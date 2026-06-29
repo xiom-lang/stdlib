@@ -1,0 +1,27 @@
+// AXIOM String Library — Phase 1
+
+module axiom.string
+
+fn str_len(s: Str) -> Int;
+
+fn str_concat(a: Str, b: Str) -> Str;
+
+fn str_slice(s: Str, start: Int, end: Int) -> Str;
+
+fn str_contains(s: Str, substr: Str) -> Bool;
+
+fn str_starts_with(s: Str, prefix: Str) -> Bool;
+
+fn str_ends_with(s: Str, suffix: Str) -> Bool;
+
+fn str_split(s: Str, delimiter: Str) -> Vec[Str];
+
+fn str_trim(s: Str) -> Str;
+
+fn str_to_int(s: Str) -> Result[Int, Str];
+
+fn str_to_float(s: Str) -> Result[Float64, Str];
+
+fn str_upper(s: Str) -> Str;
+
+fn str_lower(s: Str) -> Str;
