@@ -1,0 +1,18 @@
+// AXIOM I/O Library — Phase 1
+// FFI-backed: maps to C printf, puts, scanf
+
+module axiom.io
+
+fn print(msg: Str);
+
+fn println(msg: Str);
+
+fn read_line() -> Str;
+
+fn read_int() -> Result[Int, Str];
+
+fn read_float() -> Result[Float64, Str];
+
+fn write_file(path: Str, content: Str) -> Result[(), Str];
+
+fn read_file(path: Str) -> Result[Str, Str];

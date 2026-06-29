@@ -1,0 +1,24 @@
+// AXIOM Async Runtime — Phase 1
+
+module axiom.async
+
+// === Spawn ===
+// Launches an async task
+fn spawn(task: fn());
+
+// === Channel type ===
+type Channel[T] = {
+  // Internal ring buffer
+}
+
+fn Channel.bounded[T](capacity: Int) -> Channel[T];
+
+fn Channel.unbounded[T]() -> Channel[T];
+
+fn Channel.send[T](value: T);
+
+fn Channel.recv[T]() -> T;
+
+fn Channel.try_recv[T]() -> Option[T];
+
+fn Channel.close[T]();

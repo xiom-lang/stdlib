@@ -1,0 +1,54 @@
+// AXIOM Collections — Phase 1
+
+module axiom.collections
+
+// === Vec ===
+type Vec[T] = {
+  data: *T;
+  len: Int;
+  cap: Int;
+}
+
+fn Vec.new[T]() -> Vec[T];
+
+fn Vec.push[T](value: T);
+
+fn Vec.pop[T]() -> Option[T];
+
+fn Vec.get[T](index: Int) -> Option[&T];
+
+fn Vec.len[T]() -> Int;
+
+fn Vec.is_empty[T]() -> Bool;
+
+fn Vec.clear[T]();
+
+// === Map ===
+// Internal representation is opaque (Phase 1: simplified)
+type Map[K, V] = {}
+
+fn Map.new[K, V]() -> Map[K, V];
+
+fn Map.insert[K, V](key: K, value: V);
+
+fn Map.get[K, V](key: &K) -> Option[&V];
+
+fn Map.remove[K, V](key: &K) -> Option[V];
+
+fn Map.contains[K, V](key: &K) -> Bool;
+
+fn Map.len[K, V]() -> Int;
+
+// === Set ===
+// Internal representation is opaque (Phase 1: simplified)
+type Set[T] = {}
+
+fn Set.new[T]() -> Set[T];
+
+fn Set.insert[T](value: T);
+
+fn Set.remove[T](value: &T);
+
+fn Set.contains[T](value: &T) -> Bool;
+
+fn Set.len[T]() -> Int;

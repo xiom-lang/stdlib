@@ -1,0 +1,64 @@
+// AXIOM Core Library — Phase 1
+// Compiler-recognized types and functions with special codegen support.
+
+module axiom.core
+
+// === Option type ===
+type Option[T] = {
+  is_some: Bool;
+  value: T;
+}
+
+// === Result type ===
+type Result[T, E] = {
+  is_ok: Bool;
+  value: T;
+  error: E;
+}
+
+// === Panic ===
+// Compiler-recognized: emits trap + error message
+fn panic(msg: Str);
+
+// === Assert ===
+fn assert(condition: Bool, msg: Str);
+
+// === Numeric conversions ===
+fn to_int(x: Float64) -> Int;
+
+fn to_float(x: Int) -> Float64;
+
+// === Collection contract methods ===
+// These are used in requires/ensures/invariant clauses
+fn is_sorted[T: Ord](items: &Slice[T]) -> Bool;
+
+fn all[T](items: &Slice[T], predicate: fn(T) -> Bool) -> Bool;
+
+fn none[T](items: &Slice[T], predicate: fn(T) -> Bool) -> Bool;
+
+fn contains[T: Eq](items: &Slice[T], value: T) -> Bool;
+
+// === Clone interface ===
+interface Clone {
+  fn clone() -> Self;
+}
+
+// === Eq interface ===
+interface Eq {
+  fn eq(other: &Self) -> Bool;
+}
+
+// === Ord interface ===
+interface Ord {
+  fn compare(other: &Self) -> Int;
+}
+
+// === Display interface ===
+interface Display {
+  fn to_str() -> Str;
+}
+
+// === Hash interface ===
+interface Hash {
+  fn hash() -> UInt64;
+}

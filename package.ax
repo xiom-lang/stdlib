@@ -1,0 +1,18 @@
+// AXIOM Standard Library Package Manifest
+// package.ax — Phase 1
+
+package axiom_stdlib {
+  name: "axiom-std";
+  version: "0.1.0";
+  description: "AXIOM Standard Library — Phase 1";
+  authors: ["AXIOM Team"];
+  modules: [
+    "axiom.core",
+    "axiom.io",
+    "axiom.collections",
+    "axiom.string",
+    "axiom.math",
+    "axiom.ffi",
+    "axiom.async"
+  ];
+}
