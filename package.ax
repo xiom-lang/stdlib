@@ -13,6 +13,7 @@ package axiom_stdlib {
     "axiom.string",
     "axiom.math",
     "axiom.ffi",
-    "axiom.async"
+    "axiom.async",
+    "axiom.test"
   ];
 }
