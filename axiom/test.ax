@@ -1,0 +1,46 @@
+// AXIOM Standard Library — Test Package
+// Contract-aware test runner for stdlib conformance testing.
+// Phase 1 — per Build Strategy requirement.
+
+module test {
+
+// Test result type
+pub type TestResult = {
+  passed: Bool;
+  name: Str;
+  message: Str;
+}
+
+// Assert that a condition is true
+pub fn assert(condition: Bool, name: Str) -> TestResult {
+  if condition {
+    return TestResult{ passed: true, name: name, message: "" };
+  }
+  return TestResult{ passed: false, name: name, message: "assertion failed" };
+}
+
+// Assert equality
+pub fn assert_eq_int(expected: Int, actual: Int, name: Str) -> TestResult {
+  if expected == actual {
+    return TestResult{ passed: true, name: name, message: "" };
+  }
+  return TestResult{ passed: false, name: name, message: "expected != actual" };
+}
+
+// Assert that two values are equal
+pub fn assert_eq_bool(expected: Bool, actual: Bool, name: Str) -> TestResult {
+  if expected == actual {
+    return TestResult{ passed: true, name: name, message: "" };
+  }
+  return TestResult{ passed: false, name: name, message: "expected != actual" };
+}
+
+// Run a test and report result
+pub fn run_test(res: TestResult) -> Int {
+  if res.passed {
+    return 0;
+  }
+  return 1;
+}
+
+}
