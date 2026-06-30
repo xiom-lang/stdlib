@@ -38,3 +38,19 @@ long axiom_file_size(const char* path) {
 void axiom_free(void* ptr) {
     free(ptr);
 }
+
+// Get a character at position pos from a string.
+// Returns 0 if out of bounds (simulates null terminator).
+char axiom_char_at(const char* str, long pos) {
+    if (!str) return 0;
+    long len = (long)strlen(str);
+    if (pos < 0 || pos >= len) return 0;
+    return str[pos];
+}
+
+// Get the length of a null-terminated string.
+// Returns -1 on failure (null input).
+long axiom_str_len(const char* str) {
+    if (!str) return -1;
+    return (long)strlen(str);
+}
