@@ -1,6 +1,6 @@
-// AXIOM Standard Library — Test Package
-// Contract-aware test runner for stdlib conformance testing.
-// Phase 1 — per Build Strategy requirement.
+// AXIOM — Test Framework
+// Copyright (c) 2026 Eleftherios Notas
+// Licensed under the MIT or Apache-2.0 license, at your option.
 
 module test {
 

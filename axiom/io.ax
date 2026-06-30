@@ -1,5 +1,6 @@
-// AXIOM I/O Library — Phase 1
-// FFI-backed: maps to C printf, puts, scanf
+// AXIOM — I/O Library
+// Copyright (c) 2026 Eleftherios Notas
+// Licensed under the MIT or Apache-2.0 license, at your option.
 
 module axiom.io
 

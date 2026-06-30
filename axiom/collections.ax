@@ -1,4 +1,6 @@
-// AXIOM Collections — Phase 1
+// AXIOM — Collections Library
+// Copyright (c) 2026 Eleftherios Notas
+// Licensed under the MIT or Apache-2.0 license, at your option.
 
 module axiom.collections
 

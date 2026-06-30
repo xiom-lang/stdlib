@@ -1,5 +1,6 @@
-// AXIOM Standard Library Package Manifest
-// package.ax — Phase 1
+// AXIOM — Package Manifest
+// Copyright (c) 2026 Eleftherios Notas
+// Licensed under the MIT or Apache-2.0 license, at your option.
 
 package axiom_stdlib {
   name: "axiom-std";
