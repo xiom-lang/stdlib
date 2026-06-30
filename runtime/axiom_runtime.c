@@ -1,4 +1,5 @@
-// AXIOM Runtime — C helper functions for self-hosting compiler
+#define _CRT_SECURE_NO_WARNINGS
+// AXIOM Runtime -- C helper functions for self-hosting compiler
 // All string operations happen here. The AXIOM compiler works with Int IDs.
 #include <stdio.h>
 #include <stdlib.h>
@@ -108,7 +109,7 @@ void axiom_ir_close(void) {
 // Emit header
 void axiom_ir_header(void) {
     if (!ir_output) ir_output = stdout;
-    fprintf(ir_output, "; AXIOM Phase 1 — LLVM IR\n");
+    fprintf(ir_output, "; AXIOM Phase 1 -- LLVM IR\n");
     fprintf(ir_output, "; Self-Hosted by axiomc.ax\n\n");
     fprintf(ir_output, "target triple = \"x86_64-pc-windows-msvc\"\n\n");
 }
