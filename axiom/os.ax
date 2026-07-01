@@ -1,0 +1,25 @@
+// AXIOM — OS Library
+// Copyright (c) 2026 Eleftherios Notas
+// Licensed under the MIT or Apache-2.0 license, at your option.
+
+module axiom.os
+
+pub fn platform() -> Str;
+
+pub fn cpu_count() -> Int;
+
+pub fn total_memory() -> Int;
+
+pub fn free_memory() -> Int;
+
+pub fn env_set(name: Str, value: Str);
+
+pub fn env_unset(name: Str);
+
+pub fn current_dir() -> Str;
+
+pub fn set_current_dir(path: Str) -> Result[Unit, Str];
+
+pub fn temp_dir() -> Str;
+
+pub fn home_dir() -> Option[Str];

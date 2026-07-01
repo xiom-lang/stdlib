@@ -609,7 +609,16 @@ static void emit_body_ir(const char* source, long body_start, long body_end, lon
                             long as = pos;
                             while (pos < body_end && is_body_ident_char(source[pos])) pos++;
                             if (!first) fprintf(ir_output, ", ");
-                            fprintf(ir_output, "i64 %.*s", (int)(pos - as), source + as);
+                            fprintf(ir_output, "i64 %%%.*s", (int)(pos - as), source + as);
+                        } else if (source[pos] == '"') {
+                            pos++;
+                            long ss = pos;
+                            while (pos < body_end && source[pos] != '"') pos++;
+                            if (!first) fprintf(ir_output, ", ");
+                            long sid = axiom_intern(source, ss, pos - ss);
+                            fprintf(ir_output, "i64 %ld", sid);
+                            if (pos < body_end && source[pos] == '"') pos++;
+                            first = 0;
                         } else { pos++; }
 
                         while (pos < body_end && source[pos] == ' ') pos++;
@@ -732,7 +741,16 @@ static void emit_body_ir(const char* source, long body_start, long body_end, lon
                                     long as = pos;
                                     while (pos < body_end && is_body_ident_char(source[pos])) pos++;
                                     if (!afirst) fprintf(ir_output, ", ");
-                                    fprintf(ir_output, "i64 %.*s", (int)(pos - as), source + as);
+                                    fprintf(ir_output, "i64 %%%.*s", (int)(pos - as), source + as);
+                                } else if (source[pos] == '"') {
+                                    pos++;
+                                    long ss = pos;
+                                    while (pos < body_end && source[pos] != '"') pos++;
+                                    if (!afirst) fprintf(ir_output, ", ");
+                                    long sid = axiom_intern(source, ss, pos - ss);
+                                    fprintf(ir_output, "i64 %ld", sid);
+                                    if (pos < body_end && source[pos] == '"') pos++;
+                                    afirst = 0;
                                 } else { pos++; }
                                 while (pos < body_end && source[pos] == ' ') pos++;
                                 if (pos < body_end && source[pos] == ',') { pos++; afirst = 0; }
@@ -1137,7 +1155,16 @@ static void emit_body_ir(const char* source, long body_start, long body_end, lon
                                     long as2 = sp;
                                     while (sp < body_sub_end && is_body_ident_char(source[sp])) sp++;
                                     if (!af2) fprintf(ir_output, ", ");
-                                    fprintf(ir_output, "i64 %.*s", (int)(sp - as2), source + as2);
+                                    fprintf(ir_output, "i64 %%%.*s", (int)(sp - as2), source + as2);
+                                } else if (source[sp] == '"') {
+                                    sp++;
+                                    long ss2 = sp;
+                                    while (sp < body_sub_end && source[sp] != '"') sp++;
+                                    if (!af2) fprintf(ir_output, ", ");
+                                    long sid = axiom_intern(source, ss2, sp - ss2);
+                                    fprintf(ir_output, "i64 %ld", sid);
+                                    if (sp < body_sub_end && source[sp] == '"') sp++;
+                                    af2 = 0;
                                 } else { sp++; }
                                 while (sp < body_sub_end && source[sp] == ' ') sp++;
                                 if (sp < body_sub_end && source[sp] == ',') { sp++; af2 = 0; }
@@ -1515,7 +1542,16 @@ static void emit_body_ir(const char* source, long body_start, long body_end, lon
                                 long was2 = wsp;
                                 while (wsp < wbody_end && is_body_ident_char(source[wsp])) wsp++;
                                 if (!waf) fprintf(ir_output, ", ");
-                                fprintf(ir_output, "i64 %.*s", (int)(wsp - was2), source + was2);
+                                fprintf(ir_output, "i64 %%%.*s", (int)(wsp - was2), source + was2);
+                            } else if (source[wsp] == '"') {
+                                wsp++;
+                                long wss = wsp;
+                                while (wsp < wbody_end && source[wsp] != '"') wsp++;
+                                if (!waf) fprintf(ir_output, ", ");
+                                long sid = axiom_intern(source, wss, wsp - wss);
+                                fprintf(ir_output, "i64 %ld", sid);
+                                if (wsp < wbody_end && source[wsp] == '"') wsp++;
+                                waf = 0;
                             } else { wsp++; }
                             while (wsp < wbody_end && source[wsp] == ' ') wsp++;
                             if (wsp < wbody_end && source[wsp] == ',') { wsp++; waf = 0; }
@@ -1743,7 +1779,16 @@ static void emit_body_ir(const char* source, long body_start, long body_end, lon
                             long as = pos;
                             while (pos < body_end && is_body_ident_char(source[pos])) pos++;
                             if (!first) fprintf(ir_output, ", ");
-                            fprintf(ir_output, "i64 %.*s", (int)(pos - as), source + as);
+                            fprintf(ir_output, "i64 %%%.*s", (int)(pos - as), source + as);
+                        } else if (source[pos] == '"') {
+                            pos++;
+                            long ss = pos;
+                            while (pos < body_end && source[pos] != '"') pos++;
+                            if (!first) fprintf(ir_output, ", ");
+                            long sid = axiom_intern(source, ss, pos - ss);
+                            fprintf(ir_output, "i64 %ld", sid);
+                            if (pos < body_end && source[pos] == '"') pos++;
+                            first = 0;
                         } else { pos++; }
 
                         while (pos < body_end && source[pos] == ' ') pos++;

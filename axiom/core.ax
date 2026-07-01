@@ -29,6 +29,18 @@ fn to_int(x: Float64) -> Int;
 
 fn to_float(x: Int) -> Float64;
 
+fn to_string(x: Int) -> Str;
+
+fn to_int_from_str(s: Str) -> Result[Int, Str];
+
+fn to_float_from_str(s: Str) -> Result[Float64, Str];
+
+fn to_bool_from_str(s: Str) -> Result[Bool, Str];
+
+fn to_char(x: Int) -> Char;
+
+fn to_int_from_char(c: Char) -> Int;
+
 // === Collection contract methods ===
 // These are used in requires/ensures/invariant clauses
 fn is_sorted[T: Ord](items: &Slice[T]) -> Bool;
@@ -63,3 +75,31 @@ interface Display {
 interface Hash {
   fn hash() -> UInt64;
 }
+
+// === Numeric traits ===
+interface Add {
+  fn add(self, other: &Self) -> Self;
+}
+
+interface Sub {
+  fn sub(self, other: &Self) -> Self;
+}
+
+interface Mul {
+  fn mul(self, other: &Self) -> Self;
+}
+
+interface Div {
+  fn div(self, other: &Self) -> Self;
+}
+
+// === Box type ===
+type Box[T] = {
+  ptr: *T;
+}
+
+fn Box.new[T](value: T) -> Box[T];
+
+fn Box.get[T](b: &Box[T]) -> &T;
+
+fn Box.drop[T](b: Box[T]);

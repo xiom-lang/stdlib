@@ -13,6 +13,8 @@ type Vec[T] = {
 
 fn Vec.new[T]() -> Vec[T];
 
+fn Vec.with_capacity[T](cap: Int) -> Vec[T];
+
 fn Vec.push[T](value: T);
 
 fn Vec.pop[T]() -> Option[T];
@@ -25,8 +27,17 @@ fn Vec.is_empty[T]() -> Bool;
 
 fn Vec.clear[T]();
 
+fn Vec.insert[T](index: Int, value: T);
+
+fn Vec.remove[T](index: Int) -> Option[T];
+
+fn Vec.first[T]() -> Option[&T];
+
+fn Vec.last[T]() -> Option[&T];
+
+fn Vec.set[T](index: Int, value: T);
+
 // === Map ===
-// Internal representation is opaque (Phase 1: simplified)
 type Map[K, V] = {}
 
 fn Map.new[K, V]() -> Map[K, V];
@@ -41,8 +52,13 @@ fn Map.contains[K, V](key: &K) -> Bool;
 
 fn Map.len[K, V]() -> Int;
 
+fn Map.keys[K, V]() -> Vec[K];
+
+fn Map.values[K, V]() -> Vec[V];
+
+fn Map.clear[K, V]();
+
 // === Set ===
-// Internal representation is opaque (Phase 1: simplified)
 type Set[T] = {}
 
 fn Set.new[T]() -> Set[T];
@@ -54,3 +70,56 @@ fn Set.remove[T](value: &T);
 fn Set.contains[T](value: &T) -> Bool;
 
 fn Set.len[T]() -> Int;
+
+fn Set.union[T](other: &Set[T]) -> Set[T];
+
+fn Set.intersection[T](other: &Set[T]) -> Set[T];
+
+fn Set.difference[T](other: &Set[T]) -> Set[T];
+
+// === LinkedList ===
+type LinkedList[T] = {}
+
+fn LinkedList.new[T]() -> LinkedList[T];
+
+fn LinkedList.push_front[T](value: T);
+
+fn LinkedList.push_back[T](value: T);
+
+fn LinkedList.pop_front[T]() -> Option[T];
+
+fn LinkedList.pop_back[T]() -> Option[T];
+
+fn LinkedList.len[T]() -> Int;
+
+fn LinkedList.is_empty[T]() -> Bool;
+
+// === Queue ===
+type Queue[T] = {}
+
+fn Queue.new[T]() -> Queue[T];
+
+fn Queue.enqueue[T](value: T);
+
+fn Queue.dequeue[T]() -> Option[T];
+
+fn Queue.peek[T]() -> Option[&T];
+
+fn Queue.len[T]() -> Int;
+
+fn Queue.is_empty[T]() -> Bool;
+
+// === Stack ===
+type Stack[T] = {}
+
+fn Stack.new[T]() -> Stack[T];
+
+fn Stack.push[T](value: T);
+
+fn Stack.pop[T]() -> Option[T];
+
+fn Stack.peek[T]() -> Option[&T];
+
+fn Stack.len[T]() -> Int;
+
+fn Stack.is_empty[T]() -> Bool;
