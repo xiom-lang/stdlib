@@ -15,6 +15,11 @@ package axiom_stdlib {
     "axiom.math",
     "axiom.ffi",
     "axiom.async",
+    "axiom.net",
+    "axiom.os",
+    "axiom.time",
+    "axiom.sync",
+    "axiom.iter",
     "axiom.test"
   ];
 }

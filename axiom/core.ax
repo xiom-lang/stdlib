@@ -103,3 +103,63 @@ fn Box.new[T](value: T) -> Box[T];
 fn Box.get[T](b: &Box[T]) -> &T;
 
 fn Box.drop[T](b: Box[T]);
+
+// === Iterator trait (core to collections) ===
+interface Iterator[T] {
+  fn next(self) -> Option[T];
+  fn size_hint(self) -> (Int, Option[Int]);
+}
+
+interface IntoIterator[T] {
+  fn into_iter(self) -> Iterator[T];
+}
+
+// === Default trait ===
+interface Default {
+  fn default() -> Self;
+}
+
+// === Drop trait (deterministic cleanup) ===
+interface Drop {
+  fn drop(self);
+}
+
+// === Panic / Unwind ===
+fn panic_if(condition: Bool, msg: Str);
+
+// === Type-level operations ===
+fn size_of[T]() -> Int;
+fn align_of[T]() -> Int;
+
+// === Numeric limits ===
+const INT_MAX: Int;
+const INT_MIN: Int;
+const FLOAT64_MAX: Float64;
+const FLOAT64_MIN: Float64;
+const FLOAT64_EPSILON: Float64;
+
+// === Option methods ===
+fn Option[T].unwrap_or(self, default: T) -> T;
+fn Option[T].unwrap_or_else(self, f: fn() -> T) -> T;
+fn Option[T].map[U](self, f: fn(T) -> U) -> Option[U];
+fn Option[T].and_then[U](self, f: fn(T) -> Option[U]) -> Option[U];
+fn Option[T].filter(self, predicate: fn(&T) -> Bool) -> Option[T];
+fn Option[T].is_some_and(self, predicate: fn(&T) -> Bool) -> Bool;
+
+// === Result methods ===
+fn Result[T, E].unwrap_or(self, default: T) -> T;
+fn Result[T, E].unwrap_or_else(self, f: fn(E) -> T) -> T;
+fn Result[T, E].map[U](self, f: fn(T) -> U) -> Result[U, E];
+fn Result[T, E].map_err[F](self, f: fn(E) -> F) -> Result[T, F];
+fn Result[T, E].and_then[U](self, f: fn(T) -> Result[U, E]) -> Result[U, E];
+fn Result[T, E].expect(self, msg: Str) -> T;
+fn Result[T, E].is_ok_and(self, predicate: fn(&T) -> Bool) -> Bool;
+
+// === Binary heap (priority queue) ===
+type BinaryHeap[T] = { data: Vec[T]; }
+fn BinaryHeap[T: Ord].new() -> BinaryHeap[T];
+fn BinaryHeap[T: Ord].push(self, value: T);
+fn BinaryHeap[T: Ord].pop(self) -> Option[T];
+fn BinaryHeap[T: Ord].peek(self) -> Option[&T];
+fn BinaryHeap[T].len(self) -> Int;
+fn BinaryHeap[T].is_empty(self) -> Bool;
