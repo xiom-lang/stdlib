@@ -1648,10 +1648,217 @@ static void emit_body_ir(const char* source, long body_start, long body_end, lon
     fprintf(ir_output, "  ret %s 0\n", llvm_ty);
 }
 
+// Scan for top-level type, enum, module, interface declarations and emit simplified IR.
+static void emit_top_level_ir(const char* source, long source_len) {
+    if (!source || source_len <= 0) return;
+    long pos = 0;
+
+    while (pos < source_len - 3) {
+        // Skip whitespace and newlines
+        while (pos < source_len && (source[pos] == ' ' || source[pos] == '\t' || source[pos] == '\n' || source[pos] == '\r')) pos++;
+        if (pos >= source_len - 3) break;
+
+        // === TYPE DECLARATIONS ===
+        if (source[pos] == 't' && source[pos+1] == 'y' && source[pos+2] == 'p' && source[pos+3] == 'e') {
+            pos += 4;
+            while (pos < source_len && source[pos] == ' ') pos++;
+
+            // Read type name
+            long name_start = pos;
+            while (pos < source_len && is_body_ident_char(source[pos])) pos++;
+            long name_len = pos - name_start;
+            if (name_len <= 0) { pos++; continue; }
+
+            // Emit struct type definition (simplified: all i64 fields)
+            fprintf(ir_output, "%%struct.%.*s = type { i64 }\n\n", (int)name_len, source + name_start);
+
+            // Skip fields to find '}' and derive[...]
+            // Handle brace-delimited fields or inline decl
+            int has_brace = 0;
+            while (pos < source_len && source[pos] != '}') {
+                if (source[pos] == '{') has_brace = 1;
+                pos++;
+            }
+            if (has_brace && pos < source_len) pos++; // skip '}'
+
+            // Look for "derive["
+            while (pos < source_len - 8 && pos < source_len) {
+                while (pos < source_len && (source[pos] == ' ' || source[pos] == '\t' || source[pos] == '\n' || source[pos] == '\r')) pos++;
+                if (pos + 7 >= source_len) break;
+                if (source[pos] == 'd' && source[pos+1] == 'e' && source[pos+2] == 'r' && source[pos+3] == 'i' && source[pos+4] == 'v' && source[pos+5] == 'e' && source[pos+6] == '[') {
+                    pos += 7;
+                    break;
+                }
+                break;
+            }
+
+            // Check for derive[...] after the type
+            if (pos < source_len && pos > name_start + name_len && source[pos-1] == '[') {
+                // Parse derive traits
+                int has_eq = 0, has_clone = 0, has_hash = 0, has_ord = 0, has_display = 0;
+                long dp = pos;
+                while (dp < source_len && source[dp] != ']') {
+                    // Check for trait names
+                    if (dp + 2 <= source_len && source[dp] == 'E' && source[dp+1] == 'q' && (dp+2 >= source_len || source[dp+2] == ',' || source[dp+2] == ' ' || source[dp+2] == ']')) has_eq = 1;
+                    if (dp + 5 <= source_len && source[dp] == 'C' && source[dp+1] == 'l' && source[dp+2] == 'o' && source[dp+3] == 'n' && source[dp+4] == 'e') has_clone = 1;
+                    if (dp + 4 <= source_len && source[dp] == 'H' && source[dp+1] == 'a' && source[dp+2] == 's' && source[dp+3] == 'h') has_hash = 1;
+                    if (dp + 3 <= source_len && source[dp] == 'O' && source[dp+1] == 'r' && source[dp+2] == 'd') has_ord = 1;
+                    if (dp + 7 <= source_len && source[dp] == 'D' && source[dp+1] == 'i' && source[dp+2] == 's' && source[dp+3] == 'p' && source[dp+4] == 'l' && source[dp+5] == 'a' && source[dp+6] == 'y') has_display = 1;
+                    dp++;
+                }
+
+                char* tname = (char*)malloc((size_t)name_len + 1);
+                if (!tname) continue;
+                strncpy(tname, source + name_start, (size_t)name_len);
+                tname[name_len] = '\0';
+
+                // Eq
+                if (has_eq) {
+                    fprintf(ir_output, "define i64 @%s.eq(%%struct.%s %%self, %%struct.%s %%other) {\n", tname, tname, tname);
+                    fprintf(ir_output, "entry0:\n  ret i64 1\n}\n\n");
+                }
+
+                // Clone (always returns self unchanged)
+                if (has_clone) {
+                    fprintf(ir_output, "define %%struct.%s @%s.clone(%%struct.%s %%self) {\n", tname, tname, tname);
+                    fprintf(ir_output, "entry0:\n  ret %%struct.%s %%self\n}\n\n", tname);
+                }
+
+                // Hash (returns 0)
+                if (has_hash) {
+                    fprintf(ir_output, "define i64 @%s.hash(%%struct.%s %%self) {\n", tname, tname);
+                    fprintf(ir_output, "entry0:\n  ret i64 0\n}\n\n");
+                }
+
+                // Ord (returns 0 = equal)
+                if (has_ord) {
+                    fprintf(ir_output, "define i64 @%s.compare(%%struct.%s %%self, %%struct.%s %%other) {\n", tname, tname, tname);
+                    fprintf(ir_output, "entry0:\n  ret i64 0\n}\n\n");
+                }
+
+                // Display (no-op)
+                if (has_display) {
+                    fprintf(ir_output, "define void @%s.to_str(%%struct.%s %%self) {\n", tname, tname);
+                    fprintf(ir_output, "entry0:\n  ret void\n}\n\n");
+                }
+
+                free(tname);
+            }
+            continue;
+        }
+
+        // === ENUM DECLARATIONS ===
+        if (pos + 3 < source_len && source[pos] == 'e' && source[pos+1] == 'n' && source[pos+2] == 'u' && source[pos+3] == 'm') {
+            pos += 4;
+            while (pos < source_len && source[pos] == ' ') pos++;
+            long name_start = pos;
+            while (pos < source_len && is_body_ident_char(source[pos])) pos++;
+            long name_len = pos - name_start;
+            if (name_len > 0) {
+                fprintf(ir_output, "%%struct.%.*s = type { i64 }\n\n", (int)name_len, source + name_start);
+
+                // Check for derive[...] after enum body
+                while (pos < source_len && source[pos] != '}') pos++;
+                if (pos < source_len) pos++; // skip '}'
+                while (pos < source_len - 8 && (source[pos] == ' ' || source[pos] == '\t' || source[pos] == '\n' || source[pos] == '\r')) pos++;
+                if (pos + 7 < source_len && source[pos] == 'd' && source[pos+1] == 'e' && source[pos+2] == 'r' && source[pos+3] == 'i' && source[pos+4] == 'v' && source[pos+5] == 'e' && source[pos+6] == '[') {
+                    char* ename = (char*)malloc((size_t)name_len + 1);
+                    if (ename) {
+                        strncpy(ename, source + name_start, (size_t)name_len);
+                        ename[name_len] = '\0';
+                        // Parse derive traits
+                        pos += 7;
+                        int has_eq = 0, has_clone = 0;
+                        while (pos < source_len && source[pos] != ']') {
+                            if (pos + 2 <= source_len && source[pos] == 'E' && source[pos+1] == 'q') has_eq = 1;
+                            if (pos + 5 <= source_len && source[pos] == 'C' && source[pos+1] == 'l' && source[pos+2] == 'o' && source[pos+3] == 'n' && source[pos+4] == 'e') has_clone = 1;
+                            pos++;
+                        }
+                        if (has_eq) {
+                            fprintf(ir_output, "define i64 @%s.eq(%%struct.%s %%self, %%struct.%s %%other) {\n", ename, ename, ename);
+                            fprintf(ir_output, "entry0:\n  ret i64 1\n}\n\n");
+                        }
+                        if (has_clone) {
+                            fprintf(ir_output, "define %%struct.%s @%s.clone(%%struct.%s %%self) {\n", ename, ename, ename);
+                            fprintf(ir_output, "entry0:\n  ret %%struct.%s %%self\n}\n\n", ename);
+                        }
+                        free(ename);
+                    }
+                }
+            }
+            continue;
+        }
+
+        // === MODULE DECLARATIONS (skip to matching '}') ===
+        if (pos + 5 < source_len && source[pos] == 'm' && source[pos+1] == 'o' && source[pos+2] == 'd' && source[pos+3] == 'u' && source[pos+4] == 'l' && source[pos+5] == 'e') {
+            // Skip past "module" keyword and name
+            pos += 6;
+            while (pos < source_len && source[pos] == ' ') pos++;
+            while (pos < source_len && is_body_ident_char(source[pos])) pos++;
+            // Skip whitespace to {
+            while (pos < source_len && (source[pos] == ' ' || source[pos] == '\t' || source[pos] == '\n' || source[pos] == '\r')) pos++;
+            if (pos < source_len && source[pos] == '{') {
+                int depth = 1;
+                pos++;
+                while (pos < source_len && depth > 0) {
+                    if (source[pos] == '{') depth++;
+                    else if (source[pos] == '}') depth--;
+                    if (depth > 0) pos++;
+                }
+                if (pos < source_len) pos++;
+            }
+            continue;
+        }
+
+        // === INTERFACE DECLARATIONS (skip entirely) ===
+        if (pos + 8 < source_len && source[pos] == 'i' && source[pos+1] == 'n' && source[pos+2] == 't' && source[pos+3] == 'e' && source[pos+4] == 'r' && source[pos+5] == 'f' && source[pos+6] == 'a' && source[pos+7] == 'c' && source[pos+8] == 'e') {
+            pos += 9;
+            while (pos < source_len && source[pos] == ' ') pos++;
+            while (pos < source_len && is_body_ident_char(source[pos])) pos++;
+            // Skip to matching '}'
+            while (pos < source_len && (source[pos] == ' ' || source[pos] == '\t' || source[pos] == '\n' || source[pos] == '\r')) pos++;
+            if (pos < source_len && source[pos] == '{') {
+                int depth = 1;
+                pos++;
+                while (pos < source_len && depth > 0) {
+                    if (source[pos] == '{') depth++;
+                    else if (source[pos] == '}') depth--;
+                    if (depth > 0) pos++;
+                }
+                if (pos < source_len) pos++;
+            }
+            continue;
+        }
+
+        // === USE DECLARATIONS (skip) ===
+        if (pos + 2 < source_len && source[pos] == 'u' && source[pos+1] == 's' && source[pos+2] == 'e') {
+            pos += 3;
+            while (pos < source_len && source[pos] != ';' && source[pos] != '\n') pos++;
+            if (pos < source_len && source[pos] == ';') pos++;
+            continue;
+        }
+
+        // === SKIP // COMMENTS ===
+        if (pos + 1 < source_len && source[pos] == '/' && source[pos+1] == '/') {
+            while (pos < source_len && source[pos] != '\n') pos++;
+            continue;
+        }
+
+        pos++;
+    }
+}
+
 // Emit all functions with real body IR
 void axiom_fn_emit_all(void) {
     const char* source = g_source;
     if (!ir_output) ir_output = stdout;
+
+    // First pass: emit top-level type, enum, and derive declarations
+    if (source) {
+        emit_top_level_ir(source, strlen(source));
+        fprintf(ir_output, "\n");
+    }
+
     for (int i = 0; i < fn_count; i++) {
         const char* name = axiom_lookup(fn_table[i].name_id);
         const char* ret_ty_raw = axiom_lookup(fn_table[i].ret_type_id);
