@@ -48,5 +48,8 @@ package axiom_stdlib {
     "axiom.reflect",
     "axiom.env",
     "stdlib_tests",
+    "core_tests",
+    "collections_tests",
+    "integration_tests",
   ];
 }
