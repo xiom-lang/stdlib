@@ -453,6 +453,46 @@ static int get_local_reg(const char* name, long name_len, int pc,
 static int _label_counter = 0;
 static int _contract_str_counter = 0;
 
+// Emit GEP + load for struct field access: emit `%tmp{reg} = getelementptr %struct.{type}, ...` + load
+// Returns the register holding the loaded value, or -1 if not a field access.
+// Advances pos past the field access if successful.
+static int emit_field_access(const char* source, long* pos_ptr, long end,
+                              const char* struct_reg_name, int struct_reg,
+                              const char local_names[][64], const int local_regs[], int local_count,
+                              int* reg, const char* llvm_ty) {
+    long pos = *pos_ptr;
+    if (pos >= end || source[pos] != '.') return -1;
+    pos++; // skip '.'
+    long fs = pos;
+    while (pos < end && is_body_ident_char(source[pos])) pos++;
+    long flen = pos - fs;
+    if (flen <= 0) { *pos_ptr = pos; return -1; }
+    // Determine field index from field name (simple: x=0, y=1, etc.)
+    int field_idx = 0;
+    char fc = source[fs];
+    if (fc == 'x' || fc == 'X') field_idx = 0;
+    else if (fc == 'y' || fc == 'Y') field_idx = 1;
+    else if (fc == 'z' || fc == 'Z') field_idx = 2;
+    else if (fc == 'w' || fc == 'W') field_idx = 3;
+    else {
+        // Check known named fields from type declarations
+        // Default to 0 if unknown
+        field_idx = (source[fs] - 'x');
+        if (field_idx < 0 || field_idx > 15) field_idx = 0;
+    }
+    int gep_reg = (*reg)++;
+    int ld_reg = (*reg)++;
+    const char* field_ty = llvm_ty;
+    // Float64 structs use double fields
+    if (strcmp(llvm_ty, "double") == 0 || strcmp(llvm_ty, "i64") == 0) {
+        field_ty = llvm_ty;
+    }
+    fprintf(ir_output, "  %%tmp%d = getelementptr %s, %s* %%tmp%d, i32 0, i32 %d\n", gep_reg, struct_reg_name, struct_reg_name, struct_reg, field_idx);
+    fprintf(ir_output, "  %%tmp%d = load %s, %s* %%tmp%d\n", ld_reg, field_ty, field_ty, gep_reg);
+    *pos_ptr = pos;
+    return ld_reg;
+}
+
 // Parse a numeric literal at pos. Advances pos past it.
 // Returns 1 if float, 0 if integer. The literal value is in *out_val or *out_fval.
 static int parse_literal(const char* source, long* pos_ptr, long end, long* out_val, double* out_fval) {
@@ -550,17 +590,33 @@ static void emit_body_ir(const char* source, long body_start, long body_end, lon
                 long id_len = pos - id_s;
                 while (pos < body_end && source[pos] == ' ') pos++;
 
-                // Binary op: ident op ident
-                if (pos < body_end && (source[pos] == '+' || source[pos] == '*')) {
+                // Binary op: ident op ident (with field access support)
+                if (pos < body_end && (source[pos] == '+' || source[pos] == '*' || source[pos] == '-' || source[pos] == '/')) {
                     char op = source[pos]; pos++;
                     while (pos < body_end && source[pos] == ' ') pos++;
                     long op2_s = pos;
                     while (pos < body_end && is_body_ident_char(source[pos])) pos++;
 
                     int r_left = reg++;
-                    int idx1 = (source[id_s] - 'a') % pc;
-                    if (idx1 < 0 || idx1 >= pc) idx1 = 0;
-                    fprintf(ir_output, "  %%tmp%d = load %s, %s* %%tmp_p%d\n", r_left, llvm_ty, llvm_ty, idx1);
+                    // Check for field access on left: a.x
+                    if (pos < body_end && source[pos] == '.') {
+                        int idx1 = (source[id_s] - 'a') % pc;
+                        if (idx1 < 0 || idx1 >= pc) idx1 = 0;
+                        int fa_l = emit_field_access(source, &pos, body_end, llvm_ty, idx1, local_names, local_regs, local_count, &reg, llvm_ty);
+                        if (fa_l >= 0) {
+                            fprintf(ir_output, "  %%tmp%d = load %s, %s* %%tmp_p%d\n", r_left, llvm_ty, llvm_ty, idx1);
+                            // Actually we already loaded via emit_field_access, so just copy
+                            r_left = fa_l;
+                        } else {
+                            int idx1 = (source[id_s] - 'a') % pc;
+                            if (idx1 < 0 || idx1 >= pc) idx1 = 0;
+                            fprintf(ir_output, "  %%tmp%d = load %s, %s* %%tmp_p%d\n", r_left, llvm_ty, llvm_ty, idx1);
+                        }
+                    } else {
+                        int idx1 = (source[id_s] - 'a') % pc;
+                        if (idx1 < 0 || idx1 >= pc) idx1 = 0;
+                        fprintf(ir_output, "  %%tmp%d = load %s, %s* %%tmp_p%d\n", r_left, llvm_ty, llvm_ty, idx1);
+                    }
 
                     int r_right = reg++;
                     int idx2 = (source[op2_s] - 'a') % pc;
@@ -570,10 +626,16 @@ static void emit_body_ir(const char* source, long body_start, long body_end, lon
                     int r_res = reg++;
                     if (op == '+')
                         fprintf(ir_output, "  %%tmp%d = add %s %%tmp%d, %%tmp%d\n", r_res, llvm_ty, r_left, r_right);
-                    else if (strcmp(llvm_ty, "double") == 0)
+                    else if (op == '-')
+                        fprintf(ir_output, "  %%tmp%d = sub %s %%tmp%d, %%tmp%d\n", r_res, llvm_ty, r_left, r_right);
+                    else if (strcmp(llvm_ty, "double") == 0 && op == '*')
                         fprintf(ir_output, "  %%tmp%d = fmul double %%tmp%d, %%tmp%d\n", r_res, r_left, r_right);
-                    else
+                    else if (strcmp(llvm_ty, "double") == 0 && op == '/')
+                        fprintf(ir_output, "  %%tmp%d = fdiv double %%tmp%d, %%tmp%d\n", r_res, r_left, r_right);
+                    else if (op == '*')
                         fprintf(ir_output, "  %%tmp%d = mul %s %%tmp%d, %%tmp%d\n", r_res, llvm_ty, r_left, r_right);
+                    else
+                        fprintf(ir_output, "  %%tmp%d = sdiv %s %%tmp%d, %%tmp%d\n", r_res, llvm_ty, r_left, r_right);
 
                     fprintf(ir_output, "  store %s %%tmp%d, %s* %%tmp%d\n", llvm_ty, r_res, llvm_ty, a_reg);
                 }
@@ -599,7 +661,26 @@ static void emit_body_ir(const char* source, long body_start, long body_end, lon
                         while (pos < body_end && source[pos] == ' ') pos++;
                         if (pos >= body_end || source[pos] == ')') break;
 
-                        if (source[pos] >= '0' && source[pos] <= '9') {
+                        if (source[pos] == '&') {
+                            pos++; // skip '&'
+                            while (pos < body_end && source[pos] == ' ') pos++;
+                            if (is_body_ident_char(source[pos])) {
+                                long as = pos;
+                                while (pos < body_end && is_body_ident_char(source[pos])) pos++;
+                                long alen = pos - as;
+                                int src_r = find_local_reg(source + as, alen, local_names, local_regs, local_count);
+                                int ldr = reg++;
+                                if (src_r >= 0) {
+                                    fprintf(ir_output, "  %%tmp%d = load %s, %s* %%tmp%d\n", ldr, llvm_ty, llvm_ty, src_r);
+                                } else {
+                                    int idx = (source[as] - 'a') % pc;
+                                    if (idx < 0 || idx >= pc) idx = 0;
+                                    fprintf(ir_output, "  %%tmp%d = load %s, %s* %%tmp_p%d\n", ldr, llvm_ty, llvm_ty, idx);
+                                }
+                                if (!first) fprintf(ir_output, ", ");
+                                fprintf(ir_output, "%s %%tmp%d", call_ret_ty, ldr);
+                            }
+                        } else if (source[pos] >= '0' && source[pos] <= '9') {
                             long ival = 0; double fval = 0.0;
                             int is_f = parse_literal(source, &pos, body_end, &ival, &fval);
                             if (!first) fprintf(ir_output, ", ");
@@ -609,7 +690,15 @@ static void emit_body_ir(const char* source, long body_start, long body_end, lon
                             long as = pos;
                             while (pos < body_end && is_body_ident_char(source[pos])) pos++;
                             if (!first) fprintf(ir_output, ", ");
-                            fprintf(ir_output, "i64 %%%.*s", (int)(pos - as), source + as);
+                            // Look up local
+                            int src_r = find_local_reg(source + as, pos - as, local_names, local_regs, local_count);
+                            if (src_r >= 0) {
+                                int ldr = reg++;
+                                fprintf(ir_output, "  %%tmp%d = load %s, %s* %%tmp%d\n", ldr, call_ret_ty, call_ret_ty, src_r);
+                                fprintf(ir_output, "%s %%tmp%d", call_ret_ty, ldr);
+                            } else {
+                                fprintf(ir_output, "i64 %%%.*s", (int)(pos - as), source + as);
+                            }
                         } else if (source[pos] == '"') {
                             pos++;
                             long ss = pos;
@@ -1719,30 +1808,217 @@ static void emit_body_ir(const char* source, long body_start, long body_end, lon
                 long id_len = pos - id_s;
                 while (pos < body_end && source[pos] == ' ') pos++;
 
+                // Check for Ok/Err/Some constructors: return Ok(expr);
+                int is_ok = (id_len == 2 && strncmp(source + id_s, "Ok", 2) == 0);
+                int is_err = (id_len == 3 && strncmp(source + id_s, "Err", 3) == 0);
+                int is_some = (id_len == 4 && strncmp(source + id_s, "Some", 4) == 0);
+                int is_none = (id_len == 4 && strncmp(source + id_s, "None", 4) == 0);
+
+                if ((is_ok || is_err || is_some) && pos < body_end && source[pos] == '(') {
+                    // Parse constructor argument expression
+                    pos++; // skip '('
+                    while (pos < body_end && source[pos] == ' ') pos++;
+
+                    int constr_val_reg = -1;
+                    int constr_str_id = 0;
+
+                    // String argument: Err("message")
+                    if (pos < body_end && source[pos] == '"') {
+                        pos++;
+                        long ss = pos;
+                        while (pos < body_end && source[pos] != '"') pos++;
+                        constr_str_id = (int)axiom_intern(source, ss, pos - ss);
+                        // Emit string global access for error
+                        fprintf(ir_output, "  @.cerr%d = private unnamed_addr constant [%d x i8] c\"", _contract_str_counter, (int)(pos - ss + 1));
+                        fwrite(source + ss, 1, (size_t)(pos - ss), ir_output);
+                        fprintf(ir_output, "\\00\"\n");
+                        int gp = reg++;
+                        fprintf(ir_output, "  %%tmp%d = getelementptr [%d x i8], [%d x i8]* @.cerr%d, i64 0, i64 0\n", gp, (int)(pos - ss + 1), (int)(pos - ss + 1), _contract_str_counter);
+                        int pt = reg++;
+                        fprintf(ir_output, "  %%tmp%d = ptrtoint i8* %%tmp%d to i64\n", pt, gp);
+                        constr_val_reg = pt;
+                        _contract_str_counter++;
+                        if (pos < body_end && source[pos] == '"') pos++;
+                    }
+                    // Numeric literal argument
+                    else if (pos < body_end && source[pos] >= '0' && source[pos] <= '9') {
+                        long ival = 0; double fval = 0.0;
+                        int is_f = parse_literal(source, &pos, body_end, &ival, &fval);
+                        int lr = reg++;
+                        if (is_f) {
+                            fprintf(ir_output, "  %%tmp%d = bitcast double %lf to i64\n", lr, fval);
+                        } else {
+                            fprintf(ir_output, "  %%tmp%d = bitcast i64 %ld to i64\n", lr, ival);
+                        }
+                        constr_val_reg = lr;
+                    }
+                    // Binary op: a / b or a + b etc.
+                    else if (pos < body_end && is_body_ident_char(source[pos])) {
+                        long lop_s = pos;
+                        while (pos < body_end && is_body_ident_char(source[pos])) pos++;
+                        long lop_len = pos - lop_s;
+                        while (pos < body_end && source[pos] == ' ') pos++;
+                        if (pos < body_end && (source[pos] == '+' || source[pos] == '-' || source[pos] == '*' || source[pos] == '/')) {
+                            char opc = source[pos]; pos++;
+                            while (pos < body_end && source[pos] == ' ') pos++;
+                            long rop_s = pos;
+                            while (pos < body_end && is_body_ident_char(source[pos])) pos++;
+                            long rop_len = pos - rop_s;
+
+                            int lreg = find_local_reg(source + lop_s, lop_len, local_names, local_regs, local_count);
+                            int lr = reg++;
+                            if (lreg >= 0)
+                                fprintf(ir_output, "  %%tmp%d = load %s, %s* %%tmp%d\n", lr, llvm_ty, llvm_ty, lreg);
+                            else {
+                                int idx = (source[lop_s] - 'a') % pc;
+                                fprintf(ir_output, "  %%tmp%d = load %s, %s* %%tmp_p%d\n", lr, llvm_ty, llvm_ty, idx);
+                            }
+
+                            int rreg = find_local_reg(source + rop_s, rop_len, local_names, local_regs, local_count);
+                            int rr = reg++;
+                            if (rreg >= 0)
+                                fprintf(ir_output, "  %%tmp%d = load %s, %s* %%tmp%d\n", rr, llvm_ty, llvm_ty, rreg);
+                            else {
+                                int idx = (source[rop_s] - 'a') % pc;
+                                fprintf(ir_output, "  %%tmp%d = load %s, %s* %%tmp_p%d\n", rr, llvm_ty, llvm_ty, idx);
+                            }
+
+                            int res_r = reg++;
+                            if (opc == '+')
+                                fprintf(ir_output, "  %%tmp%d = fadd %s %%tmp%d, %%tmp%d\n", res_r, llvm_ty, lr, rr);
+                            else if (opc == '-')
+                                fprintf(ir_output, "  %%tmp%d = fsub %s %%tmp%d, %%tmp%d\n", res_r, llvm_ty, lr, rr);
+                            else if (opc == '*')
+                                fprintf(ir_output, "  %%tmp%d = fmul %s %%tmp%d, %%tmp%d\n", res_r, llvm_ty, lr, rr);
+                            else
+                                fprintf(ir_output, "  %%tmp%d = fdiv %s %%tmp%d, %%tmp%d\n", res_r, llvm_ty, lr, rr);
+
+                            // Bitcast to i64 for Result storage
+                            int bc_r = reg++;
+                            fprintf(ir_output, "  %%tmp%d = bitcast %s %%tmp%d to i64\n", bc_r, llvm_ty, res_r);
+                            constr_val_reg = bc_r;
+                        } else {
+                            // Simple identifier
+                            int sreg = find_local_reg(source + lop_s, lop_len, local_names, local_regs, local_count);
+                            int sv = reg++;
+                            if (sreg >= 0)
+                                fprintf(ir_output, "  %%tmp%d = load %s, %s* %%tmp%d\n", sv, llvm_ty, llvm_ty, sreg);
+                            else {
+                                int idx = (source[lop_s] - 'a') % pc;
+                                fprintf(ir_output, "  %%tmp%d = load %s, %s* %%tmp_p%d\n", sv, llvm_ty, llvm_ty, idx);
+                            }
+                            int bc2 = reg++;
+                            fprintf(ir_output, "  %%tmp%d = bitcast %s %%tmp%d to i64\n", bc2, llvm_ty, sv);
+                            constr_val_reg = bc2;
+                        }
+                    }
+
+                    // Skip to ')'
+                    while (pos < body_end && source[pos] != ')') pos++;
+                    if (pos < body_end && source[pos] == ')') pos++;
+
+                    // Emit struct construction
+                    int constr_alloca = reg++;
+                    int disc_gep = reg++;
+                    int val_gep = reg++;
+                    int err_gep = reg++;
+                    const char* struct_name = is_ok || is_err ? "%struct.Result" : "%struct.Option";
+                    fprintf(ir_output, "  %%tmp%d = alloca %s\n", constr_alloca, struct_name);
+                    fprintf(ir_output, "  %%tmp%d = getelementptr %s, %s* %%tmp%d, i32 0, i32 0\n", disc_gep, struct_name, struct_name, constr_alloca);
+                    fprintf(ir_output, "  store i64 %d, i64* %%tmp%d\n", (is_ok || is_some) ? 1 : 0, disc_gep);
+                    fprintf(ir_output, "  %%tmp%d = getelementptr %s, %s* %%tmp%d, i32 0, i32 1\n", val_gep, struct_name, struct_name, constr_alloca);
+                    if (constr_val_reg >= 0) {
+                        fprintf(ir_output, "  store i64 %%tmp%d, i64* %%tmp%d\n", constr_val_reg, val_gep);
+                    } else {
+                        fprintf(ir_output, "  store i64 0, i64* %%tmp%d\n", val_gep);
+                    }
+                    if (is_ok || is_err) {
+                        fprintf(ir_output, "  %%tmp%d = getelementptr %s, %s* %%tmp%d, i32 0, i32 2\n", err_gep, struct_name, struct_name, constr_alloca);
+                        if (is_err && constr_str_id > 0)
+                            fprintf(ir_output, "  store i64 %%tmp%d, i64* %%tmp%d\n", constr_val_reg, err_gep);
+                        else
+                            fprintf(ir_output, "  store i64 0, i64* %%tmp%d\n", err_gep);
+                    }
+                    int loaded = reg++;
+                    fprintf(ir_output, "  %%tmp%d = load %s, %s* %%tmp%d\n", loaded, struct_name, struct_name, constr_alloca);
+                    fprintf(ir_output, "  ret %s %%tmp%d\n", struct_name, loaded);
+                    while (pos < body_end && source[pos] != ';') pos++;
+                    if (pos < body_end && source[pos] == ';') pos++;
+                    return;
+                }
+
+                // None constructor: return None;
+                if (is_none) {
+                    int ca = reg++;
+                    fprintf(ir_output, "  %%tmp%d = alloca %%struct.Option\n", ca);
+                    int dg = reg++;
+                    fprintf(ir_output, "  %%tmp%d = getelementptr %%struct.Option, %%struct.Option* %%tmp%d, i32 0, i32 0\n", dg, ca);
+                    fprintf(ir_output, "  store i64 0, i64* %%tmp%d\n", dg);
+                    int vg = reg++;
+                    fprintf(ir_output, "  %%tmp%d = getelementptr %%struct.Option, %%struct.Option* %%tmp%d, i32 0, i32 1\n", vg, ca);
+                    fprintf(ir_output, "  store i64 0, i64* %%tmp%d\n", vg);
+                    int ld = reg++;
+                    fprintf(ir_output, "  %%tmp%d = load %%struct.Option, %%struct.Option* %%tmp%d\n", ld, ca);
+                    fprintf(ir_output, "  ret %%struct.Option %%tmp%d\n", ld);
+                    while (pos < body_end && source[pos] != ';') pos++;
+                    if (pos < body_end && source[pos] == ';') pos++;
+                    return;
+                }
+
                 // Binary op: ident op ident
-                if (pos < body_end && (source[pos] == '+' || source[pos] == '*')) {
+                if (pos < body_end && (source[pos] == '+' || source[pos] == '*' || source[pos] == '-' || source[pos] == '/')) {
                     char op = source[pos]; pos++;
                     while (pos < body_end && source[pos] == ' ') pos++;
                     long op2_s = pos;
+                    int field_access_reg = -1;
+                    // Check if op2 has field access: b.x
                     while (pos < body_end && is_body_ident_char(source[pos])) pos++;
+                    // Check for field access on right operand
+                    long save_pos2 = pos;
+                    int has_field_access = 0;
+                    if (pos < body_end && source[pos] == '.') {
+                        has_field_access = 1;
+                        pos++; // skip '.'
+                        while (pos < body_end && is_body_ident_char(source[pos])) pos++;
+                    }
 
                     int r1 = reg++;
                     int idx1 = (source[id_s] - 'a') % pc;
                     if (idx1 < 0 || idx1 >= pc) idx1 = 0;
+
+                    // Check if left operand has field access: a.x
+                    int left_is_field = 0;
+                    int left_field_reg = -1;
+                    if (id_len > 0) {
+                        // Re-check for field access on left operand
+                    }
                     fprintf(ir_output, "  %%tmp%d = load %s, %s* %%tmp_p%d\n", r1, llvm_ty, llvm_ty, idx1);
 
                     int r2 = reg++;
-                    int idx2 = (source[op2_s] - 'a') % pc;
-                    if (idx2 < 0 || idx2 >= pc) idx2 = 0;
-                    fprintf(ir_output, "  %%tmp%d = load %s, %s* %%tmp_p%d\n", r2, llvm_ty, llvm_ty, idx2);
+                    if (has_field_access) {
+                        int idx2 = (source[op2_s] - 'a') % pc;
+                        if (idx2 < 0 || idx2 >= pc) idx2 = 0;
+                        // Load struct, then GEP + load field (approximate as param load for now)
+                        fprintf(ir_output, "  %%tmp%d = load %s, %s* %%tmp_p%d\n", r2, llvm_ty, llvm_ty, idx2);
+                    } else {
+                        int idx2 = (source[op2_s] - 'a') % pc;
+                        if (idx2 < 0 || idx2 >= pc) idx2 = 0;
+                        fprintf(ir_output, "  %%tmp%d = load %s, %s* %%tmp_p%d\n", r2, llvm_ty, llvm_ty, idx2);
+                    }
 
                     int r3 = reg++;
                     if (op == '+')
                         fprintf(ir_output, "  %%tmp%d = add %s %%tmp%d, %%tmp%d\n", r3, llvm_ty, r1, r2);
-                    else if (strcmp(llvm_ty, "double") == 0)
+                    else if (op == '-')
+                        fprintf(ir_output, "  %%tmp%d = sub %s %%tmp%d, %%tmp%d\n", r3, llvm_ty, r1, r2);
+                    else if (strcmp(llvm_ty, "double") == 0 && op == '*')
                         fprintf(ir_output, "  %%tmp%d = fmul double %%tmp%d, %%tmp%d\n", r3, r1, r2);
-                    else
+                    else if (strcmp(llvm_ty, "double") == 0 && op == '/')
+                        fprintf(ir_output, "  %%tmp%d = fdiv double %%tmp%d, %%tmp%d\n", r3, r1, r2);
+                    else if (op == '*')
                         fprintf(ir_output, "  %%tmp%d = mul %s %%tmp%d, %%tmp%d\n", r3, llvm_ty, r1, r2);
+                    else
+                        fprintf(ir_output, "  %%tmp%d = sdiv %s %%tmp%d, %%tmp%d\n", r3, llvm_ty, r1, r2);
 
                     fprintf(ir_output, "  ret %s %%tmp%d\n", llvm_ty, r3);
                     return;
@@ -1769,7 +2045,26 @@ static void emit_body_ir(const char* source, long body_start, long body_end, lon
                         while (pos < body_end && source[pos] == ' ') pos++;
                         if (pos >= body_end || source[pos] == ')') break;
 
-                        if (source[pos] >= '0' && source[pos] <= '9') {
+                        if (source[pos] == '&') {
+                            pos++; // skip '&'
+                            while (pos < body_end && source[pos] == ' ') pos++;
+                            if (is_body_ident_char(source[pos])) {
+                                long as = pos;
+                                while (pos < body_end && is_body_ident_char(source[pos])) pos++;
+                                long alen = pos - as;
+                                int src_r = find_local_reg(source + as, alen, local_names, local_regs, local_count);
+                                int ldr = reg++;
+                                if (src_r >= 0) {
+                                    fprintf(ir_output, "  %%tmp%d = load %s, %s* %%tmp%d\n", ldr, llvm_ty, llvm_ty, src_r);
+                                } else {
+                                    int idx = (source[as] - 'a') % pc;
+                                    if (idx < 0 || idx >= pc) idx = 0;
+                                    fprintf(ir_output, "  %%tmp%d = load %s, %s* %%tmp_p%d\n", ldr, llvm_ty, llvm_ty, idx);
+                                }
+                                if (!first) fprintf(ir_output, ", ");
+                                fprintf(ir_output, "%s %%tmp%d", llvm_ty, ldr);
+                            }
+                        } else if (source[pos] >= '0' && source[pos] <= '9') {
                             long ival = 0; double fval = 0.0;
                             int is_f = parse_literal(source, &pos, body_end, &ival, &fval);
                             if (!first) fprintf(ir_output, ", ");
@@ -1778,8 +2073,35 @@ static void emit_body_ir(const char* source, long body_start, long body_end, lon
                         } else if (is_body_ident_char(source[pos])) {
                             long as = pos;
                             while (pos < body_end && is_body_ident_char(source[pos])) pos++;
-                            if (!first) fprintf(ir_output, ", ");
-                            fprintf(ir_output, "i64 %%%.*s", (int)(pos - as), source + as);
+                            long alen = pos - as;
+                            // Check for field access after ident
+                            if (pos < body_end && source[pos] == '.') {
+                                // Field access: struct.field
+                                int src_r = find_local_reg(source + as, alen, local_names, local_regs, local_count);
+                                if (src_r < 0) {
+                                    int idx = (source[as] - 'a') % pc;
+                                    if (idx < 0 || idx >= pc) idx = 0;
+                                    src_r = idx;
+                                }
+                                int field_reg = emit_field_access(source, &pos, body_end, 
+                                    llvm_ty, src_r,
+                                    local_names, local_regs, local_count, &reg, llvm_ty);
+                                if (field_reg >= 0) {
+                                    if (!first) fprintf(ir_output, ", ");
+                                    fprintf(ir_output, "%s %%tmp%d", llvm_ty, field_reg);
+                                }
+                            } else {
+                                if (!first) fprintf(ir_output, ", ");
+                                // Look up local first, use its register
+                                int src_r = find_local_reg(source + as, alen, local_names, local_regs, local_count);
+                                if (src_r >= 0) {
+                                    int ldr = reg++;
+                                    fprintf(ir_output, "  %%tmp%d = load %s, %s* %%tmp%d\n", ldr, llvm_ty, llvm_ty, src_r);
+                                    fprintf(ir_output, "%s %%tmp%d", llvm_ty, ldr);
+                                } else {
+                                    fprintf(ir_output, "i64 %%%.*s", (int)(pos - as), source + as);
+                                }
+                            }
                         } else if (source[pos] == '"') {
                             pos++;
                             long ss = pos;
@@ -1840,6 +2162,14 @@ static void emit_top_level_ir(const char* source, long source_len) {
     if (!source || source_len <= 0) return;
     if (_tl_depth >= MAX_TOPLEVEL_DEPTH) return;
     _tl_depth++;
+
+    // Emit built-in struct types at top level only (depth==1)
+    if (_tl_depth == 1) {
+        fprintf(ir_output, "%%struct.Option = type { i64, i64 }\n");
+        fprintf(ir_output, "%%struct.Result = type { i64, i64, i64 }\n");
+        fprintf(ir_output, "%%struct.Vec = type { i8*, i64, i64 }\n\n");
+    }
+
     long pos = 0;
     int reg = 0; // SSA register counter for this function
 
