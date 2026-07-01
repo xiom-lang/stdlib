@@ -41,5 +41,12 @@ package axiom_stdlib {
     "axiom.encoding",
     "axiom.rand",
     "axiom.compress",
+    "axiom.crypto",
+    "axiom.regex",
+    "axiom.alloc",
+    "axiom.thread",
+    "axiom.reflect",
+    "axiom.env",
+    "stdlib_tests",
   ];
 }
