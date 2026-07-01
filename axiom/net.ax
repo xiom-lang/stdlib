@@ -32,3 +32,28 @@ pub type HttpResponse = {
   status: Int;
   body: Str;
 } derive[Clone]
+
+// === UDP ===
+fn udp_bind(host: Str, port: Int) -> Result[UdpSocket, NetError];
+pub type UdpSocket = { fd: Int; }
+pub fn UdpSocket.send_to(self, data: &Vec[UInt8], addr: Str, port: Int) -> Result[Int, NetError];
+pub fn UdpSocket.recv_from(self, buf: &mut Vec[UInt8]) -> Result[(Int, Str, Int), NetError];
+pub fn UdpSocket.close(self) -> Result[Unit, NetError];
+
+// === DNS ===
+fn resolve_host(hostname: Str) -> Result[Vec[Str], NetError];
+fn local_addr(port: Int) -> Result[Str, NetError];
+
+// === URL parsing ===
+pub type UrlParts = {
+  scheme: Str;
+  host: Str;
+  port: Int;
+  path: Str;
+  query: Str;
+  fragment: Str;
+}
+fn parse_url(url: Str) -> Result[UrlParts, NetError>;
+
+// === HTTP methods ===
+pub type HttpMethod = enum { GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS }

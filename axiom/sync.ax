@@ -1,0 +1,66 @@
+// AXIOM — Synchronization Primitives
+// Copyright (c) 2026 Eleftherios Notas
+// Licensed under the MIT or Apache-2.0 license, at your option.
+
+module axiom.sync
+
+// === Mutex ===
+pub type Mutex[T] = { data: T; locked: Bool; }
+pub fn Mutex.new[T](data: T) -> Mutex[T];
+pub fn Mutex.lock[T](self) -> MutexGuard[T];
+pub fn Mutex.try_lock[T](self) -> Option[MutexGuard[T]];
+
+pub type MutexGuard[T] = { mutex: Mutex[T]; }
+pub fn MutexGuard.get[T](self) -> &T;
+pub fn MutexGuard.get_mut[T](self) -> &mut T;
+
+// === RwLock ===
+pub type RwLock[T] = { data: T; readers: Int; writer: Bool; }
+pub fn RwLock.new[T](data: T) -> RwLock[T];
+pub fn RwLock.read[T](self) -> ReadGuard[T];
+pub fn RwLock.write[T](self) -> WriteGuard[T];
+pub fn RwLock.try_read[T](self) -> Option<ReadGuard[T]>;
+pub fn RwLock.try_write[T](self) -> Option<WriteGuard[T]>;
+
+pub type ReadGuard[T] = { lock: RwLock[T]; }
+pub type WriteGuard[T] = { lock: RwLock[T]; }
+
+// === Condvar ===
+pub type Condvar = { waiters: Int; }
+pub fn Condvar.new() -> Condvar;
+pub fn Condvar.wait[T](self, guard: MutexGuard[T]) -> MutexGuard[T];
+pub fn Condvar.notify_one(self);
+pub fn Condvar.notify_all(self);
+
+// === Once ===
+pub type Once = { done: Bool; }
+pub fn Once.new() -> Once;
+pub fn Once.call_once(self, f: fn());
+
+// === Arc (Atomic Reference Counted) ===
+pub type Arc[T] = { ptr: *T; count: Int; }
+pub fn Arc.new[T](value: T) -> Arc[T];
+pub fn Arc.clone[T](self) -> Arc[T];
+pub fn Arc.get[T](self) -> &T;
+pub fn Arc.strong_count[T](self) -> Int;
+pub fn Arc.ptr_eq[T, U](self, other: &Arc[U]) -> Bool;
+
+// === Atomic types ===
+pub type AtomicBool = { val: Bool; }
+pub type AtomicInt = { val: Int; }
+
+pub fn AtomicBool.new(val: Bool) -> AtomicBool;
+pub fn AtomicBool.load(self) -> Bool;
+pub fn AtomicBool.store(self, val: Bool);
+pub fn AtomicBool.swap(self, val: Bool) -> Bool;
+
+pub fn AtomicInt.new(val: Int) -> AtomicInt;
+pub fn AtomicInt.load(self) -> Int;
+pub fn AtomicInt.store(self, val: Int);
+pub fn AtomicInt.fetch_add(self, val: Int) -> Int;
+pub fn AtomicInt.fetch_sub(self, val: Int) -> Int;
+
+// === Barrier ===
+pub type Barrier = { count: Int; generation: Int; }
+pub fn Barrier.new(n: Int) -> Barrier;
+pub fn Barrier.wait(self);

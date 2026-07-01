@@ -23,3 +23,44 @@ pub fn set_current_dir(path: Str) -> Result[Unit, Str];
 pub fn temp_dir() -> Str;
 
 pub fn home_dir() -> Option[Str];
+
+// === Permissions ===
+fn set_permissions(path: Str, mode: Int) -> Result[Unit, Str];
+fn get_permissions(path: Str) -> Result[Int, Str];
+
+// === Symlinks ===
+fn read_link(path: Str) -> Result[Str, Str];
+fn create_symlink(original: Str, link: Str) -> Result[Unit, Str];
+fn is_symlink(path: Str) -> Bool;
+
+// === Temp files ===
+fn temp_file() -> Result[Str, Str];
+fn temp_dir_os() -> Result[Str, Str];
+
+// === Process ===
+fn spawn(command: Str, args: Vec[Str]) -> Result[Int, Str];
+fn spawn_piped(command: Str, args: Vec[Str]) -> Result[(Int, Int, Int), Str];
+fn wait(pid: Int) -> Result[Int, Str];
+fn kill(pid: Int) -> Result[Unit, Str];
+
+pub type ChildProcess = {
+  pid: Int;
+  stdin: Int;
+  stdout: Int;
+  stderr: Int;
+}
+
+pub fn ChildProcess.wait(self) -> Result[Int, Str];
+pub fn ChildProcess.kill(self) -> Result[Unit, Str];
+pub fn ChildProcess.id(self) -> Int;
+
+// === Environment ===
+fn set_env(name: Str, value: Str);
+fn unset_env(name: Str);
+fn env_vars() -> Map[Str, Str];
+
+// === OS type detection ===
+fn is_windows() -> Bool;
+fn is_linux() -> Bool;
+fn is_macos() -> Bool;
+fn arch() -> Str;
