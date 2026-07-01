@@ -20,6 +20,9 @@ package axiom_stdlib {
     "axiom.time",
     "axiom.sync",
     "axiom.iter",
-    "axiom.test"
+    "axiom.test",
+    "axiom.serialize",
+    "axiom.bench",
+    "axiom.log",
   ];
 }
