@@ -1,0 +1,32 @@
+// AXIOM — Fixed-Size Array Operations
+// Copyright (c) 2026 Eleftherios Notas
+// Licensed under the MIT or Apache-2.0 license, at your option.
+
+module axiom.array
+
+pub fn len[T, const N: Int](arr: &[N]T) -> Int;
+pub fn is_empty[T, const N: Int](arr: &[N]T) -> Bool;
+pub fn first[T](arr: &[N]T) -> Option<&T>;
+pub fn last[T](arr: &[N]T) -> Option<&T>;
+pub fn get[T](arr: &[N]T, index: Int) -> Option<&T>;
+pub fn get_mut[T](arr: &mut [N]T, index: Int) -> Option<&mut T>;
+
+pub fn map[T, U, const N: Int](arr: [N]T, f: fn(T) -> U) -> [N]U;
+pub fn zip[T, U, const N: Int](a: [N]T, b: [N]U) -> [N](T, U);
+pub fn fold[T, B](arr: [N]T, init: B, f: fn(B, T) -> B) -> B;
+
+pub fn as_slice[T](arr: &[N]T) -> Slice[T];
+pub fn as_mut_slice[T](arr: &mut [N]T) -> Slice[T];
+pub fn each_ref[T](arr: &[N]T) -> [N]&T;
+pub fn each_mut[T](arr: &mut [N]T) -> [N]&mut T;
+
+pub fn fill[T: Clone](arr: &mut [N]T, value: T);
+pub fn swap[T](arr: &mut [N]T, a: Int, b: Int);
+pub fn reverse[T](arr: &mut [N]T);
+pub fn rotate_left[T](arr: &mut [N]T, mid: Int);
+pub fn rotate_right[T](arr: &mut [N]T, k: Int);
+
+pub fn sort[T: Ord](arr: &mut [N]T);
+pub fn sort_by[T](arr: &mut [N]T, compare: fn(&T, &T) -> Ordering);
+pub fn binary_search[T: Ord](arr: &[N]T, x: &T) -> Result[Int, Int];
+pub fn contains[T: Eq](arr: &[N]T, x: &T) -> Bool;

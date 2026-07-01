@@ -25,5 +25,18 @@ package axiom_stdlib {
     "axiom.bench",
     "axiom.log",
     "axiom.contracts",
+    "axiom.error",
+    "axiom.fmt",
+    "axiom.hash",
+    "axiom.num",
+    "axiom.cmp",
+    "axiom.convert",
+    "axiom.cell",
+    "axiom.rc",
+    "axiom.path",
+    "axiom.mem",
+    "axiom.ptr",
+    "axiom.char",
+    "axiom.array",
   ];
 }

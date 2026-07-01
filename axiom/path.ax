@@ -1,0 +1,43 @@
+// AXIOM — Path Manipulation
+// Copyright (c) 2026 Eleftherios Notas
+// Licensed under the MIT or Apache-2.0 license, at your option.
+
+module axiom.path
+
+pub type Path = { inner: Str; } derive[Eq, Clone, Hash, Ord]
+pub type PathBuf = { inner: Str; } derive[Eq, Clone]
+
+// Path constructors
+pub fn Path.new(s: Str) -> Path;
+pub fn PathBuf.new() -> PathBuf;
+pub fn PathBuf.from(s: Str) -> PathBuf;
+
+// Path operations
+pub fn Path.parent(self) -> Option<Path>;
+pub fn Path.file_name(self) -> Option<Str>;
+pub fn Path.extension(self) -> Option<Str>;
+pub fn Path.file_stem(self) -> Option<Str>;
+pub fn Path.is_absolute(self) -> Bool;
+pub fn Path.is_relative(self) -> Bool;
+pub fn Path.has_root(self) -> Bool;
+pub fn Path.components(self) -> Vec<Str>;
+pub fn Path.to_str(self) -> Str;
+pub fn Path.join(self, child: Str) -> PathBuf;
+pub fn Path.with_extension(self, ext: Str) -> PathBuf;
+pub fn Path.with_file_name(self, name: Str) -> PathBuf;
+pub fn Path.exists(self) -> Bool;
+pub fn Path.is_file(self) -> Bool;
+pub fn Path.is_dir(self) -> Bool;
+pub fn Path.metadata(self) -> Result<Metadata, Str>;
+pub fn Path.canonicalize(self) -> Result<PathBuf, Str>;
+pub fn Path.starts_with(self, base: &Path) -> Bool;
+pub fn Path.ends_with(self, child: &Path) -> Bool;
+
+// PathBuf operations
+pub fn PathBuf.push(self, component: Str);
+pub fn PathBuf.pop(self) -> Bool;
+pub fn PathBuf.as_path(self) -> Path;
+pub fn PathBuf.clear(self);
+
+// Utility
+pub fn path_separator() -> Str;
