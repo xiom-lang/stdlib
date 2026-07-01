@@ -1,0 +1,31 @@
+// AXIOM — Memory Allocation
+// Copyright (c) 2026 Eleftherios Notas
+// Licensed under the MIT or Apache-2.0 license, at your option.
+
+module axiom.alloc
+
+pub type Layout = { size: Int; align: Int; } derive[Eq, Clone]
+pub fn Layout.new(size: Int) -> Layout;
+pub fn Layout.with_align(self, align: Int) -> Layout;
+pub fn Layout.padded_size(self) -> Int;
+
+pub interface Allocator {
+  fn allocate(self, layout: Layout) -> Result<*mut UInt8, AllocError>;
+  fn deallocate(self, ptr: *mut UInt8, layout: Layout);
+  fn allocate_zeroed(self, layout: Layout) -> Result<*mut UInt8, AllocError>;
+  fn grow(self, ptr: *mut UInt8, old: Layout, new: Layout) -> Result<*mut UInt8, AllocError>;
+  fn shrink(self, ptr: *mut UInt8, old: Layout, new: Layout) -> Result<*mut UInt8, AllocError>;
+}
+
+pub type AllocError = { message: Str; } derive[Clone]
+
+// Global allocator (wraps malloc/free)
+pub fn global_alloc() -> Allocator;
+pub fn alloc(size: Int) -> *mut UInt8;
+pub fn alloc_zeroed(size: Int) -> *mut UInt8;
+pub fn realloc(ptr: *mut UInt8, old_size: Int, new_size: Int) -> *mut UInt8;
+pub fn dealloc(ptr: *mut UInt8, size: Int);
+
+// Sized allocation
+pub fn alloc_layout(layout: Layout) -> *mut UInt8;
+pub fn dealloc_layout(ptr: *mut UInt8, layout: Layout);
