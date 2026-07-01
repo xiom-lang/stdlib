@@ -24,5 +24,6 @@ package axiom_stdlib {
     "axiom.serialize",
     "axiom.bench",
     "axiom.log",
+    "axiom.contracts",
   ];
 }
