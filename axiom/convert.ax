@@ -1,0 +1,22 @@
+// AXIOM — Type Conversion Traits
+// Copyright (c) 2026 Eleftherios Notas
+// Licensed under the MIT or Apache-2.0 license, at your option.
+
+module axiom.convert
+
+pub interface From[T] { fn from(value: T) -> Self; }
+pub interface Into[T] { fn into(self) -> T; }
+pub interface TryFrom[T] { fn try_from(value: T) -> Result<Self, Str>; }
+pub interface TryInto[T] { fn try_into(self) -> Result<T, Str>; }
+
+// Identity conversion
+pub fn identity[T](x: T) -> T;
+
+// Common conversions
+pub fn int_to_float(n: Int) -> Float64;
+pub fn float_to_int(f: Float64) -> Int; // truncates
+pub fn int_to_string(n: Int) -> Str;
+pub fn float_to_string(f: Float64) -> Str;
+pub fn bool_to_string(b: Bool) -> Str;
+pub fn char_to_int(c: Char) -> Int;
+pub fn int_to_char(n: Int) -> Option[Char];
