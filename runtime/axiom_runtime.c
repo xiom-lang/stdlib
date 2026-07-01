@@ -543,6 +543,23 @@ static void emit_body_ir(const char* source, long body_start, long body_end, lon
         char c0 = source[pos];
         char c1 = pos + 1 < body_end ? source[pos+1] : 0;
 
+        // Skip bare semicolons (empty statements)
+        if (c0 == ';') { pos++; continue; }
+
+        // Skip // line comments
+        if (c0 == '/' && c1 == '/') {
+            while (pos < body_end && source[pos] != '\n') pos++;
+            continue;
+        }
+
+        // Skip /* */ block comments
+        if (c0 == '/' && c1 == '*') {
+            pos += 2;
+            while (pos + 1 < body_end && !(source[pos] == '*' && source[pos+1] == '/')) pos++;
+            if (pos + 1 < body_end) pos += 2;
+            continue;
+        }
+
         // --- let or var binding
         if ((pos + 3 < body_end && c0 == 'l' && c1 == 'e' && source[pos+2] == 't' && (source[pos+3] == ' ' || source[pos+3] == '\t')) ||
             (pos + 3 < body_end && c0 == 'v' && c1 == 'a' && source[pos+2] == 'r' && (source[pos+3] == ' ' || source[pos+3] == '\t'))) {
@@ -1787,16 +1804,160 @@ static void emit_body_ir(const char* source, long body_start, long body_end, lon
         // --- return statement (last statement in body)
         if (pos + 5 < body_end && c0 == 'r' && c1 == 'e' && source[pos+2] == 't' && source[pos+3] == 'u' && source[pos+4] == 'r' && source[pos+5] == 'n') {
             pos += 6;
-            while (pos < body_end && (source[pos] == ' ' || source[pos] == '\t')) pos++;
+            while (pos < body_end && (source[pos] == ' ' || source[pos] == '\t' || source[pos] == '\n' || source[pos] == '\r')) pos++;
+
+            // Unary negation: -expr
+            if (pos < body_end && source[pos] == '-') {
+                pos++;
+                while (pos < body_end && (source[pos] == ' ' || source[pos] == '\t')) pos++;
+                if (pos < body_end && source[pos] == '(') {
+                    pos++;
+                    while (pos < body_end && (source[pos] == ' ' || source[pos] == '\t')) pos++;
+                    if (pos < body_end && source[pos] >= '0' && source[pos] <= '9') {
+                        long ival = 0; double fval = 0.0;
+                        parse_literal(source, &pos, body_end, &ival, &fval);
+                        fprintf(ir_output, "  ret %s %ld\n", llvm_ty, -ival);
+                        while (pos < body_end && source[pos] != ')') pos++;
+                        if (pos < body_end && source[pos] == ')') pos++;
+                        while (pos < body_end && source[pos] != ';') pos++;
+                        if (pos < body_end && source[pos] == ';') pos++;
+                        return;
+                    }
+                }
+                else if (pos < body_end && source[pos] >= '0' && source[pos] <= '9') {
+                    long ival = 0; double fval = 0.0;
+                    int isf = parse_literal(source, &pos, body_end, &ival, &fval);
+                    fprintf(ir_output, "  ret %s %ld\n", llvm_ty, -ival);
+                    while (pos < body_end && source[pos] != ';') pos++;
+                    if (pos < body_end && source[pos] == ';') pos++;
+                    return;
+                }
+                // Backtrack: '-' might be subtraction
+                pos--;
+                while (pos < body_end && (source[pos] == ' ' || source[pos] == '\t')) pos++;
+            }
+
+            // Parenthesized expression: (expr)
+            if (pos < body_end && source[pos] == '(') {
+                pos++;
+                while (pos < body_end && (source[pos] == ' ' || source[pos] == '\t' || source[pos] == '\n' || source[pos] == '\r')) pos++;
+                int sub_reg = -1;
+                if (pos < body_end && source[pos] >= '0' && source[pos] <= '9') {
+                    long iv = 0; double fv = 0.0;
+                    int isf = parse_literal(source, &pos, body_end, &iv, &fv);
+                    sub_reg = reg++;
+                    fprintf(ir_output, "  %%tmp%d = add %s %ld, 0\n", sub_reg, llvm_ty, iv);
+                } else if (is_body_ident_char(source[pos])) {
+                    long is = pos;
+                    while (pos < body_end && is_body_ident_char(source[pos])) pos++;
+                    int sr = find_local_reg(source + is, pos - is, local_names, local_regs, local_count);
+                    sub_reg = reg++;
+                    if (sr >= 0)
+                        fprintf(ir_output, "  %%tmp%d = load %s, %s* %%tmp%d\n", sub_reg, llvm_ty, llvm_ty, sr);
+                    else
+                        fprintf(ir_output, "  %%tmp%d = load %s, %s* %%tmp_p%d\n", sub_reg, llvm_ty, llvm_ty, (source[is] - 'a') % pc);
+                }
+                while (pos < body_end && (source[pos] == ' ' || source[pos] == '\t' || source[pos] == '\n' || source[pos] == '\r')) pos++;
+                if (pos < body_end && (source[pos] == '+' || source[pos] == '-' || source[pos] == '*' || source[pos] == '/')) {
+                    char op = source[pos]; pos++;
+                    while (pos < body_end && (source[pos] == ' ' || source[pos] == '\t' || source[pos] == '\n' || source[pos] == '\r')) pos++;
+                    int right_reg = -1;
+                    if (pos < body_end && source[pos] >= '0' && source[pos] <= '9') {
+                        long iv2 = 0; double fv2 = 0.0;
+                        int isf2 = parse_literal(source, &pos, body_end, &iv2, &fv2);
+                        right_reg = reg++;
+                        fprintf(ir_output, "  %%tmp%d = add %s %ld, 0\n", right_reg, llvm_ty, iv2);
+                    } else if (is_body_ident_char(source[pos])) {
+                        long rs = pos;
+                        while (pos < body_end && is_body_ident_char(source[pos])) pos++;
+                        int rr = find_local_reg(source + rs, pos - rs, local_names, local_regs, local_count);
+                        right_reg = reg++;
+                        if (rr >= 0)
+                            fprintf(ir_output, "  %%tmp%d = load %s, %s* %%tmp%d\n", right_reg, llvm_ty, llvm_ty, rr);
+                        else
+                            fprintf(ir_output, "  %%tmp%d = load %s, %s* %%tmp_p%d\n", right_reg, llvm_ty, llvm_ty, (source[rs] - 'a') % pc);
+                    }
+                    if (right_reg >= 0 && sub_reg >= 0) {
+                        int res = reg++;
+                        if (op == '+') fprintf(ir_output, "  %%tmp%d = add %s %%tmp%d, %%tmp%d\n", res, llvm_ty, sub_reg, right_reg);
+                        else if (op == '-') fprintf(ir_output, "  %%tmp%d = sub %s %%tmp%d, %%tmp%d\n", res, llvm_ty, sub_reg, right_reg);
+                        else if (op == '*') fprintf(ir_output, "  %%tmp%d = mul %s %%tmp%d, %%tmp%d\n", res, llvm_ty, sub_reg, right_reg);
+                        else fprintf(ir_output, "  %%tmp%d = sdiv %s %%tmp%d, %%tmp%d\n", res, llvm_ty, sub_reg, right_reg);
+                        sub_reg = res;
+                    }
+                }
+                while (pos < body_end && source[pos] != ')') pos++;
+                if (pos < body_end && source[pos] == ')') pos++;
+                while (pos < body_end && (source[pos] == ' ' || source[pos] == '\t' || source[pos] == '\n' || source[pos] == '\r')) pos++;
+                if (pos < body_end && (source[pos] == '+' || source[pos] == '-' || source[pos] == '*' || source[pos] == '/')) {
+                    char op = source[pos]; pos++;
+                    while (pos < body_end && (source[pos] == ' ' || source[pos] == '\t' || source[pos] == '\n' || source[pos] == '\r')) pos++;
+                    int right_reg = -1;
+                    if (pos < body_end && source[pos] >= '0' && source[pos] <= '9') {
+                        long iv2 = 0; double fv2 = 0.0;
+                        int isf2 = parse_literal(source, &pos, body_end, &iv2, &fv2);
+                        right_reg = reg++;
+                        fprintf(ir_output, "  %%tmp%d = add %s %ld, 0\n", right_reg, llvm_ty, iv2);
+                    }
+                    if (right_reg >= 0 && sub_reg >= 0) {
+                        int res = reg++;
+                        if (op == '+') fprintf(ir_output, "  %%tmp%d = add %s %%tmp%d, %%tmp%d\n", res, llvm_ty, sub_reg, right_reg);
+                        else if (op == '-') fprintf(ir_output, "  %%tmp%d = sub %s %%tmp%d, %%tmp%d\n", res, llvm_ty, sub_reg, right_reg);
+                        else if (op == '*') fprintf(ir_output, "  %%tmp%d = mul %s %%tmp%d, %%tmp%d\n", res, llvm_ty, sub_reg, right_reg);
+                        else fprintf(ir_output, "  %%tmp%d = sdiv %s %%tmp%d, %%tmp%d\n", res, llvm_ty, sub_reg, right_reg);
+                        sub_reg = res;
+                    }
+                }
+                fprintf(ir_output, "  ret %s %%tmp%d\n", llvm_ty, sub_reg >= 0 ? sub_reg : 0);
+                while (pos < body_end && source[pos] != ';') pos++;
+                if (pos < body_end && source[pos] == ';') pos++;
+                return;
+            }
 
             // Literal
             if (pos < body_end && source[pos] >= '0' && source[pos] <= '9') {
                 long ival = 0; double fval = 0.0;
                 int is_float = parse_literal(source, &pos, body_end, &ival, &fval);
-                if (is_float)
-                    fprintf(ir_output, "  ret %s %lf\n", llvm_ty, fval);
-                else
-                    fprintf(ir_output, "  ret %s %ld\n", llvm_ty, ival);
+                while (pos < body_end && (source[pos] == ' ' || source[pos] == '\t' || source[pos] == '\n' || source[pos] == '\r')) pos++;
+                if (pos < body_end && (source[pos] == '+' || source[pos] == '-' || source[pos] == '*' || source[pos] == '/')) {
+                    int acc_reg = reg++;
+                    fprintf(ir_output, "  %%tmp%d = add %s %ld, 0\n", acc_reg, llvm_ty, ival);
+                    while (1) {
+                        while (pos < body_end && (source[pos] == ' ' || source[pos] == '\t' || source[pos] == '\n' || source[pos] == '\r')) pos++;
+                        if (pos >= body_end || !(source[pos] == '+' || source[pos] == '-' || source[pos] == '*' || source[pos] == '/')) break;
+                        char op = source[pos]; pos++;
+                        while (pos < body_end && (source[pos] == ' ' || source[pos] == '\t' || source[pos] == '\n' || source[pos] == '\r')) pos++;
+                        long iv2 = 0; double fv2 = 0.0;
+                        int right_reg = -1;
+                        if (pos < body_end && source[pos] >= '0' && source[pos] <= '9') {
+                            parse_literal(source, &pos, body_end, &iv2, &fv2);
+                            right_reg = reg++;
+                            fprintf(ir_output, "  %%tmp%d = add %s %ld, 0\n", right_reg, llvm_ty, iv2);
+                        } else if (is_body_ident_char(source[pos])) {
+                            long rs = pos;
+                            while (pos < body_end && is_body_ident_char(source[pos])) pos++;
+                            int rr = find_local_reg(source + rs, pos - rs, local_names, local_regs, local_count);
+                            right_reg = reg++;
+                            if (rr >= 0)
+                                fprintf(ir_output, "  %%tmp%d = load %s, %s* %%tmp%d\n", right_reg, llvm_ty, llvm_ty, rr);
+                            else
+                                fprintf(ir_output, "  %%tmp%d = load %s, %s* %%tmp_p%d\n", right_reg, llvm_ty, llvm_ty, (source[rs] - 'a') % pc);
+                        }
+                        if (right_reg < 0) break;
+                        int res = reg++;
+                        if (op == '+') fprintf(ir_output, "  %%tmp%d = add %s %%tmp%d, %%tmp%d\n", res, llvm_ty, acc_reg, right_reg);
+                        else if (op == '-') fprintf(ir_output, "  %%tmp%d = sub %s %%tmp%d, %%tmp%d\n", res, llvm_ty, acc_reg, right_reg);
+                        else if (op == '*') fprintf(ir_output, "  %%tmp%d = mul %s %%tmp%d, %%tmp%d\n", res, llvm_ty, acc_reg, right_reg);
+                        else fprintf(ir_output, "  %%tmp%d = sdiv %s %%tmp%d, %%tmp%d\n", res, llvm_ty, acc_reg, right_reg);
+                        acc_reg = res;
+                    }
+                    fprintf(ir_output, "  ret %s %%tmp%d\n", llvm_ty, acc_reg);
+                } else {
+                    if (is_float)
+                        fprintf(ir_output, "  ret %s %lf\n", llvm_ty, fval);
+                    else
+                        fprintf(ir_output, "  ret %s %ld\n", llvm_ty, ival);
+                }
                 return;
             }
 
