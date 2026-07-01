@@ -27,3 +27,23 @@ fn str_to_float(s: Str) -> Result[Float64, Str];
 fn str_upper(s: Str) -> Str;
 
 fn str_lower(s: Str) -> Str;
+
+fn format(fmt: Str, args: ...) -> Str;
+
+fn char_at(s: Str, pos: Int) -> Option[Char];
+
+fn index_of(s: Str, substr: Str) -> Option[Int];
+
+fn last_index_of(s: Str, substr: Str) -> Option[Int];
+
+fn replace(s: Str, from: Str, to: Str) -> Str;
+
+fn lines(s: Str) -> Vec[Str];
+
+fn words(s: Str) -> Vec[Str];
+
+fn is_empty(s: Str) -> Bool;
+
+fn char_count(s: Str) -> Int;
+
+fn byte_count(s: Str) -> Int;
