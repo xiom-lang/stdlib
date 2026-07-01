@@ -38,9 +38,8 @@ void axiom_free(void* ptr) {
 
 char axiom_char_at(const char* str, long pos) {
     if (!str) return 0;
-    long len = (long)strlen(str);
-    if (pos < 0 || pos >= len) return 0;
-    return str[pos];
+    if (pos < 0) return 0;
+    return str[pos]; // caller bounds-checks via axiom_str_len
 }
 
 long axiom_str_len(const char* str) {
