@@ -396,8 +396,28 @@ static const char* map_axiom_type(const char* axiom_ty) {
     if (strcmp(axiom_ty, "Float32") == 0) {
         return "float";
     }
-    // default: return as-is (e.g., "i64", "double" already mapped)
-    return axiom_ty;
+    // Already LLVM primitive types
+    if (strcmp(axiom_ty, "i64") == 0 || strcmp(axiom_ty, "i1") == 0 || strcmp(axiom_ty, "i32") == 0 || strcmp(axiom_ty, "i8") == 0) {
+        return axiom_ty;
+    }
+    if (strcmp(axiom_ty, "double") == 0 || strcmp(axiom_ty, "float") == 0 || strcmp(axiom_ty, "void") == 0) {
+        return axiom_ty;
+    }
+    if (strcmp(axiom_ty, "i8*") == 0) {
+        return axiom_ty;
+    }
+    // Already struct type
+    if (strncmp(axiom_ty, "%struct.", 8) == 0) {
+        return axiom_ty;
+    }
+    // Unknown types (user-defined structs like Result, Token, etc.)
+    // Use a round-robin buffer to avoid dangling pointers from static reuse
+    static char st_buf[4][128];
+    static int st_idx = 0;
+    char* buf = st_buf[st_idx];
+    st_idx = (st_idx + 1) % 4;
+    snprintf(buf, 128, "%%struct.%s", axiom_ty);
+    return buf;
 }
 
 #include <stdint.h>
@@ -1764,8 +1784,17 @@ static void emit_body_ir(const char* source, long body_start, long body_end, lon
 
 // Scan for top-level type and enum declarations and emit real derive IR.
 // Matches the Rust compiler's IR patterns: icmp eq, fcmp oeq, getelementptr, zext, and.
+// ============================================================================
+// Top-level IR emission — scans source for type/enum/module declarations
+// Uses a depth limit to prevent infinite recursion on malformed sources
+// ============================================================================
+static int _tl_depth = 0;
+#define MAX_TOPLEVEL_DEPTH 8
+
 static void emit_top_level_ir(const char* source, long source_len) {
     if (!source || source_len <= 0) return;
+    if (_tl_depth >= MAX_TOPLEVEL_DEPTH) return;
+    _tl_depth++;
     long pos = 0;
     int reg = 0; // SSA register counter for this function
 
@@ -2283,7 +2312,7 @@ static void emit_top_level_ir(const char* source, long source_len) {
             continue;
         }
 
-        // === MODULE DECLARATIONS (skip to matching '}') ===
+        // === MODULE DECLARATIONS (recurse into body for types) ===
         if (pos + 5 < source_len &&
             source[pos] == 'm' && source[pos+1] == 'o' && source[pos+2] == 'd' && source[pos+3] == 'u' && source[pos+4] == 'l' && source[pos+5] == 'e' &&
             (pos == 0 || !is_body_ident_char(source[pos-1])) &&
@@ -2293,12 +2322,19 @@ static void emit_top_level_ir(const char* source, long source_len) {
             while (pos < source_len && is_body_ident_char(source[pos])) pos++;
             while (pos < source_len && (source[pos] == ' ' || source[pos] == '\t' || source[pos] == '\n' || source[pos] == '\r')) pos++;
             if (pos < source_len && source[pos] == '{') {
+                long mod_body_start = pos + 1; // after '{'
                 int depth = 1;
                 pos++;
                 while (pos < source_len && depth > 0) {
                     if (source[pos] == '{') depth++;
                     else if (source[pos] == '}') depth--;
                     if (depth > 0) pos++;
+                }
+                long mod_body_end = pos; // position of '}'
+                // Recurse into module body for type declarations
+                if (mod_body_end > mod_body_start) {
+                    long old_pos_val = 0; // save position
+                    emit_top_level_ir(source + mod_body_start, mod_body_end - mod_body_start);
                 }
                 if (pos < source_len) pos++;
             }
@@ -2346,6 +2382,7 @@ static void emit_top_level_ir(const char* source, long source_len) {
 
         pos++;
     }
+    _tl_depth--;
 }
 
 // Emit all functions with real body IR
