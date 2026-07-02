@@ -666,24 +666,35 @@ static void emit_body_ir(const char* source, long body_start, long body_end, lon
                     }
                     const char* call_ret_ty = has_float_arg ? "double" : llvm_ty;
 
-                    int cr = reg++;
-                    fprintf(ir_output, "  %%tmp%d = call %s @", cr, call_ret_ty);
-                    fwrite(source + id_s, 1, (size_t)id_len, ir_output);
-                    fprintf(ir_output, "(");
-
                     pos++; // skip '('
-                    int first = 1;
-                    while (pos < body_end && source[pos] != ')') {
-                        while (pos < body_end && source[pos] == ' ') pos++;
-                        if (pos >= body_end || source[pos] == ')') break;
 
-                        if (source[pos] == '&') {
-                            pos++; // skip '&'
-                            while (pos < body_end && source[pos] == ' ') pos++;
-                            if (is_body_ident_char(source[pos])) {
-                                long as = pos;
-                                while (pos < body_end && is_body_ident_char(source[pos])) pos++;
-                                long alen = pos - as;
+                    // --- Pass 1: emit all argument loads as separate instructions ---
+                    // Also collect argument info for the call line
+                    #define MAX_CALL_ARGS 64
+                    const char* call_arg_types[MAX_CALL_ARGS];
+                    long call_arg_ivals[MAX_CALL_ARGS];
+                    double call_arg_fvals[MAX_CALL_ARGS];
+                    int call_arg_kind[MAX_CALL_ARGS]; // 0=reg, 1=int_const, 2=float_const, 3=string, 4=ptr_ident
+                    long call_arg_ptr_start[MAX_CALL_ARGS];
+                    long call_arg_ptr_len[MAX_CALL_ARGS];
+                    int call_arg_count = 0;
+                    long apos = pos;
+
+                    while (apos < body_end && source[apos] != ')') {
+                        while (apos < body_end && source[apos] == ' ') apos++;
+                        if (apos >= body_end || source[apos] == ')') break;
+
+                        call_arg_kind[call_arg_count] = 0;
+                        call_arg_ivals[call_arg_count] = 0;
+                        call_arg_fvals[call_arg_count] = 0.0;
+
+                        if (source[apos] == '&') {
+                            apos++; // skip '&'
+                            while (apos < body_end && source[apos] == ' ') apos++;
+                            if (is_body_ident_char(source[apos])) {
+                                long as = apos;
+                                while (apos < body_end && is_body_ident_char(source[apos])) apos++;
+                                long alen = apos - as;
                                 int src_r = find_local_reg(source + as, alen, local_names, local_regs, local_count);
                                 int ldr = reg++;
                                 if (src_r >= 0) {
@@ -693,41 +704,69 @@ static void emit_body_ir(const char* source, long body_start, long body_end, lon
                                     if (idx < 0 || idx >= pc) idx = 0;
                                     fprintf(ir_output, "  %%tmp%d = load %s, %s* %%tmp_p%d\n", ldr, llvm_ty, llvm_ty, idx);
                                 }
-                                if (!first) fprintf(ir_output, ", ");
-                                fprintf(ir_output, "%s %%tmp%d", call_ret_ty, ldr);
+                                call_arg_types[call_arg_count] = llvm_ty;
+                                call_arg_ivals[call_arg_count] = ldr;
+                                call_arg_kind[call_arg_count] = 0;
                             }
-                        } else if (source[pos] >= '0' && source[pos] <= '9') {
+                        } else if (source[apos] >= '0' && source[apos] <= '9') {
                             long ival = 0; double fval = 0.0;
-                            int is_f = parse_literal(source, &pos, body_end, &ival, &fval);
-                            if (!first) fprintf(ir_output, ", ");
-                            if (is_f) fprintf(ir_output, "double %lf", fval);
-                            else fprintf(ir_output, "i64 %ld", ival);
-                        } else if (is_body_ident_char(source[pos])) {
-                            long as = pos;
-                            while (pos < body_end && is_body_ident_char(source[pos])) pos++;
-                            if (!first) fprintf(ir_output, ", ");
-                            // Look up local
-                            int src_r = find_local_reg(source + as, pos - as, local_names, local_regs, local_count);
+                            int is_f = parse_literal(source, &apos, body_end, &ival, &fval);
+                            call_arg_types[call_arg_count] = is_f ? "double" : "i64";
+                            call_arg_ivals[call_arg_count] = ival;
+                            call_arg_fvals[call_arg_count] = fval;
+                            call_arg_kind[call_arg_count] = is_f ? 2 : 1;
+                        } else if (is_body_ident_char(source[apos])) {
+                            long as = apos;
+                            while (apos < body_end && is_body_ident_char(source[apos])) apos++;
+                            int src_r = find_local_reg(source + as, apos - as, local_names, local_regs, local_count);
                             if (src_r >= 0) {
                                 int ldr = reg++;
                                 fprintf(ir_output, "  %%tmp%d = load %s, %s* %%tmp%d\n", ldr, call_ret_ty, call_ret_ty, src_r);
-                                fprintf(ir_output, "%s %%tmp%d", call_ret_ty, ldr);
+                                call_arg_types[call_arg_count] = call_ret_ty;
+                                call_arg_ivals[call_arg_count] = ldr;
+                                call_arg_kind[call_arg_count] = 0;
                             } else {
-                                fprintf(ir_output, "i64 %%%.*s", (int)(pos - as), source + as);
+                                call_arg_types[call_arg_count] = "i64";
+                                call_arg_ptr_start[call_arg_count] = as;
+                                call_arg_ptr_len[call_arg_count] = apos - as;
+                                call_arg_kind[call_arg_count] = 4;
                             }
-                        } else if (source[pos] == '"') {
-                            pos++;
-                            long ss = pos;
-                            while (pos < body_end && source[pos] != '"') pos++;
-                            if (!first) fprintf(ir_output, ", ");
-                            long sid = axiom_intern(source, ss, pos - ss);
-                            fprintf(ir_output, "i64 %ld", sid);
-                            if (pos < body_end && source[pos] == '"') pos++;
-                            first = 0;
-                        } else { pos++; }
+                        } else if (source[apos] == '"') {
+                            apos++;
+                            long ss = apos;
+                            while (apos < body_end && source[apos] != '"') apos++;
+                            long sid = axiom_intern(source, ss, apos - ss);
+                            call_arg_types[call_arg_count] = "i64";
+                            call_arg_ivals[call_arg_count] = sid;
+                            call_arg_kind[call_arg_count] = 3;
+                            if (apos < body_end && source[apos] == '"') apos++;
+                        } else { apos++; }
 
-                        while (pos < body_end && source[pos] == ' ') pos++;
-                        if (pos < body_end && source[pos] == ',') { pos++; first = 0; }
+                        while (apos < body_end && source[apos] == ' ') apos++;
+                        if (apos < body_end && source[apos] == ',') { apos++; }
+                        call_arg_count++;
+                        if (call_arg_count >= MAX_CALL_ARGS) break;
+                    }
+                    pos = apos; // pos is now at ')'
+
+                    // --- Pass 2: emit the call with only SSA references ---
+                    int cr = reg++;
+                    fprintf(ir_output, "  %%tmp%d = call %s @", cr, call_ret_ty);
+                    fwrite(source + id_s, 1, (size_t)id_len, ir_output);
+                    fprintf(ir_output, "(");
+                    for (int ai = 0; ai < call_arg_count; ai++) {
+                        if (ai > 0) fprintf(ir_output, ", ");
+                        if (call_arg_kind[ai] == 4) {
+                            fprintf(ir_output, "%s %%%.*s", call_arg_types[ai], (int)call_arg_ptr_len[ai], source + call_arg_ptr_start[ai]);
+                        } else if (call_arg_kind[ai] == 0) {
+                            fprintf(ir_output, "%s %%tmp%d", call_arg_types[ai], (int)call_arg_ivals[ai]);
+                        } else if (call_arg_kind[ai] == 3) {
+                            fprintf(ir_output, "%s %ld", call_arg_types[ai], call_arg_ivals[ai]);
+                        } else if (call_arg_kind[ai] == 2) {
+                            fprintf(ir_output, "%s %lf", call_arg_types[ai], call_arg_fvals[ai]);
+                        } else {
+                            fprintf(ir_output, "%s %ld", call_arg_types[ai], call_arg_ivals[ai]);
+                        }
                     }
                     fprintf(ir_output, ")\n");
 
