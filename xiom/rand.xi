@@ -1,0 +1,49 @@
+// XIOM — Random Number Generation
+// Copyright (c) 2026 Eleftherios Notas
+// Licensed under the MIT or Apache-2.0 license, at your option.
+
+module xiom.rand
+
+// === RNG trait ===
+pub interface Rng {
+  fn next_int(self) -> Int;
+  fn next_float(self) -> Float64;
+  fn next_bytes(self, buf: &mut Vec[UInt8]);
+}
+
+// === Standard RNG (cryptographically secure where available) ===
+pub type StdRng = { state: Int; } derive[Clone]
+pub fn StdRng.new() -> StdRng;
+pub fn StdRng.from_seed(seed: Int) -> StdRng;
+
+// === Basic random values ===
+pub fn random() -> Float64; // [0, 1)
+pub fn random_int(min: Int, max: Int) -> Int; // [min, max]
+pub fn random_float(min: Float64, max: Float64) -> Float64; // [min, max)
+pub fn random_bool() -> Bool;
+pub fn random_bytes(count: Int) -> Vec[UInt8];
+
+// === Distributions ===
+pub fn sample_uniform(min: Float64, max: Float64) -> Float64;
+pub fn sample_normal(mean: Float64, stddev: Float64) -> Float64;
+pub fn sample_exponential(lambda: Float64) -> Float64;
+pub fn sample_bernoulli(p: Float64) -> Bool;
+pub fn sample_binomial(n: Int, p: Float64) -> Int;
+pub fn sample_poisson(lambda: Float64) -> Int;
+pub fn sample_gamma(shape: Float64, scale: Float64) -> Float64;
+pub fn sample_beta(alpha: Float64, beta: Float64) -> Float64;
+
+// === Shuffle & Pick ===
+pub fn shuffle[T](items: &mut Vec[T]);
+pub fn pick[T](items: &Vec[T]) -> Option<&T>;
+pub fn pick_n[T](items: &Vec[T], n: Int) -> Vec<&T>;
+pub fn weighted_pick[T](items: &Vec[T], weights: &Vec<Float64>) -> Option<&T>;
+
+// === UUID ===
+pub fn uuid_v4() -> Str;
+pub fn uuid_v7() -> Str;
+
+// === Seeding ===
+pub fn seed_from_entropy();
+pub fn seed_from_time();
+pub fn seed_from_value(seed: Int);

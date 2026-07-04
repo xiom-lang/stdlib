@@ -1,0 +1,23 @@
+// XIOM — FFI Library
+// Copyright (c) 2026 Eleftherios Notas
+// Licensed under the MIT or Apache-2.0 license, at your option.
+
+module xiom.ffi
+
+// Declare an external C function
+fn extern_c(name: Str, ...) -> Int;
+
+// Allocate raw memory
+fn alloc(size: Int) -> *UInt8;
+
+// Free raw memory
+fn free(ptr: *UInt8);
+
+// Copy memory
+fn memcpy(dest: *UInt8, src: *UInt8, size: Int);
+
+// Size of type (comptime)
+fn size_of[T]() -> Int;
+
+// Align of type (comptime)
+fn align_of[T]() -> Int;
