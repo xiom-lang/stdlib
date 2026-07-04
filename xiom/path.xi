@@ -8,36 +8,173 @@ pub type Path = { inner: Str; } derive[Eq, Clone, Hash, Ord]
 pub type PathBuf = { inner: Str; } derive[Eq, Clone]
 
 // Path constructors
-pub fn Path.new(s: Str) -> Path;
-pub fn PathBuf.new() -> PathBuf;
-pub fn PathBuf.from(s: Str) -> PathBuf;
+pub fn Path.new(s: Str) -> Path {
+  Path{ inner: s; }
+}
+
+pub fn PathBuf.new() -> PathBuf {
+  PathBuf{ inner: ""; }
+}
+
+pub fn PathBuf.from(s: Str) -> PathBuf {
+  PathBuf{ inner: s; }
+}
 
 // Path operations
-pub fn Path.parent(self) -> Option<Path>;
-pub fn Path.file_name(self) -> Option<Str>;
-pub fn Path.extension(self) -> Option<Str>;
-pub fn Path.file_stem(self) -> Option<Str>;
-pub fn Path.is_absolute(self) -> Bool;
-pub fn Path.is_relative(self) -> Bool;
-pub fn Path.has_root(self) -> Bool;
-pub fn Path.components(self) -> Vec<Str>;
-pub fn Path.to_str(self) -> Str;
-pub fn Path.join(self, child: Str) -> PathBuf;
-pub fn Path.with_extension(self, ext: Str) -> PathBuf;
-pub fn Path.with_file_name(self, name: Str) -> PathBuf;
-pub fn Path.exists(self) -> Bool;
-pub fn Path.is_file(self) -> Bool;
-pub fn Path.is_dir(self) -> Bool;
-pub fn Path.metadata(self) -> Result<Metadata, Str>;
-pub fn Path.canonicalize(self) -> Result<PathBuf, Str>;
-pub fn Path.starts_with(self, base: &Path) -> Bool;
-pub fn Path.ends_with(self, child: &Path) -> Bool;
+pub fn Path.parent(self) -> Option<Path> {
+  var p = parent_path(self.inner);
+  match p {
+    Some(s) => { return Some(Path{ inner: s; }); }
+    None => { return None; }
+  }
+}
+
+pub fn Path.file_name(self) -> Option<Str> {
+  return file_name(self.inner);
+}
+
+pub fn Path.extension(self) -> Option<Str> {
+  return extension(self.inner);
+}
+
+pub fn Path.file_stem(self) -> Option<Str> {
+  var name = file_name(self.inner);
+  match name {
+    Some(n) => {
+      var dot = last_index_of(n, ".");
+      match dot {
+        Some(0) => { return Some(n); }
+        Some(pos) => { return Some(str_slice(n, 0, pos)); }
+        None => { return Some(n); }
+      }
+    }
+    None => { return None; }
+  }
+}
+
+pub fn Path.is_absolute(self) -> Bool {
+  return is_absolute(self.inner);
+}
+
+pub fn Path.is_relative(self) -> Bool {
+  return !is_absolute(self.inner);
+}
+
+pub fn Path.has_root(self) -> Bool {
+  if str_starts_with(self.inner, "/") { return true; }
+  if str_starts_with(self.inner, "\\") { return true; }
+  var colon = index_of(self.inner, ":");
+  match colon {
+    Some(1) => { return true; }
+    _ => { return false; }
+  }
+}
+
+pub fn Path.components(self) -> Vec<Str> {
+  var normalized = replace(self.inner, "\\", "/");
+  return str_split(normalized, "/");
+}
+
+pub fn Path.to_str(self) -> Str {
+  self.inner
+}
+
+pub fn Path.join(self, child: Str) -> PathBuf {
+  PathBuf{ inner: join_paths(self.inner, child); }
+}
+
+pub fn Path.with_extension(self, ext: Str) -> PathBuf {
+  var stem = self.file_stem();
+  match stem {
+    Some(s) => {
+      var new_name = str_concat(str_concat(s, "."), ext);
+      var parent = self.parent();
+      match parent {
+        Some(p) => { return p.join(new_name); }
+        None => { return PathBuf{ inner: new_name; }; }
+      }
+    }
+    None => {
+      var new_name = str_concat(str_concat(self.inner, "."), ext);
+      return PathBuf{ inner: new_name; };
+    }
+  }
+}
+
+pub fn Path.with_file_name(self, name: Str) -> PathBuf {
+  var p = self.parent();
+  match p {
+    Some(parent) => { return parent.join(name); }
+    None => { return PathBuf{ inner: name; }; }
+  }
+}
+
+pub fn Path.exists(self) -> Bool {
+  return file_exists(self.inner);
+}
+
+pub fn Path.is_file(self) -> Bool {
+  if !file_exists(self.inner) { return false; }
+  return !is_dir(self.inner);
+}
+
+pub fn Path.is_dir(self) -> Bool {
+  return is_dir(self.inner);
+}
+
+pub fn Path.metadata(self) -> Result<Metadata, Str> {
+  var result = metadata(self.inner);
+  match result {
+    Ok(m) => { return Ok(m); }
+    Err(e) => { return Err(e.message); }
+  }
+}
+
+pub fn Path.canonicalize(self) -> Result<PathBuf, Str> {
+  return Ok(PathBuf{ inner: self.inner; });
+}
+
+pub fn Path.starts_with(self, base: &Path) -> Bool {
+  return str_starts_with(self.inner, base.inner);
+}
+
+pub fn Path.ends_with(self, child: &Path) -> Bool {
+  return str_ends_with(self.inner, child.inner);
+}
 
 // PathBuf operations
-pub fn PathBuf.push(self, component: Str);
-pub fn PathBuf.pop(self) -> Bool;
-pub fn PathBuf.as_path(self) -> Path;
-pub fn PathBuf.clear(self);
+pub fn PathBuf.push(self, component: Str) {
+  if is_empty(self.inner) {
+    self.inner = component;
+    return;
+  }
+  if str_ends_with(self.inner, "/") || str_ends_with(self.inner, "\\") {
+    self.inner = str_concat(self.inner, component);
+    return;
+  }
+  self.inner = str_concat(str_concat(self.inner, "/"), component);
+}
+
+pub fn PathBuf.pop(self) -> Bool {
+  var p = parent_path(self.inner);
+  match p {
+    Some(parent) => {
+      self.inner = parent;
+      return true;
+    }
+    None => { return false; }
+  }
+}
+
+pub fn PathBuf.as_path(self) -> Path {
+  Path{ inner: self.inner; }
+}
+
+pub fn PathBuf.clear(self) {
+  self.inner = "";
+}
 
 // Utility
-pub fn path_separator() -> Str;
+pub fn path_separator() -> Str {
+  "/"
+}

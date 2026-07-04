@@ -4,6 +4,12 @@
 
 module xiom.hash
 
+// === Hash interface (hasher-based) ===
+pub interface Hash {
+  fn hash(self, hasher: Hasher);
+}
+
+// === Hasher interface ===
 pub interface Hasher {
   fn write(self, bytes: &Vec[UInt8]);
   fn write_int(self, n: Int);
@@ -11,9 +17,89 @@ pub interface Hasher {
   fn finish(self) -> Int;
 }
 
-pub fn hash_value[T: Hash](value: &T) -> Int;
-pub fn hash_combine(seed: Int, hash: Int) -> Int;
+// === BuildHasher interface ===
+pub interface BuildHasher {
+  fn build_hasher(self) -> Hasher;
+}
 
-// Default hasher (SipHash-like)
+// === DefaultHasher — DJB2-based concrete hasher ===
 pub type DefaultHasher = { state: Int; } derive[Clone]
-pub fn DefaultHasher.new() -> DefaultHasher;
+
+pub fn DefaultHasher.new() -> DefaultHasher {
+  return DefaultHasher { state: 5381; };
+}
+
+pub fn DefaultHasher.write(self, bytes: &Vec[UInt8]) {
+  var i: Int = 0;
+  while i < bytes.len() {
+    self.state = ((self.state * 33) + bytes[i]);
+    i = i + 1;
+  }
+}
+
+pub fn DefaultHasher.write_int(self, n: Int) {
+  var val: Int = n;
+  var i: Int = 0;
+  while i < 8 {
+    self.state = ((self.state * 33) + (val & 0xFF));
+    val = val >> 8;
+    i = i + 1;
+  }
+}
+
+pub fn DefaultHasher.write_str(self, s: Str) {
+  var i: Int = 0;
+  let len: Int = str_len(s);
+  while i < len {
+    let ch: Option[Char] = char_at(s, i);
+    if ch.is_some {
+      let code: Int = to_int_from_char(ch.value);
+      self.state = ((self.state * 33) + code);
+    };
+    i = i + 1;
+  }
+}
+
+pub fn DefaultHasher.finish(self) -> Int {
+  return self.state;
+}
+
+// === Hash implementations for standard types ===
+pub fn Int.hash(self, hasher: Hasher) {
+  hasher.write_int(self);
+}
+
+pub fn Str.hash(self, hasher: Hasher) {
+  hasher.write_str(self);
+}
+
+pub fn Bool.hash(self, hasher: Hasher) {
+  let n: Int = 0;
+  if self {
+    n = 1;
+  };
+  hasher.write_int(n);
+}
+
+// === Free functions ===
+pub fn hash_value[T: Hash](value: &T) -> Int {
+  var hasher: DefaultHasher = DefaultHasher.new();
+  value.hash(hasher);
+  return hasher.finish();
+}
+
+pub fn hash_combine(seed: Int, hash: Int) -> Int {
+  return seed ^ (hash + 0x9e3779b9 + (seed << 6) + (seed >> 2));
+}
+
+pub fn hash[T: Hash](value: T) -> UInt64 {
+  var hasher: DefaultHasher = DefaultHasher.new();
+  value.hash(hasher);
+  return hasher.finish();
+}
+
+pub fn sip_hash(data: &Vec[UInt8]) -> UInt64 {
+  var hasher: DefaultHasher = DefaultHasher.new();
+  hasher.write(data);
+  return hasher.finish();
+}

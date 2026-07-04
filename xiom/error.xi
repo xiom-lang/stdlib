@@ -11,12 +11,66 @@ pub interface Error {
 }
 
 pub type ErrorChain = { errors: Vec<Str>; } derive[Clone]
-pub fn Error.chain(self) -> ErrorChain;
-pub fn ErrorChain.display(self) -> Str;
 
-pub fn wrap_error[T, E: Error](result: Result[T, E], context: Str) -> Result[T, Str];
-pub fn context[T, E](result: Result[T, E], msg: Str) -> Result[T, Str];
+pub fn Error.chain(self) -> ErrorChain {
+  var errors: Vec<Str> = Vec[Str].new();
+  errors.push(self.description());
+  var opt = self.source();
+  while opt.is_some {
+    errors.push(opt.value.description());
+    opt = opt.value.source();
+  };
+  return ErrorChain{ errors: errors };
+}
+
+pub fn ErrorChain.display(self) -> Str {
+  var result: Str = "";
+  var i: Int = 0;
+  while i < self.errors.len() {
+    if i > 0 {
+      result = result + ": ";
+    }
+    result = result + self.errors[i];
+    i = i + 1;
+  };
+  return result;
+}
+
+pub fn wrap_error[T, E: Error](result: Result[T, E], context: Str) -> Result[T, Str] {
+  match result {
+    Ok(v) => { return Ok(v); }
+    Err(e) => {
+      var msg: Str = context + ": " + e.description();
+      return Err(msg);
+    }
+  }
+}
+
+pub fn context[T, E](result: Result[T, E], msg: Str) -> Result[T, Str] {
+  match result {
+    Ok(v) => { return Ok(v); }
+    Err(_) => { return Err(msg); }
+  }
+}
 
 pub type Backtrace = { frames: Vec<Str>; } derive[Clone]
-pub fn capture_backtrace() -> Backtrace;
-pub fn Backtrace.display(self) -> Str;
+
+pub fn capture_backtrace() -> Backtrace {
+  return Backtrace{ frames: Vec[Str].new() };
+}
+
+pub fn Backtrace.display(self) -> Str {
+  if self.frames.len() == 0 {
+    return "";
+  }
+  var result: Str = "";
+  var i: Int = 0;
+  while i < self.frames.len() {
+    if i > 0 {
+      result = result + "\n";
+    }
+    result = result + self.frames[i];
+    i = i + 1;
+  };
+  return result;
+}

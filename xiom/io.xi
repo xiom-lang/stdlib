@@ -4,54 +4,371 @@
 
 module xiom.io
 
-// === Console ===
-fn print(msg: Str);
-
-fn println(msg: Str);
-
-fn read_line() -> Str;
-
-fn read_int() -> Result[Int, Str];
-
-fn read_float() -> Result[Float64, Str];
-
-// === File system ===
-fn read_file(path: Str) -> Result[Str, IOError];
-
-fn write_file(path: Str, content: Str) -> Result[Unit, IOError];
-
-fn append_file(path: Str, content: Str) -> Result[Unit, IOError];
-
-fn file_exists(path: Str) -> Bool;
-
-fn is_dir(path: Str) -> Bool;
-
-fn create_dir(path: Str) -> Result[Unit, IOError];
-
-fn list_dir(path: Str) -> Result[Vec[Str], IOError];
-
-fn remove_file(path: Str) -> Result[Unit, IOError];
-
-fn copy_file(src: Str, dst: Str) -> Result[Unit, IOError];
-
-fn rename(src: Str, dst: Str) -> Result[Unit, IOError];
-
-// === Process ===
-fn exit(code: Int);
-
-fn args() -> Vec[Str];
-
-fn env_var(name: Str) -> Option[Str];
-
-// === Time ===
-fn time_now() -> Int;
-
-fn sleep(ms: Int);
+extern "C" {
+  fn printf(format: *UInt8, ...) -> Int32;
+  fn puts(s: *UInt8) -> Int32;
+  fn fgets(buf: *UInt8, size: Int32, stream: *UInt8) -> *UInt8;
+  fn fopen(path: *UInt8, mode: *UInt8) -> *UInt8;
+  fn fclose(file: *UInt8) -> Int32;
+  fn fread(buf: *UInt8, size: UInt, count: UInt, file: *UInt8) -> UInt;
+  fn fwrite(buf: *UInt8, size: UInt, count: UInt, file: *UInt8) -> UInt;
+  fn remove(path: *UInt8) -> Int32;
+  fn rename(old: *UInt8, new: *UInt8) -> Int32;
+  fn xiom_read_file(path: *UInt8) -> *UInt8;
+  fn xiom_file_size(path: *UInt8) -> Int;
+  fn xiom_free(ptr: *UInt8);
+  fn exit(code: Int32);
+  fn getenv(name: *UInt8) -> *UInt8;
+  fn time(t: *Int) -> Int;
+  fn usleep(usec: UInt) -> Int32;
+  fn mkdir(path: *UInt8) -> Int32;
+  fn chmod(path: *UInt8, mode: Int32) -> Int32;
+  fn xiom_stdin() -> *UInt8;
+  fn xiom_stdout() -> *UInt8;
+  fn xiom_stderr() -> *UInt8;
+  fn xiom_get_argc() -> Int;
+  fn xiom_get_argv(i: Int) -> *UInt8;
+  fn opendir(path: *UInt8) -> *UInt8;
+  fn readdir(dir: *UInt8) -> *UInt8;
+  fn closedir(dir: *UInt8) -> Int32;
+  fn xiom_dirent_name(entry: *UInt8) -> *UInt8;
+  fn xiom_stat_is_file(path: *UInt8) -> Int32;
+  fn xiom_stat_is_dir(path: *UInt8) -> Int32;
+  fn xiom_stat_size(path: *UInt8) -> Int;
+  fn xiom_stat_mtime(path: *UInt8) -> Int;
+  fn xiom_stat_ctime(path: *UInt8) -> Int;
+  fn xiom_stat_mode(path: *UInt8) -> Int;
+}
 
 // === Error type ===
 type IOError = {
   message: Str;
   code: Int;
+}
+
+// === SeekFrom ===
+type SeekFrom = enum { Start(Int), End(Int), Current(Int) }
+
+// === Console ===
+fn print(msg: Str) {
+  unsafe {
+    printf("%s", msg.c_str());
+  }
+}
+
+fn println(msg: Str) {
+  unsafe {
+    puts(msg.c_str());
+  }
+}
+
+fn read_line() -> Str {
+  var buf: Vec[UInt8] = Vec[UInt8]::with_capacity(4096);
+  let ptr: *UInt8;
+  unsafe {
+    ptr = fgets(buf.as_mut_ptr(), 4096 as Int32, xiom_stdin());
+  }
+  if ptr == nil {
+    return "";
+  }
+  let raw = Str::from_c_str(ptr);
+  strip_trailing_newline(raw)
+}
+
+fn strip_trailing_newline(s: Str) -> Str {
+  let len = s.len();
+  if len >= 2 and s.byte_at(len - 2) == 13 and s.byte_at(len - 1) == 10 {
+    s.substr(0, len - 2)
+  } elif len >= 1 and s.byte_at(len - 1) == 10 {
+    s.substr(0, len - 1)
+  } elif len >= 1 and s.byte_at(len - 1) == 13 {
+    s.substr(0, len - 1)
+  } else {
+    s
+  }
+}
+
+fn read_int() -> Result[Int, Str] {
+  let line = read_line();
+  let trimmed = line.trim();
+  if trimmed.is_empty() {
+    return Err("empty input");
+  }
+  var sign: Int = 1;
+  var start: Int = 0;
+  if trimmed.byte_at(0) == 45 {
+    sign = -1;
+    start = 1;
+  } elif trimmed.byte_at(0) == 43 {
+    start = 1;
+  }
+  if start == trimmed.len() {
+    return Err("no digits found");
+  }
+  var result: Int = 0;
+  var i = start;
+  while i < trimmed.len() {
+    let b = trimmed.byte_at(i);
+    if b < 48 or b > 57 {
+      return Err("invalid integer: " + line);
+    }
+    result = result * 10 + (b as Int - 48);
+    i = i + 1;
+  }
+  Ok(result * sign)
+}
+
+fn read_float() -> Result[Float64, Str] {
+  let line = read_line();
+  let trimmed = line.trim();
+  if trimmed.is_empty() {
+    return Err("empty input");
+  }
+  var sign: Float64 = 1.0;
+  var start: Int = 0;
+  if trimmed.byte_at(0) == 45 {
+    sign = -1.0;
+    start = 1;
+  } elif trimmed.byte_at(0) == 43 {
+    start = 1;
+  }
+  if start == trimmed.len() {
+    return Err("no digits found");
+  }
+  var int_part: Float64 = 0.0;
+  var frac_part: Float64 = 0.0;
+  var frac_div: Float64 = 1.0;
+  var in_fraction = false;
+  var i = start;
+  while i < trimmed.len() {
+    let b = trimmed.byte_at(i);
+    if b == 46 {
+      if in_fraction {
+        return Err("invalid float: " + line);
+      }
+      in_fraction = true;
+    } elif b >= 48 and b <= 57 {
+      let digit = (b as Float64 - 48.0);
+      if in_fraction {
+        frac_div = frac_div * 10.0;
+        frac_part = frac_part * 10.0 + digit;
+      } else {
+        int_part = int_part * 10.0 + digit;
+      }
+    } else {
+      return Err("invalid float: " + line);
+    }
+    i = i + 1;
+  }
+  Ok(sign * (int_part + frac_part / frac_div))
+}
+
+// === File system ===
+fn read_file(path: Str) -> Result[Str, IOError] {
+  let c_path = path.c_str();
+  let ptr: *UInt8;
+  let size: Int;
+  unsafe {
+    ptr = xiom_read_file(c_path);
+    if ptr == nil {
+      return Err(IOError{ message: "failed to read file: " + path, code: 1 });
+    }
+    size = xiom_file_size(c_path);
+  }
+  var buf: Vec[UInt8] = Vec[UInt8]::with_capacity(size as UInt);
+  unsafe {
+    var i = 0;
+    while i < size {
+      buf.push(*(ptr.offset(i)));
+      i = i + 1;
+    }
+    xiom_free(ptr);
+  }
+  Ok(Str::from_utf8(buf))
+}
+
+fn write_file(path: Str, content: Str) -> Result[Unit, IOError] {
+  let file: *UInt8;
+  unsafe {
+    file = fopen(path.c_str(), "w");
+  }
+  if file == nil {
+    return Err(IOError{ message: "failed to open file for writing: " + path, code: 2 });
+  }
+  let c_content = content.c_str();
+  let content_len = content.len() as UInt;
+  let written: UInt;
+  unsafe {
+    written = fwrite(c_content, 1 as UInt, content_len, file);
+    let _ = fclose(file);
+  }
+  if written != content_len {
+    return Err(IOError{ message: "failed to write all data to: " + path, code: 3 });
+  }
+  Ok(Unit)
+}
+
+fn append_file(path: Str, content: Str) -> Result[Unit, IOError] {
+  let file: *UInt8;
+  unsafe {
+    file = fopen(path.c_str(), "a");
+  }
+  if file == nil {
+    return Err(IOError{ message: "failed to open file for appending: " + path, code: 4 });
+  }
+  let c_content = content.c_str();
+  let content_len = content.len() as UInt;
+  let written: UInt;
+  unsafe {
+    written = fwrite(c_content, 1 as UInt, content_len, file);
+    let _ = fclose(file);
+  }
+  if written != content_len {
+    return Err(IOError{ message: "failed to write all data to: " + path, code: 5 });
+  }
+  Ok(Unit)
+}
+
+fn file_exists(path: Str) -> Bool {
+  let file: *UInt8;
+  unsafe {
+    file = fopen(path.c_str(), "r");
+  }
+  if file == nil {
+    return false;
+  }
+  unsafe {
+    let _ = fclose(file);
+  }
+  true
+}
+
+fn is_dir(path: Str) -> Bool {
+  let result: Int32;
+  unsafe {
+    result = xiom_stat_is_dir(path.c_str());
+  }
+  result != 0
+}
+
+fn create_dir(path: Str) -> Result[Unit, IOError] {
+  let rc: Int32;
+  unsafe {
+    rc = mkdir(path.c_str());
+  }
+  if rc != 0 {
+    return Err(IOError{ message: "failed to create directory: " + path, code: 6 });
+  }
+  Ok(Unit)
+}
+
+fn list_dir(path: Str) -> Result[Vec[Str], IOError] {
+  let dir: *UInt8;
+  unsafe {
+    dir = opendir(path.c_str());
+  }
+  if dir == nil {
+    return Err(IOError{ message: "failed to open directory: " + path, code: 7 });
+  }
+  var entries: Vec[Str] = Vec[Str]::new();
+  var entry: *UInt8;
+  unsafe {
+    entry = readdir(dir);
+  }
+  while entry != nil {
+    let name_ptr: *UInt8;
+    unsafe {
+      name_ptr = xiom_dirent_name(entry);
+    }
+    let name = Str::from_c_str(name_ptr);
+    if name != "." and name != ".." {
+      entries.push(name);
+    }
+    unsafe {
+      entry = readdir(dir);
+    }
+  }
+  unsafe {
+    let _ = closedir(dir);
+  }
+  Ok(entries)
+}
+
+fn remove_file(path: Str) -> Result[Unit, IOError] {
+  let rc: Int32;
+  unsafe {
+    rc = remove(path.c_str());
+  }
+  if rc != 0 {
+    return Err(IOError{ message: "failed to remove file: " + path, code: 8 });
+  }
+  Ok(Unit)
+}
+
+fn copy_file(src: Str, dst: Str) -> Result[Unit, IOError] {
+  let content = read_file(src)?;
+  write_file(dst, content)
+}
+
+fn rename(src: Str, dst: Str) -> Result[Unit, IOError] {
+  let rc: Int32;
+  unsafe {
+    rc = rename(src.c_str(), dst.c_str());
+  }
+  if rc != 0 {
+    return Err(IOError{ message: "failed to rename " + src + " to " + dst, code: 9 });
+  }
+  Ok(Unit)
+}
+
+// === Process ===
+fn exit(code: Int) {
+  unsafe {
+    exit(code as Int32);
+  }
+}
+
+fn args() -> Vec[Str] {
+  let argc: Int;
+  unsafe {
+    argc = xiom_get_argc();
+  }
+  var result: Vec[Str] = Vec[Str]::with_capacity(argc as UInt);
+  var i = 0;
+  while i < argc {
+    let arg_ptr: *UInt8;
+    unsafe {
+      arg_ptr = xiom_get_argv(i);
+    }
+    result.push(Str::from_c_str(arg_ptr));
+    i = i + 1;
+  }
+  result
+}
+
+fn env_var(name: Str) -> Option[Str] {
+  let ptr: *UInt8;
+  unsafe {
+    ptr = getenv(name.c_str());
+  }
+  if ptr == nil {
+    None
+  } else {
+    Some(Str::from_c_str(ptr))
+  }
+}
+
+// === Time ===
+fn time_now() -> Int {
+  unsafe {
+    time(nil)
+  }
+}
+
+fn sleep(ms: Int) {
+  unsafe {
+    usleep((ms as UInt) * 1000 as UInt);
+  }
 }
 
 // === Read / Write / Seek traits ===
@@ -73,16 +390,79 @@ interface Seek {
   fn stream_position(self) -> Result[Int, IOError];
 }
 
-type SeekFrom = enum { Start(Int), End(Int), Current(Int) }
-
 // === Buffered I/O ===
 type BufReader = { inner: Int; buf: Vec[UInt8]; }
-fn BufReader.new(reader: Int) -> BufReader;
-fn BufReader.read_line(self, buf: &mut Str) -> Result[Int, IOError];
-fn BufReader.lines(self) -> Vec[Str];
+
+fn BufReader.new(reader: Int) -> BufReader {
+  var buf: Vec[UInt8] = Vec[UInt8]::with_capacity(4096);
+  BufReader{ inner: reader; buf: buf; }
+}
+
+fn BufReader.read_line(self, buf: &mut Str) -> Result[Int, IOError] {
+  var temp: Vec[UInt8] = Vec[UInt8]::with_capacity(1024);
+  var found_nl = false;
+  var total: Int = 0;
+  while not found_nl {
+    var byte_buf: Vec[UInt8] = Vec[UInt8]::with_capacity(1);
+    let nread: UInt;
+    unsafe {
+      nread = fread(byte_buf.as_mut_ptr(), 1 as UInt, 1 as UInt, self.inner as *UInt8);
+    }
+    if nread == 0 {
+      break;
+    }
+    let b = byte_buf[0];
+    if b == 10 {
+      found_nl = true;
+    } else {
+      temp.push(b);
+      total = total + 1;
+    }
+  }
+  *buf = Str::from_utf8(temp);
+  Ok(total)
+}
+
+fn BufReader.lines(self) -> Vec[Str] {
+  var result: Vec[Str] = Vec[Str]::new();
+  var raw: Vec[UInt8] = Vec[UInt8]::with_capacity(4096);
+  let nread: UInt;
+  unsafe {
+    nread = fread(raw.as_mut_ptr(), 1 as UInt, 4096 as UInt, self.inner as *UInt8);
+  }
+  var i: UInt = 0;
+  var line_start: UInt = 0;
+  while i < nread {
+    if raw[i as Int] == 10 {
+      var line_bytes: Vec[UInt8] = Vec[UInt8]::with_capacity((i - line_start) as UInt);
+      var j = line_start;
+      while j < i {
+        line_bytes.push(raw[j as Int]);
+        j = j + 1;
+      }
+      result.push(Str::from_utf8(line_bytes));
+      line_start = i + 1;
+    }
+    i = i + 1;
+  }
+  if line_start < nread {
+    var line_bytes: Vec[UInt8] = Vec[UInt8]::with_capacity((nread - line_start) as UInt);
+    var j = line_start;
+    while j < nread {
+      line_bytes.push(raw[j as Int]);
+      j = j + 1;
+    }
+    result.push(Str::from_utf8(line_bytes));
+  }
+  result
+}
 
 type BufWriter = { inner: Int; buf: Vec[UInt8]; }
-fn BufWriter.new(writer: Int) -> BufWriter;
+
+fn BufWriter.new(writer: Int) -> BufWriter {
+  var buf: Vec[UInt8] = Vec[UInt8]::with_capacity(4096);
+  BufWriter{ inner: writer; buf: buf; }
+}
 
 // === File metadata ===
 type Metadata = {
@@ -94,23 +474,147 @@ type Metadata = {
   permissions: Int;
 }
 
-fn metadata(path: Str) -> Result[Metadata, IOError];
-fn set_permissions(path: Str, perm: Int) -> Result[Unit, IOError];
+fn metadata(path: Str) -> Result[Metadata, IOError] {
+  let c_path = path.c_str();
+  let is_f: Int32;
+  let is_d: Int32;
+  let sz: Int;
+  let mt: Int;
+  let ct: Int;
+  let mode: Int;
+  unsafe {
+    is_f = xiom_stat_is_file(c_path);
+    is_d = xiom_stat_is_dir(c_path);
+    sz = xiom_stat_size(c_path);
+    mt = xiom_stat_mtime(c_path);
+    ct = xiom_stat_ctime(c_path);
+    mode = xiom_stat_mode(c_path);
+  }
+  if is_f == 0 and is_d == 0 {
+    return Err(IOError{ message: "failed to stat: " + path, code: 10 });
+  }
+  Ok(Metadata{
+    size: sz;
+    is_file: is_f != 0;
+    is_dir: is_d != 0;
+    modified: mt;
+    created: ct;
+    permissions: mode;
+  })
+}
+
+fn set_permissions(path: Str, perm: Int) -> Result[Unit, IOError] {
+  let rc: Int32;
+  unsafe {
+    rc = chmod(path.c_str(), perm as Int32);
+  }
+  if rc != 0 {
+    return Err(IOError{ message: "failed to set permissions: " + path, code: 11 });
+  }
+  Ok(Unit)
+}
 
 // === Standard streams ===
-fn stdin() -> Int;
-fn stdout() -> Int;
-fn stderr() -> Int;
-fn print_line(s: Str);
+fn stdin() -> Int {
+  0
+}
+
+fn stdout() -> Int {
+  1
+}
+
+fn stderr() -> Int {
+  2
+}
+
+fn print_line(s: Str) {
+  unsafe {
+    puts(s.c_str());
+  }
+}
 
 // === Memory I/O ===
 type Cursor = { data: Vec[UInt8]; pos: Int; }
-fn Cursor.new(data: Vec[UInt8]) -> Cursor;
-fn Cursor.into_inner(self) -> Vec[UInt8];
+
+fn Cursor.new(data: Vec[UInt8]) -> Cursor {
+  Cursor{ data: data; pos: 0; }
+}
+
+fn Cursor.into_inner(self) -> Vec[UInt8] {
+  self.data
+}
 
 // === Path operations ===
-fn join_paths(base: Str, child: Str) -> Str;
-fn parent_path(path: Str) -> Option<Str>;
-fn file_name(path: Str) -> Option<Str>;
-fn extension(path: Str) -> Option<Str>;
-fn is_absolute(path: Str) -> Bool;
+fn join_paths(base: Str, child: Str) -> Str {
+  if base.is_empty() {
+    return child;
+  }
+  if child.is_empty() {
+    return base;
+  }
+  let base_ends_sep = base.byte_at(base.len() - 1) == 47;
+  let child_starts_sep = child.byte_at(0) == 47;
+  if base_ends_sep and child_starts_sep {
+    base + child.substr(1, child.len())
+  } elif base_ends_sep or child_starts_sep {
+    base + child
+  } else {
+    base + "/" + child
+  }
+}
+
+fn parent_path(path: Str) -> Option[Str] {
+  var i = path.len() - 1;
+  while i >= 0 {
+    if path.byte_at(i) == 47 {
+      if i == 0 {
+        return Some("/");
+      }
+      return Some(path.substr(0, i));
+    }
+    i = i - 1;
+  }
+  None
+}
+
+fn file_name(path: Str) -> Option[Str] {
+  if path.is_empty() {
+    return None;
+  }
+  var i = path.len() - 1;
+  while i >= 0 {
+    if path.byte_at(i) == 47 {
+      if i == path.len() - 1 {
+        return None;
+      }
+      return Some(path.substr(i + 1, path.len()));
+    }
+    i = i - 1;
+  }
+  Some(path)
+}
+
+fn extension(path: Str) -> Option[Str] {
+  let name = file_name(path)?;
+  if name == "." or name == ".." {
+    return None;
+  }
+  var i = name.len() - 1;
+  while i >= 0 {
+    if name.byte_at(i) == 46 {
+      if i == 0 or i == name.len() - 1 {
+        return None;
+      }
+      return Some(name.substr(i + 1, name.len()));
+    }
+    i = i - 1;
+  }
+  None
+}
+
+fn is_absolute(path: Str) -> Bool {
+  if path.is_empty() {
+    return false;
+  }
+  path.byte_at(0) == 47
+}

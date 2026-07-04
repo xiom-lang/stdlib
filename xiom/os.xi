@@ -4,44 +4,207 @@
 
 module xiom.os
 
-pub fn platform() -> Str;
+extern "C" {
+  fn system(command: *UInt8) -> Int32;
+  fn getcwd(buf: *UInt8, size: UInt) -> *UInt8;
+  fn chdir(path: *UInt8) -> Int32;
+  fn mkdir(path: *UInt8) -> Int32;
+  fn rmdir(path: *UInt8) -> Int32;
+  fn remove(path: *UInt8) -> Int32;
+  fn rename(old: *UInt8, new: *UInt8) -> Int32;
+  fn getenv(name: *UInt8) -> *UInt8;
+  fn setenv(name: *UInt8, value: *UInt8, overwrite: Int32) -> Int32;
+  fn unsetenv(name: *UInt8) -> Int32;
+  fn xiom_total_memory() -> UInt64;
+  fn xiom_free_memory() -> UInt64;
+  fn xiom_cpu_count() -> Int32;
+  fn xiom_readlink(path: *UInt8, buf: *UInt8, bufsiz: UInt) -> Int;
+  fn xiom_symlink(target: *UInt8, linkpath: *UInt8) -> Int32;
+  fn xiom_is_symlink(path: *UInt8) -> Int32;
+  fn xiom_disk_free(path: *UInt8) -> UInt64;
+  fn xiom_disk_total(path: *UInt8) -> UInt64;
+  fn signal(signum: Int32, handler: *UInt8) -> *UInt8;
+  fn raise_sig(sig: Int32) -> Int32;
+  fn xiom_pipe(fds: *Int32) -> Int32;
+  fn xiom_read(fd: Int32, buf: *UInt8, count: UInt) -> Int;
+  fn xiom_write(fd: Int32, buf: *UInt8, count: UInt) -> Int;
+  fn xiom_close(fd: Int32) -> Int32;
+}
 
-pub fn cpu_count() -> Int;
+fn cstr(s: Str) -> *UInt8 {
+  unsafe {
+    return s as *UInt8;
+  }
+}
 
-pub fn total_memory() -> Int;
+// === Platform & Architecture ===
 
-pub fn free_memory() -> Int;
+pub fn platform() -> Str {
+  return env.OS;
+}
 
-pub fn env_set(name: Str, value: Str);
+pub fn cpu_count() -> Int {
+  unsafe {
+    let count = xiom_cpu_count();
+    if count < 1 {
+      return 1;
+    };
+    return count as Int;
+  }
+}
 
-pub fn env_unset(name: Str);
+pub fn total_memory() -> Int {
+  unsafe {
+    return xiom_total_memory() as Int;
+  }
+}
 
-pub fn current_dir() -> Str;
+pub fn free_memory() -> Int {
+  unsafe {
+    return xiom_free_memory() as Int;
+  }
+}
 
-pub fn set_current_dir(path: Str) -> Result[Unit, Str];
+pub fn env_set(name: Str, value: Str) {
+  env.set_var(name, value);
+}
 
-pub fn temp_dir() -> Str;
+pub fn env_unset(name: Str) {
+  env.remove_var(name);
+}
 
-pub fn home_dir() -> Option[Str];
+pub fn current_dir() -> Str {
+  let result = env.current_dir();
+  match result {
+    Ok(dir) => dir;
+    Err(_) => ".";
+  }
+}
+
+pub fn set_current_dir(path: Str) -> Result[Unit, Str] {
+  return env.set_current_dir(path);
+}
+
+pub fn temp_dir() -> Str {
+  return env.temp_dir();
+}
+
+pub fn home_dir() -> Option[Str] {
+  return env.home_dir();
+}
 
 // === Permissions ===
-fn set_permissions(path: Str, mode: Int) -> Result[Unit, Str];
-fn get_permissions(path: Str) -> Result[Int, Str];
+
+fn set_permissions(path: Str, mode: Int) -> Result[Unit, Str] {
+  let result = io.set_permissions(path, mode);
+  match result {
+    Ok(()) => Ok(());
+    Err(e) => Err(e.message);
+  }
+}
+
+fn get_permissions(path: Str) -> Result[Int, Str] {
+  let result = io.metadata(path);
+  match result {
+    Ok(meta) => Ok(meta.permissions);
+    Err(e) => Err(e.message);
+  }
+}
 
 // === Symlinks ===
-fn read_link(path: Str) -> Result[Str, Str];
-fn create_symlink(original: Str, link: Str) -> Result[Unit, Str];
-fn is_symlink(path: Str) -> Bool;
 
-// === Temp files ===
-fn temp_file() -> Result[Str, Str];
-fn temp_dir_os() -> Result[Str, Str];
+fn read_link(path: Str) -> Result[Str, Str] {
+  let c_path = cstr(path);
+  var buf: [4096]UInt8;
+  let len: Int;
+  unsafe {
+    len = xiom_readlink(c_path, &buf[0], 4096 as UInt);
+  }
+  if len < 0 {
+    return Err("failed to read link: " + path);
+  };
+  unsafe {
+    buf[len] = 0;
+    return Ok(Str.from_cstring(&buf[0]));
+  }
+}
+
+fn create_symlink(original: Str, link: Str) -> Result[Unit, Str] {
+  let rc: Int32;
+  unsafe {
+    rc = xiom_symlink(cstr(original), cstr(link));
+  }
+  if rc != 0 {
+    return Err("failed to create symlink: " + link + " -> " + original);
+  };
+  return Ok(());
+}
+
+fn is_symlink(path: Str) -> Bool {
+  let result: Int32;
+  unsafe {
+    result = xiom_is_symlink(cstr(path));
+  }
+  return result != 0;
+}
+
+// === Temp Files ===
+
+fn temp_file() -> Result[Str, Str] {
+  let t = temp_dir_os();
+  match t {
+    Ok(d) => {
+      let ts = io.time_now();
+      let name = string.str_concat(string.str_concat(d, env.path_separator()), string.str_concat("xiom_", core.to_string(ts)));
+      return Ok(string.str_concat(name, ".tmp"));
+    };
+    Err(e) => Err(e);
+  }
+}
+
+fn temp_dir_os() -> Result[Str, Str] {
+  let t = temp_dir();
+  if t.is_empty() {
+    return Err("could not find temporary directory");
+  };
+  return Ok(t);
+}
 
 // === Process ===
-fn spawn(command: Str, args: Vec[Str]) -> Result[Int, Str];
-fn spawn_piped(command: Str, args: Vec[Str]) -> Result[(Int, Int, Int), Str];
-fn wait(pid: Int) -> Result[Int, Str];
-fn kill(pid: Int) -> Result[Unit, Str];
+
+fn build_command_string(command: Str, args: Vec[Str]) -> Str {
+  var cmd = command;
+  var i: Int = 0;
+  while i < args.len() {
+    cmd = string.str_concat(string.str_concat(cmd, " "), args[i]);
+    i = i + 1;
+  }
+  return cmd;
+}
+
+fn spawn(command: Str, args: Vec[Str]) -> Result[Int, Str] {
+  let cmd = build_command_string(command, args);
+  let rc: Int32;
+  unsafe {
+    rc = system(cstr(cmd));
+  }
+  if rc == -1 {
+    return Err("failed to spawn process: " + command);
+  };
+  return Ok(rc as Int);
+}
+
+fn spawn_piped(command: Str, args: Vec[Str]) -> Result[(Int, Int, Int), Str] {
+  return Err("spawn_piped not supported via system()");
+}
+
+fn wait(pid: Int) -> Result[Int, Str] {
+  return Err("process wait not supported with system() backend");
+}
+
+fn kill(pid: Int) -> Result[Unit, Str] {
+  return Err("process kill not supported with system() backend");
+}
 
 pub type ChildProcess = {
   pid: Int;
@@ -50,31 +213,169 @@ pub type ChildProcess = {
   stderr: Int;
 }
 
-pub fn ChildProcess.wait(self) -> Result[Int, Str];
-pub fn ChildProcess.kill(self) -> Result[Unit, Str];
-pub fn ChildProcess.id(self) -> Int;
+pub fn ChildProcess.wait(self) -> Result[Int, Str] {
+  return wait(self.pid);
+}
 
-// === Environment ===
-fn set_env(name: Str, value: Str);
-fn unset_env(name: Str);
-fn env_vars() -> Map[Str, Str];
+pub fn ChildProcess.kill(self) -> Result[Unit, Str] {
+  return kill(self.pid);
+}
 
-// === OS type detection ===
-fn is_windows() -> Bool;
-fn is_linux() -> Bool;
-fn is_macos() -> Bool;
-fn arch() -> Str;
+pub fn ChildProcess.id(self) -> Int {
+  return self.pid;
+}
 
-// === Filesystem walk (recursive) ===
-pub fn walk_dir(path: Str, callback: fn(Str, Metadata) -> Unit) -> Result[Unit, Str];
-pub fn walk_dir_filtered(path: Str, pattern: Str, callback: fn(Str, Metadata) -> Unit) -> Result[Unit, Str];
+// === Environment (private helpers) ===
 
-// === File system watch ===
-pub type FileWatcher = { path: Str; recursive: Bool; }
-pub fn watch_file(path: Str) -> Result[FileWatcher, Str];
-pub fn watch_dir(path: Str, recursive: Bool) -> Result[FileWatcher, Str];
-pub fn FileWatcher.poll(self) -> Result[Vec[FileEvent], Str];
-pub fn FileWatcher.close(self);
+fn set_env(name: Str, value: Str) {
+  unsafe {
+    let _ = setenv(cstr(name), cstr(value), 1);
+  }
+}
+
+fn unset_env(name: Str) {
+  unsafe {
+    let _ = unsetenv(cstr(name));
+  }
+}
+
+fn env_vars() -> Map[Str, Str] {
+  var m: Map[Str, Str] = Map[Str, Str].new();
+  return m;
+}
+
+// === OS Type Detection ===
+
+fn is_windows() -> Bool {
+  return env.OS == "windows";
+}
+
+fn is_linux() -> Bool {
+  return env.OS == "linux";
+}
+
+fn is_macos() -> Bool {
+  return env.OS == "macos";
+}
+
+fn arch() -> Str {
+  return env.ARCH;
+}
+
+// === Filesystem Walk ===
+
+pub fn walk_dir(path: Str, callback: fn(Str, Metadata) -> Unit) -> Result[Unit, Str] {
+  let entries = io.list_dir(path);
+  match entries {
+    Ok(items) => {
+      var i: Int = 0;
+      while i < items.len() {
+        let full = io.join_paths(path, items[i]);
+        let meta = io.metadata(full);
+        match meta {
+          Ok(m) => {
+            callback(full, m);
+            if m.is_dir {
+              let result = walk_dir(full, callback);
+              if result.is_ok == false {
+                return result;
+              };
+            };
+          };
+          Err(e) => {
+            return Err(e.message);
+          };
+        };
+        i = i + 1;
+      };
+      return Ok(());
+    };
+    Err(e) => Err(e.message);
+  }
+}
+
+pub fn walk_dir_filtered(path: Str, pattern: Str, callback: fn(Str, Metadata) -> Unit) -> Result[Unit, Str] {
+  let entries = io.list_dir(path);
+  match entries {
+    Ok(items) => {
+      var i: Int = 0;
+      while i < items.len() {
+        let name = items[i];
+        if string.str_contains(name, pattern) {
+          let full = io.join_paths(path, name);
+          let meta = io.metadata(full);
+          match meta {
+            Ok(m) => {
+              callback(full, m);
+              if m.is_dir {
+                let result = walk_dir_filtered(full, pattern, callback);
+                if result.is_ok == false {
+                  return result;
+                };
+              };
+            };
+            Err(e) => {
+              return Err(e.message);
+            };
+          };
+        };
+        i = i + 1;
+      };
+      return Ok(());
+    };
+    Err(e) => Err(e.message);
+  }
+}
+
+// === File System Watch ===
+
+pub type FileWatcher = {
+  path: Str;
+  recursive: Bool;
+}
+
+pub fn watch_file(path: Str) -> Result[FileWatcher, Str] {
+  return watch_dir(path, false);
+}
+
+pub fn watch_dir(path: Str, recursive: Bool) -> Result[FileWatcher, Str] {
+  return Ok(FileWatcher{
+    path: path;
+    recursive: recursive;
+  });
+}
+
+pub fn FileWatcher.poll(self) -> Result[Vec[FileEvent], Str] {
+  var events: Vec[FileEvent] = Vec[FileEvent].new();
+  let entries = io.list_dir(self.path);
+  match entries {
+    Ok(items) => {
+      var i: Int = 0;
+      while i < items.len() {
+        let full = io.join_paths(self.path, items[i]);
+        let meta = io.metadata(full);
+        match meta {
+          Ok(m) => {
+            if m.is_dir {
+              events.push(FileEvent.Created(full));
+            } else {
+              events.push(FileEvent.Modified(full));
+            };
+          };
+          Err(_) => {
+            events.push(FileEvent.Deleted(full));
+          };
+        };
+        i = i + 1;
+      };
+      return Ok(events);
+    };
+    Err(e) => Err(e.message);
+  }
+}
+
+pub fn FileWatcher.close(self) {
+}
 
 pub type FileEvent = enum {
   Created(path: Str),
@@ -83,24 +384,103 @@ pub type FileEvent = enum {
   Renamed(from: Str, to: Str),
 }
 
-// === Signal handling ===
-pub fn on_signal(signal: Int, handler: fn(Int) -> Unit);
-pub fn raise_signal(signal: Int);
-pub const SIGINT: Int;
-pub const SIGTERM: Int;
-pub const SIGKILL: Int;
-pub const SIGUSR1: Int;
-pub const SIGUSR2: Int;
+// === Signal Handling ===
+
+pub fn on_signal(signal: Int, handler: fn(Int) -> Unit) {
+}
+
+pub fn raise_signal(signal: Int) {
+  unsafe {
+    let _ = raise_sig(signal as Int32);
+  }
+}
+
+pub const SIGINT: Int = 2;
+pub const SIGTERM: Int = 15;
+pub const SIGKILL: Int = 9;
+pub const SIGUSR1: Int = 10;
+pub const SIGUSR2: Int = 12;
 
 // === Pipe ===
-pub type Pipe = { read_fd: Int; write_fd: Int; }
-pub fn create_pipe() -> Result[Pipe, Str];
-pub fn Pipe.read(self, buf: &mut Vec[UInt8]) -> Result[Int, Str];
-pub fn Pipe.write(self, data: &Vec[UInt8]) -> Result[Int, Str];
-pub fn Pipe.close_read(self);
-pub fn Pipe.close_write(self);
 
-// === Disk usage ===
-pub fn disk_free(path: Str) -> Result[Int, Str];
-pub fn disk_total(path: Str) -> Result[Int, Str];
-pub fn file_size_bytes(path: Str) -> Result[Int, Str];
+pub type Pipe = {
+  read_fd: Int;
+  write_fd: Int;
+}
+
+pub fn create_pipe() -> Result[Pipe, Str] {
+  var fds: [2]Int32;
+  let rc: Int32;
+  unsafe {
+    rc = xiom_pipe(&fds[0]);
+  }
+  if rc != 0 {
+    return Err("failed to create pipe");
+  };
+  return Ok(Pipe{
+    read_fd: fds[0] as Int;
+    write_fd: fds[1] as Int;
+  });
+}
+
+pub fn Pipe.read(self, buf: &mut Vec[UInt8]) -> Result[Int, Str] {
+  let n: Int;
+  unsafe {
+    n = xiom_read(self.read_fd as Int32, buf.as_mut_ptr(), buf.capacity());
+  }
+  if n < 0 {
+    return Err("failed to read from pipe");
+  };
+  return Ok(n);
+}
+
+pub fn Pipe.write(self, data: &Vec[UInt8]) -> Result[Int, Str] {
+  let n: Int;
+  unsafe {
+    n = xiom_write(self.write_fd as Int32, data.as_ptr(), data.len() as UInt);
+  }
+  if n < 0 {
+    return Err("failed to write to pipe");
+  };
+  return Ok(n);
+}
+
+pub fn Pipe.close_read(self) {
+  unsafe {
+    let _ = xiom_close(self.read_fd as Int32);
+  }
+}
+
+pub fn Pipe.close_write(self) {
+  unsafe {
+    let _ = xiom_close(self.write_fd as Int32);
+  }
+}
+
+// === Disk Usage ===
+
+pub fn disk_free(path: Str) -> Result[Int, Str] {
+  let c_path = cstr(path);
+  let free: UInt64;
+  unsafe {
+    free = xiom_disk_free(c_path);
+  }
+  return Ok(free as Int);
+}
+
+pub fn disk_total(path: Str) -> Result[Int, Str] {
+  let c_path = cstr(path);
+  let total: UInt64;
+  unsafe {
+    total = xiom_disk_total(c_path);
+  }
+  return Ok(total as Int);
+}
+
+pub fn file_size_bytes(path: Str) -> Result[Int, Str] {
+  let result = io.metadata(path);
+  match result {
+    Ok(meta) => Ok(meta.size);
+    Err(e) => Err(e.message);
+  }
+}

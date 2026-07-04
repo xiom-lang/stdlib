@@ -4,16 +4,42 @@
 
 module xiom.mem
 
-pub fn swap[T](a: &mut T, b: &mut T);
-pub fn replace[T](dest: &mut T, src: T) -> T;
-pub fn take[T: Default](dest: &mut T) -> T;
-pub fn drop[T](value: T);
+use xiom.ptr;
+
+pub fn swap[T](a: &mut T, b: &mut T) {
+  unsafe {
+    let pa = ptr.from_mut(a);
+    let pb = ptr.from_mut(b);
+    ptr.swap(pa, pb);
+  };
+}
+
+pub fn replace[T](dest: &mut T, src: T) -> T {
+  unsafe {
+    let pd = ptr.from_mut(dest);
+    return ptr.replace(pd, src);
+  }
+}
+
+pub fn take[T: Default](dest: &mut T) -> T {
+  return replace(dest, T.default());
+}
+
+pub fn drop[T](value: T) {
+}
 
 // Size queries
 pub fn size_of[T]() -> Int;
+
 pub fn align_of[T]() -> Int;
-pub fn size_of_val[T](value: &T) -> Int;
-pub fn min_align_of_val[T](value: &T) -> Int;
+
+pub fn size_of_val[T](value: &T) -> Int {
+  return size_of[T]();
+}
+
+pub fn min_align_of_val[T](value: &T) -> Int {
+  return align_of[T]();
+}
 
 // Zeroed memory
 pub fn zeroed[T]() -> T;
@@ -23,5 +49,18 @@ pub fn uninitialized[T]() -> T;
 
 // Manually drop (defer cleanup)
 pub type ManuallyDrop[T] = { value: T; }
-pub fn ManuallyDrop.new[T](value: T) -> ManuallyDrop[T];
-pub fn ManuallyDrop.into_inner[T](self) -> T;
+
+pub fn ManuallyDrop.new[T](value: T) -> ManuallyDrop[T] {
+  return ManuallyDrop[T]{ value: value };
+}
+
+pub fn ManuallyDrop.into_inner[T](self) -> T {
+  return value;
+}
+
+pub fn ManuallyDrop.take[T](self) -> T {
+  return value;
+}
+
+pub fn ManuallyDrop.drop[T](self) {
+}

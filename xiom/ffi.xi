@@ -4,20 +4,40 @@
 
 module xiom.ffi
 
-// Declare an external C function
-fn extern_c(name: Str, ...) -> Int;
+extern "C" {
+  fn malloc(size: UInt) -> *UInt8;
+  fn free(ptr: *UInt8);
+  fn memcpy(dest: *UInt8, src: *UInt8, size: UInt);
+}
 
-// Allocate raw memory
-fn alloc(size: Int) -> *UInt8;
+pub fn extern_c(name: Str, ...) -> Int {
+  unsafe {
+    return 0;
+  }
+}
 
-// Free raw memory
-fn free(ptr: *UInt8);
+pub fn alloc(size: Int) -> *UInt8 {
+  unsafe {
+    return malloc(size as UInt);
+  }
+}
 
-// Copy memory
-fn memcpy(dest: *UInt8, src: *UInt8, size: Int);
+pub fn free(ptr: *UInt8) {
+  unsafe {
+    free(ptr);
+  }
+}
 
-// Size of type (comptime)
-fn size_of[T]() -> Int;
+pub fn memcpy(dest: *UInt8, src: *UInt8, size: Int) {
+  unsafe {
+    memcpy(dest, src, size as UInt);
+  }
+}
 
-// Align of type (comptime)
-fn align_of[T]() -> Int;
+pub fn size_of[T]() -> Int {
+  return 0;
+}
+
+pub fn align_of[T]() -> Int {
+  return 0;
+}
