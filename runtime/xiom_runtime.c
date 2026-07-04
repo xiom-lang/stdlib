@@ -4,6 +4,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#ifdef _WIN32
+#include <windows.h>
+#include <io.h>
+#include <fcntl.h>
+#else
+#include <dirent.h>
+#include <unistd.h>
+#include <sys/statvfs.h>
+#endif
 
 // ============================================================================
 // File I/O
@@ -2994,3 +3005,331 @@ void xiom_fn_emit_all(void) {
         fprintf(ir_output, "}\n\n");
     }
 }
+
+// ============================================================================
+// File Descriptor Access
+// ============================================================================
+
+int xiom_stdin(void) {
+#ifdef _WIN32
+    return _fileno(stdin);
+#else
+    return 0;
+#endif
+}
+
+int xiom_stdout(void) {
+#ifdef _WIN32
+    return _fileno(stdout);
+#else
+    return 1;
+#endif
+}
+
+int xiom_stderr(void) {
+#ifdef _WIN32
+    return _fileno(stderr);
+#else
+    return 2;
+#endif
+}
+
+// ============================================================================
+// Command Line Arguments
+// ============================================================================
+
+static int xiom_argc = 0;
+static char** xiom_argv = NULL;
+
+void xiom_set_args(int argc, char** argv) {
+    xiom_argc = argc;
+    xiom_argv = argv;
+}
+
+int xiom_get_argc(void) {
+    return xiom_argc;
+}
+
+const char* xiom_get_argv(int i) {
+    if (i >= 0 && i < xiom_argc) {
+        return xiom_argv[i];
+    }
+    return "";
+}
+
+// ============================================================================
+// File Stat Operations
+// ============================================================================
+
+#ifdef _WIN32
+#define stat_t  struct _stat64
+#define xiom_stat _stat64
+#else
+#define stat_t  struct stat
+#define xiom_stat stat
+#endif
+
+int xiom_stat_is_file(const char* path) {
+    stat_t st;
+    if (xiom_stat(path, &st) != 0) return 0;
+#ifdef _WIN32
+    return (st.st_mode & _S_IFREG) ? 1 : 0;
+#else
+    return S_ISREG(st.st_mode) ? 1 : 0;
+#endif
+}
+
+int xiom_stat_is_dir(const char* path) {
+    stat_t st;
+    if (xiom_stat(path, &st) != 0) return 0;
+#ifdef _WIN32
+    return (st.st_mode & _S_IFDIR) ? 1 : 0;
+#else
+    return S_ISDIR(st.st_mode) ? 1 : 0;
+#endif
+}
+
+long xiom_stat_size(const char* path) {
+    stat_t st;
+    if (xiom_stat(path, &st) != 0) return -1;
+    return (long)st.st_size;
+}
+
+long xiom_stat_mtime(const char* path) {
+    stat_t st;
+    if (xiom_stat(path, &st) != 0) return -1;
+    return (long)st.st_mtime;
+}
+
+long xiom_stat_ctime(const char* path) {
+    stat_t st;
+    if (xiom_stat(path, &st) != 0) return -1;
+    return (long)st.st_ctime;
+}
+
+int xiom_stat_mode(const char* path) {
+    stat_t st;
+    if (xiom_stat(path, &st) != 0) return -1;
+    return (int)(st.st_mode & 0777);
+}
+
+// ============================================================================
+// Directory Entry Name
+// ============================================================================
+
+#ifndef _WIN32
+const char* xiom_dirent_name(void* dir_ptr, int index) {
+    (void)dir_ptr;
+    DIR* dir = opendir(".");
+    if (!dir) return "";
+    struct dirent* entry;
+    int i = 0;
+    while ((entry = readdir(dir)) != NULL) {
+        if (i == index) {
+            static char name[1024];
+            strncpy(name, entry->d_name, 1023);
+            name[1023] = '\0';
+            closedir(dir);
+            return name;
+        }
+        i++;
+    }
+    closedir(dir);
+    return "";
+}
+#else
+// Windows: use FindFirstFile/FindNextFile
+const char* xiom_dirent_name(void* dir_ptr, int index) {
+    (void)dir_ptr;
+    WIN32_FIND_DATAA findData;
+    HANDLE hFind = FindFirstFileA(".\\*", &findData);
+    if (hFind == INVALID_HANDLE_VALUE) return "";
+    int i = 0;
+    do {
+        if (i == index) {
+            static char name[1024];
+            strncpy(name, findData.cFileName, 1023);
+            name[1023] = '\0';
+            FindClose(hFind);
+            return name;
+        }
+        i++;
+    } while (FindNextFileA(hFind, &findData));
+    FindClose(hFind);
+    return "";
+}
+#endif
+
+// ============================================================================
+// System Info
+// ============================================================================
+
+#ifdef _WIN32
+
+int xiom_cpu_count(void) {
+    SYSTEM_INFO si;
+    GetSystemInfo(&si);
+    return (int)si.dwNumberOfProcessors;
+}
+
+long xiom_total_memory(void) {
+    MEMORYSTATUSEX ms;
+    ms.dwLength = sizeof(ms);
+    if (!GlobalMemoryStatusEx(&ms)) return -1;
+    return (long)ms.ullTotalPhys;
+}
+
+long xiom_free_memory(void) {
+    MEMORYSTATUSEX ms;
+    ms.dwLength = sizeof(ms);
+    if (!GlobalMemoryStatusEx(&ms)) return -1;
+    return (long)ms.ullAvailPhys;
+}
+
+#else
+
+int xiom_cpu_count(void) {
+    long n = sysconf(_SC_NPROCESSORS_ONLN);
+    return (n < 0) ? 1 : (int)n;
+}
+
+long xiom_total_memory(void) {
+    long pages = sysconf(_SC_PHYS_PAGES);
+    long page_size = sysconf(_SC_PAGE_SIZE);
+    if (pages < 0 || page_size < 0) return -1;
+    return pages * page_size;
+}
+
+long xiom_free_memory(void) {
+    long pages = sysconf(_SC_AVPHYS_PAGES);
+    long page_size = sysconf(_SC_PAGE_SIZE);
+    if (pages < 0 || page_size < 0) return -1;
+    return pages * page_size;
+}
+
+#endif
+
+// ============================================================================
+// Symlink Operations
+// ============================================================================
+
+#ifdef _WIN32
+
+int xiom_readlink(const char* path, char* buf, long bufsize) {
+    (void)path;
+    (void)buf;
+    (void)bufsize;
+    return -1;
+}
+
+int xiom_symlink(const char* target, const char* linkpath) {
+    (void)target;
+    (void)linkpath;
+    return -1;
+}
+
+int xiom_is_symlink(const char* path) {
+    (void)path;
+    return 0;
+}
+
+#else
+
+int xiom_readlink(const char* path, char* buf, long bufsize) {
+    ssize_t n = readlink(path, buf, (size_t)bufsize - 1);
+    if (n < 0) return -1;
+    buf[n] = '\0';
+    return (int)n;
+}
+
+int xiom_symlink(const char* target, const char* linkpath) {
+    return symlink(target, linkpath);
+}
+
+int xiom_is_symlink(const char* path) {
+    struct stat st;
+    if (lstat(path, &st) != 0) return 0;
+    return S_ISLNK(st.st_mode) ? 1 : 0;
+}
+
+#endif
+
+// ============================================================================
+// Disk Space
+// ============================================================================
+
+#ifdef _WIN32
+
+long xiom_disk_free(const char* path) {
+    ULARGE_INTEGER free;
+    if (GetDiskFreeSpaceExA(path, &free, NULL, NULL)) {
+        return (long)free.QuadPart;
+    }
+    return -1;
+}
+
+long xiom_disk_total(const char* path) {
+    ULARGE_INTEGER total;
+    if (GetDiskFreeSpaceExA(path, NULL, &total, NULL)) {
+        return (long)total.QuadPart;
+    }
+    return -1;
+}
+
+#else
+
+long xiom_disk_free(const char* path) {
+    struct statvfs fs;
+    if (statvfs(path, &fs) != 0) return -1;
+    return (long)(fs.f_bavail * fs.f_frsize);
+}
+
+long xiom_disk_total(const char* path) {
+    struct statvfs fs;
+    if (statvfs(path, &fs) != 0) return -1;
+    return (long)(fs.f_blocks * fs.f_frsize);
+}
+
+#endif
+
+// ============================================================================
+// Pipe & I/O
+// ============================================================================
+
+#ifdef _WIN32
+
+int xiom_pipe(int fds[2]) {
+    return _pipe(fds, 4096, _O_BINARY);
+}
+
+int xiom_read(int fd, char* buf, long count) {
+    return _read(fd, buf, (unsigned int)count);
+}
+
+int xiom_write(int fd, const char* buf, long count) {
+    return _write(fd, buf, (unsigned int)count);
+}
+
+int xiom_close(int fd) {
+    return _close(fd);
+}
+
+#else
+
+int xiom_pipe(int fds[2]) {
+    return pipe(fds);
+}
+
+int xiom_read(int fd, char* buf, long count) {
+    return (int)read(fd, buf, (size_t)count);
+}
+
+int xiom_write(int fd, const char* buf, long count) {
+    return (int)write(fd, buf, (size_t)count);
+}
+
+int xiom_close(int fd) {
+    return close(fd);
+}
+
+#endif

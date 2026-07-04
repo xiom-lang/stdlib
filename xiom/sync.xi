@@ -2,7 +2,7 @@
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 
-module xiom.sync
+module xiom.sync;
 
 use xiom.alloc
 
@@ -24,11 +24,11 @@ pub fn Mutex.try_lock[T](self) -> Option[MutexGuard[T]] {
 pub type MutexGuard[T] = { mutex: Mutex[T]; }
 
 pub fn MutexGuard.get[T](self) -> T {
-  self.mutex.data
+  mutex.data
 }
 
 pub fn MutexGuard.get_mut[T](self) -> T {
-  self.mutex.data
+  mutex.data
 }
 
 // === RwLock ===
@@ -82,8 +82,8 @@ pub fn Once.new() -> Once {
 }
 
 pub fn Once.call_once(self, f: fn()) {
-  if !self.done {
-    self.done = true;
+  if !done {
+    done = true;
     f();
   }
 }
@@ -111,25 +111,25 @@ pub fn Arc.new[T](value: T) -> Arc[T] {
 
 pub fn Arc.clone[T](self) -> Arc[T] {
   unsafe {
-    (*self.ptr).count = (*self.ptr).count + 1;
+    (*ptr).count = (*ptr).count + 1;
   };
-  Arc[T]{ ptr: self.ptr; }
+  Arc[T]{ ptr: ptr; }
 }
 
 pub fn Arc.get[T](self) -> T {
   unsafe {
-    (*self.ptr).value
+    (*ptr).value
   }
 }
 
 pub fn Arc.strong_count[T](self) -> Int {
   unsafe {
-    (*self.ptr).count
+    (*ptr).count
   }
 }
 
 pub fn Arc.ptr_eq[T, U](self, other: &Arc[U]) -> Bool {
-  self.ptr as *UInt8 == other.ptr as *UInt8
+  ptr as *UInt8 == other.ptr as *UInt8
 }
 
 // === Atomic types ===
@@ -141,16 +141,16 @@ pub fn AtomicBool.new(val: Bool) -> AtomicBool {
 }
 
 pub fn AtomicBool.load(self) -> Bool {
-  self.val
+  val
 }
 
 pub fn AtomicBool.store(self, val: Bool) {
-  self.val = val;
+  val = val;
 }
 
 pub fn AtomicBool.swap(self, val: Bool) -> Bool {
-  let old = self.val;
-  self.val = val;
+  let old = val;
+  val = val;
   old
 }
 
@@ -159,22 +159,22 @@ pub fn AtomicInt.new(val: Int) -> AtomicInt {
 }
 
 pub fn AtomicInt.load(self) -> Int {
-  self.val
+  val
 }
 
 pub fn AtomicInt.store(self, val: Int) {
-  self.val = val;
+  val = val;
 }
 
 pub fn AtomicInt.fetch_add(self, val: Int) -> Int {
-  let old = self.val;
-  self.val = self.val + val;
+  let old = val;
+  val = val + val;
   old
 }
 
 pub fn AtomicInt.fetch_sub(self, val: Int) -> Int {
-  let old = self.val;
-  self.val = self.val - val;
+  let old = val;
+  val = val - val;
   old
 }
 

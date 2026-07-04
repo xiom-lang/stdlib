@@ -51,5 +51,11 @@ package xiom_stdlib {
     "core_tests",
     "collections_tests",
     "integration_tests",
+    "string_tests",
+    "math_tests",
+    "io_tests",
+    "memory_tests",
+    "sync_net_tests",
+    "ecosystem_tests",
   ];
 }
