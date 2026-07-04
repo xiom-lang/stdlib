@@ -51,7 +51,7 @@ long xiom_str_len(const char* str) {
 // String interning — XIOM uses Int IDs for all names
 // ============================================================================
 
-#define MAX_STRINGS 1024
+#define MAX_STRINGS 16384
 static char* string_table[MAX_STRINGS];
 static int string_count = 0;
 
@@ -313,7 +313,7 @@ void xiom_ir_ret_lit(long val) {
 // Function Table — stores parsed function info for later IR emission
 // ============================================================================
 
-#define MAX_FUNCTIONS 256
+#define MAX_FUNCTIONS 8192
 
 typedef struct {
     long name_id;       // interned function name
@@ -429,7 +429,7 @@ static int is_body_ident_char(char c) {
     return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_';
 }
 
-#define MAX_LOCALS 64
+#define MAX_LOCALS 512
 
 static int find_local_reg(const char* name, long name_len,
                           const char names[][64], const int regs[], int count) {
@@ -529,6 +529,7 @@ static void emit_body_ir(const char* source, long body_start, long body_end, lon
     int pc = param_count > 0 ? param_count : 1;
 
     // Local variable table: maps name → alloca register
+    // NOTE: MAX_LOCALS=512 → ~35KB stack per call frame (names 32KB + regs 2KB)
     char local_names[MAX_LOCALS][64];
     int local_regs[MAX_LOCALS];
     int local_count = 0;
@@ -670,7 +671,7 @@ static void emit_body_ir(const char* source, long body_start, long body_end, lon
 
                     // --- Pass 1: emit all argument loads as separate instructions ---
                     // Also collect argument info for the call line
-                    #define MAX_CALL_ARGS 64
+                    #define MAX_CALL_ARGS 256
                     const char* call_arg_types[MAX_CALL_ARGS];
                     long call_arg_ivals[MAX_CALL_ARGS];
                     double call_arg_fvals[MAX_CALL_ARGS];
@@ -2355,7 +2356,7 @@ static void emit_body_ir(const char* source, long body_start, long body_end, lon
 // Uses a depth limit to prevent infinite recursion on malformed sources
 // ============================================================================
 static int _tl_depth = 0;
-#define MAX_TOPLEVEL_DEPTH 8
+#define MAX_TOPLEVEL_DEPTH 32
 
 static void emit_top_level_ir(const char* source, long source_len) {
     if (!source || source_len <= 0) return;
