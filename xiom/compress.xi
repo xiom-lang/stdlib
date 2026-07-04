@@ -1,0 +1,46 @@
+// XIOM — Compression
+// Copyright (c) 2026 Eleftherios Notas
+// Licensed under the MIT or Apache-2.0 license, at your option.
+
+module xiom.compress
+
+// === Compression traits ===
+pub interface Compressor {
+  fn compress(self, data: &Vec[UInt8]) -> Result<Vec[UInt8], Str>;
+  fn decompress(self, data: &Vec[UInt8]) -> Result<Vec[UInt8], Str>;
+}
+
+// === Gzip ===
+pub type GzipCompressor = { level: Int; } // 0=none, 1=fast, 9=best
+pub fn GzipCompressor.new() -> GzipCompressor;
+pub fn GzipCompressor.with_level(level: Int) -> GzipCompressor;
+pub fn gzip_compress(data: &Vec[UInt8]) -> Result<Vec[UInt8], Str>;
+pub fn gzip_decompress(data: &Vec[UInt8]) -> Result<Vec[UInt8], Str>;
+pub fn gzip_compress_level(data: &Vec[UInt8], level: Int) -> Result<Vec[UInt8], Str>;
+
+// === Zlib / Deflate ===
+pub fn deflate_compress(data: &Vec[UInt8]) -> Result<Vec[UInt8], Str>;
+pub fn deflate_decompress(data: &Vec[UInt8]) -> Result<Vec[UInt8], Str>;
+pub fn deflate_compress_level(data: &Vec[UInt8], level: Int) -> Result<Vec[UInt8], Str>;
+
+pub fn zlib_compress(data: &Vec[UInt8]) -> Result<Vec[UInt8], Str>;
+pub fn zlib_decompress(data: &Vec[UInt8]) -> Result<Vec[UInt8], Str>;
+pub fn zlib_compress_level(data: &Vec[UInt8], level: Int) -> Result<Vec[UInt8], Str>;
+
+// === Brotli ===
+pub fn brotli_compress(data: &Vec[UInt8]) -> Result<Vec[UInt8], Str>;
+pub fn brotli_decompress(data: &Vec[UInt8]) -> Result<Vec[UInt8], Str>;
+pub fn brotli_compress_level(data: &Vec[UInt8], quality: Int) -> Result<Vec[UInt8], Str>;
+
+// === LZ4 (fast) ===
+pub fn lz4_compress(data: &Vec[UInt8]) -> Result<Vec[UInt8], Str>;
+pub fn lz4_decompress(data: &Vec[UInt8]) -> Result<Vec[UInt8], Str>;
+
+// === Snappy (fast, Google) ===
+pub fn snappy_compress(data: &Vec[UInt8]) -> Result<Vec[UInt8], Str>;
+pub fn snappy_decompress(data: &Vec[UInt8]) -> Result<Vec[UInt8], Str>;
+
+// === Utility ===
+pub fn compression_ratio(original: Int, compressed: Int) -> Float64;
+pub fn is_compressed(data: &Vec[UInt8]) -> Bool; // heuristic
+pub fn detect_format(data: &Vec[UInt8]) -> Str; // "gzip", "zlib", "brotli", "unknown"

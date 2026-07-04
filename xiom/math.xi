@@ -1,0 +1,88 @@
+// XIOM — Math Library
+// Copyright (c) 2026 Eleftherios Notas
+// Licensed under the MIT or Apache-2.0 license, at your option.
+
+module xiom.math
+
+// === Constants ===
+const PI: Float64;
+const E: Float64;
+const TAU: Float64;
+
+// === Basic ===
+fn sqrt(x: Float64) -> Float64;
+
+fn pow(base: Float64, exp: Float64) -> Float64;
+
+fn abs_int(x: Int) -> Int;
+
+fn abs_float(x: Float64) -> Float64;
+
+fn min_int(a: Int, b: Int) -> Int;
+
+fn max_int(a: Int, b: Int) -> Int;
+
+fn min_float(a: Float64, b: Float64) -> Float64;
+
+fn max_float(a: Float64, b: Float64) -> Float64;
+
+fn floor(x: Float64) -> Int;
+
+fn ceil(x: Float64) -> Int;
+
+fn round(x: Float64) -> Int;
+
+// === Trig ===
+fn sin(x: Float64) -> Float64;
+
+fn cos(x: Float64) -> Float64;
+
+fn tan(x: Float64) -> Float64;
+
+fn asin(x: Float64) -> Float64;
+
+fn acos(x: Float64) -> Float64;
+
+fn atan(x: Float64) -> Float64;
+
+fn atan2(y: Float64, x: Float64) -> Float64;
+
+// === Log/Exp ===
+fn exp(x: Float64) -> Float64;
+
+fn ln(x: Float64) -> Float64;
+
+fn log10(x: Float64) -> Float64;
+
+fn log2(x: Float64) -> Float64;
+
+// === Bitwise ===
+fn bit_and(a: Int, b: Int) -> Int;
+
+fn bit_or(a: Int, b: Int) -> Int;
+
+fn bit_xor(a: Int, b: Int) -> Int;
+
+fn bit_not(a: Int) -> Int;
+
+fn shl(a: Int, n: Int) -> Int;
+
+fn shr(a: Int, n: Int) -> Int;
+
+// === Random ===
+fn seed_rng(seed: Int);
+
+fn random() -> Float64;
+
+fn random_range(min: Int, max: Int) -> Int;
+
+fn random_float() -> Float64;
+
+// === Misc ===
+fn clamp(x: Float64, min: Float64, max: Float64) -> Float64;
+
+fn lerp(a: Float64, b: Float64, t: Float64) -> Float64;
+
+fn is_nan(x: Float64) -> Bool;
+
+fn is_inf(x: Float64) -> Bool;

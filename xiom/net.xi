@@ -1,0 +1,59 @@
+// XIOM — Networking Library
+// Copyright (c) 2026 Eleftherios Notas
+// Licensed under the MIT or Apache-2.0 license, at your option.
+
+module xiom.net
+
+// === TCP ===
+pub fn tcp_connect(host: Str, port: Int) -> Result[TcpStream, NetError];
+
+pub fn tcp_listen(host: Str, port: Int) -> Result[TcpListener, NetError];
+
+pub type TcpStream = { fd: Int; } derive[Clone]
+
+pub type TcpListener = { fd: Int; } derive[Clone]
+
+pub type NetError = { message: Str; code: Int; }
+
+pub fn TcpStream.read(self, buf: &mut Vec[UInt8]) -> Result[Int, NetError];
+
+pub fn TcpStream.write(self, data: &Vec[UInt8]) -> Result[Int, NetError];
+
+pub fn TcpStream.close(self) -> Result[Unit, NetError];
+
+pub fn TcpListener.accept(self) -> Result[(TcpStream, Str), NetError];
+
+// === HTTP ===
+pub fn http_get(url: Str) -> Result[HttpResponse, NetError];
+
+pub fn http_post(url: Str, body: Str) -> Result[HttpResponse, NetError];
+
+pub type HttpResponse = {
+  status: Int;
+  body: Str;
+} derive[Clone]
+
+// === UDP ===
+fn udp_bind(host: Str, port: Int) -> Result[UdpSocket, NetError];
+pub type UdpSocket = { fd: Int; }
+pub fn UdpSocket.send_to(self, data: &Vec[UInt8], addr: Str, port: Int) -> Result[Int, NetError];
+pub fn UdpSocket.recv_from(self, buf: &mut Vec[UInt8]) -> Result[(Int, Str, Int), NetError];
+pub fn UdpSocket.close(self) -> Result[Unit, NetError];
+
+// === DNS ===
+fn resolve_host(hostname: Str) -> Result[Vec[Str], NetError];
+fn local_addr(port: Int) -> Result[Str, NetError];
+
+// === URL parsing ===
+pub type UrlParts = {
+  scheme: Str;
+  host: Str;
+  port: Int;
+  path: Str;
+  query: Str;
+  fragment: Str;
+}
+fn parse_url(url: Str) -> Result[UrlParts, NetError];
+
+// === HTTP methods ===
+pub type HttpMethod = enum { GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS }

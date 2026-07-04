@@ -1,0 +1,165 @@
+// XIOM — Collections Library
+// Copyright (c) 2026 Eleftherios Notas
+// Licensed under the MIT or Apache-2.0 license, at your option.
+
+module xiom.collections
+
+// === Vec ===
+type Vec[T] = {
+  data: *T;
+  len: Int;
+  cap: Int;
+}
+
+fn Vec.new[T]() -> Vec[T];
+
+fn Vec.with_capacity[T](cap: Int) -> Vec[T];
+
+fn Vec.push[T](value: T);
+
+fn Vec.pop[T]() -> Option[T];
+
+fn Vec.get[T](index: Int) -> Option<&T>;
+
+fn Vec.len[T]() -> Int;
+
+fn Vec.is_empty[T]() -> Bool;
+
+fn Vec.clear[T]();
+
+fn Vec.insert[T](index: Int, value: T);
+
+fn Vec.remove[T](index: Int) -> Option[T];
+
+fn Vec.first[T]() -> Option<&T>;
+
+fn Vec.last[T]() -> Option<&T>;
+
+fn Vec.set[T](index: Int, value: T);
+
+// === Map ===
+type Map[K, V] = {}
+
+fn Map.new[K, V]() -> Map[K, V];
+
+fn Map.insert[K, V](key: K, value: V);
+
+fn Map.get[K, V](key: &K) -> Option<&V>;
+
+fn Map.remove[K, V](key: &K) -> Option[V];
+
+fn Map.contains[K, V](key: &K) -> Bool;
+
+fn Map.len[K, V]() -> Int;
+
+fn Map.keys[K, V]() -> Vec[K];
+
+fn Map.values[K, V]() -> Vec[V];
+
+fn Map.clear[K, V]();
+
+// === Set ===
+type Set[T] = {}
+
+fn Set.new[T]() -> Set[T];
+
+fn Set.insert[T](value: T);
+
+fn Set.remove[T](value: &T);
+
+fn Set.contains[T](value: &T) -> Bool;
+
+fn Set.len[T]() -> Int;
+
+fn Set.union[T](other: &Set[T]) -> Set[T];
+
+fn Set.intersection[T](other: &Set[T]) -> Set[T];
+
+fn Set.difference[T](other: &Set[T]) -> Set[T];
+
+// === LinkedList ===
+type LinkedList[T] = {}
+
+fn LinkedList.new[T]() -> LinkedList[T];
+
+fn LinkedList.push_front[T](value: T);
+
+fn LinkedList.push_back[T](value: T);
+
+fn LinkedList.pop_front[T]() -> Option[T];
+
+fn LinkedList.pop_back[T]() -> Option[T];
+
+fn LinkedList.len[T]() -> Int;
+
+fn LinkedList.is_empty[T]() -> Bool;
+
+// === Queue ===
+type Queue[T] = {}
+
+fn Queue.new[T]() -> Queue[T];
+
+fn Queue.enqueue[T](value: T);
+
+fn Queue.dequeue[T]() -> Option[T];
+
+fn Queue.peek[T]() -> Option<&T>;
+
+fn Queue.len[T]() -> Int;
+
+fn Queue.is_empty[T]() -> Bool;
+
+// === Stack ===
+type Stack[T] = {}
+
+fn Stack.new[T]() -> Stack[T];
+
+fn Stack.push[T](value: T);
+
+fn Stack.pop[T]() -> Option[T];
+
+fn Stack.peek[T]() -> Option<&T>;
+
+fn Stack.len[T]() -> Int;
+
+fn Stack.is_empty[T]() -> Bool;
+
+// === VecDeque (double-ended queue) ===
+type VecDeque[T] = { data: Vec[T]; head: Int; tail: Int; }
+fn VecDeque[T].new() -> VecDeque[T];
+fn VecDeque[T].with_capacity(cap: Int) -> VecDeque[T];
+fn VecDeque[T].push_front(self, value: T);
+fn VecDeque[T].push_back(self, value: T);
+fn VecDeque[T].pop_front(self) -> Option[T];
+fn VecDeque[T].pop_back(self) -> Option[T];
+fn VecDeque[T].front(self) -> Option<&T>;
+fn VecDeque[T].back(self) -> Option<&T>;
+fn VecDeque[T].len(self) -> Int;
+
+// === BTreeMap (sorted map) ===
+type BTreeMap[K: Ord, V] = { ... }
+fn BTreeMap[K: Ord, V].new() -> BTreeMap[K, V];
+fn BTreeMap[K: Ord, V].insert(self, key: K, value: V) -> Option[V];
+fn BTreeMap[K: Ord, V].get(self, key: &K) -> Option<&V>;
+fn BTreeMap[K: Ord, V].remove(self, key: &K) -> Option[V];
+fn BTreeMap[K: Ord, V].contains_key(self, key: &K) -> Bool;
+fn BTreeMap[K: Ord, V].first_entry(self) -> Option[(K, V)];
+fn BTreeMap[K: Ord, V].last_entry(self) -> Option[(K, V)];
+fn BTreeMap[K: Ord, V].len(self) -> Int;
+
+// === BTreeSet (sorted set) ===
+type BTreeSet[T: Ord] = { ... }
+fn BTreeSet[T: Ord].new() -> BTreeSet[T];
+fn BTreeSet[T: Ord].insert(self, value: T) -> Bool;
+fn BTreeSet[T: Ord].remove(self, value: &T) -> Bool;
+fn BTreeSet[T: Ord].contains(self, value: &T) -> Bool;
+fn BTreeSet[T: Ord].first(self) -> Option<&T>;
+fn BTreeSet[T: Ord].last(self) -> Option<&T>;
+fn BTreeSet[T: Ord].len(self) -> Int;
+
+// === Slice methods ===
+fn Slice[T].len(self) -> Int;
+fn Slice[T].is_empty(self) -> Bool;
+fn Slice[T].first(self) -> Option<&T>;
+fn Slice[T].last(self) -> Option<&T>;
+fn Slice[T].get(self, index: Int) -> Option<&T>;

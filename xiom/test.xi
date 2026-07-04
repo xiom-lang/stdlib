@@ -1,0 +1,47 @@
+// XIOM — Test Framework (Contract-Aware)
+// Copyright (c) 2026 Eleftherios Notas
+// Licensed under the MIT or Apache-2.0 license, at your option.
+
+module xiom.test
+
+// Test result with contract details
+pub type TestResult = {
+  passed: Bool;
+  name: Str;
+  message: Str;
+  contract_failures: Vec[ContractFailure];
+  duration_ms: Int;
+} derive[Clone]
+
+pub type ContractFailure = {
+  clause: Str;      // "requires", "ensures", "invariant"
+  expression: Str;  // the contract text
+  values: Str;      // actual values at violation
+  location: Str;    // file:line
+} derive[Clone]
+
+pub fn assert(condition: Bool, name: Str) -> TestResult;
+pub fn assert_eq[T: Eq](expected: T, actual: T, name: Str) -> TestResult;
+pub fn assert_ne[T: Eq](expected: T, actual: T, name: Str) -> TestResult;
+pub fn assert_lt[T: Ord](left: T, right: T, name: Str) -> TestResult;
+pub fn assert_gt[T: Ord](left: T, right: T, name: Str) -> TestResult;
+pub fn assert_contains(haystack: Str, needle: Str, name: Str) -> TestResult;
+pub fn assert_ok[T, E](result: Result[T, E], name: Str) -> TestResult;
+pub fn assert_err[T, E](result: Result[T, E], name: Str) -> TestResult;
+pub fn assert_some[T](option: Option[T], name: Str) -> TestResult;
+pub fn assert_none[T](option: Option[T], name: Str) -> TestResult;
+
+// Tests with contract verification
+pub fn assert_contract[T](value: T, predicate: fn(&T) -> Bool, name: Str) -> TestResult;
+
+// Test runner
+pub fn run(test: fn() -> TestResult) -> Int;
+pub fn run_all(tests: Vec[fn() -> TestResult]) -> Int;
+pub fn run_filtered(tests: Vec[fn() -> TestResult], filter: Str) -> Int;
+
+// Output formatters
+pub fn format_results(results: Vec[TestResult]) -> Str;
+pub fn format_results_json(results: Vec[TestResult]) -> Str;
+
+// Benchmark wrapper
+pub fn bench(name: Str, f: fn()) -> TestResult;

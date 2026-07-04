@@ -1,0 +1,49 @@
+// XIOM — String Library
+// Copyright (c) 2026 Eleftherios Notas
+// Licensed under the MIT or Apache-2.0 license, at your option.
+
+module xiom.string
+
+fn str_len(s: Str) -> Int;
+
+fn str_concat(a: Str, b: Str) -> Str;
+
+fn str_slice(s: Str, start: Int, end: Int) -> Str;
+
+fn str_contains(s: Str, substr: Str) -> Bool;
+
+fn str_starts_with(s: Str, prefix: Str) -> Bool;
+
+fn str_ends_with(s: Str, suffix: Str) -> Bool;
+
+fn str_split(s: Str, delimiter: Str) -> Vec[Str];
+
+fn str_trim(s: Str) -> Str;
+
+fn str_to_int(s: Str) -> Result[Int, Str];
+
+fn str_to_float(s: Str) -> Result[Float64, Str];
+
+fn str_upper(s: Str) -> Str;
+
+fn str_lower(s: Str) -> Str;
+
+fn format(fmt: Str, args: ...) -> Str;
+
+fn char_at(s: Str, pos: Int) -> Option[Char];
+
+fn index_of(s: Str, substr: Str) -> Option[Int];
+
+fn last_index_of(s: Str, substr: Str) -> Option[Int];
+
+fn replace(s: Str, from: Str, to: Str) -> Str;
+
+fn lines(s: Str) -> Vec[Str];
+
+fn words(s: Str) -> Vec[Str];
+
+fn is_empty(s: Str) -> Bool;
+
+fn char_count(s: Str) -> Int;
+
+fn byte_count(s: Str) -> Int;

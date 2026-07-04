@@ -1,0 +1,34 @@
+// XIOM — Comparison & Ordering
+// Copyright (c) 2026 Eleftherios Notas
+// Licensed under the MIT or Apache-2.0 license, at your option.
+
+module xiom.cmp
+
+pub type Ordering = enum { Less, Equal, Greater }
+
+pub fn Ordering.reverse(self) -> Ordering;
+pub fn Ordering.then(self, other: Ordering) -> Ordering;
+pub fn Ordering.then_with(self, f: fn() -> Ordering) -> Ordering;
+
+pub fn min[T: Ord](a: T, b: T) -> T;
+pub fn max[T: Ord](a: T, b: T) -> T;
+pub fn clamp[T: Ord](value: T, min_val: T, max_val: T) -> T;
+pub fn min_by[T](a: T, b: T, compare: fn(&T, &T) -> Ordering) -> T;
+pub fn max_by[T](a: T, b: T, compare: fn(&T, &T) -> Ordering) -> T;
+
+// Partial comparison (for types that may not be comparable)
+pub interface PartialEq[Rhs: Self] {
+  fn eq(self, other: &Rhs) -> Bool;
+  fn ne(self, other: &Rhs) -> Bool;
+}
+pub interface PartialOrd[Rhs: Self] {
+  fn partial_cmp(self, other: &Rhs) -> Option[Ordering];
+  fn lt(self, other: &Rhs) -> Bool;
+  fn le(self, other: &Rhs) -> Bool;
+  fn gt(self, other: &Rhs) -> Bool;
+  fn ge(self, other: &Rhs) -> Bool;
+}
+
+// Reverse ordering wrapper
+pub type Reverse[T] = { value: T; }
+pub fn Reverse.new[T](value: T) -> Reverse[T];
