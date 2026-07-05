@@ -1,6 +1,5 @@
 #define _CRT_SECURE_NO_WARNINGS
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
-#define XIOM_NO_ASM  /* No NASM assembly available — use C software implementations */
 // XIOM Runtime -- C helper functions for self-hosting compiler
 // All string operations happen here. The XIOM compiler works with Int IDs.
 #include <stdio.h>
