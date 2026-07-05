@@ -429,7 +429,11 @@ interface Seek {
 }
 
 // === Buffered I/O ===
-type BufReader = { inner: Int; buf: Vec[UInt8]; }
+type BufReader = {
+  inner: Int;
+  buf: Vec[UInt8];
+  invariant: inner >= 0;
+}
 
 fn BufReader.new(reader: Int) -> BufReader {
   var buf: Vec[UInt8] = Vec[UInt8]::with_capacity(4096);
@@ -587,7 +591,12 @@ fn print_line(s: Str) {
 }
 
 // === Memory I/O ===
-type Cursor = { data: Vec[UInt8]; pos: Int; }
+type Cursor = {
+  data: Vec[UInt8];
+  pos: Int;
+  invariant: pos >= 0;
+  invariant: pos <= data.len();
+}
 
 fn Cursor.new(data: Vec[UInt8]) -> Cursor
   ensures: self.pos == 0

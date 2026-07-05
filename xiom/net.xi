@@ -4,6 +4,27 @@
 
 module xiom.net
 
+// === FFI: C Runtime Socket Functions ===
+extern "C" {
+  fn xiom_socket_create(family: Int, typ: Int, proto: Int) -> Int;
+  fn xiom_socket_connect(sock: Int, host: *UInt8, port: Int) -> Int;
+  fn xiom_socket_bind(sock: Int, port: Int) -> Int;
+  fn xiom_socket_listen(sock: Int, backlog: Int) -> Int;
+  fn xiom_socket_accept(sock: Int, client_ip: *UInt8, client_port: *Int) -> Int;
+  fn xiom_socket_send(sock: Int, buf: *UInt8, len: Int) -> Int;
+  fn xiom_socket_recv(sock: Int, buf: *UInt8, len: Int) -> Int;
+  fn xiom_socket_close(sock: Int) -> Int;
+  fn xiom_dns_resolve(hostname: *UInt8, ip_buf: *UInt8, buf_size: Int) -> Int;
+  // Memory helpers (from xiom_runtime)
+  fn xiom_alloc(size: UInt) -> *UInt8;
+  fn xiom_free(ptr: *UInt8);
+}
+
+// === Constants ===
+const AF_INET: Int = 2;
+const SOCK_STREAM: Int = 1;
+const SOCK_DGRAM: Int = 2;
+
 // === TCP ===
 pub type TcpStream = { fd: Int; } derive[Clone]
 
@@ -12,27 +33,119 @@ pub type TcpListener = { fd: Int; } derive[Clone]
 pub type NetError = { message: Str; code: Int; }
 
 pub fn tcp_connect(host: Str, port: Int) -> Result[TcpStream, NetError] {
-  Err(NetError{ message: "TCP requires OS socket FFI — implement tcp_connect via platform socket API (socket/connect)"; code: -1; })
+  if host.len() <= 0 {
+    return Err(NetError{ message: "host must not be empty"; code: -100; });
+  }
+  if port <= 0 or port >= 65536 {
+    return Err(NetError{ message: "port out of range (1-65535)"; code: -101; });
+  }
+  unsafe {
+    let fd = xiom_socket_create(AF_INET, SOCK_STREAM, 0);
+    if fd < 0 {
+      return Err(NetError{ message: "failed to create socket"; code: fd; });
+    }
+    var c_host_buf: [256]UInt8;
+    var i = 0;
+    let hlen = host.len();
+    while i < hlen and i < 255 {
+      c_host_buf[i] = host.byte_at(i);
+      i = i + 1;
+    }
+    c_host_buf[i] = 0u8;
+    let result = xiom_socket_connect(fd, &c_host_buf as *UInt8, port);
+    if result < 0 {
+      xiom_socket_close(fd);
+      return Err(NetError{ message: "connection failed"; code: result; });
+    }
+    return Ok(TcpStream{ fd: fd; });
+  }
 }
 
 pub fn tcp_listen(host: Str, port: Int) -> Result[TcpListener, NetError] {
-  Err(NetError{ message: "TCP requires OS socket FFI — implement tcp_listen via platform socket API (socket/bind/listen)"; code: -2; })
+  if port <= 0 or port >= 65536 {
+    return Err(NetError{ message: "port out of range (1-65535)"; code: -101; });
+  }
+  unsafe {
+    let fd = xiom_socket_create(AF_INET, SOCK_STREAM, 0);
+    if fd < 0 {
+      return Err(NetError{ message: "failed to create socket"; code: fd; });
+    }
+    if xiom_socket_bind(fd, port) < 0 {
+      xiom_socket_close(fd);
+      return Err(NetError{ message: "bind failed"; code: -1; });
+    }
+    if xiom_socket_listen(fd, 128) < 0 {
+      xiom_socket_close(fd);
+      return Err(NetError{ message: "listen failed"; code: -1; });
+    }
+    return Ok(TcpListener{ fd: fd; });
+  }
 }
 
 pub fn TcpStream.read(self, buf: &mut Vec[UInt8]) -> Result[Int, NetError] {
-  Err(NetError{ message: "TCP requires OS socket FFI — implement TcpStream.read via platform socket API (recv)"; code: -3; })
+  unsafe {
+    var recv_buf: [4096]UInt8;
+    let n = xiom_socket_recv(self.fd, &recv_buf as *UInt8, 4096);
+    if n < 0 {
+      return Err(NetError{ message: "read failed"; code: n; });
+    }
+    var i = 0;
+    while i < n {
+      buf.push(recv_buf[i]);
+      i = i + 1;
+    }
+    return Ok(n);
+  }
 }
 
 pub fn TcpStream.write(self, data: &Vec[UInt8]) -> Result[Int, NetError] {
-  Err(NetError{ message: "TCP requires OS socket FFI — implement TcpStream.write via platform socket API (send)"; code: -4; })
+  unsafe {
+    var raw_buf: [65536]UInt8;
+    var i = 0;
+    let dlen = data.len();
+    if dlen > 65536 {
+      return Err(NetError{ message: "data too large for stack buffer"; code: -200; });
+    }
+    while i < dlen {
+      raw_buf[i] = data[i];
+      i = i + 1;
+    }
+    let n = xiom_socket_send(self.fd, &raw_buf as *UInt8, dlen);
+    if n < 0 {
+      return Err(NetError{ message: "write failed"; code: n; });
+    }
+    return Ok(n);
+  }
 }
 
 pub fn TcpStream.close(self) -> Result[Unit, NetError] {
+  unsafe {
+    xiom_socket_close(self.fd);
+  }
   Ok(Unit)
 }
 
 pub fn TcpListener.accept(self) -> Result[(TcpStream, Str), NetError] {
-  Err(NetError{ message: "TCP requires OS socket FFI — implement TcpListener.accept via platform socket API (accept)"; code: -5; })
+  unsafe {
+    var ip_buf: [64]UInt8;
+    var port_val: Int = 0;
+    let client = xiom_socket_accept(self.fd, &ip_buf as *UInt8, &port_val);
+    if client < 0 {
+      return Err(NetError{ message: "accept failed"; code: client; });
+    }
+    var ip_len: Int = 0;
+    while ip_len < 64 and ip_buf[ip_len] != 0u8 {
+      ip_len = ip_len + 1;
+    }
+    var ip_chars: Vec[UInt8] = Vec[UInt8]::new();
+    var j = 0;
+    while j < ip_len {
+      ip_chars.push(ip_buf[j]);
+      j = j + 1;
+    }
+    let client_ip = Str::from_utf8(ip_chars);
+    return Ok((TcpStream{ fd: client; }, client_ip));
+  }
 }
 
 // === HTTP ===
@@ -170,47 +283,74 @@ fn parse_http_response(raw: Str) -> Result[HttpResponse, NetError] {
 // === UDP ===
 pub type UdpSocket = { fd: Int; }
 
-fn udp_bind(host: Str, port: Int) -> Result[UdpSocket, NetError] {
-  Err(NetError{ message: "UDP requires OS socket FFI — implement udp_bind via platform socket API (socket/bind)"; code: -6; })
+pub fn udp_bind(host: Str, port: Int) -> Result[UdpSocket, NetError] {
+  if port <= 0 or port >= 65536 {
+    return Err(NetError{ message: "port out of range (1-65535)"; code: -101; });
+  }
+  unsafe {
+    let fd = xiom_socket_create(AF_INET, SOCK_DGRAM, 0);
+    if fd < 0 {
+      return Err(NetError{ message: "failed to create UDP socket"; code: fd; });
+    }
+    if xiom_socket_bind(fd, port) < 0 {
+      xiom_socket_close(fd);
+      return Err(NetError{ message: "UDP bind failed"; code: -1; });
+    }
+    return Ok(UdpSocket{ fd: fd; });
+  }
 }
 
 pub fn UdpSocket.send_to(self, data: &Vec[UInt8], addr: Str, port: Int) -> Result[Int, NetError] {
-  Err(NetError{ message: "UDP requires OS socket FFI — implement UdpSocket.send_to via platform socket API (sendto)"; code: -7; })
+  Err(NetError{ message: "UDP send_to requires platform sendto() — pending FFI extension"; code: -7; })
 }
 
 pub fn UdpSocket.recv_from(self, buf: &mut Vec[UInt8]) -> Result[(Int, Str, Int), NetError] {
-  Err(NetError{ message: "UDP requires OS socket FFI — implement UdpSocket.recv_from via platform socket API (recvfrom)"; code: -8; })
+  Err(NetError{ message: "UDP recv_from requires platform recvfrom() — pending FFI extension"; code: -8; })
 }
 
 pub fn UdpSocket.close(self) -> Result[Unit, NetError] {
+  unsafe {
+    xiom_socket_close(self.fd);
+  }
   Ok(Unit)
 }
 
 // === DNS ===
-fn resolve_host(hostname: Str) -> Result[Vec[Str], NetError] {
-  var dot_count: Int = 0;
-  var i: Int = 0;
-  var all_digits = true;
-  var len = hostname.len();
-  while i < len {
-    let b = hostname.byte_at(i);
-    if b == 46 {
-      dot_count = dot_count + 1;
-    } elif b < 48 or b > 57 {
-      all_digits = false;
+pub fn resolve_host(hostname: Str) -> Result[Vec[Str], NetError] {
+  unsafe {
+    var c_host: [256]UInt8;
+    var i = 0;
+    let hlen = hostname.len();
+    while i < hlen and i < 255 {
+      c_host[i] = hostname.byte_at(i);
+      i = i + 1;
     }
-    i = i + 1;
-  }
-  if all_digits and dot_count == 3 {
+    c_host[i] = 0u8;
+    var ip_buf: [256]UInt8;
+    let rc = xiom_dns_resolve(&c_host as *UInt8, &ip_buf as *UInt8, 256);
+    if rc < 0 {
+      return Err(NetError{ message: "DNS resolution failed"; code: rc; });
+    }
+    var ip_len: Int = 0;
+    while ip_len < 256 and ip_buf[ip_len] != 0u8 {
+      ip_len = ip_len + 1;
+    }
+    var ip_chars: Vec[UInt8] = Vec[UInt8]::with_capacity(ip_len as UInt);
+    var j = 0;
+    while j < ip_len {
+      ip_chars.push(ip_buf[j]);
+      j = j + 1;
+    }
+    let ip_str = Str::from_utf8(ip_chars);
     var result: Vec[Str] = Vec[Str]::new();
-    result.push(hostname);
+    result.push(ip_str);
     return Ok(result);
   }
-  Err(NetError{ message: "DNS resolution requires OS resolver FFI — implement resolve_host via getaddrinfo"; code: -9; })
 }
 
-fn local_addr(port: Int) -> Result[Str, NetError] {
-  Err(NetError{ message: "local address requires OS socket FFI — implement local_addr via gethostname/getsockname"; code: -10; })
+pub fn local_addr(port: Int) -> Result<Str, NetError) {
+  // Get local machine hostname, then resolve it
+  Err(NetError{ message: "local_addr requires gethostname — pending FFI extension"; code: -10; })
 }
 
 // === URL parsing ===
@@ -223,7 +363,7 @@ pub type UrlParts = {
   fragment: Str;
 }
 
-fn parse_url(url: Str) -> Result[UrlParts, NetError] {
+pub fn parse_url(url: Str) -> Result[UrlParts, NetError] {
   let len = url.len();
   if len == 0 {
     return Err(NetError{ message: "empty URL"; code: -30; });
