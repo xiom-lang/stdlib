@@ -144,32 +144,29 @@ xiom_asm_stack_init:
     ; Align stack to 16 bytes (required by System V ABI)
     and     rsi, ~0xF             ; clear low 4 bits
 
-    ; Set up initial stack frame for the new context
-    ; We push values onto the stack that ctx_load will pop
+    ; Set up initial stack frame. Stack grows down, so LAST push is at RSP.
+    ; When ctx_load jumps to trampoline (via ctx->rip), the stack looks like:
+    ;   [RSP]      = entry_fn address  (trampoline pops this first)
+    ;   [RSP + 8]  = arg               (trampoline pops this second)
+    ;   [RSP + 16] = ctx_exit address  (ret pops this after entry_fn returns)
 
-    ; The new context will start executing at ctx_trampoline
-    ; When ctx_load jumps, it needs:
-    ;   [RSP] = return address (will be ctx_trampoline)
-    ;   [RSP-8] = entry_fn (passed as first arg via RDI convention)
-    ;   [RSP-16] = arg (passed as second arg via RSI convention)
-
-    ; Push a fake return address for ctx_exit (cleanup when entry_fn returns)
+    ; Push ctx_exit — deepest on stack (will be popped by ret after call)
     mov     rax, .ctx_exit
     sub     rsi, 8
     mov     [rsi], rax
 
-    ; Store arg and entry_fn on the new stack
+    ; Push arg — second to be popped by trampoline
     sub     rsi, 8
-    mov     [rsi], rcx             ; arg (will go to RSI)
+    mov     [rsi], rcx
 
+    ; Push entry_fn — first to be popped by trampoline (top of stack)
     sub     rsi, 8
-    mov     [rsi], .ctx_trampoline ; return address = trampoline
+    mov     [rsi], rdx
 
     ; Store stack pointer in context
     mov     [rdi], rsi
 
-    ; Store trampoline as initial RIP (not strictly used by ctx_load,
-    ; but helpful for debugging)
+    ; Store trampoline address as initial RIP (ctx_load jumps here)
     lea     rax, [rel .ctx_trampoline]
     mov     [rdi + 8], rax
 
@@ -184,26 +181,18 @@ xiom_asm_stack_init:
 
     ret
 
-; Trampoline: called when the new context is first loaded.
-; Sets up arguments and calls entry_fn.
+; Trampoline: called when the new context is first loaded by ctx_load.
+; Stack at entry: [RSP]=entry_fn, [RSP+8]=arg, [RSP+16]=ctx_exit
 .ctx_trampoline:
-    ; Stack at this point: [RSP] = entry_fn, [RSP+8] = arg
-    ; We need: RDI = entry_fn address, RSI = arg
-    ; Actually, entry_fn(arg) → RDI = arg (first arg in SysV)
+    ; Pop entry_fn address and arg from the stack
+    pop     rsi                     ; RSI = entry_fn (function to call)
+    pop     rdi                     ; RDI = arg (first argument per SysV ABI)
     
-    ; Load arg into RDI (first argument)
-    pop     rdi                     ; RDI = entry_fn (we'll call this)
-    pop     rsi                     ; RSI = arg (second arg)
-    
-    ; Swap: we want entry_fn in a register to call, arg in RDI
-    xchg    rdi, rsi               ; RDI = arg, RSI = entry_fn
-    
-    ; Call entry_fn with arg in RDI
+    ; Call entry_fn(arg) — when it returns, execution continues below
     call    rsi
     
-    ; If entry_fn returns, jump to exit trampoline
-    ; The ctx_exit address was pushed earlier
-    ret                             ; jumps to .ctx_exit
+    ; entry_fn returned — pop ctx_exit address and jump to it
+    ret                             ; pops [RSP] = ctx_exit, jumps there
 
 ; Called when entry_fn returns — exits the context
 .ctx_exit:
