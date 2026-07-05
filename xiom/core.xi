@@ -24,10 +24,14 @@ type Result[T, E] = {
 
 // === Panic ===
 // Compiler-recognized: emits trap + error message
-fn panic(msg: Str);
+fn panic(msg: Str)
+  requires: msg.len() > 0
+;
 
 // === Assert ===
-fn assert(condition: Bool, msg: Str) {
+fn assert(condition: Bool, msg: Str)
+  requires: msg.len() > 0
+{
   if !condition {
     panic(msg);
   }
@@ -315,7 +319,10 @@ type Box[T] = {
   ptr: *T;
 }
 
-fn Box.new[T](value: T) -> Box[T] {
+fn Box.new[T](value: T) -> Box[T]
+  requires: size_of[T]() > 0
+  ensures:  ptr != null
+{
   let size = size_of[T]();
   unsafe {
     var raw = malloc(size);
@@ -325,13 +332,18 @@ fn Box.new[T](value: T) -> Box[T] {
   }
 }
 
-fn Box.get[T](b: &Box[T]) -> &T {
+fn Box.get[T](b: &Box[T]) -> &T
+  requires: ptr != null
+{
   unsafe {
     return &*ptr;
   }
 }
 
-fn Box.drop[T](b: Box[T]) {
+fn Box.drop[T](b: Box[T])
+  requires: ptr != null
+  ensures:  ptr is freed
+{
   unsafe {
     free(ptr as *UInt8);
   }
@@ -358,7 +370,9 @@ interface Drop {
 }
 
 // === Panic / Unwind ===
-fn panic_if(condition: Bool, msg: Str) {
+fn panic_if(condition: Bool, msg: Str)
+  requires: msg.len() > 0
+{
   if condition {
     panic(msg);
   }
@@ -483,7 +497,9 @@ fn Result[T, E].is_ok_and(self, predicate: fn(&T) -> Bool) -> Bool {
 // === Binary heap (priority queue) ===
 type BinaryHeap[T] = { data: Vec[T]; }
 
-fn sift_up[T: Ord](heap: &mut BinaryHeap[T], idx: Int) {
+fn sift_up[T: Ord](heap: &mut BinaryHeap[T], idx: Int)
+  requires: idx >= 0 && idx < heap.data.len()
+{
   var i = idx;
   while i > 0 {
     let parent = (i - 1) / 2;
@@ -497,7 +513,9 @@ fn sift_up[T: Ord](heap: &mut BinaryHeap[T], idx: Int) {
   }
 }
 
-fn sift_down[T: Ord](heap: &mut BinaryHeap[T], idx: Int) {
+fn sift_down[T: Ord](heap: &mut BinaryHeap[T], idx: Int)
+  requires: idx >= 0 && idx < heap.data.len()
+{
   let len = heap.data.len();
   var i = idx;
   loop {

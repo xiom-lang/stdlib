@@ -164,7 +164,10 @@ fn read_float() -> Result[Float64, Str] {
 }
 
 // === File system ===
-fn read_file(path: Str) -> Result[Str, IOError] {
+fn read_file(path: Str) -> Result[Str, IOError]
+  requires: path.len() > 0
+  ensures:  result is Ok => result.len() >= 0
+{
   let c_path = path.c_str();
   let ptr: *UInt8;
   let size: Int;
@@ -187,7 +190,10 @@ fn read_file(path: Str) -> Result[Str, IOError] {
   Ok(Str::from_utf8(buf))
 }
 
-fn write_file(path: Str, content: Str) -> Result[Unit, IOError] {
+fn write_file(path: Str, content: Str) -> Result[Unit, IOError]
+  requires: path.len() > 0
+  ensures:  result is Ok => file_exists(path)
+{
   let file: *UInt8;
   unsafe {
     file = fopen(path.c_str(), "w");
@@ -208,7 +214,10 @@ fn write_file(path: Str, content: Str) -> Result[Unit, IOError] {
   Ok(Unit)
 }
 
-fn append_file(path: Str, content: Str) -> Result[Unit, IOError] {
+fn append_file(path: Str, content: Str) -> Result[Unit, IOError]
+  requires: path.len() > 0
+  ensures:  result is Ok => file_exists(path)
+{
   let file: *UInt8;
   unsafe {
     file = fopen(path.c_str(), "a");
@@ -229,7 +238,9 @@ fn append_file(path: Str, content: Str) -> Result[Unit, IOError] {
   Ok(Unit)
 }
 
-fn file_exists(path: Str) -> Bool {
+fn file_exists(path: Str) -> Bool
+  requires: path.len() > 0
+{
   let file: *UInt8;
   unsafe {
     file = fopen(path.c_str(), "r");
@@ -243,7 +254,9 @@ fn file_exists(path: Str) -> Bool {
   true
 }
 
-fn is_dir(path: Str) -> Bool {
+fn is_dir(path: Str) -> Bool
+  requires: path.len() > 0
+{
   let result: Int32;
   unsafe {
     result = xiom_stat_is_dir(path.c_str());
@@ -251,7 +264,11 @@ fn is_dir(path: Str) -> Bool {
   result != 0
 }
 
-fn create_dir(path: Str) -> Result[Unit, IOError] {
+fn create_dir(path: Str) -> Result[Unit, IOError]
+  requires: path.len() > 0
+  requires: !file_exists(path)
+  ensures:  result is Ok => is_dir(path)
+{
   let rc: Int32;
   unsafe {
     rc = mkdir(path.c_str());
@@ -262,7 +279,11 @@ fn create_dir(path: Str) -> Result[Unit, IOError] {
   Ok(Unit)
 }
 
-fn list_dir(path: Str) -> Result[Vec[Str], IOError] {
+fn list_dir(path: Str) -> Result[Vec[Str], IOError]
+  requires: path.len() > 0
+  requires: is_dir(path)
+  ensures:  result is Ok => result.len() >= 0
+{
   let dir: *UInt8;
   unsafe {
     dir = opendir(path.c_str());
@@ -294,7 +315,10 @@ fn list_dir(path: Str) -> Result[Vec[Str], IOError] {
   Ok(entries)
 }
 
-fn remove_file(path: Str) -> Result[Unit, IOError] {
+fn remove_file(path: Str) -> Result[Unit, IOError]
+  requires: path.len() > 0
+  ensures:  result is Ok => !file_exists(path)
+{
   let rc: Int32;
   unsafe {
     rc = remove(path.c_str());
@@ -305,12 +329,22 @@ fn remove_file(path: Str) -> Result[Unit, IOError] {
   Ok(Unit)
 }
 
-fn copy_file(src: Str, dst: Str) -> Result[Unit, IOError] {
+fn copy_file(src: Str, dst: Str) -> Result[Unit, IOError]
+  requires: src.len() > 0
+  requires: dst.len() > 0
+  requires: src != dst
+  requires: file_exists(src)
+  ensures:  result is Ok => file_exists(dst)
+{
   let content = read_file(src)?;
   write_file(dst, content)
 }
 
-fn rename(src: Str, dst: Str) -> Result[Unit, IOError] {
+fn rename(src: Str, dst: Str) -> Result[Unit, IOError]
+  requires: src.len() > 0
+  requires: dst.len() > 0
+  ensures:  result is Ok => !file_exists(src) and file_exists(dst)
+{
   let rc: Int32;
   unsafe {
     rc = rename(src.c_str(), dst.c_str());
@@ -322,7 +356,9 @@ fn rename(src: Str, dst: Str) -> Result[Unit, IOError] {
 }
 
 // === Process ===
-fn exit(code: Int) {
+fn exit(code: Int)
+  requires: code >= 0
+{
   unsafe {
     exit(code as Int32);
   }
@@ -346,7 +382,9 @@ fn args() -> Vec[Str] {
   result
 }
 
-fn env_var(name: Str) -> Option[Str] {
+fn env_var(name: Str) -> Option[Str]
+  requires: name.len() > 0
+{
   let ptr: *UInt8;
   unsafe {
     ptr = getenv(name.c_str());
@@ -398,7 +436,10 @@ fn BufReader.new(reader: Int) -> BufReader {
   BufReader{ inner: reader; buf: buf; }
 }
 
-fn BufReader.read_line(self, buf: &mut Str) -> Result[Int, IOError] {
+fn BufReader.read_line(self, buf: &mut Str) -> Result[Int, IOError]
+  requires: inner >= 0
+  ensures:  result is Ok => result >= 0
+{
   var temp: Vec[UInt8] = Vec[UInt8]::with_capacity(1024);
   var found_nl = false;
   var total: Int = 0;
@@ -474,7 +515,10 @@ type Metadata = {
   permissions: Int;
 }
 
-fn metadata(path: Str) -> Result[Metadata, IOError] {
+fn metadata(path: Str) -> Result[Metadata, IOError]
+  requires: path.len() > 0
+  ensures:  result is Ok => result.size >= 0
+{
   let c_path = path.c_str();
   let is_f: Int32;
   let is_d: Int32;
@@ -503,7 +547,10 @@ fn metadata(path: Str) -> Result[Metadata, IOError] {
   })
 }
 
-fn set_permissions(path: Str, perm: Int) -> Result[Unit, IOError] {
+fn set_permissions(path: Str, perm: Int) -> Result[Unit, IOError]
+  requires: path.len() > 0
+  requires: perm >= 0
+{
   let rc: Int32;
   unsafe {
     rc = chmod(path.c_str(), perm as Int32);
@@ -515,15 +562,21 @@ fn set_permissions(path: Str, perm: Int) -> Result[Unit, IOError] {
 }
 
 // === Standard streams ===
-fn stdin() -> Int {
+fn stdin() -> Int
+  ensures: result >= 0
+{
   0
 }
 
-fn stdout() -> Int {
+fn stdout() -> Int
+  ensures: result >= 0
+{
   1
 }
 
-fn stderr() -> Int {
+fn stderr() -> Int
+  ensures: result >= 0
+{
   2
 }
 
@@ -536,7 +589,9 @@ fn print_line(s: Str) {
 // === Memory I/O ===
 type Cursor = { data: Vec[UInt8]; pos: Int; }
 
-fn Cursor.new(data: Vec[UInt8]) -> Cursor {
+fn Cursor.new(data: Vec[UInt8]) -> Cursor
+  ensures: self.pos == 0
+{
   Cursor{ data: data; pos: 0; }
 }
 

@@ -13,7 +13,9 @@ fn str_len(s: Str) -> Int {
   s.len()
 }
 
-fn str_concat(a: Str, b: Str) -> Str {
+fn str_concat(a: Str, b: Str) -> Str
+  ensures: result.len() == a.len() + b.len()
+{
   let len_a = a.len();
   let len_b = b.len();
   let total = len_a + len_b;
@@ -34,7 +36,11 @@ fn str_concat(a: Str, b: Str) -> Str {
   }
 }
 
-fn str_slice(s: Str, start: Int, end: Int) -> Str {
+fn str_slice(s: Str, start: Int, end: Int) -> Str
+  requires: start >= 0
+  requires: end >= start
+  requires: end <= s.len()
+{
   let len = s.len();
   var s_start = start;
   var s_end = end;
@@ -76,7 +82,10 @@ fn str_ends_with(s: Str, suffix: Str) -> Bool {
   str_slice(s, s_len - suffix_len, s_len) == suffix
 }
 
-fn str_split(s: Str, delimiter: Str) -> Vec[Str] {
+fn str_split(s: Str, delimiter: Str) -> Vec[Str]
+  requires: delimiter.len() > 0
+  ensures:  result.len() >= 1  // always at least one element
+{
   var result = Vec[Str].new();
   let delim_len = delimiter.len();
   let s_len = s.len();
@@ -103,7 +112,9 @@ fn str_split(s: Str, delimiter: Str) -> Vec[Str] {
   result
 }
 
-fn str_trim(s: Str) -> Str {
+fn str_trim(s: Str) -> Str
+  ensures: result.len() <= s.len()  // trim never increases length
+{
   let len = s.len();
   var start: Int = 0;
   var end: Int = len;
@@ -116,15 +127,21 @@ fn str_trim(s: Str) -> Str {
   str_slice(s, start, end)
 }
 
-fn str_to_int(s: Str) -> Result[Int, Str] {
+fn str_to_int(s: Str) -> Result[Int, Str]
+  requires: s.len() > 0
+{
   xiom.core.to_int_from_str(s)
 }
 
-fn str_to_float(s: Str) -> Result[Float64, Str] {
+fn str_to_float(s: Str) -> Result[Float64, Str]
+  requires: s.len() > 0
+{
   xiom.core.to_float_from_str(s)
 }
 
-fn str_upper(s: Str) -> Str {
+fn str_upper(s: Str) -> Str
+  ensures: result.len() == s.len()
+{
   let len = s.len();
   unsafe {
     var buf = malloc(len + 1);
@@ -139,7 +156,9 @@ fn str_upper(s: Str) -> Str {
   }
 }
 
-fn str_lower(s: Str) -> Str {
+fn str_lower(s: Str) -> Str
+  ensures: result.len() == s.len()
+{
   let len = s.len();
   unsafe {
     var buf = malloc(len + 1);
@@ -158,7 +177,9 @@ fn format(fmt: Str, args: ...) -> Str {
   fmt
 }
 
-fn format1(fmt: Str, arg: Str) -> Str {
+fn format1(fmt: Str, arg: Str) -> Str
+  ensures: result.len() >= fmt.len() - 2 + arg.len()
+{
   let idx_opt = index_of(fmt, "{}");
   match idx_opt {
     Some(idx) => {
@@ -175,14 +196,20 @@ fn format2(fmt: Str, arg1: Str, arg2: Str) -> Str {
   format1(s, arg2)
 }
 
-fn char_at(s: Str, pos: Int) -> Option[Char] {
+fn char_at(s: Str, pos: Int) -> Option[Char]
+  ensures: result is Some => pos >= 0 && pos < s.char_count()
+  ensures: result is None => pos < 0 || pos >= s.char_count()
+{
   if pos < 0 || pos >= s.len() {
     return None;
   };
   Some(s.char_at(pos))
 }
 
-fn index_of(s: Str, substr: Str) -> Option[Int] {
+fn index_of(s: Str, substr: Str) -> Option[Int]
+  requires: substr.len() > 0
+  ensures:  result is Some => result >= 0 && result < s.len()
+{
   let s_len = s.len();
   let sub_len = substr.len();
   if sub_len > s_len {
@@ -220,7 +247,9 @@ fn last_index_of(s: Str, substr: Str) -> Option[Int] {
   None
 }
 
-fn replace(s: Str, from: Str, to: Str) -> Str {
+fn replace(s: Str, from: Str, to: Str) -> Str
+  requires: from.len() > 0
+{
   let from_len = from.len();
   if from_len == 0 {
     return s;

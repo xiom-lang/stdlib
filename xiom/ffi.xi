@@ -10,25 +10,36 @@ extern "C" {
   fn memcpy(dest: *UInt8, src: *UInt8, size: UInt);
 }
 
-pub fn extern_c(name: Str, ...) -> Int {
+pub fn extern_c(name: Str, ...) -> Int
+  requires: name.len() > 0
+{
   unsafe {
     return 0;
   }
 }
 
-pub fn alloc(size: Int) -> *UInt8 {
+pub fn alloc(size: Int) -> *UInt8
+  requires: size > 0
+  ensures:  result != null
+{
   unsafe {
     return malloc(size as UInt);
   }
 }
 
-pub fn free(ptr: *UInt8) {
+pub fn free(ptr: *UInt8)
+  requires: ptr != null
+{
   unsafe {
     free(ptr);
   }
 }
 
-pub fn memcpy(dest: *UInt8, src: *UInt8, size: Int) {
+pub fn memcpy(dest: *UInt8, src: *UInt8, size: Int)
+  requires: dest != null
+  requires: src != null
+  requires: size > 0
+{
   unsafe {
     memcpy(dest, src, size as UInt);
   }

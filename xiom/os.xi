@@ -39,11 +39,15 @@ fn cstr(s: Str) -> *UInt8 {
 
 // === Platform & Architecture ===
 
-pub fn platform() -> Str {
+pub fn platform() -> Str
+  ensures: result.len() > 0
+{
   return env.OS;
 }
 
-pub fn cpu_count() -> Int {
+pub fn cpu_count() -> Int
+  ensures: result > 0
+{
   unsafe {
     let count = xiom_cpu_count();
     if count < 1 {
@@ -53,13 +57,17 @@ pub fn cpu_count() -> Int {
   }
 }
 
-pub fn total_memory() -> Int {
+pub fn total_memory() -> Int
+  ensures: result >= 0
+{
   unsafe {
     return xiom_total_memory() as Int;
   }
 }
 
-pub fn free_memory() -> Int {
+pub fn free_memory() -> Int
+  ensures: result >= 0
+{
   unsafe {
     return xiom_free_memory() as Int;
   }
@@ -73,7 +81,9 @@ pub fn env_unset(name: Str) {
   env.remove_var(name);
 }
 
-pub fn current_dir() -> Str {
+pub fn current_dir() -> Str
+  ensures: result.len() > 0
+{
   let result = env.current_dir();
   match result {
     Ok(dir) => dir;
@@ -81,21 +91,30 @@ pub fn current_dir() -> Str {
   }
 }
 
-pub fn set_current_dir(path: Str) -> Result[Unit, Str] {
+pub fn set_current_dir(path: Str) -> Result[Unit, Str]
+  requires: path.len() > 0
+{
   return env.set_current_dir(path);
 }
 
-pub fn temp_dir() -> Str {
+pub fn temp_dir() -> Str
+  ensures: result.len() > 0
+{
   return env.temp_dir();
 }
 
-pub fn home_dir() -> Option[Str] {
+pub fn home_dir() -> Option[Str]
+  ensures: result is Some => result.len() > 0
+{
   return env.home_dir();
 }
 
 // === Permissions ===
 
-fn set_permissions(path: Str, mode: Int) -> Result[Unit, Str] {
+fn set_permissions(path: Str, mode: Int) -> Result[Unit, Str]
+  requires: path.len() > 0
+  requires: mode >= 0
+{
   let result = io.set_permissions(path, mode);
   match result {
     Ok(()) => Ok(());
@@ -103,7 +122,9 @@ fn set_permissions(path: Str, mode: Int) -> Result[Unit, Str] {
   }
 }
 
-fn get_permissions(path: Str) -> Result[Int, Str] {
+fn get_permissions(path: Str) -> Result[Int, Str]
+  requires: path.len() > 0
+{
   let result = io.metadata(path);
   match result {
     Ok(meta) => Ok(meta.permissions);
@@ -129,7 +150,10 @@ fn read_link(path: Str) -> Result[Str, Str] {
   }
 }
 
-fn create_symlink(original: Str, link: Str) -> Result[Unit, Str] {
+fn create_symlink(original: Str, link: Str) -> Result[Unit, Str]
+  requires: original.len() > 0
+  requires: link.len() > 0
+{
   let rc: Int32;
   unsafe {
     rc = xiom_symlink(cstr(original), cstr(link));
@@ -140,7 +164,9 @@ fn create_symlink(original: Str, link: Str) -> Result[Unit, Str] {
   return Ok(());
 }
 
-fn is_symlink(path: Str) -> Bool {
+fn is_symlink(path: Str) -> Bool
+  requires: path.len() > 0
+{
   let result: Int32;
   unsafe {
     result = xiom_is_symlink(cstr(path));
@@ -182,7 +208,10 @@ fn build_command_string(command: Str, args: Vec[Str]) -> Str {
   return cmd;
 }
 
-fn spawn(command: Str, args: Vec[Str]) -> Result[Int, Str] {
+fn spawn(command: Str, args: Vec[Str]) -> Result[Int, Str]
+  requires: command.len() > 0
+  ensures:  result is Ok => result >= 0
+{
   let cmd = build_command_string(command, args);
   let rc: Int32;
   unsafe {
@@ -194,15 +223,21 @@ fn spawn(command: Str, args: Vec[Str]) -> Result[Int, Str] {
   return Ok(rc as Int);
 }
 
-fn spawn_piped(command: Str, args: Vec[Str]) -> Result[(Int, Int, Int), Str] {
+fn spawn_piped(command: Str, args: Vec[Str]) -> Result[(Int, Int, Int), Str]
+  requires: command.len() > 0
+{
   return Err("spawn_piped not supported via system()");
 }
 
-fn wait(pid: Int) -> Result[Int, Str] {
+fn wait(pid: Int) -> Result[Int, Str]
+  requires: pid > 0
+{
   return Err("process wait not supported with system() backend");
 }
 
-fn kill(pid: Int) -> Result[Unit, Str] {
+fn kill(pid: Int) -> Result[Unit, Str]
+  requires: pid > 0
+{
   return Err("process kill not supported with system() backend");
 }
 
@@ -213,15 +248,21 @@ pub type ChildProcess = {
   stderr: Int;
 }
 
-pub fn ChildProcess.wait(self) -> Result[Int, Str] {
+pub fn ChildProcess.wait(self) -> Result[Int, Str]
+  requires: self.pid > 0
+{
   return wait(self.pid);
 }
 
-pub fn ChildProcess.kill(self) -> Result[Unit, Str] {
+pub fn ChildProcess.kill(self) -> Result[Unit, Str]
+  requires: pid > 0
+{
   return kill(self.pid);
 }
 
-pub fn ChildProcess.id(self) -> Int {
+pub fn ChildProcess.id(self) -> Int
+  ensures: result >= 0
+{
   return self.pid;
 }
 
@@ -264,7 +305,9 @@ fn arch() -> Str {
 
 // === Filesystem Walk ===
 
-pub fn walk_dir(path: Str, callback: fn(Str, Metadata) -> Unit) -> Result[Unit, Str] {
+pub fn walk_dir(path: Str, callback: fn(Str, Metadata) -> Unit) -> Result[Unit, Str]
+  requires: path.len() > 0
+{
   let entries = io.list_dir(path);
   match entries {
     Ok(items) => {
@@ -294,7 +337,9 @@ pub fn walk_dir(path: Str, callback: fn(Str, Metadata) -> Unit) -> Result[Unit, 
   }
 }
 
-pub fn walk_dir_filtered(path: Str, pattern: Str, callback: fn(Str, Metadata) -> Unit) -> Result[Unit, Str] {
+pub fn walk_dir_filtered(path: Str, pattern: Str, callback: fn(Str, Metadata) -> Unit) -> Result[Unit, Str]
+  requires: path.len() > 0
+{
   let entries = io.list_dir(path);
   match entries {
     Ok(items) => {
@@ -334,18 +379,24 @@ pub type FileWatcher = {
   recursive: Bool;
 }
 
-pub fn watch_file(path: Str) -> Result[FileWatcher, Str] {
+pub fn watch_file(path: Str) -> Result[FileWatcher, Str]
+  requires: path.len() > 0
+{
   return watch_dir(path, false);
 }
 
-pub fn watch_dir(path: Str, recursive: Bool) -> Result[FileWatcher, Str] {
+pub fn watch_dir(path: Str, recursive: Bool) -> Result[FileWatcher, Str]
+  requires: path.len() > 0
+{
   return Ok(FileWatcher{
     path: path;
     recursive: recursive;
   });
 }
 
-pub fn FileWatcher.poll(self) -> Result[Vec[FileEvent], Str] {
+pub fn FileWatcher.poll(self) -> Result[Vec[FileEvent], Str]
+  ensures: result is Ok => result.len() >= 0
+{
   var events: Vec[FileEvent] = Vec[FileEvent].new();
   let entries = io.list_dir(self.path);
   match entries {
@@ -386,10 +437,14 @@ pub type FileEvent = enum {
 
 // === Signal Handling ===
 
-pub fn on_signal(signal: Int, handler: fn(Int) -> Unit) {
+pub fn on_signal(signal: Int, handler: fn(Int) -> Unit)
+  requires: signal > 0
+{
 }
 
-pub fn raise_signal(signal: Int) {
+pub fn raise_signal(signal: Int)
+  requires: signal > 0
+{
   unsafe {
     let _ = raise_sig(signal as Int32);
   }
@@ -408,7 +463,9 @@ pub type Pipe = {
   write_fd: Int;
 }
 
-pub fn create_pipe() -> Result[Pipe, Str] {
+pub fn create_pipe() -> Result[Pipe, Str]
+  ensures: result is Ok => result.read_fd >= 0 and result.write_fd >= 0
+{
   var fds: [2]Int32;
   let rc: Int32;
   unsafe {
@@ -423,7 +480,10 @@ pub fn create_pipe() -> Result[Pipe, Str] {
   });
 }
 
-pub fn Pipe.read(self, buf: &mut Vec[UInt8]) -> Result[Int, Str] {
+pub fn Pipe.read(self, buf: &mut Vec[UInt8]) -> Result[Int, Str]
+  requires: self.read_fd >= 0
+  ensures:  result is Ok => result >= 0
+{
   let n: Int;
   unsafe {
     n = xiom_read(self.read_fd as Int32, buf.as_mut_ptr(), buf.capacity());
@@ -434,7 +494,10 @@ pub fn Pipe.read(self, buf: &mut Vec[UInt8]) -> Result[Int, Str] {
   return Ok(n);
 }
 
-pub fn Pipe.write(self, data: &Vec[UInt8]) -> Result[Int, Str] {
+pub fn Pipe.write(self, data: &Vec[UInt8]) -> Result[Int, Str]
+  requires: self.write_fd >= 0
+  ensures:  result is Ok => result >= 0
+{
   let n: Int;
   unsafe {
     n = xiom_write(self.write_fd as Int32, data.as_ptr(), data.len() as UInt);
@@ -445,13 +508,17 @@ pub fn Pipe.write(self, data: &Vec[UInt8]) -> Result[Int, Str] {
   return Ok(n);
 }
 
-pub fn Pipe.close_read(self) {
+pub fn Pipe.close_read(self)
+  requires: self.read_fd >= 0
+{
   unsafe {
     let _ = xiom_close(self.read_fd as Int32);
   }
 }
 
-pub fn Pipe.close_write(self) {
+pub fn Pipe.close_write(self)
+  requires: self.write_fd >= 0
+{
   unsafe {
     let _ = xiom_close(self.write_fd as Int32);
   }
@@ -459,7 +526,10 @@ pub fn Pipe.close_write(self) {
 
 // === Disk Usage ===
 
-pub fn disk_free(path: Str) -> Result[Int, Str] {
+pub fn disk_free(path: Str) -> Result[Int, Str]
+  requires: path.len() > 0
+  ensures:  result is Ok => result >= 0
+{
   let c_path = cstr(path);
   let free: UInt64;
   unsafe {
@@ -468,7 +538,10 @@ pub fn disk_free(path: Str) -> Result[Int, Str] {
   return Ok(free as Int);
 }
 
-pub fn disk_total(path: Str) -> Result[Int, Str] {
+pub fn disk_total(path: Str) -> Result[Int, Str]
+  requires: path.len() > 0
+  ensures:  result is Ok => result >= 0
+{
   let c_path = cstr(path);
   let total: UInt64;
   unsafe {
@@ -477,7 +550,10 @@ pub fn disk_total(path: Str) -> Result[Int, Str] {
   return Ok(total as Int);
 }
 
-pub fn file_size_bytes(path: Str) -> Result[Int, Str] {
+pub fn file_size_bytes(path: Str) -> Result[Int, Str]
+  requires: path.len() > 0
+  ensures:  result is Ok => result >= 0
+{
   let result = io.metadata(path);
   match result {
     Ok(meta) => Ok(meta.size);

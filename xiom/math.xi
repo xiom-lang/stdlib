@@ -105,7 +105,10 @@ fn _combine_signed(sign: Bool, lower: Int) -> Int {
 
 // === Basic ===
 
-pub fn sqrt(x: Float64) -> Float64 {
+pub fn sqrt(x: Float64) -> Float64
+  requires: x >= 0.0
+  ensures:  result >= 0.0
+{
   if x < 0.0 { return -1.0; }
   if x == 0.0 { return 0.0; }
   var guess = x / 2.0;
@@ -117,7 +120,9 @@ pub fn sqrt(x: Float64) -> Float64 {
   return guess;
 }
 
-pub fn pow(base: Float64, exp: Float64) -> Float64 {
+pub fn pow(base: Float64, exp: Float64) -> Float64
+  requires: base >= 0.0 || exp == to_int(exp)  // negative base only for integer exp
+{
   if exp == 0.0 { return 1.0; }
   if base == 0.0 { return 0.0; }
   if base < 0.0 { return -1.0; }
@@ -187,14 +192,18 @@ pub fn tan(x: Float64) -> Float64 {
   return sin(x) / cos(x);
 }
 
-pub fn asin(x: Float64) -> Float64 {
+pub fn asin(x: Float64) -> Float64
+  requires: x >= -1.0 && x <= 1.0
+{
   if x < -1.0 || x > 1.0 { return 0.0 / 0.0; }
   if x == 1.0 { return PI / 2.0; }
   if x == -1.0 { return -PI / 2.0; }
   return atan(x / sqrt(1.0 - x * x));
 }
 
-pub fn acos(x: Float64) -> Float64 {
+pub fn acos(x: Float64) -> Float64
+  requires: x >= -1.0 && x <= 1.0
+{
   if x < -1.0 || x > 1.0 { return 0.0 / 0.0; }
   return PI / 2.0 - asin(x);
 }
@@ -205,7 +214,9 @@ pub fn atan(x: Float64) -> Float64 {
   return _atan_small(x);
 }
 
-pub fn atan2(y: Float64, x: Float64) -> Float64 {
+pub fn atan2(y: Float64, x: Float64) -> Float64
+  requires: x != 0.0 || y != 0.0  // both zero is undefined
+{
   if x > 0.0 { return atan(y / x); }
   if x < 0.0 {
     if y >= 0.0 { return atan(y / x) + PI; }
@@ -250,15 +261,21 @@ pub fn exp(x: Float64) -> Float64 {
   return exp_inner(x);
 }
 
-pub fn ln(x: Float64) -> Float64 {
+pub fn ln(x: Float64) -> Float64
+  requires: x > 0.0
+{
   return _ln_impl(x);
 }
 
-pub fn log10(x: Float64) -> Float64 {
+pub fn log10(x: Float64) -> Float64
+  requires: x > 0.0
+{
   return _ln_impl(x) / 2.302585092994046;
 }
 
-pub fn log2(x: Float64) -> Float64 {
+pub fn log2(x: Float64) -> Float64
+  requires: x > 0.0
+{
   return _ln_impl(x) / 0.6931471805599453;
 }
 
@@ -364,7 +381,10 @@ pub fn seed_rng(seed: Int) {
   }
 }
 
-pub fn random() -> Float64 {
+pub fn random() -> Float64
+  ensures: result >= 0.0
+  ensures: result < 1.0
+{
   _rng_state = (_rng_state * 48271) % 2147483647;
   if _rng_state <= 0 {
     _rng_state = _rng_state + 2147483647;
@@ -372,7 +392,11 @@ pub fn random() -> Float64 {
   return (_rng_state as Float64) / 2147483647.0;
 }
 
-pub fn random_range(min: Int, max: Int) -> Int {
+pub fn random_range(min: Int, max: Int) -> Int
+  requires: min <= max
+  ensures:  result >= min
+  ensures:  result <= max
+{
   var f = random();
   var range = max - min + 1;
   var val = to_int(f * (range as Float64));

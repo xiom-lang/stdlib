@@ -22,31 +22,42 @@ pub fn is_null[T](ptr: *const T) -> Bool {
   return ptr == null[T]();
 }
 
-pub fn read[T](ptr: *const T) -> T {
+pub fn read[T](ptr: *const T) -> T
+  requires: ptr != null
+{
   unsafe {
     return *ptr;
   }
 }
 
-pub fn write[T](ptr: *mut T, value: T) {
+pub fn write[T](ptr: *mut T, value: T)
+  requires: ptr != null
+{
   unsafe {
     *ptr = value;
   }
 }
 
-pub fn read_volatile[T](ptr: *const T) -> T {
+pub fn read_volatile[T](ptr: *const T) -> T
+  requires: ptr != null
+{
   unsafe {
     return *ptr;
   }
 }
 
-pub fn write_volatile[T](ptr: *mut T, value: T) {
+pub fn write_volatile[T](ptr: *mut T, value: T)
+  requires: ptr != null
+{
   unsafe {
     *ptr = value;
   }
 }
 
-pub fn swap[T](a: *mut T, b: *mut T) {
+pub fn swap[T](a: *mut T, b: *mut T)
+  requires: a != null
+  requires: b != null
+{
   unsafe {
     let temp = *a;
     *a = *b;
@@ -54,7 +65,10 @@ pub fn swap[T](a: *mut T, b: *mut T) {
   }
 }
 
-pub fn replace[T](dest: *mut T, src: T) -> T {
+pub fn replace[T](dest: *mut T, src: T) -> T
+  requires: dest != null
+  ensures:  result == old_value
+{
   unsafe {
     let old = *dest;
     *dest = src;
@@ -62,7 +76,11 @@ pub fn replace[T](dest: *mut T, src: T) -> T {
   }
 }
 
-pub fn copy[T](src: *const T, dst: *mut T, count: Int) {
+pub fn copy[T](src: *const T, dst: *mut T, count: Int)
+  requires: src != null
+  requires: dst != null
+  requires: count > 0
+{
   unsafe {
     var i = 0;
     while i < count {
@@ -72,7 +90,11 @@ pub fn copy[T](src: *const T, dst: *mut T, count: Int) {
   }
 }
 
-pub fn copy_nonoverlapping[T](src: *const T, dst: *mut T, count: Int) {
+pub fn copy_nonoverlapping[T](src: *const T, dst: *mut T, count: Int)
+  requires: src != null
+  requires: dst != null
+  requires: count > 0
+{
   unsafe {
     var i = 0;
     while i < count {
@@ -86,7 +108,9 @@ pub fn eq[T](a: *const T, b: *const T) -> Bool {
   return a == b;
 }
 
-pub fn offset[T](ptr: *const T, count: Int) -> *const T {
+pub fn offset[T](ptr: *const T, count: Int) -> *const T
+  requires: ptr != null
+{
   unsafe {
     return ptr + count;
   }
@@ -98,13 +122,17 @@ pub fn wrapping_offset[T](ptr: *const T, count: Int) -> *const T {
   }
 }
 
-pub fn add[T](ptr: *const T, count: Int) -> *const T {
+pub fn add[T](ptr: *const T, count: Int) -> *const T
+  requires: ptr != null
+{
   unsafe {
     return ptr + count;
   }
 }
 
-pub fn sub[T](ptr: *const T, count: Int) -> *const T {
+pub fn sub[T](ptr: *const T, count: Int) -> *const T
+  requires: ptr != null
+{
   unsafe {
     return ptr - count;
   }

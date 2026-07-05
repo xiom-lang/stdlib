@@ -71,12 +71,18 @@ fn StdRng.next_bytes(self, buf: &mut Vec[UInt8]) {
 
 // === Basic random values ===
 
-pub fn random() -> Float64 { // [0, 1)
+pub fn random() -> Float64
+  ensures: result >= 0.0
+  ensures: result < 1.0
+{ // [0, 1)
   _global_state = _lcg_step(_global_state);
   return (_global_state as Float64) / 2147483647.0;
 }
 
-pub fn random_int(min: Int, max: Int) -> Int { // [min, max]
+pub fn random_int(min: Int, max: Int) -> Int
+  requires: min <= max
+  ensures:  result >= min && result <= max
+{ // [min, max]
   let r = random();
   let range = max - min + 1;
   if range <= 0 {
@@ -208,7 +214,9 @@ pub fn sample_beta(alpha: Float64, beta: Float64) -> Float64 {
 
 // === Shuffle & Pick ===
 
-pub fn shuffle[T](items: &mut Vec[T]) {
+pub fn shuffle[T](items: &mut Vec[T])
+  ensures: items.len() == items.len()@pre
+{
   var i = items.len() - 1;
   while i > 0 {
     let j = ((random() * ((i + 1) as Float64)) as Int);
@@ -322,7 +330,9 @@ fn _format_uuid(bytes: &Vec[UInt8]) -> Str {
   }
 }
 
-pub fn uuid_v4() -> Str {
+pub fn uuid_v4() -> Str
+  ensures: result.len() == 36
+{
   var bytes = Vec[UInt8].new();
   var i: Int = 0;
   while i < 16 {
@@ -335,7 +345,9 @@ pub fn uuid_v4() -> Str {
   return _format_uuid(&bytes);
 }
 
-pub fn uuid_v7() -> Str {
+pub fn uuid_v7() -> Str
+  ensures: result.len() == 36
+{
   let t = time(0);
   var bytes = Vec[UInt8].new();
   var i: Int = 0;
