@@ -50,7 +50,7 @@ typedef struct {
 #include <stddef.h>
 
 /* crypto stubs */
-static void xiom_asm_sha256_compress(uint32_t s[8], const uint8_t* b) { (void)s; (void)b; }
+static void xiom_asm_sha256_compress(uint32_t s[8], const uint8_t* b) { (void)s; (void)b; } /* NOTE: SHA-256 uses SHA-NI intrinsics in simd_runtime.c, not raw asm */
 static void xiom_asm_aes128_encrypt_block(const uint8_t* p, const uint8_t* rk, uint8_t* c) { (void)p; (void)rk; (void)c; }
 static void xiom_asm_aes128_decrypt_block(const uint8_t* c, const uint8_t* rk, uint8_t* p) { (void)c; (void)rk; (void)p; }
 static void xiom_asm_aes128_key_expand(const uint8_t* k, uint8_t* rk) { (void)k; (void)rk; }
@@ -72,7 +72,7 @@ void xiom_ctx_init(xiom_context* ctx, void* sp, void (*fn)(void*), void* a) { (v
 
 #else
 /* ── Assembly symbols (NASM-linked .obj files provide strong definitions) ── */
-extern void xiom_asm_sha256_compress(uint32_t state[8], const uint8_t block[64]);
+/* NOTE: SHA-256 uses SHA-NI intrinsics in simd_runtime.c — no asm symbol */
 extern void xiom_asm_aes128_encrypt_block(const uint8_t plaintext[16], const uint8_t round_keys[176], uint8_t ciphertext[16]);
 extern void xiom_asm_aes128_decrypt_block(const uint8_t ciphertext[16], const uint8_t round_keys[176], uint8_t plaintext[16]);
 extern void xiom_asm_aes128_key_expand(const uint8_t key[16], uint8_t round_keys[176]);
@@ -3921,10 +3921,13 @@ static void xiom_asm_detect_features(void) {
     xiom_asm_cpuid_checked = 1;
 }
 
-/* Dispatch: SHA-256 compression — uses assembly if SHA-NI available */
+/* Dispatch: SHA-256 compression — uses SHA-NI intrinsics (simd_runtime.c), not raw asm */
 void xiom_sha256_compress_dispatch(uint32_t state[8], const uint8_t block[64]) {
     xiom_asm_detect_features();
-    xiom_asm_sha256_compress(state, block);
+    /* SHA-256 uses SHA-NI intrinsics via simd_runtime.c — 
+       xiom_shani_sha256_compress() handles the hardware path.
+       Software fallback is in crypto.xi (pure XIOM SHA-256). */
+    xiom_shani_sha256_compress(state, block);
 }
 
 /* Dispatch: AES-128 encrypt — uses assembly AES-NI if available */
