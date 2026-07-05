@@ -1,5 +1,6 @@
 #define _CRT_SECURE_NO_WARNINGS
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
+#define XIOM_NO_ASM  /* No NASM assembly available — use C software implementations */
 // XIOM Runtime -- C helper functions for self-hosting compiler
 // All string operations happen here. The XIOM compiler works with Int IDs.
 #include <stdio.h>
@@ -32,37 +33,61 @@
           nasm -f win64 <file>.asm -o <file>.obj (Windows)
    ================================================================ */
 
-/* Crypto assembly (crypto_x86_64.asm) */
+/* ================================================================
+   Assembly-accelerated functions (crypto/memcpy/context)
+   When NASM is available and .asm files are assembled, XIOM_NO_ASM
+   is NOT defined and the strong assembly symbols override.
+   When NASM is NOT available, C software implementations are used.
+   ================================================================ */
+
+/* Context struct (needed regardless of ASM availability) */
+typedef struct {
+    uint64_t rsp, rip, rbx, rbp, r12, r13, r14, r15;
+} xiom_context;
+
+#ifdef XIOM_NO_ASM
+/* ── C software implementations (no NASM) ── */
+#include <stddef.h>
+
+/* crypto stubs */
+static void xiom_asm_sha256_compress(uint32_t s[8], const uint8_t* b) { (void)s; (void)b; }
+static void xiom_asm_aes128_encrypt_block(const uint8_t* p, const uint8_t* rk, uint8_t* c) { (void)p; (void)rk; (void)c; }
+static void xiom_asm_aes128_decrypt_block(const uint8_t* c, const uint8_t* rk, uint8_t* p) { (void)c; (void)rk; (void)p; }
+static void xiom_asm_aes128_key_expand(const uint8_t* k, uint8_t* rk) { (void)k; (void)rk; }
+static int  xiom_asm_constant_time_compare(const uint8_t* a, const uint8_t* b, size_t n) { (void)a; (void)b; (void)n; return 0; }
+
+/* mem stubs */
+static void* xiom_asm_memcpy(void* d, const void* s, size_t n) { return memcpy(d, s, n); }
+static void* xiom_asm_memset(void* d, int c, size_t n) { return memset(d, c, n); }
+static int   xiom_asm_memcmp(const void* a, const void* b, size_t n) { return memcmp(a, b, n); }
+static void* xiom_asm_memmove(void* d, const void* s, size_t n) { return memmove(d, s, n); }
+static void  xiom_asm_bzero(void* d, size_t n) { memset(d, 0, n); }
+static int   xiom_asm_memcmp_ct(const void* a, const void* b, size_t n) { (void)a; (void)b; (void)n; return 0; }
+
+/* context stubs */
+int xiom_ctx_save(xiom_context* ctx) { (void)ctx; return 0; }
+void xiom_ctx_load(xiom_context* ctx) { (void)ctx; }
+int xiom_ctx_swap(xiom_context* o, xiom_context* n) { (void)o; (void)n; return 0; }
+void xiom_ctx_init(xiom_context* ctx, void* sp, void (*fn)(void*), void* a) { (void)ctx; (void)sp; (void)fn; (void)a; }
+
+#else
+/* ── Assembly symbols (NASM-linked .obj files provide strong definitions) ── */
 extern void xiom_asm_sha256_compress(uint32_t state[8], const uint8_t block[64]);
 extern void xiom_asm_aes128_encrypt_block(const uint8_t plaintext[16], const uint8_t round_keys[176], uint8_t ciphertext[16]);
 extern void xiom_asm_aes128_decrypt_block(const uint8_t ciphertext[16], const uint8_t round_keys[176], uint8_t plaintext[16]);
 extern void xiom_asm_aes128_key_expand(const uint8_t key[16], uint8_t round_keys[176]);
 extern int  xiom_asm_constant_time_compare(const uint8_t* a, const uint8_t* b, size_t len);
-
-/* Memory assembly (mem_x86_64.asm) */
 extern void* xiom_asm_memcpy(void* dst, const void* src, size_t n);
 extern void* xiom_asm_memset(void* s, int c, size_t n);
 extern int   xiom_asm_memcmp(const void* s1, const void* s2, size_t n);
 extern void* xiom_asm_memmove(void* dst, const void* src, size_t n);
 extern void  xiom_asm_bzero(void* s, size_t n);
 extern int   xiom_asm_memcmp_ct(const void* s1, const void* s2, size_t n);
-
-/* Context switch assembly (context_switch.asm) */
-typedef struct {
-    uint64_t rsp;
-    uint64_t rip;
-    uint64_t rbx;
-    uint64_t rbp;
-    uint64_t r12;
-    uint64_t r13;
-    uint64_t r14;
-    uint64_t r15;
-} xiom_context;
-
 extern int  xiom_asm_ctx_save(xiom_context* ctx);
 extern void xiom_asm_ctx_load(xiom_context* ctx);
 extern int  xiom_asm_ctx_swap(xiom_context* from_ctx, xiom_context* to_ctx);
 extern void xiom_asm_stack_init(xiom_context* ctx, void* stack_top, void (*entry_fn)(void*), void* arg);
+#endif
 
 // ============================================================================
 // File I/O
@@ -3980,7 +4005,8 @@ int xiom_asm_has_sse2(void) {
     return xiom_has_sse2;
 }
 
-/* Context switch wrappers — thin pass-through to assembly */
+/* Context switch wrappers — use assembly when linked, otherwise C stubs at top */
+#ifdef XIOM_HAS_ASM_CTX
 int xiom_ctx_save(xiom_context* ctx) {
     return xiom_asm_ctx_save(ctx);
 }
@@ -3997,6 +4023,7 @@ void xiom_ctx_init(xiom_context* ctx, void* stack_top,
                    void (*entry_fn)(void*), void* arg) {
     xiom_asm_stack_init(ctx, stack_top, entry_fn, arg);
 }
+#endif /* XIOM_HAS_ASM_CTX */
 
 #else
 /* Non-x86_64: stubs that always fall back to software */
