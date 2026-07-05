@@ -62,7 +62,9 @@ fn is_url_safe(c: Char) -> Bool {
   false
 }
 
-fn write_hex_byte_upper(dst: *UInt8, dst_idx: Int, byte: UInt8) {
+fn write_hex_byte_upper(dst: *UInt8, dst_idx: Int, byte: UInt8)
+  requires: dst_idx >= 0  // dst must have capacity for dst_idx + 1
+{
   let b = byte as Int;
   unsafe {
     dst[dst_idx] = hex_char_upper((b >> 4) & 15);
@@ -70,7 +72,9 @@ fn write_hex_byte_upper(dst: *UInt8, dst_idx: Int, byte: UInt8) {
   };
 }
 
-fn write_hex_byte_lower(dst: *UInt8, dst_idx: Int, byte: UInt8) {
+fn write_hex_byte_lower(dst: *UInt8, dst_idx: Int, byte: UInt8)
+  requires: dst_idx >= 0  // dst must have capacity for dst_idx + 1
+{
   let b = byte as Int;
   unsafe {
     dst[dst_idx] = hex_char_lower((b >> 4) & 15);
@@ -78,7 +82,9 @@ fn write_hex_byte_lower(dst: *UInt8, dst_idx: Int, byte: UInt8) {
   };
 }
 
-fn write_base64_triplet(dst: *UInt8, dst_idx: Int, b0: UInt8, b1: UInt8, b2: UInt8, pad1: Bool, pad2: Bool) {
+fn write_base64_triplet(dst: *UInt8, dst_idx: Int, b0: UInt8, b1: UInt8, b2: UInt8, pad1: Bool, pad2: Bool)
+  requires: dst_idx >= 0  // dst must have capacity for dst_idx + 3
+{
   let alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
   let i0 = b0 as Int;
   let i1 = b1 as Int;
@@ -99,7 +105,9 @@ fn write_base64_triplet(dst: *UInt8, dst_idx: Int, b0: UInt8, b1: UInt8, b2: UIn
   };
 }
 
-fn write_base64url_triplet(dst: *UInt8, dst_idx: Int, b0: UInt8, b1: UInt8, b2: UInt8, has_one: Bool, has_two: Bool) {
+fn write_base64url_triplet(dst: *UInt8, dst_idx: Int, b0: UInt8, b1: UInt8, b2: UInt8, has_one: Bool, has_two: Bool)
+  requires: dst_idx >= 0  // dst must have capacity: 2 bytes if no continuation, 3 if has_one, 4 if has_two
+{
   let alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
   let i0 = b0 as Int;
   let i1 = b1 as Int;
@@ -120,7 +128,9 @@ fn write_base64url_triplet(dst: *UInt8, dst_idx: Int, b0: UInt8, b1: UInt8, b2: 
 
 // === Base64 ===
 
-pub fn base64_encode(data: &Vec[UInt8]) -> Str {
+pub fn base64_encode(data: &Vec[UInt8]) -> Str
+  ensures: result.len() == ((data.len() + 2) / 3) * 4
+{
   let len = data.len();
   let out_len = ((len + 2) / 3) * 4;
   unsafe {
@@ -152,7 +162,10 @@ pub fn base64_encode(data: &Vec[UInt8]) -> Str {
   }
 }
 
-pub fn base64_decode(encoded: Str) -> Result<Vec[UInt8], Str> {
+pub fn base64_decode(encoded: Str) -> Result[Vec[UInt8], Str]
+  requires: encoded.len() % 4 == 0
+  ensures:  result is Ok => result.len() <= (encoded.len() / 4) * 3
+{
   var result = Vec[UInt8].new();
   let len = encoded.len();
   var i = 0;
@@ -204,7 +217,9 @@ pub fn base64_decode(encoded: Str) -> Result<Vec[UInt8], Str> {
   Ok(result)
 }
 
-pub fn base64url_encode(data: &Vec[UInt8]) -> Str {
+pub fn base64url_encode(data: &Vec[UInt8]) -> Str
+  ensures: result.len() == ((data.len() + 2) / 3) * 4 - (if data.len() % 3 == 1 then 2 else if data.len() % 3 == 2 then 1 else 0)
+{
   let len = data.len();
   let out_len = ((len + 2) / 3) * 4;
   var actual_len = out_len;
@@ -240,7 +255,9 @@ pub fn base64url_encode(data: &Vec[UInt8]) -> Str {
   }
 }
 
-pub fn base64url_decode(encoded: Str) -> Result<Vec[UInt8], Str> {
+pub fn base64url_decode(encoded: Str) -> Result[Vec[UInt8], Str]
+  ensures: result is Ok => result.len() <= (encoded.len() / 4) * 3
+{
   var result = Vec[UInt8].new();
   let len = encoded.len();
   var i = 0;
@@ -284,7 +301,9 @@ pub fn base64url_decode(encoded: Str) -> Result<Vec[UInt8], Str> {
 
 // === Hex ===
 
-pub fn hex_encode(data: &Vec[UInt8]) -> Str {
+pub fn hex_encode(data: &Vec[UInt8]) -> Str
+  ensures: result.len() == data.len() * 2
+{
   let len = data.len();
   let out_len = len * 2;
   unsafe {
@@ -299,7 +318,10 @@ pub fn hex_encode(data: &Vec[UInt8]) -> Str {
   }
 }
 
-pub fn hex_decode(encoded: Str) -> Result<Vec[UInt8], Str> {
+pub fn hex_decode(encoded: Str) -> Result[Vec[UInt8], Str]
+  requires: encoded.len() % 2 == 0
+  ensures:  result is Ok => result.len() == encoded.len() / 2
+{
   let len = encoded.len();
   if len % 2 != 0 {
     return Err("hex string must have even length");
@@ -318,7 +340,9 @@ pub fn hex_decode(encoded: Str) -> Result<Vec[UInt8], Str> {
   Ok(result)
 }
 
-pub fn hex_encode_upper(data: &Vec[UInt8]) -> Str {
+pub fn hex_encode_upper(data: &Vec[UInt8]) -> Str
+  ensures: result.len() == data.len() * 2
+{
   let len = data.len();
   let out_len = len * 2;
   unsafe {
@@ -335,7 +359,9 @@ pub fn hex_encode_upper(data: &Vec[UInt8]) -> Str {
 
 // === URL encoding ===
 
-pub fn url_encode(data: Str) -> Str {
+pub fn url_encode(data: Str) -> Str
+  ensures: result.len() >= data.len()
+{
   let s_len = data.len();
   var i = 0;
   var out_len = 0;
@@ -383,7 +409,9 @@ pub fn url_encode(data: Str) -> Str {
   }
 }
 
-pub fn url_decode(encoded: Str) -> Result<Str, Str> {
+pub fn url_decode(encoded: Str) -> Result[Str, Str]
+  ensures: result is Ok => result.len() <= encoded.len()
+{
   let len = encoded.len();
   if len == 0 { return Ok(""); };
   unsafe {
@@ -428,17 +456,23 @@ pub fn url_decode(encoded: Str) -> Result<Str, Str> {
 
 // === Percent encoding ===
 
-pub fn percent_encode(data: Str) -> Str {
+pub fn percent_encode(data: Str) -> Str
+  ensures: result.len() >= data.len()
+{
   url_encode(data)
 }
 
-pub fn percent_decode(encoded: Str) -> Result<Str, Str> {
+pub fn percent_decode(encoded: Str) -> Result[Str, Str]
+  ensures: result is Ok => result.len() <= encoded.len()
+{
   url_decode(encoded)
 }
 
 // === UTF-8 ===
 
-pub fn utf8_encode(s: Str) -> Vec[UInt8] {
+pub fn utf8_encode(s: Str) -> Vec[UInt8]
+  ensures: result.len() >= s.len()
+{
   var result = Vec[UInt8].new();
   let len = s.len();
   var i = 0;
@@ -450,7 +484,10 @@ pub fn utf8_encode(s: Str) -> Vec[UInt8] {
   result
 }
 
-pub fn utf8_decode(data: &Vec[UInt8]) -> Result<Str, Str> {
+pub fn utf8_decode(data: &Vec[UInt8]) -> Result[Str, Str]
+  requires: data.len() > 0
+  ensures:  result is Ok => result.len() <= data.len()
+{
   let len = data.len();
   if len == 0 { return Ok(""); };
   var i = 0;
@@ -528,7 +565,9 @@ pub fn utf8_decode(data: &Vec[UInt8]) -> Result<Str, Str> {
   }
 }
 
-pub fn utf8_valid(data: &Vec[UInt8]) -> Bool {
+pub fn utf8_valid(data: &Vec[UInt8]) -> Bool
+  ensures: result == true => utf8_decode(data) is Ok
+{
   let len = data.len();
   var i = 0;
   while i < len {
@@ -579,7 +618,9 @@ pub fn utf8_valid(data: &Vec[UInt8]) -> Bool {
   true
 }
 
-pub fn utf8_char_len(first_byte: UInt8) -> Int {
+pub fn utf8_char_len(first_byte: UInt8) -> Int
+  ensures: result >= 1 && result <= 4
+{
   let b = first_byte as Int;
   if b <= 0x7F {
     return 1;
@@ -598,7 +639,12 @@ pub fn utf8_char_len(first_byte: UInt8) -> Int {
 
 // === Binary to text ===
 
-pub fn binary_to_text(data: &Vec[UInt8], format: Int) -> Str {
+pub fn binary_to_text(data: &Vec[UInt8], format: Int) -> Str
+  requires: format >= 0 && format <= 2
+  ensures:  format == 0 => result.len() == ((data.len() + 2) / 3) * 4
+  ensures:  format == 1 => result.len() == data.len() * 2
+  ensures:  format == 2 => result.len() == ((data.len() + 2) / 3) * 4 - (if data.len() % 3 == 1 then 2 else if data.len() % 3 == 2 then 1 else 0)
+{
   if format == 0 {
     return base64_encode(data);
   };
@@ -611,7 +657,12 @@ pub fn binary_to_text(data: &Vec[UInt8], format: Int) -> Str {
   base64_encode(data)
 }
 
-pub fn text_to_binary(text: Str, format: Int) -> Result<Vec[UInt8], Str> {
+pub fn text_to_binary(text: Str, format: Int) -> Result[Vec[UInt8], Str]
+  requires: format >= 0 && format <= 2
+  ensures:  format == 0 => (result is Ok => result.len() <= (text.len() / 4) * 3)
+  ensures:  format == 1 => (result is Ok => result.len() == text.len() / 2)
+  ensures:  format == 2 => (result is Ok => result.len() <= (text.len() / 4) * 3)
+{
   if format == 0 {
     return base64_decode(text);
   };

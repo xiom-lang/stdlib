@@ -16,13 +16,18 @@ pub const OS: Str = "windows";     // compile-time target OS
 pub const ARCH: Str = "x86_64";    // compile-time target architecture
 pub const FAMILY: Str = "windows"; // "unix" or "windows"
 
-fn cstr(s: Str) -> *UInt8 {
+fn cstr(s: Str) -> *UInt8
+  requires: s.len() > 0
+  ensures:  result != null
+{
   unsafe {
     return s as *UInt8;
   }
 }
 
-pub fn var(name: Str) -> Result<Str, Str> {
+pub fn var(name: Str) -> Result<Str, Str>
+  requires: name.len() > 0
+{
   let opt = var_opt(name);
   match opt {
     Some(v) => Ok(v);
@@ -30,7 +35,9 @@ pub fn var(name: Str) -> Result<Str, Str> {
   }
 }
 
-pub fn var_opt(name: Str) -> Option<Str> {
+pub fn var_opt(name: Str) -> Option<Str>
+  requires: name.len() > 0
+{
   unsafe {
     let raw = getenv(cstr(name));
     if raw == null {
@@ -40,13 +47,17 @@ pub fn var_opt(name: Str) -> Option<Str> {
   }
 }
 
-pub fn set_var(name: Str, value: Str) {
+pub fn set_var(name: Str, value: Str)
+  requires: name.len() > 0
+{
   unsafe {
     let _ = setenv(cstr(name), cstr(value), 1);
   }
 }
 
-pub fn remove_var(name: Str) {
+pub fn remove_var(name: Str)
+  requires: name.len() > 0
+{
   unsafe {
     let _ = unsetenv(cstr(name));
   }
@@ -75,7 +86,9 @@ pub fn current_exe() -> Result<Str, Str> {
   return Err("cannot determine executable path");
 }
 
-pub fn current_dir() -> Result<Str, Str> {
+pub fn current_dir() -> Result<Str, Str>
+  ensures: result is Ok => result.len() > 0
+{
   unsafe {
     var buf: [4096]UInt8;
     let ptr = getcwd(&buf[0], 4096 as UInt);
@@ -86,7 +99,9 @@ pub fn current_dir() -> Result<Str, Str> {
   }
 }
 
-pub fn set_current_dir(path: Str) -> Result<Unit, Str> {
+pub fn set_current_dir(path: Str) -> Result<Unit, Str>
+  requires: path.len() > 0
+{
   unsafe {
     let rc = chdir(cstr(path));
     if rc != 0 {
@@ -96,7 +111,9 @@ pub fn set_current_dir(path: Str) -> Result<Unit, Str> {
   }
 }
 
-pub fn temp_dir() -> Str {
+pub fn temp_dir() -> Str
+  ensures: result.len() > 0
+{
   let v = var_opt("TMP");
   match v {
     Some(t) => return t;
@@ -115,7 +132,9 @@ pub fn temp_dir() -> Str {
   return "/tmp";
 }
 
-pub fn home_dir() -> Option<Str> {
+pub fn home_dir() -> Option<Str>
+  ensures: result is Some => result.len() > 0
+{
   let v = var_opt("USERPROFILE");
   match v {
     Some(h) => return Some(h);

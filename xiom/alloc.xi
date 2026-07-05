@@ -41,7 +41,10 @@ pub fn global_alloc() -> Allocator {
   GlobalAlloc{ }
 }
 
-pub fn GlobalAlloc.allocate(self, layout: Layout) -> Result<*mut UInt8, AllocError> {
+pub fn GlobalAlloc.allocate(self, layout: Layout) -> Result<*mut UInt8, AllocError>
+  requires: layout.size > 0
+  ensures:  result is Ok => result != null
+{
   unsafe {
     let ptr = malloc(layout.size as UInt);
     if ptr == null {
@@ -51,13 +54,18 @@ pub fn GlobalAlloc.allocate(self, layout: Layout) -> Result<*mut UInt8, AllocErr
   }
 }
 
-pub fn GlobalAlloc.deallocate(self, ptr: *mut UInt8, layout: Layout) {
+pub fn GlobalAlloc.deallocate(self, ptr: *mut UInt8, layout: Layout)
+  requires: ptr != null
+{
   unsafe {
     free(ptr);
   }
 }
 
-pub fn GlobalAlloc.allocate_zeroed(self, layout: Layout) -> Result<*mut UInt8, AllocError> {
+pub fn GlobalAlloc.allocate_zeroed(self, layout: Layout) -> Result<*mut UInt8, AllocError>
+  requires: layout.size > 0
+  ensures:  result is Ok => result != null
+{
   unsafe {
     let ptr = malloc(layout.size as UInt);
     if ptr == null {
@@ -68,7 +76,10 @@ pub fn GlobalAlloc.allocate_zeroed(self, layout: Layout) -> Result<*mut UInt8, A
   }
 }
 
-pub fn GlobalAlloc.grow(self, ptr: *mut UInt8, old: Layout, new: Layout) -> Result<*mut UInt8, AllocError> {
+pub fn GlobalAlloc.grow(self, ptr: *mut UInt8, old: Layout, new: Layout) -> Result<*mut UInt8, AllocError>
+  requires: ptr != null
+  requires: new.size > old.size
+{
   unsafe {
     let new_ptr = realloc(ptr, new.size as UInt);
     if new_ptr == null {
@@ -78,7 +89,11 @@ pub fn GlobalAlloc.grow(self, ptr: *mut UInt8, old: Layout, new: Layout) -> Resu
   }
 }
 
-pub fn GlobalAlloc.shrink(self, ptr: *mut UInt8, old: Layout, new: Layout) -> Result<*mut UInt8, AllocError> {
+pub fn GlobalAlloc.shrink(self, ptr: *mut UInt8, old: Layout, new: Layout) -> Result<*mut UInt8, AllocError>
+  requires: ptr != null
+  requires: new.size < old.size
+  requires: new.size > 0
+{
   unsafe {
     let new_ptr = realloc(ptr, new.size as UInt);
     if new_ptr == null {
@@ -89,13 +104,19 @@ pub fn GlobalAlloc.shrink(self, ptr: *mut UInt8, old: Layout, new: Layout) -> Re
 }
 
 // Global allocator (wraps malloc/free)
-pub fn alloc(size: Int) -> *mut UInt8 {
+pub fn alloc(size: Int) -> *mut UInt8
+  requires: size > 0
+  ensures:  result != null
+{
   unsafe {
     return malloc(size as UInt);
   }
 }
 
-pub fn alloc_zeroed(size: Int) -> *mut UInt8 {
+pub fn alloc_zeroed(size: Int) -> *mut UInt8
+  requires: size > 0
+  ensures:  result != null
+{
   unsafe {
     let ptr = malloc(size as UInt);
     memset(ptr, 0, size as UInt);
@@ -103,26 +124,37 @@ pub fn alloc_zeroed(size: Int) -> *mut UInt8 {
   }
 }
 
-pub fn realloc(ptr: *mut UInt8, old_size: Int, new_size: Int) -> *mut UInt8 {
+pub fn realloc(ptr: *mut UInt8, old_size: Int, new_size: Int) -> *mut UInt8
+  requires: ptr != null
+  requires: new_size > 0
+  ensures:  result != null
+{
   unsafe {
     return realloc(ptr, new_size as UInt);
   }
 }
 
-pub fn dealloc(ptr: *mut UInt8, size: Int) {
+pub fn dealloc(ptr: *mut UInt8, size: Int)
+  requires: ptr != null
+{
   unsafe {
     free(ptr);
   }
 }
 
 // Sized allocation
-pub fn alloc_layout(layout: Layout) -> *mut UInt8 {
+pub fn alloc_layout(layout: Layout) -> *mut UInt8
+  requires: layout.size > 0
+  ensures:  result != null
+{
   unsafe {
     return malloc(layout.size as UInt);
   }
 }
 
-pub fn dealloc_layout(ptr: *mut UInt8, layout: Layout) {
+pub fn dealloc_layout(ptr: *mut UInt8, layout: Layout)
+  requires: ptr != null
+{
   unsafe {
     free(ptr);
   }

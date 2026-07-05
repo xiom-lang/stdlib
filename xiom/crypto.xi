@@ -207,7 +207,9 @@ fn _int_to_be_bytes(x: Int, buf: &mut Vec[UInt8], offset: Int) {
   }
 }
 
-pub fn sha256(data: &Vec[UInt8]) -> Vec[UInt8] {
+pub fn sha256(data: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: result.len() == 32  // SHA-256 always 32 bytes
+{
   var h = _sha256_pad_and_process(data);
   var result = Vec[UInt8].new();
   var i = 0;
@@ -222,7 +224,9 @@ pub fn sha256(data: &Vec[UInt8]) -> Vec[UInt8] {
   return result;
 }
 
-pub fn sha256_hex(data: &Vec[UInt8]) -> Str {
+pub fn sha256_hex(data: &Vec[UInt8]) -> Str
+  ensures: result.len() == 64  // 32 bytes * 2 hex chars
+{
   var hash = sha256(data);
   var result = Vec[UInt8].new();
   var i = 0;
@@ -437,7 +441,9 @@ fn _i64_byte(v: Int, pos: Int) -> UInt8 {
   return b as UInt8;
 }
 
-pub fn sha512(data: &Vec[UInt8]) -> Vec[UInt8] {
+pub fn sha512(data: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: result.len() == 64
+{
   var h = _sha512_pad_and_process(data);
   var result = Vec[UInt8].new();
   var i = 0;
@@ -499,7 +505,9 @@ fn _md5_i(x: Int, y: Int, z: Int) -> Int {
   return _u32_mask(y ^ (x | (~z)));
 }
 
-pub fn md5(data: &Vec[UInt8]) -> Vec[UInt8] {
+pub fn md5(data: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: result.len() == 16
+{
   let data_len = data.len();
   let bit_len = data_len * 8;
   var pad_len = 64 - ((data_len + 9) % 64);
@@ -621,7 +629,9 @@ const _HMAC_BLOCK_SIZE: Int = 64;
 const _HMAC_IPAD: UInt8 = 0x36;
 const _HMAC_OPAD: UInt8 = 0x5c;
 
-pub fn hmac_sha256(key: &Vec[UInt8], data: &Vec[UInt8]) -> Vec[UInt8] {
+pub fn hmac_sha256(key: &Vec[UInt8], data: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: result.len() == 32
+{
   var norm_key = Vec[UInt8].new();
   if key.len() > _HMAC_BLOCK_SIZE {
     norm_key = sha256(key);
@@ -968,10 +978,13 @@ fn _pkcs7_unpad(data: &Vec[UInt8]) -> Result<Vec[UInt8], Str> {
     result.push(data[i]);
     i = i + 1;
   }
-  return Ok(result);
+return Ok(result);
 }
 
-pub fn aes_encrypt(key: &Vec[UInt8], plaintext: &Vec[UInt8]) -> Result<Vec[UInt8], Str> {
+pub fn aes_encrypt(key: &Vec[UInt8], plaintext: &Vec[UInt8]) -> Result[Vec[UInt8], Str]
+  requires: key.len() == 16 || key.len() == 24 || key.len() == 32  // AES-128/192/256
+  requires: plaintext.len() > 0
+{
   if key.len() != 16 && key.len() != 24 && key.len() != 32 {
     return Err("invalid key length: must be 16, 24, or 32 bytes");
   }
@@ -992,7 +1005,11 @@ pub fn aes_encrypt(key: &Vec[UInt8], plaintext: &Vec[UInt8]) -> Result<Vec[UInt8
   return Ok(result);
 }
 
-pub fn aes_decrypt(key: &Vec[UInt8], ciphertext: &Vec[UInt8]) -> Result<Vec[UInt8], Str> {
+pub fn aes_decrypt(key: &Vec[UInt8], ciphertext: &Vec[UInt8]) -> Result<Vec[UInt8], Str>
+  requires: key.len() == 16 || key.len() == 24 || key.len() == 32
+  requires: ciphertext.len() > 0
+  requires: ciphertext.len() % 16 == 0  // AES block size
+{
   if key.len() != 16 && key.len() != 24 && key.len() != 32 {
     return Err("invalid key length: must be 16, 24, or 32 bytes");
   }
@@ -1203,7 +1220,11 @@ pub fn rsa_verify(public_key: &Vec[UInt8], data: &Vec[UInt8], signature: &Vec[UI
 // Key Derivation
 // ============================================================================
 
-pub fn pbkdf2(password: &Str, salt: &Vec[UInt8], iterations: Int, key_len: Int) -> Vec[UInt8] {
+pub fn pbkdf2(password: &Str, salt: &Vec[UInt8], iterations: Int, key_len: Int) -> Vec[UInt8]
+  requires: iterations > 0
+  requires: key_len > 0
+  ensures:  result.len() == key_len
+{
   var pass_bytes = Vec[UInt8].new();
   var pi = 0;
   while pi < password.len() {
@@ -1279,7 +1300,9 @@ pub fn secure_random_bytes(count: Int) -> Vec[UInt8] {
   return result;
 }
 
-pub fn constant_time_compare(a: &Vec[UInt8], b: &Vec[UInt8]) -> Bool {
+pub fn constant_time_compare(a: &Vec[UInt8], b: &Vec[UInt8]) -> Bool
+  ensures: result == true => a.len() == b.len()  // equal length needed for equality
+{
   if a.len() != b.len() { return false; }
   var diff: Int = 0;
   var i = 0;

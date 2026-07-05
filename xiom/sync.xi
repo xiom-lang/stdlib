@@ -9,11 +9,15 @@ use xiom.alloc
 // === Mutex ===
 pub type Mutex[T] = { data: T; locked: Bool; }
 
-pub fn Mutex.new[T](data: T) -> Mutex[T] {
+pub fn Mutex.new[T](data: T) -> Mutex[T]
+  ensures: result contains data
+{
   Mutex[T]{ data: data; locked: false; }
 }
 
-pub fn Mutex.lock[T](self) -> MutexGuard[T] {
+pub fn Mutex.lock[T](self) -> MutexGuard[T]
+  ensures: result provides access to protected data
+{
   MutexGuard[T]{ mutex: self; }
 }
 
@@ -81,7 +85,10 @@ pub fn Once.new() -> Once {
   Once{ done: false; }
 }
 
-pub fn Once.call_once(self, f: fn()) {
+pub fn Once.call_once(self, f: fn())
+  ensures: f has been called exactly once
+  ensures: done == true
+{
   if !done {
     done = true;
     f();
@@ -98,7 +105,10 @@ pub type ArcInner[T] = {
   value: T;
 }
 
-pub fn Arc.new[T](value: T) -> Arc[T] {
+pub fn Arc.new[T](value: T) -> Arc[T]
+  requires: ptr != null
+  ensures:  strong_count == 1
+{
   let size = size_of[ArcInner[T]];
   unsafe {
     let raw = alloc(size);
@@ -109,7 +119,10 @@ pub fn Arc.new[T](value: T) -> Arc[T] {
   }
 }
 
-pub fn Arc.clone[T](self) -> Arc[T] {
+pub fn Arc.clone[T](self) -> Arc[T]
+  requires: ptr != null
+  ensures:  strong_count() == strong_count()@pre + 1
+{
   unsafe {
     (*ptr).count = (*ptr).count + 1;
   };
@@ -122,7 +135,10 @@ pub fn Arc.get[T](self) -> T {
   }
 }
 
-pub fn Arc.strong_count[T](self) -> Int {
+pub fn Arc.strong_count[T](self) -> Int
+  requires: ptr != null
+  ensures:  result >= 1
+{
   unsafe {
     (*ptr).count
   }
@@ -148,7 +164,9 @@ pub fn AtomicBool.store(self, val: Bool) {
   val = val;
 }
 
-pub fn AtomicBool.swap(self, val: Bool) -> Bool {
+pub fn AtomicBool.swap(self, val: Bool) -> Bool
+  ensures: result is previous value
+{
   let old = val;
   val = val;
   old
@@ -166,7 +184,9 @@ pub fn AtomicInt.store(self, val: Int) {
   val = val;
 }
 
-pub fn AtomicInt.fetch_add(self, val: Int) -> Int {
+pub fn AtomicInt.fetch_add(self, val: Int) -> Int
+  ensures: result is previous value
+{
   let old = val;
   val = val + val;
   old
@@ -181,7 +201,9 @@ pub fn AtomicInt.fetch_sub(self, val: Int) -> Int {
 // === Barrier ===
 pub type Barrier = { count: Int; generation: Int; }
 
-pub fn Barrier.new(n: Int) -> Barrier {
+pub fn Barrier.new(n: Int) -> Barrier
+  requires: n > 0
+{
   Barrier{ count: n; generation: 0; }
 }
 

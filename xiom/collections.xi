@@ -21,7 +21,9 @@ fn Vec.with_capacity[T](cap: Int) -> Vec[T] {
   return v;
 }
 
-fn Vec.push[T](value: T) {
+fn Vec.push[T](value: T)
+  ensures: len() == len()@pre + 1
+{
   unsafe {
     if len >= cap {
       var new_cap = cap * 2;
@@ -35,7 +37,9 @@ fn Vec.push[T](value: T) {
   }
 }
 
-fn Vec.pop[T]() -> Option[T] {
+fn Vec.pop[T]() -> Option[T]
+  ensures: len() == len()@pre - 1 || len() == 0
+{
   if len == 0 { return None; }
   len = len - 1;
   unsafe {
@@ -43,7 +47,10 @@ fn Vec.pop[T]() -> Option[T] {
   }
 }
 
-fn Vec.get[T](index: Int) -> Option[T] {
+fn Vec.get[T](index: Int) -> Option[T]
+  ensures: result is Some => index >= 0 && index < len()@pre
+  ensures: result is None => index < 0 || index >= len()@pre
+{
   if index < 0 || index >= len { return None; }
   unsafe {
     return Some(*(data + index));
@@ -58,11 +65,18 @@ fn Vec.is_empty[T]() -> Bool {
   return len == 0;
 }
 
-fn Vec.clear[T]() {
+fn Vec.clear[T]()
+  ensures: len() == 0
+  ensures: is_empty()
+{
   len = 0;
 }
 
-fn Vec.insert[T](index: Int, value: T) {
+fn Vec.insert[T](index: Int, value: T)
+  requires: index >= 0
+  requires: index <= len()
+  ensures:  len() == len()@pre + 1
+{
   if index < 0 || index > len { return; }
   unsafe {
     if len >= cap {
@@ -81,7 +95,10 @@ fn Vec.insert[T](index: Int, value: T) {
   }
 }
 
-fn Vec.remove[T](index: Int) -> Option[T] {
+fn Vec.remove[T](index: Int) -> Option[T]
+  requires: index >= 0
+  ensures:  result is Some => len() == len()@pre - 1
+{
   if index < 0 || index >= len { return None; }
   unsafe {
     var val = *(data + index);
@@ -95,21 +112,29 @@ fn Vec.remove[T](index: Int) -> Option[T] {
   }
 }
 
-fn Vec.first[T]() -> Option[T] {
+fn Vec.first[T]() -> Option[T]
+  ensures: result is Some => len()@pre > 0
+  ensures: result is None => len()@pre == 0
+{
   if len == 0 { return None; }
   unsafe {
     return Some(*(data + 0));
   }
 }
 
-fn Vec.last[T]() -> Option[T] {
+fn Vec.last[T]() -> Option[T]
+  ensures: result is Some => len()@pre > 0
+{
   if len == 0 { return None; }
   unsafe {
     return Some(*(data + len - 1));
   }
 }
 
-fn Vec.set[T](index: Int, value: T) {
+fn Vec.set[T](index: Int, value: T)
+  requires: index >= 0
+  requires: index < len()
+{
   if index < 0 || index >= len { return; }
   unsafe {
     *(data + index) = value;
@@ -126,7 +151,9 @@ fn Map.new[K, V]() -> Map[K, V] {
   return Map[K, V]{ keys: Vec[K].new(), values: Vec[V].new() };
 }
 
-fn Map.insert[K, V](key: K, value: V) {
+fn Map.insert[K, V](key: K, value: V)
+  ensures: contains(&key)
+{
   var i = 0;
   while i < keys.len() {
     if keys[i] == key {
@@ -139,7 +166,9 @@ fn Map.insert[K, V](key: K, value: V) {
   values.push(value);
 }
 
-fn Map.get[K, V](key: &K) -> Option[V] {
+fn Map.get[K, V](key: &K) -> Option[V]
+  ensures: result is Some => contains(key)
+{
   var i = 0;
   while i < keys.len() {
     if keys[i] == *key {
@@ -150,7 +179,9 @@ fn Map.get[K, V](key: &K) -> Option[V] {
   return None;
 }
 
-fn Map.remove[K, V](key: &K) -> Option[V] {
+fn Map.remove[K, V](key: &K) -> Option[V]
+  ensures: !contains(key)
+{
   var i = 0;
   while i < keys.len() {
     if keys[i] == *key {
@@ -203,7 +234,9 @@ fn Map.values[K, V]() -> Vec[V] {
   return result;
 }
 
-fn Map.clear[K, V]() {
+fn Map.clear[K, V]()
+  ensures: len() == 0
+{
   keys.clear();
   values.clear();
 }
@@ -217,7 +250,9 @@ fn Set.new[T]() -> Set[T] {
   return Set[T]{ items: Vec[T].new() };
 }
 
-fn Set.insert[T](value: T) {
+fn Set.insert[T](value: T)
+  ensures: contains(&value)
+{
   var i = 0;
   while i < items.len() {
     if items[i] == value { return; }
@@ -226,7 +261,9 @@ fn Set.insert[T](value: T) {
   items.push(value);
 }
 
-fn Set.remove[T](value: &T) {
+fn Set.remove[T](value: &T)
+  ensures: !contains(value)
+{
   var i = 0;
   while i < items.len() {
     if items[i] == *value {
@@ -255,7 +292,10 @@ fn Set.len[T]() -> Int {
   return items.len();
 }
 
-fn Set.union[T](other: &Set[T]) -> Set[T] {
+fn Set.union[T](other: &Set[T]) -> Set[T]
+  ensures: result.len() >= len()
+  ensures: result.len() >= other.len()
+{
   var result = Set[T].new();
   var i = 0;
   while i < items.len() {
@@ -270,7 +310,10 @@ fn Set.union[T](other: &Set[T]) -> Set[T] {
   return result;
 }
 
-fn Set.intersection[T](other: &Set[T]) -> Set[T] {
+fn Set.intersection[T](other: &Set[T]) -> Set[T]
+  ensures: result.len() <= len()
+  ensures: result.len() <= other.len()
+{
   var result = Set[T].new();
   var i = 0;
   while i < items.len() {
@@ -282,7 +325,9 @@ fn Set.intersection[T](other: &Set[T]) -> Set[T] {
   return result;
 }
 
-fn Set.difference[T](other: &Set[T]) -> Set[T] {
+fn Set.difference[T](other: &Set[T]) -> Set[T]
+  ensures: result.len() <= len()
+{
   var result = Set[T].new();
   var i = 0;
   while i < items.len() {
@@ -303,7 +348,9 @@ fn LinkedList.new[T]() -> LinkedList[T] {
   return LinkedList[T]{ items: Vec[T].new() };
 }
 
-fn LinkedList.push_front[T](value: T) {
+fn LinkedList.push_front[T](value: T)
+  ensures: len() == len()@pre + 1
+{
   var new_items = Vec[T].new();
   new_items.push(value);
   var i = 0;
@@ -314,11 +361,15 @@ fn LinkedList.push_front[T](value: T) {
   items = new_items;
 }
 
-fn LinkedList.push_back[T](value: T) {
+fn LinkedList.push_back[T](value: T)
+  ensures: len() == len()@pre + 1
+{
   items.push(value);
 }
 
-fn LinkedList.pop_front[T]() -> Option[T] {
+fn LinkedList.pop_front[T]() -> Option[T]
+  ensures: result is Some => len() == len()@pre - 1
+{
   if items.len() == 0 { return None; }
   var val = items[0];
   var i = 0;
@@ -330,7 +381,9 @@ fn LinkedList.pop_front[T]() -> Option[T] {
   return Some(val);
 }
 
-fn LinkedList.pop_back[T]() -> Option[T] {
+fn LinkedList.pop_back[T]() -> Option[T]
+  ensures: result is Some => len() == len()@pre - 1
+{
   if items.len() == 0 { return None; }
   var idx = items.len() - 1;
   var val = items[idx];
@@ -357,19 +410,25 @@ fn Queue.new[T]() -> Queue[T] {
   return Queue[T]{ data: Vec[T].new(), head: 0, tail: 0 };
 }
 
-fn Queue.enqueue[T](value: T) {
+fn Queue.enqueue[T](value: T)
+  ensures: len() == len()@pre + 1
+{
   data.push(value);
   tail = tail + 1;
 }
 
-fn Queue.dequeue[T]() -> Option[T] {
+fn Queue.dequeue[T]() -> Option[T]
+  ensures: result is Some => len() == len()@pre - 1
+{
   if head >= tail { return None; }
   var val = data[head];
   head = head + 1;
   return Some(val);
 }
 
-fn Queue.peek[T]() -> Option[T] {
+fn Queue.peek[T]() -> Option[T]
+  ensures: len() == len()@pre
+{
   if head >= tail { return None; }
   return Some(data[head]);
 }
@@ -391,11 +450,15 @@ fn Stack.new[T]() -> Stack[T] {
   return Stack[T]{ items: Vec[T].new() };
 }
 
-fn Stack.push[T](value: T) {
+fn Stack.push[T](value: T)
+  ensures: len() == len()@pre + 1
+{
   items.push(value);
 }
 
-fn Stack.pop[T]() -> Option[T] {
+fn Stack.pop[T]() -> Option[T]
+  ensures: result is Some => len() == len()@pre - 1
+{
   if items.len() == 0 { return None; }
   var idx = items.len() - 1;
   var val = items[idx];
@@ -403,7 +466,9 @@ fn Stack.pop[T]() -> Option[T] {
   return Some(val);
 }
 
-fn Stack.peek[T]() -> Option[T] {
+fn Stack.peek[T]() -> Option[T]
+  ensures: len() == len()@pre
+{
   if items.len() == 0 { return None; }
   return Some(items[items.len() - 1]);
 }
@@ -431,7 +496,9 @@ fn VecDeque.with_capacity[T](cap: Int) -> VecDeque[T] {
   return VecDeque[T]{ data: Vec[T].with_capacity(cap), head: 0, tail: 0 };
 }
 
-fn VecDeque.push_front[T](value: T) {
+fn VecDeque.push_front[T](value: T)
+  ensures: len() == len()@pre + 1
+{
   var new_data = Vec[T].new();
   new_data.push(value);
   var i = 0;
@@ -444,30 +511,40 @@ fn VecDeque.push_front[T](value: T) {
   head = 0;
 }
 
-fn VecDeque.push_back[T](value: T) {
+fn VecDeque.push_back[T](value: T)
+  ensures: len() == len()@pre + 1
+{
   data.push(value);
   tail = data.len();
 }
 
-fn VecDeque.pop_front[T]() -> Option[T] {
+fn VecDeque.pop_front[T]() -> Option[T]
+  ensures: result is Some => len() == len()@pre - 1
+{
   if head >= tail { return None; }
   var val = data[head];
   head = head + 1;
   return Some(val);
 }
 
-fn VecDeque.pop_back[T]() -> Option[T] {
+fn VecDeque.pop_back[T]() -> Option[T]
+  ensures: result is Some => len() == len()@pre - 1
+{
   if head >= tail { return None; }
   tail = tail - 1;
   return Some(data[tail]);
 }
 
-fn VecDeque.front[T]() -> Option[T] {
+fn VecDeque.front[T]() -> Option[T]
+  ensures: len() == len()@pre
+{
   if head >= tail { return None; }
   return Some(data[head]);
 }
 
-fn VecDeque.back[T]() -> Option[T] {
+fn VecDeque.back[T]() -> Option[T]
+  ensures: len() == len()@pre
+{
   if head >= tail { return None; }
   return Some(data[tail - 1]);
 }
@@ -486,7 +563,9 @@ fn BTreeMap.new[K: Ord, V]() -> BTreeMap[K, V] {
   return BTreeMap[K, V]{ keys: Vec[K].new(), values: Vec[V].new() };
 }
 
-fn BTreeMap.insert[K: Ord, V](key: K, value: V) -> Option[V] {
+fn BTreeMap.insert[K: Ord, V](key: K, value: V) -> Option[V]
+  ensures: contains_key(&key)
+{
   var lo = 0;
   var hi = keys.len();
   while lo < hi {
@@ -515,7 +594,9 @@ fn BTreeMap.insert[K: Ord, V](key: K, value: V) -> Option[V] {
   return None;
 }
 
-fn BTreeMap.get[K: Ord, V](key: &K) -> Option[V] {
+fn BTreeMap.get[K: Ord, V](key: &K) -> Option[V]
+  ensures: result is Some => contains_key(key)
+{
   var lo = 0;
   var hi = keys.len();
   while lo < hi {
@@ -531,7 +612,9 @@ fn BTreeMap.get[K: Ord, V](key: &K) -> Option[V] {
   return None;
 }
 
-fn BTreeMap.remove[K: Ord, V](key: &K) -> Option[V] {
+fn BTreeMap.remove[K: Ord, V](key: &K) -> Option[V]
+  ensures: !contains_key(key)
+{
   var lo = 0;
   var hi = keys.len();
   while lo < hi {
@@ -572,12 +655,16 @@ fn BTreeMap.contains_key[K: Ord, V](key: &K) -> Bool {
   return false;
 }
 
-fn BTreeMap.first_entry[K: Ord, V]() -> Option[(K, V)] {
+fn BTreeMap.first_entry[K: Ord, V]() -> Option[(K, V)]
+  ensures: result is Some => len()@pre > 0
+{
   if keys.len() == 0 { return None; }
   return Some((keys[0], values[0]));
 }
 
-fn BTreeMap.last_entry[K: Ord, V]() -> Option[(K, V)] {
+fn BTreeMap.last_entry[K: Ord, V]() -> Option[(K, V)]
+  ensures: result is Some => len()@pre > 0
+{
   if keys.len() == 0 { return None; }
   var idx = keys.len() - 1;
   return Some((keys[idx], values[idx]));
@@ -596,7 +683,9 @@ fn BTreeSet.new[T: Ord]() -> BTreeSet[T] {
   return BTreeSet[T]{ items: Vec[T].new() };
 }
 
-fn BTreeSet.insert[T: Ord](value: T) -> Bool {
+fn BTreeSet.insert[T: Ord](value: T) -> Bool
+  ensures: contains(&value)
+{
   var lo = 0;
   var hi = items.len();
   while lo < hi {
@@ -618,7 +707,9 @@ fn BTreeSet.insert[T: Ord](value: T) -> Bool {
   return true;
 }
 
-fn BTreeSet.remove[T: Ord](value: &T) -> Bool {
+fn BTreeSet.remove[T: Ord](value: &T) -> Bool
+  ensures: !contains(value)
+{
   var lo = 0;
   var hi = items.len();
   while lo < hi {
@@ -656,12 +747,16 @@ fn BTreeSet.contains[T: Ord](value: &T) -> Bool {
   return false;
 }
 
-fn BTreeSet.first[T: Ord]() -> Option[T] {
+fn BTreeSet.first[T: Ord]() -> Option[T]
+  ensures: result is Some => len()@pre > 0
+{
   if items.len() == 0 { return None; }
   return Some(items[0]);
 }
 
-fn BTreeSet.last[T: Ord]() -> Option[T] {
+fn BTreeSet.last[T: Ord]() -> Option[T]
+  ensures: result is Some => len()@pre > 0
+{
   if items.len() == 0 { return None; }
   return Some(items[items.len() - 1]);
 }
@@ -683,17 +778,23 @@ fn Slice.is_empty[T]() -> Bool {
   return data.len() == 0;
 }
 
-fn Slice.first[T]() -> Option[T] {
+fn Slice.first[T]() -> Option[T]
+  ensures: result is Some => len()@pre > 0
+{
   if data.len() == 0 { return None; }
   return Some(data[0]);
 }
 
-fn Slice.last[T]() -> Option[T] {
+fn Slice.last[T]() -> Option[T]
+  ensures: result is Some => len()@pre > 0
+{
   if data.len() == 0 { return None; }
   return Some(data[data.len() - 1]);
 }
 
-fn Slice.get[T](index: Int) -> Option[T] {
+fn Slice.get[T](index: Int) -> Option[T]
+  ensures: result is Some => index >= 0 && index < len()@pre
+{
   if index < 0 || index >= data.len() { return None; }
   return Some(data[index]);
 }

@@ -6,7 +6,9 @@ module xiom.mem
 
 use xiom.ptr;
 
-pub fn swap[T](a: &mut T, b: &mut T) {
+pub fn swap[T](a: &mut T, b: &mut T)
+  ensures: a@pre is now in b && b@pre is now in a
+{
   unsafe {
     let pa = ptr.from_mut(a);
     let pb = ptr.from_mut(b);
@@ -14,14 +16,18 @@ pub fn swap[T](a: &mut T, b: &mut T) {
   };
 }
 
-pub fn replace[T](dest: &mut T, src: T) -> T {
+pub fn replace[T](dest: &mut T, src: T) -> T
+  ensures: result is the old value
+{
   unsafe {
     let pd = ptr.from_mut(dest);
     return ptr.replace(pd, src);
   }
 }
 
-pub fn take[T: Default](dest: &mut T) -> T {
+pub fn take[T: Default](dest: &mut T) -> T
+  ensures: dest is now default value
+{
   return replace(dest, T.default());
 }
 
@@ -29,15 +35,21 @@ pub fn drop[T](value: T) {
 }
 
 // Size queries
+// Compiler intrinsic — requires compiler support
 pub fn size_of[T]() -> Int;
 
+// Compiler intrinsic — requires compiler support
 pub fn align_of[T]() -> Int;
 
-pub fn size_of_val[T](value: &T) -> Int {
+pub fn size_of_val[T](value: &T) -> Int
+  ensures: result > 0
+{
   return size_of[T]();
 }
 
-pub fn min_align_of_val[T](value: &T) -> Int {
+pub fn min_align_of_val[T](value: &T) -> Int
+  ensures: result > 0
+{
   return align_of[T]();
 }
 

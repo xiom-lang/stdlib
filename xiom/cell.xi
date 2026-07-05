@@ -26,7 +26,9 @@ pub fn Cell.set[T](self, value: T) {
   };
 }
 
-pub fn Cell.replace[T](self, value: T) -> T {
+pub fn Cell.replace[T](self, value: T) -> T
+  ensures: result is old value
+{
   unsafe {
     let raw = ptr.from_ref(self) as *mut Cell[T];
     let old = (*raw).value;
@@ -35,7 +37,9 @@ pub fn Cell.replace[T](self, value: T) -> T {
   }
 }
 
-pub fn Cell.swap[T](self, other: &Cell[T]) {
+pub fn Cell.swap[T](self, other: &Cell[T])
+  ensures: self now contains old other value
+{
   unsafe {
     let self_raw = ptr.from_ref(self) as *mut Cell[T];
     let other_raw = ptr.from_ref(other) as *mut Cell[T];
@@ -51,11 +55,16 @@ pub fn Cell.swap[T](self, other: &Cell[T]) {
 // borrows == 0: no active borrows
 pub type RefCell[T] = { value: T; borrows: Int; }
 
-pub fn RefCell.new[T](value: T) -> RefCell[T] {
+pub fn RefCell.new[T](value: T) -> RefCell[T]
+  ensures: borrows == 0
+{
   return RefCell[T]{ value: value; borrows: 0 };
 }
 
-pub fn RefCell.borrow[T](self) -> Ref[T] {
+pub fn RefCell.borrow[T](self) -> Ref[T]
+  requires: borrows >= 0
+  ensures:  borrows == borrows@pre + 1
+{
   unsafe {
     let raw = ptr.from_ref(self) as *mut RefCell[T];
     if (*raw).borrows == -1 {
@@ -66,7 +75,10 @@ pub fn RefCell.borrow[T](self) -> Ref[T] {
   return Ref[T]{ cell: RefCell[T]{ value: value; borrows: borrows } };
 }
 
-pub fn RefCell.borrow_mut[T](self) -> RefMut[T] {
+pub fn RefCell.borrow_mut[T](self) -> RefMut[T]
+  requires: borrows == 0
+  ensures:  borrows == -1
+{
   unsafe {
     let raw = ptr.from_ref(self) as *mut RefCell[T];
     if (*raw).borrows != 0 {
@@ -77,7 +89,10 @@ pub fn RefCell.borrow_mut[T](self) -> RefMut[T] {
   return RefMut[T]{ cell: RefCell[T]{ value: value; borrows: borrows } };
 }
 
-pub fn RefCell.try_borrow[T](self) -> Option[Ref[T]] {
+pub fn RefCell.try_borrow[T](self) -> Option[Ref[T]]
+  ensures: result is Some => borrows increased
+  ensures: result is None => borrows unchanged
+{
   unsafe {
     let raw = ptr.from_ref(self) as *mut RefCell[T];
     if (*raw).borrows == -1 {
@@ -88,7 +103,10 @@ pub fn RefCell.try_borrow[T](self) -> Option[Ref[T]] {
   return Some(Ref[T]{ cell: RefCell[T]{ value: value; borrows: borrows } });
 }
 
-pub fn RefCell.try_borrow_mut[T](self) -> Option[RefMut[T]] {
+pub fn RefCell.try_borrow_mut[T](self) -> Option[RefMut[T]]
+  ensures: result is Some => borrows changed to write mode
+  ensures: result is None => borrows unchanged
+{
   unsafe {
     let raw = ptr.from_ref(self) as *mut RefCell[T];
     if (*raw).borrows != 0 {
@@ -99,7 +117,9 @@ pub fn RefCell.try_borrow_mut[T](self) -> Option[RefMut[T]] {
   return Some(RefMut[T]{ cell: RefCell[T]{ value: value; borrows: borrows } });
 }
 
-pub fn RefCell.replace[T](self, value: T) -> T {
+pub fn RefCell.replace[T](self, value: T) -> T
+  ensures: result is old value
+{
   unsafe {
     let raw = ptr.from_ref(self) as *mut RefCell[T];
     let old = (*raw).value;
