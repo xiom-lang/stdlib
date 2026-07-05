@@ -53,7 +53,11 @@ pub fn Cell.swap[T](self, other: &Cell[T])
 // borrows > 0: active shared borrows
 // borrows == -1: one active mutable borrow
 // borrows == 0: no active borrows
-pub type RefCell[T] = { value: T; borrows: Int; }
+pub type RefCell[T] = {
+  value: T;
+  borrows: Int;
+  invariant: borrows >= -1;
+}
 
 pub fn RefCell.new[T](value: T) -> RefCell[T]
   ensures: borrows == 0

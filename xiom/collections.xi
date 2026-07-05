@@ -9,6 +9,9 @@ type Vec[T] = {
   data: *T;
   len: Int;
   cap: Int;
+  invariant: len >= 0;
+  invariant: cap >= 0;
+  invariant: len <= cap;
 }
 
 fn Vec.new[T]() -> Vec[T] {
@@ -145,6 +148,7 @@ fn Vec.set[T](index: Int, value: T)
 type Map[K, V] = {
   keys: Vec[K];
   values: Vec[V];
+  invariant: keys.len() == values.len();
 }
 
 fn Map.new[K, V]() -> Map[K, V] {
@@ -244,6 +248,7 @@ fn Map.clear[K, V]()
 // === Set ===
 type Set[T] = {
   items: Vec[T];
+  invariant: items.len() >= 0;
 }
 
 fn Set.new[T]() -> Set[T] {
@@ -342,6 +347,7 @@ fn Set.difference[T](other: &Set[T]) -> Set[T]
 // === LinkedList ===
 type LinkedList[T] = {
   items: Vec[T];
+  invariant: items.len() >= 0;
 }
 
 fn LinkedList.new[T]() -> LinkedList[T] {
@@ -404,6 +410,7 @@ type Queue[T] = {
   data: Vec[T];
   head: Int;
   tail: Int;
+  invariant: data.len() >= 0;
 }
 
 fn Queue.new[T]() -> Queue[T] {
@@ -444,6 +451,7 @@ fn Queue.is_empty[T]() -> Bool {
 // === Stack ===
 type Stack[T] = {
   items: Vec[T];
+  invariant: items.len() >= 0;
 }
 
 fn Stack.new[T]() -> Stack[T] {
@@ -486,6 +494,7 @@ type VecDeque[T] = {
   data: Vec[T];
   head: Int;
   tail: Int;
+  invariant: data.len() >= 0;
 }
 
 fn VecDeque.new[T]() -> VecDeque[T] {
@@ -557,6 +566,7 @@ fn VecDeque.len[T]() -> Int {
 type BTreeMap[K: Ord, V] = {
   keys: Vec[K];
   values: Vec[V];
+  invariant: keys.len() == values.len();
 }
 
 fn BTreeMap.new[K: Ord, V]() -> BTreeMap[K, V] {
@@ -677,6 +687,7 @@ fn BTreeMap.len[K: Ord, V]() -> Int {
 // === BTreeSet (sorted set) ===
 type BTreeSet[T: Ord] = {
   items: Vec[T];
+  invariant: items.len() >= 0;
 }
 
 fn BTreeSet.new[T: Ord]() -> BTreeSet[T] {
@@ -768,6 +779,7 @@ fn BTreeSet.len[T: Ord]() -> Int {
 // === Slice methods ===
 type Slice[T] = {
   data: Vec[T];
+  invariant: data.len() >= 0;
 }
 
 fn Slice.len[T]() -> Int {

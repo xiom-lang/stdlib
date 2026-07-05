@@ -9,6 +9,27 @@ use xiom.core.INT_MIN;
 use xiom.core.to_int;
 use xiom.core.to_float;
 
+// Fast math FFI — uses C standard math library (libm)
+// Link with -lm on Unix, automatically linked on Windows
+extern "C" {
+  fn sin(x: Float64) -> Float64;
+  fn cos(x: Float64) -> Float64;
+  fn tan(x: Float64) -> Float64;
+  fn asin(x: Float64) -> Float64;
+  fn acos(x: Float64) -> Float64;
+  fn atan(x: Float64) -> Float64;
+  fn atan2(y: Float64, x: Float64) -> Float64;
+  fn sqrt(x: Float64) -> Float64;
+  fn pow(base: Float64, exp: Float64) -> Float64;
+  fn exp(x: Float64) -> Float64;
+  fn log(x: Float64) -> Float64;
+  fn log10(x: Float64) -> Float64;
+  fn floor(x: Float64) -> Float64;
+  fn ceil(x: Float64) -> Float64;
+  fn fabs(x: Float64) -> Float64;
+  fn fmod(x: Float64, y: Float64) -> Float64;
+}
+
 // === Constants ===
 const PI: Float64 = 3.141592653589793;
 const E: Float64 = 2.718281828459045;
@@ -109,24 +130,13 @@ pub fn sqrt(x: Float64) -> Float64
   requires: x >= 0.0
   ensures:  result >= 0.0
 {
-  if x < 0.0 { return -1.0; }
-  if x == 0.0 { return 0.0; }
-  var guess = x / 2.0;
-  var i = 0;
-  while i < 50 {
-    guess = (guess + x / guess) / 2.0;
-    i = i + 1;
-  }
-  return guess;
+  unsafe { return sqrt(x); }
 }
 
 pub fn pow(base: Float64, exp: Float64) -> Float64
   requires: base >= 0.0 || exp == to_int(exp)  // negative base only for integer exp
 {
-  if exp == 0.0 { return 1.0; }
-  if base == 0.0 { return 0.0; }
-  if base < 0.0 { return -1.0; }
-  return exp_inner(exp * _ln_impl(base));
+  unsafe { return pow(base, exp); }
 }
 
 pub fn abs_int(x: Int) -> Int {
@@ -135,8 +145,7 @@ pub fn abs_int(x: Int) -> Int {
 }
 
 pub fn abs_float(x: Float64) -> Float64 {
-  if x >= 0.0 { return x; }
-  return -x;
+  unsafe { return fabs(x); }
 }
 
 pub fn min_int(a: Int, b: Int) -> Int {
@@ -159,18 +168,12 @@ pub fn max_float(a: Float64, b: Float64) -> Float64 {
   return b;
 }
 
-pub fn floor(x: Float64) -> Int {
-  var i = to_int(x);
-  if x >= 0.0 { return i; }
-  if to_float(i) == x { return i; }
-  return i - 1;
+pub fn floor(x: Float64) -> Float64 {
+  unsafe { return floor(x); }
 }
 
-pub fn ceil(x: Float64) -> Int {
-  var i = to_int(x);
-  if x <= 0.0 { return i; }
-  if to_float(i) == x { return i; }
-  return i + 1;
+pub fn ceil(x: Float64) -> Float64 {
+  unsafe { return ceil(x); }
 }
 
 pub fn round(x: Float64) -> Int {
@@ -181,50 +184,37 @@ pub fn round(x: Float64) -> Int {
 // === Trig ===
 
 pub fn sin(x: Float64) -> Float64 {
-  return _sin_taylor(_normalize_angle(x));
+  unsafe { return sin(x); }
 }
 
 pub fn cos(x: Float64) -> Float64 {
-  return _cos_taylor(_normalize_angle(x));
+  unsafe { return cos(x); }
 }
 
 pub fn tan(x: Float64) -> Float64 {
-  return sin(x) / cos(x);
+  unsafe { return tan(x); }
 }
 
 pub fn asin(x: Float64) -> Float64
   requires: x >= -1.0 && x <= 1.0
 {
-  if x < -1.0 || x > 1.0 { return 0.0 / 0.0; }
-  if x == 1.0 { return PI / 2.0; }
-  if x == -1.0 { return -PI / 2.0; }
-  return atan(x / sqrt(1.0 - x * x));
+  unsafe { return asin(x); }
 }
 
 pub fn acos(x: Float64) -> Float64
   requires: x >= -1.0 && x <= 1.0
 {
-  if x < -1.0 || x > 1.0 { return 0.0 / 0.0; }
-  return PI / 2.0 - asin(x);
+  unsafe { return acos(x); }
 }
 
 pub fn atan(x: Float64) -> Float64 {
-  if x > 1.0 { return PI / 2.0 - _atan_small(1.0 / x); }
-  if x < -1.0 { return -PI / 2.0 - _atan_small(1.0 / x); }
-  return _atan_small(x);
+  unsafe { return atan(x); }
 }
 
 pub fn atan2(y: Float64, x: Float64) -> Float64
   requires: x != 0.0 || y != 0.0  // both zero is undefined
 {
-  if x > 0.0 { return atan(y / x); }
-  if x < 0.0 {
-    if y >= 0.0 { return atan(y / x) + PI; }
-    return atan(y / x) - PI;
-  }
-  if y > 0.0 { return PI / 2.0; }
-  if y < 0.0 { return -PI / 2.0; }
-  return 0.0;
+  unsafe { return atan2(y, x); }
 }
 
 // === Log/Exp ===
@@ -258,25 +248,25 @@ fn exp_inner(x: Float64) -> Float64 {
 }
 
 pub fn exp(x: Float64) -> Float64 {
-  return exp_inner(x);
+  unsafe { return exp(x); }
 }
 
 pub fn ln(x: Float64) -> Float64
   requires: x > 0.0
 {
-  return _ln_impl(x);
+  unsafe { return log(x); }
 }
 
 pub fn log10(x: Float64) -> Float64
   requires: x > 0.0
 {
-  return _ln_impl(x) / 2.302585092994046;
+  unsafe { return log10(x); }
 }
 
 pub fn log2(x: Float64) -> Float64
   requires: x > 0.0
 {
-  return _ln_impl(x) / 0.6931471805599453;
+  unsafe { return log(x) / log(2.0); }
 }
 
 // === Bitwise ===
@@ -426,4 +416,120 @@ pub fn is_nan(x: Float64) -> Bool {
 
 pub fn is_inf(x: Float64) -> Bool {
   return x == 1.0 / 0.0 || x == -1.0 / 0.0;
+}
+
+// === Pure XIOM fallbacks (no libm required) ===
+// These are the original Taylor series / iterative implementations
+// available when libm FFI is unavailable or precision is preferred.
+
+pub fn sqrt_pure(x: Float64) -> Float64
+  requires: x >= 0.0
+  ensures:  result >= 0.0
+{
+  if x < 0.0 { return -1.0; }
+  if x == 0.0 { return 0.0; }
+  var guess = x / 2.0;
+  var i = 0;
+  while i < 50 {
+    guess = (guess + x / guess) / 2.0;
+    i = i + 1;
+  }
+  return guess;
+}
+
+pub fn pow_pure(base: Float64, exp: Float64) -> Float64
+  requires: base >= 0.0 || exp == to_int(exp)
+{
+  if exp == 0.0 { return 1.0; }
+  if base == 0.0 { return 0.0; }
+  if base < 0.0 { return -1.0; }
+  return exp_inner(exp * _ln_impl(base));
+}
+
+pub fn abs_float_pure(x: Float64) -> Float64 {
+  if x >= 0.0 { return x; }
+  return -x;
+}
+
+pub fn floor_pure(x: Float64) -> Float64 {
+  var i = to_int(x);
+  if x >= 0.0 { return to_float(i); }
+  if to_float(i) == x { return to_float(i); }
+  return to_float(i - 1);
+}
+
+pub fn ceil_pure(x: Float64) -> Float64 {
+  var i = to_int(x);
+  if x <= 0.0 { return to_float(i); }
+  if to_float(i) == x { return to_float(i); }
+  return to_float(i + 1);
+}
+
+pub fn sin_pure(x: Float64) -> Float64 {
+  return _sin_taylor(_normalize_angle(x));
+}
+
+pub fn cos_pure(x: Float64) -> Float64 {
+  return _cos_taylor(_normalize_angle(x));
+}
+
+pub fn tan_pure(x: Float64) -> Float64 {
+  return sin_pure(x) / cos_pure(x);
+}
+
+pub fn asin_pure(x: Float64) -> Float64
+  requires: x >= -1.0 && x <= 1.0
+{
+  if x < -1.0 || x > 1.0 { return 0.0 / 0.0; }
+  if x == 1.0 { return PI / 2.0; }
+  if x == -1.0 { return -PI / 2.0; }
+  return atan_pure(x / sqrt_pure(1.0 - x * x));
+}
+
+pub fn acos_pure(x: Float64) -> Float64
+  requires: x >= -1.0 && x <= 1.0
+{
+  if x < -1.0 || x > 1.0 { return 0.0 / 0.0; }
+  return PI / 2.0 - asin_pure(x);
+}
+
+pub fn atan_pure(x: Float64) -> Float64 {
+  if x > 1.0 { return PI / 2.0 - _atan_small(1.0 / x); }
+  if x < -1.0 { return -PI / 2.0 - _atan_small(1.0 / x); }
+  return _atan_small(x);
+}
+
+pub fn atan2_pure(y: Float64, x: Float64) -> Float64
+  requires: x != 0.0 || y != 0.0
+{
+  if x > 0.0 { return atan_pure(y / x); }
+  if x < 0.0 {
+    if y >= 0.0 { return atan_pure(y / x) + PI; }
+    return atan_pure(y / x) - PI;
+  }
+  if y > 0.0 { return PI / 2.0; }
+  if y < 0.0 { return -PI / 2.0; }
+  return 0.0;
+}
+
+pub fn exp_pure(x: Float64) -> Float64 {
+  return exp_inner(x);
+}
+
+pub fn ln_pure(x: Float64) -> Float64
+  requires: x > 0.0
+{
+  return _ln_impl(x);
+}
+
+pub fn log10_pure(x: Float64) -> Float64
+  requires: x > 0.0
+{
+  return _ln_impl(x) / 2.302585092994046;
+}
+
+pub fn log2_pure(x: Float64) -> Float64
+  requires: x > 0.0
+{
+  return _ln_impl(x) / 0.6931471805599453;
 }

@@ -17,6 +17,7 @@ pub type Channel[T] = {
   items: Vec[T];
   closed: Bool;
   cap: Int;
+  invariant: items.len() <= cap || cap == 0;
 }
 
 pub fn Channel.bounded[T](capacity: Int) -> Channel[T] {

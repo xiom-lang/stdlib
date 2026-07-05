@@ -495,7 +495,10 @@ fn Result[T, E].is_ok_and(self, predicate: fn(&T) -> Bool) -> Bool {
 }
 
 // === Binary heap (priority queue) ===
-type BinaryHeap[T] = { data: Vec[T]; }
+type BinaryHeap[T] = {
+  data: Vec[T];
+  invariant: data.len() >= 0;
+}
 
 fn sift_up[T: Ord](heap: &mut BinaryHeap[T], idx: Int)
   requires: idx >= 0 && idx < heap.data.len()

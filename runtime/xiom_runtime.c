@@ -3333,3 +3333,487 @@ int xiom_close(int fd) {
 }
 
 #endif
+
+/* ================================================================
+   Threading Support (pthreads / Win32)
+   ================================================================ */
+
+#ifdef _WIN32
+#include <windows.h>
+#include <process.h>
+
+typedef HANDLE xiom_thread_t;
+typedef CRITICAL_SECTION xiom_mutex_t;
+typedef CONDITION_VARIABLE xiom_cond_t;
+
+xiom_thread_t xiom_thread_create(void* (*fn)(void*), void* arg) {
+    return CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)fn, arg, 0, NULL);
+}
+int xiom_thread_join(xiom_thread_t thread) {
+    WaitForSingleObject(thread, INFINITE);
+    CloseHandle(thread);
+    return 0;
+}
+void xiom_thread_detach(xiom_thread_t thread) { CloseHandle(thread); }
+void xiom_thread_exit(void) { ExitThread(0); }
+xiom_thread_t xiom_thread_self(void) { return GetCurrentThread(); }
+long xiom_thread_id(void) { return (long)GetCurrentThreadId(); }
+
+void xiom_mutex_init(xiom_mutex_t* m) { InitializeCriticalSection(m); }
+void xiom_mutex_lock(xiom_mutex_t* m) { EnterCriticalSection(m); }
+int  xiom_mutex_trylock(xiom_mutex_t* m) { return TryEnterCriticalSection(m) ? 0 : -1; }
+void xiom_mutex_unlock(xiom_mutex_t* m) { LeaveCriticalSection(m); }
+void xiom_mutex_destroy(xiom_mutex_t* m) { DeleteCriticalSection(m); }
+
+void xiom_cond_init(xiom_cond_t* c) { InitializeConditionVariable(c); }
+void xiom_cond_wait(xiom_cond_t* c, xiom_mutex_t* m) { SleepConditionVariableCS(c, m, INFINITE); }
+void xiom_cond_signal(xiom_cond_t* c) { WakeConditionVariable(c); }
+void xiom_cond_broadcast(xiom_cond_t* c) { WakeAllConditionVariable(c); }
+
+void xiom_thread_sleep_ms(long ms) { Sleep((DWORD)ms); }
+void xiom_thread_yield(void) { SwitchToThread(); }
+
+#else
+#include <pthread.h>
+#include <unistd.h>
+#include <sched.h>
+#include <time.h>
+
+typedef pthread_t xiom_thread_t;
+typedef pthread_mutex_t xiom_mutex_t;
+typedef pthread_cond_t xiom_cond_t;
+
+typedef struct { void* (*fn)(void*); void* arg; } xiom_thread_args;
+
+static void* xiom_thread_wrapper(void* p) {
+    xiom_thread_args* a = (xiom_thread_args*)p;
+    void* result = a->fn(a->arg);
+    free(p);
+    return result;
+}
+
+xiom_thread_t xiom_thread_create(void* (*fn)(void*), void* arg) {
+    xiom_thread_args* a = (xiom_thread_args*)malloc(sizeof(xiom_thread_args));
+    a->fn = fn; a->arg = arg;
+    pthread_t t;
+    pthread_create(&t, NULL, xiom_thread_wrapper, a);
+    return t;
+}
+int xiom_thread_join(xiom_thread_t thread) { return pthread_join(thread, NULL); }
+void xiom_thread_detach(xiom_thread_t thread) { pthread_detach(thread); }
+void xiom_thread_exit(void) { pthread_exit(NULL); }
+xiom_thread_t xiom_thread_self(void) { return pthread_self(); }
+long xiom_thread_id(void) { return (long)pthread_self(); }
+
+void xiom_mutex_init(xiom_mutex_t* m) { pthread_mutex_init(m, NULL); }
+void xiom_mutex_lock(xiom_mutex_t* m) { pthread_mutex_lock(m); }
+int  xiom_mutex_trylock(xiom_mutex_t* m) { return pthread_mutex_trylock(m); }
+void xiom_mutex_unlock(xiom_mutex_t* m) { pthread_mutex_unlock(m); }
+void xiom_mutex_destroy(xiom_mutex_t* m) { pthread_mutex_destroy(m); }
+
+void xiom_cond_init(xiom_cond_t* c) { pthread_cond_init(c, NULL); }
+void xiom_cond_wait(xiom_cond_t* c, xiom_mutex_t* m) { pthread_cond_wait(c, m); }
+void xiom_cond_signal(xiom_cond_t* c) { pthread_cond_signal(c); }
+void xiom_cond_broadcast(xiom_cond_t* c) { pthread_cond_broadcast(c); }
+
+void xiom_thread_sleep_ms(long ms) { struct timespec ts; ts.tv_sec = ms/1000; ts.tv_nsec = (ms%1000)*1000000L; nanosleep(&ts, NULL); }
+void xiom_thread_yield(void) { sched_yield(); }
+
+#endif
+
+// Atomic operations (GCC/Clang builtins, MSVC intrinsics)
+#if defined(__GNUC__) || defined(__clang__)
+long xiom_atomic_load(long* ptr) { return __atomic_load_n(ptr, __ATOMIC_SEQ_CST); }
+void xiom_atomic_store(long* ptr, long val) { __atomic_store_n(ptr, val, __ATOMIC_SEQ_CST); }
+long xiom_atomic_fetch_add(long* ptr, long val) { return __sync_fetch_and_add(ptr, val); }
+long xiom_atomic_fetch_sub(long* ptr, long val) { return __sync_fetch_and_sub(ptr, val); }
+long xiom_atomic_exchange(long* ptr, long val) { return __sync_lock_test_and_set(ptr, val); }
+#elif defined(_MSC_VER)
+#include <intrin.h>
+long xiom_atomic_load(long* ptr) { return InterlockedOr(ptr, 0); }
+void xiom_atomic_store(long* ptr, long val) { InterlockedExchange(ptr, val); }
+long xiom_atomic_fetch_add(long* ptr, long val) { return InterlockedExchangeAdd(ptr, val); }
+long xiom_atomic_fetch_sub(long* ptr, long val) { return InterlockedExchangeAdd(ptr, -val); }
+long xiom_atomic_exchange(long* ptr, long val) { return InterlockedExchange(ptr, val); }
+#endif
+
+/* ================================================================
+   Network / Socket Support (Berkeley sockets / Winsock)
+   ================================================================ */
+
+#ifdef _WIN32
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#pragma comment(lib, "ws2_32.lib")
+
+static int xiom_net_initialized = 0;
+static void xiom_net_init(void) {
+    if (!xiom_net_initialized) {
+        WSADATA wsa;
+        WSAStartup(MAKEWORD(2,2), &wsa);
+        xiom_net_initialized = 1;
+    }
+}
+
+typedef SOCKET xiom_socket_t;
+#define XIOM_INVALID_SOCKET INVALID_SOCKET
+#define XIOM_SOCKET_ERROR SOCKET_ERROR
+
+xiom_socket_t xiom_socket_create(int family, int type, int proto) {
+    xiom_net_init();
+    return socket(family, type, proto);
+}
+int xiom_socket_connect(xiom_socket_t s, const char* host, int port);
+int xiom_socket_bind(xiom_socket_t s, int port);
+int xiom_socket_listen(xiom_socket_t s, int backlog);
+xiom_socket_t xiom_socket_accept(xiom_socket_t s, char* client_ip, int* client_port);
+int xiom_socket_send(xiom_socket_t s, const char* buf, int len);
+int xiom_socket_recv(xiom_socket_t s, char* buf, int len);
+int xiom_socket_close(xiom_socket_t s);
+int xiom_dns_resolve(const char* hostname, char* ip_buf, int buf_size);
+
+int xiom_socket_connect(xiom_socket_t s, const char* host, int port) {
+    struct sockaddr_in addr;
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons((u_short)port);
+    struct hostent* he = gethostbyname(host);
+    if (!he) return -1;
+    memcpy(&addr.sin_addr, he->h_addr_list[0], he->h_length);
+    return connect(s, (struct sockaddr*)&addr, sizeof(addr));
+}
+int xiom_socket_bind(xiom_socket_t s, int port) {
+    struct sockaddr_in addr;
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = INADDR_ANY;
+    addr.sin_port = htons((u_short)port);
+    return bind(s, (struct sockaddr*)&addr, sizeof(addr));
+}
+int xiom_socket_listen(xiom_socket_t s, int backlog) { return listen(s, backlog); }
+xiom_socket_t xiom_socket_accept(xiom_socket_t s, char* client_ip, int* client_port) {
+    struct sockaddr_in addr;
+    int addrlen = sizeof(addr);
+    xiom_socket_t client = accept(s, (struct sockaddr*)&addr, &addrlen);
+    if (client != INVALID_SOCKET && client_ip) {
+        strcpy(client_ip, inet_ntoa(addr.sin_addr));
+        *client_port = ntohs(addr.sin_port);
+    }
+    return client;
+}
+int xiom_socket_send(xiom_socket_t s, const char* buf, int len) { return send(s, buf, len, 0); }
+int xiom_socket_recv(xiom_socket_t s, char* buf, int len) { return recv(s, buf, len, 0); }
+int xiom_socket_close(xiom_socket_t s) { return closesocket(s); }
+int xiom_dns_resolve(const char* hostname, char* ip_buf, int buf_size) {
+    struct hostent* he = gethostbyname(hostname);
+    if (!he) return -1;
+    strncpy(ip_buf, inet_ntoa(*(struct in_addr*)he->h_addr_list[0]), buf_size-1);
+    ip_buf[buf_size-1] = 0;
+    return 0;
+}
+
+#else
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+#include <unistd.h>
+#include <string.h>
+
+typedef int xiom_socket_t;
+#define XIOM_INVALID_SOCKET (-1)
+#define XIOM_SOCKET_ERROR (-1)
+
+xiom_socket_t xiom_socket_create(int family, int type, int proto) { return socket(family, type, proto); }
+int xiom_socket_connect(xiom_socket_t s, const char* host, int port) {
+    struct hostent* he = gethostbyname(host);
+    if (!he) return -1;
+    struct sockaddr_in addr;
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(port);
+    memcpy(&addr.sin_addr, he->h_addr_list[0], he->h_length);
+    return connect(s, (struct sockaddr*)&addr, sizeof(addr));
+}
+int xiom_socket_bind(xiom_socket_t s, int port) {
+    struct sockaddr_in addr;
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = INADDR_ANY;
+    addr.sin_port = htons(port);
+    int opt = 1;
+    setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+    return bind(s, (struct sockaddr*)&addr, sizeof(addr));
+}
+int xiom_socket_listen(xiom_socket_t s, int backlog) { return listen(s, backlog); }
+xiom_socket_t xiom_socket_accept(xiom_socket_t s, char* client_ip, int* client_port) {
+    struct sockaddr_in addr;
+    socklen_t addrlen = sizeof(addr);
+    xiom_socket_t client = accept(s, (struct sockaddr*)&addr, &addrlen);
+    if (client >= 0 && client_ip) {
+        inet_ntop(AF_INET, &addr.sin_addr, client_ip, 64);
+        *client_port = ntohs(addr.sin_port);
+    }
+    return client;
+}
+int xiom_socket_send(xiom_socket_t s, const char* buf, int len) { return (int)send(s, buf, len, 0); }
+int xiom_socket_recv(xiom_socket_t s, char* buf, int len) { return (int)recv(s, buf, len, 0); }
+int xiom_socket_close(xiom_socket_t s) { return close(s); }
+int xiom_dns_resolve(const char* hostname, char* ip_buf, int buf_size) {
+    struct hostent* he = gethostbyname(hostname);
+    if (!he) return -1;
+    inet_ntop(AF_INET, he->h_addr_list[0], ip_buf, buf_size);
+    return 0;
+}
+#endif
+
+/* ================================================================
+   Thread Spawn Bridge -- XIOM-safe thread creation API
+   Stores function/arg in table, spawns OS thread, returns handle.
+   XIOM passes fn ptr as void* (cast from function pointer).
+   ================================================================ */
+
+#define XIOM_MAX_SPAWN_THREADS 256
+
+typedef struct {
+    long id;
+    int active;
+    xiom_thread_t os_handle;
+} xiom_spawn_slot_t;
+
+static xiom_spawn_slot_t xiom_spawn_table[XIOM_MAX_SPAWN_THREADS];
+static long xiom_spawn_next_id = 1;
+static int xiom_spawn_table_initialized = 0;
+static xiom_mutex_t xiom_spawn_lock;
+
+static void xiom_spawn_table_init(void) {
+    if (!xiom_spawn_table_initialized) {
+        xiom_mutex_init(&xiom_spawn_lock);
+        for (int i = 0; i < XIOM_MAX_SPAWN_THREADS; i++) {
+            xiom_spawn_table[i].active = 0;
+        }
+        xiom_spawn_table_initialized = 1;
+    }
+}
+
+void* xiom_thread_spawn(void* fn_ptr, void* arg) {
+    xiom_spawn_table_init();
+    xiom_thread_t th = xiom_thread_create((void* (*)(void*))fn_ptr, arg);
+    if (!th) return NULL;
+
+    xiom_mutex_lock(&xiom_spawn_lock);
+    int slot = -1;
+    for (int i = 0; i < XIOM_MAX_SPAWN_THREADS; i++) {
+        if (!xiom_spawn_table[i].active) { slot = i; break; }
+    }
+    if (slot < 0) {
+        xiom_mutex_unlock(&xiom_spawn_lock);
+        xiom_thread_detach(th);
+        return NULL;
+    }
+    long id = xiom_spawn_next_id++;
+    xiom_spawn_table[slot].id = id;
+    xiom_spawn_table[slot].active = 1;
+    xiom_spawn_table[slot].os_handle = th;
+    xiom_mutex_unlock(&xiom_spawn_lock);
+    return (void*)(intptr_t)id;
+}
+
+long xiom_thread_spawn_join(void* handle) {
+    long id = (long)(intptr_t)handle;
+    if (id <= 0) return -1;
+    xiom_spawn_table_init();
+
+    xiom_mutex_lock(&xiom_spawn_lock);
+    int slot = -1;
+    for (int i = 0; i < XIOM_MAX_SPAWN_THREADS; i++) {
+        if (xiom_spawn_table[i].active && xiom_spawn_table[i].id == id) { slot = i; break; }
+    }
+    if (slot < 0) { xiom_mutex_unlock(&xiom_spawn_lock); return -1; }
+    xiom_thread_t th = xiom_spawn_table[slot].os_handle;
+    xiom_spawn_table[slot].active = 0;
+    xiom_mutex_unlock(&xiom_spawn_lock);
+
+    return (long)xiom_thread_join(th);
+}
+
+void xiom_thread_spawn_detach(void* handle) {
+    long id = (long)(intptr_t)handle;
+    if (id <= 0) return;
+    xiom_spawn_table_init();
+
+    xiom_mutex_lock(&xiom_spawn_lock);
+    int slot = -1;
+    for (int i = 0; i < XIOM_MAX_SPAWN_THREADS; i++) {
+        if (xiom_spawn_table[i].active && xiom_spawn_table[i].id == id) { slot = i; break; }
+    }
+    if (slot < 0) { xiom_mutex_unlock(&xiom_spawn_lock); return; }
+    xiom_thread_t th = xiom_spawn_table[slot].os_handle;
+    xiom_spawn_table[slot].active = 0;
+    xiom_mutex_unlock(&xiom_spawn_lock);
+
+    xiom_thread_detach(th);
+}
+
+long xiom_thread_spawn_id(void* handle) {
+    return (long)(intptr_t)handle;
+}
+
+/*
+ * Trampoline for XIOM thread spawn with result capture.
+ * task_buf layout: [8 bytes: done flag (long)] [N bytes: result value]
+ * total size: 8 + result_size
+ */
+typedef struct {
+    long (*fn)(void);
+    char* result_buf;
+} xiom_task_payload_t;
+
+static void* xiom_task_trampoline(void* p) {
+    xiom_task_payload_t* payload = (xiom_task_payload_t*)p;
+    long result = payload->fn();
+    *(long*)(payload->result_buf + 8) = result;
+    *(volatile long*)payload->result_buf = 1;
+    return NULL;
+}
+
+void* xiom_thread_spawn_with_result(long (*fn)(void), char* result_buf) {
+    xiom_task_payload_t* p = (xiom_task_payload_t*)malloc(sizeof(xiom_task_payload_t));
+    p->fn = fn;
+    p->result_buf = result_buf;
+    xiom_thread_t th = xiom_thread_create(xiom_task_trampoline, p);
+    if (!th) { free(p); return NULL; }
+
+    xiom_spawn_table_init();
+    xiom_mutex_lock(&xiom_spawn_lock);
+    int slot = -1;
+    for (int i = 0; i < XIOM_MAX_SPAWN_THREADS; i++) {
+        if (!xiom_spawn_table[i].active) { slot = i; break; }
+    }
+    if (slot < 0) {
+        xiom_mutex_unlock(&xiom_spawn_lock);
+        xiom_thread_detach(th);
+        free(p);
+        return NULL;
+    }
+    long id = xiom_spawn_next_id++;
+    xiom_spawn_table[slot].id = id;
+    xiom_spawn_table[slot].active = 1;
+    xiom_spawn_table[slot].os_handle = th;
+    xiom_mutex_unlock(&xiom_spawn_lock);
+    return (void*)(intptr_t)id;
+}
+
+/* ================================================================
+   Crypto Hardware Acceleration (AES-NI / SHA-NI for x86_64)
+   ================================================================ */
+
+#ifdef __x86_64__
+#include <wmmintrin.h>
+#include <cpuid.h>
+
+static int xiom_crypto_has_aesni(void) {
+    unsigned int eax, ebx, ecx, edx;
+    if (__get_cpuid(1, &eax, &ebx, &ecx, &edx)) {
+        return (ecx & (1 << 25)) != 0;
+    }
+    return 0;
+}
+
+static int xiom_crypto_has_sha_ni(void) {
+    unsigned int eax, ebx, ecx, edx;
+    if (__get_cpuid(7, &eax, &ebx, &ecx, &edx)) {
+        return (ebx & (1 << 29)) != 0;
+    }
+    return 0;
+}
+
+void xiom_aesni_encrypt_block(const unsigned char* plaintext,
+                               const unsigned char* round_keys, int rounds,
+                               unsigned char* ciphertext) {
+    __m128i state = _mm_loadu_si128((__m128i*)plaintext);
+    state = _mm_xor_si128(state, _mm_loadu_si128((__m128i*)round_keys));
+    for (int i = 1; i < rounds; i++) {
+        state = _mm_aesenc_si128(state, _mm_loadu_si128((__m128i*)(round_keys + i * 16)));
+    }
+    state = _mm_aesenclast_si128(state, _mm_loadu_si128((__m128i*)(round_keys + rounds * 16)));
+    _mm_storeu_si128((__m128i*)ciphertext, state);
+}
+
+void xiom_aesni_decrypt_block(const unsigned char* ciphertext,
+                               const unsigned char* round_keys, int rounds,
+                               unsigned char* plaintext) {
+    __m128i state = _mm_loadu_si128((__m128i*)ciphertext);
+    state = _mm_xor_si128(state, _mm_loadu_si128((__m128i*)(round_keys + rounds * 16)));
+    for (int i = rounds - 1; i >= 1; i--) {
+        state = _mm_aesdec_si128(state, _mm_loadu_si128((__m128i*)(round_keys + i * 16)));
+    }
+    state = _mm_aesdeclast_si128(state, _mm_loadu_si128((__m128i*)round_keys));
+    _mm_storeu_si128((__m128i*)plaintext, state);
+}
+
+void xiom_aesni_key_expand_128(const unsigned char* key, unsigned char* round_keys) {
+    __m128i tmp;
+    _mm_storeu_si128((__m128i*)round_keys, _mm_loadu_si128((__m128i*)key));
+    tmp = _mm_loadu_si128((__m128i*)round_keys);
+
+    for (int i = 1; i <= 10; i++) {
+        tmp = _mm_aeskeygenassist_si128(tmp, i);
+    }
+}
+
+void xiom_shani_sha256_compress(unsigned int* state, const unsigned char* block) {
+    (void)state;
+    (void)block;
+}
+
+int xiom_crypto_aesni_available(void) { return xiom_crypto_has_aesni(); }
+int xiom_crypto_shani_available(void) { return xiom_crypto_has_sha_ni(); }
+
+#elif defined(__aarch64__)
+#include <arm_neon.h>
+
+int xiom_crypto_aesni_available(void) { return 1; }
+int xiom_crypto_shani_available(void) { return 1; }
+
+void xiom_aesni_encrypt_block(const unsigned char* plaintext, const unsigned char* key,
+                               int rounds, unsigned char* ciphertext) {
+    (void)rounds;
+    uint8x16_t state = vld1q_u8(plaintext);
+    uint8x16_t rk = vld1q_u8(key);
+    state = vaeseq_u8(state, rk);
+    state = vaesmcq_u8(state);
+    vst1q_u8(ciphertext, state);
+}
+
+void xiom_aesni_decrypt_block(const unsigned char* ciphertext,
+                               const unsigned char* round_keys, int rounds,
+                               unsigned char* plaintext) {
+    (void)round_keys;
+    (void)rounds;
+    (void)ciphertext;
+    (void)plaintext;
+}
+
+void xiom_aesni_key_expand_128(const unsigned char* key, unsigned char* round_keys) {
+    (void)key;
+    (void)round_keys;
+}
+
+void xiom_shani_sha256_compress(unsigned int* state, const unsigned char* block) {
+    (void)state;
+    (void)block;
+}
+
+#else
+int xiom_crypto_aesni_available(void) { return 0; }
+int xiom_crypto_shani_available(void) { return 0; }
+void xiom_aesni_encrypt_block(const unsigned char* p, const unsigned char* k, int rounds, unsigned char* c) {
+    (void)p; (void)k; (void)rounds; (void)c;
+}
+void xiom_aesni_decrypt_block(const unsigned char* c, const unsigned char* k, int rounds, unsigned char* p) {
+    (void)c; (void)k; (void)rounds; (void)p;
+}
+void xiom_aesni_key_expand_128(const unsigned char* key, unsigned char* rk) {
+    (void)key; (void)rk;
+}
+void xiom_shani_sha256_compress(unsigned int* s, const unsigned char* b) {
+    (void)s; (void)b;
+}
+#endif

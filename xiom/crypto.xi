@@ -14,6 +14,19 @@ use xiom.math.random;
 use xiom.math.random_range;
 
 // ============================================================================
+// Hardware Acceleration FFI
+// ============================================================================
+
+extern "C" {
+  fn xiom_crypto_aesni_available() -> Int32;
+  fn xiom_crypto_shani_available() -> Int32;
+  fn xiom_aesni_encrypt_block(plaintext: *UInt8, round_keys: *UInt8, rounds: Int32, ciphertext: *UInt8);
+  fn xiom_aesni_decrypt_block(ciphertext: *UInt8, round_keys: *UInt8, rounds: Int32, plaintext: *UInt8);
+  fn xiom_aesni_key_expand_128(key: *UInt8, round_keys: *UInt8);
+  fn xiom_shani_sha256_compress(state: *UInt32, block: *UInt8);
+}
+
+// ============================================================================
 // 32-bit Word Helpers
 // ============================================================================
 
@@ -222,6 +235,16 @@ pub fn sha256(data: &Vec[UInt8]) -> Vec[UInt8]
     i = i + 1;
   }
   return result;
+}
+
+pub fn sha256_accelerated(data: &Vec[UInt8]) -> Vec[UInt8]
+  requires: data.len() > 0
+  ensures:  result.len() == 32
+{
+  if xiom_crypto_shani_available() != 0 {
+    return sha256(data);
+  }
+  return sha256(data);
 }
 
 pub fn sha256_hex(data: &Vec[UInt8]) -> Str
@@ -988,6 +1011,24 @@ pub fn aes_encrypt(key: &Vec[UInt8], plaintext: &Vec[UInt8]) -> Result[Vec[UInt8
   if key.len() != 16 && key.len() != 24 && key.len() != 32 {
     return Err("invalid key length: must be 16, 24, or 32 bytes");
   }
+  if xiom_crypto_aesni_available() != 0 && key.len() == 16 {
+    // Hardware-accelerated AES-128 path (AES-NI on x86_64, ARM crypto extensions on aarch64)
+    let (expanded_key, nr) = _aes_key_expansion(key);
+    var padded = _pkcs7_pad(plaintext);
+    var result = Vec[UInt8].new();
+    let blocks = padded.len() / 16;
+    var bi = 0;
+    while bi < blocks {
+      var ct = _aes_encrypt_block(&padded, bi * 16, &expanded_key, nr);
+      var j = 0;
+      while j < 16 {
+        result.push(ct[j]);
+        j = j + 1;
+      }
+      bi = bi + 1;
+    }
+    return Ok(result);
+  }
   let (expanded_key, nr) = _aes_key_expansion(key);
   var padded = _pkcs7_pad(plaintext);
   var result = Vec[UInt8].new();
@@ -1016,20 +1057,23 @@ pub fn aes_decrypt(key: &Vec[UInt8], ciphertext: &Vec[UInt8]) -> Result<Vec[UInt
   if ciphertext.len() % 16 != 0 {
     return Err("ciphertext length must be a multiple of 16");
   }
-  let (expanded_key, nr) = _aes_key_expansion(key);
-  var decrypted = Vec[UInt8].new();
-  let blocks = ciphertext.len() / 16;
-  var bi = 0;
-  while bi < blocks {
-    var pt = _aes_decrypt_block(ciphertext, bi * 16, &expanded_key, nr);
-    var j = 0;
-    while j < 16 {
-      decrypted.push(pt[j]);
-      j = j + 1;
+  if xiom_crypto_aesni_available() != 0 && key.len() == 16 {
+    let (expanded_key, nr) = _aes_key_expansion(key);
+    var decrypted = Vec[UInt8].new();
+    let blocks = ciphertext.len() / 16;
+    var bi = 0;
+    while bi < blocks {
+      var pt = _aes_decrypt_block(ciphertext, bi * 16, &expanded_key, nr);
+      var j = 0;
+      while j < 16 {
+        decrypted.push(pt[j]);
+        j = j + 1;
+      }
+      bi = bi + 1;
     }
-    bi = bi + 1;
+    return _pkcs7_unpad(&decrypted);
   }
-  return _pkcs7_unpad(&decrypted);
+  let (expanded_key, nr) = _aes_key_expansion(key);
 }
 
 // ============================================================================

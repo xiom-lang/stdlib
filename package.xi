@@ -8,6 +8,7 @@ package xiom_stdlib {
   description: "XIOM Standard Library — Phase 1";
   authors: ["XIOM Team"];
   modules: [
+    "xiom.simd",
     "xiom.core",
     "xiom.io",
     "xiom.collections",

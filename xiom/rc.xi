@@ -13,6 +13,9 @@ pub type RcInner[T] = {
   strong: Int;
   weak: Int;
   value: T;
+  invariant: strong >= 0;
+  invariant: weak >= 0;
+  invariant: strong + weak > 0;
 }
 
 pub type Rc[T] = {
