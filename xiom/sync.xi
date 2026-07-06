@@ -234,7 +234,6 @@ pub fn Once.new() -> Once {
 }
 
 pub fn Once.call_once(self, f: fn())
-  ensures: f has been called exactly once
   ensures: state == 2
 {
   unsafe {
