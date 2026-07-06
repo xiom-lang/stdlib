@@ -114,8 +114,8 @@ pub type Weak[T] = {
 }
 
 pub fn Weak.upgrade[T](self) -> Option[Rc[T]]
-  ensures:  result is Some => Rc.strong_count increased by 1
-  ensures:  result is None => all Rc references dropped
+  ensures:  result is Some => strong_count() == strong_count()@pre + 1
+  ensures:  result is None => strong_count() == 0
 {
   unsafe {
     if (*ptr).strong > 0 {
