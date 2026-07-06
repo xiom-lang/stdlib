@@ -447,7 +447,7 @@ fn BufReader.read_line(self, buf: &mut Str) -> Result[Int, IOError]
   var temp: Vec[UInt8] = Vec[UInt8]::with_capacity(1024);
   var found_nl = false;
   var total: Int = 0;
-  while not found_nl {
+  while !found_nl {
     var byte_buf: Vec[UInt8] = Vec[UInt8]::with_capacity(1);
     let nread: UInt;
     unsafe {
