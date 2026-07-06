@@ -203,7 +203,7 @@ void xiom_ir_close(void) {
 void xiom_ir_header(void) {
     if (!ir_output) ir_output = stdout;
     fprintf(ir_output, "; XIOM Phase 1 -- LLVM IR\n");
-    fprintf(ir_output, "; Self-Hosted by axiomc.ax\n\n");
+    fprintf(ir_output, "; Self-Hosted by xiomc.ax\n\n");
     fprintf(ir_output, "target triple = \"x86_64-pc-windows-msvc\"\n\n");
 }
 
