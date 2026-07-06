@@ -348,7 +348,7 @@ pub fn resolve_host(hostname: Str) -> Result[Vec[Str], NetError] {
   }
 }
 
-pub fn local_addr(port: Int) -> Result<Str, NetError) {
+pub fn local_addr(port: Int) -> Result[Str, NetError] {
   // Get local machine hostname, then resolve it
   Err(NetError{ message: "local_addr requires gethostname — pending FFI extension"; code: -10; })
 }

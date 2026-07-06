@@ -77,11 +77,11 @@ fn read_line() -> Str {
 
 fn strip_trailing_newline(s: Str) -> Str {
   let len = s.len();
-  if len >= 2 and s.byte_at(len - 2) == 13 and s.byte_at(len - 1) == 10 {
+  if len >= 2 && s.byte_at(len - 2) == 13 && s.byte_at(len - 1) == 10 {
     s.substr(0, len - 2)
-  } elif len >= 1 and s.byte_at(len - 1) == 10 {
+  } elif len >= 1 && s.byte_at(len - 1) == 10 {
     s.substr(0, len - 1)
-  } elif len >= 1 and s.byte_at(len - 1) == 13 {
+  } elif len >= 1 && s.byte_at(len - 1) == 13 {
     s.substr(0, len - 1)
   } else {
     s
@@ -109,7 +109,7 @@ fn read_int() -> Result[Int, Str] {
   var i = start;
   while i < trimmed.len() {
     let b = trimmed.byte_at(i);
-    if b < 48 or b > 57 {
+    if b < 48 || b > 57 {
       return Err("invalid integer: " + line);
     }
     result = result * 10 + (b as Int - 48);
@@ -147,7 +147,7 @@ fn read_float() -> Result[Float64, Str] {
         return Err("invalid float: " + line);
       }
       in_fraction = true;
-    } elif b >= 48 and b <= 57 {
+    } elif b >= 48 && b <= 57 {
       let digit = (b as Float64 - 48.0);
       if in_fraction {
         frac_div = frac_div * 10.0;
@@ -302,7 +302,7 @@ fn list_dir(path: Str) -> Result[Vec[Str], IOError]
       name_ptr = xiom_dirent_name(entry);
     }
     let name = Str::from_c_str(name_ptr);
-    if name != "." and name != ".." {
+    if name != "." && name != ".." {
       entries.push(name);
     }
     unsafe {
@@ -343,7 +343,7 @@ fn copy_file(src: Str, dst: Str) -> Result[Unit, IOError]
 fn rename(src: Str, dst: Str) -> Result[Unit, IOError]
   requires: src.len() > 0
   requires: dst.len() > 0
-  ensures:  result is Ok => !file_exists(src) and file_exists(dst)
+  ensures:  result is Ok => !file_exists(src) && file_exists(dst)
 {
   let rc: Int32;
   unsafe {
@@ -538,7 +538,7 @@ fn metadata(path: Str) -> Result[Metadata, IOError]
     ct = xiom_stat_ctime(c_path);
     mode = xiom_stat_mode(c_path);
   }
-  if is_f == 0 and is_d == 0 {
+  if is_f == 0 && is_d == 0 {
     return Err(IOError{ message: "failed to stat: " + path, code: 10 });
   }
   Ok(Metadata{
@@ -618,9 +618,9 @@ fn join_paths(base: Str, child: Str) -> Str {
   }
   let base_ends_sep = base.byte_at(base.len() - 1) == 47;
   let child_starts_sep = child.byte_at(0) == 47;
-  if base_ends_sep and child_starts_sep {
+  if base_ends_sep && child_starts_sep {
     base + child.substr(1, child.len())
-  } elif base_ends_sep or child_starts_sep {
+  } elif base_ends_sep || child_starts_sep {
     base + child
   } else {
     base + "/" + child
@@ -660,13 +660,13 @@ fn file_name(path: Str) -> Option[Str] {
 
 fn extension(path: Str) -> Option[Str] {
   let name = file_name(path)?;
-  if name == "." or name == ".." {
+  if name == "." || name == ".." {
     return None;
   }
   var i = name.len() - 1;
   while i >= 0 {
     if name.byte_at(i) == 46 {
-      if i == 0 or i == name.len() - 1 {
+      if i == 0 || i == name.len() - 1 {
         return None;
       }
       return Some(name.substr(i + 1, name.len()));

@@ -464,7 +464,7 @@ pub type Pipe = {
 }
 
 pub fn create_pipe() -> Result[Pipe, Str]
-  ensures: result is Ok => result.read_fd >= 0 and result.write_fd >= 0
+  ensures: result is Ok => result.read_fd >= 0 && result.write_fd >= 0
 {
   var fds: [2]Int32;
   let rc: Int32;
