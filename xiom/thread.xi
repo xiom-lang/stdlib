@@ -37,7 +37,7 @@ pub fn spawn[T](f: fn() -> T) -> JoinHandle[T] {
     let handle = xiom_thread_spawn_with_result(raw_fn, buf);
     let id = xiom_thread_spawn_id(handle);
     let th = Thread{ handle: handle; id: id; };
-    return JoinHandle[T]{ thread: th; result_buf: buf; }
+    return JoinHandle[T]{ thread: th; result_buf: buf; };
   }
 }
 

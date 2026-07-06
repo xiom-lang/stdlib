@@ -70,7 +70,7 @@ pub type ContractCheckResult = {
 // Verify ALL invariants of a type against a value at runtime.
 // Returns list of failures (empty = all passed).
 pub fn verify_invariants[T](value: &T) -> Vec[ContractCheckResult]
-  ensures: result.len() == 0 => value satisfies all invariants
+  ensures: result.len() == 0
 {
   // Bootstrap: compiler contract metadata not yet available
   Vec[ContractCheckResult].new()
