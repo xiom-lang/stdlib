@@ -7,6 +7,43 @@
 
 module xiom.contracts
 
+// === FFI: compiler-emitted contract metadata table ===
+// Backed by an additive, read-only table that the codegen
+// (`xiom-codegen::emit_metadata_tables`) emits for every function in the
+// compilation unit that carries pre/postconditions. This makes the contract
+// index, statistics, queries and coverage below query REAL compiler data.
+//
+// REAL:    build_contract_index (function names + requires/ensures COUNTS) and,
+//          transitively, every statistic/query/coverage helper that reads the
+//          index (total_*, functions_with_contracts, contract_density,
+//          get_function_contracts, get_uncovered_contracts, coverage_percentage…).
+// LIMITED: clause EXPRESSION text, source locations, parameter/return types and
+//          type invariants are not embedded yet, so those fields are "" / empty;
+//          runtime contract evaluation (verify_function_contracts, check_invariant)
+//          and SMT reasoning (can_compose, verify_chain) remain honest placeholders.
+extern "C" {
+  fn xiom_contract_fn_count() -> Int;
+  fn xiom_contract_fn_name(idx: Int) -> Str;
+  fn xiom_contract_pre_count(idx: Int) -> Int;
+  fn xiom_contract_post_count(idx: Int) -> Int;
+}
+
+fn contract_fn_count() -> Int {
+  unsafe { return xiom_contract_fn_count(); }
+}
+
+fn contract_fn_name(idx: Int) -> Str {
+  unsafe { return xiom_contract_fn_name(idx); }
+}
+
+fn contract_pre_count(idx: Int) -> Int {
+  unsafe { return xiom_contract_pre_count(idx); }
+}
+
+fn contract_post_count(idx: Int) -> Int {
+  unsafe { return xiom_contract_post_count(idx); }
+}
+
 // ============================================================================
 // Contract Metadata Types
 // ============================================================================
@@ -111,18 +148,70 @@ fn _get_index() -> ContractIndex {
 
 // Build a complete contract index for the current package.
 // This is what --dump-contracts does at compile time, but available at runtime.
+// REAL: reads function names and requires/ensures counts from the compiler
+// contract table. LIMITED: clause expression text, locations, params, return
+// types and type invariants are not embedded, so those remain empty.
 pub fn build_contract_index() -> ContractIndex {
-  // Bootstrap: compiler does not yet embed contract metadata at runtime.
-  ContractIndex{
+  var functions = Vec[FunctionContracts].new();
+  var total = 0;
+  var req_total = 0;
+  var ens_total = 0;
+  let count = contract_fn_count();
+  var idx = 0;
+  while idx < count {
+    let fname = contract_fn_name(idx);
+    let pre = contract_pre_count(idx);
+    let post = contract_post_count(idx);
+    req_total = req_total + pre;
+    ens_total = ens_total + post;
+    total = total + pre + post;
+
+    var reqs = Vec[ContractClause].new();
+    var r = 0;
+    while r < pre {
+      reqs.push(ContractClause{
+        kind: 0;
+        expression: "";
+        location: "";
+        function: fname;
+        type_name: "";
+      });
+      r = r + 1;
+    }
+
+    var enss = Vec[ContractClause].new();
+    var e = 0;
+    while e < post {
+      enss.push(ContractClause{
+        kind: 1;
+        expression: "";
+        location: "";
+        function: fname;
+        type_name: "";
+      });
+      e = e + 1;
+    }
+
+    functions.push(FunctionContracts{
+      name: fname;
+      requires: reqs;
+      ensures: enss;
+      return_type: "";
+      params: Vec[(Str, Str)].new();
+    });
+    idx = idx + 1;
+  }
+
+  return ContractIndex{
     package: "";
     version: "0.1.0";
-    functions: Vec[FunctionContracts].new();
+    functions: functions;
     types: Vec[TypeContracts].new();
-    total_clauses: 0;
-    requires_count: 0;
-    ensures_count: 0;
+    total_clauses: total;
+    requires_count: req_total;
+    ensures_count: ens_total;
     invariant_count: 0;
-  }
+  };
 }
 
 // Query contracts for a specific function.

@@ -1077,15 +1077,283 @@ pub fn aes_decrypt(key: &Vec[UInt8], ciphertext: &Vec[UInt8]) -> Result<Vec[UInt
 }
 
 // ============================================================================
-// AES-GCM (returns errors — requires full GCM implementation)
+// AES-GCM (Galois/Counter Mode) — authenticated encryption in pure XIOM
+//
+// Built on the existing AES primitives: _aes_key_expansion and
+// _aes_encrypt_block. GCM = AES-CTR for confidentiality + GHASH (multiplication
+// in GF(2^128)) for authentication. Blocks are represented as Vec[UInt8] of
+// length 16, matching _aes_encrypt_block's parameter/return type. Shifts use
+// * 2 / / 2 like the rest of this file (no native << / >> operators exist here).
+//
+// NIST SP 800-38D test vectors (for later execution tests):
+//   Test Case 1 (AES-128, K=0^128, IV=0^96, P="", A=""):
+//     H = 66e94bd4ef8a2c3b884cfa59ca342b2e, T = 58e2fccefa7e3061367f1d57a4e7455a
+//   Test Case 2 (AES-128, K=0^128, IV=0^96, P=0^128, A=""):
+//     C = 0388dace60b6a392f328c2b971b2fe78, T = ab6e47d42cec13bdf53a67b21257bdb6
 // ============================================================================
 
+// Increment the rightmost 32 bits (bytes 12..16) of a 16-byte counter block,
+// modulo 2^32 (GCM inc32). Big-endian counter, as required by the spec.
+fn _gcm_inc32(counter: &mut Vec[UInt8]) {
+  var carry = 1;
+  var i = 15;
+  while i >= 12 {
+    let v = (counter[i] as Int) + carry;
+    counter[i] = (v % 256) as UInt8;
+    carry = v / 256;
+    i = i - 1;
+  }
+}
+
+// Multiplication in GF(2^128) using the GCM reduction polynomial
+// R = 0xE1 || 0^120 (i.e. 0xE1 << 120). Standard shift-and-xor algorithm.
+// Blocks are 16-byte big-endian; bit 0 is the MSB of byte 0. Computes x * y.
+fn _gcm_gf_mult(x: &Vec[UInt8], y: &Vec[UInt8]) -> Vec[UInt8] {
+  var z = Vec[UInt8].new();
+  var i = 0;
+  while i < 16 {
+    z.push(0);
+    i = i + 1;
+  }
+  var v = Vec[UInt8].new();
+  i = 0;
+  while i < 16 {
+    v.push(x[i]);
+    i = i + 1;
+  }
+  var bit = 0;
+  while bit < 128 {
+    let byte_index = bit / 8;
+    let within = bit % 8;
+    var mask = 128;
+    var s = 0;
+    while s < within {
+      mask = mask / 2;
+      s = s + 1;
+    }
+    let y_bit = (y[byte_index] as Int) & mask;
+    var k = 0;
+    if y_bit != 0 {
+      k = 0;
+      while k < 16 {
+        z[k] = (z[k] as Int ^ v[k] as Int) as UInt8;
+        k = k + 1;
+      }
+    }
+    // v_127 is the least-significant bit of the whole 128-bit value (LSB of v[15])
+    let lsb = (v[15] as Int) & 1;
+    // shift v right by one bit across all 16 bytes (v[0] is most significant)
+    var carry = 0;
+    k = 0;
+    while k < 16 {
+      let cur = v[k] as Int;
+      let new_carry = cur & 1;
+      v[k] = ((cur / 2) | (carry * 128)) as UInt8;
+      carry = new_carry;
+      k = k + 1;
+    }
+    if lsb != 0 {
+      // XOR with R = 0xE1 in the most-significant byte
+      v[0] = (v[0] as Int ^ 0xE1) as UInt8;
+    }
+    bit = bit + 1;
+  }
+  return z;
+}
+
+// Write a 64-bit value big-endian into buf at the given offset.
+fn _gcm_write_u64_be(buf: &mut Vec[UInt8], offset: Int, value: Int) {
+  var v = value;
+  var i = 7;
+  while i >= 0 {
+    buf[offset + i] = (v % 256) as UInt8;
+    v = v / 256;
+    i = i - 1;
+  }
+}
+
+// GHASH update: fold `data` (zero-padded to full 16-byte blocks) into the
+// running value x by XOR-and-multiply with H. Returns the new running value.
+fn _ghash_update(x_in: &Vec[UInt8], h: &Vec[UInt8], data: &Vec[UInt8]) -> Vec[UInt8] {
+  var x = Vec[UInt8].new();
+  var i = 0;
+  while i < 16 {
+    x.push(x_in[i]);
+    i = i + 1;
+  }
+  let full_blocks = data.len() / 16;
+  var bi = 0;
+  while bi < full_blocks {
+    i = 0;
+    while i < 16 {
+      x[i] = (x[i] as Int ^ data[bi * 16 + i] as Int) as UInt8;
+      i = i + 1;
+    }
+    x = _gcm_gf_mult(&x, h);
+    bi = bi + 1;
+  }
+  let rem = data.len() - full_blocks * 16;
+  if rem > 0 {
+    // XOR only the remaining bytes; the rest of the block is treated as zero
+    i = 0;
+    while i < rem {
+      x[i] = (x[i] as Int ^ data[full_blocks * 16 + i] as Int) as UInt8;
+      i = i + 1;
+    }
+    x = _gcm_gf_mult(&x, h);
+  }
+  return x;
+}
+
+// GHASH(H, A, C): process AAD blocks, then ciphertext blocks, then the
+// length block (bit-lengths of A and C), each XOR-and-multiplied by H.
+fn _ghash(h: &Vec[UInt8], aad: &Vec[UInt8], ct: &Vec[UInt8]) -> Vec[UInt8] {
+  var x = Vec[UInt8].new();
+  var i = 0;
+  while i < 16 {
+    x.push(0);
+    i = i + 1;
+  }
+  x = _ghash_update(&x, h, aad);
+  x = _ghash_update(&x, h, ct);
+  var len_block = Vec[UInt8].new();
+  i = 0;
+  while i < 16 {
+    len_block.push(0);
+    i = i + 1;
+  }
+  let aad_bits = aad.len() * 8;
+  let ct_bits = ct.len() * 8;
+  _gcm_write_u64_be(&mut len_block, 0, aad_bits);
+  _gcm_write_u64_be(&mut len_block, 8, ct_bits);
+  i = 0;
+  while i < 16 {
+    x[i] = (x[i] as Int ^ len_block[i] as Int) as UInt8;
+    i = i + 1;
+  }
+  x = _gcm_gf_mult(&x, h);
+  return x;
+}
+
+// Build J0 = IV || 0x00000001 for a 96-bit IV, per GCM.
+fn _gcm_j0(nonce: &Vec[UInt8]) -> Vec[UInt8] {
+  var j0 = Vec[UInt8].new();
+  var i = 0;
+  while i < 12 {
+    j0.push(nonce[i]);
+    i = i + 1;
+  }
+  j0.push(0);
+  j0.push(0);
+  j0.push(0);
+  j0.push(1);
+  return j0;
+}
+
 pub fn aes_encrypt_gcm(key: &Vec[UInt8], nonce: &Vec[UInt8], plaintext: &Vec[UInt8], aad: &Vec[UInt8]) -> Result<(Vec[UInt8], Vec[UInt8]), Str> {
-  return Err("AES-GCM not yet implemented in pure XIOM; use aes_encrypt for ECB mode");
+  if key.len() != 16 && key.len() != 24 && key.len() != 32 {
+    return Err("invalid key length: must be 16, 24, or 32 bytes");
+  }
+  if nonce.len() != 12 {
+    return Err("AES-GCM requires a 96-bit (12-byte) nonce");
+  }
+  let (expanded_key, nr) = _aes_key_expansion(key);
+  // H = AES_encrypt(zero block)
+  var zero = Vec[UInt8].new();
+  var i = 0;
+  while i < 16 {
+    zero.push(0);
+    i = i + 1;
+  }
+  var h = _aes_encrypt_block(&zero, 0, &expanded_key, nr);
+  // J0 = IV || 0x00000001 ; counter blocks for data start at inc32(J0)
+  var j0 = _gcm_j0(nonce);
+  var counter = Vec[UInt8].new();
+  i = 0;
+  while i < 16 {
+    counter.push(j0[i]);
+    i = i + 1;
+  }
+  var ciphertext = Vec[UInt8].new();
+  let pt_len = plaintext.len();
+  var pos = 0;
+  while pos < pt_len {
+    _gcm_inc32(&mut counter);
+    var ks = _aes_encrypt_block(&counter, 0, &expanded_key, nr);
+    var blk = 0;
+    while blk < 16 && pos + blk < pt_len {
+      ciphertext.push((plaintext[pos + blk] as Int ^ ks[blk] as Int) as UInt8);
+      blk = blk + 1;
+    }
+    pos = pos + 16;
+  }
+  // tag = GHASH(H, A, C) XOR AES_encrypt(J0)
+  var s = _ghash(&h, aad, &ciphertext);
+  var ej0 = _aes_encrypt_block(&j0, 0, &expanded_key, nr);
+  var tag = Vec[UInt8].new();
+  i = 0;
+  while i < 16 {
+    tag.push((s[i] as Int ^ ej0[i] as Int) as UInt8);
+    i = i + 1;
+  }
+  return Ok((ciphertext, tag));
 }
 
 pub fn aes_decrypt_gcm(key: &Vec[UInt8], nonce: &Vec[UInt8], ciphertext: &Vec[UInt8], tag: &Vec[UInt8], aad: &Vec[UInt8]) -> Result<Vec[UInt8], Str> {
-  return Err("AES-GCM not yet implemented in pure XIOM; use aes_decrypt for ECB mode");
+  if key.len() != 16 && key.len() != 24 && key.len() != 32 {
+    return Err("invalid key length: must be 16, 24, or 32 bytes");
+  }
+  if nonce.len() != 12 {
+    return Err("AES-GCM requires a 96-bit (12-byte) nonce");
+  }
+  if tag.len() != 16 {
+    return Err("AES-GCM tag must be 16 bytes");
+  }
+  let (expanded_key, nr) = _aes_key_expansion(key);
+  var zero = Vec[UInt8].new();
+  var i = 0;
+  while i < 16 {
+    zero.push(0);
+    i = i + 1;
+  }
+  var h = _aes_encrypt_block(&zero, 0, &expanded_key, nr);
+  var j0 = _gcm_j0(nonce);
+  // Recompute the expected tag over the received ciphertext, then verify
+  // BEFORE releasing any plaintext (encrypt-then-MAC / verify-then-decrypt).
+  var s = _ghash(&h, aad, ciphertext);
+  var ej0 = _aes_encrypt_block(&j0, 0, &expanded_key, nr);
+  var expected_tag = Vec[UInt8].new();
+  i = 0;
+  while i < 16 {
+    expected_tag.push((s[i] as Int ^ ej0[i] as Int) as UInt8);
+    i = i + 1;
+  }
+  // Constant-time tag comparison (reuses the shared XOR-accumulate helper).
+  let matched = constant_time_compare(&expected_tag, tag);
+  if matched == false {
+    return Err("AES-GCM authentication failed: tag mismatch");
+  }
+  // GCTR decryption is identical to encryption (XOR with the key stream).
+  var counter = Vec[UInt8].new();
+  i = 0;
+  while i < 16 {
+    counter.push(j0[i]);
+    i = i + 1;
+  }
+  var plaintext = Vec[UInt8].new();
+  let ct_len = ciphertext.len();
+  var pos = 0;
+  while pos < ct_len {
+    _gcm_inc32(&mut counter);
+    var ks = _aes_encrypt_block(&counter, 0, &expanded_key, nr);
+    var blk = 0;
+    while blk < 16 && pos + blk < ct_len {
+      plaintext.push((ciphertext[pos + blk] as Int ^ ks[blk] as Int) as UInt8);
+      blk = blk + 1;
+    }
+    pos = pos + 16;
+  }
+  return Ok(plaintext);
 }
 
 // ============================================================================

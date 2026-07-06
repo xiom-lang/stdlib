@@ -119,6 +119,17 @@ void xiom_free(void* ptr) {
     free(ptr);
 }
 
+/* Heap allocation used by net.xi / crypto.xi / other stdlib FFI callers.
+   Mirrors ecosystem/runtime/ffi_bridge.c (zeroed, NULL on non-positive size).
+   Uses a 64-bit size param so the XIOM Int/UInt (64-bit) ABI arg is not
+   truncated on Win64 where `long` is only 32 bits. */
+void* xiom_alloc(long long size) {
+    if (size <= 0) return NULL;
+    void* p = malloc((size_t)size);
+    if (p) memset(p, 0, (size_t)size);
+    return p;
+}
+
 char xiom_char_at(const char* str, long pos) {
     if (!str) return 0;
     if (pos < 0) return 0;
@@ -3079,32 +3090,15 @@ void xiom_fn_emit_all(void) {
 }
 
 // ============================================================================
-// File Descriptor Access
+// Standard Stream Handles
 // ============================================================================
+// io.xi declares these as `-> *UInt8` and passes the result straight into
+// fgets()/fread()/fwrite(), i.e. it expects a real FILE* opaque handle, not a
+// numeric fd. Return the actual C runtime FILE* pointers.
 
-int xiom_stdin(void) {
-#ifdef _WIN32
-    return _fileno(stdin);
-#else
-    return 0;
-#endif
-}
-
-int xiom_stdout(void) {
-#ifdef _WIN32
-    return _fileno(stdout);
-#else
-    return 1;
-#endif
-}
-
-int xiom_stderr(void) {
-#ifdef _WIN32
-    return _fileno(stderr);
-#else
-    return 2;
-#endif
-}
+void* xiom_stdin(void)  { return (void*)stdin; }
+void* xiom_stdout(void) { return (void*)stdout; }
+void* xiom_stderr(void) { return (void*)stderr; }
 
 // ============================================================================
 // Command Line Arguments
@@ -3190,45 +3184,64 @@ int xiom_stat_mode(const char* path) {
 // ============================================================================
 
 #ifndef _WIN32
-const char* xiom_dirent_name(void* dir_ptr, int index) {
-    (void)dir_ptr;
-    DIR* dir = opendir(".");
-    if (!dir) return "";
-    struct dirent* entry;
-    int i = 0;
-    while ((entry = readdir(dir)) != NULL) {
-        if (i == index) {
-            static char name[1024];
-            strncpy(name, entry->d_name, 1023);
-            name[1023] = '\0';
-            closedir(dir);
-            return name;
-        }
-        i++;
-    }
-    closedir(dir);
-    return "";
+// POSIX: `entry` is the `struct dirent*` produced by readdir() in io.xi.
+const char* xiom_dirent_name(void* entry) {
+    if (!entry) return "";
+    return ((struct dirent*)entry)->d_name;
 }
 #else
-// Windows: use FindFirstFile/FindNextFile
-const char* xiom_dirent_name(void* dir_ptr, int index) {
-    (void)dir_ptr;
-    WIN32_FIND_DATAA findData;
-    HANDLE hFind = FindFirstFileA(".\\*", &findData);
-    if (hFind == INVALID_HANDLE_VALUE) return "";
-    int i = 0;
-    do {
-        if (i == index) {
-            static char name[1024];
-            strncpy(name, findData.cFileName, 1023);
-            name[1023] = '\0';
-            FindClose(hFind);
-            return name;
-        }
-        i++;
-    } while (FindNextFileA(hFind, &findData));
-    FindClose(hFind);
-    return "";
+// Windows: provide a POSIX-style dirent shim so io.xi's opendir()/readdir()/
+// closedir() externs resolve, then extract the file name from the entry.
+// readdir() returns a pointer to the current WIN32_FIND_DATAA, so `entry` is a
+// WIN32_FIND_DATAA* whose cFileName field holds the name.
+typedef struct {
+    HANDLE handle;
+    WIN32_FIND_DATAA find_data;
+    int first;
+    int done;
+} xiom_win_dir;
+
+void* opendir(const char* path) {
+    if (!path) return NULL;
+    size_t len = strlen(path);
+    char pattern[MAX_PATH + 4];
+    const char* sep = (len > 0 && (path[len-1] == '\\' || path[len-1] == '/')) ? "" : "\\";
+    if (len + strlen(sep) + 1 >= sizeof(pattern)) return NULL;
+    snprintf(pattern, sizeof(pattern), "%s%s*", path, sep);
+    xiom_win_dir* d = (xiom_win_dir*)malloc(sizeof(xiom_win_dir));
+    if (!d) return NULL;
+    d->handle = FindFirstFileA(pattern, &d->find_data);
+    if (d->handle == INVALID_HANDLE_VALUE) { free(d); return NULL; }
+    d->first = 1;
+    d->done = 0;
+    return d;
+}
+
+void* readdir(void* dirp) {
+    xiom_win_dir* d = (xiom_win_dir*)dirp;
+    if (!d || d->done) return NULL;
+    if (d->first) {
+        d->first = 0;
+        return &d->find_data;
+    }
+    if (FindNextFileA(d->handle, &d->find_data)) {
+        return &d->find_data;
+    }
+    d->done = 1;
+    return NULL;
+}
+
+int closedir(void* dirp) {
+    xiom_win_dir* d = (xiom_win_dir*)dirp;
+    if (!d) return -1;
+    if (d->handle != INVALID_HANDLE_VALUE) FindClose(d->handle);
+    free(d);
+    return 0;
+}
+
+const char* xiom_dirent_name(void* entry) {
+    if (!entry) return "";
+    return ((WIN32_FIND_DATAA*)entry)->cFileName;
 }
 #endif
 
@@ -3418,7 +3431,7 @@ typedef HANDLE xiom_thread_t;
 typedef CRITICAL_SECTION xiom_mutex_t;
 typedef CONDITION_VARIABLE xiom_cond_t;
 
-xiom_thread_t xiom_thread_create(void* (*fn)(void*), void* arg) {
+xiom_thread_t xiom_thread_create(void* fn, void* arg) {
     return CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)fn, arg, 0, NULL);
 }
 int xiom_thread_join(xiom_thread_t thread) {
@@ -3464,9 +3477,9 @@ static void* xiom_thread_wrapper(void* p) {
     return result;
 }
 
-xiom_thread_t xiom_thread_create(void* (*fn)(void*), void* arg) {
+xiom_thread_t xiom_thread_create(void* fn, void* arg) {
     xiom_thread_args* a = (xiom_thread_args*)malloc(sizeof(xiom_thread_args));
-    a->fn = fn; a->arg = arg;
+    a->fn = (void* (*)(void*))fn; a->arg = arg;
     pthread_t t;
     pthread_create(&t, NULL, xiom_thread_wrapper, a);
     return t;
@@ -3581,6 +3594,34 @@ int xiom_dns_resolve(const char* hostname, char* ip_buf, int buf_size) {
     return 0;
 }
 
+/* UDP + hostname helpers (winsock). gethostname()/sendto()/recvfrom() all live
+   in ws2_32; the #pragma comment(lib, "ws2_32.lib") above pulls it in for
+   MSVC-style linking. */
+int xiom_socket_sendto(xiom_socket_t sock, const char* buf, int len, const char* host, int port) {
+    struct sockaddr_in addr;
+    memset(&addr, 0, sizeof(addr));
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons((u_short)port);
+    struct hostent* he = gethostbyname(host);
+    if (!he) return -1;
+    memcpy(&addr.sin_addr, he->h_addr_list[0], he->h_length);
+    return sendto(sock, buf, len, 0, (struct sockaddr*)&addr, sizeof(addr));
+}
+int xiom_socket_recvfrom(xiom_socket_t sock, char* buf, int len, char* out_ip, int* out_port) {
+    struct sockaddr_in addr;
+    int addrlen = sizeof(addr);
+    int n = recvfrom(sock, buf, len, 0, (struct sockaddr*)&addr, &addrlen);
+    if (n >= 0) {
+        if (out_ip) strcpy(out_ip, inet_ntoa(addr.sin_addr));
+        if (out_port) *out_port = ntohs(addr.sin_port);
+    }
+    return n;
+}
+int xiom_gethostname(char* buf, int len) {
+    xiom_net_init();
+    return gethostname(buf, len);
+}
+
 #else
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -3632,6 +3673,31 @@ int xiom_dns_resolve(const char* hostname, char* ip_buf, int buf_size) {
     inet_ntop(AF_INET, he->h_addr_list[0], ip_buf, buf_size);
     return 0;
 }
+
+/* UDP + hostname helpers (POSIX / Berkeley sockets). */
+int xiom_socket_sendto(xiom_socket_t sock, const char* buf, int len, const char* host, int port) {
+    struct sockaddr_in addr;
+    memset(&addr, 0, sizeof(addr));
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons((unsigned short)port);
+    struct hostent* he = gethostbyname(host);
+    if (!he) return -1;
+    memcpy(&addr.sin_addr, he->h_addr_list[0], he->h_length);
+    return (int)sendto(sock, buf, len, 0, (struct sockaddr*)&addr, sizeof(addr));
+}
+int xiom_socket_recvfrom(xiom_socket_t sock, char* buf, int len, char* out_ip, int* out_port) {
+    struct sockaddr_in addr;
+    socklen_t addrlen = sizeof(addr);
+    int n = (int)recvfrom(sock, buf, len, 0, (struct sockaddr*)&addr, &addrlen);
+    if (n >= 0) {
+        if (out_ip) inet_ntop(AF_INET, &addr.sin_addr, out_ip, 64);
+        if (out_port) *out_port = ntohs(addr.sin_port);
+    }
+    return n;
+}
+int xiom_gethostname(char* buf, int len) {
+    return gethostname(buf, len);
+}
 #endif
 
 /* ================================================================
@@ -3665,7 +3731,7 @@ static void xiom_spawn_table_init(void) {
 
 void* xiom_thread_spawn(void* fn_ptr, void* arg) {
     xiom_spawn_table_init();
-    xiom_thread_t th = xiom_thread_create((void* (*)(void*))fn_ptr, arg);
+    xiom_thread_t th = xiom_thread_create(fn_ptr, arg);
     if (!th) return NULL;
 
     xiom_mutex_lock(&xiom_spawn_lock);
@@ -3744,11 +3810,11 @@ static void* xiom_task_trampoline(void* p) {
     return NULL;
 }
 
-void* xiom_thread_spawn_with_result(long (*fn)(void), char* result_buf) {
+void* xiom_thread_spawn_with_result(void* fn, char* result_buf) {
     xiom_task_payload_t* p = (xiom_task_payload_t*)malloc(sizeof(xiom_task_payload_t));
-    p->fn = fn;
+    p->fn = (long (*)(void))fn;
     p->result_buf = result_buf;
-    xiom_thread_t th = xiom_thread_create(xiom_task_trampoline, p);
+    xiom_thread_t th = xiom_thread_create((void*)xiom_task_trampoline, p);
     if (!th) { free(p); return NULL; }
 
     xiom_spawn_table_init();
