@@ -3,6 +3,8 @@
 // Licensed under the MIT or Apache-2.0 license, at your option.
 
 #include <stdint.h>
+#include <stdlib.h>   /* malloc — used by every backend (x86/arm/scalar) */
+#include <math.h>     /* sqrtf — used by the scalar fallback backend */
 
 #ifdef __x86_64__
 #include <cpuid.h>
@@ -78,6 +80,7 @@ void xiom_simd_f32x4_max(float* a, float* b, float* out) {
     _mm_storeu_ps(out, vr);
 }
 
+__attribute__((target("sse4.1")))
 float xiom_simd_f32x4_dot(float* a, float* b) {
     __m128 va = _mm_loadu_ps(a);
     __m128 vb = _mm_loadu_ps(b);
@@ -101,6 +104,7 @@ void xiom_simd_i32x4_sub(int* a, int* b, int* out) {
     _mm_storeu_si128((__m128i*)out, vr);
 }
 
+__attribute__((target("sse4.1")))
 void xiom_simd_i32x4_mul(int* a, int* b, int* out) {
     __m128i va = _mm_loadu_si128((__m128i*)a);
     __m128i vb = _mm_loadu_si128((__m128i*)b);
@@ -110,6 +114,7 @@ void xiom_simd_i32x4_mul(int* a, int* b, int* out) {
 
 // 256-bit float ops using AVX
 
+__attribute__((target("avx")))
 void xiom_simd_f32x8_add(float* a, float* b, float* out) {
     __m256 va = _mm256_loadu_ps(a);
     __m256 vb = _mm256_loadu_ps(b);
@@ -117,6 +122,7 @@ void xiom_simd_f32x8_add(float* a, float* b, float* out) {
     _mm256_storeu_ps(out, vr);
 }
 
+__attribute__((target("avx")))
 void xiom_simd_f32x8_mul(float* a, float* b, float* out) {
     __m256 va = _mm256_loadu_ps(a);
     __m256 vb = _mm256_loadu_ps(b);
@@ -124,6 +130,7 @@ void xiom_simd_f32x8_mul(float* a, float* b, float* out) {
     _mm256_storeu_ps(out, vr);
 }
 
+__attribute__((target("avx")))
 void xiom_simd_f64x4_add(double* a, double* b, double* out) {
     __m256d va = _mm256_loadu_pd(a);
     __m256d vb = _mm256_loadu_pd(b);
@@ -131,6 +138,7 @@ void xiom_simd_f64x4_add(double* a, double* b, double* out) {
     _mm256_storeu_pd(out, vr);
 }
 
+__attribute__((target("avx")))
 void xiom_simd_f64x4_mul(double* a, double* b, double* out) {
     __m256d va = _mm256_loadu_pd(a);
     __m256d vb = _mm256_loadu_pd(b);

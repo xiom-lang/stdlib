@@ -15,6 +15,9 @@ extern "C" {
   fn xiom_socket_recv(sock: Int, buf: *UInt8, len: Int) -> Int;
   fn xiom_socket_close(sock: Int) -> Int;
   fn xiom_dns_resolve(hostname: *UInt8, ip_buf: *UInt8, buf_size: Int) -> Int;
+  fn xiom_socket_sendto(sock: Int, buf: *UInt8, len: Int, host: *UInt8, port: Int) -> Int;
+  fn xiom_socket_recvfrom(sock: Int, buf: *UInt8, len: Int, out_ip: *UInt8, out_port: *Int) -> Int;
+  fn xiom_gethostname(buf: *UInt8, len: Int) -> Int;
   // Memory helpers (from xiom_runtime)
   fn xiom_alloc(size: UInt) -> *UInt8;
   fn xiom_free(ptr: *UInt8);
@@ -301,11 +304,60 @@ pub fn udp_bind(host: Str, port: Int) -> Result[UdpSocket, NetError] {
 }
 
 pub fn UdpSocket.send_to(self, data: &Vec[UInt8], addr: Str, port: Int) -> Result[Int, NetError] {
-  Err(NetError{ message: "UDP send_to requires platform sendto() — pending FFI extension"; code: -7; })
+  unsafe {
+    var raw_buf: [65536]UInt8;
+    var i = 0;
+    let dlen = data.len();
+    if dlen > 65536 {
+      return Err(NetError{ message: "data too large for stack buffer"; code: -200; });
+    }
+    while i < dlen {
+      raw_buf[i] = data[i];
+      i = i + 1;
+    }
+    var c_host_buf: [256]UInt8;
+    var h = 0;
+    let alen = addr.len();
+    while h < alen && h < 255 {
+      c_host_buf[h] = addr.byte_at(h);
+      h = h + 1;
+    }
+    c_host_buf[h] = 0 as UInt8;
+    let n = xiom_socket_sendto(self.fd, &raw_buf as *UInt8, dlen, &c_host_buf as *UInt8, port);
+    if n < 0 {
+      return Err(NetError{ message: "UDP send_to failed"; code: n; });
+    }
+    return Ok(n);
+  }
 }
 
 pub fn UdpSocket.recv_from(self, buf: &mut Vec[UInt8]) -> Result[(Int, Str, Int), NetError] {
-  Err(NetError{ message: "UDP recv_from requires platform recvfrom() — pending FFI extension"; code: -8; })
+  unsafe {
+    var recv_buf: [4096]UInt8;
+    var ip_buf: [64]UInt8;
+    var port_val: Int = 0;
+    let n = xiom_socket_recvfrom(self.fd, &recv_buf as *UInt8, 4096, &ip_buf as *UInt8, &port_val);
+    if n < 0 {
+      return Err(NetError{ message: "UDP recv_from failed"; code: n; });
+    }
+    var i = 0;
+    while i < n {
+      buf.push(recv_buf[i]);
+      i = i + 1;
+    }
+    var ip_len: Int = 0;
+    while ip_len < 64 && ip_buf[ip_len] != 0 as UInt8 {
+      ip_len = ip_len + 1;
+    }
+    var ip_chars: Vec[UInt8] = Vec[UInt8]::new();
+    var j = 0;
+    while j < ip_len {
+      ip_chars.push(ip_buf[j]);
+      j = j + 1;
+    }
+    let sender_ip = Str::from_utf8(ip_chars);
+    return Ok((n, sender_ip, port_val));
+  }
 }
 
 pub fn UdpSocket.close(self) -> Result[Unit, NetError] {
@@ -350,7 +402,49 @@ pub fn resolve_host(hostname: Str) -> Result[Vec[Str], NetError] {
 
 pub fn local_addr(port: Int) -> Result[Str, NetError] {
   // Get local machine hostname, then resolve it
-  Err(NetError{ message: "local_addr requires gethostname — pending FFI extension"; code: -10; })
+  unsafe {
+    var host_buf: [256]UInt8;
+    let hrc = xiom_gethostname(&host_buf as *UInt8, 256);
+    if hrc < 0 {
+      return Err(NetError{ message: "gethostname failed"; code: hrc; });
+    }
+    var host_len: Int = 0;
+    while host_len < 256 && host_buf[host_len] != 0 as UInt8 {
+      host_len = host_len + 1;
+    }
+    var host_chars: Vec[UInt8] = Vec[UInt8]::with_capacity(host_len as UInt);
+    var i = 0;
+    while i < host_len {
+      host_chars.push(host_buf[i]);
+      i = i + 1;
+    }
+    let hostname = Str::from_utf8(host_chars);
+    var c_host: [256]UInt8;
+    var h = 0;
+    let hn_len = hostname.len();
+    while h < hn_len && h < 255 {
+      c_host[h] = hostname.byte_at(h);
+      h = h + 1;
+    }
+    c_host[h] = 0 as UInt8;
+    var ip_buf: [256]UInt8;
+    let rc = xiom_dns_resolve(&c_host as *UInt8, &ip_buf as *UInt8, 256);
+    if rc < 0 {
+      return Err(NetError{ message: "local_addr DNS resolution failed"; code: rc; });
+    }
+    var ip_len: Int = 0;
+    while ip_len < 256 && ip_buf[ip_len] != 0 as UInt8 {
+      ip_len = ip_len + 1;
+    }
+    var ip_chars: Vec[UInt8] = Vec[UInt8]::with_capacity(ip_len as UInt);
+    var j = 0;
+    while j < ip_len {
+      ip_chars.push(ip_buf[j]);
+      j = j + 1;
+    }
+    let ip_str = Str::from_utf8(ip_chars);
+    return Ok(ip_str + ":" + port.to_str());
+  }
 }
 
 // === URL parsing ===
