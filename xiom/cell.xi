@@ -27,7 +27,7 @@ pub fn Cell.set[T](self, value: T) {
 }
 
 pub fn Cell.replace[T](self, value: T) -> T
-  ensures: result is old value
+  ensures: result == value@pre
 {
   unsafe {
     let raw = ptr.from_ref(self) as *mut Cell[T];
@@ -38,7 +38,7 @@ pub fn Cell.replace[T](self, value: T) -> T
 }
 
 pub fn Cell.swap[T](self, other: &Cell[T])
-  ensures: self now contains old other value
+  ensures: value == other.value@pre
 {
   unsafe {
     let self_raw = ptr.from_ref(self) as *mut Cell[T];

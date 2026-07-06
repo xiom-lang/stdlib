@@ -36,7 +36,7 @@ pub fn tcp_connect(host: Str, port: Int) -> Result[TcpStream, NetError] {
   if host.len() <= 0 {
     return Err(NetError{ message: "host must not be empty"; code: -100; });
   }
-  if port <= 0 or port >= 65536 {
+  if port <= 0 || port >= 65536 {
     return Err(NetError{ message: "port out of range (1-65535)"; code: -101; });
   }
   unsafe {
@@ -47,11 +47,11 @@ pub fn tcp_connect(host: Str, port: Int) -> Result[TcpStream, NetError] {
     var c_host_buf: [256]UInt8;
     var i = 0;
     let hlen = host.len();
-    while i < hlen and i < 255 {
+    while i < hlen && i < 255 {
       c_host_buf[i] = host.byte_at(i);
       i = i + 1;
     }
-    c_host_buf[i] = 0u8;
+    c_host_buf[i] = 0 as UInt8;
     let result = xiom_socket_connect(fd, &c_host_buf as *UInt8, port);
     if result < 0 {
       xiom_socket_close(fd);
@@ -62,7 +62,7 @@ pub fn tcp_connect(host: Str, port: Int) -> Result[TcpStream, NetError] {
 }
 
 pub fn tcp_listen(host: Str, port: Int) -> Result[TcpListener, NetError] {
-  if port <= 0 or port >= 65536 {
+  if port <= 0 || port >= 65536 {
     return Err(NetError{ message: "port out of range (1-65535)"; code: -101; });
   }
   unsafe {
@@ -134,7 +134,7 @@ pub fn TcpListener.accept(self) -> Result[(TcpStream, Str), NetError] {
       return Err(NetError{ message: "accept failed"; code: client; });
     }
     var ip_len: Int = 0;
-    while ip_len < 64 and ip_buf[ip_len] != 0u8 {
+    while ip_len < 64 && ip_buf[ip_len] != 0 as UInt8 {
       ip_len = ip_len + 1;
     }
     var ip_chars: Vec[UInt8] = Vec[UInt8]::new();
@@ -284,7 +284,7 @@ fn parse_http_response(raw: Str) -> Result[HttpResponse, NetError] {
 pub type UdpSocket = { fd: Int; }
 
 pub fn udp_bind(host: Str, port: Int) -> Result[UdpSocket, NetError] {
-  if port <= 0 or port >= 65536 {
+  if port <= 0 || port >= 65536 {
     return Err(NetError{ message: "port out of range (1-65535)"; code: -101; });
   }
   unsafe {
@@ -321,18 +321,18 @@ pub fn resolve_host(hostname: Str) -> Result[Vec[Str], NetError] {
     var c_host: [256]UInt8;
     var i = 0;
     let hlen = hostname.len();
-    while i < hlen and i < 255 {
+    while i < hlen && i < 255 {
       c_host[i] = hostname.byte_at(i);
       i = i + 1;
     }
-    c_host[i] = 0u8;
+    c_host[i] = 0 as UInt8;
     var ip_buf: [256]UInt8;
     let rc = xiom_dns_resolve(&c_host as *UInt8, &ip_buf as *UInt8, 256);
     if rc < 0 {
       return Err(NetError{ message: "DNS resolution failed"; code: rc; });
     }
     var ip_len: Int = 0;
-    while ip_len < 256 and ip_buf[ip_len] != 0u8 {
+    while ip_len < 256 && ip_buf[ip_len] != 0 as UInt8 {
       ip_len = ip_len + 1;
     }
     var ip_chars: Vec[UInt8] = Vec[UInt8]::with_capacity(ip_len as UInt);
@@ -385,13 +385,13 @@ pub fn parse_url(url: Str) -> Result[UrlParts, NetError] {
   let query_start = string.index_of(rest, "?");
   let frag_start = string.index_of(rest, "#");
   var authority_end: Int = rest.len();
-  if path_start.is_some and path_start.value < authority_end {
+  if path_start.is_some && path_start.value < authority_end {
     authority_end = path_start.value;
   }
-  if query_start.is_some and query_start.value < authority_end {
+  if query_start.is_some && query_start.value < authority_end {
     authority_end = query_start.value;
   }
-  if frag_start.is_some and frag_start.value < authority_end {
+  if frag_start.is_some && frag_start.value < authority_end {
     authority_end = frag_start.value;
   }
   var authority = str_slice(rest, 0, authority_end);
@@ -413,19 +413,19 @@ pub fn parse_url(url: Str) -> Result[UrlParts, NetError] {
     var query_in_after: Option[Int] = None;
     var j = 0;
     while j < after_auth_len {
-      if after_authority[j] == '?' and query_in_after.is_none {
+      if after_authority[j] == '?' && query_in_after.is_none {
         query_in_after = Some(j);
       }
-      if after_authority[j] == '#' and frag_in_after.is_none {
+      if after_authority[j] == '#' && frag_in_after.is_none {
         frag_in_after = Some(j);
       }
       j = j + 1;
     }
     var path_end: Int = after_auth_len;
-    if query_in_after.is_some and query_in_after.value < path_end {
+    if query_in_after.is_some && query_in_after.value < path_end {
       path_end = query_in_after.value;
     }
-    if frag_in_after.is_some and frag_in_after.value < path_end {
+    if frag_in_after.is_some && frag_in_after.value < path_end {
       path_end = frag_in_after.value;
     }
     path = str_slice(after_authority, 0, path_end);
@@ -434,7 +434,7 @@ pub fn parse_url(url: Str) -> Result[UrlParts, NetError] {
     }
     if query_in_after.is_some {
       var query_end: Int = after_auth_len;
-      if frag_in_after.is_some and frag_in_after.value > query_in_after.value {
+      if frag_in_after.is_some && frag_in_after.value > query_in_after.value {
         query_end = frag_in_after.value;
       }
       query = str_slice(after_authority, query_in_after.value + 1, query_end);
@@ -483,16 +483,16 @@ fn str_to_int(s: Str) -> Int {
   var sign: Int = 1;
   var start: Int = 0;
   let len = s.len();
-  if len > 0 and s.byte_at(0) == 45 {
+  if len > 0 && s.byte_at(0) == 45 {
     sign = -1;
     start = 1;
-  } elif len > 0 and s.byte_at(0) == 43 {
+  } elif len > 0 && s.byte_at(0) == 43 {
     start = 1;
   }
   var i = start;
   while i < len {
     let b = s.byte_at(i);
-    if b < 48 or b > 57 { break; }
+    if b < 48 || b > 57 { break; }
     result = result * 10 + (b as Int - 48);
     i = i + 1;
   }

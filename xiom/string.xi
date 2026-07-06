@@ -173,7 +173,7 @@ fn str_lower(s: Str) -> Str
   }
 }
 
-fn format(fmt: Str, args: ...) -> Str {
+fn format(fmt: Str) -> Str {
   fmt
 }
 

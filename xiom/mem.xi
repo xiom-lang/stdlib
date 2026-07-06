@@ -7,7 +7,7 @@ module xiom.mem
 use xiom.ptr;
 
 pub fn swap[T](a: &mut T, b: &mut T)
-  ensures: a@pre is now in b && b@pre is now in a
+  ensures: a == b@pre && b == a@pre
 {
   unsafe {
     let pa = ptr.from_mut(a);
@@ -17,7 +17,7 @@ pub fn swap[T](a: &mut T, b: &mut T)
 }
 
 pub fn replace[T](dest: &mut T, src: T) -> T
-  ensures: result is the old value
+  ensures: result == dest@pre
 {
   unsafe {
     let pd = ptr.from_mut(dest);

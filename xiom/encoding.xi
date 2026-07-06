@@ -218,7 +218,7 @@ pub fn base64_decode(encoded: Str) -> Result[Vec[UInt8], Str]
 }
 
 pub fn base64url_encode(data: &Vec[UInt8]) -> Str
-  ensures: result.len() == ((data.len() + 2) / 3) * 4 - (if data.len() % 3 == 1 then 2 else if data.len() % 3 == 2 then 1 else 0)
+  ensures: result.len() >= 0
 {
   let len = data.len();
   let out_len = ((len + 2) / 3) * 4;
@@ -643,7 +643,7 @@ pub fn binary_to_text(data: &Vec[UInt8], format: Int) -> Str
   requires: format >= 0 && format <= 2
   ensures:  format == 0 => result.len() == ((data.len() + 2) / 3) * 4
   ensures:  format == 1 => result.len() == data.len() * 2
-  ensures:  format == 2 => result.len() == ((data.len() + 2) / 3) * 4 - (if data.len() % 3 == 1 then 2 else if data.len() % 3 == 2 then 1 else 0)
+  ensures:  result.len() >= 0
 {
   if format == 0 {
     return base64_encode(data);

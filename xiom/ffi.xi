@@ -10,7 +10,7 @@ extern "C" {
   fn memcpy(dest: *UInt8, src: *UInt8, size: UInt);
 }
 
-pub fn extern_c(name: Str, ...) -> Int
+pub fn extern_c(name: Str) -> Int
   requires: name.len() > 0
 {
   unsafe {
