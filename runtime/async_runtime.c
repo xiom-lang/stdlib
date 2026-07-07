@@ -8,7 +8,7 @@
  * Nothing here is redefined from that file — the executor calls the existing
  * xiom_thread_sleep_ms for the actual wait and only adds a clock here.
  *
- * This file is auto-linked (the compiler links every stdlib/runtime/*.c) and
+ * This file is auto-linked (the compiler links every C file in stdlib runtime)
  * must compile standalone, including under:  clang -DXIOM_NO_ASM async_runtime.c
  * It contains no assembly, so XIOM_NO_ASM has no effect beyond being accepted.
  */

@@ -5,7 +5,7 @@ module smoke_hash
 use xiom.hash;
 
 fn main() -> Int {
-  if hash.of(42) == hash.of(42) && hash.of(true) != hash.of(false) {
+  if hash.hash(42) == hash.hash(42) && hash.hash(true) != hash.hash(false) {
     return 0;
   }
   return 1;
