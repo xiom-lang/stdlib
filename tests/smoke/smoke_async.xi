@@ -14,8 +14,8 @@ fn async_task() {
 
 fn main() -> Int {
   async_ran = 0;
-  async.spawn(async_task);
-  async.run();
+  spawn(async_task);
+  run();
   if async_ran == 1 {
     return 0;
   }

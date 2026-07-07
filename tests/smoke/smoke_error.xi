@@ -5,8 +5,10 @@ module smoke_error
 use xiom.error;
 
 fn main() -> Int {
-  let e = error.new("smoke failure");
-  if e.to_string().len() > 0 {
+  var errs = Vec[Str].new();
+  errs.push("smoke failure");
+  let chain = error.ErrorChain{ errors: errs; };
+  if chain.display().len() > 0 {
     return 0;
   }
   return 1;
