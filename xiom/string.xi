@@ -7,6 +7,7 @@ module xiom.string
 extern "C" {
   fn malloc(size: UInt) -> *UInt8;
   fn free(ptr: *UInt8);
+  fn xiom_char_at(s: Str, pos: Int) -> Char;
 }
 
 fn str_len(s: Str) -> Int {
@@ -23,12 +24,12 @@ fn str_concat(a: Str, b: Str) -> Str
     var buf = malloc(total + 1);
     var i: Int = 0;
     while i < len_a {
-      buf[i] = a.char_at(i) as UInt8;
+      buf[i] = xiom_char_at(a, i) as UInt8;
       i = i + 1;
     }
     var j: Int = 0;
     while j < len_b {
-      buf[len_a + j] = b.char_at(j) as UInt8;
+      buf[len_a + j] = xiom_char_at(b, j) as UInt8;
       j = j + 1;
     }
     buf[total] = 0;
@@ -52,7 +53,7 @@ fn str_slice(s: Str, start: Int, end: Int) -> Str
     var buf = malloc(slice_len + 1);
     var i: Int = 0;
     while i < slice_len {
-      buf[i] = s.char_at(s_start + i) as UInt8;
+      buf[i] = xiom_char_at(s, s_start + i) as UInt8;
       i = i + 1;
     }
     buf[slice_len] = 0;
@@ -118,10 +119,10 @@ fn str_trim(s: Str) -> Str
   let len = s.len();
   var start: Int = 0;
   var end: Int = len;
-  while start < len && xiom.char.is_whitespace(s.char_at(start)) {
+  while start < len && xiom.char.is_whitespace(xiom_char_at(s, start)) {
     start = start + 1;
   }
-  while end > start && xiom.char.is_whitespace(s.char_at(end - 1)) {
+  while end > start && xiom.char.is_whitespace(xiom_char_at(s, end - 1)) {
     end = end - 1;
   }
   str_slice(s, start, end)
@@ -147,7 +148,7 @@ fn str_upper(s: Str) -> Str
     var buf = malloc(len + 1);
     var i: Int = 0;
     while i < len {
-      let c = s.char_at(i);
+      let c = xiom_char_at(s, i);
       buf[i] = xiom.char.to_uppercase(c) as UInt8;
       i = i + 1;
     }
@@ -164,7 +165,7 @@ fn str_lower(s: Str) -> Str
     var buf = malloc(len + 1);
     var i: Int = 0;
     while i < len {
-      let c = s.char_at(i);
+      let c = xiom_char_at(s, i);
       buf[i] = xiom.char.to_lowercase(c) as UInt8;
       i = i + 1;
     }
@@ -203,7 +204,7 @@ fn char_at(s: Str, pos: Int) -> Option[Char]
   if pos < 0 || pos >= s.len() {
     return None;
   };
-  Some(s.char_at(pos))
+  Some(xiom_char_at(s, pos))
 }
 
 fn index_of(s: Str, substr: Str) -> Option[Int]
@@ -287,12 +288,12 @@ fn words(s: Str) -> Vec[Str] {
   let len = s.len();
   var i: Int = 0;
   while i < len {
-    while i < len && xiom.char.is_whitespace(s.char_at(i)) {
+    while i < len && xiom.char.is_whitespace(xiom_char_at(s, i)) {
       i = i + 1;
     }
     if i < len {
       var start = i;
-      while i < len && !xiom.char.is_whitespace(s.char_at(i)) {
+      while i < len && !xiom.char.is_whitespace(xiom_char_at(s, i)) {
         i = i + 1;
       }
       result.push(str_slice(s, start, i));
@@ -310,7 +311,7 @@ fn char_count(s: Str) -> Int {
   let len = s.len();
   var i: Int = 0;
   while i < len {
-    let c = s.char_at(i);
+    let c = xiom_char_at(s, i);
     let byte_len = xiom.char.len_utf8(c);
     i = i + byte_len;
     count = count + 1;
