@@ -6,7 +6,7 @@
 // Backed by SSE/SSE2/AVX/AVX2/AVX-512 on x86_64 and NEON on ARM64.
 // Falls back to scalar operations when SIMD is unavailable.
 
-module xiom.simd;
+module xiom.simd
 
 use xiom.alloc;
 use xiom.ptr;
@@ -16,8 +16,7 @@ use xiom.ptr;
 // ================================================================
 
 // 128-bit vectors (SSE / NEON)
-pub type Vec4f = { data: *Float32; }  // 4 x f32
-  invariant: data != null;
+pub type Vec4f = { data: *Float32; invariant: data != null; }  // 4 x f32
 
 pub type Vec2d = { data: *Float64; }  // 2 x f64
 
@@ -28,8 +27,7 @@ pub type Vec8s = { data: *Int16; }    // 8 x i16
 pub type Vec16b = { data: *Int8; }    // 16 x i8
 
 // 256-bit vectors (AVX / AVX2)
-pub type Vec8f = { data: *Float32; }  // 8 x f32
-  invariant: data != null;
+pub type Vec8f = { data: *Float32; invariant: data != null; }  // 8 x f32
 
 pub type Vec4d = { data: *Float64; }  // 4 x f64
 
