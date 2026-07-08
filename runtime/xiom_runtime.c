@@ -141,6 +141,24 @@ long xiom_str_len(const char* str) {
     return (long)strlen(str);
 }
 
+// Concatenate two NUL-terminated strings into a freshly malloc'd buffer.
+// A XIOM Str is an i8* at the ABI; `a + b` on strings lowers to a call here.
+// NULL operands are treated as the empty string. The result is heap-allocated
+// and NUL-terminated (never freed automatically — matches the rest of the
+// string runtime, which leaks by design in this phase).
+char* xiom_str_concat(const char* a, const char* b) {
+    if (!a) a = "";
+    if (!b) b = "";
+    size_t la = strlen(a);
+    size_t lb = strlen(b);
+    char* out = (char*)malloc(la + lb + 1);
+    if (!out) return (char*)"";
+    memcpy(out, a, la);
+    memcpy(out + la, b, lb);
+    out[la + lb] = '\0';
+    return out;
+}
+
 // ============================================================================
 // String interning — XIOM uses Int IDs for all names
 // ============================================================================
