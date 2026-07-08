@@ -7,6 +7,7 @@ module xiom.core
 extern "C" {
   fn malloc(size: UInt) -> *UInt8;
   fn free(ptr: *UInt8);
+  fn xiom_char_at(s: Str, pos: Int) -> Char;
 }
 
 // === Option type ===
@@ -86,7 +87,7 @@ fn to_int_from_str(s: Str) -> Result[Int, Str] {
   }
   var i: Int = 0;
   var negative = false;
-  var c = s.char_at(0);
+  var c = xiom_char_at(s, 0);
   if c == '-' {
     negative = true;
     i = 1;
@@ -98,7 +99,7 @@ fn to_int_from_str(s: Str) -> Result[Int, Str] {
   }
   var result: Int = 0;
   while i < s.len() {
-    c = s.char_at(i);
+    c = xiom_char_at(s, i);
     if c < '0' || c > '9' {
       return Err("invalid character in integer string");
     }
@@ -119,7 +120,7 @@ fn to_float_from_str(s: Str) -> Result[Float64, Str] {
   }
   var i: Int = 0;
   var negative = false;
-  var c = s.char_at(0);
+  var c = xiom_char_at(s, 0);
   if c == '-' {
     negative = true;
     i = 1;
@@ -135,7 +136,7 @@ fn to_float_from_str(s: Str) -> Result[Float64, Str] {
   var has_frac = false;
   var has_digit = false;
   while i < s.len() {
-    c = s.char_at(i);
+    c = xiom_char_at(s, i);
     if c == '.' {
       if has_frac {
         return Err("multiple decimal points");
@@ -148,7 +149,7 @@ fn to_float_from_str(s: Str) -> Result[Float64, Str] {
       i = i + 1;
       var exp_negative = false;
       if i < s.len() {
-        c = s.char_at(i);
+        c = xiom_char_at(s, i);
         if c == '-' {
           exp_negative = true;
           i = i + 1;
@@ -158,7 +159,7 @@ fn to_float_from_str(s: Str) -> Result[Float64, Str] {
       }
       var exp_val: Int = 0;
       while i < s.len() {
-        c = s.char_at(i);
+        c = xiom_char_at(s, i);
         if c < '0' || c > '9' {
           return Err("invalid character in exponent");
         }
