@@ -4155,3 +4155,39 @@ int xiom_ct_compare_dispatch(const uint8_t* a, const uint8_t* b, size_t len) {
     return diff;
 }
 #endif
+
+// =====================================================================
+// Collection intrinsics — called by the compiler for contract-method
+// lowerings of is_sorted / contains / all / none on slices. Each
+// receives a pointer to an array of `len` i64 elements and operates
+// on the raw i64 buffer.
+// =====================================================================
+
+int64_t xiom_is_sorted(int64_t* data, int64_t len) {
+    for (int64_t i = 1; i < len; i++) {
+        if (data[i - 1] > data[i]) return 0;
+    }
+    return 1;
+}
+
+int64_t xiom_contains(int64_t* data, int64_t val) {
+    int64_t len = data[0]; // count is stored at [0], elements at [1..]
+    for (int64_t i = 0; i < len; i++) {
+        if (data[1 + i] == val) return 1;
+    }
+    return 0;
+}
+
+int64_t xiom_all(int64_t* data, int64_t len, int64_t* pred) {
+    for (int64_t i = 0; i < len; i++) {
+        if (!pred[i]) return 0;
+    }
+    return 1;
+}
+
+int64_t xiom_none(int64_t* data, int64_t len, int64_t* pred) {
+    for (int64_t i = 0; i < len; i++) {
+        if (pred[i]) return 0;
+    }
+    return 1;
+}
