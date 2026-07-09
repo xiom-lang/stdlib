@@ -1,6 +1,6 @@
 // XIOM stdlib smoke test — xiom.serialize
 // Returns 0 on success, nonzero on failure (process exit code).
-// parse_json requires Reverse dispatch fix (Phase 2).
+// NOTE: parse_json requires xiom.collections import fix + Map monomorphization.
 
 module smoke_serialize
 use xiom.serialize;
