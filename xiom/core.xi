@@ -229,7 +229,7 @@ fn to_int_from_char(c: Char) -> Int {
 }
 
 // === Collection contract methods ===
-fn is_sorted[T: Ord](items: &Slice[T]) -> Bool {
+pub fn is_sorted[T: Ord](items: &Slice[T]) -> Bool {
   var i: Int = 1;
   while i < items.len() {
     if items[i - 1].compare(&items[i]) > 0 {
@@ -262,7 +262,7 @@ fn none[T](items: &Slice[T], predicate: fn(T) -> Bool) -> Bool {
   return true;
 }
 
-fn contains[T: Eq](items: &Slice[T], value: T) -> Bool {
+pub fn contains[T: Eq](items: &Slice[T], value: T) -> Bool {
   var i: Int = 0;
   while i < items.len() {
     if items[i].eq(&value) {
