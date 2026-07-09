@@ -419,8 +419,9 @@ pub fn AtomicInt.load(self) -> Int {
   unsafe { return xiom_atomic_load(ptr); }
 }
 
-pub fn AtomicInt.store(self, val: Int) {
+pub fn AtomicInt.store(self, val: Int) -> AtomicInt {
   unsafe { xiom_atomic_store(ptr, val); }
+  self
 }
 
 pub fn AtomicInt.fetch_add(self, val: Int) -> Int {

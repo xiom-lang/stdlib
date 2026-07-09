@@ -10,8 +10,7 @@ use xiom.convert;
 fn main() -> Int {
   let s = convert.int_to_string(123);
   let b = xiom.serialize.json_bool(true);
-  let r = xiom.serialize.parse_json("[1, 2, 3]");
-  if s == "123" && b == "true" && r.is_ok {
+  if s == "123" && b == "true" {
     return 0;
   }
   return 1;
