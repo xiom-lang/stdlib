@@ -159,6 +159,26 @@ char* xiom_str_concat(const char* a, const char* b) {
     return out;
 }
 
+// Convert a signed 64-bit integer to a freshly-allocated decimal string.
+// Used to lower `to_string(Int)` / `Int.to_str()` — the pure-XIOM version relies
+// on fixed-size stack arrays which the codegen does not yet materialize.
+char* xiom_int_to_string(long long n) {
+    char tmp[24];
+    int len = 0;
+    unsigned long long u;
+    int negative = 0;
+    if (n < 0) { negative = 1; u = (unsigned long long)(-(n + 1)) + 1ULL; }
+    else { u = (unsigned long long)n; }
+    if (u == 0) { tmp[len++] = '0'; }
+    while (u > 0) { tmp[len++] = (char)('0' + (int)(u % 10)); u /= 10; }
+    if (negative) { tmp[len++] = '-'; }
+    char* out = (char*)malloc((size_t)len + 1);
+    if (!out) return (char*)"";
+    for (int i = 0; i < len; i++) { out[i] = tmp[len - 1 - i]; }
+    out[len] = '\0';
+    return out;
+}
+
 // ============================================================================
 // String interning — XIOM uses Int IDs for all names
 // ============================================================================

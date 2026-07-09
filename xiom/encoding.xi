@@ -7,6 +7,7 @@ module xiom.encoding
 extern "C" {
   fn malloc(size: UInt) -> *UInt8;
   fn free(ptr: *UInt8);
+  fn xiom_char_at(s: Str, pos: Int) -> Char;
 }
 
 // === Helpers ===
@@ -90,17 +91,17 @@ fn write_base64_triplet(dst: *UInt8, dst_idx: Int, b0: UInt8, b1: UInt8, b2: UIn
   let i1 = b1 as Int;
   let i2 = b2 as Int;
   unsafe {
-    dst[dst_idx]     = alphabet.char_at((i0 >> 2) & 63) as UInt8;
-    dst[dst_idx + 1] = alphabet.char_at(((i0 << 4) | (i1 >> 4)) & 63) as UInt8;
+    dst[dst_idx]     = xiom_char_at(alphabet, (i0 >> 2) & 63) as UInt8;
+    dst[dst_idx + 1] = xiom_char_at(alphabet, ((i0 << 4) | (i1 >> 4)) & 63) as UInt8;
     if pad1 {
       dst[dst_idx + 2] = 61;
       dst[dst_idx + 3] = 61;
     } elif pad2 {
-      dst[dst_idx + 2] = alphabet.char_at(((i1 << 2) | (i2 >> 6)) & 63) as UInt8;
+      dst[dst_idx + 2] = xiom_char_at(alphabet, ((i1 << 2) | (i2 >> 6)) & 63) as UInt8;
       dst[dst_idx + 3] = 61;
     } else {
-      dst[dst_idx + 2] = alphabet.char_at(((i1 << 2) | (i2 >> 6)) & 63) as UInt8;
-      dst[dst_idx + 3] = alphabet.char_at(i2 & 63) as UInt8;
+      dst[dst_idx + 2] = xiom_char_at(alphabet, ((i1 << 2) | (i2 >> 6)) & 63) as UInt8;
+      dst[dst_idx + 3] = xiom_char_at(alphabet, i2 & 63) as UInt8;
     };
   };
 }
@@ -113,16 +114,16 @@ fn write_base64url_triplet(dst: *UInt8, dst_idx: Int, b0: UInt8, b1: UInt8, b2: 
   let i1 = b1 as Int;
   let i2 = b2 as Int;
   unsafe {
-    dst[dst_idx]     = alphabet.char_at((i0 >> 2) & 63) as UInt8;
-    dst[dst_idx + 1] = alphabet.char_at(((i0 << 4) | (i1 >> 4)) & 63) as UInt8;
+    dst[dst_idx]     = xiom_char_at(alphabet, (i0 >> 2) & 63) as UInt8;
+    dst[dst_idx + 1] = xiom_char_at(alphabet, ((i0 << 4) | (i1 >> 4)) & 63) as UInt8;
     if !has_one {
       return;
     };
-    dst[dst_idx + 2] = alphabet.char_at(((i1 << 2) | (i2 >> 6)) & 63) as UInt8;
+    dst[dst_idx + 2] = xiom_char_at(alphabet, ((i1 << 2) | (i2 >> 6)) & 63) as UInt8;
     if !has_two {
       return;
     };
-    dst[dst_idx + 3] = alphabet.char_at(i2 & 63) as UInt8;
+    dst[dst_idx + 3] = xiom_char_at(alphabet, i2 & 63) as UInt8;
   };
 }
 
