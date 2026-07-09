@@ -10,11 +10,11 @@ extern "C" {
   fn xiom_char_at(s: Str, pos: Int) -> Char;
 }
 
-fn str_len(s: Str) -> Int {
+pub fn str_len(s: Str) -> Int {
   s.len()
 }
 
-fn str_concat(a: Str, b: Str) -> Str
+pub fn str_concat(a: Str, b: Str) -> Str
   ensures: result.len() == a.len() + b.len()
 {
   let len_a = a.len();
@@ -37,7 +37,7 @@ fn str_concat(a: Str, b: Str) -> Str
   }
 }
 
-fn str_slice(s: Str, start: Int, end: Int) -> Str
+pub fn str_slice(s: Str, start: Int, end: Int) -> Str
   requires: start >= 0
   requires: end >= start
   requires: end <= s.len()
@@ -61,12 +61,12 @@ fn str_slice(s: Str, start: Int, end: Int) -> Str
   }
 }
 
-fn str_contains(s: Str, substr: Str) -> Bool {
+pub fn str_contains(s: Str, substr: Str) -> Bool {
   let result = index_of(s, substr);
   result.is_some
 }
 
-fn str_starts_with(s: Str, prefix: Str) -> Bool {
+pub fn str_starts_with(s: Str, prefix: Str) -> Bool {
   let prefix_len = prefix.len();
   if prefix_len > s.len() {
     return false;
@@ -74,7 +74,7 @@ fn str_starts_with(s: Str, prefix: Str) -> Bool {
   str_slice(s, 0, prefix_len) == prefix
 }
 
-fn str_ends_with(s: Str, suffix: Str) -> Bool {
+pub fn str_ends_with(s: Str, suffix: Str) -> Bool {
   let suffix_len = suffix.len();
   let s_len = s.len();
   if suffix_len > s_len {
@@ -83,7 +83,7 @@ fn str_ends_with(s: Str, suffix: Str) -> Bool {
   str_slice(s, s_len - suffix_len, s_len) == suffix
 }
 
-fn str_split(s: Str, delimiter: Str) -> Vec[Str]
+pub fn str_split(s: Str, delimiter: Str) -> Vec[Str]
   requires: delimiter.len() > 0
   ensures:  result.len() >= 1  // always at least one element
 {
@@ -113,7 +113,7 @@ fn str_split(s: Str, delimiter: Str) -> Vec[Str]
   result
 }
 
-fn str_trim(s: Str) -> Str
+pub fn str_trim(s: Str) -> Str
   ensures: result.len() <= s.len()  // trim never increases length
 {
   let len = s.len();
@@ -128,19 +128,19 @@ fn str_trim(s: Str) -> Str
   str_slice(s, start, end)
 }
 
-fn str_to_int(s: Str) -> Result[Int, Str]
+pub fn str_to_int(s: Str) -> Result[Int, Str]
   requires: s.len() > 0
 {
   xiom.core.to_int_from_str(s)
 }
 
-fn str_to_float(s: Str) -> Result[Float64, Str]
+pub fn str_to_float(s: Str) -> Result[Float64, Str]
   requires: s.len() > 0
 {
   xiom.core.to_float_from_str(s)
 }
 
-fn str_upper(s: Str) -> Str
+pub fn str_upper(s: Str) -> Str
   ensures: result.len() == s.len()
 {
   let len = s.len();
@@ -157,7 +157,7 @@ fn str_upper(s: Str) -> Str
   }
 }
 
-fn str_lower(s: Str) -> Str
+pub fn str_lower(s: Str) -> Str
   ensures: result.len() == s.len()
 {
   let len = s.len();
@@ -174,11 +174,11 @@ fn str_lower(s: Str) -> Str
   }
 }
 
-fn format(fmt: Str) -> Str {
+pub fn format(fmt: Str) -> Str {
   fmt
 }
 
-fn format1(fmt: Str, arg: Str) -> Str
+pub fn format1(fmt: Str, arg: Str) -> Str
   ensures: result.len() >= fmt.len() - 2 + arg.len()
 {
   let idx_opt = index_of(fmt, "{}");
@@ -192,12 +192,12 @@ fn format1(fmt: Str, arg: Str) -> Str
   }
 }
 
-fn format2(fmt: Str, arg1: Str, arg2: Str) -> Str {
+pub fn format2(fmt: Str, arg1: Str, arg2: Str) -> Str {
   let s = format1(fmt, arg1);
   format1(s, arg2)
 }
 
-fn char_at(s: Str, pos: Int) -> Option[Char]
+pub fn char_at(s: Str, pos: Int) -> Option[Char]
   ensures: result is Some => pos >= 0 && pos < s.char_count()
   ensures: result is None => pos < 0 || pos >= s.char_count()
 {
@@ -207,7 +207,7 @@ fn char_at(s: Str, pos: Int) -> Option[Char]
   Some(xiom_char_at(s, pos))
 }
 
-fn index_of(s: Str, substr: Str) -> Option[Int]
+pub fn index_of(s: Str, substr: Str) -> Option[Int]
   requires: substr.len() > 0
   ensures:  result is Some => result >= 0 && result < s.len()
 {
@@ -229,7 +229,7 @@ fn index_of(s: Str, substr: Str) -> Option[Int]
   None
 }
 
-fn last_index_of(s: Str, substr: Str) -> Option[Int] {
+pub fn last_index_of(s: Str, substr: Str) -> Option[Int] {
   let s_len = s.len();
   let sub_len = substr.len();
   if sub_len > s_len {
@@ -248,7 +248,7 @@ fn last_index_of(s: Str, substr: Str) -> Option[Int] {
   None
 }
 
-fn replace(s: Str, from: Str, to: Str) -> Str
+pub fn replace(s: Str, from: Str, to: Str) -> Str
   requires: from.len() > 0
 {
   let from_len = from.len();
@@ -279,11 +279,11 @@ fn replace(s: Str, from: Str, to: Str) -> Str
   result
 }
 
-fn lines(s: Str) -> Vec[Str] {
+pub fn lines(s: Str) -> Vec[Str] {
   str_split(s, "\n")
 }
 
-fn words(s: Str) -> Vec[Str] {
+pub fn words(s: Str) -> Vec[Str] {
   var result = Vec[Str].new();
   let len = s.len();
   var i: Int = 0;
@@ -302,11 +302,11 @@ fn words(s: Str) -> Vec[Str] {
   result
 }
 
-fn is_empty(s: Str) -> Bool {
+pub fn is_empty(s: Str) -> Bool {
   s.len() == 0
 }
 
-fn char_count(s: Str) -> Int {
+pub fn char_count(s: Str) -> Int {
   var count: Int = 0;
   let len = s.len();
   var i: Int = 0;
@@ -319,6 +319,6 @@ fn char_count(s: Str) -> Int {
   count
 }
 
-fn byte_count(s: Str) -> Int {
+pub fn byte_count(s: Str) -> Int {
   s.len()
 }
