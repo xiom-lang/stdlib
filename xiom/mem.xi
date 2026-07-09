@@ -12,7 +12,9 @@ pub fn swap[T](a: &mut T, b: &mut T)
   unsafe {
     let pa = ptr.from_mut(a);
     let pb = ptr.from_mut(b);
-    ptr.swap(pa, pb);
+    let temp = ptr.read(pa);
+    ptr.write(pa, ptr.read(pb));
+    ptr.write(pb, temp);
   };
 }
 
