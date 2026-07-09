@@ -1,6 +1,6 @@
 // XIOM stdlib smoke test — xiom.serialize
 // Returns 0 on success, nonzero on failure (process exit code).
-// Simplified: avoids enum-variant constructors that aren't codegen'd yet.
+// parse_json requires Reverse dispatch fix (Phase 2).
 
 module smoke_serialize
 use xiom.serialize;
