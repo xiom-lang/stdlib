@@ -38,6 +38,29 @@ pub fn Range.contains(self, x: Int) -> Bool {
   x >= self.start && x < self.end
 }
 
+pub fn Range.sum(self) -> Int {
+  var total: Int = 0;
+  var i: Int = self.start;
+  while i < self.end {
+    total = total + i;
+    i = i + 1;
+  }
+  total
+}
+
+pub fn Range.product(self) -> Int {
+  var total: Int = 1;
+  var i: Int = self.start;
+  if self.start >= self.end {
+    return 1;
+  }
+  while i < self.end {
+    total = total * i;
+    i = i + 1;
+  }
+  total
+}
+
 pub fn RangeInclusive.next(self) -> Option[Int] {
   if self.done {
     None

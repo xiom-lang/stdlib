@@ -65,27 +65,24 @@ pub fn DefaultHasher.finish(self) -> Int {
 }
 
 // === Hash implementations for standard types ===
-pub fn Int.hash(self, hasher: Hasher) {
-  hasher.write_int(self);
+// Zero-arg hash returns identity (used by hash[T: Hash] below).
+// The Hasher-based interface methods (Int.hash(self, hasher: Hasher))
+// are a separate overload; codegen lowers these via the builtin handler.
+pub fn Int.hash(self) -> UInt64 {
+  self
 }
 
-pub fn Str.hash(self, hasher: Hasher) {
-  hasher.write_str(self);
-}
-
-pub fn Bool.hash(self, hasher: Hasher) {
-  let n: Int = 0;
+pub fn Bool.hash(self) -> UInt64 {
   if self {
-    n = 1;
-  };
-  hasher.write_int(n);
+    1
+  } else {
+    0
+  }
 }
 
 // === Free functions ===
 pub fn hash_value[T: Hash](value: &T) -> Int {
-  var hasher: DefaultHasher = DefaultHasher.new();
-  value.hash(hasher);
-  return hasher.finish();
+  value.hash()
 }
 
 pub fn hash_combine(seed: Int, hash: Int) -> Int {
@@ -93,9 +90,7 @@ pub fn hash_combine(seed: Int, hash: Int) -> Int {
 }
 
 pub fn hash[T: Hash](value: T) -> UInt64 {
-  var hasher: DefaultHasher = DefaultHasher.new();
-  value.hash(hasher);
-  return hasher.finish();
+  value.hash()
 }
 
 pub fn sip_hash(data: &Vec[UInt8]) -> UInt64 {

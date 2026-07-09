@@ -19,11 +19,12 @@ pub fn Cell.get[T](self) -> T {
   return value;
 }
 
-pub fn Cell.set[T](self, value: T) {
+pub fn Cell.set[T](self, value: T) -> Cell[T] {
   unsafe {
     let raw = ptr.from_ref(self) as *mut Cell[T];
     (*raw).value = value;
   };
+  self
 }
 
 pub fn Cell.replace[T](self, value: T) -> T
