@@ -8,7 +8,7 @@ fn main() -> Int {
   var a = 10;
   var b = 20;
   mem.swap(&mut a, &mut b);
-  if a == 20 && b == 10 {
+  if a == 20 && b == 10 && mem.size_of[Int]() > 0 {
     return 0;
   }
   return 1;
