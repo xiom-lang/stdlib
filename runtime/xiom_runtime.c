@@ -4163,9 +4163,10 @@ int xiom_ct_compare_dispatch(const uint8_t* a, const uint8_t* b, size_t len) {
 // on the raw i64 buffer.
 // =====================================================================
 
-int64_t xiom_is_sorted(int64_t* data, int64_t len) {
+int64_t xiom_is_sorted(int64_t* data) {
+    int64_t len = data[0];
     for (int64_t i = 1; i < len; i++) {
-        if (data[i - 1] > data[i]) return 0;
+        if (data[i] > data[i + 1]) return 0;
     }
     return 1;
 }
