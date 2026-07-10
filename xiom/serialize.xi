@@ -7,6 +7,8 @@
 
 module xiom.serialize
 
+use xiom.collections;
+
 // === Serialize trait ===
 pub interface Serialize {
   fn serialize(self) -> Result[Str, SerializeError];

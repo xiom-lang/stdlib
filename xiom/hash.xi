@@ -65,19 +65,28 @@ pub fn DefaultHasher.finish(self) -> Int {
 }
 
 // === Hash implementations for standard types ===
-// Zero-arg hash returns identity (used by hash[T: Hash] below).
-// The Hasher-based interface methods (Int.hash(self, hasher: Hasher))
-// are a separate overload; codegen lowers these via the builtin handler.
+// Full DJB2 hash computation. Each type hashes its bytes directly.
 pub fn Int.hash(self) -> UInt64 {
-  self
+  var h: Int = 5381;
+  var val: Int = self;
+  var i: Int = 0;
+  while i < 8 {
+    let byte = val & 0xFF;
+    h = ((h * 33) + byte);
+    val = val >> 8;
+    i = i + 1;
+  }
+  h
 }
 
 pub fn Bool.hash(self) -> UInt64 {
+  var h: Int = 5381;
   if self {
-    1
+    h = ((h * 33) + 1);
   } else {
-    0
+    h = ((h * 33) + 0);
   }
+  h
 }
 
 // === Free functions ===
