@@ -1,6 +1,6 @@
 // XIOM stdlib smoke test — xiom.serialize
-// Returns 0 on success. parse_json deferred: Map type not in type_meta
-// (needs architectural fix for generic type injection into codegen).
+// Returns 0. parse_json needs: parser multi-type-arg fix for Map[K,V].
+// Map.new IS now in generic_fn_decls with smoke-level use xiom.collections.
 module smoke_serialize
 use xiom.serialize;
 fn main() -> Int {
