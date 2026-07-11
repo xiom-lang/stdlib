@@ -1,6 +1,5 @@
 // XIOM stdlib smoke test — xiom.serialize
-// Returns 0. parse_json blocked by Reverse.insert stub (separate bug).
-// Map.new FIXED (removed Map from checker builtins).
+// Returns 0. parse_json needs Map type injection into codegen type_meta.
 module smoke_serialize
 use xiom.serialize;
 fn main() -> Int {
