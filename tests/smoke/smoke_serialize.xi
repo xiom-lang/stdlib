@@ -1,6 +1,6 @@
 // XIOM stdlib smoke test — xiom.serialize
-// Returns 0. parse_json needs: Map dispatch fix (parser multi-type-arg
-// + codegen generic inference with type_arg from Tuple).
+// Returns 0. parse_json blocked by Reverse.insert stub (separate bug).
+// Map.new FIXED (removed Map from checker builtins).
 module smoke_serialize
 use xiom.serialize;
 fn main() -> Int {
