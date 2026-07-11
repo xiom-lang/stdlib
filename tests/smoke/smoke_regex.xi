@@ -1,5 +1,13 @@
 // XIOM stdlib smoke test — xiom.regex
-// Returns 0. Full regex deferred: runtime SIGILL crash.
+// Returns 0 on success, nonzero on failure (process exit code).
+
 module smoke_regex
 use xiom.regex;
-fn main() -> Int { return 0; }
+
+fn main() -> Int {
+  let re = xiom.regex.Regex.new("h.*o").unwrap();
+  if re.is_match("hello") && !re.is_match("world") {
+    return 0;
+  }
+  return 1;
+}
