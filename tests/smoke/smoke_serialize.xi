@@ -1,6 +1,6 @@
 // XIOM stdlib smoke test — xiom.serialize
-// Returns 0 on success. json_number/parse_json crash at runtime
-// (ACCESS_VIOLATION/SIGILL) — need dedicated debugging.
+// Returns 0 on success. parse_json deferred: Map dispatch issue
+// (non-pub generic type methods not injected, needs architectural fix).
 module smoke_serialize
 use xiom.serialize;
 fn main() -> Int {

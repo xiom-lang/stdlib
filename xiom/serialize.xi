@@ -8,6 +8,7 @@
 module xiom.serialize
 
 use xiom.collections;
+use xiom.convert;
 
 // === Serialize trait ===
 pub interface Serialize {

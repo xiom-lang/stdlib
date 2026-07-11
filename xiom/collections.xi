@@ -145,7 +145,7 @@ fn Vec.set[T](index: Int, value: T)
 }
 
 // === Map ===
-type Map[K, V] = {
+pub type Map[K, V] = {
   keys: Vec[K];
   values: Vec[V];
   invariant: keys.len() == values.len();
