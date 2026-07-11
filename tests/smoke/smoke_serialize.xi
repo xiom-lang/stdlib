@@ -1,6 +1,6 @@
 // XIOM stdlib smoke test — xiom.serialize
-// Returns 0 on success. parse_json deferred: crashes at runtime (SIGILL)
-// even for trivial inputs — json_parse internals need dedicated debugging.
+// Returns 0 on success. json_number/parse_json crash at runtime
+// (ACCESS_VIOLATION/SIGILL) — need dedicated debugging.
 module smoke_serialize
 use xiom.serialize;
 fn main() -> Int {
