@@ -22,11 +22,33 @@ pub fn PathBuf.from(s: Str) -> PathBuf {
 
 // Path operations
 pub fn Path.parent(self) -> Option<Path> {
-  var p = parent_path(self.inner);
-  match p {
-    Some(s) => { return Some(Path{ inner: s; }); }
-    None => { return None; }
+  // Find the last path separator not at the end, return everything before it.
+  var s = self.inner;
+  var len = xiom.string.str_len(s);
+  // Strip trailing separator(s)
+  var end = len;
+  while end > 0 {
+    let ch = xiom.string.char_at(s, end - 1);
+    if ch.is_some {
+      let c = ch.value;
+      if c == '/' || c == '\\' { end = end - 1; }
+      else { break; }
+    }
   }
+  // Find last separator before end
+  var i = end - 1;
+  while i >= 0 {
+    let ch = xiom.string.char_at(s, i);
+    if ch.is_some {
+      let c = ch.value;
+      if c == '/' || c == '\\' {
+        if i == 0 { return Some(Path.new(xiom.string.str_slice(s, 0, 1))); }
+        return Some(Path.new(xiom.string.str_slice(s, 0, i)));
+      }
+    }
+    i = i - 1;
+  }
+  return None;
 }
 
 pub fn Path.file_name(self) -> Option<Str> {
@@ -66,13 +88,13 @@ pub fn Path.extension(self) -> Option<Str> {
 }
 
 pub fn Path.file_stem(self) -> Option<Str> {
-  var name = file_name(self.inner);
-  match name {
+  var name_opt = self.file_name();
+  match name_opt {
     Some(n) => {
-      var dot = last_index_of(n, ".");
+      var dot = xiom.string.last_index_of(n, ".");
       match dot {
         Some(0) => { return Some(n); }
-        Some(pos) => { return Some(str_slice(n, 0, pos)); }
+        Some(pos) => { return Some(xiom.string.str_slice(n, 0, pos)); }
         None => { return Some(n); }
       }
     }
@@ -81,21 +103,31 @@ pub fn Path.file_stem(self) -> Option<Str> {
 }
 
 pub fn Path.is_absolute(self) -> Bool {
-  return is_absolute(self.inner);
+  var s = self.inner;
+  if xiom.string.str_len(s) >= 1 {
+    let ch = xiom.string.char_at(s, 0);
+    if ch.is_some {
+      let c = ch.value;
+      return c == '/' || c == '\\';
+    }
+  }
+  return false;
 }
 
 pub fn Path.is_relative(self) -> Bool {
-  return !is_absolute(self.inner);
+  return !self.is_absolute();
 }
 
 pub fn Path.has_root(self) -> Bool {
-  if str_starts_with(self.inner, "/") { return true; }
-  if str_starts_with(self.inner, "\\") { return true; }
-  var colon = index_of(self.inner, ":");
-  match colon {
-    Some(1) => { return true; }
-    _ => { return false; }
+  var s = self.inner;
+  if xiom.string.str_len(s) >= 1 {
+    let ch = xiom.string.char_at(s, 0);
+    if ch.is_some {
+      let c = ch.value;
+      if c == '/' || c == '\\' { return true; }
+    }
   }
+  return false;
 }
 
 pub fn Path.components(self) -> Vec<Str> {
