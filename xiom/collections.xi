@@ -9,6 +9,7 @@ type Vec[T] = {
   data: *T;
   len: Int;
   cap: Int;
+  elem_size: Int;
   invariant: len >= 0;
   invariant: cap >= 0;
   invariant: len <= cap;
