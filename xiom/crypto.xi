@@ -31,14 +31,11 @@ extern "C" {
 // ============================================================================
 
 fn _u32_mask(x: Int) -> Int {
-  if x < 0 { return (x & 0xFFFFFFFF) + 0x100000000; }
   return x & 0xFFFFFFFF;
 }
 
 fn _u32_add(a: Int, b: Int) -> Int {
-  var x = _u32_mask(a);
-  var y = _u32_mask(b);
-  return _u32_mask(x + y);
+  return (a + b) & 0xFFFFFFFF;
 }
 
 fn _u32_shr(a: Int, n: Int) -> Int {
@@ -136,39 +133,42 @@ fn _sha256_block(block: &Vec[UInt8], start: Int, state: &mut Vec[Int]) {
   }
   i = 16;
   while i < 64 {
-    w[i] = _u32_add(_u32_add(_sha256_eps1(w[i - 2]), w[i - 7]), _u32_add(_sha256_eps0(w[i - 15]), w[i - 16]));
+    let es1 = _sha256_eps1(w[i - 2]);
+    let es0 = _sha256_eps0(w[i - 15]);
+    let a1  = _u32_add(es1, w[i - 7]);
+    let a2  = _u32_add(es0, w[i - 16]);
+    w[i]   = _u32_add(a1, a2);
     i = i + 1;
   }
-  var a = state[0];
-  var b = state[1];
-  var c = state[2];
-  var d = state[3];
-  var e = state[4];
-  var f = state[5];
-  var g = state[6];
-  var h = state[7];
+  var s: [8]Int;
+  s[0] = state[0]; s[1] = state[1]; s[2] = state[2]; s[3] = state[3];
+  s[4] = state[4]; s[5] = state[5]; s[6] = state[6]; s[7] = state[7];
   i = 0;
   while i < 64 {
-    let t1 = _u32_add(_u32_add(_u32_add(h, _sha256_sigma1(e)), _sha256_ch(e, f, g)), _u32_add(_SHA256_K[i], w[i]));
-    let t2 = _u32_add(_sha256_sigma0(a), _sha256_maj(a, b, c));
-    h = g;
-    g = f;
-    f = e;
-    e = _u32_add(d, t1);
-    d = c;
-    c = b;
-    b = a;
-    a = _u32_add(t1, t2);
+    let s1e = _sha256_sigma1(s[4]);
+    let ch  = _sha256_ch(s[4], s[5], s[6]);
+    let t1a = _u32_add(s[7], s1e);
+    let t1b = _u32_add(t1a, ch);
+    let kw  = _u32_add(_SHA256_K[i], w[i]);
+    let t1  = _u32_add(t1b, kw);
+    let s0a = _sha256_sigma0(s[0]);
+    let maj = _sha256_maj(s[0], s[1], s[2]);
+    let t2  = _u32_add(s0a, maj);
+
+    s[7] = s[6]; s[6] = s[5]; s[5] = s[4];
+    s[4] = _u32_add(s[3], t1);
+    s[3] = s[2]; s[2] = s[1]; s[1] = s[0];
+    s[0] = _u32_add(t1, t2);
     i = i + 1;
   }
-  state[0] = _u32_add(state[0], a);
-  state[1] = _u32_add(state[1], b);
-  state[2] = _u32_add(state[2], c);
-  state[3] = _u32_add(state[3], d);
-  state[4] = _u32_add(state[4], e);
-  state[5] = _u32_add(state[5], f);
-  state[6] = _u32_add(state[6], g);
-  state[7] = _u32_add(state[7], h);
+  state[0] = _u32_add(state[0], s[0]);
+  state[1] = _u32_add(state[1], s[1]);
+  state[2] = _u32_add(state[2], s[2]);
+  state[3] = _u32_add(state[3], s[3]);
+  state[4] = _u32_add(state[4], s[4]);
+  state[5] = _u32_add(state[5], s[5]);
+  state[6] = _u32_add(state[6], s[6]);
+  state[7] = _u32_add(state[7], s[7]);
 }
 
 fn _sha256_pad_and_process(data: &Vec[UInt8]) -> Vec[Int] {
