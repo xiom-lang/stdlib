@@ -50,13 +50,13 @@ type IOError = {
 type SeekFrom = enum { Start(Int), End(Int), Current(Int) }
 
 // === Console ===
-fn print(msg: Str) {
+pub fn print(msg: Str) {
   unsafe {
     printf("%s", msg.c_str());
   }
 }
 
-fn println(msg: Str) {
+pub fn println(msg: Str) {
   unsafe {
     puts(msg.c_str());
   }
@@ -364,7 +364,7 @@ fn exit(code: Int)
   }
 }
 
-fn args() -> Vec[Str] {
+pub fn args() -> Vec[Str] {
   let argc: Int;
   unsafe {
     argc = xiom_get_argc();
