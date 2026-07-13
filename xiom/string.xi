@@ -197,6 +197,10 @@ pub fn format2(fmt: Str, arg1: Str, arg2: Str) -> Str {
   format1(s, arg2)
 }
 
+pub fn byte_at(s: Str, pos: Int) -> UInt8 {
+  xiom_char_at(s, pos)
+}
+
 pub fn char_at(s: Str, pos: Int) -> Option[Char]
   ensures: result is Some => pos >= 0 && pos < s.char_count()
   ensures: result is None => pos < 0 || pos >= s.char_count()
