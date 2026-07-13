@@ -30,11 +30,39 @@ pub fn Path.parent(self) -> Option<Path> {
 }
 
 pub fn Path.file_name(self) -> Option<Str> {
-  return file_name(self.inner);
+  // Find the last path separator and return everything after it.
+  // Uses xiom.string helpers (str_len, char_at) which are available.
+  var s = self.inner;
+  var i = xiom.string.str_len(s) - 1;
+  while i >= 0 {
+    let ch = xiom.string.char_at(s, i);
+    if ch.is_some {
+      let c = ch.value;
+      if c == '/' || c == '\\' {
+        if i == xiom.string.str_len(s) - 1 {
+          return None;
+        }
+        return Some(xiom.string.str_slice(s, i + 1, xiom.string.str_len(s)));
+      }
+    }
+    i = i - 1;
+  }
+  return Some(s);
 }
 
 pub fn Path.extension(self) -> Option<Str> {
-  return extension(self.inner);
+  // Find the last '.' in the file name and return everything after it.
+  var name_opt = self.file_name();
+  if name_opt.is_none {
+    return None;
+  }
+  var name = name_opt.unwrap();
+  var dot = xiom.string.last_index_of(name, ".");
+  match dot {
+    Some(0) => { return None; }
+    Some(pos) => { return Some(xiom.string.str_slice(name, pos + 1, xiom.string.str_len(name))); }
+    None => { return None; }
+  }
 }
 
 pub fn Path.file_stem(self) -> Option<Str> {
