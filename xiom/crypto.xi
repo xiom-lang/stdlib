@@ -1130,7 +1130,21 @@ pub fn aes_decrypt(key: &Vec[UInt8], ciphertext: &Vec[UInt8]) -> Result<Vec[UInt
     }
     return _pkcs7_unpad(&decrypted);
   }
+  // Software fallback: same block-by-block AES decrypt.
   let (expanded_key, nr) = _aes_key_expansion(key);
+  var decrypted = Vec[UInt8].new();
+  let blocks = ciphertext.len() / 16;
+  var bi = 0;
+  while bi < blocks {
+    var pt = _aes_decrypt_block(ciphertext, bi * 16, &expanded_key, nr);
+    var j = 0;
+    while j < 16 {
+      decrypted.push(pt[j]);
+      j = j + 1;
+    }
+    bi = bi + 1;
+  }
+  return _pkcs7_unpad(&decrypted);
 }
 
 // ============================================================================
