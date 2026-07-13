@@ -131,44 +131,80 @@ fn _sha256_block(block: &Vec[UInt8], start: Int, state: &mut Vec[Int]) {
     w[i] = ((b0 * 16777216) + (b1 * 65536) + (b2 * 256) + b3) & 0xFFFFFFFF;
     i = i + 1;
   }
+  // Word expansion — all operations inlined to avoid function-call
+  // aliasing in the 64-round loop.
   i = 16;
   while i < 64 {
-    let es1 = _sha256_eps1(w[i - 2]);
-    let es0 = _sha256_eps0(w[i - 15]);
-    let a1  = _u32_add(es1, w[i - 7]);
-    let a2  = _u32_add(es0, w[i - 16]);
-    w[i]   = _u32_add(a1, a2);
+    let x1 = w[i - 2] & 0xFFFFFFFF;
+    let s1a = (x1 / 131072) | ((x1 * 32768) & 0xFFFFFFFF);
+    let s1b = (x1 / 524288) | ((x1 * 8192) & 0xFFFFFFFF);
+    let s1c = x1 / 1024;
+    let es1 = (s1a ^ s1b ^ s1c) & 0xFFFFFFFF;
+    let x0 = w[i - 15] & 0xFFFFFFFF;
+    let s0a = (x0 / 128) | ((x0 * 33554432) & 0xFFFFFFFF);
+    let s0b = (x0 / 262144) | ((x0 * 16384) & 0xFFFFFFFF);
+    let s0c = x0 / 8;
+    let es0 = (s0a ^ s0b ^ s0c) & 0xFFFFFFFF;
+    w[i] = ((es1 + w[i - 7] + es0 + w[i - 16]) & 0xFFFFFFFF) & 0xFFFFFFFF;
     i = i + 1;
   }
   var s: [8]Int;
   s[0] = state[0]; s[1] = state[1]; s[2] = state[2]; s[3] = state[3];
   s[4] = state[4]; s[5] = state[5]; s[6] = state[6]; s[7] = state[7];
+  // Round loop — split into chunks of 16 to avoid codegen issues
+  // with very long-running while loops (64 iterations).
   i = 0;
-  while i < 64 {
-    let s1e = _sha256_sigma1(s[4]);
-    let ch  = _sha256_ch(s[4], s[5], s[6]);
-    let t1a = _u32_add(s[7], s1e);
-    let t1b = _u32_add(t1a, ch);
-    let kw  = _u32_add(_SHA256_K[i], w[i]);
-    let t1  = _u32_add(t1b, kw);
-    let s0a = _sha256_sigma0(s[0]);
-    let maj = _sha256_maj(s[0], s[1], s[2]);
-    let t2  = _u32_add(s0a, maj);
+  while i < 4 {
+    var chunk = i * 16;
+    var end = chunk + 16;
+    var j = chunk;
+    while j < end {
+      var s0 = s[0]; var s1v = s[1]; var s2v = s[2]; var s3v = s[3];
+      var s4 = s[4]; var s5 = s[5]; var s6 = s[6]; var s7 = s[7];
 
-    s[7] = s[6]; s[6] = s[5]; s[5] = s[4];
-    s[4] = _u32_add(s[3], t1);
-    s[3] = s[2]; s[2] = s[1]; s[1] = s[0];
-    s[0] = _u32_add(t1, t2);
+      // sigma1(s4): ROTR(6) ^ ROTR(11) ^ ROTR(25)
+      var xs = s4 & 0xFFFFFFFF;
+      var rs6  = (xs / 64) | ((xs * 67108864) & 0xFFFFFFFF);
+      var rs11 = (xs / 2048) | ((xs * 2097152) & 0xFFFFFFFF);
+      var rs25 = (xs / 33554432) | ((xs * 128) & 0xFFFFFFFF);
+      var s1e = (rs6 ^ rs11 ^ rs25) & 0xFFFFFFFF;
+
+      // ch(s4, s5, s6) = (x & y) ^ (~x & z)
+      var ch = ((s4 & s5) ^ ((~s4) & s6)) & 0xFFFFFFFF;
+
+      // T1 = h + sigma1(e) + Ch(e,f,g) + K[j] + w[j]
+      var t1 = (s7 + s1e + ch + _SHA256_K[j] + w[j]) & 0xFFFFFFFF;
+
+      // sigma0(s0): ROTR(2) ^ ROTR(13) ^ ROTR(22)
+      var ya = s0 & 0xFFFFFFFF;
+      var ra2  = (ya / 4) | ((ya * 1073741824) & 0xFFFFFFFF);
+      var ra13 = (ya / 8192) | ((ya * 524288) & 0xFFFFFFFF);
+      var ra22 = (ya / 4194304) | ((ya * 1024) & 0xFFFFFFFF);
+      var s0a = (ra2 ^ ra13 ^ ra22) & 0xFFFFFFFF;
+
+      // maj(s0, s1, s2) = (x & y) ^ (x & z) ^ (y & z)
+      var maj = ((s0 & s1v) ^ (s0 & s2v) ^ (s1v & s2v));
+
+      // T2 = sigma0(a) + Maj(a,b,c)
+      var t2 = (s0a + maj) & 0xFFFFFFFF;
+
+      // Shift working variables
+      s[7] = s6; s[6] = s5; s[5] = s4;
+      s[4] = (s3v + t1) & 0xFFFFFFFF;
+      s[3] = s2v; s[2] = s1v; s[1] = s0;
+      s[0] = (t1 + t2) & 0xFFFFFFFF;
+      j = j + 1;
+    }
     i = i + 1;
   }
-  state[0] = _u32_add(state[0], s[0]);
-  state[1] = _u32_add(state[1], s[1]);
-  state[2] = _u32_add(state[2], s[2]);
-  state[3] = _u32_add(state[3], s[3]);
-  state[4] = _u32_add(state[4], s[4]);
-  state[5] = _u32_add(state[5], s[5]);
-  state[6] = _u32_add(state[6], s[6]);
-  state[7] = _u32_add(state[7], s[7]);
+  state[0] = (state[0] + s[0]) & 0xFFFFFFFF;
+  state[1] = (state[1] + s[1]) & 0xFFFFFFFF;
+  state[2] = (state[2] + s[2]) & 0xFFFFFFFF;
+  state[3] = (state[3] + s[3]) & 0xFFFFFFFF;
+  state[4] = (state[4] + s[4]) & 0xFFFFFFFF;
+  state[5] = (state[5] + s[5]) & 0xFFFFFFFF;
+  state[6] = (state[6] + s[6]) & 0xFFFFFFFF;
+  state[7] = (state[7] + s[7]) & 0xFFFFFFFF;
 }
 
 fn _sha256_pad_and_process(data: &Vec[UInt8]) -> Vec[Int] {
