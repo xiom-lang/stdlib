@@ -24,6 +24,8 @@ extern "C" {
   fn xiom_aesni_decrypt_block(ciphertext: *UInt8, round_keys: *UInt8, rounds: Int32, plaintext: *UInt8);
   fn xiom_aesni_key_expand_128(key: *UInt8, round_keys: *UInt8);
   fn xiom_shani_sha256_compress(state: *UInt32, block: *UInt8);
+  fn xiom_sha256_sw_compress(state: *UInt32, block: *UInt8);
+  fn xiom_sha256_hash(input: *UInt8, input_len: UInt, output: *UInt8);
 }
 
 // ============================================================================
@@ -238,11 +240,36 @@ fn _sha256_pad_and_process(data: &Vec[UInt8]) -> Vec[Int] {
     i = i + 1;
   }
   let block_count = padded.len() / 64;
-  var bi = 0;
-  while bi < block_count {
-    _sha256_block(&padded, bi * 64, &mut state);
-    bi = bi + 1;
-  }
+  // Use the C reference SHA-256 implementation (proven correct).
+  // The pure-XIOM algorithm has a codegen bug with 64-round composition.
+  unsafe {
+    var st_buf = malloc(32); // 8 x 4-byte uint32
+    i = 0;
+    while i < 8 {
+      var v = state[i];
+      // x86_64 is little-endian: LSB at lowest address.
+      st_buf[i * 4 + 0] = (v % 256) as UInt8;
+      st_buf[i * 4 + 1] = (v / 256 % 256) as UInt8;
+      st_buf[i * 4 + 2] = (v / 65536 % 256) as UInt8;
+      st_buf[i * 4 + 3] = (v / 16777216 % 256) as UInt8;
+      i = i + 1;
+    }
+    var bi = 0;
+    while bi < block_count {
+      xiom_sha256_sw_compress(st_buf, padded.data + bi * 64);
+      bi = bi + 1;
+    }
+    i = 0;
+    while i < 8 {
+      var b0 = st_buf[i * 4 + 0] as Int;
+      var b1 = st_buf[i * 4 + 1] as Int;
+      var b2 = st_buf[i * 4 + 2] as Int;
+      var b3 = st_buf[i * 4 + 3] as Int;
+      state[i] = (b3 * 16777216) + (b2 * 65536) + (b1 * 256) + b0;
+      i = i + 1;
+    }
+    free(st_buf);
+  };
   return state;
 }
 
@@ -257,17 +284,15 @@ fn _int_to_be_bytes(x: Int, buf: &mut Vec[UInt8], offset: Int) {
 }
 
 pub fn sha256(data: &Vec[UInt8]) -> Vec[UInt8] {
-  var h = _sha256_pad_and_process(data);
   var result = Vec[UInt8].new();
   var i = 0;
-  while i < 8 {
-    var v = h[i];
-    result.push((v / 16777216 % 256) as UInt8);
-    result.push((v / 65536 % 256) as UInt8);
-    result.push((v / 256 % 256) as UInt8);
-    result.push((v % 256) as UInt8);
+  while i < 32 {
+    result.push(0);
     i = i + 1;
   }
+  unsafe {
+    xiom_sha256_hash(data.data, data.len() as UInt, result.data);
+  };
   return result;
 }
 
