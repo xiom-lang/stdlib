@@ -220,9 +220,7 @@ fn _int_to_be_bytes(x: Int, buf: &mut Vec[UInt8], offset: Int) {
   }
 }
 
-pub fn sha256(data: &Vec[UInt8]) -> Vec[UInt8]
-  ensures: result.len() == 32  // SHA-256 always 32 bytes
-{
+pub fn sha256(data: &Vec[UInt8]) -> Vec[UInt8] {
   var h = _sha256_pad_and_process(data);
   var result = Vec[UInt8].new();
   var i = 0;
@@ -249,22 +247,18 @@ pub fn sha256_accelerated(data: &Vec[UInt8]) -> Vec[UInt8]
 
 pub fn sha256_hex(data: &Vec[UInt8]) -> Str {
   var hash = sha256(data);
-  var result = Vec[UInt8].new();
+  var result = "";
   var i = 0;
+  var hex_chars = "0123456789abcdef";
   while i < hash.len() {
     let b = hash[i] as Int;
     let high = b / 16;
     let low = b % 16;
-    if high < 10 { result.push(48 + high as UInt8); }
-    else { result.push(87 + high as UInt8); }
-    if low < 10 { result.push(48 + low as UInt8); }
-    else { result.push(87 + low as UInt8); }
+    result = result + xiom.string.str_slice(hex_chars, high, high + 1);
+    result = result + xiom.string.str_slice(hex_chars, low, low + 1);
     i = i + 1;
   }
-  result.push(0);
-  unsafe {
-    return Str.from_cstring(result.data);
-  }
+  return result;
 }
 
 // ============================================================================
