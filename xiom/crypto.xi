@@ -247,18 +247,22 @@ pub fn sha256_accelerated(data: &Vec[UInt8]) -> Vec[UInt8]
 
 pub fn sha256_hex(data: &Vec[UInt8]) -> Str {
   var hash = sha256(data);
-  var result = "";
+  var result = Vec[UInt8].new();
   var i = 0;
-  var hex_chars = "0123456789abcdef";
   while i < hash.len() {
     let b = hash[i] as Int;
     let high = b / 16;
     let low = b % 16;
-    result = result + xiom.string.str_slice(hex_chars, high, high + 1);
-    result = result + xiom.string.str_slice(hex_chars, low, low + 1);
+    if high < 10 { result.push(48 + high as UInt8); }
+    else { result.push(87 + high as UInt8); }
+    if low < 10 { result.push(48 + low as UInt8); }
+    else { result.push(87 + low as UInt8); }
     i = i + 1;
   }
-  return result;
+  result.push(0);
+  unsafe {
+    return Str.from_cstring(result.data);
+  }
 }
 
 // ============================================================================
