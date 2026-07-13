@@ -187,11 +187,7 @@ fn parse_value(s: Str, pos: &mut Int) -> Result[JsonValue, SerializeError] {
     Some('t') | Some('f') => parse_bool(s, pos);
     Some('n') => parse_null(s, pos);
     Some(c) => {
-      if c == '-' || xiom.char.is_digit(c) {
-        parse_number(s, pos)
-      } else {
-        Err(make_serror("unexpected character", *pos))
-      }
+      parse_number(s, pos)
     };
     None => Err(make_serror("unexpected end of input", *pos));
   }
