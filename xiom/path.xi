@@ -191,7 +191,40 @@ pub fn Path.metadata(self) -> Result<Metadata, Str> {
 }
 
 pub fn Path.canonicalize(self) -> Result<PathBuf, Str> {
-  return Ok(PathBuf{ inner: self.inner; });
+  // String-based path canonicalization: collapse `.`, `..`, and double
+  // separators without filesystem calls.  Does NOT resolve symlinks —
+  // that requires OS-level `realpath` which isn't available yet.
+  let is_abs = self.inner.len() > 0 && (self.inner.starts_with("/") || self.inner.starts_with("\\"));
+  var comps = self.components();
+  var out: Vec[Str] = Vec[Str].new();
+  var i = 0;
+  while i < comps.len() {
+    let c = comps[i];
+    if c == "." || c.len() == 0 {
+      // skip `.` and empty components
+    } elif c == ".." {
+      if out.len() > 0 {
+        out.pop();
+      }
+    } else {
+      out.push(c);
+    }
+    i = i + 1;
+  }
+  // Rebuild the path string
+  var result = "";
+  var j = 0;
+  while j < out.len() {
+    if j > 0 || is_abs {
+      result = result + "/";
+    }
+    result = result + out[j];
+    j = j + 1;
+  }
+  if is_abs && result == "" {
+    result = "/";
+  }
+  return Ok(PathBuf{ inner: result });
 }
 
 pub fn Path.starts_with(self, base: &Path) -> Bool {

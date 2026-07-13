@@ -41,13 +41,13 @@ extern "C" {
 }
 
 // === Error type ===
-type IOError = {
+pub type IOError = {
   message: Str;
   code: Int;
 }
 
 // === SeekFrom ===
-type SeekFrom = enum { Start(Int), End(Int), Current(Int) }
+pub type SeekFrom = enum { Start(Int), End(Int), Current(Int) }
 
 // === Console ===
 pub fn print(msg: Str) {
@@ -62,7 +62,7 @@ pub fn println(msg: Str) {
   }
 }
 
-fn read_line() -> Str {
+pub fn read_line() -> Str {
   var buf: Vec[UInt8] = Vec[UInt8]::with_capacity(4096);
   let ptr: *UInt8;
   unsafe {
@@ -88,7 +88,7 @@ fn strip_trailing_newline(s: Str) -> Str {
   }
 }
 
-fn read_int() -> Result[Int, Str] {
+pub fn read_int() -> Result[Int, Str] {
   let line = read_line();
   let trimmed = line.trim();
   if trimmed.is_empty() {
@@ -118,7 +118,7 @@ fn read_int() -> Result[Int, Str] {
   Ok(result * sign)
 }
 
-fn read_float() -> Result[Float64, Str] {
+pub fn read_float() -> Result[Float64, Str] {
   let line = read_line();
   let trimmed = line.trim();
   if trimmed.is_empty() {
@@ -164,7 +164,7 @@ fn read_float() -> Result[Float64, Str] {
 }
 
 // === File system ===
-fn read_file(path: Str) -> Result[Str, IOError]
+pub fn read_file(path: Str) -> Result[Str, IOError]
   requires: path.len() > 0
   ensures:  result is Ok => result.len() >= 0
 {
@@ -190,7 +190,7 @@ fn read_file(path: Str) -> Result[Str, IOError]
   Ok(Str::from_utf8(buf))
 }
 
-fn write_file(path: Str, content: Str) -> Result[Unit, IOError]
+pub fn write_file(path: Str, content: Str) -> Result[Unit, IOError]
   requires: path.len() > 0
   ensures:  result is Ok => file_exists(path)
 {
@@ -214,7 +214,7 @@ fn write_file(path: Str, content: Str) -> Result[Unit, IOError]
   Ok(Unit)
 }
 
-fn append_file(path: Str, content: Str) -> Result[Unit, IOError]
+pub fn append_file(path: Str, content: Str) -> Result[Unit, IOError]
   requires: path.len() > 0
   ensures:  result is Ok => file_exists(path)
 {
@@ -238,7 +238,7 @@ fn append_file(path: Str, content: Str) -> Result[Unit, IOError]
   Ok(Unit)
 }
 
-fn file_exists(path: Str) -> Bool
+pub fn file_exists(path: Str) -> Bool
   requires: path.len() > 0
 {
   let file: *UInt8;
@@ -254,7 +254,7 @@ fn file_exists(path: Str) -> Bool
   true
 }
 
-fn is_dir(path: Str) -> Bool
+pub fn is_dir(path: Str) -> Bool
   requires: path.len() > 0
 {
   let result: Int32;
@@ -264,7 +264,7 @@ fn is_dir(path: Str) -> Bool
   result != 0
 }
 
-fn create_dir(path: Str) -> Result[Unit, IOError]
+pub fn create_dir(path: Str) -> Result[Unit, IOError]
   requires: path.len() > 0
   requires: !file_exists(path)
   ensures:  result is Ok => is_dir(path)
@@ -279,7 +279,7 @@ fn create_dir(path: Str) -> Result[Unit, IOError]
   Ok(Unit)
 }
 
-fn list_dir(path: Str) -> Result[Vec[Str], IOError]
+pub fn list_dir(path: Str) -> Result[Vec[Str], IOError]
   requires: path.len() > 0
   requires: is_dir(path)
   ensures:  result is Ok => result.len() >= 0
@@ -315,7 +315,7 @@ fn list_dir(path: Str) -> Result[Vec[Str], IOError]
   Ok(entries)
 }
 
-fn remove_file(path: Str) -> Result[Unit, IOError]
+pub fn remove_file(path: Str) -> Result[Unit, IOError]
   requires: path.len() > 0
   ensures:  result is Ok => !file_exists(path)
 {
@@ -329,7 +329,7 @@ fn remove_file(path: Str) -> Result[Unit, IOError]
   Ok(Unit)
 }
 
-fn copy_file(src: Str, dst: Str) -> Result[Unit, IOError]
+pub fn copy_file(src: Str, dst: Str) -> Result[Unit, IOError]
   requires: src.len() > 0
   requires: dst.len() > 0
   requires: src != dst
@@ -340,7 +340,7 @@ fn copy_file(src: Str, dst: Str) -> Result[Unit, IOError]
   write_file(dst, content)
 }
 
-fn rename(src: Str, dst: Str) -> Result[Unit, IOError]
+pub fn rename(src: Str, dst: Str) -> Result[Unit, IOError]
   requires: src.len() > 0
   requires: dst.len() > 0
   ensures:  result is Ok => !file_exists(src) && file_exists(dst)
@@ -356,7 +356,7 @@ fn rename(src: Str, dst: Str) -> Result[Unit, IOError]
 }
 
 // === Process ===
-fn exit(code: Int)
+pub fn exit(code: Int)
   requires: code >= 0
 {
   unsafe {
@@ -382,7 +382,7 @@ pub fn args() -> Vec[Str] {
   result
 }
 
-fn env_var(name: Str) -> Option[Str]
+pub fn env_var(name: Str) -> Option[Str]
   requires: name.len() > 0
 {
   let ptr: *UInt8;
@@ -397,50 +397,50 @@ fn env_var(name: Str) -> Option[Str]
 }
 
 // === Time ===
-fn time_now() -> Int {
+pub fn time_now() -> Int {
   unsafe {
     time(nil)
   }
 }
 
-fn sleep(ms: Int) {
+pub fn sleep(ms: Int) {
   unsafe {
     usleep((ms as UInt) * 1000 as UInt);
   }
 }
 
 // === Read / Write / Seek traits ===
-interface Read {
+pub interface Read {
   fn read(self, buf: &mut Vec[UInt8]) -> Result[Int, IOError];
   fn read_to_end(self, buf: &mut Vec[UInt8]) -> Result[Int, IOError];
   fn read_to_string(self) -> Result[Str, IOError];
   fn read_exact(self, buf: &mut Vec[UInt8]) -> Result[Unit, IOError];
 }
 
-interface Write {
+pub interface Write {
   fn write(self, buf: &Vec[UInt8]) -> Result[Int, IOError];
   fn write_all(self, buf: &Vec[UInt8]) -> Result[Unit, IOError];
   fn flush(self) -> Result[Unit, IOError];
 }
 
-interface Seek {
+pub interface Seek {
   fn seek(self, pos: SeekFrom) -> Result[Int, IOError];
   fn stream_position(self) -> Result[Int, IOError];
 }
 
 // === Buffered I/O ===
-type BufReader = {
+pub type BufReader = {
   inner: Int;
   buf: Vec[UInt8];
   invariant: inner >= 0;
 }
 
-fn BufReader.new(reader: Int) -> BufReader {
+pub fn BufReader.new(reader: Int) -> BufReader {
   var buf: Vec[UInt8] = Vec[UInt8]::with_capacity(4096);
   BufReader{ inner: reader; buf: buf; }
 }
 
-fn BufReader.read_line(self, buf: &mut Str) -> Result[Int, IOError]
+pub fn BufReader.read_line(self, buf: &mut Str) -> Result[Int, IOError]
   requires: inner >= 0
   ensures:  result is Ok => result >= 0
 {
@@ -468,7 +468,7 @@ fn BufReader.read_line(self, buf: &mut Str) -> Result[Int, IOError]
   Ok(total)
 }
 
-fn BufReader.lines(self) -> Vec[Str] {
+pub fn BufReader.lines(self) -> Vec[Str] {
   var result: Vec[Str] = Vec[Str]::new();
   var raw: Vec[UInt8] = Vec[UInt8]::with_capacity(4096);
   let nread: UInt;
@@ -502,15 +502,15 @@ fn BufReader.lines(self) -> Vec[Str] {
   result
 }
 
-type BufWriter = { inner: Int; buf: Vec[UInt8]; }
+pub type BufWriter = { inner: Int; buf: Vec[UInt8]; }
 
-fn BufWriter.new(writer: Int) -> BufWriter {
+pub fn BufWriter.new(writer: Int) -> BufWriter {
   var buf: Vec[UInt8] = Vec[UInt8]::with_capacity(4096);
   BufWriter{ inner: writer; buf: buf; }
 }
 
 // === File metadata ===
-type Metadata = {
+pub type Metadata = {
   size: Int;
   is_file: Bool;
   is_dir: Bool;
@@ -519,7 +519,7 @@ type Metadata = {
   permissions: Int;
 }
 
-fn metadata(path: Str) -> Result[Metadata, IOError]
+pub fn metadata(path: Str) -> Result[Metadata, IOError]
   requires: path.len() > 0
   ensures:  result is Ok => result.size >= 0
 {
@@ -551,7 +551,7 @@ fn metadata(path: Str) -> Result[Metadata, IOError]
   })
 }
 
-fn set_permissions(path: Str, perm: Int) -> Result[Unit, IOError]
+pub fn set_permissions(path: Str, perm: Int) -> Result[Unit, IOError]
   requires: path.len() > 0
   requires: perm >= 0
 {
@@ -566,19 +566,19 @@ fn set_permissions(path: Str, perm: Int) -> Result[Unit, IOError]
 }
 
 // === Standard streams ===
-fn stdin() -> Int
+pub fn stdin() -> Int
   ensures: result >= 0
 {
   0
 }
 
-fn stdout() -> Int
+pub fn stdout() -> Int
   ensures: result >= 0
 {
   1
 }
 
-fn stderr() -> Int
+pub fn stderr() -> Int
   ensures: result >= 0
 {
   2
@@ -591,25 +591,25 @@ fn print_line(s: Str) {
 }
 
 // === Memory I/O ===
-type Cursor = {
+pub type Cursor = {
   data: Vec[UInt8];
   pos: Int;
   invariant: pos >= 0;
   invariant: pos <= data.len();
 }
 
-fn Cursor.new(data: Vec[UInt8]) -> Cursor
+pub fn Cursor.new(data: Vec[UInt8]) -> Cursor
   ensures: self.pos == 0
 {
   Cursor{ data: data; pos: 0; }
 }
 
-fn Cursor.into_inner(self) -> Vec[UInt8] {
+pub fn Cursor.into_inner(self) -> Vec[UInt8] {
   self.data
 }
 
 // === Path operations ===
-fn join_paths(base: Str, child: Str) -> Str {
+pub fn join_paths(base: Str, child: Str) -> Str {
   if base.is_empty() {
     return child;
   }
@@ -627,7 +627,7 @@ fn join_paths(base: Str, child: Str) -> Str {
   }
 }
 
-fn parent_path(path: Str) -> Option[Str] {
+pub fn parent_path(path: Str) -> Option[Str] {
   var i = path.len() - 1;
   while i >= 0 {
     if path.byte_at(i) == 47 {
@@ -641,7 +641,7 @@ fn parent_path(path: Str) -> Option[Str] {
   None
 }
 
-fn file_name(path: Str) -> Option[Str] {
+pub fn file_name(path: Str) -> Option[Str] {
   if path.is_empty() {
     return None;
   }
@@ -658,7 +658,7 @@ fn file_name(path: Str) -> Option[Str] {
   Some(path)
 }
 
-fn extension(path: Str) -> Option[Str] {
+pub fn extension(path: Str) -> Option[Str] {
   let name = file_name(path)?;
   if name == "." || name == ".." {
     return None;
@@ -676,7 +676,7 @@ fn extension(path: Str) -> Option[Str] {
   None
 }
 
-fn is_absolute(path: Str) -> Bool {
+pub fn is_absolute(path: Str) -> Bool {
   if path.is_empty() {
     return false;
   }
