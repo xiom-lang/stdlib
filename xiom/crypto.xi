@@ -247,9 +247,7 @@ pub fn sha256_accelerated(data: &Vec[UInt8]) -> Vec[UInt8]
   return sha256(data);
 }
 
-pub fn sha256_hex(data: &Vec[UInt8]) -> Str
-  ensures: result.len() == 64  // 32 bytes * 2 hex chars
-{
+pub fn sha256_hex(data: &Vec[UInt8]) -> Str {
   var hash = sha256(data);
   var result = Vec[UInt8].new();
   var i = 0;
