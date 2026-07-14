@@ -1885,8 +1885,8 @@ static void emit_body_ir(const char* source, long body_start, long body_end, lon
 
             fprintf(ir_output, "  br label %%match_check3\n");
 
-            long arm_lits[16];
-            long arm_results[16];
+            long arm_lits[128];
+            long arm_results[128];
             int arm_count = 0;
             int has_wildcard = 0;
             long wildcard_result = 0;
@@ -2530,8 +2530,8 @@ static void emit_top_level_ir(const char* source, long source_len) {
 
             // Parse fields if this is a struct type (has '{')
             int field_count = 0;
-            char field_names[16][64];
-            char field_types[16][16];
+            char field_names[256][64];
+            char field_types[256][16];
 
             // Invariant tracking
             int inv_count = 0;
@@ -2620,7 +2620,7 @@ static void emit_top_level_ir(const char* source, long source_len) {
                     while (pos < source_len && source[pos] != ';' && source[pos] != '}') pos++;
                     if (pos < source_len && source[pos] == ';') pos++;
 
-                    if (fn_len > 0 && ft_len > 0 && field_count < 16) {
+                    if (fn_len > 0 && ft_len > 0 && field_count < 256) {
                         int cp = fn_len < 63 ? (int)fn_len : 63;
                         strncpy(field_names[field_count], source + fn_start, (size_t)cp);
                         field_names[field_count][cp] = '\0';
@@ -2882,7 +2882,7 @@ static void emit_top_level_ir(const char* source, long source_len) {
                     fprintf(ir_output, "  %%tmp%d = getelementptr [%d x i8], [%d x i8]* @.fmt_%s.to_str, i64 0, i64 0\n", fmt_gep, fmt_len + 1, fmt_len + 1, tname);
 
                     // Load each field value
-                    int field_load_regs[16];
+                    int field_load_regs[256];
                     for (int fi = 0; fi < field_count; fi++) {
                         int gep = reg; reg++;
                         fprintf(ir_output, "  %%tmp%d = getelementptr %%struct.%s, %%struct.%s* %%tmp%d, i32 0, i32 %d\n", gep, tname, tname, d_src, fi);
