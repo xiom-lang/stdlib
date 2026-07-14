@@ -8,36 +8,266 @@ pub type Path = { inner: Str; } derive[Eq, Clone, Hash, Ord]
 pub type PathBuf = { inner: Str; } derive[Eq, Clone]
 
 // Path constructors
-pub fn Path.new(s: Str) -> Path;
-pub fn PathBuf.new() -> PathBuf;
-pub fn PathBuf.from(s: Str) -> PathBuf;
+pub fn Path.new(s: Str) -> Path {
+  Path{ inner: s; }
+}
+
+pub fn PathBuf.new() -> PathBuf {
+  PathBuf{ inner: ""; }
+}
+
+pub fn PathBuf.from(s: Str) -> PathBuf {
+  PathBuf{ inner: s; }
+}
 
 // Path operations
-pub fn Path.parent(self) -> Option<Path>;
-pub fn Path.file_name(self) -> Option<Str>;
-pub fn Path.extension(self) -> Option<Str>;
-pub fn Path.file_stem(self) -> Option<Str>;
-pub fn Path.is_absolute(self) -> Bool;
-pub fn Path.is_relative(self) -> Bool;
-pub fn Path.has_root(self) -> Bool;
-pub fn Path.components(self) -> Vec<Str>;
-pub fn Path.to_str(self) -> Str;
-pub fn Path.join(self, child: Str) -> PathBuf;
-pub fn Path.with_extension(self, ext: Str) -> PathBuf;
-pub fn Path.with_file_name(self, name: Str) -> PathBuf;
-pub fn Path.exists(self) -> Bool;
-pub fn Path.is_file(self) -> Bool;
-pub fn Path.is_dir(self) -> Bool;
-pub fn Path.metadata(self) -> Result<Metadata, Str>;
-pub fn Path.canonicalize(self) -> Result<PathBuf, Str>;
-pub fn Path.starts_with(self, base: &Path) -> Bool;
-pub fn Path.ends_with(self, child: &Path) -> Bool;
+pub fn Path.parent(self) -> Option<Path> {
+  // Find the last path separator not at the end, return everything before it.
+  var s = self.inner;
+  var len = xiom.string.str_len(s);
+  // Strip trailing separator(s)
+  var end = len;
+  while end > 0 {
+    let ch = xiom.string.char_at(s, end - 1);
+    if ch.is_some {
+      let c = ch.value;
+      if c == '/' || c == '\\' { end = end - 1; }
+      else { break; }
+    }
+  }
+  // Find last separator before end
+  var i = end - 1;
+  while i >= 0 {
+    let ch = xiom.string.char_at(s, i);
+    if ch.is_some {
+      let c = ch.value;
+      if c == '/' || c == '\\' {
+        if i == 0 { return Some(Path.new(xiom.string.str_slice(s, 0, 1))); }
+        return Some(Path.new(xiom.string.str_slice(s, 0, i)));
+      }
+    }
+    i = i - 1;
+  }
+  return None;
+}
+
+pub fn Path.file_name(self) -> Option<Str> {
+  // Find the last path separator and return everything after it.
+  // Uses xiom.string helpers (str_len, char_at) which are available.
+  var s = self.inner;
+  var i = xiom.string.str_len(s) - 1;
+  while i >= 0 {
+    let ch = xiom.string.char_at(s, i);
+    if ch.is_some {
+      let c = ch.value;
+      if c == '/' || c == '\\' {
+        if i == xiom.string.str_len(s) - 1 {
+          return None;
+        }
+        return Some(xiom.string.str_slice(s, i + 1, xiom.string.str_len(s)));
+      }
+    }
+    i = i - 1;
+  }
+  return Some(s);
+}
+
+pub fn Path.extension(self) -> Option<Str> {
+  // Find the last '.' in the file name and return everything after it.
+  var name_opt = self.file_name();
+  if name_opt.is_none {
+    return None;
+  }
+  var name = name_opt.unwrap();
+  var dot = xiom.string.last_index_of(name, ".");
+  match dot {
+    Some(0) => { return None; }
+    Some(pos) => { return Some(xiom.string.str_slice(name, pos + 1, xiom.string.str_len(name))); }
+    None => { return None; }
+  }
+}
+
+pub fn Path.file_stem(self) -> Option<Str> {
+  var name_opt = self.file_name();
+  match name_opt {
+    Some(n) => {
+      var dot = xiom.string.last_index_of(n, ".");
+      match dot {
+        Some(0) => { return Some(n); }
+        Some(pos) => { return Some(xiom.string.str_slice(n, 0, pos)); }
+        None => { return Some(n); }
+      }
+    }
+    None => { return None; }
+  }
+}
+
+pub fn Path.is_absolute(self) -> Bool {
+  var s = self.inner;
+  if xiom.string.str_len(s) >= 1 {
+    let ch = xiom.string.char_at(s, 0);
+    if ch.is_some {
+      let c = ch.value;
+      return c == '/' || c == '\\';
+    }
+  }
+  return false;
+}
+
+pub fn Path.is_relative(self) -> Bool {
+  return !self.is_absolute();
+}
+
+pub fn Path.has_root(self) -> Bool {
+  var s = self.inner;
+  if xiom.string.str_len(s) >= 1 {
+    let ch = xiom.string.char_at(s, 0);
+    if ch.is_some {
+      let c = ch.value;
+      if c == '/' || c == '\\' { return true; }
+    }
+  }
+  return false;
+}
+
+pub fn Path.components(self) -> Vec<Str> {
+  var normalized = replace(self.inner, "\\", "/");
+  return str_split(normalized, "/");
+}
+
+pub fn Path.to_str(self) -> Str {
+  self.inner
+}
+
+pub fn Path.join(self, child: Str) -> PathBuf {
+  PathBuf{ inner: join_paths(self.inner, child); }
+}
+
+pub fn Path.with_extension(self, ext: Str) -> PathBuf {
+  var stem = self.file_stem();
+  match stem {
+    Some(s) => {
+      var new_name = str_concat(str_concat(s, "."), ext);
+      var parent = self.parent();
+      match parent {
+        Some(p) => { return p.join(new_name); }
+        None => { return PathBuf{ inner: new_name; }; }
+      }
+    }
+    None => {
+      var new_name = str_concat(str_concat(self.inner, "."), ext);
+      return PathBuf{ inner: new_name; };
+    }
+  }
+}
+
+pub fn Path.with_file_name(self, name: Str) -> PathBuf {
+  var p = self.parent();
+  match p {
+    Some(parent) => { return parent.join(name); }
+    None => { return PathBuf{ inner: name; }; }
+  }
+}
+
+pub fn Path.exists(self) -> Bool {
+  return file_exists(self.inner);
+}
+
+pub fn Path.is_file(self) -> Bool {
+  if !file_exists(self.inner) { return false; }
+  return !is_dir(self.inner);
+}
+
+pub fn Path.is_dir(self) -> Bool {
+  return is_dir(self.inner);
+}
+
+pub fn Path.metadata(self) -> Result<Metadata, Str> {
+  var result = metadata(self.inner);
+  match result {
+    Ok(m) => { return Ok(m); }
+    Err(e) => { return Err(e.message); }
+  }
+}
+
+pub fn Path.canonicalize(self) -> Result<PathBuf, Str> {
+  // String-based path canonicalization: collapse `.`, `..`, and double
+  // separators without filesystem calls.  Does NOT resolve symlinks —
+  // that requires OS-level `realpath` which isn't available yet.
+  let is_abs = self.inner.len() > 0 && (self.inner.starts_with("/") || self.inner.starts_with("\\"));
+  var comps = self.components();
+  var out: Vec[Str] = Vec[Str].new();
+  var i = 0;
+  while i < comps.len() {
+    let c = comps[i];
+    if c == "." || c.len() == 0 {
+      // skip `.` and empty components
+    } elif c == ".." {
+      if out.len() > 0 {
+        out.pop();
+      }
+    } else {
+      out.push(c);
+    }
+    i = i + 1;
+  }
+  // Rebuild the path string
+  var result = "";
+  var j = 0;
+  while j < out.len() {
+    if j > 0 || is_abs {
+      result = result + "/";
+    }
+    result = result + out[j];
+    j = j + 1;
+  }
+  if is_abs && result == "" {
+    result = "/";
+  }
+  return Ok(PathBuf{ inner: result });
+}
+
+pub fn Path.starts_with(self, base: &Path) -> Bool {
+  return str_starts_with(self.inner, base.inner);
+}
+
+pub fn Path.ends_with(self, child: &Path) -> Bool {
+  return str_ends_with(self.inner, child.inner);
+}
 
 // PathBuf operations
-pub fn PathBuf.push(self, component: Str);
-pub fn PathBuf.pop(self) -> Bool;
-pub fn PathBuf.as_path(self) -> Path;
-pub fn PathBuf.clear(self);
+pub fn PathBuf.push(self, component: Str) {
+  if is_empty(self.inner) {
+    self.inner = component;
+    return;
+  }
+  if str_ends_with(self.inner, "/") || str_ends_with(self.inner, "\\") {
+    self.inner = str_concat(self.inner, component);
+    return;
+  }
+  self.inner = str_concat(str_concat(self.inner, "/"), component);
+}
+
+pub fn PathBuf.pop(self) -> Bool {
+  var p = parent_path(self.inner);
+  match p {
+    Some(parent) => {
+      self.inner = parent;
+      return true;
+    }
+    None => { return false; }
+  }
+}
+
+pub fn PathBuf.as_path(self) -> Path {
+  Path{ inner: self.inner; }
+}
+
+pub fn PathBuf.clear(self) {
+  self.inner = "";
+}
 
 // Utility
-pub fn path_separator() -> Str;
+pub fn path_separator() -> Str {
+  "/"
+}
