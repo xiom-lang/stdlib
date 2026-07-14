@@ -218,7 +218,7 @@ pub fn Channel.unbounded[T]() -> Channel[T] {
   return Channel[T]{ items: Vec[T].new(), closed: false, cap: 0 };
 }
 
-pub fn Channel.send[T](value: T) {
+pub fn Channel.send[T](&mut self, value: T) {
   if closed {
     return;
   }
@@ -232,7 +232,7 @@ pub fn Channel.send[T](value: T) {
   items.push(value);
 }
 
-pub fn Channel.recv[T]() -> T {
+pub fn Channel.recv[T](&mut self) -> T {
   // Cooperative receive: when empty, yield to the executor so a queued sender
   // can run, then return the value. Never panics during normal flow.
   while items.len() == 0 {
@@ -250,7 +250,7 @@ pub fn Channel.recv[T]() -> T {
   return val;
 }
 
-pub fn Channel.try_recv[T]() -> Option[T] {
+pub fn Channel.try_recv[T](&mut self) -> Option[T] {
   if items.len() == 0 { return None; }
   var val = items[0];
   var i = 0;
@@ -262,6 +262,6 @@ pub fn Channel.try_recv[T]() -> Option[T] {
   return Some(val);
 }
 
-pub fn Channel.close[T]() {
+pub fn Channel.close[T](self) {
   closed = true;
 }
