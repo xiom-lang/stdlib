@@ -8,6 +8,7 @@ package xiom_stdlib {
   description: "XIOM Standard Library — Phase 1";
   authors: ["XIOM Team"];
   modules: [
+    "xiom.simd",
     "xiom.core",
     "xiom.io",
     "xiom.collections",
@@ -51,5 +52,11 @@ package xiom_stdlib {
     "core_tests",
     "collections_tests",
     "integration_tests",
+    "string_tests",
+    "math_tests",
+    "io_tests",
+    "memory_tests",
+    "sync_net_tests",
+    "ecosystem_tests",
   ];
 }

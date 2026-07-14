@@ -6,15 +6,105 @@ module xiom.cmp
 
 pub type Ordering = enum { Less, Equal, Greater }
 
-pub fn Ordering.reverse(self) -> Ordering;
-pub fn Ordering.then(self, other: Ordering) -> Ordering;
-pub fn Ordering.then_with(self, f: fn() -> Ordering) -> Ordering;
+pub fn Ordering.reverse(self) -> Ordering {
+  match self {
+    Less => Greater;
+    Equal => Equal;
+    Greater => Less;
+  }
+}
 
-pub fn min[T: Ord](a: T, b: T) -> T;
-pub fn max[T: Ord](a: T, b: T) -> T;
-pub fn clamp[T: Ord](value: T, min_val: T, max_val: T) -> T;
-pub fn min_by[T](a: T, b: T, compare: fn(&T, &T) -> Ordering) -> T;
-pub fn max_by[T](a: T, b: T, compare: fn(&T, &T) -> Ordering) -> T;
+pub fn Ordering.then(self, other: Ordering) -> Ordering {
+  if self != Equal {
+    return self;
+  };
+  other
+}
+
+pub fn Ordering.then_with(self, f: fn() -> Ordering) -> Ordering {
+  if self != Equal {
+    return self;
+  };
+  f()
+}
+
+pub fn min[T: Ord](a: T, b: T) -> T {
+  if a.compare(b) <= 0 {
+    a
+  } else {
+    b
+  }
+}
+
+pub fn max[T: Ord](a: T, b: T) -> T {
+  if a.compare(b) >= 0 {
+    a
+  } else {
+    b
+  }
+}
+
+pub fn clamp[T: Ord](value: T, min_val: T, max_val: T) -> T {
+  if value.compare(min_val) < 0 {
+    min_val
+  } elif value.compare(max_val) > 0 {
+    max_val
+  } else {
+    value
+  }
+}
+
+pub fn min_by[T](a: T, b: T, compare: fn(&T, &T) -> Ordering) -> T {
+  match compare(&a, &b) {
+    Less => a;
+    Equal => a;
+    Greater => b;
+  }
+}
+
+pub fn max_by[T](a: T, b: T, compare: fn(&T, &T) -> Ordering) -> T {
+  match compare(&a, &b) {
+    Greater => a;
+    Equal => a;
+    Less => b;
+  }
+}
+
+pub fn max_int(a: Int, b: Int) -> Int {
+  if a >= b { a } else { b }
+}
+
+pub fn min_int(a: Int, b: Int) -> Int {
+  if a <= b { a } else { b }
+}
+
+pub fn clamp_int(value: Int, min_val: Int, max_val: Int) -> Int {
+  if value < min_val {
+    min_val
+  } elif value > max_val {
+    max_val
+  } else {
+    value
+  }
+}
+
+pub fn max_float(a: Float64, b: Float64) -> Float64 {
+  if a >= b { a } else { b }
+}
+
+pub fn min_float(a: Float64, b: Float64) -> Float64 {
+  if a <= b { a } else { b }
+}
+
+pub fn clamp_float(value: Float64, min_val: Float64, max_val: Float64) -> Float64 {
+  if value < min_val {
+    min_val
+  } elif value > max_val {
+    max_val
+  } else {
+    value
+  }
+}
 
 // Partial comparison (for types that may not be comparable)
 pub interface PartialEq[Rhs: Self] {
@@ -31,4 +121,6 @@ pub interface PartialOrd[Rhs: Self] {
 
 // Reverse ordering wrapper
 pub type Reverse[T] = { value: T; }
-pub fn Reverse.new[T](value: T) -> Reverse[T];
+pub fn Reverse.new[T](value: T) -> Reverse[T] {
+  Reverse { value: value; }
+}

@@ -4,6 +4,12 @@
 
 module xiom.rand
 
+extern "C" {
+  fn malloc(size: UInt) -> *UInt8;
+  fn clock() -> Int;
+  fn time(ptr: *Int) -> Int;
+}
+
 // === RNG trait ===
 pub interface Rng {
   fn next_int(self) -> Int;
@@ -11,39 +17,383 @@ pub interface Rng {
   fn next_bytes(self, buf: &mut Vec[UInt8]);
 }
 
-// === Standard RNG (cryptographically secure where available) ===
+// === Global RNG state ===
+var _global_state: Int = 12345;
+
+// === LCG step ===
+fn _lcg_step(state: Int) -> Int {
+  var s = (state * 48271) % 2147483647;
+  if s <= 0 {
+    s = s + 2147483647;
+  };
+  return s;
+}
+
+// === Standard RNG ===
 pub type StdRng = { state: Int; } derive[Clone]
-pub fn StdRng.new() -> StdRng;
-pub fn StdRng.from_seed(seed: Int) -> StdRng;
+
+pub fn StdRng.new() -> StdRng {
+  let t = clock();
+  var seed = t;
+  if seed == 0 {
+    seed = 12345;
+  } elif seed < 0 {
+    seed = -seed;
+  };
+  return StdRng{ state: seed; };
+}
+
+pub fn StdRng.from_seed(seed: Int) -> StdRng {
+  if seed == 0 {
+    return StdRng{ state: 1; };
+  };
+  return StdRng{ state: seed; };
+}
+
+fn StdRng.next_int(self) -> Int {
+  state = _lcg_step(state);
+  return state;
+}
+
+fn StdRng.next_float(self) -> Float64 {
+  state = _lcg_step(state);
+  return (state as Float64) / 2147483647.0;
+}
+
+fn StdRng.next_bytes(self, buf: &mut Vec[UInt8]) {
+  var i: Int = 0;
+  while i < 16 {
+    state = _lcg_step(state);
+    buf.push((state & 0xFF) as UInt8);
+    i = i + 1;
+  };
+}
 
 // === Basic random values ===
-pub fn random() -> Float64; // [0, 1)
-pub fn random_int(min: Int, max: Int) -> Int; // [min, max]
-pub fn random_float(min: Float64, max: Float64) -> Float64; // [min, max)
-pub fn random_bool() -> Bool;
-pub fn random_bytes(count: Int) -> Vec[UInt8];
+
+pub fn random() -> Float64
+  ensures: result >= 0.0
+  ensures: result < 1.0
+{ // [0, 1)
+  _global_state = _lcg_step(_global_state);
+  return (_global_state as Float64) / 2147483647.0;
+}
+
+pub fn random_int(min: Int, max: Int) -> Int
+  requires: min <= max
+  ensures:  result >= min && result <= max
+{ // [min, max]
+  let r = random();
+  let range = max - min + 1;
+  if range <= 0 {
+    return min;
+  };
+  let val = xiom.math.floor(r * (range as Float64));
+  if val >= range {
+    return max;
+  };
+  return min + val;
+}
+
+pub fn random_float(min: Float64, max: Float64) -> Float64 { // [min, max)
+  return min + random() * (max - min);
+}
+
+pub fn random_bool() -> Bool {
+  return random() >= 0.5;
+}
+
+pub fn random_bytes(count: Int) -> Vec[UInt8] {
+  var result = Vec[UInt8].new();
+  var i: Int = 0;
+  while i < count {
+    _global_state = _lcg_step(_global_state);
+    result.push((_global_state & 0xFF) as UInt8);
+    i = i + 1;
+  };
+  return result;
+}
 
 // === Distributions ===
-pub fn sample_uniform(min: Float64, max: Float64) -> Float64;
-pub fn sample_normal(mean: Float64, stddev: Float64) -> Float64;
-pub fn sample_exponential(lambda: Float64) -> Float64;
-pub fn sample_bernoulli(p: Float64) -> Bool;
-pub fn sample_binomial(n: Int, p: Float64) -> Int;
-pub fn sample_poisson(lambda: Float64) -> Int;
-pub fn sample_gamma(shape: Float64, scale: Float64) -> Float64;
-pub fn sample_beta(alpha: Float64, beta: Float64) -> Float64;
+
+pub fn sample_uniform(min: Float64, max: Float64) -> Float64 {
+  return min + random() * (max - min);
+}
+
+pub fn sample_normal(mean: Float64, stddev: Float64) -> Float64 {
+  let u1 = random();
+  let u2 = random();
+  var safe_u1 = u1;
+  if safe_u1 <= 0.0 {
+    safe_u1 = 0.0000000001;
+  };
+  let r = xiom.math.sqrt(-2.0 * xiom.math.ln(safe_u1));
+  let theta = 2.0 * xiom.math.PI * u2;
+  let z0 = r * xiom.math.cos(theta);
+  return mean + z0 * stddev;
+}
+
+pub fn sample_exponential(lambda: Float64) -> Float64 {
+  var u = random();
+  if u <= 0.0 {
+    u = 0.0000000001;
+  };
+  return -xiom.math.ln(u) / lambda;
+}
+
+pub fn sample_bernoulli(p: Float64) -> Bool {
+  return random() < p;
+}
+
+pub fn sample_binomial(n: Int, p: Float64) -> Int {
+  var count: Int = 0;
+  var i: Int = 0;
+  while i < n {
+    if random() < p {
+      count = count + 1;
+    };
+    i = i + 1;
+  };
+  return count;
+}
+
+pub fn sample_poisson(lambda: Float64) -> Int {
+  let L = xiom.math.exp(-lambda);
+  var k: Int = 0;
+  var p: Float64 = 1.0;
+  while p > L {
+    k = k + 1;
+    p = p * random();
+  };
+  return k - 1;
+}
+
+pub fn sample_gamma(shape: Float64, scale: Float64) -> Float64 {
+  if shape <= 0.0 {
+    return 0.0;
+  };
+  if shape < 1.0 {
+    let g = sample_gamma(shape + 1.0, 1.0);
+    var u = random();
+    if u <= 0.0 {
+      u = 0.0000000001;
+    };
+    return g * xiom.math.pow(u, 1.0 / shape) * scale;
+  };
+  let d = shape - 1.0 / 3.0;
+  let c = 1.0 / xiom.math.sqrt(9.0 * d);
+  loop {
+    var x: Float64 = 0.0;
+    var v: Float64 = 0.0;
+    loop {
+      x = sample_normal(0.0, 1.0);
+      v = 1.0 + c * x;
+      if v > 0.0 {
+        break;
+      };
+    };
+    v = v * v * v;
+    let u = random();
+    if u < 1.0 - 0.0331 * (x * x) * (x * x) {
+      return d * v * scale;
+    };
+    if xiom.math.ln(u) < 0.5 * x * x + d * (1.0 - v + xiom.math.ln(v)) {
+      return d * v * scale;
+    };
+  };
+}
+
+pub fn sample_beta(alpha: Float64, beta: Float64) -> Float64 {
+  if alpha <= 0.0 || beta <= 0.0 {
+    return 0.0;
+  };
+  let x = sample_gamma(alpha, 1.0);
+  let y = sample_gamma(beta, 1.0);
+  return x / (x + y);
+}
 
 // === Shuffle & Pick ===
-pub fn shuffle[T](items: &mut Vec[T]);
-pub fn pick[T](items: &Vec[T]) -> Option<&T>;
-pub fn pick_n[T](items: &Vec[T], n: Int) -> Vec<&T>;
-pub fn weighted_pick[T](items: &Vec[T], weights: &Vec<Float64>) -> Option<&T>;
+
+pub fn shuffle[T](items: &mut Vec[T])
+  ensures: items.len() == items.len()@pre
+{
+  var i = items.len() - 1;
+  while i > 0 {
+    let j = ((random() * ((i + 1) as Float64)) as Int);
+    if j <= i {
+      let temp = items[i];
+      items[i] = items[j];
+      items[j] = temp;
+    };
+    i = i - 1;
+  };
+}
+
+pub fn pick[T](items: &Vec[T]) -> Option<&T> {
+  let len = items.len();
+  if len == 0 {
+    return None;
+  };
+  let idx = ((random() * (len as Float64)) as Int);
+  if idx >= len {
+    return Some(&items[0]);
+  };
+  return Some(&items[idx]);
+}
+
+pub fn pick_n[T](items: &Vec[T], n: Int) -> Vec<&T> {
+  let len = items.len();
+  var count = n;
+  if count > len {
+    count = len;
+  };
+  var result = Vec[&T].new();
+  if count == 0 {
+    return result;
+  };
+  var indices = Vec[Int].new();
+  var m: Int = 0;
+  while m < len {
+    indices.push(m);
+    m = m + 1;
+  };
+  var i = len - 1;
+  while i > 0 {
+    let k = ((random() * ((i + 1) as Float64)) as Int);
+    if k <= i {
+      let temp = indices[i];
+      indices[i] = indices[k];
+      indices[k] = temp;
+    };
+    i = i - 1;
+  };
+  var j: Int = 0;
+  while j < count {
+    result.push(&items[indices[j]]);
+    j = j + 1;
+  };
+  return result;
+}
+
+pub fn weighted_pick[T](items: &Vec[T], weights: &Vec[Float64]) -> Option<&T> {
+  let len = items.len();
+  if len == 0 || weights.len() != len {
+    return None;
+  };
+  var total: Float64 = 0.0;
+  var k: Int = 0;
+  while k < len {
+    if weights[k] < 0.0 {
+      return None;
+    };
+    total = total + weights[k];
+    k = k + 1;
+  };
+  if total <= 0.0 {
+    return None;
+  };
+  let threshold = random() * total;
+  var cumulative: Float64 = 0.0;
+  var i: Int = 0;
+  while i < len {
+    cumulative = cumulative + weights[i];
+    if cumulative >= threshold {
+      return Some(&items[i]);
+    };
+    i = i + 1;
+  };
+  return Some(&items[len - 1]);
+}
 
 // === UUID ===
-pub fn uuid_v4() -> Str;
-pub fn uuid_v7() -> Str;
+
+fn _format_uuid(bytes: &Vec[UInt8]) -> Str {
+  let hex = "0123456789abcdef";
+  unsafe {
+    var buf = malloc(37);
+    var pos: Int = 0;
+    var i: Int = 0;
+    while i < 16 {
+      if i == 4 || i == 6 || i == 8 || i == 10 {
+        buf[pos] = 45;
+        pos = pos + 1;
+      };
+      let b = bytes[i];
+      buf[pos] = hex.char_at((b >> 4) as Int) as UInt8;
+      pos = pos + 1;
+      buf[pos] = hex.char_at((b & 0x0F) as Int) as UInt8;
+      pos = pos + 1;
+      i = i + 1;
+    };
+    buf[36] = 0;
+    return Str.from_cstring(buf);
+  }
+}
+
+pub fn uuid_v4() -> Str
+  ensures: result.len() == 36
+{
+  var bytes = Vec[UInt8].new();
+  var i: Int = 0;
+  while i < 16 {
+    _global_state = _lcg_step(_global_state);
+    bytes.push((_global_state & 0xFF) as UInt8);
+    i = i + 1;
+  };
+  bytes[6] = (bytes[6] & 0x0F) | 0x40;
+  bytes[8] = (bytes[8] & 0x3F) | 0x80;
+  return _format_uuid(&bytes);
+}
+
+pub fn uuid_v7() -> Str
+  ensures: result.len() == 36
+{
+  let t = time(0);
+  var bytes = Vec[UInt8].new();
+  var i: Int = 0;
+  while i < 16 {
+    _global_state = _lcg_step(_global_state);
+    bytes.push((_global_state & 0xFF) as UInt8);
+    i = i + 1;
+  };
+  var ts = t;
+  var j: Int = 5;
+  while j >= 0 {
+    bytes[j] = (ts & 0xFF) as UInt8;
+    ts = ts >> 8;
+    j = j - 1;
+  };
+  bytes[6] = (bytes[6] & 0x0F) | 0x70;
+  bytes[8] = (bytes[8] & 0x3F) | 0x80;
+  return _format_uuid(&bytes);
+}
 
 // === Seeding ===
-pub fn seed_from_entropy();
-pub fn seed_from_time();
-pub fn seed_from_value(seed: Int);
+
+pub fn seed_from_entropy() {
+  let t = clock();
+  var seed = t;
+  if seed == 0 {
+    seed = 12345;
+  } elif seed < 0 {
+    seed = -seed;
+  };
+  _global_state = seed;
+}
+
+pub fn seed_from_time() {
+  let t = time(0);
+  var seed = t;
+  if seed <= 0 {
+    seed = 1;
+  };
+  _global_state = seed;
+}
+
+pub fn seed_from_value(seed: Int) {
+  if seed == 0 {
+    _global_state = 1;
+  } else {
+    _global_state = seed;
+  };
+}
