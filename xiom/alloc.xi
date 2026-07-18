@@ -124,7 +124,10 @@ pub fn alloc_zeroed(size: Int) -> *mut UInt8
   }
 }
 
-pub fn realloc(ptr: *mut UInt8, old_size: Int, new_size: Int) -> *mut UInt8
+// Resize an allocation. Named realloc_sized to avoid shadowing the C ABI
+// symbol `realloc` — a same-named wrapper would collide with the extern
+// declaration and be silently dropped from codegen.
+pub fn realloc_sized(ptr: *mut UInt8, old_size: Int, new_size: Int) -> *mut UInt8
   requires: ptr != null
   requires: new_size > 0
   ensures:  result != null
