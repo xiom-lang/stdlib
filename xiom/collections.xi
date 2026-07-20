@@ -76,6 +76,65 @@ fn Vec.clear[T]()
   len = 0;
 }
 
+// ============================================================================
+// 6E.3: Vec production methods — extend, reserve, truncate, shrink_to_fit
+// ============================================================================
+
+/// Reserve capacity for at least `additional` more elements.
+fn Vec.reserve[T](additional: Int)
+  requires: additional >= 0
+{
+  var needed = len + additional;
+  if needed > cap {
+    var new_cap = cap;
+    while new_cap < needed { new_cap = new_cap * 2; }
+    if new_cap == 0 { new_cap = 4; }
+    unsafe {
+      data = @realloc(data as *UInt8, new_cap * 8) as *T;
+      cap = new_cap;
+    }
+  }
+}
+
+/// Extend the vector with all elements from another vector.
+fn Vec.extend[T](other: &Vec[T])
+  ensures: len() == len()@pre + other.len()
+{
+  var i = 0;
+  while i < other.len {
+    push(other.data[i]);
+    i = i + 1;
+  }
+}
+
+/// Truncate the vector to `new_len`. Elements beyond are dropped.
+fn Vec.truncate[T](new_len: Int)
+  requires: new_len >= 0
+  ensures: len() <= len()@pre
+{
+  if new_len < len { len = new_len; }
+}
+
+/// Shrink capacity to match current length.
+fn Vec.shrink_to_fit[T]()
+  ensures: cap >= len
+{
+  if cap > len {
+    unsafe {
+      if len == 0 {
+        if data as *UInt8 != 0 as *UInt8 {
+          @free(data as *UInt8);
+          data = 0 as *T;
+        }
+        cap = 0;
+      } else {
+        data = @realloc(data as *UInt8, len * 8) as *T;
+        cap = len;
+      }
+    }
+  }
+}
+
 fn Vec.insert[T](index: Int, value: T)
   requires: index >= 0
   requires: index <= len()
@@ -810,4 +869,158 @@ fn Slice.get[T](index: Int) -> Option[T]
 {
   if index < 0 || index >= data.len() { return None; }
   return Some(data[index]);
+}
+
+// ============================================================================
+// 6E.1: HashMap[K, V] — O(1) amortized hash-based map
+// ============================================================================
+// Uses open addressing with linear probing and djb2 hashing.
+// Grows by 2x when load factor exceeds 0.75.
+
+use xiom.hash;
+
+pub type HashMap[K, V] = {
+  data: Vec[HashMapBucket[K, V]];
+  len: Int;
+  cap: Int;
+}
+
+type HashMapBucket[K, V] = {
+  key: K;
+  value: V;
+  occupied: Bool;
+}
+
+fn HashMap.new[K, V]() -> HashMap[K, V] {
+  let cap = 16;
+  var data = Vec[HashMapBucket[K, V]].new();
+  var i = 0;
+  while i < cap {
+    data.push(HashMapBucket[K, V]{ key: K(), value: V(), occupied: false });
+    i = i + 1;
+  }
+  return HashMap[K, V]{ data: data; len: 0; cap: cap };
+}
+
+/// Compute bucket index from key hash.
+fn HashMap.bucket_idx[K, V](key: &K) -> Int {
+  var h = hash.hash_combine(0, *key);
+  if h < 0 { h = -h; }
+  return h % cap;
+}
+
+/// Insert or update a key-value pair. O(1) amortized.
+fn HashMap.insert[K, V](key: K, value: V)
+  requires: len <= cap
+{
+  // Grow if needed (load factor > 0.75)
+  if len * 4 > cap * 3 {
+    resize(cap * 2);
+  }
+  var idx = bucket_idx(&key);
+  while data[idx].occupied {
+    if data[idx].key == key {
+      data[idx].value = value;
+      return;
+    }
+    idx = (idx + 1) % cap;
+  }
+  data[idx].key = key;
+  data[idx].value = value;
+  data[idx].occupied = true;
+  len = len + 1;
+}
+
+/// Get value by key. O(1) amortized.
+fn HashMap.get[K, V](key: &K) -> Option[V] {
+  if len == 0 { return None; }
+  var idx = bucket_idx(key);
+  var checked = 0;
+  while checked < cap {
+    if data[idx].occupied {
+      if data[idx].key == *key {
+        return Some(data[idx].value);
+      }
+    } else {
+      // Empty bucket — key not found
+      return None;
+    }
+    idx = (idx + 1) % cap;
+    checked = checked + 1;
+  }
+  return None;
+}
+
+/// Remove a key-value pair. O(1) amortized.
+fn HashMap.remove[K, V](key: &K) -> Option[V] {
+  if len == 0 { return None; }
+  var idx = bucket_idx(key);
+  var checked = 0;
+  while checked < cap {
+    if data[idx].occupied && data[idx].key == *key {
+      var val = data[idx].value;
+      data[idx].occupied = false;
+      len = len - 1;
+      // Rehash following elements to fill the gap
+      var next = (idx + 1) % cap;
+      while data[next].occupied && next != idx {
+        var rehash_key = data[next].key;
+        var rehash_val = data[next].value;
+        data[next].occupied = false;
+        len = len - 1;
+        insert(rehash_key, rehash_val);
+        next = (next + 1) % cap;
+      }
+      return Some(val);
+    }
+    if !data[idx].occupied { return None; }
+    idx = (idx + 1) % cap;
+    checked = checked + 1;
+  }
+  return None;
+}
+
+/// Check if key exists. O(1).
+fn HashMap.contains[K, V](key: &K) -> Bool {
+  match get(key) {
+    Some(_) => true,
+    None => false,
+  }
+}
+
+/// Number of key-value pairs.
+fn HashMap.count[K, V]() -> Int { return len; }
+
+/// Remove all entries.
+fn HashMap.clear[K, V]() {
+  var i = 0;
+  while i < cap {
+    data[i].occupied = false;
+    i = i + 1;
+  }
+  len = 0;
+}
+
+/// Resize the hash table to new capacity. O(n).
+fn HashMap.resize[K, V](new_cap: Int) {
+  var old_data = data;
+  var old_cap = cap;
+  var old_len = len;
+  // Allocate new data
+  data = Vec[HashMapBucket[K, V]].new();
+  var i = 0;
+  while i < new_cap {
+    data.push(HashMapBucket[K, V]{ key: K(), value: V(), occupied: false });
+    i = i + 1;
+  }
+  cap = new_cap;
+  len = 0;
+  // Re-insert all entries
+  i = 0;
+  while i < old_cap {
+    if old_data[i].occupied {
+      insert(old_data[i].key, old_data[i].value);
+    }
+    i = i + 1;
+  }
 }
