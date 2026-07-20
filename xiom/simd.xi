@@ -145,6 +145,8 @@ pub fn Vec4f.add(self, other: Vec4f) -> Vec4f
 {
   let out = alloc.alloc(16);
   unsafe { xiom_simd_f32x4_add(data, other.data, out as *Float32); }
+  // 6D.3: Free consumed input vectors to prevent memory leak
+  unsafe { alloc.free(data as *UInt8); alloc.free(other.data as *UInt8); }
   return Vec4f{ data: out as *Float32 };
 }
 
@@ -153,6 +155,7 @@ pub fn Vec4f.sub(self, other: Vec4f) -> Vec4f
 {
   let out = alloc.alloc(16);
   unsafe { xiom_simd_f32x4_sub(data, other.data, out as *Float32); }
+  unsafe { alloc.free(data as *UInt8); alloc.free(other.data as *UInt8); }
   return Vec4f{ data: out as *Float32 };
 }
 
@@ -161,12 +164,14 @@ pub fn Vec4f.mul(self, other: Vec4f) -> Vec4f
 {
   let out = alloc.alloc(16);
   unsafe { xiom_simd_f32x4_mul(data, other.data, out as *Float32); }
+  unsafe { alloc.free(data as *UInt8); alloc.free(other.data as *UInt8); }
   return Vec4f{ data: out as *Float32 };
 }
 
 pub fn Vec4f.div(self, other: Vec4f) -> Vec4f {
   let out = alloc.alloc(16);
   unsafe { xiom_simd_f32x4_div(data, other.data, out as *Float32); }
+  unsafe { alloc.free(data as *UInt8); alloc.free(other.data as *UInt8); }
   return Vec4f{ data: out as *Float32 };
 }
 
@@ -175,13 +180,17 @@ pub fn Vec4f.sqrt(self) -> Vec4f
 {
   let out = alloc.alloc(16);
   unsafe { xiom_simd_f32x4_sqrt(data, out as *Float32); }
+  unsafe { alloc.free(data as *UInt8); }
   return Vec4f{ data: out as *Float32 };
 }
 
 pub fn Vec4f.dot(self, other: Vec4f) -> Float32
   requires: simd_supported()
 {
-  unsafe { return xiom_simd_f32x4_dot(data, other.data); }
+  let result = unsafe { xiom_simd_f32x4_dot(data, other.data) };
+  // 6D.3: Free consumed input vectors
+  unsafe { alloc.free(data as *UInt8); alloc.free(other.data as *UInt8); }
+  return result;
 }
 
 pub fn Vec4f.get(self, index: Int) -> Float32
@@ -202,14 +211,22 @@ pub fn Vec4f.len(self) -> Float32 {
 
 pub fn Vec4f.normalize(self) -> Vec4f {
   let l = len(self);
-  if l == 0.0 { return Vec4f.zero(); }
-  return Vec4f.new(get(0) / l, get(1) / l, get(2) / l, get(3) / l);
+  if l == 0.0 {
+    unsafe { alloc.free(data as *UInt8); }
+    return Vec4f.zero();
+  }
+  let result = Vec4f.new(get(0) / l, get(1) / l, get(2) / l, get(3) / l);
+  // 6D.3: Free consumed input vector
+  unsafe { alloc.free(data as *UInt8); }
+  return result;
 }
 
 pub fn Vec4f.cross3(self, other: Vec4f) -> Vec4f {
   let x = get(1) * other.get(2) - get(2) * other.get(1);
   let y = get(2) * other.get(0) - get(0) * other.get(2);
   let z = get(0) * other.get(1) - get(1) * other.get(0);
+  // 6D.3: Free consumed input vectors
+  unsafe { alloc.free(data as *UInt8); alloc.free(other.data as *UInt8); }
   return Vec4f.new(x, y, z, 0.0);
 }
 
