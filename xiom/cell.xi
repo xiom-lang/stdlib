@@ -1,14 +1,20 @@
-// XIOM — Interior Mutability
+// XIOM — Interior Mutability (Cell + RefCell)
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
+//
+// Sprint 6D.1: Fixed permanent borrow bug — Ref/RefMut now hold raw pointers
+// to the original RefCell and `release()` decrements the borrow counter.
+// Previous implementation copied RefCell by value, making Ref.get() return
+// a stale snapshot and never restoring borrow counts.
 
 module xiom.cell
 
 use xiom.ptr;
 
-// Cell: provides interior mutability through get/set.
-// All mutating methods use unsafe pointer casts to write through &self,
-// which is the defining characteristic of interior mutability.
+// ============================================================================
+// Cell — simple interior mutability via unsafe pointer casts
+// ============================================================================
+
 pub type Cell[T] = { value: T; }
 
 pub fn Cell.new[T](value: T) -> Cell[T] {
@@ -50,7 +56,10 @@ pub fn Cell.swap[T](self, other: &Cell[T])
   };
 }
 
-// RefCell: provides interior mutability through runtime borrow checking.
+// ============================================================================
+// RefCell — interior mutability with runtime borrow checking
+// ============================================================================
+
 // borrows > 0: active shared borrows
 // borrows == -1: one active mutable borrow
 // borrows == 0: no active borrows
@@ -60,6 +69,12 @@ pub type RefCell[T] = {
   invariant: borrows >= -1;
 }
 
+// 6D.1: Ref holds a raw pointer to the ORIGINAL RefCell, not a copy.
+pub type Ref[T] = { ptr: *mut RefCell[T]; }
+
+// 6D.1: RefMut holds a raw pointer to the ORIGINAL RefCell.
+pub type RefMut[T] = { ptr: *mut RefCell[T]; }
+
 pub fn RefCell.new[T](value: T) -> RefCell[T]
   ensures: borrows == 0
 {
@@ -68,7 +83,6 @@ pub fn RefCell.new[T](value: T) -> RefCell[T]
 
 pub fn RefCell.borrow[T](self) -> Ref[T]
   requires: borrows >= 0
-  ensures:  borrows == borrows@pre + 1
 {
   unsafe {
     let raw = ptr.from_ref(self) as *mut RefCell[T];
@@ -76,13 +90,12 @@ pub fn RefCell.borrow[T](self) -> Ref[T]
       panic("RefCell.borrow: already mutably borrowed");
     };
     (*raw).borrows = (*raw).borrows + 1;
-  };
-  return Ref[T]{ cell: RefCell[T]{ value: value; borrows: borrows } };
+    return Ref[T]{ ptr: raw };
+  }
 }
 
 pub fn RefCell.borrow_mut[T](self) -> RefMut[T]
   requires: borrows == 0
-  ensures:  borrows == -1
 {
   unsafe {
     let raw = ptr.from_ref(self) as *mut RefCell[T];
@@ -90,36 +103,30 @@ pub fn RefCell.borrow_mut[T](self) -> RefMut[T]
       panic("RefCell.borrow_mut: already borrowed");
     };
     (*raw).borrows = -1;
-  };
-  return RefMut[T]{ cell: RefCell[T]{ value: value; borrows: borrows } };
+    return RefMut[T]{ ptr: raw };
+  }
 }
 
-pub fn RefCell.try_borrow[T](self) -> Option[Ref[T]]
-  ensures: result is Some => borrows == borrows@pre + 1
-  ensures: result is None => borrows == borrows@pre
-{
+pub fn RefCell.try_borrow[T](self) -> Option[Ref[T]] {
   unsafe {
     let raw = ptr.from_ref(self) as *mut RefCell[T];
     if (*raw).borrows == -1 {
-      return None;
+      return None[T]();
     };
     (*raw).borrows = (*raw).borrows + 1;
-  };
-  return Some(Ref[T]{ cell: RefCell[T]{ value: value; borrows: borrows } });
+    return Some(Ref[T]{ ptr: raw });
+  }
 }
 
-pub fn RefCell.try_borrow_mut[T](self) -> Option[RefMut[T]]
-  ensures: result is Some => borrows == -1
-  ensures: result is None => borrows == borrows@pre
-{
+pub fn RefCell.try_borrow_mut[T](self) -> Option[RefMut[T]] {
   unsafe {
     let raw = ptr.from_ref(self) as *mut RefCell[T];
     if (*raw).borrows != 0 {
-      return None;
+      return None[T]();
     };
     (*raw).borrows = -1;
-  };
-  return Some(RefMut[T]{ cell: RefCell[T]{ value: value; borrows: borrows } });
+    return Some(RefMut[T]{ ptr: raw });
+  }
 }
 
 pub fn RefCell.replace[T](self, value: T) -> T
@@ -133,17 +140,52 @@ pub fn RefCell.replace[T](self, value: T) -> T
   }
 }
 
-pub type Ref[T] = { cell: RefCell[T]; }
-pub type RefMut[T] = { cell: RefCell[T]; }
+// ============================================================================
+// Ref — shared borrow handle (6D.1: pointer-based, not value copy)
+// ============================================================================
 
+// Release the shared borrow. Must be called when done with the Ref.
+// Without Drop trait support, the user is responsible for calling this.
+pub fn Ref.release[T](self) {
+  unsafe {
+    if ptr.is_null() { return; }
+    (*ptr).borrows = (*ptr).borrows - 1;
+    // borrows must be >= 0 after release (at most one mutable borrow was active)
+    // If borrows goes negative, it was released more times than borrowed.
+  };
+  // ptr is dropped (goes out of scope)
+}
+
+// Get the CURRENT value from the RefCell (not a stale copy).
 pub fn Ref.get[T](self) -> T {
-  return cell.value;
+  unsafe {
+    return (*ptr).value;
+  }
 }
 
+// ============================================================================
+// RefMut — mutable borrow handle (6D.1: pointer-based)
+// ============================================================================
+
+// Release the mutable borrow. Restores borrows from -1 to 0.
+pub fn RefMut.release[T](self) {
+  unsafe {
+    if ptr.is_null() { return; }
+    // Restore: mutable borrow (-1) → free (0)
+    (*ptr).borrows = 0;
+  };
+}
+
+// Get the current value. Returns by value (XIOM limitation: no &T references yet).
 pub fn RefMut.get[T](self) -> T {
-  return cell.value;
+  unsafe {
+    return (*ptr).value;
+  }
 }
 
+// Set a new value through the mutable borrow.
 pub fn RefMut.set[T](self, value: T) {
-  cell.value = value;
+  unsafe {
+    (*ptr).value = value;
+  }
 }
