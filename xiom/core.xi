@@ -394,21 +394,31 @@ const FLOAT64_MIN: Float64 = 2.2250738585072014e-308;
 const FLOAT64_EPSILON: Float64 = 2.220446049250313e-16;
 
 // === Option methods ===
-fn Option[T].unwrap_or(self, default: T) -> T {
+// 6F: Contract coverage — ensures clauses for all Option methods.
+
+fn Option[T].unwrap_or(self, default: T) -> T
+  ensures: self is Some => result == self.value
+  ensures: self is None => result == default
+{
   match self {
     Some(v) => v;
     None => default;
   }
 }
 
-fn Option[T].unwrap_or_else(self, f: fn() -> T) -> T {
+fn Option[T].unwrap_or_else(self, f: fn() -> T) -> T
+  ensures: self is None => result == f()
+{
   match self {
     Some(v) => v;
     None => f();
   }
 }
 
-fn Option[T].map[U](self, f: fn(T) -> U) -> Option[U] {
+fn Option[T].map[U](self, f: fn(T) -> U) -> Option[U]
+  ensures: self is Some => result is Some
+  ensures: self is None => result is None
+{
   match self {
     Some(v) => Some(f(v));
     None => None;
@@ -422,20 +432,21 @@ fn Option[T].and_then[U](self, f: fn(T) -> Option[U]) -> Option[U] {
   }
 }
 
-fn Option[T].filter(self, predicate: fn(&T) -> Bool) -> Option[T] {
+fn Option[T].filter(self, predicate: fn(&T) -> Bool) -> Option[T]
+  ensures: self is Some && predicate(&self.value) => result is Some
+  ensures: self is None => result is None
+{
   match self {
     Some(v) => {
-      if predicate(&v) {
-        Some(v)
-      } else {
-        None
-      }
+      if predicate(&v) { Some(v) } else { None }
     };
     None => None;
   }
 }
 
-fn Option[T].is_some_and(self, predicate: fn(&T) -> Bool) -> Bool {
+fn Option[T].is_some_and(self, predicate: fn(&T) -> Bool) -> Bool
+  ensures: self is None => result == false
+{
   match self {
     Some(v) => predicate(&v);
     None => false;
