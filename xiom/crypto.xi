@@ -1069,17 +1069,28 @@ pub fn aes_encrypt(key: &Vec[UInt8], plaintext: &Vec[UInt8]) -> Result[Vec[UInt8
     return Err("invalid key length: must be 16, 24, or 32 bytes");
   }
   if xiom_crypto_aesni_available() != 0 && key.len() == 16 {
-    // Hardware-accelerated AES-128 path (AES-NI on x86_64, ARM crypto extensions on aarch64)
+    // 6D.4: Hardware-accelerated AES-128 path (AES-NI on x86_64)
+    // Uses FFI xiom_aesni_encrypt_block for hardware acceleration.
+    // Falls through to software if AES-NI is unavailable.
     let (expanded_key, nr) = _aes_key_expansion(key);
     var padded = _pkcs7_pad(plaintext);
     var result = Vec[UInt8].new();
     let blocks = padded.len() / 16;
     var bi = 0;
     while bi < blocks {
-      var ct = _aes_encrypt_block(&padded, bi * 16, &expanded_key, nr);
+      // 6D.4: Use AES-NI hardware path via FFI
+      var ct_buf: [16]UInt8 = [0; 16];
+      unsafe {
+        xiom_aesni_encrypt_block(
+          &padded[bi * 16] as *UInt8,
+          &expanded_key[0] as *UInt8,
+          nr as Int32,
+          &ct_buf[0] as *UInt8
+        );
+      }
       var j = 0;
       while j < 16 {
-        result.push(ct[j]);
+        result.push(ct_buf[j]);
         j = j + 1;
       }
       bi = bi + 1;
