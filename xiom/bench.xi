@@ -27,7 +27,8 @@ fn isqrt(n: Int) -> Int {
   return x;
 }
 
-pub fn run_bench(name: Str, f: fn()) -> BenchResult {
+pub fn run_bench(name: Str, f: fn()) -> BenchResult
+  requires: name.len() > 0 {
   let start = time.Instant.now();
   f();
   let ns = start.elapsed().as_nanos();
@@ -42,7 +43,8 @@ pub fn run_bench(name: Str, f: fn()) -> BenchResult {
   };
 }
 
-pub fn run_bench_n(name: Str, iterations: Int, f: fn()) -> BenchResult {
+pub fn run_bench_n(name: Str, iterations: Int, f: fn()) -> BenchResult
+  requires: name.len() > 0 {
   if iterations <= 0 {
     return BenchResult{
       name: name;

@@ -64,7 +64,8 @@ pub interface Any {
   fn type_id(self) -> TypeId;
 }
 
-pub fn type_name[T]() -> Str {
+pub fn type_name[T]() -> Str
+  ensures: result.len() > 0 {
   return "unknown";
 }
 

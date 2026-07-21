@@ -304,11 +304,13 @@ fn _store_encode(data: &Vec[UInt8]) -> Vec[UInt8] {
 }
 
 // === Deflate / Raw ===
-pub fn deflate_compress(data: &Vec[UInt8]) -> Result<Vec[UInt8], Str> {
+pub fn deflate_compress(data: &Vec[UInt8]) -> Result<Vec[UInt8], Str>
+  requires: data.len() > 0 {
   deflate_compress_level(data, 6)
 }
 
-pub fn deflate_decompress(data: &Vec[UInt8]) -> Result<Vec[UInt8], Str> {
+pub fn deflate_decompress(data: &Vec[UInt8]) -> Result<Vec[UInt8], Str>
+  requires: data.len() > 0 {
   rle_decode(data)
 }
 
