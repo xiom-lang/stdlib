@@ -6,7 +6,9 @@ module xiom.cmp
 
 pub type Ordering = enum { Less, Equal, Greater }
 
-pub fn Ordering.reverse(self) -> Ordering {
+pub fn Ordering.reverse(self) -> Ordering
+  ensures: match self { Less => result == Greater, Equal => result == Equal, Greater => result == Less }
+{
   match self {
     Less => Greater;
     Equal => Equal;
@@ -14,7 +16,9 @@ pub fn Ordering.reverse(self) -> Ordering {
   }
 }
 
-pub fn Ordering.then(self, other: Ordering) -> Ordering {
+pub fn Ordering.then(self, other: Ordering) -> Ordering
+  ensures: self != Equal => result == self
+{
   if self != Equal {
     return self;
   };
@@ -28,7 +32,10 @@ pub fn Ordering.then_with(self, f: fn() -> Ordering) -> Ordering {
   f()
 }
 
-pub fn min[T: Ord](a: T, b: T) -> T {
+pub fn min[T: Ord](a: T, b: T) -> T
+  ensures: result == a || result == b
+  ensures: result.compare(a) <= 0 && result.compare(b) <= 0
+{
   if a.compare(b) <= 0 {
     a
   } else {
@@ -36,7 +43,10 @@ pub fn min[T: Ord](a: T, b: T) -> T {
   }
 }
 
-pub fn max[T: Ord](a: T, b: T) -> T {
+pub fn max[T: Ord](a: T, b: T) -> T
+  ensures: result == a || result == b
+  ensures: result.compare(a) >= 0 && result.compare(b) >= 0
+{
   if a.compare(b) >= 0 {
     a
   } else {
@@ -44,7 +54,10 @@ pub fn max[T: Ord](a: T, b: T) -> T {
   }
 }
 
-pub fn clamp[T: Ord](value: T, min_val: T, max_val: T) -> T {
+pub fn clamp[T: Ord](value: T, min_val: T, max_val: T) -> T
+  requires: min_val.compare(max_val) <= 0
+  ensures: result.compare(min_val) >= 0 && result.compare(max_val) <= 0
+{
   if value.compare(min_val) < 0 {
     min_val
   } elif value.compare(max_val) > 0 {
@@ -78,7 +91,10 @@ pub fn min_int(a: Int, b: Int) -> Int {
   if a <= b { a } else { b }
 }
 
-pub fn clamp_int(value: Int, min_val: Int, max_val: Int) -> Int {
+pub fn clamp_int(value: Int, min_val: Int, max_val: Int) -> Int
+  requires: min_val <= max_val
+  ensures: min_val <= result <= max_val
+{
   if value < min_val {
     min_val
   } elif value > max_val {

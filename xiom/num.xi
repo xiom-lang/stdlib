@@ -51,7 +51,10 @@ pub fn epsilon[T: Bounded]() -> T {
 }
 
 // Integer-specific
-pub fn gcd(a: Int, b: Int) -> Int {
+pub fn gcd(a: Int, b: Int) -> Int
+  ensures: result >= 0
+  ensures: a == 0 && b == 0 => result == 0
+{
   if b == 0 { return a; }
   return gcd(b, a % b);
 }
@@ -185,14 +188,18 @@ pub fn classify(x: Float64) -> Int {
   return 4;
 }
 
-pub fn floor(x: Float64) -> Int {
+pub fn floor(x: Float64) -> Int
+  ensures: to_float(result) <= x && x < to_float(result) + 1.0
+{
   var i = to_int(x);
   if x >= 0.0 { return i; }
   if to_float(i) == x { return i; }
   return i - 1;
 }
 
-pub fn ceil(x: Float64) -> Int {
+pub fn ceil(x: Float64) -> Int
+  ensures: to_float(result) - 1.0 < x && x <= to_float(result)
+{
   var i = to_int(x);
   if x <= 0.0 { return i; }
   if to_float(i) == x { return i; }
@@ -212,7 +219,9 @@ pub fn fract(x: Float64) -> Float64 {
   return x - to_float(to_int(x));
 }
 
-pub fn recip(x: Float64) -> Float64 {
+pub fn recip(x: Float64) -> Float64
+  requires: x != 0.0
+{
   return 1.0 / x;
 }
 
@@ -290,7 +299,9 @@ pub fn checked_mul[T: Bounded + Ord + Mul + Div](a: T, b: T) -> Option[T] {
   return Some(a * b);
 }
 
-pub fn checked_div[T: Bounded + Eq + Div](a: T, b: T) -> Option[T] {
+pub fn checked_div[T: Bounded + Eq + Div](a: T, b: T) -> Option[T]
+  ensures: b == zero() => result is None
+{
   var z = T.zero();
   if b == z { return None; }
   return Some(a / b);
@@ -318,7 +329,10 @@ pub fn parse_float(s: Str) -> Result[Float64, Str] {
   return to_float_from_str(s);
 }
 
-pub fn parse_int_radix(s: Str, radix: Int) -> Result[Int, Str] {
+pub fn parse_int_radix(s: Str, radix: Int) -> Result[Int, Str]
+  requires: s.len() > 0
+  requires: 2 <= radix && radix <= 36
+{
   if radix < 2 || radix > 36 { return Err("invalid radix"); }
   if s.len() == 0 { return Err("empty string"); }
   var result = 0;

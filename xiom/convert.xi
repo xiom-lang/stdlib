@@ -10,7 +10,9 @@ pub interface TryFrom[T] { fn try_from(value: T) -> Result<Self, Str>; }
 pub interface TryInto[T] { fn try_into(self) -> Result<T, Str>; }
 
 // Identity conversion
-pub fn identity[T](x: T) -> T { x }
+pub fn identity[T](x: T) -> T
+  ensures: result == x
+{ x }
 
 // Common conversions
 pub fn int_to_float(n: Int) -> Float64 {
@@ -25,7 +27,9 @@ pub fn int_to_string(n: Int) -> Str {
   return to_string(n);
 }
 
-pub fn float_to_string(f: Float64) -> Str {
+pub fn float_to_string(f: Float64) -> Str
+  ensures: result.len() > 0
+{
   var negative = false;
   var value = f;
   if f < 0.0 {
@@ -60,7 +64,9 @@ pub fn char_to_int(c: Char) -> Int {
   return to_int_from_char(c);
 }
 
-pub fn int_to_char(n: Int) -> Option[Char] {
+pub fn int_to_char(n: Int) -> Option[Char]
+  ensures: result.is_some <=> 0 <= n && n <= 0x10FFFF
+{
   if n < 0 || n > 1114111 {
     return Option[Char]{ is_some: false, value: '\0' };
   };
