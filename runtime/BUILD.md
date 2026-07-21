@@ -91,7 +91,7 @@ nasm -f elf64 stdlib/runtime/crypto_x86_64.asm   -o build/crypto.o
 nasm -f elf64 stdlib/runtime/mem_x86_64.asm      -o build/mem.o
 nasm -f elf64 stdlib/runtime/context_switch.asm  -o build/context.o
 
-cargo run -p xiomc -- --run examples/myprogram.xi \
+cargo run -p xiom -- --run examples/myprogram.xi \
     --link build/crypto.o --link build/mem.o --link build/context.o
 ```
 
