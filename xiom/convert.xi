@@ -9,6 +9,14 @@ pub interface Into[T] { fn into(self) -> T; }
 pub interface TryFrom[T] { fn try_from(value: T) -> Result<Self, Str>; }
 pub interface TryInto[T] { fn try_into(self) -> Result<T, Str>; }
 
+// 8B/M9: Parse a value from a string
+pub interface FromStr {
+  fn from_str(s: Str) -> Result<Self, Str>
+    requires: s.len() > 0
+    ensures: result.is_ok => the string was successfully parsed into Self
+  ;
+}
+
 // Identity conversion
 pub fn identity[T](x: T) -> T
   ensures: result == x
