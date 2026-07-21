@@ -91,19 +91,22 @@ pub fn debug(msg: Str) {
   };
 }
 
-pub fn info(msg: Str) {
+pub fn info(msg: Str)
+  requires: msg.len() > 0 {
   if should_log(LogLevel.Info) {
     write_entry(make_entry(LogLevel.Info, msg, Map[Str, Str]::new()));
   };
 }
 
-pub fn warn(msg: Str) {
+pub fn warn(msg: Str)
+  requires: msg.len() > 0 {
   if should_log(LogLevel.Warn) {
     write_entry(make_entry(LogLevel.Warn, msg, Map[Str, Str]::new()));
   };
 }
 
-pub fn error(msg: Str) {
+pub fn error(msg: Str)
+  requires: msg.len() > 0 {
   if should_log(LogLevel.Error) {
     write_entry(make_entry(LogLevel.Error, msg, Map[Str, Str]::new()));
   };

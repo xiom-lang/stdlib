@@ -98,7 +98,8 @@ pub fn each_mut[T, const N: Int](arr: &mut [N]T) -> [N]&mut T {
   return result;
 }
 
-pub fn fill[T: Clone, const N: Int](arr: &mut [N]T, value: T) {
+pub fn fill[T: Clone, const N: Int](arr: &mut [N]T, value: T)
+  ensures: arr elements == value {
   var i = 0;
   while i < N {
     arr[i] = value.clone();
@@ -106,7 +107,9 @@ pub fn fill[T: Clone, const N: Int](arr: &mut [N]T, value: T) {
   }
 }
 
-pub fn swap[T, const N: Int](arr: &mut [N]T, a: Int, b: Int) {
+pub fn swap[T, const N: Int](arr: &mut [N]T, a: Int, b: Int)
+  requires: a >= 0 && a < N
+  requires: b >= 0 && b < N {
   var temp = arr[a];
   arr[a] = arr[b];
   arr[b] = temp;
@@ -186,7 +189,8 @@ pub fn sort_by[T, const N: Int](arr: &mut [N]T, compare: fn(&T, &T) -> Ordering)
   }
 }
 
-pub fn binary_search[T: Ord, const N: Int](arr: &[N]T, x: &T) -> Result[Int, Int] {
+pub fn binary_search[T: Ord, const N: Int](arr: &[N]T, x: &T) -> Result[Int, Int]
+  requires: N >= 0 {
   var low = 0;
   var high = N;
   while low < high {

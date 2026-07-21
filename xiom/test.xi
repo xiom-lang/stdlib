@@ -20,7 +20,8 @@ pub type ContractFailure = {
   location: Str;    // file:line
 } derive[Clone]
 
-pub fn assert(condition: Bool, name: Str) -> TestResult {
+pub fn assert(condition: Bool, name: Str) -> TestResult
+  requires: name.len() > 0 {
   return TestResult{
     passed: condition;
     name: name;
@@ -30,7 +31,8 @@ pub fn assert(condition: Bool, name: Str) -> TestResult {
   };
 }
 
-pub fn assert_eq[T: Eq](expected: T, actual: T, name: Str) -> TestResult {
+pub fn assert_eq[T: Eq](expected: T, actual: T, name: Str) -> TestResult
+  requires: name.len() > 0 {
   let passed = expected == actual;
   return TestResult{
     passed: passed;

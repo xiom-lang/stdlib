@@ -16,7 +16,8 @@ pub fn range_inclusive(start: Int, end: Int) -> RangeInclusive {
   RangeInclusive { start: start; end: end; current: start; done: false; }
 }
 
-pub fn Range.next(self) -> Option[Int] {
+pub fn Range.next(self) -> Option[Int]
+  ensures: result is None <=> self.start >= self.end {
   if self.start < self.end {
     let val = self.start;
     self.start = self.start + 1;
@@ -26,7 +27,8 @@ pub fn Range.next(self) -> Option[Int] {
   }
 }
 
-pub fn Range.len(self) -> Int {
+pub fn Range.len(self) -> Int
+  ensures: result >= 0 {
   if self.start < self.end {
     self.end - self.start
   } else {
@@ -129,7 +131,8 @@ pub fn Iterator[T].fold[B](self, init: B, f: fn(B, T) -> B) -> B {
   acc
 }
 
-pub fn Iterator[T].count(self) -> Int {
+pub fn Iterator[T].count(self) -> Int
+  ensures: result >= 0 {
   var n = 0;
   var item = self.next();
   while item is Some {
@@ -247,7 +250,8 @@ pub fn Iterator[T].any(self, predicate: fn(&T) -> Bool) -> Bool {
   false
 }
 
-pub fn Iterator[T].nth(self, n: Int) -> Option[T] {
+pub fn Iterator[T].nth(self, n: Int) -> Option[T]
+  ensures: result is None => fewer than n+1 items {
   var item = self.next();
   var i = 0;
   while item is Some {
