@@ -268,7 +268,9 @@ pub fn Regex.is_match(self, text: Str) -> Bool {
   find_first_match(self.pattern, text).is_some
 }
 
-pub fn Regex.find(self, text: Str) -> Option[Match] {
+pub fn Regex.find(self, text: Str) -> Option[Match]
+  ensures: result.is_some => result.value.start >= 0 && result.value.end >= result.value.start
+{
   find_first_match(self.pattern, text)
 }
 

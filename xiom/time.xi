@@ -37,7 +37,9 @@ fn normalize_duration(secs: Int, nanos: Int) -> Duration {
   return Duration{ secs: s; nanos: n; };
 }
 
-pub fn Duration.new(secs: Int, nanos: Int) -> Duration {
+pub fn Duration.new(secs: Int, nanos: Int) -> Duration
+  ensures: 0 <= result.nanos && result.nanos < NANOS_PER_SEC
+{
   return normalize_duration(secs, nanos);
 }
 
@@ -132,7 +134,9 @@ pub fn Duration.mul(self, factor: Int) -> Duration {
   return normalize_duration(result_ns / NANOS_PER_SEC, result_ns - (result_ns / NANOS_PER_SEC) * NANOS_PER_SEC);
 }
 
-pub fn Duration.div(self, divisor: Int) -> Duration {
+pub fn Duration.div(self, divisor: Int) -> Duration
+  requires: divisor != 0
+{
   let total_ns = self.secs * NANOS_PER_SEC + self.nanos;
   let result_ns = total_ns / divisor;
   return normalize_duration(result_ns / NANOS_PER_SEC, result_ns - (result_ns / NANOS_PER_SEC) * NANOS_PER_SEC);
@@ -205,7 +209,9 @@ pub fn SystemTime.unix_epoch() -> SystemTime {
   return SystemTime{ secs: 0; nanos: 0; };
 }
 
-pub fn SystemTime.duration_since(self, earlier: SystemTime) -> Result[Duration, Str] {
+pub fn SystemTime.duration_since(self, earlier: SystemTime) -> Result[Duration, Str]
+  ensures: result.is_ok <=> self.secs >= earlier.secs
+{
   var sec_diff = self.secs - earlier.secs;
   var nano_diff = self.nanos - earlier.nanos;
   if nano_diff < 0 {
@@ -283,7 +289,9 @@ pub fn DateTime.year(self) -> Int {
   return self.year;
 }
 
-pub fn DateTime.month(self) -> Int {
+pub fn DateTime.month(self) -> Int
+  ensures: 1 <= result && result <= 12
+{
   return self.month;
 }
 

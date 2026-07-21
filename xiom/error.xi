@@ -12,7 +12,9 @@ pub interface Error {
 
 pub type ErrorChain = { errors: Vec<Str>; } derive[Clone]
 
-pub fn Error.chain(self) -> ErrorChain {
+pub fn Error.chain(self) -> ErrorChain
+  ensures: result.errors.len() >= 1
+{
   var errors: Vec<Str> = Vec[Str].new();
   errors.push(self.description());
   var opt = self.source();
