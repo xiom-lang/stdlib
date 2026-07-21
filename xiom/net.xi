@@ -35,7 +35,9 @@ pub type TcpListener = { fd: Int; } derive[Clone]
 
 pub type NetError = { message: Str; code: Int; }
 
-pub fn tcp_connect(host: Str, port: Int) -> Result[TcpStream, NetError] {
+pub fn tcp_connect(host: Str, port: Int) -> Result[TcpStream, NetError]
+  requires: host.len() > 0
+  requires: port > 0 && port <= 65535 {
   if host.len() <= 0 {
     return Err(NetError{ message: "host must not be empty"; code: -100; });
   }
@@ -64,7 +66,9 @@ pub fn tcp_connect(host: Str, port: Int) -> Result[TcpStream, NetError] {
   }
 }
 
-pub fn tcp_listen(host: Str, port: Int) -> Result[TcpListener, NetError] {
+pub fn tcp_listen(host: Str, port: Int) -> Result[TcpListener, NetError]
+  requires: host.len() > 0
+  requires: port > 0 && port <= 65535 {
   if port <= 0 || port >= 65536 {
     return Err(NetError{ message: "port out of range (1-65535)"; code: -101; });
   }
