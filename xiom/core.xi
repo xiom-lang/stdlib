@@ -406,7 +406,14 @@ interface Drop {
   fn drop(self);
 }
 
-// === 8B/M7: Production-grade conversion + deref traits ===
+// === 8B/M9: Debug trait (debug-print) ===
+interface Debug {
+  fn fmt(self, f: &mut Formatter) -> Str
+    ensures: result.len() > 0
+  ;
+}
+
+// 8B/M7: Production-grade conversion + deref traits ===
 
 pub interface From[T] {
   fn from(value: T) -> Self
