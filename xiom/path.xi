@@ -72,7 +72,8 @@ pub fn Path.file_name(self) -> Option<Str> {
   return Some(s);
 }
 
-pub fn Path.extension(self) -> Option<Str> {
+pub fn Path.extension(self) -> Option<Str>
+  ensures: result.is_some => self.inner.len() > 0 {
   // Find the last '.' in the file name and return everything after it.
   var name_opt = self.file_name();
   if name_opt.is_none {
@@ -102,7 +103,8 @@ pub fn Path.file_stem(self) -> Option<Str> {
   }
 }
 
-pub fn Path.is_absolute(self) -> Bool {
+pub fn Path.is_absolute(self) -> Bool
+  ensures: result => self.inner.len() >= 1 {
   var s = self.inner;
   if xiom.string.str_len(s) >= 1 {
     let ch = xiom.string.char_at(s, 0);

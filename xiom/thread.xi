@@ -27,7 +27,8 @@ pub type Thread = { handle: *UInt8; id: Int; }
 
 pub type JoinHandle[T] = { thread: Thread; result_buf: *UInt8; }
 
-pub fn spawn[T](f: fn() -> T) -> JoinHandle[T] {
+pub fn spawn[T](f: fn() -> T) -> JoinHandle[T]
+  ensures: result.thread.handle != 0 {
   unsafe {
     let bufsize = 8 + size_of[T]();
     let buf = alloc.alloc(bufsize);
@@ -45,7 +46,8 @@ pub fn spawn_with_name[T](name: Str, f: fn() -> T) -> JoinHandle[T] {
   spawn[T](f)
 }
 
-pub fn JoinHandle.join[T](self) -> Result[T, Str] {
+pub fn JoinHandle.join[T](self) -> Result[T, Str]
+  requires: self.thread.handle != 0 {
   unsafe {
     let rc = xiom_thread_spawn_join(thread.handle);
     if rc < 0 {

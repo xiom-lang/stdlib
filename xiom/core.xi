@@ -350,6 +350,42 @@ fn Box.drop[T](b: Box[T])
   }
 }
 
+// 8B/M7: Clone-on-Write — either owned or borrowed
+pub type Cow[T: Clone] = enum {
+  Borrowed(value: T);
+  Owned(value: T);
+}
+
+pub fn Cow[T: Clone].is_borrowed(self) -> Bool
+  ensures: result == (match self { Borrowed(_) => true, Owned(_) => false })
+{
+  match self { Borrowed(_) => { return true; }; Owned(_) => { return false; }; }
+}
+
+pub fn Cow[T: Clone].is_owned(self) -> Bool
+  ensures: result == !self.is_borrowed()
+{
+  return !self.is_borrowed();
+}
+
+pub fn Cow[T: Clone].to_mut(self) -> &mut T
+  ensures: result points to valid mutable T
+{
+  match self {
+    Owned(ref mut val) => { return val; };
+    Borrowed(val) => {
+      self = Owned(val.clone());
+      match self { Owned(ref mut val) => { return val; }; _ => { unreachable; }; };
+    };
+  };
+}
+
+pub fn Cow[T: Clone].into_owned(self) -> T
+  ensures: result is a valid instance of T
+{
+  match self { Owned(val) => { return val; }; Borrowed(val) => { return val.clone(); }; };
+}
+
 // === Iterator trait (core to collections) ===
 interface Iterator[T] {
   fn next(self) -> Option[T];
@@ -368,6 +404,58 @@ interface Default {
 // === Drop trait (deterministic cleanup) ===
 interface Drop {
   fn drop(self);
+}
+
+// === 8B/M7: Production-grade conversion + deref traits ===
+
+pub interface From[T] {
+  fn from(value: T) -> Self
+    ensures: result is valid instance of Self
+    ensures: Into::into(From::from(x)) == x  // round-trip law
+  ;
+}
+
+pub interface Into[T] {
+  fn into(self) -> T
+    ensures: From::from(result) == self  // round-trip law
+  ;
+}
+
+pub interface TryFrom[T] {
+  fn try_from(value: T) -> Result[Self, Str]
+    ensures: result is Ok => value was successfully converted to Self
+  ;
+}
+
+pub interface TryInto[T] {
+  fn try_into(self) -> Result[T, Str]
+    ensures: result is Ok => self was successfully converted to T
+  ;
+}
+
+pub interface Deref {
+  type Target;
+  fn deref(self) -> &Target
+    ensures: result points to valid memory
+  ;
+}
+
+pub interface DerefMut: Deref {
+  fn deref_mut(self) -> &mut Target
+    ensures: result points to valid mutable memory
+  ;
+}
+
+pub interface AsRef[T] {
+  fn as_ref(self) -> &T
+    ensures: result points to valid memory
+  ;
+}
+
+pub interface AsMut[T] {
+  fn as_mut(self) -> &mut T
+    ensures: result points to valid mutable memory
+  ;
 }
 
 // === Panic / Unwind ===
@@ -392,6 +480,32 @@ const INT_MIN: Int = -9223372036854775808;
 const FLOAT64_MAX: Float64 = 1.7976931348623157e308;
 const FLOAT64_MIN: Float64 = 2.2250738585072014e-308;
 const FLOAT64_EPSILON: Float64 = 2.220446049250313e-16;
+
+// 8B/M7: Zero-size type marker for generic parameters
+pub type PhantomData[T] = { }
+
+// 8B/M7: Uninitialized memory container
+pub type MaybeUninit[T] = { data: T; initialized: Bool; }
+  derive[Clone]
+
+pub fn MaybeUninit[T].uninit() -> MaybeUninit[T]
+  ensures: !result.initialized
+{
+  return MaybeUninit { data: zeroed, initialized: false };
+}
+
+pub fn MaybeUninit[T].new(value: T) -> MaybeUninit[T]
+  ensures: result.initialized
+{
+  return MaybeUninit { data: value, initialized: true };
+}
+
+pub fn MaybeUninit[T].assume_init(self) -> T
+  requires: self.initialized
+  ensures: result is valid T
+{
+  return self.data;
+}
 
 // === Option methods ===
 // 6F: Contract coverage — ensures clauses for all Option methods.
