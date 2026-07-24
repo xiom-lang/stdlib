@@ -107,7 +107,9 @@ pub fn Thread.name(self) -> Option[Str] {
   None
 }
 
-pub fn sleep_ms(ms: Int) {
+pub fn sleep_ms(ms: Int)
+  requires: ms >= 0
+{
   unsafe { xiom_thread_sleep_ms(ms); }
 }
 
@@ -131,7 +133,9 @@ pub fn Scope.spawn[T](self, f: fn() -> T) -> JoinHandle[T] {
   spawn[T](f)
 }
 
-pub fn available_parallelism() -> Int {
+pub fn available_parallelism() -> Int
+  ensures: result >= 1
+{
   unsafe {
     let n = xiom_cpu_count();
     if n < 1 { return 1; };

@@ -151,7 +151,10 @@ fn _get_index() -> ContractIndex {
 // REAL: reads function names and requires/ensures counts from the compiler
 // contract table. LIMITED: clause expression text, locations, params, return
 // types and type invariants are not embedded, so those remain empty.
-pub fn build_contract_index() -> ContractIndex {
+pub fn build_contract_index() -> ContractIndex
+  ensures: result.functions.len() >= 0
+  ensures: result.total_clauses >= 0
+{
   var functions = Vec[FunctionContracts].new();
   var total = 0;
   var req_total = 0;
@@ -427,7 +430,9 @@ pub fn get_uncovered_contracts() -> Vec[ContractClause] {
   result
 }
 
-pub fn coverage_percentage() -> Float64 {
+pub fn coverage_percentage() -> Float64
+  ensures: result >= 0.0 && result <= 100.0
+{
   let idx = _get_index();
   let total = idx.total_clauses;
   if total == 0 { return 100.0; }
@@ -457,7 +462,9 @@ pub fn verify_chain(fns: Vec<Str>) -> Result[Unit, Vec[ContractCheckResult]] {
 // Contract Statistics
 // ============================================================================
 
-pub fn total_contracts() -> Int {
+pub fn total_contracts() -> Int
+  ensures: result >= 0
+{
   _get_index().total_clauses
 }
 
