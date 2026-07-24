@@ -159,6 +159,43 @@ char* xiom_str_concat(const char* a, const char* b) {
     return out;
 }
 
+// M12/P1: Extract a substring [start, end) from a NUL-terminated string.
+// Returns a freshly malloc'd NUL-terminated copy of str[start..end-1].
+// Clamps start/end to [0, len] and returns "" for invalid ranges.
+char* xiom_str_slice(const char* str, long start, long end) {
+    if (!str) return (char*)"";
+    long len = (long)strlen(str);
+    if (start < 0) start = 0;
+    if (end < 0) end = 0;
+    if (start > len) start = len;
+    if (end > len) end = len;
+    if (start >= end) return (char*)"";
+    long slice_len = end - start;
+    char* out = (char*)malloc(slice_len + 1);
+    if (!out) return (char*)"";
+    memcpy(out, str + start, slice_len);
+    out[slice_len] = '\0';
+    return out;
+}
+
+// M12/P1: Check if str starts with prefix. Returns 1 if true, 0 otherwise.
+int xiom_str_starts_with(const char* str, const char* prefix) {
+    if (!str || !prefix) return 0;
+    size_t prefix_len = strlen(prefix);
+    if (prefix_len == 0) return 1;
+    return strncmp(str, prefix, prefix_len) == 0 ? 1 : 0;
+}
+
+// M12/P1: Check if str ends with suffix. Returns 1 if true, 0 otherwise.
+int xiom_str_ends_with(const char* str, const char* suffix) {
+    if (!str || !suffix) return 0;
+    size_t str_len = strlen(str);
+    size_t suffix_len = strlen(suffix);
+    if (suffix_len == 0) return 1;
+    if (suffix_len > str_len) return 0;
+    return strcmp(str + str_len - suffix_len, suffix) == 0 ? 1 : 0;
+}
+
 // Convert a signed 64-bit integer to a freshly-allocated decimal string.
 // Used to lower `to_string(Int)` / `Int.to_str()` — the pure-XIOM version relies
 // on fixed-size stack arrays which the codegen does not yet materialize.

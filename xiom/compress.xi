@@ -171,11 +171,18 @@ fn rle_decode(data: &Vec[UInt8]) -> Result<Vec[UInt8], Str> {
 }
 
 // === Gzip functions ===
-pub fn gzip_compress(data: &Vec[UInt8]) -> Result<Vec[UInt8], Str> {
+pub fn gzip_compress(data: &Vec[UInt8]) -> Result<Vec[UInt8], Str]
+  requires: data.len() > 0
+  ensures:  result is Ok => result.len() >= 18
+{
   gzip_compress_level(data, 6)
 }
 
-pub fn gzip_compress_level(data: &Vec[UInt8], level: Int) -> Result<Vec[UInt8], Str> {
+pub fn gzip_compress_level(data: &Vec[UInt8], level: Int) -> Result<Vec[UInt8], Str]
+  requires: data.len() > 0
+  requires: level >= 0 && level <= 9
+  ensures:  result is Ok => result.len() >= 18
+{
   var result = Vec[UInt8].new();
 
   result.push(0x1F);
@@ -222,7 +229,11 @@ pub fn gzip_compress_level(data: &Vec[UInt8], level: Int) -> Result<Vec[UInt8], 
   return Ok(result);
 }
 
-pub fn gzip_decompress(data: &Vec[UInt8]) -> Result<Vec[UInt8], Str> {
+pub fn gzip_decompress(data: &Vec[UInt8]) -> Result<Vec[UInt8], Str]
+  requires: data.len() >= 18
+  ensures:  result is Ok => result.len() >= 0
+  ensures:  result is Err => decompression failed (corrupt data)
+{
   if data.len() < 18 {
     return Err("gzip: data too short for header");
   }
@@ -305,16 +316,23 @@ fn _store_encode(data: &Vec[UInt8]) -> Vec[UInt8] {
 
 // === Deflate / Raw ===
 pub fn deflate_compress(data: &Vec[UInt8]) -> Result<Vec[UInt8], Str>
-  requires: data.len() > 0 {
+  requires: data.len() > 0
+  ensures:  result is Ok => result.len() >= 0
+{
   deflate_compress_level(data, 6)
 }
 
-pub fn deflate_decompress(data: &Vec[UInt8]) -> Result<Vec[UInt8], Str>
-  requires: data.len() > 0 {
+pub fn deflate_decompress(data: &Vec[UInt8]) -> Result<Vec[UInt8], Str]
+  requires: data.len() > 0
+  ensures:  result is Ok => result.len() >= 0
+{
   rle_decode(data)
 }
 
-pub fn deflate_compress_level(data: &Vec[UInt8], level: Int) -> Result<Vec[UInt8], Str> {
+pub fn deflate_compress_level(data: &Vec[UInt8], level: Int) -> Result<Vec[UInt8], Str]
+  requires: data.len() > 0
+  requires: level >= 0 && level <= 9
+{
   if level == 0 {
     return Ok(_store_encode(data));
   }
@@ -322,11 +340,18 @@ pub fn deflate_compress_level(data: &Vec[UInt8], level: Int) -> Result<Vec[UInt8
 }
 
 // === Zlib ===
-pub fn zlib_compress(data: &Vec[UInt8]) -> Result<Vec[UInt8], Str] {
+pub fn zlib_compress(data: &Vec[UInt8]) -> Result<Vec[UInt8], Str]
+  requires: data.len() > 0
+  ensures:  result is Ok => result.len() >= 6
+{
   zlib_compress_level(data, 6)
 }
 
-pub fn zlib_compress_level(data: &Vec[UInt8], level: Int) -> Result<Vec[UInt8], Str> {
+pub fn zlib_compress_level(data: &Vec[UInt8], level: Int) -> Result<Vec[UInt8], Str]
+  requires: data.len() > 0
+  requires: level >= 0 && level <= 9
+  ensures:  result is Ok => result.len() >= 6
+{
   var result = Vec[UInt8].new();
   result.push(0x78);
   if level >= 6 && level <= 9 {
@@ -354,7 +379,11 @@ pub fn zlib_compress_level(data: &Vec[UInt8], level: Int) -> Result<Vec[UInt8], 
   return Ok(result);
 }
 
-pub fn zlib_decompress(data: &Vec[UInt8]) -> Result<Vec[UInt8], Str> {
+pub fn zlib_decompress(data: &Vec[UInt8]) -> Result<Vec[UInt8], Str]
+  requires: data.len() >= 6
+  ensures:  result is Ok => result.len() >= 0
+  ensures:  result is Err => decompression failed (corrupt data)
+{
   if data.len() < 6 {
     return Err("zlib: data too short");
   }
@@ -389,11 +418,18 @@ pub fn zlib_decompress(data: &Vec[UInt8]) -> Result<Vec[UInt8], Str> {
 }
 
 // === Brotli ===
-pub fn brotli_compress(data: &Vec[UInt8]) -> Result<Vec[UInt8], Str> {
+pub fn brotli_compress(data: &Vec[UInt8]) -> Result<Vec[UInt8], Str]
+  requires: data.len() > 0
+  ensures:  result is Ok => result.len() >= 8
+{
   brotli_compress_level(data, 11)
 }
 
-pub fn brotli_compress_level(data: &Vec[UInt8], quality: Int) -> Result<Vec[UInt8], Str] {
+pub fn brotli_compress_level(data: &Vec[UInt8], quality: Int) -> Result<Vec[UInt8], Str]
+  requires: data.len() > 0
+  requires: quality >= 0 && quality <= 11
+  ensures:  result is Ok => result.len() >= 8
+{
   var result = Vec[UInt8].new();
   result.push(0xCE);
   result.push(0xB2);
@@ -417,7 +453,11 @@ pub fn brotli_compress_level(data: &Vec[UInt8], quality: Int) -> Result<Vec[UInt
   return Ok(result);
 }
 
-pub fn brotli_decompress(data: &Vec[UInt8]) -> Result<Vec[UInt8], Str] {
+pub fn brotli_decompress(data: &Vec[UInt8]) -> Result<Vec[UInt8], Str]
+  requires: data.len() >= 8
+  ensures:  result is Ok => result.len() >= 0
+  ensures:  result is Err => decompression failed (corrupt data)
+{
   if data.len() < 8 {
     return Err("brotli: data too short");
   }
@@ -444,7 +484,10 @@ pub fn brotli_decompress(data: &Vec[UInt8]) -> Result<Vec[UInt8], Str] {
 }
 
 // === LZ4 ===
-pub fn lz4_compress(data: &Vec[UInt8]) -> Result<Vec[UInt8], Str] {
+pub fn lz4_compress(data: &Vec[UInt8]) -> Result<Vec[UInt8], Str]
+  requires: data.len() > 0
+  ensures:  result is Ok => result.len() >= 7
+{
   var result = Vec[UInt8].new();
   result.push(0x04);
   result.push(0x22);
@@ -480,7 +523,10 @@ pub fn lz4_compress(data: &Vec[UInt8]) -> Result<Vec[UInt8], Str] {
   return Ok(result);
 }
 
-pub fn lz4_decompress(data: &Vec[UInt8]) -> Result<Vec[UInt8], Str] {
+pub fn lz4_decompress(data: &Vec[UInt8]) -> Result<Vec[UInt8], Str]
+  requires: data.len() >= 7
+  ensures:  result is Ok => result.len() >= 0
+{
   if data.len() < 7 {
     return Err("lz4: data too short");
   }
@@ -512,7 +558,10 @@ pub fn lz4_decompress(data: &Vec[UInt8]) -> Result<Vec[UInt8], Str] {
 }
 
 // === Snappy ===
-pub fn snappy_compress(data: &Vec[UInt8]) -> Result<Vec[UInt8], Str] {
+pub fn snappy_compress(data: &Vec[UInt8]) -> Result<Vec[UInt8], Str]
+  requires: data.len() > 0
+  ensures:  result is Ok => result.len() >= 1
+{
   var result = Vec[UInt8].new();
 
   let len = data.len();
@@ -548,7 +597,10 @@ pub fn snappy_compress(data: &Vec[UInt8]) -> Result<Vec[UInt8], Str] {
   return Ok(result);
 }
 
-pub fn snappy_decompress(data: &Vec[UInt8]) -> Result<Vec[UInt8], Str] {
+pub fn snappy_decompress(data: &Vec[UInt8]) -> Result<Vec[UInt8], Str]
+  requires: data.len() >= 1
+  ensures:  result is Ok => result.len() >= 0
+{
   var result = Vec[UInt8].new();
   let len = data.len();
   var pos = 0;
@@ -616,14 +668,20 @@ pub fn snappy_decompress(data: &Vec[UInt8]) -> Result<Vec[UInt8], Str] {
 }
 
 // === Utility ===
-pub fn compression_ratio(original: Int, compressed: Int) -> Float64 {
+pub fn compression_ratio(original: Int, compressed: Int) -> Float64
+  requires: original >= 0
+  requires: compressed >= 0
+  ensures:  result >= 0.0
+{
   if compressed == 0 || original == 0 {
     return 1.0;
   }
   (original as Float64) / (compressed as Float64)
 }
 
-pub fn is_compressed(data: &Vec[UInt8]) -> Bool {
+pub fn is_compressed(data: &Vec[UInt8]) -> Bool
+  requires: data.len() >= 0
+{
   if data.len() < 2 {
     return false;
   }
@@ -642,7 +700,9 @@ pub fn is_compressed(data: &Vec[UInt8]) -> Bool {
   return false;
 }
 
-pub fn detect_format(data: &Vec[UInt8]) -> Str {
+pub fn detect_format(data: &Vec[UInt8]) -> Str
+  requires: data.len() >= 0
+{
   if data.len() >= 2 && data[0] == 0x1F && data[1] == 0x8B {
     return "gzip";
   }
