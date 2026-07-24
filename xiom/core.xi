@@ -486,6 +486,98 @@ pub interface TryInto[T] {
   ;
 }
 
+// === M7: From/Into implementations for primitive types ===
+
+// Int -> Float64 (lossless for reasonable values)
+pub fn Int.from(value: Float64) -> Int {
+  return to_int(value);
+}
+pub fn Float64.into(self) -> Int {
+  return to_int(self);
+}
+
+// Float64 -> Int (may truncate)
+pub fn Float64.from(value: Int) -> Float64 {
+  return to_float(value);
+}
+pub fn Int.into(self) -> Float64 {
+  return to_float(self);
+}
+
+// Int -> Str
+pub fn Str.from(value: Int) -> Str {
+  return to_string(value);
+}
+pub fn Int.into(self) -> Str {
+  return to_string(self);
+}
+
+// Float64 -> Str
+pub fn Str.from(value: Float64) -> Str {
+  return xiom.convert.float_to_string(value);
+}
+pub fn Float64.into(self) -> Str {
+  return xiom.convert.float_to_string(self);
+}
+
+// Bool -> Str
+pub fn Str.from(value: Bool) -> Str {
+  return convert.bool_to_string(value);
+}
+pub fn Bool.into(self) -> Str {
+  return convert.bool_to_string(self);
+}
+
+// Bool -> Int
+pub fn Int.from(value: Bool) -> Int {
+  if value { return 1; }
+  return 0;
+}
+pub fn Bool.into(self) -> Int {
+  if self { return 1; }
+  return 0;
+}
+
+// Char -> Int
+pub fn Int.from(value: Char) -> Int {
+  return to_int_from_char(value);
+}
+pub fn Char.into(self) -> Int {
+  return to_int_from_char(self);
+}
+
+// Int -> Char (may fail, returns first char)
+pub fn Char.from(value: Int) -> Char {
+  return to_char(value);
+}
+pub fn Int.into(self) -> Char {
+  return to_char(self);
+}
+
+// === M2: PhantomData — zero-size type for generic type parameters ===
+// Already declared above. No methods needed — it's a marker type.
+// Usage: type MyStruct[T] = { data: Vec[UInt8]; _marker: PhantomData[T]; }
+
+// === M2: MaybeUninit — potentially uninitialized memory ===
+pub fn MaybeUninit[T].new(value: T) -> MaybeUninit[T] {
+  return MaybeUninit[T]{ data: value; initialized: true; }
+}
+
+pub fn MaybeUninit[T].assume_init(self) -> T
+  requires: self.initialized == true
+  ensures: result == self.data
+{
+  return self.data;
+}
+
+pub fn MaybeUninit[T].write(self, value: T)
+  ensures: self.initialized == true
+  ensures: self.data == value
+{
+  self.data = value;
+  self.initialized = true;
+}
+
 pub interface Deref {
   type Target;
   fn deref(self) -> &Target
