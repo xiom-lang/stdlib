@@ -182,7 +182,9 @@ pub fn block_on(task: fn()) {
 }
 
 // Schedule `task` to become ready after `ms` milliseconds (real timer).
-pub fn delay(ms: Int, task: fn()) {
+pub fn delay(ms: Int, task: fn())
+  requires: ms >= 0
+{
   _exec.at(_now() + ms, task);
 }
 
@@ -210,7 +212,9 @@ pub type Channel[T] = {
   invariant: items.len() <= cap || cap == 0;
 }
 
-pub fn Channel.bounded[T](capacity: Int) -> Channel[T] {
+pub fn Channel.bounded[T](capacity: Int) -> Channel[T]
+  requires: capacity > 0
+{
   return Channel[T]{ items: Vec[T].with_capacity(capacity), closed: false, cap: capacity };
 }
 
