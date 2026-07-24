@@ -4,7 +4,12 @@ use xiom.bench.types;
 use xiom.convert;
 use xiom.string;
 
-fn bench_ops_per_sec(total_ms: Int, iterations: Int) -> Int {
+fn bench_ops_per_sec(total_ms: Int, iterations: Int) -> Int
+  requires: total_ms >= 0
+  requires: iterations >= 0
+  ensures: total_ms == 0 || iterations == 0 => result == 0
+  ensures: result >= 0
+{
   if total_ms <= 0 || iterations <= 0 {
     0
   } else {
@@ -12,7 +17,10 @@ fn bench_ops_per_sec(total_ms: Int, iterations: Int) -> Int {
   }
 }
 
-fn bench_result_new(name: Str, total_ms: Int, iterations: Int) -> BenchResult {
+fn bench_result_new(name: Str, total_ms: Int, iterations: Int) -> BenchResult
+  requires: iterations >= 0
+  ensures: result.name == name
+{
   var ops = bench_ops_per_sec(total_ms, iterations);
   var avg_us = 0;
   if iterations > 0 {
@@ -29,11 +37,17 @@ fn bench_result_new(name: Str, total_ms: Int, iterations: Int) -> BenchResult {
   };
 }
 
-fn bench_run(name: Str, config: &BenchConfig) -> BenchResult {
+fn bench_run(name: Str, config: &BenchConfig) -> BenchResult
+  requires: config.min_time_ms >= 0
+  requires: config.iterations >= 0
+{
   return bench_result_new(name, config.min_time_ms, config.iterations);
 }
 
-fn bench_compare(baseline: &BenchResult, candidate: &BenchResult) -> Str {
+fn bench_compare(baseline: &BenchResult, candidate: &BenchResult) -> Str
+  requires: baseline.ops_per_sec >= 0
+  requires: candidate.ops_per_sec >= 0
+{
   if baseline.ops_per_sec == 0 {
     return "Cannot compare: baseline has zero ops/sec";
   } elif candidate.ops_per_sec == 0 {
