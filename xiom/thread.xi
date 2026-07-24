@@ -42,12 +42,16 @@ pub fn spawn[T](f: fn() -> T) -> JoinHandle[T]
   }
 }
 
-pub fn spawn_with_name[T](name: Str, f: fn() -> T) -> JoinHandle[T] {
+pub fn spawn_with_name[T](name: Str, f: fn() -> T) -> JoinHandle[T]
+  requires: name.len() >= 0
+{
   spawn[T](f)
 }
 
 pub fn JoinHandle.join[T](self) -> Result[T, Str]
-  requires: self.thread.handle != 0 {
+  requires: self.thread.handle != 0
+  ensures:  result is Ok => self.thread.handle is no longer valid
+{
   unsafe {
     let rc = xiom_thread_spawn_join(thread.handle);
     if rc < 0 {
@@ -61,7 +65,9 @@ pub fn JoinHandle.join[T](self) -> Result[T, Str]
   }
 }
 
-pub fn JoinHandle.is_finished[T](self) -> Bool {
+pub fn JoinHandle.is_finished[T](self) -> Bool
+  requires: self.result_buf != 0
+{
   unsafe {
     let done_ptr = result_buf as *Int;
     let done = ptr.read(done_ptr);
@@ -69,11 +75,16 @@ pub fn JoinHandle.is_finished[T](self) -> Bool {
   }
 }
 
-pub fn JoinHandle.thread[T](self) -> Thread {
+pub fn JoinHandle.thread[T](self) -> Thread
+  ensures: result.handle == self.thread.handle
+{
   self.thread
 }
 
-pub fn JoinHandle.detach[T](self) {
+pub fn JoinHandle.detach[T](self)
+  requires: self.thread.handle != 0
+  requires: self.result_buf != 0
+{
   unsafe {
     xiom_thread_spawn_detach(thread.handle);
     alloc.dealloc(result_buf, 8 + size_of[T]());
