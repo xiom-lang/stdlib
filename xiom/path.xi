@@ -8,20 +8,28 @@ pub type Path = { inner: Str; } derive[Eq, Clone, Hash, Ord]
 pub type PathBuf = { inner: Str; } derive[Eq, Clone]
 
 // Path constructors
-pub fn Path.new(s: Str) -> Path {
+pub fn Path.new(s: Str) -> Path
+  ensures: result.inner == s
+{
   Path{ inner: s; }
 }
 
-pub fn PathBuf.new() -> PathBuf {
+pub fn PathBuf.new() -> PathBuf
+  ensures: result.inner == ""
+{
   PathBuf{ inner: ""; }
 }
 
-pub fn PathBuf.from(s: Str) -> PathBuf {
+pub fn PathBuf.from(s: Str) -> PathBuf
+  ensures: result.inner == s
+{
   PathBuf{ inner: s; }
 }
 
 // Path operations
-pub fn Path.parent(self) -> Option<Path> {
+pub fn Path.parent(self) -> Option<Path>
+  ensures: result is None => self.inner does not contain a parent directory
+{
   // Find the last path separator not at the end, return everything before it.
   var s = self.inner;
   var len = xiom.string.str_len(s);
