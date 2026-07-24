@@ -204,6 +204,26 @@ fn Vec.set[T](index: Int, value: T)
   }
 }
 
+// === M7: AsRef / AsMut slice views for Vec[T] ===
+// These expose the Vec's backing array as a Slice reference with bounds contracts.
+pub fn Vec[T].as_slice(self) -> Slice[T]
+  requires: len >= 0
+  requires: data != null || len == 0
+  ensures: result.len == len
+  ensures: result.data == data
+{
+  Slice[T]{ data: data, len: len }
+}
+
+pub fn Vec[T].as_mut_slice(self) -> Slice[T]
+  requires: len >= 0
+  requires: data != null || len == 0
+  ensures: result.len == len
+  ensures: result.data == data
+{
+  Slice[T]{ data: data, len: len }
+}
+
 // === Map ===
 pub type Map[K, V] = {
   keys: Vec[K];
