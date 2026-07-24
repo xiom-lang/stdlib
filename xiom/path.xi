@@ -59,7 +59,9 @@ pub fn Path.parent(self) -> Option<Path>
   return None;
 }
 
-pub fn Path.file_name(self) -> Option<Str> {
+pub fn Path.file_name(self) -> Option<Str>
+  ensures: result is Some => result.len() > 0
+{
   // Find the last path separator and return everything after it.
   // Uses xiom.string helpers (str_len, char_at) which are available.
   var s = self.inner;
@@ -140,7 +142,9 @@ pub fn Path.has_root(self) -> Bool {
   return false;
 }
 
-pub fn Path.components(self) -> Vec<Str> {
+pub fn Path.components(self) -> Vec<Str>
+  ensures: result.len() >= 1
+{
   var normalized = replace(self.inner, "\\", "/");
   return str_split(normalized, "/");
 }
@@ -200,7 +204,9 @@ pub fn Path.metadata(self) -> Result<Metadata, Str> {
   }
 }
 
-pub fn Path.canonicalize(self) -> Result<PathBuf, Str> {
+pub fn Path.canonicalize(self) -> Result<PathBuf, Str>
+  ensures: result is Ok => canonical path without . or .. components
+{
   // String-based path canonicalization: collapse `.`, `..`, and double
   // separators without filesystem calls.  Does NOT resolve symlinks —
   // that requires OS-level `realpath` which isn't available yet.
@@ -246,7 +252,9 @@ pub fn Path.ends_with(self, child: &Path) -> Bool {
 }
 
 // PathBuf operations
-pub fn PathBuf.push(self, component: Str) {
+pub fn PathBuf.push(self, component: Str)
+  requires: component.len() >= 0
+{
   if is_empty(self.inner) {
     self.inner = component;
     return;
