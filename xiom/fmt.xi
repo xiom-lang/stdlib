@@ -11,34 +11,48 @@ pub interface Display {
 pub type Formatter = { buf: Str; width: Int; precision: Int; align: Int; } derive[Clone]
 pub type FmtError = { message: Str; } derive[Clone]
 
-pub fn Formatter.new() -> Formatter {
+pub fn Formatter.new() -> Formatter
+  ensures: result.buf == ""
+  ensures: result.width == 0
+  ensures: result.precision == 6
+{
   Formatter { buf: ""; width: 0; precision: 6; align: 0; }
 }
 
-pub fn Formatter.write_str(self, s: Str) -> Result[Unit, FmtError] {
+pub fn Formatter.write_str(self, s: Str) -> Result[Unit, FmtError]
+  ensures: result.is_ok => self.buf contains original + s
+{
   self.buf = string.str_concat(self.buf, s);
   Result[Unit, FmtError] { is_ok: true; value: (); error: FmtError { message: ""; }; }
 }
 
-pub fn Formatter.write_int(self, n: Int) -> Result[Unit, FmtError] {
+pub fn Formatter.write_int(self, n: Int) -> Result[Unit, FmtError]
+  ensures: result.is_ok
+{
   let s = convert.int_to_string(n);
   self.buf = string.str_concat(self.buf, s);
   Result[Unit, FmtError] { is_ok: true; value: (); error: FmtError { message: ""; }; }
 }
 
-pub fn Formatter.write_float(self, f: Float64) -> Result[Unit, FmtError] {
+pub fn Formatter.write_float(self, f: Float64) -> Result[Unit, FmtError]
+  ensures: result.is_ok
+{
   let s = convert.float_to_string(f);
   self.buf = string.str_concat(self.buf, s);
   Result[Unit, FmtError] { is_ok: true; value: (); error: FmtError { message: ""; }; }
 }
 
-pub fn Formatter.write_bool(self, b: Bool) -> Result[Unit, FmtError] {
+pub fn Formatter.write_bool(self, b: Bool) -> Result[Unit, FmtError]
+  ensures: result.is_ok
+{
   let s = convert.bool_to_string(b);
   self.buf = string.str_concat(self.buf, s);
   Result[Unit, FmtError] { is_ok: true; value: (); error: FmtError { message: ""; }; }
 }
 
-pub fn Formatter.finish(self) -> Str {
+pub fn Formatter.finish(self) -> Str
+  ensures: result == self.buf@pre
+{
   self.buf
 }
 
