@@ -364,3 +364,96 @@ pub fn ZipIter[T, U].next(self) -> Option[(T, U)] {
     None => None,
   }
 }
+
+// === M7: Additional iterator adapters ===
+
+// StepBy — yields every nth element (1-based step)
+pub type StepByIter[T] = { iter: Iterator[T]; step: Int; first: Bool; }
+
+pub fn Iterator[T].step_by(self, step: Int) -> StepByIter[T]
+  requires: step > 0
+{
+  StepByIter { iter: self; step: step; first: true; }
+}
+
+pub fn StepByIter[T].next(self) -> Option[T]
+  ensures: result is Some => element at correct step interval
+{
+  if self.first {
+    self.first = false;
+    return self.iter.next();
+  };
+  var i = 0;
+  while i < self.step - 1 {
+    self.iter.next();
+    i = i + 1;
+  };
+  self.iter.next()
+}
+
+// TakeWhile — yields elements while predicate is true
+pub type TakeWhileIter[T] = { iter: Iterator[T]; predicate: fn(&T) -> Bool; done: Bool; }
+
+pub fn Iterator[T].take_while(self, predicate: fn(&T) -> Bool) -> TakeWhileIter[T] {
+  TakeWhileIter { iter: self; predicate: predicate; done: false; }
+}
+
+pub fn TakeWhileIter[T].next(self) -> Option[T]
+  ensures: self.done => result is None
+{
+  if self.done {
+    return None;
+  };
+  match self.iter.next() {
+    Some(v) => {
+      if self.predicate(&v) {
+        return Some(v);
+      } else {
+        self.done = true;
+        return None;
+      };
+    },
+    None => None,
+  }
+}
+
+// SkipWhile — skips elements while predicate is true, then yields rest
+pub type SkipWhileIter[T] = { iter: Iterator[T]; predicate: fn(&T) -> Bool; skipped: Bool; }
+
+pub fn Iterator[T].skip_while(self, predicate: fn(&T) -> Bool) -> SkipWhileIter[T] {
+  SkipWhileIter { iter: self; predicate: predicate; skipped: false; }
+}
+
+pub fn SkipWhileIter[T].next(self) -> Option[T] {
+  if !self.skipped {
+    var item = self.iter.next();
+    while item is Some {
+      match item {
+        Some(v) => {
+          if !self.predicate(&v) {
+            self.skipped = true;
+            return Some(v);
+          };
+          item = self.iter.next();
+        },
+        None => { return None; },
+      };
+    };
+    return None;
+  };
+  self.iter.next()
+}
+
+// Inspect — calls f on each element for side effects, passes element through
+pub type InspectIter[T] = { iter: Iterator[T]; f: fn(&T); }
+
+pub fn Iterator[T].inspect(self, f: fn(&T)) -> InspectIter[T] {
+  InspectIter { iter: self; f: f; }
+}
+
+pub fn InspectIter[T].next(self) -> Option[T] {
+  match self.iter.next() {
+    Some(v) => { self.f(&v); Some(v) },
+    None => None,
+  }
+}
