@@ -79,71 +79,90 @@ fn write_entry(entry: LogEntry) {
 }
 
 // Core logging
-pub fn trace(msg: Str) {
+pub fn trace(msg: Str)
+  requires: msg.len() >= 0
+{
   if should_log(LogLevel.Trace) {
     write_entry(make_entry(LogLevel.Trace, msg, Map[Str, Str]::new()));
   };
 }
 
-pub fn debug(msg: Str) {
+pub fn debug(msg: Str)
+  requires: msg.len() >= 0
+{
   if should_log(LogLevel.Debug) {
     write_entry(make_entry(LogLevel.Debug, msg, Map[Str, Str]::new()));
   };
 }
 
 pub fn info(msg: Str)
-  requires: msg.len() > 0 {
+  requires: msg.len() > 0
+{
   if should_log(LogLevel.Info) {
     write_entry(make_entry(LogLevel.Info, msg, Map[Str, Str]::new()));
   };
 }
 
 pub fn warn(msg: Str)
-  requires: msg.len() > 0 {
+  requires: msg.len() > 0
+{
   if should_log(LogLevel.Warn) {
     write_entry(make_entry(LogLevel.Warn, msg, Map[Str, Str]::new()));
   };
 }
 
 pub fn error(msg: Str)
-  requires: msg.len() > 0 {
+  requires: msg.len() > 0
+{
   if should_log(LogLevel.Error) {
     write_entry(make_entry(LogLevel.Error, msg, Map[Str, Str]::new()));
   };
 }
 
-pub fn fatal(msg: Str) {
+pub fn fatal(msg: Str)
+  requires: msg.len() >= 0
+{
   if should_log(LogLevel.Fatal) {
     write_entry(make_entry(LogLevel.Fatal, msg, Map[Str, Str]::new()));
   };
 }
 
 // Structured logging (key=value pairs)
-pub fn trace_with(msg: Str, data: Map[Str, Str]) {
+pub fn trace_with(msg: Str, data: Map[Str, Str])
+  requires: msg.len() >= 0
+{
   if should_log(LogLevel.Trace) {
     write_entry(make_entry(LogLevel.Trace, msg, data));
   };
 }
 
-pub fn debug_with(msg: Str, data: Map[Str, Str]) {
+pub fn debug_with(msg: Str, data: Map[Str, Str])
+  requires: msg.len() >= 0
+{
   if should_log(LogLevel.Debug) {
     write_entry(make_entry(LogLevel.Debug, msg, data));
   };
 }
 
-pub fn info_with(msg: Str, data: Map[Str, Str]) {
+pub fn info_with(msg: Str, data: Map[Str, Str])
+  requires: msg.len() > 0
+{
   if should_log(LogLevel.Info) {
     write_entry(make_entry(LogLevel.Info, msg, data));
   };
 }
 
-pub fn warn_with(msg: Str, data: Map[Str, Str]) {
+pub fn warn_with(msg: Str, data: Map[Str, Str])
+  requires: msg.len() > 0
+{
   if should_log(LogLevel.Warn) {
     write_entry(make_entry(LogLevel.Warn, msg, data));
   };
 }
 
-pub fn error_with(msg: Str, data: Map[Str, Str]) {
+pub fn error_with(msg: Str, data: Map[Str, Str])
+  requires: msg.len() > 0
+{
   if should_log(LogLevel.Error) {
     write_entry(make_entry(LogLevel.Error, msg, data));
   };
@@ -158,7 +177,9 @@ pub fn get_level() -> LogLevel {
   current_level
 }
 
-pub fn set_output(file: Str) -> Result[Unit, Str] {
+pub fn set_output(file: Str) -> Result[Unit, Str]
+  requires: file.len() > 0
+{
   let result = io.write_file(file, "");
   match result {
     Ok(_) => {
@@ -178,7 +199,9 @@ pub fn set_output_color(enabled: Bool) {
 }
 
 // Query
-pub fn entries_since(instant: Instant) -> Vec[LogEntry] {
+pub fn entries_since(instant: Instant) -> Vec[LogEntry]
+  ensures: result.len() >= 0
+{
   var result: Vec[LogEntry] = Vec[LogEntry]::new();
   let threshold = instant.t;
   var i = entries.len();

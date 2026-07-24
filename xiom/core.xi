@@ -432,6 +432,16 @@ pub fn Cow[T: Clone].into_owned(self) -> T
   match self { Owned(val) => { return val; }; Borrowed(val) => { return val.clone(); }; };
 }
 
+// M12/P1: Read the inner value regardless of variant (no cloning).
+pub fn Cow[T: Clone].borrow(self) -> &T
+  ensures: result points to valid memory
+{
+  match self {
+    Borrowed(ref val) => { return val; };
+    Owned(ref val) => { return val; };
+  };
+}
+
 // === Iterator trait (core to collections) ===
 interface Iterator[T] {
   fn next(self) -> Option[T];
@@ -554,30 +564,6 @@ pub fn Int.into(self) -> Char {
   return to_char(self);
 }
 
-// === M2: PhantomData — zero-size type for generic type parameters ===
-// Already declared above. No methods needed — it's a marker type.
-// Usage: type MyStruct[T] = { data: Vec[UInt8]; _marker: PhantomData[T]; }
-
-// === M2: MaybeUninit — potentially uninitialized memory ===
-pub fn MaybeUninit[T].new(value: T) -> MaybeUninit[T] {
-  return MaybeUninit[T]{ data: value; initialized: true; }
-}
-
-pub fn MaybeUninit[T].assume_init(self) -> T
-  requires: self.initialized == true
-  ensures: result == self.data
-{
-  return self.data;
-}
-
-pub fn MaybeUninit[T].write(self, value: T)
-  ensures: self.initialized == true
-  ensures: self.data == value
-{
-  self.data = value;
-  self.initialized = true;
-}
-
 pub interface Deref {
   type Target;
   fn deref(self) -> &Target
@@ -650,6 +636,14 @@ pub fn MaybeUninit[T].assume_init(self) -> T
   ensures: result is valid T
 {
   return self.data;
+}
+
+pub fn MaybeUninit[T].write(self, value: T)
+  ensures: self.initialized == true
+  ensures: self.data == value
+{
+  self.data = value;
+  self.initialized = true;
 }
 
 // === Option methods ===
