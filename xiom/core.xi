@@ -350,6 +350,52 @@ fn Box.drop[T](b: Box[T])
   }
 }
 
+// === M7: Deref / DerefMut impl for Box[T] ===
+// Box is a heap-allocated single-owner pointer. Deref allows `*box` and
+// auto-deref in method resolution (e.g., `box.method()` calls T's method).
+pub fn Box[T].deref(self) -> &T
+  requires: ptr != null
+  ensures: result points to valid memory
+{
+  unsafe {
+    return &*ptr;
+  }
+}
+
+pub fn Box[T].deref_mut(self) -> &mut T
+  requires: ptr != null
+  ensures: result points to valid mutable memory
+{
+  unsafe {
+    return &mut *ptr;
+  }
+}
+
+// === M7: AsRef / AsMut impl for Box[T] ===
+pub fn Box[T].as_ref(self) -> &T
+  requires: ptr != null
+{
+  return deref();
+}
+
+pub fn Box[T].as_mut(self) -> &mut T
+  requires: ptr != null
+{
+  return deref_mut();
+}
+
+// === M7: AsRef[Str] impl for Str ===
+pub fn Str.as_ref(self) -> &Str {
+  return &self;
+}
+
+// === M7: AsRef<[UInt8]> impl for Str ===
+pub fn Str.as_bytes(self) -> &Slice[UInt8] {
+  unsafe {
+    Slice { data: &self as *UInt8, len: string.str_len(self) }
+  }
+}
+
 // 8B/M7: Clone-on-Write — either owned or borrowed
 pub type Cow[T: Clone] = enum {
   Borrowed(value: T);

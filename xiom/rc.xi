@@ -104,9 +104,27 @@ pub fn Rc.drop[T](self)
     if (*ptr).strong == 0 {
       if (*ptr).weak == 0 {
         alloc.dealloc(ptr as *UInt8, layout.size);
-      }
     }
   }
+}
+
+// === M7: Deref impl for Rc[T] ===
+// Rc is a shared-ownership pointer. Deref allows `*rc` and auto-deref.
+// Note: DerefMut is NOT implemented — Rc provides shared access only.
+pub fn Rc[T].deref(self) -> &T
+  requires: ptr != null
+  ensures: result points to valid memory
+{
+  unsafe {
+    return &(*ptr).value;
+  }
+}
+
+pub fn Rc[T].as_ref(self) -> &T
+  requires: ptr != null
+{
+  return deref();
+}
 }
 
 pub type Weak[T] = {

@@ -369,6 +369,24 @@ pub fn Arc.drop[T](self)
   }
 }
 
+// === M7: Deref impl for Arc[T] ===
+// Arc provides shared (atomic) access. Deref allows `*arc` and auto-deref.
+// DerefMut is NOT implemented — Arc provides shared access only.
+pub fn Arc[T].deref(self) -> &T
+  requires: ptr != null
+  ensures: result points to valid memory
+{
+  unsafe {
+    return &(*ptr).value;
+  }
+}
+
+pub fn Arc[T].as_ref(self) -> &T
+  requires: ptr != null
+{
+  return deref();
+}
+
 // === AtomicBool -- real atomic operations ===
 pub type AtomicBool = { ptr: *Int; }
 
