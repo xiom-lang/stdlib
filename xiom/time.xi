@@ -120,15 +120,22 @@ pub fn Duration.subsec_nanos(self) -> Int {
   return self.nanos;
 }
 
-pub fn Duration.add(self, other: Duration) -> Duration {
+pub fn Duration.add(self, other: Duration) -> Duration
+  ensures: 0 <= result.nanos && result.nanos < NANOS_PER_SEC
+{
   return normalize_duration(self.secs + other.secs, self.nanos + other.nanos);
 }
 
-pub fn Duration.sub(self, other: Duration) -> Duration {
+pub fn Duration.sub(self, other: Duration) -> Duration
+  ensures: 0 <= result.nanos && result.nanos < NANOS_PER_SEC
+{
   return normalize_duration(self.secs - other.secs, self.nanos - other.nanos);
 }
 
-pub fn Duration.mul(self, factor: Int) -> Duration {
+pub fn Duration.mul(self, factor: Int) -> Duration
+  requires: factor >= 0
+  ensures: 0 <= result.nanos && result.nanos < NANOS_PER_SEC
+{
   let total_ns = self.secs * NANOS_PER_SEC + self.nanos;
   let result_ns = total_ns * factor;
   return normalize_duration(result_ns / NANOS_PER_SEC, result_ns - (result_ns / NANOS_PER_SEC) * NANOS_PER_SEC);
