@@ -33,33 +33,41 @@ pub fn take[T: Default](dest: &mut T) -> T
   return replace(dest, T.default());
 }
 
-pub fn drop[T](value: T) {
+pub fn drop[T](value: T)
+  ensures: value is dropped and no longer accessible
+{
 }
 
 // Size queries
 // Compiler intrinsic — requires compiler support
-pub fn size_of[T]() -> Int;
+pub fn size_of[T]() -> Int
+  ensures: result > 0;
 
 // Compiler intrinsic — requires compiler support
-pub fn align_of[T]() -> Int;
+pub fn align_of[T]() -> Int
+  ensures: result > 0;
 
 pub fn size_of_val[T](value: &T) -> Int
   ensures: result > 0
+  ensures: result == size_of[T]()
 {
   return size_of[T]();
 }
 
 pub fn min_align_of_val[T](value: &T) -> Int
   ensures: result > 0
+  ensures: result == align_of[T]()
 {
   return align_of[T]();
 }
 
-// Zeroed memory
-pub fn zeroed[T]() -> T;
+// Zeroed memory — all bytes set to zero
+pub fn zeroed[T]() -> T
+  ensures: all bytes of result are 0;
 
-// Uninitialized memory (unsafe)
-pub fn uninitialized[T]() -> T;
+// Uninitialized memory (unsafe — reading before writing is UB)
+pub fn uninitialized[T]() -> T
+  ensures: result is uninitialized memory (reading before write is undefined behavior);
 
 // Manually drop (defer cleanup)
 pub type ManuallyDrop[T] = { value: T; }
@@ -68,13 +76,18 @@ pub fn ManuallyDrop.new[T](value: T) -> ManuallyDrop[T] {
   return ManuallyDrop[T]{ value: value };
 }
 
-pub fn ManuallyDrop.into_inner[T](self) -> T {
+pub fn ManuallyDrop.into_inner[T](self) -> T
+  requires: self.value is a valid T {
   return value;
 }
 
-pub fn ManuallyDrop.take[T](self) -> T {
+pub fn ManuallyDrop.take[T](self) -> T
+  requires: self.value is a valid T
+  ensures: result == self.value@pre {
   return value;
 }
 
-pub fn ManuallyDrop.drop[T](self) {
+pub fn ManuallyDrop.drop[T](self)
+  requires: self.value is a valid T
+  ensures: self.value is dropped {
 }
