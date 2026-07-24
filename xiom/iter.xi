@@ -154,7 +154,10 @@ pub fn Iterator[T].sum(self) -> T {
   total
 }
 
-pub fn Iterator[T].product(self) -> T {
+pub fn Iterator[T].product(self) -> T
+  requires: T supports multiplication
+  ensures: result is the product of all elements (1 if empty)
+{
   var acc: T = 1;
   var item = self.next();
   while item is Some {
@@ -166,7 +169,10 @@ pub fn Iterator[T].product(self) -> T {
   acc
 }
 
-pub fn Iterator[T].max(self) -> Option[T] {
+pub fn Iterator[T].max(self) -> Option[T]
+  ensures: result is None => no elements in iterator
+  ensures: result is Some => result is the maximum element
+{
   var item = self.next();
   match item {
     None => None,
@@ -187,7 +193,10 @@ pub fn Iterator[T].max(self) -> Option[T] {
   }
 }
 
-pub fn Iterator[T].min(self) -> Option[T] {
+pub fn Iterator[T].min(self) -> Option[T]
+  ensures: result is None => no elements in iterator
+  ensures: result is Some => result is the minimum element
+{
   var item = self.next();
   match item {
     None => None,
@@ -208,7 +217,10 @@ pub fn Iterator[T].min(self) -> Option[T] {
   }
 }
 
-pub fn Iterator[T].find(self, predicate: fn(&T) -> Bool) -> Option[T] {
+pub fn Iterator[T].find(self, predicate: fn(&T) -> Bool) -> Option[T]
+  ensures: result is Some => predicate applied to result is true
+  ensures: result is None => no element satisfies the predicate
+{
   var item = self.next();
   while item is Some {
     match item {
@@ -251,7 +263,10 @@ pub fn Iterator[T].any(self, predicate: fn(&T) -> Bool) -> Bool {
 }
 
 pub fn Iterator[T].nth(self, n: Int) -> Option[T]
-  ensures: result is None => fewer than n+1 items {
+  requires: n >= 0
+  ensures: result is None => fewer than n+1 items
+  ensures: result is Some => exactly n elements were skipped
+{
   var item = self.next();
   var i = 0;
   while item is Some {
