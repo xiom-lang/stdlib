@@ -52,7 +52,9 @@ pub fn SerializeError.format_error() -> Str {
 }
 
 // === Format detection ===
-pub fn detect_format(data: &Vec[UInt8]) -> Str {
+pub fn detect_format(data: &Vec[UInt8]) -> Str
+  ensures: result.len() > 0
+{
   if data.len() == 0 {
     return "unknown";
   }
@@ -63,7 +65,9 @@ pub fn detect_format(data: &Vec[UInt8]) -> Str {
   return "binary";
 }
 
-pub fn is_valid_json(data: Str) -> Bool {
+pub fn is_valid_json(data: Str) -> Bool
+  requires: data.len() >= 0
+{
   let result = json_parse(data);
   result.is_ok
 }
@@ -408,7 +412,11 @@ fn parse_number(s: Str, pos: &mut Int) -> Result[JsonValue, SerializeError] {
   }
 }
 
-pub fn json_parse(data: Str) -> Result[JsonValue, SerializeError] {
+pub fn json_parse(data: Str) -> Result[JsonValue, SerializeError]
+  requires: data.len() >= 0
+  ensures:  result is Ok => valid JSON value
+  ensures:  result is Err => parsing failed at error location
+{
   var pos = 0;
   skip_whitespace(data, &pos);
   if pos >= data.len() {

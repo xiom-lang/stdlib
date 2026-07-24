@@ -44,7 +44,10 @@ pub fn run_bench(name: Str, f: fn()) -> BenchResult
 }
 
 pub fn run_bench_n(name: Str, iterations: Int, f: fn()) -> BenchResult
-  requires: name.len() > 0 {
+  requires: name.len() > 0
+  requires: iterations >= 0
+  ensures:  result.iterations == iterations
+{
   if iterations <= 0 {
     return BenchResult{
       name: name;
@@ -100,7 +103,9 @@ pub fn run_bench_n(name: Str, iterations: Int, f: fn()) -> BenchResult
   };
 }
 
-pub fn compare(a: BenchResult, b: BenchResult) -> Str {
+pub fn compare(a: BenchResult, b: BenchResult) -> Str
+  ensures: result.len() > 0
+{
   if a.mean_ns < b.mean_ns {
     return a.name + " is faster than " + b.name;
   } elif b.mean_ns < a.mean_ns {

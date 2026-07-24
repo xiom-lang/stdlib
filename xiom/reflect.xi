@@ -25,28 +25,36 @@ extern "C" {
 }
 
 // Number of user types registered in this compilation unit. REAL.
-pub fn type_count() -> Int {
+pub fn type_count() -> Int
+  ensures: result >= 0
+{
   unsafe {
     return xiom_type_count();
   }
 }
 
 // Name of the type with the given stable id, or "unknown" if out of range. REAL.
-pub fn type_name_by_id(id: Int) -> Str {
+pub fn type_name_by_id(id: Int) -> Str
+  ensures: result.len() >= 0
+{
   unsafe {
     return xiom_type_name(id);
   }
 }
 
 // Stable id of the type with the given name, or -1 if not found. REAL.
-pub fn type_id_by_name(name: Str) -> Int {
+pub fn type_id_by_name(name: Str) -> Int
+  ensures: result >= -1
+{
   unsafe {
     return xiom_type_id_by_name(name);
   }
 }
 
 // Number of fields of the type with the given id (0 for enums/unknown). REAL.
-pub fn type_field_count(id: Int) -> Int {
+pub fn type_field_count(id: Int) -> Int
+  ensures: result >= 0
+{
   unsafe {
     return xiom_type_field_count(id);
   }
