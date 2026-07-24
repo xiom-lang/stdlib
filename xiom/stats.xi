@@ -1,6 +1,9 @@
 module xiom.bench.stats
 
-fn stats_mean(data: &Vec[Int]) -> Int {
+fn stats_mean(data: &Vec[Int]) -> Int
+  requires: data.len() >= 0
+  ensures: result >= 0 || data.len() == 0
+{
   if data.len() == 0 {
     0
   } else {
@@ -8,7 +11,10 @@ fn stats_mean(data: &Vec[Int]) -> Int {
   }
 }
 
-fn stats_sum(data: &Vec[Int], idx: Int) -> Int {
+fn stats_sum(data: &Vec[Int], idx: Int) -> Int
+  requires: idx >= 0
+  requires: idx <= data.len()
+{
   if idx >= data.len() {
     0
   } else {
@@ -16,7 +22,9 @@ fn stats_sum(data: &Vec[Int], idx: Int) -> Int {
   }
 }
 
-fn stats_median(data: &Vec[Int]) -> Int {
+fn stats_median(data: &Vec[Int]) -> Int
+  requires: data.len() >= 0
+{
   let len = data.len();
   if len == 0 {
     0
@@ -27,7 +35,9 @@ fn stats_median(data: &Vec[Int]) -> Int {
   }
 }
 
-fn stats_stddev(data: &Vec[Int], mean: Int) -> Int {
+fn stats_stddev(data: &Vec[Int], mean: Int) -> Int
+  requires: data.len() >= 0
+{
   if data.len() == 0 {
     0
   } else {
@@ -36,7 +46,10 @@ fn stats_stddev(data: &Vec[Int], mean: Int) -> Int {
   }
 }
 
-fn stats_variance_sum(data: &Vec[Int], mean: Int, idx: Int) -> Int {
+fn stats_variance_sum(data: &Vec[Int], mean: Int, idx: Int) -> Int
+  requires: idx >= 0
+  requires: idx <= data.len()
+{
   if idx >= data.len() {
     0
   } else {
@@ -45,7 +58,11 @@ fn stats_variance_sum(data: &Vec[Int], mean: Int, idx: Int) -> Int {
   }
 }
 
-fn int_sqrt(n: Int) -> Int {
+fn int_sqrt(n: Int) -> Int
+  requires: n >= 0
+  ensures: result >= 0
+  ensures: result * result <= n && (result + 1) * (result + 1) > n
+{
   if n <= 1 {
     n
   } else {
@@ -53,7 +70,10 @@ fn int_sqrt(n: Int) -> Int {
   }
 }
 
-fn int_sqrt_iter(n: Int, guess: Int) -> Int {
+fn int_sqrt_iter(n: Int, guess: Int) -> Int
+  requires: n >= 0
+  requires: guess >= 0
+{
   let next = (guess + n / guess) / 2;
   if next >= guess {
     guess
@@ -62,7 +82,10 @@ fn int_sqrt_iter(n: Int, guess: Int) -> Int {
   }
 }
 
-fn stats_percentile(data: &Vec[Int], p: Int) -> Int {
+fn stats_percentile(data: &Vec[Int], p: Int) -> Int
+  requires: data.len() >= 0
+  requires: p >= 0 && p <= 100
+{
   if data.len() == 0 {
     0
   } elif p <= 0 {

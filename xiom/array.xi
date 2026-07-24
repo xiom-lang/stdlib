@@ -12,28 +12,32 @@ pub fn is_empty[T, const N: Int](arr: &[N]T) -> Bool {
   N == 0
 }
 
-pub fn first[T, const N: Int](arr: &[N]T) -> Option<&T> {
+pub fn first[T, const N: Int](arr: &[N]T) -> Option<&T>
+  ensures: N == 0 => result is None {
   if N == 0 {
     return None;
   }
   Some(&arr[0])
 }
 
-pub fn last[T, const N: Int](arr: &[N]T) -> Option<&T> {
+pub fn last[T, const N: Int](arr: &[N]T) -> Option<&T>
+  ensures: N == 0 => result is None {
   if N == 0 {
     return None;
   }
   Some(&arr[N - 1])
 }
 
-pub fn get[T, const N: Int](arr: &[N]T, index: Int) -> Option<&T> {
+pub fn get[T, const N: Int](arr: &[N]T, index: Int) -> Option<&T>
+  ensures: index < 0 || index >= N => result is None {
   if index < 0 || index >= N {
     return None;
   }
   Some(&arr[index])
 }
 
-pub fn get_mut[T, const N: Int](arr: &mut [N]T, index: Int) -> Option<&mut T> {
+pub fn get_mut[T, const N: Int](arr: &mut [N]T, index: Int) -> Option<&mut T>
+  ensures: index < 0 || index >= N => result is None {
   if index < 0 || index >= N {
     return None;
   }
@@ -70,11 +74,15 @@ pub fn fold[T, B, const N: Int](arr: [N]T, init: B, f: fn(B, T) -> B) -> B {
   return acc;
 }
 
-pub fn as_slice[T, const N: Int](arr: &[N]T) -> Slice[T] {
+pub fn as_slice[T, const N: Int](arr: &[N]T) -> Slice[T]
+  requires: N > 0
+  ensures: result.len == N {
   Slice { data: &arr[0] as *T, len: N }
 }
 
-pub fn as_mut_slice[T, const N: Int](arr: &mut [N]T) -> Slice[T] {
+pub fn as_mut_slice[T, const N: Int](arr: &mut [N]T) -> Slice[T]
+  requires: N > 0
+  ensures: result.len == N {
   Slice { data: &mut arr[0] as *T, len: N }
 }
 
@@ -115,7 +123,9 @@ pub fn swap[T, const N: Int](arr: &mut [N]T, a: Int, b: Int)
   arr[b] = temp;
 }
 
-fn reverse_range[T, const N: Int](arr: &mut [N]T, start: Int, count: Int) {
+fn reverse_range[T, const N: Int](arr: &mut [N]T, start: Int, count: Int)
+  requires: start >= 0
+  requires: start + count <= N {
   var i = start;
   var j = start + count - 1;
   while i < j {
@@ -127,11 +137,14 @@ fn reverse_range[T, const N: Int](arr: &mut [N]T, start: Int, count: Int) {
   }
 }
 
-pub fn reverse[T, const N: Int](arr: &mut [N]T) {
+pub fn reverse[T, const N: Int](arr: &mut [N]T)
+  ensures: arr is reversed {
   reverse_range(arr, 0, N);
 }
 
-pub fn rotate_left[T, const N: Int](arr: &mut [N]T, mid: Int) {
+pub fn rotate_left[T, const N: Int](arr: &mut [N]T, mid: Int)
+  requires: mid >= 0
+  requires: mid <= N {
   if N <= 1 || mid <= 0 || mid >= N {
     return;
   }
@@ -140,7 +153,8 @@ pub fn rotate_left[T, const N: Int](arr: &mut [N]T, mid: Int) {
   reverse_range(arr, 0, N);
 }
 
-pub fn rotate_right[T, const N: Int](arr: &mut [N]T, k: Int) {
+pub fn rotate_right[T, const N: Int](arr: &mut [N]T, k: Int)
+  requires: k >= 0 {
   if N <= 1 {
     return;
   }
@@ -153,7 +167,8 @@ pub fn rotate_right[T, const N: Int](arr: &mut [N]T, k: Int) {
   reverse_range(arr, 0, N);
 }
 
-pub fn sort[T: Ord, const N: Int](arr: &mut [N]T) {
+pub fn sort[T: Ord, const N: Int](arr: &mut [N]T)
+  ensures: arr.is_sorted() {
   var i = 1;
   while i < N {
     var j = i;
@@ -171,7 +186,8 @@ pub fn sort[T: Ord, const N: Int](arr: &mut [N]T) {
   }
 }
 
-pub fn sort_by[T, const N: Int](arr: &mut [N]T, compare: fn(&T, &T) -> Ordering) {
+pub fn sort_by[T, const N: Int](arr: &mut [N]T, compare: fn(&T, &T) -> Ordering)
+  ensures: arr.is_sorted_by(compare) {
   var i = 1;
   while i < N {
     var j = i;
@@ -190,7 +206,8 @@ pub fn sort_by[T, const N: Int](arr: &mut [N]T, compare: fn(&T, &T) -> Ordering)
 }
 
 pub fn binary_search[T: Ord, const N: Int](arr: &[N]T, x: &T) -> Result[Int, Int]
-  requires: N >= 0 {
+  requires: N >= 0
+  requires: arr.is_sorted() {
   var low = 0;
   var high = N;
   while low < high {
@@ -207,7 +224,8 @@ pub fn binary_search[T: Ord, const N: Int](arr: &[N]T, x: &T) -> Result[Int, Int
   Err(low)
 }
 
-pub fn contains[T: Eq, const N: Int](arr: &[N]T, x: &T) -> Bool {
+pub fn contains[T: Eq, const N: Int](arr: &[N]T, x: &T) -> Bool
+  ensures: result == true => arr.contains(x) {
   var i = 0;
   while i < N {
     if arr[i].eq(x) {
