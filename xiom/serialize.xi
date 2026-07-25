@@ -82,7 +82,7 @@ pub fn json_string(s: Str) -> Str {
   let len = s.len();
   var i: Int = 0;
   while i < len {
-    let c = s.char_at(i);
+    let c = get_char(s,i);
     if c == '\"' {
       result = result + "\\\"";
     } elif c == '\\' {
@@ -159,6 +159,15 @@ pub fn from_json[T: Deserialize](s: Str) -> Result[T, SerializeError] {
 }
 
 // === JSON Parser ===
+
+/// Safe character-at: uses xiom.string.char_at (module-qualified) which returns
+/// Option[Char]. Unwraps to the character value or '\0' on None/out-of-bounds.
+/// Avoids the `get_char(s,pos)` method syntax which has inconsistent codegen.
+fn get_char(s: Str, pos: Int) -> Char {
+  let opt = xiom.string.char_at(s, pos);
+  if opt.is_some { return opt.value; }
+  return '\0';
+}
 
 fn make_serror(msg: Str, pos: Int) -> SerializeError {
   return SerializeError {
@@ -290,7 +299,7 @@ fn parse_string_val(s: Str, pos: &mut Int) -> Result[JsonValue, SerializeError] 
     if *pos >= s.len() {
       return Err(make_serror("unterminated string", start));
     }
-    let c = s.char_at(*pos);
+    let c = get_char(s,*pos);
     if c == '\"' {
       if start < *pos {
         result = result + xiom.string.str_slice(s, start, *pos);
@@ -306,7 +315,7 @@ fn parse_string_val(s: Str, pos: &mut Int) -> Result[JsonValue, SerializeError] 
       if *pos >= s.len() {
         return Err(make_serror("unterminated escape", *pos));
       }
-      let esc = s.char_at(*pos);
+      let esc = get_char(s,*pos);
       if esc == '\"' {
         result = result + "\"";
       } elif esc == '\\' {
@@ -360,7 +369,7 @@ fn parse_null(s: Str, pos: &mut Int) -> Result[JsonValue, SerializeError] {
 fn parse_number(s: Str, pos: &mut Int) -> Result[JsonValue, SerializeError] {
   let start = *pos;
   if *pos < s.len() {
-    let c = s.char_at(*pos);
+    let c = get_char(s,*pos);
     if c == '-' {
       *pos = *pos + 1;
     }
@@ -369,33 +378,33 @@ fn parse_number(s: Str, pos: &mut Int) -> Result[JsonValue, SerializeError] {
     return Err(make_serror("expected number", *pos));
   }
   while *pos < s.len() {
-    let c = s.char_at(*pos);
+    let c = get_char(s,*pos);
     if !(xiom.char.is_digit(c)) { break; }
     *pos = *pos + 1;
   }
   if *pos < s.len() {
-    let c = s.char_at(*pos);
+    let c = get_char(s,*pos);
     if c == '.' {
       *pos = *pos + 1;
       while *pos < s.len() {
-        let d = s.char_at(*pos);
+        let d = get_char(s,*pos);
         if !(xiom.char.is_digit(d)) { break; }
         *pos = *pos + 1;
       }
     }
   }
   if *pos < s.len() {
-    let c = s.char_at(*pos);
+    let c = get_char(s,*pos);
     if c == 'e' || c == 'E' {
       *pos = *pos + 1;
       if *pos < s.len() {
-        let d = s.char_at(*pos);
+        let d = get_char(s,*pos);
         if d == '+' || d == '-' {
           *pos = *pos + 1;
         }
       }
       while *pos < s.len() {
-        let d = s.char_at(*pos);
+        let d = get_char(s,*pos);
         if !(xiom.char.is_digit(d)) { break; }
         *pos = *pos + 1;
       }
