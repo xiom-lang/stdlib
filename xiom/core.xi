@@ -114,7 +114,7 @@ fn to_int_from_str(s: Str) -> Result[Int, Str] {
   return Ok(result);
 }
 
-fn to_float_from_str(s: Str) -> Result[Float64, Str] {
+pub fn to_float_from_str(s: Str) -> Result[Float64, Str] {
   if s.len() == 0 {
     return Err("empty string");
   }
