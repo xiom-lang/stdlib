@@ -161,7 +161,9 @@ pub type HttpResponse = {
   body: Str;
 } derive[Clone]
 
-pub fn http_get(url: Str) -> Result[HttpResponse, NetError] {
+pub fn http_get(url: Str) -> Result[HttpResponse, NetError]
+  requires: url.len() > 0
+{
   let parsed = parse_url(url)?;
   var request: Str = "GET " + parsed.path;
   if parsed.query.len() > 0 {
