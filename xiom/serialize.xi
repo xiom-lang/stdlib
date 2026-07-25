@@ -197,10 +197,12 @@ fn parse_value(s: Str, pos: &mut Int) -> Result[JsonValue, SerializeError] {
     Some('{') => parse_object(s, pos);
     Some('[') => parse_array(s, pos);
     Some('"') => parse_string_val(s, pos);
-    Some('t') | Some('f') => parse_bool(s, pos);
-    Some('n') => parse_null(s, pos);
     Some(c) => {
-      if c == '-' || xiom.char.is_digit(c) {
+      if c == 'n' {
+        parse_null(s, pos)
+      } elif c == 't' || c == 'f' {
+        parse_bool(s, pos)
+      } elif c == '-' || xiom.char.is_digit(c) {
         parse_number(s, pos)
       } else {
         Err(make_serror("unexpected character", *pos))
