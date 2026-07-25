@@ -252,28 +252,31 @@ pub fn Path.ends_with(self, child: &Path) -> Bool {
 }
 
 // PathBuf operations
-pub fn PathBuf.push(self, component: Str)
+// NOTE: These take self by value and return the modified PathBuf.
+// &mut self is not yet supported in the codegen (STATUS_ACCESS_VIOLATION).
+pub fn PathBuf.push(self, component: Str) -> PathBuf
   requires: component.len() >= 0
 {
   if is_empty(self.inner) {
     self.inner = component;
-    return;
+    return self;
   }
   if str_ends_with(self.inner, "/") || str_ends_with(self.inner, "\\") {
     self.inner = str_concat(self.inner, component);
-    return;
+    return self;
   }
   self.inner = str_concat(str_concat(self.inner, "/"), component);
+  return self;
 }
 
-pub fn PathBuf.pop(self) -> Bool {
+pub fn PathBuf.pop(self) -> (PathBuf, Bool) {
   var p = parent_path(self.inner);
   match p {
     Some(parent) => {
       self.inner = parent;
-      return true;
+      return (self, true);
     }
-    None => { return false; }
+    None => { return (self, false); }
   }
 }
 
