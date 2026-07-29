@@ -7,6 +7,7 @@ module xiom.error
 pub interface Error {
   fn source(self) -> Option<Error>;
   fn description(self) -> Str;
+  fn message(&self) -> Str { return self.description(); }  // M20: default alias
   fn cause(self) -> Option<Error>; // alias for source
 }
 
