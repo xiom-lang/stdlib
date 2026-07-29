@@ -6,7 +6,7 @@ module smoke_os
 use xiom.os;
 
 fn main() -> Int {
-  let c = os.cpu_count();
+  var c = os.cpu_count();
   if c > 0 {
     return 0;
   }

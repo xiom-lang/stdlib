@@ -7,7 +7,7 @@ use xiom.error;
 fn main() -> Int {
   var errs = Vec[Str].new();
   errs.push("smoke failure");
-  let chain = ErrorChain{ errors: errs };
+  var chain = ErrorChain{ errors: errs };
   if chain.display().len() > 0 {
     return 0;
   }

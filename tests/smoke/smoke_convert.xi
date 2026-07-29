@@ -5,7 +5,7 @@ module smoke_convert
 use xiom.convert;
 
 fn main() -> Int {
-  let fs = convert.float_to_string(3.14);
+  var fs = convert.float_to_string(3.14);
   if convert.int_to_string(42) == "42" && fs != "" {
     return 0;
   }

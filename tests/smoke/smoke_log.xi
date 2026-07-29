@@ -6,7 +6,7 @@ use xiom.log;
 
 fn main() -> Int {
   xiom.log.set_level(xiom.log.LogLevel.Warn);
-  let lvl = xiom.log.get_level();
+  var lvl = xiom.log.get_level();
   if lvl == xiom.log.LogLevel.Warn {
     return 0;
   }

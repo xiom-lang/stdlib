@@ -7,7 +7,7 @@ use xiom.net;
 use xiom.net.NetError;
 
 fn main() -> Int {
-  let e = NetError{ message: "smoke"; code: -100; };
+  var e = NetError{ message: "smoke"; code: -100; };
   if e.code == -100 && e.message == "smoke" {
     return 0;
   }

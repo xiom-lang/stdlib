@@ -7,7 +7,7 @@ module smoke_simd
 use xiom.simd;
 
 fn main() -> Int {
-  let _ = simd.simd_supported();
+  var _ = simd.simd_supported();
   if simd.SIMD_SSE == 1 && simd.SIMD_AVX == 4 {
     return 0;
   }

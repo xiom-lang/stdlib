@@ -12,7 +12,7 @@ fn main() -> Int {
   data.push(108); // l
   data.push(108); // l
   data.push(111); // o
-  let encoded = xiom.encoding.base64_encode(&data);
+  var encoded = xiom.encoding.base64_encode(&data);
   if encoded == "aGVsbG8=" {
     return 0;
   }

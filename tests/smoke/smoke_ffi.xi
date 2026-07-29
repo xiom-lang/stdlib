@@ -5,7 +5,7 @@ module smoke_ffi
 use xiom.ffi;
 
 fn main() -> Int {
-  let buf = ffi.alloc(64);
+  var buf = ffi.alloc(64);
   ffi.free(buf);
   if ffi.extern_c("malloc") == 0 {
     return 0;
