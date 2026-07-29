@@ -5,7 +5,7 @@ module smoke_cell
 use xiom.cell;
 
 fn main() -> Int {
-  let c = cell.Cell.new(42);
+  var c = cell.Cell.new(42);
   if c.get() == 42 {
     c.set(99);
     if c.get() == 99 {

@@ -4,11 +4,11 @@ use xiom.thread;
 
 fn main() -> Int {
   // 1. available_parallelism returns positive value
-  let ap = available_parallelism();
+  var ap = available_parallelism();
   if ap <= 0 { return 1; }
 
   // 2. hardware_threads matches available_parallelism
-  let ht = hardware_threads();
+  var ht = hardware_threads();
   if ht != ap { return 2; }
 
   // 3. sleep_ms completes without error
@@ -18,11 +18,11 @@ fn main() -> Int {
   yield_now();
 
   // 5. current_thread_id returns positive value
-  let tid = current_thread_id();
+  var tid = current_thread_id();
   if tid <= 0 { return 5; }
 
   // 6. Thread.current returns valid thread with positive id
-  let t = Thread.current();
+  var t = Thread.current();
   if t.id() <= 0 { return 6; }
 
   return 0;

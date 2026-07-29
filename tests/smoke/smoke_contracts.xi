@@ -6,8 +6,8 @@ module smoke_contracts
 use xiom.contracts;
 
 fn main() -> Int {
-  let n = xiom.contracts.total_contracts();
-  let pct = xiom.contracts.coverage_percentage();
+  var n = xiom.contracts.total_contracts();
+  var pct = xiom.contracts.coverage_percentage();
   if n >= 0 && pct >= 0.0 {
     return 0;
   }

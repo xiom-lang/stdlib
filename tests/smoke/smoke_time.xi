@@ -6,7 +6,7 @@ module smoke_time
 use xiom.time;
 
 fn main() -> Int {
-  let d = time.Duration.from_secs(5);
+  var d = time.Duration.from_secs(5);
   if d.as_secs() == 5 {
     return 0;
   }

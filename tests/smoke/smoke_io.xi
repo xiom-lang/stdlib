@@ -6,7 +6,7 @@ fn main() -> Int {
   io.write_file("__smoke_io_test.txt", "hello io");
 
   // 2. file_exists
-  if !io.file_exists("__smoke_io_test.txt") { return 2; }
+  if not io.file_exists("__smoke_io_test.txt") { return 2; }
 
   // 3. Remove file  
   io.remove_file("__smoke_io_test.txt");

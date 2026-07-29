@@ -5,8 +5,8 @@ module smoke_fmt
 use xiom.fmt;
 
 fn main() -> Int {
-  let n: Int = 42;
-  let b: Bool = true;
+  var n: Int = 42;
+  var b: Bool = true;
   if n.to_str() == "42" && b.to_str() == "true" {
     return 0;
   }

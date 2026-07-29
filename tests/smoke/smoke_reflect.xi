@@ -6,9 +6,9 @@ module smoke_reflect
 use xiom.reflect;
 
 fn main() -> Int {
-  let n = xiom.reflect.type_count();
-  let nm = xiom.reflect.type_name_by_id(0);
-  let id = xiom.reflect.type_id_by_name("Nonexistent");
+  var n = xiom.reflect.type_count();
+  var nm = xiom.reflect.type_name_by_id(0);
+  var id = xiom.reflect.type_id_by_name("Nonexistent");
   if n >= 0 && nm.len() >= 0 && id >= -1 {
     return 0;
   }

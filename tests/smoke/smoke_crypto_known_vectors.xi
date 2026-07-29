@@ -24,14 +24,14 @@ use xiom.crypto;
 fn main() -> Int {
   // Test 1: SHA-256("") = e3b0c4...
   var empty = Vec[UInt8].new();
-  let h1 = xiom.crypto.sha256_hex(&empty);
+  var h1 = xiom.crypto.sha256_hex(&empty);
   if h1 != "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" {
     return 1;
   }
   // Test 2: SHA-256("abc") = ba7816bf...
   var abc = Vec[UInt8].new();
   abc.push(97); abc.push(98); abc.push(99);
-  let h2 = xiom.crypto.sha256_hex(&abc);
+  var h2 = xiom.crypto.sha256_hex(&abc);
   if h2 != "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad" {
     return 2;
   }

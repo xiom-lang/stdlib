@@ -13,7 +13,7 @@ fn main() -> Int {
   // AtomicBool: store true, load true
   var ab = sync.AtomicBool.new(false);
   ab.store(true);
-  if !ab.load() { return 2; }
+  if not ab.load() { return 2; }
 
   // AtomicBool: store false, load false
   var ab2 = sync.AtomicBool.new(true);

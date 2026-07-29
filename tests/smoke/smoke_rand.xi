@@ -6,7 +6,7 @@ module smoke_rand
 use xiom.rand;
 
 fn main() -> Int {
-  let r = rand.random();
+  var r = rand.random();
   if r >= 0.0 && r < 1.0 {
     return 0;
   }
