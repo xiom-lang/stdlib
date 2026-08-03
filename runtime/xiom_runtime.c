@@ -4369,9 +4369,14 @@ void xiom_threadpool_init(int num_workers) {
     if (xiom_tp_initialized) { xiom_mutex_unlock(&xiom_tp_init_lock); return; }
 
     if (num_workers <= 0) {
+#ifdef _WIN32
         SYSTEM_INFO si;
         GetSystemInfo(&si);
         num_workers = si.dwNumberOfProcessors;
+#else
+        num_workers = sysconf(_SC_NPROCESSORS_ONLN);
+        if (num_workers < 1) num_workers = 1;
+#endif
     }
     if (num_workers > XIOM_TP_MAX_WORKERS) num_workers = XIOM_TP_MAX_WORKERS;
 
