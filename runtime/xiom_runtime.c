@@ -4229,3 +4229,85 @@ int64_t xiom_none(int64_t* data, int64_t len, int64_t* pred) {
     }
     return 1;
 }
+
+// ============================================================================
+// v0.55: MPSC Channel — bounded ring buffer with mutex + condition variable
+// ============================================================================
+
+#define XIOM_CHANNEL_CAP 64
+
+typedef struct {
+    int64_t data[XIOM_CHANNEL_CAP];   // ring buffer of i64 values
+    int32_t head;                      // read position
+    int32_t tail;                      // write position
+    int32_t count;                     // number of items
+    int32_t closed;                    // channel closed flag
+    xiom_mutex_t mutex;
+    xiom_cond_t cond_send;            // signaled when space available
+    xiom_cond_t cond_recv;            // signaled when data available
+} xiom_channel_t;
+
+void* xiom_channel_create(void) {
+    xiom_channel_t* ch = (xiom_channel_t*)malloc(sizeof(xiom_channel_t));
+    memset(ch, 0, sizeof(xiom_channel_t));
+    xiom_mutex_init(&ch->mutex);
+    xiom_cond_init(&ch->cond_send);
+    xiom_cond_init(&ch->cond_recv);
+    return (void*)ch;
+}
+
+int64_t xiom_channel_send(void* handle, int64_t value) {
+    xiom_channel_t* ch = (xiom_channel_t*)handle;
+    xiom_mutex_lock(&ch->mutex);
+    while (ch->count >= XIOM_CHANNEL_CAP && !ch->closed) {
+        xiom_cond_wait(&ch->cond_send, &ch->mutex);
+        if (ch->closed) { xiom_mutex_unlock(&ch->mutex); return 0; }
+    }
+    if (ch->closed) { xiom_mutex_unlock(&ch->mutex); return 0; }
+    ch->data[ch->tail] = value;
+    ch->tail = (ch->tail + 1) % XIOM_CHANNEL_CAP;
+    ch->count++;
+    xiom_cond_signal(&ch->cond_recv);
+    xiom_mutex_unlock(&ch->mutex);
+    return 1;
+}
+
+int64_t xiom_channel_recv(void* handle) {
+    xiom_channel_t* ch = (xiom_channel_t*)handle;
+    xiom_mutex_lock(&ch->mutex);
+    while (ch->count == 0 && !ch->closed) {
+        xiom_cond_wait(&ch->cond_recv, &ch->mutex);
+        if (ch->closed && ch->count == 0) { xiom_mutex_unlock(&ch->mutex); return 0; }
+    }
+    if (ch->count == 0) { xiom_mutex_unlock(&ch->mutex); return 0; }
+    int64_t value = ch->data[ch->head];
+    ch->head = (ch->head + 1) % XIOM_CHANNEL_CAP;
+    ch->count--;
+    xiom_cond_signal(&ch->cond_send);
+    xiom_mutex_unlock(&ch->mutex);
+    return value;
+}
+
+int64_t xiom_channel_try_recv(void* handle, int64_t* out) {
+    xiom_channel_t* ch = (xiom_channel_t*)handle;
+    xiom_mutex_lock(&ch->mutex);
+    if (ch->count == 0 || ch->closed) {
+        xiom_mutex_unlock(&ch->mutex);
+        return 0;
+    }
+    *out = ch->data[ch->head];
+    ch->head = (ch->head + 1) % XIOM_CHANNEL_CAP;
+    ch->count--;
+    xiom_cond_signal(&ch->cond_send);
+    xiom_mutex_unlock(&ch->mutex);
+    return 1;
+}
+
+void xiom_channel_close(void* handle) {
+    xiom_channel_t* ch = (xiom_channel_t*)handle;
+    xiom_mutex_lock(&ch->mutex);
+    ch->closed = 1;
+    xiom_cond_broadcast(&ch->cond_send);
+    xiom_cond_broadcast(&ch->cond_recv);
+    xiom_mutex_unlock(&ch->mutex);
+}
