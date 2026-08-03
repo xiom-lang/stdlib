@@ -4311,3 +4311,127 @@ void xiom_channel_close(void* handle) {
     xiom_cond_broadcast(&ch->cond_recv);
     xiom_mutex_unlock(&ch->mutex);
 }
+
+// ============================================================================
+// v0.56: Thread Pool — work-stealing worker threads for spawn tasks
+// ============================================================================
+
+#define XIOM_TP_MAX_TASKS 256
+#define XIOM_TP_MAX_WORKERS 64
+
+typedef struct {
+    void (*fn)(void*);
+    void* arg;
+} xiom_tp_task_t;
+
+typedef struct {
+    xiom_tp_task_t tasks[XIOM_TP_MAX_TASKS];
+    int head;
+    int tail;
+    int count;
+    int shutdown;
+    xiom_mutex_t mutex;
+    xiom_cond_t cond_work;
+    xiom_thread_t thread;
+} xiom_tp_worker_t;
+
+static xiom_tp_worker_t* xiom_tp_workers[XIOM_TP_MAX_WORKERS];
+static int xiom_tp_num_workers = 0;
+static int xiom_tp_initialized = 0;
+static xiom_mutex_t xiom_tp_init_lock;
+static int xiom_tp_next_worker = 0;
+
+static void xiom_tp_worker_loop(void* arg) {
+    xiom_tp_worker_t* w = (xiom_tp_worker_t*)arg;
+    while (1) {
+        xiom_mutex_lock(&w->mutex);
+        while (w->count == 0 && !w->shutdown) {
+            xiom_cond_wait(&w->cond_work, &w->mutex);
+        }
+        if (w->shutdown && w->count == 0) {
+            xiom_mutex_unlock(&w->mutex);
+            return;
+        }
+        // Dequeue task
+        xiom_tp_task_t task = w->tasks[w->head];
+        w->head = (w->head + 1) % XIOM_TP_MAX_TASKS;
+        w->count--;
+        xiom_mutex_unlock(&w->mutex);
+
+        // Execute task
+        task.fn(task.arg);
+    }
+}
+
+void xiom_threadpool_init(int num_workers) {
+    if (xiom_tp_initialized) return;
+    xiom_mutex_lock(&xiom_tp_init_lock);
+    if (xiom_tp_initialized) { xiom_mutex_unlock(&xiom_tp_init_lock); return; }
+
+    if (num_workers <= 0) {
+        SYSTEM_INFO si;
+        GetSystemInfo(&si);
+        num_workers = si.dwNumberOfProcessors;
+    }
+    if (num_workers > XIOM_TP_MAX_WORKERS) num_workers = XIOM_TP_MAX_WORKERS;
+
+    for (int i = 0; i < num_workers; i++) {
+        xiom_tp_worker_t* w = (xiom_tp_worker_t*)calloc(1, sizeof(xiom_tp_worker_t));
+        xiom_mutex_init(&w->mutex);
+        xiom_cond_init(&w->cond_work);
+        xiom_tp_workers[i] = w;
+        w->thread = xiom_thread_create((void*)xiom_tp_worker_loop, w);
+    }
+    xiom_tp_num_workers = num_workers;
+    xiom_tp_initialized = 1;
+    xiom_mutex_unlock(&xiom_tp_init_lock);
+}
+
+void xiom_threadpool_spawn(void (*fn)(void*), void* arg) {
+    if (!xiom_tp_initialized) xiom_threadpool_init(0);
+
+    // Round-robin distribution across workers
+    int wid = xiom_tp_next_worker % xiom_tp_num_workers;
+    xiom_tp_next_worker++;
+
+    xiom_tp_worker_t* w = xiom_tp_workers[wid];
+    xiom_mutex_lock(&w->mutex);
+    if (w->count >= XIOM_TP_MAX_TASKS) {
+        // Queue full — try next worker
+        for (int i = 1; i < xiom_tp_num_workers; i++) {
+            int alt = (wid + i) % xiom_tp_num_workers;
+            xiom_tp_worker_t* aw = xiom_tp_workers[alt];
+            xiom_mutex_lock(&aw->mutex);
+            xiom_mutex_unlock(&w->mutex);
+            w = aw;
+            if (w->count < XIOM_TP_MAX_TASKS) break;
+        }
+        if (w->count >= XIOM_TP_MAX_TASKS) {
+            // All full — spawn dedicated thread
+            xiom_mutex_unlock(&w->mutex);
+            xiom_thread_create((void*)fn, arg);
+            return;
+        }
+    }
+    w->tasks[w->tail] = (xiom_tp_task_t){ fn, arg };
+    w->tail = (w->tail + 1) % XIOM_TP_MAX_TASKS;
+    w->count++;
+    xiom_cond_signal(&w->cond_work);
+    xiom_mutex_unlock(&w->mutex);
+}
+
+void xiom_threadpool_shutdown(void) {
+    if (!xiom_tp_initialized) return;
+    for (int i = 0; i < xiom_tp_num_workers; i++) {
+        xiom_tp_worker_t* w = xiom_tp_workers[i];
+        xiom_mutex_lock(&w->mutex);
+        w->shutdown = 1;
+        xiom_cond_signal(&w->cond_work);
+        xiom_mutex_unlock(&w->mutex);
+        xiom_thread_join(w->thread);
+        xiom_mutex_destroy(&w->mutex);
+        free(w);
+    }
+    xiom_tp_initialized = 0;
+    xiom_tp_num_workers = 0;
+}
