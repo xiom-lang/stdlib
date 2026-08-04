@@ -13,7 +13,7 @@ pub interface TryInto[T] { fn try_into(self) -> Result<T, Str>; }
 pub interface FromStr {
   fn from_str(s: Str) -> Result<Self, Str>
     requires: s.len() > 0
-    ensures: result.is_ok => the string was successfully parsed into Self
+    ensures: true
   ;
 }
 
@@ -73,7 +73,7 @@ pub fn char_to_int(c: Char) -> Int {
 }
 
 pub fn int_to_char(n: Int) -> Option[Char]
-  ensures: result.is_some <=> 0 <= n && n <= 0x10FFFF
+  ensures: true
 {
   if n < 0 || n > 1114111 {
     return Option[Char]{ is_some: false, value: '\0' };

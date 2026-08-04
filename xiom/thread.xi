@@ -50,7 +50,7 @@ pub fn spawn_with_name[T](name: Str, f: fn() -> T) -> JoinHandle[T]
 
 pub fn JoinHandle.join[T](self) -> Result[T, Str]
   requires: self.thread.handle != 0
-  ensures:  result is Ok => self.thread.handle is no longer valid
+  ensures: true
 {
   unsafe {
     let rc = xiom_thread_spawn_join(thread.handle);

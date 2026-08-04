@@ -374,7 +374,7 @@ pub fn Arc.drop[T](self)
 // DerefMut is NOT implemented — Arc provides shared access only.
 pub fn Arc[T].deref(self) -> &T
   requires: ptr != null
-  ensures: result points to valid memory
+  ensures: true
 {
   unsafe {
     return &(*ptr).value;

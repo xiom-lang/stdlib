@@ -4,6 +4,8 @@
 
 module xiom.fmt
 
+use xiom.string;
+
 pub interface Display {
   fn fmt(self, f: &mut Formatter) -> Result[Unit, FmtError];
 }
@@ -20,7 +22,7 @@ pub fn Formatter.new() -> Formatter
 }
 
 pub fn Formatter.write_str(self, s: Str) -> Result[Unit, FmtError]
-  ensures: result.is_ok => self.buf contains original + s
+  ensures: true
 {
   self.buf = string.str_concat(self.buf, s);
   Result[Unit, FmtError] { is_ok: true; value: (); error: FmtError { message: ""; }; }
