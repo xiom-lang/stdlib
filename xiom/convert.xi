@@ -4,6 +4,8 @@
 
 module xiom.convert
 
+use xiom.string;
+
 pub interface From[T] { fn from(value: T) -> Self; }
 pub interface Into[T] { fn into(self) -> T; }
 pub interface TryFrom[T] { fn try_from(value: T) -> Result<Self, Str>; }
