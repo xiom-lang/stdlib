@@ -111,7 +111,7 @@ pub fn RefCell.try_borrow[T](self) -> Option[Ref[T]] {
   unsafe {
     let raw = ptr.from_ref(self) as *mut RefCell[T];
     if (*raw).borrows == -1 {
-      return None[T]();
+      return None;
     };
     (*raw).borrows = (*raw).borrows + 1;
     return Some(Ref[T]{ ptr: raw });
@@ -122,7 +122,7 @@ pub fn RefCell.try_borrow_mut[T](self) -> Option[RefMut[T]] {
   unsafe {
     let raw = ptr.from_ref(self) as *mut RefCell[T];
     if (*raw).borrows != 0 {
-      return None[T]();
+      return None;
     };
     (*raw).borrows = -1;
     return Some(RefMut[T]{ ptr: raw });

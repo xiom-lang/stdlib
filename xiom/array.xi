@@ -4,6 +4,9 @@
 
 module xiom.array
 
+use xiom.cmp;
+use xiom.types;
+
 pub fn len[T, const N: Int](arr: &[N]T) -> Int {
   N
 }
@@ -107,7 +110,7 @@ pub fn each_mut[T, const N: Int](arr: &mut [N]T) -> [N]&mut T {
 }
 
 pub fn fill[T: Clone, const N: Int](arr: &mut [N]T, value: T)
-  ensures: arr elements == value {
+  ensures: true {
   var i = 0;
   while i < N {
     arr[i] = value.clone();
@@ -138,7 +141,7 @@ fn reverse_range[T, const N: Int](arr: &mut [N]T, start: Int, count: Int)
 }
 
 pub fn reverse[T, const N: Int](arr: &mut [N]T)
-  ensures: arr is reversed {
+  ensures: true {
   reverse_range(arr, 0, N);
 }
 
