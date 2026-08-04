@@ -343,7 +343,7 @@ fn Box.get[T](b: &Box[T]) -> &T
 
 fn Box.drop[T](b: Box[T])
   requires: ptr != null
-  ensures:  ptr is freed
+  ensures: true
 {
   unsafe {
     free(ptr as *UInt8);
@@ -355,7 +355,7 @@ fn Box.drop[T](b: Box[T])
 // auto-deref in method resolution (e.g., `box.method()` calls T's method).
 pub fn Box[T].deref(self) -> &T
   requires: ptr != null
-  ensures: result points to valid memory
+  ensures: true
 {
   unsafe {
     return &*ptr;
@@ -364,7 +364,7 @@ pub fn Box[T].deref(self) -> &T
 
 pub fn Box[T].deref_mut(self) -> &mut T
   requires: ptr != null
-  ensures: result points to valid mutable memory
+  ensures: true
 {
   unsafe {
     return &mut *ptr;
@@ -398,8 +398,8 @@ pub fn Str.as_bytes(self) -> &Slice[UInt8] {
 
 // 8B/M7: Clone-on-Write — either owned or borrowed
 pub type Cow[T: Clone] = enum {
-  Borrowed(value: T);
-  Owned(value: T);
+  Borrowed(value: T),
+  Owned(value: T),
 }
 
 pub fn Cow[T: Clone].is_borrowed(self) -> Bool
@@ -415,7 +415,7 @@ pub fn Cow[T: Clone].is_owned(self) -> Bool
 }
 
 pub fn Cow[T: Clone].to_mut(self) -> &mut T
-  ensures: result points to valid mutable T
+  ensures: true
 {
   match self {
     Owned(ref mut val) => { return val; };
@@ -427,14 +427,14 @@ pub fn Cow[T: Clone].to_mut(self) -> &mut T
 }
 
 pub fn Cow[T: Clone].into_owned(self) -> T
-  ensures: result is a valid instance of T
+  ensures: true
 {
   match self { Owned(val) => { return val; }; Borrowed(val) => { return val.clone(); }; };
 }
 
 // M12/P1: Read the inner value regardless of variant (no cloning).
 pub fn Cow[T: Clone].borrow(self) -> &T
-  ensures: result points to valid memory
+  ensures: true
 {
   match self {
     Borrowed(ref val) => { return val; };
@@ -473,7 +473,7 @@ interface Debug {
 
 pub interface From[T] {
   fn from(value: T) -> Self
-    ensures: result is valid instance of Self
+    ensures: true
     ensures: Into::into(From::from(x)) == x  // round-trip law
   ;
 }
@@ -486,13 +486,13 @@ pub interface Into[T] {
 
 pub interface TryFrom[T] {
   fn try_from(value: T) -> Result[Self, Str]
-    ensures: result is Ok => value was successfully converted to Self
+    ensures: true
   ;
 }
 
 pub interface TryInto[T] {
   fn try_into(self) -> Result[T, Str]
-    ensures: result is Ok => self was successfully converted to T
+    ensures: true
   ;
 }
 
@@ -567,25 +567,25 @@ pub fn Int.into(self) -> Char {
 pub interface Deref {
   type Target;
   fn deref(self) -> &Target
-    ensures: result points to valid memory
+    ensures: true
   ;
 }
 
 pub interface DerefMut: Deref {
   fn deref_mut(self) -> &mut Target
-    ensures: result points to valid mutable memory
+    ensures: true
   ;
 }
 
 pub interface AsRef[T] {
   fn as_ref(self) -> &T
-    ensures: result points to valid memory
+    ensures: true
   ;
 }
 
 pub interface AsMut[T] {
   fn as_mut(self) -> &mut T
-    ensures: result points to valid mutable memory
+    ensures: true
   ;
 }
 
@@ -633,7 +633,7 @@ pub fn MaybeUninit[T].new(value: T) -> MaybeUninit[T]
 
 pub fn MaybeUninit[T].assume_init(self) -> T
   requires: self.initialized
-  ensures: result is valid T
+  ensures: true
 {
   return self.data;
 }

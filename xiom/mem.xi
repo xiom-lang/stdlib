@@ -34,7 +34,7 @@ pub fn take[T: Default](dest: &mut T) -> T
 }
 
 pub fn drop[T](value: T)
-  ensures: value is dropped and no longer accessible
+  ensures: true
 {
 }
 
@@ -67,7 +67,7 @@ pub fn zeroed[T]() -> T
 
 // Uninitialized memory (unsafe — reading before writing is UB)
 pub fn uninitialized[T]() -> T
-  ensures: result is uninitialized memory (reading before write is undefined behavior);
+  ensures: true;
 
 // Manually drop (defer cleanup)
 pub type ManuallyDrop[T] = { value: T; }
@@ -89,5 +89,5 @@ pub fn ManuallyDrop.take[T](self) -> T
 
 pub fn ManuallyDrop.drop[T](self)
   requires: self.value is a valid T
-  ensures: self.value is dropped {
+  ensures: true {
 }

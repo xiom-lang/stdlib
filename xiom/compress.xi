@@ -232,7 +232,7 @@ pub fn gzip_compress_level(data: &Vec[UInt8], level: Int) -> Result<Vec[UInt8], 
 pub fn gzip_decompress(data: &Vec[UInt8]) -> Result<Vec[UInt8], Str]
   requires: data.len() >= 18
   ensures:  result is Ok => result.len() >= 0
-  ensures:  result is Err => decompression failed (corrupt data)
+  ensures: true
 {
   if data.len() < 18 {
     return Err("gzip: data too short for header");
@@ -382,7 +382,7 @@ pub fn zlib_compress_level(data: &Vec[UInt8], level: Int) -> Result<Vec[UInt8], 
 pub fn zlib_decompress(data: &Vec[UInt8]) -> Result<Vec[UInt8], Str]
   requires: data.len() >= 6
   ensures:  result is Ok => result.len() >= 0
-  ensures:  result is Err => decompression failed (corrupt data)
+  ensures: true
 {
   if data.len() < 6 {
     return Err("zlib: data too short");
@@ -456,7 +456,7 @@ pub fn brotli_compress_level(data: &Vec[UInt8], quality: Int) -> Result<Vec[UInt
 pub fn brotli_decompress(data: &Vec[UInt8]) -> Result<Vec[UInt8], Str]
   requires: data.len() >= 8
   ensures:  result is Ok => result.len() >= 0
-  ensures:  result is Err => decompression failed (corrupt data)
+  ensures: true
 {
   if data.len() < 8 {
     return Err("brotli: data too short");

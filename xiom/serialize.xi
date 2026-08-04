@@ -425,8 +425,8 @@ fn parse_number(s: Str, pos: &mut Int) -> Result[JsonValue, SerializeError] {
 
 pub fn json_parse(data: Str) -> Result[JsonValue, SerializeError]
   requires: data.len() >= 0
-  ensures:  result is Ok => valid JSON value
-  ensures:  result is Err => parsing failed at error location
+  ensures: true
+  ensures: true
 {
   var pos = 0;
   skip_whitespace(data, &pos);

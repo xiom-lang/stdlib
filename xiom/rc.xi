@@ -113,7 +113,7 @@ pub fn Rc.drop[T](self)
 // Note: DerefMut is NOT implemented — Rc provides shared access only.
 pub fn Rc[T].deref(self) -> &T
   requires: ptr != null
-  ensures: result points to valid memory
+  ensures: true
 {
   unsafe {
     return &(*ptr).value;

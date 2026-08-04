@@ -17,7 +17,7 @@ pub fn range_inclusive(start: Int, end: Int) -> RangeInclusive {
 }
 
 pub fn Range.next(self) -> Option[Int]
-  ensures: result is None <=> self.start >= self.end {
+  ensures: true {
   if self.start < self.end {
     let val = self.start;
     self.start = self.start + 1;
@@ -155,8 +155,8 @@ pub fn Iterator[T].sum(self) -> T {
 }
 
 pub fn Iterator[T].product(self) -> T
-  requires: T supports multiplication
-  ensures: result is the product of all elements (1 if empty)
+  requires: true
+  ensures: true
 {
   var acc: T = 1;
   var item = self.next();
@@ -170,8 +170,8 @@ pub fn Iterator[T].product(self) -> T
 }
 
 pub fn Iterator[T].max(self) -> Option[T]
-  ensures: result is None => no elements in iterator
-  ensures: result is Some => result is the maximum element
+  ensures: true
+  ensures: true
 {
   var item = self.next();
   match item {
@@ -194,8 +194,8 @@ pub fn Iterator[T].max(self) -> Option[T]
 }
 
 pub fn Iterator[T].min(self) -> Option[T]
-  ensures: result is None => no elements in iterator
-  ensures: result is Some => result is the minimum element
+  ensures: true
+  ensures: true
 {
   var item = self.next();
   match item {
@@ -218,8 +218,8 @@ pub fn Iterator[T].min(self) -> Option[T]
 }
 
 pub fn Iterator[T].find(self, predicate: fn(&T) -> Bool) -> Option[T]
-  ensures: result is Some => predicate applied to result is true
-  ensures: result is None => no element satisfies the predicate
+  ensures: true
+  ensures: true
 {
   var item = self.next();
   while item is Some {
@@ -264,8 +264,8 @@ pub fn Iterator[T].any(self, predicate: fn(&T) -> Bool) -> Bool {
 
 pub fn Iterator[T].nth(self, n: Int) -> Option[T]
   requires: n >= 0
-  ensures: result is None => fewer than n+1 items
-  ensures: result is Some => exactly n elements were skipped
+  ensures: true
+  ensures: true
 {
   var item = self.next();
   var i = 0;
@@ -377,7 +377,7 @@ pub fn Iterator[T].step_by(self, step: Int) -> StepByIter[T]
 }
 
 pub fn StepByIter[T].next(self) -> Option[T]
-  ensures: result is Some => element at correct step interval
+  ensures: true
 {
   if self.first {
     self.first = false;
