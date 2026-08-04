@@ -101,12 +101,13 @@ pub fn Rc.drop[T](self)
   let layout = alloc.Layout.new(size_of[RcInner[T]]());
   unsafe {
     (*ptr).strong = (*ptr).strong - 1;
-    if (*ptr).strong == 0 {
-      if (*ptr).weak == 0 {
-        alloc.dealloc(ptr as *UInt8, layout.size);
-    }
-  }
-}
+     if (*ptr).strong == 0 {
+       if (*ptr).weak == 0 {
+         alloc.dealloc(ptr as *UInt8, layout.size);
+       }
+     }
+   }
+ }
 
 // === M7: Deref impl for Rc[T] ===
 // Rc is a shared-ownership pointer. Deref allows `*rc` and auto-deref.

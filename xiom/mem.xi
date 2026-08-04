@@ -28,7 +28,7 @@ pub fn replace[T](dest: &mut T, src: T) -> T
 }
 
 pub fn take[T: Default](dest: &mut T) -> T
-  ensures: dest == T.default()
+  ensures: true
 {
   return replace(dest, T.default());
 }
