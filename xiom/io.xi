@@ -390,10 +390,9 @@ pub fn env_var(name: Str) -> Option[Str]
     ptr = getenv(name.c_str());
   }
   if ptr == 0 {
-    None
-  } else {
-    Some(Str::from_c_str(ptr))
+    return None;
   }
+  Some(Str::from_c_str(ptr))
 }
 
 // === Time ===
