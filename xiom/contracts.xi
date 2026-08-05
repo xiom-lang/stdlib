@@ -7,6 +7,8 @@
 
 module xiom.contracts
 
+use xiom.string;
+
 // === FFI: compiler-emitted contract metadata table ===
 // Backed by an additive, read-only table that the codegen
 // (`xiom-codegen::emit_metadata_tables`) emits for every function in the
