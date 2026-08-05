@@ -5,6 +5,7 @@
 module xiom.fmt
 
 use xiom.string;
+use xiom.convert;
 
 pub interface Display {
   fn fmt(self, f: &mut Formatter) -> Result[Unit, FmtError];
