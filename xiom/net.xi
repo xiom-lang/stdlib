@@ -129,7 +129,7 @@ pub fn TcpStream.close(self) -> Result[Unit, NetError] {
   unsafe {
     xiom_socket_close(self.fd);
   }
-  Ok(Unit)
+  Ok(())
 }
 
 pub fn TcpListener.accept(self) -> Result[(TcpStream, Str), NetError] {
@@ -370,7 +370,7 @@ pub fn UdpSocket.close(self) -> Result[Unit, NetError] {
   unsafe {
     xiom_socket_close(self.fd);
   }
-  Ok(Unit)
+  Ok(())
 }
 
 // === DNS ===

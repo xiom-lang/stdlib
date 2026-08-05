@@ -4,6 +4,9 @@
 
 module xiom.env
 
+use xiom.io;
+use xiom.string;
+
 extern "C" {
   fn getenv(name: *UInt8) -> *UInt8;
   fn setenv(name: *UInt8, value: *UInt8, overwrite: Int32) -> Int32;
