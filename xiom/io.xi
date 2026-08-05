@@ -211,7 +211,7 @@ pub fn write_file(path: Str, content: Str) -> Result[Unit, IOError]
   if written != content_len {
     return Err(IOError{ message: "failed to write all data to: " + path, code: 3 });
   }
-  Ok(Unit)
+  Ok(())
 }
 
 pub fn append_file(path: Str, content: Str) -> Result[Unit, IOError]
@@ -235,7 +235,7 @@ pub fn append_file(path: Str, content: Str) -> Result[Unit, IOError]
   if written != content_len {
     return Err(IOError{ message: "failed to write all data to: " + path, code: 5 });
   }
-  Ok(Unit)
+  Ok(())
 }
 
 pub fn file_exists(path: Str) -> Bool
@@ -276,7 +276,7 @@ pub fn create_dir(path: Str) -> Result[Unit, IOError]
   if rc != 0 {
     return Err(IOError{ message: "failed to create directory: " + path, code: 6 });
   }
-  Ok(Unit)
+  Ok(())
 }
 
 pub fn list_dir(path: Str) -> Result[Vec[Str], IOError]
@@ -326,7 +326,7 @@ pub fn remove_file(path: Str) -> Result[Unit, IOError]
   if rc != 0 {
     return Err(IOError{ message: "failed to remove file: " + path, code: 8 });
   }
-  Ok(Unit)
+  Ok(())
 }
 
 pub fn copy_file(src: Str, dst: Str) -> Result[Unit, IOError]
@@ -352,7 +352,7 @@ pub fn rename(src: Str, dst: Str) -> Result[Unit, IOError]
   if rc != 0 {
     return Err(IOError{ message: "failed to rename " + src + " to " + dst, code: 9 });
   }
-  Ok(Unit)
+  Ok(())
 }
 
 // === Process ===
@@ -399,7 +399,7 @@ pub fn env_var(name: Str) -> Option[Str]
 // === Time ===
 pub fn time_now() -> Int {
   unsafe {
-    time(nil)
+    time(0)
   }
 }
 
@@ -562,7 +562,7 @@ pub fn set_permissions(path: Str, perm: Int) -> Result[Unit, IOError]
   if rc != 0 {
     return Err(IOError{ message: "failed to set permissions: " + path, code: 11 });
   }
-  Ok(Unit)
+  Ok(())
 }
 
 // === Standard streams ===
