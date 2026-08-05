@@ -6,6 +6,7 @@ module xiom.test
 
 use xiom.string;
 use xiom.io;
+use xiom.core;
 
 // Test result with contract details
 pub type TestResult = {
