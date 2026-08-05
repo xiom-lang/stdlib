@@ -496,3 +496,141 @@ pub fn contract_density() -> Float64 {
   if fn_count == 0 { return 0.0; }
   (idx.total_clauses as Float64) / (fn_count as Float64)
 }
+
+// ============================================================================
+// Contract Collection Methods — P1-4 (Spec Section 5.4)
+//
+// These predicate methods operate on the ContractIndex to answer common
+// questions about the contract database. They are the runtime equivalents
+// of the compile-time --dump-contracts queries.
+// ============================================================================
+
+/// Returns true if the contract index is empty (no functions or types
+/// have contracts registered).
+pub fn ContractIndex.none(self) -> Bool
+  ensures: !result => self.functions.len() > 0 || self.types.len() > 0
+{
+  return self.functions.len() == 0 && self.types.len() == 0;
+}
+
+/// Returns true if the functions in the contract index are sorted by
+/// name in ascending order. Useful for validating compiler-emitted
+/// metadata table ordering.
+pub fn ContractIndex.is_sorted(self) -> Bool {
+  if self.functions.len() <= 1 { return true; }
+  var i: Int = 1;
+  while i < self.functions.len() {
+    if self.functions[i].name < self.functions[i - 1].name {
+      return false;
+    }
+    i = i + 1;
+  }
+  return true;
+}
+
+/// Returns true if a function with the given name has contracts
+/// registered in the index.
+pub fn ContractIndex.contains_fn(self, name: Str) -> Bool {
+  var i: Int = 0;
+  while i < self.functions.len() {
+    if self.functions[i].name == name {
+      return self.functions[i].requires.len() > 0 || self.functions[i].ensures.len() > 0;
+    }
+    i = i + 1;
+  }
+  return false;
+}
+
+/// Returns true if a type with the given name has invariants
+/// registered in the index.
+pub fn ContractIndex.contains_type(self, name: Str) -> Bool {
+  var i: Int = 0;
+  while i < self.types.len() {
+    if self.types[i].name == name {
+      return self.types[i].invariants.len() > 0;
+    }
+    i = i + 1;
+  }
+  return false;
+}
+
+/// Returns all contract clauses across all functions (requires + ensures)
+/// and types (invariants) in the index. Useful for bulk export or coverage
+/// analysis.
+pub fn ContractIndex.all_clauses(self) -> Vec[ContractClause]
+  ensures: result.len() >= 0
+{
+  var result: Vec[ContractClause] = Vec[ContractClause].new();
+  var i: Int = 0;
+  while i < self.functions.len() {
+    let fc = self.functions[i];
+    var j: Int = 0;
+    while j < fc.requires.len() {
+      result.push(fc.requires[j]);
+      j = j + 1;
+    }
+    j = 0;
+    while j < fc.ensures.len() {
+      result.push(fc.ensures[j]);
+      j = j + 1;
+    }
+    i = i + 1;
+  }
+  i = 0;
+  while i < self.types.len() {
+    let tc = self.types[i];
+    var j: Int = 0;
+    while j < tc.invariants.len() {
+      result.push(tc.invariants[j]);
+      j = j + 1;
+    }
+    i = i + 1;
+  }
+  return result;
+}
+
+/// Returns a subset of the contract index containing only functions that
+/// have at least one requires or ensures clause. Skips functions with
+/// zero clauses.
+pub fn ContractIndex.filter_nonempty(self) -> ContractIndex {
+  var filtered_fns: Vec[FunctionContracts] = Vec[FunctionContracts].new();
+  var req_total: Int = 0;
+  var ens_total: Int = 0;
+  var clause_total: Int = 0;
+  var i: Int = 0;
+  while i < self.functions.len() {
+    let fc = self.functions[i];
+    if fc.requires.len() > 0 || fc.ensures.len() > 0 {
+      filtered_fns.push(fc);
+      req_total = req_total + fc.requires.len();
+      ens_total = ens_total + fc.ensures.len();
+      clause_total = clause_total + fc.requires.len() + fc.ensures.len();
+    }
+    i = i + 1;
+  }
+  return ContractIndex{
+    package: self.package;
+    version: self.version;
+    functions: filtered_fns;
+    types: self.types;
+    total_clauses: clause_total;
+    requires_count: req_total;
+    ensures_count: ens_total;
+    invariant_count: self.invariant_count;
+  };
+}
+
+/// Convenience: check if any contracts exist at all (package-level query).
+pub fn any_contracts() -> Bool {
+  return !_get_index().none();
+}
+
+/// Convenience: check if a specific function has contracts (package-level query).
+pub fn fn_has_contracts(name: Str) -> Bool {
+  return _get_index().contains_fn(name);
+}
+
+/// Convenience: check if a specific type has invariants (package-level query).
+pub fn type_has_invariants(name: Str) -> Bool {
+  return _get_index().contains_type(name);
+}
