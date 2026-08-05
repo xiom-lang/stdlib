@@ -4,6 +4,8 @@
 
 module xiom.hash
 
+use xiom.string;
+
 // === Hash interface (hasher-based) ===
 pub interface Hash {
   fn hash(self, hasher: Hasher);

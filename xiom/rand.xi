@@ -4,6 +4,8 @@
 
 module xiom.rand
 
+use xiom.string;
+
 extern "C" {
   fn malloc(size: UInt) -> *UInt8;
   fn clock() -> Int;
@@ -319,9 +321,9 @@ fn _format_uuid(bytes: &Vec[UInt8]) -> Str {
         pos = pos + 1;
       };
       let b = bytes[i];
-      buf[pos] = hex.char_at((b >> 4) as Int) as UInt8;
+      buf[pos] = hex.char_at((b >> 4) as Int).unwrap() as UInt8;
       pos = pos + 1;
-      buf[pos] = hex.char_at((b & 0x0F) as Int) as UInt8;
+      buf[pos] = hex.char_at((b & 0x0F) as Int).unwrap() as UInt8;
       pos = pos + 1;
       i = i + 1;
     };
