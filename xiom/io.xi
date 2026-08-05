@@ -68,7 +68,7 @@ pub fn read_line() -> Str {
   unsafe {
     ptr = fgets(buf.as_mut_ptr(), 4096 as Int32, xiom_stdin());
   }
-  if ptr == nil {
+  if ptr == 0 {
     return "";
   }
   let raw = Str::from_c_str(ptr);
@@ -173,7 +173,7 @@ pub fn read_file(path: Str) -> Result[Str, IOError]
   let size: Int;
   unsafe {
     ptr = xiom_read_file(c_path);
-    if ptr == nil {
+    if ptr == 0 {
       return Err(IOError{ message: "failed to read file: " + path, code: 1 });
     }
     size = xiom_file_size(c_path);
@@ -198,7 +198,7 @@ pub fn write_file(path: Str, content: Str) -> Result[Unit, IOError]
   unsafe {
     file = fopen(path.c_str(), "w");
   }
-  if file == nil {
+  if file == 0 {
     return Err(IOError{ message: "failed to open file for writing: " + path, code: 2 });
   }
   let c_content = content.c_str();
@@ -222,7 +222,7 @@ pub fn append_file(path: Str, content: Str) -> Result[Unit, IOError]
   unsafe {
     file = fopen(path.c_str(), "a");
   }
-  if file == nil {
+  if file == 0 {
     return Err(IOError{ message: "failed to open file for appending: " + path, code: 4 });
   }
   let c_content = content.c_str();
@@ -245,7 +245,7 @@ pub fn file_exists(path: Str) -> Bool
   unsafe {
     file = fopen(path.c_str(), "r");
   }
-  if file == nil {
+  if file == 0 {
     return false;
   }
   unsafe {
@@ -288,7 +288,7 @@ pub fn list_dir(path: Str) -> Result[Vec[Str], IOError]
   unsafe {
     dir = opendir(path.c_str());
   }
-  if dir == nil {
+  if dir == 0 {
     return Err(IOError{ message: "failed to open directory: " + path, code: 7 });
   }
   var entries: Vec[Str] = Vec[Str]::new();
@@ -296,7 +296,7 @@ pub fn list_dir(path: Str) -> Result[Vec[Str], IOError]
   unsafe {
     entry = readdir(dir);
   }
-  while entry != nil {
+  while entry != 0 {
     let name_ptr: *UInt8;
     unsafe {
       name_ptr = xiom_dirent_name(entry);
@@ -389,7 +389,7 @@ pub fn env_var(name: Str) -> Option[Str]
   unsafe {
     ptr = getenv(name.c_str());
   }
-  if ptr == nil {
+  if ptr == 0 {
     None
   } else {
     Some(Str::from_c_str(ptr))
