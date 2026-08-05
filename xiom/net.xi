@@ -4,6 +4,8 @@
 
 module xiom.net
 
+use xiom.string;
+
 // === FFI: C Runtime Socket Functions ===
 extern "C" {
   fn xiom_socket_create(family: Int, typ: Int, proto: Int) -> Int;
