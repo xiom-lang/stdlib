@@ -4,6 +4,8 @@
 
 module xiom.regex
 
+use xiom.string;
+
 pub type Regex = { pattern: Str; compiled: Int; } derive[Clone]
 pub type Match = { start: Int; end: Int; text: Str; } derive[Eq, Clone]
 pub type Captures = { groups: Vec[Option[Match]]; } derive[Clone]
@@ -45,7 +47,7 @@ fn is_space_char(c: Char) -> Bool {
 fn class_end(pattern: Str, start: Int) -> Int {
   var pos = start + 1;
   while pos < pattern.len() {
-    let pc = pattern.char_at(pos);
+    let pc = pattern.char_at(pos).unwrap();
     if pc == ']' {
       return pos;
     };
@@ -60,25 +62,25 @@ fn class_end(pattern: Str, start: Int) -> Int {
 fn class_matches(start: Int, pattern: Str, ch: Char) -> Bool {
   var negated = false;
   var pos = start + 1;
-  if pos < pattern.len() && pattern.char_at(pos) == '^' {
+  if pos < pattern.len() && pattern.char_at(pos).unwrap() == '^' {
     negated = true;
     pos = pos + 1;
   };
   var matched = false;
   while pos < pattern.len() {
-    let pc = pattern.char_at(pos);
+    let pc = pattern.char_at(pos).unwrap();
     if pc == ']' {
       break;
     };
-    if pos + 2 < pattern.len() && pattern.char_at(pos + 1) == '-' && pattern.char_at(pos + 2) != ']' {
+    if pos + 2 < pattern.len() && pattern.char_at(pos + 1).unwrap() == '-' && pattern.char_at(pos + 2).unwrap() != ']' {
       let range_start = pc;
-      let range_end = pattern.char_at(pos + 2);
+      let range_end = pattern.char_at(pos + 2).unwrap();
       if ch >= range_start && ch <= range_end {
         matched = true;
       };
       pos = pos + 3;
     } elif pc == '\\' && pos + 1 < pattern.len() {
-      let esc = pattern.char_at(pos + 1);
+      let esc = pattern.char_at(pos + 1).unwrap();
       var esc_matched = false;
       if esc == 'd' {
         esc_matched = is_digit_char(ch);
@@ -113,8 +115,8 @@ fn element_matches(pattern: Str, p_pos: Int, text: Str, t_pos: Int) -> Bool {
   if t_pos >= text.len() {
     return false;
   };
-  let pc = pattern.char_at(p_pos);
-  let tc = text.char_at(t_pos);
+  let pc = pattern.char_at(p_pos).unwrap();
+  let tc = text.char_at(t_pos).unwrap();
   if pc == '.' {
     return tc != '\n';
   };
@@ -125,7 +127,7 @@ fn element_matches(pattern: Str, p_pos: Int, text: Str, t_pos: Int) -> Bool {
     if p_pos + 1 >= pattern.len() {
       return false;
     };
-    let esc = pattern.char_at(p_pos + 1);
+    let esc = pattern.char_at(p_pos + 1).unwrap();
     if esc == 'd' {
       return is_digit_char(tc);
     } elif esc == 'w' {
@@ -150,7 +152,7 @@ fn match_here(pattern: Str, text: Str, p_pos: Int, t_pos: Int) -> Option[Int] {
   if p_pos >= p_len {
     return Some(t_pos);
   };
-  let pc = pattern.char_at(p_pos);
+  let pc = pattern.char_at(p_pos).unwrap();
   if pc == '$' && p_pos + 1 >= p_len {
     if t_pos >= text.len() {
       return Some(t_pos);
@@ -171,7 +173,7 @@ fn match_here(pattern: Str, text: Str, p_pos: Int, t_pos: Int) -> Option[Int] {
   var elem_end = elem_end_raw;
   var quant = ' ';
   if elem_end_raw < p_len {
-    let qc = pattern.char_at(elem_end_raw);
+    let qc = pattern.char_at(elem_end_raw).unwrap();
     if qc == '*' || qc == '+' || qc == '?' {
       quant = qc;
       elem_end = elem_end_raw + 1;
@@ -231,11 +233,11 @@ fn match_here(pattern: Str, text: Str, p_pos: Int, t_pos: Int) -> Option[Int] {
 
 fn find_first_match(pattern: Str, text: Str) -> Option[Match] {
   let t_len = text.len();
-  if pattern.len() > 0 && pattern.char_at(0) == '^' {
+  if pattern.len() > 0 && pattern.char_at(0).unwrap() == '^' {
     let result = match_here(pattern, text, 1, 0);
     match result {
       Some(end) => {
-        let matched = xiom.string.str_slice(text, 0, end);
+        let matched = string.str_slice(text, 0, end);
         return Some(Match{ start: 0; end: end; text: matched; });
       };
       None => {};
@@ -247,7 +249,7 @@ fn find_first_match(pattern: Str, text: Str) -> Option[Match] {
     let result = match_here(pattern, text, 0, pos);
     match result {
       Some(end) => {
-        let matched = xiom.string.str_slice(text, pos, end);
+        let matched = string.str_slice(text, pos, end);
         return Some(Match{ start: pos; end: end; text: matched; });
       };
       None => {};
@@ -286,13 +288,13 @@ pub fn Regex.find_all(self, text: Str) -> Vec[Match] {
     };
     return matches;
   };
-  let anchored = pat.char_at(0) == '^';
+  let anchored = pat.char_at(0).unwrap() == '^';
   var pos: Int = 0;
   while pos <= t_len {
     let result = match_here(pat, text, if anchored { 1 } else { 0 }, pos);
     match result {
       Some(end) => {
-        let matched = xiom.string.str_slice(text, pos, end);
+        let matched = string.str_slice(text, pos, end);
         matches.push(Match{ start: pos; end: end; text: matched; });
         if end > pos {
           pos = end;
@@ -327,16 +329,16 @@ pub fn Regex.replace(self, text: Str, replacement: Str) -> Str {
   let m = find_first_match(self.pattern, text);
   match m {
     Some(match_obj) => {
-      let before = xiom.string.str_slice(text, 0, match_obj.start);
-      let after = xiom.string.str_slice(text, match_obj.end, text.len());
-      xiom.string.str_concat(xiom.string.str_concat(before, replacement), after)
+      let before = string.str_slice(text, 0, match_obj.start);
+      let after = string.str_slice(text, match_obj.end, text.len());
+      string.str_concat(string.str_concat(before, replacement), after)
     };
     None => text;
   }
 }
 
 pub fn Regex.replace_all(self, text: Str, replacement: Str) -> Str {
-  let matches = find_all(self, text);
+  let matches = find_all(self.pattern, text);
   if matches.len() == 0 {
     return text;
   };
@@ -344,12 +346,12 @@ pub fn Regex.replace_all(self, text: Str, replacement: Str) -> Str {
   var pos: Int = 0;
   var i: Int = 0;
   while i < matches.len() {
-    result = xiom.string.str_concat(result, xiom.string.str_slice(text, pos, matches[i].start));
-    result = xiom.string.str_concat(result, replacement);
+    result = string.str_concat(result, string.str_slice(text, pos, matches[i].start));
+    result = string.str_concat(result, replacement);
     pos = matches[i].end;
     i = i + 1;
   };
-  xiom.string.str_concat(result, xiom.string.str_slice(text, pos, text.len()))
+  string.str_concat(result, string.str_slice(text, pos, text.len()))
 }
 
 pub fn Regex.split(self, text: Str) -> Vec[Str] {
@@ -359,7 +361,7 @@ pub fn Regex.split(self, text: Str) -> Vec[Str] {
   if pat.len() == 0 {
     var pos: Int = 0;
     while pos < t_len {
-      result.push(xiom.string.str_slice(text, pos, pos + 1));
+      result.push(string.str_slice(text, pos, pos + 1));
       pos = pos + 1;
     };
     return result;
@@ -370,7 +372,7 @@ pub fn Regex.split(self, text: Str) -> Vec[Str] {
     let match_result = match_here(pat, text, 0, pos);
     match match_result {
       Some(end) => {
-        result.push(xiom.string.str_slice(text, seg_start, pos));
+        result.push(string.str_slice(text, seg_start, pos));
         if end > pos {
           pos = end;
         } else {
@@ -383,12 +385,12 @@ pub fn Regex.split(self, text: Str) -> Vec[Str] {
       };
     };
   };
-  result.push(xiom.string.str_slice(text, seg_start, t_len));
+  result.push(string.str_slice(text, seg_start, t_len));
   result
 }
 
 pub fn Regex.match_count(self, text: Str) -> Int {
-  find_all(self, text).len()
+  find_all(self.pattern, text).len()
 }
 
 pub fn Captures.get(self, index: Int) -> Option[Match] {
@@ -411,12 +413,12 @@ pub fn regex_escape(pattern: Str) -> Str {
   var i: Int = 0;
   let p_len = pattern.len();
   while i < p_len {
-    let c = pattern.char_at(i);
+    let c = pattern.char_at(i).unwrap();
     if is_metachar(c) {
-      result = xiom.string.str_concat(result, "\\");
-      result = xiom.string.str_concat(result, xiom.string.str_slice(pattern, i, i + 1));
+      result = string.str_concat(result, "\\");
+      result = string.str_concat(result, string.str_slice(pattern, i, i + 1));
     } else {
-      result = xiom.string.str_concat(result, xiom.string.str_slice(pattern, i, i + 1));
+      result = string.str_concat(result, string.str_slice(pattern, i, i + 1));
     };
     i = i + 1;
   };
@@ -428,7 +430,7 @@ pub fn is_valid_regex(pattern: Str) -> Bool {
   var bracket_depth: Int = 0;
   let p_len = pattern.len();
   while i < p_len {
-    let c = pattern.char_at(i);
+    let c = pattern.char_at(i).unwrap();
     if c == '[' {
       bracket_depth = bracket_depth + 1;
     } elif c == ']' {

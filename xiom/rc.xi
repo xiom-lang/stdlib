@@ -126,7 +126,7 @@ pub fn Rc[T].as_ref(self) -> &T
 {
   return deref();
 }
-}
+
 
 pub type Weak[T] = {
   ptr: *RcInner[T];
