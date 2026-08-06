@@ -25,35 +25,24 @@ pub fn Cell.get[T](self) -> T {
   return value;
 }
 
-pub fn Cell.set[T](self, value: T) -> Cell[T] {
-  unsafe {
-    let raw = ptr.from_ref(self) as *mut Cell[T];
-    (*raw).value = value;
-  };
-  self
+pub fn Cell.set[T](&mut self, value: T) {
+    self.value = value;
 }
 
-pub fn Cell.replace[T](self, value: T) -> T
+pub fn Cell.replace[T](&mut self, value: T) -> T
   ensures: result == value@pre
 {
-  unsafe {
-    let raw = ptr.from_ref(self) as *mut Cell[T];
-    let old = (*raw).value;
-    (*raw).value = value;
-    return old;
-  }
+  let old = self.value;
+  self.value = value;
+  return old;
 }
 
-pub fn Cell.swap[T](self, other: &Cell[T])
+pub fn Cell.swap[T](&mut self, other: &mut Cell[T])
   ensures: value == other.value@pre
 {
-  unsafe {
-    let self_raw = ptr.from_ref(self) as *mut Cell[T];
-    let other_raw = ptr.from_ref(other) as *mut Cell[T];
-    let temp = (*self_raw).value;
-    (*self_raw).value = (*other_raw).value;
-    (*other_raw).value = temp;
-  };
+  let temp = self.value;
+  self.value = other.value;
+  other.value = temp;
 }
 
 // ============================================================================
