@@ -5,7 +5,6 @@
 module xiom.array
 
 use xiom.cmp;
-use xiom.types;
 
 pub fn len[T, const N: Int](arr: &[N]T) -> Int {
   N
