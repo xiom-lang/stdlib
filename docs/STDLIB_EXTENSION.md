@@ -3475,9 +3475,94 @@ Four decisions logged by the owner. These shape ALL future stdlib/compiler work.
 | `array/` | array.xi | fixed, dynamic |
 | `string/`→`text/` | string.xi (kept flat, alias) | see text/ |
 
-### Execution order (updated)
-1. **Unsafe gating (D2)** — checker depth counter + stdlib `unsafe` wrapping; keep suite green (freeze unaffected).
-2. **Native Int128/UInt128 (D1)** — parser/checker/codegen + tests; optionally Float128.
-3. **Category folders for remaining domains (D4)** — create `math/`, `crypto/`, `geom/`, `stats/`, `time/`, `sync/`, `io/`, `ffi/`, `bits/`, `sort/`, `search/`, `iter/`, `regex/`, `serialize/`, `encoding/`, `compress/`, `thread/`, `async/`, `test/`, `log/`, `debug/`, `misc/`, `error/`, `reflect/`, `simd/`, `array/` skeletons + first libs; flat files stay aggregates.
-4. **BigFloat (D3)** — num/bigfloat.xi on bigint.xi.
+### Execution order (updated 2026-08-08 — owner directive: PRODUCTION-GRADE FIRST, no workarounds)
+Owner decision: the compiler must be REAL before the huge stdlib is written.
+Do NOT write 5,000 functions against a known-broken compiler and rewrite them
+later. Hardening comes FIRST; stdlib expansion (categories + manifest) starts
+only after the numeric/generic foundation is production-grade. The freeze gate
++ D4b manifest pattern make this safe: concrete signatures stay callable
+forever, so nothing written later breaks anything written now.
+
+1. **Unsafe gating (D2)** — checker unsafe-context depth counter; reject raw
+   pointer deref / Int↔Ptr casts / Vec→Ptr casts / asm at depth 0; wrap stdlib
+   internals in `unsafe` blocks (public API stays safe). Suite must stay green
+   (freeze unaffected — signatures unchanged).
+2. **Native Int128/UInt128 (D1)** — parser/checker/codegen; `i128` LLVM;
+   div/rem via `__divti3`/`__udivti3` (clang-linked). Optional Float128.
+3. **COMPILER HARDENING — production-grade generics/interfaces (PLAN B,
+   NO workarounds):**
+   a. interface `impl` dispatch on generic params (checker+codegen honor
+      ImplDecl: `impl Num[Int] { ... }` must register and dispatch).
+   b. generic-operator monomorphization must NOT corrupt Float64
+      (`add2[T](a+b)` correct for ALL widths incl. Float64/Float32).
+   c. After (a)+(b): the generic numeric tower lands — `impl Num[Int]`,
+      `impl Num[Int32]`, `impl Num[Float32]`, `impl Num[Float64]` … and ONE
+      generic `sqrt[T: Num](x: T) -> T` serves all widths. Concrete fns stay
+      as thin shims (freeze-gated).
+   d. Full test pass on every step; no `#[ignore]`d shortcuts.
+4. **Stdlib category expansion (D4) starts AFTER hardening** — agents write
+   math/core, math/algebra, math/vectors, … as GENERIC libs over the real
+   tower; flat aggregates become use-manifests (D4b). No per-width
+   duplicated libs — one generic implementation per concept.
+5. **BigFloat (D3)** — num/bigfloat.xi on bigint.xi.
+6. **Backlog (next sessions):** see §14.
+
+## 14. BACKLOG (owner-approved, next sessions)
+
+### 14.1 Compiler hardening (continues after D2+D1)
+- Interface `impl` dispatch (3a above) — parser handles ImplDecl today;
+  checker+codegen ignore it. This is THE enabler for the generic stdlib.
+- Generic-operator Float64 corruption (3b above).
+- Result[Vec[T]].value corruption (SESSION.md bug 1).
+- Chained .method on module-qualified Str-returning calls (bug 2) — already
+  worked around in net/url.xi; fix at source.
+- Bool→Int cast (bug 4).
+- Option/Result match-arm mixing → out-of-bounds GEP (bug 5).
+- `&T` param semantics (address-as-i64, not value) — documented, keep.
+
+### 14.2 Math family libs (category: math/, manifest math.xi)
+Write AFTER hardening 3a+3b so they are generic (`[T: Num]`) not per-width:
+- math/core — sqrt, pow, exp, ln, log10, log2, trig, hyperbolic, abs, min,
+  max, clamp, floor/ceil/round/trunc/fract, remap, lerp — GENERIC over Num.
+- math/primitives — number-theoretic primitives, divisibility, parity.
+- math/algebra — linear algebra: vectors, matrices, determinants, inverses,
+  solvers (Gaussian), eigenvalues (basic).
+- math/vectors — geometric vectors (replaces flat geom.xi vec2/3/4 fns
+  eventually; keep frozen flat fns).
+- math/trig + math/transcendental — full trig, exp/log families, gamma,
+  erf, zeta (basic), special functions.
+- math/differential — numeric derivatives, gradients, ODE solvers
+  (Euler, RK4), integration (trapezoid, Simpson, Gauss).
+- math/integral — numeric quadrature.
+- math/series — Taylor, Fourier (basic), polynomial ops.
+- math/special — Bessel, Legendre, Chebyshev, factorial/gamma, binomial.
+
+### 14.3 BigInt/BigFloat (category: num/, manifest num.xi)
+- bigint.xi exists (frozen flat). Extend: bigint/ folder libs — karatsuba,
+  toom-cook, montgomery, powmod, sqrt, gcd-extended, primality
+  (Miller-Rabin), string base conversions.
+- BigFloat (D3): num/bigfloat.xi — sign/exponent/significand on bigint,
+  add/sub/mul/div, rounding modes, parse/format, sqrt, ln/exp (series),
+  sin/cos (series). Separate from bigint.xi.
+
+### 14.4 Remaining category gap libs (after hardening)
+- hash: highway, spooky, metro, t1ha, farm, superfast (city/xxhash/murmur/
+  jenkins/crc done).
+- net: http (headers/cookies/mime/etag/sse), ip (v6/well-known ports),
+  socket helpers.
+- text: unicode (normalize, bidi), case, search, diff, transliterate.
+- crypto: mac, kdf, cipher, aead, sign, keyx, curves (ECC already via
+  runtime C; move to pure XIOM once i128 + hardening land).
+- collect: list, map, set, trie, bloom, unionfind, kdtree, skiplist.
+- os: mmap, ioctl, sync_io, win, unix.
+- io: fs, buffer, console, pipe.
+- ffi: dl (dlopen), c, errno.
+- rand: splitmix, xoroshiro.
+- time: chrono, calendar, iso8601 (Date done).
+- stats: dist, test, regress, histogram, moments.
+- geom: curves, polyhedra; vec/mat/quat/collision folders.
+- sync: channel; thread: pool, park, local; async: io.
+- serialize: varint, endian; encoding: ascii85, punycode, idna;
+  compress: deflate-family detail; sort: intro/radix; search: kmp/boyer;
+  iter: fold/chain detail; regex: engine detail; test: harness; log: sinks.
 5. **Remaining gap libs** into their categories (hash: highway/spooky/metro/t1ha/farm/superfast; net: http/ip; text: unicode/bidi; etc.).
