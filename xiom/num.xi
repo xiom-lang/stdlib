@@ -79,17 +79,16 @@ pub fn next_power_of_two(n: Int) -> Int {
   return p;
 }
 
+extern "C" {
+  fn xiom_popcnt64(x: Int64) -> Int64;
+  fn xiom_clz64(x: Int64) -> Int64;
+  fn xiom_ctz64(x: Int64) -> Int64;
+}
+
 pub fn count_ones(n: Int) -> Int {
-  var count = 0;
-  var x = n;
-  var bits = size_of[Int]() * 8;
-  var i = 0;
-  while i < bits {
-    count = count + bit_and(x, 1);
-    x = shr(x, 1);
-    i = i + 1;
-  }
-  return count;
+  // Hardware popcount (POPCNT instruction / __builtin_popcountll).
+  // The runtime falls back to a SWAR bit-count when unsupported.
+  xiom_popcnt64(n)
 }
 
 pub fn count_zeros(n: Int) -> Int {
@@ -97,25 +96,13 @@ pub fn count_zeros(n: Int) -> Int {
 }
 
 pub fn leading_zeros(n: Int) -> Int {
-  if n == 0 { return size_of[Int]() * 8; }
-  var count = 0;
-  var mask = shl(1, size_of[Int]() * 8 - 1);
-  while bit_and(n, mask) == 0 {
-    count = count + 1;
-    mask = shr(mask, 1);
-  }
-  return count;
+  // Hardware LZCNT/BSR (__builtin_clzll). 64 for zero.
+  xiom_clz64(n)
 }
 
 pub fn trailing_zeros(n: Int) -> Int {
-  if n == 0 { return size_of[Int]() * 8; }
-  var count = 0;
-  var x = n;
-  while bit_and(x, 1) == 0 {
-    count = count + 1;
-    x = shr(x, 1);
-  }
-  return count;
+  // Hardware TZCNT/BSF (__builtin_ctzll). 64 for zero.
+  xiom_ctz64(n)
 }
 
 pub fn rotate_left(n: Int, k: Int) -> Int {
