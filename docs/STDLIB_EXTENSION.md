@@ -3331,3 +3331,153 @@ that does `a + b` and expect it to work for Float64 — it corrupts the value
   thin re-export shims for the frozen API. Revisit §4 numeric tower then.
 - The freeze gate locks the concrete signatures NOW, so the collapse is safe:
   concrete fns remain available even after generics land.
+
+## 13. ARCHITECTURE DECISIONS (2026-08-08 — user confirmed)
+
+Four decisions logged by the owner. These shape ALL future stdlib/compiler work.
+
+### D1 — Native integer widths: Int128/UInt128 native; 256 via bigint
+- **APPROVED: add native `Int128` / `UInt128` as LLVM `i128` primitives** (parser +
+  checker + codegen). Add/sub/mul are native hardware ops; div/rem lower to
+  `__divti3`/`__udivti3` libcalls that clang links automatically.
+- **REJECTED: native Int256/UInt256** — LLVM emulates them slowly; `bigint.xi`
+  (stdlib, 64-bit limbs) is the right home for >128-bit arithmetic.
+- Rationale: 64×64→128 wide multiply unlocks pure-XIOM secp256k1/Ed25519 field
+  math (currently delegating to runtime C), faster bigint schoolbook multiply,
+  PRNG state combining, hash combining. NOTE: SHA-256/512 do NOT need 128-bit
+  (they are 32/64-bit ops) — the win is wide multiply, not hashing per se.
+- The frozen struct-based `Int128` API (num.xi `i128_*`) stays as a shim;
+  native i128 is purely additive. Optional add: `Float128` (`fp128`) — same
+  one-session cost, libcalls via compiler-rt.
+
+### D2 — Raw pointers must be gated behind `unsafe`
+- **APPROVED: the language must be SAFE. Raw-pointer operations (deref `*p`,
+  `Int↔Ptr` casts, `Vec/Slice→Ptr` casts, `asm`) require an `unsafe { }`
+  context.** Currently the checker has NO gating (verified: `*p` compiles and
+  runs outside unsafe) — `unsafe` is only AUDITED (sandbox.rs scoring,
+  `--strict` warning). 
+- Implementation: checker unsafe-context depth counter; reject pointer deref /
+  ptr casts / asm when depth == 0. `unsafe` blocks increment/decrement.
+  Sandbox audit stays as the second layer (scoring + `#[safety_audit]`).
+- Do this BEFORE going public — the clean-break window is now.
+- Note: stdlib itself uses raw pointers extensively (Vec data pointers, ffi,
+  alloc) — those internals get wrapped in `unsafe` blocks; the PUBLIC API stays
+  safe (SafePtr, Vec, Cursor, …). This is a compiler+stdlib co-change; the
+  freeze gate (signatures) is unaffected because signatures don't change.
+
+### D3 — BigFloat = separate stdlib module (NOT inside bigint.xi)
+- **APPROVED: `BigFloat` (arbitrary-precision float) is its own stdlib module**
+  (e.g. `num/bigfloat.xi` or `bigfloat.xi`), built on `bigint.xi` +
+  `Fraction`-style internals: sign/exponent/significand, add/sub/mul/div,
+  rounding modes, parse/format. Separate from bigint (bigint = integers only).
+- MPFR-style transcendentals are a later phase; a C MPFR binding would be a
+  PACKAGE (stdlib = zero deps).
+
+### D4 — Categorize EVERY lib from the start (scale-without-breaking rule)
+- **APPROVED: every stdlib module belongs to a category folder, even if the
+  category has exactly ONE lib.** `use xiom.foo.bar` → `stdlib/xiom/foo/bar.xi`
+  (catalog strategy a, VERIFIED working).
+- Rationale (owner): categories let the stdlib scale by EXPANDING INSIDE a
+  category (math/core → math/algebra → math/vectors → math/differential …)
+  without ever breaking user code. When a lib is added it lands in its
+  category; users who `use xiom.math.core` never see churn. Pre-public, the
+  ONLY cost to move a lib is replacing the `use` line in tests — no call-site
+  changes, no signature changes.
+- RULE: **new code goes into category folders ONLY** — flat files (frozen
+  contract) are never extended with new libs; they stay as aggregates.
+  Categories are created eagerly (even for one lib) so the tree shows the
+  final shape.
+- Existing flat files stay byte-identical (freeze gate scans them). Migration
+  of EXISTING fns into categories happens only as an intentional,
+  freeze-gate-compatible refactor (flat file keeps signature + delegates, or
+  snapshot updated with reviewed migration) — NOT part of normal growth.
+
+### D4b — `use math;` imports ALL sub-libs — VERIFIED WORKING (2026-08-08)
+- **The aggregate-`use` pattern is PROVEN end-to-end with the current
+  compiler — NO compiler change required.** The flat aggregate file (e.g.
+  `math.xi`) lists its sub-modules as `use` statements:
+  ```xiom
+  // stdlib/xiom/math.xi (aggregate)
+  module xiom.math
+  use xiom.math.core;
+  use xiom.math.algebra;
+  use xiom.math.vectors;
+  ```
+  Then a user program that writes `use xiom.math;` gets ALL sub-modules
+  registered transitively and can call:
+  ```xiom
+  use xiom.math;
+  var a = math.core.sqrt(x);      // qualified by sub-lib — deterministic
+  var b = xiom.math.core.sqrt(y); // full dotted path also resolves
+  ```
+- **Verified by live probe tests (exit 0):**
+  1. `use xiom._probe;` + `_probe.core.core_add(20,22)` == 42 ✓ (parent imports
+     sub-module → sub-lib callable through parent).
+  2. Collision case: `core.core_add` vs `algebra.core_add` (same fn name in
+     two sub-libs) — BOTH resolve correctly through their qualifier ✓.
+  3. Full dotted path `xiom._probe3.core.core_add(1,2)` resolves ✓.
+  4. Sub-lib named `core` does NOT collide with the flat `core.xi` —
+     `_probe4.core.contains` resolves to the sub-lib's fn ✓ (leaf-qualified
+     resolution walks the receiver chain first).
+- **KEY MECHANISM**: the parent aggregate MUST contain the `use` lines — the
+  checker only loads modules that are `use`d; `use math;` alone does NOT
+  auto-discover `stdlib/xiom/math/*.xi`. So the flat aggregate is an EXPLICIT
+  MANIFEST of its category: add a sub-lib = add one `use` line. Deterministic,
+  no magic, no compiler change.
+- **Naming decision (owner, 2026-08-08): use `core` not `basic` for the
+  foundational sub-lib** — `math.core`, `math.algebra`, `math.primitives`,
+  `math.vectors` … `math.basic` rejected (sounds too basic). `core` is
+  reserved as the category's foundational module name; the flat aggregate file
+  keeps the category name (`math.xi`) and is the "use manifest".
+- Qualified call style `math.core.sqrt(a)` is DETERMINISTIC and unambiguous
+  (proven: same fn name in two sub-libs disambiguates). Bare `sqrt(a)` after
+  `use math;` is NOT guaranteed (keep-first alias across modules) — stdlib
+  docs should recommend qualified calls for multi-lib imports.
+- Target category map (flat files remain; folders host new libs):
+
+| Category folder | Flat aggregate (frozen, = use-manifest) | New/planned folder libs |
+|-----------------|----------------------------------------|--------------------------|
+| `num/` | num.xi, convert.xi | core, convert, int128 (native D1), fraction, base, float, bigfloat (D3) |
+| `math/` | math.xi | core, algebra, primitives, vectors, matrices, trig, transcendental, differential, integral, series, special |
+| `collect/` | collections.xi | core, tree, heap, cache, hash, queue, graph, list, map, set, trie, bloom, unionfind, kdtree (done: tree/heap/cache/hash/queue/graph) |
+| `crypto/` | crypto.xi | hash, mac, kdf, cipher, aead, sign, keyx, curves, rng-crypto |
+| `hash/` | hash.xi | city, xxhash, murmur, jenkins, crc, highway, spooky, metro, t1ha, farm, superfast, checksum (done: city/xxhash/murmur/jenkins/crc) |
+| `text/` | string.xi, char.xi, utf8.xi | similarity (done), unicode, normalize, bidi, case, search, diff, transliterate |
+| `fmt/` | fmt.xi | number, text, dump, table, units, ansi, markup (done: format/number, format/dump) |
+| `net/` | net.xi | url, dns, proto, http, ip, socket, tls-helper (done: url/dns/proto) |
+| `os/` | os.xi, env.xi, path.xi, process.xi, platform.xi | fs, proc, term, mmap, ioctl, sync_io, win, unix (done: fs/proc/term) |
+| `io/` | io.xi | fs, buffer, console, pipe |
+| `ffi/` | ffi.xi | dl, c, errno |
+| `rand/` | rand.xi | mt19937, pcg, chacha, splitmix, xoroshiro (done: mt19937/pcg/chacha) |
+| `sync/` | sync.xi | mutex, condvar, barrier, channel, atomics, rwlock |
+| `thread/` | thread.xi | pool, spawn, park, local |
+| `async/` | async.xi | executor, channel, timer, io |
+| `time/` | time.xi | duration, instant, date, iso8601, chrono, calendar |
+| `serialize/` | serialize.xi | json, varint, endian, yaml-lite |
+| `encoding/` | encoding.xi | base64, hex, base32, percent, ascii85, punycode, idna |
+| `compress/` | compress.xi | deflate, lz77, huffman, gzip, zlib, brotli, lz4, snappy |
+| `geom/` | geom.xi | vec, mat, quat, collision, curves, polyhedra |
+| `stats/` | stats.xi | dist, test, regress, histogram, moments |
+| `bits/` | bits.xi | bitarray, bitfield, popcount |
+| `sort/` | sort.xi | quick, merge, heap, radix, intro |
+| `search/` | search.xi | linear, binary, interpolation, kmp, boyer |
+| `iter/` | iter.xi | range, map, filter, zip, chain, fold |
+| `regex/` | regex.xi | engine, syntax, pcre-lite |
+| `ref`/`core` | core.xi, cell.xi, rc.xi, mem.xi, ptr.xi, alloc.xi | (memory family stays flat for now; category folder `mem/` if it grows) |
+| `test/` | test.xi, bench.xi | assert, bench, harness |
+| `log/` | log.xi | levels, sinks, json, color |
+| `debug/` | debug.xi | trace, disasm, heap-report |
+| `misc/` | misc.xi | glob, levenshtein, semver, soundex, natural |
+| `error/` | error.xi | chain, context, backtrace |
+| `contracts/` | contracts.xi | (stays flat — compiler-backed) |
+| `reflect/` | reflect.xi | typeinfo, fields |
+| `simd/` | simd.xi | vec4, vec8, mask, gather |
+| `array/` | array.xi | fixed, dynamic |
+| `string/`→`text/` | string.xi (kept flat, alias) | see text/ |
+
+### Execution order (updated)
+1. **Unsafe gating (D2)** — checker depth counter + stdlib `unsafe` wrapping; keep suite green (freeze unaffected).
+2. **Native Int128/UInt128 (D1)** — parser/checker/codegen + tests; optionally Float128.
+3. **Category folders for remaining domains (D4)** — create `math/`, `crypto/`, `geom/`, `stats/`, `time/`, `sync/`, `io/`, `ffi/`, `bits/`, `sort/`, `search/`, `iter/`, `regex/`, `serialize/`, `encoding/`, `compress/`, `thread/`, `async/`, `test/`, `log/`, `debug/`, `misc/`, `error/`, `reflect/`, `simd/`, `array/` skeletons + first libs; flat files stay aggregates.
+4. **BigFloat (D3)** — num/bigfloat.xi on bigint.xi.
+5. **Remaining gap libs** into their categories (hash: highway/spooky/metro/t1ha/farm/superfast; net: http/ip; text: unicode/bidi; etc.).
