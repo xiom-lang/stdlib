@@ -290,3 +290,121 @@ pub fn ed25519_verify(message: &Vec[Int], signature: &Ed25519Signature, public_k
   }
   return true;
 }
+
+// ============================================================================
+// PRODUCTION ECC — backed by native C field arithmetic in xiom_runtime.c
+// All 256-bit values use 32-byte little-endian Vec[UInt8].
+// The small-curve educational API above is preserved for teaching.
+// ============================================================================
+
+extern "C" {
+  fn xiom_secp256k1_point_valid(px: *UInt8, py: *UInt8) -> Int32;
+  fn xiom_secp256k1_point_add(rx: *UInt8, ry: *UInt8, ax: *UInt8, ay: *UInt8, bx: *UInt8, by: *UInt8);
+  fn xiom_secp256k1_point_mul(rx: *UInt8, ry: *UInt8, k: *UInt8, px: *UInt8, py: *UInt8);
+  fn xiom_secp256k1_base_mul(rx: *UInt8, ry: *UInt8, k: *UInt8);
+  fn xiom_ed25519_sign(msg: *UInt8, msglen: UInt, privkey: *UInt8, sig: *UInt8) -> Int32;
+  fn xiom_ed25519_verify(msg: *UInt8, msglen: UInt, pubkey: *UInt8, sig: *UInt8) -> Int32;
+  fn xiom_ed25519_pubkey(privkey: *UInt8, pubkey: *UInt8);
+}
+
+// ── Helper: ensure Vec[UInt8] has exactly `n` bytes, zero-padded. ──
+fn _ensure_bytes(buf: &mut Vec[UInt8], n: Int) {
+  while buf.len() < n { buf.push(0); }
+}
+
+// ── Helper: ensure Vec[UInt8] has at least `n` bytes ──
+fn _check_min_len(buf: &Vec[UInt8], n: Int) -> Bool {
+  return buf.len() >= n;
+}
+
+// ============================================================================
+// secp256k1 — 256-bit little-endian byte array API
+// ============================================================================
+
+/// Check if an affine point (px, py) lies on the secp256k1 curve.
+/// px, py: 32-byte little-endian buffers.
+pub fn secp256k1_point_valid_bytes(px: &Vec[UInt8], py: &Vec[UInt8]) -> Bool
+  requires: px.len() >= 32
+  requires: py.len() >= 32
+{
+  let result = unsafe { xiom_secp256k1_point_valid(px.data, py.data) };
+  return result != 0;
+}
+
+/// Scalar multiply point (px, py) by scalar k.
+/// Fills out_x, out_y with 32-byte little-endian results.
+/// Returns false on error (invalid inputs).
+pub fn secp256k1_point_mul_bytes(
+  k: &Vec[UInt8], px: &Vec[UInt8], py: &Vec[UInt8],
+  out_x: &mut Vec[UInt8], out_y: &mut Vec[UInt8]
+) -> Bool
+  requires: k.len() >= 32
+  requires: px.len() >= 32
+  requires: py.len() >= 32
+{
+  _ensure_bytes(out_x, 32);
+  _ensure_bytes(out_y, 32);
+  unsafe {
+    xiom_secp256k1_point_mul(out_x.data, out_y.data, k.data, px.data, py.data);
+  };
+  return true;
+}
+
+/// Multiply the secp256k1 base point (generator G) by scalar k.
+/// Fills out_x, out_y with 32-byte little-endian results.
+pub fn secp256k1_base_mul_bytes(
+  k: &Vec[UInt8], out_x: &mut Vec[UInt8], out_y: &mut Vec[UInt8]
+) -> Bool
+  requires: k.len() >= 32
+{
+  _ensure_bytes(out_x, 32);
+  _ensure_bytes(out_y, 32);
+  unsafe {
+    xiom_secp256k1_base_mul(out_x.data, out_y.data, k.data);
+  };
+  return true;
+}
+
+// ============================================================================
+// Ed25519 — production (RFC 8032, backed by C runtime)
+// Names suffixed with _bytes to avoid collision with the educational API
+// above (which uses &Vec[Int] for messages and Ed25519KeyPair/Ed25519Signature).
+// ============================================================================
+
+/// Derive a 32-byte Ed25519 public key from a 32-byte private key.
+pub fn ed25519_pubkey_bytes(private_key: &Vec[UInt8], public_key: &mut Vec[UInt8]) -> Bool
+  requires: private_key.len() >= 32
+{
+  _ensure_bytes(public_key, 32);
+  unsafe {
+    xiom_ed25519_pubkey(private_key.data, public_key.data);
+  };
+  return true;
+}
+
+/// Sign a message with an Ed25519 private key (32 bytes).
+/// Writes the 64-byte signature into `signature`.
+pub fn ed25519_sign_bytes(
+  message: &Vec[UInt8], private_key: &Vec[UInt8], signature: &mut Vec[UInt8]
+) -> Bool
+  requires: private_key.len() >= 32
+{
+  _ensure_bytes(signature, 64);
+  let result = unsafe {
+    xiom_ed25519_sign(message.data, message.len() as UInt, private_key.data, signature.data)
+  };
+  return result != 0;
+}
+
+/// Verify an Ed25519 signature (64 bytes) against a message and public key (32 bytes).
+pub fn ed25519_verify_bytes(
+  message: &Vec[UInt8], public_key: &Vec[UInt8], signature: &Vec[UInt8]
+) -> Bool
+  requires: public_key.len() >= 32
+  requires: signature.len() >= 64
+{
+  let result = unsafe {
+    xiom_ed25519_verify(message.data, message.len() as UInt, public_key.data, signature.data)
+  };
+  return result != 0;
+}

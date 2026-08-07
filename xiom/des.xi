@@ -1,240 +1,344 @@
-// XIOM — DES-Lite: Simplified Feistel Block Cipher (Educational)
+// XIOM — DES / 3DES (FIPS 46-3)
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 //
-// DES-LITE is a simplified Feistel network block cipher for learning purposes.
-// Unlike full DES (which uses 56-bit keys, 64-bit blocks, and 16 rounds with
-// complex S-boxes and permutation tables), DES-Lite uses:
-//   - 64-bit block size
-//   - 64-bit key (all bits used, no parity stripping)
-//   - 16 Feistel rounds
-//   - Simple key schedule (rotation-based)
-//   - Simplified S-box (8×4-bit substitution using a single 16-entry S-box)
-//   - No IP/FP permutation (simplifies the structure)
+// Full FIPS Publication 46-3 Data Encryption Standard.
 //
-// The Feistel structure is the same as DES:
-//   Split block into L (32 bits) and R (32 bits).
-//   For each round i:
-//     L_new = R
-//     R_new = L XOR F(R, K_i)
-//   After 16 rounds, output = R || L (halves swapped).
+// Implements the complete 16-round Feistel block cipher with:
+//   - Initial Permutation (IP) and Final Permutation (FP = IP^-1)
+//   - Expansion function E (32→48 bits)
+//   - Eight standard DES S-boxes (S1 through S8)
+//   - P-box permutation (32 bits)
+//   - Complete key schedule: PC-1, 28-bit half rotations (C/D),
+//     PC-2 round-key selection
+//   - Triple-DES in EDE mode (Encrypt-Decrypt-Encrypt)
 //
-// The F-function:
-//   1. Expand R (32 bits → 48 bits) by duplicating certain bits.
-//   2. XOR with the 48-bit round key.
-//   3. Substitute: split into 8 groups of 6 bits, each → 4 bits via S-box.
-//   4. Combine the 8×4 = 32 bits as output.
+// All bit numbering follows the DES convention: bit 1 is the
+// most-significant bit of the block / key (MSB-first).
 //
-// WARNING: DES-Lite is NOT secure. It exists for educational purposes only.
-//          For real encryption, use AES (xiom.crypto.aes_encrypt).
+// NOTE ON TABLE STORAGE: FIPS defines the permutation/substitution tables as
+// constants. The XIOM compiler currently mis-compiles module-level const array
+// literals (only the length and first element are materialized). Tables are
+// therefore built at runtime into Vec[Int] by the _build_*() helpers below.
+// This is functionally identical to constant tables but works around the
+// codegen defect. The tables are rebuilt per block operation; callers needing
+// throughput should reuse 3DES/multiple blocks in one call.
+//
+// SECURITY NOTES:
+//   - DES provides only 56-bit key space; 3DES (EDE) is the legacy
+//     recommendation for compatibility. Prefer AES for new work.
+//   - Single DES is considered deprecated (SWEET32 attack, < 2^56 security).
 
 module xiom.des
 
 // ============================================================================
-// Simplified S-box: a 4×4 table (16 entries, each 4-bit output)
-//
-// This S-box maps a 6-bit input to a 4-bit output.
-// Row = (bits 5, 0), Column = (bits 4-1).
-// Values come from the first row of DES S-box 1 (well-known values).
+// Table Builders — real FIPS 46-3 tables, built at runtime
 // ============================================================================
 
-const _DESLITE_SBOX: [64]Int = [
-  14, 4, 13, 1, 2, 15, 11, 8, 3, 10, 6, 12, 5, 9, 0, 7,
-  0, 15, 7, 4, 14, 2, 13, 1, 10, 6, 12, 11, 9, 5, 3, 8,
-  4, 1, 14, 8, 13, 6, 2, 11, 15, 12, 9, 7, 3, 10, 5, 0,
-  15, 12, 8, 2, 4, 9, 1, 7, 5, 11, 3, 14, 10, 0, 6, 13
-];
+/// Initial Permutation (IP) — FIPS 46-3 Table 3-2.
+/// IP[i] is the source bit position (1..64, MSB-first) for output bit (i+1).
+fn _build_ip() -> Vec[Int] {
+  var t = Vec[Int].new();
+  t.push(58); t.push(50); t.push(42); t.push(34); t.push(26); t.push(18); t.push(10); t.push(2);
+  t.push(60); t.push(52); t.push(44); t.push(36); t.push(28); t.push(20); t.push(12); t.push(4);
+  t.push(62); t.push(54); t.push(46); t.push(38); t.push(30); t.push(22); t.push(14); t.push(6);
+  t.push(64); t.push(56); t.push(48); t.push(40); t.push(32); t.push(24); t.push(16); t.push(8);
+  t.push(57); t.push(49); t.push(41); t.push(33); t.push(25); t.push(17); t.push(9); t.push(1);
+  t.push(59); t.push(51); t.push(43); t.push(35); t.push(27); t.push(19); t.push(11); t.push(3);
+  t.push(61); t.push(53); t.push(45); t.push(37); t.push(29); t.push(21); t.push(13); t.push(5);
+  t.push(63); t.push(55); t.push(47); t.push(39); t.push(31); t.push(23); t.push(15); t.push(7);
+  return t;
+}
 
-/// Single S-box lookup: 6-bit input → 4-bit output.
-/// Row = (input_bit_5, input_bit_0), Column = (input_bits 4-1).
-fn _sbox_lookup(input6: Int) -> Int {
-  let row = ((input6 >> 5) & 1) | ((input6 & 1) << 1);
-  let col = (input6 >> 1) & 0x0F;
-  return _DESLITE_SBOX[row * 16 + col];
+/// Final Permutation (FP) — FIPS 46-3 Table 3-2, inverse of IP.
+/// FP[i] is the source bit position (1..64) for output bit (i+1).
+fn _build_fp() -> Vec[Int] {
+  var t = Vec[Int].new();
+  t.push(40); t.push(8); t.push(48); t.push(16); t.push(56); t.push(24); t.push(64); t.push(32);
+  t.push(39); t.push(7); t.push(47); t.push(15); t.push(55); t.push(23); t.push(63); t.push(31);
+  t.push(38); t.push(6); t.push(46); t.push(14); t.push(54); t.push(22); t.push(62); t.push(30);
+  t.push(37); t.push(5); t.push(45); t.push(13); t.push(53); t.push(21); t.push(61); t.push(29);
+  t.push(36); t.push(4); t.push(44); t.push(12); t.push(52); t.push(20); t.push(60); t.push(28);
+  t.push(35); t.push(3); t.push(43); t.push(11); t.push(51); t.push(19); t.push(59); t.push(27);
+  t.push(34); t.push(2); t.push(42); t.push(10); t.push(50); t.push(18); t.push(58); t.push(26);
+  t.push(33); t.push(1); t.push(41); t.push(9); t.push(49); t.push(17); t.push(57); t.push(25);
+  return t;
+}
+
+/// Expansion function E — FIPS 46-3 Table 3-3.
+/// Expands a 32-bit half-block to 48 bits by duplicating boundary bits.
+/// E[i] is the source bit position (1..32) for output bit (i+1).
+fn _build_e() -> Vec[Int] {
+  var t = Vec[Int].new();
+  t.push(32); t.push(1); t.push(2); t.push(3); t.push(4); t.push(5);
+  t.push(4); t.push(5); t.push(6); t.push(7); t.push(8); t.push(9);
+  t.push(8); t.push(9); t.push(10); t.push(11); t.push(12); t.push(13);
+  t.push(12); t.push(13); t.push(14); t.push(15); t.push(16); t.push(17);
+  t.push(16); t.push(17); t.push(18); t.push(19); t.push(20); t.push(21);
+  t.push(20); t.push(21); t.push(22); t.push(23); t.push(24); t.push(25);
+  t.push(24); t.push(25); t.push(26); t.push(27); t.push(28); t.push(29);
+  t.push(28); t.push(29); t.push(30); t.push(31); t.push(32); t.push(1);
+  return t;
+}
+
+/// Permutation P — FIPS 46-3 Table 3-5.
+/// Permutes the 32-bit S-box output before XOR with the left half.
+/// P[i] is the source bit position (1..32) for output bit (i+1).
+fn _build_p() -> Vec[Int] {
+  var t = Vec[Int].new();
+  t.push(16); t.push(7); t.push(20); t.push(21);
+  t.push(29); t.push(12); t.push(28); t.push(17);
+  t.push(1); t.push(15); t.push(23); t.push(26);
+  t.push(5); t.push(18); t.push(31); t.push(10);
+  t.push(2); t.push(8); t.push(24); t.push(14);
+  t.push(32); t.push(27); t.push(3); t.push(9);
+  t.push(19); t.push(13); t.push(30); t.push(6);
+  t.push(22); t.push(11); t.push(4); t.push(25);
+  return t;
+}
+
+/// Permuted Choice 1 (PC-1) — FIPS 46-3 Table 3-4a.
+/// Selects 56 bits from the 64-bit key, dropping the 8 parity bits.
+/// PC1[i] is the source bit position (1..64) for output bit (i+1).
+fn _build_pc1() -> Vec[Int] {
+  var t = Vec[Int].new();
+  t.push(57); t.push(49); t.push(41); t.push(33); t.push(25); t.push(17); t.push(9);
+  t.push(1); t.push(58); t.push(50); t.push(42); t.push(34); t.push(26); t.push(18);
+  t.push(10); t.push(2); t.push(59); t.push(51); t.push(43); t.push(35); t.push(27);
+  t.push(19); t.push(11); t.push(3); t.push(60); t.push(52); t.push(44); t.push(36);
+  t.push(63); t.push(55); t.push(47); t.push(39); t.push(31); t.push(23); t.push(15);
+  t.push(7); t.push(62); t.push(54); t.push(46); t.push(38); t.push(30); t.push(22);
+  t.push(14); t.push(6); t.push(61); t.push(53); t.push(45); t.push(37); t.push(29);
+  t.push(21); t.push(13); t.push(5); t.push(28); t.push(20); t.push(12); t.push(4);
+  return t;
+}
+
+/// Permuted Choice 2 (PC-2) — FIPS 46-3 Table 3-4b.
+/// Selects 48 bits from the combined 56-bit C||D key halves.
+/// PC2[i] is the source bit position (1..56) for output bit (i+1).
+fn _build_pc2() -> Vec[Int] {
+  var t = Vec[Int].new();
+  t.push(14); t.push(17); t.push(11); t.push(24); t.push(1); t.push(5);
+  t.push(3); t.push(28); t.push(15); t.push(6); t.push(21); t.push(10);
+  t.push(23); t.push(19); t.push(12); t.push(4); t.push(26); t.push(8);
+  t.push(16); t.push(7); t.push(27); t.push(20); t.push(13); t.push(2);
+  t.push(41); t.push(52); t.push(31); t.push(37); t.push(47); t.push(55);
+  t.push(30); t.push(40); t.push(51); t.push(45); t.push(33); t.push(48);
+  t.push(44); t.push(49); t.push(39); t.push(56); t.push(34); t.push(53);
+  t.push(46); t.push(42); t.push(50); t.push(36); t.push(29); t.push(32);
+  return t;
+}
+
+/// Key rotation schedule — FIPS 46-3. Number of left-shifts applied to the
+/// C and D halves per round (round 1..16).
+fn _build_shifts() -> Vec[Int] {
+  var t = Vec[Int].new();
+  t.push(1); t.push(1); t.push(2); t.push(2); t.push(2); t.push(2); t.push(2); t.push(2);
+  t.push(1); t.push(2); t.push(2); t.push(2); t.push(2); t.push(2); t.push(2); t.push(1);
+  return t;
+}
+
+/// The eight standard DES S-boxes S1..S8 — FIPS 46-3 Table 3-4.
+/// Flat 512-entry table: S1 occupies indices 0..63, S2 64..127, ..., S8 448..511.
+/// Each 6-bit input selects row = (bit1, bit6) and column = (bits 2..5),
+/// producing a 4-bit output. These are the REAL published FIPS tables.
+fn _build_sboxes() -> Vec[Int] {
+  var t = Vec[Int].new();
+  // S1
+  t.push(14); t.push(4); t.push(13); t.push(1); t.push(2); t.push(15); t.push(11); t.push(8); t.push(3); t.push(10); t.push(6); t.push(12); t.push(5); t.push(9); t.push(0); t.push(7);
+  t.push(0); t.push(15); t.push(7); t.push(4); t.push(14); t.push(2); t.push(13); t.push(1); t.push(10); t.push(6); t.push(12); t.push(11); t.push(9); t.push(5); t.push(3); t.push(8);
+  t.push(4); t.push(1); t.push(14); t.push(8); t.push(13); t.push(6); t.push(2); t.push(11); t.push(15); t.push(12); t.push(9); t.push(7); t.push(3); t.push(10); t.push(5); t.push(0);
+  t.push(15); t.push(12); t.push(8); t.push(2); t.push(4); t.push(9); t.push(1); t.push(7); t.push(5); t.push(11); t.push(3); t.push(14); t.push(10); t.push(0); t.push(6); t.push(13);
+  // S2
+  t.push(15); t.push(1); t.push(8); t.push(14); t.push(6); t.push(11); t.push(3); t.push(4); t.push(9); t.push(7); t.push(2); t.push(13); t.push(12); t.push(0); t.push(5); t.push(10);
+  t.push(3); t.push(13); t.push(4); t.push(7); t.push(15); t.push(2); t.push(8); t.push(14); t.push(12); t.push(0); t.push(1); t.push(10); t.push(6); t.push(9); t.push(11); t.push(5);
+  t.push(0); t.push(14); t.push(7); t.push(11); t.push(10); t.push(4); t.push(13); t.push(1); t.push(5); t.push(8); t.push(12); t.push(6); t.push(9); t.push(3); t.push(2); t.push(15);
+  t.push(13); t.push(8); t.push(10); t.push(1); t.push(3); t.push(15); t.push(4); t.push(2); t.push(11); t.push(6); t.push(7); t.push(12); t.push(0); t.push(5); t.push(14); t.push(9);
+  // S3
+  t.push(10); t.push(0); t.push(9); t.push(14); t.push(6); t.push(3); t.push(15); t.push(5); t.push(1); t.push(13); t.push(12); t.push(7); t.push(11); t.push(4); t.push(2); t.push(8);
+  t.push(13); t.push(7); t.push(0); t.push(9); t.push(3); t.push(4); t.push(6); t.push(10); t.push(2); t.push(8); t.push(5); t.push(14); t.push(12); t.push(11); t.push(15); t.push(1);
+  t.push(13); t.push(6); t.push(4); t.push(9); t.push(8); t.push(15); t.push(3); t.push(0); t.push(11); t.push(1); t.push(2); t.push(12); t.push(5); t.push(10); t.push(14); t.push(7);
+  t.push(1); t.push(10); t.push(13); t.push(0); t.push(6); t.push(9); t.push(8); t.push(7); t.push(4); t.push(15); t.push(14); t.push(3); t.push(11); t.push(5); t.push(2); t.push(12);
+  // S4
+  t.push(7); t.push(13); t.push(14); t.push(3); t.push(0); t.push(6); t.push(9); t.push(10); t.push(1); t.push(2); t.push(8); t.push(5); t.push(11); t.push(12); t.push(4); t.push(15);
+  t.push(13); t.push(8); t.push(11); t.push(5); t.push(6); t.push(15); t.push(0); t.push(3); t.push(4); t.push(7); t.push(2); t.push(12); t.push(1); t.push(10); t.push(14); t.push(9);
+  t.push(10); t.push(6); t.push(9); t.push(0); t.push(12); t.push(11); t.push(7); t.push(13); t.push(15); t.push(1); t.push(3); t.push(14); t.push(5); t.push(2); t.push(8); t.push(4);
+  t.push(3); t.push(15); t.push(0); t.push(6); t.push(10); t.push(1); t.push(13); t.push(8); t.push(9); t.push(4); t.push(5); t.push(11); t.push(12); t.push(7); t.push(2); t.push(14);
+  // S5
+  t.push(2); t.push(12); t.push(4); t.push(1); t.push(7); t.push(10); t.push(11); t.push(6); t.push(8); t.push(5); t.push(3); t.push(15); t.push(13); t.push(0); t.push(14); t.push(9);
+  t.push(14); t.push(11); t.push(2); t.push(12); t.push(4); t.push(7); t.push(13); t.push(1); t.push(5); t.push(0); t.push(15); t.push(10); t.push(3); t.push(9); t.push(8); t.push(6);
+  t.push(4); t.push(2); t.push(1); t.push(11); t.push(10); t.push(13); t.push(7); t.push(8); t.push(15); t.push(9); t.push(12); t.push(5); t.push(6); t.push(3); t.push(0); t.push(14);
+  t.push(11); t.push(8); t.push(12); t.push(7); t.push(1); t.push(14); t.push(2); t.push(13); t.push(6); t.push(15); t.push(0); t.push(9); t.push(10); t.push(4); t.push(5); t.push(3);
+  // S6
+  t.push(12); t.push(1); t.push(10); t.push(15); t.push(9); t.push(2); t.push(6); t.push(8); t.push(0); t.push(13); t.push(3); t.push(4); t.push(14); t.push(7); t.push(5); t.push(11);
+  t.push(10); t.push(15); t.push(4); t.push(2); t.push(7); t.push(12); t.push(9); t.push(5); t.push(6); t.push(1); t.push(13); t.push(14); t.push(0); t.push(11); t.push(3); t.push(8);
+  t.push(9); t.push(14); t.push(15); t.push(5); t.push(2); t.push(8); t.push(12); t.push(3); t.push(7); t.push(0); t.push(4); t.push(10); t.push(1); t.push(13); t.push(11); t.push(6);
+  t.push(4); t.push(3); t.push(2); t.push(12); t.push(9); t.push(5); t.push(15); t.push(10); t.push(11); t.push(14); t.push(1); t.push(7); t.push(6); t.push(0); t.push(8); t.push(13);
+  // S7
+  t.push(4); t.push(11); t.push(2); t.push(14); t.push(15); t.push(0); t.push(8); t.push(13); t.push(3); t.push(12); t.push(9); t.push(7); t.push(5); t.push(10); t.push(6); t.push(1);
+  t.push(13); t.push(0); t.push(11); t.push(7); t.push(4); t.push(9); t.push(1); t.push(10); t.push(14); t.push(3); t.push(5); t.push(12); t.push(2); t.push(15); t.push(8); t.push(6);
+  t.push(1); t.push(4); t.push(11); t.push(13); t.push(12); t.push(3); t.push(7); t.push(14); t.push(10); t.push(15); t.push(6); t.push(8); t.push(0); t.push(5); t.push(9); t.push(2);
+  t.push(6); t.push(11); t.push(13); t.push(8); t.push(1); t.push(4); t.push(10); t.push(7); t.push(9); t.push(5); t.push(0); t.push(15); t.push(14); t.push(2); t.push(3); t.push(12);
+  // S8
+  t.push(13); t.push(2); t.push(8); t.push(4); t.push(6); t.push(15); t.push(11); t.push(1); t.push(10); t.push(9); t.push(3); t.push(14); t.push(5); t.push(0); t.push(12); t.push(7);
+  t.push(1); t.push(15); t.push(13); t.push(8); t.push(10); t.push(3); t.push(7); t.push(4); t.push(12); t.push(5); t.push(6); t.push(11); t.push(0); t.push(14); t.push(9); t.push(2);
+  t.push(7); t.push(11); t.push(4); t.push(1); t.push(9); t.push(12); t.push(14); t.push(2); t.push(0); t.push(6); t.push(10); t.push(13); t.push(15); t.push(3); t.push(5); t.push(8);
+  t.push(2); t.push(1); t.push(14); t.push(7); t.push(4); t.push(10); t.push(8); t.push(13); t.push(15); t.push(12); t.push(9); t.push(0); t.push(3); t.push(5); t.push(6); t.push(11);
+  return t;
 }
 
 // ============================================================================
-// Expansion: 32 bits → 48 bits
-//
-// Expansion table (simplified E-like):
-//   For each group of 4 input bits, output 6 bits by duplicating
-//   the boundary bits (same pattern as DES E-table, but simpler mapping).
-//
-// Instead of a full E-table, we use bit-position-based expansion:
-//   Group 0 (input bits 0-3): output bits 0-5 = {bit3, bit0, bit1, bit2, bit3, bit0}
-//   Group 1 (input bits 4-7): output bits 6-11 = {bit7, bit4, bit5, bit6, bit7, bit4}
-//   ...
-//   Group 7 (input bits 28-31): output bits 42-47 = {bit31, bit28, ..., bit31, bit28}
-//
-// This is mathematically equivalent to a fixed permutation.
+// Bit Helpers
 // ============================================================================
 
-fn _expand_32_to_48(r: Int) -> Int {
+/// Extract bit `pos` (1-indexed, MSB-first) from a 64-bit value.
+/// Bit 1 is the most-significant bit; bit 64 is the least-significant bit.
+fn _get_bit_64(x: Int, pos: Int) -> Int {
+  return (x >> (64 - pos)) & 1;
+}
+
+/// Extract bit `pos` (1-indexed, MSB-first) from an `in_bits`-wide value.
+fn _get_bit_n(x: Int, in_bits: Int, pos: Int) -> Int {
+  return (x >> (in_bits - pos)) & 1;
+}
+
+/// General permutation: build `out_bits` output bits, each sourced from
+/// `table[i]` (1-indexed MSB-first position within the `in_bits`-wide input).
+fn _permute(input: Int, table: &Vec[Int], in_bits: Int, out_bits: Int) -> Int {
   var result = 0;
-  var group = 0;
-  while group < 8 {
-    let base = group * 4;
-    // Extract the 4 bits of this group from r
-    let b0 = (r >> base) & 1;
-    let b1 = (r >> (base + 1)) & 1;
-    let b2 = (r >> (base + 2)) & 1;
-    let b3 = (r >> (base + 3)) & 1;
-
-    // Output 6 bits: b3, b0, b1, b2, b3, b0
-    let out_base = group * 6;
-    result = result | (b3 << out_base);
-    result = result | (b0 << (out_base + 1));
-    result = result | (b1 << (out_base + 2));
-    result = result | (b2 << (out_base + 3));
-    result = result | (b3 << (out_base + 4));
-    result = result | (b0 << (out_base + 5));
-
-    group = group + 1;
+  var i = 0;
+  while i < out_bits {
+    let src = table[i];
+    result = (result << 1) | _get_bit_n(input, in_bits, src);
+    i = i + 1;
   }
-
-  return result & 0xFFFFFFFFFFFF;
+  return result;
 }
 
 // ============================================================================
-// F-function: Feistel round function
-//
-// F(R, K_i):
-//   1. Expand R (32 bits) to 48 bits.
-//   2. XOR with round key K_i (48 bits).
-//   3. Substitute: split 48 bits into 8 groups of 6 bits,
-//      apply S-box (6→4), producing 32 bits.
-//   4. Return the 32-bit result.
-//
-// Parameters:
-//   r: 32-bit right half
-//   round_key: 48-bit round key
-// Returns: 32-bit F-function output
+// Key Schedule — FIPS 46-3
 // ============================================================================
 
-fn _f_function(r: Int, round_key: Int) -> Int {
-  // Step 1: Expand 32 → 48
-  var expanded = _expand_32_to_48(r);
-
-  // Step 2: XOR with round key (48 bits)
-  var xored = (expanded ^ round_key) & 0xFFFFFFFFFFFF;
-
-  // Step 3: S-box substitution (48 → 32)
-  // Split 48 bits into 8 groups of 6 bits
-  var result = 0;
-  var group = 0;
-  while group < 8 {
-    let input6 = (xored >> (group * 6)) & 0x3F;
-    let output4 = _sbox_lookup(input6);
-    result = result | (output4 << (group * 4));
-    group = group + 1;
-  }
-
-  return result & 0xFFFFFFFF;
-}
-
-// ============================================================================
-// Key Schedule: 64-bit key → 16 × 48-bit round keys
-//
-// Simplified key schedule:
-//   1. Split 64-bit key into two 32-bit halves: K_L, K_R.
-//   2. For each round i (0..15):
-//      a. Rotate K_L left by (i % 7 + 1) bits.
-//      b. Rotate K_R left by ((i * 3) % 11 + 1) bits.
-//      c. Combine and extract 48 bits: round_key = (rotated_K_L || rotated_K_R) >> shift
-//         and mask to 48 bits, using different shifts per round.
-//   3. Return 16 round keys.
-//
-// This is NOT the DES key schedule. It's a simplified version that produces
-// 16 distinct 48-bit round keys from a 64-bit key.
-// ============================================================================
-
-fn _key_schedule(key64: Int) -> Vec[Int] {
+/// Derive the 16 round keys from a 64-bit key.
+/// 1. PC-1 strips the 8 parity bits -> 56 bits.
+/// 2. Split into C (upper 28 bits) and D (lower 28 bits).
+/// 3. For each round i (0..15): left-rotate C/D by _shifts[i],
+///    combine and apply PC-2 to produce the 48-bit round key.
+fn _key_schedule(key64: Int, pc1: &Vec[Int], pc2: &Vec[Int], shifts: &Vec[Int]) -> Vec[Int] {
   var round_keys = Vec[Int].new();
-
-  // Split key into two 32-bit halves
-  var k_l = ((key64 >> 32) & 0xFFFFFFFF);
-  var k_r = (key64 & 0xFFFFFFFF);
-
-  var round = 0;
-  while round < 16 {
-    // Rotate K_L left by (round % 7 + 1)
-    let rot_l = (round % 7) + 1;
-    var rl = ((k_l << rot_l) | (k_l >> (32 - rot_l))) & 0xFFFFFFFF;
-
-    // Rotate K_R left by ((round * 3) % 11 + 1)
-    let rot_r = ((round * 3) % 11) + 1;
-    var rr = ((k_r << rot_r) | (k_r >> (32 - rot_r))) & 0xFFFFFFFF;
-
-    // Combine and extract 48 bits using round-dependent shift
-    var combined = (rl << 32) | rr;
-    let shift = (round * 5) % 17;
-    var round_key = (combined >> shift) & 0xFFFFFFFFFFFF;
-
-    round_keys.push(round_key);
-    round = round + 1;
+  var pc1_out = _permute(key64, pc1, 64, 56);
+  var c = (pc1_out >> 28) & 0x0FFFFFFF;
+  var d = pc1_out & 0x0FFFFFFF;
+  var i = 0;
+  while i < 16 {
+    let rot = shifts[i];
+    c = ((c << rot) | (c >> (28 - rot))) & 0x0FFFFFFF;
+    d = ((d << rot) | (d >> (28 - rot))) & 0x0FFFFFFF;
+    let combined = (c << 28) | d;
+    round_keys.push(_permute(combined, pc2, 56, 48));
+    i = i + 1;
   }
-
   return round_keys;
 }
 
 // ============================================================================
-// DES-Lite Block Encrypt / Decrypt
-//
-// Encryption:
-//   1. Split 64-bit block into L (32 bits) and R (32 bits).
-//   2. 16 Feistel rounds:
-//        temp = R
-//        R = L XOR F(R, K_i)
-//        L = temp
-//   3. Output = R || L (halves swapped after final round).
-//
-// Decryption: identical to encryption but with round keys reversed (K_15..K_0).
-//
-// Parameters:
-//   block: 64-bit plaintext/ciphertext
-//   key: 64-bit key
-// Returns: 64-bit ciphertext/plaintext
+// F-function — the Feistel round function f(R, K)
 // ============================================================================
 
-/// Encrypt a single 64-bit block using DES-Lite.
-pub fn des_encrypt_block(block: Int, key: Int) -> Int {
-  var round_keys = _key_schedule(key);
+/// f(R, K_i) = P(S(E(R) XOR K_i)).
+/// 1. Expand 32-bit R to 48 bits via E.
+/// 2. XOR with the 48-bit round key.
+/// 3. Split into eight 6-bit groups; substitute each via S1..S8 -> 4 bits.
+/// 4. Concatenate 8x4 bits and apply permutation P.
+fn _f_function(r: Int, round_key: Int, e: &Vec[Int], p: &Vec[Int], sboxes: &Vec[Int]) -> Int {
+  var expanded = _permute(r, e, 32, 48);
+  var xored = (expanded ^ round_key) & 0xFFFFFFFFFFFF;
+  var sbox_out = 0;
+  var g = 0;
+  while g < 8 {
+    let shift = 42 - g * 6;
+    let input6 = (xored >> shift) & 0x3F;
+    let row = ((input6 >> 5) & 1) * 2 + (input6 & 1);
+    let col = (input6 >> 1) & 0xF;
+    sbox_out = (sbox_out << 4) | sboxes[g * 64 + row * 16 + col];
+    g = g + 1;
+  }
+  return _permute(sbox_out, p, 32, 32);
+}
 
-  // Split block into left and right halves (32 bits each)
-  var left = ((block >> 32) & 0xFFFFFFFF);
-  var right = (block & 0xFFFFFFFF);
+// ============================================================================
+// Core Feistel — FIPS 46-3
+// ============================================================================
 
-  // 16 Feistel rounds
+/// Core 16-round Feistel. Encryption applies round keys in order K0..K15;
+/// decryption applies them in reverse (K15..K0), which inverts encryption.
+/// The halves are swapped after the last round before FP, per the DES spec.
+fn _feistel(block: Int, round_keys: &Vec[Int], ip: &Vec[Int], fp: &Vec[Int], e: &Vec[Int], p: &Vec[Int], sboxes: &Vec[Int], decrypt: Int) -> Int {
+  var state = _permute(block, ip, 64, 64);
+  var left = (state >> 32) & 0xFFFFFFFF;
+  var right = state & 0xFFFFFFFF;
   var round = 0;
   while round < 16 {
+    var ki = round;
+    if decrypt != 0 {
+      ki = 15 - round;
+    }
     var temp = right;
-    right = (left ^ _f_function(right, round_keys[round])) & 0xFFFFFFFF;
+    right = (left ^ _f_function(right, round_keys[ki], e, p, sboxes)) & 0xFFFFFFFF;
     left = temp;
     round = round + 1;
   }
-
-  // Combine with halves swapped (Feistel final step)
-  var result = (right << 32) | left;
-  return result;
+  var preoutput = (right << 32) | left;
+  return _permute(preoutput, fp, 64, 64);
 }
 
-/// Decrypt a single 64-bit block using DES-Lite.
-/// Identical to encrypt but with round keys in reverse order.
+// ============================================================================
+// Public API — single DES blocks
+// ============================================================================
+
+/// Encrypt a single 64-bit block with DES (FIPS 46-3).
+pub fn des_encrypt_block(block: Int, key: Int) -> Int {
+  var ip = _build_ip();
+  var fp = _build_fp();
+  var e = _build_e();
+  var p = _build_p();
+  var sboxes = _build_sboxes();
+  var pc1 = _build_pc1();
+  var pc2 = _build_pc2();
+  var shifts = _build_shifts();
+  var round_keys = _key_schedule(key, &pc1, &pc2, &shifts);
+  return _feistel(block, &round_keys, &ip, &fp, &e, &p, &sboxes, 0);
+}
+
+/// Decrypt a single 64-bit block with DES (FIPS 46-3).
 pub fn des_decrypt_block(block: Int, key: Int) -> Int {
-  var round_keys = _key_schedule(key);
+  var ip = _build_ip();
+  var fp = _build_fp();
+  var e = _build_e();
+  var p = _build_p();
+  var sboxes = _build_sboxes();
+  var pc1 = _build_pc1();
+  var pc2 = _build_pc2();
+  var shifts = _build_shifts();
+  var round_keys = _key_schedule(key, &pc1, &pc2, &shifts);
+  return _feistel(block, &round_keys, &ip, &fp, &e, &p, &sboxes, 1);
+}
 
-  var left = ((block >> 32) & 0xFFFFFFFF);
-  var right = (block & 0xFFFFFFFF);
+// ============================================================================
+// Triple-DES (3DES) — EDE mode (Encrypt-Decrypt-Encrypt)
+// ============================================================================
 
-  // 16 Feistel rounds with reversed key order
-  var round = 15;
-  while round >= 0 {
-    var temp = right;
-    right = (left ^ _f_function(right, round_keys[round])) & 0xFFFFFFFF;
-    left = temp;
-    round = round - 1;
-  }
+/// Encrypt a 64-bit block with Triple-DES EDE: C = E_K3(D_K2(E_K1(P))).
+/// When K1 == K2 == K3 this degenerates to single DES.
+pub fn des3_encrypt_block(block: Int, k1: Int, k2: Int, k3: Int) -> Int {
+  var t1 = des_encrypt_block(block, k1);
+  var t2 = des_decrypt_block(t1, k2);
+  return des_encrypt_block(t2, k3);
+}
 
-  var result = (right << 32) | left;
-  return result;
+/// Decrypt a 64-bit block with Triple-DES EDE: P = D_K1(E_K2(D_K3(C))).
+pub fn des3_decrypt_block(block: Int, k1: Int, k2: Int, k3: Int) -> Int {
+  var t1 = des_decrypt_block(block, k3);
+  var t2 = des_encrypt_block(t1, k2);
+  return des_decrypt_block(t2, k1);
 }

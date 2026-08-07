@@ -12,6 +12,8 @@ use xiom.math.shl;
 use xiom.math.shr;
 use xiom.math.random;
 use xiom.math.random_range;
+use xiom.chacha;
+use xiom.poly1305;
 
 // ============================================================================
 // Hardware Acceleration FFI
@@ -415,7 +417,49 @@ fn _sha512_eps1(x: Int) -> Int {
   return _u64_rotr(x, 19) ^ _u64_rotr(x, 61) ^ _u64_shr(x, 6);
 }
 
+// SHA-512 round constants K[0..79] (FIPS 180-4). Built at runtime because
+// module-level const arrays are mis-materialized by the compiler.
+fn _sha512_k_constants() -> Vec[Int] {
+  var k = Vec[Int].new();
+  k.push(0x428a2f98d728ae22); k.push(0x7137449123ef65cd); k.push(0xb5c0fbcfec4d3b2f); k.push(0xe9b5dba58189dbbc);
+  k.push(0x3956c25bf348b538); k.push(0x59f111f1b605d019); k.push(0x923f82a4af194f9b); k.push(0xab1c5ed5da6d8118);
+  k.push(0xd807aa98a3030242); k.push(0x12835b0145706fbe); k.push(0x243185be4ee4b28c); k.push(0x550c7dc3d5ffb4e2);
+  k.push(0x72be5d74f27b896f); k.push(0x80deb1fe3b1696b1); k.push(0x9bdc06a725c71235); k.push(0xc19bf174cf692694);
+  k.push(0xe49b69c19ef14ad2); k.push(0xefbe4786384f25e3); k.push(0x0fc19dc68b8cd5b5); k.push(0x240ca1cc77ac9c65);
+  k.push(0x2de92c6f592b0275); k.push(0x4a7484aa6ea6e483); k.push(0x5cb0a9dcbd41fbd4); k.push(0x76f988da831153b5);
+  k.push(0x983e5152ee66dfab); k.push(0xa831c66d2db43210); k.push(0xb00327c898fb213f); k.push(0xbf597fc7beef0ee4);
+  k.push(0xc6e00bf33da88fc2); k.push(0xd5a79147930aa725); k.push(0x06ca6351e003826f); k.push(0x142929670a0e6e70);
+  k.push(0x27b70a8546d22ffc); k.push(0x2e1b21385c26c926); k.push(0x4d2c6dfc5ac42aed); k.push(0x53380d139d95b3df);
+  k.push(0x650a73548baf63de); k.push(0x766a0abb3c77b2a8); k.push(0x81c2c92e47edaee6); k.push(0x92722c851482353b);
+  k.push(0xa2bfe8a14cf10364); k.push(0xa81a664bbc423001); k.push(0xc24b8b70d0f89791); k.push(0xc76c51a30654be30);
+  k.push(0xd192e819d6ef5218); k.push(0xd69906245565a910); k.push(0xf40e35855771202a); k.push(0x106aa07032bbd1b8);
+  k.push(0x19a4c116b8d2d0c8); k.push(0x1e376c085141ab53); k.push(0x2748774cdf8eeb99); k.push(0x34b0bcb5e19b48a8);
+  k.push(0x391c0cb3c5c95a63); k.push(0x4ed8aa4ae3418acb); k.push(0x5b9cca4f7763e373); k.push(0x682e6ff3d6b2b8a3);
+  k.push(0x748f82ee5defb2fc); k.push(0x78a5636f43172f60); k.push(0x84c87814a1f0ab72); k.push(0x8cc702081a6439ec);
+  k.push(0x90befffa23631e28); k.push(0xa4506cebde82bde9); k.push(0xbef9a3f7b2c67915); k.push(0xc67178f2e372532b);
+  k.push(0xca273eceea26619c); k.push(0xd186b8c721c0c207); k.push(0xeada7dd6cde0eb1e); k.push(0xf57d4f7fee6ed178);
+  k.push(0x06f067aa72176fba); k.push(0x0a637dc5a2c898a6); k.push(0x113f9804bef90dae); k.push(0x1b710b35131c471b);
+  k.push(0x28db77f523047d84); k.push(0x32caab7b40c72493); k.push(0x3c9ebe0a15c9bebc); k.push(0x431d67c49c100d4c);
+  k.push(0x4cc5d4becb3e42b6); k.push(0x597f299cfc657e2a); k.push(0x5fcb6fab3ad6faec); k.push(0x6c44198c4a475817);
+  return k;
+}
+
+// SHA-512 initial hash value H0 (FIPS 180-4). Built at runtime (see above).
+fn _sha512_iv() -> Vec[Int] {
+  var v = Vec[Int].new();
+  v.push(0x6a09e667f3bcc908);
+  v.push(0xbb67ae8584caa73b);
+  v.push(0x3c6ef372fe94f82b);
+  v.push(0xa54ff53a5f1d36f1);
+  v.push(0x510e527fade682d1);
+  v.push(0x9b05688c2b3e6c1f);
+  v.push(0x1f83d9abfb41bd6b);
+  v.push(0x5be0cd19137e2179);
+  return v;
+}
+
 fn _sha512_block(block: &Vec[UInt8], start: Int, state: &mut Vec[Int]) {
+  var k = _sha512_k_constants();
   var w: [80]Int;
   var i = 0;
   while i < 16 {
@@ -443,7 +487,7 @@ fn _sha512_block(block: &Vec[UInt8], start: Int, state: &mut Vec[Int]) {
   var h = state[7];
   i = 0;
   while i < 80 {
-    let t1 = h + _sha512_sigma1(e) + _sha512_ch(e, f, g) + _SHA512_K[i] + w[i];
+    let t1 = h + _sha512_sigma1(e) + _sha512_ch(e, f, g) + k[i] + w[i];
     let t2 = _sha512_sigma0(a) + _sha512_maj(a, b, c);
     h = g;
     g = f;
@@ -494,12 +538,7 @@ fn _sha512_pad_and_process(data: &Vec[UInt8]) -> Vec[Int] {
     padded.push(0);
     i = i - 1;
   }
-  var state = Vec[Int].new();
-  i = 0;
-  while i < 8 {
-    state.push(_SHA512_INIT[i]);
-    i = i + 1;
-  }
+  var state = _sha512_iv();
   let block_count = padded.len() / 128;
   var bi = 0;
   while bi < block_count {
@@ -686,19 +725,350 @@ pub fn md5(data: &Vec[UInt8]) -> Vec[UInt8]
 }
 
 // ============================================================================
-// Blake3 (simplified — delegates to SHA-256 with domain separation)
+// BLAKE3 — Real Implementation (single + multi-chunk tree)
+// Spec: https://github.com/BLAKE3-team/BLAKE3-specs
+// BLAKE3 is an evolution of BLAKE2 using a binary tree of 1024-byte chunks.
+// Each leaf chunk is compressed with the 7-round compression function,
+// producing a 32-byte chaining value. Chaining values are merged pairwise
+// through parent node compressions. The root compression produces the
+// final 32-byte hash.
 // ============================================================================
 
-pub fn blake3(data: &Vec[UInt8]) -> Vec[UInt8] {
-  var ctx = Vec[UInt8].new();
-  ctx.push(0x42);
-  ctx.push(0x33);
+// BLAKE3 IV = first 8 words of SHA-256 constants
+const _B3_IV0: Int = 0x6A09E667;
+const _B3_IV1: Int = 0xBB67AE85;
+const _B3_IV2: Int = 0x3C6EF372;
+const _B3_IV3: Int = 0xA54FF53A;
+const _B3_IV4: Int = 0x510E527F;
+const _B3_IV5: Int = 0x9B05688C;
+const _B3_IV6: Int = 0x1F83D9AB;
+const _B3_IV7: Int = 0x5BE0CD19;
+
+// BLAKE3 Flags
+const _B3_FLAG_CHUNK_START: Int = 1;
+const _B3_FLAG_CHUNK_END: Int = 2;
+const _B3_FLAG_PARENT: Int = 4;
+const _B3_FLAG_ROOT: Int = 8;
+
+// Message schedule for the 7 rounds: 16 message word indices per round.
+// The BLAKE3 spec's message schedule permutes the 16 message words each round.
+// Built at runtime: the compiler mis-materializes module-level const arrays,
+// so the schedule is produced by this builder instead of a const table.
+fn _b3_build_schedule() -> Vec[Int] {
+  var s = Vec[Int].new();
+  // Round 0
+  s.push(0); s.push(1); s.push(2); s.push(3); s.push(4); s.push(5); s.push(6); s.push(7);
+  s.push(8); s.push(9); s.push(10); s.push(11); s.push(12); s.push(13); s.push(14); s.push(15);
+  // Round 1
+  s.push(2); s.push(6); s.push(3); s.push(10); s.push(7); s.push(0); s.push(4); s.push(13);
+  s.push(1); s.push(11); s.push(12); s.push(5); s.push(9); s.push(14); s.push(15); s.push(8);
+  // Round 2
+  s.push(3); s.push(4); s.push(10); s.push(12); s.push(13); s.push(2); s.push(7); s.push(14);
+  s.push(6); s.push(5); s.push(9); s.push(0); s.push(11); s.push(15); s.push(8); s.push(1);
+  // Round 3
+  s.push(10); s.push(7); s.push(12); s.push(9); s.push(14); s.push(3); s.push(13); s.push(15);
+  s.push(4); s.push(0); s.push(11); s.push(2); s.push(5); s.push(8); s.push(1); s.push(6);
+  // Round 4
+  s.push(12); s.push(13); s.push(9); s.push(11); s.push(15); s.push(10); s.push(14); s.push(8);
+  s.push(7); s.push(2); s.push(5); s.push(3); s.push(0); s.push(1); s.push(6); s.push(4);
+  // Round 5
+  s.push(9); s.push(14); s.push(11); s.push(5); s.push(8); s.push(12); s.push(15); s.push(1);
+  s.push(13); s.push(3); s.push(0); s.push(10); s.push(2); s.push(6); s.push(4); s.push(7);
+  // Round 6
+  s.push(11); s.push(15); s.push(5); s.push(0); s.push(1); s.push(9); s.push(8); s.push(6);
+  s.push(14); s.push(10); s.push(2); s.push(12); s.push(3); s.push(4); s.push(7); s.push(13);
+  return s;
+}
+
+// BLAKE3 G function: quarter-round on state words a,b,c,d with message words mx,my.
+// All operations are modulo 2^32.
+fn _b3_g(state: &mut Vec[Int], a: Int, b: Int, c: Int, d: Int, mx: Int, my: Int) {
+  state[a] = _u32_add(state[a], _u32_add(state[b], mx));
+  state[d] = _u32_rotr(_u32_mask(state[d] ^ state[a]), 16);
+  state[c] = _u32_add(state[c], state[d]);
+  state[b] = _u32_rotr(_u32_mask(state[b] ^ state[c]), 12);
+  state[a] = _u32_add(state[a], _u32_add(state[b], my));
+  state[d] = _u32_rotr(_u32_mask(state[d] ^ state[a]), 8);
+  state[c] = _u32_add(state[c], state[d]);
+  state[b] = _u32_rotr(_u32_mask(state[b] ^ state[c]), 7);
+}
+
+// BLAKE3 compression function.
+// Inputs:
+//   chaining: 8-word chaining value (CV)
+//   block: 16-word message block (64 bytes, padded if shorter)
+//   counter_lo: low 32 bits of chunk counter
+//   counter_hi: high 32 bits of chunk counter
+//   block_len: number of bytes in this block (0-64)
+//   flags: bitwise OR of flags (CHUNK_START, CHUNK_END, PARENT, ROOT)
+//   schedule: 112-entry message schedule built by _b3_build_schedule
+// Returns: 16-word state after 7 rounds (NO XOR-back like BLAKE2).
+fn _blake3_compress(chaining: &Vec[Int], block: &Vec[Int], counter_lo: Int, counter_hi: Int, block_len: Int, flags: Int, schedule: &Vec[Int]) -> Vec[Int] {
+  // Build 16-word state matrix:
+  //   row 0: chaining[0..3]
+  //   row 1: chaining[4..7]
+  //   row 2: IV[0..3]
+  //   row 3: counter_lo, counter_hi, block_len, flags
+  var state = Vec[Int].new();
+  state.push(chaining[0]);
+  state.push(chaining[1]);
+  state.push(chaining[2]);
+  state.push(chaining[3]);
+  state.push(chaining[4]);
+  state.push(chaining[5]);
+  state.push(chaining[6]);
+  state.push(chaining[7]);
+  state.push(_B3_IV0);
+  state.push(_B3_IV1);
+  state.push(_B3_IV2);
+  state.push(_B3_IV3);
+  state.push(counter_lo);
+  state.push(counter_hi);
+  state.push(block_len);
+  state.push(flags);
+
+  // 7 rounds
+  var round = 0;
+  while round < 7 {
+    let off = round * 16;
+    // Column steps: G(0,4,8,12), G(1,5,9,13), G(2,6,10,14), G(3,7,11,15)
+    _b3_g(&mut state, 0, 4, 8, 12, block[schedule[off + 0]], block[schedule[off + 1]]);
+    _b3_g(&mut state, 1, 5, 9, 13, block[schedule[off + 2]], block[schedule[off + 3]]);
+    _b3_g(&mut state, 2, 6, 10, 14, block[schedule[off + 4]], block[schedule[off + 5]]);
+    _b3_g(&mut state, 3, 7, 11, 15, block[schedule[off + 6]], block[schedule[off + 7]]);
+    // Diagonal steps: G(0,5,10,15), G(1,6,11,12), G(2,7,8,13), G(3,4,9,14)
+    _b3_g(&mut state, 0, 5, 10, 15, block[schedule[off + 8]], block[schedule[off + 9]]);
+    _b3_g(&mut state, 1, 6, 11, 12, block[schedule[off + 10]], block[schedule[off + 11]]);
+    _b3_g(&mut state, 2, 7, 8, 13, block[schedule[off + 12]], block[schedule[off + 13]]);
+    _b3_g(&mut state, 3, 4, 9, 14, block[schedule[off + 14]], block[schedule[off + 15]]);
+    round = round + 1;
+  }
+
+  return state;
+}
+
+// Read 4 little-endian bytes from offset, return as 32-bit word.
+fn _b3_read_u32_le(bytes: &Vec[UInt8], offset: Int) -> Int {
+  return _u32_mask(
+    (bytes[offset] as Int) +
+    ((bytes[offset + 1] as Int) * 256) +
+    ((bytes[offset + 2] as Int) * 65536) +
+    ((bytes[offset + 3] as Int) * 16777216)
+  );
+}
+
+// Convert a 64-byte window of the input into 16 little-endian 32-bit words.
+// Bytes beyond `start + len` (a partial final block) are zero-padded.
+fn _b3_block_from_bytes(bytes: &Vec[UInt8], start: Int, len: Int) -> Vec[Int] {
+  var block = Vec[Int].new();
   var i = 0;
-  while i < data.len() {
-    ctx.push(data[i]);
+  while i < 16 {
+    var pos = start + i * 4;
+    var word = 0;
+    var j = 0;
+    while j < 4 {
+      if pos + j < start + len {
+        word = word | ((bytes[pos + j] as Int) << (8 * j));
+      }
+      j = j + 1;
+    }
+    block.push(_u32_mask(word));
     i = i + 1;
   }
-  return sha256(&ctx);
+  return block;
+}
+
+// Write a 32-bit word as 4 little-endian bytes into result.
+fn _b3_write_u32_le(out: &mut Vec[UInt8], word: Int) {
+  var w = _u32_mask(word);
+  out.push((w % 256) as UInt8);
+  out.push(((w / 256) % 256) as UInt8);
+  out.push(((w / 65536) % 256) as UInt8);
+  out.push(((w / 16777216) % 256) as UInt8);
+}
+
+// Compress a chunk (up to 1024 bytes) into an 8-word chaining value.
+//
+// Structure (matching the reference implementation's ChunkState):
+//   - While more than 64 bytes remain, compress full 64-byte blocks. The
+//     FIRST full block carries CHUNK_START; middle blocks carry no flags.
+//   - The final block (1..64 bytes) is compressed once with CHUNK_END (plus
+//     CHUNK_START if it is also the first block) and, when `root` is set,
+//     ROOT. The single-chunk root therefore applies ROOT on its last block.
+// The chaining value chains across blocks via the XOR-back feed-forward.
+fn _blake3_compress_chunk(chunk: &Vec[UInt8], chunk_offset: Int, chunk_len: Int, chunk_counter: Int, root: Int, schedule: &Vec[Int]) -> Vec[Int] {
+  var cv = Vec[Int].new();
+  cv.push(_B3_IV0); cv.push(_B3_IV1); cv.push(_B3_IV2); cv.push(_B3_IV3);
+  cv.push(_B3_IV4); cv.push(_B3_IV5); cv.push(_B3_IV6); cv.push(_B3_IV7);
+
+  var pos = 0;
+  var first = 1;
+
+  while chunk_len - pos > 64 {
+    var bflags = 0;
+    if first == 1 {
+      bflags = bflags | _B3_FLAG_CHUNK_START;
+      first = 0;
+    }
+    var block = _b3_block_from_bytes(chunk, chunk_offset + pos, 64);
+    var state = _blake3_compress(&cv, &block, chunk_counter, 0, 64, bflags, schedule);
+    cv[0] = state[0] ^ state[8];
+    cv[1] = state[1] ^ state[9];
+    cv[2] = state[2] ^ state[10];
+    cv[3] = state[3] ^ state[11];
+    cv[4] = state[4] ^ state[12];
+    cv[5] = state[5] ^ state[13];
+    cv[6] = state[6] ^ state[14];
+    cv[7] = state[7] ^ state[15];
+    pos = pos + 64;
+  }
+
+  // Final block (1..64 bytes, or 0 bytes for the empty input).
+  var rem = chunk_len - pos;
+  var bflags = _B3_FLAG_CHUNK_END;
+  if first == 1 {
+    bflags = bflags | _B3_FLAG_CHUNK_START;
+  }
+  if root != 0 {
+    bflags = bflags | _B3_FLAG_ROOT;
+  }
+  var block = _b3_block_from_bytes(chunk, chunk_offset + pos, rem);
+  var state = _blake3_compress(&cv, &block, chunk_counter, 0, rem, bflags, schedule);
+  cv[0] = state[0] ^ state[8];
+  cv[1] = state[1] ^ state[9];
+  cv[2] = state[2] ^ state[10];
+  cv[3] = state[3] ^ state[11];
+  cv[4] = state[4] ^ state[12];
+  cv[5] = state[5] ^ state[13];
+  cv[6] = state[6] ^ state[14];
+  cv[7] = state[7] ^ state[15];
+
+  return cv;
+}
+
+// Compress two 8-word chaining values into a parent chaining value.
+// The parent message block is left_cv || right_cv (16 words); the chaining
+// value for a parent node is the IV. block_len is always 64.
+fn _blake3_compress_parent(left_cv: &Vec[Int], right_cv: &Vec[Int], flags: Int, schedule: &Vec[Int]) -> Vec[Int] {
+  var iv = Vec[Int].new();
+  iv.push(_B3_IV0); iv.push(_B3_IV1); iv.push(_B3_IV2); iv.push(_B3_IV3);
+  iv.push(_B3_IV4); iv.push(_B3_IV5); iv.push(_B3_IV6); iv.push(_B3_IV7);
+
+  // Build 16-word message block from two 8-word CVs
+  var block = Vec[Int].new();
+  var i = 0;
+  while i < 8 { block.push(left_cv[i]); i = i + 1; }
+  while i < 16 { block.push(right_cv[i - 8]); i = i + 1; }
+
+  var state = _blake3_compress(&iv, &block, 0, 0, 64, flags, schedule);
+
+  // Parent nodes also use the XOR-back feed-forward for their chaining value.
+  var cv = Vec[Int].new();
+  i = 0;
+  while i < 8 { cv.push(state[i] ^ state[i + 8]); i = i + 1; }
+  return cv;
+}
+
+// Output the 32-byte hash from the 8-word root CV: words 0..7 in order,
+// each serialized little-endian.
+fn _blake3_output_words(cv: &Vec[Int]) -> Vec[UInt8] {
+  var result = Vec[UInt8].new();
+  var i = 0;
+  while i < 8 {
+    _b3_write_u32_le(&mut result, cv[i]);
+    i = i + 1;
+  }
+  return result;
+}
+
+// Build the BLAKE3 tree level-by-level for multi-chunk inputs and return the
+// root output. Nodes are 8-word CVs packed into a Vec[Int]. Pairs are merged
+// leftmost-first (BLAKE3 leftmost tree); a lone rightmost node is promoted
+// unchanged. The final 2-node merge is the root and uses PARENT|ROOT.
+fn _b3_reduce_tree(level: &Vec[Int], schedule: &Vec[Int]) -> Vec[UInt8] {
+  var cur = Vec[Int].new();
+  var i = 0;
+  while i < level.len() {
+    cur.push(level[i]);
+    i = i + 1;
+  }
+  while true {
+    let node_count = cur.len() / 8;
+    if node_count == 2 {
+      // Root merge: last pair on the stack is the tree root.
+      var left = Vec[Int].new();
+      var j = 0;
+      while j < 8 { left.push(cur[j]); j = j + 1; }
+      var right = Vec[Int].new();
+      j = 8;
+      while j < 16 { right.push(cur[j]); j = j + 1; }
+      var root_cv = _blake3_compress_parent(&left, &right, _B3_FLAG_PARENT | _B3_FLAG_ROOT, schedule);
+      return _blake3_output_words(&root_cv);
+    }
+    var next = Vec[Int].new();
+    var idx = 0;
+    while idx + 1 < node_count {
+      var left = Vec[Int].new();
+      var j = idx * 8;
+      while j < idx * 8 + 8 { left.push(cur[j]); j = j + 1; }
+      var right = Vec[Int].new();
+      j = idx * 8 + 8;
+      while j < idx * 8 + 16 { right.push(cur[j]); j = j + 1; }
+      var parent = _blake3_compress_parent(&left, &right, _B3_FLAG_PARENT, schedule);
+      var k = 0;
+      while k < 8 { next.push(parent[k]); k = k + 1; }
+      idx = idx + 2;
+    }
+    if idx < node_count {
+      // Lone rightmost node: promote unchanged.
+      var j = idx * 8;
+      while j < idx * 8 + 8 {
+        next.push(cur[j]);
+        j = j + 1;
+      }
+    }
+    cur = next;
+  }
+}
+
+/// Compute the BLAKE3 hash of `data` (32-byte output).
+///
+/// Spec: https://github.com/BLAKE3-team/BLAKE3-specs
+///
+/// Single-chunk inputs (<= 1024 bytes) compress the chunk directly with
+/// CHUNK_START|CHUNK_END|ROOT. Larger inputs are hashed through the binary
+/// tree: each 1024-byte chunk produces a leaf CV (chunk counter = chunk
+/// index), leaves are merged pairwise via parent nodes, and the root node
+/// carries the ROOT flag. The 32-byte digest is the root output words
+/// 7,6,5,4,3,2,1,0 serialized little-endian (reversed word order).
+pub fn blake3(data: &Vec[UInt8]) -> Vec[UInt8] {
+  let len = data.len();
+  let chunk_size = 1024;
+  let num_chunks = (len + chunk_size - 1) / chunk_size;
+  var schedule = _b3_build_schedule();
+
+  if num_chunks <= 1 {
+    // Single chunk — the chunk's final block carries ROOT.
+    var cv = _blake3_compress_chunk(data, 0, len, 0, 1, &schedule);
+    return _blake3_output_words(&cv);
+  }
+
+  // Multi-chunk: build the tree level-by-level.
+  var level = Vec[Int].new();
+  var chunk_idx = 0;
+  while chunk_idx < num_chunks {
+    var chunk_start = chunk_idx * chunk_size;
+    var chunk_len = chunk_size;
+    if chunk_start + chunk_len > len { chunk_len = len - chunk_start; }
+    var cv = _blake3_compress_chunk(data, chunk_start, chunk_len, chunk_idx, 0, &schedule);
+    var i = 0;
+    while i < 8 {
+      level.push(cv[i]);
+      i = i + 1;
+    }
+    chunk_idx = chunk_idx + 1;
+  }
+  return _b3_reduce_tree(&level, &schedule);
 }
 
 // ============================================================================
@@ -1705,4 +2075,464 @@ pub fn constant_time_compare(a: &Vec[UInt8], b: &Vec[UInt8]) -> Bool
     i = i + 1;
   }
   return diff == 0;
+}
+
+// ============================================================================
+// HKDF (RFC 5869) — HMAC-based Key Derivation Function
+//
+// HKDF consists of two steps:
+//   1. Extract: PRK = HMAC-SHA256(salt, IKM)
+//   2. Expand: OKM = T(1) || T(2) || ... || T(N) truncated to okm_len
+//      where T(0) = empty, T(i) = HMAC-SHA256(PRK, T(i-1) || info || i)
+//      i is a single byte counter (1, 2, 3, ...)
+//
+// RFC 5869 test case 1:
+//   IKM  = 0x0b0b0b... (22 times)
+//   salt = 0x000102030405060708090a0b0c
+//   info = 0xf0f1f2f3f4f5f6f7f8f9
+//   L    = 42
+//   OKM  = 3cb25f25faacd57a90434f64d0362f2a
+//          2d2d0a90cf1a5a4c5db02d56ecc4c5bf
+//          34007208d5b887185865
+//
+// Security notes:
+//   - Extract step concentrates entropy from IKM.
+//   - Salt should be random but not secret; can be all-zeros.
+//   - Info binds derived key to context; must be unique per key.
+// ============================================================================
+
+pub fn hkdf_sha256(ikm: &Vec[UInt8], salt: &Vec[UInt8], info: &Vec[UInt8], okm_len: Int) -> Result[Vec[UInt8], Str] {
+  if okm_len < 1 { return Err("okm_len must be >= 1"); }
+  let hash_len = 32;
+  let max_len = 255 * hash_len;
+  if okm_len > max_len { return Err("okm_len exceeds maximum (255 * 32)"); }
+
+  // Step 1: Extract — PRK = HMAC-SHA256(salt, IKM)
+  var prk = hmac_sha256(salt, ikm);
+
+  // Step 2: Expand — T(i) = HMAC(PRK, T(i-1) || info || i)
+  var result = Vec[UInt8].new();
+  var prev = Vec[UInt8].new(); // T(0) = empty
+
+  var block_num = 1;
+  while result.len() < okm_len {
+    // Build input: T(i-1) || info || i
+    var hmac_input = Vec[UInt8].new();
+    var j = 0;
+    while j < prev.len() {
+      hmac_input.push(prev[j]);
+      j = j + 1;
+    }
+    j = 0;
+    while j < info.len() {
+      hmac_input.push(info[j]);
+      j = j + 1;
+    }
+    hmac_input.push(block_num as UInt8);
+
+    // T(i) = HMAC-SHA256(PRK, input)
+    prev = hmac_sha256(&prk, &hmac_input);
+
+    // Append to result
+    j = 0;
+    while j < prev.len() && result.len() < okm_len {
+      result.push(prev[j]);
+      j = j + 1;
+    }
+
+    block_num = block_num + 1;
+  }
+
+  return Ok(result);
+}
+
+// ============================================================================
+// ChaCha20-Poly1305 AEAD (RFC 8439 Section 2.8)
+//
+// Authenticated Encryption with Associated Data using ChaCha20 and Poly1305.
+//
+// Algorithm:
+//   1. Generate 32-byte Poly1305 one-time key from ChaCha20 block 0 keystream.
+//   2. Encrypt plaintext using ChaCha20 keystream starting from block 1.
+//   3. Compute Poly1305 tag over: pad16(AAD) || pad16(ciphertext) ||
+//      le64(AAD_len) || le64(CT_len).
+//
+// Key: 32 bytes (256-bit). Nonce: 12 bytes (96-bit), MUST be unique per key.
+// AAD: arbitrary bytes, authenticated but NOT encrypted.
+// Plaintext: arbitrary bytes to encrypt and authenticate.
+// ciphertext: out-param, populated with encrypted data (same length as plaintext).
+// tag: out-param, populated with 16-byte authentication tag.
+// Returns: true on success.
+//
+// RFC 8439 test vector (Section 2.8.2):
+//   key = 808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9f
+//   nonce = 070000004041424344454647
+//   aad = 50515253c0c1c2c3c4c5c6c7
+//   plaintext = "Ladies and Gentlemen of the class of '99..."
+//   ciphertext = d31a8d34648e60db7b86afbc53ef7ec2...
+//   tag = 1ae10b594f09e26a7e902ecbd0600691
+//
+// Security notes:
+//   - Nonce MUST be unique for every message under the same key.
+//   - Nonce reuse completely breaks confidentiality AND authenticity.
+//   - The 16-byte tag provides 128-bit authentication strength.
+// ============================================================================
+
+pub fn chacha20_poly1305_encrypt(key: &Vec[UInt8], nonce: &Vec[UInt8], aad: &Vec[UInt8], plaintext: &Vec[UInt8], ciphertext: &mut Vec[UInt8], tag: &mut Vec[UInt8]) -> Bool {
+  if key.len() != 32 { return false; }
+  if nonce.len() != 12 { return false; }
+
+  // Generate Poly1305 one-time key: ChaCha20 block 0 keystream, first 32 bytes.
+  // We do this by encrypting 64 zero bytes: bytes 0-31 = poly_key, bytes 32-63 = discard.
+  // Bytes 64+ are plaintext keystream (ciphertext = plaintext XOR keystream).
+  var prepend_len = 64;
+  var combined = Vec[UInt8].new();
+  var i = 0;
+  while i < prepend_len { combined.push(0); i = i + 1; }
+  i = 0;
+  while i < plaintext.len() { combined.push(plaintext[i]); i = i + 1; }
+
+  var keystream_output = xiom.chacha.chacha20_encrypt(key, nonce, &combined);
+
+  // Extract Poly1305 key (first 32 bytes of output)
+  var poly_key = Vec[UInt8].new();
+  i = 0;
+  while i < 32 { poly_key.push(keystream_output[i]); i = i + 1; }
+
+  // Extract ciphertext (bytes 64+ of output, same length as plaintext)
+  ciphertext.clear();
+  i = prepend_len;
+  while i < prepend_len + plaintext.len() {
+    ciphertext.push(keystream_output[i]);
+    i = i + 1;
+  }
+
+  // Build AEAD message for Poly1305: pad16(AAD) || pad16(CT) || le64(AAD_len) || le64(CT_len)
+  var poly_msg = Vec[UInt8].new();
+
+  // pad16(AAD): AAD followed by zero padding to 16-byte boundary
+  i = 0;
+  while i < aad.len() { poly_msg.push(aad[i]); i = i + 1; }
+  var aad_pad = 16 - (aad.len() % 16);
+  if aad_pad == 16 { aad_pad = 0; }
+  i = 0;
+  while i < aad_pad { poly_msg.push(0); i = i + 1; }
+
+  // pad16(ciphertext): ciphertext followed by zero padding to 16-byte boundary
+  i = 0;
+  while i < ciphertext.len() { poly_msg.push(ciphertext[i]); i = i + 1; }
+  var ct_pad = 16 - (ciphertext.len() % 16);
+  if ct_pad == 16 { ct_pad = 0; }
+  i = 0;
+  while i < ct_pad { poly_msg.push(0); i = i + 1; }
+
+  // le64(AAD length in octets)
+  var aad_len = aad.len();
+  i = 0;
+  while i < 8 {
+    poly_msg.push((aad_len % 256) as UInt8);
+    aad_len = aad_len / 256;
+    i = i + 1;
+  }
+
+  // le64(ciphertext length in octets)
+  var ct_len_val = ciphertext.len();
+  i = 0;
+  while i < 8 {
+    poly_msg.push((ct_len_val % 256) as UInt8);
+    ct_len_val = ct_len_val / 256;
+    i = i + 1;
+  }
+
+  // Compute tag
+  var computed_tag = xiom.poly1305.poly1305_mac(&poly_key, &poly_msg);
+
+  // Copy to out-param
+  tag.clear();
+  i = 0;
+  while i < computed_tag.len() { tag.push(computed_tag[i]); i = i + 1; }
+
+  return true;
+}
+
+// ============================================================================
+// ChaCha20-Poly1305 AEAD — Decrypt
+//
+// Algorithm:
+//   1. Re-generate Poly1305 one-time key from ChaCha20 block 0.
+//   2. Compute expected tag over: pad16(AAD) || pad16(ciphertext) ||
+//      le64(AAD_len) || le64(CT_len).
+//   3. Compare expected_tag with provided tag in constant time.
+//   4. If match, decrypt ciphertext to plaintext using ChaCha20 block 1+ keystream.
+//
+// Key: 32 bytes. Nonce: 12 bytes. AAD: authenticated but unencrypted data.
+// ciphertext: encrypted data to authenticate and decrypt.
+// tag: 16-byte authentication tag to verify.
+// plaintext: out-param, populated with decrypted data on success.
+// Returns: true if authentication passed and decryption succeeded.
+//
+// Security notes:
+//   - Decryption only proceeds if tag verification passes (encrypt-then-MAC).
+//   - Constant-time tag comparison prevents timing oracle attacks.
+// ============================================================================
+
+pub fn chacha20_poly1305_decrypt(key: &Vec[UInt8], nonce: &Vec[UInt8], aad: &Vec[UInt8], ciphertext: &Vec[UInt8], tag: &Vec[UInt8], plaintext: &mut Vec[UInt8]) -> Bool {
+  if key.len() != 32 { return false; }
+  if nonce.len() != 12 { return false; }
+  if tag.len() != 16 { return false; }
+
+  // Re-generate Poly1305 one-time key (same as encrypt)
+  var prepend_len = 64;
+  var ct_len = ciphertext.len();
+  var combined = Vec[UInt8].new();
+  var i = 0;
+  while i < prepend_len { combined.push(0); i = i + 1; }
+  i = 0;
+  while i < ct_len { combined.push(ciphertext[i]); i = i + 1; }
+
+  var keystream_output = xiom.chacha.chacha20_encrypt(key, nonce, &combined);
+
+  var poly_key = Vec[UInt8].new();
+  i = 0;
+  while i < 32 { poly_key.push(keystream_output[i]); i = i + 1; }
+
+  // Build Poly1305 message (same as encrypt, over AAD || CT)
+  var poly_msg = Vec[UInt8].new();
+
+  i = 0;
+  while i < aad.len() { poly_msg.push(aad[i]); i = i + 1; }
+  var aad_pad = 16 - (aad.len() % 16);
+  if aad_pad == 16 { aad_pad = 0; }
+  i = 0;
+  while i < aad_pad { poly_msg.push(0); i = i + 1; }
+
+  i = 0;
+  while i < ciphertext.len() { poly_msg.push(ciphertext[i]); i = i + 1; }
+  var ct_pad = 16 - (ciphertext.len() % 16);
+  if ct_pad == 16 { ct_pad = 0; }
+  i = 0;
+  while i < ct_pad { poly_msg.push(0); i = i + 1; }
+
+  var aad_len = aad.len();
+  i = 0;
+  while i < 8 {
+    poly_msg.push((aad_len % 256) as UInt8);
+    aad_len = aad_len / 256;
+    i = i + 1;
+  }
+
+  var ct_len_val2 = ciphertext.len();
+  i = 0;
+  while i < 8 {
+    poly_msg.push((ct_len_val2 % 256) as UInt8);
+    ct_len_val2 = ct_len_val2 / 256;
+    i = i + 1;
+  }
+
+  var expected_tag = xiom.poly1305.poly1305_mac(&poly_key, &poly_msg);
+
+  // Constant-time tag comparison
+  let matched = constant_time_compare(&expected_tag, tag);
+  if matched == false { return false; }
+
+  // Decrypt: plaintext = ciphertext XOR keystream (bytes 64+ of output)
+  plaintext.clear();
+  i = prepend_len;
+  while i < prepend_len + ct_len {
+    plaintext.push(keystream_output[i]);
+    i = i + 1;
+  }
+
+  return true;
+}
+
+// ============================================================================
+// SHA-224 — Truncated SHA-256 with distinct IV
+//
+// SHA-224 is identical to SHA-256 but:
+//   1. Uses a different 8-word initialization vector.
+//   2. Outputs only the first 28 bytes (7 words) of the 32-byte hash.
+//
+// IV = [0xc1059ed8, 0x367cd507, 0x3070dd17, 0xf70e5939,
+//       0xffc00b31, 0x68581511, 0x64f98fa7, 0xbefa4fa4]
+//
+// Test vector: SHA-224("") = d14a028c2a3a2bc9476102bb288234c415a2b01f828ea62ac5b3e42f
+//
+// Security notes:
+//   - SHA-224 provides 112-bit collision resistance (birthday bound).
+//   - Preimage resistance matches the full SHA-256 (256-bit).
+// ============================================================================
+
+// SHA-224 uses a distinct 8-word IV; the digest is the first 28 bytes.
+// The IV is built at runtime because module-level const arrays are
+// mis-materialized by the compiler (only the length + first element survive).
+fn _sha224_iv() -> Vec[Int] {
+  var v = Vec[Int].new();
+  v.push(0xc1059ed8);
+  v.push(0x367cd507);
+  v.push(0x3070dd17);
+  v.push(0xf70e5939);
+  v.push(0xffc00b31);
+  v.push(0x68581511);
+  v.push(0x64f98fa7);
+  v.push(0xbefa4fa4);
+  return v;
+}
+
+pub fn sha224(data: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: result.len() == 28
+{
+  let data_len = data.len();
+  let bit_len = data_len * 8;
+  var pad_len = 64 - ((data_len + 9) % 64);
+  if pad_len >= 64 { pad_len = pad_len - 64; }
+  var padded = Vec[UInt8].new();
+  var i = 0;
+  while i < data_len {
+    padded.push(data[i]);
+    i = i + 1;
+  }
+  padded.push(0x80);
+  i = 0;
+  while i < pad_len {
+    padded.push(0);
+    i = i + 1;
+  }
+  var bl = bit_len;
+  i = 7;
+  while i >= 0 {
+    padded.push((bl % 256) as UInt8);
+    bl = bl / 256;
+    i = i - 1;
+  }
+  var state = _sha224_iv();
+  // Reuse the C SHA-256 compress with SHA-224 IV
+  let block_count = padded.len() / 64;
+  unsafe {
+    var st_buf = malloc(32);
+    i = 0;
+    while i < 8 {
+      var v = state[i];
+      st_buf[i * 4 + 0] = (v % 256) as UInt8;
+      st_buf[i * 4 + 1] = (v / 256 % 256) as UInt8;
+      st_buf[i * 4 + 2] = (v / 65536 % 256) as UInt8;
+      st_buf[i * 4 + 3] = (v / 16777216 % 256) as UInt8;
+      i = i + 1;
+    }
+    var bi = 0;
+    while bi < block_count {
+      xiom_sha256_sw_compress(st_buf, padded.data + bi * 64);
+      bi = bi + 1;
+    }
+    i = 0;
+    while i < 8 {
+      var b0 = st_buf[i * 4 + 0] as Int;
+      var b1 = st_buf[i * 4 + 1] as Int;
+      var b2 = st_buf[i * 4 + 2] as Int;
+      var b3 = st_buf[i * 4 + 3] as Int;
+      state[i] = (b3 * 16777216) + (b2 * 65536) + (b1 * 256) + b0;
+      i = i + 1;
+    }
+    free(st_buf);
+  };
+  // Output: first 7 words (28 bytes) big-endian (MSB first)
+  var result = Vec[UInt8].new();
+  i = 0;
+  while i < 7 {
+    var v = _u32_mask(state[i]);
+    result.push((v / 16777216 % 256) as UInt8);
+    result.push((v / 65536 % 256) as UInt8);
+    result.push((v / 256 % 256) as UInt8);
+    result.push((v % 256) as UInt8);
+    i = i + 1;
+  }
+  return result;
+}
+
+// ============================================================================
+// SHA-384 — Truncated SHA-512 with distinct IV
+//
+// SHA-384 is identical to SHA-512 but:
+//   1. Uses a different 8-word initialization vector.
+//   2. Outputs only the first 48 bytes (6 words) of the 64-byte hash.
+//
+// IV = [0xcbbb9d5dc1059ed8, 0x629a292a367cd507, 0x9159015a3070dd17,
+//       0x152fecd8f70e5939, 0x67332667ffc00b31, 0x8eb44a8768581511,
+//       0xdb0c2e0d64f98fa7, 0x47b5481dbefa4fa4]
+//
+// Test vector: SHA-384("") = 38b060a751ac96384cd9327eb1b1e36a
+//                            21fdb71114be07434c0cc7bf63f6e1da
+//                            274edebfe76f65fbd51ad2f14898b95b
+//
+// Security notes:
+//   - SHA-384 provides 192-bit collision resistance (birthday bound).
+//   - Preimage resistance matches the full SHA-512 (512-bit).
+// ============================================================================
+
+// SHA-384 uses a distinct 8-word IV; the digest is the first 48 bytes.
+// Built at runtime (see _sha224_iv for the const-array workaround note).
+fn _sha384_iv() -> Vec[Int] {
+  var v = Vec[Int].new();
+  v.push(0xcbbb9d5dc1059ed8);
+  v.push(0x629a292a367cd507);
+  v.push(0x9159015a3070dd17);
+  v.push(0x152fecd8f70e5939);
+  v.push(0x67332667ffc00b31);
+  v.push(0x8eb44a8768581511);
+  v.push(0xdb0c2e0d64f98fa7);
+  v.push(0x47b5481dbefa4fa4);
+  return v;
+}
+
+pub fn sha384(data: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: result.len() == 48
+{
+  let data_len = data.len();
+  let bit_len = data_len * 8;
+  var pad_len = 128 - ((data_len + 17) % 128);
+  if pad_len >= 128 { pad_len = pad_len - 128; }
+  var padded = Vec[UInt8].new();
+  var i = 0;
+  while i < data_len {
+    padded.push(data[i]);
+    i = i + 1;
+  }
+  padded.push(0x80);
+  i = 0;
+  while i < pad_len {
+    padded.push(0);
+    i = i + 1;
+  }
+  var bl_low = bit_len;
+  i = 7;
+  while i >= 0 {
+    padded.push((bl_low % 256) as UInt8);
+    bl_low = bl_low / 256;
+    i = i - 1;
+  }
+  i = 7;
+  while i >= 0 {
+    padded.push(0);
+    i = i - 1;
+  }
+  var state = _sha384_iv();
+  let block_count = padded.len() / 128;
+  var bi = 0;
+  while bi < block_count {
+    _sha512_block(&padded, bi * 128, &mut state);
+    bi = bi + 1;
+  }
+  // Output: first 6 words (48 bytes) big-endian
+  var result = Vec[UInt8].new();
+  i = 0;
+  while i < 6 {
+    var v = state[i];
+    var j = 7;
+    while j >= 0 {
+      result.push(_i64_byte(v, j));
+      j = j - 1;
+    }
+    i = i + 1;
+  }
+  return result;
 }
