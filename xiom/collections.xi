@@ -897,6 +897,8 @@ fn Slice.get[T](index: Int) -> Option[T]
 // Uses open addressing with linear probing and djb2 hashing.
 // Grows by 2x when load factor exceeds 0.75.
 
+use xiom.sort;
+use xiom.string;
 use xiom.hash;
 
 pub type HashMap[K, V] = {
@@ -1043,4 +1045,341 @@ fn HashMap.resize[K, V](new_cap: Int) {
     }
     i = i + 1;
   }
+}
+
+// ── Vec Operations ──────────────────────────────────────────────────────────
+
+/// Reverse elements in place. O(N).
+pub fn vec_reverse[T](v: &mut Vec[T]) {
+  var n = v.len();
+  if n <= 1 { return; }
+  var i = 0;
+  var j = n - 1;
+  while i < j {
+    var temp = v[i];
+    v[i] = v[j];
+    v[j] = temp;
+    i = i + 1;
+    j = j - 1;
+  }
+}
+
+/// Sort elements in ascending order. O(N log N) avg.
+pub fn vec_sort_asc[T: Ord](v: &mut Vec[T]) {
+  xiom.sort.sort_quick(v);
+}
+
+/// Sort elements in descending order. O(N log N) avg.
+pub fn vec_sort_desc[T: Ord](v: &mut Vec[T]) {
+  xiom.sort.sort_quick(v);
+  vec_reverse(v);
+}
+
+/// Returns true if the value is present. O(N).
+pub fn vec_contains[T: Eq](v: &Vec[T], value: T) -> Bool {
+  var i = 0;
+  while i < v.len() {
+    if v[i] == value { return true; }
+    i = i + 1;
+  }
+  false
+}
+
+/// Remove consecutive duplicate elements. O(N).
+pub fn vec_dedup[T: Eq](v: &mut Vec[T]) {
+  var n = v.len();
+  if n <= 1 { return; }
+  var write = 1;
+  var read = 1;
+  while read < n {
+    if !(v[read] == v[write - 1]) {
+      v[write] = v[read];
+      write = write + 1;
+    }
+    read = read + 1;
+  }
+  while v.len() > write {
+    v.pop();
+  }
+}
+
+/// Rotate elements left by k positions. O(N).
+pub fn vec_rotate_left[T](v: &mut Vec[T], k: Int) {
+  var n = v.len();
+  if n <= 1 { return; }
+  var kk = k % n;
+  if kk <= 0 { return; }
+  var i = 0;
+  var j = kk - 1;
+  while i < j {
+    var temp = v[i];
+    v[i] = v[j];
+    v[j] = temp;
+    i = i + 1;
+    j = j - 1;
+  }
+  i = kk;
+  j = n - 1;
+  while i < j {
+    var temp = v[i];
+    v[i] = v[j];
+    v[j] = temp;
+    i = i + 1;
+    j = j - 1;
+  }
+  i = 0;
+  j = n - 1;
+  while i < j {
+    var temp = v[i];
+    v[i] = v[j];
+    v[j] = temp;
+    i = i + 1;
+    j = j - 1;
+  }
+}
+
+/// Fill the vector with copies of `value`. O(N).
+pub fn vec_fill[T: Clone](v: &mut Vec[T], value: T) {
+  var i = 0;
+  var n = v.len();
+  while i < n {
+    v[i] = value.clone();
+    i = i + 1;
+  }
+}
+
+/// Swap the elements at indices i and j. O(1).
+pub fn vec_swap_elems[T](v: &mut Vec[T], i: Int, j: Int) {
+  var n = v.len();
+  if i < 0 || i >= n || j < 0 || j >= n { return; }
+  if i == j { return; }
+  var temp = v[i];
+  v[i] = v[j];
+  v[j] = temp;
+}
+
+// ── Vec Free Functions ──────────────────────────────────────────────────────
+
+/// Join a vector of strings with a separator. O(N·L) where L is avg string length.
+pub fn vec_str_join(items: &Vec[Str], sep: Str) -> Str {
+  var n = items.len();
+  if n == 0 { return ""; }
+  var result = items[0];
+  var i = 1;
+  while i < n {
+    result = xiom.string.str_concat(result, sep);
+    result = xiom.string.str_concat(result, items[i]);
+    i = i + 1;
+  }
+  result
+}
+
+/// Minimum element in a vector, or None if empty. O(N).
+pub fn vec_min[T: Ord](v: &Vec[T]) -> Option[T] {
+  var n = v.len();
+  if n == 0 { return None; }
+  var min_val = v[0];
+  var i = 1;
+  while i < n {
+    if v[i].compare(&min_val) < 0 { min_val = v[i]; }
+    i = i + 1;
+  }
+  Some(min_val)
+}
+
+/// Maximum element in a vector, or None if empty. O(N).
+pub fn vec_max[T: Ord](v: &Vec[T]) -> Option[T] {
+  var n = v.len();
+  if n == 0 { return None; }
+  var max_val = v[0];
+  var i = 1;
+  while i < n {
+    if v[i].compare(&max_val) > 0 { max_val = v[i]; }
+    i = i + 1;
+  }
+  Some(max_val)
+}
+
+/// Sum of all elements in an integer vector. O(N).
+pub fn vec_sum(v: &Vec[Int]) -> Int {
+  var total = 0;
+  var i = 0;
+  while i < v.len() {
+    total = total + v[i];
+    i = i + 1;
+  }
+  total
+}
+
+/// Integer average (truncated division) of a vector. Returns 0 if empty. O(N).
+pub fn vec_avg(v: &Vec[Int]) -> Int {
+  var n = v.len();
+  if n == 0 { return 0; }
+  vec_sum(v) / n
+}
+
+/// Count elements satisfying a predicate. O(N).
+pub fn vec_count_if[T](v: &Vec[T], pred: fn(&T) -> Bool) -> Int {
+  var count = 0;
+  var i = 0;
+  while i < v.len() {
+    if pred(&v[i]) { count = count + 1; }
+    i = i + 1;
+  }
+  count
+}
+
+/// Returns true if any element satisfies the predicate. O(N).
+pub fn vec_any[T](v: &Vec[T], pred: fn(&T) -> Bool) -> Bool {
+  var i = 0;
+  while i < v.len() {
+    if pred(&v[i]) { return true; }
+    i = i + 1;
+  }
+  false
+}
+
+/// Returns true if all elements satisfy the predicate. O(N).
+pub fn vec_all[T](v: &Vec[T], pred: fn(&T) -> Bool) -> Bool {
+  var i = 0;
+  while i < v.len() {
+    if !(pred(&v[i])) { return false; }
+    i = i + 1;
+  }
+  true
+}
+
+// ── Map Free Functions ──────────────────────────────────────────────────────
+
+/// Number of entries in the map. O(1).
+pub fn map_len[K, V](m: Map[K, V]) -> Int {
+  m.len()
+}
+
+/// Returns true if the key exists in the map. O(N).
+pub fn map_contains_key[K, V](m: &Map[K, V], key: &K) -> Bool {
+  m.contains(key)
+}
+
+/// Get value by key, or return `default` if not found. O(N).
+pub fn map_get_or[K, V](m: &Map[K, V], key: &K, default: V) -> V {
+  var opt = m.get(key);
+  match opt {
+    Some(v) => v,
+    None => default,
+  }
+}
+
+/// Remove a key-value pair. Returns the value if the key was present. O(N).
+pub fn map_remove_key[K, V](m: &mut Map[K, V], key: &K) -> Option[V] {
+  m.remove(key)
+}
+
+/// Remove all entries from the map. O(1).
+pub fn map_clear[K, V](m: &mut Map[K, V]) {
+  m.clear()
+}
+
+/// Insert a key-value pair only if the key is not already present.
+/// Returns true if inserted, false if key already existed. O(N).
+pub fn map_insert_if_absent[K, V](m: &mut Map[K, V], key: K, value: V) -> Bool {
+  if m.contains(&key) { return false; }
+  m.insert(key, value);
+  true
+}
+
+/// Merge two maps into a new map. Entries from `b` overwrite those from `a` on key collision. O(N·M).
+pub fn map_merge[K, V](a: &Map[K, V], b: &Map[K, V]) -> Map[K, V] {
+  var result = Map[K, V].new();
+  var a_keys = a.keys();
+  var a_vals = a.values();
+  var i = 0;
+  while i < a_keys.len() {
+    result.insert(a_keys[i], a_vals[i]);
+    i = i + 1;
+  }
+  var b_keys = b.keys();
+  var b_vals = b.values();
+  i = 0;
+  while i < b_keys.len() {
+    result.insert(b_keys[i], b_vals[i]);
+    i = i + 1;
+  }
+  result
+}
+
+// ── Set Free Functions ──────────────────────────────────────────────────────
+
+/// Insert a value into the set. O(N).
+pub fn set_insert[T](s: &mut Set[T], value: T) {
+  s.insert(value)
+}
+
+/// Returns true if the value is in the set. O(N).
+pub fn set_contains[T](s: &Set[T], value: &T) -> Bool {
+  s.contains(value)
+}
+
+/// Remove a value from the set. O(N).
+pub fn set_remove[T](s: &mut Set[T], value: &T) {
+  s.remove(value)
+}
+
+/// Number of elements in the set. O(1).
+pub fn set_len[T](s: &Set[T]) -> Int {
+  s.len()
+}
+
+/// Union of two sets: all elements present in either set. O(N·M).
+pub fn set_union[T](a: &Set[T], b: &Set[T]) -> Set[T] {
+  a.union(b)
+}
+
+/// Intersection of two sets: elements present in both. O(N·M).
+pub fn set_intersection[T](a: &Set[T], b: &Set[T]) -> Set[T] {
+  a.intersection(b)
+}
+
+/// Difference of two sets: elements in `a` but not in `b`. O(N·M).
+pub fn set_difference[T](a: &Set[T], b: &Set[T]) -> Set[T] {
+  a.difference(b)
+}
+
+/// Returns true if `sub` is a subset of `sup` (all elements of sub are in sup). O(N·M).
+pub fn set_is_subset[T](sub: &Set[T], sup: &Set[T]) -> Bool {
+  var sub_vec = set_to_vec(sub);
+  var i = 0;
+  while i < sub_vec.len() {
+    if !(sup.contains(&sub_vec[i])) { return false; }
+    i = i + 1;
+  }
+  true
+}
+
+/// Returns true if the set contains no elements. O(1).
+pub fn set_is_empty[T](s: &Set[T]) -> Bool {
+  s.len() == 0
+}
+
+/// Convert a set to a vector containing all its elements. O(N).
+pub fn set_to_vec[T](s: &Set[T]) -> Vec[T] {
+  var result = Vec[T].new();
+  var items = s.items;
+  var i = 0;
+  while i < items.len() {
+    result.push(items[i]);
+    i = i + 1;
+  }
+  result
+}
+
+/// Create a set from a vector (deduplicates). O(N²).
+pub fn set_from_vec[T](v: &Vec[T]) -> Set[T] {
+  var result = Set[T].new();
+  var i = 0;
+  while i < v.len() {
+    set_insert(&result, v[i]);
+    i = i + 1;
+  }
+  result
 }

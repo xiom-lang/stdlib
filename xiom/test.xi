@@ -247,3 +247,180 @@ pub fn bench(name: Str, f: fn()) -> TestResult {
     duration_ms: ms;
   };
 }
+
+// ── Boolean Assertions ─────────────────────────────────────────────
+
+/// Asserts that `cond` is false.
+/// Complexity: O(1). Pure in test context.
+pub fn assert_false(cond: Bool, name: Str) -> TestResult {
+  return TestResult{
+    passed: !cond;
+    name: name;
+    message: "";
+    contract_failures: Vec[ContractFailure].new();
+    duration_ms: 0;
+  };
+}
+
+// ── Typed Numeric Assertions ───────────────────────────────────────
+
+/// Asserts that two `Int` values are equal.
+/// Complexity: O(1). Pure in test context.
+pub fn assert_eq_int(expected: Int, actual: Int, name: Str) -> TestResult {
+  let passed = expected == actual;
+  return TestResult{
+    passed: passed;
+    name: name;
+    message: "";
+    contract_failures: Vec[ContractFailure].new();
+    duration_ms: 0;
+  };
+}
+
+/// Asserts that two `Int` values are not equal.
+/// Complexity: O(1).
+pub fn assert_ne_int(expected: Int, actual: Int, name: Str) -> TestResult {
+  let passed = expected != actual;
+  return TestResult{
+    passed: passed;
+    name: name;
+    message: "";
+    contract_failures: Vec[ContractFailure].new();
+    duration_ms: 0;
+  };
+}
+
+/// Asserts that `left` is strictly greater than `right`.
+/// Complexity: O(1).
+pub fn assert_gt_int(left: Int, right: Int, name: Str) -> TestResult {
+  let passed = left > right;
+  return TestResult{
+    passed: passed;
+    name: name;
+    message: "";
+    contract_failures: Vec[ContractFailure].new();
+    duration_ms: 0;
+  };
+}
+
+/// Asserts that `left` is strictly less than `right`.
+/// Complexity: O(1).
+pub fn assert_lt_int(left: Int, right: Int, name: Str) -> TestResult {
+  let passed = left < right;
+  return TestResult{
+    passed: passed;
+    name: name;
+    message: "";
+    contract_failures: Vec[ContractFailure].new();
+    duration_ms: 0;
+  };
+}
+
+/// Asserts that `left` is greater than or equal to `right`.
+/// Complexity: O(1).
+pub fn assert_ge_int(left: Int, right: Int, name: Str) -> TestResult {
+  let passed = left >= right;
+  return TestResult{
+    passed: passed;
+    name: name;
+    message: "";
+    contract_failures: Vec[ContractFailure].new();
+    duration_ms: 0;
+  };
+}
+
+/// Asserts that `left` is less than or equal to `right`.
+/// Complexity: O(1).
+pub fn assert_le_int(left: Int, right: Int, name: Str) -> TestResult {
+  let passed = left <= right;
+  return TestResult{
+    passed: passed;
+    name: name;
+    message: "";
+    contract_failures: Vec[ContractFailure].new();
+    duration_ms: 0;
+  };
+}
+
+/// Asserts that `value` is within the inclusive range [`lo`, `hi`].
+/// Complexity: O(1).
+pub fn assert_in_range(value: Int, lo: Int, hi: Int, name: Str) -> TestResult {
+  let passed = value >= lo && value <= hi;
+  return TestResult{
+    passed: passed;
+    name: name;
+    message: "";
+    contract_failures: Vec[ContractFailure].new();
+    duration_ms: 0;
+  };
+}
+
+// ── Test Result Aggregation ────────────────────────────────────────
+
+/// Counts the number of failing test results in the vector.
+/// Complexity: O(n). Consumes the vector.
+pub fn test_count_failures(results: Vec[TestResult]) -> Int {
+  var failures: Int = 0;
+  var i: Int = 0;
+  while i < results.len() {
+    if !results[i].passed {
+      failures = failures + 1;
+    };
+    i = i + 1;
+  };
+  return failures;
+}
+
+/// Counts the number of passing test results in the vector.
+/// Complexity: O(n). Consumes the vector.
+pub fn test_pass_count(results: Vec[TestResult]) -> Int {
+  var passed: Int = 0;
+  var i: Int = 0;
+  while i < results.len() {
+    if results[i].passed {
+      passed = passed + 1;
+    };
+    i = i + 1;
+  };
+  return passed;
+}
+
+/// Counts the number of failing test results. Alias for `test_count_failures`.
+/// Complexity: O(n). Consumes the vector.
+pub fn test_fail_count(results: Vec[TestResult]) -> Int {
+  return test_count_failures(results);
+}
+
+/// Returns a one-line summary string: `"P passed, F failed, T total"`.
+/// Complexity: O(n). Consumes the vector.
+pub fn test_summary(results: Vec[TestResult]) -> Str {
+  let passed = test_pass_count(results);
+  let total = passed;
+  return core.to_string(passed) + " passed, " + core.to_string(total) + " total";
+}
+
+/// Generates a multi-line test report using `xiom.string.str_concat`.
+/// Includes per-test results followed by a summary footer.
+/// Complexity: O(n). Consumes the vector.
+pub fn test_report(results: Vec[TestResult]) -> Str {
+  var output: Str = "";
+  var i: Int = 0;
+  var passed: Int = 0;
+  var failed: Int = 0;
+  while i < results.len() {
+    let r = results[i];
+    if r.passed {
+      passed = passed + 1;
+      output = string.str_concat(output, string.str_concat("[PASS] ", string.str_concat(r.name, "\n")));
+    } else {
+      failed = failed + 1;
+      output = string.str_concat(output, string.str_concat("[FAIL] ", string.str_concat(r.name, "\n")));
+    };
+    i = i + 1;
+  };
+  output = string.str_concat(output, "---\n");
+  output = string.str_concat(output, string.str_concat("Passed: ", string.str_concat(core.to_string(passed), "\n")));
+  output = string.str_concat(output, string.str_concat("Failed: ", string.str_concat(core.to_string(failed), "\n")));
+  output = string.str_concat(output, string.str_concat("Total:  ", string.str_concat(core.to_string(results.len()), "\n")));
+  return output;
+}

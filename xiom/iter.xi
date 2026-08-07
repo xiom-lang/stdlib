@@ -457,3 +457,31 @@ pub fn InspectIter[T].next(self) -> Option[T] {
     None => None,
   }
 }
+
+// ── RangeStep / Repeat ──────────────────────────────────────────────────────
+
+/// Create a Vec[Int] containing values from start to end advancing by step.
+/// Returns empty Vec if step <= 0 or start >= end. O(N).
+pub fn range_step(start: Int, end: Int, step: Int) -> Vec[Int] {
+  var result = Vec[Int].new();
+  if step <= 0 { return result; };
+  var i = start;
+  while i < end {
+    result.push(i);
+    i = i + step;
+  };
+  result
+}
+
+/// Create a Vec[Int] containing `value` repeated `n` times. O(N).
+/// Returns empty Vec if n <= 0.
+pub fn repeat_n(value: Int, n: Int) -> Vec[Int] {
+  var result = Vec[Int].new();
+  if n <= 0 { return result; };
+  var i = 0;
+  while i < n {
+    result.push(value);
+    i = i + 1;
+  };
+  result
+}

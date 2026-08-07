@@ -237,3 +237,71 @@ pub fn contains[T: Eq, const N: Int](arr: &[N]T, x: &T) -> Bool
   }
   false
 }
+
+// ── Array Aggregation ───────────────────────────────────────────────────────
+
+/// Sum of all elements in an integer array. O(N).
+pub fn array_sum[const N: Int](arr: &[N]Int) -> Int {
+  var total = 0;
+  var i = 0;
+  while i < N {
+    total = total + arr[i];
+    i = i + 1;
+  }
+  total
+}
+
+/// Maximum element in an array, or None if N == 0. O(N).
+pub fn array_max[T: Ord, const N: Int](arr: &[N]T) -> Option[T] {
+  if N == 0 { return None; }
+  var max_val = arr[0];
+  var i = 1;
+  while i < N {
+    if arr[i].compare(&max_val) > 0 { max_val = arr[i]; }
+    i = i + 1;
+  }
+  Some(max_val)
+}
+
+/// Minimum element in an array, or None if N == 0. O(N).
+pub fn array_min[T: Ord, const N: Int](arr: &[N]T) -> Option[T] {
+  if N == 0 { return None; }
+  var min_val = arr[0];
+  var i = 1;
+  while i < N {
+    if arr[i].compare(&min_val) < 0 { min_val = arr[i]; }
+    i = i + 1;
+  }
+  Some(min_val)
+}
+
+/// Count occurrences of `value` in the array. O(N).
+pub fn array_count[T: Eq, const N: Int](arr: &[N]T, value: T) -> Int {
+  var count = 0;
+  var i = 0;
+  while i < N {
+    if arr[i].eq(&value) { count = count + 1; }
+    i = i + 1;
+  }
+  count
+}
+
+/// Find the index of the first occurrence of `value`, or None. O(N).
+pub fn array_find[T: Eq, const N: Int](arr: &[N]T, value: T) -> Option[Int] {
+  var i = 0;
+  while i < N {
+    if arr[i].eq(&value) { return Some(i); }
+    i = i + 1;
+  }
+  None
+}
+
+/// Deep equality check between two arrays. O(N).
+pub fn array_equal[T: Eq, const N: Int](a: &[N]T, b: &[N]T) -> Bool {
+  var i = 0;
+  while i < N {
+    if !(a[i].eq(&b[i])) { return false; }
+    i = i + 1;
+  }
+  true
+}

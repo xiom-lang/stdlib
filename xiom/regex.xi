@@ -452,3 +452,89 @@ pub fn is_valid_regex(pattern: Str) -> Bool {
   };
   bracket_depth == 0
 }
+
+// ──────────────────────────────────────────────────
+//  Extended Regex Functions (free-function wrappers)
+// ──────────────────────────────────────────────────
+
+// ── Replace/Find ──
+
+// Replaces all non-overlapping matches of `re` in `text` with `replacement`.
+// Uses literal replacement (no $1 group references).
+pub fn regex_replace_all(re: Regex, text: Str, replacement: Str) -> Str {
+  re.replace_all(text, replacement)
+}
+
+// Finds the first match of `re` in `text` and returns the matched substring.
+// Returns None if no match is found.
+pub fn regex_find_first_str(re: Regex, text: Str) -> Option[Str] {
+  let m_result = re.find(text);
+  match m_result {
+    Some(match_obj) => {
+      Some(match_obj.text)
+    };
+    None => None;
+  }
+}
+
+// ── Split / Count ──
+
+// Splits `text` around all non-overlapping matches of `re`.
+// Returns a Vec of substrings between matches.
+pub fn regex_split(re: Regex, text: Str) -> Vec[Str] {
+  re.split(text)
+}
+
+// Returns the number of non-overlapping matches of `re` in `text`.
+pub fn regex_count_matches(re: Regex, text: Str) -> Int {
+  re.match_count(text)
+}
+
+// ── All Matches ──
+
+// Returns all non-overlapping matches of `re` in `text` as Match objects.
+// Wraps Regex.find_all.
+pub fn regex_matches_all(re: Regex, text: Str) -> Vec[Match] {
+  re.find_all(text)
+}
+
+// ── Groups ──
+
+// Extracts capture groups from the first match of `re` in `text`.
+// Returns a Vec where each element is the text of a captured group,
+// or None if that group did not participate in the match.
+// The first element (index 0) is the full match.
+pub fn regex_extract_groups(re: Regex, text: Str) -> Vec[Option[Str]] {
+  var result = Vec[Option[Str]].new();
+  let opt_caps = re.captures(text);
+  if opt_caps.is_some {
+    var cap_val = opt_caps.value;
+    var count = cap_val.len();
+    var i: Int = 0;
+    while i < count {
+      var group_opt = cap_val.get(i);
+      if group_opt.is_some {
+        result.push(Some(group_opt.value.text));
+      } else {
+        result.push(None);
+      };
+      i = i + 1;
+    };
+  };
+  result
+}
+
+// ── Escape / Validate ──
+
+// Escapes regex metacharacters in `s` so it can be used as a literal pattern.
+// Wraps regex_escape.
+pub fn regex_escape_literal(s: Str) -> Str {
+  regex_escape(s)
+}
+
+// Returns true if `pattern` is a syntactically valid regex.
+// Checks for balanced brackets and valid quantifier positions.
+// Wraps is_valid_regex.
+pub fn regex_is_valid(pattern: Str) -> Bool {
+  is_valid_regex(pattern)
+}

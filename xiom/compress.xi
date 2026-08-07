@@ -4,6 +4,8 @@
 
 module xiom.compress
 
+use xiom.string;
+
 // === Compression traits ===
 pub interface Compressor {
   fn compress(self, data: &Vec[UInt8]) -> Result<Vec[UInt8], Str>;
@@ -716,4 +718,196 @@ pub fn detect_format(data: &Vec[UInt8]) -> Str
     return "lz4";
   }
   return "unknown";
+}
+
+// ── LZ77 ────────────────────────────────────────────────────────────────────
+
+/// LZ77 compression using a simple sliding-window search.
+/// Emits tokens as flat triples in a Vec[Int]: [literal_len, match_offset, match_length, ...].
+/// A match_offset of 0 means no match found; literal_len bytes follow directly.
+/// Window size limits the backward search distance.
+/// Complexity: O(n * window), n = data length.
+pub fn lz77_compress(data: &Vec[UInt8], window: Int) -> Vec[Int] {
+  var result = Vec[Int].new();
+  let len = data.len();
+  if len == 0 {
+    return result;
+  };
+  var pos: Int = 0;
+  while pos < len {
+    var best_len: Int = 0;
+    var best_off: Int = 0;
+    var search_start: Int = pos - window;
+    if search_start < 0 { search_start = 0; };
+    var si: Int = search_start;
+    while si < pos {
+      var match_len: Int = 0;
+      while (si + match_len) < pos && (pos + match_len) < len && match_len < 255 {
+        if data[si + match_len] != data[pos + match_len] {
+          break;
+        };
+        match_len = match_len + 1;
+      };
+      if match_len > best_len && match_len >= 3 {
+        best_len = match_len;
+        best_off = pos - si;
+      };
+      si = si + 1;
+    };
+    if best_len >= 3 {
+      result.push(0);
+      result.push(best_off);
+      result.push(best_len);
+      pos = pos + best_len;
+    } else {
+      result.push(1);
+      result.push(data[pos] as Int);
+      result.push(0);
+      pos = pos + 1;
+    };
+  };
+  return result;
+}
+
+/// LZ77 decompression of token triples produced by lz77_compress.
+/// Each triple: [literal_len, data, match_length_or_zero].
+/// If literal_len == 0: data = match_offset, third = match_length.
+/// If literal_len == 1: data = literal byte, third = 0.
+/// Complexity: O(t), t = number of tokens.
+pub fn lz77_decompress(tokens: &Vec[Int]) -> Result[Vec[UInt8], Str] {
+  var result = Vec[UInt8].new();
+  let tlen = tokens.len();
+  var i: Int = 0;
+  while i + 2 < tlen {
+    let lit_len = tokens[i];
+    let data_val = tokens[i + 1];
+    let extra = tokens[i + 2];
+    if lit_len == 0 {
+      let off = data_val;
+      let mlen = extra;
+      if off == 0 || mlen <= 0 {
+        return Err("LZ77 decode: invalid match token");
+      };
+      let dst_len = result.len();
+      if off > dst_len {
+        return Err("LZ77 decode: offset exceeds output length");
+      };
+      var k: Int = 0;
+      while k < mlen {
+        result.push(result[dst_len - off + (k % off)]);
+        k = k + 1;
+      };
+    } elif lit_len == 1 {
+      result.push(data_val as UInt8);
+    } else {
+      return Err("LZ77 decode: invalid token type");
+    };
+    i = i + 3;
+  };
+  return Ok(result);
+}
+
+// ── RLE byte-level ──────────────────────────────────────────────────────────
+
+/// Simple byte-level run-length encoding.
+/// Format: [count: UInt8, byte: UInt8] for runs of identical bytes.
+/// Count represents the number of repetitions (1 means 1 byte).
+/// Differs from rle_encode which uses control-byte format with bit 7 markers.
+/// Complexity: O(n), n = data length.
+pub fn rle_encode_bytes(data: &Vec[UInt8]) -> Vec[UInt8] {
+  var result = Vec[UInt8].new();
+  let len = data.len();
+  if len == 0 {
+    return result;
+  };
+  var pos: Int = 0;
+  while pos < len {
+    var run: Int = 1;
+    while (pos + run) < len && run < 255 && data[pos + run] == data[pos] {
+      run = run + 1;
+    };
+    result.push(run as UInt8);
+    result.push(data[pos]);
+    pos = pos + run;
+  };
+  return result;
+}
+
+// ── Huffman frequency table ─────────────────────────────────────────────────
+
+/// Builds a 256-slot frequency table for Huffman coding.
+/// Each slot i contains the count of byte value i in the input.
+/// Complexity: O(n), n = data length.
+pub fn huffman_freqs(data: &Vec[UInt8]) -> Vec[Int] {
+  var freqs = Vec[Int].new();
+  var i: Int = 0;
+  while i < 256 {
+    freqs.push(0);
+    i = i + 1;
+  };
+  var j: Int = 0;
+  let len = data.len();
+  while j < len {
+    let idx = data[j] as Int;
+    freqs[idx] = freqs[idx] + 1;
+    j = j + 1;
+  };
+  return freqs;
+}
+
+// ── Gzip string wrappers ────────────────────────────────────────────────────
+
+/// Compresses a UTF-8 string using gzip.
+/// Converts Str to bytes, then wraps gzip_compress.
+/// Complexity: O(n), n = string length.
+pub fn compress_gzip_str(s: Str) -> Result[Vec[UInt8], Str] {
+  var bytes = Vec[UInt8].new();
+  var i: Int = 0;
+  let slen = s.len();
+  while i < slen {
+    let opt = xiom.string.char_at(s, i);
+    if opt.is_some {
+      let code: Int = to_int_from_char(opt.value);
+      bytes.push(code as UInt8);
+    };
+    i = i + 1;
+  };
+  if bytes.len() == 0 {
+    return Err("compress_gzip_str: empty input");
+  };
+  return gzip_compress(&bytes);
+}
+
+/// Decompresses gzip data to a UTF-8 string.
+/// Wraps gzip_decompress and converts the result to Str.
+/// Complexity: O(n), n = compressed data length.
+pub fn decompress_gzip_str(data: &Vec[UInt8]) -> Result[Str, Str] {
+  let decompressed = gzip_decompress(data);
+  if !decompressed.is_ok {
+    return Err(decompressed.error);
+  };
+  let bytes = decompressed.value;
+  let blen = bytes.len();
+  if blen == 0 {
+    return Ok("");
+  };
+  var result = "";
+  var i: Int = 0;
+  while i < blen {
+    let code = bytes[i] as Int;
+    let opt = xiom.core.to_char(code);
+    if opt.is_some {
+      result = result + xiom.string.str_slice(xiom.string.from_char(opt.value), 0, 1);
+    };
+    i = i + 1;
+  };
+  return Ok(result);
+}
+
+// ── Compression ratio alias ─────────────────────────────────────────────────
+
+/// Alias for compression_ratio. Returns original / compressed as Float64.
+/// Complexity: O(1).
+pub fn compress_ratio(original: Int, compressed: Int) -> Float64 {
+  return compression_ratio(original, compressed);
 }

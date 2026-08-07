@@ -848,3 +848,208 @@ fn BinaryHeap[T].len(self) -> Int {
 fn BinaryHeap[T].is_empty(self) -> Bool {
   return data.len() == 0;
 }
+
+// ── Comparable Extrema ─────────────────────────────────────────────
+
+/// Returns the smaller of two `Int` values.
+/// Complexity: O(1). Pure, no side effects.
+pub fn min_of(a: Int, b: Int) -> Int {
+  if a < b {
+    return a;
+  };
+  return b;
+}
+
+/// Returns the larger of two `Int` values.
+/// Complexity: O(1). Pure, no side effects.
+pub fn max_of(a: Int, b: Int) -> Int {
+  if a > b {
+    return a;
+  };
+  return b;
+}
+
+/// Returns the absolute value of `n`.
+/// Complexity: O(1). Pure, no side effects.
+/// NOTE: `INT_MIN` has no positive representation; wraps on overflow.
+pub fn abs_int(n: Int) -> Int {
+  if n < 0 {
+    return -n;
+  };
+  return n;
+}
+
+/// Clamps `v` to the inclusive range [`lo`, `hi`].
+/// Returns `lo` if `v < lo`, `hi` if `v > hi`, otherwise `v`.
+/// Complexity: O(1). Pure, no side effects.
+pub fn clamp_int(v: Int, lo: Int, hi: Int) -> Int {
+  if v < lo {
+    return lo;
+  };
+  if v > hi {
+    return hi;
+  };
+  return v;
+}
+
+// ── Bool/Int Conversions ───────────────────────────────────────────
+
+/// Converts a `Bool` to an `Int`: `true` → 1, `false` → 0.
+/// NOTE: XIOM does NOT support `b as Int`; this is the canonical conversion.
+/// Complexity: O(1). Pure, no side effects.
+pub fn bool_to_int(b: Bool) -> Int {
+  if b {
+    return 1;
+  };
+  return 0;
+}
+
+/// Converts an `Int` to a `Bool`: non-zero → `true`, zero → `false`.
+/// Complexity: O(1). Pure, no side effects.
+pub fn int_to_bool(n: Int) -> Bool {
+  return n != 0;
+}
+
+// ── Char Conversions ───────────────────────────────────────────────
+
+/// Safely converts an `Int` to a `Char`.
+/// Returns `None` if `n` is outside the valid Unicode code-point range (0..=0x10FFFF).
+/// Complexity: O(1). Pure, no side effects.
+pub fn int_to_char_safe(n: Int) -> Option[Char] {
+  if n >= 0 && n <= 1114111 {
+    return Some(to_char(n));
+  };
+  return None;
+}
+
+// ── Slice Helpers ──────────────────────────────────────────────────
+
+/// Returns the number of elements in the slice.
+/// Complexity: O(1). Thread-safe: reads immutable shared data.
+pub fn slice_len[T](s: &Slice[T]) -> Int {
+  return s.len();
+}
+
+/// Returns `true` if the slice has zero elements.
+/// Complexity: O(1). Thread-safe: reads immutable shared data.
+pub fn slice_is_empty[T](s: &Slice[T]) -> Bool {
+  return s.len() == 0;
+}
+
+/// Returns the first element of the slice, or `None` if empty.
+/// Complexity: O(1). Thread-safe: reads immutable shared data.
+pub fn slice_first[T](s: &Slice[T]) -> Option[T] {
+  if s.len() == 0 {
+    return None;
+  };
+  return Some(s[0]);
+}
+
+/// Returns the element at index `i`, or `None` if out of bounds.
+/// Complexity: O(1). Thread-safe: reads immutable shared data.
+pub fn slice_get[T](s: &Slice[T], i: Int) -> Option[T] {
+  if i >= 0 && i < s.len() {
+    return Some(s[i]);
+  };
+  return None;
+}
+
+/// Copies all elements from the slice into a new `Vec[T]`.
+/// Complexity: O(n) time and memory. Thread-safe: reads immutable shared data.
+pub fn slice_to_vec[T](s: &Slice[T]) -> Vec[T] {
+  var result = Vec[T].new();
+  var i: Int = 0;
+  while i < s.len() {
+    result.push(s[i]);
+    i = i + 1;
+  };
+  return result;
+}
+
+// ── Slice Aggregates ───────────────────────────────────────────────
+
+/// Finds the minimum element in the slice using `Ord.compare`.
+/// Returns `None` if the slice is empty.
+/// Complexity: O(n) comparisons. Thread-safe: reads immutable shared data.
+pub fn min_slice[T: Ord](s: &Slice[T]) -> Option[T] {
+  if s.len() == 0 {
+    return None;
+  };
+  var min_idx: Int = 0;
+  var i: Int = 1;
+  while i < s.len() {
+    if s[i].compare(&s[min_idx]) < 0 {
+      min_idx = i;
+    };
+    i = i + 1;
+  };
+  return Some(s[min_idx]);
+}
+
+/// Finds the maximum element in the slice using `Ord.compare`.
+/// Returns `None` if the slice is empty.
+/// Complexity: O(n) comparisons. Thread-safe: reads immutable shared data.
+pub fn max_slice[T: Ord](s: &Slice[T]) -> Option[T] {
+  if s.len() == 0 {
+    return None;
+  };
+  var max_idx: Int = 0;
+  var i: Int = 1;
+  while i < s.len() {
+    if s[i].compare(&s[max_idx]) > 0 {
+      max_idx = i;
+    };
+    i = i + 1;
+  };
+  return Some(s[max_idx]);
+}
+
+/// Sums all `Int` elements in the slice.
+/// Returns 0 if the slice is empty.
+/// Complexity: O(n). Thread-safe: reads immutable shared data.
+pub fn sum_slice(s: &Slice[Int]) -> Int {
+  var total: Int = 0;
+  var i: Int = 0;
+  while i < s.len() {
+    total = total + s[i];
+    i = i + 1;
+  };
+  return total;
+}
+
+// ── Option Standalone Queries ──────────────────────────────────────
+
+/// Returns `true` if the option is `Some`.
+/// Complexity: O(1). Thread-safe: reads immutable shared data.
+pub fn option_is_some[T](o: &Option[T]) -> Bool {
+  return o.is_some;
+}
+
+/// Returns `true` if the option is `None`.
+/// Complexity: O(1). Thread-safe: reads immutable shared data.
+pub fn option_is_none[T](o: &Option[T]) -> Bool {
+  return !o.is_some;
+}
+
+// ── Result Standalone Queries ──────────────────────────────────────
+
+/// Returns `true` if the result is `Ok`.
+/// Complexity: O(1). Thread-safe: reads immutable shared data.
+pub fn result_is_ok[T, E](r: &Result[T, E]) -> Bool {
+  return r.is_ok;
+}
+
+/// Returns `true` if the result is `Err`.
+/// Complexity: O(1). Thread-safe: reads immutable shared data.
+pub fn result_is_err[T, E](r: &Result[T, E]) -> Bool {
+  return !r.is_ok;
+}
+
+/// Returns the contained `Ok` value, or `default` if the result is `Err`.
+/// Complexity: O(1). Thread-safe: reads immutable shared data.
+pub fn result_unwrap_or[T, E](r: Result[T, E], default: T) -> T {
+  match r {
+    Ok(v) => v;
+    Err(e) => default;
+  };
+}

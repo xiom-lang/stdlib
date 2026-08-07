@@ -5,6 +5,7 @@
 module xiom.rand
 
 use xiom.string;
+use xiom.crypto;
 
 extern "C" {
   fn malloc(size: UInt) -> *UInt8;
@@ -398,4 +399,84 @@ pub fn seed_from_value(seed: Int) {
   } else {
     _global_state = seed;
   };
+}
+
+// ── Xorshift64 ──────────────────────────────────────────────────────────────
+
+/// Xorshift64 PRNG (Marsaglia, 2003).
+/// State: 64-bit unsigned. Period: 2^64 - 1.
+/// Triple-xorshift: x ^= x << a; x ^= x >> b; x ^= x << c.
+/// Complexity: O(1) per call.
+pub type Xorshift64 = { state: Int; } derive[Clone]
+
+/// Creates a new Xorshift64 generator with the given seed.
+/// Seed must be non-zero. Zero seed is replaced with 1.
+pub fn Xorshift64.new(seed: Int) -> Xorshift64 {
+  var s = seed;
+  if s == 0 {
+    s = 1;
+  };
+  return Xorshift64{ state: s; };
+}
+
+/// Returns the next pseudo-random integer from this Xorshift64 generator.
+/// Uses triple-xorshift: x ^= x << 13; x ^= x >> 7; x ^= x << 17.
+pub fn Xorshift64.next_int(self) -> Int {
+  state = state ^ (state << 13);
+  state = state ^ (state >> 7);
+  state = state ^ (state << 17);
+  return state;
+}
+
+// ── Random choice ───────────────────────────────────────────────────────────
+
+/// Returns a random element from a vector.
+/// Returns None if the vector is empty.
+/// Wraps the existing pick function.
+/// Complexity: O(1).
+pub fn random_choice[T](items: &Vec[T]) -> Option[&T] {
+  return pick(items);
+}
+
+// ── Random shuffle ──────────────────────────────────────────────────────────
+
+/// Shuffles a vector in place using Fisher-Yates.
+/// Wraps the existing shuffle function.
+/// Complexity: O(n), n = items length.
+pub fn random_shuffle[T](items: &mut Vec[T]) {
+  shuffle(items);
+}
+
+// ── Random fraction ─────────────────────────────────────────────────────────
+
+/// Alias for random(). Returns a Float64 in [0, 1).
+pub fn random_fraction() -> Float64 {
+  return random();
+}
+
+// ── Gaussian Box-Muller ─────────────────────────────────────────────────────
+
+/// Generates a normally distributed random number using the Box-Muller transform.
+/// Mean and stddev parameters control the distribution center and spread.
+/// Complexity: O(1).
+pub fn gaussian_box_muller(mean: Float64, stddev: Float64) -> Float64 {
+  let u1 = random();
+  let u2 = random();
+  var safe_u1 = u1;
+  if safe_u1 <= 0.0 {
+    safe_u1 = 0.0000000001;
+  };
+  let r = xiom.math.sqrt(-2.0 * xiom.math.ln(safe_u1));
+  let theta = 2.0 * xiom.math.PI * u2;
+  let z0 = r * xiom.math.cos(theta);
+  return mean + z0 * stddev;
+}
+
+// ── Cryptographic random bytes ──────────────────────────────────────────────
+
+/// Fills a buffer with cryptographically secure random bytes.
+/// Delegates to xiom.crypto.secure_random_bytes.
+/// Complexity: O(n), n = count.
+pub fn random_bytes_crypto(count: Int) -> Vec[UInt8] {
+  return crypto.secure_random_bytes(count);
 }
