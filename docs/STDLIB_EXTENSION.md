@@ -377,3 +377,2916 @@ Freeze gate: 2/2. stdlib compile: 40/40. feature-reg: 510/510. integration: 128/
 | 2026-08-07 | Heavy domains (math, crypto, hash, compress, rand) get NASM/SIMD tracks with pure fallback + CPUID dispatch (Â§7). |
 | 2026-08-07 | Placeholder folders + READMEs for 260 planned packages and 2 projects created now; specs later. |
 | 2026-08-07 | API-freeze test + import-alias gate enforce the contract mechanically after the rework. |
+
+
+
+
+
+
+
+
+STD EXTENSION PLANNING
+/// STDLIB FOR INSPECTION CROSS REFFERENCE IMPLEMTATION TO OUR STDLIB OR TO PACKAGING
+// Need to cross reference what we have what we dont have. and from what we dont have to decide either package or add in to existing package or to add to our lib as a module or add to existing.
+
+HASHING (Expanded)
+hash/fnv - FNV-1/FNV-1a hash (32, 64, 128-bit)
+hash/murmur - MurmurHash2, MurmurHash3 (32, 128-bit)
+hash/city - CityHash (64, 128, 256-bit)
+hash/xxhash - xxHash32, xxHash64, xxHash128, XXH3
+hash/siphash - SipHash (SipHash-2-4, SipHash-1-3)
+hash/highway - HighwayHash (64, 128, 256-bit)
+hash/spooky - SpookyHash (128-bit)
+hash/t1ha - Fast positive hash
+hash/metro - MetroHash (64, 128-bit)
+hash/farm - FarmHash (fingerprint family)
+hash/jenkins - Jenkins hash (lookup3)
+hash/superfast - SuperFastHash
+hash/crc - CRC32, CRC64 (with hardware acceleration)
+hash/adler - Adler-32 checksum
+hash/checksum - BSD, SysV, and Internet checksums
+
+COLLECTIONS (Full)
+collect/list - Singly/doubly linked list
+collect/vector - Dynamic array (Vec)
+collect/stack - Stack (LIFO)
+collect/queue - Queue (FIFO)
+collect/ring - Ring buffer (circular)
+collect/map - Hash map (open addressing)
+collect/mapch - Hash map (chaining)
+collect/treemap - Ordered map (tree-based)
+collect/treeset - Ordered set (tree-based)
+collect/tree - Binary tree
+collect/avl - AVL balanced tree
+collect/rbtree - Red-black tree
+collect/bheap - Binary heap
+collect/fheap - Fibonacci heap
+collect/pairing - Pairing heap
+collect/deque - Double-ended queue
+collect/priority - Priority queue
+collect/skiplist - Skip list
+collect/trie - Trie (prefix tree)
+collect/radix - Radix tree
+collect/bitmap - Bitmap/Bitset
+collect/bloom - Bloom filter
+collect/cuckoo - Cuckoo hash map
+collect/hashset - Hash set (open addressing)
+collect/linkedhash - Linked hash map (insertion order)
+collect/lru - LRU cache
+collect/lfu - LFU cache
+collect/tinylfu - TinyLFU cache
+collect/arc - Adaptive Replacement Cache
+collect/btree - B-Tree
+collect/btreeplus - B+Tree
+collect/segment - Segmented tree
+collect/fenwick - Fenwick tree
+collect/sparse - Sparse set
+collect/dense - Dense set
+collect/hasharray - Hash array mapped trie
+collect/immutable - Immutable collections
+collect/persistent - Persistent data structures
+collect/concurrent - Concurrent collections
+collect/interval - Interval tree
+collect/range - Range tree
+collect/kdtree - KD-Tree
+collect/octree - Octree
+collect/quadtree - Quadtree
+collect/spatial - Spatial hashing
+collect/graph - Graph adjacency
+collect/dag - Directed acyclic graph
+collect/unionfind - Union-find (disjoint set)
+collect/intmap - Integer-keyed map (optimized)
+collect/stringmap - String-keyed map (optimized)
+collect/objectpool - Object pool
+collect/threadpool - Thread pool
+collect/workqueue - Work queue
+collect/blocking - Blocking queue
+collect/mpmc - Multi-producer multi-consumer queue
+collect/mpsc - Multi-producer single-consumer queue
+collect/spmc - Single-producer multi-consumer queue
+collect/spsc - Single-producer single-consumer queue
+
+STRING OPERATIONS
+str/compare - String comparison (eq, ne, lt, gt, cmp)
+str/search - Search (contains, index, rindex, find)
+str/replace - Replace (all, first, last, with callback)
+str/trim - Trim (whitespace, chars, prefixes, suffixes)
+str/split - Split (separator, n, whitespace, lines)
+str/join - Join with separator
+str/case - Case conversion (upper, lower, title, swap)
+str/strip - Strip prefixes/suffixes
+str/repeat - Repeat string N times
+str/pad - Pad (left, right, center, with char)
+str/slice - Safe string slicing (by chars, not bytes)
+str/escape - Escape (C-style, JSON, XML, URL, HTML)
+str/unescape - Unescape (C-style, JSON, XML, URL, HTML)
+str/format - Format (sprintf-style, positional)
+str/printf - Printf-style formatting
+str/scanf - Scanf-style parsing
+str/template - Template strings (with placeholders)
+str/glob - Glob pattern matching
+str/regex - Regular expressions (if not separate)
+str/levenshtein - Levenshtein distance
+str/damerau - Damerau-Levenshtein distance
+str/jaro - Jaro-Winkler similarity
+str/soundex - Soundex algorithm
+str/metaphone - Metaphone (double metaphone)
+str/ngram - N-gram extraction
+str/ngram_similarity - N-gram similarity
+str/cosine - Cosine similarity
+str/jaccard - Jaccard similarity
+str/lcs - Longest common subsequence
+str/lcp - Longest common prefix
+str/lcsuffix - Longest common suffix
+str/editdistance - Edit distance (general)
+str/hamming - Hamming distance
+str/tr - Translate characters (tr utility)
+str/rot - ROT13, ROT47
+str/caesar - Caesar cipher
+str/atbash - Atbash cipher
+str/shuffle - Shuffle string (Fisher-Yates)
+str/reverse - Reverse string
+str/rotate - Rotate string
+str/permute - Generate permutations
+str/combine - Combine/merge strings
+str/interleave - Interleave strings
+str/chunk - Chunk/group strings
+str/wrap - Word wrap
+str/indent - Indent/dedent
+str/align - Align (left, right, center)
+str/truncate - Truncate with ellipsis
+str/abbreviate - Abbreviate (middle/end)
+str/obfuscate - Obfuscate (hide middle chars)
+str/normalize - Unicode normalization (NFC, NFD, NFKC, NFKD)
+str/collate - Unicode collation
+str/casefold - Unicode case folding
+str/titlecase - Unicode title case
+str/segment - Unicode grapheme segmentation
+str/wordbreak - Unicode word boundaries
+str/sentencebreak - Unicode sentence boundaries
+str/linebreak - Unicode line boundaries
+str/ea_width - East Asian width
+str/emoji - Emoji detection
+str/script - Script detection
+str/block - Unicode block detection
+str/category - Unicode category
+str/bidi - Bidirectional text
+str/mirror - Mirror characters
+str/compat - Compatibility decomposition
+str/fold - Case folding
+str/lowercase - Lowercase mapping
+str/uppercase - Uppercase mapping
+str/titlecase_map - Titlecase mapping
+str/nfkc - NFKC normalization
+str/nfd - NFD normalization
+str/nfc - NFC normalization
+str/nfkd - NFKD normalization
+
+CONVERSION
+conv/int - String to int (base 2-36)
+conv/float - String to float (hex, scientific)
+conv/toint - To integer (various bases, signed/unsigned)
+conv/tofloat - To float (32, 64, 128)
+conv/tostring - To string (basic types with formatting)
+conv/parse - Generic parsing utilities
+conv/itos - Integer to string (base 2-36)
+conv/ftos - Float to string (scientific, fixed, general)
+conv/atoi - ASCII to integer (fast path)
+conv/itoa - Integer to ASCII (fast path)
+conv/fromstr - FromStr trait
+conv/tryfrom - TryFrom trait
+conv/into - Into trait
+conv/asref - AsRef trait
+conv/asmut - AsMut trait
+conv/from - From trait
+conv/bytes - Bytes to/from primitives
+conv/endian - Endian-aware conversions
+conv/bigendian - Big endian conversions
+conv/littleendian - Little endian conversions
+conv/nativeendian - Native endian conversions
+conv/network - Network byte order
+conv/host - Host byte order
+conv/swap - Byte swapping utilities
+conv/saturating - Saturating conversions
+conv/wrapping - Wrapping conversions
+conv/overflow - Overflow checking conversions
+conv/checked - Checked conversions
+conv/unchecked - Unchecked conversions (unsafe)
+conv/exact - Exact conversion (fails if lossy)
+conv/lossy - Lossy conversions
+conv/roundtrip - Round-trip conversion utilities
+conv/cstring - C string conversions
+conv/wstring - Wide string conversions
+conv/utf8 - UTF-8 conversions
+conv/utf16 - UTF-16 conversions
+conv/utf32 - UTF-32 conversions
+conv/base64 - Base64 (standard, URL-safe, MIME)
+conv/base32 - Base32 (RFC 4648, z-base-32)
+conv/base16 - Base16 (hex)
+conv/base58 - Base58 (Bitcoin)
+conv/base62 - Base62
+conv/base64url - URL-safe Base64
+conv/ascii85 - Ascii85 (Adobe, Z85)
+conv/uuencode - UUencode
+conv/xxencode - XXencode
+conv/quotedprintable - Quoted-printable
+conv/punycode - Punycode (IDNA)
+conv/idna - Internationalized domain names
+conv/percent - Percent encoding (URL)
+conv/html - HTML entity encoding
+conv/xml - XML entity encoding
+conv/json - JSON string escaping
+conv/csv - CSV escaping
+conv/tsv - TSV escaping
+conv/yaml - YAML escaping
+conv/toml - TOML escaping
+conv/regex - Regex escaping
+conv/glob - Glob escaping
+conv/shell - Shell escaping
+conv/cmd - Command-line escaping
+conv/printf - Printf-style escaping
+conv/strftime - Strftime formatting
+conv/strptime - Strptime parsing
+conv/duration - Duration to/from string
+conv/date - Date to/from string
+conv/time - Time to/from string
+conv/datetime - DateTime to/from string
+conv/timestamp - Timestamp conversions
+conv/uuid - UUID to/from string
+conv/mac - MAC address to/from string
+conv/ip - IP address to/from string
+conv/url - URL to/from string
+conv/uri - URI to/from string
+conv/urn - URN to/from string
+conv/iri - IRI to/from string
+conv/email - Email address to/from string
+conv/phone - Phone number to/from string
+conv/creditcard - Credit card number validation
+conv/iban - IBAN validation
+conv/swift - SWIFT/BIC code validation
+
+NETWORK
+net/socket - Socket primitives (socket, bind, connect, accept)
+net/address - Socket address parsing
+net/tcp - TCP utilities (stream, listener)
+net/udp - UDP utilities (datagram)
+net/unix - Unix domain sockets
+net/dns - DNS resolution (A, AAAA, CNAME, MX, TXT, SRV)
+net/host - Hostname/port utilities
+net/ip - IP address operations (v4, v6)
+net/port - Port utilities (well-known, registered, dynamic)
+net/protocol - Protocol utilities
+net/url - URL parsing (scheme, host, path, query, fragment)
+net/uri - URI parsing
+net/iri - IRI parsing (internationalized)
+net/query - Query string parsing
+net/form - Form data encoding
+net/multipart - Multipart form parsing
+net/cookie - Cookie parsing and generation
+net/header - HTTP header utilities
+net/accept - Content negotiation (Accept header)
+net/accept_language - Language negotiation
+net/accept_encoding - Encoding negotiation
+net/etag - ETag generation and validation
+net/cache - Cache control headers
+net/range - Range requests
+net/compress - Content compression negotiation
+net/mime - MIME type utilities
+net/charset - Charset utilities
+net/link - Link header parsing
+net/alternates - Alternate link handling
+net/webfinger - WebFinger protocol
+net/hostmeta - Host-meta discovery
+net/wellknown - Well-known URIs
+net/oauth - OAuth 1.0/2.0 utilities
+net/jwt - JWT generation and validation
+net/pem - PEM encoding/decoding
+net/x509 - X.509 certificate parsing
+net/tls - TLS (client, server) - basic
+net/ssl - SSL utilities
+net/ssh - SSH protocol
+net/telnet - Telnet protocol
+net/ftp - FTP client
+net/sftp - SFTP client
+net/scp - SCP client
+net/smtp - SMTP client
+net/pop3 - POP3 client
+net/imap - IMAP client
+net/nntp - NNTP client
+net/irc - IRC client
+net/matrix - Matrix protocol
+net/xmpp - XMPP/Jabber
+net/sip - SIP protocol
+net/rtp - RTP protocol
+net/rtsp - RTSP protocol
+net/rtmp - RTMP protocol
+net/hls - HLS streaming
+net/dash - DASH streaming
+net/webrtc - WebRTC
+net/websocket - WebSocket (client, server)
+net/sse - Server-Sent Events
+net/http - HTTP client/server
+net/https - HTTPS
+net/http2 - HTTP/2
+net/http3 - HTTP/3 (QUIC)
+net/h2c - HTTP/2 cleartext
+net/grpc - gRPC
+net/grpcweb - gRPC-Web
+net/rest - REST utilities
+net/graphql - GraphQL client
+net/graphql_server - GraphQL server
+net/jsonrpc - JSON-RPC (1.0, 2.0)
+net/xmlrpc - XML-RPC
+net/soap - SOAP
+net/thrift - Thrift
+net/avro - Avro RPC
+net/zeromq - ZeroMQ
+net/nanomsg - Nanomsg
+net/mqtt - MQTT client
+net/amqp - AMQP (RabbitMQ)
+net/stomp - STOMP
+net/kafka - Kafka protocol
+net/pulsar - Pulsar protocol
+net/nats - NATS protocol
+net/redis - Redis protocol (RESP)
+net/memcached - Memcached protocol
+net/elastic - Elasticsearch protocol
+net/mongo - MongoDB wire protocol
+net/postgres - PostgreSQL wire protocol
+net/mysql - MySQL wire protocol
+net/sqlite - SQLite network (remote)
+net/odbc - ODBC
+net/jdbc - JDBC bridge
+net/dbus - D-Bus
+net/avahi - Avahi (Zeroconf)
+net/mdns - mDNS (Bonjour)
+net/upnp - UPnP
+net/ssdp - SSDP
+net/wsdiscovery - WS-Discovery
+net/slp - SLP
+net/ldap - LDAP client
+net/kerberos - Kerberos
+net/ntlm - NTLM authentication
+net/digest - Digest authentication
+net/basic - Basic authentication
+net/bearer - Bearer token authentication
+net/apikey - API key authentication
+net/hawk - Hawk authentication
+net/aws - AWS Signature V4
+net/azure - Azure shared key
+net/gcp - GCP authentication
+net/proxy - HTTP/SOCKS proxy
+net/socks - SOCKS5
+net/tor - Tor (SOCKS, onion)
+net/i2p - I2P
+net/zerotier - ZeroTier
+net/wireguard - WireGuard
+net/ipsec - IPsec
+net/ike - IKE
+net/ppp - PPP
+net/l2tp - L2TP
+net/gre - GRE
+net/vxlan - VXLAN
+net/geneve - Geneve
+net/nvgre - NVGRE
+net/mpls - MPLS
+net/vlan - VLAN
+net/bridge - Bridging
+net/ipip - IP-in-IP
+net/sit - SIT
+net/6to4 - 6to4
+net/teredo - Teredo
+net/isatap - ISATAP
+net/icmp - ICMP (ping)
+net/traceroute - Traceroute
+net/arp - ARP
+net/ndp - NDP (IPv6)
+net/dhcp - DHCP client
+net/dhcpv6 - DHCPv6
+net/bootp - BOOTP
+net/tftp - TFTP
+net/nfs - NFS
+net/smb - SMB/CIFS
+net/netbios - NetBIOS
+net/wins - WINS
+net/rpc - RPC (SunRPC, ONC)
+net/nlm - NLM
+net/mount - Mount protocol
+net/yp - NIS/YP
+net/ntp - NTP client
+net/sntp - SNTP
+net/ptp - PTP (IEEE 1588)
+net/chrony - Chrony
+net/radar - Radar detection
+net/sonar - SONAR
+net/lidar - LiDAR
+net/gnss - GNSS (GPS, GLONASS, Galileo, BeiDou)
+net/dme - Distance Measuring Equipment
+net/vor - VOR
+net/ils - Instrument Landing System
+net/atc - Air Traffic Control
+net/adsb - ADS-B
+net/flarm - FLARM
+net/acars - ACARS
+net/vdl - VDL Mode 2
+net/hfdl - HFDL
+net/satcom - Satellite communications
+net/inmarsat - Inmarsat
+net/iridium - Iridium
+net/starlink - Starlink
+net/oneweb - OneWeb
+net/kubernetes - Kubernetes API
+net/docker - Docker API
+net/nomad - Nomad API
+net/mesos - Mesos API
+net/swarm - Docker Swarm
+net/openshift - OpenShift API
+net/cloudfoundry - Cloud Foundry
+net/heroku - Heroku API
+net/netlify - Netlify API
+net/vercel - Vercel API
+net/cloudflare - Cloudflare API
+net/akamai - Akamai API
+net/fastly - Fastly API
+net/cloudfront - CloudFront API
+net/lambda - AWS Lambda API
+net/ec2 - EC2 API
+net/s3 - S3 API
+net/sqs - SQS API
+net/sns - SNS API
+net/dynamodb - DynamoDB API
+net/rds - RDS API
+net/route53 - Route53 API
+net/vpc - VPC API
+net/iam - IAM API
+net/cloudtrail - CloudTrail API
+net/cloudwatch - CloudWatch API
+net/lambda - AWS Lambda
+net/azure_compute - Azure Compute
+net/azure_storage - Azure Storage
+net/azure_sql - Azure SQL
+net/azure_cosmos - Cosmos DB
+net/gcp_compute - GCP Compute
+net/gcp_storage - GCP Storage
+net/gcp_sql - GCP Cloud SQL
+net/gcp_bigtable - Bigtable
+net/gcp_bigquery - BigQuery
+net/gcp_pubsub - Pub/Sub
+net/gcp_firestore - Firestore
+net/gcp_spanner - Spanner
+net/alibaba_ecs - Alibaba ECS
+net/alibaba_oss - Alibaba OSS
+net/alibaba_rds - Alibaba RDS
+net/tencent_cvm - Tencent CVM
+net/tencent_cos - Tencent COS
+net/tencent_cdb - Tencent CDB
+net/huawei_ecs - Huawei ECS
+net/huawei_obs - Huawei OBS
+net/huawei_rds - Huawei RDS
+net/oracle_cloud - Oracle Cloud
+net/ibm_cloud - IBM Cloud
+net/digitalocean - DigitalOcean API
+net/linode - Linode API
+net/vultr - Vultr API
+net/scaleway - Scaleway API
+net/hetzner - Hetzner API
+net/ovh - OVH API
+net/rackspace - Rackspace API
+net/softlayer - SoftLayer API
+net/vmware - VMware vSphere
+net/xen - XenServer
+net/kvm - KVM
+net/hyperv - Hyper-V
+net/esxi - ESXi
+net/vcenter - vCenter
+net/openstack - OpenStack
+net/opennebula - OpenNebula
+net/cloudstack - CloudStack
+net/eucalyptus - Eucalyptus
+net/openshift - OpenShift
+net/rancher - Rancher
+net/portainer - Portainer
+net/k3s - K3s
+net/microk8s - MicroK8s
+net/minikube - Minikube
+net/kind - KinD
+net/k3d - K3d
+net/talos - Talos Linux
+net/flatcar - Flatcar
+net/coreos - CoreOS
+net/ignition - Ignition
+net/cloudinit - Cloud-init
+net/userdata - User data
+net/metadata - Cloud metadata
+net/instanceid - Instance ID
+net/region - Region utilities
+net/zone - Availability zone
+net/az - AZ utilities
+net/faultdomain - Fault domain
+net/updatedomain - Update domain
+net/placement - Placement groups
+net/securitygroups - Security groups
+net/firewall - Firewall utilities
+net/nacl - Network ACLs
+net/subnet - Subnet utilities
+net/cidr - CIDR utilities
+net/route - Routing utilities
+net/gateway - Gateway utilities
+net/nat - NAT utilities
+net/vpn - VPN utilities
+net/ipsec_vpn - IPsec VPN
+net/ssl_vpn - SSL VPN
+net/wireguard_vpn - WireGuard VPN
+net/openvpn - OpenVPN
+net/pptp - PPTP
+net/l2tp_vpn - L2TP VPN
+net/ikev2 - IKEv2
+net/sstp - SSTP
+net/sonicwall - SonicWall
+net/cisco - Cisco VPN
+net/juniper - Juniper VPN
+net/checkpoint - Check Point
+net/f5 - F5 BIG-IP
+net/citrix - Citrix
+net/pulse - Pulse Secure
+net/globalprotect - GlobalProtect
+net/anyconnect - AnyConnect
+net/forticlient - FortiClient
+net/paloalto - Palo Alto
+net/watchguard - WatchGuard
+net/sophos - Sophos
+net/barracuda - Barracuda
+net/meraki - Meraki
+net/ubiquiti - Ubiquiti
+net/mikrotik - MikroTik
+net/zyxel - Zyxel
+net/dlink - D-Link
+net/netgear - Netgear
+net/asus - Asus
+net/tp_link - TP-Link
+
+
+FILE FORMATS
+format/hex - Hex dump (xxd, hexdump, od)
+format/bytes - Byte formatting (human-readable)
+format/dump - Memory dump (full, partial, structured)
+format/pretty - Pretty printing (with colors, indentation)
+format/table - Table formatting (ASCII, Markdown, CSV, HTML)
+format/indent - Indentation utilities
+format/wrap - Text wrapping
+format/column - Column formatting
+format/json - JSON formatting (pretty, compact)
+format/xml - XML formatting
+format/yaml - YAML formatting
+format/toml - TOML formatting
+format/csv - CSV formatting
+format/tsv - TSV formatting
+format/markdown - Markdown formatting
+format/html - HTML formatting
+format/textile - Textile formatting
+format/rtf - RTF formatting
+format/latex - LaTeX formatting
+format/troff - Troff formatting
+format/roff - Roff formatting
+format/man - Man page formatting
+format/help - Help text formatting
+format/usage - Usage message formatting
+format/progress - Progress bar formatting
+format/spinner - Spinner/loading indicator
+format/ansi - ANSI escape codes
+format/colors - Color utilities
+format/emoji - Emoji formatting
+format/unicode - Unicode formatting
+format/box - Box drawing (ASCII, Unicode)
+format/border - Border formatting
+format/separator - Separator lines
+format/header - Header formatting
+format/footer - Footer formatting
+format/title - Title formatting
+format/subtitle - Subtitle formatting
+format/section - Section formatting
+format/list - Bulleted/numbered lists
+format/enum - Enumerated lists
+format/definition - Definition lists
+format/glossary - Glossary formatting
+format/index - Index formatting
+format/toc - Table of contents
+format/appendix - Appendix formatting
+format/bibliography - Bibliography formatting
+format/citation - Citation formatting
+format/footnote - Footnote formatting
+format/endnote - Endnote formatting
+format/margin - Margin formatting
+format/line - Line numbering
+format/page - Page formatting
+format/pagination - Pagination utilities
+format/landscape - Landscape orientation
+format/portrait - Portrait orientation
+format/a4 - A4 paper formatting
+format/letter - Letter paper formatting
+format/legal - Legal paper formatting
+format/font - Font formatting (bold, italic, underline)
+format/size - Font size utilities
+format/weight - Font weight
+format/face - Font face
+format/fallback - Font fallback
+format/glyph - Glyph utilities
+format/diacritic - Diacritic handling
+format/ligature - Ligature utilities
+format/kerning - Kerning utilities
+format/leading - Leading utilities
+format/tracking - Tracking utilities
+format/justify - Text justification
+format/ragged - Ragged text
+format/hyphenation - Hyphenation utilities
+format/soft_hyphen - Soft hyphen
+format/hard_hyphen - Hard hyphen
+format/nobreak - No-break space
+format/zwsp - Zero-width space
+format/zwnj - Zero-width non-joiner
+format/zwnj - Zero-width joiner
+format/rtl - Right-to-left formatting
+format/ltr - Left-to-right formatting
+format/bidi_override - Bidi override
+format/arabic - Arabic formatting
+format/hebrew - Hebrew formatting
+format/indic - Indic script formatting
+format/cjk - CJK formatting
+format/vertical - Vertical text formatting
+format/ruby - Ruby annotation
+format/furigana - Furigana
+format/pinyin - Pinyin
+format/zhuyin - Zhuyin
+format/hanzi - Hanzi formatting
+format/kanji - Kanji formatting
+format/hangul - Hangul formatting
+format/kana - Kana formatting
+format/romaji - Romaji
+format/transliterate - Transliteration
+format/romanize - Romanization
+format/numbering - Numbering systems
+format/arabic_num - Arabic numerals
+format/roman_num - Roman numerals
+format/chinese_num - Chinese numerals
+format/japanese_num - Japanese numerals
+format/korean_num - Korean numerals
+format/indian_num - Indian numerals
+format/ethiopic_num - Ethiopic numerals
+format/mayan_num - Mayan numerals
+format/binary_num - Binary
+format/octal_num - Octal
+format/decimal_num - Decimal
+format/hexadecimal_num - Hexadecimal
+format/base_num - Base-N numbers
+format/fraction - Fraction formatting
+format/percent - Percent formatting
+format/per_mille - Per-mille formatting
+format/per_ten_thousand - Per-ten-thousand
+format/ratio - Ratio formatting
+format/scientific - Scientific notation
+format/engineering - Engineering notation
+format/si - SI units formatting
+format/binary_prefix - Binary prefixes (KiB, MiB)
+format/decimal_prefix - Decimal prefixes (KB, MB)
+format/metric - Metric prefixes
+format/imperial - Imperial units
+format/us_customary - US customary
+format/time_duration - Duration formatting
+format/date_time - Date/time formatting
+format/relative_time - Relative time formatting
+format/age - Age formatting
+format/clock - Clock formatting
+format/stopwatch - Stopwatch formatting
+format/countdown - Countdown formatting
+format/calendar - Calendar formatting
+format/timeline - Timeline formatting
+format/gantt - Gantt chart formatting
+format/waterfall - Waterfall chart
+format/bar - Bar chart formatting
+format/column - Column chart
+format/line - Line chart
+format/pie - Pie chart
+format/scatter - Scatter plot
+format/histogram - Histogram
+format/boxplot - Box plot
+format/violin - Violin plot
+format/heatmap - Heatmap
+format/treemap - Treemap
+format/sunburst - Sunburst chart
+format/sankey - Sankey diagram
+format/network - Network diagram
+format/mindmap - Mind map
+format/flowchart - Flowchart
+format/uml - UML diagram
+format/sequence - Sequence diagram
+format/class - Class diagram
+format/state - State diagram
+format/activity - Activity diagram
+format/timing - Timing diagram
+format/use_case - Use case diagram
+format/component - Component diagram
+format/deployment - Deployment diagram
+format/object - Object diagram
+format/package - Package diagram
+format/profile - Profile diagram
+format/composite - Composite structure
+format/interaction - Interaction diagram
+format/communication - Communication diagram
+format/interaction_overview - Interaction overview
+format/timing - Timing diagram
+format/message - Message diagram
+format/entity - Entity relationship
+format/er - ER diagram
+format/chen - Chen notation
+format/crowfoot - Crow's foot notation
+format/uml_notation - UML notation
+format/bpmn - BPMN
+format/archimate - ArchiMate
+format/dmn - DMN
+format/cmmn - CMMN
+format/sysml - SysML
+format/mermaid - Mermaid diagram
+format/plantuml - PlantUML
+format/graphviz - Graphviz DOT
+format/dot - DOT format
+format/neato - NEATO
+format/fdp - FDP
+format/sfdp - SFDP
+format/twopi - Twopi
+format/circo - Circo
+format/osage - Osage
+format/patchwork - Patchwork
+format/radial - Radial layout
+format/force - Force-directed layout
+format/spring - Spring layout
+format/sugiyama - Sugiyama layout
+format/tree - Tree layout
+format/radial_tree - Radial tree
+format/bubble - Bubble chart
+format/wordcloud - Word cloud
+format/tagcloud - Tag cloud
+format/matrix - Matrix formatting
+format/spreadsheet - Spreadsheet formatting
+format/excel - Excel formatting
+format/csv_table - CSV table
+format/tsv_table - TSV table
+format/sql_table - SQL table
+format/ascii_table - ASCII table
+format/unicode_table - Unicode table
+format/markdown_table - Markdown table
+format/html_table - HTML table
+format/latex_table - LaTeX table
+format/rest_table - reStructuredText table
+format/org_table - Org-mode table
+format/medit_table - Markdown edit table
+format/grid - Grid formatting
+format/matrix_grid - Matrix grid
+format/sudoku - Sudoku grid
+format/chess - Chess board
+format/checkers - Checkers board
+format/board - Board game utilities
+format/maze - Maze formatting
+format/map - Map formatting
+format/terrain - Terrain formatting
+format/elevation - Elevation map
+format/contour - Contour lines
+format/topographic - Topographic map
+format/geographic - Geographic map
+format/political - Political map
+format/road - Road map
+format/satellite - Satellite view
+format/hybrid - Hybrid map
+format/terrain_map - Terrain map
+format/heat_map - Heat map
+format/choropleth - Choropleth map
+format/cartogram - Cartogram
+format/flowmap - Flow map
+format/connection - Connection map
+format/bubble_map - Bubble map
+format/symbol - Symbol map
+format/point - Point map
+format/line_map - Line map
+format/polygon - Polygon map
+format/geojson - GeoJSON formatting
+format/kml - KML formatting
+format/gpx - GPX formatting
+format/shapefile - Shapefile formatting
+format/wkt - WKT formatting
+format/wkb - WKB formatting
+format/ewkt - EWKT formatting
+format/geohash - Geohash formatting
+format/mgrs - MGRS formatting
+format/utm - UTM formatting
+format/latlong - Latitude/longitude
+format/dms - Degrees/minutes/seconds
+format/dec - Decimal degrees
+format/radians - Radians formatting
+format/gradians - Gradians
+format/mils - Mils formatting
+format/azimuth - Azimuth formatting
+format/bearing - Bearing formatting
+format/heading - Heading formatting
+format/course - Course formatting
+format/track - Track formatting
+format/waypoint - Waypoint formatting
+format/route - Route formatting
+format/tracklog - Tracklog formatting
+format/segment - Segment formatting
+format/geofence - Geofence formatting
+format/geotag - Geotag formatting
+format/exif - EXIF formatting
+format/metadata - Metadata formatting
+format/id3 - ID3 tag formatting
+format/vorbis - Vorbis comment
+format/apetag - APE tag
+format/mp4 - MP4 metadata
+format/mkv - Matroska metadata
+format/avi - AVI metadata
+format/mov - QuickTime metadata
+format/asf - ASF metadata
+format/flac - FLAC metadata
+format/ogg - OGG metadata
+format/opus - Opus metadata
+format/webm - WebM metadata
+format/m4a - M4A metadata
+format/aac - AAC metadata
+format/mp3 - MP3 metadata
+format/wav - WAV metadata
+format/aiff - AIFF metadata
+format/au - AU metadata
+format/snd - SND metadata
+format/raw - RAW audio metadata
+format/midi - MIDI metadata
+format/smf - SMF metadata
+format/rmi - RMI metadata
+format/mod - MOD metadata
+format/xm - XM metadata
+format/s3m - S3M metadata
+format/it - IT metadata
+format/xm - XM metadata
+format/mo3 - MO3 metadata
+format/umx - UMX metadata
+format/psf - PSF metadata
+format/minipsf - MiniPSF metadata
+format/gsf - GSF metadata
+format/ssf - SSF metadata
+format/qsf - QSF metadata
+format/psf2 - PSF2 metadata
+format/dsf - DSF metadata
+format/minidsf - MiniDSF metadata
+format/2sf - 2SF metadata
+format/mini2sf - Mini2SF metadata
+format/usf - USF metadata
+format/miniusf - MiniUSF metadata
+format/vsf - VSF metadata
+format/minivsf - MiniVSF metadata
+format/gsf - GSF metadata
+format/minigsf - MiniGSF metadata
+format/sid - SID metadata
+format/minisid - MiniSID metadata
+format/hvl - HVL metadata
+format/ay - AY metadata
+format/gym - GYM metadata
+format/spc - SPC metadata
+format/nsf - NSF metadata
+format/nsfe - NSFE metadata
+format/gbs - GBS metadata
+format/hes - HES metadata
+format/kss - KSS metadata
+format/kss - KSS metadata
+format/mml - MML metadata
+format/sap - SAP metadata
+format/tfmx - TFMX metadata
+format/cust - CUST metadata
+format/sc68 - SC68 metadata
+format/ym - YM metadata
+format/vgm - VGM metadata
+format/vgz - VGZ metadata
+format/s98 - S98 metadata
+format/gzi - GZI metadata
+format/rsn - RSN metadata
+format/psf - PSF metadata
+format/psflib - PSFlib metadata
+format/ssf - SSF metadata
+format/qsf - QSF metadata
+format/gsflib - GSFlib metadata
+format/usflib - USFlib metadata
+format/psf2 - PSF2 metadata
+format/ssf - SSF metadata
+format/qsf - QSF metadata
+format/2sf - 2SF metadata
+format/vsf - VSF metadata
+format/gsf - GSF metadata
+format/miniusf - MiniUSF metadata
+format/mini2sf - Mini2SF metadata
+format/minivsf - MiniVSF metadata
+format/minigsflib - MiniGSFlib
+format/hexdump - Hex dump with ASCII
+format/octaldump - Octal dump
+format/binarydump - Binary dump
+format/disassembly - Disassembly formatting
+format/opcode - Opcode formatting
+format/instruction - Instruction formatting
+format/mnemonic - Mnemonic formatting
+format/register - Register formatting
+format/stackdump - Stack dump
+format/heapdump - Heap dump
+format/tracedump - Trace dump
+format/coredump - Core dump
+format/backtrace - Backtrace formatting
+format/symbol - Symbol formatting
+format/address - Address formatting
+format/offset - Offset formatting
+format/size - Size formatting
+format/count - Count formatting
+format/quantity - Quantity formatting
+format/magnitude - Magnitude formatting
+format/scale - Scale formatting
+format/proportion - Proportion formatting
+format/percentage - Percentage formatting
+format/permille - Permille formatting
+format/ppm - Parts per million
+format/ppb - Parts per billion
+format/ppt - Parts per trillion
+format/ratio_format - Ratio formatting
+format/fraction_format - Fraction formatting
+format/decimal - Decimal formatting
+format/fixed - Fixed-point formatting
+format/floating - Floating-point formatting
+format/exponent - Exponent formatting
+format/sign - Sign formatting
+format/sign_aware - Sign-aware formatting
+format/sign_optional - Optional sign
+format/sign_forced - Forced sign
+format/parentheses - Parentheses for negative
+format/currency - Currency formatting
+format/accounting - Accounting format
+format/financial - Financial formatting
+format/investment - Investment formatting
+format/tax - Tax formatting
+format/deduction - Deduction formatting
+format/interest - Interest formatting
+format/compound - Compound interest
+format/amortization - Amortization
+format/depreciation - Depreciation
+format/royalty - Royalty formatting
+format/commission - Commission formatting
+format/tip - Tip formatting
+format/discount - Discount formatting
+format/markup - Markup formatting
+format/margin_format - Margin formatting
+format/profit - Profit formatting
+format/loss - Loss formatting
+format/breakeven - Breakeven formatting
+format/roi - ROI formatting
+format/roe - ROE formatting
+format/roa - ROA formatting
+format/eps - EPS formatting
+format/pe - P/E ratio formatting
+format/peg - PEG ratio formatting
+format/debt - Debt formatting
+format/equity - Equity formatting
+format/asset - Asset formatting
+format/liability - Liability formatting
+format/revenue - Revenue formatting
+format/expense - Expense formatting
+format/cashflow - Cash flow formatting
+format/income - Income formatting
+format/balance - Balance formatting
+format/ledger - Ledger formatting
+format/journal - Journal formatting
+format/entry - Entry formatting
+format/account - Account formatting
+format/invoice - Invoice formatting
+format/receipt - Receipt formatting
+format/purchase - Purchase formatting
+format/order - Order formatting
+format/bill - Bill formatting
+format/payment - Payment formatting
+format/refund - Refund formatting
+format/credit - Credit note formatting
+format/debit - Debit note formatting
+format/statement - Statement formatting
+format/report - Report formatting
+format/summary - Summary formatting
+format/overview - Overview formatting
+format/detail - Detail formatting
+format/breakdown - Breakdown formatting
+format/category - Category formatting
+format/subcategory - Subcategory formatting
+format/group - Group formatting
+format/total - Total formatting
+format/subtotal - Subtotal formatting
+format/grand_total - Grand total
+format/balance_sheet - Balance sheet
+format/income_statement - Income statement
+format/cash_flow - Cash flow statement
+format/equity_statement - Equity statement
+format/comprehensive - Comprehensive income
+format/retained_earnings - Retained earnings
+format/dividend - Dividend formatting
+format/stock - Stock formatting
+format/bond - Bond formatting
+format/future - Futures formatting
+format/option - Options formatting
+format/swap - Swap formatting
+format/forward - Forward formatting
+format/derivative - Derivative formatting
+format/hedge - Hedge formatting
+format/arbitrage - Arbitrage formatting
+format/portfolio - Portfolio formatting
+format/fund - Fund formatting
+format/etf - ETF formatting
+format/mutual - Mutual fund formatting
+format/pension - Pension formatting
+format/retirement - Retirement formatting
+format/annuity - Annuity formatting
+format/insurance - Insurance formatting
+format/premium - Premium formatting
+format/claim - Claim formatting
+format/deductible - Deductible formatting
+format/coverage - Coverage formatting
+format/beneficiary - Beneficiary formatting
+format/policy - Policy formatting
+format/underwriting - Underwriting
+format/actuarial - Actuarial formatting
+format/risk - Risk formatting
+format/volatility - Volatility formatting
+format/correlation - Correlation formatting
+format/covariance - Covariance formatting
+format/beta - Beta formatting
+format/alpha - Alpha formatting
+format/sharpe - Sharpe ratio
+format/sortino - Sortino ratio
+format/calmar - Calmar ratio
+format/sterling - Sterling ratio
+format/max_drawdown - Maximum drawdown
+format/var - VaR formatting
+format/cvar - CVaR formatting
+format/backtest - Backtest formatting
+format/fwdtest - Forward test formatting
+format/montecarlo - Monte Carlo formatting
+format/bootstrapping - Bootstrapping
+format/permutation - Permutation formatting
+format/validation - Validation formatting
+format/crossval - Cross-validation
+format/confusion - Confusion matrix
+format/roc - ROC curve
+format/pr - PR curve
+format/auc - AUC formatting
+format/lift - Lift chart
+format/gain - Gain chart
+format/response - Response formatting
+format/sensitivity - Sensitivity formatting
+format/specificity - Specificity formatting
+format/precision - Precision formatting
+format/recall - Recall formatting
+format/f1 - F1 score
+format/fbeta - F-beta score
+format/accuracy - Accuracy formatting
+format/error - Error formatting
+format/mse - MSE formatting
+format/rmse - RMSE formatting
+format/mae - MAE formatting
+format/mape - MAPE formatting
+format/smape - SMAPE formatting
+format/mase - MASE formatting
+format/logloss - Log loss
+format/hinge - Hinge loss
+format/huber - Huber loss
+format/quantile - Quantile loss
+format/pinball - Pinball loss
+format/crps - CRPS formatting
+format/brier - Brier score
+format/auc - AUC formatting
+format/aucpr - AUCPR formatting
+format/lift_format - Lift formatting
+format/decile - Decile formatting
+format/quartile - Quartile formatting
+format/percentile - Percentile formatting
+format/median - Median formatting
+format/mean - Mean formatting
+format/mode - Mode formatting
+format/stddev - Standard deviation
+format/variance - Variance formatting
+format/skewness - Skewness formatting
+format/kurtosis - Kurtosis formatting
+format/entropy - Entropy formatting
+format/mutual_info - Mutual information
+format/gini - Gini coefficient
+format/atkinson - Atkinson index
+format/theil - Theil index
+format/herfindahl - Herfindahl index
+format/gibbs - Gibbs sampling formatting
+format/mcmc - MCMC formatting
+format/stan - Stan formatting
+format/bayes - Bayesian formatting
+format/prior - Prior formatting
+format/posterior - Posterior formatting
+format/likelihood - Likelihood formatting
+format/credible - Credible interval
+format/hdri - HDR interval
+format/bayes_factor - Bayes factor
+format/odds - Odds formatting
+format/log_odds - Log odds
+format/risk_ratio - Risk ratio
+format/odds_ratio - Odds ratio
+format/hazard - Hazard ratio
+format/incidence - Incidence rate
+format/prevalence - Prevalence
+format/mortality - Mortality rate
+format/morbidity - Morbidity rate
+format/survival - Survival formatting
+format/kaplan_meier - Kaplan-Meier
+format/cph - Cox proportional hazards
+format/af - Attributable fraction
+format/nnt - Number needed to treat
+format/nnh - Number needed to harm
+format/arr - Absolute risk reduction
+format/rrr - Relative risk reduction
+format/effect_size - Effect size
+format/cohens_d - Cohen's d
+format/hedges_g - Hedges' g
+format/glass_delta - Glass's delta
+format/eta_squared - Eta squared
+format/omega_squared - Omega squared
+format/cohens_f - Cohen's f
+format/r_squared - R-squared
+format/adjusted_r2 - Adjusted R-squared
+format/partial_eta2 - Partial eta squared
+format/effect_size - Effect size
+format/power - Statistical power
+format/sample_size - Sample size
+format/confidence - Confidence interval
+format/credible_int - Credible interval
+format/tolerance - Tolerance interval
+format/prediction - Prediction interval
+format/coverage - Coverage formatting
+format/undercoverage - Undercoverage
+format/overcoverage - Overcoverage
+format/noncoverage - Noncoverage
+format/margin_of_error - Margin of error
+format/standard_error - Standard error
+format/degrees_freedom - Degrees of freedom
+format/p_value - P-value formatting
+format/significance - Significance level
+format/alpha_level - Alpha level
+format/beta_level - Beta level
+format/test_statistic - Test statistic
+format/z_score - Z-score
+format/t_score - T-score
+format/f_score - F-score
+format/chi_square - Chi-square
+format/chi_square_stat - Chi-square statistic
+format/phi_coeff - Phi coefficient
+format/cramers_v - Cramer's V
+format/ccc - Cramér's V
+format/kendall - Kendall's tau
+format/spearman - Spearman's rho
+format/pearson - Pearson correlation
+format/pointbiserial - Point-biserial
+format/biserial - Biserial
+format/polychoric - Polychoric
+format/polyserial - Polyserial
+format/intraclass - Intraclass correlation
+format/icc - ICC formatting
+format/alpha_reliability - Cronbach's alpha
+format/guttman - Guttman's lambda
+format/split_half - Split-half reliability
+format/test_retest - Test-retest reliability
+format/inter_rater - Inter-rater reliability
+format/krippendorff - Krippendorff's alpha
+format/fleiss - Fleiss' kappa
+format/cohens_kappa - Cohen's kappa
+format/sensitivity - Sensitivity
+format/specificity - Specificity
+format/ppv - Positive predictive value
+format/npv - Negative predictive value
+format/lr_plus - Positive likelihood ratio
+format/lr_minus - Negative likelihood ratio
+format/dor - Diagnostic odds ratio
+format/youden - Youden index
+format/mcc - Matthews correlation coefficient
+format/fowlkes - Fowlkes-Mallows index
+format/rand_index - Rand index
+format/adj_rand - Adjusted Rand index
+format/mutual_info_score - Mutual information score
+format/adj_mutual_info - Adjusted mutual information
+format/homogeneity - Homogeneity
+format/completeness - Completeness
+format/v_measure - V-measure
+format/silhouette - Silhouette coefficient
+format/davies_bouldin - Davies-Bouldin index
+format/calinski_harabasz - Calinski-Harabasz index
+format/dunn_index - Dunn index
+format/ch_index - CH index
+format/db_index - DB index
+format/xb_index - XB index
+format/trace_w - Within-cluster scatter
+format/trace_b - Between-cluster scatter
+format/trace_t - Total scatter
+format/elbow - Elbow method
+format/gap_statistic - Gap statistic
+format/silhouette_plot - Silhouette plot
+format/dendrogram - Dendrogram formatting
+format/clustergram - Clustergram
+format/heatmap_dendro - Heatmap with dendrogram
+format/phylogenetic - Phylogenetic tree
+format/cladogram - Cladogram
+format/phylogram - Phylogram
+format/chronogram - Chronogram
+format/ultrametric - Ultrametric tree
+format/additive - Additive tree
+format/splits - Split network
+format/consensus - Consensus tree
+format/bootstrapping_tree - Bootstrapped tree
+format/bayesian_tree - Bayesian tree
+format/maximum_likelihood - Maximum likelihood tree
+format/parsimony - Parsimony tree
+format/neighbor_joining - Neighbor-joining
+format/upgma - UPGMA
+format/wpgma - WPGMA
+format/single_link - Single linkage
+format/complete_link - Complete linkage
+format/average_link - Average linkage
+format/centroid - Centroid linkage
+format/median_link - Median linkage
+format/ward - Ward's method
+format/mclust - Mclust formatting
+format/gaussian_mixture - Gaussian mixture
+format/em_algorithm - EM algorithm
+format/viterbi - Viterbi algorithm
+format/baum_welch - Baum-Welch
+format/hmm - Hidden Markov model
+format/crf - Conditional random field
+format/markov_chain - Markov chain
+format/hidden_markov - Hidden Markov model
+format/state_space - State space
+format/transition - Transition matrix
+format/emission - Emission matrix
+format/initial - Initial probabilities
+format/stationary - Stationary distribution
+format/absorbing - Absorbing Markov chain
+format/ergodic - Ergodic Markov chain
+format/periodic - Periodic chain
+format/aperiodic - Aperiodic chain
+format/recurrent - Recurrent chain
+format/transient - Transient chain
+format/closed_class - Closed class
+format/open_class - Open class
+format/gamblers_ruin - Gambler's ruin
+format/birth_death - Birth-death process
+format/markov_chain_mc - MCMC
+format/gibbs_sampling - Gibbs sampling
+format/metropolis_hastings - Metropolis-Hastings
+format/hmc - Hamiltonian Monte Carlo
+format/nuts - NUTS sampler
+format/slice_sampling - Slice sampling
+format/rejection_sampling - Rejection sampling
+format/importance_sampling - Importance sampling
+format/sequential_monte - Sequential Monte Carlo
+format/particle_filter - Particle filter
+format/kalman_filter - Kalman filter
+format/extended_kalman - Extended Kalman filter
+format/unscented_kalman - Unscented Kalman filter
+format/particle_kalman - Particle Kalman filter
+format/adaptive_kalman - Adaptive Kalman filter
+format/h_infinity - H-infinity filter
+format/wiener_filter - Wiener filter
+format/adaptive_filter - Adaptive filter
+format/lms_filter - LMS filter
+format/rls_filter - RLS filter
+format/recursive_least - Recursive least squares
+format/linear_regression - Linear regression
+format/logistic_regression - Logistic regression
+format/poisson_regression - Poisson regression
+format/negative_binomial - Negative binomial
+format/zero_inflated - Zero-inflated
+format/hurdle_model - Hurdle model
+format/multinomial - Multinomial regression
+format/ordinal - Ordinal regression
+format/nominal - Nominal regression
+format/proportional_odds - Proportional odds
+format/cox_regression - Cox regression
+format/competing_risks - Competing risks
+format/fine_gray - Fine-Gray model
+format/rsf - Random survival forest
+format/coxnet - Coxnet
+format/ridge - Ridge regression
+format/lasso - Lasso
+format/elastic_net - Elastic net
+format/adaptive_lasso - Adaptive lasso
+format/group_lasso - Group lasso
+format/fused_lasso - Fused lasso
+format/tv_lasso - Total variation lasso
+format/oscar - OSCAR
+format/mcp - MCP penalty
+format/scad - SCAD penalty
+format/mnet - MNET
+format/glmnet - GLMNET
+format/bayesian_glm - Bayesian GLM
+format/brms - BRMS formatting
+format/rstanarm - RStanArm formatting
+format/lme4 - LME4 formatting
+format/nlme - NLME formatting
+format/mixed_model - Mixed model
+format/random_effects - Random effects
+format/fixed_effects - Fixed effects
+format/random_intercept - Random intercept
+format/random_slope - Random slope
+format/nested_model - Nested model
+format/crossed_model - Crossed model
+format/multilevel - Multilevel model
+format/hierarchical - Hierarchical model
+format/grouped_model - Grouped model
+format/clustered_model - Clustered model
+format/panel_model - Panel model
+format/longitudinal - Longitudinal model
+format/repeated_measures - Repeated measures
+format/within_subject - Within-subject
+format/between_subject - Between-subject
+format/mixed_anova - Mixed ANOVA
+format/repeated_anova - Repeated ANOVA
+format/manova - MANOVA
+format/ancova - ANCOVA
+format/mancova - MANCOVA
+format/rm_manova - Repeated MANOVA
+format/rm_ancova - Repeated ANCOVA
+format/gls - Generalized least squares
+format/wls - Weighted least squares
+format/ols - Ordinary least squares
+format/iv - Instrumental variables
+format/2sls - Two-stage least squares
+format/3sls - Three-stage least squares
+format/sur - Seemingly unrelated regression
+format/var - Vector autoregression
+format/svar - Structural VAR
+format/vecm - Vector error correction
+format/cointegration - Cointegration
+format/engle_granger - Engle-Granger
+format/johansen - Johansen test
+format/adf - Augmented Dickey-Fuller
+format/kpss - KPSS test
+format/pp - Phillips-Perron
+format/df - Dickey-Fuller
+format/ers - Elliott-Rothenberg-Stock
+format/ng - Ng-Perron
+format/le - Leybourne
+format/ks - Kolmogorov-Smirnov
+format/ad - Anderson-Darling
+format/sw - Shapiro-Wilk
+format/ks_test - KS test
+format/ctest - Chi-square test
+format/ftest - F-test
+format/ttest - T-test
+format/utest - U-test
+format/mwtest - Mann-Whitney
+format/wilcoxon - Wilcoxon test
+format/sign_test - Sign test
+format/mcnemar - McNemar's test
+format/cq - Cochran's Q
+format/mantel - Mantel test
+format/mantel_haenszel - Mantel-Haenszel
+format/breslow_day - Breslow-Day
+format/tarone - Tarone's test
+format/barnard - Barnard's test
+format/boschloo - Boschloo's test
+format/fisher_exact - Fisher's exact test
+format/chi2_test - Chi-square test
+format/g_test - G-test
+format/log_likelihood - Log-likelihood
+format/score_test - Score test
+format/lrtest - Likelihood ratio test
+format/wald_test - Wald test
+format/rao_test - Rao test
+format/durbin_watson - Durbin-Watson
+format/breusch_pagan - Breusch-Pagan
+format/goldfeld_quandt - Goldfeld-Quandt
+format/harvey - Harvey test
+format/glesjer - Glesjer test
+format/white_test - White test
+format/cook_weisberg - Cook-Weisberg
+format/levene - Levene's test
+format/bartlett - Bartlett's test
+format/fligner - Fligner-Killeen
+format/brown_forsythe - Brown-Forsythe
+format/ansari - Ansari-Bradley
+format/mood - Mood's test
+format/conover - Conover's test
+format/dunn_test - Dunn's test
+format/games_howell - Games-Howell
+format/tamhane - Tamhane's T2
+format/dunnet - Dunnett's test
+format/tukey_hsd - Tukey HSD
+format/scheffe - Scheffe's test
+format/bonferroni - Bonferroni correction
+format/holm - Holm correction
+format/hochberg - Hochberg correction
+format/hommel - Hommel correction
+format/benjamini_hochberg - Benjamini-Hochberg
+format/benjamini_yekutieli - Benjamini-Yekutieli
+format/bh - BH correction
+format/by - BY correction
+format/fdr - False discovery rate
+format/fwer - Family-wise error rate
+format/permutation_test - Permutation test
+format/boot_test - Bootstrap test
+format/monte_carlo_test - Monte Carlo test
+format/randomization_test - Randomization test
+format/exact_test - Exact test
+format/asymptotic_test - Asymptotic test
+format/approximate_test - Approximate test
+format/resampling - Resampling formatting
+format/boot_ci - Bootstrap CI
+format/percentile_boot - Percentile bootstrap
+format/bca_boot - BCa bootstrap
+format/t_boot - Bootstrap t
+format/studentized_boot - Studentized bootstrap
+format/parametric_boot - Parametric bootstrap
+format/nonparametric_boot - Nonparametric bootstrap
+format/smooth_boot - Smooth bootstrap
+format/mcmc_boot - MCMC bootstrap
+format/wild_boot - Wild bootstrap
+format/block_boot - Block bootstrap
+format/moving_block - Moving block bootstrap
+format/circular_boot - Circular bootstrap
+format/stationary_boot - Stationary bootstrap
+format/sieve_boot - Sieve bootstrap
+format/subset_boot - Subset bootstrap
+format/bayesian_boot - Bayesian bootstrap
+format/weights_boot - Weighted bootstrap
+format/jackknife - Jackknife
+format/delete_d - Delete-d jackknife
+format/delete_group - Delete-group jackknife
+format/random_delete - Random delete jackknife
+format/influence - Influence function
+format/hijacked - Hijacked
+format/dfbetas - DFBETAS
+format/dffits - DFFITS
+format/cook_d - Cook's distance
+format/covratio - Covariance ratio
+format/leverage - Leverage
+format/mahalanobis - Mahalanobis distance
+format/studentized - Studentized residual
+format/deleted_residual - Deleted residual
+format/standardized_residual - Standardized residual
+format/pearson_residual - Pearson residual
+format/deviance_residual - Deviance residual
+format/working_residual - Working residual
+format/response_residual - Response residual
+format/partial_residual - Partial residual
+format/component_plus - Component-plus residual
+format/ceres - CERES residual
+format/avplot - Added-variable plot
+format/crplot - Component-residual plot
+format/cooksd_plot - Cook's distance plot
+format/leverage_plot - Leverage plot
+format/residual_plot - Residual plot
+format/qq_plot - Q-Q plot
+format/pp_plot - P-P plot
+format/probability_plot - Probability plot
+format/boxcox - Box-Cox plot
+format/cleveland - Cleveland dot plot
+format/stripplot - Strip plot
+format/swarmplot - Swarm plot
+format/violinplot - Violin plot
+format/boxenplot - Boxen plot
+format/letter_value - Letter-value plot
+format/beanplot - Bean plot
+format/raincloud - Raincloud plot
+format/jitterplot - Jitter plot
+format/beeswarm - Beeswarm plot
+format/ridgeline - Ridgeline plot
+format/joyplot - Joy plot
+format/quantile_plot - Quantile plot
+format/empirical_cdf - Empirical CDF
+format/ecdf_plot - ECDF plot
+format/survival_plot - Survival plot
+format/hazard_plot - Hazard plot
+format/cumulative_hazard - Cumulative hazard
+format/incidence_plot - Incidence plot
+format/prevalence_plot - Prevalence plot
+format/timeline_plot - Timeline plot
+format/event_plot - Event plot
+format/gantt_plot - Gantt plot
+format/waterfall_plot - Waterfall plot
+format/waterfall - Waterfall chart
+format/cascade - Cascade chart
+format/marimekko - Marimekko chart
+format/mekko - Mekko chart
+format/treemap_plot - Treemap plot
+format/sunburst_plot - Sunburst plot
+format/circle_packing - Circle packing
+format/voronoi - Voronoi diagram
+format/delaunay - Delaunay triangulation
+format/convex_hull - Convex hull
+format/concave_hull - Concave hull
+format/alpha_shape - Alpha shape
+format/ellipse - Ellipse formatting
+format/circle - Circle formatting
+format/sphere - Sphere formatting
+format/cylinder - Cylinder formatting
+format/cone - Cone formatting
+format/torus - Torus formatting
+format/cuboid - Cuboid formatting
+format/polyhedron - Polyhedron
+format/tetrahedron - Tetrahedron
+format/octahedron - Octahedron
+format/dodecahedron - Dodecahedron
+format/icosahedron - Icosahedron
+format/pyramid - Pyramid formatting
+format/prism - Prism formatting
+format/antiprism - Antiprism
+format/frustum - Frustum formatting
+format/geodesic - Geodesic sphere
+format/platonic - Platonic solid
+format/archimedean - Archimedean solid
+format/catalan - Catalan solid
+format/johnson - Johnson solid
+format/kepler_poinsot - Kepler-Poinsot polyhedron
+format/regular_polygon - Regular polygon
+format/star_polygon - Star polygon
+format/heptagram - Heptagram
+format/octagram - Octagram
+format/nonagram - Nonagram
+format/decagram - Decagram
+format/pentagram - Pentagram
+format/hexagram - Hexagram
+format/tridecagram - Tridecagram
+format/tetradecagram - Tetradecagram
+format/pentadecagram - Pentadecagram
+format/hexadecagram - Hexadecagram
+format/heptadecagram - Heptadecagram
+format/octadecagram - Octadecagram
+format/enneadecagram - Enneadecagram
+format/icosagram - Icosagram
+format/star_shapes - Star shapes
+format/spiral - Spiral formatting
+format/helix - Helix formatting
+format/curve - Curve formatting
+format/bezier - Bezier curve
+format/spline - Spline curve
+format/bspline - B-spline
+format/nurbs - NURBS curve
+format/hermite - Hermite spline
+format/catmull_rom - Catmull-Rom spline
+format/kochanek_bartels - Kochanek-Bartels spline
+format/beta_spline - Beta spline
+format/rational_curve - Rational curve
+format/surface - Surface formatting
+format/mesh - Mesh formatting
+format/triangle_mesh - Triangle mesh
+format/quad_mesh - Quad mesh
+format/subdivision - Subdivision surface
+format/catmull_subdiv - Catmull-Clark subdivision
+format/loop_subdiv - Loop subdivision
+format/doo_sabin - Doo-Sabin subdivision
+format/butterfly_subdiv - Butterfly subdivision
+format/kobbelt_subdiv - Kobbelt subdivision
+format/midpoint_subdiv - Midpoint subdivision
+format/sqrt3_subdiv - Sqrt(3) subdivision
+format/quad_trisection - Quad-trisection
+format/tri_trisection - Tri-trisection
+format/quad_quadrisection - Quad-quadrisection
+format/tri_quadrisection - Tri-quadrisection
+format/smooth_mesh - Smooth mesh
+format/fairing - Fairing
+format/laplacian_smooth - Laplacian smoothing
+format/taubin_smooth - Taubin smoothing
+format/humphrey_smooth - Humphrey smoothing
+format/cotangent_smooth - Cotangent smoothing
+format/mean_curvature - Mean curvature flow
+format/volume_preserving - Volume preserving flow
+format/shrinkwrap - Shrinkwrap
+format/remesh - Remeshing
+format/decimate - Decimation
+format/simplify - Simplification
+format/subdivide - Subdivision
+format/refine - Refinement
+format/upsample - Upsampling
+format/downsample - Downsampling
+format/resample - Resampling
+format/relax - Relaxation
+format/optimize - Optimization
+format/smooth - Smoothing
+format/sharp - Sharpening
+format/flatten - Flattening
+format/unfold - Unfolding
+format/parameterize - Parameterization
+format/uvmap - UV mapping
+format/texture_coords - Texture coordinates
+format/normal_map - Normal map
+format/displacement - Displacement map
+format/bump_map - Bump map
+format/parallax_map - Parallax map
+format/environment_map - Environment map
+format/cube_map - Cube map
+format/sphere_map - Sphere map
+format/equirectangular - Equirectangular projection
+format/mercator - Mercator projection
+format/gall_peters - Gall-Peters projection
+format/robinson - Robinson projection
+format/winkel_tripel - Winkel Tripel projection
+format/mollweide - Mollweide projection
+format/hammer - Hammer projection
+format/aitoff - Aitoff projection
+format/lambert - Lambert projection
+format/albers - Albers projection
+format/conic - Conic projection
+format/azimuthal - Azimuthal projection
+format/gnomonic - Gnomonic projection
+format/stereographic - Stereographic projection
+format/orthographic - Orthographic projection
+format/equal_area - Equal area projection
+format/equidistant - Equidistant projection
+format/conformal - Conformal projection
+format/pseudo - Pseudo-projection
+format/sinusoidal - Sinusoidal projection
+format/bonne - Bonne projection
+format/van_der_grinten - Van der Grinten
+format/eckert - Eckert projection
+format/goode - Goode's homolosine
+format/interrupted - Interrupted projection
+format/butterfly_proj - Butterfly projection
+format/waterman - Waterman butterfly
+format/cahill - Cahill projection
+format/peirce - Peirce quincuncial
+format/guyou - Guyou projection
+format/lee - Lee projection
+format/eisenlohr - Eisenlohr projection
+format/august - August projection
+format/nell - Nell projection
+format/oblate - Oblate projection
+format/prolate - Prolate projection
+format/transverse - Transverse projection
+format/oblique - Oblique projection
+format/equatorial - Equatorial projection
+format/polar - Polar projection
+format/universal - Universal projection
+format/utm_projection - UTM projection
+format/mgrs_projection - MGRS projection
+format/gars - GARS projection
+format/georef - GEOREF projection
+format/maidenhead - Maidenhead locator
+format/open_location - Open Location Code
+format/plus_code - Plus Code
+format/what3words - what3words
+format/geocode - Geocoding formatting
+format/reverse_geocode - Reverse geocoding
+format/place - Place formatting
+format/address_format - Address formatting
+format/street - Street formatting
+format/city - City formatting
+format/state - State formatting
+format/postal_code - Postal code formatting
+format/country - Country formatting
+format/continent - Continent formatting
+format/region - Region formatting
+format/district - District formatting
+format/neighborhood - Neighborhood formatting
+format/landmark - Landmark formatting
+format/point_of_interest - Point of interest
+format/poi - POI formatting
+format/way - Way formatting
+format/relation - Relation formatting
+format/node - Node formatting
+format/waypoint_format - Waypoint formatting
+format/route_format - Route formatting
+format/track_format - Track formatting
+format/gpx_format - GPX formatting
+format/kml_format - KML formatting
+format/geojson_format - GeoJSON formatting
+format/topo_json - TopoJSON formatting
+format/geobuf - GeoBuf formatting
+format/pbf - PBF formatting
+format/shapefile_format - Shapefile formatting
+format/dbf - DBF formatting
+format/shx - SHX formatting
+format/prj - PRJ formatting
+format/qix - QIX formatting
+format/cpg - CPG formatting
+format/sbn - SBN formatting
+format/sbx - SBX formatting
+format/fbn - FBN formatting
+format/fbx - FBX formatting
+format/ain - AIN formatting
+format/aih - AIH formatting
+format/ixs - IXS formatting
+format/mxs - MXS formatting
+format/atx - ATX formatting
+format/iso - ISO formatting
+format/ecw - ECW formatting
+format/sid - SID formatting
+format/mrsid - MrSID formatting
+format/jp2 - JP2 formatting
+format/jpeg2000 - JPEG 2000
+format/geotiff - GeoTIFF formatting
+format/tiff - TIFF formatting
+format/geopdf - GeoPDF formatting
+format/geojp2 - GeoJP2 formatting
+format/geohe - GeoHE formatting
+format/geoep - GeoEP formatting
+format/geobmp - GeoBMP formatting
+format/geopng - GeoPNG formatting
+format/geogif - GeoGIF formatting
+format/geojpg - GeoJPG formatting
+format/geosvg - GeoSVG formatting
+format/geowebp - GeoWebP formatting
+format/geobpg - GeoBPG formatting
+format/geoavif - GeoAVIF formatting
+format/geoheif - GeoHEIF formatting
+format/geojxl - GeoJXL formatting
+
+OS INTERACTION 
+os/pipe - Anonymous pipes
+os/fd - File descriptor utilities
+os/dup - Duplicate file descriptors
+os/select - Select/poll operations
+os/event - Event polling (epoll, kqueue, IOCP)
+os/ioctl - IOCTL operations
+os/mmap - Memory-mapped files
+os/stat - File status (size, permissions, timestamps)
+os/perm - Permission operations (chmod)
+os/owner - Owner operations (chown)
+os/link - Hard/symbolic links
+os/rename - Rename files/directories
+os/remove - Delete files/directories
+os/symlink - Symbolic link operations
+os/readlink - Read symbolic link target
+os/realpath - Resolve canonical path
+os/temp - Temporary directory/file creation
+os/cwd - Current working directory
+os/chdir - Change directory
+os/mkdir - Make directory (with parents)
+os/rmdir - Remove directory
+os/walk - Directory walking/traversal
+os/glob - Glob pattern expansion
+os/find - File finding
+os/locate - File locating
+os/which - Which command
+os/where - Where command
+os/type - File type detection
+os/magic - Magic number detection
+os/mime - MIME type detection
+os/encoding - File encoding detection
+os/eol - Line ending detection (LF, CRLF, CR)
+os/bom - Byte order mark handling
+os/utf8bom - UTF-8 BOM handling
+os/utf16bom - UTF-16 BOM handling
+os/binary - Binary file detection
+os/text - Text file detection
+os/empty - Empty file detection
+os/size - File size utilities
+os/truncate - Truncate file
+os/fallocate - Pre-allocate space
+os/punch_hole - Punch hole in file
+os/collapse - Collapse file holes
+os/seek - File seeking
+os/tell - File position
+os/read - File reading (various sizes)
+os/write - File writing (various sizes)
+os/read_at - Read at offset
+os/write_at - Write at offset
+os/pread - Pread (atomic read at offset)
+os/pwrite - Pwrite (atomic write at offset)
+os/readv - Read vector (scatter)
+os/writev - Write vector (gather)
+os/preadv - Preadv (scatter at offset)
+os/pwritev - Pwritev (gather at offset)
+os/sendfile - Sendfile (zero-copy)
+os/splice - Splice (zero-copy)
+os/tee - Tee (zero-copy)
+os/vmsplice - Vmsplice (zero-copy)
+os/io_uring - io_uring interface
+os/aio - Asynchronous I/O
+os/posix_aio - POSIX AIO
+os/libaio - Linux AIO
+os/uring - io_uring
+os/iocp - IOCP (Windows)
+os/overlapped - Overlapped I/O
+os/completion - Completion ports
+os/eventfd - Eventfd
+os/timerfd - Timerfd
+os/signalfd - Signalfd
+os/epoll - Epoll (Linux)
+os/kqueue - Kqueue (BSD/macOS)
+os/poll - Poll
+os/ppoll - ppoll
+os/select_sys - select
+os/pselect - pselect
+os/kevent - kevent
+os/port - Event ports (Solaris)
+os/wait - Wait for processes
+os/waitpid - Wait for specific PID
+os/waitid - Wait for specific ID
+os/wait3 - Wait with resource usage
+os/wait4 - Wait with resource usage
+os/fork - Fork process
+os/exec - Execute process
+os/execve - Execve
+os/execv - Execv
+os/execl - Execl
+os/execle - Execle
+os/execlp - Execlp
+os/execvp - Execvp
+os/execvpe - Execvpe
+os/posix_spawn - POSIX spawn
+os/posix_spawnp - POSIX spawn with PATH
+os/spawn - Process spawn
+os/spawnp - Spawn with PATH
+os/system - System call
+os/popen - Popen
+os/pclose - Pclose
+os/pipe2 - Pipe2 (with flags)
+os/fifo - FIFO (named pipe)
+os/mknod - Make node (device)
+os/mkfifo - Make FIFO
+os/dev - Device files
+os/dev_null - /dev/null
+os/dev_zero - /dev/zero
+os/dev_random - /dev/random
+os/dev_urandom - /dev/urandom
+os/stdin - Standard input
+os/stdout - Standard output
+os/stderr - Standard error
+os/tty - TTY operations
+os/pty - Pseudoterminal
+os/console - Console operations
+os/terminal - Terminal operations
+os/termios - Terminal I/O
+os/termcap - Termcap
+os/terminfo - Terminfo
+os/tput - Tput utilities
+os/resize - Terminal resize
+os/clear - Clear screen
+os/cursor - Cursor movement
+os/color - Color support
+os/input - Input modes
+os/echo - Echo control
+os/canonical - Canonical mode
+os/raw - Raw mode
+os/cbreak - Cbreak mode
+os/nonblock - Non-blocking I/O
+os/blocking - Blocking I/O
+os/timeout - I/O timeout
+os/async_io - Asynchronous I/O
+os/signal_io - Signal-driven I/O
+os/thread_io - Threaded I/O
+os/stream - Stream utilities
+os/buffer - Buffering utilities
+os/line_buffer - Line buffering
+os/full_buffer - Full buffering
+os/no_buffer - No buffering
+os/flush - Flush buffer
+os/sync - Sync file
+os/fsync - File sync
+os/fdatasync - Data sync
+os/syncfs - Sync filesystem
+os/sync_file_range - Sync file range
+os/msync - Memory sync
+os/madvise - Memory advise
+os/mlock - Memory lock
+os/munlock - Memory unlock
+os/mlockall - Lock all memory
+os/munlockall - Unlock all memory
+os/mincore - Memory residency
+os/mprotect - Memory protection
+os/mremap - Memory remap
+os/madvise - Memory advise
+os/memset - Memory set
+os/memcpy - Memory copy
+os/memmove - Memory move
+os/memchr - Memory find
+os/memcmp - Memory compare
+os/memmem - Memory find substring
+os/memrchr - Memory reverse find
+os/strcpy - String copy
+os/strncpy - String copy with length
+os/strcat - String concatenate
+os/strncat - String concatenate with length
+os/strcmp - String compare
+os/strncmp - String compare with length
+os/strcasecmp - Case-insensitive compare
+os/strncasecmp - Case-insensitive with length
+os/strchr - Find character
+os/strrchr - Reverse find character
+os/strstr - Find substring
+os/strcasestr - Case-insensitive substring
+os/strpbrk - Find any character
+os/strspn - Span string
+os/strcspn - Complement span
+os/strtok - Tokenize string
+os/strtok_r - Tokenize reentrant
+os/strerror - Error string
+os/perror - Print error
+os/errno - Error number
+os/errno_list - Error number list
+os/strsignal - Signal string
+os/psignal - Print signal
+os/backtrace - Backtrace
+os/backtrace_symbols - Backtrace symbols
+os/backtrace_symbols_fd - Backtrace symbols to FD
+os/demangle - Symbol demangling
+os/addr2line - Address to line
+os/objdump - Object dump
+os/readelf - Read ELF
+os/readpe - Read PE
+os/readmacho - Read Mach-O
+os/objcopy - Object copy
+os/objdump_syms - Symbol dump
+os/nm - Symbol listing
+os/strings - Strings extraction
+os/file - File command
+os/ldd - Library dependencies
+os/ldconfig - Library config
+os/dlopen - Dynamic loading
+os/dlclose - Dynamic unloading
+os/dlsym - Dynamic symbol
+os/dlerror - Dynamic error
+os/dladdr - Dynamic address
+os/dladdr1 - Dynamic address extended
+os/dlinfo - Dynamic info
+os/rtld_next - RTLD_NEXT
+os/rtld_default - RTLD_DEFAULT
+os/rtld_self - RTLD_SELF
+os/libc - Libc access
+os/libm - Libm access
+os/librt - Librt access
+os/libdl - Libdl access
+os/libpthread - Libpthread access
+os/libcrypto - OpenSSL/libcrypto
+os/libssl - OpenSSL/libssl
+os/libz - Zlib
+os/libbz2 - Bzip2
+os/liblzma - LZMA
+os/libzstd - Zstandard
+os/liblz4 - LZ4
+os/libsnappy - Snappy
+os/libiconv - Iconv
+os/libintl - Gettext
+os/libxml2 - Libxml2
+os/libxslt - Libxslt
+os/libexpat - Expat
+os/libyaml - Libyaml
+os/libjson - JSON-C
+os/libjansson - Jansson
+os/libcurl - Curl
+os/libgit2 - Libgit2
+os/libssh2 - Libssh2
+os/libssl - SSL
+os/libcrypto - Crypto
+os/libpcap - PCAP
+os/libnet - Libnet
+os/libpcap - PCAP
+os/libnftnl - NFTNL
+os/libmnl - MNL
+os/libnl3 - Netlink
+os/libnetfilter - Netfilter
+os/libipq - IPQ
+os/libnfnetlink - NFNetlink
+os/libnetfilter_queue - NFQueue
+os/libnetfilter_log - NFLog
+os/libnetfilter_conntrack - NFConntrack
+os/libnetfilter_cttimeout - NFCTTimeout
+os/libnetfilter_cthelper - NFCTHelper
+os/libnetfilter_queue - NFQueue
+os/libnetfilter_log - NFLog
+os/libnetfilter_conntrack - NFConntrack
+os/libnetfilter_cttimeout - NFCTTimeout
+os/libnetfilter_cthelper - NFCTHelper
+os/libnfnetlink - NFNetlink
+os/libnftnl - NFTNL
+os/libmnl - MNL
+os/libnl-3 - Netlink
+os/libnl-route - Netlink route
+os/libnl-genl - Netlink generic
+os/libnl-nf - Netlink netfilter
+os/libnl-idiag - Netlink inetdiag
+os/libnl-cli - Netlink CLI
+os/libnl - Netlink
+os/rtnetlink - Rtnetlink
+os/netlink - Netlink
+os/genetlink - Generic netlink
+os/nl80211 - nl80211 (wireless)
+os/rfkill - RFKill
+os/iw - Wireless utilities
+os/iwconfig - Wireless config
+os/iwlist - Wireless list
+os/iwpriv - Wireless private
+os/iwspy - Wireless spy
+os/wpa - WPA supplicant
+os/wpa_cli - WPA CLI
+os/hostapd - Hostapd
+os/hostapd_cli - Hostapd CLI
+os/ath9k - Atheros
+os/ath10k - Atheros 10k
+os/ath11k - Atheros 11k
+os/brcmfmac - Broadcom
+os/rtlwifi - Realtek
+os/rtl8xxxu - Realtek USB
+os/rtlwifi - Realtek PCIe
+os/mt76 - MediaTek
+os/mt7915 - MediaTek 7915
+os/mt7921 - MediaTek 7921
+os/iwlwifi - Intel wireless
+os/iwllegacy - Intel legacy
+os/iwlwifi - Intel WiFi
+os/iwlmei - Intel MEI
+os/i915 - Intel graphics
+os/amdgpu - AMD graphics
+os/nouveau - NVIDIA nouveau
+os/nvidia - NVIDIA proprietary
+os/mesa - Mesa graphics
+os/drm - DRM
+os/drm_fourcc - DRM fourcc
+os/drm_mode - DRM mode
+os/gbm - GBM
+os/egl - EGL
+os/gl - OpenGL
+os/gles - GLES
+os/glx - GLX
+os/wgl - WGL
+os/vulkan - Vulkan
+os/dx - DirectX
+os/dxgi - DXGI
+os/d3d11 - Direct3D 11
+os/d3d12 - Direct3D 12
+os/d2d - Direct2D
+os/dwrite - DirectWrite
+os/dcomp - DirectComposition
+os/mf - Media Foundation
+os/wmf - Windows Media Foundation
+os/quartz - QuickTime
+os/core_video - Core Video
+os/core_audio - Core Audio
+os/core_media - Core Media
+os/cf - Core Foundation
+os/cg - Core Graphics
+os/cg_image - Core Graphics Image
+os/cg_context - Core Graphics Context
+os/cg_font - Core Graphics Font
+os/cg_color - Core Graphics Color
+os/cg_path - Core Graphics Path
+os/cg_shader - Core Graphics Shader
+os/cg_ps - Core Graphics PDF
+os/core_text - Core Text
+os/core_animation - Core Animation
+os/scenekit - SceneKit
+os/spritekit - SpriteKit
+os/metal - Metal
+os/metal_kit - MetalKit
+os/model_io - Model I/O
+os/arkit - ARKit
+os/reality_kit - RealityKit
+os/vision - Vision
+os/natural_language - Natural Language
+os/speech - Speech
+os/sound_analysis - Sound Analysis
+os/core_ml - Core ML
+os/createml - CreateML
+os/turi - Turi Create
+os/core_image - Core Image
+os/core_video - Core Video
+os/core_media - Core Media
+os/core_audio - Core Audio
+os/core_midi - Core MIDI
+os/core_audio_kit - Core Audio Kit
+os/av_foundation - AVFoundation
+os/av_kit - AVKit
+os/audio_toolbox - AudioToolbox
+os/audio_unit - Audio Unit
+os/core_haptics - Core Haptics
+os/corenfc - Core NFC
+os/cornea - CoreNEA
+os/core_telephony - CoreTelephony
+os/coredata - CoreData
+os/cloudkit - CloudKit
+os/storekit - StoreKit
+os/identity - Identity
+os/local_authentication - Local Authentication
+os/security - Security
+os/keychain - Keychain
+os/kerberos_os - Kerberos
+os/ldap_os - LDAP
+os/open_directory - Open Directory
+os/authentication - Authentication
+os/authorization - Authorization
+os/sandbox - Sandbox
+os/entitlements - Entitlements
+os/protected - Protected resources
+os/photo - Photos
+os/photo_kit - PhotoKit
+os/camera - Camera
+os/microphone - Microphone
+os/location - Location
+os/motion - Motion
+os/pedometer - Pedometer
+os/health_kit - HealthKit
+os/research_kit - ResearchKit
+os/care_kit - CareKit
+os/school_kit - SchoolKit
+os/class_kit - ClassKit
+os/map_kit - MapKit
+os/map_kit_js - MapKit JS
+os/address_book - Address Book
+os/contacts - Contacts
+os/contacts_ui - ContactsUI
+os/event_kit - EventKit
+os/event_kit_ui - EventKitUI
+os/calendar - Calendar
+os/reminders - Reminders
+os/notes - Notes
+os/reminders_kit - RemindersKit
+os/messages - Messages
+os/message_ui - MessageUI
+os/mail - Mail
+os/mail_ui - MailUI
+os/game_kit - GameKit
+os/game_center - Game Center
+os/game_controller - GameController
+os/game_play - GamePlay
+os/replay_kit - ReplayKit
+os/screen_kit - ScreenKit
+os/device_check - DeviceCheck
+os/device_activity - DeviceActivity
+os/family_controls - FamilyControls
+os/managed - Managed
+os/mdm - MDM
+os/profiles - Profiles
+os/configuration - Configuration
+os/enterprise - Enterprise
+os/edition - Edition
+os/platform - Platform
+os/version - Version
+os/build - Build
+os/update - Update
+os/restore - Restore
+os/recovery - Recovery
+os/secure_enclave - Secure Enclave
+os/crypto_kit - CryptoKit
+os/security_interface - SecurityInterface
+os/accessibility - Accessibility
+os/siri - Siri
+os/siri_kit - SiriKit
+os/shortcuts - Shortcuts
+os/shortcuts_kit - ShortcutsKit
+os/intents - Intents
+os/intents_ui - IntentsUI
+os/app_clips - App Clips
+os/app_library - App Library
+os/app_store - App Store
+os/mac_app_store - Mac App Store
+os/play_store - Play Store
+os/amazon_store - Amazon Appstore
+os/galaxy_store - Galaxy Store
+os/huawei_store - Huawei AppGallery
+os/xiaomi_store - Xiaomi GetApps
+os/oppo_store - OPPO App Market
+os/vivo_store - Vivo App Store
+os/tencent_store - Tencent MyApp
+os/alibaba_store - Alibaba App Store
+os/baidu_store - Baidu App Store
+os/360_store - 360 App Store
+os/meizu_store - Meizu App Store
+os/lenovo_store - Lenovo Store
+os/samsung_store - Samsung Galaxy Store
+os/lg_store - LG SmartWorld
+os/sony_store - Sony Select
+os/microsoft_store - Microsoft Store
+os/chrome_web_store - Chrome Web Store
+os/firefox_addons - Firefox Add-ons
+os/opera_addons - Opera Add-ons
+os/edge_addons - Edge Add-ons
+os/packaging - Packaging
+os/signing - Code signing
+os/notarization - Notarization
+os/entitlements_signing - Entitlements signing
+os/provisioning - Provisioning profiles
+os/certs - Certificates
+os/keys - Keys
+os/secrets - Secrets
+os/passwords - Passwords
+os/tokens - Tokens
+os/sessions - Sessions
+os/cookies - Cookies
+os/cache - Cache
+os/preferences - Preferences
+os/settings - Settings
+os/configuration_os - Configuration
+os/plist - Property lists
+os/pbplist - Binary plist
+os/xmlplist - XML plist
+os/jsonplist - JSON plist
+os/registry - Windows registry
+os/reg_key - Registry key
+os/reg_value - Registry value
+os/reg_hive - Registry hive
+os/reg_acl - Registry ACL
+os/reg_transaction - Registry transaction
+os/gac - Global Assembly Cache
+os/assembly - Assembly
+os/manifest - Manifest
+os/publisher - Publisher
+os/authenticode - Authenticode
+os/signtool - SignTool
+os/winverify - WinVerify
+os/certmgr - CertMgr
+os/makecert - MakeCert
+os/pvk2pfx - PVK2PFX
+os/certutil - CertUtil
+os/certreq - CertReq
+os/certoc - CertOC
+os/certtmpl - CertTmpl
+os/certsrv - CertSrv
+os/pkicert - PKI Cert
+os/msca - MSCA
+os/mscep - MSCEP
+os/ocsp - OCSP
+os/crl - CRL
+os/crl_dist - CRL distribution
+os/aia - AIA
+os/cdp - CDP
+os/ocsp_stapling - OCSP stapling
+os/must_staple - Must-staple
+os/ct - Certificate transparency
+os/sct - Signed certificate timestamp
+os/precert - Precertificate
+os/precert_sct - Precertificate SCT
+os/akid - Authority key ID
+os/skid - Subject key ID
+os/basic_constraints - Basic constraints
+os/key_usage - Key usage
+os/ext_key_usage - Extended key usage
+os/subject_alt - Subject alternative name
+os/issuer_alt - Issuer alternative name
+os/auth_info - Authority info
+os/subj_info - Subject info
+os/crl_dist_points - CRL distribution points
+os/cert_policies - Certificate policies
+os/policy_mapping - Policy mapping
+os/policy_constraints - Policy constraints
+os/inhibit_any - Inhibit any policy
+os/name_constraints - Name constraints
+os/permitted_subtrees - Permitted subtrees
+os/excluded_subtrees - Excluded subtrees
+os/private_key_usage - Private key usage period
+os/issuer_cert - Issuer certificate
+os/cert_serial - Certificate serial
+os/thumbprint - Thumbprint
+os/fingerprint - Fingerprint
+os/spki - Subject public key info
+os/subject_key - Subject key
+os/issuer_key - Issuer key
+os/authority_key - Authority key
+os/cross_cert - Cross-certification
+os/bridge_ca - Bridge CA
+os/root_ca - Root CA
+os/intermediate_ca - Intermediate CA
+os/sub_ca - Sub CA
+os/end_entity - End entity
+os/client_cert - Client certificate
+os/server_cert - Server certificate
+os/email_cert - Email certificate
+os/code_signing_cert - Code signing certificate
+os/domain_validation - Domain validation
+os/org_validation - Organization validation
+os/ev_cert - Extended validation
+os/dv_cert - Domain validation certificate
+os/ov_cert - Organization validation certificate
+os/wildcard_cert - Wildcard certificate
+os/multi_domain_cert - Multi-domain certificate
+os/san_cert - SAN certificate
+os/sni_cert - SNI certificate
+os/ecdsa_cert - ECDSA certificate
+os/rsa_cert - RSA certificate
+os/dsa_cert - DSA certificate
+os/ed25519_cert - Ed25519 certificate
+os/ed448_cert - Ed448 certificate
+os/pqc_cert - Post-quantum certificate
+os/x509_v1 - X.509 v1
+os/x509_v2 - X.509 v2
+os/x509_v3 - X.509 v3
+os/pkcs1 - PKCS#1
+os/pkcs7 - PKCS#7
+os/pkcs8 - PKCS#8
+os/pkcs10 - PKCS#10 (CSR)
+os/pkcs11 - PKCS#11 (HSM)
+os/pkcs12 - PKCS#12 (PFX)
+os/pkcs15 - PKCS#15
+os/pkix - PKIX
+os/pki - PKI
+os/cms - CMS
+os/smime - S/MIME
+os/pgp_os - PGP/GPG
+os/ssh_os - SSH
+os/ssh_agent - SSH agent
+os/ssh_key - SSH key
+os/ssh_cert - SSH certificate
+os/known_hosts - Known hosts
+os/authorized_keys - Authorized keys
+os/ssh_config - SSH config
+os/sshd_config - SSHD config
+os/ssl_cert - SSL certificate
+os/tls_cert - TLS certificate
+os/dtls_cert - DTLS certificate
+os/webrtc_cert - WebRTC certificate
+os/mqtt_cert - MQTT certificate
+os/coap_cert - CoAP certificate
+os/zigbee_cert - Zigbee certificate
+os/z_wave_cert - Z-Wave certificate
+os/ble_cert - Bluetooth LE certificate
+os/nfc_cert - NFC certificate
+os/rfid_cert - RFID certificate
+os/device_cert - Device certificate
+os/user_cert - User certificate
+os/group_cert - Group certificate
+os/role_cert - Role certificate
+os/attribute_cert - Attribute certificate
+os/attribute_cert - Attribute certificate (AC)
+os/ac - Attribute certificate
+os/attr_cert - Attribute certificate
+os/pmi - PMI
+os/privilege - Privilege
+os/privilege_mgmt - Privilege management
+os/privilege_cert - Privilege certificate
+os/sa - Security attribute
+os/soa - Source of authority
+os/grant - Grant
+os/deny - Deny
+os/permit - Permit
+os/prohibit - Prohibit
+os/audit - Audit
+os/audit_trail - Audit trail
+os/audit_log - Audit log
+os/security_log - Security log
+os/access_log - Access log
+os/error_log - Error log
+os/syslog - Syslog
+os/eventlog - Event log (Windows)
+os/trace_log - Trace log
+os/debug_log - Debug log
+os/perf_log - Performance log
+os/monitor_log - Monitor log
+os/metric_log - Metric log
+os/json_log - JSON log
+os/structured_log - Structured log
+os/query_log - Query log
+os/transaction_log - Transaction log
+os/journal - Journal
+os/systemd_journal - Systemd journal
+os/bsd_syslog - BSD syslog
+os/rfc5424 - RFC 5424
+os/rfc3164 - RFC 3164
+os/syslog_ng - syslog-ng
+os/rsyslog - rsyslog
+os/logrotate - Log rotation
+os/log_rotate - Log rotation utilities
+os/log_compress - Log compression
+os/log_archive - Log archiving
+os/log_retention - Log retention
+os/log_audit - Log auditing
+os/log_analysis - Log analysis
+os/log_correlation - Log correlation
+os/log_enrichment - Log enrichment
+os/log_parsing - Log parsing
+os/log_filtering - Log filtering
+os/log_aggregation - Log aggregation
+os/log_shipping - Log shipping
+os/log_streaming - Log streaming
+os/log_realtime - Real-time log
+os/log_forward - Log forwarding
+os/log_forwarder - Log forwarder
+os/log_agent - Log agent
+os/log_client - Log client
+os/log_server - Log server
+os/log_collector - Log collector
+os/log_indexer - Log indexer
+os/log_search - Log search
+os/log_visualize - Log visualization
+os/log_dashboard - Log dashboard
+os/log_alert - Log alerting
+os/log_notification - Log notification
+os/log_report - Log reporting
+os/log_scheduling - Log scheduling
+os/log_trigger - Log trigger
+os/log_action - Log action
+os/log_script - Log script
+os/log_hook - Log hook
+os/log_plugin - Log plugin
+os/log_api - Log API
+os/log_rest - Log REST
+os/log_graphql - Log GraphQL
+os/log_grpc - Log gRPC
+os/log_protobuf - Log Protobuf
+os/log_flatbuffers - Log FlatBuffers
+os/log_capnproto - Log Cap'n Proto
+os/log_avro - Log Avro
+os/log_parquet - Log Parquet
+os/log_orc - Log ORC
+os/log_arrow - Log Arrow
+os/log_binary - Log binary
+os/log_text - Log text
+os/log_format - Log format
+os/log_structured - Log structured
+os/log_semantic - Log semantic
+os/log_contextual - Log contextual
+
+
+RANDOM 
+
+
+---
+
+# ═══════════════════════════════════════════════════════════════════
+# CROSS-REFERENCE & PRODUCTION PLAN (v2 — 2026-08-07)
+# Purpose: for EVERY entry in the STD EXTENSION PLANNING list below,
+# decide: HAVE (in stdlib/package) | STDLIB (no deps, implement here)
+# | PACKAGE (needs deps or domain-specific, goes to packages/<name>).
+# After each section: audit notes (folder grouping, refactoring).
+# ═══════════════════════════════════════════════════════════════════
+
+## 0. RULES (final)
+
+1. **STDLIB = ZERO external dependencies.** Only pure XIOM + OS syscalls via
+   minimal FFI + the compiler substrate (LLVM/clang/NASM). Everything that
+   needs a 3rd-party C library (OpenSSL, libcurl, ICU, zlib is fine — we have
+   pure impls — but OpenSSL/ICU/etc are NOT) → **PACKAGE**.
+2. **Package = built on stdlib, may wrap C.** Lives in `packages/<name>/`.
+3. Every package folder gets a `README.md` listing the libs/modules to create
+   (NOT full specs — just the inventory + one-line scope). 257 placeholder
+   folders already exist; this plan assigns the list entries to them.
+4. **Folder grouping is VERIFIED WORKING**: `use xiom.foo.bar` resolves
+   `stdlib/xiom/foo/bar.xi` (catalog strategy a: path-based). Tested with
+   `use xiom._foldertest.sub` → exit 42. So we CAN organize stdlib into
+   subfolders (e.g. `stdlib/xiom/str/`, `stdlib/xiom/net/`) WITHOUT breaking
+   `use` — BUT the 40 test-imported module NAMES must stay resolvable.
+   ⚠️ IMPORTANT: moving `string.xi` → `str/string.xi` changes `use xiom.string`
+   resolution (strategy a fails, strategy b matches declared module header —
+   the header says `module xiom.string` so strategy b WOULD still find it).
+   VERIFY before moving; safest = keep contract modules at top level, put NEW
+   grouped modules in folders with dotted names.
+5. **File-size refactoring rule**: any module > 1,000 lines gets split into
+   folder modules (`num/`, `str/`, `crypto/`, `net/`, `os/`, `collect/`,
+   `format/`, `text/`) with the ORIGINAL file kept as the aggregate re-export
+   for the frozen contract, and new fns added to the sub-modules. The API-freeze
+   test guards the flat files; folder modules are additive.
+
+## 1. HASHING (15 entries)
+
+| Entry | Decision | Where / Status |
+|-------|----------|----------------|
+| hash/fnv (32,64,128) | ✅ HAVE 32/64 | stdlib/hash.xi (fnv1a32, fnv1a64, fnv1_64). GAP: 128-bit |
+| hash/murmur (2,3; 32,128) | ✅ HAVE 3-32 | hash.xi murmur3_32. GAP: murmur2, murmur3-128 |
+| hash/city (64,128,256) | ⬜ STDLIB | add to hash.xi (pure) |
+| hash/xxhash (32,64,128,XXH3) | ✅ HAVE 32 | hash.xi xxhash32. GAP: xxhash64, 128, XXH3 |
+| hash/siphash (2-4,1-3) | ✅ HAVE 2-4 | hash.xi sip_hash. GAP: 1-3 variant |
+| hash/highway (64,128,256) | ⬜ STDLIB | add (pure) |
+| hash/spooky (128) | ⬜ STDLIB | add |
+| hash/t1ha | ⬜ STDLIB | add |
+| hash/metro (64,128) | ⬜ STDLIB | add |
+| hash/farm | ⬜ STDLIB | add |
+| hash/jenkins (lookup3) | ⬜ STDLIB | add |
+| hash/superfast | ⬜ STDLIB | add |
+| hash/crc (32,64 + HW accel) | ✅ HAVE 32 | hash.xi crc32_ieee + compress crc32. GAP: crc64 + asm |
+| hash/adler | ✅ HAVE | compress.xi adler32 |
+| hash/checksum (BSD,SysV,Internet) | ⬜ STDLIB | add |
+
+**Audit**: hash.xi = 23 fns, small. All hashes are pure → all STDLIB. No folder needed; keep flat. Optimization: xxhash/city/highway SIMD later (Phase 4).
+
+## 2. COLLECTIONS (58 entries)
+
+| Entry | Decision | Where / Status |
+|-------|----------|----------------|
+| collect/list (singly/doubly) | ✅ HAVE LinkedList | collections.xi |
+| collect/vector | ✅ HAVE Vec | collections.xi |
+| collect/stack | ✅ HAVE | collections.xi (Vec-based) |
+| collect/queue | ✅ HAVE | collections.xi (VecDeque) |
+| collect/ring | ✅ HAVE | collections.xi (VecDeque/circular) |
+| collect/map (open addressing) | ✅ HAVE Map | collections.xi |
+| collect/mapch (chaining) | ✅ HAVE HashMap | collections.xi |
+| collect/treemap | ⬜ STDLIB | add (ordered map, AVL-based) |
+| collect/treeset | ⬜ STDLIB | add |
+| collect/tree | ⬜ STDLIB | add (binary tree) |
+| collect/avl | ⬜ STDLIB | add (AVL) |
+| collect/rbtree | ⬜ STDLIB | add (red-black) |
+| collect/bheap | ✅ HAVE BinaryHeap | collections.xi |
+| collect/fheap | ⬜ STDLIB | add (Fibonacci) |
+| collect/pairing | ⬜ STDLIB | add (pairing heap) |
+| collect/deque | ✅ HAVE VecDeque | collections.xi |
+| collect/priority | ✅ HAVE | collections.xi (BinaryHeap) |
+| collect/skiplist | ⬜ STDLIB | add |
+| collect/trie | ⬜ STDLIB | add (prefix tree) |
+| collect/radix | ⬜ STDLIB | add (radix tree) |
+| collect/bitmap | ✅ HAVE bits | bits.xi (BitArray planned) |
+| collect/bloom | ⬜ STDLIB | add (Bloom filter) |
+| collect/cuckoo | ⬜ STDLIB | add (cuckoo hash) |
+| collect/hashset | ✅ HAVE Set | collections.xi |
+| collect/linkedhash | ⬜ STDLIB | add (insertion-order map) |
+| collect/lru | ⬜ STDLIB | add (LRU cache) |
+| collect/lfu | ⬜ STDLIB | add |
+| collect/tinylfu | ⬜ STDLIB | add |
+| collect/arc | ⬜ STDLIB | add |
+| collect/btree | ⬜ STDLIB | add (B-tree) |
+| collect/btreeplus | ⬜ STDLIB | add (B+tree) |
+| collect/segment | ⬜ STDLIB | add (segment tree) |
+| collect/fenwick | ⬜ STDLIB | add (Fenwick tree) |
+| collect/sparse | ⬜ STDLIB | add (sparse set) |
+| collect/dense | ⬜ STDLIB | add |
+| collect/hasharray (HAMT) | ⬜ STDLIB | add |
+| collect/immutable | ⬜ STDLIB | add |
+| collect/persistent | ⬜ STDLIB | add |
+| collect/concurrent | ⬜ STDLIB | add (on sync.xi) |
+| collect/interval | ⬜ STDLIB | add (interval tree) |
+| collect/range | ⬜ STDLIB | add (range tree) |
+| collect/kdtree | ⬜ STDLIB | add (KD-tree) |
+| collect/octree | ⬜ STDLIB | add |
+| collect/quadtree | ⬜ STDLIB | add |
+| collect/spatial | ⬜ STDLIB | add (spatial hash) |
+| collect/graph | ⬜ STDLIB | add (adjacency) |
+| collect/dag | ⬜ STDLIB | add |
+| collect/unionfind | ⬜ STDLIB | add (disjoint set) |
+| collect/intmap | ⬜ STDLIB | add (int-keyed map) |
+| collect/stringmap | ⬜ STDLIB | add |
+| collect/objectpool | ⬜ STDLIB | add |
+| collect/threadpool | ⬜ STDLIB | add (on thread.xi) |
+| collect/workqueue | ⬜ STDLIB | add |
+| collect/blocking | ⬜ STDLIB | add (on sync.xi) |
+| collect/mpmc/mpsc/spmc/spsc | ⬜ STDLIB | add (on sync.xi channels) |
+
+**Audit**: collections.xi = 1,732 lines / 148 fns — **REFACTOR CANDIDATE**. Plan:
+create `stdlib/xiom/collect/` folder with `tree.xi` (tree/avl/rbtree/btree),
+`heap.xi` (fheap/pairing), `cache.xi` (lru/lfu/tinylfu/arc), `hash.xi`
+(cuckoo/HAMT/linkedhash), `queue.xi` (blocking/mpmc/mpsc/spsc), `graph.xi`
+(graph/dag/unionfind/kdtree/octree/quadtree/interval/range). Keep collections.xi
+flat (frozen contract); new structs live in collect/ modules. ALL pure → stdlib.
+
+## 3. STRING OPERATIONS (74 entries)
+
+| Entry | Decision | Where / Status |
+|-------|----------|----------------|
+| str/compare | ✅ HAVE | string.xi str_compare_lexicographic + cmp |
+| str/search | ✅ HAVE | string.xi index_of/rindex_of/contains |
+| str/replace | ✅ HAVE | string.xi replace/replace_all/first/n |
+| str/trim | ✅ HAVE | string.xi trim/strip variants |
+| str/split | ✅ HAVE | string.xi split/split_whitespace/lines/once |
+| str/join | ✅ HAVE | string.xi join/join_with_and |
+| str/case | ✅ HAVE | string.xi upper/lower/title/swap/snake/camel/kebab/pascal/constant |
+| str/strip | ✅ HAVE | string.xi strip_prefix/suffix |
+| str/repeat | ✅ HAVE | string.xi repeat |
+| str/pad | ✅ HAVE | string.xi pad_left/right/center |
+| str/slice | ✅ HAVE | string.xi slice + char-boundary helpers |
+| str/escape | ✅ HAVE | string.xi escape/unescape + json/url via encoding/serialize |
+| str/unescape | ✅ HAVE | string.xi |
+| str/format | ✅ HAVE | fmt.xi format1-9 + string |
+| str/printf | ⬜ STDLIB | add (printf-style) |
+| str/scanf | ⬜ STDLIB | add (scanf-style parse) |
+| str/template | ⬜ STDLIB | add (placeholder substitution) |
+| str/glob | ✅ HAVE | misc.xi glob_match |
+| str/regex | ✅ HAVE | regex.xi |
+| str/levenshtein | ✅ HAVE | misc.xi levenshtein_distance |
+| str/damerau | ⬜ STDLIB | add (Damerau-Levenshtein) |
+| str/jaro | ⬜ STDLIB | add (Jaro-Winkler) |
+| str/soundex | ✅ HAVE | misc.xi soundex |
+| str/metaphone | ⬜ STDLIB | add (double metaphone) |
+| str/ngram | ⬜ STDLIB | add |
+| str/ngram_similarity | ⬜ STDLIB | add |
+| str/cosine | ⬜ STDLIB | add (cosine similarity) |
+| str/jaccard | ⬜ STDLIB | add |
+| str/lcs | ⬜ STDLIB | add (longest common subsequence) |
+| str/lcp | ⬜ STDLIB | add (longest common prefix) |
+| str/lcsuffix | ⬜ STDLIB | add |
+| str/editdistance | ⬜ STDLIB | add (general edit distance) |
+| str/hamming | ⬜ STDLIB | add |
+| str/tr | ⬜ STDLIB | add (translate chars) |
+| str/rot | ✅ HAVE rot13 | string.xi. GAP: rot47 |
+| str/caesar | ✅ HAVE | string.xi caesar_shift |
+| str/atbash | ⬜ STDLIB | add |
+| str/shuffle | ⬜ STDLIB | add (Fisher-Yates, on rand) |
+| str/reverse | ✅ HAVE | string.xi str_reverse (Unicode-aware) |
+| str/rotate | ⬜ STDLIB | add |
+| str/permute | ⬜ STDLIB | add (permutations) |
+| str/combine | ⬜ STDLIB | add |
+| str/interleave | ⬜ STDLIB | add |
+| str/chunk | ⬜ STDLIB | add |
+| str/wrap | ✅ HAVE | fmt.xi format_wrap |
+| str/indent | ✅ HAVE | fmt.xi format_indent |
+| str/align | ✅ HAVE | fmt.xi align_left/right/center |
+| str/truncate | ✅ HAVE | string.xi truncate_utf8 + fmt |
+| str/abbreviate | ⬜ STDLIB | add |
+| str/obfuscate | ⬜ STDLIB | add |
+| str/normalize (NFC/NFD/NFKC/NFKD) | ⬜ STDLIB | add (pure Unicode tables — big but no deps) |
+| str/collate | ⬜ STDLIB | add (basic) |
+| str/casefold | ⬜ STDLIB | add |
+| str/titlecase | ✅ HAVE | string.xi title_case |
+| str/segment (grapheme) | ⬜ STDLIB | add (UAX #29 tables) |
+| str/wordbreak | ⬜ STDLIB | add |
+| str/sentencebreak | ⬜ STDLIB | add |
+| str/linebreak | ⬜ STDLIB | add |
+| str/ea_width | ⬜ STDLIB | add |
+| str/emoji | ✅ HAVE | char.xi is_emoji |
+| str/script | ⬜ STDLIB | add (script detection ranges) |
+| str/block | ⬜ STDLIB | add (Unicode block) |
+| str/category | ✅ HAVE | char.xi is_* categories |
+| str/bidi | ⬜ STDLIB | add (basic bidi) |
+| str/mirror | ⬜ STDLIB | add (mirror chars) |
+| str/compat | ⬜ STDLIB | add |
+| str/fold | ⬜ STDLIB | add |
+| str/lowercase/uppercase/titlecase_map | ✅ HAVE | char.xi + string.xi |
+| str/nfkc/nfd/nfc/nfkd | ⬜ STDLIB | add |
+
+**Audit**: string.xi = 765 lines / 45 fns, char.xi = 340/42, fmt.xi = 468/28. All pure.
+Grouping: create `stdlib/xiom/text/` folder for the NEW heavy Unicode modules:
+`unicode.xi` (normalize/casefold/bidi/mirror), `sim.xi` (damerau/jaro/cosine/
+jaccard/lcs/hamming), `transform.xi` (tr/rot47/atbash/shuffle/permute/chunk).
+string.xi/char.xi stay flat (contract). Unicode normalization tables are
+large-but-pure → stdlib (with compressed table encoding later).
+
+## 4. CONVERSION (81 entries)
+
+| Entry | Decision | Where / Status |
+|-------|----------|----------------|
+| conv/int (base 2-36) | ✅ HAVE | num.xi to_base/from_base + convert |
+| conv/float (hex, scientific) | ⬜ STDLIB | add (scientific parse) |
+| conv/toint (signed/unsigned) | ✅ HAVE | convert.xi + num.xi checked converters |
+| conv/tofloat (32,64) | ✅ HAVE | convert.xi + num.xi |
+| conv/tostring | ✅ HAVE | convert.xi + fmt.xi |
+| conv/parse | ✅ HAVE | convert.xi + string.xi |
+| conv/itos/itoa | ✅ HAVE | convert.xi int_to_string + num.xi to_base |
+| conv/ftos | ✅ HAVE | convert.xi float_to_string |
+| conv/atoi | ✅ HAVE | convert.xi |
+| conv/fromstr | ⬜ FUTURE | interface trait — impl ignored by compiler; declare only |
+| conv/tryfrom | ⬜ FUTURE | interface trait — declare only |
+| conv/into | ⬜ FUTURE | interface trait — declare only |
+| conv/asref/asmut | ⬜ FUTURE | interface trait — declare only |
+| conv/from | ⬜ FUTURE | interface trait — declare only |
+| conv/bytes | ✅ HAVE | ffi.xi + mem.xi + encoding |
+| conv/endian (big/little/native) | ✅ HAVE | num.xi + bits.xi byte_swap/pack |
+| conv/network | ⬜ STDLIB | add (network byte order helpers) |
+| conv/swap | ✅ HAVE | bits.xi byte_swap16/32/64 |
+| conv/saturating | ✅ HAVE | num.xi add_sat/sub_sat/mul_sat |
+| conv/wrapping | ⬜ STDLIB | add (wrapping add/sub/mul) |
+| conv/overflow | ✅ HAVE | num.xi checked add/sub/mul/div |
+| conv/checked | ✅ HAVE | num.xi *_checked family |
+| conv/unchecked | ⬜ STDLIB | add (documented unsafe) |
+| conv/exact | ⬜ STDLIB | add (fails if lossy) |
+| conv/lossy | ⬜ STDLIB | add |
+| conv/roundtrip | ⬜ STDLIB | add (to_str→from_str==value) |
+| conv/cstring | ✅ HAVE | ffi.xi + os.xi cstr |
+| conv/wstring | ⬜ STDLIB | add (UTF-16) |
+| conv/utf8 | ✅ HAVE | utf8.xi |
+| conv/utf16 | ⬜ STDLIB | add (utf8↔utf16) |
+| conv/utf32 | ⬜ STDLIB | add |
+| conv/base64 | ✅ HAVE | encoding.xi |
+| conv/base32 | ✅ HAVE | encoding.xi |
+| conv/base16 | ✅ HAVE | encoding.xi hex |
+| conv/base58 | ⬜ STDLIB | add (Bitcoin alphabet) |
+| conv/base62 | ⬜ STDLIB | add |
+| conv/base64url | ✅ HAVE | encoding.xi |
+| conv/ascii85 | ⬜ STDLIB | add |
+| conv/uuencode | ⬜ STDLIB | add |
+| conv/xxencode | ⬜ STDLIB | add |
+| conv/quotedprintable | ⬜ STDLIB | add |
+| conv/punycode | ⬜ STDLIB | add (IDNA) |
+| conv/idna | ⬜ STDLIB | add |
+| conv/percent | ✅ HAVE | encoding.xi percent_encode/decode |
+| conv/html | ⬜ STDLIB | add (HTML entity escape) |
+| conv/xml | ⬜ STDLIB | add |
+| conv/json | ✅ HAVE | serialize.xi json_escape |
+| conv/csv | ⬜ STDLIB | add (CSV escape) |
+| conv/tsv | ⬜ STDLIB | add |
+| conv/yaml | ⬜ STDLIB | add |
+| conv/toml | ⬜ STDLIB | add |
+| conv/regex | ✅ HAVE | regex.xi regex_escape_literal |
+| conv/glob | ⬜ STDLIB | add |
+| conv/shell | ⬜ STDLIB | add |
+| conv/cmd | ⬜ STDLIB | add |
+| conv/printf | ⬜ STDLIB | add |
+| conv/strftime | ✅ HAVE | time.xi format_timestamp/iso8601 |
+| conv/strptime | ⬜ STDLIB | add (parse date/time strings) |
+| conv/duration | ✅ HAVE | time.xi Duration |
+| conv/date | ✅ HAVE | time.xi Date |
+| conv/time | ✅ HAVE | time.xi |
+| conv/datetime | ⬜ STDLIB | add (Date+Time combined) |
+| conv/timestamp | ✅ HAVE | time.xi |
+| conv/uuid | ✅ HAVE | rand.xi uuid_v4/v7 |
+| conv/mac | ⬜ STDLIB | add |
+| conv/ip | ✅ HAVE | net.xi is_valid_ipv4 + parsing |
+| conv/url | ✅ HAVE | net.xi url_parse_scheme/host/path/port |
+| conv/uri | ⬜ STDLIB | add (full URI parse) |
+| conv/urn | ⬜ STDLIB | add |
+| conv/iri | ⬜ STDLIB | add |
+| conv/email | ⬜ STDLIB | add (validation) |
+| conv/phone | ⬜ STDLIB | add |
+| conv/creditcard | ⬜ STDLIB | add (Luhn) |
+| conv/iban | ⬜ STDLIB | add |
+| conv/swift | ⬜ STDLIB | add |
+
+**Audit**: num.xi = 2,612 lines / 256 fns — **LARGEST FILE, REFACTOR FIRST**.
+Plan: create `stdlib/xiom/num/` folder: `checked.xi` (checked/sat ops),
+`convert.xi` (cross-type converters), `int128.xi` (Int128), `fraction.xi`,
+`base.xi` (base conversions), `float.xi` (round/floor/ceil/fract). num.xi stays
+as the flat aggregate (contract) and delegates. ALL pure → stdlib.
+
+## 5. NETWORK (298 entries)
+
+Policy: **wire protocols implemented in pure XIOM over the socket FFI = STDLIB**.
+Anything needing OpenSSL/ICU/libcurl/zlib-C/OS-specific heavy bindings = PACKAGE.
+Cloud/vendor APIs (AWS/Azure/GCP/k8s) are HTTP clients → PACKAGES built on stdlib http.
+
+| Group | Decision | Where |
+|-------|----------|-------|
+| socket/address/tcp/udp/unix | ✅ HAVE | net.xi (socket, tcp, udp, dns, resolve_host) |
+| dns (A/AAAA/CNAME/MX/TXT/SRV) | ⬜ STDLIB | net.xi expand (record parsing) |
+| ip (v4/v6), port, protocol | ✅ HAVE / ⬜ | net.xi expand (IPv6, well-known ports) |
+| url/uri/iri/query/form/multipart | ⬜ STDLIB | net.xi expand (full URL/query/form parsing) |
+| cookie/header/mime/charset/link/etag/cache/range | ⬜ STDLIB | net.xi expand (HTTP header utils) |
+| http/https/http2/http3 | ✅ HAVE http1 | net.xi http_get/post. http2/3 → PACKAGE (h2 spec heavy; http3=QUIC → PACKAGE) |
+| sse/websocket | ✅ HAVE | net.xi + packages xiom-websocket. SSE → stdlib |
+| rest/graphql/jsonrpc/xmlrpc | ✅ HAVE pkg | xiom-rest, xiom-graphql pkgs. jsonrpc → stdlib |
+| grpc/grpcweb/thrift/avro-rpc/soap | 📦 PACKAGE | xiom-grpc, xiom-protobuf pkgs (C deps) |
+| zeromq/nanomsg/mqtt/amqp/stomp/kafka/pulsar/nats | 📦 PACKAGE | xiom-zeromq, xiom-kafka exist. mqtt/amqp/nats/pulsar → new pkgs (protocols are pure-ish but heavy → PACKAGE per domain) |
+| redis/memcached | 📦 PACKAGE | xiom-redis exists. memcached → package (pure RESP is easy — could be stdlib; DECISION: redis/memcached protocol parsers → STDLIB net, drivers → PACKAGE). Final: protocol → stdlib; client drivers stay packages |
+| elastic/mongo/postgres/mysql/sqlite/odbc | 📦 PACKAGE | xiom-postgres, xiom-sqlite, xiom-sql exist; mongo/mysql/elastic/odbc → new packages |
+| tls/ssl/ssh/sftp/scp/x509/pem/jwt/oauth | 📦 PACKAGE | xiom-openssl, xiom-libsodium exist. jwt/oauth → packages (crypto + protocol) |
+| ldap/kerberos/ntlm/digest/basic/bearer/apikey/hawk | 📦 PACKAGE | auth protocols → packages (ldap/kerberos C deps; digest/basic/bearer pure → stdlib net) |
+| proxy/socks/tor/i2p | 📦 PACKAGE | proxy → stdlib (pure). socks/tor/i2p → packages |
+| icmp/ping/traceroute/arp/ndp | ⬜ STDLIB | net.xi expand (raw socket via FFI — OS-specific; keep minimal, ping = stdlib, traceroute = stdlib) |
+| dhcp/bootp/tftp/nfs/smb/netbios | 📦 PACKAGE | legacy protocols → packages |
+| ntp/sntp | ⬜ STDLIB | net.xi expand (UDP NTP client — pure) |
+| wireguard/ipsec/ike/ppp/vpn family | 📦 PACKAGE | security protocols → packages |
+| kubernetes/docker/nomad/cloud APIs (AWS/Azure/GCP/OCI/IBM/DO/etc) | 📦 PACKAGE | cloud packages (built on stdlib http + auth) |
+| CDN/vendor APIs (cloudflare/akamai/fastly/vercel/netlify) | 📦 PACKAGE | vendor packages |
+| webrtc/rtp/rtsp/rtmp/hls/dash | 📦 PACKAGE | media streaming → packages |
+| mDNS/bonjour/upnp/ssdp/ws-discovery/slp | 📦 PACKAGE | discovery → packages (multicast; pure but niche) |
+| xmpp/matrix/sip/irc/nntp | 📦 PACKAGE | messaging → packages |
+| gnss/gps/adsb/acars/aviation | 📦 PACKAGE | aviation/telemetry → packages |
+| vlan/vxlan/geneve/mpls/tunnel family | 📦 PACKAGE | network infra → packages |
+| libpcap/netlink/wireless (iw/wpa) | 📦 PACKAGE | packet/network tools → packages |
+
+**Audit**: net.xi = 735 lines / 29 fns. **REFACTOR**: create `stdlib/xiom/net/`
+folder: `http.xi` (headers/cookies/mime/charset/etag/sse), `url.xi` (url/uri/
+query/form/multipart), `dns.xi` (record parsing), `proto.xi` (ntp/icmp/jsonrpc/
+digest/basic). net.xi stays flat (contract) + delegates. New protocol clients
+that need C libs → packages with READMEs.
+
+## 6. FILE FORMATS (1,169 entries — the biggest section)
+
+Policy: **pure text/data formatting = STDLIB**; **rendering-heavy, file-format
+binary, chart/diagram, GIS, metadata-tag, statistical-model = PACKAGE**.
+
+| Group | Decision | Where |
+|-------|----------|-------|
+| hex/octal/binary dump, bytes human | ✅ HAVE | fmt.xi format_hexdump + serialize |
+| table (ascii/markdown/csv/tsv/unicode) | ✅ HAVE | fmt.xi format_table (ascii). markdown/csv/tsv tables → stdlib add |
+| json/xml/yaml/toml/csv/tsv format | ✅ HAVE / ⬜ | serialize.xi (json). xml/yaml/toml/csv → **PACKAGE** (parsers, domain) — stdlib keeps escape helpers only |
+| markdown/html/textile/rtf/latex/troff/roff/man | 📦 PACKAGE | text markup → packages |
+| text layout (justify/hyphenate/wrap/indent/align/margin) | ✅ HAVE wrap/indent | fmt.xi expand (justify, hyphenation) |
+| ANSI/colors/emoji/unicode/box/border/separator | ⬜ STDLIB | fmt.xi expand (ANSI escape codes, box drawing) |
+| font/typeface/glyph/kerning/ligature | 📦 PACKAGE | typography → package |
+| bidi/rtl/ltr/arabic/hebrew/indic/cjk | ⬜ STDLIB basic | text/unicode.xi (basic); full shaping → PACKAGE |
+| numbering (roman/chinese/japanese/etc) | ⬜ STDLIB | num.xi expand (roman numerals etc) |
+| number format (percent/permille/ppm/ppb/ratio/fraction/scientific/engineering) | ⬜ STDLIB | num.xi + fmt.xi expand |
+| SI/metric/binary/decimal/imperial/US units | ⬜ STDLIB | fmt.xi expand (unit formatting) |
+| duration/date/time/relative/age/clock/stopwatch/countdown/calendar | ✅ HAVE time | time.xi expand (relative time, clock) |
+| charts (bar/line/pie/scatter/histogram/box/violin/heatmap/treemap/sunburst/sankey/network) | 📦 PACKAGE | xiom-charts package (rendering) |
+| diagrams (uml/mermaid/plantuml/graphviz/dot/bpmn/sysml) | 📦 PACKAGE | xiom-diagrams package (text generators) |
+| GIS/geo (geojson/kml/gpx/shapefile/wkt/wkb/geohash/mgrs/utm/latlong/projections) | 📦 PACKAGE | xiom-geo package |
+| metadata tags (exif/id3/vorbis/ape/mp4/mkv/avi/flac/ogg) | 📦 PACKAGE | xiom-metadata package |
+| chiptune/audio format metadata (midi/smf/mod/xm/s3m/it/nsf/etc ~150 entries) | 📦 PACKAGE | xiom-audio-meta package (niche, one README lists all) |
+| financial formatting (currency/accounting/amortization/roi/eps/ledger/invoice/etc) | 📦 PACKAGE | xiom-finance package |
+| statistical metrics/plots (mse/rmse/auc/roc/confusion/qq/boxcox/etc) | 📦 PACKAGE | xiom-stats-ml package (on stdlib stats) |
+| statistical tests (t/f/chi2/ks/wilcoxon/mann-whitney/fisher/etc ~150 entries) | 📦 PACKAGE | xiom-stats-tests package (on stdlib stats) |
+| regression models (linear/logistic/poisson/ridge/lasso/cox/mixed/etc) | 📦 PACKAGE | xiom-ml package |
+| MCMC/Bayesian (gibbs/metropolis/hmc/nuts/kalman/particle filters) | 📦 PACKAGE | xiom-ml package |
+| time series (ar/var/vecm/cointegration/adf/kpss) | 📦 PACKAGE | xiom-timeseries package |
+| 3D geometry (polyhedra/curves/surfaces/meshes/subdivision) | ⬜ STDLIB core / 📦 advanced | geom.xi expand (polyhedra, bezier, splines — pure math = stdlib); mesh/subdivision → xiom-geom3d package |
+| map projections (mercator/robinson/mollweide/etc ~100 entries) | 📦 PACKAGE | xiom-geo package |
+| address/geocoding (place/street/city/postal/poi) | 📦 PACKAGE | xiom-geo package |
+| raster formats (tiff/jpeg2000/geotiff/mrsid/ecw) | 📦 PACKAGE | xiom-imaging package |
+
+**Audit**: fmt.xi = 468 lines / 28 fns, serialize.xi = 926/41. **REFACTOR**:
+create `stdlib/xiom/format/` folder: `number.xi` (percent/ratio/scientific/units/
+numerals), `text.xi` (justify/hyphenate/box/ansi), `dump.xi` (hex/octal/binary
+dump). fmt.xi stays flat + delegates. The rest → packages with READMEs.
+
+## 7. OS INTERACTION (692 entries)
+
+Policy: **OS syscalls via minimal FFI = STDLIB** (that's the stdlib's job —
+no deps, direct FFI allowed). **Library bindings (libcurl/libgit2/openssl/
+libpcap/etc) = PACKAGE**. **Platform framework bindings (Apple/Windows APIs) =
+PACKAGE**. **Tool-like wrappers (objdump/readelf/nm/strings) = PACKAGE**.
+
+| Group | Decision | Where |
+|-------|----------|-------|
+| pipe/fd/dup/select/poll/epoll/kqueue | ⬜ STDLIB | os.xi expand (FFI) |
+| event/ioctl/mmap/madvise/mlock | ⬜ STDLIB | os.xi expand |
+| stat/perm/owner/link/rename/remove/symlink/readlink/realpath | ✅ HAVE most | os.xi (link/symlink/readlink exist; perm/owner → add) |
+| temp/cwd/chdir/mkdir/rmdir/walk | ✅ HAVE | os.xi |
+| glob/find/locate/which/where | ⬜ STDLIB | os.xi expand (glob exists in misc; which → FFI) |
+| type/magic/mime/encoding/eol/bom detection | ⬜ STDLIB | os.xi expand (pure sniffing) |
+| size/truncate/fallocate/seek/tell/read/write/read_at/write_at/pread/pwrite | ✅ HAVE core | io.xi expand (pread/pwrite/truncate) |
+| readv/writev/sendfile/splice/tee/vmsplice | ⬜ STDLIB | os.xi expand (FFI, zero-copy) |
+| io_uring/aio/iocp/overlapped/eventfd/timerfd/signalfd | ⬜ STDLIB | os.xi expand (FFI; per-OS) |
+| fork/exec*/posix_spawn/spawn/system/popen/wait* | ✅ HAVE spawn | os.xi + process.xi expand (exec variants) |
+| pipe2/fifo/mknod/mkfifo/dev files | ⬜ STDLIB | os.xi expand |
+| stdin/stdout/stderr/tty/pty/console/terminal/termios | ⬜ STDLIB | os.xi expand (termios FFI) |
+| raw/cbreak/nonblock/blocking/timeout/echo/canonical | ⬜ STDLIB | os.xi expand |
+| buffer/line/full/no buffering + flush | ⬜ STDLIB | io.xi expand |
+| sync/fsync/fdatasync/syncfs/msync | ⬜ STDLIB | os.xi expand |
+| mem*/str* (memcpy/memset/memcmp/strcpy/strtok/strerror) | ✅ HAVE mem | mem.xi + ffi.xi (SIMD asm). str* → string.xi |
+| errno/perror/strsignal/psignal | ⬜ STDLIB | os.xi expand (FFI) |
+| backtrace/demangle/addr2line | ⬜ STDLIB | debug.xi expand (FFI backtrace) |
+| dlopen/dlclose/dlsym/dlerror/dladdr | ⬜ STDLIB | ffi.xi expand (dynamic loading) |
+| libc/libm/librt/libdl/libpthread access | ⬜ STDLIB | ffi.xi expand (expose common C fns) |
+| libcrypto/libssl/libz/libbz2/liblzma/libzstd/liblz4/libsnappy/libcurl/libgit2/libssh2 | 📦 PACKAGE | binding packages (openssl/zstd/lz4 exist; curl/git2/ssh2 → new pkgs) |
+| libxml2/libxslt/libexpat/libyaml/libjson/libjansson | 📦 PACKAGE | binding packages |
+| libpcap/libnet/netlink/nf* family | 📦 PACKAGE | packet-capture package |
+| wireless (iw/iwconfig/wpa/hostapd + drivers) | 📦 PACKAGE | wireless package |
+| graphics drivers (drm/gbm/egl/gl/gles/vulkan/dx/d3d) | 📦 PACKAGE | exist (vulkan/opengl/directx pkgs); drm/egl → new |
+| Apple frameworks (metal/arkit/vision/coreml/storekit/etc ~90 entries) | 📦 PACKAGE | xiom-apple package (macOS/iOS bindings) |
+| Windows registry/assembly/authenticode/pki tools | 📦 PACKAGE | xiom-windows package |
+| certificates (x509/pkcs*/cms/smime/pgp/ssh-certs ~180 entries) | 📦 PACKAGE | xiom-pki package (on openssl) |
+| logging (syslog/journald/eventlog/rsyslog/logrotate/agents ~90 entries) | ⬜ STDLIB core | log.xi (levels/format exist). Full syslog/journald clients → PACKAGE xiom-logging |
+
+**Audit**: os.xi = 696/61, io.xi = 907/53, ffi.xi = 32 fns. **REFACTOR**: create
+`stdlib/xiom/os/` folder: `fs.xi` (stat/perm/owner/link/glob/find/magic),
+`ioctl.xi`, `proc.xi` (fork/exec/wait), `term.xi` (tty/termios/raw),
+`mmap.xi`, `sync_io.xi` (fsync/mlock). os.xi stays flat + delegates.
+io.xi → split into `io/fs.xi` (file ops) + io.xi console. ffi.xi → add
+`ffi/dl.xi` (dlopen). Core syscall surface = stdlib; lib bindings = packages.
+
+## 8. RANDOM (section header present, entries cut off)
+
+Expected per original proposal: mt/pcg/xorshift/chacha/dist/seed/source.
+Current: rand.xi has StdRng (LCG), Xorshift64, distributions (uniform/normal/
+exponential), uuid_v4/v7, random_choice/shuffle, secure_random_bytes.
+GAP: MT19937, PCG, ChaCha-based RNG → **STDLIB** (rand.xi expand, pure).
+All pure → stdlib.
+
+## 9. PACKAGE README ASSIGNMENTS (which list entries → which package README)
+
+For each package folder, README.md must list its libs (inventory only):
+
+| Package | Libs from the list |
+|---------|--------------------|
+| xiom-json / xiom-protobuf / xiom-grpc / xiom-arrow / xiom-websocket / xiom-graphql / xiom-rest / xiom-http | exist; extend per NETWORK/format sections |
+| xiom-openssl / xiom-libsodium | tls, ssl, x509, pem, cert family, pkcs*, cms, smime |
+| xiom-sqlite / xiom-postgres / xiom-sql | sql drivers; mysql, mongo, elastic, odbc → NEW pkgs |
+| xiom-redis | memcached → NEW pkg |
+| xiom-kafka / xiom-zeromq / xiom-mqtt(NEW) / xiom-amqp(NEW) / xiom-nats(NEW) / xiom-pulsar(NEW) | messaging protocols |
+| xiom-charts (NEW) | all chart entries (bar..sunburst, statistical plots) |
+| xiom-diagrams (NEW) | mermaid, plantuml, graphviz/dot, uml, bpmn, sysml |
+| xiom-geo (NEW) | geojson, kml, gpx, shapefile, geohash, mgrs, utm, projections (~150 entries) |
+| xiom-metadata (NEW) | exif, id3, vorbis, ape, mp4/mkv/avi tags |
+| xiom-audio-meta (NEW) | chiptune formats (midi, mod, xm, s3m, it, nsf, ~150 entries) |
+| xiom-finance (NEW) | currency, accounting, amortization, roi, ledger, invoice |
+| xiom-stats-tests (NEW) | statistical tests (~150 entries) |
+| xiom-stats-ml (NEW) | metrics/plots (mse..silhouette) |
+| xiom-ml (NEW) | regression models, MCMC/Bayesian, kalman |
+| xiom-timeseries (NEW) | ar, var, vecm, cointegration, adf, kpss |
+| xiom-geom3d (NEW) | mesh, subdivision, nurbs advanced |
+| xiom-imaging (NEW) | tiff, jpeg2000, geotiff, mrsid, ecw |
+| xiom-pki (NEW) | cert/pki tooling (~180 entries) |
+| xiom-logging (NEW) | syslog, journald, eventlog, logrotate, log agents |
+| xiom-apple (NEW) | Apple frameworks (~90 entries) |
+| xiom-windows (NEW) | registry, authenticode, assembly, pki tools |
+| xiom-packet (NEW) | libpcap, netlink, nf* |
+| xiom-wireless (NEW) | iw, wpa, hostapd, driver bindings |
+| xiom-cloud (NEW umbrella) | aws, azure, gcp, k8s, docker, nomad + vendor APIs (~150 entries) |
+| xiom-messaging (NEW umbrella) | xmpp, matrix, sip, irc, nntp |
+| xiom-streaming (NEW) | webrtc, rtp, rtsp, rtmp, hls, dash |
+| xiom-discovery (NEW) | mdns, bonjour, upnp, ssdp, ws-discovery, slp |
+| xiom-legacy-proto (NEW) | dhcp, bootp, tftp, nfs, smb, netbios, socks, tor, i2p |
+| xiom-c-binding (NEW umbrella) | libcurl, libgit2, libssh2, libxml2, libexpat, libyaml, libjansson |
+| xiom-text-markup (NEW) | markdown, html, textile, rtf, latex, troff |
+| xiom-typography (NEW) | font, glyph, kerning, ligature, shaping |
+| xiom-aviation (NEW) | gnss, adsb, acars, vdl, aviation protocols |
+
+(NEW = create folder + README; existing packages get their READMEs updated.)
+
+## 10. EXECUTION ORDER (backlog)
+
+1. **Refactor first** (folder grouping — verified safe): num/, collect/, str→text/,
+   net/, os/, format/, io/fs, ffi/dl. Keep flat contract files as aggregates.
+2. **Fill stdlib gaps** (all ⬜ STDLIB entries above) — pure implementations,
+   per-module agents, test-vector verified.
+3. **Update package READMEs** with the inventory lists from §9.
+4. **Create NEW package folders + READMEs** for all (NEW) packages.
+5. **Phase 4 optimizations** on hot stdlib paths (hash SIMD, bigint asm,
+   deflate, GCM GHASH, string ops).
+6. **Verify**: freeze gate + full suite after each step.
+
+## 11. DECISIONS LOGGED
+
+- Folder modules VERIFIED working (`use xiom.foo.bar` → stdlib/xiom/foo/bar.xi,
+  exit 42 test). Contract modules stay flat; new code goes in folders.
+- Files >1,000 lines get refactored: num (2,612), crypto (2,538), geom (1,883),
+  collections (1,732), core (1,055). Split into folder modules; flat file
+  becomes aggregate re-export (frozen contract intact).
+- Hash/string/char/fmt/convert/rand = pure → STDLIB, keep flat or light folder.
+- Network: wire protocols (pure) = STDLIB; drivers/C-bound = PACKAGES.
+- File formats: text/number formatting = STDLIB; charts/diagrams/GIS/metadata/
+  stats-tests/ML/finance = PACKAGES.
+- OS: syscalls (FFI) = STDLIB; lib bindings/frameworks/tools = PACKAGES.
+- Interfaces (FromStr/TryFrom/Into/AsRef) = declare-only until compiler
+  implements impl dispatch (backlog item: compiler hardening).
