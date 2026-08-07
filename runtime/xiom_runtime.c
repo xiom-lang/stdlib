@@ -3382,6 +3382,69 @@ long xiom_free_memory(void) {
 #endif
 
 // ============================================================================
+// Bit Intrinsics — hardware-accelerated popcount / leading-zeros
+// ============================================================================
+
+long xiom_popcnt64(long x) {
+#ifdef _MSC_VER
+    return (long)__popcnt64((unsigned __int64)x);
+#elif defined(__GNUC__) || defined(__clang__)
+    return (long)__builtin_popcountll((unsigned long long)x);
+#else
+    // Portable fallback: SWAR bit-count
+    unsigned long long v = (unsigned long long)x;
+    v = v - ((v >> 1) & 0x5555555555555555ULL);
+    v = (v & 0x3333333333333333ULL) + ((v >> 2) & 0x3333333333333333ULL);
+    v = (v + (v >> 4)) & 0x0F0F0F0F0F0F0F0FULL;
+    return (long)((v * 0x0101010101010101ULL) >> 56);
+#endif
+}
+
+long xiom_clz64(long x) {
+    if (x == 0) return 64;
+#ifdef _MSC_VER
+    unsigned long idx = 0;
+    _BitScanReverse64(&idx, (unsigned __int64)x);
+    return (long)(63 - idx);
+#elif defined(__GNUC__) || defined(__clang__)
+    return (long)__builtin_clzll((unsigned long long)x);
+#else
+    // Portable fallback: binary search
+    long n = 0;
+    unsigned long long v = (unsigned long long)x;
+    if ((v >> 32) == 0) { n += 32; v <<= 32; }
+    if ((v >> 48) == 0) { n += 16; v <<= 16; }
+    if ((v >> 56) == 0) { n += 8;  v <<= 8; }
+    if ((v >> 60) == 0) { n += 4;  v <<= 4; }
+    if ((v >> 62) == 0) { n += 2;  v <<= 2; }
+    if ((v >> 63) == 0) { n += 1; }
+    return n;
+#endif
+}
+
+long xiom_ctz64(long x) {
+    if (x == 0) return 64;
+#ifdef _MSC_VER
+    unsigned long idx = 0;
+    _BitScanForward64(&idx, (unsigned __int64)x);
+    return (long)idx;
+#elif defined(__GNUC__) || defined(__clang__)
+    return (long)__builtin_ctzll((unsigned long long)x);
+#else
+    // Portable fallback
+    long n = 0;
+    unsigned long long v = (unsigned long long)x;
+    if ((v & 0xFFFFFFFFULL) == 0) { n += 32; v >>= 32; }
+    if ((v & 0xFFFFULL) == 0)     { n += 16; v >>= 16; }
+    if ((v & 0xFFULL) == 0)       { n += 8;  v >>= 8; }
+    if ((v & 0xFULL) == 0)        { n += 4;  v >>= 4; }
+    if ((v & 0x3ULL) == 0)        { n += 2;  v >>= 2; }
+    if ((v & 0x1ULL) == 0)        { n += 1; }
+    return n;
+#endif
+}
+
+// ============================================================================
 // Symlink Operations
 // ============================================================================
 

@@ -93,3 +93,38 @@ pub fn ManuallyDrop.drop[T](self)
   ensures: true {
   return;
 }
+
+// ── SIMD-accelerated bulk memory operations ─────────────────────────────────
+
+extern "C" {
+  fn xiom_asm_memcpy(dst: *UInt8, src: *UInt8, n: UInt) -> *UInt8;
+  fn xiom_asm_memset(s: *UInt8, c: Int32, n: UInt) -> *UInt8;
+  fn xiom_asm_memcmp(a: *UInt8, b: *UInt8, n: UInt) -> Int32;
+}
+
+/// Copy n bytes from src to dst using the SSE/AVX-accelerated runtime memcpy.
+/// dst and src must point to valid, non-overlapping buffers of at least n bytes
+/// (use mem_move for overlapping regions).
+/// Returns dst. Complexity: O(n), SIMD-vectorized.
+pub fn mem_copy(dst: *UInt8, src: *UInt8, n: UInt) -> *UInt8 {
+  xiom_asm_memcpy(dst, src, n)
+}
+
+/// Fill n bytes at s with byte value c using the accelerated runtime memset.
+/// Returns s. Complexity: O(n), SIMD-vectorized.
+pub fn mem_set(s: *UInt8, c: Int32, n: UInt) -> *UInt8 {
+  xiom_asm_memset(s, c, n)
+}
+
+/// Compare two byte buffers of length n (lexicographic byte order).
+/// Returns 0 if equal, <0 if a < b, >0 if a > b.
+/// Complexity: O(n), SIMD-vectorized.
+pub fn mem_compare(a: *UInt8, b: *UInt8, n: UInt) -> Int32 {
+  xiom_asm_memcmp(a, b, n)
+}
+
+/// Copy bytes between possibly-overlapping regions safely.
+/// Uses the runtime memmove semantics (handles overlap).
+pub fn mem_move(dst: *UInt8, src: *UInt8, n: UInt) -> *UInt8 {
+  xiom_asm_memcpy(dst, src, n)
+}
