@@ -3332,6 +3332,10 @@ int xiom_cpu_count(void) {
     return (int)si.dwNumberOfProcessors;
 }
 
+long xiom_getpid(void) {
+    return (long)GetCurrentProcessId();
+}
+
 long xiom_total_memory(void) {
     MEMORYSTATUSEX ms;
     ms.dwLength = sizeof(ms);
@@ -3351,6 +3355,14 @@ long xiom_free_memory(void) {
 int xiom_cpu_count(void) {
     long n = sysconf(_SC_NPROCESSORS_ONLN);
     return (n < 0) ? 1 : (int)n;
+}
+
+long xiom_getpid(void) {
+#ifdef _WIN32
+    return (long)GetCurrentProcessId();
+#else
+    return (long)getpid();
+#endif
 }
 
 long xiom_total_memory(void) {
