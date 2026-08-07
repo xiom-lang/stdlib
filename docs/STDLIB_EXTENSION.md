@@ -3290,3 +3290,44 @@ For each package folder, README.md must list its libs (inventory only):
 - OS: syscalls (FFI) = STDLIB; lib bindings/frameworks/tools = PACKAGES.
 - Interfaces (FromStr/TryFrom/Into/AsRef) = declare-only until compiler
   implements impl dispatch (backlog item: compiler hardening).
+
+## 12. GENERICS/INTERFACES vs NUMERIC TOWER — STATUS (READ BEFORE WRITING MATH CODE)
+
+**TL;DR: generic operators and interface `impl` dispatch are NOT usable for
+mixed int/float arithmetic yet.** The stdlib numeric tower is deliberately
+CONCRETE per-width. Do NOT write `fn foo[T: Bounded + Add](a: T, b: T) -> T`
+that does `a + b` and expect it to work for Float64 — it corrupts the value
+(compiler bug). Write `fn foo_i64(...) / foo_f64(...) / foo_f32(...)` instead.
+
+### Why (compiler state, 2026-08-07)
+1. **Generic operator monomorphization corrupts Float64.** `add2[T](a+b)` with
+   `T = Float64` produces garbage in the monomorphized body. Verified by the
+   Tier-3 agent work; the numeric tower (num.xi) works around it with concrete
+   per-width functions (i64/u32/i16/i8/u64/u32/u16/u8 + f64/f32 variants:
+   `i64_add_checked`, `f64_round`, `u32_mul_sat`, `i128_*`, `fraction_*` …).
+2. **Interface `impl` blocks are parsed but IGNORED by checker+codegen.**
+   Traits are declare-only: `pub interface Num[T] { … }` compiles, but
+   `impl Num[Int] { … }` does not dispatch. So trait-based math (`Num[T]` with
+   per-type impls) cannot drive generic math functions.
+3. **`[T: Ord]` generics work ONLY for algorithms using `.compare` / `.eq`**
+   (builtin inline scalar dispatch), e.g. sort/search/cmp/min/max. They do NOT
+   work for arithmetic operators.
+
+### Rules for stdlib code
+- **Math/numeric functions: concrete per-width signatures** (`i64_*`, `u64_*`,
+  `f64_*`, `f32_*`, `i128_*`, `Fraction` …). One fn per width; callers pick.
+- `[T: Ord]` generics allowed for comparison-based algorithms only.
+- Do NOT add new trait-based numeric abstractions expecting dispatch — they
+  will silently not work. Document as declare-only.
+- Packages built on stdlib inherit the same rule until the compiler hardens.
+
+### Unblocking (compiler hardening backlog, from SESSION.md)
+- (a) interface `impl` dispatch on generic params (`x.add(x)` fails — parser
+  handles ImplDecl; checker+codegen ignore it).
+- (b) generic operator monomorphization corrupting Float64
+  (`add2[T](a+b)` garbage for floats).
+- When (a)+(b) land, the numeric tower can be COLLAPSED into generic trait
+  impls (`impl Num[Int]`, `impl Num[Float64]` …) with the concrete fns kept as
+  thin re-export shims for the frozen API. Revisit §4 numeric tower then.
+- The freeze gate locks the concrete signatures NOW, so the collapse is safe:
+  concrete fns remain available even after generics land.
