@@ -3382,6 +3382,179 @@ long xiom_free_memory(void) {
 #endif
 
 // ============================================================================
+// Process & Hostname — Production OS operations (v0.56+)
+// ============================================================================
+
+#ifdef _WIN32
+
+// Returns the system hostname as a pointer to an internal static buffer.
+// Thread-safe for single-threaded callers; returns NULL on failure.
+const char* xiom_hostname(void) {
+    static char buf[256];
+    DWORD size = (DWORD)sizeof(buf);
+    if (!GetComputerNameA(buf, &size)) return NULL;
+    return buf;
+}
+
+// Spawn a command and block until completion.  Uses cmd.exe /c on Windows so
+// that built-in shell commands (dir, echo, exit, etc.) work transparently.
+// Returns the process exit code (>=0) on success, -1 on spawn failure.
+// BLOCKING: waits for the child process to finish before returning.
+long xiom_process_spawn(const char* cmd) {
+    char cmdline[32768];
+    int n = snprintf(cmdline, sizeof(cmdline), "cmd.exe /c %s", cmd);
+    if (n < 0 || n >= (int)sizeof(cmdline)) return -1;
+
+    STARTUPINFOA si;
+    PROCESS_INFORMATION pi;
+    memset(&si, 0, sizeof(si));
+    si.cb = sizeof(si);
+    memset(&pi, 0, sizeof(pi));
+
+    if (!CreateProcessA(NULL, cmdline, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
+        return -1;
+    }
+
+    CloseHandle(pi.hThread);
+    WaitForSingleObject(pi.hProcess, INFINITE);
+
+    DWORD exit_code = 0;
+    if (!GetExitCodeProcess(pi.hProcess, &exit_code)) {
+        exit_code = (DWORD)-1;
+    }
+    CloseHandle(pi.hProcess);
+
+    return (long)(int)exit_code;
+}
+
+// Terminate a process by PID.  Returns 0 on success, -1 on failure
+// (e.g. process doesn't exist or access denied).
+int xiom_process_kill(long pid) {
+    HANDLE h = OpenProcess(PROCESS_TERMINATE, FALSE, (DWORD)pid);
+    if (!h) return -1;
+    int result = TerminateProcess(h, 1) ? 0 : -1;
+    CloseHandle(h);
+    return result;
+}
+
+// Wait for a process to exit and return its exit code.
+// Returns exit code (>=0) on success, -1 on failure.
+// BLOCKING: blocks until the target process terminates.
+long xiom_process_wait(long pid) {
+    HANDLE h = OpenProcess(SYNCHRONIZE, FALSE, (DWORD)pid);
+    if (!h) return -1;
+    DWORD wait_result = WaitForSingleObject(h, INFINITE);
+    if (wait_result != WAIT_OBJECT_0) {
+        CloseHandle(h);
+        return -1;
+    }
+    DWORD exit_code = 0;
+    if (!GetExitCodeProcess(h, &exit_code)) {
+        CloseHandle(h);
+        return -1;
+    }
+    CloseHandle(h);
+    return (long)(int)exit_code;
+}
+
+// Check whether a process is still running.
+// Returns 1 if running, 0 if not running, -1 on error.
+int xiom_process_running(long pid) {
+    HANDLE h = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, (DWORD)pid);
+    if (!h) return 0;
+    DWORD exit_code = 0;
+    if (!GetExitCodeProcess(h, &exit_code)) {
+        CloseHandle(h);
+        return -1;
+    }
+    CloseHandle(h);
+    return (exit_code == STILL_ACTIVE) ? 1 : 0;
+}
+
+// Best-effort OS version string (cached, static buffer).
+const char* xiom_os_version_str(void) {
+    static char buf[128] = {0};
+    if (buf[0] != 0) return buf;
+
+    OSVERSIONINFOA vi;
+    memset(&vi, 0, sizeof(vi));
+    vi.dwOSVersionInfoSize = sizeof(vi);
+    if (GetVersionExA(&vi)) {
+        snprintf(buf, sizeof(buf), "Windows %lu.%lu Build %lu",
+                 vi.dwMajorVersion, vi.dwMinorVersion, vi.dwBuildNumber);
+    } else {
+        strcpy(buf, "Windows");
+    }
+    return buf;
+}
+
+#else
+// POSIX implementations
+
+#include <signal.h>
+#include <sys/wait.h>
+#include <sys/utsname.h>
+#include <errno.h>
+
+// Returns the system hostname as a pointer to an internal static buffer.
+// Thread-safe for single-threaded callers; returns NULL on failure.
+const char* xiom_hostname(void) {
+    static char buf[256];
+    if (gethostname(buf, sizeof(buf)) != 0) return NULL;
+    buf[sizeof(buf) - 1] = '\0';
+    return buf;
+}
+
+// Spawn a command via fork+execl("/bin/sh","sh","-c",cmd,NULL) and wait.
+// Returns exit code (>=0) on success, -1 on spawn failure.
+// BLOCKING: waits for the child process to finish before returning.
+long xiom_process_spawn(const char* cmd) {
+    pid_t pid = fork();
+    if (pid < 0) return -1;
+    if (pid == 0) {
+        execl("/bin/sh", "sh", "-c", cmd, (char*)NULL);
+        _exit(127);
+    }
+    int status = 0;
+    if (waitpid(pid, &status, 0) < 0) return -1;
+    if (WIFEXITED(status)) return (long)WEXITSTATUS(status);
+    return -1;
+}
+
+int xiom_process_kill(long pid) {
+    if (kill((pid_t)pid, SIGKILL) == 0) return 0;
+    return -1;
+}
+
+long xiom_process_wait(long pid) {
+    int status = 0;
+    if (waitpid((pid_t)pid, &status, 0) < 0) return -1;
+    if (WIFEXITED(status)) return (long)WEXITSTATUS(status);
+    return -1;
+}
+
+int xiom_process_running(long pid) {
+    if (kill((pid_t)pid, 0) == 0) return 1;
+    if (errno == ESRCH) return 0;
+    return -1;
+}
+
+const char* xiom_os_version_str(void) {
+    static char buf[256] = {0};
+    if (buf[0] != 0) return buf;
+
+    struct utsname info;
+    if (uname(&info) == 0) {
+        snprintf(buf, sizeof(buf), "%s %s %s", info.sysname, info.release, info.machine);
+    } else {
+        strcpy(buf, "Unix");
+    }
+    return buf;
+}
+
+#endif
+
+// ============================================================================
 // Bit Intrinsics — hardware-accelerated popcount / leading-zeros
 // ============================================================================
 
@@ -4514,4 +4687,1023 @@ void xiom_threadpool_shutdown(void) {
     }
     xiom_tp_initialized = 0;
     xiom_tp_num_workers = 0;
+}
+
+/* ================================================================
+   ECC: 256-bit Field Arithmetic & Elliptic Curves (secp256k1, Ed25519)
+   Uses u64[4] little-endian limb arrays for all 256-bit values.
+   ================================================================ */
+
+#include <string.h>
+
+/* intrin.h already included above for x86_64; _umul128 is available on MSVC */
+#ifdef _MSC_VER
+#ifndef _UMUL128_DEFINED
+#define _UMUL128_DEFINED
+#endif
+#define XIOM_MUL128(hi, lo, a, b) do { lo = _umul128(a, b, &hi); } while(0)
+#else
+#define XIOM_MUL128(hi, lo, a, b) do { \
+    __uint128_t _p = (__uint128_t)(a) * (__uint128_t)(b); \
+    lo = (uint64_t)_p; hi = (uint64_t)(_p >> 64); \
+} while(0)
+#endif
+
+/* ── Helper: add with carry ── */
+static uint64_t xiom_addc(uint64_t a, uint64_t b, uint64_t* carry) {
+    uint64_t sum = a + b;
+    uint64_t c = (sum < a) ? 1 : 0;
+    *carry = c;
+    return sum;
+}
+
+static uint64_t xiom_addc2(uint64_t a, uint64_t b, uint64_t cin, uint64_t* cout) {
+    uint64_t s1 = a + cin;
+    uint64_t c1 = (s1 < a) ? 1 : 0;
+    uint64_t s2 = s1 + b;
+    uint64_t c2 = (s2 < s1) ? 1 : 0;
+    *cout = c1 + c2;
+    return s2;
+}
+
+/* ── Helper: sub with borrow ── */
+static uint64_t xiom_subb(uint64_t a, uint64_t b, uint64_t* borrow) {
+    uint64_t diff = a - b;
+    *borrow = (a < b) ? 1 : 0;
+    return diff;
+}
+
+static uint64_t xiom_subb2(uint64_t a, uint64_t b, uint64_t bin, uint64_t* bout) {
+    uint64_t d1 = a - bin;
+    uint64_t b1 = (a < bin) ? 1 : 0;
+    uint64_t d2 = d1 - b;
+    uint64_t b2 = (d1 < b) ? 1 : 0;
+    *bout = b1 + b2;
+    return d2;
+}
+
+/* ── 256-bit zero/one/copy/compare ── */
+static int xiom_f256_is_zero(const uint64_t a[4]) {
+    return (a[0] | a[1] | a[2] | a[3]) == 0;
+}
+
+static int xiom_f256_is_one(const uint64_t a[4]) {
+    return a[0] == 1 && a[1] == 0 && a[2] == 0 && a[3] == 0;
+}
+
+static int xiom_f256_eq(const uint64_t a[4], const uint64_t b[4]) {
+    return a[0] == b[0] && a[1] == b[1] && a[2] == b[2] && a[3] == b[3];
+}
+
+static int xiom_f256_cmp(const uint64_t a[4], const uint64_t b[4]) {
+    int i;
+    for (i = 3; i >= 0; i--) {
+        if (a[i] < b[i]) return -1;
+        if (a[i] > b[i]) return 1;
+    }
+    return 0;
+}
+
+static void xiom_f256_from_u64(uint64_t r[4], uint64_t v) {
+    r[0] = v; r[1] = 0; r[2] = 0; r[3] = 0;
+}
+
+static void xiom_f256_set(uint64_t r[4], const uint64_t a[4]) {
+    r[0] = a[0]; r[1] = a[1]; r[2] = a[2]; r[3] = a[3];
+}
+
+static uint64_t xiom_f256_add_raw(uint64_t r[4], const uint64_t a[4], const uint64_t b[4]) {
+    uint64_t c = 0, co;
+    r[0] = xiom_addc2(a[0], b[0], 0, &co); c = co;
+    r[1] = xiom_addc2(a[1], b[1], c, &co); c = co;
+    r[2] = xiom_addc2(a[2], b[2], c, &co); c = co;
+    r[3] = xiom_addc2(a[3], b[3], c, &co);
+    return co;
+}
+
+static uint64_t xiom_f256_sub_raw(uint64_t r[4], const uint64_t a[4], const uint64_t b[4]) {
+    uint64_t br = 0, bo;
+    r[0] = xiom_subb2(a[0], b[0], 0, &bo); br = bo;
+    r[1] = xiom_subb2(a[1], b[1], br, &bo); br = bo;
+    r[2] = xiom_subb2(a[2], b[2], br, &bo); br = bo;
+    r[3] = xiom_subb2(a[3], b[3], br, &bo);
+    return bo;
+}
+
+static void xiom_f256_mod_add(uint64_t r[4], const uint64_t a[4], const uint64_t b[4], const uint64_t p[4]) {
+    uint64_t c = xiom_f256_add_raw(r, a, b);
+    if (c || xiom_f256_cmp(r, p) >= 0) {
+        xiom_f256_sub_raw(r, r, p);
+    }
+}
+
+static void xiom_f256_mod_sub(uint64_t r[4], const uint64_t a[4], const uint64_t b[4], const uint64_t p[4]) {
+    uint64_t br = xiom_f256_sub_raw(r, a, b);
+    if (br) {
+        uint64_t sum[4];
+        xiom_f256_add_raw(sum, r, p);
+        xiom_f256_set(r, sum);
+    }
+}
+
+/* ── secp256k1 constants ── */
+static const uint64_t SECP256K1_P[4] = {
+    0xFFFFFFFEFFFFFC2FULL, 0xFFFFFFFFFFFFFFFFULL,
+    0xFFFFFFFFFFFFFFFFULL, 0xFFFFFFFFFFFFFFFFULL
+};
+static const uint64_t SECP256K1_B[4] = { 7, 0, 0, 0 };
+static const uint64_t SECP256K1_GX[4] = {
+    0x59F2815B16F81798ULL, 0x029BFCDB2DCE28D9ULL,
+    0x55A06295CE870B07ULL, 0x79BE667EF9DCBBACULL
+};
+static const uint64_t SECP256K1_GY[4] = {
+    0x9C47D08FFB10D4B8ULL, 0xFD17B448A6855419ULL,
+    0x5DA4FBFC0E1108A8ULL, 0x483ADA7726A3C465ULL
+};
+#define SECP256K1_R256 0x1000003D1ULL
+
+/* ── Ed25519 constants ── */
+static const uint64_t ED25519_P[4] = {
+    0xFFFFFFFFFFFFFFEDULL, 0xFFFFFFFFFFFFFFFFULL,
+    0xFFFFFFFFFFFFFFFFULL, 0x7FFFFFFFFFFFFFFFULL
+};
+static const uint64_t ED25519_D[4] = {
+    0x135978A3F1D3720CULL, 0x75DEB90B44FDBE7FULL,
+    0x81A9A62F5E98AE4FULL, 0x52036CEE2B6FFE73ULL
+};
+static const uint64_t ED25519_BX[4] = {
+    0x62D608F25D51A0F4ULL, 0x26548ED6F1D9BC68ULL,
+    0xE8A2671C15EA2DA1ULL, 0x216936D3CD6E53FEULL
+};
+static const uint64_t ED25519_BY[4] = {
+    0x6666666666666658ULL, 0x6666666666666666ULL,
+    0x6666666666666666ULL, 0x6666666666666666ULL
+};
+static const uint64_t ED25519_L[4] = {
+    0x5812631A5CF5D3EDULL, 0x14DEF9DEA2F79CD6ULL,
+    0x0000000000000000ULL, 0x1000000000000000ULL
+};
+#define ED25519_R256 38ULL
+
+/* ── 256-bit multiply (schoolbook) + reduce ── */
+static void xiom_f256_mul_raw(uint64_t x[8], const uint64_t a[4], const uint64_t b[4]) {
+    int i, j;
+    for (i = 0; i < 8; i++) x[i] = 0;
+    for (i = 0; i < 4; i++) {
+        if (a[i] == 0) continue;
+        uint64_t carry = 0;
+        for (j = 0; j < 4; j++) {
+            uint64_t hi, lo, co;
+            XIOM_MUL128(hi, lo, a[i], b[j]);
+            int idx = i + j;
+            uint64_t c1 = 0, c2 = 0;
+            x[idx] = xiom_addc2(x[idx], lo, carry, &c1);
+            carry = c1;
+            if (idx + 1 < 8) {
+                x[idx + 1] = xiom_addc2(x[idx + 1], hi, carry, &c2);
+                carry = c2;
+            }
+        }
+        if (i + 4 < 8) x[i + 4] = carry;
+    }
+}
+
+/* Reduce 8-limb x using R_256 = 2^256 mod p (fits in u64 for our primes).
+   x[4]*2^256 ≡ x[4]*R_256 (mod p). x[5]*2^320 ≡ x[5]*R_256*2^64, etc.
+   Since R_256*2^(64*(i-4)) < p for our curves, the reduction is simple. */
+static void xiom_f256_reduce(uint64_t r[4], const uint64_t x[8],
+                              const uint64_t p[4], uint64_t R_256) {
+    uint64_t w[8];
+    int i, j;
+    uint64_t carry;
+    int iter;
+
+    for (i = 0; i < 8; i++) w[i] = x[i];
+
+    /* Reduction: w[0..7] with w[4..7] representing high part.
+       For each i >= 4: w[i] * 2^(64*i) ≡ w[i] * R_256 * 2^(64*(i-4)).
+       Since R_256 * 2^64j fits in <= 4 limbs, accumulate directly into low half.
+       Repeat until no high limbs remain. */
+    for (iter = 0; iter < 3; iter++) {
+        /* Accumulate high-limb contributions into low 4 limbs */
+        for (i = 4; i < 8; i++) {
+            uint64_t v = w[i];
+            if (v == 0) continue;
+            int shift = i - 4;
+            uint64_t hi, lo;
+            XIOM_MUL128(hi, lo, v, R_256);
+
+            /* Add (lo << shift*64) to w[shift..] */
+            carry = lo;
+            {
+                uint64_t co;
+                w[shift] = xiom_addc2(w[shift], carry, 0, &co);
+                carry = co;
+            }
+            /* Add hi << (shift+1)*64 to w[shift+1..]*/
+            if (hi) {
+                int idx = shift + 1;
+                if (idx < 8) {
+                    uint64_t co;
+                    w[idx] = xiom_addc2(w[idx], hi, carry, &co);
+                    carry = co;
+                } else {
+                    carry += hi;
+                }
+            }
+            /* Propagate carry to higher limbs */
+            for (j = shift + 2; j < 8 && carry; j++) {
+                uint64_t co;
+                w[j] = xiom_addc2(w[j], 0, carry, &co);
+                carry = co;
+            }
+            w[i] = 0;
+        }
+    }
+
+    for (i = 0; i < 4; i++) r[i] = w[i];
+
+    /* Final: while r >= p, subtract p */
+    while (xiom_f256_cmp(r, p) >= 0) {
+        xiom_f256_sub_raw(r, r, p);
+    }
+}
+
+/* ── secp256k1 field ops ── */
+static void secp256k1_mul(uint64_t r[4], const uint64_t a[4], const uint64_t b[4]) {
+    uint64_t x[8];
+    xiom_f256_mul_raw(x, a, b);
+    xiom_f256_reduce(r, x, SECP256K1_P, SECP256K1_R256);
+}
+static void secp256k1_sqr(uint64_t r[4], const uint64_t a[4]) { secp256k1_mul(r, a, a); }
+static void secp256k1_add(uint64_t r[4], const uint64_t a[4], const uint64_t b[4]) {
+    xiom_f256_mod_add(r, a, b, SECP256K1_P);
+}
+static void secp256k1_sub(uint64_t r[4], const uint64_t a[4], const uint64_t b[4]) {
+    xiom_f256_mod_sub(r, a, b, SECP256K1_P);
+}
+static void secp256k1_inv(uint64_t r[4], const uint64_t a[4]) {
+    /* Binary extended Euclidean algorithm for modular inverse.
+       No multiplication needed — just add, sub, shift-right.
+       Returns a^(-1) mod SECP256K1_P. */
+    uint64_t u[4], v[4], x1[4], x2[4];
+    int i;
+
+    /* Normalize: u = a mod p */
+    xiom_f256_set(u, a);
+    while (xiom_f256_cmp(u, SECP256K1_P) >= 0) xiom_f256_sub_raw(u, u, SECP256K1_P);
+
+    if (xiom_f256_is_zero(u)) { xiom_f256_from_u64(r, 0); return; }
+
+    xiom_f256_set(v, SECP256K1_P);
+    xiom_f256_from_u64(x1, 1);
+    xiom_f256_from_u64(x2, 0);
+
+    while (!xiom_f256_is_zero(u) && !xiom_f256_is_zero(v)) {
+        /* Remove factors of 2 from u */
+        while ((u[0] & 1) == 0) {
+            for (i = 0; i < 4; i++) {
+                u[i] = (u[i] >> 1) | ((i + 1 < 4 && (u[i + 1] & 1)) ? (1ULL << 63) : 0);
+            }
+            if (x1[0] & 1) {
+                /* x1 = (x1 + p) / 2 */
+                uint64_t carry = 0, co;
+                for (i = 0; i < 4; i++) {
+                    uint64_t sum = xiom_addc2(x1[i], SECP256K1_P[i], carry, &co);
+                    x1[i] = sum >> 1;
+                    if (i + 1 < 4) x1[i] |= (carry ? (1ULL << 63) : 0);
+                    if (co && sum & 1) { /* carry into next bit */ }
+                    carry = co;
+                }
+                /* Fix: we need x1 = (x1 + p) >> 1, doing it limb by limb */
+                /* Re-do properly: */
+                xiom_f256_sub_raw(x1, x1, SECP256K1_P); /* revert */
+                {
+                    uint64_t tmp[4];
+                    xiom_f256_sub_raw(tmp, SECP256K1_P, x1);
+                    xiom_f256_set(x1, tmp);
+                }
+                for (i = 0; i < 3; i++) {
+                    x1[i] = (x1[i] >> 1) | ((x1[i+1] & 1) ? (1ULL << 63) : 0);
+                }
+                x1[3] >>= 1;
+            } else {
+                /* x1 = x1 / 2 */
+                for (i = 0; i < 3; i++) {
+                    x1[i] = (x1[i] >> 1) | ((x1[i+1] & 1) ? (1ULL << 63) : 0);
+                }
+                x1[3] >>= 1;
+            }
+        }
+        /* Remove factors of 2 from v */
+        while ((v[0] & 1) == 0) {
+            for (i = 0; i < 4; i++) {
+                v[i] = (v[i] >> 1) | ((i + 1 < 4 && (v[i + 1] & 1)) ? (1ULL << 63) : 0);
+            }
+            if (x2[0] & 1) {
+                uint64_t tmp[4];
+                xiom_f256_sub_raw(tmp, SECP256K1_P, x2);
+                xiom_f256_set(x2, tmp);
+                for (i = 0; i < 3; i++) {
+                    x2[i] = (x2[i] >> 1) | ((x2[i+1] & 1) ? (1ULL << 63) : 0);
+                }
+                x2[3] >>= 1;
+            } else {
+                for (i = 0; i < 3; i++) {
+                    x2[i] = (x2[i] >> 1) | ((x2[i+1] & 1) ? (1ULL << 63) : 0);
+                }
+                x2[3] >>= 1;
+            }
+        }
+        /* Compare and subtract */
+        if (xiom_f256_cmp(u, v) >= 0) {
+            xiom_f256_sub_raw(u, u, v);
+            if (xiom_f256_cmp(x1, x2) >= 0) {
+                xiom_f256_sub_raw(x1, x1, x2);
+            } else {
+                uint64_t tmp[4];
+                xiom_f256_sub_raw(tmp, x2, x1);
+                xiom_f256_set(x1, SECP256K1_P);
+                xiom_f256_sub_raw(x1, x1, tmp);
+            }
+        } else {
+            xiom_f256_sub_raw(v, v, u);
+            if (xiom_f256_cmp(x2, x1) >= 0) {
+                xiom_f256_sub_raw(x2, x2, x1);
+            } else {
+                uint64_t tmp[4];
+                xiom_f256_sub_raw(tmp, x1, x2);
+                xiom_f256_set(x2, SECP256K1_P);
+                xiom_f256_sub_raw(x2, x2, tmp);
+            }
+        }
+    }
+
+    if (!xiom_f256_is_zero(u)) {
+        xiom_f256_set(r, x1);
+    } else {
+        xiom_f256_set(r, x2);
+    }
+    while (xiom_f256_cmp(r, SECP256K1_P) >= 0) xiom_f256_sub_raw(r, r, SECP256K1_P);
+}
+static void secp256k1_neg(uint64_t r[4], const uint64_t a[4]) {
+    if (xiom_f256_is_zero(a)) { xiom_f256_from_u64(r, 0); return; }
+    xiom_f256_sub_raw(r, SECP256K1_P, a);
+}
+
+/* ── secp256k1 affine point ops ── */
+
+int xiom_secp256k1_point_valid(const uint64_t px[4], const uint64_t py[4]) {
+    uint64_t lhs[4], x2[4], x3[4], rhs[4];
+    if (xiom_f256_is_zero(px) && xiom_f256_is_zero(py)) return 1;
+    secp256k1_sqr(lhs, py);
+    secp256k1_mul(x2, px, px);
+    secp256k1_mul(x3, x2, px);
+    secp256k1_add(rhs, x3, SECP256K1_B);
+    return xiom_f256_eq(lhs, rhs);
+}
+
+void xiom_secp256k1_point_add(uint64_t rx[4], uint64_t ry[4],
+                               const uint64_t ax[4], const uint64_t ay[4],
+                               const uint64_t bx[4], const uint64_t by[4]) {
+    uint64_t two[4] = {2,0,0,0}, three[4] = {3,0,0,0};
+    if (xiom_f256_is_zero(ax) && xiom_f256_is_zero(ay)) {
+        xiom_f256_set(rx, bx); xiom_f256_set(ry, by); return;
+    }
+    if (xiom_f256_is_zero(bx) && xiom_f256_is_zero(by)) {
+        xiom_f256_set(rx, ax); xiom_f256_set(ry, ay); return;
+    }
+    if (xiom_f256_eq(ax, bx)) {
+        uint64_t ysum[4];
+        secp256k1_add(ysum, ay, by);
+        if (xiom_f256_is_zero(ysum)) {
+            xiom_f256_from_u64(rx, 0); xiom_f256_from_u64(ry, 0); return;
+        }
+    }
+    if (xiom_f256_eq(ax, bx) && xiom_f256_eq(ay, by)) {
+        /* Doubling */
+        if (xiom_f256_is_zero(ay)) {
+            xiom_f256_from_u64(rx, 0); xiom_f256_from_u64(ry, 0); return;
+        }
+        uint64_t num[4], den[4], lam[4], t[4];
+        secp256k1_sqr(t, ax);
+        secp256k1_mul(num, t, three);
+        secp256k1_mul(den, ay, two);
+        secp256k1_inv(den, den);
+        secp256k1_mul(lam, num, den);
+        secp256k1_sqr(t, lam);
+        secp256k1_mul(num, ax, two);
+        secp256k1_sub(rx, t, num);
+        secp256k1_sub(t, ax, rx);
+        secp256k1_mul(t, lam, t);
+        secp256k1_sub(ry, t, ay);
+        return;
+    }
+    /* Generic addition */
+    {
+        uint64_t num[4], den[4], lam[4], t[4];
+        secp256k1_sub(num, by, ay);
+        secp256k1_sub(den, bx, ax);
+        secp256k1_inv(den, den);
+        secp256k1_mul(lam, num, den);
+        secp256k1_sqr(t, lam);
+        secp256k1_sub(t, t, ax);
+        secp256k1_sub(rx, t, bx);
+        secp256k1_sub(num, ax, rx);
+        secp256k1_mul(t, lam, num);
+        secp256k1_sub(ry, t, ay);
+    }
+}
+
+void xiom_secp256k1_point_mul(uint64_t rx[4], uint64_t ry[4],
+                               const uint64_t k[4],
+                               const uint64_t px[4], const uint64_t py[4]) {
+    uint64_t res_x[4], res_y[4], add_x[4], add_y[4];
+    int i;
+    xiom_f256_from_u64(res_x, 0); xiom_f256_from_u64(res_y, 0);
+    xiom_f256_set(add_x, px); xiom_f256_set(add_y, py);
+    for (i = 0; i < 256; i++) {
+        int limb = i / 64, bit = i % 64;
+        if ((k[limb] >> bit) & 1) {
+            xiom_secp256k1_point_add(res_x, res_y, res_x, res_y, add_x, add_y);
+        }
+        xiom_secp256k1_point_add(add_x, add_y, add_x, add_y, add_x, add_y);
+    }
+    xiom_f256_set(rx, res_x); xiom_f256_set(ry, res_y);
+}
+
+void xiom_secp256k1_base_mul(uint64_t rx[4], uint64_t ry[4], const uint64_t k[4]) {
+    xiom_secp256k1_point_mul(rx, ry, k, SECP256K1_GX, SECP256K1_GY);
+}
+
+/* ================================================================
+   SHA-512
+   ================================================================ */
+
+static const uint64_t SHA512_K[80] = {
+    0x428a2f98d728ae22ULL, 0x7137449123ef65cdULL, 0xb5c0fbcfec4d3b2fULL, 0xe9b5dba58189dbbcULL,
+    0x3956c25bf348b538ULL, 0x59f111f1b605d019ULL, 0x923f82a4af194f9bULL, 0xab1c5ed5da6d8118ULL,
+    0xd807aa98a3030242ULL, 0x12835b0145706fbeULL, 0x243185be4ee4b28cULL, 0x550c7dc3d5ffb4e2ULL,
+    0x72be5d74f27b896fULL, 0x80deb1fe3b1696b1ULL, 0x9bdc06a725c71235ULL, 0xc19bf174cf692694ULL,
+    0xe49b69c19ef14ad2ULL, 0xefbe4786384f25e3ULL, 0x0fc19dc68b8cd5b5ULL, 0x240ca1cc77ac9c65ULL,
+    0x2de92c6f592b0275ULL, 0x4a7484aa6ea6e483ULL, 0x5cb0a9dcbd41fbd4ULL, 0x76f988da831153b5ULL,
+    0x983e5152ee66dfabULL, 0xa831c66d2db43210ULL, 0xb00327c898fb213fULL, 0xbf597fc7beef0ee4ULL,
+    0xc6e00bf33da88fc2ULL, 0xd5a79147930aa725ULL, 0x06ca6351e003826fULL, 0x142929670a0e6e70ULL,
+    0x27b70a8546d22ffcULL, 0x2e1b21385c26c926ULL, 0x4d2c6dfc5ac42aedULL, 0x53380d139d95b3dfULL,
+    0x650a73548baf63deULL, 0x766a0abb3c77b2a8ULL, 0x81c2c92e47edaee6ULL, 0x92722c851482353bULL,
+    0xa2bfe8a14cf10364ULL, 0xa81a664bbc423001ULL, 0xc24b8b70d0f89791ULL, 0xc76c51a30654be30ULL,
+    0xd192e819d6ef5218ULL, 0xd69906245565a910ULL, 0xf40e35855771202aULL, 0x106aa07032bbd1b8ULL,
+    0x19a4c116b8d2d0c8ULL, 0x1e376c085141ab53ULL, 0x2748774cdf8eeb99ULL, 0x34b0bcb5e19b48a8ULL,
+    0x391c0cb3c5c95a63ULL, 0x4ed8aa4ae3418acbULL, 0x5b9cca4f7763e373ULL, 0x682e6ff3d6b2b8a3ULL,
+    0x748f82ee5defb2fcULL, 0x78a5636f43172f60ULL, 0x84c87814a1f0ab72ULL, 0x8cc702081a6439ecULL,
+    0x90befffa23631e28ULL, 0xa4506cebde82bde9ULL, 0xbef9a3f7b2c67915ULL, 0xc67178f2e372532bULL,
+    0xca273eceea26619cULL, 0xd186b8c721c0c207ULL, 0xeada7dd6cde0eb1eULL, 0xf57d4f7fee6ed178ULL,
+    0x06f067aa72176fbaULL, 0x0a637dc5a2c898a6ULL, 0x113f9804bef90daeULL, 0x1b710b35131c471bULL,
+    0x28db77f523047d84ULL, 0x32caab7b40c72493ULL, 0x3c9ebe0a15c9bebcULL, 0x431d67c49c100d4cULL,
+    0x4cc5d4becb3e42b6ULL, 0x597f299cfc657e2aULL, 0x5fcb6fab3ad6faecULL, 0x6c44198c4a475817ULL
+};
+
+#define SHA512_ROR(x,n) (((x)>>(n))|((x)<<(64-(n))))
+#define SHA512_Ch(x,y,z) (((x)&(y))^(~(x)&(z)))
+#define SHA512_Maj(x,y,z) (((x)&(y))^((x)&(z))^((y)&(z)))
+#define SHA512_Sigma0(x) (SHA512_ROR(x,28)^SHA512_ROR(x,34)^SHA512_ROR(x,39))
+#define SHA512_Sigma1(x) (SHA512_ROR(x,14)^SHA512_ROR(x,18)^SHA512_ROR(x,41))
+#define SHA512_sigma0(x) (SHA512_ROR(x,1)^SHA512_ROR(x,8)^((x)>>7))
+#define SHA512_sigma1(x) (SHA512_ROR(x,19)^SHA512_ROR(x,61)^((x)>>6))
+
+static void sha512_transform(uint64_t s[8], const uint8_t block[128]) {
+    uint64_t w[80], a,b,c,d,e,f,g,h, t1, t2;
+    int i;
+    for (i=0;i<16;i++) {
+        w[i] = ((uint64_t)block[i*8]<<56)|((uint64_t)block[i*8+1]<<48)|
+               ((uint64_t)block[i*8+2]<<40)|((uint64_t)block[i*8+3]<<32)|
+               ((uint64_t)block[i*8+4]<<24)|((uint64_t)block[i*8+5]<<16)|
+               ((uint64_t)block[i*8+6]<<8)|(uint64_t)block[i*8+7];
+    }
+    for (i=16;i<80;i++) {
+        w[i]=SHA512_sigma1(w[i-2])+w[i-7]+SHA512_sigma0(w[i-15])+w[i-16];
+    }
+    a=s[0];b=s[1];c=s[2];d=s[3];e=s[4];f=s[5];g=s[6];h=s[7];
+    for (i=0;i<80;i++) {
+        t1=h+SHA512_Sigma1(e)+SHA512_Ch(e,f,g)+SHA512_K[i]+w[i];
+        t2=SHA512_Sigma0(a)+SHA512_Maj(a,b,c);
+        h=g;g=f;f=e;e=d+t1;d=c;c=b;b=a;a=t1+t2;
+    }
+    s[0]+=a;s[1]+=b;s[2]+=c;s[3]+=d;
+    s[4]+=e;s[5]+=f;s[6]+=g;s[7]+=h;
+}
+
+static void sha512_hash(const uint8_t* msg, size_t msglen, uint8_t out[64]) {
+    uint64_t state[8] = {
+        0x6a09e667f3bcc908ULL, 0xbb67ae8584caa73bULL,
+        0x3c6ef372fe94f82bULL, 0xa54ff53a5f1d36f1ULL,
+        0x510e527fade682d1ULL, 0x9b05688c2b3e6c1fULL,
+        0x1f83d9abfb41bd6bULL, 0x5be0cd19137e2179ULL
+    };
+    uint8_t block[128];
+    size_t pos = 0, i, rem;
+    while (pos + 128 <= msglen) {
+        sha512_transform(state, msg + pos);
+        pos += 128;
+    }
+    memset(block, 0, 128);
+    rem = msglen - pos;
+    if (rem) memcpy(block, msg + pos, rem);
+    block[rem] = 0x80;
+    if (rem >= 112) {
+        sha512_transform(state, block);
+        memset(block, 0, 128);
+    }
+    {
+        uint64_t bitlen = (uint64_t)msglen * 8;
+        for (i=0;i<8;i++) {
+            block[127-i] = (uint8_t)(bitlen & 0xFF);
+            bitlen >>= 8;
+        }
+    }
+    sha512_transform(state, block);
+    for (i=0;i<8;i++) {
+        out[i*8]   = (uint8_t)(state[i]>>56);
+        out[i*8+1] = (uint8_t)(state[i]>>48);
+        out[i*8+2] = (uint8_t)(state[i]>>40);
+        out[i*8+3] = (uint8_t)(state[i]>>32);
+        out[i*8+4] = (uint8_t)(state[i]>>24);
+        out[i*8+5] = (uint8_t)(state[i]>>16);
+        out[i*8+6] = (uint8_t)(state[i]>>8);
+        out[i*8+7] = (uint8_t)(state[i]);
+    }
+}
+
+/* ================================================================
+   Ed25519 field ops (mod p = 2^255-19)
+   ================================================================ */
+
+static void ed25519_mul(uint64_t r[4], const uint64_t a[4], const uint64_t b[4]) {
+    uint64_t x[8];
+    xiom_f256_mul_raw(x, a, b);
+    xiom_f256_reduce(r, x, ED25519_P, ED25519_R256);
+}
+static void ed25519_sqr(uint64_t r[4], const uint64_t a[4]) { ed25519_mul(r, a, a); }
+static void ed25519_add(uint64_t r[4], const uint64_t a[4], const uint64_t b[4]) {
+    xiom_f256_mod_add(r, a, b, ED25519_P);
+}
+static void ed25519_sub(uint64_t r[4], const uint64_t a[4], const uint64_t b[4]) {
+    xiom_f256_mod_sub(r, a, b, ED25519_P);
+}
+static void ed25519_inv(uint64_t r[4], const uint64_t a[4]) {
+    uint64_t u[4], v[4], x1[4], x2[4];
+    int i;
+
+    xiom_f256_set(u, a);
+    while (xiom_f256_cmp(u, ED25519_P) >= 0) xiom_f256_sub_raw(u, u, ED25519_P);
+
+    if (xiom_f256_is_zero(u)) { xiom_f256_from_u64(r, 0); return; }
+
+    xiom_f256_set(v, ED25519_P);
+    xiom_f256_from_u64(x1, 1);
+    xiom_f256_from_u64(x2, 0);
+
+    while (!xiom_f256_is_zero(u) && !xiom_f256_is_zero(v)) {
+        while ((u[0] & 1) == 0) {
+            for (i = 0; i < 4; i++) {
+                u[i] = (u[i] >> 1) | ((i + 1 < 4 && (u[i + 1] & 1)) ? (1ULL << 63) : 0);
+            }
+            if (x1[0] & 1) {
+                uint64_t tmp[4];
+                xiom_f256_sub_raw(tmp, ED25519_P, x1);
+                xiom_f256_set(x1, tmp);
+                for (i = 0; i < 3; i++) {
+                    x1[i] = (x1[i] >> 1) | ((x1[i+1] & 1) ? (1ULL << 63) : 0);
+                }
+                x1[3] >>= 1;
+            } else {
+                for (i = 0; i < 3; i++) {
+                    x1[i] = (x1[i] >> 1) | ((x1[i+1] & 1) ? (1ULL << 63) : 0);
+                }
+                x1[3] >>= 1;
+            }
+        }
+        while ((v[0] & 1) == 0) {
+            for (i = 0; i < 4; i++) {
+                v[i] = (v[i] >> 1) | ((i + 1 < 4 && (v[i + 1] & 1)) ? (1ULL << 63) : 0);
+            }
+            if (x2[0] & 1) {
+                uint64_t tmp[4];
+                xiom_f256_sub_raw(tmp, ED25519_P, x2);
+                xiom_f256_set(x2, tmp);
+                for (i = 0; i < 3; i++) {
+                    x2[i] = (x2[i] >> 1) | ((x2[i+1] & 1) ? (1ULL << 63) : 0);
+                }
+                x2[3] >>= 1;
+            } else {
+                for (i = 0; i < 3; i++) {
+                    x2[i] = (x2[i] >> 1) | ((x2[i+1] & 1) ? (1ULL << 63) : 0);
+                }
+                x2[3] >>= 1;
+            }
+        }
+        if (xiom_f256_cmp(u, v) >= 0) {
+            xiom_f256_sub_raw(u, u, v);
+            if (xiom_f256_cmp(x1, x2) >= 0) {
+                xiom_f256_sub_raw(x1, x1, x2);
+            } else {
+                uint64_t tmp[4];
+                xiom_f256_sub_raw(tmp, x2, x1);
+                xiom_f256_set(x1, ED25519_P);
+                xiom_f256_sub_raw(x1, x1, tmp);
+            }
+        } else {
+            xiom_f256_sub_raw(v, v, u);
+            if (xiom_f256_cmp(x2, x1) >= 0) {
+                xiom_f256_sub_raw(x2, x2, x1);
+            } else {
+                uint64_t tmp[4];
+                xiom_f256_sub_raw(tmp, x1, x2);
+                xiom_f256_set(x2, ED25519_P);
+                xiom_f256_sub_raw(x2, x2, tmp);
+            }
+        }
+    }
+
+    if (!xiom_f256_is_zero(u)) {
+        xiom_f256_set(r, x1);
+    } else {
+        xiom_f256_set(r, x2);
+    }
+    while (xiom_f256_cmp(r, ED25519_P) >= 0) xiom_f256_sub_raw(r, r, ED25519_P);
+}
+static void ed25519_neg(uint64_t r[4], const uint64_t a[4]) {
+    if (xiom_f256_is_zero(a)) { xiom_f256_from_u64(r, 0); return; }
+    xiom_f256_sub_raw(r, ED25519_P, a);
+}
+
+/* ── Extended twisted Edwards coords ── */
+typedef struct { uint64_t x[4],y[4],z[4],t[4]; } ed25519_pt;
+
+static void ed25519_pt_id(ed25519_pt* p) {
+    xiom_f256_from_u64(p->x, 0);
+    xiom_f256_from_u64(p->y, 1);
+    xiom_f256_from_u64(p->z, 1);
+    xiom_f256_from_u64(p->t, 0);
+}
+
+static void ed25519_pt_base(ed25519_pt* p) {
+    xiom_f256_set(p->x, ED25519_BX);
+    xiom_f256_set(p->y, ED25519_BY);
+    xiom_f256_from_u64(p->z, 1);
+    ed25519_mul(p->t, ED25519_BX, ED25519_BY);
+}
+
+static void ed25519_pt_add(ed25519_pt* r, const ed25519_pt* p, const ed25519_pt* q) {
+    uint64_t a[4],b[4],c[4],d[4],e[4],f[4],g[4],h[4],t1[4],t2[4],two[4]={2,0,0,0};
+    uint64_t twod[4];
+    ed25519_mul(twod, ED25519_D, two);
+    ed25519_sub(t1, p->y, p->x); ed25519_sub(t2, q->y, q->x); ed25519_mul(a, t1, t2);
+    ed25519_add(t1, p->y, p->x); ed25519_add(t2, q->y, q->x); ed25519_mul(b, t1, t2);
+    ed25519_mul(t1, p->t, twod); ed25519_mul(c, t1, q->t);
+    ed25519_mul(t1, p->z, two); ed25519_mul(d, t1, q->z);
+    ed25519_sub(e, b, a); ed25519_sub(f, d, c);
+    ed25519_add(g, d, c); ed25519_add(h, b, a);
+    ed25519_mul(r->x, e, f); ed25519_mul(r->y, g, h);
+    ed25519_mul(r->t, e, h); ed25519_mul(r->z, f, g);
+}
+
+static void ed25519_pt_dbl(ed25519_pt* r, const ed25519_pt* p) {
+    uint64_t a[4],b[4],c[4],d[4],e[4],f[4],g[4],h[4],two[4]={2,0,0,0};
+    ed25519_sqr(a,p->x); ed25519_sqr(b,p->y);
+    ed25519_sqr(c,p->z); ed25519_mul(c,c,two);
+    ed25519_neg(d,a);
+    ed25519_add(e,p->x,p->y); ed25519_sqr(e,e); ed25519_sub(e,e,a); ed25519_sub(e,e,b);
+    ed25519_add(g,d,b); ed25519_sub(f,g,c);
+    ed25519_sub(h,d,b);
+    ed25519_mul(r->x,e,f); ed25519_mul(r->y,g,h);
+    ed25519_mul(r->t,e,h); ed25519_mul(r->z,f,g);
+}
+
+static void ed25519_scalar_mul(ed25519_pt* r, const uint8_t s[32], const ed25519_pt* base) {
+    ed25519_pt res, tmp;
+    int i;
+    ed25519_pt_id(&res);
+    tmp.x[0]=base->x[0];tmp.x[1]=base->x[1];tmp.x[2]=base->x[2];tmp.x[3]=base->x[3];
+    tmp.y[0]=base->y[0];tmp.y[1]=base->y[1];tmp.y[2]=base->y[2];tmp.y[3]=base->y[3];
+    tmp.z[0]=base->z[0];tmp.z[1]=base->z[1];tmp.z[2]=base->z[2];tmp.z[3]=base->z[3];
+    tmp.t[0]=base->t[0];tmp.t[1]=base->t[1];tmp.t[2]=base->t[2];tmp.t[3]=base->t[3];
+    for (i=0;i<256;i++) {
+        if ((s[i/8]>>(i%8))&1) ed25519_pt_add(&res,&res,&tmp);
+        ed25519_pt_dbl(&tmp,&tmp);
+    }
+    r->x[0]=res.x[0];r->x[1]=res.x[1];r->x[2]=res.x[2];r->x[3]=res.x[3];
+    r->y[0]=res.y[0];r->y[1]=res.y[1];r->y[2]=res.y[2];r->y[3]=res.y[3];
+    r->z[0]=res.z[0];r->z[1]=res.z[1];r->z[2]=res.z[2];r->z[3]=res.z[3];
+    r->t[0]=res.t[0];r->t[1]=res.t[1];r->t[2]=res.t[2];r->t[3]=res.t[3];
+}
+
+static void ed25519_to_affine(uint64_t ax[4], uint64_t ay[4], const ed25519_pt* p) {
+    uint64_t zi[4];
+    ed25519_inv(zi, p->z);
+    ed25519_mul(ax, p->x, zi);
+    ed25519_mul(ay, p->y, zi);
+}
+
+static void ed25519_enc_pub(uint8_t out[32], const uint64_t x[4], const uint64_t y[4]) {
+    int i;
+    uint8_t xp = (uint8_t)(x[0]&1);
+    for (i=0;i<32;i++) {
+        int limb=(i*8)/64, sh=(i*8)%64;
+        out[i] = (uint8_t)(y[limb]>>sh);
+        if (sh>56 && limb+1<4) out[i] |= (uint8_t)(y[limb+1]<<(64-sh));
+    }
+    out[31] = (uint8_t)((out[31]&0x7F)|(xp<<7));
+}
+
+static int ed25519_recover_x(uint64_t x[4], const uint64_t y[4], int sign) {
+    uint64_t y2[4], num[4], den[4], one[4]={1,0,0,0}, x2[4], u[4], v[4];
+    uint64_t sqrt_m1[4]={0x4A0EA0B0C42B7BD8ULL,0xC41B1CDCFE0BBABDULL,0x734D589050FAE812ULL,0x2B8324804FC1DF0BULL};
+    uint64_t e[4], cv, tmp_cv[4];
+    int bit;
+
+    ed25519_sqr(y2, y);
+    ed25519_sub(num, y2, one);
+    ed25519_mul(den, ED25519_D, y2);
+    ed25519_add(den, den, one);
+    ed25519_inv(den, den);
+    ed25519_mul(x2, num, den);
+    /* sqrt: x2^((p+3)/8) */
+    ed25519_neg(e, one); /* -1 */
+    cv = 1ULL<<60; /* 2^252 in limb 3 */
+    e[3] += cv;
+    xiom_f256_from_u64(u, 1);
+    xiom_f256_set(v, x2);
+    for (bit=0;bit<256;bit++) {
+        if ((e[bit/64]>>(bit%64))&1) ed25519_mul(u,u,v);
+        ed25519_sqr(v,v);
+    }
+    ed25519_sqr(tmp_cv, u);
+    if (!xiom_f256_eq(tmp_cv, x2)) ed25519_mul(u, u, sqrt_m1);
+    ed25519_sqr(tmp_cv, u);
+    if (!xiom_f256_eq(tmp_cv, x2)) return 0;
+    if ((u[0]&1) != (uint64_t)sign) ed25519_neg(u, u);
+    xiom_f256_set(x, u);
+    return 1;
+}
+
+/* ── Ed25519 order-l ops ── */
+/* 2^256 mod l precomputed: */
+static const uint64_t R_ORDER[4] = {
+    0xC3DC22EFF6DA94E3ULL, 0xFAE31A49EBF56854ULL,
+    0xE42FB5726C44E80CULL, 0x0DEED28E0BB8D901ULL
+};
+
+static void ed25519_reduce_order(uint64_t r[4], const uint64_t x[8]) {
+    /* Reduce using R_ORDER: x[4]*2^256 ≡ x[4]*R_ORDER (mod l).
+       High limbs x[5..7] can only appear if input is 64-byte hash. */
+    uint64_t w[8], tmp[8];
+    int i, j;
+    uint64_t carry;
+
+    for (i=0;i<8;i++) { w[i]=x[i]; tmp[i]=0; }
+    for (i=4;i<8;i++) {
+        uint64_t v=w[i];
+        if (!v) continue;
+        int sh=i-4;
+        carry=0;
+        for (j=0;j<4;j++) {
+            uint64_t hi,lo;
+            XIOM_MUL128(hi,lo,v,R_ORDER[j]);
+            int idx=j+sh;
+            if (idx<8) {
+                uint64_t co;
+                tmp[idx]=xiom_addc2(tmp[idx],lo,carry,&co); carry=co;
+                if (idx+1<8 && hi) {
+                    uint64_t co2;
+                    tmp[idx+1]=xiom_addc2(tmp[idx+1],hi,carry,&co2); carry=co2;
+                }
+            }
+        }
+        w[i]=0;
+    }
+    carry=0;
+    for (i=0;i<4;i++) {
+        uint64_t co;
+        w[i]=xiom_addc2(w[i],tmp[i],carry,&co); carry=co;
+    }
+    /* Second pass for any residual high limbs */
+    if (carry||tmp[4]||tmp[5]||tmp[6]||tmp[7]) {
+        for (i=0;i<8;i++) { if(i<4) w[i]=w[i]; else w[i]=tmp[i]; tmp[i]=0; }
+        for (i=4;i<8;i++) {
+            uint64_t v=w[i];
+            if (!v) continue;
+            int sh=i-4;
+            carry=0;
+            for (j=0;j<4;j++) {
+                uint64_t hi,lo;
+                XIOM_MUL128(hi,lo,v,R_ORDER[j]);
+                int idx=j+sh;
+                if (idx<8) {
+                    uint64_t co;
+                    tmp[idx]=xiom_addc2(tmp[idx],lo,carry,&co); carry=co;
+                    if (idx+1<8 && hi) {
+                        uint64_t co2;
+                        tmp[idx+1]=xiom_addc2(tmp[idx+1],hi,carry,&co2); carry=co2;
+                    }
+                }
+            }
+            w[i]=0;
+        }
+        carry=0;
+        for (i=0;i<4;i++) {
+            uint64_t co;
+            w[i]=xiom_addc2(w[i],tmp[i],carry,&co); carry=co;
+        }
+    }
+    for (i=0;i<4;i++) r[i]=w[i];
+    while (xiom_f256_cmp(r, ED25519_L) >= 0) xiom_f256_sub_raw(r,r,ED25519_L);
+}
+
+static void ed25519_mul_order(uint64_t r[4], const uint64_t a[4], const uint64_t b[4]) {
+    uint64_t x[8];
+    xiom_f256_mul_raw(x, a, b);
+    ed25519_reduce_order(r, x);
+}
+
+static void ed25519_bytes_to_u8(uint64_t r8[8], const uint8_t* bytes, int nbytes) {
+    int i;
+    memset(r8, 0, sizeof(uint64_t)*8);
+    for (i=0;i<nbytes;i++) {
+        int limb=i/8, sh=(i%8)*8;
+        if (limb<8) r8[limb] |= ((uint64_t)bytes[i])<<sh;
+    }
+}
+
+static void ed25519_mod_order_from_bytes(uint64_t r[4], const uint8_t* bytes, int nbytes) {
+    uint64_t x[8];
+    ed25519_bytes_to_u8(x, bytes, nbytes);
+    ed25519_reduce_order(r, x);
+}
+
+static void ed25519_order_to_bytes(uint8_t out[32], const uint64_t r[4]) {
+    int i;
+    for (i=0;i<32;i++) {
+        int limb=(i*8)/64, sh=(i*8)%64;
+        out[i] = (uint8_t)(r[limb]>>sh);
+        if (sh>56 && limb+1<4) out[i] |= (uint8_t)(r[limb+1]<<(64-sh));
+    }
+}
+
+/* ================================================================
+   Public Ed25519 API
+   ================================================================ */
+
+void xiom_ed25519_pubkey(const uint8_t privkey[32], uint8_t pubkey[32]) {
+    uint8_t h[64];
+    ed25519_pt A;
+    uint64_t ax[4], ay[4];
+    uint8_t s[32];
+    int i;
+
+    sha512_hash(privkey, 32, h);
+    h[0] &= 248; h[31] &= 127; h[31] |= 64;
+    for (i=0;i<32;i++) s[i]=h[i];
+    ed25519_pt_base(&A);
+    ed25519_scalar_mul(&A, s, &A);
+    ed25519_to_affine(ax, ay, &A);
+    ed25519_enc_pub(pubkey, ax, ay);
+}
+
+int xiom_ed25519_sign(const uint8_t* msg, size_t msglen,
+                       const uint8_t privkey[32], uint8_t sig[64]) {
+    uint8_t h[64], r[64], *rbuf, *kbuf;
+    uint8_t prefix[32], A_enc[32], R_enc[32], S_bytes[32];
+    ed25519_pt A, R;
+    uint64_t ax[4], ay[4], rx[4], ry[4], k_mod[4], a_mod[4], r_mod[4], s_mod[4];
+    size_t rlen, klen;
+    int i;
+
+    sha512_hash(privkey, 32, h);
+    h[0] &= 248; h[31] &= 127; h[31] |= 64;
+    for (i=0;i<32;i++) prefix[i]=h[i];
+
+    ed25519_pt_base(&A);
+    ed25519_scalar_mul(&A, prefix, &A);
+    ed25519_to_affine(ax, ay, &A);
+    ed25519_enc_pub(A_enc, ax, ay);
+
+    /* r = SHA-512(h[32..63] || msg) */
+    rlen = 32 + msglen;
+    rbuf = (uint8_t*)malloc(rlen);
+    if (!rbuf) return 0;
+    memcpy(rbuf, h+32, 32);
+    if (msglen) memcpy(rbuf+32, msg, msglen);
+    sha512_hash(rbuf, rlen, r);
+    free(rbuf);
+
+    ed25519_pt_base(&R);
+    ed25519_scalar_mul(&R, r, &R);
+    ed25519_to_affine(rx, ry, &R);
+    ed25519_enc_pub(R_enc, rx, ry);
+
+    /* k = SHA-512(R || A || msg) mod l */
+    klen = 64 + msglen;
+    kbuf = (uint8_t*)malloc(klen);
+    if (!kbuf) return 0;
+    memcpy(kbuf, R_enc, 32);
+    memcpy(kbuf+32, A_enc, 32);
+    if (msglen) memcpy(kbuf+64, msg, msglen);
+    sha512_hash(kbuf, klen, r); /* reuse r buffer */
+    free(kbuf);
+
+    ed25519_mod_order_from_bytes(k_mod, r, 64);
+    ed25519_mod_order_from_bytes(a_mod, prefix, 32);
+    ed25519_mod_order_from_bytes(r_mod, r, 64);
+
+    ed25519_mul_order(s_mod, k_mod, a_mod);
+    xiom_f256_mod_add(s_mod, r_mod, s_mod, ED25519_L);
+
+    ed25519_order_to_bytes(S_bytes, s_mod);
+
+    memcpy(sig, R_enc, 32);
+    memcpy(sig+32, S_bytes, 32);
+    return 1;
+}
+
+int xiom_ed25519_verify(const uint8_t* msg, size_t msglen,
+                         const uint8_t pubkey[32], const uint8_t sig[64]) {
+    const uint8_t *R_enc = sig, *S_data = sig+32;
+    uint64_t ry[4], rx[4], ax[4], ay[4], k_mod[4], s_mod[4];
+    uint8_t k_hash[64], *kbuf;
+    ed25519_pt R_pt, A_pt, SG, kA, sum;
+    uint8_t s_bytes[32], k_bytes[32];
+    int i, x_sign;
+    size_t klen;
+
+    /* Decode R */
+    {
+        uint64_t yb[4]={0,0,0,0};
+        for (i=0;i<32;i++) {
+            int limb=i/8,sh=(i%8)*8;
+            yb[limb] |= ((uint64_t)R_enc[i])<<sh;
+        }
+        yb[3] &= 0x7FFFFFFFFFFFFFFFULL;
+        xiom_f256_set(ry, yb);
+        x_sign = (R_enc[31]>>7)&1;
+        if (!ed25519_recover_x(rx, ry, x_sign)) return 0;
+    }
+
+    /* Decode A */
+    {
+        uint64_t ayb[4]={0,0,0,0};
+        for (i=0;i<32;i++) {
+            int limb=i/8,sh=(i%8)*8;
+            ayb[limb] |= ((uint64_t)pubkey[i])<<sh;
+        }
+        ayb[3] &= 0x7FFFFFFFFFFFFFFFULL;
+        xiom_f256_set(ay, ayb);
+        x_sign = (pubkey[31]>>7)&1;
+        if (!ed25519_recover_x(ax, ay, x_sign)) return 0;
+    }
+
+    /* k = SHA-512(R || A || msg) mod l */
+    klen = 64 + msglen;
+    kbuf = (uint8_t*)malloc(klen);
+    if (!kbuf) return 0;
+    memcpy(kbuf, R_enc, 32);
+    memcpy(kbuf+32, pubkey, 32);
+    if (msglen) memcpy(kbuf+64, msg, msglen);
+    sha512_hash(kbuf, klen, k_hash);
+    free(kbuf);
+    ed25519_mod_order_from_bytes(k_mod, k_hash, 64);
+
+    /* Decode S */
+    ed25519_mod_order_from_bytes(s_mod, S_data, 32);
+
+    /* Convert to extended points */
+    xiom_f256_set(R_pt.x, rx); xiom_f256_set(R_pt.y, ry);
+    xiom_f256_from_u64(R_pt.z, 1); ed25519_mul(R_pt.t, rx, ry);
+    xiom_f256_set(A_pt.x, ax); xiom_f256_set(A_pt.y, ay);
+    xiom_f256_from_u64(A_pt.z, 1); ed25519_mul(A_pt.t, ax, ay);
+
+    /* SG = s*B */
+    {
+        ed25519_pt BP;
+        ed25519_order_to_bytes(s_bytes, s_mod);
+        ed25519_pt_base(&BP);
+        ed25519_scalar_mul(&SG, s_bytes, &BP);
+    }
+
+    /* kA = k*A */
+    {
+        ed25519_order_to_bytes(k_bytes, k_mod);
+        ed25519_scalar_mul(&kA, k_bytes, &A_pt);
+    }
+
+    /* sum = SG + (-kA) */
+    ed25519_neg(kA.x, kA.x);
+    ed25519_neg(kA.t, kA.t);
+    ed25519_pt_add(&sum, &SG, &kA);
+
+    {
+        uint64_t sx[4], sy[4];
+        ed25519_to_affine(sx, sy, &sum);
+        return xiom_f256_eq(sx, rx) && xiom_f256_eq(sy, ry);
+    }
 }

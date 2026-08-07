@@ -1383,3 +1383,350 @@ pub fn set_from_vec[T](v: &Vec[T]) -> Set[T] {
   }
   result
 }
+
+// ============================================================================
+// Vec — sorting & exhaustive integer aggregations (extensions)
+// ============================================================================
+
+/// Sort a vector using a custom comparator. Delegates to xiom.sort.sort_by.
+/// O(N log N) average, O(N²) worst. Unstable.
+/// NOTE: the comparator must be a NAMED function — inline lambdas crash the
+/// current runtime (see xiom.sort comparator note).
+pub fn vec_sort_by[T](v: &mut Vec[T], compare: fn(&T, &T) -> Int) {
+  xiom.sort.sort_by(v, compare);
+}
+
+/// Sliding-window maximum: for each window of size `k` starting at index 0,
+/// the maximum element of that window. O(N·K) with O(K) extra space.
+pub fn vec_window_max(v: &Vec[Int], k: Int) -> Vec[Int] {
+  var n = v.len();
+  var result = Vec[Int].new();
+  if n == 0 || k <= 0 { return result; }
+  var kk = k;
+  if kk > n { kk = n; }
+  var start = 0;
+  while start + kk <= n {
+    var mx = v[start];
+    var i = start + 1;
+    while i < start + kk {
+      if v[i] > mx { mx = v[i]; }
+      i = i + 1;
+    }
+    result.push(mx);
+    start = start + 1;
+  }
+  return result;
+}
+
+/// Sliding-window minimum: for each window of size `k`, the minimum element.
+/// O(N·K) with O(K) extra space.
+pub fn vec_window_min(v: &Vec[Int], k: Int) -> Vec[Int] {
+  var n = v.len();
+  var result = Vec[Int].new();
+  if n == 0 || k <= 0 { return result; }
+  var kk = k;
+  if kk > n { kk = n; }
+  var start = 0;
+  while start + kk <= n {
+    var mn = v[start];
+    var i = start + 1;
+    while i < start + kk {
+      if v[i] < mn { mn = v[i]; }
+      i = i + 1;
+    }
+    result.push(mn);
+    start = start + 1;
+  }
+  return result;
+}
+
+/// Cumulative sum: result[i] = v[0] + ... + v[i]. O(N). Empty input → empty.
+pub fn vec_cumsum(v: &Vec[Int]) -> Vec[Int] {
+  var result = Vec[Int].new();
+  var total = 0;
+  var i = 0;
+  while i < v.len() {
+    total = total + v[i];
+    result.push(total);
+    i = i + 1;
+  }
+  return result;
+}
+
+/// Dot product of two integer vectors, or None if lengths differ. O(N).
+pub fn vec_dot(a: &Vec[Int], b: &Vec[Int]) -> Option[Int] {
+  var na = a.len();
+  var nb = b.len();
+  if na != nb { return None; }
+  var total = 0;
+  var i = 0;
+  while i < na {
+    total = total + a[i] * b[i];
+    i = i + 1;
+  }
+  return Some(total);
+}
+
+/// Product of all elements in an integer vector. Returns 1 if empty. O(N).
+pub fn vec_product(v: &Vec[Int]) -> Int {
+  var total = 1;
+  var i = 0;
+  while i < v.len() {
+    total = total * v[i];
+    i = i + 1;
+  }
+  return total;
+}
+
+/// Frequency keys: distinct values of the vector, sorted ascending. O(N + M²).
+/// Companion of vec_frequency_counts; the two result vectors are parallel
+/// (keys[i] occurs counts[i] times).
+pub fn vec_frequency_keys(v: &Vec[Int]) -> Vec[Int] {
+  var counts = Map[Int, Int].new();
+  var i = 0;
+  while i < v.len() {
+    var val = v[i];
+    var opt = counts.get(&val);
+    match opt {
+      Some(c) => { counts.insert(val, c + 1); },
+      None => { counts.insert(val, 1); },
+    }
+    i = i + 1;
+  }
+  var keys = counts.keys();
+  var vals = counts.values();
+  // parallel selection sort by key ascending
+  var j = 0;
+  while j < keys.len() {
+    var min_idx = j;
+    var k = j + 1;
+    while k < keys.len() {
+      if keys[k] < keys[min_idx] { min_idx = k; }
+      k = k + 1;
+    }
+    if min_idx != j {
+      var tk = keys[j];
+      keys[j] = keys[min_idx];
+      keys[min_idx] = tk;
+      var tv = vals[j];
+      vals[j] = vals[min_idx];
+      vals[min_idx] = tv;
+    }
+    j = j + 1;
+  }
+  return keys;
+}
+
+/// Frequency counts: occurrence counts aligned with vec_frequency_keys. O(N + M²).
+pub fn vec_frequency_counts(v: &Vec[Int]) -> Vec[Int] {
+  var counts = Map[Int, Int].new();
+  var i = 0;
+  while i < v.len() {
+    var val = v[i];
+    var opt = counts.get(&val);
+    match opt {
+      Some(c) => { counts.insert(val, c + 1); },
+      None => { counts.insert(val, 1); },
+    }
+    i = i + 1;
+  }
+  var keys = counts.keys();
+  var vals = counts.values();
+  var j = 0;
+  while j < keys.len() {
+    var min_idx = j;
+    var k = j + 1;
+    while k < keys.len() {
+      if keys[k] < keys[min_idx] { min_idx = k; }
+      k = k + 1;
+    }
+    if min_idx != j {
+      var tk = keys[j];
+      keys[j] = keys[min_idx];
+      keys[min_idx] = tk;
+      var tv = vals[j];
+      vals[j] = vals[min_idx];
+      vals[min_idx] = tv;
+    }
+    j = j + 1;
+  }
+  return vals;
+}
+
+/// Median of an integer vector, or None if empty. O(N log N).
+/// Convention: returns the lower-middle element (index (n-1)/2) of the sorted
+/// copy, so even-length inputs yield the smaller of the two middle values.
+pub fn vec_median(v: &mut Vec[Int]) -> Option[Int] {
+  var n = v.len();
+  if n == 0 { return None; }
+  var sorted = Vec[Int].new();
+  var i = 0;
+  while i < n {
+    sorted.push(v[i]);
+    i = i + 1;
+  }
+  xiom.sort.sort_quick(&sorted);
+  return Some(sorted[(n - 1) / 2]);
+}
+
+/// Percentile of an integer vector at p (0..100), or None if empty or p invalid.
+/// O(N log N). Convention: nearest-rank, index floor((n-1) * p / 100).
+pub fn vec_percentile(v: &mut Vec[Int], p: Int) -> Option[Int] {
+  var n = v.len();
+  if n == 0 { return None; }
+  if p < 0 || p > 100 { return None; }
+  var sorted = Vec[Int].new();
+  var i = 0;
+  while i < n {
+    sorted.push(v[i]);
+    i = i + 1;
+  }
+  xiom.sort.sort_quick(&sorted);
+  var idx = (n - 1) * p / 100;
+  return Some(sorted[idx]);
+}
+
+/// All indices where `value` occurs. O(N). Empty if not found.
+pub fn vec_find_all[T: Eq](v: &Vec[T], value: T) -> Vec[Int] {
+  var result = Vec[Int].new();
+  var i = 0;
+  while i < v.len() {
+    if v[i] == value { result.push(i); }
+    i = i + 1;
+  }
+  return result;
+}
+
+/// Remove every occurrence of `value` in place. O(N). Stability preserved.
+pub fn vec_remove_all[T: Eq](v: &mut Vec[T], value: T) {
+  var n = v.len();
+  var write = 0;
+  var read = 0;
+  while read < n {
+    if !(v[read] == value) {
+      v[write] = v[read];
+      write = write + 1;
+    }
+    read = read + 1;
+  }
+  while v.len() > write {
+    v.pop();
+  }
+}
+
+/// Keep only elements for which `keep` returns true. Returns the number of
+/// removed elements. O(N). NOTE: pass a NAMED predicate — lambdas crash the
+/// current runtime.
+pub fn vec_retain[T](v: &mut Vec[T], keep: fn(&T) -> Bool) -> Int {
+  var n = v.len();
+  var write = 0;
+  var removed = 0;
+  var read = 0;
+  while read < n {
+    if keep(&v[read]) {
+      v[write] = v[read];
+      write = write + 1;
+    } else {
+      removed = removed + 1;
+    }
+    read = read + 1;
+  }
+  while v.len() > write {
+    v.pop();
+  }
+  return removed;
+}
+
+/// Returns true if the vector is sorted in non-decreasing order. O(N).
+pub fn vec_is_sorted[T: Ord](v: &Vec[T]) -> Bool {
+  var n = v.len();
+  if n <= 1 { return true; }
+  var i = 1;
+  while i < n {
+    if v[i - 1].compare(&v[i]) > 0 { return false; }
+    i = i + 1;
+  }
+  return true;
+}
+
+/// Returns true if the vector has no elements. O(1).
+pub fn vec_is_empty[T](v: &Vec[T]) -> Bool {
+  return v.len() == 0;
+}
+
+/// Element at index i, or `default` if out of bounds. O(1).
+pub fn vec_get_or[T](v: &Vec[T], i: Int, default: T) -> T {
+  if i < 0 || i >= v.len() { return default; }
+  return v[i];
+}
+
+/// Left part of a vector: elements [0, i), clamped to the valid range. O(N).
+pub fn vec_left(v: &Vec[Int], i: Int) -> Vec[Int] {
+  var result = Vec[Int].new();
+  var n = v.len();
+  if i <= 0 { return result; }
+  var k = i;
+  if k > n { k = n; }
+  var j = 0;
+  while j < k {
+    result.push(v[j]);
+    j = j + 1;
+  }
+  return result;
+}
+
+/// Right part of a vector: elements [i, n). If i <= 0 the whole vector is
+/// returned; if i >= n the result is empty. O(N).
+pub fn vec_right(v: &Vec[Int], i: Int) -> Vec[Int] {
+  var result = Vec[Int].new();
+  var n = v.len();
+  var k = i;
+  if k < 0 { k = 0; }
+  if k >= n { return result; }
+  var j = k;
+  while j < n {
+    result.push(v[j]);
+    j = j + 1;
+  }
+  return result;
+}
+
+/// Zip two integer vectors, interleaving pairs [a0, b0, a1, b1, ...] up to the
+/// shorter length. O(N).
+pub fn vec_zip_int(a: &Vec[Int], b: &Vec[Int]) -> Vec[Int] {
+  var result = Vec[Int].new();
+  var n = a.len();
+  if b.len() < n { n = b.len(); }
+  var i = 0;
+  while i < n {
+    result.push(a[i]);
+    result.push(b[i]);
+    i = i + 1;
+  }
+  return result;
+}
+
+/// Even-indexed elements of a vector: [v[0], v[2], v[4], ...]. O(N).
+/// Pairs with vec_unzip_odds to recover the two halves of a zipped vector.
+pub fn vec_unzip_evens(v: &Vec[Int]) -> Vec[Int] {
+  var result = Vec[Int].new();
+  var i = 0;
+  while i < v.len() {
+    result.push(v[i]);
+    i = i + 2;
+  }
+  return result;
+}
+
+/// Odd-indexed elements of a vector: [v[1], v[3], v[5], ...]. O(N).
+pub fn vec_unzip_odds(v: &Vec[Int]) -> Vec[Int] {
+  var result = Vec[Int].new();
+  var i = 1;
+  while i < v.len() {
+    result.push(v[i]);
+    i = i + 2;
+  }
+  return result;
+}
+  result
+}
