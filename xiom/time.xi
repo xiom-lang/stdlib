@@ -351,3 +351,290 @@ pub fn sleep_until(instant: Instant) {
   while time(0) < instant.t {
   };
 }
+
+// ──────────────────────────────────────────────────────────
+//  Date — calendar date (year, month, day) with day-number
+//  arithmetic on the proleptic Gregorian calendar.
+// ──────────────────────────────────────────────────────────
+
+pub type Date = {
+  year: Int;
+  month: Int;
+  day: Int;
+}
+
+// days_from_civil returns the number of days since 1970-01-01
+// for the given proleptic Gregorian calendar date.
+// O(1) integer arithmetic, adapted from Howard Hinnant's algorithm.
+fn days_from_civil(y: Int, m: Int, d: Int) -> Int {
+  var y2 = y;
+  var m2 = m;
+  if m2 <= 2 {
+    y2 = y2 - 1;
+    m2 = m2 + 12;
+  };
+  m2 = m2 - 3;
+  let serial = 365 * y2 + y2 / 4 - y2 / 100 + y2 / 400 + (153 * m2 + 2) / 5 + d - 1;
+  return serial - 719468;
+}
+
+// date_new creates a Date from year, month, day.
+// Complexity: O(1). No validation performed.
+pub fn date_new(year: Int, month: Int, day: Int) -> Date {
+  return Date{ year: year; month: month; day: day; };
+}
+
+// date_now returns the current date computed from the Unix timestamp.
+// Complexity: O(1). Uses time(0) for the system clock.
+pub fn date_now() -> Date {
+  let ts = time(0);
+  return timestamp_to_date(ts);
+}
+
+// date_year returns the year field of a Date.
+// Complexity: O(1).
+pub fn date_year(d: &Date) -> Int {
+  return d.year;
+}
+
+// date_month returns the month field of a Date (1–12).
+// Complexity: O(1).
+pub fn date_month(d: &Date) -> Int {
+  return d.month;
+}
+
+// date_day returns the day-of-month field of a Date (1–31).
+// Complexity: O(1).
+pub fn date_day(d: &Date) -> Int {
+  return d.day;
+}
+
+// date_is_leap_year returns true if the given year is a leap year
+// in the proleptic Gregorian calendar.
+// Complexity: O(1).
+pub fn date_is_leap_year(year: Int) -> Bool {
+  if year % 400 == 0 {
+    return true;
+  };
+  if year % 100 == 0 {
+    return false;
+  };
+  return year % 4 == 0;
+}
+
+// date_days_in_month returns the number of days in the given month
+// of the given year (1..31).  Valid for proleptic Gregorian.
+// Complexity: O(1).
+pub fn date_days_in_month(year: Int, month: Int) -> Int {
+  if month == 2 {
+    if date_is_leap_year(year) {
+      return 29;
+    };
+    return 28;
+  };
+  if month == 4 || month == 6 || month == 9 || month == 11 {
+    return 30;
+  };
+  return 31;
+}
+
+// date_day_of_week returns the day of the week for the given date
+// using Zeller's congruence (Gregorian).  0 = Sunday, …, 6 = Saturday.
+// Complexity: O(1).
+pub fn date_day_of_week(year: Int, month: Int, day: Int) -> Int {
+  var m = month;
+  var y = year;
+  if m <= 2 {
+    m = m + 12;
+    y = y - 1;
+  };
+  let k = y - (y / 100) * 100;
+  let j = y / 100;
+  let h = day + (13 * (m + 1)) / 5 + k + k / 4 + j / 4 - 2 * j;
+  var r = h % 7;
+  if r < 0 {
+    r = r + 7;
+  };
+  return (r + 6) % 7;
+}
+
+// date_day_of_year returns the ordinal day of the year (1–366)
+// for the given date.
+// Complexity: O(1).
+pub fn date_day_of_year(year: Int, month: Int, day: Int) -> Int {
+  var result = day;
+  var m = 1;
+  while m < month {
+    result = result + date_days_in_month(year, m);
+    m = m + 1;
+  };
+  return result;
+}
+
+// date_iso8601 formats a Date as a zero-padded "YYYY-MM-DD" string.
+// Complexity: O(1).  No dynamic allocation overhead beyond str_concat.
+pub fn date_iso8601(d: &Date) -> Str {
+  return format_timestamp_date(d);
+}
+
+// format_timestamp_date formats a Date reference as "YYYY-MM-DD".
+fn format_timestamp_date(d: &Date) -> Str {
+  let y_str = format_int_padded(d.year, 4);
+  let m_str = format_int_padded(d.month, 2);
+  let d_str = format_int_padded(d.day, 2);
+  let result = y_str + "-";
+  result = result + m_str;
+  result = result + "-";
+  result = result + d_str;
+  return result;
+}
+
+// format_int_padded converts n to a zero-padded string of at least width.
+// Negative values preserve the sign and pad the absolute digits.
+fn format_int_padded(n: Int, width: Int) -> Str {
+  var negative = false;
+  var value = n;
+  if n < 0 {
+    negative = true;
+    value = -n;
+  };
+  var digits = to_string(value);
+  var pad = width - digits.len();
+  var result = "";
+  while pad > 0 {
+    result = result + "0";
+    pad = pad - 1;
+  };
+  result = result + digits;
+  if negative {
+    result = "-" + result;
+  };
+  return result;
+}
+
+// date_from_iso8601 parses a "YYYY-MM-DD" string into a Date.
+// Returns None if the format is malformed or values out of range.
+// Complexity: O(1).
+pub fn date_from_iso8601(s: Str) -> Option[Date] {
+  if s.len() != 10 {
+    return None;
+  };
+  let ch4 = xiom.string.char_at(s, 4);
+  let ch7 = xiom.string.char_at(s, 7);
+  if ch4.is_none || ch7.is_none {
+    return None;
+  };
+  if ch4.unwrap() != '-' || ch7.unwrap() != '-' {
+    return None;
+  };
+  let y_str = xiom.string.str_slice(s, 0, 4);
+  let m_str = xiom.string.str_slice(s, 5, 7);
+  let d_str = xiom.string.str_slice(s, 8, 10);
+  let y_res = xiom.string.str_to_int(y_str);
+  let m_res = xiom.string.str_to_int(m_str);
+  let d_res = xiom.string.str_to_int(d_str);
+  if y_res.is_err || m_res.is_err || d_res.is_err {
+    return None;
+  };
+  let year = y_res.unwrap();
+  let month = m_res.unwrap();
+  let day = d_res.unwrap();
+  if month < 1 || month > 12 {
+    return None;
+  };
+  if day < 1 || day > date_days_in_month(year, month) {
+    return None;
+  };
+  return Some(Date{ year: year; month: month; day: day; });
+}
+
+// date_add_days returns a new Date offset by the given number of days.
+// Handles negative days correctly.  Complexity: O(1).
+pub fn date_add_days(d: &Date, days: Int) -> Date {
+  let total = days_from_civil(d.year, d.month, d.day) + days;
+  let (y, m, day) = civil_from_days(total);
+  return Date{ year: y; month: m; day: day; };
+}
+
+// date_diff_days returns the number of days between a and b (a − b).
+// Complexity: O(1).
+pub fn date_diff_days(a: &Date, b: &Date) -> Int {
+  let da = days_from_civil(a.year, a.month, a.day);
+  let db = days_from_civil(b.year, b.month, b.day);
+  return da - db;
+}
+
+// date_compare compares two dates.
+// Returns -1 if a < b, 0 if equal, 1 if a > b.  Complexity: O(1).
+pub fn date_compare(a: &Date, b: &Date) -> Int {
+  if a.year < b.year {
+    return -1;
+  };
+  if a.year > b.year {
+    return 1;
+  };
+  if a.month < b.month {
+    return -1;
+  };
+  if a.month > b.month {
+    return 1;
+  };
+  if a.day < b.day {
+    return -1;
+  };
+  if a.day > b.day {
+    return 1;
+  };
+  return 0;
+}
+
+// unix_timestamp returns the current Unix timestamp (seconds since epoch).
+// Delegates to the C time(2) call.  Complexity: O(1).
+pub fn unix_timestamp() -> Int {
+  return time(0);
+}
+
+// timestamp_to_date converts a Unix timestamp (seconds) to a Date.
+// Uses the existing civil_from_days calendar decomposition.
+// Complexity: O(1).
+pub fn timestamp_to_date(ts: Int) -> Date {
+  var days = ts / SECS_PER_DAY;
+  var tod = ts - days * SECS_PER_DAY;
+  if tod < 0 {
+    days = days - 1;
+  };
+  let (y, m, d) = civil_from_days(days);
+  return Date{ year: y; month: m; day: d; };
+}
+
+// date_to_timestamp converts a Date to a Unix timestamp (0:00:00 UTC).
+// Complexity: O(1).
+pub fn date_to_timestamp(d: &Date) -> Int {
+  let days = days_from_civil(d.year, d.month, d.day);
+  return days * SECS_PER_DAY;
+}
+
+// iso8601_now returns the current date as an ISO-8601 "YYYY-MM-DD" string.
+// Complexity: O(1).
+pub fn iso8601_now() -> Str {
+  let d = date_now();
+  return date_iso8601(&d);
+}
+
+// format_timestamp formats a Unix timestamp as a human-readable
+// date-time string "YYYY-MM-DD HH:MM:SS" (UTC).
+// Complexity: O(1).
+pub fn format_timestamp(ts: Int) -> Str {
+  let dt = decompose_epoch(ts);
+  let result = format_int_padded(dt.year, 4) + "-";
+  result = result + format_int_padded(dt.month, 2);
+  result = result + "-";
+  result = result + format_int_padded(dt.day, 2);
+  result = result + " ";
+  result = result + format_int_padded(dt.hour, 2);
+  result = result + ":";
+  result = result + format_int_padded(dt.minute, 2);
+  result = result + ":";
+  result = result + format_int_padded(dt.second, 2);
+  return result;
+}

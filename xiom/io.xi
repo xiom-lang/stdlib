@@ -681,3 +681,227 @@ pub fn is_absolute(path: Str) -> Bool {
   }
   path.byte_at(0) == 47
 }
+
+// ──────────────────────────────────────────────────────────
+//  Extended console I/O
+// ──────────────────────────────────────────────────────────
+
+// read_line_trim reads a line from stdin and trims trailing
+// whitespace (including \r, \n).  Delegates to read_line + trim.
+// Complexity: O(n) where n is line length.
+pub fn read_line_trim() -> Str {
+  let line = read_line();
+  return line.trim();
+}
+
+// read_all_stdin reads the entire standard input stream until EOF
+// and returns the concatenated content.  Returns "" if stdin is empty.
+// Complexity: O(N) where N is total bytes read.  Each call to read_line
+// allocates up to 4096 bytes; memory usage peaks at ~2× input size.
+pub fn read_all_stdin() -> Str {
+  var result = "";
+  var done = false;
+  while !done {
+    let line = read_line();
+    if line.is_empty() {
+      done = true;
+    } else {
+      result = result + line + "\n";
+    };
+  };
+  return result;
+}
+
+// stdin_read_line is an alias for read_line.
+pub fn stdin_read_line() -> Str {
+  return read_line();
+}
+
+// flush_stdout is a no-op: the Xiom runtime does not expose fflush
+// via externs, but stdio is line-buffered by default so explicit
+// flushing is rarely required.
+pub fn flush_stdout() {
+}
+
+// ──────────────────────────────────────────────────────────
+//  Byte I/O
+// ──────────────────────────────────────────────────────────
+
+// write_file_bytes writes raw bytes to a file, truncating if it exists.
+// Complexity: O(n) where n = data.len().
+pub fn write_file_bytes(path: Str, data: &Vec[UInt8]) -> Result[Unit, IOError] {
+  let file: *UInt8;
+  unsafe {
+    file = fopen(path.c_str(), "w");
+  }
+  if file == 0 {
+    return Err(IOError{ message: "failed to open file for writing: " + path, code: 2 });
+  }
+  var i: UInt = 0;
+  let n = data.len() as UInt;
+  while i < n {
+    let b = data[i];
+    let written: UInt;
+    unsafe {
+      written = fwrite(&b, 1 as UInt, 1 as UInt, file);
+    }
+    i = i + 1;
+  }
+  unsafe {
+    let _ = fclose(file);
+  }
+  Ok(())
+}
+
+// read_file_bytes reads a file and returns its raw bytes.
+// Complexity: O(n) where n = file size.
+pub fn read_file_bytes(path: Str) -> Result[Vec[UInt8], IOError] {
+  let c_path = path.c_str();
+  let ptr: *UInt8;
+  let size: Int;
+  unsafe {
+    ptr = xiom_read_file(c_path);
+    if ptr == 0 {
+      return Err(IOError{ message: "failed to read file: " + path, code: 1 });
+    }
+    size = xiom_file_size(c_path);
+  }
+  var buf: Vec[UInt8] = Vec[UInt8]::with_capacity(size as UInt);
+  unsafe {
+    var i = 0;
+    while i < size {
+      buf.push(*(ptr.offset(i)));
+      i = i + 1;
+    }
+    xiom_free(ptr);
+  }
+  Ok(buf)
+}
+
+// ──────────────────────────────────────────────────────────
+//  File metadata helpers
+// ──────────────────────────────────────────────────────────
+
+// file_size returns the size of a file in bytes, or None if
+// the path cannot be stated.
+pub fn file_size(path: Str) -> Option[Int] {
+  let m = metadata(path);
+  match m {
+    Ok(meta) => Some(meta.size);
+    Err(_) => None;
+  }
+}
+
+// file_modified_time returns the last modification time of a file
+// as a Unix timestamp, or None if the path cannot be stated.
+pub fn file_modified_time(path: Str) -> Option[Int] {
+  let m = metadata(path);
+  match m {
+    Ok(meta) => Some(meta.modified);
+    Err(_) => None;
+  }
+}
+
+// ──────────────────────────────────────────────────────────
+//  File system convenience helpers
+// ──────────────────────────────────────────────────────────
+
+// move_file renames (moves) a file or directory from src to dst.
+// Alias for rename.  Complexity: O(1) OS call.
+pub fn move_file(src: Str, dst: Str) -> Result[Unit, IOError] {
+  return rename(src, dst);
+}
+
+// dir_exists returns true if the path exists and is a directory.
+pub fn dir_exists(path: Str) -> Bool {
+  return is_dir(path);
+}
+
+// create_dir_all creates the directory and all missing parent
+// directories along the path.  Returns Ok(()) on success.
+// Complexity: O(d) where d = directory depth.
+pub fn create_dir_all(path: Str) -> Result[Unit, IOError] {
+  if path.is_empty() {
+    return Ok(());
+  };
+  if is_dir(path) {
+    return Ok(());
+  };
+  let parent = parent_path(path);
+  match parent {
+    Some(p) => {
+      if p != "/" && p != path {
+        let r = create_dir_all(p);
+        if r.is_err {
+          return r;
+        };
+      };
+    };
+    None => {};
+  };
+  return create_dir(path);
+}
+
+// list_dir_recursive recursively collects all file and directory
+// paths under the given root directory.  Returns the full paths
+// relative to root.  Complexity: O(N) where N = total entries.
+pub fn list_dir_recursive(path: Str) -> Result[Vec[Str], IOError] {
+  var result: Vec[Str] = Vec[Str]::new();
+  let entries = list_dir(path)?;
+  var i = 0;
+  while i < entries.len() {
+    let name = entries[i];
+    let full = join_paths(path, name);
+    result.push(full);
+    if is_dir(full) {
+      let sub = list_dir_recursive(full)?;
+      var j = 0;
+      while j < sub.len() {
+        result.push(sub[j]);
+        j = j + 1;
+      };
+    };
+    i = i + 1;
+  };
+  Ok(result)
+}
+
+// ──────────────────────────────────────────────────────────
+//  Line-based file I/O
+// ──────────────────────────────────────────────────────────
+
+// read_file_lines reads a file and returns its lines as a Vec[Str].
+// Trailing newline characters are stripped.  Complexity: O(n).
+pub fn read_file_lines(path: Str) -> Result[Vec[Str], IOError] {
+  let s_result = read_file(path);
+  match s_result {
+    Ok(s) => {
+      let parts = xiom.string.str_split(s, "\n");
+      Ok(parts)
+    };
+    Err(e) => Err(e);
+  }
+}
+
+// write_file_lines writes a Vec[Str] to a file, one line per entry.
+// Lines are separated by '\n'.  Complexity: O(n).
+pub fn write_file_lines(path: Str, lines: &Vec[Str]) -> Result[Unit, IOError] {
+  var content = "";
+  var i = 0;
+  var n = lines.len();
+  while i < n {
+    if i > 0 {
+      content = content + "\n";
+    };
+    content = content + lines[i];
+    i = i + 1;
+  };
+  return write_file(path, content);
+}
+
+// append_line appends a single line (followed by '\n') to a file.
+// If the file does not exist it will be created.
+// Complexity: O(n) where n = line length.
+pub fn append_line(path: Str, line: Str) -> Result[Unit, IOError] {
+  return append_file(path, line + "\n");
+}

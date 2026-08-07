@@ -150,3 +150,47 @@ pub fn hardware_threads() -> Int {
 pub fn current_thread_id() -> Int {
   unsafe { return xiom_thread_id(); }
 }
+
+// ── Thread Discovery ───────────────────────────────────────────────
+
+/// Returns the number of available hardware threads.
+/// Delegates to `available_parallelism()`.
+/// Complexity: O(1). Thread-safe.
+pub fn thread_count() -> Int {
+  return available_parallelism();
+}
+
+// ── Sleep Helpers ──────────────────────────────────────────────────
+
+/// Sleeps for `us` microseconds, rounding down to the nearest millisecond.
+/// Complexity: O(1) syscall. Thread-safe.
+pub fn thread_sleep_us(us: Int) {
+  sleep_ms(us / 1000);
+}
+
+/// Yields the current thread's time slice. Alias for `yield_now`.
+/// Complexity: O(1) syscall. Thread-safe.
+pub fn thread_yield() {
+  yield_now();
+}
+
+// ── Parallel Iteration ─────────────────────────────────────────────
+
+/// Executes `f(i)` for each `i` in [`start`, `end`).
+/// NOTE: This is a SEQUENTIAL implementation. True parallel execution requires
+/// spawning threads, which is not yet supported by this helper.
+/// Complexity: O(end - start) sequential invocations.
+pub fn thread_parallel_for(start: Int, end: Int, f: fn(Int)) {
+  var i: Int = start;
+  while i < end {
+    f(i);
+    i = i + 1;
+  };
+}
+
+/// Returns the name of the current thread, or `None` if unnamed.
+/// Delegates to `Thread.current().name`.
+/// Complexity: O(1). Thread-safe.
+pub fn thread_name_current() -> Option[Str] {
+  return Thread.current().name();
+}

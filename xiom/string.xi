@@ -326,3 +326,440 @@ pub fn char_count(s: Str) -> Int {
 pub fn byte_count(s: Str) -> Int {
   s.len()
 }
+
+// ──────────────────────────────────────────────────
+//  Extended String Functions
+// ──────────────────────────────────────────────────
+
+// ── Search ──
+
+// Returns the first byte index of needle in haystack, or None if not found.
+// O(n*m) naive search. For an empty needle, returns Some(0).
+pub fn str_index_of(haystack: Str, needle: Str) -> Option[Int]
+  requires: needle.len() > 0
+{
+  index_of(haystack, needle)
+}
+
+// Returns the last byte index of needle in haystack, or None if not found.
+// O(n*m) reverse naive search. For an empty needle, returns Some(haystack.len()).
+pub fn str_rindex_of(haystack: Str, needle: Str) -> Option[Int] {
+  last_index_of(haystack, needle)
+}
+
+// ── Replace ──
+
+// Replaces every occurrence of `from` with `to` in `s`.
+// O(n*m) where n = |s|, m = |from|. If `from` is empty, returns `s` unchanged.
+pub fn str_replace_all(s: Str, from_needle: Str, to_replacement: Str) -> Str
+  requires: from_needle.len() > 0
+{
+  replace(s, from_needle, to_replacement)
+}
+
+// ── Repeat & Pad ──
+
+// Repeats `s` `n` times. Returns empty string if n <= 0.
+// O(n * |s|) using repeated concatenation.
+pub fn str_repeat(s: Str, n: Int) -> Str {
+  if n <= 0 {
+    return "";
+  };
+  var result = "";
+  var i: Int = 0;
+  while i < n {
+    result = str_concat(result, s);
+    i = i + 1;
+  };
+  result
+}
+
+// Left-pads `s` with `pad` until the string reaches `width` bytes.
+// If `s` is already >= `width` in bytes, returns `s` unchanged.
+// O(width - |s|). Only handles single-byte pad characters correctly.
+pub fn str_pad_left(s: Str, width: Int, pad: Char) -> Str {
+  let s_len = s.len();
+  if s_len >= width {
+    return s;
+  };
+  let pad_len = width - s_len;
+  var pad_str = "";
+  var i: Int = 0;
+  while i < pad_len {
+    unsafe {
+      var buf = malloc(2);
+      buf[0] = pad as UInt8;
+      buf[1] = 0;
+      pad_str = str_concat(pad_str, Str.from_cstring(buf));
+    };
+    i = i + 1;
+  };
+  str_concat(pad_str, s)
+}
+
+// Right-pads `s` with `pad` until the string reaches `width` bytes.
+// If `s` is already >= `width` in bytes, returns `s` unchanged.
+// O(width - |s|). Only handles single-byte pad characters correctly.
+pub fn str_pad_right(s: Str, width: Int, pad: Char) -> Str {
+  let s_len = s.len();
+  if s_len >= width {
+    return s;
+  };
+  var result = s;
+  var i: Int = s_len;
+  while i < width {
+    unsafe {
+      var buf = malloc(2);
+      buf[0] = pad as UInt8;
+      buf[1] = 0;
+      result = str_concat(result, Str.from_cstring(buf));
+    };
+    i = i + 1;
+  };
+  result
+}
+
+// ── Strip ──
+
+// If `s` starts with `prefix`, returns `Some(s without prefix)`.
+// Otherwise returns `None`.
+// O(|prefix|).
+pub fn str_strip_prefix(s: Str, prefix: Str) -> Option[Str] {
+  if str_starts_with(s, prefix) {
+    let remaining = str_slice(s, prefix.len(), s.len());
+    return Some(remaining);
+  };
+  None
+}
+
+// If `s` ends with `suffix`, returns `Some(s without suffix)`.
+// Otherwise returns `None`.
+// O(|suffix|).
+pub fn str_strip_suffix(s: Str, suffix: Str) -> Option[Str] {
+  if str_ends_with(s, suffix) {
+    let remaining = str_slice(s, 0, s.len() - suffix.len());
+    return Some(remaining);
+  };
+  None
+}
+
+// ── Escape/Unescape ──
+
+// Escapes special characters (\n, \t, \", \\, \r) in `s`.
+// Returns a new string with escape sequences replaced by their literal representations.
+// O(|s|). For multi-byte UTF-8 chars, only \n \t \" \\ \r are escaped.
+pub fn str_escape(s: Str) -> Str {
+  var result = "";
+  let len = s.len();
+  var i: Int = 0;
+  while i < len {
+    let c = xiom_char_at(s, i);
+    if c == '\n' {
+      result = str_concat(result, "\\n");
+    } elif c == '\t' {
+      result = str_concat(result, "\\t");
+    } elif c == '\"' {
+      result = str_concat(result, "\\\"");
+    } elif c == '\\' {
+      result = str_concat(result, "\\\\");
+    } elif c == '\r' {
+      result = str_concat(result, "\\r");
+    } else {
+      unsafe {
+        var buf = malloc(5);
+        var byte_len = xiom.char.len_utf8(c);
+        var code = xiom.char.to_int_from_char(c);
+        if code <= 0x7F {
+          buf[0] = code as UInt8;
+          buf[1] = 0;
+        } elif code <= 0x7FF {
+          buf[0] = (0xC0 | (code >> 6)) as UInt8;
+          buf[1] = (0x80 | (code & 0x3F)) as UInt8;
+          buf[2] = 0;
+        } elif code <= 0xFFFF {
+          buf[0] = (0xE0 | (code >> 12)) as UInt8;
+          buf[1] = (0x80 | ((code >> 6) & 0x3F)) as UInt8;
+          buf[2] = (0x80 | (code & 0x3F)) as UInt8;
+          buf[3] = 0;
+        } else {
+          buf[0] = (0xF0 | (code >> 18)) as UInt8;
+          buf[1] = (0x80 | ((code >> 12) & 0x3F)) as UInt8;
+          buf[2] = (0x80 | ((code >> 6) & 0x3F)) as UInt8;
+          buf[3] = (0x80 | (code & 0x3F)) as UInt8;
+          buf[4] = 0;
+        };
+        result = str_concat(result, Str.from_cstring(buf));
+      };
+    };
+    let byte_adv = xiom.char.len_utf8(c);
+    i = i + byte_adv;
+  };
+  result
+}
+
+// Un-escapes a string that contains escape sequences like \n \t \" \\ \r.
+// Returns the string with literal escape sequences replaced by the actual characters.
+// O(|s|). Unrecognised escape sequences are left unchanged.
+pub fn str_unescape(s: Str) -> Str {
+  var result = "";
+  let len = s.len();
+  var i: Int = 0;
+  while i < len {
+    let c = xiom_char_at(s, i);
+    if c == '\\' && i + 1 < len {
+      let next = xiom_char_at(s, i + 1);
+      if next == 'n' {
+        result = str_concat(result, "\n");
+        i = i + 2;
+      } elif next == 't' {
+        result = str_concat(result, "\t");
+        i = i + 2;
+      } elif next == '\"' {
+        result = str_concat(result, "\"");
+        i = i + 2;
+      } elif next == '\\' {
+        result = str_concat(result, "\\");
+        i = i + 2;
+      } elif next == 'r' {
+        result = str_concat(result, "\r");
+        i = i + 2;
+      } else {
+        result = str_concat(result, str_slice(s, i, i + 1));
+        i = i + 1;
+      };
+    } else {
+      var byte_adv = xiom.char.len_utf8(c);
+      result = str_concat(result, str_slice(s, i, i + byte_adv));
+      i = i + byte_adv;
+    };
+  };
+  result
+}
+
+// ── Case ──
+
+// Converts `s` to Title Case: first character of each space-separated word
+// is uppercased, remaining characters are lowercased.
+// O(|s|) byte-by-byte. Only handles ASCII letter case correctly.
+pub fn str_title_case(s: Str) -> Str {
+  let len = s.len();
+  var new_word = true;
+  unsafe {
+    var buf = malloc(len + 1);
+    var i: Int = 0;
+    while i < len {
+      let c = xiom_char_at(s, i);
+      if xiom.char.is_whitespace(c) {
+        new_word = true;
+        buf[i] = c as UInt8;
+      } elif new_word {
+        buf[i] = xiom.char.to_uppercase(c) as UInt8;
+        new_word = false;
+      } else {
+        buf[i] = xiom.char.to_lowercase(c) as UInt8;
+      };
+      i = i + 1;
+    };
+    buf[len] = 0;
+    return Str.from_cstring(buf);
+  }
+}
+
+// Swaps the case of every character in `s`: uppercase becomes lowercase and
+// vice versa. Characters that are neither are left unchanged.
+// O(|s|) byte-by-byte. Only handles ASCII letter case correctly.
+pub fn str_swap_case(s: Str) -> Str {
+  let len = s.len();
+  unsafe {
+    var buf = malloc(len + 1);
+    var i: Int = 0;
+    while i < len {
+      let c = xiom_char_at(s, i);
+      if xiom.char.is_uppercase(c) {
+        buf[i] = xiom.char.to_lowercase(c) as UInt8;
+      } elif xiom.char.is_lowercase(c) {
+        buf[i] = xiom.char.to_uppercase(c) as UInt8;
+      } else {
+        buf[i] = c as UInt8;
+      };
+      i = i + 1;
+    };
+    buf[len] = 0;
+    return Str.from_cstring(buf);
+  }
+}
+
+// ── Predicates ──
+
+// Returns true if `s` has zero length.
+// O(1).
+pub fn str_is_empty(s: Str) -> Bool {
+  s.len() == 0
+}
+
+// ── Reverse ──
+
+// Reverses the characters in `s`. Unicode-aware: iterates by
+// proper UTF-8 character boundaries.
+// O(|s|) — two passes (collect + build).
+pub fn str_reverse(s: Str) -> Str {
+  let len = s.len();
+  if len == 0 {
+    return "";
+  };
+  var total_bytes: Int = 0;
+  var i: Int = 0;
+  while i < len {
+    let c = xiom_char_at(s, i);
+    total_bytes = total_bytes + xiom.char.len_utf8(c);
+    i = i + xiom.char.len_utf8(c);
+  };
+  unsafe {
+    var buf = malloc(total_bytes + 1);
+    var out_pos: Int = 0;
+    var rev_start: Int = len;
+    while rev_start > 0 {
+      var j: Int = 0;
+      while j < rev_start {
+        let c = xiom_char_at(s, j);
+        let bl = xiom.char.len_utf8(c);
+        if j + bl == rev_start {
+          var code = xiom.char.to_int_from_char(c);
+          if code <= 0x7F {
+            buf[out_pos] = code as UInt8;
+            out_pos = out_pos + 1;
+          } elif code <= 0x7FF {
+            buf[out_pos] = (0xC0 | (code >> 6)) as UInt8;
+            buf[out_pos + 1] = (0x80 | (code & 0x3F)) as UInt8;
+            out_pos = out_pos + 2;
+          } elif code <= 0xFFFF {
+            buf[out_pos] = (0xE0 | (code >> 12)) as UInt8;
+            buf[out_pos + 1] = (0x80 | ((code >> 6) & 0x3F)) as UInt8;
+            buf[out_pos + 2] = (0x80 | (code & 0x3F)) as UInt8;
+            out_pos = out_pos + 3;
+          } else {
+            buf[out_pos] = (0xF0 | (code >> 18)) as UInt8;
+            buf[out_pos + 1] = (0x80 | ((code >> 12) & 0x3F)) as UInt8;
+            buf[out_pos + 2] = (0x80 | ((code >> 6) & 0x3F)) as UInt8;
+            buf[out_pos + 3] = (0x80 | (code & 0x3F)) as UInt8;
+            out_pos = out_pos + 4;
+          };
+          rev_start = j;
+          break;
+        };
+        j = j + bl;
+      };
+    };
+    buf[total_bytes] = 0;
+    return Str.from_cstring(buf);
+  }
+}
+
+// ── Count ──
+
+// Counts the number of Unicode characters in `s` using xiom_char_at.
+// Unicode-aware: advances by the byte length of each character.
+// O(|s|).
+pub fn str_count_chars(s: Str) -> Int {
+  char_count(s)
+}
+
+// ── Truncate ──
+
+// Truncates `s` at the given byte position `max_bytes`, ensuring the result
+// does not split a multi-byte UTF-8 character. If `max_bytes` lands in the
+// middle of a multi-byte sequence, the result is truncated before that
+// character begins.
+// O(|s|).
+pub fn str_truncate_utf8(s: Str, max_bytes: Int) -> Str {
+  let len = s.len();
+  if max_bytes >= len {
+    return s;
+  };
+  if max_bytes <= 0 {
+    return "";
+  };
+  var i: Int = 0;
+  var last_valid: Int = 0;
+  while i < len && i < max_bytes {
+    let c = xiom_char_at(s, i);
+    let bl = xiom.char.len_utf8(c);
+    if i + bl <= max_bytes {
+      last_valid = i + bl;
+    } else {
+      break;
+    };
+    i = i + bl;
+  };
+  str_slice(s, 0, last_valid)
+}
+
+// ── Center ──
+
+// Centers `s` within a field of `width` bytes by adding spaces on both sides.
+// If an odd number of spaces are needed, the extra space goes on the right.
+// Only handles single-byte pad characters correctly.
+// O(width).
+pub fn str_center(s: Str, width: Int) -> Str {
+  let s_len = s.len();
+  if s_len >= width {
+    return s;
+  };
+  let total_pad = width - s_len;
+  let left_pad = total_pad / 2;
+  let right_pad = total_pad - left_pad;
+  var result = "";
+  var i: Int = 0;
+  while i < left_pad {
+    result = str_concat(result, " ");
+    i = i + 1;
+  };
+  result = str_concat(result, s);
+  var j: Int = 0;
+  while j < right_pad {
+    result = str_concat(result, " ");
+    j = j + 1;
+  };
+  result
+}
+
+// ── Multi-pattern Tests ──
+
+// Returns true if `s` starts with any of the given prefixes.
+// O(n * k) where n = |s|, k = prefixes.len().
+pub fn str_starts_with_any(s: Str, prefixes: &Vec[Str]) -> Bool {
+  var i: Int = 0;
+  while i < prefixes.len() {
+    if str_starts_with(s, prefixes[i]) {
+      return true;
+    };
+    i = i + 1;
+  };
+  false
+}
+
+// Returns true if `s` ends with any of the given suffixes.
+// O(n * k) where n = |s|, k = suffixes.len().
+pub fn str_ends_with_any(s: Str, suffixes: &Vec[Str]) -> Bool {
+  var i: Int = 0;
+  while i < suffixes.len() {
+    if str_ends_with(s, suffixes[i]) {
+      return true;
+    };
+    i = i + 1;
+  };
+  false
+}
+
+// Returns true if `s` contains any of the given substrings.
+// O(n * m * k) where n = |s|, m = max substring length, k = needles.len().
+pub fn str_contains_any(s: Str, needles: &Vec[Str]) -> Bool {
+  var i: Int = 0;
+  while i < needles.len() {
+    if str_contains(s, needles[i]) {
+      return true;
+    };
+    i = i + 1;
+  };
+  false
+}

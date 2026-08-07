@@ -464,3 +464,185 @@ pub fn AtomicInt.compare_exchange(self, current: Int, new: Int) -> Bool {
     return false;
   }
 }
+
+// ── Semaphore ──────────────────────────────────────────────────────
+
+/// A simple counting semaphore backed by an integer counter.
+/// Non-blocking: `acquire` returns `false` if no permits are available.
+/// Thread-safety: NOT atomic — use `Mutex[Semaphore]` for shared access.
+pub type Semaphore = { count: Int; max: Int; }
+
+/// Creates a new semaphore with `permits` initial available permits.
+/// Complexity: O(1).
+pub fn sem_new(permits: Int) -> Semaphore {
+  return Semaphore{ count: permits; max: permits; };
+}
+
+/// Attempts to acquire one permit. Returns `true` on success, `false` if none available.
+/// Non-blocking. Complexity: O(1).
+pub fn sem_try_acquire(s: &mut Semaphore) -> Bool {
+  if s.count > 0 {
+    s.count = s.count - 1;
+    return true;
+  };
+  return false;
+}
+
+/// Alias for `sem_try_acquire`. Non-blocking.
+/// Complexity: O(1).
+pub fn sem_acquire(s: &mut Semaphore) -> Bool {
+  return sem_try_acquire(s);
+}
+
+/// Releases one permit back to the semaphore, up to the maximum.
+/// Complexity: O(1).
+pub fn sem_release(s: &mut Semaphore) {
+  if s.count < s.max {
+    s.count = s.count + 1;
+  };
+}
+
+/// Returns the number of currently available permits.
+/// Complexity: O(1).
+pub fn sem_available(s: &Semaphore) -> Int {
+  return s.count;
+}
+
+// ── Barrier Standalone Helpers ─────────────────────────────────────
+
+/// Creates a new barrier for `n` threads. Wraps `Barrier.new`.
+/// Complexity: O(1).
+pub fn barrier_new(n: Int) -> Barrier {
+  return Barrier.new(n);
+}
+
+/// Waits at the barrier. Returns `true` when this thread is the last to arrive
+/// and the barrier releases all waiters. Returns `false` otherwise.
+/// Complexity: O(1) lock operations; blocks until all threads arrive.
+pub fn barrier_wait(b: &mut Barrier) -> Bool {
+  unsafe { xiom_mutex_lock(b.inner); }
+  unsafe {
+    let gen = xiom_atomic_load(b.generation);
+    let w = xiom_atomic_fetch_add(b.waiting, 1) + 1;
+    if w == b.count {
+      xiom_atomic_store(b.waiting, 0);
+      xiom_atomic_fetch_add(b.generation, 1);
+      xiom_cond_broadcast(b.cond);
+      xiom_mutex_unlock(b.inner);
+      return true;
+    };
+    var cur_gen = xiom_atomic_load(b.generation);
+    while cur_gen == gen {
+      xiom_cond_wait(b.cond, b.inner);
+      cur_gen = xiom_atomic_load(b.generation);
+    };
+  };
+  unsafe { xiom_mutex_unlock(b.inner); }
+  return false;
+}
+
+/// Resets the barrier waiting count to zero (best-effort).
+/// Complexity: O(1). Not safe for concurrent use with active waiters.
+pub fn barrier_reset(b: &mut Barrier) {
+  unsafe { xiom_atomic_store(b.waiting, 0); }
+}
+
+// ── CountDownLatch ─────────────────────────────────────────────────
+
+/// A simple count-down latch for synchronisation.
+/// Thread-safety: NOT atomic — use `Mutex[CountDownLatch]` for shared access.
+pub type CountDownLatch = { remaining: Int; }
+
+/// Creates a new count-down latch initialised to `n`.
+/// Complexity: O(1).
+pub fn cdl_new(n: Int) -> CountDownLatch {
+  return CountDownLatch{ remaining: n; };
+}
+
+/// Decrements the latch counter by one. Does nothing if already zero.
+/// Complexity: O(1).
+pub fn cdl_count_down(l: &mut CountDownLatch) {
+  if l.remaining > 0 {
+    l.remaining = l.remaining - 1;
+  };
+}
+
+/// Returns `true` if the latch has reached zero.
+/// Complexity: O(1).
+pub fn cdl_is_zero(l: &CountDownLatch) -> Bool {
+  return l.remaining == 0;
+}
+
+/// Spins until the latch reaches zero. Yields the thread between checks.
+/// Complexity: O(remaining) busy-wait iterations.
+pub fn cdl_wait_spin(l: &mut CountDownLatch) {
+  while l.remaining > 0 {
+    unsafe { xiom_thread_yield(); };
+  };
+}
+
+// ── AtomicInt Standalone Helpers ───────────────────────────────────
+
+/// Atomically loads the current value. Direct FFI access.
+/// Complexity: O(1). Thread-safe.
+pub fn atomic_load(ai: &AtomicInt) -> Int {
+  let p: *Int = ai.ptr;
+  unsafe { return xiom_atomic_load(p); }
+}
+
+/// Atomically stores a new value. Direct FFI access.
+/// Complexity: O(1). Thread-safe.
+pub fn atomic_store(ai: &mut AtomicInt, v: Int) {
+  let p: *Int = ai.ptr;
+  unsafe { xiom_atomic_store(p, v); };
+}
+
+/// Atomically adds `v` to the value. Returns the new value.
+/// Complexity: O(1). Thread-safe.
+pub fn atomic_add(ai: &mut AtomicInt, v: Int) -> Int {
+  let p: *Int = ai.ptr;
+  unsafe { return xiom_atomic_fetch_add(p, v) + v; }
+}
+
+/// Atomically subtracts `v` from the value. Returns the new value.
+/// Complexity: O(1). Thread-safe.
+pub fn atomic_sub(ai: &mut AtomicInt, v: Int) -> Int {
+  let p: *Int = ai.ptr;
+  unsafe { return xiom_atomic_fetch_sub(p, v) - v; }
+}
+
+/// Atomically swaps the value and returns the old value.
+/// Complexity: O(1). Thread-safe.
+pub fn atomic_exchange(ai: &mut AtomicInt, v: Int) -> Int {
+  let p: *Int = ai.ptr;
+  unsafe { return xiom_atomic_exchange(p, v); }
+}
+
+/// Atomically compares and exchanges. Stores `new` if current value equals `expected`.
+/// Returns `true` if the exchange was performed.
+/// Complexity: O(1). Thread-safe.
+pub fn atomic_compare_exchange(ai: &mut AtomicInt, expected: Int, new: Int) -> Bool {
+  let p: *Int = ai.ptr;
+  unsafe {
+    let old = xiom_atomic_load(p);
+    if old == expected {
+      xiom_atomic_store(p, new);
+      return true;
+    };
+    return false;
+  }
+}
+
+/// Atomically adds `v` and returns the OLD value.
+/// Complexity: O(1). Thread-safe.
+pub fn atomic_fetch_add(ai: &mut AtomicInt, v: Int) -> Int {
+  let p: *Int = ai.ptr;
+  unsafe { return xiom_atomic_fetch_add(p, v); }
+}
+
+/// Atomically subtracts `v` and returns the OLD value.
+/// Complexity: O(1). Thread-safe.
+pub fn atomic_fetch_sub(ai: &mut AtomicInt, v: Int) -> Int {
+  let p: *Int = ai.ptr;
+  unsafe { return xiom_atomic_fetch_sub(p, v); }
+}

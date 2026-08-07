@@ -269,3 +269,71 @@ pub fn Channel.try_recv[T](&mut self) -> Option[T] {
 pub fn Channel.close[T](self) {
   closed = true;
 }
+
+// ── Async Task ID Counter ──────────────────────────────────────────
+
+var _async_task_counter: Int = 0;
+
+// ── Time & Yield Helpers ───────────────────────────────────────────
+
+/// Returns the current monotonic time in milliseconds.
+/// Complexity: O(1). Thread-safe.
+pub fn async_now_ms() -> Int {
+  return _now();
+}
+
+/// Cooperative sleep: waits `ms` milliseconds while driving other ready tasks.
+/// Complexity: O(ms) pump iterations.
+pub fn async_sleep_ms(ms: Int) {
+  sleep_ms(ms);
+}
+
+/// Yields execution to other ready tasks by sleeping for 0ms.
+/// Complexity: O(1) pump iteration.
+pub fn async_yield_now() {
+  unsafe { xiom_thread_sleep_ms(0); };
+}
+
+// ── Spawn Helpers ──────────────────────────────────────────────────
+
+/// Enqueues a task onto the global executor and returns a task id.
+/// Complexity: O(1). Thread-safe: accesses global executor.
+pub fn async_spawn(f: fn()) -> Int {
+  _exec.spawn(f);
+  _async_task_counter = _async_task_counter + 1;
+  return _async_task_counter;
+}
+
+/// Schedules a task to become ready after `ms` milliseconds.
+/// Complexity: O(1). Thread-safe: accesses global executor.
+pub fn async_spawn_delayed(ms: Int, f: fn()) {
+  _exec.at(_now() + ms, f);
+}
+
+// ── Executor Inspection & Control ──────────────────────────────────
+
+/// Runs one step of the given executor. Returns `true` if a task was run.
+/// Complexity: O(1). Thread-safe if executor is not shared.
+pub fn async_step_once(exec: &mut Executor) -> Bool {
+  return exec.step();
+}
+
+/// Returns `true` if the executor has pending tasks or timers.
+/// Complexity: O(1). Thread-safe: reads immutable data.
+pub fn async_has_pending(exec: &Executor) -> Bool {
+  return exec.ready.len() > 0 || exec.timers.len() > 0;
+}
+
+/// Drains all ready tasks from the executor without advancing timers.
+/// Complexity: O(ready_queue_size).
+pub fn async_run_until_idle(exec: &mut Executor) {
+  while exec.ready.len() > 0 {
+    exec.step();
+  };
+}
+
+/// Returns the number of pending timers in the executor.
+/// Complexity: O(1). Thread-safe: reads immutable data.
+pub fn async_timer_count(exec: &Executor) -> Int {
+  return exec.timers.len();
+}

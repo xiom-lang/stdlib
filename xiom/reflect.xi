@@ -187,3 +187,88 @@ pub fn all_types() -> Vec<TypeInfo> {
   }
   return result;
 }
+
+// ── Type Classification Queries ────────────────────────────────────
+
+/// Returns true if `T` is a primitive type (Int, Float64, Bool, Char, etc.).
+/// LIMITED: compiler does not expose this metadata yet — always returns false.
+/// Complexity: O(1).
+pub fn type_is_primitive[T]() -> Bool {
+  return false;
+}
+
+/// Returns true if `T` is a struct type.
+/// LIMITED: compiler does not expose this metadata yet — always returns false.
+/// Complexity: O(1).
+pub fn type_is_struct[T]() -> Bool {
+  return false;
+}
+
+/// Returns true if `T` is an enum type.
+/// LIMITED: compiler does not expose this metadata yet — always returns false.
+/// Complexity: O(1).
+pub fn type_is_enum[T]() -> Bool {
+  return false;
+}
+
+/// Returns true if `T` has generic parameters.
+/// LIMITED: compiler does not expose this metadata yet — always returns false.
+/// Complexity: O(1).
+pub fn type_is_generic[T]() -> Bool {
+  return false;
+}
+
+/// Always returns `true`: all XIOM types are sized (statically known layout).
+/// Complexity: O(1).
+pub fn type_is_sized[T]() -> Bool {
+  return true;
+}
+
+// ── Type Kind ──────────────────────────────────────────────────────
+
+/// Returns a human-readable kind string: "primitive", "struct", "enum", or "unknown".
+/// LIMITED: compiler does not expose kind metadata yet — always returns "unknown".
+/// Complexity: O(1).
+pub fn type_kind[T]() -> Str {
+  return "unknown";
+}
+
+// ── Type Value Queries ─────────────────────────────────────────────
+
+/// Returns the type name of the value referenced by `value`.
+/// Delegates to `type_name[T]()`.
+/// Complexity: O(1).
+pub fn type_name_of_value[T](value: &T) -> Str {
+  return type_name[T]();
+}
+
+/// Returns the stable type id of the value referenced by `value`.
+/// Delegates to `TypeId.of[T]()`.
+/// Complexity: O(1).
+pub fn type_id_of_value[T](value: &T) -> Int {
+  return TypeId.of[T]().id;
+}
+
+// ── Field Introspection ────────────────────────────────────────────
+
+/// Returns the name of field at index `idx` in type `T`, or "unknown".
+/// LIMITED: per-field metadata not embedded yet — always returns "unknown".
+/// Complexity: O(1).
+pub fn type_field_name[T](idx: Int) -> Str {
+  return "unknown";
+}
+
+/// Returns the byte offset of field at index `idx` in type `T`, or 0.
+/// LIMITED: field offset intrinsic not available yet — always returns 0.
+/// Complexity: O(1).
+pub fn type_field_offset[T](idx: Int) -> Int {
+  return 0;
+}
+
+// ── Size Aliases ───────────────────────────────────────────────────
+
+/// Returns the total size of type `T` in bytes. Alias for `type_size[T]()`.
+/// Complexity: O(1).
+pub fn type_total_size[T]() -> Int {
+  return type_size[T]();
+}

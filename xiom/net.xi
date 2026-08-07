@@ -600,3 +600,136 @@ fn str_to_int(s: Str) -> Int {
   }
   result * sign
 }
+
+// ── HTTP Convenience Helpers ───────────────────────────────────────
+
+/// Performs an HTTP GET request and returns the response body as a string.
+/// Complexity: network I/O. Thread-safe: no shared state.
+pub fn http_get_str(url: Str) -> Result[Str, NetError] {
+  let response = http_get(url)?;
+  return Ok(response.body);
+}
+
+/// Performs an HTTP POST request and returns the response body as a string.
+/// Complexity: network I/O. Thread-safe: no shared state.
+pub fn http_post_str(url: Str, body: Str) -> Result[Str, NetError] {
+  let response = http_post(url, body)?;
+  return Ok(response.body);
+}
+
+/// Performs an HTTP GET request and returns only the status code, or `None` on error.
+/// Complexity: network I/O.
+pub fn http_status(url: Str) -> Option[Int] {
+  let response = http_get(url);
+  match response {
+    Ok(r) => Some(r.status);
+    Err(e) => None;
+  };
+}
+
+// ── TCP Alias ──────────────────────────────────────────────────────
+
+/// Alias for `tcp_connect`. Connects to a TCP server at `host:port`.
+/// Complexity: network I/O.
+pub fn tcp_connect_str(host: Str, port: Int) -> Result[TcpStream, NetError] {
+  return tcp_connect(host, port);
+}
+
+// ── Validation Helpers ─────────────────────────────────────────────
+
+/// Returns `true` if `s` is a valid IPv4 address (e.g. "192.168.1.1").
+/// Complexity: O(n). Pure, no side effects.
+pub fn is_valid_ipv4(s: Str) -> Bool {
+  let len = s.len();
+  if len < 7 { return false; };
+  if len > 15 { return false; };
+  var dots: Int = 0;
+  var octet: Int = 0;
+  var digits: Int = 0;
+  var i: Int = 0;
+  while i < len {
+    let b = s.byte_at(i);
+    if b == 46 {
+      if digits == 0 || octet > 255 { return false; };
+      dots = dots + 1;
+      octet = 0;
+      digits = 0;
+    } elif b >= 48 && b <= 57 {
+      octet = octet * 10 + (b as Int - 48);
+      digits = digits + 1;
+      if octet > 255 { return false; };
+    } else {
+      return false;
+    };
+    i = i + 1;
+  };
+  if dots != 3 { return false; };
+  if digits == 0 || octet > 255 { return false; };
+  return true;
+}
+
+/// Returns `true` if `p` is a valid TCP/UDP port number (1–65535).
+/// Complexity: O(1). Pure.
+pub fn is_valid_port(p: Int) -> Bool {
+  return p > 0 && p <= 65535;
+}
+
+// ── URL Component Parsers ──────────────────────────────────────────
+
+/// Extracts the scheme from a URL (e.g. "https" from "https://example.com").
+/// Returns `None` if the URL is malformed.
+/// Complexity: O(n). Pure.
+pub fn url_parse_scheme(url: Str) -> Option[Str] {
+  let parsed = parse_url(url);
+  match parsed {
+    Ok(p) => Some(p.scheme);
+    Err(e) => None;
+  };
+}
+
+/// Extracts the host from a URL (e.g. "example.com" from "https://example.com/path").
+/// Returns `None` if the URL is malformed.
+/// Complexity: O(n). Pure.
+pub fn url_parse_host(url: Str) -> Option[Str] {
+  let parsed = parse_url(url);
+  match parsed {
+    Ok(p) => Some(p.host);
+    Err(e) => None;
+  };
+}
+
+/// Extracts the path from a URL (e.g. "/path" from "https://example.com/path").
+/// Returns `None` if the URL is malformed.
+/// Complexity: O(n). Pure.
+pub fn url_parse_path(url: Str) -> Option[Str] {
+  let parsed = parse_url(url);
+  match parsed {
+    Ok(p) => Some(p.path);
+    Err(e) => None;
+  };
+}
+
+/// Extracts the port from a URL (e.g. 8080 from "https://example.com:8080/path").
+/// Returns `None` if the URL is malformed or has no explicit port.
+/// Complexity: O(n). Pure.
+pub fn url_parse_port(url: Str) -> Option[Int] {
+  let parsed = parse_url(url);
+  match parsed {
+    Ok(p) => {
+      if p.port > 0 {
+        return Some(p.port);
+      };
+      return None;
+    };
+    Err(e) => None;
+  };
+}
+
+// ── DNS Helpers ────────────────────────────────────────────────────
+
+/// Resolves a hostname to a list of IP addresses.
+/// Delegates to `resolve_host`.
+/// Complexity: DNS network I/O.
+pub fn dns_lookup(host: Str) -> Result[Vec[Str], NetError] {
+  return resolve_host(host);
+}

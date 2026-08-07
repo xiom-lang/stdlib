@@ -4,6 +4,8 @@
 
 module xiom.encoding
 
+use xiom.string;
+
 extern "C" {
   fn malloc(size: UInt) -> *UInt8;
   fn free(ptr: *UInt8);
@@ -674,4 +676,248 @@ pub fn text_to_binary(text: Str, format: Int) -> Result[Vec[UInt8], Str]
     return base64url_decode(text);
   };
   base64_decode(text)
+}
+
+// ── Base32 (RFC 4648) ───────────────────────────────────────────────────────
+
+/// Encodes bytes to a Base32 string using RFC 4648 alphabet (A-Z, 2-7).
+/// Processes 5-byte blocks into 8 Base32 characters.
+/// Padding with '=' to multiple of 8.
+/// Complexity: O(n), n = data length.
+pub fn base32_encode(data: &Vec[UInt8]) -> Str {
+  let alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+  let len = data.len();
+  let out_len = ((len + 4) / 5) * 8;
+  unsafe {
+    var buf = malloc(out_len + 1);
+    var i: Int = 0;
+    var out: Int = 0;
+    while i + 4 < len {
+      let b0 = data[i] as Int;
+      let b1 = data[i + 1] as Int;
+      let b2 = data[i + 2] as Int;
+      let b3 = data[i + 3] as Int;
+      let b4 = data[i + 4] as Int;
+      buf[out]     = xiom_char_at(alphabet, (b0 >> 3) & 31) as UInt8;
+      buf[out + 1] = xiom_char_at(alphabet, ((b0 << 2) | (b1 >> 6)) & 31) as UInt8;
+      buf[out + 2] = xiom_char_at(alphabet, (b1 >> 1) & 31) as UInt8;
+      buf[out + 3] = xiom_char_at(alphabet, ((b1 << 4) | (b2 >> 4)) & 31) as UInt8;
+      buf[out + 4] = xiom_char_at(alphabet, ((b2 << 1) | (b3 >> 7)) & 31) as UInt8;
+      buf[out + 5] = xiom_char_at(alphabet, (b3 >> 2) & 31) as UInt8;
+      buf[out + 6] = xiom_char_at(alphabet, ((b3 << 3) | (b4 >> 5)) & 31) as UInt8;
+      buf[out + 7] = xiom_char_at(alphabet, b4 & 31) as UInt8;
+      out = out + 8;
+      i = i + 5;
+    };
+    let rem = len - i;
+    if rem == 1 {
+      let b0 = data[i] as Int;
+      buf[out]     = xiom_char_at(alphabet, (b0 >> 3) & 31) as UInt8;
+      buf[out + 1] = xiom_char_at(alphabet, (b0 << 2) & 31) as UInt8;
+      buf[out + 2] = 61;
+      buf[out + 3] = 61;
+      buf[out + 4] = 61;
+      buf[out + 5] = 61;
+      buf[out + 6] = 61;
+      buf[out + 7] = 61;
+      out = out + 8;
+    } elif rem == 2 {
+      let b0 = data[i] as Int;
+      let b1 = data[i + 1] as Int;
+      buf[out]     = xiom_char_at(alphabet, (b0 >> 3) & 31) as UInt8;
+      buf[out + 1] = xiom_char_at(alphabet, ((b0 << 2) | (b1 >> 6)) & 31) as UInt8;
+      buf[out + 2] = xiom_char_at(alphabet, (b1 >> 1) & 31) as UInt8;
+      buf[out + 3] = xiom_char_at(alphabet, (b1 << 4) & 31) as UInt8;
+      buf[out + 4] = 61;
+      buf[out + 5] = 61;
+      buf[out + 6] = 61;
+      buf[out + 7] = 61;
+      out = out + 8;
+    } elif rem == 3 {
+      let b0 = data[i] as Int;
+      let b1 = data[i + 1] as Int;
+      let b2 = data[i + 2] as Int;
+      buf[out]     = xiom_char_at(alphabet, (b0 >> 3) & 31) as UInt8;
+      buf[out + 1] = xiom_char_at(alphabet, ((b0 << 2) | (b1 >> 6)) & 31) as UInt8;
+      buf[out + 2] = xiom_char_at(alphabet, (b1 >> 1) & 31) as UInt8;
+      buf[out + 3] = xiom_char_at(alphabet, ((b1 << 4) | (b2 >> 4)) & 31) as UInt8;
+      buf[out + 4] = xiom_char_at(alphabet, (b2 << 1) & 31) as UInt8;
+      buf[out + 5] = 61;
+      buf[out + 6] = 61;
+      buf[out + 7] = 61;
+      out = out + 8;
+    } elif rem == 4 {
+      let b0 = data[i] as Int;
+      let b1 = data[i + 1] as Int;
+      let b2 = data[i + 2] as Int;
+      let b3 = data[i + 3] as Int;
+      buf[out]     = xiom_char_at(alphabet, (b0 >> 3) & 31) as UInt8;
+      buf[out + 1] = xiom_char_at(alphabet, ((b0 << 2) | (b1 >> 6)) & 31) as UInt8;
+      buf[out + 2] = xiom_char_at(alphabet, (b1 >> 1) & 31) as UInt8;
+      buf[out + 3] = xiom_char_at(alphabet, ((b1 << 4) | (b2 >> 4)) & 31) as UInt8;
+      buf[out + 4] = xiom_char_at(alphabet, ((b2 << 1) | (b3 >> 7)) & 31) as UInt8;
+      buf[out + 5] = xiom_char_at(alphabet, (b3 >> 2) & 31) as UInt8;
+      buf[out + 6] = xiom_char_at(alphabet, (b3 << 3) & 31) as UInt8;
+      buf[out + 7] = 61;
+      out = out + 8;
+    };
+    buf[out_len] = 0;
+    return Str.from_cstring(buf);
+  }
+}
+
+fn base32_char_index(c: Char) -> Int {
+  let code = c as UInt8 as Int;
+  if code >= 65 && code <= 90 {
+    return code - 65;
+  };
+  if code >= 50 && code <= 55 {
+    return code - 24;
+  };
+  return -1;
+}
+
+/// Decodes a Base32 string (RFC 4648, with optional '=' padding).
+/// Returns the decoded bytes or an error string.
+/// Complexity: O(n), n = encoded string length.
+pub fn base32_decode(encoded: Str) -> Result[Vec[UInt8], Str] {
+  var result = Vec[UInt8].new();
+  let len = encoded.len();
+  if len == 0 { return Ok(result); };
+  var bits: Int = 0;
+  var bit_count: Int = 0;
+  var i: Int = 0;
+  while i < len {
+    let opt = xiom.string.char_at(encoded, i);
+    if !opt.is_some { break; };
+    let c = opt.value;
+    let code = c as UInt8 as Int;
+    if code == 61 {
+      break;
+    };
+    let v = base32_char_index(c);
+    if v < 0 { return Err("invalid base32 character"); };
+    bits = (bits << 5) | v;
+    bit_count = bit_count + 5;
+    if bit_count >= 8 {
+      bit_count = bit_count - 8;
+      result.push(((bits >> bit_count) & 0xFF) as UInt8);
+      var m: Int = 1;
+      var k: Int = 0;
+      while k < bit_count {
+        m = m * 2;
+        k = k + 1;
+      };
+      m = m - 1;
+      bits = bits & m;
+    };
+    i = i + 1;
+  };
+  return Ok(result);
+}
+
+// ── Base16 (hex alias) ──────────────────────────────────────────────────────
+
+/// Alias for hex_encode. Converts bytes to lowercase hex string.
+pub fn base16_encode(data: &Vec[UInt8]) -> Str {
+  return hex_encode(data);
+}
+
+// ── Integer hex conversions ─────────────────────────────────────────────────
+
+/// Converts an integer to a lowercase hexadecimal string.
+/// Complexity: O(log16(n)).
+pub fn int_to_hex(n: Int) -> Str {
+  if n == 0 {
+    return "0";
+  };
+  var digits: [16]UInt8;
+  var pos: Int = 16;
+  var val: Int = n;
+  if val < 0 {
+    val = -val;
+  };
+  while val > 0 {
+    pos = pos - 1;
+    let d = val & 0xF;
+    if d < 10 {
+      digits[pos] = (48 + d) as UInt8;
+    } else {
+      digits[pos] = (87 + d) as UInt8;
+    };
+    val = val >> 4;
+  };
+  let out_len = 16 - pos;
+  unsafe {
+    var buf = malloc(out_len + 1);
+    var i: Int = 0;
+    while i < out_len {
+      buf[i] = digits[pos + i];
+      i = i + 1;
+    };
+    buf[out_len] = 0;
+    return Str.from_cstring(buf);
+  }
+}
+
+/// Converts a hexadecimal string to an integer.
+/// Returns None if the string contains invalid hex characters.
+/// Complexity: O(n), n = string length.
+pub fn hex_to_int(s: Str) -> Option[Int] {
+  let len = s.len();
+  if len == 0 {
+    return Option[Int]{ is_some: false; value: 0; };
+  };
+  var result: Int = 0;
+  var i: Int = 0;
+  while i < len {
+    let c = s.char_at(i);
+    let v = hex_value(c);
+    if v < 0 {
+      return Option[Int]{ is_some: false; value: 0; };
+    };
+    result = (result << 4) | v;
+    i = i + 1;
+  };
+  return Option[Int]{ is_some: true; value: result; };
+}
+
+// ── Base64 string wrappers ──────────────────────────────────────────────────
+
+/// Encodes a string to Base64 by first converting to UTF-8 bytes.
+/// Complexity: O(n), n = string length.
+pub fn base64_encode_str(s: Str) -> Str {
+  var bytes = Vec[UInt8].new();
+  var i: Int = 0;
+  let slen = s.len();
+  while i < slen {
+    let c: Char = xiom_char_at(s, i);
+    bytes.push(c as UInt8);
+    i = i + 1;
+  };
+  return base64_encode(&bytes);
+}
+
+/// Decodes a Base64 string and returns the original string.
+/// Complexity: O(n), n = encoded string length.
+pub fn base64_decode_str(encoded: Str) -> Result[Str, Str] {
+  let bytes_result = base64_decode(encoded);
+  if !bytes_result.is_ok {
+    return Err(bytes_result.error);
+  };
+  let bytes = bytes_result.value;
+  let blen = bytes.len();
+  if blen == 0 {
+    return Ok("");
+  };
+  unsafe {
+    var buf = malloc(blen + 1);
+    var i: Int = 0;
+    while i < blen {
+      buf[i] = bytes[i];
+      i = i + 1;
+    };
+    buf[blen] = 0;
+    return Ok(Str.from_cstring(buf));
+  }
 }

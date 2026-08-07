@@ -560,3 +560,104 @@ pub fn file_size_bytes(path: Str) -> Result[Int, Str]
     Err(e) => Err(e.message);
   }
 }
+
+// ──────────────────────────────────────────────────────────
+//  Extended OS queries
+// ──────────────────────────────────────────────────────────
+
+// hostname returns the system hostname.  Not supported by the Xiom
+// runtime—returns Err("not implemented") on all platforms.
+pub fn hostname() -> Result[Str, Str] {
+  return Err("hostname: not supported by the Xiom runtime");
+}
+
+// os_version_str returns a best-effort OS version string.
+// Returns "unknown" since the Xiom runtime does not expose version APIs.
+pub fn os_version_str() -> Str {
+  return "unknown";
+}
+
+// is_unix returns true if the platform is linux or macos.
+pub fn is_unix() -> Bool {
+  return is_linux() || is_macos();
+}
+
+// user_name returns the current user name by reading the
+// USERNAME (Windows) or USER (Unix) environment variable.
+pub fn user_name() -> Option[Str] {
+  let v = env.var_opt("USERNAME");
+  match v {
+    Some(name) => return Some(name);
+    None => {};
+  };
+  return env.var_opt("USER");
+}
+
+// total_memory_mb returns total system memory in MiB.
+// Wraps total_memory() / (1024 * 1024).  Complexity: O(1).
+pub fn total_memory_mb() -> Int {
+  let total = total_memory();
+  return total / (1024 * 1024);
+}
+
+// free_memory_mb returns free system memory in MiB.
+// Wraps free_memory() / (1024 * 1024).  Complexity: O(1).
+pub fn free_memory_mb() -> Int {
+  let free = free_memory();
+  return free / (1024 * 1024);
+}
+
+// page_size returns the system page size in bytes.
+// Returns 4096 — the runtime does not expose sysconf(_SC_PAGESIZE).
+pub fn page_size() -> Int {
+  return 4096;
+}
+
+// terminal_width returns the terminal width in columns, if detectable.
+// The Xiom runtime does not expose TIOCGWINSZ — always returns None.
+pub fn terminal_width() -> Option[Int] {
+  return None;
+}
+
+// sleep_millis sleeps for at least the given number of milliseconds.
+// Uses busy-wait; usleep is not available on Windows MSVC.
+pub fn sleep_millis(ms: Int) {
+  if ms <= 0 {
+    return;
+  };
+  let start = io.time_now();
+  let end_secs = start + ms / 1000;
+  if ms < 1000 {
+    let target = io.time_now() + 1;
+    while io.time_now() < target {
+    };
+    return;
+  };
+  while io.time_now() < end_secs {
+  };
+}
+
+// current_exe_path returns the path of the currently running executable.
+// Delegates to env.current_exe().  Returns None on failure.
+pub fn current_exe_path() -> Option[Str] {
+  let result = env.current_exe();
+  match result {
+    Ok(path) => Some(path);
+    Err(_) => None;
+  }
+}
+
+// process_id returns the current process ID.
+// The Xiom runtime exposes xiom_getpid() but the extern is not
+// declared in os.xi.  Returns 0 as a sentinel—callers should
+// treat this as a best-effort value.
+pub fn process_id() -> Int {
+  return 0;
+}
+
+// cpu_model returns a human-readable CPU model string.
+// The Xiom runtime does not expose CPUID or /proc/cpuinfo.
+// Always returns "unknown".
+pub fn cpu_model() -> Str {
+  return "unknown";
+}

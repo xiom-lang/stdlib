@@ -292,3 +292,10 @@ pub fn PathBuf.clear(self) {
 pub fn path_separator() -> Str {
   "/"
 }
+
+// path_is_absolute_str returns true if p starts with '/' or '\\'.
+pub fn path_is_absolute_str(p: Str) -> Bool {
+  if p.is_empty() { return false; };
+  let ch = p.byte_at(0);
+  return ch == 47 || ch == 92;
+}
