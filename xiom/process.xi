@@ -18,6 +18,11 @@ use xiom.string;
 extern "C" {
     fn system(command: *UInt8) -> Int32;
     fn xiom_getpid() -> Int64;
+    // v0.56: Production process operations
+    fn xiom_process_spawn(cmd: *UInt8) -> Int64;
+    fn xiom_process_kill(pid: Int64) -> Int32;
+    fn xiom_process_wait(pid: Int64) -> Int64;
+    fn xiom_process_running(pid: Int64) -> Int32;
 }
 
 // ── Helper: C string conversion (mirrors os.xi/cstr pattern) ─────────────────
@@ -163,4 +168,79 @@ pub fn command_exists(name: Str) -> Bool
         rc = system(cstr(check_cmd));
     }
     rc == 0
+}
+
+// ── v0.56: Production process management ─────────────────────────────────────
+//
+// These functions delegate to the xiom_runtime.c OS process
+// primitives (CreateProcessA on Windows, fork+exec on POSIX).
+// Unlike the system()-based spawn_command(), these provide:
+//   • Exit-code capture (spawn_blocking)
+//   • Process kill (kill)
+//   • Process wait (wait)
+//   • Liveliness check (is_running)
+//
+// All spawn operations are BLOCKING — the caller is suspended until
+// the child process completes.  For asynchronous use, spawn in a
+// separate thread via thread.spawn.
+
+/// Spawn a command via the OS shell and wait for completion.
+/// Returns Ok(exit_code) on success, Err on spawn failure.
+/// BLOCKING: the calling thread blocks until the child exits.
+/// On Windows: uses cmd.exe /c internally.
+/// On POSIX:   uses /bin/sh -c internally.
+pub fn spawn_blocking(command: Str) -> Result[Int, Str]
+    requires: command.len() > 0
+    ensures:  result is Ok => result >= 0
+{
+    let rc: Int64;
+    unsafe {
+        rc = xiom_process_spawn(cstr(command));
+    }
+    if rc < 0 {
+        return Err("spawn_blocking: failed to spawn process");
+    };
+    Ok(rc as Int)
+}
+
+/// Terminate a process by PID.  Returns true on success, false
+/// if the process could not be killed (doesn't exist, access denied).
+pub fn kill(pid: Int) -> Bool
+    requires: pid > 0
+{
+    let rc: Int32;
+    unsafe {
+        rc = xiom_process_kill(pid as Int64);
+    }
+    rc == 0
+}
+
+/// Wait for a process to exit and return its exit code.
+/// Returns Ok(exit_code) on success, Err if the process doesn't exist
+/// or the wait failed.
+/// BLOCKING: blocks until the target process terminates.
+pub fn wait(pid: Int) -> Result[Int, Str]
+    requires: pid > 0
+{
+    let rc: Int64;
+    unsafe {
+        rc = xiom_process_wait(pid as Int64);
+    }
+    if rc < 0 {
+        return Err("wait: process not found or wait error");
+    };
+    Ok(rc as Int)
+}
+
+/// Check whether a process is still running.
+/// Returns true if the process exists and is running, false otherwise.
+/// May return false for processes owned by other users (access denied).
+pub fn is_running(pid: Int) -> Bool
+    requires: pid > 0
+{
+    let rc: Int32;
+    unsafe {
+        rc = xiom_process_running(pid as Int64);
+    }
+    rc == 1
 }

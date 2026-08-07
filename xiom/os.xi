@@ -29,6 +29,14 @@ extern "C" {
   fn xiom_read(fd: Int32, buf: *UInt8, count: UInt) -> Int;
   fn xiom_write(fd: Int32, buf: *UInt8, count: UInt) -> Int;
   fn xiom_close(fd: Int32) -> Int32;
+  // v0.56: Production process & hostname operations
+  fn xiom_hostname() -> *UInt8;
+  fn xiom_process_spawn(cmd: *UInt8) -> Int64;
+  fn xiom_process_kill(pid: Int64) -> Int32;
+  fn xiom_process_wait(pid: Int64) -> Int64;
+  fn xiom_process_running(pid: Int64) -> Int32;
+  fn xiom_os_version_str() -> *UInt8;
+  fn xiom_getpid() -> Int64;
 }
 
 fn cstr(s: Str) -> *UInt8 {
@@ -213,11 +221,11 @@ fn spawn(command: Str, args: Vec[Str]) -> Result[Int, Str]
   ensures:  result is Ok => result >= 0
 {
   let cmd = build_command_string(command, args);
-  let rc: Int32;
+  let rc: Int64;
   unsafe {
-    rc = system(cstr(cmd));
+    rc = xiom_process_spawn(cstr(cmd));
   }
-  if rc == -1 {
+  if rc < 0 {
     return Err("failed to spawn process: " + command);
   };
   return Ok(rc as Int);
@@ -232,13 +240,27 @@ fn spawn_piped(command: Str, args: Vec[Str]) -> Result[(Int, Int, Int), Str]
 fn wait(pid: Int) -> Result[Int, Str]
   requires: pid > 0
 {
-  return Err("process wait not supported with system() backend");
+  let rc: Int64;
+  unsafe {
+    rc = xiom_process_wait(pid as Int64);
+  }
+  if rc < 0 {
+    return Err("process wait failed");
+  };
+  return Ok(rc as Int);
 }
 
 fn kill(pid: Int) -> Result[Unit, Str]
   requires: pid > 0
 {
-  return Err("process kill not supported with system() backend");
+  let rc: Int32;
+  unsafe {
+    rc = xiom_process_kill(pid as Int64);
+  }
+  if rc != 0 {
+    return Err("process kill failed");
+  };
+  return Ok(());
 }
 
 pub type ChildProcess = {
@@ -565,16 +587,27 @@ pub fn file_size_bytes(path: Str) -> Result[Int, Str]
 //  Extended OS queries
 // ──────────────────────────────────────────────────────────
 
-// hostname returns the system hostname.  Not supported by the Xiom
-// runtime—returns Err("not implemented") on all platforms.
+// hostname returns the system hostname via gethostname (POSIX) or
+// GetComputerNameA (Windows).  Uses an internal static buffer in the
+// C runtime.  Returns Err on failure.
 pub fn hostname() -> Result[Str, Str] {
-  return Err("hostname: not supported by the Xiom runtime");
+  unsafe {
+    let raw = xiom_hostname();
+    if raw == null {
+      return Err("hostname: system call failed");
+    };
+    return Ok(Str.from_cstring(raw));
+  }
 }
 
-// os_version_str returns a best-effort OS version string.
-// Returns "unknown" since the Xiom runtime does not expose version APIs.
+// os_version_str returns a best-effort OS version string via the
+// xiom_os_version_str runtime intrinsic (GetVersionExA on Windows,
+// uname on POSIX).
 pub fn os_version_str() -> Str {
-  return "unknown";
+  unsafe {
+    let raw = xiom_os_version_str();
+    return Str.from_cstring(raw);
+  }
 }
 
 // is_unix returns true if the platform is linux or macos.
@@ -647,12 +680,12 @@ pub fn current_exe_path() -> Option[Str] {
   }
 }
 
-// process_id returns the current process ID.
-// The Xiom runtime exposes xiom_getpid() but the extern is not
-// declared in os.xi.  Returns 0 as a sentinel—callers should
-// treat this as a best-effort value.
+// process_id returns the current process ID via the xiom_getpid
+// runtime intrinsic.
 pub fn process_id() -> Int {
-  return 0;
+  unsafe {
+    return xiom_getpid() as Int;
+  }
 }
 
 // cpu_model returns a human-readable CPU model string.
