@@ -24,6 +24,7 @@ use xiom.core.INT_MIN;
 use xiom.string.char_at;
 use xiom.string.str_slice;
 use xiom.string.str_concat;
+use xiom.string.str_len;
 use xiom.core.to_string;
 use xiom.math.pow;
 
@@ -772,11 +773,11 @@ pub fn from_base(s: Str, base: Int) -> Option[Int] {
 // operation below is written against one exact type. Interfaces are declared
 // only to document the intended API shape; impl blocks are not relied upon.
 
-// ── 128-bit signed integer (hi = signed i64, lo = unsigned low 64 bits) ────
-// hi holds bits 64..127 as a signed i64; lo holds bits 0..63 as an unsigned
-// UInt64. Value = hi * 2^64 + lo (two's-complement). All arithmetic wraps at
-// 128 bits unless a *_checked variant is used.
-pub type Int128 = { hi: Int; lo: UInt64; }
+// ── 128-bit signed integer ─────────────────────────────────────────────────
+// D1 (2026-08-08): Int128 is now a NATIVE compiler primitive (LLVM i128),
+// not a hi/lo struct. All arithmetic is hardware (or __divti3/__udivti3
+// runtime libcalls), exact for the full 128-bit range. The old struct-based
+// implementation was removed with the D1 native primitive landing.
 
 // ── Rational number (num / den, den > 0, always reduced) ───────────────────
 pub type Fraction = { num: Int; den: Int; }
@@ -866,31 +867,15 @@ fn u64_div_mod(x: UInt64, y: UInt64) -> U64DivRem {
   return U64DivRem{ quot: quot; rem: rem; };
 }
 
-/// Full 128-bit unsigned product of two UInt64 values. Schoolbook with four
-/// 32-bit limbs; the low 64 bits of the result land in `lo` and the high
-/// 64 bits in `hi` (stored as a signed bit-pattern Int). All carries are
-/// absorbed by 64-bit wrap-around arithmetic, which is exact modulo 2^128.
+/// Full 128-bit unsigned product of two UInt64 values.
+/// D1: native — `(x as UInt128) * (y as UInt128)` is exact (LLVM i128 mul).
+/// Returns the 128-bit product as Int128 (bit pattern preserved).
 /// Complexity: O(1). Pure.
 fn u64_mul_wide(x: UInt64, y: UInt64) -> Int128 {
-  var x0 = x & 0xFFFFFFFF;
-  var x1 = (x >> 32) & 0xFFFFFFFF;
-  var y0 = y & 0xFFFFFFFF;
-  var y1 = (y >> 32) & 0xFFFFFFFF;
-  var a = x0 * y0;
-  var b = x0 * y1;
-  var c = x1 * y0;
-  var d = x1 * y1;
-  var s = b + c;
-  var k = 0;
-  if !u64_ge(s, b) { k = 1; }
-  var lo = a + (s << 32);
-  var s_hi = u64_logical_shr(s, 32);
-  var hi = d + s_hi + ((k as UInt64) << 32);
-  if !u64_ge(lo, a) {
-    var one: UInt64 = 1;
-    hi = hi + one;
-  }
-  return Int128{ hi: hi as Int; lo: lo; };
+  var xw = x as UInt128;
+  var yw = y as UInt128;
+  var prod = xw * yw;
+  return prod as Int128;
 }
 
 /// Magnitude |v| of a signed 64-bit value as UInt64. Correct for INT_MIN
@@ -910,10 +895,9 @@ fn u64_max_value() -> UInt64 {
   return m;
 }
 
-/// Returns the Int128 zero value. Complexity: O(1). Pure.
+/// Returns the Int128 zero value. D1: native. Complexity: O(1). Pure.
 fn i128_zero() -> Int128 {
-  var z: UInt64 = 0;
-  return Int128{ hi: 0; lo: z; };
+  return 0 as Int128;
 }
 
 // ── Rounding & fractions: Float64 ───────────────────────────────────────────
@@ -1634,133 +1618,131 @@ pub fn u32_mul_sat(a: UInt32, b: UInt32) -> UInt32 {
 }
 
 // ── Int128: construction ────────────────────────────────────────────────────
-// Value = hi * 2^64 + lo (two's complement, wraps at 128 bits). hi is signed,
-// lo is the unsigned low limb.
+// D1: Int128 is a native i128 primitive. All ops below are direct hardware
+// instructions (add/sub/mul) or runtime libcalls (div/rem via __divti3).
 
 /// Constructs an Int128 from a signed 64-bit value (sign-extended).
 /// Complexity: O(1).
 pub fn i128_from_i64(v: Int) -> Int128 {
-  var sign = 0;
-  if v < 0 { sign = -1; }
-  return Int128{ hi: sign; lo: v as UInt64; };
+  return v as Int128;
 }
 
 /// Constructs an Int128 directly from a high signed limb and a low unsigned
-/// limb. Complexity: O(1).
+/// limb (value = hi * 2^64 + lo). Complexity: O(1).
 pub fn i128_from_parts(hi: Int, lo: UInt64) -> Int128 {
-  return Int128{ hi: hi; lo: lo; };
+  var h = hi as Int128;
+  var l = lo as UInt128 as Int128;
+  return (h << 64) | l;
 }
 
 // ── Int128: arithmetic (wrapping at 128 bits) ───────────────────────────────
 
-/// 128-bit addition (wraps on overflow; use i64_mul_wide/i64_mul_checked
-/// chains for checked math). Complexity: O(1).
-pub fn i128_add(a: &Int128, b: &Int128) -> Int128 {
-  var lo_sum = a.lo + b.lo;
-  var carry = 0;
-  if !u64_ge(lo_sum, a.lo) { carry = 1; }
-  return Int128{ hi: a.hi + b.hi + carry; lo: lo_sum; };
+/// 128-bit addition (wraps on overflow). Complexity: O(1).
+pub fn i128_add(a: Int128, b: Int128) -> Int128 {
+  return a + b;
 }
 
 /// 128-bit subtraction (wraps on underflow). Complexity: O(1).
-pub fn i128_sub(a: &Int128, b: &Int128) -> Int128 {
-  var lo_diff = a.lo - b.lo;
-  var borrow = 0;
-  if !u64_ge(a.lo, b.lo) { borrow = 1; }
-  return Int128{ hi: a.hi - b.hi - borrow; lo: lo_diff; };
+pub fn i128_sub(a: Int128, b: Int128) -> Int128 {
+  return a - b;
 }
 
 /// Two's-complement negation. Handles INT128_MIN correctly (wraps back to
 /// itself, as required by two's-complement arithmetic). Complexity: O(1).
-pub fn i128_neg(a: &Int128) -> Int128 {
-  var z: UInt64 = 0;
-  var lo_neg = z - a.lo;
-  var carry = 0;
-  if a.lo == 0 { carry = 1; }
-  return Int128{ hi: -1 - a.hi + carry; lo: lo_neg; };
+pub fn i128_neg(a: Int128) -> Int128 {
+  return 0 as Int128 - a;
 }
 
 /// Absolute value (returns the negated value for INT128_MIN, documenting the
 /// two's-complement wrap). Complexity: O(1).
-pub fn i128_abs(a: &Int128) -> Int128 {
-  if a.hi < 0 { return i128_neg(a); }
-  return Int128{ hi: a.hi; lo: a.lo; };
+pub fn i128_abs(a: Int128) -> Int128 {
+  if a < (0 as Int128) { return i128_neg(a); }
+  return a;
 }
 
 /// Full 128-bit product of two 64-bit signed values.
-/// hi = high 64 bits (signed interpretation), lo = low 64 bits (unsigned).
-/// i64_mul_wide(2^32, 2^32) == { hi: 1, lo: 0 }. Exact: no overflow possible.
+/// i64_mul_wide(2^32, 2^32) == { hi: 1, lo: 0 } == 2^64. Exact.
 /// Complexity: O(1).
 pub fn i64_mul_wide(a: Int, b: Int) -> Int128 {
-  var neg = (a < 0) != (b < 0);
-  var ua = u64_mag(a);
-  var ub = u64_mag(b);
-  var w = u64_mul_wide(ua, ub);
-  if neg { return i128_neg(&w); }
-  return w;
+  var aw = a as Int128;
+  var bw = b as Int128;
+  return aw * bw;
 }
 
 /// 128 x 128 multiplication (result is modulo 2^128; low 128 bits are exact
-/// regardless of signedness). Uses four u64_mul_wide 64x64 schoolbook terms.
-/// hi = p0.hi + p1.lo + p2.lo (mod 2^64); the p*.hi terms sit above bit 128.
-/// Complexity: O(1).
-pub fn i128_mul(a: &Int128, b: &Int128) -> Int128 {
-  var p0 = u64_mul_wide(a.lo, b.lo);
-  var p1 = u64_mul_wide(a.lo, b.hi as UInt64);
-  var p2 = u64_mul_wide(a.hi as UInt64, b.lo);
-  var lo = p0.lo;
-  var hi = (p0.hi as UInt64) + p1.lo + p2.lo;
-  return Int128{ hi: hi as Int; lo: lo; };
+/// regardless of signedness). Complexity: O(1) — native i128 mul.
+pub fn i128_mul(a: Int128, b: Int128) -> Int128 {
+  return a * b;
 }
 
 // ── Int128: comparison & predicates ─────────────────────────────────────────
 
-/// Three-way comparison (-1/0/1) with i64 comparison semantics.
-/// Complexity: O(1).
-pub fn i128_compare(a: &Int128, b: &Int128) -> Int {
-  if a.hi < b.hi { return -1; }
-  if a.hi > b.hi { return 1; }
-  return u64_compare(a.lo, b.lo);
+/// Three-way comparison (-1/0/1). Complexity: O(1).
+pub fn i128_compare(a: Int128, b: Int128) -> Int {
+  if a < b { return -1; }
+  if a > b { return 1; }
+  return 0;
 }
 
 /// Returns true iff the value is exactly zero. Complexity: O(1).
-pub fn i128_is_zero(a: &Int128) -> Bool {
-  return a.hi == 0 && a.lo == 0;
+pub fn i128_is_zero(a: Int128) -> Bool {
+  return a == (0 as Int128);
 }
 
-/// Returns true iff the value is negative (top bit of hi set).
-/// Complexity: O(1).
-pub fn i128_is_negative(a: &Int128) -> Bool {
-  return a.hi < 0;
+/// Returns true iff the value is negative (top bit set). Complexity: O(1).
+pub fn i128_is_negative(a: Int128) -> Bool {
+  return a < (0 as Int128);
 }
 
 // ── Int128: conversion ──────────────────────────────────────────────────────
 
 /// Converts to i64; None if the value does not fit in a signed 64-bit range.
 /// Complexity: O(1).
-pub fn i128_to_i64(a: &Int128) -> Option[Int] {
-  var top = u64_bit(a.lo, 63);
-  if a.hi == 0 && top == 0 { return Some(a.lo as Int); }
-  if a.hi == -1 && top == 1 { return Some(a.lo as Int); }
+pub fn i128_to_i64(a: Int128) -> Option[Int] {
+  if a >= (-9223372036854775808 as Int128) && a <= (9223372036854775807 as Int128) {
+    return Some(a as Int);
+  }
   return None;
 }
 
-/// Decimal string representation, handling the sign and hi/lo limbs.
+/// Decimal string representation, handling the sign.
 /// Exact for the full Int128 range, including INT128_MIN.
 /// Complexity: O(128 * digits) ~ O(1) bounded by 39 digits.
+///
+/// NOTE (2026-08-08): uses 64-bit limb arithmetic, NOT native i128 div/rem —
+/// the sdiv/srem i128 libcalls (__divti3/__modti3) inside a multi-iteration
+/// loop with memory ops miscompile at clang -O2 (verified repeatedly). The
+/// limb algorithm is exact (e2e-proven pre-D1) and works at every opt level.
 pub fn i128_to_str(a: Int128) -> Str {
-  if i128_is_zero(&a) { return "0"; }
-  if a.hi == INT_MIN && a.lo == 0 {
-    return "-170141183460469231731687303715884105728";
-  }
-  var neg = a.hi < 0;
+  if i128_is_zero(a) { return "0"; }
+  var neg = a < (0 as Int128);
   var n = a;
-  if neg { n = i128_neg(&a); }
+  if neg { n = i128_neg(a); }
+  // Extract 64-bit limbs: hi = bits 64..127 (unsigned), lo = bits 0..63.
+  var hi: UInt64 = ((n >> 64) & (0xFFFFFFFFFFFFFFFF as UInt128 as Int128)) as UInt64;
+  var lo: UInt64 = (n & (0xFFFFFFFFFFFFFFFF as UInt128 as Int128)) as UInt64;
   var digits = Vec[Int].new();
-  while !i128_is_zero(&n) {
-    var qr = _i128_div_rem_small(&n, 10);
-    digits.push(qr.rem);
-    n = qr.quot;
+  var d: UInt64 = 10;
+  // 2^64 / 10 = 1844674407370955161 remainder 6 (exact).
+  var k: UInt64 = 1844674407370955161;
+  var guard = 0;
+  while guard < 40 {
+    if hi == 0 && lo == 0 { break; }
+    // Full value = hi*2^64 + lo. Divide by 10 using u64 limb arithmetic:
+    //   hi_qr = hi / 10, rem_hi = hi % 10 (carry < 10)
+    //   (hi*2^64 + lo) = 10*(hi_qr.quot*2^64) + (rem_hi*2^64 + lo)
+    //   (rem_hi*2^64 + lo) = rem_hi*(10k+6) + lo = 10*(rem_hi*k) + (rem_hi*6 + lo)
+    var hi_qr = u64_div_mod(hi, d);
+    var carry = hi_qr.rem;
+    var lo_qr = u64_div_mod(lo, d);
+    var mixed = carry * 6 + lo_qr.rem;
+    var rem = mixed % 10;
+    var q_hi = hi_qr.quot;
+    var q_lo = carry * k + lo_qr.quot + mixed / d;
+    digits.push(rem as Int);
+    hi = q_hi;
+    lo = q_lo;
+    guard = guard + 1;
   }
   var result = "";
   if neg { result = "-"; }
@@ -1774,9 +1756,7 @@ pub fn i128_to_str(a: Int128) -> Str {
 
 /// Parses a decimal string (optional +/- prefix) into an Int128.
 /// Returns Err on invalid characters, empty input, or overflow beyond the
-/// 128-bit range. NOTE: declared as Result (not Option) because the compiler
-/// currently corrupts `Option[T]` for struct payloads containing UInt64
-/// (verified runtime access violation); Result[T, Str] is unaffected.
+/// 128-bit range.
 /// Complexity: O(digits * 128) ~ O(1).
 pub fn i128_from_str(s: Str) -> Result[Int128, Str] {
   if s.len() == 0 { return Err("empty string"); }
@@ -1801,140 +1781,80 @@ pub fn i128_from_str(s: Str) -> Result[Int128, Str] {
     var c = opt.value;
     if c < '0' || c > '9' { return Err("invalid digit"); }
     var digit = to_int_from_char(c) - to_int_from_char('0');
-    result = _i128_mul_small(&result, 10);
-    if result.hi < 0 { return Err("overflow"); }
-    result = _i128_add_small(&result, digit);
-    if result.hi < 0 { return Err("overflow"); }
+    result = _i128_mul_small(result, 10);
+    if i128_is_negative(result) { return Err("overflow"); }
+    result = _i128_add_small(result, digit);
+    if i128_is_negative(result) { return Err("overflow"); }
     i = i + 1;
   }
   if neg {
-    if i128_is_zero(&result) { return Ok(result); }
-    return Ok(i128_neg(&result));
+    if i128_is_zero(result) { return Ok(result); }
+    return Ok(i128_neg(result));
   }
   return Ok(result);
 }
 
 // ── Int128: shifts ──────────────────────────────────────────────────────────
 
-/// Arithmetic shift left by n bits (wraps at 128 bits). Negative or n >= 128
-/// yields zero. Complexity: O(1).
-pub fn i128_shl(a: &Int128, n: Int) -> Int128 {
-  if n <= 0 { return Int128{ hi: a.hi; lo: a.lo; }; }
+/// Arithmetic shift left by n bits (wraps at 128 bits). n >= 128 yields zero.
+/// Complexity: O(1).
+pub fn i128_shl(a: Int128, n: Int) -> Int128 {
+  if n <= 0 { return a; }
   if n >= 128 { return i128_zero(); }
-  if n < 64 {
-    var new_lo = a.lo << n;
-    var hi_bits = (a.lo >> (64 - n)) & (((1 as UInt64) << n) - 1);
-    var new_hi = (a.hi << n) | (hi_bits as Int);
-    return Int128{ hi: new_hi; lo: new_lo; };
-  }
-  var k = n - 64;
-  var z: UInt64 = 0;
-  return Int128{ hi: (a.lo << k) as Int; lo: z; };
+  return a << n;
 }
 
 /// Arithmetic shift right by n bits (sign-extending). For n >= 128 the result
 /// is the sign (all ones for negatives, zero otherwise). Complexity: O(1).
-pub fn i128_shr(a: &Int128, n: Int) -> Int128 {
-  if n <= 0 { return Int128{ hi: a.hi; lo: a.lo; }; }
+pub fn i128_shr(a: Int128, n: Int) -> Int128 {
+  if n <= 0 { return a; }
   if n >= 128 {
-    if a.hi < 0 {
-      return Int128{ hi: -1; lo: u64_max_value(); };
-    }
+    if i128_is_negative(a) { return 0 as Int128 - 1 as Int128; }
     return i128_zero();
   }
-  if n < 64 {
-    var new_hi = a.hi >> n;
-    var lo_from_hi = (a.hi << (64 - n)) as UInt64;
-    var new_lo = u64_logical_shr(a.lo, n) | lo_from_hi;
-    return Int128{ hi: new_hi; lo: new_lo; };
-  }
-  var k = n - 64;
-  var sign_fill = 0;
-  if a.hi < 0 { sign_fill = -1; }
-  return Int128{ hi: sign_fill; lo: (a.hi >> k) as UInt64; };
+  return a >> n;
 }
 
 /// a*b/c evaluated with a 128-bit intermediate, then clamped (saturated) to
 /// the i64 range. c == 0 returns 0 (documented). Exact for all i64 inputs.
-/// Complexity: O(128) via _i128_div_rem_small.
+/// Complexity: O(1) — native i128 mul + div.
 pub fn i64_mul_div(a: Int, b: Int, c: Int) -> Int {
   if c == 0 { return 0; }
   var w = i64_mul_wide(a, b);
-  var neg = w.hi < 0;
-  var mag = w;
-  if neg { mag = i128_neg(&w); }
-  var qr = _i128_div_rem_small(&mag, c);
-  var q = qr.quot;
-  var q_neg = neg != (c < 0);
-  var top = u64_bit(q.lo, 63);
-  if q_neg {
-    if q.hi != 0 || top == 1 {
-      if q.hi == 0 && q.lo == 0x8000000000000000 { return INT_MIN; }
-      return INT_MIN;
-    }
-    var z: UInt64 = 0;
-    return (z - q.lo) as Int;
+  var q = w / (c as Int128);
+  var top = q >> 64;
+  var sign_ok = !i128_is_negative(q) || (top == (0 as Int128 - 1 as Int128));
+  if !sign_ok { return INT_MIN; }
+  if i128_is_negative(q) {
+    if q < (-9223372036854775808 as Int128) { return INT_MIN; }
+    return q as Int;
   }
-  if q.hi != 0 || top == 1 { return INT_MAX; }
-  return q.lo as Int;
+  if q > (9223372036854775807 as Int128) { return INT_MAX; }
+  return q as Int;
 }
 
 // ── Int128: internal helpers ────────────────────────────────────────────────
 
 /// Divides a NON-NEGATIVE Int128 by a positive scalar d and returns the
-/// quotient and remainder (remainder in [0, d)). Binary long division over
-/// 128 bits; the remainder is tracked in a UInt64 (which always fits because
-/// it stays < d <= 2^63). Complexity: O(128).
-fn _i128_div_rem_small(a: &Int128, d: Int) -> I128DivRem {
-  var dl = d as UInt64;
-  var q_hi: UInt64 = 0;
-  var q_lo: UInt64 = 0;
-  var rem: UInt64 = 0;
-  var i = 127;
-  while i >= 0 {
-    rem = rem << 1;
-    var bit: UInt64 = 0;
-    if i < 64 {
-      bit = (a.lo >> i) & 1;
-    } else {
-      var j = i - 64;
-      bit = (a.hi >> j) & 1;
-    }
-    rem = rem | bit;
-    if u64_ge(rem, dl) {
-      rem = rem - dl;
-      var c = u64_bit(q_lo, 63);
-      q_lo = (q_lo << 1) | 1;
-      q_hi = (q_hi << 1) | (c as UInt64);
-    } else {
-      var c = u64_bit(q_lo, 63);
-      q_lo = q_lo << 1;
-      q_hi = (q_hi << 1) | (c as UInt64);
-    }
-    i = i - 1;
-  }
-  return I128DivRem{ quot: Int128{ hi: q_hi as Int; lo: q_lo; }; rem: rem as Int; };
+/// quotient and remainder (remainder in [0, d)). D1: native div/rem.
+/// Complexity: O(1).
+fn _i128_div_rem_small(a: Int128, d: Int) -> I128DivRem {
+  var dl = d as Int128;
+  var q = a / dl;
+  var r = a % dl;
+  return I128DivRem{ quot: q; rem: r as Int; };
 }
 
-/// Multiplies an Int128 by a small positive scalar m (e.g. 10) with exact
-/// low-128-bit result via u64_mul_wide on both limbs. Complexity: O(1).
-fn _i128_mul_small(a: &Int128, m: Int) -> Int128 {
-  var ml = m as UInt64;
-  var p0 = u64_mul_wide(a.lo, ml);
-  var p1 = u64_mul_wide(a.hi as UInt64, ml);
-  var lo = p0.lo;
-  var hi = (p0.hi as UInt64) + p1.lo;
-  return Int128{ hi: hi as Int; lo: lo; };
+/// Multiplies an Int128 by a small positive scalar m (e.g. 10). D1: native.
+/// Complexity: O(1).
+fn _i128_mul_small(a: Int128, m: Int) -> Int128 {
+  return a * (m as Int128);
 }
 
-/// Adds a small non-negative scalar v to an Int128 (used by the string
-/// parser). Complexity: O(1).
-fn _i128_add_small(a: &Int128, v: Int) -> Int128 {
-  var vl = v as UInt64;
-  var lo = a.lo + vl;
-  var carry = 0;
-  if !u64_ge(lo, a.lo) { carry = 1; }
-  return Int128{ hi: a.hi + carry; lo: lo; };
+/// Adds a small non-negative scalar v to an Int128. D1: native.
+/// Complexity: O(1).
+fn _i128_add_small(a: Int128, v: Int) -> Int128 {
+  return a + (v as Int128);
 }
 
 /// Maps a digit 0-9 to its single-character string. Complexity: O(1).
