@@ -3493,13 +3493,33 @@ forever, so nothing written later breaks anything written now.
    NO workarounds):**
    a. interface `impl` dispatch on generic params (checker+codegen honor
       ImplDecl: `impl Num[Int] { ... }` must register and dispatch).
+      ✅ DONE (2026-08-08, commit b34ebaa4): `impl Trait[Args]` registers;
+      `Trait[Arg].method()` static dispatch resolves to the impl's
+      `Type.method` freestanding fn (expand_impl_blocks type-name fix +
+      codegen impl-receiver resolution). Verified: `Num[Int].add`,
+      `Num[Float64].add`, multi-type impls, direct `Int.add`.
    b. generic-operator monomorphization must NOT corrupt Float64
       (`add2[T](a+b)` correct for ALL widths incl. Float64/Float32).
+      ✅ DONE: explicit type args `fn[T](args)` were DISCARDED by the parser
+      (→ wrong monomorphisation); now preserved through GenericCall and used
+      for concrete-type mapping. Generic return-type substitution (was
+      emitted as i64 → garbage) fixed for scalar results. Verified:
+      `add2[Int]/[Float64]/[Float32]` all correct.
    c. After (a)+(b): the generic numeric tower lands — `impl Num[Int]`,
       `impl Num[Int32]`, `impl Num[Float32]`, `impl Num[Float64]` … and ONE
       generic `sqrt[T: Num](x: T) -> T` serves all widths. Concrete fns stay
-      as thin shims (freeze-gated).
+      as thin shims (freeze-gated). (IN PROGRESS — tower collapse next.)
    d. Full test pass on every step; no `#[ignore]`d shortcuts.
+      ✅ checker 166, exec 67 (incl. hardening smoke), e2e 2231, all suites.
+   e. ADDITIONAL fixes landed during hardening:
+      - Str::from_utf8(Vec[UInt8]) NUL-termination (runtime
+        `xiom_str_from_vec`) — was returning raw non-terminated Vec data →
+        intermittent garbage suffixes (ROOT CAUSE of the net_folder harness
+        flake, ~1-in-5 processes; now 8/8 stable from Rust-spawn).
+      - url_encode single-pass rewrite (two-pass count/write disagreement
+        could leave uninitialized malloc bytes).
+      - Test harness: compile retry + flush delay for the parallel-session
+        binary race.
 4. **Stdlib category expansion (D4) starts AFTER hardening** — agents write
    math/core, math/algebra, math/vectors, … as GENERIC libs over the real
    tower; flat aggregates become use-manifests (D4b). No per-width
