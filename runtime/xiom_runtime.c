@@ -159,6 +159,20 @@ char* xiom_str_concat(const char* a, const char* b) {
     return out;
 }
 
+// D1 hardening (2026-08-08): build a NUL-terminated Str from a raw byte
+// buffer + length. The Vec[UInt8] data is NOT NUL-terminated — returning it
+// directly as a Str made string ops read past the buffer into adjacent
+// memory (intermittent garbage suffixes in url_decode_component output,
+// ~1-in-5 processes). Copies into a fresh NUL-terminated buffer.
+char* xiom_str_from_vec(const unsigned char* data, long len) {
+    if (!data || len < 0) return (char*)"";
+    char* out = (char*)malloc((size_t)len + 1);
+    if (!out) return (char*)"";
+    if (len > 0) memcpy(out, data, (size_t)len);
+    out[len] = '\0';
+    return out;
+}
+
 // M12/P1: Extract a substring [start, end) from a NUL-terminated string.
 // Returns a freshly malloc'd NUL-terminated copy of str[start..end-1].
 // Clamps start/end to [0, len] and returns "" for invalid ranges.
