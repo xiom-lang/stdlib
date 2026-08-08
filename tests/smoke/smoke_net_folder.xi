@@ -1,10 +1,11 @@
-// XIOM stdlib smoke test — xiom.net.url, xiom.net.dns, xiom.net.proto
+// XIOM stdlib smoke test â€” xiom.net.url, xiom.net.dns, xiom.net.proto
 // Returns 0 on success, nonzero on failure (process exit code).
 
 module smoke_net_folder
 use xiom.net.url;
 use xiom.net.dns;
 use xiom.net.proto;
+use xiom.io;
 use xiom.string;
 
 fn contains(hay: Str, needle: Str) -> Bool {
@@ -46,13 +47,13 @@ fn main() -> Int {
   // --- url encode/decode ---
   let enc = url.url_encode_component("a b&c=d");
   match enc {
-    Ok(s) => { if s != "a%20b%26c%3Dd" { return 2; } }
-    Err(_) => { return 2; }
+    Ok(s) => { if s != "a%20b%26c%3Dd" { io.println("enc-bad: [" + s + "]"); return 2; } }
+    Err(e) => { io.println("enc-err: [" + e + "]"); return 2; }
   }
   let dec = url.url_decode_component("a%20b%26c%3Dd");
   match dec {
-    Ok(s) => { if s != "a b&c=d" { return 2; } }
-    Err(_) => { return 2; }
+    Ok(s) => { if s != "a b&c=d" { io.println("dec-bad: [" + s + "]"); return 2; } }
+    Err(e) => { io.println("dec-err: [" + e + "]"); return 2; }
   }
 
   // --- url_query_parse ---

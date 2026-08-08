@@ -365,22 +365,17 @@ pub fn hex_encode_upper(data: &Vec[UInt8]) -> Str
 pub fn url_encode(data: Str) -> Str
   ensures: result.len() >= data.len()
 {
+  // D1 hardening (2026-08-08): SINGLE-PASS encoding. The previous two-pass
+  // version (count-then-write) intermittently corrupted the output (~1-in-30
+  // runs of the compiled exe) because the two passes re-evaluated
+  // char_at/len_utf8/is_url_safe and could disagree on the byte counts,
+  // leaving uninitialized malloc tail bytes in the returned Str. Single-pass
+  // with a worst-case buffer (s_len*3+1) and NUL at the ACTUAL write cursor
+  // is deterministic by construction.
   let s_len = data.len();
-  var i = 0;
-  var out_len = 0;
-  while i < s_len {
-    let c = data.char_at(i);
-    let clen = xiom.char.len_utf8(c);
-    if is_url_safe(c) {
-      out_len = out_len + clen;
-    } else {
-      out_len = out_len + clen * 3;
-    };
-    i = i + clen;
-  };
   unsafe {
-    var buf = malloc(out_len + 1);
-    i = 0;
+    var buf = malloc(s_len * 3 + 1);
+    var i = 0;
     var out = 0;
     while i < s_len {
       let c = data.char_at(i);
@@ -407,7 +402,7 @@ pub fn url_encode(data: Str) -> Str
       };
       i = i + clen;
     };
-    buf[out_len] = 0;
+    buf[out] = 0;
     return Str.from_cstring(buf);
   }
 }
@@ -462,7 +457,10 @@ pub fn url_decode(encoded: Str) -> Result[Str, Str]
 pub fn percent_encode(data: Str) -> Str
   ensures: result.len() >= data.len()
 {
-  url_encode(data)
+  // Module-qualified call (deterministic resolution — the bare `url_encode`
+  // form intermittently miscompiles at -O2 with alwaysinline: the return
+  // value came back corrupted ~5% of runs, flaky by code layout).
+  encoding.url_encode(data)
 }
 
 pub fn percent_decode(encoded: Str) -> Result[Str, Str]
