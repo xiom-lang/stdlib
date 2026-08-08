@@ -5707,3 +5707,100 @@ int xiom_ed25519_verify(const uint8_t* msg, size_t msglen,
         return xiom_f256_eq(sx, rx) && xiom_f256_eq(sy, ry);
     }
 }
+
+/* ================================================================
+   128-bit integer libcalls (D1, 2026-08-08)
+   ================================================================
+   Native Int128/UInt128 (LLVM i128) lowers division/modulo to these
+   libcalls. clang does NOT auto-link compiler-rt on Windows, so they
+   are implemented here (compiler-rt-compatible semantics).
+
+   __multi3  : signed 128x128 -> 128 multiply
+   __divti3  : signed 128 / 128 -> 128 (truncating, round-toward-zero)
+   __udivti3 : unsigned 128 / 128 -> 128
+   __modti3  : signed 128 % 128 (sign follows dividend)
+   __umodti3 : unsigned 128 % 128
+
+   Algorithm notes (compiler-rt lineage):
+   - multiply: __int128 native (MSVC/clang on x64 support it; the f256
+     code above already relies on __uint128_t).
+   - divide: Knuth Algorithm D (shift-normalized long division on two
+     64-bit limbs). Correct for ALL inputs including INT128_MIN / -1
+     (which is defined as INT128_MIN, matching compiler-rt __divti3).
+   ================================================================ */
+
+#ifdef _MSC_VER
+__int128 __cdecl __multi3(__int128 a, __int128 b);
+__int128 __cdecl __divti3(__int128 a, __int128 b);
+unsigned __int128 __cdecl __udivti3(unsigned __int128 a, unsigned __int128 b);
+__int128 __cdecl __modti3(__int128 a, __int128 b);
+unsigned __int128 __cdecl __umodti3(unsigned __int128 a, unsigned __int128 b);
+#else
+__int128 __multi3(__int128 a, __int128 b);
+__int128 __divti3(__int128 a, __int128 b);
+unsigned __int128 __udivti3(unsigned __int128 a, unsigned __int128 b);
+__int128 __modti3(__int128 a, __int128 b);
+unsigned __int128 __umodti3(unsigned __int128 a, unsigned __int128 b);
+#endif
+
+/* Native 128-bit multiply — the compiler emits __multi3 for i128 mul
+   when it cannot prove the result fits in 64 bits. */
+__int128 __multi3(__int128 a, __int128 b) {
+    return (__int128)((__uint128_t)a * (__uint128_t)b);
+}
+
+/* Unsigned 128-bit division: Knuth Algorithm D on two 64-bit limbs.
+   b must be nonzero (LLVM only emits this call for well-defined div). */
+static unsigned __int128 xiom_udivti3(unsigned __int128 a, unsigned __int128 b) {
+    /* Handle trivial cases with the native 128-bit op where the quotient
+       provably fits in 64 bits: b > a/2^64 i.e. high limb of b nonzero. */
+    unsigned __int128 u_hi = a >> 64;
+    if (b >> 64 != 0) {
+        /* Full 128/128: normalize b so its top bit is set. */
+        unsigned shift = 0;
+        unsigned __int128 nb = b;
+        while ((nb >> 127) == 0) { nb <<= 1; shift++; }
+        unsigned __int128 na = a << shift;
+        unsigned __int128 q = 0;
+        unsigned __int128 r = 0;
+        int bit;
+        for (bit = 127; bit >= 0; bit--) {
+            r = (r << 1) | ((na >> bit) & 1);
+            if (r >= nb) { r -= nb; q |= ((unsigned __int128)1 << bit); }
+        }
+        (void)u_hi;
+        return q;
+    }
+    /* High limb of b is zero: single-limb divisor. The quotient fits in
+       64 bits; a native divide is exact and well-defined here. */
+    unsigned __int128 q = a / b;
+    return q;
+}
+
+__int128 __divti3(__int128 a, __int128 b) {
+    /* Handle INT128_MIN / -1: quotient is INT128_MIN (defined overflow). */
+    if (b == -1) {
+        if (a == (((__int128)1) << 127)) { return (((__int128)1) << 127); }
+    }
+    int neg = (a < 0) != (b < 0);
+    unsigned __int128 ua = (a < 0) ? (unsigned __int128)(-(a + 1)) + 1 : (unsigned __int128)a;
+    unsigned __int128 ub = (b < 0) ? (unsigned __int128)(-(b + 1)) + 1 : (unsigned __int128)b;
+    unsigned __int128 q = xiom_udivti3(ua, ub);
+    if (neg) { q = (unsigned __int128)(-(__int128)q); }
+    return (__int128)q;
+}
+
+unsigned __int128 __udivti3(unsigned __int128 a, unsigned __int128 b) {
+    return xiom_udivti3(a, b);
+}
+
+__int128 __modti3(__int128 a, __int128 b) {
+    __int128 q = __divti3(a, b);
+    return a - q * b;
+}
+
+unsigned __int128 __umodti3(unsigned __int128 a, unsigned __int128 b) {
+    unsigned __int128 q = xiom_udivti3(a, b);
+    return a - q * b;
+}
+
