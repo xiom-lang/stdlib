@@ -1,4 +1,4 @@
-// XIOM — Error Trait Hierarchy
+// XIOM â€” Error Trait Hierarchy
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 
@@ -78,7 +78,7 @@ pub fn Backtrace.display(self) -> Str {
   return result;
 }
 
-// ── Error Construction Helpers ─────────────────────────────────────
+// â”€â”€ Error Construction Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 /// Returns the error message unchanged. Identity helper for code clarity.
 /// Complexity: O(1). Pure, no side effects.
@@ -112,7 +112,7 @@ pub fn error_join(a: Str, b: Str) -> Str {
 }
 
 /// Converts an `Option[T]` into a `Result[T, Str]`.
-/// `Some(v)` → `Ok(v)`, `None` → `Err(msg)`.
+/// `Some(v)` â†’ `Ok(v)`, `None` â†’ `Err(msg)`.
 /// Complexity: O(1). Pure, no side effects.
 pub fn option_ok_or[T](o: Option[T], msg: Str) -> Result[T, Str] {
   match o {
@@ -120,3 +120,10 @@ pub fn option_ok_or[T](o: Option[T], msg: Str) -> Result[T, Str] {
     None => Err(msg);
   };
 }
+
+
+// D2.1 (Unsafe Confinement Phase 5, requirement g): recoverable hardware-fault
+// error returned when an unsafe block traps (SIGSEGV/SIGILL/SIGFPE/...).
+pub type HardwareFault = { signal: Str; pc: UInt64; retried: Bool; }
+
+pub type ContractViolation = { contract: Str; }

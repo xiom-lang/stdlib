@@ -365,6 +365,154 @@ int xiom_guard_page_is_armed(void) {
     return xiom_guard_page_armed;
 }
 
+/* ================================================================
+   Fault Trampoline (Unsafe Confinement Phase 5, requirement f/g)
+   ================================================================
+   The unsafe block is compiled as a STANDALONE function:
+       int64_t __unsafe_block_N(uint8_t* ctx)
+   The call site invokes it through xiom_trampoline_call, which wraps the
+   call in SEH (Windows __try/__except) or sigsetjmp/siglongjmp (POSIX).
+   Hardware faults (SIGSEGV/SIGILL/SIGFPE) inside the block unwind ONLY the
+   trampoline's frame — the caller's IR stack is untouched — and the call
+   returns a recoverable error code.
+
+   Returns: 0 = block completed normally (result is valid)
+            otherwise = fault code (result is invalid; use xiom_trap_signal_name)
+   ================================================================ */
+
+typedef int64_t (*xiom_block_fn)(uint8_t* ctx);
+
+#ifdef _WIN32
+static __declspec(thread) int xiom_trampoline_active = 0;
+
+/* D2.1 Phase 5: Vectored-Exception-Handler trap-enter mechanism for INLINE
+   unsafe blocks. xiom_trap_enter captures the CPU context; if a hardware
+   fault occurs while a trap is active, the VEH handler sets the return
+   register (RAX) to the fault code and RESTORES the captured context, so
+   execution resumes right after the xiom_trap_enter call with the fault
+   code as its "return value". The codegen branches on it to produce
+   Err(HardwareFault). */
+static __declspec(thread) CONTEXT xiom_trap_ctx;
+static __declspec(thread) int xiom_trap_active = 0;
+static __declspec(thread) int xiom_trap_fault = 0;
+
+static LONG WINAPI xiom_trap_veh(PEXCEPTION_POINTERS ep) {
+    if (xiom_trap_active) {
+        DWORD code = ep->ExceptionRecord->ExceptionCode;
+        if (code == EXCEPTION_ACCESS_VIOLATION) xiom_trap_fault = 1;
+        else if (code == EXCEPTION_ILLEGAL_INSTRUCTION) xiom_trap_fault = 2;
+        else if (code == EXCEPTION_INT_DIVIDE_BY_ZERO) xiom_trap_fault = 3;
+        else if (code == EXCEPTION_STACK_OVERFLOW) xiom_trap_fault = 4;
+        else if (code == EXCEPTION_GUARD_PAGE) xiom_trap_fault = 5;
+        else xiom_trap_fault = 6;
+        /* Set RAX to the fault code and resume at the captured context. */
+        xiom_trap_ctx.Rax = (DWORD64)xiom_trap_fault;
+        RtlRestoreContext(&xiom_trap_ctx, NULL);
+        return EXCEPTION_CONTINUE_EXECUTION; /* unreachable */
+    }
+    return EXCEPTION_CONTINUE_SEARCH; /* not in a confined block — crash loudly */
+}
+
+int64_t xiom_trap_enter(void) {
+    static int veh_installed = 0;
+    if (!veh_installed) {
+        AddVectoredExceptionHandler(1, xiom_trap_veh);
+        veh_installed = 1;
+    }
+    xiom_trap_active = 1;
+    xiom_trap_fault = 0;
+    RtlCaptureContext(&xiom_trap_ctx);
+    /* Reached twice: once normally (fault==0), once after a fault
+       (fault != 0). NOTE: active stays 1 until xiom_trap_leave is
+       called at the block's normal exit — faults anywhere in the
+       confined block are trapped. */
+    return xiom_trap_fault;
+}
+
+/* Clear the trap context (called at the unsafe block's normal exit). */
+void xiom_trap_leave(void) {
+    xiom_trap_active = 0;
+    xiom_trap_fault = 0;
+}
+
+int64_t xiom_trampoline_call(xiom_block_fn fn, uint8_t* ctx) {
+    int64_t result = 0;
+    xiom_trampoline_active = 1;
+    __try {
+        result = fn(ctx);
+    }
+    __except (EXCEPTION_EXECUTE_HANDLER) {
+        /* Hardware fault inside the confined block: return the fault code.
+           The guard arena + page are reset by the codegen's return-exit
+           path or the block tail — here we just report the fault. */
+        xiom_trampoline_active = 0;
+        DWORD code = GetExceptionCode();
+        /* Map SEH codes to our fault codes (positive, non-zero). */
+        if (code == EXCEPTION_ACCESS_VIOLATION) return 1;       /* SIGSEGV */
+        if (code == EXCEPTION_ILLEGAL_INSTRUCTION) return 2;    /* SIGILL */
+        if (code == EXCEPTION_INT_DIVIDE_BY_ZERO) return 3;     /* SIGFPE */
+        if (code == EXCEPTION_STACK_OVERFLOW) return 4;         /* SIGSEGV-ish */
+        if (code == EXCEPTION_GUARD_PAGE) return 5;             /* guard page hit */
+        return 6;                                               /* other */
+    }
+    xiom_trampoline_active = 0;
+    return 0;
+}
+#else
+#include <setjmp.h>
+#include <signal.h>
+static __thread sigjmp_buf xiom_trampoline_jmp;
+static __thread int xiom_trampoline_active = 0;
+
+static void xiom_trampoline_handler(int sig, siginfo_t* si, void* uc) {
+    (void)si; (void)uc;
+    if (xiom_trampoline_active) {
+        /* Map to fault code: SIGSEGV=1, SIGILL=2, SIGFPE=3 */
+        int code = (sig == SIGSEGV) ? 1 : (sig == SIGILL) ? 2 : (sig == SIGFPE) ? 3 : 6;
+        siglongjmp(xiom_trampoline_jmp, code);
+    }
+    /* Not in a trampoline: restore default and re-raise (crash loudly). */
+    signal(sig, SIG_DFL);
+    raise(sig);
+}
+
+int64_t xiom_trampoline_call(xiom_block_fn fn, uint8_t* ctx) {
+    struct sigaction sa;
+    struct sigaction old_segv, old_ill, old_fpe;
+    memset(&sa, 0, sizeof(sa));
+    sa.sa_sigaction = xiom_trampoline_handler;
+    sa.sa_flags = SA_SIGINFO;
+    sigemptyset(&sa.sa_mask);
+    sigaction(SIGSEGV, &sa, &old_segv);
+    sigaction(SIGILL, &sa, &old_ill);
+    sigaction(SIGFPE, &sa, &old_fpe);
+
+    xiom_trampoline_active = 1;
+    int code = sigsetjmp(xiom_trampoline_jmp, 1);
+    int64_t result = 0;
+    if (code == 0) {
+        result = fn(ctx);
+    }
+    xiom_trampoline_active = 0;
+    sigaction(SIGSEGV, &old_segv, NULL);
+    sigaction(SIGILL, &old_ill, NULL);
+    sigaction(SIGFPE, &old_fpe, NULL);
+    return code; /* 0 = ok, else fault code */
+}
+#endif
+
+/* Fault code → signal name for HardwareFault diagnostics. */
+const char* xiom_trap_signal_name(int code) {
+    switch (code) {
+        case 1: return "SIGSEGV";
+        case 2: return "SIGILL";
+        case 3: return "SIGFPE";
+        case 4: return "STACK_OVERFLOW";
+        case 5: return "GUARD_PAGE";
+        default: return "UNKNOWN_FAULT";
+    }
+}
+
 char xiom_char_at(const char* str, long pos) {
     if (!str) return 0;
     if (pos < 0) return 0;
