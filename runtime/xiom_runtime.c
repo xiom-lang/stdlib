@@ -417,6 +417,12 @@ static __declspec(thread) int xiom_trampoline_returned = 0;
    that JUST ran (not leaked from nested trampoline calls). The call site reads
    this via xiom_trampoline_was_returned(). */
 static __declspec(thread) int xiom_trampoline_this_returned = 0;
+/* D2.1 (Phase 6): 1 once a transient fault has been retried; the block's value
+   was delivered on a fresh memory slot (HardwareFault.retried=true path). */
+static __declspec(thread) int xiom_trampoline_retried = 0;
+/* D2.1 (Phase 6): 1 by default — the trampoline retries a transient fault once.
+   Cleared for `#[unsafe_no_retry]` blocks (deterministic faults shouldn't retry). */
+static __declspec(thread) int xiom_trampoline_allow_retry = 1;
 
 /* D2.1 Phase 5: Vectored-Exception-Handler trap-enter mechanism for INLINE
    unsafe blocks. xiom_trap_enter captures the CPU context; if a hardware
@@ -470,38 +476,63 @@ void xiom_trap_leave(void) {
 
 int64_t xiom_trampoline_call(xiom_block_fn fn, uint8_t* ctx) {
     int64_t result = 0;
-    xiom_trampoline_active = 1;
+    int fault_code = 0;
+    int attempt = 0;
+    xiom_trampoline_retried = 0;
     /* Save the enclosing block's returned-flag and reset for THIS block fn, so
        nested trampoline calls (a confined block calling a fn whose unsafe block
        is another confined block) do not leak their returned-status into the
        outer block's call site. */
     int saved_returned = xiom_trampoline_returned;
-    xiom_trampoline_returned = 0;
-    __try {
-        result = fn(ctx);
-    }
-    __except (EXCEPTION_EXECUTE_HANDLER) {
-        /* Hardware fault inside the confined block: return the fault code.
-           The guard arena + page are reset by the codegen's return-exit
-           path or the block tail — here we just report the fault. */
+
+    while (1) {
+        xiom_trampoline_active = 1;
+        xiom_trampoline_returned = 0;
+        int faulted = 0;
+        DWORD fault_win = 0;
+        __try {
+            result = fn(ctx);
+        }
+        __except (EXCEPTION_EXECUTE_HANDLER) {
+            faulted = 1;
+            fault_win = GetExceptionCode();
+        }
         xiom_trampoline_active = 0;
+
+        if (!faulted) {
+            /* Block completed normally: deliver result. */
+            xiom_trampoline_last_result = result;
+            xiom_trampoline_this_returned = xiom_trampoline_returned;
+            xiom_trampoline_returned = saved_returned;
+            return 0;
+        }
+
+        /* Map the fault code. */
+        if (fault_win == EXCEPTION_ACCESS_VIOLATION) fault_code = 1;       /* SIGSEGV */
+        else if (fault_win == EXCEPTION_ILLEGAL_INSTRUCTION) fault_code = 2; /* SIGILL */
+        else if (fault_win == EXCEPTION_INT_DIVIDE_BY_ZERO) fault_code = 3;  /* SIGFPE */
+        else if (fault_win == EXCEPTION_STACK_OVERFLOW) fault_code = 4;      /* SIGSEGV-ish */
+        else if (fault_win == EXCEPTION_GUARD_PAGE) fault_code = 5;          /* guard page hit */
+        else fault_code = 6;                                                 /* other */
+
+        /* D2.1 (Phase 6, requirement h): transient-fault RETRY ONCE. A fault can
+           be transient (first-touch guard page / fresh arena slot). Reset the
+           guard arena (discard all slabs) + re-arm the guard page, then re-run
+           the block fn ONCE on a fresh memory slot. The block fn re-enters the
+           arena + re-arms the page at its entry. If it faults again the fault is
+           permanent → report it. `#[unsafe_no_retry]` (xiom_trampoline_allow_retry
+           == 0) disables the retry. */
+        if (xiom_trampoline_allow_retry && !xiom_trampoline_retried) {
+            xiom_trampoline_retried = 1;
+            xiom_guard_heap_exit();    /* discard all arena slabs (fresh slot) */
+            xiom_guard_page_disarm();  /* block fn re-arms on retry */
+            continue;                  /* re-run fn(ctx) */
+        }
+
+        /* Permanent fault (or retry disabled / already retried): report it. */
         xiom_trampoline_returned = saved_returned;
-        DWORD code = GetExceptionCode();
-        /* Map SEH codes to our fault codes (positive, non-zero). */
-        if (code == EXCEPTION_ACCESS_VIOLATION) return 1;       /* SIGSEGV */
-        if (code == EXCEPTION_ILLEGAL_INSTRUCTION) return 2;    /* SIGILL */
-        if (code == EXCEPTION_INT_DIVIDE_BY_ZERO) return 3;     /* SIGFPE */
-        if (code == EXCEPTION_STACK_OVERFLOW) return 4;         /* SIGSEGV-ish */
-        if (code == EXCEPTION_GUARD_PAGE) return 5;             /* guard page hit */
-        return 6;                                               /* other */
+        return fault_code;
     }
-    xiom_trampoline_active = 0;
-    xiom_trampoline_last_result = result;
-    /* Snapshot THIS block fn's returned-status for the call site, then restore
-       the enclosing block's flag (so nested calls don't corrupt it). */
-    xiom_trampoline_this_returned = xiom_trampoline_returned;
-    xiom_trampoline_returned = saved_returned;
-    return 0;
 }
 #else
 #include <setjmp.h>
@@ -511,6 +542,8 @@ static __thread int xiom_trampoline_active = 0;
 static __thread int64_t xiom_trampoline_last_result = 0;
 static __thread int xiom_trampoline_returned = 0;
 static __thread int xiom_trampoline_this_returned = 0;
+static __thread int xiom_trampoline_retried = 0;
+static __thread int xiom_trampoline_allow_retry = 1;
 
 static void xiom_trampoline_handler(int sig, siginfo_t* si, void* uc) {
     (void)si; (void)uc;
@@ -535,26 +568,40 @@ int64_t xiom_trampoline_call(xiom_block_fn fn, uint8_t* ctx) {
     sigaction(SIGILL, &sa, &old_ill);
     sigaction(SIGFPE, &sa, &old_fpe);
 
-    xiom_trampoline_active = 1;
     int saved_returned = xiom_trampoline_returned;
-    xiom_trampoline_returned = 0;
-    int code = sigsetjmp(xiom_trampoline_jmp, 1);
-    int64_t result = 0;
-    if (code == 0) {
-        result = fn(ctx);
+    xiom_trampoline_retried = 0;
+    int fault_code = 0;
+    while (1) {
+        xiom_trampoline_active = 1;
+        xiom_trampoline_returned = 0;
+        int code = sigsetjmp(xiom_trampoline_jmp, 1);
+        int64_t result = 0;
+        if (code == 0) {
+            result = fn(ctx);
+        }
+        xiom_trampoline_active = 0;
+        if (code == 0) {
+            xiom_trampoline_last_result = result;
+            xiom_trampoline_this_returned = xiom_trampoline_returned;
+            xiom_trampoline_returned = saved_returned;
+            return 0;
+        }
+        fault_code = code;
+        if (xiom_trampoline_allow_retry && !xiom_trampoline_retried) {
+            xiom_trampoline_retried = 1;
+            xiom_guard_heap_exit();
+            xiom_guard_page_disarm();
+            continue;
+        }
+        xiom_trampoline_returned = saved_returned;
+        return fault_code;
     }
-    xiom_trampoline_active = 0;
+    /* never reached */
     sigaction(SIGSEGV, &old_segv, NULL);
     sigaction(SIGILL, &old_ill, NULL);
     sigaction(SIGFPE, &old_fpe, NULL);
-    if (code == 0) {
-        xiom_trampoline_last_result = result;
-        xiom_trampoline_this_returned = xiom_trampoline_returned;
-    }
-    xiom_trampoline_returned = saved_returned;
-    return code; /* 0 = ok, else fault code */
 }
-#endif
+#endif /* end POSIX trampoline */
 
 /* Fault code → signal name for HardwareFault diagnostics. */
 const char* xiom_trap_signal_name(int code) {    switch (code) {
@@ -591,6 +638,18 @@ int64_t xiom_trampoline_was_returned(void) {
     return xiom_trampoline_this_returned;
 }
 
+/* D2.1 (Phase 6): 1 if a transient fault was retried (delivered on a fresh
+   slot), 0 otherwise. Enables the HardwareFault.retried=true field. */
+int64_t xiom_trampoline_was_retried(void) {
+    return xiom_trampoline_retried;
+}
+
+/* D2.1 (Phase 6): enable/disable the once-only transient retry for the next
+   trampoline call. `#[unsafe_no_retry]` blocks call this with 0. */
+void xiom_trampoline_set_allow_retry(int allow) {
+    xiom_trampoline_allow_retry = allow;
+}
+
 /* ================================================================
    Fault-injection helpers (Phase 5 tests) — deliberately raise
    hardware faults that the SEH trampoline must trap. Each returns
@@ -616,6 +675,26 @@ int64_t xiom_fault_div0(void) {
     /* Deliberate integer divide-by-zero (SIGFPE / EXCEPTION_INT_DIVIDE_BY_ZERO). */
     volatile int64_t zero = 0;
     return 42 / zero;
+}
+
+/* D2.1 (Phase 6): simulate a TRANSIENT fault — faults on the FIRST call, then
+   succeeds (returns 42) on subsequent calls, mimicking a first-touch page /
+   fresh-slot fault that a retry resolves. */
+static __declspec(thread) int xiom_fault_transient_count = 0;
+int64_t xiom_fault_transient(void) {
+    if (xiom_fault_transient_count == 0) {
+        xiom_fault_transient_count = 1;
+        volatile int* bad = (volatile int*)0x1;
+        return (int64_t)*bad; /* SIGSEGV on first call */
+    }
+    return 42; /* succeeds on retry */
+}
+
+/* D2.1 (Phase 6): PERMANENT fault — faults on every call (for #[unsafe_no_retry]
+   and permanent-fault smokes). */
+int64_t xiom_fault_permanent(void) {
+    volatile int* bad = (volatile int*)0x1;
+    return (int64_t)*bad;
 }
 
 int64_t xiom_fault_deref_ok(void) {
