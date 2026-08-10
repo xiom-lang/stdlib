@@ -1,4 +1,4 @@
-// XIOM â€” math/core.xi â€” GENERIC numeric tower (3c, 2026-08-10)
+// XIOM Ã¢â‚¬â€ math/core.xi Ã¢â‚¬â€ GENERIC numeric tower (3c, 2026-08-10)
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 //
@@ -6,13 +6,13 @@
 // contract (math.sqrt(Float64) etc.) as freeze-gated shims; THIS module hosts
 // the GENERIC implementations that serve every width through the Num
 // interface (impl Num[Int], Num[Int32], Num[Float64], Num[Float32], ...).
-// One implementation per concept â€” no per-width duplication.
+// One implementation per concept Ã¢â‚¬â€ no per-width duplication.
 
 module xiom.math.core
 
-// â”€â”€ Num interface (the numeric tower contract) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ Num interface (the numeric tower contract) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 // Implemented by every numeric width. New widths register by adding one
-// `impl Num[Width] { ... }` block â€” every generic function below then serves
+// `impl Num[Width] { ... }` block Ã¢â‚¬â€ every generic function below then serves
 // that width automatically.
 pub interface Num[T] {
   fn add(a: T, b: T) -> T;
@@ -23,7 +23,7 @@ pub interface Num[T] {
   fn one() -> T;
 }
 
-// â”€â”€ Width implementations â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ Width implementations Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
 impl Num[Int] {
   fn add(a: Int, b: Int) -> Int { return a + b; }
@@ -91,7 +91,7 @@ impl Num[Float32] {
   fn to_float(v: Float32) -> Float64 { return v as Float64; }
 }
 
-// â”€â”€ Generic numeric functions (one impl, all widths) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ Generic numeric functions (one impl, all widths) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
 /// Linear interpolation: a*(1-t) + b*t. Generic over every Num width.
 pub fn lerp[T: Num](a: T, b: T, t: T) -> T {
@@ -139,3 +139,124 @@ pub fn twice[T: Num](a: T) -> T {
 pub fn negate[T: Num](a: T) -> T {
   return Num[T].sub(Num[T].zero(), a);
 }
+
+// â”€â”€ FromInt interface (conversions â€” separate from arithmetic Num) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Widths opt into Int conversion by implementing FromInt. Keeps Num pure
+// arithmetic so the tower contract stays minimal.
+
+pub interface FromInt[T] {
+  fn from_int(v: Int) -> T;
+  fn to_float(v: T) -> Float64;
+}
+
+impl FromInt[Int] {
+  fn from_int(v: Int) -> Int { return v; }
+  fn to_float(v: Int) -> Float64 { return v as Float64; }
+}
+
+impl FromInt[Int32] {
+  fn from_int(v: Int) -> Int32 { return v as Int32; }
+  fn to_float(v: Int32) -> Float64 { return v as Float64; }
+}
+
+impl FromInt[Int64] {
+  fn from_int(v: Int) -> Int64 { return v as Int64; }
+  fn to_float(v: Int64) -> Float64 { return v as Float64; }
+}
+
+impl FromInt[UInt64] {
+  fn from_int(v: Int) -> UInt64 { return v as UInt64; }
+  fn to_float(v: UInt64) -> Float64 { return v as Float64; }
+}
+
+impl FromInt[Float64] {
+  fn from_int(v: Int) -> Float64 { return v as Float64; }
+  fn to_float(v: Float64) -> Float64 { return v; }
+}
+
+impl FromInt[Float32] {
+  fn from_int(v: Int) -> Float32 { return v as Float32; }
+  fn to_float(v: Float32) -> Float64 { return v as Float64; }
+}
+
+// â”€â”€ Generic conversion + comparison helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+// NOTE: generic abs/clamp/sqrt require COMPARISON, which is not part of the
+// Num tower (Num is pure arithmetic). The `Real` interface below extends the
+// tower with comparison + sign ops so abs/clamp/min/max become generic too.
+// Float widths also gain sqrt via their concrete math.sqrt.
+
+pub interface Real[T] {
+  fn lt(a: T, b: T) -> Bool;
+  fn gt(a: T, b: T) -> Bool;
+  fn le(a: T, b: T) -> Bool;
+  fn ge(a: T, b: T) -> Bool;
+  fn is_negative(a: T) -> Bool;
+}
+
+impl Real[Int] {
+  fn lt(a: Int, b: Int) -> Bool { return a < b; }
+  fn gt(a: Int, b: Int) -> Bool { return a > b; }
+  fn le(a: Int, b: Int) -> Bool { return a <= b; }
+  fn ge(a: Int, b: Int) -> Bool { return a >= b; }
+  fn is_negative(a: Int) -> Bool { return a < 0; }
+}
+
+impl Real[Int32] {
+  fn lt(a: Int32, b: Int32) -> Bool { return a < b; }
+  fn gt(a: Int32, b: Int32) -> Bool { return a > b; }
+  fn le(a: Int32, b: Int32) -> Bool { return a <= b; }
+  fn ge(a: Int32, b: Int32) -> Bool { return a >= b; }
+  fn is_negative(a: Int32) -> Bool { return a < (0 as Int32); }
+}
+
+impl Real[Float64] {
+  fn lt(a: Float64, b: Float64) -> Bool { return a < b; }
+  fn gt(a: Float64, b: Float64) -> Bool { return a > b; }
+  fn le(a: Float64, b: Float64) -> Bool { return a <= b; }
+  fn ge(a: Float64, b: Float64) -> Bool { return a >= b; }
+  fn is_negative(a: Float64) -> Bool { return a < 0.0; }
+}
+
+impl Real[Float32] {
+  fn lt(a: Float32, b: Float32) -> Bool { return a < b; }
+  fn gt(a: Float32, b: Float32) -> Bool { return a > b; }
+  fn le(a: Float32, b: Float32) -> Bool { return a <= b; }
+  fn ge(a: Float32, b: Float32) -> Bool { return a >= b; }
+  fn is_negative(a: Float32) -> Bool { return a < (0 as Float32); }
+}
+
+/// Absolute value. Generic over widths implementing Real.
+pub fn abs[T: Real + Num](a: T) -> T {
+  if Real[T].is_negative(a) {
+    return Num[T].sub(Num[T].zero(), a);
+  }
+  return a;
+}
+
+/// Clamp x into [lo, hi]. Generic over widths implementing Real.
+pub fn clamp[T: Real + Num](x: T, lo: T, hi: T) -> T {
+  if Real[T].lt(x, lo) { return lo; }
+  if Real[T].gt(x, hi) { return hi; }
+  return x;
+}
+
+/// Minimum of two values. Generic over widths implementing Real.
+pub fn min2[T: Real](a: T, b: T) -> T {
+  if Real[T].lt(a, b) { return a; }
+  return b;
+}
+
+/// Maximum of two values. Generic over widths implementing Real.
+pub fn max2[T: Real](a: T, b: T) -> T {
+  if Real[T].gt(a, b) { return a; }
+  return b;
+}
+
+/// Build a value of any FromInt width from an Int literal.
+pub fn of_int[T: FromInt](v: Int) -> T {
+  return FromInt[T].from_int(v);
+}
+
+// NOTE: generic sqrt needs transcendental support per width â€” the Float64
+// sqrt is concrete (math.sqrt). A future `Transcendental` interface hosts it.
