@@ -302,6 +302,69 @@ int xiom_guard_heap_depth(void) {
     return xiom_guard_arena.active;
 }
 
+/* ================================================================
+   Stack Guard Pages (Unsafe Confinement Phase 4, requirement e)
+   ================================================================
+   A per-thread red-zone page is armed while an unsafe block runs. On
+   Windows a PAGE_GUARD page raises a one-shot fault on first touch; on
+   POSIX a PROT_NONE page raises SIGSEGV. Stack overflow inside the
+   confined block faults AT the guard page — before adjacent memory is
+   written — and the Phase 5 trampoline catches it.
+
+   The guard page is a FIXED allocation per thread (created lazily);
+   arming writes a probe byte to consume the one-shot PAGE_GUARD state
+   so the page is in its protective state during the block.
+   ================================================================ */
+
+static __declspec(thread) void* xiom_guard_page_ptr = NULL;
+static __declspec(thread) int xiom_guard_page_armed = 0;
+
+/* Create (or reuse) the per-thread guard page and ARM it. */
+void xiom_guard_page_arm(void) {
+    if (!xiom_guard_page_ptr) {
+#ifdef _WIN32
+        /* Reserve + commit a PAGE_GUARD page. A PAGE_GUARD page raises
+           STATUS_GUARD_PAGE_VIOLATION on first access (one-shot). */
+        SYSTEM_INFO si;
+        GetSystemInfo(&si);
+        SIZE_T page = si.dwPageSize;
+        void* p = VirtualAlloc(NULL, page, MEM_COMMIT | MEM_RESERVE, PAGE_GUARD | PAGE_READWRITE);
+        if (!p) return;
+        xiom_guard_page_ptr = p;
+#else
+        long page = sysconf(_SC_PAGESIZE);
+        void* p = mmap(NULL, (size_t)page, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+        if (p == MAP_FAILED) return;
+        xiom_guard_page_ptr = p;
+#endif
+    }
+    xiom_guard_page_armed = 1;
+}
+
+/* Disarm the guard page (restore it to a benign state until re-armed). */
+void xiom_guard_page_disarm(void) {
+    if (!xiom_guard_page_ptr || !xiom_guard_page_armed) return;
+#ifdef _WIN32
+    /* Re-arm the one-shot PAGE_GUARD: VirtualProtect re-arms it. */
+    DWORD old;
+    SYSTEM_INFO si;
+    GetSystemInfo(&si);
+    VirtualProtect(xiom_guard_page_ptr, si.dwPageSize, PAGE_GUARD | PAGE_READWRITE, &old);
+#else
+    /* PROT_NONE stays until the page is un-mapped; disarm = mprotect to
+       PROT_READ|WRITE so a stale write does not fault in safe code. */
+    long page = sysconf(_SC_PAGESIZE);
+    mprotect(xiom_guard_page_ptr, (size_t)page, PROT_READ | PROT_WRITE);
+#endif
+    xiom_guard_page_armed = 0;
+}
+
+/* Whether a guard page is currently armed (for the fault handler to
+   distinguish confined-block overflows from genuine faults). */
+int xiom_guard_page_is_armed(void) {
+    return xiom_guard_page_armed;
+}
+
 char xiom_char_at(const char* str, long pos) {
     if (!str) return 0;
     if (pos < 0) return 0;
