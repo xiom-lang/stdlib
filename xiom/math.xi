@@ -4,6 +4,11 @@
 
 module xiom.math
 
+// D4b manifest (2026-08-10): importing xiom.math pulls in the generic
+// sub-modules. math/core hosts the generic numeric tower (3c) — one
+// implementation per concept serving every Num width.
+use xiom.math.core;
+
 use xiom.core.INT_MAX;
 use xiom.core.INT_MIN;
 use xiom.core.to_int;
