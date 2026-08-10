@@ -13,7 +13,12 @@
  * It contains no assembly, so XIOM_NO_ASM has no effect beyond being accepted.
  */
 
+// Guarded against redefinition: the xiom compiler also passes
+// -D_CRT_SECURE_NO_WARNINGS on the command line (a bare re-#define triggers
+// clang's -Wmacro-redefined).
+#ifndef _CRT_SECURE_NO_WARNINGS
 #define _CRT_SECURE_NO_WARNINGS
+#endif
 
 #ifdef _WIN32
   #define WIN32_LEAN_AND_MEAN
