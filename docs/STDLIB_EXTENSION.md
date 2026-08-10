@@ -3523,9 +3523,15 @@ forever, so nothing written later breaks anything written now.
         module-qualified/lazily-registered impl methods.
       Verified: smoke_math_core (lerp/average/sum/product/negate/twice over
       5 widths), smoke_generic_tower, missing-impl → clean C001.
-      REMAINING: conversions (`from_int`/`to_float`) as a separate
-      interface (Num stays pure arithmetic); generic `sqrt`/`abs`/`clamp`
-      in math/core; stdlib adoption of the generic forms.
+      ✅ COMPLETED (2026-08-10, commits f1cb3fef + cd48a8df):
+      - `Real` interface (lt/gt/le/ge/is_negative) → generic abs/clamp/min2/max2
+      - `FromInt` interface (from_int/to_float) → generic of_int
+      - catalog impl-method injection: dedup on type-qualified names,
+        interface collection in register_external_module, generic-bound
+        reachability seeding (all interface methods survive the dead-code
+        filter so C001 bound checks pass)
+      - REMAINING (later): generic sqrt needs a Transcendental interface;
+        stdlib adoption of the generic forms (math.xi stays frozen concrete).
    d. Full test pass on every step; no `#[ignore]`d shortcuts.
       ✅ checker 166, exec 67 (incl. hardening smoke), e2e 2231, all suites.
    e. ADDITIONAL fixes landed during hardening:
