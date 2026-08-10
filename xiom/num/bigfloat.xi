@@ -102,6 +102,13 @@ fn _copy_bf(f: &BigFloat) -> BigFloat {
                    significand: xiom.bigint.bigint_abs(&f.significand); precision: f.precision; };
 }
 
+// Copy with a new precision (working-precision plumbing for transcendentals).
+fn _set_prec(f: &BigFloat, prec: Int) -> BigFloat {
+  var r = _copy_bf(f);
+  r.precision = prec;
+  return r;
+}
+
 fn _prec_of(a: &BigFloat, b: &BigFloat) -> Int {
   var p = a.precision;
   if b.precision > p { p = b.precision; }
@@ -423,6 +430,11 @@ pub fn bigfloat_is_negative(f: &BigFloat) -> Bool {
   return f.sign && !bigfloat_is_zero(f);
 }
 
+pub fn bigfloat_is_one(f: &BigFloat) -> Bool {
+  var one = _one_at(f.precision);
+  return bigfloat_eq(f, &one);
+}
+
 pub fn bigfloat_sign(f: &BigFloat) -> Int {
   if bigfloat_is_zero(f) { return 0; }
   if f.sign { return -1; }
@@ -716,24 +728,431 @@ pub fn bigfloat_ge(a: &BigFloat, b: &BigFloat) -> Bool {
 }
 
 // ============================================================================
-// PHASE C TODO — Transcendentals (planned signatures, follow-up session)
+// PHASE C — Transcendentals (pure XIOM series; zero external deps)
 // ============================================================================
-// MPFR-style series with argument reduction; stdlib stays zero-dependency
-// (a C MPFR binding would be a PACKAGE, per D3). Planned API:
+// Strategy: working precision = max(operand precisions, 64) + 4 guard digits;
+// all intermediates carry the working precision; the result is rounded back
+// to the operand precision with the current RoundMode. Argument reduction
+// uses decimal scaling (exact in this representation) and the stored
+// constants pi / ln(10) / sqrt(10) computed at working precision.
 //
-//   pub fn bigfloat_pi_with_precision(precision: Int) -> BigFloat   // Machin series
-//   pub fn bigfloat_e_with_precision(precision: Int) -> BigFloat    // Taylor series
-//   pub fn bigfloat_exp(f: &BigFloat) -> BigFloat                   // Taylor + range reduction
-//   pub fn bigfloat_ln(f: &BigFloat) -> BigFloat
-//   pub fn bigfloat_log10(f: &BigFloat) -> BigFloat
-//   pub fn bigfloat_sin(f: &BigFloat) -> BigFloat
-//   pub fn bigfloat_cos(f: &BigFloat) -> BigFloat
-//   pub fn bigfloat_tan(f: &BigFloat) -> BigFloat
-//   pub fn bigfloat_atan(f: &BigFloat) -> BigFloat
-//   pub fn bigfloat_atan2(y: &BigFloat, x: &BigFloat) -> BigFloat
-//   pub fn bigfloat_pow_bf(base: &BigFloat, exp: &BigFloat) -> BigFloat  // via exp(exp*ln(base))
-// All honor precision and the current RoundMode; argument reduction needs
-// pi() at working precision first.
+// Complexity is O(prec^2) series (no acceleration); fine for stdlib use up
+// to a few thousand digits. Arguments are limited to |x| < ~9e18 (the
+// reduction needs x/ln10 or x/(pi/2) to fit an Int).
+
+fn _work_prec(a: &BigFloat, b: &BigFloat) -> Int {
+  var p = a.precision;
+  if b.precision > p { p = b.precision; }
+  if p < 64 { p = 64; }
+  return p + 4;
+}
+
+fn _one_at(prec: Int) -> BigFloat {
+  return BigFloat{ sign: false; exponent: 0;
+                   significand: xiom.bigint.bigint_one(); precision: prec; };
+}
+
+fn _two_at(prec: Int) -> BigFloat {
+  return BigFloat{ sign: false; exponent: 0;
+                   significand: xiom.bigint.bigint_two(); precision: prec; };
+}
+
+fn _ten_at(prec: Int) -> BigFloat {
+  return BigFloat{ sign: false; exponent: 1;
+                   significand: xiom.bigint.bigint_one(); precision: prec; };
+}
+
+// 10^-(prec+2): series-termination threshold.
+fn _epsilon_at(prec: Int) -> BigFloat {
+  return BigFloat{ sign: false; exponent: -(prec + 2);
+                   significand: xiom.bigint.bigint_one(); precision: prec; };
+}
+
+// atan(t) = t - t^3/3 + t^5/5 - ... for |t| <= 0.25 (argument pre-halved).
+fn _atan_series(t: &BigFloat, prec: Int) -> BigFloat {
+  var t2 = bigfloat_mul(t, t);
+  var term = _copy_bf(t);
+  var sum = _copy_bf(t);
+  var n = 1;
+  var subtract = true;
+  var eps = _epsilon_at(prec);
+  var limit = 20000;
+  while limit > 0 {
+    term = bigfloat_mul(&term, &t2);
+    var den = bigfloat_from_int(2 * n + 1);
+    var q = bigfloat_div(&term, &den);
+    if subtract { sum = bigfloat_sub(&sum, &q); }
+    else { sum = bigfloat_add(&sum, &q); }
+    if bigfloat_lt(&bigfloat_abs(&q), &eps) { break; }
+    subtract = !subtract;
+    n = n + 1;
+    limit = limit - 1;
+  }
+  return sum;
+}
+
+// atanh(t) = t + t^3/3 + t^5/5 + ... for |t| <= 0.52.
+fn _atanh_series(t: &BigFloat, prec: Int) -> BigFloat {
+  var t2 = bigfloat_mul(t, t);
+  var term = _copy_bf(t);
+  var sum = _copy_bf(t);
+  var n = 1;
+  var eps = _epsilon_at(prec);
+  var limit = 20000;
+  while limit > 0 {
+    term = bigfloat_mul(&term, &t2);
+    var den = bigfloat_from_int(2 * n + 1);
+    var q = bigfloat_div(&term, &den);
+    sum = bigfloat_add(&sum, &q);
+    if bigfloat_lt(&bigfloat_abs(&q), &eps) { break; }
+    n = n + 1;
+    limit = limit - 1;
+  }
+  return sum;
+}
+
+// exp(r) = sum r^n / n! for |r| <= ln(10)/2 (decimal-reduced).
+fn _exp_series(r: &BigFloat, prec: Int) -> BigFloat {
+  var term = _one_at(prec);
+  var sum = _one_at(prec);
+  var n = 1;
+  var eps = _epsilon_at(prec);
+  var limit = 20000;
+  while limit > 0 {
+    var nf = bigfloat_from_int(n);
+    term = bigfloat_div(&bigfloat_mul(&term, r), &nf);
+    sum = bigfloat_add(&sum, &term);
+    if bigfloat_lt(&bigfloat_abs(&term), &eps) { break; }
+    n = n + 1;
+    limit = limit - 1;
+  }
+  return sum;
+}
+
+// sin(r) = r - r^3/3! + r^5/5! - ... for |r| <= pi/4.
+fn _sin_series(r: &BigFloat, prec: Int) -> BigFloat {
+  var r2neg = bigfloat_neg(&bigfloat_mul(r, r));
+  var term = _copy_bf(r);
+  var sum = _copy_bf(r);
+  var n = 1;
+  var eps = _epsilon_at(prec);
+  var limit = 20000;
+  while limit > 0 {
+    term = bigfloat_mul(&term, &r2neg);
+    term = bigfloat_div(&term, &bigfloat_from_int(2 * n));
+    term = bigfloat_div(&term, &bigfloat_from_int(2 * n + 1));
+    sum = bigfloat_add(&sum, &term);
+    if bigfloat_lt(&bigfloat_abs(&term), &eps) { break; }
+    n = n + 1;
+    limit = limit - 1;
+  }
+  return sum;
+}
+
+// cos(r) = 1 - r^2/2! + r^4/4! - ... for |r| <= pi/4.
+fn _cos_series(r: &BigFloat, prec: Int) -> BigFloat {
+  var r2neg = bigfloat_neg(&bigfloat_mul(r, r));
+  var term = _one_at(prec);
+  var sum = _one_at(prec);
+  var n = 1;
+  var eps = _epsilon_at(prec);
+  var limit = 20000;
+  while limit > 0 {
+    term = bigfloat_mul(&term, &r2neg);
+    term = bigfloat_div(&term, &bigfloat_from_int(2 * n - 1));
+    term = bigfloat_div(&term, &bigfloat_from_int(2 * n));
+    sum = bigfloat_add(&sum, &term);
+    if bigfloat_lt(&bigfloat_abs(&term), &eps) { break; }
+    n = n + 1;
+    limit = limit - 1;
+  }
+  return sum;
+}
+
+// pi to `prec` digits via Machin: pi = 16*atan(1/5) - 4*atan(1/239).
+fn _pi_at(prec: Int) -> BigFloat {
+  var fifth = BigFloat{ sign: false; exponent: -1;
+                        significand: xiom.bigint.bigint_two(); precision: prec; };
+  var a = _atan_series(&fifth, prec);
+  var one = _one_at(prec);
+  var t239 = bigfloat_div(&one, &bigfloat_from_int(239));
+  var b = _atan_series(&t239, prec);
+  var sixteen = bigfloat_from_int(16);
+  var four = bigfloat_from_int(4);
+  var pi = bigfloat_sub(&bigfloat_mul(&sixteen, &a), &bigfloat_mul(&four, &b));
+  return pi;
+}
+
+// e to `prec` digits via e = sum 1/n!.
+fn _e_at(prec: Int) -> BigFloat {
+  var term = _one_at(prec);
+  var sum = _one_at(prec);
+  var n = 1;
+  var eps = _epsilon_at(prec);
+  var limit = 20000;
+  while limit > 0 {
+    term = bigfloat_div(&term, &bigfloat_from_int(n));
+    sum = bigfloat_add(&sum, &term);
+    if bigfloat_lt(&bigfloat_abs(&term), &eps) { break; }
+    n = n + 1;
+    limit = limit - 1;
+  }
+  return sum;
+}
+
+// ln(10) to `prec` digits: ln(10) = 3*ln(2) + 2*atanh(1/9);
+// ln(2) = 2*atanh(1/3).
+fn _ln10_at(prec: Int) -> BigFloat {
+  var one = _one_at(prec);
+  var third = bigfloat_div(&one, &bigfloat_from_int(3));
+  var ln2 = bigfloat_mul(&_two_at(prec), &_atanh_series(&third, prec));
+  var ninth = bigfloat_div(&one, &bigfloat_from_int(9));
+  var l = bigfloat_add(&bigfloat_mul(&bigfloat_from_int(3), &ln2),
+                       &bigfloat_mul(&_two_at(prec), &_atanh_series(&ninth, prec)));
+  return l;
+}
+
+// atan(x) for x >= 0, x <= 1: halve the argument until <= 0.25, series, double back.
+fn _atan_positive(x: &BigFloat, prec: Int) -> BigFloat {
+  var t = _copy_bf(x);
+  var doublings = 0;
+  var quarter = BigFloat{ sign: false; exponent: -2;
+                          significand: xiom.bigint.bigint_from_int(25); precision: prec; };
+  var one = _one_at(prec);
+  var limit = 100;
+  while bigfloat_compare(&t, &quarter) > 0 && limit > 0 {
+    // t = t / (1 + sqrt(1 + t^2))   (NOT 1 + sqrt(t^2))
+    var t2 = bigfloat_mul(&t, &t);
+    var inner = bigfloat_add(&one, &t2);
+    var s = bigfloat_add(&one, &bigfloat_sqrt(&inner));
+    t = bigfloat_div(&t, &s);
+    doublings = doublings + 1;
+    limit = limit - 1;
+  }
+  var result = _atan_series(&t, prec);
+  var d = 0;
+  while d < doublings {
+    result = bigfloat_add(&result, &result);
+    d = d + 1;
+  }
+  return result;
+}
+
+fn _finish(result: &BigFloat, target: Int) -> BigFloat {
+  var r = _copy_bf(result);
+  r.precision = target;
+  return _round_to_precision(&r);
+}
+
+// pi / e at explicit precision.
+pub fn bigfloat_pi_with_precision(precision: Int) -> BigFloat
+  requires: precision >= 1
+{
+  var p = precision;
+  if p < 10 { p = 10; }
+  var pi = _pi_at(p + 4);
+  return _finish(&pi, precision);
+}
+
+pub fn bigfloat_e_with_precision(precision: Int) -> BigFloat
+  requires: precision >= 1
+{
+  var p = precision;
+  if p < 10 { p = 10; }
+  var e = _e_at(p + 4);
+  return _finish(&e, precision);
+}
+
+// exp(x) = exp(r) * 10^k with r = x - k*ln(10) in [-ln(10)/2, ln(10)/2].
+pub fn bigfloat_exp(f: &BigFloat) -> BigFloat {
+  var prec = _work_prec(f, f);
+  var x = _set_prec(f, prec);
+  var l10 = _ln10_at(prec);
+  var q = bigfloat_div(&x, &l10);
+  var qr = bigfloat_round(&q);
+  var qi = bigfloat_to_bigint(&qr);
+  var ki = xiom.bigint.bigint_to_int(&qi);
+  var k = 0;
+  match ki {
+    Ok(v) => { k = v; },
+    Err(_) => { return bigfloat_zero(); },  // |x| too large for Int reduction
+  }
+  var r = bigfloat_sub(&x, &bigfloat_mul(&bigfloat_from_int(k), &l10));
+  var s = _exp_series(&r, prec);
+  // s * 10^k is an exact exponent shift in this representation.
+  s.exponent = s.exponent + k;
+  return _finish(&s, f.precision);
+}
+
+// ln(x): x = m * 10^k with m in [1, 10); reduce m to [1, sqrt(10)) via one
+// sqrt; ln(x) = 2*atanh((m-1)/(m+1)) + k*ln(10).
+pub fn bigfloat_ln(f: &BigFloat) -> BigFloat
+  requires: !bigfloat_is_negative(f)
+  requires: !bigfloat_is_zero(f)
+{
+  var prec = _work_prec(f, f);
+  var one = _one_at(prec);
+  var ten = _ten_at(prec);
+  var m = _set_prec(f, prec);
+  var k = 0;
+  while bigfloat_compare(&m, &ten) >= 0 {
+    m = bigfloat_div(&m, &ten);
+    k = k + 1;
+  }
+  while bigfloat_compare(&m, &one) < 0 {
+    m = bigfloat_mul(&m, &ten);
+    k = k - 1;
+  }
+  var factor2 = false;
+  var root10 = bigfloat_sqrt(&ten);
+  if bigfloat_compare(&m, &root10) > 0 {
+    m = bigfloat_sqrt(&m);
+    factor2 = true;
+  }
+  var t = bigfloat_div(&bigfloat_sub(&m, &one), &bigfloat_add(&m, &one));
+  // ln(m) = 2*atanh(t); the sqrt reduction adds another factor 2.
+  var ah = _atanh_series(&t, prec);
+  var s = bigfloat_add(&ah, &ah);
+  if factor2 { s = bigfloat_add(&s, &s); }
+  var l10 = _ln10_at(prec);
+  if k != 0 {
+    s = bigfloat_add(&s, &bigfloat_mul(&bigfloat_from_int(k), &l10));
+  }
+  return _finish(&s, f.precision);
+}
+
+pub fn bigfloat_log10(f: &BigFloat) -> BigFloat
+  requires: !bigfloat_is_negative(f)
+  requires: !bigfloat_is_zero(f)
+{
+  var l = bigfloat_ln(f);
+  var l10 = _ln10_at(_work_prec(&l, &l));
+  return bigfloat_div(&l, &l10);
+}
+
+fn _sincos(f: &BigFloat, want_cos: Bool) -> BigFloat {
+  var prec = _work_prec(f, f);
+  var x = _set_prec(f, prec);
+  if want_cos && bigfloat_is_zero(&x) {
+    return _finish(&_one_at(prec), f.precision);
+  }
+  var half_pi = bigfloat_div(&_pi_at(prec), &_two_at(prec));
+  var q = bigfloat_round(&bigfloat_div(&x, &half_pi));
+  var qi = bigfloat_to_bigint(&q);
+  var ki = xiom.bigint.bigint_to_int(&qi);
+  var k = 0;
+  match ki {
+    Ok(v) => { k = v; },
+    Err(_) => { return bigfloat_zero(); },  // |x| too large for Int reduction
+  }
+  var r = bigfloat_sub(&x, &bigfloat_mul(&bigfloat_from_int(k), &half_pi));
+  var s = _sin_series(&r, prec);
+  var c = _cos_series(&r, prec);
+  var qm = k % 4;
+  if qm < 0 { qm = qm + 4; }
+  var result = _one_at(prec);
+  if want_cos {
+    if qm == 0 { result = c; }
+    elif qm == 1 { result = bigfloat_neg(&s); }
+    elif qm == 2 { result = bigfloat_neg(&c); }
+    else { result = s; }
+  } else {
+    if qm == 0 { result = s; }
+    elif qm == 1 { result = c; }
+    elif qm == 2 { result = bigfloat_neg(&s); }
+    else { result = bigfloat_neg(&c); }
+  }
+  return _finish(&result, f.precision);
+}
+
+pub fn bigfloat_sin(f: &BigFloat) -> BigFloat {
+  return _sincos(f, false);
+}
+
+pub fn bigfloat_cos(f: &BigFloat) -> BigFloat {
+  return _sincos(f, true);
+}
+
+pub fn bigfloat_tan(f: &BigFloat) -> BigFloat {
+  var s = bigfloat_sin(f);
+  var c = bigfloat_cos(f);
+  return bigfloat_div(&s, &c);
+}
+
+// atan(x) in [-pi/2, pi/2].
+pub fn bigfloat_atan(f: &BigFloat) -> BigFloat {
+  var prec = _work_prec(f, f);
+  if bigfloat_is_zero(f) { return bigfloat_zero(); }
+  var sign = bigfloat_is_negative(f);
+  var x = bigfloat_abs(f);
+  x.precision = prec;
+  var one = _one_at(prec);
+  var result = _one_at(prec);
+  if bigfloat_compare(&x, &one) > 0 {
+    // atan(x) = pi/2 - atan(1/x)
+    var inv = bigfloat_div(&one, &x);
+    var half_pi = bigfloat_div(&_pi_at(prec), &_two_at(prec));
+    result = bigfloat_sub(&half_pi, &_atan_positive(&inv, prec));
+  } else {
+    result = _atan_positive(&x, prec);
+  }
+  if sign { result = bigfloat_neg(&result); }
+  return _finish(&result, f.precision);
+}
+
+// atan2(y, x) in [-pi, pi].
+pub fn bigfloat_atan2(y: &BigFloat, x: &BigFloat) -> BigFloat {
+  var prec = _work_prec(y, x);
+  var target = y.precision;
+  if x.precision > target { target = x.precision; }
+  var yz = bigfloat_is_zero(y);
+  var xz = bigfloat_is_zero(x);
+  var pi = _pi_at(prec);
+  var half_pi = bigfloat_div(&pi, &_two_at(prec));
+  if yz && !xz {
+    if bigfloat_is_negative(x) { return _finish(&pi, target); }
+    return _finish(&bigfloat_zero(), target);
+  }
+  if xz {
+    if yz { return _finish(&bigfloat_zero(), target); }
+    if bigfloat_is_negative(y) { return _finish(&bigfloat_neg(&half_pi), target); }
+    return _finish(&half_pi, target);
+  }
+  var t = _atan_positive(&bigfloat_abs(&bigfloat_div(y, x)), prec);
+  var result = _one_at(prec);
+  if !bigfloat_is_negative(x) {
+    // x > 0: result = atan(y/x) — sign of y applies.
+    result = t;
+    if bigfloat_is_negative(y) { result = bigfloat_neg(&result); }
+  } else {
+    // x < 0: y > 0 -> pi - t; y < 0 -> t - pi.
+    if bigfloat_is_negative(y) { result = bigfloat_sub(&t, &pi); }
+    else { result = bigfloat_sub(&pi, &t); }
+  }
+  return _finish(&result, target);
+}
+
+// base^exp for base >= 0 via exp(exp * ln(base)); negative exponents via inv.
+pub fn bigfloat_pow_bf(base: &BigFloat, exp: &BigFloat) -> BigFloat
+  requires: !bigfloat_is_negative(base)
+{
+  var target = base.precision;
+  if exp.precision > target { target = exp.precision; }
+  if bigfloat_is_zero(exp) {
+    return _finish(&_one_at(_work_prec(base, exp)), target);
+  }
+  if bigfloat_is_zero(base) {
+    return _finish(&bigfloat_zero(), target);
+  }
+  if bigfloat_is_negative(exp) {
+    var p = bigfloat_pow_bf(base, &bigfloat_neg(exp));
+    return bigfloat_inv(&p);
+  }
+  if bigfloat_is_one(&base) { return _finish(&_one_at(_work_prec(base, exp)), target); }
+  var l = bigfloat_ln(base);
+  var prod = bigfloat_mul(exp, &l);
+  return bigfloat_exp(&prod);
+}
 
 
 

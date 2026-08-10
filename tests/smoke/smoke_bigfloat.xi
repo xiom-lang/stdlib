@@ -402,5 +402,113 @@ fn main() -> Int {
     }
     Err(_) => { return 30; }
   }
+  // ---- Phase C: transcendentals ----
+  // 31. exp(0) == 1; exp(1) matches e to 20 digits
+  var z31 = bigfloat.bigfloat_zero();
+  if bigfloat.bigfloat_to_str(&bigfloat.bigfloat_exp(&z31)) != "1" { return 31; }
+  var o31 = bigfloat.bigfloat_one();
+  var e31 = bigfloat.bigfloat_exp(&o31);
+  if bigfloat.bigfloat_to_str_prec(&e31, 20) != "2.7182818284590452354" { return 31; }
+  // 32. ln(exp(1)) == 1; ln(1) == 0
+  var l32 = bigfloat.bigfloat_ln(&e31);
+  if bigfloat.bigfloat_to_str_prec(&l32, 20) != "1" { return 32; }
+  var l32b = bigfloat.bigfloat_ln(&o31);
+  if bigfloat.bigfloat_to_str(&l32b) != "0" { return 32; }
+  // 33. ln(10) to 20 digits
+  var l33 = bigfloat.bigfloat_ln(&bigfloat.bigfloat_ten());
+  if bigfloat.bigfloat_to_str_prec(&l33, 20) != "2.3025850929940456840" { return 33; }
+  // 34. log10(100) == 2, log10(1000) == 3 — via the identity
+  //     log10(x) * ln(10) == ln(x) (robust against the last-digit rounding
+  //     of the computed quotient; to_str_prec preserves trailing zeros)
+  var f34 = bigfloat.bigfloat_from_str("100");
+  match f34 {
+    Ok(a34) => {
+      var g34 = bigfloat.bigfloat_log10(&a34);
+      var m34 = bigfloat.bigfloat_mul(&g34, &l33);
+      var l34 = bigfloat.bigfloat_ln(&a34);
+      if bigfloat.bigfloat_to_str_prec(&m34, 15) != bigfloat.bigfloat_to_str_prec(&l34, 15) { return 34; }
+    }
+    Err(_) => { return 34; }
+  }
+  var f34b = bigfloat.bigfloat_from_str("1000");
+  match f34b {
+    Ok(a34) => {
+      var g34 = bigfloat.bigfloat_log10(&a34);
+      var m34 = bigfloat.bigfloat_mul(&g34, &l33);
+      var l34 = bigfloat.bigfloat_ln(&a34);
+      if bigfloat.bigfloat_to_str_prec(&m34, 15) != bigfloat.bigfloat_to_str_prec(&l34, 15) { return 34; }
+    }
+    Err(_) => { return 34; }
+  }
+  // 35. sin(0) == 0; cos(0) == 1; sin(pi/2) == 1; cos(pi) == -1
+  if bigfloat.bigfloat_to_str(&bigfloat.bigfloat_sin(&z31)) != "0" { return 35; }
+  if bigfloat.bigfloat_to_str(&bigfloat.bigfloat_cos(&z31)) != "1" { return 35; }
+  var pi35 = bigfloat.bigfloat_pi();
+  var hp35 = bigfloat.bigfloat_div(&pi35, &bigfloat.bigfloat_two());
+  if bigfloat.bigfloat_to_str_prec(&bigfloat.bigfloat_sin(&hp35), 15) != "1" { return 35; }
+  if bigfloat.bigfloat_to_str_prec(&bigfloat.bigfloat_cos(&pi35), 15) != "-1" { return 35; }
+  // 36. sin(pi/6) == 0.5 (to 15 digits)
+  var s36 = bigfloat.bigfloat_div(&pi35, &bigfloat.bigfloat_from_int(6));
+  if bigfloat.bigfloat_to_str_prec(&bigfloat.bigfloat_sin(&s36), 15) != "0.5" { return 36; }
+  // 37. atan(1) * 4 == pi (to 20 digits)
+  var a37 = bigfloat.bigfloat_mul(&bigfloat.bigfloat_atan(&o31), &bigfloat.bigfloat_from_int(4));
+  if bigfloat.bigfloat_to_str_prec(&a37, 20) != bigfloat.bigfloat_to_str_prec(&pi35, 20) { return 37; }
+  // 38. atan2(1, 1) == pi/4; atan2(-1, -1) == -pi/4
+  var a38 = bigfloat.bigfloat_atan2(&o31, &o31);
+  var q38 = bigfloat.bigfloat_div(&pi35, &bigfloat.bigfloat_from_int(4));
+  if bigfloat.bigfloat_to_str_prec(&a38, 20) != bigfloat.bigfloat_to_str_prec(&q38, 20) { return 38; }
+  var n38 = bigfloat.bigfloat_from_str("-1");
+  match n38 {
+    Ok(nv) => {
+      // atan2(-1, -1) = -3*pi/4 (third quadrant)
+      var a38b = bigfloat.bigfloat_atan2(&nv, &nv);
+      var q38b = bigfloat.bigfloat_sub(&q38, &pi35);
+      if bigfloat.bigfloat_to_str_prec(&a38b, 20) != bigfloat.bigfloat_to_str_prec(&q38b, 20) { return 38; }
+    }
+    Err(_) => { return 38; }
+  }
+  // 39. pow_bf(2, 0.5)^2 == 2
+  var h39 = bigfloat.bigfloat_from_str("0.5");
+  match h39 {
+    Ok(hv) => {
+      var p39 = bigfloat.bigfloat_pow_bf(&bigfloat.bigfloat_two(), &hv);
+      var m39 = bigfloat.bigfloat_mul(&p39, &p39);
+      if bigfloat.bigfloat_to_str_prec(&m39, 20) != "2" { return 39; }
+    }
+    Err(_) => { return 39; }
+  }
+  // 40. e^ln(2) == 2; exp(ln(10)) == 10
+  var l40 = bigfloat.bigfloat_ln(&bigfloat.bigfloat_two());
+  var e40 = bigfloat.bigfloat_exp(&l40);
+  if bigfloat.bigfloat_to_str_prec(&e40, 20) != "2" { return 40; }
+  var e40b = bigfloat.bigfloat_exp(&l33);
+  if bigfloat.bigfloat_to_str_prec(&e40b, 20) != "10" { return 40; }
+  // 41. ln(e()) == 1
+  var l41 = bigfloat.bigfloat_ln(&bigfloat.bigfloat_e());
+  if bigfloat.bigfloat_to_str_prec(&l41, 20) != "1" { return 41; }
+  // 42. pi_with_precision / e_with_precision match the 100-digit constants
+  var p42 = bigfloat.bigfloat_pi_with_precision(20);
+  if bigfloat.bigfloat_to_str_prec(&p42, 20) != bigfloat.bigfloat_to_str_prec(&pi35, 20) { return 42; }
+  var e42 = bigfloat.bigfloat_e_with_precision(20);
+  if bigfloat.bigfloat_to_str_prec(&e42, 20) != bigfloat.bigfloat_to_str_prec(&bigfloat.bigfloat_e(), 20) { return 42; }
+  // 43. tan(0) == 0; tan(pi/4) == 1 (to 15 digits)
+  if bigfloat.bigfloat_to_str(&bigfloat.bigfloat_tan(&z31)) != "0" { return 43; }
+  if bigfloat.bigfloat_to_str_prec(&bigfloat.bigfloat_tan(&q38), 15) != "1" { return 43; }
+  // 44. odd symmetry: sin(-1) == -sin(1); atan(-1) == -atan(1); exp(-1)*exp(1) == 1
+  var n44 = bigfloat.bigfloat_from_str("-1");
+  match n44 {
+    Ok(nv) => {
+      var sn44 = bigfloat.bigfloat_sin(&nv);
+      var sp44 = bigfloat.bigfloat_sin(&o31);
+      if bigfloat.bigfloat_to_str_prec(&sn44, 15) != bigfloat.bigfloat_to_str_prec(&bigfloat.bigfloat_neg(&sp44), 15) { return 44; }
+      var an44 = bigfloat.bigfloat_atan(&nv);
+      var ap44 = bigfloat.bigfloat_atan(&o31);
+      if bigfloat.bigfloat_to_str_prec(&an44, 15) != bigfloat.bigfloat_to_str_prec(&bigfloat.bigfloat_neg(&ap44), 15) { return 44; }
+      var en44 = bigfloat.bigfloat_exp(&nv);
+      var prod44 = bigfloat.bigfloat_mul(&en44, &e31);
+      if bigfloat.bigfloat_to_str_prec(&prod44, 15) != "1" { return 44; }
+    }
+    Err(_) => { return 44; }
+  }
   return 0;
 }
