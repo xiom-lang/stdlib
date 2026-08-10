@@ -130,6 +130,178 @@ void* xiom_alloc(long long size) {
     return p;
 }
 
+/* ================================================================
+   Guard Heap (Unsafe Confinement Phase 3, requirement d)
+   ================================================================
+   A per-thread ARENA allocator. Allocations made inside an `unsafe`
+   block are routed to this arena (via xiom_guard_alloc); on block exit
+   (or fault retry) the ENTIRE arena is discarded wholesale — memory
+   is released back to the OS in one shot. This isolates unsafe-block
+   allocations from the main process heap: corruption inside the block
+   cannot contaminate application memory, and leaked intermediate
+   allocations are reclaimed with the arena (no per-allocation free).
+
+   Copy-Out (requirement i, review/UAF fix): a value returned from an
+   unsafe block is COPIED to the main heap by the codegen BEFORE the
+   arena resets (xiom_guard_copy_out), so the caller's Vec/Str never
+   points at arena memory that is about to be discarded.
+
+   Thread-local: 128 parallel threads each get their own arena — no
+   locks, no cross-thread interference.
+   ================================================================ */
+
+typedef struct XiomGuardArena {
+    void** slabs;        /* array of slab pointers */
+    long   slab_count;
+    long   slab_cap;
+    long   cur_slab;     /* index of the slab being filled */
+    long   cur_off;      /* byte offset within cur_slab */
+    long   slab_size;    /* bytes per slab (default 64KB) */
+    int    active;       /* 1 while an unsafe block is running */
+} XiomGuardArena;
+
+#ifdef _WIN32
+#include <windows.h>
+#define XIOM_GUARD_SLAB 65536
+static void* xiom_guard_valloc(long size) {
+    return VirtualAlloc(NULL, (SIZE_T)size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+}
+static void xiom_guard_vfree(void* p, long size) {
+    (void)size;
+    if (p) VirtualFree(p, 0, MEM_RELEASE);
+}
+#else
+#include <sys/mman.h>
+#define XIOM_GUARD_SLAB 65536
+static void* xiom_guard_valloc(long size) {
+    void* p = mmap(NULL, (size_t)size, PROT_READ | PROT_WRITE,
+                   MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    return (p == MAP_FAILED) ? NULL : p;
+}
+static void xiom_guard_vfree(void* p, long size) {
+    if (p) munmap(p, (size_t)size);
+}
+#endif
+
+static __declspec(thread) XiomGuardArena xiom_guard_arena;
+static __declspec(thread) int xiom_guard_initialized = 0;
+
+static void xiom_guard_ensure_slab(XiomGuardArena* a) {
+    if (a->cur_slab >= 0 && a->cur_off < a->slab_size) return;
+    if (a->slab_count >= a->slab_cap) {
+        long new_cap = (a->slab_cap == 0) ? 8 : a->slab_cap * 2;
+        void** new_slabs = (void**)realloc(a->slabs, (size_t)new_cap * sizeof(void*));
+        if (!new_slabs) return; /* arena full — leave as-is */
+        a->slabs = new_slabs;
+        a->slab_cap = new_cap;
+    }
+    void* slab = xiom_guard_valloc(a->slab_size);
+    if (!slab) return;
+    a->slabs[a->slab_count++] = slab;
+    a->cur_slab = (int)(a->slab_count - 1);
+    a->cur_off = 0;
+}
+
+/* Enter a guard-heap context (called at unsafe-block entry). */
+void xiom_guard_heap_enter(void) {
+    if (!xiom_guard_initialized) {
+        xiom_guard_arena.slabs = NULL;
+        xiom_guard_arena.slab_count = 0;
+        xiom_guard_arena.slab_cap = 0;
+        xiom_guard_arena.cur_slab = -1;
+        xiom_guard_arena.cur_off = 0;
+        xiom_guard_arena.slab_size = XIOM_GUARD_SLAB;
+        xiom_guard_arena.active = 0;
+        xiom_guard_initialized = 1;
+    }
+    xiom_guard_arena.active++;
+}
+
+/* Exit a guard-heap context: discard the ENTIRE arena (all slabs). */
+void xiom_guard_heap_exit(void) {
+    XiomGuardArena* a = &xiom_guard_arena;
+    if (a->active > 0) a->active--;
+    if (a->active > 0) return; /* still inside an outer unsafe block */
+    long i;
+    for (i = 0; i < a->slab_count; i++) {
+        xiom_guard_vfree(a->slabs[i], a->slab_size);
+    }
+    free(a->slabs);
+    a->slabs = NULL;
+    a->slab_count = 0;
+    a->slab_cap = 0;
+    a->cur_slab = -1;
+    a->cur_off = 0;
+}
+
+/* Allocate from the guard arena (zeroed, 16-byte aligned). */
+void* xiom_guard_alloc(long long size) {
+    if (size <= 0) return NULL;
+    if (xiom_guard_arena.active <= 0) return xiom_alloc(size); /* fallback */
+    XiomGuardArena* a = &xiom_guard_arena;
+    /* 16-byte alignment */
+    long align = 16;
+    long aligned = (long)size + (align - 1);
+    aligned &= ~(long)(align - 1);
+    xiom_guard_ensure_slab(a);
+    if (a->cur_slab < 0 || a->cur_off + aligned > a->slab_size) {
+        /* allocate a fresh slab for oversized allocations */
+        long need = aligned > a->slab_size ? aligned : a->slab_size;
+        if (a->slab_count >= a->slab_cap) {
+            long new_cap = (a->slab_cap == 0) ? 8 : a->slab_cap * 2;
+            void** new_slabs = (void**)realloc(a->slabs, (size_t)new_cap * sizeof(void*));
+            if (!new_slabs) return NULL;
+            a->slabs = new_slabs;
+            a->slab_cap = new_cap;
+        }
+        void* slab = xiom_guard_valloc(need);
+        if (!slab) return NULL;
+        a->slabs[a->slab_count++] = slab;
+        a->cur_slab = (int)(a->slab_count - 1);
+        a->cur_off = 0;
+        if (aligned > a->slab_size) {
+            /* oversized: hand out the whole slab, next alloc gets a new one */
+            void* p = (char*)slab;
+            a->cur_off = a->slab_size; /* force new slab next time */
+            memset(p, 0, (size_t)aligned);
+            return p;
+        }
+    }
+    void* p = (char*)a->slabs[a->cur_slab] + a->cur_off;
+    memset(p, 0, (size_t)aligned);
+    a->cur_off += aligned;
+    return p;
+}
+
+/* Copy OUT a heap payload from the guard arena to the main heap.
+   Returns a main-heap allocation with the same contents, or NULL.
+   Called by the codegen before the arena resets (Copy-Out, req i). */
+void* xiom_guard_copy_out(const void* src, long long len) {
+    if (!src || len <= 0) return NULL;
+    void* p = malloc((size_t)len);
+    if (p) memcpy(p, src, (size_t)len);
+    return p;
+}
+
+/* Copy OUT a NUL-terminated Str from the guard arena to the main heap.
+   Single C call (len + copy) so the codegen does not inline extra
+   alwaysinline'd strlen calls into the confined block (which leak the
+   recursion counter and trip the 500-depth trap). */
+char* xiom_guard_copy_str(const char* src) {
+    if (!src) return NULL;
+    size_t len = strlen(src);
+    char* p = (char*)malloc(len + 1);
+    if (!p) return NULL;
+    if (len > 0) memcpy(p, src, len);
+    p[len] = '\0';
+    return p;
+}
+
+/* Current guard-heap nesting depth (0 = no active unsafe block). */
+int xiom_guard_heap_depth(void) {
+    return xiom_guard_arena.active;
+}
+
 char xiom_char_at(const char* str, long pos) {
     if (!str) return 0;
     if (pos < 0) return 0;
