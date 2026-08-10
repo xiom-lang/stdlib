@@ -1,5 +1,12 @@
+// Guarded against redefinition: the xiom compiler and JIT also pass these via
+// -D on the command line for some targets (a bare re-#define triggers clang's
+// -Wmacro-redefined).
+#ifndef _CRT_SECURE_NO_WARNINGS
 #define _CRT_SECURE_NO_WARNINGS
+#endif
+#ifndef _WINSOCK_DEPRECATED_NO_WARNINGS
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
+#endif
 // XIOM Runtime -- C helper functions for self-hosting compiler
 // All string operations happen here. The XIOM compiler works with Int IDs.
 #include <stdio.h>
