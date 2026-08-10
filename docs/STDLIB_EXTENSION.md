@@ -3508,7 +3508,24 @@ forever, so nothing written later breaks anything written now.
    c. After (a)+(b): the generic numeric tower lands — `impl Num[Int]`,
       `impl Num[Int32]`, `impl Num[Float32]`, `impl Num[Float64]` … and ONE
       generic `sqrt[T: Num](x: T) -> T` serves all widths. Concrete fns stay
-      as thin shims (freeze-gated). (IN PROGRESS — tower collapse next.)
+      as thin shims (freeze-gated).
+      ✅ CORE DONE (2026-08-10, commit pending): `math/core.xi` folder module
+      (D4 category) hosts the generic tower — `pub interface Num[T]` with
+      `impl Num[Int/Int32/Int64/UInt64/Float64/Float32]` and ONE generic
+      implementation per concept (`lerp`, `average`, `sum`, `product`,
+      `negate`, `twice`) serving every width. Enabled by:
+      - catalog `parse_file` expands impl blocks at parse time,
+      - `collect_external_decls` injects catalog-loaded interfaces + impls
+        (module-qualified keys `core.Float64.add`),
+      - driver Stage 4.5 injects `TopDecl::Interface`,
+      - codegen dispatches `Num[T].add` via `current_type_map` (T→concrete)
+        with module-qualified impl-key search; C001 bound check accepts
+        module-qualified/lazily-registered impl methods.
+      Verified: smoke_math_core (lerp/average/sum/product/negate/twice over
+      5 widths), smoke_generic_tower, missing-impl → clean C001.
+      REMAINING: conversions (`from_int`/`to_float`) as a separate
+      interface (Num stays pure arithmetic); generic `sqrt`/`abs`/`clamp`
+      in math/core; stdlib adoption of the generic forms.
    d. Full test pass on every step; no `#[ignore]`d shortcuts.
       ✅ checker 166, exec 67 (incl. hardening smoke), e2e 2231, all suites.
    e. ADDITIONAL fixes landed during hardening:
