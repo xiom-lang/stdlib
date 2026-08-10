@@ -3609,3 +3609,1715 @@ Write AFTER hardening 3a+3b so they are generic (`[T: Num]`) not per-width:
   compress: deflate-family detail; sort: intro/radix; search: kmp/boyer;
   iter: fold/chain detail; regex: engine detail; test: harness; log: sinks.
 5. **Remaining gap libs** into their categories (hash: highway/spooky/metro/t1ha/farm/superfast; net: http/ip; text: unicode/bidi; etc.).
+
+
+
+
+
+Function	Generic	Description
+add(a, b)	✅	Addition
+sub(a, b)	✅	Subtraction
+mul(a, b)	✅	Multiplication
+div(a, b)	✅	Division (requires b != 0)
+mod(a, b)	✅	Modulo/remainder
+abs(x)	✅	Absolute value
+neg(x)	✅	Negation
+signum(x)	✅	Sign (-1, 0, 1)
+min(a, b)	✅	Minimum of two values
+max(a, b)	✅	Maximum of two values
+clamp(x, lo, hi)	✅	Clamp value between bounds
+lerp(a, b, t)	✅	Linear interpolation
+saturating_add(a, b)	✅	Addition with saturation
+saturating_sub(a, b)	✅	Subtraction with saturation
+saturating_mul(a, b)	✅	Multiplication with saturation
+checked_add(a, b)	✅	Addition with overflow check
+checked_sub(a, b)	✅	Subtraction with overflow check
+checked_mul(a, b)	✅	Multiplication with overflow check
+checked_div(a, b)	✅	Division with zero check
+wrapping_add(a, b)	✅	Addition with wrap-around
+wrapping_sub(a, b)	✅	Subtraction with wrap-around
+wrapping_mul(a, b)	✅	Multiplication with wrap-around
+overflowing_add(a, b)	✅	Addition + overflow flag
+overflowing_sub(a, b)	✅	Subtraction + overflow flag
+overflowing_mul(a, b)	✅	Multiplication + overflow flag
+abs_diff(a, b)	✅	Absolute difference
+math/constants — Fundamental Mathematical Constants
+Description: Universal constants with type-specific precision. No functions, all constants. Constants are resolved at compile time.
+
+Constant	Generic	Description
+PI	❌	π = 3.14159265358979323846
+E	❌	e = 2.71828182845904523536
+TAU	❌	τ = 2π = 6.28318530717958647692
+PHI	❌	φ = 1.61803398874989484820 (Golden ratio)
+SQRT_2	❌	√2 = 1.41421356237309504880
+SQRT_3	❌	√3 = 1.73205080756887729352
+SQRT_5	❌	√5 = 2.23606797749978969640
+LN_2	❌	ln 2 = 0.69314718055994530942
+LN_10	❌	ln 10 = 2.30258509299404568402
+LOG2_E	❌	log₂ e = 1.44269504088896340736
+LOG10_E	❌	log₁₀ e = 0.43429448190325182765
+EULER_GAMMA	❌	γ = 0.57721566490153286060
+CATALAN	❌	G = 0.91596559417721901505
+APERY	❌	ζ(3) = 1.20205690315959428540
+FLOAT_EPSILON	❌	Machine epsilon (Float64)
+FLOAT32_EPSILON	❌	Machine epsilon (Float32)
+FLOAT64_MAX	❌	Maximum Float64
+FLOAT64_MIN	❌	Minimum Float64
+FLOAT32_MAX	❌	Maximum Float32
+FLOAT32_MIN	❌	Minimum Float32
+INFINITY	❌	Positive infinity
+NEG_INFINITY	❌	Negative infinity
+NAN	❌	Not-a-number
+math/precision — Type-Specific Precision Information
+Description: Compile-time information about numeric type precision, ranges, and characteristics.
+
+Function	Generic	Description
+min_value[T]()	✅	Minimum representable value
+max_value[T]()	✅	Maximum representable value
+epsilon[T]()	✅	Machine epsilon
+digits[T]()	✅	Number of significant digits
+mantissa_digits[T]()	✅	Mantissa bits (floats)
+exponent_bias[T]()	✅	Exponent bias (floats)
+min_exponent[T]()	✅	Minimum exponent (floats)
+max_exponent[T]()	✅	Maximum exponent (floats)
+is_signed[T]()	✅	Whether type is signed
+bit_width[T]()	✅	Bit width of type
+byte_width[T]()	✅	Byte width of type
+math/interfaces — Numeric Traits
+Description: The foundational interfaces that enable generic mathematics. All numeric types implement these.
+
+Interface	Description
+Numeric	Add, sub, mul, div, abs, neg, signum, zero, one
+Integer	Numeric + rem, shl, shr, bit_and, bit_or, bit_xor, bit_not
+Signed	Numeric + is_negative, is_positive, abs
+Unsigned	Numeric + wrapping_add, wrapping_sub, overflowing_add, overflowing_sub
+Float	Numeric + sqrt, sin, cos, tan, exp, ln, log10, log2, pow, is_nan, is_inf, is_finite
+Ord	Compare, lt, le, gt, ge, eq, ne, min, max, clamp
+Bounded	min_value, max_value, epsilon
+FromStr	Parse from string
+Display	Format to string
+ARITHMETIC & ALGEBRA
+math/arithmetic — Arithmetic Operations
+Description: Extended arithmetic operations beyond core. Generic over Integer and Float.
+
+Function	Generic	Description
+gcd(a, b)	✅	Greatest common divisor
+lcm(a, b)	✅	Least common multiple
+is_power_of_two(n)	✅	Check if power of two
+next_power_of_two(n)	✅	Next power of two
+prev_power_of_two(n)	✅	Previous power of two
+gcd_extended(a, b)	✅	Extended Euclidean algorithm
+mod_inverse(a, m)	✅	Modular multiplicative inverse
+pow_mod(base, exp, mod)	✅	Modular exponentiation
+is_odd(n)	✅	Check if odd
+is_even(n)	✅	Check if even
+div_ceil(a, b)	✅	Integer division rounding up
+div_floor(a, b)	✅	Integer division rounding down
+div_trunc(a, b)	✅	Integer division truncating toward zero
+mod_floor(a, b)	✅	Modulo with floor division
+mod_trunc(a, b)	✅	Modulo with truncation
+math/roots — Root Operations
+Description: Square roots, cube roots, nth roots, and related operations. Float functions use hardware acceleration (where available). Integer functions use software fallback.
+
+Function	Generic	Description
+sqrt(x)	Partial	Square root (hardware for Float, software for Integer)
+cbrt(x)	Partial	Cube root
+nth_root(x, n)	Partial	Nth root
+sqrt_pure(x)	❌	Software-only sqrt (no hardware)
+cbrt_pure(x)	❌	Software-only cube root
+is_square(n)	✅	Check if perfect square
+is_cube(n)	✅	Check if perfect cube
+integer_sqrt(n)	✅	Integer square root (floor)
+integer_cbrt(n)	✅	Integer cube root (floor)
+hypot(x, y)	❌	Hypotenuse (sqrt(x² + y²))
+hypot3(x, y, z)	❌	Hypotenuse (sqrt(x² + y² + z²))
+norm2(x, y)	❌	Euclidean distance (2D)
+norm3(x, y, z)	❌	Euclidean distance (3D)
+math/exponential — Exponential and Logarithmic Functions
+Description: Exponential, logarithmic, power, and related functions. Float functions use libm (hardware accelerated). Integer functions use software fallback.
+
+Function	Generic	Description
+exp(x)	❌	Exponential (e^x)
+exp2(x)	❌	Exponential base 2 (2^x)
+exp10(x)	❌	Exponential base 10 (10^x)
+expm1(x)	❌	e^x - 1 (accurate for small x)
+ln(x)	❌	Natural logarithm
+log2(x)	❌	Logarithm base 2
+log10(x)	❌	Logarithm base 10
+log1p(x)	❌	ln(1 + x) (accurate for small x)
+ln_1_plus(x)	❌	ln(1 + x)
+pow(base, exp)	Partial	Power (hardware for Float, software for Integer)
+pow_int(base, exp)	✅	Integer power
+pow_float(base, exp)	❌	Float power (libm)
+sqrt_power(base, exp)	❌	Power with integer exponent
+exp_pure(x)	❌	Software-only exp
+ln_pure(x)	❌	Software-only ln
+log2_pure(x)	❌	Software-only log2
+log10_pure(x)	❌	Software-only log10
+pow_pure(base, exp)	❌	Software-only pow
+math/rounding — Rounding Operations
+Description: Floor, ceil, round, trunc, and fractional part operations.
+
+Function	Generic	Description
+floor(x)	❌	Floor (largest integer ≤ x)
+ceil(x)	❌	Ceiling (smallest integer ≥ x)
+round(x)	❌	Round half to even
+trunc(x)	❌	Truncate (toward zero)
+fract(x)	❌	Fractional part
+modf(x)	❌	Split integer and fractional parts
+floor_pure(x)	❌	Software-only floor
+ceil_pure(x)	❌	Software-only ceil
+round_pure(x)	❌	Software-only round
+trunc_pure(x)	❌	Software-only trunc
+fract_pure(x)	❌	Software-only fract
+integer_part(x)	❌	Integer part (same as trunc)
+frac_part(x)	❌	Fractional part (same as fract)
+round_to(x, decimals)	❌	Round to n decimal places
+round_nearest(x, multiple)	❌	Round to nearest multiple
+math/decompose — Number Decomposition
+Description: Split numbers into components, extract mantissa/exponent, and related operations.
+
+Function	Generic	Description
+frexp(x)	❌	Split into mantissa and exponent (Float)
+ldexp(x, n)	❌	Multiply by power of 2
+ilogb(x)	❌	Integer exponent (biased)
+logb(x)	❌	Unbiased exponent
+scalbn(x, n)	❌	Multiply by 2^n
+scalbln(x, n)	❌	Multiply by 2^n (long)
+significand(x)	❌	Extract significand
+exponent(x)	❌	Extract exponent
+frexp_pure(x)	❌	Software-only frexp
+ldexp_pure(x, n)	❌	Software-only ldexp
+is_normal(x)	❌	Check if normal float
+is_subnormal(x)	❌	Check if subnormal float
+classify(x)	❌	Classify floating-point value
+nextafter(x, y)	❌	Next representable float
+nexttoward(x, y)	❌	Next representable float (long double)
+TRIGONOMETRY
+math/trigonometry — Trigonometric Functions
+Description: Sine, cosine, tangent, and related functions. Hardware accelerated via libm.
+
+Function	Generic	Description
+sin(x)	❌	Sine (radians)
+cos(x)	❌	Cosine (radians)
+tan(x)	❌	Tangent (radians)
+csc(x)	❌	Cosecant (1/sin)
+sec(x)	❌	Secant (1/cos)
+cot(x)	❌	Cotangent (1/tan)
+sincos(x)	❌	Returns (sin, cos) pair (optimized)
+sincospi(x)	❌	Returns (sin(πx), cos(πx)) pair
+sin_pure(x)	❌	Software-only sin
+cos_pure(x)	❌	Software-only cos
+tan_pure(x)	❌	Software-only tan
+sinpi(x)	❌	sin(πx)
+cospi(x)	❌	cos(πx)
+tanpi(x)	❌	tan(πx)
+math/inverse_trig — Inverse Trigonometric Functions
+Description: Arcsine, arccosine, arctangent, and related functions. Hardware accelerated via libm.
+
+Function	Generic	Description
+asin(x)	❌	Arcsine
+acos(x)	❌	Arccosine
+atan(x)	❌	Arctangent
+atan2(y, x)	❌	Arctangent (two-argument)
+atan2_pure(y, x)	❌	Software-only atan2
+asin_pure(x)	❌	Software-only asin
+acos_pure(x)	❌	Software-only acos
+atan_pure(x)	❌	Software-only atan
+atan2_radians(y, x)	❌	atan2 in radians
+atan2_degrees(y, x)	❌	atan2 in degrees
+arg(z)	❌	Argument/phase of complex number
+math/hyperbolic — Hyperbolic Functions
+Description: Hyperbolic sine, cosine, tangent, and inverse functions. Hardware accelerated via libm.
+
+Function	Generic	Description
+sinh(x)	❌	Hyperbolic sine
+cosh(x)	❌	Hyperbolic cosine
+tanh(x)	❌	Hyperbolic tangent
+csch(x)	❌	Hyperbolic cosecant
+sech(x)	❌	Hyperbolic secant
+coth(x)	❌	Hyperbolic cotangent
+asinh(x)	❌	Inverse hyperbolic sine
+acosh(x)	❌	Inverse hyperbolic cosine
+atanh(x)	❌	Inverse hyperbolic tangent
+sinh_pure(x)	❌	Software-only sinh
+cosh_pure(x)	❌	Software-only cosh
+tanh_pure(x)	❌	Software-only tanh
+math/trigonometric_constants — Trigonometric Constants
+Description: Constants related to trigonometry and angles.
+
+Constant	Generic	Description
+DEG_TO_RAD	❌	π/180
+RAD_TO_DEG	❌	180/π
+DEG_TO_RAD32	❌	π/180 (Float32)
+RAD_TO_DEG32	❌	180/π (Float32)
+PI_2	❌	π/2
+PI_4	❌	π/4
+PI_8	❌	π/8
+PI_3	❌	π/3
+PI_6	❌	π/6
+TAU_2	❌	π
+TAU_4	❌	π/2
+TAU_8	❌	π/4
+TAU_3	❌	2π/3
+TAU_6	❌	π/3
+TAU_12	❌	π/6
+math/angular — Angular Conversion
+Description: Convert between radians, degrees, gradians, and other angular units.
+
+Function	Generic	Description
+to_radians(deg)	❌	Degrees to radians
+to_degrees(rad)	❌	Radians to degrees
+to_gradians(deg)	❌	Degrees to gradians
+from_gradians(grad)	❌	Gradians to degrees
+to_mils(deg)	❌	Degrees to mils
+from_mils(mils)	❌	Mils to degrees
+to_arcmin(deg)	❌	Degrees to arcminutes
+from_arcmin(arcmin)	❌	Arcminutes to degrees
+to_arcsec(deg)	❌	Degrees to arcseconds
+from_arcsec(arcsec)	❌	Arcseconds to degrees
+normalize_angle(rad)	❌	Normalize angle to [0, 2π)
+normalize_angle_deg(deg)	❌	Normalize angle to [0, 360)
+angle_diff(a, b)	❌	Difference between angles
+angle_lerp(a, b, t)	❌	Angular interpolation
+BITWISE & BINARY
+math/bitwise — Bitwise Operations
+Description: Bit manipulation operations on integer types. Hardware accelerated via LLVM intrinsics.
+
+Function	Generic	Description
+popcnt(x)	✅	Count set bits (population count)
+clz(x)	✅	Count leading zeros
+ctz(x)	✅	Count trailing zeros
+bit_reverse(x)	✅	Reverse bit order
+bit_reverse_byte(x)	✅	Reverse bits within each byte
+byte_swap(x)	✅	Swap bytes (endian conversion)
+rotate_left(x, n)	✅	Rotate bits left
+rotate_right(x, n)	✅	Rotate bits right
+bit_width(x)	✅	Minimum bits to represent x
+bit_length(x)	✅	Number of bits needed to represent x
+leading_ones(x)	✅	Count leading ones
+trailing_ones(x)	✅	Count trailing ones
+bit_parity(x)	✅	Parity (odd/even number of bits)
+bit_scan_forward(x)	✅	Position of least significant set bit
+bit_scan_reverse(x)	✅	Position of most significant set bit
+is_power_of_two_bit(x)	✅	Check if power of two (bitwise)
+math/rotation — Bit Rotation
+Description: Advanced bit rotation and bitfield manipulation operations.
+
+Function	Generic	Description
+rotate_left(x, n)	✅	Rotate left by n bits
+rotate_right(x, n)	✅	Rotate right by n bits
+rotate_left_carry(x, n, carry)	✅	Rotate left with carry bit
+rotate_right_carry(x, n, carry)	✅	Rotate right with carry bit
+rol_imm(x, n)	✅	Rotate left (constant)
+ror_imm(x, n)	✅	Rotate right (constant)
+bit_rotate_left(x, n)	✅	Alias for rotate_left
+bit_rotate_right(x, n)	✅	Alias for rotate_right
+masked_rotate_left(x, mask, n)	✅	Rotate only masked bits
+masked_rotate_right(x, mask, n)	✅	Rotate only masked bits
+math/endianness — Endianness Operations
+Description: Endian conversion and detection.
+
+Function	Generic	Description
+is_big_endian()	✅	Check if system is big-endian
+is_little_endian()	✅	Check if system is little-endian
+to_be(x)	✅	Convert to big-endian
+to_le(x)	✅	Convert to little-endian
+from_be(x)	✅	Convert from big-endian
+from_le(x)	✅	Convert from little-endian
+native_to_be(x)	✅	Native to big-endian (no-op on BE)
+native_to_le(x)	✅	Native to little-endian (no-op on LE)
+be_to_native(x)	✅	Big-endian to native (no-op on BE)
+le_to_native(x)	✅	Little-endian to native (no-op on LE)
+swap_endian(x)	✅	Swap endianness (byte-swap)
+bswap_16(x)	✅	Swap 16-bit endianness
+bswap_32(x)	✅	Swap 32-bit endianness
+bswap_64(x)	✅	Swap 64-bit endianness
+bswap_128(x)	✅	Swap 128-bit endianness
+bswap_256(x)	✅	Swap 256-bit endianness
+math/bitfield — Bitfield Operations
+Description: Extract, insert, and manipulate bitfields.
+
+Function	Generic	Description
+bit_extract(x, pos, len)	✅	Extract bits from position with length
+bit_insert(x, value, pos, len)	✅	Insert bits at position with length
+bit_replace(x, mask, value)	✅	Replace masked bits with value
+bit_set(x, pos)	✅	Set bit at position
+bit_clear(x, pos)	✅	Clear bit at position
+bit_toggle(x, pos)	✅	Toggle bit at position
+bit_test(x, pos)	✅	Test bit at position
+bit_field_get(x, pos, len)	✅	Get bitfield (extract)
+bit_field_set(x, pos, len, value)	✅	Set bitfield (insert)
+bit_field_clear(x, pos, len)	✅	Clear bitfield
+bit_field_inc(x, pos, len)	✅	Increment bitfield (saturating)
+bit_field_dec(x, pos, len)	✅	Decrement bitfield (saturating)
+mask_low(len)	✅	Create mask of len low bits
+mask_high(len)	✅	Create mask of len high bits
+mask_range(pos, len)	✅	Create mask for range of bits
+sign_extend(x, width)	✅	Sign extend from width to full
+NUMBER THEORY
+math/number_theory — Number Theory
+Description: Prime numbers, factorization, and related number theory operations.
+
+Function	Generic	Description
+is_prime(n)	✅	Primality test (Miller-Rabin)
+is_prime_deterministic(n)	✅	Deterministic primality test
+next_prime(n)	✅	Next prime number
+prev_prime(n)	✅	Previous prime number
+factor(n)	✅	Prime factorization (trial division)
+pollard_rho(n)	✅	Pollard's Rho factorization
+p_1_factor(n)	✅	Pollard's p-1 factorization
+is_pseudoprime(n)	✅	Fermat pseudoprime test
+miller_rabin(n, k)	✅	Miller-Rabin test with k iterations
+fermat_test(n)	✅	Fermat primality test
+lucas_lehmer(p)	✅	Lucas-Lehmer test for Mersenne primes
+mersenne_prime_p(p)	✅	Check if 2^p - 1 is prime
+euler_phi(n)	✅	Euler's totient function
+mobius(n)	✅	Möbius function
+jordan_totient(n, k)	✅	Jordan's totient function
+carmichael(n)	✅	Carmichael function
+prime_pi(n)	✅	Number of primes ≤ n
+nth_prime(n)	✅	Nth prime number
+primorial(n)	✅	Primorial (product of primes ≤ n)
+is_composite(n)	✅	Check if composite
+is_semiprime(n)	✅	Check if semiprime
+is_power(n)	✅	Check if perfect power
+is_power_of(x, n)	✅	Check if x is a power of n
+radical(n)	✅	Radical of n (product of distinct primes)
+smooth(n, b)	✅	B-smooth number check
+rough(n, b)	✅	B-rough number check
+legendre_symbol(a, p)	✅	Legendre symbol
+jacobi_symbol(a, n)	✅	Jacobi symbol
+kronecker_symbol(a, n)	✅	Kronecker symbol
+divisor_sum(n)	✅	Sum of divisors
+divisor_count(n)	✅	Number of divisors
+proper_divisors(n)	✅	All proper divisors
+math/factorial — Factorial and Combinatorial Functions
+Description: Factorial, binomial coefficients, and related combinatorial functions.
+
+Function	Generic	Description
+factorial(n)	✅	Factorial (n!)
+double_factorial(n)	✅	Double factorial (n!!)
+subfactorial(n)	✅	Derangements (!n)
+multifactorial(n, k)	✅	Multifactorial
+binomial(n, k)	✅	Binomial coefficient (n choose k)
+binomial_coeff(n, k)	✅	Binomial coefficient (alias)
+multinomial(n, ks)	✅	Multinomial coefficient
+falling_factorial(n, k)	✅	Falling factorial
+rising_factorial(n, k)	✅	Rising factorial
+stirling_first(n, k)	✅	Stirling numbers of the first kind
+stirling_second(n, k)	✅	Stirling numbers of the second kind
+bell(n)	✅	Bell numbers
+catalan(n)	✅	Catalan numbers
+eulerian(n, k)	✅	Eulerian numbers
+narayana(n, k)	✅	Narayana numbers
+lah(n, k)	✅	Lah numbers
+motzkin(n)	✅	Motzkin numbers
+schroeder(n)	✅	Schröder numbers
+partition_count(n)	✅	Number of partitions (p(n))
+integer_partitions(n)	✅	Generate integer partitions
+derangements(n)	✅	Derangements (subfactorial)
+bell_triangle(n)	✅	Bell triangle
+math/modular — Modular Arithmetic
+Description: Modular arithmetic operations and algorithms.
+
+Function	Generic	Description
+mod_add(a, b, m)	✅	Modular addition
+mod_sub(a, b, m)	✅	Modular subtraction
+mod_mul(a, b, m)	✅	Modular multiplication
+mod_pow(a, e, m)	✅	Modular exponentiation
+mod_inverse(a, m)	✅	Modular inverse
+mod_sqrt(a, p)	✅	Modular square root
+mod_cbrt(a, p)	✅	Modular cube root
+mod_div(a, b, m)	✅	Modular division
+mod_lcm(a, b, m)	✅	Modular LCM
+crt(pairs)	✅	Chinese Remainder Theorem
+crt_solve(residues, moduli)	✅	CRT solver
+linear_congruence(a, b, m)	✅	Linear congruence solver
+quadratic_residue(a, p)	✅	Check if quadratic residue
+tonelli_shanks(a, p)	✅	Tonelli-Shanks algorithm
+cipolla(a, p)	✅	Cipolla's algorithm
+cornacchia(d, m)	✅	Cornacchia's algorithm
+hilbert_symbol(a, b, p)	✅	Hilbert symbol
+pow_mod_fast(a, e, m)	✅	Fast modular exponentiation
+COMPLEX NUMBERS
+math/complex — Complex Numbers
+Description: Operations on complex numbers. Generic over Float types.
+
+Function	Generic	Description
+Complex[T]	✅	Complex number type
+new(real, imag)	✅	Create complex number
+real(z)	✅	Get real part
+imag(z)	✅	Get imaginary part
+add(a, b)	✅	Complex addition
+sub(a, b)	✅	Complex subtraction
+mul(a, b)	✅	Complex multiplication
+div(a, b)	✅	Complex division
+neg(z)	✅	Complex negation
+conj(z)	✅	Complex conjugate
+abs(z)	✅	Complex magnitude
+abs_sq(z)	✅	Squared magnitude
+arg(z)	✅	Argument/phase
+sqrt(z)	✅	Complex square root
+cbrt(z)	✅	Complex cube root
+exp(z)	✅	Complex exponential
+ln(z)	✅	Complex natural log
+log(z, base)	✅	Complex log with base
+pow(z, n)	✅	Complex power
+sin(z)	✅	Complex sine
+cos(z)	✅	Complex cosine
+tan(z)	✅	Complex tangent
+sinh(z)	✅	Complex hyperbolic sine
+cosh(z)	✅	Complex hyperbolic cosine
+tanh(z)	✅	Complex hyperbolic tangent
+asin(z)	✅	Complex arcsine
+acos(z)	✅	Complex arccosine
+atan(z)	✅	Complex arctangent
+asinh(z)	✅	Complex inverse hyperbolic sine
+acosh(z)	✅	Complex inverse hyperbolic cosine
+atanh(z)	✅	Complex inverse hyperbolic tangent
+polar(r, theta)	✅	Create from polar coordinates
+to_polar(z)	✅	Convert to polar coordinates
+is_real(z)	✅	Check if real
+is_imag(z)	✅	Check if imaginary
+is_zero(z)	✅	Check if zero
+is_infinite(z)	✅	Check if infinite
+is_nan(z)	✅	Check if NaN
+LINEAR ALGEBRA
+math/vector — Vector Operations
+Description: Vector operations for 2D, 3D, 4D, and N-dimensional vectors.
+
+Function	Generic	Description
+Vec2[T]	✅	2D vector
+Vec3[T]	✅	3D vector
+Vec4[T]	✅	4D vector
+VecN[T]	✅	N-dimensional vector
+v2_new(x, y)	✅	Create 2D vector
+v3_new(x, y, z)	✅	Create 3D vector
+v4_new(x, y, z, w)	✅	Create 4D vector
+dot(a, b)	✅	Dot product
+cross(a, b)	✅	Cross product (3D)
+cross2(a, b)	✅	Cross product (2D scalar)
+outer(a, b)	✅	Outer product
+norm(v)	✅	Euclidean norm
+norm_sq(v)	✅	Squared norm
+normalize(v)	✅	Normalized vector
+unit(v)	✅	Unit vector
+distance(a, b)	✅	Euclidean distance
+distance_sq(a, b)	✅	Squared distance
+angle(a, b)	✅	Angle between vectors
+project(a, b)	✅	Project a onto b
+reject(a, b)	✅	Reject a from b
+lerp(a, b, t)	✅	Linear interpolation
+slerp(a, b, t)	✅	Spherical interpolation
+reflect(v, normal)	✅	Reflect vector
+refract(v, normal, eta)	✅	Refract vector
+clamp(v, min, max)	✅	Clamp vector components
+component_min(a, b)	✅	Component-wise min
+component_max(a, b)	✅	Component-wise max
+hadamard(a, b)	✅	Component-wise product
+math/matrix — Matrix Operations
+Description: Matrix operations for 2x2, 3x3, 4x4, and MxN matrices.
+
+Function	Generic	Description
+Mat2[T]	✅	2x2 matrix
+Mat3[T]	✅	3x3 matrix
+Mat4[T]	✅	4x4 matrix
+MatMN[T]	✅	MxN matrix
+mat2_new(m00, m01, m10, m11)	✅	Create 2x2
+mat3_new(...)	✅	Create 3x3
+mat4_new(...)	✅	Create 4x4
+identity()	✅	Identity matrix
+zero()	✅	Zero matrix
+one()	✅	Ones matrix
+add(a, b)	✅	Matrix addition
+sub(a, b)	✅	Matrix subtraction
+mul(a, b)	✅	Matrix multiplication
+scalar_mul(a, s)	✅	Scalar multiplication
+transpose(m)	✅	Transpose
+det(m)	✅	Determinant
+inverse(m)	✅	Inverse
+adjugate(m)	✅	Adjugate (classical adjoint)
+cofactor(m, i, j)	✅	Cofactor
+minor(m, i, j)	✅	Minor
+trace(m)	✅	Trace
+rank(m)	✅	Rank
+nullity(m)	✅	Nullity
+eigenvalues(m)	✅	Eigenvalues
+eigenvectors(m)	✅	Eigenvectors
+diagonal(d)	✅	Diagonal matrix
+diag_mul(a, d)	✅	Diagonal multiplication
+hadamard(a, b)	✅	Component-wise (Hadamard) product
+kronecker(a, b)	✅	Kronecker product
+lu_decompose(m)	✅	LU decomposition
+qr_decompose(m)	✅	QR decomposition
+svd_decompose(m)	✅	SVD decomposition
+cholesky(m)	✅	Cholesky decomposition
+solve_linear(a, b)	✅	Solve linear system
+least_squares(a, b)	✅	Least squares solution
+condition_number(m)	✅	Condition number
+math/quaternion — Quaternion Operations
+Description: Quaternion operations for 3D rotations.
+
+Function	Generic	Description
+Quat[T]	✅	Quaternion type
+quat_new(w, x, y, z)	✅	Create quaternion
+quat_identity()	✅	Identity quaternion
+quat_from_axis_angle(axis, angle)	✅	Create from axis-angle
+quat_from_euler(yaw, pitch, roll)	✅	Create from Euler angles
+quat_from_rotation_matrix(m)	✅	Create from rotation matrix
+quat_to_matrix(q)	✅	Convert to rotation matrix
+quat_to_euler(q)	✅	Convert to Euler angles
+quat_mul(a, b)	✅	Quaternion multiplication
+quat_conj(q)	✅	Conjugate
+quat_inv(q)	✅	Inverse
+quat_norm(q)	✅	Norm
+quat_normalize(q)	✅	Normalize
+quat_rotate(q, v)	✅	Rotate vector by quaternion
+quat_slerp(a, b, t)	✅	Spherical interpolation
+quat_nlerp(a, b, t)	✅	Normalized linear interpolation
+quat_angle(q)	✅	Rotation angle
+quat_axis(q)	✅	Rotation axis
+quat_look_at(direction, up)	✅	Look at rotation
+quat_between(from, to)	✅	Quaternion between vectors
+math/linear — Advanced Linear Algebra
+Description: Advanced linear algebra operations.
+
+Function	Generic	Description
+gram_schmidt(vectors)	✅	Gram-Schmidt orthogonalization
+orthogonalize(vectors)	✅	Orthogonalize vectors
+normalize_columns(m)	✅	Normalize columns
+normalize_rows(m)	✅	Normalize rows
+is_orthogonal(m)	✅	Check if orthogonal
+is_symmetric(m)	✅	Check if symmetric
+is_skew_symmetric(m)	✅	Check if skew-symmetric
+is_positive_definite(m)	✅	Check if positive definite
+is_diagonal_dominant(m)	✅	Check if diagonally dominant
+matrix_exponential(m)	✅	Matrix exponential
+matrix_logarithm(m)	✅	Matrix logarithm
+matrix_sqrt(m)	✅	Matrix square root
+matrix_power(m, n)	✅	Matrix power
+vec_to_skew(v)	✅	Convert vector to skew-symmetric matrix
+skew_to_vec(m)	✅	Convert skew-symmetric matrix to vector
+GEOMETRY
+math/geometry_2d — 2D Geometry
+Description: 2D geometric shapes and operations.
+
+Function	Generic	Description
+Point2[T]	✅	2D point
+Line2[T]	✅	2D line
+Ray2[T]	✅	2D ray
+Segment2[T]	✅	2D line segment
+Circle[T]	✅	Circle
+Rect[T]	✅	Rectangle
+Triangle2[T]	✅	Triangle
+Polygon2[T]	✅	Polygon
+point_distance(a, b)	✅	Distance between points
+point_in_circle(p, circle)	✅	Point in circle test
+point_in_rect(p, rect)	✅	Point in rectangle test
+point_in_triangle(p, tri)	✅	Point in triangle test
+point_in_polygon(p, poly)	✅	Point in polygon test
+line_intersection(a, b)	✅	Line intersection
+segment_intersection(a, b)	✅	Segment intersection
+segment_point_distance(seg, p)	✅	Distance from point to segment
+line_point_distance(line, p)	✅	Distance from point to line
+circle_intersection(a, b)	✅	Circle intersection
+circle_line_intersection(circle, line)	✅	Circle-line intersection
+circle_circle_intersection(a, b)	✅	Circle-circle intersection
+area_triangle(a, b, c)	✅	Triangle area
+area_polygon(poly)	✅	Polygon area
+centroid(poly)	✅	Polygon centroid
+convex_hull(points)	✅	Convex hull
+is_convex(poly)	✅	Check if convex
+polygon_contains(poly, p)	✅	Polygon contains point
+polygon_intersection(a, b)	✅	Polygon intersection
+polygon_union(a, b)	✅	Polygon union
+polygon_difference(a, b)	✅	Polygon difference
+polygon_circumference(poly)	✅	Polygon perimeter
+math/geometry_3d — 3D Geometry
+Description: 3D geometric shapes and operations.
+
+Function	Generic	Description
+Point3[T]	✅	3D point
+Line3[T]	✅	3D line
+Ray3[T]	✅	3D ray
+Segment3[T]	✅	3D line segment
+Plane[T]	✅	Plane
+Sphere[T]	✅	Sphere
+Capsule[T]	✅	Capsule
+Cylinder[T]	✅	Cylinder
+Cone[T]	✅	Cone
+Box[T]	✅	Axis-aligned box (AABB)
+OBB[T]	✅	Oriented bounding box
+Triangle3[T]	✅	3D triangle
+Polygon3[T]	✅	3D polygon
+Mesh[T]	✅	Mesh
+point_distance(a, b)	✅	3D distance
+point_sphere_distance(p, s)	✅	Point-sphere distance
+point_plane_distance(p, plane)	✅	Point-plane distance
+plane_point_distance(plane, p)	✅	Plane-point distance
+line_point_distance(line, p)	✅	Line-point distance
+segment_point_distance(seg, p)	✅	Segment-point distance
+ray_plane_intersection(ray, plane)	✅	Ray-plane intersection
+ray_triangle_intersection(ray, tri)	✅	Ray-triangle intersection
+ray_sphere_intersection(ray, sphere)	✅	Ray-sphere intersection
+ray_box_intersection(ray, box)	✅	Ray-box intersection
+plane_plane_intersection(a, b)	✅	Plane-plane intersection
+sphere_sphere_intersection(a, b)	✅	Sphere-sphere intersection
+aabb_intersection(a, b)	✅	AABB intersection test
+aabb_contains(box, point)	✅	AABB contains point
+closest_point_on_segment(p, seg)	✅	Closest point on segment
+closest_point_on_plane(p, plane)	✅	Closest point on plane
+triangle_normal(tri)	✅	Triangle normal
+mesh_volume(mesh)	✅	Mesh volume
+mesh_surface_area(mesh)	✅	Mesh surface area
+mesh_centroid(mesh)	✅	Mesh centroid
+convex_hull_3d(points)	✅	3D convex hull
+STATISTICS & PROBABILITY
+math/statistics — Statistical Functions
+Description: Descriptive statistics and data analysis.
+
+Function	Generic	Description
+mean(data)	✅	Arithmetic mean
+median(data)	✅	Median
+mode(data)	✅	Mode
+variance(data)	✅	Variance (sample)
+variance_pop(data)	✅	Variance (population)
+stddev(data)	✅	Standard deviation (sample)
+stddev_pop(data)	✅	Standard deviation (population)
+range(data)	✅	Range (max - min)
+iqr(data)	✅	Interquartile range
+quartiles(data)	✅	Quartiles (Q1, Q2, Q3)
+percentile(data, p)	✅	Percentile
+skewness(data)	✅	Skewness
+kurtosis(data)	✅	Kurtosis
+covariance(a, b)	✅	Covariance
+correlation(a, b)	✅	Pearson correlation
+spearman_correlation(a, b)	✅	Spearman rank correlation
+kendall_correlation(a, b)	✅	Kendall tau correlation
+rms(data)	✅	Root mean square
+geometric_mean(data)	✅	Geometric mean
+harmonic_mean(data)	✅	Harmonic mean
+weighted_mean(data, weights)	✅	Weighted mean
+trimmed_mean(data, p)	✅	Trimmed mean
+winsorized_mean(data, p)	✅	Winsorized mean
+mad(data)	✅	Median absolute deviation
+z_score(value, mean, stddev)	✅	Z-score
+math/probability — Probability Functions
+Description: Probability distributions and related functions.
+
+Function	Generic	Description
+uniform_pdf(x, a, b)	❌	Uniform PDF
+uniform_cdf(x, a, b)	❌	Uniform CDF
+normal_pdf(x, mean, std)	❌	Normal PDF
+normal_cdf(x, mean, std)	❌	Normal CDF
+normal_quantile(p)	❌	Normal quantile (inverse CDF)
+exponential_pdf(x, lambda)	❌	Exponential PDF
+exponential_cdf(x, lambda)	❌	Exponential CDF
+gamma_pdf(x, shape, scale)	❌	Gamma PDF
+gamma_cdf(x, shape, scale)	❌	Gamma CDF
+beta_pdf(x, alpha, beta)	❌	Beta PDF
+beta_cdf(x, alpha, beta)	❌	Beta CDF
+chi2_pdf(x, df)	❌	Chi-square PDF
+chi2_cdf(x, df)	❌	Chi-square CDF
+t_pdf(x, df)	❌	Student's t PDF
+t_cdf(x, df)	❌	Student's t CDF
+f_pdf(x, df1, df2)	❌	F-distribution PDF
+f_cdf(x, df1, df2)	❌	F-distribution CDF
+weibull_pdf(x, shape, scale)	❌	Weibull PDF
+weibull_cdf(x, shape, scale)	❌	Weibull CDF
+lognormal_pdf(x, mean, std)	❌	Log-normal PDF
+lognormal_cdf(x, mean, std)	❌	Log-normal CDF
+pareto_pdf(x, alpha)	❌	Pareto PDF
+pareto_cdf(x, alpha)	❌	Pareto CDF
+poisson_pmf(k, lambda)	❌	Poisson PMF
+poisson_cdf(k, lambda)	❌	Poisson CDF
+binomial_pmf(k, n, p)	❌	Binomial PMF
+binomial_cdf(k, n, p)	❌	Binomial CDF
+geometric_pmf(k, p)	❌	Geometric PMF
+geometric_cdf(k, p)	❌	Geometric CDF
+negative_binomial_pmf(k, r, p)	❌	Negative binomial PMF
+negative_binomial_cdf(k, r, p)	❌	Negative binomial CDF
+hypergeometric_pmf(k, N, K, n)	❌	Hypergeometric PMF
+hypergeometric_cdf(k, N, K, n)	❌	Hypergeometric CDF
+CALCULUS & ANALYSIS
+math/calculus — Calculus Operations
+Description: Differentiation, integration, and related operations.
+
+Function	Generic	Description
+derivative(f, x, h)	✅	Numerical derivative
+derivative_2nd(f, x, h)	✅	Second derivative
+derivative_3rd(f, x, h)	✅	Third derivative
+integrate(f, a, b, n)	✅	Numerical integration (Simpson)
+integrate_trapezoid(f, a, b, n)	✅	Trapezoidal integration
+integrate_simpson(f, a, b, n)	✅	Simpson's rule
+integrate_romberg(f, a, b)	✅	Romberg integration
+integrate_gauss(f, a, b)	✅	Gauss-Legendre quadrature
+limit(f, x, direction)	✅	Numerical limit
+limit_left(f, x)	✅	Left-hand limit
+limit_right(f, x)	✅	Right-hand limit
+is_continuous(f, x)	✅	Check continuity
+gradient(f, x)	✅	Gradient (multivariate)
+partial_derivative(f, x, i, h)	✅	Partial derivative
+jacobian(f, x)	✅	Jacobian matrix
+hessian(f, x)	✅	Hessian matrix
+laplacian(f, x)	✅	Laplacian
+curl(f, x)	✅	Curl
+divergence(f, x)	✅	Divergence
+math/differential_equations — Differential Equations
+Description: Numerical solvers for differential equations.
+
+Function	Generic	Description
+solve_ode_euler(f, y0, t0, t1, n)	❌	Euler method
+solve_ode_rk4(f, y0, t0, t1, n)	❌	Runge-Kutta 4th order
+solve_ode_rk45(f, y0, t0, t1)	❌	Runge-Kutta-Fehlberg
+solve_ode_adaptive(f, y0, t0, t1)	❌	Adaptive step solver
+solve_ode_bdf(f, y0, t0, t1, n)	❌	Backward differentiation
+solve_pde_fd(u0, bc, dx, dt)	❌	Finite difference PDE
+solve_pde_fem(u0, bc, mesh)	❌	Finite element PDE
+SPECIAL FUNCTIONS
+math/special — Special Functions
+Description: Advanced special functions from mathematics and physics.
+
+Function	Generic	Description
+gamma(x)	❌	Gamma function Γ(x)
+gamma_ln(x)	❌	Log gamma ln(Γ(x))
+digamma(x)	❌	Digamma function ψ(x)
+trigamma(x)	❌	Trigamma function ψ₁(x)
+polygamma(n, x)	❌	Polygamma function ψⁿ(x)
+beta(a, b)	❌	Beta function B(a,b)
+beta_ln(a, b)	❌	Log beta ln(B(a,b))
+incomplete_gamma(a, x)	❌	Upper incomplete gamma
+incomplete_gamma_low(a, x)	❌	Lower incomplete gamma
+incomplete_beta(a, b, x)	❌	Incomplete beta
+erf(x)	❌	Error function
+erfc(x)	❌	Complementary error function
+erfi(x)	❌	Imaginary error function
+erfinv(x)	❌	Inverse error function
+erfcinv(x)	❌	Inverse complementary error function
+bessel_j(n, x)	❌	Bessel J (first kind)
+bessel_y(n, x)	❌	Bessel Y (second kind)
+bessel_i(n, x)	❌	Modified Bessel I
+bessel_k(n, x)	❌	Modified Bessel K
+bessel_j0(x)	❌	Bessel J₀
+bessel_j1(x)	❌	Bessel J₁
+bessel_jn(n, x)	❌	Bessel J_n
+airy_ai(x)	❌	Airy function Ai(x)
+airy_bi(x)	❌	Airy function Bi(x)
+airy_aip(x)	❌	Airy Ai'(x)
+airy_bip(x)	❌	Airy Bi'(x)
+legendre_p(n, x)	❌	Legendre polynomial Pₙ(x)
+legendre_q(n, x)	❌	Legendre function Qₙ(x)
+laguerre_l(n, x)	❌	Laguerre polynomial Lₙ(x)
+hermite_h(n, x)	❌	Hermite polynomial Hₙ(x)
+chebyshev_t(n, x)	❌	Chebyshev Tₙ(x)
+chebyshev_u(n, x)	❌	Chebyshev Uₙ(x)
+jacobi_p(n, a, b, x)	❌	Jacobi polynomial Pₙ^(a,b)(x)
+gegenbauer_c(n, a, x)	❌	Gegenbauer Cₙ^(a)(x)
+spherical_harmonic(l, m, theta, phi)	❌	Spherical harmonic Yₗᵐ
+dawson(x)	❌	Dawson's integral
+fresnel_s(x)	❌	Fresnel S(x)
+fresnel_c(x)	❌	Fresnel C(x)
+exponential_integral(x)	❌	Exponential integral E₁(x)
+li(x)	❌	Logarithmic integral li(x)
+li_offset(x)	❌	Offset logarithmic integral Li(x)
+sin_integral(x)	❌	Sine integral Si(x)
+cos_integral(x)	❌	Cosine integral Ci(x)
+hypergeometric_2f1(a, b, c, x)	❌	Hypergeometric ₂F₁
+hypergeometric_1f1(a, b, x)	❌	Hypergeometric ₁F₁ (Kummer)
+elliptic_k(k)	❌	Complete elliptic integral K(k)
+elliptic_e(k)	❌	Complete elliptic integral E(k)
+elliptic_pi(n, k)	❌	Complete elliptic integral Π(n,k)
+elliptic_f(phi, k)	❌	Incomplete elliptic integral F(φ,k)
+elliptic_e_incomplete(phi, k)	❌	Incomplete elliptic integral E(φ,k)
+elliptic_pi_incomplete(n, phi, k)	❌	Incomplete elliptic integral Π(n,φ,k)
+theta_1(z, q)	❌	Jacobi theta θ₁
+theta_2(z, q)	❌	Jacobi theta θ₂
+theta_3(z, q)	❌	Jacobi theta θ₃
+theta_4(z, q)	❌	Jacobi theta θ₄
+riemann_zeta(x)	❌	Riemann zeta function ζ(x)
+riemann_zeta_eta(x)	❌	Dirichlet eta η(x)
+dirichlet_beta(x)	❌	Dirichlet beta β(x)
+lerch_phi(z, s, a)	❌	Lerch transcendent Φ(z,s,a)
+polylog(s, z)	❌	Polylogarithm Liₛ(z)
+DISCRETE MATHEMATICS
+math/combinatorics — Combinatorics
+Description: Combinatorial structures and algorithms.
+
+Function	Generic	Description
+permutations(n, k)	✅	Permutations P(n,k)
+combinations(n, k)	✅	Combinations C(n,k)
+permutations_with_repetition(n, k)	✅	Permutations with repetition
+combinations_with_repetition(n, k)	✅	Combinations with repetition
+derangements(n)	✅	Derangements !n
+bell_numbers(n)	✅	Bell numbers
+catalan_numbers(n)	✅	Catalan numbers
+eulerian_numbers(n, k)	✅	Eulerian numbers
+stirling_numbers_1(n, k)	✅	Stirling numbers (1st kind)
+stirling_numbers_2(n, k)	✅	Stirling numbers (2nd kind)
+lah_numbers(n, k)	✅	Lah numbers
+narayana_numbers(n, k)	✅	Narayana numbers
+fibonacci(n)	✅	Fibonacci number
+fibonacci_start(a, b, n)	✅	Generalized Fibonacci
+lucas(n)	✅	Lucas number
+tribonacci(n)	✅	Tribonacci number
+tetranacci(n)	✅	Tetranacci number
+partitions(n)	✅	Number of partitions p(n)
+integer_partitions(n)	✅	Generate integer partitions
+compositions(n, k)	✅	Compositions of n into k parts
+compositions_all(n)	✅	All compositions of n
+surjections(n, k)	✅	Surjections from n to k
+involutions(n)	✅	Involutions (self-inverse permutations)
+derangements_enum(n)	✅	Enumerate derangements
+permutations_enum(n)	✅	Enumerate permutations
+combinations_enum(n, k)	✅	Enumerate combinations
+subsets_enum(n)	✅	Enumerate subsets
+powerset_enum(set)	✅	Enumerate power set
+math/graph_theory — Graph Theory
+Description: Graph operations and algorithms.
+
+Function	Generic	Description
+Graph[T]	✅	Graph type
+graph_new()	✅	Create empty graph
+graph_add_vertex(g, v)	✅	Add vertex
+graph_add_edge(g, u, v)	✅	Add edge
+graph_add_weighted_edge(g, u, v, w)	✅	Add weighted edge
+graph_remove_vertex(g, v)	✅	Remove vertex
+graph_remove_edge(g, u, v)	✅	Remove edge
+graph_has_vertex(g, v)	✅	Check vertex exists
+graph_has_edge(g, u, v)	✅	Check edge exists
+graph_degree(g, v)	✅	Degree of vertex
+graph_vertices(g)	✅	List vertices
+graph_edges(g)	✅	List edges
+graph_adjacent(g, v)	✅	Adjacent vertices
+graph_dfs(g, start)	✅	Depth-first search
+graph_bfs(g, start)	✅	Breadth-first search
+graph_dijkstra(g, start)	✅	Dijkstra's shortest path
+graph_bellman_ford(g, start)	✅	Bellman-Ford shortest path
+graph_floyd_warshall(g)	✅	Floyd-Warshall all-pairs
+graph_astar(g, start, goal)	✅	A* search
+graph_prim(g)	✅	Prim's MST
+graph_kruskal(g)	✅	Kruskal's MST
+graph_tarjan_scc(g)	✅	Tarjan's strongly connected components
+graph_kosaraju_scc(g)	✅	Kosaraju's SCC
+graph_topological_sort(g)	✅	Topological sort
+graph_is_connected(g)	✅	Check if connected
+graph_is_cyclic(g)	✅	Check if cyclic
+graph_is_bipartite(g)	✅	Check if bipartite
+graph_isomorphic(g, h)	✅	Check isomorphism
+graph_color(g)	✅	Graph coloring
+graph_max_flow(g, s, t)	✅	Max flow (Ford-Fulkerson)
+graph_min_cut(g, s, t)	✅	Min cut
+graph_hamiltonian_path(g)	✅	Hamiltonian path
+graph_tsp(g)	✅	Traveling salesman
+ARBITRARY PRECISION
+math/precision_integer — Arbitrary Precision Integers
+Description: Big integers with arbitrary precision.
+
+Function	Generic	Description
+BigInt	❌	Arbitrary precision integer
+BigInt.new(value)	❌	Create from integer
+BigInt.from_str(s)	❌	Parse from string
+BigInt.to_str(n)	❌	Convert to string
+BigInt.to_hex(n)	❌	Convert to hex
+BigInt.to_bin(n)	❌	Convert to binary
+BigInt.to_oct(n)	❌	Convert to octal
+BigInt.add(a, b)	❌	Addition
+BigInt.sub(a, b)	❌	Subtraction
+BigInt.mul(a, b)	❌	Multiplication
+BigInt.div(a, b)	❌	Division
+BigInt.mod(a, b)	❌	Modulo
+BigInt.pow(a, b)	❌	Power
+BigInt.neg(a)	❌	Negation
+BigInt.abs(a)	❌	Absolute value
+BigInt.cmp(a, b)	❌	Compare
+BigInt.eq(a, b)	❌	Equality
+BigInt.lt(a, b)	❌	Less than
+BigInt.gt(a, b)	❌	Greater than
+BigInt.bit_and(a, b)	❌	Bitwise AND
+BigInt.bit_or(a, b)	❌	Bitwise OR
+BigInt.bit_xor(a, b)	❌	Bitwise XOR
+BigInt.bit_not(a)	❌	Bitwise NOT
+BigInt.shl(a, n)	❌	Shift left
+BigInt.shr(a, n)	❌	Shift right
+BigInt.is_prime(n)	❌	Primality test
+BigInt.gcd(a, b)	❌	GCD
+BigInt.lcm(a, b)	❌	LCM
+BigInt.mod_inverse(a, m)	❌	Modular inverse
+BigInt.mod_pow(a, e, m)	❌	Modular exponentiation
+BigInt.factorial(n)	❌	Factorial
+BigInt.binomial(n, k)	❌	Binomial coefficient
+math/precision_float — Arbitrary Precision Floats
+Description: Big floats with arbitrary precision.
+
+Function	Generic	Description
+BigFloat	❌	Arbitrary precision float
+BigFloat.new(value)	❌	Create from float
+BigFloat.from_str(s)	❌	Parse from string
+BigFloat.to_str(f)	❌	Convert to string
+BigFloat.with_precision(prec)	❌	Set precision (bits)
+BigFloat.add(a, b)	❌	Addition
+BigFloat.sub(a, b)	❌	Subtraction
+BigFloat.mul(a, b)	❌	Multiplication
+BigFloat.div(a, b)	❌	Division
+BigFloat.neg(a)	❌	Negation
+BigFloat.abs(a)	❌	Absolute value
+BigFloat.sqrt(a)	❌	Square root
+BigFloat.cbrt(a)	❌	Cube root
+BigFloat.exp(a)	❌	Exponential
+BigFloat.ln(a)	❌	Natural logarithm
+BigFloat.log10(a)	❌	Log base 10
+BigFloat.log2(a)	❌	Log base 2
+BigFloat.pow(a, b)	❌	Power
+BigFloat.sin(a)	❌	Sine
+BigFloat.cos(a)	❌	Cosine
+BigFloat.tan(a)	❌	Tangent
+BigFloat.asin(a)	❌	Arcsine
+BigFloat.acos(a)	❌	Arccosine
+BigFloat.atan(a)	❌	Arctangent
+BigFloat.atan2(y, x)	❌	Atan2
+BigFloat.sinh(a)	❌	Hyperbolic sine
+BigFloat.cosh(a)	❌	Hyperbolic cosine
+BigFloat.tanh(a)	❌	Hyperbolic tangent
+BigFloat.pi(prec)	❌	π with precision
+BigFloat.e(prec)	❌	e with precision
+BigFloat.cmp(a, b)	❌	Compare
+BigFloat.eq(a, b)	❌	Equality
+math/precision_rational — Arbitrary Precision Rationals
+Description: Big rational numbers with arbitrary precision.
+
+Function	Generic	Description
+BigRat	❌	Arbitrary precision rational
+BigRat.new(num, den)	❌	Create rational
+BigRat.from_int(n)	❌	Create from integer
+BigRat.from_str(s)	❌	Parse from string
+BigRat.to_str(r)	❌	Convert to string
+BigRat.numerator(r)	❌	Get numerator
+BigRat.denominator(r)	❌	Get denominator
+BigRat.add(a, b)	❌	Addition
+BigRat.sub(a, b)	❌	Subtraction
+BigRat.mul(a, b)	❌	Multiplication
+BigRat.div(a, b)	❌	Division
+BigRat.neg(a)	❌	Negation
+BigRat.abs(a)	❌	Absolute value
+BigRat.recip(a)	❌	Reciprocal
+BigRat.reduce(r)	❌	Reduce to lowest terms
+BigRat.is_reduced(r)	❌	Check if reduced
+BigRat.is_integer(r)	❌	Check if integer
+BigRat.is_zero(r)	❌	Check if zero
+BigRat.cmp(a, b)	❌	Compare
+BigRat.eq(a, b)	❌	Equality
+BigRat.to_float(r)	❌	Convert to float
+BigRat.to_integer(r)	❌	Convert to integer
+NUMERICAL METHODS
+math/numerical — Numerical Methods
+Description: Numerical algorithms for solving mathematical problems.
+
+Function	Generic	Description
+bisection(f, a, b)	✅	Bisection method
+newton(f, fprime, x0)	✅	Newton-Raphson method
+secant(f, x0, x1)	✅	Secant method
+falsi(f, a, b)	✅	False position method
+brent(f, a, b)	✅	Brent's method
+fixed_point(f, x0)	✅	Fixed-point iteration
+steffensen(f, x0)	✅	Steffensen's method
+newton_multi(f, jac, x0)	✅	Multidimensional Newton
+gauss_seidel(a, b, x0)	✅	Gauss-Seidel method
+jacobi_iterative(a, b, x0)	✅	Jacobi iteration
+conjugate_gradient(a, b, x0)	✅	Conjugate gradient
+gradient_descent(f, grad, x0)	✅	Gradient descent
+newton_raphson_multi(f, grad, hess, x0)	✅	Newton-Raphson (multi)
+bisection_root(f, a, b)	✅	Bisection for root
+newton_root(f, fp, x0)	✅	Newton for root
+broyden(f, x0)	✅	Broyden's method
+anderson(f, x0)	✅	Anderson acceleration
+interp_linear(x, y, xi)	✅	Linear interpolation
+interp_polynomial(x, y, xi)	✅	Polynomial interpolation
+interp_spline(x, y, xi)	✅	Spline interpolation
+interp_cubic(x, y, xi)	✅	Cubic interpolation
+interp_hermite(x, y, dy, xi)	✅	Hermite interpolation
+spline_linear(x, y)	✅	Linear spline
+spline_cubic(x, y)	✅	Cubic spline
+spline_b_spline(x, y, k)	✅	B-spline
+spline_nurbs(x, y, k, weights)	✅	NURBS
+quadrature_trapezoid(f, a, b, n)	✅	Trapezoidal quadrature
+quadrature_simpson(f, a, b, n)	✅	Simpson's quadrature
+quadrature_gauss(f, a, b, n)	✅	Gauss-Legendre quadrature
+quadrature_adaptive(f, a, b)	✅	Adaptive quadrature
+quadrature_monte_carlo(f, a, b, n)	✅	Monte Carlo integration
+optimize_golden(f, a, b)	✅	Golden-section optimization
+optimize_ternary(f, a, b)	✅	Ternary search
+optimize_bfgs(f, grad, x0)	✅	BFGS optimization
+optimize_lbfgs(f, grad, x0)	✅	L-BFGS
+optimize_simplex(f, x0)	✅	Nelder-Mead simplex
+optimize_powell(f, x0)	✅	Powell's method
+optimize_cg(f, grad, x0)	✅	Conjugate gradient optimization
+optimize_gradient(f, grad, x0)	✅	Gradient descent optimization
+optimize_newton(f, grad, hess, x0)	✅	Newton optimization
+optimize_least_squares(f, x0)	✅	Nonlinear least squares
+solver_single(f, x0)	✅	Single equation solver
+solver_system(f, x0)	✅	System of equations solver
+SIGNAL PROCESSING
+math/signal — Signal Processing
+Description: Signal processing and transform operations.
+
+Function	Generic	Description
+fft(data)	❌	Fast Fourier Transform
+ifft(data)	❌	Inverse FFT
+fft_real(data)	❌	Real FFT
+ifft_real(data)	❌	Inverse real FFT
+dft(data)	❌	Discrete Fourier Transform
+idft(data)	❌	Inverse DFT
+dct(data)	❌	Discrete Cosine Transform
+idct(data)	❌	Inverse DCT
+dct_type2(data)	❌	DCT Type II
+dct_type3(data)	❌	DCT Type III
+dst(data)	❌	Discrete Sine Transform
+idst(data)	❌	Inverse DST
+wavelet_dwt(data)	❌	Discrete Wavelet Transform
+wavelet_idwt(data)	❌	Inverse DWT
+wavelet_daubechies(data)	❌	Daubechies wavelet
+wavelet_haar(data)	❌	Haar wavelet
+filter_lowpass(data, cutoff)	❌	Low-pass filter
+filter_highpass(data, cutoff)	❌	High-pass filter
+filter_bandpass(data, lo, hi)	❌	Band-pass filter
+filter_bandstop(data, lo, hi)	❌	Band-stop filter
+filter_butterworth(data, cutoff, n)	❌	Butterworth filter
+filter_chebyshev(data, cutoff, n)	❌	Chebyshev filter
+filter_bessel(data, cutoff, n)	❌	Bessel filter
+filter_fir(data, taps)	❌	FIR filter
+filter_iir(data, a, b)	❌	IIR filter
+convolve(a, b)	❌	Convolution
+correlate(a, b)	❌	Cross-correlation
+autocorrelate(a)	❌	Autocorrelation
+window_hanning(n)	❌	Hanning window
+window_hamming(n)	❌	Hamming window
+window_blackman(n)	❌	Blackman window
+window_kaiser(n, beta)	❌	Kaiser window
+window_bartlett(n)	❌	Bartlett window
+window_gaussian(n, sigma)	❌	Gaussian window
+spectrum(data)	❌	Power spectrum
+psd(data)	❌	Power spectral density
+spectrogram(data, window, overlap)	❌	Spectrogram
+cepstrum(data)	❌	Cepstrum
+mel_filterbank(data)	❌	Mel filterbank
+mfcc(data)	❌	Mel-frequency cepstral coefficients
+OPTIMIZATION
+math/optimization — Optimization Algorithms
+Description: Mathematical optimization algorithms.
+
+Function	Generic	Description
+linear_programming(c, A, b)	✅	Linear programming (simplex)
+integer_programming(c, A, b)	✅	Integer linear programming
+mixed_integer_programming(c, A, b)	✅	Mixed-integer programming
+quadratic_programming(Q, c, A, b)	✅	Quadratic programming
+nonlinear_programming(f, constraints)	✅	Nonlinear programming
+lp_simplex(c, A, b)	✅	Simplex algorithm
+lp_interior_point(c, A, b)	✅	Interior point method
+branch_and_bound(f, constraints)	✅	Branch and bound
+cutting_plane(f, constraints)	✅	Cutting plane method
+sequential_quadratic(f, constraints)	✅	Sequential quadratic programming
+penalty_method(f, constraints)	✅	Penalty method
+barrier_method(f, constraints)	✅	Barrier method
+augmented_lagrangian(f, constraints)	✅	Augmented Lagrangian
+genetic_algorithm(f, population, generations)	✅	Genetic algorithm
+simulated_annealing(f, schedule)	✅	Simulated annealing
+particle_swarm(f, swarm_size, iterations)	✅	Particle swarm optimization
+ant_colony(f, ants, iterations)	✅	Ant colony optimization
+differential_evolution(f, population, generations)	✅	Differential evolution
+bayesian_optimization(f, bounds)	✅	Bayesian optimization
+grid_search(f, grid)	✅	Grid search
+random_search(f, distribution, iterations)	✅	Random search
+FINANCE
+math/finance — Financial Mathematics
+Description: Financial calculations and models.
+
+Function	Generic	Description
+pv(future_value, rate, periods)	❌	Present value
+fv(present_value, rate, periods)	❌	Future value
+npv(rate, cashflows)	❌	Net present value
+irr(cashflows)	❌	Internal rate of return
+mirr(cashflows, finance_rate, reinvest_rate)	❌	Modified IRR
+pmt(rate, periods, pv)	❌	Payment amount
+ipmt(rate, period, periods, pv)	❌	Interest portion of payment
+ppmt(rate, period, periods, pv)	❌	Principal portion of payment
+nper(rate, pmt, pv)	❌	Number of periods
+rate(nper, pmt, pv, fv)	❌	Interest rate
+annuity(rate, periods, pv)	❌	Annuity calculation
+perpetuity(cashflow, rate)	❌	Perpetuity calculation
+bond_price(face_value, coupon, maturity, rate)	❌	Bond price
+bond_yield(price, face_value, coupon, maturity)	❌	Bond yield to maturity
+duration(price, face_value, coupon, maturity, rate)	❌	Macaulay duration
+convexity(price, face_value, coupon, maturity, rate)	❌	Convexity
+option_call(s, k, t, r, sigma)	❌	Call option price (Black-Scholes)
+option_put(s, k, t, r, sigma)	❌	Put option price (Black-Scholes)
+option_call_delta(s, k, t, r, sigma)	❌	Call option delta
+option_put_delta(s, k, t, r, sigma)	❌	Put option delta
+option_gamma(s, k, t, r, sigma)	❌	Option gamma
+option_theta(s, k, t, r, sigma)	❌	Option theta
+option_vega(s, k, t, r, sigma)	❌	Option vega
+option_rho(s, k, t, r, sigma)	❌	Option rho
+implied_volatility(price, s, k, t, r)	❌	Implied volatility
+cagr(start_value, end_value, periods)	❌	Compound annual growth rate
+sharpe_ratio(returns, risk_free_rate)	❌	Sharpe ratio
+sortino_ratio(returns, risk_free_rate)	❌	Sortino ratio
+calmar_ratio(returns)	❌	Calmar ratio
+var(returns, confidence_level)	❌	Value at Risk
+cvar(returns, confidence_level)	❌	Conditional VaR
+drawdown(returns)	❌	Maximum drawdown
+beta(returns, market_returns)	❌	Beta coefficient
+alpha(returns, market_returns, risk_free_rate)	❌	Alpha coefficient
+treynor_ratio(returns, market_returns, risk_free_rate)	❌	Treynor ratio
+Complete Module Summary
+Module	Category	Functions
+math/core	Foundation	25
+math/constants	Foundation	24
+math/precision	Foundation	10
+math/interfaces	Foundation	10
+math/arithmetic	Arithmetic	20
+math/roots	Arithmetic	12
+math/exponential	Arithmetic	22
+math/rounding	Arithmetic	14
+math/decompose	Arithmetic	14
+math/trigonometry	Trigonometry	12
+math/inverse_trig	Trigonometry	10
+math/hyperbolic	Trigonometry	12
+math/trigonometric_constants	Trigonometry	12
+math/angular	Trigonometry	12
+math/bitwise	Bitwise	18
+math/rotation	Bitwise	10
+math/endianness	Bitwise	16
+math/bitfield	Bitwise	16
+math/number_theory	Number Theory	38
+math/factorial	Number Theory	22
+math/modular	Number Theory	18
+math/complex	Complex	36
+math/vector	Linear Algebra	30
+math/matrix	Linear Algebra	34
+math/quaternion	Linear Algebra	18
+math/linear	Linear Algebra	16
+math/geometry_2d	Geometry	28
+math/geometry_3d	Geometry	30
+math/statistics	Statistics	28
+math/probability	Probability	30
+math/calculus	Calculus	18
+math/differential_equations	Calculus	8
+math/special	Special	58
+math/combinatorics	Discrete	32
+math/graph_theory	Discrete	38
+math/precision_integer	Precision	34
+math/precision_float	Precision	28
+math/precision_rational	Precision	20
+math/numerical	Numerical	44
+math/signal	Signal	38
+math/optimization	Optimization	24
+math/finance	Finance	36
+TOTAL	42 Modules	~980 Functions
+Next Steps
+Implement math/core first (most used, simplest)
+
+Add math/constants (compile-time only)
+
+Implement math/trigonometry (libm bindings)
+
+Add math/vector (game/3D operations)
+
+Expand incrementally based on demand
+
+Would you like me to write the full implementation for any specific module?
+
+do we include stuff like min max lerp vector length etc ? are we left any math
+Complete Math Coverage Audit
+Let me do a full audit to make sure we haven't missed anything. I'll check every branch of mathematics and identify gaps.
+
+✅ WHAT WE HAVE (Covered)
+Category	Modules	Status
+Foundations	core, constants, precision, interfaces	✅ Complete
+Arithmetic	arithmetic, roots, exponential, rounding, decompose	✅ Complete
+Trigonometry	trigonometry, inverse_trig, hyperbolic, angular, trig_constants	✅ Complete
+Bitwise	bitwise, rotation, endianness, bitfield	✅ Complete
+Number Theory	number_theory, factorial, modular	✅ Complete
+Complex	complex	✅ Complete
+Linear Algebra	vector, matrix, quaternion, linear	✅ Complete
+Geometry	geometry_2d, geometry_3d	✅ Complete
+Statistics	statistics, probability	✅ Complete
+Calculus	calculus, differential_equations	✅ Complete
+Special Functions	special	✅ Complete
+Discrete Math	combinatorics, graph_theory	✅ Complete
+Precision	precision_integer, precision_float, precision_rational	✅ Complete
+Numerical Methods	numerical	✅ Complete
+Signal Processing	signal	✅ Complete
+Optimization	optimization	✅ Complete
+Finance	finance	✅ Complete
+❌ WHAT WE MISSED (Gaps)
+1. MIN/MAX/LERP/VECTOR LENGTH — These are actually covered!
+Function	Where it lives
+min, max	math/core (generic over Ord)
+clamp	math/core (generic over Ord)
+lerp	math/core (generic over Numeric)
+norm, norm_sq, normalize	math/vector
+length, length_sq	math/vector (aliases for norm)
+distance	math/vector
+So these ARE included. Good.
+
+2. MISSING: Set Theory
+text
+math/set_theory
+├── Set[T] - Set operations
+├── union, intersection, difference, symmetric_difference
+├── subset, superset, proper_subset
+├── power_set, cartesian_product
+├── cardinality, complement
+├── disjoint, partition
+└── set_comprehension
+3. MISSING: Logic & Boolean Algebra
+text
+math/logic
+├── truth_table - Generate truth table
+├── boolean_expression - Evaluate boolean expressions
+├── simplify - Boolean algebra simplification
+├── normal_forms - DNF, CNF conversion
+├── iff, implies, xor, nand, nor
+├── quantifiers - ∀, ∃
+├── satisfiability - SAT solver (basic)
+└── tautology_check - Check if expression is tautology
+4. MISSING: Information Theory
+text
+math/information_theory
+├── entropy - Shannon entropy
+├── joint_entropy - H(X,Y)
+├── conditional_entropy - H(X|Y)
+├── mutual_information - I(X;Y)
+├── kl_divergence - KL divergence
+├── js_divergence - Jensen-Shannon divergence
+├── cross_entropy - Cross entropy
+├── perplexity - Perplexity
+├── self_information - log(1/p)
+├── entropy_rate - Entropy rate
+├── channel_capacity - Shannon-Hartley
+├── data_compression - Information theoretic bounds
+├── huffman_coding - Huffman encoding/decoding
+└── arithmetic_coding - Arithmetic encoding/decoding
+5. MISSING: Cryptography (but you have crypto/ module already)
+text
+(Already in crypto/ - skip)
+6. MISSING: Chaos Theory
+text
+math/chaos
+├── logistic_map - xₙ₊₁ = r*xₙ*(1-xₙ)
+├── lorenz_system - Lorenz attractor
+├── rossler_system - Rössler attractor
+├── henon_map - Hénon map
+├── bifurcation_diagram - Bifurcation diagram
+├── lyapunov_exponent - Lyapunov exponent
+├── strange_attractor - Strange attractor detection
+├── fractal_dimension - Hausdorff dimension
+├── mandelbrot_set - Mandelbrot set
+├── julia_set - Julia set
+├── burning_ship - Burning Ship fractal
+├── newton_fractal - Newton fractal
+└── tent_map - Tent map
+7. MISSING: Game Theory
+text
+math/game_theory
+├── NormalFormGame - Matrix game
+├── ExtensiveFormGame - Tree game
+├── nash_equilibrium - Nash equilibrium solver
+├── minimax - Minimax algorithm
+├── alpha_beta - Alpha-beta pruning
+├── dominant_strategy - Dominant strategy detection
+├── pareto_optimal - Pareto optimality
+├── cooperative_game - Coalition games
+├── shapley_value - Shapley value
+├── core - Core of cooperative game
+├── auction - Auction theory
+├── mechanism_design - Mechanism design
+├── evolutionary_game - Evolutionary game theory
+├── replicator_dynamics - Replicator dynamics
+└── prisoner_dilemma - Classic game theory examples
+8. MISSING: Queueing Theory
+text
+math/queueing
+├── m_m_1 - M/M/1 queue (arrival/service rates)
+├── m_m_c - M/M/c queue
+├── m_g_1 - M/G/1 queue
+├── g_g_1 - G/G/1 queue
+├── erlang_b - Erlang B formula
+├── erlang_c - Erlang C formula
+├── little_law - Little's Law (L = λW)
+├── utilization - Server utilization
+├── queue_length - Expected queue length
+├── waiting_time - Expected waiting time
+├── loss_probability - Loss probability
+├── blocking_probability - Blocking probability
+├── heavy_traffic - Heavy traffic approximation
+└── diffusion_approx - Diffusion approximation
+9. MISSING: Control Theory
+text
+math/control_theory
+├── pid_controller - PID controller
+├── transfer_function - Transfer function
+├── state_space - State-space representation
+├── observability - Observability check
+├── controllability - Controllability check
+├── stability - Stability analysis (Routh-Hurwitz)
+├── nyquist_plot - Nyquist plot
+├── bode_plot - Bode plot
+├── root_locus - Root locus
+├── pole_placement - Pole placement
+├── lqr - Linear Quadratic Regulator
+├── lqg - Linear Quadratic Gaussian
+├── kalman_filter - Kalman filter
+├── h_infinity - H-infinity control
+└── robust_control - Robust control
+10. MISSING: Machine Learning Primitives
+text
+math/machine_learning
+├── activation - Activation functions (sigmoid, tanh, relu, gelu, swish)
+├── loss - Loss functions (MSE, MAE, Huber, CrossEntropy, Hinge)
+├── metrics - Metrics (accuracy, precision, recall, f1, auc)
+├── regularization - L1, L2, ElasticNet
+├── normalization - BatchNorm, LayerNorm, GroupNorm
+├── dropout - Dropout
+├── kernel - Kernel functions (RBF, polynomial, sigmoid)
+├── distance - Distance metrics (Euclidean, Manhattan, Cosine, Minkowski)
+├── similarity - Similarity metrics (Cosine, Jaccard, Dice)
+└── embedding - Embedding operations
+11. MISSING: Topology
+text
+math/topology
+├── open_set - Open set operations
+├── closed_set - Closed set operations
+├── compactness - Compactness check
+├── connectedness - Connectedness check
+├── continuity - Continuity check
+├── homeomorphism - Homeomorphism check
+├── topological_space - Topological space operations
+├── metric_space - Metric space operations
+├── ball - Open/closed ball
+├── interior - Interior of set
+├── closure - Closure of set
+├── boundary - Boundary of set
+├── limit_point - Limit points
+└── neighborhood - Neighborhood operations
+12. MISSING: Number Systems
+text
+math/number_systems
+├── binary - Binary operations
+├── octal - Octal operations
+├── decimal - Decimal operations
+├── hexadecimal - Hex operations
+├── base_n - Base-N conversion
+├── roman - Roman numerals
+├── mayan - Mayan numerals
+├── chinese - Chinese numerals
+├── japanese - Japanese numerals
+├── egyptian - Egyptian fractions
+├── babylonian - Babylonian numerals
+├── greek - Greek numerals
+├── fraction - Fractions (proper, improper, mixed)
+├── continued_fraction - Continued fractions
+├── surds - Surds (√2, √3, etc.)
+├── complex - Complex numbers (already have)
+├── quaternion - Quaternions (already have)
+├── octonion - Octonions
+└── sedenion - Sedenions
+13. MISSING: Mathematical Logic
+text
+math/mathematical_logic
+├── propositional - Propositional logic
+├── predicate - Predicate logic
+├── first_order - First-order logic
+├── modal - Modal logic
+├── temporal - Temporal logic
+├── fuzzy - Fuzzy logic
+├── intuitionistic - Intuitionistic logic
+├── linear - Linear logic
+├── relevance - Relevance logic
+├── provability - Provability logic
+├── model_theory - Model theory
+├── proof_theory - Proof theory
+├── set_theory - Axiomatic set theory
+├── type_theory - Type theory
+└── category_theory - Category theory
+14. MISSING: Approximation Theory
+text
+math/approximation
+├── interpolation - Interpolation methods
+├── extrapolation - Extrapolation methods
+├── polynomial_approx - Polynomial approximation
+├── rational_approx - Rational approximation
+├── trigonometric_approx - Trigonometric approximation
+├── exponential_approx - Exponential approximation
+├── chebyshev_approx - Chebyshev approximation
+├── least_squares - Least squares approximation
+├── minimax - Minimax approximation
+├── pade_approx - Padé approximation
+├── remez - Remez algorithm
+├── spline_approx - Spline approximation
+└── best_approx - Best approximation
+15. MISSING: Fuzzy Mathematics
+text
+math/fuzzy
+├── fuzzy_set - Fuzzy set operations
+├── membership - Membership functions
+├── fuzzy_logic - Fuzzy logic operations
+├── fuzzy_intersection - Fuzzy intersection
+├── fuzzy_union - Fuzzy union
+├── fuzzy_complement - Fuzzy complement
+├── fuzzy_relation - Fuzzy relations
+├── fuzzy_composition - Fuzzy composition
+├── defuzzification - Defuzzification methods
+├── fuzzy_inference - Fuzzy inference
+├── mamdani - Mamdani inference
+├── sugeno - Sugeno inference
+├── fuzzy_control - Fuzzy control
+└── fuzzy_decision - Fuzzy decision making
+16. MISSING: Mathematical Physics
+text
+math/mathematical_physics
+├── hamiltonian - Hamiltonian mechanics
+├── lagrangian - Lagrangian mechanics
+├── quantum_operators - Quantum operators
+├── pauli_matrices - Pauli matrices
+├── gamma_matrices - Dirac gamma matrices
+├── tensor_calculus - Tensor calculus
+├── differential_geometry - Differential geometry
+├── riemannian - Riemannian geometry
+├── symplectic - Symplectic geometry
+├── lie_algebra - Lie algebra
+├── lie_group - Lie groups
+├── representation - Representation theory
+├── greens_function - Green's functions
+├── propagator - Quantum propagators
+└── path_integral - Path integrals
+17. MISSING: Operations Research
+text
+math/operations_research
+├── linear_programming - LP (already have)
+├── integer_programming - ILP (already have)
+├── dynamic_programming - Dynamic programming
+├── inventory - Inventory management
+├── queuing - Queuing theory (above)
+├── scheduling - Job scheduling
+├── routing - Vehicle routing
+├── assignment - Assignment problem
+├── transportation - Transportation problem
+├── transshipment - Transshipment problem
+├── network_flow - Network flow (already in graph)
+├── facility_location - Facility location
+├── supply_chain - Supply chain optimization
+├── revenue_management - Revenue management
+└── stochastic_optimization - Stochastic optimization
+18. MISSING: Mathematical Biology
+text
+math/mathematical_biology
+├── population_growth - Population growth models
+├── logistic_growth - Logistic growth
+├── lotka_volterra - Predator-prey model
+├── epidemiological - SIR, SEIR models
+├── chemotherapy - Chemotherapy models
+├── genetics - Genetic algorithms
+├── neural_networks - Neural network math
+├── ecology - Ecological models
+├── epidemiology - Disease spread
+├── immunology - Immune system models
+├── neuroscience - Neuron models
+└── evolution - Evolutionary dynamics
+19. MISSING: Mathematical Economics
+text
+math/mathematical_economics
+├── utility - Utility functions
+├── production - Production functions (Cobb-Douglas)
+├── demand - Demand functions
+├── supply - Supply functions
+├── equilibrium - Market equilibrium
+├── elasticity - Elasticity calculations
+├── marginal - Marginal analysis
+├── consumer_theory - Consumer theory
+├── producer_theory - Producer theory
+├── general_equilibrium - General equilibrium
+├── game_theory - Game theory (above)
+├── auction_theory - Auction theory
+└── mechanism_design - Mechanism design
+20. MISSING: Geometry (Extended)
+text
+math/geometry_extended
+├── projective_geometry - Projective geometry
+├── hyperbolic_geometry - Hyperbolic geometry
+├── elliptic_geometry - Elliptic geometry
+├── non_euclidean - Non-Euclidean geometry
+├── inversive_geometry - Inversive geometry
+├── incidence_geometry - Incidence geometry
+├── finite_geometry - Finite geometries
+├── algebraic_geometry - Algebraic geometry
+├── differential_geometry - Differential geometry
+├── riemannian_geometry - Riemannian geometry
+├── convex_geometry - Convex geometry
+├── discrete_geometry - Discrete geometry
+├── computational_geometry - Computational geometry
+├── voronoi - Voronoi diagrams
+├── delaunay - Delaunay triangulation
+├── bezier - Bézier curves
+├── b_spline - B-splines
+├── nurbs - NURBS
+├── subdivision - Subdivision surfaces
+└── mesh_processing - Mesh processing
+21. MISSING: Algebra (Extended)
+text
+math/algebra_extended
+├── group_theory - Group theory
+├── ring_theory - Ring theory
+├── field_theory - Field theory
+├── module_theory - Module theory
+├── vector_spaces - Vector spaces (already have)
+├── linear_algebra - Linear algebra (already have)
+├── galois_theory - Galois theory
+├── algebraic_number - Algebraic number theory
+├── algebraic_geometry - Algebraic geometry
+├── commutative_algebra - Commutative algebra
+├── homological_algebra - Homological algebra
+├── category_theory - Category theory
+├── universal_algebra - Universal algebra
+├── representation_theory - Representation theory
+├── lie_algebra - Lie algebra
+└── clifford_algebra - Clifford algebra
+📊 SUMMARY: What We Have vs What We're Missing
+Category	Status	Modules
+Basic Math	✅ Complete	core, constants, arithmetic, roots, exponential, rounding, decompose
+Trigonometry	✅ Complete	trigonometry, inverse_trig, hyperbolic, angular
+Bitwise	✅ Complete	bitwise, rotation, endianness, bitfield
+Number Theory	✅ Complete	number_theory, factorial, modular
+Complex Numbers	✅ Complete	complex
+Linear Algebra	✅ Complete	vector, matrix, quaternion, linear
+Geometry	⚠️ Partial	geometry_2d, geometry_3d (missing extended geometry)
+Statistics	✅ Complete	statistics, probability
+Calculus	✅ Complete	calculus, differential_equations
+Special Functions	✅ Complete	special
+Discrete Math	✅ Complete	combinatorics, graph_theory
+Precision	✅ Complete	precision_integer, precision_float, precision_rational
+Numerical Methods	✅ Complete	numerical
+Signal Processing	✅ Complete	signal
+Optimization	✅ Complete	optimization
+Finance	✅ Complete	finance
+Missing:
+Category	Priority	Modules Needed
+Set Theory	Medium	math/set_theory
+Logic	Medium	math/logic
+Information Theory	High	math/information_theory
+Chaos Theory	Low	math/chaos
+Game Theory	Medium	math/game_theory
+Queueing Theory	Medium	math/queueing
+Control Theory	High	math/control_theory
+ML Primitives	High	math/machine_learning
+Topology	Low	math/topology
+Number Systems	Low	math/number_systems
+Mathematical Logic	Low	math/mathematical_logic
+Approximation	Medium	math/approximation
+Fuzzy Math	Low	math/fuzzy
+Math Physics	Low	math/mathematical_physics
+Operations Research	Medium	math/operations_research
+Math Biology	Low	math/mathematical_biology
+Math Economics	Low	math/mathematical_economics
+Extended Geometry	Medium	math/geometry_extended
+Extended Algebra	Low	math/algebra_extended
+🎯 RECOMMENDATION: What to Add Next
+Priority 1 (Add Now - Most Used)
+text
+math/information_theory - Entropy, KL divergence, mutual information
+math/machine_learning - Activation, loss, metrics, normalization
+math/control_theory - PID, transfer functions, stability
+math/set_theory - Set operations
+math/approximation - Interpolation, approximation methods
+Priority 2 (Add Soon)
+text
+math/game_theory - Nash, minimax, Shapley value
+math/queueing - M/M/1, Erlang, Little's Law
+math/operations_research - Dynamic programming, scheduling
+math/geometry_extended - Voronoi, Delaunay, Bézier curves
+Priority 3 (Add Later - Niche)
+text
+math/chaos - Fractals, attractors, Lyapunov
+math/topology - Open/closed sets, continuity
+math/number_systems - Roman, Mayan, base conversion
+math/mathematical_logic - Propositional, predicate logic
+math/fuzzy - Fuzzy sets, fuzzy logic
+math/mathematical_physics - Hamiltonian, quantum operators
+math/mathematical_biology - Population models, SIR
+math/mathematical_economics - Utility, production functions
+math/algebra_extended - Group theory, ring theory
+📝 Updated Module List
+text
+math/
+├── core/                      ✅ Foundation
+├── constants/                 ✅ Constants
+├── precision/                 ✅ Type precision
+├── interfaces/                ✅ Traits
+├── arithmetic/                ✅ Arithmetic
+├── roots/                     ✅ Roots
+├── exponential/               ✅ Exponential
+├── rounding/                  ✅ Rounding
+├── decompose/                 ✅ Decompose
+├── trigonometry/              ✅ Trig
+├── inverse_trig/              ✅ Inverse trig
+├── hyperbolic/                ✅ Hyperbolic
+├── angular/                   ✅ Angular conversion
+├── trig_constants/            ✅ Trig constants
+├── bitwise/                   ✅ Bitwise
+├── rotation/                  ✅ Rotation
+├── endianness/                ✅ Endianness
+├── bitfield/                  ✅ Bitfield
+├── number_theory/             ✅ Number theory
+├── factorial/                 ✅ Factorial
+├── modular/                   ✅ Modular
+├── complex/                   ✅ Complex
+├── vector/                    ✅ Vector
+├── matrix/                    ✅ Matrix
+├── quaternion/                ✅ Quaternion
+├── linear/                    ✅ Linear algebra
+├── geometry_2d/               ✅ 2D geometry
+├── geometry_3d/               ✅ 3D geometry
+├── statistics/                ✅ Statistics
+├── probability/               ✅ Probability
+├── calculus/                  ✅ Calculus
+├── differential_equations/    ✅ ODE/PDE
+├── special/                   ✅ Special functions
+├── combinatorics/             ✅ Combinatorics
+├── graph_theory/              ✅ Graph theory
+├── precision_integer/         ✅ BigInt
+├── precision_float/           ✅ BigFloat
+├── precision_rational/        ✅ BigRat
+├── numerical/                 ✅ Numerical methods
+├── signal/                    ✅ Signal processing
+├── optimization/              ✅ Optimization
+├── finance/                   ✅ Finance
+│
+├── set_theory/                🔲 Add
+├── logic/                     🔲 Add
+├── information_theory/        🔲 Add
+├── chaos/                     🔲 Add
+├── game_theory/               🔲 Add
+├── queueing/                  🔲 Add
+├── control_theory/            🔲 Add
+├── machine_learning/          🔲 Add
+├── topology/                  🔲 Add
+├── number_systems/            🔲 Add
+├── mathematical_logic/        🔲 Add
+├── approximation/             🔲 Add
+├── fuzzy/                     🔲 Add
+├── mathematical_physics/      🔲 Add
+├── operations_research/       🔲 Add
+├── mathematical_biology/      🔲 Add
+├── mathematical_economics/    🔲 Add
+├── geometry_extended/         🔲 Add
+└── algebra_extended/          🔲 Add
+Final Answer: Are We Missing Anything?
+Yes, about 19 modules. But the core that 95% of developers need is already covered. The missing modules are for specialized domains:
+
+Domain	Users
+Information Theory	Data scientists, ML engineers
+Machine Learning	AI/ML developers
+Control Theory	Robotics, aerospace, engineers
+Game Theory	Economists, AI researchers
+Queueing Theory	Network engineers, operations
+Recommendation: Keep the core as is. Add the missing modules as packages (@xiom/math-*) rather than bloating the stdlib. This keeps stdlib lean while supporting specialized needs.
