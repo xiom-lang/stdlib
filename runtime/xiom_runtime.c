@@ -302,6 +302,26 @@ int xiom_guard_heap_depth(void) {
     return xiom_guard_arena.active;
 }
 
+/* Arena-aware realloc: grow a guard-arena allocation. `realloc` cannot grow a
+   VirtualAlloc slab pointer, so (inside a confined block) Vec growth must route
+   here: allocate a fresh arena block, copy the old contents, and return it. The
+   old block is orphaned and discarded wholesale with the arena at block exit.
+   Falls back to plain realloc when no arena is active. */
+void* xiom_guard_realloc(void* old, long long old_size, long long new_size) {
+    if (new_size <= 0) return NULL;
+    if (xiom_guard_arena.active <= 0) {
+        /* Not confined: plain realloc on a main-heap pointer. */
+        return realloc(old, (size_t)new_size);
+    }
+    void* p = xiom_guard_alloc(new_size);
+    if (!p) return NULL;
+    if (old && old_size > 0) {
+        long long copy = old_size < new_size ? old_size : new_size;
+        memcpy(p, old, (size_t)copy);
+    }
+    return p;
+}
+
 /* ================================================================
    Stack Guard Pages (Unsafe Confinement Phase 4, requirement e)
    ================================================================
@@ -384,6 +404,19 @@ typedef int64_t (*xiom_block_fn)(uint8_t* ctx);
 
 #ifdef _WIN32
 static __declspec(thread) int xiom_trampoline_active = 0;
+/* Result produced by the confined block on the SUCCESS path. Because the
+   trampoline returns the fault code (0 = ok, 1-6 = fault), the block fn's
+   actual return VALUE is routed through this TLS slot so the codegen can
+   recover it at the call site (the block's value on success). */
+static __declspec(thread) int64_t xiom_trampoline_last_result = 0;
+/* Set by the block fn when it executes a `return` statement (as opposed to
+   falling through to its tail). The call site then knows the block's value
+   is a "return from the enclosing fn" and emits a return accordingly. */
+static __declspec(thread) int xiom_trampoline_returned = 0;
+/* Per-trampoline-call snapshot of xiom_trampoline_returned for the block fn
+   that JUST ran (not leaked from nested trampoline calls). The call site reads
+   this via xiom_trampoline_was_returned(). */
+static __declspec(thread) int xiom_trampoline_this_returned = 0;
 
 /* D2.1 Phase 5: Vectored-Exception-Handler trap-enter mechanism for INLINE
    unsafe blocks. xiom_trap_enter captures the CPU context; if a hardware
@@ -438,6 +471,12 @@ void xiom_trap_leave(void) {
 int64_t xiom_trampoline_call(xiom_block_fn fn, uint8_t* ctx) {
     int64_t result = 0;
     xiom_trampoline_active = 1;
+    /* Save the enclosing block's returned-flag and reset for THIS block fn, so
+       nested trampoline calls (a confined block calling a fn whose unsafe block
+       is another confined block) do not leak their returned-status into the
+       outer block's call site. */
+    int saved_returned = xiom_trampoline_returned;
+    xiom_trampoline_returned = 0;
     __try {
         result = fn(ctx);
     }
@@ -446,6 +485,7 @@ int64_t xiom_trampoline_call(xiom_block_fn fn, uint8_t* ctx) {
            The guard arena + page are reset by the codegen's return-exit
            path or the block tail — here we just report the fault. */
         xiom_trampoline_active = 0;
+        xiom_trampoline_returned = saved_returned;
         DWORD code = GetExceptionCode();
         /* Map SEH codes to our fault codes (positive, non-zero). */
         if (code == EXCEPTION_ACCESS_VIOLATION) return 1;       /* SIGSEGV */
@@ -456,6 +496,11 @@ int64_t xiom_trampoline_call(xiom_block_fn fn, uint8_t* ctx) {
         return 6;                                               /* other */
     }
     xiom_trampoline_active = 0;
+    xiom_trampoline_last_result = result;
+    /* Snapshot THIS block fn's returned-status for the call site, then restore
+       the enclosing block's flag (so nested calls don't corrupt it). */
+    xiom_trampoline_this_returned = xiom_trampoline_returned;
+    xiom_trampoline_returned = saved_returned;
     return 0;
 }
 #else
@@ -463,6 +508,9 @@ int64_t xiom_trampoline_call(xiom_block_fn fn, uint8_t* ctx) {
 #include <signal.h>
 static __thread sigjmp_buf xiom_trampoline_jmp;
 static __thread int xiom_trampoline_active = 0;
+static __thread int64_t xiom_trampoline_last_result = 0;
+static __thread int xiom_trampoline_returned = 0;
+static __thread int xiom_trampoline_this_returned = 0;
 
 static void xiom_trampoline_handler(int sig, siginfo_t* si, void* uc) {
     (void)si; (void)uc;
@@ -488,6 +536,8 @@ int64_t xiom_trampoline_call(xiom_block_fn fn, uint8_t* ctx) {
     sigaction(SIGFPE, &sa, &old_fpe);
 
     xiom_trampoline_active = 1;
+    int saved_returned = xiom_trampoline_returned;
+    xiom_trampoline_returned = 0;
     int code = sigsetjmp(xiom_trampoline_jmp, 1);
     int64_t result = 0;
     if (code == 0) {
@@ -497,13 +547,17 @@ int64_t xiom_trampoline_call(xiom_block_fn fn, uint8_t* ctx) {
     sigaction(SIGSEGV, &old_segv, NULL);
     sigaction(SIGILL, &old_ill, NULL);
     sigaction(SIGFPE, &old_fpe, NULL);
+    if (code == 0) {
+        xiom_trampoline_last_result = result;
+        xiom_trampoline_this_returned = xiom_trampoline_returned;
+    }
+    xiom_trampoline_returned = saved_returned;
     return code; /* 0 = ok, else fault code */
 }
 #endif
 
 /* Fault code → signal name for HardwareFault diagnostics. */
-const char* xiom_trap_signal_name(int code) {
-    switch (code) {
+const char* xiom_trap_signal_name(int code) {    switch (code) {
         case 1: return "SIGSEGV";
         case 2: return "SIGILL";
         case 3: return "SIGFPE";
@@ -511,6 +565,62 @@ const char* xiom_trap_signal_name(int code) {
         case 5: return "GUARD_PAGE";
         default: return "UNKNOWN_FAULT";
     }
+}
+
+/* Return the confined block's success-path value. The trampoline routes the
+   block fn's return value through this TLS slot (see xiom_trampoline_call),
+   since the trampoline's own return value is the fault code. */
+int64_t xiom_trampoline_get_result(void) {
+    return xiom_trampoline_last_result;
+}
+
+/* Reset the block-fn "did a return" flag at trampoline entry. */
+void xiom_trampoline_clear_returned(void) {
+    xiom_trampoline_returned = 0;
+}
+
+/* Called by the block fn right before returning from a `return` statement.
+   The call site then knows the block's value must be returned from the
+   ENCLOSING fn (the block was not used as an expression). */
+void xiom_trampoline_set_returned(void) {
+    xiom_trampoline_returned = 1;
+}
+
+/* 1 if the block fn executed a `return`, 0 if it fell through to its tail. */
+int64_t xiom_trampoline_was_returned(void) {
+    return xiom_trampoline_this_returned;
+}
+
+/* ================================================================
+   Fault-injection helpers (Phase 5 tests) — deliberately raise
+   hardware faults that the SEH trampoline must trap. Each returns
+   an Int (i64) ABI value but faults before returning.
+   ================================================================ */
+int64_t xiom_fault_av(void) {
+    /* Deliberate access violation: read from a known-bad address. */
+    volatile int* bad = (volatile int*)0x1;
+    return (int64_t)*bad;
+}
+
+int64_t xiom_fault_ud2(void) {
+    /* Deliberate illegal instruction (SIGILL). */
+#ifdef _MSC_VER
+    __debugbreak(); /* raises EXCEPTION_BREAKPOINT (0x80000003) */
+#else
+    __builtin_trap(); /* ud2 */
+#endif
+    return 0;
+}
+
+int64_t xiom_fault_div0(void) {
+    /* Deliberate integer divide-by-zero (SIGFPE / EXCEPTION_INT_DIVIDE_BY_ZERO). */
+    volatile int64_t zero = 0;
+    return 42 / zero;
+}
+
+int64_t xiom_fault_deref_ok(void) {
+    /* Benign: no fault, returns 42 (confined block returns this value). */
+    return 42;
 }
 
 char xiom_char_at(const char* str, long pos) {
