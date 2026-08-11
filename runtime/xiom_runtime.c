@@ -1,4 +1,4 @@
-// Guarded against redefinition: the xiom compiler and JIT also pass these via
+﻿// Guarded against redefinition: the xiom compiler and JIT also pass these via
 // -D on the command line for some targets (a bare re-#define triggers clang's
 // -Wmacro-redefined).
 #ifndef _CRT_SECURE_NO_WARNINGS
@@ -32,9 +32,9 @@
 /* ================================================================
    Assembly-Optimized Function Declarations
    These are implemented in:
-     crypto_x86_64.asm   — SHA-256, AES-128, constant-time compare
-     mem_x86_64.asm      — memcpy, memset, memcmp, memmove, bzero
-     context_switch.asm  — context save/load/swap for async
+     crypto_x86_64.asm   â€” SHA-256, AES-128, constant-time compare
+     mem_x86_64.asm      â€” memcpy, memset, memcmp, memmove, bzero
+     context_switch.asm  â€” context save/load/swap for async
    Build: nasm -f elf64 <file>.asm -o <file>.o (Linux)
           nasm -f win64 <file>.asm -o <file>.obj (Windows)
    ================================================================ */
@@ -52,7 +52,7 @@ typedef struct {
 } xiom_context;
 
 #ifdef XIOM_NO_ASM
-/* ── C software implementations (no NASM) ── */
+/* â”€â”€ C software implementations (no NASM) â”€â”€ */
 #include <stddef.h>
 
 /* crypto stubs */
@@ -77,8 +77,8 @@ int xiom_ctx_swap(xiom_context* o, xiom_context* n) { (void)o; (void)n; return 0
 void xiom_ctx_init(xiom_context* ctx, void* sp, void (*fn)(void*), void* a) { (void)ctx; (void)sp; (void)fn; (void)a; }
 
 #else
-/* ── Assembly symbols (NASM-linked .obj files provide strong definitions) ── */
-/* NOTE: SHA-256 uses SHA-NI intrinsics in simd_runtime.c — no asm symbol */
+/* â”€â”€ Assembly symbols (NASM-linked .obj files provide strong definitions) â”€â”€ */
+/* NOTE: SHA-256 uses SHA-NI intrinsics in simd_runtime.c â€” no asm symbol */
 extern void xiom_asm_aes128_encrypt_block(const uint8_t plaintext[16], const uint8_t round_keys[176], uint8_t ciphertext[16]);
 extern void xiom_asm_aes128_decrypt_block(const uint8_t ciphertext[16], const uint8_t round_keys[176], uint8_t plaintext[16]);
 extern void xiom_asm_aes128_key_expand(const uint8_t key[16], uint8_t round_keys[176]);
@@ -142,7 +142,7 @@ void* xiom_alloc(long long size) {
    ================================================================
    A per-thread ARENA allocator. Allocations made inside an `unsafe`
    block are routed to this arena (via xiom_guard_alloc); on block exit
-   (or fault retry) the ENTIRE arena is discarded wholesale — memory
+   (or fault retry) the ENTIRE arena is discarded wholesale â€” memory
    is released back to the OS in one shot. This isolates unsafe-block
    allocations from the main process heap: corruption inside the block
    cannot contaminate application memory, and leaked intermediate
@@ -153,7 +153,7 @@ void* xiom_alloc(long long size) {
    arena resets (xiom_guard_copy_out), so the caller's Vec/Str never
    points at arena memory that is about to be discarded.
 
-   Thread-local: 128 parallel threads each get their own arena — no
+   Thread-local: 128 parallel threads each get their own arena â€” no
    locks, no cross-thread interference.
    ================================================================ */
 
@@ -190,15 +190,24 @@ static void xiom_guard_vfree(void* p, long size) {
 }
 #endif
 
-static __declspec(thread) XiomGuardArena xiom_guard_arena;
-static __declspec(thread) int xiom_guard_initialized = 0;
+// Thread-local storage: MSVC syntax on Windows, GCC/Clang syntax elsewhere
+// (Linux WSL target). Replaces the previously unconditional __declspec(thread),
+// which clang rejects on Linux ("attributes are not enabled").
+#if defined(_WIN32)
+#define XIOM_TLS __declspec(thread)
+#else
+#define XIOM_TLS __thread
+#endif
+
+static XIOM_TLS XiomGuardArena xiom_guard_arena;
+static XIOM_TLS int xiom_guard_initialized = 0;
 
 static void xiom_guard_ensure_slab(XiomGuardArena* a) {
     if (a->cur_slab >= 0 && a->cur_off < a->slab_size) return;
     if (a->slab_count >= a->slab_cap) {
         long new_cap = (a->slab_cap == 0) ? 8 : a->slab_cap * 2;
         void** new_slabs = (void**)realloc(a->slabs, (size_t)new_cap * sizeof(void*));
-        if (!new_slabs) return; /* arena full — leave as-is */
+        if (!new_slabs) return; /* arena full â€” leave as-is */
         a->slabs = new_slabs;
         a->slab_cap = new_cap;
     }
@@ -335,16 +344,16 @@ void* xiom_guard_realloc(void* old, long long old_size, long long new_size) {
    A per-thread red-zone page is armed while an unsafe block runs. On
    Windows a PAGE_GUARD page raises a one-shot fault on first touch; on
    POSIX a PROT_NONE page raises SIGSEGV. Stack overflow inside the
-   confined block faults AT the guard page — before adjacent memory is
-   written — and the Phase 5 trampoline catches it.
+   confined block faults AT the guard page â€” before adjacent memory is
+   written â€” and the Phase 5 trampoline catches it.
 
    The guard page is a FIXED allocation per thread (created lazily);
    arming writes a probe byte to consume the one-shot PAGE_GUARD state
    so the page is in its protective state during the block.
    ================================================================ */
 
-static __declspec(thread) void* xiom_guard_page_ptr = NULL;
-static __declspec(thread) int xiom_guard_page_armed = 0;
+static XIOM_TLS void* xiom_guard_page_ptr = NULL;
+static XIOM_TLS int xiom_guard_page_armed = 0;
 
 /* Create (or reuse) the per-thread guard page and ARM it. */
 void xiom_guard_page_arm(void) {
@@ -400,7 +409,7 @@ int xiom_guard_page_is_armed(void) {
    The call site invokes it through xiom_trampoline_call, which wraps the
    call in SEH (Windows __try/__except) or sigsetjmp/siglongjmp (POSIX).
    Hardware faults (SIGSEGV/SIGILL/SIGFPE) inside the block unwind ONLY the
-   trampoline's frame — the caller's IR stack is untouched — and the call
+   trampoline's frame â€” the caller's IR stack is untouched â€” and the call
    returns a recoverable error code.
 
    Returns: 0 = block completed normally (result is valid)
@@ -410,26 +419,26 @@ int xiom_guard_page_is_armed(void) {
 typedef int64_t (*xiom_block_fn)(uint8_t* ctx);
 
 #ifdef _WIN32
-static __declspec(thread) int xiom_trampoline_active = 0;
+static XIOM_TLS int xiom_trampoline_active = 0;
 /* Result produced by the confined block on the SUCCESS path. Because the
    trampoline returns the fault code (0 = ok, 1-6 = fault), the block fn's
    actual return VALUE is routed through this TLS slot so the codegen can
    recover it at the call site (the block's value on success). */
-static __declspec(thread) int64_t xiom_trampoline_last_result = 0;
+static XIOM_TLS int64_t xiom_trampoline_last_result = 0;
 /* Set by the block fn when it executes a `return` statement (as opposed to
    falling through to its tail). The call site then knows the block's value
    is a "return from the enclosing fn" and emits a return accordingly. */
-static __declspec(thread) int xiom_trampoline_returned = 0;
+static XIOM_TLS int xiom_trampoline_returned = 0;
 /* Per-trampoline-call snapshot of xiom_trampoline_returned for the block fn
    that JUST ran (not leaked from nested trampoline calls). The call site reads
    this via xiom_trampoline_was_returned(). */
-static __declspec(thread) int xiom_trampoline_this_returned = 0;
+static XIOM_TLS int xiom_trampoline_this_returned = 0;
 /* D2.1 (Phase 6): 1 once a transient fault has been retried; the block's value
    was delivered on a fresh memory slot (HardwareFault.retried=true path). */
-static __declspec(thread) int xiom_trampoline_retried = 0;
-/* D2.1 (Phase 6): 1 by default — the trampoline retries a transient fault once.
+static XIOM_TLS int xiom_trampoline_retried = 0;
+/* D2.1 (Phase 6): 1 by default â€” the trampoline retries a transient fault once.
    Cleared for `#[unsafe_no_retry]` blocks (deterministic faults shouldn't retry). */
-static __declspec(thread) int xiom_trampoline_allow_retry = 1;
+static XIOM_TLS int xiom_trampoline_allow_retry = 1;
 
 /* D2.1 Phase 5: Vectored-Exception-Handler trap-enter mechanism for INLINE
    unsafe blocks. xiom_trap_enter captures the CPU context; if a hardware
@@ -438,9 +447,9 @@ static __declspec(thread) int xiom_trampoline_allow_retry = 1;
    execution resumes right after the xiom_trap_enter call with the fault
    code as its "return value". The codegen branches on it to produce
    Err(HardwareFault). */
-static __declspec(thread) CONTEXT xiom_trap_ctx;
-static __declspec(thread) int xiom_trap_active = 0;
-static __declspec(thread) int xiom_trap_fault = 0;
+static XIOM_TLS CONTEXT xiom_trap_ctx;
+static XIOM_TLS int xiom_trap_active = 0;
+static XIOM_TLS int xiom_trap_fault = 0;
 
 static LONG WINAPI xiom_trap_veh(PEXCEPTION_POINTERS ep) {
     if (xiom_trap_active) {
@@ -456,7 +465,7 @@ static LONG WINAPI xiom_trap_veh(PEXCEPTION_POINTERS ep) {
         RtlRestoreContext(&xiom_trap_ctx, NULL);
         return EXCEPTION_CONTINUE_EXECUTION; /* unreachable */
     }
-    return EXCEPTION_CONTINUE_SEARCH; /* not in a confined block — crash loudly */
+    return EXCEPTION_CONTINUE_SEARCH; /* not in a confined block â€” crash loudly */
 }
 
 int64_t xiom_trap_enter(void) {
@@ -470,7 +479,7 @@ int64_t xiom_trap_enter(void) {
     RtlCaptureContext(&xiom_trap_ctx);
     /* Reached twice: once normally (fault==0), once after a fault
        (fault != 0). NOTE: active stays 1 until xiom_trap_leave is
-       called at the block's normal exit — faults anywhere in the
+       called at the block's normal exit â€” faults anywhere in the
        confined block are trapped. */
     return xiom_trap_fault;
 }
@@ -527,7 +536,7 @@ int64_t xiom_trampoline_call(xiom_block_fn fn, uint8_t* ctx) {
            guard arena (discard all slabs) + re-arm the guard page, then re-run
            the block fn ONCE on a fresh memory slot. The block fn re-enters the
            arena + re-arms the page at its entry. If it faults again the fault is
-           permanent → report it. `#[unsafe_no_retry]` (xiom_trampoline_allow_retry
+           permanent â†’ report it. `#[unsafe_no_retry]` (xiom_trampoline_allow_retry
            == 0) disables the retry. */
         if (xiom_trampoline_allow_retry && !xiom_trampoline_retried) {
             xiom_trampoline_retried = 1;
@@ -562,6 +571,55 @@ static void xiom_trampoline_handler(int sig, siginfo_t* si, void* uc) {
     /* Not in a trampoline: restore default and re-raise (crash loudly). */
     signal(sig, SIG_DFL);
     raise(sig);
+}
+
+/* POSIX equivalents of the Windows inline-unsafe-block trap-enter/leave
+   (VEH + RtlCaptureContext). The codegen emits xiom_trap_enter() /
+   xiom_trap_leave() around INLINE unsafe blocks; on POSIX the same
+   sigsetjmp/siglongjmp mechanism captures hardware faults and resumes
+   after the trap_enter call with the fault code as its return value. */
+static __thread sigjmp_buf xiom_trap_jmp;
+static __thread int xiom_trap_active = 0;
+static __thread int xiom_trap_fault = 0;
+static __thread int xiom_trap_handlers_installed = 0;
+
+static void xiom_trap_handler(int sig, siginfo_t* si, void* uc) {
+    (void)si; (void)uc;
+    if (xiom_trap_active) {
+        int code = (sig == SIGSEGV) ? 1 : (sig == SIGILL) ? 2 : (sig == SIGFPE) ? 3 : 6;
+        xiom_trap_fault = code;
+        siglongjmp(xiom_trap_jmp, code);
+    }
+    signal(sig, SIG_DFL);
+    raise(sig);
+}
+
+static void xiom_trap_install_handlers(void) {
+    if (xiom_trap_handlers_installed) return;
+    struct sigaction sa;
+    memset(&sa, 0, sizeof(sa));
+    sa.sa_sigaction = xiom_trap_handler;
+    sa.sa_flags = SA_SIGINFO;
+    sigemptyset(&sa.sa_mask);
+    sigaction(SIGSEGV, &sa, NULL);
+    sigaction(SIGILL, &sa, NULL);
+    sigaction(SIGFPE, &sa, NULL);
+    xiom_trap_handlers_installed = 1;
+}
+
+int64_t xiom_trap_enter(void) {
+    xiom_trap_install_handlers();
+    xiom_trap_active = 1;
+    xiom_trap_fault = 0;
+    int code = sigsetjmp(xiom_trap_jmp, 1);
+    /* Reached twice: once normally (code==0), once after a fault
+       (code != 0). */
+    return (code == 0) ? 0 : xiom_trap_fault;
+}
+
+void xiom_trap_leave(void) {
+    xiom_trap_active = 0;
+    xiom_trap_fault = 0;
 }
 
 int64_t xiom_trampoline_call(xiom_block_fn fn, uint8_t* ctx) {
@@ -610,7 +668,7 @@ int64_t xiom_trampoline_call(xiom_block_fn fn, uint8_t* ctx) {
 }
 #endif /* end POSIX trampoline */
 
-/* Fault code → signal name for HardwareFault diagnostics. */
+/* Fault code â†’ signal name for HardwareFault diagnostics. */
 const char* xiom_trap_signal_name(int code) {    switch (code) {
         case 1: return "SIGSEGV";
         case 2: return "SIGILL";
@@ -658,7 +716,7 @@ void xiom_trampoline_set_allow_retry(int allow) {
 }
 
 /* ================================================================
-   Fault-injection helpers (Phase 5 tests) — deliberately raise
+   Fault-injection helpers (Phase 5 tests) â€” deliberately raise
    hardware faults that the SEH trampoline must trap. Each returns
    an Int (i64) ABI value but faults before returning.
    ================================================================ */
@@ -684,10 +742,10 @@ int64_t xiom_fault_div0(void) {
     return 42 / zero;
 }
 
-/* D2.1 (Phase 6): simulate a TRANSIENT fault — faults on the FIRST call, then
+/* D2.1 (Phase 6): simulate a TRANSIENT fault â€” faults on the FIRST call, then
    succeeds (returns 42) on subsequent calls, mimicking a first-touch page /
    fresh-slot fault that a retry resolves. */
-static __declspec(thread) int xiom_fault_transient_count = 0;
+static XIOM_TLS int xiom_fault_transient_count = 0;
 int64_t xiom_fault_transient(void) {
     if (xiom_fault_transient_count == 0) {
         xiom_fault_transient_count = 1;
@@ -697,7 +755,7 @@ int64_t xiom_fault_transient(void) {
     return 42; /* succeeds on retry */
 }
 
-/* D2.1 (Phase 6): PERMANENT fault — faults on every call (for #[unsafe_no_retry]
+/* D2.1 (Phase 6): PERMANENT fault â€” faults on every call (for #[unsafe_no_retry]
    and permanent-fault smokes). */
 int64_t xiom_fault_permanent(void) {
     volatile int* bad = (volatile int*)0x1;
@@ -723,7 +781,7 @@ long xiom_str_len(const char* str) {
 // Concatenate two NUL-terminated strings into a freshly malloc'd buffer.
 // A XIOM Str is an i8* at the ABI; `a + b` on strings lowers to a call here.
 // NULL operands are treated as the empty string. The result is heap-allocated
-// and NUL-terminated (never freed automatically — matches the rest of the
+// and NUL-terminated (never freed automatically â€” matches the rest of the
 // string runtime, which leaks by design in this phase).
 char* xiom_str_concat(const char* a, const char* b) {
     if (!a) a = "";
@@ -739,7 +797,7 @@ char* xiom_str_concat(const char* a, const char* b) {
 }
 
 // D1 hardening (2026-08-08): build a NUL-terminated Str from a raw byte
-// buffer + length. The Vec[UInt8] data is NOT NUL-terminated — returning it
+// buffer + length. The Vec[UInt8] data is NOT NUL-terminated â€” returning it
 // directly as a Str made string ops read past the buffer into adjacent
 // memory (intermittent garbage suffixes in url_decode_component output,
 // ~1-in-5 processes). Copies into a fresh NUL-terminated buffer.
@@ -790,7 +848,7 @@ int xiom_str_ends_with(const char* str, const char* suffix) {
 }
 
 // Convert a signed 64-bit integer to a freshly-allocated decimal string.
-// Used to lower `to_string(Int)` / `Int.to_str()` — the pure-XIOM version relies
+// Used to lower `to_string(Int)` / `Int.to_str()` â€” the pure-XIOM version relies
 // on fixed-size stack arrays which the codegen does not yet materialize.
 char* xiom_int_to_string(long long n) {
     char tmp[24];
@@ -810,7 +868,7 @@ char* xiom_int_to_string(long long n) {
 }
 
 // ============================================================================
-// String interning — XIOM uses Int IDs for all names
+// String interning â€” XIOM uses Int IDs for all names
 // ============================================================================
 
 #define MAX_STRINGS 16384
@@ -843,7 +901,7 @@ const char* xiom_lookup(long id) {
 }
 
 // ============================================================================
-// IR Emission — XIOM passes Int IDs, C prints LLVM IR
+// IR Emission â€” XIOM passes Int IDs, C prints LLVM IR
 // ============================================================================
 
 static FILE* ir_output = NULL;
@@ -999,7 +1057,7 @@ void xiom_ir_emit_program(long return_value) {
 }
 
 // ============================================================================
-// v0.9.4 — String-based IR Emission (no interning needed)
+// v0.9.4 â€” String-based IR Emission (no interning needed)
 // These functions take raw C strings instead of interned IDs.
 // ============================================================================
 
@@ -1072,7 +1130,7 @@ void xiom_ir_ret_lit(long val) {
 }
 
 // ============================================================================
-// Function Table — stores parsed function info for later IR emission
+// Function Table â€” stores parsed function info for later IR emission
 // ============================================================================
 
 #define MAX_FUNCTIONS 8192
@@ -1290,8 +1348,8 @@ static void emit_body_ir(const char* source, long body_start, long body_end, lon
     int reg = (int)param_count;
     int pc = param_count > 0 ? param_count : 1;
 
-    // Local variable table: maps name → alloca register
-    // NOTE: MAX_LOCALS=512 → ~35KB stack per call frame (names 32KB + regs 2KB)
+    // Local variable table: maps name â†’ alloca register
+    // NOTE: MAX_LOCALS=512 â†’ ~35KB stack per call frame (names 32KB + regs 2KB)
     char local_names[MAX_LOCALS][64];
     int local_regs[MAX_LOCALS];
     int local_count = 0;
@@ -2186,7 +2244,7 @@ static void emit_body_ir(const char* source, long body_start, long body_end, lon
                 fprintf(ir_output, "  %%tmp%d = load %s, %s* %%tmp_p%d\n", wleft_reg, llvm_ty, llvm_ty, lreg);
             }
 
-            // Handle negation: !(ident) → icmp eq 0
+            // Handle negation: !(ident) â†’ icmp eq 0
             if (wneg && wleft_reg >= 0) {
                 int cmp_r = reg++;
                 fprintf(ir_output, "  %%tmp%d = icmp eq %s %%tmp%d, 0\n", cmp_r, llvm_ty, wleft_reg);
@@ -3114,7 +3172,7 @@ static void emit_body_ir(const char* source, long body_start, long body_end, lon
 // Scan for top-level type and enum declarations and emit real derive IR.
 // Matches the Rust compiler's IR patterns: icmp eq, fcmp oeq, getelementptr, zext, and.
 // ============================================================================
-// Top-level IR emission — scans source for type/enum/module declarations
+// Top-level IR emission â€” scans source for type/enum/module declarations
 // Uses a depth limit to prevent infinite recursion on malformed sources
 // ============================================================================
 static int _tl_depth = 0;
@@ -3272,7 +3330,7 @@ static void emit_top_level_ir(const char* source, long source_len) {
                 }
                 if (pos < source_len && source[pos] == '}') pos++; // skip '}'
             } else {
-                // No brace fields — skip to end of line
+                // No brace fields â€” skip to end of line
                 while (pos < source_len && source[pos] != '\n' && source[pos] != ';') pos++;
                 field_count = 1;
                 strcpy(field_names[0], "value");
@@ -3323,7 +3381,7 @@ static void emit_top_level_ir(const char* source, long source_len) {
                 tname[name_len] = '\0';
 
                 // =========================================
-                // Eq — compare each field with icmp/fcmp eq, zext to i64, and chain
+                // Eq â€” compare each field with icmp/fcmp eq, zext to i64, and chain
                 // =========================================
                 if (has_eq) {
                     fprintf(ir_output, "define i64 @%s.eq(%%struct.%s %%self, %%struct.%s %%other) {\n", tname, tname, tname);
@@ -3378,7 +3436,7 @@ static void emit_top_level_ir(const char* source, long source_len) {
                 }
 
                 // =========================================
-                // Clone — GEP each field, load, GEP dst, store
+                // Clone â€” GEP each field, load, GEP dst, store
                 // =========================================
                 if (has_clone) {
                     fprintf(ir_output, "define %%struct.%s @%s.clone(%%struct.%s %%self) {\n", tname, tname, tname);
@@ -3406,7 +3464,7 @@ static void emit_top_level_ir(const char* source, long source_len) {
                 }
 
                 // =========================================
-                // Hash — DJB2: hash = hash*33 + field
+                // Hash â€” DJB2: hash = hash*33 + field
                 // =========================================
                 if (has_hash) {
                     fprintf(ir_output, "define i64 @%s.hash(%%struct.%s %%self) {\n", tname, tname);
@@ -3438,7 +3496,7 @@ static void emit_top_level_ir(const char* source, long source_len) {
                 }
 
                 // =========================================
-                // Ord — lexicographic compare with icmp eq, br, icmp slt, select
+                // Ord â€” lexicographic compare with icmp eq, br, icmp slt, select
                 // =========================================
                 if (has_ord) {
                     fprintf(ir_output, "define i64 @%s.compare(%%struct.%s %%self, %%struct.%s %%other) {\n", tname, tname, tname);
@@ -3483,7 +3541,7 @@ static void emit_top_level_ir(const char* source, long source_len) {
                 }
 
                 // =========================================
-                // Display (to_str) — printf call with format string
+                // Display (to_str) â€” printf call with format string
                 // =========================================
                 if (has_display) {
                     // Build format string: "TypeName{ field: %lld ... }"
@@ -3975,7 +4033,7 @@ long xiom_free_memory(void) {
 #endif
 
 // ============================================================================
-// Process & Hostname — Production OS operations (v0.56+)
+// Process & Hostname â€” Production OS operations (v0.56+)
 // ============================================================================
 
 #ifdef _WIN32
@@ -4148,7 +4206,7 @@ const char* xiom_os_version_str(void) {
 #endif
 
 // ============================================================================
-// Bit Intrinsics — hardware-accelerated popcount / leading-zeros
+// Bit Intrinsics â€” hardware-accelerated popcount / leading-zeros
 // ============================================================================
 
 long xiom_popcnt64(long x) {
@@ -4803,7 +4861,7 @@ void xiom_aesni_decrypt_block(const unsigned char* ciphertext,
 
 void xiom_aesni_key_expand_128(const unsigned char* key, unsigned char* round_keys) {
     // SSE intrinsic requires compile-time constant for _mm_aeskeygenassist_si128.
-    // Full implementation in crypto_x86_64.asm — link with NASM-built object.
+    // Full implementation in crypto_x86_64.asm â€” link with NASM-built object.
     (void)key;
     (void)round_keys;
 }
@@ -4869,7 +4927,7 @@ void xiom_shani_sha256_compress(unsigned int* s, const unsigned char* b) {
 #endif
 
 /* ================================================================
-   Assembly Dispatch — CPUID Feature Detection
+   Assembly Dispatch â€” CPUID Feature Detection
    These select the optimal implementation at runtime.
    ================================================================ */
 
@@ -4902,16 +4960,16 @@ static void xiom_asm_detect_features(void) {
     xiom_asm_cpuid_checked = 1;
 }
 
-/* Dispatch: SHA-256 compression — uses SHA-NI intrinsics (simd_runtime.c), not raw asm */
+/* Dispatch: SHA-256 compression â€” uses SHA-NI intrinsics (simd_runtime.c), not raw asm */
 void xiom_sha256_compress_dispatch(uint32_t state[8], const uint8_t block[64]) {
     xiom_asm_detect_features();
-    /* SHA-256 uses SHA-NI intrinsics via simd_runtime.c — 
+    /* SHA-256 uses SHA-NI intrinsics via simd_runtime.c â€” 
        xiom_shani_sha256_compress() handles the hardware path.
        Software fallback is in crypto.xi (pure XIOM SHA-256). */
     xiom_shani_sha256_compress(state, block);
 }
 
-/* Dispatch: AES-128 encrypt — uses assembly AES-NI if available */
+/* Dispatch: AES-128 encrypt â€” uses assembly AES-NI if available */
 int xiom_aes128_encrypt_dispatch(const uint8_t* plaintext, const uint8_t* key,
                                   uint8_t* ciphertext) {
     xiom_asm_detect_features();
@@ -4924,7 +4982,7 @@ int xiom_aes128_encrypt_dispatch(const uint8_t* plaintext, const uint8_t* key,
     return 0;  /* fall back to software */
 }
 
-/* Dispatch: AES-128 decrypt — uses assembly AES-NI if available */
+/* Dispatch: AES-128 decrypt â€” uses assembly AES-NI if available */
 int xiom_aes128_decrypt_dispatch(const uint8_t* ciphertext, const uint8_t* key,
                                   uint8_t* plaintext) {
     xiom_asm_detect_features();
@@ -4937,7 +4995,7 @@ int xiom_aes128_decrypt_dispatch(const uint8_t* ciphertext, const uint8_t* key,
     return 0;
 }
 
-/* Dispatch: memcpy — uses SSE2 assembly for copies > 16 bytes */
+/* Dispatch: memcpy â€” uses SSE2 assembly for copies > 16 bytes */
 void* xiom_memcpy_dispatch(void* dst, const void* src, size_t n) {
     xiom_asm_detect_features();
     if (xiom_has_sse2 && n >= 16) {
@@ -4951,7 +5009,7 @@ void* xiom_memcpy_dispatch(void* dst, const void* src, size_t n) {
     return dst;
 }
 
-/* Dispatch: memset — uses SSE2 assembly for fills > 16 bytes */
+/* Dispatch: memset â€” uses SSE2 assembly for fills > 16 bytes */
 void* xiom_memset_dispatch(void* s, int c, size_t n) {
     xiom_asm_detect_features();
     if (xiom_has_sse2 && n >= 16) {
@@ -4989,7 +5047,7 @@ int xiom_asm_has_sse2(void) {
     return xiom_has_sse2;
 }
 
-/* Context switch wrappers — use assembly when linked, otherwise C stubs at top */
+/* Context switch wrappers â€” use assembly when linked, otherwise C stubs at top */
 #ifdef XIOM_HAS_ASM_CTX
 int xiom_ctx_save(xiom_context* ctx) {
     return xiom_asm_ctx_save(ctx);
@@ -5035,7 +5093,7 @@ int xiom_ct_compare_dispatch(const uint8_t* a, const uint8_t* b, size_t len) {
 #endif
 
 // =====================================================================
-// Collection intrinsics — called by the compiler for contract-method
+// Collection intrinsics â€” called by the compiler for contract-method
 // lowerings of is_sorted / contains / all / none on slices. Each
 // receives a pointer to an array of `len` i64 elements and operates
 // on the raw i64 buffer.
@@ -5072,7 +5130,7 @@ int64_t xiom_none(int64_t* data, int64_t len, int64_t* pred) {
 }
 
 // ============================================================================
-// v0.55: MPSC Channel — bounded ring buffer with mutex + condition variable
+// v0.55: MPSC Channel â€” bounded ring buffer with mutex + condition variable
 // ============================================================================
 
 #define XIOM_CHANNEL_CAP 64
@@ -5154,7 +5212,7 @@ void xiom_channel_close(void* handle) {
 }
 
 // ============================================================================
-// v0.56: Thread Pool — work-stealing worker threads for spawn tasks
+// v0.56: Thread Pool â€” work-stealing worker threads for spawn tasks
 // ============================================================================
 
 #define XIOM_TP_MAX_TASKS 256
@@ -5243,7 +5301,7 @@ void xiom_threadpool_spawn(void (*fn)(void*), void* arg) {
     xiom_tp_worker_t* w = xiom_tp_workers[wid];
     xiom_mutex_lock(&w->mutex);
     if (w->count >= XIOM_TP_MAX_TASKS) {
-        // Queue full — try next worker
+        // Queue full â€” try next worker
         for (int i = 1; i < xiom_tp_num_workers; i++) {
             int alt = (wid + i) % xiom_tp_num_workers;
             xiom_tp_worker_t* aw = xiom_tp_workers[alt];
@@ -5253,7 +5311,7 @@ void xiom_threadpool_spawn(void (*fn)(void*), void* arg) {
             if (w->count < XIOM_TP_MAX_TASKS) break;
         }
         if (w->count >= XIOM_TP_MAX_TASKS) {
-            // All full — spawn dedicated thread
+            // All full â€” spawn dedicated thread
             xiom_mutex_unlock(&w->mutex);
             xiom_thread_create((void*)fn, arg);
             return;
@@ -5302,7 +5360,7 @@ void xiom_threadpool_shutdown(void) {
 } while(0)
 #endif
 
-/* ── Helper: add with carry ── */
+/* â”€â”€ Helper: add with carry â”€â”€ */
 static uint64_t xiom_addc(uint64_t a, uint64_t b, uint64_t* carry) {
     uint64_t sum = a + b;
     uint64_t c = (sum < a) ? 1 : 0;
@@ -5319,7 +5377,7 @@ static uint64_t xiom_addc2(uint64_t a, uint64_t b, uint64_t cin, uint64_t* cout)
     return s2;
 }
 
-/* ── Helper: sub with borrow ── */
+/* â”€â”€ Helper: sub with borrow â”€â”€ */
 static uint64_t xiom_subb(uint64_t a, uint64_t b, uint64_t* borrow) {
     uint64_t diff = a - b;
     *borrow = (a < b) ? 1 : 0;
@@ -5335,7 +5393,7 @@ static uint64_t xiom_subb2(uint64_t a, uint64_t b, uint64_t bin, uint64_t* bout)
     return d2;
 }
 
-/* ── 256-bit zero/one/copy/compare ── */
+/* â”€â”€ 256-bit zero/one/copy/compare â”€â”€ */
 static int xiom_f256_is_zero(const uint64_t a[4]) {
     return (a[0] | a[1] | a[2] | a[3]) == 0;
 }
@@ -5399,7 +5457,7 @@ static void xiom_f256_mod_sub(uint64_t r[4], const uint64_t a[4], const uint64_t
     }
 }
 
-/* ── secp256k1 constants ── */
+/* â”€â”€ secp256k1 constants â”€â”€ */
 static const uint64_t SECP256K1_P[4] = {
     0xFFFFFFFEFFFFFC2FULL, 0xFFFFFFFFFFFFFFFFULL,
     0xFFFFFFFFFFFFFFFFULL, 0xFFFFFFFFFFFFFFFFULL
@@ -5415,7 +5473,7 @@ static const uint64_t SECP256K1_GY[4] = {
 };
 #define SECP256K1_R256 0x1000003D1ULL
 
-/* ── Ed25519 constants ── */
+/* â”€â”€ Ed25519 constants â”€â”€ */
 static const uint64_t ED25519_P[4] = {
     0xFFFFFFFFFFFFFFEDULL, 0xFFFFFFFFFFFFFFFFULL,
     0xFFFFFFFFFFFFFFFFULL, 0x7FFFFFFFFFFFFFFFULL
@@ -5438,7 +5496,7 @@ static const uint64_t ED25519_L[4] = {
 };
 #define ED25519_R256 38ULL
 
-/* ── 256-bit multiply (schoolbook) + reduce ── */
+/* â”€â”€ 256-bit multiply (schoolbook) + reduce â”€â”€ */
 static void xiom_f256_mul_raw(uint64_t x[8], const uint64_t a[4], const uint64_t b[4]) {
     int i, j;
     for (i = 0; i < 8; i++) x[i] = 0;
@@ -5462,7 +5520,7 @@ static void xiom_f256_mul_raw(uint64_t x[8], const uint64_t a[4], const uint64_t
 }
 
 /* Reduce 8-limb x using R_256 = 2^256 mod p (fits in u64 for our primes).
-   x[4]*2^256 ≡ x[4]*R_256 (mod p). x[5]*2^320 ≡ x[5]*R_256*2^64, etc.
+   x[4]*2^256 â‰¡ x[4]*R_256 (mod p). x[5]*2^320 â‰¡ x[5]*R_256*2^64, etc.
    Since R_256*2^(64*(i-4)) < p for our curves, the reduction is simple. */
 static void xiom_f256_reduce(uint64_t r[4], const uint64_t x[8],
                               const uint64_t p[4], uint64_t R_256) {
@@ -5474,7 +5532,7 @@ static void xiom_f256_reduce(uint64_t r[4], const uint64_t x[8],
     for (i = 0; i < 8; i++) w[i] = x[i];
 
     /* Reduction: w[0..7] with w[4..7] representing high part.
-       For each i >= 4: w[i] * 2^(64*i) ≡ w[i] * R_256 * 2^(64*(i-4)).
+       For each i >= 4: w[i] * 2^(64*i) â‰¡ w[i] * R_256 * 2^(64*(i-4)).
        Since R_256 * 2^64j fits in <= 4 limbs, accumulate directly into low half.
        Repeat until no high limbs remain. */
     for (iter = 0; iter < 3; iter++) {
@@ -5522,7 +5580,7 @@ static void xiom_f256_reduce(uint64_t r[4], const uint64_t x[8],
     }
 }
 
-/* ── secp256k1 field ops ── */
+/* â”€â”€ secp256k1 field ops â”€â”€ */
 static void secp256k1_mul(uint64_t r[4], const uint64_t a[4], const uint64_t b[4]) {
     uint64_t x[8];
     xiom_f256_mul_raw(x, a, b);
@@ -5537,7 +5595,7 @@ static void secp256k1_sub(uint64_t r[4], const uint64_t a[4], const uint64_t b[4
 }
 static void secp256k1_inv(uint64_t r[4], const uint64_t a[4]) {
     /* Binary extended Euclidean algorithm for modular inverse.
-       No multiplication needed — just add, sub, shift-right.
+       No multiplication needed â€” just add, sub, shift-right.
        Returns a^(-1) mod SECP256K1_P. */
     uint64_t u[4], v[4], x1[4], x2[4];
     int i;
@@ -5644,7 +5702,7 @@ static void secp256k1_neg(uint64_t r[4], const uint64_t a[4]) {
     xiom_f256_sub_raw(r, SECP256K1_P, a);
 }
 
-/* ── secp256k1 affine point ops ── */
+/* â”€â”€ secp256k1 affine point ops â”€â”€ */
 
 int xiom_secp256k1_point_valid(const uint64_t px[4], const uint64_t py[4]) {
     uint64_t lhs[4], x2[4], x3[4], rhs[4];
@@ -5930,7 +5988,7 @@ static void ed25519_neg(uint64_t r[4], const uint64_t a[4]) {
     xiom_f256_sub_raw(r, ED25519_P, a);
 }
 
-/* ── Extended twisted Edwards coords ── */
+/* â”€â”€ Extended twisted Edwards coords â”€â”€ */
 typedef struct { uint64_t x[4],y[4],z[4],t[4]; } ed25519_pt;
 
 static void ed25519_pt_id(ed25519_pt* p) {
@@ -6040,7 +6098,7 @@ static int ed25519_recover_x(uint64_t x[4], const uint64_t y[4], int sign) {
     return 1;
 }
 
-/* ── Ed25519 order-l ops ── */
+/* â”€â”€ Ed25519 order-l ops â”€â”€ */
 /* 2^256 mod l precomputed: */
 static const uint64_t R_ORDER[4] = {
     0xC3DC22EFF6DA94E3ULL, 0xFAE31A49EBF56854ULL,
@@ -6048,7 +6106,7 @@ static const uint64_t R_ORDER[4] = {
 };
 
 static void ed25519_reduce_order(uint64_t r[4], const uint64_t x[8]) {
-    /* Reduce using R_ORDER: x[4]*2^256 ≡ x[4]*R_ORDER (mod l).
+    /* Reduce using R_ORDER: x[4]*2^256 â‰¡ x[4]*R_ORDER (mod l).
        High limbs x[5..7] can only appear if input is 64-byte hash. */
     uint64_t w[8], tmp[8];
     int i, j;
@@ -6336,7 +6394,7 @@ __int128 __modti3(__int128 a, __int128 b);
 unsigned __int128 __umodti3(unsigned __int128 a, unsigned __int128 b);
 #endif
 
-/* Native 128-bit multiply — the compiler emits __multi3 for i128 mul
+/* Native 128-bit multiply â€” the compiler emits __multi3 for i128 mul
    when it cannot prove the result fits in 64 bits. */
 __int128 __multi3(__int128 a, __int128 b) {
     return (__int128)((__uint128_t)a * (__uint128_t)b);
