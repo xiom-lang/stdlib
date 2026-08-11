@@ -86,6 +86,15 @@ R8. GENERIC BY DESIGN but DECLARE-ONLY - Trait-style conversion/serialization.
     Deserialize]` (serialize.xi:158/162) - cannot dispatch; keep them comment-
     only or concrete per type until compiler impl-dispatch lands.
 
+R9. THE NAME `core` BELONGS TO THE PRELUDE ONLY (added 2026-08-11). No category
+    sublib may be named `core` - foundational sublibs use domain names
+    (`math.tower`, renamed from `math.core` 2026-08-11; future: `num.base`,
+    `collect.primitives`, ...). Never create `<cat>/core.xi`. Rationale:
+    `xiom.core` is the implicit prelude (leaf-imported by math.xi itself), and a
+    sublib named identically invites bare-call ambiguity and doc confusion; the
+    qualified form works (probe-verified) but the name is worth more as the
+    prelude's own.
+
 ===============================================================================
 2. PER-CATEGORY TABLE (39 categories)
 ===============================================================================
@@ -300,3 +309,4 @@ Sublibs that declare `[T` stub signatures, verified against the policy above.
   concrete fns remain available as re-export shims and the tower can be
   collapsed into `impl Num[Width]` blocks. Do NOT design around a future that
   has not landed - write the concrete signatures today.
+
