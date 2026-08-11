@@ -88,13 +88,13 @@ R8. GENERIC BY DESIGN but DECLARE-ONLY - Trait-style conversion/serialization.
 
 R9. THE NAME `core` BELONGS TO THE PRELUDE. `xiom.core` is the compiler-wired
     prelude (crates/xiom-check PRELUDE array) — it owns the name `core`. No NEW
-    sublib may be named `core` (so `core.core` can never exist). `math.core` is
+    sublib may be named `core` (so `core.core` can never exist). `math.tower` is
     the one accepted exception: it reads naturally as "the core of math" and is
-    already established (module xiom.math.core, smoke_math_core.xi). The same
+    already established (module xiom.math.tower, renamed from math.core 2026-08-11, smoke_math_tower.xi). The same
     "category.core = foundational sublib" convention from the old D4b note is
     retired; a category's foundation is its flat aggregate (math.xi, num.xi,
     collections.xi) unless a separate concern genuinely needs its own module
-    (math.core = the generic Num/Real tower). Never create `<cat>/core.xi`.
+    (math.tower = the generic Num/Real tower). Never create `<cat>/core.xi`.
 
 ===============================================================================
 2. PER-CATEGORY TABLE (39 categories)
@@ -287,7 +287,7 @@ Sublibs that declare `[T` stub signatures, verified against the policy above.
     ip, json(3), levenshtein, mac, map, percent, punycode, radix, range,
     search, segment, soundex, terminal, test, time, unix, url, utf8.
   RULE: any call to a fn whose SHORT name exists in more than one stdlib
-  sublib MUST be module-qualified: `math.core.sqrt`, `serialize.json.json_parse`,
+  sublib MUST be module-qualified: `math.tower.sqrt`, `serialize.json.json_parse`,
   `convert.base64.base64_encode`, `sync.channel.channel_send`,
   `encoding.hex.hex_encode`, `time.date.date_from_iso8601`. Unqualified calls
   inside the owning module are fine (self-context). Cross-module same-name
@@ -295,7 +295,7 @@ Sublibs that declare `[T` stub signatures, verified against the policy above.
   wrong module - always qualify.
   Aggregate caveat (COMPILER_BUGS.md NOTE 5): a leaf sub-module's fns are only
   reachable through a 1-segment aggregate when the aggregate leaf equals the
-  parent segment (math.core works; num.bigfloat via xiom.num does not). Import
+  parent segment (math.tower works; num.bigfloat via xiom.num does not). Import
   `use xiom.num.bigfloat;` directly when the D4b shortcut fails.
 
 4.3 Smoke-split rule (BUG 16/18)
@@ -310,3 +310,4 @@ Sublibs that declare `[T` stub signatures, verified against the policy above.
   concrete fns remain available as re-export shims and the tower can be
   collapsed into `impl Num[Width]` blocks. Do NOT design around a future that
   has not landed - write the concrete signatures today.
+

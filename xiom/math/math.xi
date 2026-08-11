@@ -26,7 +26,7 @@ use xiom.math.special;
 // D4b manifest (2026-08-10): importing xiom.math pulls in the generic
 // sub-modules. math/core hosts the generic numeric tower (3c) — one
 // implementation per concept serving every Num width.
-use xiom.math.core;
+use xiom.math.tower;
 use xiom.math.numerical;
 use xiom.math.signal;
 use xiom.math.optimization;
@@ -592,3 +592,4 @@ pub fn log2_pure(x: Float64) -> Float64
 {
   return _ln_impl(x) / 0.6931471805599453;
 }
+
