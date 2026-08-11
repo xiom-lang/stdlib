@@ -92,9 +92,7 @@ fn main() -> Int {
     io.println("FLOAT32_MIN-bad"); return 24;
   }
 
-  // --- Specials: infinity / -infinity classification. ---
-  // NAN is not yet testable: BUG 19 (NaN-producing float ops trap or return
-  // a garbage sentinel) — math.constants.nan() is not shipped until fixed.
+  // --- Specials: infinity / -infinity / NaN classification. ---
   if !math.is_inf(math.constants.infinity()) {
     io.println("INF-bad"); return 25;
   }
@@ -106,6 +104,13 @@ fn main() -> Int {
   }
   if math.constants.neg_infinity() >= 0.0 {
     io.println("NEG_INF-pos"); return 28;
+  }
+  // NaN: BUG 19 fixed — IEEE semantics; NaN != NaN, is_nan detects it.
+  if !math.is_nan(math.constants.nan()) {
+    io.println("NAN-bad"); return 29;
+  }
+  if math.constants.nan() == math.constants.nan() {
+    io.println("NAN-eq"); return 30;
   }
   // Infinite is equal to itself.
   if math.constants.infinity() != math.constants.infinity() {
