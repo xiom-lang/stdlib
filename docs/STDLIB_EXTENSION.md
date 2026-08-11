@@ -324,16 +324,26 @@ Each placeholder has a README.md with planned scope/modules; no implementation y
 | Phase 3 | Tier 3: +600 fns across 30 modules (text, time/Date+ISO8601, collections, num, crypto/data, core/quality families) | ✅ Done |
 | Phase 4 | NASM/SIMD: hardware popcnt/clz/ctz intrinsics, SIMD mem_copy/set/compare; existing SHA-NI/AES-NI/SSE2 asm retained | ✅ Done |
 
-### Final stdlib: 60 modules, 1,922 public fns (was 51/~1,300)
-All 16 Tier-2 modules have CI smokes in examples/stdlib_smoke (stdlib_execution_tests: 57/57).
+### Final stdlib: 64+ modules, ~2,215 public fns (was 51/~1,300) — status refreshed 2026-08-11
+
+All 16 Tier-2 modules have CI smokes in examples/stdlib_smoke (stdlib_execution_tests: 72/72).
 Freeze gate: 2/2. stdlib compile: 40/40. feature-reg: 510/510. integration: 128/128. checker: 156/156.
 
-### Known compiler bugs discovered (stdlib works around them; fix in compiler later)
-1. `Result[Vec[T], _]` payload corrupted when MANY modules with Vec[UInt8] fns are combined (mono collision) — `.value` accessor returns garbage; `match { Ok(v) }` works in small programs. Pre-existing (encoding.xi).
-2. `.method()` chained on module-qualified Str-returning calls emits inttoptr i64→i8* of a ptr — bind to var first. Pre-existing.
-3. `is Ok` + `.value` on Result[Vec] broken — use match. Pre-existing.
-4. Bool→Int cast unsupported — use if/else. Pre-existing.
-5. Match arms must match type: Option→Some/None, Result→Ok/Err (mixing generates out-of-bounds GEP). Pre-existing.
+**Phases landed since this doc was written (see docs/stdlib_session.md):**
+- **Phase A — production BigInt** (~40 new pub fns): constants-as-constructors, `from_u64` (full 0..2^64-1), `from_hex`/`from_base`/`to_base`, range-checked `to_int`, predicates, `div`, `pow_mod`, `sqrt(_rem)`, `lcm`, `ext_gcd`, Miller-Rabin `is_prime`/`next_prime`, `factorial`/`binomial`/`fibonacci`, two's-complement bit ops, comparisons. `bigint_div_mod` = Knuth Algorithm D (two-limb window, single-limb fast path, upward fixup).
+- **Phase B — production BigFloat** (`num/bigfloat.xi` + flat aggregate): power-of-10 representation, RoundMode, string-exact to_str, all arithmetic with precision-aware rounding, `pi()`/`e()`.
+- **Phase C — BigFloat transcendentals**: Machin π, Taylor e, exp/ln/log10, sin/cos/tan, atan/atan2, pow_bf (O(prec²) series).
+- **Phase C.5**: log2/exp2/cbrt/hypot/hyperbolics/inverse-hyperbolics/asin/acos, to_str_sci, from_ratio, pow10, int helpers.
+- **Perf**: BigInt Karatsuba (`_abs_mul_karatsuba`, threshold 4000 limbs, measured ~12% faster at 100k digits).
+- **misc expansion** (23 fns): string metrics (damerau/jaro/jaro-winkler/hamming/LCS), case converters, roman numerals, ordinal/pluralize, units.
+- **hash 64-bit additions**: canonical xxhash64 (C-reference-verified), fnv1_32.
+- **Full categorized audit of the wish-list**: §13 below (HAVE / GAP-stdlib / GAP-package, deduped).
+
+**Known compiler bugs discovered (stdlib works around them; fix in compiler later)**
+— superseded by docs/COMPILER_BUGS.md STATUS SUMMARY (2026-08-11): BUG 1/8/9/10/11 and
+the parser/catalog/&T-param/inline-hang findings are all FIXED; BUG 2 (module-global
+struct field writes) and BUG 3 (module-global fn-call initializers) remain OPEN
+(advisory — stdlib uses whole-value assignment and constructor fns).
 
 ## 11. Migration Sequencing & Gates
 
@@ -5321,3 +5331,188 @@ Control Theory	Robotics, aerospace, engineers
 Game Theory	Economists, AI researchers
 Queueing Theory	Network engineers, operations
 Recommendation: Keep the core as is. Add the missing modules as packages (@xiom/math-*) rather than bloating the stdlib. This keeps stdlib lean while supporting specialized needs.
+
+---
+
+## 13. WISH-LIST AUDIT (2026-08-11) — HAVE / GAP-stdlib / GAP-package
+
+> Full pass over the flat wish-list (HASHING / COLLECTIONS / STRING / CONVERSION /
+> NETWORK / FILE FORMATS / OS INTERACTION). Rules: **STDLIB** = zero external deps
+> (pure XIOM; SIMD/C-FFI/ASM only for perf with pure fallback + runtime dispatch);
+> **PACKAGE** = needs an external library/protocol peer; dedupe aggressively.
+> Verified against the live tree on 2026-08-11 (64+ modules, ~2,215 pub fns).
+> GAP-stdlib items marked **(P0/P1/P2)** are queued implementation work; P0 items
+> landed in the same session (see §10 status + docs/stdlib_session.md).
+
+### 13.1 HASHING (16 wish-items → 13 HAVE, 3 GAP-stdlib)
+
+| Wish item | Status | Home (module.fn) / note |
+|-----------|--------|--------------------------|
+| hash/fnv (32/64/128) | **HAVE** (128 GAP P2) | `hash.fnv1a32`, `fnv1a64`, `fnv1_64`, `fnv1_32`; fnv1a_128/fnv1_128 → GAP |
+| hash/murmur (2, 3: 32/128) | **HAVE** | `hash.murmur3_32`, `hash.murmur.murmur3_128`, `hash.murmur.murmur2_64` |
+| hash/city (64/128) | **HAVE** | `hash.city.city64`, `city64_with_seed`, `city128` (CityHash v1.1; 256-bit does not exist upstream) |
+| hash/xxhash (32/64/128, XXH3) | **GAP-stdlib P0** | `hash.xxhash32/64`, `hash.xxhash.xxh32/xxh64`; **XXH3-64 + XXH128 missing → landed this session** |
+| hash/siphash (2-4, 1-3) | **GAP-stdlib P0** | `hash.sip_hash` is a misnamed DJB2 wrapper — **real SipHash-2-4/1-3 landed this session** (hash/siphash.xi) |
+| hash/highway (64/128/256) | **GAP-stdlib P1** | pure XIOM port; large |
+| hash/spooky (128) | **GAP-stdlib P1** | pure XIOM port; large |
+| hash/t1ha | **GAP-stdlib P2** | fast non-crypto; pure |
+| hash/metro (64/128) | **GAP-stdlib P2** | pure |
+| hash/farm | **GAP-stdlib P2** | city-derived; pure |
+| hash/jenkins (lookup3) | **HAVE** | `hash.jenkins.jenkins_lookup3` |
+| hash/superfast | **GAP-stdlib P0** | trivial Paul Hsieh — **landed this session** (hash/superfast.xi) |
+| hash/crc (32/64 hw-accel) | **HAVE** | `hash.crc32_ieee`, `hash.crc.crc32c`, `crc64_ecma`, `crc64_we`, `crc16_ccitt`; hw-accel = §7 asm track |
+| hash/adler (32) | **GAP-stdlib P0** | **landed this session** (hash/crc.xi) |
+| hash/checksum (BSD/SysV/Internet) | **HAVE** | `hash.crc.checksum_bsd/sysv/internet` |
+
+### 13.2 COLLECTIONS (56 wish-items → 30 HAVE, 26 GAP-stdlib, 0 PACKAGE)
+
+| Wish item | Status | Home / note |
+|-----------|--------|-------------|
+| list / vector / stack / queue | **HAVE** | `collections.LinkedList/Vec/Stack/Queue` |
+| ring (circular) | **GAP-stdlib P0** | spsc ring **landed this session** (collect/queue.xi `SpscRing`) |
+| map (open addressing) | **HAVE** | `collections.Map` |
+| mapch (chaining) | **HAVE** | `collections.HashMap` |
+| treemap / treeset | **HAVE** | `collections.BTreeMap/BTreeSet` |
+| tree / avl | **HAVE** | `collect.tree.Bst/Avl` |
+| rbtree | **GAP-stdlib P1** | pure; AVL covers balanced needs (dedupe candidate) |
+| bheap / fheap / priority | **HAVE** | `collect.heap.PHeap`, `FibHeap` |
+| pairing heap | **GAP-stdlib P2** | pure; dedupe with PHeap |
+| deque | **HAVE** | `collect.queue.Deque` + `collections.VecDeque` |
+| skiplist | **GAP-stdlib P0** | **landed this session** (collect/skiplist.xi) |
+| trie / radix | **GAP-stdlib P0** | **trie landed this session** (collect/trie.xi); radix = trie variant, dedupe |
+| bitmap | **HAVE** | `bits.bit_*`, `num` bit ops |
+| bloom | **HAVE** | `collect.hash.BloomFilter` |
+| cuckoo | **GAP-stdlib P0** | **landed this session** (collect/cuckoo.xi) |
+| hashset | **HAVE** | `collections.Set` |
+| linkedhash | **HAVE** | `collect.hash.LhMap` |
+| lru / lfu | **HAVE** | `collect.cache.LruCache/LfuCache` |
+| tinylfu | **GAP-stdlib P2** | count-min sketch + LFU; pure |
+| arc (Adaptive Replacement) | **GAP-stdlib P0** | **landed this session** (collect/cache.xi `ArcCache`) |
+| btree / btreeplus | **HAVE** (B+Tree GAP P2) | `collections.BTreeMap/BTreeSet` |
+| segment tree | **GAP-stdlib P2** | pure; fenwick covers prefix sums |
+| fenwick | **GAP-stdlib P0** | **landed this session** (collect/fenwick.xi) |
+| sparse / dense sets | **GAP-stdlib P2** | pure; dedupe with Set |
+| hasharray (HAMT) | **GAP-stdlib P2** | pure; low |
+| immutable / persistent | **GAP-stdlib P2** | pure (persistent via copy-on-write); low |
+| concurrent collections | **GAP-stdlib P0** | **spsc lock-free ring landed this session**; mpmc/mpsc need atomic-CAS ring or a Mutex setter (see note) |
+| interval / range trees | **GAP-stdlib P2** | pure; med |
+| kdtree / octree / quadtree / spatial | **GAP-stdlib P1** | pure; geom-adjacent |
+| graph / dag | **HAVE** | `collect.graph.Graph` (adjacency, BFS/DFS/cycles) |
+| unionfind | **HAVE** | `collect.graph.uf_*` |
+| intmap / stringmap | **GAP-stdlib P2** | LhMap covers insertion-order needs; perf variants low |
+| objectpool | **GAP-stdlib P0** | **landed this session** (collect/objectpool.xi) |
+| threadpool | **GAP-stdlib P1** | `thread`+`sync` exist; needs a work-queue executor |
+| workqueue | **HAVE** | `collect.queue.WorkQueue` |
+| blocking queue | **GAP-stdlib P1** | `sync.Semaphore`/`Condvar` + WorkQueue |
+| mpmc / mpsc / spmc / spsc | **HAVE-partial** | mpsc cooperative: `async.Channel`; **spsc lock-free: landed this session**; mpmc: needs Mutex mutation API (documented limitation, see module comment) |
+
+### 13.3 STRING (72 wish-items → 47 HAVE, 25 GAP-stdlib, 0 PACKAGE)
+
+| Wish item | Status | Home / note |
+|-----------|--------|-------------|
+| compare / search / replace / trim / split / join / case / strip / repeat / pad / slice | **HAVE** | `string.*` + `cmp.*` (dedupe: compare→cmp, search→index_of, strip→trim) |
+| escape / unescape | **HAVE** | `string.str_escape/unescape` (URL variants in `encoding.url_encode/percent_encode`) |
+| format (sprintf-style) | **GAP-stdlib P0** | `fmt.format1..9` positional; **printf-style `fmt.sprintf` landed this session** |
+| printf / scanf | **GAP-stdlib P0** | **landed this session**: `fmt.sprintf1..3`, `fmt.sscanf` + typed wrappers |
+| template | **GAP-stdlib P2** | format1..9 cover positional; named-placeholder templates low |
+| glob / regex | **HAVE** | `misc.glob_match`, `regex.*` |
+| levenshtein / damerau / jaro(-winkler) / soundex / metaphone / ngram / ngram_similarity / cosine / lcs / editdistance / hamming | **HAVE** | `text.similarity.*` + `misc.*` |
+| jaccard | **GAP-stdlib P0** | **landed this session** (`text.similarity.jaccard_similarity`) |
+| lcp / lcsuffix | **GAP-stdlib P0** | **landed this session** (`text.similarity.longest_common_prefix/suffix`) |
+| tr / rot / caesar / atbash | **GAP-stdlib P0** | **landed this session** (`string.str_translate/rot13/rot47/caesar/atbash`) |
+| shuffle / rotate / permute / combine / interleave / chunk | **GAP-stdlib P2** | pure; shuffle needs rand; low-med |
+| reverse | **HAVE** | `string.str_reverse`, `misc.reverse_str` |
+| wrap / indent / align / truncate | **HAVE** | `fmt.format_wrap/indent/align_left/align_right`, `string.str_center`, `misc.truncate` |
+| abbreviate / obfuscate | **GAP-stdlib P0** | **landed this session** (`string.str_abbreviate/obfuscate`) |
+| Unicode (normalize/collate/casefold/titlecase/segment/wordbreak/ea_width/emoji/script/block/category/bidi/mirror/nfc/nfd/nfkc/nfkd/maps) | **GAP-stdlib P1** | pure but table-heavy (utf8 module is the foundation); ICU-class collation = **PACKAGE** (xiom-icu placeholder) |
+
+### 13.4 CONVERSION (82 wish-items → 55 HAVE, 22 GAP-stdlib, 5 GAP-package)
+
+| Wish item | Status | Home / note |
+|-----------|--------|-------------|
+| int/float/toint/tofloat/tostring/parse/itos/ftos/atoi/itoa | **HAVE** | `convert.*`, `num.parse_int(_radix)/parse_float`, `string.str_to_int/float` |
+| fromstr/tryfrom/into/asref/asmut/from (traits) | **HAVE** (N/A) | language traits — dedupe to `convert.*` + `core` helpers |
+| bytes / endian / network order / swap | **HAVE** | `bits.pack_*/unpack_*`, `num.to_be/to_le/from_be/from_le`, `bits.byte_swap*` |
+| saturating / wrapping / overflow / checked / exact / lossy / roundtrip | **HAVE** | `num.saturating_*/wrapping_*/checked_*`; roundtrip = to_str/parse pairs |
+| cstring / wstring / utf8 / utf16 / utf32 | **HAVE** (utf16/32 GAP P2) | `ffi.Str.from_cstring`, `mem`, `utf8.*`, `encoding.utf8_*` |
+| base64 / base32 / base16 / base64url | **HAVE** | `encoding.*` |
+| base58 / base62 / ascii85 | **HAVE** | `num.convert.to_base58/from_base58/to_base62/from_base62/to_ascii85/from_ascii85` |
+| uuencode / xxencode / quoted-printable | **GAP-stdlib P2** | trivial pure encodings |
+| punycode / idna | **GAP-stdlib P1** | pure but fiddly (IDNA tables) |
+| percent | **HAVE** | `encoding.url_encode/percent_encode/url_decode/percent_decode` |
+| html / xml escaping | **GAP-stdlib P2** | entity tables; low (str_escape is C-style) |
+| json escaping | **HAVE** | `serialize` (JSON internal escaping) |
+| csv / tsv escaping | **GAP-stdlib P2** | trivial |
+| yaml / toml escaping | **GAP-package** | xiom-yaml/xiom-toml placeholders |
+| regex / glob escaping | **GAP-stdlib P2** | low |
+| shell / cmd escaping | **GAP-stdlib P2** | pure; med |
+| printf escaping (%% etc.) | **HAVE** | **fmt.sprintf landed this session** |
+| strftime / strptime | **GAP-stdlib P0** | **landed this session** (`time.strftime/strptime`) |
+| duration / date / datetime / timestamp | **HAVE** | `time.*` (Duration/Date/DateTime/ISO 8601) |
+| uuid / mac / ip / url / uri | **HAVE** | `rand.uuid_v4`, `net.is_valid_ipv4`, `net.parse_url/url_parse` |
+| email / phone / creditcard / iban / swift validation | **GAP-stdlib P1** | pure validation (email/iban useful); phone/creditcard P2 |
+
+### 13.5 NETWORK (307 wish-items → ~25 HAVE, ~10 GAP-stdlib, ~272 GAP-package)
+
+| Wish item | Status | Home / note |
+|-----------|--------|-------------|
+| socket / tcp / udp / address | **HAVE** | `net.tcp_connect/tcp_listen/udp_bind`, `TcpStream/TcpListener/UdpSocket` |
+| dns / host / ip / port / protocol | **HAVE** | `net.dns_*`, `resolve_host`, `dns_well_known_port`, `is_valid_ipv4` |
+| url / uri / query / header / basic/bearer auth / http_status_text | **HAVE** | `net.url_parse/url_query_*/http_header_*/basic_auth_header/bearer_auth_header` |
+| http (get/post) | **HAVE** | `net.http_get/http_post/http_status` |
+| sse | **HAVE-partial** | `net.sse_format_*` (wire formatting); full SSE client P2 |
+| websocket / jsonrpc / rest | **HAVE-partial** | jsonrpc_request/success/error builders exist; websocket framing GAP-stdlib P1; rest = http + json |
+| cookie / multipart / mime / charset / etag / accept-* / link | **GAP-stdlib P2** | pure parsing; low-med |
+| jwt | **GAP-stdlib P1** | pure composition over crypto (HMAC/SHA) |
+| ntp / sntp | **GAP-stdlib P2** | UDP datagram client; pure-ish |
+| icmp (ping) / traceroute | **GAP-stdlib P2** | raw sockets via FFI; low |
+| unix sockets / pipe | **HAVE-partial** | `os.create_pipe/Pipe`; AF_UNIX GAP-stdlib P2 |
+| everything else (tls/ssl/ssh/ftp/smtp/pop3/imap/irc/xmpp/mqtt/amqp/kafka/redis/mongo/postgres/mysql/sqlite/grpc/graphql/soap/thrift/zeromq/dbus/ldap/kerberos/ntp/dhcp/dns-sd/cloud SDKs/VPN/kernel networking/hardware protocols) | **GAP-package** | external protocol peers / C libs; placeholders exist (xiom-ftp, xiom-smtp, xiom-mqtt, xiom-tls, xiom-ldap, ...) |
+
+### 13.6 FILE FORMATS (~1,700 wish-items → ~20 HAVE, ~25 GAP-stdlib, ~30 GAP-package, ~1,600 noise/dedupe)
+
+| Wish item | Status | Home / note |
+|-----------|--------|-------------|
+| hex / octal / binary dump, hexdump | **HAVE** | `format.dump.hexdump/octal_dump/binary_dump`, `fmt.format_hexdump` |
+| bytes human-readable | **HAVE** | `format.number.fmt_bytes`, `misc.human_size` |
+| table / columns / wrap / indent / align / join / repeat / line | **HAVE** | `fmt.format_table/columns/wrap/indent/align_left/align_right/join/repeat/line` |
+| number formatting (fixed/percent/separators/duration/ordinal) | **HAVE** | `format.number.fmt_float_fixed/fmt_percent/fmt_int_with_separators/fmt_duration_ms/fmt_ordinal` |
+| json formatting | **HAVE** | `serialize` |
+| progress / spinner / ansi / colors / box / border / list / toc | **GAP-stdlib P2** | pure text; terminal control via `os` later |
+| markdown / html / textile / rtf / latex / troff / man | **GAP-package** | xiom-markdown/xiom-html placeholders |
+| xml / yaml / toml / csv / tsv | **GAP-package** | xiom-xml/yaml/toml/csv placeholders |
+| diagrams (flowchart/uml/mermaid/gantt/...) | **GAP-package** | rendering/DSL tools |
+| geo formats (geojson/kml/gpx/wkt/wkb/geohash/utm/...) | **GAP-package** | xiom-geo placeholders (mostly) |
+| statistics/regression/metrics/ML formatting (~900 items) | **GAP-stdlib P2** | dedupe → `stats.*` + `format.number.*`; most are number-formatting variants |
+| typography (fonts/kerning/hyphenation/bidi/CJK) | **GAP-package** | ICU-class |
+| audio/video metadata (id3/mp4/exif/...) | **GAP-package** | binary container parsers |
+| everything else | **noise** | dedupe into the rows above |
+
+### 13.7 OS INTERACTION (~310 wish-items → ~60 HAVE, ~40 GAP-stdlib, ~210 GAP-package)
+
+| Wish item | Status | Home / note |
+|-----------|--------|-------------|
+| pipe / fd / stat / perm / rename / remove / temp / cwd / chdir / mkdir / walk / realpath | **HAVE** | `os.*` (create_pipe/Pipe, walk_dir, env, disk_*), `io.*` (file ops), `path.*` |
+| process (spawn/exec/wait/exit/signal) | **HAVE** | `process.spawn_command/wait/kill/is_running/exit`, `os.on_signal/raise_signal/ChildProcess` |
+| watch (files/dirs) | **HAVE** | `os.FileWatcher/watch_file/watch_dir` |
+| symlink / link / readlink / owner (chown) / mmap / dup / select | **GAP-stdlib P2** | FFI syscalls; med-low |
+| eol / bom / utf8bom / binary-text detection / magic / mime | **GAP-stdlib P2** | pure + FFI; low-med |
+| truncate / fallocate / seek / tell / read_at / write_at / pread / pwrite / readv / writev / sendfile / splice | **GAP-stdlib P2** | FFI; io.xi covers the basic read/write/seek set |
+| epoll / kqueue / iocp / io_uring / eventfd / timerfd / signalfd / poll / select | **GAP-stdlib P2** | FFI; async executor domain (compiler session) |
+| fork / waitpid / popen / posix_spawn | **GAP-stdlib P2** | FFI |
+| tty / pty / termios / terminal control | **GAP-stdlib P2** | FFI |
+| errno / strerror / backtrace / demangle | **GAP-stdlib P2** | FFI; `debug` module is the home |
+| dlopen / dlsym / dlclose | **HAVE** | `ffi.*` |
+| libm / libc | **HAVE** | `math.*` (libm), `mem.*`, `string.*`, `ffi.*` |
+| openssl / libssl / zlib / bz2 / lzma / zstd / lz4 / snappy / iconv / xml2 / curl / git2 / ssh2 / pcap | **GAP-package** | external C libs (xiom-openssl, xiom-zstd, ...) |
+| graphics (vulkan/dx/metal/gl), media frameworks, ML frameworks, cloud SDKs, VPN/wireless vendors, registry/plist | **GAP-package** | external deps; xiom-vulkan etc. placeholders |
+
+### 13.8 Dedup map (aggressive, per session rules)
+
+`str/compare`→`cmp` · `str/search`→`string.index_of` · `str/strip`→`str_trim` · `conv/base64`→`encoding` ·
+`conv/base16`→`encoding.hex_*` · `collect/vector`→`collections.Vec` · `collect/stack/queue/ring`→`collections.Stack/Queue`+`collect.queue` ·
+`hash/crc`→`hash.crc32_ieee`+`hash.crc` · `str/regex`→`regex` · `conv/uuid`→`rand.uuid_v4` ·
+`conv/endian`→`bits.pack/unpack`+`num.to_be/to_le` · `conv/swap`→`bits.byte_swap*` · `conv/saturating|wrapping|checked`→`num.*` ·
+`conv/strftime`→`time.strftime` (landed) · `format/indent|wrap|align`→`fmt.*` · `format/hex`→`format.dump` ·
+`os/memcpy|memcmp`→`mem` · `os/str*`→`string` · `collect/radix`→`collect/trie` · `collect/sparse|dense`→`collections.Set` ·
+`format/*stat*`→`stats` · `net/jsonrpc`→`net.jsonrpc_*` · `str/metaphone|soundex|jaro|ngram|cosine`→`text.similarity`
