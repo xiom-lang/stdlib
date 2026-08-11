@@ -394,3 +394,485 @@ pub fn truncate(s: Str, max_len: Int) -> Str
     };
     xiom.string.str_slice(s, 0, max_len)
 }
+
+// ============================================================================
+// Extended utilities (2026-08-11): string metrics, case conversion, roman
+// numerals, ordinal/pluralize, units. ASCII-oriented where noted.
+// ============================================================================
+
+// Damerau-Levenshtein distance (insert/delete/substitute/transpose), O(n*m).
+pub fn damerau_levenshtein_distance(a: Str, b: Str) -> Int {
+  var la = a.len();
+  var lb = b.len();
+  var cols = lb + 1;
+  var dp = Vec[Int].new();
+  var i = 0;
+  while i < (la + 1) * cols { dp.push(0); i = i + 1; }
+  i = 0;
+  while i <= la { dp[i * cols] = i; i = i + 1; }
+  i = 0;
+  while i <= lb { dp[i] = i; i = i + 1; }
+  var ai = 1;
+  while ai <= la {
+    var bj = 1;
+    while bj <= lb {
+      var cost = 1;
+      if xiom.string.str_slice(a, ai - 1, ai) == xiom.string.str_slice(b, bj - 1, bj) { cost = 0; }
+      var del = dp[(ai - 1) * cols + bj] + 1;
+      var ins = dp[ai * cols + (bj - 1)] + 1;
+      var sub = dp[(ai - 1) * cols + (bj - 1)] + cost;
+      var best = del;
+      if ins < best { best = ins; }
+      if sub < best { best = sub; }
+      // transposition: a[ai-1] == b[bj-2] && a[ai-2] == b[bj-1]
+      if ai > 1 && bj > 1 {
+        if xiom.string.str_slice(a, ai - 1, ai) == xiom.string.str_slice(b, bj - 2, bj - 1) &&
+           xiom.string.str_slice(a, ai - 2, ai - 1) == xiom.string.str_slice(b, bj - 1, bj) {
+          var trans = dp[(ai - 2) * cols + (bj - 2)] + 1;
+          if trans < best { best = trans; }
+        }
+      }
+      dp[ai * cols + bj] = best;
+      bj = bj + 1;
+    }
+    ai = ai + 1;
+  }
+  return dp[la * cols + lb];
+}
+
+// Jaro similarity in [0, 1] (ASCII-aware matching window).
+pub fn jaro_similarity(a: Str, b: Str) -> Float64 {
+  var la = a.len();
+  var lb = b.len();
+  if la == 0 && lb == 0 { return 1.0; }
+  if la == 0 || lb == 0 { return 0.0; }
+  var window = la;
+  if lb > window { window = lb; }
+  window = window / 2;
+  if window > 0 { window = window - 1; }
+  if window < 0 { window = 0; }
+  var a_m = Vec[Int].new();
+  var b_m = Vec[Int].new();
+  var i = 0;
+  while i < la { a_m.push(0); i = i + 1; }
+  i = 0;
+  while i < lb { b_m.push(0); i = i + 1; }
+  var matches = 0;
+  i = 0;
+  while i < la {
+    var lo = i - window;
+    if lo < 0 { lo = 0; }
+    var hi = i + window + 1;
+    if hi > lb { hi = lb; }
+    var j = lo;
+    while j < hi {
+      if b_m[j] == 0 {
+        if xiom.string.str_slice(a, i, i + 1) == xiom.string.str_slice(b, j, j + 1) {
+          a_m[i] = 1;
+          b_m[j] = 1;
+          matches = matches + 1;
+          break;
+        }
+      }
+      j = j + 1;
+    }
+    i = i + 1;
+  }
+  if matches == 0 { return 0.0; }
+  // count transpositions
+  var trans = 0;
+  var k = 0;
+  i = 0;
+  while i < la {
+    if a_m[i] == 1 {
+      while k < lb && b_m[k] == 0 { k = k + 1; }
+      if k < lb {
+        if xiom.string.str_slice(a, i, i + 1) != xiom.string.str_slice(b, k, k + 1) { trans = trans + 1; }
+        k = k + 1;
+      }
+    }
+    i = i + 1;
+  }
+  var mf = matches as Float64;
+  var tf = (trans / 2) as Float64;
+  var laf = la as Float64;
+  var lbf = lb as Float64;
+  var jaro = (mf / laf + mf / lbf + (mf - tf) / mf) / 3.0;
+  return jaro;
+}
+
+// Jaro-Winkler similarity (prefix bonus up to 4 chars, scale 0.1).
+pub fn jaro_winkler_similarity(a: Str, b: Str) -> Float64 {
+  var j = jaro_similarity(a, b);
+  var prefix = 0;
+  var limit = a.len();
+  if b.len() < limit { limit = b.len(); }
+  if limit > 4 { limit = 4; }
+  var i = 0;
+  while i < limit {
+    if xiom.string.str_slice(a, i, i + 1) == xiom.string.str_slice(b, i, i + 1) { prefix = prefix + 1; }
+    else { break; }
+    i = i + 1;
+  }
+  var pf = prefix as Float64;
+  return j + pf * 0.1 * (1.0 - j);
+}
+
+// Hamming distance; -1 if lengths differ.
+pub fn hamming_distance(a: Str, b: Str) -> Int {
+  if a.len() != b.len() { return -1; }
+  var d = 0;
+  var i = 0;
+  while i < a.len() {
+    if xiom.string.str_slice(a, i, i + 1) != xiom.string.str_slice(b, i, i + 1) { d = d + 1; }
+    i = i + 1;
+  }
+  return d;
+}
+
+// Longest common subsequence (not substring), O(n*m).
+pub fn longest_common_subsequence(a: Str, b: Str) -> Str {
+  var la = a.len();
+  var lb = b.len();
+  var cols = lb + 1;
+  var dp = Vec[Int].new();
+  var i = 0;
+  while i < (la + 1) * cols { dp.push(0); i = i + 1; }
+  var ai = 1;
+  while ai <= la {
+    var bj = 1;
+    while bj <= lb {
+      if xiom.string.str_slice(a, ai - 1, ai) == xiom.string.str_slice(b, bj - 1, bj) {
+        dp[ai * cols + bj] = dp[(ai - 1) * cols + (bj - 1)] + 1;
+      } else {
+        var up = dp[(ai - 1) * cols + bj];
+        var left = dp[ai * cols + (bj - 1)];
+        if up >= left { dp[ai * cols + bj] = up; }
+        else { dp[ai * cols + bj] = left; }
+      }
+      bj = bj + 1;
+    }
+    ai = ai + 1;
+  }
+  // backtrack
+  var result = "";
+  var x = la;
+  var y = lb;
+  while x > 0 && y > 0 {
+    if xiom.string.str_slice(a, x - 1, x) == xiom.string.str_slice(b, y - 1, y) {
+      result = xiom.string.str_concat(xiom.string.str_slice(a, x - 1, x), result);
+      x = x - 1;
+      y = y - 1;
+    } elif dp[(x - 1) * cols + y] >= dp[x * cols + (y - 1)] {
+      x = x - 1;
+    } else {
+      y = y - 1;
+    }
+  }
+  return result;
+}
+
+// Roman numerals for 1..3999; "" outside the range.
+pub fn to_roman(n: Int) -> Str
+  requires: n >= 1
+  requires: n <= 3999
+{
+  if n < 1 || n > 3999 { return ""; }
+  var values = Vec[Int].new();
+  values.push(1000); values.push(900); values.push(500); values.push(400);
+  values.push(100); values.push(90); values.push(50); values.push(40);
+  values.push(10); values.push(9); values.push(5); values.push(4); values.push(1);
+  var symbols = Vec[Str].new();
+  symbols.push("M"); symbols.push("CM"); symbols.push("D"); symbols.push("CD");
+  symbols.push("C"); symbols.push("XC"); symbols.push("L"); symbols.push("XL");
+  symbols.push("X"); symbols.push("IX"); symbols.push("V"); symbols.push("IV"); symbols.push("I");
+  var result = "";
+  var v = n;
+  var i = 0;
+  while i < values.len() {
+    while v >= values[i] {
+      result = xiom.string.str_concat(result, symbols[i]);
+      v = v - values[i];
+    }
+    i = i + 1;
+  }
+  return result;
+}
+
+// Parse a Roman numeral; 0 if invalid.
+pub fn from_roman(s: Str) -> Int {
+  var total = 0;
+  var prev = 0;
+  var i = s.len() - 1;
+  while i >= 0 {
+    var ch = xiom.string.str_slice(s, i, i + 1);
+    var val = 0;
+    if ch == "I" { val = 1; }
+    elif ch == "V" { val = 5; }
+    elif ch == "X" { val = 10; }
+    elif ch == "L" { val = 50; }
+    elif ch == "C" { val = 100; }
+    elif ch == "D" { val = 500; }
+    elif ch == "M" { val = 1000; }
+    else { return 0; }
+    if val < prev { total = total - val; }
+    else { total = total + val; }
+    prev = val;
+    i = i - 1;
+  }
+  return total;
+}
+
+// ASCII case helpers shared by the converters.
+fn _misc_split_words(s: Str) -> Vec[Str] {
+  var words = Vec[Str].new();
+  var current = "";
+  var i = 0;
+  var prev_lower = false;
+  while i < s.len() {
+    var ch = xiom.string.str_slice(s, i, i + 1);
+    var code = xiom.string.byte_at(s, i);
+    var is_alpha = false;
+    var is_upper = false;
+    if code >= 65 && code <= 90 { is_alpha = true; is_upper = true; }
+    if code >= 97 && code <= 122 { is_alpha = true; }
+    if code >= 48 && code <= 57 { is_alpha = true; }
+    if is_alpha {
+      // camelCase boundary: uppercase following a lowercase starts a word.
+      if is_upper && prev_lower && current.len() > 0 {
+        words.push(current);
+        current = "";
+      }
+      current = xiom.string.str_concat(current, ch);
+      prev_lower = !is_upper;
+    } else {
+      if current.len() > 0 { words.push(current); current = ""; }
+      prev_lower = false;
+    }
+    i = i + 1;
+  }
+  if current.len() > 0 { words.push(current); }
+  return words;
+}
+
+fn _misc_lower(s: Str) -> Str {
+  var lower = "abcdefghijklmnopqrstuvwxyz";
+  var upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  var result = "";
+  var i = 0;
+  while i < s.len() {
+    var ch = xiom.string.str_slice(s, i, i + 1);
+    var idx_opt = xiom.string.str_index_of(upper, ch);
+    var idx = -1;
+    match idx_opt {
+      Some(v) => { idx = v; },
+      None => {},
+    }
+    if idx >= 0 { ch = xiom.string.str_slice(lower, idx, idx + 1); }
+    result = xiom.string.str_concat(result, ch);
+    i = i + 1;
+  }
+  return result;
+}
+
+fn _misc_capitalize(s: Str) -> Str {
+  var lower = "abcdefghijklmnopqrstuvwxyz";
+  var upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  if s.len() == 0 { return s; }
+  var first = xiom.string.str_slice(s, 0, 1);
+  var idx_opt = xiom.string.str_index_of(lower, first);
+  var idx = -1;
+  match idx_opt {
+    Some(v) => { idx = v; },
+    None => {},
+  }
+  if idx >= 0 { first = xiom.string.str_slice(upper, idx, idx + 1); }
+  var rest = _misc_lower(xiom.string.str_slice(s, 1, s.len()));
+  return xiom.string.str_concat(first, rest);
+}
+
+pub fn to_camel_case(s: Str) -> Str {
+  var words = _misc_split_words(s);
+  var result = "";
+  var i = 0;
+  while i < words.len() {
+    var w = words[i];
+    if i == 0 { result = _misc_lower(w); }
+    else { result = xiom.string.str_concat(result, _misc_capitalize(w)); }
+    i = i + 1;
+  }
+  return result;
+}
+
+pub fn to_pascal_case(s: Str) -> Str {
+  var words = _misc_split_words(s);
+  var result = "";
+  var i = 0;
+  while i < words.len() {
+    result = xiom.string.str_concat(result, _misc_capitalize(words[i]));
+    i = i + 1;
+  }
+  return result;
+}
+
+pub fn to_snake_case(s: Str) -> Str {
+  var words = _misc_split_words(s);
+  var result = "";
+  var i = 0;
+  while i < words.len() {
+    if i > 0 { result = xiom.string.str_concat(result, "_"); }
+    result = xiom.string.str_concat(result, _misc_lower(words[i]));
+    i = i + 1;
+  }
+  return result;
+}
+
+pub fn to_kebab_case(s: Str) -> Str {
+  var words = _misc_split_words(s);
+  var result = "";
+  var i = 0;
+  while i < words.len() {
+    if i > 0 { result = xiom.string.str_concat(result, "-"); }
+    result = xiom.string.str_concat(result, _misc_lower(words[i]));
+    i = i + 1;
+  }
+  return result;
+}
+
+// Ordinal suffix: 1st, 2nd, 3rd, 11th, 21st, ...
+pub fn ordinal(n: Int) -> Str {
+  var suffix = "th";
+  var mod100 = n % 100;
+  if mod100 < 11 || mod100 > 13 {
+    var mod10 = n % 10;
+    if mod10 == 1 { suffix = "st"; }
+    elif mod10 == 2 { suffix = "nd"; }
+    elif mod10 == 3 { suffix = "rd"; }
+  }
+  return xiom.string.str_concat(xiom.core.to_string(n), suffix);
+}
+
+// Naive pluralize: count == 1 keeps the singular; otherwise +s / +es / +ies.
+pub fn pluralize(s: Str, count: Int) -> Str {
+  if count == 1 { return s; }
+  if s.len() == 0 { return s; }
+  var last = xiom.string.str_slice(s, s.len() - 1, s.len());
+  if last == "y" {
+    var second = "";
+    if s.len() >= 2 { second = xiom.string.str_slice(s, s.len() - 2, s.len() - 1); }
+    var vowels = "aeiou";
+    var v_opt = xiom.string.str_index_of(vowels, second);
+    var v_idx = -1;
+    match v_opt {
+      Some(v) => { v_idx = v; },
+      None => {},
+    }
+    if v_idx >= 0 {
+      return xiom.string.str_concat(s, "s");
+    }
+    var stem = xiom.string.str_slice(s, 0, s.len() - 1);
+    return xiom.string.str_concat(stem, "ies");
+  }
+  if last == "s" || last == "x" || last == "z" {
+    return xiom.string.str_concat(s, "es");
+  }
+  if s.len() >= 2 {
+    var tail = xiom.string.str_slice(s, s.len() - 2, s.len());
+    if tail == "ch" || tail == "sh" {
+      return xiom.string.str_concat(s, "es");
+    }
+  }
+  return xiom.string.str_concat(s, "s");
+}
+
+// Anagrams (ASCII case-insensitive letter counts).
+pub fn is_anagram(a: Str, b: Str) -> Bool {
+  var counts = Vec[Int].new();
+  var i = 0;
+  while i < 26 { counts.push(0); i = i + 1; }
+  i = 0;
+  while i < a.len() {
+    var code = xiom.string.byte_at(a, i);
+    if code >= 65 && code <= 90 { code = code + 32; }
+    if code >= 97 && code <= 122 { counts[code - 97] = counts[code - 97] + 1; }
+    i = i + 1;
+  }
+  i = 0;
+  while i < b.len() {
+    var code = xiom.string.byte_at(b, i);
+    if code >= 65 && code <= 90 { code = code + 32; }
+    if code >= 97 && code <= 122 { counts[code - 97] = counts[code - 97] - 1; }
+    i = i + 1;
+  }
+  i = 0;
+  while i < 26 {
+    if counts[i] != 0 { return false; }
+    i = i + 1;
+  }
+  return true;
+}
+
+// ---- Units ----
+
+pub fn celsius_to_fahrenheit(c: Float64) -> Float64 {
+  return c * 1.8 + 32.0;
+}
+
+pub fn fahrenheit_to_celsius(f: Float64) -> Float64 {
+  return (f - 32.0) / 1.8;
+}
+
+pub fn celsius_to_kelvin(c: Float64) -> Float64 {
+  return c + 273.15;
+}
+
+pub fn kelvin_to_celsius(k: Float64) -> Float64 {
+  return k - 273.15;
+}
+
+pub fn fahrenheit_to_kelvin(f: Float64) -> Float64 {
+  return (f + 459.67) * 5.0 / 9.0;
+}
+
+pub fn kelvin_to_fahrenheit(k: Float64) -> Float64 {
+  return k * 1.8 - 459.67;
+}
+
+pub fn miles_to_km(m: Float64) -> Float64 {
+  return m * 1.609344;
+}
+
+pub fn km_to_miles(km: Float64) -> Float64 {
+  return km / 1.609344;
+}
+
+// Human-readable byte size: "512 B", "1.5 KB", "3.2 MB", ...
+// Integer math only (the runtime lacks decimal float formatting).
+pub fn human_size(bytes: Int) -> Str {
+  if bytes < 0 { return "0 B"; }
+  var units = Vec[Str].new();
+  units.push("B"); units.push("KB"); units.push("MB");
+  units.push("GB"); units.push("TB"); units.push("PB");
+  var unit_idx = 0;
+  var value = bytes;
+  while value >= 1024 && unit_idx < units.len() - 1 {
+    value = value / 1024;
+    unit_idx = unit_idx + 1;
+  }
+  if unit_idx == 0 {
+    return xiom.string.str_concat(xiom.core.to_string(bytes), " B");
+  }
+  // rounded to one decimal: scaled = value*10/unit with +unit/2 rounding
+  var scaled = (bytes * 10 + 512) / 1024;
+  var u = 1;
+  while u < unit_idx {
+    scaled = scaled / 1024;
+    u = u + 1;
+  }
+  var whole = scaled / 10;
+  var frac = scaled % 10;
+  var body = xiom.string.str_concat(xiom.core.to_string(whole), ".");
+  body = xiom.string.str_concat(body, xiom.core.to_string(frac));
+  return xiom.string.str_concat(body, " " + units[unit_idx]);
+}
+
