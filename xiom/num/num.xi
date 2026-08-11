@@ -4,6 +4,9 @@
 
 module xiom.num
 
+use xiom.num.precision_integer;
+use xiom.num.precision_float;
+use xiom.num.precision_rational;
 use xiom.num.fraction;
 use xiom.num.base;
 use xiom.num.float;

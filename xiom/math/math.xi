@@ -4,6 +4,14 @@
 
 module xiom.math
 
+use xiom.math.number_theory;
+use xiom.math.factorial;
+use xiom.math.modular;
+
+use xiom.math.calculus;
+use xiom.math.differential_equations;
+use xiom.math.combinatorics;
+use xiom.math.graph_theory;
 use xiom.math.algebra;
 use xiom.math.primitives;
 use xiom.math.vectors;
@@ -19,6 +27,41 @@ use xiom.math.special;
 // sub-modules. math/core hosts the generic numeric tower (3c) — one
 // implementation per concept serving every Num width.
 use xiom.math.core;
+use xiom.math.numerical;
+use xiom.math.signal;
+use xiom.math.optimization;
+use xiom.math.finance;
+use xiom.math.constants;
+use xiom.math.precision;
+use xiom.math.interfaces;
+use xiom.math.arithmetic;
+use xiom.math.roots;
+use xiom.math.exponential;
+use xiom.math.rounding;
+use xiom.math.decompose;
+use xiom.math.trigonometry;
+use xiom.math.inverse_trig;
+use xiom.math.hyperbolic;
+use xiom.math.trigonometric_constants;
+use xiom.math.angular;
+use xiom.math.set_theory;
+use xiom.math.logic;
+use xiom.math.information_theory;
+use xiom.math.chaos;
+use xiom.math.game_theory;
+use xiom.math.queueing;
+use xiom.math.control_theory;
+use xiom.math.machine_learning;
+use xiom.math.topology;
+use xiom.math.number_systems;
+use xiom.math.mathematical_logic;
+use xiom.math.approximation;
+use xiom.math.fuzzy;
+use xiom.math.mathematical_physics;
+use xiom.math.operations_research;
+use xiom.math.mathematical_biology;
+use xiom.math.mathematical_economics;
+use xiom.math.algebra_extended;
 
 use xiom.core.INT_MAX;
 use xiom.core.INT_MIN;
