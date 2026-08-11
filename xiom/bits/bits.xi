@@ -4,6 +4,10 @@
 
 module xiom.bits
 
+use xiom.bits.bitwise;
+use xiom.bits.rotation;
+use xiom.bits.endianness;
+
 use xiom.bits.bitarray;
 use xiom.bits.bitfield;
 use xiom.bits.popcount;

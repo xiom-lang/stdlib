@@ -4,6 +4,14 @@
 
 module xiom.geom
 
+use xiom.geom.vector;
+use xiom.geom.matrix;
+use xiom.geom.quaternion;
+use xiom.geom.linear;
+use xiom.geom.geometry_2d;
+use xiom.geom.geometry_3d;
+use xiom.geom.geometry_extended;
+
 use xiom.geom.vec;
 use xiom.geom.mat;
 use xiom.geom.quat;

@@ -1,5 +1,7 @@
 module xiom.stats
 
+use xiom.stats.statistics;
+use xiom.stats.probability;
 use xiom.stats.dist;
 use xiom.stats.test;
 use xiom.stats.regress;
