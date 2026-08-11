@@ -510,5 +510,189 @@ fn main() -> Int {
     }
     Err(_) => { return 44; }
   }
+  // ---- Phase C.5: additional elementary functions ----
+  // helper-free rounded-equality check: |x - ref| < 10^-15 via with_rounding
+  // 45. cbrt(27) == 3, cbrt(8) == 2, cbrt(-8) == -2, cbrt(2)^3 == 2
+  var f45a = bigfloat.bigfloat_from_str("27");
+  match f45a {
+    Ok(a45) => {
+      var c45 = bigfloat.bigfloat_cbrt(&a45);
+      if !(bigfloat.bigfloat_eq(&bigfloat.bigfloat_with_rounding(&c45, bigfloat.RoundMode.Nearest, 15), &bigfloat.bigfloat_from_int(3))) { return 45; }
+    }
+    Err(_) => { return 45; }
+  }
+  var f45b = bigfloat.bigfloat_from_str("8");
+  match f45b {
+    Ok(a45) => {
+      var c45 = bigfloat.bigfloat_cbrt(&a45);
+      if !(bigfloat.bigfloat_eq(&bigfloat.bigfloat_with_rounding(&c45, bigfloat.RoundMode.Nearest, 15), &bigfloat.bigfloat_from_int(2))) { return 45; }
+    }
+    Err(_) => { return 45; }
+  }
+  var f45c = bigfloat.bigfloat_from_str("-8");
+  match f45c {
+    Ok(a45) => {
+      var c45 = bigfloat.bigfloat_cbrt(&a45);
+      if !(bigfloat.bigfloat_eq(&bigfloat.bigfloat_with_rounding(&c45, bigfloat.RoundMode.Nearest, 15), &bigfloat.bigfloat_from_int(-2))) { return 45; }
+    }
+    Err(_) => { return 45; }
+  }
+  var f45d = bigfloat.bigfloat_from_str("2");
+  match f45d {
+    Ok(a45) => {
+      var c45 = bigfloat.bigfloat_cbrt(&a45);
+      var m45 = bigfloat.bigfloat_mul(&bigfloat.bigfloat_mul(&c45, &c45), &c45);
+      if !(bigfloat.bigfloat_eq(&bigfloat.bigfloat_with_rounding(&m45, bigfloat.RoundMode.Nearest, 15), &bigfloat.bigfloat_from_int(2))) { return 45; }
+    }
+    Err(_) => { return 45; }
+  }
+  // 46. hypot(3, 4) == 5; hypot(1, 1) == sqrt(2) to 15
+  var f46a = bigfloat.bigfloat_from_str("3");
+  var f46b = bigfloat.bigfloat_from_str("4");
+  match f46a {
+    Ok(a46) => {
+      match f46b {
+        Ok(b46) => {
+          var h46 = bigfloat.bigfloat_hypot(&a46, &b46);
+          if !(bigfloat.bigfloat_eq(&bigfloat.bigfloat_with_rounding(&h46, bigfloat.RoundMode.Nearest, 15), &bigfloat.bigfloat_from_int(5))) { return 46; }
+        }
+        Err(_) => { return 46; }
+      }
+    }
+    Err(_) => { return 46; }
+  }
+  var h46 = bigfloat.bigfloat_hypot(&o31, &o31);
+  var s46 = bigfloat.bigfloat_sqrt(&bigfloat.bigfloat_two());
+  if !(bigfloat.bigfloat_eq(&bigfloat.bigfloat_with_rounding(&h46, bigfloat.RoundMode.Nearest, 15),
+                           &bigfloat.bigfloat_with_rounding(&s46, bigfloat.RoundMode.Nearest, 15))) { return 46; }
+  // 47. log2 identity: log2(8)*ln(2) == ln(8) (to 15)
+  var f47 = bigfloat.bigfloat_from_str("8");
+  match f47 {
+    Ok(a47) => {
+      var g47 = bigfloat.bigfloat_log2(&a47);
+      var l47 = bigfloat.bigfloat_ln(&a47);
+      var m47 = bigfloat.bigfloat_mul(&g47, &bigfloat.bigfloat_ln(&bigfloat.bigfloat_two()));
+      if !(bigfloat.bigfloat_eq(&bigfloat.bigfloat_with_rounding(&m47, bigfloat.RoundMode.Nearest, 15),
+                               &bigfloat.bigfloat_with_rounding(&l47, bigfloat.RoundMode.Nearest, 15))) { return 47; }
+    }
+    Err(_) => { return 47; }
+  }
+  // 48. exp2(3) == 8
+  var f48 = bigfloat.bigfloat_from_str("3");
+  match f48 {
+    Ok(a48) => {
+      var e48 = bigfloat.bigfloat_exp2(&a48);
+      if !(bigfloat.bigfloat_eq(&bigfloat.bigfloat_with_rounding(&e48, bigfloat.RoundMode.Nearest, 15), &bigfloat.bigfloat_from_int(8))) { return 48; }
+    }
+    Err(_) => { return 48; }
+  }
+  // 49. hyperbolic: cosh^2 - sinh^2 == 1; tanh(0) == 0
+  var ch49 = bigfloat.bigfloat_cosh(&o31);
+  var sh49 = bigfloat.bigfloat_sinh(&o31);
+  var d49 = bigfloat.bigfloat_sub(&bigfloat.bigfloat_mul(&ch49, &ch49), &bigfloat.bigfloat_mul(&sh49, &sh49));
+  if !(bigfloat.bigfloat_eq(&bigfloat.bigfloat_with_rounding(&d49, bigfloat.RoundMode.Nearest, 15), &bigfloat.bigfloat_one())) { return 49; }
+  if bigfloat.bigfloat_to_str(&bigfloat.bigfloat_tanh(&z31)) != "0" { return 49; }
+  // 50. asin(1) == pi/2; asin(0.5) == pi/6; acos(1) == 0
+  var a50 = bigfloat.bigfloat_asin(&o31);
+  var hp50 = bigfloat.bigfloat_div(&pi35, &bigfloat.bigfloat_two());
+  if !(bigfloat.bigfloat_eq(&bigfloat.bigfloat_with_rounding(&a50, bigfloat.RoundMode.Nearest, 15),
+                           &bigfloat.bigfloat_with_rounding(&hp50, bigfloat.RoundMode.Nearest, 15))) { return 50; }
+  var hf50 = bigfloat.bigfloat_from_str("0.5");
+  match hf50 {
+    Ok(hv) => {
+      var a50b = bigfloat.bigfloat_asin(&hv);
+      var s6 = bigfloat.bigfloat_div(&pi35, &bigfloat.bigfloat_from_int(6));
+      if !(bigfloat.bigfloat_eq(&bigfloat.bigfloat_with_rounding(&a50b, bigfloat.RoundMode.Nearest, 15),
+                               &bigfloat.bigfloat_with_rounding(&s6, bigfloat.RoundMode.Nearest, 15))) { return 50; }
+      var ac50 = bigfloat.bigfloat_acos(&o31);
+      if !(bigfloat.bigfloat_eq(&bigfloat.bigfloat_with_rounding(&ac50, bigfloat.RoundMode.Nearest, 15), &bigfloat.bigfloat_zero())) { return 50; }
+    }
+    Err(_) => { return 50; }
+  }
+  // 51. asinh(sinh(1)) == 1; atanh(0.5) == ln(3)/2; acosh(1) == 0
+  var as51 = bigfloat.bigfloat_asinh(&sh49);
+  if !(bigfloat.bigfloat_eq(&bigfloat.bigfloat_with_rounding(&as51, bigfloat.RoundMode.Nearest, 10), &bigfloat.bigfloat_one())) { return 51; }
+  match hf50 {
+    Ok(hv) => {
+      var at51 = bigfloat.bigfloat_atanh(&hv);
+      var l3 = bigfloat.bigfloat_ln(&bigfloat.bigfloat_from_int(3));
+      var h51 = bigfloat.bigfloat_div(&l3, &bigfloat.bigfloat_two());
+      if !(bigfloat.bigfloat_eq(&bigfloat.bigfloat_with_rounding(&at51, bigfloat.RoundMode.Nearest, 15),
+                               &bigfloat.bigfloat_with_rounding(&h51, bigfloat.RoundMode.Nearest, 15))) { return 51; }
+    }
+    Err(_) => { return 51; }
+  }
+  var ac51 = bigfloat.bigfloat_acosh(&o31);
+  if !(bigfloat.bigfloat_eq(&bigfloat.bigfloat_with_rounding(&ac51, bigfloat.RoundMode.Nearest, 15), &bigfloat.bigfloat_zero())) { return 51; }
+  // 52. to_str_sci
+  var f52 = bigfloat.bigfloat_from_str("1234.567");
+  match f52 {
+    Ok(a52) => {
+      if bigfloat.bigfloat_to_str_sci(&a52, 5) != "1.2346e+3" { return 52; }
+    }
+    Err(_) => { return 52; }
+  }
+  var f52b = bigfloat.bigfloat_from_str("0.0001234");
+  match f52b {
+    Ok(a52) => {
+      if bigfloat.bigfloat_to_str_sci(&a52, 3) != "1.23e-4" { return 52; }
+    }
+    Err(_) => { return 52; }
+  }
+  if bigfloat.bigfloat_to_str_sci(&z31, 5) != "0" { return 52; }
+  // 53. from_ratio
+  var r53 = bigfloat.bigfloat_from_ratio(1, 4);
+  if bigfloat.bigfloat_to_str(&r53) != "0.25" { return 53; }
+  var r53b = bigfloat.bigfloat_from_ratio(22, 7);
+  var s53b = bigfloat.bigfloat_from_str("3.14285714285714");
+  match s53b {
+    Ok(ref53) => {
+      if !(bigfloat.bigfloat_eq(&bigfloat.bigfloat_with_rounding(&r53b, bigfloat.RoundMode.Nearest, 15),
+                               &bigfloat.bigfloat_with_rounding(&ref53, bigfloat.RoundMode.Nearest, 15))) { return 53; }
+    }
+    Err(_) => { return 53; }
+  }
+  // 54. pow10 exact
+  var f54 = bigfloat.bigfloat_from_str("2.5");
+  match f54 {
+    Ok(a54) => {
+      if bigfloat.bigfloat_to_str(&bigfloat.bigfloat_pow10(&a54, 2)) != "250" { return 54; }
+      if bigfloat.bigfloat_to_str(&bigfloat.bigfloat_pow10(&a54, -2)) != "0.025" { return 54; }
+    }
+    Err(_) => { return 54; }
+  }
+  // 55. integer helpers
+  var f55 = bigfloat.bigfloat_from_str("-3.7");
+  match f55 {
+    Ok(a55) => {
+      var fi55 = bigfloat.bigfloat_floor_int(&a55);
+      match fi55 {
+        Ok(v) => { if v != -4 { return 55; } }
+        Err(_) => { return 55; }
+      }
+      var ti55 = bigfloat.bigfloat_trunc_int(&a55);
+      match ti55 {
+        Ok(v) => { if v != -3 { return 55; } }
+        Err(_) => { return 55; }
+      }
+    }
+    Err(_) => { return 55; }
+  }
+  var f55b = bigfloat.bigfloat_from_str("2.5");
+  match f55b {
+    Ok(a55) => {
+      var ri55 = bigfloat.bigfloat_round_int(&a55);
+      match ri55 {
+        Ok(v) => { if v != 2 { return 55; } }
+        Err(_) => { return 55; }
+      }
+      var ci55 = bigfloat.bigfloat_ceil_int(&a55);
+      match ci55 {
+        Ok(v) => { if v != 3 { return 55; } }
+        Err(_) => { return 55; }
+      }
+    }
+    Err(_) => { return 55; }
+  }
   return 0;
 }

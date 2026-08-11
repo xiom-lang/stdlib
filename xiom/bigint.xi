@@ -140,13 +140,21 @@ fn _abs_shift_limbs(a: &BigInt, n: Int) -> BigInt {
 // 64-nines / 10^44), corrupting the quotient. Overestimates (<= 2 after D4)
 // are handled by the decrement loop; underestimates (<= 1) by the final
 // remainder >= divisor fixup.
+//
+// Returns -1 when the remainder's top limb (at/above the window) is ZERO:
+// then the true digit is 0 or 1 (r < B^(idx+1) and the normalized divisor
+// gives digit < B/v[m-1] <= 2) and bigint_div_mod tests r >= v*B^shift
+// directly. A naive 0 here is an underestimate of 1 at weight B^shift,
+// which the final fixup (units of 1) cannot repair — hit by bigfloat's
+// rounding divisions (dividend top limb 1, divisor 10^k).
 fn _estimate_q_digit(n: &BigInt, d: &BigInt, shift: Int) -> Int {
   var idx = d.digits.len() - 1 + shift;
   var top = idx + 1;
-  if top >= n.digits.len() { return 0; }
+  if top >= n.digits.len() { return -1; }
   var d_hi = d.digits[d.digits.len() - 1];
-  if d_hi == 0 { return 0; }
+  if d_hi == 0 { return -1; }
   var u_hi = n.digits[top];
+  if u_hi == 0 { return -1; }
   var u_lo = n.digits[idx];
   var est = (u_hi * _BASE + u_lo) / d_hi;
   if est >= _BASE { est = _BASE - 1; }
@@ -534,6 +542,14 @@ pub fn bigint_div_mod(a: &BigInt, b: &BigInt) -> (BigInt, BigInt) {
     var shift = norm_a.digits.len() - norm_b.digits.len();
     while shift >= 0 {
       var est = _estimate_q_digit(&remainder, &norm_b, shift);
+      if est < 0 {
+        // Remainder top limb is zero: the true digit is 0 or 1 — test
+        // r >= v*B^shift directly (a guessed 0 would be an uncorrectable
+        // underestimate at this position's weight).
+        var sh_v = _abs_shift_limbs(&norm_b, shift);
+        if _abs_compare(&remainder, &sh_v) >= 0 { est = 1; }
+        else { est = 0; }
+      }
       if est > 0 {
         var q_part = _abs_mul_small(&norm_b, est);
         var q_shifted = _abs_shift_limbs(&q_part, shift);

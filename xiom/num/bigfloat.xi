@@ -1154,6 +1154,223 @@ pub fn bigfloat_pow_bf(base: &BigFloat, exp: &BigFloat) -> BigFloat
   return bigfloat_exp(&prod);
 }
 
+// ============================================================================
+// PHASE C.5 — Additional elementary functions (built on the Phase C primitives)
+// ============================================================================
+
+// ln(2) to `prec` digits: ln(2) = 2*atanh(1/3).
+fn _ln2_at(prec: Int) -> BigFloat {
+  var third = bigfloat_div(&_one_at(prec), &bigfloat_from_int(3));
+  return bigfloat_mul(&_two_at(prec), &_atanh_series(&third, prec));
+}
+
+// log2(x) = ln(x) / ln(2).
+pub fn bigfloat_log2(f: &BigFloat) -> BigFloat
+  requires: !bigfloat_is_negative(f)
+  requires: !bigfloat_is_zero(f)
+{
+  var l = bigfloat_ln(f);
+  var l2 = _ln2_at(_work_prec(&l, &l));
+  return bigfloat_div(&l, &l2);
+}
+
+// exp2(x) = exp(x * ln(2)).
+pub fn bigfloat_exp2(f: &BigFloat) -> BigFloat {
+  var l2 = _ln2_at(_work_prec(f, f));
+  var prod = bigfloat_mul(f, &l2);
+  return bigfloat_exp(&prod);
+}
+
+// Cube root (Newton: x = (2x + n/x^2)/3). Works for negative operands via
+// sign symmetry; the significand is scaled to a multiple-of-3 exponent so
+// the final 10^(exp/3) shift is exact.
+pub fn bigfloat_cbrt(f: &BigFloat) -> BigFloat {
+  var prec = _work_prec(f, f);
+  if bigfloat_is_zero(f) { return bigfloat_zero(); }
+  var sign = bigfloat_is_negative(f);
+  var x = bigfloat_abs(f);
+  x.precision = prec;
+  // x = sig * 10^exp; pull the exponent to a multiple of 3.
+  var e = x.exponent % 3;
+  if e < 0 { e = e + 3; }
+  var m = _copy_bf(&x);
+  m.exponent = m.exponent - e;
+  var n = BigFloat{ sign: false; exponent: 0;
+                    significand: xiom.bigint.bigint_shift_left(&m.significand, e);
+                    precision: prec; };
+  // n in [1, 1000): cbrt in [1, 10); Newton from 10.
+  var guess = _ten_at(prec);
+  var two = _two_at(prec);
+  var three = bigfloat_from_int(3);
+  var guard = 0;
+  while guard < 30 {
+    var x2 = bigfloat_mul(&guess, &guess);
+    var next = bigfloat_div(&bigfloat_add(&bigfloat_mul(&two, &guess),
+                                          &bigfloat_div(&n, &x2)), &three);
+    if bigfloat_eq(&next, &guess) { break; }
+    guess = next;
+    guard = guard + 1;
+  }
+  guess.exponent = guess.exponent + m.exponent / 3;
+  if sign { guess = bigfloat_neg(&guess); }
+  return _finish(&guess, f.precision);
+}
+
+// hypot(a, b) = sqrt(a^2 + b^2).
+pub fn bigfloat_hypot(a: &BigFloat, b: &BigFloat) -> BigFloat {
+  var prec = _work_prec(a, b);
+  var target = a.precision;
+  if b.precision > target { target = b.precision; }
+  var a2 = bigfloat_mul(a, a);
+  var b2 = bigfloat_mul(b, b);
+  var s = bigfloat_add(&a2, &b2);
+  var r = bigfloat_sqrt(&s);
+  return _finish(&r, target);
+}
+
+// Hyperbolic functions via exp.
+pub fn bigfloat_sinh(f: &BigFloat) -> BigFloat {
+  var e = bigfloat_exp(f);
+  var en = bigfloat_exp(&bigfloat_neg(f));
+  return bigfloat_div(&bigfloat_sub(&e, &en), &bigfloat_two());
+}
+
+pub fn bigfloat_cosh(f: &BigFloat) -> BigFloat {
+  var e = bigfloat_exp(f);
+  var en = bigfloat_exp(&bigfloat_neg(f));
+  return bigfloat_div(&bigfloat_add(&e, &en), &bigfloat_two());
+}
+
+pub fn bigfloat_tanh(f: &BigFloat) -> BigFloat {
+  var s = bigfloat_sinh(f);
+  var c = bigfloat_cosh(f);
+  return bigfloat_div(&s, &c);
+}
+
+// asin(x) = atan(x / sqrt(1 - x^2)); asin(+-1) = +-pi/2.
+pub fn bigfloat_asin(f: &BigFloat) -> BigFloat {
+  var prec = _work_prec(f, f);
+  var one = _one_at(prec);
+  if bigfloat_eq(f, &one) {
+    var half_pi = bigfloat_div(&_pi_at(prec), &_two_at(prec));
+    return _finish(&half_pi, f.precision);
+  }
+  if bigfloat_eq(f, &bigfloat_neg(&one)) {
+    var half_pi = bigfloat_div(&_pi_at(prec), &_two_at(prec));
+    return _finish(&bigfloat_neg(&half_pi), f.precision);
+  }
+  var x2 = bigfloat_mul(f, f);
+  var inner = bigfloat_sqrt(&bigfloat_sub(&one, &x2));
+  var t = bigfloat_div(f, &inner);
+  return bigfloat_atan(&t);
+}
+
+// acos(x) = pi/2 - asin(x). Exact endpoints: acos(1) = 0, acos(-1) = pi.
+pub fn bigfloat_acos(f: &BigFloat) -> BigFloat {
+  var prec = _work_prec(f, f);
+  var one = _one_at(prec);
+  if bigfloat_eq(f, &one) { return bigfloat_zero(); }
+  if bigfloat_eq(f, &bigfloat_neg(&one)) {
+    return _finish(&_pi_at(prec), f.precision);
+  }
+  var a = bigfloat_asin(f);
+  var hp = bigfloat_div(&_pi_at(prec), &_two_at(prec));
+  return bigfloat_sub(&hp, &a);
+}
+
+// asinh(x) = ln(x + sqrt(x^2 + 1)).
+pub fn bigfloat_asinh(f: &BigFloat) -> BigFloat {
+  var prec = _work_prec(f, f);
+  var x2 = bigfloat_mul(f, f);
+  var inner = bigfloat_sqrt(&bigfloat_add(&x2, &_one_at(prec)));
+  var s = bigfloat_add(f, &inner);
+  return bigfloat_ln(&s);
+}
+
+// acosh(x) = ln(x + sqrt(x^2 - 1)); requires x >= 1.
+pub fn bigfloat_acosh(f: &BigFloat) -> BigFloat
+  requires: !bigfloat_lt(f, &bigfloat_one())
+{
+  var prec = _work_prec(f, f);
+  var x2 = bigfloat_mul(f, f);
+  var inner = bigfloat_sqrt(&bigfloat_sub(&x2, &_one_at(prec)));
+  var s = bigfloat_add(f, &inner);
+  return bigfloat_ln(&s);
+}
+
+// atanh(x) = ln((1 + x)/(1 - x)) / 2; requires |x| < 1.
+pub fn bigfloat_atanh(f: &BigFloat) -> BigFloat
+  requires: bigfloat_lt(&bigfloat_abs(f), &bigfloat_one())
+{
+  var prec = _work_prec(f, f);
+  var one = _one_at(prec);
+  var num = bigfloat_add(&one, f);
+  var den = bigfloat_sub(&one, f);
+  var l = bigfloat_ln(&bigfloat_div(&num, &den));
+  return bigfloat_div(&l, &bigfloat_two());
+}
+
+// Scientific notation: d.ddd...e[+-]k with `digits` significant digits.
+// Zero renders as "0".
+pub fn bigfloat_to_str_sci(f: &BigFloat, digits: Int) -> Str
+  requires: digits >= 1
+{
+  if bigfloat_is_zero(f) { return "0"; }
+  var raw = _round_digits_raw(f, digits, _default_round);
+  var r = _normalize(&raw);
+  var sig = xiom.bigint.bigint_to_str(&r.significand);
+  var n = sig.len();
+  var e10 = r.exponent + n - 1;
+  var mantissa: Str = "";
+  if n == 1 {
+    mantissa = sig;
+  } else {
+    mantissa = xiom.string.str_concat(xiom.string.str_slice(sig, 0, 1), ".");
+    mantissa = xiom.string.str_concat(mantissa, xiom.string.str_slice(sig, 1, n));
+  }
+  var prefix = "";
+  if r.sign { prefix = "-"; }
+  var es = "";
+  if e10 < 0 { es = "-"; e10 = -e10; }
+  else { es = "+"; }
+  var body = xiom.string.str_concat(mantissa, "e");
+  body = xiom.string.str_concat(body, es);
+  body = xiom.string.str_concat(body, xiom.core.to_string(e10));
+  return xiom.string.str_concat(prefix, body);
+}
+
+// Exact rational n/d at the default precision.
+pub fn bigfloat_from_ratio(n: Int, d: Int) -> BigFloat
+  requires: d != 0
+{
+  if d == 0 { return bigfloat_zero(); }
+  return bigfloat_div(&bigfloat_from_int(n), &bigfloat_from_int(d));
+}
+
+// Exact x * 10^n (pure exponent shift; no rounding).
+pub fn bigfloat_pow10(f: &BigFloat, n: Int) -> BigFloat {
+  var r = _copy_bf(f);
+  r.exponent = r.exponent + n;
+  return r;
+}
+
+// Integer-valued helpers (range-checked to i64).
+pub fn bigfloat_floor_int(f: &BigFloat) -> Result[Int, Str] {
+  return xiom.bigint.bigint_to_int(&bigfloat_to_bigint(&bigfloat_floor(f)));
+}
+
+pub fn bigfloat_ceil_int(f: &BigFloat) -> Result[Int, Str] {
+  return xiom.bigint.bigint_to_int(&bigfloat_to_bigint(&bigfloat_ceil(f)));
+}
+
+pub fn bigfloat_round_int(f: &BigFloat) -> Result[Int, Str] {
+  return xiom.bigint.bigint_to_int(&bigfloat_to_bigint(&bigfloat_round(f)));
+}
+
+pub fn bigfloat_trunc_int(f: &BigFloat) -> Result[Int, Str] {
+  return xiom.bigint.bigint_to_int(&bigfloat_to_bigint(&bigfloat_trunc(f)));
+}
+
 
 
 
