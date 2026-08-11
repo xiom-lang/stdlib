@@ -5,7 +5,7 @@
 module xiom.collect.trie
 
 // TODO(compiler): combining this module with collect.skiplist in one program
-// fast-fails at exit (0xC0000409) — see docs/COMPILER_BUGS.md BUG 16.
+// fast-fails at exit (0xC0000409) â€” see docs/COMPILER_BUGS.md BUG 16.
 // The modules are correct individually; keep them in separate smokes.
 
 
