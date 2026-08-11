@@ -6,6 +6,10 @@
 // A deserialized struct is validated against its invariants.
 
 module xiom.serialize
+use xiom.serialize.json;
+use xiom.serialize.varint;
+use xiom.serialize.endian;
+use xiom.serialize.yaml_lite;
 
 use xiom.collections;
 use xiom.convert;

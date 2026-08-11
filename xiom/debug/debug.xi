@@ -10,6 +10,10 @@
 
 module xiom.debug
 
+use xiom.debug.trace;
+use xiom.debug.disasm;
+use xiom.debug.heap_report;
+
 use xiom.io;
 use xiom.core;
 use xiom.time;

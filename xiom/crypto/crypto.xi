@@ -3,6 +3,15 @@
 // Licensed under the MIT or Apache-2.0 license, at your option.
 
 module xiom.crypto
+use xiom.crypto.hash;
+use xiom.crypto.mac;
+use xiom.crypto.kdf;
+use xiom.crypto.cipher;
+use xiom.crypto.aead;
+use xiom.crypto.sign;
+use xiom.crypto.keyx;
+use xiom.crypto.curves;
+use xiom.crypto.rng_crypto;
 
 use xiom.math.bit_and;
 use xiom.math.bit_or;

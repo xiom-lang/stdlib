@@ -4,6 +4,11 @@
 
 module xiom.os
 
+use xiom.os.mmap;
+use xiom.os.sync_io;
+use xiom.os.win;
+use xiom.os.unix;
+
 extern "C" {
   fn system(command: *UInt8) -> Int32;
   fn getcwd(buf: *UInt8, size: UInt) -> *UInt8;

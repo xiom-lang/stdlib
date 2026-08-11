@@ -3,6 +3,10 @@
 // Licensed under the MIT or Apache-2.0 license, at your option.
 
 module xiom.io
+use xiom.io.fs;
+use xiom.io.buffer;
+use xiom.io.console;
+use xiom.io.pipe;
 
 extern "C" {
   fn printf(format: *UInt8, ...) -> Int32;

@@ -3,6 +3,14 @@
 // Licensed under the MIT or Apache-2.0 license, at your option.
 
 module xiom.compress
+use xiom.compress.deflate;
+use xiom.compress.lz77;
+use xiom.compress.huffman;
+use xiom.compress.gzip;
+use xiom.compress.zlib;
+use xiom.compress.brotli;
+use xiom.compress.lz4;
+use xiom.compress.snappy;
 
 use xiom.string;
 

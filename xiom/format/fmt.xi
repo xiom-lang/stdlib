@@ -4,6 +4,12 @@
 
 module xiom.fmt
 
+use xiom.format.table;
+use xiom.format.units;
+use xiom.format.ansi;
+use xiom.format.text;
+use xiom.format.markup;
+
 use xiom.string;
 use xiom.convert;
 use xiom.io;
