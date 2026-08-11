@@ -9,6 +9,9 @@
 // Phase 2 (future):  Drop trait auto-cleanup, Vec[UInt8] native support, AtomicPtr
 
 module xiom.ffi
+use xiom.ffi.dl;
+use xiom.ffi.c;
+use xiom.ffi.errno;
 
 // —— Raw C interop primitives (extern "C") ——————————————————————————————————
 

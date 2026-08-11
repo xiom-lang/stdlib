@@ -4,6 +4,17 @@
 
 module xiom.math
 
+use xiom.math.algebra;
+use xiom.math.primitives;
+use xiom.math.vectors;
+use xiom.math.matrices;
+use xiom.math.trig;
+use xiom.math.transcendental;
+use xiom.math.differential;
+use xiom.math.integral;
+use xiom.math.series;
+use xiom.math.special;
+
 // D4b manifest (2026-08-10): importing xiom.math pulls in the generic
 // sub-modules. math/core hosts the generic numeric tower (3c) — one
 // implementation per concept serving every Num width.

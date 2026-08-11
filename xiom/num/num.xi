@@ -4,6 +4,10 @@
 
 module xiom.num
 
+use xiom.num.fraction;
+use xiom.num.base;
+use xiom.num.float;
+
 use xiom.math.bit_and;
 use xiom.math.bit_or;
 use xiom.math.bit_xor;

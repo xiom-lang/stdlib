@@ -4,6 +4,11 @@
 
 module xiom.net
 
+use xiom.net.http;
+use xiom.net.ip;
+use xiom.net.socket;
+use xiom.net.tls_helper;
+
 use xiom.string;
 
 // === FFI: C Runtime Socket Functions ===

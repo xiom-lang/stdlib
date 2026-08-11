@@ -3,6 +3,13 @@
 // Licensed under the MIT or Apache-2.0 license, at your option.
 
 module xiom.encoding
+use xiom.encoding.base64;
+use xiom.encoding.hex;
+use xiom.encoding.base32;
+use xiom.encoding.percent;
+use xiom.encoding.ascii85;
+use xiom.encoding.punycode;
+use xiom.encoding.idna;
 
 use xiom.string;
 

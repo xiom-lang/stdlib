@@ -3,6 +3,12 @@
 // Licensed under the MIT or Apache-2.0 license, at your option.
 
 module xiom.time
+use xiom.time.duration;
+use xiom.time.instant;
+use xiom.time.date;
+use xiom.time.iso8601;
+use xiom.time.chrono;
+use xiom.time.calendar;
 
 extern "C" {
   fn clock() -> Int;

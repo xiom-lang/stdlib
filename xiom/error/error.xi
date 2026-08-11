@@ -4,6 +4,10 @@
 
 module xiom.error
 
+use xiom.error.chain;
+use xiom.error.context;
+use xiom.error.backtrace;
+
 pub interface Error {
   fn source(self) -> Option<Error>;
   fn description(self) -> Str;
