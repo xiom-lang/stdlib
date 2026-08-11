@@ -423,3 +423,123 @@ pub fn combine_hashes(a: Int, b: Int) -> Int {
 pub fn string_hash(s: Str) -> Int {
   return djb2(s);
 }
+
+// ============================================================================
+// 64-bit hash additions (2026-08-11)
+// ============================================================================
+
+const PRIME64_1: Int = -7046029288634856825; // 0x9E3779B185EBCA87
+const PRIME64_2: Int = -4417276706812531889; // 0xC2B2AE3D27D4EB4F
+const PRIME64_3: Int = 1609587929392839161;  // 0x165667B19E3779F9
+const PRIME64_4: Int = -8796714831421723037; // 0x85EBCA77C2B2AE63
+const PRIME64_5: Int = 2870177450012600261;  // 0x27D4EB2F165667C5
+
+// 64-bit rotate left (arithmetic-shift corrected: keep only the low c bits
+// of the shifted-in portion).
+fn _rotl64(x: Int, c: Int) -> Int {
+  var shift = 64 - c;
+  var mask = (1 << c) - 1;
+  return (x << c) | ((x >> shift) & mask);
+}
+
+// Little-endian 64-bit read from the byte buffer.
+fn _read_u64_le(data: &Vec[UInt8], pos: Int) -> Int {
+  var r: Int = data[pos] as Int;
+  r = r | ((data[pos + 1] as Int) << 8);
+  r = r | ((data[pos + 2] as Int) << 16);
+  r = r | ((data[pos + 3] as Int) << 24);
+  r = r | ((data[pos + 4] as Int) << 32);
+  r = r | ((data[pos + 5] as Int) << 40);
+  r = r | ((data[pos + 6] as Int) << 48);
+  r = r | ((data[pos + 7] as Int) << 56);
+  return r;
+}
+
+fn _xxh64_round(acc: Int, input: Int) -> Int {
+  // canonical: acc = rotl(acc + input*P2, 31) * P1
+  var v = acc + input * PRIME64_2;
+  v = _rotl64(v, 31);
+  v = v * PRIME64_1;
+  return v;
+}
+
+fn _xxh64_merge_round(acc: Int, val: Int) -> Int {
+  var v = acc ^ _xxh64_round(0, val);
+  v = v * PRIME64_1 + PRIME64_4;
+  return v;
+}
+
+// xxHash64 (seed 0 compatible with the reference implementation; 64-bit
+// results wrap naturally in i64 arithmetic — masks are no-ops at 64 bits).
+pub fn xxhash64(data: &Vec[UInt8], seed: Int) -> Int {
+  var len = data.len();
+  var h: Int = seed + PRIME64_5 + len;
+  var pos: Int = 0;
+  if len >= 32 {
+    var v1: Int = seed + PRIME64_1 + PRIME64_2;
+    var v2: Int = seed + PRIME64_2;
+    var v3: Int = seed;
+    var v4: Int = seed - PRIME64_1;
+    while pos + 32 <= len {
+      v1 = _xxh64_round(v1, _read_u64_le(data, pos));
+      v2 = _xxh64_round(v2, _read_u64_le(data, pos + 8));
+      v3 = _xxh64_round(v3, _read_u64_le(data, pos + 16));
+      v4 = _xxh64_round(v4, _read_u64_le(data, pos + 24));
+      pos = pos + 32;
+    }
+    h = _rotl64(v1, 1) + _rotl64(v2, 7) + _rotl64(v3, 12) + _rotl64(v4, 18);
+    h = _xxh64_merge_round(h, v1);
+    h = _xxh64_merge_round(h, v2);
+    h = _xxh64_merge_round(h, v3);
+    h = _xxh64_merge_round(h, v4);
+  }
+  // tail: 8-byte chunks
+  while pos + 8 <= len {
+    var k = _read_u64_le(data, pos);
+    k = k * PRIME64_2;
+    k = _rotl64(k, 31);
+    k = k * PRIME64_1;
+    h = h ^ k;
+    h = _rotl64(h, 27) * PRIME64_1 + PRIME64_4;
+    pos = pos + 8;
+  }
+  // 4-byte chunk
+  if pos + 4 <= len {
+    var k4: Int = data[pos] as Int;
+    k4 = k4 | ((data[pos + 1] as Int) << 8);
+    k4 = k4 | ((data[pos + 2] as Int) << 16);
+    k4 = k4 | ((data[pos + 3] as Int) << 24);
+    h = h ^ (k4 * PRIME64_1);
+    h = _rotl64(h, 23) * PRIME64_2 + PRIME64_3;
+    pos = pos + 4;
+  }
+  // remaining bytes
+  while pos < len {
+    h = h ^ ((data[pos] as Int) * PRIME64_5);
+    h = _rotl64(h, 11) * PRIME64_1;
+    pos = pos + 1;
+  }
+  // avalanche (logical shifts: mask the arithmetic-shift sign extension)
+  var t33 = (h >> 33) & 0x7FFFFFFF;
+  h = h ^ t33;
+  h = h * PRIME64_2;
+  var t29 = (h >> 29) & 0x7FFFFFFFF;
+  h = h ^ t29;
+  h = h * PRIME64_3;
+  var t32 = (h >> 32) & 0xFFFFFFFF;
+  h = h ^ t32;
+  return h;
+}
+
+// FNV-1 32-bit (multiply before XOR, unlike FNV-1a).
+pub fn fnv1_32(s: Str) -> Int {
+  var h: Int = 2166136261;
+  var i: Int = 0;
+  while i < s.len() {
+    h = (h * 16777619) & 0xFFFFFFFF;
+    h = (h ^ (xiom.string.byte_at(s, i) as Int)) & 0xFFFFFFFF;
+    i = i + 1;
+  }
+  return h;
+}
+
