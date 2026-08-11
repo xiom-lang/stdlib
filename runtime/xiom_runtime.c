@@ -28,6 +28,7 @@
 #endif
 
 #include <stdint.h>
+#include <float.h>
 
 /* ================================================================
    Assembly-Optimized Function Declarations
@@ -864,6 +865,46 @@ char* xiom_int_to_string(long long n) {
     if (!out) return (char*)"";
     for (int i = 0; i < len; i++) { out[i] = tmp[len - 1 - i]; }
     out[len] = '\0';
+    return out;
+}
+
+// BUG 19 fix (2026-08-11): IEEE-754-aware double formatting for `Str + Float64`
+// concat. NaN -> "nan", +inf -> "inf", -inf -> "-inf"; finite values use the
+// SHORTEST representation that round-trips (%.15g if it parses back exactly,
+// else %.17g — the classic shortest-round-trip trick: "3.14" stays "3.14",
+// never "3.1400000000000001"). Previously the codegen inttoptr'd the FP bits,
+// crashing (AV) or printing garbage sentinels.
+char* xiom_double_to_string(double v) {
+    /* NaN: IEEE says NaN != NaN — the standard portable NaN test. */
+    if (v != v) {
+        char* out = (char*)malloc(4);
+        if (!out) return (char*)"";
+        out[0] = 'n'; out[1] = 'a'; out[2] = 'n'; out[3] = '\0';
+        return out;
+    }
+    /* +/-Inf: beyond DBL_MAX is only reachable via inf (or overflow). */
+    if (v > DBL_MAX) {
+        char* out = (char*)malloc(4);
+        if (!out) return (char*)"";
+        out[0] = 'i'; out[1] = 'n'; out[2] = 'f'; out[3] = '\0';
+        return out;
+    }
+    if (v < -DBL_MAX) {
+        char* out = (char*)malloc(5);
+        if (!out) return (char*)"";
+        out[0] = '-'; out[1] = 'i'; out[2] = 'n'; out[3] = 'f'; out[4] = '\0';
+        return out;
+    }
+    char buf17[48];
+    char buf15[48];
+    snprintf(buf17, sizeof buf17, "%.17g", v);
+    snprintf(buf15, sizeof buf15, "%.15g", v);
+    const char* pick = buf15;
+    if (strtod(buf15, NULL) != v) { pick = buf17; }
+    size_t len = strlen(pick);
+    char* out = (char*)malloc(len + 1);
+    if (!out) return (char*)"";
+    memcpy(out, pick, len + 1);
     return out;
 }
 
