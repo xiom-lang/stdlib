@@ -638,3 +638,234 @@ pub fn format_timestamp(ts: Int) -> Str {
   result = result + format_int_padded(dt.second, 2);
   return result;
 }
+
+// ============================================================================
+// strftime / strptime (2026-08-11)
+// ============================================================================
+// C-style date formatting/parsing. Supported conversions:
+//   %Y 4-digit year · %y 2-digit year · %m month (01-12) · %d day (01-31)
+//   %H hour (00-23, always 0 for a Date) · %M minute · %S second
+//   %j day of year (001-366) · %w weekday (0=Sunday..6) · %u ISO weekday
+//   (1=Monday..7) · %% literal '%'
+// Unknown conversions are left as-is in strftime; strptime rejects specs it
+// cannot parse (None).
+
+fn _pad2(n: Int) -> Str {
+  var s = to_string(n);
+  while s.len() < 2 {
+    s = str_concat("0", s);
+  }
+  return s;
+}
+
+fn _pad3(n: Int) -> Str {
+  var s = to_string(n);
+  while s.len() < 3 {
+    s = str_concat("0", s);
+  }
+  return s;
+}
+
+fn _pad4(n: Int) -> Str {
+  var s = to_string(n);
+  while s.len() < 4 {
+    s = str_concat("0", s);
+  }
+  return s;
+}
+
+/// Format a Date per the supported conversion set (see the module comment).
+pub fn strftime(spec: Str, d: &Date) -> Str {
+  var result = "";
+  var i: Int = 0;
+  var len = spec.len();
+  while i < len {
+    var c = str_slice(spec, i, i + 1);
+    if c == "%" && i + 1 < len {
+      var conv = str_slice(spec, i + 1, i + 2);
+      if conv == "%" {
+        result = str_concat(result, "%");
+        i = i + 2;
+      } elif conv == "Y" {
+        result = str_concat(result, _pad4(d.year));
+        i = i + 2;
+      } elif conv == "y" {
+        var yy = d.year % 100;
+        if yy < 0 { yy = yy + 100; }
+        result = str_concat(result, _pad2(yy));
+        i = i + 2;
+      } elif conv == "m" {
+        result = str_concat(result, _pad2(d.month));
+        i = i + 2;
+      } elif conv == "d" {
+        result = str_concat(result, _pad2(d.day));
+        i = i + 2;
+      } elif conv == "H" {
+        result = str_concat(result, "00");
+        i = i + 2;
+      } elif conv == "M" {
+        result = str_concat(result, "00");
+        i = i + 2;
+      } elif conv == "S" {
+        result = str_concat(result, "00");
+        i = i + 2;
+      } elif conv == "j" {
+        result = str_concat(result, _pad3(date_day_of_year(d.year, d.month, d.day)));
+        i = i + 2;
+      } elif conv == "w" {
+        result = str_concat(result, to_string(date_day_of_week(d.year, d.month, d.day)));
+        i = i + 2;
+      } elif conv == "u" {
+        var w = date_day_of_week(d.year, d.month, d.day);
+        var u = w;
+        if u == 0 { u = 7; }
+        result = str_concat(result, to_string(u));
+        i = i + 2;
+      } else {
+        result = str_concat(result, c);
+        i = i + 1;
+      }
+    } else {
+      result = str_concat(result, c);
+      i = i + 1;
+    }
+  }
+  return result;
+}
+
+/// Parse a date per the supported conversion set (see the module comment).
+/// Returns None when the input does not match the spec, the month/day are
+/// out of range, or the spec uses an unsupported conversion.
+// Result struct instead of Option[Date]: Option-of-struct payloads collide
+// with Option[Int] in combined programs (COMPILER_BUGS.md BUG 12 family).
+pub type DateParse = { is_ok: Bool; date: Date; }
+
+fn _parse_fail() -> DateParse {
+  return DateParse{ is_ok: false; date: Date{ year: 0; month: 1; day: 1; }; };
+}
+
+pub fn strptime(s: Str, spec: Str) -> DateParse {
+  var year: Int = 0;
+  var month: Int = 1;
+  var day: Int = 1;
+  var have_y = false;
+  var have_m = false;
+  var have_d = false;
+  var pos: Int = 0;
+  var i: Int = 0;
+  var slen = s.len();
+  var speclen = spec.len();
+  while i < speclen {
+    var c = str_slice(spec, i, i + 1);
+    if c == "%" && i + 1 < speclen {
+      var conv = str_slice(spec, i + 1, i + 2);
+      var digits = "";
+      if conv == "%" {
+        if pos >= slen || str_slice(s, pos, pos + 1) != "%" {
+          return _parse_fail();
+        }
+        pos = pos + 1;
+        i = i + 2;
+      } elif conv == "Y" {
+        while pos < slen && digits.len() < 4 {
+          var ch = str_slice(s, pos, pos + 1);
+          if ch >= "0" && ch <= "9" {
+            digits = str_concat(digits, ch);
+            pos = pos + 1;
+          } else {
+            break;
+          }
+        }
+        if digits.len() != 4 {
+          return _parse_fail();
+        }
+        year = _parse_int(digits);
+        have_y = true;
+        i = i + 2;
+      } elif conv == "m" {
+        while pos < slen && digits.len() < 2 {
+          var ch2 = str_slice(s, pos, pos + 1);
+          if ch2 >= "0" && ch2 <= "9" {
+            digits = str_concat(digits, ch2);
+            pos = pos + 1;
+          } else {
+            break;
+          }
+        }
+        if digits.len() != 2 {
+          return _parse_fail();
+        }
+        month = _parse_int(digits);
+        have_m = true;
+        i = i + 2;
+      } elif conv == "d" {
+        while pos < slen && digits.len() < 2 {
+          var ch3 = str_slice(s, pos, pos + 1);
+          if ch3 >= "0" && ch3 <= "9" {
+            digits = str_concat(digits, ch3);
+            pos = pos + 1;
+          } else {
+            break;
+          }
+        }
+        if digits.len() != 2 {
+          return _parse_fail();
+        }
+        day = _parse_int(digits);
+        have_d = true;
+        i = i + 2;
+      } elif conv == "H" || conv == "M" || conv == "S" {
+        // time-of-day accepted but ignored for Date parsing
+        while pos < slen && digits.len() < 2 {
+          var ch4 = str_slice(s, pos, pos + 1);
+          if ch4 >= "0" && ch4 <= "9" {
+            digits = str_concat(digits, ch4);
+            pos = pos + 1;
+          } else {
+            break;
+          }
+        }
+        if digits.len() != 2 {
+          return _parse_fail();
+        }
+        i = i + 2;
+      } else {
+        return _parse_fail();
+      }
+    } else {
+      if pos >= slen || str_slice(s, pos, pos + 1) != c {
+        return _parse_fail();
+      }
+      pos = pos + 1;
+      i = i + 1;
+    }
+  }
+  if !have_y || !have_m || !have_d {
+    return _parse_fail();
+  }
+  if month < 1 || month > 12 || day < 1 || day > date_days_in_month(year, month) {
+    return _parse_fail();
+  }
+  return DateParse{ is_ok: true; date: Date{ year: year; month: month; day: day; }; };
+}
+
+fn _parse_int(s: Str) -> Int {
+  var v: Int = 0;
+  var i: Int = 0;
+  while i < s.len() {
+    var c = str_slice(s, i, i + 1);
+    if c == "0" { v = v * 10 + 0; }
+    elif c == "1" { v = v * 10 + 1; }
+    elif c == "2" { v = v * 10 + 2; }
+    elif c == "3" { v = v * 10 + 3; }
+    elif c == "4" { v = v * 10 + 4; }
+    elif c == "5" { v = v * 10 + 5; }
+    elif c == "6" { v = v * 10 + 6; }
+    elif c == "7" { v = v * 10 + 7; }
+    elif c == "8" { v = v * 10 + 8; }
+    elif c == "9" { v = v * 10 + 9; }
+    i = i + 1;
+  }
+  return v;
+}
+

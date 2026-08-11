@@ -710,3 +710,106 @@ pub fn soundex(word: Str) -> Str {
   };
   result
 }
+
+// ============================================================================
+// 2026-08-11 additions: Jaccard, LCP/LCSuffix, n-gram extraction
+// ============================================================================
+
+// All contiguous n-grams of `s` (n = 1 → single chars). Empty input or
+// n < 1 → empty Vec. O(len) with O(len) output.
+pub fn ngram_extract(s: Str, n: Int) -> Vec[Str] {
+  var out = Vec[Str].new();
+  var len = xiom.string.str_len(s);
+  if n < 1 || len < n {
+    return out;
+  }
+  var i: Int = 0;
+  while i + n <= len {
+    out.push(xiom.string.str_slice(s, i, i + n));
+    i = i + 1;
+  }
+  return out;
+}
+
+// Content-based string equality. The compiler's `==` between two runtime
+// Vec[Str] ELEMENTS lowers to pointer comparison (COMPILER_BUGS.md BUG 17),
+// so all element-to-element string tests go through byte-wise comparison.
+fn _str_eq(a: Str, b: Str) -> Bool {
+  var la = xiom.string.str_len(a);
+  var lb = xiom.string.str_len(b);
+  if la != lb {
+    return false;
+  }
+  var i: Int = 0;
+  while i < la {
+    if xiom.string.byte_at(a, i) != xiom.string.byte_at(b, i) {
+      return false;
+    }
+    i = i + 1;
+  }
+  return true;
+}
+
+// Jaccard similarity over n-grams: |A ∩ B| / |A ∪ B| in Float64 (0 when
+// both inputs have no n-grams, 1 when identical). O(|a|·|b|) naive set
+// comparison — the compiler's Set is not usable for Str elements here.
+pub fn jaccard_similarity(a: Str, b: Str, n: Int) -> Float64 {
+  var ga = ngram_extract(a, n);
+  var gb = ngram_extract(b, n);
+  if ga.len() == 0 && gb.len() == 0 {
+    return 0.0;
+  }
+  var inter: Int = 0;
+  var i: Int = 0;
+  while i < ga.len() {
+    var j: Int = 0;
+    var found = false;
+    while j < gb.len() && !found {
+      if _str_eq(ga[i], gb[j]) {
+        found = true;
+      }
+      j = j + 1;
+    }
+    if found {
+      inter = inter + 1;
+    }
+    i = i + 1;
+  }
+  var union = ga.len() + gb.len() - inter;
+  if union <= 0 {
+    return 0.0;
+  }
+  return xiom.convert.int_to_float(inter) / xiom.convert.int_to_float(union);
+}
+
+// Length of the longest common prefix of a and b. O(min(|a|,|b|)).
+pub fn longest_common_prefix(a: Str, b: Str) -> Int {
+  var la = xiom.string.str_len(a);
+  var lb = xiom.string.str_len(b);
+  var lim = la;
+  if lb < lim { lim = lb; }
+  var i: Int = 0;
+  while i < lim {
+    if xiom.string.byte_at(a, i) != xiom.string.byte_at(b, i) {
+      break;
+    }
+    i = i + 1;
+  }
+  return i;
+}
+
+// Length of the longest common suffix of a and b. O(min(|a|,|b|)).
+pub fn longest_common_suffix(a: Str, b: Str) -> Int {
+  var la = xiom.string.str_len(a);
+  var lb = xiom.string.str_len(b);
+  var lim = la;
+  if lb < lim { lim = lb; }
+  var i: Int = 0;
+  while i < lim {
+    if xiom.string.byte_at(a, la - 1 - i) != xiom.string.byte_at(b, lb - 1 - i) {
+      break;
+    }
+    i = i + 1;
+  }
+  return i;
+}
