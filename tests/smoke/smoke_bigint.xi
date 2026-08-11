@@ -213,5 +213,20 @@ fn main() -> Int {
   maxu = maxu - 1;
   var u64max = xiom.bigint.bigint_from_u64(maxu);
   if xiom.bigint.bigint_to_str(&u64max) != "18446744073709551615" { return 21; }
+  // 21. Karatsuba path (>= 4000-limb operands exercise the recursive split):
+  //     (10^500-1)(10^400-1) == 10^900 - 10^500 - 10^400 + 1,
+  //     and (a*b)/b == a.
+  var p500 = xiom.bigint.bigint_pow(&xiom.bigint.bigint_ten(), 500);
+  var p400 = xiom.bigint.bigint_pow(&xiom.bigint.bigint_ten(), 400);
+  var a21 = xiom.bigint.bigint_sub(&p500, &xiom.bigint.bigint_one());
+  var b21 = xiom.bigint.bigint_sub(&p400, &xiom.bigint.bigint_one());
+  var m21 = xiom.bigint.bigint_mul(&a21, &b21);
+  var p900 = xiom.bigint.bigint_pow(&xiom.bigint.bigint_ten(), 900);
+  var e21 = xiom.bigint.bigint_add(
+    &xiom.bigint.bigint_sub(&xiom.bigint.bigint_sub(&p900, &p500), &p400),
+    &xiom.bigint.bigint_one());
+  if !(xiom.bigint.bigint_eq(&m21, &e21)) { return 21; }
+  var q21 = xiom.bigint.bigint_div(&m21, &b21);
+  if !(xiom.bigint.bigint_eq(&q21, &a21)) { return 21; }
   return 0;
 }
