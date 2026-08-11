@@ -164,6 +164,31 @@ mechanical edit per entry). Module names/contents are byte-identical
 unaffected. Resolution was verified by compiling smokes across categories
 (smoke_str2 34/34, smoke_fmt_sprintf 123/123 with the new layout).
 
+## 5b. Implementation order (dependency levels, 2026-08-11)
+
+Every stub carries a `// Depends on:` header. The dependency-ordered
+implementation sequence (bottom-up):
+
+- **Level 0 — no deps (pure primitives):** core/, memory/, ffi/, error/,
+  num/ (bits, cmp lives in core/), contracts.
+- **Level 1 — string+math foundations (the two most-imported):**
+  string/string.xi, char, utf8, regex; math/, num/, hash/ (needs
+  Vec[UInt8] building via string), encoding/, collections base (Vec/Map/
+  Set/Stack/Queue), rand/, time/ (needs num), fmt (needs string+convert).
+- **Level 2 — builds on L1:** collections/* (trie/radix→string,
+  spatial/kdtree→math, mpmc/mpsc/spmc→sync), convert/* (base58→num,
+  strftime→time, uuid→rand, ip/url→net), string/* metrics (cosine→math),
+  format/* (relative→time, numbering→num), serialize/ (json), compress/,
+  crypto/ primitives (needs math bit ops), sync/async/thread.
+- **Level 3 — FFI/IO layer:** io/, os/* (fs_ffi/proc_ffi/event/terminal/
+  err/filetype→ffi+io), net/ (sockets→ffi), process, debug, bench/stats.
+- **Level 4 — composition:** net/cookie (string+time), net/jwt
+  (string+crypto+serialize), net/websocket (string+net), format/terminal
+  (string), bigint/bigfloat (num).
+
+The bulk of sublibs only need `xiom.string` (+ `xiom.math` for the
+distance/spatial/float-heavy ones), confirming the user's estimate.
+
 **Verified GAPs (from §6 wish-list):** printf/scanf (G13), murmur3_128,
 xxhash128/XXH3, city/highway/spooky/t1ha/metro/farm/jenkins hashes, base58/62,
 ascii85, uuencode/xxencode, quoted-printable, punycode, skiplist, trie, radix
