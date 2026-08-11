@@ -4,6 +4,8 @@
 
 module xiom.format.relative
 
+// Depends on: xiom.time
+
 // ============================================================================
 // Human-readable relative time: "5 minutes ago", "in 2 days", elapsed and
 // remaining durations, ages, and decomposed relative-time parts. Pure

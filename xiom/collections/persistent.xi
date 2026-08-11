@@ -4,6 +4,8 @@
 
 module xiom.collect.persistent
 
+// Depends on: none (pure)
+
 // ============================================================================
 // Persistent (copy-on-write) collections. Every update returns a new structure
 // and leaves the original intact, enabling cheap immutability and undo/history.

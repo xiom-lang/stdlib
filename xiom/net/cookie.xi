@@ -4,6 +4,8 @@
 
 module xiom.net.cookie
 
+// Depends on: xiom.string, xiom.time
+
 // ============================================================================
 // HTTP cookie parsing, serialization, and jar management per RFC 6265.
 // Provides the Cookie struct plus parse/serialize helpers and a jar

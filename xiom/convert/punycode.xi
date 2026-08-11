@@ -4,6 +4,8 @@
 
 module xiom.convert.punycode
 
+// Depends on: xiom.string, xiom.convert
+
 // ============================================================================
 // Punycode (RFC 3492) and IDNA (RFC 5891) conversions for internationalized
 // domain names. Includes domain-level codecs plus UTS-46 normalization.

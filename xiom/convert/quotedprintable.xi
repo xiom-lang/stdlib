@@ -4,6 +4,8 @@
 
 module xiom.convert.quotedprintable
 
+// Depends on: xiom.string
+
 // ============================================================================
 // Quoted-Printable encoding and decoding per RFC 2045, used in email MIME.
 // Provides line-aware encoding with soft line breaks and detection helpers.

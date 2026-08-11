@@ -4,6 +4,8 @@
 
 module xiom.net.jwt
 
+// Depends on: xiom.string, xiom.crypto, xiom.serialize
+
 // ============================================================================
 // JSON Web Token composition and verification per RFC 7519.
 // Pure XIOM: base64url plus signature composition over existing modules.

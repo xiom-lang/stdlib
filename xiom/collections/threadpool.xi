@@ -4,6 +4,8 @@
 
 module xiom.collect.threadpool
 
+// Depends on: xiom.thread, xiom.sync
+
 // ============================================================================
 // Thread pool. Spawns a fixed number of worker threads that drain a shared job
 // queue. pool_submit enqueues a closure; pool_join waits for all pending jobs

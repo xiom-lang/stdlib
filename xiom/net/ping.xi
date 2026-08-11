@@ -4,6 +4,8 @@
 
 module xiom.net.ping
 
+// Depends on: xiom.net
+
 // ============================================================================
 // ICMP echo (ping) and traceroute via raw sockets through minimal FFI.
 // Echo send/receive, checksum math, and per-hop traversal helpers.

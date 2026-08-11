@@ -4,6 +4,8 @@
 
 module xiom.string.combinatorics
 
+// Depends on: xiom.string, xiom.rand
+
 // ============================================================================
 // String transformations and combinatorics: shuffling, rotation, permutations,
 // combinations, interleaving, chunking, sliding windows, and character-level

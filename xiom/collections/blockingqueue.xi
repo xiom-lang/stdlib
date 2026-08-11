@@ -4,6 +4,8 @@
 
 module xiom.collect.blockingqueue
 
+// Depends on: xiom.sync
+
 // ============================================================================
 // Blocking queue (Int items) with a fixed capacity. bq_push blocks while full
 // and bq_pop blocks while empty; try_* variants return immediately. bq_close

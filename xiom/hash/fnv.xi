@@ -4,6 +4,8 @@
 
 module xiom.hash.fnv
 
+// Depends on: xiom.string
+
 // ============================================================================
 // FNV-1 and FNV-1a are simple non-cryptographic hashes based on a prime
 // multiplication per byte. 32/64-bit variants already exist in hash.xi;

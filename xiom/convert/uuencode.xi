@@ -4,6 +4,8 @@
 
 module xiom.convert.uuencode
 
+// Depends on: xiom.string
+
 // ============================================================================
 // UUencode and XXencode binary-to-text encodings, plus their decoders.
 // Uses the classic UU alphabet and the XXencode alphabet with a 32-offset

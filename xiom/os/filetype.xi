@@ -4,6 +4,8 @@
 
 module xiom.os.filetype
 
+// Depends on: xiom.string
+
 // ============================================================================
 // File content detection: EOL style, byte-order marks, UTF BOM presence,
 // binary-vs-text classification, encoding detection, magic numbers, MIME

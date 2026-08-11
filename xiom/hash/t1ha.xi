@@ -4,6 +4,8 @@
 
 module xiom.hash.t1ha
 
+// Depends on: xiom.string
+
 // ============================================================================
 // T1HA is a family of fast non-cryptographic hashes from Positive Technologies
 // that is among the fastest on modern x86-64 while keeping good distribution.

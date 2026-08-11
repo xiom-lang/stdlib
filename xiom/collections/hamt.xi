@@ -4,6 +4,8 @@
 
 module xiom.collect.hamt
 
+// Depends on: none (pure)
+
 // ============================================================================
 // Hash array mapped trie (Int keys, Int values). A space-efficient persistent
 // map built on a trie of 32-way nodes using the hash of the key. Average

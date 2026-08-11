@@ -4,6 +4,8 @@
 
 module xiom.hash.farm
 
+// Depends on: xiom.string
+
 // ============================================================================
 // FarmHash is Google's successor to CityHash, providing fast 32/64/128-bit
 // non-cryptographic hashes with good distribution across platforms. It is

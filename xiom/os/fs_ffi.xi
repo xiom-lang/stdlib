@@ -4,6 +4,8 @@
 
 module xiom.os.fs_ffi
 
+// Depends on: xiom.ffi, xiom.io
+
 // ============================================================================
 // Advanced file-system operations that go beyond os.xi / io.xi: symlinks,
 // mmap, dup, positional and vectored I/O, sendfile/splice, fsync family,

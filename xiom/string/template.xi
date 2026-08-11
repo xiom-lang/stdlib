@@ -4,6 +4,8 @@
 
 module xiom.string.template
 
+// Depends on: xiom.string
+
 // ============================================================================
 // Named-placeholder string templates. Placeholders look like {{name}} and are
 // substituted from a map of values. Compilation separates the source text from

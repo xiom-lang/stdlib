@@ -4,6 +4,8 @@
 
 module xiom.net.ntp
 
+// Depends on: xiom.net
+
 // ============================================================================
 // NTP/SNTP client over UDP datagrams per RFC 5905 / RFC 4330.
 // Packet encode/decode, offset and roundtrip math, and sync-time helpers.

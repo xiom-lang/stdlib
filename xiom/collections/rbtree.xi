@@ -4,6 +4,8 @@
 
 module xiom.collect.rbtree
 
+// Depends on: none (pure)
+
 // ============================================================================
 // Red-black tree (Int keys, Int values). Self-balancing BST with a color bit
 // per node (red/black) that guarantees O(log n) insert, delete and lookup.

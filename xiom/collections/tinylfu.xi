@@ -4,6 +4,8 @@
 
 module xiom.collect.tinylfu
 
+// Depends on: none (pure)
+
 // ============================================================================
 // TinyLFU admission filter for caches. Uses a count-min sketch (CMS) of
 // estimated access frequencies to decide whether an incoming key should

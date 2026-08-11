@@ -4,6 +4,8 @@
 
 module xiom.collect.pairingheap
 
+// Depends on: none (pure)
+
 // ============================================================================
 // Pairing heap (Int priorities) - a simple amortized O(log n) meldable heap.
 // Supports push, pop-min, peek, size, merge and decrease-key in O(1) amortized

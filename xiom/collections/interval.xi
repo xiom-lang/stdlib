@@ -4,6 +4,8 @@
 
 module xiom.collect.interval
 
+// Depends on: none (pure)
+
 // ============================================================================
 // Interval tree (Int start/end, Int value). Stores [start, end] intervals and
 // answers stabbing queries (which intervals contain a point) and range queries
