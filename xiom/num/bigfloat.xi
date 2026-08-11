@@ -390,6 +390,10 @@ pub fn bigfloat_to_bigint(f: &BigFloat) -> BigInt {
 
 // Float64 conversion. None on exponent overflow/underflow beyond f64 range
 // (|value| > ~1.8e308); values underflowing to 0.0 return Some(0.0).
+// TODO(compiler): a `bigfloat_to_float128` (34-digit fp128 bridge) is
+// blocked by BUG 13 — fp128 div/i64-conv need __divtf3/__floatditf/
+// __trunctfdf2 compiler-rt helpers that are not in the link line. Land the
+// fn here (significand × 10^exponent in fp128, fpext per limb) once fixed.
 pub fn bigfloat_to_float64(f: &BigFloat) -> Option[Float64] {
   if xiom.bigint.bigint_is_zero(&f.significand) { return Some(0.0); }
   var acc = 0.0;

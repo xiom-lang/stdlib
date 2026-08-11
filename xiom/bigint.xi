@@ -822,6 +822,80 @@ pub fn bigint_to_int(b: &BigInt) -> Result[Int, Str] {
   return Ok(result);
 }
 
+// ============================================================================
+// Fixed-width bridges — 256-bit framing (2026-08-11)
+// ============================================================================
+// BigInt is arbitrary precision, so 128/64-bit consumers get exact
+// range-checked conversions (Err on out-of-range — no silent truncation).
+// The accumulation uses native LLVM i128/UInt128 arithmetic (no soft-float
+// helpers); the range pre-check guarantees no wraparound.
+
+// Convert to UInt64 (0 .. 2^64-1). Negative or ≥ 2^64 → Err.
+pub fn bigint_to_u64(b: &BigInt) -> Result[UInt64, Str] {
+  if bigint_is_negative(b) { return Err("out of u64 range"); }
+  var max = bigint_from_u64(18446744073709551615 as UInt64);
+  if bigint_compare(b, &max) > 0 { return Err("out of u64 range"); }
+  var r: UInt64 = 0;
+  var base: UInt64 = 1000000000;
+  var i = b.digits.len() - 1;
+  while i >= 0 {
+    r = r * base + (b.digits[i] as UInt64);
+    i = i - 1;
+  }
+  return Ok(r);
+}
+
+// Convert to UInt128 (0 .. 2^128-1). Negative or ≥ 2^128 → Err.
+pub fn bigint_to_u128(b: &BigInt) -> Result[UInt128, Str] {
+  if bigint_is_negative(b) { return Err("out of u128 range"); }
+  var max = bigint_from_base("ffffffffffffffffffffffffffffffff", 16);
+  match max {
+    Err(_) => { return Err("internal: hex parse failed"); };
+    Ok(m) => {
+      if bigint_compare(b, &m) > 0 { return Err("out of u128 range"); }
+    };
+  }
+  var r: UInt128 = 0;
+  var base: UInt128 = 1000000000 as UInt128;
+  var i = b.digits.len() - 1;
+  while i >= 0 {
+    r = r * base + (b.digits[i] as UInt128);
+    i = i - 1;
+  }
+  return Ok(r);
+}
+
+// Convert to Int128 (-2^127 .. 2^127-1). Out of range → Err.
+pub fn bigint_to_i128(b: &BigInt) -> Result[Int128, Str] {
+  var lo = bigint_from_base("80000000000000000000000000000000", 16);
+  var hi = bigint_from_base("7fffffffffffffffffffffffffffffff", 16);
+  match lo {
+    Err(_) => { return Err("internal: hex parse failed"); };
+    Ok(lo_v) => {
+      var lo_neg = bigint_neg(&lo_v);
+      if bigint_compare(b, &lo_neg) < 0 { return Err("out of i128 range"); }
+    };
+  }
+  match hi {
+    Err(_) => { return Err("internal: hex parse failed"); };
+    Ok(hi_v) => {
+      if bigint_compare(b, &hi_v) > 0 { return Err("out of i128 range"); }
+    };
+  }
+  var r: Int128 = 0;
+  var base: Int128 = 1000000000 as Int128;
+  var i = b.digits.len() - 1;
+  while i >= 0 {
+    r = r * base + (b.digits[i] as Int128);
+    i = i - 1;
+  }
+  if bigint_is_negative(b) {
+    var z: Int128 = 0 as Int128;
+    r = z - r;
+  }
+  return Ok(r);
+}
+
 // -- Predicates ---------------------------------------------------------------
 
 pub fn bigint_is_one(b: &BigInt) -> Bool {
