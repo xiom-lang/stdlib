@@ -184,15 +184,15 @@ pub fn lfu_size(c: &LfuCache) -> Int {
 }
 
 // ============================================================================
-// ArcCache â€” Adaptive Replacement Cache (2026-08-11)
+// ArcCache ? Adaptive Replacement Cache (2026-08-11)
 // Standard ARC (Megiddo & Modha): T1 (recent) / T2 (frequent) hold cached
 // (key, value) pairs, B1/B2 are ghost lists (keys only). `p` is the target
 // size of T1 and adapts on ghost hits. Lists are parallel Vecs with the MRU
-// at the FRONT; lookups are O(n) linear scans (documented â€” this is a
+// at the FRONT; lookups are O(n) linear scans (documented ? this is a
 // correctness-focused reference implementation; the compiler's Vec lacks a
 // map container for struct elements). Int keys/values.
 //
-// NOTE: all list operations are inlined on the &mut ArcCache struct â€” helper
+// NOTE: all list operations are inlined on the &mut ArcCache struct ? helper
 // fns taking `&mut Vec[Int]` params get a fresh-alloca COPY for non-ident
 // args (`&mut c.t1k`), so their push/pop/shift mutations would be lost
 // (COMPILER_BUGS.md BUG 16).

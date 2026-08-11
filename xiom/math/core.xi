@@ -1,4 +1,4 @@
-// XIOM Ã¢â‚¬â€ math/core.xi Ã¢â‚¬â€ GENERIC numeric tower (3c, 2026-08-10)
+// XIOM - math/core.xi - GENERIC numeric tower (3c, 2026-08-10)
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 //
@@ -6,13 +6,13 @@
 // contract (math.sqrt(Float64) etc.) as freeze-gated shims; THIS module hosts
 // the GENERIC implementations that serve every width through the Num
 // interface (impl Num[Int], Num[Int32], Num[Float64], Num[Float32], ...).
-// One implementation per concept Ã¢â‚¬â€ no per-width duplication.
+// One implementation per concept - no per-width duplication.
 
 module xiom.math.core
 
-// Ã¢â€â‚¬Ã¢â€â‚¬ Num interface (the numeric tower contract) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// -- Num interface (the numeric tower contract) ------------------------------
 // Implemented by every numeric width. New widths register by adding one
-// `impl Num[Width] { ... }` block Ã¢â‚¬â€ every generic function below then serves
+// `impl Num[Width] { ... }` block - every generic function below then serves
 // that width automatically.
 pub interface Num[T] {
   fn add(a: T, b: T) -> T;
@@ -23,7 +23,7 @@ pub interface Num[T] {
   fn one() -> T;
 }
 
-// Ã¢â€â‚¬Ã¢â€â‚¬ Width implementations Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// -- Width implementations ----------------------------------------------------
 
 impl Num[Int] {
   fn add(a: Int, b: Int) -> Int { return a + b; }
@@ -91,7 +91,7 @@ impl Num[Float32] {
   fn to_float(v: Float32) -> Float64 { return v as Float64; }
 }
 
-// Ã¢â€â‚¬Ã¢â€â‚¬ Generic numeric functions (one impl, all widths) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// -- Generic numeric functions (one impl, all widths) -----------------------
 
 /// Linear interpolation: a*(1-t) + b*t. Generic over every Num width.
 pub fn lerp[T: Num](a: T, b: T, t: T) -> T {
@@ -140,7 +140,7 @@ pub fn negate[T: Num](a: T) -> T {
   return Num[T].sub(Num[T].zero(), a);
 }
 
-// â”€â”€ FromInt interface (conversions â€” separate from arithmetic Num) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -- FromInt interface (conversions ? separate from arithmetic Num) ----------
 // Widths opt into Int conversion by implementing FromInt. Keeps Num pure
 // arithmetic so the tower contract stays minimal.
 
@@ -179,7 +179,7 @@ impl FromInt[Float32] {
   fn to_float(v: Float32) -> Float64 { return v as Float64; }
 }
 
-// â”€â”€ Generic conversion + comparison helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -- Generic conversion + comparison helpers ---------------------------------
 
 // NOTE: generic abs/clamp/sqrt require COMPARISON, which is not part of the
 // Num tower (Num is pure arithmetic). The `Real` interface below extends the
@@ -258,5 +258,5 @@ pub fn of_int[T: FromInt](v: Int) -> T {
   return FromInt[T].from_int(v);
 }
 
-// NOTE: generic sqrt needs transcendental support per width â€” the Float64
+// NOTE: generic sqrt needs transcendental support per width ? the Float64
 // sqrt is concrete (math.sqrt). A future `Transcendental` interface hosts it.

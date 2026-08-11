@@ -1,4 +1,4 @@
-// XIOM â€” Error Trait Hierarchy
+// XIOM ? Error Trait Hierarchy
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 
@@ -78,7 +78,7 @@ pub fn Backtrace.display(self) -> Str {
   return result;
 }
 
-// â”€â”€ Error Construction Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -- Error Construction Helpers -------------------------------------
 
 /// Returns the error message unchanged. Identity helper for code clarity.
 /// Complexity: O(1). Pure, no side effects.
@@ -112,7 +112,7 @@ pub fn error_join(a: Str, b: Str) -> Str {
 }
 
 /// Converts an `Option[T]` into a `Result[T, Str]`.
-/// `Some(v)` â†’ `Ok(v)`, `None` â†’ `Err(msg)`.
+/// `Some(v)` ? `Ok(v)`, `None` ? `Err(msg)`.
 /// Complexity: O(1). Pure, no side effects.
 pub fn option_ok_or[T](o: Option[T], msg: Str) -> Result[T, Str] {
   match o {
