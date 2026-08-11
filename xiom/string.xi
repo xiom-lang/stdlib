@@ -763,3 +763,147 @@ pub fn str_contains_any(s: Str, needles: &Vec[Str]) -> Bool {
   };
   false
 }
+
+// ============================================================================
+// 2026-08-11 additions: translate / rot / caesar / atbash / abbreviate /
+// obfuscate (ASCII; non-ASCII bytes pass through unchanged for the ciphers)
+// ============================================================================
+
+// Build a one-char string from a printable ASCII byte value (32..126).
+// Bytes outside that range render as "?" — the ciphers below only produce
+// printable output for printable input (documented).
+fn _mk_byte(v: Int) -> Str {
+  var table = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
+  if v >= 32 && v <= 126 {
+    return str_slice(table, v - 32, v - 31);
+  }
+  return str_slice("?", 0, 1);
+}
+
+/// Translate characters per the `tr` utility: each char of `s` found in
+/// `from` is replaced by the char at the same position in `to`; chars beyond
+/// `to`'s length are REMOVED; chars not in `from` pass through. ASCII.
+pub fn str_translate(s: Str, from: Str, to: Str) -> Str {
+  var result = "";
+  var i: Int = 0;
+  while i < str_len(s) {
+    var c = byte_at(s, i);
+    var j: Int = 0;
+    var found = false;
+    while j < str_len(from) {
+      if byte_at(from, j) == c {
+        found = true;
+        break;
+      }
+      j = j + 1;
+    }
+    if !found {
+      result = str_concat(result, str_slice(s, i, i + 1));
+    } elif j < str_len(to) {
+      result = str_concat(result, str_slice(to, j, j + 1));
+    }
+    // j >= len(to): removed
+    i = i + 1;
+  }
+  return result;
+}
+
+/// ROT13 over A-Z/a-z (ASCII).
+pub fn str_rot13(s: Str) -> Str {
+  return str_caesar(s, 13);
+}
+
+/// ROT47 over ASCII 33..126 (all printable chars rotate by 47).
+pub fn str_rot47(s: Str) -> Str {
+  var result = "";
+  var i: Int = 0;
+  while i < str_len(s) {
+    var b = byte_at(s, i) as Int;
+    if b >= 33 && b <= 126 {
+      var v = b - 33;
+      v = (v + 47) % 94;
+      result = str_concat(result, _mk_byte(v + 33));
+    } else {
+      result = str_concat(result, str_slice(s, i, i + 1));
+    }
+    i = i + 1;
+  }
+  return result;
+}
+
+/// Caesar shift over A-Z/a-z (ASCII). Negative shifts go backwards; the
+/// shift wraps mod 26.
+pub fn str_caesar(s: Str, shift: Int) -> Str {
+  var result = "";
+  var sh = shift % 26;
+  if sh < 0 { sh = sh + 26; }
+  var i: Int = 0;
+  while i < str_len(s) {
+    var b = byte_at(s, i) as Int;
+    if b >= 97 && b <= 122 {
+      var v = (b - 97 + sh) % 26 + 97;
+      result = str_concat(result, _mk_byte(v));
+    } elif b >= 65 && b <= 90 {
+      var v2 = (b - 65 + sh) % 26 + 65;
+      result = str_concat(result, _mk_byte(v2));
+    } else {
+      result = str_concat(result, str_slice(s, i, i + 1));
+    }
+    i = i + 1;
+  }
+  return result;
+}
+
+/// Atbash: a↔z, A↔Z mirror (ASCII). Non-letters pass through.
+pub fn str_atbash(s: Str) -> Str {
+  var result = "";
+  var i: Int = 0;
+  while i < str_len(s) {
+    var b = byte_at(s, i) as Int;
+    if b >= 97 && b <= 122 {
+      result = str_concat(result, _mk_byte(97 + (122 - b)));
+    } elif b >= 65 && b <= 90 {
+      result = str_concat(result, _mk_byte(65 + (90 - b)));
+    } else {
+      result = str_concat(result, str_slice(s, i, i + 1));
+    }
+    i = i + 1;
+  }
+  return result;
+}
+
+/// Abbreviate with a middle ellipsis: keeps `(max_len-3)/2` chars from the
+/// front and the rest from the back ("…" as "..."). Strings at or under
+/// max_len are returned unchanged; max_len < 4 falls back to truncation.
+pub fn str_abbreviate(s: Str, max_len: Int) -> Str {
+  var len = str_len(s);
+  if len <= max_len {
+    return s;
+  }
+  if max_len < 4 {
+    return str_slice(s, 0, max_len);
+  }
+  var keep = max_len - 3;
+  var front = (keep + 1) / 2;
+  var back = keep - front;
+  var head = str_slice(s, 0, front);
+  var tail = str_slice(s, len - back, len);
+  return str_concat(str_concat(head, "..."), tail);
+}
+
+/// Obfuscate: keep the first `visible` chars, mask the rest with '*'
+/// (e.g. str_obfuscate("secret", 3) == "sec***"). visible < 0 → 0.
+pub fn str_obfuscate(s: Str, visible: Int) -> Str {
+  var v = visible;
+  if v < 0 { v = 0; }
+  var len = str_len(s);
+  var keep = v;
+  if keep > len { keep = len; }
+  var result = str_slice(s, 0, keep);
+  var i: Int = keep;
+  while i < len {
+    result = str_concat(result, "*");
+    i = i + 1;
+  }
+  return result;
+}
