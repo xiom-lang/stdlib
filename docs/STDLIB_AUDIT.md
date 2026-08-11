@@ -90,7 +90,7 @@ Net: **0 broken resolutions**; 3 items worth a naming decision (S5.2-5.4).
 | chain | error, iter |
 | channel | async, sync |
 | convert | convert (`xiom.convert`), num (`xiom.num.convert`) |
-| core | core (`xiom.core`), math (`xiom.math.core`) |
+| core | core (`xiom.core` only — RESOLVED 2026-08-11: math.core renamed math.tower) |
 | curves | crypto, geom |
 | date | convert, time |
 | duration | convert, time |
@@ -135,7 +135,7 @@ the audit tracks so implementers keep qualified calls deterministic):
 | chain | `xiom.error.chain` (error/chain.xi) | error context chaining |
 | channel | `xiom.sync.channel` (sync/channel.xi) | sync owns channels; `async/channel.xi` is the executor flavor |
 | convert | `xiom.convert` (convert/convert.xi, frozen) + `xiom.num.convert` (num/convert.xi) | the latter is numeric radix/base58/62/85/roman (verified) |
-| core | `xiom.core` (core/core.xi, frozen) + `xiom.math.core` (math/core.xi, generic tower) | distinct by design (D4b) |
+| core | `xiom.core` (core/core.xi, frozen) — RESOLVED: math.core renamed to math.tower (math/tower.xi), the prelude owns `core` |
 | curves | `xiom.crypto.curves` (crypto/curves.xi, ECC) vs `xiom.geom.curves` (geom/curves.xi, splines) | distinct domains |
 | date / duration / time / timestamp | `xiom.time.*` (time/time.xi flat has real Date/Duration/strftime/strptime) | time is the production home; `convert/*` are parse/serialize shims |
 | endian | `xiom.serialize.endian` (serialize/endian.xi) | binary serialization |
@@ -184,7 +184,7 @@ Status legend: **REAL** = real implementation; **STUB** = spec skeleton (`// fn 
 | `bits` | bits/bits.xi | `xiom.bits` | REAL (28 fns) |
 | `bits.bitarray` / `bitfield` / `popcount` | bits/bitarray.xi, bitfield.xi, popcount.xi | `xiom.bits.*` | STUB |
 | `math` (KEEP/EXPAND + NASM) | math/math.xi | `xiom.math` | REAL (77 fns; f64-specialized, libm FFI verified) |
-| `math.core` (generic tower, D4b) | math/core.xi | `xiom.math.core` | REAL (104 fns; Num/Real/FromInt tower verified) |
+| `math.tower` (generic tower, D4b; renamed from math.core 2026-08-11) | math/tower.xi | `xiom.math.tower` | REAL (104 fns; Num/Real/FromInt tower verified) |
 | `math.complex` (Tier-2 flat) | math/complex.xi | `xiom.complex` | REAL (23 fns) |
 | `math.algebra` / `primitives` / `vectors` / `matrices` / `trig` / `transcendental` / `differential` / `integral` / `series` / `special` | math/*.xi | `xiom.math.*` | STUB (10 skeletons) |
 | `geom` (186 fns) | geom/geom.xi | `xiom.geom` | REAL (186 fns) |
@@ -330,7 +330,7 @@ All P0 "landed this session" claims from S13 verified **REAL** in the tree:
 | fmt sprintf / sscanf | format/fmt.xi | REAL |
 | time strftime / strptime | time/time.xi | REAL |
 | num.convert base58 / base62 / ascii85 / roman | num/convert.xi | REAL |
-| os fs / proc / term, net url / dns / proto, rand mt19937 / pcg / chacha, math.core tower | os/*, net/*, rand/*, math/core.xi | REAL |
+| os fs / proc / term, net url / dns / proto, rand mt19937 / pcg / chacha, math.tower | os/*, net/*, rand/*, math/tower.xi | REAL |
 
 S13 items still queued (correctly marked GAP-stdlib P1/P2) map to the STUB files above.
 
@@ -402,7 +402,7 @@ For each of the **346 STUB sublibs** (one row per file, grouped by category per 
      must stay in separate smokes (COMPILER_BUGS.md BUG 16); xxhash's duplicate
      `_rotl32` should be deduped first (S4).
 5. **Concrete-over-generic for math/crypto/num.** Follow S12/S13.9: width-agnostic
-   numeric helpers go to `math.core` with `[T: Num]`; everything else is
+   numeric helpers go to `math.tower` with `[T: Num]`; everything else is
    Float64/Int-specialized (`f64_*`, `i64_*`) or arbitrary-precision concrete types.
 6. **No external deps.** Any sublib that needs a C library is a PACKAGE, not stdlib
    (wire this decision into S5.5 classification).
@@ -412,3 +412,4 @@ For each of the **346 STUB sublibs** (one row per file, grouped by category per 
    name, `platform.xi` placement, `collections/` <-> `xiom.collect` documentation.
 9. **Re-run gates** after each sublib: freeze gate, import-alias gate, full suite
    (per doc S11 gates) - no phase requires coordinated package republish.
+
