@@ -4,6 +4,8 @@
 
 module xiom.collect.queue
 
+use xiom.sync;
+
 // ============================================================================
 // WorkQueue (Int items)
 // A FIFO queue backed by a Vec plus a head offset. `push` appends at the end,
@@ -112,3 +114,72 @@ pub fn deque_len(d: &Deque) -> Int {
 pub fn deque_is_empty(d: &Deque) -> Bool {
   return d.head >= d.tail;
 }
+
+// ============================================================================
+// SpscRing — lock-free single-producer / single-consumer ring buffer
+// (2026-08-11). Fixed `cap` slots (power of two not required; modulo via %).
+// head = next slot to pop, tail = next slot to push, both AtomicInt
+// (fetch_add based). Producer and consumer must each be used from exactly
+// one thread. When full, push returns false without blocking; when empty,
+// pop returns None. Slot reuse races are bounded by the documented usage
+// contract (SPSC); a "full" or "empty" state read by the OTHER side may lag
+// one operation, which is safe for SPSC.
+// ============================================================================
+
+pub type SpscRing = { buf: Vec[Int]; cap: Int; head: AtomicInt; tail: AtomicInt; }
+
+/// Create an spsc ring with `cap` slots.
+pub fn spsc_ring_new(cap: Int) -> SpscRing {
+  var buf = Vec[Int].new();
+  var i: Int = 0;
+  while i < cap {
+    buf.push(0);
+    i = i + 1;
+  }
+  return SpscRing{ buf: buf; cap: cap; head: AtomicInt.new(0); tail: AtomicInt.new(0); };
+}
+
+/// Push `item` from the producer side. Returns false when the ring is full.
+pub fn spsc_ring_push(r: &mut SpscRing, item: Int) -> Bool {
+  var t = r.tail.fetch_add(1);
+  var h = r.head.load();
+  if t - h >= r.cap {
+    r.tail.fetch_sub(1);
+    return false;
+  }
+  r.buf[t % r.cap] = item;
+  return true;
+}
+
+/// Pop an item from the consumer side. None when empty.
+pub fn spsc_ring_pop(r: &mut SpscRing) -> Option[Int] {
+  var h = r.head.fetch_add(1);
+  var t = r.tail.load();
+  if h >= t {
+    r.head.fetch_sub(1);
+    return Option[Int]{ is_some: false; value: 0; };
+  }
+  var v = r.buf[h % r.cap];
+  return Option[Int]{ is_some: true; value: v; };
+}
+
+/// Number of items currently in the ring (approximate under concurrency).
+pub fn spsc_ring_len(r: &SpscRing) -> Int {
+  var t = r.tail.load();
+  var h = r.head.load();
+  var n = t - h;
+  if n < 0 { n = 0; }
+  if n > r.cap { n = r.cap; }
+  return n;
+}
+
+/// True when the ring is empty (approximate under concurrency).
+pub fn spsc_ring_is_empty(r: &SpscRing) -> Bool {
+  return r.tail.load() == r.head.load();
+}
+
+/// Capacity (number of slots).
+pub fn spsc_ring_capacity(r: &SpscRing) -> Int {
+  return r.cap;
+}
+

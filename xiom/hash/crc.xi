@@ -189,3 +189,19 @@ pub fn checksum_internet(data: &Vec[UInt8]) -> UInt32 {
   total = (total & 0xFFFF) + _u64_shr(total, 16);
   return ((0xFFFF - (total & 0xFFFF)) & 0xFFFF) as UInt32;
 }
+
+/// Adler-32 (RFC 1950). Verified against a clang-built reference
+/// (2026-08-11): "" → 0x00000001, "a" → 0x00620062, "abc" → 0x024d0127,
+/// "Wikipedia" → 0x11e60398 (matches the Wikipedia article).
+pub fn adler32(data: &Vec[UInt8]) -> UInt32 {
+  var a: Int = 1;
+  var b: Int = 0;
+  var i: Int = 0;
+  let len = data.len();
+  while i < len {
+    a = (a + (data[i] as Int)) % 65521;
+    b = (b + a) % 65521;
+    i = i + 1;
+  }
+  return ((b << 16) | a) as UInt32;
+}
