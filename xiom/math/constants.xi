@@ -97,9 +97,11 @@ pub fn neg_infinity() -> Float64 {
   return -1.0 / 0.0;
 }
 
-// NAN (not-a-number) — BLOCKED by BUG 19 (2026-08-11): every NaN-producing
-// Float64 operation (`0.0/0.0`, `inf-inf`, `inf*0`) returns a garbage
-// sentinel or traps 0xC000001D, and no NaN literal syntax exists. Do NOT
-// call a broken constructor — production standard forbids silent failures.
-// TODO(compiler): BUG 19 — land IEEE NaN results + a nan literal or a
-// bitcast intrinsic; then `pub const NAN: Float64` lands here.
+// NAN (not-a-number) — constructor fn (no NaN literal syntax exists; a const
+// initializer can't hold the `0.0 / 0.0` expression — const-fold handles
+// literals only). IEEE semantics verified: `nan() != nan()` is true and
+// math.is_nan(nan()) is true since BUG 19's fcmp-one/Str+Float64-concat
+// defects were fixed (2026-08-11, `9c3a2f9e`/`88f924ea`).
+pub fn nan() -> Float64 {
+  return 0.0 / 0.0;
+}

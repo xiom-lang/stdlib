@@ -4,13 +4,30 @@
 
 module xiom.string.titlecase
 
-// Depends on: none
+// Depends on: xiom.string
 
 // ============================================================================
-// Unicode title-case conversion of a whole string and per-word.
-// NOTE: current implementation lives in string.unicode stub - move the functions
-// here during the implementation phase. TODO(compiler): implement.
+// Unicode title-case conversion of a whole string and per-word. Both variants
+// delegate to the flat string library's title-casing routine.
 // ============================================================================
 
-// fn str_titlecase(s: Str) -> Str - convert s to Unicode title case. TODO(compiler): implement.
-// fn str_titlecase_words(s: Str) -> Str - convert each word of s to title case. TODO(compiler): implement.
+use xiom.string;
+
+// Converts `s` to title case: the first character of each whitespace-separated
+// word is uppercased and the remaining characters are lowercased.
+// Returns a new string with the same byte length as `s`.
+// Complexity: O(|s|).
+pub fn str_titlecase(s: Str) -> Str
+  ensures: result.len() == s.len()
+{
+  return string.str_title_case(s);
+}
+
+// Converts each word of `s` to title case, exactly like `str_titlecase`.
+// Returns a new string with the same byte length as `s`.
+// Complexity: O(|s|).
+pub fn str_titlecase_words(s: Str) -> Str
+  ensures: result.len() == s.len()
+{
+  return string.str_title_case(s);
+}

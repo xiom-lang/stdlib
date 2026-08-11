@@ -4,17 +4,64 @@
 
 module xiom.string.pad
 
-// Depends on: none
+// Depends on: xiom.string
 
 // ============================================================================
-// Pad a string to a target width on the left, right, or both sides.
-// NOTE: current implementation lives in string - move the functions here during
-// the implementation phase. TODO(compiler): implement.
+// Pad a string to a target width on the left, right, or both sides. Padding
+// only uses single-byte pad characters correctly; a string already as long as
+// the requested width is returned unchanged. The left/right variants delegate
+// to the flat string library.
 // ============================================================================
 
-// fn str_pad_left(s: Str, width: Int, pad: Char) -> Str - pad s on the left with pad up to width. TODO(compiler): implement.
-// fn str_pad_right(s: Str, width: Int, pad: Char) -> Str - pad s on the right with pad up to width. TODO(compiler): implement.
-// fn str_pad_both(s: Str, width: Int, pad: Char) -> Str - pad s on both sides with pad up to width. TODO(compiler): implement.
-// fn str_center(s: Str, width: Int, pad: Char) -> Str - center s in a field of width using pad. TODO(compiler): implement.
-// fn str_pad_start(s: Str, width: Int, pad: Char) -> Str - pad s at the start with pad up to width (alias of str_pad_left). TODO(compiler): implement.
-// fn str_pad_end(s: Str, width: Int, pad: Char) -> Str - pad s at the end with pad up to width (alias of str_pad_right). TODO(compiler): implement.
+use xiom.string;
+
+// Pads `s` on the left with `pad` up to `width` bytes.
+// Returns `s` unchanged when `s` is already at least `width` bytes long.
+// Complexity: O(width - |s|).
+pub fn str_pad_left(s: Str, width: Int, pad: Char) -> Str {
+  return string.str_pad_left(s, width, pad);
+}
+
+// Pads `s` on the right with `pad` up to `width` bytes.
+// Returns `s` unchanged when `s` is already at least `width` bytes long.
+// Complexity: O(width - |s|).
+pub fn str_pad_right(s: Str, width: Int, pad: Char) -> Str {
+  return string.str_pad_right(s, width, pad);
+}
+
+// Pads `s` on both sides with `pad` up to `width` bytes, distributing the
+// padding so that the left side carries the extra character when the pad count
+// is odd.
+// Returns `s` unchanged when `s` is already at least `width` bytes long.
+// Complexity: O(width - |s|).
+pub fn str_pad_both(s: Str, width: Int, pad: Char) -> Str {
+  let s_len = string.str_len(s);
+  if s_len >= width {
+    return s;
+  };
+  let total = width - s_len;
+  let left = total / 2;
+  let right = total - left;
+  let after_left = string.str_pad_left(s, s_len + left, pad);
+  return string.str_pad_right(after_left, width, pad);
+}
+
+// Centers `s` in a field of `width` bytes using `pad`. Equivalent to
+// `str_pad_both`.
+// Returns `s` unchanged when `s` is already at least `width` bytes long.
+// Complexity: O(width - |s|).
+pub fn str_center(s: Str, width: Int, pad: Char) -> Str {
+  str_pad_both(s, width, pad)
+}
+
+// Alias of `str_pad_left`: pads `s` at the start with `pad` up to `width`.
+// Complexity: O(width - |s|).
+pub fn str_pad_start(s: Str, width: Int, pad: Char) -> Str {
+  return string.str_pad_left(s, width, pad);
+}
+
+// Alias of `str_pad_right`: pads `s` at the end with `pad` up to `width`.
+// Complexity: O(width - |s|).
+pub fn str_pad_end(s: Str, width: Int, pad: Char) -> Str {
+  return string.str_pad_right(s, width, pad);
+}
