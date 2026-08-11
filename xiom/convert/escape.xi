@@ -4,6 +4,8 @@
 
 module xiom.convert.escape
 
+// Depends on: xiom.string
+
 // ============================================================================
 // Escaping and quoting families for markup, delimited text, and shells.
 // Covers HTML/XML entities, CSV/TSV fields, regex and glob literals, and

@@ -4,6 +4,8 @@
 
 module xiom.format.numbering
 
+// Depends on: xiom.string, xiom.num
+
 // ============================================================================
 // Human number words: English, ordinal, Chinese (simplified/traditional),
 // Japanese, Korean, and Indian-system words plus Indian digit grouping and

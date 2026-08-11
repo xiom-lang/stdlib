@@ -4,6 +4,8 @@
 
 module xiom.os.terminal
 
+// Depends on: xiom.ffi, xiom.io
+
 // ============================================================================
 // Terminal control via FFI: isatty, tty names, pseudo-terminals, termios
 // modes (raw/cbreak/canonical), nonblocking I/O, window size, and simple

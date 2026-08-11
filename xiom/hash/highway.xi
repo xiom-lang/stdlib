@@ -4,6 +4,8 @@
 
 module xiom.hash.highway
 
+// Depends on: xiom.string
+
 // ============================================================================
 // HighwayHash is a SIMD-friendly strong pseudo-random-function by Google that
 // is very fast on modern CPUs while resisting many attacks on non-cryptographic

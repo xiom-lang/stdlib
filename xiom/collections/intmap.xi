@@ -4,6 +4,8 @@
 
 module xiom.collect.intmap
 
+// Depends on: xiom.string
+
 // ============================================================================
 // Optimized keyed maps. int_map uses a flat open-addressing table sized for the
 // expected capacity (Int keys -> Int values); string_map uses a string-keyed

@@ -4,6 +4,8 @@
 
 module xiom.net.websocket
 
+// Depends on: xiom.string, xiom.net
+
 // ============================================================================
 // WebSocket framing and client handshake per RFC 6455.
 // Frame encode/decode, masking, and the connect/send/recv client API.

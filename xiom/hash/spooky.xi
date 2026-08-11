@@ -4,6 +4,8 @@
 
 module xiom.hash.spooky
 
+// Depends on: xiom.string
+
 // ============================================================================
 // SpookyHash is Bob Jenkins' well-tested 32/64/128-bit non-cryptographic
 // hash family with excellent avalanche behaviour for short and long inputs.

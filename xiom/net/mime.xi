@@ -4,6 +4,8 @@
 
 module xiom.net.mime
 
+// Depends on: xiom.string
+
 // ============================================================================
 // MIME type parsing, extension mapping, and content negotiation plus
 // related HTTP header utilities: charset, etag, accept, and link.

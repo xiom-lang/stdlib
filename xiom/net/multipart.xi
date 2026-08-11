@@ -4,6 +4,8 @@
 
 module xiom.net.multipart
 
+// Depends on: xiom.string
+
 // ============================================================================
 // multipart/form-data construction and parsing per RFC 7578.
 // Builds and splits multi-part bodies using a caller-provided boundary.

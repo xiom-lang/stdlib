@@ -4,6 +4,8 @@
 
 module xiom.hash.metro
 
+// Depends on: xiom.string
+
 // ============================================================================
 // MetroHash is a fast non-cryptographic hash by J. Andrew Rogers designed
 // around hardware multiply and 64-bit word reads. Its 64/128-bit variants

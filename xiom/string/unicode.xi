@@ -4,6 +4,8 @@
 
 module xiom.string.unicode
 
+// Depends on: xiom.string, xiom.char
+
 // ============================================================================
 // Unicode property tables and transforms: normalization (NFC/NFD/NFKC/NFKD),
 // case folding, grapheme/word/sentence/line segmentation, East Asian display

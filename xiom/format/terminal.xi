@@ -4,6 +4,8 @@
 
 module xiom.format.terminal
 
+// Depends on: xiom.string
+
 // ============================================================================
 // Terminal UI helpers: progress bars, spinners, ANSI styles, colors (named,
 // 256, RGB), cursor control, and screen/line clearing. Pure escape-string

@@ -4,6 +4,8 @@
 
 module xiom.convert.utf
 
+// Depends on: xiom.string, xiom.utf8
+
 // ============================================================================
 // UTF-16 and UTF-32 conversion helpers on top of the core utf8 module.
 // Covers code-unit vectors, little/big-endian byte serialization, code point

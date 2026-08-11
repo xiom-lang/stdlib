@@ -4,6 +4,8 @@
 
 module xiom.collect.segment
 
+// Depends on: none (pure)
+
 // ============================================================================
 // Segment tree over an Int array (0-based indices). Builds in O(n), supports
 // point updates and range queries (sum, min, max) in O(log n). Indices are

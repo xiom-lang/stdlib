@@ -4,6 +4,8 @@
 
 module xiom.format.textual
 
+// Depends on: xiom.string
+
 // ============================================================================
 // Text layout helpers: boxes, borders, separators, headers, footers, titles,
 // sections, lists, definition lists, tables of contents, and text wrapping.

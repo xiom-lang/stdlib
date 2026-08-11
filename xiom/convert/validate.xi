@@ -4,6 +4,8 @@
 
 module xiom.convert.validate
 
+// Depends on: xiom.string
+
 // ============================================================================
 // Format validation helpers for common structured identifiers and values.
 // Covers email, phone, credit card (Luhn), IBAN, SWIFT/BIC, hex colors, and

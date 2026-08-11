@@ -4,6 +4,8 @@
 
 module xiom.os.proc_ffi
 
+// Depends on: xiom.ffi
+
 // ============================================================================
 // Low-level process control beyond process.xi: fork/wait, popen pipes,
 // posix_spawn/exec, process identity and signal delivery. All via minimal C

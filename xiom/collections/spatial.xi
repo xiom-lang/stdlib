@@ -4,6 +4,8 @@
 
 module xiom.collect.spatial
 
+// Depends on: xiom.math
+
 // ============================================================================
 // Spatial indexes for 2D and 3D points. KD-tree supports nearest-neighbor and
 // rectangular range queries; quadtree and octree partition space recursively

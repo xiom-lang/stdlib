@@ -4,6 +4,8 @@
 
 module xiom.net.sse
 
+// Depends on: xiom.net, xiom.string
+
 // ============================================================================
 // Server-Sent Events client per the WHATWG SSE spec. The wire builders
 // live in net.xi; this module owns connection lifecycle and parsing.

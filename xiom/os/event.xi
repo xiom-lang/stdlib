@@ -4,6 +4,8 @@
 
 module xiom.os.event
 
+// Depends on: xiom.ffi
+
 // ============================================================================
 // Async I/O event loops via FFI: epoll, kqueue, eventfd, timerfd, signalfd,
 // poll/ppoll, and select/pselect. Per-OS availability varies; the fallback

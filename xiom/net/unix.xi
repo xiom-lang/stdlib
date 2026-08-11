@@ -4,6 +4,8 @@
 
 module xiom.net.unix
 
+// Depends on: xiom.net, xiom.ffi
+
 // ============================================================================
 // AF_UNIX domain socket client and server over minimal FFI.
 // Connect, listen, accept, send/recv, plus socketpair and credentials.

@@ -4,6 +4,8 @@
 
 module xiom.collect.concurrent
 
+// Depends on: xiom.sync
+
 // NOTE: MPMC/MSPC/SPMC need atomic CAS or a Mutex mutation API; see
 // docs/COMPILER_BUGS.md BUG 2 / BUG 16 family. The single-producer
 // SpscRing already landed in collect/queue.xi; these queue families are

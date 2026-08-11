@@ -4,6 +4,8 @@
 
 module xiom.os.err
 
+// Depends on: xiom.ffi
+
 // ============================================================================
 // Error introspection via FFI: errno access, errno names and messages,
 // perror-style reporting, stack backtraces, symbol demangling, and the last
