@@ -1,4 +1,4 @@
-module xiom.bench.stats
+module xiom.stats
 
 use xiom.stats.dist;
 use xiom.stats.test;
@@ -442,3 +442,4 @@ pub fn stats_r_squared(x: &Vec[Int], y: &Vec[Int]) -> Float64 {
   if ss_tot == 0.0 { return 0.0; };
   return 1.0 - (ss_res / ss_tot);
 }
+
