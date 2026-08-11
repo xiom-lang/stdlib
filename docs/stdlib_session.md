@@ -1,4 +1,4 @@
-# XIOM Stdlib Session — Clean Handoff (2026-08-11)
+# XIOM Stdlib Session — Clean Handoff (2026-08-11, evening session)
 
 > Written at session end for a seamless continuation. Current branch:
 > `feat/architect`. Compiler session works in parallel on crates/ (commits
@@ -10,30 +10,39 @@
 
 | Commit | Content |
 |--------|---------|
-| `dc1dd8e4` | **Phase A — production BigInt** (additive, ~40 new pub fns): constants-as-constructors (`bigint_zero/one/two/ten`), `from_u64` (full 0..2^64-1), `from_hex`/`from_base(2..36)`/`to_hex`/`to_base`, range-checked `to_int`, predicates, `div`, `pow_mod`, `sqrt`/`sqrt_rem`, `lcm`, `ext_gcd`, Miller-Rabin `is_prime`, `next_prime`, `factorial`, `binomial`, `fibonacci`, two's-complement bit ops (`bit_and/or/xor`, arithmetic `shift_right`, `popcount`, `bit_len`), comparison wrappers. **`bigint_div_mod` reworked to Knuth Algorithm D** (D1 normalization, D4-refined qhat with window `(u[idx+1], u[idx])`, D7 denormalization, single-limb schoolbook fast path, upward fixup, **top-limb-zero digit test** — see §4). |
-| `dc1dd8e4` | **Phase B — production BigFloat** (`stdlib/xiom/num/bigfloat.xi` + flat aggregate `bigfloat.xi`): power-of-10 representation `sign × significand × 10^exponent` (normalized), `RoundMode` (Nearest ties-to-even/Up/Down/Zero) + module default, constructors (`from_int/float/str/bigint/with_precision`), string-exact `to_str`/`to_str_prec`, `to_bigint`, range-checked `to_float64`, add/sub/mul/div/inv/sqrt/pow/neg/abs, floor/ceil/round/trunc/fract, `with_rounding`, comparisons, `bigfloat_pi()`/`e()` (100-digit string constants). All arithmetic rounds to max(operand precisions). |
-| `de756136` | **Phase C — transcendentals**: `pi_with_precision` (Machin), `e_with_precision` (Taylor), `exp` (ln10 reduction + exact 10^k scaling), `ln` (m·10^k extraction + √10 reduction + atanh), `log10`, `sin/cos` (π/2 quadrant reduction), `tan`, `atan` (argument-halving identity), `atan2`, `pow_bf` (exp(exp·ln(base))). Working precision = max(operand precisions, 64) + 4 guard digits; O(prec²) series. |
-| `bb06b37c` | **Perf: BigInt Karatsuba** (`_abs_mul_karatsuba`), threshold **4000 limbs** (measured: schoolbook wins < ~10k digits, equal at 10k, karatsuba ~12% faster at 100k digits — by-value Vec semantics make the crossover high). |
-| `437592e6` | **Phase C.5**: `log2`, `exp2`, `cbrt`, `hypot`, `sinh/cosh/tanh`, `asin/acos` (exact endpoints), `asinh/acosh/atanh`, `to_str_sci`, `from_ratio`, `pow10` (exact exponent shift), `floor_int/ceil_int/round_int/trunc_int`. Plus the **Knuth div_mod top-limb fix** (§4). |
-| `afe871a6` | **misc expansion** (23 fns): `damerau_levenshtein_distance` (OSA), `jaro_similarity`, `jaro_winkler_similarity`, `hamming_distance`, `longest_common_subsequence`, `to_camel/pascal/snake/kebab_case` (camelCase-boundary aware), `to_roman`/`from_roman` (1..3999), `ordinal`, `pluralize`, `is_anagram`, temperature/length units, `human_size`. |
-| `1cfcb01b` | **hash**: `xxhash64` (canonical, verified against a clang-built C reference) + `fnv1_32`. |
-| `605bb985` | AI_CONTEXT.md §8.41–8.45 (bigint, bigfloat, C.5, misc, hash). |
+| `c9426687` | **MISSION 1 — wish-list audit** (docs/STDLIB_EXTENSION.md §13): full categorized HAVE/GAP-stdlib/GAP-package tables for HASHING/COLLECTIONS/STRING/CONVERSION/NETWORK/FILE FORMATS/OS + dedupe map; §10 status refreshed (64+ modules, ~2,215 fns, Phases A–C.5/Karatsuba). |
+| `1bc7f8f0` | **G13 — printf/scanf**: `fmt.sprintf_i1/i2/f1/f2/s1/s2` (d/i/u/x/X/o/b/f/e/E/g/G/s, flags/width/prec, C semantics) + `fmt.sscanf`/`sscanf_ints`/`sscanf_floats` (width, `*`, %c, ws-skip). FIXED `convert.float_to_string` (was fptosi bit-pattern garbage → %.15g-style); added `float_to_fixed_str`/`float_to_sci_str`. Smoke `smoke_fmt_sprintf` (123 checks). BUG 12/13 logged. |
+| `1bc7f8f0` | **256-bit bridge (bigint)**: `bigint_to_u64` (0..2^64-1), `bigint_to_u128` (0..2^128-1), `bigint_to_i128` (±2^127) — exact range-checked via BigInt compare + native i128 accumulate. `bigfloat_to_float128` BLOCKED by BUG 13 (fp128 needs compiler-rt helpers); TODO(compiler) in num/bigfloat.xi + AI_CONTEXT §8.41 note. Smoke `smoke_bigint_bridge` (31 checks). |
+| `4bab7b4b` | **Hashes**: XXH3-64 + XXH3-128 (official v0.8.3 port incl. seeded secret; verified against a clang-built reference of the real header — all 39 vectors), SipHash-2-4/1-3 (`hash/siphash.xi`), SuperFastHash (`hash/superfast.xi`), Adler-32 (`hash/crc.xi`). **Collections**: skiplist, trie (autocomplete), cuckoo map, fenwick, object pool, spsc lock-free ring (AtomicInt), ARC cache — all flat-arena style. BUG 14/15/16 logged. |
+| `2517ece0` | **string/text/time**: `str_translate` (tr), `str_rot13`/`str_rot47`/`str_caesar`/`str_atbash`, `str_abbreviate` (middle …), `str_obfuscate`; `ngram_extract`, `jaccard_similarity`, `longest_common_prefix/suffix`; `time.strftime`/`strptime` (DateParse struct). BUG 17/18 logged. |
+| docs (uncommitted → final commit) | AI_CONTEXT §8.3/8.5/8.19/8.45/8.46/8.44 additions, STDLIB_EXTENSION §13.9 generics policy, this session doc. |
 
-**Gates at handoff:** stdlib-exec **72/72**, stdlib_tests **40/40**, API-freeze **2/2**.
-Smokes (all exit 0): `smoke_bigint.xi` (21 sections), `smoke_bigfloat.xi` (55 sections),
-`smoke_misc.xi` (8 sections), `smoke_hash2.xi` (13 sections).
+**Gates at handoff:** stdlib_tests **40/40**, api-freeze **2/2** (verified
+after every batch). Smokes (all exit 0): smoke_fmt_sprintf (123),
+smoke_bigint_bridge (31), smoke_hash3 (39), smoke_collect2a (66),
+smoke_collect2b (26), smoke_str2 (34), smoke_time2 (17).
 
-**Stdlib size:** 64+ modules, ~2,215 pub fns (flat ~1,934 + folder modules).
+**Stdlib size:** 64+ modules, ~2,350+ pub fns (flat ~1,934 + folder modules).
 
 ---
 
-## 2. STDLIB_EXTENSION.md — the big audit (next major workstream)
+## 2. STDLIB_EXTENSION.md — the big audit (DONE this session)
 
-The doc (5,300+ lines) has: the master plan (§1-12, mostly accurate) and a huge
-flat wish-list (HASHING / COLLECTIONS / STRING / CONVERSION / NETWORK / FILE
-FORMATS, lines 388+) that needs **categorization + duplicate detection** and a
-**status refresh** (§10 says "60 modules, 1,922 fns" — now 64+/~2,215; Phases
-C/C.5/Karatsuba not mentioned).
+§13 now contains the full categorized audit (HAVE / GAP-stdlib / GAP-package
+tables for all 7 wish-list categories + dedupe map + §13.9 generics policy).
+Remaining GAP-stdlib work by priority (from §13):
+- Hashing P1/P2: highway, spooky, t1ha, metro, farm (pure ports; no reference
+  harness needed beyond the clang pattern used for XXH3).
+- Collections P1/P2: rbtree, pairing heap, blocking queue, threadpool,
+  TinyLFU, HAMT, interval/range trees, kd/oct/quadtree, segment tree,
+  persistent structures, ring (SpscRing covers the lock-free case).
+- String P1/P2: Unicode tables (normalize/casefold/ea_width/…), template
+  strings, shuffle/rotate/permute/combine/chunk, uuencode/xxencode,
+  quoted-printable, punycode/idna, shell/cmd escaping, regex/glob escaping.
+- Conversion P1/P2: email/iban validation, html/xml escaping.
+- Network P2: cookie/multipart/mime parsing, websocket framing, jwt (pure
+  crypto composition), ntp/sntp, unix sockets.
+- OS P2: symlink/mmap/dup/readv/sendfile/termios/strerror (FFI syscalls).
 
 ### THE RULE (user-mandated, applies to every wish-list item)
 
@@ -53,42 +62,30 @@ C/C.5/Karatsuba not mentioned).
 - Existing folder categories (D4 pattern): `collect/`, `format/`, `hash/`,
   `math/`, `net/`, `num/`, `os/`, `rand/`, `text/` (see §5 for contents).
 
-### Audit method (suggested, docs-only — perfect agent fan-out)
-
-For each wish-list item (`net/tcp`, `collect/rbtree`, `conv/base58`, ...):
-1. **HAVE** → map to the existing module/fn (note the name + module).
-2. **GAP** → decide STDLIB (pure XIOM, zero deps) vs PACKAGE (external dep).
-3. Duplicate detection: e.g. `str/compare`→`cmp`, `str/search`→`string.index_of`,
-   `conv/base64`→`encoding`, `hash/crc`→`hash.crc32_ieee`,
-   `collect/vector`→`collections.Vec`, `str/regex`→`regex`, `conv/uuid`→`rand.uuid_v4`.
-4. Produce a categorized table: Category → Sublibs → Items (HAVE/GAP/PACKAGE).
-5. Refresh §10 status block with current numbers.
-
 ---
 
 ## 3. Remaining stdlib work (priority order)
 
-1. **printf/scanf-style formatting (G13, the last named gap).** Verified
-   missing: no `sprintf`/`sscanf` anywhere. Add `fmt.sprintf(spec, ...)` +
-   `fmt.sscanf` with `%d/%x/%f/%s/%e/%g` (implement with `format1..9` +
-   string ops). Also check `format/` folder (10 fns) for hexdump/table/wrap
-   gaps vs the wish-list.
-2. **256-bit framing (user note).** BigInt/BigFloat are arbitrary precision
-   (cover 256+). Add the explicit bridge: `bigint_to_i128`/`bigint_to_u128`/
-   `bigint_to_u64` (bigint has `to_int` only), `bigfloat_to_float128`, and a
-   doc note in AI_CONTEXT §8.41.
-3. **Generics audit (user note).** Review where generics are used vs not —
-   especially `math` (the biggest family; 186 fns in geom, 52 in math flat +
-   folder). Math should stay `Float64`-specialized (native f64 ABI) but verify
-   `num`/`bits`/`geom` use generics where semantically right (Vec[T],
-   Complex[T] patterns exist). Document the policy in the audit.
-4. **CI wiring:** `smoke_bigfloat`, `smoke_misc`, `smoke_hash2` are manual-only
-   (the harness list lives in crates/ — ask the compiler session to add them,
-   like they did `smoke_bigint`).
-5. **NASM/SIMD §7 tracks** (math/crypto/hash/compress asm): compiler/runtime
-   session domain (crates/ + stdlib/runtime/*.c are OFF-LIMITS to us). Pure
-   fallbacks exist. BUG 2/3 fix would also enable π/ln10 precision caching in
-   bigfloat.
+1. **Compiler bugs to land first** (they block/constrain stdlib shape):
+   BUG 12 (Vec[Float64]/[N]Float64 element reads — blocks float containers),
+   BUG 13 (fp128 compiler-rt helpers — blocks bigfloat_to_float128),
+   BUG 14 (UInt64→UInt128 sext / UInt128 ashr), BUG 15 (single-var inline
+   mask drop), BUG 16 (skiplist×trie / multi-Option-payload startup
+   fast-fail), BUG 17 (Vec[Str] element == → pointer cmp), BUG 18
+   (string×text.similarity×time combo crash; %Q strptime pair miscompile).
+2. **P1 hashes**: highway, spooky, t1ha, metro, farm (pure ports; clang
+   reference harness pattern established).
+3. **P1 collections**: rbtree, blocking queue, threadpool, kd/oct/quadtree,
+   TinyLFU.
+4. **P1 conversion**: punycode/idna, email/iban validation.
+5. **CI wiring**: ask the compiler session to add the new smokes
+   (smoke_fmt_sprintf, smoke_bigint_bridge, smoke_hash3, smoke_collect2a/b,
+   smoke_str2, smoke_time2) to the stdlib-exec harness list.
+6. **Unicode tables** (string P1: normalize/casefold/ea_width/…) — big,
+   table-heavy; utf8 module is the foundation.
+7. **NASM/SIMD §7 tracks**: compiler/runtime session domain (crates/ +
+   stdlib/runtime/*.c are OFF-LIMITS to us). BUG 2/3 fix would enable
+   precision-cached π/ln10 in bigfloat.
 
 ---
 
@@ -108,12 +105,27 @@ For each wish-list item (`net/tcp`, `collect/rbtree`, `conv/base58`, ...):
   `>>` is arithmetic.
 - **XXH64 round** is `rotl(acc + input·P2, 31)·P1` (not the XXH32-style
   double-rotate).
+- **UInt64→UInt128 casts sext and UInt128 `>>` is ashr** (BUG 14): the XXH3
+  64×64→128 product builds from 32-bit halves and masks the high-half shift.
+- **Single-var inline bodies lose the mask** (BUG 15): `var mask = …;
+  return x & mask;` inlines as bare ashr — always use the two-var form.
+- **UInt64 tuples collide with Int tuples** in catalog codegen: return named
+  structs (U64Pair, SipState, IntRepr, MatchTok, SkipSearch).
+- **`&mut Vec[T]` args that are struct FIELDS copy** (fresh-alloca): helper
+  fns taking `&mut Vec[Int]` with `&mut c.field` args lose push/pop — inline
+  list ops on the parent struct (ARC) or use flat arenas.
+- **Vec-of-struct × 2 in one program → startup fast-fail** (BUG 16): use
+  flat parallel Vec[Int] arenas (tree.xi/graph.xi convention).
+- **Vec[Str] element-to-element `==` lowers to pointer compare** (BUG 17):
+  compare string content byte-wise.
 - Smoke-writing rules learned: `str_slice(s, 0, 6)` is 6 chars; `requires`
   violations TRAP at entry (don't call fns with out-of-contract args in
   smokes); `core.to_string` on Float64 truncates (fptosi) — use comparisons or
   scaled-integer prints; match arms must match the enum type (Option vs
   Result); don't chain `.len()` on module-qualified Str-returning calls (bind
-  to a var first).
+  to a var first); float literals like 2.675 are parse-dependent — use
+  exact-f64 values (3.125) in assertions; the builtin float parser is not
+  correctly-rounded to the last ulp (compare with tolerance or scaled ints).
 
 ---
 
@@ -129,10 +141,18 @@ aes 7, crypto 25, sha 23, ecc 16, compress 28, contracts 34, test 30, fmt 28,
 simd 26, thread 22, convert 8, md5 2, des 4, chacha 4, poly1305 1, rsa 6,
 bigfloat 40+ (num/bigfloat.xi), async 27, bench 16.
 
-Folder categories (D4): `collect/` (cache, graph, hash, heap, queue, tree — 81
-fns: Avl, Bst, PHeap, FibHeap, WorkQueue, Deque, BloomFilter, LhMap), `format/`
-(10), `hash/` (15), `math/` (11), `net/` (26: url, dns, proto...), `num/` (82:
-bigfloat, convert...), `os/` (26), `rand/` (19: chacha, mt19937, pcg), `text/` (11).
+Folder categories (D4): `collect/` (cache, graph, hash, heap, queue, tree,
+skiplist, trie, cuckoo, fenwick, objectpool — 2026-08-11 additions: ArcCache,
+SpscRing, SkipList, Trie, CuckooMap, FenwickTree, ObjectPool), `format/` (10),
+`hash/` (city, crc, jenkins, murmur, xxhash, siphash, superfast — 2026-08-11:
+SipHash-2-4/1-3, SuperFastHash, Adler-32, XXH3-64/128), `math/` (11), `net/`
+(26: url, dns, proto...), `num/` (82: bigfloat, convert...), `os/` (26),
+`rand/` (19: chacha, mt19937, pcg), `text/` (11: similarity — 2026-08-11:
+jaccard, lcp/lcsuffix, ngram_extract). fmt.xi gained sprintf/sscanf (~15 new
+pub fns); string.xi +7 (translate/rot13/rot47/caesar/atbash/abbreviate/
+obfuscate); time.xi +2 (strftime/strptime + DateParse); convert.xi +2
+(float_to_fixed_str/float_to_sci_str) and float_to_string fixed; bigint.xi +3
+(to_u64/to_u128/to_i128).
 
 **Verified GAPs (from §6 wish-list):** printf/scanf (G13), murmur3_128,
 xxhash128/XXH3, city/highway/spooky/t1ha/metro/farm/jenkins hashes, base58/62,
@@ -172,13 +192,19 @@ PACKAGE per §2.
   catalog params), BUG 9 (private catalog struct types), BUG 10 (float literal
   6-decimal emission), BUG 11 (unsafe-extern double marshalling), parser
   `bits[L-1]`, catalog import slowness, circular imports verified safe.
-- **STILL OPEN:** BUG 2 (module-global struct FIELD writes lost — use
-  whole-value assignment), BUG 3 (module-global fn-call initializers silently
-  zero — use constructor fns). Stdlib already works around both; fixing them
-  enables `const BIGINT_*`/`BIGFLOAT_*` style and π/ln10 caching.
+- **STILL OPEN (compiler session):** BUG 2 (module-global struct FIELD writes
+  lost — use whole-value assignment), BUG 3 (module-global fn-call
+  initializers silently zero — use constructor fns), **BUG 12–18 (this
+  session, see docs/COMPILER_BUGS.md)**: Vec[Float64]/[N]Float64 element
+  reads (load i64+sitofp / type-string ']' split → AV), fp128 missing
+  compiler-rt helpers (__divtf3/__floatditf/__trunctfdf2), UInt64→UInt128
+  sext + UInt128 ashr, single-var inline mask drop, skiplist×trie startup
+  fast-fail (unqualified MaybeUninit.clone), Vec[Str] element == → pointer
+  cmp, string×text.similarity×time combo crash (+ %Q strptime pair).
 - Pre-existing quirks (stdlib works around): Result[Vec[T]] mono collision,
   chained-method inttoptr, `is Ok`+.value, Bool→Int cast, match-arm type
-  mixing. Full details in docs/COMPILER_BUGS.md.
+  mixing, Option-of-struct/Date payload collisions. Full details in
+  docs/COMPILER_BUGS.md.
 
 ---
 

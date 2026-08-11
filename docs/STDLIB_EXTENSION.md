@@ -5516,3 +5516,26 @@ Recommendation: Keep the core as is. Add the missing modules as packages (@xiom/
 `conv/strftime`→`time.strftime` (landed) · `format/indent|wrap|align`→`fmt.*` · `format/hex`→`format.dump` ·
 `os/memcpy|memcmp`→`mem` · `os/str*`→`string` · `collect/radix`→`collect/trie` · `collect/sparse|dense`→`collections.Set` ·
 `format/*stat*`→`stats` · `net/jsonrpc`→`net.jsonrpc_*` · `str/metaphone|soundex|jaro|ngram|cosine`→`text.similarity`
+
+### 13.9 Generics policy (audited 2026-08-11 — math family, num, bits, geom, complex)
+
+Verified against the live tree. The policy is **specialize-by-default, generic-where-semantic**:
+
+| Area | Pattern | Verdict |
+|------|---------|---------|
+| `math` flat (52 fns: sqrt/trig/exp/log/…) | Float64-specialized | **KEEP** — native f64 ABI, no boxing, libm FFI (BUG 11 fixed) |
+| `math.core` (folder, 11 fns) | generic `[T: Num]` / `[T: Real]` tower (lerp/average/sum/product/abs/clamp/min2/max2/negate/twice) | **KEEP** — the one place width-generic math lives |
+| `num` (243 fns) | mixed: generic `min_value/max_value/epsilon[T: Bounded]`, `saturating_*/wrapping_*/checked_*[T: Bounded+Ord+Add…]` + Float64/Int specializations (f64_floor, parse_int…) | **KEEP** — generics exactly where widths matter; specializations where ABI/perf does |
+| `geom` (186 fns) | Vec2/3/4, Quat, Matrix, transforms — Float64-specialized | **KEEP** — graphics math is f64 by contract; the §5.1 “generic geom” idea was dropped in practice and that is correct |
+| `complex` (20 fns) | `Complex = { re: Float64; im: Float64; }` — NOT `Complex[T]` (the §5.1 plan) | **KEEP** — f64 specialization is the shipped reality; no callers need Complex[Float32] |
+| `bits` (28 fns) | Int-specialized | **KEEP** — bit ops on i64 only |
+| `stats` (23 fns) | Int-specialized (Vec[Int]) | **KEEP** — note: the compiler's Vec[Float64] element reads are broken (BUG 12), so float stats must use scaled-Int or fixed slots until fixed |
+| `bigint`/`bigfloat` | arbitrary precision, concrete types | **KEEP** — no generics needed |
+
+Rationale (documented for future contributors): (1) native scalar ABI (f64/i64) is
+the compiler's fastest and most reliable path — generic containers of floats are
+currently broken (BUG 12); (2) generic code is mono-instantiated per module, so
+generics pay off only when multiple widths are actually instantiated (num's
+checked/saturating/wrapping families are the canonical example); (3) new math
+functions must be added Float64-specialized to `math` unless they are
+width-agnostic numeric helpers, which go to `math.core` with `[T: Num]`.
