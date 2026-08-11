@@ -8,11 +8,7 @@
 // interface (impl Num[Int], Num[Int32], Num[Float64], Num[Float32], ...).
 // One implementation per concept - no per-width duplication.
 
-module xiom.math.tower
-
-// NOTE (2026-08-11): renamed from math.core — the prelude owns the name
-// `core`; this module is the numeric tower contract (see
-// docs/STDLIB_GENERICS.md rule R9).
+module xiom.math.core
 
 // -- Num interface (the numeric tower contract) ------------------------------
 // Implemented by every numeric width. New widths register by adding one
