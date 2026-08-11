@@ -129,30 +129,40 @@ Remaining GAP-stdlib work by priority (from §13):
 
 ---
 
-## 5. Module inventory for the audit (current reality)
+## 5. Module inventory (current reality, 2026-08-11 — AFTER the category restructure)
 
-Flat modules (pub fn counts, 2026-08-11): bigint 52, num 243, math 52, geom
-186 (folder), collections 57, string 45, time 59, sync 66, io 51, ffi 47,
-iter 44, char 42, os 41, core 54, rand 31, serialize 31, log 31, array 28,
-bits 28, encoding 24, reflect 24, regex 22, hash 23 (+15 folder), stats 23,
-cmp 22, sort 20, complex 20, mem 18, path 28, alloc 15, cell 16, rc 15,
-platform 14, env 28, error 11, debug 10, misc 33, process 10, utf8 8, search 8,
-aes 7, crypto 25, sha 23, ecc 16, compress 28, contracts 34, test 30, fmt 28,
-simd 26, thread 22, convert 8, md5 2, des 4, chacha 4, poly1305 1, rsa 6,
-bigfloat 40+ (num/bigfloat.xi), async 27, bench 16.
+**stdlib/xiom is now CATEGORIES-ONLY (24 folders, zero flat files).** Every
+module name is UNCHANGED (the catalog resolves modules by header scan, not
+path — verified with probe programs). Layout:
 
-Folder categories (D4): `collect/` (cache, graph, hash, heap, queue, tree,
-skiplist, trie, cuckoo, fenwick, objectpool — 2026-08-11 additions: ArcCache,
-SpscRing, SkipList, Trie, CuckooMap, FenwickTree, ObjectPool), `format/` (10),
-`hash/` (city, crc, jenkins, murmur, xxhash, siphash, superfast — 2026-08-11:
-SipHash-2-4/1-3, SuperFastHash, Adler-32, XXH3-64/128), `math/` (11), `net/`
-(26: url, dns, proto...), `num/` (82: bigfloat, convert...), `os/` (26),
-`rand/` (19: chacha, mt19937, pcg), `text/` (11: similarity — 2026-08-11:
-jaccard, lcp/lcsuffix, ngram_extract). fmt.xi gained sprintf/sscanf (~15 new
-pub fns); string.xi +7 (translate/rot13/rot47/caesar/atbash/abbreviate/
-obfuscate); time.xi +2 (strftime/strptime + DateParse); convert.xi +2
-(float_to_fixed_str/float_to_sci_str) and float_to_string fixed; bigint.xi +3
-(to_u64/to_u128/to_i128).
+- `core/` : core.xi, cmp.xi, contracts.xi, platform.xi, reflect.xi, simd.xi, test.xi
+- `memory/` : alloc.xi, cell.xi, mem.xi, ptr.xi, rc.xi
+- `ffi/` : ffi.xi
+- `string/` : string.xi, char.xi, utf8.xi, regex.xi + stub sublibs (unicode, template, combinatorics)
+- `text/` : misc.xi, similarity.xi
+- `collections/` : collections.xi, array.xi, iter.xi, sort.xi, search.xi + the 27 collect/* modules (cache, graph, hash, heap, queue, tree, skiplist, trie, cuckoo, fenwick, objectpool, rbtree, pairingheap, tinylfu, hamt, interval, segment, persistent, spatial, threadpool, blockingqueue, concurrent, intmap, ...)
+- `encoding/` : encoding.xi
+- `convert/` : convert.xi + stub sublibs (uuencode, quotedprintable, punycode, escape, validate, utf)
+- `format/` : fmt.xi, dump.xi, number.xi + stub sublibs (terminal, textual, relative, numbering)
+- `num/` : num.xi, bigint.xi, bits.xi, bigfloat.xi (impl), bigfloat_agg.xi (module xiom.bigfloat aggregate), convert.xi
+- `math/` : math.xi, core.xi, complex.xi, geom.xi
+- `bench/` : bench.xi, stats.xi
+- `hash/` : hash.xi + city, crc, jenkins, murmur, xxhash, siphash, superfast + stub sublibs (fnv, highway, spooky, t1ha, metro, farm)
+- `crypto/` : crypto.xi, aes.xi, sha.xi, md5.xi, des.xi, ecc.xi, poly1305.xi, rsa.xi, chacha.xi
+- `rand/` : rand.xi, chacha.xi, mt19937.xi, pcg.xi
+- `net/` : net.xi + url, dns, proto + stub sublibs (cookie, multipart, mime, websocket, jwt, ntp, ping, unix, sse)
+- `os/` : os.xi, env.xi, path.xi, process.xi + fs.xi, proc.xi, term.xi + stub sublibs (fs_ffi, proc_ffi, event, terminal, err, filetype)
+- `io/` : io.xi, log.xi
+- `concurrency/` : sync.xi, async.xi, thread.xi
+- `time/` : time.xi · `error/` : error.xi · `compress/` : compress.xi · `debug/` : debug.xi · `serialize/` : serialize.xi
+
+**GATES NOTE (compiler session):** the restructure breaks
+`crates/xiom-codegen/tests/stdlib_tests.rs` `stdlib_modules()` and the
+api-freeze test's path list — update the paths to the new layout (one
+mechanical edit per entry). Module names/contents are byte-identical
+(84 pure renames). The stdlib-exec smokes import by MODULE NAME and are
+unaffected. Resolution was verified by compiling smokes across categories
+(smoke_str2 34/34, smoke_fmt_sprintf 123/123 with the new layout).
 
 **Verified GAPs (from §6 wish-list):** printf/scanf (G13), murmur3_128,
 xxhash128/XXH3, city/highway/spooky/t1ha/metro/farm/jenkins hashes, base58/62,
