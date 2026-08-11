@@ -8,7 +8,12 @@
 // interface (impl Num[Int], Num[Int32], Num[Float64], Num[Float32], ...).
 // One implementation per concept - no per-width duplication.
 
-module xiom.math.core
+module xiom.math.tower
+
+// The generic numeric tower contract (Num/Real/FromInt) — the name `tower`
+// (renamed from `core` 2026-08-11, owner decision) distinguishes it from the
+// prelude `xiom.core`. STDLIB_GENERICS.md rule R9: no other sublib may be
+// named `core`; the prelude owns that name.
 
 // -- Num interface (the numeric tower contract) ------------------------------
 // Implemented by every numeric width. New widths register by adding one

@@ -1,10 +1,10 @@
-﻿# XIOM Standard Library & Package Architecture Plan
+# XIOM Standard Library & Package Architecture Plan
 
 > **Status: PLANNING (v0.56.0, 2026-08-07)**
-> **Owner:** Compiler team â€” `feat/architect`
+> **Owner:** Compiler team — `feat/architect`
 > **Strategy: CLEAN BREAK NOW, 3 tiers, ZERO test churn.** The language is pre-public
 > and the monorepo will be split into separate repos before going public (no history
-> to preserve) â€” so we build the stdlib the RIGHT way now, with no shims, no
+> to preserve) — so we build the stdlib the RIGHT way now, with no shims, no
 > deprecation windows, no legacy compat.
 > **Constraint:** Stdlib = `stdlib/xiom/`, packages = `packages/`, external projects =
 > repo top level. This document is the master plan; it only POINTS at locations.
@@ -19,25 +19,25 @@
 
 | Tier | What | Test churn |
 |------|------|-----------|
-| **Tier 1 â€” Cleanup & consolidation** | Delete `demo`; absorb orphan/duplicate modules into their canonical homes (`b64`/`hex`â†’`encoding`, `random`â†’`rand`, `runner`/`types`â†’`bench`, `ed25519`/`pbkdf`â†’crypto family) | **ZERO** (all orphans have 0 external import sites) |
-| **Tier 2 â€” Reorganization** | Split huge domains into proper module families: **math** â†’ `num`/`bits`/`math`/`geom`/`complex`/`bigint`/`stats`/`rand`/`convert`; **crypto** â†’ `crypto`/`sha`/`md5`/`aes`/`chacha`/`poly1305`/`ecc`/`rsa`/`des`. No forced renames of the 40 test-imported modules. | **ZERO** (splits are new modules + internal moves) |
-| **Tier 3 â€” Comprehensive expansion** | Fill every gap to production grade: full string/UTF-8, sorting, searching, Date/ISO8601, bigint, complex, geom, full crypto suite, more hashes, more compression, platform abstraction, debug, misc algos | **ZERO** (additive: new fns + new modules) |
+| **Tier 1 — Cleanup & consolidation** | Delete `demo`; absorb orphan/duplicate modules into their canonical homes (`b64`/`hex`→`encoding`, `random`→`rand`, `runner`/`types`→`bench`, `ed25519`/`pbkdf`→crypto family) | **ZERO** (all orphans have 0 external import sites) |
+| **Tier 2 — Reorganization** | Split huge domains into proper module families: **math** → `num`/`bits`/`math`/`geom`/`complex`/`bigint`/`stats`/`rand`/`convert`; **crypto** → `crypto`/`sha`/`md5`/`aes`/`chacha`/`poly1305`/`ecc`/`rsa`/`des`. No forced renames of the 40 test-imported modules. | **ZERO** (splits are new modules + internal moves) |
+| **Tier 3 — Comprehensive expansion** | Fill every gap to production grade: full string/UTF-8, sorting, searching, Date/ISO8601, bigint, complex, geom, full crypto suite, more hashes, more compression, platform abstraction, debug, misc algos | **ZERO** (additive: new fns + new modules) |
 
 ### 1.2 Principles
 
-1. **Stdlib has NO external dependencies** â€” only pure XIOM + OS syscalls via minimal FFI + the compiler substrate (LLVM/clang, NASM) the language is built on.
+1. **Stdlib has NO external dependencies** — only pure XIOM + OS syscalls via minimal FFI + the compiler substrate (LLVM/clang, NASM) the language is built on.
 2. **Packages build ON stdlib**; may wrap third-party C libraries (FFI).
-3. **External projects** (frameworks, engines, apps) live at repo top level: `xiom-pulse` (Node.js-like web framework), `xiom-game-engine`, and the existing ones (`xiom-db`, `xiom-vector`, `xiom-playground`, â€¦). They are NOT packages.
+3. **External projects** (frameworks, engines, apps) live at repo top level: `xiom-pulse` (Node.js-like web framework), `xiom-game-engine`, and the existing ones (`xiom-db`, `xiom-vector`, `xiom-playground`, …). They are NOT packages.
 4. **The no-break contract = module name + public fn signature** of the 40 test-imported modules (2,090 regression files, 687 smokes, eco fixtures, 66 packages). Both `use xiom.x;` and `use stdlib.xiom.x;` must keep resolving.
 5. **No shims, no deprecation cycles.** Pre-public: rename/delete freely, update callers in the same commit. Everything below is designed so that the *externally visible* surface (the 40 modules) stays byte-identical anyway.
-6. **Every heavy domain gets a NASM/SIMD optimization track** (math, crypto, hash, compress) with pure-XIOM fallback + runtime dispatch (see Â§7).
-7. **Clean state stays clean** â€” an API-freeze test (Â§10) snapshots all stdlib pub signatures after the rework.
+6. **Every heavy domain gets a NASM/SIMD optimization track** (math, crypto, hash, compress) with pure-XIOM fallback + runtime dispatch (see §7).
+7. **Clean state stays clean** — an API-freeze test (§10) snapshots all stdlib pub signatures after the rework.
 
 ---
 
-## 2. Current State Inventory (scanned 2026-08-06 â€” read-only)
+## 2. Current State Inventory (scanned 2026-08-06 — read-only)
 
-### 2.1 Stdlib â€” 51 modules in `stdlib/xiom/*.xi` (~1,300 pub fns)
+### 2.1 Stdlib — 51 modules in `stdlib/xiom/*.xi` (~1,300 pub fns)
 
 | Module | fns | Module | fns | Module | fns |
 |--------|----:|--------|----:|--------|----:|
@@ -60,22 +60,22 @@
 | types | 2 | test | 17 | demo | 10 |
 | array | 23 | | | | |
 
-**Orphans / duplicates (ZERO external imports â€” free to absorb):** `b64`, `hex`, `random`, `runner`, `types`, `stats`(keep, expand), `md5`(keep), `aes`(keep), `sha`(keep), `ed25519`, `pbkdf`, `demo`(DELETE).
+**Orphans / duplicates (ZERO external imports — free to absorb):** `b64`, `hex`, `random`, `runner`, `types`, `stats`(keep, expand), `md5`(keep), `aes`(keep), `sha`(keep), `ed25519`, `pbkdf`, `demo`(DELETE).
 
-### 2.2 Packages â€” 66 dirs in `packages/` (all `deps: xiom-std`)
+### 2.2 Packages — 66 dirs in `packages/` (all `deps: xiom-std`)
 
 - **Pure XIOM (15):** xiom-json, xiom-http, xiom-net, xiom-rest, xiom-graphql, xiom-websocket, xiom-micro, xiom-realtime, xiom-algo, xiom-math, xiom-core, xiom-ffi, xiom-log, xiom-test, xiom-arrow
 - **FFI-bound (51):** openssl, libsodium, sqlite, postgres/libpq, redis, kafka, zeromq, grpc, protobuf, wasmtime, libuv, zstd, lzfse, tensorflow, libtorch/torch, onnx, numpy, pandas, scipy, blas, openblas, cuda, eigen, opencv, ffmpeg, sql, dxc, moveit, ros2, gazebo, sensor, control, bullet, jolt, box2d, ozz, meshopt, assimp, raylib, glfw, sdl3, imgui, ui, miniaudio, openal, portaudio, phonon, vulkan, opengl, directx11, directx12, vma, stb
-- **Namespace note:** packages declare `module xiom.json`, `xiom.algo`, `xiom.http.client` â€” they share `xiom.*` with stdlib. Guarded by the reserved-name list (Â§3).
+- **Namespace note:** packages declare `module xiom.json`, `xiom.algo`, `xiom.http.client` — they share `xiom.*` with stdlib. Guarded by the reserved-name list (§3).
 
 ### 2.3 Test/ecosystem surface (the no-break contract)
 
-- `tests/regression/` â€” 2,090 files, 467 with `use` imports
-- `examples/stdlib_smoke/` â€” 687 files
-- `tests/ecosystem/` â€” internal E2E fixtures
+- `tests/regression/` — 2,090 files, 467 with `use` imports
+- `examples/stdlib_smoke/` — 687 files
+- `tests/ecosystem/` — internal E2E fixtures
 - 40 stdlib modules imported by tests: alloc, array, async, bench, cell, char, cmp, collections, compress, contracts, convert, core, crypto, encoding, env, error, ffi, fmt, hash, io, iter, log, math, mem, net, num, os, path, ptr, rand, rc, reflect, regex, serialize, simd, string, sync, test, thread, time
-- Import forms: `use xiom.x;` + `use stdlib.xiom.x;` (35 files) â€” alias is a prefix rewrite (crates/xiom/src/lib.rs:2139), stays name-based.
-- **Compiler hardcode to keep in mind:** `xiom.collections.Vec` (crates/xiom-codegen/src/lib.rs:2253/2270) â€” `collections` name must stay (it does).
+- Import forms: `use xiom.x;` + `use stdlib.xiom.x;` (35 files) — alias is a prefix rewrite (crates/xiom/src/lib.rs:2139), stays name-based.
+- **Compiler hardcode to keep in mind:** `xiom.collections.Vec` (crates/xiom-codegen/src/lib.rs:2253/2270) — `collections` name must stay (it does).
 
 ---
 
@@ -87,33 +87,33 @@
 | Package | `xiom.<name>` or `xiom.<pkg>.<feature>` | Only if name NOT reserved; else rename to `xiom.<pkg>.<feature>` |
 | External project | repo top level | Depends on stdlib + packages like any user |
 
-**Reserved by stdlib (monotonic â€” extend as stdlib grows):**
+**Reserved by stdlib (monotonic — extend as stdlib grows):**
 `core, io, os, sys, env, args, path, file, dir, time, date, duration, thread, sync, mutex, atomic, condvar, rwlock, semaphore, once, process, signal, memory, alloc, mem, ptr, ffi, string, str, utf8, utf16, char, array, slice, range, iter, vector, list, stack, queue, ring, deque, priority, map, set, tree, btree, rbtree, avl, heap, bheap, fheap, filter, num, math, int, uint, float, const, abs, minmax, clamp, sqrt, pow, log, exp, trig, atrig, hyper, floor, modf, ldexp, bit, bits, rotate, endian, crc, adler, checksum, bitarray, hash, fnv, murmur, city, xxhash, siphash, highway, composite, rand, random, mt, pcg, xorshift, chacha, dist, seed, source, crypto, sha, sha1, sha256, sha512, md5, blake2, keccak, aes, des, poly1305, curve25519, ed25519, rsa, dh, otp, entropy, kdf, hmac, padding, mode, compress, deflate, inflate, zlib, gzip, lz4, snappy, huffman, lz, rle, serial, binary, varint, fixed, zero, buffer, stream, sort, quick, merge, heap, insert, bubble, select, radix, count, tim, stable, search, binary, linear, interp, exponential, jump, ternary, concurrent, channel, select, spawn, join, future, promise, yield, convert, conv, parse, atoi, itoa, tostring, toint, tofloat, compare, replace, trim, split, join, case, strip, repeat, pad, slice, escape, printf, scanf, format, fmt, regex, reflect, typeid, align, offset, unsafe, builtin, callconv, platform, linux, windows, darwin, bsd, unix, posix, debug, trace, symbol, break, print, assert, source, perf, counter, cycle, bench, prof, test, misc, uuid, guid, version, semver, glob, diff, patch, natural, levenshtein, soundex, error, option, result, panic, defer, log, stats, simd, async, cell, rc, contracts, serialize, net, socket, tcp, udp, dns, ip, port, url, host, protocol, icmp, mac, websocket, sse, sql, sqlite, postgres, mysql, mongo, redis, oauth, jwt, tls, ssl, cert, x509, ldap, saml, bcrypt, argon2, password, sanitize, escape, audit, encrypt, decrypt, key, secret, vault, i18n, locale, translate, plural, collation, transliteration, unicode, icu, unit, currency, timezone, qrcode, slug, emoji, phone, email, geo, calendar, holiday, units, license, notice, legal, game, engine, physics, collision, particle, scene, entity, ai, pathfinding, steering, state, save, achievement, leaderboard, multiplayer, input, audio, ui, level, event, web, server, router, middleware, auth, session, cookie, cache, static, template, form, validation, csrf, xss, rate, cors, docs, ml, tensor, neural, deep, training, inference, optimizer, layers, activation, loss, metrics, dataset, preprocess, feature, selection, ensemble, boosting, randomforest, svm, clustering, dimensionality, media, image, png, jpeg, gif, bmp, webp, svg, mp3, wav, ogg, flac, aac, video, mp4, avi, mkv, codec, subtitle, embedded, gpio, i2c, spi, uart, adc, dac, pwm, interrupt, timer, rtc, eeprom, flash, sd, ble, zigbee, blockchain, ethereum, bitcoin, smartcontract, wallet, transaction, consensus, merkle, hashchain, nft, defi, web3, oracle, bridge, cloud, aws, azure, gcp, docker, k8s, terraform, ansible, puppet, chef, salt, helm, serverless, cfn, monitoring, tracing, metrics, alerting, scaling, util, logger, config, flag, option, retry, cache, pool, worker, lru, ttl, backoff, timeout, context, cancel, benchmark, profiling, fuzz, mock, stub, coverage, property, golden, snapshot, performance, security, compliance, report, compiler, parser, lexer, ast, codegen, optimizer, linter, formatter, analyzer, refactor, plugin, macro, inline, jit, wasm, llvm, geom, bigint, bigfloat, complex, sort, search`
 
 ---
 
-## 4. TIER 1 â€” Cleanup & Consolidation (ZERO test churn)
+## 4. TIER 1 — Cleanup & Consolidation (ZERO test churn)
 
 All targets below have **0 external import sites** (verified 2026-08-06). Only internal stdlib cross-imports change (~15 statements).
 
-| Action | Module | â†’ Canonical home | Internal imports to update |
+| Action | Module | → Canonical home | Internal imports to update |
 |--------|--------|------------------|---------------------------|
-| DELETE | `demo.xi` (10 fns, example cruft) | â€” | none |
-| MERGE | `b64.xi` (4) | `encoding` (base64/base64url already there) | b64â†’encoding |
-| MERGE | `hex.xi` (3) | `encoding` (hex already there) | hexâ†’encoding |
-| MERGE | `random.xi` (1) | `rand` (random() already there) | randomâ†’rand |
-| MERGE | `runner.xi` (8) | `bench` (benchmark reporting) | runnerâ†’bench.typesâ†’bench |
-| MERGE | `types.xi` (2, BenchConfig/BenchSuite) | `bench` | arrayâ†’bench |
+| DELETE | `demo.xi` (10 fns, example cruft) | — | none |
+| MERGE | `b64.xi` (4) | `encoding` (base64/base64url already there) | b64→encoding |
+| MERGE | `hex.xi` (3) | `encoding` (hex already there) | hex→encoding |
+| MERGE | `random.xi` (1) | `rand` (random() already there) | random→rand |
+| MERGE | `runner.xi` (8) | `bench` (benchmark reporting) | runner→bench.types→bench |
+| MERGE | `types.xi` (2, BenchConfig/BenchSuite) | `bench` | array→bench |
 | MERGE | `ed25519.xi` (3) | `ecc` (new Tier-2 module) | none |
-| MERGE | `pbkdf.xi` (2) | `crypto` (PBKDF2/HKDF) | pbkdfâ†’crypto |
-| KEEP+EXPAND | `stats.xi` (8) | becomes full statistics module | â€” |
-| KEEP | `md5`, `aes`, `sha`, `crypto` | crypto family (Â§5.2) | â€” |
+| MERGE | `pbkdf.xi` (2) | `crypto` (PBKDF2/HKDF) | pbkdf→crypto |
+| KEEP+EXPAND | `stats.xi` (8) | becomes full statistics module | — |
+| KEEP | `md5`, `aes`, `sha`, `crypto` | crypto family (§5.2) | — |
 
-**Result:** 51 â†’ 43 modules before Tier 2. Zero tests touched. `stdlib-pin/` snapshot regenerated at the end of the tier.
+**Result:** 51 → 43 modules before Tier 2. Zero tests touched. `stdlib-pin/` snapshot regenerated at the end of the tier.
 
 ---
 
-## 5. TIER 2 â€” Reorganization into Module Families
+## 5. TIER 2 — Reorganization into Module Families
 
 No forced renames of the 40 test-imported modules (their names are already good). Reorganization = NEW modules + internal moves. Two domains are split because they are huge and need optimization tracks: **math** and **crypto**.
 
@@ -123,19 +123,19 @@ No forced renames of the 40 test-imported modules (their names are already good)
 |--------|--------|-------|
 | `num` | KEEP/EXPAND | integer bounds, gcd/lcm, bit ops (count_ones/zeros, rotate, reverse_bits, byte_swap, bit read/write, endian conversion), power-of-two |
 | `bits` | **NEW** | BitArray, bit reader/writer, bit streams, base-N conversion |
-| `math` | KEEP/EXPAND (+NASM) | constants (Ï€/e/Ï„), abs/minmax/clamp, sqrt (fast), pow (int/float), trig (sin/cos/tan), inverse trig, hyperbolic, log (ln/log2/log10), exp, floor/ceil/round/trunc, modf, ldexp/frexp, fma, remainder, hypot, signum, lerp |
+| `math` | KEEP/EXPAND (+NASM) | constants (π/e/τ), abs/minmax/clamp, sqrt (fast), pow (int/float), trig (sin/cos/tan), inverse trig, hyperbolic, log (ln/log2/log10), exp, floor/ceil/round/trunc, modf, ldexp/frexp, fma, remainder, hypot, signum, lerp |
 | `geom` | **NEW** | Vec2/3/4, dot/cross/normalize, Quaternion, Matrix2/3/4, transforms (translate/rotate/scale/look_at/projection), collision primitives (AABB/sphere/ray) |
 | `complex` | **NEW** | Complex[T], arithmetic, conjugate, abs/arg, exp/log/pow/sqrt, trig |
 | `bigint` | **NEW** | arbitrary-precision int, add/sub/mul/div/mod, pow, gcd, primality, base conversion (+NASM montgomery/multiply) |
 | `stats` | EXPAND | mean/median/mode/stddev/variance/percentile/quartiles/min/max/sum, covariance, correlation, linear regression, histogram |
 | `rand` | EXPAND | StdRng + MT19937, PCG, Xorshift, ChaCha; distributions: uniform/normal/exponential/binomial/poisson; seed/entropy |
-| `convert` | EXPAND | int/float/string/bool/char, radix 2â€“36, float formatting (scientific/fixed), parse-from-str |
+| `convert` | EXPAND | int/float/string/bool/char, radix 2–36, float formatting (scientific/fixed), parse-from-str |
 
 ### 5.2 Crypto family (split `crypto` + new modules)
 
 | Module | Status | Scope |
 |--------|--------|-------|
-| `crypto` | EXPAND (umbrella) | HMAC, KDF (PBKDF2, HKDF â€” absorbs pbkdf), entropy, OTP (HOTP/TOTP), padding (PKCS7), block modes (CBC/CTR/GCM/CCM), crypto_random, constant-time compare, random_bytes |
+| `crypto` | EXPAND (umbrella) | HMAC, KDF (PBKDF2, HKDF — absorbs pbkdf), entropy, OTP (HOTP/TOTP), padding (PKCS7), block modes (CBC/CTR/GCM/CCM), crypto_random, constant-time compare, random_bytes |
 | `sha` | EXPAND | SHA-1, SHA-224/256/384/512, SHA-3 (Keccak), BLAKE2 (+SHA-NI asm) |
 | `md5` | KEEP | MD5 digest (legacy) |
 | `aes` | EXPAND | AES-128/192/256, ECB/CBC/CTR/GCM/CCM, constant-time (+AES-NI asm) |
@@ -150,9 +150,9 @@ No forced renames of the 40 test-imported modules (their names are already good)
 | Module | Status | Scope |
 |--------|--------|-------|
 | `string` | MAJOR EXPAND | existing + UTF-8 encode/decode/validate, codepoint iteration, UTF-16, case (upper/lower/title), strip, pad, repeat, escape/unescape, printf/scanf, format, index_of/rfind, replace_all, split (multi-delim), join, is_* predicates, char_at/byte_at, byte_len, reverse, natural compare |
-| `char` | EXPAND | full Unicode categories, case conversion, to_digit/from_digit, codepointâ†”UTF-8 |
+| `char` | EXPAND | full Unicode categories, case conversion, to_digit/from_digit, codepoint↔UTF-8 |
 | `utf8` | **NEW** | dedicated UTF-8/UTF-16 codec + validation + BOM handling |
-| `fmt` | EXPAND | Formatter, to_str, format1â€“9, printf-style, table, columns, wrap, indent, hexdump, pretty, duration/date formatting |
+| `fmt` | EXPAND | Formatter, to_str, format1–9, printf-style, table, columns, wrap, indent, hexdump, pretty, duration/date formatting |
 | `regex` | EXPAND | full syntax: quantifiers, groups, alternation, classes, anchors, lookahead, captures, replace, split, find_iter |
 
 ### 5.4 System family
@@ -210,13 +210,13 @@ No forced renames of the 40 test-imported modules (their names are already good)
 |--------|--------|-------|
 | `net` | EXPAND | TCP/UDP sockets, DNS, addresses, http_get/post, IPv6, URL parse, host/port, protocol helpers, ICMP ping |
 
-**Target stdlib: ~57 modules** (51 âˆ’ 6 absorbed/deleted + 12 new in Tiers 1â€“2, then Tier 3 additions). Every existing pub fn signature preserved.
+**Target stdlib: ~57 modules** (51 − 6 absorbed/deleted + 12 new in Tiers 1–2, then Tier 3 additions). Every existing pub fn signature preserved.
 
 ---
 
-## 6. TIER 3 â€” Comprehensive Expansion (the "go nuts" coverage)
+## 6. TIER 3 — Comprehensive Expansion (the "go nuts" coverage)
 
-Every module above carries its full coverage list (Â§5). The expansion priorities (gaps closed):
+Every module above carries its full coverage list (§5). The expansion priorities (gaps closed):
 
 | # | Gap | Home | Priority |
 |---|-----|------|----------|
@@ -238,7 +238,7 @@ Every module above carries its full coverage list (Â§5). The expansion priorit
 | G16 | PRNGs (MT/PCG/xorshift), chacha20/poly1305/keccak/curve25519/rsa/des | `rand`/crypto family | P2 |
 | G17 | Full statistics (covariance, regression, histogram) | `stats` | P2 |
 
-**"Comprehensive and top-tier" means:** every module is (a) fully covered per its Â§5 scope, (b) documented with examples in `docs/`, (c) tested by dedicated smoke files, (d) optimized where heavy (Â§7), (e) designed for future extension (generic traits: `Hash`, `Ord`, `Serialize`, `Deserialize`, `Iterator`).
+**"Comprehensive and top-tier" means:** every module is (a) fully covered per its §5 scope, (b) documented with examples in `docs/`, (c) tested by dedicated smoke files, (d) optimized where heavy (§7), (e) designed for future extension (generic traits: `Hash`, `Ord`, `Serialize`, `Deserialize`, `Iterator`).
 
 ---
 
@@ -249,7 +249,7 @@ Heavy domains get assembly-accelerated hot paths with pure-XIOM fallback, runtim
 | Domain | Accelerated ops | Instruction sets |
 |--------|-----------------|------------------|
 | math | sqrt/rsqrt, trig/exp/log (polynomial minimax), vector/matrix multiply | SSE2, AVX2, FMA |
-| bigint | multiplication (schoolbook â†’ Karatsuba â†’ Montgomery), division | SSE2, AVX2 |
+| bigint | multiplication (schoolbook → Karatsuba → Montgomery), division | SSE2, AVX2 |
 | crypto | AES round (AES-NI), SHA-1/256 (SHA-NI), GHASH/GCM (PCLMULQDQ), ChaCha20, Poly1305, constant-time primitives | AES-NI, SHA-NI, PCLMULQDQ, AVX2 |
 | hash | xxhash/highway/murmur streaming | SSE2, AVX2 |
 | compress | deflate match finding (hash chains), huffman encode, lz4/snappy fast paths | SSE2, AVX2 |
@@ -260,13 +260,13 @@ Heavy domains get assembly-accelerated hot paths with pure-XIOM fallback, runtim
 2. Dispatch via `simd.simd_supported()`/CPUID at first call; cache result.
 3. New asm files live in `stdlib/runtime/` and are selected by platform in `build-runtime`.
 4. Correctness gate: asm path vs pure path must produce identical results (diff tests).
-5. Constant-time crypto ops are NOT optimized for speed at the expense of secrecy â€” branch-free even in the pure path.
+5. Constant-time crypto ops are NOT optimized for speed at the expense of secrecy — branch-free even in the pure path.
 
 ---
 
 ## 8. Packages Catalog
 
-### 8.1 Existing (66) â€” `packages/` â€” half-done, revisit later
+### 8.1 Existing (66) — `packages/` — half-done, revisit later
 
 Pure-XIOM: xiom-json, xiom-http, xiom-net, xiom-rest, xiom-graphql, xiom-websocket, xiom-micro, xiom-realtime, xiom-algo, xiom-math, xiom-core, xiom-ffi, xiom-log, xiom-test, xiom-arrow.
 FFI-bound: openssl, libsodium, sqlite, postgres/libpq, redis, kafka, zeromq, grpc, protobuf, wasmtime, libuv, zstd, lzfse, tensorflow, libtorch/torch, onnx, numpy, pandas, scipy, blas, openblas, cuda, eigen, opencv, ffmpeg, sql, dxc, moveit, ros2, gazebo, sensor, control, bullet, jolt, box2d, ozz, meshopt, assimp, raylib, glfw, sdl3, imgui, ui, miniaudio, openal, portaudio, phonon, vulkan, opengl, directx11, directx12, vma, stb.
@@ -300,74 +300,74 @@ Each placeholder has a README.md with planned scope/modules; no implementation y
 
 | Project | Proposal mapping | Status |
 |---------|------------------|--------|
-| **xiom-pulse** | Node.js-like web framework: server, router, middleware, auth, session, cookie, cache, static, template, form, validation, csrf, xss, rate, cors, sse, rest, graphql | ðŸ”² PLACEHOLDER â€” README created; consumes xiom-http/json/websocket/graphql/rest |
-| **xiom-game-engine** | game/*: engine, math, physics, collision, particle, scene, entity (ECS), ai, pathfinding, steering, state, save, achievement, leaderboard, multiplayer, input, audio, ui, level, event | ðŸ”² PLACEHOLDER â€” README created; consumes binding packages (raylib, sdl3, jolt, bullet, imgui, miniaudio, â€¦) |
-| xiom-db | database product | âœ… EXISTS |
-| xiom-vector | vector database | âœ… EXISTS |
-| xiom-debugger-pro | debugger | âœ… EXISTS |
-| xiom-playground | WASM playground | âœ… EXISTS |
-| xiom-website | website | âœ… EXISTS |
-| xiom-Book | language book | âœ… EXISTS |
-| xiom-benchmark-chaos | benchmark harness | âœ… EXISTS (other owner) |
-| xiom-research_paper | research | âœ… EXISTS |
+| **xiom-pulse** | Node.js-like web framework: server, router, middleware, auth, session, cookie, cache, static, template, form, validation, csrf, xss, rate, cors, sse, rest, graphql | 🔲 PLACEHOLDER — README created; consumes xiom-http/json/websocket/graphql/rest |
+| **xiom-game-engine** | game/*: engine, math, physics, collision, particle, scene, entity (ECS), ai, pathfinding, steering, state, save, achievement, leaderboard, multiplayer, input, audio, ui, level, event | 🔲 PLACEHOLDER — README created; consumes binding packages (raylib, sdl3, jolt, bullet, imgui, miniaudio, …) |
+| xiom-db | database product | ✅ EXISTS |
+| xiom-vector | vector database | ✅ EXISTS |
+| xiom-debugger-pro | debugger | ✅ EXISTS |
+| xiom-playground | WASM playground | ✅ EXISTS |
+| xiom-website | website | ✅ EXISTS |
+| xiom-Book | language book | ✅ EXISTS |
+| xiom-benchmark-chaos | benchmark harness | ✅ EXISTS (other owner) |
+| xiom-research_paper | research | ✅ EXISTS |
 
 ---
 
-## 10. IMPLEMENTATION STATUS (2026-08-07) — ALL PHASES COMPLETE
+## 10. IMPLEMENTATION STATUS (2026-08-07) � ALL PHASES COMPLETE
 
 ### Completed
 | Phase | Scope | Result |
 |-------|-------|--------|
-| Phase 0 | Plan + 260 package / 2 project placeholders | ✅ Done |
-| Phase 1 | Tier 1 cleanup: 8 orphan modules deleted, API-freeze gate (905→1,922 sigs) | ✅ Done |
-| Phase 2 | Tier 2: 16 new modules (sort, search, bits, geom, complex, bigint, chacha, poly1305, ecc, rsa, des, utf8, platform, debug, misc, process) + resolve_module_call leaf-first compiler fix + runtime getpid | ✅ Done |
-| Phase 3 | Tier 3: +600 fns across 30 modules (text, time/Date+ISO8601, collections, num, crypto/data, core/quality families) | ✅ Done |
-| Phase 4 | NASM/SIMD: hardware popcnt/clz/ctz intrinsics, SIMD mem_copy/set/compare; existing SHA-NI/AES-NI/SSE2 asm retained | ✅ Done |
+| Phase 0 | Plan + 260 package / 2 project placeholders | ? Done |
+| Phase 1 | Tier 1 cleanup: 8 orphan modules deleted, API-freeze gate (905?1,922 sigs) | ? Done |
+| Phase 2 | Tier 2: 16 new modules (sort, search, bits, geom, complex, bigint, chacha, poly1305, ecc, rsa, des, utf8, platform, debug, misc, process) + resolve_module_call leaf-first compiler fix + runtime getpid | ? Done |
+| Phase 3 | Tier 3: +600 fns across 30 modules (text, time/Date+ISO8601, collections, num, crypto/data, core/quality families) | ? Done |
+| Phase 4 | NASM/SIMD: hardware popcnt/clz/ctz intrinsics, SIMD mem_copy/set/compare; existing SHA-NI/AES-NI/SSE2 asm retained | ? Done |
 
-### Final stdlib: 64+ modules, ~2,215 public fns (was 51/~1,300) — status refreshed 2026-08-11
+### Final stdlib: 64+ modules, ~2,215 public fns (was 51/~1,300) � status refreshed 2026-08-11
 
 All 16 Tier-2 modules have CI smokes in examples/stdlib_smoke (stdlib_execution_tests: 72/72).
 Freeze gate: 2/2. stdlib compile: 40/40. feature-reg: 510/510. integration: 128/128. checker: 156/156.
 
 **Phases landed since this doc was written (see docs/stdlib_session.md):**
-- **Phase A — production BigInt** (~40 new pub fns): constants-as-constructors, `from_u64` (full 0..2^64-1), `from_hex`/`from_base`/`to_base`, range-checked `to_int`, predicates, `div`, `pow_mod`, `sqrt(_rem)`, `lcm`, `ext_gcd`, Miller-Rabin `is_prime`/`next_prime`, `factorial`/`binomial`/`fibonacci`, two's-complement bit ops, comparisons. `bigint_div_mod` = Knuth Algorithm D (two-limb window, single-limb fast path, upward fixup).
-- **Phase B — production BigFloat** (`num/bigfloat.xi` + flat aggregate): power-of-10 representation, RoundMode, string-exact to_str, all arithmetic with precision-aware rounding, `pi()`/`e()`.
-- **Phase C — BigFloat transcendentals**: Machin π, Taylor e, exp/ln/log10, sin/cos/tan, atan/atan2, pow_bf (O(prec²) series).
+- **Phase A � production BigInt** (~40 new pub fns): constants-as-constructors, `from_u64` (full 0..2^64-1), `from_hex`/`from_base`/`to_base`, range-checked `to_int`, predicates, `div`, `pow_mod`, `sqrt(_rem)`, `lcm`, `ext_gcd`, Miller-Rabin `is_prime`/`next_prime`, `factorial`/`binomial`/`fibonacci`, two's-complement bit ops, comparisons. `bigint_div_mod` = Knuth Algorithm D (two-limb window, single-limb fast path, upward fixup).
+- **Phase B � production BigFloat** (`num/bigfloat.xi` + flat aggregate): power-of-10 representation, RoundMode, string-exact to_str, all arithmetic with precision-aware rounding, `pi()`/`e()`.
+- **Phase C � BigFloat transcendentals**: Machin p, Taylor e, exp/ln/log10, sin/cos/tan, atan/atan2, pow_bf (O(prec�) series).
 - **Phase C.5**: log2/exp2/cbrt/hypot/hyperbolics/inverse-hyperbolics/asin/acos, to_str_sci, from_ratio, pow10, int helpers.
 - **Perf**: BigInt Karatsuba (`_abs_mul_karatsuba`, threshold 4000 limbs, measured ~12% faster at 100k digits).
 - **misc expansion** (23 fns): string metrics (damerau/jaro/jaro-winkler/hamming/LCS), case converters, roman numerals, ordinal/pluralize, units.
 - **hash 64-bit additions**: canonical xxhash64 (C-reference-verified), fnv1_32.
-- **Full categorized audit of the wish-list**: §13 below (HAVE / GAP-stdlib / GAP-package, deduped).
+- **Full categorized audit of the wish-list**: �13 below (HAVE / GAP-stdlib / GAP-package, deduped).
 
 **Known compiler bugs discovered (stdlib works around them; fix in compiler later)**
-— superseded by docs/COMPILER_BUGS.md STATUS SUMMARY (2026-08-11): BUG 1/8/9/10/11 and
+� superseded by docs/COMPILER_BUGS.md STATUS SUMMARY (2026-08-11): BUG 1/8/9/10/11 and
 the parser/catalog/&T-param/inline-hang findings are all FIXED; BUG 2 (module-global
 struct field writes) and BUG 3 (module-global fn-call initializers) remain OPEN
-(advisory — stdlib uses whole-value assignment and constructor fns).
+(advisory � stdlib uses whole-value assignment and constructor fns).
 
 ## 11. Migration Sequencing & Gates
 
-### Phase 0 â€” THIS DOCUMENT + placeholders (done now)
-- Full plan written; placeholder folders + READMEs for all Â§8.2 packages and Â§9 projects; no implementations.
+### Phase 0 — THIS DOCUMENT + placeholders (done now)
+- Full plan written; placeholder folders + READMEs for all §8.2 packages and §9 projects; no implementations.
 
-### Phase 1 â€” Tier 1 cleanup (~1 session, zero test churn)
-1. Merge orphans per Â§4 (update ~15 internal imports).
+### Phase 1 — Tier 1 cleanup (~1 session, zero test churn)
+1. Merge orphans per §4 (update ~15 internal imports).
 2. Delete `demo.xi`.
-3. Add **API-freeze test** (`stdlib_api_freeze_tests`) snapshotting every pub fn signature of the 40 contract modules â€” any future rename/removal/resignature fails CI.
+3. Add **API-freeze test** (`stdlib_api_freeze_tests`) snapshotting every pub fn signature of the 40 contract modules — any future rename/removal/resignature fails CI.
 4. Add **import-alias gate**: fixtures for `use xiom.string;` and `use stdlib.xiom.string;`.
 5. Regenerate `stdlib-pin/`; run FULL suite: 2,231 E2E + 1,284 unit green.
 
-### Phase 2 â€” Tier 2 reorganization (internal only)
+### Phase 2 — Tier 2 reorganization (internal only)
 - Create `bits`, `geom`, `complex`, `bigint`, `utf8`, `sort`, `search`, `platform`, `debug`, `misc`, `process`, `chacha`, `poly1305`, `ecc`, `rsa`, `des` skeletons; move absorbed fns; verify API-freeze still green (contract modules untouched).
 
-### Phase 3 â€” Tier 3 expansion (additive, per area)
-- Order: string/utf8 â†’ collections/sort/search â†’ time/date â†’ math family â†’ crypto family â†’ system (os/process/platform/debug) â†’ hash/compress â†’ misc.
+### Phase 3 — Tier 3 expansion (additive, per area)
+- Order: string/utf8 → collections/sort/search → time/date → math family → crypto family → system (os/process/platform/debug) → hash/compress → misc.
 - Each area lands with smokes + docs; suite stays green after every area.
 
-### Phase 4 â€” Optimization (NASM/SIMD)
-- Per Â§7, one domain at a time (math â†’ crypto â†’ hash â†’ compress â†’ rand); correctness diff-tests asm vs pure.
+### Phase 4 — Optimization (NASM/SIMD)
+- Per §7, one domain at a time (math → crypto → hash → compress → rand); correctness diff-tests asm vs pure.
 
-### Phase 5 â€” Packages/projects specs
+### Phase 5 — Packages/projects specs
 - Write SPEC.md for placeholder packages/projects as the ecosystem grows; publish after public split.
 
 ### Gates (every phase)
@@ -381,10 +381,10 @@ struct field writes) and BUG 3 (module-global fn-call initializers) remain OPEN
 
 | Date | Decision |
 |------|----------|
-| 2026-08-07 | **Clean break now.** Pre-public + monorepo will be split before going public (no history to preserve) â†’ NO shims, NO deprecation cycles. Build stdlib right the first time. |
-| 2026-08-07 | 3-tier plan: cleanup (zero churn) â†’ reorganization (module families: math split, crypto split) â†’ comprehensive expansion. No forced renames of the 40 test-imported modules; their fn signatures are the frozen contract. |
+| 2026-08-07 | **Clean break now.** Pre-public + monorepo will be split before going public (no history to preserve) → NO shims, NO deprecation cycles. Build stdlib right the first time. |
+| 2026-08-07 | 3-tier plan: cleanup (zero churn) → reorganization (module families: math split, crypto split) → comprehensive expansion. No forced renames of the 40 test-imported modules; their fn signatures are the frozen contract. |
 | 2026-08-07 | Stdlib = zero external deps; packages build on stdlib and may wrap C; frameworks/engines = top-level external projects (xiom-pulse, xiom-game-engine). |
-| 2026-08-07 | Heavy domains (math, crypto, hash, compress, rand) get NASM/SIMD tracks with pure fallback + CPUID dispatch (Â§7). |
+| 2026-08-07 | Heavy domains (math, crypto, hash, compress, rand) get NASM/SIMD tracks with pure fallback + CPUID dispatch (§7). |
 | 2026-08-07 | Placeholder folders + READMEs for 260 planned packages and 2 projects created now; specs later. |
 | 2026-08-07 | API-freeze test + import-alias gate enforce the contract mechanically after the rework. |
 
@@ -1550,7 +1550,7 @@ format/chi_square - Chi-square
 format/chi_square_stat - Chi-square statistic
 format/phi_coeff - Phi coefficient
 format/cramers_v - Cramer's V
-format/ccc - Cramér's V
+format/ccc - Cram�r's V
 format/kendall - Kendall's tau
 format/spearman - Spearman's rho
 format/pearson - Pearson correlation
@@ -2807,31 +2807,31 @@ RANDOM
 
 ---
 
-# ═══════════════════════════════════════════════════════════════════
-# CROSS-REFERENCE & PRODUCTION PLAN (v2 — 2026-08-07)
+# -------------------------------------------------------------------
+# CROSS-REFERENCE & PRODUCTION PLAN (v2 � 2026-08-07)
 # Purpose: for EVERY entry in the STD EXTENSION PLANNING list below,
 # decide: HAVE (in stdlib/package) | STDLIB (no deps, implement here)
 # | PACKAGE (needs deps or domain-specific, goes to packages/<name>).
 # After each section: audit notes (folder grouping, refactoring).
-# ═══════════════════════════════════════════════════════════════════
+# -------------------------------------------------------------------
 
 ## 0. RULES (final)
 
 1. **STDLIB = ZERO external dependencies.** Only pure XIOM + OS syscalls via
    minimal FFI + the compiler substrate (LLVM/clang/NASM). Everything that
-   needs a 3rd-party C library (OpenSSL, libcurl, ICU, zlib is fine — we have
-   pure impls — but OpenSSL/ICU/etc are NOT) → **PACKAGE**.
+   needs a 3rd-party C library (OpenSSL, libcurl, ICU, zlib is fine � we have
+   pure impls � but OpenSSL/ICU/etc are NOT) ? **PACKAGE**.
 2. **Package = built on stdlib, may wrap C.** Lives in `packages/<name>/`.
 3. Every package folder gets a `README.md` listing the libs/modules to create
-   (NOT full specs — just the inventory + one-line scope). 257 placeholder
+   (NOT full specs � just the inventory + one-line scope). 257 placeholder
    folders already exist; this plan assigns the list entries to them.
 4. **Folder grouping is VERIFIED WORKING**: `use xiom.foo.bar` resolves
    `stdlib/xiom/foo/bar.xi` (catalog strategy a: path-based). Tested with
-   `use xiom._foldertest.sub` → exit 42. So we CAN organize stdlib into
+   `use xiom._foldertest.sub` ? exit 42. So we CAN organize stdlib into
    subfolders (e.g. `stdlib/xiom/str/`, `stdlib/xiom/net/`) WITHOUT breaking
-   `use` — BUT the 40 test-imported module NAMES must stay resolvable.
-   ⚠️ IMPORTANT: moving `string.xi` → `str/string.xi` changes `use xiom.string`
-   resolution (strategy a fails, strategy b matches declared module header —
+   `use` � BUT the 40 test-imported module NAMES must stay resolvable.
+   ?? IMPORTANT: moving `string.xi` ? `str/string.xi` changes `use xiom.string`
+   resolution (strategy a fails, strategy b matches declared module header �
    the header says `module xiom.string` so strategy b WOULD still find it).
    VERIFY before moving; safest = keep contract modules at top level, put NEW
    grouped modules in folders with dotted names.
@@ -2845,384 +2845,384 @@ RANDOM
 
 | Entry | Decision | Where / Status |
 |-------|----------|----------------|
-| hash/fnv (32,64,128) | ✅ HAVE 32/64 | stdlib/hash.xi (fnv1a32, fnv1a64, fnv1_64). GAP: 128-bit |
-| hash/murmur (2,3; 32,128) | ✅ HAVE 3-32 | hash.xi murmur3_32. GAP: murmur2, murmur3-128 |
-| hash/city (64,128,256) | ⬜ STDLIB | add to hash.xi (pure) |
-| hash/xxhash (32,64,128,XXH3) | ✅ HAVE 32 | hash.xi xxhash32. GAP: xxhash64, 128, XXH3 |
-| hash/siphash (2-4,1-3) | ✅ HAVE 2-4 | hash.xi sip_hash. GAP: 1-3 variant |
-| hash/highway (64,128,256) | ⬜ STDLIB | add (pure) |
-| hash/spooky (128) | ⬜ STDLIB | add |
-| hash/t1ha | ⬜ STDLIB | add |
-| hash/metro (64,128) | ⬜ STDLIB | add |
-| hash/farm | ⬜ STDLIB | add |
-| hash/jenkins (lookup3) | ⬜ STDLIB | add |
-| hash/superfast | ⬜ STDLIB | add |
-| hash/crc (32,64 + HW accel) | ✅ HAVE 32 | hash.xi crc32_ieee + compress crc32. GAP: crc64 + asm |
-| hash/adler | ✅ HAVE | compress.xi adler32 |
-| hash/checksum (BSD,SysV,Internet) | ⬜ STDLIB | add |
+| hash/fnv (32,64,128) | ? HAVE 32/64 | stdlib/hash.xi (fnv1a32, fnv1a64, fnv1_64). GAP: 128-bit |
+| hash/murmur (2,3; 32,128) | ? HAVE 3-32 | hash.xi murmur3_32. GAP: murmur2, murmur3-128 |
+| hash/city (64,128,256) | ? STDLIB | add to hash.xi (pure) |
+| hash/xxhash (32,64,128,XXH3) | ? HAVE 32 | hash.xi xxhash32. GAP: xxhash64, 128, XXH3 |
+| hash/siphash (2-4,1-3) | ? HAVE 2-4 | hash.xi sip_hash. GAP: 1-3 variant |
+| hash/highway (64,128,256) | ? STDLIB | add (pure) |
+| hash/spooky (128) | ? STDLIB | add |
+| hash/t1ha | ? STDLIB | add |
+| hash/metro (64,128) | ? STDLIB | add |
+| hash/farm | ? STDLIB | add |
+| hash/jenkins (lookup3) | ? STDLIB | add |
+| hash/superfast | ? STDLIB | add |
+| hash/crc (32,64 + HW accel) | ? HAVE 32 | hash.xi crc32_ieee + compress crc32. GAP: crc64 + asm |
+| hash/adler | ? HAVE | compress.xi adler32 |
+| hash/checksum (BSD,SysV,Internet) | ? STDLIB | add |
 
-**Audit**: hash.xi = 23 fns, small. All hashes are pure → all STDLIB. No folder needed; keep flat. Optimization: xxhash/city/highway SIMD later (Phase 4).
+**Audit**: hash.xi = 23 fns, small. All hashes are pure ? all STDLIB. No folder needed; keep flat. Optimization: xxhash/city/highway SIMD later (Phase 4).
 
 ## 2. COLLECTIONS (58 entries)
 
 | Entry | Decision | Where / Status |
 |-------|----------|----------------|
-| collect/list (singly/doubly) | ✅ HAVE LinkedList | collections.xi |
-| collect/vector | ✅ HAVE Vec | collections.xi |
-| collect/stack | ✅ HAVE | collections.xi (Vec-based) |
-| collect/queue | ✅ HAVE | collections.xi (VecDeque) |
-| collect/ring | ✅ HAVE | collections.xi (VecDeque/circular) |
-| collect/map (open addressing) | ✅ HAVE Map | collections.xi |
-| collect/mapch (chaining) | ✅ HAVE HashMap | collections.xi |
-| collect/treemap | ⬜ STDLIB | add (ordered map, AVL-based) |
-| collect/treeset | ⬜ STDLIB | add |
-| collect/tree | ⬜ STDLIB | add (binary tree) |
-| collect/avl | ⬜ STDLIB | add (AVL) |
-| collect/rbtree | ⬜ STDLIB | add (red-black) |
-| collect/bheap | ✅ HAVE BinaryHeap | collections.xi |
-| collect/fheap | ⬜ STDLIB | add (Fibonacci) |
-| collect/pairing | ⬜ STDLIB | add (pairing heap) |
-| collect/deque | ✅ HAVE VecDeque | collections.xi |
-| collect/priority | ✅ HAVE | collections.xi (BinaryHeap) |
-| collect/skiplist | ⬜ STDLIB | add |
-| collect/trie | ⬜ STDLIB | add (prefix tree) |
-| collect/radix | ⬜ STDLIB | add (radix tree) |
-| collect/bitmap | ✅ HAVE bits | bits.xi (BitArray planned) |
-| collect/bloom | ⬜ STDLIB | add (Bloom filter) |
-| collect/cuckoo | ⬜ STDLIB | add (cuckoo hash) |
-| collect/hashset | ✅ HAVE Set | collections.xi |
-| collect/linkedhash | ⬜ STDLIB | add (insertion-order map) |
-| collect/lru | ⬜ STDLIB | add (LRU cache) |
-| collect/lfu | ⬜ STDLIB | add |
-| collect/tinylfu | ⬜ STDLIB | add |
-| collect/arc | ⬜ STDLIB | add |
-| collect/btree | ⬜ STDLIB | add (B-tree) |
-| collect/btreeplus | ⬜ STDLIB | add (B+tree) |
-| collect/segment | ⬜ STDLIB | add (segment tree) |
-| collect/fenwick | ⬜ STDLIB | add (Fenwick tree) |
-| collect/sparse | ⬜ STDLIB | add (sparse set) |
-| collect/dense | ⬜ STDLIB | add |
-| collect/hasharray (HAMT) | ⬜ STDLIB | add |
-| collect/immutable | ⬜ STDLIB | add |
-| collect/persistent | ⬜ STDLIB | add |
-| collect/concurrent | ⬜ STDLIB | add (on sync.xi) |
-| collect/interval | ⬜ STDLIB | add (interval tree) |
-| collect/range | ⬜ STDLIB | add (range tree) |
-| collect/kdtree | ⬜ STDLIB | add (KD-tree) |
-| collect/octree | ⬜ STDLIB | add |
-| collect/quadtree | ⬜ STDLIB | add |
-| collect/spatial | ⬜ STDLIB | add (spatial hash) |
-| collect/graph | ⬜ STDLIB | add (adjacency) |
-| collect/dag | ⬜ STDLIB | add |
-| collect/unionfind | ⬜ STDLIB | add (disjoint set) |
-| collect/intmap | ⬜ STDLIB | add (int-keyed map) |
-| collect/stringmap | ⬜ STDLIB | add |
-| collect/objectpool | ⬜ STDLIB | add |
-| collect/threadpool | ⬜ STDLIB | add (on thread.xi) |
-| collect/workqueue | ⬜ STDLIB | add |
-| collect/blocking | ⬜ STDLIB | add (on sync.xi) |
-| collect/mpmc/mpsc/spmc/spsc | ⬜ STDLIB | add (on sync.xi channels) |
+| collect/list (singly/doubly) | ? HAVE LinkedList | collections.xi |
+| collect/vector | ? HAVE Vec | collections.xi |
+| collect/stack | ? HAVE | collections.xi (Vec-based) |
+| collect/queue | ? HAVE | collections.xi (VecDeque) |
+| collect/ring | ? HAVE | collections.xi (VecDeque/circular) |
+| collect/map (open addressing) | ? HAVE Map | collections.xi |
+| collect/mapch (chaining) | ? HAVE HashMap | collections.xi |
+| collect/treemap | ? STDLIB | add (ordered map, AVL-based) |
+| collect/treeset | ? STDLIB | add |
+| collect/tree | ? STDLIB | add (binary tree) |
+| collect/avl | ? STDLIB | add (AVL) |
+| collect/rbtree | ? STDLIB | add (red-black) |
+| collect/bheap | ? HAVE BinaryHeap | collections.xi |
+| collect/fheap | ? STDLIB | add (Fibonacci) |
+| collect/pairing | ? STDLIB | add (pairing heap) |
+| collect/deque | ? HAVE VecDeque | collections.xi |
+| collect/priority | ? HAVE | collections.xi (BinaryHeap) |
+| collect/skiplist | ? STDLIB | add |
+| collect/trie | ? STDLIB | add (prefix tree) |
+| collect/radix | ? STDLIB | add (radix tree) |
+| collect/bitmap | ? HAVE bits | bits.xi (BitArray planned) |
+| collect/bloom | ? STDLIB | add (Bloom filter) |
+| collect/cuckoo | ? STDLIB | add (cuckoo hash) |
+| collect/hashset | ? HAVE Set | collections.xi |
+| collect/linkedhash | ? STDLIB | add (insertion-order map) |
+| collect/lru | ? STDLIB | add (LRU cache) |
+| collect/lfu | ? STDLIB | add |
+| collect/tinylfu | ? STDLIB | add |
+| collect/arc | ? STDLIB | add |
+| collect/btree | ? STDLIB | add (B-tree) |
+| collect/btreeplus | ? STDLIB | add (B+tree) |
+| collect/segment | ? STDLIB | add (segment tree) |
+| collect/fenwick | ? STDLIB | add (Fenwick tree) |
+| collect/sparse | ? STDLIB | add (sparse set) |
+| collect/dense | ? STDLIB | add |
+| collect/hasharray (HAMT) | ? STDLIB | add |
+| collect/immutable | ? STDLIB | add |
+| collect/persistent | ? STDLIB | add |
+| collect/concurrent | ? STDLIB | add (on sync.xi) |
+| collect/interval | ? STDLIB | add (interval tree) |
+| collect/range | ? STDLIB | add (range tree) |
+| collect/kdtree | ? STDLIB | add (KD-tree) |
+| collect/octree | ? STDLIB | add |
+| collect/quadtree | ? STDLIB | add |
+| collect/spatial | ? STDLIB | add (spatial hash) |
+| collect/graph | ? STDLIB | add (adjacency) |
+| collect/dag | ? STDLIB | add |
+| collect/unionfind | ? STDLIB | add (disjoint set) |
+| collect/intmap | ? STDLIB | add (int-keyed map) |
+| collect/stringmap | ? STDLIB | add |
+| collect/objectpool | ? STDLIB | add |
+| collect/threadpool | ? STDLIB | add (on thread.xi) |
+| collect/workqueue | ? STDLIB | add |
+| collect/blocking | ? STDLIB | add (on sync.xi) |
+| collect/mpmc/mpsc/spmc/spsc | ? STDLIB | add (on sync.xi channels) |
 
-**Audit**: collections.xi = 1,732 lines / 148 fns — **REFACTOR CANDIDATE**. Plan:
+**Audit**: collections.xi = 1,732 lines / 148 fns � **REFACTOR CANDIDATE**. Plan:
 create `stdlib/xiom/collect/` folder with `tree.xi` (tree/avl/rbtree/btree),
 `heap.xi` (fheap/pairing), `cache.xi` (lru/lfu/tinylfu/arc), `hash.xi`
 (cuckoo/HAMT/linkedhash), `queue.xi` (blocking/mpmc/mpsc/spsc), `graph.xi`
 (graph/dag/unionfind/kdtree/octree/quadtree/interval/range). Keep collections.xi
-flat (frozen contract); new structs live in collect/ modules. ALL pure → stdlib.
+flat (frozen contract); new structs live in collect/ modules. ALL pure ? stdlib.
 
 ## 3. STRING OPERATIONS (74 entries)
 
 | Entry | Decision | Where / Status |
 |-------|----------|----------------|
-| str/compare | ✅ HAVE | string.xi str_compare_lexicographic + cmp |
-| str/search | ✅ HAVE | string.xi index_of/rindex_of/contains |
-| str/replace | ✅ HAVE | string.xi replace/replace_all/first/n |
-| str/trim | ✅ HAVE | string.xi trim/strip variants |
-| str/split | ✅ HAVE | string.xi split/split_whitespace/lines/once |
-| str/join | ✅ HAVE | string.xi join/join_with_and |
-| str/case | ✅ HAVE | string.xi upper/lower/title/swap/snake/camel/kebab/pascal/constant |
-| str/strip | ✅ HAVE | string.xi strip_prefix/suffix |
-| str/repeat | ✅ HAVE | string.xi repeat |
-| str/pad | ✅ HAVE | string.xi pad_left/right/center |
-| str/slice | ✅ HAVE | string.xi slice + char-boundary helpers |
-| str/escape | ✅ HAVE | string.xi escape/unescape + json/url via encoding/serialize |
-| str/unescape | ✅ HAVE | string.xi |
-| str/format | ✅ HAVE | fmt.xi format1-9 + string |
-| str/printf | ⬜ STDLIB | add (printf-style) |
-| str/scanf | ⬜ STDLIB | add (scanf-style parse) |
-| str/template | ⬜ STDLIB | add (placeholder substitution) |
-| str/glob | ✅ HAVE | misc.xi glob_match |
-| str/regex | ✅ HAVE | regex.xi |
-| str/levenshtein | ✅ HAVE | misc.xi levenshtein_distance |
-| str/damerau | ⬜ STDLIB | add (Damerau-Levenshtein) |
-| str/jaro | ⬜ STDLIB | add (Jaro-Winkler) |
-| str/soundex | ✅ HAVE | misc.xi soundex |
-| str/metaphone | ⬜ STDLIB | add (double metaphone) |
-| str/ngram | ⬜ STDLIB | add |
-| str/ngram_similarity | ⬜ STDLIB | add |
-| str/cosine | ⬜ STDLIB | add (cosine similarity) |
-| str/jaccard | ⬜ STDLIB | add |
-| str/lcs | ⬜ STDLIB | add (longest common subsequence) |
-| str/lcp | ⬜ STDLIB | add (longest common prefix) |
-| str/lcsuffix | ⬜ STDLIB | add |
-| str/editdistance | ⬜ STDLIB | add (general edit distance) |
-| str/hamming | ⬜ STDLIB | add |
-| str/tr | ⬜ STDLIB | add (translate chars) |
-| str/rot | ✅ HAVE rot13 | string.xi. GAP: rot47 |
-| str/caesar | ✅ HAVE | string.xi caesar_shift |
-| str/atbash | ⬜ STDLIB | add |
-| str/shuffle | ⬜ STDLIB | add (Fisher-Yates, on rand) |
-| str/reverse | ✅ HAVE | string.xi str_reverse (Unicode-aware) |
-| str/rotate | ⬜ STDLIB | add |
-| str/permute | ⬜ STDLIB | add (permutations) |
-| str/combine | ⬜ STDLIB | add |
-| str/interleave | ⬜ STDLIB | add |
-| str/chunk | ⬜ STDLIB | add |
-| str/wrap | ✅ HAVE | fmt.xi format_wrap |
-| str/indent | ✅ HAVE | fmt.xi format_indent |
-| str/align | ✅ HAVE | fmt.xi align_left/right/center |
-| str/truncate | ✅ HAVE | string.xi truncate_utf8 + fmt |
-| str/abbreviate | ⬜ STDLIB | add |
-| str/obfuscate | ⬜ STDLIB | add |
-| str/normalize (NFC/NFD/NFKC/NFKD) | ⬜ STDLIB | add (pure Unicode tables — big but no deps) |
-| str/collate | ⬜ STDLIB | add (basic) |
-| str/casefold | ⬜ STDLIB | add |
-| str/titlecase | ✅ HAVE | string.xi title_case |
-| str/segment (grapheme) | ⬜ STDLIB | add (UAX #29 tables) |
-| str/wordbreak | ⬜ STDLIB | add |
-| str/sentencebreak | ⬜ STDLIB | add |
-| str/linebreak | ⬜ STDLIB | add |
-| str/ea_width | ⬜ STDLIB | add |
-| str/emoji | ✅ HAVE | char.xi is_emoji |
-| str/script | ⬜ STDLIB | add (script detection ranges) |
-| str/block | ⬜ STDLIB | add (Unicode block) |
-| str/category | ✅ HAVE | char.xi is_* categories |
-| str/bidi | ⬜ STDLIB | add (basic bidi) |
-| str/mirror | ⬜ STDLIB | add (mirror chars) |
-| str/compat | ⬜ STDLIB | add |
-| str/fold | ⬜ STDLIB | add |
-| str/lowercase/uppercase/titlecase_map | ✅ HAVE | char.xi + string.xi |
-| str/nfkc/nfd/nfc/nfkd | ⬜ STDLIB | add |
+| str/compare | ? HAVE | string.xi str_compare_lexicographic + cmp |
+| str/search | ? HAVE | string.xi index_of/rindex_of/contains |
+| str/replace | ? HAVE | string.xi replace/replace_all/first/n |
+| str/trim | ? HAVE | string.xi trim/strip variants |
+| str/split | ? HAVE | string.xi split/split_whitespace/lines/once |
+| str/join | ? HAVE | string.xi join/join_with_and |
+| str/case | ? HAVE | string.xi upper/lower/title/swap/snake/camel/kebab/pascal/constant |
+| str/strip | ? HAVE | string.xi strip_prefix/suffix |
+| str/repeat | ? HAVE | string.xi repeat |
+| str/pad | ? HAVE | string.xi pad_left/right/center |
+| str/slice | ? HAVE | string.xi slice + char-boundary helpers |
+| str/escape | ? HAVE | string.xi escape/unescape + json/url via encoding/serialize |
+| str/unescape | ? HAVE | string.xi |
+| str/format | ? HAVE | fmt.xi format1-9 + string |
+| str/printf | ? STDLIB | add (printf-style) |
+| str/scanf | ? STDLIB | add (scanf-style parse) |
+| str/template | ? STDLIB | add (placeholder substitution) |
+| str/glob | ? HAVE | misc.xi glob_match |
+| str/regex | ? HAVE | regex.xi |
+| str/levenshtein | ? HAVE | misc.xi levenshtein_distance |
+| str/damerau | ? STDLIB | add (Damerau-Levenshtein) |
+| str/jaro | ? STDLIB | add (Jaro-Winkler) |
+| str/soundex | ? HAVE | misc.xi soundex |
+| str/metaphone | ? STDLIB | add (double metaphone) |
+| str/ngram | ? STDLIB | add |
+| str/ngram_similarity | ? STDLIB | add |
+| str/cosine | ? STDLIB | add (cosine similarity) |
+| str/jaccard | ? STDLIB | add |
+| str/lcs | ? STDLIB | add (longest common subsequence) |
+| str/lcp | ? STDLIB | add (longest common prefix) |
+| str/lcsuffix | ? STDLIB | add |
+| str/editdistance | ? STDLIB | add (general edit distance) |
+| str/hamming | ? STDLIB | add |
+| str/tr | ? STDLIB | add (translate chars) |
+| str/rot | ? HAVE rot13 | string.xi. GAP: rot47 |
+| str/caesar | ? HAVE | string.xi caesar_shift |
+| str/atbash | ? STDLIB | add |
+| str/shuffle | ? STDLIB | add (Fisher-Yates, on rand) |
+| str/reverse | ? HAVE | string.xi str_reverse (Unicode-aware) |
+| str/rotate | ? STDLIB | add |
+| str/permute | ? STDLIB | add (permutations) |
+| str/combine | ? STDLIB | add |
+| str/interleave | ? STDLIB | add |
+| str/chunk | ? STDLIB | add |
+| str/wrap | ? HAVE | fmt.xi format_wrap |
+| str/indent | ? HAVE | fmt.xi format_indent |
+| str/align | ? HAVE | fmt.xi align_left/right/center |
+| str/truncate | ? HAVE | string.xi truncate_utf8 + fmt |
+| str/abbreviate | ? STDLIB | add |
+| str/obfuscate | ? STDLIB | add |
+| str/normalize (NFC/NFD/NFKC/NFKD) | ? STDLIB | add (pure Unicode tables � big but no deps) |
+| str/collate | ? STDLIB | add (basic) |
+| str/casefold | ? STDLIB | add |
+| str/titlecase | ? HAVE | string.xi title_case |
+| str/segment (grapheme) | ? STDLIB | add (UAX #29 tables) |
+| str/wordbreak | ? STDLIB | add |
+| str/sentencebreak | ? STDLIB | add |
+| str/linebreak | ? STDLIB | add |
+| str/ea_width | ? STDLIB | add |
+| str/emoji | ? HAVE | char.xi is_emoji |
+| str/script | ? STDLIB | add (script detection ranges) |
+| str/block | ? STDLIB | add (Unicode block) |
+| str/category | ? HAVE | char.xi is_* categories |
+| str/bidi | ? STDLIB | add (basic bidi) |
+| str/mirror | ? STDLIB | add (mirror chars) |
+| str/compat | ? STDLIB | add |
+| str/fold | ? STDLIB | add |
+| str/lowercase/uppercase/titlecase_map | ? HAVE | char.xi + string.xi |
+| str/nfkc/nfd/nfc/nfkd | ? STDLIB | add |
 
 **Audit**: string.xi = 765 lines / 45 fns, char.xi = 340/42, fmt.xi = 468/28. All pure.
 Grouping: create `stdlib/xiom/text/` folder for the NEW heavy Unicode modules:
 `unicode.xi` (normalize/casefold/bidi/mirror), `sim.xi` (damerau/jaro/cosine/
 jaccard/lcs/hamming), `transform.xi` (tr/rot47/atbash/shuffle/permute/chunk).
 string.xi/char.xi stay flat (contract). Unicode normalization tables are
-large-but-pure → stdlib (with compressed table encoding later).
+large-but-pure ? stdlib (with compressed table encoding later).
 
 ## 4. CONVERSION (81 entries)
 
 | Entry | Decision | Where / Status |
 |-------|----------|----------------|
-| conv/int (base 2-36) | ✅ HAVE | num.xi to_base/from_base + convert |
-| conv/float (hex, scientific) | ⬜ STDLIB | add (scientific parse) |
-| conv/toint (signed/unsigned) | ✅ HAVE | convert.xi + num.xi checked converters |
-| conv/tofloat (32,64) | ✅ HAVE | convert.xi + num.xi |
-| conv/tostring | ✅ HAVE | convert.xi + fmt.xi |
-| conv/parse | ✅ HAVE | convert.xi + string.xi |
-| conv/itos/itoa | ✅ HAVE | convert.xi int_to_string + num.xi to_base |
-| conv/ftos | ✅ HAVE | convert.xi float_to_string |
-| conv/atoi | ✅ HAVE | convert.xi |
-| conv/fromstr | ⬜ FUTURE | interface trait — impl ignored by compiler; declare only |
-| conv/tryfrom | ⬜ FUTURE | interface trait — declare only |
-| conv/into | ⬜ FUTURE | interface trait — declare only |
-| conv/asref/asmut | ⬜ FUTURE | interface trait — declare only |
-| conv/from | ⬜ FUTURE | interface trait — declare only |
-| conv/bytes | ✅ HAVE | ffi.xi + mem.xi + encoding |
-| conv/endian (big/little/native) | ✅ HAVE | num.xi + bits.xi byte_swap/pack |
-| conv/network | ⬜ STDLIB | add (network byte order helpers) |
-| conv/swap | ✅ HAVE | bits.xi byte_swap16/32/64 |
-| conv/saturating | ✅ HAVE | num.xi add_sat/sub_sat/mul_sat |
-| conv/wrapping | ⬜ STDLIB | add (wrapping add/sub/mul) |
-| conv/overflow | ✅ HAVE | num.xi checked add/sub/mul/div |
-| conv/checked | ✅ HAVE | num.xi *_checked family |
-| conv/unchecked | ⬜ STDLIB | add (documented unsafe) |
-| conv/exact | ⬜ STDLIB | add (fails if lossy) |
-| conv/lossy | ⬜ STDLIB | add |
-| conv/roundtrip | ⬜ STDLIB | add (to_str→from_str==value) |
-| conv/cstring | ✅ HAVE | ffi.xi + os.xi cstr |
-| conv/wstring | ⬜ STDLIB | add (UTF-16) |
-| conv/utf8 | ✅ HAVE | utf8.xi |
-| conv/utf16 | ⬜ STDLIB | add (utf8↔utf16) |
-| conv/utf32 | ⬜ STDLIB | add |
-| conv/base64 | ✅ HAVE | encoding.xi |
-| conv/base32 | ✅ HAVE | encoding.xi |
-| conv/base16 | ✅ HAVE | encoding.xi hex |
-| conv/base58 | ⬜ STDLIB | add (Bitcoin alphabet) |
-| conv/base62 | ⬜ STDLIB | add |
-| conv/base64url | ✅ HAVE | encoding.xi |
-| conv/ascii85 | ⬜ STDLIB | add |
-| conv/uuencode | ⬜ STDLIB | add |
-| conv/xxencode | ⬜ STDLIB | add |
-| conv/quotedprintable | ⬜ STDLIB | add |
-| conv/punycode | ⬜ STDLIB | add (IDNA) |
-| conv/idna | ⬜ STDLIB | add |
-| conv/percent | ✅ HAVE | encoding.xi percent_encode/decode |
-| conv/html | ⬜ STDLIB | add (HTML entity escape) |
-| conv/xml | ⬜ STDLIB | add |
-| conv/json | ✅ HAVE | serialize.xi json_escape |
-| conv/csv | ⬜ STDLIB | add (CSV escape) |
-| conv/tsv | ⬜ STDLIB | add |
-| conv/yaml | ⬜ STDLIB | add |
-| conv/toml | ⬜ STDLIB | add |
-| conv/regex | ✅ HAVE | regex.xi regex_escape_literal |
-| conv/glob | ⬜ STDLIB | add |
-| conv/shell | ⬜ STDLIB | add |
-| conv/cmd | ⬜ STDLIB | add |
-| conv/printf | ⬜ STDLIB | add |
-| conv/strftime | ✅ HAVE | time.xi format_timestamp/iso8601 |
-| conv/strptime | ⬜ STDLIB | add (parse date/time strings) |
-| conv/duration | ✅ HAVE | time.xi Duration |
-| conv/date | ✅ HAVE | time.xi Date |
-| conv/time | ✅ HAVE | time.xi |
-| conv/datetime | ⬜ STDLIB | add (Date+Time combined) |
-| conv/timestamp | ✅ HAVE | time.xi |
-| conv/uuid | ✅ HAVE | rand.xi uuid_v4/v7 |
-| conv/mac | ⬜ STDLIB | add |
-| conv/ip | ✅ HAVE | net.xi is_valid_ipv4 + parsing |
-| conv/url | ✅ HAVE | net.xi url_parse_scheme/host/path/port |
-| conv/uri | ⬜ STDLIB | add (full URI parse) |
-| conv/urn | ⬜ STDLIB | add |
-| conv/iri | ⬜ STDLIB | add |
-| conv/email | ⬜ STDLIB | add (validation) |
-| conv/phone | ⬜ STDLIB | add |
-| conv/creditcard | ⬜ STDLIB | add (Luhn) |
-| conv/iban | ⬜ STDLIB | add |
-| conv/swift | ⬜ STDLIB | add |
+| conv/int (base 2-36) | ? HAVE | num.xi to_base/from_base + convert |
+| conv/float (hex, scientific) | ? STDLIB | add (scientific parse) |
+| conv/toint (signed/unsigned) | ? HAVE | convert.xi + num.xi checked converters |
+| conv/tofloat (32,64) | ? HAVE | convert.xi + num.xi |
+| conv/tostring | ? HAVE | convert.xi + fmt.xi |
+| conv/parse | ? HAVE | convert.xi + string.xi |
+| conv/itos/itoa | ? HAVE | convert.xi int_to_string + num.xi to_base |
+| conv/ftos | ? HAVE | convert.xi float_to_string |
+| conv/atoi | ? HAVE | convert.xi |
+| conv/fromstr | ? FUTURE | interface trait � impl ignored by compiler; declare only |
+| conv/tryfrom | ? FUTURE | interface trait � declare only |
+| conv/into | ? FUTURE | interface trait � declare only |
+| conv/asref/asmut | ? FUTURE | interface trait � declare only |
+| conv/from | ? FUTURE | interface trait � declare only |
+| conv/bytes | ? HAVE | ffi.xi + mem.xi + encoding |
+| conv/endian (big/little/native) | ? HAVE | num.xi + bits.xi byte_swap/pack |
+| conv/network | ? STDLIB | add (network byte order helpers) |
+| conv/swap | ? HAVE | bits.xi byte_swap16/32/64 |
+| conv/saturating | ? HAVE | num.xi add_sat/sub_sat/mul_sat |
+| conv/wrapping | ? STDLIB | add (wrapping add/sub/mul) |
+| conv/overflow | ? HAVE | num.xi checked add/sub/mul/div |
+| conv/checked | ? HAVE | num.xi *_checked family |
+| conv/unchecked | ? STDLIB | add (documented unsafe) |
+| conv/exact | ? STDLIB | add (fails if lossy) |
+| conv/lossy | ? STDLIB | add |
+| conv/roundtrip | ? STDLIB | add (to_str?from_str==value) |
+| conv/cstring | ? HAVE | ffi.xi + os.xi cstr |
+| conv/wstring | ? STDLIB | add (UTF-16) |
+| conv/utf8 | ? HAVE | utf8.xi |
+| conv/utf16 | ? STDLIB | add (utf8?utf16) |
+| conv/utf32 | ? STDLIB | add |
+| conv/base64 | ? HAVE | encoding.xi |
+| conv/base32 | ? HAVE | encoding.xi |
+| conv/base16 | ? HAVE | encoding.xi hex |
+| conv/base58 | ? STDLIB | add (Bitcoin alphabet) |
+| conv/base62 | ? STDLIB | add |
+| conv/base64url | ? HAVE | encoding.xi |
+| conv/ascii85 | ? STDLIB | add |
+| conv/uuencode | ? STDLIB | add |
+| conv/xxencode | ? STDLIB | add |
+| conv/quotedprintable | ? STDLIB | add |
+| conv/punycode | ? STDLIB | add (IDNA) |
+| conv/idna | ? STDLIB | add |
+| conv/percent | ? HAVE | encoding.xi percent_encode/decode |
+| conv/html | ? STDLIB | add (HTML entity escape) |
+| conv/xml | ? STDLIB | add |
+| conv/json | ? HAVE | serialize.xi json_escape |
+| conv/csv | ? STDLIB | add (CSV escape) |
+| conv/tsv | ? STDLIB | add |
+| conv/yaml | ? STDLIB | add |
+| conv/toml | ? STDLIB | add |
+| conv/regex | ? HAVE | regex.xi regex_escape_literal |
+| conv/glob | ? STDLIB | add |
+| conv/shell | ? STDLIB | add |
+| conv/cmd | ? STDLIB | add |
+| conv/printf | ? STDLIB | add |
+| conv/strftime | ? HAVE | time.xi format_timestamp/iso8601 |
+| conv/strptime | ? STDLIB | add (parse date/time strings) |
+| conv/duration | ? HAVE | time.xi Duration |
+| conv/date | ? HAVE | time.xi Date |
+| conv/time | ? HAVE | time.xi |
+| conv/datetime | ? STDLIB | add (Date+Time combined) |
+| conv/timestamp | ? HAVE | time.xi |
+| conv/uuid | ? HAVE | rand.xi uuid_v4/v7 |
+| conv/mac | ? STDLIB | add |
+| conv/ip | ? HAVE | net.xi is_valid_ipv4 + parsing |
+| conv/url | ? HAVE | net.xi url_parse_scheme/host/path/port |
+| conv/uri | ? STDLIB | add (full URI parse) |
+| conv/urn | ? STDLIB | add |
+| conv/iri | ? STDLIB | add |
+| conv/email | ? STDLIB | add (validation) |
+| conv/phone | ? STDLIB | add |
+| conv/creditcard | ? STDLIB | add (Luhn) |
+| conv/iban | ? STDLIB | add |
+| conv/swift | ? STDLIB | add |
 
-**Audit**: num.xi = 2,612 lines / 256 fns — **LARGEST FILE, REFACTOR FIRST**.
+**Audit**: num.xi = 2,612 lines / 256 fns � **LARGEST FILE, REFACTOR FIRST**.
 Plan: create `stdlib/xiom/num/` folder: `checked.xi` (checked/sat ops),
 `convert.xi` (cross-type converters), `int128.xi` (Int128), `fraction.xi`,
 `base.xi` (base conversions), `float.xi` (round/floor/ceil/fract). num.xi stays
-as the flat aggregate (contract) and delegates. ALL pure → stdlib.
+as the flat aggregate (contract) and delegates. ALL pure ? stdlib.
 
 ## 5. NETWORK (298 entries)
 
 Policy: **wire protocols implemented in pure XIOM over the socket FFI = STDLIB**.
 Anything needing OpenSSL/ICU/libcurl/zlib-C/OS-specific heavy bindings = PACKAGE.
-Cloud/vendor APIs (AWS/Azure/GCP/k8s) are HTTP clients → PACKAGES built on stdlib http.
+Cloud/vendor APIs (AWS/Azure/GCP/k8s) are HTTP clients ? PACKAGES built on stdlib http.
 
 | Group | Decision | Where |
 |-------|----------|-------|
-| socket/address/tcp/udp/unix | ✅ HAVE | net.xi (socket, tcp, udp, dns, resolve_host) |
-| dns (A/AAAA/CNAME/MX/TXT/SRV) | ⬜ STDLIB | net.xi expand (record parsing) |
-| ip (v4/v6), port, protocol | ✅ HAVE / ⬜ | net.xi expand (IPv6, well-known ports) |
-| url/uri/iri/query/form/multipart | ⬜ STDLIB | net.xi expand (full URL/query/form parsing) |
-| cookie/header/mime/charset/link/etag/cache/range | ⬜ STDLIB | net.xi expand (HTTP header utils) |
-| http/https/http2/http3 | ✅ HAVE http1 | net.xi http_get/post. http2/3 → PACKAGE (h2 spec heavy; http3=QUIC → PACKAGE) |
-| sse/websocket | ✅ HAVE | net.xi + packages xiom-websocket. SSE → stdlib |
-| rest/graphql/jsonrpc/xmlrpc | ✅ HAVE pkg | xiom-rest, xiom-graphql pkgs. jsonrpc → stdlib |
-| grpc/grpcweb/thrift/avro-rpc/soap | 📦 PACKAGE | xiom-grpc, xiom-protobuf pkgs (C deps) |
-| zeromq/nanomsg/mqtt/amqp/stomp/kafka/pulsar/nats | 📦 PACKAGE | xiom-zeromq, xiom-kafka exist. mqtt/amqp/nats/pulsar → new pkgs (protocols are pure-ish but heavy → PACKAGE per domain) |
-| redis/memcached | 📦 PACKAGE | xiom-redis exists. memcached → package (pure RESP is easy — could be stdlib; DECISION: redis/memcached protocol parsers → STDLIB net, drivers → PACKAGE). Final: protocol → stdlib; client drivers stay packages |
-| elastic/mongo/postgres/mysql/sqlite/odbc | 📦 PACKAGE | xiom-postgres, xiom-sqlite, xiom-sql exist; mongo/mysql/elastic/odbc → new packages |
-| tls/ssl/ssh/sftp/scp/x509/pem/jwt/oauth | 📦 PACKAGE | xiom-openssl, xiom-libsodium exist. jwt/oauth → packages (crypto + protocol) |
-| ldap/kerberos/ntlm/digest/basic/bearer/apikey/hawk | 📦 PACKAGE | auth protocols → packages (ldap/kerberos C deps; digest/basic/bearer pure → stdlib net) |
-| proxy/socks/tor/i2p | 📦 PACKAGE | proxy → stdlib (pure). socks/tor/i2p → packages |
-| icmp/ping/traceroute/arp/ndp | ⬜ STDLIB | net.xi expand (raw socket via FFI — OS-specific; keep minimal, ping = stdlib, traceroute = stdlib) |
-| dhcp/bootp/tftp/nfs/smb/netbios | 📦 PACKAGE | legacy protocols → packages |
-| ntp/sntp | ⬜ STDLIB | net.xi expand (UDP NTP client — pure) |
-| wireguard/ipsec/ike/ppp/vpn family | 📦 PACKAGE | security protocols → packages |
-| kubernetes/docker/nomad/cloud APIs (AWS/Azure/GCP/OCI/IBM/DO/etc) | 📦 PACKAGE | cloud packages (built on stdlib http + auth) |
-| CDN/vendor APIs (cloudflare/akamai/fastly/vercel/netlify) | 📦 PACKAGE | vendor packages |
-| webrtc/rtp/rtsp/rtmp/hls/dash | 📦 PACKAGE | media streaming → packages |
-| mDNS/bonjour/upnp/ssdp/ws-discovery/slp | 📦 PACKAGE | discovery → packages (multicast; pure but niche) |
-| xmpp/matrix/sip/irc/nntp | 📦 PACKAGE | messaging → packages |
-| gnss/gps/adsb/acars/aviation | 📦 PACKAGE | aviation/telemetry → packages |
-| vlan/vxlan/geneve/mpls/tunnel family | 📦 PACKAGE | network infra → packages |
-| libpcap/netlink/wireless (iw/wpa) | 📦 PACKAGE | packet/network tools → packages |
+| socket/address/tcp/udp/unix | ? HAVE | net.xi (socket, tcp, udp, dns, resolve_host) |
+| dns (A/AAAA/CNAME/MX/TXT/SRV) | ? STDLIB | net.xi expand (record parsing) |
+| ip (v4/v6), port, protocol | ? HAVE / ? | net.xi expand (IPv6, well-known ports) |
+| url/uri/iri/query/form/multipart | ? STDLIB | net.xi expand (full URL/query/form parsing) |
+| cookie/header/mime/charset/link/etag/cache/range | ? STDLIB | net.xi expand (HTTP header utils) |
+| http/https/http2/http3 | ? HAVE http1 | net.xi http_get/post. http2/3 ? PACKAGE (h2 spec heavy; http3=QUIC ? PACKAGE) |
+| sse/websocket | ? HAVE | net.xi + packages xiom-websocket. SSE ? stdlib |
+| rest/graphql/jsonrpc/xmlrpc | ? HAVE pkg | xiom-rest, xiom-graphql pkgs. jsonrpc ? stdlib |
+| grpc/grpcweb/thrift/avro-rpc/soap | ?? PACKAGE | xiom-grpc, xiom-protobuf pkgs (C deps) |
+| zeromq/nanomsg/mqtt/amqp/stomp/kafka/pulsar/nats | ?? PACKAGE | xiom-zeromq, xiom-kafka exist. mqtt/amqp/nats/pulsar ? new pkgs (protocols are pure-ish but heavy ? PACKAGE per domain) |
+| redis/memcached | ?? PACKAGE | xiom-redis exists. memcached ? package (pure RESP is easy � could be stdlib; DECISION: redis/memcached protocol parsers ? STDLIB net, drivers ? PACKAGE). Final: protocol ? stdlib; client drivers stay packages |
+| elastic/mongo/postgres/mysql/sqlite/odbc | ?? PACKAGE | xiom-postgres, xiom-sqlite, xiom-sql exist; mongo/mysql/elastic/odbc ? new packages |
+| tls/ssl/ssh/sftp/scp/x509/pem/jwt/oauth | ?? PACKAGE | xiom-openssl, xiom-libsodium exist. jwt/oauth ? packages (crypto + protocol) |
+| ldap/kerberos/ntlm/digest/basic/bearer/apikey/hawk | ?? PACKAGE | auth protocols ? packages (ldap/kerberos C deps; digest/basic/bearer pure ? stdlib net) |
+| proxy/socks/tor/i2p | ?? PACKAGE | proxy ? stdlib (pure). socks/tor/i2p ? packages |
+| icmp/ping/traceroute/arp/ndp | ? STDLIB | net.xi expand (raw socket via FFI � OS-specific; keep minimal, ping = stdlib, traceroute = stdlib) |
+| dhcp/bootp/tftp/nfs/smb/netbios | ?? PACKAGE | legacy protocols ? packages |
+| ntp/sntp | ? STDLIB | net.xi expand (UDP NTP client � pure) |
+| wireguard/ipsec/ike/ppp/vpn family | ?? PACKAGE | security protocols ? packages |
+| kubernetes/docker/nomad/cloud APIs (AWS/Azure/GCP/OCI/IBM/DO/etc) | ?? PACKAGE | cloud packages (built on stdlib http + auth) |
+| CDN/vendor APIs (cloudflare/akamai/fastly/vercel/netlify) | ?? PACKAGE | vendor packages |
+| webrtc/rtp/rtsp/rtmp/hls/dash | ?? PACKAGE | media streaming ? packages |
+| mDNS/bonjour/upnp/ssdp/ws-discovery/slp | ?? PACKAGE | discovery ? packages (multicast; pure but niche) |
+| xmpp/matrix/sip/irc/nntp | ?? PACKAGE | messaging ? packages |
+| gnss/gps/adsb/acars/aviation | ?? PACKAGE | aviation/telemetry ? packages |
+| vlan/vxlan/geneve/mpls/tunnel family | ?? PACKAGE | network infra ? packages |
+| libpcap/netlink/wireless (iw/wpa) | ?? PACKAGE | packet/network tools ? packages |
 
 **Audit**: net.xi = 735 lines / 29 fns. **REFACTOR**: create `stdlib/xiom/net/`
 folder: `http.xi` (headers/cookies/mime/charset/etag/sse), `url.xi` (url/uri/
 query/form/multipart), `dns.xi` (record parsing), `proto.xi` (ntp/icmp/jsonrpc/
 digest/basic). net.xi stays flat (contract) + delegates. New protocol clients
-that need C libs → packages with READMEs.
+that need C libs ? packages with READMEs.
 
-## 6. FILE FORMATS (1,169 entries — the biggest section)
+## 6. FILE FORMATS (1,169 entries � the biggest section)
 
 Policy: **pure text/data formatting = STDLIB**; **rendering-heavy, file-format
 binary, chart/diagram, GIS, metadata-tag, statistical-model = PACKAGE**.
 
 | Group | Decision | Where |
 |-------|----------|-------|
-| hex/octal/binary dump, bytes human | ✅ HAVE | fmt.xi format_hexdump + serialize |
-| table (ascii/markdown/csv/tsv/unicode) | ✅ HAVE | fmt.xi format_table (ascii). markdown/csv/tsv tables → stdlib add |
-| json/xml/yaml/toml/csv/tsv format | ✅ HAVE / ⬜ | serialize.xi (json). xml/yaml/toml/csv → **PACKAGE** (parsers, domain) — stdlib keeps escape helpers only |
-| markdown/html/textile/rtf/latex/troff/roff/man | 📦 PACKAGE | text markup → packages |
-| text layout (justify/hyphenate/wrap/indent/align/margin) | ✅ HAVE wrap/indent | fmt.xi expand (justify, hyphenation) |
-| ANSI/colors/emoji/unicode/box/border/separator | ⬜ STDLIB | fmt.xi expand (ANSI escape codes, box drawing) |
-| font/typeface/glyph/kerning/ligature | 📦 PACKAGE | typography → package |
-| bidi/rtl/ltr/arabic/hebrew/indic/cjk | ⬜ STDLIB basic | text/unicode.xi (basic); full shaping → PACKAGE |
-| numbering (roman/chinese/japanese/etc) | ⬜ STDLIB | num.xi expand (roman numerals etc) |
-| number format (percent/permille/ppm/ppb/ratio/fraction/scientific/engineering) | ⬜ STDLIB | num.xi + fmt.xi expand |
-| SI/metric/binary/decimal/imperial/US units | ⬜ STDLIB | fmt.xi expand (unit formatting) |
-| duration/date/time/relative/age/clock/stopwatch/countdown/calendar | ✅ HAVE time | time.xi expand (relative time, clock) |
-| charts (bar/line/pie/scatter/histogram/box/violin/heatmap/treemap/sunburst/sankey/network) | 📦 PACKAGE | xiom-charts package (rendering) |
-| diagrams (uml/mermaid/plantuml/graphviz/dot/bpmn/sysml) | 📦 PACKAGE | xiom-diagrams package (text generators) |
-| GIS/geo (geojson/kml/gpx/shapefile/wkt/wkb/geohash/mgrs/utm/latlong/projections) | 📦 PACKAGE | xiom-geo package |
-| metadata tags (exif/id3/vorbis/ape/mp4/mkv/avi/flac/ogg) | 📦 PACKAGE | xiom-metadata package |
-| chiptune/audio format metadata (midi/smf/mod/xm/s3m/it/nsf/etc ~150 entries) | 📦 PACKAGE | xiom-audio-meta package (niche, one README lists all) |
-| financial formatting (currency/accounting/amortization/roi/eps/ledger/invoice/etc) | 📦 PACKAGE | xiom-finance package |
-| statistical metrics/plots (mse/rmse/auc/roc/confusion/qq/boxcox/etc) | 📦 PACKAGE | xiom-stats-ml package (on stdlib stats) |
-| statistical tests (t/f/chi2/ks/wilcoxon/mann-whitney/fisher/etc ~150 entries) | 📦 PACKAGE | xiom-stats-tests package (on stdlib stats) |
-| regression models (linear/logistic/poisson/ridge/lasso/cox/mixed/etc) | 📦 PACKAGE | xiom-ml package |
-| MCMC/Bayesian (gibbs/metropolis/hmc/nuts/kalman/particle filters) | 📦 PACKAGE | xiom-ml package |
-| time series (ar/var/vecm/cointegration/adf/kpss) | 📦 PACKAGE | xiom-timeseries package |
-| 3D geometry (polyhedra/curves/surfaces/meshes/subdivision) | ⬜ STDLIB core / 📦 advanced | geom.xi expand (polyhedra, bezier, splines — pure math = stdlib); mesh/subdivision → xiom-geom3d package |
-| map projections (mercator/robinson/mollweide/etc ~100 entries) | 📦 PACKAGE | xiom-geo package |
-| address/geocoding (place/street/city/postal/poi) | 📦 PACKAGE | xiom-geo package |
-| raster formats (tiff/jpeg2000/geotiff/mrsid/ecw) | 📦 PACKAGE | xiom-imaging package |
+| hex/octal/binary dump, bytes human | ? HAVE | fmt.xi format_hexdump + serialize |
+| table (ascii/markdown/csv/tsv/unicode) | ? HAVE | fmt.xi format_table (ascii). markdown/csv/tsv tables ? stdlib add |
+| json/xml/yaml/toml/csv/tsv format | ? HAVE / ? | serialize.xi (json). xml/yaml/toml/csv ? **PACKAGE** (parsers, domain) � stdlib keeps escape helpers only |
+| markdown/html/textile/rtf/latex/troff/roff/man | ?? PACKAGE | text markup ? packages |
+| text layout (justify/hyphenate/wrap/indent/align/margin) | ? HAVE wrap/indent | fmt.xi expand (justify, hyphenation) |
+| ANSI/colors/emoji/unicode/box/border/separator | ? STDLIB | fmt.xi expand (ANSI escape codes, box drawing) |
+| font/typeface/glyph/kerning/ligature | ?? PACKAGE | typography ? package |
+| bidi/rtl/ltr/arabic/hebrew/indic/cjk | ? STDLIB basic | text/unicode.xi (basic); full shaping ? PACKAGE |
+| numbering (roman/chinese/japanese/etc) | ? STDLIB | num.xi expand (roman numerals etc) |
+| number format (percent/permille/ppm/ppb/ratio/fraction/scientific/engineering) | ? STDLIB | num.xi + fmt.xi expand |
+| SI/metric/binary/decimal/imperial/US units | ? STDLIB | fmt.xi expand (unit formatting) |
+| duration/date/time/relative/age/clock/stopwatch/countdown/calendar | ? HAVE time | time.xi expand (relative time, clock) |
+| charts (bar/line/pie/scatter/histogram/box/violin/heatmap/treemap/sunburst/sankey/network) | ?? PACKAGE | xiom-charts package (rendering) |
+| diagrams (uml/mermaid/plantuml/graphviz/dot/bpmn/sysml) | ?? PACKAGE | xiom-diagrams package (text generators) |
+| GIS/geo (geojson/kml/gpx/shapefile/wkt/wkb/geohash/mgrs/utm/latlong/projections) | ?? PACKAGE | xiom-geo package |
+| metadata tags (exif/id3/vorbis/ape/mp4/mkv/avi/flac/ogg) | ?? PACKAGE | xiom-metadata package |
+| chiptune/audio format metadata (midi/smf/mod/xm/s3m/it/nsf/etc ~150 entries) | ?? PACKAGE | xiom-audio-meta package (niche, one README lists all) |
+| financial formatting (currency/accounting/amortization/roi/eps/ledger/invoice/etc) | ?? PACKAGE | xiom-finance package |
+| statistical metrics/plots (mse/rmse/auc/roc/confusion/qq/boxcox/etc) | ?? PACKAGE | xiom-stats-ml package (on stdlib stats) |
+| statistical tests (t/f/chi2/ks/wilcoxon/mann-whitney/fisher/etc ~150 entries) | ?? PACKAGE | xiom-stats-tests package (on stdlib stats) |
+| regression models (linear/logistic/poisson/ridge/lasso/cox/mixed/etc) | ?? PACKAGE | xiom-ml package |
+| MCMC/Bayesian (gibbs/metropolis/hmc/nuts/kalman/particle filters) | ?? PACKAGE | xiom-ml package |
+| time series (ar/var/vecm/cointegration/adf/kpss) | ?? PACKAGE | xiom-timeseries package |
+| 3D geometry (polyhedra/curves/surfaces/meshes/subdivision) | ? STDLIB core / ?? advanced | geom.xi expand (polyhedra, bezier, splines � pure math = stdlib); mesh/subdivision ? xiom-geom3d package |
+| map projections (mercator/robinson/mollweide/etc ~100 entries) | ?? PACKAGE | xiom-geo package |
+| address/geocoding (place/street/city/postal/poi) | ?? PACKAGE | xiom-geo package |
+| raster formats (tiff/jpeg2000/geotiff/mrsid/ecw) | ?? PACKAGE | xiom-imaging package |
 
 **Audit**: fmt.xi = 468 lines / 28 fns, serialize.xi = 926/41. **REFACTOR**:
 create `stdlib/xiom/format/` folder: `number.xi` (percent/ratio/scientific/units/
 numerals), `text.xi` (justify/hyphenate/box/ansi), `dump.xi` (hex/octal/binary
-dump). fmt.xi stays flat + delegates. The rest → packages with READMEs.
+dump). fmt.xi stays flat + delegates. The rest ? packages with READMEs.
 
 ## 7. OS INTERACTION (692 entries)
 
-Policy: **OS syscalls via minimal FFI = STDLIB** (that's the stdlib's job —
+Policy: **OS syscalls via minimal FFI = STDLIB** (that's the stdlib's job �
 no deps, direct FFI allowed). **Library bindings (libcurl/libgit2/openssl/
 libpcap/etc) = PACKAGE**. **Platform framework bindings (Apple/Windows APIs) =
 PACKAGE**. **Tool-like wrappers (objdump/readelf/nm/strings) = PACKAGE**.
 
 | Group | Decision | Where |
 |-------|----------|-------|
-| pipe/fd/dup/select/poll/epoll/kqueue | ⬜ STDLIB | os.xi expand (FFI) |
-| event/ioctl/mmap/madvise/mlock | ⬜ STDLIB | os.xi expand |
-| stat/perm/owner/link/rename/remove/symlink/readlink/realpath | ✅ HAVE most | os.xi (link/symlink/readlink exist; perm/owner → add) |
-| temp/cwd/chdir/mkdir/rmdir/walk | ✅ HAVE | os.xi |
-| glob/find/locate/which/where | ⬜ STDLIB | os.xi expand (glob exists in misc; which → FFI) |
-| type/magic/mime/encoding/eol/bom detection | ⬜ STDLIB | os.xi expand (pure sniffing) |
-| size/truncate/fallocate/seek/tell/read/write/read_at/write_at/pread/pwrite | ✅ HAVE core | io.xi expand (pread/pwrite/truncate) |
-| readv/writev/sendfile/splice/tee/vmsplice | ⬜ STDLIB | os.xi expand (FFI, zero-copy) |
-| io_uring/aio/iocp/overlapped/eventfd/timerfd/signalfd | ⬜ STDLIB | os.xi expand (FFI; per-OS) |
-| fork/exec*/posix_spawn/spawn/system/popen/wait* | ✅ HAVE spawn | os.xi + process.xi expand (exec variants) |
-| pipe2/fifo/mknod/mkfifo/dev files | ⬜ STDLIB | os.xi expand |
-| stdin/stdout/stderr/tty/pty/console/terminal/termios | ⬜ STDLIB | os.xi expand (termios FFI) |
-| raw/cbreak/nonblock/blocking/timeout/echo/canonical | ⬜ STDLIB | os.xi expand |
-| buffer/line/full/no buffering + flush | ⬜ STDLIB | io.xi expand |
-| sync/fsync/fdatasync/syncfs/msync | ⬜ STDLIB | os.xi expand |
-| mem*/str* (memcpy/memset/memcmp/strcpy/strtok/strerror) | ✅ HAVE mem | mem.xi + ffi.xi (SIMD asm). str* → string.xi |
-| errno/perror/strsignal/psignal | ⬜ STDLIB | os.xi expand (FFI) |
-| backtrace/demangle/addr2line | ⬜ STDLIB | debug.xi expand (FFI backtrace) |
-| dlopen/dlclose/dlsym/dlerror/dladdr | ⬜ STDLIB | ffi.xi expand (dynamic loading) |
-| libc/libm/librt/libdl/libpthread access | ⬜ STDLIB | ffi.xi expand (expose common C fns) |
-| libcrypto/libssl/libz/libbz2/liblzma/libzstd/liblz4/libsnappy/libcurl/libgit2/libssh2 | 📦 PACKAGE | binding packages (openssl/zstd/lz4 exist; curl/git2/ssh2 → new pkgs) |
-| libxml2/libxslt/libexpat/libyaml/libjson/libjansson | 📦 PACKAGE | binding packages |
-| libpcap/libnet/netlink/nf* family | 📦 PACKAGE | packet-capture package |
-| wireless (iw/iwconfig/wpa/hostapd + drivers) | 📦 PACKAGE | wireless package |
-| graphics drivers (drm/gbm/egl/gl/gles/vulkan/dx/d3d) | 📦 PACKAGE | exist (vulkan/opengl/directx pkgs); drm/egl → new |
-| Apple frameworks (metal/arkit/vision/coreml/storekit/etc ~90 entries) | 📦 PACKAGE | xiom-apple package (macOS/iOS bindings) |
-| Windows registry/assembly/authenticode/pki tools | 📦 PACKAGE | xiom-windows package |
-| certificates (x509/pkcs*/cms/smime/pgp/ssh-certs ~180 entries) | 📦 PACKAGE | xiom-pki package (on openssl) |
-| logging (syslog/journald/eventlog/rsyslog/logrotate/agents ~90 entries) | ⬜ STDLIB core | log.xi (levels/format exist). Full syslog/journald clients → PACKAGE xiom-logging |
+| pipe/fd/dup/select/poll/epoll/kqueue | ? STDLIB | os.xi expand (FFI) |
+| event/ioctl/mmap/madvise/mlock | ? STDLIB | os.xi expand |
+| stat/perm/owner/link/rename/remove/symlink/readlink/realpath | ? HAVE most | os.xi (link/symlink/readlink exist; perm/owner ? add) |
+| temp/cwd/chdir/mkdir/rmdir/walk | ? HAVE | os.xi |
+| glob/find/locate/which/where | ? STDLIB | os.xi expand (glob exists in misc; which ? FFI) |
+| type/magic/mime/encoding/eol/bom detection | ? STDLIB | os.xi expand (pure sniffing) |
+| size/truncate/fallocate/seek/tell/read/write/read_at/write_at/pread/pwrite | ? HAVE core | io.xi expand (pread/pwrite/truncate) |
+| readv/writev/sendfile/splice/tee/vmsplice | ? STDLIB | os.xi expand (FFI, zero-copy) |
+| io_uring/aio/iocp/overlapped/eventfd/timerfd/signalfd | ? STDLIB | os.xi expand (FFI; per-OS) |
+| fork/exec*/posix_spawn/spawn/system/popen/wait* | ? HAVE spawn | os.xi + process.xi expand (exec variants) |
+| pipe2/fifo/mknod/mkfifo/dev files | ? STDLIB | os.xi expand |
+| stdin/stdout/stderr/tty/pty/console/terminal/termios | ? STDLIB | os.xi expand (termios FFI) |
+| raw/cbreak/nonblock/blocking/timeout/echo/canonical | ? STDLIB | os.xi expand |
+| buffer/line/full/no buffering + flush | ? STDLIB | io.xi expand |
+| sync/fsync/fdatasync/syncfs/msync | ? STDLIB | os.xi expand |
+| mem*/str* (memcpy/memset/memcmp/strcpy/strtok/strerror) | ? HAVE mem | mem.xi + ffi.xi (SIMD asm). str* ? string.xi |
+| errno/perror/strsignal/psignal | ? STDLIB | os.xi expand (FFI) |
+| backtrace/demangle/addr2line | ? STDLIB | debug.xi expand (FFI backtrace) |
+| dlopen/dlclose/dlsym/dlerror/dladdr | ? STDLIB | ffi.xi expand (dynamic loading) |
+| libc/libm/librt/libdl/libpthread access | ? STDLIB | ffi.xi expand (expose common C fns) |
+| libcrypto/libssl/libz/libbz2/liblzma/libzstd/liblz4/libsnappy/libcurl/libgit2/libssh2 | ?? PACKAGE | binding packages (openssl/zstd/lz4 exist; curl/git2/ssh2 ? new pkgs) |
+| libxml2/libxslt/libexpat/libyaml/libjson/libjansson | ?? PACKAGE | binding packages |
+| libpcap/libnet/netlink/nf* family | ?? PACKAGE | packet-capture package |
+| wireless (iw/iwconfig/wpa/hostapd + drivers) | ?? PACKAGE | wireless package |
+| graphics drivers (drm/gbm/egl/gl/gles/vulkan/dx/d3d) | ?? PACKAGE | exist (vulkan/opengl/directx pkgs); drm/egl ? new |
+| Apple frameworks (metal/arkit/vision/coreml/storekit/etc ~90 entries) | ?? PACKAGE | xiom-apple package (macOS/iOS bindings) |
+| Windows registry/assembly/authenticode/pki tools | ?? PACKAGE | xiom-windows package |
+| certificates (x509/pkcs*/cms/smime/pgp/ssh-certs ~180 entries) | ?? PACKAGE | xiom-pki package (on openssl) |
+| logging (syslog/journald/eventlog/rsyslog/logrotate/agents ~90 entries) | ? STDLIB core | log.xi (levels/format exist). Full syslog/journald clients ? PACKAGE xiom-logging |
 
 **Audit**: os.xi = 696/61, io.xi = 907/53, ffi.xi = 32 fns. **REFACTOR**: create
 `stdlib/xiom/os/` folder: `fs.xi` (stat/perm/owner/link/glob/find/magic),
 `ioctl.xi`, `proc.xi` (fork/exec/wait), `term.xi` (tty/termios/raw),
 `mmap.xi`, `sync_io.xi` (fsync/mlock). os.xi stays flat + delegates.
-io.xi → split into `io/fs.xi` (file ops) + io.xi console. ffi.xi → add
+io.xi ? split into `io/fs.xi` (file ops) + io.xi console. ffi.xi ? add
 `ffi/dl.xi` (dlopen). Core syscall surface = stdlib; lib bindings = packages.
 
 ## 8. RANDOM (section header present, entries cut off)
@@ -3230,10 +3230,10 @@ io.xi → split into `io/fs.xi` (file ops) + io.xi console. ffi.xi → add
 Expected per original proposal: mt/pcg/xorshift/chacha/dist/seed/source.
 Current: rand.xi has StdRng (LCG), Xorshift64, distributions (uniform/normal/
 exponential), uuid_v4/v7, random_choice/shuffle, secure_random_bytes.
-GAP: MT19937, PCG, ChaCha-based RNG → **STDLIB** (rand.xi expand, pure).
-All pure → stdlib.
+GAP: MT19937, PCG, ChaCha-based RNG ? **STDLIB** (rand.xi expand, pure).
+All pure ? stdlib.
 
-## 9. PACKAGE README ASSIGNMENTS (which list entries → which package README)
+## 9. PACKAGE README ASSIGNMENTS (which list entries ? which package README)
 
 For each package folder, README.md must list its libs (inventory only):
 
@@ -3241,8 +3241,8 @@ For each package folder, README.md must list its libs (inventory only):
 |---------|--------------------|
 | xiom-json / xiom-protobuf / xiom-grpc / xiom-arrow / xiom-websocket / xiom-graphql / xiom-rest / xiom-http | exist; extend per NETWORK/format sections |
 | xiom-openssl / xiom-libsodium | tls, ssl, x509, pem, cert family, pkcs*, cms, smime |
-| xiom-sqlite / xiom-postgres / xiom-sql | sql drivers; mysql, mongo, elastic, odbc → NEW pkgs |
-| xiom-redis | memcached → NEW pkg |
+| xiom-sqlite / xiom-postgres / xiom-sql | sql drivers; mysql, mongo, elastic, odbc ? NEW pkgs |
+| xiom-redis | memcached ? NEW pkg |
 | xiom-kafka / xiom-zeromq / xiom-mqtt(NEW) / xiom-amqp(NEW) / xiom-nats(NEW) / xiom-pulsar(NEW) | messaging protocols |
 | xiom-charts (NEW) | all chart entries (bar..sunburst, statistical plots) |
 | xiom-diagrams (NEW) | mermaid, plantuml, graphviz/dot, uml, bpmn, sysml |
@@ -3276,11 +3276,11 @@ For each package folder, README.md must list its libs (inventory only):
 
 ## 10. EXECUTION ORDER (backlog)
 
-1. **Refactor first** (folder grouping — verified safe): num/, collect/, str→text/,
+1. **Refactor first** (folder grouping � verified safe): num/, collect/, str?text/,
    net/, os/, format/, io/fs, ffi/dl. Keep flat contract files as aggregates.
-2. **Fill stdlib gaps** (all ⬜ STDLIB entries above) — pure implementations,
+2. **Fill stdlib gaps** (all ? STDLIB entries above) � pure implementations,
    per-module agents, test-vector verified.
-3. **Update package READMEs** with the inventory lists from §9.
+3. **Update package READMEs** with the inventory lists from �9.
 4. **Create NEW package folders + READMEs** for all (NEW) packages.
 5. **Phase 4 optimizations** on hot stdlib paths (hash SIMD, bigint asm,
    deflate, GCM GHASH, string ops).
@@ -3288,12 +3288,12 @@ For each package folder, README.md must list its libs (inventory only):
 
 ## 11. DECISIONS LOGGED
 
-- Folder modules VERIFIED working (`use xiom.foo.bar` → stdlib/xiom/foo/bar.xi,
+- Folder modules VERIFIED working (`use xiom.foo.bar` ? stdlib/xiom/foo/bar.xi,
   exit 42 test). Contract modules stay flat; new code goes in folders.
 - Files >1,000 lines get refactored: num (2,612), crypto (2,538), geom (1,883),
   collections (1,732), core (1,055). Split into folder modules; flat file
   becomes aggregate re-export (frozen contract intact).
-- Hash/string/char/fmt/convert/rand = pure → STDLIB, keep flat or light folder.
+- Hash/string/char/fmt/convert/rand = pure ? STDLIB, keep flat or light folder.
 - Network: wire protocols (pure) = STDLIB; drivers/C-bound = PACKAGES.
 - File formats: text/number formatting = STDLIB; charts/diagrams/GIS/metadata/
   stats-tests/ML/finance = PACKAGES.
@@ -3301,12 +3301,12 @@ For each package folder, README.md must list its libs (inventory only):
 - Interfaces (FromStr/TryFrom/Into/AsRef) = declare-only until compiler
   implements impl dispatch (backlog item: compiler hardening).
 
-## 12. GENERICS/INTERFACES vs NUMERIC TOWER — STATUS (READ BEFORE WRITING MATH CODE)
+## 12. GENERICS/INTERFACES vs NUMERIC TOWER � STATUS (READ BEFORE WRITING MATH CODE)
 
 **TL;DR: generic operators and interface `impl` dispatch are NOT usable for
 mixed int/float arithmetic yet.** The stdlib numeric tower is deliberately
 CONCRETE per-width. Do NOT write `fn foo[T: Bounded + Add](a: T, b: T) -> T`
-that does `a + b` and expect it to work for Float64 — it corrupts the value
+that does `a + b` and expect it to work for Float64 � it corrupts the value
 (compiler bug). Write `fn foo_i64(...) / foo_f64(...) / foo_f32(...)` instead.
 
 ### Why (compiler state, 2026-08-07)
@@ -3314,10 +3314,10 @@ that does `a + b` and expect it to work for Float64 — it corrupts the value
    `T = Float64` produces garbage in the monomorphized body. Verified by the
    Tier-3 agent work; the numeric tower (num.xi) works around it with concrete
    per-width functions (i64/u32/i16/i8/u64/u32/u16/u8 + f64/f32 variants:
-   `i64_add_checked`, `f64_round`, `u32_mul_sat`, `i128_*`, `fraction_*` …).
+   `i64_add_checked`, `f64_round`, `u32_mul_sat`, `i128_*`, `fraction_*` �).
 2. **Interface `impl` blocks are parsed but IGNORED by checker+codegen.**
-   Traits are declare-only: `pub interface Num[T] { … }` compiles, but
-   `impl Num[Int] { … }` does not dispatch. So trait-based math (`Num[T]` with
+   Traits are declare-only: `pub interface Num[T] { � }` compiles, but
+   `impl Num[Int] { � }` does not dispatch. So trait-based math (`Num[T]` with
    per-type impls) cannot drive generic math functions.
 3. **`[T: Ord]` generics work ONLY for algorithms using `.compare` / `.eq`**
    (builtin inline scalar dispatch), e.g. sort/search/cmp/min/max. They do NOT
@@ -3325,57 +3325,57 @@ that does `a + b` and expect it to work for Float64 — it corrupts the value
 
 ### Rules for stdlib code
 - **Math/numeric functions: concrete per-width signatures** (`i64_*`, `u64_*`,
-  `f64_*`, `f32_*`, `i128_*`, `Fraction` …). One fn per width; callers pick.
+  `f64_*`, `f32_*`, `i128_*`, `Fraction` �). One fn per width; callers pick.
 - `[T: Ord]` generics allowed for comparison-based algorithms only.
-- Do NOT add new trait-based numeric abstractions expecting dispatch — they
+- Do NOT add new trait-based numeric abstractions expecting dispatch � they
   will silently not work. Document as declare-only.
 - Packages built on stdlib inherit the same rule until the compiler hardens.
 
 ### Unblocking (compiler hardening backlog, from SESSION.md)
-- (a) interface `impl` dispatch on generic params (`x.add(x)` fails — parser
+- (a) interface `impl` dispatch on generic params (`x.add(x)` fails � parser
   handles ImplDecl; checker+codegen ignore it).
 - (b) generic operator monomorphization corrupting Float64
   (`add2[T](a+b)` garbage for floats).
 - When (a)+(b) land, the numeric tower can be COLLAPSED into generic trait
-  impls (`impl Num[Int]`, `impl Num[Float64]` …) with the concrete fns kept as
-  thin re-export shims for the frozen API. Revisit §4 numeric tower then.
+  impls (`impl Num[Int]`, `impl Num[Float64]` �) with the concrete fns kept as
+  thin re-export shims for the frozen API. Revisit �4 numeric tower then.
 - The freeze gate locks the concrete signatures NOW, so the collapse is safe:
   concrete fns remain available even after generics land.
 
-## 13. ARCHITECTURE DECISIONS (2026-08-08 — user confirmed)
+## 13. ARCHITECTURE DECISIONS (2026-08-08 � user confirmed)
 
 Four decisions logged by the owner. These shape ALL future stdlib/compiler work.
 
-### D1 — Native integer widths: Int128/UInt128 native; 256 via bigint
+### D1 � Native integer widths: Int128/UInt128 native; 256 via bigint
 - **APPROVED: add native `Int128` / `UInt128` as LLVM `i128` primitives** (parser +
   checker + codegen). Add/sub/mul are native hardware ops; div/rem lower to
   `__divti3`/`__udivti3` libcalls that clang links automatically.
-- **REJECTED: native Int256/UInt256** — LLVM emulates them slowly; `bigint.xi`
+- **REJECTED: native Int256/UInt256** � LLVM emulates them slowly; `bigint.xi`
   (stdlib, 64-bit limbs) is the right home for >128-bit arithmetic.
-- Rationale: 64×64→128 wide multiply unlocks pure-XIOM secp256k1/Ed25519 field
+- Rationale: 64�64?128 wide multiply unlocks pure-XIOM secp256k1/Ed25519 field
   math (currently delegating to runtime C), faster bigint schoolbook multiply,
   PRNG state combining, hash combining. NOTE: SHA-256/512 do NOT need 128-bit
-  (they are 32/64-bit ops) — the win is wide multiply, not hashing per se.
+  (they are 32/64-bit ops) � the win is wide multiply, not hashing per se.
 - The frozen struct-based `Int128` API (num.xi `i128_*`) stays as a shim;
-  native i128 is purely additive. Optional add: `Float128` (`fp128`) — same
+  native i128 is purely additive. Optional add: `Float128` (`fp128`) � same
   one-session cost, libcalls via compiler-rt.
 
-### D2 — Raw pointers must be gated behind `unsafe`
+### D2 � Raw pointers must be gated behind `unsafe`
 - **APPROVED: the language must be SAFE. Raw-pointer operations (deref `*p`,
-  `Int↔Ptr` casts, `Vec/Slice→Ptr` casts, `asm`) require an `unsafe { }`
+  `Int?Ptr` casts, `Vec/Slice?Ptr` casts, `asm`) require an `unsafe { }`
   context.** Currently the checker has NO gating (verified: `*p` compiles and
-  runs outside unsafe) — `unsafe` is only AUDITED (sandbox.rs scoring,
+  runs outside unsafe) � `unsafe` is only AUDITED (sandbox.rs scoring,
   `--strict` warning). 
 - Implementation: checker unsafe-context depth counter; reject pointer deref /
   ptr casts / asm when depth == 0. `unsafe` blocks increment/decrement.
   Sandbox audit stays as the second layer (scoring + `#[safety_audit]`).
-- Do this BEFORE going public — the clean-break window is now.
+- Do this BEFORE going public � the clean-break window is now.
 - Note: stdlib itself uses raw pointers extensively (Vec data pointers, ffi,
-  alloc) — those internals get wrapped in `unsafe` blocks; the PUBLIC API stays
-  safe (SafePtr, Vec, Cursor, …). This is a compiler+stdlib co-change; the
+  alloc) � those internals get wrapped in `unsafe` blocks; the PUBLIC API stays
+  safe (SafePtr, Vec, Cursor, �). This is a compiler+stdlib co-change; the
   freeze gate (signatures) is unaffected because signatures don't change.
 
-### D3 — BigFloat = separate stdlib module (NOT inside bigint.xi)
+### D3 � BigFloat = separate stdlib module (NOT inside bigint.xi)
 - **APPROVED: `BigFloat` (arbitrary-precision float) is its own stdlib module**
   (e.g. `num/bigfloat.xi` or `bigfloat.xi`), built on `bigint.xi` +
   `Fraction`-style internals: sign/exponent/significand, add/sub/mul/div,
@@ -3383,28 +3383,28 @@ Four decisions logged by the owner. These shape ALL future stdlib/compiler work.
 - MPFR-style transcendentals are a later phase; a C MPFR binding would be a
   PACKAGE (stdlib = zero deps).
 
-### D4 — Categorize EVERY lib from the start (scale-without-breaking rule)
+### D4 � Categorize EVERY lib from the start (scale-without-breaking rule)
 - **APPROVED: every stdlib module belongs to a category folder, even if the
-  category has exactly ONE lib.** `use xiom.foo.bar` → `stdlib/xiom/foo/bar.xi`
+  category has exactly ONE lib.** `use xiom.foo.bar` ? `stdlib/xiom/foo/bar.xi`
   (catalog strategy a, VERIFIED working).
 - Rationale (owner): categories let the stdlib scale by EXPANDING INSIDE a
-  category (math/core → math/algebra → math/vectors → math/differential …)
+  category (math/core ? math/algebra ? math/vectors ? math/differential �)
   without ever breaking user code. When a lib is added it lands in its
   category; users who `use xiom.math.core` never see churn. Pre-public, the
-  ONLY cost to move a lib is replacing the `use` line in tests — no call-site
+  ONLY cost to move a lib is replacing the `use` line in tests � no call-site
   changes, no signature changes.
-- RULE: **new code goes into category folders ONLY** — flat files (frozen
+- RULE: **new code goes into category folders ONLY** � flat files (frozen
   contract) are never extended with new libs; they stay as aggregates.
   Categories are created eagerly (even for one lib) so the tree shows the
   final shape.
 - Existing flat files stay byte-identical (freeze gate scans them). Migration
   of EXISTING fns into categories happens only as an intentional,
   freeze-gate-compatible refactor (flat file keeps signature + delegates, or
-  snapshot updated with reviewed migration) — NOT part of normal growth.
+  snapshot updated with reviewed migration) � NOT part of normal growth.
 
-### D4b — `use math;` imports ALL sub-libs — VERIFIED WORKING (2026-08-08)
+### D4b � `use math;` imports ALL sub-libs � VERIFIED WORKING (2026-08-08)
 - **The aggregate-`use` pattern is PROVEN end-to-end with the current
-  compiler — NO compiler change required.** The flat aggregate file (e.g.
+  compiler � NO compiler change required.** The flat aggregate file (e.g.
   `math.xi`) lists its sub-modules as `use` statements:
   ```xiom
   // stdlib/xiom/math.xi (aggregate)
@@ -3417,31 +3417,31 @@ Four decisions logged by the owner. These shape ALL future stdlib/compiler work.
   registered transitively and can call:
   ```xiom
   use xiom.math;
-  var a = math.core.sqrt(x);      // qualified by sub-lib — deterministic
+  var a = math.core.sqrt(x);      // qualified by sub-lib � deterministic
   var b = xiom.math.core.sqrt(y); // full dotted path also resolves
   ```
 - **Verified by live probe tests (exit 0):**
-  1. `use xiom._probe;` + `_probe.core.core_add(20,22)` == 42 ✓ (parent imports
-     sub-module → sub-lib callable through parent).
+  1. `use xiom._probe;` + `_probe.core.core_add(20,22)` == 42 ? (parent imports
+     sub-module ? sub-lib callable through parent).
   2. Collision case: `core.core_add` vs `algebra.core_add` (same fn name in
-     two sub-libs) — BOTH resolve correctly through their qualifier ✓.
-  3. Full dotted path `xiom._probe3.core.core_add(1,2)` resolves ✓.
-  4. Sub-lib named `core` does NOT collide with the flat `core.xi` —
-     `_probe4.core.contains` resolves to the sub-lib's fn ✓ (leaf-qualified
+     two sub-libs) � BOTH resolve correctly through their qualifier ?.
+  3. Full dotted path `xiom._probe3.core.core_add(1,2)` resolves ?.
+  4. Sub-lib named `core` does NOT collide with the flat `core.xi` �
+     `_probe4.core.contains` resolves to the sub-lib's fn ? (leaf-qualified
      resolution walks the receiver chain first).
-- **KEY MECHANISM**: the parent aggregate MUST contain the `use` lines — the
+- **KEY MECHANISM**: the parent aggregate MUST contain the `use` lines � the
   checker only loads modules that are `use`d; `use math;` alone does NOT
   auto-discover `stdlib/xiom/math/*.xi`. So the flat aggregate is an EXPLICIT
   MANIFEST of its category: add a sub-lib = add one `use` line. Deterministic,
   no magic, no compiler change.
 - **Naming decision (owner, 2026-08-08): use `core` not `basic` for the
-  foundational sub-lib** — `math.core`, `math.algebra`, `math.primitives`,
-  `math.vectors` … `math.basic` rejected (sounds too basic). `core` is
+  foundational sub-lib** � `math.core`, `math.algebra`, `math.primitives`,
+  `math.vectors` � `math.basic` rejected (sounds too basic). `core` is
   reserved as the category's foundational module name; the flat aggregate file
   keeps the category name (`math.xi`) and is the "use manifest".
 - Qualified call style `math.core.sqrt(a)` is DETERMINISTIC and unambiguous
   (proven: same fn name in two sub-libs disambiguates). Bare `sqrt(a)` after
-  `use math;` is NOT guaranteed (keep-first alias across modules) — stdlib
+  `use math;` is NOT guaranteed (keep-first alias across modules) � stdlib
   docs should recommend qualified calls for multi-lib imports.
 - Target category map (flat files remain; folders host new libs):
 
@@ -3479,13 +3479,13 @@ Four decisions logged by the owner. These shape ALL future stdlib/compiler work.
 | `debug/` | debug.xi | trace, disasm, heap-report |
 | `misc/` | misc.xi | glob, levenshtein, semver, soundex, natural |
 | `error/` | error.xi | chain, context, backtrace |
-| `contracts/` | contracts.xi | (stays flat — compiler-backed) |
+| `contracts/` | contracts.xi | (stays flat � compiler-backed) |
 | `reflect/` | reflect.xi | typeinfo, fields |
 | `simd/` | simd.xi | vec4, vec8, mask, gather |
 | `array/` | array.xi | fixed, dynamic |
-| `string/`→`text/` | string.xi (kept flat, alias) | see text/ |
+| `string/`?`text/` | string.xi (kept flat, alias) | see text/ |
 
-### Execution order (updated 2026-08-08 — owner directive: PRODUCTION-GRADE FIRST, no workarounds)
+### Execution order (updated 2026-08-08 � owner directive: PRODUCTION-GRADE FIRST, no workarounds)
 Owner decision: the compiler must be REAL before the huge stdlib is written.
 Do NOT write 5,000 functions against a known-broken compiler and rewrite them
 later. Hardening comes FIRST; stdlib expansion (categories + manifest) starts
@@ -3493,34 +3493,34 @@ only after the numeric/generic foundation is production-grade. The freeze gate
 + D4b manifest pattern make this safe: concrete signatures stay callable
 forever, so nothing written later breaks anything written now.
 
-1. **Unsafe gating (D2)** — checker unsafe-context depth counter; reject raw
-   pointer deref / Int↔Ptr casts / Vec→Ptr casts / asm at depth 0; wrap stdlib
+1. **Unsafe gating (D2)** � checker unsafe-context depth counter; reject raw
+   pointer deref / Int?Ptr casts / Vec?Ptr casts / asm at depth 0; wrap stdlib
    internals in `unsafe` blocks (public API stays safe). Suite must stay green
-   (freeze unaffected — signatures unchanged).
-2. **Native Int128/UInt128 (D1)** — parser/checker/codegen; `i128` LLVM;
+   (freeze unaffected � signatures unchanged).
+2. **Native Int128/UInt128 (D1)** � parser/checker/codegen; `i128` LLVM;
    div/rem via `__divti3`/`__udivti3` (clang-linked). Optional Float128.
-3. **COMPILER HARDENING — production-grade generics/interfaces (PLAN B,
+3. **COMPILER HARDENING � production-grade generics/interfaces (PLAN B,
    NO workarounds):**
    a. interface `impl` dispatch on generic params (checker+codegen honor
       ImplDecl: `impl Num[Int] { ... }` must register and dispatch).
-      ✅ DONE (2026-08-08, commit b34ebaa4): `impl Trait[Args]` registers;
+      ? DONE (2026-08-08, commit b34ebaa4): `impl Trait[Args]` registers;
       `Trait[Arg].method()` static dispatch resolves to the impl's
       `Type.method` freestanding fn (expand_impl_blocks type-name fix +
       codegen impl-receiver resolution). Verified: `Num[Int].add`,
       `Num[Float64].add`, multi-type impls, direct `Int.add`.
    b. generic-operator monomorphization must NOT corrupt Float64
       (`add2[T](a+b)` correct for ALL widths incl. Float64/Float32).
-      ✅ DONE: explicit type args `fn[T](args)` were DISCARDED by the parser
-      (→ wrong monomorphisation); now preserved through GenericCall and used
+      ? DONE: explicit type args `fn[T](args)` were DISCARDED by the parser
+      (? wrong monomorphisation); now preserved through GenericCall and used
       for concrete-type mapping. Generic return-type substitution (was
-      emitted as i64 → garbage) fixed for scalar results. Verified:
+      emitted as i64 ? garbage) fixed for scalar results. Verified:
       `add2[Int]/[Float64]/[Float32]` all correct.
-   c. After (a)+(b): the generic numeric tower lands — `impl Num[Int]`,
-      `impl Num[Int32]`, `impl Num[Float32]`, `impl Num[Float64]` … and ONE
+   c. After (a)+(b): the generic numeric tower lands � `impl Num[Int]`,
+      `impl Num[Int32]`, `impl Num[Float32]`, `impl Num[Float64]` � and ONE
       generic `sqrt[T: Num](x: T) -> T` serves all widths. Concrete fns stay
       as thin shims (freeze-gated).
-      ✅ CORE DONE (2026-08-10, commit pending): `math/core.xi` folder module
-      (D4 category) hosts the generic tower — `pub interface Num[T]` with
+      ? CORE DONE (2026-08-10, commit pending): `math/core.xi` folder module
+      (D4 category) hosts the generic tower � `pub interface Num[T]` with
       `impl Num[Int/Int32/Int64/UInt64/Float64/Float32]` and ONE generic
       implementation per concept (`lerp`, `average`, `sum`, `product`,
       `negate`, `twice`) serving every width. Enabled by:
@@ -3528,14 +3528,14 @@ forever, so nothing written later breaks anything written now.
       - `collect_external_decls` injects catalog-loaded interfaces + impls
         (module-qualified keys `core.Float64.add`),
       - driver Stage 4.5 injects `TopDecl::Interface`,
-      - codegen dispatches `Num[T].add` via `current_type_map` (T→concrete)
+      - codegen dispatches `Num[T].add` via `current_type_map` (T?concrete)
         with module-qualified impl-key search; C001 bound check accepts
         module-qualified/lazily-registered impl methods.
       Verified: smoke_math_core (lerp/average/sum/product/negate/twice over
-      5 widths), smoke_generic_tower, missing-impl → clean C001.
-      ✅ COMPLETED (2026-08-10, commits f1cb3fef + cd48a8df):
-      - `Real` interface (lt/gt/le/ge/is_negative) → generic abs/clamp/min2/max2
-      - `FromInt` interface (from_int/to_float) → generic of_int
+      5 widths), smoke_generic_tower, missing-impl ? clean C001.
+      ? COMPLETED (2026-08-10, commits f1cb3fef + cd48a8df):
+      - `Real` interface (lt/gt/le/ge/is_negative) ? generic abs/clamp/min2/max2
+      - `FromInt` interface (from_int/to_float) ? generic of_int
       - catalog impl-method injection: dedup on type-qualified names,
         interface collection in register_external_module, generic-bound
         reachability seeding (all interface methods survive the dead-code
@@ -3543,58 +3543,58 @@ forever, so nothing written later breaks anything written now.
       - REMAINING (later): generic sqrt needs a Transcendental interface;
         stdlib adoption of the generic forms (math.xi stays frozen concrete).
    d. Full test pass on every step; no `#[ignore]`d shortcuts.
-      ✅ checker 166, exec 67 (incl. hardening smoke), e2e 2231, all suites.
+      ? checker 166, exec 67 (incl. hardening smoke), e2e 2231, all suites.
    e. ADDITIONAL fixes landed during hardening:
       - Str::from_utf8(Vec[UInt8]) NUL-termination (runtime
-        `xiom_str_from_vec`) — was returning raw non-terminated Vec data →
+        `xiom_str_from_vec`) � was returning raw non-terminated Vec data ?
         intermittent garbage suffixes (ROOT CAUSE of the net_folder harness
         flake, ~1-in-5 processes; now 8/8 stable from Rust-spawn).
       - url_encode single-pass rewrite (two-pass count/write disagreement
         could leave uninitialized malloc bytes).
       - Test harness: compile retry + flush delay for the parallel-session
         binary race.
-4. **Stdlib category expansion (D4) starts AFTER hardening** — agents write
-   math/core, math/algebra, math/vectors, … as GENERIC libs over the real
+4. **Stdlib category expansion (D4) starts AFTER hardening** � agents write
+   math/core, math/algebra, math/vectors, � as GENERIC libs over the real
    tower; flat aggregates become use-manifests (D4b). No per-width
-   duplicated libs — one generic implementation per concept.
-5. **BigFloat (D3)** — num/bigfloat.xi on bigint.xi.
-6. **Backlog (next sessions):** see §14.
+   duplicated libs � one generic implementation per concept.
+5. **BigFloat (D3)** � num/bigfloat.xi on bigint.xi.
+6. **Backlog (next sessions):** see �14.
 
 ## 14. BACKLOG (owner-approved, next sessions)
 
 ### 14.1 Compiler hardening (continues after D2+D1)
-- Interface `impl` dispatch (3a above) — parser handles ImplDecl today;
+- Interface `impl` dispatch (3a above) � parser handles ImplDecl today;
   checker+codegen ignore it. This is THE enabler for the generic stdlib.
 - Generic-operator Float64 corruption (3b above).
 - Result[Vec[T]].value corruption (SESSION.md bug 1).
-- Chained .method on module-qualified Str-returning calls (bug 2) — already
+- Chained .method on module-qualified Str-returning calls (bug 2) � already
   worked around in net/url.xi; fix at source.
-- Bool→Int cast (bug 4).
-- Option/Result match-arm mixing → out-of-bounds GEP (bug 5).
-- `&T` param semantics (address-as-i64, not value) — documented, keep.
+- Bool?Int cast (bug 4).
+- Option/Result match-arm mixing ? out-of-bounds GEP (bug 5).
+- `&T` param semantics (address-as-i64, not value) � documented, keep.
 
 ### 14.2 Math family libs (category: math/, manifest math.xi)
 Write AFTER hardening 3a+3b so they are generic (`[T: Num]`) not per-width:
-- math/core — sqrt, pow, exp, ln, log10, log2, trig, hyperbolic, abs, min,
-  max, clamp, floor/ceil/round/trunc/fract, remap, lerp — GENERIC over Num.
-- math/primitives — number-theoretic primitives, divisibility, parity.
-- math/algebra — linear algebra: vectors, matrices, determinants, inverses,
+- math/core � sqrt, pow, exp, ln, log10, log2, trig, hyperbolic, abs, min,
+  max, clamp, floor/ceil/round/trunc/fract, remap, lerp � GENERIC over Num.
+- math/primitives � number-theoretic primitives, divisibility, parity.
+- math/algebra � linear algebra: vectors, matrices, determinants, inverses,
   solvers (Gaussian), eigenvalues (basic).
-- math/vectors — geometric vectors (replaces flat geom.xi vec2/3/4 fns
+- math/vectors � geometric vectors (replaces flat geom.xi vec2/3/4 fns
   eventually; keep frozen flat fns).
-- math/trig + math/transcendental — full trig, exp/log families, gamma,
+- math/trig + math/transcendental � full trig, exp/log families, gamma,
   erf, zeta (basic), special functions.
-- math/differential — numeric derivatives, gradients, ODE solvers
+- math/differential � numeric derivatives, gradients, ODE solvers
   (Euler, RK4), integration (trapezoid, Simpson, Gauss).
-- math/integral — numeric quadrature.
-- math/series — Taylor, Fourier (basic), polynomial ops.
-- math/special — Bessel, Legendre, Chebyshev, factorial/gamma, binomial.
+- math/integral � numeric quadrature.
+- math/series � Taylor, Fourier (basic), polynomial ops.
+- math/special � Bessel, Legendre, Chebyshev, factorial/gamma, binomial.
 
 ### 14.3 BigInt/BigFloat (category: num/, manifest num.xi)
-- bigint.xi exists (frozen flat). Extend: bigint/ folder libs — karatsuba,
+- bigint.xi exists (frozen flat). Extend: bigint/ folder libs � karatsuba,
   toom-cook, montgomery, powmod, sqrt, gcd-extended, primality
   (Miller-Rabin), string base conversions.
-- BigFloat (D3): num/bigfloat.xi — sign/exponent/significand on bigint,
+- BigFloat (D3): num/bigfloat.xi � sign/exponent/significand on bigint,
   add/sub/mul/div, rounding modes, parse/format, sqrt, ln/exp (series),
   sin/cos (series). Separate from bigint.xi.
 
@@ -3625,75 +3625,75 @@ Write AFTER hardening 3a+3b so they are generic (`[T: Num]`) not per-width:
 
 
 Function	Generic	Description
-add(a, b)	✅	Addition
-sub(a, b)	✅	Subtraction
-mul(a, b)	✅	Multiplication
-div(a, b)	✅	Division (requires b != 0)
-mod(a, b)	✅	Modulo/remainder
-abs(x)	✅	Absolute value
-neg(x)	✅	Negation
-signum(x)	✅	Sign (-1, 0, 1)
-min(a, b)	✅	Minimum of two values
-max(a, b)	✅	Maximum of two values
-clamp(x, lo, hi)	✅	Clamp value between bounds
-lerp(a, b, t)	✅	Linear interpolation
-saturating_add(a, b)	✅	Addition with saturation
-saturating_sub(a, b)	✅	Subtraction with saturation
-saturating_mul(a, b)	✅	Multiplication with saturation
-checked_add(a, b)	✅	Addition with overflow check
-checked_sub(a, b)	✅	Subtraction with overflow check
-checked_mul(a, b)	✅	Multiplication with overflow check
-checked_div(a, b)	✅	Division with zero check
-wrapping_add(a, b)	✅	Addition with wrap-around
-wrapping_sub(a, b)	✅	Subtraction with wrap-around
-wrapping_mul(a, b)	✅	Multiplication with wrap-around
-overflowing_add(a, b)	✅	Addition + overflow flag
-overflowing_sub(a, b)	✅	Subtraction + overflow flag
-overflowing_mul(a, b)	✅	Multiplication + overflow flag
-abs_diff(a, b)	✅	Absolute difference
-math/constants — Fundamental Mathematical Constants
+add(a, b)	?	Addition
+sub(a, b)	?	Subtraction
+mul(a, b)	?	Multiplication
+div(a, b)	?	Division (requires b != 0)
+mod(a, b)	?	Modulo/remainder
+abs(x)	?	Absolute value
+neg(x)	?	Negation
+signum(x)	?	Sign (-1, 0, 1)
+min(a, b)	?	Minimum of two values
+max(a, b)	?	Maximum of two values
+clamp(x, lo, hi)	?	Clamp value between bounds
+lerp(a, b, t)	?	Linear interpolation
+saturating_add(a, b)	?	Addition with saturation
+saturating_sub(a, b)	?	Subtraction with saturation
+saturating_mul(a, b)	?	Multiplication with saturation
+checked_add(a, b)	?	Addition with overflow check
+checked_sub(a, b)	?	Subtraction with overflow check
+checked_mul(a, b)	?	Multiplication with overflow check
+checked_div(a, b)	?	Division with zero check
+wrapping_add(a, b)	?	Addition with wrap-around
+wrapping_sub(a, b)	?	Subtraction with wrap-around
+wrapping_mul(a, b)	?	Multiplication with wrap-around
+overflowing_add(a, b)	?	Addition + overflow flag
+overflowing_sub(a, b)	?	Subtraction + overflow flag
+overflowing_mul(a, b)	?	Multiplication + overflow flag
+abs_diff(a, b)	?	Absolute difference
+math/constants � Fundamental Mathematical Constants
 Description: Universal constants with type-specific precision. No functions, all constants. Constants are resolved at compile time.
 
 Constant	Generic	Description
-PI	❌	π = 3.14159265358979323846
-E	❌	e = 2.71828182845904523536
-TAU	❌	τ = 2π = 6.28318530717958647692
-PHI	❌	φ = 1.61803398874989484820 (Golden ratio)
-SQRT_2	❌	√2 = 1.41421356237309504880
-SQRT_3	❌	√3 = 1.73205080756887729352
-SQRT_5	❌	√5 = 2.23606797749978969640
-LN_2	❌	ln 2 = 0.69314718055994530942
-LN_10	❌	ln 10 = 2.30258509299404568402
-LOG2_E	❌	log₂ e = 1.44269504088896340736
-LOG10_E	❌	log₁₀ e = 0.43429448190325182765
-EULER_GAMMA	❌	γ = 0.57721566490153286060
-CATALAN	❌	G = 0.91596559417721901505
-APERY	❌	ζ(3) = 1.20205690315959428540
-FLOAT_EPSILON	❌	Machine epsilon (Float64)
-FLOAT32_EPSILON	❌	Machine epsilon (Float32)
-FLOAT64_MAX	❌	Maximum Float64
-FLOAT64_MIN	❌	Minimum Float64
-FLOAT32_MAX	❌	Maximum Float32
-FLOAT32_MIN	❌	Minimum Float32
-INFINITY	❌	Positive infinity
-NEG_INFINITY	❌	Negative infinity
-NAN	❌	Not-a-number
-math/precision — Type-Specific Precision Information
+PI	?	p = 3.14159265358979323846
+E	?	e = 2.71828182845904523536
+TAU	?	t = 2p = 6.28318530717958647692
+PHI	?	f = 1.61803398874989484820 (Golden ratio)
+SQRT_2	?	v2 = 1.41421356237309504880
+SQRT_3	?	v3 = 1.73205080756887729352
+SQRT_5	?	v5 = 2.23606797749978969640
+LN_2	?	ln 2 = 0.69314718055994530942
+LN_10	?	ln 10 = 2.30258509299404568402
+LOG2_E	?	log2 e = 1.44269504088896340736
+LOG10_E	?	log10 e = 0.43429448190325182765
+EULER_GAMMA	?	? = 0.57721566490153286060
+CATALAN	?	G = 0.91596559417721901505
+APERY	?	?(3) = 1.20205690315959428540
+FLOAT_EPSILON	?	Machine epsilon (Float64)
+FLOAT32_EPSILON	?	Machine epsilon (Float32)
+FLOAT64_MAX	?	Maximum Float64
+FLOAT64_MIN	?	Minimum Float64
+FLOAT32_MAX	?	Maximum Float32
+FLOAT32_MIN	?	Minimum Float32
+INFINITY	?	Positive infinity
+NEG_INFINITY	?	Negative infinity
+NAN	?	Not-a-number
+math/precision � Type-Specific Precision Information
 Description: Compile-time information about numeric type precision, ranges, and characteristics.
 
 Function	Generic	Description
-min_value[T]()	✅	Minimum representable value
-max_value[T]()	✅	Maximum representable value
-epsilon[T]()	✅	Machine epsilon
-digits[T]()	✅	Number of significant digits
-mantissa_digits[T]()	✅	Mantissa bits (floats)
-exponent_bias[T]()	✅	Exponent bias (floats)
-min_exponent[T]()	✅	Minimum exponent (floats)
-max_exponent[T]()	✅	Maximum exponent (floats)
-is_signed[T]()	✅	Whether type is signed
-bit_width[T]()	✅	Bit width of type
-byte_width[T]()	✅	Byte width of type
-math/interfaces — Numeric Traits
+min_value[T]()	?	Minimum representable value
+max_value[T]()	?	Maximum representable value
+epsilon[T]()	?	Machine epsilon
+digits[T]()	?	Number of significant digits
+mantissa_digits[T]()	?	Mantissa bits (floats)
+exponent_bias[T]()	?	Exponent bias (floats)
+min_exponent[T]()	?	Minimum exponent (floats)
+max_exponent[T]()	?	Maximum exponent (floats)
+is_signed[T]()	?	Whether type is signed
+bit_width[T]()	?	Bit width of type
+byte_width[T]()	?	Byte width of type
+math/interfaces � Numeric Traits
 Description: The foundational interfaces that enable generic mathematics. All numeric types implement these.
 
 Interface	Description
@@ -3707,1077 +3707,1077 @@ Bounded	min_value, max_value, epsilon
 FromStr	Parse from string
 Display	Format to string
 ARITHMETIC & ALGEBRA
-math/arithmetic — Arithmetic Operations
+math/arithmetic � Arithmetic Operations
 Description: Extended arithmetic operations beyond core. Generic over Integer and Float.
 
 Function	Generic	Description
-gcd(a, b)	✅	Greatest common divisor
-lcm(a, b)	✅	Least common multiple
-is_power_of_two(n)	✅	Check if power of two
-next_power_of_two(n)	✅	Next power of two
-prev_power_of_two(n)	✅	Previous power of two
-gcd_extended(a, b)	✅	Extended Euclidean algorithm
-mod_inverse(a, m)	✅	Modular multiplicative inverse
-pow_mod(base, exp, mod)	✅	Modular exponentiation
-is_odd(n)	✅	Check if odd
-is_even(n)	✅	Check if even
-div_ceil(a, b)	✅	Integer division rounding up
-div_floor(a, b)	✅	Integer division rounding down
-div_trunc(a, b)	✅	Integer division truncating toward zero
-mod_floor(a, b)	✅	Modulo with floor division
-mod_trunc(a, b)	✅	Modulo with truncation
-math/roots — Root Operations
+gcd(a, b)	?	Greatest common divisor
+lcm(a, b)	?	Least common multiple
+is_power_of_two(n)	?	Check if power of two
+next_power_of_two(n)	?	Next power of two
+prev_power_of_two(n)	?	Previous power of two
+gcd_extended(a, b)	?	Extended Euclidean algorithm
+mod_inverse(a, m)	?	Modular multiplicative inverse
+pow_mod(base, exp, mod)	?	Modular exponentiation
+is_odd(n)	?	Check if odd
+is_even(n)	?	Check if even
+div_ceil(a, b)	?	Integer division rounding up
+div_floor(a, b)	?	Integer division rounding down
+div_trunc(a, b)	?	Integer division truncating toward zero
+mod_floor(a, b)	?	Modulo with floor division
+mod_trunc(a, b)	?	Modulo with truncation
+math/roots � Root Operations
 Description: Square roots, cube roots, nth roots, and related operations. Float functions use hardware acceleration (where available). Integer functions use software fallback.
 
 Function	Generic	Description
 sqrt(x)	Partial	Square root (hardware for Float, software for Integer)
 cbrt(x)	Partial	Cube root
 nth_root(x, n)	Partial	Nth root
-sqrt_pure(x)	❌	Software-only sqrt (no hardware)
-cbrt_pure(x)	❌	Software-only cube root
-is_square(n)	✅	Check if perfect square
-is_cube(n)	✅	Check if perfect cube
-integer_sqrt(n)	✅	Integer square root (floor)
-integer_cbrt(n)	✅	Integer cube root (floor)
-hypot(x, y)	❌	Hypotenuse (sqrt(x² + y²))
-hypot3(x, y, z)	❌	Hypotenuse (sqrt(x² + y² + z²))
-norm2(x, y)	❌	Euclidean distance (2D)
-norm3(x, y, z)	❌	Euclidean distance (3D)
-math/exponential — Exponential and Logarithmic Functions
+sqrt_pure(x)	?	Software-only sqrt (no hardware)
+cbrt_pure(x)	?	Software-only cube root
+is_square(n)	?	Check if perfect square
+is_cube(n)	?	Check if perfect cube
+integer_sqrt(n)	?	Integer square root (floor)
+integer_cbrt(n)	?	Integer cube root (floor)
+hypot(x, y)	?	Hypotenuse (sqrt(x� + y�))
+hypot3(x, y, z)	?	Hypotenuse (sqrt(x� + y� + z�))
+norm2(x, y)	?	Euclidean distance (2D)
+norm3(x, y, z)	?	Euclidean distance (3D)
+math/exponential � Exponential and Logarithmic Functions
 Description: Exponential, logarithmic, power, and related functions. Float functions use libm (hardware accelerated). Integer functions use software fallback.
 
 Function	Generic	Description
-exp(x)	❌	Exponential (e^x)
-exp2(x)	❌	Exponential base 2 (2^x)
-exp10(x)	❌	Exponential base 10 (10^x)
-expm1(x)	❌	e^x - 1 (accurate for small x)
-ln(x)	❌	Natural logarithm
-log2(x)	❌	Logarithm base 2
-log10(x)	❌	Logarithm base 10
-log1p(x)	❌	ln(1 + x) (accurate for small x)
-ln_1_plus(x)	❌	ln(1 + x)
+exp(x)	?	Exponential (e^x)
+exp2(x)	?	Exponential base 2 (2^x)
+exp10(x)	?	Exponential base 10 (10^x)
+expm1(x)	?	e^x - 1 (accurate for small x)
+ln(x)	?	Natural logarithm
+log2(x)	?	Logarithm base 2
+log10(x)	?	Logarithm base 10
+log1p(x)	?	ln(1 + x) (accurate for small x)
+ln_1_plus(x)	?	ln(1 + x)
 pow(base, exp)	Partial	Power (hardware for Float, software for Integer)
-pow_int(base, exp)	✅	Integer power
-pow_float(base, exp)	❌	Float power (libm)
-sqrt_power(base, exp)	❌	Power with integer exponent
-exp_pure(x)	❌	Software-only exp
-ln_pure(x)	❌	Software-only ln
-log2_pure(x)	❌	Software-only log2
-log10_pure(x)	❌	Software-only log10
-pow_pure(base, exp)	❌	Software-only pow
-math/rounding — Rounding Operations
+pow_int(base, exp)	?	Integer power
+pow_float(base, exp)	?	Float power (libm)
+sqrt_power(base, exp)	?	Power with integer exponent
+exp_pure(x)	?	Software-only exp
+ln_pure(x)	?	Software-only ln
+log2_pure(x)	?	Software-only log2
+log10_pure(x)	?	Software-only log10
+pow_pure(base, exp)	?	Software-only pow
+math/rounding � Rounding Operations
 Description: Floor, ceil, round, trunc, and fractional part operations.
 
 Function	Generic	Description
-floor(x)	❌	Floor (largest integer ≤ x)
-ceil(x)	❌	Ceiling (smallest integer ≥ x)
-round(x)	❌	Round half to even
-trunc(x)	❌	Truncate (toward zero)
-fract(x)	❌	Fractional part
-modf(x)	❌	Split integer and fractional parts
-floor_pure(x)	❌	Software-only floor
-ceil_pure(x)	❌	Software-only ceil
-round_pure(x)	❌	Software-only round
-trunc_pure(x)	❌	Software-only trunc
-fract_pure(x)	❌	Software-only fract
-integer_part(x)	❌	Integer part (same as trunc)
-frac_part(x)	❌	Fractional part (same as fract)
-round_to(x, decimals)	❌	Round to n decimal places
-round_nearest(x, multiple)	❌	Round to nearest multiple
-math/decompose — Number Decomposition
+floor(x)	?	Floor (largest integer = x)
+ceil(x)	?	Ceiling (smallest integer = x)
+round(x)	?	Round half to even
+trunc(x)	?	Truncate (toward zero)
+fract(x)	?	Fractional part
+modf(x)	?	Split integer and fractional parts
+floor_pure(x)	?	Software-only floor
+ceil_pure(x)	?	Software-only ceil
+round_pure(x)	?	Software-only round
+trunc_pure(x)	?	Software-only trunc
+fract_pure(x)	?	Software-only fract
+integer_part(x)	?	Integer part (same as trunc)
+frac_part(x)	?	Fractional part (same as fract)
+round_to(x, decimals)	?	Round to n decimal places
+round_nearest(x, multiple)	?	Round to nearest multiple
+math/decompose � Number Decomposition
 Description: Split numbers into components, extract mantissa/exponent, and related operations.
 
 Function	Generic	Description
-frexp(x)	❌	Split into mantissa and exponent (Float)
-ldexp(x, n)	❌	Multiply by power of 2
-ilogb(x)	❌	Integer exponent (biased)
-logb(x)	❌	Unbiased exponent
-scalbn(x, n)	❌	Multiply by 2^n
-scalbln(x, n)	❌	Multiply by 2^n (long)
-significand(x)	❌	Extract significand
-exponent(x)	❌	Extract exponent
-frexp_pure(x)	❌	Software-only frexp
-ldexp_pure(x, n)	❌	Software-only ldexp
-is_normal(x)	❌	Check if normal float
-is_subnormal(x)	❌	Check if subnormal float
-classify(x)	❌	Classify floating-point value
-nextafter(x, y)	❌	Next representable float
-nexttoward(x, y)	❌	Next representable float (long double)
+frexp(x)	?	Split into mantissa and exponent (Float)
+ldexp(x, n)	?	Multiply by power of 2
+ilogb(x)	?	Integer exponent (biased)
+logb(x)	?	Unbiased exponent
+scalbn(x, n)	?	Multiply by 2^n
+scalbln(x, n)	?	Multiply by 2^n (long)
+significand(x)	?	Extract significand
+exponent(x)	?	Extract exponent
+frexp_pure(x)	?	Software-only frexp
+ldexp_pure(x, n)	?	Software-only ldexp
+is_normal(x)	?	Check if normal float
+is_subnormal(x)	?	Check if subnormal float
+classify(x)	?	Classify floating-point value
+nextafter(x, y)	?	Next representable float
+nexttoward(x, y)	?	Next representable float (long double)
 TRIGONOMETRY
-math/trigonometry — Trigonometric Functions
+math/trigonometry � Trigonometric Functions
 Description: Sine, cosine, tangent, and related functions. Hardware accelerated via libm.
 
 Function	Generic	Description
-sin(x)	❌	Sine (radians)
-cos(x)	❌	Cosine (radians)
-tan(x)	❌	Tangent (radians)
-csc(x)	❌	Cosecant (1/sin)
-sec(x)	❌	Secant (1/cos)
-cot(x)	❌	Cotangent (1/tan)
-sincos(x)	❌	Returns (sin, cos) pair (optimized)
-sincospi(x)	❌	Returns (sin(πx), cos(πx)) pair
-sin_pure(x)	❌	Software-only sin
-cos_pure(x)	❌	Software-only cos
-tan_pure(x)	❌	Software-only tan
-sinpi(x)	❌	sin(πx)
-cospi(x)	❌	cos(πx)
-tanpi(x)	❌	tan(πx)
-math/inverse_trig — Inverse Trigonometric Functions
+sin(x)	?	Sine (radians)
+cos(x)	?	Cosine (radians)
+tan(x)	?	Tangent (radians)
+csc(x)	?	Cosecant (1/sin)
+sec(x)	?	Secant (1/cos)
+cot(x)	?	Cotangent (1/tan)
+sincos(x)	?	Returns (sin, cos) pair (optimized)
+sincospi(x)	?	Returns (sin(px), cos(px)) pair
+sin_pure(x)	?	Software-only sin
+cos_pure(x)	?	Software-only cos
+tan_pure(x)	?	Software-only tan
+sinpi(x)	?	sin(px)
+cospi(x)	?	cos(px)
+tanpi(x)	?	tan(px)
+math/inverse_trig � Inverse Trigonometric Functions
 Description: Arcsine, arccosine, arctangent, and related functions. Hardware accelerated via libm.
 
 Function	Generic	Description
-asin(x)	❌	Arcsine
-acos(x)	❌	Arccosine
-atan(x)	❌	Arctangent
-atan2(y, x)	❌	Arctangent (two-argument)
-atan2_pure(y, x)	❌	Software-only atan2
-asin_pure(x)	❌	Software-only asin
-acos_pure(x)	❌	Software-only acos
-atan_pure(x)	❌	Software-only atan
-atan2_radians(y, x)	❌	atan2 in radians
-atan2_degrees(y, x)	❌	atan2 in degrees
-arg(z)	❌	Argument/phase of complex number
-math/hyperbolic — Hyperbolic Functions
+asin(x)	?	Arcsine
+acos(x)	?	Arccosine
+atan(x)	?	Arctangent
+atan2(y, x)	?	Arctangent (two-argument)
+atan2_pure(y, x)	?	Software-only atan2
+asin_pure(x)	?	Software-only asin
+acos_pure(x)	?	Software-only acos
+atan_pure(x)	?	Software-only atan
+atan2_radians(y, x)	?	atan2 in radians
+atan2_degrees(y, x)	?	atan2 in degrees
+arg(z)	?	Argument/phase of complex number
+math/hyperbolic � Hyperbolic Functions
 Description: Hyperbolic sine, cosine, tangent, and inverse functions. Hardware accelerated via libm.
 
 Function	Generic	Description
-sinh(x)	❌	Hyperbolic sine
-cosh(x)	❌	Hyperbolic cosine
-tanh(x)	❌	Hyperbolic tangent
-csch(x)	❌	Hyperbolic cosecant
-sech(x)	❌	Hyperbolic secant
-coth(x)	❌	Hyperbolic cotangent
-asinh(x)	❌	Inverse hyperbolic sine
-acosh(x)	❌	Inverse hyperbolic cosine
-atanh(x)	❌	Inverse hyperbolic tangent
-sinh_pure(x)	❌	Software-only sinh
-cosh_pure(x)	❌	Software-only cosh
-tanh_pure(x)	❌	Software-only tanh
-math/trigonometric_constants — Trigonometric Constants
+sinh(x)	?	Hyperbolic sine
+cosh(x)	?	Hyperbolic cosine
+tanh(x)	?	Hyperbolic tangent
+csch(x)	?	Hyperbolic cosecant
+sech(x)	?	Hyperbolic secant
+coth(x)	?	Hyperbolic cotangent
+asinh(x)	?	Inverse hyperbolic sine
+acosh(x)	?	Inverse hyperbolic cosine
+atanh(x)	?	Inverse hyperbolic tangent
+sinh_pure(x)	?	Software-only sinh
+cosh_pure(x)	?	Software-only cosh
+tanh_pure(x)	?	Software-only tanh
+math/trigonometric_constants � Trigonometric Constants
 Description: Constants related to trigonometry and angles.
 
 Constant	Generic	Description
-DEG_TO_RAD	❌	π/180
-RAD_TO_DEG	❌	180/π
-DEG_TO_RAD32	❌	π/180 (Float32)
-RAD_TO_DEG32	❌	180/π (Float32)
-PI_2	❌	π/2
-PI_4	❌	π/4
-PI_8	❌	π/8
-PI_3	❌	π/3
-PI_6	❌	π/6
-TAU_2	❌	π
-TAU_4	❌	π/2
-TAU_8	❌	π/4
-TAU_3	❌	2π/3
-TAU_6	❌	π/3
-TAU_12	❌	π/6
-math/angular — Angular Conversion
+DEG_TO_RAD	?	p/180
+RAD_TO_DEG	?	180/p
+DEG_TO_RAD32	?	p/180 (Float32)
+RAD_TO_DEG32	?	180/p (Float32)
+PI_2	?	p/2
+PI_4	?	p/4
+PI_8	?	p/8
+PI_3	?	p/3
+PI_6	?	p/6
+TAU_2	?	p
+TAU_4	?	p/2
+TAU_8	?	p/4
+TAU_3	?	2p/3
+TAU_6	?	p/3
+TAU_12	?	p/6
+math/angular � Angular Conversion
 Description: Convert between radians, degrees, gradians, and other angular units.
 
 Function	Generic	Description
-to_radians(deg)	❌	Degrees to radians
-to_degrees(rad)	❌	Radians to degrees
-to_gradians(deg)	❌	Degrees to gradians
-from_gradians(grad)	❌	Gradians to degrees
-to_mils(deg)	❌	Degrees to mils
-from_mils(mils)	❌	Mils to degrees
-to_arcmin(deg)	❌	Degrees to arcminutes
-from_arcmin(arcmin)	❌	Arcminutes to degrees
-to_arcsec(deg)	❌	Degrees to arcseconds
-from_arcsec(arcsec)	❌	Arcseconds to degrees
-normalize_angle(rad)	❌	Normalize angle to [0, 2π)
-normalize_angle_deg(deg)	❌	Normalize angle to [0, 360)
-angle_diff(a, b)	❌	Difference between angles
-angle_lerp(a, b, t)	❌	Angular interpolation
+to_radians(deg)	?	Degrees to radians
+to_degrees(rad)	?	Radians to degrees
+to_gradians(deg)	?	Degrees to gradians
+from_gradians(grad)	?	Gradians to degrees
+to_mils(deg)	?	Degrees to mils
+from_mils(mils)	?	Mils to degrees
+to_arcmin(deg)	?	Degrees to arcminutes
+from_arcmin(arcmin)	?	Arcminutes to degrees
+to_arcsec(deg)	?	Degrees to arcseconds
+from_arcsec(arcsec)	?	Arcseconds to degrees
+normalize_angle(rad)	?	Normalize angle to [0, 2p)
+normalize_angle_deg(deg)	?	Normalize angle to [0, 360)
+angle_diff(a, b)	?	Difference between angles
+angle_lerp(a, b, t)	?	Angular interpolation
 BITWISE & BINARY
-math/bitwise — Bitwise Operations
+math/bitwise � Bitwise Operations
 Description: Bit manipulation operations on integer types. Hardware accelerated via LLVM intrinsics.
 
 Function	Generic	Description
-popcnt(x)	✅	Count set bits (population count)
-clz(x)	✅	Count leading zeros
-ctz(x)	✅	Count trailing zeros
-bit_reverse(x)	✅	Reverse bit order
-bit_reverse_byte(x)	✅	Reverse bits within each byte
-byte_swap(x)	✅	Swap bytes (endian conversion)
-rotate_left(x, n)	✅	Rotate bits left
-rotate_right(x, n)	✅	Rotate bits right
-bit_width(x)	✅	Minimum bits to represent x
-bit_length(x)	✅	Number of bits needed to represent x
-leading_ones(x)	✅	Count leading ones
-trailing_ones(x)	✅	Count trailing ones
-bit_parity(x)	✅	Parity (odd/even number of bits)
-bit_scan_forward(x)	✅	Position of least significant set bit
-bit_scan_reverse(x)	✅	Position of most significant set bit
-is_power_of_two_bit(x)	✅	Check if power of two (bitwise)
-math/rotation — Bit Rotation
+popcnt(x)	?	Count set bits (population count)
+clz(x)	?	Count leading zeros
+ctz(x)	?	Count trailing zeros
+bit_reverse(x)	?	Reverse bit order
+bit_reverse_byte(x)	?	Reverse bits within each byte
+byte_swap(x)	?	Swap bytes (endian conversion)
+rotate_left(x, n)	?	Rotate bits left
+rotate_right(x, n)	?	Rotate bits right
+bit_width(x)	?	Minimum bits to represent x
+bit_length(x)	?	Number of bits needed to represent x
+leading_ones(x)	?	Count leading ones
+trailing_ones(x)	?	Count trailing ones
+bit_parity(x)	?	Parity (odd/even number of bits)
+bit_scan_forward(x)	?	Position of least significant set bit
+bit_scan_reverse(x)	?	Position of most significant set bit
+is_power_of_two_bit(x)	?	Check if power of two (bitwise)
+math/rotation � Bit Rotation
 Description: Advanced bit rotation and bitfield manipulation operations.
 
 Function	Generic	Description
-rotate_left(x, n)	✅	Rotate left by n bits
-rotate_right(x, n)	✅	Rotate right by n bits
-rotate_left_carry(x, n, carry)	✅	Rotate left with carry bit
-rotate_right_carry(x, n, carry)	✅	Rotate right with carry bit
-rol_imm(x, n)	✅	Rotate left (constant)
-ror_imm(x, n)	✅	Rotate right (constant)
-bit_rotate_left(x, n)	✅	Alias for rotate_left
-bit_rotate_right(x, n)	✅	Alias for rotate_right
-masked_rotate_left(x, mask, n)	✅	Rotate only masked bits
-masked_rotate_right(x, mask, n)	✅	Rotate only masked bits
-math/endianness — Endianness Operations
+rotate_left(x, n)	?	Rotate left by n bits
+rotate_right(x, n)	?	Rotate right by n bits
+rotate_left_carry(x, n, carry)	?	Rotate left with carry bit
+rotate_right_carry(x, n, carry)	?	Rotate right with carry bit
+rol_imm(x, n)	?	Rotate left (constant)
+ror_imm(x, n)	?	Rotate right (constant)
+bit_rotate_left(x, n)	?	Alias for rotate_left
+bit_rotate_right(x, n)	?	Alias for rotate_right
+masked_rotate_left(x, mask, n)	?	Rotate only masked bits
+masked_rotate_right(x, mask, n)	?	Rotate only masked bits
+math/endianness � Endianness Operations
 Description: Endian conversion and detection.
 
 Function	Generic	Description
-is_big_endian()	✅	Check if system is big-endian
-is_little_endian()	✅	Check if system is little-endian
-to_be(x)	✅	Convert to big-endian
-to_le(x)	✅	Convert to little-endian
-from_be(x)	✅	Convert from big-endian
-from_le(x)	✅	Convert from little-endian
-native_to_be(x)	✅	Native to big-endian (no-op on BE)
-native_to_le(x)	✅	Native to little-endian (no-op on LE)
-be_to_native(x)	✅	Big-endian to native (no-op on BE)
-le_to_native(x)	✅	Little-endian to native (no-op on LE)
-swap_endian(x)	✅	Swap endianness (byte-swap)
-bswap_16(x)	✅	Swap 16-bit endianness
-bswap_32(x)	✅	Swap 32-bit endianness
-bswap_64(x)	✅	Swap 64-bit endianness
-bswap_128(x)	✅	Swap 128-bit endianness
-bswap_256(x)	✅	Swap 256-bit endianness
-math/bitfield — Bitfield Operations
+is_big_endian()	?	Check if system is big-endian
+is_little_endian()	?	Check if system is little-endian
+to_be(x)	?	Convert to big-endian
+to_le(x)	?	Convert to little-endian
+from_be(x)	?	Convert from big-endian
+from_le(x)	?	Convert from little-endian
+native_to_be(x)	?	Native to big-endian (no-op on BE)
+native_to_le(x)	?	Native to little-endian (no-op on LE)
+be_to_native(x)	?	Big-endian to native (no-op on BE)
+le_to_native(x)	?	Little-endian to native (no-op on LE)
+swap_endian(x)	?	Swap endianness (byte-swap)
+bswap_16(x)	?	Swap 16-bit endianness
+bswap_32(x)	?	Swap 32-bit endianness
+bswap_64(x)	?	Swap 64-bit endianness
+bswap_128(x)	?	Swap 128-bit endianness
+bswap_256(x)	?	Swap 256-bit endianness
+math/bitfield � Bitfield Operations
 Description: Extract, insert, and manipulate bitfields.
 
 Function	Generic	Description
-bit_extract(x, pos, len)	✅	Extract bits from position with length
-bit_insert(x, value, pos, len)	✅	Insert bits at position with length
-bit_replace(x, mask, value)	✅	Replace masked bits with value
-bit_set(x, pos)	✅	Set bit at position
-bit_clear(x, pos)	✅	Clear bit at position
-bit_toggle(x, pos)	✅	Toggle bit at position
-bit_test(x, pos)	✅	Test bit at position
-bit_field_get(x, pos, len)	✅	Get bitfield (extract)
-bit_field_set(x, pos, len, value)	✅	Set bitfield (insert)
-bit_field_clear(x, pos, len)	✅	Clear bitfield
-bit_field_inc(x, pos, len)	✅	Increment bitfield (saturating)
-bit_field_dec(x, pos, len)	✅	Decrement bitfield (saturating)
-mask_low(len)	✅	Create mask of len low bits
-mask_high(len)	✅	Create mask of len high bits
-mask_range(pos, len)	✅	Create mask for range of bits
-sign_extend(x, width)	✅	Sign extend from width to full
+bit_extract(x, pos, len)	?	Extract bits from position with length
+bit_insert(x, value, pos, len)	?	Insert bits at position with length
+bit_replace(x, mask, value)	?	Replace masked bits with value
+bit_set(x, pos)	?	Set bit at position
+bit_clear(x, pos)	?	Clear bit at position
+bit_toggle(x, pos)	?	Toggle bit at position
+bit_test(x, pos)	?	Test bit at position
+bit_field_get(x, pos, len)	?	Get bitfield (extract)
+bit_field_set(x, pos, len, value)	?	Set bitfield (insert)
+bit_field_clear(x, pos, len)	?	Clear bitfield
+bit_field_inc(x, pos, len)	?	Increment bitfield (saturating)
+bit_field_dec(x, pos, len)	?	Decrement bitfield (saturating)
+mask_low(len)	?	Create mask of len low bits
+mask_high(len)	?	Create mask of len high bits
+mask_range(pos, len)	?	Create mask for range of bits
+sign_extend(x, width)	?	Sign extend from width to full
 NUMBER THEORY
-math/number_theory — Number Theory
+math/number_theory � Number Theory
 Description: Prime numbers, factorization, and related number theory operations.
 
 Function	Generic	Description
-is_prime(n)	✅	Primality test (Miller-Rabin)
-is_prime_deterministic(n)	✅	Deterministic primality test
-next_prime(n)	✅	Next prime number
-prev_prime(n)	✅	Previous prime number
-factor(n)	✅	Prime factorization (trial division)
-pollard_rho(n)	✅	Pollard's Rho factorization
-p_1_factor(n)	✅	Pollard's p-1 factorization
-is_pseudoprime(n)	✅	Fermat pseudoprime test
-miller_rabin(n, k)	✅	Miller-Rabin test with k iterations
-fermat_test(n)	✅	Fermat primality test
-lucas_lehmer(p)	✅	Lucas-Lehmer test for Mersenne primes
-mersenne_prime_p(p)	✅	Check if 2^p - 1 is prime
-euler_phi(n)	✅	Euler's totient function
-mobius(n)	✅	Möbius function
-jordan_totient(n, k)	✅	Jordan's totient function
-carmichael(n)	✅	Carmichael function
-prime_pi(n)	✅	Number of primes ≤ n
-nth_prime(n)	✅	Nth prime number
-primorial(n)	✅	Primorial (product of primes ≤ n)
-is_composite(n)	✅	Check if composite
-is_semiprime(n)	✅	Check if semiprime
-is_power(n)	✅	Check if perfect power
-is_power_of(x, n)	✅	Check if x is a power of n
-radical(n)	✅	Radical of n (product of distinct primes)
-smooth(n, b)	✅	B-smooth number check
-rough(n, b)	✅	B-rough number check
-legendre_symbol(a, p)	✅	Legendre symbol
-jacobi_symbol(a, n)	✅	Jacobi symbol
-kronecker_symbol(a, n)	✅	Kronecker symbol
-divisor_sum(n)	✅	Sum of divisors
-divisor_count(n)	✅	Number of divisors
-proper_divisors(n)	✅	All proper divisors
-math/factorial — Factorial and Combinatorial Functions
+is_prime(n)	?	Primality test (Miller-Rabin)
+is_prime_deterministic(n)	?	Deterministic primality test
+next_prime(n)	?	Next prime number
+prev_prime(n)	?	Previous prime number
+factor(n)	?	Prime factorization (trial division)
+pollard_rho(n)	?	Pollard's Rho factorization
+p_1_factor(n)	?	Pollard's p-1 factorization
+is_pseudoprime(n)	?	Fermat pseudoprime test
+miller_rabin(n, k)	?	Miller-Rabin test with k iterations
+fermat_test(n)	?	Fermat primality test
+lucas_lehmer(p)	?	Lucas-Lehmer test for Mersenne primes
+mersenne_prime_p(p)	?	Check if 2^p - 1 is prime
+euler_phi(n)	?	Euler's totient function
+mobius(n)	?	M�bius function
+jordan_totient(n, k)	?	Jordan's totient function
+carmichael(n)	?	Carmichael function
+prime_pi(n)	?	Number of primes = n
+nth_prime(n)	?	Nth prime number
+primorial(n)	?	Primorial (product of primes = n)
+is_composite(n)	?	Check if composite
+is_semiprime(n)	?	Check if semiprime
+is_power(n)	?	Check if perfect power
+is_power_of(x, n)	?	Check if x is a power of n
+radical(n)	?	Radical of n (product of distinct primes)
+smooth(n, b)	?	B-smooth number check
+rough(n, b)	?	B-rough number check
+legendre_symbol(a, p)	?	Legendre symbol
+jacobi_symbol(a, n)	?	Jacobi symbol
+kronecker_symbol(a, n)	?	Kronecker symbol
+divisor_sum(n)	?	Sum of divisors
+divisor_count(n)	?	Number of divisors
+proper_divisors(n)	?	All proper divisors
+math/factorial � Factorial and Combinatorial Functions
 Description: Factorial, binomial coefficients, and related combinatorial functions.
 
 Function	Generic	Description
-factorial(n)	✅	Factorial (n!)
-double_factorial(n)	✅	Double factorial (n!!)
-subfactorial(n)	✅	Derangements (!n)
-multifactorial(n, k)	✅	Multifactorial
-binomial(n, k)	✅	Binomial coefficient (n choose k)
-binomial_coeff(n, k)	✅	Binomial coefficient (alias)
-multinomial(n, ks)	✅	Multinomial coefficient
-falling_factorial(n, k)	✅	Falling factorial
-rising_factorial(n, k)	✅	Rising factorial
-stirling_first(n, k)	✅	Stirling numbers of the first kind
-stirling_second(n, k)	✅	Stirling numbers of the second kind
-bell(n)	✅	Bell numbers
-catalan(n)	✅	Catalan numbers
-eulerian(n, k)	✅	Eulerian numbers
-narayana(n, k)	✅	Narayana numbers
-lah(n, k)	✅	Lah numbers
-motzkin(n)	✅	Motzkin numbers
-schroeder(n)	✅	Schröder numbers
-partition_count(n)	✅	Number of partitions (p(n))
-integer_partitions(n)	✅	Generate integer partitions
-derangements(n)	✅	Derangements (subfactorial)
-bell_triangle(n)	✅	Bell triangle
-math/modular — Modular Arithmetic
+factorial(n)	?	Factorial (n!)
+double_factorial(n)	?	Double factorial (n!!)
+subfactorial(n)	?	Derangements (!n)
+multifactorial(n, k)	?	Multifactorial
+binomial(n, k)	?	Binomial coefficient (n choose k)
+binomial_coeff(n, k)	?	Binomial coefficient (alias)
+multinomial(n, ks)	?	Multinomial coefficient
+falling_factorial(n, k)	?	Falling factorial
+rising_factorial(n, k)	?	Rising factorial
+stirling_first(n, k)	?	Stirling numbers of the first kind
+stirling_second(n, k)	?	Stirling numbers of the second kind
+bell(n)	?	Bell numbers
+catalan(n)	?	Catalan numbers
+eulerian(n, k)	?	Eulerian numbers
+narayana(n, k)	?	Narayana numbers
+lah(n, k)	?	Lah numbers
+motzkin(n)	?	Motzkin numbers
+schroeder(n)	?	Schr�der numbers
+partition_count(n)	?	Number of partitions (p(n))
+integer_partitions(n)	?	Generate integer partitions
+derangements(n)	?	Derangements (subfactorial)
+bell_triangle(n)	?	Bell triangle
+math/modular � Modular Arithmetic
 Description: Modular arithmetic operations and algorithms.
 
 Function	Generic	Description
-mod_add(a, b, m)	✅	Modular addition
-mod_sub(a, b, m)	✅	Modular subtraction
-mod_mul(a, b, m)	✅	Modular multiplication
-mod_pow(a, e, m)	✅	Modular exponentiation
-mod_inverse(a, m)	✅	Modular inverse
-mod_sqrt(a, p)	✅	Modular square root
-mod_cbrt(a, p)	✅	Modular cube root
-mod_div(a, b, m)	✅	Modular division
-mod_lcm(a, b, m)	✅	Modular LCM
-crt(pairs)	✅	Chinese Remainder Theorem
-crt_solve(residues, moduli)	✅	CRT solver
-linear_congruence(a, b, m)	✅	Linear congruence solver
-quadratic_residue(a, p)	✅	Check if quadratic residue
-tonelli_shanks(a, p)	✅	Tonelli-Shanks algorithm
-cipolla(a, p)	✅	Cipolla's algorithm
-cornacchia(d, m)	✅	Cornacchia's algorithm
-hilbert_symbol(a, b, p)	✅	Hilbert symbol
-pow_mod_fast(a, e, m)	✅	Fast modular exponentiation
+mod_add(a, b, m)	?	Modular addition
+mod_sub(a, b, m)	?	Modular subtraction
+mod_mul(a, b, m)	?	Modular multiplication
+mod_pow(a, e, m)	?	Modular exponentiation
+mod_inverse(a, m)	?	Modular inverse
+mod_sqrt(a, p)	?	Modular square root
+mod_cbrt(a, p)	?	Modular cube root
+mod_div(a, b, m)	?	Modular division
+mod_lcm(a, b, m)	?	Modular LCM
+crt(pairs)	?	Chinese Remainder Theorem
+crt_solve(residues, moduli)	?	CRT solver
+linear_congruence(a, b, m)	?	Linear congruence solver
+quadratic_residue(a, p)	?	Check if quadratic residue
+tonelli_shanks(a, p)	?	Tonelli-Shanks algorithm
+cipolla(a, p)	?	Cipolla's algorithm
+cornacchia(d, m)	?	Cornacchia's algorithm
+hilbert_symbol(a, b, p)	?	Hilbert symbol
+pow_mod_fast(a, e, m)	?	Fast modular exponentiation
 COMPLEX NUMBERS
-math/complex — Complex Numbers
+math/complex � Complex Numbers
 Description: Operations on complex numbers. Generic over Float types.
 
 Function	Generic	Description
-Complex[T]	✅	Complex number type
-new(real, imag)	✅	Create complex number
-real(z)	✅	Get real part
-imag(z)	✅	Get imaginary part
-add(a, b)	✅	Complex addition
-sub(a, b)	✅	Complex subtraction
-mul(a, b)	✅	Complex multiplication
-div(a, b)	✅	Complex division
-neg(z)	✅	Complex negation
-conj(z)	✅	Complex conjugate
-abs(z)	✅	Complex magnitude
-abs_sq(z)	✅	Squared magnitude
-arg(z)	✅	Argument/phase
-sqrt(z)	✅	Complex square root
-cbrt(z)	✅	Complex cube root
-exp(z)	✅	Complex exponential
-ln(z)	✅	Complex natural log
-log(z, base)	✅	Complex log with base
-pow(z, n)	✅	Complex power
-sin(z)	✅	Complex sine
-cos(z)	✅	Complex cosine
-tan(z)	✅	Complex tangent
-sinh(z)	✅	Complex hyperbolic sine
-cosh(z)	✅	Complex hyperbolic cosine
-tanh(z)	✅	Complex hyperbolic tangent
-asin(z)	✅	Complex arcsine
-acos(z)	✅	Complex arccosine
-atan(z)	✅	Complex arctangent
-asinh(z)	✅	Complex inverse hyperbolic sine
-acosh(z)	✅	Complex inverse hyperbolic cosine
-atanh(z)	✅	Complex inverse hyperbolic tangent
-polar(r, theta)	✅	Create from polar coordinates
-to_polar(z)	✅	Convert to polar coordinates
-is_real(z)	✅	Check if real
-is_imag(z)	✅	Check if imaginary
-is_zero(z)	✅	Check if zero
-is_infinite(z)	✅	Check if infinite
-is_nan(z)	✅	Check if NaN
+Complex[T]	?	Complex number type
+new(real, imag)	?	Create complex number
+real(z)	?	Get real part
+imag(z)	?	Get imaginary part
+add(a, b)	?	Complex addition
+sub(a, b)	?	Complex subtraction
+mul(a, b)	?	Complex multiplication
+div(a, b)	?	Complex division
+neg(z)	?	Complex negation
+conj(z)	?	Complex conjugate
+abs(z)	?	Complex magnitude
+abs_sq(z)	?	Squared magnitude
+arg(z)	?	Argument/phase
+sqrt(z)	?	Complex square root
+cbrt(z)	?	Complex cube root
+exp(z)	?	Complex exponential
+ln(z)	?	Complex natural log
+log(z, base)	?	Complex log with base
+pow(z, n)	?	Complex power
+sin(z)	?	Complex sine
+cos(z)	?	Complex cosine
+tan(z)	?	Complex tangent
+sinh(z)	?	Complex hyperbolic sine
+cosh(z)	?	Complex hyperbolic cosine
+tanh(z)	?	Complex hyperbolic tangent
+asin(z)	?	Complex arcsine
+acos(z)	?	Complex arccosine
+atan(z)	?	Complex arctangent
+asinh(z)	?	Complex inverse hyperbolic sine
+acosh(z)	?	Complex inverse hyperbolic cosine
+atanh(z)	?	Complex inverse hyperbolic tangent
+polar(r, theta)	?	Create from polar coordinates
+to_polar(z)	?	Convert to polar coordinates
+is_real(z)	?	Check if real
+is_imag(z)	?	Check if imaginary
+is_zero(z)	?	Check if zero
+is_infinite(z)	?	Check if infinite
+is_nan(z)	?	Check if NaN
 LINEAR ALGEBRA
-math/vector — Vector Operations
+math/vector � Vector Operations
 Description: Vector operations for 2D, 3D, 4D, and N-dimensional vectors.
 
 Function	Generic	Description
-Vec2[T]	✅	2D vector
-Vec3[T]	✅	3D vector
-Vec4[T]	✅	4D vector
-VecN[T]	✅	N-dimensional vector
-v2_new(x, y)	✅	Create 2D vector
-v3_new(x, y, z)	✅	Create 3D vector
-v4_new(x, y, z, w)	✅	Create 4D vector
-dot(a, b)	✅	Dot product
-cross(a, b)	✅	Cross product (3D)
-cross2(a, b)	✅	Cross product (2D scalar)
-outer(a, b)	✅	Outer product
-norm(v)	✅	Euclidean norm
-norm_sq(v)	✅	Squared norm
-normalize(v)	✅	Normalized vector
-unit(v)	✅	Unit vector
-distance(a, b)	✅	Euclidean distance
-distance_sq(a, b)	✅	Squared distance
-angle(a, b)	✅	Angle between vectors
-project(a, b)	✅	Project a onto b
-reject(a, b)	✅	Reject a from b
-lerp(a, b, t)	✅	Linear interpolation
-slerp(a, b, t)	✅	Spherical interpolation
-reflect(v, normal)	✅	Reflect vector
-refract(v, normal, eta)	✅	Refract vector
-clamp(v, min, max)	✅	Clamp vector components
-component_min(a, b)	✅	Component-wise min
-component_max(a, b)	✅	Component-wise max
-hadamard(a, b)	✅	Component-wise product
-math/matrix — Matrix Operations
+Vec2[T]	?	2D vector
+Vec3[T]	?	3D vector
+Vec4[T]	?	4D vector
+VecN[T]	?	N-dimensional vector
+v2_new(x, y)	?	Create 2D vector
+v3_new(x, y, z)	?	Create 3D vector
+v4_new(x, y, z, w)	?	Create 4D vector
+dot(a, b)	?	Dot product
+cross(a, b)	?	Cross product (3D)
+cross2(a, b)	?	Cross product (2D scalar)
+outer(a, b)	?	Outer product
+norm(v)	?	Euclidean norm
+norm_sq(v)	?	Squared norm
+normalize(v)	?	Normalized vector
+unit(v)	?	Unit vector
+distance(a, b)	?	Euclidean distance
+distance_sq(a, b)	?	Squared distance
+angle(a, b)	?	Angle between vectors
+project(a, b)	?	Project a onto b
+reject(a, b)	?	Reject a from b
+lerp(a, b, t)	?	Linear interpolation
+slerp(a, b, t)	?	Spherical interpolation
+reflect(v, normal)	?	Reflect vector
+refract(v, normal, eta)	?	Refract vector
+clamp(v, min, max)	?	Clamp vector components
+component_min(a, b)	?	Component-wise min
+component_max(a, b)	?	Component-wise max
+hadamard(a, b)	?	Component-wise product
+math/matrix � Matrix Operations
 Description: Matrix operations for 2x2, 3x3, 4x4, and MxN matrices.
 
 Function	Generic	Description
-Mat2[T]	✅	2x2 matrix
-Mat3[T]	✅	3x3 matrix
-Mat4[T]	✅	4x4 matrix
-MatMN[T]	✅	MxN matrix
-mat2_new(m00, m01, m10, m11)	✅	Create 2x2
-mat3_new(...)	✅	Create 3x3
-mat4_new(...)	✅	Create 4x4
-identity()	✅	Identity matrix
-zero()	✅	Zero matrix
-one()	✅	Ones matrix
-add(a, b)	✅	Matrix addition
-sub(a, b)	✅	Matrix subtraction
-mul(a, b)	✅	Matrix multiplication
-scalar_mul(a, s)	✅	Scalar multiplication
-transpose(m)	✅	Transpose
-det(m)	✅	Determinant
-inverse(m)	✅	Inverse
-adjugate(m)	✅	Adjugate (classical adjoint)
-cofactor(m, i, j)	✅	Cofactor
-minor(m, i, j)	✅	Minor
-trace(m)	✅	Trace
-rank(m)	✅	Rank
-nullity(m)	✅	Nullity
-eigenvalues(m)	✅	Eigenvalues
-eigenvectors(m)	✅	Eigenvectors
-diagonal(d)	✅	Diagonal matrix
-diag_mul(a, d)	✅	Diagonal multiplication
-hadamard(a, b)	✅	Component-wise (Hadamard) product
-kronecker(a, b)	✅	Kronecker product
-lu_decompose(m)	✅	LU decomposition
-qr_decompose(m)	✅	QR decomposition
-svd_decompose(m)	✅	SVD decomposition
-cholesky(m)	✅	Cholesky decomposition
-solve_linear(a, b)	✅	Solve linear system
-least_squares(a, b)	✅	Least squares solution
-condition_number(m)	✅	Condition number
-math/quaternion — Quaternion Operations
+Mat2[T]	?	2x2 matrix
+Mat3[T]	?	3x3 matrix
+Mat4[T]	?	4x4 matrix
+MatMN[T]	?	MxN matrix
+mat2_new(m00, m01, m10, m11)	?	Create 2x2
+mat3_new(...)	?	Create 3x3
+mat4_new(...)	?	Create 4x4
+identity()	?	Identity matrix
+zero()	?	Zero matrix
+one()	?	Ones matrix
+add(a, b)	?	Matrix addition
+sub(a, b)	?	Matrix subtraction
+mul(a, b)	?	Matrix multiplication
+scalar_mul(a, s)	?	Scalar multiplication
+transpose(m)	?	Transpose
+det(m)	?	Determinant
+inverse(m)	?	Inverse
+adjugate(m)	?	Adjugate (classical adjoint)
+cofactor(m, i, j)	?	Cofactor
+minor(m, i, j)	?	Minor
+trace(m)	?	Trace
+rank(m)	?	Rank
+nullity(m)	?	Nullity
+eigenvalues(m)	?	Eigenvalues
+eigenvectors(m)	?	Eigenvectors
+diagonal(d)	?	Diagonal matrix
+diag_mul(a, d)	?	Diagonal multiplication
+hadamard(a, b)	?	Component-wise (Hadamard) product
+kronecker(a, b)	?	Kronecker product
+lu_decompose(m)	?	LU decomposition
+qr_decompose(m)	?	QR decomposition
+svd_decompose(m)	?	SVD decomposition
+cholesky(m)	?	Cholesky decomposition
+solve_linear(a, b)	?	Solve linear system
+least_squares(a, b)	?	Least squares solution
+condition_number(m)	?	Condition number
+math/quaternion � Quaternion Operations
 Description: Quaternion operations for 3D rotations.
 
 Function	Generic	Description
-Quat[T]	✅	Quaternion type
-quat_new(w, x, y, z)	✅	Create quaternion
-quat_identity()	✅	Identity quaternion
-quat_from_axis_angle(axis, angle)	✅	Create from axis-angle
-quat_from_euler(yaw, pitch, roll)	✅	Create from Euler angles
-quat_from_rotation_matrix(m)	✅	Create from rotation matrix
-quat_to_matrix(q)	✅	Convert to rotation matrix
-quat_to_euler(q)	✅	Convert to Euler angles
-quat_mul(a, b)	✅	Quaternion multiplication
-quat_conj(q)	✅	Conjugate
-quat_inv(q)	✅	Inverse
-quat_norm(q)	✅	Norm
-quat_normalize(q)	✅	Normalize
-quat_rotate(q, v)	✅	Rotate vector by quaternion
-quat_slerp(a, b, t)	✅	Spherical interpolation
-quat_nlerp(a, b, t)	✅	Normalized linear interpolation
-quat_angle(q)	✅	Rotation angle
-quat_axis(q)	✅	Rotation axis
-quat_look_at(direction, up)	✅	Look at rotation
-quat_between(from, to)	✅	Quaternion between vectors
-math/linear — Advanced Linear Algebra
+Quat[T]	?	Quaternion type
+quat_new(w, x, y, z)	?	Create quaternion
+quat_identity()	?	Identity quaternion
+quat_from_axis_angle(axis, angle)	?	Create from axis-angle
+quat_from_euler(yaw, pitch, roll)	?	Create from Euler angles
+quat_from_rotation_matrix(m)	?	Create from rotation matrix
+quat_to_matrix(q)	?	Convert to rotation matrix
+quat_to_euler(q)	?	Convert to Euler angles
+quat_mul(a, b)	?	Quaternion multiplication
+quat_conj(q)	?	Conjugate
+quat_inv(q)	?	Inverse
+quat_norm(q)	?	Norm
+quat_normalize(q)	?	Normalize
+quat_rotate(q, v)	?	Rotate vector by quaternion
+quat_slerp(a, b, t)	?	Spherical interpolation
+quat_nlerp(a, b, t)	?	Normalized linear interpolation
+quat_angle(q)	?	Rotation angle
+quat_axis(q)	?	Rotation axis
+quat_look_at(direction, up)	?	Look at rotation
+quat_between(from, to)	?	Quaternion between vectors
+math/linear � Advanced Linear Algebra
 Description: Advanced linear algebra operations.
 
 Function	Generic	Description
-gram_schmidt(vectors)	✅	Gram-Schmidt orthogonalization
-orthogonalize(vectors)	✅	Orthogonalize vectors
-normalize_columns(m)	✅	Normalize columns
-normalize_rows(m)	✅	Normalize rows
-is_orthogonal(m)	✅	Check if orthogonal
-is_symmetric(m)	✅	Check if symmetric
-is_skew_symmetric(m)	✅	Check if skew-symmetric
-is_positive_definite(m)	✅	Check if positive definite
-is_diagonal_dominant(m)	✅	Check if diagonally dominant
-matrix_exponential(m)	✅	Matrix exponential
-matrix_logarithm(m)	✅	Matrix logarithm
-matrix_sqrt(m)	✅	Matrix square root
-matrix_power(m, n)	✅	Matrix power
-vec_to_skew(v)	✅	Convert vector to skew-symmetric matrix
-skew_to_vec(m)	✅	Convert skew-symmetric matrix to vector
+gram_schmidt(vectors)	?	Gram-Schmidt orthogonalization
+orthogonalize(vectors)	?	Orthogonalize vectors
+normalize_columns(m)	?	Normalize columns
+normalize_rows(m)	?	Normalize rows
+is_orthogonal(m)	?	Check if orthogonal
+is_symmetric(m)	?	Check if symmetric
+is_skew_symmetric(m)	?	Check if skew-symmetric
+is_positive_definite(m)	?	Check if positive definite
+is_diagonal_dominant(m)	?	Check if diagonally dominant
+matrix_exponential(m)	?	Matrix exponential
+matrix_logarithm(m)	?	Matrix logarithm
+matrix_sqrt(m)	?	Matrix square root
+matrix_power(m, n)	?	Matrix power
+vec_to_skew(v)	?	Convert vector to skew-symmetric matrix
+skew_to_vec(m)	?	Convert skew-symmetric matrix to vector
 GEOMETRY
-math/geometry_2d — 2D Geometry
+math/geometry_2d � 2D Geometry
 Description: 2D geometric shapes and operations.
 
 Function	Generic	Description
-Point2[T]	✅	2D point
-Line2[T]	✅	2D line
-Ray2[T]	✅	2D ray
-Segment2[T]	✅	2D line segment
-Circle[T]	✅	Circle
-Rect[T]	✅	Rectangle
-Triangle2[T]	✅	Triangle
-Polygon2[T]	✅	Polygon
-point_distance(a, b)	✅	Distance between points
-point_in_circle(p, circle)	✅	Point in circle test
-point_in_rect(p, rect)	✅	Point in rectangle test
-point_in_triangle(p, tri)	✅	Point in triangle test
-point_in_polygon(p, poly)	✅	Point in polygon test
-line_intersection(a, b)	✅	Line intersection
-segment_intersection(a, b)	✅	Segment intersection
-segment_point_distance(seg, p)	✅	Distance from point to segment
-line_point_distance(line, p)	✅	Distance from point to line
-circle_intersection(a, b)	✅	Circle intersection
-circle_line_intersection(circle, line)	✅	Circle-line intersection
-circle_circle_intersection(a, b)	✅	Circle-circle intersection
-area_triangle(a, b, c)	✅	Triangle area
-area_polygon(poly)	✅	Polygon area
-centroid(poly)	✅	Polygon centroid
-convex_hull(points)	✅	Convex hull
-is_convex(poly)	✅	Check if convex
-polygon_contains(poly, p)	✅	Polygon contains point
-polygon_intersection(a, b)	✅	Polygon intersection
-polygon_union(a, b)	✅	Polygon union
-polygon_difference(a, b)	✅	Polygon difference
-polygon_circumference(poly)	✅	Polygon perimeter
-math/geometry_3d — 3D Geometry
+Point2[T]	?	2D point
+Line2[T]	?	2D line
+Ray2[T]	?	2D ray
+Segment2[T]	?	2D line segment
+Circle[T]	?	Circle
+Rect[T]	?	Rectangle
+Triangle2[T]	?	Triangle
+Polygon2[T]	?	Polygon
+point_distance(a, b)	?	Distance between points
+point_in_circle(p, circle)	?	Point in circle test
+point_in_rect(p, rect)	?	Point in rectangle test
+point_in_triangle(p, tri)	?	Point in triangle test
+point_in_polygon(p, poly)	?	Point in polygon test
+line_intersection(a, b)	?	Line intersection
+segment_intersection(a, b)	?	Segment intersection
+segment_point_distance(seg, p)	?	Distance from point to segment
+line_point_distance(line, p)	?	Distance from point to line
+circle_intersection(a, b)	?	Circle intersection
+circle_line_intersection(circle, line)	?	Circle-line intersection
+circle_circle_intersection(a, b)	?	Circle-circle intersection
+area_triangle(a, b, c)	?	Triangle area
+area_polygon(poly)	?	Polygon area
+centroid(poly)	?	Polygon centroid
+convex_hull(points)	?	Convex hull
+is_convex(poly)	?	Check if convex
+polygon_contains(poly, p)	?	Polygon contains point
+polygon_intersection(a, b)	?	Polygon intersection
+polygon_union(a, b)	?	Polygon union
+polygon_difference(a, b)	?	Polygon difference
+polygon_circumference(poly)	?	Polygon perimeter
+math/geometry_3d � 3D Geometry
 Description: 3D geometric shapes and operations.
 
 Function	Generic	Description
-Point3[T]	✅	3D point
-Line3[T]	✅	3D line
-Ray3[T]	✅	3D ray
-Segment3[T]	✅	3D line segment
-Plane[T]	✅	Plane
-Sphere[T]	✅	Sphere
-Capsule[T]	✅	Capsule
-Cylinder[T]	✅	Cylinder
-Cone[T]	✅	Cone
-Box[T]	✅	Axis-aligned box (AABB)
-OBB[T]	✅	Oriented bounding box
-Triangle3[T]	✅	3D triangle
-Polygon3[T]	✅	3D polygon
-Mesh[T]	✅	Mesh
-point_distance(a, b)	✅	3D distance
-point_sphere_distance(p, s)	✅	Point-sphere distance
-point_plane_distance(p, plane)	✅	Point-plane distance
-plane_point_distance(plane, p)	✅	Plane-point distance
-line_point_distance(line, p)	✅	Line-point distance
-segment_point_distance(seg, p)	✅	Segment-point distance
-ray_plane_intersection(ray, plane)	✅	Ray-plane intersection
-ray_triangle_intersection(ray, tri)	✅	Ray-triangle intersection
-ray_sphere_intersection(ray, sphere)	✅	Ray-sphere intersection
-ray_box_intersection(ray, box)	✅	Ray-box intersection
-plane_plane_intersection(a, b)	✅	Plane-plane intersection
-sphere_sphere_intersection(a, b)	✅	Sphere-sphere intersection
-aabb_intersection(a, b)	✅	AABB intersection test
-aabb_contains(box, point)	✅	AABB contains point
-closest_point_on_segment(p, seg)	✅	Closest point on segment
-closest_point_on_plane(p, plane)	✅	Closest point on plane
-triangle_normal(tri)	✅	Triangle normal
-mesh_volume(mesh)	✅	Mesh volume
-mesh_surface_area(mesh)	✅	Mesh surface area
-mesh_centroid(mesh)	✅	Mesh centroid
-convex_hull_3d(points)	✅	3D convex hull
+Point3[T]	?	3D point
+Line3[T]	?	3D line
+Ray3[T]	?	3D ray
+Segment3[T]	?	3D line segment
+Plane[T]	?	Plane
+Sphere[T]	?	Sphere
+Capsule[T]	?	Capsule
+Cylinder[T]	?	Cylinder
+Cone[T]	?	Cone
+Box[T]	?	Axis-aligned box (AABB)
+OBB[T]	?	Oriented bounding box
+Triangle3[T]	?	3D triangle
+Polygon3[T]	?	3D polygon
+Mesh[T]	?	Mesh
+point_distance(a, b)	?	3D distance
+point_sphere_distance(p, s)	?	Point-sphere distance
+point_plane_distance(p, plane)	?	Point-plane distance
+plane_point_distance(plane, p)	?	Plane-point distance
+line_point_distance(line, p)	?	Line-point distance
+segment_point_distance(seg, p)	?	Segment-point distance
+ray_plane_intersection(ray, plane)	?	Ray-plane intersection
+ray_triangle_intersection(ray, tri)	?	Ray-triangle intersection
+ray_sphere_intersection(ray, sphere)	?	Ray-sphere intersection
+ray_box_intersection(ray, box)	?	Ray-box intersection
+plane_plane_intersection(a, b)	?	Plane-plane intersection
+sphere_sphere_intersection(a, b)	?	Sphere-sphere intersection
+aabb_intersection(a, b)	?	AABB intersection test
+aabb_contains(box, point)	?	AABB contains point
+closest_point_on_segment(p, seg)	?	Closest point on segment
+closest_point_on_plane(p, plane)	?	Closest point on plane
+triangle_normal(tri)	?	Triangle normal
+mesh_volume(mesh)	?	Mesh volume
+mesh_surface_area(mesh)	?	Mesh surface area
+mesh_centroid(mesh)	?	Mesh centroid
+convex_hull_3d(points)	?	3D convex hull
 STATISTICS & PROBABILITY
-math/statistics — Statistical Functions
+math/statistics � Statistical Functions
 Description: Descriptive statistics and data analysis.
 
 Function	Generic	Description
-mean(data)	✅	Arithmetic mean
-median(data)	✅	Median
-mode(data)	✅	Mode
-variance(data)	✅	Variance (sample)
-variance_pop(data)	✅	Variance (population)
-stddev(data)	✅	Standard deviation (sample)
-stddev_pop(data)	✅	Standard deviation (population)
-range(data)	✅	Range (max - min)
-iqr(data)	✅	Interquartile range
-quartiles(data)	✅	Quartiles (Q1, Q2, Q3)
-percentile(data, p)	✅	Percentile
-skewness(data)	✅	Skewness
-kurtosis(data)	✅	Kurtosis
-covariance(a, b)	✅	Covariance
-correlation(a, b)	✅	Pearson correlation
-spearman_correlation(a, b)	✅	Spearman rank correlation
-kendall_correlation(a, b)	✅	Kendall tau correlation
-rms(data)	✅	Root mean square
-geometric_mean(data)	✅	Geometric mean
-harmonic_mean(data)	✅	Harmonic mean
-weighted_mean(data, weights)	✅	Weighted mean
-trimmed_mean(data, p)	✅	Trimmed mean
-winsorized_mean(data, p)	✅	Winsorized mean
-mad(data)	✅	Median absolute deviation
-z_score(value, mean, stddev)	✅	Z-score
-math/probability — Probability Functions
+mean(data)	?	Arithmetic mean
+median(data)	?	Median
+mode(data)	?	Mode
+variance(data)	?	Variance (sample)
+variance_pop(data)	?	Variance (population)
+stddev(data)	?	Standard deviation (sample)
+stddev_pop(data)	?	Standard deviation (population)
+range(data)	?	Range (max - min)
+iqr(data)	?	Interquartile range
+quartiles(data)	?	Quartiles (Q1, Q2, Q3)
+percentile(data, p)	?	Percentile
+skewness(data)	?	Skewness
+kurtosis(data)	?	Kurtosis
+covariance(a, b)	?	Covariance
+correlation(a, b)	?	Pearson correlation
+spearman_correlation(a, b)	?	Spearman rank correlation
+kendall_correlation(a, b)	?	Kendall tau correlation
+rms(data)	?	Root mean square
+geometric_mean(data)	?	Geometric mean
+harmonic_mean(data)	?	Harmonic mean
+weighted_mean(data, weights)	?	Weighted mean
+trimmed_mean(data, p)	?	Trimmed mean
+winsorized_mean(data, p)	?	Winsorized mean
+mad(data)	?	Median absolute deviation
+z_score(value, mean, stddev)	?	Z-score
+math/probability � Probability Functions
 Description: Probability distributions and related functions.
 
 Function	Generic	Description
-uniform_pdf(x, a, b)	❌	Uniform PDF
-uniform_cdf(x, a, b)	❌	Uniform CDF
-normal_pdf(x, mean, std)	❌	Normal PDF
-normal_cdf(x, mean, std)	❌	Normal CDF
-normal_quantile(p)	❌	Normal quantile (inverse CDF)
-exponential_pdf(x, lambda)	❌	Exponential PDF
-exponential_cdf(x, lambda)	❌	Exponential CDF
-gamma_pdf(x, shape, scale)	❌	Gamma PDF
-gamma_cdf(x, shape, scale)	❌	Gamma CDF
-beta_pdf(x, alpha, beta)	❌	Beta PDF
-beta_cdf(x, alpha, beta)	❌	Beta CDF
-chi2_pdf(x, df)	❌	Chi-square PDF
-chi2_cdf(x, df)	❌	Chi-square CDF
-t_pdf(x, df)	❌	Student's t PDF
-t_cdf(x, df)	❌	Student's t CDF
-f_pdf(x, df1, df2)	❌	F-distribution PDF
-f_cdf(x, df1, df2)	❌	F-distribution CDF
-weibull_pdf(x, shape, scale)	❌	Weibull PDF
-weibull_cdf(x, shape, scale)	❌	Weibull CDF
-lognormal_pdf(x, mean, std)	❌	Log-normal PDF
-lognormal_cdf(x, mean, std)	❌	Log-normal CDF
-pareto_pdf(x, alpha)	❌	Pareto PDF
-pareto_cdf(x, alpha)	❌	Pareto CDF
-poisson_pmf(k, lambda)	❌	Poisson PMF
-poisson_cdf(k, lambda)	❌	Poisson CDF
-binomial_pmf(k, n, p)	❌	Binomial PMF
-binomial_cdf(k, n, p)	❌	Binomial CDF
-geometric_pmf(k, p)	❌	Geometric PMF
-geometric_cdf(k, p)	❌	Geometric CDF
-negative_binomial_pmf(k, r, p)	❌	Negative binomial PMF
-negative_binomial_cdf(k, r, p)	❌	Negative binomial CDF
-hypergeometric_pmf(k, N, K, n)	❌	Hypergeometric PMF
-hypergeometric_cdf(k, N, K, n)	❌	Hypergeometric CDF
+uniform_pdf(x, a, b)	?	Uniform PDF
+uniform_cdf(x, a, b)	?	Uniform CDF
+normal_pdf(x, mean, std)	?	Normal PDF
+normal_cdf(x, mean, std)	?	Normal CDF
+normal_quantile(p)	?	Normal quantile (inverse CDF)
+exponential_pdf(x, lambda)	?	Exponential PDF
+exponential_cdf(x, lambda)	?	Exponential CDF
+gamma_pdf(x, shape, scale)	?	Gamma PDF
+gamma_cdf(x, shape, scale)	?	Gamma CDF
+beta_pdf(x, alpha, beta)	?	Beta PDF
+beta_cdf(x, alpha, beta)	?	Beta CDF
+chi2_pdf(x, df)	?	Chi-square PDF
+chi2_cdf(x, df)	?	Chi-square CDF
+t_pdf(x, df)	?	Student's t PDF
+t_cdf(x, df)	?	Student's t CDF
+f_pdf(x, df1, df2)	?	F-distribution PDF
+f_cdf(x, df1, df2)	?	F-distribution CDF
+weibull_pdf(x, shape, scale)	?	Weibull PDF
+weibull_cdf(x, shape, scale)	?	Weibull CDF
+lognormal_pdf(x, mean, std)	?	Log-normal PDF
+lognormal_cdf(x, mean, std)	?	Log-normal CDF
+pareto_pdf(x, alpha)	?	Pareto PDF
+pareto_cdf(x, alpha)	?	Pareto CDF
+poisson_pmf(k, lambda)	?	Poisson PMF
+poisson_cdf(k, lambda)	?	Poisson CDF
+binomial_pmf(k, n, p)	?	Binomial PMF
+binomial_cdf(k, n, p)	?	Binomial CDF
+geometric_pmf(k, p)	?	Geometric PMF
+geometric_cdf(k, p)	?	Geometric CDF
+negative_binomial_pmf(k, r, p)	?	Negative binomial PMF
+negative_binomial_cdf(k, r, p)	?	Negative binomial CDF
+hypergeometric_pmf(k, N, K, n)	?	Hypergeometric PMF
+hypergeometric_cdf(k, N, K, n)	?	Hypergeometric CDF
 CALCULUS & ANALYSIS
-math/calculus — Calculus Operations
+math/calculus � Calculus Operations
 Description: Differentiation, integration, and related operations.
 
 Function	Generic	Description
-derivative(f, x, h)	✅	Numerical derivative
-derivative_2nd(f, x, h)	✅	Second derivative
-derivative_3rd(f, x, h)	✅	Third derivative
-integrate(f, a, b, n)	✅	Numerical integration (Simpson)
-integrate_trapezoid(f, a, b, n)	✅	Trapezoidal integration
-integrate_simpson(f, a, b, n)	✅	Simpson's rule
-integrate_romberg(f, a, b)	✅	Romberg integration
-integrate_gauss(f, a, b)	✅	Gauss-Legendre quadrature
-limit(f, x, direction)	✅	Numerical limit
-limit_left(f, x)	✅	Left-hand limit
-limit_right(f, x)	✅	Right-hand limit
-is_continuous(f, x)	✅	Check continuity
-gradient(f, x)	✅	Gradient (multivariate)
-partial_derivative(f, x, i, h)	✅	Partial derivative
-jacobian(f, x)	✅	Jacobian matrix
-hessian(f, x)	✅	Hessian matrix
-laplacian(f, x)	✅	Laplacian
-curl(f, x)	✅	Curl
-divergence(f, x)	✅	Divergence
-math/differential_equations — Differential Equations
+derivative(f, x, h)	?	Numerical derivative
+derivative_2nd(f, x, h)	?	Second derivative
+derivative_3rd(f, x, h)	?	Third derivative
+integrate(f, a, b, n)	?	Numerical integration (Simpson)
+integrate_trapezoid(f, a, b, n)	?	Trapezoidal integration
+integrate_simpson(f, a, b, n)	?	Simpson's rule
+integrate_romberg(f, a, b)	?	Romberg integration
+integrate_gauss(f, a, b)	?	Gauss-Legendre quadrature
+limit(f, x, direction)	?	Numerical limit
+limit_left(f, x)	?	Left-hand limit
+limit_right(f, x)	?	Right-hand limit
+is_continuous(f, x)	?	Check continuity
+gradient(f, x)	?	Gradient (multivariate)
+partial_derivative(f, x, i, h)	?	Partial derivative
+jacobian(f, x)	?	Jacobian matrix
+hessian(f, x)	?	Hessian matrix
+laplacian(f, x)	?	Laplacian
+curl(f, x)	?	Curl
+divergence(f, x)	?	Divergence
+math/differential_equations � Differential Equations
 Description: Numerical solvers for differential equations.
 
 Function	Generic	Description
-solve_ode_euler(f, y0, t0, t1, n)	❌	Euler method
-solve_ode_rk4(f, y0, t0, t1, n)	❌	Runge-Kutta 4th order
-solve_ode_rk45(f, y0, t0, t1)	❌	Runge-Kutta-Fehlberg
-solve_ode_adaptive(f, y0, t0, t1)	❌	Adaptive step solver
-solve_ode_bdf(f, y0, t0, t1, n)	❌	Backward differentiation
-solve_pde_fd(u0, bc, dx, dt)	❌	Finite difference PDE
-solve_pde_fem(u0, bc, mesh)	❌	Finite element PDE
+solve_ode_euler(f, y0, t0, t1, n)	?	Euler method
+solve_ode_rk4(f, y0, t0, t1, n)	?	Runge-Kutta 4th order
+solve_ode_rk45(f, y0, t0, t1)	?	Runge-Kutta-Fehlberg
+solve_ode_adaptive(f, y0, t0, t1)	?	Adaptive step solver
+solve_ode_bdf(f, y0, t0, t1, n)	?	Backward differentiation
+solve_pde_fd(u0, bc, dx, dt)	?	Finite difference PDE
+solve_pde_fem(u0, bc, mesh)	?	Finite element PDE
 SPECIAL FUNCTIONS
-math/special — Special Functions
+math/special � Special Functions
 Description: Advanced special functions from mathematics and physics.
 
 Function	Generic	Description
-gamma(x)	❌	Gamma function Γ(x)
-gamma_ln(x)	❌	Log gamma ln(Γ(x))
-digamma(x)	❌	Digamma function ψ(x)
-trigamma(x)	❌	Trigamma function ψ₁(x)
-polygamma(n, x)	❌	Polygamma function ψⁿ(x)
-beta(a, b)	❌	Beta function B(a,b)
-beta_ln(a, b)	❌	Log beta ln(B(a,b))
-incomplete_gamma(a, x)	❌	Upper incomplete gamma
-incomplete_gamma_low(a, x)	❌	Lower incomplete gamma
-incomplete_beta(a, b, x)	❌	Incomplete beta
-erf(x)	❌	Error function
-erfc(x)	❌	Complementary error function
-erfi(x)	❌	Imaginary error function
-erfinv(x)	❌	Inverse error function
-erfcinv(x)	❌	Inverse complementary error function
-bessel_j(n, x)	❌	Bessel J (first kind)
-bessel_y(n, x)	❌	Bessel Y (second kind)
-bessel_i(n, x)	❌	Modified Bessel I
-bessel_k(n, x)	❌	Modified Bessel K
-bessel_j0(x)	❌	Bessel J₀
-bessel_j1(x)	❌	Bessel J₁
-bessel_jn(n, x)	❌	Bessel J_n
-airy_ai(x)	❌	Airy function Ai(x)
-airy_bi(x)	❌	Airy function Bi(x)
-airy_aip(x)	❌	Airy Ai'(x)
-airy_bip(x)	❌	Airy Bi'(x)
-legendre_p(n, x)	❌	Legendre polynomial Pₙ(x)
-legendre_q(n, x)	❌	Legendre function Qₙ(x)
-laguerre_l(n, x)	❌	Laguerre polynomial Lₙ(x)
-hermite_h(n, x)	❌	Hermite polynomial Hₙ(x)
-chebyshev_t(n, x)	❌	Chebyshev Tₙ(x)
-chebyshev_u(n, x)	❌	Chebyshev Uₙ(x)
-jacobi_p(n, a, b, x)	❌	Jacobi polynomial Pₙ^(a,b)(x)
-gegenbauer_c(n, a, x)	❌	Gegenbauer Cₙ^(a)(x)
-spherical_harmonic(l, m, theta, phi)	❌	Spherical harmonic Yₗᵐ
-dawson(x)	❌	Dawson's integral
-fresnel_s(x)	❌	Fresnel S(x)
-fresnel_c(x)	❌	Fresnel C(x)
-exponential_integral(x)	❌	Exponential integral E₁(x)
-li(x)	❌	Logarithmic integral li(x)
-li_offset(x)	❌	Offset logarithmic integral Li(x)
-sin_integral(x)	❌	Sine integral Si(x)
-cos_integral(x)	❌	Cosine integral Ci(x)
-hypergeometric_2f1(a, b, c, x)	❌	Hypergeometric ₂F₁
-hypergeometric_1f1(a, b, x)	❌	Hypergeometric ₁F₁ (Kummer)
-elliptic_k(k)	❌	Complete elliptic integral K(k)
-elliptic_e(k)	❌	Complete elliptic integral E(k)
-elliptic_pi(n, k)	❌	Complete elliptic integral Π(n,k)
-elliptic_f(phi, k)	❌	Incomplete elliptic integral F(φ,k)
-elliptic_e_incomplete(phi, k)	❌	Incomplete elliptic integral E(φ,k)
-elliptic_pi_incomplete(n, phi, k)	❌	Incomplete elliptic integral Π(n,φ,k)
-theta_1(z, q)	❌	Jacobi theta θ₁
-theta_2(z, q)	❌	Jacobi theta θ₂
-theta_3(z, q)	❌	Jacobi theta θ₃
-theta_4(z, q)	❌	Jacobi theta θ₄
-riemann_zeta(x)	❌	Riemann zeta function ζ(x)
-riemann_zeta_eta(x)	❌	Dirichlet eta η(x)
-dirichlet_beta(x)	❌	Dirichlet beta β(x)
-lerch_phi(z, s, a)	❌	Lerch transcendent Φ(z,s,a)
-polylog(s, z)	❌	Polylogarithm Liₛ(z)
+gamma(x)	?	Gamma function G(x)
+gamma_ln(x)	?	Log gamma ln(G(x))
+digamma(x)	?	Digamma function ?(x)
+trigamma(x)	?	Trigamma function ?1(x)
+polygamma(n, x)	?	Polygamma function ?n(x)
+beta(a, b)	?	Beta function B(a,b)
+beta_ln(a, b)	?	Log beta ln(B(a,b))
+incomplete_gamma(a, x)	?	Upper incomplete gamma
+incomplete_gamma_low(a, x)	?	Lower incomplete gamma
+incomplete_beta(a, b, x)	?	Incomplete beta
+erf(x)	?	Error function
+erfc(x)	?	Complementary error function
+erfi(x)	?	Imaginary error function
+erfinv(x)	?	Inverse error function
+erfcinv(x)	?	Inverse complementary error function
+bessel_j(n, x)	?	Bessel J (first kind)
+bessel_y(n, x)	?	Bessel Y (second kind)
+bessel_i(n, x)	?	Modified Bessel I
+bessel_k(n, x)	?	Modified Bessel K
+bessel_j0(x)	?	Bessel J0
+bessel_j1(x)	?	Bessel J1
+bessel_jn(n, x)	?	Bessel J_n
+airy_ai(x)	?	Airy function Ai(x)
+airy_bi(x)	?	Airy function Bi(x)
+airy_aip(x)	?	Airy Ai'(x)
+airy_bip(x)	?	Airy Bi'(x)
+legendre_p(n, x)	?	Legendre polynomial P?(x)
+legendre_q(n, x)	?	Legendre function Q?(x)
+laguerre_l(n, x)	?	Laguerre polynomial L?(x)
+hermite_h(n, x)	?	Hermite polynomial H?(x)
+chebyshev_t(n, x)	?	Chebyshev T?(x)
+chebyshev_u(n, x)	?	Chebyshev U?(x)
+jacobi_p(n, a, b, x)	?	Jacobi polynomial P?^(a,b)(x)
+gegenbauer_c(n, a, x)	?	Gegenbauer C?^(a)(x)
+spherical_harmonic(l, m, theta, phi)	?	Spherical harmonic Y??
+dawson(x)	?	Dawson's integral
+fresnel_s(x)	?	Fresnel S(x)
+fresnel_c(x)	?	Fresnel C(x)
+exponential_integral(x)	?	Exponential integral E1(x)
+li(x)	?	Logarithmic integral li(x)
+li_offset(x)	?	Offset logarithmic integral Li(x)
+sin_integral(x)	?	Sine integral Si(x)
+cos_integral(x)	?	Cosine integral Ci(x)
+hypergeometric_2f1(a, b, c, x)	?	Hypergeometric 2F1
+hypergeometric_1f1(a, b, x)	?	Hypergeometric 1F1 (Kummer)
+elliptic_k(k)	?	Complete elliptic integral K(k)
+elliptic_e(k)	?	Complete elliptic integral E(k)
+elliptic_pi(n, k)	?	Complete elliptic integral ?(n,k)
+elliptic_f(phi, k)	?	Incomplete elliptic integral F(f,k)
+elliptic_e_incomplete(phi, k)	?	Incomplete elliptic integral E(f,k)
+elliptic_pi_incomplete(n, phi, k)	?	Incomplete elliptic integral ?(n,f,k)
+theta_1(z, q)	?	Jacobi theta ?1
+theta_2(z, q)	?	Jacobi theta ?2
+theta_3(z, q)	?	Jacobi theta ?3
+theta_4(z, q)	?	Jacobi theta ?4
+riemann_zeta(x)	?	Riemann zeta function ?(x)
+riemann_zeta_eta(x)	?	Dirichlet eta ?(x)
+dirichlet_beta(x)	?	Dirichlet beta �(x)
+lerch_phi(z, s, a)	?	Lerch transcendent F(z,s,a)
+polylog(s, z)	?	Polylogarithm Li?(z)
 DISCRETE MATHEMATICS
-math/combinatorics — Combinatorics
+math/combinatorics � Combinatorics
 Description: Combinatorial structures and algorithms.
 
 Function	Generic	Description
-permutations(n, k)	✅	Permutations P(n,k)
-combinations(n, k)	✅	Combinations C(n,k)
-permutations_with_repetition(n, k)	✅	Permutations with repetition
-combinations_with_repetition(n, k)	✅	Combinations with repetition
-derangements(n)	✅	Derangements !n
-bell_numbers(n)	✅	Bell numbers
-catalan_numbers(n)	✅	Catalan numbers
-eulerian_numbers(n, k)	✅	Eulerian numbers
-stirling_numbers_1(n, k)	✅	Stirling numbers (1st kind)
-stirling_numbers_2(n, k)	✅	Stirling numbers (2nd kind)
-lah_numbers(n, k)	✅	Lah numbers
-narayana_numbers(n, k)	✅	Narayana numbers
-fibonacci(n)	✅	Fibonacci number
-fibonacci_start(a, b, n)	✅	Generalized Fibonacci
-lucas(n)	✅	Lucas number
-tribonacci(n)	✅	Tribonacci number
-tetranacci(n)	✅	Tetranacci number
-partitions(n)	✅	Number of partitions p(n)
-integer_partitions(n)	✅	Generate integer partitions
-compositions(n, k)	✅	Compositions of n into k parts
-compositions_all(n)	✅	All compositions of n
-surjections(n, k)	✅	Surjections from n to k
-involutions(n)	✅	Involutions (self-inverse permutations)
-derangements_enum(n)	✅	Enumerate derangements
-permutations_enum(n)	✅	Enumerate permutations
-combinations_enum(n, k)	✅	Enumerate combinations
-subsets_enum(n)	✅	Enumerate subsets
-powerset_enum(set)	✅	Enumerate power set
-math/graph_theory — Graph Theory
+permutations(n, k)	?	Permutations P(n,k)
+combinations(n, k)	?	Combinations C(n,k)
+permutations_with_repetition(n, k)	?	Permutations with repetition
+combinations_with_repetition(n, k)	?	Combinations with repetition
+derangements(n)	?	Derangements !n
+bell_numbers(n)	?	Bell numbers
+catalan_numbers(n)	?	Catalan numbers
+eulerian_numbers(n, k)	?	Eulerian numbers
+stirling_numbers_1(n, k)	?	Stirling numbers (1st kind)
+stirling_numbers_2(n, k)	?	Stirling numbers (2nd kind)
+lah_numbers(n, k)	?	Lah numbers
+narayana_numbers(n, k)	?	Narayana numbers
+fibonacci(n)	?	Fibonacci number
+fibonacci_start(a, b, n)	?	Generalized Fibonacci
+lucas(n)	?	Lucas number
+tribonacci(n)	?	Tribonacci number
+tetranacci(n)	?	Tetranacci number
+partitions(n)	?	Number of partitions p(n)
+integer_partitions(n)	?	Generate integer partitions
+compositions(n, k)	?	Compositions of n into k parts
+compositions_all(n)	?	All compositions of n
+surjections(n, k)	?	Surjections from n to k
+involutions(n)	?	Involutions (self-inverse permutations)
+derangements_enum(n)	?	Enumerate derangements
+permutations_enum(n)	?	Enumerate permutations
+combinations_enum(n, k)	?	Enumerate combinations
+subsets_enum(n)	?	Enumerate subsets
+powerset_enum(set)	?	Enumerate power set
+math/graph_theory � Graph Theory
 Description: Graph operations and algorithms.
 
 Function	Generic	Description
-Graph[T]	✅	Graph type
-graph_new()	✅	Create empty graph
-graph_add_vertex(g, v)	✅	Add vertex
-graph_add_edge(g, u, v)	✅	Add edge
-graph_add_weighted_edge(g, u, v, w)	✅	Add weighted edge
-graph_remove_vertex(g, v)	✅	Remove vertex
-graph_remove_edge(g, u, v)	✅	Remove edge
-graph_has_vertex(g, v)	✅	Check vertex exists
-graph_has_edge(g, u, v)	✅	Check edge exists
-graph_degree(g, v)	✅	Degree of vertex
-graph_vertices(g)	✅	List vertices
-graph_edges(g)	✅	List edges
-graph_adjacent(g, v)	✅	Adjacent vertices
-graph_dfs(g, start)	✅	Depth-first search
-graph_bfs(g, start)	✅	Breadth-first search
-graph_dijkstra(g, start)	✅	Dijkstra's shortest path
-graph_bellman_ford(g, start)	✅	Bellman-Ford shortest path
-graph_floyd_warshall(g)	✅	Floyd-Warshall all-pairs
-graph_astar(g, start, goal)	✅	A* search
-graph_prim(g)	✅	Prim's MST
-graph_kruskal(g)	✅	Kruskal's MST
-graph_tarjan_scc(g)	✅	Tarjan's strongly connected components
-graph_kosaraju_scc(g)	✅	Kosaraju's SCC
-graph_topological_sort(g)	✅	Topological sort
-graph_is_connected(g)	✅	Check if connected
-graph_is_cyclic(g)	✅	Check if cyclic
-graph_is_bipartite(g)	✅	Check if bipartite
-graph_isomorphic(g, h)	✅	Check isomorphism
-graph_color(g)	✅	Graph coloring
-graph_max_flow(g, s, t)	✅	Max flow (Ford-Fulkerson)
-graph_min_cut(g, s, t)	✅	Min cut
-graph_hamiltonian_path(g)	✅	Hamiltonian path
-graph_tsp(g)	✅	Traveling salesman
+Graph[T]	?	Graph type
+graph_new()	?	Create empty graph
+graph_add_vertex(g, v)	?	Add vertex
+graph_add_edge(g, u, v)	?	Add edge
+graph_add_weighted_edge(g, u, v, w)	?	Add weighted edge
+graph_remove_vertex(g, v)	?	Remove vertex
+graph_remove_edge(g, u, v)	?	Remove edge
+graph_has_vertex(g, v)	?	Check vertex exists
+graph_has_edge(g, u, v)	?	Check edge exists
+graph_degree(g, v)	?	Degree of vertex
+graph_vertices(g)	?	List vertices
+graph_edges(g)	?	List edges
+graph_adjacent(g, v)	?	Adjacent vertices
+graph_dfs(g, start)	?	Depth-first search
+graph_bfs(g, start)	?	Breadth-first search
+graph_dijkstra(g, start)	?	Dijkstra's shortest path
+graph_bellman_ford(g, start)	?	Bellman-Ford shortest path
+graph_floyd_warshall(g)	?	Floyd-Warshall all-pairs
+graph_astar(g, start, goal)	?	A* search
+graph_prim(g)	?	Prim's MST
+graph_kruskal(g)	?	Kruskal's MST
+graph_tarjan_scc(g)	?	Tarjan's strongly connected components
+graph_kosaraju_scc(g)	?	Kosaraju's SCC
+graph_topological_sort(g)	?	Topological sort
+graph_is_connected(g)	?	Check if connected
+graph_is_cyclic(g)	?	Check if cyclic
+graph_is_bipartite(g)	?	Check if bipartite
+graph_isomorphic(g, h)	?	Check isomorphism
+graph_color(g)	?	Graph coloring
+graph_max_flow(g, s, t)	?	Max flow (Ford-Fulkerson)
+graph_min_cut(g, s, t)	?	Min cut
+graph_hamiltonian_path(g)	?	Hamiltonian path
+graph_tsp(g)	?	Traveling salesman
 ARBITRARY PRECISION
-math/precision_integer — Arbitrary Precision Integers
+math/precision_integer � Arbitrary Precision Integers
 Description: Big integers with arbitrary precision.
 
 Function	Generic	Description
-BigInt	❌	Arbitrary precision integer
-BigInt.new(value)	❌	Create from integer
-BigInt.from_str(s)	❌	Parse from string
-BigInt.to_str(n)	❌	Convert to string
-BigInt.to_hex(n)	❌	Convert to hex
-BigInt.to_bin(n)	❌	Convert to binary
-BigInt.to_oct(n)	❌	Convert to octal
-BigInt.add(a, b)	❌	Addition
-BigInt.sub(a, b)	❌	Subtraction
-BigInt.mul(a, b)	❌	Multiplication
-BigInt.div(a, b)	❌	Division
-BigInt.mod(a, b)	❌	Modulo
-BigInt.pow(a, b)	❌	Power
-BigInt.neg(a)	❌	Negation
-BigInt.abs(a)	❌	Absolute value
-BigInt.cmp(a, b)	❌	Compare
-BigInt.eq(a, b)	❌	Equality
-BigInt.lt(a, b)	❌	Less than
-BigInt.gt(a, b)	❌	Greater than
-BigInt.bit_and(a, b)	❌	Bitwise AND
-BigInt.bit_or(a, b)	❌	Bitwise OR
-BigInt.bit_xor(a, b)	❌	Bitwise XOR
-BigInt.bit_not(a)	❌	Bitwise NOT
-BigInt.shl(a, n)	❌	Shift left
-BigInt.shr(a, n)	❌	Shift right
-BigInt.is_prime(n)	❌	Primality test
-BigInt.gcd(a, b)	❌	GCD
-BigInt.lcm(a, b)	❌	LCM
-BigInt.mod_inverse(a, m)	❌	Modular inverse
-BigInt.mod_pow(a, e, m)	❌	Modular exponentiation
-BigInt.factorial(n)	❌	Factorial
-BigInt.binomial(n, k)	❌	Binomial coefficient
-math/precision_float — Arbitrary Precision Floats
+BigInt	?	Arbitrary precision integer
+BigInt.new(value)	?	Create from integer
+BigInt.from_str(s)	?	Parse from string
+BigInt.to_str(n)	?	Convert to string
+BigInt.to_hex(n)	?	Convert to hex
+BigInt.to_bin(n)	?	Convert to binary
+BigInt.to_oct(n)	?	Convert to octal
+BigInt.add(a, b)	?	Addition
+BigInt.sub(a, b)	?	Subtraction
+BigInt.mul(a, b)	?	Multiplication
+BigInt.div(a, b)	?	Division
+BigInt.mod(a, b)	?	Modulo
+BigInt.pow(a, b)	?	Power
+BigInt.neg(a)	?	Negation
+BigInt.abs(a)	?	Absolute value
+BigInt.cmp(a, b)	?	Compare
+BigInt.eq(a, b)	?	Equality
+BigInt.lt(a, b)	?	Less than
+BigInt.gt(a, b)	?	Greater than
+BigInt.bit_and(a, b)	?	Bitwise AND
+BigInt.bit_or(a, b)	?	Bitwise OR
+BigInt.bit_xor(a, b)	?	Bitwise XOR
+BigInt.bit_not(a)	?	Bitwise NOT
+BigInt.shl(a, n)	?	Shift left
+BigInt.shr(a, n)	?	Shift right
+BigInt.is_prime(n)	?	Primality test
+BigInt.gcd(a, b)	?	GCD
+BigInt.lcm(a, b)	?	LCM
+BigInt.mod_inverse(a, m)	?	Modular inverse
+BigInt.mod_pow(a, e, m)	?	Modular exponentiation
+BigInt.factorial(n)	?	Factorial
+BigInt.binomial(n, k)	?	Binomial coefficient
+math/precision_float � Arbitrary Precision Floats
 Description: Big floats with arbitrary precision.
 
 Function	Generic	Description
-BigFloat	❌	Arbitrary precision float
-BigFloat.new(value)	❌	Create from float
-BigFloat.from_str(s)	❌	Parse from string
-BigFloat.to_str(f)	❌	Convert to string
-BigFloat.with_precision(prec)	❌	Set precision (bits)
-BigFloat.add(a, b)	❌	Addition
-BigFloat.sub(a, b)	❌	Subtraction
-BigFloat.mul(a, b)	❌	Multiplication
-BigFloat.div(a, b)	❌	Division
-BigFloat.neg(a)	❌	Negation
-BigFloat.abs(a)	❌	Absolute value
-BigFloat.sqrt(a)	❌	Square root
-BigFloat.cbrt(a)	❌	Cube root
-BigFloat.exp(a)	❌	Exponential
-BigFloat.ln(a)	❌	Natural logarithm
-BigFloat.log10(a)	❌	Log base 10
-BigFloat.log2(a)	❌	Log base 2
-BigFloat.pow(a, b)	❌	Power
-BigFloat.sin(a)	❌	Sine
-BigFloat.cos(a)	❌	Cosine
-BigFloat.tan(a)	❌	Tangent
-BigFloat.asin(a)	❌	Arcsine
-BigFloat.acos(a)	❌	Arccosine
-BigFloat.atan(a)	❌	Arctangent
-BigFloat.atan2(y, x)	❌	Atan2
-BigFloat.sinh(a)	❌	Hyperbolic sine
-BigFloat.cosh(a)	❌	Hyperbolic cosine
-BigFloat.tanh(a)	❌	Hyperbolic tangent
-BigFloat.pi(prec)	❌	π with precision
-BigFloat.e(prec)	❌	e with precision
-BigFloat.cmp(a, b)	❌	Compare
-BigFloat.eq(a, b)	❌	Equality
-math/precision_rational — Arbitrary Precision Rationals
+BigFloat	?	Arbitrary precision float
+BigFloat.new(value)	?	Create from float
+BigFloat.from_str(s)	?	Parse from string
+BigFloat.to_str(f)	?	Convert to string
+BigFloat.with_precision(prec)	?	Set precision (bits)
+BigFloat.add(a, b)	?	Addition
+BigFloat.sub(a, b)	?	Subtraction
+BigFloat.mul(a, b)	?	Multiplication
+BigFloat.div(a, b)	?	Division
+BigFloat.neg(a)	?	Negation
+BigFloat.abs(a)	?	Absolute value
+BigFloat.sqrt(a)	?	Square root
+BigFloat.cbrt(a)	?	Cube root
+BigFloat.exp(a)	?	Exponential
+BigFloat.ln(a)	?	Natural logarithm
+BigFloat.log10(a)	?	Log base 10
+BigFloat.log2(a)	?	Log base 2
+BigFloat.pow(a, b)	?	Power
+BigFloat.sin(a)	?	Sine
+BigFloat.cos(a)	?	Cosine
+BigFloat.tan(a)	?	Tangent
+BigFloat.asin(a)	?	Arcsine
+BigFloat.acos(a)	?	Arccosine
+BigFloat.atan(a)	?	Arctangent
+BigFloat.atan2(y, x)	?	Atan2
+BigFloat.sinh(a)	?	Hyperbolic sine
+BigFloat.cosh(a)	?	Hyperbolic cosine
+BigFloat.tanh(a)	?	Hyperbolic tangent
+BigFloat.pi(prec)	?	p with precision
+BigFloat.e(prec)	?	e with precision
+BigFloat.cmp(a, b)	?	Compare
+BigFloat.eq(a, b)	?	Equality
+math/precision_rational � Arbitrary Precision Rationals
 Description: Big rational numbers with arbitrary precision.
 
 Function	Generic	Description
-BigRat	❌	Arbitrary precision rational
-BigRat.new(num, den)	❌	Create rational
-BigRat.from_int(n)	❌	Create from integer
-BigRat.from_str(s)	❌	Parse from string
-BigRat.to_str(r)	❌	Convert to string
-BigRat.numerator(r)	❌	Get numerator
-BigRat.denominator(r)	❌	Get denominator
-BigRat.add(a, b)	❌	Addition
-BigRat.sub(a, b)	❌	Subtraction
-BigRat.mul(a, b)	❌	Multiplication
-BigRat.div(a, b)	❌	Division
-BigRat.neg(a)	❌	Negation
-BigRat.abs(a)	❌	Absolute value
-BigRat.recip(a)	❌	Reciprocal
-BigRat.reduce(r)	❌	Reduce to lowest terms
-BigRat.is_reduced(r)	❌	Check if reduced
-BigRat.is_integer(r)	❌	Check if integer
-BigRat.is_zero(r)	❌	Check if zero
-BigRat.cmp(a, b)	❌	Compare
-BigRat.eq(a, b)	❌	Equality
-BigRat.to_float(r)	❌	Convert to float
-BigRat.to_integer(r)	❌	Convert to integer
+BigRat	?	Arbitrary precision rational
+BigRat.new(num, den)	?	Create rational
+BigRat.from_int(n)	?	Create from integer
+BigRat.from_str(s)	?	Parse from string
+BigRat.to_str(r)	?	Convert to string
+BigRat.numerator(r)	?	Get numerator
+BigRat.denominator(r)	?	Get denominator
+BigRat.add(a, b)	?	Addition
+BigRat.sub(a, b)	?	Subtraction
+BigRat.mul(a, b)	?	Multiplication
+BigRat.div(a, b)	?	Division
+BigRat.neg(a)	?	Negation
+BigRat.abs(a)	?	Absolute value
+BigRat.recip(a)	?	Reciprocal
+BigRat.reduce(r)	?	Reduce to lowest terms
+BigRat.is_reduced(r)	?	Check if reduced
+BigRat.is_integer(r)	?	Check if integer
+BigRat.is_zero(r)	?	Check if zero
+BigRat.cmp(a, b)	?	Compare
+BigRat.eq(a, b)	?	Equality
+BigRat.to_float(r)	?	Convert to float
+BigRat.to_integer(r)	?	Convert to integer
 NUMERICAL METHODS
-math/numerical — Numerical Methods
+math/numerical � Numerical Methods
 Description: Numerical algorithms for solving mathematical problems.
 
 Function	Generic	Description
-bisection(f, a, b)	✅	Bisection method
-newton(f, fprime, x0)	✅	Newton-Raphson method
-secant(f, x0, x1)	✅	Secant method
-falsi(f, a, b)	✅	False position method
-brent(f, a, b)	✅	Brent's method
-fixed_point(f, x0)	✅	Fixed-point iteration
-steffensen(f, x0)	✅	Steffensen's method
-newton_multi(f, jac, x0)	✅	Multidimensional Newton
-gauss_seidel(a, b, x0)	✅	Gauss-Seidel method
-jacobi_iterative(a, b, x0)	✅	Jacobi iteration
-conjugate_gradient(a, b, x0)	✅	Conjugate gradient
-gradient_descent(f, grad, x0)	✅	Gradient descent
-newton_raphson_multi(f, grad, hess, x0)	✅	Newton-Raphson (multi)
-bisection_root(f, a, b)	✅	Bisection for root
-newton_root(f, fp, x0)	✅	Newton for root
-broyden(f, x0)	✅	Broyden's method
-anderson(f, x0)	✅	Anderson acceleration
-interp_linear(x, y, xi)	✅	Linear interpolation
-interp_polynomial(x, y, xi)	✅	Polynomial interpolation
-interp_spline(x, y, xi)	✅	Spline interpolation
-interp_cubic(x, y, xi)	✅	Cubic interpolation
-interp_hermite(x, y, dy, xi)	✅	Hermite interpolation
-spline_linear(x, y)	✅	Linear spline
-spline_cubic(x, y)	✅	Cubic spline
-spline_b_spline(x, y, k)	✅	B-spline
-spline_nurbs(x, y, k, weights)	✅	NURBS
-quadrature_trapezoid(f, a, b, n)	✅	Trapezoidal quadrature
-quadrature_simpson(f, a, b, n)	✅	Simpson's quadrature
-quadrature_gauss(f, a, b, n)	✅	Gauss-Legendre quadrature
-quadrature_adaptive(f, a, b)	✅	Adaptive quadrature
-quadrature_monte_carlo(f, a, b, n)	✅	Monte Carlo integration
-optimize_golden(f, a, b)	✅	Golden-section optimization
-optimize_ternary(f, a, b)	✅	Ternary search
-optimize_bfgs(f, grad, x0)	✅	BFGS optimization
-optimize_lbfgs(f, grad, x0)	✅	L-BFGS
-optimize_simplex(f, x0)	✅	Nelder-Mead simplex
-optimize_powell(f, x0)	✅	Powell's method
-optimize_cg(f, grad, x0)	✅	Conjugate gradient optimization
-optimize_gradient(f, grad, x0)	✅	Gradient descent optimization
-optimize_newton(f, grad, hess, x0)	✅	Newton optimization
-optimize_least_squares(f, x0)	✅	Nonlinear least squares
-solver_single(f, x0)	✅	Single equation solver
-solver_system(f, x0)	✅	System of equations solver
+bisection(f, a, b)	?	Bisection method
+newton(f, fprime, x0)	?	Newton-Raphson method
+secant(f, x0, x1)	?	Secant method
+falsi(f, a, b)	?	False position method
+brent(f, a, b)	?	Brent's method
+fixed_point(f, x0)	?	Fixed-point iteration
+steffensen(f, x0)	?	Steffensen's method
+newton_multi(f, jac, x0)	?	Multidimensional Newton
+gauss_seidel(a, b, x0)	?	Gauss-Seidel method
+jacobi_iterative(a, b, x0)	?	Jacobi iteration
+conjugate_gradient(a, b, x0)	?	Conjugate gradient
+gradient_descent(f, grad, x0)	?	Gradient descent
+newton_raphson_multi(f, grad, hess, x0)	?	Newton-Raphson (multi)
+bisection_root(f, a, b)	?	Bisection for root
+newton_root(f, fp, x0)	?	Newton for root
+broyden(f, x0)	?	Broyden's method
+anderson(f, x0)	?	Anderson acceleration
+interp_linear(x, y, xi)	?	Linear interpolation
+interp_polynomial(x, y, xi)	?	Polynomial interpolation
+interp_spline(x, y, xi)	?	Spline interpolation
+interp_cubic(x, y, xi)	?	Cubic interpolation
+interp_hermite(x, y, dy, xi)	?	Hermite interpolation
+spline_linear(x, y)	?	Linear spline
+spline_cubic(x, y)	?	Cubic spline
+spline_b_spline(x, y, k)	?	B-spline
+spline_nurbs(x, y, k, weights)	?	NURBS
+quadrature_trapezoid(f, a, b, n)	?	Trapezoidal quadrature
+quadrature_simpson(f, a, b, n)	?	Simpson's quadrature
+quadrature_gauss(f, a, b, n)	?	Gauss-Legendre quadrature
+quadrature_adaptive(f, a, b)	?	Adaptive quadrature
+quadrature_monte_carlo(f, a, b, n)	?	Monte Carlo integration
+optimize_golden(f, a, b)	?	Golden-section optimization
+optimize_ternary(f, a, b)	?	Ternary search
+optimize_bfgs(f, grad, x0)	?	BFGS optimization
+optimize_lbfgs(f, grad, x0)	?	L-BFGS
+optimize_simplex(f, x0)	?	Nelder-Mead simplex
+optimize_powell(f, x0)	?	Powell's method
+optimize_cg(f, grad, x0)	?	Conjugate gradient optimization
+optimize_gradient(f, grad, x0)	?	Gradient descent optimization
+optimize_newton(f, grad, hess, x0)	?	Newton optimization
+optimize_least_squares(f, x0)	?	Nonlinear least squares
+solver_single(f, x0)	?	Single equation solver
+solver_system(f, x0)	?	System of equations solver
 SIGNAL PROCESSING
-math/signal — Signal Processing
+math/signal � Signal Processing
 Description: Signal processing and transform operations.
 
 Function	Generic	Description
-fft(data)	❌	Fast Fourier Transform
-ifft(data)	❌	Inverse FFT
-fft_real(data)	❌	Real FFT
-ifft_real(data)	❌	Inverse real FFT
-dft(data)	❌	Discrete Fourier Transform
-idft(data)	❌	Inverse DFT
-dct(data)	❌	Discrete Cosine Transform
-idct(data)	❌	Inverse DCT
-dct_type2(data)	❌	DCT Type II
-dct_type3(data)	❌	DCT Type III
-dst(data)	❌	Discrete Sine Transform
-idst(data)	❌	Inverse DST
-wavelet_dwt(data)	❌	Discrete Wavelet Transform
-wavelet_idwt(data)	❌	Inverse DWT
-wavelet_daubechies(data)	❌	Daubechies wavelet
-wavelet_haar(data)	❌	Haar wavelet
-filter_lowpass(data, cutoff)	❌	Low-pass filter
-filter_highpass(data, cutoff)	❌	High-pass filter
-filter_bandpass(data, lo, hi)	❌	Band-pass filter
-filter_bandstop(data, lo, hi)	❌	Band-stop filter
-filter_butterworth(data, cutoff, n)	❌	Butterworth filter
-filter_chebyshev(data, cutoff, n)	❌	Chebyshev filter
-filter_bessel(data, cutoff, n)	❌	Bessel filter
-filter_fir(data, taps)	❌	FIR filter
-filter_iir(data, a, b)	❌	IIR filter
-convolve(a, b)	❌	Convolution
-correlate(a, b)	❌	Cross-correlation
-autocorrelate(a)	❌	Autocorrelation
-window_hanning(n)	❌	Hanning window
-window_hamming(n)	❌	Hamming window
-window_blackman(n)	❌	Blackman window
-window_kaiser(n, beta)	❌	Kaiser window
-window_bartlett(n)	❌	Bartlett window
-window_gaussian(n, sigma)	❌	Gaussian window
-spectrum(data)	❌	Power spectrum
-psd(data)	❌	Power spectral density
-spectrogram(data, window, overlap)	❌	Spectrogram
-cepstrum(data)	❌	Cepstrum
-mel_filterbank(data)	❌	Mel filterbank
-mfcc(data)	❌	Mel-frequency cepstral coefficients
+fft(data)	?	Fast Fourier Transform
+ifft(data)	?	Inverse FFT
+fft_real(data)	?	Real FFT
+ifft_real(data)	?	Inverse real FFT
+dft(data)	?	Discrete Fourier Transform
+idft(data)	?	Inverse DFT
+dct(data)	?	Discrete Cosine Transform
+idct(data)	?	Inverse DCT
+dct_type2(data)	?	DCT Type II
+dct_type3(data)	?	DCT Type III
+dst(data)	?	Discrete Sine Transform
+idst(data)	?	Inverse DST
+wavelet_dwt(data)	?	Discrete Wavelet Transform
+wavelet_idwt(data)	?	Inverse DWT
+wavelet_daubechies(data)	?	Daubechies wavelet
+wavelet_haar(data)	?	Haar wavelet
+filter_lowpass(data, cutoff)	?	Low-pass filter
+filter_highpass(data, cutoff)	?	High-pass filter
+filter_bandpass(data, lo, hi)	?	Band-pass filter
+filter_bandstop(data, lo, hi)	?	Band-stop filter
+filter_butterworth(data, cutoff, n)	?	Butterworth filter
+filter_chebyshev(data, cutoff, n)	?	Chebyshev filter
+filter_bessel(data, cutoff, n)	?	Bessel filter
+filter_fir(data, taps)	?	FIR filter
+filter_iir(data, a, b)	?	IIR filter
+convolve(a, b)	?	Convolution
+correlate(a, b)	?	Cross-correlation
+autocorrelate(a)	?	Autocorrelation
+window_hanning(n)	?	Hanning window
+window_hamming(n)	?	Hamming window
+window_blackman(n)	?	Blackman window
+window_kaiser(n, beta)	?	Kaiser window
+window_bartlett(n)	?	Bartlett window
+window_gaussian(n, sigma)	?	Gaussian window
+spectrum(data)	?	Power spectrum
+psd(data)	?	Power spectral density
+spectrogram(data, window, overlap)	?	Spectrogram
+cepstrum(data)	?	Cepstrum
+mel_filterbank(data)	?	Mel filterbank
+mfcc(data)	?	Mel-frequency cepstral coefficients
 OPTIMIZATION
-math/optimization — Optimization Algorithms
+math/optimization � Optimization Algorithms
 Description: Mathematical optimization algorithms.
 
 Function	Generic	Description
-linear_programming(c, A, b)	✅	Linear programming (simplex)
-integer_programming(c, A, b)	✅	Integer linear programming
-mixed_integer_programming(c, A, b)	✅	Mixed-integer programming
-quadratic_programming(Q, c, A, b)	✅	Quadratic programming
-nonlinear_programming(f, constraints)	✅	Nonlinear programming
-lp_simplex(c, A, b)	✅	Simplex algorithm
-lp_interior_point(c, A, b)	✅	Interior point method
-branch_and_bound(f, constraints)	✅	Branch and bound
-cutting_plane(f, constraints)	✅	Cutting plane method
-sequential_quadratic(f, constraints)	✅	Sequential quadratic programming
-penalty_method(f, constraints)	✅	Penalty method
-barrier_method(f, constraints)	✅	Barrier method
-augmented_lagrangian(f, constraints)	✅	Augmented Lagrangian
-genetic_algorithm(f, population, generations)	✅	Genetic algorithm
-simulated_annealing(f, schedule)	✅	Simulated annealing
-particle_swarm(f, swarm_size, iterations)	✅	Particle swarm optimization
-ant_colony(f, ants, iterations)	✅	Ant colony optimization
-differential_evolution(f, population, generations)	✅	Differential evolution
-bayesian_optimization(f, bounds)	✅	Bayesian optimization
-grid_search(f, grid)	✅	Grid search
-random_search(f, distribution, iterations)	✅	Random search
+linear_programming(c, A, b)	?	Linear programming (simplex)
+integer_programming(c, A, b)	?	Integer linear programming
+mixed_integer_programming(c, A, b)	?	Mixed-integer programming
+quadratic_programming(Q, c, A, b)	?	Quadratic programming
+nonlinear_programming(f, constraints)	?	Nonlinear programming
+lp_simplex(c, A, b)	?	Simplex algorithm
+lp_interior_point(c, A, b)	?	Interior point method
+branch_and_bound(f, constraints)	?	Branch and bound
+cutting_plane(f, constraints)	?	Cutting plane method
+sequential_quadratic(f, constraints)	?	Sequential quadratic programming
+penalty_method(f, constraints)	?	Penalty method
+barrier_method(f, constraints)	?	Barrier method
+augmented_lagrangian(f, constraints)	?	Augmented Lagrangian
+genetic_algorithm(f, population, generations)	?	Genetic algorithm
+simulated_annealing(f, schedule)	?	Simulated annealing
+particle_swarm(f, swarm_size, iterations)	?	Particle swarm optimization
+ant_colony(f, ants, iterations)	?	Ant colony optimization
+differential_evolution(f, population, generations)	?	Differential evolution
+bayesian_optimization(f, bounds)	?	Bayesian optimization
+grid_search(f, grid)	?	Grid search
+random_search(f, distribution, iterations)	?	Random search
 FINANCE
-math/finance — Financial Mathematics
+math/finance � Financial Mathematics
 Description: Financial calculations and models.
 
 Function	Generic	Description
-pv(future_value, rate, periods)	❌	Present value
-fv(present_value, rate, periods)	❌	Future value
-npv(rate, cashflows)	❌	Net present value
-irr(cashflows)	❌	Internal rate of return
-mirr(cashflows, finance_rate, reinvest_rate)	❌	Modified IRR
-pmt(rate, periods, pv)	❌	Payment amount
-ipmt(rate, period, periods, pv)	❌	Interest portion of payment
-ppmt(rate, period, periods, pv)	❌	Principal portion of payment
-nper(rate, pmt, pv)	❌	Number of periods
-rate(nper, pmt, pv, fv)	❌	Interest rate
-annuity(rate, periods, pv)	❌	Annuity calculation
-perpetuity(cashflow, rate)	❌	Perpetuity calculation
-bond_price(face_value, coupon, maturity, rate)	❌	Bond price
-bond_yield(price, face_value, coupon, maturity)	❌	Bond yield to maturity
-duration(price, face_value, coupon, maturity, rate)	❌	Macaulay duration
-convexity(price, face_value, coupon, maturity, rate)	❌	Convexity
-option_call(s, k, t, r, sigma)	❌	Call option price (Black-Scholes)
-option_put(s, k, t, r, sigma)	❌	Put option price (Black-Scholes)
-option_call_delta(s, k, t, r, sigma)	❌	Call option delta
-option_put_delta(s, k, t, r, sigma)	❌	Put option delta
-option_gamma(s, k, t, r, sigma)	❌	Option gamma
-option_theta(s, k, t, r, sigma)	❌	Option theta
-option_vega(s, k, t, r, sigma)	❌	Option vega
-option_rho(s, k, t, r, sigma)	❌	Option rho
-implied_volatility(price, s, k, t, r)	❌	Implied volatility
-cagr(start_value, end_value, periods)	❌	Compound annual growth rate
-sharpe_ratio(returns, risk_free_rate)	❌	Sharpe ratio
-sortino_ratio(returns, risk_free_rate)	❌	Sortino ratio
-calmar_ratio(returns)	❌	Calmar ratio
-var(returns, confidence_level)	❌	Value at Risk
-cvar(returns, confidence_level)	❌	Conditional VaR
-drawdown(returns)	❌	Maximum drawdown
-beta(returns, market_returns)	❌	Beta coefficient
-alpha(returns, market_returns, risk_free_rate)	❌	Alpha coefficient
-treynor_ratio(returns, market_returns, risk_free_rate)	❌	Treynor ratio
+pv(future_value, rate, periods)	?	Present value
+fv(present_value, rate, periods)	?	Future value
+npv(rate, cashflows)	?	Net present value
+irr(cashflows)	?	Internal rate of return
+mirr(cashflows, finance_rate, reinvest_rate)	?	Modified IRR
+pmt(rate, periods, pv)	?	Payment amount
+ipmt(rate, period, periods, pv)	?	Interest portion of payment
+ppmt(rate, period, periods, pv)	?	Principal portion of payment
+nper(rate, pmt, pv)	?	Number of periods
+rate(nper, pmt, pv, fv)	?	Interest rate
+annuity(rate, periods, pv)	?	Annuity calculation
+perpetuity(cashflow, rate)	?	Perpetuity calculation
+bond_price(face_value, coupon, maturity, rate)	?	Bond price
+bond_yield(price, face_value, coupon, maturity)	?	Bond yield to maturity
+duration(price, face_value, coupon, maturity, rate)	?	Macaulay duration
+convexity(price, face_value, coupon, maturity, rate)	?	Convexity
+option_call(s, k, t, r, sigma)	?	Call option price (Black-Scholes)
+option_put(s, k, t, r, sigma)	?	Put option price (Black-Scholes)
+option_call_delta(s, k, t, r, sigma)	?	Call option delta
+option_put_delta(s, k, t, r, sigma)	?	Put option delta
+option_gamma(s, k, t, r, sigma)	?	Option gamma
+option_theta(s, k, t, r, sigma)	?	Option theta
+option_vega(s, k, t, r, sigma)	?	Option vega
+option_rho(s, k, t, r, sigma)	?	Option rho
+implied_volatility(price, s, k, t, r)	?	Implied volatility
+cagr(start_value, end_value, periods)	?	Compound annual growth rate
+sharpe_ratio(returns, risk_free_rate)	?	Sharpe ratio
+sortino_ratio(returns, risk_free_rate)	?	Sortino ratio
+calmar_ratio(returns)	?	Calmar ratio
+var(returns, confidence_level)	?	Value at Risk
+cvar(returns, confidence_level)	?	Conditional VaR
+drawdown(returns)	?	Maximum drawdown
+beta(returns, market_returns)	?	Beta coefficient
+alpha(returns, market_returns, risk_free_rate)	?	Alpha coefficient
+treynor_ratio(returns, market_returns, risk_free_rate)	?	Treynor ratio
 Complete Module Summary
 Module	Category	Functions
 math/core	Foundation	25
@@ -4840,27 +4840,27 @@ do we include stuff like min max lerp vector length etc ? are we left any math
 Complete Math Coverage Audit
 Let me do a full audit to make sure we haven't missed anything. I'll check every branch of mathematics and identify gaps.
 
-✅ WHAT WE HAVE (Covered)
+? WHAT WE HAVE (Covered)
 Category	Modules	Status
-Foundations	core, constants, precision, interfaces	✅ Complete
-Arithmetic	arithmetic, roots, exponential, rounding, decompose	✅ Complete
-Trigonometry	trigonometry, inverse_trig, hyperbolic, angular, trig_constants	✅ Complete
-Bitwise	bitwise, rotation, endianness, bitfield	✅ Complete
-Number Theory	number_theory, factorial, modular	✅ Complete
-Complex	complex	✅ Complete
-Linear Algebra	vector, matrix, quaternion, linear	✅ Complete
-Geometry	geometry_2d, geometry_3d	✅ Complete
-Statistics	statistics, probability	✅ Complete
-Calculus	calculus, differential_equations	✅ Complete
-Special Functions	special	✅ Complete
-Discrete Math	combinatorics, graph_theory	✅ Complete
-Precision	precision_integer, precision_float, precision_rational	✅ Complete
-Numerical Methods	numerical	✅ Complete
-Signal Processing	signal	✅ Complete
-Optimization	optimization	✅ Complete
-Finance	finance	✅ Complete
-❌ WHAT WE MISSED (Gaps)
-1. MIN/MAX/LERP/VECTOR LENGTH — These are actually covered!
+Foundations	core, constants, precision, interfaces	? Complete
+Arithmetic	arithmetic, roots, exponential, rounding, decompose	? Complete
+Trigonometry	trigonometry, inverse_trig, hyperbolic, angular, trig_constants	? Complete
+Bitwise	bitwise, rotation, endianness, bitfield	? Complete
+Number Theory	number_theory, factorial, modular	? Complete
+Complex	complex	? Complete
+Linear Algebra	vector, matrix, quaternion, linear	? Complete
+Geometry	geometry_2d, geometry_3d	? Complete
+Statistics	statistics, probability	? Complete
+Calculus	calculus, differential_equations	? Complete
+Special Functions	special	? Complete
+Discrete Math	combinatorics, graph_theory	? Complete
+Precision	precision_integer, precision_float, precision_rational	? Complete
+Numerical Methods	numerical	? Complete
+Signal Processing	signal	? Complete
+Optimization	optimization	? Complete
+Finance	finance	? Complete
+? WHAT WE MISSED (Gaps)
+1. MIN/MAX/LERP/VECTOR LENGTH � These are actually covered!
 Function	Where it lives
 min, max	math/core (generic over Ord)
 clamp	math/core (generic over Ord)
@@ -4873,343 +4873,343 @@ So these ARE included. Good.
 2. MISSING: Set Theory
 text
 math/set_theory
-├── Set[T] - Set operations
-├── union, intersection, difference, symmetric_difference
-├── subset, superset, proper_subset
-├── power_set, cartesian_product
-├── cardinality, complement
-├── disjoint, partition
-└── set_comprehension
++-- Set[T] - Set operations
++-- union, intersection, difference, symmetric_difference
++-- subset, superset, proper_subset
++-- power_set, cartesian_product
++-- cardinality, complement
++-- disjoint, partition
++-- set_comprehension
 3. MISSING: Logic & Boolean Algebra
 text
 math/logic
-├── truth_table - Generate truth table
-├── boolean_expression - Evaluate boolean expressions
-├── simplify - Boolean algebra simplification
-├── normal_forms - DNF, CNF conversion
-├── iff, implies, xor, nand, nor
-├── quantifiers - ∀, ∃
-├── satisfiability - SAT solver (basic)
-└── tautology_check - Check if expression is tautology
++-- truth_table - Generate truth table
++-- boolean_expression - Evaluate boolean expressions
++-- simplify - Boolean algebra simplification
++-- normal_forms - DNF, CNF conversion
++-- iff, implies, xor, nand, nor
++-- quantifiers - ?, ?
++-- satisfiability - SAT solver (basic)
++-- tautology_check - Check if expression is tautology
 4. MISSING: Information Theory
 text
 math/information_theory
-├── entropy - Shannon entropy
-├── joint_entropy - H(X,Y)
-├── conditional_entropy - H(X|Y)
-├── mutual_information - I(X;Y)
-├── kl_divergence - KL divergence
-├── js_divergence - Jensen-Shannon divergence
-├── cross_entropy - Cross entropy
-├── perplexity - Perplexity
-├── self_information - log(1/p)
-├── entropy_rate - Entropy rate
-├── channel_capacity - Shannon-Hartley
-├── data_compression - Information theoretic bounds
-├── huffman_coding - Huffman encoding/decoding
-└── arithmetic_coding - Arithmetic encoding/decoding
++-- entropy - Shannon entropy
++-- joint_entropy - H(X,Y)
++-- conditional_entropy - H(X|Y)
++-- mutual_information - I(X;Y)
++-- kl_divergence - KL divergence
++-- js_divergence - Jensen-Shannon divergence
++-- cross_entropy - Cross entropy
++-- perplexity - Perplexity
++-- self_information - log(1/p)
++-- entropy_rate - Entropy rate
++-- channel_capacity - Shannon-Hartley
++-- data_compression - Information theoretic bounds
++-- huffman_coding - Huffman encoding/decoding
++-- arithmetic_coding - Arithmetic encoding/decoding
 5. MISSING: Cryptography (but you have crypto/ module already)
 text
 (Already in crypto/ - skip)
 6. MISSING: Chaos Theory
 text
 math/chaos
-├── logistic_map - xₙ₊₁ = r*xₙ*(1-xₙ)
-├── lorenz_system - Lorenz attractor
-├── rossler_system - Rössler attractor
-├── henon_map - Hénon map
-├── bifurcation_diagram - Bifurcation diagram
-├── lyapunov_exponent - Lyapunov exponent
-├── strange_attractor - Strange attractor detection
-├── fractal_dimension - Hausdorff dimension
-├── mandelbrot_set - Mandelbrot set
-├── julia_set - Julia set
-├── burning_ship - Burning Ship fractal
-├── newton_fractal - Newton fractal
-└── tent_map - Tent map
++-- logistic_map - x??1 = r*x?*(1-x?)
++-- lorenz_system - Lorenz attractor
++-- rossler_system - R�ssler attractor
++-- henon_map - H�non map
++-- bifurcation_diagram - Bifurcation diagram
++-- lyapunov_exponent - Lyapunov exponent
++-- strange_attractor - Strange attractor detection
++-- fractal_dimension - Hausdorff dimension
++-- mandelbrot_set - Mandelbrot set
++-- julia_set - Julia set
++-- burning_ship - Burning Ship fractal
++-- newton_fractal - Newton fractal
++-- tent_map - Tent map
 7. MISSING: Game Theory
 text
 math/game_theory
-├── NormalFormGame - Matrix game
-├── ExtensiveFormGame - Tree game
-├── nash_equilibrium - Nash equilibrium solver
-├── minimax - Minimax algorithm
-├── alpha_beta - Alpha-beta pruning
-├── dominant_strategy - Dominant strategy detection
-├── pareto_optimal - Pareto optimality
-├── cooperative_game - Coalition games
-├── shapley_value - Shapley value
-├── core - Core of cooperative game
-├── auction - Auction theory
-├── mechanism_design - Mechanism design
-├── evolutionary_game - Evolutionary game theory
-├── replicator_dynamics - Replicator dynamics
-└── prisoner_dilemma - Classic game theory examples
++-- NormalFormGame - Matrix game
++-- ExtensiveFormGame - Tree game
++-- nash_equilibrium - Nash equilibrium solver
++-- minimax - Minimax algorithm
++-- alpha_beta - Alpha-beta pruning
++-- dominant_strategy - Dominant strategy detection
++-- pareto_optimal - Pareto optimality
++-- cooperative_game - Coalition games
++-- shapley_value - Shapley value
++-- core - Core of cooperative game
++-- auction - Auction theory
++-- mechanism_design - Mechanism design
++-- evolutionary_game - Evolutionary game theory
++-- replicator_dynamics - Replicator dynamics
++-- prisoner_dilemma - Classic game theory examples
 8. MISSING: Queueing Theory
 text
 math/queueing
-├── m_m_1 - M/M/1 queue (arrival/service rates)
-├── m_m_c - M/M/c queue
-├── m_g_1 - M/G/1 queue
-├── g_g_1 - G/G/1 queue
-├── erlang_b - Erlang B formula
-├── erlang_c - Erlang C formula
-├── little_law - Little's Law (L = λW)
-├── utilization - Server utilization
-├── queue_length - Expected queue length
-├── waiting_time - Expected waiting time
-├── loss_probability - Loss probability
-├── blocking_probability - Blocking probability
-├── heavy_traffic - Heavy traffic approximation
-└── diffusion_approx - Diffusion approximation
++-- m_m_1 - M/M/1 queue (arrival/service rates)
++-- m_m_c - M/M/c queue
++-- m_g_1 - M/G/1 queue
++-- g_g_1 - G/G/1 queue
++-- erlang_b - Erlang B formula
++-- erlang_c - Erlang C formula
++-- little_law - Little's Law (L = ?W)
++-- utilization - Server utilization
++-- queue_length - Expected queue length
++-- waiting_time - Expected waiting time
++-- loss_probability - Loss probability
++-- blocking_probability - Blocking probability
++-- heavy_traffic - Heavy traffic approximation
++-- diffusion_approx - Diffusion approximation
 9. MISSING: Control Theory
 text
 math/control_theory
-├── pid_controller - PID controller
-├── transfer_function - Transfer function
-├── state_space - State-space representation
-├── observability - Observability check
-├── controllability - Controllability check
-├── stability - Stability analysis (Routh-Hurwitz)
-├── nyquist_plot - Nyquist plot
-├── bode_plot - Bode plot
-├── root_locus - Root locus
-├── pole_placement - Pole placement
-├── lqr - Linear Quadratic Regulator
-├── lqg - Linear Quadratic Gaussian
-├── kalman_filter - Kalman filter
-├── h_infinity - H-infinity control
-└── robust_control - Robust control
++-- pid_controller - PID controller
++-- transfer_function - Transfer function
++-- state_space - State-space representation
++-- observability - Observability check
++-- controllability - Controllability check
++-- stability - Stability analysis (Routh-Hurwitz)
++-- nyquist_plot - Nyquist plot
++-- bode_plot - Bode plot
++-- root_locus - Root locus
++-- pole_placement - Pole placement
++-- lqr - Linear Quadratic Regulator
++-- lqg - Linear Quadratic Gaussian
++-- kalman_filter - Kalman filter
++-- h_infinity - H-infinity control
++-- robust_control - Robust control
 10. MISSING: Machine Learning Primitives
 text
 math/machine_learning
-├── activation - Activation functions (sigmoid, tanh, relu, gelu, swish)
-├── loss - Loss functions (MSE, MAE, Huber, CrossEntropy, Hinge)
-├── metrics - Metrics (accuracy, precision, recall, f1, auc)
-├── regularization - L1, L2, ElasticNet
-├── normalization - BatchNorm, LayerNorm, GroupNorm
-├── dropout - Dropout
-├── kernel - Kernel functions (RBF, polynomial, sigmoid)
-├── distance - Distance metrics (Euclidean, Manhattan, Cosine, Minkowski)
-├── similarity - Similarity metrics (Cosine, Jaccard, Dice)
-└── embedding - Embedding operations
++-- activation - Activation functions (sigmoid, tanh, relu, gelu, swish)
++-- loss - Loss functions (MSE, MAE, Huber, CrossEntropy, Hinge)
++-- metrics - Metrics (accuracy, precision, recall, f1, auc)
++-- regularization - L1, L2, ElasticNet
++-- normalization - BatchNorm, LayerNorm, GroupNorm
++-- dropout - Dropout
++-- kernel - Kernel functions (RBF, polynomial, sigmoid)
++-- distance - Distance metrics (Euclidean, Manhattan, Cosine, Minkowski)
++-- similarity - Similarity metrics (Cosine, Jaccard, Dice)
++-- embedding - Embedding operations
 11. MISSING: Topology
 text
 math/topology
-├── open_set - Open set operations
-├── closed_set - Closed set operations
-├── compactness - Compactness check
-├── connectedness - Connectedness check
-├── continuity - Continuity check
-├── homeomorphism - Homeomorphism check
-├── topological_space - Topological space operations
-├── metric_space - Metric space operations
-├── ball - Open/closed ball
-├── interior - Interior of set
-├── closure - Closure of set
-├── boundary - Boundary of set
-├── limit_point - Limit points
-└── neighborhood - Neighborhood operations
++-- open_set - Open set operations
++-- closed_set - Closed set operations
++-- compactness - Compactness check
++-- connectedness - Connectedness check
++-- continuity - Continuity check
++-- homeomorphism - Homeomorphism check
++-- topological_space - Topological space operations
++-- metric_space - Metric space operations
++-- ball - Open/closed ball
++-- interior - Interior of set
++-- closure - Closure of set
++-- boundary - Boundary of set
++-- limit_point - Limit points
++-- neighborhood - Neighborhood operations
 12. MISSING: Number Systems
 text
 math/number_systems
-├── binary - Binary operations
-├── octal - Octal operations
-├── decimal - Decimal operations
-├── hexadecimal - Hex operations
-├── base_n - Base-N conversion
-├── roman - Roman numerals
-├── mayan - Mayan numerals
-├── chinese - Chinese numerals
-├── japanese - Japanese numerals
-├── egyptian - Egyptian fractions
-├── babylonian - Babylonian numerals
-├── greek - Greek numerals
-├── fraction - Fractions (proper, improper, mixed)
-├── continued_fraction - Continued fractions
-├── surds - Surds (√2, √3, etc.)
-├── complex - Complex numbers (already have)
-├── quaternion - Quaternions (already have)
-├── octonion - Octonions
-└── sedenion - Sedenions
++-- binary - Binary operations
++-- octal - Octal operations
++-- decimal - Decimal operations
++-- hexadecimal - Hex operations
++-- base_n - Base-N conversion
++-- roman - Roman numerals
++-- mayan - Mayan numerals
++-- chinese - Chinese numerals
++-- japanese - Japanese numerals
++-- egyptian - Egyptian fractions
++-- babylonian - Babylonian numerals
++-- greek - Greek numerals
++-- fraction - Fractions (proper, improper, mixed)
++-- continued_fraction - Continued fractions
++-- surds - Surds (v2, v3, etc.)
++-- complex - Complex numbers (already have)
++-- quaternion - Quaternions (already have)
++-- octonion - Octonions
++-- sedenion - Sedenions
 13. MISSING: Mathematical Logic
 text
 math/mathematical_logic
-├── propositional - Propositional logic
-├── predicate - Predicate logic
-├── first_order - First-order logic
-├── modal - Modal logic
-├── temporal - Temporal logic
-├── fuzzy - Fuzzy logic
-├── intuitionistic - Intuitionistic logic
-├── linear - Linear logic
-├── relevance - Relevance logic
-├── provability - Provability logic
-├── model_theory - Model theory
-├── proof_theory - Proof theory
-├── set_theory - Axiomatic set theory
-├── type_theory - Type theory
-└── category_theory - Category theory
++-- propositional - Propositional logic
++-- predicate - Predicate logic
++-- first_order - First-order logic
++-- modal - Modal logic
++-- temporal - Temporal logic
++-- fuzzy - Fuzzy logic
++-- intuitionistic - Intuitionistic logic
++-- linear - Linear logic
++-- relevance - Relevance logic
++-- provability - Provability logic
++-- model_theory - Model theory
++-- proof_theory - Proof theory
++-- set_theory - Axiomatic set theory
++-- type_theory - Type theory
++-- category_theory - Category theory
 14. MISSING: Approximation Theory
 text
 math/approximation
-├── interpolation - Interpolation methods
-├── extrapolation - Extrapolation methods
-├── polynomial_approx - Polynomial approximation
-├── rational_approx - Rational approximation
-├── trigonometric_approx - Trigonometric approximation
-├── exponential_approx - Exponential approximation
-├── chebyshev_approx - Chebyshev approximation
-├── least_squares - Least squares approximation
-├── minimax - Minimax approximation
-├── pade_approx - Padé approximation
-├── remez - Remez algorithm
-├── spline_approx - Spline approximation
-└── best_approx - Best approximation
++-- interpolation - Interpolation methods
++-- extrapolation - Extrapolation methods
++-- polynomial_approx - Polynomial approximation
++-- rational_approx - Rational approximation
++-- trigonometric_approx - Trigonometric approximation
++-- exponential_approx - Exponential approximation
++-- chebyshev_approx - Chebyshev approximation
++-- least_squares - Least squares approximation
++-- minimax - Minimax approximation
++-- pade_approx - Pad� approximation
++-- remez - Remez algorithm
++-- spline_approx - Spline approximation
++-- best_approx - Best approximation
 15. MISSING: Fuzzy Mathematics
 text
 math/fuzzy
-├── fuzzy_set - Fuzzy set operations
-├── membership - Membership functions
-├── fuzzy_logic - Fuzzy logic operations
-├── fuzzy_intersection - Fuzzy intersection
-├── fuzzy_union - Fuzzy union
-├── fuzzy_complement - Fuzzy complement
-├── fuzzy_relation - Fuzzy relations
-├── fuzzy_composition - Fuzzy composition
-├── defuzzification - Defuzzification methods
-├── fuzzy_inference - Fuzzy inference
-├── mamdani - Mamdani inference
-├── sugeno - Sugeno inference
-├── fuzzy_control - Fuzzy control
-└── fuzzy_decision - Fuzzy decision making
++-- fuzzy_set - Fuzzy set operations
++-- membership - Membership functions
++-- fuzzy_logic - Fuzzy logic operations
++-- fuzzy_intersection - Fuzzy intersection
++-- fuzzy_union - Fuzzy union
++-- fuzzy_complement - Fuzzy complement
++-- fuzzy_relation - Fuzzy relations
++-- fuzzy_composition - Fuzzy composition
++-- defuzzification - Defuzzification methods
++-- fuzzy_inference - Fuzzy inference
++-- mamdani - Mamdani inference
++-- sugeno - Sugeno inference
++-- fuzzy_control - Fuzzy control
++-- fuzzy_decision - Fuzzy decision making
 16. MISSING: Mathematical Physics
 text
 math/mathematical_physics
-├── hamiltonian - Hamiltonian mechanics
-├── lagrangian - Lagrangian mechanics
-├── quantum_operators - Quantum operators
-├── pauli_matrices - Pauli matrices
-├── gamma_matrices - Dirac gamma matrices
-├── tensor_calculus - Tensor calculus
-├── differential_geometry - Differential geometry
-├── riemannian - Riemannian geometry
-├── symplectic - Symplectic geometry
-├── lie_algebra - Lie algebra
-├── lie_group - Lie groups
-├── representation - Representation theory
-├── greens_function - Green's functions
-├── propagator - Quantum propagators
-└── path_integral - Path integrals
++-- hamiltonian - Hamiltonian mechanics
++-- lagrangian - Lagrangian mechanics
++-- quantum_operators - Quantum operators
++-- pauli_matrices - Pauli matrices
++-- gamma_matrices - Dirac gamma matrices
++-- tensor_calculus - Tensor calculus
++-- differential_geometry - Differential geometry
++-- riemannian - Riemannian geometry
++-- symplectic - Symplectic geometry
++-- lie_algebra - Lie algebra
++-- lie_group - Lie groups
++-- representation - Representation theory
++-- greens_function - Green's functions
++-- propagator - Quantum propagators
++-- path_integral - Path integrals
 17. MISSING: Operations Research
 text
 math/operations_research
-├── linear_programming - LP (already have)
-├── integer_programming - ILP (already have)
-├── dynamic_programming - Dynamic programming
-├── inventory - Inventory management
-├── queuing - Queuing theory (above)
-├── scheduling - Job scheduling
-├── routing - Vehicle routing
-├── assignment - Assignment problem
-├── transportation - Transportation problem
-├── transshipment - Transshipment problem
-├── network_flow - Network flow (already in graph)
-├── facility_location - Facility location
-├── supply_chain - Supply chain optimization
-├── revenue_management - Revenue management
-└── stochastic_optimization - Stochastic optimization
++-- linear_programming - LP (already have)
++-- integer_programming - ILP (already have)
++-- dynamic_programming - Dynamic programming
++-- inventory - Inventory management
++-- queuing - Queuing theory (above)
++-- scheduling - Job scheduling
++-- routing - Vehicle routing
++-- assignment - Assignment problem
++-- transportation - Transportation problem
++-- transshipment - Transshipment problem
++-- network_flow - Network flow (already in graph)
++-- facility_location - Facility location
++-- supply_chain - Supply chain optimization
++-- revenue_management - Revenue management
++-- stochastic_optimization - Stochastic optimization
 18. MISSING: Mathematical Biology
 text
 math/mathematical_biology
-├── population_growth - Population growth models
-├── logistic_growth - Logistic growth
-├── lotka_volterra - Predator-prey model
-├── epidemiological - SIR, SEIR models
-├── chemotherapy - Chemotherapy models
-├── genetics - Genetic algorithms
-├── neural_networks - Neural network math
-├── ecology - Ecological models
-├── epidemiology - Disease spread
-├── immunology - Immune system models
-├── neuroscience - Neuron models
-└── evolution - Evolutionary dynamics
++-- population_growth - Population growth models
++-- logistic_growth - Logistic growth
++-- lotka_volterra - Predator-prey model
++-- epidemiological - SIR, SEIR models
++-- chemotherapy - Chemotherapy models
++-- genetics - Genetic algorithms
++-- neural_networks - Neural network math
++-- ecology - Ecological models
++-- epidemiology - Disease spread
++-- immunology - Immune system models
++-- neuroscience - Neuron models
++-- evolution - Evolutionary dynamics
 19. MISSING: Mathematical Economics
 text
 math/mathematical_economics
-├── utility - Utility functions
-├── production - Production functions (Cobb-Douglas)
-├── demand - Demand functions
-├── supply - Supply functions
-├── equilibrium - Market equilibrium
-├── elasticity - Elasticity calculations
-├── marginal - Marginal analysis
-├── consumer_theory - Consumer theory
-├── producer_theory - Producer theory
-├── general_equilibrium - General equilibrium
-├── game_theory - Game theory (above)
-├── auction_theory - Auction theory
-└── mechanism_design - Mechanism design
++-- utility - Utility functions
++-- production - Production functions (Cobb-Douglas)
++-- demand - Demand functions
++-- supply - Supply functions
++-- equilibrium - Market equilibrium
++-- elasticity - Elasticity calculations
++-- marginal - Marginal analysis
++-- consumer_theory - Consumer theory
++-- producer_theory - Producer theory
++-- general_equilibrium - General equilibrium
++-- game_theory - Game theory (above)
++-- auction_theory - Auction theory
++-- mechanism_design - Mechanism design
 20. MISSING: Geometry (Extended)
 text
 math/geometry_extended
-├── projective_geometry - Projective geometry
-├── hyperbolic_geometry - Hyperbolic geometry
-├── elliptic_geometry - Elliptic geometry
-├── non_euclidean - Non-Euclidean geometry
-├── inversive_geometry - Inversive geometry
-├── incidence_geometry - Incidence geometry
-├── finite_geometry - Finite geometries
-├── algebraic_geometry - Algebraic geometry
-├── differential_geometry - Differential geometry
-├── riemannian_geometry - Riemannian geometry
-├── convex_geometry - Convex geometry
-├── discrete_geometry - Discrete geometry
-├── computational_geometry - Computational geometry
-├── voronoi - Voronoi diagrams
-├── delaunay - Delaunay triangulation
-├── bezier - Bézier curves
-├── b_spline - B-splines
-├── nurbs - NURBS
-├── subdivision - Subdivision surfaces
-└── mesh_processing - Mesh processing
++-- projective_geometry - Projective geometry
++-- hyperbolic_geometry - Hyperbolic geometry
++-- elliptic_geometry - Elliptic geometry
++-- non_euclidean - Non-Euclidean geometry
++-- inversive_geometry - Inversive geometry
++-- incidence_geometry - Incidence geometry
++-- finite_geometry - Finite geometries
++-- algebraic_geometry - Algebraic geometry
++-- differential_geometry - Differential geometry
++-- riemannian_geometry - Riemannian geometry
++-- convex_geometry - Convex geometry
++-- discrete_geometry - Discrete geometry
++-- computational_geometry - Computational geometry
++-- voronoi - Voronoi diagrams
++-- delaunay - Delaunay triangulation
++-- bezier - B�zier curves
++-- b_spline - B-splines
++-- nurbs - NURBS
++-- subdivision - Subdivision surfaces
++-- mesh_processing - Mesh processing
 21. MISSING: Algebra (Extended)
 text
 math/algebra_extended
-├── group_theory - Group theory
-├── ring_theory - Ring theory
-├── field_theory - Field theory
-├── module_theory - Module theory
-├── vector_spaces - Vector spaces (already have)
-├── linear_algebra - Linear algebra (already have)
-├── galois_theory - Galois theory
-├── algebraic_number - Algebraic number theory
-├── algebraic_geometry - Algebraic geometry
-├── commutative_algebra - Commutative algebra
-├── homological_algebra - Homological algebra
-├── category_theory - Category theory
-├── universal_algebra - Universal algebra
-├── representation_theory - Representation theory
-├── lie_algebra - Lie algebra
-└── clifford_algebra - Clifford algebra
-📊 SUMMARY: What We Have vs What We're Missing
++-- group_theory - Group theory
++-- ring_theory - Ring theory
++-- field_theory - Field theory
++-- module_theory - Module theory
++-- vector_spaces - Vector spaces (already have)
++-- linear_algebra - Linear algebra (already have)
++-- galois_theory - Galois theory
++-- algebraic_number - Algebraic number theory
++-- algebraic_geometry - Algebraic geometry
++-- commutative_algebra - Commutative algebra
++-- homological_algebra - Homological algebra
++-- category_theory - Category theory
++-- universal_algebra - Universal algebra
++-- representation_theory - Representation theory
++-- lie_algebra - Lie algebra
++-- clifford_algebra - Clifford algebra
+?? SUMMARY: What We Have vs What We're Missing
 Category	Status	Modules
-Basic Math	✅ Complete	core, constants, arithmetic, roots, exponential, rounding, decompose
-Trigonometry	✅ Complete	trigonometry, inverse_trig, hyperbolic, angular
-Bitwise	✅ Complete	bitwise, rotation, endianness, bitfield
-Number Theory	✅ Complete	number_theory, factorial, modular
-Complex Numbers	✅ Complete	complex
-Linear Algebra	✅ Complete	vector, matrix, quaternion, linear
-Geometry	⚠️ Partial	geometry_2d, geometry_3d (missing extended geometry)
-Statistics	✅ Complete	statistics, probability
-Calculus	✅ Complete	calculus, differential_equations
-Special Functions	✅ Complete	special
-Discrete Math	✅ Complete	combinatorics, graph_theory
-Precision	✅ Complete	precision_integer, precision_float, precision_rational
-Numerical Methods	✅ Complete	numerical
-Signal Processing	✅ Complete	signal
-Optimization	✅ Complete	optimization
-Finance	✅ Complete	finance
+Basic Math	? Complete	core, constants, arithmetic, roots, exponential, rounding, decompose
+Trigonometry	? Complete	trigonometry, inverse_trig, hyperbolic, angular
+Bitwise	? Complete	bitwise, rotation, endianness, bitfield
+Number Theory	? Complete	number_theory, factorial, modular
+Complex Numbers	? Complete	complex
+Linear Algebra	? Complete	vector, matrix, quaternion, linear
+Geometry	?? Partial	geometry_2d, geometry_3d (missing extended geometry)
+Statistics	? Complete	statistics, probability
+Calculus	? Complete	calculus, differential_equations
+Special Functions	? Complete	special
+Discrete Math	? Complete	combinatorics, graph_theory
+Precision	? Complete	precision_integer, precision_float, precision_rational
+Numerical Methods	? Complete	numerical
+Signal Processing	? Complete	signal
+Optimization	? Complete	optimization
+Finance	? Complete	finance
 Missing:
 Category	Priority	Modules Needed
 Set Theory	Medium	math/set_theory
@@ -5231,7 +5231,7 @@ Math Biology	Low	math/mathematical_biology
 Math Economics	Low	math/mathematical_economics
 Extended Geometry	Medium	math/geometry_extended
 Extended Algebra	Low	math/algebra_extended
-🎯 RECOMMENDATION: What to Add Next
+?? RECOMMENDATION: What to Add Next
 Priority 1 (Add Now - Most Used)
 text
 math/information_theory - Entropy, KL divergence, mutual information
@@ -5244,7 +5244,7 @@ text
 math/game_theory - Nash, minimax, Shapley value
 math/queueing - M/M/1, Erlang, Little's Law
 math/operations_research - Dynamic programming, scheduling
-math/geometry_extended - Voronoi, Delaunay, Bézier curves
+math/geometry_extended - Voronoi, Delaunay, B�zier curves
 Priority 3 (Add Later - Niche)
 text
 math/chaos - Fractals, attractors, Lyapunov
@@ -5256,71 +5256,71 @@ math/mathematical_physics - Hamiltonian, quantum operators
 math/mathematical_biology - Population models, SIR
 math/mathematical_economics - Utility, production functions
 math/algebra_extended - Group theory, ring theory
-📝 Updated Module List
+?? Updated Module List
 text
 math/
-├── core/                      ✅ Foundation
-├── constants/                 ✅ Constants
-├── precision/                 ✅ Type precision
-├── interfaces/                ✅ Traits
-├── arithmetic/                ✅ Arithmetic
-├── roots/                     ✅ Roots
-├── exponential/               ✅ Exponential
-├── rounding/                  ✅ Rounding
-├── decompose/                 ✅ Decompose
-├── trigonometry/              ✅ Trig
-├── inverse_trig/              ✅ Inverse trig
-├── hyperbolic/                ✅ Hyperbolic
-├── angular/                   ✅ Angular conversion
-├── trig_constants/            ✅ Trig constants
-├── bitwise/                   ✅ Bitwise
-├── rotation/                  ✅ Rotation
-├── endianness/                ✅ Endianness
-├── bitfield/                  ✅ Bitfield
-├── number_theory/             ✅ Number theory
-├── factorial/                 ✅ Factorial
-├── modular/                   ✅ Modular
-├── complex/                   ✅ Complex
-├── vector/                    ✅ Vector
-├── matrix/                    ✅ Matrix
-├── quaternion/                ✅ Quaternion
-├── linear/                    ✅ Linear algebra
-├── geometry_2d/               ✅ 2D geometry
-├── geometry_3d/               ✅ 3D geometry
-├── statistics/                ✅ Statistics
-├── probability/               ✅ Probability
-├── calculus/                  ✅ Calculus
-├── differential_equations/    ✅ ODE/PDE
-├── special/                   ✅ Special functions
-├── combinatorics/             ✅ Combinatorics
-├── graph_theory/              ✅ Graph theory
-├── precision_integer/         ✅ BigInt
-├── precision_float/           ✅ BigFloat
-├── precision_rational/        ✅ BigRat
-├── numerical/                 ✅ Numerical methods
-├── signal/                    ✅ Signal processing
-├── optimization/              ✅ Optimization
-├── finance/                   ✅ Finance
-│
-├── set_theory/                🔲 Add
-├── logic/                     🔲 Add
-├── information_theory/        🔲 Add
-├── chaos/                     🔲 Add
-├── game_theory/               🔲 Add
-├── queueing/                  🔲 Add
-├── control_theory/            🔲 Add
-├── machine_learning/          🔲 Add
-├── topology/                  🔲 Add
-├── number_systems/            🔲 Add
-├── mathematical_logic/        🔲 Add
-├── approximation/             🔲 Add
-├── fuzzy/                     🔲 Add
-├── mathematical_physics/      🔲 Add
-├── operations_research/       🔲 Add
-├── mathematical_biology/      🔲 Add
-├── mathematical_economics/    🔲 Add
-├── geometry_extended/         🔲 Add
-└── algebra_extended/          🔲 Add
++-- core/                      ? Foundation
++-- constants/                 ? Constants
++-- precision/                 ? Type precision
++-- interfaces/                ? Traits
++-- arithmetic/                ? Arithmetic
++-- roots/                     ? Roots
++-- exponential/               ? Exponential
++-- rounding/                  ? Rounding
++-- decompose/                 ? Decompose
++-- trigonometry/              ? Trig
++-- inverse_trig/              ? Inverse trig
++-- hyperbolic/                ? Hyperbolic
++-- angular/                   ? Angular conversion
++-- trig_constants/            ? Trig constants
++-- bitwise/                   ? Bitwise
++-- rotation/                  ? Rotation
++-- endianness/                ? Endianness
++-- bitfield/                  ? Bitfield
++-- number_theory/             ? Number theory
++-- factorial/                 ? Factorial
++-- modular/                   ? Modular
++-- complex/                   ? Complex
++-- vector/                    ? Vector
++-- matrix/                    ? Matrix
++-- quaternion/                ? Quaternion
++-- linear/                    ? Linear algebra
++-- geometry_2d/               ? 2D geometry
++-- geometry_3d/               ? 3D geometry
++-- statistics/                ? Statistics
++-- probability/               ? Probability
++-- calculus/                  ? Calculus
++-- differential_equations/    ? ODE/PDE
++-- special/                   ? Special functions
++-- combinatorics/             ? Combinatorics
++-- graph_theory/              ? Graph theory
++-- precision_integer/         ? BigInt
++-- precision_float/           ? BigFloat
++-- precision_rational/        ? BigRat
++-- numerical/                 ? Numerical methods
++-- signal/                    ? Signal processing
++-- optimization/              ? Optimization
++-- finance/                   ? Finance
+�
++-- set_theory/                ?? Add
++-- logic/                     ?? Add
++-- information_theory/        ?? Add
++-- chaos/                     ?? Add
++-- game_theory/               ?? Add
++-- queueing/                  ?? Add
++-- control_theory/            ?? Add
++-- machine_learning/          ?? Add
++-- topology/                  ?? Add
++-- number_systems/            ?? Add
++-- mathematical_logic/        ?? Add
++-- approximation/             ?? Add
++-- fuzzy/                     ?? Add
++-- mathematical_physics/      ?? Add
++-- operations_research/       ?? Add
++-- mathematical_biology/      ?? Add
++-- mathematical_economics/    ?? Add
++-- geometry_extended/         ?? Add
++-- algebra_extended/          ?? Add
 Final Answer: Are We Missing Anything?
 Yes, about 19 modules. But the core that 95% of developers need is already covered. The missing modules are for specialized domains:
 
@@ -5334,7 +5334,7 @@ Recommendation: Keep the core as is. Add the missing modules as packages (@xiom/
 
 ---
 
-## 13. WISH-LIST AUDIT (2026-08-11) — HAVE / GAP-stdlib / GAP-package
+## 13. WISH-LIST AUDIT (2026-08-11) � HAVE / GAP-stdlib / GAP-package
 
 > Full pass over the flat wish-list (HASHING / COLLECTIONS / STRING / CONVERSION /
 > NETWORK / FILE FORMATS / OS INTERACTION). Rules: **STDLIB** = zero external deps
@@ -5342,29 +5342,29 @@ Recommendation: Keep the core as is. Add the missing modules as packages (@xiom/
 > **PACKAGE** = needs an external library/protocol peer; dedupe aggressively.
 > Verified against the live tree on 2026-08-11 (64+ modules, ~2,215 pub fns).
 > GAP-stdlib items marked **(P0/P1/P2)** are queued implementation work; P0 items
-> landed in the same session (see §10 status + docs/stdlib_session.md).
+> landed in the same session (see �10 status + docs/stdlib_session.md).
 
-### 13.1 HASHING (16 wish-items → 13 HAVE, 3 GAP-stdlib)
+### 13.1 HASHING (16 wish-items ? 13 HAVE, 3 GAP-stdlib)
 
 | Wish item | Status | Home (module.fn) / note |
 |-----------|--------|--------------------------|
-| hash/fnv (32/64/128) | **HAVE** (128 GAP P2) | `hash.fnv1a32`, `fnv1a64`, `fnv1_64`, `fnv1_32`; fnv1a_128/fnv1_128 → GAP |
+| hash/fnv (32/64/128) | **HAVE** (128 GAP P2) | `hash.fnv1a32`, `fnv1a64`, `fnv1_64`, `fnv1_32`; fnv1a_128/fnv1_128 ? GAP |
 | hash/murmur (2, 3: 32/128) | **HAVE** | `hash.murmur3_32`, `hash.murmur.murmur3_128`, `hash.murmur.murmur2_64` |
 | hash/city (64/128) | **HAVE** | `hash.city.city64`, `city64_with_seed`, `city128` (CityHash v1.1; 256-bit does not exist upstream) |
-| hash/xxhash (32/64/128, XXH3) | **GAP-stdlib P0** | `hash.xxhash32/64`, `hash.xxhash.xxh32/xxh64`; **XXH3-64 + XXH128 missing → landed this session** |
-| hash/siphash (2-4, 1-3) | **GAP-stdlib P0** | `hash.sip_hash` is a misnamed DJB2 wrapper — **real SipHash-2-4/1-3 landed this session** (hash/siphash.xi) |
+| hash/xxhash (32/64/128, XXH3) | **GAP-stdlib P0** | `hash.xxhash32/64`, `hash.xxhash.xxh32/xxh64`; **XXH3-64 + XXH128 missing ? landed this session** |
+| hash/siphash (2-4, 1-3) | **GAP-stdlib P0** | `hash.sip_hash` is a misnamed DJB2 wrapper � **real SipHash-2-4/1-3 landed this session** (hash/siphash.xi) |
 | hash/highway (64/128/256) | **GAP-stdlib P1** | pure XIOM port; large |
 | hash/spooky (128) | **GAP-stdlib P1** | pure XIOM port; large |
 | hash/t1ha | **GAP-stdlib P2** | fast non-crypto; pure |
 | hash/metro (64/128) | **GAP-stdlib P2** | pure |
 | hash/farm | **GAP-stdlib P2** | city-derived; pure |
 | hash/jenkins (lookup3) | **HAVE** | `hash.jenkins.jenkins_lookup3` |
-| hash/superfast | **GAP-stdlib P0** | trivial Paul Hsieh — **landed this session** (hash/superfast.xi) |
-| hash/crc (32/64 hw-accel) | **HAVE** | `hash.crc32_ieee`, `hash.crc.crc32c`, `crc64_ecma`, `crc64_we`, `crc16_ccitt`; hw-accel = §7 asm track |
+| hash/superfast | **GAP-stdlib P0** | trivial Paul Hsieh � **landed this session** (hash/superfast.xi) |
+| hash/crc (32/64 hw-accel) | **HAVE** | `hash.crc32_ieee`, `hash.crc.crc32c`, `crc64_ecma`, `crc64_we`, `crc16_ccitt`; hw-accel = �7 asm track |
 | hash/adler (32) | **GAP-stdlib P0** | **landed this session** (hash/crc.xi) |
 | hash/checksum (BSD/SysV/Internet) | **HAVE** | `hash.crc.checksum_bsd/sysv/internet` |
 
-### 13.2 COLLECTIONS (56 wish-items → 30 HAVE, 26 GAP-stdlib, 0 PACKAGE)
+### 13.2 COLLECTIONS (56 wish-items ? 30 HAVE, 26 GAP-stdlib, 0 PACKAGE)
 
 | Wish item | Status | Home / note |
 |-----------|--------|-------------|
@@ -5406,11 +5406,11 @@ Recommendation: Keep the core as is. Add the missing modules as packages (@xiom/
 | blocking queue | **GAP-stdlib P1** | `sync.Semaphore`/`Condvar` + WorkQueue |
 | mpmc / mpsc / spmc / spsc | **HAVE-partial** | mpsc cooperative: `async.Channel`; **spsc lock-free: landed this session**; mpmc: needs Mutex mutation API (documented limitation, see module comment) |
 
-### 13.3 STRING (72 wish-items → 47 HAVE, 25 GAP-stdlib, 0 PACKAGE)
+### 13.3 STRING (72 wish-items ? 47 HAVE, 25 GAP-stdlib, 0 PACKAGE)
 
 | Wish item | Status | Home / note |
 |-----------|--------|-------------|
-| compare / search / replace / trim / split / join / case / strip / repeat / pad / slice | **HAVE** | `string.*` + `cmp.*` (dedupe: compare→cmp, search→index_of, strip→trim) |
+| compare / search / replace / trim / split / join / case / strip / repeat / pad / slice | **HAVE** | `string.*` + `cmp.*` (dedupe: compare?cmp, search?index_of, strip?trim) |
 | escape / unescape | **HAVE** | `string.str_escape/unescape` (URL variants in `encoding.url_encode/percent_encode`) |
 | format (sprintf-style) | **GAP-stdlib P0** | `fmt.format1..9` positional; **printf-style `fmt.sprintf` landed this session** |
 | printf / scanf | **GAP-stdlib P0** | **landed this session**: `fmt.sprintf1..3`, `fmt.sscanf` + typed wrappers |
@@ -5426,12 +5426,12 @@ Recommendation: Keep the core as is. Add the missing modules as packages (@xiom/
 | abbreviate / obfuscate | **GAP-stdlib P0** | **landed this session** (`string.str_abbreviate/obfuscate`) |
 | Unicode (normalize/collate/casefold/titlecase/segment/wordbreak/ea_width/emoji/script/block/category/bidi/mirror/nfc/nfd/nfkc/nfkd/maps) | **GAP-stdlib P1** | pure but table-heavy (utf8 module is the foundation); ICU-class collation = **PACKAGE** (xiom-icu placeholder) |
 
-### 13.4 CONVERSION (82 wish-items → 55 HAVE, 22 GAP-stdlib, 5 GAP-package)
+### 13.4 CONVERSION (82 wish-items ? 55 HAVE, 22 GAP-stdlib, 5 GAP-package)
 
 | Wish item | Status | Home / note |
 |-----------|--------|-------------|
 | int/float/toint/tofloat/tostring/parse/itos/ftos/atoi/itoa | **HAVE** | `convert.*`, `num.parse_int(_radix)/parse_float`, `string.str_to_int/float` |
-| fromstr/tryfrom/into/asref/asmut/from (traits) | **HAVE** (N/A) | language traits — dedupe to `convert.*` + `core` helpers |
+| fromstr/tryfrom/into/asref/asmut/from (traits) | **HAVE** (N/A) | language traits � dedupe to `convert.*` + `core` helpers |
 | bytes / endian / network order / swap | **HAVE** | `bits.pack_*/unpack_*`, `num.to_be/to_le/from_be/from_le`, `bits.byte_swap*` |
 | saturating / wrapping / overflow / checked / exact / lossy / roundtrip | **HAVE** | `num.saturating_*/wrapping_*/checked_*`; roundtrip = to_str/parse pairs |
 | cstring / wstring / utf8 / utf16 / utf32 | **HAVE** (utf16/32 GAP P2) | `ffi.Str.from_cstring`, `mem`, `utf8.*`, `encoding.utf8_*` |
@@ -5452,7 +5452,7 @@ Recommendation: Keep the core as is. Add the missing modules as packages (@xiom/
 | uuid / mac / ip / url / uri | **HAVE** | `rand.uuid_v4`, `net.is_valid_ipv4`, `net.parse_url/url_parse` |
 | email / phone / creditcard / iban / swift validation | **GAP-stdlib P1** | pure validation (email/iban useful); phone/creditcard P2 |
 
-### 13.5 NETWORK (307 wish-items → ~25 HAVE, ~10 GAP-stdlib, ~272 GAP-package)
+### 13.5 NETWORK (307 wish-items ? ~25 HAVE, ~10 GAP-stdlib, ~272 GAP-package)
 
 | Wish item | Status | Home / note |
 |-----------|--------|-------------|
@@ -5469,7 +5469,7 @@ Recommendation: Keep the core as is. Add the missing modules as packages (@xiom/
 | unix sockets / pipe | **HAVE-partial** | `os.create_pipe/Pipe`; AF_UNIX GAP-stdlib P2 |
 | everything else (tls/ssl/ssh/ftp/smtp/pop3/imap/irc/xmpp/mqtt/amqp/kafka/redis/mongo/postgres/mysql/sqlite/grpc/graphql/soap/thrift/zeromq/dbus/ldap/kerberos/ntp/dhcp/dns-sd/cloud SDKs/VPN/kernel networking/hardware protocols) | **GAP-package** | external protocol peers / C libs; placeholders exist (xiom-ftp, xiom-smtp, xiom-mqtt, xiom-tls, xiom-ldap, ...) |
 
-### 13.6 FILE FORMATS (~1,700 wish-items → ~20 HAVE, ~25 GAP-stdlib, ~30 GAP-package, ~1,600 noise/dedupe)
+### 13.6 FILE FORMATS (~1,700 wish-items ? ~20 HAVE, ~25 GAP-stdlib, ~30 GAP-package, ~1,600 noise/dedupe)
 
 | Wish item | Status | Home / note |
 |-----------|--------|-------------|
@@ -5483,12 +5483,12 @@ Recommendation: Keep the core as is. Add the missing modules as packages (@xiom/
 | xml / yaml / toml / csv / tsv | **GAP-package** | xiom-xml/yaml/toml/csv placeholders |
 | diagrams (flowchart/uml/mermaid/gantt/...) | **GAP-package** | rendering/DSL tools |
 | geo formats (geojson/kml/gpx/wkt/wkb/geohash/utm/...) | **GAP-package** | xiom-geo placeholders (mostly) |
-| statistics/regression/metrics/ML formatting (~900 items) | **GAP-stdlib P2** | dedupe → `stats.*` + `format.number.*`; most are number-formatting variants |
+| statistics/regression/metrics/ML formatting (~900 items) | **GAP-stdlib P2** | dedupe ? `stats.*` + `format.number.*`; most are number-formatting variants |
 | typography (fonts/kerning/hyphenation/bidi/CJK) | **GAP-package** | ICU-class |
 | audio/video metadata (id3/mp4/exif/...) | **GAP-package** | binary container parsers |
 | everything else | **noise** | dedupe into the rows above |
 
-### 13.7 OS INTERACTION (~310 wish-items → ~60 HAVE, ~40 GAP-stdlib, ~210 GAP-package)
+### 13.7 OS INTERACTION (~310 wish-items ? ~60 HAVE, ~40 GAP-stdlib, ~210 GAP-package)
 
 | Wish item | Status | Home / note |
 |-----------|--------|-------------|
@@ -5509,33 +5509,34 @@ Recommendation: Keep the core as is. Add the missing modules as packages (@xiom/
 
 ### 13.8 Dedup map (aggressive, per session rules)
 
-`str/compare`→`cmp` · `str/search`→`string.index_of` · `str/strip`→`str_trim` · `conv/base64`→`encoding` ·
-`conv/base16`→`encoding.hex_*` · `collect/vector`→`collections.Vec` · `collect/stack/queue/ring`→`collections.Stack/Queue`+`collect.queue` ·
-`hash/crc`→`hash.crc32_ieee`+`hash.crc` · `str/regex`→`regex` · `conv/uuid`→`rand.uuid_v4` ·
-`conv/endian`→`bits.pack/unpack`+`num.to_be/to_le` · `conv/swap`→`bits.byte_swap*` · `conv/saturating|wrapping|checked`→`num.*` ·
-`conv/strftime`→`time.strftime` (landed) · `format/indent|wrap|align`→`fmt.*` · `format/hex`→`format.dump` ·
-`os/memcpy|memcmp`→`mem` · `os/str*`→`string` · `collect/radix`→`collect/trie` · `collect/sparse|dense`→`collections.Set` ·
-`format/*stat*`→`stats` · `net/jsonrpc`→`net.jsonrpc_*` · `str/metaphone|soundex|jaro|ngram|cosine`→`text.similarity`
+`str/compare`?`cmp` � `str/search`?`string.index_of` � `str/strip`?`str_trim` � `conv/base64`?`encoding` �
+`conv/base16`?`encoding.hex_*` � `collect/vector`?`collections.Vec` � `collect/stack/queue/ring`?`collections.Stack/Queue`+`collect.queue` �
+`hash/crc`?`hash.crc32_ieee`+`hash.crc` � `str/regex`?`regex` � `conv/uuid`?`rand.uuid_v4` �
+`conv/endian`?`bits.pack/unpack`+`num.to_be/to_le` � `conv/swap`?`bits.byte_swap*` � `conv/saturating|wrapping|checked`?`num.*` �
+`conv/strftime`?`time.strftime` (landed) � `format/indent|wrap|align`?`fmt.*` � `format/hex`?`format.dump` �
+`os/memcpy|memcmp`?`mem` � `os/str*`?`string` � `collect/radix`?`collect/trie` � `collect/sparse|dense`?`collections.Set` �
+`format/*stat*`?`stats` � `net/jsonrpc`?`net.jsonrpc_*` � `str/metaphone|soundex|jaro|ngram|cosine`?`text.similarity`
 
-### 13.9 Generics policy (audited 2026-08-11 — math family, num, bits, geom, complex)
+### 13.9 Generics policy (audited 2026-08-11 � math family, num, bits, geom, complex)
 
 Verified against the live tree. The policy is **specialize-by-default, generic-where-semantic**:
 
 | Area | Pattern | Verdict |
 |------|---------|---------|
-| `math` flat (52 fns: sqrt/trig/exp/log/…) | Float64-specialized | **KEEP** — native f64 ABI, no boxing, libm FFI (BUG 11 fixed) |
-| `math.core` (folder, 11 fns) | generic `[T: Num]` / `[T: Real]` tower (lerp/average/sum/product/abs/clamp/min2/max2/negate/twice) | **KEEP** — the one place width-generic math lives |
-| `num` (243 fns) | mixed: generic `min_value/max_value/epsilon[T: Bounded]`, `saturating_*/wrapping_*/checked_*[T: Bounded+Ord+Add…]` + Float64/Int specializations (f64_floor, parse_int…) | **KEEP** — generics exactly where widths matter; specializations where ABI/perf does |
-| `geom` (186 fns) | Vec2/3/4, Quat, Matrix, transforms — Float64-specialized | **KEEP** — graphics math is f64 by contract; the §5.1 “generic geom” idea was dropped in practice and that is correct |
-| `complex` (20 fns) | `Complex = { re: Float64; im: Float64; }` — NOT `Complex[T]` (the §5.1 plan) | **KEEP** — f64 specialization is the shipped reality; no callers need Complex[Float32] |
-| `bits` (28 fns) | Int-specialized | **KEEP** — bit ops on i64 only |
-| `stats` (23 fns) | Int-specialized (Vec[Int]) | **KEEP** — note: the compiler's Vec[Float64] element reads are broken (BUG 12), so float stats must use scaled-Int or fixed slots until fixed |
-| `bigint`/`bigfloat` | arbitrary precision, concrete types | **KEEP** — no generics needed |
+| `math` flat (52 fns: sqrt/trig/exp/log/�) | Float64-specialized | **KEEP** � native f64 ABI, no boxing, libm FFI (BUG 11 fixed) |
+| `math.tower` (folder, 11 fns; renamed from math.core 2026-08-11) | generic `[T: Num]` / `[T: Real]` tower (lerp/average/sum/product/abs/clamp/min2/max2/negate/twice) | **KEEP** � the one place width-generic math lives |
+| `num` (243 fns) | mixed: generic `min_value/max_value/epsilon[T: Bounded]`, `saturating_*/wrapping_*/checked_*[T: Bounded+Ord+Add�]` + Float64/Int specializations (f64_floor, parse_int�) | **KEEP** � generics exactly where widths matter; specializations where ABI/perf does |
+| `geom` (186 fns) | Vec2/3/4, Quat, Matrix, transforms � Float64-specialized | **KEEP** � graphics math is f64 by contract; the �5.1 �generic geom� idea was dropped in practice and that is correct |
+| `complex` (20 fns) | `Complex = { re: Float64; im: Float64; }` � NOT `Complex[T]` (the �5.1 plan) | **KEEP** � f64 specialization is the shipped reality; no callers need Complex[Float32] |
+| `bits` (28 fns) | Int-specialized | **KEEP** � bit ops on i64 only |
+| `stats` (23 fns) | Int-specialized (Vec[Int]) | **KEEP** � note: the compiler's Vec[Float64] element reads are broken (BUG 12), so float stats must use scaled-Int or fixed slots until fixed |
+| `bigint`/`bigfloat` | arbitrary precision, concrete types | **KEEP** � no generics needed |
 
 Rationale (documented for future contributors): (1) native scalar ABI (f64/i64) is
-the compiler's fastest and most reliable path — generic containers of floats are
+the compiler's fastest and most reliable path � generic containers of floats are
 currently broken (BUG 12); (2) generic code is mono-instantiated per module, so
 generics pay off only when multiple widths are actually instantiated (num's
 checked/saturating/wrapping families are the canonical example); (3) new math
 functions must be added Float64-specialized to `math` unless they are
-width-agnostic numeric helpers, which go to `math.core` with `[T: Num]`.
+width-agnostic numeric helpers, which go to `math.tower` with `[T: Num]`.
+

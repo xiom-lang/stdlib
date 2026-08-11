@@ -238,7 +238,7 @@ PACKAGE per §2.
    compiler session updates the path list).
 3. Follow STDLIB_GENERICS.md per category (generic vs concrete decided BEFORE
    writing; flagged stubs wait for the named compiler BUG fixes).
-4. Use qualified calls (`math.core.sqrt`) in user code; same-name pairs (38) are
+4. Use qualified calls (`math.tower.sqrt`) in user code; same-name pairs (38) are
    disambiguated by module path (see STDLIB_AUDIT.md §3 for designated homes).
 5. Compiler bugs block list (implementation queue must check first):
    BUG 12 (float containers), BUG 13 (fp128), BUG 14/15 (UInt128/sext, inline),
@@ -295,3 +295,4 @@ PACKAGE per §2.
   commit.
 - The session doc constraint: only `stdlib/xiom/**`, `examples/**`,
   `docs/COMPILER_BUGS.md`, `docs/AI_CONTEXT.md` §8 are ours to commit.
+
