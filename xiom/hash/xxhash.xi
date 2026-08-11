@@ -289,11 +289,10 @@ fn _rotl(x: UInt64, c: Int) -> UInt64 {
 }
 
 // 32-bit rotate (for values held in a UInt64 — the 64-bit rotate does not
-// wrap the top bits back into the low positions).
-fn _rotl32(x: UInt64, c: Int) -> UInt64 {
-  var m = (1 << (32 - c)) - 1;
-  return ((x << c) | ((x >> (32 - c)) & m)) & 0xFFFFFFFF;
-}
+// wrap the top bits back into the low positions). NOTE: the shared _rotl32
+// at the top of this file (xxh32 section) serves this role; a duplicate
+// definition was removed (STDLIB_AUDIT.md anomaly 2).
+
 
 fn _swap64(x: UInt64) -> UInt64 {
   return ((x & 0xFF) << 56) | ((x & 0xFF00) << 40) | ((x & 0xFF0000) << 24)

@@ -203,6 +203,47 @@ PACKAGE per §2.
 
 ## 6. Agent workflow rules (user-mandated, apply to all bulk work)
 
+## 6b. Sanity audit + implementation-phase entry (2026-08-11, evening)
+
+**Verdict: READY for the implementation phase.** Three new docs:
+
+- **docs/STDLIB_AUDIT.md** — full doc→tree mapping. 39 categories / 440 files / 440
+  modules / 93 REAL / 346 STUB / 1 aggregate; 2,298 real pub fns; duplicate module
+  decls 0; fn conflicts within a prefix 0; same-name sublib pairs across categories
+  38 (homes designated); MISSING 0. Implementation checklist per sublib in §6.
+- **docs/STDLIB_GENERICS.md** — 8 policy rules (R1 generic containers; R2 concrete
+  native ABI for math/geom/crypto/os/net/hash/time; R3 no trait-driven generic
+  arithmetic — §12; R4 no float containers until BUG 12; R5 no Vec[Str] element
+  `==` — BUG 17; R6 two-var inline bodies — BUG 15; R7 UInt128 halves — BUG 14;
+  R8 trait-style conversions declare-only). Per-category mode table (7 GENERIC /
+  23 CONCRETE / 9 MIXED) + the stub list blocked by compiler bugs (stats float
+  containers, simd f32x8/gather, string/format + convert/into generics, reflect
+  intrinsics).
+- **packages/README.md** — the PACKAGE ecosystem: 366 packages (365 on-disk dirs
+  in packages/, 70 with real .xi = IMPLEMENTED, 295 placeholder = STUB, 1 planned),
+  categorized (crypto/security 20, testing/qa 13, protocols 43, databases 22, file
+  formats 23, graphics/media 38, ml/cloud 47, geospatial 8, game 16, compress 2,
+  misc 133), plus the 15 pure-XIOM packages flagged "stdlib or package by owner".
+
+**Anomalies fixed during the audit:**
+- hash/xxhash.xi duplicate `_rotl32` (L37 vs L293) — removed the duplicate.
+- stats/stats.xi `module xiom.bench.stats` → `module xiom.stats` (nothing imported
+  the old name; aggregate now consistent with xiom.stats.* sublibs).
+
+**Phase-2 implementation rules (production-grade):**
+1. Order: L0→L4 (see §5b) — string+math first; follow each stub's `// Depends on:`.
+2. Per sublib: replace `// fn` stubs with real `pub fn` + contracts (`requires`/
+   `ensures`) + doc comments + smoke in examples/stdlib_smoke; keep module name,
+   keep the aggregate use-line; re-run the gates (stdlib_tests/api_freeze once the
+   compiler session updates the path list).
+3. Follow STDLIB_GENERICS.md per category (generic vs concrete decided BEFORE
+   writing; flagged stubs wait for the named compiler BUG fixes).
+4. Use qualified calls (`math.core.sqrt`) in user code; same-name pairs (38) are
+   disambiguated by module path (see STDLIB_AUDIT.md §3 for designated homes).
+5. Compiler bugs block list (implementation queue must check first):
+   BUG 12 (float containers), BUG 13 (fp128), BUG 14/15 (UInt128/sext, inline),
+   BUG 16/18 (module-combination crashes), BUG 17 (Vec[Str] element ==).
+
 1. Agents work **in bulk**; commit **ONLY** `stdlib/xiom/**` + the smoke files
    they write to verify their sublibs (`examples/stdlib_smoke/`). Docs updates
    to AI_CONTEXT/STDLIB_EXTENSION per batch.
