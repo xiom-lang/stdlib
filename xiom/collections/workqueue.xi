@@ -8,12 +8,53 @@ module xiom.collect.workqueue
 
 // ============================================================================
 // FIFO queue of Int jobs consumed by worker threads.
-// NOTE: current implementation lives in collect.queue WorkQueue - move the
-// functions here during the implementation phase. TODO(compiler): implement.
+// Pure-XIOM data structure (no OS threads): a bounded-by-memory FIFO backed by
+// a flat Vec plus a head offset. push appends, pop reads from `head`; popped
+// slots are left in place (no compaction) so every operation is O(1).
 // ============================================================================
 
-// fn workqueue_new() - create a new empty work queue. TODO(compiler): implement.
-// fn workqueue_push(q: &mut WorkQueue, value: Int) - enqueue a job. TODO(compiler): implement.
-// fn workqueue_pop(q: &mut WorkQueue) -> Option[Int] - dequeue a job, None when empty. TODO(compiler): implement.
-// fn workqueue_len(q: &WorkQueue) -> Int - number of pending jobs. TODO(compiler): implement.
-// fn workqueue_is_empty(q: &WorkQueue) -> Bool - check whether no jobs are pending. TODO(compiler): implement.
+pub type WorkQueue = {
+  items: Vec[Int];
+  head: Int;
+}
+
+/// Create a new empty work queue.
+/// Returns: an empty WorkQueue with no pending jobs.
+/// Complexity: O(1).
+pub fn workqueue_new() -> WorkQueue {
+  return WorkQueue{ items: Vec[Int].new(); head: 0; };
+}
+
+/// Append a job handle to the back of the queue.
+/// Params: q - the queue; value - the Int job handle to enqueue.
+/// Complexity: O(1) amortized.
+pub fn workqueue_push(q: &mut WorkQueue, value: Int) {
+  q.items.push(value);
+}
+
+/// Dequeue the front job handle. None when the queue is empty.
+/// Params: q - the queue.
+/// Returns: the oldest pending job, or None if no jobs are pending.
+/// Complexity: O(1).
+pub fn workqueue_pop(q: &mut WorkQueue) -> Option[Int] {
+  if q.head >= q.items.len() { return None; }
+  var val = q.items[q.head];
+  q.head = q.head + 1;
+  return Some(val);
+}
+
+/// Number of pending jobs.
+/// Params: q - the queue.
+/// Returns: the count of jobs not yet popped.
+/// Complexity: O(1).
+pub fn workqueue_len(q: &WorkQueue) -> Int {
+  return q.items.len() - q.head;
+}
+
+/// True if no jobs are pending.
+/// Params: q - the queue.
+/// Returns: true when the queue holds no pending jobs.
+/// Complexity: O(1).
+pub fn workqueue_is_empty(q: &WorkQueue) -> Bool {
+  return q.head >= q.items.len();
+}

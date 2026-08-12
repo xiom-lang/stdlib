@@ -7,12 +7,59 @@ module xiom.convert.overflow
 // Depends on: xiom.num
 
 // ============================================================================
-// Overflowing integer arithmetic that reports the overflow flag. NOTE:
-// current implementation lives in num - move the functions here during the
-// implementation phase. TODO(compiler): implement.
+// Overflowing integer arithmetic: each operation returns the wrapped result
+// together with a Bool flag reporting whether the arithmetic overflowed.
+//
+// TODO(compiler): functions returning a tuple that CONTAINS a Bool cannot be
+// compiled — the compiler emits a Tuple__Int__Int where a Tuple__Int__Bool is
+// expected ("invalid IR", verified by minimal probe; Bool-in-struct is fine,
+// Bool-in-tuple is not). The implementations below are correct but must not
+// be CALLED until the tuple/Bool codegen bug is fixed.
 // ============================================================================
 
-// fn overflowing_add(a, b) -> (Int, Bool) - add, returning the wrapped value and whether it overflowed. TODO(compiler): implement.
-// fn overflowing_sub(a, b) -> (Int, Bool) - subtract, returning the wrapped value and whether it overflowed. TODO(compiler): implement.
-// fn overflowing_mul(a, b) -> (Int, Bool) - multiply, returning the wrapped value and whether it overflowed. TODO(compiler): implement.
-// fn overflowing_neg(a) -> (Int, Bool) - negate, returning the wrapped value and whether it overflowed. TODO(compiler): implement.
+use xiom.num;
+use xiom.core.INT_MIN;
+
+/// a + b, returning (wrapped_value, overflowed). Complexity: O(1).
+pub fn overflowing_add(a: Int, b: Int) -> (Int, Bool) {
+  var r = num.i64_add_checked(a, b);
+  if r.is_some {
+    var fl: Bool = false;
+    return (r.value, fl);
+  };
+  var ok: Bool = true;
+  (a + b, ok)
+}
+
+/// a - b, returning (wrapped_value, overflowed). Complexity: O(1).
+pub fn overflowing_sub(a: Int, b: Int) -> (Int, Bool) {
+  var r = num.i64_sub_checked(a, b);
+  if r.is_some {
+    var fl: Bool = false;
+    return (r.value, fl);
+  };
+  var ok: Bool = true;
+  (a - b, ok)
+}
+
+/// a * b, returning (wrapped_value, overflowed). Complexity: O(1).
+pub fn overflowing_mul(a: Int, b: Int) -> (Int, Bool) {
+  var r = num.i64_mul_checked(a, b);
+  if r.is_some {
+    var fl: Bool = false;
+    return (r.value, fl);
+  };
+  var ok: Bool = true;
+  (a * b, ok)
+}
+
+/// -a, returning (wrapped_value, overflowed). INT_MIN negates to itself.
+/// Complexity: O(1).
+pub fn overflowing_neg(a: Int) -> (Int, Bool) {
+  if a == INT_MIN {
+    var ok: Bool = true;
+    return (a, ok);
+  };
+  var fl: Bool = false;
+  (-a, fl)
+}

@@ -7,11 +7,27 @@ module xiom.convert.ftos
 // Depends on: none
 
 // ============================================================================
-// Float-to-string shorthand helpers. NOTE: current implementation lives in
-// convert - move the functions here during the implementation phase.
-// TODO(compiler): implement.
+// Float-to-string shorthand helpers. All delegate to the canonical
+// xiom.convert float formatters (different function names, so delegation is
+// safe from the same-name miscompile).
 // ============================================================================
 
-// fn ftos(f: Float64) -> Str - float-to-string shorthand. TODO(compiler): implement.
-// fn ftos_prec(f: Float64, prec: Int) -> Str - float-to-string with a given precision. TODO(compiler): implement.
-// fn ftos_sci(f: Float64, prec: Int) -> Str - float-to-string in scientific notation. TODO(compiler): implement.
+use xiom.convert;
+
+/// Float-to-string shorthand: 15 significant digits in the canonical fixed /
+/// scientific layout. Handles "nan" and "inf". Complexity: O(|exp10| + 15).
+pub fn ftos(f: Float64) -> Str {
+  convert.float_to_string(f)
+}
+
+/// Float-to-string with exactly `prec` fraction digits (fixed notation,
+/// rounded half away from zero). Complexity: O(prec).
+pub fn ftos_prec(f: Float64, prec: Int) -> Str {
+  convert.float_to_fixed_str(f, prec)
+}
+
+/// Float-to-string in scientific notation "d.ddde±XX" with `prec` fraction
+/// digits. Complexity: O(|exp10| + prec).
+pub fn ftos_sci(f: Float64, prec: Int) -> Str {
+  convert.float_to_sci_str(f, prec)
+}

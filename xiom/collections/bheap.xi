@@ -7,13 +7,48 @@ module xiom.collect.bheap
 // Depends on: none
 
 // ============================================================================
-// Classic binary heap of Int elements.
-// NOTE: current implementation lives in collect.heap PHeap - move the
-// functions here during the implementation phase. TODO(compiler): implement.
+// Classic binary heap of Int elements. Thin adapter over the production
+// pairing heap in collect.heap: PHeap satisfies the binary-heap contract
+// (push, pop-min, peek, len) with the same signatures, so every function here
+// delegates to it. See collect.heap for the flat-arena layout.
 // ============================================================================
 
-// fn bheap_new() - create a new empty binary heap. TODO(compiler): implement.
-// fn bheap_push(h: &mut PHeap, value: Int) - insert an element. TODO(compiler): implement.
-// fn bheap_pop(h: &mut PHeap) -> Option[Int] - remove and return the top element. TODO(compiler): implement.
-// fn bheap_peek(h: &PHeap) -> Option[Int] - peek at the top element. TODO(compiler): implement.
-// fn bheap_len(h: &PHeap) -> Int - number of elements. TODO(compiler): implement.
+use xiom.collect.heap;
+
+/// Create a new empty binary heap.
+/// Returns: an empty PHeap-backed heap.
+/// Complexity: O(1).
+pub fn bheap_new() -> PHeap {
+  return pheap_new();
+}
+
+/// Insert an element.
+/// Params: h - the heap; value - Int element to insert.
+/// Complexity: O(log n) amortized.
+pub fn bheap_push(h: &mut PHeap, value: Int) {
+  pheap_insert(h, value);
+}
+
+/// Remove and return the top (minimum) element. None if empty.
+/// Params: h - the heap.
+/// Returns: the minimum element, or None when the heap is empty.
+/// Complexity: O(log n) amortized.
+pub fn bheap_pop(h: &mut PHeap) -> Option[Int] {
+  return pheap_extract_min(h);
+}
+
+/// Peek at the top (minimum) element. None if empty.
+/// Params: h - the heap.
+/// Returns: the minimum element without removing it, or None when empty.
+/// Complexity: O(1).
+pub fn bheap_peek(h: &PHeap) -> Option[Int] {
+  return pheap_find_min(h);
+}
+
+/// Number of elements.
+/// Params: h - the heap.
+/// Returns: the number of elements currently stored.
+/// Complexity: O(n) (reachable-node walk).
+pub fn bheap_len(h: &PHeap) -> Int {
+  return pheap_size(h);
+}

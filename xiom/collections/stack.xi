@@ -7,15 +7,53 @@ module xiom.collect.stack
 // Depends on: none
 
 // ============================================================================
-// LIFO stack of Int elements.
-// NOTE: current implementation lives in collections.Stack - move the functions
-// here during the implementation phase. TODO(compiler): implement.
+// LIFO stack of Int elements backed by the built-in Vec[Int]. All operations
+// are O(1); `stack_pop`/`stack_peek` return None on an empty stack.
 // ============================================================================
 
-// fn stack_new() - create a new empty stack. TODO(compiler): implement.
-// fn stack_push(s: &mut Stack, value: Int) - push a value onto the top. TODO(compiler): implement.
-// fn stack_pop(s: &mut Stack) -> Option[Int] - remove and return the top value. TODO(compiler): implement.
-// fn stack_peek(s: &Stack) -> Option[Int] - peek at the top value. TODO(compiler): implement.
-// fn stack_len(s: &Stack) -> Int - number of elements. TODO(compiler): implement.
-// fn stack_is_empty(s: &Stack) -> Bool - check whether the stack has no elements. TODO(compiler): implement.
-// fn stack_clear(s: &mut Stack) - remove all elements. TODO(compiler): implement.
+pub type Stack = {
+  items: Vec[Int];
+}
+
+/// Create a new empty stack. O(1).
+pub fn stack_new() -> Stack {
+  return Stack{ items: Vec[Int].new(); };
+}
+
+/// Push `value` onto the top of the stack. O(1).
+pub fn stack_push(s: &mut Stack, value: Int) {
+  s.items.push(value);
+}
+
+/// Remove and return the top value. None if the stack is empty. O(1).
+pub fn stack_pop(s: &mut Stack) -> Option[Int] {
+  if s.items.len() == 0 { return None; }
+  var o = s.items.pop();
+  match o {
+    Some(x) => { return Some(x); },
+    None => { return None; },
+  }
+}
+
+/// Return the top value without removing it. None if empty. O(1).
+pub fn stack_peek(s: &Stack) -> Option[Int] {
+  if s.items.len() == 0 { return None; }
+  var last = s.items.len() - 1;
+  return Some(s.items[last]);
+}
+
+/// Number of elements on the stack. O(1).
+pub fn stack_len(s: &Stack) -> Int {
+  var len = s.items.len();
+  return len;
+}
+
+/// True if the stack holds no elements. O(1).
+pub fn stack_is_empty(s: &Stack) -> Bool {
+  return s.items.len() == 0;
+}
+
+/// Remove all elements. O(1) (capacity is retained).
+pub fn stack_clear(s: &mut Stack) {
+  s.items.clear();
+}

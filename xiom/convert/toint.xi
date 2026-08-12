@@ -8,11 +8,43 @@ module xiom.convert.toint
 
 // ============================================================================
 // Float-to-int conversion strategies (truncating, saturating, checked).
-// NOTE: current implementation lives in convert - move the functions here
-// during the implementation phase. TODO(compiler): implement.
+// `to_int` shadows the core intrinsic within this module only; the saturating
+// variant delegates to the canonical xiom.num.f64_trunc_to_int (different
+// function name, so delegation is safe from the same-name miscompile).
 // ============================================================================
 
-// fn to_int(n: Float64) -> Int - truncate a float to an integer. TODO(compiler): implement.
-// fn to_int_saturating(f: Float64) -> Int - truncate a float, clamping to the integer bounds. TODO(compiler): implement.
-// fn to_int_checked(f: Float64) -> Option[Int] - truncate a float only if it fits in an integer. TODO(compiler): implement.
-// fn to_int_from_char(c: Char) -> Int - return a character's code point as an integer. TODO(compiler): implement.
+use xiom.num;
+
+/// Truncates a float toward zero. Behavior for NaN and out-of-range values is
+/// undefined (use the checked/saturating variants for those inputs).
+/// Complexity: O(1).
+pub fn to_int(n: Float64) -> Int {
+  n as Int
+}
+
+/// Truncates a float toward zero, clamping to INT_MAX/INT_MIN on overflow.
+/// NaN yields 0. Complexity: O(1).
+pub fn to_int_saturating(f: Float64) -> Int {
+  num.f64_trunc_to_int(f)
+}
+
+/// Truncates a float toward zero only when the result fits an Int. Returns
+/// None for NaN or values outside [INT_MIN, INT_MAX). Complexity: O(1).
+pub fn to_int_checked(f: Float64) -> Option[Int] {
+  if f != f {
+    return None;
+  };
+  if f >= 9223372036854775808.0 {
+    return None;
+  };
+  if f < -9223372036854775808.0 {
+    return None;
+  };
+  Some(f as Int)
+}
+
+/// Returns a character's code point as an integer.
+/// Complexity: O(1).
+pub fn to_int_from_char(c: Char) -> Int {
+  c as Int
+}
