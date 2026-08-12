@@ -341,3 +341,32 @@ hash/xxhash.xi duplicate `_rotl32` removed; stats.xi renamed to `module xiom.sta
 - The session doc constraint: only `stdlib/xiom/**`, `examples/**`,
   `docs/COMPILER_BUGS.md`, `docs/AI_CONTEXT.md` Â§8 are ours to commit.
 
+
+---
+
+## 9. Night-session continuation (2026-08-11 23:00 ? 00:15) — waves 1-2 landed
+
+### Commits
+| Commit | Content |
+|--------|---------|
+| `799c24f5` | **math/constants** — 20 extended constants (PI/E/TAU/PHI/SQRT_*/LN_*/LOG*_E/EULER_GAMMA/CATALAN/APERY/epsilons/mins/maxs) as literal `pub const` + `infinity()`/`neg_infinity()` constructors; `nan()` added after BUG 19 fix (commit `224b0ed6`). BUG 19 logged (NaN ops garbage/trap) ? compiler session FIXED it (`88f924ea`/`9c3a2f9e`: fcmp one?une + Str+Float64 concat). |
+| `224b0ed6` | **WAVE 1 — foundations (40 modules, ~400 fns, 25 smokes):** num/ (fraction, base, float, precision_integer/float/rational), math/ (primitives, arithmetic, rounding, decompose, angular, trigonometric_constants, precision, roots, exponential, hyperbolic — NaN sentinels upgraded to IEEE NaN post-BUG-19), string/ (case, uppercase, lowercase, titlecase, trim, strip, split, join, pad, repeat, reverse, replace, slice, compare, search, chunk, combine, interleave, truncate, indent, align, wrap, block, escape). |
+| `15dc20dc` | **WAVE 2 — string+math (46 modules, ~500 fns, 35 smokes):** string metrics (hamming/levenshtein/damerau/jaro/editdistance/cosine/jaccard/ngram/ngram_similarity/lcp/lcs/lcsuffix — 14 wrappers over misc+similarity), string unicode (ea_width/casefold/normalize/nfkc/bidi/category/script/emoji/linebreak/sentencebreak/wordbreak/unicode + soundex/metaphone wrappers), math (factorial, number_theory w/ Miller-Rabin+pollard-rho, modular w/ Tonelli-Shanks+Cipolla+CRT, combinatorics, set_theory, logic, series, integral, calculus, differential, trig, inverse_trig, algebra, algebra_extended, vectors, matrices, transcendental, numerical, approximation, topology). |
+
+### Compiler bugs logged this session (all in docs/COMPILER_BUGS.md)
+- **BUG 19 — FIXED by compiler session** (fcmp one?une; Str+Float64 concat inttoptr; `@xiom_double_to_string`). stdlib NaN unblocked: `nan() = 0.0/0.0`, `is_nan = x != x`, domain errors return real NaN.
+- **BUG 20 (OPEN, REGRESSION `1d4cd2e8`)** — unconditional `-mavx512f/bw/dq/vl` clang flags crash ANY vectorized float program on non-AVX-512 CPUs (this machine: AMD Zen 2, 0xC000001D, zero output). Blocks float-smoke runtime verification. Fix: CPUID-gate the flags or `-march=native`. Agent-discovered dodge: recursive helpers (=180 frames) defeat the vectorizer. **Compiler session should land this next.**
+- **BUG 21 (OPEN)** — catalog fn returning Str created inside an unsafe block corrupts (len 0xFFFFFFFF); repeat.xi restructured to the proven shape.
+- **BUG 22 (OPEN, 15 findings)** — && no short-circuit; unary-minus on match vars; cross-module 3-tuple `.1/.2`; match Option payload garbage; requires/ensures runtime-trap; string.str_reverse invalid IR; str_slice?index_of crash; xiom_char_at byte-return; multibyte char literal mangling; byte_at sign-extend; qualified-call-in-arithmetic miscompile; Vec[Char] 1-byte; catalog `xiom.*.fn` stub resolution; unsafe-block statement loss.
+- **BUG 23 (OPEN, 12 findings)** — cross-module returned Vec[Float64] reads garbage; nested Vec[Vec[T]] garbage; fn-params named add/mul collide with operators; parser rejects `else if`; flaky undefined-symbol stub compile; BOM breaks registration; Bool tuples misregister; catalog `&Vec` mutation no-op; unary-minus/subtraction on catalog floats trap; bare sqrt import T001; recursion dodge.
+
+### Verification state (current compiler = fresh build incl. BUG 19 fix + SIMD flags)
+- **29/29 runnable smokes exit 0** (all string + int-heavy math) on the current compiler.
+- **Float-heavy smokes (wave-1 num/math group, vectors/matrices/transcendental/numerical/approximation, cosine_jaccard, constants_ext): compile clean, runtime BUG-20-trapped** — verified exit 0 at agent time with the pre-SIMD-flag compiler; re-verify after BUG 20 lands.
+- stdlib_tests **40/40** after each wave. api_freeze still blocked by the stale path list (compiler session owns `stdlib_api_freeze_tests.rs` — also add the ~60 new smokes to the exec harness list).
+- **TODO(compiler): NOT IMPLEMENTABLE** marks (frozen signatures compile, bodies documented): trig sinh/cosh/tanh/atanh, calculus integrate_romberg/integrate_gauss/limit/gradient/jacobian/hessian/laplacian/curl/divergence/partial_derivative, differential richardson/gradient/jacobian/partial_derivative, series maclaurin_series/convergence_rate, integral integrate_adaptive, set_theory set_partition, logic simplify/normal_forms/satisfiability/tautology_check/quantifiers — all blocked by BUG 20 + BUG 23 #1/#2, re-implementable after those land.
+
+### Remaining work (wave 3+)
+- **collections/** 50 stubs (rbtree, btree, hamt, kdtree, octree, quadtree, interval, segment, sparse, dense, unionfind, mpmc/mpsc/spmc, tinylfu, threadpool, blockingqueue, dag, radix, treemap/treeset, hashset, linkedhash, list, vector, stack, ring, deque, priority, avl, btreeplus, bheap, fheap, bloom, bitmap, persistent, immutable, concurrent, mapch, hasharray, stringmap, workqueue, range, lfu, lru, arc, pairingheap, spatial, intmap, map, ...)
+- **convert/** 60 stubs (base16/32/58/62/64/85, percent, bytes, endian, checked/saturating/wrapping, time/uuid/ip/url/json shims, trait-style declare-only...)
+- **hash/** P1 (highway, spooky, t1ha, metro, farm, fnv, adler, checksum), **encoding/** (hex/base64/base32/percent/ascii85/punycode/idna), **format/** (ansi/markup/numbering/relative/table/terminal/text/textual/units), **bits/** (bitarray/bitfield/bitwise/endianness/popcount/rotation), **iter/sort/search/array** generic stubs, **crypto/** (aead/cipher/curves/hash/kdf/keyx/mac/rng_crypto/sign), **compress/** 8 codecs, **net/** 15, **os/** 11, **sync/async/thread/time/error/debug/log/misc/reflect/regex/serialize/simd/stats/test** remainder.
