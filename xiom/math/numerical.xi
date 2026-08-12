@@ -662,8 +662,9 @@ pub fn interp_spline(xs: &Vec[Float64], ys: &Vec[Float64], x: Float64) -> Float6
 pub fn interp_cubic(xs: &Vec[Float64], ys: &Vec[Float64], x: Float64) -> Float64 {
   var n = xs.len();
   if n < 2 || ys.len() != n { return 0.0 / 0.0; }
-  var coeffs = _natural_cubic(&xs, &ys);
-  return _eval_spline(&xs, &ys, &coeffs, x);
+  // BUG 24 fix: xs/ys are ALREADY &Vec[Float64] — `&xs` was a double-address.
+  var coeffs = _natural_cubic(xs, ys);
+  return _eval_spline(xs, ys, &coeffs, x);
 }
 
 // Hermite cubic interpolation at x using derivative values dys. Returns
@@ -732,7 +733,8 @@ pub fn spline_cubic(xs: &Vec[Float64], ys: &Vec[Float64]) -> Vec[Float64] {
   var out = Vec[Float64].new();
   var n = xs.len();
   if n < 2 || ys.len() != n { return out; }
-  var coeffs = _natural_cubic(&xs, &ys);
+  // BUG 24 fix: xs/ys are ALREADY &Vec[Float64] — `&xs` was a double-address.
+  var coeffs = _natural_cubic(xs, ys);
   var i = 0;
   while i < coeffs.len() {
     out.push(coeffs[i]);
@@ -1184,6 +1186,7 @@ pub fn optimize_simplex(f: fn(&Vec[Float64]) -> Float64, x0: &Vec[Float64], tol:
     iter = iter + 1;
   }
   return simplex[0];
+}
 }
 
 // Minimize f by Powell's conjugate direction method from x0 (cyclic
