@@ -523,6 +523,9 @@ int64_t xiom_trampoline_call(xiom_block_fn fn, uint8_t* ctx) {
             xiom_trampoline_returned = saved_returned;
             return 0;
         }
+        if (getenv("XIOM_TRACE_FAULT")) {
+            fprintf(stderr, "[trampoline] fault win=0x%lX attempt=%d\n", (unsigned long)fault_win, attempt);
+        }
 
         /* Map the fault code. */
         if (fault_win == EXCEPTION_ACCESS_VIOLATION) fault_code = 1;       /* SIGSEGV */
