@@ -4916,10 +4916,19 @@ void xiom_aesni_encrypt_block(const unsigned char* plaintext,
 void xiom_aesni_decrypt_block(const unsigned char* ciphertext,
                                const unsigned char* round_keys, int rounds,
                                unsigned char* plaintext) {
+    // The XIOM-side `_aes_key_expansion` produces the FORWARD key schedule
+    // (round key i at offset i*16), which `xiom_aesni_encrypt_block` consumes
+    // directly. Hardware decryption (`aesdec`) instead requires the EQUIVALENT
+    // INVERSE cipher schedule: the middle round keys must be transformed with
+    // aesimc; the first and last round keys are used as-is. Without the
+    // aesimc step, decrypting our own AES-NI ciphertext yielded garbage
+    // (roundtrip "invalid padding"). Verified: AES-128 roundtrip R=0.
     __m128i state = _mm_loadu_si128((__m128i*)ciphertext);
     state = _mm_xor_si128(state, _mm_loadu_si128((__m128i*)(round_keys + rounds * 16)));
     for (int i = rounds - 1; i >= 1; i--) {
-        state = _mm_aesdec_si128(state, _mm_loadu_si128((__m128i*)(round_keys + i * 16)));
+        __m128i rk = _mm_loadu_si128((__m128i*)(round_keys + i * 16));
+        rk = _mm_aesimc_si128(rk);
+        state = _mm_aesdec_si128(state, rk);
     }
     state = _mm_aesdeclast_si128(state, _mm_loadu_si128((__m128i*)round_keys));
     _mm_storeu_si128((__m128i*)plaintext, state);
