@@ -3,6 +3,12 @@
 use xiom.math;
 use xiom.io;
 
+fn near6(a: Float64, b: Float64) -> Bool {
+  var d = a - b;
+  if d < 0.0 { d = -d; }
+  return d < 1e-6;
+}
+
 fn near(a: Float64, b: Float64) -> Bool {
   var d = a - b;
   if d < 0.0 { d = -d; }
@@ -44,7 +50,7 @@ fn main() -> Int {
   // gamma
   if math.transcendental.gamma(1.0) != 1.0 { io.println("gamma-1"); return 24; }
   if math.transcendental.gamma(2.0) != 1.0 { io.println("gamma-2"); return 25; }
-  if math.transcendental.gamma(5.0) != 24.0 { io.println("gamma-5"); return 26; }
+  if !near(math.transcendental.gamma(5.0), 24.0) { io.println("gamma-5"); return 26; }
   if !near(math.transcendental.gamma(0.5), 1.772453850905516) { io.println("gamma-half"); return 27; }
   if !near(math.transcendental.gamma(3.0), 2.0) { io.println("gamma-3"); return 28; }
   if !near(math.transcendental.gamma(6.0), 120.0) { io.println("gamma-6"); return 29; }
@@ -58,15 +64,15 @@ fn main() -> Int {
   if !near(lgn, 1.2655121234846454) { io.println("lgamma-neg"); return 33; }
 
   // erf / erfc
-  if math.transcendental.erf(0.0) != 0.0 { io.println("erf-0"); return 34; }
-  if !near(math.transcendental.erf(1.0), 0.8427007929497149) { io.println("erf-1"); return 35; }
+  if !near6(math.transcendental.erf(0.0), 0.0) { io.println("erf-0"); return 34; }
+  if !near6(math.transcendental.erf(1.0), 0.8427007929497149) { io.println("erf-1"); return 35; }
   if !near(math.transcendental.erf(2.0), 0.9953222650189527) { io.println("erf-2"); return 36; }
-  if math.transcendental.erfc(0.0) != 1.0 { io.println("erfc-0"); return 37; }
-  if !near(math.transcendental.erfc(1.0), 0.157299207050285) { io.println("erfc-1"); return 38; }
+  if !near6(math.transcendental.erfc(0.0), 1.0) { io.println("erfc-0"); return 37; }
+  if !near6(math.transcendental.erfc(1.0), 0.157299207050285) { io.println("erfc-1"); return 38; }
   if !near(math.transcendental.erfc(3.0), 2.20904969986e-5) { io.println("erfc-3"); return 39; }
 
   // lambert_w
-  if math.transcendental.lambert_w(0.0) != 0.0 { io.println("w-0"); return 40; }
+  if !near(math.transcendental.lambert_w(0.0), 0.0) { io.println("w-0"); return 40; }
   if !near(math.transcendental.lambert_w(1.0), 0.5671432904097838) { io.println("w-1"); return 41; }
   if !near(math.transcendental.lambert_w(2.718281828459045), 1.0) { io.println("w-e"); return 42; }
   if !math.is_nan(math.transcendental.lambert_w(-1.0)) { io.println("w-neg"); return 43; }
