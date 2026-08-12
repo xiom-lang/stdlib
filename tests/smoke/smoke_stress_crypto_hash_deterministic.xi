@@ -1,4 +1,4 @@
-module smoke_stress_crypto_hash_deterministic
+﻿module smoke_stress_crypto_hash_deterministic
   use xiom.crypto;
 
   fn main() -> Int {
@@ -15,4 +15,3 @@ module smoke_stress_crypto_hash_deterministic
     }
     return 1;
   }
-}

@@ -1,4 +1,4 @@
-module smoke_stress_crypto_constant_time_compare
+﻿module smoke_stress_crypto_constant_time_compare
   use xiom.crypto;
 
   fn main() -> Int {
@@ -27,4 +27,3 @@ module smoke_stress_crypto_constant_time_compare
     }
     return 1;
   }
-}

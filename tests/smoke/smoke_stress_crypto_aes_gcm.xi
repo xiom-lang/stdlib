@@ -21,8 +21,10 @@ module smoke_stress_crypto_aes_gcm
 
     var enc = crypto.aes_encrypt_gcm(&key, &nonce, &plaintext, &aad);
     match enc {
-      Ok((ciphertext, tag)) => {
-        var dec = crypto.aes_decrypt_gcm(&key, &nonce, &ciphertext, &tag, &aad);
+      Ok(pair) => {
+        // tuple payload via .0/.1 field access (tuple PATTERNS bind Int —
+        // documented checker simplification; field access is the supported form)
+        var dec = crypto.aes_decrypt_gcm(&key, &nonce, &pair.0, &pair.1, &aad);
         match dec {
           Ok(recovered) => {
             if recovered.len() == plaintext.len() {

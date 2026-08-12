@@ -1,4 +1,4 @@
-module smoke_stress_crypto_blake3_large
+﻿module smoke_stress_crypto_blake3_large
   use xiom.crypto;
 
   fn main() -> Int {
@@ -34,19 +34,10 @@ module smoke_stress_crypto_blake3_large
       var hash2 = crypto.blake3(&data);
       var idx = 0;
       while idx < hash.len() {
-        var b1 = hash.get(idx);
-        var b2 = hash2.get(idx);
-        match b1 {
-          Some(v1) => {
-            match b2 {
-              Some(v2) => {
-                if v1 != v2 { return 2; }
-              }
-              None => { return 3; }
-            }
-          }
-          None => { return 3; }
-        }
+        // element access via indexing (Vec.get is not a language builtin)
+        var v1 = hash[idx];
+        var v2 = hash2[idx];
+        if v1 != v2 { return 2; }
         idx = idx + 1;
       }
       return 0;

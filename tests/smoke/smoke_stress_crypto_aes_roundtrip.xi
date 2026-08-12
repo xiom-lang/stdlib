@@ -1,4 +1,4 @@
-module smoke_stress_crypto_aes_roundtrip
+﻿module smoke_stress_crypto_aes_roundtrip
   use xiom.crypto;
 
   fn main() -> Int {
@@ -34,4 +34,3 @@ module smoke_stress_crypto_aes_roundtrip
       Err(_) => { return 1; }
     }
   }
-}

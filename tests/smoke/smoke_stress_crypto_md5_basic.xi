@@ -1,4 +1,4 @@
-module smoke_stress_crypto_md5_basic
+﻿module smoke_stress_crypto_md5_basic
   use xiom.crypto;
 
   fn main() -> Int {
@@ -16,4 +16,3 @@ module smoke_stress_crypto_md5_basic
     }
     return 1;
   }
-}
