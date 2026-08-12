@@ -1441,8 +1441,8 @@ return Ok(result);
 }
 
 pub fn aes_encrypt(key: &Vec[UInt8], plaintext: &Vec[UInt8]) -> Result[Vec[UInt8], Str]
-  requires: key.len() == 16 || key.len() == 24 || key.len() == 32  // AES-128/192/256
-  requires: plaintext.len() > 0
+  // No requires clauses: the body validates and returns Err gracefully
+  // (documented stdlib rule — contracts trap on violation, BUG 22 #5).
 {
   if key.len() != 16 && key.len() != 24 && key.len() != 32 {
     return Err("invalid key length: must be 16, 24, or 32 bytes");
@@ -1496,9 +1496,8 @@ pub fn aes_encrypt(key: &Vec[UInt8], plaintext: &Vec[UInt8]) -> Result[Vec[UInt8
 }
 
 pub fn aes_decrypt(key: &Vec[UInt8], ciphertext: &Vec[UInt8]) -> Result<Vec[UInt8], Str>
-  requires: key.len() == 16 || key.len() == 24 || key.len() == 32
-  requires: ciphertext.len() > 0
-  requires: ciphertext.len() % 16 == 0  // AES block size
+  // No requires clauses: the body validates and returns Err gracefully
+  // (documented stdlib rule — contracts trap on violation, BUG 22 #5).
 {
   if key.len() != 16 && key.len() != 24 && key.len() != 32 {
     return Err("invalid key length: must be 16, 24, or 32 bytes");
