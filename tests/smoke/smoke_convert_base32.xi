@@ -4,6 +4,7 @@
 module smoke_convert_base32
 use xiom.convert.base32;
 use xiom.io;
+use xiom.convert;
 use xiom.string;
 
 fn build(s: Str) -> Vec[UInt8] {
@@ -28,7 +29,7 @@ fn check_rt(s: Str, expected: Str) -> Bool {
   match dec {
     Ok(out) => {
       if out.len() != bytes.len() {
-        io.println(string.str_concat("base32_decode len ", to_string(out.len())));
+        io.println(string.str_concat("base32_decode len ", convert.int_to_string(out.len())));
         return false;
       };
       var i = 0;

@@ -10,6 +10,7 @@ use xiom.convert.lossy;
 use xiom.convert.unchecked;
 use xiom.convert.roundtrip;
 use xiom.io;
+use xiom.convert;
 use xiom.string;
 
 fn main() -> Int {
@@ -100,7 +101,7 @@ fn main() -> Int {
   var er = exact.exact_ratio(4, 6);
   match er {
     Some(t) => {
-      if t.0 != 2 || t.1 != 3 { io.println(string.str_concat("exact_ratio ", string.str_concat(to_string(t.0), string.str_concat("/", to_string(t.1))))); return 40; }
+      if t.0 != 2 || t.1 != 3 { io.println(string.str_concat("exact_ratio ", string.str_concat(convert.int_to_string(t.0), string.str_concat("/", convert.int_to_string(t.1))))); return 40; }
     },
     None => { io.println("exact_ratio none"); return 41; },
   }

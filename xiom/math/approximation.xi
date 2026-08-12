@@ -106,8 +106,8 @@ pub fn rational_approx(x: &Vec[Float64], y: &Vec[Float64], m: Int, n: Int) -> Ve
       var s = 0.0;
       var t = 0;
       while t < k {
-        var bi = _basis(x[t], i, m);
-        var bj = _basis(x[t], j, m);
+        var bi = _basis(x[t], y[t], i, m);
+        var bj = _basis(x[t], y[t], j, m);
         s = s + bi * bj;
         t = t + 1;
       }
@@ -118,7 +118,7 @@ pub fn rational_approx(x: &Vec[Float64], y: &Vec[Float64], m: Int, n: Int) -> Ve
     var b = 0.0;
     var t2 = 0;
     while t2 < k {
-      b = b + _basis(x[t2], i, m) * y[t2];
+      b = b + _basis(x[t2], y[t2], i, m) * y[t2];
       t2 = t2 + 1;
     }
     rhs.push(b);
@@ -233,6 +233,13 @@ pub fn chebyshev_approx(f: fn(Float64) -> Float64, a: Float64, b: Float64, degre
 // Normal-equation least-squares solution of A x = b: solves (A^T A) x =
 // A^T b by Gaussian elimination. Returns the empty vector for empty or
 // mismatched input (documented). Complexity: O(m * n^2 + n^3).
+// Least-squares solution of A x = b via the normal equations (A^T A x = A^T b).
+// Returns the empty vector for empty/mismatched input, a singular normal
+// matrix, or when the input matrix is read through a `&Vec[Vec[Float64]]`
+// parameter (TODO(compiler): BUG 26 #1 — by-ref nested float Vec element
+// reads return garbage data pointers; len fields are correct). The matrix
+// case is unimplementable until the compiler fix lands; the early-return
+// paths are verified.
 pub fn least_squares(a: &Vec[Vec[Float64]], b: &Vec[Float64]) -> Vec[Float64] {
   var empty = Vec[Float64].new();
   var m = a.len();
@@ -482,6 +489,10 @@ pub fn spline_approx(x: &Vec[Float64], y: &Vec[Float64]) -> Vec[Vec[Float64]] {
 // [a, b]: samples f and the basis on a 64-point uniform grid and solves the
 // normal equations. Returns the coefficient vector; the empty vector for an
 // empty basis (documented). Complexity: O(64 * m^2 + m^3).
+// Least-squares fit of f over [a, b] in the given function basis, via the
+// normal equations sampled at 64 points. Returns the empty vector for an
+// empty basis or when the basis is read through a `&Vec[fn]` parameter
+// (TODO(compiler): BUG 26 #2 — Vec[fn] element reads return garbage).
 pub fn best_approx(f: fn(Float64) -> Float64, basis: &Vec[fn(Float64) -> Float64], a: Float64, b: Float64) -> Vec[Float64] {
   var empty = Vec[Float64].new();
   var m = basis.len();
@@ -535,9 +546,15 @@ fn _vander(x: Float64, k: Int) -> Float64 {
 
 // Basis column for the rational least-squares problem: columns 0..m are the
 // numerator powers x^col; columns m+1..m+n are -y * x^(col - m - 1).
-fn _basis(x: Float64, col: Int, m: Int) -> Float64 {
+// Basis function of the LINEARIZED rational fit: minimize
+// sum_i (P(x_i) - y_i * Q(x_i))^2 over the m+1 numerator and n denominator
+// coefficients. Column j <= m is the monomial x^j; column j > m is
+// -y_i * x^(j-m-1) (the denominator monomials scaled by the SAMPLE y —
+// scaling by x instead would duplicate the numerator basis and make the
+// normal matrix singular for m >= n-1).
+fn _basis(x: Float64, y: Float64, col: Int, m: Int) -> Float64 {
   if col <= m { return _vander(x, col); }
-  return -x * _vander(x, col - m - 1);
+  return -y * _vander(x, col - m - 1);
 }
 
 // Linear extrapolation through (x0, y0), (x1, y1) at x.

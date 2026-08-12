@@ -20,12 +20,12 @@ fn main() -> Int {
   if n0 != "a" { io.println("split_n[0]"); return 6; }
   if n1 != "b,c" { io.println("split_n[1]"); return 7; }
 
-  let (ob, oa) = split.str_split_once("a,b,c", ",");
-  if ob != "a" { io.println("split_once before"); return 8; }
-  if oa != "b,c" { io.println("split_once after"); return 9; }
-  let (nb, na) = split.str_split_once("abc", ",");
-  if nb != "abc" { io.println("split_once no delim before"); return 10; }
-  if na != "" { io.println("split_once no delim after"); return 11; }
+  var so1 = split.str_split_once("a,b,c", ",");
+  if so1.0 != "a" { io.println("split_once before"); return 8; }
+  if so1.1 != "b,c" { io.println("split_once after"); return 9; }
+  var so2 = split.str_split_once("abc", ",");
+  if so2.0 != "abc" { io.println("split_once no delim before"); return 10; }
+  if so2.1 != "" { io.println("split_once no delim after"); return 11; }
 
   var ln = split.str_lines("a\nb\nc");
   if ln.len() != 3 { io.println("lines len"); return 12; }

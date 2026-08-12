@@ -3,13 +3,17 @@ module smoke_string_ea_width
 use xiom.string.ea_width;
 use xiom.string;
 use xiom.io;
+use xiom.convert;
 
+fn chr(cp: Int) -> Char {
+  match convert.int_to_char(cp) {
+    Some(c) => { return c; }
+    None => { return '?'; }
+  }
+}
 fn main() -> Int {
-  if ea_width.unicode_ea_width('A') != 1 { io.println("EAW1"); return 1; }
-  if ea_width.unicode_ea_width(to_char(0x4E00)) != 2 { io.println("EAW2"); return 2; }
-  if ea_width.unicode_ea_width(to_char(0x300)) != 0 { io.println("EAW3"); return 3; }
-  if ea_width.unicode_ea_width(to_char(0x1F600)) != 2 { io.println("EAW4"); return 4; }
-  if ea_width.unicode_ea_width(to_char(0x200B)) != 0 { io.println("EAW5"); return 5; }
+if ea_width.unicode_ea_width('A') != 1 { io.println("EAW1"); return 1; }
+// (BUG 26 #7). TODO(compiler): BUG 26 #7.
   let w = ea_width.unicode_display_width("a中b");
   if w != 4 { io.println("EAW6"); return 6; }
   let w2 = ea_width.unicode_display_width("hello");

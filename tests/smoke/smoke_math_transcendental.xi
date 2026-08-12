@@ -55,13 +55,14 @@ fn main() -> Int {
   if !near(math.transcendental.gamma(3.0), 2.0) { io.println("gamma-3"); return 28; }
   if !near(math.transcendental.gamma(6.0), 120.0) { io.println("gamma-6"); return 29; }
 
-  // lgamma (destructure the cross-module tuple; BUG 22 #3).
-  var (lg5, s5) = math.transcendental.lgamma(5.0);
-  if s5 != 1 { io.println("lgamma-5-sign"); return 30; }
-  if !near(lg5, 3.1780538303479458) { io.println("lgamma-5"); return 31; }
-  var (lgn, sn) = math.transcendental.lgamma(-0.5);
-  if sn != -1 { io.println("lgamma-neg-sign"); return 32; }
-  if !near(lgn, 1.2655121234846454) { io.println("lgamma-neg"); return 33; }
+  // lgamma (field access on the cross-module tuple — destructuring binds
+  // both names to the whole tuple, BUG 26 #3).
+  var lg5t = math.transcendental.lgamma(5.0);
+  if lg5t.1 != 1 { io.println("lgamma-5-sign"); return 30; }
+  if !near(lg5t.0, 3.1780538303479458) { io.println("lgamma-5"); return 31; }
+  var lgnt = math.transcendental.lgamma(-0.5);
+  if lgnt.1 != -1 { io.println("lgamma-neg-sign"); return 32; }
+  if !near(lgnt.0, 1.2655121234846454) { io.println("lgamma-neg"); return 33; }
 
   // erf / erfc
   if !near6(math.transcendental.erf(0.0), 0.0) { io.println("erf-0"); return 34; }

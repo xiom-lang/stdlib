@@ -1458,7 +1458,9 @@ pub fn aes_encrypt(key: &Vec[UInt8], plaintext: &Vec[UInt8]) -> Result[Vec[UInt8
     var bi = 0;
     while bi < blocks {
       // 6D.4: Use AES-NI hardware path via FFI
-      var ct_buf: [16]UInt8 = [0; 16];
+      // (fixed-array zero-init form; `[0; 16]` repeat literal is not in the
+      // language spec — declared arrays zero-initialize)
+      var ct_buf: [16]UInt8;
       unsafe {
         xiom_aesni_encrypt_block(
           &padded[bi * 16] as *UInt8,
