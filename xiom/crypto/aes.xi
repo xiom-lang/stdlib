@@ -712,22 +712,26 @@ fn aes_inv_mix_columns(state: AesState) -> AesState {
 }
 
 fn aes_add_round_key(state: AesState, round_key: &Vec[Int], offset: Int) -> AesState {
+  // Column-major key schedule: state[r][c] ^= w[c][r] = rk[offset + 4c + r].
+  // sXY (X=row, Y=col) → rk[offset + 4Y + X]. The previous mapping used
+  // 4X + Y (row-major), which made encrypt∘decrypt self-consistent but
+  // NON-FIPS (verified against FIPS-197 Appendix B). Fixed 2026-08-13.
   return AesState{
-    s00: xiom.math.bit_xor(state.s00, round_key[offset]),
-    s01: xiom.math.bit_xor(state.s01, round_key[offset + 1]),
-    s02: xiom.math.bit_xor(state.s02, round_key[offset + 2]),
-    s03: xiom.math.bit_xor(state.s03, round_key[offset + 3]),
-    s10: xiom.math.bit_xor(state.s10, round_key[offset + 4]),
+    s00: xiom.math.bit_xor(state.s00, round_key[offset + 0]),
+    s01: xiom.math.bit_xor(state.s01, round_key[offset + 4]),
+    s02: xiom.math.bit_xor(state.s02, round_key[offset + 8]),
+    s03: xiom.math.bit_xor(state.s03, round_key[offset + 12]),
+    s10: xiom.math.bit_xor(state.s10, round_key[offset + 1]),
     s11: xiom.math.bit_xor(state.s11, round_key[offset + 5]),
-    s12: xiom.math.bit_xor(state.s12, round_key[offset + 6]),
-    s13: xiom.math.bit_xor(state.s13, round_key[offset + 7]),
-    s20: xiom.math.bit_xor(state.s20, round_key[offset + 8]),
-    s21: xiom.math.bit_xor(state.s21, round_key[offset + 9]),
+    s12: xiom.math.bit_xor(state.s12, round_key[offset + 9]),
+    s13: xiom.math.bit_xor(state.s13, round_key[offset + 13]),
+    s20: xiom.math.bit_xor(state.s20, round_key[offset + 2]),
+    s21: xiom.math.bit_xor(state.s21, round_key[offset + 6]),
     s22: xiom.math.bit_xor(state.s22, round_key[offset + 10]),
-    s23: xiom.math.bit_xor(state.s23, round_key[offset + 11]),
-    s30: xiom.math.bit_xor(state.s30, round_key[offset + 12]),
-    s31: xiom.math.bit_xor(state.s31, round_key[offset + 13]),
-    s32: xiom.math.bit_xor(state.s32, round_key[offset + 14]),
+    s23: xiom.math.bit_xor(state.s23, round_key[offset + 14]),
+    s30: xiom.math.bit_xor(state.s30, round_key[offset + 3]),
+    s31: xiom.math.bit_xor(state.s31, round_key[offset + 7]),
+    s32: xiom.math.bit_xor(state.s32, round_key[offset + 11]),
     s33: xiom.math.bit_xor(state.s33, round_key[offset + 15]),
   };
 }
