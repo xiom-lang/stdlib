@@ -848,6 +848,19 @@ int xiom_str_ends_with(const char* str, const char* suffix) {
     return strcmp(str + str_len - suffix_len, suffix) == 0 ? 1 : 0;
 }
 
+// BUG 22 #5 fix (2026-08-12): clean contract-violation termination. The
+// codegen's contract checks print the violation message then call this —
+// message goes to stderr (never lost to buffering), all streams flush, and
+// the process exits with code 1. Previously the codegen emitted llvm.trap()
+// (ud2 → 0xC000001D), which crashed with buffered output lost and, inside
+// unsafe blocks, was silently swallowed by the VEH as a recoverable
+// "illegal instruction" fault.
+void xiom_panic(const char* msg) {
+    if (msg) { fputs(msg, stderr); fputc('\n', stderr); }
+    fflush(NULL);
+    exit(1);
+}
+
 // Convert a signed 64-bit integer to a freshly-allocated decimal string.
 // Used to lower `to_string(Int)` / `Int.to_str()` â€” the pure-XIOM version relies
 // on fixed-size stack arrays which the codegen does not yet materialize.
