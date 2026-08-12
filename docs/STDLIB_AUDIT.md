@@ -413,3 +413,57 @@ For each of the **346 STUB sublibs** (one row per file, grouped by category per 
 9. **Re-run gates** after each sublib: freeze gate, import-alias gate, full suite
    (per doc S11 gates) - no phase requires coordinated package republish.
 
+
+---
+
+## 7. Implementation-phase status (2026-08-11 night, wave 1) — 40 modules flipped STUB -> REAL
+
+> Maintained by the stdlib session; the §3 tables above are the 2026-08-11
+> read-only snapshot. Modules flipped to REAL since then (commit `224b0ed6`,
+> all with smokes in examples/stdlib_smoke/, exit 0):
+
+| Module | Path | Fns | Smoke | Notes |
+|--------|------|-----|-------|-------|
+| xiom.num.fraction | num/fraction.xi | 11 | smoke_num_fraction (30) | Fraction type, continued-fraction from_float, div -> Option |
+| xiom.num.base | num/base.xi | 6 | smoke_num_base (52) | to_base/from_base (2-36) with validation, digits |
+| xiom.num.float | num/float.xi | 11 | smoke_num_float (34) | 6 exact (mantissa/exponent/classify/is_*); float_bits/bits_to_float/next_up/down/ulp are DOCUMENTED FALLBACKS, TODO(compiler): needs i64<->f64 bitcast intrinsic |
+| xiom.num.precision_integer | num/precision_integer.xi | 30 | smoke_num_precision (146, all 3) | wrappers over xiom.bigint, Option-gated |
+| xiom.num.precision_float | num/precision_float.xi | 30 | (same smoke) | wrappers over xiom.num.bigfloat, Option-gated |
+| xiom.num.precision_rational | num/precision_rational.xi | 21 | (same smoke) | BigRat type over xiom.bigint |
+| xiom.math.primitives | math/primitives.xi | 20 | smoke_math_primitives (52) | float comparisons/clamp/lerp/decompose, two-sum; nextafter needs bitcast (TODO) |
+| xiom.math.arithmetic | math/arithmetic.xi | 15 | smoke_math_arithmetic (53) | gcd/lcm/mod_inverse/gcd_extended; cross-module 3-tuple `.1/.2` blocked (BUG 22 #3) |
+| xiom.math.rounding | math/rounding.xi | 15 | smoke_math_rounding (36) | floor/ceil/round/truncate/round_to |
+| xiom.math.decompose | math/decompose.xi | 15 | smoke_math_decompose (41) | int/frac parts, divmod, signif/exponent |
+| xiom.math.angular | math/angular.xi | 14 | smoke_math_angular (32) | deg/rad/grad conversions |
+| xiom.math.trigonometric_constants | math/trigonometric_constants.xi | 0 fns / 15 consts | smoke_math_trig_constants (20) | trig tables as pub const |
+| xiom.math.precision | math/precision.xi | 11 | smoke_math_precision (38) | round_to_precision/decimal_digits |
+| xiom.math.roots | math/roots.xi | 13 | smoke_math_roots (44) | sqrt/cbrt/nth_root/pure variants/integer roots/hypot/norm; NaN on domain errors (IEEE) |
+| xiom.math.exponential | math/exponential.xi | 18 | smoke_math_exponential (46) | exp/expm1/ln/log2/log10/log1p/pow/pow_int/pow_float/pure variants; NaN on domain errors |
+| xiom.math.hyperbolic | math/hyperbolic.xi | 12 | smoke_math_hyperbolic (37) | sinh/cosh/tanh/csch/sech/coth/inverse + pure; NaN on domain errors |
+| xiom.string.case | string/case.xi | 10 | smoke_string_case (17) | upper/lower/title/sentence/camel/snake/kebab/pascal |
+| xiom.string.uppercase | string/uppercase.xi | 2 | (same smoke) | wrappers |
+| xiom.string.lowercase | string/lowercase.xi | 2 | (same smoke) | wrappers |
+| xiom.string.titlecase | string/titlecase.xi | 2 | (same smoke) | wrappers |
+| xiom.string.trim | string/trim.xi | 6 | smoke_string_trim (13) | trim/_start/_end/_matches |
+| xiom.string.strip | string/strip.xi | 4 | (same smoke) | prefix/suffix/whitespace/control |
+| xiom.string.split | string/split.xi | 7 | smoke_string_split_join (27) | split/split_n/split_any/split_once/rsplit/lines/words |
+| xiom.string.join | string/join.xi | 4 | (same smoke) | join/join_after/vec_int/float_join |
+| xiom.string.pad | string/pad.xi | 6 | smoke_string_pad_repeat (11) | pad_left/right/both/start/end/center |
+| xiom.string.repeat | string/repeat.xi | 2 | (same smoke) | str_repeat wrapper + str_repeat_char (restructured: BUG 21/22#15 unsafe-loop inline corruption) |
+| xiom.string.reverse | string/reverse.xi | 3 | smoke_string_reverse_replace (9) | local impl (flat str_reverse emits invalid IR — BUG 22 #6) |
+| xiom.string.replace | string/replace.xi | 5 | (same smoke) | byte-scan impl (index_of-in-loop crash — BUG 22 #7) |
+| xiom.string.slice | string/slice.xi | 5 | smoke_string_slice (28) | slice/substring/chars/bytes/code_points (Vec[Int] — Vec[Char] is 1-byte, BUG 22 #12) |
+| xiom.string.compare | string/compare.xi | 4 | smoke_string_compare_search (27) | byte-wise compare/ignore_case/natural |
+| xiom.string.search | string/search.xi | 6 | (same smoke) | index_of/last_index_of/contains/count/find_any |
+| xiom.string.chunk | string/chunk.xi | 3 | smoke_string_chunk_combine (50) | chunk/chunks_reverse/windows |
+| xiom.string.combine | string/combine.xi | 2 | (same smoke) | combinations + binomial unranking |
+| xiom.string.interleave | string/interleave.xi | 2 | (same smoke) | interleave/interleave_n |
+| xiom.string.truncate | string/truncate.xi | 4 | smoke_string_truncate_indent (27) | char-boundary truncate/middle/ellipsis |
+| xiom.string.indent | string/indent.xi | 4 | (same smoke) | indent/indent_with/dedent/unindent |
+| xiom.string.align | string/align.xi | 4 | smoke_string_align_wrap (37) | left/right/center/justify |
+| xiom.string.wrap | string/wrap.xi | 4 | (same smoke) | wrap/hard/soft/join |
+| xiom.string.block | string/block.xi | 2 | smoke_string_block_escape (21) | Unicode block lookup table |
+| xiom.string.escape | string/escape.xi | 4 | (same smoke) | escape/unescape/ascii/unicode |
+| xiom.math.constants | math/constants.xi | 20 consts + 3 fns | smoke_math_constants_ext (31) | NAN landed after BUG 19 fix (commit 799c24f5 + 224b0ed6) |
+
+**Verification state:** 10/11 string smokes + constants smoke verified exit 0 on the CURRENT compiler; the float-heavy smokes (num 4, math 10, split_join, constants_ext) compile clean but RUNTIME-TRAP 0xC000001D on this machine (AMD Zen 2) — BUG 20 (unconditional -mavx512* clang flags, compiler session's `1d4cd2e8`). They were verified exit 0 at agent time with the pre-SIMD-flag compiler. Re-verify after the compiler session gates the flags on CPUID. stdlib_tests 40/40 green; api_freeze still blocked by the stale path list (compiler session owns the test file).
