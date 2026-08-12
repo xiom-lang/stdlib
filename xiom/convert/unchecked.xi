@@ -7,13 +7,42 @@ module xiom.convert.unchecked
 // Depends on: xiom.num
 
 // ============================================================================
-// Unchecked integer arithmetic (no overflow checks; caller responsibility).
-// NOTE: current implementation lives in num - move the functions here during
-// the implementation phase. TODO(compiler): implement.
+// Unchecked integer arithmetic: plain two's-complement operations with NO
+// overflow detection. The caller guarantees the results fit. Shift amounts
+// are masked to [0, 64).
 // ============================================================================
 
-// fn unchecked_add(a, b) -> Int - add without overflow checking. TODO(compiler): implement.
-// fn unchecked_sub(a, b) -> Int - subtract without overflow checking. TODO(compiler): implement.
-// fn unchecked_mul(a, b) -> Int - multiply without overflow checking. TODO(compiler): implement.
-// fn unchecked_shl(a, n) -> Int - shift left without overflow checking. TODO(compiler): implement.
-// fn unchecked_shr(a, n) -> Int - shift right without overflow checking. TODO(compiler): implement.
+/// a + b without overflow checking (wraps). Complexity: O(1).
+pub fn unchecked_add(a: Int, b: Int) -> Int {
+  a + b
+}
+
+/// a - b without overflow checking (wraps). Complexity: O(1).
+pub fn unchecked_sub(a: Int, b: Int) -> Int {
+  a - b
+}
+
+/// a * b without overflow checking (wraps). Complexity: O(1).
+pub fn unchecked_mul(a: Int, b: Int) -> Int {
+  a * b
+}
+
+/// a << n without overflow checking (discards shifted-out bits); n is masked
+/// to [0, 64). Complexity: O(1).
+pub fn unchecked_shl(a: Int, n: Int) -> Int {
+  var k = n % 64;
+  if k < 0 {
+    k = k + 64;
+  };
+  a << k
+}
+
+/// a >> n (arithmetic) without overflow checking; n is masked to [0, 64).
+/// Complexity: O(1).
+pub fn unchecked_shr(a: Int, n: Int) -> Int {
+  var k = n % 64;
+  if k < 0 {
+    k = k + 64;
+  };
+  a >> k
+}

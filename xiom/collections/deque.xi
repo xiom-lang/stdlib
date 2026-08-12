@@ -8,16 +8,87 @@ module xiom.collect.deque
 
 // ============================================================================
 // Double-ended queue of Int elements with O(1) push and pop at both ends.
-// NOTE: current implementation lives in collect.queue Deque - move the
-// functions here during the implementation phase. TODO(compiler): implement.
+// Backed by a single Vec[Int] with `head`/`tail` offsets defining the live
+// window [head, tail). Pops advance the offsets (stale slots are later
+// overwritten); `deque_push_front` rebuilds the window when there is no
+// room at the front. All pops/peeks are bounds-checked (None on empty).
 // ============================================================================
 
-// fn deque_new() - create a new empty deque. TODO(compiler): implement.
-// fn deque_push_front(d: &mut Deque, value: Int) - add a value to the front. TODO(compiler): implement.
-// fn deque_push_back(d: &mut Deque, value: Int) - add a value to the back. TODO(compiler): implement.
-// fn deque_pop_front(d: &mut Deque) -> Option[Int] - remove and return the front value. TODO(compiler): implement.
-// fn deque_pop_back(d: &mut Deque) -> Option[Int] - remove and return the back value. TODO(compiler): implement.
-// fn deque_front(d: &Deque) -> Option[Int] - peek at the front value. TODO(compiler): implement.
-// fn deque_back(d: &Deque) -> Option[Int] - peek at the back value. TODO(compiler): implement.
-// fn deque_len(d: &Deque) -> Int - number of elements. TODO(compiler): implement.
-// fn deque_is_empty(d: &Deque) -> Bool - check whether the deque has no elements. TODO(compiler): implement.
+pub type Deque = {
+  items: Vec[Int];
+  head: Int;
+  tail: Int;
+}
+
+/// Create an empty deque. O(1).
+pub fn deque_new() -> Deque {
+  return Deque{ items: Vec[Int].new(); head: 0; tail: 0; };
+}
+
+/// Append `value` to the back of the deque. O(1).
+pub fn deque_push_back(d: &mut Deque, value: Int) {
+  if d.tail < d.items.len() {
+    d.items[d.tail] = value;
+  } else {
+    d.items.push(value);
+  }
+  d.tail = d.tail + 1;
+}
+
+/// Prepend `value` to the front of the deque. O(1) amortized (O(n) when the
+/// window must be rebuilt).
+pub fn deque_push_front(d: &mut Deque, value: Int) {
+  if d.head > 0 {
+    d.head = d.head - 1;
+    d.items[d.head] = value;
+    return;
+  }
+  var fresh = Vec[Int].new();
+  fresh.push(value);
+  var i = d.head;
+  while i < d.tail {
+    fresh.push(d.items[i]);
+    i = i + 1;
+  }
+  d.items = fresh;
+  d.head = 0;
+  d.tail = fresh.len();
+}
+
+/// Remove and return the front value. None if the deque is empty. O(1).
+pub fn deque_pop_front(d: &mut Deque) -> Option[Int] {
+  if d.head >= d.tail { return None; }
+  var value = d.items[d.head];
+  d.head = d.head + 1;
+  return Some(value);
+}
+
+/// Remove and return the back value. None if the deque is empty. O(1).
+pub fn deque_pop_back(d: &mut Deque) -> Option[Int] {
+  if d.head >= d.tail { return None; }
+  d.tail = d.tail - 1;
+  return Some(d.items[d.tail]);
+}
+
+/// Return the front value without removing it. None if empty. O(1).
+pub fn deque_front(d: &Deque) -> Option[Int] {
+  if d.head >= d.tail { return None; }
+  return Some(d.items[d.head]);
+}
+
+/// Return the back value without removing it. None if empty. O(1).
+pub fn deque_back(d: &Deque) -> Option[Int] {
+  if d.head >= d.tail { return None; }
+  var last = d.tail - 1;
+  return Some(d.items[last]);
+}
+
+/// Number of elements in the deque. O(1).
+pub fn deque_len(d: &Deque) -> Int {
+  return d.tail - d.head;
+}
+
+/// True if the deque holds no elements. O(1).
+pub fn deque_is_empty(d: &Deque) -> Bool {
+  return d.head >= d.tail;
+}
