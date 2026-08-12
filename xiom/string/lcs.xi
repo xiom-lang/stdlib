@@ -4,13 +4,34 @@
 
 module xiom.string.lcs
 
-// Depends on: none
+// Depends on: xiom.text.similarity
 
 // ============================================================================
-// Longest common subsequence and longest common substring lengths. NOTE:
-// current implementation lives in text.similarity - move the functions here
-// during the implementation phase. TODO(compiler): implement.
+// Longest common subsequence and longest common substring lengths. Both
+// delegate to the canonical implementations in xiom.text.similarity.
 // ============================================================================
 
-// fn longest_common_subsequence(a: Str, b: Str) -> Int - length of the longest common subsequence of a and b. TODO(compiler): implement.
-// fn longest_common_substring(a: Str, b: Str) -> Int - length of the longest common substring of a and b. TODO(compiler): implement.
+use xiom.text.similarity;
+
+/// Length of the longest common subsequence of `a` and `b` (a subsequence
+/// keeps the relative order of characters without requiring contiguity).
+/// Delegates to `xiom.text.similarity.longest_common_subsequence`.
+/// Params: a, b - the strings to compare.
+/// Returns: the LCS length (>= 0); e.g. 3 for ("ABCDGH", "AEDFHR") whose
+/// longest common subsequence is "ADH".
+/// Errors: none.
+/// Complexity: O(|a| * |b|) time, O(|b|) space.
+pub fn longest_common_subsequence(a: Str, b: Str) -> Int {
+  similarity.longest_common_subsequence(a, b)
+}
+
+/// Length of the longest common contiguous substring of `a` and `b`.
+/// Delegates to `xiom.text.similarity.longest_common_substring`.
+/// Params: a, b - the strings to compare.
+/// Returns: the substring length (>= 0); e.g. 3 for ("abcdef", "zcdemf")
+/// whose longest common substring is "cde".
+/// Errors: none.
+/// Complexity: O(|a| * |b|) time, O(|b|) space.
+pub fn longest_common_substring(a: Str, b: Str) -> Int {
+  similarity.longest_common_substring(a, b)
+}

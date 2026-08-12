@@ -4,13 +4,32 @@
 
 module xiom.string.nfkc
 
-// Depends on: none
+// Depends on: xiom.string.normalize
 
 // ============================================================================
-// Compatibility normalization forms NFKC and NFKD. NOTE: current implementation
-// lives in string.unicode stub - move the functions here during the
-// implementation phase. TODO(compiler): implement.
+// Compatibility normalization forms NFKC and NFKD. The normalization tables
+// live in xiom.string.normalize (canonical implementation); this module
+// re-exports the compatibility forms behind the xiom.string.nfkc API.
 // ============================================================================
 
-// fn unicode_normalize_nfkc(s: Str) -> Str - normalize s to NFKC (compatibility composition). TODO(compiler): implement.
-// fn unicode_normalize_nfkd(s: Str) -> Str - normalize s to NFKD (compatibility decomposition). TODO(compiler): implement.
+use xiom.string.normalize;
+
+/// Normalize `s` to NFKC (compatibility composition). See
+/// `xiom.string.normalize.unicode_normalize_nfkc` for the documented coverage.
+/// Params: s the string to normalize.
+/// Returns: the NFKC-normalized string.
+/// Error case: none; malformed UTF-8 bytes pass through approximately.
+/// Complexity: O(|s|).
+pub fn unicode_normalize_nfkc(s: Str) -> Str {
+  normalize.unicode_normalize_nfkc(s)
+}
+
+/// Normalize `s` to NFKD (compatibility decomposition). See
+/// `xiom.string.normalize.unicode_normalize_nfkd` for the documented coverage.
+/// Params: s the string to normalize.
+/// Returns: the NFKD-normalized string.
+/// Error case: none; malformed UTF-8 bytes pass through approximately.
+/// Complexity: O(|s|).
+pub fn unicode_normalize_nfkd(s: Str) -> Str {
+  normalize.unicode_normalize_nfkd(s)
+}

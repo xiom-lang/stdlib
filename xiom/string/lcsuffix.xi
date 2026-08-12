@@ -4,11 +4,22 @@
 
 module xiom.string.lcsuffix
 
-// Depends on: none
+// Depends on: xiom.text.similarity
 
 // ============================================================================
-// Longest common suffix of two strings. NOTE: current implementation lives in
-// text.similarity - move the functions here during the implementation phase. TODO(compiler): implement.
+// Longest common suffix of two strings. The canonical implementation lives
+// in xiom.text.similarity; this module re-exposes it under the
+// xiom.string.lcsuffix API.
 // ============================================================================
 
-// fn longest_common_suffix(a: Str, b: Str) -> Int - length of the longest common suffix of a and b. TODO(compiler): implement.
+use xiom.text.similarity;
+
+/// Length of the longest common suffix of `a` and `b` (in bytes). Delegates
+/// to `xiom.text.similarity.longest_common_suffix`.
+/// Params: a, b - the strings to compare.
+/// Returns: the shared suffix length in 0..min(|a|, |b|).
+/// Errors: none.
+/// Complexity: O(min(|a|, |b|)).
+pub fn longest_common_suffix(a: Str, b: Str) -> Int {
+  similarity.longest_common_suffix(a, b)
+}

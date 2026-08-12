@@ -4,13 +4,36 @@
 
 module xiom.string.metaphone
 
-// Depends on: none
+// Depends on: xiom.text.similarity
 
 // ============================================================================
-// Metaphone phonetic encoding and comparison for English words. NOTE: current
-// implementation lives in text.similarity - move the functions here during the
-// implementation phase. TODO(compiler): implement.
+// Metaphone phonetic encoding and comparison for English words. The algorithm
+// itself lives in xiom.text.similarity (canonical implementation); this module
+// wraps it behind the xiom.string.metaphone API. Empty input encodes to "".
 // ============================================================================
 
-// fn metaphone(s: Str) -> Str - Metaphone code of s. TODO(compiler): implement.
-// fn metaphone_compare(a: Str, b: Str) -> Bool - true when a and b share the same Metaphone code. TODO(compiler): implement.
+use xiom.text.similarity;
+
+/// Metaphone code of `s`. Uppercases the input, keeps the first letter (with
+/// a few start-of-word rules such as leading "kn" and "wr"), drops vowels,
+/// maps the remaining consonants, then removes consecutive duplicate codes
+/// and any non-leading H/W. Empty input encodes to "".
+/// Params: s the word to encode.
+/// Returns: the Metaphone code ("" for empty input).
+/// Error case: none.
+/// Complexity: O(|s|).
+pub fn metaphone(s: Str) -> Str {
+  similarity.metaphone(s)
+}
+
+/// True when `a` and `b` share the same Metaphone code, i.e. they sound alike.
+/// Two empty strings compare equal (both encode to "").
+/// Params: a, b the strings to compare.
+/// Returns: true when metaphone(a) == metaphone(b).
+/// Error case: none.
+/// Complexity: O(|a| + |b|).
+pub fn metaphone_compare(a: Str, b: Str) -> Bool {
+  let ca = similarity.metaphone(a);
+  let cb = similarity.metaphone(b);
+  ca == cb
+}
