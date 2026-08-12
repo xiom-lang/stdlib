@@ -1152,7 +1152,11 @@ pub fn bigfloat_pow_bf(base: &BigFloat, exp: &BigFloat) -> BigFloat
     var p = bigfloat_pow_bf(base, &bigfloat_neg(exp));
     return bigfloat_inv(&p);
   }
-  if bigfloat_is_one(&base) { return _finish(&_one_at(_work_prec(base, exp)), target); }
+  // BUG 24 fix (2026-08-12): `base` is already `&BigFloat` — `&base` passed
+  // the ADDRESS OF THE POINTER SLOT to is_one(f: &BigFloat), which read the
+  // slot as a BigFloat struct (garbage → per-program-shape wrong values/AVs
+  // in bigfloat_pow_bf). The compiler now rejects double-addresses like this.
+  if bigfloat_is_one(base) { return _finish(&_one_at(_work_prec(base, exp)), target); }
   var l = bigfloat_ln(base);
   var prod = bigfloat_mul(exp, &l);
   return bigfloat_exp(&prod);
