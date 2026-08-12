@@ -4,14 +4,37 @@
 
 module xiom.convert.fromstr
 
-// Depends on: none
+// Depends on: xiom.convert.parse
 
 // ============================================================================
-// FromStr-style parse helpers for primitive types. NOTE: current
-// implementation lives in convert + num - move the functions here during the
-// implementation phase. TODO(compiler): implement.
+// FromStr-style parse helpers for primitive types. All functions delegate to
+// the canonical xiom.convert.parse parsers (function names differ here, so
+// delegation is safe from the same-name miscompile).
 // ============================================================================
 
-// fn from_str_int(s: Str) -> Result[Int, Str] - parse a string as an integer. TODO(compiler): implement.
-// fn from_str_float(s: Str) -> Result[Float64, Str] - parse a string as a float. TODO(compiler): implement.
-// fn from_str_bool(s: Str) -> Option[Bool] - parse a string as a boolean. TODO(compiler): implement.
+use xiom.convert.parse;
+
+/// Parse a string as an integer.
+/// Parameters: s — the decimal integer string (optional sign).
+/// Returns: Ok(Int) for well-formed input, Err otherwise.
+/// Complexity: O(n), n = string length.
+pub fn from_str_int(s: Str) -> Result[Int, Str] {
+  return parse.parse_int(s);
+}
+
+/// Parse a string as a float.
+/// Parameters: s — the decimal float string (optional sign, '.', 'e'/'E').
+/// Returns: Ok(Float64) for well-formed input, Err otherwise.
+/// Complexity: O(n), n = string length.
+pub fn from_str_float(s: Str) -> Result[Float64, Str] {
+  return parse.parse_float(s);
+}
+
+/// Parse a string as a boolean.
+/// Parameters: s — the string.
+/// Returns: Some(true) for "true", Some(false) for "false" (exact, case
+///          sensitive), None otherwise.
+/// Complexity: O(1).
+pub fn from_str_bool(s: Str) -> Option[Bool] {
+  return parse.parse_bool(s);
+}

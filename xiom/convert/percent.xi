@@ -35,7 +35,9 @@ fn _is_unreserved(c: Char) -> Bool {
 /// common reserved separators '-', '_', '.', '~', '/', ':', '?', '&', '=', '+',
 /// ',', '$', '#', '@', '%', '!', '*', '(', ')', '[', ']').
 fn _is_url_safe(c: Char) -> Bool {
-  var code = c as UInt8 as Int;
+  // Single `as Int` cast: `c as UInt8 as Int` miscompiles for char_at-derived
+  // chars (BUG 26 #5 — two-step cast loses the value).
+  var code = c as Int;
   code = code & 0xFF;
   if code >= 65 && code <= 90 { return true; }
   if code >= 97 && code <= 122 { return true; }

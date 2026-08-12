@@ -8,28 +8,28 @@ use xiom.io;
 
 fn main() -> Int {
   // --- kdtree: insert / nearest / range ---
-  var kt = kdtree_new();
-  if kdtree_size(&kt) != 0 { io.println("kdtree: initial size"); return 1; }
-  kdtree_insert(&mut kt, 2, 3, 100);
-  kdtree_insert(&mut kt, 5, 4, 200);
-  kdtree_insert(&mut kt, 9, 6, 300);
-  kdtree_insert(&mut kt, 4, 7, 400);
-  if kdtree_size(&kt) != 4 { io.println("kdtree: size"); return 2; }
+  var kt = kdtree.kdtree_new();
+  if kdtree.kdtree_size(&kt) != 0 { io.println("kdtree: initial size"); return 1; }
+  kdtree.kdtree_insert(&mut kt, 2, 3, 100);
+  kdtree.kdtree_insert(&mut kt, 5, 4, 200);
+  kdtree.kdtree_insert(&mut kt, 9, 6, 300);
+  kdtree.kdtree_insert(&mut kt, 4, 7, 400);
+  if kdtree.kdtree_size(&kt) != 4 { io.println("kdtree: size"); return 2; }
   // nearest to (4,3): (5,4) at dist 2 beats (2,3) at dist 4
-  var nn = kdtree_nearest(&kt, 4, 3);
+  var nn = kdtree.kdtree_nearest(&kt, 4, 3);
   if !nn.is_some || nn.value != 200 { io.println("kdtree: nearest"); return 3; }
-  var nn2 = kdtree_nearest(&kt, 8, 6);
+  var nn2 = kdtree.kdtree_nearest(&kt, 8, 6);
   if !nn2.is_some || nn2.value != 300 { io.println("kdtree: nearest 2"); return 4; }
-  var miss = kdtree_nearest(&(kdtree_new()), 0, 0);
+  var miss = kdtree.kdtree_nearest(&(kdtree.kdtree_new()), 0, 0);
   if miss.is_some { io.println("kdtree: nearest empty"); return 5; }
-  var kt2 = kdtree_new();
-  var miss2 = kdtree_nearest(&kt2, 0, 0);
+  var kt2 = kdtree.kdtree_new();
+  var miss2 = kdtree.kdtree_nearest(&kt2, 0, 0);
   if miss2.is_some { io.println("kdtree: nearest empty"); return 5; }
-  var rng = kdtree_range(&kt, 0, 0, 5, 5);
+  var rng = kdtree.kdtree_range(&kt, 0, 0, 5, 5);
   if rng.len() != 2 { io.println("kdtree: range count"); return 6; }
-  var rng2 = kdtree_range(&kt, 5, 5, 0, 0);
+  var rng2 = kdtree.kdtree_range(&kt, 5, 5, 0, 0);
   if rng2.len() != 2 { io.println("kdtree: range swapped"); return 7; }
-  var rng3 = kdtree_range(&kt, 20, 20, 30, 30);
+  var rng3 = kdtree.kdtree_range(&kt, 20, 20, 30, 30);
   if rng3.len() != 0 { io.println("kdtree: range empty"); return 8; }
 
   // --- spatial quadtree (fixed bounds, rect query) ---

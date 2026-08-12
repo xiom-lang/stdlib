@@ -6,6 +6,7 @@ module smoke_convert_base58_62
 use xiom.convert.base58;
 use xiom.convert.base62;
 use xiom.io;
+use xiom.convert;
 use xiom.string;
 
 fn main() -> Int {
@@ -50,7 +51,7 @@ fn main() -> Int {
   var b58d = base58.base58_decode(b58s);
   match b58d {
     Ok(out) => {
-      if out.len() != 3 { io.println(string.str_concat("b58 decode len ", to_string(out.len()))); return 13; }
+      if out.len() != 3 { io.println(string.str_concat("b58 decode len ", convert.int_to_string(out.len()))); return 13; }
       var b0 = out[0] as Int;
       var b1 = out[1] as Int;
       var b2 = out[2] as Int;
