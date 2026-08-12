@@ -1,4 +1,4 @@
-module smoke_stress_crypto_hash_known_vector
+﻿module smoke_stress_crypto_hash_known_vector
   use xiom.crypto;
 
   fn main() -> Int {
@@ -13,4 +13,3 @@ module smoke_stress_crypto_hash_known_vector
     }
     return 1;
   }
-}

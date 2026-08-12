@@ -1,4 +1,4 @@
-module smoke_stress_crypto_sha256_large
+﻿module smoke_stress_crypto_sha256_large
   use xiom.crypto;
 
   fn main() -> Int {
@@ -16,4 +16,3 @@ module smoke_stress_crypto_sha256_large
     }
     return 1;
   }
-}

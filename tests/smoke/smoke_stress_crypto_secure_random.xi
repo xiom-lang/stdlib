@@ -1,4 +1,4 @@
-module smoke_stress_crypto_secure_random
+﻿module smoke_stress_crypto_secure_random
   use xiom.crypto;
 
   fn main() -> Int {
@@ -9,4 +9,3 @@ module smoke_stress_crypto_secure_random
     }
     return 1;
   }
-}

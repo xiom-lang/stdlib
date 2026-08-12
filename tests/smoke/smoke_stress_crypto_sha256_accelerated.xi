@@ -1,4 +1,4 @@
-module smoke_stress_crypto_sha256_accelerated
+﻿module smoke_stress_crypto_sha256_accelerated
   use xiom.crypto;
 
   fn main() -> Int {
@@ -28,19 +28,10 @@ module smoke_stress_crypto_sha256_accelerated
 
     var idx = 0;
     while idx < h1.len() {
-      var b1 = h1.get(idx);
-      var b2 = h2.get(idx);
-      match b1 {
-        Some(v1) => {
-          match b2 {
-            Some(v2) => {
-              if v1 != v2 { return 2; }
-            }
-            None => { return 3; }
-          }
-        }
-        None => { return 3; }
-      }
+      // element access via indexing (Vec.get is not a language builtin)
+      var v1 = h1[idx];
+      var v2 = h2[idx];
+      if v1 != v2 { return 2; }
       idx = idx + 1;
     }
 

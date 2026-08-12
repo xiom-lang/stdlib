@@ -1,4 +1,4 @@
-module smoke_stress_crypto_pbkdf2
+﻿module smoke_stress_crypto_pbkdf2
   use xiom.crypto;
 
   fn main() -> Int {
@@ -16,4 +16,3 @@ module smoke_stress_crypto_pbkdf2
     }
     return 1;
   }
-}
