@@ -861,6 +861,15 @@ void xiom_panic(const char* msg) {
     exit(1);
 }
 
+// BUG 27: `debugger;` — break into the attached debugger (no-op without
+// one). Windows: IsDebuggerPresent + DebugBreak (the xiom-dbg DAP server
+// attaches via CDB/GDB and catches this as a breakpoint event).
+void xiom_debugger_break(void) {
+#ifdef _WIN32
+    if (IsDebuggerPresent()) { DebugBreak(); }
+#endif
+}
+
 // Convert a signed 64-bit integer to a freshly-allocated decimal string.
 // Used to lower `to_string(Int)` / `Int.to_str()` â€” the pure-XIOM version relies
 // on fixed-size stack arrays which the codegen does not yet materialize.
