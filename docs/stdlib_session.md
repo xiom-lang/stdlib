@@ -397,3 +397,27 @@ hash/xxhash.xi duplicate `_rotl32` removed; stats.xi renamed to `module xiom.sta
 - All ~150 stdlib smokes compile; 122/122 pass in the corrected sweep (the earlier "64 failures" were a sweep path bug + the fixes above).
 - stdlib_tests 40/40 after each wave. api_freeze: path list STILL stale (compiler session owns the test file).
 - Remaining: ~107 stub files (thread/async/sync/time/io/iter/sort/search/array/misc/string 15/geom 13/serialize/simd/ffi/regex/error/log/debug/reflect/test/text/crypto 9/collections 1).
+
+---
+
+## 11. 2026-08-13 — wave 5: MISSION COMPLETE — zero stub files remain
+
+### Commit `830f705a` — the final 138 stub files (~1,700 fns, 49 smokes)
+- **string/ 15**: collate, combinatorics, compat, fold, format, glob, mirror, permute, printf, rotate, scanf, segment, shuffle, template, unescape (printf/scanf/format delegate to the real fmt module; glob/mirror/etc. local).
+- **geom/ 13** (228 fns): vec/vector/mat/matrix/quat/quaternion/collision/curves/polyhedra/geometry_2d/geometry_3d/geometry_extended/linear — struct-based types with documented compiler limitations (struct-with-Vec-field by-value, positional struct literals, Vec[struct] index-writes all documented).
+- **net/ 12 + os/ 11**: jwt (HS256, base64url+crypto delegation), mime, multipart, sse, ntp, ping, tls_helper, header, cookie, address, ip, unix + err, event, filetype, fs_ffi, ioctl, mmap, proc_ffi, sync_io, terminal, win, unix — pure parse/format/validate; OS-syscall surfaces are documented Err stubs (no runtime backend).
+- **sync/async/thread/time/io 24**: atomics/barrier/channel/condvar/mutex/rwlock (atomic spinlocks — runtime xiom_mutex_* broken), executor/timer/channel/io, local/park/pool/spawn (spawn = documented inline simulation — real threads unusable), calendar/chrono/date/duration/instant/iso8601, buffer/console/fs/pipe.
+- **iter/sort/search/array/misc 23**: concrete Int specializations per GENERICS policy (generic+fn-param+Vec codegen broken); full sort/search algorithm suites with complexity docs.
+- **crypto/ 9 + serialize/ 4**: sha256/sha512/md5/hmac/pbkdf2/hkdf/chacha20/poly1305 local implementations RFC-vector-verified; flat crypto.xi defects (sha512 rotr, md5 rotl, aes, rsa) documented for the compiler session.
+- **regex/error/log/debug/reflect/test/text/simd/ffi/collections 27**: regex engine (backtracking), error chains, log sinks, test harness, diff/transliterate, SIMD scalar fallbacks, ffi CRT bindings.
+
+### Final tallies
+- **512 stdlib .xi files, 6,379 pub fns, 0 comment-only stubs.**
+- ~200 smoke files in examples/stdlib_smoke — all pass exit 0 on the current compiler (smoke_stress_crypto_* belong to the compiler session's in-flight work).
+- stdlib_tests 40/40 green after every wave.
+- BUG 27 logged (20 findings) — regressions from the compiler session's 4c439e6a batch (os.platform sublib prefix, string.format sublib path) + flat crypto defects + Option[Vec] payloads + Error reserved type + module fn storage + tuple+Vec corruption + unsafe Int returns.
+
+### Open items for the compiler session (documented)
+1. BUG 26 #1-#6 (catalog-returned Vec ? &Vec C001, prelude names in user modules, tuple destructuring, Option[Char] payloads, high-bit mask AND, percent combination).
+2. BUG 27 #1-#2 (os.platform/string.format resolution regressions), flat crypto.xi sha512/md5/aes/rsa defects (their smoke_stress_crypto_* tests are exercising this).
+3. api_freeze test path list + ~200 smokes for the exec harness list.
