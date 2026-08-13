@@ -12,5 +12,30 @@ module xiom.string.fold
 // implementation phase. TODO(compiler): implement.
 // ============================================================================
 
-// fn unicode_casefold(s: Str) -> Str - full Unicode case folding of s for case-insensitive matching. TODO(compiler): implement.
-// fn unicode_fold_full(s: Str) -> Str - full (F) Unicode case fold of s, applying multi-character mappings. TODO(compiler): implement.
+use xiom.string.casefold;
+
+/// Full Unicode case folding of `s` for case-insensitive matching. ASCII,
+/// Latin-1, Latin Extended-A, Greek and Cyrillic uppercase letters fold to
+/// their lowercase forms; the sharp s (ß/ẞ) folds to "ss" and dotted capital I
+/// (İ) folds to "i" + combining dot. See `xiom.string.casefold.str_casefold`
+/// for the documented coverage.
+/// Params: s the string to fold.
+/// Returns: the case-folded string.
+/// Error case: none; malformed UTF-8 bytes pass through unchanged.
+/// Complexity: O(|s|).
+pub fn unicode_casefold(s: Str) -> Str {
+  let r = casefold.str_casefold(s);
+  r
+}
+
+/// Full (F) Unicode case fold of `s`, applying the multi-character mappings
+/// (ß/ẞ → "ss", İ → "i" + combining dot). Currently identical to
+/// `unicode_casefold`; both expose the same full case-folding table.
+/// Params: s the string to fold.
+/// Returns: the fully case-folded string.
+/// Error case: none; malformed UTF-8 bytes pass through unchanged.
+/// Complexity: O(|s|).
+pub fn unicode_fold_full(s: Str) -> Str {
+  let r = casefold.str_casefold(s);
+  r
+}

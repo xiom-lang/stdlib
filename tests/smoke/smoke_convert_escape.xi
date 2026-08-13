@@ -2,6 +2,7 @@
 // Returns 0 on success, nonzero on failure (process exit code).
 module smoke_convert_escape
 use xiom.io;
+use xiom.convert;
 use xiom.string;
 use xiom.convert.escape;
 use xiom.convert.quotedprintable;
@@ -194,7 +195,7 @@ fn main() -> Int {
   }
   var el = uuencode.uu_encoded_length(5);
   if el != 61 {
-    io.println("smoke_convert_escape: uu_encoded_length failed: " + to_string(el));
+    io.println("smoke_convert_escape: uu_encoded_length failed: " + convert.int_to_string(el));
     return 37;
   }
 

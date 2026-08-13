@@ -12,7 +12,13 @@
 module smoke_os_env
 
 use xiom.os.sysinfo;
-use xiom.os.platform;
+use xiom.os.platform.platform_name;
+use xiom.os.platform.platform_arch;
+use xiom.os.platform.platform_is_windows;
+use xiom.os.platform.platform_family;
+use xiom.os.platform.platform_hostname;
+use xiom.os.platform.platform_is_unix;
+use xiom.os.platform.platform_user_name;
 use xiom.env;
 use xiom.io;
 
@@ -50,26 +56,26 @@ fn main() -> Int {
   }
 
   // --- platform ---
-  var pname = platform.platform_name();
+  var pname = platform_name();
   if pname.len() == 0 {
     io.println("plat-name");
     return 6;
   }
-  var parch = platform.platform_arch();
+  var parch = platform_arch();
   if parch.len() == 0 {
     io.println("plat-arch");
     return 7;
   }
-  var pwin = platform.platform_is_windows();
+  var pwin = platform_is_windows();
   if pwin != (pname == "windows") {
     io.println("plat-win");
     return 8;
   }
-  if platform.platform_family() != "windows" && platform.platform_family() != "unix" {
+  if platform_family() != "windows" && platform_family() != "unix" {
     io.println("plat-fam");
     return 9;
   }
-  var ph = platform.platform_hostname();
+  var ph = platform_hostname();
   match ph {
     Ok(_) => {}
     Err(_) => {
@@ -77,7 +83,7 @@ fn main() -> Int {
       return 10;
     }
   }
-  var pu = platform.platform_user_name();
+  var pu = platform_user_name();
   match pu {
     Some(_) => {}
     None => {
