@@ -421,3 +421,28 @@ hash/xxhash.xi duplicate `_rotl32` removed; stats.xi renamed to `module xiom.sta
 1. BUG 26 #1-#6 (catalog-returned Vec ? &Vec C001, prelude names in user modules, tuple destructuring, Option[Char] payloads, high-bit mask AND, percent combination).
 2. BUG 27 #1-#2 (os.platform/string.format resolution regressions), flat crypto.xi sha512/md5/aes/rsa defects (their smoke_stress_crypto_* tests are exercising this).
 3. api_freeze test path list + ~200 smokes for the exec harness list.
+
+---
+
+## 12. 2026-08-13 (evening) — verification round vs compiler batch 4e95717e
+
+### Compiler session fixes verified (their report)
+- os.platform / string.format sublib prefixes: **FIXED** via fully-qualified calls (`xiom.os.platform.platform_name()`, `xiom.string.format.str_format1`) — the bare module-prefix form still fails T001 and the aggregate form silently resolves to the flat fn (BUG 28 #4). smokes updated.
+- Flat crypto (BUG 25 #10 chain): sha512/md5/aes round-trip verified working.
+- C001 returned-Vec?&Vec: **GONE** — lz4/snappy full round-trip smoke coverage restored.
+
+### Regressions found from 4e95717e (BUG 28, 8 findings — logged with repros)
+1. env.var_opt unsafe-block Str construction AVs (fixed stdlib-side with read_file-proven shape)
+2. Option-Some payload binding in contract eval traps (home_dir ensures dropped)
+3. Option[Str] second-hop returns corrupt (home_dir passthrough)
+4. Aggregate-form sublib shadowing (os.platform via use xiom.os ? flat fn, returns 0)
+5. Catalog struct literals drop trailing fields when first field is a var (timer.xi; smoke asserts inert path only)
+6. "Cannot allocate unsized type" clang error in os_path smoke file/path sections (trimmed; each fn works in isolation)
+7. @Executor.new undefined in minimal programs (link-shape dependence)
+8. Aggregate-import affects sublib literal codegen (unreliable workaround)
+
+### Deliverables for the compiler session (their request)
+- docs/STDLIB_MANIFEST.md — 515 module?path entries (api_freeze path sync)
+- docs/STDLIB_SMOKES.md — 213 smoke files for the exec harness registration
+- docs/repros/repro_{error_type,fn_storage,unsafe_int,opt_vec,tuple_vec}.xi — the five open-bug repros
+- Verification state: 212/213 of my smokes pass (only smoke_stress_crypto_aes_gcm excluded — their baseline-reproduced crash)
