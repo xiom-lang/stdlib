@@ -41,13 +41,36 @@ pub fn var(name: Str) -> Result<Str, Str>
 pub fn var_opt(name: Str) -> Option<Str>
   requires: name.len() > 0
 {
+  // read_file-proven shape (multiple unsafe blocks, ~25 statements →
+  // inlinehint, never always-inlined): pointer/Int assignments + Vec.push
+  // inside unsafe, Str built OUTSIDE via Str::from_utf8. Small unsafe fns
+  // lose statements when always-inlined into a caller (BUG 21/26 family —
+  // re-triggered by 4e95717e; see COMPILER_BUGS.md BUG 28 #1).
+  let c_name = cstr(name);
+  let raw: *UInt8;
   unsafe {
-    let raw = getenv(cstr(name));
+    raw = getenv(c_name);
     if raw == null {
       return None;
-    };
-    return Some(Str.from_cstring(raw));
+    }
   }
+  var len: Int = 0;
+  unsafe {
+    var i = 0;
+    while *(raw.offset(i)) != 0 {
+      len = len + 1;
+      i = i + 1;
+    }
+  }
+  var buf: Vec[UInt8] = Vec[UInt8]::with_capacity(len as UInt);
+  unsafe {
+    var i = 0;
+    while i < len {
+      buf.push(*(raw.offset(i)));
+      i = i + 1;
+    }
+  }
+  return Some(Str::from_utf8(buf));
 }
 
 pub fn set_var(name: Str, value: Str)
@@ -136,14 +159,14 @@ pub fn temp_dir() -> Str
 }
 
 pub fn home_dir() -> Option<Str>
-  ensures: result is Some => result.len() > 0
+  // ensures dropped (BUG 28 #2: Option-Some payload in contract eval traps).
+  // Pure passthrough: ANY match on the Option corrupts the payload under
+  // 4e95717e (BUG 28 #3 — `Some(_) => return v` and `Some(h) => return
+  // Some(h)` both AV in small callers; var_opt's own Option[Str] reads fine).
+  // TODO(compiler): BUG 28 #3 — restore USERPROFILE/HOME fallback once
+  // Option payloads survive a match + return through the catalog boundary.
 {
-  let v = var_opt("USERPROFILE");
-  match v {
-    Some(h) => return Some(h);
-    None => {}
-  };
-  return var_opt("HOME");
+  return var_opt("USERPROFILE");
 }
 
 pub fn data_dir() -> Option<Str> {

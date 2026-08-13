@@ -85,6 +85,10 @@ pub fn timer_delay(ms: Int) -> Future {
 /// Params: ms - the interval in milliseconds.
 /// Returns: an armed timer whose next fire deadline is `ms` from now.
 /// Complexity: O(1).
+// TODO(compiler): BUG 28 #5 — catalog struct literals drop trailing fields
+// when the first field expression is a var (Timer{deadline: dl; armed: true}
+// reads armed=false under 4e95717e; constant-field literals work). timer_next
+// therefore returns None for interval timers until fixed.
 pub fn timer_interval(ms: Int) -> Timer {
   var m = ms;
   if m < 0 {
@@ -97,7 +101,7 @@ pub fn timer_interval(ms: Int) -> Timer {
 /// Params: t - the timer.
 /// Returns: Some(deadline in ms) if armed, None otherwise.
 /// Complexity: O(1).
-pub fn timer_next(t: Timer) -> Option[Int] {
+pub fn timer_next(t: &Timer) -> Option[Int] {
   if t.armed {
     return Some(t.deadline);
   }
