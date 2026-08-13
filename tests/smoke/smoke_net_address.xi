@@ -74,7 +74,7 @@ fn main() -> Int {
     return 13;
   }
 
-  io.println("addr-ok");`n  // --- ip: ipv4 parse / format ---
+  // --- ip: ipv4 parse / format ---
   let v4 = ip.ipv4_parse("192.168.1.1");
   match v4 {
     None => {
@@ -220,12 +220,14 @@ fn main() -> Int {
     io.println("ip-octets-len");
     return 40;
   }
-  if oct[0] != 10 || oct[3] != 7 {
+  let o0 = oct[0];
+  let o3 = oct[3];
+  if o0 != 10 || o3 != 7 {
     io.println("ip-octets");
     return 41;
   }
 
-  io.println("ip-ok");`n  // --- header: parse line ---
+  // --- header: parse line ---
   let h = header.header_parse_line("Host: example.com");
   match h {
     None => {
@@ -248,48 +250,54 @@ fn main() -> Int {
     return 45;
   }
 
-  io.println("hdr-parse-ok");`n  // --- header: list operations ---
+  // --- header: list operations ---
   var headers: Vec[(Str, Str)] = Vec[(Str, Str)].new();
   headers.push(("Host", "example.com"));
   headers.push(("Content-Type", "text/plain"));
-  let got = header.header_get(&headers, "host");
-  match got {
-    None => {
-      io.println("hdr-get");
-      return 46;
-    }
-    Some(v) => {
-      if v != "example.com" {
-        io.println("hdr-get-value");
-        return 47;
+  {
+    let got = header.header_get(&headers, "host");
+    match got {
+      None => {
+        io.println("hdr-get");
+        return 46;
+      }
+      Some(v) => {
+        if v != "example.com" {
+          io.println("hdr-get-value");
+          return 47;
+        }
       }
     }
-  }
-  if !header.header_contains(&headers, "content-type") {
-    io.println("hdr-contains");
-    return 48;
+    if !header.header_contains(&headers, "content-type") {
+      io.println("hdr-contains");
+      return 48;
+    }
   }
   header.header_set(&mut headers, "Host", "example.org");
-  let got2 = header.header_get(&headers, "HOST");
-  match got2 {
-    None => {
-      io.println("hdr-set");
-      return 49;
-    }
-    Some(v) => {
-      if v != "example.org" {
-        io.println("hdr-set-value");
-        return 50;
+  {
+    let got2 = header.header_get(&headers, "HOST");
+    match got2 {
+      None => {
+        io.println("hdr-set");
+        return 49;
+      }
+      Some(v) => {
+        if v != "example.org" {
+          io.println("hdr-set-value");
+          return 50;
+        }
       }
     }
   }
-  if !header.header_remove(&mut headers, "host") {
-    io.println("hdr-remove");
-    return 51;
-  }
-  if header.header_contains(&headers, "Host") {
-    io.println("hdr-remove2");
-    return 52;
+  {
+    if !header.header_remove(&mut headers, "host") {
+      io.println("hdr-remove");
+      return 51;
+    }
+    if header.header_contains(&headers, "Host") {
+      io.println("hdr-remove2");
+      return 52;
+    }
   }
   let serialized = header.header_serialize(&headers);
   if serialized != "Content-Type: text/plain\r\n" {

@@ -8,17 +8,71 @@ module xiom.reflect.fields
 
 // ============================================================================
 // Struct field and enum variant introspection: names, types, offsets and
-// values. NOTE: current implementation lives in reflect.xi - move the
-// functions here during the implementation phase. TODO(compiler): implement.
+// values.
+//
+// NOTE (limited): the compiler does not emit per-field metadata or field
+// intrinsics in this build, so every query returns the documented
+// placeholder: counts 0, field queries None/empty, variant queries
+// "unknown"/0. This mirrors xiom.reflect's documented LIMITED behaviour.
 // ============================================================================
 
-// fn field_count[T]() -> Int - the number of fields in struct T. TODO(compiler): implement.
-// fn field_name[T](i: Int) -> Option[Str] - the name of field i. TODO(compiler): implement.
-// fn field_type[T](i: Int) -> Option[Str] - the type name of field i. TODO(compiler): implement.
-// fn field_offset[T](i: Int) -> Option[Int] - the byte offset of field i. TODO(compiler): implement.
-// fn field_value[T](obj: &T, i: Int) -> Option[Int] - read field i of obj as an integer. TODO(compiler): implement.
-// fn field_names[T]() -> Vec[Str] - all field names in declaration order. TODO(compiler): implement.
-// fn field_types[T]() -> Vec[Str] - all field type names in declaration order. TODO(compiler): implement.
-// fn field_offsets[T]() -> Vec[Int] - all field byte offsets in declaration order. TODO(compiler): implement.
-// fn variant_name[T](v: T) -> Str - the name of enum variant v. TODO(compiler): implement.
-// fn variant_index[T](v: T) -> Int - the index of enum variant v. TODO(compiler): implement.
+/// The number of fields in struct T. LIMITED: always 0.
+/// Complexity: O(1).
+pub fn field_count[T]() -> Int {
+  0
+}
+
+/// The name of field `i` of T. LIMITED: always None.
+/// Complexity: O(1).
+pub fn field_name[T](i: Int) -> Option[Str] {
+  None
+}
+
+/// The type name of field `i` of T. LIMITED: always None.
+/// Complexity: O(1).
+pub fn field_type[T](i: Int) -> Option[Str] {
+  None
+}
+
+/// The byte offset of field `i` of T. LIMITED: always None.
+/// Complexity: O(1).
+pub fn field_offset[T](i: Int) -> Option[Int] {
+  None
+}
+
+/// Read field `i` of `obj` as an integer. LIMITED: always None.
+/// Complexity: O(1).
+pub fn field_value[T](obj: &T, i: Int) -> Option[Int] {
+  None
+}
+
+/// All field names in declaration order. LIMITED: always empty.
+/// Complexity: O(1).
+pub fn field_names[T]() -> Vec[Str] {
+  Vec[Str].new()
+}
+
+/// All field type names in declaration order. LIMITED: always empty.
+/// Complexity: O(1).
+pub fn field_types[T]() -> Vec[Str] {
+  Vec[Str].new()
+}
+
+/// All field byte offsets in declaration order. LIMITED: always empty.
+/// Complexity: O(1).
+pub fn field_offsets[T]() -> Vec[Int] {
+  Vec[Int].new()
+}
+
+/// The name of enum variant `v`. LIMITED: the compiler does not expose
+/// variant metadata — returns "unknown".
+/// Complexity: O(1).
+pub fn variant_name[T](v: T) -> Str {
+  "unknown"
+}
+
+/// The index of enum variant `v`. LIMITED: returns 0.
+/// Complexity: O(1).
+pub fn variant_index[T](v: T) -> Int {
+  0
+}

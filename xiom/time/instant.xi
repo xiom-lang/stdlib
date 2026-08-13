@@ -8,16 +8,77 @@ module xiom.time.instant
 
 // ============================================================================
 // Monotonic timestamps for measuring elapsed wall time.
-// NOTE: current implementation lives in time.xi - move the functions here
-// during the implementation phase. TODO(compiler): implement.
+// Delegates to the parent xiom.time.Instant implementation; comparison and
+// millisecond conversions read the instant's internal second value.
 // ============================================================================
 
-// type Instant - a monotonic point in time from the system clock.
-// fn instant_now() -> Instant - the current monotonic instant. TODO(compiler): implement.
-// fn instant_elapsed(i) -> Duration - the time elapsed since i. TODO(compiler): implement.
-// fn instant_duration_since(a, b) -> Duration - the time between a and b. TODO(compiler): implement.
-// fn instant_add(i, d: Duration) -> Instant - i advanced by d. TODO(compiler): implement.
-// fn instant_sub(i, d) -> Instant - i moved back by d. TODO(compiler): implement.
-// fn instant_compare(a, b) -> Int - negative, zero, or positive for a before, equal, after b. TODO(compiler): implement.
-// fn instant_to_millis(i) -> Int - i as milliseconds since an arbitrary origin. TODO(compiler): implement.
-// fn instant_from_millis(ms) -> Instant - an instant from a millisecond reading. TODO(compiler): implement.
+use xiom.time;
+
+/// The current monotonic instant.
+/// Returns: an Instant from the system monotonic clock.
+/// Complexity: O(1).
+pub fn instant_now() -> Instant {
+  return time.Instant.now();
+}
+
+/// The time elapsed since `i`.
+/// Params: i - the earlier instant.
+/// Returns: now - i.
+/// Complexity: O(1).
+pub fn instant_elapsed(i: Instant) -> Duration {
+  return i.elapsed();
+}
+
+/// The time between `a` and `b`.
+/// Params: a - the later instant; b - the earlier instant.
+/// Returns: a - b.
+/// Complexity: O(1).
+pub fn instant_duration_since(a: Instant, b: Instant) -> Duration {
+  return a.duration_since(b);
+}
+
+/// `i` advanced by `d`.
+/// Params: i - the instant; d - the duration to add.
+/// Returns: i + d.
+/// Complexity: O(1).
+pub fn instant_add(i: Instant, d: Duration) -> Instant {
+  return i.add(d);
+}
+
+/// `i` moved back by `d`.
+/// Params: i - the instant; d - the duration to subtract.
+/// Returns: i - d.
+/// Complexity: O(1).
+pub fn instant_sub(i: Instant, d: Duration) -> Instant {
+  return i.sub(d);
+}
+
+/// Compare two instants.
+/// Params: a - the left operand; b - the right operand.
+/// Returns: negative, zero, or positive for a before, equal, after b.
+/// Complexity: O(1).
+pub fn instant_compare(a: Instant, b: Instant) -> Int {
+  if a.t < b.t {
+    return -1;
+  }
+  if a.t > b.t {
+    return 1;
+  }
+  return 0;
+}
+
+/// `i` as milliseconds since an arbitrary origin.
+/// Params: i - the instant.
+/// Returns: the underlying second reading scaled to milliseconds.
+/// Complexity: O(1).
+pub fn instant_to_millis(i: Instant) -> Int {
+  return i.t * 1000;
+}
+
+/// An instant from a millisecond reading.
+/// Params: ms - a millisecond reading from the same arbitrary origin.
+/// Returns: the corresponding Instant.
+/// Complexity: O(1).
+pub fn instant_from_millis(ms: Int) -> Instant {
+  return Instant{ t: ms / 1000; }
+}

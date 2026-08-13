@@ -8,11 +8,41 @@ module xiom.os.ioctl
 
 // ============================================================================
 // Raw ioctl(2) wrapper plus common helpers for terminal and socket control.
-// NOTE: no implementation yet - add the FFI bindings and implement these
-// functions during the implementation phase. TODO(compiler): implement.
+// All functions require the ioctl syscall, which the pure stdlib does not
+// expose — every function is a documented stub returning Err.
 // ============================================================================
 
-// fn ioctl(fd: Int, request: Int, arg: Int) -> Result[Int, Str] - issue an ioctl request on fd, returning the kernel result. TODO(compiler): implement.
-// fn ioctl_get_winsize(fd: Int) -> Result[(Int, Int), Str] - fetch the terminal size as (rows, cols). TODO(compiler): implement.
-// fn ioctl_set_nonblock(fd: Int, on: Bool) -> Result[Unit, Str] - enable or disable non-blocking mode on fd. TODO(compiler): implement.
-// fn ioctl_fionread(fd: Int) -> Result[Int, Str] - number of bytes available for reading on fd. TODO(compiler): implement.
+/// Issue an ioctl request on fd, returning the kernel result.
+/// NOT IMPLEMENTED: requires the ioctl syscall.
+/// Returns: Err("ioctl: ioctl syscall not available in the pure stdlib").
+pub fn ioctl(fd: Int, request: Int, arg: Int) -> Result[Int, Str] {
+  let _ = fd;
+  let _ = request;
+  let _ = arg;
+  Err("ioctl: ioctl syscall not available in the pure stdlib")
+}
+
+/// Fetch the terminal size as (rows, cols).
+/// NOT IMPLEMENTED: requires ioctl(TIOCGWINSZ).
+/// Returns: Err("ioctl_get_winsize: TIOCGWINSZ not available in the pure stdlib").
+pub fn ioctl_get_winsize(fd: Int) -> Result[(Int, Int), Str] {
+  let _ = fd;
+  Err("ioctl_get_winsize: TIOCGWINSZ not available in the pure stdlib")
+}
+
+/// Enable or disable non-blocking mode on fd.
+/// NOT IMPLEMENTED: requires fcntl(F_GETFL/F_SETFL).
+/// Returns: Err("ioctl_set_nonblock: fcntl not available in the pure stdlib").
+pub fn ioctl_set_nonblock(fd: Int, on: Bool) -> Result[Unit, Str] {
+  let _ = fd;
+  let _ = on;
+  Err("ioctl_set_nonblock: fcntl not available in the pure stdlib")
+}
+
+/// Number of bytes available for reading on fd.
+/// NOT IMPLEMENTED: requires ioctl(FIONREAD).
+/// Returns: Err("ioctl_fionread: FIONREAD not available in the pure stdlib").
+pub fn ioctl_fionread(fd: Int) -> Result[Int, Str] {
+  let _ = fd;
+  Err("ioctl_fionread: FIONREAD not available in the pure stdlib")
+}
