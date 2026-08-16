@@ -30,25 +30,23 @@ pub fn semver_parse(s: Str) -> Option[SemVer] {
   var core = text;
   var prerelease = "";
   var build = "";
+  // NOTE: plain `match` only — `if x is Some { match x {...} }` double-check
+  // binds the payload as 0 (TODO(compiler): BUG 38).
   var plus = xiom.string.str_index_of(text, "+");
-  if plus is Some {
-    match plus {
-      Some(pos) => {
-        core = xiom.string.str_slice(text, 0, pos);
-        build = xiom.string.str_slice(text, pos + 1, text.len());
-      },
-      None => {},
-    }
+  match plus {
+    Some(pos) => {
+      core = xiom.string.str_slice(text, 0, pos);
+      build = xiom.string.str_slice(text, pos + 1, text.len());
+    },
+    None => {},
   }
   var dash = xiom.string.str_index_of(core, "-");
-  if dash is Some {
-    match dash {
-      Some(pos) => {
-        prerelease = xiom.string.str_slice(core, pos + 1, core.len());
-        core = xiom.string.str_slice(core, 0, pos);
-      },
-      None => {},
-    }
+  match dash {
+    Some(pos) => {
+      prerelease = xiom.string.str_slice(core, pos + 1, core.len());
+      core = xiom.string.str_slice(core, 0, pos);
+    },
+    None => {},
   }
   var parts = xiom.string.str_split(core, ".");
   if parts.len() != 3 { return None; }
@@ -452,25 +450,23 @@ fn semver_parse_partial(s: Str) -> Option[SemVer] {
   var core = s;
   var prerelease = "";
   var build = "";
+  // NOTE: plain `match` only — TODO(compiler): BUG 38 (is-Some + match
+  // double-check binds payload as 0).
   var dash = xiom.string.str_index_of(core, "-");
-  if dash is Some {
-    match dash {
-      Some(pos) => {
-        prerelease = xiom.string.str_slice(core, pos + 1, core.len());
-        core = xiom.string.str_slice(core, 0, pos);
-      },
-      None => {},
-    }
+  match dash {
+    Some(pos) => {
+      prerelease = xiom.string.str_slice(core, pos + 1, core.len());
+      core = xiom.string.str_slice(core, 0, pos);
+    },
+    None => {},
   }
   var plus = xiom.string.str_index_of(core, "+");
-  if plus is Some {
-    match plus {
-      Some(pos) => {
-        build = xiom.string.str_slice(core, pos + 1, core.len());
-        core = xiom.string.str_slice(core, 0, pos);
-      },
-      None => {},
-    }
+  match plus {
+    Some(pos) => {
+      build = xiom.string.str_slice(core, pos + 1, core.len());
+      core = xiom.string.str_slice(core, 0, pos);
+    },
+    None => {},
   }
   var parts = xiom.string.str_split(core, ".");
   if parts.len() == 0 || parts.len() > 3 { return None; }
@@ -498,42 +494,40 @@ pub fn semver_satisfies(version: Str, range: Str) -> Bool {
     None => { return false; },
     Some(v) => {
       var hyphen = xiom.string.str_index_of(range, " - ");
-      if hyphen is Some {
-        var lo = "";
-        var hi = "";
-        match hyphen {
-          Some(pos) => {
-            lo = xiom.string.str_slice(range, 0, pos);
-            hi = xiom.string.str_slice(range, pos + 3, range.len());
-          },
-          None => {},
-        }
-        var vl = semver_parse(lo);
-        var vh = semver_parse(hi);
-        var lok = false;
-        var hok = false;
-        match vl {
-          Some(_) => { lok = true; },
-          None => {},
-        }
-        match vh {
-          Some(_) => { hok = true; },
-          None => {},
-        }
-        if !lok || !hok { return false; }
-        match vl {
-          Some(lv) => {
-            match vh {
-              Some(hv) => {
-                var c1 = semver_compare(v, lv);
-                var c2 = semver_compare(v, hv);
-                return c1 >= 0 && c2 <= 0;
-              },
-              None => { return false; },
-            }
-          },
-          None => { return false; },
-        }
+      var lo = "";
+      var hi = "";
+      match hyphen {
+        Some(pos) => {
+          lo = xiom.string.str_slice(range, 0, pos);
+          hi = xiom.string.str_slice(range, pos + 3, range.len());
+        },
+        None => {},
+      }
+      var vl = semver_parse(lo);
+      var vh = semver_parse(hi);
+      var lok = false;
+      var hok = false;
+      match vl {
+        Some(_) => { lok = true; },
+        None => {},
+      }
+      match vh {
+        Some(_) => { hok = true; },
+        None => {},
+      }
+      if !lok || !hok { return false; }
+      match vl {
+        Some(lv) => {
+          match vh {
+            Some(hv) => {
+              var c1 = semver_compare(v, lv);
+              var c2 = semver_compare(v, hv);
+              return c1 >= 0 && c2 <= 0;
+            },
+            None => { return false; },
+          }
+        },
+        None => { return false; },
       }
       var alts = xiom.string.str_split(range, ",");
       var i = 0;
@@ -549,7 +543,6 @@ pub fn semver_satisfies(version: Str, range: Str) -> Bool {
       return false;
     },
   }
-}
 }
 
 /// Bump a version part ("major", "minor", "patch", "prerelease", "build").
