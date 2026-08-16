@@ -1,7 +1,7 @@
 module smoke_stress_rand_random_int_boundaries
-    use xiom.rand;
+use xiom.rand;
 
-    fn main() -> Int {
+fn main() -> Int {
         var val = rand.random_int(1, 10);
         if val >= 1 {
             if val <= 10 {
@@ -12,5 +12,4 @@ module smoke_stress_rand_random_int_boundaries
         } else {
             return 1;
         }
-    }
 }
