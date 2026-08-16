@@ -162,4 +162,5 @@ fn write_u64_at(v: &mut Vec[UInt8], pos: Int, val: Int) {
     v[pos + i] = ((val >> shift) & 0xFF) as UInt8;
     shift = shift - 8;
     i = i + 1;
+  }
 }

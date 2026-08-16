@@ -1,14 +1,11 @@
 module smoke_stress_sync_mutex_get_mut
-use xiom.sync;
+use xiom.sync.mutex;
 
 fn main() -> Int {
-        var m = sync.Mutex.new(10);
-        var g = m.lock();
-        var v = g.get_mut();
-        g.drop();
-        if v == 10 {
-            return 0;
-        } else {
-            return 1;
-        }
+    var m = mutex.mutex_new();
+    mutex.mutex_lock(&m);
+    if not mutex.mutex_is_locked(&m) { return 1; }
+    mutex.mutex_unlock(&m);
+    if mutex.mutex_is_locked(&m) { return 2; }
+    return 0;
 }

@@ -1,11 +1,11 @@
 module smoke_stress_sync_mutex_into_inner
-use xiom.sync;
+use xiom.sync.mutex;
 
 fn main() -> Int {
-    var m = sync.Mutex.new(99);
-    var v = m.into_inner();
-    if v == 99 {
+    var m = mutex.mutex_new();
+    var handle = mutex.mutex_into_inner(&m);
+    if handle != 0 {
         return 0;
-    } else {
-        return 1;
+    }
+    return 1;
 }

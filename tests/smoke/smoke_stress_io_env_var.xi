@@ -10,4 +10,5 @@ fn main() -> Int {
   match path {
     Some(_) => { return 0; }
     None => { return 1; }
+  }
 }

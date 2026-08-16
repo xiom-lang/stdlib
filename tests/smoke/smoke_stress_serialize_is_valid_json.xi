@@ -11,4 +11,5 @@ fn main() -> Int {
       }
     }
     return 1;
+  }
 }

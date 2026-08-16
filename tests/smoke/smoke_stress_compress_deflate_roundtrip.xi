@@ -26,4 +26,5 @@ fn main() -> Int {
       }
       Err(_) => { return 1; }
     }
+  }
 }

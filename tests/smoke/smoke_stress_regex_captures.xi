@@ -8,4 +8,5 @@ fn main() -> Int {
       if caps.len() >= 2 { return 0; } else { return 2; }
     }
     None => { return 1; }
+  }
 }
