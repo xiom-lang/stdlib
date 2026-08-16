@@ -118,8 +118,25 @@ pub fn search_range(v: &Vec[Int], target: Int) -> (Int, Int) {
   (lo, hi)
 }
 
-// fn binary_search_float(v: &Vec[Float64], target) -> Option[Int] - binary
-// search over a sorted Float64 vector.
-// NOT IMPLEMENTED: element READS of Vec[Float64] are corrupted by BUG 12 in
-// the current compiler (load i64 + sitofp), so a correct comparison-based
-// search is impossible. Revisit when BUG 12 is fixed.
+/// Binary search for an exact float value in a sorted Vec[Float64].
+/// O(log n). Requires v to be sorted ascending (exact IEEE-754 equality
+/// semantics: -0.0 and +0.0 compare equal; NaN never matches because
+/// NaN == NaN is false). Returns None when target is absent.
+pub fn binary_search_float(v: &Vec[Float64], target: Float64) -> Option[Int] {
+  var n = v.len();
+  if n == 0 { return None; }
+  var lo = 0;
+  var hi = n - 1;
+  while lo <= hi {
+    var mid = lo + (hi - lo) / 2;
+    var m = v[mid];
+    if m == target {
+      return Some(mid);
+    } elif m < target {
+      lo = mid + 1;
+    } else {
+      hi = mid - 1;
+    }
+  }
+  None
+}

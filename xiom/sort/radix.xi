@@ -195,10 +195,99 @@ pub fn counting_sort(v: &mut Vec[Int], max_val: Int) {
   }
 }
 
-// fn bucket_sort(v: &mut Vec[Int], buckets: Int) - distribute elements into
-// buckets and sort each.
-// NOT IMPLEMENTED: bucket sort requires reading/writing elements of a nested
-// Vec[Vec[Int]], which the current compiler does not handle reliably
-// (see docs/STDLIB_GENERICS.md and collections/graph.xi). Revisit when nested
-// Vec element access is supported.
+/// Bucket sort: distribute the elements of v into `buckets` value-ordered
+/// ranges and concatenate them back. Stable within each bucket. O(n + b)
+/// expected on uniformly distributed data (b = buckets), O(n^2) worst when
+/// all elements land in one bucket. Uses a flat offset table (no nested
+/// vectors — TODO(compiler): BUG 34 — and no Int128 index math —
+/// TODO(compiler): BUG 35 — both crash in this fn shape). Values whose
+/// spread exceeds i64 range (span > 2^63) may produce wrong bucket indexes;
+/// exact for any realistic dataset. Requires v to be non-empty and
+/// buckets >= 1; otherwise v is unchanged.
+pub fn bucket_sort(v: &mut Vec[Int], buckets: Int) {
+  var n = v.len();
+  if n <= 1 || buckets <= 0 { return; }
+  var min = v[0];
+  var max = v[0];
+  var i = 1;
+  while i < n {
+    if v[i] < min { min = v[i]; }
+    if v[i] > max { max = v[i]; }
+    i = i + 1;
+  }
+  if min == max { return; }
+  // counts[b] = number of elements in bucket b; offsets[b] = start of
+  // bucket b in the flat output (prefix sum of counts).
+  var counts = Vec[Int].new();
+  var b = 0;
+  while b < buckets {
+    counts.push(0);
+    b = b + 1;
+  }
+  var width = (max - min + 1 + buckets - 1) / buckets;
+  i = 0;
+  while i < n {
+    var idx = (v[i] - min) / width;
+    if idx < 0 { idx = 0; }
+    if idx >= buckets { idx = buckets - 1; }
+    counts[idx] = counts[idx] + 1;
+    i = i + 1;
+  }
+  var offsets = Vec[Int].new();
+  b = 0;
+  var acc = 0;
+  while b < buckets {
+    offsets.push(acc);
+    acc = acc + counts[b];
+    b = b + 1;
+  }
+  var output = Vec[Int].new();
+  i = 0;
+  while i < n {
+    output.push(0);
+    i = i + 1;
+  }
+  // Distribution pass: write each element to its bucket's next slot.
+  i = 0;
+  while i < n {
+    var idx = (v[i] - min) / width;
+    if idx < 0 { idx = 0; }
+    if idx >= buckets { idx = buckets - 1; }
+    var slot = offsets[idx];
+    output[slot] = v[i];
+    offsets[idx] = slot + 1;
+    i = i + 1;
+  }
+  // Sort each bucket's flat range in output with insertion sort (stable).
+  var starts = Vec[Int].new();
+  b = 0;
+  acc = 0;
+  while b < buckets {
+    starts.push(acc);
+    acc = acc + counts[b];
+    b = b + 1;
+  }
+  b = 0;
+  while b < buckets {
+    var lo = starts[b];
+    var hi = lo + counts[b];
+    var k = lo + 1;
+    while k < hi {
+      var key = output[k];
+      var j = k - 1;
+      while j >= lo && output[j] > key {
+        output[j + 1] = output[j];
+        j = j - 1;
+      }
+      output[j + 1] = key;
+      k = k + 1;
+    }
+    b = b + 1;
+  }
+  i = 0;
+  while i < n {
+    v[i] = output[i];
+    i = i + 1;
+  }
+}
 

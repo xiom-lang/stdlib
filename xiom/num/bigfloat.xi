@@ -388,12 +388,56 @@ pub fn bigfloat_to_bigint(f: &BigFloat) -> BigInt {
   return mag;
 }
 
-// Float64 conversion. None on exponent overflow/underflow beyond f64 range
-// (|value| > ~1.8e308); values underflowing to 0.0 return Some(0.0).
-// TODO(compiler): a `bigfloat_to_float128` (34-digit fp128 bridge) is
-// blocked by BUG 13 — fp128 div/i64-conv need __divtf3/__floatditf/
-// __trunctfdf2 compiler-rt helpers that are not in the link line. Land the
-// fn here (significand × 10^exponent in fp128, fpext per limb) once fixed.
+/// 10^e as Float128 for e in [-300, 300] via repeated scaling (one loop).
+/// Split out of bigfloat_to_float128: a single fn containing MULTIPLE fp128
+/// loop shapes crashes at runtime (TODO(compiler): BUG 36, BUG 24 family).
+fn _f128_pow10(e: Int) -> Float128 {
+  var acc = 1.0 as Float128;
+  var k = 0;
+  if e >= 0 {
+    while k < e {
+      acc = acc * (10.0 as Float128);
+      k = k + 1;
+    }
+  } else {
+    while k < -e {
+      acc = acc / (10.0 as Float128);
+      k = k + 1;
+    }
+  }
+  acc
+}
+
+/// Apply the sign flag to an fp128 value. Kept as a separate fn: any sign
+/// statement inside bigfloat_to_float128 breaks that fn's fp128 codegen
+/// shape (TODO(compiler): BUG 36).
+fn _f128_neg(acc: Float128, neg: Bool) -> Float128 {
+  if neg { (0.0 as Float128) - acc } else { acc }
+}
+
+/// Float128 conversion. Same accumulation strategy as bigfloat_to_float64 but
+/// in fp128: ~34 significant digits of the significand survive, and the
+/// exponent range extends to ~1.1e4932. Values whose exponent exceeds the
+/// fp128 range saturate to +/-inf (fp128 IEEE-754 semantics).
+/// TODO(compiler): BUG 33 — Option[Float128] payload unwrap emits a load of
+/// the undefined `%struct.Float128` (opaque) instead of native `fp128`, so
+/// the Option-returning form cannot be consumed yet; returns the value
+/// directly until the unwrap path is fixed.
+pub fn bigfloat_to_float128(f: &BigFloat) -> Float128 {
+  if xiom.bigint.bigint_is_zero(&f.significand) { return 0.0 as Float128; }
+  var acc = 0.0 as Float128;
+  var i = f.significand.digits.len() - 1;
+  while i >= 0 {
+    var limb: Int = f.significand.digits[i];
+    acc = acc * (1000000000.0 as Float128) + (limb as Float128);
+    i = i - 1;
+  }
+  acc = acc * _f128_pow10(f.exponent);
+  return _f128_neg(acc, f.sign);
+}
+
+/// Float64 conversion. None on exponent overflow/underflow beyond f64 range
+/// (|value| > ~1.8e308); values underflowing to 0.0 return Some(0.0).
 pub fn bigfloat_to_float64(f: &BigFloat) -> Option[Float64] {
   if xiom.bigint.bigint_is_zero(&f.significand) { return Some(0.0); }
   var acc = 0.0;
