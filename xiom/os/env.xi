@@ -159,14 +159,19 @@ pub fn temp_dir() -> Str
 }
 
 pub fn home_dir() -> Option<Str>
-  // ensures dropped (BUG 28 #2: Option-Some payload in contract eval traps).
-  // Pure passthrough: ANY match on the Option corrupts the payload under
-  // 4e95717e (BUG 28 #3 — `Some(_) => return v` and `Some(h) => return
-  // Some(h)` both AV in small callers; var_opt's own Option[Str] reads fine).
-  // TODO(compiler): BUG 28 #3 — restore USERPROFILE/HOME fallback once
-  // Option payloads survive a match + return through the catalog boundary.
+  ensures: result is Some => result.len() > 0
 {
-  return var_opt("USERPROFILE");
+  let v = var_opt("USERPROFILE");
+  match v {
+    Some(h) => return Some(h);
+    None => {}
+  };
+  let v2 = var_opt("HOME");
+  match v2 {
+    Some(h) => return Some(h);
+    None => {}
+  };
+  return None;
 }
 
 pub fn data_dir() -> Option<Str> {
