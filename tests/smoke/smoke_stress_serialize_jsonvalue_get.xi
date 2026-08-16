@@ -1,7 +1,7 @@
 module smoke_stress_serialize_jsonvalue_get
-  use xiom.serialize;
+use xiom.serialize;
 
-  fn main() -> Int {
+fn main() -> Int {
     var json_str = "{\"id\":42,\"label\":\"hello\",\"flag\":false}";
 
     var result = serialize.parse_json(&json_str);
@@ -27,4 +27,4 @@ module smoke_stress_serialize_jsonvalue_get
       }
       Err(_) => { return 1; }
     }
-  }
+}

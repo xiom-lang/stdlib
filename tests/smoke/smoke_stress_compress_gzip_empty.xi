@@ -1,7 +1,7 @@
 module smoke_stress_compress_gzip_empty
-  use xiom.compress;
+use xiom.compress;
 
-  fn main() -> Int {
+fn main() -> Int {
     var data = Vec[UInt8].new();
 
     var compressed = compress.gzip_compress(&data);
@@ -21,5 +21,4 @@ module smoke_stress_compress_gzip_empty
       }
       Err(_) => { return 1; }
     }
-  }
 }

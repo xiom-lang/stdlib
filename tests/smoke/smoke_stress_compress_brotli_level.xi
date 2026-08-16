@@ -1,7 +1,7 @@
 module smoke_stress_compress_brotli_level
-  use xiom.compress;
+use xiom.compress;
 
-  fn main() -> Int {
+fn main() -> Int {
     var data = Vec[UInt8].new();
     data.push(84u8); data.push(104u8); data.push(101u8);
     data.push(32u8); data.push(113u8); data.push(117u8);
@@ -27,4 +27,4 @@ module smoke_stress_compress_brotli_level
       }
       Err(_) => { return 1; }
     }
-  }
+}

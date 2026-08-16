@@ -16,5 +16,4 @@ fn main() -> Int {
   match ri {
     Ok(v) => { if v == 42 { return 0; } else { return 1; } }
     Err(_) => { return 2; }
-  }
 }

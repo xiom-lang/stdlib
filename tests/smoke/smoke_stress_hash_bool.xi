@@ -1,7 +1,7 @@
 module smoke_stress_hash_bool
-  use xiom.hash;
+use xiom.hash;
 
-  fn main() -> Int {
+fn main() -> Int {
     var t1 = hash.hash(true);
     var t2 = hash.hash(true);
     var f1 = hash.hash(false);
@@ -9,4 +9,4 @@ module smoke_stress_hash_bool
       return 0;
     }
     return 1;
-  }
+}

@@ -1,7 +1,7 @@
 module smoke_stress_sync_mutex_get_mut
-    use xiom.sync;
+use xiom.sync;
 
-    fn main() -> Int {
+fn main() -> Int {
         var m = sync.Mutex.new(10);
         var g = m.lock();
         var v = g.get_mut();
@@ -11,5 +11,4 @@ module smoke_stress_sync_mutex_get_mut
         } else {
             return 1;
         }
-    }
 }

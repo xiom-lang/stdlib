@@ -1,7 +1,7 @@
 module smoke_stress_serialize_json_parse_nested
-  use xiom.serialize;
+use xiom.serialize;
 
-  fn main() -> Int {
+fn main() -> Int {
     var nested_json = "{\"user\":{\"name\":\"Alice\",\"scores\":[95,87,92]},\"active\":true}";
 
     var result = serialize.parse_json(&nested_json);
@@ -21,4 +21,4 @@ module smoke_stress_serialize_json_parse_nested
       }
       Err(_) => { return 1; }
     }
-  }
+}

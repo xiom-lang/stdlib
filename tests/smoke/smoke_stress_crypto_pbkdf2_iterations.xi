@@ -1,7 +1,7 @@
 module smoke_stress_crypto_pbkdf2_iterations
-  use xiom.crypto;
+use xiom.crypto;
 
-  fn main() -> Int {
+fn main() -> Int {
     var salt = Vec[UInt8].new();
     salt.push(115u8); salt.push(97u8); salt.push(108u8); salt.push(116u8);
     salt.push(95u8); salt.push(104u8); salt.push(105u8); salt.push(103u8);
@@ -13,4 +13,4 @@ module smoke_stress_crypto_pbkdf2_iterations
       return 0;
     }
     return 1;
-  }
+}

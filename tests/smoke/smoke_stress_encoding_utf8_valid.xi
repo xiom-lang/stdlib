@@ -1,7 +1,7 @@
 module smoke_stress_encoding_utf8_valid
-  use xiom.encoding;
+use xiom.encoding;
 
-  fn main() -> Int {
+fn main() -> Int {
     var data = Vec[UInt8].new();
     data.push(104u8);
     data.push(101u8);
@@ -12,4 +12,4 @@ module smoke_stress_encoding_utf8_valid
       return 0;
     }
     return 1;
-  }
+}

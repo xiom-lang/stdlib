@@ -1,7 +1,7 @@
 module smoke_stress_compress_gzip_large
-  use xiom.compress;
+use xiom.compress;
 
-  fn main() -> Int {
+fn main() -> Int {
     var data = Vec[UInt8].new();
     var i = 0;
     while i < 5000 {
@@ -26,5 +26,4 @@ module smoke_stress_compress_gzip_large
       }
       Err(_) => { return 1; }
     }
-  }
 }

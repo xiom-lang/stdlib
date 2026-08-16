@@ -1,7 +1,7 @@
 module smoke_stress_crypto_argon2_basic
-  use xiom.crypto;
+use xiom.crypto;
 
-  fn main() -> Int {
+fn main() -> Int {
     var salt = Vec[UInt8].new();
     salt.push(115u8); salt.push(111u8); salt.push(109u8); salt.push(101u8);
     salt.push(115u8); salt.push(97u8); salt.push(108u8); salt.push(116u8);
@@ -13,4 +13,4 @@ module smoke_stress_crypto_argon2_basic
       return 0;
     }
     return 1;
-  }
+}

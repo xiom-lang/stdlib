@@ -1,7 +1,7 @@
 module smoke_stress_iter_range_inclusive
-  use xiom.iter;
+use xiom.iter;
 
-  fn main() -> Int {
+fn main() -> Int {
     var ri = iter.range_inclusive(1, 5);
     match ri.next() {
       Some(v) => {
@@ -10,4 +10,4 @@ module smoke_stress_iter_range_inclusive
       }
       None => { return 1; }
     }
-  }
+}

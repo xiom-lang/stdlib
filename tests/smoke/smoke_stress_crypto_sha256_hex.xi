@@ -1,7 +1,7 @@
-﻿module smoke_stress_crypto_sha256_hex
-  use xiom.crypto;
+module smoke_stress_crypto_sha256_hex
+use xiom.crypto;
 
-  fn main() -> Int {
+fn main() -> Int {
     var data = Vec[UInt8].new();
     data.push(97u8);
     data.push(98u8);
@@ -13,4 +13,4 @@
       return 0;
     }
     return 1;
-  }
+}

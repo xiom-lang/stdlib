@@ -1,7 +1,7 @@
 module smoke_stress_serialize_json_bool
-  use xiom.serialize;
+use xiom.serialize;
 
-  fn main() -> Int {
+fn main() -> Int {
     var t = serialize.json_bool(true);
     var f = serialize.json_bool(false);
 
@@ -11,5 +11,4 @@ module smoke_stress_serialize_json_bool
       }
     }
     return 1;
-  }
 }

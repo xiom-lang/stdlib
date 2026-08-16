@@ -1,7 +1,7 @@
 module smoke_stress_sync_rwlock_read
-    use xiom.sync;
+use xiom.sync;
 
-    fn main() -> Int {
+fn main() -> Int {
         var lock = sync.RwLock.new(55);
         var guard = lock.read();
         var v = guard.get();
@@ -11,5 +11,4 @@ module smoke_stress_sync_rwlock_read
         } else {
             return 1;
         }
-    }
 }

@@ -11,5 +11,4 @@ fn main() -> Int {
         None => {
             return 1;
         }
-    }
 }

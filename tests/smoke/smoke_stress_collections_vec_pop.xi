@@ -26,5 +26,4 @@ fn main() -> Int {
   match v.pop() {
     Some(_) => { return 8; }
     None => { return 0; }
-  }
 }

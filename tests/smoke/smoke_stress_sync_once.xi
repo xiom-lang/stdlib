@@ -1,7 +1,7 @@
 module smoke_stress_sync_once
-    use xiom.sync;
+use xiom.sync;
 
-    fn main() -> Int {
+fn main() -> Int {
         var o = sync.Once.new();
         var completed = o.is_completed();
         if not completed {
@@ -9,5 +9,4 @@ module smoke_stress_sync_once
         } else {
             return 1;
         }
-    }
 }

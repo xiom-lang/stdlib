@@ -1,7 +1,7 @@
-﻿module smoke_stress_crypto_sha256_large
-  use xiom.crypto;
+module smoke_stress_crypto_sha256_large
+use xiom.crypto;
 
-  fn main() -> Int {
+fn main() -> Int {
     var data = Vec[UInt8].new();
     var i = 0;
     while i < 10000 {
@@ -15,4 +15,4 @@
       return 0;
     }
     return 1;
-  }
+}

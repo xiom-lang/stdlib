@@ -10,5 +10,4 @@ fn main() -> Int {
       if n == "new.txt" { return 0; } else { return 2; }
     }
     None => { return 1; }
-  }
 }

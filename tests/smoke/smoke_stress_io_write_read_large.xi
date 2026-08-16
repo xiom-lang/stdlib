@@ -17,5 +17,4 @@ fn main() -> Int {
       if data == big { return 0; } else { return 1; }
     }
     Err(_) => { return 2; }
-  }
 }

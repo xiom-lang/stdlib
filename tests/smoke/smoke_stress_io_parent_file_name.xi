@@ -27,5 +27,4 @@ fn main() -> Int {
       if par_s == "/home/user" || par_s == "\\home\\user" { return 0; } else { return 5; }
     }
     None => { return 6; }
-  }
 }

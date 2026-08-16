@@ -1,7 +1,7 @@
 module smoke_stress_iter_range_next
-  use xiom.iter;
+use xiom.iter;
 
-  fn main() -> Int {
+fn main() -> Int {
     var r = iter.range(0, 3);
     match r.next() {
       Some(v) => {
@@ -31,4 +31,4 @@ module smoke_stress_iter_range_next
       }
       None => { return 1; }
     }
-  }
+}

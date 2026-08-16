@@ -1,7 +1,7 @@
 module smoke_stress_encoding_base64url
-  use xiom.encoding;
+use xiom.encoding;
 
-  fn main() -> Int {
+fn main() -> Int {
     var data = Vec[UInt8].new();
     data.push(72u8);
     data.push(101u8);
@@ -18,4 +18,4 @@ module smoke_stress_encoding_base64url
       }
       Err(_) => { return 1; }
     }
-  }
+}

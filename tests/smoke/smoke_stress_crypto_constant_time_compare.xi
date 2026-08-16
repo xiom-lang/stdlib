@@ -1,7 +1,7 @@
-﻿module smoke_stress_crypto_constant_time_compare
-  use xiom.crypto;
+module smoke_stress_crypto_constant_time_compare
+use xiom.crypto;
 
-  fn main() -> Int {
+fn main() -> Int {
     var a = Vec[UInt8].new();
     a.push(1u8);
     a.push(2u8);
@@ -26,4 +26,4 @@
       }
     }
     return 1;
-  }
+}
