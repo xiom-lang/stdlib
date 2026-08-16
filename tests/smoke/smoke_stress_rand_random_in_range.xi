@@ -1,7 +1,7 @@
 module smoke_stress_rand_random_in_range
-    use xiom.rand;
+use xiom.rand;
 
-    fn main() -> Int {
+fn main() -> Int {
         var r = rand.random();
         if r >= 0.0 {
             if r < 1.0 {
@@ -12,5 +12,4 @@ module smoke_stress_rand_random_in_range
         } else {
             return 1;
         }
-    }
 }

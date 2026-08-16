@@ -9,6 +9,7 @@ use xiom.hash.murmur;
 use xiom.hash.jenkins;
 use xiom.hash.crc;
 use xiom.string;
+use xiom.convert.toint;
 
 fn _bytes(s: Str) -> Vec[UInt8] {
   var v = Vec[UInt8].new();

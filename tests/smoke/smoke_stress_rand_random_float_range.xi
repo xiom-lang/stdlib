@@ -1,7 +1,7 @@
 module smoke_stress_rand_random_float_range
-    use xiom.rand;
+use xiom.rand;
 
-    fn main() -> Int {
+fn main() -> Int {
         var val = rand.random_float(5.0, 10.0);
         if val >= 5.0 {
             if val <= 10.0 {
@@ -12,5 +12,4 @@ module smoke_stress_rand_random_float_range
         } else {
             return 1;
         }
-    }
 }

@@ -1,16 +1,15 @@
 module smoke_stress_rand_pick
-    use xiom.rand;
+use xiom.rand;
 
-    fn main() -> Int {
-        var v = vec_of(10, 20, 30);
-        var result = rand.pick(v);
-        match result {
-            Some(x) => {
-                return 0;
-            },
-            None => {
-                return 1;
-            }
+fn main() -> Int {
+    var v = Vec[Int].new();
+    v.push(10); v.push(20); v.push(30);
+    match rand.pick(&v) {
+        Some(_) => {
+            return 0;
+        },
+        None => {
+            return 1;
         }
     }
 }

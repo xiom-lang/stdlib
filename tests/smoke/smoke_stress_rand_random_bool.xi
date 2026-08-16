@@ -1,7 +1,7 @@
 module smoke_stress_rand_random_bool
-    use xiom.rand;
+use xiom.rand;
 
-    fn main() -> Int {
+fn main() -> Int {
         var val = rand.random_bool();
         if val == true {
             return 0;
@@ -12,5 +12,4 @@ module smoke_stress_rand_random_bool
                 return 1;
             }
         }
-    }
 }
