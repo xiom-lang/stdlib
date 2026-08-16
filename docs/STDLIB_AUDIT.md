@@ -467,3 +467,25 @@ For each of the **346 STUB sublibs** (one row per file, grouped by category per 
 | xiom.math.constants | math/constants.xi | 20 consts + 3 fns | smoke_math_constants_ext (31) | NAN landed after BUG 19 fix (commit 799c24f5 + 224b0ed6) |
 
 **Verification state:** 10/11 string smokes + constants smoke verified exit 0 on the CURRENT compiler; the float-heavy smokes (num 4, math 10, split_join, constants_ext) compile clean but RUNTIME-TRAP 0xC000001D on this machine (AMD Zen 2) — BUG 20 (unconditional -mavx512* clang flags, compiler session's `1d4cd2e8`). They were verified exit 0 at agent time with the pre-SIMD-flag compiler. Re-verify after the compiler session gates the flags on CPUID. stdlib_tests 40/40 green; api_freeze still blocked by the stale path list (compiler session owns the test file).
+
+---
+
+## 2026-08-16 (evening) — gap-fill completion update (stdlib session)
+
+The 2026-08-11 summary above (93 REAL / 346 STUB) is superseded: waves 1-5
+landed 2026-08-11..13 took the tree to ~500 REAL / 0 stub-only files
+(512 files, 8,300+ fn declarations — see docs/stdlib_session.md §9-12).
+This session closed the last unblocked comment-stubs:
+
+| Module | Added | Smoke |
+|--------|-------|-------|
+| xiom.misc.glob | glob_compile / glob_compile_match (single-slot registry, constant handle 1; TODO(compiler) BUG 32) | smoke_gapfill_glob_binary_radix |
+| xiom.search.binary | binary_search_float (exact IEEE-754 equality) | (same smoke) |
+| xiom.sort.radix | bucket_sort (flat offset-table; TODO(compiler) BUG 34/35) | (same smoke) |
+| xiom.num.bigfloat | bigfloat_to_float128 (34-digit fp128 bridge; returns bare Float128, TODO(compiler) BUG 33/36/37) | smoke_bigfloat covers parse/format; f128 consumer blocked by BUG 37 |
+
+Still comment-only by design: iter/range.xi range_inf (no Iter type exists —
+needs the STDLIB_EXTENSION Iterator machinery, §12 dispatch), array/fixed.xi
+generic array fns (trait dispatch), reflect/*, simd/gather (reflection/SIMD
+features not built), math/logic symbolic fns (expression parser), string/
+format.xi (lives in fmt).

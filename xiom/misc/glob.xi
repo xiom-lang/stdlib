@@ -253,10 +253,33 @@ pub fn glob_translate(pattern: Str) -> Str {
   }
 }
 
-// fn glob_compile(pattern) -> Result[Int, Str] - compile a pattern to a
-// matcher handle.
-// fn glob_compile_match(compiled: Int, s) -> Bool - match s against a compiled
-// pattern.
-// NOT IMPLEMENTABLE: a matcher "handle" is a bare Int, so the original
-// pattern cannot be recovered to match against; a pattern registry does not
-// exist in the stdlib. Kept comment-only.
+// Single compiled-pattern slot. glob_compile stores the pattern here and
+// returns the constant handle 1; glob_compile_match matches against the most
+// recently compiled pattern. Not thread-safe (same caveat as the global RNG).
+// TODO(compiler): BUG 32 — Int→pointer casts emit address-of-local instead of
+// inttoptr, so real malloc'd handles cannot round-trip through the frozen
+// Int-handle API; switch to per-handle storage when the cast is fixed.
+var _compiled: Str = "";
+
+/// Compile a glob pattern for repeated matching. This implementation keeps a
+/// single compiled-pattern slot: each call replaces the previous pattern, and
+/// the returned handle is always 1 (any other value is invalid). Matches use
+/// the same semantics as glob_match ('*' and '?' metacharacters,
+/// case-sensitive). Errors: Err on an empty pattern.
+pub fn glob_compile(pattern: Str) -> Result[Int, Str] {
+  if pattern.len() == 0 {
+    return Err("glob_compile: empty pattern");
+  }
+  _compiled = pattern;
+  return Ok(1);
+}
+
+/// Match s against the pattern most recently compiled by glob_compile.
+/// Returns false when `compiled` is not the current handle (or the slot is
+/// still empty). O(p * s) worst.
+pub fn glob_compile_match(compiled: Int, s: Str) -> Bool {
+  if compiled != 1 {
+    return false;
+  }
+  glob_match(_compiled, s)
+}
