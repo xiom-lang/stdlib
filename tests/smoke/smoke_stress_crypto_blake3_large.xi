@@ -1,7 +1,7 @@
-﻿module smoke_stress_crypto_blake3_large
-  use xiom.crypto;
+module smoke_stress_crypto_blake3_large
+use xiom.crypto;
 
-  fn main() -> Int {
+fn main() -> Int {
     var data = Vec[UInt8].new();
     data.push(76u8); data.push(111u8); data.push(114u8); data.push(101u8);
     data.push(109u8); data.push(32u8); data.push(105u8); data.push(112u8);
@@ -43,4 +43,4 @@
       return 0;
     }
     return 1;
-  }
+}

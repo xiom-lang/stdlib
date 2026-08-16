@@ -1,7 +1,7 @@
 module smoke_stress_compress_lz4_roundtrip
-  use xiom.compress;
+use xiom.compress;
 
-  fn main() -> Int {
+fn main() -> Int {
     var data = Vec[UInt8].new();
     data.push(76u8); data.push(90u8); data.push(52u8);
     data.push(32u8); data.push(114u8); data.push(111u8);
@@ -25,4 +25,4 @@ module smoke_stress_compress_lz4_roundtrip
       }
       Err(_) => { return 1; }
     }
-  }
+}

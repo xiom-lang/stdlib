@@ -18,5 +18,4 @@ fn main() -> Int {
       if s == "copy test data" { return 0; } else { return 1; }
     }
     Err(_) => { return 2; }
-  }
 }

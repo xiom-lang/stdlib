@@ -1,7 +1,7 @@
 module smoke_stress_sync_atomic_bool
-    use xiom.sync;
+use xiom.sync;
 
-    fn main() -> Int {
+fn main() -> Int {
         var ab = sync.AtomicBool.new(false);
         var val1 = ab.load();
         ab.store(true);
@@ -15,5 +15,4 @@ module smoke_stress_sync_atomic_bool
         } else {
             return 1;
         }
-    }
 }

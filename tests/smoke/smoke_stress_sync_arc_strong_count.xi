@@ -1,7 +1,7 @@
 module smoke_stress_sync_arc_strong_count
-    use xiom.sync;
+use xiom.sync;
 
-    fn main() -> Int {
+fn main() -> Int {
         var a = sync.Arc.new(200);
         var count = a.strong_count();
         a.drop();
@@ -10,5 +10,4 @@ module smoke_stress_sync_arc_strong_count
         } else {
             return 1;
         }
-    }
 }

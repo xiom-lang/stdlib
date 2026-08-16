@@ -9,5 +9,4 @@ fn main() -> Int {
       if result.as_secs() == 300 { return 0; } else { return 2; }
     }
     None => { return 1; }
-  }
 }

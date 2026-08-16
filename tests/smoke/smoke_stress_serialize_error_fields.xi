@@ -1,7 +1,7 @@
 module smoke_stress_serialize_error_fields
-  use xiom.serialize;
+use xiom.serialize;
 
-  fn main() -> Int {
+fn main() -> Int {
     var bad_json = "{invalid";
 
     var result = serialize.parse_json(&bad_json);
@@ -18,4 +18,4 @@ module smoke_stress_serialize_error_fields
         return 2;
       }
     }
-  }
+}

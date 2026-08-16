@@ -1,7 +1,7 @@
 module smoke_stress_hash_default_hasher
-  use xiom.hash;
+use xiom.hash;
 
-  fn main() -> Int {
+fn main() -> Int {
     var hasher = hash.DefaultHasher.new();
     hasher.write_int(42);
     hasher.write_int(100);
@@ -11,4 +11,4 @@ module smoke_stress_hash_default_hasher
       return 0;
     }
     return 1;
-  }
+}

@@ -1,7 +1,7 @@
 module smoke_stress_convert_roundtrip_int
-    use xiom.convert;
+use xiom.convert;
 
-    fn main() -> Int {
+fn main() -> Int {
         var original = 42;
         var as_float = convert.int_to_float(original);
         var back = convert.float_to_int(as_float);
@@ -10,5 +10,4 @@ module smoke_stress_convert_roundtrip_int
         } else {
             return 1;
         }
-    }
 }

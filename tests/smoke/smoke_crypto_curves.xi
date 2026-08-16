@@ -133,5 +133,4 @@ fn push_hex(v: &mut Vec[UInt8], s: Str) {
     }
     v.push((h1 * 16 + h2) as UInt8);
     i = i + 2;
-  }
 }

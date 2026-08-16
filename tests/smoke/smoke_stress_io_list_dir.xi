@@ -19,5 +19,4 @@ fn main() -> Int {
       if files.len() >= 2 { return 0; } else { return 1; }
     }
     Err(_) => { return 2; }
-  }
 }

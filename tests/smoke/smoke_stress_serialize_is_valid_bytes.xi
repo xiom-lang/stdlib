@@ -1,7 +1,7 @@
 module smoke_stress_serialize_is_valid_bytes
-  use xiom.serialize;
+use xiom.serialize;
 
-  fn main() -> Int {
+fn main() -> Int {
     var valid_json = Vec[UInt8].new();
     valid_json.push(123u8); valid_json.push(34u8); valid_json.push(107u8);
     valid_json.push(101u8); valid_json.push(121u8); valid_json.push(34u8);
@@ -22,4 +22,4 @@ module smoke_stress_serialize_is_valid_bytes
       }
     }
     return 1;
-  }
+}

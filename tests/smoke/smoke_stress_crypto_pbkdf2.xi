@@ -1,7 +1,7 @@
-﻿module smoke_stress_crypto_pbkdf2
-  use xiom.crypto;
+module smoke_stress_crypto_pbkdf2
+use xiom.crypto;
 
-  fn main() -> Int {
+fn main() -> Int {
     var salt = Vec[UInt8].new();
     var i = 0;
     while i < 16 {
@@ -15,4 +15,4 @@
       return 0;
     }
     return 1;
-  }
+}

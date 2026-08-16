@@ -1,7 +1,7 @@
 module smoke_stress_sync_arc_new_clone
-    use xiom.sync;
+use xiom.sync;
 
-    fn main() -> Int {
+fn main() -> Int {
         var a = sync.Arc.new(100);
         var b = a.clone();
         var v = b.get();
@@ -12,5 +12,4 @@ module smoke_stress_sync_arc_new_clone
         } else {
             return 1;
         }
-    }
 }

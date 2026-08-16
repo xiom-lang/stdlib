@@ -1,7 +1,7 @@
-﻿module smoke_stress_crypto_hmac_sha256
-  use xiom.crypto;
+module smoke_stress_crypto_hmac_sha256
+use xiom.crypto;
 
-  fn main() -> Int {
+fn main() -> Int {
     var key = Vec[UInt8].new();
     key.push(107u8);
     key.push(101u8);
@@ -19,4 +19,4 @@
       return 0;
     }
     return 1;
-  }
+}

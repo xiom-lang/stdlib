@@ -1,7 +1,7 @@
 module smoke_stress_serialize_jsonvalue_index
-  use xiom.serialize;
+use xiom.serialize;
 
-  fn main() -> Int {
+fn main() -> Int {
     var json_str = "[10, 20, 30, 40, 50]";
 
     var result = serialize.parse_json(&json_str);
@@ -27,4 +27,4 @@ module smoke_stress_serialize_jsonvalue_index
       }
       Err(_) => { return 1; }
     }
-  }
+}

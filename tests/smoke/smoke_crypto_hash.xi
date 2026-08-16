@@ -91,5 +91,4 @@ fn push_str(v: &mut Vec[UInt8], s: Str) {
       v.push(opt.value as UInt8);
     }
     i = i + 1;
-  }
 }

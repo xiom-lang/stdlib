@@ -1,7 +1,7 @@
 module smoke_stress_serialize_json_nested
-  use xiom.serialize;
+use xiom.serialize;
 
-  fn main() -> Int {
+fn main() -> Int {
     var arr = serialize.json_array_builder();
     arr.push(serialize.json_int(1));
     arr.push(serialize.json_int(2));
@@ -24,4 +24,4 @@ module smoke_stress_serialize_json_nested
       }
     }
     return 1;
-  }
+}

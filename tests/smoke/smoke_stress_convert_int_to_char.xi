@@ -1,7 +1,7 @@
 module smoke_stress_convert_int_to_char
-    use xiom.convert;
+use xiom.convert;
 
-    fn main() -> Int {
+fn main() -> Int {
         var result = convert.int_to_char(65);
         match result {
             Some(c) => {
@@ -15,5 +15,4 @@ module smoke_stress_convert_int_to_char
                 return 1;
             }
         }
-    }
 }

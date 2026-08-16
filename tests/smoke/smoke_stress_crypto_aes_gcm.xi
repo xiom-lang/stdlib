@@ -1,7 +1,7 @@
 module smoke_stress_crypto_aes_gcm
-  use xiom.crypto;
+use xiom.crypto;
 
-  fn main() -> Int {
+fn main() -> Int {
     var key = Vec[UInt8].new();
     key.push(0u8); key.push(1u8); key.push(2u8); key.push(3u8);
     key.push(4u8); key.push(5u8); key.push(6u8); key.push(7u8);
@@ -37,4 +37,4 @@ module smoke_stress_crypto_aes_gcm
       }
       Err(_) => { return 1; }
     }
-  }
+}

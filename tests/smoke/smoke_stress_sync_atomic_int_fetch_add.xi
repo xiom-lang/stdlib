@@ -1,7 +1,7 @@
 module smoke_stress_sync_atomic_int_fetch_add
-    use xiom.sync;
+use xiom.sync;
 
-    fn main() -> Int {
+fn main() -> Int {
         var ai = sync.AtomicInt.new(5);
         var old = ai.fetch_add(3);
         var new_val = ai.load();
@@ -14,5 +14,4 @@ module smoke_stress_sync_atomic_int_fetch_add
         } else {
             return 1;
         }
-    }
 }

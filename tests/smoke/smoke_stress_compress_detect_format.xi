@@ -1,7 +1,7 @@
 module smoke_stress_compress_detect_format
-  use xiom.compress;
+use xiom.compress;
 
-  fn main() -> Int {
+fn main() -> Int {
     var data = Vec[UInt8].new();
     data.push(72u8);
     data.push(101u8);
@@ -21,5 +21,4 @@ module smoke_stress_compress_detect_format
       }
       Err(_) => { return 1; }
     }
-  }
 }

@@ -1,7 +1,7 @@
 module smoke_stress_compress_gzip_levels
-  use xiom.compress;
+use xiom.compress;
 
-  fn main() -> Int {
+fn main() -> Int {
     var data = Vec[UInt8].new();
     data.push(71u8); data.push(122u8); data.push(105u8); data.push(112u8);
     data.push(32u8); data.push(108u8); data.push(101u8); data.push(118u8);
@@ -42,4 +42,4 @@ module smoke_stress_compress_gzip_levels
       }
       Err(_) => { return 1; }
     }
-  }
+}

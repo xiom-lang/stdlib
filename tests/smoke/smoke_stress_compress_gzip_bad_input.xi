@@ -1,7 +1,7 @@
 module smoke_stress_compress_gzip_bad_input
-  use xiom.compress;
+use xiom.compress;
 
-  fn main() -> Int {
+fn main() -> Int {
     var bad = Vec[UInt8].new();
     bad.push(0u8);
     bad.push(1u8);
@@ -13,5 +13,4 @@ module smoke_stress_compress_gzip_bad_input
       return 0;
     }
     return 1;
-  }
 }

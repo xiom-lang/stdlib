@@ -1,7 +1,7 @@
 ﻿module smoke_stress_crypto_hash_known_vector
-  use xiom.crypto;
+use xiom.crypto;
 
-  fn main() -> Int {
+fn main() -> Int {
     var data = Vec[UInt8].new();
 
     var hex = crypto.sha256_hex(&data);
@@ -12,4 +12,4 @@
       return 0;
     }
     return 1;
-  }
+}

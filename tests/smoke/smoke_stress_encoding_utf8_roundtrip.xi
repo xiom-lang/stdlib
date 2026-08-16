@@ -1,7 +1,7 @@
 module smoke_stress_encoding_utf8_roundtrip
-  use xiom.encoding;
+use xiom.encoding;
 
-  fn main() -> Int {
+fn main() -> Int {
     var s = "hello";
     var data = encoding.utf8_encode(s);
     match encoding.utf8_decode(&data) {
@@ -13,4 +13,4 @@ module smoke_stress_encoding_utf8_roundtrip
       }
       Err(_) => { return 1; }
     }
-  }
+}

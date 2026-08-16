@@ -1,7 +1,7 @@
 module smoke_stress_crypto_rsa_keypair
-  use xiom.crypto;
+use xiom.crypto;
 
-  fn main() -> Int {
+fn main() -> Int {
     // pure-XIOM RSA supports 16-32 bit keys (documented practical range)
     var kp = crypto.generate_rsa_keypair(24);
     match kp {
@@ -15,4 +15,4 @@ module smoke_stress_crypto_rsa_keypair
       }
       Err(_) => { return 1; }
     }
-  }
+}

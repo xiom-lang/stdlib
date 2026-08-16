@@ -1,7 +1,7 @@
 module smoke_stress_compress_compound
-  use xiom.compress;
+use xiom.compress;
 
-  fn main() -> Int {
+fn main() -> Int {
     var data = Vec[UInt8].new();
     data.push(67u8); data.push(111u8); data.push(109u8); data.push(112u8);
     data.push(111u8); data.push(117u8); data.push(110u8); data.push(100u8);
@@ -34,4 +34,4 @@ module smoke_stress_compress_compound
       }
       Err(_) => { return 1; }
     }
-  }
+}

@@ -10,5 +10,4 @@ fn main() -> Int {
   match rd {
     Ok(_) => { return 1; }
     Err(_) => { return 0; }
-  }
 }

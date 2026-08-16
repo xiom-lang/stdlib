@@ -1,7 +1,7 @@
 module smoke_stress_crypto_aes_bad_key
-  use xiom.crypto;
+use xiom.crypto;
 
-  fn main() -> Int {
+fn main() -> Int {
     var bad_key = Vec[UInt8].new();
     bad_key.push(1u8); bad_key.push(2u8); bad_key.push(3u8);
 
@@ -14,4 +14,4 @@ module smoke_stress_crypto_aes_bad_key
       Ok(_) => { return 1; }
       Err(_) => { return 0; }
     }
-  }
+}

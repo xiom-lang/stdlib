@@ -1,7 +1,7 @@
 module smoke_stress_sync_atomic_int_swap
-    use xiom.sync;
+use xiom.sync;
 
-    fn main() -> Int {
+fn main() -> Int {
         var ai = sync.AtomicInt.new(100);
         var old = ai.swap(200);
         var new_val = ai.load();
@@ -14,5 +14,4 @@ module smoke_stress_sync_atomic_int_swap
         } else {
             return 1;
         }
-    }
 }

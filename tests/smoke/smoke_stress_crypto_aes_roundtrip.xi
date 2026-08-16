@@ -1,7 +1,7 @@
-﻿module smoke_stress_crypto_aes_roundtrip
-  use xiom.crypto;
+module smoke_stress_crypto_aes_roundtrip
+use xiom.crypto;
 
-  fn main() -> Int {
+fn main() -> Int {
     var key = Vec[UInt8].new();
     var i = 0;
     while i < 16 {
@@ -33,4 +33,4 @@
       }
       Err(_) => { return 1; }
     }
-  }
+}
