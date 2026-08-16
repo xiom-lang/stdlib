@@ -9,4 +9,5 @@ fn main() -> Int {
         return 0;
     } else {
         return 2;
+    }
 }

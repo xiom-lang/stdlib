@@ -8,4 +8,5 @@ fn main() -> Int {
         } else {
             return 1;
         }
+    }
 }

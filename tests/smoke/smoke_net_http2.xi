@@ -416,4 +416,5 @@ fn push_bytes(dst: &mut Vec[UInt8], s: Str) {
   while i < s.len() {
     dst.push(s.byte_at(i));
     i = i + 1;
+  }
 }

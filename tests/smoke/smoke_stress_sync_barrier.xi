@@ -5,4 +5,5 @@ fn main() -> Int {
         var b = sync.Barrier.new(1);
         b.wait();
         return 0;
+    }
 }

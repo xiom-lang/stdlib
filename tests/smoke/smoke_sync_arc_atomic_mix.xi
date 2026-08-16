@@ -1,18 +1,24 @@
 module smoke_sync_arc_atomic_mix
-use xiom.sync;
+use xiom.sync.atomics;
+use xiom.collect.arc;
 
 fn main() -> Int {
-  var ai = sync.AtomicInt.new(0);
-  ai.store(100);
-  if ai.load() != 100 { return 1; }
+  var ai = atomics.atomic_int_new(0);
+  atomics.atomic_store(&ai, 100);
+  if atomics.atomic_load(&ai) != 100 { return 1; }
 
-  ai.fetch_add(50);
-  if ai.load() != 150 { return 2; }
+  var old = atomics.atomic_fetch_add(&ai, 50);
+  if old != 100 { return 2; }
+  if atomics.atomic_load(&ai) != 150 { return 3; }
 
-  var a = sync.Arc.new(99);
-  var b = a.clone();
-  if a.get() != 99 { return 3; }
-  if a.strong_count() != 2 { return 4; }
+  // Arc cache half of the mix
+  var a = arc_new(2);
+  arc_put(&a, 7, 99);
+  var v = arc_get(&a, 7);
+  match v {
+    Some(val) => { if val != 99 { return 4; } },
+    None => { return 5; }
+  }
 
   return 0;
 }

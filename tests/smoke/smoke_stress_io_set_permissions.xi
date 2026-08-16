@@ -13,4 +13,5 @@ fn main() -> Int {
   match sp {
     Ok(_) => { return 0; }
     Err(_) => { return 1; }
+  }
 }
