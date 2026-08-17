@@ -43,15 +43,15 @@ fn assert(condition: Bool, msg: Str)
 }
 
 // === Numeric conversions ===
-fn to_int(x: Float64) -> Int {
+pub fn to_int(x: Float64) -> Int {
   return x as Int;
 }
 
-fn to_float(x: Int) -> Float64 {
+pub fn to_float(x: Int) -> Float64 {
   return x as Float64;
 }
 
-fn to_string(x: Int) -> Str {
+pub fn to_string(x: Int) -> Str {
   if x == 0 {
     return "0";
   }
@@ -85,7 +85,7 @@ fn to_string(x: Int) -> Str {
   }
 }
 
-fn to_int_from_str(s: Str) -> Result[Int, Str] {
+pub fn to_int_from_str(s: Str) -> Result[Int, Str] {
   if s.len() == 0 {
     return Err("empty string");
   }
@@ -214,7 +214,7 @@ pub fn to_float_from_str(s: Str) -> Result[Float64, Str] {
   return Ok(value);
 }
 
-fn to_bool_from_str(s: Str) -> Result[Bool, Str] {
+pub fn to_bool_from_str(s: Str) -> Result[Bool, Str] {
   if s == "true" {
     return Ok(true);
   } elif s == "false" {
@@ -224,11 +224,11 @@ fn to_bool_from_str(s: Str) -> Result[Bool, Str] {
   }
 }
 
-fn to_char(x: Int) -> Char {
+pub fn to_char(x: Int) -> Char {
   return x as Char;
 }
 
-fn to_int_from_char(c: Char) -> Int {
+pub fn to_int_from_char(c: Char) -> Int {
   return c as Int;
 }
 
@@ -244,7 +244,7 @@ pub fn is_sorted[T: Ord](items: &Slice[T]) -> Bool {
   return true;
 }
 
-fn all[T](items: &Slice[T], predicate: fn(T) -> Bool) -> Bool {
+pub fn all[T](items: &Slice[T], predicate: fn(T) -> Bool) -> Bool {
   var i: Int = 0;
   while i < items.len() {
     if !predicate(items[i]) {
@@ -255,7 +255,7 @@ fn all[T](items: &Slice[T], predicate: fn(T) -> Bool) -> Bool {
   return true;
 }
 
-fn none[T](items: &Slice[T], predicate: fn(T) -> Bool) -> Bool {
+pub fn none[T](items: &Slice[T], predicate: fn(T) -> Bool) -> Bool {
   var i: Int = 0;
   while i < items.len() {
     if predicate(items[i]) {
@@ -604,17 +604,17 @@ fn panic_if(condition: Bool, msg: Str)
 
 // === Type-level operations ===
 // Compiler intrinsic: returns size of type in bytes
-fn size_of[T]() -> Int;
+pub fn size_of[T]() -> Int;
 
 // Compiler intrinsic: returns alignment of type in bytes
-fn align_of[T]() -> Int;
+pub fn align_of[T]() -> Int;
 
 // === Numeric limits ===
-const INT_MAX: Int = 9223372036854775807;
-const INT_MIN: Int = -9223372036854775808;
-const FLOAT64_MAX: Float64 = 1.7976931348623157e308;
-const FLOAT64_MIN: Float64 = 2.2250738585072014e-308;
-const FLOAT64_EPSILON: Float64 = 2.220446049250313e-16;
+pub const INT_MAX: Int = 9223372036854775807;
+pub const INT_MIN: Int = -9223372036854775808;
+pub const FLOAT64_MAX: Float64 = 1.7976931348623157e308;
+pub const FLOAT64_MIN: Float64 = 2.2250738585072014e-308;
+pub const FLOAT64_EPSILON: Float64 = 2.220446049250313e-16;
 
 // 8B/M7: Zero-size type marker for generic parameters
 pub type PhantomData[T] = { }
