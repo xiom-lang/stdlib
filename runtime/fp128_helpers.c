@@ -1,6 +1,6 @@
 /* ============================================================================
  * fp128 (IEEE 754 quadruple / Float128) soft-float helpers
- * (BUG 13 fix â€” 2026-08-11)
+ * (BUG 13 fix Ã¢â‚¬â€ 2026-08-11)
  *
  * clang emits libcalls (__divtf3, __multf3, __trunctfdf2, ...) for Float128
  * arithmetic on x86-64; the Windows compiler-rt builtins library ships only a
@@ -51,7 +51,7 @@ static xiom_f128 xiom_f128_pack(int sign, int exp, uint64_t mhi, uint64_t mlo) {
  * bits BELOW it) down to 113 bits with round-to-nearest-even and pack. */
 static xiom_f128 xiom_f128_round_pack(int sign, int exp, unsigned __int128 sig, int extra_bits) {
     if (extra_bits <= 0) {
-        /* already exactly 113 bits (bit 112 set) â€” no rounding needed */
+        /* already exactly 113 bits (bit 112 set) Ã¢â‚¬â€ no rounding needed */
         return xiom_f128_pack(sign, exp, (uint64_t)(sig >> 64), (uint64_t)sig);
     }
     int drop = extra_bits; /* bits below the 113-bit significand */
@@ -91,7 +91,7 @@ static xiom_f128 xiom_f128_addsub(xiom_f128 a, xiom_f128 b, int subtract) {
     if (xiom_f128_isnan(b)) return b;
     if (xiom_f128_isinf(a)) {
         if (xiom_f128_isinf(b) && ((a.hi ^ b.hi) >> 63) == (uint64_t)subtract) {
-            /* inf - inf or -inf + inf â†’ NaN */
+            /* inf - inf or -inf + inf Ã¢â€ â€™ NaN */
             xiom_f128 nan = a; nan.hi = (nan.hi & 0x8000000000000000ULL) | 0x7FFF000000000000ULL; nan.lo = 1; return nan;
         }
         return a;
@@ -113,7 +113,7 @@ static xiom_f128 xiom_f128_addsub(xiom_f128 a, xiom_f128 b, int subtract) {
     unsigned __int128 mb = ((unsigned __int128)1 << 112) | ((unsigned __int128)mb_hi << 64) | b.lo;
 
     if (sa == sb) {
-        /* same sign â†’ magnitude add */
+        /* same sign Ã¢â€ â€™ magnitude add */
         int e = ea > eb ? ea : eb;
         if (ea < eb) ma >>= (eb - ea); else if (eb < ea) mb >>= (ea - eb);
         unsigned __int128 sum = ma + mb;
@@ -125,7 +125,7 @@ static xiom_f128 xiom_f128_addsub(xiom_f128 a, xiom_f128 b, int subtract) {
         e += n - 113;
         return xiom_f128_round_pack(sa, e, sum, 0);
     } else {
-        /* opposite signs â†’ magnitude subtract */
+        /* opposite signs Ã¢â€ â€™ magnitude subtract */
         int ebig = ea, esmall = eb;
         unsigned __int128 big = ma, small = mb;
         if (ma < mb) { big = mb; small = ma; ebig = eb; esmall = ea; }
@@ -165,10 +165,10 @@ static xiom_f128 xiom_f128_mul_impl(xiom_f128 a, xiom_f128 b) {
     int eb = (int)((b.hi >> 48) & XIOM_F128_EXP_MASK);
     unsigned __int128 ma = ((unsigned __int128)1 << 112) | ((unsigned __int128)(a.hi & XIOM_F128_MAN_HI_MASK) << 64) | a.lo;
     unsigned __int128 mb = ((unsigned __int128)1 << 112) | ((unsigned __int128)(b.hi & XIOM_F128_MAN_HI_MASK) << 64) | b.lo;
-    /* 113x113 â†’ 226-bit product: split into 64-bit halves */
+    /* 113x113 Ã¢â€ â€™ 226-bit product: split into 64-bit halves */
     uint64_t a0 = (uint64_t)ma, a1 = (uint64_t)(ma >> 64);
     uint64_t b0 = (uint64_t)mb, b1 = (uint64_t)(mb >> 64);
-    /* 64x64 â†’ 128 */
+    /* 64x64 Ã¢â€ â€™ 128 */
     unsigned __int128 p00 = (unsigned __int128)a0 * b0;
     unsigned __int128 p01 = (unsigned __int128)a0 * b1;
     unsigned __int128 p10 = (unsigned __int128)a1 * b0;
@@ -181,15 +181,15 @@ static xiom_f128 xiom_f128_mul_impl(xiom_f128 a, xiom_f128 b) {
     uint64_t t2 = (uint64_t)hi2;
     uint64_t t3 = (uint64_t)(hi2 >> 64);
     /* BUG 13 fix: extract the significand from the FULL product. P = ma*mb
-     * âˆˆ [2^224, 2^226); the 113-bit significand = P >> 112 (P < 2^225) or
-     * P >> 113 (P â‰¥ 2^225). The old code built prod from t2:t1 only (bits
-     * 64..191) â€” dropping bits 192..225 â€” so 1000*2.5 produced 0. Also the
+     * Ã¢Ë†Ë† [2^224, 2^226); the 113-bit significand = P >> 112 (P < 2^225) or
+     * P >> 113 (P Ã¢â€°Â¥ 2^225). The old code built prod from t2:t1 only (bits
+     * 64..191) Ã¢â‚¬â€ dropping bits 192..225 Ã¢â‚¬â€ so 1000*2.5 produced 0. Also the
      * exponent was missing a BIAS term.
-     * value = 2^(ea+eb-2B) * P/2^224; with m = P/2^113 (P â‰¥ 2^225):
-     * value = 2^(ea+eb-2B+1) * m/2^112 â†’ e = ea+eb-B+1 (biased). */
+     * value = 2^(ea+eb-2B) * P/2^224; with m = P/2^113 (P Ã¢â€°Â¥ 2^225):
+     * value = 2^(ea+eb-2B+1) * m/2^112 Ã¢â€ â€™ e = ea+eb-B+1 (biased). */
     int e = ea + eb - XIOM_F128_BIAS;
     unsigned __int128 prod;
-    if (t3 >> 33) { /* P â‰¥ 2^225 */
+    if (t3 >> 33) { /* P Ã¢â€°Â¥ 2^225 */
         prod = ((unsigned __int128)t3 << 79) | ((unsigned __int128)t2 << 15) | (t1 >> 49);
         e += 1;
     } else {
@@ -202,7 +202,7 @@ static xiom_f128 xiom_f128_mul_impl(xiom_f128 a, xiom_f128 b) {
 static unsigned __int128 xiom_f128_udiv_114(unsigned __int128 num, unsigned __int128 den) {
     /* num < den (both < 2^113); produce 114 quotient bits (113 + 1 guard).
      * BUG 13 fix: the remainder can exceed 2^128 (the shifted-out top bit
-     * contributes 2^128) â€” track it as an explicit high bit (`hi`) instead of
+     * contributes 2^128) Ã¢â‚¬â€ track it as an explicit high bit (`hi`) instead of
      * dropping it (the old `num -= den` on a carry corrupted the low digits:
      * 10/2 gave 13). */
     unsigned __int128 q = 0;
@@ -242,15 +242,15 @@ static xiom_f128 xiom_f128_div_impl(xiom_f128 a, xiom_f128 b) {
     unsigned __int128 ma = ((unsigned __int128)1 << 112) | ((unsigned __int128)(a.hi & XIOM_F128_MAN_HI_MASK) << 64) | a.lo;
     unsigned __int128 mb = ((unsigned __int128)1 << 112) | ((unsigned __int128)(b.hi & XIOM_F128_MAN_HI_MASK) << 64) | b.lo;
     /* ma/mb in [2^112, 2^113). Ensure ma < mb by shifting ma right once.
-     * value = 2^(ea-eb) * ma/mb; with sig = (ma/mb)*2^113 âˆˆ [2^112, 2^113):
-     * value = 2^(ea-eb-113) * sig â†’ e = ea-eb+BIAS-1 (+1 when shifted). */
+     * value = 2^(ea-eb) * ma/mb; with sig = (ma/mb)*2^113 Ã¢Ë†Ë† [2^112, 2^113):
+     * value = 2^(ea-eb-113) * sig Ã¢â€ â€™ e = ea-eb+BIAS-1 (+1 when shifted). */
     int e = ea - eb + XIOM_F128_BIAS - 1;
     if (ma >= mb) {
         ma >>= 1;
         e += 1;
     }
     unsigned __int128 q = xiom_f128_udiv_114(ma, mb); /* 114 bits: 113 + guard */
-    /* pass q with extra_bits=1 â€” round_pack drops the guard bit itself */
+    /* pass q with extra_bits=1 Ã¢â‚¬â€ round_pack drops the guard bit itself */
     return xiom_f128_round_pack(sres, e, q, 1);
 }
 
@@ -299,7 +299,7 @@ static xiom_f128 xiom_f128_from_f64_impl(double d) {
  * but the MSVC C ABI for a 16-byte STRUCT (xiom_f128) is:
  *   - args: pointers (same), result: hidden sret pointer in rcx
  * So any helper RETURNING xiom_f128 was compiled with an extra sret param in
- * rcx, shifted the args by one register (rdx/r8), and never wrote XMM0 â€”
+ * rcx, shifted the args by one register (rdx/r8), and never wrote XMM0 Ã¢â‚¬â€
  * the caller read XMM0 = garbage and the callee dereferenced r8 = garbage
  * (0xC0000005 in every runtime fp128 shape; constant-folded loops masked it).
  *
@@ -337,19 +337,19 @@ void xiom_f128_from_i128_sret(xiom_f128* out, const unsigned __int128* v, int ne
     unsigned __int128 t = u;
     while ((t >> 127) == 0) { t <<= 1; n--; }
     int exp = XIOM_F128_BIAS + n - 1;
-    unsigned __int128 sig = t >> 15; /* bit 127 â†’ bit 112 */
+    unsigned __int128 sig = t >> 15; /* bit 127 Ã¢â€ â€™ bit 112 */
     *out = xiom_f128_pack(neg, exp, (uint64_t)(sig >> 64), (uint64_t)sig);
 }
 
-/* ============== naked asm shims (IR convention â†’ sret wrappers) ============ */
-/* Layout at each shim entry (rsp â‰¡ 8 mod 16):
- *   subq N â†’ rsp â‰¡ 0 at the `callq` (N â‰¡ 8 mod 16, N â‰¥ 48)
+/* ============== naked asm shims (IR convention Ã¢â€ â€™ sret wrappers) ============ */
+/* Layout at each shim entry (rsp Ã¢â€°Â¡ 8 mod 16):
+ *   subq N Ã¢â€ â€™ rsp Ã¢â€°Â¡ 0 at the `callq` (N Ã¢â€°Â¡ 8 mod 16, N Ã¢â€°Â¥ 48)
  *   shadow space for the wrapper: [rsp .. rsp+31]
  *   sret result slot: [rsp+32 .. rsp+47]  (outside the wrapper's shadow)
  *   extra locals (i128 copy): [rsp+48 .. rsp+63]
  * Result is reloaded from the sret slot into XMM0 after the call. */
 
-__attribute__((used, naked)) xiom_f128 __addtf3(xiom_f128 a, xiom_f128 b) {
+__attribute__((used, naked)) void __addtf3(xiom_f128 a, xiom_f128 b) {
     __asm__(
         "subq $0x48, %rsp\n\t"
         "movq %rdx, %r8\n\t"
@@ -360,7 +360,7 @@ __attribute__((used, naked)) xiom_f128 __addtf3(xiom_f128 a, xiom_f128 b) {
         "addq $0x48, %rsp\n\t"
         "retq\n\t");
 }
-__attribute__((used, naked)) xiom_f128 __subtf3(xiom_f128 a, xiom_f128 b) {
+__attribute__((used, naked)) void __subtf3(xiom_f128 a, xiom_f128 b) {
     __asm__(
         "subq $0x48, %rsp\n\t"
         "movq %rdx, %r8\n\t"
@@ -371,7 +371,7 @@ __attribute__((used, naked)) xiom_f128 __subtf3(xiom_f128 a, xiom_f128 b) {
         "addq $0x48, %rsp\n\t"
         "retq\n\t");
 }
-__attribute__((used, naked)) xiom_f128 __multf3(xiom_f128 a, xiom_f128 b) {
+__attribute__((used, naked)) void __multf3(xiom_f128 a, xiom_f128 b) {
     __asm__(
         "subq $0x48, %rsp\n\t"
         "movq %rdx, %r8\n\t"
@@ -382,7 +382,7 @@ __attribute__((used, naked)) xiom_f128 __multf3(xiom_f128 a, xiom_f128 b) {
         "addq $0x48, %rsp\n\t"
         "retq\n\t");
 }
-__attribute__((used, naked)) xiom_f128 __divtf3(xiom_f128 a, xiom_f128 b) {
+__attribute__((used, naked)) void __divtf3(xiom_f128 a, xiom_f128 b) {
     __asm__(
         "subq $0x48, %rsp\n\t"
         "movq %rdx, %r8\n\t"
@@ -393,7 +393,7 @@ __attribute__((used, naked)) xiom_f128 __divtf3(xiom_f128 a, xiom_f128 b) {
         "addq $0x48, %rsp\n\t"
         "retq\n\t");
 }
-__attribute__((used, naked)) xiom_f128 __negtf2(xiom_f128 a) {
+__attribute__((used, naked)) void __negtf2(xiom_f128 a) {
     __asm__(
         "subq $0x48, %rsp\n\t"
         "movq %rcx, %rdx\n\t"
@@ -403,7 +403,7 @@ __attribute__((used, naked)) xiom_f128 __negtf2(xiom_f128 a) {
         "addq $0x48, %rsp\n\t"
         "retq\n\t");
 }
-__attribute__((used, naked)) xiom_f128 __extenddftf2(double d) {
+__attribute__((used, naked)) void __extenddftf2(double d) {
     __asm__(
         "subq $0x48, %rsp\n\t"
         "leaq 32(%rsp), %rcx\n\t"
@@ -413,7 +413,7 @@ __attribute__((used, naked)) xiom_f128 __extenddftf2(double d) {
         "addq $0x48, %rsp\n\t"
         "retq\n\t");
 }
-__attribute__((used, naked)) xiom_f128 __extendsftf2(float f) {
+__attribute__((used, naked)) void __extendsftf2(float f) {
     __asm__(
         "subq $0x48, %rsp\n\t"
         "leaq 32(%rsp), %rcx\n\t"
@@ -423,7 +423,7 @@ __attribute__((used, naked)) xiom_f128 __extendsftf2(float f) {
         "addq $0x48, %rsp\n\t"
         "retq\n\t");
 }
-__attribute__((used, naked)) xiom_f128 __floatsitf(int32_t i) {
+__attribute__((used, naked)) void __floatsitf(int32_t i) {
     __asm__(
         "subq $0x48, %rsp\n\t"
         "movl %ecx, %edx\n\t"
@@ -433,7 +433,7 @@ __attribute__((used, naked)) xiom_f128 __floatsitf(int32_t i) {
         "addq $0x48, %rsp\n\t"
         "retq\n\t");
 }
-__attribute__((used, naked)) xiom_f128 __floatunsitf(uint32_t u) {
+__attribute__((used, naked)) void __floatunsitf(uint32_t u) {
     __asm__(
         "subq $0x48, %rsp\n\t"
         "movl %ecx, %edx\n\t"
@@ -443,7 +443,7 @@ __attribute__((used, naked)) xiom_f128 __floatunsitf(uint32_t u) {
         "addq $0x48, %rsp\n\t"
         "retq\n\t");
 }
-__attribute__((used, naked)) xiom_f128 __floatditf(int64_t i) {
+__attribute__((used, naked)) void __floatditf(int64_t i) {
     __asm__(
         "subq $0x48, %rsp\n\t"
         "movq %rcx, %rdx\n\t"
@@ -453,7 +453,7 @@ __attribute__((used, naked)) xiom_f128 __floatditf(int64_t i) {
         "addq $0x48, %rsp\n\t"
         "retq\n\t");
 }
-__attribute__((used, naked)) xiom_f128 __floatunditf(uint64_t u) {
+__attribute__((used, naked)) void __floatunditf(uint64_t u) {
     __asm__(
         "subq $0x48, %rsp\n\t"
         "movq %rcx, %rdx\n\t"
@@ -464,7 +464,7 @@ __attribute__((used, naked)) xiom_f128 __floatunditf(uint64_t u) {
         "retq\n\t");
 }
 /* i128 args arrive BY REFERENCE in rcx (memory class on Win64). */
-__attribute__((used, naked)) xiom_f128 __floattitf(__int128 i) {
+__attribute__((used, naked)) void __floattitf(__int128 i) {
     __asm__(
         "subq $0x58, %rsp\n\t"
         "movq %rcx, %rdx\n\t"
@@ -477,7 +477,7 @@ __attribute__((used, naked)) xiom_f128 __floattitf(__int128 i) {
         "addq $0x58, %rsp\n\t"
         "retq\n\t");
 }
-__attribute__((used, naked)) xiom_f128 __floatuntitf(unsigned __int128 u) {
+__attribute__((used, naked)) void __floatuntitf(unsigned __int128 u) {
     __asm__(
         "subq $0x58, %rsp\n\t"
         "movq %rcx, %rdx\n\t"
@@ -504,7 +504,7 @@ double __trunctfdf2(xiom_f128 f) {
     int e64 = e - XIOM_F128_BIAS + 1023;
     /* significand: implicit bit + 112 mantissa bits; keep 53 + guard/sticky */
     unsigned __int128 sig = ((unsigned __int128)1 << 112) | ((unsigned __int128)mhi << 64) | f.lo;
-    if (e64 >= 0x7FF) { /* overflow â†’ inf */
+    if (e64 >= 0x7FF) { /* overflow Ã¢â€ â€™ inf */
         uint64_t bits = ((uint64_t)sign << 63) | 0x7FF0000000000000ULL;
         double d; memcpy(&d, &bits, 8); return d;
     }
@@ -560,7 +560,7 @@ uint64_t __fixunstfdi(xiom_f128 f) {
 int32_t __fixtfsi(xiom_f128 f) { return (int32_t)__fixtfdi(f); }
 uint32_t __fixunstfsi(xiom_f128 f) { return (uint32_t)__fixunstfdi(f); }
 
-/* 128-bit integer results return in rax:rdx on Win64 â€” matches the IR's
+/* 128-bit integer results return in rax:rdx on Win64 Ã¢â‚¬â€ matches the IR's
  * i128 convention, so these need no shim. */
 __int128 __fixtfti(xiom_f128 f) {
     if (xiom_f128_isnan(f) || xiom_f128_isinf(f)) return 0;
@@ -576,7 +576,7 @@ __int128 __fixtfti(xiom_f128 f) {
         if (mag > (((unsigned __int128)1) << 127)) return 0; /* < INT128_MIN */
         return (__int128)(0 - mag);
     }
-    if (mag >= (((unsigned __int128)1) << 127)) return 0; /* â‰¥ INT128_MAX */
+    if (mag >= (((unsigned __int128)1) << 127)) return 0; /* Ã¢â€°Â¥ INT128_MAX */
     return (__int128)mag;
 }
 unsigned __int128 __fixunstfti(xiom_f128 f) {
@@ -611,7 +611,7 @@ int __cmptf2(xiom_f128 a, xiom_f128 b) {
 }
 int __getf2(xiom_f128 a, xiom_f128 b) {
     int c = __cmptf2(a, b);
-    return c == 1 ? 0 : c; /* unord â†’ 0 */
+    return c == 1 ? 0 : c; /* unord Ã¢â€ â€™ 0 */
 }
 int __gttf2(xiom_f128 a, xiom_f128 b) {
     int c = __cmptf2(a, b);
@@ -619,7 +619,7 @@ int __gttf2(xiom_f128 a, xiom_f128 b) {
 }
 int __letf2(xiom_f128 a, xiom_f128 b) {
     int c = __cmptf2(a, b);
-    return c == 1 ? 1 : (c == 0 ? 0 : -1); /* unord â†’ 1 */
+    return c == 1 ? 1 : (c == 0 ? 0 : -1); /* unord Ã¢â€ â€™ 1 */
 }
 int __lttf2(xiom_f128 a, xiom_f128 b) {
     int c = __cmptf2(a, b);
