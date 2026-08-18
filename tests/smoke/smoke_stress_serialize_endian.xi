@@ -8,6 +8,4 @@ fn main() -> Int {
     if le or be {
       return 0;
     }
-    return 1;
-  }
-}
+    return 1;}

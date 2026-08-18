@@ -12,6 +12,4 @@ fn main() -> Int {
     if not result.is_ok() {
       return 0;
     }
-    return 1;
-  }
-}
+    return 1;}
