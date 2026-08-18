@@ -25,7 +25,7 @@ pub fn sort_insertion[T: Ord](arr: &mut Vec[T]) {
   var i = 1;
   while i < n {
     var j = i;
-    while j > 0 && arr[j - 1].compare(&arr[j]) > 0 {
+    while j > 0 && arr[j - 1].compare(arr[j]) > 0 {
       var temp = arr[j - 1];
       arr[j - 1] = arr[j];
       arr[j] = temp;
@@ -48,7 +48,7 @@ pub fn sort_selection[T: Ord](arr: &mut Vec[T]) {
     var min_idx = i;
     var j = i + 1;
     while j < n {
-      if arr[j].compare(&arr[min_idx]) < 0 {
+      if arr[j].compare(arr[min_idx]) < 0 {
         min_idx = j;
       }
       j = j + 1;
@@ -77,7 +77,7 @@ pub fn sort_bubble[T: Ord](arr: &mut Vec[T]) {
     swapped = false;
     var j = 0;
     while j < n - i - 1 {
-      if arr[j].compare(&arr[j + 1]) > 0 {
+      if arr[j].compare(arr[j + 1]) > 0 {
         var temp = arr[j];
         arr[j] = arr[j + 1];
         arr[j + 1] = temp;
@@ -103,7 +103,7 @@ fn insertion_sort_range[T: Ord](arr: &mut Vec[T], lo: Int, hi: Int) {
   var i = lo + 1;
   while i <= hi {
     var j = i;
-    while j > lo && arr[j - 1].compare(&arr[j]) > 0 {
+    while j > lo && arr[j - 1].compare(arr[j]) > 0 {
       var temp = arr[j - 1];
       arr[j - 1] = arr[j];
       arr[j] = temp;
@@ -114,17 +114,17 @@ fn insertion_sort_range[T: Ord](arr: &mut Vec[T], lo: Int, hi: Int) {
 }
 
 fn median_of_three[T: Ord](arr: &mut Vec[T], lo: Int, mid: Int, hi: Int) -> Int {
-  if arr[lo].compare(&arr[mid]) > 0 {
+  if arr[lo].compare(arr[mid]) > 0 {
     var t = arr[lo];
     arr[lo] = arr[mid];
     arr[mid] = t;
   }
-  if arr[lo].compare(&arr[hi]) > 0 {
+  if arr[lo].compare(arr[hi]) > 0 {
     var t = arr[lo];
     arr[lo] = arr[hi];
     arr[hi] = t;
   }
-  if arr[mid].compare(&arr[hi]) > 0 {
+  if arr[mid].compare(arr[hi]) > 0 {
     var t = arr[mid];
     arr[mid] = arr[hi];
     arr[hi] = t;
@@ -153,7 +153,7 @@ fn quick_sort_3way_range[T: Ord](arr: &mut Vec[T], lo: Int, hi: Int) {
   // Since compare uses &Self, we store a reference. Use arr[lo] as pivot anchor.
   // Work with a copy for comparisons; arr[lo] itself will be overwritten.
   while i <= gt {
-    var cmp = arr[i].compare(&arr[lo]);
+    var cmp = arr[i].compare(arr[lo]);
     if cmp < 0 {
       var swap_temp = arr[i];
       arr[i] = arr[lt];
@@ -201,7 +201,7 @@ fn merge_merge[T: Ord](arr: &mut Vec[T], temp: &mut Vec[T], lo: Int, mid: Int, h
   var end_right = hi - lo;
   var k = lo;
   while left_idx <= end_left && right_idx <= end_right {
-    if temp[left_idx].compare(&temp[right_idx]) <= 0 {
+    if temp[left_idx].compare(temp[right_idx]) <= 0 {
       arr[k] = temp[left_idx];
       left_idx = left_idx + 1;
     } else {
@@ -254,10 +254,10 @@ fn heap_sift_down[T: Ord](arr: &mut Vec[T], start: Int, end: Int) {
   loop {
     var child = 2 * root + 1;
     if child > end { break; }
-    if child + 1 <= end && arr[child].compare(&arr[child + 1]) < 0 {
+    if child + 1 <= end && arr[child].compare(arr[child + 1]) < 0 {
       child = child + 1;
     }
-    if arr[root].compare(&arr[child]) < 0 {
+    if arr[root].compare(arr[child]) < 0 {
       var temp = arr[root];
       arr[root] = arr[child];
       arr[child] = temp;
@@ -309,7 +309,7 @@ pub fn sort_shell[T: Ord](arr: &mut Vec[T]) {
     while i < n {
       var j = i;
       var temp_val = arr[i];
-      while j >= gap && arr[j - gap].compare(&temp_val) > 0 {
+      while j >= gap && arr[j - gap].compare(temp_val) > 0 {
         arr[j] = arr[j - gap];
         j = j - gap;
       }
@@ -452,7 +452,7 @@ pub fn is_sorted[T: Ord](arr: &Vec[T]) -> Bool {
   if n <= 1 { return true; }
   var i = 1;
   while i < n {
-    if arr[i - 1].compare(&arr[i]) > 0 {
+    if arr[i - 1].compare(arr[i]) > 0 {
       return false;
     }
     i = i + 1;
@@ -534,7 +534,7 @@ pub fn sort_by_key[T, K: Ord](arr: &mut Vec[T], key: fn(&T) -> K) {
     while j > 0 {
       var key_left = key(&arr[j - 1]);
       var key_right = key(&arr[j]);
-      if key_left.compare(&key_right) > 0 {
+      if key_left.compare(key_right) > 0 {
         var temp = arr[j - 1];
         arr[j - 1] = arr[j];
         arr[j] = temp;
@@ -624,7 +624,7 @@ pub fn partial_sort[T: Ord](arr: &mut Vec[T], k: Int) {
     var min_idx = i;
     var j = i + 1;
     while j < n {
-      if arr[j].compare(&arr[min_idx]) < 0 { min_idx = j; }
+      if arr[j].compare(arr[min_idx]) < 0 { min_idx = j; }
       j = j + 1;
     }
     if min_idx != i {
@@ -648,8 +648,8 @@ fn nth_partition[T: Ord](arr: &mut Vec[T], lo: Int, hi: Int) -> Int {
   var i = lo + 1;
   var j = hi;
   while i <= j {
-    while i <= j && arr[i].compare(&pivot) <= 0 { i = i + 1; }
-    while j >= i && arr[j].compare(&pivot) > 0 { j = j - 1; }
+    while i <= j && arr[i].compare(pivot) <= 0 { i = i + 1; }
+    while j >= i && arr[j].compare(pivot) > 0 { j = j - 1; }
     if i < j {
       var temp = arr[i];
       arr[i] = arr[j];
@@ -728,7 +728,7 @@ fn dual_pivot_range[T: Ord](arr: &mut Vec[T], lo: Int, hi: Int) {
     var i = lo + 1;
     while i <= hi {
       var j = i;
-      while j > lo && arr[j - 1].compare(&arr[j]) > 0 {
+      while j > lo && arr[j - 1].compare(arr[j]) > 0 {
         var temp = arr[j - 1];
         arr[j - 1] = arr[j];
         arr[j] = temp;
@@ -739,7 +739,7 @@ fn dual_pivot_range[T: Ord](arr: &mut Vec[T], lo: Int, hi: Int) {
     return;
   }
   // order the two pivots so arr[lo] <= arr[hi]
-  if arr[lo].compare(&arr[hi]) > 0 {
+  if arr[lo].compare(arr[hi]) > 0 {
     var t = arr[lo];
     arr[lo] = arr[hi];
     arr[hi] = t;
@@ -750,13 +750,13 @@ fn dual_pivot_range[T: Ord](arr: &mut Vec[T], lo: Int, hi: Int) {
   var gt = hi - 1;
   var k = lt;
   while k <= gt {
-    if arr[k].compare(&pivot1) < 0 {
+    if arr[k].compare(pivot1) < 0 {
       var t = arr[k];
       arr[k] = arr[lt];
       arr[lt] = t;
       lt = lt + 1;
       k = k + 1;
-    } elif arr[k].compare(&pivot2) > 0 {
+    } elif arr[k].compare(pivot2) > 0 {
       var t = arr[k];
       arr[k] = arr[gt];
       arr[gt] = t;

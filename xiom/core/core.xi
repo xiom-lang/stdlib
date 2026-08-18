@@ -236,7 +236,7 @@ pub fn to_int_from_char(c: Char) -> Int {
 pub fn is_sorted[T: Ord](items: &Slice[T]) -> Bool {
   var i: Int = 1;
   while i < items.len() {
-    if items[i - 1].compare(&items[i]) > 0 {
+    if items[i - 1].compare(items[i]) > 0 {
       return false;
     }
     i = i + 1;
@@ -269,7 +269,7 @@ pub fn none[T](items: &Slice[T], predicate: fn(T) -> Bool) -> Bool {
 pub fn contains[T: Eq](items: &Slice[T], value: T) -> Bool {
   var i: Int = 0;
   while i < items.len() {
-    if items[i].eq(&value) {
+    if items[i].eq(value) {
       return true;
     }
     i = i + 1;
@@ -283,16 +283,194 @@ interface Clone {
 }
 
 // === Eq interface ===
-interface Eq {
-  fn eq(other: &Self) -> Bool;
+// Generic-interface form (STDLIB_GENERICS §12): dispatch through
+// `a.eq(b)` — the method-form `a.eq(b)` inside generic-bound fns
+// resolves to a stub (TODO(compiler): BUG 45), and impl method names must
+// not collide with fn-typed params named `eq`/`compare` (TODO(compiler):
+// BUG 47 — fn-params in the stdlib are named `cmp` to avoid this).
+interface Eq[T] {
+  fn eq(a: T, b: T) -> Bool;
+}
+
+impl Eq[Int] {
+  fn eq(a: Int, b: Int) -> Bool { return a == b; }
+}
+
+impl Eq[Int8] {
+  fn eq(a: Int8, b: Int8) -> Bool { return a == b; }
+}
+
+impl Eq[Int16] {
+  fn eq(a: Int16, b: Int16) -> Bool { return a == b; }
+}
+
+impl Eq[Int32] {
+  fn eq(a: Int32, b: Int32) -> Bool { return a == b; }
+}
+
+impl Eq[Int64] {
+  fn eq(a: Int64, b: Int64) -> Bool { return a == b; }
+}
+
+impl Eq[UInt] {
+  fn eq(a: UInt, b: UInt) -> Bool { return a == b; }
+}
+
+impl Eq[UInt8] {
+  fn eq(a: UInt8, b: UInt8) -> Bool { return a == b; }
+}
+
+impl Eq[UInt16] {
+  fn eq(a: UInt16, b: UInt16) -> Bool { return a == b; }
+}
+
+impl Eq[UInt32] {
+  fn eq(a: UInt32, b: UInt32) -> Bool { return a == b; }
+}
+
+impl Eq[UInt64] {
+  fn eq(a: UInt64, b: UInt64) -> Bool { return a == b; }
+}
+
+impl Eq[Bool] {
+  fn eq(a: Bool, b: Bool) -> Bool { return a == b; }
+}
+
+impl Eq[Str] {
+  fn eq(a: Str, b: Str) -> Bool { return a == b; }
+}
+
+impl Eq[Char] {
+  fn eq(a: Char, b: Char) -> Bool { return a == b; }
+}
+
+impl Eq[Float32] {
+  fn eq(a: Float32, b: Float32) -> Bool { return a == b; }
+}
+
+impl Eq[Float64] {
+  fn eq(a: Float64, b: Float64) -> Bool { return a == b; }
 }
 
 // === Ord interface ===
-interface Ord {
-  fn compare(other: &Self) -> Int;
+interface Ord[T] {
+  fn compare(a: T, b: T) -> Int;
+}
+
+impl Ord[Int] {
+  fn compare(a: Int, b: Int) -> Int {
+    if a < b { return -1; }
+    if a > b { return 1; }
+    return 0;
+  }
+}
+
+impl Ord[Int8] {
+  fn compare(a: Int8, b: Int8) -> Int {
+    if a < b { return -1; }
+    if a > b { return 1; }
+    return 0;
+  }
+}
+
+impl Ord[Int16] {
+  fn compare(a: Int16, b: Int16) -> Int {
+    if a < b { return -1; }
+    if a > b { return 1; }
+    return 0;
+  }
+}
+
+impl Ord[Int32] {
+  fn compare(a: Int32, b: Int32) -> Int {
+    if a < b { return -1; }
+    if a > b { return 1; }
+    return 0;
+  }
+}
+
+impl Ord[Int64] {
+  fn compare(a: Int64, b: Int64) -> Int {
+    if a < b { return -1; }
+    if a > b { return 1; }
+    return 0;
+  }
+}
+
+impl Ord[UInt] {
+  fn compare(a: UInt, b: UInt) -> Int {
+    if a < b { return -1; }
+    if a > b { return 1; }
+    return 0;
+  }
+}
+
+impl Ord[UInt8] {
+  fn compare(a: UInt8, b: UInt8) -> Int {
+    if a < b { return -1; }
+    if a > b { return 1; }
+    return 0;
+  }
+}
+
+impl Ord[UInt16] {
+  fn compare(a: UInt16, b: UInt16) -> Int {
+    if a < b { return -1; }
+    if a > b { return 1; }
+    return 0;
+  }
+}
+
+impl Ord[UInt32] {
+  fn compare(a: UInt32, b: UInt32) -> Int {
+    if a < b { return -1; }
+    if a > b { return 1; }
+    return 0;
+  }
+}
+
+impl Ord[UInt64] {
+  fn compare(a: UInt64, b: UInt64) -> Int {
+    if a < b { return -1; }
+    if a > b { return 1; }
+    return 0;
+  }
+}
+
+impl Ord[Float32] {
+  fn compare(a: Float32, b: Float32) -> Int {
+    if a < b { return -1; }
+    if a > b { return 1; }
+    return 0;
+  }
+}
+
+impl Ord[Float64] {
+  fn compare(a: Float64, b: Float64) -> Int {
+    if a < b { return -1; }
+    if a > b { return 1; }
+    return 0;
+  }
+}
+
+impl Ord[Str] {
+  fn compare(a: Str, b: Str) -> Int {
+    if a < b { return -1; }
+    if a > b { return 1; }
+    return 0;
+  }
+}
+
+impl Ord[Char] {
+  fn compare(a: Char, b: Char) -> Int {
+    if a < b { return -1; }
+    if a > b { return 1; }
+    return 0;
+  }
 }
 
 // === Display interface ===
+
 interface Display {
   fn to_str() -> Str;
 }
@@ -775,7 +953,7 @@ fn sift_up[T: Ord](heap: &mut BinaryHeap[T], idx: Int)
   var i = idx;
   while i > 0 {
     let parent = (i - 1) / 2;
-    if heap.data[parent].compare(&heap.data[i]) >= 0 {
+    if Ord[T].compare(heap.data[parent], heap.data[i]) >= 0 {
       break;
     }
     let temp = heap.data[parent];
@@ -794,10 +972,10 @@ fn sift_down[T: Ord](heap: &mut BinaryHeap[T], idx: Int)
     let left = 2 * i + 1;
     let right = 2 * i + 2;
     var largest = i;
-    if left < len && heap.data[left].compare(&heap.data[largest]) > 0 {
+    if left < len && Ord[T].compare(heap.data[left], heap.data[largest]) > 0 {
       largest = left;
     }
-    if right < len && heap.data[right].compare(&heap.data[largest]) > 0 {
+    if right < len && Ord[T].compare(heap.data[right], heap.data[largest]) > 0 {
       largest = right;
     }
     if largest == i {
@@ -978,7 +1156,7 @@ pub fn min_slice[T: Ord](s: &Slice[T]) -> Option[T] {
   var min_idx: Int = 0;
   var i: Int = 1;
   while i < s.len() {
-    if s[i].compare(&s[min_idx]) < 0 {
+    if s[i].compare(s[min_idx]) < 0 {
       min_idx = i;
     };
     i = i + 1;
@@ -996,7 +1174,7 @@ pub fn max_slice[T: Ord](s: &Slice[T]) -> Option[T] {
   var max_idx: Int = 0;
   var i: Int = 1;
   while i < s.len() {
-    if s[i].compare(&s[max_idx]) > 0 {
+    if s[i].compare(s[max_idx]) > 0 {
       max_idx = i;
     };
     i = i + 1;
