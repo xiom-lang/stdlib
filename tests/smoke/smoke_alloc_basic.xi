@@ -1,5 +1,6 @@
 module smoke_alloc_basic
 use xiom.alloc;
+use xiom.ptr;
 
 fn main() -> Int {
   var p = alloc.alloc(64);

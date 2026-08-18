@@ -10,11 +10,27 @@ fn main() -> Int {
     if zero != 48 { return 3; }
     var space = convert.char_to_int(' ');
     if space != 32 { return 4; }
-    var char_a = convert.int_to_char(65);
-    if char_a != 'A' { return 5; }
-    var char_9 = convert.int_to_char(57);
-    if char_9 != '9' { return 6; }
-    var char_newline = convert.int_to_char(10);
-    if char_newline != '\n' { return 7; }
+    // int_to_char returns Option[Char] (None for out-of-range codes)
+    match convert.int_to_char(65) {
+        Some(c) => { if c != 'A' { return 5; } }
+        None => { return 10; }
+    }
+    match convert.int_to_char(57) {
+        Some(c) => { if c != '9' { return 6; } }
+        None => { return 11; }
+    }
+    match convert.int_to_char(10) {
+        Some(c) => { if c != '\n' { return 7; } }
+        None => { return 12; }
+    }
+    // out-of-range must be None
+    match convert.int_to_char(-1) {
+        Some(_) => { return 8; }
+        None => {}
+    }
+    match convert.int_to_char(1114112) {
+        Some(_) => { return 9; }
+        None => {}
+    }
     return 0;
 }
