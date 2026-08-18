@@ -1,5 +1,6 @@
 module smoke_alloc_edge
 use xiom.alloc;
+use xiom.ptr;
 
 fn main() -> Int {
   var ga = alloc.global_alloc();

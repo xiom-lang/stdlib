@@ -16,7 +16,7 @@ fn main() -> Int {
       Ok(c) => {
         var is_comp2 = compress.is_compressed(&c);
         var fmt = compress.detect_format(&c);
-        var ratio = compress.compression_ratio(data.len() as Float, c.len() as Float);
+        var ratio = compress.compression_ratio(data.len(), c.len());
 
         if is_comp {
           return 1;

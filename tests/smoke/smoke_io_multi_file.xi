@@ -1,5 +1,6 @@
 module smoke_io_multi_file
 use xiom.io;
+use xiom.convert;
 
 fn main() -> Int {
   var i: Int = 0;

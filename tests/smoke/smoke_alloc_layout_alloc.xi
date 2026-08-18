@@ -1,5 +1,6 @@
 module smoke_alloc_layout_alloc
 use xiom.alloc;
+use xiom.ptr;
 
 fn main() -> Int {
   var l = alloc.Layout.new(128);
