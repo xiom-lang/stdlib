@@ -9,11 +9,17 @@ fn main() -> Int {
 
   var rc = cell.RefCell.new(10);
   match rc.try_borrow() {
-    Some(r) => { if r.get() != 10 { return 3; } },
+    Some(r) => {
+      if r.get() != 10 { return 3; }
+      r.release();
+    },
     None => { return 4; },
   };
   match rc.try_borrow_mut() {
-    Some(rm) => { rm.set(20); },
+    Some(rm) => {
+      rm.set(20);
+      rm.release();
+    },
     None => { return 5; },
   };
   var old2 = rc.replace(30);

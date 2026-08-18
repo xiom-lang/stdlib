@@ -70,7 +70,7 @@ pub fn RefCell.new[T](value: T) -> RefCell[T]
   return RefCell[T]{ value: value; borrows: 0 };
 }
 
-pub fn RefCell.borrow[T](self) -> Ref[T]
+pub fn RefCell.borrow[T](&mut self) -> Ref[T]
   requires: borrows >= 0
 {
   unsafe {
@@ -83,7 +83,7 @@ pub fn RefCell.borrow[T](self) -> Ref[T]
   }
 }
 
-pub fn RefCell.borrow_mut[T](self) -> RefMut[T]
+pub fn RefCell.borrow_mut[T](&mut self) -> RefMut[T]
   requires: borrows == 0
 {
   unsafe {
@@ -96,7 +96,7 @@ pub fn RefCell.borrow_mut[T](self) -> RefMut[T]
   }
 }
 
-pub fn RefCell.try_borrow[T](self) -> Option[Ref[T]] {
+pub fn RefCell.try_borrow[T](&mut self) -> Option[Ref[T]] {
   unsafe {
     let raw = ptr.from_ref(self) as *mut RefCell[T];
     if (*raw).borrows == -1 {
@@ -107,7 +107,7 @@ pub fn RefCell.try_borrow[T](self) -> Option[Ref[T]] {
   }
 }
 
-pub fn RefCell.try_borrow_mut[T](self) -> Option[RefMut[T]] {
+pub fn RefCell.try_borrow_mut[T](&mut self) -> Option[RefMut[T]] {
   unsafe {
     let raw = ptr.from_ref(self) as *mut RefCell[T];
     if (*raw).borrows != 0 {
