@@ -1,24 +1,24 @@
 module smoke_stress_serialize_json_nested
-use xiom.serialize;
+use xiom.serialize.json;
 
 fn main() -> Int {
-    var arr = serialize.json_array_builder();
-    arr.push(serialize.json_int(1));
-    arr.push(serialize.json_int(2));
-    arr.push(serialize.json_int(3));
+    var arr = json.json_array_new();
+    arr = json.json_array_push(arr, json.json_number(1.0));
+    arr = json.json_array_push(arr, json.json_number(2.0));
+    arr = json.json_array_push(arr, json.json_number(3.0));
 
-    var inner = serialize.json_object_builder();
-    inner.insert("x", serialize.json_int(10));
-    inner.insert("y", serialize.json_int(20));
+    var inner = json.json_object_new();
+    inner = json.json_set(inner, "x", json.json_number(10.0));
+    inner = json.json_set(inner, "y", json.json_number(20.0));
 
-    var outer = serialize.json_object_builder();
-    outer.insert("name", serialize.json_string("test"));
-    outer.insert("points", arr.build());
-    outer.insert("coord", inner.build());
+    var outer = json.json_object_new();
+    outer = json.json_set(outer, "name", json.json_string("test"));
+    outer = json.json_set(outer, "points", arr);
+    outer = json.json_set(outer, "coord", inner);
 
-    var json_str = outer.build();
+    var json_str = json.json_stringify(outer);
     if json_str.len() > 0 {
-      var result = serialize.parse_json(&json_str);
+      var result = json.json_parse(json_str);
       if result.is_ok {
         return 0;
       }
