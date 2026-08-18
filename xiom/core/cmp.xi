@@ -145,36 +145,36 @@ pub fn Reverse.new[T](value: T) -> Reverse[T] {
 
 /// Minimum of three values. O(1).
 pub fn min3[T: Ord](a: T, b: T, c: T) -> T {
-  if a.compare(&b) <= 0 {
-    if a.compare(&c) <= 0 { a } else { c }
+  if a.compare(b) <= 0 {
+    if a.compare(c) <= 0 { a } else { c }
   } else {
-    if b.compare(&c) <= 0 { b } else { c }
+    if b.compare(c) <= 0 { b } else { c }
   }
 }
 
 /// Maximum of three values. O(1).
 pub fn max3[T: Ord](a: T, b: T, c: T) -> T {
-  if a.compare(&b) >= 0 {
-    if a.compare(&c) >= 0 { a } else { c }
+  if a.compare(b) >= 0 {
+    if a.compare(c) >= 0 { a } else { c }
   } else {
-    if b.compare(&c) >= 0 { b } else { c }
+    if b.compare(c) >= 0 { b } else { c }
   }
 }
 
 /// Returns true if `value` is in the closed interval [lo, hi]. O(1).
 pub fn is_between[T: Ord](value: T, lo: T, hi: T) -> Bool {
-  value.compare(&lo) >= 0 && value.compare(&hi) <= 0
+  value.compare(lo) >= 0 && value.compare(hi) <= 0
 }
 
 /// Median of three values (the value that would be in the middle when sorted). O(1).
 pub fn median3[T: Ord](a: T, b: T, c: T) -> T {
-  if a.compare(&b) <= 0 {
-    if b.compare(&c) <= 0 { b }
-    elif a.compare(&c) <= 0 { c }
+  if a.compare(b) <= 0 {
+    if b.compare(c) <= 0 { b }
+    elif a.compare(c) <= 0 { c }
     else { a }
   } else {
-    if a.compare(&c) <= 0 { a }
-    elif b.compare(&c) <= 0 { c }
+    if a.compare(c) <= 0 { a }
+    elif b.compare(c) <= 0 { c }
     else { b }
   }
 }
@@ -193,7 +193,7 @@ pub fn min_of_vec[T: Ord](v: &Vec[T]) -> Option[T] {
   var min_val = v[0];
   var i = 1;
   while i < n {
-    if v[i].compare(&min_val) < 0 { min_val = v[i]; }
+    if v[i].compare(min_val) < 0 { min_val = v[i]; }
     i = i + 1;
   }
   Some(min_val)
@@ -206,7 +206,7 @@ pub fn max_of_vec[T: Ord](v: &Vec[T]) -> Option[T] {
   var max_val = v[0];
   var i = 1;
   while i < n {
-    if v[i].compare(&max_val) > 0 { max_val = v[i]; }
+    if v[i].compare(max_val) > 0 { max_val = v[i]; }
     i = i + 1;
   }
   Some(max_val)

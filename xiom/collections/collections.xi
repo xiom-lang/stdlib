@@ -1181,7 +1181,7 @@ pub fn vec_min[T: Ord](v: &Vec[T]) -> Option[T] {
   var min_val = v[0];
   var i = 1;
   while i < n {
-    if v[i].compare(&min_val) < 0 { min_val = v[i]; }
+    if v[i].compare(min_val) < 0 { min_val = v[i]; }
     i = i + 1;
   }
   Some(min_val)
@@ -1194,7 +1194,7 @@ pub fn vec_max[T: Ord](v: &Vec[T]) -> Option[T] {
   var max_val = v[0];
   var i = 1;
   while i < n {
-    if v[i].compare(&max_val) > 0 { max_val = v[i]; }
+    if v[i].compare(max_val) > 0 { max_val = v[i]; }
     i = i + 1;
   }
   Some(max_val)
@@ -1643,7 +1643,7 @@ pub fn vec_is_sorted[T: Ord](v: &Vec[T]) -> Bool {
   if n <= 1 { return true; }
   var i = 1;
   while i < n {
-    if v[i - 1].compare(&v[i]) > 0 { return false; }
+    if v[i - 1].compare(v[i]) > 0 { return false; }
     i = i + 1;
   }
   return true;
