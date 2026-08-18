@@ -1,14 +1,21 @@
 module smoke_sync_rwlock
-use xiom.sync;
+use xiom.sync.rwlock;
 
 fn main() -> Int {
-  var l = sync.RwLock.new(42);
+  var l = rwlock.rwlock_new();
+  rwlock.rwlock_read_lock(&l);
+  if rwlock.rwlock_is_write_locked(&l) { return 1; }
+  rwlock.rwlock_read_unlock(&l);
 
-  var rg = l.read();
-  if rg.get() != 42 { return 1; }
+  rwlock.rwlock_write_lock(&l);
+  if not rwlock.rwlock_is_write_locked(&l) { return 2; }
+  rwlock.rwlock_write_unlock(&l);
+  if rwlock.rwlock_is_write_locked(&l) { return 3; }
 
-  var wg = l.write();
-  if wg.get() != 42 { return 2; }
+  if not rwlock.rwlock_read_try_lock(&l) { return 4; }
+  rwlock.rwlock_read_unlock(&l);
+  if not rwlock.rwlock_write_try_lock(&l) { return 5; }
+  rwlock.rwlock_write_unlock(&l);
 
   return 0;
 }
