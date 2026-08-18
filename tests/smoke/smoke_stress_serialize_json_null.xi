@@ -7,6 +7,4 @@ fn main() -> Int {
     if n.len() > 0 {
       return 0;
     }
-    return 1;
-  }
-}
+    return 1;}

@@ -11,7 +11,7 @@ fn main() -> Int {
         var decompressed = compress.deflate_decompress(&c);
         match decompressed {
           Ok(result) => {
-            if result.len() == 0 {
+            if result.len() == data.len() {
               return 0;
             }
             return 1;
@@ -20,6 +20,4 @@ fn main() -> Int {
         }
       }
       Err(_) => { return 1; }
-    }
-  }
-}
+    }}
