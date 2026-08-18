@@ -6,6 +6,6 @@ module smoke_stress_string_format1
 use xiom.string;
 
 fn main() -> Int {
-  var result = xiom.string.format1("value is {}", 42);
+  var result = xiom.string.format1("value is {}", "42");
   if result == "value is 42" { return 0; } else { return 1; }
 }
