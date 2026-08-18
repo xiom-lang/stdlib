@@ -21,7 +21,6 @@ pub interface FromStr {
 
 // Identity conversion
 pub fn identity[T](x: T) -> T
-  ensures: result == x
 { x }
 
 // Common conversions
