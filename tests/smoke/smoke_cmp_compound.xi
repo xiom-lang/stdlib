@@ -5,7 +5,7 @@ fn main() -> Int {
   var a = cmp.min(10, 20);
   var b = cmp.max(a, 5);
   var c = cmp.clamp(b, 0, 15);
-  if c != 15 { return 1; }
+  if c != 10 { return 1; }
 
   var x = cmp.clamp_float(25.0, 0.0, 10.0);
   var y = cmp.max_float(x, 5.0);
