@@ -9,7 +9,7 @@ fn main() -> Int {
 
     var result = compress.gzip_decompress(&bad);
 
-    if not result.is_ok() {
+    if not result.is_ok {
       return 0;
     }
     return 1;}
