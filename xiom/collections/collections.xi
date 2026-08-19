@@ -159,7 +159,6 @@ fn Vec.insert[T](index: Int, value: T)
 }
 
 fn Vec.remove[T](index: Int) -> Option[T]
-  requires: index >= 0
   ensures:  result is Some => len() == len()@pre - 1
 {
   if index < 0 || index >= len { return None; }
