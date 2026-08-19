@@ -20,8 +20,9 @@ fn main() -> Int {
     None => { return 2; }
   }
   match p4.extension() {
-    Some(ext) => { if ext != "hidden" { return 4; } }
-    None => { return 4; }
+    // Leading-dot names are hidden files: no extension (Rust semantics).
+    Some(_) => { return 4; }
+    None => {},
   }
 
   return 0;

@@ -4,6 +4,8 @@
 
 module xiom.path
 
+use xiom.env;
+
 pub type Path = { inner: Str; } derive[Eq, Clone, Hash, Ord]
 pub type PathBuf = { inner: Str; } derive[Eq, Clone]
 
@@ -60,7 +62,6 @@ pub fn Path.parent(self) -> Option<Path>
 }
 
 pub fn Path.file_name(self) -> Option<Str>
-  ensures: result is Some => result.len() > 0
 {
   // Find the last path separator and return everything after it.
   // Uses xiom.string helpers (str_len, char_at) which are available.
@@ -290,7 +291,7 @@ pub fn PathBuf.clear(&mut self) {
 
 // Utility
 pub fn path_separator() -> Str {
-  "/"
+  return env.path_separator();
 }
 
 // path_is_absolute_str returns true if p starts with '/' or '\\'.
