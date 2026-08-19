@@ -8,7 +8,7 @@ use xiom.path;
 fn main() -> Int {
   var p1 = path.Path.new("src/main.xi");
   var changed = p1.with_extension("txt");
-  if changed.as_path().to_str() != "src/main.txt" { return 1; }
+  if changed.as_path().to_str() != "src" + path.path_separator() + "main.txt" { return 1; }
 
   var p2 = path.Path.new("README");
   var added = p2.with_extension("md");
