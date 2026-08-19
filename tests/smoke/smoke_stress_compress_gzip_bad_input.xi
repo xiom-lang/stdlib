@@ -9,7 +9,8 @@ fn main() -> Int {
 
     var result = compress.gzip_decompress(&bad);
 
-    if not result.is_ok {
-      return 0;
+    match result {
+      Err(_) => { return 0; }
+      Ok(_) => { return 1; }
     }
-    return 1;}
+}
