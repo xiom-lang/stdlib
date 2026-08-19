@@ -7,7 +7,7 @@ fn main() -> Int {
     Some(caps) => {
       match caps.get(1) {
         Some(m) => {
-          if m.as_str() == "hello" { return 0; } else { return 3; }
+          if m.text == "hello" { return 0; } else { return 3; }
         }
         None => { return 2; }
       }
