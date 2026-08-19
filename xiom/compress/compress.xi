@@ -229,7 +229,6 @@ pub fn gzip_compress_level(data: &Vec[UInt8], level: Int) -> Result<Vec[UInt8], 
 }
 
 pub fn gzip_decompress(data: &Vec[UInt8]) -> Result<Vec[UInt8], Str]
-  requires: data.len() >= 18
   ensures:  result is Ok => result.len() >= 0
   ensures: true
 {
@@ -379,7 +378,6 @@ pub fn zlib_compress_level(data: &Vec[UInt8], level: Int) -> Result<Vec[UInt8], 
 }
 
 pub fn zlib_decompress(data: &Vec[UInt8]) -> Result<Vec[UInt8], Str]
-  requires: data.len() >= 6
   ensures:  result is Ok => result.len() >= 0
   ensures: true
 {
