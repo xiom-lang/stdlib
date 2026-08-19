@@ -28,7 +28,7 @@ pub fn PathBuf.from(s: Str) -> PathBuf
 
 // Path operations
 pub fn Path.parent(self) -> Option<Path>
-  ensures: result is None => self.inner does not contain a parent directory
+  // (was: ensures prose — contract-eval Str field read corrupts the fn, BUG 56 family; the prose is documentation, moved here)
 {
   // Find the last path separator not at the end, return everything before it.
   var s = self.inner;
@@ -243,40 +243,40 @@ pub fn Path.canonicalize(self) -> Result<PathBuf, Str>
   return Ok(PathBuf{ inner: result });
 }
 
-pub fn Path.starts_with(self, base: &Path) -> Bool {
+pub fn Path.starts_with(self, base: Path) -> Bool {
   return str_starts_with(self.inner, base.inner);
 }
 
-pub fn Path.ends_with(self, child: &Path) -> Bool {
+pub fn Path.ends_with(self, child: Path) -> Bool {
   return str_ends_with(self.inner, child.inner);
 }
 
 // PathBuf operations
-// NOTE: These take self by value and return the modified PathBuf.
-// &mut self is not yet supported in the codegen (STATUS_ACCESS_VIOLATION).
-pub fn PathBuf.push(self, component: Str) -> PathBuf
+// NOTE: These take &mut self (the old by-value forms mutated a copy and
+// required callers to capture the return — the stale "&mut self not
+// supported" note predates the BUG 55 fixes; cell.xi &mut self works).
+pub fn PathBuf.push(&mut self, component: Str)
   requires: component.len() >= 0
 {
   if is_empty(self.inner) {
     self.inner = component;
-    return self;
+    return;
   }
   if str_ends_with(self.inner, "/") || str_ends_with(self.inner, "\\") {
     self.inner = str_concat(self.inner, component);
-    return self;
+    return;
   }
   self.inner = str_concat(str_concat(self.inner, "/"), component);
-  return self;
 }
 
-pub fn PathBuf.pop(self) -> (PathBuf, Bool) {
+pub fn PathBuf.pop(&mut self) -> Bool {
   var p = parent_path(self.inner);
   match p {
     Some(parent) => {
       self.inner = parent;
-      return (self, true);
+      return true;
     }
-    None => { return (self, false); }
+    None => { return false; }
   }
 }
 
@@ -284,7 +284,7 @@ pub fn PathBuf.as_path(self) -> Path {
   Path{ inner: self.inner; }
 }
 
-pub fn PathBuf.clear(self) {
+pub fn PathBuf.clear(&mut self) {
   self.inner = "";
 }
 
