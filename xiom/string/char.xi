@@ -72,7 +72,6 @@ pub fn to_uppercase(c: Char) -> Char {
 }
 
 pub fn to_digit(c: Char, radix: Int) -> Option[Int]
-  requires: 2 <= radix && radix <= 36
 {
   if radix < 2 || radix > 36 {
     return None;
@@ -103,7 +102,6 @@ pub fn to_digit(c: Char, radix: Int) -> Option[Int]
 }
 
 pub fn from_digit(n: Int, radix: Int) -> Option[Char]
-  requires: 2 <= radix && radix <= 36
 {
   if radix < 2 || radix > 36 {
     return None;
