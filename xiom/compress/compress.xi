@@ -42,13 +42,17 @@ fn GzipCompressor.decompress(self, data: &Vec[UInt8]) -> Result<Vec[UInt8], Str>
   gzip_decompress(data)
 }
 
-// === CRC32 table ===
-var _crc32_table: [256]UInt;
-
-fn _crc32_init() {
+// === CRC32 (bitwise, no lookup table) ===
+// NOTE: the module-global [256]UInt table element writes go to a stack copy
+// (BUG 2 family — array elements on module globals) so the table never
+// initialized and gzip CRCs were NOT real-gzip compatible. The bitwise form
+// is table-free, correct, and interoperable with external gzip tools.
+fn crc32(data: &Vec[UInt8]) -> UInt {
+  var crc = 0xFFFFFFFF as UInt;
   var i = 0;
-  while i < 256 {
-    var crc = i as UInt;
+  let len = data.len();
+  while i < len {
+    crc = crc ^ (data[i] as UInt);
     var j = 0;
     while j < 8 {
       if (crc & 1) == 1 {
@@ -58,21 +62,6 @@ fn _crc32_init() {
       }
       j = j + 1;
     }
-    _crc32_table[i] = crc;
-    i = i + 1;
-  }
-}
-
-fn crc32(data: &Vec[UInt8]) -> UInt {
-  if _crc32_table[1] == 0 {
-    _crc32_init();
-  }
-  var crc = 0xFFFFFFFF as UInt;
-  var i = 0;
-  let len = data.len();
-  while i < len {
-    let idx = ((crc ^ (data[i] as UInt)) & 0xFF) as Int;
-    crc = (crc >> 8) ^ _crc32_table[idx];
     i = i + 1;
   }
   return crc ^ 0xFFFFFFFF as UInt;
