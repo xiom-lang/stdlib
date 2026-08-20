@@ -334,7 +334,7 @@ fn Set.new[T]() -> Set[T] {
   return Set[T]{ items: Vec[T].new() };
 }
 
-fn Set.insert[T](value: T)
+fn Set.insert[T](&mut self, value: T)
   ensures: contains(&value)
 {
   var i = 0;
@@ -342,10 +342,12 @@ fn Set.insert[T](value: T)
     if items[i] == value { return; }
     i = i + 1;
   }
-  items.push(value);
+  var it = items;
+  it.push(value);
+  items = it;
 }
 
-fn Set.remove[T](value: &T)
+fn Set.remove[T](&mut self, value: &T)
   ensures: !contains(value)
 {
   var i = 0;
@@ -356,7 +358,9 @@ fn Set.remove[T](value: &T)
         items[j] = items[j + 1];
         j = j + 1;
       }
-      items.pop();
+      var it = items;
+      it.pop();
+      items = it;
       return;
     }
     i = i + 1;
@@ -499,10 +503,12 @@ fn Queue.new[T]() -> Queue[T] {
   return Queue[T]{ data: Vec[T].new(), head: 0, tail: 0 };
 }
 
-fn Queue.enqueue[T](value: T)
+fn Queue.enqueue[T](&mut self, value: T)
   ensures: len() == len()@pre + 1
 {
-  data.push(value);
+  var d = data;
+  d.push(value);
+  data = d;
   tail = tail + 1;
 }
 
@@ -594,10 +600,12 @@ fn VecDeque.with_capacity[T](cap: Int) -> VecDeque[T] {
 fn VecDeque.push_front[T](&mut self, value: T)
   ensures: len() == len()@pre + 1
 {
+  // rebuild over the LIVE range only — copying all of data re-pushes
+  // elements already drained by pop_front (stale 20 bug)
   var new_data = Vec[T].new();
   new_data.push(value);
-  var i = 0;
-  while i < data.len() {
+  var i = head;
+  while i < tail {
     new_data.push(data[i]);
     i = i + 1;
   }
