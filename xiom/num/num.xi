@@ -48,6 +48,116 @@ pub interface Bounded {
   fn max_value() -> Self;
   fn epsilon() -> Self;
   fn zero() -> Self;
+  fn is_finite() -> Bool;
+  fn is_infinite() -> Bool;
+}
+
+impl Bounded[Int] {
+  fn min_value() -> Int { return -9223372036854775807 - 1; }
+  fn max_value() -> Int { return 9223372036854775807; }
+  fn epsilon() -> Int { return 1; }
+  fn zero() -> Int { return 0; }
+  fn is_finite() -> Bool { return true; }
+  fn is_infinite() -> Bool { return false; }
+}
+
+impl Bounded[Int8] {
+  fn min_value() -> Int8 { return -128 as Int8; }
+  fn max_value() -> Int8 { return 127 as Int8; }
+  fn epsilon() -> Int8 { return 1 as Int8; }
+  fn zero() -> Int8 { return 0 as Int8; }
+  fn is_finite() -> Bool { return true; }
+  fn is_infinite() -> Bool { return false; }
+}
+
+impl Bounded[Int16] {
+  fn min_value() -> Int16 { return -32768 as Int16; }
+  fn max_value() -> Int16 { return 32767 as Int16; }
+  fn epsilon() -> Int16 { return 1 as Int16; }
+  fn zero() -> Int16 { return 0 as Int16; }
+  fn is_finite() -> Bool { return true; }
+  fn is_infinite() -> Bool { return false; }
+}
+
+impl Bounded[Int32] {
+  fn min_value() -> Int32 { return -2147483648 as Int32; }
+  fn max_value() -> Int32 { return 2147483647 as Int32; }
+  fn epsilon() -> Int32 { return 1 as Int32; }
+  fn zero() -> Int32 { return 0 as Int32; }
+  fn is_finite() -> Bool { return true; }
+  fn is_infinite() -> Bool { return false; }
+}
+
+impl Bounded[Int64] {
+  fn min_value() -> Int64 { return -9223372036854775807 - 1; }
+  fn max_value() -> Int64 { return 9223372036854775807; }
+  fn epsilon() -> Int64 { return 1; }
+  fn zero() -> Int64 { return 0; }
+  fn is_finite() -> Bool { return true; }
+  fn is_infinite() -> Bool { return false; }
+}
+
+impl Bounded[UInt] {
+  fn min_value() -> UInt { return 0; }
+  fn max_value() -> UInt { return 18446744073709551615; }
+  fn epsilon() -> UInt { return 1; }
+  fn zero() -> UInt { return 0; }
+  fn is_finite() -> Bool { return true; }
+  fn is_infinite() -> Bool { return false; }
+}
+
+impl Bounded[UInt8] {
+  fn min_value() -> UInt8 { return 0 as UInt8; }
+  fn max_value() -> UInt8 { return 255 as UInt8; }
+  fn epsilon() -> UInt8 { return 1 as UInt8; }
+  fn zero() -> UInt8 { return 0 as UInt8; }
+  fn is_finite() -> Bool { return true; }
+  fn is_infinite() -> Bool { return false; }
+}
+
+impl Bounded[UInt16] {
+  fn min_value() -> UInt16 { return 0 as UInt16; }
+  fn max_value() -> UInt16 { return 65535 as UInt16; }
+  fn epsilon() -> UInt16 { return 1 as UInt16; }
+  fn zero() -> UInt16 { return 0 as UInt16; }
+  fn is_finite() -> Bool { return true; }
+  fn is_infinite() -> Bool { return false; }
+}
+
+impl Bounded[UInt32] {
+  fn min_value() -> UInt32 { return 0 as UInt32; }
+  fn max_value() -> UInt32 { return 4294967295 as UInt32; }
+  fn epsilon() -> UInt32 { return 1 as UInt32; }
+  fn zero() -> UInt32 { return 0 as UInt32; }
+  fn is_finite() -> Bool { return true; }
+  fn is_infinite() -> Bool { return false; }
+}
+
+impl Bounded[UInt64] {
+  fn min_value() -> UInt64 { return 0; }
+  fn max_value() -> UInt64 { return 18446744073709551615; }
+  fn epsilon() -> UInt64 { return 1; }
+  fn zero() -> UInt64 { return 0; }
+  fn is_finite() -> Bool { return true; }
+  fn is_infinite() -> Bool { return false; }
+}
+
+impl Bounded[Float32] {
+  fn min_value() -> Float32 { return -3.4028234663852886e38 as Float32; }
+  fn max_value() -> Float32 { return 3.4028234663852886e38 as Float32; }
+  fn epsilon() -> Float32 { return 1.1920929e-7 as Float32; }
+  fn zero() -> Float32 { return 0.0 as Float32; }
+  fn is_finite() -> Bool { return true; }
+  fn is_infinite() -> Bool { return false; }
+}
+
+impl Bounded[Float64] {
+  fn min_value() -> Float64 { return -1.7976931348623157e308; }
+  fn max_value() -> Float64 { return 1.7976931348623157e308; }
+  fn epsilon() -> Float64 { return 2.220446049250313e-16; }
+  fn zero() -> Float64 { return 0.0; }
+  fn is_finite() -> Bool { return true; }
+  fn is_infinite() -> Bool { return false; }
 }
 
 pub fn min_value[T: Bounded]() -> T {
