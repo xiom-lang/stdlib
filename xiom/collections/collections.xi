@@ -433,7 +433,7 @@ fn LinkedList.new[T]() -> LinkedList[T] {
   return LinkedList[T]{ items: Vec[T].new() };
 }
 
-fn LinkedList.push_front[T](value: T)
+fn LinkedList.push_front[T](&mut self, value: T)
   ensures: len() == len()@pre + 1
 {
   var new_items = Vec[T].new();
@@ -446,13 +446,16 @@ fn LinkedList.push_front[T](value: T)
   items = new_items;
 }
 
-fn LinkedList.push_back[T](value: T)
+fn LinkedList.push_back[T](&mut self, value: T)
   ensures: len() == len()@pre + 1
 {
-  items.push(value);
+  // read-modify-write-back (field-copy push loses the len)
+  var it = items;
+  it.push(value);
+  items = it;
 }
 
-fn LinkedList.pop_front[T]() -> Option[T]
+fn LinkedList.pop_front[T](&mut self) -> Option[T]
   ensures: result is Some => len() == len()@pre - 1
 {
   if items.len() == 0 { return None; }
@@ -466,7 +469,7 @@ fn LinkedList.pop_front[T]() -> Option[T]
   return Some(val);
 }
 
-fn LinkedList.pop_back[T]() -> Option[T]
+fn LinkedList.pop_back[T](&mut self) -> Option[T]
   ensures: result is Some => len() == len()@pre - 1
 {
   if items.len() == 0 { return None; }
@@ -537,19 +540,23 @@ fn Stack.new[T]() -> Stack[T] {
   return Stack[T]{ items: Vec[T].new() };
 }
 
-fn Stack.push[T](value: T)
+fn Stack.push[T](&mut self, value: T)
   ensures: len() == len()@pre + 1
 {
-  items.push(value);
+  var it = items;
+  it.push(value);
+  items = it;
 }
 
-fn Stack.pop[T]() -> Option[T]
+fn Stack.pop[T](&mut self) -> Option[T]
   ensures: result is Some => len() == len()@pre - 1
 {
   if items.len() == 0 { return None; }
   var idx = items.len() - 1;
   var val = items[idx];
-  items.pop();
+  var it = items;
+  it.pop();
+  items = it;
   return Some(val);
 }
 
@@ -584,7 +591,7 @@ fn VecDeque.with_capacity[T](cap: Int) -> VecDeque[T] {
   return VecDeque[T]{ data: Vec[T].with_capacity(cap), head: 0, tail: 0 };
 }
 
-fn VecDeque.push_front[T](value: T)
+fn VecDeque.push_front[T](&mut self, value: T)
   ensures: len() == len()@pre + 1
 {
   var new_data = Vec[T].new();
@@ -599,14 +606,17 @@ fn VecDeque.push_front[T](value: T)
   head = 0;
 }
 
-fn VecDeque.push_back[T](value: T)
+fn VecDeque.push_back[T](&mut self, value: T)
   ensures: len() == len()@pre + 1
 {
-  data.push(value);
+  // read-modify-write-back: a field-copy Vec push loses the len on the copy
+  var d = data;
+  d.push(value);
+  data = d;
   tail = data.len();
 }
 
-fn VecDeque.pop_front[T]() -> Option[T]
+fn VecDeque.pop_front[T](&mut self) -> Option[T]
   ensures: result is Some => len() == len()@pre - 1
 {
   if head >= tail { return None; }
@@ -615,7 +625,7 @@ fn VecDeque.pop_front[T]() -> Option[T]
   return Some(val);
 }
 
-fn VecDeque.pop_back[T]() -> Option[T]
+fn VecDeque.pop_back[T](&mut self) -> Option[T]
   ensures: result is Some => len() == len()@pre - 1
 {
   if head >= tail { return None; }
@@ -623,14 +633,14 @@ fn VecDeque.pop_back[T]() -> Option[T]
   return Some(data[tail]);
 }
 
-fn VecDeque.front[T]() -> Option[T]
+fn VecDeque.front[T](&mut self) -> Option[T]
   ensures: len() == len()@pre
 {
   if head >= tail { return None; }
   return Some(data[head]);
 }
 
-fn VecDeque.back[T]() -> Option[T]
+fn VecDeque.back[T](&mut self) -> Option[T]
   ensures: len() == len()@pre
 {
   if head >= tail { return None; }
