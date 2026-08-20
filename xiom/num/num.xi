@@ -67,8 +67,15 @@ pub fn gcd(a: Int, b: Int) -> Int
   ensures: result >= 0
   ensures: a == 0 && b == 0 => result == 0
 {
-  if b == 0 { return a; }
-  return gcd(b, a % b);
+  // abs-normalize both args so Euclid's recursion stays non-negative
+  // (the naive form returns negative gcds for negative inputs and traps
+  // its own ensure). NOTE: i64::MIN abs overflows — such inputs trap.
+  var x = a;
+  var y = b;
+  if x < 0 { x = -x; }
+  if y < 0 { y = -y; }
+  if y == 0 { return x; }
+  return gcd(y, x % y);
 }
 
 pub fn lcm(a: Int, b: Int) -> Int {
