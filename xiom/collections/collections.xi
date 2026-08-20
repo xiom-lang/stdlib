@@ -347,12 +347,12 @@ fn Set.insert[T](&mut self, value: T)
   items = it;
 }
 
-fn Set.remove[T](&mut self, value: &T)
-  ensures: !contains(value)
+fn Set.remove[T](&mut self, value: T)
+  ensures: !contains(&value)
 {
   var i = 0;
   while i < items.len() {
-    if items[i] == *value {
+    if items[i] == value {
       var j = i;
       while j + 1 < items.len() {
         items[j] = items[j + 1];
