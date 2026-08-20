@@ -11,6 +11,7 @@ fn main() -> Int {
     Some(up) => {
       if up.get() != 100 { return 2; }
       if up.strong_count() != 2 { return 3; }
+      up.drop();
     },
     None => { return 4; },
   };
