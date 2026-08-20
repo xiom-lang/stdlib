@@ -358,182 +358,195 @@ interface Ord[T] {
   fn cmp(a: T, b: T) -> Int;
 }
 
-impl Ord[] {
-  fn compare(a: , b: ) -> Int {
+impl Ord[Int] {
+  fn compare(a: Int, b: Int) -> Int {
     if a < b { return -1; }
     if a > b { return 1; }
     return 0;
   }
-  fn cmp(a: , b: ) -> Int {
-    if a < b { return -1; }
-    if a > b { return 1; }
-    return 0;
-  }
-}
-
-impl Ord[] {
-  fn compare(a: , b: ) -> Int {
-    if a < b { return -1; }
-    if a > b { return 1; }
-    return 0;
-  }
-  fn cmp(a: , b: ) -> Int {
+  fn cmp(a: Int, b: Int) -> Int {
     if a < b { return -1; }
     if a > b { return 1; }
     return 0;
   }
 }
 
-impl Ord[] {
-  fn compare(a: , b: ) -> Int {
+impl Ord[Int8] {
+  fn compare(a: Int8, b: Int8) -> Int {
     if a < b { return -1; }
     if a > b { return 1; }
     return 0;
   }
-  fn cmp(a: , b: ) -> Int {
-    if a < b { return -1; }
-    if a > b { return 1; }
-    return 0;
-  }
-}
-
-impl Ord[] {
-  fn compare(a: , b: ) -> Int {
-    if a < b { return -1; }
-    if a > b { return 1; }
-    return 0;
-  }
-  fn cmp(a: , b: ) -> Int {
+  fn cmp(a: Int8, b: Int8) -> Int {
     if a < b { return -1; }
     if a > b { return 1; }
     return 0;
   }
 }
 
-impl Ord[] {
-  fn compare(a: , b: ) -> Int {
+impl Ord[Int16] {
+  fn compare(a: Int16, b: Int16) -> Int {
     if a < b { return -1; }
     if a > b { return 1; }
     return 0;
   }
-  fn cmp(a: , b: ) -> Int {
-    if a < b { return -1; }
-    if a > b { return 1; }
-    return 0;
-  }
-}
-
-impl Ord[] {
-  fn compare(a: , b: ) -> Int {
-    if a < b { return -1; }
-    if a > b { return 1; }
-    return 0;
-  }
-  fn cmp(a: , b: ) -> Int {
+  fn cmp(a: Int16, b: Int16) -> Int {
     if a < b { return -1; }
     if a > b { return 1; }
     return 0;
   }
 }
 
-impl Ord[] {
-  fn compare(a: , b: ) -> Int {
+impl Ord[Int32] {
+  fn compare(a: Int32, b: Int32) -> Int {
     if a < b { return -1; }
     if a > b { return 1; }
     return 0;
   }
-  fn cmp(a: , b: ) -> Int {
-    if a < b { return -1; }
-    if a > b { return 1; }
-    return 0;
-  }
-}
-
-impl Ord[] {
-  fn compare(a: , b: ) -> Int {
-    if a < b { return -1; }
-    if a > b { return 1; }
-    return 0;
-  }
-  fn cmp(a: , b: ) -> Int {
+  fn cmp(a: Int32, b: Int32) -> Int {
     if a < b { return -1; }
     if a > b { return 1; }
     return 0;
   }
 }
 
-impl Ord[] {
-  fn compare(a: , b: ) -> Int {
+impl Ord[Int64] {
+  fn compare(a: Int64, b: Int64) -> Int {
     if a < b { return -1; }
     if a > b { return 1; }
     return 0;
   }
-  fn cmp(a: , b: ) -> Int {
-    if a < b { return -1; }
-    if a > b { return 1; }
-    return 0;
-  }
-}
-
-impl Ord[] {
-  fn compare(a: , b: ) -> Int {
-    if a < b { return -1; }
-    if a > b { return 1; }
-    return 0;
-  }
-  fn cmp(a: , b: ) -> Int {
+  fn cmp(a: Int64, b: Int64) -> Int {
     if a < b { return -1; }
     if a > b { return 1; }
     return 0;
   }
 }
 
-impl Ord[] {
-  fn compare(a: , b: ) -> Int {
+impl Ord[UInt] {
+  fn compare(a: UInt, b: UInt) -> Int {
     if a < b { return -1; }
     if a > b { return 1; }
     return 0;
   }
-  fn cmp(a: , b: ) -> Int {
-    if a < b { return -1; }
-    if a > b { return 1; }
-    return 0;
-  }
-}
-
-impl Ord[] {
-  fn compare(a: , b: ) -> Int {
-    if a < b { return -1; }
-    if a > b { return 1; }
-    return 0;
-  }
-  fn cmp(a: , b: ) -> Int {
+  fn cmp(a: UInt, b: UInt) -> Int {
     if a < b { return -1; }
     if a > b { return 1; }
     return 0;
   }
 }
 
-impl Ord[] {
-  fn compare(a: , b: ) -> Int {
+impl Ord[UInt8] {
+  fn compare(a: UInt8, b: UInt8) -> Int {
     if a < b { return -1; }
     if a > b { return 1; }
     return 0;
   }
-  fn cmp(a: , b: ) -> Int {
+  fn cmp(a: UInt8, b: UInt8) -> Int {
     if a < b { return -1; }
     if a > b { return 1; }
     return 0;
   }
 }
 
-impl Ord[] {
-  fn compare(a: , b: ) -> Int {
+impl Ord[UInt16] {
+  fn compare(a: UInt16, b: UInt16) -> Int {
     if a < b { return -1; }
     if a > b { return 1; }
     return 0;
   }
-  fn cmp(a: , b: ) -> Int {
+  fn cmp(a: UInt16, b: UInt16) -> Int {
+    if a < b { return -1; }
+    if a > b { return 1; }
+    return 0;
+  }
+}
+
+impl Ord[UInt32] {
+  fn compare(a: UInt32, b: UInt32) -> Int {
+    if a < b { return -1; }
+    if a > b { return 1; }
+    return 0;
+  }
+  fn cmp(a: UInt32, b: UInt32) -> Int {
+    if a < b { return -1; }
+    if a > b { return 1; }
+    return 0;
+  }
+}
+
+impl Ord[UInt64] {
+  fn compare(a: UInt64, b: UInt64) -> Int {
+    if a < b { return -1; }
+    if a > b { return 1; }
+    return 0;
+  }
+  fn cmp(a: UInt64, b: UInt64) -> Int {
+    if a < b { return -1; }
+    if a > b { return 1; }
+    return 0;
+  }
+}
+
+impl Ord[Bool] {
+  fn compare(a: Bool, b: Bool) -> Int {
+    if a < b { return -1; }
+    if a > b { return 1; }
+    return 0;
+  }
+  fn cmp(a: Bool, b: Bool) -> Int {
+    if a < b { return -1; }
+    if a > b { return 1; }
+    return 0;
+  }
+}
+
+impl Ord[Str] {
+  fn compare(a: Str, b: Str) -> Int {
+    if a < b { return -1; }
+    if a > b { return 1; }
+    return 0;
+  }
+  fn cmp(a: Str, b: Str) -> Int {
+    if a < b { return -1; }
+    if a > b { return 1; }
+    return 0;
+  }
+}
+
+impl Ord[Char] {
+  fn compare(a: Char, b: Char) -> Int {
+    if a < b { return -1; }
+    if a > b { return 1; }
+    return 0;
+  }
+  fn cmp(a: Char, b: Char) -> Int {
+    if a < b { return -1; }
+    if a > b { return 1; }
+    return 0;
+  }
+}
+
+impl Ord[Float32] {
+  fn compare(a: Float32, b: Float32) -> Int {
+    if a < b { return -1; }
+    if a > b { return 1; }
+    return 0;
+  }
+  fn cmp(a: Float32, b: Float32) -> Int {
+    if a < b { return -1; }
+    if a > b { return 1; }
+    return 0;
+  }
+}
+
+impl Ord[Float64] {
+  fn compare(a: Float64, b: Float64) -> Int {
+    if a < b { return -1; }
+    if a > b { return 1; }
+    return 0;
+  }
+  fn cmp(a: Float64, b: Float64) -> Int {
     if a < b { return -1; }
     if a > b { return 1; }
     return 0;
