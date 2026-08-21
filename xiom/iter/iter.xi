@@ -1,4 +1,4 @@
-// XIOM â€” Iterator Library
+// XIOM -- Iterator Library
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 
@@ -85,7 +85,7 @@ pub fn RangeInclusive.next(self) -> Option[Int] {
 }
 
 // === Iterator adapters (closure-based) ===
-// The previous design stored iter: Iterator[T] interface values — the
+// The previous design stored iter: Iterator[T] interface values -- the
 // checker has no interface-as-value, so those fields defaulted to i64 and
 // every adapter call corrupted. The new design stores a NEXT-CLOSURE
 // (fn() -> Option[T]); the closure env holds the mutable iterator state.
@@ -642,7 +642,7 @@ pub fn ZipIter[T, U].count(self) -> Int {
 
 // === M7: Additional iterator adapters ===
 
-// StepBy â€” yields every nth element (1-based step)
+// StepBy -- yields every nth element (1-based step)
 pub type StepByIter[T] = { iter: Iterator[T]; step: Int; first: Bool; }
 
 pub fn Iterator[T].step_by(self, step: Int) -> StepByIter[T]
@@ -666,7 +666,7 @@ pub fn StepByIter[T].next(self) -> Option[T]
   self.iter.next()
 }
 
-// TakeWhile â€” yields elements while predicate is true
+// TakeWhile -- yields elements while predicate is true
 pub type TakeWhileIter[T] = { iter: Iterator[T]; predicate: fn(&T) -> Bool; done: Bool; }
 
 pub fn Iterator[T].take_while(self, predicate: fn(&T) -> Bool) -> TakeWhileIter[T] {
@@ -692,7 +692,7 @@ pub fn TakeWhileIter[T].next(self) -> Option[T]
   }
 }
 
-// SkipWhile â€” skips elements while predicate is true, then yields rest
+// SkipWhile -- skips elements while predicate is true, then yields rest
 pub type SkipWhileIter[T] = { iter: Iterator[T]; predicate: fn(&T) -> Bool; skipped: Bool; }
 
 pub fn Iterator[T].skip_while(self, predicate: fn(&T) -> Bool) -> SkipWhileIter[T] {
@@ -719,7 +719,7 @@ pub fn SkipWhileIter[T].next(self) -> Option[T] {
   self.iter.next()
 }
 
-// Inspect â€” calls f on each element for side effects, passes element through
+// Inspect -- calls f on each element for side effects, passes element through
 pub type InspectIter[T] = { iter: Iterator[T]; f: fn(&T); }
 
 pub fn Iterator[T].inspect(self, f: fn(&T)) -> InspectIter[T] {
@@ -733,7 +733,7 @@ pub fn InspectIter[T].next(self) -> Option[T] {
   }
 }
 
-// â”€â”€ RangeStep / Repeat â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -- RangeStep / Repeat ------------------------------------------------------
 
 /// Create a Vec[Int] containing values from start to end advancing by step.
 /// Returns empty Vec if step <= 0 or start >= end. O(N).

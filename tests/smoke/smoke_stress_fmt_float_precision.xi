@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.fmt Float64.to_str precision handling
+// XIOM stdlib stress -- xiom.fmt Float64.to_str precision handling
 // Tests that floats with many decimal digits produce non-empty strings.
 // Returns 0 on success, nonzero on failure.
 

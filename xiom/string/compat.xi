@@ -131,7 +131,7 @@ fn _cp_str(cp: Int) -> Str {
 
 // Single-level canonical decomposition of `cp`: (base, mark), or (cp, -1)
 // when `cp` does not decompose. Covers the Latin-1 Supplement accented letters
-// (À..ÿ); all other code points pass through undecoded (documented subset).
+// (A..y); all other code points pass through undecoded (documented subset).
 // Complexity: O(1).
 fn _decomp(cp: Int) -> (Int, Int) {
   if cp == 0xC0 { return (0x41, 0x300); };

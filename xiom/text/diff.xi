@@ -21,7 +21,7 @@ extern "C" {
 // `diff_myers` and `diff_lcs` both compute the longest-common-subsequence
 // diff (optimal edit script); the two entry points exist for API parity with
 // classic tools. A DiffOp's `kind` is the string "eq" (kept), "ins" (added)
-// or "del" (removed) — encoded as a string because cross-module reads of a
+// or "del" (removed) -- encoded as a string because cross-module reads of a
 // leading Int field in a struct are unreliable in this build. Text is
 // compared byte-wise (ASCII/UTF-8 bytes).
 // ============================================================================

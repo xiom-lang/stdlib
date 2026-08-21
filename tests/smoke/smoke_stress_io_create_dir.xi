@@ -1,4 +1,4 @@
-// XIOM stdlib stress — io.create_dir / io.is_dir
+// XIOM stdlib stress -- io.create_dir / io.is_dir
 // Creates a directory, confirms is_dir returns true, cleans up.
 // Returns 0 on success.
 

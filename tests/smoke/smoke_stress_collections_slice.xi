@@ -1,4 +1,4 @@
-// XIOM stdlib stress — Slice first and last access
+// XIOM stdlib stress -- Slice first and last access
 // Tests slice boundary access on a Vec-derived slice.
 // Returns 0 on success, nonzero on failure.
 

@@ -1,4 +1,4 @@
-// XIOM stdlib stress — Map clear
+// XIOM stdlib stress -- Map clear
 // Inserts entries, clears map, verifies empty state.
 // Returns 0 on success, nonzero on failure.
 

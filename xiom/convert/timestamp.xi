@@ -23,7 +23,7 @@ pub fn timestamp_now() -> Int {
 }
 
 /// Convert a Unix timestamp (seconds since the epoch) to a calendar date.
-/// Parameters: ts — the timestamp.
+/// Parameters: ts -- the timestamp.
 /// Returns: the corresponding Date (UTC).
 /// Complexity: O(1).
 pub fn timestamp_to_date(ts: Int) -> Date {
@@ -37,7 +37,7 @@ pub fn timestamp_to_date(ts: Int) -> Date {
 }
 
 /// Convert a Unix timestamp (seconds since the epoch) to a date-time value.
-/// Parameters: ts — the timestamp.
+/// Parameters: ts -- the timestamp.
 /// Returns: the corresponding DateTime (UTC) with weekday computed.
 /// Complexity: O(1).
 pub fn timestamp_to_datetime(ts: Int) -> DateTime {
@@ -56,7 +56,7 @@ pub fn timestamp_to_datetime(ts: Int) -> DateTime {
 }
 
 /// Convert a calendar date to the Unix timestamp of its midnight (UTC).
-/// Parameters: d — the date.
+/// Parameters: d -- the date.
 /// Returns: epoch seconds for 00:00:00Z of that date.
 /// Complexity: O(1).
 pub fn timestamp_from_date(d: &Date) -> Int {
@@ -64,7 +64,7 @@ pub fn timestamp_from_date(d: &Date) -> Int {
 }
 
 /// Convert a date-time value to a Unix timestamp (UTC).
-/// Parameters: dt — the date-time value.
+/// Parameters: dt -- the date-time value.
 /// Returns: epoch seconds for that instant.
 /// Complexity: O(1).
 pub fn timestamp_from_datetime(dt: &DateTime) -> Int {

@@ -8,7 +8,7 @@ module xiom.convert.base16
 
 // ============================================================================
 // Hexadecimal (base16) encoding/decoding. Canonical implementations of the
-// lowercase hex codec (RFC 4648 §8). Hex is the byte-oriented radix-16 codec;
+// lowercase hex codec (RFC 4648 S8). Hex is the byte-oriented radix-16 codec;
 // for integer <-> string radix conversion see xiom.num.base.
 // ============================================================================
 

@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.regex Regex.new with valid patterns
+// XIOM stdlib stress -- xiom.regex Regex.new with valid patterns
 // Tests successful compilation of common regex patterns.
 // Returns 0 on success, nonzero on failure.
 

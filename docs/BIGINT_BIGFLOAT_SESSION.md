@@ -1,4 +1,4 @@
-# XIOM — BigInt/BigFloat Production-Grade Stdlib Session
+# XIOM -- BigInt/BigFloat Production-Grade Stdlib Session
 
 **Version:** v0.57 | **Branch:** `feat/architect` | **Date:** 2026-08-10
 **Goal:** Upgrade `xiom.bigint` to production grade and build `xiom.bigfloat` from scratch, with full contract coverage, exhaustive tests, and a categorized lib map so **parallel sessions** can work independently.
@@ -8,22 +8,22 @@
 
 ## 1. Current State (read-only inventory, 2026-08-10)
 
-### 1.1 `stdlib/xiom/bigint.xi` (exists — 14 KB, 44 pub fns)
-- Representation: `pub type BigInt = { digits: Vec[Int]; negative: Bool; }` — base-10⁹ limbs, little-endian (limb 0 = least significant).
+### 1.1 `stdlib/xiom/bigint.xi` (exists -- 14 KB, 44 pub fns)
+- Representation: `pub type BigInt = { digits: Vec[Int]; negative: Bool; }` -- base-109 limbs, little-endian (limb 0 = least significant).
 - Existing API (all `bigint_*` free functions):
   `bigint_from_int`, `bigint_from_str`, `bigint_to_str`, `bigint_add`, `bigint_sub`, `bigint_mul`, `bigint_div_mod`, `bigint_compare`, `bigint_is_zero`, `bigint_abs`, `bigint_neg`, `bigint_sign`, `bigint_mod`, `bigint_pow`, `bigint_gcd`, `bigint_shift_left`
 - Private helpers: `_trim`, `_copy`, `_abs_compare`, `_BASE`, `_BASE_DIGITS`.
-- Smoke: `examples/stdlib_smoke/smoke_bigint.xi` (3 assertions: parse/roundtrip, mul×2, compare).
+- Smoke: `examples/stdlib_smoke/smoke_bigint.xi` (3 assertions: parse/roundtrip, mulx2, compare).
 
-### 1.2 `BigFloat` — DOES NOT EXIST. Must be a NEW module.
-- Decision D3 (STDLIB_EXTENSION.md §D3, APPROVED): `BigFloat` is its **own module** (NOT inside bigint.xi), built on bigint + Fraction-style internals: sign/exponent/significand, add/sub/mul/div, rounding modes, parse/format. MPFR-style transcendentals = later phase (or C-MPFR binding as a PACKAGE; stdlib = zero deps).
+### 1.2 `BigFloat` -- DOES NOT EXIST. Must be a NEW module.
+- Decision D3 (STDLIB_EXTENSION.md SD3, APPROVED): `BigFloat` is its **own module** (NOT inside bigint.xi), built on bigint + Fraction-style internals: sign/exponent/significand, add/sub/mul/div, rounding modes, parse/format. MPFR-style transcendentals = later phase (or C-MPFR binding as a PACKAGE; stdlib = zero deps).
 
 ### 1.3 Categorization rule (Decision D4, APPROVED)
 - New code goes into **category folders ONLY** (`stdlib/xiom/<category>/<lib>.xi`).
 - Every module belongs to a category, even single-lib categories.
-- `use xiom.bigint;` (flat aggregate) stays valid — aggregate file lists sub-modules as `use` statements (D4b, VERIFIED).
+- `use xiom.bigint;` (flat aggregate) stays valid -- aggregate file lists sub-modules as `use` statements (D4b, VERIFIED).
 
-**IMPORTANT (freeze gate):** `bigint.xi` is currently a FLAT frozen file imported as `xiom.bigint`. The freeze gate scans flat files byte-identical. **Strategy:** keep `bigint.xi` as the flat aggregate (all fns stay there, signatures unchanged) and put NEW production fns + `bigfloat.xi` in category `stdlib/xiom/num/`. See §7 for the migration-safe plan.
+**IMPORTANT (freeze gate):** `bigint.xi` is currently a FLAT frozen file imported as `xiom.bigint`. The freeze gate scans flat files byte-identical. **Strategy:** keep `bigint.xi` as the flat aggregate (all fns stay there, signatures unchanged) and put NEW production fns + `bigfloat.xi` in category `stdlib/xiom/num/`. See S7 for the migration-safe plan.
 
 ---
 
@@ -123,17 +123,17 @@ fn bigint_gt(a: &BigInt, b: &BigInt) -> Bool
 fn bigint_ge(a: &BigInt, b: &BigInt) -> Bool
 ```
 
-### 2.8 Contracts (requires/ensures — compiler-enforced)
+### 2.8 Contracts (requires/ensures -- compiler-enforced)
 - All div-family: `requires: !bigint_is_zero(b)`.
 - `bigint_pow`: `requires: exp >= 0`.
 - `bigint_from_base`: `requires: base >= 2 && base <= 36`.
-- `bigint_mul` ensures (example): `ensures: bigint_eq(&result, &bigint_mul(a, b))` is NOT decidable cheaply — instead use property tests (§5) for correctness; contracts cover preconditions + cheap invariants (`ensures: bigint_is_zero(&bigint_mod(&result, &bigint_from_int(10)))` style only where meaningful).
+- `bigint_mul` ensures (example): `ensures: bigint_eq(&result, &bigint_mul(a, b))` is NOT decidable cheaply -- instead use property tests (S5) for correctness; contracts cover preconditions + cheap invariants (`ensures: bigint_is_zero(&bigint_mod(&result, &bigint_from_int(10)))` style only where meaningful).
 
 ---
 
-## 3. Production-Grade BigFloat API (target — NEW module `xiom.bigfloat`)
+## 3. Production-Grade BigFloat API (target -- NEW module `xiom.bigfloat`)
 
-Decision D3: `BigFloat` is its **own module** built on bigint. Recommendation: **`stdlib/xiom/num/bigfloat.xi`** (category `num`), aggregate re-export from flat `num.xi` (already exists as aggregate? — verify; if `num.xi` is a flat frozen file, create `stdlib/xiom/bigfloat.xi` flat aggregate instead — see §7 rule).
+Decision D3: `BigFloat` is its **own module** built on bigint. Recommendation: **`stdlib/xiom/num/bigfloat.xi`** (category `num`), aggregate re-export from flat `num.xi` (already exists as aggregate? -- verify; if `num.xi` is a flat frozen file, create `stdlib/xiom/bigfloat.xi` flat aggregate instead -- see S7 rule).
 
 ### 3.1 Representation
 ```xiom
@@ -146,16 +146,16 @@ pub enum RoundMode {
 
 pub type BigFloat = {
   sign: Bool;          // false = positive, true = negative
-  exponent: Int;       // power of 2 (or 10 — DECIDE: power-of-10 keeps parse/format simple; see §3.2)
+  exponent: Int;       // power of 2 (or 10 -- DECIDE: power-of-10 keeps parse/format simple; see S3.2)
   significand: BigInt; // mantissa, normalized (no trailing zeros)
   precision: Int;      // bits (or decimal digits) of precision
 }
 ```
 
-### 3.2 Design decision — radix
-- **Option A (power-of-10, like BigInt's base-10⁹):** parse/format trivial, arithmetic needs digit-shift normalization.
+### 3.2 Design decision -- radix
+- **Option A (power-of-10, like BigInt's base-109):** parse/format trivial, arithmetic needs digit-shift normalization.
 - **Option B (power-of-2, IEEE-754 style):** efficient rounding/shifts, format needs radix conversion.
-- **RECOMMENDATION: power-of-10 with `exponent` = decimal exponent and `significand` an integer BigInt** (matches BigInt base-10⁹, parse/format are string-level, arithmetic is schoolbook on BigInt). Transcendentals later (MPFR binding package) regardless.
+- **RECOMMENDATION: power-of-10 with `exponent` = decimal exponent and `significand` an integer BigInt** (matches BigInt base-109, parse/format are string-level, arithmetic is schoolbook on BigInt). Transcendentals later (MPFR binding package) regardless.
 
 ### 3.3 Constants
 ```xiom
@@ -177,7 +177,7 @@ fn bigfloat_from_bigint(b: &BigInt) -> BigFloat
 fn bigfloat_with_precision(n: Int, precision: Int) -> BigFloat  // requires precision >= 1
 fn bigfloat_to_str(f: &BigFloat) -> Str                     // shortest round-trip
 fn bigfloat_to_str_prec(f: &BigFloat, digits: Int) -> Str   // requires digits >= 1
-fn bigfloat_to_float64(f: &BigFloat) -> Float64             // range-checked → Result? (decide: return Option[Float64])
+fn bigfloat_to_float64(f: &BigFloat) -> Float64             // range-checked -> Result? (decide: return Option[Float64])
 fn bigfloat_to_bigint(f: &BigFloat) -> BigInt               // truncates toward zero
 ```
 
@@ -224,8 +224,8 @@ fn bigfloat_get_round_mode() -> RoundMode
 fn bigfloat_with_rounding(f: &BigFloat, mode: RoundMode, digits: Int) -> BigFloat
 ```
 
-### 3.8 Transcendentals — LATER PHASE (do NOT implement in this session unless time permits)
-`bigfloat_exp`, `bigfloat_ln`, `bigfloat_log10`, `bigfloat_sin`, `bigfloat_cos`, `bigfloat_tan`, `bigfloat_atan`, `bigfloat_atan2`, `bigfloat_pi(precision)`, `bigfloat_e(precision)` — MPFR-style series/argument reduction. **Plan them in the doc; implement in a follow-up session** (or as a C-MPFR PACKAGE per D3).
+### 3.8 Transcendentals -- LATER PHASE (do NOT implement in this session unless time permits)
+`bigfloat_exp`, `bigfloat_ln`, `bigfloat_log10`, `bigfloat_sin`, `bigfloat_cos`, `bigfloat_tan`, `bigfloat_atan`, `bigfloat_atan2`, `bigfloat_pi(precision)`, `bigfloat_e(precision)` -- MPFR-style series/argument reduction. **Plan them in the doc; implement in a follow-up session** (or as a C-MPFR PACKAGE per D3).
 
 ---
 
@@ -234,27 +234,27 @@ fn bigfloat_with_rounding(f: &BigFloat, mode: RoundMode, digits: Int) -> BigFloa
 ### 4.1 Target tree (categorization rule D4)
 ```
 stdlib/xiom/
-├── bigint.xi          (FLAT AGGREGATE — stays; freeze gate)
-│     module xiom.bigint
-│     use xiom.num.bigint;      ← NEW home for production code (or keep all in flat? SEE 4.2)
-├── bigfloat.xi        (FLAT AGGREGATE — NEW, mirrors bigint.xi pattern)
-│     module xiom.bigfloat
-│     use xiom.num.bigfloat;
-└── num/               (category)
-    ├── bigint.xi      (PRODUCTION BigInt — move/extend HERE)
-    └── bigfloat.xi    (PRODUCTION BigFloat)
+|-- bigint.xi          (FLAT AGGREGATE -- stays; freeze gate)
+|     module xiom.bigint
+|     use xiom.num.bigint;      <- NEW home for production code (or keep all in flat? SEE 4.2)
+|-- bigfloat.xi        (FLAT AGGREGATE -- NEW, mirrors bigint.xi pattern)
+|     module xiom.bigfloat
+|     use xiom.num.bigfloat;
+`-- num/               (category)
+    |-- bigint.xi      (PRODUCTION BigInt -- move/extend HERE)
+    `-- bigfloat.xi    (PRODUCTION BigFloat)
 ```
 
-### 4.2 Migration decision (READ FIRST — freeze-gate constraint)
+### 4.2 Migration decision (READ FIRST -- freeze-gate constraint)
 The API-freeze gate scans FLAT files for byte-identical signatures. Two options:
 
 - **Option 1 (recommended for THIS session):** keep ALL functions in the flat
-  `bigint.xi` (extend it in place; existing signatures untouched → freeze green).
+  `bigint.xi` (extend it in place; existing signatures untouched -> freeze green).
   Put ONLY `bigfloat.xi` in category `num/` (new file, no freeze impact) with a
   flat aggregate `bigfloat.xi` at root (D4b pattern: `use xiom.num.bigfloat;`).
 - **Option 2 (cleaner long-term, more churn):** move bigint production code to
   `num/bigint.xi`, keep flat `bigint.xi` as aggregate re-export. Requires
-  freeze-gate-compatible refactor (flat keeps signature + delegates) — the
+  freeze-gate-compatible refactor (flat keeps signature + delegates) -- the
   documented migration path (D4). **Verify the aggregate-use pattern against the
   freeze gate BEFORE choosing.**
 
@@ -267,13 +267,13 @@ lives in `num/` + flat aggregate. Freeze stays green.
 
 ### 5.1 Extend `examples/stdlib_smoke/smoke_bigint.xi` (keep existing 3 assertions)
 Add property-style checks (values chosen to avoid full property fuzzing):
-1. `bigint_from_str("0")` → "0", `is_zero` true.
+1. `bigint_from_str("0")` -> "0", `is_zero` true.
 2. `bigint_from_str("-9999999999999999999999")` round-trips.
-3. `bigint_from_hex("ff")` → "255"; `bigint_from_hex("-1a")` → "-26".
-4. `bigint_from_base("zz", 36)` → "1295" (35*36+35).
+3. `bigint_from_hex("ff")` -> "255"; `bigint_from_hex("-1a")` -> "-26".
+4. `bigint_from_base("zz", 36)` -> "1295" (35*36+35).
 5. add/sub commutativity + identity: `a + 0 == a`, `a - a == 0`.
 6. mul by 10: `bigint_mul(&b, bigint_from_int(10))` shifts decimal digits.
-7. div_mod: `(q, r) = div_mod(a, b)` ⇒ `q*b + r == a && 0 <= r < |b|` (for positive b).
+7. div_mod: `(q, r) = div_mod(a, b)` => `q*b + r == a && 0 <= r < |b|` (for positive b).
 8. pow: `bigint_pow(2, 10) == 1024`.
 9. pow_mod: `bigint_pow_mod(2, 10, 1000) == 24`.
 10. sqrt: `bigint_sqrt(81) == 9`; `bigint_sqrt_rem(82) == (9, 1)`.
@@ -283,44 +283,44 @@ Add property-style checks (values chosen to avoid full property fuzzing):
 14. next_prime(14) == 17.
 15. factorial(5) == 120; binomial(10,3) == 120; fibonacci(10) == 55.
 16. bit ops: and(0b1100, 0b1010) == 0b1000; or/ xor; shl(1,3) == 8; shr(8,3) == 1; popcount(0b1011) == 3; bit_len(255) == 8.
-17. to_int range: `bigint_to_int(&bigint_from_int(42))` → Ok(42); huge → Err.
+17. to_int range: `bigint_to_int(&bigint_from_int(42))` -> Ok(42); huge -> Err.
 18. Comparison chain: -5 < -1 < 0 < 1 < 5.
 
 ### 5.2 New `examples/stdlib_smoke/smoke_bigfloat.xi` (~30 assertions)
-1. `bigfloat_from_str("3.14")` → to_str round-trips "3.14".
+1. `bigfloat_from_str("3.14")` -> to_str round-trips "3.14".
 2. `bigfloat_from_str("-1e-10")` round-trips.
-3. add: 0.1 + 0.2 at precision 60 digits → 0.3 (exact at this precision).
-4. mul: 1.5 * 2 == 3.0; div: 1.0 / 3.0 * 3.0 ≈ 1.0 within precision.
-5. sqrt(2)^2 ≈ 2 within precision.
+3. add: 0.1 + 0.2 at precision 60 digits -> 0.3 (exact at this precision).
+4. mul: 1.5 * 2 == 3.0; div: 1.0 / 3.0 * 3.0 ~= 1.0 within precision.
+5. sqrt(2)^2 ~= 2 within precision.
 6. floor/ceil/round/trunc/fract on -3.7, 3.7, -0.5, 0.5 (ties-to-even: round(2.5)=2, round(3.5)=4).
 7. comparisons: 0.1 < 0.2; -1.5 < 1.5; eq after normalize.
 8. precision honored: with_precision(1.0, 10) ops stay within 10 digits.
-9. from_bigint/to_bigint: 2.5 → 2 (trunc); -2.5 → -2.
+9. from_bigint/to_bigint: 2.5 -> 2 (trunc); -2.5 -> -2.
 10. inv(2) == 0.5; pow(2, 10) == 1024.0.
-11. to_float64(3.14) ≈ 3.14 within f64 eps.
+11. to_float64(3.14) ~= 3.14 within f64 eps.
 12. Constants: BIGFLOAT_PI starts "3.14159"; BIGFLOAT_E starts "2.71828".
 
 ### 5.3 Fast gates (MANDATORY before commit)
-- `cargo test -p xiom-check --lib` → 178/178
-- `cargo test -p xiom-codegen --test stdlib_execution_tests` → 70+ (new smokes included; complex+net pre-existing failures OK)
-- `cargo test -p xiom-codegen --test stdlib_tests` → 40/40
-- API-freeze suite (if runnable standalone) → green
+- `cargo test -p xiom-check --lib` -> 178/178
+- `cargo test -p xiom-codegen --test stdlib_execution_tests` -> 70+ (new smokes included; complex+net pre-existing failures OK)
+- `cargo test -p xiom-codegen --test stdlib_tests` -> 40/40
+- API-freeze suite (if runnable standalone) -> green
 
 ---
 
 ## 6. Phased Execution Plan (commit per phase)
 
-### Phase A — BigInt production extension (in flat `bigint.xi`, additive)
+### Phase A -- BigInt production extension (in flat `bigint.xi`, additive)
 1. Add constants `BIGINT_ZERO/ONE/TEN`.
 2. Add constructors: `from_u64`, `from_hex`, `from_base`, `to_int`, `to_hex`, `to_base`.
 3. Add predicates: `is_one`, `is_even`, `is_odd`, `is_negative`.
 4. Add arithmetic: `div`, `pow_mod`, `sqrt`, `sqrt_rem` (schoolbook: Newton for sqrt).
 5. Add number theory: `lcm`, `ext_gcd`, `is_prime` (Miller-Rabin with small bases + deterministic below 3.3e24), `next_prime`, `factorial`, `binomial`, `fibonacci`.
-6. Add bitwise: `bit_and/or/xor`, `shift_right`, `popcount`, `bit_len` (two's-complement semantics for negatives — decide + document).
+6. Add bitwise: `bit_and/or/xor`, `shift_right`, `popcount`, `bit_len` (two's-complement semantics for negatives -- decide + document).
 7. Add comparisons: `eq/lt/le/gt/ge` (wrap `compare`).
-8. Extend smoke_bigint.xi (§5.1). Run fast gates. **COMMIT** `feat(stdlib): production BigInt — full arithmetic, number theory, bitwise, base conversion, contracts + smoke`.
+8. Extend smoke_bigint.xi (S5.1). Run fast gates. **COMMIT** `feat(stdlib): production BigInt -- full arithmetic, number theory, bitwise, base conversion, contracts + smoke`.
 
-### Phase B — BigFloat core (NEW `stdlib/xiom/num/bigfloat.xi` + flat aggregate)
+### Phase B -- BigFloat core (NEW `stdlib/xiom/num/bigfloat.xi` + flat aggregate)
 1. `RoundMode` enum + thread-local default (runtime global `var` + set/get).
 2. `BigFloat` type (power-of-10: sign, exponent, significand BigInt, precision).
 3. Normalization: `_normalize` (strip trailing zeros, adjust exponent).
@@ -330,9 +330,9 @@ Add property-style checks (values chosen to avoid full property fuzzing):
 7. Rounding: with_rounding (Nearest/Up/Down/Zero), floor/ceil/round/trunc/fract.
 8. sqrt (Newton on significand), pow (Int exp).
 9. Comparisons.
-10. `smoke_bigfloat.xi` (§5.2). Fast gates. **COMMIT** `feat(stdlib): BigFloat — arbitrary-precision float core (add/sub/mul/div/sqrt/rounding/parse/format)`.
+10. `smoke_bigfloat.xi` (S5.2). Fast gates. **COMMIT** `feat(stdlib): BigFloat -- arbitrary-precision float core (add/sub/mul/div/sqrt/rounding/parse/format)`.
 
-### Phase C — Transcendentals (OPTIONAL this session; else plan doc)
+### Phase C -- Transcendentals (OPTIONAL this session; else plan doc)
 - `pi(precision)`, `e(precision)` via series (Machin for pi, Taylor for e).
 - exp/ln/log10/sin/cos/tan/atan via series with argument reduction.
 - If skipped: add a `TODO` block in bigfloat.xi documenting the planned signatures so a follow-up session picks it up without re-design.
@@ -343,13 +343,13 @@ Add property-style checks (values chosen to avoid full property fuzzing):
 
 The rest of the stdlib is already categorized; independent sessions can pick any
 unclaimed lib family below. **Do not touch** flat frozen files (`core`, `string`,
-`collections`, `io`, `math`…) unless the task explicitly requires it — the API-freeze
+`collections`, `io`, `math`...) unless the task explicitly requires it -- the API-freeze
 gate scans them.
 
 ### 7.1 Existing categories (D4 tree as of 2026-08-10)
 | Category | Libs | Status |
 |----------|------|--------|
-| `num/` | convert.xi (+ this session: bigint.xi, bigfloat.xi) | PARTIAL — bigint basic done; bigfloat NEW |
+| `num/` | convert.xi (+ this session: bigint.xi, bigfloat.xi) | PARTIAL -- bigint basic done; bigfloat NEW |
 | `math/` | core.xi | DONE |
 | `text/` | similarity.xi | DONE |
 | `collect/` | cache, graph, hash, heap, queue, tree | DONE |
@@ -359,24 +359,24 @@ gate scans them.
 | `net/` | dns, proto, url | DONE |
 | `rand/` | chacha, mt19937, pcg | DONE |
 
-### 7.2 Flat frozen files (aggregate/root — freeze-gated, DO NOT extend with NEW libs)
+### 7.2 Flat frozen files (aggregate/root -- freeze-gated, DO NOT extend with NEW libs)
 `aes, alloc, array, async, bench, bigint, bits, cell, chacha, char, cmp, collections, complex, compress, contracts, convert, core, crypto, debug, des, ecc, encoding, env, error, ffi, fmt, geom, hash, io, iter, log, math, md5, mem, misc, net, num, os, path, platform, poly1305, process, ptr, rand, rc, reflect, regex, rsa, search, serialize, sha, simd, sort, stats, string, sync, test, thread, time, utf8`
 
-### 7.3 Candidate parallel sessions (unclaimed production-grade gaps — pick ONE per session)
+### 7.3 Candidate parallel sessions (unclaimed production-grade gaps -- pick ONE per session)
 | # | Session | Scope | Depends on | Est. |
 |---|---------|-------|-----------|------|
-| S1 | **BigInt production** (THIS doc) | §6 Phase A | — | 1 session |
-| S2 | **BigFloat core** (THIS doc) | §6 Phase B | S1 (bigint) | 1 session |
-| S3 | **BigFloat transcendentals** | §6 Phase C | S2 | 1-2 sessions |
-| S4 | Decimal/`Fixed[N]` | fixed-point decimal (money-safe) | — | 1 session |
+| S1 | **BigInt production** (THIS doc) | S6 Phase A | -- | 1 session |
+| S2 | **BigFloat core** (THIS doc) | S6 Phase B | S1 (bigint) | 1 session |
+| S3 | **BigFloat transcendentals** | S6 Phase C | S2 | 1-2 sessions |
+| S4 | Decimal/`Fixed[N]` | fixed-point decimal (money-safe) | -- | 1 session |
 | S5 | Interval arithmetic | `interval.xi` for verified numerics | bigfloat | 1 session |
 | S6 | Rationals | `rational.xi` (fraction arithmetic) | bigint | 1 session |
-| S7 | Matrix/vector algebra | `linalg.xi` (from geom) | — | 1 session |
-| S8 | Statistics hardening | `stats.xi` (distributions, moments) | — | 1 session |
-| S9 | Units/dimensional analysis | `units.xi` | — | 1 session |
-| S10 | Date/time ISO8601 hardening | `time.xi` extensions | — | 1 session |
-| S11 | Serialization v2 (bincode-style) | `serialize.xi` binary formats | — | 1 session |
-| S12 | Compression suite | `compress.xi` (deflate/gzip/lz4) | — | 1 session |
+| S7 | Matrix/vector algebra | `linalg.xi` (from geom) | -- | 1 session |
+| S8 | Statistics hardening | `stats.xi` (distributions, moments) | -- | 1 session |
+| S9 | Units/dimensional analysis | `units.xi` | -- | 1 session |
+| S10 | Date/time ISO8601 hardening | `time.xi` extensions | -- | 1 session |
+| S11 | Serialization v2 (bincode-style) | `serialize.xi` binary formats | -- | 1 session |
+| S12 | Compression suite | `compress.xi` (deflate/gzip/lz4) | -- | 1 session |
 
 **Rule:** every parallel session works on a DIFFERENT category; shared dependencies
 are read-only. Each session commits its own phase with fast-gates green.
@@ -385,20 +385,20 @@ are read-only. Each session commits its own phase with fast-gates green.
 
 ## 8. Constraints & Gates (non-negotiable)
 
-1. **Docs-only? NO — this session WRITES CODE** (unlike the doc-update session). The
-   only doc updates here are `AI_CONTEXT.md` §8 additions IF new public API lands
-   (BigFloat module section) — add a `### 8.x bigfloat` block mirroring §8.31 style.
+1. **Docs-only? NO -- this session WRITES CODE** (unlike the doc-update session). The
+   only doc updates here are `AI_CONTEXT.md` S8 additions IF new public API lands
+   (BigFloat module section) -- add a `### 8.x bigfloat` block mirroring S8.31 style.
 2. `stdlib` must stay **zero-dependency** (no C MPFR; pure XIOM).
-3. New public functions go into category folders OR the flat bigint aggregate —
+3. New public functions go into category folders OR the flat bigint aggregate --
    never into frozen flat files of OTHER modules.
 4. Every pub fn: type-annotated params/return, `requires` where a precondition
    exists, doc comment.
-5. Fast gates green before commit (§5.3); commit per phase with conventional
-   message; verify stdlib-compile (40) — the bigint/bigfloat fns must compile in
+5. Fast gates green before commit (S5.3); commit per phase with conventional
+   message; verify stdlib-compile (40) -- the bigint/bigfloat fns must compile in
    the monolithic stdlib build.
 6. Do NOT touch `xiom-benchmark-chaos/` or `.xiom_ai.json`.
 7. Selfhost tests stay `#[ignore]`d. e2e only at phase boundaries if time permits.
-8. BigFloat radix = **power-of-10** (per §3.2 recommendation) — unless a strong
+8. BigFloat radix = **power-of-10** (per S3.2 recommendation) -- unless a strong
    argument for power-of-2 is made in the session; if so, document the change in
    STDLIB_EXTENSION.md D3 before implementing.
 
@@ -406,9 +406,9 @@ are read-only. Each session commits its own phase with fast-gates green.
 
 ## 9. Definition of Done
 
-- [ ] All §2 API present in `xiom.bigint` with contracts.
-- [ ] All §3 core API present in `xiom.bigfloat` with contracts (transcendentals may be TODO-documented).
-- [ ] `smoke_bigint.xi` ≥ 20 assertions; `smoke_bigfloat.xi` ≥ 30 assertions; both pass.
-- [ ] checker 178/178, stdlib-exec ≥ 70, stdlib-compile 40/40, freeze green.
+- [ ] All S2 API present in `xiom.bigint` with contracts.
+- [ ] All S3 core API present in `xiom.bigfloat` with contracts (transcendentals may be TODO-documented).
+- [ ] `smoke_bigint.xi` >= 20 assertions; `smoke_bigfloat.xi` >= 30 assertions; both pass.
+- [ ] checker 178/178, stdlib-exec >= 70, stdlib-compile 40/40, freeze green.
 - [ ] `AI_CONTEXT.md` updated with `bigfloat` module section (and any new bigint fns noted).
 - [ ] One commit per phase (A, B, [C]).

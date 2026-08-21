@@ -15,7 +15,7 @@ module xiom.convert.duration
 use xiom.time;
 
 /// Build a Duration from whole seconds.
-/// Parameters: n — the number of seconds (may be negative).
+/// Parameters: n -- the number of seconds (may be negative).
 /// Returns: a normalized Duration (nanos in [0, 1e9)).
 /// Complexity: O(1).
 pub fn duration_seconds(n: Int) -> Duration {
@@ -23,7 +23,7 @@ pub fn duration_seconds(n: Int) -> Duration {
 }
 
 /// Build a Duration from whole milliseconds.
-/// Parameters: n — the number of milliseconds (may be negative).
+/// Parameters: n -- the number of milliseconds (may be negative).
 /// Returns: a normalized Duration.
 /// Complexity: O(1).
 pub fn duration_millis(n: Int) -> Duration {
@@ -31,7 +31,7 @@ pub fn duration_millis(n: Int) -> Duration {
 }
 
 /// Build a Duration from whole microseconds.
-/// Parameters: n — the number of microseconds (may be negative).
+/// Parameters: n -- the number of microseconds (may be negative).
 /// Returns: a normalized Duration.
 /// Complexity: O(1).
 pub fn duration_micros(n: Int) -> Duration {
@@ -39,7 +39,7 @@ pub fn duration_micros(n: Int) -> Duration {
 }
 
 /// Build a Duration from whole nanoseconds.
-/// Parameters: n — the number of nanoseconds (may be negative).
+/// Parameters: n -- the number of nanoseconds (may be negative).
 /// Returns: a normalized Duration.
 /// Complexity: O(1).
 pub fn duration_nanos(n: Int) -> Duration {
@@ -47,7 +47,7 @@ pub fn duration_nanos(n: Int) -> Duration {
 }
 
 /// Whole seconds contained in a Duration.
-/// Parameters: d — the duration.
+/// Parameters: d -- the duration.
 /// Returns: the seconds field (sub-second parts dropped).
 /// Complexity: O(1).
 pub fn duration_as_secs(d: Duration) -> Int {
@@ -55,7 +55,7 @@ pub fn duration_as_secs(d: Duration) -> Int {
 }
 
 /// Whole milliseconds contained in a Duration.
-/// Parameters: d — the duration.
+/// Parameters: d -- the duration.
 /// Returns: the total milliseconds (sub-millisecond parts dropped).
 /// Complexity: O(1).
 pub fn duration_as_ms(d: Duration) -> Int {

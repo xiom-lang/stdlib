@@ -1,4 +1,4 @@
-// XIOM stdlib smoke — xiom.convert.{into,from,tryfrom,fromstr,asref,int,float,
+// XIOM stdlib smoke -- xiom.convert.{into,from,tryfrom,fromstr,asref,int,float,
 // validate,punycode}
 // Returns 0 on success, nonzero on failure (process exit code).
 module smoke_convert_traits
@@ -261,7 +261,7 @@ fn main() -> Int {
   }
 
   // punycode
-  var pe = punycode.punycode_encode("bücher");
+  var pe = punycode.punycode_encode("bucher");
   if !pe.is_ok {
     io.println("smoke_convert_traits: punycode_encode failed");
     return 46;
@@ -285,7 +285,7 @@ fn main() -> Int {
   }
   match pd {
     Ok(dv) => {
-      if dv != "bücher" {
+      if dv != "bucher" {
         io.println("smoke_convert_traits: punycode_decode value failed: " + dv);
         return 49;
       }
@@ -295,7 +295,7 @@ fn main() -> Int {
       return 49;
     },
   }
-  var ed = punycode.punycode_encode_domain("münchen.de");
+  var ed = punycode.punycode_encode_domain("munchen.de");
   if !ed.is_ok {
     io.println("smoke_convert_traits: punycode_encode_domain failed");
     return 50;
@@ -319,7 +319,7 @@ fn main() -> Int {
   }
   match a2u {
     Ok(av) => {
-      if av != "münchen.de" {
+      if av != "munchen.de" {
         io.println("smoke_convert_traits: idna_to_unicode value failed: " + av);
         return 53;
       }

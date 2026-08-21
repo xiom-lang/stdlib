@@ -1,4 +1,4 @@
-// XIOM stdlib stress — math.pow
+// XIOM stdlib stress -- math.pow
 // Tests pow with various base/exponent combinations.
 // Returns 0 on success, nonzero on failure.
 

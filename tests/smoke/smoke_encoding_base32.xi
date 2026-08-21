@@ -1,4 +1,4 @@
-// XIOM stdlib smoke test — xiom.encoding.base32
+// XIOM stdlib smoke test -- xiom.encoding.base32
 // base32/base32hex known answers and round trips, invalid-input errors.
 // Returns 0 on success, nonzero on failure.
 

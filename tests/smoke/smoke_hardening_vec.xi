@@ -1,6 +1,6 @@
-// XIOM — Vec[UInt8] elem_size hardening test
+// XIOM -- Vec[UInt8] elem_size hardening test
 // Verifies that narrow-type Vec stores elements at correct byte width.
-// Vec[UInt8] → 1 byte per element (not 8).
+// Vec[UInt8] -> 1 byte per element (not 8).
 // Returns 0 on success, nonzero on failure:
 //   1 = len mismatch, 2-5 = value mismatch at index
 

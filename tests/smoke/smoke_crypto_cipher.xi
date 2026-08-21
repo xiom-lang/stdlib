@@ -1,4 +1,4 @@
-// XIOM stdlib smoke test — xiom.crypto.cipher (+ aead dependency surface)
+// XIOM stdlib smoke test -- xiom.crypto.cipher (+ aead dependency surface)
 // Tests the paths that the current compiler build can execute reliably:
 //   - ChaCha20 stream round-trip with explicit counter
 //   - AES key generation and passphrase-derived keys (PBKDF2-HMAC-SHA256)

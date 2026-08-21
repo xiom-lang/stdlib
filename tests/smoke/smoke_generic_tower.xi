@@ -1,4 +1,4 @@
-// 3c smoke: generic numeric tower — ONE generic implementation serves all
+// 3c smoke: generic numeric tower -- ONE generic implementation serves all
 // widths via interface impl dispatch. Returns 0 on success.
 interface Num[T] {
   fn add(a: T, b: T) -> T;
@@ -45,7 +45,7 @@ impl Num[Float32] {
   fn one() -> Float32 { return 1 as Float32; }
 }
 
-// Generic lerp over the tower: a*(1-t) + b*t — one impl, all widths.
+// Generic lerp over the tower: a*(1-t) + b*t -- one impl, all widths.
 fn lerp[T: Num](a: T, b: T, t: T) -> T {
   var one = Num[T].one();
   var omt = Num[T].sub(one, t);

@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.string.str_to_int valid and invalid input
+// XIOM stdlib stress -- xiom.string.str_to_int valid and invalid input
 // Parses a valid integer, verifies invalid input returns Err.
 // Returns 0 on success.
 

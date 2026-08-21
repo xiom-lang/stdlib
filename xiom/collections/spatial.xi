@@ -12,7 +12,7 @@ module xiom.collect.spatial
 // into cells. Queries return the stored values; empty regions yield empty Vecs.
 //
 // All three structures use the flat-arena style (the established collect/
-// pattern — tree.xi/graph.xi use parallel Vec[Int]s because Vec-of-struct
+// pattern -- tree.xi/graph.xi use parallel Vec[Int]s because Vec-of-struct
 // instantiations collide at startup in combined programs). The quadtree and
 // octree here take FIXED bounds (unlike xiom.collect.quadtree/octree, whose
 // roots grow on demand); points outside the bounds are rejected by insert.

@@ -25,7 +25,7 @@ const _SKEW: Int = 38;
 const _DAMP: Int = 700;
 
 /// Encode a Unicode label to Punycode (with the "xn--" prefix).
-/// Parameters: s — the Unicode label (no dots).
+/// Parameters: s -- the Unicode label (no dots).
 /// Returns: Ok("xn--...") for a label with non-ASCII code points; Ok(s)
 ///          unchanged when the label is entirely ASCII.
 /// Complexity: O(n^2) worst case, O(n) typical.
@@ -106,7 +106,7 @@ pub fn punycode_encode(s: Str) -> Result[Str, Str] {
 }
 
 /// Decode a Punycode label to Unicode.
-/// Parameters: s — the label; "xn--" prefixed labels are decoded, plain
+/// Parameters: s -- the label; "xn--" prefixed labels are decoded, plain
 ///          ASCII labels pass through unchanged.
 /// Returns: Ok(Unicode label) on success; Err on malformed input.
 /// Complexity: O(n^2) worst case.
@@ -206,7 +206,7 @@ pub fn punycode_decode(s: Str) -> Result[Str, Str] {
 }
 
 /// Encode each label of a full domain to Punycode.
-/// Parameters: domain — a dotted domain (labels separated by '.').
+/// Parameters: domain -- a dotted domain (labels separated by '.').
 /// Returns: Ok(encoded domain) on success; Err for an empty label.
 /// Complexity: O(n) labels x encode cost.
 pub fn punycode_encode_domain(domain: Str) -> Result[Str, Str] {
@@ -228,7 +228,7 @@ pub fn punycode_encode_domain(domain: Str) -> Result[Str, Str] {
 }
 
 /// Decode each label of an A-label domain to Unicode.
-/// Parameters: domain — a dotted domain.
+/// Parameters: domain -- a dotted domain.
 /// Returns: Ok(Unicode domain) on success; Err for a malformed label.
 /// Complexity: O(n) labels x decode cost.
 pub fn punycode_decode_domain(domain: Str) -> Result[Str, Str] {
@@ -250,7 +250,7 @@ pub fn punycode_decode_domain(domain: Str) -> Result[Str, Str] {
 }
 
 /// Convert an internationalized domain to its ASCII A-label form.
-/// Parameters: s — the Unicode domain.
+/// Parameters: s -- the Unicode domain.
 /// Returns: Ok(A-label domain) on success; Err for invalid input.
 /// Complexity: O(n).
 pub fn idna_to_ascii(s: Str) -> Result[Str, Str] {
@@ -267,7 +267,7 @@ pub fn idna_to_ascii(s: Str) -> Result[Str, Str] {
 }
 
 /// Convert an ASCII A-label domain to its Unicode U-label form.
-/// Parameters: s — the A-label domain.
+/// Parameters: s -- the A-label domain.
 /// Returns: Ok(U-label domain) on success; Err for invalid input.
 /// Complexity: O(n).
 pub fn idna_to_unicode(s: Str) -> Result[Str, Str] {
@@ -279,7 +279,7 @@ pub fn idna_to_unicode(s: Str) -> Result[Str, Str] {
 }
 
 /// Report whether a domain conforms to IDNA requirements.
-/// Parameters: s — the candidate domain (A-label or U-label).
+/// Parameters: s -- the candidate domain (A-label or U-label).
 /// Returns: true when every label is a valid IDNA label.
 /// Complexity: O(n).
 pub fn idna_is_valid(s: Str) -> Bool {
@@ -318,7 +318,7 @@ pub fn idna_is_valid(s: Str) -> Bool {
 
 /// Apply UTS-46 mapping and normalization to a domain string: case folding
 /// (lowercasing) plus IDNA character validation.
-/// Parameters: s — the raw domain.
+/// Parameters: s -- the raw domain.
 /// Returns: Ok(normalized) on success; Err when an invalid character remains.
 /// Complexity: O(n).
 pub fn idna_uts46_normalize(s: Str) -> Result[Str, Str] {

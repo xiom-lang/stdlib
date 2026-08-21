@@ -253,7 +253,7 @@ fn main() -> Int {
       match fo {
         Some(v) => {
           // tolerance check without tiny float literals (compiler emits
-          // literals rounded to 6 decimals — docs/COMPILER_BUGS.md BUG 10)
+          // literals rounded to 6 decimals -- docs/COMPILER_BUGS.md BUG 10)
           var diff: Float64 = v - 3.14;
           if diff < 0.0 { diff = -diff; }
           var scaled: Float64 = diff * 1000000000.0;
@@ -417,7 +417,7 @@ fn main() -> Int {
   // 33. ln(10) to 20 digits
   var l33 = bigfloat.bigfloat_ln(&bigfloat.bigfloat_ten());
   if bigfloat.bigfloat_to_str_prec(&l33, 20) != "2.3025850929940456840" { return 33; }
-  // 34. log10(100) == 2, log10(1000) == 3 — via the identity
+  // 34. log10(100) == 2, log10(1000) == 3 -- via the identity
   //     log10(x) * ln(10) == ln(x) (robust against the last-digit rounding
   //     of the computed quotient; to_str_prec preserves trailing zeros)
   var f34 = bigfloat.bigfloat_from_str("100");

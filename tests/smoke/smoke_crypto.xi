@@ -1,4 +1,4 @@
-// XIOM stdlib smoke test — xiom.crypto (enhanced)
+// XIOM stdlib smoke test -- xiom.crypto (enhanced)
 // Tests: sha256 raw, sha256_hex, known-vector verification
 // Returns 0 on success, unique error code on failure.
 

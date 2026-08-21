@@ -9,7 +9,7 @@ module xiom.encoding.base64
 // ============================================================================
 // Base64 and base64url encoding and decoding with padding variants.
 // Implemented locally (same-name delegation to xiom.encoding crashes the
-// compiler — see xiom.convert.base58 for the probe reference).
+// compiler -- see xiom.convert.base58 for the probe reference).
 // ============================================================================
 
 use xiom.string;

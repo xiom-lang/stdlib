@@ -19,7 +19,7 @@ extern "C" {
 }
 
 /// Copy a NUL-terminated C string into a XIOM string.
-/// Parameters: ptr — the address of the C string (0 returns "").
+/// Parameters: ptr -- the address of the C string (0 returns "").
 /// Returns: the XIOM string.
 /// Complexity: O(n), n = string length.
 pub fn from_cstring(ptr: Int) -> Str {
@@ -46,7 +46,7 @@ pub fn from_cstring(ptr: Int) -> Str {
 }
 
 /// Allocate a NUL-terminated copy of a XIOM string and return its pointer.
-/// Parameters: s — the string to copy.
+/// Parameters: s -- the string to copy.
 /// Returns: a malloc'd pointer the caller must free with xiom.ffi.free.
 /// Complexity: O(n).
 pub fn to_cstring(s: Str) -> Int {
@@ -64,7 +64,7 @@ pub fn to_cstring(s: Str) -> Int {
 }
 
 /// Length of a C string excluding the terminating NUL.
-/// Parameters: ptr — the address of the C string (0 returns 0).
+/// Parameters: ptr -- the address of the C string (0 returns 0).
 /// Returns: the byte count before the first NUL.
 /// Complexity: O(n).
 pub fn cstring_len(ptr: Int) -> Int {
@@ -82,7 +82,7 @@ pub fn cstring_len(ptr: Int) -> Int {
 }
 
 /// Duplicate a C string and return the new pointer.
-/// Parameters: ptr — the address of the source C string.
+/// Parameters: ptr -- the address of the source C string.
 /// Returns: a malloc'd copy the caller must free.
 /// Complexity: O(n).
 pub fn cstring_copy(ptr: Int) -> Int {

@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.time Duration add and sub operations
+// XIOM stdlib stress -- xiom.time Duration add and sub operations
 // Verifies commutativity of addition and identity of subtraction.
 // Returns 0 on success, nonzero on failure.
 

@@ -29,7 +29,7 @@ fn main() -> Int {
   var eg2 = math.algebra.egcd(18, 84);
   if !egcd_eq(eg2, 6, 5, -1) { io.println("egcd-18"); return 10; }
 
-  // mod_inverse (is_some()/unwrap() — BUG 22 #4 safe path)
+  // mod_inverse (is_some()/unwrap() -- BUG 22 #4 safe path)
   var inv1 = math.algebra.mod_inverse(3, 7);
   if !inv1.is_some() { io.println("modinv-none1"); return 12; }
   if inv1.unwrap() != 5 { io.println("modinv-1"); return 13; }

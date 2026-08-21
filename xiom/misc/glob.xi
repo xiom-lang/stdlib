@@ -256,7 +256,7 @@ pub fn glob_translate(pattern: Str) -> Str {
 // Single compiled-pattern slot. glob_compile stores the pattern here and
 // returns the constant handle 1; glob_compile_match matches against the most
 // recently compiled pattern. Not thread-safe (same caveat as the global RNG).
-// TODO(compiler): BUG 32 — Int→pointer casts emit address-of-local instead of
+// TODO(compiler): BUG 32 -- Int->pointer casts emit address-of-local instead of
 // inttoptr, so real malloc'd handles cannot round-trip through the frozen
 // Int-handle API; switch to per-handle storage when the cast is fixed.
 var _compiled: Str = "";

@@ -1,4 +1,4 @@
-// XIOM — Sorting Algorithms
+// XIOM -- Sorting Algorithms
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 
@@ -15,7 +15,7 @@ use xiom.cmp.min_int;
 use xiom.cmp.max_int;
 
 // ---------------------------------------------------------------------------
-// Insertion sort — O(n²) worst/average, O(n) best (already sorted).
+// Insertion sort -- O(n2) worst/average, O(n) best (already sorted).
 // Stable. Excellent for small arrays (n < ~50) and nearly-sorted data.
 // Algorithm: builds sorted prefix by inserting each new element into place.
 // ---------------------------------------------------------------------------
@@ -36,7 +36,7 @@ pub fn sort_insertion[T: Ord](arr: &mut Vec[T]) {
 }
 
 // ---------------------------------------------------------------------------
-// Selection sort — O(n²) always. Unstable. Minimal writes (O(n) swaps).
+// Selection sort -- O(n2) always. Unstable. Minimal writes (O(n) swaps).
 // Algorithm: repeatedly finds the minimum element from the unsorted tail
 // and places it at the current position.
 // ---------------------------------------------------------------------------
@@ -63,7 +63,7 @@ pub fn sort_selection[T: Ord](arr: &mut Vec[T]) {
 }
 
 // ---------------------------------------------------------------------------
-// Bubble sort — O(n²) worst/average, O(n) best (already sorted).
+// Bubble sort -- O(n2) worst/average, O(n) best (already sorted).
 // Stable. Simple educational algorithm; rarely used in production.
 // Algorithm: compares adjacent elements and swaps if out of order;
 // largest elements "bubble" to the end each pass.
@@ -90,9 +90,9 @@ pub fn sort_bubble[T: Ord](arr: &mut Vec[T]) {
 }
 
 // ---------------------------------------------------------------------------
-// Quick sort with 3-way partitioning — O(n log n) average, O(n²) worst.
+// Quick sort with 3-way partitioning -- O(n log n) average, O(n2) worst.
 // Unstable. 3-way partition (Dutch national flag) handles duplicates
-// efficiently — all equal-to-pivot elements land in a contiguous block
+// efficiently -- all equal-to-pivot elements land in a contiguous block
 // that needs no further recursion.
 // Uses insertion sort for small sub-arrays (threshold = 16).
 // ---------------------------------------------------------------------------
@@ -181,7 +181,7 @@ pub fn sort_quick[T: Ord](arr: &mut Vec[T]) {
 }
 
 // ---------------------------------------------------------------------------
-// Merge sort — O(n log n) always. Stable. Uses O(n) auxiliary space.
+// Merge sort -- O(n log n) always. Stable. Uses O(n) auxiliary space.
 // Algorithm: recursively splits array in half, sorts each half,
 // then merges the two sorted halves.
 // ---------------------------------------------------------------------------
@@ -244,7 +244,7 @@ pub fn sort_merge[T: Ord](arr: &mut Vec[T]) {
 }
 
 // ---------------------------------------------------------------------------
-// Heap sort — O(n log n) always. Unstable. In-place, no extra allocation.
+// Heap sort -- O(n log n) always. Unstable. In-place, no extra allocation.
 // Algorithm: builds a max-heap from the array in-place, then repeatedly
 // extracts the maximum (root) and places it at the end of the array.
 // ---------------------------------------------------------------------------
@@ -289,7 +289,7 @@ pub fn sort_heap[T: Ord](arr: &mut Vec[T]) {
 }
 
 // ---------------------------------------------------------------------------
-// Shell sort — O(n log² n) average using Ciura gap sequence.
+// Shell sort -- O(n log2 n) average using Ciura gap sequence.
 // Unstable. Generalizes insertion sort with a decreasing gap.
 // Algorithm: sorts elements at decreasing gap distances; when gap=1,
 // it becomes ordinary insertion sort (on a nearly-sorted array).
@@ -321,7 +321,7 @@ pub fn sort_shell[T: Ord](arr: &mut Vec[T]) {
 }
 
 // ---------------------------------------------------------------------------
-// Counting sort — O(n + k) where k = max_val. Stable.
+// Counting sort -- O(n + k) where k = max_val. Stable.
 // Only for Int arrays with known non-negative range [0, max_val].
 // Algorithm: counts occurrences of each value, then reconstructs sorted array
 // by iterating counts in order.
@@ -378,7 +378,7 @@ pub fn sort_counting(arr: &mut Vec[Int], max_val: Int) {
 }
 
 // ---------------------------------------------------------------------------
-// Radix sort (LSD) — O(n * d) where d is the number of digits (set to 8).
+// Radix sort (LSD) -- O(n * d) where d is the number of digits (set to 8).
 // Stable. Only for non-negative Int arrays.
 // Algorithm: sorts by each digit from least to most significant using
 // counting sort as a stable subroutine.
@@ -443,7 +443,7 @@ pub fn sort_radix(arr: &mut Vec[Int]) {
 }
 
 // ---------------------------------------------------------------------------
-// is_sorted — O(n). Checks whether the vector is in non-decreasing order
+// is_sorted -- O(n). Checks whether the vector is in non-decreasing order
 // according to the Ord (compare) trait.
 // ---------------------------------------------------------------------------
 
@@ -461,7 +461,7 @@ pub fn is_sorted[T: Ord](arr: &Vec[T]) -> Bool {
 }
 
 // ---------------------------------------------------------------------------
-// stable_sort — O(n log n). Guarantees equal elements retain their relative
+// stable_sort -- O(n log n). Guarantees equal elements retain their relative
 // order. Delegates to merge_sort which is naturally stable.
 // ---------------------------------------------------------------------------
 
@@ -484,8 +484,8 @@ pub fn stable_sort[T: Ord](arr: &mut Vec[T]) {
 // ---------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------
-// sort_by — in-place quick sort using a custom comparator.
-// O(n log n) average, O(n²) worst. Unstable.
+// sort_by -- in-place quick sort using a custom comparator.
+// O(n log n) average, O(n2) worst. Unstable.
 // Uses the same two-pointer partition scheme as sort_quick.
 // ---------------------------------------------------------------------------
 
@@ -519,8 +519,8 @@ pub fn sort_by[T](arr: &mut Vec[T], compare: fn(&T, &T) -> Int) {
 }
 
 // ---------------------------------------------------------------------------
-// sort_by_key — sort by an extracted key, K must be Ord.
-// O(n²) worst with O(1) extra key storage per comparison. Unstable.
+// sort_by_key -- sort by an extracted key, K must be Ord.
+// O(n2) worst with O(1) extra key storage per comparison. Unstable.
 // The key function is called twice per comparison to keep the code simple;
 // it must be a named function (see comparator note above).
 // ---------------------------------------------------------------------------
@@ -548,7 +548,7 @@ pub fn sort_by_key[T, K: Ord](arr: &mut Vec[T], key: fn(&T) -> K) {
 }
 
 // ---------------------------------------------------------------------------
-// stable_sort_by — merge sort with a custom comparator.
+// stable_sort_by -- merge sort with a custom comparator.
 // O(n log n) always. STABLE: equal elements retain relative order.
 // Uses an auxiliary buffer of size n, mirroring the Ord-based sort_merge.
 // ---------------------------------------------------------------------------
@@ -608,8 +608,8 @@ pub fn stable_sort_by[T](arr: &mut Vec[T], compare: fn(&T, &T) -> Int) {
 }
 
 // ---------------------------------------------------------------------------
-// partial_sort — places the smallest k elements at the front, in order.
-// O(n·k) with O(1) extra space. Unstable. Selection-based: repeatedly find the
+// partial_sort -- places the smallest k elements at the front, in order.
+// O(n-k) with O(1) extra space. Unstable. Selection-based: repeatedly find the
 // minimum of the unsorted tail and swap it into position.
 // If k >= n the entire vector becomes sorted; if k <= 0 nothing happens.
 // ---------------------------------------------------------------------------
@@ -637,9 +637,9 @@ pub fn partial_sort[T: Ord](arr: &mut Vec[T], k: Int) {
 }
 
 // ---------------------------------------------------------------------------
-// nth_element — quickselect: partially partitions the vector so the element
+// nth_element -- quickselect: partially partitions the vector so the element
 // that would appear at index n in sorted order lands at position n.
-// O(n) average, O(n²) worst. Unstable. Returns that element, or None if n is
+// O(n) average, O(n2) worst. Unstable. Returns that element, or None if n is
 // out of bounds. Note the vector is reordered as a side effect.
 // ---------------------------------------------------------------------------
 
@@ -680,7 +680,7 @@ pub fn nth_element[T: Ord](arr: &mut Vec[T], n: Int) -> Option[T] {
 }
 
 // ---------------------------------------------------------------------------
-// is_sorted_by — O(n). Checks whether the vector is in non-decreasing order
+// is_sorted_by -- O(n). Checks whether the vector is in non-decreasing order
 // according to the supplied comparator.
 // ---------------------------------------------------------------------------
 
@@ -698,7 +698,7 @@ pub fn is_sorted_by[T](arr: &Vec[T], compare: fn(&T, &T) -> Int) -> Bool {
 }
 
 // ---------------------------------------------------------------------------
-// sort_desc — O(n log n) average. Sorts in strictly descending order.
+// sort_desc -- O(n log n) average. Sorts in strictly descending order.
 // Unstable (delegates to quick sort, then reverses in place).
 // ---------------------------------------------------------------------------
 
@@ -717,8 +717,8 @@ pub fn sort_desc[T: Ord](arr: &mut Vec[T]) {
 }
 
 // ---------------------------------------------------------------------------
-// sort_dual_pivot — dual-pivot quick sort (Yaroslavskiy).
-// O(n log n) average, O(n²) worst. Unstable. Uses two pivots and partitions
+// sort_dual_pivot -- dual-pivot quick sort (Yaroslavskiy).
+// O(n log n) average, O(n2) worst. Unstable. Uses two pivots and partitions
 // the range into three segments (< p1, between, > p2) in a single pass.
 // Small ranges (< 16 elements) fall back to insertion sort.
 // ---------------------------------------------------------------------------
@@ -785,8 +785,8 @@ pub fn sort_dual_pivot[T: Ord](arr: &mut Vec[T]) {
 }
 
 // ---------------------------------------------------------------------------
-// sort_insertion_by — insertion sort with a custom comparator.
-// O(n²) worst/average, O(n) best (already sorted). STABLE.
+// sort_insertion_by -- insertion sort with a custom comparator.
+// O(n2) worst/average, O(n) best (already sorted). STABLE.
 // ---------------------------------------------------------------------------
 
 pub fn sort_insertion_by[T](arr: &mut Vec[T], compare: fn(&T, &T) -> Int) {

@@ -10,7 +10,7 @@ module xiom.net.mime
 // MIME type parsing, extension mapping, and content negotiation plus related
 // HTTP header utilities: charset, etag, accept, and link. All functions are
 // pure string/byte operations; ETags delegate to xiom.crypto (SHA-256) and
-// xiom.encoding (hex) with different names — safe.
+// xiom.encoding (hex) with different names -- safe.
 // ============================================================================
 
 use xiom.string;
@@ -201,7 +201,7 @@ fn parse_q(token: Str) -> Int {
 }
 
 /// Parse a MIME type string into its parts.
-/// Parameters: s — the MIME type (e.g. "text/html; charset=utf-8").
+/// Parameters: s -- the MIME type (e.g. "text/html; charset=utf-8").
 /// Returns: Ok(MimeType) with a lowercased type/subtype and parsed
 ///          parameters (in declaration order); Err for a missing slash or an
 ///          empty type.
@@ -243,7 +243,7 @@ pub fn mime_parse(s: Str) -> Result[MimeType, Str] {
 }
 
 /// Guess the MIME type from a file extension.
-/// Parameters: path — the file path.
+/// Parameters: path -- the file path.
 /// Returns: the MIME type (lowercase) or "application/octet-stream".
 /// Complexity: O(1). Pure.
 pub fn mime_type_of(path: Str) -> Str {
@@ -284,7 +284,7 @@ pub fn mime_type_of(path: Str) -> Str {
 }
 
 /// Guess a file extension for a MIME type.
-/// Parameters: mime — the MIME type (lowercase).
+/// Parameters: mime -- the MIME type (lowercase).
 /// Returns: the extension without the leading dot, or "" when unknown.
 /// Complexity: O(1). Pure.
 pub fn mime_extension_of(mime: Str) -> Str {
@@ -313,7 +313,7 @@ pub fn mime_extension_of(mime: Str) -> Str {
 }
 
 /// Wildcard pattern match against a MIME type.
-/// Parameters: pattern — e.g. "text/*", "application/json" or "*/*"; mime —
+/// Parameters: pattern -- e.g. "text/*", "application/json" or "*/*"; mime --
 ///          the actual MIME type.
 /// Returns: true when the pattern matches.
 /// Complexity: O(n). Pure.
@@ -347,7 +347,7 @@ fn type_part(mime: Str) -> Str {
 }
 
 /// Test if a MIME type is text-based.
-/// Parameters: mime — the MIME type.
+/// Parameters: mime -- the MIME type.
 /// Returns: true for text/*, application/json, application/xml and related.
 /// Complexity: O(1). Pure.
 pub fn mime_is_text(mime: Str) -> Bool {
@@ -362,7 +362,7 @@ pub fn mime_is_text(mime: Str) -> Bool {
 }
 
 /// Test if a MIME type is an image.
-/// Parameters: mime — the MIME type.
+/// Parameters: mime -- the MIME type.
 /// Returns: true for image/* and image/x-* types.
 /// Complexity: O(1). Pure.
 pub fn mime_is_image(mime: Str) -> Bool {
@@ -371,7 +371,7 @@ pub fn mime_is_image(mime: Str) -> Bool {
 }
 
 /// Test if a MIME type is audio.
-/// Parameters: mime — the MIME type.
+/// Parameters: mime -- the MIME type.
 /// Returns: true for audio/* types.
 /// Complexity: O(1). Pure.
 pub fn mime_is_audio(mime: Str) -> Bool {
@@ -380,7 +380,7 @@ pub fn mime_is_audio(mime: Str) -> Bool {
 }
 
 /// Test if a MIME type is video.
-/// Parameters: mime — the MIME type.
+/// Parameters: mime -- the MIME type.
 /// Returns: true for video/* types.
 /// Complexity: O(1). Pure.
 pub fn mime_is_video(mime: Str) -> Bool {
@@ -389,7 +389,7 @@ pub fn mime_is_video(mime: Str) -> Bool {
 }
 
 /// Test if a MIME type is an application type.
-/// Parameters: mime — the MIME type.
+/// Parameters: mime -- the MIME type.
 /// Returns: true for application/* types.
 /// Complexity: O(1). Pure.
 pub fn mime_is_application(mime: Str) -> Bool {
@@ -403,7 +403,7 @@ fn has_utf8_bom_b(data: &Vec[UInt8]) -> Bool {
 }
 
 /// Guess the character encoding of a byte buffer.
-/// Parameters: data — the bytes to inspect.
+/// Parameters: data -- the bytes to inspect.
 /// Returns: "utf-8", "utf-16le", "utf-16be", "utf-32le", "utf-32be", "ascii"
 ///          or "binary".
 /// Complexity: O(n). Pure.
@@ -447,7 +447,7 @@ pub fn charset_detect(data: &Vec[UInt8]) -> Str {
 }
 
 /// Re-encode a string into a target charset.
-/// Parameters: s — the input string (already UTF-8); charset — the requested
+/// Parameters: s -- the input string (already UTF-8); charset -- the requested
 ///          target charset.
 /// Returns: Ok(s) for UTF-8/ASCII targets (XIOM strings are always UTF-8),
 ///          Err for unsupported targets.
@@ -461,7 +461,7 @@ pub fn charset_normalize(s: Str, charset: Str) -> Result[Str, Str] {
 }
 
 /// Compute a quoted etag for a byte buffer (SHA-256 hex).
-/// Parameters: content — the bytes to hash.
+/// Parameters: content -- the bytes to hash.
 /// Returns: the quoted etag, e.g. "\"a1b2c3...\"".
 /// Complexity: O(n). Pure.
 pub fn etag_new(content: &Vec[UInt8]) -> Str {
@@ -477,7 +477,7 @@ pub fn etag_new(content: &Vec[UInt8]) -> Str {
 }
 
 /// Test an etag against an If-None-Match header.
-/// Parameters: etag — the entity tag (quoted); if_none_match — the header
+/// Parameters: etag -- the entity tag (quoted); if_none_match -- the header
 ///          value (a comma-separated list, optionally W/ prefixed).
 /// Returns: true when any list entry matches (including "*").
 /// Complexity: O(n). Pure.
@@ -502,7 +502,7 @@ pub fn etag_matches(etag: Str, if_none_match: Str) -> Bool {
 }
 
 /// Parse an Accept header into mime pattern and q pairs.
-/// Parameters: header — the Accept header value.
+/// Parameters: header -- the Accept header value.
 /// Returns: the (pattern, q*1000) entries; malformed entries are skipped.
 /// Complexity: O(n). Pure.
 pub fn accept_parse(header: Str) -> Vec[(Str, Int)] {
@@ -536,7 +536,7 @@ pub fn accept_parse(header: Str) -> Vec[(Str, Int)] {
 }
 
 /// Look up the q value of a MIME type in an Accept header.
-/// Parameters: header — the Accept header value; mime — the actual MIME type.
+/// Parameters: header -- the Accept header value; mime -- the actual MIME type.
 /// Returns: the highest matching q (scaled by 1000), or 0 when absent.
 /// Complexity: O(n). Pure.
 pub fn accept_q_value(header: Str, mime: Str) -> Int {
@@ -556,10 +556,10 @@ pub fn accept_q_value(header: Str, mime: Str) -> Int {
 }
 
 /// Pick the best available MIME type for an Accept header.
-/// Parameters: header — the Accept header value; available — the candidate
+/// Parameters: header -- the Accept header value; available -- the candidate
 ///          MIME types.
 /// Returns: Some(best) when a match with q > 0 exists, None otherwise.
-/// Complexity: O(n·m). Pure.
+/// Complexity: O(n-m). Pure.
 pub fn accept_negotiate(header: Str, available: &Vec[Str]) -> Option[Str] {
   var best_q = 0;
   var best = "";
@@ -580,7 +580,7 @@ pub fn accept_negotiate(header: Str, available: &Vec[Str]) -> Option[Str] {
 }
 
 /// Parse a Link header into typed links.
-/// Parameters: header — the Link header value (e.g.
+/// Parameters: header -- the Link header value (e.g.
 ///          "<https://a.com>; rel=\"next\"; title=\"Next\"").
 /// Returns: the parsed links; malformed entries are skipped.
 /// Complexity: O(n). Pure.
@@ -633,7 +633,7 @@ pub fn link_parse(header: Str) -> Vec[Link] {
 }
 
 /// Find the href of a link with the given rel.
-/// Parameters: links — the parsed links; rel — the relation type.
+/// Parameters: links -- the parsed links; rel -- the relation type.
 /// Returns: Some(href) for the first matching link, None otherwise.
 /// Complexity: O(n). Pure.
 pub fn link_find(links: &Vec[Link], rel: Str) -> Option[Str] {

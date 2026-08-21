@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.fmt Int.to_str for zero
+// XIOM stdlib stress -- xiom.fmt Int.to_str for zero
 // Tests that zero is formatted as "0", not " " or empty.
 // Returns 0 on success, nonzero on failure.
 

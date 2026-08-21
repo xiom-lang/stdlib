@@ -1,4 +1,4 @@
-// XIOM — MT19937 (Mersenne Twister) 32-bit PRNG
+// XIOM -- MT19937 (Mersenne Twister) 32-bit PRNG
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 //

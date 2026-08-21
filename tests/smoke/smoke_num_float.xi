@@ -3,7 +3,7 @@ use xiom.num.float;
 use xiom.io;
 
 fn main() -> Int {
-  // is_nan (f != f; NaN cannot be produced today — BUG 19)
+  // is_nan (f != f; NaN cannot be produced today -- BUG 19)
   if float.float_is_nan(0.0) { io.println("float: is_nan(0.0)"); return 1; }
   if float.float_is_nan(1.0) { io.println("float: is_nan(1.0)"); return 1; }
   if float.float_is_nan(1.0 / 0.0) { io.println("float: is_nan(inf)"); return 1; }

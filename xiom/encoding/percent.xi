@@ -9,7 +9,7 @@ module xiom.encoding.percent
 // ============================================================================
 // Percent (URL) encoding and decoding for bytes, components, and forms.
 // Implemented locally (same-name delegation to xiom.encoding crashes the
-// compiler — see xiom.convert.base58 for the probe reference).
+// compiler -- see xiom.convert.base58 for the probe reference).
 // ============================================================================
 
 use xiom.string;
@@ -137,7 +137,7 @@ pub fn percent_decode(s: Str) -> Result[Str, Str] {
 }
 
 /// Percent-encodes a single URL path or query component: only unreserved
-/// characters pass through; everything else — including '/', '?', '&', '=' —
+/// characters pass through; everything else -- including '/', '?', '&', '=' --
 /// is percent-encoded per UTF-8 byte. Complexity: O(n).
 pub fn percent_encode_component(s: Str) -> Str {
   _percent_encode(s, false)

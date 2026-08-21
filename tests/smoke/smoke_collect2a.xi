@@ -7,12 +7,12 @@ use xiom.collect.objectpool;
 use xiom.collect.queue;
 use xiom.collect.cache;
 
-// NOTE: skiplist must NOT be combined with trie in one program — dual
+// NOTE: skiplist must NOT be combined with trie in one program -- dual
 // Option-payload instantiations trigger a compiler stack-cookie fast-fail
 // (COMPILER_BUGS.md BUG 16). trie lives in smoke_collect2b.
 
 fn main() -> Int {
-  // ── SkipList ──
+  // -- SkipList --
   var sl = xiom.collect.skiplist.skiplist_new();
   if !xiom.collect.skiplist.skiplist_insert(&mut sl, 5) { return 1; }
   if !xiom.collect.skiplist.skiplist_insert(&mut sl, 1) { return 2; }
@@ -43,7 +43,7 @@ fn main() -> Int {
     k2 = k2 + 1;
   }
 
-  // ── CuckooMap ──
+  // -- CuckooMap --
   var cm = xiom.collect.cuckoo.cuckoo_new(8);
   var ck: Int = 0;
   while ck < 500 {
@@ -67,7 +67,7 @@ fn main() -> Int {
   var miss = xiom.collect.cuckoo.cuckoo_get(&cm, 1234567);
   if miss.is_some { return 24; }
 
-  // ── FenwickTree ──
+  // -- FenwickTree --
   var ft = xiom.collect.fenwick.fenwick_new(10);
   xiom.collect.fenwick.fenwick_add(&mut ft, 3, 5);
   xiom.collect.fenwick.fenwick_add(&mut ft, 7, 2);
@@ -82,7 +82,7 @@ fn main() -> Int {
   xiom.collect.fenwick.fenwick_add(&mut ft, 3, -2);
   if xiom.collect.fenwick.fenwick_get(&ft, 3) != 3 { return 32; }
 
-  // ── ObjectPool ──
+  // -- ObjectPool --
   var pl = xiom.collect.objectpool.pool_new(4);
   var h0 = xiom.collect.objectpool.pool_acquire(&mut pl);
   var h1 = xiom.collect.objectpool.pool_acquire(&mut pl);
@@ -102,7 +102,7 @@ fn main() -> Int {
   if !h5.is_some || h5.value != 2 { return 42; }
   if xiom.collect.objectpool.pool_available(&pl) != 0 { return 43; }
 
-  // ── SpscRing ──
+  // -- SpscRing --
   var rq = xiom.collect.queue.spsc_ring_new(4);
   if !xiom.collect.queue.spsc_ring_push(&mut rq, 10) { return 44; }
   if !xiom.collect.queue.spsc_ring_push(&mut rq, 20) { return 45; }
@@ -125,7 +125,7 @@ fn main() -> Int {
   if p6.is_some { return 56; }
   if !xiom.collect.queue.spsc_ring_is_empty(&rq) { return 57; }
 
-  // ── ArcCache ──
+  // -- ArcCache --
   var ac = xiom.collect.cache.arc_new(3);
   xiom.collect.cache.arc_put(&mut ac, 1, 100);
   xiom.collect.cache.arc_put(&mut ac, 2, 200);

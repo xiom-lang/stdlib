@@ -1,4 +1,4 @@
-// XIOM — Hashing: xxHash (XXH64 / XXH32)
+// XIOM -- Hashing: xxHash (XXH64 / XXH32)
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 
@@ -189,14 +189,14 @@ pub fn xxh32(data: &Vec[UInt8], seed: UInt32) -> UInt32 {
 }
 
 // ============================================================================
-// XXH3 — 64-bit and 128-bit (2026-08-11)
+// XXH3 -- 64-bit and 128-bit (2026-08-11)
 // ============================================================================
 // Faithful port of the official XXH3 (xxHash v0.8.3, scalar path) with seed
 // support. Verified against a clang-built reference (official xxhash.h
 // v0.8.3): seed-0 vectors for "", "a", "abc", "message digest", the classic
 // fox sentence and an 80-byte input, plus XXH3_64bits_withSeed("abc", 42).
 // All secret byte reads go through _secret64_at (the seeded secret is
-// kSecret with +seed on even lanes, -seed on odd lanes — the v0.8.3
+// kSecret with +seed on even lanes, -seed on odd lanes -- the v0.8.3
 // initCustomSecret_scalar rule; several paths read the secret at unaligned
 // byte offsets (3, 11, 17, 103, 119, 121), so a byte-addressed reader is
 // required for exactness). Pure XIOM; UInt64 wrapping via LLVM i64 ops.
@@ -275,7 +275,7 @@ fn _secret32_at(off: Int, seed: UInt64) -> UInt64 {
 }
 
 // Logical (unsigned) right shift.
-// NOTE: two-var body — a single-var `var mask = ...; return ... & mask;`
+// NOTE: two-var body -- a single-var `var mask = ...; return ... & mask;`
 // body is mis-inlined by the compiler (the mask statement is dropped,
 // COMPILER_BUGS.md BUG 15). Keep the two-var form.
 fn _shr(x: UInt64, k: Int) -> UInt64 {
@@ -288,7 +288,7 @@ fn _rotl(x: UInt64, c: Int) -> UInt64 {
   return (x << c) | _shr(x, 64 - c);
 }
 
-// 32-bit rotate (for values held in a UInt64 — the 64-bit rotate does not
+// 32-bit rotate (for values held in a UInt64 -- the 64-bit rotate does not
 // wrap the top bits back into the low positions). NOTE: the shared _rotl32
 // at the top of this file (xxh32 section) serves this role; a duplicate
 // definition was removed (STDLIB_AUDIT.md anomaly 2).
@@ -329,8 +329,8 @@ fn _read32(data: &Vec[UInt8], pos: Int) -> UInt64 {
 // Named pair (UInt64 tuples collide with Int tuples in catalog codegen).
 type U64Pair = { lo: UInt64; hi: UInt64; }
 
-// UInt64 → UInt128: the compiler emits SEXT for `v as UInt128` (bit 63
-// sign-extends — COMPILER_BUGS.md BUG 14). Build from 32-bit halves, whose
+// UInt64 -> UInt128: the compiler emits SEXT for `v as UInt128` (bit 63
+// sign-extends -- COMPILER_BUGS.md BUG 14). Build from 32-bit halves, whose
 // sext == zext since bit 63 is clear.
 fn _u64_to_u128(v: UInt64) -> UInt128 {
   var lo32 = v & 0xFFFFFFFF;
@@ -341,7 +341,7 @@ fn _u64_to_u128(v: UInt64) -> UInt128 {
 }
 
 // 64x64 -> 128 product (native LLVM i128). The high half masks the `>>`
-// (UInt128 arithmetic shift sign-extends bit 127 — COMPILER_BUGS.md BUG 14).
+// (UInt128 arithmetic shift sign-extends bit 127 -- COMPILER_BUGS.md BUG 14).
 fn _mult64to128(lhs: UInt64, rhs: UInt64) -> U64Pair {
   var p: UInt128 = _u64_to_u128(lhs) * _u64_to_u128(rhs);
   var lo = (p & (0xFFFFFFFFFFFFFFFF as UInt128)) as UInt64;
@@ -473,7 +473,7 @@ fn _len_129to240_64(data: &Vec[UInt8], len: Int, seed: UInt64) -> UInt64 {
 // NOTE: the long path is only reached with the default secret (seed 0) in
 // the reference when seed == 0; with a seed, v0.8.3 uses a 192-byte custom
 // secret with +seed/-seed lanes. _secret64_at(off, 0) IS the default secret,
-// so the seeded long path must use the seeded secret — handled by the caller
+// so the seeded long path must use the seeded secret -- handled by the caller
 // via _hash_long_* with `seed` threaded through _scalar_round2 below.
 fn _scalar_round2(acc: &mut Vec[UInt64], data: &Vec[UInt8], input_pos: Int, secret_off: Int, lane: Int, seed: UInt64) {
   var data_val = _read64(data, input_pos + lane * 8);
@@ -706,8 +706,8 @@ fn _hash_long_128(data: &Vec[UInt8], len: Int, seed: UInt64) -> Xxh128 {
 
 // ---- public API ----
 
-/// XXH3-64, seed 0. Verified against xxHash v0.8.3 reference: "" →
-/// 0x2d06800538d394c2, "a" → 0xe6c632b61e964e1f, "abc" → 0x78af5f94892f3950.
+/// XXH3-64, seed 0. Verified against xxHash v0.8.3 reference: "" ->
+/// 0x2d06800538d394c2, "a" -> 0xe6c632b61e964e1f, "abc" -> 0x78af5f94892f3950.
 pub fn xxh3_64(data: &Vec[UInt8]) -> UInt64 {
   return xxh3_64_with_seed(data, 0);
 }
@@ -721,8 +721,8 @@ pub fn xxh3_64_with_seed(data: &Vec[UInt8], seed: UInt64) -> UInt64 {
   return _hash_long_64(data, len, seed);
 }
 
-/// XXH3-128, seed 0. Verified against xxHash v0.8.3 reference: "" →
-/// (0x6001c324468d497f, 0x99aa06d3014798d8), "a" →
+/// XXH3-128, seed 0. Verified against xxHash v0.8.3 reference: "" ->
+/// (0x6001c324468d497f, 0x99aa06d3014798d8), "a" ->
 /// (0xe6c632b61e964e1f, 0xa96faf705af16834).
 pub fn xxh3_128(data: &Vec[UInt8]) -> Xxh128 {
   return xxh3_128_with_seed(data, 0);

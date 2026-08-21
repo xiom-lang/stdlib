@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.path Path.file_stem extraction
+// XIOM stdlib stress -- xiom.path Path.file_stem extraction
 // Tests file_stem() for files with single and multiple extensions.
 // Returns 0 on success, nonzero on failure.
 

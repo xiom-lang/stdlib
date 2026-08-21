@@ -10,7 +10,7 @@ module xiom.os.fs_ffi
 // Advanced file-system operations that go beyond os.xi / io.xi: symlinks,
 // mmap, dup, positional and vectored I/O, sendfile/splice, fsync family,
 // memory advice and FIFOs. chmod delegates to xiom.io (set_permissions); the
-// remaining operations need raw syscalls the pure stdlib does not expose —
+// remaining operations need raw syscalls the pure stdlib does not expose --
 // they are documented stubs returning Err (or documented defaults).
 // ============================================================================
 
@@ -68,7 +68,7 @@ pub fn chown(path: Str, uid: Int, gid: Int) -> Result[Unit, Str] {
 
 /// Change permissions.
 /// Delegates to xiom.io.set_permissions.
-/// Parameters: path — the file path; mode — the permission bits.
+/// Parameters: path -- the file path; mode -- the permission bits.
 /// Returns: Ok(()) on success, Err with the underlying message otherwise.
 /// Complexity: O(1). Pure (OS call).
 pub fn chmod(path: Str, mode: Int) -> Result[Unit, Str] {

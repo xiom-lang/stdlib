@@ -1,4 +1,4 @@
-// XIOM stdlib stress — math nested function calls
+// XIOM stdlib stress -- math nested function calls
 // Tests composing multiple math functions in expressions.
 // Returns 0 on success, nonzero on failure.
 

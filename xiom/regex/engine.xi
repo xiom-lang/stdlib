@@ -13,18 +13,18 @@ use xiom.string;
 // ============================================================================
 //
 // Supported pattern syntax (deliberately compact, pure-XIOM backtracking):
-//   .        — matches any single character (except newline)
-//   *        — zero or more of preceding element (greedy)
-//   +        — one or more of preceding element (greedy)
-//   ?        — zero or one of preceding element (greedy)
-//   ^        — start-of-string anchor
-//   $        — end-of-string anchor
-//   [abc]    — character class (literal chars)
-//   [a-z]    — character range inside a class
-//   [^abc]   — negated character class
-//   \d \w \s — digit, word, whitespace shorthands
-//   \D \W \S — negated shorthands
-//   \c       — any other escaped character matches the literal char
+//   .        -- matches any single character (except newline)
+//   *        -- zero or more of preceding element (greedy)
+//   +        -- one or more of preceding element (greedy)
+//   ?        -- zero or one of preceding element (greedy)
+//   ^        -- start-of-string anchor
+//   $        -- end-of-string anchor
+//   [abc]    -- character class (literal chars)
+//   [a-z]    -- character range inside a class
+//   [^abc]   -- negated character class
+//   \d \w \s -- digit, word, whitespace shorthands
+//   \D \W \S -- negated shorthands
+//   \c       -- any other escaped character matches the literal char
 //
 // NOT supported (honestly): alternation `|`, groups `(...)`, backreferences,
 // lookahead/lookbehind, non-greedy quantifiers, named captures, Unicode

@@ -1,4 +1,4 @@
-// XIOM — Platform Abstraction (OS, arch, environment detection)
+// XIOM -- Platform Abstraction (OS, arch, environment detection)
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 //
@@ -15,7 +15,7 @@ module xiom.platform
 use xiom.env;
 use xiom.os;
 
-// ── OS name ──────────────────────────────────────────────────────────────────
+// -- OS name ------------------------------------------------------------------
 
 /// Return the operating system name as a lowercase string.
 /// Delegates to xiom.env.OS (compile-time constant).
@@ -26,7 +26,7 @@ pub fn os_name() -> Str
     xiom.os.platform()
 }
 
-// ── Boolean OS checks ────────────────────────────────────────────────────────
+// -- Boolean OS checks --------------------------------------------------------
 
 /// True when the target OS is Windows.
 pub fn is_windows() -> Bool {
@@ -55,7 +55,7 @@ pub fn is_unix() -> Bool {
     !is_windows()
 }
 
-// ── Architecture ─────────────────────────────────────────────────────────────
+// -- Architecture -------------------------------------------------------------
 
 /// Return the CPU architecture name as a lowercase string.
 /// Delegates to xiom.env.ARCH (compile-time constant).
@@ -67,7 +67,7 @@ pub fn arch_name() -> Str
     xiom.env.ARCH
 }
 
-// ── Endianness ───────────────────────────────────────────────────────────────
+// -- Endianness ---------------------------------------------------------------
 
 /// Returns true if the current platform is little-endian.
 /// On x86_64 and aarch64 (which dominate current hardware), this is always true.
@@ -78,7 +78,7 @@ pub fn endian_is_little() -> Bool {
     true
 }
 
-// ── System resources ─────────────────────────────────────────────────────────
+// -- System resources ---------------------------------------------------------
 
 /// Return the system page size in bytes (typically 4096).
 /// No cross-platform FFI intrinsic exists yet; returns the most common value.
@@ -96,7 +96,7 @@ pub fn cpu_count() -> Int
     xiom.os.cpu_count()
 }
 
-// ── Text conventions ─────────────────────────────────────────────────────────
+// -- Text conventions ---------------------------------------------------------
 
 /// Return the platform-specific newline sequence.
 /// Returns "\r\n" on Windows, "\n" everywhere else.
@@ -117,7 +117,7 @@ pub fn path_sep() -> Str
     xiom.env.path_separator()
 }
 
-// ── Pointer width ────────────────────────────────────────────────────────────
+// -- Pointer width ------------------------------------------------------------
 
 /// Returns true if the platform uses 64-bit pointers.
 /// XIOM Int is always 64-bit, so this is always true.
@@ -125,7 +125,7 @@ pub fn is_64bit() -> Bool {
     true
 }
 
-// ── OS version (best-effort) ─────────────────────────────────────────────────
+// -- OS version (best-effort) -------------------------------------------------
 
 /// Return the operating system version string.
 /// Best-effort: reads environment variables or delegates to OS-specific APIs.

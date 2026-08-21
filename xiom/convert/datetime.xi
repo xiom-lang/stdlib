@@ -33,7 +33,7 @@ pub fn datetime_now() -> DateTime {
 }
 
 /// Format a date-time as ISO 8601 "YYYY-MM-DDTHH:MM:SS", zero-padded.
-/// Parameters: dt — the date-time value.
+/// Parameters: dt -- the date-time value.
 /// Returns: the formatted string (always 19 bytes).
 /// Complexity: O(1).
 pub fn datetime_iso8601(dt: &DateTime) -> Str {
@@ -52,7 +52,7 @@ pub fn datetime_iso8601(dt: &DateTime) -> Str {
 }
 
 /// Parse an ISO 8601 "YYYY-MM-DDTHH:MM:SS" string into a DateTime.
-/// Parameters: s — the date-time string.
+/// Parameters: s -- the date-time string.
 /// Returns: Some(DateTime) when well-formed and within range, None otherwise.
 /// Complexity: O(1).
 pub fn datetime_from_iso8601(s: Str) -> Option[DateTime] {

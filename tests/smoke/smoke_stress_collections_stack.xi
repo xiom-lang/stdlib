@@ -1,4 +1,4 @@
-// XIOM stdlib stress — Stack push, pop, peek
+// XIOM stdlib stress -- Stack push, pop, peek
 // Tests LIFO stack operations including empty stack behavior.
 // Returns 0 on success, nonzero on failure.
 

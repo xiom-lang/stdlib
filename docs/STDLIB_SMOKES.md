@@ -1,11 +1,11 @@
-# Stdlib Smoke Registration List (2026-08-13) — for stdlib_execution_tests.rs
+# Stdlib Smoke Registration List (2026-08-13) -- for stdlib_execution_tests.rs
 
 All smokes in examples/stdlib_smoke/ verified exit 0 on the current compiler
 (4e95717e + stdlib fixes 9a411df8), unless marked. The M22-era and stress files
 marked with * are the pre-existing surface (never compiled against current APIs;
 the compiler session's curated harness already excludes them).
 
-## Stdlib session smokes (waves 1-5, 212 files) — register all
+## Stdlib session smokes (waves 1-5, 212 files) -- register all
 
 - examples/stdlib_smoke/smoke_array.xi
 - examples/stdlib_smoke/smoke_async.xi

@@ -1,9 +1,9 @@
-// XIOM — Queryable Contract Runtime API
+// XIOM -- Queryable Contract Runtime API
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 //
 // Exposes XIOM's contract system as a runtime-queryable API.
-// No other language has this — contracts are first-class data in XIOM.
+// No other language has this -- contracts are first-class data in XIOM.
 
 module xiom.contracts
 
@@ -18,7 +18,7 @@ use xiom.string;
 // REAL:    build_contract_index (function names + requires/ensures COUNTS) and,
 //          transitively, every statistic/query/coverage helper that reads the
 //          index (total_*, functions_with_contracts, contract_density,
-//          get_function_contracts, get_uncovered_contracts, coverage_percentage…).
+//          get_function_contracts, get_uncovered_contracts, coverage_percentage...).
 // LIMITED: clause EXPRESSION text, source locations, parameter/return types and
 //          type invariants are not embedded yet, so those fields are "" / empty;
 //          runtime contract evaluation (verify_function_contracts, check_invariant)
@@ -140,7 +140,7 @@ pub fn check_invariant[T](value: &T, invariant: Str) -> ContractCheckResult {
 }
 
 // ============================================================================
-// Contract Index — Queryable Spec Database
+// Contract Index -- Queryable Spec Database
 // ============================================================================
 
 // Internal: retrieve the current contract index.
@@ -498,7 +498,7 @@ pub fn contract_density() -> Float64 {
 }
 
 // ============================================================================
-// Contract Collection Methods — P1-4 (Spec Section 5.4)
+// Contract Collection Methods -- P1-4 (Spec Section 5.4)
 //
 // These predicate methods operate on the ContractIndex to answer common
 // questions about the contract database. They are the runtime equivalents

@@ -1,4 +1,4 @@
-// XIOM — OS Library
+// XIOM -- OS Library
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 
@@ -588,9 +588,9 @@ pub fn file_size_bytes(path: Str) -> Result[Int, Str]
   }
 }
 
-// ──────────────────────────────────────────────────────────
+// ----------------------------------------------------------
 //  Extended OS queries
-// ──────────────────────────────────────────────────────────
+// ----------------------------------------------------------
 
 // hostname returns the system hostname via gethostname (POSIX) or
 // GetComputerNameA (Windows).  Uses an internal static buffer in the
@@ -646,13 +646,13 @@ pub fn free_memory_mb() -> Int {
 }
 
 // page_size returns the system page size in bytes.
-// Returns 4096 — the runtime does not expose sysconf(_SC_PAGESIZE).
+// Returns 4096 -- the runtime does not expose sysconf(_SC_PAGESIZE).
 pub fn page_size() -> Int {
   return 4096;
 }
 
 // terminal_width returns the terminal width in columns, if detectable.
-// The Xiom runtime does not expose TIOCGWINSZ — always returns None.
+// The Xiom runtime does not expose TIOCGWINSZ -- always returns None.
 pub fn terminal_width() -> Option[Int] {
   return None;
 }

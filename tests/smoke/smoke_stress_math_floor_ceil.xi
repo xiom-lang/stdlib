@@ -1,4 +1,4 @@
-// XIOM stdlib stress — math.floor and math.ceil
+// XIOM stdlib stress -- math.floor and math.ceil
 // Tests floor/ceil on positive, negative, and fractional values.
 // Returns 0 on success, nonzero on failure.
 

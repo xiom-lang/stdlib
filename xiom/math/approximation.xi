@@ -12,10 +12,10 @@ module xiom.math.approximation
 //
 // interpolation delegates to the natural cubic spline in math.numerical
 // (DRY); extrapolation, least-squares / rational / Fourier / exponential
-// fits, Chebyshev and Padé approximants, the Remez minimax algorithm, and
+// fits, Chebyshev and Pade approximants, the Remez minimax algorithm, and
 // spline coefficient extraction are implemented here. All fallible inputs
 // are validated in the bodies and return documented sentinels (NaN for
-// scalar results, empty vectors for vector results) — requires/ensures
+// scalar results, empty vectors for vector results) -- requires/ensures
 // clauses are runtime-enforced and would trap. Every linear solve uses
 // Gaussian elimination with partial pivoting.
 // ============================================================================
@@ -236,7 +236,7 @@ pub fn chebyshev_approx(f: fn(Float64) -> Float64, a: Float64, b: Float64, degre
 // Least-squares solution of A x = b via the normal equations (A^T A x = A^T b).
 // Returns the empty vector for empty/mismatched input, a singular normal
 // matrix, or when the input matrix is read through a `&Vec[Vec[Float64]]`
-// parameter (TODO(compiler): BUG 26 #1 — by-ref nested float Vec element
+// parameter (TODO(compiler): BUG 26 #1 -- by-ref nested float Vec element
 // reads return garbage data pointers; len fields are correct). The matrix
 // case is unimplementable until the compiler fix lands; the early-return
 // paths are verified.
@@ -283,9 +283,9 @@ pub fn minimax(f: fn(Float64) -> Float64, a: Float64, b: Float64, degree: Int) -
   return remez(f, a, b, degree);
 }
 
-// Padé approximant of order (m, n) of f at x0: builds the Taylor
+// Pade approximant of order (m, n) of f at x0: builds the Taylor
 // coefficients c0..c_{m+n} by central finite differences, then solves the
-// Padé equations for the denominator q1..qn (q0 = 1) and folds the
+// Pade equations for the denominator q1..qn (q0 = 1) and folds the
 // numerators p0..pm. Returns [p0..pm, q1..qn]; the empty vector for
 // m, n < 0 (documented). NOTE: finite-difference Taylor coefficients limit
 // accuracy (h = 1e-3); the approximation is most reliable for modest
@@ -492,7 +492,7 @@ pub fn spline_approx(x: &Vec[Float64], y: &Vec[Float64]) -> Vec[Vec[Float64]] {
 // Least-squares fit of f over [a, b] in the given function basis, via the
 // normal equations sampled at 64 points. Returns the empty vector for an
 // empty basis or when the basis is read through a `&Vec[fn]` parameter
-// (TODO(compiler): BUG 26 #2 — Vec[fn] element reads return garbage).
+// (TODO(compiler): BUG 26 #2 -- Vec[fn] element reads return garbage).
 pub fn best_approx(f: fn(Float64) -> Float64, basis: &Vec[fn(Float64) -> Float64], a: Float64, b: Float64) -> Vec[Float64] {
   var empty = Vec[Float64].new();
   var m = basis.len();
@@ -549,7 +549,7 @@ fn _vander(x: Float64, k: Int) -> Float64 {
 // Basis function of the LINEARIZED rational fit: minimize
 // sum_i (P(x_i) - y_i * Q(x_i))^2 over the m+1 numerator and n denominator
 // coefficients. Column j <= m is the monomial x^j; column j > m is
-// -y_i * x^(j-m-1) (the denominator monomials scaled by the SAMPLE y —
+// -y_i * x^(j-m-1) (the denominator monomials scaled by the SAMPLE y --
 // scaling by x instead would duplicate the numerator basis and make the
 // normal matrix singular for m >= n-1).
 fn _basis(x: Float64, y: Float64, col: Int, m: Int) -> Float64 {
@@ -594,7 +594,7 @@ fn _eval_poly(c: &Vec[Float64], x: Float64) -> Float64 {
 }
 
 // Central finite-difference approximation of the k-th derivative of f at x0
-// (used for Padé Taylor coefficients; h = 1e-2 for stability).
+// (used for Pade Taylor coefficients; h = 1e-2 for stability).
 fn _taylor_coeff(f: fn(Float64) -> Float64, x0: Float64, k: Int) -> Float64 {
   if k == 0 { return f(x0); }
   var h = 1e-2;

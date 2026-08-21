@@ -1,4 +1,4 @@
-// XIOM — Bit-Level Utilities
+// XIOM -- Bit-Level Utilities
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 
@@ -21,7 +21,7 @@ use xiom.math.shr;
 use xiom.core.size_of;
 
 // ---------------------------------------------------------------------------
-// bit_get — Returns 1 if the bit at position pos (0 = LSB) is set, 0 otherwise.
+// bit_get -- Returns 1 if the bit at position pos (0 = LSB) is set, 0 otherwise.
 // Position must be in [0, 63] for 64-bit Int.
 // ---------------------------------------------------------------------------
 
@@ -33,7 +33,7 @@ pub fn bit_get(n: Int, pos: Int) -> Int {
 }
 
 // ---------------------------------------------------------------------------
-// bit_set — Returns n with the bit at position pos set to 1.
+// bit_set -- Returns n with the bit at position pos set to 1.
 // ---------------------------------------------------------------------------
 
 pub fn bit_set(n: Int, pos: Int) -> Int {
@@ -43,7 +43,7 @@ pub fn bit_set(n: Int, pos: Int) -> Int {
 }
 
 // ---------------------------------------------------------------------------
-// bit_clear — Returns n with the bit at position pos cleared (set to 0).
+// bit_clear -- Returns n with the bit at position pos cleared (set to 0).
 // ---------------------------------------------------------------------------
 
 pub fn bit_clear(n: Int, pos: Int) -> Int {
@@ -53,7 +53,7 @@ pub fn bit_clear(n: Int, pos: Int) -> Int {
 }
 
 // ---------------------------------------------------------------------------
-// bit_toggle — Flips the bit at position pos: 0→1, 1→0.
+// bit_toggle -- Flips the bit at position pos: 0->1, 1->0.
 // ---------------------------------------------------------------------------
 
 pub fn bit_toggle(n: Int, pos: Int) -> Int {
@@ -63,7 +63,7 @@ pub fn bit_toggle(n: Int, pos: Int) -> Int {
 }
 
 // ---------------------------------------------------------------------------
-// bit_count_ones (popcount) — Counts set bits (1s) in n.
+// bit_count_ones (popcount) -- Counts set bits (1s) in n.
 // Delegates to xiom.num.count_ones for the canonical implementation.
 // ---------------------------------------------------------------------------
 
@@ -83,7 +83,7 @@ pub fn bit_count_ones(n: Int) -> Int {
 }
 
 // ---------------------------------------------------------------------------
-// bit_count_zeros — Counts cleared bits (0s) in n.
+// bit_count_zeros -- Counts cleared bits (0s) in n.
 // ---------------------------------------------------------------------------
 
 pub fn bit_count_zeros(n: Int) -> Int {
@@ -91,7 +91,7 @@ pub fn bit_count_zeros(n: Int) -> Int {
 }
 
 // ---------------------------------------------------------------------------
-// popcount — Alias for bit_count_ones. Hamming weight of the value.
+// popcount -- Alias for bit_count_ones. Hamming weight of the value.
 // Delegates to the built-in counting function.
 // ---------------------------------------------------------------------------
 
@@ -100,7 +100,7 @@ pub fn popcount(n: Int) -> Int {
 }
 
 // ---------------------------------------------------------------------------
-// clz — Count Leading Zeros. Returns the number of consecutive zero bits
+// clz -- Count Leading Zeros. Returns the number of consecutive zero bits
 // starting from the most significant bit.
 // ---------------------------------------------------------------------------
 
@@ -117,7 +117,7 @@ pub fn clz(n: Int) -> Int {
 }
 
 // ---------------------------------------------------------------------------
-// ctz — Count Trailing Zeros. Returns the number of consecutive zero bits
+// ctz -- Count Trailing Zeros. Returns the number of consecutive zero bits
 // starting from the least significant bit.
 // ---------------------------------------------------------------------------
 
@@ -133,7 +133,7 @@ pub fn ctz(n: Int) -> Int {
 }
 
 // ---------------------------------------------------------------------------
-// rot_left — Circularly shifts bits left by k positions.
+// rot_left -- Circularly shifts bits left by k positions.
 // Bits shifted off the MSB reappear at the LSB.
 // Equivalent to xiom.num.rotate_left.
 // ---------------------------------------------------------------------------
@@ -146,7 +146,7 @@ pub fn rot_left(n: Int, k: Int) -> Int {
 }
 
 // ---------------------------------------------------------------------------
-// rot_right — Circularly shifts bits right by k positions.
+// rot_right -- Circularly shifts bits right by k positions.
 // Bits shifted off the LSB reappear at the MSB.
 // Equivalent to xiom.num.rotate_right.
 // ---------------------------------------------------------------------------
@@ -159,7 +159,7 @@ pub fn rot_right(n: Int, k: Int) -> Int {
 }
 
 // ---------------------------------------------------------------------------
-// bit_reverse — Reverses the order of bits in n (mirror).
+// bit_reverse -- Reverses the order of bits in n (mirror).
 // LSB becomes MSB and vice versa.
 // ---------------------------------------------------------------------------
 
@@ -177,7 +177,7 @@ pub fn bit_reverse(n: Int) -> Int {
 }
 
 // ---------------------------------------------------------------------------
-// byte_swap16 — Swaps the two bytes of a 16-bit value (stored in lower 16
+// byte_swap16 -- Swaps the two bytes of a 16-bit value (stored in lower 16
 // bits of an Int). Returns the byte-swapped result.
 // ---------------------------------------------------------------------------
 
@@ -188,7 +188,7 @@ pub fn byte_swap16(v: Int) -> Int {
 }
 
 // ---------------------------------------------------------------------------
-// byte_swap32 — Swaps all four bytes of a 32-bit value (stored in lower 32
+// byte_swap32 -- Swaps all four bytes of a 32-bit value (stored in lower 32
 // bits of an Int). Returns the byte-swapped result.
 // ---------------------------------------------------------------------------
 
@@ -201,7 +201,7 @@ pub fn byte_swap32(v: Int) -> Int {
 }
 
 // ---------------------------------------------------------------------------
-// byte_swap64 — Swaps all eight bytes of a 64-bit value.
+// byte_swap64 -- Swaps all eight bytes of a 64-bit value.
 // Returns the fully byte-reversed Int.
 // ---------------------------------------------------------------------------
 
@@ -217,10 +217,10 @@ pub fn byte_swap64(v: Int) -> Int {
 }
 
 // ---------------------------------------------------------------------------
-// get_bit_range — Extracts a contiguous range of bits from n as an unsigned
+// get_bit_range -- Extracts a contiguous range of bits from n as an unsigned
 // value. start is the LSB position of the range, len is the number of bits.
 // Returns the extracted value right-justified.
-// Example: get_bit_range(0b110101, 0, 3) → 0b101 (bits 0-2)
+// Example: get_bit_range(0b110101, 0, 3) -> 0b101 (bits 0-2)
 // ---------------------------------------------------------------------------
 
 pub fn get_bit_range(n: Int, start: Int, len: Int) -> Int {
@@ -235,7 +235,7 @@ pub fn get_bit_range(n: Int, start: Int, len: Int) -> Int {
 }
 
 // ---------------------------------------------------------------------------
-// set_bit_range — Sets a contiguous range of bits in n to the given value.
+// set_bit_range -- Sets a contiguous range of bits in n to the given value.
 // start is the LSB position, len is the bit width.
 // value is right-justified (lower bits only).
 // Returns the modified Int.
@@ -255,7 +255,7 @@ pub fn set_bit_range(n: Int, start: Int, len: Int, value: Int) -> Int {
 }
 
 // ---------------------------------------------------------------------------
-// is_pow2 — Returns true if n > 0 and n is a power of two.
+// is_pow2 -- Returns true if n > 0 and n is a power of two.
 // Uses the classic bit trick: powers of two have exactly one set bit,
 // so n & (n-1) == 0.
 // NOTE: xiom.num also provides is_power_of_two with identical behavior.
@@ -267,7 +267,7 @@ pub fn is_pow2(n: Int) -> Bool {
 }
 
 // ---------------------------------------------------------------------------
-// low_nibble — Extracts the lower 4 bits (nibble) of n. Returns 0–15.
+// low_nibble -- Extracts the lower 4 bits (nibble) of n. Returns 0-15.
 // ---------------------------------------------------------------------------
 
 pub fn low_nibble(n: Int) -> Int {
@@ -275,8 +275,8 @@ pub fn low_nibble(n: Int) -> Int {
 }
 
 // ---------------------------------------------------------------------------
-// high_nibble — Extracts bits 4–7 (the high nibble of the low byte).
-// Returns 0–15.
+// high_nibble -- Extracts bits 4-7 (the high nibble of the low byte).
+// Returns 0-15.
 // ---------------------------------------------------------------------------
 
 pub fn high_nibble(n: Int) -> Int {
@@ -284,7 +284,7 @@ pub fn high_nibble(n: Int) -> Int {
 }
 
 // ---------------------------------------------------------------------------
-// pack_u16_le — Packs two byte values (0-255) into a 16-bit integer in
+// pack_u16_le -- Packs two byte values (0-255) into a 16-bit integer in
 // little-endian order: low_byte at bits 0-7, high_byte at bits 8-15.
 // ---------------------------------------------------------------------------
 
@@ -295,7 +295,7 @@ pub fn pack_u16_le(low_byte: Int, high_byte: Int) -> Int {
 }
 
 // ---------------------------------------------------------------------------
-// pack_u16_be — Packs two byte values into a 16-bit integer in big-endian
+// pack_u16_be -- Packs two byte values into a 16-bit integer in big-endian
 // order: high_byte at bits 0-7, low_byte at bits 8-15.
 // ---------------------------------------------------------------------------
 
@@ -306,7 +306,7 @@ pub fn pack_u16_be(high_byte: Int, low_byte: Int) -> Int {
 }
 
 // ---------------------------------------------------------------------------
-// pack_u32_le — Packs four byte values (0-255) into a 32-bit integer in
+// pack_u32_le -- Packs four byte values (0-255) into a 32-bit integer in
 // little-endian order: b0 at bits 0-7, b1 at 8-15, b2 at 16-23, b3 at 24-31.
 // ---------------------------------------------------------------------------
 
@@ -316,7 +316,7 @@ pub fn pack_u32_le(b0: Int, b1: Int, b2: Int, b3: Int) -> Int {
 }
 
 // ---------------------------------------------------------------------------
-// pack_u32_be — Packs four byte values into a 32-bit integer in big-endian
+// pack_u32_be -- Packs four byte values into a 32-bit integer in big-endian
 // order: b0 at bits 24-31, ... , b3 at bits 0-7.
 // ---------------------------------------------------------------------------
 
@@ -326,7 +326,7 @@ pub fn pack_u32_be(b0: Int, b1: Int, b2: Int, b3: Int) -> Int {
 }
 
 // ---------------------------------------------------------------------------
-// unpack_u16_le — Unpacks a little-endian 16-bit value into (low_byte, high_byte).
+// unpack_u16_le -- Unpacks a little-endian 16-bit value into (low_byte, high_byte).
 // ---------------------------------------------------------------------------
 
 pub fn unpack_u16_le(value: Int) -> (Int, Int) {
@@ -336,7 +336,7 @@ pub fn unpack_u16_le(value: Int) -> (Int, Int) {
 }
 
 // ---------------------------------------------------------------------------
-// unpack_u16_be — Unpacks a big-endian 16-bit value into (high_byte, low_byte).
+// unpack_u16_be -- Unpacks a big-endian 16-bit value into (high_byte, low_byte).
 // ---------------------------------------------------------------------------
 
 pub fn unpack_u16_be(value: Int) -> (Int, Int) {
@@ -346,7 +346,7 @@ pub fn unpack_u16_be(value: Int) -> (Int, Int) {
 }
 
 // ---------------------------------------------------------------------------
-// unpack_u32_le — Unpacks a little-endian 32-bit value into a 4-tuple of
+// unpack_u32_le -- Unpacks a little-endian 32-bit value into a 4-tuple of
 // bytes (b0=LSB .. b3=MSB).
 // ---------------------------------------------------------------------------
 
@@ -359,7 +359,7 @@ pub fn unpack_u32_le(value: Int) -> (Int, Int, Int, Int) {
 }
 
 // ---------------------------------------------------------------------------
-// unpack_u32_be — Unpacks a big-endian 32-bit value into a 4-tuple of bytes
+// unpack_u32_be -- Unpacks a big-endian 32-bit value into a 4-tuple of bytes
 // (b0=MSB .. b3=LSB).
 // ---------------------------------------------------------------------------
 

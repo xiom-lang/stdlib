@@ -1,4 +1,4 @@
-// XIOM stdlib stress — Map get missing key
+// XIOM stdlib stress -- Map get missing key
 // Tests .get() on keys not present in map, expects None.
 // Returns 0 on success, nonzero on failure.
 

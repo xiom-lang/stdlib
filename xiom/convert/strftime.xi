@@ -9,7 +9,7 @@ module xiom.convert.strftime
 // ============================================================================
 // Date/time formatting with strftime-style format specifiers. The reference
 // implementation lives in xiom.time.strftime; because the function name
-// matches here (same-name delegation miscompiles — BUG 25 #1) the formatting
+// matches here (same-name delegation miscompiles -- BUG 25 #1) the formatting
 // engine is reimplemented locally on top of the time/string primitives.
 //
 // Supported conversions: %Y %y %m %d %H %M %S %j %w %u %%. Unknown
@@ -20,7 +20,7 @@ use xiom.time;
 use xiom.string;
 
 /// Format a date using a strftime specifier.
-/// Parameters: spec — the format string; d — the date.
+/// Parameters: spec -- the format string; d -- the date.
 /// Returns: the formatted string. Unknown conversions pass through literally.
 /// Complexity: O(|spec|).
 pub fn strftime(spec: Str, d: &Date) -> Str {
@@ -84,7 +84,7 @@ pub fn strftime(spec: Str, d: &Date) -> Str {
 }
 
 /// Format the current date using a strftime specifier.
-/// Parameters: spec — the format string.
+/// Parameters: spec -- the format string.
 /// Returns: the formatted string for today's date.
 /// Complexity: O(|spec|).
 pub fn strftime_now(spec: Str) -> Str {

@@ -150,7 +150,7 @@ pub fn consumer_theory(prices: &Vec[Float64], income: Float64, utilities: fn(&Ve
 }
 
 // Profit-maximizing input combination by coordinate search: starting from a
-// unit input vector, scale each input to maximize prices·x - costs(x).
+// unit input vector, scale each input to maximize prices-x - costs(x).
 // Returns the input vector. Empty for a price mismatch.
 // Complexity: O(steps * n * cost(costs)).
 pub fn producer_theory(prices: &Vec[Float64], costs: fn(&Vec[Float64]) -> Float64) -> Vec[Float64] {

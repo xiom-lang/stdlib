@@ -41,7 +41,7 @@ fn main() -> Int {
   if s7.count != 2 { io.println("sc-8"); return 15; }
   if s7.v0 * 100.0 < 313.9 || s7.v0 * 100.0 > 314.1 { io.println("sc-9"); return 16; }
   if s7.v1 * 100.0 < 249.9 || s7.v1 * 100.0 > 250.1 { io.println("sc-10"); return 17; }
-  // s7.remainder check dropped — FloatScan struct field reads unreliable
+  // s7.remainder check dropped -- FloatScan struct field reads unreliable
   // cross-module (documented in scanf.xi).
   var s8 = scanf.str_scanf_floats("1.5 trailing", "%f");
   if !s8.is_ok { io.println(s8.remainder); return 19; }
@@ -87,7 +87,7 @@ fn main() -> Int {
       }
       var pl = t.placeholders;
       if pl.len() != 1 { io.println("tpl-4"); return 32; }
-      // placeholders[0] content compare dropped — module-struct Vec[Str]
+      // placeholders[0] content compare dropped -- module-struct Vec[Str]
       // element reads corrupt (BUG 27 family).
     };
     Err(e) => { io.println(e); return 34; };

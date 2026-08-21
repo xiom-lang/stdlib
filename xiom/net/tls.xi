@@ -1,4 +1,4 @@
-// XIOM — TLS Protocol Helpers (xiom.net.tls)
+// XIOM -- TLS Protocol Helpers (xiom.net.tls)
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 //

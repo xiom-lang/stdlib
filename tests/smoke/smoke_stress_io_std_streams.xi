@@ -1,4 +1,4 @@
-// XIOM stdlib stress — io.stdin / io.stdout / io.stderr descriptors
+// XIOM stdlib stress -- io.stdin / io.stdout / io.stderr descriptors
 // Verifies all three standard stream descriptors are non-negative.
 // Returns 0 on success.
 

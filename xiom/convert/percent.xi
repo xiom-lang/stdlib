@@ -9,7 +9,7 @@ module xiom.convert.percent
 // ============================================================================
 // Percent-encoding (RFC 3986) for full URLs and for path/query components.
 // Implemented locally (same-name delegation to xiom.encoding crashes the
-// compiler — see xiom.convert.base58 for the probe reference).
+// compiler -- see xiom.convert.base58 for the probe reference).
 // ============================================================================
 
 use xiom.string;
@@ -36,7 +36,7 @@ fn _is_unreserved(c: Char) -> Bool {
 /// ',', '$', '#', '@', '%', '!', '*', '(', ')', '[', ']').
 fn _is_url_safe(c: Char) -> Bool {
   // Single `as Int` cast: `c as UInt8 as Int` miscompiles for char_at-derived
-  // chars (BUG 26 #5 — two-step cast loses the value).
+  // chars (BUG 26 #5 -- two-step cast loses the value).
   var code = c as Int;
   code = code & 0xFF;
   if code >= 65 && code <= 90 { return true; }
@@ -162,7 +162,7 @@ pub fn percent_decode(s: Str) -> Result[Str, Str] {
 
 /// Percent-encodes a single URL component (path segment / query value): only
 /// unreserved characters (A-Z a-z 0-9 - _ . ~) pass through; everything else
-/// — including '/', '?', '&', '=', ':' — is percent-encoded per UTF-8 byte.
+/// -- including '/', '?', '&', '=', ':' -- is percent-encoded per UTF-8 byte.
 /// Complexity: O(n).
 pub fn percent_encode_component(s: Str) -> Str {
   _percent_encode(s, true)

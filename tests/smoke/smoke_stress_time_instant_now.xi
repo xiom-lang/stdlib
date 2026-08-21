@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.time Instant.now returns non-trivial Instant
+// XIOM stdlib stress -- xiom.time Instant.now returns non-trivial Instant
 // Instant.now() must not panic and elapsed duration must be >= 0.
 // Returns 0 on success, nonzero on failure.
 

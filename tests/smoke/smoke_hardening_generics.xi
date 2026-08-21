@@ -21,12 +21,12 @@ fn main() -> Int {
   var i = add2[Int](20, 22);
   if i != 42 { return 1; }
 
-  // --- generic Float64 (explicit type args) — was corrupted to i64 ---
+  // --- generic Float64 (explicit type args) -- was corrupted to i64 ---
   var f = add2[Float64](1.5, 2.25);
   var fe: Float64 = 3.75;
   if f != fe { return 2; }
 
-  // --- generic Float32 (explicit type args) — was resolved to Int ---
+  // --- generic Float32 (explicit type args) -- was resolved to Int ---
   var g = add2[Float32](1.5 as Float32, 2.25 as Float32);
   var ge: Float32 = 3.75 as Float32;
   if g != ge { return 3; }

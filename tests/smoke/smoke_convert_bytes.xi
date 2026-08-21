@@ -1,4 +1,4 @@
-﻿// XIOM stdlib smoke test - xiom.convert.bytes
+// XIOM stdlib smoke test - xiom.convert.bytes
 // Checks: integer <-> bytes round-trips, hex rendering, concat, reverse.
 module smoke_convert_bytes
 use xiom.convert.bytes;
@@ -24,7 +24,7 @@ fn main() -> Int {
     if a != b { io.println("to_bytes mismatch"); return 11; }
     i = i + 1;
   }
-  // NOTE: bytes.from_bytes is not exercised â€” the name collides with a
+  // NOTE: bytes.from_bytes is not exercised -- the name collides with a
   // compiler builtin (any call emits invalid IR; see bytes.xi TODO(compiler)).
   // The bytes->int direction is covered via xiom.convert.endian's
   // from_be_bytes in smoke_convert_endian.xi.

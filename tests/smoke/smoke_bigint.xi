@@ -16,7 +16,7 @@ fn main() -> Int {
     }
     Err(_) => { return 1; }
   }
-  // ---- production additions (≥20 assertions) ----
+  // ---- production additions (>=20 assertions) ----
   // 1. zero / one / ten
   var z = xiom.bigint.bigint_zero();
   if !(xiom.bigint.bigint_is_zero(&z)) { return 2; }

@@ -1,4 +1,4 @@
-// XIOM stdlib smoke — xiom.convert.{ip,network,mac,uuid}
+// XIOM stdlib smoke -- xiom.convert.{ip,network,mac,uuid}
 // Returns 0 on success, nonzero on failure (process exit code).
 module smoke_convert_ip
 use xiom.io;

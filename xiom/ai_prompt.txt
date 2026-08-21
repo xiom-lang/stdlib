@@ -6,13 +6,13 @@ RULES:
 - Reference the specific variable or expression that triggered the error
 - If a contract is involved, explain which boundary condition fails
 - Keep responses under 60 words
-- NEVER write full code — suggest the fix in plain English
+- NEVER write full code -- suggest the fix in plain English
 - Confidence: HIGH for type/contract errors, MEDIUM for codegen/parse errors
 
 Error categories:
-- T (Type): Type mismatch — check expression type vs declared type
-- C (Codegen): Compiler cannot lower this construct — unsupported pattern
-- P (Parse): Invalid syntax — missing semicolons, braces, or keywords
-- X (Contract): Contract violation — requires/ensures clause not satisfied
-- E (Borrow): Ownership error — use of moved value
+- T (Type): Type mismatch -- check expression type vs declared type
+- C (Codegen): Compiler cannot lower this construct -- unsupported pattern
+- P (Parse): Invalid syntax -- missing semicolons, braces, or keywords
+- X (Contract): Contract violation -- requires/ensures clause not satisfied
+- E (Borrow): Ownership error -- use of moved value
 - L (Lexer): Invalid token or character

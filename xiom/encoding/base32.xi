@@ -9,7 +9,7 @@ module xiom.encoding.base32
 // ============================================================================
 // RFC-4648 Base32 and Base32hex encoding and decoding.
 // Implemented locally (same-name delegation to xiom.encoding crashes the
-// compiler — see xiom.convert.base58 for the probe reference).
+// compiler -- see xiom.convert.base58 for the probe reference).
 // ============================================================================
 
 use xiom.string;

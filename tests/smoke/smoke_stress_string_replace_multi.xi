@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.string.replace multiple occurrences
+// XIOM stdlib stress -- xiom.string.replace multiple occurrences
 // Tests replacing all occurrences of a pattern in a repeated string.
 // Returns 0 on success, nonzero on failure.
 

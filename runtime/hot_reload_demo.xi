@@ -1,4 +1,4 @@
-// XIOM Hot Reload Test — used with xiom_hot_host.exe
+// XIOM Hot Reload Test -- used with xiom_hot_host.exe
 // Demonstrates the hot reload cycle: change this file,
 // save, and the host will recompile and reload automatically.
 

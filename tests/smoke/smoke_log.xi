@@ -1,4 +1,4 @@
-// XIOM stdlib smoke — xiom.log.levels + color + json + sinks
+// XIOM stdlib smoke -- xiom.log.levels + color + json + sinks
 // Returns 0 on success, nonzero (and a tag) on failure.
 
 module smoke_log

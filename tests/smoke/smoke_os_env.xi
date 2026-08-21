@@ -1,11 +1,11 @@
-// XIOM stdlib smoke test — xiom.env + xiom.os.platform + xiom.os.sysinfo
+// XIOM stdlib smoke test -- xiom.env + xiom.os.platform + xiom.os.sysinfo
 // Env, platform, and sysinfo helpers.
 // Returns 0 on success, nonzero on failure (process exit code).
 //
 // NOTE: xiom.os.signal and xiom.os.term are tested in smoke_os_folder.xi
 // because the compiler cannot resolve the `xiom.os.platform` module prefix
 // when xiom.os.signal or xiom.os.term are also imported into the same
-// program (module/function name collision — the flat xiom.os module exposes
+// program (module/function name collision -- the flat xiom.os module exposes
 // a `platform()` function and a `signal` extern, which shadow the sibling
 // submodule prefixes).
 

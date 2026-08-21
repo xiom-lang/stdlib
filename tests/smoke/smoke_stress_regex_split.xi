@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.regex Regex.split splits text by pattern
+// XIOM stdlib stress -- xiom.regex Regex.split splits text by pattern
 // Tests split on delimiters, multi-char patterns, and no-match passthrough.
 // Returns 0 on success, nonzero on failure.
 

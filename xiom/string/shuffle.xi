@@ -15,7 +15,7 @@ module xiom.string.shuffle
 use xiom.string;
 use xiom.rand;
 
-// ── Private helpers ─────────────────────────────────────────────────────────
+// -- Private helpers ---------------------------------------------------------
 
 // Masked byte at `pos` (BUG 22 #10: `as Int` sign-extends UInt8).
 // Complexity: O(1).
@@ -151,7 +151,7 @@ fn _sh_shuffle(chars: &Vec[Str], use_rand: Bool, seed: Int) -> Vec[Str] {
   arr
 }
 
-// ── Public API ──────────────────────────────────────────────────────────────
+// -- Public API --------------------------------------------------------------
 
 /// Random permutation of the characters of `s` via Fisher-Yates, drawing swap
 /// indices from the runtime PRNG. The result is a rearrangement of the

@@ -74,7 +74,7 @@ fn main() -> Int {
 
   // NOTE: xiom.convert.overflow's (Int, Bool) returns cannot be compiled in
   // this compiler build (Bool-in-tuple emits invalid IR; see overflow.xi
-  // TODO(compiler)) — the four overflowing_* functions are not exercised.
+  // TODO(compiler)) -- the four overflowing_* functions are not exercised.
 
   var ed = exact.exact_div(6, 3);
   match ed {

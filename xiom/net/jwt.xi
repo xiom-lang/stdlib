@@ -9,7 +9,7 @@ module xiom.net.jwt
 // ============================================================================
 // JSON Web Token composition and verification per RFC 7519.
 // Pure XIOM: base64url and HMAC-SHA256 sign/verify delegate to xiom.encoding
-// and xiom.crypto (different names — safe). Claim extraction is a light JSON
+// and xiom.crypto (different names -- safe). Claim extraction is a light JSON
 // field scanner (no full JSON parser required for alg/exp).
 // ============================================================================
 
@@ -192,7 +192,7 @@ fn json_number_field(json: Str, key: Str) -> Option[Int] {
 }
 
 /// Base64url encode bytes without padding.
-/// Parameters: data — the bytes to encode.
+/// Parameters: data -- the bytes to encode.
 /// Returns: the unpadded URL-safe base64 string.
 /// Complexity: O(n). Pure.
 pub fn jwt_base64url_encode(data: &Vec[UInt8]) -> Str {
@@ -201,7 +201,7 @@ pub fn jwt_base64url_encode(data: &Vec[UInt8]) -> Str {
 }
 
 /// Decode an unpadded base64url string back to bytes.
-/// Parameters: s — the encoded string (padding optional).
+/// Parameters: s -- the encoded string (padding optional).
 /// Returns: Ok(bytes) on success, Err for an invalid character.
 /// Complexity: O(n). Pure.
 pub fn jwt_base64url_decode(s: Str) -> Result[Vec[UInt8], Str] {
@@ -210,7 +210,7 @@ pub fn jwt_base64url_decode(s: Str) -> Result[Vec[UInt8], Str] {
 }
 
 /// Test if an algorithm is supported.
-/// Parameters: alg — the algorithm name.
+/// Parameters: alg -- the algorithm name.
 /// Returns: true for "HS256" and "none".
 /// Complexity: O(1). Pure.
 pub fn jwt_alg_supported(alg: Str) -> Bool {
@@ -233,9 +233,9 @@ fn hmac_sign(secret: Str, input: &Vec[UInt8]) -> Result[Str, Str] {
 }
 
 /// Build a signed JWT string.
-/// Parameters: header — the JSON header (e.g.
-///          "{\"alg\":\"HS256\",\"typ\":\"JWT\"}"); payload — the JSON
-///          claims; secret — the HMAC secret; alg — "HS256" or "none".
+/// Parameters: header -- the JSON header (e.g.
+///          "{\"alg\":\"HS256\",\"typ\":\"JWT\"}"); payload -- the JSON
+///          claims; secret -- the HMAC secret; alg -- "HS256" or "none".
 /// Returns: Ok("header.payload.signature") on success, Err for an unsupported
 ///          algorithm.
 /// Complexity: O(n). Pure.
@@ -252,8 +252,8 @@ pub fn jwt_encode(header: Str, payload: Str, secret: Str, alg: Str) -> Result[St
 }
 
 /// Sign base64url parts and append the signature.
-/// Parameters: header_b64 — the encoded header; payload_b64 — the encoded
-///          payload; secret — the HMAC secret; alg — "HS256" or "none".
+/// Parameters: header_b64 -- the encoded header; payload_b64 -- the encoded
+///          payload; secret -- the HMAC secret; alg -- "HS256" or "none".
 /// Returns: Ok("header.payload.signature") on success, Err for an unsupported
 ///          algorithm.
 /// Complexity: O(n). Pure.
@@ -281,7 +281,7 @@ fn join_token(a: Str, b: Str, c: Str) -> Str {
 }
 
 /// Split a JWT into header, payload, and signature.
-/// Parameters: token — the full JWT string.
+/// Parameters: token -- the full JWT string.
 /// Returns: Ok(Jwt) with exactly three dot-separated parts, Err otherwise.
 /// Complexity: O(n). Pure.
 pub fn jwt_decode(token: Str) -> Result[Jwt, Str] {
@@ -299,7 +299,7 @@ pub fn jwt_decode(token: Str) -> Result[Jwt, Str] {
 }
 
 /// Verify a JWT signature with the given secret.
-/// Parameters: token — the JWT string; secret — the HMAC secret.
+/// Parameters: token -- the JWT string; secret -- the HMAC secret.
 /// Returns: true when the structure is valid and (for HS256) the signature
 ///          matches; "none" tokens verify only when the signature part is
 ///          empty.
@@ -355,7 +355,7 @@ pub fn jwt_verify(token: Str, secret: Str) -> Bool {
 }
 
 /// Test if the exp claim is before the given time.
-/// Parameters: token — the JWT string; now — the reference unix timestamp.
+/// Parameters: token -- the JWT string; now -- the reference unix timestamp.
 /// Returns: true when the token has an exp claim at or before now, false when
 ///          there is no exp claim or the token is malformed.
 /// Complexity: O(n). Pure.
@@ -382,7 +382,7 @@ pub fn jwt_expired(token: Str, now: Int) -> Bool {
 }
 
 /// Extract the payload claims as JSON.
-/// Parameters: token — the JWT string.
+/// Parameters: token -- the JWT string.
 /// Returns: Ok(decoded payload) on success, Err for a malformed token or an
 ///          invalid base64url payload.
 /// Complexity: O(n). Pure.

@@ -22,7 +22,7 @@ fn main() -> Int {
     var enc = crypto.aes_encrypt_gcm(&key, &nonce, &plaintext, &aad);
     match enc {
       Ok(pair) => {
-        // tuple payload via .0/.1 field access (tuple PATTERNS bind Int —
+        // tuple payload via .0/.1 field access (tuple PATTERNS bind Int --
         // documented checker simplification; field access is the supported form)
         var dec = crypto.aes_decrypt_gcm(&key, &nonce, &pair.0, &pair.1, &aad);
         match dec {

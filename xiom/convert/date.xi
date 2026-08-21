@@ -9,7 +9,7 @@ module xiom.convert.date
 // ============================================================================
 // Calendar date helpers and ISO 8601 formatting/parsing. The reference
 // implementation lives in xiom.time; where a function name matches one in
-// xiom.time (same-name delegation miscompiles — BUG 25 #1) the logic is
+// xiom.time (same-name delegation miscompiles -- BUG 25 #1) the logic is
 // reimplemented locally on top of the time/string primitives.
 // ============================================================================
 
@@ -34,7 +34,7 @@ pub fn date_now() -> Date {
 }
 
 /// Format a date as ISO 8601 "YYYY-MM-DD", zero-padded.
-/// Parameters: d — the date to format.
+/// Parameters: d -- the date to format.
 /// Returns: the formatted string (always 10 bytes).
 /// Complexity: O(1).
 pub fn date_iso8601(d: &Date) -> Str {
@@ -47,7 +47,7 @@ pub fn date_iso8601(d: &Date) -> Str {
 }
 
 /// Parse an ISO 8601 "YYYY-MM-DD" string into a Date.
-/// Parameters: s — the date string.
+/// Parameters: s -- the date string.
 /// Returns: Some(Date) when well-formed and within calendar range,
 ///          None otherwise (malformed layout or out-of-range fields).
 /// Complexity: O(1).
@@ -80,7 +80,7 @@ pub fn date_from_iso8601(s: Str) -> Option[Date] {
 }
 
 /// Day of the week for a date: 0 = Sunday .. 6 = Saturday.
-/// Parameters: d — the date.
+/// Parameters: d -- the date.
 /// Returns: weekday index.
 /// Complexity: O(1).
 pub fn date_weekday(d: &Date) -> Int {
@@ -88,7 +88,7 @@ pub fn date_weekday(d: &Date) -> Int {
 }
 
 /// Ordinal day of the year for a date (1..366, leap-aware).
-/// Parameters: d — the date.
+/// Parameters: d -- the date.
 /// Returns: the day-of-year index.
 /// Complexity: O(month) in the worst case (small constant).
 pub fn date_day_of_year(d: &Date) -> Int {

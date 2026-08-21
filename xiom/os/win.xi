@@ -9,8 +9,8 @@ module xiom.os.win
 // ============================================================================
 // Windows-only helpers: registry, environment variables, services, shell
 // execute and identity queries. Environment-variable access delegates to
-// xiom.env (different names — safe); the registry/service/shell functions
-// require the Win32 API, which the pure stdlib does not expose — documented
+// xiom.env (different names -- safe); the registry/service/shell functions
+// require the Win32 API, which the pure stdlib does not expose -- documented
 // stubs.
 // ============================================================================
 
@@ -49,7 +49,7 @@ pub fn win_registry_delete(hive: Int, path: Str, name: Str) -> Result[Unit, Str]
 
 /// Read a Windows environment variable.
 /// Delegates to xiom.env.var_opt.
-/// Parameters: name — the variable name.
+/// Parameters: name -- the variable name.
 /// Returns: Some(value) when set, None otherwise.
 /// Complexity: O(1). Pure (OS call).
 pub fn win_environment_var(name: Str) -> Option[Str] {

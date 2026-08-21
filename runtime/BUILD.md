@@ -1,4 +1,4 @@
-# XIOM Runtime — Build Instructions
+# XIOM Runtime -- Build Instructions
 
 ## Assembly Files
 
@@ -98,7 +98,7 @@ cargo run -p xiom -- --run examples/myprogram.xi \
 ## Testing Assembly Functions
 
 ```c
-// test_asm.c — verify assembly functions work
+// test_asm.c -- verify assembly functions work
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
@@ -134,10 +134,10 @@ gcc test_asm.c mem.o -o test_asm
 
 | Platform | Assembly | Fallback |
 |----------|----------|----------|
-| x86_64 (Intel/AMD) | ✅ Full assembly (SSE2, AVX, AES-NI, SHA-NI) | C software via `#else` stubs |
-| ARM64 (Apple M1/M2, AWS Graviton) | ⚠️ Planned (NEON intrinsics in simd_runtime.c already available) | C software |
-| RISC-V | ❌ No assembly yet | C software |
-| WASM | ❌ N/A (no native assembly in WASM) | C software |
+| x86_64 (Intel/AMD) | [OK] Full assembly (SSE2, AVX, AES-NI, SHA-NI) | C software via `#else` stubs |
+| ARM64 (Apple M1/M2, AWS Graviton) | [WARN] Planned (NEON intrinsics in simd_runtime.c already available) | C software |
+| RISC-V | [FAIL] No assembly yet | C software |
+| WASM | [FAIL] N/A (no native assembly in WASM) | C software |
 
 ## Performance Notes
 

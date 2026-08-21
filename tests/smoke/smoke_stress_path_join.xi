@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.path Path.join creates PathBuf with child component
+// XIOM stdlib stress -- xiom.path Path.join creates PathBuf with child component
 // Tests join with various child path segments.
 // Returns 0 on success, nonzero on failure.
 

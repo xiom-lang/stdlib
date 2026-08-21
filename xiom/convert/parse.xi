@@ -9,7 +9,7 @@ module xiom.convert.parse
 // ============================================================================
 // String parsing helpers for primitive types. Implemented here directly: the
 // core `to_int_from_str`/`to_float_from_str` paths are unreliable (Char range
-// comparisons miscompile — see the module header of xiom.convert.lossy), and
+// comparisons miscompile -- see the module header of xiom.convert.lossy), and
 // the same-named xiom.num helpers cannot be imported without triggering the
 // same-name delegation miscompile (see xiom.convert.base58).
 // ============================================================================

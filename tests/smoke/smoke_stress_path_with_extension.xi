@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.path Path.with_extension replacement
+// XIOM stdlib stress -- xiom.path Path.with_extension replacement
 // Tests with_extension replacing and adding extensions.
 // Returns 0 on success, nonzero on failure.
 

@@ -1,4 +1,4 @@
-// XIOM — Collections Library
+// XIOM -- Collections Library
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 
@@ -77,7 +77,7 @@ fn Vec.clear[T]()
 }
 
 // ============================================================================
-// 6E.3: Vec production methods — extend, reserve, truncate, shrink_to_fit
+// 6E.3: Vec production methods -- extend, reserve, truncate, shrink_to_fit
 // ============================================================================
 
 /// Reserve capacity for at least `additional` more elements.
@@ -600,7 +600,7 @@ fn VecDeque.with_capacity[T](cap: Int) -> VecDeque[T] {
 fn VecDeque.push_front[T](&mut self, value: T)
   ensures: len() == len()@pre + 1
 {
-  // rebuild over the LIVE range only — copying all of data re-pushes
+  // rebuild over the LIVE range only -- copying all of data re-pushes
   // elements already drained by pop_front (stale 20 bug)
   var new_data = Vec[T].new();
   new_data.push(value);
@@ -909,7 +909,7 @@ fn Slice.get[T](index: Int) -> Option[T]
 }
 
 // ============================================================================
-// 6E.1: HashMap[K, V] — O(1) amortized hash-based map
+// 6E.1: HashMap[K, V] -- O(1) amortized hash-based map
 // ============================================================================
 // Uses open addressing with linear probing and djb2 hashing.
 // Grows by 2x when load factor exceeds 0.75.
@@ -981,7 +981,7 @@ fn HashMap.get[K, V](key: &K) -> Option[V] {
         return Some(data[idx].value);
       }
     } else {
-      // Empty bucket — key not found
+      // Empty bucket -- key not found
       return None;
     }
     idx = (idx + 1) % cap;
@@ -1064,7 +1064,7 @@ fn HashMap.resize[K, V](new_cap: Int) {
   }
 }
 
-// ── Vec Operations ──────────────────────────────────────────────────────────
+// -- Vec Operations ----------------------------------------------------------
 
 /// Reverse elements in place. O(N).
 pub fn vec_reverse[T](v: &mut Vec[T]) {
@@ -1175,9 +1175,9 @@ pub fn vec_swap_elems[T](v: &mut Vec[T], i: Int, j: Int) {
   v[j] = temp;
 }
 
-// ── Vec Free Functions ──────────────────────────────────────────────────────
+// -- Vec Free Functions ------------------------------------------------------
 
-/// Join a vector of strings with a separator. O(N·L) where L is avg string length.
+/// Join a vector of strings with a separator. O(N-L) where L is avg string length.
 pub fn vec_str_join(items: &Vec[Str], sep: Str) -> Str {
   var n = items.len();
   if n == 0 { return ""; }
@@ -1266,7 +1266,7 @@ pub fn vec_all[T](v: &Vec[T], pred: fn(&T) -> Bool) -> Bool {
   true
 }
 
-// ── Map Free Functions ──────────────────────────────────────────────────────
+// -- Map Free Functions ------------------------------------------------------
 
 /// Number of entries in the map. O(1).
 pub fn map_len[K, V](m: Map[K, V]) -> Int {
@@ -1305,7 +1305,7 @@ pub fn map_insert_if_absent[K, V](m: &mut Map[K, V], key: K, value: V) -> Bool {
   true
 }
 
-/// Merge two maps into a new map. Entries from `b` overwrite those from `a` on key collision. O(N·M).
+/// Merge two maps into a new map. Entries from `b` overwrite those from `a` on key collision. O(N-M).
 pub fn map_merge[K, V](a: &Map[K, V], b: &Map[K, V]) -> Map[K, V] {
   var result = Map[K, V].new();
   var a_keys = a.keys();
@@ -1325,7 +1325,7 @@ pub fn map_merge[K, V](a: &Map[K, V], b: &Map[K, V]) -> Map[K, V] {
   result
 }
 
-// ── Set Free Functions ──────────────────────────────────────────────────────
+// -- Set Free Functions ------------------------------------------------------
 
 /// Insert a value into the set. O(N).
 pub fn set_insert[T](s: &mut Set[T], value: T) {
@@ -1347,22 +1347,22 @@ pub fn set_len[T](s: &Set[T]) -> Int {
   s.len()
 }
 
-/// Union of two sets: all elements present in either set. O(N·M).
+/// Union of two sets: all elements present in either set. O(N-M).
 pub fn set_union[T](a: &Set[T], b: &Set[T]) -> Set[T] {
   a.union(b)
 }
 
-/// Intersection of two sets: elements present in both. O(N·M).
+/// Intersection of two sets: elements present in both. O(N-M).
 pub fn set_intersection[T](a: &Set[T], b: &Set[T]) -> Set[T] {
   a.intersection(b)
 }
 
-/// Difference of two sets: elements in `a` but not in `b`. O(N·M).
+/// Difference of two sets: elements in `a` but not in `b`. O(N-M).
 pub fn set_difference[T](a: &Set[T], b: &Set[T]) -> Set[T] {
   a.difference(b)
 }
 
-/// Returns true if `sub` is a subset of `sup` (all elements of sub are in sup). O(N·M).
+/// Returns true if `sub` is a subset of `sup` (all elements of sub are in sup). O(N-M).
 pub fn set_is_subset[T](sub: &Set[T], sup: &Set[T]) -> Bool {
   var sub_vec = set_to_vec(sub);
   var i = 0;
@@ -1390,7 +1390,7 @@ pub fn set_to_vec[T](s: &Set[T]) -> Vec[T] {
   result
 }
 
-/// Create a set from a vector (deduplicates). O(N²).
+/// Create a set from a vector (deduplicates). O(N2).
 pub fn set_from_vec[T](v: &Vec[T]) -> Set[T] {
   var result = Set[T].new();
   var i = 0;
@@ -1402,19 +1402,19 @@ pub fn set_from_vec[T](v: &Vec[T]) -> Set[T] {
 }
 
 // ============================================================================
-// Vec — sorting & exhaustive integer aggregations (extensions)
+// Vec -- sorting & exhaustive integer aggregations (extensions)
 // ============================================================================
 
 /// Sort a vector using a custom comparator. Delegates to xiom.sort.sort_by.
-/// O(N log N) average, O(N²) worst. Unstable.
-/// NOTE: the comparator must be a NAMED function — inline lambdas crash the
+/// O(N log N) average, O(N2) worst. Unstable.
+/// NOTE: the comparator must be a NAMED function -- inline lambdas crash the
 /// current runtime (see xiom.sort comparator note).
 pub fn vec_sort_by[T](v: &mut Vec[T], compare: fn(&T, &T) -> Int) {
   xiom.sort.sort_by(v, compare);
 }
 
 /// Sliding-window maximum: for each window of size `k` starting at index 0,
-/// the maximum element of that window. O(N·K) with O(K) extra space.
+/// the maximum element of that window. O(N-K) with O(K) extra space.
 pub fn vec_window_max(v: &Vec[Int], k: Int) -> Vec[Int] {
   var n = v.len();
   var result = Vec[Int].new();
@@ -1436,7 +1436,7 @@ pub fn vec_window_max(v: &Vec[Int], k: Int) -> Vec[Int] {
 }
 
 /// Sliding-window minimum: for each window of size `k`, the minimum element.
-/// O(N·K) with O(K) extra space.
+/// O(N-K) with O(K) extra space.
 pub fn vec_window_min(v: &Vec[Int], k: Int) -> Vec[Int] {
   var n = v.len();
   var result = Vec[Int].new();
@@ -1457,7 +1457,7 @@ pub fn vec_window_min(v: &Vec[Int], k: Int) -> Vec[Int] {
   return result;
 }
 
-/// Cumulative sum: result[i] = v[0] + ... + v[i]. O(N). Empty input → empty.
+/// Cumulative sum: result[i] = v[0] + ... + v[i]. O(N). Empty input -> empty.
 pub fn vec_cumsum(v: &Vec[Int]) -> Vec[Int] {
   var result = Vec[Int].new();
   var total = 0;
@@ -1495,7 +1495,7 @@ pub fn vec_product(v: &Vec[Int]) -> Int {
   return total;
 }
 
-/// Frequency keys: distinct values of the vector, sorted ascending. O(N + M²).
+/// Frequency keys: distinct values of the vector, sorted ascending. O(N + M2).
 /// Companion of vec_frequency_counts; the two result vectors are parallel
 /// (keys[i] occurs counts[i] times).
 pub fn vec_frequency_keys(v: &Vec[Int]) -> Vec[Int] {
@@ -1534,7 +1534,7 @@ pub fn vec_frequency_keys(v: &Vec[Int]) -> Vec[Int] {
   return keys;
 }
 
-/// Frequency counts: occurrence counts aligned with vec_frequency_keys. O(N + M²).
+/// Frequency counts: occurrence counts aligned with vec_frequency_keys. O(N + M2).
 pub fn vec_frequency_counts(v: &Vec[Int]) -> Vec[Int] {
   var counts = Map[Int, Int].new();
   var i = 0;
@@ -1632,7 +1632,7 @@ pub fn vec_remove_all[T: Eq](v: &mut Vec[T], value: T) {
 }
 
 /// Keep only elements for which `keep` returns true. Returns the number of
-/// removed elements. O(N). NOTE: pass a NAMED predicate — lambdas crash the
+/// removed elements. O(N). NOTE: pass a NAMED predicate -- lambdas crash the
 /// current runtime.
 pub fn vec_retain[T](v: &mut Vec[T], keep: fn(&T) -> Bool) -> Int {
   var n = v.len();

@@ -1,4 +1,4 @@
-// XIOM — Path Manipulation
+// XIOM -- Path Manipulation
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 
@@ -30,7 +30,7 @@ pub fn PathBuf.from(s: Str) -> PathBuf
 
 // Path operations
 pub fn Path.parent(self) -> Option<Path>
-  // (was: ensures prose — contract-eval Str field read corrupts the fn, BUG 56 family; the prose is documentation, moved here)
+  // (was: ensures prose -- contract-eval Str field read corrupts the fn, BUG 56 family; the prose is documentation, moved here)
 {
   // Find the last path separator not at the end, return everything before it.
   var s = self.inner;
@@ -209,7 +209,7 @@ pub fn Path.canonicalize(self) -> Result<PathBuf, Str>
   ensures: result is Ok => canonical path without . or .. components
 {
   // String-based path canonicalization: collapse `.`, `..`, and double
-  // separators without filesystem calls.  Does NOT resolve symlinks —
+  // separators without filesystem calls.  Does NOT resolve symlinks --
   // that requires OS-level `realpath` which isn't available yet.
   let is_abs = self.inner.len() > 0 && (self.inner.starts_with("/") || self.inner.starts_with("\\"));
   var comps = self.components();
@@ -254,7 +254,7 @@ pub fn Path.ends_with(self, child: Path) -> Bool {
 
 // PathBuf operations
 // NOTE: These take &mut self (the old by-value forms mutated a copy and
-// required callers to capture the return — the stale "&mut self not
+// required callers to capture the return -- the stale "&mut self not
 // supported" note predates the BUG 55 fixes; cell.xi &mut self works).
 pub fn PathBuf.push(&mut self, component: Str)
   requires: component.len() >= 0

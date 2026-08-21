@@ -1,4 +1,4 @@
-﻿// XIOM - Conversion: Uuid
+// XIOM - Conversion: Uuid
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 
@@ -69,7 +69,7 @@ pub fn uuid_v4() -> Str {
 }
 
 /// Parse a UUID string into its four 32-bit fields.
-/// Parameters: s â€” a UUID string in 8-4-4-4-12 form.
+/// Parameters: s -- a UUID string in 8-4-4-4-12 form.
 /// Returns: Some((time_low, time_mid, time_hi_and_version, clock_and_node))
 ///          for a well-formed string, None otherwise.
 /// Complexity: O(1).
@@ -87,7 +87,7 @@ pub fn uuid_parse(s: Str) -> Option[(Int, Int, Int, Int)] {
 }
 
 /// Check that a string is a valid UUID (36 chars, 8-4-4-4-12 layout, hex).
-/// Parameters: s â€” the candidate string.
+/// Parameters: s -- the candidate string.
 /// Returns: true when the layout matches.
 /// Complexity: O(1).
 pub fn uuid_is_valid(s: Str) -> Bool {

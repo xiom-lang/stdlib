@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.fmt Int.to_str for large positive boundary values
+// XIOM stdlib stress -- xiom.fmt Int.to_str for large positive boundary values
 // Tests integer to string for values near max and powers of two.
 // Returns 0 on success, nonzero on failure.
 

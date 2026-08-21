@@ -15,7 +15,7 @@ module xiom.convert.fromstr
 use xiom.convert.parse;
 
 /// Parse a string as an integer.
-/// Parameters: s — the decimal integer string (optional sign).
+/// Parameters: s -- the decimal integer string (optional sign).
 /// Returns: Ok(Int) for well-formed input, Err otherwise.
 /// Complexity: O(n), n = string length.
 pub fn from_str_int(s: Str) -> Result[Int, Str] {
@@ -23,7 +23,7 @@ pub fn from_str_int(s: Str) -> Result[Int, Str] {
 }
 
 /// Parse a string as a float.
-/// Parameters: s — the decimal float string (optional sign, '.', 'e'/'E').
+/// Parameters: s -- the decimal float string (optional sign, '.', 'e'/'E').
 /// Returns: Ok(Float64) for well-formed input, Err otherwise.
 /// Complexity: O(n), n = string length.
 pub fn from_str_float(s: Str) -> Result[Float64, Str] {
@@ -31,7 +31,7 @@ pub fn from_str_float(s: Str) -> Result[Float64, Str] {
 }
 
 /// Parse a string as a boolean.
-/// Parameters: s — the string.
+/// Parameters: s -- the string.
 /// Returns: Some(true) for "true", Some(false) for "false" (exact, case
 ///          sensitive), None otherwise.
 /// Complexity: O(1).

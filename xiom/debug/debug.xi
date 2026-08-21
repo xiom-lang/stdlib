@@ -1,4 +1,4 @@
-// XIOM — Debug Utilities (assert, hexdump, tracing, logging)
+// XIOM -- Debug Utilities (assert, hexdump, tracing, logging)
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 //
@@ -27,7 +27,7 @@ extern "C" {
     fn xiom_char_at(s: Str, pos: Int) -> Char;
 }
 
-// ── Print to stderr ──────────────────────────────────────────────────────────
+// -- Print to stderr ----------------------------------------------------------
 
 /// Write a message to stderr with a "DEBUG:" prefix.
 /// Uses xiom.io.println which goes to stdout; stderr is not directly exposed
@@ -38,7 +38,7 @@ pub fn debug_print(msg: Str)
     xiom.io.println("DEBUG: " + msg)
 }
 
-// ── Debug assertion ──────────────────────────────────────────────────────────
+// -- Debug assertion ----------------------------------------------------------
 
 /// Assert that a condition holds; panics with the given message if false.
 /// In a release build, this should be a no-op (stripped by the compiler).
@@ -52,7 +52,7 @@ pub fn assert_debug(cond: Bool, msg: Str)
     }
 }
 
-// ── Hex dump ─────────────────────────────────────────────────────────────────
+// -- Hex dump -----------------------------------------------------------------
 
 /// Produce a formatted hex + ASCII dump string for a byte vector.
 /// Each line shows: 8-digit hex offset, 16 bytes in hex (grouped 8+8),
@@ -71,7 +71,7 @@ pub fn hexdump(data: &Vec[UInt8], width: Int) -> Str
         return "";
     };
     let hex_chars: Str = "0123456789ABCDEF";
-    // Estimate output size: each byte → 3 chars (2 hex + space) + ASCII column + offset
+    // Estimate output size: each byte -> 3 chars (2 hex + space) + ASCII column + offset
     // Rough upper bound: (offset_width + 2 + 3*width + 1 + width + 1) * ceil(len/width)
     let lines = (len + width - 1) / width;
     let line_size = 10 + 3 * width + 1 + width + 1; // offset(8)+sp+hex(3*w)+sp+ascii(width)+\n
@@ -153,7 +153,7 @@ pub fn hexdump(data: &Vec[UInt8], width: Int) -> Str
     }
 }
 
-// ── Trace point ──────────────────────────────────────────────────────────────
+// -- Trace point --------------------------------------------------------------
 
 /// Return a timestamped marker string for tracing execution flow.
 /// Uses xiom.time.time(0) for the current Unix timestamp.
@@ -170,7 +170,7 @@ pub fn trace_point(name: Str) -> Str
     "[TRACE] " + name + " @ " + xiom.convert.int_to_string(ts)
 }
 
-// ── Elapsed time ─────────────────────────────────────────────────────────────
+// -- Elapsed time -------------------------------------------------------------
 
 /// Convert a nanosecond timestamp (e.g., from xiom.time) to elapsed milliseconds
 /// as a Float64. Use with xiom.time.Instant for measuring code sections.
@@ -185,7 +185,7 @@ pub fn elapsed_ms(start_ns: Int) -> Float64
     (start_ns as Float64) / 1000000.0
 }
 
-// ── Type name (delegates to reflect) ─────────────────────────────────────────
+// -- Type name (delegates to reflect) -----------------------------------------
 
 /// Return the name of a type at runtime.
 /// Delegates to xiom.reflect.type_name which currently returns "unknown"
@@ -197,7 +197,7 @@ pub fn type_name_of[T]() -> Str
     xiom.reflect.type_name[T]()
 }
 
-// ── Logging wrappers (delegate to xiom.log) ──────────────────────────────────
+// -- Logging wrappers (delegate to xiom.log) ----------------------------------
 
 /// Log a message at DEBUG level. Delegates to xiom.log.debug.
 pub fn log_debug(msg: Str)

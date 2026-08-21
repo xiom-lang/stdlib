@@ -1,4 +1,4 @@
-// XIOM stdlib stress — math.abs_int
+// XIOM stdlib stress -- math.abs_int
 // Tests abs_int on positive, negative, and zero.
 // Returns 0 on success, nonzero on failure.
 

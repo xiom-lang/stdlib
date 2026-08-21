@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.string.index_of / last_index_of
+// XIOM stdlib stress -- xiom.string.index_of / last_index_of
 // Tests first and last occurrence positions including not-found case.
 // Returns 0 on success.
 

@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.string.str_to_float valid and edge
+// XIOM stdlib stress -- xiom.string.str_to_float valid and edge
 // Parses a valid float, verifies invalid input returns Err.
 // Returns 0 on success.
 

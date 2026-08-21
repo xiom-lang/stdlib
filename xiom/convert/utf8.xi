@@ -1,4 +1,4 @@
-﻿// XIOM - Conversion: Utf8
+// XIOM - Conversion: Utf8
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 
@@ -8,7 +8,7 @@ module xiom.convert.utf8
 
 // ============================================================================
 // UTF-8 encoding/decoding and validation. Character encoding delegates to the
-// canonical xiom.char.encode_utf8 (different function name â€” safe); decoding
+// canonical xiom.char.encode_utf8 (different function name -- safe); decoding
 // and validation are implemented locally over raw bytes.
 // ============================================================================
 
@@ -16,7 +16,7 @@ use xiom.char;
 use xiom.string;
 
 /// Encode a character as UTF-8 bytes.
-/// Parameters: c â€” the character.
+/// Parameters: c -- the character.
 /// Returns: 1-4 bytes forming the UTF-8 encoding of c.
 /// Complexity: O(1).
 pub fn utf8_encode(c: Char) -> Vec[UInt8] {
@@ -26,7 +26,7 @@ pub fn utf8_encode(c: Char) -> Vec[UInt8] {
 }
 
 /// Decode one UTF-8 character from the start of a byte vector.
-/// Parameters: bytes â€” a UTF-8 byte sequence.
+/// Parameters: bytes -- a UTF-8 byte sequence.
 /// Returns: Some(Char) when the leading sequence is well-formed (including
 ///          overlong/surrogate/range checks); None otherwise.
 /// Complexity: O(1).
@@ -82,7 +82,7 @@ pub fn utf8_decode(bytes: &Vec[UInt8]) -> Option[Char] {
 }
 
 /// Check that a string is well-formed UTF-8.
-/// Parameters: s â€” the string to validate.
+/// Parameters: s -- the string to validate.
 /// Returns: true when every byte sequence decodes cleanly.
 /// Complexity: O(n), n = byte length.
 pub fn utf8_validate(s: Str) -> Bool {
@@ -116,7 +116,7 @@ pub fn utf8_validate(s: Str) -> Bool {
 
 /// Count the valid UTF-8 sequences in a string. Invalid bytes advance one
 /// position without being counted.
-/// Parameters: s â€” the string to scan.
+/// Parameters: s -- the string to scan.
 /// Returns: the number of well-formed UTF-8 sequences.
 /// Complexity: O(n), n = byte length.
 pub fn utf8_valid_sequences(s: Str) -> Int {

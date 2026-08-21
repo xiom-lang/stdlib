@@ -1,4 +1,4 @@
-// XIOM stdlib stress — math.sqrt
+// XIOM stdlib stress -- math.sqrt
 // Tests sqrt on perfect squares and edge values.
 // Returns 0 on success, nonzero on failure.
 

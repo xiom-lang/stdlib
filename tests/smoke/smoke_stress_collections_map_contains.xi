@@ -1,4 +1,4 @@
-// XIOM stdlib stress — Map contains
+// XIOM stdlib stress -- Map contains
 // Tests contains for existing and missing keys.
 // Returns 0 on success, nonzero on failure.
 

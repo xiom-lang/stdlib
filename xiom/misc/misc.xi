@@ -1,4 +1,4 @@
-// XIOM — Miscellaneous Pure Algorithm Utilities
+// XIOM -- Miscellaneous Pure Algorithm Utilities
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 //
@@ -24,7 +24,7 @@ extern "C" {
     fn xiom_char_at(s: Str, pos: Int) -> Char;
 }
 
-// ── Semver comparison ────────────────────────────────────────────────────────
+// -- Semver comparison --------------------------------------------------------
 
 /// Compare two semantic version strings (major.minor.patch).
 /// Returns -1 if a < b, 0 if equal, 1 if a > b.
@@ -63,7 +63,7 @@ pub fn semver_compare(a: Str, b: Str) -> Int
     0
 }
 
-// ── Levenshtein distance ─────────────────────────────────────────────────────
+// -- Levenshtein distance -----------------------------------------------------
 
 /// Compute the Levenshtein (edit) distance between two strings.
 /// Uses dynamic programming with O(m*n) time and O(min(m,n)) space.
@@ -121,7 +121,7 @@ pub fn levenshtein_distance(a: Str, b: Str) -> Int
     prev[shorter_len]
 }
 
-// ── Glob matching ────────────────────────────────────────────────────────────
+// -- Glob matching ------------------------------------------------------------
 
 /// Match a string against a glob pattern supporting:
 ///   '?' matches any single character
@@ -158,7 +158,7 @@ pub fn glob_match(pattern: Str, text: Str) -> Bool {
     pi == plen
 }
 
-// ── Natural compare ──────────────────────────────────────────────────────────
+// -- Natural compare ----------------------------------------------------------
 
 /// Compare two strings using natural sort order (e.g., "file2" < "file10").
 /// Returns -1 if a < b, 0 if equal, 1 if a > b.
@@ -200,9 +200,9 @@ pub fn natural_compare(a: Str, b: Str) -> Int {
     -1
 }
 
-// ── Slugify ──────────────────────────────────────────────────────────────────
+// -- Slugify ------------------------------------------------------------------
 
-/// Convert a string to a URL-friendly slug (lowercased, non-alnum → '-').
+/// Convert a string to a URL-friendly slug (lowercased, non-alnum -> '-').
 pub fn slugify(s: Str) -> Str
     ensures: result.len() <= s.len()
 {
@@ -237,7 +237,7 @@ pub fn slugify(s: Str) -> Str
     }
 }
 
-// ── Soundex helper ────────────────────────────────────────────────────────────
+// -- Soundex helper ------------------------------------------------------------
 
 /// Map a character to its Soundex digit (1-6), or 0 if ignored.
 fn soundex_map(c: Char) -> Int {
@@ -253,7 +253,7 @@ fn soundex_map(c: Char) -> Int {
     0
 }
 
-// ── Soundex ──────────────────────────────────────────────────────────────────
+// -- Soundex ------------------------------------------------------------------
 
 /// Compute the classic American Soundex code for a string (4 chars).
 pub fn soundex(code: Str) -> Str {
@@ -311,7 +311,7 @@ pub fn soundex(code: Str) -> Str {
     }
 }
 
-// ── Palindrome ───────────────────────────────────────────────────────────────
+// -- Palindrome ---------------------------------------------------------------
 
 /// Check if a string reads the same forward and backward.
 pub fn is_palindrome(s: Str) -> Bool {
@@ -328,7 +328,7 @@ pub fn is_palindrome(s: Str) -> Bool {
     true
 }
 
-// ── Reverse string ───────────────────────────────────────────────────────────
+// -- Reverse string -----------------------------------------------------------
 
 /// Return the reversed copy of a string.
 pub fn reverse_str(s: Str) -> Str
@@ -350,7 +350,7 @@ pub fn reverse_str(s: Str) -> Str
     }
 }
 
-// ── Count occurrences ────────────────────────────────────────────────────────
+// -- Count occurrences --------------------------------------------------------
 
 /// Count non-overlapping occurrences of needle in haystack.
 pub fn count_occurrences(haystack: Str, needle: Str) -> Int
@@ -384,7 +384,7 @@ pub fn count_occurrences(haystack: Str, needle: Str) -> Int
     count
 }
 
-// ── Truncate ─────────────────────────────────────────────────────────────────
+// -- Truncate -----------------------------------------------------------------
 
 /// Truncate a string to at most max_len bytes.
 pub fn truncate(s: Str, max_len: Int) -> Str

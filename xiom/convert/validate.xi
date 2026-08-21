@@ -15,7 +15,7 @@ module xiom.convert.validate
 use xiom.string;
 
 /// Check the basic email shape (local@domain).
-/// Parameters: s — the candidate address.
+/// Parameters: s -- the candidate address.
 /// Returns: true when there is exactly one '@', a non-empty local part, a
 ///          non-empty domain containing a dot, and no whitespace.
 /// Complexity: O(n).
@@ -50,7 +50,7 @@ pub fn is_valid_email(s: Str) -> Bool {
 
 /// Check an email against stricter RFC 5322-shaped rules: local part up to 64
 /// chars, domain labels 1..63 chars, no leading/trailing dots.
-/// Parameters: s — the candidate address.
+/// Parameters: s -- the candidate address.
 /// Returns: true for a well-formed address.
 /// Complexity: O(n).
 pub fn is_valid_email_strict(s: Str) -> Bool {
@@ -105,7 +105,7 @@ pub fn is_valid_email_strict(s: Str) -> Bool {
 }
 
 /// Check a phone number for a recognizable format (digits, spaces, + - ( )).
-/// Parameters: s — the candidate number.
+/// Parameters: s -- the candidate number.
 /// Returns: true when the number contains 7..15 digits with only allowed
 ///          separator characters.
 /// Complexity: O(n).
@@ -134,7 +134,7 @@ pub fn is_valid_phone(s: Str) -> Bool {
 
 /// Check a phone number against the E.164 specification: optional leading
 /// '+', then 1..15 digits.
-/// Parameters: s — the candidate number.
+/// Parameters: s -- the candidate number.
 /// Returns: true for an E.164-compliant number.
 /// Complexity: O(n).
 pub fn is_valid_phone_e164(s: Str) -> Bool {
@@ -163,7 +163,7 @@ pub fn is_valid_phone_e164(s: Str) -> Bool {
 }
 
 /// Check a card number for length (13-19 digits) and Luhn validity.
-/// Parameters: s — the candidate card number (digits, optional spaces).
+/// Parameters: s -- the candidate card number (digits, optional spaces).
 /// Returns: true for a valid card number.
 /// Complexity: O(n).
 pub fn is_valid_credit_card(s: Str) -> Bool {
@@ -176,7 +176,7 @@ pub fn is_valid_credit_card(s: Str) -> Bool {
 }
 
 /// Validate a digit string with the Luhn algorithm.
-/// Parameters: s — a string of digits.
+/// Parameters: s -- a string of digits.
 /// Returns: true when the Luhn checksum passes.
 /// Complexity: O(n).
 pub fn luhn_check(s: Str) -> Bool {
@@ -208,7 +208,7 @@ pub fn luhn_check(s: Str) -> Bool {
 }
 
 /// Validate an IBAN structure, country format, and mod-97 checksum.
-/// Parameters: s — the candidate IBAN (spaces allowed).
+/// Parameters: s -- the candidate IBAN (spaces allowed).
 /// Returns: true for a valid IBAN.
 /// Complexity: O(n).
 pub fn is_valid_iban(s: Str) -> Bool {
@@ -250,7 +250,7 @@ pub fn is_valid_iban(s: Str) -> Bool {
 }
 
 /// Extract the two-letter country code from an IBAN.
-/// Parameters: s — the IBAN.
+/// Parameters: s -- the IBAN.
 /// Returns: the country code (uppercase) or "" when too short.
 /// Complexity: O(1).
 pub fn iban_country_code(s: Str) -> Str {
@@ -266,7 +266,7 @@ pub fn iban_country_code(s: Str) -> Str {
 }
 
 /// Extract the two-digit checksum from an IBAN.
-/// Parameters: s — the IBAN.
+/// Parameters: s -- the IBAN.
 /// Returns: the checksum digits or "" when too short.
 /// Complexity: O(1).
 pub fn iban_checksum(s: Str) -> Str {
@@ -282,7 +282,7 @@ pub fn iban_checksum(s: Str) -> Str {
 }
 
 /// Check a SWIFT/BIC code for the 8 or 11 character layout.
-/// Parameters: s — the candidate code.
+/// Parameters: s -- the candidate code.
 /// Returns: true for a valid layout (6 alphanumeric + 2 alpha + optional 3
 ///          alphanumeric).
 /// Complexity: O(1).
@@ -309,7 +309,7 @@ pub fn is_valid_swift(s: Str) -> Bool {
 }
 
 /// Alias checking a BIC code for the 8 or 11 character layout.
-/// Parameters: s — the candidate BIC.
+/// Parameters: s -- the candidate BIC.
 /// Returns: true for a valid BIC.
 /// Complexity: O(1).
 pub fn is_valid_bic(s: Str) -> Bool {
@@ -317,7 +317,7 @@ pub fn is_valid_bic(s: Str) -> Bool {
 }
 
 /// Check a hex color value in #RGB, #RRGGBB, or #RRGGBBAA form.
-/// Parameters: s — the candidate color.
+/// Parameters: s -- the candidate color.
 /// Returns: true for a well-formed hex color.
 /// Complexity: O(1).
 pub fn is_valid_hex_color(s: Str) -> Bool {
@@ -342,7 +342,7 @@ pub fn is_valid_hex_color(s: Str) -> Bool {
 
 /// Check a semantic version string per SemVer 2.0.0
 /// (major.minor.patch with optional -prerelease and +build).
-/// Parameters: s — the candidate version.
+/// Parameters: s -- the candidate version.
 /// Returns: true for a valid SemVer.
 /// Complexity: O(n).
 pub fn is_valid_semver(s: Str) -> Bool {

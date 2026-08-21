@@ -1,4 +1,4 @@
-// XIOM stdlib smoke test — xiom.os.sync_io + xiom.os.terminal
+// XIOM stdlib smoke test -- xiom.os.sync_io + xiom.os.terminal
 // Synchronous fd helpers (documented stubs) and terminal helpers.
 // Returns 0 on success, nonzero on failure (process exit code).
 

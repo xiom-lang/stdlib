@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.fmt Float64.to_str for negative values
+// XIOM stdlib stress -- xiom.fmt Float64.to_str for negative values
 // Tests that negative floats produce non-empty, distinct strings.
 // Returns 0 on success, nonzero on failure.
 

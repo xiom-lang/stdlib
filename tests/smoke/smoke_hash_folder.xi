@@ -1,4 +1,4 @@
-// XIOM stdlib smoke test — xiom.hash.city / xiom.hash.xxhash /
+// XIOM stdlib smoke test -- xiom.hash.city / xiom.hash.xxhash /
 //                       xiom.hash.murmur / xiom.hash.jenkins / xiom.hash.crc
 // Returns 0 on success, nonzero on failure (process exit code).
 

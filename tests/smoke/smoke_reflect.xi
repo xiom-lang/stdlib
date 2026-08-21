@@ -1,4 +1,4 @@
-// XIOM stdlib smoke — xiom.reflect.typeinfo + fields (LIMITED placeholders)
+// XIOM stdlib smoke -- xiom.reflect.typeinfo + fields (LIMITED placeholders)
 // Returns 0 on success, nonzero (and a tag) on failure.
 
 module smoke_reflect

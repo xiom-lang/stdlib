@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.regex Regex.is_match with edge cases
+// XIOM stdlib stress -- xiom.regex Regex.is_match with edge cases
 // Tests matching on empty strings, boundaries, and multi-byte inputs.
 // Returns 0 on success, nonzero on failure.
 

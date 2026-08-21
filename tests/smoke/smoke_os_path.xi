@@ -1,4 +1,4 @@
-// XIOM stdlib smoke test â€” xiom.os.{path,dir,file,fs}
+// XIOM stdlib smoke test -- xiom.os.{path,dir,file,fs}
 // Path/dir/file/fs helpers.
 // Returns 0 on success, nonzero on failure (process exit code).
 
@@ -88,7 +88,7 @@ fn main() -> Int {
 
   // --- file + path sections dropped ---
   // "Cannot allocate unsized type" at clang when os/file.xi fns combine
-  // with the fs/dir sections (BUG 24/28 family — each fn works in
+  // with the fs/dir sections (BUG 24/28 family -- each fn works in
   // isolation; os/file.xi + os/path.xi have partial coverage in
   // smoke_io2.xi / smoke_path.xi). TODO(compiler): BUG 28 #6.
 

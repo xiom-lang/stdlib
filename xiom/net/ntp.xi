@@ -10,7 +10,7 @@ module xiom.net.ntp
 // NTP/SNTP client over UDP datagrams per RFC 5905 / RFC 4330.
 // Packet encode/decode, offset and roundtrip math, and validate are pure.
 // The network functions (ntp_request, ntp_sync_time, sntp_request) require a
-// UDP socket layer that is not available in the pure stdlib — they are
+// UDP socket layer that is not available in the pure stdlib -- they are
 // documented stubs returning Err.
 // ============================================================================
 
@@ -124,7 +124,7 @@ fn io_time_secs() -> Int {
 }
 
 /// Serialize an NTP packet to 48 bytes (RFC 5905 wire format).
-/// Parameters: p — the packet.
+/// Parameters: p -- the packet.
 /// Returns: the 48-byte big-endian packet.
 /// Complexity: O(1). Pure.
 pub fn ntp_packet_to_bytes(p: NtpPacket) -> Vec[UInt8] {
@@ -145,7 +145,7 @@ pub fn ntp_packet_to_bytes(p: NtpPacket) -> Vec[UInt8] {
 }
 
 /// Parse a 48-byte NTP packet.
-/// Parameters: data — at least 48 bytes of packet data.
+/// Parameters: data -- at least 48 bytes of packet data.
 /// Returns: Ok(NtpPacket) for a readable packet, Err when too short.
 /// Complexity: O(1). Pure.
 pub fn ntp_packet_from_bytes(data: &Vec[UInt8]) -> Result[NtpPacket, Str] {
@@ -174,7 +174,7 @@ pub fn ntp_packet_from_bytes(data: &Vec[UInt8]) -> Result[NtpPacket, Str] {
 }
 
 /// Sanity-check a received packet.
-/// Parameters: p — the packet.
+/// Parameters: p -- the packet.
 /// Returns: true when the version is 1..4, the mode is 1..7 (reserved 0
 ///          excluded) and the transmit timestamp is non-zero.
 /// Complexity: O(1). Pure.
@@ -192,8 +192,8 @@ pub fn ntp_validate(p: NtpPacket) -> Bool {
 }
 
 /// Compute the clock offset in seconds (RFC 5905: (T2 - T1) + (T3 - T4)) / 2.
-/// Parameters: packet — the server reply; local_t0 — the client transmit time
-///          (unix seconds); local_t1 — the client receive time (unix seconds).
+/// Parameters: packet -- the server reply; local_t0 -- the client transmit time
+///          (unix seconds); local_t1 -- the client receive time (unix seconds).
 /// Returns: the offset in seconds (positive = local clock is behind).
 /// Complexity: O(1). Pure.
 pub fn ntp_offset(packet: NtpPacket, local_t0: Int, local_t1: Int) -> Float64 {
@@ -205,8 +205,8 @@ pub fn ntp_offset(packet: NtpPacket, local_t0: Int, local_t1: Int) -> Float64 {
 }
 
 /// Compute the roundtrip delay in seconds (RFC 5905: (T4 - T1) - (T3 - T2)).
-/// Parameters: packet — the server reply; local_t0 — the client transmit time
-///          (unix seconds); local_t1 — the client receive time (unix seconds).
+/// Parameters: packet -- the server reply; local_t0 -- the client transmit time
+///          (unix seconds); local_t1 -- the client receive time (unix seconds).
 /// Returns: the roundtrip delay in seconds.
 /// Complexity: O(1). Pure.
 pub fn ntp_roundtrip(packet: NtpPacket, local_t0: Int, local_t1: Int) -> Float64 {

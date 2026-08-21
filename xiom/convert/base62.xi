@@ -9,7 +9,7 @@ module xiom.convert.base62
 // ============================================================================
 // Base62 (0-9, A-Z, a-z) encoding/decoding. The integer <-> base62 helpers
 // mirror xiom.num.convert (implemented locally: same-name delegation crashes
-// the compiler — see xiom.convert.base58 for the probe reference).
+// the compiler -- see xiom.convert.base58 for the probe reference).
 // ============================================================================
 
 use xiom.string;

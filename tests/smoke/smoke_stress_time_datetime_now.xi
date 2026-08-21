@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.time DateTime.now returns a valid DateTime
+// XIOM stdlib stress -- xiom.time DateTime.now returns a valid DateTime
 // DateTime.now() must return a value whose year is >= 2025.
 // Returns 0 on success, nonzero on failure.
 

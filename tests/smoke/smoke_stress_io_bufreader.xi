@@ -1,4 +1,4 @@
-// XIOM stdlib stress — io.BufReader from stdin, call lines()
+// XIOM stdlib stress -- io.BufReader from stdin, call lines()
 // Returns 0 on success, nonzero on failure.
 
 module smoke_stress_io_bufreader

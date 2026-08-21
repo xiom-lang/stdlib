@@ -1,4 +1,4 @@
-// XIOM stdlib smoke — xiom.convert.{strftime,strptime}
+// XIOM stdlib smoke -- xiom.convert.{strftime,strptime}
 // Returns 0 on success, nonzero on failure (process exit code).
 module smoke_convert_strftime
 use xiom.io;

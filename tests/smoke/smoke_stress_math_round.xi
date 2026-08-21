@@ -1,4 +1,4 @@
-// XIOM stdlib stress — math.round
+// XIOM stdlib stress -- math.round
 // Tests round to nearest integer.
 // Returns 0 on success, nonzero on failure.
 

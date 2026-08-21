@@ -96,7 +96,7 @@ pub fn unicode_truncate_display(s: Str, max_width: Int) -> Str {
   _bytes_to_str(&out)
 }
 
-// ── Private helpers ─────────────────────────────────────────────────────────
+// -- Private helpers ---------------------------------------------------------
 
 /// East Asian Width of one codepoint; 1 when unmapped.
 fn _ea_w(cp: Int) -> Int {

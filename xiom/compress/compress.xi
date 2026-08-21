@@ -1,4 +1,4 @@
-// XIOM — Compression
+// XIOM -- Compression
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 
@@ -44,7 +44,7 @@ fn GzipCompressor.decompress(self, data: &Vec[UInt8]) -> Result<Vec[UInt8], Str>
 
 // === CRC32 (bitwise, no lookup table) ===
 // NOTE: the module-global [256]UInt table element writes go to a stack copy
-// (BUG 2 family — array elements on module globals) so the table never
+// (BUG 2 family -- array elements on module globals) so the table never
 // initialized and gzip CRCs were NOT real-gzip compatible. The bitwise form
 // is table-free, correct, and interoperable with external gzip tools.
 fn crc32(data: &Vec[UInt8]) -> UInt {
@@ -715,7 +715,7 @@ pub fn detect_format(data: &Vec[UInt8]) -> Str
   return "unknown";
 }
 
-// ── LZ77 ────────────────────────────────────────────────────────────────────
+// -- LZ77 --------------------------------------------------------------------
 
 /// LZ77 compression using a simple sliding-window search.
 /// Emits tokens as flat triples in a Vec[Int]: [literal_len, match_offset, match_length, ...].
@@ -802,7 +802,7 @@ pub fn lz77_decompress(tokens: &Vec[Int]) -> Result[Vec[UInt8], Str] {
   return Ok(result);
 }
 
-// ── RLE byte-level ──────────────────────────────────────────────────────────
+// -- RLE byte-level ----------------------------------------------------------
 
 /// Simple byte-level run-length encoding.
 /// Format: [count: UInt8, byte: UInt8] for runs of identical bytes.
@@ -828,7 +828,7 @@ pub fn rle_encode_bytes(data: &Vec[UInt8]) -> Vec[UInt8] {
   return result;
 }
 
-// ── Huffman frequency table ─────────────────────────────────────────────────
+// -- Huffman frequency table -------------------------------------------------
 
 /// Builds a 256-slot frequency table for Huffman coding.
 /// Each slot i contains the count of byte value i in the input.
@@ -850,7 +850,7 @@ pub fn huffman_freqs(data: &Vec[UInt8]) -> Vec[Int] {
   return freqs;
 }
 
-// ── Gzip string wrappers ────────────────────────────────────────────────────
+// -- Gzip string wrappers ----------------------------------------------------
 
 /// Compresses a UTF-8 string using gzip.
 /// Converts Str to bytes, then wraps gzip_compress.
@@ -899,7 +899,7 @@ pub fn decompress_gzip_str(data: &Vec[UInt8]) -> Result[Str, Str] {
   return Ok(result);
 }
 
-// ── Compression ratio alias ─────────────────────────────────────────────────
+// -- Compression ratio alias -------------------------------------------------
 
 /// Alias for compression_ratio. Returns original / compressed as Float64.
 /// Complexity: O(1).

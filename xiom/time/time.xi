@@ -1,4 +1,4 @@
-// XIOM — Time Library
+// XIOM -- Time Library
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 
@@ -15,7 +15,7 @@ extern "C" {
   fn time(ptr: *Int) -> Int;
 }
 
-// === Duration — a span of time ===
+// === Duration -- a span of time ===
 pub type Duration = {
   secs: Int;
   nanos: Int;
@@ -185,7 +185,7 @@ pub fn Duration.checked_sub(self, other: Duration) -> Option[Duration] {
   return Some(Duration{ secs: secs; nanos: nanos; });
 }
 
-// === Instant — a point in time (monotonic clock) ===
+// === Instant -- a point in time (monotonic clock) ===
 pub type Instant = { t: Int; }
 
 pub fn Instant.now() -> Instant {
@@ -211,7 +211,7 @@ pub fn Instant.sub(self, d: Duration) -> Instant {
   return Instant{ t: self.t - d.secs; };
 }
 
-// === SystemTime — wall clock time ===
+// === SystemTime -- wall clock time ===
 pub type SystemTime = { secs: Int; nanos: Int; }
 
 pub fn SystemTime.now() -> SystemTime {
@@ -241,7 +241,7 @@ pub fn SystemTime.secs_since_epoch(self) -> Int {
   return self.secs;
 }
 
-// === DateTime — calendar date and time ===
+// === DateTime -- calendar date and time ===
 pub type DateTime = {
   year: Int;
   month: Int;
@@ -358,10 +358,10 @@ pub fn sleep_until(instant: Instant) {
   };
 }
 
-// ──────────────────────────────────────────────────────────
-//  Date — calendar date (year, month, day) with day-number
+// ----------------------------------------------------------
+//  Date -- calendar date (year, month, day) with day-number
 //  arithmetic on the proleptic Gregorian calendar.
-// ──────────────────────────────────────────────────────────
+// ----------------------------------------------------------
 
 pub type Date = {
   year: Int;
@@ -403,13 +403,13 @@ pub fn date_year(d: &Date) -> Int {
   return d.year;
 }
 
-// date_month returns the month field of a Date (1–12).
+// date_month returns the month field of a Date (1-12).
 // Complexity: O(1).
 pub fn date_month(d: &Date) -> Int {
   return d.month;
 }
 
-// date_day returns the day-of-month field of a Date (1–31).
+// date_day returns the day-of-month field of a Date (1-31).
 // Complexity: O(1).
 pub fn date_day(d: &Date) -> Int {
   return d.day;
@@ -445,7 +445,7 @@ pub fn date_days_in_month(year: Int, month: Int) -> Int {
 }
 
 // date_day_of_week returns the day of the week for the given date
-// using Zeller's congruence (Gregorian).  0 = Sunday, …, 6 = Saturday.
+// using Zeller's congruence (Gregorian).  0 = Sunday, ..., 6 = Saturday.
 // Complexity: O(1).
 pub fn date_day_of_week(year: Int, month: Int, day: Int) -> Int {
   var m = month;
@@ -464,7 +464,7 @@ pub fn date_day_of_week(year: Int, month: Int, day: Int) -> Int {
   return (r + 6) % 7;
 }
 
-// date_day_of_year returns the ordinal day of the year (1–366)
+// date_day_of_year returns the ordinal day of the year (1-366)
 // for the given date.
 // Complexity: O(1).
 pub fn date_day_of_year(year: Int, month: Int, day: Int) -> Int {
@@ -562,7 +562,7 @@ pub fn date_add_days(d: &Date, days: Int) -> Date {
   return Date{ year: y; month: m; day: day; };
 }
 
-// date_diff_days returns the number of days between a and b (a − b).
+// date_diff_days returns the number of days between a and b (a - b).
 // Complexity: O(1).
 pub fn date_diff_days(a: &Date, b: &Date) -> Int {
   let da = days_from_civil(a.year, a.month, a.day);
@@ -649,10 +649,10 @@ pub fn format_timestamp(ts: Int) -> Str {
 // strftime / strptime (2026-08-11)
 // ============================================================================
 // C-style date formatting/parsing. Supported conversions:
-//   %Y 4-digit year · %y 2-digit year · %m month (01-12) · %d day (01-31)
-//   %H hour (00-23, always 0 for a Date) · %M minute · %S second
-//   %j day of year (001-366) · %w weekday (0=Sunday..6) · %u ISO weekday
-//   (1=Monday..7) · %% literal '%'
+//   %Y 4-digit year - %y 2-digit year - %m month (01-12) - %d day (01-31)
+//   %H hour (00-23, always 0 for a Date) - %M minute - %S second
+//   %j day of year (001-366) - %w weekday (0=Sunday..6) - %u ISO weekday
+//   (1=Monday..7) - %% literal '%'
 // Unknown conversions are left as-is in strftime; strptime rejects specs it
 // cannot parse (None).
 

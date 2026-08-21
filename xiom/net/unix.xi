@@ -9,7 +9,7 @@ module xiom.net.unix
 // ============================================================================
 // AF_UNIX domain socket client and server over minimal FFI.
 // All functions require the OS AF_UNIX socket layer, which the pure stdlib
-// does not expose — every function is a documented stub returning Err (or a
+// does not expose -- every function is a documented stub returning Err (or a
 // documented default) with the fd-based helpers left for the FFI layer.
 // ============================================================================
 

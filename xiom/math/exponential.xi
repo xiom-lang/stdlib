@@ -58,7 +58,7 @@ pub fn expm1(x: Float64) -> Float64 {
 }
 
 // Natural logarithm of x. Requires x > 0. For x <= 0 returns NaN
-// (IEEE semantics; BUG 19 fixed — NaN ops now work).
+// (IEEE semantics; BUG 19 fixed -- NaN ops now work).
 pub fn ln(x: Float64) -> Float64 {
   if x <= 0.0 { return 0.0 / 0.0; }
   return math.ln(x);

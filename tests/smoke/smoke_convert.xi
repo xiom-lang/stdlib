@@ -1,4 +1,4 @@
-// XIOM stdlib smoke test — xiom.convert
+// XIOM stdlib smoke test -- xiom.convert
 // Returns 0 on success, nonzero on failure (process exit code).
 
 module smoke_convert

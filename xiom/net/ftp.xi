@@ -1,4 +1,4 @@
-// XIOM — FTP Protocol Helpers (xiom.net.ftp)
+// XIOM -- FTP Protocol Helpers (xiom.net.ftp)
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 //

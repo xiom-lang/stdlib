@@ -1,4 +1,4 @@
-// XIOM stdlib smoke test â€” xiom.net.url, xiom.net.dns, xiom.net.proto
+// XIOM stdlib smoke test -- xiom.net.url, xiom.net.dns, xiom.net.proto
 // Returns 0 on success, nonzero on failure (process exit code).
 
 module smoke_net_folder

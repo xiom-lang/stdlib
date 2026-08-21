@@ -1,4 +1,4 @@
-// XIOM stdlib stress — math.log10 and math.log2
+// XIOM stdlib stress -- math.log10 and math.log2
 // Tests log10 and log2 at known values.
 // Returns 0 on success, nonzero on failure.
 

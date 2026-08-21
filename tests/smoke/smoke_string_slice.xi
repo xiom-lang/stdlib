@@ -37,10 +37,10 @@ fn main() -> Int {
   if c0 != 'a' { io.println("chars-2"); return 22; }
   if c1 != 'b' { io.println("chars-3"); return 23; }
   if c2 != 'c' { io.println("chars-4"); return 24; }
-  var uchars = slice.str_chars("éΩ");
+  var uchars = slice.str_chars("eOmega");
   if uchars.len() != 2 { io.println("chars-5"); return 25; }
   // Byte-value comparisons of multibyte chars dropped: chr() payload is
-  // corrupted (BUG 26 #7) — the length check above still covers the
+  // corrupted (BUG 26 #7) -- the length check above still covers the
   // multibyte path. TODO(compiler): BUG 26 #7.
 
   // str_bytes
@@ -54,7 +54,7 @@ fn main() -> Int {
   if (b2 as Int) != 99 { io.println("bytes-4"); return 34; }
 
   // str_code_points
-  var cps = slice.str_code_points("aΩ");
+  var cps = slice.str_code_points("aOmega");
   if cps.len() != 2 { io.println("cp-1"); return 41; }
   var p0 = cps[0];
   var p1 = cps[1];

@@ -16,7 +16,7 @@ module xiom.math.matrices
 // the arithmetic is implemented directly. The dynamic mat_* functions use
 // row-major Vec[Vec[Float64]] storage. Every dynamic entry validates its
 // inputs in the body and returns a documented sentinel (empty matrix or NaN)
-// on dimension/degeneracy errors — requires/ensures would trap at runtime.
+// on dimension/degeneracy errors -- requires/ensures would trap at runtime.
 // ============================================================================
 
 use xiom.math;

@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.path Path.is_absolute and is_relative
+// XIOM stdlib stress -- xiom.path Path.is_absolute and is_relative
 // Tests absolute/relative detection on multiple path styles.
 // Returns 0 on success, nonzero on failure.
 

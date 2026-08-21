@@ -1,4 +1,4 @@
-// XIOM stdlib stress — Vec mixed operations
+// XIOM stdlib stress -- Vec mixed operations
 // Interleaves push, pop, set, and get to stress internal state.
 // Returns 0 on success, nonzero on failure.
 

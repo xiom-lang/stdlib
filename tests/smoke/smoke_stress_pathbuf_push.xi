@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.path PathBuf push and as_path
+// XIOM stdlib stress -- xiom.path PathBuf push and as_path
 // Tests PathBuf construction, push, and conversion to Path.
 // Returns 0 on success, nonzero on failure.
 

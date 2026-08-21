@@ -8,7 +8,7 @@ module xiom.net.ip
 
 // ============================================================================
 // IPv4/IPv6 parsing, formatting, classification, masking and subnet tests.
-// IPv4 handling delegates to xiom.net.ip4 (different names — safe); IPv6
+// IPv4 handling delegates to xiom.net.ip4 (different names -- safe); IPv6
 // handling delegates to xiom.net.ip6 for validation and expansion and keeps
 // the 16-bit-group helpers local. All functions are pure and never touch the
 // network stack.
@@ -168,7 +168,7 @@ fn push_hex16(dst: &mut Vec[UInt8], group: Int) {
 }
 
 /// Parse a dotted-quad IPv4 string into four octets.
-/// Parameters: s — the address string.
+/// Parameters: s -- the address string.
 /// Returns: Some(four octets) for a valid address, None otherwise.
 /// Complexity: O(n). Pure.
 pub fn ipv4_parse(s: Str) -> Option[Vec[UInt8]] {
@@ -180,7 +180,7 @@ pub fn ipv4_parse(s: Str) -> Option[Vec[UInt8]] {
 }
 
 /// Format four octets as a dotted-quad IPv4 string.
-/// Parameters: octets — at least four octets (only the first four are used).
+/// Parameters: octets -- at least four octets (only the first four are used).
 /// Returns: the "a.b.c.d" representation, or "" for an undersized vector.
 /// Complexity: O(1). Pure.
 pub fn ipv4_to_string(octets: &Vec[UInt8]) -> Str {
@@ -196,7 +196,7 @@ pub fn ipv4_to_string(octets: &Vec[UInt8]) -> Str {
 
 /// Parse an IPv6 string (full form or single "::" compression) into eight
 /// 16-bit groups.
-/// Parameters: s — the address string.
+/// Parameters: s -- the address string.
 /// Returns: Some(eight groups) for a valid address, None otherwise.
 /// Complexity: O(n). Pure.
 pub fn ipv6_parse(s: Str) -> Option[Vec[UInt16]] {
@@ -353,7 +353,7 @@ fn _dcolon_index(s: Str) -> Int {
 
 /// Format eight 16-bit parts as a full-form IPv6 string (no "::" compression,
 /// leading zeros elided).
-/// Parameters: parts — exactly eight 16-bit groups.
+/// Parameters: parts -- exactly eight 16-bit groups.
 /// Returns: the colon-separated string, or "" for a vector of the wrong size.
 /// Complexity: O(8). Pure.
 pub fn ipv6_to_string(parts: &Vec[UInt16]) -> Str {
@@ -374,7 +374,7 @@ pub fn ipv6_to_string(parts: &Vec[UInt16]) -> Str {
 }
 
 /// Parse an IPv4 or IPv6 string into an IpAddr.
-/// Parameters: s — the address string.
+/// Parameters: s -- the address string.
 /// Returns: Some(IpAddr) for a valid address, None otherwise.
 /// Complexity: O(n). Pure.
 pub fn ip_parse(s: Str) -> Option[IpAddr] {
@@ -394,7 +394,7 @@ pub fn ip_parse(s: Str) -> Option[IpAddr] {
 }
 
 /// Returns true for loopback addresses (127.0.0.0/8, ::1).
-/// Parameters: s — the address string.
+/// Parameters: s -- the address string.
 /// Returns: true when the address parses and is loopback.
 /// Complexity: O(n). Pure.
 pub fn ip_is_loopback(s: Str) -> Bool {
@@ -431,7 +431,7 @@ pub fn ip_is_loopback(s: Str) -> Bool {
 
 /// Returns true for private-use ranges (10/8, 172.16/12, 192.168/16,
 /// fc00::/7).
-/// Parameters: s — the address string.
+/// Parameters: s -- the address string.
 /// Returns: true when the address parses and is private-use.
 /// Complexity: O(n). Pure.
 pub fn ip_is_private(s: Str) -> Bool {
@@ -460,7 +460,7 @@ pub fn ip_is_private(s: Str) -> Bool {
 }
 
 /// Returns true for link-local ranges (169.254/16, fe80::/10).
-/// Parameters: s — the address string.
+/// Parameters: s -- the address string.
 /// Returns: true when the address parses and is link-local.
 /// Complexity: O(n). Pure.
 pub fn ip_is_link_local(s: Str) -> Bool {
@@ -486,7 +486,7 @@ pub fn ip_is_link_local(s: Str) -> Bool {
 }
 
 /// Returns true for multicast ranges (224.0.0.0/4, ff00::/8).
-/// Parameters: s — the address string.
+/// Parameters: s -- the address string.
 /// Returns: true when the address parses and is multicast.
 /// Complexity: O(n). Pure.
 pub fn ip_is_multicast(s: Str) -> Bool {
@@ -511,7 +511,7 @@ pub fn ip_is_multicast(s: Str) -> Bool {
 }
 
 /// Returns true for the all-zero address (0.0.0.0, ::).
-/// Parameters: s — the address string.
+/// Parameters: s -- the address string.
 /// Returns: true when the address parses and is all zero.
 /// Complexity: O(n). Pure.
 pub fn ip_is_unspecified(s: Str) -> Bool {
@@ -565,7 +565,7 @@ fn ipv4_mask_octet(byte_val: Int, bits: Int) -> Int {
 
 /// Apply a CIDR prefix mask to an address and return the masked address
 /// string.
-/// Parameters: s — the address string; prefix — the prefix length (0..32 for
+/// Parameters: s -- the address string; prefix -- the prefix length (0..32 for
 ///          IPv4, 0..128 for IPv6).
 /// Returns: the masked address, or "" for invalid input or an out-of-range
 ///          prefix.
@@ -644,7 +644,7 @@ fn ipv6_mask_group(group: Int, bits: Int) -> Int {
 
 /// Test whether ip falls inside a CIDR subnet ("192.168.1.0/24" or
 /// "2001:db8::/32").
-/// Parameters: ip — the address string; subnet — "address/prefix".
+/// Parameters: ip -- the address string; subnet -- "address/prefix".
 /// Returns: true when the masked addresses are equal.
 /// Complexity: O(n). Pure.
 pub fn ip_in_subnet(ip: Str, subnet: Str) -> Bool {
@@ -676,7 +676,7 @@ pub fn ip_in_subnet(ip: Str, subnet: Str) -> Bool {
 }
 
 /// Expand an IPv6 string to the full eight-part form with zero padding.
-/// Parameters: s — the address string.
+/// Parameters: s -- the address string.
 /// Returns: the "0000:0000:...:0000" form, or "" for invalid input. IPv4
 ///          input is returned unchanged.
 /// Complexity: O(n). Pure.
@@ -693,7 +693,7 @@ pub fn ip_expand(s: Str) -> Str {
 }
 
 /// Compress an IPv6 string using "::" and leading-zero elision.
-/// Parameters: s — the address string.
+/// Parameters: s -- the address string.
 /// Returns: the canonical compressed form, or "" for invalid input. IPv4
 ///          input is returned unchanged.
 /// Complexity: O(n). Pure.
@@ -768,7 +768,7 @@ fn _v6_compress(groups: Vec[UInt16]) -> Str {
 }
 
 /// Split an IPv4 string into its numeric octets.
-/// Parameters: s — the address string.
+/// Parameters: s -- the address string.
 /// Returns: four octets for a valid address, an empty vector otherwise.
 /// Complexity: O(n). Pure.
 pub fn ip_octets(s: Str) -> Vec[Int] {

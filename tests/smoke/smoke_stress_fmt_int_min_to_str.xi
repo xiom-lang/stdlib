@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.fmt Int.to_str for negative boundary values
+// XIOM stdlib stress -- xiom.fmt Int.to_str for negative boundary values
 // Tests integer to string for negative values including near-min.
 // Returns 0 on success, nonzero on failure.
 

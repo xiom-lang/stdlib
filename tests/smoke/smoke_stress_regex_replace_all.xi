@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.regex Regex.replace_all replaces all matches
+// XIOM stdlib stress -- xiom.regex Regex.replace_all replaces all matches
 // Tests replace_all for full replacement and empty-text edge case.
 // Returns 0 on success, nonzero on failure.
 

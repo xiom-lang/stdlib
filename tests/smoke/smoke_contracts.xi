@@ -1,4 +1,4 @@
-// XIOM stdlib smoke test — xiom.contracts
+// XIOM stdlib smoke test -- xiom.contracts
 // Exercises real coverage/statistics accessors without crashing.
 // Returns 0 on success, nonzero on failure (process exit code).
 

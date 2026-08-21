@@ -55,7 +55,7 @@ fn main() -> Int {
   if !near(math.transcendental.gamma(3.0), 2.0) { io.println("gamma-3"); return 28; }
   if !near(math.transcendental.gamma(6.0), 120.0) { io.println("gamma-6"); return 29; }
 
-  // lgamma (field access on the cross-module tuple — destructuring binds
+  // lgamma (field access on the cross-module tuple -- destructuring binds
   // both names to the whole tuple, BUG 26 #3).
   var lg5t = math.transcendental.lgamma(5.0);
   if lg5t.1 != 1 { io.println("lgamma-5-sign"); return 30; }

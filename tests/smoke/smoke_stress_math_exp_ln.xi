@@ -1,4 +1,4 @@
-// XIOM stdlib stress — math.exp and math.ln
+// XIOM stdlib stress -- math.exp and math.ln
 // Tests exp and natural log with known values.
 // Returns 0 on success, nonzero on failure.
 

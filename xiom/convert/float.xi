@@ -11,7 +11,7 @@ module xiom.convert.float
 // collide with xiom.convert (BUG 25 #1: same-name delegation miscompiles even
 // when module-qualified) so the formatting engine is reimplemented here with
 // the same scaled-integer rounding as the canonical convert module; parsing
-// delegates to xiom.convert.parse (different name — safe).
+// delegates to xiom.convert.parse (different name -- safe).
 //
 // All conversions are lossless to 15 significant digits (the f64 round-trip
 // guarantee), then rounded half away from zero.
@@ -23,7 +23,7 @@ use xiom.convert.parse;
 /// Format a float with 15 significant digits: fixed notation for
 /// 1e-4 <= |f| < 1e15, scientific otherwise (C `%.15g` semantics with
 /// trailing zeros stripped). Handles "nan"/"inf".
-/// Parameters: f — the float value.
+/// Parameters: f -- the float value.
 /// Returns: the formatted string.
 /// Complexity: O(|exp10| + 15).
 pub fn float_to_string(f: Float64) -> Str {
@@ -55,7 +55,7 @@ pub fn float_to_string(f: Float64) -> Str {
 }
 
 /// Parse a string to a float.
-/// Parameters: s — the decimal float string (optional sign, '.', 'e'/'E').
+/// Parameters: s -- the decimal float string (optional sign, '.', 'e'/'E').
 /// Returns: Ok(Float64) for well-formed input, Err otherwise.
 /// Complexity: O(n), n = string length.
 pub fn string_to_float(s: Str) -> Result[Float64, Str] {
@@ -64,7 +64,7 @@ pub fn string_to_float(s: Str) -> Result[Float64, Str] {
 
 /// Format a float in fixed-point notation with exactly `decimals` fraction
 /// digits (rounded half away from zero). Handles "nan"/"inf".
-/// Parameters: f — the float value; decimals — the fraction digit count.
+/// Parameters: f -- the float value; decimals -- the fraction digit count.
 /// Returns: the formatted string.
 /// Complexity: O(decimals).
 pub fn float_to_fixed_str(f: Float64, decimals: Int) -> Str {
@@ -82,9 +82,9 @@ pub fn float_to_fixed_str(f: Float64, decimals: Int) -> Str {
   return body;
 }
 
-/// Format a float in scientific notation "d.ddde±XX" with `decimals` fraction
+/// Format a float in scientific notation "d.ddde+/-XX" with `decimals` fraction
 /// digits (rounded half away from zero). Handles "nan"/"inf".
-/// Parameters: f — the float value; decimals — the fraction digit count.
+/// Parameters: f -- the float value; decimals -- the fraction digit count.
 /// Returns: the formatted string.
 /// Complexity: O(|exp10| + decimals).
 pub fn float_to_sci_str(f: Float64, decimals: Int) -> Str {
@@ -109,7 +109,7 @@ pub fn float_to_sci_str(f: Float64, decimals: Int) -> Str {
 }
 
 /// Truncate a float to an integer (toward zero).
-/// Parameters: f — the float value.
+/// Parameters: f -- the float value.
 /// Returns: the truncated integer. Behavior for NaN/out-of-range input is
 /// undefined (use checked variants elsewhere).
 /// Complexity: O(1).
@@ -118,7 +118,7 @@ pub fn float_to_int(f: Float64) -> Int {
 }
 
 /// Widen an integer to a float (exact up to 2^53).
-/// Parameters: n — the integer value.
+/// Parameters: n -- the integer value.
 /// Returns: n widened to Float64.
 /// Complexity: O(1).
 pub fn int_to_float(n: Int) -> Float64 {
@@ -140,7 +140,7 @@ fn _f64_exp10(v: Float64) -> Int {
   return e;
 }
 
-// 10^p as exact Int (p in 0..=15 — 1e15 fits i64).
+// 10^p as exact Int (p in 0..=15 -- 1e15 fits i64).
 fn _f64_scale(p: Int) -> Int {
   var s: Int = 1;
   var k: Int = 0;
@@ -227,7 +227,7 @@ fn _f64_sci_abs(v: Float64, decimals: Int) -> (Str, Int) {
   return (s, e);
 }
 
-// "e±XX" (exponent at least 2 digits), upper -> "E±XX".
+// "e+/-XX" (exponent at least 2 digits), upper -> "E+/-XX".
 fn _f64_exp_text(e_in: Int, upper: Bool) -> Str {
   var e = e_in;
   var sign = "e-";

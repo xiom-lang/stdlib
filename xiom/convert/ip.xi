@@ -17,7 +17,7 @@ module xiom.convert.ip
 use xiom.string;
 
 /// Check that a string is a valid IPv4 address.
-/// Parameters: s — the candidate address.
+/// Parameters: s -- the candidate address.
 /// Returns: true for a dotted-quad with four octets in 0..255.
 /// Complexity: O(n).
 pub fn is_valid_ipv4(s: Str) -> Bool {
@@ -27,7 +27,7 @@ pub fn is_valid_ipv4(s: Str) -> Bool {
 
 /// Check that a string is a valid IPv6 address (with optional "::"
 /// compression; IPv4-mapped forms are not accepted).
-/// Parameters: s — the candidate address.
+/// Parameters: s -- the candidate address.
 /// Returns: true for a well-formed IPv6 address.
 /// Complexity: O(n).
 pub fn is_valid_ipv6(s: Str) -> Bool {
@@ -36,7 +36,7 @@ pub fn is_valid_ipv6(s: Str) -> Bool {
 }
 
 /// Format four octets as a dotted IPv4 address.
-/// Parameters: octets — at least four octets (only the first four are used).
+/// Parameters: octets -- at least four octets (only the first four are used).
 /// Returns: the "a.b.c.d" representation.
 /// Complexity: O(1).
 pub fn ipv4_to_string(octets: &Vec[UInt8]) -> Str {
@@ -55,7 +55,7 @@ pub fn ipv4_to_string(octets: &Vec[UInt8]) -> Str {
 }
 
 /// Parse a dotted IPv4 address into four octets.
-/// Parameters: s — the address string.
+/// Parameters: s -- the address string.
 /// Returns: Some(four octets) for a valid address, None otherwise.
 /// Complexity: O(n).
 pub fn string_to_ipv4(s: Str) -> Option[Vec[UInt8]] {
@@ -80,7 +80,7 @@ pub fn string_to_ipv4(s: Str) -> Option[Vec[UInt8]] {
 
 /// Parse an IP address, returning its canonical text form (IPv4 dotted-quad
 /// or IPv6 with "::" compression).
-/// Parameters: s — the address string.
+/// Parameters: s -- the address string.
 /// Returns: Some(canonical) for a valid address, None otherwise.
 /// Complexity: O(n).
 pub fn ip_parse(s: Str) -> Option[Str] {
@@ -104,7 +104,7 @@ pub fn ip_parse(s: Str) -> Option[Str] {
 }
 
 /// Parse an IP address into its raw bytes (4 for IPv4, 16 for IPv6).
-/// Parameters: s — the address string.
+/// Parameters: s -- the address string.
 /// Returns: Some(bytes) for a valid address, None otherwise.
 /// Complexity: O(n).
 pub fn ip_to_bytes(s: Str) -> Option[Vec[UInt8]] {

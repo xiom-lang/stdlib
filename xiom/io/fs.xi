@@ -146,9 +146,9 @@ pub fn fs_copy(src: Str, dst: Str) -> Result[Unit, Str> {
 /// Move or rename a file.
 /// Params: src - the source path; dst - the destination path.
 /// Returns: Ok(()) on success, Err on failure.
-/// Complexity: O(n) copy + delete (non-atomic — documented; the libc
+/// Complexity: O(n) copy + delete (non-atomic -- documented; the libc
 /// rename() path is unusable: its return code is corrupted through the
-/// catalog unsafe-block trampoline, BUG 22 #15/26 family — the file moved
+/// catalog unsafe-block trampoline, BUG 22 #15/26 family -- the file moved
 /// correctly but the code always read non-zero).
 pub fn fs_move(src: Str, dst: Str) -> Result[Unit, Str> {
   let r = io.read_file_bytes(src);

@@ -1,4 +1,4 @@
-// XIOM stdlib stress — io.args returns at least program name
+// XIOM stdlib stress -- io.args returns at least program name
 // Verifies that args vector has at least 1 element (the binary path).
 // Returns 0 on success.
 

@@ -1,4 +1,4 @@
-// XIOM stdlib smoke test — xiom.string
+// XIOM stdlib smoke test -- xiom.string
 // Returns 0 on success, nonzero on failure (process exit code).
 
 module smoke_string

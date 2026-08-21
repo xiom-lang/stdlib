@@ -1,4 +1,4 @@
-// XIOM stdlib smoke test — xiom.collect.tree + xiom.collect.heap
+// XIOM stdlib smoke test -- xiom.collect.tree + xiom.collect.heap
 // Returns 0 on success, nonzero on failure (process exit code).
 
 module smoke_collect_tree

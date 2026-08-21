@@ -1,4 +1,4 @@
-// XIOM stdlib smoke — xiom.debug.trace + heap_report + disasm
+// XIOM stdlib smoke -- xiom.debug.trace + heap_report + disasm
 // Returns 0 on success, nonzero (and a tag) on failure.
 
 module smoke_debug2

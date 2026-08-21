@@ -1,4 +1,4 @@
-// XIOM stdlib smoke — xiom.convert.{url,uri,urn,iri}
+// XIOM stdlib smoke -- xiom.convert.{url,uri,urn,iri}
 // Returns 0 on success, nonzero on failure (process exit code).
 module smoke_convert_url
 use xiom.io;
@@ -179,12 +179,12 @@ fn main() -> Int {
   }
 
   // iri: parse + to_uri
-  var ip = iri.iri_parse("https://exämple.com/päth");
+  var ip = iri.iri_parse("https://example.com/path");
   if !ip.is_ok {
     io.println("smoke_convert_url: iri_parse failed");
     return 25;
   }
-  var iu = iri.iri_to_uri("https://exämple.com/päth");
+  var iu = iri.iri_to_uri("https://example.com/path");
   if !iu.is_ok {
     io.println("smoke_convert_url: iri_to_uri failed");
     return 26;

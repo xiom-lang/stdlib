@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.string.str_trim whitespace removal
+// XIOM stdlib stress -- xiom.string.str_trim whitespace removal
 // Trims leading/trailing spaces from a string.
 // Returns 0 on success.
 

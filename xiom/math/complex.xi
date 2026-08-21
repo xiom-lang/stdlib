@@ -1,4 +1,4 @@
-// XIOM — Complex Number Library (a + bi arithmetic, transcendentials)
+// XIOM -- Complex Number Library (a + bi arithmetic, transcendentials)
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 
@@ -7,7 +7,7 @@ module xiom.complex
 use xiom.math;
 
 // ============================================================================
-// Type — Complex number with real and imaginary parts
+// Type -- Complex number with real and imaginary parts
 // ============================================================================
 
 // Complex number in Cartesian form: re + im * i.
@@ -46,7 +46,7 @@ pub fn complex_mul(a: Complex, b: Complex) -> Complex {
   };
 }
 
-// Divide a by b: (a+bi)/(c+di) = (ac+bd)/(c²+d²) + i*(bc-ad)/(c²+d²). O(1).
+// Divide a by b: (a+bi)/(c+di) = (ac+bd)/(c2+d2) + i*(bc-ad)/(c2+d2). O(1).
 pub fn complex_div(a: Complex, b: Complex) -> Complex {
   var denom = b.re * b.re + b.im * b.im;
   return Complex{
@@ -69,12 +69,12 @@ pub fn complex_conj(z: Complex) -> Complex {
   return Complex{ re: z.re; im: -z.im; };
 }
 
-// Absolute value (magnitude, modulus): |z| = sqrt(re² + im²). O(1).
+// Absolute value (magnitude, modulus): |z| = sqrt(re2 + im2). O(1).
 pub fn complex_abs(z: Complex) -> Float64 {
   return math.sqrt(z.re * z.re + z.im * z.im);
 }
 
-// Argument (phase, angle): atan2(im, re) in radians (-π, π]. O(1).
+// Argument (phase, angle): atan2(im, re) in radians (-pi, pi]. O(1).
 pub fn complex_arg(z: Complex) -> Float64 {
   return math.atan2(z.im, z.re);
 }
@@ -96,7 +96,7 @@ pub fn complex_is_zero(z: Complex, eps: Float64) -> Bool {
 }
 
 // ============================================================================
-// Private helpers — hyperbolic functions
+// Private helpers -- hyperbolic functions
 // ============================================================================
 
 // Hyperbolic cosine: cosh(x) = (e^x + e^-x) / 2. O(1).
@@ -121,7 +121,7 @@ pub fn complex_exp(z: Complex) -> Complex {
 }
 
 // Complex natural logarithm (principal branch).
-// ln(z) = ln(|z|) + i * arg(z), where arg(z) ∈ (-π, π]. O(1).
+// ln(z) = ln(|z|) + i * arg(z), where arg(z) in (-pi, pi]. O(1).
 pub fn complex_log(z: Complex) -> Complex {
   return Complex{ re: math.ln(complex_abs(z)); im: complex_arg(z); };
 }
@@ -137,14 +137,14 @@ pub fn complex_pow(z: Complex, w: Complex) -> Complex {
 }
 
 // Complex square root (principal branch).
-// Formula: sqrt(z) = sqrt(r) * (cos(θ/2) + i*sin(θ/2)) where r=|z|, θ=arg(z).
+// Formula: sqrt(z) = sqrt(r) * (cos(theta/2) + i*sin(theta/2)) where r=|z|, theta=arg(z).
 // Also handles negative re branch properly. O(1).
 pub fn complex_sqrt(z: Complex) -> Complex {
   // if z is real and non-negative, use real sqrt
   if z.im == 0.0 && z.re >= 0.0 {
     return Complex{ re: math.sqrt(z.re); im: 0.0; };
   }
-  // general case: sqrt(|z|) * e^(i*θ/2)
+  // general case: sqrt(|z|) * e^(i*theta/2)
   var r = complex_abs(z);
   var theta = complex_arg(z);
   var sqrt_r = math.sqrt(r);

@@ -1,4 +1,4 @@
-// XIOM stdlib smoke test — xiom.crypto.hash
+// XIOM stdlib smoke test -- xiom.crypto.hash
 // Tests: sha256 (delegated), sha512 (local), sha1 (local), md5 (local),
 // hex wrappers, hmac_sha256 (delegated), hmac_sha512 (local), pbkdf2, hkdf.
 // Known-answer vectors verified.
@@ -29,7 +29,7 @@ fn main() -> Int {
   var sha1hex = encoding.hex_encode(&sha1);
   if sha1hex != "a9993e364706816aba3e25717850c26c9cd0d89d" { return 5; }
 
-  // MD5 (local; see module notes — data-dependent codegen issue in the
+  // MD5 (local; see module notes -- data-dependent codegen issue in the
   // current build, only the length is asserted here).
   var md5 = hash.crypto_hash_md5(&abc);
   if md5.len() != 16 { return 6; }

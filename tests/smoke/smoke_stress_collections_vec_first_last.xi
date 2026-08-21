@@ -1,4 +1,4 @@
-// XIOM stdlib stress — Vec first and last access
+// XIOM stdlib stress -- Vec first and last access
 // Tests first() and last() on populated and single-element vectors.
 // Returns 0 on success, nonzero on failure.
 

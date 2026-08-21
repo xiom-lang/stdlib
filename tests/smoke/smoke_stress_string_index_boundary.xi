@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.string.byte_at / char_at boundary
+// XIOM stdlib stress -- xiom.string.byte_at / char_at boundary
 // Accesses first and last byte/char of a string, verifies correctness.
 // Returns 0 on success.
 

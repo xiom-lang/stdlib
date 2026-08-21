@@ -1,4 +1,4 @@
-// XIOM — Hashing: MurmurHash (MurmurHash3 x64_128 / MurmurHash64A)
+// XIOM -- Hashing: MurmurHash (MurmurHash3 x64_128 / MurmurHash64A)
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 

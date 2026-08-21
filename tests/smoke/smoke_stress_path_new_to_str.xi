@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.path Path.new and to_str round-trip
+// XIOM stdlib stress -- xiom.path Path.new and to_str round-trip
 // Tests construction and string representation for multiple paths.
 // Returns 0 on success, nonzero on failure.
 

@@ -1,4 +1,4 @@
-// XIOM — Hashing: Bob Jenkins lookup3 (hashlittle)
+// XIOM -- Hashing: Bob Jenkins lookup3 (hashlittle)
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 

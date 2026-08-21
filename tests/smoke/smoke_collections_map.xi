@@ -1,4 +1,4 @@
-// XIOM stdlib smoke — xiom.collect.map (open-addressing Int→Int map)
+// XIOM stdlib smoke -- xiom.collect.map (open-addressing Int->Int map)
 // Returns 0 on success, nonzero (and a tag) on failure.
 
 module smoke_collections_map

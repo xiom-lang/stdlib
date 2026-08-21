@@ -1,4 +1,4 @@
-// XIOM stdlib smoke test — xiom.net.jwt + xiom.net.tls_helper
+// XIOM stdlib smoke test -- xiom.net.jwt + xiom.net.tls_helper
 // JWT encode/decode/verify and TLS PEM/DER certificate helpers.
 // Returns 0 on success, nonzero on failure (process exit code).
 

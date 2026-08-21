@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.fmt Int.to_str for positive values
+// XIOM stdlib stress -- xiom.fmt Int.to_str for positive values
 // Tests integer to string conversion for common positive values.
 // Returns 0 on success, nonzero on failure.
 

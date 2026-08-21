@@ -1,4 +1,4 @@
-// XIOM stdlib smoke test — xiom.hash.spooky
+// XIOM stdlib smoke test -- xiom.hash.spooky
 // SpookyHash 32/64/128 determinism, empty input, different inputs and seeds.
 // Returns 0 on success, nonzero on failure.
 

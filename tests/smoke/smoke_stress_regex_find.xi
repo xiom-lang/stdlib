@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.regex Regex.find returns Option[Match]
+// XIOM stdlib stress -- xiom.regex Regex.find returns Option[Match]
 // Tests find for first occurrence, including no-match and empty-pattern cases.
 // Returns 0 on success, nonzero on failure.
 

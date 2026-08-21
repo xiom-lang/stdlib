@@ -15,7 +15,7 @@ module xiom.convert.quotedprintable
 use xiom.string;
 
 /// Encode bytes to Quoted-Printable with default 76-column lines.
-/// Parameters: data — the raw bytes.
+/// Parameters: data -- the raw bytes.
 /// Returns: the QP-encoded text (ASCII).
 /// Complexity: O(n).
 pub fn qp_encode(data: &Vec[UInt8]) -> Str {
@@ -23,7 +23,7 @@ pub fn qp_encode(data: &Vec[UInt8]) -> Str {
 }
 
 /// Encode bytes to Quoted-Printable using a custom maximum line width.
-/// Parameters: data — the raw bytes; max_line — the target column limit.
+/// Parameters: data -- the raw bytes; max_line -- the target column limit.
 /// Returns: the QP-encoded text.
 /// Complexity: O(n).
 pub fn qp_encode_maxline(data: &Vec[UInt8], max_line: Int) -> Str {
@@ -59,7 +59,7 @@ pub fn qp_encode_maxline(data: &Vec[UInt8], max_line: Int) -> Str {
 }
 
 /// Decode a Quoted-Printable string to bytes.
-/// Parameters: s — the QP-encoded text.
+/// Parameters: s -- the QP-encoded text.
 /// Returns: Ok(bytes) on success; Err for a truncated or invalid =HH escape.
 /// Complexity: O(n).
 pub fn qp_decode(s: Str) -> Result[Vec[UInt8], Str] {
@@ -108,7 +108,7 @@ pub fn qp_decode(s: Str) -> Result[Vec[UInt8], Str] {
 }
 
 /// Insert soft line breaks (=CRLF) into already-encoded text.
-/// Parameters: s — the encoded text; width — the maximum line width.
+/// Parameters: s -- the encoded text; width -- the maximum line width.
 /// Returns: the re-wrapped text.
 /// Complexity: O(n).
 pub fn qp_soft_linebreak(s: Str, width: Int) -> Str {
@@ -142,7 +142,7 @@ pub fn qp_soft_linebreak(s: Str, width: Int) -> Str {
 
 /// Report whether the string is too binary for safe Quoted-Printable use
 /// (contains NUL or more than a third of its bytes are control bytes).
-/// Parameters: s — the candidate text.
+/// Parameters: s -- the candidate text.
 /// Returns: true when the content is too binary.
 /// Complexity: O(n).
 pub fn qp_is_binary(s: Str) -> Bool {
@@ -168,7 +168,7 @@ pub fn qp_is_binary(s: Str) -> Bool {
 }
 
 /// Return the =HH escape for a single byte.
-/// Parameters: b — the byte.
+/// Parameters: b -- the byte.
 /// Returns: a three-character "=HH" string (uppercase hex).
 /// Complexity: O(1).
 pub fn qp_escape_byte(b: UInt8) -> Str {

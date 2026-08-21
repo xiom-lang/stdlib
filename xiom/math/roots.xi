@@ -20,7 +20,7 @@ use xiom.math;
 // ============================================================================
 
 // Principal square root of x. Requires x >= 0. For x < 0 returns NaN
-// (IEEE semantics; BUG 19 fixed 2026-08-11 — NaN ops now work).
+// (IEEE semantics; BUG 19 fixed 2026-08-11 -- NaN ops now work).
 pub fn sqrt(x: Float64) -> Float64
   ensures: result >= 0.0 || result != result
 {

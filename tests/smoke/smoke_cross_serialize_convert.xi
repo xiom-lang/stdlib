@@ -1,4 +1,4 @@
-// XIOM stdlib cross-module smoke test — xiom.serialize + xiom.convert together.
+// XIOM stdlib cross-module smoke test -- xiom.serialize + xiom.convert together.
 // Proves cross-module resolution AND linking (GAP 3): two stdlib modules are
 // resolved via `use`, injected into one program, and linked into one binary.
 // Returns 0 on success, nonzero on failure (process exit code).

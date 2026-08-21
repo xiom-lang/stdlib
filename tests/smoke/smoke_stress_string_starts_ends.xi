@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.string.str_starts_with / str_ends_with
+// XIOM stdlib stress -- xiom.string.str_starts_with / str_ends_with
 // Tests prefix/suffix matching with true and false cases.
 // Returns 0 on success.
 

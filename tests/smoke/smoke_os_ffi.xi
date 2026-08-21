@@ -1,4 +1,4 @@
-// XIOM stdlib smoke test — xiom.os.fs_ffi + xiom.os.proc_ffi + xiom.os.ioctl +
+// XIOM stdlib smoke test -- xiom.os.fs_ffi + xiom.os.proc_ffi + xiom.os.ioctl +
 // xiom.os.mmap + xiom.os.win + xiom.os.unix
 // FFI-backed OS helpers: only what each stub documents as implementable is
 // verified; the rest are documented stubs returning Err or defaults.

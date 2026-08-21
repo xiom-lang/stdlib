@@ -9,9 +9,9 @@ module xiom.os.proc_ffi
 // ============================================================================
 // Low-level process control beyond process.xi: fork/wait, popen pipes,
 // posix_spawn/exec, process identity and signal delivery. getpid delegates to
-// xiom.os.process_id (different name — safe); the wait-status decoders
+// xiom.os.process_id (different name -- safe); the wait-status decoders
 // (exit_code / exit_signal) are pure bit math; the remaining functions need
-// POSIX syscalls the pure stdlib does not expose — documented stubs.
+// POSIX syscalls the pure stdlib does not expose -- documented stubs.
 // ============================================================================
 
 use xiom.os;
@@ -131,7 +131,7 @@ pub fn raise(sig: Int) -> Result[Unit, Str] {
 }
 
 /// Extract the exit code from a wait status.
-/// Parameters: status — a wait()/waitpid() status word.
+/// Parameters: status -- a wait()/waitpid() status word.
 /// Returns: the low 8 bits of the shifted status.
 /// Complexity: O(1). Pure.
 pub fn exit_code(status: Int) -> Int {
@@ -140,7 +140,7 @@ pub fn exit_code(status: Int) -> Int {
 }
 
 /// Extract the terminating signal from a wait status.
-/// Parameters: status — a wait()/waitpid() status word.
+/// Parameters: status -- a wait()/waitpid() status word.
 /// Returns: the low 7 bits of the status.
 /// Complexity: O(1). Pure.
 pub fn exit_signal(status: Int) -> Int {

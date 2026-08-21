@@ -123,7 +123,7 @@ fn boundary_final(boundary: Str) -> Str {
 }
 
 /// Build a plain text field part.
-/// Parameters: name — the field name; value — the field value.
+/// Parameters: name -- the field name; value -- the field value.
 /// Returns: a Part with no filename or content type.
 /// Complexity: O(n). Pure.
 pub fn multipart_part(name: Str, value: Str) -> Part {
@@ -132,8 +132,8 @@ pub fn multipart_part(name: Str, value: Str) -> Part {
 }
 
 /// Build a file field part.
-/// Parameters: name — the field name; filename — the client file name;
-///          content_type — the file's MIME type; data — the file bytes.
+/// Parameters: name -- the field name; filename -- the client file name;
+///          content_type -- the file's MIME type; data -- the file bytes.
 /// Returns: a Part carrying the file metadata and bytes.
 /// Complexity: O(n). Pure.
 pub fn multipart_part_file(name: Str, filename: Str, content_type: Str, data: &Vec[UInt8]) -> Part {
@@ -147,7 +147,7 @@ pub fn multipart_part_file(name: Str, filename: Str, content_type: Str, data: &V
 }
 
 /// Serialize parts into a multipart body.
-/// Parameters: parts — the parts to serialize; boundary — the boundary string.
+/// Parameters: parts -- the parts to serialize; boundary -- the boundary string.
 /// Returns: the multipart/form-data body bytes.
 /// Complexity: O(n). Pure.
 pub fn multipart_build(parts: &Vec[Part], boundary: Str) -> Vec[UInt8] {
@@ -284,7 +284,7 @@ fn parse_part_headers(header_block: Str) -> (Str, Str, Str) {
 }
 
 /// Split a multipart body into parts.
-/// Parameters: body — the multipart body bytes; boundary — the boundary
+/// Parameters: body -- the multipart body bytes; boundary -- the boundary
 ///          string.
 /// Returns: Ok(parts) on success, Err when the body has no boundary markers
 ///          or is malformed.
@@ -384,7 +384,7 @@ pub fn multipart_boundary_new() -> Str {
 }
 
 /// Build the Content-Type header value for a boundary.
-/// Parameters: boundary — the boundary string.
+/// Parameters: boundary -- the boundary string.
 /// Returns: "multipart/form-data; boundary=<boundary>".
 /// Complexity: O(1). Pure.
 pub fn multipart_content_type(boundary: Str) -> Str {

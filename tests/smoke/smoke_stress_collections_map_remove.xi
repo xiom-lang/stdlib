@@ -1,4 +1,4 @@
-// XIOM stdlib stress — Map remove
+// XIOM stdlib stress -- Map remove
 // Inserts keys, removes one, verifies it's gone and others remain.
 // Returns 0 on success, nonzero on failure.
 

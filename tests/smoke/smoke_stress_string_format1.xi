@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.string.format1 with one arg
+// XIOM stdlib stress -- xiom.string.format1 with one arg
 // Tests format with one placeholder and a single replacement value.
 // Returns 0 on success, nonzero on failure.
 

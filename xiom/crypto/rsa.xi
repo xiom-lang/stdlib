@@ -1,9 +1,9 @@
-// XIOM — RSA Public-Key Cryptosystem (Educational / Small-Key)
+// XIOM -- RSA Public-Key Cryptosystem (Educational / Small-Key)
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 //
-// WARNING — EDUCATIONAL IMPLEMENTATION:
-//   XIOM Int is 64-bit signed (i64, max ≈ 9.22e18). This limits RSA to
+// WARNING -- EDUCATIONAL IMPLEMENTATION:
+//   XIOM Int is 64-bit signed (i64, max ~= 9.22e18). This limits RSA to
 //   keys where n = p*q < 2^63. In practice, keys up to ~30 bits are
 //   feasible (since primes around 2^15 multiply to ~2^30).
 //
@@ -13,11 +13,11 @@
 //
 //   This implementation demonstrates the mathematical structure of RSA:
 //   key generation, modular exponentiation, encryption, decryption,
-//   signing, and verification — all correct modulo the small-key limit.
+//   signing, and verification -- all correct modulo the small-key limit.
 //
 // Algorithm (RSA):
 //   1. KeyGen: Pick two primes p, q. Compute n = p*q, phi = (p-1)(q-1).
-//      Choose e coprime to phi (typically 65537). Compute d = e⁻¹ mod phi.
+//      Choose e coprime to phi (typically 65537). Compute d = e-1 mod phi.
 //      Public key: (n, e). Private key: (n, d).
 //   2. Encrypt: c = m^e mod n
 //   3. Decrypt: m = c^d mod n
@@ -40,7 +40,7 @@ module xiom.rsa
 /// Full RSA key pair (private key).
 /// n: modulus (p * q)
 /// e: public exponent
-/// d: private exponent (e⁻¹ mod phi(n))
+/// d: private exponent (e-1 mod phi(n))
 pub type RsaKeyPair = {
   n: Int;
   e: Int;
@@ -88,7 +88,7 @@ fn _mod(a: Int, m: Int) -> Int {
 ///     base = (base * base) mod modulus
 ///
 /// Complexity: O(log exp) multiplications.
-/// Security: Not constant-time — fine for educational use.
+/// Security: Not constant-time -- fine for educational use.
 fn _mod_pow(base: Int, exp: Int, modulus: Int) -> Int {
   if modulus <= 1 {
     return 0;
@@ -140,7 +140,7 @@ fn _extended_gcd(a: Int, b: Int) -> Vec[Int] {
   return result;
 }
 
-/// Compute modular inverse: find x such that (a * x) ≡ 1 mod m.
+/// Compute modular inverse: find x such that (a * x) == 1 mod m.
 /// Returns -1 if no inverse exists (gcd(a, m) != 1).
 fn _mod_inverse(a: Int, m: Int) -> Int {
   var eg = _extended_gcd(_mod(a, m), m);
@@ -162,7 +162,7 @@ fn _mod_inverse(a: Int, m: Int) -> Int {
 /// Trial division primality test.
 /// Returns true if n is prime, false otherwise.
 ///
-/// Complexity: O(sqrt(n)) — acceptable for n < 2^31 (~46,340 iterations max).
+/// Complexity: O(sqrt(n)) -- acceptable for n < 2^31 (~46,340 iterations max).
 fn _is_prime(n: Int) -> Bool {
   if n < 2 {
     return false;
@@ -229,11 +229,11 @@ fn _random_prime(min: Int, max: Int) -> Int {
 ///   3. phi = (p-1) * (q-1)
 ///   4. e = 65537 (standard RSA public exponent; Fermat prime F4)
 ///      If 65537 >= phi or gcd(e, phi) != 1, fall back to e = 3 and search.
-///   5. d = e⁻¹ mod phi (modular inverse via extended Euclidean algorithm)
+///   5. d = e-1 mod phi (modular inverse via extended Euclidean algorithm)
 ///
 /// Parameters:
 ///   bits: desired modulus size in bits (recommended: 16-30 for this impl)
-/// Returns: Result[RsaKeyPair, Str] — the key pair or an error message
+/// Returns: Result[RsaKeyPair, Str] -- the key pair or an error message
 ///
 /// Complexity: O(2^(bits/2)) for primality testing due to trial division.
 ///             Keep bits <= 30 for reasonable performance.
@@ -256,7 +256,7 @@ pub fn rsa_keygen(bits: Int) -> Result[RsaKeyPair, Str] {
     max_prime = 32768;
   } else {
     min_prime = 16384;
-    max_prime = 46340; // sqrt(2^31) ≈ 46340
+    max_prime = 46340; // sqrt(2^31) ~= 46340
   }
 
   if half_bits < 4 {
@@ -307,7 +307,7 @@ pub fn rsa_keygen(bits: Int) -> Result[RsaKeyPair, Str] {
     }
   }
 
-  // Private exponent: d ≡ e⁻¹ mod phi
+  // Private exponent: d == e-1 mod phi
   let d = _mod_inverse(e, phi);
   if d < 0 {
     return Err("Could not compute modular inverse for private exponent");
@@ -322,7 +322,7 @@ pub fn rsa_keygen(bits: Int) -> Result[RsaKeyPair, Str] {
 
 /// Encrypt a message using RSA.
 ///
-/// c ≡ m^e mod n
+/// c == m^e mod n
 ///
 /// Parameters:
 ///   msg: plaintext message (Int, must be < n)
@@ -337,7 +337,7 @@ pub fn rsa_encrypt(msg: Int, key: &RsaPublicKey) -> Int {
 
 /// Decrypt a ciphertext using RSA.
 ///
-/// m ≡ c^d mod n
+/// m == c^d mod n
 ///
 /// Parameters:
 ///   ct: ciphertext (Int, must be < n)
@@ -353,7 +353,7 @@ pub fn rsa_decrypt(ct: Int, key: &RsaKeyPair) -> Int {
 
 /// Sign a message using RSA (textbook/Raw RSA signature).
 ///
-/// sig ≡ m^d mod n
+/// sig == m^d mod n
 ///
 /// Parameters:
 ///   msg: message to sign (Int)
@@ -368,7 +368,7 @@ pub fn rsa_sign(msg: Int, key: &RsaKeyPair) -> Int {
 
 /// Verify an RSA signature.
 ///
-/// m' ≡ sig^e mod n; returns (m' == msg)
+/// m' == sig^e mod n; returns (m' == msg)
 ///
 /// Parameters:
 ///   msg: original message (Int)

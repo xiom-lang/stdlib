@@ -14,12 +14,12 @@ module xiom.num.float
 // language today (core.to_int / core.to_float are numeric, sitofp/fptosi,
 // not reinterprets) and no stdlib module reinterprets float bits (verified:
 // bits.xi, core.xi). IEEE NaN/Inf arithmetic semantics were FIXED 2026-08-11
-// (BUG 19) — NaN is constructible via 0.0/0.0 and detected via f != f.
+// (BUG 19) -- NaN is constructible via 0.0/0.0 and detected via f != f.
 //
 // Consequences:
 //   * float_bits / bits_to_float / float_next_up / float_next_down / float_ulp
 //     are implemented as DOCUMENTED FALLBACKS and carry a TODO(compiler)
-//     marker — they need a bitcast intrinsic to be exact (still missing).
+//     marker -- they need a bitcast intrinsic to be exact (still missing).
 //   * float_mantissa / float_exponent are implemented exactly via repeated
 //     halving/doubling (no bitcast, no precision loss: scaling by powers of
 //     two is exact in binary floating point).
@@ -54,7 +54,7 @@ pub fn bits_to_float(bits: Int) -> Float64 {
 /// normal values; no implicit bit for subnormals). Zero, NaN, and infinities
 /// map to 0 (documented). Exact: computed by scaling |f| by exact powers of
 /// two until it lies in [1, 2), then multiplying by 2^52 (or 2^(e+1074) for
-/// subnormals). Complexity: O(|exponent|) — at most ~1074 iterations.
+/// subnormals). Complexity: O(|exponent|) -- at most ~1074 iterations.
 pub fn float_mantissa(f: Float64) -> Int {
   if f == 0.0 { return 0; }
   if float_is_nan(f) || float_is_infinite(f) { return 0; }
@@ -87,7 +87,7 @@ pub fn float_mantissa(f: Float64) -> Int {
 /// Unbiased binary exponent of |f|: the unique e with 2^e <= |f| < 2^(e+1).
 /// Zero, NaN, and infinities map to 0 (documented; IEEE's stored exponent of
 /// zero would be -1023, but 0 is the conventional frexp-style result).
-/// Exact via repeated halving/doubling. Complexity: O(|e|) — at most ~1074
+/// Exact via repeated halving/doubling. Complexity: O(|e|) -- at most ~1074
 /// iterations.
 pub fn float_exponent(f: Float64) -> Int {
   if f == 0.0 { return 0; }
@@ -131,7 +131,7 @@ pub fn float_is_infinite(f: Float64) -> Bool {
 }
 
 // TODO(compiler): needs an i64<->f64 bitcast intrinsic. The exact
-// next-value operations are the classic integer ±1 on the bit pattern; the
+// next-value operations are the classic integer +/-1 on the bit pattern; the
 // fallback returns f unchanged.
 /// Smallest Float64 strictly greater than f.
 /// FALLBACK (TODO(compiler): needs bitcast intrinsic): returns f unchanged until
@@ -160,7 +160,7 @@ pub fn float_ulp(f: Float64) -> Float64 {
 /// "normal" (checked in that order). The "nan" branch uses f != f (IEEE).
 /// Complexity: O(1).
 pub fn float_classify(f: Float64) -> Str {
-  // TODO(compiler): needs bitcast intrinsic — see module header. The f != f
+  // TODO(compiler): needs bitcast intrinsic -- see module header. The f != f
   // check is correct (BUG 19 fixed); NaN is constructible via 0.0/0.0.
   if float_is_nan(f) { return "nan"; }
   if f == 1.0 / 0.0 { return "inf"; }

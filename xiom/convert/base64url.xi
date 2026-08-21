@@ -7,9 +7,9 @@ module xiom.convert.base64url
 // Depends on: none
 
 // ============================================================================
-// URL-safe base64 encoding/decoding (RFC 4648 §5, alphabet A-Za-z0-9-_,
+// URL-safe base64 encoding/decoding (RFC 4648 S5, alphabet A-Za-z0-9-_,
 // unpadded). Implemented locally (same-name delegation to xiom.encoding
-// crashes the compiler — see xiom.convert.base58 for the probe reference).
+// crashes the compiler -- see xiom.convert.base58 for the probe reference).
 // ============================================================================
 
 use xiom.string;

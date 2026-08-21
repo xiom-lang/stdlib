@@ -17,7 +17,7 @@ use xiom.convert;
 use xiom.convert.parse;
 
 /// Widen an integer to a float only when the conversion is lossless.
-/// Parameters: n — the integer value.
+/// Parameters: n -- the integer value.
 /// Returns: Ok(Float64) when n fits exactly (|n| <= 2^53), Err otherwise.
 /// Complexity: O(1).
 pub fn try_from_int(n: Int) -> Result[Float64, Str] {
@@ -30,7 +30,7 @@ pub fn try_from_int(n: Int) -> Result[Float64, Str] {
 }
 
 /// Truncate a float to an integer only when the value fits an Int.
-/// Parameters: f — the float value.
+/// Parameters: f -- the float value.
 /// Returns: Ok(Int) for finite in-range values, Err for NaN or values
 ///          outside the Int range.
 /// Complexity: O(1).
@@ -48,7 +48,7 @@ pub fn try_from_float(f: Float64) -> Result[Int, Str] {
 }
 
 /// Parse a string to an integer if valid.
-/// Parameters: s — the decimal integer string (optional sign).
+/// Parameters: s -- the decimal integer string (optional sign).
 /// Returns: Ok(Int) for well-formed input, Err otherwise.
 /// Complexity: O(n), n = string length.
 pub fn try_from_str(s: Str) -> Result[Int, Str] {

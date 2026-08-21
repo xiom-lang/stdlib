@@ -10,7 +10,7 @@ module xiom.convert.ascii85
 // Ascii85 (Adobe base85, RFC 1924) encoding/decoding. Groups of four bytes
 // are encoded as five characters in the range '!'..'u'; a run of four zero
 // bytes encodes as the single character 'z'. Implemented locally (same-name
-// delegation to xiom.num.convert crashes the compiler — see xiom.convert
+// delegation to xiom.num.convert crashes the compiler -- see xiom.convert
 // .base58 for the probe reference).
 // ============================================================================
 

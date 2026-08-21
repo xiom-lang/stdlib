@@ -15,7 +15,7 @@ module xiom.string.jaccard
 use xiom.text.similarity;
 
 /// Jaccard index of the length-n n-gram sets of `a` and `b`:
-/// |A ∩ B| / |A ∪ B|, where each set holds the distinct character n-grams of
+/// |A & B| / |A | B|, where each set holds the distinct character n-grams of
 /// one input. Delegates to `xiom.text.similarity.jaccard_similarity`.
 /// Params: a, b - the strings to compare; n - the n-gram size (>= 1).
 /// Returns: the Jaccard similarity in 0.0..1.0; 1.0 when both inputs produce

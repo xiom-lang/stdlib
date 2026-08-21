@@ -98,7 +98,7 @@ pub fn from_base(s: Str, base: Int) -> Result[Int, Str] {
 /// is then not representable). Complexity: O(prec + log_base |f|).
 pub fn to_base_float(f: Float64, base: Int, prec: Int) -> Str {
   if base < 2 || base > 36 || prec < 0 { return ""; }
-  // TODO(compiler): BUG 19 — NaN cannot be produced today; the guard is kept
+  // TODO(compiler): BUG 19 -- NaN cannot be produced today; the guard is kept
   // for the future and requires no NaN construction.
   if f != f { return "nan"; }
   if f == 1.0 / 0.0 { return "inf"; }
@@ -197,7 +197,7 @@ pub fn digits_of(n: Int, base: Int) -> Vec[Int] {
 
 /// Integer reconstructed from a little-endian digit vector in the given base
 /// (inverse of digits_of). Returns 0 on an invalid base, an out-of-range
-/// digit, or overflow (documented — the signature cannot signal errors).
+/// digit, or overflow (documented -- the signature cannot signal errors).
 /// Complexity: O(len(digits)).
 pub fn from_digits(digits: &Vec[Int], base: Int) -> Int {
   if base < 2 || base > 36 { return 0; }

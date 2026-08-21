@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.string.str_contains presence/absence
+// XIOM stdlib stress -- xiom.string.str_contains presence/absence
 // Checks substring found and not found cases.
 // Returns 0 on success.
 

@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.time Instant.elapsed monotonic growth
+// XIOM stdlib stress -- xiom.time Instant.elapsed monotonic growth
 // Two calls to elapsed on the same Instant should return increasing values.
 // Returns 0 on success, nonzero on failure.
 

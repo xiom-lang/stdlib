@@ -1,4 +1,4 @@
-// XIOM stdlib stress — io.write_file / io.read_file with NUL bytes
+// XIOM stdlib stress -- io.write_file / io.read_file with NUL bytes
 // Writes embedded null characters, reads back, verifies length preserved.
 // Returns 0 on success, nonzero on failure.
 

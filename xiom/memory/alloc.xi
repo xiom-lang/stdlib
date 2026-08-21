@@ -1,4 +1,4 @@
-// XIOM — Memory Allocation
+// XIOM -- Memory Allocation
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 
@@ -127,7 +127,7 @@ pub fn alloc_zeroed(size: Int) -> *mut UInt8
 }
 
 // Resize an allocation. Named realloc_sized to avoid shadowing the C ABI
-// symbol `realloc` — a same-named wrapper would collide with the extern
+// symbol `realloc` -- a same-named wrapper would collide with the extern
 // declaration and be silently dropped from codegen.
 pub fn realloc_sized(ptr: *mut UInt8, old_size: Int, new_size: Int) -> *mut UInt8
   requires: ptr != null

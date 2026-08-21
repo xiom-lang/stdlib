@@ -1,4 +1,4 @@
-// XIOM stdlib smoke test — xiom.crypto.mac
+// XIOM stdlib smoke test -- xiom.crypto.mac
 // Tests: hmac_sha256 (RFC 4231 test case 1 known answer), hmac_verify
 // (constant-time), incremental hmac_new/update/final, constant_time_eq /
 // constant_time_select, poly1305_mac/verify.

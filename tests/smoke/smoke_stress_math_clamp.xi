@@ -1,4 +1,4 @@
-// XIOM stdlib stress — math.clamp
+// XIOM stdlib stress -- math.clamp
 // Tests clamping values within, above, and below range.
 // Returns 0 on success, nonzero on failure.
 

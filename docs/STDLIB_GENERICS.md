@@ -87,7 +87,7 @@ R8. GENERIC BY DESIGN but DECLARE-ONLY - Trait-style conversion/serialization.
     only or concrete per type until compiler impl-dispatch lands.
 
 R9. THE NAME `core` BELONGS TO THE PRELUDE. `xiom.core` is the compiler-wired
-    prelude (crates/xiom-check PRELUDE array) — it owns the name `core`. No NEW
+    prelude (crates/xiom-check PRELUDE array) -- it owns the name `core`. No NEW
     sublib may be named `core` (so `core.core` can never exist). `math.tower` is
     the one accepted exception: it reads naturally as "the core of math" and is
     already established (module xiom.math.tower, renamed from math.core 2026-08-11, smoke_math_tower.xi). The same

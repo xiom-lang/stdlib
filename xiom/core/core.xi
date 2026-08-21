@@ -1,4 +1,4 @@
-// XIOM — Core Library
+// XIOM -- Core Library
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 
@@ -283,11 +283,11 @@ interface Clone {
 }
 
 // === Eq interface ===
-// Generic-interface form (STDLIB_GENERICS §12): dispatch through
-// `a.eq(b)` — the method-form `a.eq(b)` inside generic-bound fns
+// Generic-interface form (STDLIB_GENERICS S12): dispatch through
+// `a.eq(b)` -- the method-form `a.eq(b)` inside generic-bound fns
 // resolves to a stub (TODO(compiler): BUG 45), and impl method names must
 // not collide with fn-typed params named `eq`/`compare` (TODO(compiler):
-// BUG 47 — fn-params in the stdlib are named `cmp` to avoid this).
+// BUG 47 -- fn-params in the stdlib are named `cmp` to avoid this).
 interface Eq[T] {
   fn eq(a: T, b: T) -> Bool;
 }
@@ -662,7 +662,7 @@ pub fn Str.as_bytes(self) -> &Slice[UInt8] {
   }
 }
 
-// 8B/M7: Clone-on-Write — either owned or borrowed
+// 8B/M7: Clone-on-Write -- either owned or borrowed
 pub type Cow[T: Clone] = enum {
   Borrowed(value: T),
   Owned(value: T),
@@ -913,7 +913,7 @@ pub fn MaybeUninit[T].write(self, value: T)
 }
 
 // === Option methods ===
-// 6F: Contract coverage — ensures clauses for all Option methods.
+// 6F: Contract coverage -- ensures clauses for all Option methods.
 
 fn Option[T].unwrap_or(self, default: T) -> T
   ensures: self is Some => result == self.value
@@ -1111,7 +1111,7 @@ fn BinaryHeap[T].is_empty(self) -> Bool {
   return data.len() == 0;
 }
 
-// ── Comparable Extrema ─────────────────────────────────────────────
+// -- Comparable Extrema ---------------------------------------------
 
 /// Returns the smaller of two `Int` values.
 /// Complexity: O(1). Pure, no side effects.
@@ -1154,9 +1154,9 @@ pub fn clamp_int(v: Int, lo: Int, hi: Int) -> Int {
   return v;
 }
 
-// ── Bool/Int Conversions ───────────────────────────────────────────
+// -- Bool/Int Conversions -------------------------------------------
 
-/// Converts a `Bool` to an `Int`: `true` → 1, `false` → 0.
+/// Converts a `Bool` to an `Int`: `true` -> 1, `false` -> 0.
 /// NOTE: XIOM does NOT support `b as Int`; this is the canonical conversion.
 /// Complexity: O(1). Pure, no side effects.
 pub fn bool_to_int(b: Bool) -> Int {
@@ -1166,13 +1166,13 @@ pub fn bool_to_int(b: Bool) -> Int {
   return 0;
 }
 
-/// Converts an `Int` to a `Bool`: non-zero → `true`, zero → `false`.
+/// Converts an `Int` to a `Bool`: non-zero -> `true`, zero -> `false`.
 /// Complexity: O(1). Pure, no side effects.
 pub fn int_to_bool(n: Int) -> Bool {
   return n != 0;
 }
 
-// ── Char Conversions ───────────────────────────────────────────────
+// -- Char Conversions -----------------------------------------------
 
 /// Safely converts an `Int` to a `Char`.
 /// Returns `None` if `n` is outside the valid Unicode code-point range (0..=0x10FFFF).
@@ -1184,7 +1184,7 @@ pub fn int_to_char_safe(n: Int) -> Option[Char] {
   return None;
 }
 
-// ── Slice Helpers ──────────────────────────────────────────────────
+// -- Slice Helpers --------------------------------------------------
 
 /// Returns the number of elements in the slice.
 /// Complexity: O(1). Thread-safe: reads immutable shared data.
@@ -1228,7 +1228,7 @@ pub fn slice_to_vec[T](s: &Slice[T]) -> Vec[T] {
   return result;
 }
 
-// ── Slice Aggregates ───────────────────────────────────────────────
+// -- Slice Aggregates -----------------------------------------------
 
 /// Finds the minimum element in the slice using `Ord.compare`.
 /// Returns `None` if the slice is empty.
@@ -1279,7 +1279,7 @@ pub fn sum_slice(s: &Slice[Int]) -> Int {
   return total;
 }
 
-// ── Option Standalone Queries ──────────────────────────────────────
+// -- Option Standalone Queries --------------------------------------
 
 /// Returns `true` if the option is `Some`.
 /// Complexity: O(1). Thread-safe: reads immutable shared data.
@@ -1293,7 +1293,7 @@ pub fn option_is_none[T](o: &Option[T]) -> Bool {
   return !o.is_some;
 }
 
-// ── Result Standalone Queries ──────────────────────────────────────
+// -- Result Standalone Queries --------------------------------------
 
 /// Returns `true` if the result is `Ok`.
 /// Complexity: O(1). Thread-safe: reads immutable shared data.

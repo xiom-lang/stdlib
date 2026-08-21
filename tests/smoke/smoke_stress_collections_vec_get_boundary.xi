@@ -1,4 +1,4 @@
-// XIOM stdlib stress — Vec get at boundaries
+// XIOM stdlib stress -- Vec get at boundaries
 // Tests indexing at first, last, and uses .get() for safe retrieval.
 // Returns 0 on success, nonzero on failure.
 

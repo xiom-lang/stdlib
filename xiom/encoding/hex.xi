@@ -9,7 +9,7 @@ module xiom.encoding.hex
 // ============================================================================
 // Hexadecimal encoding and decoding for bytes, strings, and integers.
 // Implemented locally (same-name delegation to xiom.encoding crashes the
-// compiler — see xiom.convert.base58 for the probe reference).
+// compiler -- see xiom.convert.base58 for the probe reference).
 // ============================================================================
 
 use xiom.string;

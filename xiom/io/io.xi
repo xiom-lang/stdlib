@@ -1,4 +1,4 @@
-// XIOM — I/O Library
+// XIOM -- I/O Library
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 
@@ -169,7 +169,7 @@ pub fn read_float() -> Result[Float64, Str] {
 
 // === File system ===
 pub fn read_file(path: Str) -> Result[Str, IOError]
-  // NOTE: requires path.len()>0 removed — contract-eval Str-param read corrupts (BUG 56 family); trivially satisfiable
+  // NOTE: requires path.len()>0 removed -- contract-eval Str-param read corrupts (BUG 56 family); trivially satisfiable
   ensures:  result is Ok => result.len() >= 0
 {
   let c_path = path.c_str();
@@ -195,7 +195,7 @@ pub fn read_file(path: Str) -> Result[Str, IOError]
 }
 
 pub fn write_file(path: Str, content: Str) -> Result[Unit, IOError]
-  // NOTE: requires path.len()>0 removed — contract-eval Str-param read corrupts (BUG 56 family); trivially satisfiable
+  // NOTE: requires path.len()>0 removed -- contract-eval Str-param read corrupts (BUG 56 family); trivially satisfiable
   ensures:  result is Ok => file_exists(path)
 {
   let file: *UInt8;
@@ -219,7 +219,7 @@ pub fn write_file(path: Str, content: Str) -> Result[Unit, IOError]
 }
 
 pub fn append_file(path: Str, content: Str) -> Result[Unit, IOError]
-  // NOTE: requires path.len()>0 removed — contract-eval Str-param read corrupts (BUG 56 family); trivially satisfiable
+  // NOTE: requires path.len()>0 removed -- contract-eval Str-param read corrupts (BUG 56 family); trivially satisfiable
   ensures:  result is Ok => file_exists(path)
 {
   let file: *UInt8;
@@ -243,7 +243,7 @@ pub fn append_file(path: Str, content: Str) -> Result[Unit, IOError]
 }
 
 pub fn file_exists(path: Str) -> Bool
-  // NOTE: requires path.len()>0 removed — contract-eval Str-param read corrupts (BUG 56 family); trivially satisfiable
+  // NOTE: requires path.len()>0 removed -- contract-eval Str-param read corrupts (BUG 56 family); trivially satisfiable
 {
   let file: *UInt8;
   unsafe {
@@ -259,7 +259,7 @@ pub fn file_exists(path: Str) -> Bool
 }
 
 pub fn is_dir(path: Str) -> Bool
-  // NOTE: requires path.len()>0 removed — contract-eval Str-param read corrupts (BUG 56 family); trivially satisfiable
+  // NOTE: requires path.len()>0 removed -- contract-eval Str-param read corrupts (BUG 56 family); trivially satisfiable
 {
   let result: Int32;
   unsafe {
@@ -269,7 +269,7 @@ pub fn is_dir(path: Str) -> Bool
 }
 
 pub fn create_dir(path: Str) -> Result[Unit, IOError]
-  // NOTE: requires path.len()>0 removed — contract-eval Str-param read corrupts (BUG 56 family); trivially satisfiable
+  // NOTE: requires path.len()>0 removed -- contract-eval Str-param read corrupts (BUG 56 family); trivially satisfiable
   requires: !file_exists(path)
   ensures:  result is Ok => is_dir(path)
 {
@@ -284,7 +284,7 @@ pub fn create_dir(path: Str) -> Result[Unit, IOError]
 }
 
 pub fn list_dir(path: Str) -> Result[Vec[Str], IOError]
-  // NOTE: requires path.len()>0 removed — contract-eval Str-param read corrupts (BUG 56 family); trivially satisfiable
+  // NOTE: requires path.len()>0 removed -- contract-eval Str-param read corrupts (BUG 56 family); trivially satisfiable
   requires: is_dir(path)
   ensures:  result is Ok => result.len() >= 0
 {
@@ -320,7 +320,7 @@ pub fn list_dir(path: Str) -> Result[Vec[Str], IOError]
 }
 
 pub fn remove_file(path: Str) -> Result[Unit, IOError]
-  // NOTE: requires path.len()>0 removed — contract-eval Str-param read corrupts (BUG 56 family); trivially satisfiable
+  // NOTE: requires path.len()>0 removed -- contract-eval Str-param read corrupts (BUG 56 family); trivially satisfiable
   ensures:  result is Ok => !file_exists(path)
 {
   let rc: Int32;
@@ -523,7 +523,7 @@ pub type Metadata = {
 }
 
 pub fn metadata(path: Str) -> Result[Metadata, IOError]
-  // NOTE: requires path.len()>0 removed — contract-eval Str-param read corrupts (BUG 56 family); trivially satisfiable
+  // NOTE: requires path.len()>0 removed -- contract-eval Str-param read corrupts (BUG 56 family); trivially satisfiable
   ensures:  result is Ok => result.size >= 0
 {
   let c_path = path.c_str();
@@ -555,7 +555,7 @@ pub fn metadata(path: Str) -> Result[Metadata, IOError]
 }
 
 pub fn set_permissions(path: Str, perm: Int) -> Result[Unit, IOError]
-  // NOTE: requires path.len()>0 removed — contract-eval Str-param read corrupts (BUG 56 family); trivially satisfiable
+  // NOTE: requires path.len()>0 removed -- contract-eval Str-param read corrupts (BUG 56 family); trivially satisfiable
   requires: perm >= 0
 {
   let rc: Int32;
@@ -686,9 +686,9 @@ pub fn is_absolute(path: Str) -> Bool {
   path.byte_at(0) == 47
 }
 
-// ──────────────────────────────────────────────────────────
+// ----------------------------------------------------------
 //  Extended console I/O
-// ──────────────────────────────────────────────────────────
+// ----------------------------------------------------------
 
 // read_line_trim reads a line from stdin and trims trailing
 // whitespace (including \r, \n).  Delegates to read_line + trim.
@@ -701,7 +701,7 @@ pub fn read_line_trim() -> Str {
 // read_all_stdin reads the entire standard input stream until EOF
 // and returns the concatenated content.  Returns "" if stdin is empty.
 // Complexity: O(N) where N is total bytes read.  Each call to read_line
-// allocates up to 4096 bytes; memory usage peaks at ~2× input size.
+// allocates up to 4096 bytes; memory usage peaks at ~2x input size.
 pub fn read_all_stdin() -> Str {
   var result = "";
   var done = false;
@@ -727,9 +727,9 @@ pub fn stdin_read_line() -> Str {
 pub fn flush_stdout() {
 }
 
-// ──────────────────────────────────────────────────────────
+// ----------------------------------------------------------
 //  Byte I/O
-// ──────────────────────────────────────────────────────────
+// ----------------------------------------------------------
 
 // write_file_bytes writes raw bytes to a file, truncating if it exists.
 // Complexity: O(n) where n = data.len().
@@ -782,9 +782,9 @@ pub fn read_file_bytes(path: Str) -> Result[Vec[UInt8], IOError] {
   Ok(buf)
 }
 
-// ──────────────────────────────────────────────────────────
+// ----------------------------------------------------------
 //  File metadata helpers
-// ──────────────────────────────────────────────────────────
+// ----------------------------------------------------------
 
 // file_size returns the size of a file in bytes, or None if
 // the path cannot be stated.
@@ -806,9 +806,9 @@ pub fn file_modified_time(path: Str) -> Option[Int] {
   }
 }
 
-// ──────────────────────────────────────────────────────────
+// ----------------------------------------------------------
 //  File system convenience helpers
-// ──────────────────────────────────────────────────────────
+// ----------------------------------------------------------
 
 // move_file renames (moves) a file or directory from src to dst.
 // Alias for rename.  Complexity: O(1) OS call.
@@ -870,9 +870,9 @@ pub fn list_dir_recursive(path: Str) -> Result[Vec[Str], IOError] {
   Ok(result)
 }
 
-// ──────────────────────────────────────────────────────────
+// ----------------------------------------------------------
 //  Line-based file I/O
-// ──────────────────────────────────────────────────────────
+// ----------------------------------------------------------
 
 // read_file_lines reads a file and returns its lines as a Vec[Str].
 // Trailing newline characters are stripped.  Complexity: O(n).

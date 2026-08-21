@@ -1,4 +1,4 @@
-// XIOM — BigFloat: arbitrary-precision decimal floating point (xiom.num.bigfloat)
+// XIOM -- BigFloat: arbitrary-precision decimal floating point (xiom.num.bigfloat)
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 //
@@ -16,7 +16,7 @@
 // and sign = false.
 //
 // NOTE (2026-08-10): module-global initializers cannot call functions
-// (compiler bug — docs/COMPILER_BUGS.md), so the spec constants are exposed
+// (compiler bug -- docs/COMPILER_BUGS.md), so the spec constants are exposed
 // as pure constructor functions (bigfloat_pi(), ...) that return fresh
 // values. The round-mode global is updated by whole-value assignment only
 // (global struct FIELD writes are also a logged compiler bug).
@@ -42,7 +42,7 @@ pub type BigFloat = {
 
 // Split result of _split_int_frac: magnitude = q + r / 10^d.
 // PUB (not private): catalog fns returning module-local PRIVATE struct types
-// are degraded to i64 by the checker (see docs/COMPILER_BUGS.md BUG 9) — the
+// are degraded to i64 by the checker (see docs/COMPILER_BUGS.md BUG 9) -- the
 // type must be part of the module's public surface.
 pub type IntFrac = { q: BigInt; r: BigInt; d: Int; }
 
@@ -50,7 +50,7 @@ var _default_round: RoundMode = RoundMode.Nearest;
 var _default_precision: Int = 64;
 
 // ============================================================================
-// Constants (constructor functions — see header note)
+// Constants (constructor functions -- see header note)
 // ============================================================================
 
 pub fn bigfloat_zero() -> BigFloat {
@@ -141,7 +141,7 @@ fn _digits_of(b: &BigInt) -> Int {
 }
 
 // Round `f` to `digits` significant digits with the given mode. `f` need not
-// be normalized. The result is NOT normalized — trailing zeros produced by
+// be normalized. The result is NOT normalized -- trailing zeros produced by
 // the rounding stay significant (to_str_prec must render "1.41421356237310"
 // as 15 digits, not the normalized 14-digit form). Arithmetic callers
 // normalize via _round_to_precision / with_rounding.
@@ -419,7 +419,7 @@ fn _f128_neg(acc: Float128, neg: Bool) -> Float128 {
 /// in fp128: ~34 significant digits of the significand survive, and the
 /// exponent range extends to ~1.1e4932. Values whose exponent exceeds the
 /// fp128 range saturate to +/-inf (fp128 IEEE-754 semantics).
-/// TODO(compiler): BUG 33 — Option[Float128] payload unwrap emits a load of
+/// TODO(compiler): BUG 33 -- Option[Float128] payload unwrap emits a load of
 /// the undefined `%struct.Float128` (opaque) instead of native `fp128`, so
 /// the Option-returning form cannot be consumed yet; returns the value
 /// directly until the unwrap path is fixed.
@@ -643,7 +643,7 @@ pub fn bigfloat_pow(base: &BigFloat, exp: Int) -> BigFloat
 // ============================================================================
 
 // Split the magnitude into integer part q and fractional limbs r / 10^d.
-// Named struct (not a tuple) — tuple-of-struct returns were a fresh compiler
+// Named struct (not a tuple) -- tuple-of-struct returns were a fresh compiler
 // bug (BUG 1, docs/COMPILER_BUGS.md); structs are the proven-safe ABI.
 fn _split_int_frac(f: &BigFloat) -> IntFrac {
   if f.exponent >= 0 {
@@ -776,7 +776,7 @@ pub fn bigfloat_ge(a: &BigFloat, b: &BigFloat) -> Bool {
 }
 
 // ============================================================================
-// PHASE C — Transcendentals (pure XIOM series; zero external deps)
+// PHASE C -- Transcendentals (pure XIOM series; zero external deps)
 // ============================================================================
 // Strategy: working precision = max(operand precisions, 64) + 4 guard digits;
 // all intermediates carry the working precision; the result is rounded back
@@ -1169,7 +1169,7 @@ pub fn bigfloat_atan2(y: &BigFloat, x: &BigFloat) -> BigFloat {
   var t = _atan_positive(&bigfloat_abs(&bigfloat_div(y, x)), prec);
   var result = _one_at(prec);
   if !bigfloat_is_negative(x) {
-    // x > 0: result = atan(y/x) — sign of y applies.
+    // x > 0: result = atan(y/x) -- sign of y applies.
     result = t;
     if bigfloat_is_negative(y) { result = bigfloat_neg(&result); }
   } else {
@@ -1196,9 +1196,9 @@ pub fn bigfloat_pow_bf(base: &BigFloat, exp: &BigFloat) -> BigFloat
     var p = bigfloat_pow_bf(base, &bigfloat_neg(exp));
     return bigfloat_inv(&p);
   }
-  // BUG 24 fix (2026-08-12): `base` is already `&BigFloat` — `&base` passed
+  // BUG 24 fix (2026-08-12): `base` is already `&BigFloat` -- `&base` passed
   // the ADDRESS OF THE POINTER SLOT to is_one(f: &BigFloat), which read the
-  // slot as a BigFloat struct (garbage → per-program-shape wrong values/AVs
+  // slot as a BigFloat struct (garbage -> per-program-shape wrong values/AVs
   // in bigfloat_pow_bf). The compiler now rejects double-addresses like this.
   if bigfloat_is_one(base) { return _finish(&_one_at(_work_prec(base, exp)), target); }
   var l = bigfloat_ln(base);
@@ -1207,7 +1207,7 @@ pub fn bigfloat_pow_bf(base: &BigFloat, exp: &BigFloat) -> BigFloat
 }
 
 // ============================================================================
-// PHASE C.5 — Additional elementary functions (built on the Phase C primitives)
+// PHASE C.5 -- Additional elementary functions (built on the Phase C primitives)
 // ============================================================================
 
 // ln(2) to `prec` digits: ln(2) = 2*atanh(1/3).

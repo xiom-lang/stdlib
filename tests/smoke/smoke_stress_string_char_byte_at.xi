@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.string.byte_at / char_at access
+// XIOM stdlib stress -- xiom.string.byte_at / char_at access
 // Verifies byte_at returns ASCII codes, char_at returns Some for valid.
 // Returns 0 on success.
 

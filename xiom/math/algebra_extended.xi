@@ -19,7 +19,7 @@ module xiom.math.algebra_extended
 //
 // COMPILER WORKAROUND: higher-order parameters named `add`/`mul`/`sub`
 // collide with the compiler's built-in operators (an `add(a, b)` call
-// resolves to native +/* and IGNORES the passed function — a name
+// resolves to native +/* and IGNORES the passed function -- a name
 // resolution bug). The operator-carrying parameters are therefore named
 // `op_add`/`op_mul`. The public function names and argument TYPES are
 // unchanged; callers pass functions positionally.

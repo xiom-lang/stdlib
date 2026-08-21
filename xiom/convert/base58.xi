@@ -10,7 +10,7 @@ module xiom.convert.base58
 // Base58 and base58check encoding/decoding. The integer <-> base58 helpers
 // mirror xiom.num.convert (delegation is impossible here: defining a local
 // `to_base58`/`from_base58` while importing the same-named functions from
-// xiom.num.convert makes the compiler emit a 0xC0000005 miscompile — verified
+// xiom.num.convert makes the compiler emit a 0xC0000005 miscompile -- verified
 // by probe; the logic is therefore implemented locally). base58check uses an
 // Adler-32 checksum fallback (see base58check_encode) until the compiler's
 // 32-bit bitwise codegen bug is fixed.
@@ -255,7 +255,7 @@ pub fn base58_decode(s: Str) -> Result[Vec[UInt8], Str] {
 // detects accidental corruption but is NOT the cryptographic Bitcoin checksum.
 
 /// 4-byte checksum for base58check. FALLBACK: Adler-32 (RFC 1950) instead of
-/// double-SHA256 — see the TODO(compiler) note above. Deterministic and
+/// double-SHA256 -- see the TODO(compiler) note above. Deterministic and
 /// corruption-detecting, not cryptographic.
 fn _b58check_checksum(data: &Vec[UInt8]) -> Vec[UInt8] {
   var s1: Int = 1;
@@ -288,7 +288,7 @@ fn _b58check_checksum(data: &Vec[UInt8]) -> Vec[UInt8] {
 
 /// Encodes bytes as base58 with a trailing 4-byte checksum, matching the
 /// base58check shape. FALLBACK: the checksum is Adler-32, not double-SHA256
-/// (see the TODO(compiler) note) — the output is NOT Bitcoin-interoperable.
+/// (see the TODO(compiler) note) -- the output is NOT Bitcoin-interoperable.
 /// Complexity: O(n^2) worst case.
 pub fn base58check_encode(data: &Vec[UInt8]) -> Str {
   var checksum = _b58check_checksum(data);

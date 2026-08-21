@@ -1,4 +1,4 @@
-// XIOM — Hashing: Google CityHash (CityHash64 / CityHash128)
+// XIOM -- Hashing: Google CityHash (CityHash64 / CityHash128)
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 

@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.path Path.parent for various depths
+// XIOM stdlib stress -- xiom.path Path.parent for various depths
 // Tests parent() on 1, 2, and 3 component paths.
 // Returns 0 on success, nonzero on failure.
 

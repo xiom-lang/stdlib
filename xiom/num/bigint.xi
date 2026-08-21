@@ -1,4 +1,4 @@
-// XIOM — Arbitrary-Precision Signed Integer (BigInt) Library
+// XIOM -- Arbitrary-Precision Signed Integer (BigInt) Library
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 
@@ -10,7 +10,7 @@ use xiom.core.INT_MAX;
 use xiom.core.to_int_from_char;
 
 // ============================================================================
-// Constants — base-10^9 representation
+// Constants -- base-10^9 representation
 // ============================================================================
 
 // Each limb stores 9 decimal digits (0 .. 999,999,999).
@@ -20,13 +20,13 @@ var _BASE: Int = 1000000000;
 var _BASE_DIGITS: Int = 9;
 
 // ============================================================================
-// Type — BigInt
+// Type -- BigInt
 // ============================================================================
 
 pub type BigInt = { digits: Vec[Int]; negative: Bool; }
 
 // ============================================================================
-// Private helpers — trim, copy, comparison
+// Private helpers -- trim, copy, comparison
 // ============================================================================
 
 fn _trim(b: &BigInt) {
@@ -129,12 +129,12 @@ fn _abs_shift_limbs(a: &BigInt, n: Int) -> BigInt {
   return result;
 }
 
-// Estimate the next quotient digit for long division — Knuth Algorithm D
+// Estimate the next quotient digit for long division -- Knuth Algorithm D
 // (TAOCP 4.3.1) qhat with the D4 refinement. Precondition: the divisor's top
 // limb is normalized to [BASE/2, BASE) (see bigint_div_mod D1) and the
 // remainder satisfies r < d * BASE^(shift+1).
 //
-// The window is (r[idx+1], r[idx]) — the limb ABOVE the aligned position —
+// The window is (r[idx+1], r[idx]) -- the limb ABOVE the aligned position --
 // NOT (r[idx], r[idx-1]). With an un-normalized top limb or a wrong window
 // the estimate underestimates multi-limb digits (e.g. 9 vs true 100 for
 // 64-nines / 10^44), corrupting the quotient. Overestimates (<= 2 after D4)
@@ -145,7 +145,7 @@ fn _abs_shift_limbs(a: &BigInt, n: Int) -> BigInt {
 // then the true digit is 0 or 1 (r < B^(idx+1) and the normalized divisor
 // gives digit < B/v[m-1] <= 2) and bigint_div_mod tests r >= v*B^shift
 // directly. A naive 0 here is an underestimate of 1 at weight B^shift,
-// which the final fixup (units of 1) cannot repair — hit by bigfloat's
+// which the final fixup (units of 1) cannot repair -- hit by bigfloat's
 // rounding divisions (dividend top limb 1, divisor 10^k).
 fn _estimate_q_digit(n: &BigInt, d: &BigInt, shift: Int) -> Int {
   var idx = d.digits.len() - 1 + shift;
@@ -216,7 +216,7 @@ fn _div_mod_base(n: &BigInt) -> DivModResult {
 }
 
 // ============================================================================
-// Construction — from Int, from Str
+// Construction -- from Int, from Str
 // ============================================================================
 
 pub fn bigint_from_int(n: Int) -> BigInt {
@@ -234,7 +234,7 @@ pub fn bigint_from_int(n: Int) -> BigInt {
 
 // Build from an unsigned 64-bit value. The compiler emits SIGNED LLVM
 // instructions for UInt64 `/` and `%`, so the proven unsigned helpers from
-// xiom.num (u64_div_floor / u64_mod_euclid) are used instead — exact for the
+// xiom.num (u64_div_floor / u64_mod_euclid) are used instead -- exact for the
 // full 0 .. 2^64-1 range.
 pub fn bigint_from_u64(n: UInt64) -> BigInt {
   var result = BigInt{ digits: Vec[Int].new(); negative: false; };
@@ -250,7 +250,7 @@ pub fn bigint_from_u64(n: UInt64) -> BigInt {
 }
 
 // Parse decimal string. Uses xiom.string.str_slice for char access.
-// O(n²) due to repeated multiply-by-10-and-add during accumulation.
+// O(n2) due to repeated multiply-by-10-and-add during accumulation.
 pub fn bigint_from_str(s: Str) -> Result[BigInt, Str] {
   if s.len() == 0 { return Err("empty string"); }
   var result = BigInt{ digits: Vec[Int].new(); negative: false; };
@@ -290,7 +290,7 @@ fn _parse_digit(c: Str) -> Int {
 }
 
 // ============================================================================
-// Conversion — to string
+// Conversion -- to string
 // ============================================================================
 
 // Convert to decimal string via repeated division by BASE.
@@ -373,7 +373,7 @@ fn _digit_char(d: Int) -> Str {
 }
 
 // ============================================================================
-// Core arithmetic — add, sub, mul, div_mod
+// Core arithmetic -- add, sub, mul, div_mod
 // ============================================================================
 
 pub fn bigint_add(a: &BigInt, b: &BigInt) -> BigInt {
@@ -401,7 +401,7 @@ pub fn bigint_sub(a: &BigInt, b: &BigInt) -> BigInt {
 }
 
 // Magnitude-only schoolbook multiplication (limbs only; sign ignored).
-// O(n^2) — the fast path below a Karatsuba-sized split.
+// O(n^2) -- the fast path below a Karatsuba-sized split.
 fn _abs_mul_schoolbook(a: &BigInt, b: &BigInt) -> BigInt {
   var result = BigInt{ digits: Vec[Int].new(); negative: false; };
   if a.digits.len() == 0 || b.digits.len() == 0 { return result; }
@@ -529,7 +529,7 @@ pub fn bigint_div_mod(a: &BigInt, b: &BigInt) -> (BigInt, BigInt) {
     // Multi-limb divisor: Knuth Algorithm D.
     // D1: normalize so the divisor's top limb >= BASE/2. d = floor(BASE/(v+1))
     // satisfies d*v in [BASE/2, BASE) and the carry into the top limb is
-    // bounded by d-1, so d*v + carry <= BASE-1 — the divisor never gains a
+    // bounded by d-1, so d*v + carry <= BASE-1 -- the divisor never gains a
     // limb. The quotient is unaffected by the shared scaling.
     var dnorm = _BASE / (abs_b.digits[abs_b.digits.len() - 1] + 1);
     var norm_a = abs_a;
@@ -543,7 +543,7 @@ pub fn bigint_div_mod(a: &BigInt, b: &BigInt) -> (BigInt, BigInt) {
     while shift >= 0 {
       var est = _estimate_q_digit(&remainder, &norm_b, shift);
       if est < 0 {
-        // Remainder top limb is zero: the true digit is 0 or 1 — test
+        // Remainder top limb is zero: the true digit is 0 or 1 -- test
         // r >= v*B^shift directly (a guessed 0 would be an uncorrectable
         // underestimate at this position's weight).
         var sh_v = _abs_shift_limbs(&norm_b, shift);
@@ -673,7 +673,7 @@ pub fn bigint_shift_left(b: &BigInt, shift: Int) -> BigInt {
 }
 
 // ============================================================================
-// PRODUCTION BIGINT (2026-08-10) — additive extension, Phase A
+// PRODUCTION BIGINT (2026-08-10) -- additive extension, Phase A
 // ============================================================================
 // Every function below is additive: existing pub fns are untouched (API-freeze
 // gate). Contracts use `requires` for preconditions; where a violation can be
@@ -685,7 +685,7 @@ pub fn bigint_shift_left(b: &BigInt, shift: Int) -> BigInt {
 
 // -- Constants ---------------------------------------------------------------
 // NOTE (2026-08-10): module-global initializers cannot call functions (the
-// compiler silently leaves them zero — see docs/COMPILER_BUGS.md), so the
+// compiler silently leaves them zero -- see docs/COMPILER_BUGS.md), so the
 // spec constants BIGINT_ZERO/ONE/TEN are exposed as pure constructors that
 // return a fresh value. Zero-cost, immutable by construction.
 
@@ -823,14 +823,14 @@ pub fn bigint_to_int(b: &BigInt) -> Result[Int, Str] {
 }
 
 // ============================================================================
-// Fixed-width bridges — 256-bit framing (2026-08-11)
+// Fixed-width bridges -- 256-bit framing (2026-08-11)
 // ============================================================================
 // BigInt is arbitrary precision, so 128/64-bit consumers get exact
-// range-checked conversions (Err on out-of-range — no silent truncation).
+// range-checked conversions (Err on out-of-range -- no silent truncation).
 // The accumulation uses native LLVM i128/UInt128 arithmetic (no soft-float
 // helpers); the range pre-check guarantees no wraparound.
 
-// Convert to UInt64 (0 .. 2^64-1). Negative or ≥ 2^64 → Err.
+// Convert to UInt64 (0 .. 2^64-1). Negative or >= 2^64 -> Err.
 pub fn bigint_to_u64(b: &BigInt) -> Result[UInt64, Str] {
   if bigint_is_negative(b) { return Err("out of u64 range"); }
   var max = bigint_from_u64(18446744073709551615 as UInt64);
@@ -845,7 +845,7 @@ pub fn bigint_to_u64(b: &BigInt) -> Result[UInt64, Str] {
   return Ok(r);
 }
 
-// Convert to UInt128 (0 .. 2^128-1). Negative or ≥ 2^128 → Err.
+// Convert to UInt128 (0 .. 2^128-1). Negative or >= 2^128 -> Err.
 pub fn bigint_to_u128(b: &BigInt) -> Result[UInt128, Str] {
   if bigint_is_negative(b) { return Err("out of u128 range"); }
   var max = bigint_from_base("ffffffffffffffffffffffffffffffff", 16);
@@ -865,7 +865,7 @@ pub fn bigint_to_u128(b: &BigInt) -> Result[UInt128, Str] {
   return Ok(r);
 }
 
-// Convert to Int128 (-2^127 .. 2^127-1). Out of range → Err.
+// Convert to Int128 (-2^127 .. 2^127-1). Out of range -> Err.
 pub fn bigint_to_i128(b: &BigInt) -> Result[Int128, Str] {
   var lo = bigint_from_base("80000000000000000000000000000000", 16);
   var hi = bigint_from_base("7fffffffffffffffffffffffffffffff", 16);

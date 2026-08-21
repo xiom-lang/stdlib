@@ -210,7 +210,7 @@ fn parse_http_date(s: Str) -> Int {
 }
 
 /// Parse a request Cookie header into a cookie.
-/// Parameters: header — the Cookie header value (e.g. "a=b; c=d").
+/// Parameters: header -- the Cookie header value (e.g. "a=b; c=d").
 /// Returns: Ok(Cookie) for the first name=value pair, Err when the header is
 ///          empty or any segment is malformed.
 /// Complexity: O(n). Pure.
@@ -256,7 +256,7 @@ pub fn cookie_parse(header: Str) -> Result[Cookie, Str] {
 }
 
 /// Parse a Set-Cookie header into a cookie.
-/// Parameters: header — the Set-Cookie header value (e.g.
+/// Parameters: header -- the Set-Cookie header value (e.g.
 ///          "a=b; Path=/; HttpOnly; Max-Age=3600; SameSite=Strict").
 /// Returns: Ok(Cookie) with attributes applied, Err when the name=value pair
 ///          is missing or malformed.
@@ -332,7 +332,7 @@ pub fn cookie_parse_set_cookie(header: Str) -> Result[Cookie, Str] {
 }
 
 /// Serialize a cookie into Cookie header form ("name=value").
-/// Parameters: c — the cookie.
+/// Parameters: c -- the cookie.
 /// Returns: the "name=value" string.
 /// Complexity: O(1). Pure.
 pub fn cookie_serialize(c: Cookie) -> Str {
@@ -348,7 +348,7 @@ pub fn cookie_jar_new() -> CookieJar {
 
 /// Store a cookie in the jar, replacing an existing cookie with the same
 /// name, domain and path.
-/// Parameters: jar — the mutable jar; c — the cookie to store.
+/// Parameters: jar -- the mutable jar; c -- the cookie to store.
 /// Returns: Unit.
 /// Complexity: O(n) with n = jar size. Pure.
 pub fn cookie_jar_set(jar: &mut CookieJar, c: Cookie) {
@@ -365,7 +365,7 @@ pub fn cookie_jar_set(jar: &mut CookieJar, c: Cookie) {
 }
 
 /// Fetch a cookie by name for a url.
-/// Parameters: jar — the jar; name — the cookie name; url — the request url.
+/// Parameters: jar -- the jar; name -- the cookie name; url -- the request url.
 /// Returns: Some(Cookie) for the first matching cookie, None otherwise.
 /// Complexity: O(n) with n = jar size. Pure.
 pub fn cookie_jar_get(jar: &CookieJar, name: Str, url: Str) -> Option[Cookie] {
@@ -382,7 +382,7 @@ pub fn cookie_jar_get(jar: &CookieJar, name: Str, url: Str) -> Option[Cookie] {
 
 /// Test if a cookie applies to a url (domain match, path match and not
 /// expired).
-/// Parameters: c — the cookie; url — the request url.
+/// Parameters: c -- the cookie; url -- the request url.
 /// Returns: true when the cookie applies.
 /// Complexity: O(n). Pure.
 pub fn cookie_jar_matches(c: Cookie, url: Str) -> Bool {
@@ -408,7 +408,7 @@ pub fn cookie_jar_matches(c: Cookie, url: Str) -> Bool {
 }
 
 /// Count cookies held in the jar.
-/// Parameters: jar — the jar.
+/// Parameters: jar -- the jar.
 /// Returns: the number of cookies.
 /// Complexity: O(1). Pure.
 pub fn cookie_jar_size(jar: &CookieJar) -> Int {
@@ -416,7 +416,7 @@ pub fn cookie_jar_size(jar: &CookieJar) -> Int {
 }
 
 /// Test if the cookie expires within the given number of seconds.
-/// Parameters: c — the cookie; seconds — the window in seconds.
+/// Parameters: c -- the cookie; seconds -- the window in seconds.
 /// Returns: true when the cookie has an expiry and it falls at or before
 ///          now + seconds (already-expired cookies count as expiring).
 /// Complexity: O(1). Pure.
@@ -429,7 +429,7 @@ pub fn cookie_expires_after(c: Cookie, seconds: Int) -> Bool {
 }
 
 /// RFC 6265 domain-match test.
-/// Parameters: domain — the cookie's Domain attribute; host — the request
+/// Parameters: domain -- the cookie's Domain attribute; host -- the request
 ///          host.
 /// Returns: true when host equals domain or is a subdomain of domain.
 /// Complexity: O(n). Pure.
@@ -453,7 +453,7 @@ pub fn cookie_domain_matches(domain: Str, host: Str) -> Bool {
 }
 
 /// RFC 6265 path-match test.
-/// Parameters: path — the cookie's Path attribute; request_path — the request
+/// Parameters: path -- the cookie's Path attribute; request_path -- the request
 ///          path.
 /// Returns: true when request_path matches the cookie path.
 /// Complexity: O(n). Pure.

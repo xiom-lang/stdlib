@@ -10,7 +10,7 @@ module xiom.os.event
 // Async I/O event loops via FFI: epoll, kqueue, eventfd, timerfd, signalfd,
 // poll/ppoll, and select/pselect. The descriptor structs are provided so
 // callers can build poll sets; the system calls themselves are Linux/BSD
-// specific and not exposed by the pure stdlib — every function is a
+// specific and not exposed by the pure stdlib -- every function is a
 // documented stub returning Err.
 // ============================================================================
 

@@ -1,4 +1,4 @@
-// XIOM — Type Conversion Traits
+// XIOM -- Type Conversion Traits
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 
@@ -36,14 +36,14 @@ pub fn int_to_string(n: Int) -> Str {
   return to_string(n);
 }
 
-// ── Float64 → Str (exact-ish decimal formatting) ────────────────────────────
+// -- Float64 -> Str (exact-ish decimal formatting) ----------------------------
 // NOTE (2026-08-11): the previous implementation used `to_string(f)` on a
-// Float64, which the compiler lowers to fptosi (bit-pattern truncation) — it
+// Float64, which the compiler lowers to fptosi (bit-pattern truncation) -- it
 // printed the f64 BITS, not the value. Replaced with scaled-integer rounding
 // (half away from zero, like C printf). All conversions are lossless to 15
 // significant digits (the f64 round-trip guarantee), then round.
 
-// Decimal exponent: v = m * 10^e with 1 <= m < 10 (v >= 0; 0 → e = 0).
+// Decimal exponent: v = m * 10^e with 1 <= m < 10 (v >= 0; 0 -> e = 0).
 fn _f64_exp10(v: Float64) -> Int {
   var e: Int = 0;
   var t = v;
@@ -58,7 +58,7 @@ fn _f64_exp10(v: Float64) -> Int {
   return e;
 }
 
-// 10^p as exact Int (p in 0..=15 — 1e15 fits i64).
+// 10^p as exact Int (p in 0..=15 -- 1e15 fits i64).
 fn _f64_scale(p: Int) -> Int {
   var s: Int = 1;
   var k: Int = 0;
@@ -124,7 +124,7 @@ fn _f64_sci_abs(v: Float64, decimals: Int) -> (Str, Int) {
   }
   var scale = _f64_scale(decimals);
   var scaled = _f64_round_half_away(m * (scale as Float64));
-  // mantissa carry: 9.999… → 10.000…
+  // mantissa carry: 9.999... -> 10.000...
   if scaled >= scale * 10 {
     scaled = scaled / 10;
     e = e + 1;
@@ -146,7 +146,7 @@ fn _f64_sci_abs(v: Float64, decimals: Int) -> (Str, Int) {
   return (s, e);
 }
 
-// "e±XX" (exponent at least 2 digits), upper → "E±XX".
+// "e+/-XX" (exponent at least 2 digits), upper -> "E+/-XX".
 fn _f64_exp_text(e_in: Int, upper: Bool) -> Str {
   var e = e_in;
   var sign = "e-";
@@ -213,7 +213,7 @@ pub fn float_to_fixed_str(f: Float64, decimals: Int) -> Str {
   return body;
 }
 
-/// Formats `f` in scientific notation "d.ddde±XX" with `decimals` fraction
+/// Formats `f` in scientific notation "d.ddde+/-XX" with `decimals` fraction
 /// digits (rounded half away from zero). Handles sign, "nan" and "inf".
 /// Complexity: O(|exp10| + decimals).
 pub fn float_to_sci_str(f: Float64, decimals: Int) -> Str {
@@ -237,7 +237,7 @@ pub fn float_to_sci_str(f: Float64, decimals: Int) -> Str {
   return body;
 }
 
-/// Default Float64 → Str conversion: 15 significant digits, fixed notation
+/// Default Float64 -> Str conversion: 15 significant digits, fixed notation
 /// for 1e-4 <= |f| < 1e15, scientific otherwise (C `%.15g` semantics with
 /// trailing zeros stripped). Handles "nan"/"inf".
 /// Complexity: O(|exp10| + 15).

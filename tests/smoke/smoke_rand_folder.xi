@@ -1,4 +1,4 @@
-// XIOM — Smoke test for the stdlib/xiom/rand/ folder modules:
+// XIOM -- Smoke test for the stdlib/xiom/rand/ folder modules:
 // mt19937 (Mersenne Twister), pcg (PCG-XSH-RR), chacha (ChaCha20 RNG).
 module smoke_rand_folder
 use xiom.rand.mt19937;
@@ -10,7 +10,7 @@ fn _u32i(x: UInt32) -> Int {
 }
 
 fn main() -> Int {
-  // ── mt19937 ──────────────────────────────────────────────────────────────
+  // -- mt19937 --------------------------------------------------------------
   // Known vectors: default seed 5489 -> 0xD091BB5C (3499211612);
   // seed 0 -> 0x8C7F0AAC (2357136044).
   var mt1 = mt19937.mt19937_new();
@@ -48,7 +48,7 @@ fn main() -> Int {
     j = j + 1;
   }
 
-  // ── pcg ──────────────────────────────────────────────────────────────────
+  // -- pcg ------------------------------------------------------------------
   // Same seed must give an identical 5-value sequence.
   var p1 = pcg.pcg_from_seed(0x1234567890 as UInt64);
   var p2 = pcg.pcg_from_seed(0x1234567890 as UInt64);
@@ -75,7 +75,7 @@ fn main() -> Int {
   let pi = pcg.pcg_next_int(&mut p2);
   if pi < 0 || pi >= 4294967296 { return 12; }
 
-  // ── chacha ───────────────────────────────────────────────────────────────
+  // -- chacha ---------------------------------------------------------------
   // Known vector: all-zero key/nonce/counter 0 block starts with 0xADE0B876.
   var c1 = chacha.chacha_rng_new();
   let cw = chacha.chacha_rng_next_u32(&mut c1);

@@ -1,4 +1,4 @@
-// XIOM — Hash Collection (Bloom Filter + Insertion-ordered Map)
+// XIOM -- Hash Collection (Bloom Filter + Insertion-ordered Map)
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 
@@ -121,7 +121,7 @@ pub fn bloom_false_positive_rate(b: &BloomFilter) -> Float64 {
 }
 
 // ============================================================================
-// LhMap — insertion-ordered map (Int keys -> Int values)
+// LhMap -- insertion-ordered map (Int keys -> Int values)
 // Inserting a new key appends; updating an existing key keeps its position.
 // ============================================================================
 

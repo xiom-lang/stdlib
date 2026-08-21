@@ -1,8 +1,8 @@
-// XIOM — Interior Mutability (Cell + RefCell)
+// XIOM -- Interior Mutability (Cell + RefCell)
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 //
-// Sprint 6D.1: Fixed permanent borrow bug — Ref/RefMut now hold raw pointers
+// Sprint 6D.1: Fixed permanent borrow bug -- Ref/RefMut now hold raw pointers
 // to the original RefCell and `release()` decrements the borrow counter.
 // Previous implementation copied RefCell by value, making Ref.get() return
 // a stale snapshot and never restoring borrow counts.
@@ -12,7 +12,7 @@ module xiom.cell
 use xiom.ptr;
 
 // ============================================================================
-// Cell — simple interior mutability via unsafe pointer casts
+// Cell -- simple interior mutability via unsafe pointer casts
 // ============================================================================
 
 pub type Cell[T] = { value: T; }
@@ -46,7 +46,7 @@ pub fn Cell.swap[T](&mut self, other: &mut Cell[T])
 }
 
 // ============================================================================
-// RefCell — interior mutability with runtime borrow checking
+// RefCell -- interior mutability with runtime borrow checking
 // ============================================================================
 
 // borrows > 0: active shared borrows
@@ -130,7 +130,7 @@ pub fn RefCell.replace[T](self, value: T) -> T
 }
 
 // ============================================================================
-// Ref — shared borrow handle (6D.1: pointer-based, not value copy)
+// Ref -- shared borrow handle (6D.1: pointer-based, not value copy)
 // ============================================================================
 
 // Release the shared borrow. Must be called when done with the Ref.
@@ -153,14 +153,14 @@ pub fn Ref.get[T](self) -> T {
 }
 
 // ============================================================================
-// RefMut — mutable borrow handle (6D.1: pointer-based)
+// RefMut -- mutable borrow handle (6D.1: pointer-based)
 // ============================================================================
 
 // Release the mutable borrow. Restores borrows from -1 to 0.
 pub fn RefMut.release[T](self) {
   unsafe {
     if ptr.is_null() { return; }
-    // Restore: mutable borrow (-1) → free (0)
+    // Restore: mutable borrow (-1) -> free (0)
     (*ptr).borrows = 0;
   };
 }

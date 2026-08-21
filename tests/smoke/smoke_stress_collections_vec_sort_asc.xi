@@ -1,4 +1,4 @@
-// XIOM stdlib stress — Vec sort ascending
+// XIOM stdlib stress -- Vec sort ascending
 // Pushes unsorted values, sorts, verifies ascending order.
 // Returns 0 on success, nonzero on failure.
 

@@ -1,4 +1,4 @@
-// XIOM stdlib stress — Map large (200 entries)
+// XIOM stdlib stress -- Map large (200 entries)
 // Inserts 200 key-value pairs via while loop and verifies count.
 // Returns 0 on success, nonzero on failure.
 

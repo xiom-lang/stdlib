@@ -1,12 +1,12 @@
 // XIOM stdlib smoke test - xiom.string.format + xiom.string.printf + xiom.string.scanf
 // Returns 0 on success, nonzero on failure (process exit code).
 //
-// NOTE (compiler, BUG 27 #2 — FIXED 4e95717e): the sublib path now resolves
+// NOTE (compiler, BUG 27 #2 -- FIXED 4e95717e): the sublib path now resolves
 // via FULLY-QUALIFIED calls (xiom.string.format.str_format1); the bare
 // module-prefix form (format.str_format1) still fails T001 and the aggregate
 // form (string.format.str_format1) silently resolves to the flat string.xi
 // fn of the same name. Format fns take Int args only (Str/Float64 to_str
-// crash, Bool renders "1" — BUG 27 #19).
+// crash, Bool renders "1" -- BUG 27 #19).
 
 module smoke_string_format_printf
 use xiom.string.format;

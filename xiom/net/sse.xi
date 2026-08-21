@@ -10,7 +10,7 @@ module xiom.net.sse
 // Server-Sent Events client per the WHATWG SSE spec. The wire builders live in
 // net.xi; this module owns connection lifecycle and parsing. Parsing and the
 // pure event accessors are fully implemented; the connection functions require
-// a live TcpStream — they are documented stubs returning Err.
+// a live TcpStream -- they are documented stubs returning Err.
 // ============================================================================
 
 use xiom.string;
@@ -135,7 +135,7 @@ fn apply_line(e: SseEvent, line: Str) -> SseEvent {
 }
 
 /// Parse one raw event chunk.
-/// Parameters: chunk — a raw event block (a sequence of "field: value" lines
+/// Parameters: chunk -- a raw event block (a sequence of "field: value" lines
 ///          ending with a blank line).
 /// Returns: Ok(SseEvent) for a well-formed chunk, Err for an empty chunk.
 /// Complexity: O(n). Pure.
@@ -155,7 +155,7 @@ pub fn sse_parse_event(chunk: Str) -> Result[SseEvent, Str] {
 }
 
 /// Return the event id field.
-/// Parameters: e — the event.
+/// Parameters: e -- the event.
 /// Returns: Some(id) when the id is non-empty, None otherwise.
 /// Complexity: O(1). Pure.
 pub fn sse_event_id(e: SseEvent) -> Option[Str] {
@@ -166,7 +166,7 @@ pub fn sse_event_id(e: SseEvent) -> Option[Str] {
 }
 
 /// Return the event data field.
-/// Parameters: e — the event.
+/// Parameters: e -- the event.
 /// Returns: the data field (possibly "").
 /// Complexity: O(1). Pure.
 pub fn sse_event_data(e: SseEvent) -> Str {

@@ -47,7 +47,7 @@ fn matches_name(stored: Str, name: Str) -> Bool {
 }
 
 /// Fetch the first value for a header name (case-insensitive).
-/// Parameters: headers — the header list; name — the header name.
+/// Parameters: headers -- the header list; name -- the header name.
 /// Returns: Some(first value) when present, None otherwise.
 /// Complexity: O(n) with n = header count. Pure.
 pub fn header_get(headers: &Vec[(Str, Str)], name: Str) -> Option[Str] {
@@ -64,8 +64,8 @@ pub fn header_get(headers: &Vec[(Str, Str)], name: Str) -> Option[Str] {
 
 /// Set a header, replacing any existing entry with the same name
 /// (case-insensitive); the new entry keeps the caller's spelling.
-/// Parameters: headers — the mutable header list; name — the header name;
-///          value — the header value.
+/// Parameters: headers -- the mutable header list; name -- the header name;
+///          value -- the header value.
 /// Returns: Unit.
 /// Complexity: O(n) with n = header count. Pure.
 pub fn header_set(headers: &mut Vec[(Str, Str)], name: Str, value: Str) {
@@ -83,7 +83,7 @@ pub fn header_set(headers: &mut Vec[(Str, Str)], name: Str, value: Str) {
 }
 
 /// Remove all entries for a header name (case-insensitive).
-/// Parameters: headers — the mutable header list; name — the header name.
+/// Parameters: headers -- the mutable header list; name -- the header name.
 /// Returns: true when at least one entry was removed.
 /// Complexity: O(n) with n = header count. Pure.
 pub fn header_remove(headers: &mut Vec[(Str, Str)], name: Str) -> Bool {
@@ -102,7 +102,7 @@ pub fn header_remove(headers: &mut Vec[(Str, Str)], name: Str) -> Bool {
 }
 
 /// Test if a header name is present (case-insensitive).
-/// Parameters: headers — the header list; name — the header name.
+/// Parameters: headers -- the header list; name -- the header name.
 /// Returns: true when at least one entry matches.
 /// Complexity: O(n) with n = header count. Pure.
 pub fn header_contains(headers: &Vec[(Str, Str)], name: Str) -> Bool {
@@ -118,7 +118,7 @@ pub fn header_contains(headers: &Vec[(Str, Str)], name: Str) -> Bool {
 }
 
 /// Parse one "Name: value" line into a (name, value) pair.
-/// Parameters: line — a single header line (may include a trailing CRLF).
+/// Parameters: line -- a single header line (may include a trailing CRLF).
 /// Returns: Some((name, value)) for a well-formed line, None otherwise. The
 ///          name is preserved verbatim; the value is trimmed.
 /// Complexity: O(n). Pure.
@@ -150,7 +150,7 @@ pub fn header_parse_line(line: Str) -> Option[(Str, Str)] {
 }
 
 /// Serialize headers into "Name: value" lines.
-/// Parameters: headers — the header list.
+/// Parameters: headers -- the header list.
 /// Returns: the concatenated header block; each line ends with CRLF.
 /// Complexity: O(n) with n = header count. Pure.
 pub fn header_serialize(headers: &Vec[(Str, Str)]) -> Str {

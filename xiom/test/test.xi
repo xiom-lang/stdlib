@@ -1,4 +1,4 @@
-// XIOM — Test Framework (Contract-Aware)
+// XIOM -- Test Framework (Contract-Aware)
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 
@@ -251,7 +251,7 @@ pub fn bench(name: Str, f: fn()) -> TestResult {
   };
 }
 
-// ── Boolean Assertions ─────────────────────────────────────────────
+// -- Boolean Assertions ---------------------------------------------
 
 /// Asserts that `cond` is false.
 /// Complexity: O(1). Pure in test context.
@@ -265,7 +265,7 @@ pub fn assert_false(cond: Bool, name: Str) -> TestResult {
   };
 }
 
-// ── Typed Numeric Assertions ───────────────────────────────────────
+// -- Typed Numeric Assertions ---------------------------------------
 
 /// Asserts that two `Int` values are equal.
 /// Complexity: O(1). Pure in test context.
@@ -358,7 +358,7 @@ pub fn assert_in_range(value: Int, lo: Int, hi: Int, name: Str) -> TestResult {
   };
 }
 
-// ── Test Result Aggregation ────────────────────────────────────────
+// -- Test Result Aggregation ----------------------------------------
 
 /// Counts the number of failing test results in the vector.
 /// Complexity: O(n). Consumes the vector.

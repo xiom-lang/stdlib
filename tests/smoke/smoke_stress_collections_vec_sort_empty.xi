@@ -1,4 +1,4 @@
-// XIOM stdlib stress — Vec sort on empty and single-element
+// XIOM stdlib stress -- Vec sort on empty and single-element
 // Verifies sort does not crash on empty or single-element vectors.
 // Returns 0 on success, nonzero on failure.
 

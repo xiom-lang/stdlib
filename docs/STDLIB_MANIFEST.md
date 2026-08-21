@@ -1,4 +1,4 @@
-# Stdlib Module Manifest (2026-08-13) — for stdlib_tests.rs / api_freeze path sync
+# Stdlib Module Manifest (2026-08-13) -- for stdlib_tests.rs / api_freeze path sync
 
 Generated from the frozen layout (9aa95d35). Module -> file mapping for all 512 stdlib .xi files.
 

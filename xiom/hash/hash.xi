@@ -1,4 +1,4 @@
-// XIOM — Hashing
+// XIOM -- Hashing
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 
@@ -25,7 +25,7 @@ pub interface BuildHasher {
   fn build_hasher(self) -> Hasher;
 }
 
-// === DefaultHasher — DJB2-based concrete hasher ===
+// === DefaultHasher -- DJB2-based concrete hasher ===
 pub type DefaultHasher = { state: Int; } derive[Clone]
 
 pub fn DefaultHasher.new() -> DefaultHasher {
@@ -113,7 +113,7 @@ pub fn sip_hash(data: &Vec[UInt8]) -> UInt64 {
   return hasher.finish();
 }
 
-// ── FNV-1a (Fowler–Noll–Vo) ────────────────────────────────────────────────
+// -- FNV-1a (Fowler-Noll-Vo) ------------------------------------------------
 
 /// FNV-1a 32-bit hash.
 /// Algorithm: hash = (hash XOR byte) * FNV Prime, with 32-bit wrapping.
@@ -149,7 +149,7 @@ pub fn fnv1a64(data: &Vec[UInt8]) -> Int {
   return hash;
 }
 
-/// FNV-1 64-bit hash (multiply first, then XOR — non-alternate variant).
+/// FNV-1 64-bit hash (multiply first, then XOR -- non-alternate variant).
 /// Offset basis: 0xCBF29CE484222325, prime: 0x00000100000001B3.
 /// Complexity: O(n), n = data length.
 pub fn fnv1_64(data: &Vec[UInt8]) -> Int {
@@ -165,7 +165,7 @@ pub fn fnv1_64(data: &Vec[UInt8]) -> Int {
   return hash;
 }
 
-// ── MurmurHash3 x86_32 ──────────────────────────────────────────────────────
+// -- MurmurHash3 x86_32 ------------------------------------------------------
 
 /// MurmurHash3 32-bit (x86_32 variant).
 /// Processes 4-byte blocks with fmix32 finalization.
@@ -223,7 +223,7 @@ pub fn murmur3_32(data: &Vec[UInt8], seed: Int) -> Int {
   return h1;
 }
 
-// ── xxHash32 ────────────────────────────────────────────────────────────────
+// -- xxHash32 ----------------------------------------------------------------
 
 // Helper: rotates left within 32 bits.
 pub fn _rotl32(x: Int, r: Int) -> Int {
@@ -232,7 +232,7 @@ pub fn _rotl32(x: Int, r: Int) -> Int {
   return (a | b) & 0xFFFFFFFF;
 }
 
-/// xxHash32 — Yann Collet's fast non-cryptographic hash.
+/// xxHash32 -- Yann Collet's fast non-cryptographic hash.
 /// Prime constants and avalanche per original xxHash specification.
 /// Complexity: O(n), n = data length. Processes 4-byte lanes + tail.
 pub fn xxhash32(data: &Vec[UInt8], seed: Int) -> Int {
@@ -330,7 +330,7 @@ pub fn xxhash32(data: &Vec[UInt8], seed: Int) -> Int {
   return h32;
 }
 
-// ── DJB2 ─────────────────────────────────────────────────────────────────────
+// -- DJB2 ---------------------------------------------------------------------
 
 /// DJB2 string hash (Dan Bernstein).
 /// Start with 5381, for each char: hash = hash * 33 + char_code.
@@ -348,7 +348,7 @@ pub fn djb2(s: Str) -> Int {
   return hash;
 }
 
-// ── SDBM ─────────────────────────────────────────────────────────────────────
+// -- SDBM ---------------------------------------------------------------------
 
 /// SDBM string hash.
 /// For each char: hash = char_code + (hash << 6) + (hash << 16) - hash.
@@ -366,7 +366,7 @@ pub fn sdbm(s: Str) -> Int {
   return hash;
 }
 
-// ── CRC32-IEEE ───────────────────────────────────────────────────────────────
+// -- CRC32-IEEE ---------------------------------------------------------------
 
 /// CRC32-IEEE 802.3 (polynomial 0xEDB88320, reflected).
 /// Generates lookup table lazily on first call.
@@ -399,7 +399,7 @@ pub fn crc32_ieee(data: &Vec[UInt8]) -> Int {
   return (crc ^ 0xFFFFFFFF) & 0xFFFFFFFF;
 }
 
-// ── Hash to hex ──────────────────────────────────────────────────────────────
+// -- Hash to hex --------------------------------------------------------------
 
 /// Converts a byte vector to a lowercase hexadecimal string.
 /// Delegates to xiom.encoding.hex_encode.
@@ -407,7 +407,7 @@ pub fn hash_bytes_to_hex(data: &Vec[UInt8]) -> Str {
   return encoding.hex_encode(data);
 }
 
-// ── Hash combination ─────────────────────────────────────────────────────────
+// -- Hash combination ---------------------------------------------------------
 
 /// Boost-style hash combination.
 /// Combines two hash values into one using a mixing function.
@@ -416,7 +416,7 @@ pub fn combine_hashes(a: Int, b: Int) -> Int {
   return a ^ (b + 0x9e3779b9 + (a << 6) + (a >> 2));
 }
 
-// ── String hash (djb2 variant) ───────────────────────────────────────────────
+// -- String hash (djb2 variant) -----------------------------------------------
 
 /// DJB2 hash over string characters.
 /// Alias for djb2.
@@ -470,7 +470,7 @@ fn _xxh64_merge_round(acc: Int, val: Int) -> Int {
 }
 
 // xxHash64 (seed 0 compatible with the reference implementation; 64-bit
-// results wrap naturally in i64 arithmetic — masks are no-ops at 64 bits).
+// results wrap naturally in i64 arithmetic -- masks are no-ops at 64 bits).
 pub fn xxhash64(data: &Vec[UInt8], seed: Int) -> Int {
   var len = data.len();
   var h: Int = seed + PRIME64_5 + len;

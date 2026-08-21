@@ -65,7 +65,7 @@ typedef struct {
 static HotSlotMeta slot_meta[XIOM_HOT_MAX_FUNCTIONS];
 
 // ============================================================================
-// Hash function (djb2 — must match Rust-side djb2_hash in xiom-codegen)
+// Hash function (djb2 -- must match Rust-side djb2_hash in xiom-codegen)
 // ============================================================================
 
 static int hot_name_hash(const char* name) {
@@ -135,7 +135,7 @@ int xiom_hot_set_ptr(int64_t fn_id, int64_t new_ptr) {
     return 1;
 }
 
-// Mark a slot as "in flight" — a call is executing through it.
+// Mark a slot as "in flight" -- a call is executing through it.
 // Returns the current pointer (for the caller to use).
 int64_t xiom_hot_enter(int64_t fn_id) {
     int idx = (int)fn_id;
@@ -268,12 +268,12 @@ int xiom_hot_restore_state_v2(const char* path,
     return 0;
 }
 
-// Legacy save (backward compat — used when host doesn't pass layout metadata).
+// Legacy save (backward compat -- used when host doesn't pass layout metadata).
 int xiom_hot_save_state_legacy(const char* path, const uint8_t* data, uint64_t size) {
     return xiom_hot_save_state_v2(path, "", data, size);
 }
 
-// Legacy restore (backward compat — skips layout check).
+// Legacy restore (backward compat -- skips layout check).
 int xiom_hot_restore_state_legacy(const char* path, uint8_t* out, uint64_t size) {
     // Try v2 first, fall back to raw read
     int rc = xiom_hot_restore_state_v2(path, "", out, size);

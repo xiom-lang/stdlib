@@ -5,7 +5,7 @@ fn main() -> Int {
   var p = path.Path.new("/home/user/file.txt");
   // .parent() returns Option[PathBuf], .unwrap() on struct payload may crash
   var par_opt = p.parent();
-  // Skip parent test if it crashes — just test String-returning methods
+  // Skip parent test if it crashes -- just test String-returning methods
   match p.file_name() {
     Some(name) => { if name != "file.txt" { return 1; } }
     None => { return 1; }

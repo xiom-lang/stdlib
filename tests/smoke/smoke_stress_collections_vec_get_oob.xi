@@ -1,4 +1,4 @@
-// XIOM stdlib stress — Vec get out-of-bounds via .get()
+// XIOM stdlib stress -- Vec get out-of-bounds via .get()
 // Uses safe .get() on out-of-bounds indices, expects None.
 // Returns 0 on success, nonzero on failure.
 

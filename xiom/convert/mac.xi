@@ -44,7 +44,7 @@ fn _next_byte() -> UInt8 {
 }
 
 /// Parse a MAC address into six octets.
-/// Parameters: s — a MAC address using ':' or '-' separators
+/// Parameters: s -- a MAC address using ':' or '-' separators
 ///          (e.g. "aa:bb:cc:dd:ee:ff" or "AA-BB-CC-DD-EE-FF").
 /// Returns: Some(six octets) for a well-formed address, None otherwise.
 /// Complexity: O(1).
@@ -74,7 +74,7 @@ pub fn mac_parse(s: Str) -> Option[Vec[UInt8]] {
 }
 
 /// Format six octets as a colon-separated lowercase MAC address.
-/// Parameters: bytes — at least six octets (only the first six are used).
+/// Parameters: bytes -- at least six octets (only the first six are used).
 /// Returns: the "xx:xx:xx:xx:xx:xx" representation.
 /// Complexity: O(1).
 pub fn mac_to_string(bytes: &Vec[UInt8]) -> Str {
@@ -95,7 +95,7 @@ pub fn mac_to_string(bytes: &Vec[UInt8]) -> Str {
 
 /// Check that a string is a valid MAC address (six hex octets, ':' or '-'
 /// separators).
-/// Parameters: s — the candidate string.
+/// Parameters: s -- the candidate string.
 /// Returns: true when well-formed.
 /// Complexity: O(1).
 pub fn mac_is_valid(s: Str) -> Bool {

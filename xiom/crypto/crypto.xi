@@ -1,4 +1,4 @@
-// XIOM — Cryptography
+// XIOM -- Cryptography
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 
@@ -144,7 +144,7 @@ fn _sha256_block(block: &Vec[UInt8], start: Int, state: &mut Vec[Int]) {
     w[i] = ((b0 * 16777216) + (b1 * 65536) + (b2 * 256) + b3) & 0xFFFFFFFF;
     i = i + 1;
   }
-  // Word expansion — all operations inlined to avoid function-call
+  // Word expansion -- all operations inlined to avoid function-call
   // aliasing in the 64-round loop.
   i = 16;
   while i < 64 {
@@ -164,7 +164,7 @@ fn _sha256_block(block: &Vec[UInt8], start: Int, state: &mut Vec[Int]) {
   var s: [8]Int;
   s[0] = state[0]; s[1] = state[1]; s[2] = state[2]; s[3] = state[3];
   s[4] = state[4]; s[5] = state[5]; s[6] = state[6]; s[7] = state[7];
-  // Round loop — split into chunks of 16 to avoid codegen issues
+  // Round loop -- split into chunks of 16 to avoid codegen issues
   // with very long-running while loops (64 iterations).
   i = 0;
   while i < 4 {
@@ -734,7 +734,7 @@ pub fn md5(data: &Vec[UInt8]) -> Vec[UInt8]
 }
 
 // ============================================================================
-// BLAKE3 — Real Implementation (single + multi-chunk tree)
+// BLAKE3 -- Real Implementation (single + multi-chunk tree)
 // Spec: https://github.com/BLAKE3-team/BLAKE3-specs
 // BLAKE3 is an evolution of BLAKE2 using a binary tree of 1024-byte chunks.
 // Each leaf chunk is compressed with the 7-round compression function,
@@ -1057,7 +1057,7 @@ pub fn blake3(data: &Vec[UInt8]) -> Vec[UInt8] {
   var schedule = _b3_build_schedule();
 
   if num_chunks <= 1 {
-    // Single chunk — the chunk's final block carries ROOT.
+    // Single chunk -- the chunk's final block carries ROOT.
     var cv = _blake3_compress_chunk(data, 0, len, 0, 1, &schedule);
     return _blake3_output_words(&cv);
   }
@@ -1139,7 +1139,7 @@ pub fn hmac_sha256(key: &Vec[UInt8], data: &Vec[UInt8]) -> Vec[UInt8]
 }
 
 // ============================================================================
-// AES — S-box, Key Expansion, Encrypt/Decrypt
+// AES -- S-box, Key Expansion, Encrypt/Decrypt
 // ============================================================================
 
 const _AES_SBOX: [256]UInt8 = [
@@ -1442,7 +1442,7 @@ return Ok(result);
 
 pub fn aes_encrypt(key: &Vec[UInt8], plaintext: &Vec[UInt8]) -> Result[Vec[UInt8], Str]
   // No requires clauses: the body validates and returns Err gracefully
-  // (documented stdlib rule — contracts trap on violation, BUG 22 #5).
+  // (documented stdlib rule -- contracts trap on violation, BUG 22 #5).
 {
   if key.len() != 16 && key.len() != 24 && key.len() != 32 {
     return Err("invalid key length: must be 16, 24, or 32 bytes");
@@ -1459,7 +1459,7 @@ pub fn aes_encrypt(key: &Vec[UInt8], plaintext: &Vec[UInt8]) -> Result[Vec[UInt8
     while bi < blocks {
       // 6D.4: Use AES-NI hardware path via FFI
       // (fixed-array zero-init form; `[0; 16]` repeat literal is not in the
-      // language spec — declared arrays zero-initialize)
+      // language spec -- declared arrays zero-initialize)
       var ct_buf: [16]UInt8;
       unsafe {
         xiom_aesni_encrypt_block(
@@ -1497,7 +1497,7 @@ pub fn aes_encrypt(key: &Vec[UInt8], plaintext: &Vec[UInt8]) -> Result[Vec[UInt8
 
 pub fn aes_decrypt(key: &Vec[UInt8], ciphertext: &Vec[UInt8]) -> Result<Vec[UInt8], Str>
   // No requires clauses: the body validates and returns Err gracefully
-  // (documented stdlib rule — contracts trap on violation, BUG 22 #5).
+  // (documented stdlib rule -- contracts trap on violation, BUG 22 #5).
 {
   if key.len() != 16 && key.len() != 24 && key.len() != 32 {
     return Err("invalid key length: must be 16, 24, or 32 bytes");
@@ -1539,7 +1539,7 @@ pub fn aes_decrypt(key: &Vec[UInt8], ciphertext: &Vec[UInt8]) -> Result<Vec[UInt
 }
 
 // ============================================================================
-// AES-GCM (Galois/Counter Mode) — authenticated encryption in pure XIOM
+// AES-GCM (Galois/Counter Mode) -- authenticated encryption in pure XIOM
 //
 // Built on the existing AES primitives: _aes_key_expansion and
 // _aes_encrypt_block. GCM = AES-CTR for confidentiality + GHASH (multiplication
@@ -2088,7 +2088,7 @@ pub fn constant_time_compare(a: &Vec[UInt8], b: &Vec[UInt8]) -> Bool
 }
 
 // ============================================================================
-// HKDF (RFC 5869) — HMAC-based Key Derivation Function
+// HKDF (RFC 5869) -- HMAC-based Key Derivation Function
 //
 // HKDF consists of two steps:
 //   1. Extract: PRK = HMAC-SHA256(salt, IKM)
@@ -2117,10 +2117,10 @@ pub fn hkdf_sha256(ikm: &Vec[UInt8], salt: &Vec[UInt8], info: &Vec[UInt8], okm_l
   let max_len = 255 * hash_len;
   if okm_len > max_len { return Err("okm_len exceeds maximum (255 * 32)"); }
 
-  // Step 1: Extract — PRK = HMAC-SHA256(salt, IKM)
+  // Step 1: Extract -- PRK = HMAC-SHA256(salt, IKM)
   var prk = hmac_sha256(salt, ikm);
 
-  // Step 2: Expand — T(i) = HMAC(PRK, T(i-1) || info || i)
+  // Step 2: Expand -- T(i) = HMAC(PRK, T(i-1) || info || i)
   var result = Vec[UInt8].new();
   var prev = Vec[UInt8].new(); // T(0) = empty
 
@@ -2266,7 +2266,7 @@ pub fn chacha20_poly1305_encrypt(key: &Vec[UInt8], nonce: &Vec[UInt8], aad: &Vec
 }
 
 // ============================================================================
-// ChaCha20-Poly1305 AEAD — Decrypt
+// ChaCha20-Poly1305 AEAD -- Decrypt
 //
 // Algorithm:
 //   1. Re-generate Poly1305 one-time key from ChaCha20 block 0.
@@ -2357,7 +2357,7 @@ pub fn chacha20_poly1305_decrypt(key: &Vec[UInt8], nonce: &Vec[UInt8], aad: &Vec
 }
 
 // ============================================================================
-// SHA-224 — Truncated SHA-256 with distinct IV
+// SHA-224 -- Truncated SHA-256 with distinct IV
 //
 // SHA-224 is identical to SHA-256 but:
 //   1. Uses a different 8-word initialization vector.
@@ -2460,7 +2460,7 @@ pub fn sha224(data: &Vec[UInt8]) -> Vec[UInt8]
 }
 
 // ============================================================================
-// SHA-384 — Truncated SHA-512 with distinct IV
+// SHA-384 -- Truncated SHA-512 with distinct IV
 //
 // SHA-384 is identical to SHA-512 but:
 //   1. Uses a different 8-word initialization vector.

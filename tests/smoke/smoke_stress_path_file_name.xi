@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.path Path.file_name extraction
+// XIOM stdlib stress -- xiom.path Path.file_name extraction
 // Tests file_name on paths with and without extensions.
 // Returns 0 on success, nonzero on failure.
 

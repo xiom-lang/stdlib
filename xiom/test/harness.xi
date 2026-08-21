@@ -254,7 +254,7 @@ pub fn test_main() -> Int {
 
 /// Register a test in the global harness. Returns true when the test was
 /// recorded, false when the 8-slot registry is full. LIMITED: only the test
-/// name is recorded — the function pointer cannot be retained in this build
+/// name is recorded -- the function pointer cannot be retained in this build
 /// (see header).
 /// Complexity: O(1).
 pub fn test_register(name: Str, f: fn() -> Result[Unit, Str]) -> Bool {

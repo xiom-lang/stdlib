@@ -1,4 +1,4 @@
-// XIOM stdlib stress — Queue enqueue, dequeue, peek
+// XIOM stdlib stress -- Queue enqueue, dequeue, peek
 // Tests FIFO queue operations including empty queue behavior.
 // Returns 0 on success, nonzero on failure.
 

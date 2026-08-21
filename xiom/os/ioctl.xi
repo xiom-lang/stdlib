@@ -9,7 +9,7 @@ module xiom.os.ioctl
 // ============================================================================
 // Raw ioctl(2) wrapper plus common helpers for terminal and socket control.
 // All functions require the ioctl syscall, which the pure stdlib does not
-// expose — every function is a documented stub returning Err.
+// expose -- every function is a documented stub returning Err.
 // ============================================================================
 
 /// Issue an ioctl request on fd, returning the kernel result.

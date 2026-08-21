@@ -1,4 +1,4 @@
-// XIOM — Regular Expressions
+// XIOM -- Regular Expressions
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 
@@ -14,23 +14,23 @@ pub type Regex = { pattern: Str; compiled: Int; } derive[Clone]
 pub type Match = { start: Int; end: Int; text: Str; } derive[Eq, Clone]
 pub type Captures = { groups: Vec[Option[Match]]; } derive[Clone]
 
-// ── Simplified regex engine ──
+// -- Simplified regex engine --
 // This is a simplified regex engine. Full PCRE features (lookahead,
 // backreferences, non-greedy quantifiers, Unicode categories, alternation)
 // are not yet supported.
 //
 // Supported features:
-//   .        — matches any single character (except newline)
-//   *        — zero or more of preceding (greedy)
-//   +        — one or more of preceding (greedy)
-//   ?        — zero or one of preceding (greedy)
-//   ^        — start-of-string anchor
-//   $        — end-of-string anchor
-//   [abc]    — character class (literal chars)
-//   [a-z]    — character range inside class
-//   [^abc]   — negated character class
-//   \d \w \s — digit, word, whitespace shorthands
-//   \D \W \S — negated shorthands
+//   .        -- matches any single character (except newline)
+//   *        -- zero or more of preceding (greedy)
+//   +        -- one or more of preceding (greedy)
+//   ?        -- zero or one of preceding (greedy)
+//   ^        -- start-of-string anchor
+//   $        -- end-of-string anchor
+//   [abc]    -- character class (literal chars)
+//   [a-z]    -- character range inside class
+//   [^abc]   -- negated character class
+//   \d \w \s -- digit, word, whitespace shorthands
+//   \D \W \S -- negated shorthands
 
 fn is_metachar(c: Char) -> Bool {
   c == '.' || c == '*' || c == '+' || c == '?' || c == '^' || c == '$' || c == '[' || c == ']' || c == '\\' || c == '(' || c == ')' || c == '|' || c == '{' || c == '}'
@@ -457,11 +457,11 @@ pub fn is_valid_regex(pattern: Str) -> Bool {
   bracket_depth == 0
 }
 
-// ──────────────────────────────────────────────────
+// --------------------------------------------------
 //  Extended Regex Functions (free-function wrappers)
-// ──────────────────────────────────────────────────
+// --------------------------------------------------
 
-// ── Replace/Find ──
+// -- Replace/Find --
 
 // Replaces all non-overlapping matches of `re` in `text` with `replacement`.
 // Uses literal replacement (no $1 group references).
@@ -481,7 +481,7 @@ pub fn regex_find_first_str(re: Regex, text: Str) -> Option[Str] {
   }
 }
 
-// ── Split / Count ──
+// -- Split / Count --
 
 // Splits `text` around all non-overlapping matches of `re`.
 // Returns a Vec of substrings between matches.
@@ -494,7 +494,7 @@ pub fn regex_count_matches(re: Regex, text: Str) -> Int {
   re.match_count(text)
 }
 
-// ── All Matches ──
+// -- All Matches --
 
 // Returns all non-overlapping matches of `re` in `text` as Match objects.
 // Wraps Regex.find_all.
@@ -502,7 +502,7 @@ pub fn regex_matches_all(re: Regex, text: Str) -> Vec[Match] {
   re.find_all(text)
 }
 
-// ── Groups ──
+// -- Groups --
 
 // Extracts capture groups from the first match of `re` in `text`.
 // Returns a Vec where each element is the text of a captured group,
@@ -528,7 +528,7 @@ pub fn regex_extract_groups(re: Regex, text: Str) -> Vec[Option[Str]] {
   result
 }
 
-// ── Escape / Validate ──
+// -- Escape / Validate --
 
 // Escapes regex metacharacters in `s` so it can be used as a literal pattern.
 // Wraps regex_escape.

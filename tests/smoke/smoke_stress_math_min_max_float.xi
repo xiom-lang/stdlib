@@ -1,4 +1,4 @@
-// XIOM stdlib stress — math.min_float and math.max_float
+// XIOM stdlib stress -- math.min_float and math.max_float
 // Tests min/max on floating point values.
 // Returns 0 on success, nonzero on failure.
 

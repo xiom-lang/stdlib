@@ -1,10 +1,10 @@
 # XIOM Standard Library & Package Architecture Plan
 
 > **Status: PLANNING (v0.56.0, 2026-08-07)**
-> **Owner:** Compiler team â€” `feat/architect`
+> **Owner:** Compiler team -- `feat/architect`
 > **Strategy: CLEAN BREAK NOW, 3 tiers, ZERO test churn.** The language is pre-public
 > and the monorepo will be split into separate repos before going public (no history
-> to preserve) â€” so we build the stdlib the RIGHT way now, with no shims, no
+> to preserve) -- so we build the stdlib the RIGHT way now, with no shims, no
 > deprecation windows, no legacy compat.
 > **Constraint:** Stdlib = `stdlib/xiom/`, packages = `packages/`, external projects =
 > repo top level. This document is the master plan; it only POINTS at locations.
@@ -19,25 +19,25 @@
 
 | Tier | What | Test churn |
 |------|------|-----------|
-| **Tier 1 â€” Cleanup & consolidation** | Delete `demo`; absorb orphan/duplicate modules into their canonical homes (`b64`/`hex`â†’`encoding`, `random`â†’`rand`, `runner`/`types`â†’`bench`, `ed25519`/`pbkdf`â†’crypto family) | **ZERO** (all orphans have 0 external import sites) |
-| **Tier 2 â€” Reorganization** | Split huge domains into proper module families: **math** â†’ `num`/`bits`/`math`/`geom`/`complex`/`bigint`/`stats`/`rand`/`convert`; **crypto** â†’ `crypto`/`sha`/`md5`/`aes`/`chacha`/`poly1305`/`ecc`/`rsa`/`des`. No forced renames of the 40 test-imported modules. | **ZERO** (splits are new modules + internal moves) |
-| **Tier 3 â€” Comprehensive expansion** | Fill every gap to production grade: full string/UTF-8, sorting, searching, Date/ISO8601, bigint, complex, geom, full crypto suite, more hashes, more compression, platform abstraction, debug, misc algos | **ZERO** (additive: new fns + new modules) |
+| **Tier 1 -- Cleanup & consolidation** | Delete `demo`; absorb orphan/duplicate modules into their canonical homes (`b64`/`hex`->`encoding`, `random`->`rand`, `runner`/`types`->`bench`, `ed25519`/`pbkdf`->crypto family) | **ZERO** (all orphans have 0 external import sites) |
+| **Tier 2 -- Reorganization** | Split huge domains into proper module families: **math** -> `num`/`bits`/`math`/`geom`/`complex`/`bigint`/`stats`/`rand`/`convert`; **crypto** -> `crypto`/`sha`/`md5`/`aes`/`chacha`/`poly1305`/`ecc`/`rsa`/`des`. No forced renames of the 40 test-imported modules. | **ZERO** (splits are new modules + internal moves) |
+| **Tier 3 -- Comprehensive expansion** | Fill every gap to production grade: full string/UTF-8, sorting, searching, Date/ISO8601, bigint, complex, geom, full crypto suite, more hashes, more compression, platform abstraction, debug, misc algos | **ZERO** (additive: new fns + new modules) |
 
 ### 1.2 Principles
 
-1. **Stdlib has NO external dependencies** â€” only pure XIOM + OS syscalls via minimal FFI + the compiler substrate (LLVM/clang, NASM) the language is built on.
+1. **Stdlib has NO external dependencies** -- only pure XIOM + OS syscalls via minimal FFI + the compiler substrate (LLVM/clang, NASM) the language is built on.
 2. **Packages build ON stdlib**; may wrap third-party C libraries (FFI).
-3. **External projects** (frameworks, engines, apps) live at repo top level: `xiom-pulse` (Node.js-like web framework), `xiom-game-engine`, and the existing ones (`xiom-db`, `xiom-vector`, `xiom-playground`, â€¦). They are NOT packages.
+3. **External projects** (frameworks, engines, apps) live at repo top level: `xiom-pulse` (Node.js-like web framework), `xiom-game-engine`, and the existing ones (`xiom-db`, `xiom-vector`, `xiom-playground`, ...). They are NOT packages.
 4. **The no-break contract = module name + public fn signature** of the 40 test-imported modules (2,090 regression files, 687 smokes, eco fixtures, 66 packages). Both `use xiom.x;` and `use stdlib.xiom.x;` must keep resolving.
 5. **No shims, no deprecation cycles.** Pre-public: rename/delete freely, update callers in the same commit. Everything below is designed so that the *externally visible* surface (the 40 modules) stays byte-identical anyway.
-6. **Every heavy domain gets a NASM/SIMD optimization track** (math, crypto, hash, compress) with pure-XIOM fallback + runtime dispatch (see Â§7).
-7. **Clean state stays clean** â€” an API-freeze test (Â§10) snapshots all stdlib pub signatures after the rework.
+6. **Every heavy domain gets a NASM/SIMD optimization track** (math, crypto, hash, compress) with pure-XIOM fallback + runtime dispatch (see S7).
+7. **Clean state stays clean** -- an API-freeze test (S10) snapshots all stdlib pub signatures after the rework.
 
 ---
 
-## 2. Current State Inventory (scanned 2026-08-06 â€” read-only)
+## 2. Current State Inventory (scanned 2026-08-06 -- read-only)
 
-### 2.1 Stdlib â€” 51 modules in `stdlib/xiom/*.xi` (~1,300 pub fns)
+### 2.1 Stdlib -- 51 modules in `stdlib/xiom/*.xi` (~1,300 pub fns)
 
 | Module | fns | Module | fns | Module | fns |
 |--------|----:|--------|----:|--------|----:|
@@ -60,22 +60,22 @@
 | types | 2 | test | 17 | demo | 10 |
 | array | 23 | | | | |
 
-**Orphans / duplicates (ZERO external imports â€” free to absorb):** `b64`, `hex`, `random`, `runner`, `types`, `stats`(keep, expand), `md5`(keep), `aes`(keep), `sha`(keep), `ed25519`, `pbkdf`, `demo`(DELETE).
+**Orphans / duplicates (ZERO external imports -- free to absorb):** `b64`, `hex`, `random`, `runner`, `types`, `stats`(keep, expand), `md5`(keep), `aes`(keep), `sha`(keep), `ed25519`, `pbkdf`, `demo`(DELETE).
 
-### 2.2 Packages â€” 66 dirs in `packages/` (all `deps: xiom-std`)
+### 2.2 Packages -- 66 dirs in `packages/` (all `deps: xiom-std`)
 
 - **Pure XIOM (15):** xiom-json, xiom-http, xiom-net, xiom-rest, xiom-graphql, xiom-websocket, xiom-micro, xiom-realtime, xiom-algo, xiom-math, xiom-core, xiom-ffi, xiom-log, xiom-test, xiom-arrow
 - **FFI-bound (51):** openssl, libsodium, sqlite, postgres/libpq, redis, kafka, zeromq, grpc, protobuf, wasmtime, libuv, zstd, lzfse, tensorflow, libtorch/torch, onnx, numpy, pandas, scipy, blas, openblas, cuda, eigen, opencv, ffmpeg, sql, dxc, moveit, ros2, gazebo, sensor, control, bullet, jolt, box2d, ozz, meshopt, assimp, raylib, glfw, sdl3, imgui, ui, miniaudio, openal, portaudio, phonon, vulkan, opengl, directx11, directx12, vma, stb
-- **Namespace note:** packages declare `module xiom.json`, `xiom.algo`, `xiom.http.client` â€” they share `xiom.*` with stdlib. Guarded by the reserved-name list (Â§3).
+- **Namespace note:** packages declare `module xiom.json`, `xiom.algo`, `xiom.http.client` -- they share `xiom.*` with stdlib. Guarded by the reserved-name list (S3).
 
 ### 2.3 Test/ecosystem surface (the no-break contract)
 
-- `tests/regression/` â€” 2,090 files, 467 with `use` imports
-- `examples/stdlib_smoke/` â€” 687 files
-- `tests/ecosystem/` â€” internal E2E fixtures
+- `tests/regression/` -- 2,090 files, 467 with `use` imports
+- `examples/stdlib_smoke/` -- 687 files
+- `tests/ecosystem/` -- internal E2E fixtures
 - 40 stdlib modules imported by tests: alloc, array, async, bench, cell, char, cmp, collections, compress, contracts, convert, core, crypto, encoding, env, error, ffi, fmt, hash, io, iter, log, math, mem, net, num, os, path, ptr, rand, rc, reflect, regex, serialize, simd, string, sync, test, thread, time
-- Import forms: `use xiom.x;` + `use stdlib.xiom.x;` (35 files) â€” alias is a prefix rewrite (crates/xiom/src/lib.rs:2139), stays name-based.
-- **Compiler hardcode to keep in mind:** `xiom.collections.Vec` (crates/xiom-codegen/src/lib.rs:2253/2270) â€” `collections` name must stay (it does).
+- Import forms: `use xiom.x;` + `use stdlib.xiom.x;` (35 files) -- alias is a prefix rewrite (crates/xiom/src/lib.rs:2139), stays name-based.
+- **Compiler hardcode to keep in mind:** `xiom.collections.Vec` (crates/xiom-codegen/src/lib.rs:2253/2270) -- `collections` name must stay (it does).
 
 ---
 
@@ -87,33 +87,33 @@
 | Package | `xiom.<name>` or `xiom.<pkg>.<feature>` | Only if name NOT reserved; else rename to `xiom.<pkg>.<feature>` |
 | External project | repo top level | Depends on stdlib + packages like any user |
 
-**Reserved by stdlib (monotonic â€” extend as stdlib grows):**
+**Reserved by stdlib (monotonic -- extend as stdlib grows):**
 `core, io, os, sys, env, args, path, file, dir, time, date, duration, thread, sync, mutex, atomic, condvar, rwlock, semaphore, once, process, signal, memory, alloc, mem, ptr, ffi, string, str, utf8, utf16, char, array, slice, range, iter, vector, list, stack, queue, ring, deque, priority, map, set, tree, btree, rbtree, avl, heap, bheap, fheap, filter, num, math, int, uint, float, const, abs, minmax, clamp, sqrt, pow, log, exp, trig, atrig, hyper, floor, modf, ldexp, bit, bits, rotate, endian, crc, adler, checksum, bitarray, hash, fnv, murmur, city, xxhash, siphash, highway, composite, rand, random, mt, pcg, xorshift, chacha, dist, seed, source, crypto, sha, sha1, sha256, sha512, md5, blake2, keccak, aes, des, poly1305, curve25519, ed25519, rsa, dh, otp, entropy, kdf, hmac, padding, mode, compress, deflate, inflate, zlib, gzip, lz4, snappy, huffman, lz, rle, serial, binary, varint, fixed, zero, buffer, stream, sort, quick, merge, heap, insert, bubble, select, radix, count, tim, stable, search, binary, linear, interp, exponential, jump, ternary, concurrent, channel, select, spawn, join, future, promise, yield, convert, conv, parse, atoi, itoa, tostring, toint, tofloat, compare, replace, trim, split, join, case, strip, repeat, pad, slice, escape, printf, scanf, format, fmt, regex, reflect, typeid, align, offset, unsafe, builtin, callconv, platform, linux, windows, darwin, bsd, unix, posix, debug, trace, symbol, break, print, assert, source, perf, counter, cycle, bench, prof, test, misc, uuid, guid, version, semver, glob, diff, patch, natural, levenshtein, soundex, error, option, result, panic, defer, log, stats, simd, async, cell, rc, contracts, serialize, net, socket, tcp, udp, dns, ip, port, url, host, protocol, icmp, mac, websocket, sse, sql, sqlite, postgres, mysql, mongo, redis, oauth, jwt, tls, ssl, cert, x509, ldap, saml, bcrypt, argon2, password, sanitize, escape, audit, encrypt, decrypt, key, secret, vault, i18n, locale, translate, plural, collation, transliteration, unicode, icu, unit, currency, timezone, qrcode, slug, emoji, phone, email, geo, calendar, holiday, units, license, notice, legal, game, engine, physics, collision, particle, scene, entity, ai, pathfinding, steering, state, save, achievement, leaderboard, multiplayer, input, audio, ui, level, event, web, server, router, middleware, auth, session, cookie, cache, static, template, form, validation, csrf, xss, rate, cors, docs, ml, tensor, neural, deep, training, inference, optimizer, layers, activation, loss, metrics, dataset, preprocess, feature, selection, ensemble, boosting, randomforest, svm, clustering, dimensionality, media, image, png, jpeg, gif, bmp, webp, svg, mp3, wav, ogg, flac, aac, video, mp4, avi, mkv, codec, subtitle, embedded, gpio, i2c, spi, uart, adc, dac, pwm, interrupt, timer, rtc, eeprom, flash, sd, ble, zigbee, blockchain, ethereum, bitcoin, smartcontract, wallet, transaction, consensus, merkle, hashchain, nft, defi, web3, oracle, bridge, cloud, aws, azure, gcp, docker, k8s, terraform, ansible, puppet, chef, salt, helm, serverless, cfn, monitoring, tracing, metrics, alerting, scaling, util, logger, config, flag, option, retry, cache, pool, worker, lru, ttl, backoff, timeout, context, cancel, benchmark, profiling, fuzz, mock, stub, coverage, property, golden, snapshot, performance, security, compliance, report, compiler, parser, lexer, ast, codegen, optimizer, linter, formatter, analyzer, refactor, plugin, macro, inline, jit, wasm, llvm, geom, bigint, bigfloat, complex, sort, search`
 
 ---
 
-## 4. TIER 1 â€” Cleanup & Consolidation (ZERO test churn)
+## 4. TIER 1 -- Cleanup & Consolidation (ZERO test churn)
 
 All targets below have **0 external import sites** (verified 2026-08-06). Only internal stdlib cross-imports change (~15 statements).
 
-| Action | Module | â†’ Canonical home | Internal imports to update |
+| Action | Module | -> Canonical home | Internal imports to update |
 |--------|--------|------------------|---------------------------|
-| DELETE | `demo.xi` (10 fns, example cruft) | â€” | none |
-| MERGE | `b64.xi` (4) | `encoding` (base64/base64url already there) | b64â†’encoding |
-| MERGE | `hex.xi` (3) | `encoding` (hex already there) | hexâ†’encoding |
-| MERGE | `random.xi` (1) | `rand` (random() already there) | randomâ†’rand |
-| MERGE | `runner.xi` (8) | `bench` (benchmark reporting) | runnerâ†’bench.typesâ†’bench |
-| MERGE | `types.xi` (2, BenchConfig/BenchSuite) | `bench` | arrayâ†’bench |
+| DELETE | `demo.xi` (10 fns, example cruft) | -- | none |
+| MERGE | `b64.xi` (4) | `encoding` (base64/base64url already there) | b64->encoding |
+| MERGE | `hex.xi` (3) | `encoding` (hex already there) | hex->encoding |
+| MERGE | `random.xi` (1) | `rand` (random() already there) | random->rand |
+| MERGE | `runner.xi` (8) | `bench` (benchmark reporting) | runner->bench.types->bench |
+| MERGE | `types.xi` (2, BenchConfig/BenchSuite) | `bench` | array->bench |
 | MERGE | `ed25519.xi` (3) | `ecc` (new Tier-2 module) | none |
-| MERGE | `pbkdf.xi` (2) | `crypto` (PBKDF2/HKDF) | pbkdfâ†’crypto |
-| KEEP+EXPAND | `stats.xi` (8) | becomes full statistics module | â€” |
-| KEEP | `md5`, `aes`, `sha`, `crypto` | crypto family (Â§5.2) | â€” |
+| MERGE | `pbkdf.xi` (2) | `crypto` (PBKDF2/HKDF) | pbkdf->crypto |
+| KEEP+EXPAND | `stats.xi` (8) | becomes full statistics module | -- |
+| KEEP | `md5`, `aes`, `sha`, `crypto` | crypto family (S5.2) | -- |
 
-**Result:** 51 â†’ 43 modules before Tier 2. Zero tests touched. `stdlib-pin/` snapshot regenerated at the end of the tier.
+**Result:** 51 -> 43 modules before Tier 2. Zero tests touched. `stdlib-pin/` snapshot regenerated at the end of the tier.
 
 ---
 
-## 5. TIER 2 â€” Reorganization into Module Families
+## 5. TIER 2 -- Reorganization into Module Families
 
 No forced renames of the 40 test-imported modules (their names are already good). Reorganization = NEW modules + internal moves. Two domains are split because they are huge and need optimization tracks: **math** and **crypto**.
 
@@ -123,19 +123,19 @@ No forced renames of the 40 test-imported modules (their names are already good)
 |--------|--------|-------|
 | `num` | KEEP/EXPAND | integer bounds, gcd/lcm, bit ops (count_ones/zeros, rotate, reverse_bits, byte_swap, bit read/write, endian conversion), power-of-two |
 | `bits` | **NEW** | BitArray, bit reader/writer, bit streams, base-N conversion |
-| `math` | KEEP/EXPAND (+NASM) | constants (Ï€/e/Ï„), abs/minmax/clamp, sqrt (fast), pow (int/float), trig (sin/cos/tan), inverse trig, hyperbolic, log (ln/log2/log10), exp, floor/ceil/round/trunc, modf, ldexp/frexp, fma, remainder, hypot, signum, lerp |
+| `math` | KEEP/EXPAND (+NASM) | constants (pi/e/tau), abs/minmax/clamp, sqrt (fast), pow (int/float), trig (sin/cos/tan), inverse trig, hyperbolic, log (ln/log2/log10), exp, floor/ceil/round/trunc, modf, ldexp/frexp, fma, remainder, hypot, signum, lerp |
 | `geom` | **NEW** | Vec2/3/4, dot/cross/normalize, Quaternion, Matrix2/3/4, transforms (translate/rotate/scale/look_at/projection), collision primitives (AABB/sphere/ray) |
 | `complex` | **NEW** | Complex[T], arithmetic, conjugate, abs/arg, exp/log/pow/sqrt, trig |
 | `bigint` | **NEW** | arbitrary-precision int, add/sub/mul/div/mod, pow, gcd, primality, base conversion (+NASM montgomery/multiply) |
 | `stats` | EXPAND | mean/median/mode/stddev/variance/percentile/quartiles/min/max/sum, covariance, correlation, linear regression, histogram |
 | `rand` | EXPAND | StdRng + MT19937, PCG, Xorshift, ChaCha; distributions: uniform/normal/exponential/binomial/poisson; seed/entropy |
-| `convert` | EXPAND | int/float/string/bool/char, radix 2â€“36, float formatting (scientific/fixed), parse-from-str |
+| `convert` | EXPAND | int/float/string/bool/char, radix 2-36, float formatting (scientific/fixed), parse-from-str |
 
 ### 5.2 Crypto family (split `crypto` + new modules)
 
 | Module | Status | Scope |
 |--------|--------|-------|
-| `crypto` | EXPAND (umbrella) | HMAC, KDF (PBKDF2, HKDF â€” absorbs pbkdf), entropy, OTP (HOTP/TOTP), padding (PKCS7), block modes (CBC/CTR/GCM/CCM), crypto_random, constant-time compare, random_bytes |
+| `crypto` | EXPAND (umbrella) | HMAC, KDF (PBKDF2, HKDF -- absorbs pbkdf), entropy, OTP (HOTP/TOTP), padding (PKCS7), block modes (CBC/CTR/GCM/CCM), crypto_random, constant-time compare, random_bytes |
 | `sha` | EXPAND | SHA-1, SHA-224/256/384/512, SHA-3 (Keccak), BLAKE2 (+SHA-NI asm) |
 | `md5` | KEEP | MD5 digest (legacy) |
 | `aes` | EXPAND | AES-128/192/256, ECB/CBC/CTR/GCM/CCM, constant-time (+AES-NI asm) |
@@ -150,9 +150,9 @@ No forced renames of the 40 test-imported modules (their names are already good)
 | Module | Status | Scope |
 |--------|--------|-------|
 | `string` | MAJOR EXPAND | existing + UTF-8 encode/decode/validate, codepoint iteration, UTF-16, case (upper/lower/title), strip, pad, repeat, escape/unescape, printf/scanf, format, index_of/rfind, replace_all, split (multi-delim), join, is_* predicates, char_at/byte_at, byte_len, reverse, natural compare |
-| `char` | EXPAND | full Unicode categories, case conversion, to_digit/from_digit, codepointâ†”UTF-8 |
+| `char` | EXPAND | full Unicode categories, case conversion, to_digit/from_digit, codepoint<->UTF-8 |
 | `utf8` | **NEW** | dedicated UTF-8/UTF-16 codec + validation + BOM handling |
-| `fmt` | EXPAND | Formatter, to_str, format1â€“9, printf-style, table, columns, wrap, indent, hexdump, pretty, duration/date formatting |
+| `fmt` | EXPAND | Formatter, to_str, format1-9, printf-style, table, columns, wrap, indent, hexdump, pretty, duration/date formatting |
 | `regex` | EXPAND | full syntax: quantifiers, groups, alternation, classes, anchors, lookahead, captures, replace, split, find_iter |
 
 ### 5.4 System family
@@ -210,13 +210,13 @@ No forced renames of the 40 test-imported modules (their names are already good)
 |--------|--------|-------|
 | `net` | EXPAND | TCP/UDP sockets, DNS, addresses, http_get/post, IPv6, URL parse, host/port, protocol helpers, ICMP ping |
 
-**Target stdlib: ~57 modules** (51 âˆ’ 6 absorbed/deleted + 12 new in Tiers 1â€“2, then Tier 3 additions). Every existing pub fn signature preserved.
+**Target stdlib: ~57 modules** (51 - 6 absorbed/deleted + 12 new in Tiers 1-2, then Tier 3 additions). Every existing pub fn signature preserved.
 
 ---
 
-## 6. TIER 3 â€” Comprehensive Expansion (the "go nuts" coverage)
+## 6. TIER 3 -- Comprehensive Expansion (the "go nuts" coverage)
 
-Every module above carries its full coverage list (Â§5). The expansion priorities (gaps closed):
+Every module above carries its full coverage list (S5). The expansion priorities (gaps closed):
 
 | # | Gap | Home | Priority |
 |---|-----|------|----------|
@@ -238,7 +238,7 @@ Every module above carries its full coverage list (Â§5). The expansion prioritie
 | G16 | PRNGs (MT/PCG/xorshift), chacha20/poly1305/keccak/curve25519/rsa/des | `rand`/crypto family | P2 |
 | G17 | Full statistics (covariance, regression, histogram) | `stats` | P2 |
 
-**"Comprehensive and top-tier" means:** every module is (a) fully covered per its Â§5 scope, (b) documented with examples in `docs/`, (c) tested by dedicated smoke files, (d) optimized where heavy (Â§7), (e) designed for future extension (generic traits: `Hash`, `Ord`, `Serialize`, `Deserialize`, `Iterator`).
+**"Comprehensive and top-tier" means:** every module is (a) fully covered per its S5 scope, (b) documented with examples in `docs/`, (c) tested by dedicated smoke files, (d) optimized where heavy (S7), (e) designed for future extension (generic traits: `Hash`, `Ord`, `Serialize`, `Deserialize`, `Iterator`).
 
 ---
 
@@ -249,7 +249,7 @@ Heavy domains get assembly-accelerated hot paths with pure-XIOM fallback, runtim
 | Domain | Accelerated ops | Instruction sets |
 |--------|-----------------|------------------|
 | math | sqrt/rsqrt, trig/exp/log (polynomial minimax), vector/matrix multiply | SSE2, AVX2, FMA |
-| bigint | multiplication (schoolbook â†’ Karatsuba â†’ Montgomery), division | SSE2, AVX2 |
+| bigint | multiplication (schoolbook -> Karatsuba -> Montgomery), division | SSE2, AVX2 |
 | crypto | AES round (AES-NI), SHA-1/256 (SHA-NI), GHASH/GCM (PCLMULQDQ), ChaCha20, Poly1305, constant-time primitives | AES-NI, SHA-NI, PCLMULQDQ, AVX2 |
 | hash | xxhash/highway/murmur streaming | SSE2, AVX2 |
 | compress | deflate match finding (hash chains), huffman encode, lz4/snappy fast paths | SSE2, AVX2 |
@@ -260,13 +260,13 @@ Heavy domains get assembly-accelerated hot paths with pure-XIOM fallback, runtim
 2. Dispatch via `simd.simd_supported()`/CPUID at first call; cache result.
 3. New asm files live in `stdlib/runtime/` and are selected by platform in `build-runtime`.
 4. Correctness gate: asm path vs pure path must produce identical results (diff tests).
-5. Constant-time crypto ops are NOT optimized for speed at the expense of secrecy â€” branch-free even in the pure path.
+5. Constant-time crypto ops are NOT optimized for speed at the expense of secrecy -- branch-free even in the pure path.
 
 ---
 
 ## 8. Packages Catalog
 
-### 8.1 Existing (66) â€” `packages/` â€” half-done, revisit later
+### 8.1 Existing (66) -- `packages/` -- half-done, revisit later
 
 Pure-XIOM: xiom-json, xiom-http, xiom-net, xiom-rest, xiom-graphql, xiom-websocket, xiom-micro, xiom-realtime, xiom-algo, xiom-math, xiom-core, xiom-ffi, xiom-log, xiom-test, xiom-arrow.
 FFI-bound: openssl, libsodium, sqlite, postgres/libpq, redis, kafka, zeromq, grpc, protobuf, wasmtime, libuv, zstd, lzfse, tensorflow, libtorch/torch, onnx, numpy, pandas, scipy, blas, openblas, cuda, eigen, opencv, ffmpeg, sql, dxc, moveit, ros2, gazebo, sensor, control, bullet, jolt, box2d, ozz, meshopt, assimp, raylib, glfw, sdl3, imgui, ui, miniaudio, openal, portaudio, phonon, vulkan, opengl, directx11, directx12, vma, stb.
@@ -300,20 +300,20 @@ Each placeholder has a README.md with planned scope/modules; no implementation y
 
 | Project | Proposal mapping | Status |
 |---------|------------------|--------|
-| **xiom-pulse** | Node.js-like web framework: server, router, middleware, auth, session, cookie, cache, static, template, form, validation, csrf, xss, rate, cors, sse, rest, graphql | ðŸ”² PLACEHOLDER â€” README created; consumes xiom-http/json/websocket/graphql/rest |
-| **xiom-game-engine** | game/*: engine, math, physics, collision, particle, scene, entity (ECS), ai, pathfinding, steering, state, save, achievement, leaderboard, multiplayer, input, audio, ui, level, event | ðŸ”² PLACEHOLDER â€” README created; consumes binding packages (raylib, sdl3, jolt, bullet, imgui, miniaudio, â€¦) |
-| xiom-db | database product | âœ… EXISTS |
-| xiom-vector | vector database | âœ… EXISTS |
-| xiom-debugger-pro | debugger | âœ… EXISTS |
-| xiom-playground | WASM playground | âœ… EXISTS |
-| xiom-website | website | âœ… EXISTS |
-| xiom-Book | language book | âœ… EXISTS |
-| xiom-benchmark-chaos | benchmark harness | âœ… EXISTS (other owner) |
-| xiom-research_paper | research | âœ… EXISTS |
+| **xiom-pulse** | Node.js-like web framework: server, router, middleware, auth, session, cookie, cache, static, template, form, validation, csrf, xss, rate, cors, sse, rest, graphql | [NO] PLACEHOLDER -- README created; consumes xiom-http/json/websocket/graphql/rest |
+| **xiom-game-engine** | game/*: engine, math, physics, collision, particle, scene, entity (ECS), ai, pathfinding, steering, state, save, achievement, leaderboard, multiplayer, input, audio, ui, level, event | [NO] PLACEHOLDER -- README created; consumes binding packages (raylib, sdl3, jolt, bullet, imgui, miniaudio, ...) |
+| xiom-db | database product | [OK] EXISTS |
+| xiom-vector | vector database | [OK] EXISTS |
+| xiom-debugger-pro | debugger | [OK] EXISTS |
+| xiom-playground | WASM playground | [OK] EXISTS |
+| xiom-website | website | [OK] EXISTS |
+| xiom-Book | language book | [OK] EXISTS |
+| xiom-benchmark-chaos | benchmark harness | [OK] EXISTS (other owner) |
+| xiom-research_paper | research | [OK] EXISTS |
 
 ---
 
-## 10. IMPLEMENTATION STATUS (2026-08-07) — ALL PHASES COMPLETE
+## 10. IMPLEMENTATION STATUS (2026-08-07) -- ALL PHASES COMPLETE
 
 ### Completed
 | Phase | Scope | Result |
@@ -324,50 +324,50 @@ Each placeholder has a README.md with planned scope/modules; no implementation y
 | Phase 3 | Tier 3: +600 fns across 30 modules (text, time/Date+ISO8601, collections, num, crypto/data, core/quality families) | ? Done |
 | Phase 4 | NASM/SIMD: hardware popcnt/clz/ctz intrinsics, SIMD mem_copy/set/compare; existing SHA-NI/AES-NI/SSE2 asm retained | ? Done |
 
-### Final stdlib: 64+ modules, ~2,215 public fns (was 51/~1,300) — status refreshed 2026-08-11
+### Final stdlib: 64+ modules, ~2,215 public fns (was 51/~1,300) -- status refreshed 2026-08-11
 
 All 16 Tier-2 modules have CI smokes in examples/stdlib_smoke (stdlib_execution_tests: 72/72).
 Freeze gate: 2/2. stdlib compile: 40/40. feature-reg: 510/510. integration: 128/128. checker: 156/156.
 
 **Phases landed since this doc was written (see docs/stdlib_session.md):**
-- **Phase A — production BigInt** (~40 new pub fns): constants-as-constructors, `from_u64` (full 0..2^64-1), `from_hex`/`from_base`/`to_base`, range-checked `to_int`, predicates, `div`, `pow_mod`, `sqrt(_rem)`, `lcm`, `ext_gcd`, Miller-Rabin `is_prime`/`next_prime`, `factorial`/`binomial`/`fibonacci`, two's-complement bit ops, comparisons. `bigint_div_mod` = Knuth Algorithm D (two-limb window, single-limb fast path, upward fixup).
-- **Phase B — production BigFloat** (`num/bigfloat.xi` + flat aggregate): power-of-10 representation, RoundMode, string-exact to_str, all arithmetic with precision-aware rounding, `pi()`/`e()`.
-- **Phase C — BigFloat transcendentals**: Machin p, Taylor e, exp/ln/log10, sin/cos/tan, atan/atan2, pow_bf (O(prec²) series).
+- **Phase A -- production BigInt** (~40 new pub fns): constants-as-constructors, `from_u64` (full 0..2^64-1), `from_hex`/`from_base`/`to_base`, range-checked `to_int`, predicates, `div`, `pow_mod`, `sqrt(_rem)`, `lcm`, `ext_gcd`, Miller-Rabin `is_prime`/`next_prime`, `factorial`/`binomial`/`fibonacci`, two's-complement bit ops, comparisons. `bigint_div_mod` = Knuth Algorithm D (two-limb window, single-limb fast path, upward fixup).
+- **Phase B -- production BigFloat** (`num/bigfloat.xi` + flat aggregate): power-of-10 representation, RoundMode, string-exact to_str, all arithmetic with precision-aware rounding, `pi()`/`e()`.
+- **Phase C -- BigFloat transcendentals**: Machin p, Taylor e, exp/ln/log10, sin/cos/tan, atan/atan2, pow_bf (O(prec2) series).
 - **Phase C.5**: log2/exp2/cbrt/hypot/hyperbolics/inverse-hyperbolics/asin/acos, to_str_sci, from_ratio, pow10, int helpers.
 - **Perf**: BigInt Karatsuba (`_abs_mul_karatsuba`, threshold 4000 limbs, measured ~12% faster at 100k digits).
 - **misc expansion** (23 fns): string metrics (damerau/jaro/jaro-winkler/hamming/LCS), case converters, roman numerals, ordinal/pluralize, units.
 - **hash 64-bit additions**: canonical xxhash64 (C-reference-verified), fnv1_32.
-- **Full categorized audit of the wish-list**: §13 below (HAVE / GAP-stdlib / GAP-package, deduped).
+- **Full categorized audit of the wish-list**: S13 below (HAVE / GAP-stdlib / GAP-package, deduped).
 
 **Known compiler bugs discovered (stdlib works around them; fix in compiler later)**
-— superseded by docs/COMPILER_BUGS.md STATUS SUMMARY (2026-08-11): BUG 1/8/9/10/11 and
+-- superseded by docs/COMPILER_BUGS.md STATUS SUMMARY (2026-08-11): BUG 1/8/9/10/11 and
 the parser/catalog/&T-param/inline-hang findings are all FIXED; BUG 2 (module-global
 struct field writes) and BUG 3 (module-global fn-call initializers) remain OPEN
-(advisory — stdlib uses whole-value assignment and constructor fns).
+(advisory -- stdlib uses whole-value assignment and constructor fns).
 
 ## 11. Migration Sequencing & Gates
 
-### Phase 0 â€” THIS DOCUMENT + placeholders (done now)
-- Full plan written; placeholder folders + READMEs for all Â§8.2 packages and Â§9 projects; no implementations.
+### Phase 0 -- THIS DOCUMENT + placeholders (done now)
+- Full plan written; placeholder folders + READMEs for all S8.2 packages and S9 projects; no implementations.
 
-### Phase 1 â€” Tier 1 cleanup (~1 session, zero test churn)
-1. Merge orphans per Â§4 (update ~15 internal imports).
+### Phase 1 -- Tier 1 cleanup (~1 session, zero test churn)
+1. Merge orphans per S4 (update ~15 internal imports).
 2. Delete `demo.xi`.
-3. Add **API-freeze test** (`stdlib_api_freeze_tests`) snapshotting every pub fn signature of the 40 contract modules â€” any future rename/removal/resignature fails CI.
+3. Add **API-freeze test** (`stdlib_api_freeze_tests`) snapshotting every pub fn signature of the 40 contract modules -- any future rename/removal/resignature fails CI.
 4. Add **import-alias gate**: fixtures for `use xiom.string;` and `use stdlib.xiom.string;`.
 5. Regenerate `stdlib-pin/`; run FULL suite: 2,231 E2E + 1,284 unit green.
 
-### Phase 2 â€” Tier 2 reorganization (internal only)
+### Phase 2 -- Tier 2 reorganization (internal only)
 - Create `bits`, `geom`, `complex`, `bigint`, `utf8`, `sort`, `search`, `platform`, `debug`, `misc`, `process`, `chacha`, `poly1305`, `ecc`, `rsa`, `des` skeletons; move absorbed fns; verify API-freeze still green (contract modules untouched).
 
-### Phase 3 â€” Tier 3 expansion (additive, per area)
-- Order: string/utf8 â†’ collections/sort/search â†’ time/date â†’ math family â†’ crypto family â†’ system (os/process/platform/debug) â†’ hash/compress â†’ misc.
+### Phase 3 -- Tier 3 expansion (additive, per area)
+- Order: string/utf8 -> collections/sort/search -> time/date -> math family -> crypto family -> system (os/process/platform/debug) -> hash/compress -> misc.
 - Each area lands with smokes + docs; suite stays green after every area.
 
-### Phase 4 â€” Optimization (NASM/SIMD)
-- Per Â§7, one domain at a time (math â†’ crypto â†’ hash â†’ compress â†’ rand); correctness diff-tests asm vs pure.
+### Phase 4 -- Optimization (NASM/SIMD)
+- Per S7, one domain at a time (math -> crypto -> hash -> compress -> rand); correctness diff-tests asm vs pure.
 
-### Phase 5 â€” Packages/projects specs
+### Phase 5 -- Packages/projects specs
 - Write SPEC.md for placeholder packages/projects as the ecosystem grows; publish after public split.
 
 ### Gates (every phase)
@@ -381,10 +381,10 @@ struct field writes) and BUG 3 (module-global fn-call initializers) remain OPEN
 
 | Date | Decision |
 |------|----------|
-| 2026-08-07 | **Clean break now.** Pre-public + monorepo will be split before going public (no history to preserve) â†’ NO shims, NO deprecation cycles. Build stdlib right the first time. |
-| 2026-08-07 | 3-tier plan: cleanup (zero churn) â†’ reorganization (module families: math split, crypto split) â†’ comprehensive expansion. No forced renames of the 40 test-imported modules; their fn signatures are the frozen contract. |
+| 2026-08-07 | **Clean break now.** Pre-public + monorepo will be split before going public (no history to preserve) -> NO shims, NO deprecation cycles. Build stdlib right the first time. |
+| 2026-08-07 | 3-tier plan: cleanup (zero churn) -> reorganization (module families: math split, crypto split) -> comprehensive expansion. No forced renames of the 40 test-imported modules; their fn signatures are the frozen contract. |
 | 2026-08-07 | Stdlib = zero external deps; packages build on stdlib and may wrap C; frameworks/engines = top-level external projects (xiom-pulse, xiom-game-engine). |
-| 2026-08-07 | Heavy domains (math, crypto, hash, compress, rand) get NASM/SIMD tracks with pure fallback + CPUID dispatch (Â§7). |
+| 2026-08-07 | Heavy domains (math, crypto, hash, compress, rand) get NASM/SIMD tracks with pure fallback + CPUID dispatch (S7). |
 | 2026-08-07 | Placeholder folders + READMEs for 260 planned packages and 2 projects created now; specs later. |
 | 2026-08-07 | API-freeze test + import-alias gate enforce the contract mechanically after the rework. |
 
@@ -1550,7 +1550,7 @@ format/chi_square - Chi-square
 format/chi_square_stat - Chi-square statistic
 format/phi_coeff - Phi coefficient
 format/cramers_v - Cramer's V
-format/ccc - Cramér's V
+format/ccc - Cramer's V
 format/kendall - Kendall's tau
 format/spearman - Spearman's rho
 format/pearson - Pearson correlation
@@ -2808,7 +2808,7 @@ RANDOM
 ---
 
 # -------------------------------------------------------------------
-# CROSS-REFERENCE & PRODUCTION PLAN (v2 — 2026-08-07)
+# CROSS-REFERENCE & PRODUCTION PLAN (v2 -- 2026-08-07)
 # Purpose: for EVERY entry in the STD EXTENSION PLANNING list below,
 # decide: HAVE (in stdlib/package) | STDLIB (no deps, implement here)
 # | PACKAGE (needs deps or domain-specific, goes to packages/<name>).
@@ -2819,19 +2819,19 @@ RANDOM
 
 1. **STDLIB = ZERO external dependencies.** Only pure XIOM + OS syscalls via
    minimal FFI + the compiler substrate (LLVM/clang/NASM). Everything that
-   needs a 3rd-party C library (OpenSSL, libcurl, ICU, zlib is fine — we have
-   pure impls — but OpenSSL/ICU/etc are NOT) ? **PACKAGE**.
+   needs a 3rd-party C library (OpenSSL, libcurl, ICU, zlib is fine -- we have
+   pure impls -- but OpenSSL/ICU/etc are NOT) ? **PACKAGE**.
 2. **Package = built on stdlib, may wrap C.** Lives in `packages/<name>/`.
 3. Every package folder gets a `README.md` listing the libs/modules to create
-   (NOT full specs — just the inventory + one-line scope). 257 placeholder
+   (NOT full specs -- just the inventory + one-line scope). 257 placeholder
    folders already exist; this plan assigns the list entries to them.
 4. **Folder grouping is VERIFIED WORKING**: `use xiom.foo.bar` resolves
    `stdlib/xiom/foo/bar.xi` (catalog strategy a: path-based). Tested with
    `use xiom._foldertest.sub` ? exit 42. So we CAN organize stdlib into
    subfolders (e.g. `stdlib/xiom/str/`, `stdlib/xiom/net/`) WITHOUT breaking
-   `use` — BUT the 40 test-imported module NAMES must stay resolvable.
+   `use` -- BUT the 40 test-imported module NAMES must stay resolvable.
    ?? IMPORTANT: moving `string.xi` ? `str/string.xi` changes `use xiom.string`
-   resolution (strategy a fails, strategy b matches declared module header —
+   resolution (strategy a fails, strategy b matches declared module header --
    the header says `module xiom.string` so strategy b WOULD still find it).
    VERIFY before moving; safest = keep contract modules at top level, put NEW
    grouped modules in folders with dotted names.
@@ -2923,7 +2923,7 @@ RANDOM
 | collect/blocking | ? STDLIB | add (on sync.xi) |
 | collect/mpmc/mpsc/spmc/spsc | ? STDLIB | add (on sync.xi channels) |
 
-**Audit**: collections.xi = 1,732 lines / 148 fns — **REFACTOR CANDIDATE**. Plan:
+**Audit**: collections.xi = 1,732 lines / 148 fns -- **REFACTOR CANDIDATE**. Plan:
 create `stdlib/xiom/collect/` folder with `tree.xi` (tree/avl/rbtree/btree),
 `heap.xi` (fheap/pairing), `cache.xi` (lru/lfu/tinylfu/arc), `hash.xi`
 (cuckoo/HAMT/linkedhash), `queue.xi` (blocking/mpmc/mpsc/spsc), `graph.xi`
@@ -2984,7 +2984,7 @@ flat (frozen contract); new structs live in collect/ modules. ALL pure ? stdlib.
 | str/truncate | ? HAVE | string.xi truncate_utf8 + fmt |
 | str/abbreviate | ? STDLIB | add |
 | str/obfuscate | ? STDLIB | add |
-| str/normalize (NFC/NFD/NFKC/NFKD) | ? STDLIB | add (pure Unicode tables — big but no deps) |
+| str/normalize (NFC/NFD/NFKC/NFKD) | ? STDLIB | add (pure Unicode tables -- big but no deps) |
 | str/collate | ? STDLIB | add (basic) |
 | str/casefold | ? STDLIB | add |
 | str/titlecase | ? HAVE | string.xi title_case |
@@ -3024,11 +3024,11 @@ large-but-pure ? stdlib (with compressed table encoding later).
 | conv/itos/itoa | ? HAVE | convert.xi int_to_string + num.xi to_base |
 | conv/ftos | ? HAVE | convert.xi float_to_string |
 | conv/atoi | ? HAVE | convert.xi |
-| conv/fromstr | ? FUTURE | interface trait — impl ignored by compiler; declare only |
-| conv/tryfrom | ? FUTURE | interface trait — declare only |
-| conv/into | ? FUTURE | interface trait — declare only |
-| conv/asref/asmut | ? FUTURE | interface trait — declare only |
-| conv/from | ? FUTURE | interface trait — declare only |
+| conv/fromstr | ? FUTURE | interface trait -- impl ignored by compiler; declare only |
+| conv/tryfrom | ? FUTURE | interface trait -- declare only |
+| conv/into | ? FUTURE | interface trait -- declare only |
+| conv/asref/asmut | ? FUTURE | interface trait -- declare only |
+| conv/from | ? FUTURE | interface trait -- declare only |
 | conv/bytes | ? HAVE | ffi.xi + mem.xi + encoding |
 | conv/endian (big/little/native) | ? HAVE | num.xi + bits.xi byte_swap/pack |
 | conv/network | ? STDLIB | add (network byte order helpers) |
@@ -3091,7 +3091,7 @@ large-but-pure ? stdlib (with compressed table encoding later).
 | conv/iban | ? STDLIB | add |
 | conv/swift | ? STDLIB | add |
 
-**Audit**: num.xi = 2,612 lines / 256 fns — **LARGEST FILE, REFACTOR FIRST**.
+**Audit**: num.xi = 2,612 lines / 256 fns -- **LARGEST FILE, REFACTOR FIRST**.
 Plan: create `stdlib/xiom/num/` folder: `checked.xi` (checked/sat ops),
 `convert.xi` (cross-type converters), `int128.xi` (Int128), `fraction.xi`,
 `base.xi` (base conversions), `float.xi` (round/floor/ceil/fract). num.xi stays
@@ -3115,14 +3115,14 @@ Cloud/vendor APIs (AWS/Azure/GCP/k8s) are HTTP clients ? PACKAGES built on stdli
 | rest/graphql/jsonrpc/xmlrpc | ? HAVE pkg | xiom-rest, xiom-graphql pkgs. jsonrpc ? stdlib |
 | grpc/grpcweb/thrift/avro-rpc/soap | ?? PACKAGE | xiom-grpc, xiom-protobuf pkgs (C deps) |
 | zeromq/nanomsg/mqtt/amqp/stomp/kafka/pulsar/nats | ?? PACKAGE | xiom-zeromq, xiom-kafka exist. mqtt/amqp/nats/pulsar ? new pkgs (protocols are pure-ish but heavy ? PACKAGE per domain) |
-| redis/memcached | ?? PACKAGE | xiom-redis exists. memcached ? package (pure RESP is easy — could be stdlib; DECISION: redis/memcached protocol parsers ? STDLIB net, drivers ? PACKAGE). Final: protocol ? stdlib; client drivers stay packages |
+| redis/memcached | ?? PACKAGE | xiom-redis exists. memcached ? package (pure RESP is easy -- could be stdlib; DECISION: redis/memcached protocol parsers ? STDLIB net, drivers ? PACKAGE). Final: protocol ? stdlib; client drivers stay packages |
 | elastic/mongo/postgres/mysql/sqlite/odbc | ?? PACKAGE | xiom-postgres, xiom-sqlite, xiom-sql exist; mongo/mysql/elastic/odbc ? new packages |
 | tls/ssl/ssh/sftp/scp/x509/pem/jwt/oauth | ?? PACKAGE | xiom-openssl, xiom-libsodium exist. jwt/oauth ? packages (crypto + protocol) |
 | ldap/kerberos/ntlm/digest/basic/bearer/apikey/hawk | ?? PACKAGE | auth protocols ? packages (ldap/kerberos C deps; digest/basic/bearer pure ? stdlib net) |
 | proxy/socks/tor/i2p | ?? PACKAGE | proxy ? stdlib (pure). socks/tor/i2p ? packages |
-| icmp/ping/traceroute/arp/ndp | ? STDLIB | net.xi expand (raw socket via FFI — OS-specific; keep minimal, ping = stdlib, traceroute = stdlib) |
+| icmp/ping/traceroute/arp/ndp | ? STDLIB | net.xi expand (raw socket via FFI -- OS-specific; keep minimal, ping = stdlib, traceroute = stdlib) |
 | dhcp/bootp/tftp/nfs/smb/netbios | ?? PACKAGE | legacy protocols ? packages |
-| ntp/sntp | ? STDLIB | net.xi expand (UDP NTP client — pure) |
+| ntp/sntp | ? STDLIB | net.xi expand (UDP NTP client -- pure) |
 | wireguard/ipsec/ike/ppp/vpn family | ?? PACKAGE | security protocols ? packages |
 | kubernetes/docker/nomad/cloud APIs (AWS/Azure/GCP/OCI/IBM/DO/etc) | ?? PACKAGE | cloud packages (built on stdlib http + auth) |
 | CDN/vendor APIs (cloudflare/akamai/fastly/vercel/netlify) | ?? PACKAGE | vendor packages |
@@ -3139,7 +3139,7 @@ query/form/multipart), `dns.xi` (record parsing), `proto.xi` (ntp/icmp/jsonrpc/
 digest/basic). net.xi stays flat (contract) + delegates. New protocol clients
 that need C libs ? packages with READMEs.
 
-## 6. FILE FORMATS (1,169 entries — the biggest section)
+## 6. FILE FORMATS (1,169 entries -- the biggest section)
 
 Policy: **pure text/data formatting = STDLIB**; **rendering-heavy, file-format
 binary, chart/diagram, GIS, metadata-tag, statistical-model = PACKAGE**.
@@ -3148,7 +3148,7 @@ binary, chart/diagram, GIS, metadata-tag, statistical-model = PACKAGE**.
 |-------|----------|-------|
 | hex/octal/binary dump, bytes human | ? HAVE | fmt.xi format_hexdump + serialize |
 | table (ascii/markdown/csv/tsv/unicode) | ? HAVE | fmt.xi format_table (ascii). markdown/csv/tsv tables ? stdlib add |
-| json/xml/yaml/toml/csv/tsv format | ? HAVE / ? | serialize.xi (json). xml/yaml/toml/csv ? **PACKAGE** (parsers, domain) — stdlib keeps escape helpers only |
+| json/xml/yaml/toml/csv/tsv format | ? HAVE / ? | serialize.xi (json). xml/yaml/toml/csv ? **PACKAGE** (parsers, domain) -- stdlib keeps escape helpers only |
 | markdown/html/textile/rtf/latex/troff/roff/man | ?? PACKAGE | text markup ? packages |
 | text layout (justify/hyphenate/wrap/indent/align/margin) | ? HAVE wrap/indent | fmt.xi expand (justify, hyphenation) |
 | ANSI/colors/emoji/unicode/box/border/separator | ? STDLIB | fmt.xi expand (ANSI escape codes, box drawing) |
@@ -3169,7 +3169,7 @@ binary, chart/diagram, GIS, metadata-tag, statistical-model = PACKAGE**.
 | regression models (linear/logistic/poisson/ridge/lasso/cox/mixed/etc) | ?? PACKAGE | xiom-ml package |
 | MCMC/Bayesian (gibbs/metropolis/hmc/nuts/kalman/particle filters) | ?? PACKAGE | xiom-ml package |
 | time series (ar/var/vecm/cointegration/adf/kpss) | ?? PACKAGE | xiom-timeseries package |
-| 3D geometry (polyhedra/curves/surfaces/meshes/subdivision) | ? STDLIB core / ?? advanced | geom.xi expand (polyhedra, bezier, splines — pure math = stdlib); mesh/subdivision ? xiom-geom3d package |
+| 3D geometry (polyhedra/curves/surfaces/meshes/subdivision) | ? STDLIB core / ?? advanced | geom.xi expand (polyhedra, bezier, splines -- pure math = stdlib); mesh/subdivision ? xiom-geom3d package |
 | map projections (mercator/robinson/mollweide/etc ~100 entries) | ?? PACKAGE | xiom-geo package |
 | address/geocoding (place/street/city/postal/poi) | ?? PACKAGE | xiom-geo package |
 | raster formats (tiff/jpeg2000/geotiff/mrsid/ecw) | ?? PACKAGE | xiom-imaging package |
@@ -3181,7 +3181,7 @@ dump). fmt.xi stays flat + delegates. The rest ? packages with READMEs.
 
 ## 7. OS INTERACTION (692 entries)
 
-Policy: **OS syscalls via minimal FFI = STDLIB** (that's the stdlib's job —
+Policy: **OS syscalls via minimal FFI = STDLIB** (that's the stdlib's job --
 no deps, direct FFI allowed). **Library bindings (libcurl/libgit2/openssl/
 libpcap/etc) = PACKAGE**. **Platform framework bindings (Apple/Windows APIs) =
 PACKAGE**. **Tool-like wrappers (objdump/readelf/nm/strings) = PACKAGE**.
@@ -3276,11 +3276,11 @@ For each package folder, README.md must list its libs (inventory only):
 
 ## 10. EXECUTION ORDER (backlog)
 
-1. **Refactor first** (folder grouping — verified safe): num/, collect/, str?text/,
+1. **Refactor first** (folder grouping -- verified safe): num/, collect/, str?text/,
    net/, os/, format/, io/fs, ffi/dl. Keep flat contract files as aggregates.
-2. **Fill stdlib gaps** (all ? STDLIB entries above) — pure implementations,
+2. **Fill stdlib gaps** (all ? STDLIB entries above) -- pure implementations,
    per-module agents, test-vector verified.
-3. **Update package READMEs** with the inventory lists from §9.
+3. **Update package READMEs** with the inventory lists from S9.
 4. **Create NEW package folders + READMEs** for all (NEW) packages.
 5. **Phase 4 optimizations** on hot stdlib paths (hash SIMD, bigint asm,
    deflate, GCM GHASH, string ops).
@@ -3301,12 +3301,12 @@ For each package folder, README.md must list its libs (inventory only):
 - Interfaces (FromStr/TryFrom/Into/AsRef) = declare-only until compiler
   implements impl dispatch (backlog item: compiler hardening).
 
-## 12. GENERICS/INTERFACES vs NUMERIC TOWER — STATUS (READ BEFORE WRITING MATH CODE)
+## 12. GENERICS/INTERFACES vs NUMERIC TOWER -- STATUS (READ BEFORE WRITING MATH CODE)
 
 **TL;DR: generic operators and interface `impl` dispatch are NOT usable for
 mixed int/float arithmetic yet.** The stdlib numeric tower is deliberately
 CONCRETE per-width. Do NOT write `fn foo[T: Bounded + Add](a: T, b: T) -> T`
-that does `a + b` and expect it to work for Float64 — it corrupts the value
+that does `a + b` and expect it to work for Float64 -- it corrupts the value
 (compiler bug). Write `fn foo_i64(...) / foo_f64(...) / foo_f32(...)` instead.
 
 ### Why (compiler state, 2026-08-07)
@@ -3314,10 +3314,10 @@ that does `a + b` and expect it to work for Float64 — it corrupts the value
    `T = Float64` produces garbage in the monomorphized body. Verified by the
    Tier-3 agent work; the numeric tower (num.xi) works around it with concrete
    per-width functions (i64/u32/i16/i8/u64/u32/u16/u8 + f64/f32 variants:
-   `i64_add_checked`, `f64_round`, `u32_mul_sat`, `i128_*`, `fraction_*` …).
+   `i64_add_checked`, `f64_round`, `u32_mul_sat`, `i128_*`, `fraction_*` ...).
 2. **Interface `impl` blocks are parsed but IGNORED by checker+codegen.**
-   Traits are declare-only: `pub interface Num[T] { … }` compiles, but
-   `impl Num[Int] { … }` does not dispatch. So trait-based math (`Num[T]` with
+   Traits are declare-only: `pub interface Num[T] { ... }` compiles, but
+   `impl Num[Int] { ... }` does not dispatch. So trait-based math (`Num[T]` with
    per-type impls) cannot drive generic math functions.
 3. **`[T: Ord]` generics work ONLY for algorithms using `.compare` / `.eq`**
    (builtin inline scalar dispatch), e.g. sort/search/cmp/min/max. They do NOT
@@ -3325,57 +3325,57 @@ that does `a + b` and expect it to work for Float64 — it corrupts the value
 
 ### Rules for stdlib code
 - **Math/numeric functions: concrete per-width signatures** (`i64_*`, `u64_*`,
-  `f64_*`, `f32_*`, `i128_*`, `Fraction` …). One fn per width; callers pick.
+  `f64_*`, `f32_*`, `i128_*`, `Fraction` ...). One fn per width; callers pick.
 - `[T: Ord]` generics allowed for comparison-based algorithms only.
-- Do NOT add new trait-based numeric abstractions expecting dispatch — they
+- Do NOT add new trait-based numeric abstractions expecting dispatch -- they
   will silently not work. Document as declare-only.
 - Packages built on stdlib inherit the same rule until the compiler hardens.
 
 ### Unblocking (compiler hardening backlog, from SESSION.md)
-- (a) interface `impl` dispatch on generic params (`x.add(x)` fails — parser
+- (a) interface `impl` dispatch on generic params (`x.add(x)` fails -- parser
   handles ImplDecl; checker+codegen ignore it).
 - (b) generic operator monomorphization corrupting Float64
   (`add2[T](a+b)` garbage for floats).
 - When (a)+(b) land, the numeric tower can be COLLAPSED into generic trait
-  impls (`impl Num[Int]`, `impl Num[Float64]` …) with the concrete fns kept as
-  thin re-export shims for the frozen API. Revisit §4 numeric tower then.
+  impls (`impl Num[Int]`, `impl Num[Float64]` ...) with the concrete fns kept as
+  thin re-export shims for the frozen API. Revisit S4 numeric tower then.
 - The freeze gate locks the concrete signatures NOW, so the collapse is safe:
   concrete fns remain available even after generics land.
 
-## 13. ARCHITECTURE DECISIONS (2026-08-08 — user confirmed)
+## 13. ARCHITECTURE DECISIONS (2026-08-08 -- user confirmed)
 
 Four decisions logged by the owner. These shape ALL future stdlib/compiler work.
 
-### D1 — Native integer widths: Int128/UInt128 native; 256 via bigint
+### D1 -- Native integer widths: Int128/UInt128 native; 256 via bigint
 - **APPROVED: add native `Int128` / `UInt128` as LLVM `i128` primitives** (parser +
   checker + codegen). Add/sub/mul are native hardware ops; div/rem lower to
   `__divti3`/`__udivti3` libcalls that clang links automatically.
-- **REJECTED: native Int256/UInt256** — LLVM emulates them slowly; `bigint.xi`
+- **REJECTED: native Int256/UInt256** -- LLVM emulates them slowly; `bigint.xi`
   (stdlib, 64-bit limbs) is the right home for >128-bit arithmetic.
-- Rationale: 64×64?128 wide multiply unlocks pure-XIOM secp256k1/Ed25519 field
+- Rationale: 64x64?128 wide multiply unlocks pure-XIOM secp256k1/Ed25519 field
   math (currently delegating to runtime C), faster bigint schoolbook multiply,
   PRNG state combining, hash combining. NOTE: SHA-256/512 do NOT need 128-bit
-  (they are 32/64-bit ops) — the win is wide multiply, not hashing per se.
+  (they are 32/64-bit ops) -- the win is wide multiply, not hashing per se.
 - The frozen struct-based `Int128` API (num.xi `i128_*`) stays as a shim;
-  native i128 is purely additive. Optional add: `Float128` (`fp128`) — same
+  native i128 is purely additive. Optional add: `Float128` (`fp128`) -- same
   one-session cost, libcalls via compiler-rt.
 
-### D2 — Raw pointers must be gated behind `unsafe`
+### D2 -- Raw pointers must be gated behind `unsafe`
 - **APPROVED: the language must be SAFE. Raw-pointer operations (deref `*p`,
   `Int?Ptr` casts, `Vec/Slice?Ptr` casts, `asm`) require an `unsafe { }`
   context.** Currently the checker has NO gating (verified: `*p` compiles and
-  runs outside unsafe) — `unsafe` is only AUDITED (sandbox.rs scoring,
+  runs outside unsafe) -- `unsafe` is only AUDITED (sandbox.rs scoring,
   `--strict` warning). 
 - Implementation: checker unsafe-context depth counter; reject pointer deref /
   ptr casts / asm when depth == 0. `unsafe` blocks increment/decrement.
   Sandbox audit stays as the second layer (scoring + `#[safety_audit]`).
-- Do this BEFORE going public — the clean-break window is now.
+- Do this BEFORE going public -- the clean-break window is now.
 - Note: stdlib itself uses raw pointers extensively (Vec data pointers, ffi,
-  alloc) — those internals get wrapped in `unsafe` blocks; the PUBLIC API stays
-  safe (SafePtr, Vec, Cursor, …). This is a compiler+stdlib co-change; the
+  alloc) -- those internals get wrapped in `unsafe` blocks; the PUBLIC API stays
+  safe (SafePtr, Vec, Cursor, ...). This is a compiler+stdlib co-change; the
   freeze gate (signatures) is unaffected because signatures don't change.
 
-### D3 — BigFloat = separate stdlib module (NOT inside bigint.xi)
+### D3 -- BigFloat = separate stdlib module (NOT inside bigint.xi)
 - **APPROVED: `BigFloat` (arbitrary-precision float) is its own stdlib module**
   (e.g. `num/bigfloat.xi` or `bigfloat.xi`), built on `bigint.xi` +
   `Fraction`-style internals: sign/exponent/significand, add/sub/mul/div,
@@ -3383,28 +3383,28 @@ Four decisions logged by the owner. These shape ALL future stdlib/compiler work.
 - MPFR-style transcendentals are a later phase; a C MPFR binding would be a
   PACKAGE (stdlib = zero deps).
 
-### D4 — Categorize EVERY lib from the start (scale-without-breaking rule)
+### D4 -- Categorize EVERY lib from the start (scale-without-breaking rule)
 - **APPROVED: every stdlib module belongs to a category folder, even if the
   category has exactly ONE lib.** `use xiom.foo.bar` ? `stdlib/xiom/foo/bar.xi`
   (catalog strategy a, VERIFIED working).
 - Rationale (owner): categories let the stdlib scale by EXPANDING INSIDE a
-  category (math/core ? math/algebra ? math/vectors ? math/differential …)
+  category (math/core ? math/algebra ? math/vectors ? math/differential ...)
   without ever breaking user code. When a lib is added it lands in its
   category; users who `use xiom.math.core` never see churn. Pre-public, the
-  ONLY cost to move a lib is replacing the `use` line in tests — no call-site
+  ONLY cost to move a lib is replacing the `use` line in tests -- no call-site
   changes, no signature changes.
-- RULE: **new code goes into category folders ONLY** — flat files (frozen
+- RULE: **new code goes into category folders ONLY** -- flat files (frozen
   contract) are never extended with new libs; they stay as aggregates.
   Categories are created eagerly (even for one lib) so the tree shows the
   final shape.
 - Existing flat files stay byte-identical (freeze gate scans them). Migration
   of EXISTING fns into categories happens only as an intentional,
   freeze-gate-compatible refactor (flat file keeps signature + delegates, or
-  snapshot updated with reviewed migration) — NOT part of normal growth.
+  snapshot updated with reviewed migration) -- NOT part of normal growth.
 
-### D4b — `use math;` imports ALL sub-libs — VERIFIED WORKING (2026-08-08)
+### D4b -- `use math;` imports ALL sub-libs -- VERIFIED WORKING (2026-08-08)
 - **The aggregate-`use` pattern is PROVEN end-to-end with the current
-  compiler — NO compiler change required.** The flat aggregate file (e.g.
+  compiler -- NO compiler change required.** The flat aggregate file (e.g.
   `math.xi`) lists its sub-modules as `use` statements:
   ```xiom
   // stdlib/xiom/math.xi (aggregate)
@@ -3417,31 +3417,31 @@ Four decisions logged by the owner. These shape ALL future stdlib/compiler work.
   registered transitively and can call:
   ```xiom
   use xiom.math;
-  var a = math.core.sqrt(x);      // qualified by sub-lib — deterministic
+  var a = math.core.sqrt(x);      // qualified by sub-lib -- deterministic
   var b = xiom.math.core.sqrt(y); // full dotted path also resolves
   ```
 - **Verified by live probe tests (exit 0):**
   1. `use xiom._probe;` + `_probe.core.core_add(20,22)` == 42 ? (parent imports
      sub-module ? sub-lib callable through parent).
   2. Collision case: `core.core_add` vs `algebra.core_add` (same fn name in
-     two sub-libs) — BOTH resolve correctly through their qualifier ?.
+     two sub-libs) -- BOTH resolve correctly through their qualifier ?.
   3. Full dotted path `xiom._probe3.core.core_add(1,2)` resolves ?.
-  4. Sub-lib named `core` does NOT collide with the flat `core.xi` —
+  4. Sub-lib named `core` does NOT collide with the flat `core.xi` --
      `_probe4.core.contains` resolves to the sub-lib's fn ? (leaf-qualified
      resolution walks the receiver chain first).
-- **KEY MECHANISM**: the parent aggregate MUST contain the `use` lines — the
+- **KEY MECHANISM**: the parent aggregate MUST contain the `use` lines -- the
   checker only loads modules that are `use`d; `use math;` alone does NOT
   auto-discover `stdlib/xiom/math/*.xi`. So the flat aggregate is an EXPLICIT
   MANIFEST of its category: add a sub-lib = add one `use` line. Deterministic,
   no magic, no compiler change.
 - **Naming decision (owner, 2026-08-08): use `core` not `basic` for the
-  foundational sub-lib** — `math.core`, `math.algebra`, `math.primitives`,
-  `math.vectors` … `math.basic` rejected (sounds too basic). `core` is
+  foundational sub-lib** -- `math.core`, `math.algebra`, `math.primitives`,
+  `math.vectors` ... `math.basic` rejected (sounds too basic). `core` is
   reserved as the category's foundational module name; the flat aggregate file
   keeps the category name (`math.xi`) and is the "use manifest".
 - Qualified call style `math.core.sqrt(a)` is DETERMINISTIC and unambiguous
   (proven: same fn name in two sub-libs disambiguates). Bare `sqrt(a)` after
-  `use math;` is NOT guaranteed (keep-first alias across modules) — stdlib
+  `use math;` is NOT guaranteed (keep-first alias across modules) -- stdlib
   docs should recommend qualified calls for multi-lib imports.
 - Target category map (flat files remain; folders host new libs):
 
@@ -3479,13 +3479,13 @@ Four decisions logged by the owner. These shape ALL future stdlib/compiler work.
 | `debug/` | debug.xi | trace, disasm, heap-report |
 | `misc/` | misc.xi | glob, levenshtein, semver, soundex, natural |
 | `error/` | error.xi | chain, context, backtrace |
-| `contracts/` | contracts.xi | (stays flat — compiler-backed) |
+| `contracts/` | contracts.xi | (stays flat -- compiler-backed) |
 | `reflect/` | reflect.xi | typeinfo, fields |
 | `simd/` | simd.xi | vec4, vec8, mask, gather |
 | `array/` | array.xi | fixed, dynamic |
 | `string/`?`text/` | string.xi (kept flat, alias) | see text/ |
 
-### Execution order (updated 2026-08-08 — owner directive: PRODUCTION-GRADE FIRST, no workarounds)
+### Execution order (updated 2026-08-08 -- owner directive: PRODUCTION-GRADE FIRST, no workarounds)
 Owner decision: the compiler must be REAL before the huge stdlib is written.
 Do NOT write 5,000 functions against a known-broken compiler and rewrite them
 later. Hardening comes FIRST; stdlib expansion (categories + manifest) starts
@@ -3493,13 +3493,13 @@ only after the numeric/generic foundation is production-grade. The freeze gate
 + D4b manifest pattern make this safe: concrete signatures stay callable
 forever, so nothing written later breaks anything written now.
 
-1. **Unsafe gating (D2)** — checker unsafe-context depth counter; reject raw
+1. **Unsafe gating (D2)** -- checker unsafe-context depth counter; reject raw
    pointer deref / Int?Ptr casts / Vec?Ptr casts / asm at depth 0; wrap stdlib
    internals in `unsafe` blocks (public API stays safe). Suite must stay green
-   (freeze unaffected — signatures unchanged).
-2. **Native Int128/UInt128 (D1)** — parser/checker/codegen; `i128` LLVM;
+   (freeze unaffected -- signatures unchanged).
+2. **Native Int128/UInt128 (D1)** -- parser/checker/codegen; `i128` LLVM;
    div/rem via `__divti3`/`__udivti3` (clang-linked). Optional Float128.
-3. **COMPILER HARDENING — production-grade generics/interfaces (PLAN B,
+3. **COMPILER HARDENING -- production-grade generics/interfaces (PLAN B,
    NO workarounds):**
    a. interface `impl` dispatch on generic params (checker+codegen honor
       ImplDecl: `impl Num[Int] { ... }` must register and dispatch).
@@ -3515,12 +3515,12 @@ forever, so nothing written later breaks anything written now.
       for concrete-type mapping. Generic return-type substitution (was
       emitted as i64 ? garbage) fixed for scalar results. Verified:
       `add2[Int]/[Float64]/[Float32]` all correct.
-   c. After (a)+(b): the generic numeric tower lands — `impl Num[Int]`,
-      `impl Num[Int32]`, `impl Num[Float32]`, `impl Num[Float64]` … and ONE
+   c. After (a)+(b): the generic numeric tower lands -- `impl Num[Int]`,
+      `impl Num[Int32]`, `impl Num[Float32]`, `impl Num[Float64]` ... and ONE
       generic `sqrt[T: Num](x: T) -> T` serves all widths. Concrete fns stay
       as thin shims (freeze-gated).
       ? CORE DONE (2026-08-10, commit pending): `math/core.xi` folder module
-      (D4 category) hosts the generic tower — `pub interface Num[T]` with
+      (D4 category) hosts the generic tower -- `pub interface Num[T]` with
       `impl Num[Int/Int32/Int64/UInt64/Float64/Float32]` and ONE generic
       implementation per concept (`lerp`, `average`, `sum`, `product`,
       `negate`, `twice`) serving every width. Enabled by:
@@ -3546,55 +3546,55 @@ forever, so nothing written later breaks anything written now.
       ? checker 166, exec 67 (incl. hardening smoke), e2e 2231, all suites.
    e. ADDITIONAL fixes landed during hardening:
       - Str::from_utf8(Vec[UInt8]) NUL-termination (runtime
-        `xiom_str_from_vec`) — was returning raw non-terminated Vec data ?
+        `xiom_str_from_vec`) -- was returning raw non-terminated Vec data ?
         intermittent garbage suffixes (ROOT CAUSE of the net_folder harness
         flake, ~1-in-5 processes; now 8/8 stable from Rust-spawn).
       - url_encode single-pass rewrite (two-pass count/write disagreement
         could leave uninitialized malloc bytes).
       - Test harness: compile retry + flush delay for the parallel-session
         binary race.
-4. **Stdlib category expansion (D4) starts AFTER hardening** — agents write
-   math/core, math/algebra, math/vectors, … as GENERIC libs over the real
+4. **Stdlib category expansion (D4) starts AFTER hardening** -- agents write
+   math/core, math/algebra, math/vectors, ... as GENERIC libs over the real
    tower; flat aggregates become use-manifests (D4b). No per-width
-   duplicated libs — one generic implementation per concept.
-5. **BigFloat (D3)** — num/bigfloat.xi on bigint.xi.
-6. **Backlog (next sessions):** see §14.
+   duplicated libs -- one generic implementation per concept.
+5. **BigFloat (D3)** -- num/bigfloat.xi on bigint.xi.
+6. **Backlog (next sessions):** see S14.
 
 ## 14. BACKLOG (owner-approved, next sessions)
 
 ### 14.1 Compiler hardening (continues after D2+D1)
-- Interface `impl` dispatch (3a above) — parser handles ImplDecl today;
+- Interface `impl` dispatch (3a above) -- parser handles ImplDecl today;
   checker+codegen ignore it. This is THE enabler for the generic stdlib.
 - Generic-operator Float64 corruption (3b above).
 - Result[Vec[T]].value corruption (SESSION.md bug 1).
-- Chained .method on module-qualified Str-returning calls (bug 2) — already
+- Chained .method on module-qualified Str-returning calls (bug 2) -- already
   worked around in net/url.xi; fix at source.
 - Bool?Int cast (bug 4).
 - Option/Result match-arm mixing ? out-of-bounds GEP (bug 5).
-- `&T` param semantics (address-as-i64, not value) — documented, keep.
+- `&T` param semantics (address-as-i64, not value) -- documented, keep.
 
 ### 14.2 Math family libs (category: math/, manifest math.xi)
 Write AFTER hardening 3a+3b so they are generic (`[T: Num]`) not per-width:
-- math/core — sqrt, pow, exp, ln, log10, log2, trig, hyperbolic, abs, min,
-  max, clamp, floor/ceil/round/trunc/fract, remap, lerp — GENERIC over Num.
-- math/primitives — number-theoretic primitives, divisibility, parity.
-- math/algebra — linear algebra: vectors, matrices, determinants, inverses,
+- math/core -- sqrt, pow, exp, ln, log10, log2, trig, hyperbolic, abs, min,
+  max, clamp, floor/ceil/round/trunc/fract, remap, lerp -- GENERIC over Num.
+- math/primitives -- number-theoretic primitives, divisibility, parity.
+- math/algebra -- linear algebra: vectors, matrices, determinants, inverses,
   solvers (Gaussian), eigenvalues (basic).
-- math/vectors — geometric vectors (replaces flat geom.xi vec2/3/4 fns
+- math/vectors -- geometric vectors (replaces flat geom.xi vec2/3/4 fns
   eventually; keep frozen flat fns).
-- math/trig + math/transcendental — full trig, exp/log families, gamma,
+- math/trig + math/transcendental -- full trig, exp/log families, gamma,
   erf, zeta (basic), special functions.
-- math/differential — numeric derivatives, gradients, ODE solvers
+- math/differential -- numeric derivatives, gradients, ODE solvers
   (Euler, RK4), integration (trapezoid, Simpson, Gauss).
-- math/integral — numeric quadrature.
-- math/series — Taylor, Fourier (basic), polynomial ops.
-- math/special — Bessel, Legendre, Chebyshev, factorial/gamma, binomial.
+- math/integral -- numeric quadrature.
+- math/series -- Taylor, Fourier (basic), polynomial ops.
+- math/special -- Bessel, Legendre, Chebyshev, factorial/gamma, binomial.
 
 ### 14.3 BigInt/BigFloat (category: num/, manifest num.xi)
-- bigint.xi exists (frozen flat). Extend: bigint/ folder libs — karatsuba,
+- bigint.xi exists (frozen flat). Extend: bigint/ folder libs -- karatsuba,
   toom-cook, montgomery, powmod, sqrt, gcd-extended, primality
   (Miller-Rabin), string base conversions.
-- BigFloat (D3): num/bigfloat.xi — sign/exponent/significand on bigint,
+- BigFloat (D3): num/bigfloat.xi -- sign/exponent/significand on bigint,
   add/sub/mul/div, rounding modes, parse/format, sqrt, ln/exp (series),
   sin/cos (series). Separate from bigint.xi.
 
@@ -3651,7 +3651,7 @@ overflowing_add(a, b)	?	Addition + overflow flag
 overflowing_sub(a, b)	?	Subtraction + overflow flag
 overflowing_mul(a, b)	?	Multiplication + overflow flag
 abs_diff(a, b)	?	Absolute difference
-math/constants — Fundamental Mathematical Constants
+math/constants -- Fundamental Mathematical Constants
 Description: Universal constants with type-specific precision. No functions, all constants. Constants are resolved at compile time.
 
 Constant	Generic	Description
@@ -3678,7 +3678,7 @@ FLOAT32_MIN	?	Minimum Float32
 INFINITY	?	Positive infinity
 NEG_INFINITY	?	Negative infinity
 NAN	?	Not-a-number
-math/precision — Type-Specific Precision Information
+math/precision -- Type-Specific Precision Information
 Description: Compile-time information about numeric type precision, ranges, and characteristics.
 
 Function	Generic	Description
@@ -3693,7 +3693,7 @@ max_exponent[T]()	?	Maximum exponent (floats)
 is_signed[T]()	?	Whether type is signed
 bit_width[T]()	?	Bit width of type
 byte_width[T]()	?	Byte width of type
-math/interfaces — Numeric Traits
+math/interfaces -- Numeric Traits
 Description: The foundational interfaces that enable generic mathematics. All numeric types implement these.
 
 Interface	Description
@@ -3707,7 +3707,7 @@ Bounded	min_value, max_value, epsilon
 FromStr	Parse from string
 Display	Format to string
 ARITHMETIC & ALGEBRA
-math/arithmetic — Arithmetic Operations
+math/arithmetic -- Arithmetic Operations
 Description: Extended arithmetic operations beyond core. Generic over Integer and Float.
 
 Function	Generic	Description
@@ -3726,7 +3726,7 @@ div_floor(a, b)	?	Integer division rounding down
 div_trunc(a, b)	?	Integer division truncating toward zero
 mod_floor(a, b)	?	Modulo with floor division
 mod_trunc(a, b)	?	Modulo with truncation
-math/roots — Root Operations
+math/roots -- Root Operations
 Description: Square roots, cube roots, nth roots, and related operations. Float functions use hardware acceleration (where available). Integer functions use software fallback.
 
 Function	Generic	Description
@@ -3739,11 +3739,11 @@ is_square(n)	?	Check if perfect square
 is_cube(n)	?	Check if perfect cube
 integer_sqrt(n)	?	Integer square root (floor)
 integer_cbrt(n)	?	Integer cube root (floor)
-hypot(x, y)	?	Hypotenuse (sqrt(x² + y²))
-hypot3(x, y, z)	?	Hypotenuse (sqrt(x² + y² + z²))
+hypot(x, y)	?	Hypotenuse (sqrt(x2 + y2))
+hypot3(x, y, z)	?	Hypotenuse (sqrt(x2 + y2 + z2))
 norm2(x, y)	?	Euclidean distance (2D)
 norm3(x, y, z)	?	Euclidean distance (3D)
-math/exponential — Exponential and Logarithmic Functions
+math/exponential -- Exponential and Logarithmic Functions
 Description: Exponential, logarithmic, power, and related functions. Float functions use libm (hardware accelerated). Integer functions use software fallback.
 
 Function	Generic	Description
@@ -3765,7 +3765,7 @@ ln_pure(x)	?	Software-only ln
 log2_pure(x)	?	Software-only log2
 log10_pure(x)	?	Software-only log10
 pow_pure(base, exp)	?	Software-only pow
-math/rounding — Rounding Operations
+math/rounding -- Rounding Operations
 Description: Floor, ceil, round, trunc, and fractional part operations.
 
 Function	Generic	Description
@@ -3784,7 +3784,7 @@ integer_part(x)	?	Integer part (same as trunc)
 frac_part(x)	?	Fractional part (same as fract)
 round_to(x, decimals)	?	Round to n decimal places
 round_nearest(x, multiple)	?	Round to nearest multiple
-math/decompose — Number Decomposition
+math/decompose -- Number Decomposition
 Description: Split numbers into components, extract mantissa/exponent, and related operations.
 
 Function	Generic	Description
@@ -3804,7 +3804,7 @@ classify(x)	?	Classify floating-point value
 nextafter(x, y)	?	Next representable float
 nexttoward(x, y)	?	Next representable float (long double)
 TRIGONOMETRY
-math/trigonometry — Trigonometric Functions
+math/trigonometry -- Trigonometric Functions
 Description: Sine, cosine, tangent, and related functions. Hardware accelerated via libm.
 
 Function	Generic	Description
@@ -3822,7 +3822,7 @@ tan_pure(x)	?	Software-only tan
 sinpi(x)	?	sin(px)
 cospi(x)	?	cos(px)
 tanpi(x)	?	tan(px)
-math/inverse_trig — Inverse Trigonometric Functions
+math/inverse_trig -- Inverse Trigonometric Functions
 Description: Arcsine, arccosine, arctangent, and related functions. Hardware accelerated via libm.
 
 Function	Generic	Description
@@ -3837,7 +3837,7 @@ atan_pure(x)	?	Software-only atan
 atan2_radians(y, x)	?	atan2 in radians
 atan2_degrees(y, x)	?	atan2 in degrees
 arg(z)	?	Argument/phase of complex number
-math/hyperbolic — Hyperbolic Functions
+math/hyperbolic -- Hyperbolic Functions
 Description: Hyperbolic sine, cosine, tangent, and inverse functions. Hardware accelerated via libm.
 
 Function	Generic	Description
@@ -3853,7 +3853,7 @@ atanh(x)	?	Inverse hyperbolic tangent
 sinh_pure(x)	?	Software-only sinh
 cosh_pure(x)	?	Software-only cosh
 tanh_pure(x)	?	Software-only tanh
-math/trigonometric_constants — Trigonometric Constants
+math/trigonometric_constants -- Trigonometric Constants
 Description: Constants related to trigonometry and angles.
 
 Constant	Generic	Description
@@ -3872,7 +3872,7 @@ TAU_8	?	p/4
 TAU_3	?	2p/3
 TAU_6	?	p/3
 TAU_12	?	p/6
-math/angular — Angular Conversion
+math/angular -- Angular Conversion
 Description: Convert between radians, degrees, gradians, and other angular units.
 
 Function	Generic	Description
@@ -3891,7 +3891,7 @@ normalize_angle_deg(deg)	?	Normalize angle to [0, 360)
 angle_diff(a, b)	?	Difference between angles
 angle_lerp(a, b, t)	?	Angular interpolation
 BITWISE & BINARY
-math/bitwise — Bitwise Operations
+math/bitwise -- Bitwise Operations
 Description: Bit manipulation operations on integer types. Hardware accelerated via LLVM intrinsics.
 
 Function	Generic	Description
@@ -3911,7 +3911,7 @@ bit_parity(x)	?	Parity (odd/even number of bits)
 bit_scan_forward(x)	?	Position of least significant set bit
 bit_scan_reverse(x)	?	Position of most significant set bit
 is_power_of_two_bit(x)	?	Check if power of two (bitwise)
-math/rotation — Bit Rotation
+math/rotation -- Bit Rotation
 Description: Advanced bit rotation and bitfield manipulation operations.
 
 Function	Generic	Description
@@ -3925,7 +3925,7 @@ bit_rotate_left(x, n)	?	Alias for rotate_left
 bit_rotate_right(x, n)	?	Alias for rotate_right
 masked_rotate_left(x, mask, n)	?	Rotate only masked bits
 masked_rotate_right(x, mask, n)	?	Rotate only masked bits
-math/endianness — Endianness Operations
+math/endianness -- Endianness Operations
 Description: Endian conversion and detection.
 
 Function	Generic	Description
@@ -3945,7 +3945,7 @@ bswap_32(x)	?	Swap 32-bit endianness
 bswap_64(x)	?	Swap 64-bit endianness
 bswap_128(x)	?	Swap 128-bit endianness
 bswap_256(x)	?	Swap 256-bit endianness
-math/bitfield — Bitfield Operations
+math/bitfield -- Bitfield Operations
 Description: Extract, insert, and manipulate bitfields.
 
 Function	Generic	Description
@@ -3966,7 +3966,7 @@ mask_high(len)	?	Create mask of len high bits
 mask_range(pos, len)	?	Create mask for range of bits
 sign_extend(x, width)	?	Sign extend from width to full
 NUMBER THEORY
-math/number_theory — Number Theory
+math/number_theory -- Number Theory
 Description: Prime numbers, factorization, and related number theory operations.
 
 Function	Generic	Description
@@ -3983,7 +3983,7 @@ fermat_test(n)	?	Fermat primality test
 lucas_lehmer(p)	?	Lucas-Lehmer test for Mersenne primes
 mersenne_prime_p(p)	?	Check if 2^p - 1 is prime
 euler_phi(n)	?	Euler's totient function
-mobius(n)	?	Möbius function
+mobius(n)	?	Mobius function
 jordan_totient(n, k)	?	Jordan's totient function
 carmichael(n)	?	Carmichael function
 prime_pi(n)	?	Number of primes = n
@@ -4002,7 +4002,7 @@ kronecker_symbol(a, n)	?	Kronecker symbol
 divisor_sum(n)	?	Sum of divisors
 divisor_count(n)	?	Number of divisors
 proper_divisors(n)	?	All proper divisors
-math/factorial — Factorial and Combinatorial Functions
+math/factorial -- Factorial and Combinatorial Functions
 Description: Factorial, binomial coefficients, and related combinatorial functions.
 
 Function	Generic	Description
@@ -4023,12 +4023,12 @@ eulerian(n, k)	?	Eulerian numbers
 narayana(n, k)	?	Narayana numbers
 lah(n, k)	?	Lah numbers
 motzkin(n)	?	Motzkin numbers
-schroeder(n)	?	Schröder numbers
+schroeder(n)	?	Schroder numbers
 partition_count(n)	?	Number of partitions (p(n))
 integer_partitions(n)	?	Generate integer partitions
 derangements(n)	?	Derangements (subfactorial)
 bell_triangle(n)	?	Bell triangle
-math/modular — Modular Arithmetic
+math/modular -- Modular Arithmetic
 Description: Modular arithmetic operations and algorithms.
 
 Function	Generic	Description
@@ -4051,7 +4051,7 @@ cornacchia(d, m)	?	Cornacchia's algorithm
 hilbert_symbol(a, b, p)	?	Hilbert symbol
 pow_mod_fast(a, e, m)	?	Fast modular exponentiation
 COMPLEX NUMBERS
-math/complex — Complex Numbers
+math/complex -- Complex Numbers
 Description: Operations on complex numbers. Generic over Float types.
 
 Function	Generic	Description
@@ -4094,7 +4094,7 @@ is_zero(z)	?	Check if zero
 is_infinite(z)	?	Check if infinite
 is_nan(z)	?	Check if NaN
 LINEAR ALGEBRA
-math/vector — Vector Operations
+math/vector -- Vector Operations
 Description: Vector operations for 2D, 3D, 4D, and N-dimensional vectors.
 
 Function	Generic	Description
@@ -4126,7 +4126,7 @@ clamp(v, min, max)	?	Clamp vector components
 component_min(a, b)	?	Component-wise min
 component_max(a, b)	?	Component-wise max
 hadamard(a, b)	?	Component-wise product
-math/matrix — Matrix Operations
+math/matrix -- Matrix Operations
 Description: Matrix operations for 2x2, 3x3, 4x4, and MxN matrices.
 
 Function	Generic	Description
@@ -4166,7 +4166,7 @@ cholesky(m)	?	Cholesky decomposition
 solve_linear(a, b)	?	Solve linear system
 least_squares(a, b)	?	Least squares solution
 condition_number(m)	?	Condition number
-math/quaternion — Quaternion Operations
+math/quaternion -- Quaternion Operations
 Description: Quaternion operations for 3D rotations.
 
 Function	Generic	Description
@@ -4190,7 +4190,7 @@ quat_angle(q)	?	Rotation angle
 quat_axis(q)	?	Rotation axis
 quat_look_at(direction, up)	?	Look at rotation
 quat_between(from, to)	?	Quaternion between vectors
-math/linear — Advanced Linear Algebra
+math/linear -- Advanced Linear Algebra
 Description: Advanced linear algebra operations.
 
 Function	Generic	Description
@@ -4210,7 +4210,7 @@ matrix_power(m, n)	?	Matrix power
 vec_to_skew(v)	?	Convert vector to skew-symmetric matrix
 skew_to_vec(m)	?	Convert skew-symmetric matrix to vector
 GEOMETRY
-math/geometry_2d — 2D Geometry
+math/geometry_2d -- 2D Geometry
 Description: 2D geometric shapes and operations.
 
 Function	Generic	Description
@@ -4244,7 +4244,7 @@ polygon_intersection(a, b)	?	Polygon intersection
 polygon_union(a, b)	?	Polygon union
 polygon_difference(a, b)	?	Polygon difference
 polygon_circumference(poly)	?	Polygon perimeter
-math/geometry_3d — 3D Geometry
+math/geometry_3d -- 3D Geometry
 Description: 3D geometric shapes and operations.
 
 Function	Generic	Description
@@ -4284,7 +4284,7 @@ mesh_surface_area(mesh)	?	Mesh surface area
 mesh_centroid(mesh)	?	Mesh centroid
 convex_hull_3d(points)	?	3D convex hull
 STATISTICS & PROBABILITY
-math/statistics — Statistical Functions
+math/statistics -- Statistical Functions
 Description: Descriptive statistics and data analysis.
 
 Function	Generic	Description
@@ -4313,7 +4313,7 @@ trimmed_mean(data, p)	?	Trimmed mean
 winsorized_mean(data, p)	?	Winsorized mean
 mad(data)	?	Median absolute deviation
 z_score(value, mean, stddev)	?	Z-score
-math/probability — Probability Functions
+math/probability -- Probability Functions
 Description: Probability distributions and related functions.
 
 Function	Generic	Description
@@ -4351,7 +4351,7 @@ negative_binomial_cdf(k, r, p)	?	Negative binomial CDF
 hypergeometric_pmf(k, N, K, n)	?	Hypergeometric PMF
 hypergeometric_cdf(k, N, K, n)	?	Hypergeometric CDF
 CALCULUS & ANALYSIS
-math/calculus — Calculus Operations
+math/calculus -- Calculus Operations
 Description: Differentiation, integration, and related operations.
 
 Function	Generic	Description
@@ -4374,7 +4374,7 @@ hessian(f, x)	?	Hessian matrix
 laplacian(f, x)	?	Laplacian
 curl(f, x)	?	Curl
 divergence(f, x)	?	Divergence
-math/differential_equations — Differential Equations
+math/differential_equations -- Differential Equations
 Description: Numerical solvers for differential equations.
 
 Function	Generic	Description
@@ -4386,7 +4386,7 @@ solve_ode_bdf(f, y0, t0, t1, n)	?	Backward differentiation
 solve_pde_fd(u0, bc, dx, dt)	?	Finite difference PDE
 solve_pde_fem(u0, bc, mesh)	?	Finite element PDE
 SPECIAL FUNCTIONS
-math/special — Special Functions
+math/special -- Special Functions
 Description: Advanced special functions from mathematics and physics.
 
 Function	Generic	Description
@@ -4447,11 +4447,11 @@ theta_3(z, q)	?	Jacobi theta ?3
 theta_4(z, q)	?	Jacobi theta ?4
 riemann_zeta(x)	?	Riemann zeta function ?(x)
 riemann_zeta_eta(x)	?	Dirichlet eta ?(x)
-dirichlet_beta(x)	?	Dirichlet beta ß(x)
+dirichlet_beta(x)	?	Dirichlet beta ss(x)
 lerch_phi(z, s, a)	?	Lerch transcendent F(z,s,a)
 polylog(s, z)	?	Polylogarithm Li?(z)
 DISCRETE MATHEMATICS
-math/combinatorics — Combinatorics
+math/combinatorics -- Combinatorics
 Description: Combinatorial structures and algorithms.
 
 Function	Generic	Description
@@ -4483,7 +4483,7 @@ permutations_enum(n)	?	Enumerate permutations
 combinations_enum(n, k)	?	Enumerate combinations
 subsets_enum(n)	?	Enumerate subsets
 powerset_enum(set)	?	Enumerate power set
-math/graph_theory — Graph Theory
+math/graph_theory -- Graph Theory
 Description: Graph operations and algorithms.
 
 Function	Generic	Description
@@ -4521,7 +4521,7 @@ graph_min_cut(g, s, t)	?	Min cut
 graph_hamiltonian_path(g)	?	Hamiltonian path
 graph_tsp(g)	?	Traveling salesman
 ARBITRARY PRECISION
-math/precision_integer — Arbitrary Precision Integers
+math/precision_integer -- Arbitrary Precision Integers
 Description: Big integers with arbitrary precision.
 
 Function	Generic	Description
@@ -4557,7 +4557,7 @@ BigInt.mod_inverse(a, m)	?	Modular inverse
 BigInt.mod_pow(a, e, m)	?	Modular exponentiation
 BigInt.factorial(n)	?	Factorial
 BigInt.binomial(n, k)	?	Binomial coefficient
-math/precision_float — Arbitrary Precision Floats
+math/precision_float -- Arbitrary Precision Floats
 Description: Big floats with arbitrary precision.
 
 Function	Generic	Description
@@ -4593,7 +4593,7 @@ BigFloat.pi(prec)	?	p with precision
 BigFloat.e(prec)	?	e with precision
 BigFloat.cmp(a, b)	?	Compare
 BigFloat.eq(a, b)	?	Equality
-math/precision_rational — Arbitrary Precision Rationals
+math/precision_rational -- Arbitrary Precision Rationals
 Description: Big rational numbers with arbitrary precision.
 
 Function	Generic	Description
@@ -4620,7 +4620,7 @@ BigRat.eq(a, b)	?	Equality
 BigRat.to_float(r)	?	Convert to float
 BigRat.to_integer(r)	?	Convert to integer
 NUMERICAL METHODS
-math/numerical — Numerical Methods
+math/numerical -- Numerical Methods
 Description: Numerical algorithms for solving mathematical problems.
 
 Function	Generic	Description
@@ -4668,7 +4668,7 @@ optimize_least_squares(f, x0)	?	Nonlinear least squares
 solver_single(f, x0)	?	Single equation solver
 solver_system(f, x0)	?	System of equations solver
 SIGNAL PROCESSING
-math/signal — Signal Processing
+math/signal -- Signal Processing
 Description: Signal processing and transform operations.
 
 Function	Generic	Description
@@ -4713,7 +4713,7 @@ cepstrum(data)	?	Cepstrum
 mel_filterbank(data)	?	Mel filterbank
 mfcc(data)	?	Mel-frequency cepstral coefficients
 OPTIMIZATION
-math/optimization — Optimization Algorithms
+math/optimization -- Optimization Algorithms
 Description: Mathematical optimization algorithms.
 
 Function	Generic	Description
@@ -4739,7 +4739,7 @@ bayesian_optimization(f, bounds)	?	Bayesian optimization
 grid_search(f, grid)	?	Grid search
 random_search(f, distribution, iterations)	?	Random search
 FINANCE
-math/finance — Financial Mathematics
+math/finance -- Financial Mathematics
 Description: Financial calculations and models.
 
 Function	Generic	Description
@@ -4860,7 +4860,7 @@ Signal Processing	signal	? Complete
 Optimization	optimization	? Complete
 Finance	finance	? Complete
 ? WHAT WE MISSED (Gaps)
-1. MIN/MAX/LERP/VECTOR LENGTH — These are actually covered!
+1. MIN/MAX/LERP/VECTOR LENGTH -- These are actually covered!
 Function	Where it lives
 min, max	math/core (generic over Ord)
 clamp	math/core (generic over Ord)
@@ -4916,8 +4916,8 @@ text
 math/chaos
 +-- logistic_map - x??1 = r*x?*(1-x?)
 +-- lorenz_system - Lorenz attractor
-+-- rossler_system - Rössler attractor
-+-- henon_map - Hénon map
++-- rossler_system - Rossler attractor
++-- henon_map - Henon map
 +-- bifurcation_diagram - Bifurcation diagram
 +-- lyapunov_exponent - Lyapunov exponent
 +-- strange_attractor - Strange attractor detection
@@ -5062,7 +5062,7 @@ math/approximation
 +-- chebyshev_approx - Chebyshev approximation
 +-- least_squares - Least squares approximation
 +-- minimax - Minimax approximation
-+-- pade_approx - Padé approximation
++-- pade_approx - Pade approximation
 +-- remez - Remez algorithm
 +-- spline_approx - Spline approximation
 +-- best_approx - Best approximation
@@ -5168,7 +5168,7 @@ math/geometry_extended
 +-- computational_geometry - Computational geometry
 +-- voronoi - Voronoi diagrams
 +-- delaunay - Delaunay triangulation
-+-- bezier - Bézier curves
++-- bezier - Bezier curves
 +-- b_spline - B-splines
 +-- nurbs - NURBS
 +-- subdivision - Subdivision surfaces
@@ -5244,7 +5244,7 @@ text
 math/game_theory - Nash, minimax, Shapley value
 math/queueing - M/M/1, Erlang, Little's Law
 math/operations_research - Dynamic programming, scheduling
-math/geometry_extended - Voronoi, Delaunay, Bézier curves
+math/geometry_extended - Voronoi, Delaunay, Bezier curves
 Priority 3 (Add Later - Niche)
 text
 math/chaos - Fractals, attractors, Lyapunov
@@ -5301,7 +5301,7 @@ math/
 +-- signal/                    ? Signal processing
 +-- optimization/              ? Optimization
 +-- finance/                   ? Finance
-¦
+|
 +-- set_theory/                ?? Add
 +-- logic/                     ?? Add
 +-- information_theory/        ?? Add
@@ -5334,7 +5334,7 @@ Recommendation: Keep the core as is. Add the missing modules as packages (@xiom/
 
 ---
 
-## 13. WISH-LIST AUDIT (2026-08-11) — HAVE / GAP-stdlib / GAP-package
+## 13. WISH-LIST AUDIT (2026-08-11) -- HAVE / GAP-stdlib / GAP-package
 
 > Full pass over the flat wish-list (HASHING / COLLECTIONS / STRING / CONVERSION /
 > NETWORK / FILE FORMATS / OS INTERACTION). Rules: **STDLIB** = zero external deps
@@ -5342,7 +5342,7 @@ Recommendation: Keep the core as is. Add the missing modules as packages (@xiom/
 > **PACKAGE** = needs an external library/protocol peer; dedupe aggressively.
 > Verified against the live tree on 2026-08-11 (64+ modules, ~2,215 pub fns).
 > GAP-stdlib items marked **(P0/P1/P2)** are queued implementation work; P0 items
-> landed in the same session (see §10 status + docs/stdlib_session.md).
+> landed in the same session (see S10 status + docs/stdlib_session.md).
 
 ### 13.1 HASHING (16 wish-items ? 13 HAVE, 3 GAP-stdlib)
 
@@ -5352,15 +5352,15 @@ Recommendation: Keep the core as is. Add the missing modules as packages (@xiom/
 | hash/murmur (2, 3: 32/128) | **HAVE** | `hash.murmur3_32`, `hash.murmur.murmur3_128`, `hash.murmur.murmur2_64` |
 | hash/city (64/128) | **HAVE** | `hash.city.city64`, `city64_with_seed`, `city128` (CityHash v1.1; 256-bit does not exist upstream) |
 | hash/xxhash (32/64/128, XXH3) | **GAP-stdlib P0** | `hash.xxhash32/64`, `hash.xxhash.xxh32/xxh64`; **XXH3-64 + XXH128 missing ? landed this session** |
-| hash/siphash (2-4, 1-3) | **GAP-stdlib P0** | `hash.sip_hash` is a misnamed DJB2 wrapper — **real SipHash-2-4/1-3 landed this session** (hash/siphash.xi) |
+| hash/siphash (2-4, 1-3) | **GAP-stdlib P0** | `hash.sip_hash` is a misnamed DJB2 wrapper -- **real SipHash-2-4/1-3 landed this session** (hash/siphash.xi) |
 | hash/highway (64/128/256) | **GAP-stdlib P1** | pure XIOM port; large |
 | hash/spooky (128) | **GAP-stdlib P1** | pure XIOM port; large |
 | hash/t1ha | **GAP-stdlib P2** | fast non-crypto; pure |
 | hash/metro (64/128) | **GAP-stdlib P2** | pure |
 | hash/farm | **GAP-stdlib P2** | city-derived; pure |
 | hash/jenkins (lookup3) | **HAVE** | `hash.jenkins.jenkins_lookup3` |
-| hash/superfast | **GAP-stdlib P0** | trivial Paul Hsieh — **landed this session** (hash/superfast.xi) |
-| hash/crc (32/64 hw-accel) | **HAVE** | `hash.crc32_ieee`, `hash.crc.crc32c`, `crc64_ecma`, `crc64_we`, `crc16_ccitt`; hw-accel = §7 asm track |
+| hash/superfast | **GAP-stdlib P0** | trivial Paul Hsieh -- **landed this session** (hash/superfast.xi) |
+| hash/crc (32/64 hw-accel) | **HAVE** | `hash.crc32_ieee`, `hash.crc.crc32c`, `crc64_ecma`, `crc64_we`, `crc16_ccitt`; hw-accel = S7 asm track |
 | hash/adler (32) | **GAP-stdlib P0** | **landed this session** (hash/crc.xi) |
 | hash/checksum (BSD/SysV/Internet) | **HAVE** | `hash.crc.checksum_bsd/sysv/internet` |
 
@@ -5431,7 +5431,7 @@ Recommendation: Keep the core as is. Add the missing modules as packages (@xiom/
 | Wish item | Status | Home / note |
 |-----------|--------|-------------|
 | int/float/toint/tofloat/tostring/parse/itos/ftos/atoi/itoa | **HAVE** | `convert.*`, `num.parse_int(_radix)/parse_float`, `string.str_to_int/float` |
-| fromstr/tryfrom/into/asref/asmut/from (traits) | **HAVE** (N/A) | language traits — dedupe to `convert.*` + `core` helpers |
+| fromstr/tryfrom/into/asref/asmut/from (traits) | **HAVE** (N/A) | language traits -- dedupe to `convert.*` + `core` helpers |
 | bytes / endian / network order / swap | **HAVE** | `bits.pack_*/unpack_*`, `num.to_be/to_le/from_be/from_le`, `bits.byte_swap*` |
 | saturating / wrapping / overflow / checked / exact / lossy / roundtrip | **HAVE** | `num.saturating_*/wrapping_*/checked_*`; roundtrip = to_str/parse pairs |
 | cstring / wstring / utf8 / utf16 / utf32 | **HAVE** (utf16/32 GAP P2) | `ffi.Str.from_cstring`, `mem`, `utf8.*`, `encoding.utf8_*` |
@@ -5509,31 +5509,31 @@ Recommendation: Keep the core as is. Add the missing modules as packages (@xiom/
 
 ### 13.8 Dedup map (aggressive, per session rules)
 
-`str/compare`?`cmp` · `str/search`?`string.index_of` · `str/strip`?`str_trim` · `conv/base64`?`encoding` ·
-`conv/base16`?`encoding.hex_*` · `collect/vector`?`collections.Vec` · `collect/stack/queue/ring`?`collections.Stack/Queue`+`collect.queue` ·
-`hash/crc`?`hash.crc32_ieee`+`hash.crc` · `str/regex`?`regex` · `conv/uuid`?`rand.uuid_v4` ·
-`conv/endian`?`bits.pack/unpack`+`num.to_be/to_le` · `conv/swap`?`bits.byte_swap*` · `conv/saturating|wrapping|checked`?`num.*` ·
-`conv/strftime`?`time.strftime` (landed) · `format/indent|wrap|align`?`fmt.*` · `format/hex`?`format.dump` ·
-`os/memcpy|memcmp`?`mem` · `os/str*`?`string` · `collect/radix`?`collect/trie` · `collect/sparse|dense`?`collections.Set` ·
-`format/*stat*`?`stats` · `net/jsonrpc`?`net.jsonrpc_*` · `str/metaphone|soundex|jaro|ngram|cosine`?`text.similarity`
+`str/compare`?`cmp` - `str/search`?`string.index_of` - `str/strip`?`str_trim` - `conv/base64`?`encoding` -
+`conv/base16`?`encoding.hex_*` - `collect/vector`?`collections.Vec` - `collect/stack/queue/ring`?`collections.Stack/Queue`+`collect.queue` -
+`hash/crc`?`hash.crc32_ieee`+`hash.crc` - `str/regex`?`regex` - `conv/uuid`?`rand.uuid_v4` -
+`conv/endian`?`bits.pack/unpack`+`num.to_be/to_le` - `conv/swap`?`bits.byte_swap*` - `conv/saturating|wrapping|checked`?`num.*` -
+`conv/strftime`?`time.strftime` (landed) - `format/indent|wrap|align`?`fmt.*` - `format/hex`?`format.dump` -
+`os/memcpy|memcmp`?`mem` - `os/str*`?`string` - `collect/radix`?`collect/trie` - `collect/sparse|dense`?`collections.Set` -
+`format/*stat*`?`stats` - `net/jsonrpc`?`net.jsonrpc_*` - `str/metaphone|soundex|jaro|ngram|cosine`?`text.similarity`
 
-### 13.9 Generics policy (audited 2026-08-11 — math family, num, bits, geom, complex)
+### 13.9 Generics policy (audited 2026-08-11 -- math family, num, bits, geom, complex)
 
 Verified against the live tree. The policy is **specialize-by-default, generic-where-semantic**:
 
 | Area | Pattern | Verdict |
 |------|---------|---------|
-| `math` flat (52 fns: sqrt/trig/exp/log/…) | Float64-specialized | **KEEP** — native f64 ABI, no boxing, libm FFI (BUG 11 fixed) |
-| `math.tower` (folder, 11 fns; renamed from math.core 2026-08-11) | generic `[T: Num]` / `[T: Real]` tower (lerp/average/sum/product/abs/clamp/min2/max2/negate/twice) | **KEEP** — the one place width-generic math lives |
-| `num` (243 fns) | mixed: generic `min_value/max_value/epsilon[T: Bounded]`, `saturating_*/wrapping_*/checked_*[T: Bounded+Ord+Add…]` + Float64/Int specializations (f64_floor, parse_int…) | **KEEP** — generics exactly where widths matter; specializations where ABI/perf does |
-| `geom` (186 fns) | Vec2/3/4, Quat, Matrix, transforms — Float64-specialized | **KEEP** — graphics math is f64 by contract; the §5.1 “generic geom” idea was dropped in practice and that is correct |
-| `complex` (20 fns) | `Complex = { re: Float64; im: Float64; }` — NOT `Complex[T]` (the §5.1 plan) | **KEEP** — f64 specialization is the shipped reality; no callers need Complex[Float32] |
-| `bits` (28 fns) | Int-specialized | **KEEP** — bit ops on i64 only |
-| `stats` (23 fns) | Int-specialized (Vec[Int]) | **KEEP** — note: the compiler's Vec[Float64] element reads are broken (BUG 12), so float stats must use scaled-Int or fixed slots until fixed |
-| `bigint`/`bigfloat` | arbitrary precision, concrete types | **KEEP** — no generics needed |
+| `math` flat (52 fns: sqrt/trig/exp/log/...) | Float64-specialized | **KEEP** -- native f64 ABI, no boxing, libm FFI (BUG 11 fixed) |
+| `math.tower` (folder, 11 fns; renamed from math.core 2026-08-11) | generic `[T: Num]` / `[T: Real]` tower (lerp/average/sum/product/abs/clamp/min2/max2/negate/twice) | **KEEP** -- the one place width-generic math lives |
+| `num` (243 fns) | mixed: generic `min_value/max_value/epsilon[T: Bounded]`, `saturating_*/wrapping_*/checked_*[T: Bounded+Ord+Add...]` + Float64/Int specializations (f64_floor, parse_int...) | **KEEP** -- generics exactly where widths matter; specializations where ABI/perf does |
+| `geom` (186 fns) | Vec2/3/4, Quat, Matrix, transforms -- Float64-specialized | **KEEP** -- graphics math is f64 by contract; the S5.1 "generic geom" idea was dropped in practice and that is correct |
+| `complex` (20 fns) | `Complex = { re: Float64; im: Float64; }` -- NOT `Complex[T]` (the S5.1 plan) | **KEEP** -- f64 specialization is the shipped reality; no callers need Complex[Float32] |
+| `bits` (28 fns) | Int-specialized | **KEEP** -- bit ops on i64 only |
+| `stats` (23 fns) | Int-specialized (Vec[Int]) | **KEEP** -- note: the compiler's Vec[Float64] element reads are broken (BUG 12), so float stats must use scaled-Int or fixed slots until fixed |
+| `bigint`/`bigfloat` | arbitrary precision, concrete types | **KEEP** -- no generics needed |
 
 Rationale (documented for future contributors): (1) native scalar ABI (f64/i64) is
-the compiler's fastest and most reliable path — generic containers of floats are
+the compiler's fastest and most reliable path -- generic containers of floats are
 currently broken (BUG 12); (2) generic code is mono-instantiated per module, so
 generics pay off only when multiple widths are actually instantiated (num's
 checked/saturating/wrapping families are the canonical example); (3) new math

@@ -1,4 +1,4 @@
-// XIOM stdlib stress — Map collision stress
+// XIOM stdlib stress -- Map collision stress
 // Inserts many entries with keys that may collide internally.
 // Returns 0 on success, nonzero on failure.
 

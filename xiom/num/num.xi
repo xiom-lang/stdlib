@@ -1,4 +1,4 @@
-// XIOM — Numeric Traits & Operations
+// XIOM -- Numeric Traits & Operations
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 
@@ -179,7 +179,7 @@ pub fn gcd(a: Int, b: Int) -> Int
 {
   // abs-normalize both args so Euclid's recursion stays non-negative
   // (the naive form returns negative gcds for negative inputs and traps
-  // its own ensure). NOTE: i64::MIN abs overflows — such inputs trap.
+  // its own ensure). NOTE: i64::MIN abs overflows -- such inputs trap.
   var x = a;
   var y = b;
   if x < 0 { x = -x; }
@@ -481,7 +481,7 @@ pub fn parse_int_radix(s: Str, radix: Int) -> Result[Int, Str]
   return Ok(result);
 }
 
-// ── Basic Integer Predicates ────────────────────────────────────────────────
+// -- Basic Integer Predicates ------------------------------------------------
 
 /// Returns true if n is even. O(1).
 pub fn is_even(n: Int) -> Bool {
@@ -515,9 +515,9 @@ pub fn signum(n: Int) -> Int {
   else { 0 }
 }
 
-// ── Digit Operations ────────────────────────────────────────────────────────
+// -- Digit Operations --------------------------------------------------------
 
-/// Counts the number of decimal digits. O(log₁₀ n).
+/// Counts the number of decimal digits. O(log10 n).
 pub fn digit_count(n: Int) -> Int {
   if n == 0 { return 1; }
   var count = 0;
@@ -530,7 +530,7 @@ pub fn digit_count(n: Int) -> Int {
   count
 }
 
-/// Sum of decimal digits. O(log₁₀ n).
+/// Sum of decimal digits. O(log10 n).
 pub fn digit_sum(n: Int) -> Int {
   var sum = 0;
   var x = n;
@@ -542,7 +542,7 @@ pub fn digit_sum(n: Int) -> Int {
   sum
 }
 
-/// Digital root: repeated digit sum until a single digit is obtained. O(log₁₀ n).
+/// Digital root: repeated digit sum until a single digit is obtained. O(log10 n).
 pub fn digital_root(n: Int) -> Int {
   if n == 0 { return 0; }
   var r = n % 9;
@@ -551,7 +551,7 @@ pub fn digital_root(n: Int) -> Int {
   r
 }
 
-// ── Combinatorics ───────────────────────────────────────────────────────────
+// -- Combinatorics -----------------------------------------------------------
 
 /// Factorial of n (n!). Returns 0 on overflow or negative input. O(N).
 pub fn factorial(n: Int) -> Int {
@@ -600,9 +600,9 @@ pub fn fibonacci(n: Int) -> Int {
   b
 }
 
-// ── Extended GCD / LCM ──────────────────────────────────────────────────────
+// -- Extended GCD / LCM ------------------------------------------------------
 
-/// GCD of a slice of integers. Returns 0 if the slice is empty. O(N·log max).
+/// GCD of a slice of integers. Returns 0 if the slice is empty. O(N-log max).
 pub fn gcd_many(nums: &Vec[Int]) -> Int {
   var n = nums.len();
   if n == 0 { return 0; }
@@ -616,7 +616,7 @@ pub fn gcd_many(nums: &Vec[Int]) -> Int {
   g
 }
 
-/// LCM of a slice of integers. Returns 0 if any element is 0. O(N·log max).
+/// LCM of a slice of integers. Returns 0 if any element is 0. O(N-log max).
 pub fn lcm_many(nums: &Vec[Int]) -> Int {
   var n = nums.len();
   if n == 0 { return 0; }
@@ -632,9 +632,9 @@ pub fn lcm_many(nums: &Vec[Int]) -> Int {
   l
 }
 
-// ── Prime Numbers ───────────────────────────────────────────────────────────
+// -- Prime Numbers -----------------------------------------------------------
 
-/// Trial-division primality test. O(√n).
+/// Trial-division primality test. O(sqrtn).
 pub fn is_prime(n: Int) -> Bool {
   if n < 2 { return false; }
   if n == 2 { return true; }
@@ -647,7 +647,7 @@ pub fn is_prime(n: Int) -> Bool {
   true
 }
 
-/// Next prime greater than n. O(√result · gap).
+/// Next prime greater than n. O(sqrtresult - gap).
 pub fn next_prime(n: Int) -> Int {
   if n < 2 { return 2; }
   var cand = n + 1;
@@ -658,7 +658,7 @@ pub fn next_prime(n: Int) -> Int {
   cand
 }
 
-/// Nth prime (1-indexed: nth_prime(1)=2). Returns 0 for n <= 0. O(n·√pₙ).
+/// Nth prime (1-indexed: nth_prime(1)=2). Returns 0 for n <= 0. O(n-sqrtpn).
 pub fn nth_prime(n: Int) -> Int {
   if n <= 0 { return 0; }
   if n == 1 { return 2; }
@@ -671,7 +671,7 @@ pub fn nth_prime(n: Int) -> Int {
   cand
 }
 
-/// Prime factors of n (with multiplicity). O(√n).
+/// Prime factors of n (with multiplicity). O(sqrtn).
 pub fn prime_factors(n: Int) -> Vec[Int] {
   var result = Vec[Int].new();
   if n <= 1 { return result; }
@@ -693,7 +693,7 @@ pub fn prime_factors(n: Int) -> Vec[Int] {
   result
 }
 
-/// All positive divisors of n (unsorted). O(√n).
+/// All positive divisors of n (unsorted). O(sqrtn).
 pub fn divisors(n: Int) -> Vec[Int] {
   var result = Vec[Int].new();
   if n <= 0 { return result; }
@@ -710,7 +710,7 @@ pub fn divisors(n: Int) -> Vec[Int] {
   result
 }
 
-/// Euler's totient φ(n): count of k in [1, n] with gcd(k, n) = 1. O(√n).
+/// Euler's totient phi(n): count of k in [1, n] with gcd(k, n) = 1. O(sqrtn).
 pub fn euler_totient(n: Int) -> Int {
   if n <= 0 { return 0; }
   if n == 1 { return 1; }
@@ -730,7 +730,7 @@ pub fn euler_totient(n: Int) -> Int {
   result
 }
 
-// ── Modular Arithmetic ──────────────────────────────────────────────────────
+// -- Modular Arithmetic ------------------------------------------------------
 
 /// Modular exponentiation: (base^exp) mod m. Uses square-and-multiply. O(log exp).
 pub fn mod_pow(base: Int, exp: Int, m: Int) -> Int {
@@ -751,7 +751,7 @@ pub fn mod_pow(base: Int, exp: Int, m: Int) -> Int {
   result
 }
 
-/// Modular inverse: x such that (a * x) ≡ 1 (mod m). Uses extended Euclid. O(log min(a,m)).
+/// Modular inverse: x such that (a * x) == 1 (mod m). Uses extended Euclid. O(log min(a,m)).
 /// Returns None if gcd(a, m) != 1.
 pub fn mod_inverse(a: Int, m: Int) -> Option[Int] {
   var old_r = a % m;
@@ -807,7 +807,7 @@ pub fn mod_mul(a: Int, b: Int, m: Int) -> Int {
   r
 }
 
-// ── Integer Properties ──────────────────────────────────────────────────────
+// -- Integer Properties ------------------------------------------------------
 
 /// Returns true if n is a perfect square. O(log n).
 pub fn is_perfect_square(n: Int) -> Bool {
@@ -825,7 +825,7 @@ pub fn is_perfect_square(n: Int) -> Bool {
   false
 }
 
-/// Returns true if n reads the same forward and backward in decimal. O(log₁₀ n).
+/// Returns true if n reads the same forward and backward in decimal. O(log10 n).
 pub fn is_palindrome_int(n: Int) -> Bool {
   if n < 0 { return false; }
   var reversed = 0;
@@ -837,7 +837,7 @@ pub fn is_palindrome_int(n: Int) -> Bool {
   reversed == n
 }
 
-/// Reverses the decimal digits of n. Sign is preserved. O(log₁₀ n).
+/// Reverses the decimal digits of n. Sign is preserved. O(log10 n).
 pub fn reverse_int(n: Int) -> Int {
   var neg = n < 0;
   var x = n;
@@ -850,9 +850,9 @@ pub fn reverse_int(n: Int) -> Int {
   if neg { -rev } else { rev }
 }
 
-// ── Base Conversion ─────────────────────────────────────────────────────────
+// -- Base Conversion ---------------------------------------------------------
 
-/// Convert integer to string in given base (2–36). Uses digits 0–9, A–Z.
+/// Convert integer to string in given base (2-36). Uses digits 0-9, A-Z.
 /// Returns empty string for invalid base. O(log_base n).
 pub fn to_base(n: Int, base: Int) -> Str {
   if base < 2 || base > 36 { return ""; }
@@ -878,7 +878,7 @@ pub fn to_base(n: Int, base: Int) -> Str {
   result
 }
 
-/// Parse integer from string in given base (2–36). Delegates to parse_int_radix.
+/// Parse integer from string in given base (2-36). Delegates to parse_int_radix.
 /// Returns None on invalid input or overflow. O(N).
 pub fn from_base(s: Str, base: Int) -> Option[Int] {
   if s.len() == 0 { return None; }
@@ -889,21 +889,21 @@ pub fn from_base(s: Str, base: Int) -> Option[Int] {
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
+// ===========================================================================
 // PRODUCTION NUMERIC TOWER
-// ═══════════════════════════════════════════════════════════════════════════
+// ===========================================================================
 // These functions are intentionally CONCRETE (per-width, non-generic): the
 // monomorphiser currently miscompiles generic arithmetic on Float64, so every
 // operation below is written against one exact type. Interfaces are declared
 // only to document the intended API shape; impl blocks are not relied upon.
 
-// ── 128-bit signed integer ─────────────────────────────────────────────────
+// -- 128-bit signed integer -------------------------------------------------
 // D1 (2026-08-08): Int128 is now a NATIVE compiler primitive (LLVM i128),
 // not a hi/lo struct. All arithmetic is hardware (or __divti3/__udivti3
 // runtime libcalls), exact for the full 128-bit range. The old struct-based
 // implementation was removed with the D1 native primitive landing.
 
-// ── Rational number (num / den, den > 0, always reduced) ───────────────────
+// -- Rational number (num / den, den > 0, always reduced) -------------------
 pub type Fraction = { num: Int; den: Int; }
 
 // Internal: unsigned 64-bit division result.
@@ -912,9 +912,9 @@ pub type U64DivRem = { quot: UInt64; rem: UInt64; }
 // Internal: Int128 division by a small scalar.
 pub type I128DivRem = { quot: Int128; rem: Int; }
 
-// ── UInt64 core helpers ────────────────────────────────────────────────────
+// -- UInt64 core helpers ----------------------------------------------------
 // The compiler emits SIGNED LLVM instructions for UInt64 `%`, `/`, `>>` and
-// `>` (verified: 0xFFFFFFFFFFFFFFFF / 2 == 0, not 0x7FFF…). These helpers
+// `>` (verified: 0xFFFFFFFFFFFFFFFF / 2 == 0, not 0x7FFF...). These helpers
 // restore correct unsigned semantics using bit tricks and logical shifts.
 
 /// Returns bit `i` (0..63) of an unsigned 64-bit value as 0 or 1.
@@ -992,7 +992,7 @@ fn u64_div_mod(x: UInt64, y: UInt64) -> U64DivRem {
 }
 
 /// Full 128-bit unsigned product of two UInt64 values.
-/// D1: native — `(x as UInt128) * (y as UInt128)` is exact (LLVM i128 mul).
+/// D1: native -- `(x as UInt128) * (y as UInt128)` is exact (LLVM i128 mul).
 /// Returns the 128-bit product as Int128 (bit pattern preserved).
 /// Complexity: O(1). Pure.
 fn u64_mul_wide(x: UInt64, y: UInt64) -> Int128 {
@@ -1024,7 +1024,7 @@ fn i128_zero() -> Int128 {
   return 0 as Int128;
 }
 
-// ── Rounding & fractions: Float64 ───────────────────────────────────────────
+// -- Rounding & fractions: Float64 -------------------------------------------
 // All of these return Float64. Values with |x| >= 2^63 are exactly integral
 // in IEEE-754 (ULP >= 2^11), so floor/ceil/round/trunc return x and fract
 // returns 0 without touching `to_int` (whose behaviour is undefined out of
@@ -1091,7 +1091,7 @@ pub fn f64_modf_frac_part(x: Float64) -> Float64 {
   return f64_fract(x);
 }
 
-// ── Rounding & fractions: Float32 ───────────────────────────────────────────
+// -- Rounding & fractions: Float32 -------------------------------------------
 // Float32 mirrors Float64; `to_int` accepts Float32 directly, and values with
 // |x| >= 2^63 are exactly integral (Float32 ULP there is 2^40).
 
@@ -1159,7 +1159,7 @@ pub fn f32_modf_frac_part(x: Float32) -> Float32 {
   return f32_fract(x);
 }
 
-// ── Float-to-Int rounding (round-half-away-from-zero) ───────────────────────
+// -- Float-to-Int rounding (round-half-away-from-zero) -----------------------
 // Out-of-range and NaN inputs saturate/are documented per function.
 
 /// Rounds x to the nearest Int, halves away from zero. NaN -> 0,
@@ -1225,7 +1225,7 @@ pub fn f32_trunc_to_int(x: Float32) -> Int {
   return f64_trunc_to_int(x as Float64);
 }
 
-// ── Integer division helpers ────────────────────────────────────────────────
+// -- Integer division helpers ------------------------------------------------
 // Division by zero returns 0 (documented per function). INT_MIN / -1 wraps
 // like two's-complement hardware (documented; use *_checked for safety).
 
@@ -1280,7 +1280,7 @@ pub fn i64_div_round(a: Int, b: Int) -> Int {
   return q as Int;
 }
 
-/// Euclidean remainder: r >= 0 always, r ≡ a (mod b).
+/// Euclidean remainder: r >= 0 always, r == a (mod b).
 /// mod_euclid(-7, 2) == 1. Division by zero returns 0. Complexity: O(1).
 pub fn i64_mod_euclid(a: Int, b: Int) -> Int {
   if b == 0 { return 0; }
@@ -1345,7 +1345,7 @@ pub fn u64_div_euclid(a: UInt64, b: UInt64) -> UInt64 {
   return u64_div_floor(a, b);
 }
 
-// ── Checked arithmetic: i64 ─────────────────────────────────────────────────
+// -- Checked arithmetic: i64 -------------------------------------------------
 // Overflow-safe: return None on overflow/div-by-zero instead of wrapping.
 
 /// a + b with overflow detection. Some(sum) on success, None on overflow.
@@ -1365,7 +1365,7 @@ pub fn i64_sub_checked(a: Int, b: Int) -> Option[Int] {
 }
 
 /// a * b with overflow detection. Some(product) on success, None on overflow.
-/// Handles the ±1 edge cases explicitly. Complexity: O(1).
+/// Handles the +/-1 edge cases explicitly. Complexity: O(1).
 pub fn i64_mul_checked(a: Int, b: Int) -> Option[Int] {
   if a == 0 || b == 0 { return Some(0); }
   if a == -1 { return Some(-b); }
@@ -1420,7 +1420,7 @@ pub fn i64_pow_checked(base: Int, exp: Int) -> Option[Int] {
   return Some(result);
 }
 
-// ── Checked arithmetic: i32 / i16 / i8 ──────────────────────────────────────
+// -- Checked arithmetic: i32 / i16 / i8 --------------------------------------
 // Small widths promote to i64 first: every intermediate is exact, so the
 // only failure mode is the final range check.
 
@@ -1515,7 +1515,7 @@ pub fn i8_div_checked(a: Int8, b: Int8) -> Option[Int8] {
   return Some((big_a / big_b) as Int8);
 }
 
-// ── Checked arithmetic: unsigned widths ─────────────────────────────────────
+// -- Checked arithmetic: unsigned widths -------------------------------------
 
 /// u64 a + b using unsigned wrap detection. None on overflow.
 /// Complexity: O(1).
@@ -1629,7 +1629,7 @@ pub fn u8_div_checked(a: UInt8, b: UInt8) -> Option[UInt8] {
   return Some((a as Int / b as Int) as UInt8);
 }
 
-// ── Saturating arithmetic ───────────────────────────────────────────────────
+// -- Saturating arithmetic ---------------------------------------------------
 // Clamp to the width's min/max instead of wrapping or failing.
 
 /// Saturating i64 addition: clamps to INT_MAX/INT_MIN. Complexity: O(1).
@@ -1741,7 +1741,7 @@ pub fn u32_mul_sat(a: UInt32, b: UInt32) -> UInt32 {
   return big as UInt32;
 }
 
-// ── Int128: construction ────────────────────────────────────────────────────
+// -- Int128: construction ----------------------------------------------------
 // D1: Int128 is a native i128 primitive. All ops below are direct hardware
 // instructions (add/sub/mul) or runtime libcalls (div/rem via __divti3).
 
@@ -1759,7 +1759,7 @@ pub fn i128_from_parts(hi: Int, lo: UInt64) -> Int128 {
   return (h << 64) | l;
 }
 
-// ── Int128: arithmetic (wrapping at 128 bits) ───────────────────────────────
+// -- Int128: arithmetic (wrapping at 128 bits) -------------------------------
 
 /// 128-bit addition (wraps on overflow). Complexity: O(1).
 pub fn i128_add(a: Int128, b: Int128) -> Int128 {
@@ -1794,12 +1794,12 @@ pub fn i64_mul_wide(a: Int, b: Int) -> Int128 {
 }
 
 /// 128 x 128 multiplication (result is modulo 2^128; low 128 bits are exact
-/// regardless of signedness). Complexity: O(1) — native i128 mul.
+/// regardless of signedness). Complexity: O(1) -- native i128 mul.
 pub fn i128_mul(a: Int128, b: Int128) -> Int128 {
   return a * b;
 }
 
-// ── Int128: comparison & predicates ─────────────────────────────────────────
+// -- Int128: comparison & predicates -----------------------------------------
 
 /// Three-way comparison (-1/0/1). Complexity: O(1).
 pub fn i128_compare(a: Int128, b: Int128) -> Int {
@@ -1818,7 +1818,7 @@ pub fn i128_is_negative(a: Int128) -> Bool {
   return a < (0 as Int128);
 }
 
-// ── Int128: conversion ──────────────────────────────────────────────────────
+// -- Int128: conversion ------------------------------------------------------
 
 /// Converts to i64; None if the value does not fit in a signed 64-bit range.
 /// Complexity: O(1).
@@ -1833,7 +1833,7 @@ pub fn i128_to_i64(a: Int128) -> Option[Int] {
 /// Exact for the full Int128 range, including INT128_MIN.
 /// Complexity: O(128 * digits) ~ O(1) bounded by 39 digits.
 ///
-/// NOTE (2026-08-08): uses 64-bit limb arithmetic, NOT native i128 div/rem —
+/// NOTE (2026-08-08): uses 64-bit limb arithmetic, NOT native i128 div/rem --
 /// the sdiv/srem i128 libcalls (__divti3/__modti3) inside a multi-iteration
 /// loop with memory ops miscompile at clang -O2 (verified repeatedly). The
 /// limb algorithm is exact (e2e-proven pre-D1) and works at every opt level.
@@ -1918,7 +1918,7 @@ pub fn i128_from_str(s: Str) -> Result[Int128, Str] {
   return Ok(result);
 }
 
-// ── Int128: shifts ──────────────────────────────────────────────────────────
+// -- Int128: shifts ----------------------------------------------------------
 
 /// Arithmetic shift left by n bits (wraps at 128 bits). n >= 128 yields zero.
 /// Complexity: O(1).
@@ -1941,7 +1941,7 @@ pub fn i128_shr(a: Int128, n: Int) -> Int128 {
 
 /// a*b/c evaluated with a 128-bit intermediate, then clamped (saturated) to
 /// the i64 range. c == 0 returns 0 (documented). Exact for all i64 inputs.
-/// Complexity: O(1) — native i128 mul + div.
+/// Complexity: O(1) -- native i128 mul + div.
 pub fn i64_mul_div(a: Int, b: Int, c: Int) -> Int {
   if c == 0 { return 0; }
   var w = i64_mul_wide(a, b);
@@ -1957,7 +1957,7 @@ pub fn i64_mul_div(a: Int, b: Int, c: Int) -> Int {
   return q as Int;
 }
 
-// ── Int128: internal helpers ────────────────────────────────────────────────
+// -- Int128: internal helpers ------------------------------------------------
 
 /// Divides a NON-NEGATIVE Int128 by a positive scalar d and returns the
 /// quotient and remainder (remainder in [0, d)). D1: native div/rem.
@@ -1995,7 +1995,7 @@ fn _digit_char(d: Int) -> Str {
   return "9";
 }
 
-// ── Cross-type conversions: integers (bounds-checked) ───────────────────────
+// -- Cross-type conversions: integers (bounds-checked) -----------------------
 // Each conversion validates the source value against the target range and
 // returns None on failure, so all-widths math is safe by construction.
 
@@ -2084,7 +2084,7 @@ pub fn i64_from_u32(v: UInt32) -> Int {
   return v as Int;
 }
 
-// ── Cross-type conversions: float construction ──────────────────────────────
+// -- Cross-type conversions: float construction ------------------------------
 
 /// Float64 from i64 (lossless only for |v| < 2^53; rounds beyond).
 /// Complexity: O(1).
@@ -2122,7 +2122,7 @@ pub fn f64_from_f32(v: Float32) -> Float64 {
   return v as Float64;
 }
 
-// ── Cross-type conversions: float -> integer (bounds-checked) ───────────────
+// -- Cross-type conversions: float -> integer (bounds-checked) ---------------
 
 /// Truncating conversion Float64 -> Int. None on NaN or out-of-i64-range.
 /// Complexity: O(1).
@@ -2207,7 +2207,7 @@ pub fn int_from_str_radix_checked(s: Str, radix: Int) -> Option[Int] {
   }
 }
 
-// ── Per-width absolute value ────────────────────────────────────────────────
+// -- Per-width absolute value ------------------------------------------------
 
 /// Absolute value of an i64. NOTE: |INT_MIN| wraps to INT_MIN
 /// (two's-complement); use i64_neg_checked for overflow-safe negation.
@@ -2251,7 +2251,7 @@ pub fn f32_abs(x: Float32) -> Float32 {
   return -x;
 }
 
-// ── Per-width clamp ─────────────────────────────────────────────────────────
+// -- Per-width clamp ---------------------------------------------------------
 
 /// Clamps v to the inclusive range [lo, hi]. Complexity: O(1).
 pub fn i64_clamp(v: Int, lo: Int, hi: Int) -> Int {
@@ -2292,7 +2292,7 @@ pub fn f32_clamp(x: Float32, lo: Float32, hi: Float32) -> Float32 {
   return x;
 }
 
-// ── Per-width signum ────────────────────────────────────────────────────────
+// -- Per-width signum --------------------------------------------------------
 
 /// -1/0/1 for negative/zero/positive i64. Complexity: O(1).
 pub fn i64_signum(v: Int) -> Int {
@@ -2325,7 +2325,7 @@ pub fn f32_signum(v: Float32) -> Float32 {
   return 0.0;
 }
 
-// ── Per-width power ─────────────────────────────────────────────────────────
+// -- Per-width power ---------------------------------------------------------
 
 /// base^exp for i64 via square-and-multiply. Overflows WRAP (documented);
 /// use i64_pow_checked for overflow detection. Negative exponent returns 0.
@@ -2404,7 +2404,7 @@ pub fn f32_pow(base: Float32, exp: Float32) -> Float32 {
   return f64_pow(base as Float64, exp as Float64) as Float32;
 }
 
-// ── Per-width extrema ───────────────────────────────────────────────────────
+// -- Per-width extrema -------------------------------------------------------
 
 /// Minimum of three i64 values. Concrete (generic min3 needs Ord dispatch).
 /// Complexity: O(1).
@@ -2427,7 +2427,7 @@ pub fn i64_max_of3(a: Int, b: Int, c: Int) -> Int {
   return c;
 }
 
-// ── Fraction (rational) arithmetic ──────────────────────────────────────────
+// -- Fraction (rational) arithmetic ------------------------------------------
 // Invariants: den > 0, gcd(|num|, den) == 1. Cross-multiplication can
 // overflow i64 for large numerators/denominators (documented on the
 // operations that use it); pre-reduction via gcd is applied where possible.
@@ -2615,7 +2615,7 @@ pub fn fraction_is_proper(a: Fraction) -> Bool {
   return n < a.den;
 }
 
-// ── Per-width lerp ──────────────────────────────────────────────────────────
+// -- Per-width lerp ----------------------------------------------------------
 
 /// Integer lerp: a + (b - a) * t with t clamped to [0, 1]. For i64, t is
 /// effectively 0 or 1. NOTE: (b - a) * t can overflow i64 for extreme ranges

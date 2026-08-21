@@ -1,4 +1,4 @@
-// XIOM — Collections: Cuckoo hash map (Int keys, Int values)
+// XIOM -- Collections: Cuckoo hash map (Int keys, Int values)
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 
@@ -116,7 +116,7 @@ fn _grow(m: &mut CuckooMap) {
   }
 }
 
-/// Insert or overwrite `key` → `value`. Doubles the tables when the
+/// Insert or overwrite `key` -> `value`. Doubles the tables when the
 /// displacement bound is exceeded.
 pub fn cuckoo_put(m: &mut CuckooMap, key: Int, value: Int) {
   var existing = _lookup(m, key);
@@ -163,7 +163,7 @@ pub fn cuckoo_put(m: &mut CuckooMap, key: Int, value: Int) {
     }
     round = round + 1;
   }
-  // too many relocations — grow and retry
+  // too many relocations -- grow and retry
   _grow(m);
   cuckoo_put(m, k, v);
 }

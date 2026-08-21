@@ -1,4 +1,4 @@
-// XIOM stdlib stress — LinkedList push_front/back and pop_front/back
+// XIOM stdlib stress -- LinkedList push_front/back and pop_front/back
 // Tests doubly-linked list insertion and removal at both ends.
 // Returns 0 on success, nonzero on failure.
 

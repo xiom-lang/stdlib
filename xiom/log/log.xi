@@ -1,4 +1,4 @@
-// XIOM — Structured Logging
+// XIOM -- Structured Logging
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 
@@ -223,7 +223,7 @@ pub fn clear_log() {
   entries = Vec[LogEntry]::new();
 }
 
-// ── Level-Aware Message Helpers ────────────────────────────────────
+// -- Level-Aware Message Helpers ------------------------------------
 
 /// Logs a debug-level message. Alias for `log.debug` for discoverability.
 /// Complexity: O(1) if level is filtered, O(1) otherwise.
@@ -249,7 +249,7 @@ pub fn log_error_msg(msg: Str) {
   error(msg);
 }
 
-// ── Structured Logging ─────────────────────────────────────────────
+// -- Structured Logging ---------------------------------------------
 
 /// Creates and writes a log entry with the given level, message, and key-value fields.
 /// Returns the created `LogEntry`.
@@ -260,7 +260,7 @@ pub fn log_with_fields(level: LogLevel, msg: Str, fields: Map[Str, Str]) -> LogE
   return entry;
 }
 
-// ── Configuration Helpers ──────────────────────────────────────────
+// -- Configuration Helpers ------------------------------------------
 
 /// Sets the minimum log level. Messages below this level are filtered out.
 /// Alias for `set_level`.
@@ -276,7 +276,7 @@ pub fn log_enable_json(enable: Bool) {
   set_output_json(enable);
 }
 
-// ── Entry Management ───────────────────────────────────────────────
+// -- Entry Management -----------------------------------------------
 
 /// Clears all buffered log entries.
 /// Alias for `clear_log`.
@@ -300,7 +300,7 @@ pub fn log_last_entry() -> Option[LogEntry] {
   return Some(entries[entries.len() - 1]);
 }
 
-// ── Entry Serialization ────────────────────────────────────────────
+// -- Entry Serialization --------------------------------------------
 
 /// Returns all buffered entries as a newline-separated text string.
 /// Complexity: O(n).

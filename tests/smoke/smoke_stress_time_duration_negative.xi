@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.time Duration subtraction resulting in negative
+// XIOM stdlib stress -- xiom.time Duration subtraction resulting in negative
 // Duration sub should handle results where earlier > later (negative duration).
 // Returns 0 on success, nonzero on failure.
 

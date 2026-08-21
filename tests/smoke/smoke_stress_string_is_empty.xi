@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.string.is_empty true/false
+// XIOM stdlib stress -- xiom.string.is_empty true/false
 // Tests empty string returns true and non-empty returns false.
 // Returns 0 on success.
 

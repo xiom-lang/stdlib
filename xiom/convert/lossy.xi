@@ -16,7 +16,7 @@ use xiom.core.INT_MAX;
 use xiom.core.INT_MIN;
 
 /// Parses a decimal integer string. Returns 0 on malformed input (empty,
-/// invalid characters) and clamps to INT_MAX/INT_MIN on overflow — the
+/// invalid characters) and clamps to INT_MAX/INT_MIN on overflow -- the
 /// function never fails. Complexity: O(n), n = string length.
 pub fn lossy_from_str(s: Str) -> Int {
   let len = s.len();

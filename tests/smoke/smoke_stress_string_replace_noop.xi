@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.string.replace with nonexistent pattern
+// XIOM stdlib stress -- xiom.string.replace with nonexistent pattern
 // Tests replacing a pattern that does not occur in the source string.
 // Returns 0 on success, nonzero on failure.
 

@@ -1,4 +1,4 @@
-// XIOM — Filesystem Helpers (xiom.os.fs)
+// XIOM -- Filesystem Helpers (xiom.os.fs)
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 //
@@ -202,7 +202,7 @@ pub fn fs_with_extension(path: Str, new_ext: Str) -> Str {
   }
 }
 
-// fs_split returns (dir, file) — the directory and file-name portions.
+// fs_split returns (dir, file) -- the directory and file-name portions.
 pub fn fs_split(path: Str) -> (Str, Str) {
   let dir_opt = fs_parent_dir(path);
   let file_opt = fs_file_name(path);

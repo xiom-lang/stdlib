@@ -1,10 +1,10 @@
-// Phase 3 smoke: Guard Heap (d) + Copy-Out (i) — Unsafe Confinement.
+// Phase 3 smoke: Guard Heap (d) + Copy-Out (i) -- Unsafe Confinement.
 // Returns 0 on success.
 use xiom.io;
 
 // Build a Str from arena-allocated data entirely inside an unsafe block.
 // The Vec's buffer is allocated on the guard arena (routed via emit_alloc);
-// Copy-Out must promote it to the main heap BEFORE the arena resets — the
+// Copy-Out must promote it to the main heap BEFORE the arena resets -- the
 // caller uses it safely afterwards (UAF fix).
 fn make_str() -> Str
   requires: true

@@ -1,4 +1,4 @@
-// XIOM stdlib smoke — xiom.collect.arc
+// XIOM stdlib smoke -- xiom.collect.arc
 // ARC cache (delegates to collect.cache): put/get/evict/contains/size/capacity.
 // Returns 0 on success, nonzero + tag on failure.
 

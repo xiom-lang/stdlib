@@ -1,4 +1,4 @@
-// XIOM stdlib stress — math.is_nan and math.is_inf
+// XIOM stdlib stress -- math.is_nan and math.is_inf
 // Tests NaN and infinity detection.
 // Returns 0 on success, nonzero on failure.
 

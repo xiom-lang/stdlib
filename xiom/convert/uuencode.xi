@@ -18,7 +18,7 @@ module xiom.convert.uuencode
 use xiom.string;
 
 /// Encode arbitrary bytes to classic UU format (data lines only).
-/// Parameters: data — the raw bytes.
+/// Parameters: data -- the raw bytes.
 /// Returns: the UU-encoded text (each line ends with a newline).
 /// Complexity: O(n).
 pub fn uuencode(data: &Vec[UInt8]) -> Str {
@@ -45,7 +45,7 @@ pub fn uuencode(data: &Vec[UInt8]) -> Str {
 }
 
 /// Decode a UU-encoded string to bytes.
-/// Parameters: s — the UU text (data lines; "begin"/"end" wrappers ignored).
+/// Parameters: s -- the UU text (data lines; "begin"/"end" wrappers ignored).
 /// Returns: Ok(bytes) on success; Err on malformed input.
 /// Complexity: O(n).
 pub fn uudecode(s: Str) -> Result[Vec[UInt8], Str] {
@@ -96,7 +96,7 @@ pub fn uudecode(s: Str) -> Result[Vec[UInt8], Str] {
 }
 
 /// Encode a single UU line of at most 45 bytes (length char + encoded data).
-/// Parameters: data — up to 45 bytes.
+/// Parameters: data -- up to 45 bytes.
 /// Returns: the encoded line (without a trailing newline).
 /// Complexity: O(1).
 pub fn uuencode_line(data: &Vec[UInt8]) -> Str {
@@ -134,7 +134,7 @@ pub fn uuencode_line(data: &Vec[UInt8]) -> Str {
 }
 
 /// Decode a single UU line, validating length and padding.
-/// Parameters: s — the encoded line (length char + data, no newline).
+/// Parameters: s -- the encoded line (length char + data, no newline).
 /// Returns: Ok(bytes) on success; Err on invalid input.
 /// Complexity: O(1).
 pub fn uudecode_line(s: Str) -> Result[Vec[UInt8], Str] {
@@ -184,7 +184,7 @@ pub fn uudecode_line(s: Str) -> Result[Vec[UInt8], Str] {
 }
 
 /// Encode arbitrary bytes to XXencode format (data lines only).
-/// Parameters: data — the raw bytes.
+/// Parameters: data -- the raw bytes.
 /// Returns: the XX-encoded text.
 /// Complexity: O(n).
 pub fn xxencode(data: &Vec[UInt8]) -> Str {
@@ -235,7 +235,7 @@ pub fn xxencode(data: &Vec[UInt8]) -> Str {
 }
 
 /// Decode an XXencode string to bytes.
-/// Parameters: s — the XX text.
+/// Parameters: s -- the XX text.
 /// Returns: Ok(bytes) on success; Err on malformed input.
 /// Complexity: O(n).
 pub fn xxdecode(s: Str) -> Result[Vec[UInt8], Str] {
@@ -297,7 +297,7 @@ pub fn xxdecode(s: Str) -> Result[Vec[UInt8], Str] {
 
 /// Compute the encoded length for a given input length: each 45-byte block
 /// becomes a 61-character line (60 data chars + newline).
-/// Parameters: len — the input byte count.
+/// Parameters: len -- the input byte count.
 /// Returns: the UU-encoded text length.
 /// Complexity: O(1).
 pub fn uu_encoded_length(len: Int) -> Int {

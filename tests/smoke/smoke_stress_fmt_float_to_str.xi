@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.fmt Float64.to_str for common values
+// XIOM stdlib stress -- xiom.fmt Float64.to_str for common values
 // Tests float to string conversion for round and fractional values.
 // Returns 0 on success, nonzero on failure.
 

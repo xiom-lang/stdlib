@@ -1,4 +1,4 @@
-// XIOM — Async Library
+// XIOM -- Async Library
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 //
@@ -11,7 +11,7 @@
 //     when the sole remaining work is a future-dated timer.
 //   * Channels are scheduling-aware: `recv` yields to the executor when the
 //     channel is empty (so a queued sender can run) and `send` applies
-//     cooperative backpressure on a full bounded channel — neither panics
+//     cooperative backpressure on a full bounded channel -- neither panics
 //     during normal flow.
 //   * `delay` registers a task that becomes ready after a real, monotonic
 //     deadline; `sleep_ms` waits while still driving other ready tasks.
@@ -19,7 +19,7 @@
 // NOTE: XIOM `fn()` values are non-capturing function pointers and the
 // language has no async/await coroutine transform, so tasks run to
 // completion (there is no mid-task suspension). Cooperation therefore
-// happens at task boundaries — `spawn`, `recv`, `send`, `delay`, `run`.
+// happens at task boundaries -- `spawn`, `recv`, `send`, `delay`, `run`.
 // This is a genuine ready-queue scheduler with real timers, not a
 // stackful/epoll runtime.
 
@@ -168,7 +168,7 @@ fn _pump() -> Bool {
 
 // === Spawn ===
 // Enqueue an async task onto the global executor's ready-queue.
-// NOTE: unlike the old stub, this no longer runs `task` inline — it is
+// NOTE: unlike the old stub, this no longer runs `task` inline -- it is
 // scheduled and runs when the executor is driven via `run`/`block_on`.
 pub fn spawn(task: fn()) {
   _exec.spawn(task);
@@ -231,7 +231,7 @@ pub fn Channel.send[T](&mut self, value: T) {
     return;
   }
   // Cooperative backpressure: when a bounded channel is full, yield to the
-  // executor so a receiver can drain it — never panic during normal flow.
+  // executor so a receiver can drain it -- never panic during normal flow.
   while cap > 0 && items.len() >= cap {
     if !_pump() {
       panic("Channel.send: deadlock -- channel full and scheduler idle");
@@ -274,11 +274,11 @@ pub fn Channel.close[T](self) {
   closed = true;
 }
 
-// ── Async Task ID Counter ──────────────────────────────────────────
+// -- Async Task ID Counter ------------------------------------------
 
 var _async_task_counter: Int = 0;
 
-// ── Time & Yield Helpers ───────────────────────────────────────────
+// -- Time & Yield Helpers -------------------------------------------
 
 /// Returns the current monotonic time in milliseconds.
 /// Complexity: O(1). Thread-safe.
@@ -298,7 +298,7 @@ pub fn async_yield_now() {
   unsafe { xiom_thread_sleep_ms(0); };
 }
 
-// ── Spawn Helpers ──────────────────────────────────────────────────
+// -- Spawn Helpers --------------------------------------------------
 
 /// Enqueues a task onto the global executor and returns a task id.
 /// Complexity: O(1). Thread-safe: accesses global executor.
@@ -314,7 +314,7 @@ pub fn async_spawn_delayed(ms: Int, f: fn()) {
   _exec.at(_now() + ms, f);
 }
 
-// ── Executor Inspection & Control ──────────────────────────────────
+// -- Executor Inspection & Control ----------------------------------
 
 /// Runs one step of the given executor. Returns `true` if a task was run.
 /// Complexity: O(1). Thread-safe if executor is not shared.

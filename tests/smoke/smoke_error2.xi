@@ -1,4 +1,4 @@
-// XIOM stdlib smoke — xiom.error.chain + context + backtrace
+// XIOM stdlib smoke -- xiom.error.chain + context + backtrace
 // Returns 0 on success, nonzero (and a tag) on failure.
 
 module smoke_error2

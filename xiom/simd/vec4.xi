@@ -15,7 +15,7 @@ use xiom.math.sqrt;
 // Scalar fallback: each vector is four scalar lanes stored in a plain struct.
 // There is no real SIMD acceleration in this build (that is the compiler
 // session's runtime domain); the API is fully implemented with scalar
-// arithmetic. Use `f32x4_extract`/`f32x4_insert` and friends to read lanes —
+// arithmetic. Use `f32x4_extract`/`f32x4_insert` and friends to read lanes --
 // direct cross-module field reads of multi-field structs are unreliable in
 // this build.
 // ============================================================================

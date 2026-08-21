@@ -1,4 +1,4 @@
-// XIOM — Hashing: SuperFastHash (Paul Hsieh)
+// XIOM -- Hashing: SuperFastHash (Paul Hsieh)
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 
@@ -6,8 +6,8 @@ module xiom.hash.superfast
 
 // Faithful port of Paul Hsieh's SuperFastHash (32-bit). Fast for hash
 // tables; NOT cryptographic. Verified against a clang-built reference
-// (2026-08-11): "" → 0, "a" → 0x1266f960, "abc" → 0xd7be8b0f,
-// "message digest" → 0x32bb9891.
+// (2026-08-11): "" -> 0, "a" -> 0x1266f960, "abc" -> 0xd7be8b0f,
+// "message digest" -> 0x32bb9891.
 
 // 4-byte block loop plus 1-3 byte tail; all 32-bit wrapping via masks.
 pub fn superfast32(data: &Vec[UInt8]) -> Int {

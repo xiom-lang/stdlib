@@ -1,4 +1,4 @@
-﻿// XIOM - Conversion: UTF-16/UTF-32
+// XIOM - Conversion: UTF-16/UTF-32
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 
@@ -18,7 +18,7 @@ use xiom.char;
 // ============================================================================
 
 /// Encode a string to native-order UTF-16 code units (no BOM).
-/// Parameters: s â€” the input string.
+/// Parameters: s -- the input string.
 /// Returns: UTF-16 code units (surrogate pairs for supplementary chars).
 /// Complexity: O(n).
 pub fn utf16_encode(s: Str) -> Vec[UInt16] {
@@ -42,7 +42,7 @@ pub fn utf16_encode(s: Str) -> Vec[UInt16] {
 }
 
 /// Decode native-order UTF-16 code units to a string.
-/// Parameters: bytes â€” the code units (a leading BOM is skipped).
+/// Parameters: bytes -- the code units (a leading BOM is skipped).
 /// Returns: Ok(Str) on success; Err for lone surrogates.
 /// Complexity: O(n).
 pub fn utf16_decode(bytes: &Vec[UInt16]) -> Result[Str, Str] {
@@ -76,7 +76,7 @@ pub fn utf16_decode(bytes: &Vec[UInt16]) -> Result[Str, Str] {
 }
 
 /// Encode a string to little-endian UTF-16 bytes including a BOM.
-/// Parameters: s â€” the input string.
+/// Parameters: s -- the input string.
 /// Returns: the byte sequence.
 /// Complexity: O(n).
 pub fn utf16le_to_bytes(s: Str) -> Vec[UInt8] {
@@ -95,7 +95,7 @@ pub fn utf16le_to_bytes(s: Str) -> Vec[UInt8] {
 }
 
 /// Encode a string to big-endian UTF-16 bytes including a BOM.
-/// Parameters: s â€” the input string.
+/// Parameters: s -- the input string.
 /// Returns: the byte sequence.
 /// Complexity: O(n).
 pub fn utf16be_to_bytes(s: Str) -> Vec[UInt8] {
@@ -114,7 +114,7 @@ pub fn utf16be_to_bytes(s: Str) -> Vec[UInt8] {
 }
 
 /// Decode little-endian UTF-16 bytes to a string.
-/// Parameters: bytes â€” the byte sequence (a leading BOM is skipped).
+/// Parameters: bytes -- the byte sequence (a leading BOM is skipped).
 /// Returns: Ok(Str) on success; Err for an odd length or lone surrogates.
 /// Complexity: O(n).
 pub fn utf16_decode_le(bytes: &Vec[UInt8]) -> Result[Str, Str] {
@@ -133,7 +133,7 @@ pub fn utf16_decode_le(bytes: &Vec[UInt8]) -> Result[Str, Str] {
 }
 
 /// Decode big-endian UTF-16 bytes to a string.
-/// Parameters: bytes â€” the byte sequence (a leading BOM is skipped).
+/// Parameters: bytes -- the byte sequence (a leading BOM is skipped).
 /// Returns: Ok(Str) on success; Err for an odd length or lone surrogates.
 /// Complexity: O(n).
 pub fn utf16_decode_be(bytes: &Vec[UInt8]) -> Result[Str, Str] {
@@ -152,7 +152,7 @@ pub fn utf16_decode_be(bytes: &Vec[UInt8]) -> Result[Str, Str] {
 }
 
 /// Encode a string to UTF-32 code points (no BOM).
-/// Parameters: s â€” the input string.
+/// Parameters: s -- the input string.
 /// Returns: one UInt32 per code point.
 /// Complexity: O(n).
 pub fn utf32_encode(s: Str) -> Vec[UInt32] {
@@ -167,7 +167,7 @@ pub fn utf32_encode(s: Str) -> Vec[UInt32] {
 }
 
 /// Decode UTF-32 code points to a string.
-/// Parameters: code_points â€” the code points (a leading BOM is skipped).
+/// Parameters: code_points -- the code points (a leading BOM is skipped).
 /// Returns: Ok(Str) on success; Err for a surrogate or out-of-range value.
 /// Complexity: O(n).
 pub fn utf32_decode(code_points: &Vec[UInt32]) -> Result[Str, Str] {
@@ -192,7 +192,7 @@ pub fn utf32_decode(code_points: &Vec[UInt32]) -> Result[Str, Str] {
 }
 
 /// Encode a string to little-endian UTF-32 bytes including a BOM.
-/// Parameters: s â€” the input string.
+/// Parameters: s -- the input string.
 /// Returns: the byte sequence.
 /// Complexity: O(n).
 pub fn utf32le_to_bytes(s: Str) -> Vec[UInt8] {
@@ -215,7 +215,7 @@ pub fn utf32le_to_bytes(s: Str) -> Vec[UInt8] {
 }
 
 /// Encode a string to big-endian UTF-32 bytes including a BOM.
-/// Parameters: s â€” the input string.
+/// Parameters: s -- the input string.
 /// Returns: the byte sequence.
 /// Complexity: O(n).
 pub fn utf32be_to_bytes(s: Str) -> Vec[UInt8] {
@@ -239,7 +239,7 @@ pub fn utf32be_to_bytes(s: Str) -> Vec[UInt8] {
 
 /// Report whether every code point of a string fits within UTF-16 (i.e. no
 /// character lies in the surrogate range and all are <= 0x10FFFF).
-/// Parameters: s â€” the input string.
+/// Parameters: s -- the input string.
 /// Returns: true when every code point is encodable in UTF-16.
 /// Complexity: O(n).
 pub fn utf16_is_valid(s: Str) -> Bool {
@@ -262,7 +262,7 @@ pub fn utf16_is_valid(s: Str) -> Bool {
 }
 
 /// Report whether a string contains no surrogate or invalid code points.
-/// Parameters: s â€” the input string.
+/// Parameters: s -- the input string.
 /// Returns: true when every code point is a valid scalar value.
 /// Complexity: O(n).
 pub fn utf32_is_valid(s: Str) -> Bool {
@@ -270,7 +270,7 @@ pub fn utf32_is_valid(s: Str) -> Bool {
 }
 
 /// Split a code point into a UTF-16 surrogate pair.
-/// Parameters: cp â€” a code point >= 0x10000.
+/// Parameters: cp -- a code point >= 0x10000.
 /// Returns: (high surrogate, low surrogate). Code points below 0x10000 or
 ///          above 0x10FFFF map to (0, 0).
 /// Complexity: O(1).
@@ -285,7 +285,7 @@ pub fn code_point_to_utf16(cp: Int) -> (UInt16, UInt16) {
 }
 
 /// Combine a UTF-16 surrogate pair into a code point.
-/// Parameters: hi â€” the high surrogate; lo â€” the low surrogate.
+/// Parameters: hi -- the high surrogate; lo -- the low surrogate.
 /// Returns: the code point; -1 when the pair is not a valid surrogate pair.
 /// Complexity: O(1).
 pub fn surrogate_pair_to_code_point(hi: UInt16, lo: UInt16) -> Int {

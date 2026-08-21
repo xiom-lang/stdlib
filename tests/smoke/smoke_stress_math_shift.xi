@@ -1,4 +1,4 @@
-// XIOM stdlib stress — math.shl and math.shr
+// XIOM stdlib stress -- math.shl and math.shr
 // Tests bit shift left and right.
 // Returns 0 on success, nonzero on failure.
 

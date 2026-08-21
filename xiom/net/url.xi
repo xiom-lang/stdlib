@@ -1,4 +1,4 @@
-// XIOM — URL Parsing Utilities (xiom.net.url)
+// XIOM -- URL Parsing Utilities (xiom.net.url)
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 //
@@ -165,7 +165,7 @@ pub fn url_parse(url: Str) -> Result[UrlParts, Str] {
 }
 
 // url_decode_component percent-decodes %XX sequences. '+' is left as-is
-// (component semantics — '+' is only a space in form-encoding).
+// (component semantics -- '+' is only a space in form-encoding).
 pub fn url_decode_component(s: Str) -> Result[Str, Str] {
   let len = s.len();
   if len == 0 {
@@ -352,7 +352,7 @@ fn path_dir(path: Str) -> Str {
   string.str_slice(path, 0, last_slash + 1)
 }
 
-// url_join resolves a relative reference against a base URL (RFC 3986 §5.3
+// url_join resolves a relative reference against a base URL (RFC 3986 S5.3
 // merge), then normalizes dot segments. If the reference carries its own
 // scheme it is returned unchanged.
 pub fn url_join(base: Str, relative: Str) -> Result[Str, Str] {

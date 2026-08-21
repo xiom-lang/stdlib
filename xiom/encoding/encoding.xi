@@ -1,4 +1,4 @@
-// XIOM — Encoding Utilities
+// XIOM -- Encoding Utilities
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 
@@ -464,7 +464,7 @@ pub fn url_decode(encoded: Str) -> Result[Str, Str]
 pub fn percent_encode(data: Str) -> Str
   ensures: result.len() >= data.len()
 {
-  // Module-qualified call (deterministic resolution — the bare `url_encode`
+  // Module-qualified call (deterministic resolution -- the bare `url_encode`
   // form intermittently miscompiles at -O2 with alwaysinline: the return
   // value came back corrupted ~5% of runs, flaky by code layout).
   encoding.url_encode(data)
@@ -683,7 +683,7 @@ pub fn text_to_binary(text: Str, format: Int) -> Result[Vec[UInt8], Str]
   base64_decode(text)
 }
 
-// ── Base32 (RFC 4648) ───────────────────────────────────────────────────────
+// -- Base32 (RFC 4648) -------------------------------------------------------
 
 /// Encodes bytes to a Base32 string using RFC 4648 alphabet (A-Z, 2-7).
 /// Processes 5-byte blocks into 8 Base32 characters.
@@ -821,14 +821,14 @@ pub fn base32_decode(encoded: Str) -> Result[Vec[UInt8], Str] {
   return Ok(result);
 }
 
-// ── Base16 (hex alias) ──────────────────────────────────────────────────────
+// -- Base16 (hex alias) ------------------------------------------------------
 
 /// Alias for hex_encode. Converts bytes to lowercase hex string.
 pub fn base16_encode(data: &Vec[UInt8]) -> Str {
   return hex_encode(data);
 }
 
-// ── Integer hex conversions ─────────────────────────────────────────────────
+// -- Integer hex conversions -------------------------------------------------
 
 /// Converts an integer to a lowercase hexadecimal string.
 /// Complexity: O(log16(n)).
@@ -887,7 +887,7 @@ pub fn hex_to_int(s: Str) -> Option[Int] {
   return Option[Int]{ is_some: true; value: result; };
 }
 
-// ── Base64 string wrappers ──────────────────────────────────────────────────
+// -- Base64 string wrappers --------------------------------------------------
 
 /// Encodes a string to Base64 by first converting to UTF-8 bytes.
 /// Complexity: O(n), n = string length.

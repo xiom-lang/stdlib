@@ -65,7 +65,7 @@ pub fn field_offsets[T]() -> Vec[Int] {
 }
 
 /// The name of enum variant `v`. LIMITED: the compiler does not expose
-/// variant metadata — returns "unknown".
+/// variant metadata -- returns "unknown".
 /// Complexity: O(1).
 pub fn variant_name[T](v: T) -> Str {
   "unknown"

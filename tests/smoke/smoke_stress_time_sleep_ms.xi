@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.time sleep_ms pauses execution
+// XIOM stdlib stress -- xiom.time sleep_ms pauses execution
 // Calls sleep_ms(1) and verifies that elapsed time is at least 0.
 // Returns 0 on success, nonzero on failure.
 

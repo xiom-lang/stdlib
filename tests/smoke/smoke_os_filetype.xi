@@ -1,4 +1,4 @@
-// XIOM stdlib smoke test — xiom.os.filetype + xiom.os.err + xiom.os.event
+// XIOM stdlib smoke test -- xiom.os.filetype + xiom.os.err + xiom.os.event
 // Byte sniffing, errno tables, and event-loop stubs.
 // Returns 0 on success, nonzero on failure (process exit code).
 

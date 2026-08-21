@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.fmt Formatter.write_bool and finish
+// XIOM stdlib stress -- xiom.fmt Formatter.write_bool and finish
 // Tests Formatter building a string from boolean writes.
 // Returns 0 on success, nonzero on failure.
 

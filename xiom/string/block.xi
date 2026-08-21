@@ -120,7 +120,7 @@ fn _block_name(cp: Int) -> Str {
 }
 
 /// Returns the Unicode block name of the character `c`, e.g. 'A' yields
-/// "Basic Latin" and 'Ω' yields "Greek and Coptic". Code points outside every
+/// "Basic Latin" and 'Omega' yields "Greek and Coptic". Code points outside every
 /// known block yield "Undefined".
 /// Params: c the character to classify.
 /// Returns: the block name.

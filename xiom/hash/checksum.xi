@@ -9,7 +9,7 @@ module xiom.hash.checksum
 // ============================================================================
 // Simple legacy checksum algorithms (BSD, SysV, Internet, Fletcher-16).
 // Implemented locally (same-name delegation to xiom.hash.crc crashes the
-// compiler — see xiom.convert.base58 for the probe reference).
+// compiler -- see xiom.convert.base58 for the probe reference).
 // ============================================================================
 
 /// BSD sum: 16-bit checksum = rotate-right-1, then add each byte (mod 2^16).

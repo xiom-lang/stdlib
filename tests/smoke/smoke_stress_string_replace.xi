@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.string.replace single and multi
+// XIOM stdlib stress -- xiom.string.replace single and multi
 // Replaces one occurrence and all overlapping occurrences.
 // Returns 0 on success.
 

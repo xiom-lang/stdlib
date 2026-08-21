@@ -1,4 +1,4 @@
-// XIOM — Comparison & Ordering
+// XIOM -- Comparison & Ordering
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 
@@ -141,7 +141,7 @@ pub fn Reverse.new[T](value: T) -> Reverse[T] {
   Reverse { value: value; }
 }
 
-// ── Multi-value comparisons ─────────────────────────────────────────────────
+// -- Multi-value comparisons -------------------------------------------------
 
 /// Minimum of three values. O(1).
 pub fn min3[T: Ord](a: T, b: T, c: T) -> T {

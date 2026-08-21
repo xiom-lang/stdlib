@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.string.char_at out-of-bounds
+// XIOM stdlib stress -- xiom.string.char_at out-of-bounds
 // Tests char_at returns None for indices past the end of the string.
 // Returns 0 on success, nonzero on failure.
 

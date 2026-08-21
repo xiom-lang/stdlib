@@ -10,7 +10,7 @@ module xiom.string.casefold
 // Unicode case folding for case-insensitive matching, plus a fast ASCII-only
 // variant. Coverage: full 1:1 lowercase mappings for ASCII, Latin-1, Latin
 // Extended-A, Greek and Cyrillic, plus the well-known multi-char folds
-// (U+00DF/ß and U+1E9E/ẞ -> "ss", U+0130/İ -> "i" + combining dot). Other
+// (U+00DF/ss and U+1E9E/SS -> "ss", U+0130/I -> "i" + combining dot). Other
 // scripts are passed through unchanged; see the inline TODO.
 // ============================================================================
 
@@ -19,8 +19,8 @@ use xiom.char;
 
 /// Full Unicode case folding of `s` for case-insensitive comparison. ASCII,
 /// Latin-1, Latin Extended-A, Greek and Cyrillic uppercase letters are folded
-/// to their lowercase forms; the sharp s (ß/ẞ) folds to "ss" and dotted
-/// capital I (İ) folds to "i" + combining dot, matching the Unicode full
+/// to their lowercase forms; the sharp s (ss/SS) folds to "ss" and dotted
+/// capital I (I) folds to "i" + combining dot, matching the Unicode full
 /// case-folding mapping for those characters.
 /// Params: s the string to fold.
 /// Returns: the case-folded string.
@@ -86,7 +86,7 @@ pub fn str_casefold_ascii(s: Str) -> Str {
   _bytes_to_str(&out)
 }
 
-// ── Private helpers ─────────────────────────────────────────────────────────
+// -- Private helpers ---------------------------------------------------------
 
 /// Masked byte at `pos` (BUG 22 #10: `as Int` sign-extends UInt8).
 fn _byte_at(s: Str, pos: Int) -> Int {

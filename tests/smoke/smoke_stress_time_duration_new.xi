@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.time Duration.new with various secs/nanos combos
+// XIOM stdlib stress -- xiom.time Duration.new with various secs/nanos combos
 // Returns 0 on success, nonzero on failure.
 
 module smoke_stress_time_duration_new

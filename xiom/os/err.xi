@@ -9,7 +9,7 @@ module xiom.os.err
 // ============================================================================
 // Error introspection: errno access, errno names and messages, perror-style
 // reporting, stack backtraces, symbol demangling, and the last captured
-// error. The direct errno syscall is not exposed by the pure stdlib — the
+// error. The direct errno syscall is not exposed by the pure stdlib -- the
 // errno value is reported as 0 and the code tables are used for name/message
 // mapping (pure). backtrace/last_error are documented stubs.
 // ============================================================================
@@ -25,7 +25,7 @@ pub fn errno() -> Int {
 }
 
 /// Return the symbolic name for an errno code.
-/// Parameters: code — the errno number.
+/// Parameters: code -- the errno number.
 /// Returns: the symbolic name (e.g. "ENOENT"), or "EUNKNOWN".
 /// Complexity: O(1). Pure.
 pub fn errno_name(code: Int) -> Str {
@@ -106,7 +106,7 @@ pub fn errno_name(code: Int) -> Str {
 }
 
 /// Return the human-readable message for an errno code.
-/// Parameters: code — the errno number.
+/// Parameters: code -- the errno number.
 /// Returns: the descriptive message, or "unknown error".
 /// Complexity: O(1). Pure.
 pub fn strerror(code: Int) -> Str {
@@ -143,7 +143,7 @@ pub fn strerror(code: Int) -> Str {
 }
 
 /// Print msg plus the current errno message.
-/// Parameters: msg — the prefix message.
+/// Parameters: msg -- the prefix message.
 /// Returns: Unit. Prints "msg: <errno message>" (stdout; the runtime exposes
 ///          no stderr writer).
 /// Complexity: O(1). Pure.
@@ -199,7 +199,7 @@ pub fn last_error() -> Str {
 }
 
 /// Format an errno code as "name (code): message".
-/// Parameters: code — the errno number.
+/// Parameters: code -- the errno number.
 /// Returns: the formatted string.
 /// Complexity: O(1). Pure.
 pub fn errno_to_string(code: Int) -> Str {
