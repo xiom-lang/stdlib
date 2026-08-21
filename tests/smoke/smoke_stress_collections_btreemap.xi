@@ -11,10 +11,10 @@ fn main() -> Int {
   bm.insert(1, "one");
   bm.insert(2, "two");
   if bm.len() != 3 { return 1; }
-  if not bm.contains(1) { return 2; }
-  if not bm.contains(2) { return 3; }
-  if not bm.contains(3) { return 4; }
-  if bm.contains(4) { return 5; }
+  if not bm.contains_key(1) { return 2; }
+  if not bm.contains_key(2) { return 3; }
+  if not bm.contains_key(3) { return 4; }
+  if bm.contains_key(4) { return 5; }
   match bm.get(1) {
     Some(v) => { if v != "one" { return 6; } }
     None => { return 7; }
@@ -29,7 +29,7 @@ fn main() -> Int {
   }
   bm.remove(2);
   if bm.len() != 2 { return 12; }
-  if bm.contains(2) { return 13; }
+  if bm.contains_key(2) { return 13; }
   match bm.get(2) {
     Some(_) => { return 14; }
     None => { }
