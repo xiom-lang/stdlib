@@ -1,4 +1,4 @@
-// XIOM stdlib smoke test — xiom.net
+// XIOM stdlib smoke test -- xiom.net
 // Does NOT open sockets: constructs a NetError value and checks its fields.
 // Returns 0 on success, nonzero on failure (process exit code).
 

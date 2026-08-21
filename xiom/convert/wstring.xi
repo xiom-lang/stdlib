@@ -10,7 +10,7 @@ module xiom.convert.wstring
 // Wide-character C string interop helpers. Wide strings are UTF-16 code
 // units (matching Windows wchar_t); pointers are passed as Int and accessed
 // as *UInt8 with running byte offsets (index multiplication in pointer
-// indexing is unreliable — BUG 25 family). String building happens outside
+// indexing is unreliable -- BUG 25 family). String building happens outside
 // unsafe blocks (BUG 22 #15).
 // ============================================================================
 
@@ -20,7 +20,7 @@ extern "C" {
 }
 
 /// Convert a wide C string to a XIOM string.
-/// Parameters: ptr — the address of the UTF-16 wide string (0 returns "").
+/// Parameters: ptr -- the address of the UTF-16 wide string (0 returns "").
 /// Returns: the XIOM string.
 /// Complexity: O(n).
 pub fn from_wstring(ptr: Int) -> Str {
@@ -54,7 +54,7 @@ pub fn from_wstring(ptr: Int) -> Str {
 }
 
 /// Allocate a wide-string copy of a XIOM string and return its pointer.
-/// Parameters: s — the string to copy.
+/// Parameters: s -- the string to copy.
 /// Returns: a malloc'd UTF-16 pointer the caller must free.
 /// Complexity: O(n).
 pub fn to_wstring(s: Str) -> Int {
@@ -115,7 +115,7 @@ pub fn to_wstring(s: Str) -> Int {
 }
 
 /// Length of a wide string in code units.
-/// Parameters: ptr — the address of the UTF-16 wide string (0 returns 0).
+/// Parameters: ptr -- the address of the UTF-16 wide string (0 returns 0).
 /// Returns: the number of code units before the terminating zero.
 /// Complexity: O(n).
 pub fn wstring_len(ptr: Int) -> Int {

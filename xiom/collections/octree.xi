@@ -10,7 +10,7 @@ module xiom.collect.octree
 // Octree of 3D Int points with values, recursively subdividing space into
 // eight octants.
 //
-// Flat-arena style (the established collect/ pattern — see quadtree.xi for
+// Flat-arena style (the established collect/ pattern -- see quadtree.xi for
 // the 2D sibling). Every node owns 8 child slots (`kids[i * 8 + o]`; o packs
 // x = bit 0, y = bit 1, z = bit 2) and a region (nx, ny, nz, nw, nh, nd).
 // Points live in a global pool linked through `phead`/`pnxt`, leaves hold at
@@ -40,7 +40,7 @@ pub type Octree = {
   pnxt: Vec[Int];
 }
 
-// ceil(v / 2) — child extents and octant boundaries must share the SAME
+// ceil(v / 2) -- child extents and octant boundaries must share the SAME
 // rounding so children tile their parent without gaps.
 fn _half(v: Int) -> Int {
   var r = v / 2;

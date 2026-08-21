@@ -11,7 +11,7 @@ module xiom.num.precision_float
 // BigFloat implementation. The reference implementation lives in
 // num/bigfloat.xi (module xiom.num.bigfloat); these thin wrappers present the
 // frozen xiom.num.precision_float API (by-value operands, Option on fallible
-// paths — division by zero, negative roots, non-positive logs, out-of-domain
+// paths -- division by zero, negative roots, non-positive logs, out-of-domain
 // asin/acos). All fallible inputs are validated before dispatch so the
 // underlying requires clauses are never violated.
 // ============================================================================

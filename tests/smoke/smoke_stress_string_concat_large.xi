@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.string.str_concat repeated growth
+// XIOM stdlib stress -- xiom.string.str_concat repeated growth
 // Builds a large string via repeated concatenation and verifies length.
 // Returns 0 on success.
 

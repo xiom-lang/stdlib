@@ -11,7 +11,7 @@ module xiom.convert.overflow
 // together with a Bool flag reporting whether the arithmetic overflowed.
 //
 // TODO(compiler): functions returning a tuple that CONTAINS a Bool cannot be
-// compiled — the compiler emits a Tuple__Int__Int where a Tuple__Int__Bool is
+// compiled -- the compiler emits a Tuple__Int__Int where a Tuple__Int__Bool is
 // expected ("invalid IR", verified by minimal probe; Bool-in-struct is fine,
 // Bool-in-tuple is not). The implementations below are correct but must not
 // be CALLED until the tuple/Bool codegen bug is fixed.

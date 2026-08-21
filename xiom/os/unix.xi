@@ -9,8 +9,8 @@ module xiom.os.unix
 // ============================================================================
 // Unix-only helpers: umask, uid/gid, user/group names, load average, sysconf,
 // rlimits, utime, chroot and nice. Home-directory lookup delegates to
-// xiom.env (different name — safe); the remaining functions require POSIX
-// syscalls the pure stdlib does not expose — documented stubs returning
+// xiom.env (different name -- safe); the remaining functions require POSIX
+// syscalls the pure stdlib does not expose -- documented stubs returning
 // documented defaults.
 // ============================================================================
 

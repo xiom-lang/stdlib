@@ -1,4 +1,4 @@
-// XIOM stdlib smoke — xiom.collect.tinylfu
+// XIOM stdlib smoke -- xiom.collect.tinylfu
 // Count-min sketch primitives + TinyLFU admission decisions and reset.
 // Returns 0 on success, nonzero + tag on failure.
 

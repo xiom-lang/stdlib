@@ -12,7 +12,7 @@ module xiom.convert.int
 // xiom.convert.parse (different function name, so delegation is safe from the
 // same-name miscompile).
 //
-// NOTE: the canonical xiom.convert.tostring is deliberately NOT imported —
+// NOTE: the canonical xiom.convert.tostring is deliberately NOT imported --
 // it pulls xiom.num.base, whose Int<->Float64 towers force the compiler to
 // route conversions through the Into interface and emit a buggy `Int.into`
 // (clang: tower.Int.to_float called with an alloca pointer). Local
@@ -24,7 +24,7 @@ use xiom.convert.parse;
 
 /// Format an integer as a decimal string. Exact for the full Int range
 /// (including INT_MIN).
-/// Parameters: n — the integer value.
+/// Parameters: n -- the integer value.
 /// Returns: the decimal representation.
 /// Complexity: O(log_10 |n|).
 pub fn int_to_string(n: Int) -> Str {
@@ -62,7 +62,7 @@ pub fn int_to_string(n: Int) -> Str {
 }
 
 /// Parse a decimal string to an integer.
-/// Parameters: s — the decimal integer string (optional sign).
+/// Parameters: s -- the decimal integer string (optional sign).
 /// Returns: Ok(Int) for well-formed input, Err otherwise.
 /// Complexity: O(n), n = string length.
 pub fn string_to_int(s: Str) -> Result[Int, Str] {
@@ -70,7 +70,7 @@ pub fn string_to_int(s: Str) -> Result[Int, Str] {
 }
 
 /// Format an integer in an arbitrary base (2-36, lowercase digits).
-/// Parameters: n — the integer value; base — the radix.
+/// Parameters: n -- the integer value; base -- the radix.
 /// Returns: the base representation; "" for an invalid radix.
 /// Complexity: O(log_base |n|).
 pub fn int_to_base(n: Int, base: Int) -> Str {
@@ -111,7 +111,7 @@ pub fn int_to_base(n: Int, base: Int) -> Str {
 }
 
 /// Parse an integer string in an arbitrary base (2-36, both digit cases).
-/// Parameters: s — the digit string (optional sign); base — the radix.
+/// Parameters: s -- the digit string (optional sign); base -- the radix.
 /// Returns: Ok(Int) for well-formed input, Err for an invalid radix, an
 ///          empty string, an out-of-range digit, or overflow.
 /// Complexity: O(n), n = string length.
@@ -120,7 +120,7 @@ pub fn base_to_int(s: Str, base: Int) -> Result[Int, Str] {
 }
 
 /// Format an integer as a lowercase hexadecimal string.
-/// Parameters: n — the integer value.
+/// Parameters: n -- the integer value.
 /// Returns: the hexadecimal representation ("0" for zero).
 /// Complexity: O(log_16 |n|).
 pub fn int_to_hex(n: Int) -> Str {
@@ -128,7 +128,7 @@ pub fn int_to_hex(n: Int) -> Str {
 }
 
 /// Parse a hexadecimal string to an integer.
-/// Parameters: s — the hex digit string (both digit cases accepted).
+/// Parameters: s -- the hex digit string (both digit cases accepted).
 /// Returns: Ok(Int) for well-formed input, Err otherwise.
 /// Complexity: O(n), n = string length.
 pub fn int_from_hex(s: Str) -> Result[Int, Str] {
@@ -136,7 +136,7 @@ pub fn int_from_hex(s: Str) -> Result[Int, Str] {
 }
 
 /// Format an integer as a lowercase octal string.
-/// Parameters: n — the integer value.
+/// Parameters: n -- the integer value.
 /// Returns: the octal representation ("0" for zero).
 /// Complexity: O(log_8 |n|).
 pub fn int_to_octal(n: Int) -> Str {
@@ -144,7 +144,7 @@ pub fn int_to_octal(n: Int) -> Str {
 }
 
 /// Format an integer as a binary string.
-/// Parameters: n — the integer value.
+/// Parameters: n -- the integer value.
 /// Returns: the binary representation ("0" for zero).
 /// Complexity: O(log_2 |n|).
 pub fn int_to_binary(n: Int) -> Str {

@@ -1,4 +1,4 @@
-// XIOM — 2D/3D Geometry Library (vectors, matrices, quaternions, primitives)
+// XIOM -- 2D/3D Geometry Library (vectors, matrices, quaternions, primitives)
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 
@@ -22,32 +22,32 @@ use xiom.geom.polyhedra;
 use xiom.math;
 
 // ============================================================================
-// Types — 2D/3D vector, matrix, quaternion, and primitive types
+// Types -- 2D/3D vector, matrix, quaternion, and primitive types
 // ============================================================================
 
-// 2-component vector (x, y) — used for 2D positions, directions, UVs.
+// 2-component vector (x, y) -- used for 2D positions, directions, UVs.
 pub type Vec2 = { x: Float64; y: Float64; }
 
-// 3-component vector (x, y, z) — core 3D math type.
+// 3-component vector (x, y, z) -- core 3D math type.
 pub type Vec3 = { x: Float64; y: Float64; z: Float64; }
 
-// 4-component vector (x, y, z, w) — homogeneous coords, RGBA colours.
+// 4-component vector (x, y, z, w) -- homogeneous coords, RGBA colours.
 pub type Vec4 = { x: Float64; y: Float64; z: Float64; w: Float64; }
 
-// Quaternion (x, y, z, w) — rotation representation; w is the scalar part.
+// Quaternion (x, y, z, w) -- rotation representation; w is the scalar part.
 pub type Quaternion = { x: Float64; y: Float64; z: Float64; w: Float64; }
 
-// 2×2 column-major matrix.
+// 2x2 column-major matrix.
 pub type Mat2 = { m00: Float64; m01: Float64; m10: Float64; m11: Float64; }
 
-// 3×3 column-major matrix.
+// 3x3 column-major matrix.
 pub type Mat3 = {
   m00: Float64; m01: Float64; m02: Float64;
   m10: Float64; m11: Float64; m12: Float64;
   m20: Float64; m21: Float64; m22: Float64;
 }
 
-// 4×4 column-major matrix — core 3D transform type.
+// 4x4 column-major matrix -- core 3D transform type.
 pub type Mat4 = {
   m00: Float64; m01: Float64; m02: Float64; m03: Float64;
   m10: Float64; m11: Float64; m12: Float64; m13: Float64;
@@ -66,7 +66,7 @@ pub type Sphere = { center: Vec3; radius: Float64; }
 pub type Ray = { origin: Vec3; dir: Vec3; }
 
 // ============================================================================
-// Vec2 — construction and arithmetic
+// Vec2 -- construction and arithmetic
 // ============================================================================
 
 // Create a new 2D vector.
@@ -142,13 +142,13 @@ pub fn vec2_distance(a: Vec2, b: Vec2) -> Float64 {
   return vec2_length(vec2_sub(a, b));
 }
 
-// Linearly interpolate between a and b by t. t=0 → a, t=1 → b. O(1).
+// Linearly interpolate between a and b by t. t=0 -> a, t=1 -> b. O(1).
 pub fn vec2_lerp(a: Vec2, b: Vec2, t: Float64) -> Float64 {
   return math.lerp(a.x, b.x, t);
 }
 
 // ============================================================================
-// Vec3 — construction and arithmetic
+// Vec3 -- construction and arithmetic
 // ============================================================================
 
 // Create a new 3D vector.
@@ -201,7 +201,7 @@ pub fn vec3_dot(a: Vec3, b: Vec3) -> Float64 {
   return a.x * b.x + a.y * b.y + a.z * b.z;
 }
 
-// 3D cross product: a × b (right-handed). O(1).
+// 3D cross product: a x b (right-handed). O(1).
 pub fn vec3_cross(a: Vec3, b: Vec3) -> Vec3 {
   return Vec3{
     x: a.y * b.z - a.z * b.y;
@@ -241,7 +241,7 @@ pub fn vec3_lerp(a: Vec3, b: Vec3, t: Float64) -> Vec3 {
 }
 
 // ============================================================================
-// Vec4 — construction
+// Vec4 -- construction
 // ============================================================================
 
 // Create a new 4D vector.
@@ -250,7 +250,7 @@ pub fn vec4_new(x: Float64, y: Float64, z: Float64, w: Float64) -> Vec4 {
 }
 
 // ============================================================================
-// Quaternion — construction and operations
+// Quaternion -- construction and operations
 // ============================================================================
 
 // Identity quaternion (no rotation). O(1).
@@ -272,7 +272,7 @@ pub fn quat_new(axis: Vec3, angle: Float64) -> Quaternion {
 }
 
 // Multiply two quaternions q1 * q2 (compose rotations, q2 applied first). O(1).
-// Hamilton product: (w1w2 - v1·v2, w1v2 + w2v1 + v1×v2)
+// Hamilton product: (w1w2 - v1-v2, w1v2 + w2v1 + v1xv2)
 pub fn quat_mul(a: Quaternion, b: Quaternion) -> Quaternion {
   return Quaternion{
     x: a.w * b.x + a.x * b.w + a.y * b.z - a.z * b.y;
@@ -297,13 +297,13 @@ pub fn quat_conjugate(q: Quaternion) -> Quaternion {
 }
 
 // Rotate a 3D vector by quaternion q (q must be normalised). O(1).
-// Returns: v + 2.0 * q.xyz × (q.xyz × v + q.w * v)
+// Returns: v + 2.0 * q.xyz x (q.xyz x v + q.w * v)
 pub fn quat_rotate_vec3(q: Quaternion, v: Vec3) -> Vec3 {
   var qv = Vec3{ x: q.x; y: q.y; z: q.z; };
   var t = vec3_mul_scalar(vec3_cross(qv, v), 2.0);
   var u = vec3_cross(qv, t);
   var w_term = vec3_mul_scalar(t, q.w); // already w * t = q.w * 2 * cross(qv,v)
-  // Correct: v' = v + 2*(q.w*(qv×v) + qv×(qv×v))
+  // Correct: v' = v + 2*(q.w*(qvxv) + qvx(qvxv))
   return vec3_add(v, vec3_mul_scalar(vec3_add(vec3_mul_scalar(vec3_cross(qv, v), q.w), vec3_cross(qv, vec3_cross(qv, v))), 2.0));
 }
 
@@ -325,10 +325,10 @@ pub fn quat_from_euler(yaw: Float64, pitch: Float64, roll: Float64) -> Quaternio
 }
 
 // ============================================================================
-// Mat4 — 4×4 transform matrices (column-major)
+// Mat4 -- 4x4 transform matrices (column-major)
 // ============================================================================
 
-// 4×4 identity matrix. O(1).
+// 4x4 identity matrix. O(1).
 pub fn mat4_identity() -> Mat4 {
   return Mat4{
     m00: 1.0; m01: 0.0; m02: 0.0; m03: 0.0;
@@ -338,7 +338,7 @@ pub fn mat4_identity() -> Mat4 {
   };
 }
 
-// Multiply two 4×4 matrices: a * b. Row × column dot products. O(64 ops).
+// Multiply two 4x4 matrices: a * b. Row x column dot products. O(64 ops).
 pub fn mat4_mul(a: Mat4, b: Mat4) -> Mat4 {
   return Mat4{
     m00: a.m00 * b.m00 + a.m01 * b.m10 + a.m02 * b.m20 + a.m03 * b.m30;
@@ -444,7 +444,7 @@ pub fn mat4_look_at(eye: Vec3, target: Vec3, up: Vec3) -> Mat4 {
   };
 }
 
-// Transform a Vec3 point by a 4×4 matrix (x,y,z,1 homogeneous). O(16 ops).
+// Transform a Vec3 point by a 4x4 matrix (x,y,z,1 homogeneous). O(16 ops).
 pub fn mat4_transform_vec3(m: Mat4, v: Vec3) -> Vec3 {
   var w = m.m30 * v.x + m.m31 * v.y + m.m32 * v.z + m.m33;
   if w == 0.0 { return Vec3{ x: 0.0; y: 0.0; z: 0.0; }; }
@@ -456,10 +456,10 @@ pub fn mat4_transform_vec3(m: Mat4, v: Vec3) -> Vec3 {
 }
 
 // ============================================================================
-// Mat3 — 3×3 matrices (column-major)
+// Mat3 -- 3x3 matrices (column-major)
 // ============================================================================
 
-// 3×3 identity matrix. O(1).
+// 3x3 identity matrix. O(1).
 pub fn mat3_identity() -> Mat3 {
   return Mat3{
     m00: 1.0; m01: 0.0; m02: 0.0;
@@ -468,7 +468,7 @@ pub fn mat3_identity() -> Mat3 {
   };
 }
 
-// Multiply two 3×3 matrices: a * b. O(27 ops).
+// Multiply two 3x3 matrices: a * b. O(27 ops).
 pub fn mat3_mul(a: Mat3, b: Mat3) -> Mat3 {
   return Mat3{
     m00: a.m00 * b.m00 + a.m01 * b.m10 + a.m02 * b.m20;
@@ -484,7 +484,7 @@ pub fn mat3_mul(a: Mat3, b: Mat3) -> Mat3 {
 }
 
 // ============================================================================
-// Aabb — axis-aligned bounding box
+// Aabb -- axis-aligned bounding box
 // ============================================================================
 
 // Create an AABB from min and max corners.
@@ -523,7 +523,7 @@ pub fn sphere_contains_point(s: Sphere, point: Vec3) -> Bool {
 }
 
 // ============================================================================
-// Ray — ray casting
+// Ray -- ray casting
 // ============================================================================
 
 // Create a ray from origin and direction.
@@ -583,7 +583,7 @@ pub fn ray_intersect_aabb(r: Ray, box: Aabb) -> Option[Float64] {
 }
 
 // ============================================================================
-// Vec2 — component-wise extras, negation, reflection, refraction
+// Vec2 -- component-wise extras, negation, reflection, refraction
 // ============================================================================
 
 // Negate a 2D vector (component-wise -v). O(1).
@@ -603,7 +603,7 @@ pub fn vec2_reflect(incident: Vec2, normal: Vec2) -> Vec2 {
 
 // Refract a 2D vector across an interface with relative index eta.
 // Returns None on total internal reflection (k < 0). Both vectors should be
-// unit length. Formula: eta*i - (eta*dot(i,n) + sqrt(k)) * n, k = 1 - eta²(1 - dot²). O(1).
+// unit length. Formula: eta*i - (eta*dot(i,n) + sqrt(k)) * n, k = 1 - eta2(1 - dot2). O(1).
 pub fn vec2_refract(incident: Vec2, normal: Vec2, eta: Float64) -> Option[Vec2] {
   var idotn = vec2_dot(incident, normal);
   var k = 1.0 - eta * eta * (1.0 - idotn * idotn);
@@ -735,7 +735,7 @@ pub fn vec2_clamp_length(v: Vec2, max_len: Float64) -> Vec2 {
 }
 
 // ============================================================================
-// Vec3 — negation, reflection, refraction, projection, angle, orthogonals
+// Vec3 -- negation, reflection, refraction, projection, angle, orthogonals
 // ============================================================================
 
 // Negate a 3D vector (component-wise -v). O(1).
@@ -755,7 +755,7 @@ pub fn vec3_reflect(incident: Vec3, normal: Vec3) -> Vec3 {
 
 // Refract a 3D vector across an interface with relative index eta.
 // Returns None on total internal reflection (k < 0). Both vectors should be
-// unit length. Formula: eta*i - (eta*dot(i,n) + sqrt(k)) * n, k = 1 - eta²(1 - dot²). O(1).
+// unit length. Formula: eta*i - (eta*dot(i,n) + sqrt(k)) * n, k = 1 - eta2(1 - dot2). O(1).
 pub fn vec3_refract(incident: Vec3, normal: Vec3, eta: Float64) -> Option[Vec3] {
   var idotn = vec3_dot(incident, normal);
   var k = 1.0 - eta * eta * (1.0 - idotn * idotn);
@@ -884,7 +884,7 @@ pub fn vec3_clamp_length(v: Vec3, max_len: Float64) -> Vec3 {
 }
 
 // ============================================================================
-// Vec4 — component-wise operations, negation, and conversions
+// Vec4 -- component-wise operations, negation, and conversions
 // ============================================================================
 
 // Multiply two 4D vectors component-wise (Hadamard product). O(1).
@@ -954,10 +954,10 @@ pub fn vec4_from_vec3(v: Vec3, w: Float64) -> Vec4 {
 }
 
 // ============================================================================
-// Mat2 — 2×2 matrices (column-major)
+// Mat2 -- 2x2 matrices (column-major)
 // ============================================================================
 
-// 2×2 identity matrix. O(1).
+// 2x2 identity matrix. O(1).
 pub fn mat2_identity() -> Mat2 {
   return Mat2{
     m00: 1.0; m01: 0.0;
@@ -965,7 +965,7 @@ pub fn mat2_identity() -> Mat2 {
   };
 }
 
-// Multiply two 2×2 matrices: a * b. O(8 ops).
+// Multiply two 2x2 matrices: a * b. O(8 ops).
 pub fn mat2_mul(a: Mat2, b: Mat2) -> Mat2 {
   return Mat2{
     m00: a.m00 * b.m00 + a.m01 * b.m10;
@@ -975,7 +975,7 @@ pub fn mat2_mul(a: Mat2, b: Mat2) -> Mat2 {
   };
 }
 
-// Transpose a 2×2 matrix in place. O(1).
+// Transpose a 2x2 matrix in place. O(1).
 pub fn mat2_transpose(m: Mat2) -> Mat2 {
   return Mat2{
     m00: m.m00; m01: m.m10;
@@ -983,12 +983,12 @@ pub fn mat2_transpose(m: Mat2) -> Mat2 {
   };
 }
 
-// Determinant of a 2×2 matrix: m00*m11 - m01*m10. O(1).
+// Determinant of a 2x2 matrix: m00*m11 - m01*m10. O(1).
 pub fn mat2_determinant(m: Mat2) -> Float64 {
   return m.m00 * m.m11 - m.m01 * m.m10;
 }
 
-// Inverse of a 2×2 matrix via the adjugate / determinant formula.
+// Inverse of a 2x2 matrix via the adjugate / determinant formula.
 // Returns None when the determinant is (near) zero, so the matrix is singular. O(1).
 pub fn mat2_inverse(m: Mat2) -> Option[Mat2] {
   var det = mat2_determinant(m);
@@ -1004,7 +1004,7 @@ pub fn mat2_inverse(m: Mat2) -> Option[Mat2] {
   });
 }
 
-// Uniform 2×2 scale matrix with factor s. O(1).
+// Uniform 2x2 scale matrix with factor s. O(1).
 pub fn mat2_scale(s: Float64) -> Mat2 {
   return Mat2{
     m00: s; m01: 0.0;
@@ -1012,7 +1012,7 @@ pub fn mat2_scale(s: Float64) -> Mat2 {
   };
 }
 
-// 2×2 rotation matrix by angle radians (counter-clockwise). O(1).
+// 2x2 rotation matrix by angle radians (counter-clockwise). O(1).
 pub fn mat2_rotation(angle: Float64) -> Mat2 {
   var c = math.cos(angle);
   var s = math.sin(angle);
@@ -1022,7 +1022,7 @@ pub fn mat2_rotation(angle: Float64) -> Mat2 {
   };
 }
 
-// Transform a 2D vector by a 2×2 matrix: M * v. O(4 ops).
+// Transform a 2D vector by a 2x2 matrix: M * v. O(4 ops).
 pub fn mat2_transform_vec2(m: Mat2, v: Vec2) -> Vec2 {
   return Vec2{
     x: m.m00 * v.x + m.m01 * v.y;
@@ -1031,10 +1031,10 @@ pub fn mat2_transform_vec2(m: Mat2, v: Vec2) -> Vec2 {
 }
 
 // ============================================================================
-// Mat3 — 3×3 matrices (column-major)
+// Mat3 -- 3x3 matrices (column-major)
 // ============================================================================
 
-// Transpose a 3×3 matrix. O(1).
+// Transpose a 3x3 matrix. O(1).
 pub fn mat3_transpose(m: Mat3) -> Mat3 {
   return Mat3{
     m00: m.m00; m01: m.m10; m02: m.m20;
@@ -1043,14 +1043,14 @@ pub fn mat3_transpose(m: Mat3) -> Mat3 {
   };
 }
 
-// Determinant of a 3×3 matrix by cofactor expansion along the first row. O(9 ops).
+// Determinant of a 3x3 matrix by cofactor expansion along the first row. O(9 ops).
 pub fn mat3_determinant(m: Mat3) -> Float64 {
   return m.m00 * (m.m11 * m.m22 - m.m12 * m.m21)
        - m.m01 * (m.m10 * m.m22 - m.m12 * m.m20)
        + m.m02 * (m.m10 * m.m21 - m.m11 * m.m20);
 }
 
-// Inverse of a 3×3 matrix via the adjugate / determinant formula.
+// Inverse of a 3x3 matrix via the adjugate / determinant formula.
 // Returns None when the determinant is (near) zero, so the matrix is singular. O(27 ops).
 pub fn mat3_inverse(m: Mat3) -> Option[Mat3] {
   var det = mat3_determinant(m);
@@ -1071,7 +1071,7 @@ pub fn mat3_inverse(m: Mat3) -> Option[Mat3] {
   });
 }
 
-// Transform a 3D vector by a 3×3 matrix: M * v. O(9 ops).
+// Transform a 3D vector by a 3x3 matrix: M * v. O(9 ops).
 pub fn mat3_transform_vec3(m: Mat3, v: Vec3) -> Vec3 {
   return Vec3{
     x: m.m00 * v.x + m.m01 * v.y + m.m02 * v.z;
@@ -1080,7 +1080,7 @@ pub fn mat3_transform_vec3(m: Mat3, v: Vec3) -> Vec3 {
   };
 }
 
-// Uniform 3×3 scale matrix with factor s. O(1).
+// Uniform 3x3 scale matrix with factor s. O(1).
 pub fn mat3_scale(s: Float64) -> Mat3 {
   return Mat3{
     m00: s; m01: 0.0; m02: 0.0;
@@ -1089,7 +1089,7 @@ pub fn mat3_scale(s: Float64) -> Mat3 {
   };
 }
 
-// Non-uniform 3×3 scale matrix with per-axis factors. O(1).
+// Non-uniform 3x3 scale matrix with per-axis factors. O(1).
 pub fn mat3_scale_xyz(x: Float64, y: Float64, z: Float64) -> Mat3 {
   return Mat3{
     m00: x; m01: 0.0; m02: 0.0;
@@ -1098,7 +1098,7 @@ pub fn mat3_scale_xyz(x: Float64, y: Float64, z: Float64) -> Mat3 {
   };
 }
 
-// 3×3 rotation around the X axis by angle radians (right-handed). O(1).
+// 3x3 rotation around the X axis by angle radians (right-handed). O(1).
 pub fn mat3_rotation_x(angle: Float64) -> Mat3 {
   var c = math.cos(angle);
   var s = math.sin(angle);
@@ -1109,7 +1109,7 @@ pub fn mat3_rotation_x(angle: Float64) -> Mat3 {
   };
 }
 
-// 3×3 rotation around the Y axis by angle radians (right-handed). O(1).
+// 3x3 rotation around the Y axis by angle radians (right-handed). O(1).
 pub fn mat3_rotation_y(angle: Float64) -> Mat3 {
   var c = math.cos(angle);
   var s = math.sin(angle);
@@ -1120,7 +1120,7 @@ pub fn mat3_rotation_y(angle: Float64) -> Mat3 {
   };
 }
 
-// 3×3 rotation around the Z axis by angle radians (right-handed). O(1).
+// 3x3 rotation around the Z axis by angle radians (right-handed). O(1).
 pub fn mat3_rotation_z(angle: Float64) -> Mat3 {
   var c = math.cos(angle);
   var s = math.sin(angle);
@@ -1132,7 +1132,7 @@ pub fn mat3_rotation_z(angle: Float64) -> Mat3 {
 }
 
 // Rotation matrix from a (unit) quaternion. The quaternion is normalised first.
-// Formula: the standard 3×3 rotation matrix derived from q. O(27 ops).
+// Formula: the standard 3x3 rotation matrix derived from q. O(27 ops).
 pub fn mat3_from_quat(q: Quaternion) -> Mat3 {
   var nq = quat_normalize(q);
   var x = nq.x;
@@ -1156,10 +1156,10 @@ pub fn mat3_from_quat(q: Quaternion) -> Mat3 {
 }
 
 // ============================================================================
-// Mat4 — full 4×4 matrix operations (column-major)
+// Mat4 -- full 4x4 matrix operations (column-major)
 // ============================================================================
 
-// Transpose a 4×4 matrix. O(1).
+// Transpose a 4x4 matrix. O(1).
 pub fn mat4_transpose(m: Mat4) -> Mat4 {
   return Mat4{
     m00: m.m00; m01: m.m10; m02: m.m20; m03: m.m30;
@@ -1169,8 +1169,8 @@ pub fn mat4_transpose(m: Mat4) -> Mat4 {
   };
 }
 
-// Determinant of a 4×4 matrix by cofactor expansion along the first row. O(48 ops).
-// Uses 3×3 sub-determinants of the three lower rows.
+// Determinant of a 4x4 matrix by cofactor expansion along the first row. O(48 ops).
+// Uses 3x3 sub-determinants of the three lower rows.
 pub fn mat4_determinant(m: Mat4) -> Float64 {
   // Minor of (0,0): rows 1-3, cols 1-3
   var m00 = m.m11 * (m.m22 * m.m33 - m.m23 * m.m32)
@@ -1192,7 +1192,7 @@ pub fn mat4_determinant(m: Mat4) -> Float64 {
   return m.m00 * m00 - m.m01 * m01 + m.m02 * m02 - m.m03 * m03;
 }
 
-// Inverse of a 4×4 matrix via the adjugate method (cofactor transpose / det).
+// Inverse of a 4x4 matrix via the adjugate method (cofactor transpose / det).
 // Returns None when |det| < 1e-12, so the matrix is singular. O(150 ops).
 pub fn mat4_inverse(m: Mat4) -> Option[Mat4] {
   var m00 = m.m11 * (m.m22 * m.m33 - m.m23 * m.m32)
@@ -1288,7 +1288,7 @@ pub fn mat4_inverse(m: Mat4) -> Option[Mat4] {
   });
 }
 
-// Transform a Vec4 (homogeneous) by a 4×4 matrix: M * v, no perspective divide. O(16 ops).
+// Transform a Vec4 (homogeneous) by a 4x4 matrix: M * v, no perspective divide. O(16 ops).
 pub fn mat4_transform_vec4(m: Mat4, v: Vec4) -> Vec4 {
   return Vec4{
     x: m.m00 * v.x + m.m01 * v.y + m.m02 * v.z + m.m03 * v.w;
@@ -1298,7 +1298,7 @@ pub fn mat4_transform_vec4(m: Mat4, v: Vec4) -> Vec4 {
   };
 }
 
-// Transform a point (w=1) by a 4×4 matrix, including perspective divide.
+// Transform a point (w=1) by a 4x4 matrix, including perspective divide.
 // If the transformed w is zero, returns the zero vector. O(16 ops).
 pub fn mat4_transform_point(m: Mat4, p: Vec3) -> Vec3 {
   var w = m.m30 * p.x + m.m31 * p.y + m.m32 * p.z + m.m33;
@@ -1310,7 +1310,7 @@ pub fn mat4_transform_point(m: Mat4, p: Vec3) -> Vec3 {
   };
 }
 
-// Transform a direction (w=0) by a 4×4 matrix: rotation/scale only,
+// Transform a direction (w=0) by a 4x4 matrix: rotation/scale only,
 // translation is ignored and no perspective divide is applied. O(9 ops).
 pub fn mat4_transform_direction(m: Mat4, d: Vec3) -> Vec3 {
   return Vec3{
@@ -1351,7 +1351,7 @@ pub fn mat4_from_rotation_z(angle: Float64) -> Mat4 {
 }
 
 // Rotation matrix from a (unit) quaternion. The quaternion is normalised first.
-// Formula: the standard 4×4 rotation matrix derived from q. O(27 ops).
+// Formula: the standard 4x4 rotation matrix derived from q. O(27 ops).
 pub fn mat4_from_quat(q: Quaternion) -> Mat4 {
   var nq = quat_normalize(q);
   var x = nq.x;
@@ -1463,7 +1463,7 @@ pub fn mat4_approx_eq(a: Mat4, b: Mat4, eps: Float64) -> Bool {
 }
 
 // ============================================================================
-// Quaternion — full rotation operations
+// Quaternion -- full rotation operations
 // ============================================================================
 
 // Create a quaternion from an axis and angle (radians). The axis is normalised
@@ -1596,12 +1596,12 @@ pub fn quat_from_mat4(m: &Mat4) -> Quaternion {
   };
 }
 
-// 4×4 rotation matrix from a quaternion. Same result as mat4_from_quat. O(1).
+// 4x4 rotation matrix from a quaternion. Same result as mat4_from_quat. O(1).
 pub fn quat_to_mat4(q: Quaternion) -> Mat4 {
   return mat4_from_quat(q);
 }
 
-// 3×3 rotation matrix from a quaternion. Same result as mat3_from_quat. O(1).
+// 3x3 rotation matrix from a quaternion. Same result as mat3_from_quat. O(1).
 pub fn quat_to_mat3(q: Quaternion) -> Mat3 {
   return mat3_from_quat(q);
 }
@@ -1637,7 +1637,7 @@ pub fn quat_angle_between(a: Quaternion, b: Quaternion) -> Float64 {
 }
 
 // ============================================================================
-// Aabb — query and combination helpers
+// Aabb -- query and combination helpers
 // ============================================================================
 
 // Create an AABB from min and max corners. Same as aabb_new. O(1).
@@ -1666,7 +1666,7 @@ pub fn aabb_half_extents(box: Aabb) -> Vec3 {
 }
 
 // True if the sphere intersects the AABB. Uses the closest-point test:
-// the squared distance from the sphere centre to the box must not exceed r². O(1).
+// the squared distance from the sphere centre to the box must not exceed r2. O(1).
 pub fn aabb_intersects_sphere(box: Aabb, s: Sphere) -> Bool {
   var cp = aabb_closest_point(box, s.center);
   return vec3_distance_squared(cp, s.center) <= s.radius * s.radius;
@@ -1746,7 +1746,7 @@ pub fn aabb_intersection(a: Aabb, b: Aabb) -> Option[Aabb] {
 }
 
 // ============================================================================
-// Sphere — query and combination helpers
+// Sphere -- query and combination helpers
 // ============================================================================
 
 // True if two spheres intersect (or touch): distance <= r_a + r_b. O(1).
@@ -1771,12 +1771,12 @@ pub fn sphere_closest_point(s: Sphere, p: Vec3) -> Vec3 {
   return vec3_add(s.center, vec3_mul_scalar(n, s.radius));
 }
 
-// Surface area of a sphere: 4*PI*r². O(1).
+// Surface area of a sphere: 4*PI*r2. O(1).
 pub fn sphere_surface_area(s: Sphere) -> Float64 {
   return 4.0 * math.PI * s.radius * s.radius;
 }
 
-// Volume of a sphere: (4/3)*PI*r³. O(1).
+// Volume of a sphere: (4/3)*PI*r3. O(1).
 pub fn sphere_volume(s: Sphere) -> Float64 {
   return 4.0 / 3.0 * math.PI * s.radius * s.radius * s.radius;
 }
@@ -1792,7 +1792,7 @@ pub fn sphere_expand(s: Sphere, p: Vec3) -> Sphere {
 }
 
 // ============================================================================
-// Ray — evaluation and intersection helpers
+// Ray -- evaluation and intersection helpers
 // ============================================================================
 
 // Point on the ray at parameter t: origin + dir * t. O(1).
@@ -1826,7 +1826,7 @@ pub fn ray_intersect_plane(r: Ray, plane_point: Vec3, plane_normal: Vec3) -> Opt
 }
 
 // Distance from a point p to the ray line (not the segment). Uses the 3D
-// cross-product formula |(p - o) × d| / |d|. Returns 0 if the direction is degenerate. O(1).
+// cross-product formula |(p - o) x d| / |d|. Returns 0 if the direction is degenerate. O(1).
 pub fn ray_distance_to_point(r: Ray, p: Vec3) -> Float64 {
   var v = vec3_sub(p, r.origin);
   var denom = vec3_length(r.dir);
@@ -1838,7 +1838,7 @@ pub fn ray_distance_to_point(r: Ray, p: Vec3) -> Float64 {
 }
 
 // ============================================================================
-// Plane — infinite plane primitive
+// Plane -- infinite plane primitive
 // ============================================================================
 
 // Plane defined by a point on the plane and its normal direction.
@@ -1869,7 +1869,7 @@ pub fn plane_intersect_ray(p: &Plane, r: Ray) -> Option[Float64] {
 }
 
 // ============================================================================
-// Scalar helpers — comparisons and angle conversions
+// Scalar helpers -- comparisons and angle conversions
 // ============================================================================
 
 // True if |a - b| <= eps. The canonical epsilon comparison. O(1).

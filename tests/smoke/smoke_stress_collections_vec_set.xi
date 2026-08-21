@@ -1,4 +1,4 @@
-// XIOM stdlib stress — Vec set
+// XIOM stdlib stress -- Vec set
 // Sets elements at various indices and verifies values.
 // Returns 0 on success, nonzero on failure.
 

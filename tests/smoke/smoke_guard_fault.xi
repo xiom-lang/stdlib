@@ -1,4 +1,4 @@
-// Phase 5 smoke: Hardware Fault Trapping (requirement f, g) — Unsafe Confinement.
+// Phase 5 smoke: Hardware Fault Trapping (requirement f, g) -- Unsafe Confinement.
 // Deliberate hardware faults inside confined blocks must be caught by the SEH
 // trampoline; the process must SURVIVE and continue (println after each).
 // Returns 0 on success.
@@ -52,19 +52,19 @@ fn confined_ok() -> Int
 }
 
 fn main() -> Int {
-  // (1) Access violation inside a confined block → process survives.
+  // (1) Access violation inside a confined block -> process survives.
   io.println("before-av");
   var r1 = confined_av();
   io.println("after-av");
   if r1 != 0 { return 1; }
 
-  // (2) Illegal instruction (ud2) inside a confined block → process survives.
+  // (2) Illegal instruction (ud2) inside a confined block -> process survives.
   io.println("before-ud2");
   var r2 = confined_ud2();
   io.println("after-ud2");
   if r2 != 0 { return 2; }
 
-  // (3) Divide-by-zero inside a confined block → process survives.
+  // (3) Divide-by-zero inside a confined block -> process survives.
   io.println("before-div0");
   var r3 = confined_div0();
   io.println("after-div0");

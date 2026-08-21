@@ -1,4 +1,4 @@
-// XIOM stdlib stress — io.env_var returns Some for PATH
+// XIOM stdlib stress -- io.env_var returns Some for PATH
 // Reads the PATH environment variable, expects Some value.
 // Returns 0 on success.
 

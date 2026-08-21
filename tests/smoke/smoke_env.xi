@@ -1,5 +1,5 @@
 // NOTE: link/run smoke only
-// XIOM stdlib smoke test — xiom.env
+// XIOM stdlib smoke test -- xiom.env
 // Returns 0 on success, nonzero on failure (process exit code).
 
 module smoke_env

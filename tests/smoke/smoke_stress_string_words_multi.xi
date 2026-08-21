@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.string.words with multiple spaces
+// XIOM stdlib stress -- xiom.string.words with multiple spaces
 // Tests words() handles consecutive whitespace and trims boundaries.
 // Returns 0 on success, nonzero on failure.
 

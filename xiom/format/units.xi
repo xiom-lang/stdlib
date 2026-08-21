@@ -205,12 +205,12 @@ fn _prefix_str(f: Float64, unit: Str, binary: Bool) -> Str {
   return body;
 }
 
-/// Degrees Celsius with the degree sign and C suffix ("21.5°C").
+/// Degrees Celsius with the degree sign and C suffix ("21.5degC").
 pub fn format_temperature_celsius(c: Float64) -> Str {
   return convert.float_to_fixed_str(c, 1) + "\u{00b0}C";
 }
 
-/// Degrees Fahrenheit with the degree sign and F suffix ("72.0°F").
+/// Degrees Fahrenheit with the degree sign and F suffix ("72.0degF").
 pub fn format_temperature_fahrenheit(f: Float64) -> Str {
   return convert.float_to_fixed_str(f, 1) + "\u{00b0}F";
 }

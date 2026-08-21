@@ -109,7 +109,7 @@ fn main() -> Int {
   ls_b.push(2.0);
   ls_b.push(3.0);
   ls_b.push(4.0);
-  // least_squares core blocked: TODO(compiler) BUG 26 #1 — by-ref
+  // least_squares core blocked: TODO(compiler) BUG 26 #1 -- by-ref
   // Vec[Vec[Float64]] element reads return garbage data pointers (len fields
   // are correct), so the normal-equation core cannot run; only the
   // empty-input guard is assertable until the compiler fix lands.
@@ -136,7 +136,7 @@ fn main() -> Int {
   basis.push(const1);
   basis.push(idmap);
   basis.push(sq);
-  // best_approx core blocked: TODO(compiler) BUG 26 #2 — Vec[fn] element
+  // best_approx core blocked: TODO(compiler) BUG 26 #2 -- Vec[fn] element
   // reads return garbage, so only the empty-basis guard is assertable.
   var empty_basis = Vec[fn(Float64) -> Float64].new();
   if math.approximation.best_approx(sq, &empty_basis, 0.0, 1.0).len() != 0 { io.println("best-approx-empty"); return 14; }

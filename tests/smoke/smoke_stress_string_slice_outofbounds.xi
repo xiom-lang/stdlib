@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.string.str_slice out-of-bounds handling
+// XIOM stdlib stress -- xiom.string.str_slice out-of-bounds handling
 // Requests slice beyond string length; verifies graceful truncation or error.
 // Returns 0 on success.
 

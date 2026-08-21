@@ -35,7 +35,7 @@ fn _gcd(a: Int, b: Int) -> Int {
   x
 }
 
-/// Truncation toward zero of a Float64 in [0, 2^63) — equals floor there.
+/// Truncation toward zero of a Float64 in [0, 2^63) -- equals floor there.
 /// Callers guarantee the range (the cast is undefined outside i64).
 fn _floor_nonneg(x: Float64) -> Int {
   x as Int

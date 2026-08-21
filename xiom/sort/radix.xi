@@ -199,8 +199,8 @@ pub fn counting_sort(v: &mut Vec[Int], max_val: Int) {
 /// ranges and concatenate them back. Stable within each bucket. O(n + b)
 /// expected on uniformly distributed data (b = buckets), O(n^2) worst when
 /// all elements land in one bucket. Uses a flat offset table (no nested
-/// vectors — TODO(compiler): BUG 34 — and no Int128 index math —
-/// TODO(compiler): BUG 35 — both crash in this fn shape). Values whose
+/// vectors -- TODO(compiler): BUG 34 -- and no Int128 index math --
+/// TODO(compiler): BUG 35 -- both crash in this fn shape). Values whose
 /// spread exceeds i64 range (span > 2^63) may produce wrong bucket indexes;
 /// exact for any realistic dataset. Requires v to be non-empty and
 /// buckets >= 1; otherwise v is unchanged.

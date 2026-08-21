@@ -1,4 +1,4 @@
-// XIOM stdlib stress — io.list_dir returns files
+// XIOM stdlib stress -- io.list_dir returns files
 // Creates a directory with files, lists contents, verifies count.
 // Returns 0 on success.
 

@@ -1,4 +1,4 @@
-// XIOM stdlib stress — Vec sort with duplicates
+// XIOM stdlib stress -- Vec sort with duplicates
 // Pushes values with duplicates, sorts, verifies stability.
 // Returns 0 on success, nonzero on failure.
 

@@ -1,4 +1,4 @@
-// XIOM stdlib stress — Vec push large (1000 elements)
+// XIOM stdlib stress -- Vec push large (1000 elements)
 // Pushes 1000 ints and verifies length.
 // Returns 0 on success.
 

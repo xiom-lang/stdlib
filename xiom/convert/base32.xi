@@ -194,7 +194,7 @@ pub fn base32_decode(s: Str) -> Result[Vec[UInt8], Str] {
   _b32_decode(s, false)
 }
 
-/// Encodes bytes as a base32hex string (RFC 4648 §7, alphabet 0-9, A-V),
+/// Encodes bytes as a base32hex string (RFC 4648 S7, alphabet 0-9, A-V),
 /// padded with '='. Complexity: O(n).
 pub fn base32hex_encode(data: &Vec[UInt8]) -> Str {
   _b32_encode(data, _B32HEX_ALPHABET)

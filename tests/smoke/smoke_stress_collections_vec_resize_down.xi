@@ -1,4 +1,4 @@
-// XIOM stdlib stress — Vec shrink via pop then refill
+// XIOM stdlib stress -- Vec shrink via pop then refill
 // Fills vec, pops all, refills, verifies data integrity.
 // Returns 0 on success, nonzero on failure.
 

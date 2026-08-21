@@ -1,4 +1,4 @@
-// XIOM stdlib smoke test — xiom.net.http + xiom.net.https
+// XIOM stdlib smoke test -- xiom.net.http + xiom.net.https
 // HTTP/HTTPS request line, request building, response parsing helpers.
 // Returns 0 on success, nonzero on failure (process exit code).
 

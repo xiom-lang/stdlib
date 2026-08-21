@@ -1,4 +1,4 @@
-// XIOM stdlib stress — io.BufWriter from stdout
+// XIOM stdlib stress -- io.BufWriter from stdout
 // Creates a BufWriter wrapping stdout and verifies construction succeeds.
 // Returns 0 on success, nonzero on failure.
 

@@ -1,4 +1,4 @@
-// XIOM — Cache Collection (LRU + LFU)
+// XIOM -- Cache Collection (LRU + LFU)
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 
@@ -244,7 +244,7 @@ fn _move_to_front(c: &mut ArcCache, list: Int, idx: Int) {
 }
 
 fn _push_front(c: &mut ArcCache, list: Int, key: Int, value: Int) {
-  // snapshot → clear → key → restore (Vec append-shift cannot front-insert)
+  // snapshot -> clear -> key -> restore (Vec append-shift cannot front-insert)
   var tmpk = Vec[Int].new();
   var tmpv = Vec[Int].new();
   var i: Int = 0;
@@ -348,7 +348,7 @@ fn _ghost_push(c: &mut ArcCache, ghost: Int, key: Int) {
     }
     i = i + 1;
   }
-  // snapshot → clear → key → restore
+  // snapshot -> clear -> key -> restore
   var tmp = Vec[Int].new();
   i = 0;
   if ghost == 0 {
@@ -410,7 +410,7 @@ pub fn arc_new(capacity: Int) -> ArcCache {
   };
 }
 
-/// Value for `key` (promotes recent→frequent on hit). None on miss.
+/// Value for `key` (promotes recent->frequent on hit). None on miss.
 pub fn arc_get(c: &mut ArcCache, key: Int) -> Option[Int] {
   var i1 = _find_idx(&c.t1k, key);
   if i1 >= 0 {
@@ -460,7 +460,7 @@ fn _arc_replace(c: &mut ArcCache) {
   }
 }
 
-/// Insert or update `key` → `value`, adapting p on ghost hits.
+/// Insert or update `key` -> `value`, adapting p on ghost hits.
 pub fn arc_put(c: &mut ArcCache, key: Int, value: Int) {
   var i1 = _find_idx(&c.t1k, key);
   if i1 >= 0 {

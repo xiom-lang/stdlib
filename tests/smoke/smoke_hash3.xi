@@ -29,7 +29,7 @@ fn main() -> Int {
   var b80 = to_bytes("12345678901234567890123456789012345678901234567890123456789012345678901234567890");
   var bwiki = to_bytes("Wikipedia");
 
-  // ── XXH3-64 (seed 0) ──
+  // -- XXH3-64 (seed 0) --
   if xiom.hash.xxhash.xxh3_64(&b0) != 0x2d06800538d394c2 { io.println("xxh3_64 empty"); return 1; }
   if xiom.hash.xxhash.xxh3_64(&ba) != 0xe6c632b61e964e1f { io.println("xxh3_64 a"); return 2; }
   if xiom.hash.xxhash.xxh3_64(&babc) != 0x78af5f94892f3950 { io.println("xxh3_64 abc"); return 3; }
@@ -39,7 +39,7 @@ fn main() -> Int {
   // seeded: XXH3_64bits_withSeed("abc", 42)
   if xiom.hash.xxhash.xxh3_64_with_seed(&babc, 42) != 0xd8438def21bbdcc3 { io.println("xxh3_64 seed"); return 7; }
 
-  // ── XXH3-128 (seed 0) ──
+  // -- XXH3-128 (seed 0) --
   var h0 = xiom.hash.xxhash.xxh3_128(&b0);
   if h0.low64 != 0x6001c324468d497f || h0.high64 != 0x99aa06d3014798d8 { io.println("xxh3_128 empty"); return 8; }
   var ha = xiom.hash.xxhash.xxh3_128(&ba);
@@ -53,7 +53,7 @@ fn main() -> Int {
   var h80 = xiom.hash.xxhash.xxh3_128(&b80);
   if h80.low64 != 0x40cb8d6ac672dcb8 || h80.high64 != 0x08dd22c3ddc34ce6 { io.println("xxh3_128 80"); return 13; }
 
-  // ── SipHash-2-4 / 1-3 (key = 0x0706050403020100, 0x0f0e0d0c0b0a0908) ──
+  // -- SipHash-2-4 / 1-3 (key = 0x0706050403020100, 0x0f0e0d0c0b0a0908) --
   var k0: UInt64 = 0x0706050403020100;
   var k1: UInt64 = 0x0f0e0d0c0b0a0908;
   if xiom.hash.siphash.siphash24(&b0, k0, k1) != 0x726fdb47dd0e0e31 { io.println("sip24 empty"); return 14; }
@@ -72,7 +72,7 @@ fn main() -> Int {
   if xiom.hash.siphash.siphash24_zerokey(&ba) != 0x96c20860cd93a249 { io.println("sip24 zk a"); return 26; }
   if xiom.hash.siphash.siphash24_zerokey(&b0) != 0x1e924b9d737700d7 { io.println("sip24 zk empty"); return 27; }
 
-  // ── SuperFastHash ──
+  // -- SuperFastHash --
   if xiom.hash.superfast.superfast32(&b0) != 0 { io.println("sf empty"); return 28; }
   if xiom.hash.superfast.superfast32(&ba) != 0x1266f960 { io.println("sf a"); return 29; }
   if xiom.hash.superfast.superfast32(&babc) != 0xd7be8b0f { io.println("sf abc"); return 30; }
@@ -80,7 +80,7 @@ fn main() -> Int {
   if xiom.hash.superfast.superfast32(&bfox) != 0x385751ee { io.println("sf fox"); return 32; }
   if xiom.hash.superfast.superfast32(&b80) != 0xde28c84f { io.println("sf 80"); return 33; }
 
-  // ── Adler-32 ──
+  // -- Adler-32 --
   if xiom.hash.crc.adler32(&b0) != 0x00000001 { io.println("adler empty"); return 34; }
   if xiom.hash.crc.adler32(&ba) != 0x00620062 { io.println("adler a"); return 35; }
   if xiom.hash.crc.adler32(&babc) != 0x024d0127 { io.println("adler abc"); return 36; }

@@ -1,4 +1,4 @@
-// XIOM stdlib smoke — xiom.collect.concurrent / mapch
+// XIOM stdlib smoke -- xiom.collect.concurrent / mapch
 // Concurrent queues (mpmc/mpsc/spmc), stack, counter; chaining hash map.
 // Returns 0 on success, nonzero + tag on failure.
 

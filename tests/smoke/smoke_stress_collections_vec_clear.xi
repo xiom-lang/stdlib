@@ -1,4 +1,4 @@
-// XIOM stdlib stress — Vec clear
+// XIOM stdlib stress -- Vec clear
 // Pushes items, clears, verifies empty and can reuse.
 // Returns 0 on success, nonzero on failure.
 

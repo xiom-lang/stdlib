@@ -1,4 +1,4 @@
-// XIOM stdlib smoke — xiom.convert.{date,datetime,duration,time,timestamp}
+// XIOM stdlib smoke -- xiom.convert.{date,datetime,duration,time,timestamp}
 // Returns 0 on success, nonzero on failure (process exit code).
 module smoke_convert_time
 use xiom.io;

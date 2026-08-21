@@ -1,4 +1,4 @@
-// XIOM — Hashing: SipHash (SipHash-2-4 / SipHash-1-3)
+// XIOM -- Hashing: SipHash (SipHash-2-4 / SipHash-1-3)
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 
@@ -8,9 +8,9 @@ module xiom.hash.siphash
 // 64-bit halves (k0, k1); c = compression rounds, d = finalization rounds:
 // SipHash-2-4 is the standard, SipHash-1-3 the faster variant. Verified
 // against a clang-built reference (2026-08-11): key 00..0f, SipHash-2-4 ""
-// → 0x726fdb47dd0e0e31, "a" → 0x2ba3e8e9a71148ca; SipHash-1-3 "" →
-// 0xabac0158050fc4dc, "a" → 0x1c2697ab786a6237. The flat hash.sip_hash
-// name was taken by a DJB2 wrapper — this is the real SipHash.
+// -> 0x726fdb47dd0e0e31, "a" -> 0x2ba3e8e9a71148ca; SipHash-1-3 "" ->
+// 0xabac0158050fc4dc, "a" -> 0x1c2697ab786a6237. The flat hash.sip_hash
+// name was taken by a DJB2 wrapper -- this is the real SipHash.
 
 // SipState is a named struct (not a UInt64 tuple): mixed Int/UInt64 tuples
 // of the same arity collide in catalog codegen type resolution
@@ -18,7 +18,7 @@ module xiom.hash.siphash
 type SipState = { v0: UInt64; v1: UInt64; v2: UInt64; v3: UInt64; }
 
 // Logical (unsigned) right shift of a UInt64 by k bits.
-// NOTE: two-var body — a single-var `var mask = ...; return ... & mask;`
+// NOTE: two-var body -- a single-var `var mask = ...; return ... & mask;`
 // body is mis-inlined by the compiler (the mask statement is dropped,
 // COMPILER_BUGS.md BUG 15). Keep the two-var form.
 fn _u64_shr(x: UInt64, k: Int) -> UInt64 {
@@ -154,7 +154,7 @@ pub fn siphash13(data: &Vec[UInt8], k0: UInt64, k1: UInt64) -> UInt64 {
   return _siphash_core(data, k0, k1, 1, 3);
 }
 
-/// SipHash-2-4 with a zero key (convenience; NOT secure — use real keys).
+/// SipHash-2-4 with a zero key (convenience; NOT secure -- use real keys).
 pub fn siphash24_zerokey(data: &Vec[UInt8]) -> UInt64 {
   return _siphash_core(data, 0, 0, 2, 4);
 }

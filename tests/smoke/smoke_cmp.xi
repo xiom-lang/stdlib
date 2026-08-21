@@ -1,4 +1,4 @@
-// XIOM stdlib smoke test — xiom.cmp
+// XIOM stdlib smoke test -- xiom.cmp
 // Returns 0 on success, nonzero on failure (process exit code).
 
 module smoke_cmp

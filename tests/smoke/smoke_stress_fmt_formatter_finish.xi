@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.fmt Formatter.finish after mixed writes
+// XIOM stdlib stress -- xiom.fmt Formatter.finish after mixed writes
 // Tests Formatter with a sequence of mixed-type writes producing a combined result.
 // Returns 0 on success, nonzero on failure.
 

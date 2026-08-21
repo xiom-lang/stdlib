@@ -18,7 +18,7 @@ module xiom.reflect.typeinfo
 // ============================================================================
 
 /// The name of type T. LIMITED: the compiler does not expose generic type
-/// names yet — returns "unknown".
+/// names yet -- returns "unknown".
 /// Complexity: O(1).
 pub fn type_name[T]() -> Str {
   "unknown"
@@ -31,7 +31,7 @@ pub fn type_id[T]() -> Int {
 }
 
 /// The size of type T in bytes. LIMITED: the layout intrinsics are not
-/// emitted yet — returns 0.
+/// emitted yet -- returns 0.
 /// Complexity: O(1).
 pub fn type_size[T]() -> Int {
   0

@@ -14,7 +14,7 @@ module xiom.convert.iri
 
 use xiom.string;
 
-// Iri — parsed IRI components.
+// Iri -- parsed IRI components.
 pub type Iri = {
   scheme: Str;
   authority: Str;
@@ -24,7 +24,7 @@ pub type Iri = {
 }
 
 /// Parse an IRI into its scheme, authority, path, query and fragment.
-/// Parameters: s — the IRI string (non-ASCII characters allowed).
+/// Parameters: s -- the IRI string (non-ASCII characters allowed).
 /// Returns: Ok(Iri) on success; Err for an empty IRI.
 /// Complexity: O(n).
 pub fn iri_parse(s: Str) -> Result[Iri, Str] {
@@ -90,7 +90,7 @@ pub fn iri_parse(s: Str) -> Result[Iri, Str] {
 
 /// Convert an IRI to an ASCII-only URI by percent-encoding every byte >= 0x80
 /// in the authority, path, query and fragment.
-/// Parameters: s — the IRI string.
+/// Parameters: s -- the IRI string.
 /// Returns: Ok(URI) on success; Err for an empty IRI.
 /// Complexity: O(n).
 pub fn iri_to_uri(s: Str) -> Result[Str, Str] {
@@ -118,7 +118,7 @@ pub fn iri_to_uri(s: Str) -> Result[Str, Str] {
 
 /// Normalize an IRI into canonical form (lowercase scheme, non-ASCII bytes
 /// percent-encoded in place).
-/// Parameters: s — the IRI string.
+/// Parameters: s -- the IRI string.
 /// Returns: Ok(canonical) on success; Err for an empty IRI.
 /// Complexity: O(n).
 pub fn iri_normalize(s: Str) -> Result[Str, Str] {

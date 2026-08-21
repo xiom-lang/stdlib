@@ -1,4 +1,4 @@
-// XIOM stdlib stress — Vec resize up via repeated growth
+// XIOM stdlib stress -- Vec resize up via repeated growth
 // Starts small, grows beyond initial capacity, verifies integrity.
 // Returns 0 on success, nonzero on failure.
 

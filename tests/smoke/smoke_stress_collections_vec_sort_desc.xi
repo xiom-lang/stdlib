@@ -1,4 +1,4 @@
-// XIOM stdlib stress — Vec sort with negative and positive values
+// XIOM stdlib stress -- Vec sort with negative and positive values
 // Pushes mixed-sign values, sorts, verifies correct order.
 // Returns 0 on success, nonzero on failure.
 

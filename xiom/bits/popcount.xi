@@ -11,7 +11,7 @@ module xiom.bits.popcount
 // Bit counting, leading/trailing zeros, parity, power-of-two rounding, and
 // rotation. All operations are built from byte-at-a-time reads and arithmetic
 // shifts/masks (the compiler miscompiles bitwise AND on operands with bit 31
-// set — see xiom.convert.base58 for the probe reference).
+// set -- see xiom.convert.base58 for the probe reference).
 // ============================================================================
 
 /// Number of set bits in n. Complexity: O(64).

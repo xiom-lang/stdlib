@@ -1,4 +1,4 @@
-// XIOM stdlib smoke — xiom.simd.mask + vec4 + vec8 + gather (scalar fallbacks)
+// XIOM stdlib smoke -- xiom.simd.mask + vec4 + vec8 + gather (scalar fallbacks)
 // Returns 0 on success, nonzero (and a tag) on failure.
 
 module smoke_simd

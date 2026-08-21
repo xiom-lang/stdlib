@@ -1,4 +1,4 @@
-// XIOM — Character Operations
+// XIOM -- Character Operations
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 
@@ -148,11 +148,11 @@ pub fn encode_utf8(c: Char, buf: &mut Vec[UInt8]) {
   };
 }
 
-// ──────────────────────────────────────────────────
+// --------------------------------------------------
 //  Extended Character Functions
-// ──────────────────────────────────────────────────
+// --------------------------------------------------
 
-// ── Aliases & Shorthands ──
+// -- Aliases & Shorthands --
 
 // Alias for is_alphabetic. Returns true if `c` is an ASCII letter (a-z, A-Z).
 pub fn is_letter(c: Char) -> Bool {
@@ -164,7 +164,7 @@ pub fn is_control_char(c: Char) -> Bool {
   is_control(c)
 }
 
-// ── Digit Classification ──
+// -- Digit Classification --
 
 // Returns true if `c` is a hexadecimal digit (0-9, a-f, A-F).
 pub fn is_hex_digit(c: Char) -> Bool {
@@ -182,7 +182,7 @@ pub fn is_octal_digit(c: Char) -> Bool {
   c >= '0' && c <= '7'
 }
 
-// ── Unicode Categories ──
+// -- Unicode Categories --
 
 // Returns true if `c` is a symbol character (punctuation, currency, math, or modifier).
 // Covers ASCII punctuation + common Unicode symbol ranges.
@@ -192,7 +192,7 @@ pub fn is_symbol(c: Char) -> Bool {
   if is_math_symbol(c) { return true; };
   return is_punctuation(c)
       || (code >= 0x00A0 && code <= 0x00BF)    // Latin-1 supplement symbols
-      || (code >= 0x00D7 && code <= 0x00F7)    // ×, ÷
+      || (code >= 0x00D7 && code <= 0x00F7)    // x, /
       || (code >= 0x2010 && code <= 0x2027)    // General punctuation
       || (code >= 0x2030 && code <= 0x205E)    // General punctuation continued
       || (code >= 0x2190 && code <= 0x21FF)    // Arrows
@@ -205,10 +205,10 @@ pub fn is_symbol(c: Char) -> Bool {
 }
 
 // Returns true if `c` is a currency symbol.
-// Covers $, ¢, £, ¤, ¥, and the currency symbols block U+20A0..U+20CF.
+// Covers $, c, GBP, $, JPY, and the currency symbols block U+20A0..U+20CF.
 pub fn is_currency(c: Char) -> Bool {
   let code = to_int_from_char(c);
-  return c == '$' || c == '¢' || c == '£' || c == '¤' || c == '¥'
+  return c == '$' || c == 'c' || c == 'GBP' || c == '$' || c == 'JPY'
       || (code >= 0x20A0 && code <= 0x20CF);
 }
 
@@ -217,7 +217,7 @@ pub fn is_currency(c: Char) -> Bool {
 pub fn is_math_symbol(c: Char) -> Bool {
   let code = to_int_from_char(c);
   return c == '+' || c == '-' || c == '*' || c == '/' || c == '=' || c == '<' || c == '>'
-      || c == '±' || c == '×' || c == '÷'
+      || c == '+/-' || c == 'x' || c == '/'
       || (code >= 0x2200 && code <= 0x22FF);
 }
 
@@ -237,7 +237,7 @@ pub fn is_combining_mark(c: Char) -> Bool {
   return code >= 0x0300 && code <= 0x036F;
 }
 
-// ── Case ──
+// -- Case --
 
 // Returns the title-case version of `c`. For a single character this is
 // equivalent to to_uppercase.
@@ -245,7 +245,7 @@ pub fn to_title_case(c: Char) -> Char {
   to_uppercase(c)
 }
 
-// ── ASCII Subclassifications ──
+// -- ASCII Subclassifications --
 
 // Returns true if `c` is an ASCII letter (a-z, A-Z).
 pub fn is_ascii_letter(c: Char) -> Bool {
@@ -289,7 +289,7 @@ pub fn is_ascii_printable(c: Char) -> Bool {
   return code >= 32 && code <= 126;
 }
 
-// ── Digit Value Conversion ──
+// -- Digit Value Conversion --
 
 // Returns the numeric value (0-9) of a digit character, or None if `c` is not a digit.
 pub fn char_to_digit_value(c: Char) -> Option[Int] {
@@ -301,7 +301,7 @@ pub fn digit_value_to_char(n: Int) -> Option[Char] {
   from_digit(n, 10)
 }
 
-// ── ASCII Case ──
+// -- ASCII Case --
 
 // Returns true if `c` is an uppercase ASCII letter (A-Z).
 pub fn is_uppercase_ascii(c: Char) -> Bool {
@@ -325,7 +325,7 @@ pub fn to_ascii_lower(c: Char) -> Char {
   to_lowercase(c)
 }
 
-// ── Composite Predicates ──
+// -- Composite Predicates --
 
 // Returns true if `c` is whitespace or a Unicode separator character.
 // Covers ASCII whitespace + line/paragraph separators (U+2028, U+2029).

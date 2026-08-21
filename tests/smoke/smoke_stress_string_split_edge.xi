@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.string.str_split edge cases
+// XIOM stdlib stress -- xiom.string.str_split edge cases
 // Splits empty string, single char, and no-delimiter-found.
 // Returns 0 on success.
 

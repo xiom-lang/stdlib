@@ -1,4 +1,4 @@
-// XIOM stdlib stress — io.write_file / io.read_file large content
+// XIOM stdlib stress -- io.write_file / io.read_file large content
 // Writes multi-line repeated content, reads it back, verifies.
 // Returns 0 on success, nonzero on failure.
 

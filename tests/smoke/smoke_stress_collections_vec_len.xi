@@ -1,4 +1,4 @@
-// XIOM stdlib stress — Vec len tracking
+// XIOM stdlib stress -- Vec len tracking
 // Verifies len grows and shrinks with push/pop/clear.
 // Returns 0 on success, nonzero on failure.
 

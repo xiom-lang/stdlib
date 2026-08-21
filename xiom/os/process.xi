@@ -1,4 +1,4 @@
-// XIOM — Process Management (exit, spawn, env, PID)
+// XIOM -- Process Management (exit, spawn, env, PID)
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 //
@@ -25,7 +25,7 @@ extern "C" {
     fn xiom_process_running(pid: Int64) -> Int32;
 }
 
-// ── Helper: C string conversion (mirrors os.xi/cstr pattern) ─────────────────
+// -- Helper: C string conversion (mirrors os.xi/cstr pattern) -----------------
 
 // Convert an XIOM Str to a null-terminated C string pointer.
 // WARNING: The pointer is only valid as long as the original Str is alive.
@@ -38,7 +38,7 @@ fn cstr(s: Str) -> *UInt8
     }
 }
 
-// ── Exit ─────────────────────────────────────────────────────────────────────
+// -- Exit ---------------------------------------------------------------------
 
 /// Terminate the current process with the given exit code.
 /// Delegates to xiom.io.exit (which calls the C exit() function).
@@ -49,7 +49,7 @@ pub fn exit(code: Int)
     xiom.io.exit(code);
 }
 
-// ── Get PID ──────────────────────────────────────────────────────────────────
+// -- Get PID ------------------------------------------------------------------
 //
 // PID retrieval requires a platform-specific FFI call. The XIOM runtime does
 // not currently expose a xiom_getpid() intrinsic. On Windows, _getpid() from
@@ -64,7 +64,7 @@ pub fn exit(code: Int)
       xiom_getpid()
   }
 
-// ── Sleep ────────────────────────────────────────────────────────────────────
+// -- Sleep --------------------------------------------------------------------
 
 /// Sleep (block) the current thread for the specified number of milliseconds.
 /// Delegates to xiom.thread.sleep_ms which calls xiom_thread_sleep_ms.
@@ -74,7 +74,7 @@ pub fn sleep_ms(ms: Int)
     xiom.thread.sleep_ms(ms);
 }
 
-// ── Environment variable ─────────────────────────────────────────────────────
+// -- Environment variable -----------------------------------------------------
 
 /// Get the value of an environment variable.
 /// Returns Some(value) if the variable exists, None otherwise.
@@ -85,7 +85,7 @@ pub fn env_var(name: Str) -> Option[Str]
     xiom.env.var_opt(name)
 }
 
-// ── Current executable path ──────────────────────────────────────────────────
+// -- Current executable path --------------------------------------------------
 
 /// Get the full path of the currently running executable.
 /// Delegates to xiom.env.current_exe() which reads argv[0].
@@ -98,7 +98,7 @@ pub fn current_exe_path() -> Option[Str] {
     }
 }
 
-// ── Spawn command ────────────────────────────────────────────────────────────
+// -- Spawn command ------------------------------------------------------------
 //
 /// Execute an external command with arguments and wait for it to complete.
 /// Uses the C system() function (the same backend as xiom.os.spawn).
@@ -139,7 +139,7 @@ pub fn spawn_command(cmd: Str, args: &Vec[Str]) -> Result[Int, Str]
     Ok(rc as Int)
 }
 
-// ── Command existence check ──────────────────────────────────────────────────
+// -- Command existence check --------------------------------------------------
 //
 /// Check whether a command/program exists on the system PATH.
 /// Uses platform-specific lookup:
@@ -170,17 +170,17 @@ pub fn command_exists(name: Str) -> Bool
     rc == 0
 }
 
-// ── v0.56: Production process management ─────────────────────────────────────
+// -- v0.56: Production process management -------------------------------------
 //
 // These functions delegate to the xiom_runtime.c OS process
 // primitives (CreateProcessA on Windows, fork+exec on POSIX).
 // Unlike the system()-based spawn_command(), these provide:
-//   • Exit-code capture (spawn_blocking)
-//   • Process kill (kill)
-//   • Process wait (wait)
-//   • Liveliness check (is_running)
+//   - Exit-code capture (spawn_blocking)
+//   - Process kill (kill)
+//   - Process wait (wait)
+//   - Liveliness check (is_running)
 //
-// All spawn operations are BLOCKING — the caller is suspended until
+// All spawn operations are BLOCKING -- the caller is suspended until
 // the child process completes.  For asynchronous use, spawn in a
 // separate thread via thread.spawn.
 

@@ -1,4 +1,4 @@
-// XIOM — Text Similarity Algorithms (xiom.text.similarity)
+// XIOM -- Text Similarity Algorithms (xiom.text.similarity)
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 //
@@ -79,7 +79,7 @@ fn _ngrams(s: Str, len: Int, n: Int) -> Vec[Int] {
   result
 }
 
-// ── Edit distances ──────────────────────────────────────────────────────────
+// -- Edit distances ----------------------------------------------------------
 
 /// Levenshtein edit distance between `a` and `b` (insertions, deletions,
 /// substitutions each cost 1). Classic two-row DP; ASCII byte comparison.
@@ -180,7 +180,7 @@ pub fn damerau_levenshtein(a: Str, b: Str) -> Int {
   prev[lb]
 }
 
-// ── Jaro / Jaro-Winkler ─────────────────────────────────────────────────────
+// -- Jaro / Jaro-Winkler -----------------------------------------------------
 
 /// Jaro similarity in [0, 1]. Match window is floor(max(|a|,|b|)/2) - 1
 /// (clamped to 0); transpositions are mismatched match pairs divided by 2.
@@ -284,7 +284,7 @@ pub fn jaro_winkler(a: Str, b: Str) -> Float64 {
   j + (convert.int_to_float(prefix) * 0.1 * (1.0 - j))
 }
 
-// ── N-gram / vector similarity ──────────────────────────────────────────────
+// -- N-gram / vector similarity ----------------------------------------------
 
 /// Jaccard similarity over the set of character n-grams (as djb2 hash codes)
 /// of `a` and `b`. Returns 0.0 when either side has no n-grams. O(|a|*|b|).
@@ -324,8 +324,8 @@ pub fn ngram_similarity(a: Str, b: Str, n: Int) -> Float64 {
 }
 
 /// Cosine similarity over per-character frequency vectors.
-/// Character-level (unigram) frequencies are used — rather than bigram
-/// frequencies — so that words sharing letters but no bigrams (e.g. "hello"
+/// Character-level (unigram) frequencies are used -- rather than bigram
+/// frequencies -- so that words sharing letters but no bigrams (e.g. "hello"
 /// and "world") still score a non-zero, sub-1 similarity.
 /// Returns 0.0 when either vector has zero length.
 pub fn cosine_similarity(a: Str, b: Str) -> Float64 {
@@ -432,7 +432,7 @@ pub fn cosine_similarity(a: Str, b: Str) -> Float64 {
   convert.int_to_float(dot) / denom
 }
 
-// ── Longest common subsequence / substring ──────────────────────────────────
+// -- Longest common subsequence / substring ----------------------------------
 
 /// Length of the longest common subsequence of `a` and `b`.
 /// Two-row DP. Complexity: O(|a| * |b|) time, O(|b|) space.
@@ -503,7 +503,7 @@ pub fn longest_common_substring(a: Str, b: Str) -> Int {
   best
 }
 
-// ── Phonetic algorithms ─────────────────────────────────────────────────────
+// -- Phonetic algorithms -----------------------------------------------------
 
 /// Hamming distance: number of differing byte positions. Returns None when the
 /// byte lengths differ; Some(0) for empty == empty.
@@ -715,8 +715,8 @@ pub fn soundex(word: Str) -> Str {
 // 2026-08-11 additions: Jaccard, LCP/LCSuffix, n-gram extraction
 // ============================================================================
 
-// All contiguous n-grams of `s` (n = 1 → single chars). Empty input or
-// n < 1 → empty Vec. O(len) with O(len) output.
+// All contiguous n-grams of `s` (n = 1 -> single chars). Empty input or
+// n < 1 -> empty Vec. O(len) with O(len) output.
 pub fn ngram_extract(s: Str, n: Int) -> Vec[Str] {
   var out = Vec[Str].new();
   var len = xiom.string.str_len(s);
@@ -750,9 +750,9 @@ fn _str_eq(a: Str, b: Str) -> Bool {
   return true;
 }
 
-// Jaccard similarity over n-grams: |A ∩ B| / |A ∪ B| in Float64 (0 when
-// both inputs have no n-grams, 1 when identical). O(|a|·|b|) naive set
-// comparison — the compiler's Set is not usable for Str elements here.
+// Jaccard similarity over n-grams: |A & B| / |A | B| in Float64 (0 when
+// both inputs have no n-grams, 1 when identical). O(|a|-|b|) naive set
+// comparison -- the compiler's Set is not usable for Str elements here.
 pub fn jaccard_similarity(a: Str, b: Str, n: Int) -> Float64 {
   var ga = ngram_extract(a, n);
   var gb = ngram_extract(b, n);

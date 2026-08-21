@@ -1,4 +1,4 @@
-// XIOM stdlib stress — io.metadata on a regular file
+// XIOM stdlib stress -- io.metadata on a regular file
 // Writes a file, queries metadata, verifies is_file and size > 0.
 // Returns 0 on success.
 

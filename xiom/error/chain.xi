@@ -14,7 +14,7 @@ use xiom.string;
 //
 // A chain is a list of messages ordered newest-first: `messages[0]` is the
 // head (top), `messages[messages.len()-1]` is the root (the original cause).
-// Values are immutable — push/pop return new chains.
+// Values are immutable -- push/pop return new chains.
 // ============================================================================
 
 /// An ChainError node: `messages[0]` is the newest message (head), the last

@@ -10,7 +10,7 @@
 
 module xiom.math.tower
 
-// The generic numeric tower contract (Num/Real/FromInt) — the name `tower`
+// The generic numeric tower contract (Num/Real/FromInt) -- the name `tower`
 // (renamed from `core` 2026-08-11, owner decision) distinguishes it from the
 // prelude `xiom.core`. STDLIB_GENERICS.md rule R9: no other sublib may be
 // named `core`; the prelude owns that name.

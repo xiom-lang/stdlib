@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.string.char_count / byte_count
+// XIOM stdlib stress -- xiom.string.char_count / byte_count
 // Tests character vs byte counts (same for ASCII, different for multi-byte).
 // Returns 0 on success.
 

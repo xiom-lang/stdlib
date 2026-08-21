@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.string.str_upper / str_lower
+// XIOM stdlib stress -- xiom.string.str_upper / str_lower
 // Converts mixed-case strings to upper and lower, verifies results.
 // Returns 0 on success.
 

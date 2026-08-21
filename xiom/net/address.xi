@@ -9,7 +9,7 @@ module xiom.net.address
 // ============================================================================
 // Network address parsing and validation helpers for host:port strings.
 // Supports bare hosts, "host:port", bracketed IPv6 ("[::1]:8080") and raw
-// IPv6. Family classification delegates to xiom.net.ip (different names —
+// IPv6. Family classification delegates to xiom.net.ip (different names --
 // safe). All functions are pure.
 // ============================================================================
 
@@ -129,7 +129,7 @@ fn classify(host: Str) -> Str {
 }
 
 /// Parse a host:port address string into an Address.
-/// Parameters: s — the address string ("example.com:8080", "127.0.0.1",
+/// Parameters: s -- the address string ("example.com:8080", "127.0.0.1",
 ///          "[::1]:53", "example.com").
 /// Returns: Some(Address) when the string is well-formed (non-empty host and
 ///          a valid port if present), None otherwise.
@@ -149,7 +149,7 @@ pub fn address_parse(s: Str) -> Option[Address] {
 }
 
 /// Extract the host part of an address string.
-/// Parameters: s — the address string.
+/// Parameters: s -- the address string.
 /// Returns: the host (without brackets for IPv6 literals), or "" when the
 ///          string is not a valid address.
 /// Complexity: O(n). Pure.
@@ -162,7 +162,7 @@ pub fn address_host(s: Str) -> Str {
 }
 
 /// Extract the port part of an address string.
-/// Parameters: s — the address string.
+/// Parameters: s -- the address string.
 /// Returns: the port number (0 when absent), or 0 for an invalid address.
 /// Complexity: O(n). Pure.
 pub fn address_port(s: Str) -> Int {
@@ -174,7 +174,7 @@ pub fn address_port(s: Str) -> Int {
 }
 
 /// Test if the host part of an address string is an IPv4 address.
-/// Parameters: s — the address string.
+/// Parameters: s -- the address string.
 /// Returns: true when the string parses and its host is dotted-quad IPv4.
 /// Complexity: O(n). Pure.
 pub fn address_is_ipv4(s: Str) -> Bool {
@@ -186,7 +186,7 @@ pub fn address_is_ipv4(s: Str) -> Bool {
 }
 
 /// Test if the host part of an address string is an IPv6 address.
-/// Parameters: s — the address string.
+/// Parameters: s -- the address string.
 /// Returns: true when the string parses and its host is an IPv6 literal.
 /// Complexity: O(n). Pure.
 pub fn address_is_ipv6(s: Str) -> Bool {
@@ -198,7 +198,7 @@ pub fn address_is_ipv6(s: Str) -> Bool {
 }
 
 /// Test if the address string is well-formed.
-/// Parameters: s — the address string.
+/// Parameters: s -- the address string.
 /// Returns: true when parsing succeeds with a non-empty host and a valid port
 ///          (0..65535) if one is present.
 /// Complexity: O(n). Pure.

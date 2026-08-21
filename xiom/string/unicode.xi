@@ -38,7 +38,7 @@ use xiom.string.linebreak;
 use xiom.string.sentencebreak;
 use xiom.string.wordbreak;
 
-// ── Normalization ───────────────────────────────────────────────────────────
+// -- Normalization -----------------------------------------------------------
 
 /// Normalize `s` to NFC (canonical composition). See the normalize module.
 pub fn unicode_normalize(s: Str) -> Str {
@@ -154,7 +154,7 @@ pub fn unicode_nfkc_quick_check(s: Str) -> Bool {
   norm == s
 }
 
-// ── Case ────────────────────────────────────────────────────────────────────
+// -- Case --------------------------------------------------------------------
 
 /// Full case folding of `s` for caseless comparison.
 pub fn unicode_casefold(s: Str) -> Str {
@@ -330,7 +330,7 @@ pub fn unicode_istitlecase(c: Char) -> Bool {
   cat == "Lt"
 }
 
-// ── Segmentation ────────────────────────────────────────────────────────────
+// -- Segmentation ------------------------------------------------------------
 
 /// Split `s` into extended grapheme clusters (simplified: base + combining
 /// marks + ZWJ sequences + emoji modifiers).
@@ -448,7 +448,7 @@ pub fn unicode_prev_grapheme(s: Str, offset: Int) -> Int {
   boundary
 }
 
-// ── Display width ───────────────────────────────────────────────────────────
+// -- Display width -----------------------------------------------------------
 
 /// East Asian Width of `c`: 0, 1 or 2.
 pub fn unicode_ea_width(c: Char) -> Int {
@@ -534,7 +534,7 @@ pub fn unicode_is_wide(c: Char) -> Bool {
   w == 2
 }
 
-// ── Emoji ───────────────────────────────────────────────────────────────────
+// -- Emoji -------------------------------------------------------------------
 
 /// True when `c` is an emoji or emoji component codepoint.
 pub fn unicode_is_emoji(c: Char) -> Bool {
@@ -606,7 +606,7 @@ pub fn unicode_emoji_version() -> Str {
   "15.0"
 }
 
-// ── Properties ──────────────────────────────────────────────────────────────
+// -- Properties --------------------------------------------------------------
 
 /// ISO 15924 script code of `c`.
 pub fn unicode_script(c: Char) -> Str {
@@ -735,7 +735,7 @@ pub fn unicode_is_ideographic(c: Char) -> Bool {
   _is_ideo_cp(cp)
 }
 
-// ── Bidi ────────────────────────────────────────────────────────────────────
+// -- Bidi --------------------------------------------------------------------
 
 /// Bidi class of `c`, e.g. "L", "R", "AL", "NSM".
 pub fn unicode_bidi_class(c: Char) -> Str {
@@ -830,7 +830,7 @@ pub fn unicode_bidi_scan(s: Str) -> Vec[Int] {
   levels
 }
 
-// ── Whitespace and numeric classification ───────────────────────────────────
+// -- Whitespace and numeric classification -----------------------------------
 
 /// True when `c` matches the White_Space property.
 pub fn unicode_is_whitespace(c: Char) -> Bool {
@@ -910,7 +910,7 @@ pub fn unicode_numeric_value(c: Char) -> Option[Float64] {
   None
 }
 
-// ── Private helpers ─────────────────────────────────────────────────────────
+// -- Private helpers ---------------------------------------------------------
 
 fn _int_to_float(v: Int) -> Float64 {
   let f = v as Float64;

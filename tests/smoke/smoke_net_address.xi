@@ -1,4 +1,4 @@
-// XIOM stdlib smoke test — xiom.net.address + xiom.net.ip + xiom.net.header
+// XIOM stdlib smoke test -- xiom.net.address + xiom.net.ip + xiom.net.header
 // Address host:port parsing, IPv4/IPv6 helpers, and HTTP header lists.
 // Returns 0 on success, nonzero on failure (process exit code).
 

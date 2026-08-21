@@ -1,4 +1,4 @@
-// XIOM — Collections: Fenwick tree (binary indexed tree)
+// XIOM -- Collections: Fenwick tree (binary indexed tree)
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 
@@ -35,7 +35,7 @@ pub fn fenwick_add(t: &mut FenwickTree, idx: Int, delta: Int) {
   }
 }
 
-/// Prefix sum of slots 1..=idx. O(log n). idx < 1 → 0.
+/// Prefix sum of slots 1..=idx. O(log n). idx < 1 -> 0.
 pub fn fenwick_sum(t: &FenwickTree, idx: Int) -> Int {
   var i = idx;
   var s: Int = 0;

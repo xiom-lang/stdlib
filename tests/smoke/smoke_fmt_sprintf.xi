@@ -16,7 +16,7 @@ fn expect_s(spec: Str, got: Str, want: Str, label: Str) -> Int {
 }
 
 fn main() -> Int {
-  // ── sprintf int family ──
+  // -- sprintf int family --
   var r = xiom.fmt.sprintf_i1("%d", 42);
   match r {
     Ok(v) => { if expect_s("d", v, "42", "d") != 0 { return 1; } };
@@ -97,7 +97,7 @@ fn main() -> Int {
     Ok(v) => { if expect_s("i2", v, "3-4", "i2") != 0 { return 31; } };
     Err(e) => { io.println(e); return 32; };
   }
-  // wrong family / missing args → Err (no silent failures)
+  // wrong family / missing args -> Err (no silent failures)
   var r17 = xiom.fmt.sprintf_f1("%d", 1.5);
   match r17 {
     Ok(v) => { return 33; };
@@ -114,7 +114,7 @@ fn main() -> Int {
     Err(e) => {};
   }
 
-  // ── sprintf float family ──
+  // -- sprintf float family --
   var f1 = xiom.fmt.sprintf_f1("%.2f", 3.14159);
   match f1 {
     Ok(v) => { if expect_s("2f", v, "3.14", "2f") != 0 { return 36; } };
@@ -191,7 +191,7 @@ fn main() -> Int {
     Err(e) => { io.println(e); return 65; };
   }
 
-  // ── sprintf str family ──
+  // -- sprintf str family --
   var s1 = xiom.fmt.sprintf_s1("%s", "hi");
   match s1 {
     Ok(v) => { if expect_s("s", v, "hi", "s") != 0 { return 66; } };
@@ -218,7 +218,7 @@ fn main() -> Int {
     Err(e) => { io.println(e); return 75; };
   }
 
-  // ── convert.float_to_string (was fptosi bit-pattern garbage) ──
+  // -- convert.float_to_string (was fptosi bit-pattern garbage) --
   if xiom.convert.float_to_string(1.5) != "1.5" { return 76; }
   if xiom.convert.float_to_string(0.1) != "0.1" { return 77; }
   if xiom.convert.float_to_string(3.14159265358979) != "3.14159265358979" { return 78; }
@@ -231,7 +231,7 @@ fn main() -> Int {
   if xiom.convert.float_to_sci_str(12345.678, 2) != "1.23e+04" { return 85; }
   if xiom.convert.float_to_fixed_str(-1.5, 2) != "-1.50" { return 86; }
 
-  // ── sscanf ──
+  // -- sscanf --
   var sc1 = xiom.fmt.sscanf_ints("42", "%d");
   match sc1 {
     Ok(v) => { if v.len() != 1 || v[0] != 42 { return 87; } };

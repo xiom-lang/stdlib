@@ -1,4 +1,4 @@
-// XIOM — Serialization Library
+// XIOM -- Serialization Library
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 //
@@ -535,7 +535,7 @@ pub fn big_endian() -> Bool {
   return false;
 }
 
-// ── JSON escape/unescape ────────────────────────────────────────────────────
+// -- JSON escape/unescape ----------------------------------------------------
 
 /// JSON-escapes a string (without surrounding quotes).
 /// Handles \, ", \n, \r, \t, \b, \f.
@@ -605,7 +605,7 @@ pub fn json_unescape(s: Str) -> Result[Str, Str] {
   return Ok(result);
 }
 
-// ── JSON minify ─────────────────────────────────────────────────────────────
+// -- JSON minify -------------------------------------------------------------
 
 /// Strips whitespace from JSON outside of strings.
 /// Complexity: O(n), n = input length.
@@ -642,7 +642,7 @@ pub fn json_minify(s: Str) -> Result[Str, Str] {
   return Ok(result);
 }
 
-// ── JSON pretty-print ───────────────────────────────────────────────────────
+// -- JSON pretty-print -------------------------------------------------------
 
 /// Pretty-prints JSON with 2-space indentation.
 /// Uses a simple tokenizer-based approach that tracks nesting depth.
@@ -755,7 +755,7 @@ pub fn json_pretty(s: Str) -> Result[Str, Str] {
   return Ok(result);
 }
 
-// ── JSON path navigation ────────────────────────────────────────────────────
+// -- JSON path navigation ----------------------------------------------------
 
 /// Navigates a JSON string using a dot-notation path (e.g. "a.b.0").
 /// Returns the value at the path as a string, or None if not found.
@@ -814,11 +814,11 @@ pub fn json_get_path(json: Str, path: Str) -> Option[Str] {
   return Option[Str]{ is_some: true; value: node.to_str(); };
 }
 
-// ── JSON type detection ─────────────────────────────────────────────────────
+// -- JSON type detection -----------------------------------------------------
 
 /// Returns the JSON type of a string: "object", "array", "string", "number",
 /// "bool", "null", or "invalid".
-/// Complexity: O(1) — reads only the first non-whitespace character.
+/// Complexity: O(1) -- reads only the first non-whitespace character.
 pub fn json_type_of(s: Str) -> Str {
   var i: Int = 0;
   let len = s.len();
@@ -843,7 +843,7 @@ pub fn json_type_of(s: Str) -> Str {
   return "invalid";
 }
 
-// ── Variable-length integer encoding (LEB128) ──────────────────────────────
+// -- Variable-length integer encoding (LEB128) ------------------------------
 
 /// Encodes an integer using unsigned LEB128 (Little Endian Base 128).
 /// Each byte uses 7 bits for data and the MSB as continuation flag.
@@ -915,7 +915,7 @@ pub fn varint_encoded_len(data: &Vec[UInt8], pos: Int) -> Int {
   return 0;
 }
 
-// ── Hex ↔ bytes helpers ─────────────────────────────────────────────────────
+// -- Hex <-> bytes helpers -----------------------------------------------------
 
 /// Converts bytes to a hex string. Delegates to xiom.encoding.hex_encode.
 /// Complexity: O(n), n = data length.

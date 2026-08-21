@@ -1,4 +1,4 @@
-// XIOM stdlib smoke test — xiom.net.cookie + xiom.net.mime +
+// XIOM stdlib smoke test -- xiom.net.cookie + xiom.net.mime +
 // xiom.net.multipart + xiom.net.sse
 // Returns 0 on success, nonzero on failure (process exit code).
 

@@ -1,4 +1,4 @@
-// XIOM stdlib stress — Vec is_empty
+// XIOM stdlib stress -- Vec is_empty
 // Verifies is_empty returns true for new/cleared vec, false after push.
 // Returns 0 on success, nonzero on failure.
 

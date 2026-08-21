@@ -12,7 +12,7 @@ module xiom.math.graph_theory
 //
 // Graph is an edge-list graph: vertices are the integers [0, n - 1] (n grows
 // automatically on add). Edges are stored as (u, v) pairs with a parallel
-// scaled-integer weight vector (1 unit = 1e-5) — the representation avoids
+// scaled-integer weight vector (1 unit = 1e-5) -- the representation avoids
 // nested float Vec and 3-tuple element reads, which are unreliable in this
 // compiler build (BUG 23 #1 residual; see the smoke notes). Undirected
 // graphs store both directions. Complexity is documented per function.

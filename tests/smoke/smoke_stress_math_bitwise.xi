@@ -1,4 +1,4 @@
-// XIOM stdlib stress — math bitwise operations
+// XIOM stdlib stress -- math bitwise operations
 // Tests bit_and, bit_or, bit_xor, bit_not.
 // Returns 0 on success, nonzero on failure.
 

@@ -377,7 +377,7 @@ pub fn Arc.drop[T](self)
 
 // === M7: Deref impl for Arc[T] ===
 // Arc provides shared (atomic) access. Deref allows `*arc` and auto-deref.
-// DerefMut is NOT implemented — Arc provides shared access only.
+// DerefMut is NOT implemented -- Arc provides shared access only.
 pub fn Arc[T].deref(self) -> &T
   requires: ptr != null
   ensures: true
@@ -471,11 +471,11 @@ pub fn AtomicInt.compare_exchange(self, current: Int, new: Int) -> Bool {
   }
 }
 
-// ── Semaphore ──────────────────────────────────────────────────────
+// -- Semaphore ------------------------------------------------------
 
 /// A simple counting semaphore backed by an integer counter.
 /// Non-blocking: `acquire` returns `false` if no permits are available.
-/// Thread-safety: NOT atomic — use `Mutex[Semaphore]` for shared access.
+/// Thread-safety: NOT atomic -- use `Mutex[Semaphore]` for shared access.
 pub type Semaphore = { count: Int; max: Int; }
 
 /// Creates a new semaphore with `permits` initial available permits.
@@ -514,7 +514,7 @@ pub fn sem_available(s: &Semaphore) -> Int {
   return s.count;
 }
 
-// ── Barrier Standalone Helpers ─────────────────────────────────────
+// -- Barrier Standalone Helpers -------------------------------------
 
 /// Creates a new barrier for `n` threads. Wraps `Barrier.new`.
 /// Complexity: O(1).
@@ -553,10 +553,10 @@ pub fn barrier_reset(b: &mut Barrier) {
   unsafe { xiom_atomic_store(b.waiting, 0); }
 }
 
-// ── CountDownLatch ─────────────────────────────────────────────────
+// -- CountDownLatch -------------------------------------------------
 
 /// A simple count-down latch for synchronisation.
-/// Thread-safety: NOT atomic — use `Mutex[CountDownLatch]` for shared access.
+/// Thread-safety: NOT atomic -- use `Mutex[CountDownLatch]` for shared access.
 pub type CountDownLatch = { remaining: Int; }
 
 /// Creates a new count-down latch initialised to `n`.
@@ -587,7 +587,7 @@ pub fn cdl_wait_spin(l: &mut CountDownLatch) {
   };
 }
 
-// ── AtomicInt Standalone Helpers ───────────────────────────────────
+// -- AtomicInt Standalone Helpers -----------------------------------
 
 /// Atomically loads the current value. Direct FFI access.
 /// Complexity: O(1). Thread-safe.

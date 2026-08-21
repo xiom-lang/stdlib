@@ -1,4 +1,4 @@
-// XIOM — ChaCha20 Stream Cipher (RFC 8439)
+// XIOM -- ChaCha20 Stream Cipher (RFC 8439)
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 //
@@ -21,7 +21,7 @@
 module xiom.chacha
 
 // ============================================================================
-// Constants — "expand 32-byte k" as four 32-bit words (RFC 8439 Section 2.3)
+// Constants -- "expand 32-byte k" as four 32-bit words (RFC 8439 Section 2.3)
 //
 // These four constants are placed at the beginning of the ChaCha20 state matrix.
 // In ASCII: "expand 32-byte k". They serve as domain separation and
@@ -67,7 +67,7 @@ fn _u32_rotl(x: Int, n: Int) -> Int {
 // ============================================================================
 // ChaCha20 State Type
 //
-// The 512-bit state is arranged as a 4×4 matrix of 32-bit words (16 words total).
+// The 512-bit state is arranged as a 4x4 matrix of 32-bit words (16 words total).
 // Layout (RFC 8439 Section 2.3):
 //   state[0..3]  = constants    (row 0)
 //   state[4..11] = key          (rows 1,2)
@@ -129,7 +129,7 @@ fn _quarter_round(state: &mut Vec[Int], a: Int, b: Int, c: Int, d: Int) {
 //   3. Add the original state to the working array (word-wise, mod 2^32).
 //   4. Serialize the 16 words (little-endian) into 64 output bytes.
 //
-// Returns: Vec[UInt8] — 64 bytes of keystream.
+// Returns: Vec[UInt8] -- 64 bytes of keystream.
 // ============================================================================
 
 fn _chacha20_block(state: &Vec[Int]) -> Vec[UInt8] {
@@ -144,13 +144,13 @@ fn _chacha20_block(state: &Vec[Int]) -> Vec[UInt8] {
   // Step 2: 20 rounds (10 double-rounds)
   var round = 0;
   while round < 10 {
-    // Column round: operate on columns of the 4×4 matrix
+    // Column round: operate on columns of the 4x4 matrix
     _quarter_round(&mut working, 0, 4, 8, 12);
     _quarter_round(&mut working, 1, 5, 9, 13);
     _quarter_round(&mut working, 2, 6, 10, 14);
     _quarter_round(&mut working, 3, 7, 11, 15);
 
-    // Diagonal round: operate on diagonals of the 4×4 matrix
+    // Diagonal round: operate on diagonals of the 4x4 matrix
     _quarter_round(&mut working, 0, 5, 10, 15);
     _quarter_round(&mut working, 1, 6, 11, 12);
     _quarter_round(&mut working, 2, 7, 8, 13);
@@ -192,7 +192,7 @@ fn _chacha20_block(state: &Vec[Int]) -> Vec[UInt8] {
 // and a block counter (typically starting at 1 for encryption, 0 for
 // Poly1305 key generation).
 //
-// State layout (16 × 32-bit words):
+// State layout (16 x 32-bit words):
 //   0: constant  "expa"   0x61707865
 //   1: constant  "nd 3"   0x3320646e
 //   2: constant  "2-by"   0x79622d32
@@ -232,7 +232,7 @@ pub fn chacha20_new(key: &Vec[UInt8], nonce_bytes: &Vec[UInt8]) -> ChaCha20 {
   state.push(_CHACHA_CONST2);
   state.push(_CHACHA_CONST3);
 
-  // Key (32 bytes → 8 u32 words, little-endian)
+  // Key (32 bytes -> 8 u32 words, little-endian)
   var i = 0;
   while i < 8 {
     state.push(_pack_u32_le(key, i * 4));
@@ -242,7 +242,7 @@ pub fn chacha20_new(key: &Vec[UInt8], nonce_bytes: &Vec[UInt8]) -> ChaCha20 {
   // Counter (initialized to 0)
   state.push(0);
 
-  // Nonce (12 bytes → 3 u32 words, little-endian)
+  // Nonce (12 bytes -> 3 u32 words, little-endian)
   i = 0;
   while i < 3 {
     state.push(_pack_u32_le(nonce_bytes, i * 4));
@@ -264,7 +264,7 @@ pub fn chacha20_new(key: &Vec[UInt8], nonce_bytes: &Vec[UInt8]) -> ChaCha20 {
 //     2. Increment the block counter (state[12]).
 //        If counter wraps to 0, increment state[13] (see RFC 8439 for
 //        extended nonce handling; this implementation supports up to
-//        2^32 blocks ≈ 256 GB per message).
+//        2^32 blocks ~= 256 GB per message).
 //     3. XOR keystream with plaintext/ciphertext.
 //
 // The encrypt and decrypt operations are identical since XOR is symmetric.
@@ -305,7 +305,7 @@ pub fn chacha20_process(state: &ChaCha20, data: &Vec[UInt8]) -> Vec[UInt8] {
     // Increment block counter (state[12] is the 32-bit counter)
     // - state layout: consts(0-3), key(4-11), counter(12), nonce(13-15)
     st[12] = _u32_add(st[12], 1);
-    // If counter wraps, carry to state[13] (RFC 8439 §2.4: extended nonce support)
+    // If counter wraps, carry to state[13] (RFC 8439 S2.4: extended nonce support)
     if st[12] == 0 {
       st[13] = _u32_add(st[13], 1);
     }
@@ -342,7 +342,7 @@ pub fn chacha20_encrypt(key: &Vec[UInt8], nonce: &Vec[UInt8], data: &Vec[UInt8])
 /// nonce: 12 bytes (96 bits)
 /// data: ciphertext to decrypt
 /// Returns: plaintext (same length as ciphertext)
-/// Note: This is identical to chacha20_encrypt — ChaCha20 is a stream cipher.
+/// Note: This is identical to chacha20_encrypt -- ChaCha20 is a stream cipher.
 pub fn chacha20_decrypt(key: &Vec[UInt8], nonce: &Vec[UInt8], data: &Vec[UInt8]) -> Vec[UInt8] {
   return chacha20_encrypt(key, nonce, data);
 }

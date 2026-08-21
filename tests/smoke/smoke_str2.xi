@@ -5,10 +5,10 @@ use xiom.text.similarity;
 
 // tr/rot/caesar/atbash, abbreviate/obfuscate, jaccard/lcp/lcsuffix/ngram.
 // strftime/strptime live in smoke_time2 (string + text.similarity + time
-// combined crashes at startup — COMPILER_BUGS.md BUG 18).
+// combined crashes at startup -- COMPILER_BUGS.md BUG 18).
 
 fn main() -> Int {
-  // ── tr / rot / caesar / atbash ──
+  // -- tr / rot / caesar / atbash --
   if xiom.string.str_translate("hello world", "aeiou", "AEIOU") != "hEllO wOrld" { return 1; }
   if xiom.string.str_translate("abc123", "abc", "XY") != "XY123" { return 2; }  // c removed
   if xiom.string.str_translate("abc", "z", "q") != "abc" { return 3; }
@@ -23,7 +23,7 @@ fn main() -> Int {
   if xiom.string.str_rot47("Hello!") != "w6==@P" { return 12; }
   if xiom.string.str_rot47("w6==@P") != "Hello!" { return 13; }
 
-  // ── abbreviate / obfuscate ──
+  // -- abbreviate / obfuscate --
   if xiom.string.str_abbreviate("short", 10) != "short" { return 14; }
   if xiom.string.str_abbreviate("abcdefghij", 7) != "ab...ij" { return 15; }
   if xiom.string.str_abbreviate("abcdefghijklmnop", 8) != "abc...op" { return 16; }
@@ -33,7 +33,7 @@ fn main() -> Int {
   if xiom.string.str_obfuscate("abcd", 0) != "****" { return 20; }
   if xiom.string.str_obfuscate("test", -1) != "****" { return 21; }
 
-  // ── jaccard / lcp / lcsuffix / ngram ──
+  // -- jaccard / lcp / lcsuffix / ngram --
   var ng = xiom.text.similarity.ngram_extract("abcd", 2);
   if ng.len() != 3 { return 22; }
   if ng[0] != "ab" || ng[1] != "bc" || ng[2] != "cd" { return 23; }
@@ -41,11 +41,11 @@ fn main() -> Int {
   if ng1.len() != 3 { return 24; }
   var ng0 = xiom.text.similarity.ngram_extract("ab", 5);
   if ng0.len() != 0 { return 25; }
-  // identical strings → jaccard 1.0
+  // identical strings -> jaccard 1.0
   if xiom.text.similarity.jaccard_similarity("hello", "hello", 2) != 1.0 { return 26; }
-  // disjoint → 0.0
+  // disjoint -> 0.0
   if xiom.text.similarity.jaccard_similarity("abc", "xyz", 2) != 0.0 { return 27; }
-  // partial: "abcd" vs "abef", bigrams: {ab,bc,cd} ∩ {ab,be,ef} = {ab} → 1/5
+  // partial: "abcd" vs "abef", bigrams: {ab,bc,cd} & {ab,be,ef} = {ab} -> 1/5
   var j = xiom.text.similarity.jaccard_similarity("abcd", "abef", 2);
   if j * 100.0 < 19.0 || j * 100.0 > 21.0 { return 28; }
   if xiom.text.similarity.longest_common_prefix("abcdef", "abcxyz") != 3 { return 29; }

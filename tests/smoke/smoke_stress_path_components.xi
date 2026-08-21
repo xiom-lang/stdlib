@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.path Path.components decomposition
+// XIOM stdlib stress -- xiom.path Path.components decomposition
 // Tests components() on absolute and relative paths.
 // Returns 0 on success, nonzero on failure.
 

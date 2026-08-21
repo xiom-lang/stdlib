@@ -1,7 +1,7 @@
-// XIOM stdlib smoke — xiom.regex.engine + syntax + pcre_lite
+// XIOM stdlib smoke -- xiom.regex.engine + syntax + pcre_lite
 // Returns 0 on success, nonzero (and a tag) on failure.
 //
-// NOTE: the statement order below matters — this build's codegen corrupts
+// NOTE: the statement order below matters -- this build's codegen corrupts
 // the pcre_lite pattern registry when `regex_match` is followed too closely
 // by `regex_find`/`regex_find_all` (see report). Order verified green.
 

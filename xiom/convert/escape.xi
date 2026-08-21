@@ -18,7 +18,7 @@ module xiom.convert.escape
 use xiom.string;
 
 /// Escape text for HTML body content: & < > " ' become entities.
-/// Parameters: s — the input text.
+/// Parameters: s -- the input text.
 /// Returns: the escaped text (strictly longer unless no specials).
 /// Complexity: O(n), n = input length.
 pub fn html_escape(s: Str) -> Str {
@@ -48,7 +48,7 @@ pub fn html_escape(s: Str) -> Str {
 
 /// Decode HTML entities back to characters: the named set (&amp; &lt; &gt;
 /// &quot; &#39; &apos;) and numeric forms (&#NN; decimal, &#xHH; hex).
-/// Parameters: s — the escaped text.
+/// Parameters: s -- the escaped text.
 /// Returns: the decoded text; unrecognized sequences pass through.
 /// Complexity: O(n), n = input length.
 pub fn html_unescape(s: Str) -> Str {
@@ -80,7 +80,7 @@ pub fn html_unescape(s: Str) -> Str {
 
 /// Escape text for use inside HTML attribute quotes: same entity set as
 /// html_escape plus both quote characters are always escaped.
-/// Parameters: s — the attribute value text.
+/// Parameters: s -- the attribute value text.
 /// Returns: the escaped text.
 /// Complexity: O(n).
 pub fn html_escape_attr(s: Str) -> Str {
@@ -88,7 +88,7 @@ pub fn html_escape_attr(s: Str) -> Str {
 }
 
 /// Escape the five predefined XML entities: & " ' < >.
-/// Parameters: s — the input text.
+/// Parameters: s -- the input text.
 /// Returns: the escaped text.
 /// Complexity: O(n).
 pub fn xml_escape(s: Str) -> Str {
@@ -117,7 +117,7 @@ pub fn xml_escape(s: Str) -> Str {
 }
 
 /// Decode the predefined XML entities back to characters.
-/// Parameters: s — the escaped text.
+/// Parameters: s -- the escaped text.
 /// Returns: the decoded text; unrecognized sequences pass through.
 /// Complexity: O(n).
 pub fn xml_unescape(s: Str) -> Str {
@@ -149,7 +149,7 @@ pub fn xml_unescape(s: Str) -> Str {
 
 /// Escape and quote a field for RFC 4180 CSV output: the field is quoted when
 /// it contains a comma, quote, CR or LF, and embedded quotes are doubled.
-/// Parameters: s — the raw field value.
+/// Parameters: s -- the raw field value.
 /// Returns: the CSV-ready field.
 /// Complexity: O(n).
 pub fn csv_escape_field(s: Str) -> Str {
@@ -175,7 +175,7 @@ pub fn csv_escape_field(s: Str) -> Str {
 
 /// Parse and unquote a single CSV field: a quoted field is unquoted and
 /// doubled quotes are restored; unquoted fields pass through unchanged.
-/// Parameters: s — a single CSV field (no separators).
+/// Parameters: s -- a single CSV field (no separators).
 /// Returns: the raw field value.
 /// Complexity: O(n).
 pub fn csv_unescape_field(s: Str) -> Str {
@@ -213,7 +213,7 @@ pub fn csv_unescape_field(s: Str) -> Str {
 }
 
 /// Escape tab, CR and LF characters in a TSV field as \\t, \\r, \\n.
-/// Parameters: s — the raw field value.
+/// Parameters: s -- the raw field value.
 /// Returns: the escaped field.
 /// Complexity: O(n).
 pub fn tsv_escape_field(s: Str) -> Str {
@@ -238,7 +238,7 @@ pub fn tsv_escape_field(s: Str) -> Str {
 }
 
 /// Restore tab, CR and LF escapes in a TSV field.
-/// Parameters: s — the escaped field.
+/// Parameters: s -- the escaped field.
 /// Returns: the raw field value.
 /// Complexity: O(n).
 pub fn tsv_unescape_field(s: Str) -> Str {
@@ -274,7 +274,7 @@ pub fn tsv_unescape_field(s: Str) -> Str {
 
 /// Escape regex metacharacters in a literal string with a backslash.
 /// Escapes: \ . ^ $ * + ? ( ) [ ] { } |.
-/// Parameters: s — the literal text.
+/// Parameters: s -- the literal text.
 /// Returns: the regex-safe text.
 /// Complexity: O(n).
 pub fn regex_escape(s: Str) -> Str {
@@ -295,7 +295,7 @@ pub fn regex_escape(s: Str) -> Str {
 
 /// Escape glob wildcard metacharacters (* ? [ ] and backslash) in a literal
 /// string with a backslash.
-/// Parameters: s — the literal text.
+/// Parameters: s -- the literal text.
 /// Returns: the glob-safe text.
 /// Complexity: O(n).
 pub fn glob_escape(s: Str) -> Str {
@@ -316,7 +316,7 @@ pub fn glob_escape(s: Str) -> Str {
 
 /// Restore escaped glob metacharacters: a backslash before a glob character
 /// is removed.
-/// Parameters: s — the escaped text.
+/// Parameters: s -- the escaped text.
 /// Returns: the literal text.
 /// Complexity: O(n).
 pub fn glob_unescape(s: Str) -> Str {
@@ -348,7 +348,7 @@ pub fn glob_unescape(s: Str) -> Str {
 /// Escape a string for safe use in a POSIX shell command: every character
 /// outside the safe set (alphanumerics plus _ - . / , : @ % + =) is preceded
 /// by a backslash.
-/// Parameters: s — the raw argument.
+/// Parameters: s -- the raw argument.
 /// Returns: the shell-escaped argument.
 /// Complexity: O(n).
 pub fn shell_escape(s: Str) -> Str {
@@ -369,7 +369,7 @@ pub fn shell_escape(s: Str) -> Str {
 
 /// Quote a string with single quotes for a POSIX shell; embedded single
 /// quotes are closed, escaped and reopened ('\'').
-/// Parameters: s — the raw argument.
+/// Parameters: s -- the raw argument.
 /// Returns: the single-quoted argument.
 /// Complexity: O(n).
 pub fn shell_quote(s: Str) -> Str {
@@ -392,7 +392,7 @@ pub fn shell_quote(s: Str) -> Str {
 
 /// Escape a string for safe use in a Windows cmd command line: ^ & | < >
 /// ( ) " % are escaped with a caret.
-/// Parameters: s — the raw argument.
+/// Parameters: s -- the raw argument.
 /// Returns: the cmd-escaped argument.
 /// Complexity: O(n).
 pub fn cmd_escape(s: Str) -> Str {
@@ -413,7 +413,7 @@ pub fn cmd_escape(s: Str) -> Str {
 
 /// Quote a string for a Windows cmd command line: wrap in double quotes and
 /// double any embedded quote characters.
-/// Parameters: s — the raw argument.
+/// Parameters: s -- the raw argument.
 /// Returns: the double-quoted argument.
 /// Complexity: O(n).
 pub fn cmd_quote(s: Str) -> Str {

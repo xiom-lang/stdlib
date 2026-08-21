@@ -1,4 +1,4 @@
-// XIOM stdlib smoke test — xiom.serialize submodules
+// XIOM stdlib smoke test -- xiom.serialize submodules
 // Tests: endian (LE/BE reads+writes, i64, f64), varint (LEB128 encode/decode
 // round-trip, zigzag, uvarint), json (construct + stringify + get), yaml_lite
 // (scalar/sequence/mapping emission).

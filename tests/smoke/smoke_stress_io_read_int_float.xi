@@ -1,4 +1,4 @@
-// XIOM stdlib stress — io.read_int / io.read_float API existence
+// XIOM stdlib stress -- io.read_int / io.read_float API existence
 // Tests reading integers and floats from a byte buffer via Cursor.
 // Returns 0 on success, nonzero on failure.
 

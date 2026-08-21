@@ -1,4 +1,4 @@
-// XIOM stdlib stress — io.parent_path / file_name / extension
+// XIOM stdlib stress -- io.parent_path / file_name / extension
 // Tests path decomposition functions on a sample path string.
 // Returns 0 on success, nonzero on failure.
 

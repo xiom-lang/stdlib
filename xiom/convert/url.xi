@@ -9,14 +9,14 @@ module xiom.convert.url
 // ============================================================================
 // URL parsing, building, and percent-encoding helpers. Parsing is
 // reimplemented locally (the canonical xiom.net.url.url_parse shares the
-// function name — same-name delegation miscompiles, BUG 25 #1); encoding
-// delegates to xiom.encoding (different names — safe).
+// function name -- same-name delegation miscompiles, BUG 25 #1); encoding
+// delegates to xiom.encoding (different names -- safe).
 // ============================================================================
 
 use xiom.string;
 use xiom.encoding;
 
-// Url — parsed URL components.
+// Url -- parsed URL components.
 pub type Url = {
   scheme: Str;
   host: Str;
@@ -27,7 +27,7 @@ pub type Url = {
 
 /// Parse a URL into its scheme, host, port, path and query components.
 /// Userinfo (user:pass@) is skipped.
-/// Parameters: s — the URL string.
+/// Parameters: s -- the URL string.
 /// Returns: Ok(Url) on success; Err for an empty URL or a missing host.
 /// Complexity: O(n).
 pub fn url_parse(s: Str) -> Result[Url, Str] {
@@ -90,8 +90,8 @@ pub fn url_parse(s: Str) -> Result[Url, Str] {
 }
 
 /// Assemble a URL string from its parts.
-/// Parameters: scheme — e.g. "https"; host — e.g. "example.com"; port — 0
-///          means "no explicit port"; path — must start with "/"; query — the
+/// Parameters: scheme -- e.g. "https"; host -- e.g. "example.com"; port -- 0
+///          means "no explicit port"; path -- must start with "/"; query -- the
 ///          raw query string without '?' (empty means none).
 /// Returns: the assembled URL.
 /// Complexity: O(n).
@@ -116,7 +116,7 @@ pub fn url_build(scheme: Str, host: Str, port: Int, path: Str, query: Str) -> St
 
 /// Percent-encode a URL (unreserved characters A-Z a-z 0-9 - _ . ~ pass
 /// through; everything else becomes %HH).
-/// Parameters: s — the text to encode.
+/// Parameters: s -- the text to encode.
 /// Returns: the percent-encoded string.
 /// Complexity: O(n).
 pub fn url_encode(s: Str) -> Str {
@@ -125,7 +125,7 @@ pub fn url_encode(s: Str) -> Str {
 }
 
 /// Percent-decode a URL.
-/// Parameters: s — the encoded text.
+/// Parameters: s -- the encoded text.
 /// Returns: Ok(decoded) on success; Err for a truncated or invalid escape.
 /// Complexity: O(n).
 pub fn url_decode(s: Str) -> Result[Str, Str] {

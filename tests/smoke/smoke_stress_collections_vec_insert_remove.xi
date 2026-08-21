@@ -1,4 +1,4 @@
-// XIOM stdlib stress — Vec insert and remove at positions
+// XIOM stdlib stress -- Vec insert and remove at positions
 // Tests middle and end insertion/removal in a Vec.
 // Returns 0 on success, nonzero on failure.
 

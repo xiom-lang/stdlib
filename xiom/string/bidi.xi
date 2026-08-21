@@ -46,7 +46,7 @@ pub fn unicode_mirrored(c: Char) -> Bool {
 
 /// Mirror image of `c`: the paired bracket/quote on the other side, or `c`
 /// itself when `c` is not mirrored. E.g. '(' -> ')', ')' -> '(', '[' -> ']',
-/// '{' -> '}', '<' -> '>', '«' -> '»', '‹' -> '›'.
+/// '{' -> '}', '<' -> '>', '<<' -> '>>', '<' -> '>'.
 /// Params: c the character to mirror.
 /// Returns: the mirrored counterpart, or c itself.
 /// Error case: none.

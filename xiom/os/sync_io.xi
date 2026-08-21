@@ -9,7 +9,7 @@ module xiom.os.sync_io
 // ============================================================================
 // Blocking fd helpers: exact reads, full writes, buffered line reads, copying
 // and file advice/locking. All require raw fd syscalls (read/write/lseek/
-// fcntl/posix_fadvise/posix_fallocate) that the pure stdlib does not expose —
+// fcntl/posix_fadvise/posix_fallocate) that the pure stdlib does not expose --
 // every function is a documented stub returning Err (or a documented default).
 // ============================================================================
 

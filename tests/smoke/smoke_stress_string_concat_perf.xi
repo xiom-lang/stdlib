@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.string.str_concat repeated growth performance
+// XIOM stdlib stress -- xiom.string.str_concat repeated growth performance
 // Chains several concatenations to stress allocator, verifies result.
 // Returns 0 on success.
 

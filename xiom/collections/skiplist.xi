@@ -1,17 +1,17 @@
-// XIOM — Collections: SkipList (ordered map, probabilistic)
+// XIOM -- Collections: SkipList (ordered map, probabilistic)
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 
 module xiom.collect.skiplist
 
 // TODO(compiler): combining this module with collect.trie in one program
-// fast-fails at exit (0xC0000409) — see docs/COMPILER_BUGS.md BUG 16.
+// fast-fails at exit (0xC0000409) -- see docs/COMPILER_BUGS.md BUG 16.
 // The modules are correct individually; keep them in separate smokes.
 
 
 // ============================================================================
 // SkipList (Int keys)
-// Flat-arena style (the established collect/ pattern — tree.xi/graph.xi use
+// Flat-arena style (the established collect/ pattern -- tree.xi/graph.xi use
 // parallel Vec[Int]s because Vec-of-struct instantiations collide at startup
 // in combined programs, COMPILER_BUGS.md BUG 16). `keys[i]` is the key of
 // node i; the successor of node i at level L is nexts[i * MAX_LEVEL + L]

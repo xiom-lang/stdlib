@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.regex Regex.replace replaces first match
+// XIOM stdlib stress -- xiom.regex Regex.replace replaces first match
 // Tests replace for first occurrence replacement and no-match passthrough.
 // Returns 0 on success, nonzero on failure.
 

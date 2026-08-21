@@ -10,7 +10,7 @@ module xiom.convert.tofloat
 // Int-to-float widening and string-to-float parsing strategies. `to_float`
 // shadows the core intrinsic within this module only. The string parsers are
 // implemented here directly: the core `to_float_from_str` path is unusable
-// (it relies on Char range comparisons that miscompile — see the module
+// (it relies on Char range comparisons that miscompile -- see the module
 // header of xiom.convert.lossy).
 // ============================================================================
 

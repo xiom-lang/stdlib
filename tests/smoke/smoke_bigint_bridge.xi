@@ -13,7 +13,7 @@ fn from_str(s: Str) -> BigInt {
 }
 
 fn main() -> Int {
-  // ── to_u64 ──
+  // -- to_u64 --
   var z = xiom.bigint.bigint_zero();
   var r0 = xiom.bigint.bigint_to_u64(&z);
   match r0 {
@@ -45,7 +45,7 @@ fn main() -> Int {
     Err(e) => { io.println(e); return 8; };
   }
 
-  // ── to_u128 ──
+  // -- to_u128 --
   var max_u128 = from_str("340282366920938463463374607431768211455");
   var r5 = xiom.bigint.bigint_to_u128(&max_u128);
   match r5 {
@@ -79,7 +79,7 @@ fn main() -> Int {
     Err(e) => { io.println(e); return 15; };
   }
 
-  // ── to_i128 ──
+  // -- to_i128 --
   var neg_2_63: Int128 = (0 as Int128) - ((1 as Int128) << 63);
   var i_min = from_str("-9223372036854775808");
   var r9 = xiom.bigint.bigint_to_i128(&i_min);
@@ -95,7 +95,7 @@ fn main() -> Int {
     Ok(v) => { if v != max_i { return 18; } };
     Err(e) => { io.println(e); return 19; };
   }
-  // 2^63 fits in i128 (bounds are ±2^127) — verify it works:
+  // 2^63 fits in i128 (bounds are +/-2^127) -- verify it works:
   var i_2p63 = from_str("9223372036854775808");
   var r11 = xiom.bigint.bigint_to_i128(&i_2p63);
   match r11 {

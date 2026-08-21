@@ -30,7 +30,7 @@ pub fn semver_parse(s: Str) -> Option[SemVer] {
   var core = text;
   var prerelease = "";
   var build = "";
-  // NOTE: plain `match` only — `if x is Some { match x {...} }` double-check
+  // NOTE: plain `match` only -- `if x is Some { match x {...} }` double-check
   // binds the payload as 0 (TODO(compiler): BUG 38).
   var plus = xiom.string.str_index_of(text, "+");
   match plus {
@@ -450,7 +450,7 @@ fn semver_parse_partial(s: Str) -> Option[SemVer] {
   var core = s;
   var prerelease = "";
   var build = "";
-  // NOTE: plain `match` only — TODO(compiler): BUG 38 (is-Some + match
+  // NOTE: plain `match` only -- TODO(compiler): BUG 38 (is-Some + match
   // double-check binds payload as 0).
   var dash = xiom.string.str_index_of(core, "-");
   match dash {

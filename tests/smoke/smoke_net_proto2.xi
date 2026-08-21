@@ -1,9 +1,9 @@
-// XIOM stdlib smoke test — xiom.net.ntp + xiom.net.ping + xiom.net.unix
+// XIOM stdlib smoke test -- xiom.net.ntp + xiom.net.ping + xiom.net.unix
 // NTP packet encode/decode, ICMP checksum, and unix socket stubs.
 // Returns 0 on success, nonzero on failure (process exit code).
 // NOTE: ntp_packet_to_bytes triggers an LLVM codegen bug (a module fn taking
 // the Float64-bearing NtpPacket struct by value and returning Vec miscompiles
-// in the fresh compiler) — it is exercised only inside the module.
+// in the fresh compiler) -- it is exercised only inside the module.
 
 module smoke_net_proto2
 

@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.fmt Float64.to_str for zero values
+// XIOM stdlib stress -- xiom.fmt Float64.to_str for zero values
 // Tests that 0.0 produces a non-empty, sane representation.
 // Returns 0 on success, nonzero on failure.
 

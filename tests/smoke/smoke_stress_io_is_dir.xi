@@ -1,4 +1,4 @@
-// XIOM stdlib stress — io.is_dir distinguishes file vs directory
+// XIOM stdlib stress -- io.is_dir distinguishes file vs directory
 // Creates a file and checks is_dir returns false; checks "." is true.
 // Returns 0 on success.
 

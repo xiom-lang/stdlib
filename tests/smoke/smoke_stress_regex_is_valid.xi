@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.regex is_valid_regex validates patterns
+// XIOM stdlib stress -- xiom.regex is_valid_regex validates patterns
 // Tests valid and invalid pattern detection without compilation.
 // Returns 0 on success, nonzero on failure.
 

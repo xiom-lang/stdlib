@@ -105,7 +105,7 @@ fn main() -> Int {
   if math.constants.neg_infinity() >= 0.0 {
     io.println("NEG_INF-pos"); return 28;
   }
-  // NaN: BUG 19 fixed — IEEE semantics; NaN != NaN, is_nan detects it.
+  // NaN: BUG 19 fixed -- IEEE semantics; NaN != NaN, is_nan detects it.
   if !math.is_nan(math.constants.nan()) {
     io.println("NAN-bad"); return 29;
   }

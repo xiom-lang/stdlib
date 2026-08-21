@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.string.last_index_of boundary
+// XIOM stdlib stress -- xiom.string.last_index_of boundary
 // Tests last_index_of for single char, multi-char substring, and not-found.
 // Returns 0 on success, nonzero on failure.
 

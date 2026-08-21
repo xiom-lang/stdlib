@@ -1,4 +1,4 @@
-// XIOM stdlib smoke test — xiom.hash.farm
+// XIOM stdlib smoke test -- xiom.hash.farm
 // FarmHash 32/64/128 determinism, empty input, different inputs, seeds and
 // fingerprint aliases. Returns 0 on success, nonzero on failure.
 

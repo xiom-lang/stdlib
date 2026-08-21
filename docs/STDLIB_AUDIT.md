@@ -90,7 +90,7 @@ Net: **0 broken resolutions**; 3 items worth a naming decision (S5.2-5.4).
 | chain | error, iter |
 | channel | async, sync |
 | convert | convert (`xiom.convert`), num (`xiom.num.convert`) |
-| core | core (`xiom.core` only — RESOLVED 2026-08-11: math.core renamed math.tower) |
+| core | core (`xiom.core` only -- RESOLVED 2026-08-11: math.core renamed math.tower) |
 | curves | crypto, geom |
 | date | convert, time |
 | duration | convert, time |
@@ -135,7 +135,7 @@ the audit tracks so implementers keep qualified calls deterministic):
 | chain | `xiom.error.chain` (error/chain.xi) | error context chaining |
 | channel | `xiom.sync.channel` (sync/channel.xi) | sync owns channels; `async/channel.xi` is the executor flavor |
 | convert | `xiom.convert` (convert/convert.xi, frozen) + `xiom.num.convert` (num/convert.xi) | the latter is numeric radix/base58/62/85/roman (verified) |
-| core | `xiom.core` (core/core.xi, frozen) — RESOLVED: math.core renamed math.tower (math/tower.xi), prelude owns `core` |neric tower) | distinct by design (D4b) |
+| core | `xiom.core` (core/core.xi, frozen) -- RESOLVED: math.core renamed math.tower (math/tower.xi), prelude owns `core` |neric tower) | distinct by design (D4b) |
 | curves | `xiom.crypto.curves` (crypto/curves.xi, ECC) vs `xiom.geom.curves` (geom/curves.xi, splines) | distinct domains |
 | date / duration / time / timestamp | `xiom.time.*` (time/time.xi flat has real Date/Duration/strftime/strptime) | time is the production home; `convert/*` are parse/serialize shims |
 | endian | `xiom.serialize.endian` (serialize/endian.xi) | binary serialization |
@@ -416,9 +416,9 @@ For each of the **346 STUB sublibs** (one row per file, grouped by category per 
 
 ---
 
-## 7. Implementation-phase status (2026-08-11 night, wave 1) — 40 modules flipped STUB -> REAL
+## 7. Implementation-phase status (2026-08-11 night, wave 1) -- 40 modules flipped STUB -> REAL
 
-> Maintained by the stdlib session; the §3 tables above are the 2026-08-11
+> Maintained by the stdlib session; the S3 tables above are the 2026-08-11
 > read-only snapshot. Modules flipped to REAL since then (commit `224b0ed6`,
 > all with smokes in examples/stdlib_smoke/, exit 0):
 
@@ -450,9 +450,9 @@ For each of the **346 STUB sublibs** (one row per file, grouped by category per 
 | xiom.string.join | string/join.xi | 4 | (same smoke) | join/join_after/vec_int/float_join |
 | xiom.string.pad | string/pad.xi | 6 | smoke_string_pad_repeat (11) | pad_left/right/both/start/end/center |
 | xiom.string.repeat | string/repeat.xi | 2 | (same smoke) | str_repeat wrapper + str_repeat_char (restructured: BUG 21/22#15 unsafe-loop inline corruption) |
-| xiom.string.reverse | string/reverse.xi | 3 | smoke_string_reverse_replace (9) | local impl (flat str_reverse emits invalid IR — BUG 22 #6) |
-| xiom.string.replace | string/replace.xi | 5 | (same smoke) | byte-scan impl (index_of-in-loop crash — BUG 22 #7) |
-| xiom.string.slice | string/slice.xi | 5 | smoke_string_slice (28) | slice/substring/chars/bytes/code_points (Vec[Int] — Vec[Char] is 1-byte, BUG 22 #12) |
+| xiom.string.reverse | string/reverse.xi | 3 | smoke_string_reverse_replace (9) | local impl (flat str_reverse emits invalid IR -- BUG 22 #6) |
+| xiom.string.replace | string/replace.xi | 5 | (same smoke) | byte-scan impl (index_of-in-loop crash -- BUG 22 #7) |
+| xiom.string.slice | string/slice.xi | 5 | smoke_string_slice (28) | slice/substring/chars/bytes/code_points (Vec[Int] -- Vec[Char] is 1-byte, BUG 22 #12) |
 | xiom.string.compare | string/compare.xi | 4 | smoke_string_compare_search (27) | byte-wise compare/ignore_case/natural |
 | xiom.string.search | string/search.xi | 6 | (same smoke) | index_of/last_index_of/contains/count/find_any |
 | xiom.string.chunk | string/chunk.xi | 3 | smoke_string_chunk_combine (50) | chunk/chunks_reverse/windows |
@@ -466,15 +466,15 @@ For each of the **346 STUB sublibs** (one row per file, grouped by category per 
 | xiom.string.escape | string/escape.xi | 4 | (same smoke) | escape/unescape/ascii/unicode |
 | xiom.math.constants | math/constants.xi | 20 consts + 3 fns | smoke_math_constants_ext (31) | NAN landed after BUG 19 fix (commit 799c24f5 + 224b0ed6) |
 
-**Verification state:** 10/11 string smokes + constants smoke verified exit 0 on the CURRENT compiler; the float-heavy smokes (num 4, math 10, split_join, constants_ext) compile clean but RUNTIME-TRAP 0xC000001D on this machine (AMD Zen 2) — BUG 20 (unconditional -mavx512* clang flags, compiler session's `1d4cd2e8`). They were verified exit 0 at agent time with the pre-SIMD-flag compiler. Re-verify after the compiler session gates the flags on CPUID. stdlib_tests 40/40 green; api_freeze still blocked by the stale path list (compiler session owns the test file).
+**Verification state:** 10/11 string smokes + constants smoke verified exit 0 on the CURRENT compiler; the float-heavy smokes (num 4, math 10, split_join, constants_ext) compile clean but RUNTIME-TRAP 0xC000001D on this machine (AMD Zen 2) -- BUG 20 (unconditional -mavx512* clang flags, compiler session's `1d4cd2e8`). They were verified exit 0 at agent time with the pre-SIMD-flag compiler. Re-verify after the compiler session gates the flags on CPUID. stdlib_tests 40/40 green; api_freeze still blocked by the stale path list (compiler session owns the test file).
 
 ---
 
-## 2026-08-16 (evening) — gap-fill completion update (stdlib session)
+## 2026-08-16 (evening) -- gap-fill completion update (stdlib session)
 
 The 2026-08-11 summary above (93 REAL / 346 STUB) is superseded: waves 1-5
 landed 2026-08-11..13 took the tree to ~500 REAL / 0 stub-only files
-(512 files, 8,300+ fn declarations — see docs/stdlib_session.md §9-12).
+(512 files, 8,300+ fn declarations -- see docs/stdlib_session.md S9-12).
 This session closed the last unblocked comment-stubs:
 
 | Module | Added | Smoke |
@@ -484,8 +484,8 @@ This session closed the last unblocked comment-stubs:
 | xiom.sort.radix | bucket_sort (flat offset-table; TODO(compiler) BUG 34/35) | (same smoke) |
 | xiom.num.bigfloat | bigfloat_to_float128 (34-digit fp128 bridge; returns bare Float128, TODO(compiler) BUG 33/36/37) | smoke_bigfloat covers parse/format; f128 consumer blocked by BUG 37 |
 
-Still comment-only by design: iter/range.xi range_inf (no Iter type exists —
-needs the STDLIB_EXTENSION Iterator machinery, §12 dispatch), array/fixed.xi
+Still comment-only by design: iter/range.xi range_inf (no Iter type exists --
+needs the STDLIB_EXTENSION Iterator machinery, S12 dispatch), array/fixed.xi
 generic array fns (trait dispatch), reflect/*, simd/gather (reflection/SIMD
 features not built), math/logic symbolic fns (expression parser), string/
 format.xi (lives in fmt).

@@ -1,4 +1,4 @@
-// XIOM — Networking Library
+// XIOM -- Networking Library
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 
@@ -606,7 +606,7 @@ fn str_to_int(s: Str) -> Int {
   result * sign
 }
 
-// ── HTTP Convenience Helpers ───────────────────────────────────────
+// -- HTTP Convenience Helpers ---------------------------------------
 
 /// Performs an HTTP GET request and returns the response body as a string.
 /// Complexity: network I/O. Thread-safe: no shared state.
@@ -632,7 +632,7 @@ pub fn http_status(url: Str) -> Option[Int] {
   };
 }
 
-// ── TCP Alias ──────────────────────────────────────────────────────
+// -- TCP Alias ------------------------------------------------------
 
 /// Alias for `tcp_connect`. Connects to a TCP server at `host:port`.
 /// Complexity: network I/O.
@@ -640,7 +640,7 @@ pub fn tcp_connect_str(host: Str, port: Int) -> Result[TcpStream, NetError] {
   return tcp_connect(host, port);
 }
 
-// ── Validation Helpers ─────────────────────────────────────────────
+// -- Validation Helpers ---------------------------------------------
 
 /// Returns `true` if `s` is a valid IPv4 address (e.g. "192.168.1.1").
 /// Complexity: O(n). Pure, no side effects.
@@ -673,13 +673,13 @@ pub fn is_valid_ipv4(s: Str) -> Bool {
   return true;
 }
 
-/// Returns `true` if `p` is a valid TCP/UDP port number (1–65535).
+/// Returns `true` if `p` is a valid TCP/UDP port number (1-65535).
 /// Complexity: O(1). Pure.
 pub fn is_valid_port(p: Int) -> Bool {
   return p > 0 && p <= 65535;
 }
 
-// ── URL Component Parsers ──────────────────────────────────────────
+// -- URL Component Parsers ------------------------------------------
 
 /// Extracts the scheme from a URL (e.g. "https" from "https://example.com").
 /// Returns `None` if the URL is malformed.
@@ -730,7 +730,7 @@ pub fn url_parse_port(url: Str) -> Option[Int] {
   };
 }
 
-// ── DNS Helpers ────────────────────────────────────────────────────
+// -- DNS Helpers ----------------------------------------------------
 
 /// Resolves a hostname to a list of IP addresses.
 /// Delegates to `resolve_host`.

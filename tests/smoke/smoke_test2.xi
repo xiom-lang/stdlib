@@ -1,8 +1,8 @@
-// XIOM stdlib smoke — xiom.test.assert
+// XIOM stdlib smoke -- xiom.test.assert
 // Returns 0 on success, nonzero (and a tag) on failure.
 //
 // NOTE: xiom.test.assert and xiom.test.harness cannot be imported together
-// in one program — the second sibling import clobbers the first module's
+// in one program -- the second sibling import clobbers the first module's
 // exports in this build (see report). Harness checks live in smoke_test3.xi.
 
 module smoke_test2

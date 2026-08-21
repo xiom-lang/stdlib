@@ -1,4 +1,4 @@
-// XIOM stdlib stress — math extreme values
+// XIOM stdlib stress -- math extreme values
 // Tests math functions at boundary and extreme values.
 // Returns 0 on success, nonzero on failure.
 

@@ -1,4 +1,4 @@
-// XIOM stdlib smoke test — xiom.net.url + xiom.net.ws + xiom.net.websocket
+// XIOM stdlib smoke test -- xiom.net.url + xiom.net.ws + xiom.net.websocket
 // URL parsing, ws URL parsing/building, websocket handshake and framing.
 // Returns 0 on success, nonzero on failure (process exit code).
 

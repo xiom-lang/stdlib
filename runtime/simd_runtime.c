@@ -1,10 +1,10 @@
-// XIOM SIMD Runtime — SSE/AVX/NEON intrinsics
+// XIOM SIMD Runtime -- SSE/AVX/NEON intrinsics
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 
 #include <stdint.h>
-#include <stdlib.h>   /* malloc — used by every backend (x86/arm/scalar) */
-#include <math.h>     /* sqrtf — used by the scalar fallback backend */
+#include <stdlib.h>   /* malloc -- used by every backend (x86/arm/scalar) */
+#include <math.h>     /* sqrtf -- used by the scalar fallback backend */
 
 #ifdef __x86_64__
 #include <cpuid.h>
@@ -380,7 +380,7 @@ void xiom_simd_i32_to_f32(int* src, float* dst) {
     dst[2] = (float)src[2]; dst[3] = (float)src[3];
 }
 
-// 256-bit fallbacks — called from .xi wrappers; here as no-op stubs
+// 256-bit fallbacks -- called from .xi wrappers; here as no-op stubs
 // real AVX path is in the __x86_64__ block above
 
 void xiom_simd_f32x8_add(float* a, float* b, float* out) {

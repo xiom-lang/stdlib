@@ -1,4 +1,4 @@
-// XIOM stdlib stress — Vec pop
+// XIOM stdlib stress -- Vec pop
 // Pushes items, pops them, verifies LIFO order and empty state.
 // Returns 0 on success, nonzero on failure.
 

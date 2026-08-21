@@ -1,4 +1,4 @@
-// XIOM — Reference Counting
+// XIOM -- Reference Counting
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 
@@ -111,7 +111,7 @@ pub fn Rc.drop[T](self)
 
 // === M7: Deref impl for Rc[T] ===
 // Rc is a shared-ownership pointer. Deref allows `*rc` and auto-deref.
-// Note: DerefMut is NOT implemented — Rc provides shared access only.
+// Note: DerefMut is NOT implemented -- Rc provides shared access only.
 pub fn Rc[T].deref(self) -> &T
   requires: ptr != null
   ensures: true

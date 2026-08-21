@@ -12,7 +12,7 @@ module xiom.collect.hamt
 // O(log_32 n) operations with fast structural sharing and cache locality.
 // Duplicate keys are rejected by insert.
 //
-// Flat-arena style (the established collect/ pattern — tree.xi/graph.xi use
+// Flat-arena style (the established collect/ pattern -- tree.xi/graph.xi use
 // parallel Vec[Int]s because Vec-of-struct instantiations collide at startup
 // in combined programs). Every node owns 32 child slots in the flat `kids`
 // vector (`kids[i * 32 + slot]`), so table nodes and leaf nodes share one

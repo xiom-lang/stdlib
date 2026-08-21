@@ -1,4 +1,4 @@
-// XIOM stdlib stress — BTreeSet insert, contains, remove
+// XIOM stdlib stress -- BTreeSet insert, contains, remove
 // Tests ordered set operations with unique sorted elements.
 // Returns 0 on success, nonzero on failure.
 

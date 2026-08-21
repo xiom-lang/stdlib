@@ -67,7 +67,7 @@ pub fn compactness(tau: &Vec[Vec[Int]], s: &Vec[Int]) -> Bool {
 }
 
 // True iff s cannot be split into two disjoint non-empty open sets. Checks
-// every pair (a, b) of open sets: s is disconnected when (a ∪ b) covers s,
+// every pair (a, b) of open sets: s is disconnected when (a | b) covers s,
 // a and b are disjoint on s, and each meets s in a non-empty set. An empty
 // s is vacuously connected. Complexity: O(|tau|^2 * |s|).
 pub fn connectedness(tau: &Vec[Vec[Int]], s: &Vec[Int]) -> Bool {

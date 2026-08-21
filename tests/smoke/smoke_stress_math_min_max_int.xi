@@ -1,4 +1,4 @@
-// XIOM stdlib stress — math.min_int and math.max_int
+// XIOM stdlib stress -- math.min_int and math.max_int
 // Tests min/max on various integer pairs.
 // Returns 0 on success, nonzero on failure.
 

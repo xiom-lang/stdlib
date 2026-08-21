@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.fmt Formatter.write_int and finish
+// XIOM stdlib stress -- xiom.fmt Formatter.write_int and finish
 // Tests Formatter building a string from multiple integer writes.
 // Returns 0 on success, nonzero on failure.
 

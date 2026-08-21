@@ -4,7 +4,7 @@ use xiom.time;
 
 // strftime / strptime (G13 batch). Kept separate from smoke_str2 (string +
 // text.similarity): combining string + text.similarity + time in one
-// program crashes at startup — COMPILER_BUGS.md BUG 18.
+// program crashes at startup -- COMPILER_BUGS.md BUG 18.
 
 fn main() -> Int {
   var d = xiom.time.date_new(2026, 8, 11);

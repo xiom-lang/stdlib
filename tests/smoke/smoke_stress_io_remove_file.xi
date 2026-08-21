@@ -1,4 +1,4 @@
-// XIOM stdlib stress — io.remove_file success and verification
+// XIOM stdlib stress -- io.remove_file success and verification
 // Writes file, removes it, verifies file is gone.
 // Returns 0 on success.
 

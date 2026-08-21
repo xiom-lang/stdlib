@@ -12,9 +12,9 @@ module xiom.math.constants
 // The flat math.xi keeps the frozen PI/E/TAU shims (freeze-gated contract);
 // THIS module is the canonical home for the full constant set. Every numeric
 // constant is a module-level `pub const` with a SCALAR LITERAL initializer
-// only — fn-call initializers on module globals are silently zero (BUG 3) and
+// only -- fn-call initializers on module globals are silently zero (BUG 3) and
 // struct FIELD writes on module globals are lost (BUG 2), so the three
-// non-literal IEEE special values (INFINITY, NEG_INFINITY, NAN — no literal
+// non-literal IEEE special values (INFINITY, NEG_INFINITY, NAN -- no literal
 // syntax exists) are exposed as pure constructor functions instead:
 // `math.constants.infinity()`, `math.constants.neg_infinity()`,
 // `math.constants.nan()`. They are contract-free and side-effect-free.
@@ -26,46 +26,46 @@ module xiom.math.constants
 // last ulp.
 // ============================================================================
 
-/// pi — ratio of a circle's circumference to its diameter (3.14159...).
+/// pi -- ratio of a circle's circumference to its diameter (3.14159...).
 pub const PI: Float64 = 3.14159265358979323846;
 
-/// e — base of the natural logarithm (2.71828...).
+/// e -- base of the natural logarithm (2.71828...).
 pub const E: Float64 = 2.71828182845904523536;
 
-/// tau — full circle in radians, exactly 2*pi (6.28318...).
+/// tau -- full circle in radians, exactly 2*pi (6.28318...).
 pub const TAU: Float64 = 6.28318530717958647692;
 
-/// phi — golden ratio, (1 + sqrt(5))/2 (1.61803...).
+/// phi -- golden ratio, (1 + sqrt(5))/2 (1.61803...).
 pub const PHI: Float64 = 1.61803398874989484820;
 
-/// sqrt(2) — 1.41421...
+/// sqrt(2) -- 1.41421...
 pub const SQRT_2: Float64 = 1.41421356237309504880;
 
-/// sqrt(3) — 1.73205...
+/// sqrt(3) -- 1.73205...
 pub const SQRT_3: Float64 = 1.73205080756887729352;
 
-/// sqrt(5) — 2.23606...
+/// sqrt(5) -- 2.23606...
 pub const SQRT_5: Float64 = 2.23606797749978969640;
 
-/// ln(2) — natural logarithm of two (0.69314...).
+/// ln(2) -- natural logarithm of two (0.69314...).
 pub const LN_2: Float64 = 0.69314718055994530942;
 
-/// ln(10) — natural logarithm of ten (2.30258...).
+/// ln(10) -- natural logarithm of ten (2.30258...).
 pub const LN_10: Float64 = 2.30258509299404568402;
 
-/// log2(e) — base-2 logarithm of e, 1/ln(2) (1.44269...).
+/// log2(e) -- base-2 logarithm of e, 1/ln(2) (1.44269...).
 pub const LOG2_E: Float64 = 1.44269504088896340736;
 
-/// log10(e) — base-10 logarithm of e, 1/ln(10) (0.43429...).
+/// log10(e) -- base-10 logarithm of e, 1/ln(10) (0.43429...).
 pub const LOG10_E: Float64 = 0.43429448190325182765;
 
-/// gamma — Euler-Mascheroni constant (0.57721...).
+/// gamma -- Euler-Mascheroni constant (0.57721...).
 pub const EULER_GAMMA: Float64 = 0.57721566490153286060;
 
-/// G — Catalan's constant, sum (-1)^k/(2k+1)^2 (0.91596...).
+/// G -- Catalan's constant, sum (-1)^k/(2k+1)^2 (0.91596...).
 pub const CATALAN: Float64 = 0.91596559417721901505;
 
-/// zeta(3) — Apery's constant (1.20205...).
+/// zeta(3) -- Apery's constant (1.20205...).
 pub const APERY: Float64 = 1.20205690315959428540;
 
 /// Machine epsilon for Float64: the smallest x such that 1.0 + x != 1.0.
@@ -87,18 +87,18 @@ pub const FLOAT32_MAX: Float64 = 3.4028234663852886e38;
 /// Smallest positive NORMAL Float32 (as Float64): 2^-126.
 pub const FLOAT32_MIN: Float64 = 1.1754943508222875e-38;
 
-/// Positive infinity. Constructor fn (no literal syntax; BUG 3 — see header).
+/// Positive infinity. Constructor fn (no literal syntax; BUG 3 -- see header).
 pub fn infinity() -> Float64 {
   return 1.0 / 0.0;
 }
 
-/// Negative infinity. Constructor fn (no literal syntax; BUG 3 — see header).
+/// Negative infinity. Constructor fn (no literal syntax; BUG 3 -- see header).
 pub fn neg_infinity() -> Float64 {
   return -1.0 / 0.0;
 }
 
-// NAN (not-a-number) — constructor fn (no NaN literal syntax exists; a const
-// initializer can't hold the `0.0 / 0.0` expression — const-fold handles
+// NAN (not-a-number) -- constructor fn (no NaN literal syntax exists; a const
+// initializer can't hold the `0.0 / 0.0` expression -- const-fold handles
 // literals only). IEEE semantics verified: `nan() != nan()` is true and
 // math.is_nan(nan()) is true since BUG 19's fcmp-one/Str+Float64-concat
 // defects were fixed (2026-08-11, `9c3a2f9e`/`88f924ea`).

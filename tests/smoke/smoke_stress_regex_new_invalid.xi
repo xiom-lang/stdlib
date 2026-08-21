@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.regex Regex.new with invalid patterns
+// XIOM stdlib stress -- xiom.regex Regex.new with invalid patterns
 // Tests that malformed regex patterns return Err, not panic.
 // Returns 0 on success, nonzero on failure.
 

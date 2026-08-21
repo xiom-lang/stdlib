@@ -1,4 +1,4 @@
-// XIOM stdlib stress — io.file_exists true/false
+// XIOM stdlib stress -- io.file_exists true/false
 // Writes a file, confirms exists, removes, confirms gone.
 // Returns 0 on success.
 

@@ -14,7 +14,7 @@ fn main() -> Int {
   let b1 = bidi.unicode_bidi_class('A');
 if b1 != "L" { io.println("BDI1 b1=" + b1); return 1; }
 // Non-ASCII bidi checks (Hebrew/Arabic classes) dropped: user modules cannot
-// build a non-ASCII Char — prelude to_char unreachable (BUG 26 #3) and
+// build a non-ASCII Char -- prelude to_char unreachable (BUG 26 #3) and
 // convert.int_to_char returns a corrupted Char payload (BUG 26 #7).
 // TODO(compiler): BUG 26 #3/#7.
   let b5 = bidi.unicode_bidi_class('5');

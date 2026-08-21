@@ -1,4 +1,4 @@
-// XIOM stdlib smoke test — xiom.os.fs, xiom.os.proc, xiom.os.term
+// XIOM stdlib smoke test -- xiom.os.fs, xiom.os.proc, xiom.os.term
 // Returns 0 on success, nonzero on failure (process exit code).
 
 module smoke_os_folder

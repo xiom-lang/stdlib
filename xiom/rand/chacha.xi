@@ -1,4 +1,4 @@
-// XIOM — ChaCha20-based RNG (32-bit words)
+// XIOM -- ChaCha20-based RNG (32-bit words)
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 //

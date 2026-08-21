@@ -152,7 +152,7 @@ pub fn terminal_height() -> Int {
 }
 
 /// Return the escape sequence that sets the window title.
-/// Parameters: title — the desired title text.
+/// Parameters: title -- the desired title text.
 /// Returns: the "ESC]0;<title>BEL" sequence.
 /// Complexity: O(n). Pure.
 pub fn terminal_title(title: Str) -> Str {

@@ -12,7 +12,7 @@ module xiom.string.normalize
 // COVERAGE (documented honestly): the canonical decomposition/composition
 // tables cover ASCII, the Latin-1 Supplement accented forms, the decomposable
 // Latin Extended-A accented pairs, the standard Greek accented vowels, and the
-// Cyrillic diaeresis/grave forms (Ѐ/Ё/ѐ/ё). Compatibility decompositions cover
+// Cyrillic diaeresis/grave forms (Ye/Yo/ye/yo). Compatibility decompositions cover
 // fullwidth forms, NBSP, superscript/subscript digits, fractions, the Latin
 // ligatures (ff/fi/fl/ffi/ffl, IJ/ij), circled numbers/letters, ideographic
 // space, and a few symbol-to-ASCII mappings. Everything else passes through
@@ -27,7 +27,7 @@ use xiom.char;
 
 /// Normalize `s` to NFC (canonical composition): characters are canonically
 /// decomposed, canonically reordered, then recomposed to their precomposed
-/// forms where one exists (e.g. "e\u0301" -> "é"). Characters outside the
+/// forms where one exists (e.g. "e\u0301" -> "e"). Characters outside the
 /// covered table pass through unchanged.
 /// Params: s the string to normalize.
 /// Returns: the NFC-normalized string.
@@ -43,7 +43,7 @@ pub fn unicode_normalize_nfc(s: Str) -> Str {
 
 /// Normalize `s` to NFD (canonical decomposition): precomposed characters are
 /// decomposed into their base letter plus combining marks, and combining marks
-/// are canonically reordered by combining class (e.g. "é" -> "e" + U+0301).
+/// are canonically reordered by combining class (e.g. "e" -> "e" + U+0301).
 /// Params: s the string to normalize.
 /// Returns: the NFD-normalized string.
 /// Error case: none; malformed UTF-8 bytes pass through approximately.
@@ -57,7 +57,7 @@ pub fn unicode_normalize_nfd(s: Str) -> Str {
 
 /// Normalize `s` to NFKC (compatibility composition): NFKD then NFC-style
 /// recomposition. Compatibility characters such as ligatures, superscripts and
-/// fullwidth forms are decomposed first (e.g. "①" -> "1", "ｦ" -> "ｦ"... 1:1
+/// fullwidth forms are decomposed first (e.g. "1" -> "1", "[U+FF66]" -> "[U+FF66]"... 1:1
 /// fullwidth forms fold to ASCII). See the module header for the covered set.
 /// Params: s the string to normalize.
 /// Returns: the NFKC-normalized string.
@@ -72,7 +72,7 @@ pub fn unicode_normalize_nfkc(s: Str) -> Str {
 }
 
 /// Normalize `s` to NFKD (compatibility decomposition): like NFD plus the
-/// compatibility mappings (e.g. "ﬁ" -> "fi", "½" -> "1/2", "⑧" -> "8").
+/// compatibility mappings (e.g. "fi" -> "fi", "1/2" -> "1/2", "8" -> "8").
 /// Params: s the string to normalize.
 /// Returns: the NFKD-normalized string.
 /// Error case: none; malformed UTF-8 bytes pass through approximately.
@@ -85,9 +85,9 @@ pub fn unicode_normalize_nfkd(s: Str) -> Str {
 }
 
 /// Fold `s` to plain ASCII, removing accents and combining marks. Accented
-/// Latin letters reduce to their base letter ("café" -> "cafe"); common
+/// Latin letters reduce to their base letter ("cafe" -> "cafe"); common
 /// non-ASCII letters without an ASCII base are transliterated via a small map
-/// ("ø" -> "o", "ß" -> "s", "æ" -> "a"). Characters with no ASCII
+/// ("o" -> "o", "ss" -> "s", "ae" -> "a"). Characters with no ASCII
 /// transliteration are dropped. See the module header for the covered set.
 /// Params: s the string to fold.
 /// Returns: an ASCII-only string.
@@ -123,7 +123,7 @@ pub fn str_normalize_ascii(s: Str) -> Str {
   _bytes_to_str(&out)
 }
 
-// ── Private helpers ─────────────────────────────────────────────────────────
+// -- Private helpers ---------------------------------------------------------
 
 /// Masked byte at `pos` (BUG 22 #10: `as Int` sign-extends UInt8).
 fn _byte_at(s: Str, pos: Int) -> Int {
@@ -668,7 +668,7 @@ fn _compose(a: Int, b: Int) -> Int {
 
 /// Single-level canonical decomposition of `cp`: (base, mark), or (cp, -1).
 fn _decomp(cp: Int) -> (Int, Int) {
-  // ── Latin-1 Supplement ──
+  // -- Latin-1 Supplement --
   if cp == 0xC0 { return (0x41, 0x300); };
   if cp == 0xC1 { return (0x41, 0x301); };
   if cp == 0xC2 { return (0x41, 0x302); };
@@ -722,7 +722,7 @@ fn _decomp(cp: Int) -> (Int, Int) {
   if cp == 0xFC { return (0x75, 0x308); };
   if cp == 0xFD { return (0x79, 0x301); };
   if cp == 0xFF { return (0x79, 0x308); };
-  // ── Latin Extended-A ──
+  // -- Latin Extended-A --
   if cp == 0x100 { return (0x41, 0x304); };
   if cp == 0x101 { return (0x61, 0x304); };
   if cp == 0x102 { return (0x41, 0x306); };
@@ -829,7 +829,7 @@ fn _decomp(cp: Int) -> (Int, Int) {
   if cp == 0x17C { return (0x7A, 0x307); };
   if cp == 0x17D { return (0x5A, 0x30C); };
   if cp == 0x17E { return (0x7A, 0x30C); };
-  // ── Greek (standard accented vowels) ──
+  // -- Greek (standard accented vowels) --
   if cp == 0x386 { return (0x391, 0x301); };
   if cp == 0x388 { return (0x395, 0x301); };
   if cp == 0x389 { return (0x397, 0x301); };
@@ -850,7 +850,7 @@ fn _decomp(cp: Int) -> (Int, Int) {
   if cp == 0x3CC { return (0x3BF, 0x301); };
   if cp == 0x3CD { return (0x3C5, 0x301); };
   if cp == 0x3CE { return (0x3C9, 0x301); };
-  // ── Cyrillic (grave and diaeresis forms) ──
+  // -- Cyrillic (grave and diaeresis forms) --
   if cp == 0x400 { return (0x415, 0x300); };
   if cp == 0x401 { return (0x415, 0x308); };
   if cp == 0x450 { return (0x435, 0x300); };

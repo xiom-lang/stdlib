@@ -7,9 +7,9 @@ module xiom.convert.base64
 // Depends on: none
 
 // ============================================================================
-// Standard base64 encoding/decoding (RFC 4648 §4, alphabet A-Za-z0-9+/).
+// Standard base64 encoding/decoding (RFC 4648 S4, alphabet A-Za-z0-9+/).
 // Implemented locally (same-name delegation to xiom.encoding crashes the
-// compiler — see xiom.convert.base58 for the probe reference).
+// compiler -- see xiom.convert.base58 for the probe reference).
 // ============================================================================
 
 use xiom.string;

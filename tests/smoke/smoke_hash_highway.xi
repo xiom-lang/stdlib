@@ -1,4 +1,4 @@
-// XIOM stdlib smoke test — xiom.hash.highway
+// XIOM stdlib smoke test -- xiom.hash.highway
 // HighwayHash 64/128/256 determinism, empty input, different inputs, key-vector
 // and verify helpers. Returns 0 on success, nonzero on failure.
 

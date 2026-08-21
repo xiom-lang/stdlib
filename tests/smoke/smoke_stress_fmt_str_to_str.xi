@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.fmt Str.to_str identity round-trip
+// XIOM stdlib stress -- xiom.fmt Str.to_str identity round-trip
 // Tests string to_str returns itself for various inputs.
 // Returns 0 on success, nonzero on failure.
 

@@ -1,4 +1,4 @@
-// XIOM — PCG (Permuted Congruential Generator) XSH-RR 64/32 PRNG
+// XIOM -- PCG (Permuted Congruential Generator) XSH-RR 64/32 PRNG
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 //

@@ -9,7 +9,7 @@ module xiom.convert.strptime
 // ============================================================================
 // Date/time parsing with strptime-style format specifiers. The reference
 // implementation lives in xiom.time.strptime; because the function name
-// matches here (same-name delegation miscompiles — BUG 25 #1) the parsing
+// matches here (same-name delegation miscompiles -- BUG 25 #1) the parsing
 // engine is reimplemented locally on top of the time/string primitives.
 //
 // Supported conversions: %Y %m %d %H %M %S %%. The result uses the
@@ -21,7 +21,7 @@ use xiom.time;
 use xiom.string;
 
 /// Parse a string with a strptime specifier.
-/// Parameters: s — the input string; spec — the format string.
+/// Parameters: s -- the input string; spec -- the format string.
 /// Returns: a DateParse whose is_ok is true when the input matches the spec
 ///          and the parsed month/day are in range; unsupported conversions
 ///          and mismatches yield is_ok = false.
@@ -142,7 +142,7 @@ pub fn strptime(s: Str, spec: Str) -> DateParse {
 }
 
 /// Parse an ISO 8601 "YYYY-MM-DD" date string.
-/// Parameters: s — the date string.
+/// Parameters: s -- the date string.
 /// Returns: a DateParse with is_ok true when the string is well-formed.
 /// Complexity: O(|s|).
 pub fn strptime_iso8601(s: Str) -> DateParse {

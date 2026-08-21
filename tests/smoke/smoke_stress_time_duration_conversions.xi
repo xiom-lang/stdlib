@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.time Duration factory and conversion methods
+// XIOM stdlib stress -- xiom.time Duration factory and conversion methods
 // Tests from_secs, from_millis, from_micros, from_nanos and as_* round-trips.
 // Returns 0 on success, nonzero on failure.
 

@@ -9,7 +9,7 @@ module xiom.convert.from
 // ============================================================================
 // Trait-style From helpers for primitive conversions. Numeric conversions
 // delegate to the canonical xiom.convert functions (different names here, so
-// delegation is safe from the same-name miscompile) — this also avoids
+// delegation is safe from the same-name miscompile) -- this also avoids
 // emitting duplicate tower.Int.to_float conversions, which clash with the
 // core Into impl when combined in one program (BUG 25 family).
 // ============================================================================
@@ -17,7 +17,7 @@ module xiom.convert.from
 use xiom.convert;
 
 /// Widen an integer to a float (exact up to 2^53).
-/// Parameters: n — the integer value.
+/// Parameters: n -- the integer value.
 /// Returns: n widened to Float64.
 /// Complexity: O(1).
 pub fn from_int(n: Int) -> Float64 {
@@ -25,7 +25,7 @@ pub fn from_int(n: Int) -> Float64 {
 }
 
 /// Truncate a float toward zero to an integer.
-/// Parameters: f — the float value.
+/// Parameters: f -- the float value.
 /// Returns: the truncated integer. Behavior for NaN/out-of-range input is
 /// undefined (use the checked variants elsewhere).
 /// Complexity: O(1).
@@ -34,7 +34,7 @@ pub fn from_float(f: Float64) -> Int {
 }
 
 /// Return a character's code point as an integer.
-/// Parameters: c — the character.
+/// Parameters: c -- the character.
 /// Returns: the Unicode code point of c.
 /// Complexity: O(1).
 pub fn from_char(c: Char) -> Int {
@@ -42,7 +42,7 @@ pub fn from_char(c: Char) -> Int {
 }
 
 /// Render a boolean as 0 or 1.
-/// Parameters: b — the boolean.
+/// Parameters: b -- the boolean.
 /// Returns: 1 when true, 0 when false.
 /// Complexity: O(1).
 pub fn from_bool(b: Bool) -> Int {

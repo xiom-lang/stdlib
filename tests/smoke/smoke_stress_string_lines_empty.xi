@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.string.lines on empty string
+// XIOM stdlib stress -- xiom.string.lines on empty string
 // Tests lines() returns correct count for empty and blank input.
 // Returns 0 on success, nonzero on failure.
 

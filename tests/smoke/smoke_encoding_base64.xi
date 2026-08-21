@@ -1,4 +1,4 @@
-// XIOM stdlib smoke test — xiom.encoding.base64
+// XIOM stdlib smoke test -- xiom.encoding.base64
 // base64/base64url known answers, padded variants, invalid-input errors.
 // Returns 0 on success, nonzero on failure.
 

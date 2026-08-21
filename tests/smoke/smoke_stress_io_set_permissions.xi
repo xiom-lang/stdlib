@@ -1,4 +1,4 @@
-// XIOM stdlib stress — io.set_permissions on temp file
+// XIOM stdlib stress -- io.set_permissions on temp file
 // Creates a test file, sets permissions, cleans up, verifies result.
 // Returns 0 on success, nonzero on failure.
 

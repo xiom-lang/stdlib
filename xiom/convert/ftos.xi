@@ -26,7 +26,7 @@ pub fn ftos_prec(f: Float64, prec: Int) -> Str {
   convert.float_to_fixed_str(f, prec)
 }
 
-/// Float-to-string in scientific notation "d.ddde±XX" with `prec` fraction
+/// Float-to-string in scientific notation "d.ddde+/-XX" with `prec` fraction
 /// digits. Complexity: O(|exp10| + prec).
 pub fn ftos_sci(f: Float64, prec: Int) -> Str {
   convert.float_to_sci_str(f, prec)

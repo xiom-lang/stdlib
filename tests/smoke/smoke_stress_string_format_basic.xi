@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.string.format basic (no args)
+// XIOM stdlib stress -- xiom.string.format basic (no args)
 // Tests format with a pattern string containing no placeholders.
 // Returns 0 on success, nonzero on failure.
 

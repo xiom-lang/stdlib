@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.string.str_len on boundary strings
+// XIOM stdlib stress -- xiom.string.str_len on boundary strings
 // Tests length of empty string and single-character string.
 // Returns 0 on success.
 

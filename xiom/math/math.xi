@@ -1,4 +1,4 @@
-// XIOM — Math Library
+// XIOM -- Math Library
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 
@@ -24,7 +24,7 @@ use xiom.math.series;
 use xiom.math.special;
 
 // D4b manifest (2026-08-10): importing xiom.math pulls in the generic
-// sub-modules. math/core hosts the generic numeric tower (3c) — one
+// sub-modules. math/core hosts the generic numeric tower (3c) -- one
 // implementation per concept serving every Num width.
 use xiom.math.tower;
 use xiom.math.numerical;
@@ -68,7 +68,7 @@ use xiom.core.INT_MIN;
 use xiom.core.to_int;
 use xiom.core.to_float;
 
-// Fast math FFI — uses C standard math library (libm)
+// Fast math FFI -- uses C standard math library (libm)
 // Link with -lm on Unix, automatically linked on Windows
 extern "C" {
   fn sin(x: Float64) -> Float64;

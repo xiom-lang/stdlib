@@ -1,4 +1,4 @@
-// XIOM stdlib stress — BTreeMap insert, get, contains, remove
+// XIOM stdlib stress -- BTreeMap insert, get, contains, remove
 // Tests ordered map operations with sorted key ordering.
 // Returns 0 on success, nonzero on failure.
 

@@ -14,7 +14,7 @@ module xiom.convert.network
 // ============================================================================
 
 /// Convert a 16-bit host-order value to network order (big-endian).
-/// Parameters: n — a 16-bit value (0..65535).
+/// Parameters: n -- a 16-bit value (0..65535).
 /// Returns: the byte-swapped value.
 /// Complexity: O(1).
 pub fn host_to_network16(n: Int) -> Int {
@@ -24,7 +24,7 @@ pub fn host_to_network16(n: Int) -> Int {
 }
 
 /// Convert a 32-bit host-order value to network order (big-endian).
-/// Parameters: n — a 32-bit value.
+/// Parameters: n -- a 32-bit value.
 /// Returns: the byte-swapped value.
 /// Complexity: O(1).
 pub fn host_to_network32(n: Int) -> Int {
@@ -32,7 +32,7 @@ pub fn host_to_network32(n: Int) -> Int {
 }
 
 /// Convert a 16-bit network-order value to host order (little-endian).
-/// Parameters: n — a 16-bit network-order value.
+/// Parameters: n -- a 16-bit network-order value.
 /// Returns: the byte-swapped value.
 /// Complexity: O(1).
 pub fn network_to_host16(n: Int) -> Int {
@@ -42,7 +42,7 @@ pub fn network_to_host16(n: Int) -> Int {
 }
 
 /// Convert a 32-bit network-order value to host order (little-endian).
-/// Parameters: n — a 32-bit network-order value.
+/// Parameters: n -- a 32-bit network-order value.
 /// Returns: the byte-swapped value.
 /// Complexity: O(1).
 pub fn network_to_host32(n: Int) -> Int {
@@ -50,7 +50,7 @@ pub fn network_to_host32(n: Int) -> Int {
 }
 
 /// Convert a 64-bit host-order value to network order (big-endian).
-/// Parameters: n — a 64-bit value.
+/// Parameters: n -- a 64-bit value.
 /// Returns: the byte-swapped value.
 /// Complexity: O(1).
 pub fn htonll(n: Int) -> Int {
@@ -58,7 +58,7 @@ pub fn htonll(n: Int) -> Int {
 }
 
 /// Convert a 64-bit network-order value to host order (little-endian).
-/// Parameters: n — a 64-bit network-order value.
+/// Parameters: n -- a 64-bit network-order value.
 /// Returns: the byte-swapped value.
 /// Complexity: O(1).
 pub fn ntohll(n: Int) -> Int {

@@ -1,4 +1,4 @@
-// XIOM stdlib stress — math trig precision
+// XIOM stdlib stress -- math trig precision
 // Tests sin/cos/tan at multiple known angles.
 // Returns 0 on success, nonzero on failure.
 

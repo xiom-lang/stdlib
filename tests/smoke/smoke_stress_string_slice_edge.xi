@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.string.str_slice edge positions
+// XIOM stdlib stress -- xiom.string.str_slice edge positions
 // Slices at start=0, start==end, and end==len; verifies each case.
 // Returns 0 on success.
 

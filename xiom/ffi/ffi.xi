@@ -1,4 +1,4 @@
-// XIOM — FFI Library (C Foreign Function Interface)
+// XIOM -- FFI Library (C Foreign Function Interface)
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 //
@@ -13,7 +13,7 @@ use xiom.ffi.dl;
 use xiom.ffi.c;
 use xiom.ffi.errno;
 
-// —— Raw C interop primitives (extern "C") ——————————————————————————————————
+// ---- Raw C interop primitives (extern "C") --------------------------------------------------------------------
 
 extern "C" {
   fn malloc(size: UInt) -> *UInt8;
@@ -21,7 +21,7 @@ extern "C" {
   fn memcpy(dest: *UInt8, src: *UInt8, size: UInt);
 }
 
-// —— Raw allocation / free (primitive, no wrapper) ——————————————————————————
+// ---- Raw allocation / free (primitive, no wrapper) ----------------------------------------------------
 
 pub fn alloc(size: Int) -> *UInt8
   requires: size > 0
@@ -44,7 +44,7 @@ pub fn memcpy(dest: *UInt8, src: *UInt8, size: Int)
   unsafe { memcpy(dest, src, size as UInt); }
 }
 
-// —— SafePtr — owned pointer with bounds tracking ———————————————————————————
+// ---- SafePtr -- owned pointer with bounds tracking ------------------------------------------------------
 
 pub type SafePtr = {
   ptr: *UInt8;
@@ -76,7 +76,7 @@ pub fn safe_ptr_free(ptr: SafePtr) {
   }
 }
 
-// —— Bounds-checked pointer read/write (little-endian) ————————————————————
+// ---- Bounds-checked pointer read/write (little-endian) ----------------------------------------
 
 /// Read a single byte at offset. Bounds-checked.
 pub fn safe_ptr_read_byte(ptr: &SafePtr, offset: Int) -> Result[Int, Str]
@@ -158,7 +158,7 @@ pub fn safe_ptr_write_f32(ptr: &mut SafePtr, offset: Int, val: Float32) -> Resul
   Ok({})
 }
 
-// —— SafePtr extended helpers —————————————————————————————————————————————
+// ---- SafePtr extended helpers ------------------------------------------------------------------------------------------
 
 /// Read a 32-bit unsigned integer at offset (little-endian). Bounds-checked.
 /// Result is always non-negative (0..4294967295).
@@ -329,7 +329,7 @@ pub fn safe_ptr_to_vec(ptr: &SafePtr) -> Result[Vec[Int], Str] {
   Ok(result)
 }
 
-// —— Raw pointer helpers (unsafe, no bounds checks) ———————————————————————
+// ---- Raw pointer helpers (unsafe, no bounds checks) ----------------------------------------------
 
 /// Raw unsafe read of a UInt8 at pointer p.
 /// SAFETY: caller must ensure p points to valid memory.
@@ -415,7 +415,7 @@ pub fn ptr_write_u64_le(p: *UInt8, v: Int) {
   }
 }
 
-// —— FFIBuffer — growable byte buffer with capacity guard ———————————————————
+// ---- FFIBuffer -- growable byte buffer with capacity guard --------------------------------------
 
 pub type FFIBuffer = {
   data: Vec[Int];   // Vec[UInt8] when compiler supports it (G-XX)
@@ -472,7 +472,7 @@ pub fn buffer_is_empty(buf: &FFIBuffer) -> Bool {
   buf.data.len() == 0
 }
 
-// —— FFIError — C error code translation ————————————————————————————————————
+// ---- FFIError -- C error code translation ------------------------------------------------------------------------
 
 pub type FFIError = {
   code: Int;
@@ -511,7 +511,7 @@ pub fn ffi_error(code: Int, msg: Str) -> FFIError {
   FFIError { code: code; message: msg }
 }
 
-// —— Struct marshalling — byte-offset read/write for C struct fields ————————
+// ---- Struct marshalling -- byte-offset read/write for C struct fields ----------------
 
 /// Write a UInt32 at a byte offset into a raw pointer (C struct field).
 pub fn write_u32_at(dest: Int, offset: Int, value: Int)
@@ -573,7 +573,7 @@ pub fn write_str_at(dest: Int, offset: Int, s: Str)
   }
 }
 
-// —— Utility ————————————————————————————————————————————————————————————————
+// ---- Utility --------------------------------------------------------------------------------------------------------------------------------
 
 pub fn size_of[T]() -> Int { return 0; }
 pub fn align_of[T]() -> Int { return 0; }

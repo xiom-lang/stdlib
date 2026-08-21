@@ -1,7 +1,7 @@
-// XIOM — SHA-256 Known-Vector Tests
+// XIOM -- SHA-256 Known-Vector Tests
 // Tests SHA-256 correctness against RFC 6234 test vectors.
 //
-// STATUS: FAILING — pure-XIOM SHA-256 algorithm produces wrong hashes.
+// STATUS: FAILING -- pure-XIOM SHA-256 algorithm produces wrong hashes.
 // Root cause: the algorithm logic is correct but produces output that
 // does not match standard SHA-256 test vectors. This indicates a
 // subtle codegen-level issue in XIOM's 32-bit arithmetic operations

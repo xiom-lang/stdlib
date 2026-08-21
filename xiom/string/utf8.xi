@@ -1,24 +1,24 @@
-// XIOM — UTF-8 Codec (byte-level encode/decode/validate)
+// XIOM -- UTF-8 Codec (byte-level encode/decode/validate)
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 //
 // Pure algorithm implementations of the UTF-8 encoding scheme (RFC 3629).
 // Operates on raw bytes (Vec[UInt8]) and codepoints (Int), not on Str.
-// Rejects overlong sequences, surrogates (U+D800–U+DFFF), and out-of-range
+// Rejects overlong sequences, surrogates (U+D800-U+DFFF), and out-of-range
 // codepoints (> U+10FFFF).
 //
 // Encoding scheme:
-//   U+0000  – U+007F  : 0xxxxxxx
-//   U+0080  – U+07FF  : 110xxxxx 10xxxxxx
-//   U+0800  – U+FFFF  : 1110xxxx 10xxxxxx 10xxxxxx
-//   U+10000 – U+10FFFF: 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
+//   U+0000  - U+007F  : 0xxxxxxx
+//   U+0080  - U+07FF  : 110xxxxx 10xxxxxx
+//   U+0800  - U+FFFF  : 1110xxxx 10xxxxxx 10xxxxxx
+//   U+10000 - U+10FFFF: 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
 
 module xiom.utf8
 
 use xiom.char;
 use xiom.core;
 
-// ── Private helpers ──────────────────────────────────────────────────────────
+// -- Private helpers ----------------------------------------------------------
 
 // Returns true if the byte is a UTF-8 continuation byte (10xxxxxx).
 // Complexity: O(1).
@@ -104,18 +104,18 @@ fn decode_one(data: &Vec[UInt8], pos: Int) -> Result[Int, Str] {
     return Ok(cp);
 }
 
-// ── Public API ───────────────────────────────────────────────────────────────
+// -- Public API ---------------------------------------------------------------
 
-/// Encode a single Unicode codepoint (Int) into 1–4 UTF-8 bytes.
+/// Encode a single Unicode codepoint (Int) into 1-4 UTF-8 bytes.
 /// Returns a Vec[UInt8] containing exactly the encoded bytes.
-/// Rejects codepoints outside the valid Unicode range [0, 0xD7FF] ∪ [0xE000, 0x10FFFF].
+/// Rejects codepoints outside the valid Unicode range [0, 0xD7FF] | [0xE000, 0x10FFFF].
 /// Complexity: O(1).
 pub fn utf8_encode(codepoint: Int) -> Result[Vec[UInt8], Str]
     requires: codepoint >= 0
     ensures:  result is Ok => result.len() >= 1 && result.len() <= 4
 {
     if codepoint < 0 || codepoint > 0x10FFFF {
-        return Err("utf8_encode: codepoint out of valid Unicode range (0–0x10FFFF)");
+        return Err("utf8_encode: codepoint out of valid Unicode range (0-0x10FFFF)");
     };
     if codepoint >= 0xD800 && codepoint <= 0xDFFF {
         return Err("utf8_encode: surrogate code points are not valid Unicode scalar values");
@@ -150,7 +150,7 @@ pub fn utf8_decode_at(data: &Vec[UInt8], pos: Int) -> Result[Int, Str]
     decode_one(data, pos)
 }
 
-/// Return the length (1–4) of a UTF-8 sequence given its first byte.
+/// Return the length (1-4) of a UTF-8 sequence given its first byte.
 /// Returns 1 for any invalid leading byte (conservative fallback).
 /// Complexity: O(1).
 pub fn utf8_seq_len(first_byte: Int) -> Int
@@ -179,7 +179,7 @@ pub fn utf8_validate(data: &Vec[UInt8]) -> Bool {
             return false;
         };
         if seq == 1 {
-            // ASCII — always valid
+            // ASCII -- always valid
         } elif seq == 2 {
             let b1 = data[i + 1] as Int;
             if !is_cont(b1) { return false; };

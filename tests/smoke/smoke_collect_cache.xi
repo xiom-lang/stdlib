@@ -1,4 +1,4 @@
-// XIOM stdlib smoke test — xiom.collect.cache / hash / queue / graph
+// XIOM stdlib smoke test -- xiom.collect.cache / hash / queue / graph
 // Returns 0 on success, nonzero on failure (process exit code).
 
 module smoke_collect_cache

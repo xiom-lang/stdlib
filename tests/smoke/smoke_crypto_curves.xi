@@ -1,4 +1,4 @@
-// XIOM stdlib smoke test — xiom.crypto.curves + xiom.crypto.keyx +
+// XIOM stdlib smoke test -- xiom.crypto.curves + xiom.crypto.keyx +
 // xiom.crypto.sign
 // Tests: curve25519_clamp, curve25519_base_point, p256_curve_order,
 // curve_order, curve_point_on_curve, curve_scalar_valid; classic DH

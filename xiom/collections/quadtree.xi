@@ -12,7 +12,7 @@ module xiom.collect.quadtree
 //
 // Flat-arena style (the established collect/ pattern). Every node owns 4 child
 // slots (`kids[i * 4 + q]`, q = 0 NW, 1 NE, 2 SW, 3 SE) and a region given by
-// (nx, ny, nw, nh) — top-left corner and size. Points are not stored inline:
+// (nx, ny, nw, nh) -- top-left corner and size. Points are not stored inline:
 // each node has a head pointer into a global point pool (`px`/`py`/`pv`/`pnxt`
 // as a linked list), and a leaf holds at most MAX_PTS points before it
 // subdivides. There is no fixed root bounds: `quadtree_insert` grows the root
@@ -40,7 +40,7 @@ pub type Quadtree = {
   pnxt: Vec[Int];
 }
 
-// ceil(v / 2) — child widths and quadrant boundaries must use the SAME
+// ceil(v / 2) -- child widths and quadrant boundaries must use the SAME
 // rounding so that child regions tile their parent without gaps.
 fn _half(v: Int) -> Int {
   var r = v / 2;

@@ -17,7 +17,7 @@ use xiom.regex.syntax;
 // registry; the handle stays valid for the life of the process (pcre_free is
 // a documented no-op because the registry is never evicted). The supported
 // pattern syntax is the compact engine subset documented in
-// xiom.regex.engine; flags are reserved (only 0 is honoured — case
+// xiom.regex.engine; flags are reserved (only 0 is honoured -- case
 // insensitivity and the other PCRE flags are not implemented).
 // ============================================================================
 

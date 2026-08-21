@@ -1,11 +1,11 @@
-/* XIOM Async Runtime — monotonic time source for the cooperative executor.
+/* XIOM Async Runtime -- monotonic time source for the cooperative executor.
  *
  * Provides the clock used by stdlib/xiom/async.xi to drive real timers
  * (`delay`, `sleep_ms`) and the scheduler in general.
  *
  * All symbols are uniquely prefixed `xiom_async_` so they never collide with
  * xiom_runtime.c, which owns xiom_thread_*, xiom_socket_*, xiom_mutex_*, etc.
- * Nothing here is redefined from that file — the executor calls the existing
+ * Nothing here is redefined from that file -- the executor calls the existing
  * xiom_thread_sleep_ms for the actual wait and only adds a clock here.
  *
  * This file is auto-linked (the compiler links every C file in stdlib runtime)
@@ -30,7 +30,7 @@
 /* Monotonic milliseconds since a fixed, unspecified epoch.
  * Guaranteed non-decreasing, which is exactly what scheduler deadlines need.
  * Returns a 64-bit value (`long long`) to match the XIOM `Int` (i64) ABI on
- * all platforms — mirroring xiom_alloc's use of `long long` to avoid Win64
+ * all platforms -- mirroring xiom_alloc's use of `long long` to avoid Win64
  * truncation of `long` (which is only 32-bit under MSVC/clang-cl). */
 long long xiom_async_now_ms(void) {
 #ifdef _WIN32
@@ -56,7 +56,7 @@ long long xiom_async_now_ms(void) {
 #endif
 }
 
-/* Monotonic microseconds — a finer-grained companion helper. Optional; kept
+/* Monotonic microseconds -- a finer-grained companion helper. Optional; kept
  * uniquely prefixed and self-contained so it is always safe to link. */
 long long xiom_async_now_us(void) {
 #ifdef _WIN32

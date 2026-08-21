@@ -155,7 +155,7 @@ pub fn current_thread_id() -> Int {
   unsafe { return xiom_thread_id(); }
 }
 
-// ── Thread Discovery ───────────────────────────────────────────────
+// -- Thread Discovery -----------------------------------------------
 
 /// Returns the number of available hardware threads.
 /// Delegates to `available_parallelism()`.
@@ -164,7 +164,7 @@ pub fn thread_count() -> Int {
   return available_parallelism();
 }
 
-// ── Sleep Helpers ──────────────────────────────────────────────────
+// -- Sleep Helpers --------------------------------------------------
 
 /// Sleeps for `us` microseconds, rounding down to the nearest millisecond.
 /// Complexity: O(1) syscall. Thread-safe.
@@ -178,7 +178,7 @@ pub fn thread_yield() {
   yield_now();
 }
 
-// ── Parallel Iteration ─────────────────────────────────────────────
+// -- Parallel Iteration ---------------------------------------------
 
 /// Executes `f(i)` for each `i` in [`start`, `end`).
 /// NOTE: This is a SEQUENTIAL implementation. True parallel execution requires

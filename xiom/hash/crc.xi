@@ -1,4 +1,4 @@
-// XIOM — Hashing: CRC-64 / CRC-32C / CRC-16-CCITT and classic checksums
+// XIOM -- Hashing: CRC-64 / CRC-32C / CRC-16-CCITT and classic checksums
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 
@@ -191,8 +191,8 @@ pub fn checksum_internet(data: &Vec[UInt8]) -> UInt32 {
 }
 
 /// Adler-32 (RFC 1950). Verified against a clang-built reference
-/// (2026-08-11): "" → 0x00000001, "a" → 0x00620062, "abc" → 0x024d0127,
-/// "Wikipedia" → 0x11e60398 (matches the Wikipedia article).
+/// (2026-08-11): "" -> 0x00000001, "a" -> 0x00620062, "abc" -> 0x024d0127,
+/// "Wikipedia" -> 0x11e60398 (matches the Wikipedia article).
 pub fn adler32(data: &Vec[UInt8]) -> UInt32 {
   var a: Int = 1;
   var b: Int = 0;

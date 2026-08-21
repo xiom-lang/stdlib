@@ -1,7 +1,7 @@
-﻿// XIOM stdlib smoke test - xiom.convert.percent
+// XIOM stdlib smoke test - xiom.convert.percent
 // Checks: percent encode/decode (full URL and component).
 // NOTE: split from smoke_convert_percent_bytes (combination with xiom.convert.bytes
-// miscompiles percent_encode — BUG 24/26 family; isolated module verified).
+// miscompiles percent_encode -- BUG 24/26 family; isolated module verified).
 module smoke_convert_percent
 use xiom.convert.percent;
 use xiom.io;

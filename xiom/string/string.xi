@@ -1,4 +1,4 @@
-// XIOM — String Library
+// XIOM -- String Library
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 
@@ -327,11 +327,11 @@ pub fn byte_count(s: Str) -> Int {
   s.len()
 }
 
-// ──────────────────────────────────────────────────
+// --------------------------------------------------
 //  Extended String Functions
-// ──────────────────────────────────────────────────
+// --------------------------------------------------
 
-// ── Search ──
+// -- Search --
 
 // Returns the first byte index of needle in haystack, or None if not found.
 // O(n*m) naive search. For an empty needle, returns Some(0).
@@ -347,7 +347,7 @@ pub fn str_rindex_of(haystack: Str, needle: Str) -> Option[Int] {
   last_index_of(haystack, needle)
 }
 
-// ── Replace ──
+// -- Replace --
 
 // Replaces every occurrence of `from` with `to` in `s`.
 // O(n*m) where n = |s|, m = |from|. If `from` is empty, returns `s` unchanged.
@@ -357,7 +357,7 @@ pub fn str_replace_all(s: Str, from_needle: Str, to_replacement: Str) -> Str
   replace(s, from_needle, to_replacement)
 }
 
-// ── Repeat & Pad ──
+// -- Repeat & Pad --
 
 // Repeats `s` `n` times. Returns empty string if n <= 0.
 // O(n * |s|) using repeated concatenation.
@@ -419,7 +419,7 @@ pub fn str_pad_right(s: Str, width: Int, pad: Char) -> Str {
   result
 }
 
-// ── Strip ──
+// -- Strip --
 
 // If `s` starts with `prefix`, returns `Some(s without prefix)`.
 // Otherwise returns `None`.
@@ -443,7 +443,7 @@ pub fn str_strip_suffix(s: Str, suffix: Str) -> Option[Str] {
   None
 }
 
-// ── Escape/Unescape ──
+// -- Escape/Unescape --
 
 // Escapes special characters (\n, \t, \", \\, \r) in `s`.
 // Returns a new string with escape sequences replaced by their literal representations.
@@ -536,7 +536,7 @@ pub fn str_unescape(s: Str) -> Str {
   result
 }
 
-// ── Case ──
+// -- Case --
 
 // Converts `s` to Title Case: first character of each space-separated word
 // is uppercased, remaining characters are lowercased.
@@ -589,7 +589,7 @@ pub fn str_swap_case(s: Str) -> Str {
   }
 }
 
-// ── Predicates ──
+// -- Predicates --
 
 // Returns true if `s` has zero length.
 // O(1).
@@ -597,11 +597,11 @@ pub fn str_is_empty(s: Str) -> Bool {
   s.len() == 0
 }
 
-// ── Reverse ──
+// -- Reverse --
 
 // Reverses the characters in `s`. Unicode-aware: iterates by
 // proper UTF-8 character boundaries.
-// O(|s|) — two passes (collect + build).
+// O(|s|) -- two passes (collect + build).
 pub fn str_reverse(s: Str) -> Str {
   let len = s.len();
   if len == 0 {
@@ -655,7 +655,7 @@ pub fn str_reverse(s: Str) -> Str {
   }
 }
 
-// ── Count ──
+// -- Count --
 
 // Counts the number of Unicode characters in `s` using xiom_char_at.
 // Unicode-aware: advances by the byte length of each character.
@@ -664,7 +664,7 @@ pub fn str_count_chars(s: Str) -> Int {
   char_count(s)
 }
 
-// ── Truncate ──
+// -- Truncate --
 
 // Truncates `s` at the given byte position `max_bytes`, ensuring the result
 // does not split a multi-byte UTF-8 character. If `max_bytes` lands in the
@@ -694,7 +694,7 @@ pub fn str_truncate_utf8(s: Str, max_bytes: Int) -> Str {
   str_slice(s, 0, last_valid)
 }
 
-// ── Center ──
+// -- Center --
 
 // Centers `s` within a field of `width` bytes by adding spaces on both sides.
 // If an odd number of spaces are needed, the extra space goes on the right.
@@ -723,7 +723,7 @@ pub fn str_center(s: Str, width: Int) -> Str {
   result
 }
 
-// ── Multi-pattern Tests ──
+// -- Multi-pattern Tests --
 
 // Returns true if `s` starts with any of the given prefixes.
 // O(n * k) where n = |s|, k = prefixes.len().
@@ -770,7 +770,7 @@ pub fn str_contains_any(s: Str, needles: &Vec[Str]) -> Bool {
 // ============================================================================
 
 // Build a one-char string from a printable ASCII byte value (32..126).
-// Bytes outside that range render as "?" — the ciphers below only produce
+// Bytes outside that range render as "?" -- the ciphers below only produce
 // printable output for printable input (documented).
 fn _mk_byte(v: Int) -> Str {
   var table = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
@@ -854,7 +854,7 @@ pub fn str_caesar(s: Str, shift: Int) -> Str {
   return result;
 }
 
-/// Atbash: a↔z, A↔Z mirror (ASCII). Non-letters pass through.
+/// Atbash: a<->z, A<->Z mirror (ASCII). Non-letters pass through.
 pub fn str_atbash(s: Str) -> Str {
   var result = "";
   var i: Int = 0;
@@ -873,7 +873,7 @@ pub fn str_atbash(s: Str) -> Str {
 }
 
 /// Abbreviate with a middle ellipsis: keeps `(max_len-3)/2` chars from the
-/// front and the rest from the back ("…" as "..."). Strings at or under
+/// front and the rest from the back ("..." as "..."). Strings at or under
 /// max_len are returned unchanged; max_len < 4 falls back to truncation.
 pub fn str_abbreviate(s: Str, max_len: Int) -> Str {
   var len = str_len(s);
@@ -892,7 +892,7 @@ pub fn str_abbreviate(s: Str, max_len: Int) -> Str {
 }
 
 /// Obfuscate: keep the first `visible` chars, mask the rest with '*'
-/// (e.g. str_obfuscate("secret", 3) == "sec***"). visible < 0 → 0.
+/// (e.g. str_obfuscate("secret", 3) == "sec***"). visible < 0 -> 0.
 pub fn str_obfuscate(s: Str, visible: Int) -> Str {
   var v = visible;
   if v < 0 { v = 0; }

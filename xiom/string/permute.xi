@@ -14,7 +14,7 @@ module xiom.string.permute
 
 use xiom.string;
 
-// ── Private helpers ─────────────────────────────────────────────────────────
+// -- Private helpers ---------------------------------------------------------
 
 // Masked byte at `pos` (BUG 22 #10: `as Int` sign-extends UInt8).
 // Complexity: O(1).
@@ -111,7 +111,7 @@ fn _pm_copy_idx(v: &Vec[Int]) -> Vec[Int] {
   c
 }
 
-// ── Public API ──────────────────────────────────────────────────────────────
+// -- Public API --------------------------------------------------------------
 
 /// All permutations of the characters of `s`, treating the characters as
 /// distinct (n! results). An empty string yields a vector containing "".

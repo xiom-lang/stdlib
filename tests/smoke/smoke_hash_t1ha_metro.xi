@@ -1,4 +1,4 @@
-// XIOM stdlib smoke test — xiom.hash.t1ha and xiom.hash.metro
+// XIOM stdlib smoke test -- xiom.hash.t1ha and xiom.hash.metro
 // Determinism, empty input, different inputs, seeded variants, 128-bit twins.
 // Returns 0 on success, nonzero on failure.
 

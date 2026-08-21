@@ -17,7 +17,7 @@ use xiom.convert;
 // accented-Latin characters map fully; Arabic, Hebrew, Devanagari, kana,
 // hangul and CJK map the most frequent characters and pass everything else
 // through unchanged. Input is decoded as UTF-8; unmapped characters are
-// preserved verbatim. `transliterate` is `transliterate_to_ascii` — a
+// preserved verbatim. `transliterate` is `transliterate_to_ascii` -- a
 // best-effort reduction to Latin script.
 // ============================================================================
 
@@ -994,7 +994,7 @@ pub fn transliterate_korean_roman(s: Str) -> Str {
   transliterate_with(s, hangul_repl)
 }
 
-/// Strip accents from Latin letters (é -> e, ü -> u, ...).
+/// Strip accents from Latin letters (e -> e, u -> u, ...).
 /// Complexity: O(len(s)).
 pub fn transliterate_accented(s: Str) -> Str {
   transliterate_with(s, accent_repl)

@@ -10,7 +10,7 @@ module xiom.collect.kdtree
 // 2D k-d tree of Int points with values, supporting nearest-neighbor and
 // rectangular range queries.
 //
-// Flat-arena style (the established collect/ pattern — tree.xi/graph.xi use
+// Flat-arena style (the established collect/ pattern -- tree.xi/graph.xi use
 // parallel Vec[Int]s because Vec-of-struct instantiations collide at startup
 // in combined programs). Node i lives in the parallel vectors `xs`/`ys`/`vals`
 // plus its `left`/`right` children; the splitting axis alternates by depth

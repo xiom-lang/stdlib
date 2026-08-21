@@ -1,4 +1,4 @@
-// XIOM stdlib smoke test — xiom.encoding.hex
+// XIOM stdlib smoke test -- xiom.encoding.hex
 // hex_encode/decode known answers, string/int wrappers, nibble helpers.
 // Returns 0 on success, nonzero on failure.
 

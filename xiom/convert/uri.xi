@@ -15,7 +15,7 @@ module xiom.convert.uri
 
 use xiom.string;
 
-// Uri — parsed URI components.
+// Uri -- parsed URI components.
 pub type Uri = {
   scheme: Str;
   authority: Str;
@@ -25,7 +25,7 @@ pub type Uri = {
 }
 
 /// Parse a URI into its scheme, authority, path, query and fragment.
-/// Parameters: s — the URI string.
+/// Parameters: s -- the URI string.
 /// Returns: Ok(Uri) on success; Err for an empty URI.
 /// Complexity: O(n).
 pub fn uri_parse(s: Str) -> Result[Uri, Str] {
@@ -91,7 +91,7 @@ pub fn uri_parse(s: Str) -> Result[Uri, Str] {
 
 /// Normalize a URI into canonical form: lowercase scheme, remove dot
 /// segments from the path, and keep the authority/query/fragment.
-/// Parameters: s — the URI string.
+/// Parameters: s -- the URI string.
 /// Returns: Ok(canonical) on success; Err for an empty URI.
 /// Complexity: O(n).
 pub fn uri_normalize(s: Str) -> Result[Str, Str] {
@@ -117,8 +117,8 @@ pub fn uri_normalize(s: Str) -> Result[Str, Str] {
   return Ok(result);
 }
 
-/// Resolve a relative URI against a base URI (RFC 3986 §5).
-/// Parameters: base — the absolute base URI; rel — the reference (may be
+/// Resolve a relative URI against a base URI (RFC 3986 S5).
+/// Parameters: base -- the absolute base URI; rel -- the reference (may be
 ///          absolute or relative).
 /// Returns: Ok(resolved) on success; Err when parsing fails.
 /// Complexity: O(n).
@@ -194,7 +194,7 @@ fn _index_of(hay: Str, needle: Str) -> Int {
   return -1;
 }
 
-// Remove "." and ".." dot segments per RFC 3986 §5.2.4 (keeps a leading "/").
+// Remove "." and ".." dot segments per RFC 3986 S5.2.4 (keeps a leading "/").
 fn _remove_dot_segments(path: Str) -> Str {
   var parts = _split(path, "/");
   var stack = Vec[Str].new();

@@ -1,4 +1,4 @@
-// XIOM — DES / 3DES (FIPS 46-3)
+// XIOM -- DES / 3DES (FIPS 46-3)
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 //
@@ -6,7 +6,7 @@
 //
 // Implements the complete 16-round Feistel block cipher with:
 //   - Initial Permutation (IP) and Final Permutation (FP = IP^-1)
-//   - Expansion function E (32→48 bits)
+//   - Expansion function E (32->48 bits)
 //   - Eight standard DES S-boxes (S1 through S8)
 //   - P-box permutation (32 bits)
 //   - Complete key schedule: PC-1, 28-bit half rotations (C/D),
@@ -32,10 +32,10 @@
 module xiom.des
 
 // ============================================================================
-// Table Builders — real FIPS 46-3 tables, built at runtime
+// Table Builders -- real FIPS 46-3 tables, built at runtime
 // ============================================================================
 
-/// Initial Permutation (IP) — FIPS 46-3 Table 3-2.
+/// Initial Permutation (IP) -- FIPS 46-3 Table 3-2.
 /// IP[i] is the source bit position (1..64, MSB-first) for output bit (i+1).
 fn _build_ip() -> Vec[Int] {
   var t = Vec[Int].new();
@@ -50,7 +50,7 @@ fn _build_ip() -> Vec[Int] {
   return t;
 }
 
-/// Final Permutation (FP) — FIPS 46-3 Table 3-2, inverse of IP.
+/// Final Permutation (FP) -- FIPS 46-3 Table 3-2, inverse of IP.
 /// FP[i] is the source bit position (1..64) for output bit (i+1).
 fn _build_fp() -> Vec[Int] {
   var t = Vec[Int].new();
@@ -65,7 +65,7 @@ fn _build_fp() -> Vec[Int] {
   return t;
 }
 
-/// Expansion function E — FIPS 46-3 Table 3-3.
+/// Expansion function E -- FIPS 46-3 Table 3-3.
 /// Expands a 32-bit half-block to 48 bits by duplicating boundary bits.
 /// E[i] is the source bit position (1..32) for output bit (i+1).
 fn _build_e() -> Vec[Int] {
@@ -81,7 +81,7 @@ fn _build_e() -> Vec[Int] {
   return t;
 }
 
-/// Permutation P — FIPS 46-3 Table 3-5.
+/// Permutation P -- FIPS 46-3 Table 3-5.
 /// Permutes the 32-bit S-box output before XOR with the left half.
 /// P[i] is the source bit position (1..32) for output bit (i+1).
 fn _build_p() -> Vec[Int] {
@@ -97,7 +97,7 @@ fn _build_p() -> Vec[Int] {
   return t;
 }
 
-/// Permuted Choice 1 (PC-1) — FIPS 46-3 Table 3-4a.
+/// Permuted Choice 1 (PC-1) -- FIPS 46-3 Table 3-4a.
 /// Selects 56 bits from the 64-bit key, dropping the 8 parity bits.
 /// PC1[i] is the source bit position (1..64) for output bit (i+1).
 fn _build_pc1() -> Vec[Int] {
@@ -113,7 +113,7 @@ fn _build_pc1() -> Vec[Int] {
   return t;
 }
 
-/// Permuted Choice 2 (PC-2) — FIPS 46-3 Table 3-4b.
+/// Permuted Choice 2 (PC-2) -- FIPS 46-3 Table 3-4b.
 /// Selects 48 bits from the combined 56-bit C||D key halves.
 /// PC2[i] is the source bit position (1..56) for output bit (i+1).
 fn _build_pc2() -> Vec[Int] {
@@ -129,7 +129,7 @@ fn _build_pc2() -> Vec[Int] {
   return t;
 }
 
-/// Key rotation schedule — FIPS 46-3. Number of left-shifts applied to the
+/// Key rotation schedule -- FIPS 46-3. Number of left-shifts applied to the
 /// C and D halves per round (round 1..16).
 fn _build_shifts() -> Vec[Int] {
   var t = Vec[Int].new();
@@ -138,7 +138,7 @@ fn _build_shifts() -> Vec[Int] {
   return t;
 }
 
-/// The eight standard DES S-boxes S1..S8 — FIPS 46-3 Table 3-4.
+/// The eight standard DES S-boxes S1..S8 -- FIPS 46-3 Table 3-4.
 /// Flat 512-entry table: S1 occupies indices 0..63, S2 64..127, ..., S8 448..511.
 /// Each 6-bit input selects row = (bit1, bit6) and column = (bits 2..5),
 /// producing a 4-bit output. These are the REAL published FIPS tables.
@@ -216,7 +216,7 @@ fn _permute(input: Int, table: &Vec[Int], in_bits: Int, out_bits: Int) -> Int {
 }
 
 // ============================================================================
-// Key Schedule — FIPS 46-3
+// Key Schedule -- FIPS 46-3
 // ============================================================================
 
 /// Derive the 16 round keys from a 64-bit key.
@@ -242,7 +242,7 @@ fn _key_schedule(key64: Int, pc1: &Vec[Int], pc2: &Vec[Int], shifts: &Vec[Int]) 
 }
 
 // ============================================================================
-// F-function — the Feistel round function f(R, K)
+// F-function -- the Feistel round function f(R, K)
 // ============================================================================
 
 /// f(R, K_i) = P(S(E(R) XOR K_i)).
@@ -267,7 +267,7 @@ fn _f_function(r: Int, round_key: Int, e: &Vec[Int], p: &Vec[Int], sboxes: &Vec[
 }
 
 // ============================================================================
-// Core Feistel — FIPS 46-3
+// Core Feistel -- FIPS 46-3
 // ============================================================================
 
 /// Core 16-round Feistel. Encryption applies round keys in order K0..K15;
@@ -293,7 +293,7 @@ fn _feistel(block: Int, round_keys: &Vec[Int], ip: &Vec[Int], fp: &Vec[Int], e: 
 }
 
 // ============================================================================
-// Public API — single DES blocks
+// Public API -- single DES blocks
 // ============================================================================
 
 /// Encrypt a single 64-bit block with DES (FIPS 46-3).
@@ -325,7 +325,7 @@ pub fn des_decrypt_block(block: Int, key: Int) -> Int {
 }
 
 // ============================================================================
-// Triple-DES (3DES) — EDE mode (Encrypt-Decrypt-Encrypt)
+// Triple-DES (3DES) -- EDE mode (Encrypt-Decrypt-Encrypt)
 // ============================================================================
 
 /// Encrypt a 64-bit block with Triple-DES EDE: C = E_K3(D_K2(E_K1(P))).

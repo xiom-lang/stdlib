@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.string.lines / words splitting
+// XIOM stdlib stress -- xiom.string.lines / words splitting
 // Splits multi-line text and spaced text, verifies counts.
 // Returns 0 on success.
 

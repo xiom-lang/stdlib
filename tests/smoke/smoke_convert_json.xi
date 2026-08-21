@@ -1,4 +1,4 @@
-// XIOM stdlib smoke — xiom.convert.json
+// XIOM stdlib smoke -- xiom.convert.json
 // Returns 0 on success, nonzero on failure (process exit code).
 module smoke_convert_json
 use xiom.io;

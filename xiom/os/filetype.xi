@@ -24,7 +24,7 @@ fn hex_digit(nib: Int) -> UInt8 {
 }
 
 /// Detect the line ending style.
-/// Parameters: data — the bytes to inspect.
+/// Parameters: data -- the bytes to inspect.
 /// Returns: "lf", "crlf", "cr", "mixed" or "none".
 /// Complexity: O(n). Pure.
 pub fn detect_eol(data: &Vec[UInt8]) -> Str {
@@ -64,7 +64,7 @@ pub fn detect_eol(data: &Vec[UInt8]) -> Str {
 }
 
 /// Detect and describe the byte-order mark, or "" if absent.
-/// Parameters: data — the bytes to inspect.
+/// Parameters: data -- the bytes to inspect.
 /// Returns: "utf-8", "utf-16le", "utf-16be", "utf-32le", "utf-32be" or "".
 /// Complexity: O(1). Pure.
 pub fn detect_bom(data: &Vec[UInt8]) -> Str {
@@ -88,7 +88,7 @@ pub fn detect_bom(data: &Vec[UInt8]) -> Str {
 }
 
 /// Return true if data starts with the UTF-8 BOM.
-/// Parameters: data — the bytes to inspect.
+/// Parameters: data -- the bytes to inspect.
 /// Returns: true for the EF BB BF prefix.
 /// Complexity: O(1). Pure.
 pub fn has_utf8_bom(data: &Vec[UInt8]) -> Bool {
@@ -96,7 +96,7 @@ pub fn has_utf8_bom(data: &Vec[UInt8]) -> Bool {
 }
 
 /// Return true if data starts with the UTF-16 LE BOM.
-/// Parameters: data — the bytes to inspect.
+/// Parameters: data -- the bytes to inspect.
 /// Returns: true for the FF FE prefix.
 /// Complexity: O(1). Pure.
 pub fn has_utf16le_bom(data: &Vec[UInt8]) -> Bool {
@@ -104,7 +104,7 @@ pub fn has_utf16le_bom(data: &Vec[UInt8]) -> Bool {
 }
 
 /// Return true if data starts with the UTF-16 BE BOM.
-/// Parameters: data — the bytes to inspect.
+/// Parameters: data -- the bytes to inspect.
 /// Returns: true for the FE FF prefix.
 /// Complexity: O(1). Pure.
 pub fn has_utf16be_bom(data: &Vec[UInt8]) -> Bool {
@@ -112,7 +112,7 @@ pub fn has_utf16be_bom(data: &Vec[UInt8]) -> Bool {
 }
 
 /// Return true if data starts with the UTF-32 LE BOM.
-/// Parameters: data — the bytes to inspect.
+/// Parameters: data -- the bytes to inspect.
 /// Returns: true for the FF FE 00 00 prefix.
 /// Complexity: O(1). Pure.
 pub fn has_utf32le_bom(data: &Vec[UInt8]) -> Bool {
@@ -120,7 +120,7 @@ pub fn has_utf32le_bom(data: &Vec[UInt8]) -> Bool {
 }
 
 /// Return true if data starts with the UTF-32 BE BOM.
-/// Parameters: data — the bytes to inspect.
+/// Parameters: data -- the bytes to inspect.
 /// Returns: true for the 00 00 FE FF prefix.
 /// Complexity: O(1). Pure.
 pub fn has_utf32be_bom(data: &Vec[UInt8]) -> Bool {
@@ -128,7 +128,7 @@ pub fn has_utf32be_bom(data: &Vec[UInt8]) -> Bool {
 }
 
 /// Classify data as binary by a control-byte heuristic.
-/// Parameters: data — the bytes to inspect.
+/// Parameters: data -- the bytes to inspect.
 /// Returns: true when a NUL byte is present or control bytes exceed 30% of
 ///          the sampled prefix.
 /// Complexity: O(min(n, 1024)). Pure.
@@ -157,7 +157,7 @@ pub fn is_binary(data: &Vec[UInt8]) -> Bool {
 }
 
 /// Classify data as plain text by a control-byte heuristic.
-/// Parameters: data — the bytes to inspect.
+/// Parameters: data -- the bytes to inspect.
 /// Returns: true when the data is not classified as binary.
 /// Complexity: O(min(n, 1024)). Pure.
 pub fn is_text(data: &Vec[UInt8]) -> Bool {
@@ -165,7 +165,7 @@ pub fn is_text(data: &Vec[UInt8]) -> Bool {
 }
 
 /// Guess the character encoding.
-/// Parameters: data — the bytes to inspect.
+/// Parameters: data -- the bytes to inspect.
 /// Returns: "utf-8", "utf-16le", "utf-16be", "utf-32le", "utf-32be", "ascii"
 ///          or "binary".
 /// Complexity: O(n). Pure.
@@ -193,7 +193,7 @@ pub fn detect_encoding(data: &Vec[UInt8]) -> Str {
 }
 
 /// Return the magic-number hex prefix of data.
-/// Parameters: data — the bytes to inspect.
+/// Parameters: data -- the bytes to inspect.
 /// Returns: the lowercase hex of the first up-to-8 bytes ("" for empty input).
 /// Complexity: O(1). Pure.
 pub fn magic_number(data: &Vec[UInt8]) -> Str {
@@ -333,7 +333,7 @@ fn is_macho_magic(data: &Vec[UInt8]) -> Bool {
 }
 
 /// Detect the MIME type by content sniffing.
-/// Parameters: data — the bytes to inspect.
+/// Parameters: data -- the bytes to inspect.
 /// Returns: a MIME type guessed from magic bytes and text heuristics.
 /// Complexity: O(1). Pure.
 pub fn detect_mime(data: &Vec[UInt8]) -> Str {
@@ -361,7 +361,7 @@ pub fn detect_mime(data: &Vec[UInt8]) -> Str {
 }
 
 /// Detect the MIME type from magic bytes only.
-/// Parameters: data — the bytes to inspect.
+/// Parameters: data -- the bytes to inspect.
 /// Returns: the magic-derived MIME type or "application/octet-stream".
 /// Complexity: O(1). Pure.
 pub fn mime_from_magic(data: &Vec[UInt8]) -> Str {
@@ -377,7 +377,7 @@ pub fn mime_from_magic(data: &Vec[UInt8]) -> Str {
 }
 
 /// Return true if data matches a known image format.
-/// Parameters: data — the bytes to inspect.
+/// Parameters: data -- the bytes to inspect.
 /// Returns: true for PNG/JPEG/GIF/BMP/WebP/ICO signatures.
 /// Complexity: O(1). Pure.
 pub fn is_image_data(data: &Vec[UInt8]) -> Bool {
@@ -394,7 +394,7 @@ pub fn is_image_data(data: &Vec[UInt8]) -> Bool {
 }
 
 /// Return true if data matches a known audio format.
-/// Parameters: data — the bytes to inspect.
+/// Parameters: data -- the bytes to inspect.
 /// Returns: true for WAV/OGG/FLAC/MP3 (ID3) signatures.
 /// Complexity: O(1). Pure.
 pub fn is_audio_data(data: &Vec[UInt8]) -> Bool {
@@ -410,7 +410,7 @@ pub fn is_audio_data(data: &Vec[UInt8]) -> Bool {
 }
 
 /// Return true if data matches a known video container.
-/// Parameters: data — the bytes to inspect.
+/// Parameters: data -- the bytes to inspect.
 /// Returns: true for AVI/MP4/MKV/WebM/Ogg signatures.
 /// Complexity: O(1). Pure.
 pub fn is_video_data(data: &Vec[UInt8]) -> Bool {
@@ -430,7 +430,7 @@ pub fn is_video_data(data: &Vec[UInt8]) -> Bool {
 }
 
 /// Return true if data looks like a PDF.
-/// Parameters: data — the bytes to inspect.
+/// Parameters: data -- the bytes to inspect.
 /// Returns: true for the "%PDF-" header.
 /// Complexity: O(1). Pure.
 pub fn is_pdf_data(data: &Vec[UInt8]) -> Bool {
@@ -438,7 +438,7 @@ pub fn is_pdf_data(data: &Vec[UInt8]) -> Bool {
 }
 
 /// Return true if data is a ZIP archive.
-/// Parameters: data — the bytes to inspect.
+/// Parameters: data -- the bytes to inspect.
 /// Returns: true for the "PK\x03\x04" local-file header.
 /// Complexity: O(1). Pure.
 pub fn is_zip_data(data: &Vec[UInt8]) -> Bool {
@@ -446,7 +446,7 @@ pub fn is_zip_data(data: &Vec[UInt8]) -> Bool {
 }
 
 /// Return true if data is a gzip stream.
-/// Parameters: data — the bytes to inspect.
+/// Parameters: data -- the bytes to inspect.
 /// Returns: true for the 1F 8B header.
 /// Complexity: O(1). Pure.
 pub fn is_gzip_data(data: &Vec[UInt8]) -> Bool {
@@ -454,7 +454,7 @@ pub fn is_gzip_data(data: &Vec[UInt8]) -> Bool {
 }
 
 /// Return true if data is an ELF binary.
-/// Parameters: data — the bytes to inspect.
+/// Parameters: data -- the bytes to inspect.
 /// Returns: true for the 7F 45 4C 46 header.
 /// Complexity: O(1). Pure.
 pub fn is_elf_data(data: &Vec[UInt8]) -> Bool {
@@ -462,7 +462,7 @@ pub fn is_elf_data(data: &Vec[UInt8]) -> Bool {
 }
 
 /// Return true if data is a PE/COFF binary.
-/// Parameters: data — the bytes to inspect.
+/// Parameters: data -- the bytes to inspect.
 /// Returns: true for the "MZ" DOS header.
 /// Complexity: O(1). Pure.
 pub fn is_pe_data(data: &Vec[UInt8]) -> Bool {
@@ -470,7 +470,7 @@ pub fn is_pe_data(data: &Vec[UInt8]) -> Bool {
 }
 
 /// Return true if data is a Mach-O binary.
-/// Parameters: data — the bytes to inspect.
+/// Parameters: data -- the bytes to inspect.
 /// Returns: true for the Mach-O magic numbers.
 /// Complexity: O(1). Pure.
 pub fn is_macho_data(data: &Vec[UInt8]) -> Bool {

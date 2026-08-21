@@ -15,7 +15,7 @@ use xiom.string;
 // Layout: `messages` is the head-first chain (like xiom.error.chain), `free`
 // holds one free-form context string per layer ("" when absent), and
 // `keys`/`values` hold the key/value pairs of the HEAD layer only (documented
-// below). Values are immutable — attaching or wrapping returns new errors.
+// below). Values are immutable -- attaching or wrapping returns new errors.
 // ============================================================================
 
 /// An error node with per-layer messages and free-form context, plus the

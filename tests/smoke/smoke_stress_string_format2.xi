@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.string.format2 with two args
+// XIOM stdlib stress -- xiom.string.format2 with two args
 // Tests format with two placeholders and two replacement values.
 // Returns 0 on success, nonzero on failure.
 

@@ -1,4 +1,4 @@
-// XIOM — Numeric Base Conversion (xiom.num.convert)
+// XIOM -- Numeric Base Conversion (xiom.num.convert)
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 //
@@ -89,7 +89,7 @@ pub fn from_base58(s: Str) -> Option[Int] {
   Some(result)
 }
 
-// ── Base62 ──────────────────────────────────────────────────────────────────
+// -- Base62 ------------------------------------------------------------------
 
 /// Converts an integer to its Base62 representation ("0-9A-Za-z").
 /// n == 0 yields "0". Negative numbers get a '-' prefix.
@@ -175,7 +175,7 @@ pub fn from_base62(s: Str) -> Option[Int] {
   Some(result)
 }
 
-// ── ASCII85 (Adobe) ─────────────────────────────────────────────────────────
+// -- ASCII85 (Adobe) ---------------------------------------------------------
 
 /// Encodes a 32-bit big-endian value as exactly five ASCII85 characters
 /// ('!'..'u').

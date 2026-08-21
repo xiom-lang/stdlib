@@ -11,7 +11,7 @@ module xiom.net.tls_helper
 // package; this sublib provides the certificate/helper utilities. DER is
 // parsed with a local minimal ASN.1 TLV walker; fingerprints delegate to
 // xiom.crypto (SHA-256) and PEM armor delegates to xiom.encoding.base64.
-// SHA-1 fingerprints cannot be produced (no SHA-1 in xiom.crypto) — that
+// SHA-1 fingerprints cannot be produced (no SHA-1 in xiom.crypto) -- that
 // function is a documented empty result.
 // ============================================================================
 
@@ -65,7 +65,7 @@ fn region_str(data: &Vec[UInt8], from: Int, to: Int) -> Str {
 }
 
 /// Read a DER length at pos.
-/// Parameters: data — the DER bytes; pos — the position of the length octet.
+/// Parameters: data -- the DER bytes; pos -- the position of the length octet.
 /// Returns: Ok((length, bytes_consumed)) for short and long forms; Err for
 ///          indefinite lengths or truncated input.
 /// Complexity: O(1). Pure.
@@ -123,7 +123,7 @@ fn der_read_tlv(data: &Vec[UInt8], pos: Int) -> Result[(Int, Int, Int), Str] {
 }
 
 /// Read an ASN.1 object identifier at pos.
-/// Parameters: data — the DER bytes; pos — the position of the OID tag.
+/// Parameters: data -- the DER bytes; pos -- the position of the OID tag.
 /// Returns: Ok((oid components, next_pos)) on success, Err on malformed input.
 /// Complexity: O(n). Pure.
 pub fn asn1_read_oid(data: &Vec[UInt8], pos: Int) -> Result[(Vec[Int], Int), Str] {
@@ -237,7 +237,7 @@ fn name_cn(data: &Vec[UInt8], start: Int, end: Int) -> Result[Str, Str] {
 }
 
 /// SHA-256 fingerprint of a DER certificate.
-/// Parameters: der — the certificate DER bytes.
+/// Parameters: der -- the certificate DER bytes.
 /// Returns: the 32-byte SHA-256 digest.
 /// Complexity: O(n). Pure.
 pub fn cert_fingerprint_sha256(der: &Vec[UInt8]) -> Vec[UInt8] {
@@ -366,7 +366,7 @@ fn validity_dates(der: &Vec[UInt8]) -> Result[(Str, Str), Str] {
 }
 
 /// Certificate validity period.
-/// Parameters: der — the certificate DER bytes.
+/// Parameters: der -- the certificate DER bytes.
 /// Returns: Ok((not_before, not_after)) as ASN.1 time strings, Err when the
 ///          structure cannot be parsed.
 /// Complexity: O(n). Pure.
@@ -375,7 +375,7 @@ pub fn cert_validity_dates(der: &Vec[UInt8]) -> Result[(Str, Str), Str] {
 }
 
 /// The common name of the certificate subject.
-/// Parameters: der — the certificate DER bytes.
+/// Parameters: der -- the certificate DER bytes.
 /// Returns: Ok(CN) on success, Err when unparseable or missing.
 /// Complexity: O(n). Pure.
 pub fn cert_subject_cn(der: &Vec[UInt8]) -> Result[Str, Str] {
@@ -394,7 +394,7 @@ pub fn cert_subject_cn(der: &Vec[UInt8]) -> Result[Str, Str] {
 }
 
 /// The common name of the certificate issuer.
-/// Parameters: der — the certificate DER bytes.
+/// Parameters: der -- the certificate DER bytes.
 /// Returns: Ok(CN) on success, Err when unparseable or missing.
 /// Complexity: O(n). Pure.
 pub fn cert_issuer_cn(der: &Vec[UInt8]) -> Result[Str, Str] {
@@ -435,7 +435,7 @@ fn oid_algorithm_name(oid: &Vec[Int]) -> Str {
 }
 
 /// Public key metadata for a certificate.
-/// Parameters: der — the certificate DER bytes.
+/// Parameters: der -- the certificate DER bytes.
 /// Returns: Ok((algorithm, bits)) on success, Err when unparseable.
 /// Complexity: O(n). Pure.
 pub fn cert_public_key_info(der: &Vec[UInt8]) -> Result[(Str, Int), Str] {
@@ -496,7 +496,7 @@ fn data_byte_at(data: &Vec[UInt8], pos: Int) -> UInt8 {
 }
 
 /// True when subject equals issuer (by common name comparison).
-/// Parameters: der — the certificate DER bytes.
+/// Parameters: der -- the certificate DER bytes.
 /// Returns: true when both subject and issuer CNs parse and match; false
 ///          otherwise (including unparseable input).
 /// Complexity: O(n). Pure.
@@ -515,7 +515,7 @@ pub fn cert_is_self_signed(der: &Vec[UInt8]) -> Bool {
 }
 
 /// Wrap DER bytes in a PEM armor with the given label.
-/// Parameters: der — the DER bytes; label — the PEM label (e.g.
+/// Parameters: der -- the DER bytes; label -- the PEM label (e.g.
 ///          "CERTIFICATE").
 /// Returns: the PEM string with 64-column base64 lines.
 /// Complexity: O(n). Pure.
@@ -572,7 +572,7 @@ fn pem_find_block(pem: Str, label: Str) -> Option[Str] {
 }
 
 /// Strip PEM armor and return the DER bytes.
-/// Parameters: pem — the PEM string.
+/// Parameters: pem -- the PEM string.
 /// Returns: Ok(DER bytes) on success, Err when no matching block is found.
 /// Complexity: O(n). Pure.
 pub fn pem_decode(pem: Str) -> Result[Vec[UInt8], Str] {
@@ -590,7 +590,7 @@ pub fn pem_decode(pem: Str) -> Result[Vec[UInt8], Str] {
 }
 
 /// Extract every certificate block from a PEM string.
-/// Parameters: pem — the PEM string.
+/// Parameters: pem -- the PEM string.
 /// Returns: Ok(the DER bytes of each CERTIFICATE block) on success, Err when
 ///          no certificate block is present.
 /// Complexity: O(n). Pure.

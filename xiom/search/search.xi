@@ -1,4 +1,4 @@
-// XIOM — Search Algorithms
+// XIOM -- Search Algorithms
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 
@@ -15,7 +15,7 @@ use xiom.cmp.min_int;
 use xiom.cmp.max_int;
 
 // ---------------------------------------------------------------------------
-// Linear search — O(n) worst/average, O(1) best.
+// Linear search -- O(n) worst/average, O(1) best.
 // Scans the array sequentially from index 0. Works on unsorted data.
 // Returns Some(index) of the first match, or None if not found.
 // ---------------------------------------------------------------------------
@@ -33,7 +33,7 @@ pub fn linear_search[T: Eq](arr: &Vec[T], target: &T) -> Option[Int] {
 }
 
 // ---------------------------------------------------------------------------
-// Binary search — O(log n). Requires a sorted array (non-decreasing).
+// Binary search -- O(log n). Requires a sorted array (non-decreasing).
 // Classic divide-and-conquer: repeatedly narrows the range by comparing
 // the middle element against the target.
 // Returns Some(index) if found, or None if not present.
@@ -59,7 +59,7 @@ pub fn binary_search[T: Ord](arr: &Vec[T], target: &T) -> Option[Int] {
 }
 
 // ---------------------------------------------------------------------------
-// Interpolation search — O(log log n) average on uniformly distributed
+// Interpolation search -- O(log log n) average on uniformly distributed
 // sorted Int arrays, O(n) worst. Analogous to how one searches a phone book:
 // estimates position based on value range.
 // Returns Some(index) if found, or None if not present.
@@ -96,7 +96,7 @@ pub fn interpolation_search(arr: &Vec[Int], target: Int) -> Option[Int] {
 }
 
 // ---------------------------------------------------------------------------
-// Exponential (galloping) search — O(log i) where i is the target index.
+// Exponential (galloping) search -- O(log i) where i is the target index.
 // Best for unbounded/infinite arrays or when the target is near the start.
 // First finds a range [2^(k-1), 2^k] where target lies, then binary searches.
 // Requires sorted array.
@@ -136,8 +136,8 @@ pub fn exponential_search[T: Ord](arr: &Vec[T], target: &T) -> Option[Int] {
 }
 
 // ---------------------------------------------------------------------------
-// Jump search — O(√n). Requires sorted array.
-// Jumps ahead by fixed step size (√n) until the element at the jump position
+// Jump search -- O(sqrtn). Requires sorted array.
+// Jumps ahead by fixed step size (sqrtn) until the element at the jump position
 // exceeds the target, then linear-searches the previous block.
 // ---------------------------------------------------------------------------
 
@@ -176,7 +176,7 @@ pub fn jump_search[T: Ord](arr: &Vec[T], target: &T) -> Option[Int] {
 }
 
 // ---------------------------------------------------------------------------
-// lower_bound — O(log n). Returns the index of the first element >= target.
+// lower_bound -- O(log n). Returns the index of the first element >= target.
 // If all elements are < target, returns arr.len().
 // Requires sorted array.
 // ---------------------------------------------------------------------------
@@ -197,7 +197,7 @@ pub fn lower_bound[T: Ord](arr: &Vec[T], target: &T) -> Int {
 }
 
 // ---------------------------------------------------------------------------
-// upper_bound — O(log n). Returns the index of the first element > target.
+// upper_bound -- O(log n). Returns the index of the first element > target.
 // If all elements are <= target, returns arr.len().
 // Requires sorted array.
 // ---------------------------------------------------------------------------
@@ -218,7 +218,7 @@ pub fn upper_bound[T: Ord](arr: &Vec[T], target: &T) -> Int {
 }
 
 // ---------------------------------------------------------------------------
-// binary_search_range — O(log n). Returns (lower_bound, upper_bound) as a
+// binary_search_range -- O(log n). Returns (lower_bound, upper_bound) as a
 // tuple: [lo, hi) of all indices where arr[i] == target.
 // If target is not found, lo == hi (empty range).
 // Requires sorted array.

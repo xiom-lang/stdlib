@@ -22,7 +22,7 @@ use xiom.simd.mask;
 // ============================================================================
 
 /// Load `T` values from `base + index` for every index. Scalar fallback:
-/// generic memory loads are unavailable — returns default `T()` values with
+/// generic memory loads are unavailable -- returns default `T()` values with
 /// one element per index (documented).
 /// Complexity: O(len(indices)).
 pub fn gather_load[T](base: Int, indices: &Vec[Int]) -> Vec[T] {
@@ -43,13 +43,13 @@ pub fn gather_load4[T](base: Int, i0: Int, i1: Int, i2: Int, i3: Int) -> (T, T, 
 }
 
 /// Store `values` to `base + index`. Scalar fallback: generic memory stores
-/// are unavailable — no-op (documented).
+/// are unavailable -- no-op (documented).
 /// Complexity: O(1).
 pub fn scatter_store[T](base: Int, indices: &Vec[Int], values: &Vec[T]) {
 }
 
 /// Gather only the lanes where the mask is set. Scalar fallback: generic
-/// memory loads are unavailable — returns default `T()` values, one per set
+/// memory loads are unavailable -- returns default `T()` values, one per set
 /// lane (documented).
 /// Complexity: O(32).
 pub fn gather_mask[T](base: Int, indices: &Vec[Int], m: Mask) -> Vec[T] {
@@ -105,7 +105,7 @@ pub fn gather_expand[T](values: &Vec[T], m: Mask) -> Vec[T] {
 }
 
 /// Materialize the values `base + 0 .. base + n-1`. Scalar fallback: generic
-/// construction from an Int is unavailable — returns default `T()` values,
+/// construction from an Int is unavailable -- returns default `T()` values,
 /// one per element (documented).
 /// Complexity: O(n).
 pub fn gather_iota[T](base: Int, n: Int) -> Vec[T] {

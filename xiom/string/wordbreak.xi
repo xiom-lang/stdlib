@@ -126,7 +126,7 @@ pub fn unicode_split_words(s: Str) -> Vec[Str] {
   out
 }
 
-// ── Private helpers ─────────────────────────────────────────────────────────
+// -- Private helpers ---------------------------------------------------------
 
 /// True when `cp` is a word character (letters, digits, underscore).
 /// NOTE (BUG 20): the ranges are walked through a small recursive helper; a

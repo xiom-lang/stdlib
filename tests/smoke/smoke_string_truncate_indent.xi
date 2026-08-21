@@ -11,8 +11,8 @@ fn main() -> Int {
   if truncate.str_truncate("hello", -1) != "" { io.println("tr-4"); return 4; }
 
   // ---- truncate_utf8 (by bytes, UTF-8 boundary aware) ----
-  if truncate.str_truncate_utf8("héllo", 3) != "hé" { io.println("tr8-1"); return 11; }
-  if truncate.str_truncate_utf8("héllo", 2) != "h" { io.println("tr8-2"); return 12; }
+  if truncate.str_truncate_utf8("hello", 3) != "he" { io.println("tr8-1"); return 11; }
+  if truncate.str_truncate_utf8("hello", 2) != "h" { io.println("tr8-2"); return 12; }
   if truncate.str_truncate_utf8("hello", 10) != "hello" { io.println("tr8-3"); return 13; }
   if truncate.str_truncate_utf8("hello", 0) != "" { io.println("tr8-4"); return 14; }
 

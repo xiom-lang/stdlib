@@ -1,4 +1,4 @@
-// XIOM stdlib stress — io.append_file concatenation
+// XIOM stdlib stress -- io.append_file concatenation
 // Writes first part, appends second, verifies concatenated content.
 // Returns 0 on success.
 

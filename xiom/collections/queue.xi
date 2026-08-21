@@ -1,4 +1,4 @@
-// XIOM — Queue Collection (WorkQueue + Deque)
+// XIOM -- Queue Collection (WorkQueue + Deque)
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 
@@ -116,7 +116,7 @@ pub fn deque_is_empty(d: &Deque) -> Bool {
 }
 
 // ============================================================================
-// SpscRing — lock-free single-producer / single-consumer ring buffer
+// SpscRing -- lock-free single-producer / single-consumer ring buffer
 // (2026-08-11). Fixed `cap` slots (power of two not required; modulo via %).
 // head = next slot to pop, tail = next slot to push, both AtomicInt
 // (fetch_add based). Producer and consumer must each be used from exactly

@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.string.byte_at with negative index
+// XIOM stdlib stress -- xiom.string.byte_at with negative index
 // Tests byte_at with negative index (should return None or cap at 0).
 // Returns 0 on success, nonzero on failure.
 

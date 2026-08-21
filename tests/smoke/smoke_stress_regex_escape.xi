@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.regex regex_escape escapes special chars
+// XIOM stdlib stress -- xiom.regex regex_escape escapes special chars
 // Tests that escaped strings are treated as literals by Regex.
 // Returns 0 on success, nonzero on failure.
 

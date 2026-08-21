@@ -108,7 +108,7 @@ fn stats_percentile(data: &Vec[Int], p: Int) -> Int
   }
 }
 
-// ── Min, Max, Range ─────────────────────────────────────────────────────────
+// -- Min, Max, Range ---------------------------------------------------------
 
 /// Returns the minimum value in a vector of integers.
 /// Returns 0 for empty input.
@@ -147,7 +147,7 @@ pub fn stats_range(data: &Vec[Int]) -> Int {
   return stats_max(data) - stats_min(data);
 }
 
-// ── Mode ────────────────────────────────────────────────────────────────────
+// -- Mode --------------------------------------------------------------------
 
 /// Returns the most frequently occurring value (mode) in a sorted vector.
 /// For ties, returns the first mode encountered.
@@ -180,7 +180,7 @@ pub fn stats_mode(data: &Vec[Int]) -> Option[Int] {
   return Option[Int]{ is_some: true; value: best_val; };
 }
 
-// ── Variance & Standard Deviation ───────────────────────────────────────────
+// -- Variance & Standard Deviation -------------------------------------------
 
 /// Computes the population variance of a vector of integers.
 /// Sum of squared deviations from the mean divided by N.
@@ -223,7 +223,7 @@ pub fn stats_sample_stddev(data: &Vec[Int]) -> Float64 {
   return xiom.math.sqrt(stats_sample_variance(data));
 }
 
-// ── Quartiles ───────────────────────────────────────────────────────────────
+// -- Quartiles ---------------------------------------------------------------
 
 /// Returns the first quartile (Q1) of a sorted vector of integers.
 /// Uses the median-of-lower-half method.
@@ -251,7 +251,7 @@ pub fn stats_iqr(data: &Vec[Int]) -> Int {
   return stats_q3(data) - stats_q1(data);
 }
 
-// ── Float64-based statistics ────────────────────────────────────────────────
+// -- Float64-based statistics ------------------------------------------------
 
 /// Sum of a vector of Float64 values.
 pub fn stats_sum_f(data: &Vec[Float64]) -> Float64 {
@@ -288,7 +288,7 @@ pub fn stats_stddev_f_f(data: &Vec[Float64]) -> Float64 {
   return xiom.math.sqrt(variance);
 }
 
-// ── Covariance & Correlation ────────────────────────────────────────────────
+// -- Covariance & Correlation ------------------------------------------------
 
 /// Computes the population covariance between two vectors of equal length.
 pub fn stats_covariance(a: &Vec[Int], b: &Vec[Int]) -> Float64 {
@@ -316,7 +316,7 @@ pub fn stats_correlation(a: &Vec[Int], b: &Vec[Int]) -> Float64 {
   return cov / denom;
 }
 
-// ── Histogram ───────────────────────────────────────────────────────────────
+// -- Histogram ---------------------------------------------------------------
 
 /// Builds a histogram with the specified number of bins over [lo, hi].
 /// Each bin counts values in [bin_start, bin_start + bin_width).
@@ -350,7 +350,7 @@ pub fn stats_histogram(data: &Vec[Int], bins: Int, lo: Int, hi: Int) -> Vec[Int]
   return result;
 }
 
-// ── Geometric Mean ──────────────────────────────────────────────────────────
+// -- Geometric Mean ----------------------------------------------------------
 
 /// Computes the geometric mean using logarithms to avoid overflow.
 /// Requires all values to be positive.
@@ -368,9 +368,9 @@ pub fn stats_geometric_mean(data: &Vec[Int]) -> Float64 {
   return xiom.math.exp(log_sum / (n as Float64));
 }
 
-// ── Harmonic Mean ───────────────────────────────────────────────────────────
+// -- Harmonic Mean -----------------------------------------------------------
 
-/// Computes the harmonic mean. Returns 0 if any value is ≤ 0.
+/// Computes the harmonic mean. Returns 0 if any value is <= 0.
 pub fn stats_harmonic_mean(data: &Vec[Int]) -> Float64 {
   let n = data.len();
   if n == 0 { return 0.0; };
@@ -385,7 +385,7 @@ pub fn stats_harmonic_mean(data: &Vec[Int]) -> Float64 {
   return (n as Float64) / recip_sum;
 }
 
-// ── Z-score ─────────────────────────────────────────────────────────────────
+// -- Z-score -----------------------------------------------------------------
 
 /// Computes the z-score: (value - mean) / stddev.
 pub fn stats_zscore(value: Int, mean: Float64, stddev: Float64) -> Float64 {
@@ -393,7 +393,7 @@ pub fn stats_zscore(value: Int, mean: Float64, stddev: Float64) -> Float64 {
   return ((value as Float64) - mean) / stddev;
 }
 
-// ── Linear Regression ───────────────────────────────────────────────────────
+// -- Linear Regression -------------------------------------------------------
 
 /// Computes the slope of the simple linear regression line y = mx + b.
 pub fn stats_slope(x: &Vec[Int], y: &Vec[Int]) -> Float64 {

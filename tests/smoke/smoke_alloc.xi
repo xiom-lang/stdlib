@@ -1,4 +1,4 @@
-// XIOM stdlib smoke test — xiom.alloc
+// XIOM stdlib smoke test -- xiom.alloc
 // Returns 0 on success, nonzero on failure (process exit code).
 
 module smoke_alloc

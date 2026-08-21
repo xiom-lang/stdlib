@@ -78,7 +78,7 @@ pub fn unicode_has_emoji(s: Str) -> Bool {
   false
 }
 
-// ── Private helpers ─────────────────────────────────────────────────────────
+// -- Private helpers ---------------------------------------------------------
 
 /// Masked byte at `pos` (BUG 22 #10: `as Int` sign-extends UInt8).
 fn _byte_at(s: Str, pos: Int) -> Int {

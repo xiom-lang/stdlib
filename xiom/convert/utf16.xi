@@ -1,4 +1,4 @@
-﻿// XIOM - Conversion: Utf16
+// XIOM - Conversion: Utf16
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 
@@ -17,7 +17,7 @@ use xiom.string;
 use xiom.char;
 
 /// Encode a string as UTF-16 code units (native order, no BOM).
-/// Parameters: s â€” the input string.
+/// Parameters: s -- the input string.
 /// Returns: one UTF-16 code unit per BMP code point, surrogate pairs for
 ///          supplementary characters.
 /// Complexity: O(n), n = code points.
@@ -42,7 +42,7 @@ pub fn utf16_encode(s: Str) -> Vec[UInt16] {
 }
 
 /// Decode UTF-16 code units to a string.
-/// Parameters: bytes â€” the code units (a leading BOM is skipped).
+/// Parameters: bytes -- the code units (a leading BOM is skipped).
 /// Returns: Ok(Str) on success; Err for a lone surrogate, an invalid code
 ///          unit range, or an overlong result.
 /// Complexity: O(n).
@@ -77,7 +77,7 @@ pub fn utf16_decode(bytes: &Vec[UInt16]) -> Result[Str, Str] {
 }
 
 /// Encode a string as UTF-16LE bytes, including a BOM.
-/// Parameters: s â€” the input string.
+/// Parameters: s -- the input string.
 /// Returns: the little-endian byte sequence.
 /// Complexity: O(n).
 pub fn utf16le_to_bytes(s: Str) -> Vec[UInt8] {
@@ -96,7 +96,7 @@ pub fn utf16le_to_bytes(s: Str) -> Vec[UInt8] {
 }
 
 /// Encode a string as UTF-16BE bytes, including a BOM.
-/// Parameters: s â€” the input string.
+/// Parameters: s -- the input string.
 /// Returns: the big-endian byte sequence.
 /// Complexity: O(n).
 pub fn utf16be_to_bytes(s: Str) -> Vec[UInt8] {

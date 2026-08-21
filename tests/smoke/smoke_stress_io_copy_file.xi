@@ -1,4 +1,4 @@
-// XIOM stdlib stress — io.copy_file content preservation
+// XIOM stdlib stress -- io.copy_file content preservation
 // Copies a file, reads destination, verifies content matches.
 // Returns 0 on success.
 

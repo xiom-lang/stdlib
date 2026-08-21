@@ -1,4 +1,4 @@
-// XIOM stdlib stress — math.random and math.random_range
+// XIOM stdlib stress -- math.random and math.random_range
 // Tests random generation and verifies values are in expected range.
 // Returns 0 on success, nonzero on failure.
 

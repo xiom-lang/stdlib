@@ -1,4 +1,4 @@
-// XIOM — Random Number Generation
+// XIOM -- Random Number Generation
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 
@@ -401,7 +401,7 @@ pub fn seed_from_value(seed: Int) {
   };
 }
 
-// ── Xorshift64 ──────────────────────────────────────────────────────────────
+// -- Xorshift64 --------------------------------------------------------------
 
 /// Xorshift64 PRNG (Marsaglia, 2003).
 /// State: 64-bit unsigned. Period: 2^64 - 1.
@@ -428,7 +428,7 @@ pub fn Xorshift64.next_int(self) -> Int {
   return state;
 }
 
-// ── Random choice ───────────────────────────────────────────────────────────
+// -- Random choice -----------------------------------------------------------
 
 /// Returns a random element from a vector.
 /// Returns None if the vector is empty.
@@ -438,7 +438,7 @@ pub fn random_choice[T](items: &Vec[T]) -> Option[&T] {
   return pick(items);
 }
 
-// ── Random shuffle ──────────────────────────────────────────────────────────
+// -- Random shuffle ----------------------------------------------------------
 
 /// Shuffles a vector in place using Fisher-Yates.
 /// Wraps the existing shuffle function.
@@ -447,14 +447,14 @@ pub fn random_shuffle[T](items: &mut Vec[T]) {
   shuffle(items);
 }
 
-// ── Random fraction ─────────────────────────────────────────────────────────
+// -- Random fraction ---------------------------------------------------------
 
 /// Alias for random(). Returns a Float64 in [0, 1).
 pub fn random_fraction() -> Float64 {
   return random();
 }
 
-// ── Gaussian Box-Muller ─────────────────────────────────────────────────────
+// -- Gaussian Box-Muller -----------------------------------------------------
 
 /// Generates a normally distributed random number using the Box-Muller transform.
 /// Mean and stddev parameters control the distribution center and spread.
@@ -472,7 +472,7 @@ pub fn gaussian_box_muller(mean: Float64, stddev: Float64) -> Float64 {
   return mean + z0 * stddev;
 }
 
-// ── Cryptographic random bytes ──────────────────────────────────────────────
+// -- Cryptographic random bytes ----------------------------------------------
 
 /// Fills a buffer with cryptographically secure random bytes.
 /// Delegates to xiom.crypto.secure_random_bytes.

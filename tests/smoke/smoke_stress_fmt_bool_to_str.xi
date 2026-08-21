@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.fmt Bool.to_str returns "true" or "false"
+// XIOM stdlib stress -- xiom.fmt Bool.to_str returns "true" or "false"
 // Tests boolean to string conversion for both values.
 // Returns 0 on success, nonzero on failure.
 

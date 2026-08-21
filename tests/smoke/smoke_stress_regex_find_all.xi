@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.regex Regex.find_all collects all matches
+// XIOM stdlib stress -- xiom.regex Regex.find_all collects all matches
 // Tests find_all on text with multiple, single, and zero matches.
 // Returns 0 on success, nonzero on failure.
 

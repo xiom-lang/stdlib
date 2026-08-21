@@ -12,7 +12,7 @@ module xiom.simd.mask
 //
 // Scalar fallback: a `Mask` is an Int bit pattern over 32 lanes (lane 0 is
 // the least-significant bit). Access mask data through the functions in this
-// module — direct cross-module field reads of the leading Int field of a
+// module -- direct cross-module field reads of the leading Int field of a
 // struct are unreliable in this build.
 // ============================================================================
 

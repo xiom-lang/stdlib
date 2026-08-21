@@ -9,7 +9,7 @@ module xiom.convert.atoi
 // ============================================================================
 // C-style ASCII-to-integer helpers: leading whitespace is skipped, an
 // optional sign is accepted, and parsing stops at the first non-digit
-// (trailing garbage is ignored). No malformed input ever fails — results
+// (trailing garbage is ignored). No malformed input ever fails -- results
 // clamp to INT_MAX/INT_MIN on overflow.
 // ============================================================================
 

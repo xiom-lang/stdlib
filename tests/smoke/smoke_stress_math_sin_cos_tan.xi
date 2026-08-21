@@ -1,4 +1,4 @@
-// XIOM stdlib stress — math.sin, math.cos, math.tan
+// XIOM stdlib stress -- math.sin, math.cos, math.tan
 // Tests trig functions at known angles.
 // Returns 0 on success, nonzero on failure.
 

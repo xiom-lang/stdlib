@@ -17,8 +17,8 @@ use xiom.io;
 // The runtime has no stack-walking or source-location intrinsics yet, so the
 // real backtrace/source-location functions report best-effort data: the
 // backtrace mirrors the traced scope stack, and source location returns the
-// last recorded scope name (see trace_enter). Tracing itself — enablement,
-// depth counting, enter/exit and log emission — is fully functional.
+// last recorded scope name (see trace_enter). Tracing itself -- enablement,
+// depth counting, enter/exit and log emission -- is fully functional.
 // ============================================================================
 
 /// Whether tracing is currently enabled.
@@ -27,7 +27,7 @@ var tracing_enabled: Bool = false;
 /// Current entry/exit nesting depth.
 var trace_depth_value: Int = 0;
 
-/// Trace scope stack (module-level struct with a Vec[Str] — primitive
+/// Trace scope stack (module-level struct with a Vec[Str] -- primitive
 /// element type, which is codegen-safe in this build).
 pub type TraceStack = {
   names: Vec[Str];
@@ -127,13 +127,13 @@ pub fn trace_current_function() -> Str {
   "unknown"
 }
 
-/// The file of the calling site. Not available in this build — "unknown".
+/// The file of the calling site. Not available in this build -- "unknown".
 /// Complexity: O(1).
 pub fn trace_current_file() -> Str {
   "unknown"
 }
 
-/// The line of the calling site. Not available in this build — 0.
+/// The line of the calling site. Not available in this build -- 0.
 /// Complexity: O(1).
 pub fn trace_current_line() -> Int {
   0

@@ -9,7 +9,7 @@ module xiom.string.sentencebreak
 // ============================================================================
 // Unicode sentence segmentation (UAX #29, compact approximation). A sentence
 // boundary is emitted after a run of sentence-ending punctuation
-// (. ! ? … and fullwidth forms) plus any closing quotes/brackets, when that
+// (. ! ? ... and fullwidth forms) plus any closing quotes/brackets, when that
 // run is followed by whitespace, a newline, or the end of the segment.
 // Paragraph separators (U+2028/U+2029) and runs of two or more newlines are
 // mandatory boundaries. Limitations (documented): abbreviations such as "e.g."
@@ -117,7 +117,7 @@ pub fn unicode_split_sentences(s: Str) -> Vec[Str] {
   out
 }
 
-// ── Private helpers ─────────────────────────────────────────────────────────
+// -- Private helpers ---------------------------------------------------------
 
 /// Masked byte at `pos` (BUG 22 #10: `as Int` sign-extends UInt8).
 fn _byte_at(s: Str, pos: Int) -> Int {

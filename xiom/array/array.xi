@@ -1,4 +1,4 @@
-// XIOM — Fixed-Size Array Operations
+// XIOM -- Fixed-Size Array Operations
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 
@@ -241,7 +241,7 @@ pub fn contains[T: Eq, const N: Int](arr: &[N]T, x: &T) -> Bool
   false
 }
 
-// ── Array Aggregation ───────────────────────────────────────────────────────
+// -- Array Aggregation -------------------------------------------------------
 
 /// Sum of all elements in an integer array. O(N).
 pub fn array_sum[const N: Int](arr: &[N]Int) -> Int {

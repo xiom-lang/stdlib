@@ -10,7 +10,7 @@ module xiom.bits.endianness
 // Host detection, byte-order conversion, and fixed-width byte swaps. The
 // supported x86-64 targets are little-endian. All conversions are built from
 // byte extraction and arithmetic reassembly (bitwise AND on operands with bit
-// 31 set miscompiles — see xiom.convert.base58 for the probe reference).
+// 31 set miscompiles -- see xiom.convert.base58 for the probe reference).
 // ============================================================================
 
 /// True if the host stores integers big-endian. The supported targets are

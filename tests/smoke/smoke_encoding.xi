@@ -1,4 +1,4 @@
-// XIOM stdlib smoke test — xiom.encoding
+// XIOM stdlib smoke test -- xiom.encoding
 // base64_encode known-answer: "hello" -> "aGVsbG8=".
 // Returns 0 on success, nonzero on failure (process exit code).
 

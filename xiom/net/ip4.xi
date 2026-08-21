@@ -1,4 +1,4 @@
-// XIOM — IPv4 Address Helpers (xiom.net.ip4)
+// XIOM -- IPv4 Address Helpers (xiom.net.ip4)
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 //

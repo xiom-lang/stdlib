@@ -15,7 +15,7 @@ module xiom.convert.urn
 use xiom.string;
 
 /// Parse a URN into its (nid, nss, rq) components.
-/// Parameters: s — the URN string.
+/// Parameters: s -- the URN string.
 /// Returns: Ok((nid, nss, rq)) on success, where rq is the concatenation of
 ///          the r-component and q-component ("" when absent); Err otherwise.
 /// Complexity: O(n).
@@ -55,7 +55,7 @@ pub fn urn_parse(s: Str) -> Result[(Str, Str, Str), Str] {
 }
 
 /// Check that a string is a valid URN.
-/// Parameters: s — the candidate URN string.
+/// Parameters: s -- the candidate URN string.
 /// Returns: true when the URN structure is valid.
 /// Complexity: O(n).
 pub fn urn_is_valid(s: Str) -> Bool {
@@ -64,8 +64,8 @@ pub fn urn_is_valid(s: Str) -> Bool {
 }
 
 /// Assemble a URN from a namespace identifier and specific string.
-/// Parameters: nid — the namespace identifier (2-32 chars, alphanumeric plus
-///          hyphen, not starting or ending with hyphen); nss — the namespace
+/// Parameters: nid -- the namespace identifier (2-32 chars, alphanumeric plus
+///          hyphen, not starting or ending with hyphen); nss -- the namespace
 ///          specific string.
 /// Returns: "urn:<nid>:<nss>".
 /// Complexity: O(n).

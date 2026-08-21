@@ -15,7 +15,7 @@ module xiom.math.numerical
 // implemented directly on f64; the multi-variable methods operate on
 // Vec[Float64]/Vec[Vec[Float64]] in row-major storage. All fallible inputs
 // are validated in the bodies and return documented sentinels (NaN for
-// scalar results, empty vectors for vector results) — requires/ensures are
+// scalar results, empty vectors for vector results) -- requires/ensures are
 // runtime-enforced and would trap. Convergence guards cap iteration counts
 // on every loop.
 // ============================================================================
@@ -662,7 +662,7 @@ pub fn interp_spline(xs: &Vec[Float64], ys: &Vec[Float64], x: Float64) -> Float6
 pub fn interp_cubic(xs: &Vec[Float64], ys: &Vec[Float64], x: Float64) -> Float64 {
   var n = xs.len();
   if n < 2 || ys.len() != n { return 0.0 / 0.0; }
-  // BUG 24 fix: xs/ys are ALREADY &Vec[Float64] — `&xs` was a double-address.
+  // BUG 24 fix: xs/ys are ALREADY &Vec[Float64] -- `&xs` was a double-address.
   var coeffs = _natural_cubic(xs, ys);
   return _eval_spline(xs, ys, &coeffs, x);
 }
@@ -733,7 +733,7 @@ pub fn spline_cubic(xs: &Vec[Float64], ys: &Vec[Float64]) -> Vec[Float64] {
   var out = Vec[Float64].new();
   var n = xs.len();
   if n < 2 || ys.len() != n { return out; }
-  // BUG 24 fix: xs/ys are ALREADY &Vec[Float64] — `&xs` was a double-address.
+  // BUG 24 fix: xs/ys are ALREADY &Vec[Float64] -- `&xs` was a double-address.
   var coeffs = _natural_cubic(xs, ys);
   var i = 0;
   while i < coeffs.len() {

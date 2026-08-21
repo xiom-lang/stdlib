@@ -1,4 +1,4 @@
-// XIOM stdlib stress — Set insert, contains, remove, intersection, union, diff
+// XIOM stdlib stress -- Set insert, contains, remove, intersection, union, diff
 // Tests Set basic operations and set algebra.
 // Returns 0 on success, nonzero on failure.
 

@@ -1,4 +1,4 @@
-// XIOM stdlib smoke test — xiom.compress
+// XIOM stdlib smoke test -- xiom.compress
 // Returns 0 on success, nonzero on failure (process exit code).
 
 module smoke_compress

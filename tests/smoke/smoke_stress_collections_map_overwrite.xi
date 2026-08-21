@@ -1,4 +1,4 @@
-// XIOM stdlib stress — Map overwrite existing key
+// XIOM stdlib stress -- Map overwrite existing key
 // Inserts a key, overwrites it with new value, verifies update.
 // Returns 0 on success, nonzero on failure.
 

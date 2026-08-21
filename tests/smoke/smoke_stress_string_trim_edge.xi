@@ -1,4 +1,4 @@
-// XIOM stdlib stress — xiom.string.str_trim edge cases
+// XIOM stdlib stress -- xiom.string.str_trim edge cases
 // Tests trim on whitespace-only, already-trimmed, and mixed strings.
 // Returns 0 on success, nonzero on failure.
 

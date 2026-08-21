@@ -1,4 +1,4 @@
-// XIOM stdlib smoke — xiom.collect.threadpool / workqueue / blockingqueue
+// XIOM stdlib smoke -- xiom.collect.threadpool / workqueue / blockingqueue
 // Pure-XIOM pool simulation (submit/join/shutdown), FIFO work queue, bounded
 // blocking queue with close semantics.
 // Returns 0 on success, nonzero + tag on failure.

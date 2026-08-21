@@ -113,7 +113,7 @@ pub fn unicode_split_lines(s: Str) -> Vec[Str] {
   lines
 }
 
-// ── Private helpers ─────────────────────────────────────────────────────────
+// -- Private helpers ---------------------------------------------------------
 
 // Line break classes: 0=AL 1=SP 2=ID 3=BA 4=B2 5=GL 6=OP 7=CL 8=EX 9=IS
 // 10=QU 11=NU 12=PO 13=PR 14=WJ 15=ZW 16=NL 17=BK

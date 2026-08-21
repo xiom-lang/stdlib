@@ -1,4 +1,4 @@
-// XIOM — Number Formatting (xiom.format.number)
+// XIOM -- Number Formatting (xiom.format.number)
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 //
@@ -43,7 +43,7 @@ pub fn fmt_int_with_separators(n: Int, sep: Str) -> Str {
 /// Formats a float with a fixed number of decimals using integer math.
 /// Rounds half away from zero: fmt_float_fixed(3.14159, 2) -> "3.14".
 /// Because 2.675 is not exactly representable in binary, its scaled value
-/// (267.4999...) rounds to "2.67", not "2.68" — a documented float-math
+/// (267.4999...) rounds to "2.67", not "2.68" -- a documented float-math
 /// artifact. Negative values keep their sign.
 /// Complexity: O(decimals).
 pub fn fmt_float_fixed(x: Float64, decimals: Int) -> Str {

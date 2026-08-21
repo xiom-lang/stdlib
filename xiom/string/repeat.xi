@@ -12,7 +12,7 @@ module xiom.string.repeat
 // string library, `str_repeat_char` encodes the character once and repeats
 // the single-char string.
 //
-// TODO(compiler): BUG 22 #15 — a catalog fn whose unsafe block contains a
+// TODO(compiler): BUG 22 #15 -- a catalog fn whose unsafe block contains a
 // while loop + string build loses statements when inlined into the caller
 // (the identical code works with extra statements inside the block; the flat
 // string.xi str_concat shape works because it returns directly from inside

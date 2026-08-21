@@ -8,7 +8,7 @@ fn main() -> Int {
   // implementation; calling the frozen API name `str_reverse` directly is
   // currently blocked by a compiler bug in the flat string.str_reverse (it is
   // emitted whenever a function named str_reverse is called, and its codegen
-  // violates LLVM dominance) — see the reverse.xi module header.
+  // violates LLVM dominance) -- see the reverse.xi module header.
   if reverse.str_reverse_chars("abc") != "cba" { io.println("reverse chars"); return 1; }
   if reverse.str_reverse_chars("") != "" { io.println("reverse chars empty"); return 2; }
   if reverse.str_reverse_words("hello world") != "world hello" { io.println("reverse words"); return 3; }

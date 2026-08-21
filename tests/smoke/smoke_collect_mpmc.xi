@@ -1,4 +1,4 @@
-// XIOM stdlib smoke — xiom.collect.mpmc / mpsc / spmc
+// XIOM stdlib smoke -- xiom.collect.mpmc / mpsc / spmc
 // Bounded ring queues: FIFO push/pop, overflow/underflow behaviour, size.
 // Returns 0 on success, nonzero + tag on failure.
 

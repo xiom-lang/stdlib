@@ -1,4 +1,4 @@
-// XIOM — Benchmarking Framework
+// XIOM -- Benchmarking Framework
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 
@@ -121,7 +121,7 @@ pub fn black_box[T](value: T) -> T {
   return value;
 }
 
-// ── BenchResult Analytics ──────────────────────────────────────────
+// -- BenchResult Analytics ------------------------------------------
 
 /// Returns operations per second based on `mean_ns`.
 /// Returns 0 if `mean_ns` is 0 to avoid division by zero.
@@ -242,13 +242,13 @@ pub fn bench_time_fn(f: fn()) -> Int {
   return result.mean_ns;
 }
 
-// ── BenchResult Reporting ──────────────────────────────────────────
+// -- BenchResult Reporting ------------------------------------------
 
 /// Generates a table report with columns: name, mean, min, max, ops/s.
 /// Complexity: O(n).
 pub fn bench_report(results: Vec[BenchResult]) -> Str {
   var output: Str = "name               mean        min         max         ops/s\n";
-  output = output + "──────────────────────────────────────────────────────────────\n";
+  output = output + "--------------------------------------------------------------\n";
   var i: Int = 0;
   while i < results.len() {
     let r = results[i];

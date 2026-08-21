@@ -1,4 +1,4 @@
-// XIOM — Poly1305 One-Time Authenticator (RFC 8439)
+// XIOM -- Poly1305 One-Time Authenticator (RFC 8439)
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 //
@@ -15,16 +15,16 @@
 //   4. Finally: tag = (h + s) mod 2^128, output as 16 little-endian bytes.
 //
 // Implementation Strategy:
-//   Since XIOM Int is 64-bit signed (i64, max ≈ 9.22e18), we cannot directly
+//   Since XIOM Int is 64-bit signed (i64, max ~= 9.22e18), we cannot directly
 //   represent 130-bit numbers. We use 5 limbs of 26 bits each (base B = 2^26).
-//   - Each limb fits in i64 (< 2^26 ≈ 67 million)
-//   - Product of two limbs: < 2^52 ≈ 4.5e15, fits in i64
-//   - Sum of up to 5 partial products: < 2^54 ≈ 1.8e16, fits in i64
+//   - Each limb fits in i64 (< 2^26 ~= 67 million)
+//   - Product of two limbs: < 2^52 ~= 4.5e15, fits in i64
+//   - Sum of up to 5 partial products: < 2^54 ~= 1.8e16, fits in i64
 //
 //   Base B = 2^26 = 67108864. 5 limbs give B^5 = 2^130.
 //   The prime is p = 2^130 - 5 = B^5 - 5.
 //
-//   Reduction uses: B^5 ≡ 5 (mod p), so for j >= 0: B^(5+j) ≡ 5 * B^j.
+//   Reduction uses: B^5 == 5 (mod p), so for j >= 0: B^(5+j) == 5 * B^j.
 //
 // Security notes:
 //   - The key MUST be used only once (hence "one-time authenticator").
@@ -179,7 +179,7 @@ fn _carry_propagate(limbs: &mut Vec[Int]) {
 /// Multiply two 5-limb values h and r, returning h*r mod (2^130 - 5).
 ///
 /// Computes the full 10-limb product using schoolbook multiplication,
-/// then reduces using the identity B^5 ≡ 5 (mod p).
+/// then reduces using the identity B^5 == 5 (mod p).
 ///
 /// Each limb of h and r is < 2^26, so each partial product h[i]*r[j] < 2^52.
 /// Summing up to 5 such products (for each output limb) gives < 5 * 2^52 < 2^55,
@@ -196,8 +196,8 @@ fn _poly_mul_mod(h: &Vec[Int], r: &Vec[Int]) -> Vec[Int] {
   var d7 = h[3] * r[4] + h[4] * r[3];
   var d8 = h[4] * r[4];
 
-  // Reduction: B^5 ≡ 5 (mod p), so B^(5+j) ≡ 5 * B^j (mod p)
-  // d5*B^5 ≡ 5*d5, d6*B^6 ≡ 5*d6*B, d7*B^7 ≡ 5*d7*B^2, etc.
+  // Reduction: B^5 == 5 (mod p), so B^(5+j) == 5 * B^j (mod p)
+  // d5*B^5 == 5*d5, d6*B^6 == 5*d6*B, d7*B^7 == 5*d7*B^2, etc.
   // So:
   //   c0 = d0 + 5*d5
   //   c1 = d1 + 5*d6
@@ -216,7 +216,7 @@ fn _poly_mul_mod(h: &Vec[Int], r: &Vec[Int]) -> Vec[Int] {
   _carry_propagate(&mut result);
 
   // If limb 4 still has overflow (>= 2^26), the extra * B^4 * B = extra * B^5
-  // ≡ extra * 5. Add this back to limb 0 and carry again.
+  // == extra * 5. Add this back to limb 0 and carry again.
   var extra = result[4] >> 26;
   while extra > 0 {
     result[4] = result[4] & _POLY_BMASK;
@@ -285,7 +285,7 @@ fn _finalize(h: &Vec[Int], s: &Vec[Int]) -> Vec[UInt8] {
   // byte[i] = (value / 256^i) % 256
 
   // Since we can't hold 2^130 in i64 directly, let's extract bytes from limbs.
-  // Convert to a 22-element byte array (130/8 ≈ 17 bytes, round up to 22 for carries).
+  // Convert to a 22-element byte array (130/8 ~= 17 bytes, round up to 22 for carries).
   // Actually, let me use a different strategy: serialize all 5 limbs into bytes.
 
   var bytes = Vec[UInt8].new();
@@ -331,7 +331,7 @@ fn _finalize(h: &Vec[Int], s: &Vec[Int]) -> Vec[UInt8] {
 }
 
 // ============================================================================
-// Poly1305 MAC — Main Function
+// Poly1305 MAC -- Main Function
 //
 // Computes a 16-byte authenticator tag for the given message under the
 // given 32-byte one-time key.
@@ -424,7 +424,7 @@ pub fn poly1305_mac(key: &Vec[UInt8], msg: &Vec[UInt8]) -> Vec[UInt8] {
     pos = pos + 16;
   }
 
-  // Step 4: Finalize — tag = low 128 bits of (h + s)
+  // Step 4: Finalize -- tag = low 128 bits of (h + s)
   var tag = _finalize(&h, &s_limbs);
   return tag;
 }

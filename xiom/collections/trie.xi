@@ -1,11 +1,11 @@
-// XIOM — Collections: Trie (prefix tree, lowercase a-z keys)
+// XIOM -- Collections: Trie (prefix tree, lowercase a-z keys)
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 
 module xiom.collect.trie
 
 // TODO(compiler): combining this module with collect.skiplist in one program
-// fast-fails at exit (0xC0000409) — see docs/COMPILER_BUGS.md BUG 16.
+// fast-fails at exit (0xC0000409) -- see docs/COMPILER_BUGS.md BUG 16.
 // The modules are correct individually; keep them in separate smokes.
 
 
@@ -14,7 +14,7 @@ use xiom.convert;
 
 // ============================================================================
 // Trie (Str keys, lowercase a-z only; other chars are rejected)
-// Flat-arena style (the established collect/ pattern — tree.xi/graph.xi use
+// Flat-arena style (the established collect/ pattern -- tree.xi/graph.xi use
 // parallel Vec[Int]s because Vec-of-struct instantiations collide at startup
 // in combined programs, COMPILER_BUGS.md BUG 16). Node n's child for letter
 // c is children[n * 26 + c] (-1 = none); ends[n] is 1 for a complete word.

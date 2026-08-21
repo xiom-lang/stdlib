@@ -1,4 +1,4 @@
-// XIOM stdlib smoke test — xiom.crypto.kdf + xiom.crypto.rng_crypto
+// XIOM stdlib smoke test -- xiom.crypto.kdf + xiom.crypto.rng_crypto
 // Tests: pbkdf2 (RFC 7914 vector), pbkdf2_hmac_sha256, hkdf_extract/expand
 // (RFC 5869), hkdf_sha256, kdf_derive_master, kdf_check_interval, scrypt
 // (determinism + length), argon2id / bcrypt approximations, and CSPRNG

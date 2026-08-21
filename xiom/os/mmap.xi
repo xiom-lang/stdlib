@@ -9,7 +9,7 @@ module xiom.os.mmap
 // ============================================================================
 // Anonymous and file-backed memory mapping, protection, sync, lock and copy
 // helpers. All functions require the mmap/mprotect/msync family of syscalls,
-// which the pure stdlib does not expose — every function is a documented
+// which the pure stdlib does not expose -- every function is a documented
 // stub returning Err.
 // ============================================================================
 

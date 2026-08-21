@@ -713,8 +713,8 @@ fn aes_inv_mix_columns(state: AesState) -> AesState {
 
 fn aes_add_round_key(state: AesState, round_key: &Vec[Int], offset: Int) -> AesState {
   // Column-major key schedule: state[r][c] ^= w[c][r] = rk[offset + 4c + r].
-  // sXY (X=row, Y=col) → rk[offset + 4Y + X]. The previous mapping used
-  // 4X + Y (row-major), which made encrypt∘decrypt self-consistent but
+  // sXY (X=row, Y=col) -> rk[offset + 4Y + X]. The previous mapping used
+  // 4X + Y (row-major), which made encryptodecrypt self-consistent but
   // NON-FIPS (verified against FIPS-197 Appendix B). Fixed 2026-08-13.
   return AesState{
     s00: xiom.math.bit_xor(state.s00, round_key[offset + 0]),

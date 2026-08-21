@@ -17,7 +17,7 @@ use xiom.string;
 use xiom.rand;
 use xiom.convert;
 
-// ── Private helpers ─────────────────────────────────────────────────────────
+// -- Private helpers ---------------------------------------------------------
 
 // Masked byte at `pos` (BUG 22 #10: `as Int` sign-extends UInt8).
 // Complexity: O(1).
@@ -251,7 +251,7 @@ fn _piece_from_idx(s: Str, idx: &Vec[Int]) -> Str {
   piece
 }
 
-// ── Shuffle (Fisher-Yates) ──────────────────────────────────────────────────
+// -- Shuffle (Fisher-Yates) --------------------------------------------------
 
 /// Random permutation of the characters of `s` via Fisher-Yates, drawing swap
 /// indices from the runtime PRNG. The result is a rearrangement of the
@@ -307,7 +307,7 @@ pub fn str_shuffle_words_seeded(s: Str, seed: Int) -> Str {
   r
 }
 
-// ── Rotation ────────────────────────────────────────────────────────────────
+// -- Rotation ----------------------------------------------------------------
 
 /// Rotate `s` right by `n` byte positions: a positive `n` moves characters
 /// toward the end of the string ("abcde" rotated right by 2 is "deabc"). A
@@ -401,7 +401,7 @@ pub fn str_rotate_word(s: Str, n: Int) -> Str {
   result
 }
 
-// ── Permutations and combinations ───────────────────────────────────────────
+// -- Permutations and combinations -------------------------------------------
 
 /// All permutations of the characters of `s`, treating the characters as
 /// distinct (n! results for |s| = n; duplicate characters yield duplicate
@@ -533,7 +533,7 @@ pub fn str_cartesian(a: Str, b: Str) -> Vec[Str] {
   out
 }
 
-// ── Interleave, chunking and windows ────────────────────────────────────────
+// -- Interleave, chunking and windows ----------------------------------------
 
 /// Merge `a` and `b` alternating characters, appending the remainder of the
 /// longer string ("abc" + "12" yields "a1b2c").
@@ -675,7 +675,7 @@ pub fn str_chunk_bytes(s: Str, n: Int) -> Vec[Str] {
   result
 }
 
-// ── Word order ──────────────────────────────────────────────────────────────
+// -- Word order --------------------------------------------------------------
 
 /// Reverse the order of the whitespace-separated words of `s`, preserving the
 /// whitespace runs: only the token order changes ("a  b" -> "b  a"). Returns
@@ -709,7 +709,7 @@ pub fn str_reverse_words(s: Str) -> Str {
   result
 }
 
-// ── Character statistics ────────────────────────────────────────────────────
+// -- Character statistics ----------------------------------------------------
 
 /// The characters of `s` without duplicates, in first-seen order. Dedup is
 /// byte-based, so two different multi-byte code points sharing a leading byte

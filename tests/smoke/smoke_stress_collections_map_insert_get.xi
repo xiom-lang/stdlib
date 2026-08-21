@@ -1,4 +1,4 @@
-// XIOM stdlib stress — Map insert and get
+// XIOM stdlib stress -- Map insert and get
 // Inserts key-value pairs and retrieves them.
 // Returns 0 on success, nonzero on failure.
 

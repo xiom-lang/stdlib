@@ -1,4 +1,4 @@
-// XIOM — Formatting & Display
+// XIOM -- Formatting & Display
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 
@@ -123,14 +123,14 @@ pub fn println(s: Str) {
   io.println(s);
 }
 
-// ──────────────────────────────────────────────────
+// --------------------------------------------------
 //  Extended Formatting Functions
-// ──────────────────────────────────────────────────
+// --------------------------------------------------
 
-// ── Table ──
+// -- Table --
 
 // Formats a simple aligned-column table with `|` separators.
-// O(r * c). No padding — cells are left-aligned as-is.
+// O(r * c). No padding -- cells are left-aligned as-is.
 pub fn format_table(headers: &Vec[Str], cells: &Vec[Str], col_count: Int) -> Str {
   if col_count <= 0 || headers.len() == 0 {
     return "";
@@ -180,7 +180,7 @@ pub fn format_table(headers: &Vec[Str], cells: &Vec[Str], col_count: Int) -> Str
   result
 }
 
-// ── Columns ──
+// -- Columns --
 
 // Arranges `items` into multiple columns, wrapping at `width`.
 // Items are placed column-by-column (top-to-bottom then left-to-right).
@@ -232,7 +232,7 @@ pub fn format_columns(items: &Vec[Str], width: Int) -> Str {
   result
 }
 
-// ── Wrap ──
+// -- Wrap --
 
 // Wraps `text` at word boundaries to fit within `width` characters.
 // Words longer than `width` are placed on their own line.
@@ -272,7 +272,7 @@ pub fn format_wrap(text: Str, width: Int) -> Str {
   result
 }
 
-// ── Indent ──
+// -- Indent --
 
 // Adds `spaces` spaces at the beginning of each line in `text`.
 // O(n + lines * spaces).
@@ -301,7 +301,7 @@ pub fn format_indent(text: Str, spaces: Int) -> Str {
   result
 }
 
-// ── Hexdump ──
+// -- Hexdump --
 
 // Formats a byte buffer as a classic hexdump: offset, hex bytes, ASCII preview.
 // `width` controls bytes per line (default 16). Returns multi-line string.
@@ -372,7 +372,7 @@ pub fn format_hexdump(data: &Vec[UInt8], width: Int) -> Str {
   result
 }
 
-// ── Number Formatting ──
+// -- Number Formatting --
 
 // Zero-pads integer `n` to `width` digits. Negative numbers are handled
 // (the sign is not counted in the width). Returns the string representation.
@@ -400,14 +400,14 @@ pub fn format_pad_number(n: Int, width: Int) -> Str {
 
 // Formats a float with `decimals` decimal places, ROUNDED half away from zero
 // (2026-08-11: previously truncated via the old float_to_string, which itself
-// was fptosi-garbage — see convert.xi; now delegates to the exact
+// was fptosi-garbage -- see convert.xi; now delegates to the exact
 // scaled-integer formatter).
 pub fn format_float_fixed(f: Float64, decimals: Int) -> Str {
   if decimals < 0 { return convert.float_to_string(f); }
   return convert.float_to_fixed_str(f, decimals);
 }
 
-// ── Simple Formatting ──
+// -- Simple Formatting --
 
 // Converts a boolean to "true" or "false".
 pub fn format_bool(b: Bool) -> Str {
@@ -451,16 +451,16 @@ pub fn format_line(prefix: Str, body: Str) -> Str {
 }
 
 // ============================================================================
-//  printf-style formatting — sprintf / sscanf (G13, 2026-08-11)
+//  printf-style formatting -- sprintf / sscanf (G13, 2026-08-11)
 // ============================================================================
 // Pure-XIOM C-style format engine. Conversions:
-//   %d %i signed decimal · %u unsigned decimal · %x/%X hex (negatives wrap
-//   to 64-bit two's complement, C-style) · %o octal · %b binary · %f fixed ·
-//   %e/%E scientific · %g/%G C-style shortest · %s string · %% literal '%'.
+//   %d %i signed decimal - %u unsigned decimal - %x/%X hex (negatives wrap
+//   to 64-bit two's complement, C-style) - %o octal - %b binary - %f fixed -
+//   %e/%E scientific - %g/%G C-style shortest - %s string - %% literal '%'.
 // Flags: `-` left-align, `0` zero-pad, `+` force sign, ` ` space sign.
 // Width: minimum field width (digits after flags). Precision `.N`: minimum
 // digit count for ints, fraction digits for %f/%e, significant digits for
-// %g, max chars for %s. All errors are returned as Err — no silent failures
+// %g, max chars for %s. All errors are returned as Err -- no silent failures
 // (wrong conversion family, missing args, malformed spec). XIOM has no
 // variadics, so the typed families sprintf_i* / sprintf_f* / sprintf_s* are
 // provided; the shared engine rejects mixed families at runtime.
@@ -497,7 +497,7 @@ fn _digit_str(d: Int, upper: Bool) -> Str {
   return string.str_slice(alpha, d, d + 1);
 }
 
-// Unsigned 64-bit → base-N digit string (exact for 0..2^64-1; uses the
+// Unsigned 64-bit -> base-N digit string (exact for 0..2^64-1; uses the
 // unsigned division helpers from xiom.num because UInt64 `/` lowers signed).
 fn _u64_to_base(v: UInt64, base: Int, upper: Bool) -> Str {
   if v == 0 { return "0"; }
@@ -511,7 +511,7 @@ fn _u64_to_base(v: UInt64, base: Int, upper: Bool) -> Str {
   return out;
 }
 
-// Non-negative i64 → base-N digit string (digit-abs trick keeps INT_MIN safe).
+// Non-negative i64 -> base-N digit string (digit-abs trick keeps INT_MIN safe).
 fn _i64_to_base(val: Int, base: Int, upper: Bool) -> Str {
   if val == 0 { return "0"; }
   var out = "";
@@ -525,7 +525,7 @@ fn _i64_to_base(val: Int, base: Int, upper: Bool) -> Str {
   return out;
 }
 
-// Named struct instead of a (Str, Bool) tuple — mixed-primitive tuples in
+// Named struct instead of a (Str, Bool) tuple -- mixed-primitive tuples in
 // catalog modules collide in codegen type resolution (COMPILER_BUGS.md quirk
 // family; pure-Int tuples like bits.unpack_u16_le are proven safe).
 type IntRepr = { digits: Str; neg: Bool; }
@@ -639,12 +639,12 @@ fn _strip_frac(s: Str) -> Str {
   return string.str_slice(s, 0, i + 1);
 }
 
-// %e → %E / %g → %G: uppercase the exponent marker (mantissa has no letters).
+// %e -> %E / %g -> %G: uppercase the exponent marker (mantissa has no letters).
 fn _upper_e(s: Str) -> Str {
   return string.replace(s, "e", "E");
 }
 
-// %g/%G core for v >= 0: C semantics — fixed when -4 <= exp10 < P, else
+// %g/%G core for v >= 0: C semantics -- fixed when -4 <= exp10 < P, else
 // scientific; trailing zeros stripped (matches C without the `#` flag).
 fn _fmt_g(v: Float64, P: Int) -> Str {
   var e: Int = 0;
@@ -677,7 +677,7 @@ fn _fmt_g(v: Float64, P: Int) -> Str {
 }
 
 // Float conversions: conv 0=%f, 1=%F, 2=%e, 3=%E, 4=%g, 5=%G.
-// prec < 0 → default 6 (C default); %g maps 0 → 1 (C rule).
+// prec < 0 -> default 6 (C default); %g maps 0 -> 1 (C rule).
 fn _fmt_float(f: Float64, conv: Int, prec: Int, flags: Int, width: Int) -> Result[Str, Str] {
   var upper = conv == 3 || conv == 5;
   if f != f {
@@ -717,14 +717,14 @@ fn _fmt_float(f: Float64, conv: Int, prec: Int, flags: Int, width: Int) -> Resul
 
 // ---- sprintf engine ---------------------------------------------------------
 // mode: 0 = Int-only spec, 1 = Str-only spec, 2 = Float64-only spec.
-// Floats arrive as two scalar params (fa/fb, fcount = 1 or 2) — NOT a
+// Floats arrive as two scalar params (fa/fb, fcount = 1 or 2) -- NOT a
 // Vec[Float64]: element reads of float containers are broken in the current
 // compiler (COMPILER_BUGS.md BUG 12: load i64 + sitofp). TODO(compiler):
 // remove this note and restore a Vec[Float64] `sprintf_f` once BUG 12 lands.
 // Returns Err on malformed specs, unknown conversions, wrong family or
 // missing values (extra values are ignored, C-style).
 
-// Parse "%[flags][width][.prec]" → (flags, width, prec, next_index).
+// Parse "%[flags][width][.prec]" -> (flags, width, prec, next_index).
 // Pure-Int tuple (proven shape, like bits.unpack_u32_le).
 fn _parse_spec_head(spec: Str, j0: Int) -> (Int, Int, Int, Int) {
   var j = j0;
@@ -838,13 +838,13 @@ fn _sprintf_engine(spec: Str, ints: &Vec[Int], strs: &Vec[Str], fa: Float64, fb:
 // ---- sprintf public API -----------------------------------------------------
 
 /// printf-style formatting of an Int-only spec. Supports %d/%i/%u/%x/%X/%o/%b
-/// with flags/width/precision. Wrong conversion family or missing values → Err.
+/// with flags/width/precision. Wrong conversion family or missing values -> Err.
 pub fn sprintf_i(spec: Str, values: &Vec[Int]) -> Result[Str, Str] {
   return _sprintf_engine(spec, values, Vec[Str].new(), 0.0, 0.0, 0, 0);
 }
 
 /// printf-style formatting of a Str-only spec. Supports %s with width/
-/// precision. Wrong conversion family or missing values → Err.
+/// precision. Wrong conversion family or missing values -> Err.
 pub fn sprintf_s(spec: Str, values: &Vec[Str]) -> Result[Str, Str] {
   return _sprintf_engine(spec, Vec[Int].new(), values, 0.0, 0.0, 0, 1);
 }
@@ -1235,7 +1235,7 @@ pub fn sscanf(s: Str, spec: Str) -> Result[Vec[Str], Str] {
 
 /// sscanf + typed integer extraction: converts %d/%i/%u (decimal) and %x/%X
 /// (hex) tokens to Int with overflow checking. Non-integer conversions in the
-/// spec → Err. The returned Vec is in token order.
+/// spec -> Err. The returned Vec is in token order.
 pub fn sscanf_ints(s: Str, spec: Str) -> Result[Vec[Int], Str] {
   var res = _sscanf_engine(s, spec);
   if !res.is_ok {
@@ -1265,9 +1265,9 @@ pub fn sscanf_ints(s: Str, spec: Str) -> Result[Vec[Int], Str] {
 }
 
 // Float results of sscanf_floats. Fixed 8 scalar slots instead of a
-// Vec[Float64] (BUG 12: float container element reads broken — TODO(compiler)
+// Vec[Float64] (BUG 12: float container element reads broken -- TODO(compiler)
 // restore a Vec-based API once fixed). Specs with more than 8 float
-// conversions → is_ok = false ("too many float conversions").
+// conversions -> is_ok = false ("too many float conversions").
 pub type FloatScan = {
   is_ok: Bool;
   count: Int;
@@ -1291,8 +1291,8 @@ fn _scan_err(msg: Str) -> FloatScan {
 }
 
 /// sscanf + typed float extraction: converts %f/%e/%g tokens to Float64
-/// (normalized ".5" → "0.5" for the builtin parser). Non-float conversions
-/// in the spec or more than 8 float conversions → is_ok = false with error.
+/// (normalized ".5" -> "0.5" for the builtin parser). Non-float conversions
+/// in the spec or more than 8 float conversions -> is_ok = false with error.
 /// Values land in v0..v7 in token order; `count` says how many are valid.
 pub fn sscanf_floats(s: Str, spec: Str) -> FloatScan {
   var res = _sscanf_engine(s, spec);

@@ -9,7 +9,7 @@ module xiom.math.primitives
 // ============================================================================
 // Scalar float primitives: comparisons, clamping, interpolation, decomposition.
 // Pure XIOM (no libm). IEEE special values: +inf = 1.0/0.0, -inf = -1.0/0.0,
-// NaN = 0.0/0.0 (BUG 19 fixed 2026-08-11 — IEEE NaN/Inf semantics work).
+// NaN = 0.0/0.0 (BUG 19 fixed 2026-08-11 -- IEEE NaN/Inf semantics work).
 // ============================================================================
 
 // 2^53: every Float64 with |x| >= 2^53 is an integer.

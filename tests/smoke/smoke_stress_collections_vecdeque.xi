@@ -1,4 +1,4 @@
-// XIOM stdlib stress — VecDeque push_front/back and pop_front/back
+// XIOM stdlib stress -- VecDeque push_front/back and pop_front/back
 // Tests double-ended queue insertion and removal at both ends.
 // Returns 0 on success, nonzero on failure.
 

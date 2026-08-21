@@ -1,7 +1,7 @@
 // XIOM stdlib smoke test - xiom.compress.lz4 + xiom.compress.snappy
 // Returns 0 on success, nonzero on failure (process exit code).
 //
-// Full round-trips restored (BUG 26 #1 FIXED 4e95717e — catalog-returned
+// Full round-trips restored (BUG 26 #1 FIXED 4e95717e -- catalog-returned
 // Vecs re-enter &Vec params again).
 
 module smoke_compress_lz4_snappy

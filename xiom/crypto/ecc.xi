@@ -1,16 +1,16 @@
-// XIOM — Elliptic Curve Cryptography (ECC) & Ed25519
+// XIOM -- Elliptic Curve Cryptography (ECC) & Ed25519
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 //
-// WARNING — EDUCATIONAL / EXPERIMENTAL IMPLEMENTATION:
+// WARNING -- EDUCATIONAL / EXPERIMENTAL IMPLEMENTATION:
 //   XIOM Int is 64-bit signed (i64). Full 256-bit field arithmetic for
 //   secp256k1 or Curve25519 is NOT feasible without a big-integer type.
 //   This module provides:
-//     1. A SMALL test curve y² = x³ + 2x + 2 mod 17 with full point
+//     1. A SMALL test curve y2 = x3 + 2x + 2 mod 17 with full point
 //        arithmetic for learning ECC fundamentals.
 //     2. Simplified Ed25519 keygen / sign / verify using SHA-256 and
 //        the small test curve. The Ed25519 operations are structurally
-//        correct but operate on the small curve — NOT secp256k1/Curve25519.
+//        correct but operate on the small curve -- NOT secp256k1/Curve25519.
 //
 // NOTE ON Option[EcPoint]:
 //   Due to XIOM compiler limitations with generic Option[T] instantiation
@@ -30,7 +30,7 @@ use xiom.crypto.sha256;
 // Types
 // ============================================================================
 
-/// Affine point on an elliptic curve y² = x³ + ax + b (mod p).
+/// Affine point on an elliptic curve y2 = x3 + ax + b (mod p).
 pub type EcPoint = {
   x: Int;
   y: Int;
@@ -127,7 +127,7 @@ fn _none_pt() -> EcPointOpt {
 }
 
 // ============================================================================
-// Small Test Curve: y² = x³ + 2x + 2  mod 17
+// Small Test Curve: y2 = x3 + 2x + 2  mod 17
 //
 // Order 19 (prime). Generator: (5, 1).
 // ============================================================================
@@ -292,7 +292,7 @@ pub fn ed25519_verify(message: &Vec[Int], signature: &Ed25519Signature, public_k
 }
 
 // ============================================================================
-// PRODUCTION ECC — backed by native C field arithmetic in xiom_runtime.c
+// PRODUCTION ECC -- backed by native C field arithmetic in xiom_runtime.c
 // All 256-bit values use 32-byte little-endian Vec[UInt8].
 // The small-curve educational API above is preserved for teaching.
 // ============================================================================
@@ -307,18 +307,18 @@ extern "C" {
   fn xiom_ed25519_pubkey(privkey: *UInt8, pubkey: *UInt8);
 }
 
-// ── Helper: ensure Vec[UInt8] has exactly `n` bytes, zero-padded. ──
+// -- Helper: ensure Vec[UInt8] has exactly `n` bytes, zero-padded. --
 fn _ensure_bytes(buf: &mut Vec[UInt8], n: Int) {
   while buf.len() < n { buf.push(0); }
 }
 
-// ── Helper: ensure Vec[UInt8] has at least `n` bytes ──
+// -- Helper: ensure Vec[UInt8] has at least `n` bytes --
 fn _check_min_len(buf: &Vec[UInt8], n: Int) -> Bool {
   return buf.len() >= n;
 }
 
 // ============================================================================
-// secp256k1 — 256-bit little-endian byte array API
+// secp256k1 -- 256-bit little-endian byte array API
 // ============================================================================
 
 /// Check if an affine point (px, py) lies on the secp256k1 curve.
@@ -366,7 +366,7 @@ pub fn secp256k1_base_mul_bytes(
 }
 
 // ============================================================================
-// Ed25519 — production (RFC 8032, backed by C runtime)
+// Ed25519 -- production (RFC 8032, backed by C runtime)
 // Names suffixed with _bytes to avoid collision with the educational API
 // above (which uses &Vec[Int] for messages and Ed25519KeyPair/Ed25519Signature).
 // ============================================================================

@@ -77,7 +77,7 @@ fn main() -> Int {
   if !bitwise.is_power_of_two_bit(16) { io.println("pow2"); return 46; }
   if bitwise.is_power_of_two_bit(15) { io.println("pow2 bad"); return 47; }
 
-  // NOTE: xiom.bits.popcount is covered separately in smoke_bits_popcount.xi —
+  // NOTE: xiom.bits.popcount is covered separately in smoke_bits_popcount.xi --
   // its module name collides with bitwise's `popcount` function when both are
   // imported into one file.
 

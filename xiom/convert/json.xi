@@ -10,7 +10,7 @@ module xiom.convert.json
 // JSON string escaping, validation, and pretty-printing helpers. The
 // reference implementation lives in xiom.serialize; the escape/unescape and
 // pretty-print logic is reimplemented here (same function names as the
-// canonical module — same-name delegation miscompiles, BUG 25 #1) and the
+// canonical module -- same-name delegation miscompiles, BUG 25 #1) and the
 // validator is a compact recursive-descent parser. All invalid inputs return
 // an error instead of crashing.
 // ============================================================================
@@ -19,7 +19,7 @@ use xiom.string;
 
 /// Escape a string for embedding in JSON (without surrounding quotes).
 /// Handles ", \, \n, \r, \t, \b, \f.
-/// Parameters: s — the raw text.
+/// Parameters: s -- the raw text.
 /// Returns: the escaped text.
 /// Complexity: O(n), n = string length.
 pub fn json_escape(s: Str) -> Str {
@@ -53,7 +53,7 @@ pub fn json_escape(s: Str) -> Str {
 
 /// Unescape a JSON string literal (without surrounding quotes).
 /// Handles \\, \", \/, \b, \f, \n, \r, \t, and \uNNNN.
-/// Parameters: s — the escaped text.
+/// Parameters: s -- the escaped text.
 /// Returns: Ok(text) on success; Err on an invalid escape or a truncated
 ///          \u sequence.
 /// Complexity: O(n), n = string length.
@@ -110,7 +110,7 @@ pub fn json_unescape(s: Str) -> Result[Str, Str] {
 }
 
 /// Wrap a string in JSON quotes with escaping.
-/// Parameters: s — the raw text.
+/// Parameters: s -- the raw text.
 /// Returns: the quoted, escaped JSON string literal.
 /// Complexity: O(n).
 pub fn json_quote(s: Str) -> Str {
@@ -118,7 +118,7 @@ pub fn json_quote(s: Str) -> Str {
 }
 
 /// Check that a string is valid JSON (a single top-level value).
-/// Parameters: s — the candidate JSON text.
+/// Parameters: s -- the candidate JSON text.
 /// Returns: true when the whole input parses as one JSON value.
 /// Complexity: O(n).
 pub fn json_is_valid(s: Str) -> Bool {
@@ -132,7 +132,7 @@ pub fn json_is_valid(s: Str) -> Bool {
 }
 
 /// Pretty-print a JSON string with 2-space indentation.
-/// Parameters: s — the minified JSON text.
+/// Parameters: s -- the minified JSON text.
 /// Returns: Ok(pretty) on success; Err for invalid JSON (unterminated
 ///          string or unbalanced brackets).
 /// Complexity: O(n), n = input length.

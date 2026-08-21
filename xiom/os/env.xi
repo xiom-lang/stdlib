@@ -1,4 +1,4 @@
-// XIOM — Environment Variables
+// XIOM -- Environment Variables
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 
@@ -41,10 +41,10 @@ pub fn var(name: Str) -> Result<Str, Str>
 pub fn var_opt(name: Str) -> Option<Str>
   requires: name.len() > 0
 {
-  // read_file-proven shape (multiple unsafe blocks, ~25 statements →
+  // read_file-proven shape (multiple unsafe blocks, ~25 statements ->
   // inlinehint, never always-inlined): pointer/Int assignments + Vec.push
   // inside unsafe, Str built OUTSIDE via Str::from_utf8. Small unsafe fns
-  // lose statements when always-inlined into a caller (BUG 21/26 family —
+  // lose statements when always-inlined into a caller (BUG 21/26 family --
   // re-triggered by 4e95717e; see COMPILER_BUGS.md BUG 28 #1).
   let c_name = cstr(name);
   let raw: *UInt8;
@@ -239,9 +239,9 @@ pub fn path_separator() -> Str {
   return "/";
 }
 
-// ──────────────────────────────────────────────────────────
+// ----------------------------------------------------------
 //  Convenience wrappers
-// ──────────────────────────────────────────────────────────
+// ----------------------------------------------------------
 
 // var_or returns the value of the environment variable name,
 // or default if the variable is not set.
@@ -264,7 +264,7 @@ pub fn has_var(name: Str) -> Bool {
   }
 }
 
-// all_var_names returns an empty vector on all platforms — the Xiom
+// all_var_names returns an empty vector on all platforms -- the Xiom
 // runtime does not support iterating over environment variables
 // via the C standard library.
 pub fn all_var_names() -> Vec[Str] {
@@ -272,7 +272,7 @@ pub fn all_var_names() -> Vec[Str] {
   return result;
 }
 
-// all_var_values returns an empty vector on all platforms — see
+// all_var_values returns an empty vector on all platforms -- see
 // all_var_names for rationale.
 pub fn all_var_values() -> Vec[Str] {
   var result: Vec[Str] = Vec[Str]::new();
@@ -293,9 +293,9 @@ pub fn clear_var(name: Str) {
   let _ = remove_var(name);
 }
 
-// ──────────────────────────────────────────────────────────
+// ----------------------------------------------------------
 //  Command-line argument helpers
-// ──────────────────────────────────────────────────────────
+// ----------------------------------------------------------
 
 // args_len returns the number of command-line arguments.
 // Complexity: O(1).
@@ -328,9 +328,9 @@ pub fn arg_contains(s: Str) -> Bool {
   return false;
 }
 
-// ──────────────────────────────────────────────────────────
+// ----------------------------------------------------------
 //  Directory helpers
-// ──────────────────────────────────────────────────────────
+// ----------------------------------------------------------
 
 // current_dir_str returns the current working directory as a Str,
 // or "." if the OS call fails.  Wraps getcwd directly.

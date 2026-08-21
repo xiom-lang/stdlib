@@ -1,4 +1,4 @@
-// XIOM stdlib stress — Map keys and values
+// XIOM stdlib stress -- Map keys and values
 // Verifies keys() and values() return correct collections.
 // Returns 0 on success, nonzero on failure.
 

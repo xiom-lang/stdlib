@@ -1,4 +1,4 @@
-// XIOM stdlib stress — Map empty operations
+// XIOM stdlib stress -- Map empty operations
 // Tests operations on empty map: get, contains, len, keys, values, clear.
 // Returns 0 on success, nonzero on failure.
 

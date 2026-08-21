@@ -10,7 +10,7 @@ module xiom.net.ping
 // ICMP echo (ping) and traceroute via raw sockets through minimal FFI.
 // The ICMP header checksum is pure and fully implemented; the raw-socket
 // functions require OS-level raw sockets that the pure stdlib does not
-// expose — they are documented stubs returning Err.
+// expose -- they are documented stubs returning Err.
 // ============================================================================
 
 // struct PingStats { sent: Int; received: Int; min_ms: Int; avg_ms: Int;
@@ -26,7 +26,7 @@ pub type PingStats = {
 // (Int, Int, Int) - recv_echo result: id, seq, rtt_ms.
 
 /// Compute the ICMP header checksum (RFC 1071 one's-complement sum).
-/// Parameters: data — the packet bytes (the checksum field should be zero).
+/// Parameters: data -- the packet bytes (the checksum field should be zero).
 /// Returns: the 16-bit checksum.
 /// Complexity: O(n). Pure.
 pub fn icmp_checksum(data: &Vec[UInt8]) -> UInt16 {

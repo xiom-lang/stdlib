@@ -1,4 +1,4 @@
-﻿// XIOM - Conversion: Utf32
+// XIOM - Conversion: Utf32
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
 
@@ -17,7 +17,7 @@ use xiom.string;
 use xiom.char;
 
 /// Encode a string as UTF-32 code points (no BOM).
-/// Parameters: s â€” the input string.
+/// Parameters: s -- the input string.
 /// Returns: one UInt32 per Unicode code point.
 /// Complexity: O(n), n = code points.
 pub fn utf32_encode(s: Str) -> Vec[UInt32] {
@@ -32,7 +32,7 @@ pub fn utf32_encode(s: Str) -> Vec[UInt32] {
 }
 
 /// Decode UTF-32 code points to a string.
-/// Parameters: code_points â€” the code points (a leading BOM is skipped).
+/// Parameters: code_points -- the code points (a leading BOM is skipped).
 /// Returns: Ok(Str) on success; Err for a surrogate or out-of-range value.
 /// Complexity: O(n).
 pub fn utf32_decode(code_points: &Vec[UInt32]) -> Result[Str, Str] {
@@ -57,7 +57,7 @@ pub fn utf32_decode(code_points: &Vec[UInt32]) -> Result[Str, Str] {
 }
 
 /// Encode a string as UTF-32LE bytes, including a BOM.
-/// Parameters: s â€” the input string.
+/// Parameters: s -- the input string.
 /// Returns: the little-endian byte sequence.
 /// Complexity: O(n).
 pub fn utf32le_to_bytes(s: Str) -> Vec[UInt8] {
@@ -80,7 +80,7 @@ pub fn utf32le_to_bytes(s: Str) -> Vec[UInt8] {
 }
 
 /// Encode a string as UTF-32BE bytes, including a BOM.
-/// Parameters: s â€” the input string.
+/// Parameters: s -- the input string.
 /// Returns: the big-endian byte sequence.
 /// Complexity: O(n).
 pub fn utf32be_to_bytes(s: Str) -> Vec[UInt8] {

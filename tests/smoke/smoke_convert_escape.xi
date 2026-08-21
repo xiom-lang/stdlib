@@ -1,4 +1,4 @@
-// XIOM stdlib smoke Ã¢â‚¬â€ xiom.convert.{escape,quotedprintable,uuencode}
+// XIOM stdlib smoke -- xiom.convert.{escape,quotedprintable,uuencode}
 // Returns 0 on success, nonzero on failure (process exit code).
 module smoke_convert_escape
 use xiom.io;
@@ -151,7 +151,7 @@ fn main() -> Int {
     },
   }
 
-  // uuencode: known answers (avoid reading Vec payloads â€” compiler bug)
+  // uuencode: known answers (avoid reading Vec payloads -- compiler bug)
   var ud = Vec[UInt8].new();
   ud.push(104);
   ud.push(101);

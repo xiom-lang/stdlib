@@ -1,4 +1,4 @@
-// XIOM stdlib smoke test — xiom.hash.fnv, xiom.hash.adler, xiom.hash.checksum
+// XIOM stdlib smoke test -- xiom.hash.fnv, xiom.hash.adler, xiom.hash.checksum
 // FNV-1a known answers, Adler-32 known answer and combine, classic checksums.
 // Returns 0 on success, nonzero on failure.
 

@@ -1,4 +1,4 @@
-// XIOM stdlib smoke test — xiom.net.{dns,ftp,smtp,tcp,udp,socket,tls,server}
+// XIOM stdlib smoke test -- xiom.net.{dns,ftp,smtp,tcp,udp,socket,tls,server}
 // Protocol format helpers per stub.
 // Returns 0 on success, nonzero on failure (process exit code).
 

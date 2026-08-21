@@ -1,4 +1,4 @@
-// XIOM stdlib smoke — xiom.collect.hasharray / stringmap
+// XIOM stdlib smoke -- xiom.collect.hasharray / stringmap
 // HAMT (Int keys) with upsert + Str-keyed hash map.
 // Returns 0 on success, nonzero + tag on failure.
 

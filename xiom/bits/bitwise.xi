@@ -9,7 +9,7 @@ module xiom.bits.bitwise
 // ============================================================================
 // Bit counting, scanning, reversal, and power-of-two tests. All operations
 // are built from byte-at-a-time reads and arithmetic shifts/masks (the
-// compiler miscompiles bitwise AND on operands with bit 31 set — see
+// compiler miscompiles bitwise AND on operands with bit 31 set -- see
 // xiom.convert.base58 for the probe reference).
 // ============================================================================
 

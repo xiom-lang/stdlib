@@ -1,5 +1,5 @@
 // NOTE: link/run smoke only
-// XIOM stdlib smoke test — xiom.os
+// XIOM stdlib smoke test -- xiom.os
 // Returns 0 on success, nonzero on failure (process exit code).
 
 module smoke_os

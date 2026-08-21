@@ -1,4 +1,4 @@
-// XIOM stdlib stress — io.rename source-gone, dest-present
+// XIOM stdlib stress -- io.rename source-gone, dest-present
 // Renames a file, verifies old path gone and new path exists.
 // Returns 0 on success.
 
