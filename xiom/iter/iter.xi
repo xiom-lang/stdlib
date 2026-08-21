@@ -212,16 +212,12 @@ pub fn Range.skip(self, n: Int) -> SkipIter[Int] {
 pub fn Range.chain(self, other: Range) -> ChainIter[Int, Int] {
   var r1 = self;
   var r2 = other;
-  var done1 = false;
-  ChainIter[Int, Int]{ next_fn: fn() -> Option[Int] {
-    if !done1 {
-      match r1.next() {
-        Some(v) => { return Some(v); },
-        None => { done1 = true; },
-      }
-    }
-    return r2.next();
-  }, second: fn() -> Option[Int] { return r2.next(); } }
+  // The next_fn closure consumes ONLY the first source; ChainIter.next
+  // hands off to second() when it returns None. Consuming r2 here TOO
+  // double-captured it (the closure's env copy and second()'s env copy
+  // diverge -- second() replayed r2's elements after the closure
+  // exhausted its own copy: chain(1..4, 10..13) counted 9).
+  ChainIter[Int, Int]{ next_fn: fn() -> Option[Int] { return r1.next(); }, second: fn() -> Option[Int] { return r2.next(); } }
 }
 
 pub fn Range.zip(self, other: Range) -> ZipIter[Int, Int] {
@@ -363,16 +359,8 @@ pub fn MapIter[T, U].skip(self, n: Int) -> SkipIter[U] {
 pub fn MapIter[T, U].chain(self, other: Range) -> ChainIter[U, Int] {
   var it = self;
   var r2 = other;
-  var done1 = false;
-  ChainIter[U, Int]{ next_fn: fn() -> Option[U] {
-    if !done1 {
-      match it.next() {
-        Some(v) => { return Some(v); },
-        None => { done1 = true; },
-      }
-    }
-    return r2.next();
-  }, second: fn() -> Option[Int] { return r2.next(); } }
+  // next_fn consumes only the first source (see Range.chain).
+  ChainIter[U, Int]{ next_fn: fn() -> Option[U] { return it.next(); }, second: fn() -> Option[Int] { return r2.next(); } }
 }
 
 pub fn MapIter[T, U].zip(self, other: Range) -> ZipIter[U, Int] {
@@ -382,31 +370,38 @@ pub fn MapIter[T, U].zip(self, other: Range) -> ZipIter[U, Int] {
 }
 
 pub fn MapIter[T, U].collect(self) -> Vec[U] {
-  return _collect_via[U](self.next_fn);
+  var it = self;
+  return _collect_via[U](fn() -> Option[U] { return it.next(); });
 }
 
 pub fn MapIter[T, U].fold[B](self, init: B, f: fn(B, U) -> B) -> B {
-  return _fold_via[U, B](self.next_fn, init, f);
+  var it = self;
+  return _fold_via[U, B](fn() -> Option[U] { return it.next(); }, init, f);
 }
 
 pub fn MapIter[T, U].count(self) -> Int {
-  return _count_via[U](self.next_fn);
+  var it = self;
+  return _count_via[U](fn() -> Option[U] { return it.next(); });
 }
 
 pub fn MapIter[T, U].sum(self) -> U {
-  return _sum_via[U](self.next_fn);
+  var it = self;
+  return _sum_via[U](fn() -> Option[U] { return it.next(); });
 }
 
 pub fn MapIter[T, U].product(self) -> U {
-  return _product_via[U](self.next_fn);
+  var it = self;
+  return _product_via[U](fn() -> Option[U] { return it.next(); });
 }
 
 pub fn MapIter[T, U].max(self) -> Option[U] {
-  return _max_via[U](self.next_fn);
+  var it = self;
+  return _max_via[U](fn() -> Option[U] { return it.next(); });
 }
 
 pub fn MapIter[T, U].min(self) -> Option[U] {
-  return _min_via[U](self.next_fn);
+  var it = self;
+  return _min_via[U](fn() -> Option[U] { return it.next(); });
 }
 
 pub fn FilterIter[T].map[U](self, f: fn(T) -> U) -> MapIter[T, U] {
@@ -437,16 +432,8 @@ pub fn FilterIter[T].skip(self, n: Int) -> SkipIter[T] {
 pub fn FilterIter[T].chain(self, other: Range) -> ChainIter[T, Int] {
   var it = self;
   var r2 = other;
-  var done1 = false;
-  ChainIter[T, Int]{ next_fn: fn() -> Option[T] {
-    if !done1 {
-      match it.next() {
-        Some(v) => { return Some(v); },
-        None => { done1 = true; },
-      }
-    }
-    return r2.next();
-  }, second: fn() -> Option[Int] { return r2.next(); } }
+  // next_fn consumes only the first source (see Range.chain).
+  ChainIter[T, Int]{ next_fn: fn() -> Option[T] { return it.next(); }, second: fn() -> Option[Int] { return r2.next(); } }
 }
 
 pub fn FilterIter[T].zip(self, other: Range) -> ZipIter[T, Int] {
@@ -456,31 +443,38 @@ pub fn FilterIter[T].zip(self, other: Range) -> ZipIter[T, Int] {
 }
 
 pub fn FilterIter[T].collect(self) -> Vec[T] {
-  return _collect_via[T](self.next_fn);
+  var it = self;
+  return _collect_via[T](fn() -> Option[T] { return it.next(); });
 }
 
 pub fn FilterIter[T].fold[B](self, init: B, f: fn(B, T) -> B) -> B {
-  return _fold_via[T, B](self.next_fn, init, f);
+  var it = self;
+  return _fold_via[T, B](fn() -> Option[T] { return it.next(); }, init, f);
 }
 
 pub fn FilterIter[T].count(self) -> Int {
-  return _count_via[T](self.next_fn);
+  var it = self;
+  return _count_via[T](fn() -> Option[T] { return it.next(); });
 }
 
 pub fn FilterIter[T].sum(self) -> T {
-  return _sum_via[T](self.next_fn);
+  var it = self;
+  return _sum_via[T](fn() -> Option[T] { return it.next(); });
 }
 
 pub fn FilterIter[T].product(self) -> T {
-  return _product_via[T](self.next_fn);
+  var it = self;
+  return _product_via[T](fn() -> Option[T] { return it.next(); });
 }
 
 pub fn FilterIter[T].max(self) -> Option[T] {
-  return _max_via[T](self.next_fn);
+  var it = self;
+  return _max_via[T](fn() -> Option[T] { return it.next(); });
 }
 
 pub fn FilterIter[T].min(self) -> Option[T] {
-  return _min_via[T](self.next_fn);
+  var it = self;
+  return _min_via[T](fn() -> Option[T] { return it.next(); });
 }
 
 pub fn EnumerateIter[T].map[U](self, f: fn((Int, T)) -> U) -> MapIter[(Int, T), U] {
@@ -506,7 +500,8 @@ pub fn EnumerateIter[T].collect(self) -> Vec[(Int, T)] {
 }
 
 pub fn EnumerateIter[T].count(self) -> Int {
-  return _count_via[(Int, T)](self.next_fn);
+  var it = self;
+  return _count_via[(Int, T)](fn() -> Option[(Int, T)] { return it.next(); });
 }
 
 pub fn TakeIter[T].map[U](self, f: fn(T) -> U) -> MapIter[T, U] {
@@ -520,31 +515,38 @@ pub fn TakeIter[T].filter(self, predicate: fn(&T) -> Bool) -> FilterIter[T] {
 }
 
 pub fn TakeIter[T].collect(self) -> Vec[T] {
-  return _collect_via[T](self.next_fn);
+  var it = self;
+  return _collect_via[T](fn() -> Option[T] { return it.next(); });
 }
 
 pub fn TakeIter[T].fold[B](self, init: B, f: fn(B, T) -> B) -> B {
-  return _fold_via[T, B](self.next_fn, init, f);
+  var it = self;
+  return _fold_via[T, B](fn() -> Option[T] { return it.next(); }, init, f);
 }
 
 pub fn TakeIter[T].count(self) -> Int {
-  return _count_via[T](self.next_fn);
+  var it = self;
+  return _count_via[T](fn() -> Option[T] { return it.next(); });
 }
 
 pub fn TakeIter[T].sum(self) -> T {
-  return _sum_via[T](self.next_fn);
+  var it = self;
+  return _sum_via[T](fn() -> Option[T] { return it.next(); });
 }
 
 pub fn TakeIter[T].product(self) -> T {
-  return _product_via[T](self.next_fn);
+  var it = self;
+  return _product_via[T](fn() -> Option[T] { return it.next(); });
 }
 
 pub fn TakeIter[T].max(self) -> Option[T] {
-  return _max_via[T](self.next_fn);
+  var it = self;
+  return _max_via[T](fn() -> Option[T] { return it.next(); });
 }
 
 pub fn TakeIter[T].min(self) -> Option[T] {
-  return _min_via[T](self.next_fn);
+  var it = self;
+  return _min_via[T](fn() -> Option[T] { return it.next(); });
 }
 
 pub fn SkipIter[T].map[U](self, f: fn(T) -> U) -> MapIter[T, U] {
@@ -558,31 +560,38 @@ pub fn SkipIter[T].filter(self, predicate: fn(&T) -> Bool) -> FilterIter[T] {
 }
 
 pub fn SkipIter[T].collect(self) -> Vec[T] {
-  return _collect_via[T](self.next_fn);
+  var it = self;
+  return _collect_via[T](fn() -> Option[T] { return it.next(); });
 }
 
 pub fn SkipIter[T].fold[B](self, init: B, f: fn(B, T) -> B) -> B {
-  return _fold_via[T, B](self.next_fn, init, f);
+  var it = self;
+  return _fold_via[T, B](fn() -> Option[T] { return it.next(); }, init, f);
 }
 
 pub fn SkipIter[T].count(self) -> Int {
-  return _count_via[T](self.next_fn);
+  var it = self;
+  return _count_via[T](fn() -> Option[T] { return it.next(); });
 }
 
 pub fn SkipIter[T].sum(self) -> T {
-  return _sum_via[T](self.next_fn);
+  var it = self;
+  return _sum_via[T](fn() -> Option[T] { return it.next(); });
 }
 
 pub fn SkipIter[T].product(self) -> T {
-  return _product_via[T](self.next_fn);
+  var it = self;
+  return _product_via[T](fn() -> Option[T] { return it.next(); });
 }
 
 pub fn SkipIter[T].max(self) -> Option[T] {
-  return _max_via[T](self.next_fn);
+  var it = self;
+  return _max_via[T](fn() -> Option[T] { return it.next(); });
 }
 
 pub fn SkipIter[T].min(self) -> Option[T] {
-  return _min_via[T](self.next_fn);
+  var it = self;
+  return _min_via[T](fn() -> Option[T] { return it.next(); });
 }
 
 pub fn ChainIter[T, U].collect(self) -> Vec[T] {

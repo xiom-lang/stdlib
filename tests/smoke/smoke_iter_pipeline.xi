@@ -11,7 +11,7 @@ fn main() -> Int {
 
   if result.len() != 5 { return 1; }
   match result.get(0) { Some(v) => { if v != 9 { return 2; } }, None => { return 3; }, };
-  match result.get(4) { Some(v) => { if v != 729 { return 4; } }, None => { return 5; }, };
+  match result.get(4) { Some(v) => { if v != 225 { return 4; } }, None => { return 5; }, };
 
   return 0;
 }
