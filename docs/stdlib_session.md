@@ -1,187 +1,127 @@
-# XIOM Stdlib Session -- Clean Handoff (2026-08-22)
+# XIOM Stdlib Session -- Clean Handoff (2026-08-22, evening)
 
 > Written at session end for a seamless continuation. Current branch:
 > `feat/architect`. Compiler session works in parallel on crates/ (commits
-> interleave with ours). All gates green at handoff. This doc supersedes the
-> 2026-08-11 handoff (archived in git history).
+> interleave with ours). Sweep re-run completed this session (819/907, zero
+> hangs). This doc supersedes the morning handoff (committed as `700fdc56`).
 
 ---
 
-## 1. Current state (verified 2026-08-22, binary 0ba41521)
+## 1. Current state (verified 2026-08-22 evening, binary 0ba41521 round-13)
 
-Full 907-smoke sweep: **802/907 PASS, zero hangs** as of round-12's final run.
-The compiler session's round-13 fixes (commit `0ba41521`) landed the closure
-family + tuple payloads + the **closure-based iter adapter build** -- verified
-just now: **15/16 on the previously-failing battery**:
+Full 907-smoke sweep re-run: **819/907 PASS, zero hangs** (trajectory 802 ->
+819). The +17 = the round-13 closure/tuple wins now visible in the sweep +
+this session's iter API (find/all/any/nth/last).
+
+**This session's wins (all committed, probe-verified):**
 
 | Family | Status |
 |--------|--------|
-| iter adapters (map/filter/take_skip/max_min/pipeline/chain_zip/count/fold/enumerate) | **ALL GREEN** (was 0/9) |
-| btree_map / btreemap (tuple payloads, first_entry) | **GREEN** (was exit 7/2) |
-| cmp_by (Ordering-returning &T-param closure) | **GREEN** |
-| result map/chains/deep_chain, option map/filter/unwrap/deep_chain | **GREEN** |
-| core_slice, async, thread, cross_num_iter_hash | **GREEN** |
-| array_sort_by | still AV -- PRE-EXISTING baseline (CRT-layout miscompile, compiler queue items 5/7 -- BEX64 in ntdll before main, stash-verified by the compiler session) |
+| iter find/all/any/nth/last on Range + MapIter/FilterIter/TakeIter/SkipIter/ChainIter/ZipIter | **GREEN** (3 smokes: find_all_any, nth_last, edge) |
+| sync Once (`ensures: state == 2` compared the *Int field with literal 2 -> clang reject) | **GREEN** (3 smokes: sync_once, stress_sync_once, stress_sync_once_completed) |
+| error context pretty-print (Vec[Str]-element method calls -> invalid GEP) | **GREEN** (smoke_error2 -- see layout note below) |
+| error wrap_error `E: Error` bound (C001 wrong-param resolution) -> bound-free | **GREEN** (error_chain, error_edge) |
+| string requires on graceful fns (str_split/str_slice/replace/str_to_int/str_to_float) | **GREEN** (5 smokes: edge, parse, parse_edge, replace_edge, stress_slice_outofbounds) |
+| format text/textual/fmt text_columns/format_columns (latent Vec[Str]-element GEP sites) | fixed, verified by probe_fmt_cols |
 
-Campaign trajectory: 516 -> 621 -> 679 -> 738 -> 765 -> 779 -> 793 -> 799 -> 801 -> 802.
+**New compiler findings logged in docs/COMPILER_BUGS.md (all with probes):**
 
----
-
-## 2. Compiler session report -- round-13 (verbatim, appended)
-
-Round-13 complete. Compiler fixes landed (commit 0ba41521, branch feat/architect).
-The four roots blocking the closure-based iter adapters -- all FIXED:
-
-- **Closure env struct name collisions** -- identical capture shapes in
-  different mono fns redefined %struct.__closure_env_N (clang error).
-  tmp_counter resets per fn, so every mono fn's first closure was
-  __closure_0. Added a global closure_counter (never reset, like
-  unsafe_block_counter) naming __closure_N/__closure_env_N/__fnwrap_N.
-- **Captured-state mutation persistence** -- closure thunks copied captures
-  into locals at entry; r.next()'s implicit-self write only touched the copy,
-  so the env's Range never advanced (count/fold hung; take/skip countdowns
-  never decremented). Captures now bind directly to their env-struct field
-  GEPs -- persistent across invocations.
-- **fn-typed field calls** -- self.next_fn()/self.f(v) compiled to zero-param
-  stubs (the field holds a closure ENV, not a code pointer -> 0xC000001D in
-  MapIter.next/FilterIter.next). Instance fn-marker fields now load the env,
-  load field 0, and call env-first with the field's declared return type
-  (pointer-typed receivers GEP the pointee -- fixed the ThreadLocal tls_get
-  shape too).
-- **Tuple payloads through Option/Vec** (queue item 2, the first_entry
-  family) -- Some((i, v)) bound literal 0; Vec[(Int, Int)] slots held 8 of 16
-  bytes; (Int, Int) never resolved to the registered Tuple__Int__Int; generic
-  mono returns (Vec[Tuple__Int__T]) were dropped. Multi-part fix (scrutinee
-  payload derivation, mono-return substitution, substitute_type
-  Named-arg/Tuple recursion, elem-name normalization, Tuple-inner payload
-  binding). smoke_collections_btree_map -- exit 7 at baseline -- now PASSES.
-- **Enum-return scrutinees** (cmp.min_by's comparator match had no
-  discriminant checks) -- the scrutinee fallback now adopts any registered
-  %struct.X.
-
-Stdlib fixes (iter.xi + smokes): adapter terminal helpers call the adapter's
-.next() method (raw next_fn bypassed map/filter/take semantics); Chain
-delegates no longer double-capture r2 (chain counted 9); smoke expectation
-fixes: chain_zip (6/3 not 5/2), pipeline (225 not 729), btreemap
-(contains -> contains_key).
-
-Verification: full e2e 2289/2289 (new e2e_m43_round13_closure_adapters +
-e2e_m44_round13_tuple_payloads -- split because the combined module flips the
-documented clang -O2/MSVC-CRT startup crash); stdlib-exec 70/70 (+2 ignore),
-feature-reg 510, checker 178, parser 97, ctfe 97; 19/20 iter smokes green +
-btree_map/btreemap + full closure/cmp family.
-
-Important discoveries:
-- `xiom run` never propagates the program exit code -- it prints `exit code: N`
-  and exits 0 (and the script cache returns stale binaries). The `-o` +
-  direct-run path is authoritative.
-- Pre-existing at baseline (stash-verified): smoke_iter_collect /
-  smoke_array_sort_by startup AV -- the clang -O2/MSVC-CRT layout miscompile
-  family (queue items 5/7, BEX64 in ntdll before main);
-  smoke_iter_find_all_any/nth_last/edge fail at the checker (find/all/any/
-  nth/last are NOT in the stdlib iter API yet).
+1. **Aggregate-typed CLOSURE params corrupt on call** -- struct/tuple/Vec
+   params (by value or &ref) read garbage in closures; top-level fns and
+   scalar closure params are correct (probe_zip_f/c2/c3/b/e/g fail,
+   probe_zip_d/c4 pass). Blocks ZipIter.find/all/any tuple predicates and
+   EnumerateIter.map's latent fn((Int,T))->U path. Shipped iter API is
+   correct; re-test zip-predicates once fixed.
+2. **Method call on a Vec[Str] element emits invalid GEP** --
+   `e.free[0].len()` / `items[i].len()` -> `getelementptr i8*, i8**,
+   i32 0, i32 1` (clang reject). Str (i8*) is the only affected element
+   type; struct elements (Vec[Vec[Float64]]) fine. Workaround proven:
+   bind element to a local first (probe_err_ctx_g fails, h passes).
+   stdlib fixed at all known sites; the compiler fix should make the
+   workaround removable.
+3. **smoke_error2 layout flip** -- has-mid check flips PASS/FAIL with
+   unrelated stdlib code (wrap_error body change); identical chain code
+   passes as a chain-only program (probe_err_chain2). Same family as the
+   documented clang -O2/MSVC-CRT layout miscompiles.
+4. **Multibyte char** -- `char.len_utf8(xiom_char_at(s, i))` wrong for
+   2-byte chars (byte-oriented reader, BUG 26 #7 family); str_chars
+   returns byte count for multibyte strings (smoke_string_slice check 25
+   blocked).
+5. **narrow-SIGNED zext re-confirmed** -- pop/get of negative Int16/Int8
+   returns the zext pattern (35536 for -30000; probe_narrow_zext).
 
 ---
 
-## 3. What this session delivered (stdlib side, all committed)
+## 2. Sweep failure breakdown (88 remaining, all pre-existing)
 
-### Real stdlib bugs found and fixed (probe-verified, user-space-proofed)
-- **RefCell borrow/borrow_mut/try_borrow/try_borrow_mut -> `&mut self`**
-  (by-value self + `ptr.from_ref(self)` pointed at a dead copy -- guards read
-  garbage, borrow counting never applied)
-- **PathBuf push/pop/clear -> `&mut self`** (by-value pushed mutated a copy --
-  silent no-ops)
-- **Path.parent prose-ensure removed** (contract-eval Str-field read corrupts)
-- **gcd abs-normalized** (negative inputs trapped its own `result >= 0` ensure)
-- **crc32 rewritten bitwise** (module-global `[256]UInt` table element writes
-  went to a stack copy -- gzip output was never real-gzip compatible; now
-  interoperable with external tools)
-- **VecDeque.push_front live-range rebuild** (was copying drained elements)
-- **VecDeque/LinkedList/Stack/Set/Queue mutators -> `&mut self` +
-  read-modify-write-back Vec fields** (field-copy mutations lose the len)
-- **Set.remove by-value T** (the &T param call shape AVs)
-- **Redundant requires removed** (trap-first instead of graceful Err/None):
-  io.xi path fns (10), compress gzip/zlib decompress, char to_digit,
-  Vec.remove
-- **identity's redundant ensure removed** (generic param-compare ensure
-  dropped the mono body -- BUG 56)
-- **global_alloc returns GlobalAlloc** (was returning the Allocator interface
-  type -- a real stdlib bug)
-- **Bounded interface + 12 tower impls** (is_finite/is_infinite),
-  **Ord cmp added** to the tower (15 impls), **Eq tower** (15 impls)
-- **Tower-style Eq/Ord re-apply** (the conversion from BUG 45-49 era -- now
-  the production dispatch form; the compiler session fixed my malformed
-  `impl Ord[]` empty-bracket blocks from one regex pass)
-
-### Feature build: closure-based iterator adapters (iter.xi, ~440 lines)
-Range.map/filter/enumerate/take/skip/chain/zip/collect/fold/count/max/min +
-7 adapter types with next-closure fields (the old interface-valued
-`Iterator[T]` design defaulted to i64 -- the checker has no interface-as-value).
-Now fully green after the compiler's closure-env fixes.
-
-### Smoke fixes (~60 files realigned)
-Planned-API drift to implemented APIs (rand, sync mutex/condvar/rwlock/arc,
-time, format, json, regex, char, path, compress), missing imports
-(alloc/ptr/convert/io), stray-brace EOF realignment (41 stress files),
-separator-aware path expectations, rc_weak explicit drop, cmp_compound
-clamp assertion, bad_input match form, btreemap contains_key.
+- **CRT-layout startup AVs (-1073741819)**: smoke_array_edge/fold/
+  get_first_last/slice/sort_by, smoke_iter_collect, smoke_convert_url,
+  smoke_core_box, smoke_stress_regex_find/match_count,
+  smoke_stress_serialize_jsonvalue_get/parse_nested -- queue items 5/7,
+  stash-verified pre-existing, compiler-side.
+- **Stack cookie (0xC0000409)**: smoke_math_edge, smoke_stress_crypto_
+  argon2_basic/pbkdf2/pbkdf2_iterations, smoke_stress_io_bufreader.
+- **json heap layer (0xC0000374)**: smoke_stress_serialize_json_nested/
+  parse_valid -- queue item 4, compiler-side, their fix not landed.
+- **clang variants (queue item 6)**: smoke_ptr_offset, smoke_io_copy,
+  smoke_io_copy_file, smoke_io_read_int_float, smoke_hash_values,
+  smoke_stress_env_constants, smoke_convert_escape, smoke_array_map,
+  smoke_array_narrow, smoke_stress_regex_captures x4.
+- **narrow-zext family**: smoke_collections_vec_narrow (5),
+  smoke_convert_narrow_roundtrip (3), smoke_string_narrow (4).
+- **Bounded/Ord builtin resolution (queue item 7)**: smoke_num_saturating
+  (C001) -- compiler-side.
+- **array_zip T001** ("cannot access field on non-struct type Int") --
+  stale smoke or checker gap, untriaged.
+- **Untriaged value-mismatch families (next session candidates)**:
+  string (slice 25, truncate_indent 11, block_escape 51, normalize 1,
+  byte_at_negative 2 -- chars/multibyte blocked by BUG 26 #7; the rest
+  need per-file triage), time (duration_ops 2, time_normalize 2,
+  stress_time_duration_add_sub 2, stress_time_duration_negative 3),
+  math (analysis 14, calculus 1, finance 13, floor_ceil_round 12,
+  integral 1, numerical 1, optimization 2, num_float_classify 17),
+  sync (arc_new 4, arc_clone 2, arc_chain 2, atomic_compare_exchange 1,
+  atomic_swap 1), geom (mat 4, quat 18, vec 57), convert (traits 47,
+  utf 40), compress (deflate_empty 1, gzip_empty 1, lz4_roundtrip 1),
+  misc (cell_refcell_replace 2, io_path 3, array_len_empty 3,
+  convert_float_to_string_prec 1, base64url 1, regex smalls,
+  serialize_is_valid_bytes 1).
 
 ---
 
-## 4. Remaining queue (all documented in docs/COMPILER_BUGS.md with probes)
-
-### Compiler-side (their queue, with repro files)
-1. **CRT-layout startup AVs** (queue items 5/7): smoke_array_sort_by,
-   smoke_iter_collect -- BEX64 in ntdll before main, clang -O2/MSVC-CRT
-   family, stash-verified pre-existing
-2. **Missing iter API**: find/all/any/nth/last -- smoke_iter_find_all_any/
-   nth_last/edge fail at the checker -- the stdlib needs these methods once
-   the checker gap (generic-tuple substitution) is closed
-3. **narrow-SIGNED zext**: smoke_collections_vec_narrow exit 5 (inline
-   pop/get zext instead of sext)
-4. **json heap layer**: smoke_stress_serialize_json_nested / parse_valid --
-   enum-with-Vec-field payloads through Map values (0xC0000374, flaky)
-5. **SIMD flags family**: smoke_core_binary_heap/box (0xC000001D on
-   non-AVX-512)
-6. **clang codegen variants**: ptr_offset, io_copy, regex_captures,
-   btree_set(was), hash_values, env_constants, path_pop_clear(was)
-7. **Bounded/Ord builtin resolution**: num_checked/saturating C001 -- the
-   checker's builtin Ord expects its own method shape (stdlib now provides
-   all methods; the checker's builtin-interface matching is theirs)
-8. **Set iteration**: `for x in set` -- the For-stmt is a hardcoded Range GEP;
-   needs the iterator-protocol work
-9. **gzip_large __chkstk**: pre-existing stack-alloca crash
-10. **Option[&T] reference payloads** -- verified fixed (rand_weighted green)
-
-### Stdlib-side (next session's candidates)
-- The missing iter find/all/any/nth/last methods (once the checker gap
-  closes -- or probe if they compile now)
-- json_nested re-test after their heap-layer fix
-- Re-run the full sweep after each compiler round; triage new failures with
-  the probe -> log -> verify loop (user-space replicas prove stdlib logic)
-
----
-
-## 5. Key workflows for the next session
+## 3. Key workflows (unchanged)
 
 - **Sweep**: `powershell -File C:\Users\lefte\AppData\Local\Temp\kilo\sweep3.ps1`
-  (background; ~1.5h; results in sweep_results.csv -- note the CSV is only
-  written at the end; check `sweep_progress.txt` for progress)
-- **Battery verify**: `verify2.ps1 -ListFile <list.txt>` (file names with .xi)
+  (background; ~1.5h; sweep_results.csv written at the end; check
+  sweep_progress.txt meanwhile)
+- **Battery verify**: `verify2.ps1 -ListFile <list.txt>`
 - **Compiler interaction**: log findings in docs/COMPILER_BUGS.md with
-  minimal repros + user-space proof (the compiler session works every logged
-  root; probes in C:\Users\lefte\AppData\Local\Temp\kilo\*.xi)
-- **Critical conventions learned**:
-  - The stdlib files are CRLF on disk -- regex replacements must use `\r?\n`
-  - Method form (`a.compare(b)`) is the working interface dispatch; the
-    associated form (`Ord[T].compare(a,b)`) fails in catalog fns
+  minimal repros + user-space proof; probes live in
+  C:\Users\lefte\AppData\Local\Temp\kilo\*.xi
+- **Conventions that still hold**:
+  - stdlib files are CRLF on disk (the Edit tool preserves CRLF when
+    matching hunks, but may convert a file to LF on rewrite -- re-check
+    with a byte scan and normalize after editing)
+  - `requires:` traps instead of graceful Err/None -- redundant requires
+    must be removed (this session: string str_split/str_slice/replace/
+    str_to_int/str_to_float, sync Once ensures)
+  - method call on a Vec[Str] element (`v[i].len()`) miscompiles --
+    bind to a local first
   - `xiom run` lies about exit codes -- always `-o file.exe` + direct run
-  - `use xiom.x.y;` sublib imports need the sublib prefix (`y.fn()`), not the
-    aggregate prefix
-  - Contract `requires:` traps (panics) instead of graceful Err/None --
-    redundant requires must be removed; prose `ensures:` corrupts fns
-  - Generic catalog fns with param-comparing ensures emit `ret 0` (BUG 56)
-  - Field-copy Vec mutations lose the len -- always read-modify-write-back
-  - &T params AV on by-value calls -- use by-value T params
-  - Module-global array element writes go to a stack copy (BUG 2 family) --
-    compute tables locally or bitwise
+  - Method form dispatch; sublib prefixes; field-copy write-back;
+    pure-ASCII policy (commit hook checks it)
+  - Generic-bound checker resolution (C001) is compiler-side; bound-free
+    forms keep the stdlib usable until the checker closes the gap
+  - smoke_error2's pass/fail is layout-sensitive -- don't chase its
+    value failures; verify chain/context modules with chain-only probes
+    (probe_err_chain2/probe_err_ctx_a-b) instead
+
+## 4. Next session's queue
+
+1. Re-run the sweep after the compiler session's next round (layout
+   family + heap layer + narrow-zext are their queue items 3/4/5/7).
+2. Re-test ZipIter.find/all/any tuple predicates + EnumerateIter.map once
+   the aggregate-closure-param fix lands.
+3. Triage the untriaged value-mismatch families (string/time/math/sync
+   arc/geom/convert/compress) with the probe -> log -> verify loop.
+4. json_nested re-test after the heap-layer fix.
