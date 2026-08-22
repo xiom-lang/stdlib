@@ -118,7 +118,7 @@ pub fn RefCell.try_borrow_mut[T](&mut self) -> Option[RefMut[T]] {
   }
 }
 
-pub fn RefCell.replace[T](self, value: T) -> T
+pub fn RefCell.replace[T](&mut self, value: T) -> T
   ensures: result == value@pre
 {
   unsafe {
