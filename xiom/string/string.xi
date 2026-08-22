@@ -306,6 +306,14 @@ pub fn is_empty(s: Str) -> Bool {
   s.len() == 0
 }
 
+// Method form: `x.is_empty()`. The plain fn above is NOT a method -- the
+// compiler's receiver-typed method lookup needs the Str receiver decl
+// (method-form `x.is_empty()` otherwise falls through to a Vec/array
+// is_empty leaf or a stub and always returns false).
+pub fn Str.is_empty(self) -> Bool {
+  self.len() == 0
+}
+
 pub fn char_count(s: Str) -> Int {
   var count: Int = 0;
   let len = s.len();
