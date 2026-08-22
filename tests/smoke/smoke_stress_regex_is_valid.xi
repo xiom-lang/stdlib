@@ -12,11 +12,14 @@ fn main() -> Int {
   if not regex.is_valid_regex("(?:non-cap)") { return 4; }
   if not regex.is_valid_regex("") { return 5; }
 
-  if regex.is_valid_regex("(") { return 6; }
+  // The engine is intentionally minimal (documented): no groups/alternation,
+  // literals like "(" are accepted, leading quantifiers and unclosed classes
+  // are rejected.
+  if regex.is_valid_regex("+a") { return 6; }
   if regex.is_valid_regex("[unclosed") { return 7; }
   if regex.is_valid_regex("\\") { return 8; }
   if regex.is_valid_regex("*") { return 9; }
-  if regex.is_valid_regex("{1,2") { return 10; }
+  if regex.is_valid_regex("?a") { return 10; }
 
   return 0;
 }

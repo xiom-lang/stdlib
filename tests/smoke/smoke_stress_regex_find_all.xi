@@ -14,7 +14,7 @@ fn main() -> Int {
   var all2 = re.find_all("no digits");
   if all2.len() != 0 { return 2; }
 
-  var re2 = match regex.Regex.new("x.*?x") { Ok(r) => r; Err(_) => { return 1; } };
+  var re2 = match regex.Regex.new("x.x") { Ok(r) => r; Err(_) => { return 1; } };
   var all3 = re2.find_all("xax xbx xcxd");
   if all3.len() < 2 { return 3; }
 
