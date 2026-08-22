@@ -266,7 +266,9 @@ pub fn base64url_encode(data: &Vec[UInt8]) -> Str
 }
 
 pub fn base64url_decode(encoded: Str) -> Result[Vec[UInt8], Str]
-  ensures: result is Ok => result.len() <= (encoded.len() / 4) * 3
+  // Unpadded base64url: the (len/4)*3 bound assumes padding; the true
+  // max is floor(len*3/4) (len%4 == 1 inputs are rejected as invalid).
+  ensures: result is Ok => result.len() <= (encoded.len() * 3) / 4
 {
   var result = Vec[UInt8].new();
   let len = encoded.len();
