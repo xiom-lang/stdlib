@@ -194,8 +194,11 @@ pub fn error_context_all(e: ContextError) -> Vec[(Str, Str)] {
 pub fn error_pretty_print(e: ContextError) -> Str {
   let msg = e.messages[0];
   var suffix = "";
-  if e.free.len() > 0 && e.free[0].len() > 0 {
-    suffix = string.str_concat(suffix, e.free[0]);
+  if e.free.len() > 0 {
+    let head_free = e.free[0];
+    if head_free.len() > 0 {
+      suffix = string.str_concat(suffix, head_free);
+    };
   };
   var i: Int = 0;
   while i < e.keys.len() {
@@ -226,8 +229,11 @@ pub fn error_pretty_print_chain(e: ContextError) -> Str {
     };
     let msg = e.messages[i];
     result = string.str_concat(result, msg);
-    if i < e.free.len() && e.free[i].len() > 0 {
-      result = string.str_concat(result, string.str_concat(" (context: ", string.str_concat(e.free[i], ")")));
+    if i < e.free.len() {
+      let fi = e.free[i];
+      if fi.len() > 0 {
+        result = string.str_concat(result, string.str_concat(" (context: ", string.str_concat(fi, ")")));
+      };
     };
     i = i + 1;
   };
