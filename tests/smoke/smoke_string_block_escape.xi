@@ -37,12 +37,12 @@ if block.unicode_block('A') != "Basic Latin" { io.println("blk-1"); return 1; }
   if escape.str_unescape(esc) != round { io.println("rt-1"); return 41; }
 
   // ---- escape_ascii ----
-  if escape.str_escape_ascii("cafe") != "caf\\xc3\\xa9" { io.println("escA-1"); return 51; }
+  if escape.str_escape_ascii("caf\u{e9}") != "caf\\xc3\\xa9" { io.println("escA-1"); return 51; }
   if escape.str_escape_ascii("abc") != "abc" { io.println("escA-2"); return 52; }
 
   // ---- escape_unicode ----
-  if escape.str_escape_unicode("e") != "\\u00e9" { io.println("escU-1"); return 61; }
-  if escape.str_escape_unicode("Omega") != "\\u03a9" { io.println("escU-2"); return 62; }
+  if escape.str_escape_unicode("\u{e9}") != "\\u00e9" { io.println("escU-1"); return 61; }
+  if escape.str_escape_unicode("\u{3a9}") != "\\u03a9" { io.println("escU-2"); return 62; }
   if escape.str_escape_unicode("abc") != "abc" { io.println("escU-3"); return 63; }
 
   io.println("smoke_string_block_escape: OK");

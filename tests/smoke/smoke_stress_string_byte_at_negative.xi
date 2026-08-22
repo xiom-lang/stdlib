@@ -11,8 +11,10 @@ fn main() -> Int {
   var b1 = xiom.string.byte_at(s, 1);
   var b2 = xiom.string.byte_at(s, 2);
   if b0 != 88 || b1 != 89 || b2 != 90 { return 1; }
+  // byte_at returns UInt8 -- out-of-range positions read 0 (the runtime
+  // clamps; a -1 sentinel is not representable in the return type).
   var b3 = xiom.string.byte_at(s, 3);
   var b4 = xiom.string.byte_at(s, 100);
-  if b3 != -1 || b4 != -1 { return 2; }
+  if b3 != 0 || b4 != 0 { return 2; }
   return 0;
 }
