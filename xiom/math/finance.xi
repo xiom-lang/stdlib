@@ -552,7 +552,7 @@ pub fn var(returns: &Vec[Float64], alpha: Float64, method: Int) -> Float64 {
   var idx = to_int((1.0 - alpha) * (n as Float64));
   if idx < 0 { idx = 0; }
   if idx >= n { idx = n - 1; }
-  return -sorted[idx];
+  return -(sorted[idx]);
 }
 
 // Conditional value at risk: mean of the returns below the alpha-VaR level.

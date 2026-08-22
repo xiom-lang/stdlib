@@ -464,7 +464,7 @@ pub fn partition_count(n: Int) -> Int {
         if _add_ovf(total, p[i - pent]) { return 0; }
         total = total + p[i - pent];
       } else {
-        if _add_ovf(total, -p[i - pent]) { return 0; }
+        if _add_ovf(total, -(p[i - pent])) { return 0; }
         total = total - p[i - pent];
       }
       var pent2 = k * (3 * k + 1) / 2;
@@ -473,7 +473,7 @@ pub fn partition_count(n: Int) -> Int {
           if _add_ovf(total, p[i - pent2]) { return 0; }
           total = total + p[i - pent2];
         } else {
-          if _add_ovf(total, -p[i - pent2]) { return 0; }
+          if _add_ovf(total, -(p[i - pent2])) { return 0; }
           total = total - p[i - pent2];
         }
       }

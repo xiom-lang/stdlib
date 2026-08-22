@@ -23,7 +23,7 @@ fn main() -> Int {
   if num.ceil(-3.1) != -3 { return 15; }
 
   if num.round(3.5) != 4 { return 16; }
-  if num.round(-3.5) != -3 { return 17; }
+  if num.round(-3.5) != -4 { return 17; }
 
   if num.trunc(3.9) != 3 { return 18; }
   if num.trunc(-3.9) != -3 { return 19; }

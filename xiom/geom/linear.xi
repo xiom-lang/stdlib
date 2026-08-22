@@ -484,7 +484,7 @@ pub fn is_skew_symmetric(m: &Vec[Vec[Float64]]) -> Bool {
     if mc[i].len() != c { return false; }
     var j = 0;
     while j < c {
-      if mc[i][j] != -mc[j][i] { return false; }
+      if mc[i][j] != -(mc[j][i]) { return false; }
       j = j + 1;
     }
     i = i + 1;
@@ -879,16 +879,16 @@ pub fn vec_to_skew(v: &Vec[Float64]) -> Vec[Vec[Float64]] {
   if v.len() != 3 { return out; }
   var r0 = Vec[Float64].new();
   r0.push(0.0);
-  r0.push(-v[2]);
+  r0.push(-(v[2]));
   r0.push(v[1]);
   out.push(r0);
   var r1 = Vec[Float64].new();
   r1.push(v[2]);
   r1.push(0.0);
-  r1.push(-v[0]);
+  r1.push(-(v[0]));
   out.push(r1);
   var r2 = Vec[Float64].new();
-  r2.push(-v[1]);
+  r2.push(-(v[1]));
   r2.push(v[0]);
   r2.push(0.0);
   out.push(r2);
