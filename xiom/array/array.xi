@@ -17,36 +17,41 @@ pub fn is_empty[T, const N: Int](arr: &[N]T) -> Bool {
   N == 0
 }
 
-pub fn first[T, const N: Int](arr: &[N]T) -> Option<&T>
+pub fn first[T, const N: Int](arr: &[N]T) -> Option[T]
   ensures: N == 0 => result is None {
   if N == 0 {
     return None;
   }
-  Some(&arr[0])
+  Some(arr[0])
 }
 
-pub fn last[T, const N: Int](arr: &[N]T) -> Option<&T>
+pub fn last[T, const N: Int](arr: &[N]T) -> Option[T]
   ensures: N == 0 => result is None {
   if N == 0 {
     return None;
   }
-  Some(&arr[N - 1])
+  Some(arr[N - 1])
 }
 
-pub fn get[T, const N: Int](arr: &[N]T, index: Int) -> Option<&T>
+pub fn get[T, const N: Int](arr: &[N]T, index: Int) -> Option[T]
   ensures: index < 0 || index >= N => result is None {
   if index < 0 || index >= N {
     return None;
   }
-  Some(&arr[index])
+  Some(arr[index])
 }
 
-pub fn get_mut[T, const N: Int](arr: &mut [N]T, index: Int) -> Option<&mut T>
+// Value-returning read (like Vec.get). The Option<&T> reference form is
+// not representable on this compiler: the mono'd body boxes the element
+// VALUE into the Option payload while call sites auto-deref the payload
+// as a pointer (inttoptr of the value -> AV). All consumers must use
+// the value form.
+pub fn get_mut[T, const N: Int](arr: &mut [N]T, index: Int) -> Option[T]
   ensures: index < 0 || index >= N => result is None {
   if index < 0 || index >= N {
     return None;
   }
-  Some(&mut arr[index])
+  Some(arr[index])
 }
 
 pub fn map[T, U, const N: Int](arr: [N]T, f: fn(T) -> U) -> [N]U {
