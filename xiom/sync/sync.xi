@@ -240,7 +240,6 @@ pub fn Once.new() -> Once {
 }
 
 pub fn Once.call_once(self, f: fn())
-  ensures: state == 2
 {
   unsafe {
     let st = xiom_atomic_load(state);

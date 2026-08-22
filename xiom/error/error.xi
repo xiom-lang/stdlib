@@ -43,13 +43,17 @@ pub fn ErrorChain.display(self) -> Str {
   return result;
 }
 
-pub fn wrap_error[T, E: Error](result: Result[T, E], context: Str) -> Result[T, Str] {
+/// Wrap the Err payload of `result` with a context message, preserving Ok
+/// values unchanged. The Err message becomes just `context` -- the richer
+/// `context + ": " + e.description()` form needs the `E: Error` bound, which
+/// the checker's builtin-interface matching does not support yet (C001:
+/// bound resolves against the OK type; interface-as-value gap). The `Error`
+/// interface with `Option[Error]` returns also defaults to i64 (unknown-type
+/// warning). Re-enrich once the checker closes those gaps.
+pub fn wrap_error[T, E](result: Result[T, E], context: Str) -> Result[T, Str] {
   match result {
     Ok(v) => { return Ok(v); }
-    Err(e) => {
-      var msg: Str = context + ": " + e.description();
-      return Err(msg);
-    }
+    Err(_) => { return Err(context); }
   }
 }
 
