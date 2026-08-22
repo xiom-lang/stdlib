@@ -6,7 +6,7 @@ fn main() -> Int {
   var i: Int = 0;
   while i < 3 {
     match array.get(&arr, i) {
-      Some(v) => { if *v != i + 1 { return 1; } },
+      Some(v) => { if v != i + 1 { return 1; } },
       None => { return 2; },
     };
     i = i + 1;
