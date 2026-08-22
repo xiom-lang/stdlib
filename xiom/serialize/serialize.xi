@@ -78,7 +78,15 @@ pub fn is_valid_json(data: Str) -> Bool
 }
 
 pub fn is_valid_bytes(data: &Vec[UInt8]) -> Bool {
-  return true;
+  var buf = Vec[UInt8].new();
+  var i = 0;
+  while i < data.len() {
+    buf.push(data[i]);
+    i = i + 1;
+  }
+  let s = Str.from_utf8(buf);
+  let result = json_parse(s);
+  result.is_ok
 }
 
 // === JSON helpers ===
