@@ -771,10 +771,38 @@ int64_t xiom_fault_deref_ok(void) {
     return 42;
 }
 
-char xiom_char_at(const char* str, long pos) {
+// round-14 (BUG 26 #7): the RAW BYTE at byte position pos -- byte_at's
+// accessor. xiom_char_at decodes the CODEPOINT; byte consumers (UTF-8
+// decoders, str_bytes) must NOT get the decoded value (it would
+// double-decode).
+long xiom_byte_at(const char* str, long pos) {
     if (!str) return 0;
     if (pos < 0) return 0;
-    return str[pos]; // caller bounds-checks via xiom_str_len
+    return (unsigned char)str[pos];
+}
+
+// round-14 (BUG 26 #7): decode the UTF-8 CODEPOINT at byte position pos --
+// the old implementation returned the raw BYTE (str[pos]), so a 2-byte
+// char yielded 0xCE instead of the full codepoint and len_utf8()/str_chars
+// mis-counted multibyte strings (smoke_string_slice chars check). The
+// codepoint (up to 0x10FFFF) needs 32 bits; the ABI is i64.
+long xiom_char_at(const char* str, long pos) {
+    if (!str) return 0;
+    if (pos < 0) return 0;
+    unsigned char b = (unsigned char)str[pos];
+    if (b < 0x80) return (long)b;
+    int len;
+    long cp;
+    if ((b & 0xE0) == 0xC0)      { len = 2; cp = b & 0x1F; }
+    else if ((b & 0xF0) == 0xE0) { len = 3; cp = b & 0x0F; }
+    else if ((b & 0xF8) == 0xF0) { len = 4; cp = b & 0x07; }
+    else { return (long)b; } // stray continuation byte -- return it as-is
+    for (int i = 1; i < len; i++) {
+        unsigned char cb = (unsigned char)str[pos + i];
+        if ((cb & 0xC0) != 0x80) return (long)b; // malformed sequence
+        cp = (cp << 6) | (cb & 0x3F);
+    }
+    return cp;
 }
 
 long xiom_str_len(const char* str) {
