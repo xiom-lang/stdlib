@@ -38,9 +38,6 @@ pub fn str_concat(a: Str, b: Str) -> Str
 }
 
 pub fn str_slice(s: Str, start: Int, end: Int) -> Str
-  requires: start >= 0
-  requires: end >= start
-  requires: end <= s.len()
 {
   let len = s.len();
   var s_start = start;
@@ -84,7 +81,6 @@ pub fn str_ends_with(s: Str, suffix: Str) -> Bool {
 }
 
 pub fn str_split(s: Str, delimiter: Str) -> Vec[Str]
-  requires: delimiter.len() > 0
   ensures:  result.len() >= 1  // always at least one element
 {
   var result = Vec[Str].new();
@@ -95,6 +91,9 @@ pub fn str_split(s: Str, delimiter: Str) -> Vec[Str]
     while i < s_len {
       result.push(str_slice(s, i, i + 1));
       i = i + 1;
+    }
+    if result.len() == 0 {
+      result.push("");
     }
     return result;
   };
@@ -129,13 +128,11 @@ pub fn str_trim(s: Str) -> Str
 }
 
 pub fn str_to_int(s: Str) -> Result[Int, Str]
-  requires: s.len() > 0
 {
   xiom.core.to_int_from_str(s)
 }
 
 pub fn str_to_float(s: Str) -> Result[Float64, Str]
-  requires: s.len() > 0
 {
   xiom.core.to_float_from_str(s)
 }
@@ -253,7 +250,6 @@ pub fn last_index_of(s: Str, substr: Str) -> Option[Int] {
 }
 
 pub fn replace(s: Str, from: Str, to: Str) -> Str
-  requires: from.len() > 0
 {
   let from_len = from.len();
   if from_len == 0 {
