@@ -442,8 +442,7 @@ pub fn text_columns(items: &Vec[Str], cols: Int) -> Str {
   var col_width = 0;
   var i = 0;
   while i < n {
-    let item = items[i];
-    var il = item.len();
+    var il = items[i].len();
     if il > col_width {
       col_width = il;
     };
