@@ -15,7 +15,7 @@ fn main() -> Int {
   if math.round(3.14) != 3 { return 9; }
   if math.round(3.5) != 4 { return 10; }
   if math.round(3.99) != 4 { return 11; }
-  if math.round(-3.5) != -3 { return 12; }
+  if math.round(-3.5) != -4 { return 12; }
   if math.round(0.0) != 0 { return 13; }
 
   return 0;

@@ -315,7 +315,7 @@ pub fn pade_approx(f: fn(Float64) -> Float64, m: Int, n: Int, x0: Float64) -> Ve
     }
     sys.push(row);
     var rr = 0.0;
-    if r <= order { rr = -c[r]; }
+    if r <= order { rr = -(c[r]); }
     rhs.push(rr);
     r = r + 1;
   }

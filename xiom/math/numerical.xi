@@ -1259,7 +1259,7 @@ pub fn optimize_cg(f: fn(&Vec[Float64]) -> Float64, grad: fn(&Vec[Float64]) -> V
     if beta < 0.0 { beta = 0.0; }
     var j = 0;
     while j < n {
-      d[j] = -g_new[j] + beta * d[j];
+      d[j] = -(g_new[j]) + beta * d[j];
       j = j + 1;
     }
     x = x_new;
@@ -1631,7 +1631,7 @@ fn neg_vec(v: &Vec[Float64]) -> Vec[Float64] {
   var out = Vec[Float64].new();
   var i = 0;
   while i < v.len() {
-    out.push(-v[i]);
+    out.push(-(v[i]));
     i = i + 1;
   }
   return out;
