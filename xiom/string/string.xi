@@ -8,6 +8,11 @@ extern "C" {
   fn malloc(size: UInt) -> *UInt8;
   fn free(ptr: *UInt8);
   fn xiom_char_at(s: Str, pos: Int) -> Char;
+  // round-14 (BUG 26 #7): the RAW BYTE accessor -- xiom_char_at now
+  // returns the decoded UTF-8 CODEPOINT, which broke byte_at (the old
+  // byte_at reused xiom_char_at and double-decoded multibyte strings).
+  // Declared Int (i64) -- the runtime's return -- the wrapper casts.
+  fn xiom_byte_at(s: Str, pos: Int) -> Int;
 }
 
 pub fn str_len(s: Str) -> Int {
@@ -195,7 +200,7 @@ pub fn format2(fmt: Str, arg1: Str, arg2: Str) -> Str {
 }
 
 pub fn byte_at(s: Str, pos: Int) -> UInt8 {
-  xiom_char_at(s, pos)
+  (xiom_byte_at(s, pos)) as UInt8
 }
 
 pub fn char_at(s: Str, pos: Int) -> Option[Char]

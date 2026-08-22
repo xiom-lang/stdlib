@@ -49,12 +49,13 @@ fn main() -> Int {
     io.println("smoke_convert_utf: utf8_decode accepted bad byte");
     return 5;
   }
-  if !utf8.utf8_validate("hÃ©llo") {
+  if !utf8.utf8_validate("h\u{00E9}llo") {
     io.println("smoke_convert_utf: utf8_validate failed");
     return 6;
   }
-  var count = utf8.utf8_valid_sequences("hÃ©llo");
-  if count != 6 {
+  var count = utf8.utf8_valid_sequences("h\u{00E9}llo");
+  // "héllo" = h + é(2 bytes) + l + l + o = 5 UTF-8 sequences, 6 bytes.
+  if count != 5 {
     io.println("smoke_convert_utf: utf8_valid_sequences failed: " + convert.int_to_string(count));
     return 7;
   }
@@ -111,13 +112,13 @@ fn main() -> Int {
     io.println("smoke_convert_utf: utf16_is_valid failed");
     return 32;
   }
-  if !utf.utf32_is_valid("hÃ©llo") {
+  if !utf.utf32_is_valid("h\u{00E9}llo") {
     io.println("smoke_convert_utf: utf32_is_valid failed");
     return 33;
   }
 
   // cstring: to_cstring -> cstring_len -> from_cstring round-trip
-  var cp = cstring.to_cstring("hÃ©llo");
+  var cp = cstring.to_cstring("h\u{00E9}llo");
   var clen = cstring.cstring_len(cp);
   if clen != 6 {
     io.println("smoke_convert_utf: cstring_len failed: " + convert.int_to_string(clen));
