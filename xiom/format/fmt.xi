@@ -192,7 +192,8 @@ pub fn format_columns(items: &Vec[Str], width: Int) -> Str {
   var col_width: Int = 0;
   var i: Int = 0;
   while i < items.len() {
-    var il = items[i].len();
+    let item = items[i];
+    var il = item.len();
     if il > col_width { col_width = il; };
     i = i + 1;
   };
@@ -213,7 +214,8 @@ pub fn format_columns(items: &Vec[Str], width: Int) -> Str {
       var idx = c * rows_needed + r;
       if idx < items.len() {
         line = string.str_concat(line, items[idx]);
-        var pad_len = col_width - items[idx].len();
+        let item = items[idx];
+        var pad_len = col_width - item.len();
         var p: Int = 0;
         while p < pad_len {
           line = string.str_concat(line, " ");
