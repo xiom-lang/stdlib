@@ -184,6 +184,78 @@ fn _min_via[T](next_fn: fn() -> Option[T]) -> Option[T] {
   }
 }
 
+fn _find_via[T](next_fn: fn() -> Option[T], predicate: fn(&T) -> Bool) -> Option[T] {
+  var item = next_fn();
+  while item is Some {
+    match item {
+      Some(v) => {
+        if predicate(&v) { return Some(v); };
+        item = next_fn();
+      },
+      None => {},
+    };
+  }
+  None
+}
+
+fn _all_via[T](next_fn: fn() -> Option[T], predicate: fn(&T) -> Bool) -> Bool {
+  var item = next_fn();
+  while item is Some {
+    match item {
+      Some(v) => {
+        if !predicate(&v) { return false; };
+        item = next_fn();
+      },
+      None => {},
+    };
+  }
+  true
+}
+
+fn _any_via[T](next_fn: fn() -> Option[T], predicate: fn(&T) -> Bool) -> Bool {
+  var item = next_fn();
+  while item is Some {
+    match item {
+      Some(v) => {
+        if predicate(&v) { return true; };
+        item = next_fn();
+      },
+      None => {},
+    };
+  }
+  false
+}
+
+fn _nth_via[T](next_fn: fn() -> Option[T], n: Int) -> Option[T] {
+  var i = 0;
+  while i < n {
+    match next_fn() {
+      Some(_) => {},
+      None => { return None; },
+    }
+    i = i + 1;
+  }
+  next_fn()
+}
+
+fn _last_via[T](next_fn: fn() -> Option[T]) -> Option[T] {
+  var item = next_fn();
+  match item {
+    None => { return None; },
+    Some(first) => {
+      var last_val = first;
+      item = next_fn();
+      while item is Some {
+        match item {
+          Some(v) => { last_val = v; item = next_fn(); },
+          None => {},
+        };
+      }
+      return Some(last_val);
+    },
+  }
+}
+
 pub fn Range.map[U](self, f: fn(Int) -> U) -> MapIter[Int, U] {
   var r = self;
   MapIter[Int, U]{ next_fn: fn() -> Option[Int] { return r.next(); }, f: f }
@@ -249,6 +321,31 @@ pub fn Range.max(self) -> Option[Int] {
 pub fn Range.min(self) -> Option[Int] {
   var r = self;
   return _min_via[Int](fn() -> Option[Int] { return r.next(); });
+}
+
+pub fn Range.find(self, predicate: fn(&Int) -> Bool) -> Option[Int] {
+  var r = self;
+  return _find_via[Int](fn() -> Option[Int] { return r.next(); }, predicate);
+}
+
+pub fn Range.all(self, predicate: fn(&Int) -> Bool) -> Bool {
+  var r = self;
+  return _all_via[Int](fn() -> Option[Int] { return r.next(); }, predicate);
+}
+
+pub fn Range.any(self, predicate: fn(&Int) -> Bool) -> Bool {
+  var r = self;
+  return _any_via[Int](fn() -> Option[Int] { return r.next(); }, predicate);
+}
+
+pub fn Range.nth(self, n: Int) -> Option[Int] {
+  var r = self;
+  return _nth_via[Int](fn() -> Option[Int] { return r.next(); }, n);
+}
+
+pub fn Range.last(self) -> Option[Int] {
+  var r = self;
+  return _last_via[Int](fn() -> Option[Int] { return r.next(); });
 }
 
 pub type MapIter[T, U] = { next_fn: fn() -> Option[T]; f: fn(T) -> U; }
@@ -404,6 +501,31 @@ pub fn MapIter[T, U].min(self) -> Option[U] {
   return _min_via[U](fn() -> Option[U] { return it.next(); });
 }
 
+pub fn MapIter[T, U].find(self, predicate: fn(&U) -> Bool) -> Option[U] {
+  var it = self;
+  return _find_via[U](fn() -> Option[U] { return it.next(); }, predicate);
+}
+
+pub fn MapIter[T, U].all(self, predicate: fn(&U) -> Bool) -> Bool {
+  var it = self;
+  return _all_via[U](fn() -> Option[U] { return it.next(); }, predicate);
+}
+
+pub fn MapIter[T, U].any(self, predicate: fn(&U) -> Bool) -> Bool {
+  var it = self;
+  return _any_via[U](fn() -> Option[U] { return it.next(); }, predicate);
+}
+
+pub fn MapIter[T, U].nth(self, n: Int) -> Option[U] {
+  var it = self;
+  return _nth_via[U](fn() -> Option[U] { return it.next(); }, n);
+}
+
+pub fn MapIter[T, U].last(self) -> Option[U] {
+  var it = self;
+  return _last_via[U](fn() -> Option[U] { return it.next(); });
+}
+
 pub fn FilterIter[T].map[U](self, f: fn(T) -> U) -> MapIter[T, U] {
   var it = self;
   MapIter[T, U]{ next_fn: fn() -> Option[T] { return it.next(); }, f: f }
@@ -475,6 +597,31 @@ pub fn FilterIter[T].max(self) -> Option[T] {
 pub fn FilterIter[T].min(self) -> Option[T] {
   var it = self;
   return _min_via[T](fn() -> Option[T] { return it.next(); });
+}
+
+pub fn FilterIter[T].find(self, predicate: fn(&T) -> Bool) -> Option[T] {
+  var it = self;
+  return _find_via[T](fn() -> Option[T] { return it.next(); }, predicate);
+}
+
+pub fn FilterIter[T].all(self, predicate: fn(&T) -> Bool) -> Bool {
+  var it = self;
+  return _all_via[T](fn() -> Option[T] { return it.next(); }, predicate);
+}
+
+pub fn FilterIter[T].any(self, predicate: fn(&T) -> Bool) -> Bool {
+  var it = self;
+  return _any_via[T](fn() -> Option[T] { return it.next(); }, predicate);
+}
+
+pub fn FilterIter[T].nth(self, n: Int) -> Option[T] {
+  var it = self;
+  return _nth_via[T](fn() -> Option[T] { return it.next(); }, n);
+}
+
+pub fn FilterIter[T].last(self) -> Option[T] {
+  var it = self;
+  return _last_via[T](fn() -> Option[T] { return it.next(); });
 }
 
 pub fn EnumerateIter[T].map[U](self, f: fn((Int, T)) -> U) -> MapIter[(Int, T), U] {
@@ -549,6 +696,31 @@ pub fn TakeIter[T].min(self) -> Option[T] {
   return _min_via[T](fn() -> Option[T] { return it.next(); });
 }
 
+pub fn TakeIter[T].find(self, predicate: fn(&T) -> Bool) -> Option[T] {
+  var it = self;
+  return _find_via[T](fn() -> Option[T] { return it.next(); }, predicate);
+}
+
+pub fn TakeIter[T].all(self, predicate: fn(&T) -> Bool) -> Bool {
+  var it = self;
+  return _all_via[T](fn() -> Option[T] { return it.next(); }, predicate);
+}
+
+pub fn TakeIter[T].any(self, predicate: fn(&T) -> Bool) -> Bool {
+  var it = self;
+  return _any_via[T](fn() -> Option[T] { return it.next(); }, predicate);
+}
+
+pub fn TakeIter[T].nth(self, n: Int) -> Option[T] {
+  var it = self;
+  return _nth_via[T](fn() -> Option[T] { return it.next(); }, n);
+}
+
+pub fn TakeIter[T].last(self) -> Option[T] {
+  var it = self;
+  return _last_via[T](fn() -> Option[T] { return it.next(); });
+}
+
 pub fn SkipIter[T].map[U](self, f: fn(T) -> U) -> MapIter[T, U] {
   var it = self;
   MapIter[T, U]{ next_fn: fn() -> Option[T] { return it.next(); }, f: f }
@@ -594,6 +766,31 @@ pub fn SkipIter[T].min(self) -> Option[T] {
   return _min_via[T](fn() -> Option[T] { return it.next(); });
 }
 
+pub fn SkipIter[T].find(self, predicate: fn(&T) -> Bool) -> Option[T] {
+  var it = self;
+  return _find_via[T](fn() -> Option[T] { return it.next(); }, predicate);
+}
+
+pub fn SkipIter[T].all(self, predicate: fn(&T) -> Bool) -> Bool {
+  var it = self;
+  return _all_via[T](fn() -> Option[T] { return it.next(); }, predicate);
+}
+
+pub fn SkipIter[T].any(self, predicate: fn(&T) -> Bool) -> Bool {
+  var it = self;
+  return _any_via[T](fn() -> Option[T] { return it.next(); }, predicate);
+}
+
+pub fn SkipIter[T].nth(self, n: Int) -> Option[T] {
+  var it = self;
+  return _nth_via[T](fn() -> Option[T] { return it.next(); }, n);
+}
+
+pub fn SkipIter[T].last(self) -> Option[T] {
+  var it = self;
+  return _last_via[T](fn() -> Option[T] { return it.next(); });
+}
+
 pub fn ChainIter[T, U].collect(self) -> Vec[T] {
   var result = Vec[T].new();
   var item = self.next();
@@ -626,6 +823,31 @@ pub fn ChainIter[T, U].take(self, n: Int) -> TakeIter[T] {
   TakeIter[T]{ next_fn: fn() -> Option[T] { return it.next(); }, remaining: n }
 }
 
+pub fn ChainIter[T, U].find(self, predicate: fn(&T) -> Bool) -> Option[T] {
+  var it = self;
+  return _find_via[T](fn() -> Option[T] { return it.next(); }, predicate);
+}
+
+pub fn ChainIter[T, U].all(self, predicate: fn(&T) -> Bool) -> Bool {
+  var it = self;
+  return _all_via[T](fn() -> Option[T] { return it.next(); }, predicate);
+}
+
+pub fn ChainIter[T, U].any(self, predicate: fn(&T) -> Bool) -> Bool {
+  var it = self;
+  return _any_via[T](fn() -> Option[T] { return it.next(); }, predicate);
+}
+
+pub fn ChainIter[T, U].nth(self, n: Int) -> Option[T] {
+  var it = self;
+  return _nth_via[T](fn() -> Option[T] { return it.next(); }, n);
+}
+
+pub fn ChainIter[T, U].last(self) -> Option[T] {
+  var it = self;
+  return _last_via[T](fn() -> Option[T] { return it.next(); });
+}
+
 pub fn ZipIter[T, U].collect(self) -> Vec[(T, U)] {
   var result = Vec[(T, U)].new();
   var item = self.next();
@@ -648,6 +870,30 @@ pub fn ZipIter[T, U].count(self) -> Int {
   n
 }
 
+pub fn ZipIter[T, U].find(self, predicate: fn(&(T, U)) -> Bool) -> Option[(T, U)] {
+  var it = self;
+  return _find_via[(T, U)](fn() -> Option[(T, U)] { return it.next(); }, predicate);
+}
+
+pub fn ZipIter[T, U].all(self, predicate: fn(&(T, U)) -> Bool) -> Bool {
+  var it = self;
+  return _all_via[(T, U)](fn() -> Option[(T, U)] { return it.next(); }, predicate);
+}
+
+pub fn ZipIter[T, U].any(self, predicate: fn(&(T, U)) -> Bool) -> Bool {
+  var it = self;
+  return _any_via[(T, U)](fn() -> Option[(T, U)] { return it.next(); }, predicate);
+}
+
+pub fn ZipIter[T, U].nth(self, n: Int) -> Option[(T, U)] {
+  var it = self;
+  return _nth_via[(T, U)](fn() -> Option[(T, U)] { return it.next(); }, n);
+}
+
+pub fn ZipIter[T, U].last(self) -> Option[(T, U)] {
+  var it = self;
+  return _last_via[(T, U)](fn() -> Option[(T, U)] { return it.next(); });
+}
 
 // === M7: Additional iterator adapters ===
 
