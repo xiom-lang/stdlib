@@ -145,13 +145,20 @@ pub fn str_to_float(s: Str) -> Result[Float64, Str]
 pub fn str_upper(s: Str) -> Str
   ensures: result.len() == s.len()
 {
+  // Byte-safe: ASCII a-z -> A-Z; all other bytes (incl. UTF-8 sequences)
+  // pass through verbatim. The char-based version truncated multibyte
+  // chars to their low byte (xiom_char_at -> as UInt8).
   let len = s.len();
   unsafe {
     var buf = malloc(len + 1);
     var i: Int = 0;
     while i < len {
-      let c = xiom_char_at(s, i);
-      buf[i] = xiom.char.to_uppercase(c) as UInt8;
+      let b = byte_at(s, i);
+      if b >= 97 && b <= 122 {
+        buf[i] = (b - 32) as UInt8;
+      } else {
+        buf[i] = b;
+      };
       i = i + 1;
     }
     buf[len] = 0;
@@ -162,13 +169,18 @@ pub fn str_upper(s: Str) -> Str
 pub fn str_lower(s: Str) -> Str
   ensures: result.len() == s.len()
 {
+  // Byte-safe: ASCII A-Z -> a-z; all other bytes pass through verbatim.
   let len = s.len();
   unsafe {
     var buf = malloc(len + 1);
     var i: Int = 0;
     while i < len {
-      let c = xiom_char_at(s, i);
-      buf[i] = xiom.char.to_lowercase(c) as UInt8;
+      let b = byte_at(s, i);
+      if b >= 65 && b <= 90 {
+        buf[i] = (b + 32) as UInt8;
+      } else {
+        buf[i] = b;
+      };
       i = i + 1;
     }
     buf[len] = 0;

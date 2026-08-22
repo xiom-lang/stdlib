@@ -1076,13 +1076,13 @@ fn BinaryHeap[T: Ord].new() -> BinaryHeap[T] {
   return BinaryHeap[T]{ data: Vec[T].new(); };
 }
 
-fn BinaryHeap[T: Ord].push(self, value: T) {
+fn BinaryHeap[T: Ord].push(&mut self, value: T) {
   data.push(value);
   let idx = data.len() - 1;
   sift_up(self, idx);
 }
 
-fn BinaryHeap[T: Ord].pop(self) -> Option[T] {
+fn BinaryHeap[T: Ord].pop(&mut self) -> Option[T] {
   if data.len() == 0 {
     return None;
   }
