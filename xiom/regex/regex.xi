@@ -342,7 +342,7 @@ pub fn Regex.replace(self, text: Str, replacement: Str) -> Str {
 }
 
 pub fn Regex.replace_all(self, text: Str, replacement: Str) -> Str {
-  let matches = find_all(self.pattern, text);
+  let matches = engine.regex_find_all(self, text);
   if matches.len() == 0 {
     return text;
   };

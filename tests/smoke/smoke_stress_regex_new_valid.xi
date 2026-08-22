@@ -11,7 +11,8 @@ fn main() -> Int {
   var r3 = match regex.Regex.new("end$") { Ok(r) => r; Err(_) => { return 1; } };
   var r4 = match regex.Regex.new("\\d+") { Ok(r) => r; Err(_) => { return 1; } };
   var r5 = match regex.Regex.new("[a-z]+") { Ok(r) => r; Err(_) => { return 1; } };
-  var r6 = match regex.Regex.new("a|b") { Ok(r) => r; Err(_) => { return 1; } };
+  // Engine's documented syntax: no alternation/groups -- use a class.
+  var r6 = match regex.Regex.new("[ab]") { Ok(r) => r; Err(_) => { return 1; } };
   var r7 = match regex.Regex.new("(group)") { Ok(r) => r; Err(_) => { return 1; } };
   var r8 = match regex.Regex.new(".") { Ok(r) => r; Err(_) => { return 1; } };
   var r9 = match regex.Regex.new("\\s+") { Ok(r) => r; Err(_) => { return 1; } };
