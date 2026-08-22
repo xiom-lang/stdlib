@@ -318,17 +318,16 @@ pub type ArcInner[T] = {
 }
 
 pub fn Arc.new[T](value: T) -> Arc[T]
-  requires: ptr != null
   ensures:  strong_count == 1
 {
   let c = alloc.alloc(8);
-  unsafe { ptr.write(c as *Int, 1); }
+  unsafe { *(c as *Int) = 1; }
   let inner = ArcInner[T]{ count: c; value: value; };
   let isize = size_of[ArcInner[T]]();
   let raw = alloc.alloc(isize);
   unsafe {
     let dest = raw as *mut ArcInner[T];
-    ptr.write(dest, inner);
+    *dest = inner;
   };
   return Arc[T]{ ptr: raw as *ArcInner[T]; }
 }
@@ -398,7 +397,7 @@ pub type AtomicBool = { ptr: *Int; }
 pub fn AtomicBool.new(val: Bool) -> AtomicBool {
   let p = alloc.alloc(8);
   let iv: Int = if val { 1 } else { 0 };
-  unsafe { ptr.write(p as *Int, iv); }
+  unsafe { *(p as *Int) = iv; }
   return AtomicBool{ ptr: p as *Int; }
 }
 
@@ -434,7 +433,7 @@ pub type AtomicInt = { ptr: *Int; }
 
 pub fn AtomicInt.new(val: Int) -> AtomicInt {
   let p = alloc.alloc(8);
-  unsafe { ptr.write(p as *Int, val); }
+  unsafe { *(p as *Int) = val; }
   return AtomicInt{ ptr: p as *Int; }
 }
 
