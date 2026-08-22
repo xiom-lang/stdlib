@@ -29,12 +29,12 @@ pub fn str_concat(a: Str, b: Str) -> Str
     var buf = malloc(total + 1);
     var i: Int = 0;
     while i < len_a {
-      buf[i] = xiom_char_at(a, i) as UInt8;
+      buf[i] = byte_at(a, i);
       i = i + 1;
     }
     var j: Int = 0;
     while j < len_b {
-      buf[len_a + j] = xiom_char_at(b, j) as UInt8;
+      buf[len_a + j] = byte_at(b, j);
       j = j + 1;
     }
     buf[total] = 0;
@@ -55,7 +55,7 @@ pub fn str_slice(s: Str, start: Int, end: Int) -> Str
     var buf = malloc(slice_len + 1);
     var i: Int = 0;
     while i < slice_len {
-      buf[i] = xiom_char_at(s, s_start + i) as UInt8;
+      buf[i] = byte_at(s, s_start + i);
       i = i + 1;
     }
     buf[slice_len] = 0;
