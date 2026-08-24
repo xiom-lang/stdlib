@@ -131,8 +131,8 @@ fn _bytes_to_limbs(bytes: &Vec[UInt8], offset: Int) -> Vec[Int] {
   limbs.push(l3 & _POLY_BMASK);
 
   // Limb 4: bits 104-127 (w3 >> 8) & 0xFFFFFF
-  // w3 contributes bits 8-31 (24 bits, but we only need up to 22 bits for 128-bit number)
-  var l4 = (w3 >> 8) & 0x3FFFFF;
+  // w3 contributes bits 8-31 = exactly the 24 bits of positions 104-127.
+  var l4 = (w3 >> 8) & 0xFFFFFF;
   limbs.push(l4 & _POLY_BMASK);
 
   return limbs;
@@ -240,94 +240,46 @@ fn _finalize(h: &Vec[Int], s: &Vec[Int]) -> Vec[UInt8] {
 
   _carry_propagate(&mut sum);
 
-  // Tag is the low 128 bits of (h + s): i.e., limbs 0-4, but limb 4 only
-  // contributes 24 bits (since 4*26 + 24 = 128). We need to serialize
-  // bits 0-127 as 16 little-endian bytes.
-
-  // Reconstruct the full value from limbs 0-4 as a 130-bit number,
-  // then take the low 128 bits.
-  var val0 = sum[0] + sum[1] * _POLY_B + sum[2] * _POLY_B * _POLY_B + sum[3] * _POLY_B * _POLY_B * _POLY_B + (sum[4] & 0xFFFFFF) * _POLY_B * _POLY_B * _POLY_B * _POLY_B;
-
-  // Now serialise the low 128 bits as 16 little-endian bytes.
-  // Since val0 might be > 2^63, we need to do this in chunks.
-  // Better: serialize limb-wise.
-  // val0 represents the full value. Let's extract bytes manually.
-  //
-  // Simpler approach: convert limbs 0-3 (104 bits) and low 24 bits of limb 4
-  // into bytes. In total: 104 + 24 = 128 bits = 16 bytes.
-  //
-  // Step 1: Build the low 64 bits from limbs 0-2.
-  //   limb0 = bits 0-25
-  //   limb1 = bits 26-51
-  //   limb2 = bits 52-77
-  //   That's 78 bits. The low 64 bits: limb0 + limb1*B + (limb2 & 0xFFF)*B^2
+  // Tag is the low 128 bits of (h + s): limbs 0-4, with limb 4 only
+  // contributing 24 bits (4*26 + 24 = 128). Serialize bits 0-127 as 16
+  // little-endian bytes.
 
   var tag = Vec[UInt8].new();
-  var acc = sum[0] + sum[1] * _POLY_B + sum[2] * 67108864 * 67108864 + sum[3] * 67108864 * 67108864 * 67108864 + (sum[4] & 0xFFFFFF) * 67108864 * 67108864 * 67108864 * 67108864;
 
-  // Extract 16 little-endian bytes from the accumulated value.
-  // We need to handle the fact that acc might exceed i64 range.
-  // Let's do it in two halves: low 64 bits and high 64 bits.
-
-  // Low 64 bits of acc:
-  var lo = acc & 0x7FFFFFFFFFFFFFFF;
-  // Actually, acc could overflow i64. Let's compute bytes directly from limbs.
-
-  // Rebuild using iterative byte extraction.
-  // More robust: process each limb, accumulating carries at byte level.
-
-  // Alternative: save the 5 limbs to a temporary byte buffer and output.
-  // But XIOM doesn't have direct byte-level memory access like that.
-
-  // Simplest robust approach: extract 16 bytes iteratively.
-  // We'll track the full value using a running division.
-  // Represent the full value as: bytes[0..15] in little-endian.
-  // byte[i] = (value / 256^i) % 256
-
-  // Since we can't hold 2^130 in i64 directly, let's extract bytes from limbs.
-  // Convert to a 22-element byte array (130/8 ~= 17 bytes, round up to 22 for carries).
-  // Actually, let me use a different strategy: serialize all 5 limbs into bytes.
-
-  var bytes = Vec[UInt8].new();
-  var j = 0;
-  while j < 17 {
-    bytes.push(0);
-    j = j + 1;
+  // Serialize the low 128 bits of `sum` as 16 little-endian bytes.
+  //
+  // BUG FIX (2026-08-25, kat_crypto_chacha20poly1305_rfc8439): the previous
+  // serialization placed each limb at BYTE offset k*26/8 and silently
+  // ignored the intra-byte bit offset (limbs sit at bit offsets 0/2/4/6/0),
+  // producing garbage tags for any non-trivial value. The correct method is
+  // repeated division of the limb vector by 256: byte[i] = value mod 256,
+  // value = value / 256, done in base-2^26 limb space. All intermediates
+  // stay far below i64 range: rem*B + limb <= 255*2^26 + 2^26 < 2^34.
+  var t = Vec[Int].new();
+  var q = 0;
+  while q < 5 {
+    t.push(sum[q]);
+    q = q + 1;
   }
+  // Mask limb 4 to its 24 significant bits (bits 104-127).
+  t[4] = t[4] & 0xFFFFFF;
 
-  // Treat the 5 limbs as a base-2^26 number and convert to base-256 bytes.
-  // We do this by processing each limb's contribution.
-  var k = 0;
-  while k < 5 {
-    var limb_val = sum[k];
-    if k == 4 {
-      limb_val = limb_val & 0xFFFFFF;
+  var tag = Vec[UInt8].new();
+  var bi = 0;
+  while bi < 16 {
+    var rem = 0;
+    var k = 4;
+    while k >= 0 {
+      var cur = rem * _POLY_B + t[k];
+      t[k] = cur / 256;
+      rem = cur - (cur / 256) * 256;
+      k = k - 1;
     }
-    var shift = k * 26;
-    var byte_pos = shift / 8;
-    var bit_offset = shift % 8;
-
-    // Add limb_val * 2^shift to the byte array
-    var carry = limb_val;
-    var bp = byte_pos;
-    while carry > 0 && bp < 17 {
-      var cur = bytes[bp] as Int + (carry & 0xFF);
-      bytes[bp] = (cur & 0xFF) as UInt8;
-      carry = (carry >> 8) + (cur >> 8);
-      bp = bp + 1;
-    }
-    k = k + 1;
+    tag.push(rem as UInt8);
+    bi = bi + 1;
   }
 
-  // Output first 16 bytes as the tag
-  var result = Vec[UInt8].new();
-  var m = 0;
-  while m < 16 {
-    result.push(bytes[m]);
-    m = m + 1;
-  }
-
-  return result;
+  return tag;
 }
 
 // ============================================================================

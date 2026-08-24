@@ -3,6 +3,14 @@
 // Licensed under the MIT or Apache-2.0 license, at your option.
 
 module xiom.net.https
+// ============================================================================
+// TRANSPORT SECURITY NOTE (honest scoping -- see docs/STDLIB_READINESS_PLAN.md
+// phase C2 and the stdlib audit): XIOM currently ships NO TLS stack. Messages
+// sent through this module travel in PLAINTEXT unless you terminate TLS
+// yourself (system proxy, schannel/OpenSSL via FFI, or an external tunnel).
+// Treat every wire format produced here as unauthenticated until a vetted
+// TLS binding lands. Do not send credentials without such a layer.
+// ============================================================================
 
 // Depends on: xiom.net.http + xiom.net.url
 //

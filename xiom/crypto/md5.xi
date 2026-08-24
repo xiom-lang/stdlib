@@ -1,4 +1,13 @@
 module xiom.crypto.md5
+// ============================================================================
+// !!! LEGACY / DEPRECATED -- DO NOT USE IN NEW SYSTEMS !!!
+//
+// MD5 is cryptographically broken: practical chosen-prefix collisions since
+// 2004 (RFC 6151); forbidden for signatures (CA/Browser Forum, FIPS moves).
+// Acceptable ONLY for non-security checksums and legacy interop. Never use
+// for passwords, signatures, or identifiers adversarial parties can influence.
+// See docs/STDLIB_READINESS_PLAN.md phase O.
+// ============================================================================
 
 use xiom.math;
 use xiom.encoding;

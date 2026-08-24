@@ -63,20 +63,13 @@ fn main() -> Int {
   }
 
   if tg.len() != want_tag.len() { io.println("tag len mismatch"); return 5; }
-  // BLOCKED-INTEROP (2026-08-24): the computed tag deviates from the RFC
-  // vector even though the ciphertext is byte-exact -- the ChaCha20
-  // keystream/counter/nonce handling is correct, but the Poly1305 layer
-  // (one-time key derivation or mac_data layout) does not match RFC 8439.
-  // Self-roundtrip IS consistent (see probe_chacha_rt3). Needs a focused
-  // session against the RFC text; until then the exact-tag assert is gated.
   i = 0;
-  var tag_matches = true;
   while i < want_tag.len() {
-    if tg[i] != want_tag[i] { tag_matches = false; }
+    if tg[i] != want_tag[i] {
+      io.println("tag mismatch: got " + hex.hex_encode(&tg));
+      return 6;
+    }
     i += 1;
-  }
-  if !tag_matches {
-    io.println("NOTE: tag != RFC vector (interop defect, tracked): " + hex.hex_encode(&tg));
   }
 
   // round trip: our own ciphertext must decrypt back to the plaintext

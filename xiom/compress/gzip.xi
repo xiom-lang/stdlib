@@ -21,39 +21,31 @@ use xiom.io;
 // Complexity: O(n) checksums, O(n * window) payload.
 // ============================================================================
 
-var _gzip_crc32_table: [256]UInt;
-
-fn _gzip_crc32_init() {
+// CRC-32 (IEEE, reflected 0xEDB88320) computed BITWISE with no lookup table.
+//
+// BUG FIX (2026-08-25): this used a lazily-initialized module-level
+// [256]UInt table. Module-level arrays are mis-materialized by the current
+// compiler (undersized backing store): the init loop silently overflowed the
+// heap on every call -- surviving for inputs <= ~4095 bytes and hitting
+// unmapped memory (AV) beyond that (probes crc_*.xi / p_crc_local.xi; also
+// reads through the table returned all zeros, so tags were wrong anyway).
+// The bitwise form keeps all state in locals and is exact. If throughput
+// ever matters, bind a C crc32 in runtime/ instead of restoring the table.
+fn _gzip_crc32_impl(data: &Vec[UInt8]) -> UInt {
+  var crc = 0xFFFFFFFF as UInt;
+  var len = data.len();
   var i = 0;
-  while i < 256 {
-    var crc = i as UInt;
+  while i < len {
+    crc = crc ^ (data[i] as UInt);
     var j = 0;
     while j < 8 {
-      var low = crc & 1;
-      if low == 1 {
+      if (crc & 1) == 1 {
         crc = (crc >> 1) ^ 0xEDB88320 as UInt;
       } else {
         crc = crc >> 1;
       };
       j = j + 1;
     }
-    _gzip_crc32_table[i] = crc;
-    i = i + 1;
-  }
-}
-
-fn _gzip_crc32_impl(data: &Vec[UInt8]) -> UInt {
-  if _gzip_crc32_table[1] == 0 {
-    _gzip_crc32_init();
-  };
-  var crc = 0xFFFFFFFF as UInt;
-  var len = data.len();
-  var i = 0;
-  while i < len {
-    var b = data[i] as UInt;
-    var idx = ((crc ^ b) & 0xFF) as Int;
-    var tbl = _gzip_crc32_table[idx];
-    crc = (crc >> 8) ^ tbl;
     i = i + 1;
   }
   return crc ^ 0xFFFFFFFF as UInt;
