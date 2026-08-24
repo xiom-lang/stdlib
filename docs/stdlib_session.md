@@ -1,12 +1,10 @@
-# XIOM Stdlib Session -- Clean Handoff (2026-08-24, late evening)
+# XIOM Stdlib Session -- Clean Handoff (2026-08-25, early morning)
 
-> Written for the next session. Branch: `feat/architect`. HEAD = 00237fe7
-> (KAT corpus + crypto C-backing + readiness plan) on top of the round-15
-> line. **Full sweep on round-15: 874/907 PASS** (corrected classification;
-> the naive exit-code method false-reports 907/907 -- the child's real
-> status is the printed "exit code:" stderr line, NOT $LASTEXITCODE).
-> The 33 failures map exactly onto the compiler clusters below; three were
-> new discoveries now fixed or catalogued.
+> Written for the next session. Branch: `feat/architect`. HEAD = this
+> doc's commit. **Round-15 sweep: 874/907** (corrected classification --
+> child status is the printed "exit code:" stderr line, NOT $LASTEXITCODE;
+> naive sweeps false-report 907/907). This continuation session RESOLVED
+> both top stdlib crypto/compress defects and shipped StringBuilder.
 
 ---
 
@@ -50,16 +48,35 @@
    see report 3b.1. Flip when their fix lands.
 5. **Plan + convention docs** committed.
 
+## 1.5. Continuation session results (2026-08-25, non-blocked roads)
+
+1. **ChaCha20-Poly1305 interop FIXED** (was our top crypto defect): two
+   poly1305.xi engine bugs -- _finalize limb serialization ignored intra-
+   byte bit alignment; _bytes_to_limbs dropped bits 126-127. RFC 8439
+   2.8.2 now byte-exact on ct AND tag (KAT un-gated, green). Reference
+   oracle: probes/ref_aead.py (validated against the RFC first!).
+2. **gzip >=4096 AV + wrong CRCs FIXED**: root cause = module-level
+   [256]UInt crc table mis-materialization (reads all zeros + init heap
+   overflow). Bitwise no-table impl now matches zlib exactly;
+   smoke_stress_compress_gzip_large green again.
+3. **StringBuilder shipped** (string/builder.xi + smoke): bare Vec[UInt8]
+   API by necessity -- cross-module struct params and `self`-param prefix
+   calls are compiler-broken (report 3b-2 items 9-11).
+4. **Legacy quarantine + honest TLS footnotes** on des/md5/sha/https/jwt.
+
+New compiler findings: report 3b-2 items 8-12 (module-array
+mis-materialization with size-dependent AV; self-param methods invisible
+to prefix calls; cross-module struct-param resolution failures; bare-name
+injection inconsistency; bare-name wrong-overload binding on deflate).
+
 ## 2. New stdlib-side defects found (next-session queue, priority order)
 
-1. **ChaCha20-Poly1305 interop**: ciphertext byte-exact vs RFC 8439 but tag
-   deviates => Poly1305 layer wrong somewhere; self-roundtrip consistent so
-   it silently produces non-interoperable AEAD today. Focused session with
-   RFC text; kat file gates the exact-tag assert.
-2. **gzip >= 4096 input AV** (compress.gzip_compress; per-process bisect
-   probes gz_*.xi) + deflate.deflate_compress returns EMPTY Vec at every
-   size probed while lz77/huffman pass standalone. Possibly compiler return-
-   path bug -- joint investigation flagged.
+1. ~~ChaCha20-Poly1305 interop~~ DONE.
+2. ~~gzip >=4096 AV + deflate empty-return~~ AV root-caused (crc table);
+   DEFLATE item narrowed: bare-name `deflate_compress` binds the wrong
+   overload (compiler); qualified calls work and gzip roundtrips green at
+   all tested sizes. Deflate payload efficiency (lz77 emits near-2x
+   expansion on repetitive data) is a separate quality TODO.
 3. Legacy-cipher quarantine (crypto/legacy/ move) -- pure docs+headers, safe.
 4. StringBuilder + alloc-free predicates (plan phase E) -- untouched yet.
 
