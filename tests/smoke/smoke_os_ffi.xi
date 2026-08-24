@@ -16,7 +16,7 @@ use xiom.io;
 
 fn main() -> Int {
   // --- fs_ffi: chmod (delegates to xiom.io) ---
-  let tmp = "C:\\Users\\lefte\\AppData\\Local\\Temp\\kilo\\agent_net2\\ffi_chmod.txt";
+  let tmp = "os_ffi_chmod_tmp.txt";
   {
     let w = io.write_file(tmp, "test");
     if w.is_err {
