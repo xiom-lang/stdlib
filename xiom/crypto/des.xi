@@ -1,6 +1,15 @@
 // XIOM -- DES / 3DES (FIPS 46-3)
 // Copyright (c) 2026 Eleftherios Notas
 // Licensed under the MIT or Apache-2.0 license, at your option.
+// ============================================================================
+// !!! LEGACY / DEPRECATED -- DO NOT USE IN NEW SYSTEMS !!!
+//
+// DES provides ~56-bit effective key strength and is breakable with modest
+// resources (NIST withdrew FIPS 46-3 in 2005). 3DES remains listed only for
+// interop with ancient systems and is deprecated by SP 800-131A rev 2.
+// Kept solely for compatibility with legacy data and protocols. Never use
+// for new encryption. See docs/STDLIB_READINESS_PLAN.md phase O.
+// ============================================================================
 //
 // Full FIPS Publication 46-3 Data Encryption Standard.
 //

@@ -1,4 +1,11 @@
 module xiom.crypto.sha
+// ============================================================================
+// !!! SHA-1 IS LEGACY / DEPRECATED -- DO NOT USE IN NEW SYSTEMS !!!
+//
+// SHA-1 has practical collision attacks (SHAttered 2017, chosen-prefix 2020).
+// Kept only for legacy protocol interop (git objects, old TLS PRFs). Use
+// sha256/sha384/sha512 for all new designs. See docs/STDLIB_READINESS_PLAN.md.
+// ============================================================================
 
 use xiom.math;
 use xiom.encoding;
