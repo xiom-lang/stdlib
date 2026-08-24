@@ -322,7 +322,18 @@ pub fn base64url_encode(data: &Vec[UInt8]) -> Str {
         b2 = data[i + 2];
       };
       _b64u_write_group(buf, out, b0, b1, b2, has_one, has_two);
-      out = out + 4;
+      // Partial groups emit fewer than 4 chars; advancing by 4 left the NUL
+      // terminator one byte PAST the malloc'd buffer (heap overflow) and let
+      // an uninitialized byte leak into the string.
+      if has_two {
+        out = out + 4;
+      } else {
+        if has_one {
+          out = out + 3;
+        } else {
+          out = out + 2;
+        };
+      };
     };
     buf[out] = 0;
     return Str.from_cstring(buf);
