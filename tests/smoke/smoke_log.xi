@@ -116,7 +116,7 @@ fn main() -> Int {
   if sinks.log_sinks().len() != 1 { return fail("sinks-after-close"); }
   sinks.log_sink_close(se);
   if sinks.log_sinks().len() != 0 { return fail("sinks-clear"); }
-  let file_res = sinks.log_sink_file("C:\\Users\\lefte\\AppData\\Local\\Temp\\kilo\\agent_misc3\\smoke_sink.log");
+  let file_res = sinks.log_sink_file("smoke_sink_tmp.log");
   match file_res {
     Ok(fs) => {
       if fs.target != 3 { return fail("sink-file-target"); }
