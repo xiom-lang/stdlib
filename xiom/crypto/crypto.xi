@@ -16,6 +16,7 @@ use xiom.crypto.rng_crypto;
 use xiom.math.bit_and;
 use xiom.math.bit_or;
 use xiom.math.bit_xor;
+use xiom.memory.alloc;
 use xiom.math.bit_not;
 use xiom.math.shl;
 use xiom.math.shr;
@@ -36,7 +37,11 @@ extern "C" {
   fn xiom_aesni_key_expand_128(key: *UInt8, round_keys: *UInt8);
   fn xiom_shani_sha256_compress(state: *UInt32, block: *UInt8);
   fn xiom_sha256_sw_compress(state: *UInt32, block: *UInt8);
+  fn xiom_sha224_hash(input: *UInt8, input_len: UInt, output: *UInt8);
+  fn xiom_sha384_hash(input: *UInt8, input_len: UInt, output: *UInt8);
+  fn xiom_sha512_hash(input: *UInt8, input_len: UInt, output: *UInt8);
   fn xiom_sha256_hash(input: *UInt8, input_len: UInt, output: *UInt8);
+  fn xiom_os_entropy(buf: *UInt8, len: Int64) -> Int64;
 }
 
 // ============================================================================
@@ -572,18 +577,18 @@ fn _i64_byte(v: Int, pos: Int) -> UInt8 {
 pub fn sha512(data: &Vec[UInt8]) -> Vec[UInt8]
   ensures: result.len() == 64
 {
-  var h = _sha512_pad_and_process(data);
+  // C-backed (runtime xiom_runtime.c): the XIOM-side u64 loop produced wrong
+  // digests for all inputs except empty-padding-only blocks (kat_crypto_sha2,
+  // 2026-08-24). Same treatment as sha224.
   var result = Vec[UInt8].new();
   var i = 0;
-  while i < 8 {
-    var v = h[i];
-    var j = 7;
-    while j >= 0 {
-      result.push(_i64_byte(v, j));
-      j = j - 1;
-    }
+  while i < 64 {
+    result.push(0);
     i = i + 1;
   }
+  unsafe {
+    xiom_sha512_hash(data.data, data.len() as UInt, result.data);
+  };
   return result;
 }
 
@@ -2063,7 +2068,66 @@ pub fn argon2(password: &Str, salt: &Vec[UInt8], memory: Int, iterations: Int, p
 // Random Crypto
 // ============================================================================
 
+/// OS-entropy CSPRNG draw (ProcessPrng/RtlGenRandom on Windows,
+/// /dev/urandom on Unix), degrading to the legacy PRNG only when no OS
+/// source answers. SECURITY NOTE: prefer this over secure_random_bytes for
+/// anything security-relevant once the compiler fixes the cross-module
+/// miscompile that currently AVs when THIS function is invoked from other
+/// modules (probes p_replica_srb / probe_entropy2, 2026-08-24); until then
+/// only same-module (xiom.crypto-internal) callers may use it.
+pub fn os_secure_random_bytes(count: Int) -> Vec[UInt8] {
+  var result = Vec[UInt8].new();
+  if count <= 0 {
+    return result;
+  };
+  unsafe {
+    var probe = Vec[UInt8].new();
+    var z = 0;
+    while z < 8 { probe.push(0u8); z = z + 1; };
+    var have_os = false;
+    if xiom_os_entropy(probe.data, 8) == 8 {
+      have_os = true;
+    };
+    if have_os {
+      var done = 0;
+      while done < count {
+        var want = count - done;
+        if want > 4096 {
+          want = 4096;
+        };
+        var chunk = Vec[UInt8].new();
+        z = 0;
+        while z < want { chunk.push(0u8); z = z + 1; };
+        var got = xiom_os_entropy(chunk.data, want as Int64);
+        if got != (want as Int64) {
+          break;
+        };
+        var k = 0;
+        while k < want {
+          result.push(chunk[k]);
+          k = k + 1;
+        }
+        done = done + want;
+      }
+    };
+    if result.len() < count {
+      var i = 0;
+      while i < count {
+        let r = random_range(0, 255);
+        result.push(r as UInt8);
+        i = i + 1;
+      }
+    };
+  };
+  return result;
+}
+
 pub fn secure_random_bytes(count: Int) -> Vec[UInt8] {
+  // KNOWN SECURITY GAP (tracked): still draws from the non-cryptographic
+  // random_range PRNG. The OS-entropy replacement exists above
+  // (os_secure_random_bytes + runtime xiom_os_entropy) but calling it
+  // CROSS-MODULE currently triggers a compiler miscompile (AV) -- see
+  // REPORT_TO_COMPILER_SESSION.md. Flip the bodies once that lands.
   var result = Vec[UInt8].new();
   var i = 0;
   while i < count {
@@ -2373,89 +2437,23 @@ pub fn chacha20_poly1305_decrypt(key: &Vec[UInt8], nonce: &Vec[UInt8], aad: &Vec
 //   - Preimage resistance matches the full SHA-256 (256-bit).
 // ============================================================================
 
-// SHA-224 uses a distinct 8-word IV; the digest is the first 28 bytes.
-// The IV is built at runtime because module-level const arrays are
-// mis-materialized by the compiler (only the length + first element survive).
-fn _sha224_iv() -> Vec[Int] {
-  var v = Vec[Int].new();
-  v.push(0xc1059ed8);
-  v.push(0x367cd507);
-  v.push(0x3070dd17);
-  v.push(0xf70e5939);
-  v.push(0xffc00b31);
-  v.push(0x68581511);
-  v.push(0x64f98fa7);
-  v.push(0xbefa4fa4);
-  return v;
-}
-
+// SHA-224 delegates to the runtime C path (xiom_sha224_hash in
+// runtime/sha256_sw.c). The previous XIOM-side state marshalling around
+// xiom_sha256_sw_compress miscompiles (zero-offset store corruption into the
+// malloc'd state buffer; probed 2026-08-24 -- wrong digests for any non-empty
+// message while empty passed). Same architecture as sha256 below.
 pub fn sha224(data: &Vec[UInt8]) -> Vec[UInt8]
   ensures: result.len() == 28
 {
-  let data_len = data.len();
-  let bit_len = data_len * 8;
-  var pad_len = 64 - ((data_len + 9) % 64);
-  if pad_len >= 64 { pad_len = pad_len - 64; }
-  var padded = Vec[UInt8].new();
-  var i = 0;
-  while i < data_len {
-    padded.push(data[i]);
-    i = i + 1;
-  }
-  padded.push(0x80);
-  i = 0;
-  while i < pad_len {
-    padded.push(0);
-    i = i + 1;
-  }
-  var bl = bit_len;
-  i = 7;
-  while i >= 0 {
-    padded.push((bl % 256) as UInt8);
-    bl = bl / 256;
-    i = i - 1;
-  }
-  var state = _sha224_iv();
-  // Reuse the C SHA-256 compress with SHA-224 IV
-  let block_count = padded.len() / 64;
-  unsafe {
-    var st_buf = malloc(32);
-    i = 0;
-    while i < 8 {
-      var v = state[i];
-      st_buf[i * 4 + 0] = (v % 256) as UInt8;
-      st_buf[i * 4 + 1] = (v / 256 % 256) as UInt8;
-      st_buf[i * 4 + 2] = (v / 65536 % 256) as UInt8;
-      st_buf[i * 4 + 3] = (v / 16777216 % 256) as UInt8;
-      i = i + 1;
-    }
-    var bi = 0;
-    while bi < block_count {
-      xiom_sha256_sw_compress(st_buf, padded.data + bi * 64);
-      bi = bi + 1;
-    }
-    i = 0;
-    while i < 8 {
-      var b0 = st_buf[i * 4 + 0] as Int;
-      var b1 = st_buf[i * 4 + 1] as Int;
-      var b2 = st_buf[i * 4 + 2] as Int;
-      var b3 = st_buf[i * 4 + 3] as Int;
-      state[i] = (b3 * 16777216) + (b2 * 65536) + (b1 * 256) + b0;
-      i = i + 1;
-    }
-    free(st_buf);
-  };
-  // Output: first 7 words (28 bytes) big-endian (MSB first)
   var result = Vec[UInt8].new();
-  i = 0;
-  while i < 7 {
-    var v = _u32_mask(state[i]);
-    result.push((v / 16777216 % 256) as UInt8);
-    result.push((v / 65536 % 256) as UInt8);
-    result.push((v / 256 % 256) as UInt8);
-    result.push((v % 256) as UInt8);
+  var i = 0;
+  while i < 28 {
+    result.push(0);
     i = i + 1;
   }
+  unsafe {
+    xiom_sha224_hash(data.data, data.len() as UInt, result.data);
+  };
   return result;
 }
 
@@ -2497,52 +2495,16 @@ fn _sha384_iv() -> Vec[Int] {
 pub fn sha384(data: &Vec[UInt8]) -> Vec[UInt8]
   ensures: result.len() == 48
 {
-  let data_len = data.len();
-  let bit_len = data_len * 8;
-  var pad_len = 128 - ((data_len + 17) % 128);
-  if pad_len >= 128 { pad_len = pad_len - 128; }
-  var padded = Vec[UInt8].new();
-  var i = 0;
-  while i < data_len {
-    padded.push(data[i]);
-    i = i + 1;
-  }
-  padded.push(0x80);
-  i = 0;
-  while i < pad_len {
-    padded.push(0);
-    i = i + 1;
-  }
-  var bl_low = bit_len;
-  i = 7;
-  while i >= 0 {
-    padded.push((bl_low % 256) as UInt8);
-    bl_low = bl_low / 256;
-    i = i - 1;
-  }
-  i = 7;
-  while i >= 0 {
-    padded.push(0);
-    i = i - 1;
-  }
-  var state = _sha384_iv();
-  let block_count = padded.len() / 128;
-  var bi = 0;
-  while bi < block_count {
-    _sha512_block(&padded, bi * 128, &mut state);
-    bi = bi + 1;
-  }
-  // Output: first 6 words (48 bytes) big-endian
+  // C-backed (runtime xiom_runtime.c): same rationale as sha512 -- the
+  // XIOM-side u64 block implementation produced wrong digests.
   var result = Vec[UInt8].new();
-  i = 0;
-  while i < 6 {
-    var v = state[i];
-    var j = 7;
-    while j >= 0 {
-      result.push(_i64_byte(v, j));
-      j = j - 1;
-    }
+  var i = 0;
+  while i < 48 {
+    result.push(0);
     i = i + 1;
   }
+  unsafe {
+    xiom_sha384_hash(data.data, data.len() as UInt, result.data);
+  };
   return result;
 }

@@ -5947,13 +5947,9 @@ static void sha512_transform(uint64_t s[8], const uint8_t block[128]) {
     s[4]+=e;s[5]+=f;s[6]+=g;s[7]+=h;
 }
 
-static void sha512_hash(const uint8_t* msg, size_t msglen, uint8_t out[64]) {
-    uint64_t state[8] = {
-        0x6a09e667f3bcc908ULL, 0xbb67ae8584caa73bULL,
-        0x3c6ef372fe94f82bULL, 0xa54ff53a5f1d36f1ULL,
-        0x510e527fade682d1ULL, 0x9b05688c2b3e6c1fULL,
-        0x1f83d9abfb41bd6bULL, 0x5be0cd19137e2179ULL
-    };
+/* Shared SHA-512 transform driver; `words` selects output length
+   (8 = SHA-512/64 bytes, 6 = SHA-384/48 bytes). */
+static void sha512_core(uint64_t state[8], const uint8_t* msg, size_t msglen, uint8_t* out, int words) {
     uint8_t block[128];
     size_t pos = 0, i, rem;
     while (pos + 128 <= msglen) {
@@ -5976,7 +5972,7 @@ static void sha512_hash(const uint8_t* msg, size_t msglen, uint8_t out[64]) {
         }
     }
     sha512_transform(state, block);
-    for (i=0;i<8;i++) {
+    for (i=0;i<words;i++) {
         out[i*8]   = (uint8_t)(state[i]>>56);
         out[i*8+1] = (uint8_t)(state[i]>>48);
         out[i*8+2] = (uint8_t)(state[i]>>40);
@@ -5986,6 +5982,81 @@ static void sha512_hash(const uint8_t* msg, size_t msglen, uint8_t out[64]) {
         out[i*8+6] = (uint8_t)(state[i]>>8);
         out[i*8+7] = (uint8_t)(state[i]);
     }
+}
+
+static void sha512_hash(const uint8_t* msg, size_t msglen, uint8_t out[64]) {
+    uint64_t state[8] = {
+        0x6a09e667f3bcc908ULL, 0xbb67ae8584caa73bULL,
+        0x3c6ef372fe94f82bULL, 0xa54ff53a5f1d36f1ULL,
+        0x510e527fade682d1ULL, 0x9b05688c2b3e6c1fULL,
+        0x1f83d9abfb41bd6bULL, 0x5be0cd19137e2179ULL
+    };
+    sha512_core(state, msg, msglen, out, 8);
+}
+
+/* One-shot SHA-384: SHA-512 with the SHA-384 IV, 48-byte output.
+   Bound from xiom.crypto; the XIOM-side u64 loop implementation miscompiles
+   (wrong digests; see stdlib session 2026-08-24 kat_crypto_sha2 findings). */
+/* ================================================================
+   OS CSPRNG -- xiom_os_entropy
+   Fills buf with cryptographically secure random bytes from the
+   operating system. Returns the number of bytes filled; 0 means no
+   OS source was available and the caller must fall back (and must
+   document the weakness loudly).
+   Windows: ProcessPrng (bcrypt.dll, Win10+), fallback to
+            SystemFunction036/RtlGenRandom (advapi32.dll). Both are
+            bound dynamically via LoadLibraryA/GetProcAddress so NO
+            import library is needed by the standard link line.
+   Unix:    /dev/urandom via fread.
+   ================================================================ */
+#if defined(_WIN32)
+long xiom_os_entropy(unsigned char* buf, long len) {
+    typedef BOOLEAN (WINAPI *RtlGenRandomFn)(PVOID, ULONG);
+    typedef BOOL (WINAPI *ProcessPrngFn)(PBYTE, SIZE_T);
+    HMODULE h;
+    ProcessPrngFn pp;
+    RtlGenRandomFn rgr;
+    if (buf == NULL || len <= 0) { return 0; }
+    h = GetModuleHandleA("bcrypt.dll");
+    if (h == NULL) { h = LoadLibraryA("bcrypt.dll"); }
+    if (h != NULL) {
+        pp = (ProcessPrngFn)(void*)GetProcAddress(h, "ProcessPrng");
+        if (pp != NULL && pp((PBYTE)buf, (SIZE_T)len)) { return len; }
+    }
+    h = LoadLibraryA("advapi32.dll");
+    if (h != NULL) {
+        rgr = (RtlGenRandomFn)(void*)GetProcAddress(h, "SystemFunction036");
+        if (rgr != NULL && rgr((PVOID)buf, (ULONG)len)) { return len; }
+    }
+    return 0;
+}
+#else
+long xiom_os_entropy(unsigned char* buf, long len) {
+    FILE* f;
+    size_t got;
+    if (buf == NULL || len <= 0) { return 0; }
+    f = fopen("/dev/urandom", "rb");
+    if (f == NULL) { return 0; }
+    got = fread(buf, 1, (size_t)len, f);
+    fclose(f);
+    if (got == 0) { return 0; }
+    return (long)got;
+}
+#endif
+
+void xiom_sha384_hash(const uint8_t* msg, unsigned int msglen, uint8_t out[48]) {
+    uint64_t state[8] = {
+        0xcbbb9d5dc1059ed8ULL, 0x629a292a367cd507ULL,
+        0x9159015a3070dd17ULL, 0x152fecd8f70e5939ULL,
+        0x67332667ffc00b31ULL, 0x8eb44a8768581511ULL,
+        0xdb0c2e0d64f98fa7ULL, 0x47b5481dbefa4fa4ULL
+    };
+    sha512_core(state, msg, (size_t)msglen, out, 6);
+}
+
+/* Public wrapper: one-shot SHA-512 (bound from xiom.crypto). */
+void xiom_sha512_hash(const uint8_t* msg, unsigned int msglen, uint8_t out[64]) {
+    sha512_hash(msg, (size_t)msglen, out);
 }
 
 /* ================================================================

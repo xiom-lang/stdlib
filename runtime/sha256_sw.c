@@ -180,3 +180,21 @@ void xiom_sha256_hash(const unsigned char* input, unsigned int input_len, unsign
     sha256_update(&ctx, input, input_len);
     sha256_final(&ctx, output);
 }
+
+/* One-shot SHA-224: SHA-256 with the SHA-224 IV, truncated to 28 bytes.
+   Implemented in C (not XIOM-side state marshalling) because the XIOM-compiled
+   byte-store loop into the malloc'd state buffer miscompiles (zero-offset
+   store corruption; see stdlib session 2026-08-24 probe_sha224_replica). */
+void xiom_sha224_hash(const unsigned char* input, unsigned int input_len, unsigned char* output) {
+    SHA256_CTX ctx;
+    unsigned char tmp[32];
+    int i;
+    sha256_init(&ctx);
+    ctx.state[0] = 0xc1059ed8u; ctx.state[1] = 0x367cd507u;
+    ctx.state[2] = 0x3070dd17u; ctx.state[3] = 0xf70e5939u;
+    ctx.state[4] = 0xffc00b31u; ctx.state[5] = 0x68581511u;
+    ctx.state[6] = 0x64f98fa7u; ctx.state[7] = 0xbefa4fa4u;
+    sha256_update(&ctx, input, (size_t)input_len);
+    sha256_final(&ctx, tmp);
+    for (i = 0; i < 28; i++) output[i] = tmp[i];
+}
