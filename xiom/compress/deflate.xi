@@ -75,13 +75,28 @@ pub fn deflate_compress_level(data: &Vec[UInt8], level: Int) -> Vec[UInt8] {
 /// Decompress a deflate_compress / deflate_compress_level container.
 /// Returns Err on truncation, an unknown method byte, or a corrupted
 /// huffman/lz77 payload.
+// Default output ceiling for uncapped decompression (1 GiB); passed down
+// to the huffman and lz77 expanders. Capped variant accepts an explicit
+// limit -- see lz77.xi for the convention.
+const _DEFLATE_DEFAULT_CAP: Int = 1073741824;
+
 pub fn deflate_decompress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str] {
+  return deflate_decompress_capped(data, _DEFLATE_DEFAULT_CAP);
+}
+
+/// Decompress with a hard ceiling on output size (decompression-bomb
+/// guard). The cap is enforced inside both expander stages BEFORE their
+/// allocations grow.
+pub fn deflate_decompress_capped(data: &Vec[UInt8], max_out: Int) -> Result[Vec[UInt8], Str] {
   var len = data.len();
   if len < 2 {
     return Err("deflate: container too short");
   };
   var method = data[0] as Int;
   if method == 0x00 {
+    if len - 2 > max_out {
+      return Err("deflate: output exceeds cap");
+    };
     var result = Vec[UInt8].new();
     var i = 2;
     while i < len {
@@ -99,13 +114,13 @@ pub fn deflate_decompress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str] {
     container.push(data[j]);
     j = j + 1;
   }
-  var packed = huffman.huffman_decompress(&container);
+  var packed = huffman.huffman_decompress_capped(&container, max_out);
   var tokens = Vec[UInt8].new();
   match packed {
     Ok(v) => { tokens = v; };
     Err(e) => { return Err(e); };
   }
-  var decoded = lz77.lz77_decompress(&tokens);
+  var decoded = lz77.lz77_decompress_capped(&tokens, max_out);
   match decoded {
     Ok(v2) => { return Ok(v2); };
     Err(e2) => { return Err(e2); };

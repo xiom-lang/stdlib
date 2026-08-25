@@ -405,7 +405,19 @@ pub fn huffman_compress(data: &Vec[UInt8]) -> Vec[UInt8] {
 
 /// One-shot Huffman decompression of a huffman_compress container.
 /// Returns Err on truncation, an invalid code table, or stream exhaustion.
+// Default output ceiling for uncapped decompression (1 GiB): bounds
+// decompression-bomb amplification. Capped variant accepts an explicit
+// limit; see lz77.xi for the same convention.
+const _HUFF_DEFAULT_CAP: Int = 1073741824;
+
 pub fn huffman_decompress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str] {
+  return huffman_decompress_capped(data, _HUFF_DEFAULT_CAP);
+}
+
+/// Decompress with a hard ceiling on output size. The container's declared
+/// length is rejected up-front when it exceeds the cap; the decode loop
+/// re-checks per symbol, so a lying header cannot allocate past the cap.
+pub fn huffman_decompress_capped(data: &Vec[UInt8], max_out: Int) -> Result[Vec[UInt8], Str] {
   var len = data.len();
   if len < 260 {
     return Err("huffman: container too short");
@@ -415,6 +427,9 @@ pub fn huffman_decompress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str] {
   var b2 = data[2] as Int;
   var b3 = data[3] as Int;
   var orig_len = b0 | (b1 << 8) | (b2 << 16) | (b3 << 24);
+  if orig_len > max_out {
+    return Err("huffman: declared output exceeds cap");
+  };
   var lens = Vec[Int].new();
   var i = 0;
   while i < 256 {

@@ -77,7 +77,20 @@ pub fn lz77_compress(data: &Vec[UInt8]) -> Vec[UInt8] {
 
 /// Decompress an lz77_compress token stream. Returns Err on truncated input,
 /// a zero match distance, or a distance beyond the emitted output.
+// Default output ceiling for uncapped decompression (1 GiB): bounds
+// decompression-bomb amplification while never triggering for legitimate
+// stdlib-roundtrip data. Capped variants accept an explicit limit.
+const _LZ77_DEFAULT_CAP: Int = 1073741824;
+
 pub fn lz77_decompress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str] {
+  return lz77_decompress_capped(data, _LZ77_DEFAULT_CAP);
+}
+
+/// Decompress with a hard ceiling on output size. Every expansion step is
+/// checked BEFORE writing, so a hostile token stream cannot allocate beyond
+/// the cap even momentarily. Returns Err("lz77: output exceeds cap") when
+/// exceeded.
+pub fn lz77_decompress_capped(data: &Vec[UInt8], max_out: Int) -> Result[Vec[UInt8], Str] {
   var result = Vec[UInt8].new();
   var len = data.len();
   var pos = 0;
@@ -89,6 +102,9 @@ pub fn lz77_decompress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str] {
       var count = (ctrl & 0x7F) + 1;
       if pos + count > len {
         return Err("lz77: truncated literal run");
+      };
+      if result.len() + count > max_out {
+        return Err("lz77: output exceeds cap");
       };
       var k = 0;
       while k < count {
@@ -111,6 +127,9 @@ pub fn lz77_decompress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str] {
       var dst_len = result.len();
       if off > dst_len {
         return Err("lz77: match distance exceeds output length");
+      };
+      if dst_len + mlen > max_out {
+        return Err("lz77: output exceeds cap");
       };
       var k2 = 0;
       while k2 < mlen {
