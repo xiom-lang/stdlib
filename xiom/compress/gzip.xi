@@ -99,10 +99,22 @@ pub fn gzip_compress(data: &Vec[UInt8]) -> Vec[UInt8] {
   return result;
 }
 
+// Default output ceiling for uncapped decompression (1 GiB); enforced in
+// the deflate expander stages before allocation grows. Capped variant
+// accepts an explicit limit -- see lz77.xi for the convention.
+const _GZIP_DEFAULT_CAP: Int = 1073741824;
+
 /// Unwrap and validate a gzip stream. Parses the optional header fields,
 /// decompresses the payload, and verifies the CRC32 and ISIZE trailer values.
 /// Returns Err on any mismatch or malformed input.
 pub fn gzip_decompress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str] {
+  return gzip_decompress_capped(data, _GZIP_DEFAULT_CAP);
+}
+
+/// Decompress with a hard ceiling on output size (decompression-bomb
+/// guard). The header's declared ISIZE is rejected up-front when it
+/// exceeds the cap; the payload cap is enforced inside the deflate stages.
+pub fn gzip_decompress_capped(data: &Vec[UInt8], max_out: Int) -> Result[Vec[UInt8], Str] {
   var len = data.len();
   if len < 18 {
     return Err("gzip: data too short for header");
@@ -112,6 +124,17 @@ pub fn gzip_decompress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str] {
   };
   if data[2] != 0x08 {
     return Err("gzip: unsupported compression method");
+  };
+  // Early rejection on the DECLARED size; the deflate stages still enforce
+  // the real bound (a lying ISIZE must not allocate past the cap either).
+  var isize_pos = len - 4;
+  var ds0 = data[isize_pos] as Int;
+  var ds1 = data[isize_pos + 1] as Int;
+  var ds2 = data[isize_pos + 2] as Int;
+  var ds3 = data[isize_pos + 3] as Int;
+  var declared = ds0 | (ds1 << 8) | (ds2 << 16) | (ds3 << 24);
+  if declared > max_out {
+    return Err("gzip: declared output exceeds cap");
   };
   var flg = data[3] as Int;
   var header_end = 10;
@@ -157,7 +180,7 @@ pub fn gzip_decompress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str] {
     payload.push(data[i]);
     i = i + 1;
   }
-  var decoded = deflate.deflate_decompress(&payload);
+  var decoded = deflate.deflate_decompress_capped(&payload, max_out);
   var decompressed = Vec[UInt8].new();
   match decoded {
     Ok(v) => { decompressed = v; };
