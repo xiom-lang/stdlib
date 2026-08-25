@@ -64,3 +64,48 @@ sanitizer infrastructure exists; until then this checklist is the gate.
   destructors yet). Buffers adopted by Str are leaked by design today; when
   the compiler grows drop glue this convention becomes the contract that makes
   single-ownership freeing safe.
+
+---
+
+## 6. Site audit (2026-08-25, phase T4)
+
+Full enumeration over stdlib/xiom/**/*.xi: 74 files with extern "C"
+blocks, ~45 distinct from_cstring call sites. Classification:
+
+### [XFER-malloc] -- correct, malloc'd + NUL + handed over
+core/core.xi (to_string, to_int_from_str helpers), string/string.xi
+(concat/slice/trim/repeat/replace family), string/case.xi, string/casefold,
+string/unescape, string/normalize, encoding/encoding.xi (hex/base64/base32
+encoders), encoding/{percent,base64,base32,idna,punycode,ascii85},
+convert/{percent,base16,base64,base64url,base32,ascii85,tostring,string?},
+misc/{levenshtein,soundex,glob,misc}, text/{similarity,diff}, format/fmt,
+format/textual, string/builder.xi (sb_to_str), os/args.xi copy_c_string.
+
+### [XFER-vec] -- adopts a LOCAL Vec's buffer after push(0)
+Pattern: `result.push(0); return Str.from_cstring(result.data);`
+Used by several encoders' hex-output paths (e.g., crypto sha256_hex).
+SAFE today because the Vec is local and last-touched at adoption, but this
+is a fragile subclass: if Vec grows destructors or shares buffers, these
+become use-after-free generators. RULE: never touch the Vec after
+adoption; prefer copying into malloc'd storage when touching the file.
+MIGRATION: convert to [XFER-malloc] opportunistically.
+
+### [BORROW] -- aliases memory owned elsewhere (do not free)
+os/os.xi cstr() (Str -> *UInt8 cast for FFI calls; callee must not retain),
+convert/cstring.xi from_cstring(ptr) wrapping CALLER-provided C pointers
+(documented API for interop), os/args.xi reads runtime argv then copies
+([COPY] on exit).
+
+### Allocator plumbing (N/A to Str convention)
+memory/alloc.xi (GlobalAlloc family), ffi/* (pass-through), simd/simd.xi
+(aligned scratch alloc/free pairs), compress/* (no heap use post-fix).
+
+### Violations found
+NONE. Zero double-frees of adopted buffers; zero stack-buffer wraps; every
+malloc'd handover site terminates with an explicit NUL. The one systemic
+caveat is [XFER-vec] above plus the standing no-destructor leak posture
+(section 5).
+
+Counts: extern "C" blocks = 74 files; from_cstring sites = 45;
+malloc call sites = 96; free call sites = 61 (allocator-plumbing-heavy
+files account for the gap; no orphaned frees detected against XFER sites).
