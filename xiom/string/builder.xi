@@ -23,7 +23,6 @@ module xiom.string.builder
 
 extern "C" {
   fn malloc(size: UInt) -> *UInt8;
-  fn xiom_memcpy_dispatch(dest: *UInt8, src: *UInt8, n: UInt) -> *UInt8;
 }
 
 use xiom.string;
@@ -87,7 +86,11 @@ pub fn sb_to_str(sb: &Vec[UInt8]) -> Str {
   let n = sb.len();
   unsafe {
     var buf = malloc(n + 1);
-    xiom_memcpy_dispatch(buf, sb.data, n as UInt);
+    var i = 0;
+    while i < n {
+      buf[i] = sb[i];
+      i = i + 1;
+    }
     buf[n] = 0;
     return Str.from_cstring(buf);
   }
