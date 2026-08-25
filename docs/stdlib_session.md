@@ -69,6 +69,51 @@ mis-materialization with size-dependent AV; self-param methods invisible
 to prefix calls; cross-module struct-param resolution failures; bare-name
 injection inconsistency; bare-name wrong-overload binding on deflate).
 
+## 1.6. Overnight continuation (2026-08-25, small hours) -- all committed
+
+1. **Alloc-free search predicates** (string.xi): index_of/last_index_of/
+   starts_with/ends_with rewritten onto shared byte-wise _matches_at --
+   zero allocations per search. smoke_string_search locks found/miss,
+   long-needle, empty-needle, multibyte-boundary cases.
+2. **Decompression-bomb caps through the whole stack**: lz77/huffman/
+   deflate/gzip each gain *_decompress_capped (per-symbol checks BEFORE
+   allocation; huffman rejects lying declared length; gzip rejects
+   over-cap ISIZE early). Uncapped names delegate with a 1 GiB default;
+   aggregate facade passthroughs added.
+   smoke_compress_bomb_guard: sub-size cap rejected, working cap
+   round-trips byte-exact.
+3. **os/args.xi shipped**: binds runtime argc/argv with [COPY] semantics;
+   flag/--key=value/--key value/positional helpers over synthetic vectors;
+   smoke_os_args green first run.
+4. **Dedup inventory** (docs/STDLIB_DEDUP_INVENTORY.md): canonical twin
+   table + verified-diverged notes + per-pair execution checklist.
+5. **TLS decision** (docs/TLS_DECISION.md): bind schannel via FFI first,
+   OpenSSL adapter second, homegrown TLS rejected.
+6. **Extern-site ownership audit DONE**: 74 extern blocks / 45
+   from_cstring sites / zero violations; one systemic caveat documented
+   ([XFER-vec] subclass adopting local Vec buffers -- safe today,
+   fragile under future Vec destructors). Full table in STR_OWNERSHIP.md
+   section 6.
+7. **lz77 investigated**: match detection WORKS in-pipeline (earlier
+   3x-expansion reading was another bare-name binding artifact); ratio gap
+   vs zlib (~9x on runs: 366 vs 41 bytes for 5000xA) is architectural --
+   huffman container overhead + 130-byte match cap. Quality TODO, not bug.
+
+### Night-session compiler findings (report 3b-3)
+13. **Str-cast memcpy corruption**: routing str_concat through
+    xiom_memcpy_dispatch with Str->ptr casts breaks CHAINED self-concat
+    (wrong lengths from 3rd link; direct concats fine; pristine passes).
+    Stdlib reverted to byte loops same-night; re-land after diagnosis.
+14. **Runtime contracts are ACTIVE on round-15**: ensures clauses abort
+    programs (exit 1 + "contract violated" message citing source line).
+    str_concat's own length ensure caught finding 13 mid-flight. Expect
+    contract aborts in sweeps wherever an ensure is genuinely violated.
+
+### Verification protocol note
+Sequential many-smoke batches occasionally yield NOLINE compile blips
+(temp-name collisions?); ALWAYS rerun any batch-failure individually
+before believing it. Solo reruns of every batch-NOLINE tonight passed.
+
 ## 2. New stdlib-side defects found (next-session queue, priority order)
 
 1. ~~ChaCha20-Poly1305 interop~~ DONE.
@@ -100,7 +145,7 @@ byte_at bound check, Rc prefix-call receiver garble, silent arity mismatch.
 4. Mirror edited stdlib files into the verification worktree before
    running (dual-root gotcha above).
 
-## 5. Next session queue
+## 5. Next session queue (updated after overnight run)
 
 1. ChaCha20-Poly1305 interop root-cause + fix (top stdlib crypto defect).
 2. gzip >=4096 AV + deflate empty-return joint probe with compiler session.
@@ -108,7 +153,9 @@ byte_at bound check, Rc prefix-call receiver garble, silent arity mismatch.
    stack-cookie clusters flip; un-gate kdf/json/blocked KAT asserts.
 4. Flip secure_random_bytes to OS entropy once cross-module miscompile fixed.
 5. StringBuilder + dealloc-free predicate rewrites (phase E1-E3).
-6. Legacy cipher quarantine move (phase O prep safe NOW).
+6. Legacy cipher quarantine banners DONE; remaining: physical move to crypto/legacy/ post-delegation-fix.
+7. lz77/huffman ratio improvement (real dynamic-Huffman deflate) -- quality project.
+8. Container tuning + iteration-order docs; package.xi identity fix.
 
 ---
 
