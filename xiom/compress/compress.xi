@@ -185,6 +185,18 @@ pub fn gzip_compress_level(data: &Vec[UInt8], level: Int) -> Result[Vec[UInt8], 
   Ok(gzip.gzip_compress(data))
 }
 
+// Capped variant: hard ceiling on decompressed size (bomb guard).
+pub fn gzip_decompress_capped(data: &Vec[UInt8], max_out: Int) -> Result[Vec[UInt8], Str]
+{
+  return gzip.gzip_decompress_capped(data, max_out);
+}
+
+// Capped variant: hard ceiling on decompressed size (bomb guard).
+pub fn deflate_decompress_capped(data: &Vec[UInt8], max_out: Int) -> Result[Vec[UInt8], Str]
+{
+  return deflate.deflate_decompress_capped(data, max_out);
+}
+
 pub fn gzip_decompress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str]
   ensures:  result is Ok => result.len() >= 0
 {
