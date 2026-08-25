@@ -114,17 +114,78 @@ Sequential many-smoke batches occasionally yield NOLINE compile blips
 (temp-name collisions?); ALWAYS rerun any batch-failure individually
 before believing it. Solo reruns of every batch-NOLINE tonight passed.
 
-## 2. New stdlib-side defects found (next-session queue, priority order)
+## 1.7. Second overnight pass (2026-08-25 morning) -- non-blocked backlog drained
 
-1. ~~ChaCha20-Poly1305 interop~~ DONE.
-2. ~~gzip >=4096 AV + deflate empty-return~~ AV root-caused (crc table);
-   DEFLATE item narrowed: bare-name `deflate_compress` binds the wrong
-   overload (compiler); qualified calls work and gzip roundtrips green at
-   all tested sizes. Deflate payload efficiency (lz77 emits near-2x
-   expansion on repetitive data) is a separate quality TODO.
-3. Legacy-cipher quarantine (crypto/legacy/ move) -- pure docs+headers, safe.
-4. StringBuilder + alloc-free predicates (plan phase E) -- untouched yet.
+1. **Bomb caps completed for ALL codecs**: lz4 (per-block check,
+   residual single-block overshoot documented) and snappy (varint
+   declared-length early reject + per-literal/per-copy checks).
+   Bomb-guard smoke extended; aggregate passthroughs added.
+2. **snappy round-trip BUG FIXED**: copy2 element encodes max length 256
+   but the compressor emitted matches up to 273 while advancing pos by the
+   full length -- input bytes silently dropped, stream desynchronized from
+   ~1000-byte inputs. Clamped emitted match to copy2 capacity.
+   Caught by the new family round-trip smoke; per-size bisect probes
+   snapq_*.xi.
+3. **smoke_compress_crc32**: zlib-cross-checked vectors incl. classic
+   123456789 check value + 5000-byte cyclic pattern (masked-string compare
+   avoids the UInt32 cast hazard).
+4. **smoke_compress_roundtrip_family**: direct byte-exact round-trips for
+   lz77/huffman/deflate/zlib/snappy/lz4 at two sizes -- this is the smoke
+   that caught snappy.
+5. **kat_encoding_punycode**: RFC 3492 vectors via python-oracle; module
+   verified fully conformant first run (encode + decode round-trips).
+6. **docs/STDLIB_CONTAINER_TUNING.md**: Vec doubling-from-4, IntMap
+   open-addressing/linear-probe/tombstones with 16-start/0.75-load/double
+   growth, iteration-order UNSPECIFIED warning, hash-DoS seeded-siphash
+   plan, guidance for new containers.
 
+Final matrix: 26-target validation set green (two batch NOLINE transients
+pass solo -- known harness flake, always rerun individually).
+
+---
+
+## 1.8. DEFINITIVE remaining-work split
+
+### A. REMAINING NON-BLOCKED (stdlib can do without compiler)
+Small, mostly additive:
+- KAT breadth: bigint/bigfloat spot values, net/url parser edge tables,
+  utf8 ENCODER side vectors, SHA-512 multi-block long-message vectors
+- Seeded-siphash DEFAULT hasher switch for Str-keyed maps (changes
+  iteration order run-to-run -- will shake order-dependent smokes; pair
+  with STDLIB_CONTAINER_TUNING.md promises)
+- map_rehash API for tombstone-heavy workloads
+- [XFER-vec] -> [XFER-malloc] opportunistic migration in encoder paths
+- Contract-coverage expansion (runtime now ENFORCES ensures -- adding
+  clauses doubles as bug discovery; case.xi wrappers already have them)
+- Deflate quality project: real dynamic-Huffman blocks (current huffman
+  container adds ~260B header; gzip of 5000xA is 366B vs zlib 41B)
+
+### B. COMPILER-BLOCKED (hand to the compiler session; full detail in
+REPORT_TO_COMPILER_SESSION.md 3b/3b-2/3b-3)
+1. Same-name delegation crash (blocks ALL dedup execution; inventory ready)
+2. Cross-module unsafe+extern+Vec miscompile (blocks OS-entropy default flip)
+3. Multi-call+compare shapes AV/breakpoint (blocks kdf/json KAT un-gating)
+4. json heap layer cluster (json KAT + stress serialize smokes)
+5. UInt8->Int narrow-zext cast miscompile
+6. byte_at contextual OOB read (builtin bound check)
+7. Generic-method prefix-call receiver garble (Rc family)
+8. Str-cast memcpy corruption in chained concats (memop re-land blocked)
+9. geom nested &Vec[Vec[Float64]] param reads
+10. CRT-layout AV cluster (iter_collect/array_slice/sort_by/url/core_box/regex x2)
+11. Stack-cookie/SIMD illegal-instruction family (math_edge/pbkdf2 x2/argon2/bufreader)
+12. clang-variant compile failures (ptr_offset/io_copy x2/read_int_float/hash_values/escape/captures x4/array_zip T001)
+13. Silent arity mismatch / bare-name wrong-overload binding
+14. Module-level array mis-materialization (size-dependent heap overflow)
+15. `self`-param methods unreachable via prefix calls
+16. Cross-module struct-param resolution failure
+17. LET-array representation joint decision doc (their stage 4 owes us)
+18. api_freeze harness path sync (their item B)
+## 2. Defect ledger status
+
+All defects from prior sessions are RESOLVED or reclassified into the
+section 1.8 lists: ChaCha interop DONE, gzip AV root-caused and fixed
+(crc table), deflate bare-name binding moved to compiler list item 13,
+lz77 efficiency moved to non-blocked backlog (deflate quality project).
 ## 3. Compiler-facing queue (their side; do NOT work around)
 
 See REPORT_TO_COMPILER_SESSION.md sections 3/3b/5. Headliners:
