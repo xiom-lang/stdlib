@@ -183,10 +183,25 @@ fn _snappy_write_copy2(out: &mut Vec[UInt8], mlen: Int, moff: Int) {
 
 /// Decompress a raw snappy stream. Returns Err on malformed varints, invalid
 /// element types, truncated data, or out-of-range copy offsets.
+// Default output ceiling for uncapped decompression (1 GiB): bounds
+// decompression-bomb amplification. Capped variant accepts an explicit
+// limit and also rejects a lying varint declared length up-front.
+const _SNAPPY_DEFAULT_CAP: Int = 1073741824;
+
 pub fn snappy_decompress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str] {
+  return snappy_decompress_capped(data, _SNAPPY_DEFAULT_CAP);
+}
+
+/// Decompress with a hard ceiling on output size (bomb guard). The
+/// varint-declared length is rejected up-front when it exceeds the cap;
+/// every literal/copy element re-checks before writing.
+pub fn snappy_decompress_capped(data: &Vec[UInt8], max_out: Int) -> Result[Vec[UInt8], Str] {
   var vv = _get_varint(data, 0);
   if vv.1 < 0 {
     return Err("snappy: malformed varint length");
+  };
+  if vv.0 > max_out {
+    return Err("snappy: declared output exceeds cap");
   };
   var pos = vv.1;
   var len = data.len();
@@ -218,6 +233,9 @@ pub fn snappy_decompress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str] {
       if pos + lit_len > len {
         return Err("snappy: truncated literal");
       };
+      if result.len() + lit_len > max_out {
+        return Err("snappy: output exceeds cap");
+      };
       var t = 0;
       while t < lit_len {
         result.push(data[pos + t]);
@@ -235,6 +253,9 @@ pub fn snappy_decompress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str] {
       var dst_len = result.len();
       if off == 0 || off > dst_len {
         return Err("snappy: invalid copy offset");
+      };
+      if dst_len + clen > max_out {
+        return Err("snappy: output exceeds cap");
       };
       var k2 = 0;
       while k2 < clen {
@@ -255,6 +276,9 @@ pub fn snappy_decompress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str] {
       var dst_len2 = result.len();
       if off2 == 0 || off2 > dst_len2 {
         return Err("snappy: invalid copy offset");
+      };
+      if dst_len2 + clen2 > max_out {
+        return Err("snappy: output exceeds cap");
       };
       var k3 = 0;
       while k3 < clen2 {
