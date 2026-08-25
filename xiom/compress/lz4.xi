@@ -92,7 +92,19 @@ pub fn lz4_bound(len: Int) -> Int {
 
 /// Decompress an lz4_compress frame. Validates magic and the end-of-frame
 /// marker. Returns Err on malformed input.
+// Default output ceiling for uncapped decompression (1 GiB): bounds
+// decompression-bomb amplification. Capped variant accepts an explicit
+// limit; residual note: a single hostile block may overshoot by up to its
+// own decoded size before the per-block check fires.
+const _LZ4_DEFAULT_CAP: Int = 1073741824;
+
 pub fn lz4_decompress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str] {
+  return lz4_decompress_capped(data, _LZ4_DEFAULT_CAP);
+}
+
+/// Decompress with a hard ceiling on total output size (bomb guard).
+/// Checked after each block's expansion.
+pub fn lz4_decompress_capped(data: &Vec[UInt8], max_out: Int) -> Result[Vec[UInt8], Str] {
   var len = data.len();
   if len < 11 {
     return Err("lz4: frame too short");
@@ -133,6 +145,9 @@ pub fn lz4_decompress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str] {
       };
       Err(e) => { return Err(e); };
     }
+    if result.len() > max_out {
+      return Err("lz4: output exceeds cap");
+    };
     if is_last {
       return Ok(result);
     };
