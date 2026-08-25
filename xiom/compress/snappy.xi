@@ -124,6 +124,14 @@ pub fn snappy_compress(data: &Vec[UInt8]) -> Vec[UInt8] {
         si = si + 1;
       }
     };
+    // Clamp to what copy2 can encode (length byte holds len-1, max 255).
+    // BUG FIX (2026-08-25): without this clamp, matches of 257..273 bytes
+    // were emitted as 256-byte copies while pos advanced by the FULL
+    // match length -- silently dropping input bytes and desynchronizing
+    // every later offset (round-trip failed from ~1000-byte inputs).
+    if best_len > 256 {
+      best_len = 256;
+    };
     if best_len >= 4 && best_off <= 65535 {
       var lit_len = pos - lit_start;
       _snappy_write_literal(&result, data, lit_start, lit_len);
