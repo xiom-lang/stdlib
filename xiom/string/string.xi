@@ -68,12 +68,29 @@ pub fn str_contains(s: Str, substr: Str) -> Bool {
   result.is_some
 }
 
+// Byte-wise matcher: does `sub` occur at byte offset `at` of `s`?
+// Allocation-free (audit 5.2 / phase E2): the previous implementations
+// built a fresh slice per candidate position via str_slice.
+// UTF-8-safe: valid UTF-8 is prefix/suffix closed under byte comparison,
+// and byte_at returns raw bytes (round-14 semantics).
+fn _matches_at(s: Str, at: Int, sub: Str) -> Bool {
+  let n = sub.len();
+  var i = 0;
+  while i < n {
+    if byte_at(s, at + i) != byte_at(sub, i) {
+      return false;
+    };
+    i = i + 1;
+  }
+  return true;
+}
+
 pub fn str_starts_with(s: Str, prefix: Str) -> Bool {
   let prefix_len = prefix.len();
   if prefix_len > s.len() {
     return false;
   };
-  str_slice(s, 0, prefix_len) == prefix
+  _matches_at(s, 0, prefix)
 }
 
 pub fn str_ends_with(s: Str, suffix: Str) -> Bool {
@@ -82,7 +99,7 @@ pub fn str_ends_with(s: Str, suffix: Str) -> Bool {
   if suffix_len > s_len {
     return false;
   };
-  str_slice(s, s_len - suffix_len, s_len) == suffix
+  _matches_at(s, s_len - suffix_len, suffix)
 }
 
 pub fn str_split(s: Str, delimiter: Str) -> Vec[Str]
@@ -239,7 +256,7 @@ pub fn index_of(s: Str, substr: Str) -> Option[Int]
   };
   var i: Int = 0;
   while i <= s_len - sub_len {
-    if str_slice(s, i, i + sub_len) == substr {
+    if _matches_at(s, i, substr) {
       return Some(i);
     };
     i = i + 1;
@@ -258,7 +275,7 @@ pub fn last_index_of(s: Str, substr: Str) -> Option[Int] {
   };
   var i: Int = s_len - sub_len;
   while i >= 0 {
-    if str_slice(s, i, i + sub_len) == substr {
+    if _matches_at(s, i, substr) {
       return Some(i);
     };
     i = i - 1;
