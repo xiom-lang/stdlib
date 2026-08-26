@@ -2126,8 +2126,9 @@ pub fn secure_random_bytes(count: Int) -> Vec[UInt8] {
   // KNOWN SECURITY GAP (tracked): still draws from the non-cryptographic
   // random_range PRNG. The OS-entropy replacement exists above
   // (os_secure_random_bytes + runtime xiom_os_entropy) but calling it
-  // CROSS-MODULE currently triggers a compiler miscompile (AV) -- see
-  // REPORT_TO_COMPILER_SESSION.md. Flip the bodies once that lands.
+  // CROSS-MODULE still miscompiles on round-17 (multi-draw shapes hit
+  // STATUS_BREAKPOINT -- probe p_os_direct17; see
+  // REPORT_TO_COMPILER_SESSION.md 3b.2 item 1). Flip once genuinely fixed.
   var result = Vec[UInt8].new();
   var i = 0;
   while i < count {

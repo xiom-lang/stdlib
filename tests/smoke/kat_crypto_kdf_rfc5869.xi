@@ -1,11 +1,8 @@
 // kat_crypto_kdf_rfc5869.xi -- RFC 5869 HKDF-SHA-256 known-answer tests
 // Test cases 1-3 verbatim. TC3 exercises the EMPTY salt/info paths, which are
 // classic off-by-one traps in extract-and-expand implementations.
-// KNOWN-COMPILER-CLUSTER: this file currently AVs (-1073741819) on the
-// round-15 baseline too -- multi-call shape (hkdf x3 + secure_random x2 +
-// hex) trips the cross-module Vec/multi-call miscompile family. The vectors
-// were verified individually green before the cluster hit; keep committed as
-// a flip-green regression lock. See REPORT_TO_COMPILER_SESSION.md.
+// (Formerly blocked by the multi-call cluster; round-17 fixed it --
+// this file now runs green.)
 module kat_crypto_kdf_rfc5869
 use xiom.crypto;
 use xiom.io;

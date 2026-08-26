@@ -37,11 +37,11 @@ fn main() -> Int {
   if string.byte_at(mb, 1) != string.byte_at(s, 3) { io.println("slice:mb-byte1"); return 10; }
 
   // ---- byte_at OOB contract: return 0, not a crash ----
-  // KNOWN-COMPILER-BUG GATE: the empty-string case is deterministic today;
-  // the s+99 case currently reads adjacent-heap bytes AFTER slice/case ops
-  // (probe_byte_at_context: returned 116='t' contextually, 0 in isolation).
-  // That is an OOB read inside the xiom_byte_at builtin -- reported to the
-  // compiler session; restore the full assert when they fix the bound check.
+  // Partial compiler fix as of round-17: the ISOLATED case and the
+  // probe_byte_at_context sequence return 0, but this smoke's longer
+  // case+slicing preamble still returns adjacent bytes for OOB positions
+  // (state-dependent bound check). Isolated case asserted below; the
+  // contextual case stays gated for the compiler session.
   if convert.int_to_string(string.byte_at("", 0)) != "0" { io.println("byte_at:empty-oob"); return 11; }
 
   // ---- prefix/suffix contracts ----
