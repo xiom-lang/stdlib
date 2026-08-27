@@ -144,6 +144,37 @@ pass solo -- known harness flake, always rerun individually).
 
 ---
 
+## 1.9. Round-17 stretch (2026-08-27) -- REAL deflate interop + flips re-verified
+
+1. **compress/deflate.xi replaced with REAL RFC 1951** (stored + fixed
+   producer, stored+fixed+dynamic consumer, caps threaded). gzip/zlib
+   wrappers were already RFC-shaped -> the whole stack now emits
+   INTEROPERABLE streams. Verified three ways: 9 python-zlib streams
+   decode byte-exact (kat_compress_rfc1952), xiom output decompresses in
+   python gzip (live cross-check), producer byte-exact vs python for
+   fixed and stored. Old custom container removed (pre-1.0 break).
+   All 8 compress-family smokes green.
+2. **KAT breadth closed**: kat_num_bigint (python-oracle vectors),
+   kat_crypto_sha_multiblock (55/56 + 111/112 boundaries),
+   kat_convert_utf8_encoder, kat_net_parsers (RFC 3986/6890 ranges).
+   All green on r17.
+3. **Round-17 flip re-verification** (careful this time -- several
+   earlier probes had been exercising legacy paths):
+   FIXED: kdf cluster (KAT un-gated), Rc prefix reads, geom quat.
+   PARTIAL: byte_at contextual OOB.
+   STILL BROKEN: OS-entropy multi-draw (p_os_direct17 -- flip reverted
+   same-day), Str-cast memcpy (re-land reverted same-day), module
+   arrays, array_zip, json heap, CRT, SIMD.
+   NEW: geom_vec/mat now COMPILE-fail (IR type mismatch) -- see report.
+4. **Full r17 sweep: 887/927 PASS**.
+5. Two new compiler findings (report 3b-4): #15 unparenthesized
+   `expr as T` -> illegal instruction; #16 nested &mut push loses the
+   final byte.
+
+### A. REMAINING NON-BLOCKED (post-r17)
+- [XFER-vec] -> [XFER-malloc] encoder migration (opportunistic)
+- map_rehash API; seeded-siphash default hasher switch
+- contract-coverage expansion; deflate dynamic-Huffman producer (quality)
 ## 1.8. DEFINITIVE remaining-work split
 
 ### A. REMAINING NON-BLOCKED (stdlib can do without compiler)
