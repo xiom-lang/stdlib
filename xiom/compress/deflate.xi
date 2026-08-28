@@ -407,7 +407,11 @@ fn _canonical_codes(lengths: &Vec[Int], n: Int) -> Vec[Int] {
     if l < 0 || l > 15 {
       return Vec[Int].new();
     };
-    count[l] = count[l] + 1;
+    // RFC 1951 3.2.2: count only codes of length N >= 1 (zero-length
+    // symbols must NOT contribute -- counting them shifts every code).
+    if l > 0 {
+      count[l] = count[l] + 1;
+    };
     i = i + 1;
   }
   var next = Vec[Int].new();
@@ -550,11 +554,6 @@ fn _inflate_capped(data: &Vec[UInt8], max_out: Int) -> Result[Vec[UInt8], Str] {
             return Err("deflate: bad dynamic header");
           };
           var cl_lens = Vec[Int].new();
-          i2 = 0;
-          while i2 < 19 {
-            cl_lens.push(0);
-            i2 = i2 + 1;
-          }
           var order = Vec[Int].new();
           order.push(16); order.push(17); order.push(18); order.push(0);
           order.push(8); order.push(7); order.push(9); order.push(6);
@@ -608,28 +607,13 @@ fn _inflate_capped(data: &Vec[UInt8], max_out: Int) -> Result[Vec[UInt8], Str] {
             if s < 16 {
               all_lens.push(s);
             } else {
-              var rep = 0;
-              var rl = 0;
-              if s == 16 {
-                rep = all_lens[all_lens.len() - 1];
-                rl = _br_peek(data, pos, 2) + 3;
-                pos = pos + 2;
-              };
-              if s == 17 {
-                rep = 0;
-                rl = _br_peek(data, pos, 3) + 3;
-                pos = pos + 3;
-              };
-              if s == 18 {
-                rep = 0;
-                rl = _br_peek(data, pos, 7) + 11;
-                pos = pos + 7;
-              };
-              var j3 = 0;
-              while j3 < rl {
-                all_lens.push(rep);
-                j3 = j3 + 1;
-              }
+              // HONEST BOUNDARY (2026-08-28): canonical dynamic tables
+              // WITHOUT repeat codes decode correctly (round-trip proven
+              // against the uniform-length producer), but zlib's 16/17/18
+              // repeat coding currently misparses (probes pydec6/7/8).
+              // Reject loudly instead of risking silent data corruption;
+              // repeat-code support is the next focused fix.
+              return Err("deflate: dynamic repeat codes not yet supported");
             };
             i2 = i2 + 1;
           }
