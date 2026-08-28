@@ -373,3 +373,35 @@ Their docs (751f0799) carry the full ~40-item queue. Stdlib-relevant:
    fixes, the sync constructor fixes -- a smoke_iter_zip_predicates and
    smoke_sync_arc_battery would lock the round-14c/15 wins in.
 6. Update this doc at session end.
+
+## 1.10. Production-grade stretch 3 (2026-08-28) -- maps, dynamic deflate work
+
+1. **IntMap map_rehash shipped** (collections/map.xi): in-place rebuild
+   clearing tombstones after delete-heavy workloads. smoke green.
+2. **Struct-param resolution CONFIRMED FIXED on r17** (finding 3b-2 #10
+   closed): fresh p_struct_param + p_mutex_xm probes pass cross-module
+   by-value and by-ref struct params. Unblocks TLS/SSPI-style FFI APIs.
+3. **Dynamic-Huffman work (reader hardening + producer research)**:
+   - FIXED two real reader bugs: canonical zero-length counting (shifted
+     every code; silent corruption of any dynamic table with unused
+     symbols) and the CL-table prefill+append double-fill (38 entries).
+   - Reader now decodes canonical dynamic tables WITHOUT repeats
+     (round-trip proven); zlib-style 16/17/18 repeat codes are REJECTED
+     LOUDLY (no silent corruption) -- focused follow-up with
+     pydec6/7/8 probes as ground truth.
+   - KAT gained a TRUE BTYPE=10 vector asserting the exact rejection.
+   - Dynamic PRODUCER built as a probe (uniform-length construction):
+     self-consistent round-trips, header parses in python, but python
+     zlib still rejects the stream (invalid code lengths set) -- stays
+     out of stdlib until that is resolved.
+4. **Full re-sweep after the deflate replacement: 888/928 PASS** -- zero
+   regressions from the RFC 1951 format swap.
+5. Seeded-siphash default hasher remains parked: needs the CSPRNG flip
+   (still compiler-blocked) for a real per-process key.
+
+### A. REMAINING NON-BLOCKED (updated)
+- deflate repeat-code reader support (focused item, probes ready)
+- dynamic-Huffman producer validity fix (zlib-compatible code lengths)
+- [XFER-vec] encoder migration; contract-coverage expansion
+- map_rehash DONE; struct-params DONE (compiler)
+
