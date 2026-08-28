@@ -219,6 +219,36 @@ pub fn map_clear(m: &mut IntMap) {
   m.used = 0;
 }
 
+/// Rebuild the table IN PLACE at the same capacity, clearing tombstones
+/// and restoring contiguous probe sequences. Call after heavy
+/// delete+insert workloads, where tombstone density between automatic
+/// grows can degrade lookups toward O(capacity) linear scans.
+/// Complexity: O(capacity).
+pub fn map_rehash(m: &mut IntMap) {
+  let cap = m.states.len();
+  let old_keys = m.keys;
+  let old_values = m.values;
+  let old_states = m.states;
+  m.keys = Vec[Int].new();
+  m.values = Vec[Int].new();
+  m.states = Vec[Int].new();
+  var i: Int = 0;
+  while i < cap {
+    m.keys.push(0);
+    m.values.push(0);
+    m.states.push(0);
+    i = i + 1;
+  };
+  m.used = 0;
+  i = 0;
+  while i < cap {
+    if old_states[i] == state_occupied {
+      put_internal(m, old_keys[i], old_values[i]);
+    };
+    i = i + 1;
+  };
+}
+
 /// Check whether the IntMap has no entries.
 /// Complexity: O(1).
 pub fn map_is_empty(m: &IntMap) -> Bool {
