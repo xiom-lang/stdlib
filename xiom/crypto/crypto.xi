@@ -2069,11 +2069,10 @@ pub fn argon2(password: &Str, salt: &Vec[UInt8], memory: Int, iterations: Int, p
 // Random Crypto
 // ============================================================================
 
-// Interim legacy-PRNG seeding state. ONE OS-entropy draw per process is the
-// maximum the current compiler supports: a second cross-module
-// unsafe+extern+Vec os draw corrupts byte reads of either Vec (AV) --
-// COMPILER_BUGS.md R4, probes p_os_direct20 / p_os_double / p_os_twoframes.
-// Tracked: flip secure_random_bytes to os_secure_random_bytes when fixed.
+// Legacy-PRNG seeding state for the NO-OS degraded fallback only (see
+// os_secure_random_bytes). One flag-gated OS draw per process seeds
+// math._rng_state so even the fallback path is not deterministic across
+// runs. Primary draws no longer touch this path (R4 flip, 041e8bb3).
 var _legacy_rng_seeded: Bool = false;
 
 fn _seed_legacy_rng() {
@@ -2093,12 +2092,10 @@ fn _seed_legacy_rng() {
 
 /// OS-entropy CSPRNG draw (ProcessPrng/RtlGenRandom on Windows,
 /// /dev/urandom on Unix), degrading to the legacy PRNG only when no OS
-/// source answers. SECURITY NOTE: prefer this over secure_random_bytes for
-/// anything security-relevant once the compiler fixes the cross-module
-/// multi-draw miscompile that currently AVs on the SECOND os draw in a
-/// program (byte reads of either returned Vec corrupt -- COMPILER_BUGS.md
-/// R4, probes p_os_direct20/p_os_double/p_os_twoframes). Until then this
-/// function is used internally for the one-time process seed only.
+/// source answers (degraded mode documented -- do not treat as secure).
+/// Backs secure_random_bytes since the confined-block growth fix
+/// (COMPILER_BUGS.md R4, 041e8bb3) removed the multi-draw AV; also used
+/// for the legacy fallback's one-time process seed.
 pub fn os_secure_random_bytes(count: Int) -> Vec[UInt8] {
   var result = Vec[UInt8].new();
   if count <= 0 {
@@ -2147,24 +2144,15 @@ pub fn os_secure_random_bytes(count: Int) -> Vec[UInt8] {
 }
 
 pub fn secure_random_bytes(count: Int) -> Vec[UInt8] {
-  // SECURITY NOTE (interim, tracked): draws from the xiom.math Park-Miller
-  // LCG. The process-wide LCG is seeded ONCE from OS entropy (xiom_os_entropy
-  // via os_secure_random_bytes) on first use, so output now differs across
-  // runs and processes (was: fixed seed 12345, byte-identical every run).
-  // This is still NOT a CSPRNG: the 31-bit state is recoverable after ~2^31
-  // outputs, so keys and long-term secrets must NOT be derived from this
-  // path. The full flip to os_secure_random_bytes is compiler-blocked (second
-  // cross-module OS draw AVs byte reads -- COMPILER_BUGS.md R4); flip when
-  // their fix lands.
+  // OS-entropy CSPRNG: ProcessPrng/RtlGenRandom on Windows, /dev/urandom on
+  // Unix (xiom_os_entropy in the runtime; multi-draw shapes unblocked by the
+  // confined-block growth fix -- COMPILER_BUGS.md R4, 041e8bb3). Degrades to
+  // the OS-seeded legacy LCG ONLY when no OS source answers (internal
+  // fallback in os_secure_random_bytes); that degraded mode is documented,
+  // not silent -- code deriving keys must treat a no-OS environment as
+  // insecure regardless of this function's fallback.
   _seed_legacy_rng();
-  var result = Vec[UInt8].new();
-  var i = 0;
-  while i < count {
-    let r = random_range(0, 255);
-    result.push(r as UInt8);
-    i = i + 1;
-  }
-  return result;
+  return os_secure_random_bytes(count);
 }
 
 pub fn constant_time_compare(a: &Vec[UInt8], b: &Vec[UInt8]) -> Bool
