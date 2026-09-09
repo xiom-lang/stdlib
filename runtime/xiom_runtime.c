@@ -833,9 +833,17 @@ int64_t xiom_fault_deref_ok(void) {
 // accessor. xiom_char_at decodes the CODEPOINT; byte consumers (UTF-8
 // decoders, str_bytes) must NOT get the decoded value (it would
 // double-decode).
+// R1 fix (2026-09-09): xiom_byte_at must clamp UPPER out-of-range reads too.
+// The old code only checked pos < 0, so byte_at(s, pos >= len) read past the
+// NUL terminator into adjacent heap bytes (stdlib report R1: byte_at("",999)
+// returned 4 after a string-op preamble; the value depended on allocation
+// history, not (s, pos)). XIOM Str values are NUL-terminated (xiom_str_len is
+// strlen), so the clamp is a pure function of (str, pos): pos >= strlen -> 0.
+// strnlen caps the scan defensively for untrusted (non-NUL) buffers.
 long xiom_byte_at(const char* str, long pos) {
     if (!str) return 0;
     if (pos < 0) return 0;
+    if (pos >= (long)strnlen(str, 1 << 20)) return 0;
     return (unsigned char)str[pos];
 }
 
@@ -844,9 +852,14 @@ long xiom_byte_at(const char* str, long pos) {
 // char yielded 0xCE instead of the full codepoint and len_utf8()/str_chars
 // mis-counted multibyte strings (smoke_string_slice chars check). The
 // codepoint (up to 0x10FFFF) needs 32 bits; the ABI is i64.
+// R1 fix (2026-09-09): same upper-OOB clamp as xiom_byte_at. The codepoint
+// decoder previously read str[pos..pos+3] past the terminator on out-of-range
+// positions (direct extern callers such as base32/ascii85 index small
+// alphabets in-bounds, but no caller-side guarantee exists at the ABI).
 long xiom_char_at(const char* str, long pos) {
     if (!str) return 0;
     if (pos < 0) return 0;
+    if (pos >= (long)strnlen(str, 1 << 20)) return 0;
     unsigned char b = (unsigned char)str[pos];
     if (b < 0x80) return (long)b;
     int len;
