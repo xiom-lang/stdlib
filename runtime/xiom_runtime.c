@@ -181,6 +181,7 @@ void* xiom_alloc(long long size) {
 
 typedef struct XiomGuardArena {
     void** slabs;        /* array of slab pointers */
+    long*  slab_sizes;   /* per-slab allocated bytes (parallel to slabs) */
     long   slab_count;
     long   slab_cap;
     long   cur_slab;     /* index of the slab being filled */
@@ -231,11 +232,16 @@ static void xiom_guard_ensure_slab(XiomGuardArena* a) {
         void** new_slabs = (void**)realloc(a->slabs, (size_t)new_cap * sizeof(void*));
         if (!new_slabs) return; /* arena full -- leave as-is */
         a->slabs = new_slabs;
+        long* new_sizes = (long*)realloc(a->slab_sizes, (size_t)new_cap * sizeof(long));
+        if (!new_sizes) return; /* arena full -- leave as-is */
+        a->slab_sizes = new_sizes;
         a->slab_cap = new_cap;
     }
     void* slab = xiom_guard_valloc(a->slab_size);
     if (!slab) return;
-    a->slabs[a->slab_count++] = slab;
+    a->slabs[a->slab_count] = slab;
+    a->slab_sizes[a->slab_count] = a->slab_size;
+    a->slab_count++;
     a->cur_slab = (int)(a->slab_count - 1);
     a->cur_off = 0;
 }
@@ -244,6 +250,7 @@ static void xiom_guard_ensure_slab(XiomGuardArena* a) {
 void xiom_guard_heap_enter(void) {
     if (!xiom_guard_initialized) {
         xiom_guard_arena.slabs = NULL;
+        xiom_guard_arena.slab_sizes = NULL;
         xiom_guard_arena.slab_count = 0;
         xiom_guard_arena.slab_cap = 0;
         xiom_guard_arena.cur_slab = -1;
@@ -262,10 +269,12 @@ void xiom_guard_heap_exit(void) {
     if (a->active > 0) return; /* still inside an outer unsafe block */
     long i;
     for (i = 0; i < a->slab_count; i++) {
-        xiom_guard_vfree(a->slabs[i], a->slab_size);
+        xiom_guard_vfree(a->slabs[i], a->slab_sizes ? a->slab_sizes[i] : a->slab_size);
     }
     free(a->slabs);
+    free(a->slab_sizes);
     a->slabs = NULL;
+    a->slab_sizes = NULL;
     a->slab_count = 0;
     a->slab_cap = 0;
     a->cur_slab = -1;
@@ -290,11 +299,16 @@ void* xiom_guard_alloc(long long size) {
             void** new_slabs = (void**)realloc(a->slabs, (size_t)new_cap * sizeof(void*));
             if (!new_slabs) return NULL;
             a->slabs = new_slabs;
+            long* new_sizes = (long*)realloc(a->slab_sizes, (size_t)new_cap * sizeof(long));
+            if (!new_sizes) return NULL;
+            a->slab_sizes = new_sizes;
             a->slab_cap = new_cap;
         }
         void* slab = xiom_guard_valloc(need);
         if (!slab) return NULL;
-        a->slabs[a->slab_count++] = slab;
+        a->slabs[a->slab_count] = slab;
+        a->slab_sizes[a->slab_count] = need;
+        a->slab_count++;
         a->cur_slab = (int)(a->slab_count - 1);
         a->cur_off = 0;
         if (aligned > a->slab_size) {
@@ -340,6 +354,19 @@ int xiom_guard_heap_depth(void) {
     return xiom_guard_arena.active;
 }
 
+/* True when p falls inside one of the current arena slabs. Used to decide
+   whether a confined-block realloc may stay in the arena (block-local data)
+   or must use the plain heap (data that outlives the block). */
+static int xiom_guard_arena_contains(XiomGuardArena* a, const void* p) {
+    if (!p || !a->slab_sizes || a->slab_count <= 0) return 0;
+    long i;
+    for (i = 0; i < a->slab_count; i++) {
+        const char* s = (const char*)a->slabs[i];
+        if ((const char*)p >= s && (const char*)p < s + a->slab_sizes[i]) return 1;
+    }
+    return 0;
+}
+
 /* Arena-aware realloc: grow a guard-arena allocation. `realloc` cannot grow a
    VirtualAlloc slab pointer, so (inside a confined block) Vec growth must route
    here: allocate a fresh arena block, copy the old contents, and return it. The
@@ -349,6 +376,16 @@ void* xiom_guard_realloc(void* old, long long old_size, long long new_size) {
     if (new_size <= 0) return NULL;
     if (xiom_guard_arena.active <= 0) {
         /* Not confined: plain realloc on a main-heap pointer. */
+        return realloc(old, (size_t)new_size);
+    }
+    /* R4 fix (2026-09-09): when `old` belongs to the MAIN heap (a Vec created
+       OUTSIDE the confined block and grown inside, e.g. crypto.xi
+       os_secure_random_bytes) it must NOT be migrated into the arena -- the
+       arena is discarded wholesale at block exit, leaving the caller's Vec
+       data pointer dangling (0xC0000005 on later byte reads, stdlib report
+       R4). Grow main-heap allocations in place with plain realloc so the
+       data outlives the block. Arena-born pointers keep the arena path. */
+    if (old && !xiom_guard_arena_contains(&xiom_guard_arena, old)) {
         return realloc(old, (size_t)new_size);
     }
     void* p = xiom_guard_alloc(new_size);
