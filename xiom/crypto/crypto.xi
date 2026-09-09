@@ -1932,17 +1932,17 @@ pub fn generate_rsa_keypair(bits: Int) -> Result<KeyPair, Str> {
   var public_bytes = _int_to_be_vec(e, 4);
   var n_bytes = _int_to_be_vec(n, key_size);
   var d_bytes = _int_to_be_vec(d, key_size);
-  var pub = Vec[UInt8].new();
+  var pub_key = Vec[UInt8].new();
   i = 0;
-  while i < key_size { pub.push(n_bytes[i]); i = i + 1; }
+  while i < key_size { pub_key.push(n_bytes[i]); i = i + 1; }
   i = 0;
-  while i < 4 { pub.push(public_bytes[i]); i = i + 1; }
+  while i < 4 { pub_key.push(public_bytes[i]); i = i + 1; }
   var priv = Vec[UInt8].new();
   i = 0;
   while i < key_size { priv.push(n_bytes[i]); i = i + 1; }
   i = 0;
   while i < key_size { priv.push(d_bytes[i]); i = i + 1; }
-  return Ok(KeyPair{ public: pub; private: priv; });
+  return Ok(KeyPair{ public: pub_key; private: priv; });
 }
 
 fn _rsa_parse_key(key: &Vec[UInt8]) -> (Int, Int, Int) {
