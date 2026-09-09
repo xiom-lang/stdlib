@@ -405,3 +405,235 @@ Their docs (751f0799) carry the full ~40-item queue. Stdlib-relevant:
 - [XFER-vec] encoder migration; contract-coverage expansion
 - map_rehash DONE; struct-params DONE (compiler)
 
+## 2.0. Round-20 sync (2026-09-09) -- ordered remaining-work queue
+
+> Compiler rounds 18-20 have landed on feat/architect since section 1.10
+> (HEAD = 223603ce): BUG 57 + follow-ups (nested Vec ctor element
+> registration, per-fn map scoping, M58 module-level mutable arrays),
+> Stage 3 catalog body type-checking (Item A), literal-truncation `as`
+> warning (finding #15 as a compile-time warning). Compiler-lane re-sweep
+> on 034b65a6: geom vec/mat/quat/2d/3d/collision all green. Their
+> stdlib-lane report received (5 items). This section = the ordered
+> remaining-work queue + verified facts.
+
+### 2.0.1 Facts verified this session (correct the record)
+
+- **Runtime OS-CSPRNG binding EXISTS** (contradicts their report's
+  "no OS-CSPRNG binding"): xiom_runtime.c ~6000-6045 defines
+  `xiom_os_entropy` (ProcessPrng on bcrypt.dll -> RtlGenRandom/
+  SystemFunction036 on advapi32.dll, both dynamically bound, zero new
+  import deps; /dev/urandom on Unix), extern declared crypto.xi:44,
+  and `os_secure_random_bytes` (crypto.xi:2078, same module as the
+  extern, degrade-to-legacy fallback) is implemented. Their "not in the
+  245 exported symbols" scan is either stale or name-based (they looked
+  for static imports like BCryptGenRandom; the dynamic bind hides those).
+  ACTION: verify the symbol actually lands in the isolated binary
+  (dumpbin/link dump) during Q4 -- if it does NOT, that is the real
+  packaging defect and the fix is stdlib-runtime wiring, not crypto.xi.
+- **REAL security gap, chain now fully documented**: secure_random_bytes
+  (crypto.xi:2125) -> math.random_range -> math.random() -> math._rng_state
+  which starts at the literal 12345 (math.xi:98, Park-Miller LCG). Nothing
+  seeds it on the crypto path (only math.seed_rng callers are
+  optimization/operations_research/machine_learning with fixed constants
+  7/13/42). => ALL crypto key/nonce/IV material is byte-identical across
+  every process run TODAY. Consumers (flip ripple): aead.xi:75,
+  cipher.xi:855, keyx.xi:33/92, sign.xi:30, rng_crypto.xi (6 sites),
+  rand.xi:481.
+- **T007 rule confirmed** (crates xiom-check lib.rs:3613): a fn whose
+  whole body is one `unsafe {}` block must declare `requires`; accepted
+  minimal shape is `requires: true`. Catalogued sites: io.xi print (57)/
+  println (63)/time_now (403)/sleep (409). Same shape NOT in their catalog
+  but identical: thread.xi yield_now (124). Sweep for any others at Q2.
+- **io.xi ~354 latent type error identified**: pub fn rename (347) shares
+  its name with extern C rename (io.xi:20); the Stage-3 body checker binds
+  the bare call to the wrapper, typing the RHS as Result[Unit, IOError]
+  against `let rc: Int32`. No #[link_name] support exists in crates.
+  Fix candidates: (a) tiny runtime shim xiom_rename in xiom_runtime.c
+  (precedent: the xiom_stat_* family), or (b) verify extern-vs-fn
+  resolution with a 10-line probe and restructure accordingly. pub fn exit
+  (363) is the same collision shape (but has requires, was not flagged) --
+  probe it too.
+- Gated-test ledger as of HEAD: the ONLY KNOWN-COMPILER-CLUSTER kat file
+  left is kat_serialize_json_minimal (json heap layer, their stage 4).
+  kdf was un-gated on r17. smoke_string_bytecopy_locks line 44: the
+  contextual byte_at case stays gated (partial fix). kat files total 15,
+  all committed.
+
+### 2.0.2 Ordered queue (execute in this order)
+
+**Q1 -- Item-A deadline fixes (do FIRST: their warnings flip to hard
+errors and would block every later compile of stdlib).** Add `requires`
+to whole-body-unsafe fns: io.xi print/println/time_now/sleep (semantic
+clauses where cheap: sleep requires ms >= 0; print/println/time_now
+`requires: true` with a comment), thread.xi yield_now, then run the
+checker over stdlib/xiom/** and fix every remaining T007 + latent type
+error it reports (their catalog was io-focused; Item A will hit all).
+Fix the io.rename collision per 2.0.1 (probe first). Re-run the io smoke
+family + smoke_thread_* + anything touching io.fs/rename afterwards.
+
+**Q2 -- Geom un-park + consumer re-sweep (verification only, code is
+correct).** On an isolated HEAD binary run: smoke_geom, smoke_geom_vec,
+smoke_geom_mat, smoke_geom_quat, smoke_geom_2d, smoke_geom_3d,
+smoke_geom_collision. This covers curves/bezier consumers
+(smoke_geom_collision chk_curves: bezier_quad/cubic/derivative;
+smoke_geom_2d chk_curves: geometry_extended.bezier_curve) and the
+matrix.det/trace/rank consumers in smoke_geom_mat, plus xiom.geom.linear
+via smoke_geom_vec. Un-park geom in the B-list below and in
+REPORT_TO_COMPILER_SESSION.md (BUG 57 family + M58 CLOSED). Re-run the
+flip-green probes their rounds should have fixed: p_crc_int2 (module
+arrays), probe_byte_at_context + the gated smoke_string_bytecopy_locks
+contextual case, cl_5 (Str-cast memcpy -- re-test before believing; their
+report did not claim it fixed).
+
+**Q3 -- CSPRNG completion (security-critical; the current "CSPRNG" is a
+deterministic LCG, see 2.0.1).**
+  a. Re-run probe p_os_direct17 (multi-draw OS-entropy) on the round-20
+     binary. If green: flip secure_random_bytes to the os path (keep the
+     degrade-to-legacy fallback), then run the rng/crypto smoke family
+     (smoke_stress_rand_*, rng smokes, keyx/sign/aead consumers).
+  b. If still breakpointing: do NOT ship deterministic keys silently --
+     apply the interim time-seed (crypto.xi seeds math._rng_state once
+     from an extern time/clock draw on first secure_random_bytes call;
+     precedent rand.xi StdRng.new), document honestly, and hand the
+     compiler lane the exact remaining shape with the probe.
+  c. Docs: seeding source + reseed policy on crypto.xi/rng_crypto.xi/
+     rand.xi headers; loud "not for keys" note on any still-legacy path.
+  d. New smoke locking non-determinism (two consecutive draws differ;
+     canary that a constant seed would fail).
+  e. After the flip: un-park the seeded-siphash DEFAULT hasher switch for
+     Str-keyed maps (needs a real per-process key).
+
+**Q4 -- Fresh full sweep + re-triage on HEAD.** Last full sweep was
+888/928 on r17; compiler rounds 18-20 landed since (Stage 3 body
+type-checking may surface NEW stdlib-lane errors beyond the io.xi one --
+fold those into Q1/Q2). Publish the new pass/fail baseline, refresh the
+defect ledger, and verify xiom_os_entropy is in the isolated binary's
+export list (answers the compiler lane's 245-symbols claim). Update
+stdlib_session.md + REPORT_TO_COMPILER_SESSION.md from the results.
+
+**Q5 -- LET-array joint decision input (they owe the doc; our input
+requested).** Provide the stdlib-lane position + usage census for the
+M33 let->Vec vs &[N]T representation decision: enumerate stdlib/smoke
+shapes that depend on let-bound array semantics, and the fallout list if
+let arrays become Vec. Do NOT decide unilaterally; this is their Stage 4
+gate for the remaining [N]T-dependent fixes.
+
+**Q6 -- Non-blocked backlog drain (readiness-plan gates still open).**
+Contract-coverage expansion (>=60% pub-fn on collections/string/io,
+every touched fn -- contracts are runtime-enforced now; pairs with Q1);
+deflate dynamic-Huffman PRODUCER validity (python-zlib must accept the
+stream -- probes pydec6/7/8; do NOT land until it does) + repeat-code
+reader follow-up; [XFER-vec] -> [XFER-malloc] encoder migration;
+runtime symbol bind-or-delete audit (~175 orphaned exports; folds in the
+Q4 export verification); tzdata phase 1 via OS timezone FFI (UNBLOCKED:
+struct params confirmed fixed on r17); TOML + CSV modules (toolchain eats
+its own xiom.toml); Phase S: property tests for collections + coverage
+ratchet; async stress suite (10k fibers, cancellation storms). Parked
+until compiler: same-name delegation crash (dedup execution, legacy
+cipher physical move, namespace cleanup), json heap layer (json KAT +
+stress serialize smokes stay gated as flip-green locks), CRT-layout AV
+cluster, SIMD/stack-cookie fns, array_zip T001, Str-cast memcpy re-land.
+
+**Q7 -- Cross-lane replies + housekeeping.** Answer their 5-item report:
+(1) OS-entropy: evidence above (binding exists; verify export; flip per
+Q3a), (2) Round-19 catalog: Q1 owns it, (3) geom: Q2 owns it,
+(4) LET-array: Q5 owns it, (5) e2e flake: acknowledge -- shared
+xiominput.ll CWD races; adopt serialized temp outputs wherever the stdlib
+session touches the harness (our sweep already reruns batch failures solo).
+Verify current branch/worktree + commit Q1-Q3 batches per the
+verification protocol (isolated binary from HEAD worktree, dual-root
+gotcha, probe-before-commit).
+
+## 2.1. Round-20 execution log (2026-09-09) -- Q1-Q5 results, all committed
+
+Commits: fb7b3da0 (io family), fa9bb3da (T007 sweep), 99fe1cc2 (smoke
+keyword repairs), 2eceec27 + 01ffe1da (COMPILER_BUGS.md entries R1-R4),
+077b1fdf (CSPRNG interim seeding). All verified on the round-20 binary
+(target/debug/xiom.exe built 2026-09-09 20:13 = HEAD 223603ce + clean
+crates; protocol note: compiler session's temp worktrees are gone -- this
+session used the in-tree debug binary with CWD = repo root so both module
+roots resolve to the same stdlib).
+
+**Q1 DONE -- Item-A deadline cleared.** Round-19 catalog findings closed:
+io.xi print/println/time_now/sleep T007 + 354:42 rename collision. Two
+runtime shims added to xiom_runtime.c: xiom_rename (MoveFileExA +
+MOVEFILE_REPLACE_EXISTING on Windows = POSIX replace semantics; removes
+the extern/pub-fn name collision the catalog typed as Int32 =
+Result[Unit, IOError]) and xiom_process_exit (same collision removal for
+exit). io.sleep Windows LINK BUG fixed (usleep does not exist on
+MSVC/Windows): now routes through xiom_thread_sleep_ms. fs.xi fs_move
+canonicalized to the atomic io.rename (was copy+delete, BUG 22 #15/26
+workaround; round-20 rename verified correct); dead extern dropped.
+T007 mechanical sweep (scanner mirrors xiom-check
+block_is_single_unsafe) cleared 128 whole-body-unsafe fns to ZERO hits:
+semantic requires where real (io.sleep ms>=0, br_seek Int32-range +
+valid FILE*, ptr_read_*/ptr_write_* p != null, pipe_close fd>=0,
+Rc/Weak/cell/sync/mutex/condvar/once/barrier/atomics handle clauses,
+wstring/args null+range), requires: true where the fn is total by type
+invariant or a graceful-Err FFI API (fallback fns carry no semantic
+contract). Re-verified: family probes compile with ZERO T007 warnings;
+runtime regression batteries (io/thread/sync/memory/math/collections
+smokes) all green. Also fixed 4 smokes broken by the round-19/20 keyword
+enforcement of `as` (var as -> asin_v).
+
+**Q2 DONE -- geom un-parked; flip-green re-checks.** smoke_geom + vec +
+mat + quat + 2d + 3d + collision all green (curves/bezier + matrix
+det/trace/rank consumers included). byte_at contextual OOB STILL BROKEN
+(new probe: returns 4 after preamble) -> COMPILER_BUGS.md R1, stays
+gated. M58 residual: module-level mutable-array LITERAL INITIALIZER still
+emits invalid IR (store ptr vs [256 x i64]) -> R2; no stdlib module needs
+that shape (all tables const). Chained str_concat byte-loop path green.
+YamlValue "non-exhaustive match" 0:0 W000s = checker false positives
+(all variants covered; block-arm/return analysis gap) -> R3.
+
+**Q3 DONE -- deterministic-CSPRNG gap closed (interim), flip still
+compiler-blocked.** Re-created p_os_direct17 as p_os_direct20 + bisect:
+single cross-module os_secure_random_bytes draw + reads = OK; SECOND
+draw corrupts byte reads of either Vec (0xC0000005) in-frame or
+cross-frame -> COMPILER_BUGS.md R4. The full secure_random_bytes flip is
+therefore still BLOCKED (their de-scope claim answered with the bisect:
+the symbol links fine; the defect is second-call Vec-slot corruption).
+Interim landed (no workaround; honest + tracked): one flag-gated
+os_secure_random_bytes(8) draw per process seeds math._rng_state on first
+secure_random_bytes call. The fixed-seed-12345 determinism (every key
+byte-identical across all runs) is GONE: draws differ in-process and
+cross-process (locked by
+smoke_stress_crypto_secure_random_seeded; consumers + existing crypto
+smokes green). Generators still LCG: headers now say NOT a CSPRNG, keys
+must not derive from this path until the compiler fix + full flip.
+Un-park item: seeded-siphash default hasher STILL waits on the full flip.
+
+**Q5 DONE (input) -- LET-array census.** stdlib + smokes contain ZERO
+let-bound fixed arrays (0 sites); all 69 fixed arrays are `var` FFI
+staging buffers (net/socket/websocket/io/crypto/buffer/pipe/hash lead),
+plus 85 [N]T / &[N]T params. Position for the joint doc: a let->Vec
+representation change has NO stdlib/examples surface today; the var
+[N]T staging buffers (address-stable &buf[0] for extern calls) are the
+impactful class if var semantics ever change -- record that in their
+Stage 4 doc.
+
+**Q4 in flight at doc time**: full 933-smoke sweep on 8 workers
+(sweep_worker.ps1 + launch_sweep.ps1 in the probes dir; results CSV per
+worker). Triage against the ledger below when it lands.
+
+**Refreshed blocked ledger (compiler lane; COMPILER_BUGS.md R1-R4):**
+byte_at contextual OOB; M58 initializer store; OS-entropy multi-draw
+(R4 -- flips CSPRNG + siphash when fixed); same-name delegation crash
+(dedup execution, legacy cipher move); json heap layer (json KAT +
+stress smokes stay gated); Str-cast memcpy chained concat (memop
+re-land); CRT-layout AV cluster; SIMD/stack-cookie fns; array_zip T001.
+Catalog noise to ignore while Item A matures: undefined variable
+io/string/size_of/alloc, unknown fn() -> T type, yaml 0:0 exhaustiveness.
+
+**Deferred backlog notes:** [XFER-vec] -> [XFER-malloc] migration has 10
+concrete sites (crypto.xi:342 sha256_hex, string casefold:163,
+collate:92, compat:128, ea_width:287, normalize:206, unescape:51/74,
+unicode:992, misc glob:45). CONVERSION CAVEAT verified before touching:
+Vec buffers come from the @realloc intrinsic; allocations made inside
+unsafe blocks route to the guard arena (xiom_guard_alloc) -- free via CRT
+only after confirming the buffer was built in safe code; otherwise keep
+the documented "SAFE today" posture. Contract-coverage expansion (Q6)
+next; stale BUG-56 NOTE comments on io.xi fs fns can be retired once
+requires are restored there (Str-param contract reads verified working on
+round-20 via io.rename).
+
