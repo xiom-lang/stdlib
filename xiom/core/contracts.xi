@@ -30,19 +30,27 @@ extern "C" {
   fn xiom_contract_post_count(idx: Int) -> Int;
 }
 
-fn contract_fn_count() -> Int {
+fn contract_fn_count() -> Int
+  requires: true
+{
   unsafe { return xiom_contract_fn_count(); }
 }
 
-fn contract_fn_name(idx: Int) -> Str {
+fn contract_fn_name(idx: Int) -> Str
+  requires: idx >= 0
+{
   unsafe { return xiom_contract_fn_name(idx); }
 }
 
-fn contract_pre_count(idx: Int) -> Int {
+fn contract_pre_count(idx: Int) -> Int
+  requires: idx >= 0
+{
   unsafe { return xiom_contract_pre_count(idx); }
 }
 
-fn contract_post_count(idx: Int) -> Int {
+fn contract_post_count(idx: Int) -> Int
+  requires: idx >= 0
+{
   unsafe { return xiom_contract_post_count(idx); }
 }
 

@@ -21,7 +21,9 @@ module xiom.convert.asref
 /// Complexity: O(1).
 /// NOTE: unsound for values that are not plain data; provided for
 /// diagnostics only.
-pub fn as_ref_bytes[T](v: &T) -> &Vec[UInt8] {
+pub fn as_ref_bytes[T](v: &T) -> &Vec[UInt8]
+  requires: true
+{
   unsafe {
     return &*(v as *Vec[UInt8]);
   }
@@ -34,7 +36,9 @@ pub fn as_ref_bytes[T](v: &T) -> &Vec[UInt8] {
 /// Complexity: O(1).
 /// NOTE: unsound for values that are not plain data; provided for
 /// diagnostics only.
-pub fn as_mut_bytes[T](v: &mut T) -> &mut Vec[UInt8] {
+pub fn as_mut_bytes[T](v: &mut T) -> &mut Vec[UInt8]
+  requires: true
+{
   unsafe {
     return &mut *(v as *Vec[UInt8]);
   }
@@ -45,7 +49,9 @@ pub fn as_mut_bytes[T](v: &mut T) -> &mut Vec[UInt8] {
 /// Returns: the address of the value as an Int (never 0 for a valid
 ///          reference).
 /// Complexity: O(1).
-pub fn as_ptr[T](v: &T) -> Int {
+pub fn as_ptr[T](v: &T) -> Int
+  requires: true
+{
   unsafe {
     return (v as *UInt8) as Int;
   }

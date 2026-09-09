@@ -56,7 +56,9 @@ pub fn Rc.strong_count[T](self) -> Int
   }
 }
 
-pub fn Rc.weak_count[T](self) -> Int {
+pub fn Rc.weak_count[T](self) -> Int
+  requires: ptr != null
+{
   unsafe {
     return (*ptr).weak;
   }
@@ -133,6 +135,7 @@ pub type Weak[T] = {
 }
 
 pub fn Weak.upgrade[T](self) -> Option[Rc[T]]
+  requires: ptr != null
   ensures:  result is Some => strong_count() == strong_count()@pre + 1
   ensures:  result is None => strong_count() == 0
 {
@@ -153,7 +156,9 @@ pub fn Weak.strong_count[T](self) -> Int
   }
 }
 
-pub fn Weak.weak_count[T](self) -> Int {
+pub fn Weak.weak_count[T](self) -> Int
+  requires: ptr != null
+{
   unsafe {
     return (*ptr).weak;
   }

@@ -39,7 +39,9 @@ extern "C" {
   fn xiom_thread_sleep_ms(ms: Int);
 }
 
-fn _now() -> Int {
+fn _now() -> Int
+  requires: true
+{
   unsafe { return xiom_async_now_ms(); }
 }
 

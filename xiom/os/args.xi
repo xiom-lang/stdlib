@@ -34,7 +34,9 @@ use xiom.string;
 /// Copy a NUL-terminated C string into a fresh heap-backed Str.
 /// [COPY] per docs/STR_OWNERSHIP.md: we measure, allocate exactly, copy,
 /// terminate, and transfer ownership into the result.
-fn copy_c_string(p: *UInt8) -> Str {
+fn copy_c_string(p: *UInt8) -> Str
+  requires: p != null
+{
   unsafe {
     var n = 0;
     while p[n] != 0 {

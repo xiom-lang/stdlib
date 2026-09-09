@@ -18,7 +18,9 @@ extern "C" {
 }
 
 /// Renders a single ASCII byte code (0..255) as a 1-character Str.
-fn _byte_to_str(code: Int) -> Str {
+fn _byte_to_str(code: Int) -> Str
+  requires: true
+{
   unsafe {
     var buf = malloc(2);
     buf[0] = code as UInt8;

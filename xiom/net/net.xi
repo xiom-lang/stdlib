@@ -96,7 +96,9 @@ pub fn tcp_listen(host: Str, port: Int) -> Result[TcpListener, NetError]
   }
 }
 
-pub fn TcpStream.read(self, buf: &mut Vec[UInt8]) -> Result[Int, NetError] {
+pub fn TcpStream.read(self, buf: &mut Vec[UInt8]) -> Result[Int, NetError]
+  requires: true
+{
   unsafe {
     var recv_buf: [4096]UInt8;
     let n = xiom_socket_recv(self.fd, &recv_buf as *UInt8, 4096);
@@ -112,7 +114,9 @@ pub fn TcpStream.read(self, buf: &mut Vec[UInt8]) -> Result[Int, NetError] {
   }
 }
 
-pub fn TcpStream.write(self, data: &Vec[UInt8]) -> Result[Int, NetError] {
+pub fn TcpStream.write(self, data: &Vec[UInt8]) -> Result[Int, NetError]
+  requires: true
+{
   unsafe {
     var raw_buf: [65536]UInt8;
     var i = 0;
@@ -139,7 +143,9 @@ pub fn TcpStream.close(self) -> Result[Unit, NetError] {
   Ok(())
 }
 
-pub fn TcpListener.accept(self) -> Result[(TcpStream, Str), NetError] {
+pub fn TcpListener.accept(self) -> Result[(TcpStream, Str), NetError]
+  requires: true
+{
   unsafe {
     var ip_buf: [64]UInt8;
     var port_val: Int = 0;
@@ -316,7 +322,9 @@ pub fn udp_bind(host: Str, port: Int) -> Result[UdpSocket, NetError] {
   }
 }
 
-pub fn UdpSocket.send_to(self, data: &Vec[UInt8], addr: Str, port: Int) -> Result[Int, NetError] {
+pub fn UdpSocket.send_to(self, data: &Vec[UInt8], addr: Str, port: Int) -> Result[Int, NetError]
+  requires: true
+{
   unsafe {
     var raw_buf: [65536]UInt8;
     var i = 0;
@@ -344,7 +352,9 @@ pub fn UdpSocket.send_to(self, data: &Vec[UInt8], addr: Str, port: Int) -> Resul
   }
 }
 
-pub fn UdpSocket.recv_from(self, buf: &mut Vec[UInt8]) -> Result[(Int, Str, Int), NetError] {
+pub fn UdpSocket.recv_from(self, buf: &mut Vec[UInt8]) -> Result[(Int, Str, Int), NetError]
+  requires: true
+{
   unsafe {
     var recv_buf: [4096]UInt8;
     var ip_buf: [64]UInt8;
@@ -381,7 +391,9 @@ pub fn UdpSocket.close(self) -> Result[Unit, NetError] {
 }
 
 // === DNS ===
-pub fn resolve_host(hostname: Str) -> Result[Vec[Str], NetError] {
+pub fn resolve_host(hostname: Str) -> Result[Vec[Str], NetError]
+  requires: true
+{
   unsafe {
     var c_host: [256]UInt8;
     var i = 0;
@@ -413,7 +425,9 @@ pub fn resolve_host(hostname: Str) -> Result[Vec[Str], NetError] {
   }
 }
 
-pub fn local_addr(port: Int) -> Result[Str, NetError] {
+pub fn local_addr(port: Int) -> Result[Str, NetError]
+  requires: true
+{
   // Get local machine hostname, then resolve it
   unsafe {
     var host_buf: [256]UInt8;

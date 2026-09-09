@@ -113,7 +113,9 @@ fn str_eq(a: Str, b: Str) -> Bool {
 }
 
 /// Render a single ASCII byte (0..255) as a 1-character string.
-fn byte_to_str(code: Int) -> Str {
+fn byte_to_str(code: Int) -> Str
+  requires: true
+{
   unsafe {
     var buf = malloc(2);
     buf[0] = code as UInt8;

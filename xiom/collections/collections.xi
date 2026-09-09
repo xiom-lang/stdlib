@@ -26,6 +26,7 @@ fn Vec.with_capacity[T](cap: Int) -> Vec[T] {
 }
 
 fn Vec.push[T](value: T)
+  requires: true
   ensures: len() == len()@pre + 1
 {
   unsafe {

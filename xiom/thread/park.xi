@@ -73,7 +73,9 @@ pub fn park_token_wait(tok: ParkToken) {
 /// Release one waiter on the token.
 /// Params: tok - the token.
 /// Complexity: O(1).
-pub fn park_token_notify(tok: ParkToken) {
+pub fn park_token_notify(tok: ParkToken)
+  requires: true
+{
   unsafe { xiom_atomic_store(tok.flag, 1); }
 }
 

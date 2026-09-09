@@ -98,27 +98,39 @@ pub const SIMD_AVX2:   Int = 8;
 pub const SIMD_AVX512: Int = 16;
 pub const SIMD_NEON:   Int = 32;
 
-pub fn simd_supported() -> Bool {
+pub fn simd_supported() -> Bool
+  requires: true
+{
   unsafe { return xiom_simd_available() != 0; }
 }
 
-pub fn has_sse() -> Bool {
+pub fn has_sse() -> Bool
+  requires: true
+{
   unsafe { return xiom_simd_has_sse() != 0; }
 }
 
-pub fn has_avx() -> Bool {
+pub fn has_avx() -> Bool
+  requires: true
+{
   unsafe { return xiom_simd_has_avx() != 0; }
 }
 
-pub fn has_avx2() -> Bool {
+pub fn has_avx2() -> Bool
+  requires: true
+{
   unsafe { return xiom_simd_has_avx2() != 0; }
 }
 
-pub fn has_avx512() -> Bool {
+pub fn has_avx512() -> Bool
+  requires: true
+{
   unsafe { return xiom_simd_has_avx512() != 0; }
 }
 
-pub fn has_neon() -> Bool {
+pub fn has_neon() -> Bool
+  requires: true
+{
   unsafe { return xiom_simd_has_neon() != 0; }
 }
 
@@ -235,7 +247,9 @@ pub fn Vec4f.cross3(self, other: Vec4f) -> Vec4f {
   return Vec4f.new(x, y, z, 0.0);
 }
 
-pub fn Vec4f.drop(self) {
+pub fn Vec4f.drop(self)
+  requires: true
+{
   unsafe { alloc.free(data as *UInt8); }
 }
 

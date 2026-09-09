@@ -32,6 +32,7 @@ pub type Thread = { handle: *UInt8; id: Int; }
 pub type JoinHandle[T] = { thread: Thread; result_buf: *UInt8; }
 
 pub fn spawn[T](f: fn() -> T) -> JoinHandle[T]
+  requires: true
   ensures: result.thread.handle != 0 {
   unsafe {
     let bufsize = 8 + size_of[T]();
@@ -95,7 +96,9 @@ pub fn JoinHandle.detach[T](self)
   }
 }
 
-pub fn Thread.current() -> Thread {
+pub fn Thread.current() -> Thread
+  requires: true
+{
   unsafe {
     let handle = xiom_thread_self();
     let id = xiom_thread_id();
@@ -121,7 +124,9 @@ pub fn sleep(ms: Int) {
   sleep_ms(ms);
 }
 
-pub fn yield_now() {
+pub fn yield_now()
+  requires: true
+{
   unsafe { xiom_thread_yield(); }
 }
 
@@ -138,6 +143,7 @@ pub fn Scope.spawn[T](self, f: fn() -> T) -> JoinHandle[T] {
 }
 
 pub fn available_parallelism() -> Int
+  requires: true
   ensures: result >= 1
 {
   unsafe {
@@ -151,7 +157,9 @@ pub fn hardware_threads() -> Int {
   available_parallelism()
 }
 
-pub fn current_thread_id() -> Int {
+pub fn current_thread_id() -> Int
+  requires: true
+{
   unsafe { return xiom_thread_id(); }
 }
 

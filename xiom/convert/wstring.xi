@@ -141,7 +141,10 @@ pub fn wstring_len(ptr: Int) -> Int {
 }
 
 // Write one UTF-16 code unit (little-endian) at byte offset `off`.
-fn _write_unit(buf: *UInt8, off: Int, unit: Int) {
+fn _write_unit(buf: *UInt8, off: Int, unit: Int)
+  requires: buf != null
+  requires: off >= 0
+{
   unsafe {
     var lo = (unit & 0xFF) as UInt8;
     var hi = ((unit >> 8) & 0xFF) as UInt8;

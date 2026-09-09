@@ -348,7 +348,9 @@ pub fn levenshtein_edit_script(a: Str, b: Str) -> Vec[Str] {
 }
 
 /// Build a "keep:c" operation string.
-fn op_keep(c: Char) -> Str {
+fn op_keep(c: Char) -> Str
+  requires: true
+{
   unsafe {
     var buf = malloc(8 as UInt);
     buf[0] = 107;
@@ -363,7 +365,9 @@ fn op_keep(c: Char) -> Str {
 }
 
 /// Build a "del:c" operation string.
-fn op_del(c: Char) -> Str {
+fn op_del(c: Char) -> Str
+  requires: true
+{
   unsafe {
     var buf = malloc(8 as UInt);
     buf[0] = 100;
@@ -377,7 +381,9 @@ fn op_del(c: Char) -> Str {
 }
 
 /// Build an "ins:c" operation string.
-fn op_ins(c: Char) -> Str {
+fn op_ins(c: Char) -> Str
+  requires: true
+{
   unsafe {
     var buf = malloc(8 as UInt);
     buf[0] = 105;
@@ -391,7 +397,9 @@ fn op_ins(c: Char) -> Str {
 }
 
 /// Build a "sub:x>y" operation string.
-fn op_sub(a: Char, b: Char) -> Str {
+fn op_sub(a: Char, b: Char) -> Str
+  requires: true
+{
   unsafe {
     var buf = malloc(10 as UInt);
     buf[0] = 115;

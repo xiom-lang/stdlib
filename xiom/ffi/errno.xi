@@ -27,7 +27,9 @@ var last_errno: Int = 0;
 /// Read the current errno value (and record it as the snapshot). Reads the
 /// CRT errno cell byte-wise (64-bit little-endian).
 /// Complexity: O(1).
-pub fn errno_get() -> Int {
+pub fn errno_get() -> Int
+  requires: true
+{
   unsafe {
     let p = _errno() as *UInt8;
     let b0 = p[0] as Int;
@@ -63,7 +65,9 @@ pub fn errno_set(code: Int) {
 
 /// Human-readable message for an error code.
 /// Complexity: O(1).
-pub fn errno_strerror(code: Int) -> Str {
+pub fn errno_strerror(code: Int) -> Str
+  requires: true
+{
   unsafe {
     Str.from_cstring(strerror(code))
   }

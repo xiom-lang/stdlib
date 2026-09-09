@@ -52,7 +52,9 @@ pub fn Mutex.lock[T](self) -> MutexGuard[T] {
   return MutexGuard[T]{ mutex: self; }
 }
 
-pub fn Mutex.try_lock[T](self) -> Option[MutexGuard[T]] {
+pub fn Mutex.try_lock[T](self) -> Option[MutexGuard[T]]
+  requires: inner != null
+{
   unsafe {
     if xiom_mutex_trylock(inner) == 0 {
       return Some(MutexGuard[T]{ mutex: self; });
@@ -61,8 +63,10 @@ pub fn Mutex.try_lock[T](self) -> Option[MutexGuard[T]] {
   }
 }
 
-pub fn Mutex.into_inner[T](self) -> T {
-  unsafe {
+pub fn Mutex.into_inner[T](self) -> T
+  requires: inner != null
+  requires: data != null
+{
     let val = ptr.read(data as *T);
     xiom_mutex_destroy(inner);
     alloc.dealloc(inner, 64);
@@ -75,15 +79,21 @@ pub type MutexGuard[T] = {
   mutex: Mutex[T];
 }
 
-pub fn MutexGuard.get[T](self) -> T {
+pub fn MutexGuard.get[T](self) -> T
+  requires: mutex.data != null
+{
   unsafe { return ptr.read(mutex.data as *T); }
 }
 
-pub fn MutexGuard.get_mut[T](self) -> T {
+pub fn MutexGuard.get_mut[T](self) -> T
+  requires: mutex.data != null
+{
   unsafe { return ptr.read(mutex.data as *T); }
 }
 
-pub fn MutexGuard.drop[T](self) {
+pub fn MutexGuard.drop[T](self)
+  requires: mutex.inner != null
+{
   unsafe { xiom_mutex_unlock(mutex.inner); }
 }
 
@@ -168,7 +178,9 @@ pub fn RwLock.try_write[T](self) -> Option[WriteGuard[T]] {
 
 pub type ReadGuard[T] = { lock: RwLock[T]; }
 
-pub fn ReadGuard.get[T](self) -> T {
+pub fn ReadGuard.get[T](self) -> T
+  requires: lock.data != null
+{
   unsafe { return ptr.read(lock.data as *T); }
 }
 
@@ -185,11 +197,15 @@ pub fn ReadGuard.drop[T](self) {
 
 pub type WriteGuard[T] = { lock: RwLock[T]; }
 
-pub fn WriteGuard.get[T](self) -> T {
+pub fn WriteGuard.get[T](self) -> T
+  requires: lock.data != null
+{
   unsafe { return ptr.read(lock.data as *T); }
 }
 
-pub fn WriteGuard.get_mut[T](self) -> T {
+pub fn WriteGuard.get_mut[T](self) -> T
+  requires: lock.data != null
+{
   unsafe { return ptr.read(lock.data as *T); }
 }
 
@@ -217,11 +233,15 @@ pub fn Condvar.wait[T](self, guard: MutexGuard[T]) -> MutexGuard[T] {
   return guard;
 }
 
-pub fn Condvar.notify_one(self) {
+pub fn Condvar.notify_one(self)
+  requires: inner != null
+{
   unsafe { xiom_cond_signal(inner); }
 }
 
-pub fn Condvar.notify_all(self) {
+pub fn Condvar.notify_all(self)
+  requires: inner != null
+{
   unsafe { xiom_cond_broadcast(inner); }
 }
 
@@ -240,6 +260,8 @@ pub fn Once.new() -> Once {
 }
 
 pub fn Once.call_once(self, f: fn())
+  requires: inner != null
+  requires: state != null
 {
   unsafe {
     let st = xiom_atomic_load(state);
@@ -257,7 +279,9 @@ pub fn Once.call_once(self, f: fn())
   }
 }
 
-pub fn Once.is_completed(self) -> Bool {
+pub fn Once.is_completed(self) -> Bool
+  requires: state != null
+{
   unsafe { return xiom_atomic_load(state) == 2; }
 }
 
@@ -342,7 +366,9 @@ pub fn Arc.clone[T](self) -> Arc[T]
   return Arc[T]{ ptr: ptr; }
 }
 
-pub fn Arc.get[T](self) -> T {
+pub fn Arc.get[T](self) -> T
+  requires: ptr != null
+{
   unsafe {
     (*ptr).value
   }
@@ -401,7 +427,9 @@ pub fn AtomicBool.new(val: Bool) -> AtomicBool {
   return AtomicBool{ ptr: p as *Int; }
 }
 
-pub fn AtomicBool.load(self) -> Bool {
+pub fn AtomicBool.load(self) -> Bool
+  requires: ptr != null
+{
   unsafe { return xiom_atomic_load(ptr) != 0; }
 }
 
@@ -437,28 +465,40 @@ pub fn AtomicInt.new(val: Int) -> AtomicInt {
   return AtomicInt{ ptr: p as *Int; }
 }
 
-pub fn AtomicInt.load(self) -> Int {
+pub fn AtomicInt.load(self) -> Int
+  requires: ptr != null
+{
   unsafe { return xiom_atomic_load(ptr); }
 }
 
-pub fn AtomicInt.store(self, val: Int) -> AtomicInt {
+pub fn AtomicInt.store(self, val: Int) -> AtomicInt
+  requires: ptr != null
+{
   unsafe { xiom_atomic_store(ptr, val); }
   self
 }
 
-pub fn AtomicInt.fetch_add(self, val: Int) -> Int {
+pub fn AtomicInt.fetch_add(self, val: Int) -> Int
+  requires: ptr != null
+{
   unsafe { return xiom_atomic_fetch_add(ptr, val); }
 }
 
-pub fn AtomicInt.fetch_sub(self, val: Int) -> Int {
+pub fn AtomicInt.fetch_sub(self, val: Int) -> Int
+  requires: ptr != null
+{
   unsafe { return xiom_atomic_fetch_sub(ptr, val); }
 }
 
-pub fn AtomicInt.swap(self, val: Int) -> Int {
+pub fn AtomicInt.swap(self, val: Int) -> Int
+  requires: ptr != null
+{
   unsafe { return xiom_atomic_exchange(ptr, val); }
 }
 
-pub fn AtomicInt.compare_exchange(self, current: Int, new: Int) -> Bool {
+pub fn AtomicInt.compare_exchange(self, current: Int, new: Int) -> Bool
+  requires: ptr != null
+{
   unsafe {
     let old = xiom_atomic_load(ptr);
     if old == current {
@@ -547,7 +587,9 @@ pub fn barrier_wait(b: &mut Barrier) -> Bool {
 
 /// Resets the barrier waiting count to zero (best-effort).
 /// Complexity: O(1). Not safe for concurrent use with active waiters.
-pub fn barrier_reset(b: &mut Barrier) {
+pub fn barrier_reset(b: &mut Barrier)
+  requires: b.waiting != null
+{
   unsafe { xiom_atomic_store(b.waiting, 0); }
 }
 

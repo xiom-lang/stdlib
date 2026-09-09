@@ -12,7 +12,10 @@ pub fn null_mut[T]() -> *mut T {
   return 0 as *mut T;
 }
 
-pub fn dangling[T]() -> *T {
+pub fn dangling[T]() -> *T
+  // Deliberate marker pointer (never dereference); no input precondition.
+  requires: true
+{
   unsafe {
     return 1 as *T;
   }
@@ -116,7 +119,9 @@ pub fn offset[T](ptr: *const T, count: Int) -> *const T
   }
 }
 
-pub fn wrapping_offset[T](ptr: *const T, count: Int) -> *const T {
+pub fn wrapping_offset[T](ptr: *const T, count: Int) -> *const T
+  requires: true
+{
   unsafe {
     return ptr + count;
   }

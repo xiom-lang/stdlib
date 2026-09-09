@@ -122,7 +122,9 @@ pub fn c_atof(ptr: Int) -> Float64
 
 /// Absolute value.
 /// Complexity: O(1).
-pub fn c_abs(n: Int) -> Int {
+pub fn c_abs(n: Int) -> Int
+  requires: true
+{
   unsafe {
     abs(n)
   }
@@ -130,7 +132,9 @@ pub fn c_abs(n: Int) -> Int {
 
 /// Pseudo-random integer.
 /// Complexity: O(1).
-pub fn c_rand() -> Int {
+pub fn c_rand() -> Int
+  requires: true
+{
   unsafe {
     rand()
   }
@@ -138,7 +142,9 @@ pub fn c_rand() -> Int {
 
 /// Seed the C random generator.
 /// Complexity: O(1).
-pub fn c_srand(seed: Int) {
+pub fn c_srand(seed: Int)
+  requires: true
+{
   unsafe {
     srand(seed as UInt);
   }
@@ -146,7 +152,9 @@ pub fn c_srand(seed: Int) {
 
 /// Processor time consumed.
 /// Complexity: O(1).
-pub fn c_clock() -> Int {
+pub fn c_clock() -> Int
+  requires: true
+{
   unsafe {
     clock()
   }
