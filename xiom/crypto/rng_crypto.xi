@@ -9,15 +9,15 @@ module xiom.crypto.rng_crypto
 // ============================================================================
 // Cryptographically secure random number generation.
 //
-// All functions build on xiom.crypto.secure_random_bytes (the flat RNG), so
-// they inherit its entropy source and are not reproducible from a seed.
+// All functions build on xiom.crypto.secure_random_bytes (the OS-entropy
+// CSPRNG), so they inherit its entropy source and are not reproducible from
+// a seed.
 //
-// SECURITY STATUS (interim, tracked in crypto.xi): secure_random_bytes is
-// still the legacy Park-Miller LCG, now seeded ONCE per process from OS
-// entropy. Output differs across runs but the generator is NOT a CSPRNG
-// (31-bit state recoverable after ~2^31 outputs) -- do not derive keys or
-// long-term secrets from this path until the os_secure_random_bytes flip
-// lands (compiler multi-draw fix, COMPILER_BUGS.md R4).
+// SECURITY STATUS: OS-entropy backed (ProcessPrng/RtlGenRandom on Windows,
+// /dev/urandom on Unix) since the confined-block growth fix (COMPILER_BUGS.md
+// R4). Degraded mode: if no OS source answers, the internal fallback draws
+// from the OS-seeded legacy LCG -- a no-OS environment must be treated as
+// insecure regardless.
 //
 // Security notes:
 //   - crypto_random_uniform uses rejection sampling over a 32-bit draw so the

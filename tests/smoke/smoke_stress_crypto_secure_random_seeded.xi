@@ -1,8 +1,11 @@
-// smoke_stress_crypto_secure_random_seeded.xi -- lock for the interim
-// OS-entropy process seeding of the legacy RNG (2026-09-09).
-// 1. Two secure_random_bytes draws in the same process must DIFFER
-//    (regression: fixed seed 12345 made every run byte-identical).
-// 2. Consumers (rng_crypto, keyx, aead nonce paths) must run without AV.
+// smoke_stress_crypto_secure_random_seeded.xi -- locks for the CSPRNG
+// pipeline (2026-09-09):
+// 1. secure_random_bytes is OS-entropy backed (R4 flip after the
+//    confined-block growth fix, 041e8bb3); two draws MUST differ.
+// 2. Draws larger than the 16-byte initial Vec capacity MUST survive
+//    (regression: pre-fix confined growth dangled the returned buffer).
+// 3. Consumers (rng_crypto, keyx, aead nonce paths) run without AV.
+// 4. A no-OS fallback would still differ across runs (seeded LCG).
 // Exit 0 = green. A deterministic generator fails at check 2.
 module smoke_stress_crypto_secure_random_seeded
 use xiom.crypto;
@@ -33,6 +36,15 @@ fn main() -> Int {
     i = i + 1;
   }
   if same { io.println("deterministic-draws"); return 3; }
+
+  // growth-escape regression: multi-draw at 5000 bytes (pre-R4: AV)
+  var big1 = crypto.secure_random_bytes(5000);
+  var big2 = crypto.secure_random_bytes(5000);
+  if big1.len() != 5000 { io.println("big1-len"); return 8; }
+  if big2.len() != 5000 { io.println("big2-len"); return 9; }
+  var sbig1 = bytes_sum(&big1);
+  var sbig2 = bytes_sum(&big2);
+  if sbig1 == sbig2 { io.println("big-equal"); return 10; }
 
   // rng_crypto multi-call consumers
   var u1 = crypto_random_u64();
