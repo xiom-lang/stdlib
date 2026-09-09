@@ -96,7 +96,9 @@ pub fn RefCell.borrow_mut[T](&mut self) -> RefMut[T]
   }
 }
 
-pub fn RefCell.try_borrow[T](&mut self) -> Option[Ref[T]] {
+pub fn RefCell.try_borrow[T](&mut self) -> Option[Ref[T]]
+  requires: true
+{
   unsafe {
     let raw = ptr.from_ref(self) as *mut RefCell[T];
     if (*raw).borrows == -1 {
@@ -107,7 +109,9 @@ pub fn RefCell.try_borrow[T](&mut self) -> Option[Ref[T]] {
   }
 }
 
-pub fn RefCell.try_borrow_mut[T](&mut self) -> Option[RefMut[T]] {
+pub fn RefCell.try_borrow_mut[T](&mut self) -> Option[RefMut[T]]
+  requires: true
+{
   unsafe {
     let raw = ptr.from_ref(self) as *mut RefCell[T];
     if (*raw).borrows != 0 {
@@ -119,6 +123,7 @@ pub fn RefCell.try_borrow_mut[T](&mut self) -> Option[RefMut[T]] {
 }
 
 pub fn RefCell.replace[T](&mut self, value: T) -> T
+  requires: true
   ensures: result == value@pre
 {
   unsafe {
@@ -146,7 +151,9 @@ pub fn Ref.release[T](self) {
 }
 
 // Get the CURRENT value from the RefCell (not a stale copy).
-pub fn Ref.get[T](self) -> T {
+pub fn Ref.get[T](self) -> T
+  requires: ptr != null
+{
   unsafe {
     return (*ptr).value;
   }
@@ -166,14 +173,18 @@ pub fn RefMut.release[T](self) {
 }
 
 // Get the current value. Returns by value (XIOM limitation: no &T references yet).
-pub fn RefMut.get[T](self) -> T {
+pub fn RefMut.get[T](self) -> T
+  requires: ptr != null
+{
   unsafe {
     return (*ptr).value;
   }
 }
 
 // Set a new value through the mutable borrow.
-pub fn RefMut.set[T](self, value: T) {
+pub fn RefMut.set[T](self, value: T)
+  requires: ptr != null
+{
   unsafe {
     (*ptr).value = value;
   }

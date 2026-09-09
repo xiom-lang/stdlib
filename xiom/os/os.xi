@@ -44,7 +44,9 @@ extern "C" {
   fn xiom_getpid() -> Int64;
 }
 
-fn cstr(s: Str) -> *UInt8 {
+fn cstr(s: Str) -> *UInt8
+  requires: true
+{
   unsafe {
     return s as *UInt8;
   }
@@ -59,6 +61,7 @@ pub fn platform() -> Str
 }
 
 pub fn cpu_count() -> Int
+  requires: true
   ensures: result > 0
 {
   unsafe {
@@ -71,6 +74,7 @@ pub fn cpu_count() -> Int
 }
 
 pub fn total_memory() -> Int
+  requires: true
   ensures: result >= 0
 {
   unsafe {
@@ -79,6 +83,7 @@ pub fn total_memory() -> Int
 }
 
 pub fn free_memory() -> Int
+  requires: true
   ensures: result >= 0
 {
   unsafe {
@@ -295,13 +300,17 @@ pub fn ChildProcess.id(self) -> Int
 
 // === Environment (private helpers) ===
 
-fn set_env(name: Str, value: Str) {
+fn set_env(name: Str, value: Str)
+  requires: true
+{
   unsafe {
     let _ = setenv(cstr(name), cstr(value), 1);
   }
 }
 
-fn unset_env(name: Str) {
+fn unset_env(name: Str)
+  requires: true
+{
   unsafe {
     let _ = unsetenv(cstr(name));
   }
@@ -595,7 +604,9 @@ pub fn file_size_bytes(path: Str) -> Result[Int, Str]
 // hostname returns the system hostname via gethostname (POSIX) or
 // GetComputerNameA (Windows).  Uses an internal static buffer in the
 // C runtime.  Returns Err on failure.
-pub fn hostname() -> Result[Str, Str] {
+pub fn hostname() -> Result[Str, Str]
+  requires: true
+{
   unsafe {
     let raw = xiom_hostname();
     if raw == null {
@@ -608,7 +619,9 @@ pub fn hostname() -> Result[Str, Str] {
 // os_version_str returns a best-effort OS version string via the
 // xiom_os_version_str runtime intrinsic (GetVersionExA on Windows,
 // uname on POSIX).
-pub fn os_version_str() -> Str {
+pub fn os_version_str() -> Str
+  requires: true
+{
   unsafe {
     let raw = xiom_os_version_str();
     return Str.from_cstring(raw);
@@ -687,7 +700,9 @@ pub fn current_exe_path() -> Option[Str] {
 
 // process_id returns the current process ID via the xiom_getpid
 // runtime intrinsic.
-pub fn process_id() -> Int {
+pub fn process_id() -> Int
+  requires: true
+{
   unsafe {
     return xiom_getpid() as Int;
   }

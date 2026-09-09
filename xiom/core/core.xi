@@ -656,7 +656,9 @@ pub fn Str.as_ref(self) -> &Str {
 }
 
 // === M7: AsRef<[UInt8]> impl for Str ===
-pub fn Str.as_bytes(self) -> &Slice[UInt8] {
+pub fn Str.as_bytes(self) -> &Slice[UInt8]
+  requires: true
+{
   unsafe {
     Slice { data: &self as *UInt8, len: string.str_len(self) }
   }

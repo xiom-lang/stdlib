@@ -29,6 +29,7 @@ extern "C" {
 
 // Number of user types registered in this compilation unit. REAL.
 pub fn type_count() -> Int
+  requires: true
   ensures: result >= 0
 {
   unsafe {
@@ -38,6 +39,7 @@ pub fn type_count() -> Int
 
 // Name of the type with the given stable id, or "unknown" if out of range. REAL.
 pub fn type_name_by_id(id: Int) -> Str
+  requires: true
   ensures: result.len() >= 0
 {
   unsafe {
@@ -47,6 +49,7 @@ pub fn type_name_by_id(id: Int) -> Str
 
 // Stable id of the type with the given name, or -1 if not found. REAL.
 pub fn type_id_by_name(name: Str) -> Int
+  requires: true
   ensures: result >= -1
 {
   unsafe {
@@ -56,6 +59,7 @@ pub fn type_id_by_name(name: Str) -> Int
 
 // Number of fields of the type with the given id (0 for enums/unknown). REAL.
 pub fn type_field_count(id: Int) -> Int
+  requires: true
   ensures: result >= 0
 {
   unsafe {

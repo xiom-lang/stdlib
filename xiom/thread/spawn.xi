@@ -82,14 +82,18 @@ pub fn sleep_ms(ms: Int) {
 
 /// Voluntarily give up the CPU timeslice.
 /// Complexity: O(1) syscall.
-pub fn yield_now() {
+pub fn yield_now()
+  requires: true
+{
   unsafe { xiom_thread_yield(); }
 }
 
 /// The id of the calling thread.
 /// Returns: the OS thread id of the current thread.
 /// Complexity: O(1).
-pub fn thread_id() -> Int {
+pub fn thread_id() -> Int
+  requires: true
+{
   unsafe { return xiom_thread_id(); }
 }
 

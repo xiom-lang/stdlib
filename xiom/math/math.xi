@@ -203,7 +203,9 @@ pub fn abs_int(x: Int) -> Int {
   return -x;
 }
 
-pub fn abs_float(x: Float64) -> Float64 {
+pub fn abs_float(x: Float64) -> Float64
+  requires: true
+{
   unsafe { return fabs(x); }
 }
 
@@ -227,11 +229,15 @@ pub fn max_float(a: Float64, b: Float64) -> Float64 {
   return b;
 }
 
-pub fn floor(x: Float64) -> Float64 {
+pub fn floor(x: Float64) -> Float64
+  requires: true
+{
   unsafe { return floor(x); }
 }
 
-pub fn ceil(x: Float64) -> Float64 {
+pub fn ceil(x: Float64) -> Float64
+  requires: true
+{
   unsafe { return ceil(x); }
 }
 
@@ -242,15 +248,21 @@ pub fn round(x: Float64) -> Int {
 
 // === Trig ===
 
-pub fn sin(x: Float64) -> Float64 {
+pub fn sin(x: Float64) -> Float64
+  requires: true
+{
   unsafe { return sin(x); }
 }
 
-pub fn cos(x: Float64) -> Float64 {
+pub fn cos(x: Float64) -> Float64
+  requires: true
+{
   unsafe { return cos(x); }
 }
 
-pub fn tan(x: Float64) -> Float64 {
+pub fn tan(x: Float64) -> Float64
+  requires: true
+{
   unsafe { return tan(x); }
 }
 
@@ -266,7 +278,9 @@ pub fn acos(x: Float64) -> Float64
   unsafe { return acos(x); }
 }
 
-pub fn atan(x: Float64) -> Float64 {
+pub fn atan(x: Float64) -> Float64
+  requires: true
+{
   unsafe { return atan(x); }
 }
 
@@ -306,7 +320,9 @@ fn exp_inner(x: Float64) -> Float64 {
   return result;
 }
 
-pub fn exp(x: Float64) -> Float64 {
+pub fn exp(x: Float64) -> Float64
+  requires: true
+{
   unsafe { return exp(x); }
 }
 

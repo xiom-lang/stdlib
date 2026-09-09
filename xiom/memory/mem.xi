@@ -19,6 +19,7 @@ pub fn swap[T](a: &mut T, b: &mut T)
 }
 
 pub fn replace[T](dest: &mut T, src: T) -> T
+  requires: true
   ensures: result == dest@pre
 {
   unsafe {

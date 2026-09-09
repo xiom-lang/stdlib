@@ -113,6 +113,7 @@ pub fn current_exe() -> Result<Str, Str> {
 }
 
 pub fn current_dir() -> Result<Str, Str>
+  requires: true
   ensures: result is Ok => result.len() > 0
 {
   unsafe {
@@ -335,7 +336,9 @@ pub fn arg_contains(s: Str) -> Bool {
 // current_dir_str returns the current working directory as a Str,
 // or "." if the OS call fails.  Wraps getcwd directly.
 // Complexity: O(1).
-pub fn current_dir_str() -> Str {
+pub fn current_dir_str() -> Str
+  requires: true
+{
   unsafe {
     var buf: [4096]UInt8;
     let ptr = getcwd(&buf[0], 4096 as UInt);

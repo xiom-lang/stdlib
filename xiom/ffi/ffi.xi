@@ -334,7 +334,9 @@ pub fn safe_ptr_to_vec(ptr: &SafePtr) -> Result[Vec[Int], Str] {
 /// Raw unsafe read of a UInt8 at pointer p.
 /// SAFETY: caller must ensure p points to valid memory.
 /// No bounds check.
-pub fn ptr_read_u8(p: *UInt8) -> Int {
+pub fn ptr_read_u8(p: *UInt8) -> Int
+  requires: p != null
+{
   unsafe {
     return p[0] as Int;
   }
@@ -355,7 +357,9 @@ pub fn ptr_write_u8(p: *UInt8, v: Int)
 /// Raw unsafe read of a 32-bit unsigned integer at pointer p (little-endian).
 /// SAFETY: caller must ensure p and p+0..p+3 point to valid memory.
 /// No bounds check.
-pub fn ptr_read_u32_le(p: *UInt8) -> Int {
+pub fn ptr_read_u32_le(p: *UInt8) -> Int
+  requires: p != null
+{
   unsafe {
     let b0 = p[0] as Int;
     let b1 = p[1] as Int;
@@ -383,7 +387,9 @@ pub fn ptr_write_u32_le(p: *UInt8, v: Int)
 /// Raw unsafe read of a 64-bit unsigned integer at pointer p (little-endian).
 /// SAFETY: caller must ensure p+0..p+7 point to valid memory.
 /// No bounds check.
-pub fn ptr_read_u64_le(p: *UInt8) -> Int {
+pub fn ptr_read_u64_le(p: *UInt8) -> Int
+  requires: p != null
+{
   unsafe {
     let b0 = p[0] as Int;
     let b1 = p[1] as Int;
@@ -402,7 +408,9 @@ pub fn ptr_read_u64_le(p: *UInt8) -> Int {
 /// Writes the lower 64 bits of v.
 /// SAFETY: caller must ensure p+0..p+7 point to valid mutable memory.
 /// No bounds check.
-pub fn ptr_write_u64_le(p: *UInt8, v: Int) {
+pub fn ptr_write_u64_le(p: *UInt8, v: Int)
+  requires: p != null
+{
   unsafe {
     p[0] = ( v        & 0xFF) as UInt8;
     p[1] = ((v >>  8) & 0xFF) as UInt8;
@@ -489,7 +497,9 @@ pub fn ffi_check(code: Int, msg: Str) -> Result[Int, FFIError] {
 }
 
 /// C convention: null pointer = error.
-pub fn ffi_check_ptr(ptr: *UInt8, msg: Str) -> Result[*UInt8, FFIError] {
+pub fn ffi_check_ptr(ptr: *UInt8, msg: Str) -> Result[*UInt8, FFIError]
+  requires: true
+{
   unsafe {
     if ptr == null { Err(FFIError { code: -1; message: msg }) }
     else { Ok(ptr) }

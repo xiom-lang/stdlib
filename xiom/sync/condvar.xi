@@ -99,13 +99,17 @@ pub fn condvar_wait_timeout(cv: SyncCondvar, m: SyncMutex, ms: Int) -> Bool {
 /// Wake one waiting thread.
 /// Params: cv - the condition variable.
 /// Complexity: O(1).
-pub fn condvar_notify_one(cv: SyncCondvar) {
+pub fn condvar_notify_one(cv: SyncCondvar)
+  requires: cv.notified != null
+{
   unsafe { xiom_atomic_fetch_add(cv.notified, 1); }
 }
 
 /// Wake all waiting threads.
 /// Params: cv - the condition variable.
 /// Complexity: O(1).
-pub fn condvar_notify_all(cv: SyncCondvar) {
+pub fn condvar_notify_all(cv: SyncCondvar)
+  requires: cv.notified != null
+{
   unsafe { xiom_atomic_fetch_add(cv.notified, 1); }
 }

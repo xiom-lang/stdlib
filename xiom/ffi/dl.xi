@@ -26,7 +26,9 @@ extern "C" {
 
 /// Load a shared library and return a handle (Int address), or Err.
 /// Complexity: O(1).
-pub fn dl_open(path: Str) -> Result[Int, Str] {
+pub fn dl_open(path: Str) -> Result[Int, Str]
+  requires: true
+{
   unsafe {
     let p = LoadLibraryA(path as *UInt8);
     if (p as Int) == 0 {
@@ -38,7 +40,9 @@ pub fn dl_open(path: Str) -> Result[Int, Str] {
 
 /// Resolve a symbol address in a library, or Err.
 /// Complexity: O(1).
-pub fn dl_sym(handle: Int, name: Str) -> Result[Int, Str] {
+pub fn dl_sym(handle: Int, name: Str) -> Result[Int, Str]
+  requires: true
+{
   unsafe {
     let p = GetProcAddress(handle as *UInt8, name as *UInt8);
     if (p as Int) == 0 {
@@ -50,7 +54,9 @@ pub fn dl_sym(handle: Int, name: Str) -> Result[Int, Str] {
 
 /// Unload a library.
 /// Complexity: O(1).
-pub fn dl_close(handle: Int) -> Result[Unit, Str] {
+pub fn dl_close(handle: Int) -> Result[Unit, Str]
+  requires: true
+{
   unsafe {
     let rc = FreeLibrary(handle as *UInt8);
     if rc == 0 {
@@ -62,7 +68,9 @@ pub fn dl_close(handle: Int) -> Result[Unit, Str] {
 
 /// Description of the last dynamic-loading error (Windows error code).
 /// Complexity: O(1).
-pub fn dl_error() -> Str {
+pub fn dl_error() -> Str
+  requires: true
+{
   unsafe {
     let code = GetLastError();
     "dynamic library error (code " + convert.int_to_string(code) + ")"
@@ -71,7 +79,9 @@ pub fn dl_error() -> Str {
 
 /// Handle of the current executable.
 /// Complexity: O(1).
-pub fn dl_self() -> Int {
+pub fn dl_self() -> Int
+  requires: true
+{
   unsafe {
     let p = GetModuleHandleA(0 as *UInt8);
     p as Int
@@ -93,7 +103,9 @@ pub fn dl_sym_address(handle: Int, name: Str) -> Result[Int, Str] {
 
 /// Whether a symbol exists in a library.
 /// Complexity: O(1).
-pub fn dl_has_symbol(handle: Int, name: Str) -> Bool {
+pub fn dl_has_symbol(handle: Int, name: Str) -> Bool
+  requires: true
+{
   unsafe {
     let p = GetProcAddress(handle as *UInt8, name as *UInt8);
     (p as Int) != 0

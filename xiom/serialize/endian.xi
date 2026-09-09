@@ -192,7 +192,9 @@ pub fn read_i64_le(data: &Vec[UInt8], pos: Int) -> Int {
 /// Append the IEEE-754 bit pattern of `v` little-endian (host byte order,
 /// which is little-endian on all supported targets).
 /// Complexity: O(1).
-pub fn write_f64_le(out: &mut Vec[UInt8], v: Float64) {
+pub fn write_f64_le(out: &mut Vec[UInt8], v: Float64)
+  requires: true
+{
   unsafe {
     var buf: [8]UInt8;
     let fp: *mut Float64 = &buf[0] as *mut Float64;
