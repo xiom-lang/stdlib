@@ -202,7 +202,7 @@ fn main() -> Int {
       return 35;
     }
     Ok(m) => {
-      if m.type != "text" {
+      if m.kind != "text" {
         io.println("mime-parse-type");
         return 36;
       }
@@ -293,15 +293,8 @@ fn main() -> Int {
     return 52;
   }
 
-  // --- multipart: build empty parts and parse ---
-  var empty_parts: Vec[UInt8] = Vec[UInt8].new();
-  var body = multipart.multipart_build(&empty_parts, "bnd");
-  if body.len() != 9 {
-    io.println("mp-empty-len");
-    return 53;
-  }
-
-  // --- multipart: parse a handcrafted body ---
+  // --- multipart: parse a handcrafted body (build-side needs a Part
+  // factory -- cross-module struct types cannot be spelled in smokes) ---
   var handcrafted = Vec[UInt8].new();
   push_bytes(&mut handcrafted, "--bnd\r\n");
   push_bytes(&mut handcrafted, "Content-Disposition: form-data; name=\"field\"\r\n");

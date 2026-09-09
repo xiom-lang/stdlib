@@ -5,7 +5,7 @@ fn main() -> Int {
   var p = env.path_separator();
   if p == "" { return 1; }
 
-  match env.var("NONEXISTENT_VAR_12345_XYZ") {
+  match env.get_var("NONEXISTENT_VAR_12345_XYZ") {
     Ok(_) => {},
     Err(_) => {},
   };

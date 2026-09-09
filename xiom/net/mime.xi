@@ -17,24 +17,24 @@ use xiom.string;
 use xiom.crypto;
 use xiom.encoding;
 
-// struct MimeType { type: Str; subtype: Str; params: Vec[(Str, Str)] }
+// struct MimeType { kind: Str; subtype: Str; params: Vec[(Str, Str)] }
 //   NOTE: the frozen spec documents `params: Map[Str, Str]`. The compiler
 //   cannot construct/return a struct containing a Map field (hangs/0xC0000005,
-//   see probe in agent_net2); `type` must also not be the first field (reserved
-//   keyword breaks cross-module resolution). Params are therefore stored as
-//   ordered (name, value) pairs.
+//   see probe in agent_net2); the main-type field is named `kind` because the
+//   reserved word `type` is unreadable at call sites (P001) and breaks
+//   cross-module resolution. Params are stored as ordered (name, value) pairs.
 pub type MimeType = {
   subtype: Str;
   params: Vec[(Str, Str)];
-  type: Str;
+  kind: Str;
 }
 
-// struct Link { href: Str; rel: Str; title: Str; type: Str }
+// struct Link { href: Str; rel: Str; title: Str; kind: Str }
 pub type Link = {
   href: Str;
   rel: Str;
   title: Str;
-  type: Str;
+  kind: Str;
 }
 
 // (Str, Int) - accept entry: mime pattern plus q value (scaled by 1000).
@@ -239,7 +239,7 @@ pub fn mime_parse(s: Str) -> Result[MimeType, Str] {
       i = i + 1;
     }
   }
-  Ok(MimeType{ subtype: sub; params: params; type: typ; })
+  Ok(MimeType{ subtype: sub; params: params; kind: typ; })
 }
 
 /// Guess the MIME type from a file extension.
@@ -626,7 +626,7 @@ pub fn link_parse(header: Str) -> Vec[Link] {
       }
       j = j + 1;
     }
-    result.push(Link{ href: href; rel: rel; title: title; type: typ; });
+    result.push(Link{ href: href; rel: rel; title: title; kind: typ; });
     i = i + 1;
   }
   result
