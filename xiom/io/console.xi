@@ -83,7 +83,9 @@ pub fn console_read_key() -> Option[Char] {
 /// Write a string to standard output.
 /// Params: s - the string.
 /// Complexity: O(n).
-pub fn console_write(s: Str) {
+pub fn console_write(s: Str)
+  requires: true
+{
   unsafe {
     printf("%s", s.c_str());
   }
@@ -92,7 +94,9 @@ pub fn console_write(s: Str) {
 /// Write a string followed by a newline.
 /// Params: s - the string.
 /// Complexity: O(n).
-pub fn console_write_line(s: Str) {
+pub fn console_write_line(s: Str)
+  requires: true
+{
   unsafe {
     puts(s.c_str());
   }
@@ -110,7 +114,9 @@ pub fn console_write_error(s: Str) {
 
 /// Clear the terminal screen.
 /// Complexity: O(1) shell invocation.
-pub fn console_clear() {
+pub fn console_clear()
+  requires: true
+{
   unsafe {
     let _ = system("cls");
   }
@@ -172,7 +178,9 @@ pub fn console_read_until_eof() -> Result[Str, Str> {
 
 /// Flush standard output.
 /// Complexity: O(1) syscall.
-pub fn console_flush() {
+pub fn console_flush()
+  requires: true
+{
   unsafe {
     let _ = fflush(xiom_stdout());
   }

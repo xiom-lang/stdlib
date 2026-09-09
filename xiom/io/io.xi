@@ -17,14 +17,21 @@ extern "C" {
   fn fread(buf: *UInt8, size: UInt, count: UInt, file: *UInt8) -> UInt;
   fn fwrite(buf: *UInt8, size: UInt, count: UInt, file: *UInt8) -> UInt;
   fn remove(path: *UInt8) -> Int32;
-  fn rename(old: *UInt8, new: *UInt8) -> Int32;
+  // C `rename` is bound through the runtime shim xiom_rename (atomic replace
+  // semantics on Windows); a same-named extern would collide with the public
+  // `rename` wrapper below in the catalog body checker.
+  fn xiom_rename(old: *UInt8, new: *UInt8) -> Int32;
   fn xiom_read_file(path: *UInt8) -> *UInt8;
   fn xiom_file_size(path: *UInt8) -> Int;
   fn xiom_free(ptr: *UInt8);
-  fn exit(code: Int32);
+  // C `exit` is bound through the runtime shim xiom_process_exit for the same
+  // collision-avoidance reason as xiom_rename.
+  fn xiom_process_exit(code: Int32);
   fn getenv(name: *UInt8) -> *UInt8;
   fn time(t: *Int) -> Int;
-  fn usleep(usec: UInt) -> Int32;
+  // Cross-platform millisecond sleep via the runtime (Sleep on Windows,
+  // nanosleep on Unix); libc usleep does not exist on Windows/MSVC.
+  fn xiom_thread_sleep_ms(ms: Int);
   fn mkdir(path: *UInt8) -> Int32;
   fn chmod(path: *UInt8, mode: Int32) -> Int32;
   fn xiom_stdin() -> *UInt8;
@@ -54,13 +61,19 @@ pub type IOError = {
 pub type SeekFrom = enum { Start(Int), End(Int), Current(Int) }
 
 // === Console ===
-pub fn print(msg: Str) {
+pub fn print(msg: Str)
+  // T007: confined printf wrapper. Str is always NUL-terminated by type
+  // invariant, so the C side has no additional precondition.
+  requires: true
+{
   unsafe {
     printf("%s", msg.c_str());
   }
 }
 
-pub fn println(msg: Str) {
+pub fn println(msg: Str)
+  requires: true
+{
   unsafe {
     puts(msg.c_str());
   }
@@ -351,7 +364,7 @@ pub fn rename(src: Str, dst: Str) -> Result[Unit, IOError]
 {
   let rc: Int32;
   unsafe {
-    rc = rename(src.c_str(), dst.c_str());
+    rc = xiom_rename(src.c_str(), dst.c_str());
   }
   if rc != 0 {
     return Err(IOError{ message: "failed to rename " + src + " to " + dst, code: 9 });
@@ -364,7 +377,7 @@ pub fn exit(code: Int)
   requires: code >= 0
 {
   unsafe {
-    exit(code as Int32);
+    xiom_process_exit(code as Int32);
   }
 }
 
@@ -400,15 +413,19 @@ pub fn env_var(name: Str) -> Option[Str]
 }
 
 // === Time ===
-pub fn time_now() -> Int {
+pub fn time_now() -> Int
+  requires: true
+{
   unsafe {
     time(0)
   }
 }
 
-pub fn sleep(ms: Int) {
+pub fn sleep(ms: Int)
+  requires: ms >= 0
+{
   unsafe {
-    usleep((ms as UInt) * 1000 as UInt);
+    xiom_thread_sleep_ms(ms);
   }
 }
 
@@ -587,7 +604,9 @@ pub fn stderr() -> Int
   2
 }
 
-fn print_line(s: Str) {
+fn print_line(s: Str)
+  requires: true
+{
   unsafe {
     puts(s.c_str());
   }

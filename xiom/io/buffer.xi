@@ -191,7 +191,10 @@ pub fn br_peek(r: &mut BufReader, n: Int) -> Result[Vec[UInt8], Str> {
 /// Move the underlying read position.
 /// Params: r - the reader; pos - the byte offset from the start.
 /// Complexity: O(1) syscall.
-pub fn br_seek(r: &mut BufReader, pos: Int) {
+pub fn br_seek(r: &mut BufReader, pos: Int)
+  requires: pos >= -2147483648 && pos <= 2147483647
+  requires: r.inner != 0
+{
   unsafe {
     let _ = fseek(r.inner as *UInt8, pos as Int32, 0 as Int32);
   }
@@ -201,7 +204,9 @@ pub fn br_seek(r: &mut BufReader, pos: Int) {
 /// Params: r - the reader.
 /// Returns: the byte offset of the underlying stream.
 /// Complexity: O(1) syscall.
-pub fn br_tell(r: &BufReader) -> Int {
+pub fn br_tell(r: &BufReader) -> Int
+  requires: r.inner != 0
+{
   unsafe { return ftell(r.inner as *UInt8) as Int; }
 }
 

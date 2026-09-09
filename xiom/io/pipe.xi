@@ -76,7 +76,9 @@ pub fn pipe_write(fd: Int, data: &Vec[UInt8]) -> Result[Int, Str> {
 /// Close a pipe descriptor.
 /// Params: fd - the pipe fd.
 /// Complexity: O(1) syscall.
-pub fn pipe_close(fd: Int) {
+pub fn pipe_close(fd: Int)
+  requires: fd >= 0
+{
   unsafe {
     let _ = xiom_close(fd as Int32);
   }
