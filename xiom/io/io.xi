@@ -182,7 +182,7 @@ pub fn read_float() -> Result[Float64, Str] {
 
 // === File system ===
 pub fn read_file(path: Str) -> Result[Str, IOError]
-  // NOTE: requires path.len()>0 removed -- contract-eval Str-param read corrupts (BUG 56 family); trivially satisfiable
+  requires: path.len() > 0
   ensures:  result is Ok => result.len() >= 0
 {
   let c_path = path.c_str();
@@ -208,7 +208,7 @@ pub fn read_file(path: Str) -> Result[Str, IOError]
 }
 
 pub fn write_file(path: Str, content: Str) -> Result[Unit, IOError]
-  // NOTE: requires path.len()>0 removed -- contract-eval Str-param read corrupts (BUG 56 family); trivially satisfiable
+  requires: path.len() > 0
   ensures:  result is Ok => file_exists(path)
 {
   let file: *UInt8;
@@ -232,7 +232,7 @@ pub fn write_file(path: Str, content: Str) -> Result[Unit, IOError]
 }
 
 pub fn append_file(path: Str, content: Str) -> Result[Unit, IOError]
-  // NOTE: requires path.len()>0 removed -- contract-eval Str-param read corrupts (BUG 56 family); trivially satisfiable
+  requires: path.len() > 0
   ensures:  result is Ok => file_exists(path)
 {
   let file: *UInt8;
@@ -256,7 +256,8 @@ pub fn append_file(path: Str, content: Str) -> Result[Unit, IOError]
 }
 
 pub fn file_exists(path: Str) -> Bool
-  // NOTE: requires path.len()>0 removed -- contract-eval Str-param read corrupts (BUG 56 family); trivially satisfiable
+  // Graceful query: empty path is a valid false answer (locked by
+  // smoke_io_file_exists) -- deliberately no path requires.
 {
   let file: *UInt8;
   unsafe {
@@ -272,7 +273,7 @@ pub fn file_exists(path: Str) -> Bool
 }
 
 pub fn is_dir(path: Str) -> Bool
-  // NOTE: requires path.len()>0 removed -- contract-eval Str-param read corrupts (BUG 56 family); trivially satisfiable
+  // Graceful query (false on any unusable path) -- deliberately no requires.
 {
   let result: Int32;
   unsafe {
@@ -282,7 +283,7 @@ pub fn is_dir(path: Str) -> Bool
 }
 
 pub fn create_dir(path: Str) -> Result[Unit, IOError]
-  // NOTE: requires path.len()>0 removed -- contract-eval Str-param read corrupts (BUG 56 family); trivially satisfiable
+  requires: path.len() > 0
   requires: !file_exists(path)
   ensures:  result is Ok => is_dir(path)
 {
@@ -297,7 +298,7 @@ pub fn create_dir(path: Str) -> Result[Unit, IOError]
 }
 
 pub fn list_dir(path: Str) -> Result[Vec[Str], IOError]
-  // NOTE: requires path.len()>0 removed -- contract-eval Str-param read corrupts (BUG 56 family); trivially satisfiable
+  requires: path.len() > 0
   requires: is_dir(path)
   ensures:  result is Ok => result.len() >= 0
 {
@@ -333,7 +334,7 @@ pub fn list_dir(path: Str) -> Result[Vec[Str], IOError]
 }
 
 pub fn remove_file(path: Str) -> Result[Unit, IOError]
-  // NOTE: requires path.len()>0 removed -- contract-eval Str-param read corrupts (BUG 56 family); trivially satisfiable
+  requires: path.len() > 0
   ensures:  result is Ok => !file_exists(path)
 {
   let rc: Int32;
@@ -540,7 +541,7 @@ pub type Metadata = {
 }
 
 pub fn metadata(path: Str) -> Result[Metadata, IOError]
-  // NOTE: requires path.len()>0 removed -- contract-eval Str-param read corrupts (BUG 56 family); trivially satisfiable
+  requires: path.len() > 0
   ensures:  result is Ok => result.size >= 0
 {
   let c_path = path.c_str();
@@ -572,7 +573,7 @@ pub fn metadata(path: Str) -> Result[Metadata, IOError]
 }
 
 pub fn set_permissions(path: Str, perm: Int) -> Result[Unit, IOError]
-  // NOTE: requires path.len()>0 removed -- contract-eval Str-param read corrupts (BUG 56 family); trivially satisfiable
+  requires: path.len() > 0
   requires: perm >= 0
 {
   let rc: Int32;
