@@ -23,7 +23,6 @@ extern "C" {
   fn fread(buf: *UInt8, size: UInt, count: UInt, file: *UInt8) -> UInt;
   fn fwrite(buf: *UInt8, size: UInt, count: UInt, file: *UInt8) -> UInt;
   fn fseek(file: *UInt8, offset: Int32, whence: Int32) -> Int32;
-  fn rename(old: *UInt8, new: *UInt8) -> Int32;
 }
 
 fn err_msg(action: Str, path: Str) -> Str {
@@ -146,26 +145,12 @@ pub fn fs_copy(src: Str, dst: Str) -> Result[Unit, Str> {
 /// Move or rename a file.
 /// Params: src - the source path; dst - the destination path.
 /// Returns: Ok(()) on success, Err on failure.
-/// Complexity: O(n) copy + delete (non-atomic -- documented; the libc
-/// rename() path is unusable: its return code is corrupted through the
-/// catalog unsafe-block trampoline, BUG 22 #15/26 family -- the file moved
-/// correctly but the code always read non-zero).
+/// Complexity: O(1) syscall (atomic rename via the runtime shim; an existing
+/// dst is replaced, matching POSIX rename semantics on both platforms).
 pub fn fs_move(src: Str, dst: Str) -> Result[Unit, Str> {
-  let r = io.read_file_bytes(src);
+  let r = io.rename(src, dst);
   match r {
-    Ok(s) => {
-      let w = io.write_file_bytes(dst, &s);
-      match w {
-        Ok(()) => {
-          let d = io.remove_file(src);
-          match d {
-            Ok(()) => Ok(()),
-            Err(e) => Err(e.message),
-          }
-        }
-        Err(e) => Err(e.message),
-      }
-    }
+    Ok(()) => Ok(()),
     Err(e) => Err(e.message),
   }
 }

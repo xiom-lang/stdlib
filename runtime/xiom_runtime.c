@@ -127,6 +127,27 @@ void xiom_free(void* ptr) {
     free(ptr);
 }
 
+/* Atomic file rename with replace semantics (Windows: MoveFileExA with
+   MOVEFILE_REPLACE_EXISTING so an existing destination is overwritten,
+   matching POSIX rename(); plain rename() elsewhere). Bound from xiom.io
+   under the xiom_ prefix so the extern name cannot collide with the XIOM
+   wrapper fn `rename` in the same module (catalog name-resolution hazard).
+   Returns 0 on success, -1 on failure. */
+int xiom_rename(const char* oldpath, const char* newpath) {
+#ifdef _WIN32
+    if (!MoveFileExA(oldpath, newpath, MOVEFILE_REPLACE_EXISTING)) return -1;
+    return 0;
+#else
+    return rename(oldpath, newpath);
+#endif
+}
+
+/* Terminate the process with an exit code (libc exit). Bound from xiom.io
+   under a xiom_ prefix for the same reason as xiom_rename. Never returns. */
+void xiom_process_exit(int code) {
+    exit(code);
+}
+
 /* Heap allocation used by net.xi / crypto.xi / other stdlib FFI callers.
    Mirrors ecosystem/runtime/ffi_bridge.c (zeroed, NULL on non-positive size).
    Uses a 64-bit size param so the XIOM Int/UInt (64-bit) ABI arg is not
