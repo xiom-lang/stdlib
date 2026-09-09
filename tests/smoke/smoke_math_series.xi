@@ -39,8 +39,8 @@ fn main() -> Int {
   if !in_range(gs, 1.998, 2.0) { io.println("geometric"); return 3; }
 
   // arithmetic series: 1 + 3 + 5 + 7 + 9 = 25
-  var as = math.series.arithmetic_series(1.0, 2.0, 5);
-  if !in_range(as, 25.0, 25.0) { io.println("arithmetic"); return 4; }
+  var asin_v = math.series.arithmetic_series(1.0, 2.0, 5);
+  if !in_range(asin_v, 25.0, 25.0) { io.println("arithmetic"); return 4; }
 
   // harmonic(10) ~= 2.928968
   var h = math.series.harmonic(10);

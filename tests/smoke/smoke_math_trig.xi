@@ -32,8 +32,8 @@ fn main() -> Int {
   if !in_range(tp, 0.999999, 1.000001) { io.println("tan-pi4"); return 6; }
 
   // inverse (libm-backed)
-  var as = math.trig.asin(0.0);
-  if !in_range(as, -1e-9, 1e-9) { io.println("asin-0"); return 7; }
+  var asin_v = math.trig.asin(0.0);
+  if !in_range(asin_v, -1e-9, 1e-9) { io.println("asin-0"); return 7; }
   var ac = math.trig.acos(1.0);
   if !in_range(ac, -1e-9, 1e-9) { io.println("acos-1"); return 8; }
   var at = math.trig.atan(1.0);
