@@ -22,6 +22,7 @@ use xiom.math.shl;
 use xiom.math.shr;
 use xiom.math.random;
 use xiom.math.random_range;
+use xiom.math.seed_rng;
 use xiom.chacha;
 use xiom.poly1305;
 
@@ -2068,13 +2069,36 @@ pub fn argon2(password: &Str, salt: &Vec[UInt8], memory: Int, iterations: Int, p
 // Random Crypto
 // ============================================================================
 
+// Interim legacy-PRNG seeding state. ONE OS-entropy draw per process is the
+// maximum the current compiler supports: a second cross-module
+// unsafe+extern+Vec os draw corrupts byte reads of either Vec (AV) --
+// COMPILER_BUGS.md R4, probes p_os_direct20 / p_os_double / p_os_twoframes.
+// Tracked: flip secure_random_bytes to os_secure_random_bytes when fixed.
+var _legacy_rng_seeded: Bool = false;
+
+fn _seed_legacy_rng() {
+  if _legacy_rng_seeded { return; };
+  _legacy_rng_seeded = true;
+  var seed_bytes = os_secure_random_bytes(8);
+  if seed_bytes.len() == 8 {
+    var seed: Int = 0;
+    var i = 0;
+    while i < 8 {
+      seed = seed | ((seed_bytes[i] as Int) << (i * 8));
+      i = i + 1;
+    };
+    seed_rng(seed);  // seed_rng(0) falls back to state 1; fine either way
+  };
+}
+
 /// OS-entropy CSPRNG draw (ProcessPrng/RtlGenRandom on Windows,
 /// /dev/urandom on Unix), degrading to the legacy PRNG only when no OS
 /// source answers. SECURITY NOTE: prefer this over secure_random_bytes for
 /// anything security-relevant once the compiler fixes the cross-module
-/// miscompile that currently AVs when THIS function is invoked from other
-/// modules (probes p_replica_srb / probe_entropy2, 2026-08-24); until then
-/// only same-module (xiom.crypto-internal) callers may use it.
+/// multi-draw miscompile that currently AVs on the SECOND os draw in a
+/// program (byte reads of either returned Vec corrupt -- COMPILER_BUGS.md
+/// R4, probes p_os_direct20/p_os_double/p_os_twoframes). Until then this
+/// function is used internally for the one-time process seed only.
 pub fn os_secure_random_bytes(count: Int) -> Vec[UInt8] {
   var result = Vec[UInt8].new();
   if count <= 0 {
@@ -2123,12 +2147,16 @@ pub fn os_secure_random_bytes(count: Int) -> Vec[UInt8] {
 }
 
 pub fn secure_random_bytes(count: Int) -> Vec[UInt8] {
-  // KNOWN SECURITY GAP (tracked): still draws from the non-cryptographic
-  // random_range PRNG. The OS-entropy replacement exists above
-  // (os_secure_random_bytes + runtime xiom_os_entropy) but calling it
-  // CROSS-MODULE still miscompiles on round-17 (multi-draw shapes hit
-  // STATUS_BREAKPOINT -- probe p_os_direct17; see
-  // REPORT_TO_COMPILER_SESSION.md 3b.2 item 1). Flip once genuinely fixed.
+  // SECURITY NOTE (interim, tracked): draws from the xiom.math Park-Miller
+  // LCG. The process-wide LCG is seeded ONCE from OS entropy (xiom_os_entropy
+  // via os_secure_random_bytes) on first use, so output now differs across
+  // runs and processes (was: fixed seed 12345, byte-identical every run).
+  // This is still NOT a CSPRNG: the 31-bit state is recoverable after ~2^31
+  // outputs, so keys and long-term secrets must NOT be derived from this
+  // path. The full flip to os_secure_random_bytes is compiler-blocked (second
+  // cross-module OS draw AVs byte reads -- COMPILER_BUGS.md R4); flip when
+  // their fix lands.
+  _seed_legacy_rng();
   var result = Vec[UInt8].new();
   var i = 0;
   while i < count {
