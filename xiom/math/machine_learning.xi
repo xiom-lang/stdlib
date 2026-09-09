@@ -183,16 +183,16 @@ pub fn metric_precision(y_true: &Vec[Int], y_pred: &Vec[Int]) -> Float64 {
 pub fn metric_recall(y_true: &Vec[Int], y_pred: &Vec[Int]) -> Float64 {
   if y_true.len() != y_pred.len() { return 0.0 / 0.0; }
   var tp = 0;
-  var fn = 0;
+  var fn_count = 0;  // 'fn' is a reserved keyword (would poison cross-module calls)
   var i = 0;
   while i < y_true.len() {
     if y_true[i] == 1 {
-      if y_pred[i] == 1 { tp = tp + 1; } else { fn = fn + 1; }
+      if y_pred[i] == 1 { tp = tp + 1; } else { fn_count = fn_count + 1; }
     }
     i = i + 1;
   }
-  if tp + fn == 0 { return 0.0; }
-  return (tp as Float64) / ((tp + fn) as Float64);
+  if tp + fn_count == 0 { return 0.0; }
+  return (tp as Float64) / ((tp + fn_count) as Float64);
 }
 
 // F1 score: harmonic mean of precision and recall. Returns 0 when both are
