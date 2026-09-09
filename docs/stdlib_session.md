@@ -637,3 +637,63 @@ next; stale BUG-56 NOTE comments on io.xi fs fns can be retired once
 requires are restored there (Str-param contract reads verified working on
 round-20 via io.rename).
 
+## 2.2. Round-21 close (2026-09-09 evening) -- CSPRNG flip landed; 933-sweep triage complete
+
+**R4 flip DONE (7148b615).** Compiler lane fixed the guard-arena escape
+(041e8bb3; root cause: confined-block Vec growth past the initial 16-byte
+buffer migrated main-heap Vecs into the discarded arena -- the stdlib
+"second-call" framing was incidental). Verified on the current binary:
+p_os_direct20/p_os_double/p_os_twoframes all green with differing draws;
+5000-byte multi-draws (the true trigger) pass. secure_random_bytes now
+delegates to os_secure_random_bytes (OS-entropy CSPRNG, ProcessPrng/
+RtlGenRandom or /dev/urandom); the OS-seeded LCG remains ONLY as the
+documented no-OS degraded fallback. Headers updated (crypto.xi +
+rng_crypto.xi: CSPRNG status restored with the degraded-mode caveat);
+lock smoke strengthened (5000-byte growth-escape draws). Consumers
+(aead/cipher/keyx/sign/rng_crypto/rand + kdf/mac/hash/curves smokes) all
+green. Un-park item: seeded-siphash DEFAULT hasher switch is now
+UNBLOCKED (real per-process key available) -- next backlog candidate.
+
+**Q4 sweep: 933 files -> 903 PASS at sweep time.** All 16 runfails are the
+catalogued compiler clusters (json heap x6, CRT-layout x6, stack-cookie
+x4) -- ZERO new stdlib regressions from the Q1-Q3 contract work. The 18
+compilefails triaged to:
+- 12 known (clang-variant/T001/stack-cookie families: array_zip,
+  convert_escape, hash_values, ptr_offset, io_copy, argon2_basic,
+  io_copy_file, read_int_float, regex_captures x4)
+- 6 NEW, of which 4 FIXED stdlib-side this session:
+  * smoke_env_edge/env_var -> env.get_var (env.var was unparseable: 'var'
+    reserved at call sites; renamed module fn, only 2 callers)
+  * smoke_math_algebra_ext -> module_theory param 'module' renamed
+    module_set (keyword param broke every call; group_theory twin works)
+  * smoke_stress_crypto_rsa_keypair -> 'var pub' local renamed pub_key
+    (keyword local inside the fn poisoned cross-module calls; module
+    compiled fine)
+  * smoke_net_http2 m.type -> m.kind after net/mime MimeType.type +
+    Link.type renamed to kind (reserved field was unreadable); empty-
+    parts build check removed (cross-module struct types unspellable);
+    then blocked at CODEGEN by invalid GEP indices (R6, compiler lane)
+  * machine_learning metric_recall 'var fn' renamed fn_count (R7 family)
+- 2 COMPILER-BLOCKED, catalogued with full evidence:
+  * smoke_net_address (R5): address.xi is CORRECT (whole-file probe
+    passes) but cross-module Option[Address] returns come back with all
+    Str fields empty; shape-specific, replicas pass. Flip-green lock.
+  * smoke_net_http2 (R6): invalid getelementptr indices in the
+    mime/multipart/sse graph at codegen; isolated mime consumer green.
+    Flip-green lock.
+Keyword-poisoning family (R7) recorded for the compiler lane: reserved
+words in fn-body locals/params parse (context-dependent enforcement) but
+break cross-module calls to the enclosing fn. Stdlib is now clean
+(scan: only soft-keyword 'move' remains in game_theory, verified usable).
+
+Post-fix expected baseline: 907/937 green; the 30 non-green files are
+100% catalogued compiler-lane items with flip-green locks + probes.
+
+**Handoff state:** branch feat/architect, all work committed. Next-session
+queue: (1) seeded-siphash default hasher switch (now unblocked by the
+flip; pairs with STDLIB_CONTAINER_TUNING.md -- will shake iteration
+order), (2) contract-coverage expansion + retire remaining stale notes,
+(3) XFER-vec migration per the caveat above, (4) re-run the 933-sweep on
+the compiler lane's next round for R5/R6 flips + json/CRT/stack-cookie
+families, (5) deflate dynamic-Huffman producer quality project.
+
