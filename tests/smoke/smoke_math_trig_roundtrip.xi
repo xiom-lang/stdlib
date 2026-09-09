@@ -4,8 +4,8 @@ use xiom.math;
 fn main() -> Int {
   var x: Float64 = 0.5;
   var s = math.sin(x);
-  var as = math.asin(s);
-  if as < x - 0.01 || as > x + 0.01 { return 1; }
+  var asin_v = math.asin(s);
+  if asin_v < x - 0.01 || asin_v > x + 0.01 { return 1; }
 
   var c = math.cos(0.5);
   var ac = math.acos(c);

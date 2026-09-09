@@ -19,8 +19,8 @@ fn main() -> Int {
   var pi = math.constants.PI;
 
   // libm-backed variants
-  var as = math.inverse_trig.asin(0.0);
-  if !in_range(as, -1e-9, 1e-9) { io.println("asin-0"); return 1; }
+  var asin_v = math.inverse_trig.asin(0.0);
+  if !in_range(asin_v, -1e-9, 1e-9) { io.println("asin-0"); return 1; }
   var ac = math.inverse_trig.acos(1.0);
   if !in_range(ac, -1e-9, 1e-9) { io.println("acos-1"); return 2; }
   var at = math.inverse_trig.atan(1.0);
