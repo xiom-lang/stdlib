@@ -28,7 +28,7 @@ fn cstr(s: Str) -> *UInt8
   }
 }
 
-pub fn var(name: Str) -> Result<Str, Str>
+pub fn get_var(name: Str) -> Result<Str, Str>
   requires: name.len() > 0
 {
   let opt = var_opt(name);

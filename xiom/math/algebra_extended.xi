@@ -220,8 +220,8 @@ pub fn field_theory(op_add: fn(Float64, Float64) -> Float64, op_mul: fn(Float64,
 // closure of the action (r*v in module for every r, v) and the unital law
 // assuming ring[0] is the multiplicative identity of the ring (documented
 // convention). Complexity: O(|R| * |M|).
-pub fn module_theory(action: fn(Int, Int) -> Int, ring: &Vec[Int], module: &Vec[Int]) -> Bool {
-  var n = module.len();
+pub fn module_theory(action: fn(Int, Int) -> Int, ring: &Vec[Int], module_set: &Vec[Int]) -> Bool {
+  var n = module_set.len();
   if n == 0 { return true; }
   var id = 0;
   if ring.len() > 0 { id = ring[0]; }
@@ -229,10 +229,10 @@ pub fn module_theory(action: fn(Int, Int) -> Int, ring: &Vec[Int], module: &Vec[
   while i < ring.len() {
     var j = 0;
     while j < n {
-      var prod = action(ring[i], module[j]);
-      if !_contains(module, prod) { return false; }
+      var prod = action(ring[i], module_set[j]);
+      if !_contains(module_set, prod) { return false; }
       if ring[i] == id {
-        if prod != module[j] { return false; }
+        if prod != module_set[j] { return false; }
       }
       j = j + 1;
     }
