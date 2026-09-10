@@ -449,6 +449,40 @@ pub interface Seek {
   fn stream_position(self) -> Result[Int, IOError];
 }
 
+// === Stream handles ===
+/// Open `path` with the stdio `mode` ("r", "w", "a", ...) and return the
+/// FILE* handle as Int -- the handle type BufReader.new and other
+/// stdio-backed APIs expect (stdin_file()/stdout_file()/stderr_file() cover
+/// the standard streams). Close with io.close when done.
+pub fn open(path: Str, mode: Str) -> Result[Int, IOError]
+  requires: path.len() > 0
+  requires: mode.len() > 0
+{
+  let file: *UInt8;
+  unsafe {
+    file = fopen(path.c_str(), mode.c_str());
+  }
+  if file == 0 {
+    return Err(IOError{ message: "failed to open " + path, code: 4 });
+  }
+  Ok(file as Int)
+}
+
+/// Close a FILE* handle previously returned by io.open or the stdio
+/// *_file() accessors.
+pub fn close(handle: Int) -> Result[Unit, IOError]
+  requires: handle != 0
+{
+  let rc: Int32;
+  unsafe {
+    rc = fclose(handle as *UInt8);
+  }
+  if rc != 0 {
+    return Err(IOError{ message: "failed to close stream", code: 6 });
+  }
+  Ok(())
+}
+
 // === Buffered I/O ===
 pub type BufReader = {
   inner: Int;

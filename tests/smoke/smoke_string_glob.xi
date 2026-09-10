@@ -18,6 +18,12 @@ fn main() -> Int {
   if glob.glob_match("a*c", "abd") { io.println("glob-10"); return 10; }
   if !glob.glob_match("*.xi", "a.b.xi") { io.println("glob-11"); return 11; }
   if !glob.glob_match("a**b", "ab") { io.println("glob-12"); return 12; }
+  // class metacharacters are LITERAL in this glob dialect (parity-locked
+  // with xiom.misc.glob; these vectors came from the retired
+  // smoke_string_glob_parity -- dual-module full-path calls hit
+  // COMPILER_BUGS.md R9)
+  if glob.glob_match("[ab]c", "ac") { io.println("glob-13"); return 18; }
+  if glob.glob_match("a[bc]d", "abd") { io.println("glob-14"); return 19; }
   if !glob.glob_match_case_insensitive("*.XI", "main.xi") { io.println("glob-ci-1"); return 12; }
   if glob.glob_match_case_insensitive("*.XI", "main.txt") { io.println("glob-ci-2"); return 13; }
   if !glob.glob_match_case_insensitive("ABC", "abc") { io.println("glob-ci-3"); return 14; }

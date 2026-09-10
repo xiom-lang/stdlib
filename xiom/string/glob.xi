@@ -21,6 +21,8 @@ module xiom.string.glob
 // every other byte matches literally.
 // ============================================================================
 
+use xiom.misc.glob;
+
 /// Match `s` against the glob `pattern`, case-sensitive.
 /// Params: pattern the glob pattern; s the string to test.
 /// Returns: true when `s` matches `pattern`.
