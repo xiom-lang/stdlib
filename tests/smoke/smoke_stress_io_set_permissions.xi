@@ -7,8 +7,12 @@ use xiom.io;
 
 fn main() -> Int {
   var path = "__smk_perm.txt";
+  // Pre-clean: heal leftovers from previous runs that aborted before cleanup.
+  var _pre = io.remove_file(path);
   var _wr = io.write_file(path, "test");
-  var sp = io.set_permissions(path, 0);
+  // 420 == 0o644 (rw-r--r--): exercising set_permissions with a mode that
+  // keeps the file removable; mode 0 makes it read-only and removal fails.
+  var sp = io.set_permissions(path, 420);
   var _ = io.remove_file(path);
   match sp {
     Ok(_) => { return 0; }
