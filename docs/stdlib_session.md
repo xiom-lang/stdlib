@@ -697,3 +697,44 @@ order), (2) contract-coverage expansion + retire remaining stale notes,
 the compiler lane's next round for R5/R6 flips + json/CRT/stack-cookie
 families, (5) deflate dynamic-Huffman producer quality project.
 
+## 2.4. Rounds 26-29 verification (2026-09-10 evening) -- R5/R6/CRT/KDF flips; R7/R8 found
+
+Verified on a fresh isolated build of round-29 HEAD (temp target dir).
+Compiler rounds 26 (json P2), 27 (R5/R6), 28 (CRT), 29 (KDF/stack-cookie)
+flipped most of the ledger red->green:
+
+- kat_serialize_json_minimal: UN-GATED and GREEN (marker updated).
+  json family: parse_valid (was heap-corrupt), parse_nested, jsonvalue_get
+  all green. STRESS JSON NESTED still red: new compiler defect R7 --
+  generic-container mono truncates large V: Map[K,JsonValue].values[i]
+  comes back garbage (p_map_key_probe), while direct Vec[JsonValue] works
+  (p_vect_json). Bisect: push of V inside a generic fn writes wrong width
+  (p_gp_a: 1.09e-311) and Vec[V].new() inside a generic ctor yields a
+  corrupt vec whose later push AVs (p_gp_b/p_gp_c). Catalogue R7 with
+  probes; no stdlib-side fix (code correct).
+- R5 + R6 FIXED (root cause: benchmark-graph module pollution dragging a
+  colliding `Address` type into every stdlib compile; catalog root-scoped
+  lookup + import-scoped bare-type resolution). smoke_net_address and
+  smoke_net_http2 GREEN end to end.
+- CRT family: smoke_array_slice, smoke_core_box,
+  smoke_stress_regex_find GREEN. smoke_stress_regex_match_count still AV
+  (not in their round-28 scope).
+- KDF/stack-cookie: smoke_stress_crypto_pbkdf2 (+_iterations) GREEN.
+  smoke_math_edge still traps (their next round).
+- Compiler-lane handoffs CLOSED (ef15043d): stdio FILE* accessors added
+  (stdin_file/stdout_file/stderr_file; the FD-as-FILE* trap) + bufreader
+  smoke fixed; argon2 smoke 5-arg fix; convert_url fixture restored
+  (\u{00E4} input). All three green.
+- R8 catalogued: char_at contract codegen. The old ensures'
+  `s.char_count()` (free fn in method syntax) evaluated 0 -> aborted every
+  Some return (hit via json build); the correct byte-domain `s.len()`
+  version instead corrupts the stack for method-position `.char_at` (the
+  builtin Char overload in xiom.misc.glob) -- 0xC0000409 at the first
+  wildcard loop. Clause REMOVED with an in-file PENDING note (body guard
+  unchanged) pending their contract-codegen fix.
+
+Dedup state unchanged (misc.soundex + string.glob shims + rc move landed
+earlier today; see 2.3/STDLIB_DEDUP_INVENTORY.md). Full 933-smoke sweep
+on round-29 launched; triage lands on top of this section. Queue after
+triage: R7/R8 once fixed, seeded-siphash switch, next dedup units.
+
