@@ -20,7 +20,18 @@ DONE:
 - `string/glob.xi` -> delegating shim over `misc/glob.xi` (dd174986).
   Canonical is misc.glob (9 fns incl. escape/translate/compile), not
   string.glob as the table said; 15-vector parity probe identical; locked
-  by smoke_string_glob_parity.
+  by smoke_string_glob (extended with the class-literal vectors).
+  HARDENED 1e099b84: the shim originally omitted `use xiom.misc.glob;`
+  (the only shim without it) and crashed deps of any consumer that
+  imported only the shim (0xC0000409) -- see R9. All shims now import
+  their target. The dual-path parity smoke was retired (dual-module
+  full-path calls are unsafe while R9 is open; parity style = twin vs
+  vectors, per kat_convert_base64_parity).
+
+PARITY-SMOKE CONVENTION (hardened by R9): a shim's lock compares the twin
+against official/expected vectors with the twin imported + alias calls;
+do NOT write side-by-side calls to two modules in one smoke until R9 is
+fixed.
 
 ALREADY DONE before this session (verified):
 - `string/levenshtein.xi` delegates to `misc.levenshtein_distance`

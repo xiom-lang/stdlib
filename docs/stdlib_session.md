@@ -738,3 +738,40 @@ earlier today; see 2.3/STDLIB_DEDUP_INVENTORY.md). Full 933-smoke sweep
 on round-29 launched; triage lands on top of this section. Queue after
 triage: R7/R8 once fixed, seeded-siphash switch, next dedup units.
 
+## 2.5. Round-29 full sweep results + R9 (2026-09-10 late evening)
+
+Sweep: 935 rows -> 916 PASS / 7 RUNFAIL / 12 COMPILEFAIL. vs r20: 19
+FLIPS (R5/R6, CRT slice+core_box+regex_find, KDF x2, json family, argon2
+and more), 3 regressions investigated:
+- smoke_stress_serialize_large_json: REAL r29 codegen regression (erased
+  Option slot for concrete Option[JsonValue]; catalogued R7 follow-up).
+- smoke_string_glob: REAL defect, but stdlib-side -- the glob shim was the
+  only shim WITHOUT `use` of its target module; consumers importing only
+  the shim crashed 0xC0000409. Fixed 1e099b84 (`use xiom.misc.glob;`),
+  verified 3x, vectors folded into smoke_string_glob (parity smoke
+  retired per the twin-vs-vectors convention).
+- smoke_error2: flaky-by-source (green solo; known has-mid layout flip).
+
+Remaining reds are 100% compiler-catalogued: clang-variant compilefail x11
+(array_zip, convert_escape, hash_values, io_copy, ptr_offset,
+io_copy_file, read_int_float, regex_captures x4), math_edge,
+regex_match_count, serialize_json_nested + large_json (R7/R7-follow-up),
++ error2 (flaky). Effective post-fix: ~919/935.
+
+Also landed this round: io.open/io.close FILE* wrappers (BufReader had NO
+public file-open API; only stdin_file()) + file-based
+smoke_stress_io_bufreader (deterministic; the old one blocked harnesses on
+stdin -- all future sweep workers should redirect stdin).
+
+NEW compiler finding R9 (catalogued with repros): full-path calls to a
+module that was never imported crash at runtime (0xC0000409) -- caller
+shape (p_x1/x2/x4/x6, p_sdx/p_lev_shim_first; same on r25+r29) and the
+shim-internal shape (now fixed stdlib-side). Direct call to the canonical
+first masks it. Resolver must hard-error, not corrupt.
+
+Next queue (unchanged priority): R7/R8/R9 when their rounds land;
+seeded-siphash default hasher; legacy crypto/legacy/ move; namespace
+cleanup (62 collections/ files declare xiom.collect.*); contract-coverage
+wave + published number; dedup continuation (endian trio, base32/ascii85/
+percent/punycode, ip4/ip6, terminal, platform).
+
