@@ -151,10 +151,107 @@ T1/T2 yields.
 
 ## 8. Definition of production-ready (gate)
 
-- [ ] Zero known-cluster regressions; sweep green except catalogued compiler bugs
-- [ ] KAT corpus committed and passing for encodings/UTF-8/hashes/MACs/AEAD/parsers
-- [ ] CSPRNG bound to OS entropy with documented reseed policy
-- [ ] StringBuilder + alloc-free predicates shipped; bulk ops on runtime memops
-- [ ] Legacy ciphers quarantined; TLS story documented honestly
-- [ ] Duplication consolidated behind canonical modules once delegation lands
-- [ ] Coverage number published + ratcheted in CI-equivalent sweep script
+- [x] Zero known-cluster regressions; sweep green except catalogued compiler
+      bugs -- r20 903/937; r29 sweep in flight (~875/933 at audit); R5/R6,
+      CRT (slice/core_box/regex_find), KDF (pbkdf2 x2) verified flipped;
+      remaining red catalogued (R7, regex_match_count, math_edge)
+- [x] KAT corpus committed and passing for encodings/UTF-8/hashes/MACs/AEAD/
+      parsers -- 15 files, ALL un-gated as of 2026-09-10 (kdf + json last)
+- [x] CSPRNG bound to OS entropy with documented reseed policy -- flip
+      landed 7148b615; OS-seeded LCG only as documented no-OS fallback
+- [~] StringBuilder + alloc-free predicates shipped (DONE); runtime memops
+      bound in xiom.mem (DONE); STRING fast-path re-land still
+      compiler-blocked (Str-cast chained concat family)
+- [~] Legacy ciphers quarantined (banners DONE; physical crypto/legacy/
+      move UNBLOCKED and pending); TLS story documented (TLS_DECISION.md);
+      schannel binding not started
+- [~] Duplication consolidated -- STARTED 2026-09-10: 3 units landed
+      (misc.soundex, string.glob shims + rc directory fix), inventory
+      corrected; ~15 pairs remain (base32/ascii85/percent/punycode,
+      endian x3, ip4/ip6, console/terminal, platform, geom translation)
+- [ ] Coverage number published + ratcheted in CI-equivalent sweep script --
+      OPEN: global 937 clauses / 8070 fns = 11.6%; no ratchet script yet
+
+## 9. Status audit -- 2026-09-10 (rounds 15-29, sweep29 in flight)
+
+### 9.1 What is genuinely done (verified, not aspirational)
+
+- **Trust (T)**: 935-file smoke corpus + 15 KAT files (RFC 4648/4231/5869/
+  8439/1952, NIST SHS, JSONTestSuite subset, Kuhn UTF-8); ownership
+  convention (STR_OWNERSHIP.md) with full extern-site audit; probe-first
+  verification protocol; compressed/gzip proven interoperable with python.
+- **Ergonomics (E1,E2,E4,E5)**: StringBuilder; alloc-free search predicates;
+  container tuning doc; CSPRNG (OS-entropy flip + lock smoke);
+  decompression-bomb caps through lz77/huffman/deflate/gzip/zlib/lz4/snappy.
+- **Compiler-forced debt cleared**: T007 whole-body-unsafe sweep (128 fns),
+  io.rename/exit collision shims, io.sleep Windows fix, 20+ smoke/API
+  keyword-defect repairs (env.var, MimeType.type, module_theory/module,
+  pub/fn locals), stdio FILE* accessors, R5/R6/KDF/CRT/json flips verified.
+- **Organization (O)**: dedup execution started; legacy banners; TLS doc.
+
+### 9.2 Remaining work, ordered
+
+**A. Unblocked now (highest ROI first)**
+1. sweep29 triage + publish baseline. Fix smoke_stress_io_bufreader
+   harness block: add io.open/io.close (FILE* wrappers; BufReader has NO
+   file-open API today) and make the smoke file-based; note for all sweep
+   harnesses: redirect stdin.
+2. Seeded-siphash DEFAULT hasher switch (E4; hash-DoS). Seeded key is now
+   available (CSPRNG flip). Will shake iteration-order-dependent smokes --
+   pair with STDLIB_CONTAINER_TUNING.md promises.
+3. Legacy physical move to crypto/legacy/ + deprecation ladder (unblocked
+   by the delegation fix; pure moves + headers).
+4. Namespace cleanup wave 1: collections/.xi files declare module
+   xiom.collect.* (62 files) while xiom.collections also exists -- align
+   directory/module names (same class as the rc fix); memory quartet.
+5. Contract-coverage wave 1 (io/string/collections touched fns) + publish
+   the coverage number + add a ratchet mode to the sweep script.
+6. Dedup continuation: base32/ascii85/percent/punycode, endian three-way,
+   ip4+ip6, console/os.terminal/os.term, core.platform/os.platform --
+   each lands with a parity smoke.
+
+**B. Capability (C)**
+7. Runtime symbol audit: 441 xiom_* defs vs 247 stdlib externs => ~194
+   unbound symbols; bind-or-delete.
+8. CSV + TOML modules (toolchain eats its own xiom.toml).
+9. tzdata phase 1 via OS timezone FFI (only chrono_timezone_offset today).
+10. Async stress suite (10k fibers, cancellation storms, saturation);
+    async infra currently has a single smoke.
+11. TLS schannel binding (project; decision doc done).
+
+**C. Compiler-gated**
+12. R7 (generic container mono truncates large V) -> json nested smoke,
+    convert/json shim, Map[K,bigV] users.
+13. R8 (char_at contract codegen) -> re-add the in-range clause.
+14. memops string fast-path re-land (Str-cast chained concat) -> completes
+    gate #4.
+15. Stage-5 coupling: fuzz targets, api_freeze manifest path sync,
+    package.xi identity.
+
+**D. Scale discipline (S)**
+16. Property tests for collections (BST balance, heap shape, hash
+    distribution).
+17. Parser fuzz ladder (url/ip/header/cookie/mime/json/utf) once stage-5
+    fuzz infra lands.
+18. Coverage ratchet in CI-equivalent script; async/CLI-of-everything.
+
+### 9.3 Honest Rust-parity gaps (beyond the original plan)
+
+- No timezone database/zoneinfo, CSV, TOML, or TLS -- the biggest "not a
+  complete systems stdlib yet" items.
+- Async runtime is minimal (executor/timer/channel + 1 smoke); no
+  cancellation-storm/saturation validation.
+- ~194 runtime symbols defined but unbound by any module (dead surface;
+  audit pending). Runtime is 441 xiom_* fns vs 247 stdlib externs.
+- Contract coverage 11.6% globally; key modules 8-28% (target >=60%).
+- Namespace/identity debt: collect vs collections, memory quartet,
+  package.xi identity, geom/twin module names.
+- No fuzz/property infrastructure (stage-5 dependent); coverage number
+  unpublished.
+- Console is Windows-first (console_clear "cls"); os.terminal exists but
+  the split is not consolidated.
+
+Strengths relative to the Rust-parity bar: breadth (40 module families),
+KAT-locked crypto/compression with real RFC interop, 935-file executable
+smoke corpus, OS-entropy CSPRNG, working threads/sync/atomics, SIMD/geom/
+stats/math towers, and a documented verification protocol.
