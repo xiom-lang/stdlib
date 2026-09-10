@@ -4,96 +4,38 @@
 
 module xiom.string.glob
 
-// Depends on: none
+// Depends on: xiom.misc.glob
 
 // ============================================================================
-// Glob pattern matching with wildcards, case-sensitive and case-insensitive.
-// NOTE: current implementation lives in misc.glob_match - move the functions
-// here during the implementation phase. TODO(compiler): implement.
+// Glob wildcard matching -- CONSOLIDATED SHIM.
+//
+// The canonical implementation lives in `xiom.misc.glob` (which also owns
+// the richer surface: escape/unescape, has_magic, quote, translate, and the
+// compile/compile_match handle API). This module delegates for the two
+// string-side entry points. Before the compiler's delegation fix (round-22,
+// m62) the matcher was a copy-paste duplicate; a 15-vector parity probe
+// (including class-pattern and case-insensitive cases) shows byte-identical
+// behavior, locked by smoke_string_glob_parity.
+//
+// Supported metacharacters: '*' (zero or more bytes), '?' (exactly one byte);
+// every other byte matches literally.
 // ============================================================================
 
-use xiom.string;
-
-// Masked byte at `pos` (BUG 22 #10: `as Int` sign-extends UInt8).
-// Complexity: O(1).
-fn _byte(s: Str, i: Int) -> Int {
-  let v = string.byte_at(s, i) as Int;
-  v & 0xFF
-}
-
-// ASCII-lowercase copy of `s`: 'A'..'Z' fold to lowercase, all other bytes
-// pass through unchanged.
-// Complexity: O(|s|).
-fn _ascii_lower(s: Str) -> Str {
-  let len = string.str_len(s);
-  if len == 0 {
-    return "";
-  };
-  var out = Vec[UInt8].new();
-  var i: Int = 0;
-  while i < len {
-    let b = _byte(s, i);
-    var ch = b;
-    if b >= 65 && b <= 90 {
-      ch = b + 32;
-    };
-    out.push(ch as UInt8);
-    i = i + 1;
-  };
-  out.push(0);
-  unsafe {
-    Str.from_cstring(out.data)
-  }
-}
-
-/// Match `s` against the glob `pattern`. Supported wildcards:
-///   '?' matches exactly one byte;
-///   '*' matches zero or more bytes (greedy, backtracking match).
-/// Every other byte must match literally.
+/// Match `s` against the glob `pattern`, case-sensitive.
 /// Params: pattern the glob pattern; s the string to test.
 /// Returns: true when `s` matches `pattern`.
 /// Error case: none.
-/// Complexity: O(|pattern| * |s|) worst case, linear on typical patterns.
+/// Complexity: O(|pattern| * |s|) worst case.
 pub fn glob_match(pattern: Str, s: Str) -> Bool {
-  let plen = string.str_len(pattern);
-  let tlen = string.str_len(s);
-  var pi: Int = 0;
-  var ti: Int = 0;
-  var star_idx: Int = -1;
-  var match_idx: Int = 0;
-  while ti < tlen {
-    if pi < plen && _byte(pattern, pi) == 42 {
-      star_idx = pi;
-      match_idx = ti;
-      pi = pi + 1;
-    } elif pi < plen && (_byte(pattern, pi) == 63 || _byte(pattern, pi) == _byte(s, ti)) {
-      pi = pi + 1;
-      ti = ti + 1;
-    } elif star_idx >= 0 {
-      pi = star_idx + 1;
-      match_idx = match_idx + 1;
-      ti = match_idx;
-    } else {
-      return false;
-    };
-  };
-  while pi < plen && _byte(pattern, pi) == 42 {
-    pi = pi + 1;
-  };
-  pi == plen
+  xiom.misc.glob.glob_match(pattern, s)
 }
 
-/// Match `s` against the glob `pattern`, ignoring ASCII letter case. The
-/// pattern and the input are ASCII-lowercased before the same wildcard
-/// matching as `glob_match` runs. Bytes above 0x7F match byte-exactly.
+/// Match `s` against the glob `pattern`, ignoring ASCII letter case.
+/// Bytes above 0x7F match byte-exactly.
 /// Params: pattern the glob pattern; s the string to test.
 /// Returns: true when `s` matches `pattern` case-insensitively.
 /// Error case: none.
-/// Complexity: O(|pattern| * |s|) worst case after O(|pattern| + |s|)
-///             lowercasing.
+/// Complexity: O(|pattern| * |s|) worst case.
 pub fn glob_match_case_insensitive(pattern: Str, s: Str) -> Bool {
-  let pl = _ascii_lower(pattern);
-  let sl = _ascii_lower(s);
-  let r = glob_match(pl, sl);
-  r
+  xiom.misc.glob.glob_match_case_insensitive(pattern, s)
 }
