@@ -8,7 +8,9 @@ fn main() -> Int {
     salt.push(49u8); salt.push(50u8); salt.push(51u8); salt.push(52u8);
     salt.push(53u8); salt.push(54u8); salt.push(55u8); salt.push(56u8);
 
-    var hash = crypto.argon2(&"password123", &salt, 3, 65536, 1, 32);
+    // Signature: argon2(password, salt, memory, iterations, parallelism)
+    // (the 6-arg call predated the key_len removal).
+    var hash = crypto.argon2(&"password123", &salt, 65536, 3, 1);
     if hash.len() == 32 {
       return 0;
     }

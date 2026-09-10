@@ -178,13 +178,15 @@ fn main() -> Int {
     return 24;
   }
 
-  // iri: parse + to_uri
-  var ip = iri.iri_parse("https://example.com/path");
+  // iri: parse + to_uri. The input carries a non-ASCII a-umlaut (U+00E4)
+  // in host and path; the ASCII-safe \u escape restores the bytes the
+  // mojibake-strip sweep turned literal, matching the %C3%A4 expectation.
+  var ip = iri.iri_parse("https://ex\u{00E4}mple.com/p\u{00E4}th");
   if !ip.is_ok {
     io.println("smoke_convert_url: iri_parse failed");
     return 25;
   }
-  var iu = iri.iri_to_uri("https://example.com/path");
+  var iu = iri.iri_to_uri("https://ex\u{00E4}mple.com/p\u{00E4}th");
   if !iu.is_ok {
     io.println("smoke_convert_url: iri_to_uri failed");
     return 26;
