@@ -233,8 +233,13 @@ pub fn byte_at(s: Str, pos: Int) -> UInt8 {
 }
 
 pub fn char_at(s: Str, pos: Int) -> Option[Char]
-  ensures: result is Some => pos >= 0 && pos < s.char_count()
-  ensures: result is None => pos < 0 || pos >= s.char_count()
+  // CONTRACT PENDING (compiler-blocked, COMPILER_BUGS.md R8): the ensures
+  // previously used `s.char_count()` -- a free fn in method syntax that
+  // evaluated to 0 inside contracts and tripped the runtime abort on every
+  // Some return; rewriting it to the byte-domain `s.len()` made method
+  // positions `.char_at(...)` (the builtin Char path in e.g. xiom.misc.glob)
+  // corrupt the stack (0xC0000409). Re-add a correct in-range clause once
+  // contract codegen for this name is fixed; the guarded body remains.
 {
   if pos < 0 || pos >= s.len() {
     return None;

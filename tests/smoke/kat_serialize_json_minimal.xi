@@ -2,9 +2,8 @@
 // Accept/reject subset of JSONTestSuite plus RFC 8259 section semantics.
 // Number-formatting assertions are deliberately excluded (float repr is a
 // separate battle); this file pins structural parse behavior only.
-// KNOWN-COMPILER-CLUSTER: heap corruption (0xC0000374) on round-15 baseline,
-// same json heap-layer family as smoke_stress_serialize_json_* (compiler
-// stage 4). Keep committed as a flip-green regression lock.
+// UN-GATED 2026-09-10 (compiler rounds 26-29: json heap layer Parts 1+2).
+// Ran as a flip-green regression lock through the round-15..29 fix series.
 module kat_serialize_json_minimal
 use xiom.serialize.json;
 use xiom.io;

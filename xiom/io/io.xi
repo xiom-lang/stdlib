@@ -587,6 +587,7 @@ pub fn set_permissions(path: Str, perm: Int) -> Result[Unit, IOError]
 }
 
 // === Standard streams ===
+// Numeric file descriptors (for fd-based APIs: pipe/dup/close).
 pub fn stdin() -> Int
   ensures: result >= 0
 {
@@ -603,6 +604,37 @@ pub fn stderr() -> Int
   ensures: result >= 0
 {
   2
+}
+
+// stdio FILE* handles (for stream APIs: BufReader.new and other fread/
+// fgets-backed readers). Use these -- not the numeric FDs above -- anywhere
+// a FILE* is expected; passing an FD (e.g. 0) as a FILE* is a null stream.
+
+/// FILE* handle of the standard input stream.
+pub fn stdin_file() -> Int
+  ensures: result != 0
+{
+  unsafe {
+    return xiom_stdin() as Int;
+  }
+}
+
+/// FILE* handle of the standard output stream.
+pub fn stdout_file() -> Int
+  ensures: result != 0
+{
+  unsafe {
+    return xiom_stdout() as Int;
+  }
+}
+
+/// FILE* handle of the standard error stream.
+pub fn stderr_file() -> Int
+  ensures: result != 0
+{
+  unsafe {
+    return xiom_stderr() as Int;
+  }
 }
 
 fn print_line(s: Str)
