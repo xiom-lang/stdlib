@@ -7,6 +7,7 @@ use xiom.io.fs;
 use xiom.io.buffer;
 use xiom.io.console;
 use xiom.io.pipe;
+use xiom.string;
 
 extern "C" {
   fn printf(format: *UInt8, ...) -> Int32;
@@ -107,7 +108,21 @@ fn strip_trailing_newline(s: Str) -> Str {
 
 pub fn read_int() -> Result[Int, Str] {
   let line = read_line();
-  let trimmed = line.trim();
+  return parse_int(line);
+}
+
+pub fn read_float() -> Result[Float64, Str] {
+  let line = read_line();
+  return parse_float(line);
+}
+
+/// Parse a decimal integer (optional leading +/- sign, ASCII digits only).
+/// Deterministic core of read_int, exposed for parsing without stdin.
+pub fn parse_int(s: Str) -> Result[Int, Str] {
+  // Free-call trim: method-position `.trim()` on a Str PARAM returns a
+  // corrupt Str (len 0xFFFFFFFF) on the current compiler -- see
+  // COMPILER_BUGS.md R8 follow-up (probe p_strparam2); str_trim is fine.
+  let trimmed = string.str_trim(s);
   if trimmed.is_empty() {
     return Err("empty input");
   }
@@ -127,7 +142,7 @@ pub fn read_int() -> Result[Int, Str] {
   while i < trimmed.len() {
     let b = trimmed.byte_at(i);
     if b < 48 || b > 57 {
-      return Err("invalid integer: " + line);
+      return Err("invalid integer: " + s);
     }
     result = result * 10 + (b as Int - 48);
     i = i + 1;
@@ -135,9 +150,10 @@ pub fn read_int() -> Result[Int, Str] {
   Ok(result * sign)
 }
 
-pub fn read_float() -> Result[Float64, Str] {
-  let line = read_line();
-  let trimmed = line.trim();
+/// Parse a decimal float (optional sign, one optional '.', ASCII digits;
+/// no exponent support). Deterministic core of read_float.
+pub fn parse_float(s: Str) -> Result[Float64, Str] {
+  let trimmed = string.str_trim(s);
   if trimmed.is_empty() {
     return Err("empty input");
   }
@@ -161,7 +177,7 @@ pub fn read_float() -> Result[Float64, Str] {
     let b = trimmed.byte_at(i);
     if b == 46 {
       if in_fraction {
-        return Err("invalid float: " + line);
+        return Err("invalid float: " + s);
       }
       in_fraction = true;
     } elif b >= 48 && b <= 57 {
@@ -173,7 +189,7 @@ pub fn read_float() -> Result[Float64, Str] {
         int_part = int_part * 10.0 + digit;
       }
     } else {
-      return Err("invalid float: " + line);
+      return Err("invalid float: " + s);
     }
     i = i + 1;
   }

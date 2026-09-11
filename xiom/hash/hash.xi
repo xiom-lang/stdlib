@@ -95,8 +95,14 @@ pub fn Bool.hash(self) -> UInt64 {
 }
 
 // === Free functions ===
-pub fn hash_value[T: Hash](value: &T) -> Int {
-  value.hash()
+// NOTE: these dispatch to the concrete 0-arg `.hash()` methods (Int/Bool)
+// like the sibling `hash` below. The hasher-based `Hash` interface
+// (hash(self, hasher)) is defined above but has no concrete impls yet;
+// calling through it from a &T receiver produced invalid IR
+// (ptr->i64) -- keep by-value params until the interface path is complete.
+pub fn hash_value[T: Hash](value: T) -> Int {
+  let h = value.hash();
+  return h as Int;
 }
 
 pub fn hash_combine(seed: Int, hash: Int) -> Int {

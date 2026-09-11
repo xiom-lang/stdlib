@@ -71,7 +71,7 @@ fn is_space_char(c: Char) -> Bool {
 fn class_end(pattern: Str, start: Int) -> Int {
   var pos = start + 1;
   while pos < pattern.len() {
-    let pc = pattern.char_at(pos).unwrap();
+    let pc = string.char_at(pattern, pos).unwrap();
     if pc == ']' {
       return pos;
     };
@@ -88,25 +88,25 @@ fn class_end(pattern: Str, start: Int) -> Int {
 fn class_matches(start: Int, pattern: Str, ch: Char) -> Bool {
   var negated = false;
   var pos = start + 1;
-  if pos < pattern.len() && pattern.char_at(pos).unwrap() == '^' {
+  if pos < pattern.len() && string.char_at(pattern, pos).unwrap() == '^' {
     negated = true;
     pos = pos + 1;
   };
   var matched = false;
   while pos < pattern.len() {
-    let pc = pattern.char_at(pos).unwrap();
+    let pc = string.char_at(pattern, pos).unwrap();
     if pc == ']' {
       break;
     };
-    if pos + 2 < pattern.len() && pattern.char_at(pos + 1).unwrap() == '-' && pattern.char_at(pos + 2).unwrap() != ']' {
+    if pos + 2 < pattern.len() && string.char_at(pattern, pos + 1).unwrap() == '-' && string.char_at(pattern, pos + 2).unwrap() != ']' {
       let range_start = pc;
-      let range_end = pattern.char_at(pos + 2).unwrap();
+      let range_end = string.char_at(pattern, pos + 2).unwrap();
       if ch >= range_start && ch <= range_end {
         matched = true;
       };
       pos = pos + 3;
     } elif pc == '\\' && pos + 1 < pattern.len() {
-      let esc = pattern.char_at(pos + 1).unwrap();
+      let esc = string.char_at(pattern, pos + 1).unwrap();
       var esc_matched = false;
       if esc == 'd' {
         esc_matched = is_digit_char(ch);
@@ -143,8 +143,8 @@ fn element_matches(pattern: Str, p_pos: Int, text: Str, t_pos: Int) -> Bool {
   if t_pos >= text.len() {
     return false;
   };
-  let pc = pattern.char_at(p_pos).unwrap();
-  let tc = text.char_at(t_pos).unwrap();
+  let pc = string.char_at(pattern, p_pos).unwrap();
+  let tc = string.char_at(text, t_pos).unwrap();
   if pc == '.' {
     return tc != '\n';
   };
@@ -155,7 +155,7 @@ fn element_matches(pattern: Str, p_pos: Int, text: Str, t_pos: Int) -> Bool {
     if p_pos + 1 >= pattern.len() {
       return false;
     };
-    let esc = pattern.char_at(p_pos + 1).unwrap();
+    let esc = string.char_at(pattern, p_pos + 1).unwrap();
     if esc == 'd' {
       return is_digit_char(tc);
     } elif esc == 'w' {
@@ -182,7 +182,7 @@ fn match_here(pattern: Str, text: Str, p_pos: Int, t_pos: Int) -> Option[Int] {
   if p_pos >= p_len {
     return Some(t_pos);
   };
-  let pc = pattern.char_at(p_pos).unwrap();
+  let pc = string.char_at(pattern, p_pos).unwrap();
   if pc == '$' && p_pos + 1 >= p_len {
     if t_pos >= text.len() {
       return Some(t_pos);
@@ -203,7 +203,7 @@ fn match_here(pattern: Str, text: Str, p_pos: Int, t_pos: Int) -> Option[Int] {
   var elem_end = elem_end_raw;
   var quant = ' ';
   if elem_end_raw < p_len {
-    let qc = pattern.char_at(elem_end_raw).unwrap();
+    let qc = string.char_at(pattern, elem_end_raw).unwrap();
     if qc == '*' || qc == '+' || qc == '?' {
       quant = qc;
       elem_end = elem_end_raw + 1;
@@ -264,7 +264,7 @@ fn match_here(pattern: Str, text: Str, p_pos: Int, t_pos: Int) -> Option[Int] {
 /// Find the first match of `pattern` in `text`, honouring a leading `^` anchor.
 fn find_first_match(pattern: Str, text: Str) -> Option[Match] {
   let t_len = text.len();
-  if pattern.len() > 0 && pattern.char_at(0).unwrap() == '^' {
+  if pattern.len() > 0 && string.char_at(pattern, 0).unwrap() == '^' {
     let result = match_here(pattern, text, 1, 0);
     match result {
       Some(end) => {
@@ -297,7 +297,7 @@ fn is_valid_regex(pattern: Str) -> Bool {
   var bracket_depth: Int = 0;
   let p_len = pattern.len();
   while i < p_len {
-    let c = pattern.char_at(i).unwrap();
+    let c = string.char_at(pattern, i).unwrap();
     if c == '[' {
       bracket_depth = bracket_depth + 1;
     } elif c == ']' {
@@ -334,7 +334,7 @@ pub fn regex_compile(pattern: Str) -> Result[Regex, Str] {
 /// Complexity: O(len(s) * len(r)) worst case for the backtracking matcher.
 pub fn regex_match(r: Regex, s: Str) -> Bool {
   let pattern = r.pattern;
-  let anchored = pattern.len() > 0 && pattern.char_at(0).unwrap() == '^';
+  let anchored = pattern.len() > 0 && string.char_at(pattern, 0).unwrap() == '^';
   let result = match_here(pattern, s, if anchored { 1 } else { 0 }, 0);
   match result {
     Some(end) => {
@@ -368,7 +368,7 @@ pub fn regex_find_all(r: Regex, s: Str) -> Vec[Match] {
     };
     return matches;
   };
-  let anchored = pattern.char_at(0).unwrap() == '^';
+  let anchored = string.char_at(pattern, 0).unwrap() == '^';
   var pos: Int = 0;
   while pos <= t_len {
     let result = match_here(pattern, s, if anchored { 1 } else { 0 }, pos);
