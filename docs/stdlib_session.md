@@ -775,3 +775,42 @@ cleanup (62 collections/ files declare xiom.collect.*); contract-coverage
 wave + published number; dedup continuation (endian trio, base32/ascii85/
 percent/punycode, ip4/ip6, terminal, platform).
 
+## 2.6. Compiler rounds 30-31 verification (2026-09-11) -- R7/R8/math_edge/regex flips; R8-followup + R10 found
+
+Fresh isolated build at HEAD (8d73a8a6). Compiler fixes verified green:
+R7 (json nested + large_json + the erased-Option regression), R8 (char_at
+contracts + method-position sugar), math_edge (shl/shr), regex family
+compile fails, interface-dispatch arity validation.
+
+Stdlib-lane actions (commit 31943d7a):
+- char_at in-range ensures RESTORED (byte-domain; method + free + glob
+  verified). The R8 PENDING note is gone.
+- Regex smokes realigned to the honest surface: Result unwrap on
+  Regex.new; captures = whole-match only; get_named = None (documented
+  stub). 4 of 5 captures smokes green; captures_get blocked by R10.
+- Regex.match_count bug FIXED: it used the legacy local find_all (2)
+  while Regex.find_all uses the engine (3); now counts its own find_all.
+- engine.xi + regex.xi converted to the free-call string.char_at(s,pos)
+  form (18+15 sites; per the compiler-lane guidance).
+- hash_value fixed: stale 0-arg interface dispatch -> by-value concrete
+  dispatch (hasher interface has no impls yet); hash family green.
+- io.parse_int/io.parse_float exposed (deterministic cores of the stdin
+  line readers); smoke_stress_io_read_int_float rewritten to pin them.
+  Used string.str_trim because method `.trim()` on a Str PARAM is still
+  corrupt on this compiler -> catalogued as R8 follow-up (probe
+  p_strparam2).
+
+New compiler findings (catalogued):
+- R8 follow-up: method-position sugar for OTHER free fns (trim) on Str
+  params still corrupts; free-call form works.
+- R10: Vec[Option[struct-with-Str]] element reads AV (local mirror
+  repro); blocks Captures.get / smoke_stress_regex_captures_get.
+
+Remaining reds after this round: smoke_stress_regex_captures_get (R10),
+ptr_offset + convert_escape + array_zip (their next rounds), error2
+(flaky-by-source). Everything else in the last sweep is now green or
+flipped: effective ~925/935 with only the four catalogued items left.
+
+Queue next: R10/R8-followup when fixed; the A/B/C/D readiness items from
+STDLIB_READINESS_PLAN.md section 9.2 (seeded-siphash first).
+
