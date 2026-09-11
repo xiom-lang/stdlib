@@ -72,7 +72,7 @@ fn main() -> Int {
   if def != "Zm9vYg==" { io.println("default enc: " + def); return 11; }
 
   // ---- URL-safe alphabet: bytes {251,239} -> sextets 62,62,60 -> "--8"
-  // (hand-derived from RFC 4648 §5 alphabet; module is unpadded by design)
+  // (hand-derived from RFC 4648 S5 alphabet; module is unpadded by design)
   var urlb = Vec[UInt8].new();
   urlb.push(251u8);
   urlb.push(239u8);
