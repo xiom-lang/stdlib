@@ -58,12 +58,12 @@ file, official vectors ONLY (no self-invented expectations):
 | File | Vectors |
 |---|---|
 | kat_encoding_base16_32_64 | RFC 4648 test vectors incl. padding/url-alphabet |
-| kat_convert_base64url | RFC 4648 §5 + unpadded forms (diverged-copy lock) |
-| kat_encoding_punycode | RFC 3492 §7 sample vectors |
+| kat_convert_base64url | RFC 4648 S5 + unpadded forms (diverged-copy lock) |
+| kat_encoding_punycode | RFC 3492 S7 sample vectors |
 | kat_convert_utf8_decoder | Kuhn stress set subset (BMP, surrogates-reject, overlong-reject, boundary bytes) |
 | kat_crypto_sha2 | NIST CAVP short/msg digests SHA-256/512 + empty-string vectors |
 | kat_crypto_hmac | RFC 4231 HMAC-SHA-256 cases 1-7 |
-| kat_crypto_chacha20poly1305 | RFC 8439 §2.3.2 keystream + §2.8.2 AEAD vector (where paths compile) |
+| kat_crypto_chacha20poly1305 | RFC 8439 S2.3.2 keystream + S2.8.2 AEAD vector (where paths compile) |
 | kat_serialize_json | JSONTestSuite y_/n_ minimal subset (parse accept/reject) |
 | kat_net_parsers | url/ip/percent edge tables from RFC 3986/4291 examples |
 | kat_num_bigint_bigfloat | known decimal expansions + round-trip identities |
