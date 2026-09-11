@@ -220,9 +220,14 @@ T1/T2 yields.
 11. TLS schannel binding (project; decision doc done).
 
 **C. Compiler-gated**
-12. R7 (generic container mono truncates large V) -> json nested smoke,
-    convert/json shim, Map[K,bigV] users.
-13. R8 (char_at contract codegen) -> re-add the in-range clause.
+12. ~~R7 (generic container mono truncates large V)~~ FIXED 2026-09-11
+    (882ee321): json nested + large_json + Map[K,bigV] verified green.
+13. ~~R8 (char_at contract codegen)~~ FIXED 2026-09-11 (20aa3d07):
+    char_at in-range ensures RESTORED and verified; open residue =
+    R8 follow-up (method `.trim()` on Str params) + R10
+    (Vec[Option[struct]] element AV).
+12b. R9 (full-path calls without import) + R8-followup + R10 pending on
+    the compiler lane; captures_get stays red until R10 lands.
 14. memops string fast-path re-land (Str-cast chained concat) -> completes
     gate #4.
 15. Stage-5 coupling: fuzz targets, api_freeze manifest path sync,
