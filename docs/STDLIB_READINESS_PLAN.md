@@ -163,18 +163,25 @@ T1/T2 yields.
       parsers -- 15 files, ALL un-gated as of 2026-09-10 (kdf + json last)
 - [x] CSPRNG bound to OS entropy with documented reseed policy -- flip
       landed 7148b615; OS-seeded LCG only as documented no-OS fallback
-- [~] StringBuilder + alloc-free predicates shipped (DONE); runtime memops
-      bound in xiom.mem (DONE); STRING fast-path re-land still
-      compiler-blocked (Str-cast chained concat family)
+- [x] StringBuilder + alloc-free predicates shipped (DONE); runtime memops
+      bound in xiom.mem (DONE); STRING fast-path RE-LANDED 2026-09-12:
+      str_concat + sb_to_str route through xiom_memcpy_dispatch with the
+      R16 Int-cast workaround for the dest offset (the old Str-cast
+      chained-concat failure was the `buf + len_a` argument miscompile,
+      not the casts). Verified by p_fastpath_live + the string subset;
+      full r34 corpus sweep runs as the definitive gate.
 - [x] Legacy ciphers quarantined: banners + physical move DONE 2026-09-12
       (des/md5/sha under crypto/legacy/; module names frozen for the api
       freeze, manifest paths synced; p_legacy_modules + 41-file crypto
       battery green); TLS story documented (TLS_DECISION.md); schannel
       binding not started
-- [~] Duplication consolidated -- STARTED 2026-09-10: 3 units landed
-      (misc.soundex, string.glob shims + rc directory fix), inventory
-      corrected; ~15 pairs remain (base32/ascii85/percent/punycode,
-      endian x3, ip4/ip6, console/terminal, platform, geom translation)
+- [~] Duplication consolidated -- 2026-09-12 waves: endian trio unit
+      landed; namespace waves (collect dirs, memory quartet); ascii85
+      audited (= already layered: convert canonical, encoding wrappers, no
+      action); base32/percent/punycode and the base16/base64/base58 family
+      are COMPILER-GATED by R15 (same-leaf + same-name codegen key
+      collision); ip4/ip6 needs a translation pass; console/terminal +
+      platform still queued.
 - [x] Coverage number published + ratcheted in CI-equivalent sweep script --
       DELIVERED 2026-09-12: global 1007 clauses / 8627 fns = 11.7%
       (pub-with-clause 636/6465 = 9.8%); key modules io 38.9%,
@@ -257,8 +264,10 @@ T1/T2 yields.
     compiler lane is on it (tests/regression/m70_full_path_shim_delegation.xi
     in flight). R11/R12/R13 (r31/r32 WIP regressions) CLOSED by
     b8e2fa43; r33 all-green.
-14. memops string fast-path re-land (Str-cast chained concat) -> completes
-    gate #4.
+14. ~~memops string fast-path re-land (Str-cast chained concat)~~ DONE
+    2026-09-12: the real failure was R16 (`ptr + int` as a memcpy dest
+    argument miscompiles); re-landed with the Int-cast workaround in
+    str_concat + sb_to_str. Completes gate #4's performance item.
 15. Stage-5 coupling: fuzz targets, api_freeze manifest path sync,
     package.xi identity.
 
