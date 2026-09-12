@@ -49,6 +49,20 @@ DONE:
   (Vec[UInt8] v4 / Vec[UInt16] v6 + IpAddr + masking/subnet). Delegation
   needs an API translation pass; queued as its own unit with a
   twin-vs-vectors lock.
+- ASCII85 DIRECTION CORRECTED (2026-09-12): the pair is ALREADY layered --
+  `xiom.encoding.ascii85` imports `xiom.convert.ascii85.to_ascii85/
+  from_ascii85` (different names, so no R15 collision) and adds the
+  str/delimiter wrappers. Canonical = convert.ascii85; encoding is the
+  public wrapper layer. No action needed; inventory table direction was
+  stale (4th stale direction after soundex, glob, endian).
+- ENCODING FAMILY R15-GATED (2026-09-12): convert.base32 vs
+  encoding.base32, convert.percent vs encoding.percent, and
+  convert.punycode vs encoding.punycode share BOTH the module leaf and
+  the fn names, which trips R15 (leaf-qualified codegen key collision ->
+  wrong 0-arg stub -> runtime crash; probe p_b32_shim preserved). The same
+  blocks the old base16/base64/base58 copy-paste family. Workaround in
+  place: keep the local implementations; consolidate after the compiler
+  lane fixes R15 (full-path keys).
 
 PARITY-SMOKE CONVENTION (hardened by R9): a shim's lock compares the twin
 against official/expected vectors with the twin imported + alias calls;
