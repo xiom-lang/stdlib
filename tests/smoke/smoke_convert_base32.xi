@@ -86,6 +86,25 @@ fn main() -> Int {
     Err(_) => {},
   }
 
+  // Decoder surface extras: unpadded standard input and lowercase
+  // base32hex input, both documented by the shared decoder semantics.
+  var unpadded = base32.base32_decode("MZXW6YTBOI");
+  match unpadded {
+    Ok(out) => {
+      if out.len() != 6 { io.println("unpadded len"); return 14; }
+      var u0 = out[0] as Int;
+      if u0 != 102 { io.println("unpadded byte"); return 15; }
+    },
+    Err(e) => { io.println(string.str_concat("unpadded err ", e)); return 16; },
+  }
+  var lower_hex = base32.base32hex_decode("cpnmu");
+  match lower_hex {
+    Ok(out) => {
+      if out.len() != 3 { io.println("lower hex len"); return 17; }
+    },
+    Err(e) => { io.println(string.str_concat("lower hex err ", e)); return 18; },
+  }
+
   io.println("OK");
   return 0;
 }
