@@ -123,7 +123,10 @@ without churn.
 2. TLS decision doc: recommend FFI-bind system schannel first (toolchain is
    Windows-first); until landed, https/jwt/ws modules carry honest
    "plaintext unless you bring your own TLS" security footnotes.
-3. TOML + CSV + argv-parsing modules (toolchain eats its own `xiom.toml`).
+3. CSV DONE 2026-09-12 (`xiom.serialize.csv`: RFC 4180 reader/writer,
+   quoted/doubled-quote/embedded-newline handling, CRLF writer,
+   smoke_serialize_csv with round-trip vectors). TOML + argv-parsing
+   still owed (toolchain eats its own `xiom.toml`).
 4. tzdata: phase 1 delegate to OS timezone APIs via FFI; embed IANA snapshot later.
 5. Bind-or-delete the ~175 orphaned runtime symbols (atomics ordering, ctx
    swap, ct_compare into MAC compare, disk/sysinfo).
@@ -234,7 +237,8 @@ T1/T2 yields.
 **B. Capability (C)**
 7. Runtime symbol audit: 441 xiom_* defs vs 247 stdlib externs => ~194
    unbound symbols; bind-or-delete.
-8. CSV + TOML modules (toolchain eats its own xiom.toml).
+8. ~~CSV + TOML modules (toolchain eats its own xiom.toml)~~ CSV DONE
+   2026-09-12 (xiom.serialize.csv + smoke_serialize_csv); TOML owed.
 9. tzdata phase 1 via OS timezone FFI (only chrono_timezone_offset today).
 10. Async stress suite (10k fibers, cancellation storms, saturation);
     async infra currently has a single smoke.

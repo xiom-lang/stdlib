@@ -399,6 +399,7 @@ Generated from the frozen layout (9aa95d35). Module -> file mapping for all 512 
 | xiom.search.kmp | stdlib/xiom/search/kmp.xi |
 | xiom.search.linear | stdlib/xiom/search/linear.xi |
 | xiom.search | stdlib/xiom/search/search.xi |
+| xiom.serialize.csv | stdlib/xiom/serialize/csv.xi |
 | xiom.serialize.endian | stdlib/xiom/serialize/endian.xi |
 | xiom.serialize.json | stdlib/xiom/serialize/json.xi |
 | xiom.serialize | stdlib/xiom/serialize/serialize.xi |
