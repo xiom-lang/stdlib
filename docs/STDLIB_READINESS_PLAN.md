@@ -282,8 +282,9 @@ T1/T2 yields.
 
 ### 9.3 Honest Rust-parity gaps (beyond the original plan)
 
-- CSV landed 2026-09-12; still missing: timezone database/zoneinfo,
-  TOML, TLS -- the remaining "not a complete systems stdlib yet" items.
+- CSV and TOML (v1 reader) landed 2026-09-12; still missing: timezone
+  database/zoneinfo and TLS -- the remaining "not a complete systems
+  stdlib yet" items.
 - Async runtime is minimal (executor/timer/channel + 1 smoke); no
   cancellation-storm/saturation validation.
 - ~194 runtime symbols defined but unbound by any module (dead surface;
