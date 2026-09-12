@@ -1,26 +1,103 @@
-# XIOM Stdlib Session -- Clean Handoff (2026-08-25, early morning)
+# XIOM Stdlib Session -- Handoff
 
-> Written for the next session. Branch: `feat/architect`. HEAD = this
-> doc's commit. **Round-15 sweep: 874/907** (corrected classification --
-> child status is the printed "exit code:" stderr line, NOT $LASTEXITCODE;
-> naive sweeps false-report 907/907). This continuation session RESOLVED
-> both top stdlib crypto/compress defects and shipped StringBuilder.
+## 0. START HERE -- current handoff (2026-09-12)
+
+Lane boundary: this session owns `stdlib/**`, `examples/stdlib_smoke/**`,
+and the docs listed below. A PARALLEL COMPILER SESSION owns `crates/**`
+and edits `stdlib/runtime/` occasionally; its uncommitted crates changes
+can appear in the shared tree at any time -- NEVER `git add -A`; stage
+explicit paths only. Branch: `feat/architect`.
+
+State (verified on a fresh isolated build this date):
+- ALL catalogued compiler defects from the round-29 sweep are CLOSED
+  (R5/R6 address/http2, R7 generic-container large-V, R7-followup,
+  R8 char_at contracts + method sugar, R8-followup trim-on-param, R10
+  Vec[Option[struct]] element reads, ptr_offset, convert_escape,
+  array_zip, math_edge, regex family). Remaining known-red across the
+  corpus: smoke_error2 (flaky-by-source, green solo) + the latent R9
+  call shape (full-path call to a never-imported module; no shipping
+  consumer). Effective baseline ~934/935.
+- Latest stdlib deliverables (newest first): seeded-SipHash StringMap
+  default (b6df21b7), compiler-handoff fixes + char_at contract restore
+  (31943d7a), regex/hash/io/parse API realignments, dedup wave 1
+  (misc.soundex + string.glob shims, rc directory move), CSPRNG flip to
+  OS entropy (7148b615), T007 requires sweep, io shims/accessors,
+  io.open/close + io.parse_int/parse_float.
+
+NEXT QUEUE (ordered; details in STDLIB_READINESS_PLAN.md section 9.2):
+1. Legacy physical move: crypto/{des,md5,sha1}.xi -> crypto/legacy/ +
+   deprecation ladder (banners exist; pure move + headers).
+2. Namespace cleanup wave 1: 62 files under collections/ declare module
+   xiom.collect.* -- align directory/module names (same class as the rc
+   move), then memory quartet.
+3. Contract-coverage wave 1 (io/string/collections touched fns) + PUBLISH
+   the coverage number + add a ratchet mode to the sweep script
+   (readiness gate #7 is the only open gate).
+4. Dedup continuation per STDLIB_DEDUP_INVENTORY.md (endian trio,
+   base32/ascii85/percent/punycode, ip4+ip6, console/os.terminal,
+   platform; json after its heap work). Parity style: twin vs vectors
+   (kat_convert_base64_parity template), NOT dual-module side-by-side.
+5. Capability items (biggest Rust-parity gaps): CSV + TOML modules,
+   tzdata phase 1 (OS timezone FFI), async stress suite, TLS schannel.
+6. Fresh full sweep for the definitive r32 baseline.
+
+Environment & tooling:
+- Isolated binary build (preferred; ~30s warm):
+  `$env:CARGO_TARGET_DIR="C:\Users\lefte\AppData\Local\Temp\kilo\stdlib_ws\target_rNN"; cargo build -p xiom`
+  then use `...\target_rNN\debug\xiom.exe`. A fresh target dir is a
+  from-scratch build (~10 min); reuse per round.
+- Sweep tooling (copy + bump the paths per round):
+  C:\Users\lefte\AppData\Local\Temp\kilo\stdlib_ws\
+  {sweep_worker29.ps1, launch_sweep29.ps1, triage_sweep29.ps1,
+  compare_sweeps.ps1}. 8 workers; per-file CSV rows; error logs per
+  worker. Run worker binaries with stdin redirected (a stdin-reading
+  smoke can hang a worker -- kill the process to unblock; the bufreader
+  smoke is file-based now).
+- Probes preserved: C:\Users\lefte\AppData\Local\Temp\kilo\stdlib_ws\probes\
+  (p_*, probe_*, kat probes). Run verification with CWD = repo root so
+  the CWD-relative stdlib root and the binary's baked manifest root are
+  the same tree.
+- Verification protocol: probe-first; any batch failure re-run SOLO
+  before believing it; no stdlib edits while a sweep is in flight;
+  one fix = one probe = one verified rerun; batch-commit per family.
+
+Conventions / hazards (hard-won):
+- PowerShell quoting: use SINGLE-QUOTED commit messages; `"` plus `->`
+  in a double-quoted message breaks argument parsing.
+- Contracts are ACTIVE at runtime (requires/ensures abort on violation);
+  whole-body-unsafe fns need a requires (T007).
+- Prefer explicit free-call forms for historical sugar-misresolve areas
+  (char_at/trim are fixed now, but new param-receiver code should stay
+  explicit where a free fn exists).
+- R9 rule: always `use` the module you call; a full-path call to a
+  never-imported module can corrupt at runtime.
+- Pure-ASCII policy (ascii_guard); `repair --apply` can touch crates
+  files -- revert those.
+- Docs coupling: update STDLIB_READINESS_PLAN.md gate tags and this
+  doc's newest section at session end; cross-boundary findings go to
+  COMPILER_BUGS.md (shared with the compiler lane).
+
+Historical detail: sections 1 .. 2.7 below are prior-session logs; the
+most recent (rounds 26-32, incl. the seeded-siphash unit) is section 2.7.
+Key docs: STDLIB_READINESS_PLAN.md (phases T/E/O/C/S + section 9 status),
+COMPILER_BUGS.md (open: R9 latent only), STDLIB_DEDUP_INVENTORY.md
+(progress + parity convention), STDLIB_CONTAINER_TUNING.md (iteration
+order + hash-DoS posture), STR_OWNERSHIP.md, REPORT_TO_COMPILER_SESSION.md.
 
 ---
 
-## 0. Read first
+## 0.1 Historical "read first" (round-15 era, superseded above)
 
 - docs/STDLIB_READINESS_PLAN.md -- this campaign's plan (phases T/E/O/C/S)
-- docs/REPORT_TO_COMPILER_SESSION.md -- cross-boundary findings + 7 new
-  compiler defect probes (all under %TEMP%\kilo\stdlib_campaign\probes\)
+- docs/REPORT_TO_COMPILER_SESSION.md -- cross-boundary findings + compiler
+  defect probes
 - docs/STR_OWNERSHIP.md -- normative Str.from_cstring ownership convention
-- Sweep tooling (reusable): %TEMP%\kilo\stdlib_campaign\
-  {launch_sweep.ps1,sweep_worker.ps1,reclassify.ps1}. Isolated binary =
-  %TEMP%\kilo\tgt_std\debug\xiom.exe built from worktree
-  %TEMP%\kilo\axiom_r15 (HEAD). GOTCHA: module resolution also scans a
-  CWD-relative stdlib root AND the binary's baked CARGO_MANIFEST_DIR root --
-  run verification from %TEMP%\kilo\iso_run (junction to worktree stdlib)
-  or results silently mix trees.
+- Old sweep tooling lived under %TEMP%\kilo\stdlib_campaign\
+  {launch_sweep.ps1,sweep_worker.ps1,reclassify.ps1} with the isolated
+  binary in %TEMP%\kilo\tgt_std -- replaced by the stdlib_ws tooling
+  described in section 0. GOTCHA (still true): module resolution scans a
+  CWD-relative stdlib root AND the binary's baked CARGO_MANIFEST_DIR root;
+  run from the repo root or an ISO junction so both resolve to one tree.
 
 ## 1. What landed this session (all committed)
 
