@@ -814,3 +814,35 @@ flipped: effective ~925/935 with only the four catalogued items left.
 Queue next: R10/R8-followup when fixed; the A/B/C/D readiness items from
 STDLIB_READINESS_PLAN.md section 9.2 (seeded-siphash first).
 
+## 2.7. Round-32 verification + seeded-siphash delivered (2026-09-12)
+
+Compiler fixes verified GREEN on a fresh build at HEAD (Stage 2c slices,
+LET-array P2/P3 also landed): R8 follow-up (029bdb77 -- trim on Str
+params works again; io.parse_int/parse_float reverted to natural
+s.trim()), R10 (captures_get green), ptr_offset + convert_escape
+(195a5d6a), array_zip (2b808bb2). ALL previously catalogued compiler items
+from the r29 sweep are closed; remaining known-red across the corpus:
+smoke_error2 (flaky-by-source, green solo) + the R9 latent shape
+(full-path calls without an import -- no shipping consumers).
+
+Readiness item A2 DELIVERED (b6df21b7): per-process OS-entropy seeded
+SipHash-2-4 as the StringMap default:
+- siphash.xi core -> pointer+len signature (Vec AND Str hash with zero
+  copies); reference vectors re-verified byte-exact; per-process key pair
+  lazily seeded from xiom_os_entropy with a documented time-derived
+  degraded fallback; explicit-key APIs unchanged.
+- stringmap.xi _hash_str -> seeded siphash masked to 63 bits; smoke +
+  container + cross-collections batteries green.
+- Iteration order for StringMap now VARIES run-to-run by design;
+  STDLIB_CONTAINER_TUNING.md iteration-order + hash-DoS sections updated
+  (generic HashMap[K,V] seed rollout noted as follow-up).
+- Verified: Vec==Str path, in-process determinism, cross-process
+  variation, vector KATs.
+
+Queue next (readiness section 9.2): legacy crypto/legacy/ move;
+namespace cleanup (62 collections/ files declare xiom.collect.*);
+contract-coverage wave + published ratchet number; dedup continuation
+(endian trio, base32/ascii85/percent/punycode, ip4/ip6, terminal,
+platform); capability items (CSV/TOML/tzdata/async-stress/TLS); fresh
+full sweep on r32 for the definitive baseline.
+

@@ -30,18 +30,30 @@ explicitly rather than promising.
 - Hash-map iteration order is implementation-defined: it depends on the
   hash function, table capacity history, and deletion pattern. Code MUST
   NOT depend on it. Sorted output requires explicit sorting.
-- There is NO keyed/hash-seed randomization in the default hasher today,
-  so iteration order is currently DETERMINISTIC across runs -- do not rely
-  on that either; seed randomization (hash-DoS hardening, audit phase E4)
-  will deliberately change order run-to-run when it lands.
+- As of 2026-09-12 StringMap (xiom.collect.stringmap) uses a per-process
+  OS-ENTROPY-SEEDED SipHash key, so its bucket assignment -- and therefore
+  iteration order -- VARIES run-to-run by design. Do not rely on run
+  determinism anywhere; seed randomization (hash-DoS hardening, audit
+  phase E4) is now the default for Str-keyed maps.
 - Vec/lz77/token streams are ordered by construction.
 
-## Hash-DoS posture (planned)
+## Hash-DoS posture (DELIVERED 2026-09-12)
 
-The hash package contains a keyed siphash candidate. Plan: make a seeded
-siphash the DEFAULT Map hasher for Str keys (per-process random key),
-keeping the fast identity hash opt-in for trusted workloads. Until then,
-untrusted-key hash maps are theoretically collidable by design.
+`xiom.collect.stringmap` now defaults to seeded SipHash-2-4:
+- `xiom.hash.siphash.siphash24_str_seeded` lazily draws a 16-byte key from
+  the runtime OS entropy source (`xiom_os_entropy`: ProcessPrng /
+  RtlGenRandom / /dev/urandom) once per process.
+- Degraded fallback (no OS entropy source answering): a time-derived key --
+  still per-process variable, but PREDICTABLE; treat untrusted-key maps as
+  theoretical-targets in that environment.
+- The core hashes Str inputs with zero copies (pointer+len signature;
+  reference vectors re-verified byte-exact: key 00..0f ->
+  0x726FDB47DD0E0E31 / 0x2BA3E8E9A71148CA).
+- `siphash24`/`siphash13`/`siphash24_zerokey` remain available with
+  explicit keys for MAC-style use.
+- Open (separate unit): the generic `HashMap[K,V]` in collections.xi still
+  hashes via the legacy free `hash` helpers -- its Str-key support and a
+  seed rollout there are future work.
 
 ## Guidance for new container code
 
