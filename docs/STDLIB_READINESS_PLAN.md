@@ -196,9 +196,12 @@ T1/T2 yields.
    harness block: add io.open/io.close (FILE* wrappers; BufReader has NO
    file-open API today) and make the smoke file-based; note for all sweep
    harnesses: redirect stdin.
-2. Seeded-siphash DEFAULT hasher switch (E4; hash-DoS). Seeded key is now
-   available (CSPRNG flip). Will shake iteration-order-dependent smokes --
-   pair with STDLIB_CONTAINER_TUNING.md promises.
+2. ~~Seeded-siphash DEFAULT hasher switch (E4; hash-DoS)~~ DELIVERED
+   2026-09-12 (b6df21b7): StringMap defaults to per-process OS-entropy
+   seeded SipHash-2-4 (zero-copy Str core, vectors re-verified); degraded
+   fallback documented. Iteration order now varies run-to-run by design
+   (STDLIB_CONTAINER_TUNING.md updated). Follow-up: generic HashMap[K,V]
+   seed rollout.
 3. Legacy physical move to crypto/legacy/ + deprecation ladder (unblocked
    by the delegation fix; pure moves + headers).
 4. Namespace cleanup wave 1: collections/.xi files declare module
