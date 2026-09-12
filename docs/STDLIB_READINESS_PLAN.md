@@ -282,8 +282,8 @@ T1/T2 yields.
 
 ### 9.3 Honest Rust-parity gaps (beyond the original plan)
 
-- No timezone database/zoneinfo, CSV, TOML, or TLS -- the biggest "not a
-  complete systems stdlib yet" items.
+- CSV landed 2026-09-12; still missing: timezone database/zoneinfo,
+  TOML, TLS -- the remaining "not a complete systems stdlib yet" items.
 - Async runtime is minimal (executor/timer/channel + 1 smoke); no
   cancellation-storm/saturation validation.
 - ~194 runtime symbols defined but unbound by any module (dead surface;
@@ -292,8 +292,12 @@ T1/T2 yields.
   io 38.9%, string 17.1%, collect 18.9% (target >=60%; waves 3+ owed).
 - Namespace/identity debt: collect vs collections, memory quartet,
   package.xi identity, geom/twin module names.
-- No fuzz/property infrastructure (stage-5 dependent); coverage number
-  unpublished.
+- No fuzz/property infrastructure (stage-5 dependent); the coverage
+  number IS published + ratcheted (gate #7) as of 2026-09-12.
+- Item A catalog findings: stdlib burn-down DONE 2026-09-12 (237 -> 2
+  findings, 17 -> 1 parse errors; the remainder are the compiler-side
+  D4 iter:413 / D5 path:261 / D1 time `<=>` items) -- full details in
+  docs/ITEM_A_STDLIB_FINDINGS.md; r36 sweep 935/935, ratchet OK.
 - Console is Windows-first (console_clear "cls"); os.terminal exists but
   the split is not consolidated.
 
