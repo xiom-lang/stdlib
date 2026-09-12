@@ -58,11 +58,14 @@ DONE:
 - ENCODING FAMILY R15-GATED (2026-09-12): convert.base32 vs
   encoding.base32, convert.percent vs encoding.percent, and
   convert.punycode vs encoding.punycode share BOTH the module leaf and
-  the fn names, which trips R15 (leaf-qualified codegen key collision ->
-  wrong 0-arg stub -> runtime crash; probe p_b32_shim preserved). The same
-  blocks the old base16/base64/base58 copy-paste family. Workaround in
-  place: keep the local implementations; consolidate after the compiler
-  lane fixes R15 (full-path keys).
+  the fn names, which trips R15 (leaf-qualified codegen key collision).
+  Round-56 re-test: the crash became a SILENT EMPTY return for the
+  same-name fns (differently-named legs like base32hex_* work), so the
+  gate stands -- probes p_b32_s5a/s5b + reverted shim recorded in
+  COMPILER_BUGS R15. The same blocks the old base16/base64/base58
+  copy-paste family. Workaround in place: keep the local
+  implementations; consolidate after the compiler lane keys the codegen
+  symbols by the FULL module path.
 
 PARITY-SMOKE CONVENTION (hardened by R9): a shim's lock compares the twin
 against official/expected vectors with the twin imported + alias calls;
