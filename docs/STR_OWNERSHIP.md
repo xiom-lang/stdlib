@@ -97,7 +97,7 @@ convert/cstring.xi from_cstring(ptr) wrapping CALLER-provided C pointers
 ([COPY] on exit).
 
 ### Allocator plumbing (N/A to Str convention)
-memory/alloc.xi (GlobalAlloc family), ffi/* (pass-through), simd/simd.xi
+alloc/alloc.xi (GlobalAlloc family), ffi/* (pass-through), simd/simd.xi
 (aligned scratch alloc/free pairs), compress/* (no heap use post-fix).
 
 ### Violations found
