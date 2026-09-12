@@ -4,43 +4,32 @@
 
 module xiom.convert.endian
 
-// Depends on: none
-
-// ============================================================================
-// Big/little-endian byte conversions and host endianness detection. The
-// byte-swap primitive delegates to the canonical xiom.bits.byte_swap64
-// (different function name, so delegation is safe from the same-name
-// miscompile). The host is always little-endian on the supported x86-64
-// targets.
-// ============================================================================
+// Depends on: xiom.bits (swap primitive), xiom.serialize.endian (canonical)
+//
+// DEPRECATED TWIN (dedup unit, 2026-09-12): this module is now a thin
+// compatibility surface over the canonical xiom.serialize.endian writers and
+// readers; new code should use xiom.serialize.endian directly. The 8-byte
+// Int forms below are the frozen legacy API and are pinned by
+// smoke_convert_endian (twin-vs-vectors; see STDLIB_DEDUP_INVENTORY.md).
 
 use xiom.bits;
+use xiom.serialize.endian as sendian;
 
 /// Big-endian byte representation of an integer (exactly 8 bytes, MSB first).
 /// Negative values render as their two's-complement pattern.
 /// Complexity: O(1).
 pub fn to_be_bytes(n: Int) -> Vec[UInt8] {
-  var result = Vec[UInt8].new();
-  var i = 7;
-  while i >= 0 {
-    var b = (n >> (i * 8)) & 0xFF;
-    result.push(b as UInt8);
-    i = i - 1;
-  };
-  result
+  var out = Vec[UInt8].new();
+  sendian.write_u64_be(&mut out, n as UInt64);
+  return out;
 }
 
 /// Little-endian byte representation of an integer (exactly 8 bytes, LSB
 /// first). Complexity: O(1).
 pub fn to_le_bytes(n: Int) -> Vec[UInt8] {
-  var result = Vec[UInt8].new();
-  var i = 0;
-  while i < 8 {
-    var b = (n >> (i * 8)) & 0xFF;
-    result.push(b as UInt8);
-    i = i + 1;
-  };
-  result
+  var out = Vec[UInt8].new();
+  sendian.write_u64_le(&mut out, n as UInt64);
+  return out;
 }
 
 /// Integer read from big-endian bytes. Reads at most 8 bytes; returns 0 for
@@ -50,6 +39,9 @@ pub fn from_be_bytes(bytes: &Vec[UInt8]) -> Int {
   if len == 0 || len > 8 {
     return 0;
   };
+  if len == 8 {
+    return sendian.read_u64_be(bytes, 0) as Int;
+  };
   var result: Int = 0;
   var i: Int = 0;
   while i < len {
@@ -58,7 +50,7 @@ pub fn from_be_bytes(bytes: &Vec[UInt8]) -> Int {
     result = result * 256 + b;
     i = i + 1;
   };
-  result
+  return result;
 }
 
 /// Integer read from little-endian bytes. Reads at most 8 bytes; returns 0
@@ -68,6 +60,9 @@ pub fn from_le_bytes(bytes: &Vec[UInt8]) -> Int {
   if len == 0 || len > 8 {
     return 0;
   };
+  if len == 8 {
+    return sendian.read_u64_le(bytes, 0) as Int;
+  };
   var result: Int = 0;
   var i = len - 1;
   while i >= 0 {
@@ -76,7 +71,7 @@ pub fn from_le_bytes(bytes: &Vec[UInt8]) -> Int {
     result = result * 256 + b;
     i = i - 1;
   };
-  result
+  return result;
 }
 
 /// Reverses the byte order of an integer (all 8 bytes). Delegates to the
@@ -90,3 +85,4 @@ pub fn swap_bytes(n: Int) -> Int {
 pub fn is_little_endian() -> Bool {
   true
 }
+

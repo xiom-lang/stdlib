@@ -55,6 +55,25 @@ fn main() -> Int {
   if endianness.le_to_native(0x0102030405060708) != 0x0102030405060708 { io.println("le_to_native"); return 24; }
   if endianness.swap_endian(0x0102030405060708) != 0x0807060504030201 { io.println("swap_endian"); return 25; }
 
+  // Short/overflow/negative vectors pin the from_*/to_* surface now that
+  // xiom.convert.endian delegates to the canonical xiom.serialize.endian
+  // (dedup unit; see STDLIB_DEDUP_INVENTORY.md). Twin-vs-vectors only --
+  // no side-by-side dual-module calls while R9 is open.
+  var short_be = Vec[UInt8].new();
+  short_be.push(1); short_be.push(2);
+  if endian.from_be_bytes(&short_be) != 0x0102 { io.println("from_be short"); return 26; }
+  var short_le = Vec[UInt8].new();
+  short_le.push(2); short_le.push(1);
+  if endian.from_le_bytes(&short_le) != 0x0102 { io.println("from_le short"); return 27; }
+  var nine = Vec[UInt8].new();
+  var k9 = 0;
+  while k9 < 9 { nine.push(1); k9 = k9 + 1; }
+  if endian.from_be_bytes(&nine) != 0 { io.println("from_be overflow"); return 28; }
+  if endian.from_le_bytes(&nine) != 0 { io.println("from_le overflow"); return 29; }
+  var negle = endian.to_le_bytes(0 - 2);
+  if (negle[0] as Int) != 254 || (negle[7] as Int) != 255 { io.println("to_le negative"); return 30; }
+  if endian.from_le_bytes(&negle) != (0 - 2) { io.println("from_le negative"); return 31; }
+
   io.println("OK");
   return 0;
 }

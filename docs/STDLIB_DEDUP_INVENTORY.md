@@ -27,6 +27,28 @@ DONE:
   their target. The dual-path parity smoke was retired (dual-module
   full-path calls are unsafe while R9 is open; parity style = twin vs
   vectors, per kat_convert_base64_parity).
+- LEGACY QUARANTINE (2026-09-12): `crypto/{des,md5,sha}.xi` ->
+  `crypto/legacy/` with physical-location headers. Module names FROZEN for
+  the api_freeze gate (`xiom.des` / `xiom.crypto.md5` / `xiom.crypto.sha`),
+  so imports are unchanged; docs/STDLIB_MANIFEST.md paths synced. Verified
+  by p_legacy_modules + the 41-file crypto battery (all green).
+- NAMESPACE WAVE 1 (2026-09-12): the 61 `xiom.collect.*` modules moved from
+  `stdlib/xiom/collections/` to `stdlib/xiom/collect/` (directory==module);
+  the `xiom.collections` aggregate stays at `collections/collections.xi`.
+  Manifest + NAMING_CONVENTIONS/SCALING_ARCHITECTURE synced; 100/100
+  container smokes green. Memory quartet (alloc/cell/mem/ptr) still queued.
+- ENDIAN TRIO UNIT (2026-09-12): `xiom.convert.endian` converted to a thin
+  delegating shim over `xiom.serialize.endian` (writers/readers) +
+  `xiom.bits.byte_swap64` (swap primitive). The 8-byte Int forms stay as
+  the frozen legacy surface; parity pinned twin-vs-vectors by
+  smoke_convert_endian (short 1..7-byte reads, >8-byte/empty -> 0,
+  negative two's-complement, round-trips added). `xiom.bits.endianness`
+  stays the primitive module (not a twin of the public conversion API).
+- IP4/IP6 AUDIT (2026-09-12): NOT a blind shim. `net/ip4` and `net/ip6`
+  expose Result + Vec[UInt8] surfaces; canonical `net/ip` is Option-based
+  (Vec[UInt8] v4 / Vec[UInt16] v6 + IpAddr + masking/subnet). Delegation
+  needs an API translation pass; queued as its own unit with a
+  twin-vs-vectors lock.
 
 PARITY-SMOKE CONVENTION (hardened by R9): a shim's lock compares the twin
 against official/expected vectors with the twin imported + alias calls;
