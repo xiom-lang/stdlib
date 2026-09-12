@@ -268,6 +268,7 @@ fn _yaml_emit_node(v: YamlValue, depth: Int) -> Str {
       }
       return result;
     }
+    _ => { return ""; }
   }
 }
 
@@ -304,6 +305,7 @@ fn _yaml_emit_flat(v: YamlValue, depth: Int) -> Str {
       }
       return result;
     }
+    _ => { return ""; }
   }
 }
 

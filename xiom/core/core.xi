@@ -85,7 +85,9 @@ pub fn to_string(x: Int) -> Str {
   }
 }
 
-pub fn to_int_from_str(s: Str) -> Result[Int, Str] {
+pub fn to_int_from_str(s: Str) -> Result[Int, Str]
+  requires: true  // extern char_at calls below (D2.1/T002 safe-wrapper pattern)
+{
   if s.len() == 0 {
     return Err("empty string");
   }
@@ -118,7 +120,9 @@ pub fn to_int_from_str(s: Str) -> Result[Int, Str] {
   return Ok(result);
 }
 
-pub fn to_float_from_str(s: Str) -> Result[Float64, Str] {
+pub fn to_float_from_str(s: Str) -> Result[Float64, Str]
+  requires: true  // extern char_at calls below (D2.1/T002 safe-wrapper pattern)
+{
   if s.len() == 0 {
     return Err("empty string");
   }

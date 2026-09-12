@@ -1453,7 +1453,9 @@ pub fn aes_encrypt(key: &Vec[UInt8], plaintext: &Vec[UInt8]) -> Result[Vec[UInt8
   if key.len() != 16 && key.len() != 24 && key.len() != 32 {
     return Err("invalid key length: must be 16, 24, or 32 bytes");
   }
-  if xiom_crypto_aesni_available() != 0 && key.len() == 16 {
+  var aesni: Int = 0;
+  unsafe { aesni = xiom_crypto_aesni_available(); }
+  if aesni != 0 && key.len() == 16 {
     // 6D.4: Hardware-accelerated AES-128 path (AES-NI on x86_64)
     // Uses FFI xiom_aesni_encrypt_block for hardware acceleration.
     // Falls through to software if AES-NI is unavailable.
@@ -1511,7 +1513,9 @@ pub fn aes_decrypt(key: &Vec[UInt8], ciphertext: &Vec[UInt8]) -> Result<Vec[UInt
   if ciphertext.len() % 16 != 0 {
     return Err("ciphertext length must be a multiple of 16");
   }
-  if xiom_crypto_aesni_available() != 0 && key.len() == 16 {
+  var aesni2: Int = 0;
+  unsafe { aesni2 = xiom_crypto_aesni_available(); }
+  if aesni2 != 0 && key.len() == 16 {
     let (expanded_key, nr) = _aes_key_expansion(key);
     var decrypted = Vec[UInt8].new();
     let blocks = ciphertext.len() / 16;

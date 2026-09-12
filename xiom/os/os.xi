@@ -522,7 +522,7 @@ pub fn Pipe.read(self, buf: &mut Vec[UInt8]) -> Result[Int, Str]
 {
   let n: Int;
   unsafe {
-    n = xiom_read(self.read_fd as Int32, buf.as_mut_ptr(), buf.capacity());
+    n = xiom_read(self.read_fd as Int32, buf.as_mut_ptr(), buf.len());
   }
   if n < 0 {
     return Err("failed to read from pipe");

@@ -26,7 +26,9 @@ extern "C" {
 /// Returns: the interleaved string.
 /// Error case: none.
 /// Complexity: O(|a| + |b|).
-pub fn str_interleave(a: Str, b: Str) -> Str {
+pub fn str_interleave(a: Str, b: Str) -> Str
+  requires: true  // extern char_at calls in the loop (T002 confinement)
+{
   let la = string.str_len(a);
   let lb = string.str_len(b);
   var ia: Int = 0;
@@ -63,7 +65,9 @@ pub fn str_interleave(a: Str, b: Str) -> Str {
 /// Returns: the interleaved string with separators.
 /// Error case: parts.len() == 0 => "".
 /// Complexity: O(total chars * parts.len()).
-pub fn str_interleave_n(parts: &Vec[Str], sep: Str) -> Str {
+pub fn str_interleave_n(parts: &Vec[Str], sep: Str) -> Str
+  requires: true  // extern char_at calls in the loop (T002 confinement)
+{
   let pcount = parts.len();
   if pcount == 0 {
     return "";

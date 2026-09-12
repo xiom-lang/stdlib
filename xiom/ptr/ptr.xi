@@ -4,12 +4,20 @@
 
 module xiom.ptr
 
-pub fn null[T]() -> *T {
-  return 0 as *T;
+pub fn null[T]() -> *T
+  requires: true  // deliberate null pointer (T003 raw-pointer escape hatch / T007)
+{
+  unsafe {
+    return 0 as *T;
+  }
 }
 
-pub fn null_mut[T]() -> *mut T {
-  return 0 as *mut T;
+pub fn null_mut[T]() -> *mut T
+  requires: true  // deliberate null pointer (T003 raw-pointer escape hatch / T007)
+{
+  unsafe {
+    return 0 as *mut T;
+  }
 }
 
 pub fn dangling[T]() -> *T
@@ -143,10 +151,18 @@ pub fn sub[T](ptr: *const T, count: Int) -> *const T
   }
 }
 
-pub fn from_ref[T](r: &T) -> *const T {
-  return r as *const T;
+pub fn from_ref[T](r: &T) -> *const T
+  requires: true  // ref-to-pointer cast, allocator-style escape hatch (T003/T007)
+{
+  unsafe {
+    return r as *const T;
+  }
 }
 
-pub fn from_mut[T](r: &mut T) -> *mut T {
-  return r as *mut T;
+pub fn from_mut[T](r: &mut T) -> *mut T
+  requires: true  // ref-to-pointer cast, allocator-style escape hatch (T003/T007)
+{
+  unsafe {
+    return r as *mut T;
+  }
 }

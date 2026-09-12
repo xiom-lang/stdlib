@@ -1110,6 +1110,7 @@ fn _des_key_int(key: &Vec[UInt8]) -> Result[Int, Str] {
 /// Complexity: O(n).
 pub fn des_encrypt(key: &Vec[UInt8], data: &Vec[UInt8]) -> Result<Vec[UInt8], Str> {
   var k = _des_key_int(key);
+  if !k.is_ok { return Err(k.error); }
   var padded = Vec[UInt8].new();
   var i = 0;
   while i < data.len() {
@@ -1127,7 +1128,7 @@ pub fn des_encrypt(key: &Vec[UInt8], data: &Vec[UInt8]) -> Result<Vec[UInt8], St
   var bi = 0;
   while bi < padded.len() / 8 {
     var block = _be64_from_bytes(&padded, bi * 8);
-    var ct = des.des_encrypt_block(block, k);
+    var ct = des.des_encrypt_block(block, k.value);
     var bytes = _bytes_from_be64(ct);
     i = 0;
     while i < 8 {
@@ -1146,11 +1147,12 @@ pub fn des_decrypt(key: &Vec[UInt8], data: &Vec[UInt8]) -> Result<Vec[UInt8], St
     return Err("des: ciphertext length must be a multiple of 8");
   }
   var k = _des_key_int(key);
+  if !k.is_ok { return Err(k.error); }
   var decrypted = Vec[UInt8].new();
   var bi = 0;
   while bi < data.len() / 8 {
     var block = _be64_from_bytes(data, bi * 8);
-    var pt = des.des_decrypt_block(block, k);
+    var pt = des.des_decrypt_block(block, k.value);
     var bytes = _bytes_from_be64(pt);
     var i = 0;
     while i < 8 {

@@ -115,7 +115,7 @@ pub fn bezier_derivative(points: &Vec[Vec[Float64]], t: Float64) -> Vec[Float64]
       s = s + (pc[i2 + 1][k2] - pc[i2][k2]) * w;
       i2 = i2 + 1;
     }
-    out.push(s * scale);
+    out.push(s * (scale as Float64));
     k2 = k2 + 1;
   }
   return out;
@@ -220,7 +220,7 @@ pub fn curve_length(samples: fn(Float64) -> Vec[Float64], a: Float64, b: Float64
   var prev = samples(a);
   var i = 1;
   while i <= segs {
-    var u = a + (b - a) * i / segs;
+    var u = a + (b - a) * (i as Float64) / (segs as Float64);
     var cur = samples(u);
     var s = 0.0;
     var k = 0;

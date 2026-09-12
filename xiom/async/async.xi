@@ -296,7 +296,9 @@ pub fn async_sleep_ms(ms: Int) {
 
 /// Yields execution to other ready tasks by sleeping for 0ms.
 /// Complexity: O(1) pump iteration.
-pub fn async_yield_now() {
+pub fn async_yield_now()
+  requires: true  // whole-body unsafe sleep call (T007)
+{
   unsafe { xiom_thread_sleep_ms(0); };
 }
 

@@ -73,7 +73,9 @@ pub fn str_indent_with(s: Str, n: Int, prefix: Str) -> Str {
 /// Returns: the dedented string.
 /// Error case: none.
 /// Complexity: O(|s|).
-pub fn str_dedent(s: Str) -> Str {
+pub fn str_dedent(s: Str) -> Str
+  requires: true  // extern char_at call in the scan loop (T002 confinement)
+{
   var lines = string.str_split(s, "\n");
   var min_indent: Int = -1;
   var i: Int = 0;

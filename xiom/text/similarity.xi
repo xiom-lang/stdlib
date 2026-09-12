@@ -330,7 +330,9 @@ pub fn ngram_similarity(a: Str, b: Str, n: Int) -> Float64 {
 /// frequencies -- so that words sharing letters but no bigrams (e.g. "hello"
 /// and "world") still score a non-zero, sub-1 similarity.
 /// Returns 0.0 when either vector has zero length.
-pub fn cosine_similarity(a: Str, b: Str) -> Float64 {
+pub fn cosine_similarity(a: Str, b: Str) -> Float64
+  requires: true  // extern sqrt calls below (T002 confinement)
+{
   let la = a.len();
   let lb = b.len();
   if la == 0 || lb == 0 {

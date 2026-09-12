@@ -503,21 +503,7 @@ pub fn decompress_gzip_str(data: &Vec[UInt8]) -> Result[Str, Str] {
     return Err(decompressed.error);
   };
   let bytes = decompressed.value;
-  let blen = bytes.len();
-  if blen == 0 {
-    return Ok("");
-  };
-  var result = "";
-  var i: Int = 0;
-  while i < blen {
-    let code = bytes[i] as Int;
-    let opt = xiom.core.to_char(code);
-    if opt.is_some {
-      result = result + xiom.string.str_slice(xiom.string.from_char(opt.value), 0, 1);
-    };
-    i = i + 1;
-  };
-  return Ok(result);
+  return Ok(Str::from_utf8(bytes));
 }
 
 // -- Compression ratio alias -------------------------------------------------

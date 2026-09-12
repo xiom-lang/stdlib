@@ -140,7 +140,9 @@ pub fn RefCell.replace[T](&mut self, value: T) -> T
 
 // Release the shared borrow. Must be called when done with the Ref.
 // Without Drop trait support, the user is responsible for calling this.
-pub fn Ref.release[T](self) {
+pub fn Ref.release[T](self)
+  requires: true  // whole-body unsafe borrow release (T007)
+{
   unsafe {
     if ptr.is_null() { return; }
     (*ptr).borrows = (*ptr).borrows - 1;
@@ -164,7 +166,9 @@ pub fn Ref.get[T](self) -> T
 // ============================================================================
 
 // Release the mutable borrow. Restores borrows from -1 to 0.
-pub fn RefMut.release[T](self) {
+pub fn RefMut.release[T](self)
+  requires: true  // whole-body unsafe borrow release (T007)
+{
   unsafe {
     if ptr.is_null() { return; }
     // Restore: mutable borrow (-1) -> free (0)

@@ -209,4 +209,3 @@ pub fn ascii85_decode_str(s: Str) -> Result[Str, Str] {
     },
   }
 }
-}

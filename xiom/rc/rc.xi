@@ -28,7 +28,10 @@ pub fn Rc.new[T](value: T) -> Rc[T]
 {
   let layout = alloc.Layout.new(size_of[RcInner[T]]());
   let raw = alloc.alloc(layout.size);
-  let inner: *RcInner[T] = raw as *RcInner[T];
+  var inner: *RcInner[T];
+  unsafe {
+    inner = raw as *RcInner[T];
+  }
   unsafe {
     (*inner).strong = 1;
     (*inner).weak = 0;
@@ -75,7 +78,9 @@ pub fn Rc.get[T](self) -> T
 pub fn Rc.ptr_eq[T, U](self, other: &Rc[U]) -> Bool
   requires: ptr != null
 {
-  return ptr as *UInt8 == other.ptr as *UInt8;
+  unsafe {
+    return ptr as *UInt8 == other.ptr as *UInt8;
+  }
 }
 
 pub fn Rc.downgrade[T](self) -> Weak[T]

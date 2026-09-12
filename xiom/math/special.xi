@@ -97,7 +97,7 @@ fn _cot_poly(m: Int, x: Float64) -> Float64 {
     }
     if j % 2 == 1 { sign = -1; }
     var arg = x + (m / 2 - j) as Float64 * h;
-    var val = _pi * 1.0 / math.tan(_pi * arg);
+    var val = _PI * 1.0 / math.tan(_PI * arg);
     if sign < 0 {
       sum = sum - (comb as Float64) * val;
     } else {

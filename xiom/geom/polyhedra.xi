@@ -76,12 +76,12 @@ pub fn sphere_vertices(radius: Float64, slices: Int, stacks: Int) -> Vec[Vec[Flo
   if slices < 1 || stacks < 1 { return out; }
   var s = 0;
   while s <= stacks {
-    var phi = math.PI * s / stacks;
+    var phi = math.PI * (s as Float64) / (stacks as Float64);
     var sp = math.sin(phi);
     var cp = math.cos(phi);
     var sl = 0;
     while sl <= slices {
-      var theta = 2.0 * math.PI * sl / slices;
+      var theta = 2.0 * math.PI * (sl as Float64) / (slices as Float64);
       var v = Vec[Float64].new();
       v.push(radius * sp * math.cos(theta));
       v.push(radius * cp);

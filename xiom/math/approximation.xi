@@ -152,8 +152,8 @@ pub fn trigonometric_approx(x: &Vec[Float64], y: &Vec[Float64], harmonics: Int) 
     var t = 0;
     while t < n {
       var theta = 2.0 * 3.141592653589793 * (t as Float64) / (n as Float64);
-      a = a + y[t] * math.cos(h * theta);
-      b = b + y[t] * math.sin(h * theta);
+      a = a + y[t] * math.cos((h as Float64) * theta);
+      b = b + y[t] * math.sin((h as Float64) * theta);
       t = t + 1;
     }
     out.push(2.0 * a / (n as Float64));
@@ -369,7 +369,7 @@ pub fn remez(f: fn(Float64) -> Float64, a: Float64, b: Float64, degree: Int) -> 
   var ref_pts = Vec[Float64].new();
   var i = 0;
   while i < n {
-    var theta = 3.141592653589793 * (degree + 1 - i + 0.5) / (n as Float64);
+    var theta = 3.141592653589793 * ((degree + 1 - i) as Float64 + 0.5) / (n as Float64);
     var t = math.cos(theta);
     ref_pts.push(0.5 * (a + b) + 0.5 * (b - a) * t);
     i = i + 1;
@@ -603,8 +603,8 @@ fn _taylor_coeff(f: fn(Float64) -> Float64, x0: Float64, k: Int) -> Float64 {
   while i <= k {
     var sign = 1.0;
     if (k - i) % 2 == 1 { sign = -1.0; }
-    var x = x0 + (k - 2 * i) * h;
-    sum = sum + sign * _binom(k, i) * f(x);
+    var x = x0 + ((k - 2 * i) as Float64) * h;
+    sum = sum + sign * (_binom(k, i) as Float64) * f(x);
     i = i + 1;
   }
   var denom = math.pow(2.0 * h, k as Float64);

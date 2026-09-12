@@ -35,7 +35,9 @@ pub type AtomicInt = { ptr: *Int; }
 pub fn atomic_int_new(init: Int) -> AtomicInt {
   let p = alloc.alloc(8);
   unsafe { ptr.write(p as *Int, init); }
-  return AtomicInt{ ptr: p as *Int; }
+  unsafe {
+    return AtomicInt{ ptr: p as *Int; }
+  }
 }
 
 /// Atomically read the current value.
@@ -132,7 +134,9 @@ pub fn atomic_bool_new(init: Bool) -> AtomicBool {
   let p = alloc.alloc(8);
   let iv: Int = if init { 1 } else { 0 };
   unsafe { ptr.write(p as *Int, iv); }
-  return AtomicBool{ ptr: p as *Int; }
+  unsafe {
+    return AtomicBool{ ptr: p as *Int; }
+  }
 }
 
 /// Atomically read the current value.
@@ -173,7 +177,9 @@ pub type AtomicPtr = { ptr: *Int; }
 pub fn atomic_ptr_new[T](ptr: Int) -> AtomicPtr {
   let p = alloc.alloc(8);
   unsafe { ptr.write(p as *Int, ptr); }
-  return AtomicPtr{ ptr: p as *Int; }
+  unsafe {
+    return AtomicPtr{ ptr: p as *Int; }
+  }
 }
 
 /// Atomically read the current address.

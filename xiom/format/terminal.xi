@@ -403,7 +403,7 @@ fn _word_at(s: Str, n: Int) -> Int {
     if b == 32 {
       if word.len() > 0 {
         if idx == n {
-          var parsed = convert.str_to_int(word);
+          var parsed = string.str_to_int(word);
           match parsed {
             Ok(v) => { return v; };
             Err(_) => { return 0; };
@@ -419,7 +419,7 @@ fn _word_at(s: Str, n: Int) -> Int {
   }
   if word.len() > 0 {
     if idx == n {
-      var parsed2 = convert.str_to_int(word);
+      var parsed2 = string.str_to_int(word);
       match parsed2 {
         Ok(v) => { return v; };
         Err(_) => { return 0; };

@@ -519,7 +519,7 @@ fn _sort_asc(v: &mut Vec[Float64]) {
 // Value at risk at confidence alpha: method 0 = historical quantile,
 // method 1 = parametric (normal) quantile. Returns a positive loss.
 // Complexity: O(n log n) historical / O(n) parametric.
-pub fn var(returns: &Vec[Float64], alpha: Float64, method: Int) -> Float64 {
+pub fn value_at_risk(returns: &Vec[Float64], alpha: Float64, method: Int) -> Float64 {
   var n = returns.len();
   if n == 0 { return 0.0 / 0.0; }
   if alpha <= 0.0 || alpha >= 1.0 { return 0.0 / 0.0; }

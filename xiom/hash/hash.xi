@@ -341,7 +341,9 @@ pub fn xxhash32(data: &Vec[UInt8], seed: Int) -> Int {
 /// DJB2 string hash (Dan Bernstein).
 /// Start with 5381, for each char: hash = hash * 33 + char_code.
 /// Complexity: O(n), n = string length.
-pub fn djb2(s: Str) -> Int {
+pub fn djb2(s: Str) -> Int
+  requires: true  // extern char_at call in the loop (T002 confinement)
+{
   var hash: Int = 5381;
   var i: Int = 0;
   let len = s.len();
@@ -359,7 +361,9 @@ pub fn djb2(s: Str) -> Int {
 /// SDBM string hash.
 /// For each char: hash = char_code + (hash << 6) + (hash << 16) - hash.
 /// Complexity: O(n), n = string length.
-pub fn sdbm(s: Str) -> Int {
+pub fn sdbm(s: Str) -> Int
+  requires: true  // extern char_at call in the loop (T002 confinement)
+{
   var hash: Int = 0;
   var i: Int = 0;
   let len = s.len();

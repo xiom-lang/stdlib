@@ -126,7 +126,7 @@ fn _sin_taylor(x: Float64) -> Float64 {
   var term = x;
   var i = 1;
   while i <= 10 {
-    term = -term * x * x / ((2 * i) * (2 * i + 1) as Float64);
+    term = -term * x * x / (((2 * i) * (2 * i + 1)) as Float64);
     result = result + term;
     i = i + 1;
   }
@@ -138,7 +138,7 @@ fn _cos_taylor(x: Float64) -> Float64 {
   var term = 1.0;
   var i = 1;
   while i <= 10 {
-    term = -term * x * x / ((2 * i - 1) * (2 * i) as Float64);
+    term = -term * x * x / (((2 * i - 1) * (2 * i)) as Float64);
     result = result + term;
     i = i + 1;
   }

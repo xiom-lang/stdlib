@@ -256,7 +256,9 @@ fn soundex_map(c: Char) -> Int {
 // -- Soundex ------------------------------------------------------------------
 
 /// Compute the classic American Soundex code for a string (4 chars).
-pub fn soundex(code: Str) -> Str {
+pub fn soundex(code: Str) -> Str
+  requires: true  // extern char_at calls in the loops (T002 confinement)
+{
     let len = code.len();
     if len == 0 {
         return "0000";

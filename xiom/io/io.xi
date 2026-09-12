@@ -35,9 +35,9 @@ extern "C" {
   fn xiom_thread_sleep_ms(ms: Int);
   fn mkdir(path: *UInt8) -> Int32;
   fn chmod(path: *UInt8, mode: Int32) -> Int32;
-  fn xiom_stdin() -> *UInt8;
-  fn xiom_stdout() -> *UInt8;
-  fn xiom_stderr() -> *UInt8;
+  fn xiom_stdin() -> Int;
+  fn xiom_stdout() -> Int;
+  fn xiom_stderr() -> Int;
   fn xiom_get_argc() -> Int;
   fn xiom_get_argv(i: Int) -> *UInt8;
   fn opendir(path: *UInt8) -> *UInt8;
@@ -478,7 +478,9 @@ pub fn open(path: Str, mode: Str) -> Result[Int, IOError]
   if file == 0 {
     return Err(IOError{ message: "failed to open " + path, code: 4 });
   }
-  Ok(file as Int)
+  unsafe {
+    return Ok(file as Int);
+  }
 }
 
 /// Close a FILE* handle previously returned by io.open or the stdio
@@ -663,7 +665,7 @@ pub fn stdin_file() -> Int
   ensures: result != 0
 {
   unsafe {
-    return xiom_stdin() as Int;
+    return xiom_stdin();
   }
 }
 
@@ -673,7 +675,7 @@ pub fn stdout_file() -> Int
   ensures: result != 0
 {
   unsafe {
-    return xiom_stdout() as Int;
+    return xiom_stdout();
   }
 }
 
@@ -683,7 +685,7 @@ pub fn stderr_file() -> Int
   ensures: result != 0
 {
   unsafe {
-    return xiom_stderr() as Int;
+    return xiom_stderr();
   }
 }
 

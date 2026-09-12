@@ -161,28 +161,36 @@ fn _siphash_core(p: *UInt8, len: Int, k0: UInt64, k1: UInt64, c: Int, d: Int) ->
 }
 
 /// Canonical SipHash-2-4 over a byte buffer.
-pub fn siphash24(data: &Vec[UInt8], k0: UInt64, k1: UInt64) -> UInt64 {
+pub fn siphash24(data: &Vec[UInt8], k0: UInt64, k1: UInt64) -> UInt64
+  requires: true  // whole-body unsafe core call (T007)
+{
   unsafe {
     return _siphash_core(data.as_ptr(), data.len(), k0, k1, 2, 4);
   }
 }
 
 /// SipHash-1-3 (faster variant, same security level for MAC use cases).
-pub fn siphash13(data: &Vec[UInt8], k0: UInt64, k1: UInt64) -> UInt64 {
+pub fn siphash13(data: &Vec[UInt8], k0: UInt64, k1: UInt64) -> UInt64
+  requires: true  // whole-body unsafe core call (T007)
+{
   unsafe {
     return _siphash_core(data.as_ptr(), data.len(), k0, k1, 1, 3);
   }
 }
 
 /// SipHash-2-4 with a zero key (convenience; NOT secure -- use real keys).
-pub fn siphash24_zerokey(data: &Vec[UInt8]) -> UInt64 {
+pub fn siphash24_zerokey(data: &Vec[UInt8]) -> UInt64
+  requires: true  // whole-body unsafe core call (T007)
+{
   unsafe {
     return _siphash_core(data.as_ptr(), data.len(), 0, 0, 2, 4);
   }
 }
 
 /// SipHash-2-4 over a Str's bytes with an explicit key, zero copies.
-pub fn siphash24_str(s: Str, k0: UInt64, k1: UInt64) -> UInt64 {
+pub fn siphash24_str(s: Str, k0: UInt64, k1: UInt64) -> UInt64
+  requires: true  // whole-body unsafe core call (T007)
+{
   unsafe {
     return _siphash_core(s as *UInt8, s.len(), k0, k1, 2, 4);
   }
@@ -232,7 +240,10 @@ fn _sip_ensure_keys() {
     _sip_k0 = _u64_from_bytes(kb, 0);
     _sip_k1 = _u64_from_bytes(kb, 8);
   } else {
-    let secs = time(0);
+    var secs: Int = 0;
+    unsafe {
+      secs = time(0);
+    }
     let s64 = secs as UInt64;
     _sip_k0 = s64 * 0x5851F42D4C957F2D;
     _sip_k1 = (s64 ^ 0x2545F4914F6CDD1D) * 0x5851F42D4C957F2D;

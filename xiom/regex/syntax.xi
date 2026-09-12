@@ -45,7 +45,7 @@ pub fn regex_escape(s: Str) -> Str {
   var i: Int = 0;
   let p_len = s.len();
   while i < p_len {
-    let c = s.char_at(i).unwrap();
+    let c = s.char_at(i);
     if is_metachar(c) {
       result = string.str_concat(result, "\\");
     };
@@ -106,7 +106,7 @@ pub fn regex_parse(pattern: Str) -> Result[Ast, Str] {
   var i: Int = 0;
   let p_len = pattern.len();
   while i < p_len {
-    let c = pattern.char_at(i).unwrap();
+    let c = pattern.char_at(i);
     if c == '[' {
       classes = classes + 1;
       let end = class_end_index(pattern, i);
@@ -134,7 +134,7 @@ pub fn regex_parse(pattern: Str) -> Result[Ast, Str] {
 fn class_end_index(pattern: Str, start: Int) -> Int {
   var pos = start + 1;
   while pos < pattern.len() {
-    let pc = pattern.char_at(pos).unwrap();
+    let pc = pattern.char_at(pos);
     if pc == ']' {
       return pos + 1;
     };

@@ -161,6 +161,7 @@ fn _json_parse_object(s: Str, pos: &mut Int) -> Result[JsonValue, Str] {
       return Err("json_parse: expected '}' or ','");
     }
   }
+  return Err("json_parse: unexpected end of object");
 }
 
 fn _json_parse_array(s: Str, pos: &mut Int) -> Result[JsonValue, Str] {
@@ -195,6 +196,7 @@ fn _json_parse_array(s: Str, pos: &mut Int) -> Result[JsonValue, Str] {
       return Err("json_parse: expected ']' or ','");
     }
   }
+  return Err("json_parse: unexpected end of array");
 }
 
 fn _json_parse_string_val(s: Str, pos: &mut Int) -> Result[JsonValue, Str] {

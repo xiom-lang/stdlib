@@ -238,7 +238,7 @@ pub fn ant_colony(cost: fn(&Vec[Int]) -> Float64, n_nodes: Int, iters: Int) -> V
       var c = 0;
       while c < n_nodes {
         if !used[c] {
-          var score = pheromone + (best_tour[step - 1] == c) as Float64 * 0.0 + 1.0;
+          var score = pheromone + 1.0;
           var r = math.random();
           score = score + r;
           if score > best_score {

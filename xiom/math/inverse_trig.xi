@@ -73,19 +73,25 @@ pub fn atan_pure(x: Float64) -> Float64 {
 
 // Four-quadrant arctangent of y/x with the result in radians. Alias of atan2.
 // Complexity: O(1).
-pub fn atan2_radians(y: Float64, x: Float64) -> Float64 {
+pub fn atan2_radians(y: Float64, x: Float64) -> Float64
+  requires: true  // extern atan2 call (T002 confinement)
+{
   return atan2(y, x);
 }
 
 // Four-quadrant arctangent of y/x with the result in degrees. Complexity:
 // O(1).
-pub fn atan2_degrees(y: Float64, x: Float64) -> Float64 {
+pub fn atan2_degrees(y: Float64, x: Float64) -> Float64
+  requires: true  // extern atan2 call (T002 confinement)
+{
   var r = atan2(y, x);
   var pi = math.constants.PI;
   return r * 180.0 / pi;
 }
 
 // Angle of the vector (x, y) in radians: alias of atan2. Complexity: O(1).
-pub fn arg(y: Float64, x: Float64) -> Float64 {
+pub fn arg(y: Float64, x: Float64) -> Float64
+  requires: true  // extern atan2 call (T002 confinement)
+{
   return atan2(y, x);
 }

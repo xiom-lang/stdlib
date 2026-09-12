@@ -893,7 +893,9 @@ pub fn hex_to_int(s: Str) -> Option[Int] {
 
 /// Encodes a string to Base64 by first converting to UTF-8 bytes.
 /// Complexity: O(n), n = string length.
-pub fn base64_encode_str(s: Str) -> Str {
+pub fn base64_encode_str(s: Str) -> Str
+  requires: true  // extern char_at call in the loop (T002 confinement)
+{
   var bytes = Vec[UInt8].new();
   var i: Int = 0;
   let slen = s.len();

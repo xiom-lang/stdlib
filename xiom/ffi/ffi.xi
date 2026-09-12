@@ -72,7 +72,7 @@ pub fn safe_ptr_from_raw(ptr: *UInt8, size: Int) -> Result[SafePtr, Str]
 /// Free an owned SafePtr. No-op for non-owned pointers.
 pub fn safe_ptr_free(ptr: SafePtr) {
   if ptr.owned && ptr.ptr != null {
-    free(ptr.ptr);
+    unsafe { free(ptr.ptr); }
   }
 }
 
@@ -501,8 +501,10 @@ pub fn ffi_check_ptr(ptr: *UInt8, msg: Str) -> Result[*UInt8, FFIError]
   requires: true
 {
   unsafe {
-    if ptr == null { Err(FFIError { code: -1; message: msg }) }
-    else { Ok(ptr) }
+    if ptr == null {
+      return Err(FFIError { code: -1; message: msg });
+    }
+    return Ok(ptr);
   }
 }
 

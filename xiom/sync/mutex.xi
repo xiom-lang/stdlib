@@ -95,7 +95,10 @@ pub fn mutex_is_locked(m: &SyncMutex) -> Bool {
 /// Returns: the address of the atomic owner flag as an integer.
 /// Complexity: O(1). Frees the flag storage.
 pub fn mutex_into_inner(m: &mut SyncMutex) -> Int {
-  let handle = m.locked as Int;
+  var handle: Int = 0;
+  unsafe {
+    handle = m.locked as Int;
+  }
   unsafe { alloc.dealloc(m.locked as *UInt8, 8); }
   return handle;
 }

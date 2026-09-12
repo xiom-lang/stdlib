@@ -55,7 +55,9 @@ fn copy_c_string(p: *UInt8) -> Str
 
 /// All arguments as freshly-owned strings. Index 0 is conventionally the
 /// program name when the host provides one. Complexity: O(total bytes).
-pub fn args_raw() -> Vec[Str] {
+pub fn args_raw() -> Vec[Str]
+  requires: true  // extern argc/argv calls below (T002 confinement)
+{
   var result = Vec[Str].new();
   let argc = xiom_get_argc();
   var i = 0;

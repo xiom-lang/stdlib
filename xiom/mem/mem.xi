@@ -7,6 +7,7 @@ module xiom.mem
 use xiom.ptr;
 
 pub fn swap[T](a: &mut T, b: &mut T)
+  requires: true  // whole-body unsafe pointer swap (T007)
   ensures: a == b@pre && b == a@pre
 {
   unsafe {
@@ -107,25 +108,41 @@ extern "C" {
 /// dst and src must point to valid, non-overlapping buffers of at least n bytes
 /// (use mem_move for overlapping regions).
 /// Returns dst. Complexity: O(n), SIMD-vectorized.
-pub fn mem_copy(dst: *UInt8, src: *UInt8, n: UInt) -> *UInt8 {
-  xiom_asm_memcpy(dst, src, n)
+pub fn mem_copy(dst: *UInt8, src: *UInt8, n: UInt) -> *UInt8
+  requires: true  // raw-pointer return is the allocator-style escape hatch (T003/T007)
+{
+  unsafe {
+    return xiom_asm_memcpy(dst, src, n);
+  }
 }
 
 /// Fill n bytes at s with byte value c using the accelerated runtime memset.
 /// Returns s. Complexity: O(n), SIMD-vectorized.
-pub fn mem_set(s: *UInt8, c: Int32, n: UInt) -> *UInt8 {
-  xiom_asm_memset(s, c, n)
+pub fn mem_set(s: *UInt8, c: Int32, n: UInt) -> *UInt8
+  requires: true  // raw-pointer return is the allocator-style escape hatch (T003/T007)
+{
+  unsafe {
+    return xiom_asm_memset(s, c, n);
+  }
 }
 
 /// Compare two byte buffers of length n (lexicographic byte order).
 /// Returns 0 if equal, <0 if a < b, >0 if a > b.
 /// Complexity: O(n), SIMD-vectorized.
-pub fn mem_compare(a: *UInt8, b: *UInt8, n: UInt) -> Int32 {
-  xiom_asm_memcmp(a, b, n)
+pub fn mem_compare(a: *UInt8, b: *UInt8, n: UInt) -> Int32
+  requires: true  // extern memcmp call confined below (T002)
+{
+  unsafe {
+    return xiom_asm_memcmp(a, b, n);
+  }
 }
 
 /// Copy bytes between possibly-overlapping regions safely.
 /// Uses the runtime memmove semantics (handles overlap).
-pub fn mem_move(dst: *UInt8, src: *UInt8, n: UInt) -> *UInt8 {
-  xiom_asm_memcpy(dst, src, n)
+pub fn mem_move(dst: *UInt8, src: *UInt8, n: UInt) -> *UInt8
+  requires: true  // raw-pointer return is the allocator-style escape hatch (T003/T007)
+{
+  unsafe {
+    return xiom_asm_memcpy(dst, src, n);
+  }
 }

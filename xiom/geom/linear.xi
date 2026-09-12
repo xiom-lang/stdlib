@@ -608,7 +608,7 @@ pub fn matrix_exponential(m: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {
   var term = result;
   var k = 1;
   while k <= 60 {
-    var inv = 1.0 / k;
+    var inv = 1.0 / (k as Float64);
     var nt = _mat_mul(&mc, &term);
     term = nt;
     var tc = Vec[Vec[Float64]].new();
@@ -690,7 +690,7 @@ pub fn matrix_logarithm(m: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {
   while k <= 50 {
     var sign = 1.0;
     if (k + 1) % 2 == 0 { sign = -1.0; }
-    var inv = sign / k;
+    var inv = sign / (k as Float64);
     var i2 = 0;
     while i2 < n {
       var j2 = 0;
