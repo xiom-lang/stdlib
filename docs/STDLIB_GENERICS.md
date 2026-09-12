@@ -128,7 +128,7 @@ net        | CONCRETE     | Wire protocols over Str/bytes: socket/http/websocket
 num        | CONCRETE     | Per-width tower `i64_*`/`u64_*`/`i128_*`/`fraction_*` verified (num.xi); bigint/bigfloat structs; Bounded interface declare-only | min_value[T: Bounded] etc. are non-dispatching wrappers - keep | bigfloat Float64 FIELDS fine; `bigfloat_to_float128` blocked by BUG 13 (fp128 link)
 os         | CONCRETE     | fd Int syscalls via FFI; path/env/fs/proc | none | termios stubs concrete
 rand       | CONCRETE     | UInt64 state; mt19937/pcg/chacha | none | -
-reflect    | GENERIC stubs| typeinfo.xi/fields.xi declare `[T]` phantom generics | FLAGGED: type_name/type_id/variant_count/field_offset need type-metadata intrinsics that do not exist (only size_of[T]/align_of[T] proven via memory/mem.xi) - keep comment-only | -
+reflect    | GENERIC stubs| typeinfo.xi/fields.xi declare `[T]` phantom generics | FLAGGED: type_name/type_id/variant_count/field_offset need type-metadata intrinsics that do not exist (only size_of[T]/align_of[T] proven via mem/mem.xi) - keep comment-only | -
 regex      | CONCRETE     | Str patterns; engine/pcre_lite/syntax | none | -
 search     | GENERIC      | `[T: Eq]`/`[T: Ord]` verified (search.xi); binary_by/linear_by `[T]` comparator stubs match | comparator/pred fns must be named | interpolation_search stays `&Vec[Int]` concrete (arithmetic on values)
 serialize  | MIXED        | Serialize/Deserialize interfaces declare-only; JsonValue/varint/endian/yaml_lite concrete | to_json[T: Serialize]/from_json[T: Deserialize] wrappers non-dispatching (section 12) - keep concrete json_* fns | -
@@ -214,7 +214,7 @@ Sublibs that declare `[T` stub signatures, verified against the policy above.
       only Vec/Slice as_slice is proven. Keep comment-only. Compiler feature.
   reflect/typeinfo.xi                      type_name[T]/type_id[T]/
       type_variant_count[T]/type_is_*[T]: no type-metadata intrinsic exists
-      (only size_of[T]/align_of[T] proven via memory/mem.xi). Keep comment-only.
+      (only size_of[T]/align_of[T] proven via mem/mem.xi). Keep comment-only.
       Compiler feature.
   reflect/fields.xi                        field_count[T]/field_name[T]/
       field_offset[T]/field_value[T](&T, i): field-reflection intrinsic does

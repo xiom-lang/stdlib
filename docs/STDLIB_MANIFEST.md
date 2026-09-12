@@ -308,10 +308,10 @@ Generated from the frozen layout (9aa95d35). Module -> file mapping for all 512 
 | xiom.math.trigonometric_constants | stdlib/xiom/math/trigonometric_constants.xi |
 | xiom.math.trigonometry | stdlib/xiom/math/trigonometry.xi |
 | xiom.math.vectors | stdlib/xiom/math/vectors.xi |
-| xiom.alloc | stdlib/xiom/memory/alloc.xi |
-| xiom.cell | stdlib/xiom/memory/cell.xi |
-| xiom.mem | stdlib/xiom/memory/mem.xi |
-| xiom.ptr | stdlib/xiom/memory/ptr.xi |
+| xiom.alloc | stdlib/xiom/alloc/alloc.xi |
+| xiom.cell | stdlib/xiom/cell/cell.xi |
+| xiom.mem | stdlib/xiom/mem/mem.xi |
+| xiom.ptr | stdlib/xiom/ptr/ptr.xi |
 | xiom.rc | stdlib/xiom/memory/rc.xi |
 | xiom.misc.glob | stdlib/xiom/misc/glob.xi |
 | xiom.misc.levenshtein | stdlib/xiom/misc/levenshtein.xi |
