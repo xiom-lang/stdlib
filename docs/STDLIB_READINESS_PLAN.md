@@ -154,10 +154,11 @@ T1/T2 yields.
 
 ## 8. Definition of production-ready (gate)
 
-- [x] Zero known-cluster regressions; sweep green except catalogued compiler
-      bugs -- r20 903/937; r29 sweep in flight (~875/933 at audit); R5/R6,
-      CRT (slice/core_box/regex_find), KDF (pbkdf2 x2) verified flipped;
-      remaining red catalogued (R7, regex_match_count, math_edge)
+- [x] Zero known-cluster regressions -- DEFINITIVE all-green 2026-09-12:
+      r33 sweep on committed compiler HEAD b8e2fa43 = 935 files,
+      935 PASS / 0 RUNFAIL / 0 COMPILEFAIL (includes smoke_serialize_csv).
+      History: r20 903/937; r29 916/935; r32 927/934 with three compiler
+      WIP regressions (R11/R12/R13) which b8e2fa43 superseded and closed.
 - [x] KAT corpus committed and passing for encodings/UTF-8/hashes/MACs/AEAD/
       parsers -- 15 files, ALL un-gated as of 2026-09-10 (kdf + json last)
 - [x] CSPRNG bound to OS entropy with documented reseed policy -- flip
@@ -248,11 +249,14 @@ T1/T2 yields.
 12. ~~R7 (generic container mono truncates large V)~~ FIXED 2026-09-11
     (882ee321): json nested + large_json + Map[K,bigV] verified green.
 13. ~~R8 (char_at contract codegen)~~ FIXED 2026-09-11 (20aa3d07):
-    char_at in-range ensures RESTORED and verified; open residue =
-    R8 follow-up (method `.trim()` on Str params) + R10
-    (Vec[Option[struct]] element AV).
-12b. R9 (full-path calls without import) + R8-followup + R10 pending on
-    the compiler lane; captures_get stays red until R10 lands.
+    char_at in-range ensures RESTORED and verified; R8 follow-up
+    (method `.trim()` on Str params) + R10 (Vec[Option[struct]]
+    element AV) also FIXED and verified on r32 (029bdb77).
+12b. ~~R9 (full-path calls without import)~~ latent only: stdlib shims
+    all import their targets and the shipping corpus is clean; the
+    compiler lane is on it (tests/regression/m70_full_path_shim_delegation.xi
+    in flight). R11/R12/R13 (r31/r32 WIP regressions) CLOSED by
+    b8e2fa43; r33 all-green.
 14. memops string fast-path re-land (Str-cast chained concat) -> completes
     gate #4.
 15. Stage-5 coupling: fuzz targets, api_freeze manifest path sync,

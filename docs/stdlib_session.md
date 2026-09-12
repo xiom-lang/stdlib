@@ -8,20 +8,16 @@ and edits `stdlib/runtime/` occasionally; its uncommitted crates changes
 can appear in the shared tree at any time -- NEVER `git add -A`; stage
 explicit paths only. Branch: `feat/architect`.
 
-State (verified 2026-09-12 evening; r32 isolated build = clean HEAD 51c81efd):
-- r32 full sweep: 934 files -> 927 PASS / 3 RUNFAIL / 4 COMPILEFAIL.
-  Every previously catalogued defect is CLOSED (18 flips vs r29 incl.
-  math_edge, regex family, ptr_offset, array_zip, captures_get, json
-  nested, io copy family; smoke_error2 green this round). The 7 reds are
-  THREE NEW compiler regressions entering between the r30 and r31 builds,
-  all logged with minimal probes (COMPILER_BUGS.md R11/R12/R13):
-    R11 iter .filter() returns empty (smoke_iter_pipeline / _filter /
-        _chained_adapters; probe p_iter_filter_r32)
-    R12 tower Int.to_float wrapper self-calls with a ptr self
-        (smoke_convert_traits; probe p_ct_tower2)
-    R13 Tuple__Int__Int vs Tuple__UInt64__UInt64 identity split
-        (smoke_hash_farm / _spooky / _t1ha_metro; probe p_hash_tuple)
-  Prime suspect window: Stage 2c slices 3/4 + Stage 3 Item A.
+State (verified 2026-09-12 evening; r33 isolated build = committed HEAD
+b8e2fa43, after the compiler lane's Stage 3 Item A step 1):
+- r33 full sweep: 935 files -> 935 PASS / 0 RUNFAIL / 0 COMPILEFAIL --
+  the first all-green corpus (includes the new smoke_serialize_csv).
+  The r32 sweep's 7 reds (934 files -> 927 PASS) were all three
+  regressions from the compiler lane's superseded Item-A phase-1 WIP:
+  R11 iter .filter() empty, R12 tower Int.to_float ptr-self wrapper,
+  R13 Tuple__Int__Int vs Tuple__UInt64__UInt64 split. They are CLOSED
+  by b8e2fa43 (probes p_iter_filter_r32 / p_ct_tower2 / p_hash_tuple all
+  green on r33; COMPILER_BUGS.md carries the verification note).
 - Stdlib deliverables THIS session (all committed, newest first):
   xiom.serialize.csv RFC 4180 + smoke (e398df2f); endian trio dedup shim
   (9616b72f); contract wave 1 -- 40 clauses, io 38.9%/string 17.1%,
@@ -31,10 +27,10 @@ State (verified 2026-09-12 evening; r32 isolated build = clean HEAD 51c81efd):
   (0dc8d90a + 8ea8e324); R11/R12/R13 compiler log (0dc8d90a).
 
 NEXT QUEUE (ordered):
-1. Compiler lane: R11/R12/R13 (r31/r32 regressions) -- re-verify the
-   preserved probes once a fix round lands; the corpus goes to 934/934
-   when they do. Probes live in stdlib_ws\probes (p_iter_filter_r32,
-   p_ct_tower2, p_hash_tuple + the sweep32 CSVs).
+1. ~~Compiler lane: R11/R12/R13~~ DONE: fixed by b8e2fa43, verified on
+   r33 (935/935). Next compiler-lane interplay: their in-flight R9 work
+   (tests/regression/m70_full_path_shim_delegation.xi) -- re-sweep when
+   it commits.
 2. Namespace wave 2: memory quartet memory/{alloc,cell,mem,ptr}.xi ->
    {alloc,cell,mem,ptr}/ (rc-move pattern; deferred from wave 1).
 3. Contract wave 2: collect/ container family (2.0% pub coverage) and
@@ -57,8 +53,11 @@ Environment & tooling:
   from-scratch build (~10 min); reuse per round.
 - r32 binary provenance: target_r32 = the clean-HEAD artifact copied from
   target_r31 (built 2026-09-12 14:19, before the compiler lane's
-  uncommitted Stage-3 WIP edit at 14:27), so the baseline excludes their
-  in-flight work. Rebuild only after their fixes are committed.
+  uncommitted Stage-3 WIP edit at 14:27), so the r32 baseline excludes
+  their in-flight work. r33 = fresh isolated build of committed HEAD
+  b8e2fa43 (Item-A step 1) and is the current all-green baseline; the
+  r33 sweep tooling is sweep_worker33/launch_sweep33/triage_sweep33 +
+  stdlib_ws\sweep33 CSVs.
 - Coverage ratchet (gate #7): stdlib_ws\coverage_scan.ps1
   [-Detail] [-DumpFloors coverage_floors32.json] [-RatchetFile ...];
   per-top-level-dir pub-coverage floors; positive + negative runs
@@ -1009,7 +1008,13 @@ All six ordered items executed; commits are listed per item.
    round-trips), green first run. TOML/tzdata/async-stress/TLS remain
    the capability queue.
 
-Next: re-verify R11/R12/R13 probes when the compiler lane's fix round
-lands, then a fresh r33 sweep; namespace wave 2 (memory quartet);
-contract wave 2 (collect containers); dedup next units; TOML.
+**Post-queue r33 verification (compiler b8e2fa43).** The compiler lane's
+committed Stage 3 Item A step 1 superseded the phase-1 WIP that caused
+R11/R12/R13: all three probes are green on a fresh r33 build and the full
+935-file sweep is **935 PASS / 0 RUNFAIL / 0 COMPILEFAIL** -- the
+definitive all-green baseline (sweep33 CSVs preserved).
+
+Next: namespace wave 2 (memory quartet); contract wave 2 (collect
+containers); dedup next units (base32/ascii85/percent/punycode, ip4/ip6
+translation); TOML; re-sweep when the compiler lane's R9 work commits.
 
