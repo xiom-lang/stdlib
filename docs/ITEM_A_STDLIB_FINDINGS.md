@@ -1,30 +1,57 @@
 # Report to the STDLIB session -- Stage 3 Item A step 2 (compiler-lane triage)
 
 From: compiler lane. To: stdlib session.
-Status: all compiler-side artifacts fixed; **all remaining catalog-corpus
-findings are stdlib-side**. The gate flips warnings -> hard errors once the
-corpus is clean, so these must reach zero as well.
+Status: all compiler-side artifacts fixed; **corpus at 0 findings, 0 hard
+errors, 1 parse error** (2026-09-12, after the stdlib lane's fixes). One item
+left: `xiom.time:232` `<=>` in `ensures:` (section P). The moment it lands,
+`CatalogCorpusReport::is_clean()` is true and the compiler lane flips the
+catalog findings to hard errors.
 
 ## TL;DR (paste-ready)
 
-> Compiler lane finished the Item A triage. Corpus 779 -> 237 findings, all
-> remaining ones are stdlib. Groups: (1) D2.1 unsafe confinement -- extern
-> calls and casts outside `unsafe` in fns without `requires` (~60 sites; the
-> `time`/`xiom_char_at`/`sqrt` families dominate); (2) T003 raw-pointer
-> returns from safe fns (7); (3) T007 whole-body unsafe without `requires`
-> (8); (4) T006 unconverted extern pointers (3); (5) numeric mixing
-> Int/Float (~30); (6) missing-return/tail-type mismatches (9); (7)
-> individual call/type bugs (`capacity()`, `char_at().unwrap()`,
-> `'GBP'` char literals, `_pi` typo, `from_char`/`str_to_int` qualifiers,
-> Int128 `.hi`, Slice shape, Hash interface arity). Full per-site list:
-> docs/ITEM_A_STDLIB_FINDINGS.md. Re-measure with
+> Excellent work -- the corpus is at **0 findings, 0 hard errors**. Every
+> unsafe/numeric/extern/type item is cleared. ONE item left before the flip:
+> `xiom.time:232` uses `<=>` in `ensures:` (not an operator -- use `==`).
+> After that, `is_clean()` holds and the compiler lane flips catalog findings
+> to HARD errors + un-ignores the corpus gate. Re-measure with
 > `cargo test -p xiom-check catalog_corpus_is_clean -- --ignored
-> --nocapture` and `$env:XIOM_CATALOG_DUMP='1'` for every site.
+> --nocapture`.
 
-Measurement: **237 findings, 0 hard errors** (count moves while both lanes
-work; compiler-lane freeze commit 843a5a88 measured 235). Nothing below is a
+Measurement: live, both lanes; 0 findings at the last compiler check. The
+sections below are retained as history/context for the classes that were
+fixed and for the compiler-side items (section D). Nothing below is a
 compiler artifact -- if a fix looks wrong, ping the compiler lane in chat
 before working around it.
+
+## P. Catalog parse diagnostics -- HARD ERRORS once the flip lands (D1)
+
+STATUS: fixed except `xiom.time:232`. At the last check the gate reported:
+`PARSE 232:29: catalog parse [xiom.time]: expected identifier, found '>'`.
+Everything else in the table below is history (kept for context).
+
+The parser recovers from syntax errors by returning a partial AST; before
+D1 those diagnostics were discarded and whole declarations silently vanished
+(downstream `undefined variable` cascades were the only symptom). The gate
+now records and prints them and treats them as hard errors. Sites at the
+original measurement (line numbers move with stdlib edits -- use the gate):
+
+| Module:line | Diagnostic | Likely cause / fix |
+|---|---|---|
+| `xiom.char:211` | `expected identifier, found ''` | `'GBP'` multi-char literal (line 211); use `'G'` etc. or a `Str` compare |
+| `xiom.char:213`, `:222` | `expected declaration, found '}'` | cascades of the two bad literals (211 and 220 `'+/-'`); fixing the literals clears all four |
+| `xiom.collections:1749` (now 1753) | `expected declaration, found 'result'` | stray `result` + extra `}` after the fn's `return result;` |
+| `xiom.convert.ascii85:212` | `expected declaration, found '}'` | stray closing brace (removed `unsafe` block left its `}`) |
+| `xiom.convert.base64:210` | same | same |
+| `xiom.convert.base64url:177` | same | same (verified: fn closes at 176, 177 is extra) |
+| `xiom.encoding.idna:320`, `:372` | same | same |
+| `xiom.sync:76` | same | same (fn closes at 75, 76 extra; verified) |
+| `xiom.test.assert:152` | same | same |
+| `xiom.math.finance:522` | `'var' is a reserved keyword` | `pub fn var(...)` -- rename (e.g. `value_at_risk`) |
+| `xiom.path:209` | `expected declaration, found 'path'` | `ensures: result is Ok => canonical path without . or .. components` is English prose, not an expression; replace with a boolean condition (e.g. `result.is_ok`) |
+| `xiom.time:226` (now 232) | `expected identifier, found '>'` | `ensures: result.is_ok <=> self.secs >= earlier.secs` -- `<=>` is NOT an XIOM operator (no spec/test/doc usage; the parser reads `<=` then chokes on `>`). STDLIB-OWNED one-line fix: `ensures: result.is_ok == (self.secs >= earlier.secs)` |
+
+The `xiom.char` undefined-variable findings from the earlier report are
+SUPERSEDED by these parse errors; nothing else needs to change there.
 
 ## A. Unsafe confinement (D2.1)
 
@@ -134,7 +161,7 @@ Fix: explicit `as` (`Int as Float64` / narrowing casts).
 | `xiom.math.special:100` | `_pi` undefined -- module declares `_PI` (line 25) | case typo |
 | `xiom.log:70` | `convert.int_to_string` without `use xiom.convert;` | add the import |
 | `xiom.format.terminal:406, 422` | `convert.str_to_int` (`str_to_int` is in xiom.string) | fix qualifier |
-| `xiom.hash:104, 113` | `value.hash()` with `T: Hash`: the module's local hasher-based `Hash` declares `hash(self, hasher)` | unify/rename the hasher interface (the code comment already flags it) |
+| `xiom.hash:104, 113` | `value.hash()` with `T: Hash`: same-name `Hash` interfaces with different arities | FIXED COMPILER-SIDE (D5c: any same-name declaration whose arity fits is accepted) -- no stdlib change needed |
 | `xiom.serialize.yaml_lite` | non-exhaustive match (`Scalar`/`Sequence`/`Mapping`), spans 0:0 | cover variants (compiler-side D2 tracks the span) |
 
 Missing-return / tail-type mismatches (arm yields `()`):
@@ -153,26 +180,29 @@ Regex cascade: once the `.unwrap()` sites are fixed, the seven
 
 ## D. Compiler-side items (do NOT fix in stdlib)
 
-Tracked in COMPILER_BUGS.md; listed here so the stdlib session knows these
-findings are NOT theirs:
+Status after the D1/D2/D4/D5 slice:
 
-- **D1** catalog parse errors are swallowed: invalid `'GBP'` literals lose
-  `is_currency`/`is_math_symbol` silently. Compiler will persist parse
-  diagnostics on `CachedModule`.
-- **D2** non-exhaustive-match spans are `0:0` (yaml_lite).
-- **D3** `xiom.path:204` -- checker bound `e: Str` for
-  `Result[Metadata, IOError]` (`Err(e) => e.message`); suspected
-  registration-order artifact. `xiom.path:262` (`is_empty`) is the
-  cross-module bare-name collision (argument-aware resolution queued).
-- **D4** `xiom.iter:261, 266, 308, 328, 333, 338, 413, 433, 438, 476, 506,
-  511, 516, 818, 875, 880, 885` -- generic struct-literal / higher-order
-  `fn(T) -> U` substitutions; suspected checker limitation, not stdlib.
-  If you keep the current generic designs, ping us and we will finish the
-  substitution pass.
-- **D5** same as D3 second item.
-- **D6** `ChainIter[T, U].next` returns `Option[U]` where `Option[T]` is
-  declared (`xiom.iter:413`) -- if the design is intentional, the compiler
-  needs a generic-relation rule; otherwise constrain `T == U`.
+- **D1 LANDED** -- catalog parse diagnostics are recorded and gate hard
+  errors (see section P). User-facing surfacing is staged for the flip.
+  **D1b LANDED** -- parser fix for tuple type args in generic struct literals
+  (`MapIter[(A, B), C]{...}`); the previously dropped
+  `EnumerateIter.map/take` declarations are live again.
+- **D2 LANDED** -- non-exhaustive match diagnostics now carry the match
+  span (was `0:0`). yaml_lite points at the match.
+- **D3 NOT REPRODUCING** -- `xiom.path:204` types `e: IOError` correctly at
+  HEAD (the free `metadata` wins the bare call). No action needed unless it
+  reappears in the gate.
+- **D4 LANDED** -- `(Fn, Fn)` structural compatibility: concrete closures
+  now fill generic fn-typed struct fields (`fn(T) -> U`). The `xiom.iter`
+  findings are gone.
+- **D5 LANDED** -- argument-aware bare-name selection: when the first-wins
+  global sig cannot accept the call, a compatible same-named pub fn is
+  selected from imported items / module surfaces. `xiom.path:262`
+  (`is_empty(str)`) is gone.
+- **D6 OPEN** -- `ChainIter[T, U].next` returns `Option[U]` from `second()`
+  where `Option[T]` is declared. If the stdlib keeps the design, the
+  compiler needs a generic-relation rule; otherwise constrain `T == U`.
+  This remains the only queued compiler-side item from this report.
 
 ## E. How to measure
 
@@ -182,6 +212,10 @@ cargo test -p xiom-check catalog_corpus_is_clean -- --ignored --nocapture
 $env:XIOM_CATALOG_DUMP='1'; cargo test -p xiom-check catalog_corpus_is_clean -- --ignored --nocapture
 ```
 
-The gate flips to hard errors when the report is clean; the compiler lane
-re-measures after each stdlib drop. Current measurement: 237 findings,
-0 hard errors, 0 other warnings.
+The gate flips to hard errors when the report is clean (`is_clean()` also
+requires the section-P parse list to be empty). The corpus is re-measured
+continuously by both lanes; run the command above for the live count. At the
+D1/D2/D4/D5 compiler freeze the top classes were mixed-numeric (~27),
+`regex.syntax` unwrap cascades (8), `unwrap` (5), the remaining extern/unsafe
+confinement sites, plus the 14 catalog parse errors in section P (hard,
+first priority).
