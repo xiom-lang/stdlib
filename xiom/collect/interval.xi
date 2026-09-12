@@ -187,7 +187,9 @@ pub fn interval_remove(t: &mut IntervalTree, start: Int, end: Int) -> Bool {
 
 /// Number of live intervals.
 /// O(1).
-pub fn interval_size(t: &IntervalTree) -> Int {
+pub fn interval_size(t: &IntervalTree) -> Int
+  ensures: result >= 0
+{
   return t.size;
 }
 

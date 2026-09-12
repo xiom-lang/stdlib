@@ -228,7 +228,9 @@ pub fn btree_insert(t: &mut BTree, key: Int, value: Int) {
 }
 
 /// Number of entries. O(1).
-pub fn btree_size(t: &BTree) -> Int {
+pub fn btree_size(t: &BTree) -> Int
+  ensures: result >= 0
+{
   return t.size;
 }
 

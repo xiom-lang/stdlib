@@ -206,7 +206,9 @@ pub fn int_map_remove(m: &mut IntMap, key: Int) -> Bool {
 
 /// Number of key/value pairs.
 /// O(1).
-pub fn int_map_size(m: &IntMap) -> Int {
+pub fn int_map_size(m: &IntMap) -> Int
+  ensures: result >= 0
+{
   return m.size;
 }
 
@@ -306,6 +308,8 @@ pub fn string_map_remove(m: &mut StringMap, key: Str) -> Bool {
 
 /// Number of key/value pairs.
 /// O(1).
-pub fn string_map_size(m: &StringMap) -> Int {
+pub fn string_map_size(m: &StringMap) -> Int
+  ensures: result >= 0
+{
   return m.keys.len();
 }

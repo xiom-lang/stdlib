@@ -239,6 +239,8 @@ pub fn segtree_query_max(t: &SegTree, l: Int, r: Int) -> Int {
 
 /// Number of slots in the tree.
 /// O(1).
-pub fn segtree_size(t: &SegTree) -> Int {
+pub fn segtree_size(t: &SegTree) -> Int
+  ensures: result >= 0
+{
   return t.n;
 }

@@ -87,7 +87,9 @@ pub fn dense_remove(s: &mut DenseSet, value: Int) {
 
 /// Number of elements in the set.
 /// O(1).
-pub fn dense_size(s: &DenseSet) -> Int {
+pub fn dense_size(s: &DenseSet) -> Int
+  ensures: result >= 0
+{
   return s.size;
 }
 

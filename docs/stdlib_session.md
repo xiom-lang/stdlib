@@ -8,60 +8,59 @@ and edits `stdlib/runtime/` occasionally; its uncommitted crates changes
 can appear in the shared tree at any time -- NEVER `git add -A`; stage
 explicit paths only. Branch: `feat/architect`.
 
-State (verified 2026-09-12 evening; r33 isolated build = committed HEAD
-b8e2fa43, after the compiler lane's Stage 3 Item A step 1):
-- r33 full sweep: 935 files -> 935 PASS / 0 RUNFAIL / 0 COMPILEFAIL --
-  the first all-green corpus (includes the new smoke_serialize_csv).
-  The r32 sweep's 7 reds (934 files -> 927 PASS) were all three
-  regressions from the compiler lane's superseded Item-A phase-1 WIP:
-  R11 iter .filter() empty, R12 tower Int.to_float ptr-self wrapper,
-  R13 Tuple__Int__Int vs Tuple__UInt64__UInt64 split. They are CLOSED
-  by b8e2fa43 (probes p_iter_filter_r32 / p_ct_tower2 / p_hash_tuple all
-  green on r33; COMPILER_BUGS.md carries the verification note).
-- Stdlib deliverables THIS session (all committed, newest first):
-  xiom.serialize.csv RFC 4180 + smoke (e398df2f); endian trio dedup shim
-  (9616b72f); contract wave 1 -- 40 clauses, io 38.9%/string 17.1%,
-  ratchet gate #7 (69a07b7e); namespace wave 1 -- 61 xiom.collect files
-  moved collections/->collect/ (0d63c6b0); legacy quarantine complete --
-  des/md5/sha under crypto/legacy/ with frozen names, manifest synced
-  (0dc8d90a + 8ea8e324); R11/R12/R13 compiler log (0dc8d90a).
-
+State (verified 2026-09-12 late; r34/r35 isolated builds = committed HEAD
+8c921c32, after the compiler lane's R9 fix b581184d):
+- Sweeps: r33 935/935; r34 935/935 (fast-path re-land); r35 935/935
+  (contract wave 2). Three consecutive all-green corpora.
+- Part-2 deliverables (newest first): contract wave 2 -- 83 clauses
+  across 56 collect containers, collect 2.0% -> 18.9%, global 12.6%
+  clauses / 11.1% pub-with-clause; dedup audit R15 logged + ascii85
+  direction corrected (e42520c1); string fast-path re-land + R16
+  (a47ac737); memory-quartet namespace wave 2 (78b107fb).
+- Part-1 deliverables (same day, newest first): xiom.serialize.csv RFC
+  4180 + smoke (e398df2f); endian trio dedup shim (9616b72f); contract
+  wave 1 + ratchet gate #7 (69a07b7e); collect namespace wave 1
+  (0d63c6b0); legacy quarantine (0dc8d90a + 8ea8e324); r32/R11-R13 log.
+- Open compiler findings: R15 (same-leaf + same-name codegen key
+  collision; blocks base32/percent/punycode + base16/base64/base58
+  consolidation), R16 (ptr + int in call args; Int-cast workaround in
+  use), R14 (latent combined-iter AV, compiler lane). R9 FIXED by
+  b581184d; Item A step 2 (843a5a88) + stdlib findings report
+  (695af0f0) drive the next work block.
 NEXT QUEUE (ordered):
-1. ~~Compiler lane: R11/R12/R13~~ DONE: fixed by b8e2fa43, verified on
-   r33 (935/935). Next compiler-lane interplay: their in-flight R9 work
-   (tests/regression/m70_full_path_shim_delegation.xi) -- re-sweep when
-   it commits.
-2. Namespace wave 2: memory quartet memory/{alloc,cell,mem,ptr}.xi ->
-   {alloc,cell,mem,ptr}/ (rc-move pattern; deferred from wave 1).
-3. Contract wave 2: collect/ container family (2.0% pub coverage) and
-   string/ deep modules toward the 60% gate; refresh ratchet floors each
-   wave (coverage_floors32.json is the wave-1 baseline).
-4. Dedup continuation: base32/ascii85/percent/punycode (audit surfaces
-   first -- reality disagreed with the table 3/3 times), ip4/ip6 needs a
-   translation pass (Result/Vec[UInt8] vs Option/Vec[UInt16]; see
-   STDLIB_DEDUP_INVENTORY.md), console/os.terminal/os.term,
-   core.platform/os.platform, json after its heap work.
-5. Capability: TOML (CSV landed), tzdata phase 1 (OS timezone FFI),
-   async stress suite, TLS schannel binding.
-6. After the compiler fixes land: fresh full sweep (r33) + ratchet run
-   for the definitive post-change baseline.
+1. Compiler lane: R9 FIXED (b581184d); R11-R13 fixed (b8e2fa43); open
+   R15 (encoding-family dedup gate), R16 (ptr+int workaround), R14
+   (latent). Re-sweep per compiler round (r34/r35 tooling ready).
+2. Item A stdlib findings (docs/ITEM_A_STDLIB_FINDINGS.md, 237 findings,
+   0 hard errors): D2.1 unsafe confinement (~60), T003 (7), T007 (8),
+   T006 (3), numeric mixing (~30), missing returns (9), individual bugs.
+   Re-measure with `cargo test -p xiom-check catalog_corpus_is_clean
+   -- --ignored --nocapture` (isolated CARGO_TARGET_DIR).
+3. Contract wave 3: collect depth (18.9%), string (17.1%), io (38.9%)
+   toward the 60% gate; refresh ratchet floors each wave (current:
+   coverage_floors34.json).
+4. Dedup: after R15, consolidate base32/percent/punycode +
+   base16/base64/base58; ip4/ip6 translation unit; console/terminal and
+   platform audited (layered / name-collision hazard); json after heap.
+5. Capability: TOML, tzdata phase 1 (OS timezone FFI), async stress
+   suite, TLS schannel binding.
 
 Environment & tooling:
 - Isolated binary build (preferred; ~30s warm):
   `$env:CARGO_TARGET_DIR="C:\Users\lefte\AppData\Local\Temp\kilo\stdlib_ws\target_rNN"; cargo build -p xiom`
   then use `...\target_rNN\debug\xiom.exe`. A fresh target dir is a
   from-scratch build (~10 min); reuse per round.
-- r32 binary provenance: target_r32 = the clean-HEAD artifact copied from
-  target_r31 (built 2026-09-12 14:19, before the compiler lane's
-  uncommitted Stage-3 WIP edit at 14:27), so the r32 baseline excludes
-  their in-flight work. r33 = fresh isolated build of committed HEAD
-  b8e2fa43 (Item-A step 1) and is the current all-green baseline; the
-  r33 sweep tooling is sweep_worker33/launch_sweep33/triage_sweep33 +
-  stdlib_ws\sweep33 CSVs.
+- Binary provenance: r32 = clean-HEAD artifact copied from r31 (excludes
+  the compiler lane's then-WIP); r33 = fresh build of b8e2fa43;
+  r34 = fresh build of committed HEAD 8c921c32 (R9 fix + Item A step 2);
+  r34/r35 sweeps are the current all-green baselines (sweep35 tooling:
+  sweep_worker35/launch_sweep35/triage_sweep35). The triage script also
+  runs the coverage ratchet (gate #7) on the floors file.
 - Coverage ratchet (gate #7): stdlib_ws\coverage_scan.ps1
-  [-Detail] [-DumpFloors coverage_floors32.json] [-RatchetFile ...];
+  [-Detail] [-DumpFloors coverage_floors34.json] [-RatchetFile ...];
   per-top-level-dir pub-coverage floors; positive + negative runs
-  verified 2026-09-12. Re-dump floors after each contract wave.
+  verified 2026-09-12; wave-1 floors kept at coverage_floors32.json.
+  Re-dump floors after each contract wave.
 - Sweep tooling (copy + bump the paths per round; r32 set current):
   C:\Users\lefte\AppData\Local\Temp\kilo\stdlib_ws\
   {sweep_worker32.ps1, launch_sweep32.ps1, triage_sweep32.ps1,
@@ -1017,4 +1016,41 @@ definitive all-green baseline (sweep33 CSVs preserved).
 Next: namespace wave 2 (memory quartet); contract wave 2 (collect
 containers); dedup next units (base32/ascii85/percent/punycode, ip4/ip6
 translation); TOML; re-sweep when the compiler lane's R9 work commits.
+
+## 2.9. Continued readiness push (2026-09-12, part 2)
+
+1. **Namespace wave 2** (78b107fb): memory quartet moved to aligned dirs
+   (alloc/alloc.xi, cell/cell.xi, mem/mem.xi, ptr/ptr.xi); manifest +
+   STDLIB_GENERICS/STR_OWNERSHIP docs synced; 35/35 memory smokes green.
+2. **Fast-path re-land + R16** (a47ac737): re-probed the reverted memcpy
+   fast path (night-session finding 13). Root cause isolated as R16 --
+   `ptr + int` used directly as an argument miscompiles (probe trio
+   p_str_memcpy{,2,3}.xi; the Int-cast workaround produces the right
+   address). str_concat + sb_to_str re-landed through
+   xiom_memcpy_dispatch with the workaround; p_fastpath_live + the string
+   subset + full r34 sweep (935/935) green. Gate #4 perf item closed.
+   (Sweep r34 also confirmed the new smoke_serialize_csv is in-corpus.)
+3. **R15 + dedup audit** (e42520c1): the base32 shim attempt crashed --
+   leaf-qualified codegen keys collide for same-leaf modules with
+   same-name fns (convert.base32 vs encoding.base32), binding a wrong
+   0-arg stub; logged as R15 with IR evidence and the probe pair
+   (p_b32_shim crash vs p_b32_canonical green; the endian shim is the
+   control -- same leaf, different fn names, green). ascii85 audited:
+   ALREADY layered (convert canonical, encoding wrappers) -- no action.
+   percent/punycode and the base16/base64/base58 family are R15-gated;
+   base32 reverted to its local implementation. Base32 decoder parity
+   vectors added to smoke_convert_base32.
+4. **Contract wave 2**: 83 clauses across 56 collect containers -- every
+   clause shape pre-validated (p_contract_shapes, p_contract_shape_bool,
+   p_contract_shape_mut) and every size/clear body reviewed for
+   non-negativity (including the two ring-buffer subtraction sizes and
+   uf_component_size's 0-on-missing). collect pub-coverage 2.0% ->
+   18.9%; global 12.6% clauses / 11.1% pub-with-clause. Floors refreshed
+   to coverage_floors34.json (ratchet positive verified). The r35 full
+   sweep is 935/935 green (definitive gate).
+
+Next queue: contract wave 3 (collect depth + string/io), TOML, ip4/ip6
+translation unit, console/os.terminal/os.term + platform audits, and --
+once the compiler lane fixes R15 -- consolidate base32/percent/punycode
++ base16/base64/base58 behind shims.
 

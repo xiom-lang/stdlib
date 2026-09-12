@@ -183,13 +183,15 @@ T1/T2 yields.
       collision); ip4/ip6 needs a translation pass; console/terminal +
       platform still queued.
 - [x] Coverage number published + ratcheted in CI-equivalent sweep script --
-      DELIVERED 2026-09-12: global 1007 clauses / 8627 fns = 11.7%
-      (pub-with-clause 636/6465 = 9.8%); key modules io 38.9%,
-      string 17.1%, collect 2.0% (target >=60% in later waves). Wave 1
-      added 40 clauses on touched io/string/IntMap/StringMap fns,
-      verified by a 429-file battery with zero contract fallout.
-      Ratchet: coverage_scan.ps1 -RatchetFile coverage_floors32.json
-      (stdlib_ws tooling; positive + negative runs verified); floors are
+      DELIVERED 2026-09-12: global 1092 clauses / 8634 fns = 12.6%
+      (pub-with-clause 720/6469 = 11.1%); key modules io 38.9%,
+      string 17.1%, collect 18.9% (target >=60% in later waves). Wave 1
+      added 40 clauses on touched io/string/IntMap/StringMap fns; wave 2
+      added 83 clauses across 56 collect containers (size/len/count >= 0,
+      is_empty == (len == 0), clear -> size 0), lifting collect
+      2.0% -> 18.9%. Ratchet: coverage_scan.ps1 -RatchetFile
+      coverage_floors34.json (stdlib_ws tooling; positive + negative runs
+      verified; wave-1 floors kept at coverage_floors32.json); floors are
       per top-level stdlib/xiom directory.
 
 ## 9. Status audit -- 2026-09-10 (rounds 15-29, sweep29 in flight)
@@ -286,8 +288,8 @@ T1/T2 yields.
   cancellation-storm/saturation validation.
 - ~194 runtime symbols defined but unbound by any module (dead surface;
   audit pending). Runtime is 441 xiom_* fns vs 247 stdlib externs.
-- Contract coverage 11.7% globally / 9.8% pub-with-clause; key modules
-  io 38.9%, string 17.1%, collect 2.0% (target >=60%; wave 2+ owed).
+- Contract coverage 12.6% globally / 11.1% pub-with-clause; key modules
+  io 38.9%, string 17.1%, collect 18.9% (target >=60%; waves 3+ owed).
 - Namespace/identity debt: collect vs collections, memory quartet,
   package.xi identity, geom/twin module names.
 - No fuzz/property infrastructure (stage-5 dependent); coverage number

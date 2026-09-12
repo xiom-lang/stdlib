@@ -47,7 +47,9 @@ pub fn workqueue_pop(q: &mut WorkQueue) -> Option[Int] {
 /// Params: q - the queue.
 /// Returns: the count of jobs not yet popped.
 /// Complexity: O(1).
-pub fn workqueue_len(q: &WorkQueue) -> Int {
+pub fn workqueue_len(q: &WorkQueue) -> Int
+  ensures: result >= 0
+{
   return q.items.len() - q.head;
 }
 
@@ -55,6 +57,8 @@ pub fn workqueue_len(q: &WorkQueue) -> Int {
 /// Params: q - the queue.
 /// Returns: true when the queue holds no pending jobs.
 /// Complexity: O(1).
-pub fn workqueue_is_empty(q: &WorkQueue) -> Bool {
+pub fn workqueue_is_empty(q: &WorkQueue) -> Bool
+  ensures: result == (workqueue_len(q) == 0)
+{
   return q.head >= q.items.len();
 }

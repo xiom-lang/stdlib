@@ -293,7 +293,9 @@ pub fn bptree_remove(t: &mut BPlusTree, key: Int) -> Bool {
 }
 
 /// Number of entries. O(1).
-pub fn bptree_size(t: &BPlusTree) -> Int {
+pub fn bptree_size(t: &BPlusTree) -> Int
+  ensures: result >= 0
+{
   return t.size;
 }
 

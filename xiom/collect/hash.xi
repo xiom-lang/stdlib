@@ -185,7 +185,9 @@ pub fn lhmap_remove(m: &mut LhMap, key: Int) -> Bool {
 }
 
 /// Number of entries in the map.
-pub fn lhmap_size(m: &LhMap) -> Int {
+pub fn lhmap_size(m: &LhMap) -> Int
+  ensures: result >= 0
+{
   return m.keys.len();
 }
 

@@ -93,7 +93,9 @@ pub fn pheap_extract_min(h: &mut PHeap) -> Option[Int] {
 }
 
 /// Number of reachable nodes in the heap.
-pub fn pheap_size(h: &PHeap) -> Int {
+pub fn pheap_size(h: &PHeap) -> Int
+  ensures: result >= 0
+{
   if h.root == -1 { return 0; }
   var count = 0;
   var stack = Vec[Int].new();
@@ -116,7 +118,9 @@ pub fn pheap_size(h: &PHeap) -> Int {
 }
 
 /// True if the heap contains no keys.
-pub fn pheap_is_empty(h: &PHeap) -> Bool {
+pub fn pheap_is_empty(h: &PHeap) -> Bool
+  ensures: result == (pheap_size(h) == 0)
+{
   return h.root == -1;
 }
 
@@ -307,12 +311,16 @@ pub fn fib_heap_extract_min(h: &mut FibHeap) -> Option[Int] {
 }
 
 /// Number of keys in the heap.
-pub fn fib_heap_size(h: &FibHeap) -> Int {
+pub fn fib_heap_size(h: &FibHeap) -> Int
+  ensures: result >= 0
+{
   return h.n;
 }
 
 /// True if the heap contains no keys.
-pub fn fib_heap_is_empty(h: &FibHeap) -> Bool {
+pub fn fib_heap_is_empty(h: &FibHeap) -> Bool
+  ensures: result == (fib_heap_size(h) == 0)
+{
   return h.min == -1;
 }
 

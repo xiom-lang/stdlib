@@ -79,7 +79,9 @@ pub fn bitmap_flip(b: &mut Bitmap, pos: Int) {
 }
 
 /// Number of set bits among the first `nbits` positions. O(n).
-pub fn bitmap_count(b: &Bitmap) -> Int {
+pub fn bitmap_count(b: &Bitmap) -> Int
+  ensures: result >= 0
+{
   var count: Int = 0;
   var i: Int = 0;
   while i < b.nbits {

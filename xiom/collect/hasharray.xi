@@ -224,6 +224,8 @@ pub fn hamt_remove(h: &mut Hamt, key: Int) {
 /// Params: h - the map.
 /// Returns: the number of key/value pairs.
 /// Complexity: O(1).
-pub fn hamt_size(h: &Hamt) -> Int {
+pub fn hamt_size(h: &Hamt) -> Int
+  ensures: result >= 0
+{
   return h.size;
 }

@@ -81,7 +81,9 @@ pub fn bq_try_pop(q: &mut BlockingQueue) -> Option[Int] {
 /// Params: q - the queue.
 /// Returns: the count of not-yet-popped items.
 /// Complexity: O(1).
-pub fn bq_size(q: &BlockingQueue) -> Int {
+pub fn bq_size(q: &BlockingQueue) -> Int
+  ensures: result >= 0
+{
   return q.buf.len() - q.head;
 }
 

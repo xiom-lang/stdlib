@@ -264,6 +264,8 @@ pub fn quadtree_query(t: &Quadtree, x: Int, y: Int) -> Option[Int] {
 
 /// Number of stored points.
 /// O(1).
-pub fn quadtree_size(t: &Quadtree) -> Int {
+pub fn quadtree_size(t: &Quadtree) -> Int
+  ensures: result >= 0
+{
   return t.size;
 }

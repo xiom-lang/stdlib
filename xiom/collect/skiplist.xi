@@ -161,7 +161,9 @@ pub fn skiplist_remove(l: &mut SkipList, key: Int) -> Bool {
 }
 
 /// Number of keys.
-pub fn skiplist_size(l: &SkipList) -> Int {
+pub fn skiplist_size(l: &SkipList) -> Int
+  ensures: result >= 0
+{
   return l.size;
 }
 

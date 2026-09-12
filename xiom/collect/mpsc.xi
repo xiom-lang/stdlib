@@ -73,7 +73,9 @@ pub fn mpsc_pop(q: &mut MpscQueue) -> Option[Int] {
 /// Params: q - the queue.
 /// Returns: an approximation of the number of items currently buffered.
 /// Complexity: O(1).
-pub fn mpsc_size(q: &MpscQueue) -> Int {
+pub fn mpsc_size(q: &MpscQueue) -> Int
+  ensures: result >= 0
+{
   var t = q.tail.load();
   var h = q.head.load();
   var n = t - h;

@@ -43,17 +43,23 @@ pub fn stack_peek(s: &Stack) -> Option[Int] {
 }
 
 /// Number of elements on the stack. O(1).
-pub fn stack_len(s: &Stack) -> Int {
+pub fn stack_len(s: &Stack) -> Int
+  ensures: result >= 0
+{
   var len = s.items.len();
   return len;
 }
 
 /// True if the stack holds no elements. O(1).
-pub fn stack_is_empty(s: &Stack) -> Bool {
+pub fn stack_is_empty(s: &Stack) -> Bool
+  ensures: result == (stack_len(s) == 0)
+{
   return s.items.len() == 0;
 }
 
 /// Remove all elements. O(1) (capacity is retained).
-pub fn stack_clear(s: &mut Stack) {
+pub fn stack_clear(s: &mut Stack)
+  ensures: stack_len(s) == 0
+{
   s.items.clear();
 }

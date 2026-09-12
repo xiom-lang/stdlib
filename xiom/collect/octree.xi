@@ -290,6 +290,8 @@ pub fn octree_query(t: &Octree, x: Int, y: Int, z: Int) -> Option[Int] {
 
 /// Number of stored points.
 /// O(1).
-pub fn octree_size(t: &Octree) -> Int {
+pub fn octree_size(t: &Octree) -> Int
+  ensures: result >= 0
+{
   return t.size;
 }

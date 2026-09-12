@@ -275,6 +275,8 @@ pub fn radix_longest_prefix(r: &RadixTrie, key: Str) -> Int {
 
 /// Number of stored keys.
 /// O(1).
-pub fn radix_size(r: &RadixTrie) -> Int {
+pub fn radix_size(r: &RadixTrie) -> Int
+  ensures: result >= 0
+{
   return r.size;
 }

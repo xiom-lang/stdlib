@@ -78,6 +78,8 @@ pub fn fheap_decrease_key(h: &mut FibHeap, node: &mut FibNode, new_key: Int) {
 /// Params: h - the heap.
 /// Returns: the number of elements currently stored.
 /// Complexity: O(1).
-pub fn fheap_len(h: &FibHeap) -> Int {
+pub fn fheap_len(h: &FibHeap) -> Int
+  ensures: result >= 0
+{
   return fib_heap_size(h);
 }

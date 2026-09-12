@@ -123,7 +123,9 @@ pub fn lfu_remove(c: &mut LfuCache, key: Int) -> Bool {
 
 /// Number of entries currently cached.
 /// O(1).
-pub fn lfu_size(c: &mut LfuCache) -> Int {
+pub fn lfu_size(c: &mut LfuCache) -> Int
+  ensures: result >= 0
+{
   return c.keys.len();
 }
 
@@ -135,7 +137,9 @@ pub fn lfu_capacity(c: &mut LfuCache) -> Int {
 
 /// Remove all entries from the cache.
 /// O(1).
-pub fn lfu_clear(c: &mut LfuCache) {
+pub fn lfu_clear(c: &mut LfuCache)
+  ensures: lfu_size(c) == 0
+{
   while c.keys.len() > 0 {
     c.keys.pop();
     c.values.pop();

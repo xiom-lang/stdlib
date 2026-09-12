@@ -41,7 +41,9 @@ pub fn vec_pop(v: &mut IntVec) -> Option[Int] {
 }
 
 /// Number of elements currently stored. O(1).
-pub fn vec_len(v: &IntVec) -> Int {
+pub fn vec_len(v: &IntVec) -> Int
+  ensures: result >= 0
+{
   var len = v.items.len();
   return len;
 }
@@ -88,11 +90,15 @@ pub fn vec_remove(v: &mut IntVec, idx: Int) -> Option[Int] {
 }
 
 /// Remove all elements. O(1) (capacity is retained).
-pub fn vec_clear(v: &mut IntVec) {
+pub fn vec_clear(v: &mut IntVec)
+  ensures: vec_len(v) == 0
+{
   v.items.clear();
 }
 
 /// True if the vector holds no elements. O(1).
-pub fn vec_is_empty(v: &IntVec) -> Bool {
+pub fn vec_is_empty(v: &IntVec) -> Bool
+  ensures: result == (vec_len(v) == 0)
+{
   return v.items.len() == 0;
 }

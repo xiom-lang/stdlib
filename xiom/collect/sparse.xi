@@ -84,7 +84,9 @@ pub fn sparse_remove(s: &mut SparseSet, value: Int) {
 
 /// Number of elements in the set.
 /// O(1).
-pub fn sparse_size(s: &SparseSet) -> Int {
+pub fn sparse_size(s: &SparseSet) -> Int
+  ensures: result >= 0
+{
   return s.dense.len();
 }
 

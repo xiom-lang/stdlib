@@ -263,6 +263,8 @@ pub fn map_rehash(m: &mut IntMap) {
 
 /// Check whether the IntMap has no entries.
 /// Complexity: O(1).
-pub fn map_is_empty(m: &IntMap) -> Bool {
+pub fn map_is_empty(m: &IntMap) -> Bool
+  ensures: result == (map_size(m) == 0)
+{
   m.used == 0
 }

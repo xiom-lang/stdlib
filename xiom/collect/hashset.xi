@@ -144,12 +144,16 @@ pub fn hashset_remove(s: &mut HashSet, value: Int) {
 }
 
 /// Number of elements in the set. O(1).
-pub fn hashset_size(s: &HashSet) -> Int {
+pub fn hashset_size(s: &HashSet) -> Int
+  ensures: result >= 0
+{
   return s.size;
 }
 
 /// Remove all elements. O(cap).
-pub fn hashset_clear(s: &mut HashSet) {
+pub fn hashset_clear(s: &mut HashSet)
+  ensures: hashset_size(s) == 0
+{
   var i: Int = 0;
   while i < s.cap {
     s.used[i] = 0;

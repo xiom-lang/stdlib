@@ -54,7 +54,9 @@ pub fn pheap_peek(h: &PHeap) -> Option[Int] {
 /// Params: h - the heap.
 /// Returns: the number of reachable priorities.
 /// Complexity: O(n) (reachable-node walk).
-pub fn pheap_size(h: &PHeap) -> Int {
+pub fn pheap_size(h: &PHeap) -> Int
+  ensures: result >= 0
+{
   return xiom.collect.heap.pheap_size(h);
 }
 

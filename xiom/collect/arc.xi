@@ -50,7 +50,9 @@ pub fn arc_contains(c: &mut ArcCache, key: Int) -> Bool {
 /// Params: c - the cache.
 /// Returns: the number of cached key/value pairs.
 /// Complexity: O(1).
-pub fn arc_size(c: &mut ArcCache) -> Int {
+pub fn arc_size(c: &mut ArcCache) -> Int
+  ensures: result >= 0
+{
   return xiom.collect.cache.arc_size(c);
 }
 

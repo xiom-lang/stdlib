@@ -157,14 +157,18 @@ pub fn hashmap_remove(m: &mut HashMap, key: Int) -> Bool {
 /// Params: m - the map.
 /// Returns: the number of live key/value pairs.
 /// Complexity: O(1).
-pub fn hashmap_size(m: &HashMap) -> Int {
+pub fn hashmap_size(m: &HashMap) -> Int
+  ensures: result >= 0
+{
   return m.count;
 }
 
 /// Remove all entries.
 /// Params: m - the map.
 /// Complexity: O(1) (the table is re-initialised; arena memory is retained).
-pub fn hashmap_clear(m: &mut HashMap) {
+pub fn hashmap_clear(m: &mut HashMap)
+  ensures: hashmap_size(m) == 0
+{
   var i: Int = 0;
   while i < m.buckets.len() {
     m.buckets[i] = -1;

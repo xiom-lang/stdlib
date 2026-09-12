@@ -111,12 +111,16 @@ pub fn ll_back(l: &LinkedList) -> Option[Int] {
 }
 
 /// Number of elements in the list. O(1).
-pub fn ll_len(l: &LinkedList) -> Int {
+pub fn ll_len(l: &LinkedList) -> Int
+  ensures: result >= 0
+{
   return l.size;
 }
 
 /// True if the list holds no elements. O(1).
-pub fn ll_is_empty(l: &LinkedList) -> Bool {
+pub fn ll_is_empty(l: &LinkedList) -> Bool
+  ensures: result == (ll_len(l) == 0)
+{
   return l.size == 0;
 }
 

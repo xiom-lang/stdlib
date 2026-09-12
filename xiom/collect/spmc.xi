@@ -74,7 +74,9 @@ pub fn spmc_pop(q: &mut SpmcQueue) -> Option[Int] {
 /// Params: q - the queue.
 /// Returns: an approximation of the number of items currently buffered.
 /// Complexity: O(1).
-pub fn spmc_size(q: &SpmcQueue) -> Int {
+pub fn spmc_size(q: &SpmcQueue) -> Int
+  ensures: result >= 0
+{
   var t = q.tail.load();
   var h = q.head.load();
   var n = t - h;
