@@ -187,7 +187,9 @@ pub fn fs_is_dir(path: Str) -> Bool {
 /// Params: path - the file path.
 /// Returns: Ok(size in bytes), Err on failure.
 /// Complexity: O(1).
-pub fn fs_size(path: Str) -> Result[Int, Str> {
+pub fn fs_size(path: Str) -> Result[Int, Str>
+  ensures: result is Ok => result.value >= 0
+{
   let r = io.file_size(path);
   match r {
     Some(s) => Ok(s);
@@ -262,7 +264,9 @@ pub fn fs_read_range(path: Str, offset: Int, len: Int) -> Result[Vec[UInt8], Str
 /// Params: path - the file path; offset - the start offset; data - the bytes.
 /// Returns: Ok(bytes written), Err on failure.
 /// Complexity: O(n) where n is the data length.
-pub fn fs_write_range(path: Str, offset: Int, data: &Vec[UInt8]) -> Result[Int, Str> {
+pub fn fs_write_range(path: Str, offset: Int, data: &Vec[UInt8]) -> Result[Int, Str>
+  ensures: result is Ok => result.value >= 0
+{
   if offset < 0 {
     return Err(err_msg("write range", path));
   }

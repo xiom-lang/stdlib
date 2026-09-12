@@ -15,7 +15,9 @@ extern "C" {
   fn xiom_byte_at(s: Str, pos: Int) -> Int;
 }
 
-pub fn str_len(s: Str) -> Int {
+pub fn str_len(s: Str) -> Int
+  ensures: result >= 0
+{
   s.len()
 }
 
@@ -269,7 +271,9 @@ pub fn index_of(s: Str, substr: Str) -> Option[Int]
   None
 }
 
-pub fn last_index_of(s: Str, substr: Str) -> Option[Int] {
+pub fn last_index_of(s: Str, substr: Str) -> Option[Int]
+  ensures: result is Some => result >= 0 && result <= s.len()
+{
   let s_len = s.len();
   let sub_len = substr.len();
   if sub_len > s_len {
@@ -318,7 +322,9 @@ pub fn replace(s: Str, from: Str, to: Str) -> Str
   result
 }
 
-pub fn lines(s: Str) -> Vec[Str] {
+pub fn lines(s: Str) -> Vec[Str]
+  ensures: result.len() >= 1
+{
   str_split(s, "\n")
 }
 
@@ -353,7 +359,9 @@ pub fn Str.is_empty(self) -> Bool {
   self.len() == 0
 }
 
-pub fn char_count(s: Str) -> Int {
+pub fn char_count(s: Str) -> Int
+  ensures: result >= 0
+{
   var count: Int = 0;
   let len = s.len();
   var i: Int = 0;
@@ -366,7 +374,9 @@ pub fn char_count(s: Str) -> Int {
   count
 }
 
-pub fn byte_count(s: Str) -> Int {
+pub fn byte_count(s: Str) -> Int
+  ensures: result >= 0
+{
   s.len()
 }
 
@@ -404,7 +414,9 @@ pub fn str_replace_all(s: Str, from_needle: Str, to_replacement: Str) -> Str
 
 // Repeats `s` `n` times. Returns empty string if n <= 0.
 // O(n * |s|) using repeated concatenation.
-pub fn str_repeat(s: Str, n: Int) -> Str {
+pub fn str_repeat(s: Str, n: Int) -> Str
+  ensures: n <= 0 => result.len() == 0
+{
   if n <= 0 {
     return "";
   };
@@ -420,7 +432,9 @@ pub fn str_repeat(s: Str, n: Int) -> Str {
 // Left-pads `s` with `pad` until the string reaches `width` bytes.
 // If `s` is already >= `width` in bytes, returns `s` unchanged.
 // O(width - |s|). Only handles single-byte pad characters correctly.
-pub fn str_pad_left(s: Str, width: Int, pad: Char) -> Str {
+pub fn str_pad_left(s: Str, width: Int, pad: Char) -> Str
+  ensures: result.len() >= s.len()
+{
   let s_len = s.len();
   if s_len >= width {
     return s;
@@ -443,7 +457,9 @@ pub fn str_pad_left(s: Str, width: Int, pad: Char) -> Str {
 // Right-pads `s` with `pad` until the string reaches `width` bytes.
 // If `s` is already >= `width` in bytes, returns `s` unchanged.
 // O(width - |s|). Only handles single-byte pad characters correctly.
-pub fn str_pad_right(s: Str, width: Int, pad: Char) -> Str {
+pub fn str_pad_right(s: Str, width: Int, pad: Char) -> Str
+  ensures: result.len() >= s.len()
+{
   let s_len = s.len();
   if s_len >= width {
     return s;
@@ -645,7 +661,9 @@ pub fn str_is_empty(s: Str) -> Bool {
 // Reverses the characters in `s`. Unicode-aware: iterates by
 // proper UTF-8 character boundaries.
 // O(|s|) -- two passes (collect + build).
-pub fn str_reverse(s: Str) -> Str {
+pub fn str_reverse(s: Str) -> Str
+  ensures: result.len() == s.len()
+{
   let len = s.len();
   if len == 0 {
     return "";
@@ -703,7 +721,9 @@ pub fn str_reverse(s: Str) -> Str {
 // Counts the number of Unicode characters in `s` using xiom_char_at.
 // Unicode-aware: advances by the byte length of each character.
 // O(|s|).
-pub fn str_count_chars(s: Str) -> Int {
+pub fn str_count_chars(s: Str) -> Int
+  ensures: result >= 0
+{
   char_count(s)
 }
 
@@ -714,7 +734,9 @@ pub fn str_count_chars(s: Str) -> Int {
 // middle of a multi-byte sequence, the result is truncated before that
 // character begins.
 // O(|s|).
-pub fn str_truncate_utf8(s: Str, max_bytes: Int) -> Str {
+pub fn str_truncate_utf8(s: Str, max_bytes: Int) -> Str
+  ensures: max_bytes >= 0 => result.len() <= max_bytes
+{
   let len = s.len();
   if max_bytes >= len {
     return s;
@@ -743,7 +765,9 @@ pub fn str_truncate_utf8(s: Str, max_bytes: Int) -> Str {
 // If an odd number of spaces are needed, the extra space goes on the right.
 // Only handles single-byte pad characters correctly.
 // O(width).
-pub fn str_center(s: Str, width: Int) -> Str {
+pub fn str_center(s: Str, width: Int) -> Str
+  ensures: result.len() >= s.len()
+{
   let s_len = s.len();
   if s_len >= width {
     return s;
@@ -826,7 +850,9 @@ fn _mk_byte(v: Int) -> Str {
 /// Translate characters per the `tr` utility: each char of `s` found in
 /// `from` is replaced by the char at the same position in `to`; chars beyond
 /// `to`'s length are REMOVED; chars not in `from` pass through. ASCII.
-pub fn str_translate(s: Str, from: Str, to: Str) -> Str {
+pub fn str_translate(s: Str, from: Str, to: Str) -> Str
+  ensures: result.len() <= s.len()
+{
   var result = "";
   var i: Int = 0;
   while i < str_len(s) {
@@ -852,12 +878,16 @@ pub fn str_translate(s: Str, from: Str, to: Str) -> Str {
 }
 
 /// ROT13 over A-Z/a-z (ASCII).
-pub fn str_rot13(s: Str) -> Str {
+pub fn str_rot13(s: Str) -> Str
+  ensures: result.len() == s.len()
+{
   return str_caesar(s, 13);
 }
 
 /// ROT47 over ASCII 33..126 (all printable chars rotate by 47).
-pub fn str_rot47(s: Str) -> Str {
+pub fn str_rot47(s: Str) -> Str
+  ensures: result.len() == s.len()
+{
   var result = "";
   var i: Int = 0;
   while i < str_len(s) {
@@ -876,7 +906,9 @@ pub fn str_rot47(s: Str) -> Str {
 
 /// Caesar shift over A-Z/a-z (ASCII). Negative shifts go backwards; the
 /// shift wraps mod 26.
-pub fn str_caesar(s: Str, shift: Int) -> Str {
+pub fn str_caesar(s: Str, shift: Int) -> Str
+  ensures: result.len() == s.len()
+{
   var result = "";
   var sh = shift % 26;
   if sh < 0 { sh = sh + 26; }
@@ -898,7 +930,9 @@ pub fn str_caesar(s: Str, shift: Int) -> Str {
 }
 
 /// Atbash: a<->z, A<->Z mirror (ASCII). Non-letters pass through.
-pub fn str_atbash(s: Str) -> Str {
+pub fn str_atbash(s: Str) -> Str
+  ensures: result.len() == s.len()
+{
   var result = "";
   var i: Int = 0;
   while i < str_len(s) {
@@ -918,7 +952,9 @@ pub fn str_atbash(s: Str) -> Str {
 /// Abbreviate with a middle ellipsis: keeps `(max_len-3)/2` chars from the
 /// front and the rest from the back ("..." as "..."). Strings at or under
 /// max_len are returned unchanged; max_len < 4 falls back to truncation.
-pub fn str_abbreviate(s: Str, max_len: Int) -> Str {
+pub fn str_abbreviate(s: Str, max_len: Int) -> Str
+  ensures: result.len() <= s.len()
+{
   var len = str_len(s);
   if len <= max_len {
     return s;
@@ -936,7 +972,9 @@ pub fn str_abbreviate(s: Str, max_len: Int) -> Str {
 
 /// Obfuscate: keep the first `visible` chars, mask the rest with '*'
 /// (e.g. str_obfuscate("secret", 3) == "sec***"). visible < 0 -> 0.
-pub fn str_obfuscate(s: Str, visible: Int) -> Str {
+pub fn str_obfuscate(s: Str, visible: Int) -> Str
+  ensures: result.len() == s.len()
+{
   var v = visible;
   if v < 0 { v = 0; }
   var len = str_len(s);
