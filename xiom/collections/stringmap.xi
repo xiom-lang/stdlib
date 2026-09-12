@@ -8,14 +8,16 @@ module xiom.collect.stringmap
 
 // ============================================================================
 // Hash map with string keys and Int values.
-// Separate chaining with Str keys; the bucket index comes from a djb2 hash of
-// the key bytes (via xiom.string.byte_at/byte_count). Entries live in
-// parallel `keys` (Str) / `values` (Int) / `next` / `live` arenas; removed
-// entries are unlinked and flagged dead but stay in the arena. The table
-// doubles when the load factor exceeds 0.75, re-linking only live entries.
+// Separate chaining with Str keys; the bucket index comes from SipHash-2-4
+// keyed per process from OS entropy (hash-DoS hardening -- replaced the
+// previous fixed-key DJB2 default). Entries live in parallel `keys` (Str) /
+// `values` (Int) / `next` / `live` arenas; removed entries are unlinked and
+// flagged dead but stay in the arena. The table doubles when the load
+// factor exceeds 0.75, re-linking only live entries.
 // ============================================================================
 
 use xiom.string;
+use xiom.hash.siphash;
 
 pub type StringMap = {
   buckets: Vec[Int];
@@ -28,18 +30,13 @@ pub type StringMap = {
 
 const _SMAP_INITIAL: Int = 8;
 
-// djb2 hash over the bytes of `key`, folded to a non-negative value.
+// Seeded SipHash-2-4 over the key, masked to 63 bits so the bucket modulo
+// is well-defined. Key material: per-process from OS entropy (see
+// xiom.hash.siphash._sip_ensure_keys; degraded to a time-derived key only
+// when no OS entropy source answers).
 fn _hash_str(key: Str) -> Int {
-  var hash: Int = 5381;
-  var n = byte_count(key);
-  var i: Int = 0;
-  while i < n {
-    var b = byte_at(key, i) as Int;
-    hash = ((hash * 33) + b) & 0xFFFFFFFF;
-    i = i + 1;
-  }
-  if hash < 0 { hash = -hash; }
-  return hash;
+  let h = siphash.siphash24_str_seeded(key);
+  return (h & 0x7FFFFFFFFFFFFFFF) as Int;
 }
 
 fn _bucket(m: &StringMap, key: Str) -> Int {

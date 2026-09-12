@@ -119,10 +119,7 @@ pub fn read_float() -> Result[Float64, Str] {
 /// Parse a decimal integer (optional leading +/- sign, ASCII digits only).
 /// Deterministic core of read_int, exposed for parsing without stdin.
 pub fn parse_int(s: Str) -> Result[Int, Str] {
-  // Free-call trim: method-position `.trim()` on a Str PARAM returns a
-  // corrupt Str (len 0xFFFFFFFF) on the current compiler -- see
-  // COMPILER_BUGS.md R8 follow-up (probe p_strparam2); str_trim is fine.
-  let trimmed = string.str_trim(s);
+  let trimmed = s.trim();
   if trimmed.is_empty() {
     return Err("empty input");
   }
@@ -153,7 +150,7 @@ pub fn parse_int(s: Str) -> Result[Int, Str] {
 /// Parse a decimal float (optional sign, one optional '.', ASCII digits;
 /// no exponent support). Deterministic core of read_float.
 pub fn parse_float(s: Str) -> Result[Float64, Str] {
-  let trimmed = string.str_trim(s);
+  let trimmed = s.trim();
   if trimmed.is_empty() {
     return Err("empty input");
   }
