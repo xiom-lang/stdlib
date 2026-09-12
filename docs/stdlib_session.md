@@ -13,9 +13,10 @@ State (verified 2026-09-12 late; r34/r35 isolated builds = committed HEAD
 - Sweeps: r33 935/935; r34 935/935 (fast-path re-land); r35 935/935
   (contract wave 2); r36 935/935 (Item A findings burn-down).
   Four consecutive all-green corpora (+ ratchet OK).
-- Item A stdlib status (2026-09-12): 237 -> 2 findings, 17 -> 1 parse
-  errors; the 2 findings + 1 parse error are the compiler-side D4/D5/D1
-  items (iter:413, path:261, time `<=>`). See section 2.10.
+- Item A stdlib status (2026-09-12, after compiler round 56 = 9e625094):
+  catalog corpus CLEAN -- 0 findings / 0 hard errors / 0 parse errors;
+  is_clean() true; the strict-flip is the compiler lane's next two edits.
+  See section 2.10.
 - Part-2 deliverables (newest first): contract wave 2 -- 83 clauses
   across 56 collect containers, collect 2.0% -> 18.9%, global 12.6%
   clauses / 11.1% pub-with-clause; dedup audit R15 logged + ascii85
@@ -1067,10 +1068,17 @@ The compiler lane shipped the catalog-body checker (Item A step 2,
 695af0f0: 237 findings / 0 hard errors; D1-D6 marked compiler-side).
 Stdlib burn-down on committed HEAD (b71d839f):
 
-- **237 -> 2 findings and 17 -> 1 parse errors.** Both remaining findings
-  are the compiler-side items from the report: D4 xiom.iter:413 (generic
-  fn substitution) and D5 xiom.path:261 (bare-name collision); the last
-  parse error is xiom.time's `<=>` operator (D1).
+- **237 -> 0 findings, 17 -> 0 parse errors.** The compiler lane's round-56
+  D1-D6 + R14 fixes closed their side; the last stdlib line was
+  `xiom.time:232`'s non-operator `<=>` in an ensures, replaced with the
+  exact `result.is_ok == (self.secs > earlier.secs || (self.secs ==
+  earlier.secs && self.nanos >= earlier.nanos))` (the handed `secs >=`
+  form was wrong for the equal-seconds nanos-borrow edge; probe
+  p_duration_since covers all five branches). The in-tree measure
+  `cargo test -p xiom-check catalog_corpus_is_clean -- --ignored
+  --nocapture` now PASSES -- is_clean() is true, so the compiler lane's
+  flip (strict_catalog_findings default + #[ignore] removal) is unblocked.
+  Full r36 sweep 935/935 PASS, coverage ratchet OK, 39/39 time smokes.
 - **D2.1 unsafe confinement (~112 sites):** scattered extern calls got the
   whole-fn `requires: true` safe-wrapper pattern (core/string/time/rand/
   num/math/simd/geom/misc/hash/crypto/...); single calls and all raw
