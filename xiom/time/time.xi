@@ -229,7 +229,9 @@ pub fn SystemTime.unix_epoch() -> SystemTime {
 }
 
 pub fn SystemTime.duration_since(self, earlier: SystemTime) -> Result[Duration, Str]
-  ensures: result.is_ok <=> self.secs >= earlier.secs
+  // Ok iff the duration is non-negative; the nanos borrow decides the
+  // equal-seconds edge (10.200 - 10.500 is Err, not Ok).
+  ensures: result.is_ok == (self.secs > earlier.secs || (self.secs == earlier.secs && self.nanos >= earlier.nanos))
 {
   var sec_diff = self.secs - earlier.secs;
   var nano_diff = self.nanos - earlier.nanos;
