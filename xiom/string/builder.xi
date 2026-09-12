@@ -23,6 +23,8 @@ module xiom.string.builder
 
 extern "C" {
   fn malloc(size: UInt) -> *UInt8;
+  // asm-accelerated with a C fallback in the runtime; always links.
+  fn xiom_memcpy_dispatch(dest: *UInt8, src: *UInt8, n: UInt) -> *UInt8;
 }
 
 use xiom.string;
@@ -86,11 +88,9 @@ pub fn sb_to_str(sb: &Vec[UInt8]) -> Str {
   let n = sb.len();
   unsafe {
     var buf = malloc(n + 1);
-    var i = 0;
-    while i < n {
-      buf[i] = sb[i];
-      i = i + 1;
-    }
+    // Bulk copy via the runtime's asm/C memcpy (phase E3 re-land); the
+    // builder's data pointer is stable for the duration of the copy.
+    xiom_memcpy_dispatch(buf, sb.data, n as UInt);
     buf[n] = 0;
     return Str.from_cstring(buf);
   }

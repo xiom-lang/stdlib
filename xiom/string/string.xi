@@ -7,6 +7,8 @@ module xiom.string
 extern "C" {
   fn malloc(size: UInt) -> *UInt8;
   fn free(ptr: *UInt8);
+  // asm-accelerated with a C fallback in the runtime; always links.
+  fn xiom_memcpy_dispatch(dest: *UInt8, src: *UInt8, n: UInt) -> *UInt8;
   fn xiom_char_at(s: Str, pos: Int) -> Char;
   // round-14 (BUG 26 #7): the RAW BYTE accessor -- xiom_char_at now
   // returns the decoded UTF-8 CODEPOINT, which broke byte_at (the old
@@ -29,16 +31,14 @@ pub fn str_concat(a: Str, b: Str) -> Str
   let total = len_a + len_b;
   unsafe {
     var buf = malloc(total + 1);
-    var i: Int = 0;
-    while i < len_a {
-      buf[i] = byte_at(a, i);
-      i = i + 1;
-    }
-    var j: Int = 0;
-    while j < len_b {
-      buf[len_a + j] = byte_at(b, j);
-      j = j + 1;
-    }
+    // Bulk copy via the runtime's asm/C memcpy (phase E3 re-land). A Str IS
+    // a NUL-terminated buffer pointer (see os.xi cstr precedent for the
+    // cast); sources are non-overlapping regions of the fresh buffer.
+    // R16: `buf + len_a` as an argument miscompiles, so the second dest
+    // address is built through an Int cast.
+    xiom_memcpy_dispatch(buf, a as *UInt8, len_a as UInt);
+    var dst2 = (buf as Int + len_a) as *UInt8;
+    xiom_memcpy_dispatch(dst2, b as *UInt8, len_b as UInt);
     buf[total] = 0;
     return Str.from_cstring(buf);
   }
