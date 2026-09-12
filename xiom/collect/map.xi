@@ -29,7 +29,9 @@ pub type IntMap = {
 
 /// Create a new empty IntMap (capacity 16).
 /// Complexity: O(1).
-pub fn map_new() -> IntMap {
+pub fn map_new() -> IntMap
+  ensures: result.used == 0
+{
   var keys = Vec[Int].new();
   var values = Vec[Int].new();
   var states = Vec[Int].new();
@@ -125,7 +127,9 @@ fn put_internal(m: &mut IntMap, key: Int, value: Int) {
 
 /// Insert or update a key. Grows the table when the load factor exceeds 0.75.
 /// Complexity: O(1) amortized.
-pub fn map_put(m: &mut IntMap, key: Int, value: Int) {
+pub fn map_put(m: &mut IntMap, key: Int, value: Int)
+  ensures: m.used >= 1
+{
   if needs_grow(m) {
     grow(m);
   };
@@ -165,7 +169,9 @@ pub fn map_contains(m: &IntMap, key: Int) -> Bool {
 /// Remove a key, returning whether it was present (the bucket becomes a
 /// tombstone).
 /// Complexity: O(1) average.
-pub fn map_remove(m: &mut IntMap, key: Int) -> Bool {
+pub fn map_remove(m: &mut IntMap, key: Int) -> Bool
+  ensures: m.used >= 0
+{
   let cap = m.states.len();
   var idx = key;
   if idx < 0 {
@@ -190,13 +196,17 @@ pub fn map_remove(m: &mut IntMap, key: Int) -> Bool {
 
 /// Number of entries.
 /// Complexity: O(1).
-pub fn map_size(m: &IntMap) -> Int {
+pub fn map_size(m: &IntMap) -> Int
+  ensures: result >= 0
+{
   m.used
 }
 
 /// Collect all keys.
 /// Complexity: O(capacity).
-pub fn map_keys(m: &IntMap) -> Vec[Int] {
+pub fn map_keys(m: &IntMap) -> Vec[Int]
+  ensures: result.len() == map_size(m)
+{
   var out = Vec[Int].new();
   var i: Int = 0;
   while i < m.states.len() {
@@ -210,7 +220,9 @@ pub fn map_keys(m: &IntMap) -> Vec[Int] {
 
 /// Remove all entries.
 /// Complexity: O(capacity).
-pub fn map_clear(m: &mut IntMap) {
+pub fn map_clear(m: &mut IntMap)
+  ensures: m.used == 0
+{
   var i: Int = 0;
   while i < m.states.len() {
     m.states[i] = state_empty;

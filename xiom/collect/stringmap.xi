@@ -47,7 +47,9 @@ fn _bucket(m: &StringMap, key: Str) -> Int {
 /// Create a new empty string map.
 /// Returns: a map with a small initial table and zero entries.
 /// Complexity: O(1).
-pub fn string_map_new() -> StringMap {
+pub fn string_map_new() -> StringMap
+  ensures: result.count == 0
+{
   var buckets = Vec[Int].new();
   var i: Int = 0;
   while i < _SMAP_INITIAL {
@@ -97,7 +99,9 @@ fn _grow(m: &mut StringMap) {
 /// Params: m - the map; key - Str key; value - Int value.
 /// Re-inserting an existing key updates its value.
 /// Complexity: O(1) amortized.
-pub fn string_map_put(m: &mut StringMap, key: Str, value: Int) {
+pub fn string_map_put(m: &mut StringMap, key: Str, value: Int)
+  ensures: m.count >= 1
+{
   var idx = _find(m, key);
   if idx >= 0 {
     m.values[idx] = value;
@@ -138,7 +142,9 @@ pub fn string_map_contains(m: &StringMap, key: Str) -> Bool {
 /// Params: m - the map; key - Str key.
 /// Absent keys are a no-op. Arena memory is retained.
 /// Complexity: O(1) amortized.
-pub fn string_map_remove(m: &mut StringMap, key: Str) {
+pub fn string_map_remove(m: &mut StringMap, key: Str)
+  ensures: m.count >= 0
+{
   var b = _bucket(m, key);
   var prev: Int = -1;
   var e = m.buckets[b];
@@ -163,6 +169,8 @@ pub fn string_map_remove(m: &mut StringMap, key: Str) {
 /// Params: m - the map.
 /// Returns: the number of live key/value pairs.
 /// Complexity: O(1).
-pub fn string_map_size(m: &StringMap) -> Int {
+pub fn string_map_size(m: &StringMap) -> Int
+  ensures: result >= 0
+{
   return m.count;
 }

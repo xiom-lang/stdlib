@@ -162,15 +162,24 @@ T1/T2 yields.
 - [~] StringBuilder + alloc-free predicates shipped (DONE); runtime memops
       bound in xiom.mem (DONE); STRING fast-path re-land still
       compiler-blocked (Str-cast chained concat family)
-- [~] Legacy ciphers quarantined (banners DONE; physical crypto/legacy/
-      move UNBLOCKED and pending); TLS story documented (TLS_DECISION.md);
-      schannel binding not started
+- [x] Legacy ciphers quarantined: banners + physical move DONE 2026-09-12
+      (des/md5/sha under crypto/legacy/; module names frozen for the api
+      freeze, manifest paths synced; p_legacy_modules + 41-file crypto
+      battery green); TLS story documented (TLS_DECISION.md); schannel
+      binding not started
 - [~] Duplication consolidated -- STARTED 2026-09-10: 3 units landed
       (misc.soundex, string.glob shims + rc directory fix), inventory
       corrected; ~15 pairs remain (base32/ascii85/percent/punycode,
       endian x3, ip4/ip6, console/terminal, platform, geom translation)
-- [ ] Coverage number published + ratcheted in CI-equivalent sweep script --
-      OPEN: global 937 clauses / 8070 fns = 11.6%; no ratchet script yet
+- [x] Coverage number published + ratcheted in CI-equivalent sweep script --
+      DELIVERED 2026-09-12: global 1007 clauses / 8627 fns = 11.7%
+      (pub-with-clause 636/6465 = 9.8%); key modules io 38.9%,
+      string 17.1%, collect 2.0% (target >=60% in later waves). Wave 1
+      added 40 clauses on touched io/string/IntMap/StringMap fns,
+      verified by a 429-file battery with zero contract fallout.
+      Ratchet: coverage_scan.ps1 -RatchetFile coverage_floors32.json
+      (stdlib_ws tooling; positive + negative runs verified); floors are
+      per top-level stdlib/xiom directory.
 
 ## 9. Status audit -- 2026-09-10 (rounds 15-29, sweep29 in flight)
 
@@ -202,16 +211,25 @@ T1/T2 yields.
    fallback documented. Iteration order now varies run-to-run by design
    (STDLIB_CONTAINER_TUNING.md updated). Follow-up: generic HashMap[K,V]
    seed rollout.
-3. Legacy physical move to crypto/legacy/ + deprecation ladder (unblocked
-   by the delegation fix; pure moves + headers).
-4. Namespace cleanup wave 1: collections/.xi files declare module
-   xiom.collect.* (62 files) while xiom.collections also exists -- align
-   directory/module names (same class as the rc fix); memory quartet.
-5. Contract-coverage wave 1 (io/string/collections touched fns) + publish
-   the coverage number + add a ratchet mode to the sweep script.
-6. Dedup continuation: base32/ascii85/percent/punycode, endian three-way,
-   ip4+ip6, console/os.terminal/os.term, core.platform/os.platform --
-   each lands with a parity smoke.
+3. ~~Legacy physical move to crypto/legacy/ + deprecation ladder~~ DONE
+   2026-09-12: des/md5/sha moved to crypto/legacy/ with physical-location
+   headers; module names frozen (api_freeze), manifest synced; probe +
+   41-file crypto battery green.
+4. ~~Namespace cleanup wave 1: collections/.xi files declare module
+   xiom.collect.* (62 files) while xiom.collections also exists~~ DONE
+   2026-09-12: 61 xiom.collect.* files moved to stdlib/xiom/collect/
+   (rc-move pattern); xiom.collections aggregate stays at
+   collections/collections.xi; manifest + naming docs synced; 100/100
+   container smokes green. Memory quartet still queued.
+5. ~~Contract-coverage wave 1 (io/string/collections touched fns) + publish
+   the coverage number + add a ratchet mode~~ DONE 2026-09-12 (see gate #7).
+6. Dedup continuation: ~~endian three-way~~ DONE 2026-09-12
+   (convert/endian -> delegating shim over serialize.endian + bits;
+   twin-vs-vectors pinned by smoke_convert_endian). Remaining:
+   base32/ascii85/percent/punycode, ip4+ip6 (needs an API translation
+   pass -- Result/Vec[UInt8] vs Option/Vec[UInt16], not a blind shim),
+   console/os.terminal/os.term, core.platform/os.platform -- each lands
+   with a parity smoke.
 
 **B. Capability (C)**
 7. Runtime symbol audit: 441 xiom_* defs vs 247 stdlib externs => ~194
@@ -251,7 +269,8 @@ T1/T2 yields.
   cancellation-storm/saturation validation.
 - ~194 runtime symbols defined but unbound by any module (dead surface;
   audit pending). Runtime is 441 xiom_* fns vs 247 stdlib externs.
-- Contract coverage 11.6% globally; key modules 8-28% (target >=60%).
+- Contract coverage 11.7% globally / 9.8% pub-with-clause; key modules
+  io 38.9%, string 17.1%, collect 2.0% (target >=60%; wave 2+ owed).
 - Namespace/identity debt: collect vs collections, memory quartet,
   package.xi identity, geom/twin module names.
 - No fuzz/property infrastructure (stage-5 dependent); coverage number

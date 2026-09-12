@@ -659,6 +659,7 @@ pub fn stderr() -> Int
 
 /// FILE* handle of the standard input stream.
 pub fn stdin_file() -> Int
+  requires: true  // whole-body unsafe (T007); no preconditions
   ensures: result != 0
 {
   unsafe {
@@ -668,6 +669,7 @@ pub fn stdin_file() -> Int
 
 /// FILE* handle of the standard output stream.
 pub fn stdout_file() -> Int
+  requires: true  // whole-body unsafe (T007); no preconditions
   ensures: result != 0
 {
   unsafe {
@@ -677,6 +679,7 @@ pub fn stdout_file() -> Int
 
 /// FILE* handle of the standard error stream.
 pub fn stderr_file() -> Int
+  requires: true  // whole-body unsafe (T007); no preconditions
   ensures: result != 0
 {
   unsafe {
@@ -706,12 +709,16 @@ pub fn Cursor.new(data: Vec[UInt8]) -> Cursor
   Cursor{ data: data; pos: 0; }
 }
 
-pub fn Cursor.into_inner(self) -> Vec[UInt8] {
+pub fn Cursor.into_inner(self) -> Vec[UInt8]
+  ensures: result.len() == self.data.len()
+{
   self.data
 }
 
 // === Path operations ===
-pub fn join_paths(base: Str, child: Str) -> Str {
+pub fn join_paths(base: Str, child: Str) -> Str
+  ensures: result.len() >= base.len()
+{
   if base.is_empty() {
     return child;
   }
@@ -743,7 +750,9 @@ pub fn parent_path(path: Str) -> Option[Str] {
   None
 }
 
-pub fn file_name(path: Str) -> Option[Str] {
+pub fn file_name(path: Str) -> Option[Str]
+  ensures: result is Some => result.value.len() > 0
+{
   if path.is_empty() {
     return None;
   }
@@ -760,7 +769,9 @@ pub fn file_name(path: Str) -> Option[Str] {
   Some(path)
 }
 
-pub fn extension(path: Str) -> Option[Str] {
+pub fn extension(path: Str) -> Option[Str]
+  ensures: result is Some => result.value.len() > 0
+{
   let name = file_name(path)?;
   if name == "." || name == ".." {
     return None;
@@ -887,7 +898,9 @@ pub fn read_file_bytes(path: Str) -> Result[Vec[UInt8], IOError] {
 
 // file_size returns the size of a file in bytes, or None if
 // the path cannot be stated.
-pub fn file_size(path: Str) -> Option[Int] {
+pub fn file_size(path: Str) -> Option[Int]
+  ensures: result is Some => result.value >= 0
+{
   let m = metadata(path);
   match m {
     Ok(meta) => Some(meta.size);

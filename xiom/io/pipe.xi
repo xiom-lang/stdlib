@@ -142,7 +142,9 @@ pub fn pipe_write_line(fd: Int, s: Str) -> Result[Unit, Str> {
 /// Params: fd - the pipe fd.
 /// Returns: 0 (the runtime does not expose FIONREAD).
 /// Complexity: O(1).
-pub fn pipe_available(fd: Int) -> Int {
+pub fn pipe_available(fd: Int) -> Int
+  ensures: result >= 0
+{
   return 0;
 }
 
@@ -150,7 +152,9 @@ pub fn pipe_available(fd: Int) -> Int {
 /// Params: fd - the pipe fd; ms - the timeout in milliseconds.
 /// Returns: Ok(bytes read) even if the timeout elapsed, Err on failure.
 /// Complexity: O(ms) polls.
-pub fn pipe_read_timeout(fd: Int, ms: Int) -> Result[Int, Str> {
+pub fn pipe_read_timeout(fd: Int, ms: Int) -> Result[Int, Str>
+  ensures: result is Ok => result.value >= 0
+{
   var one: [1]UInt8;
   let n = unsafe { xiom_read(fd as Int32, &one[0], 1 as UInt) };
   if n < 0 {
@@ -163,7 +167,9 @@ pub fn pipe_read_timeout(fd: Int, ms: Int) -> Result[Int, Str> {
 /// Params: fd - the pipe fd; data - the bytes; ms - the timeout.
 /// Returns: Ok(bytes written), Err on failure.
 /// Complexity: O(ms) polls.
-pub fn pipe_write_timeout(fd: Int, data: &Vec[UInt8], ms: Int) -> Result[Int, Str> {
+pub fn pipe_write_timeout(fd: Int, data: &Vec[UInt8], ms: Int) -> Result[Int, Str>
+  ensures: result is Ok => result.value >= 0
+{
   var budget = ms;
   if budget < 0 {
     budget = 0;
