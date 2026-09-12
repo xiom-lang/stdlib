@@ -11,12 +11,18 @@ explicit paths only. Branch: `feat/architect`.
 State (verified 2026-09-12 late; r34/r35 isolated builds = committed HEAD
 8c921c32, after the compiler lane's R9 fix b581184d):
 - Sweeps: r33 935/935; r34 935/935 (fast-path re-land); r35 935/935
-  (contract wave 2). Three consecutive all-green corpora.
+  (contract wave 2); r36 935/935 (Item A findings burn-down).
+  Four consecutive all-green corpora (+ ratchet OK).
+- Item A stdlib status (2026-09-12): 237 -> 2 findings, 17 -> 1 parse
+  errors; the 2 findings + 1 parse error are the compiler-side D4/D5/D1
+  items (iter:413, path:261, time `<=>`). See section 2.10.
 - Part-2 deliverables (newest first): contract wave 2 -- 83 clauses
   across 56 collect containers, collect 2.0% -> 18.9%, global 12.6%
   clauses / 11.1% pub-with-clause; dedup audit R15 logged + ascii85
   direction corrected (e42520c1); string fast-path re-land + R16
   (a47ac737); memory-quartet namespace wave 2 (78b107fb).
+- Part-3 deliverable: Item A findings burn-down (b71d839f) -- 237 -> 2
+  findings, 17 -> 1 parse errors (rest are compiler D4/D5/D1); see 2.10.
 - Part-1 deliverables (same day, newest first): xiom.serialize.csv RFC
   4180 + smoke (e398df2f); endian trio dedup shim (9616b72f); contract
   wave 1 + ratchet gate #7 (69a07b7e); collect namespace wave 1
@@ -1053,4 +1059,40 @@ Next queue: contract wave 3 (collect depth + string/io), TOML, ip4/ip6
 translation unit, console/os.terminal/os.term + platform audits, and --
 once the compiler lane fixes R15 -- consolidate base32/percent/punycode
 + base16/base64/base58 behind shims.
+
+## 2.10. Item A stdlib findings burn-down (2026-09-12, part 3)
+
+The compiler lane shipped the catalog-body checker (Item A step 2,
+843a5a88) plus the per-site stdlib report (docs/ITEM_A_STDLIB_FINDINGS.md,
+695af0f0: 237 findings / 0 hard errors; D1-D6 marked compiler-side).
+Stdlib burn-down on committed HEAD (b71d839f):
+
+- **237 -> 2 findings and 17 -> 1 parse errors.** Both remaining findings
+  are the compiler-side items from the report: D4 xiom.iter:413 (generic
+  fn substitution) and D5 xiom.path:261 (bare-name collision); the last
+  parse error is xiom.time's `<=>` operator (D1).
+- **D2.1 unsafe confinement (~112 sites):** scattered extern calls got the
+  whole-fn `requires: true` safe-wrapper pattern (core/string/time/rand/
+  num/math/simd/geom/misc/hash/crypto/...); single calls and all raw
+  casts got local `unsafe { }` blocks (simd, sync, rc, park, collections,
+  io.open).
+- **T003/T007:** mem_copy/mem_set/mem_move, ptr null/null_mut/from_ref/
+  from_mut, mem.swap, siphash x4, cell release x2, async_yield_now.
+- **T006:** io stdio accessors now declare Int-returning externs (no raw
+  pointer tail).
+- **Numeric mixing (~22):** explicit casts in math, approximation,
+  trigonometry, geom.*, stats.histogram, rand.
+- **Missing returns:** json object/array parse loops, convert json
+  validators, ffi_check_ptr, ffi c_memcpy, os.err perror,
+  numerical.optimize_simplex (a genuinely missing brace fixed).
+- **Individual bugs:** regex.syntax `.unwrap()` cascade x10, rand uuid
+  hex `.unwrap()` x2, os Pipe.read capacity -> len, crypto curves/cipher
+  Result handling, compress decompress_gzip_str -> Str::from_utf8,
+  char currency/math literals ('GBP'/'+/-' mangling), legacy Slice shape
+  reconcile, finance `var` -> value_at_risk (reserved keyword), 5 stray
+  top-level braces (assert/base64/base64url/ascii85/idna), yaml_lite
+  match wildcards, thread.park null compare, hasharray/intmap dup sizes.
+- **Verification:** re-measure = `cargo test -p xiom-check
+  catalog_corpus_is_clean -- --ignored --nocapture` (isolated
+  CARGO_TARGET_DIR); full **r36 sweep 935/935 PASS**, coverage ratchet OK.
 
