@@ -1,27 +1,51 @@
 # Report to the STDLIB session -- Stage 3 Item A step 2 (compiler-lane triage)
 
 From: compiler lane. To: stdlib session.
-Status: all compiler-side artifacts fixed; **corpus at 0 findings, 0 hard
-errors, 1 parse error** (2026-09-12, after the stdlib lane's fixes). One item
-left: `xiom.time:232` `<=>` in `ensures:` (section P). The moment it lands,
-`CatalogCorpusReport::is_clean()` is true and the compiler lane flips the
-catalog findings to hard errors.
+Status (2026-09-12, updated): the corpus-isolation fix (synthetic corpus
+`use` aliases no longer leak into catalog-body contexts -- the gate now
+models what a real program sees) exposed a SECOND class: **modules using
+qualified aliases they never import**. 149 findings, see section Q. The
+previous 0/0/1 measurement was taken with the alias leak and was too
+permissive. The flip is re-pending on section Q.
 
 ## TL;DR (paste-ready)
 
-> Excellent work -- the corpus is at **0 findings, 0 hard errors**. Every
-> unsafe/numeric/extern/type item is cleared. ONE item left before the flip:
-> `xiom.time:232` uses `<=>` in `ensures:` (not an operator -- use `==`).
-> After that, `is_clean()` holds and the compiler lane flips catalog findings
-> to HARD errors + un-ignores the corpus gate. Re-measure with
-> `cargo test -p xiom-check catalog_corpus_is_clean -- --ignored
-> --nocapture`.
+> The corpus gate now checks each module under its OWN imports (a synthetic
+> `use` list only loads modules; it no longer binds aliases for bodies). That
+> exposed 149 real findings of one kind: **qualified aliases used but not
+> imported** -- `xiom.os` uses `env.*`, `io.*`, `string.*` without
+> `use xiom.env/io/string;`; `xiom.log` uses `io.*`; `xiom.net.https` uses
+> `string.*`; `xiom.crypto`/`xiom.collections` use `malloc`/`realloc`/`free`;
+> `xiom.simd` uses `math.sqrt`; `xiom.encoding` self-qualifies as
+> `encoding.url_encode`. Add the missing `use` lines (full per-site list in
+> section Q). Everything else (sections A-P) is still fixed. Re-measure:
+> `cargo test -p xiom-check catalog_corpus_is_clean -- --ignored --nocapture`
+> (`$env:XIOM_CATALOG_DUMP='1'` for every site).
 
-Measurement: live, both lanes; 0 findings at the last compiler check. The
-sections below are retained as history/context for the classes that were
-fixed and for the compiler-side items (section D). Nothing below is a
-compiler artifact -- if a fix looks wrong, ping the compiler lane in chat
-before working around it.
+Measurement: live, both lanes; the last compiler check is 149 findings / 0
+hard errors / 0 parse errors (section Q only). Nothing below is a compiler
+artifact -- if a fix looks wrong, ping the compiler lane in chat before
+working around it.
+
+## Q. Missing imports / unbound aliases (149 findings)
+
+BLOCKING THE FLIP. Groups (module:lines -> missing binding):
+
+| Module | Sites | Missing import / fix |
+|---|---|---|
+| `xiom.os` | 60,95,99,105,115,121,127,327,331,335,339,639,644,694 | `use xiom.env;` (`env.set_var/remove_var/current_dir/set_current_dir/temp_dir/home_dir/var_opt/current_exe`) |
+| `xiom.os` | 136,146,201,347,352,353,379,386,387,437,442,443,593,679,682,683,687 | `use xiom.io;` (`io.set_permissions/metadata/time_now/list_dir/join_paths/time_now`) |
+| `xiom.os` | 202,203,223,385 | `use xiom.string;` (`string.str_concat/str_contains`) |
+| `xiom.log` | 61,79,82,189 | `use xiom.io;` (`io.time_now/append_file/println/write_file`) |
+| `xiom.net.https` | 80,84,140,144,180 (+88,89,93,97 cascades) | `use xiom.string;` (`string.str_slice`; the `len`/`byte_at`/compare cascades should clear once the slice type resolves) |
+| `xiom.crypto` | 263,288 (+276 cascade) | bind `malloc`/`free` (`use xiom.alloc;` + `alloc.malloc/free`, or the bare helpers if alloc exports them) |
+| `xiom.collections` | 40,98,136,153 | bind `realloc` (same -- alloc module) |
+| `xiom.simd` | 238 | `use xiom.math;` (`math.sqrt`) |
+| `xiom.encoding` | 472 | `encoding.url_encode` is a SELF-qualified call (`module xiom.encoding`); drop the qualifier or import self |
+
+After adding imports, re-run the gate: remaining cascades (e.g. `cannot
+compare <error> with Str` in net.https) should disappear with the root
+unbound alias.
 
 ## P. Catalog parse diagnostics -- HARD ERRORS once the flip lands (D1)
 
