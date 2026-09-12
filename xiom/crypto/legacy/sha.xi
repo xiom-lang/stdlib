@@ -6,6 +6,10 @@ module xiom.crypto.sha
 // Kept only for legacy protocol interop (git objects, old TLS PRFs). Use
 // sha256/sha384/sha512 for all new designs. See docs/STDLIB_READINESS_PLAN.md.
 // ============================================================================
+// PHYSICAL LOCATION (2026-09-12): this file was moved to
+// stdlib/xiom/crypto/legacy/. The module name is unchanged (API freeze),
+// so existing `use xiom.crypto.sha;` imports keep working; new code must
+// not import it.
 
 use xiom.math;
 use xiom.encoding;

@@ -8,6 +8,10 @@ module xiom.crypto.md5
 // for passwords, signatures, or identifiers adversarial parties can influence.
 // See docs/STDLIB_READINESS_PLAN.md phase O.
 // ============================================================================
+// PHYSICAL LOCATION (2026-09-12): this file was moved to
+// stdlib/xiom/crypto/legacy/. The module name is unchanged (API freeze),
+// so existing `use xiom.crypto.md5;` imports keep working; new code must
+// not import it.
 
 use xiom.math;
 use xiom.encoding;

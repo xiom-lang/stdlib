@@ -10,6 +10,10 @@
 // Kept solely for compatibility with legacy data and protocols. Never use
 // for new encryption. See docs/STDLIB_READINESS_PLAN.md phase O.
 // ============================================================================
+// PHYSICAL LOCATION (2026-09-12): this file was moved to
+// stdlib/xiom/crypto/legacy/. The module name is unchanged (API freeze),
+// so existing `use xiom.des;` imports keep working; new code must not
+// import it.
 //
 // Full FIPS Publication 46-3 Data Encryption Standard.
 //
