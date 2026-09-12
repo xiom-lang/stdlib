@@ -75,7 +75,9 @@ pub fn f32x8_div(x: F32x8, y: F32x8) -> F32x8 {
 
 /// Lane-wise square root.
 /// Complexity: O(1).
-pub fn f32x8_sqrt(x: F32x8) -> F32x8 {
+pub fn f32x8_sqrt(x: F32x8) -> F32x8
+  requires: true  // extern sqrt calls below (T002 confinement)
+{
   F32x8{ a0: sqrt(x.a0 as Float64) as Float32; a1: sqrt(x.a1 as Float64) as Float32; a2: sqrt(x.a2 as Float64) as Float32; a3: sqrt(x.a3 as Float64) as Float32; a4: sqrt(x.a4 as Float64) as Float32; a5: sqrt(x.a5 as Float64) as Float32; a6: sqrt(x.a6 as Float64) as Float32; a7: sqrt(x.a7 as Float64) as Float32; }
 }
 

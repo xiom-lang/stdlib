@@ -149,7 +149,6 @@ pub fn assert_some[T](o: Option[T], msg: Str) -> T {
   xiom.core.panic(msg);
   o.value
 }
-}
 
 /// Fail unless `o` is None.
 /// Complexity: O(1).

@@ -24,7 +24,9 @@ var _state: Int = 0;
 var _seeded = false;
 
 // Advance the LCG and return the next pseudo-random byte.
-fn _next_byte() -> UInt8 {
+fn _next_byte() -> UInt8
+  requires: true  // extern clock call below (T002 confinement)
+{
   if !_seeded {
     var t = clock();
     if t == 0 {

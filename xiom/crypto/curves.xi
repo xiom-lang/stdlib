@@ -244,7 +244,11 @@ fn _bigint_to_le(b: &BigInt) -> Vec[UInt8] {
   var guard = 0;
   while i < 32 {
     var qr = bigint.bigint_div_mod(&v, &bigint.bigint_from_int(256));
-    result[i] = (bigint.bigint_to_int(&qr.1)) as UInt8;
+    let rem = bigint.bigint_to_int(&qr.1);
+    match rem {
+      Ok(rv) => { result[i] = rv as UInt8; },
+      Err(_) => { result[i] = 0; },
+    }
     v = qr.0;
     i = i + 1;
   }
@@ -321,12 +325,13 @@ pub fn secp256k1_point_mul(scalar: &Vec[UInt8], point: &Vec[UInt8]) -> (Vec[UInt
   var zero = bigint.bigint_zero();
   var result = (_bytes_from_bigint(&zero, 32), _bytes_from_bigint(&zero, 32));
   var p = _bigint_from_bytes(point);
+  var p_bytes = _bytes_from_bigint(&p, 32);
   var i = 0;
   while i < 256 {
     result = secp256k1_point_add(&result.0, &result.1);
     var bit = _scalar_bit(scalar, 255 - i);
     if bit != 0 {
-      result = secp256k1_point_add(&result.0, &p);
+      result = secp256k1_point_add(&result.0, &p_bytes);
     }
     i = i + 1;
   }

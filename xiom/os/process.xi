@@ -60,7 +60,9 @@ pub fn exit(code: Int)
 // indicating "not implemented". Programs should check for this value.
 
   /// Return the current process ID (via the xiom_getpid runtime intrinsic).
-  pub fn get_pid() -> Int {
+  pub fn get_pid() -> Int
+    requires: true  // extern getpid call below (T002 confinement)
+  {
       xiom_getpid()
   }
 

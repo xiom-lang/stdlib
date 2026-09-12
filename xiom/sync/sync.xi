@@ -67,6 +67,7 @@ pub fn Mutex.into_inner[T](self) -> T
   requires: inner != null
   requires: data != null
 {
+  unsafe {
     let val = ptr.read(data as *T);
     xiom_mutex_destroy(inner);
     alloc.dealloc(inner, 64);
@@ -353,7 +354,9 @@ pub fn Arc.new[T](value: T) -> Arc[T]
     let dest = raw as *mut ArcInner[T];
     *dest = inner;
   };
-  return Arc[T]{ ptr: raw as *ArcInner[T]; }
+  unsafe {
+    return Arc[T]{ ptr: raw as *ArcInner[T]; }
+  }
 }
 
 pub fn Arc.clone[T](self) -> Arc[T]
@@ -383,8 +386,12 @@ pub fn Arc.strong_count[T](self) -> Int
   }
 }
 
-pub fn Arc.ptr_eq[T, U](self, other: &Arc[U]) -> Bool {
-  ptr as *UInt8 == other.ptr as *UInt8
+pub fn Arc.ptr_eq[T, U](self, other: &Arc[U]) -> Bool
+  requires: true  // whole-body unsafe pointer compare (T007)
+{
+  unsafe {
+    return ptr as *UInt8 == other.ptr as *UInt8;
+  }
 }
 
 pub fn Arc.drop[T](self)
@@ -424,7 +431,9 @@ pub fn AtomicBool.new(val: Bool) -> AtomicBool {
   let p = alloc.alloc(8);
   let iv: Int = if val { 1 } else { 0 };
   unsafe { *(p as *Int) = iv; }
-  return AtomicBool{ ptr: p as *Int; }
+  unsafe {
+    return AtomicBool{ ptr: p as *Int; }
+  }
 }
 
 pub fn AtomicBool.load(self) -> Bool
@@ -462,7 +471,9 @@ pub type AtomicInt = { ptr: *Int; }
 pub fn AtomicInt.new(val: Int) -> AtomicInt {
   let p = alloc.alloc(8);
   unsafe { *(p as *Int) = val; }
-  return AtomicInt{ ptr: p as *Int; }
+  unsafe {
+    return AtomicInt{ ptr: p as *Int; }
+  }
 }
 
 pub fn AtomicInt.load(self) -> Int

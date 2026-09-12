@@ -35,7 +35,9 @@ fn _lcg_step(state: Int) -> Int {
 // === Standard RNG ===
 pub type StdRng = { state: Int; } derive[Clone]
 
-pub fn StdRng.new() -> StdRng {
+pub fn StdRng.new() -> StdRng
+  requires: true  // extern clock call below (T002 confinement)
+{
   let t = clock();
   var seed = t;
   if seed == 0 {
@@ -91,7 +93,7 @@ pub fn random_int(min: Int, max: Int) -> Int
   if range <= 0 {
     return min;
   };
-  let val = xiom.math.floor(r * (range as Float64));
+  let val = xiom.math.floor(r * (range as Float64)) as Int;
   if val >= range {
     return max;
   };
@@ -322,9 +324,9 @@ fn _format_uuid(bytes: &Vec[UInt8]) -> Str {
         pos = pos + 1;
       };
       let b = bytes[i];
-      buf[pos] = hex.char_at((b >> 4) as Int).unwrap() as UInt8;
+      buf[pos] = hex.char_at((b >> 4) as Int) as UInt8;
       pos = pos + 1;
-      buf[pos] = hex.char_at((b & 0x0F) as Int).unwrap() as UInt8;
+      buf[pos] = hex.char_at((b & 0x0F) as Int) as UInt8;
       pos = pos + 1;
       i = i + 1;
     };
@@ -373,7 +375,9 @@ pub fn uuid_v7() -> Str
 
 // === Seeding ===
 
-pub fn seed_from_entropy() {
+pub fn seed_from_entropy()
+  requires: true  // extern clock call below (T002 confinement)
+{
   let t = clock();
   var seed = t;
   if seed == 0 {
@@ -384,7 +388,9 @@ pub fn seed_from_entropy() {
   _global_state = seed;
 }
 
-pub fn seed_from_time() {
+pub fn seed_from_time()
+  requires: true  // extern time call below (T002 confinement)
+{
   let t = time(0);
   var seed = t;
   if seed <= 0 {

@@ -90,7 +90,7 @@ pub fn sin_pure(x: Float64) -> Float64 {
   var term = a;
   var i = 1;
   while i <= 10 {
-    var den = (2 * i) * (2 * i + 1) as Float64;
+    var den = (((2 * i) * (2 * i + 1)) as Float64);
     term = -term * a * a / den;
     result = result + term;
     i = i + 1;
@@ -105,7 +105,7 @@ pub fn cos_pure(x: Float64) -> Float64 {
   var term = 1.0;
   var i = 1;
   while i <= 10 {
-    var den = (2 * i - 1) * (2 * i) as Float64;
+    var den = (((2 * i - 1) * (2 * i)) as Float64);
     term = -term * a * a / den;
     result = result + term;
     i = i + 1;

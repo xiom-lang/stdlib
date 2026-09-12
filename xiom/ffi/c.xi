@@ -23,6 +23,9 @@ extern "C" {
   fn memcpy(dst: *UInt8, src: *UInt8, n: UInt) -> *UInt8;
   fn memset(dst: *UInt8, value: Int, n: UInt) -> *UInt8;
   fn memcmp(a: *UInt8, b: *UInt8, n: UInt) -> Int;
+  // Runtime bulk copy (asm with a C fallback); the checker's builtin
+  // typing for libc `memcpy` returns (), so the wrapper delegates here.
+  fn xiom_asm_memcpy(dst: *UInt8, src: *UInt8, n: UInt) -> *UInt8;
   fn atoi(s: *UInt8) -> Int;
   fn atof(s: *UInt8) -> Float64;
   fn abs(n: Int) -> Int;
@@ -73,8 +76,8 @@ pub fn c_memcpy(dst: Int, src: Int, n: Int) -> Int
   requires: src != 0
 {
   unsafe {
-    let p = memcpy(dst as *UInt8, src as *UInt8, n as UInt);
-    p as Int
+    let p = xiom_asm_memcpy(dst as *UInt8, src as *UInt8, n as UInt);
+    return p as Int;
   }
 }
 

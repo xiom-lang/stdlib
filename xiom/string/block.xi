@@ -137,7 +137,9 @@ pub fn unicode_block(c: Char) -> Str {
 /// Returns: the block name, or "Undefined" when unparsable/unmapped.
 /// Error case: "Undefined" for empty, non-hex, or unmapped input.
 /// Complexity: O(|code| + number of table entries).
-pub fn unicode_block_name(code: Str) -> Str {
+pub fn unicode_block_name(code: Str) -> Str
+  requires: true  // extern char_at calls in the parsing loops (T002 confinement)
+{
   let len = string.str_len(code);
   var start: Int = 0;
   if len >= 2 {

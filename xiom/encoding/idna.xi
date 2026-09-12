@@ -317,7 +317,6 @@ pub fn idna_uts46_normalize(s: Str) -> Result[Str, Str] {
     return Ok(Str.from_cstring(buf));
   }
 }
-}
 
 /// Applies the older Nameprep profile (RFC 3491 subset) to a domain string:
 /// case folding (ASCII lowercase), rejection of whitespace, control and
@@ -368,7 +367,6 @@ pub fn idna_nameprep(s: Str) -> Result[Str, Str] {
     buf[blen] = 0;
     return Ok(Str.from_cstring(buf));
   }
-}
 }
 
 /// True iff `cp` falls in a right-to-left script (Hebrew, Arabic, Syriac,

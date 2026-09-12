@@ -146,7 +146,9 @@ pub fn Vec4f.new(x: Float32, y: Float32, z: Float32, w: Float32) -> Vec4f {
     ptr.write((data + 8) as *Float32, z);
     ptr.write((data + 12) as *Float32, w);
   }
-  return Vec4f{ data: data as *Float32 };
+  unsafe {
+    return Vec4f{ data: data as *Float32 };
+  }
 }
 
 pub fn Vec4f.splat(value: Float32) -> Vec4f {
@@ -164,7 +166,9 @@ pub fn Vec4f.add(self, other: Vec4f) -> Vec4f
   unsafe { xiom_simd_f32x4_add(data, other.data, out as *Float32); }
   // 6D.3: Free consumed input vectors to prevent memory leak
   unsafe { alloc.free(data as *UInt8); alloc.free(other.data as *UInt8); }
-  return Vec4f{ data: out as *Float32 };
+  unsafe {
+    return Vec4f{ data: out as *Float32 };
+  }
 }
 
 pub fn Vec4f.sub(self, other: Vec4f) -> Vec4f
@@ -173,7 +177,9 @@ pub fn Vec4f.sub(self, other: Vec4f) -> Vec4f
   let out = alloc.alloc(16);
   unsafe { xiom_simd_f32x4_sub(data, other.data, out as *Float32); }
   unsafe { alloc.free(data as *UInt8); alloc.free(other.data as *UInt8); }
-  return Vec4f{ data: out as *Float32 };
+  unsafe {
+    return Vec4f{ data: out as *Float32 };
+  }
 }
 
 pub fn Vec4f.mul(self, other: Vec4f) -> Vec4f
@@ -182,14 +188,18 @@ pub fn Vec4f.mul(self, other: Vec4f) -> Vec4f
   let out = alloc.alloc(16);
   unsafe { xiom_simd_f32x4_mul(data, other.data, out as *Float32); }
   unsafe { alloc.free(data as *UInt8); alloc.free(other.data as *UInt8); }
-  return Vec4f{ data: out as *Float32 };
+  unsafe {
+    return Vec4f{ data: out as *Float32 };
+  }
 }
 
 pub fn Vec4f.div(self, other: Vec4f) -> Vec4f {
   let out = alloc.alloc(16);
   unsafe { xiom_simd_f32x4_div(data, other.data, out as *Float32); }
   unsafe { alloc.free(data as *UInt8); alloc.free(other.data as *UInt8); }
-  return Vec4f{ data: out as *Float32 };
+  unsafe {
+    return Vec4f{ data: out as *Float32 };
+  }
 }
 
 pub fn Vec4f.sqrt(self) -> Vec4f
@@ -198,7 +208,9 @@ pub fn Vec4f.sqrt(self) -> Vec4f
   let out = alloc.alloc(16);
   unsafe { xiom_simd_f32x4_sqrt(data, out as *Float32); }
   unsafe { alloc.free(data as *UInt8); }
-  return Vec4f{ data: out as *Float32 };
+  unsafe {
+    return Vec4f{ data: out as *Float32 };
+  }
 }
 
 pub fn Vec4f.dot(self, other: Vec4f) -> Float32
@@ -287,9 +299,11 @@ pub fn Vec8f.new(v0: Float32, v1: Float32, v2: Float32, v3: Float32,
     ptr.write(p, v0); ptr.write(p + 4, v1);
     ptr.write(p + 8, v2); ptr.write(p + 12, v3);
     ptr.write(p + 16, v4); ptr.write(p + 20, v5);
-    ptr.write(p + 24, v6); ptr.write(p + 28, v7);
+    ptr.write(p + 24, v6);     ptr.write(p + 28, v7);
   }
-  return Vec8f{ data: data as *Float32 };
+  unsafe {
+    return Vec8f{ data: data as *Float32 };
+  }
 }
 
 pub fn Vec8f.add(self, other: Vec8f) -> Vec8f
@@ -297,7 +311,9 @@ pub fn Vec8f.add(self, other: Vec8f) -> Vec8f
 {
   let out = alloc.alloc(32);
   unsafe { xiom_simd_f32x8_add(data, other.data, out as *Float32); }
-  return Vec8f{ data: out as *Float32 };
+  unsafe {
+    return Vec8f{ data: out as *Float32 };
+  }
 }
 
 pub fn Vec8f.mul(self, other: Vec8f) -> Vec8f
@@ -305,5 +321,7 @@ pub fn Vec8f.mul(self, other: Vec8f) -> Vec8f
 {
   let out = alloc.alloc(32);
   unsafe { xiom_simd_f32x8_mul(data, other.data, out as *Float32); }
-  return Vec8f{ data: out as *Float32 };
+  unsafe {
+    return Vec8f{ data: out as *Float32 };
+  }
 }

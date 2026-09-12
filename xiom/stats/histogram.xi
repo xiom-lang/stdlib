@@ -161,7 +161,7 @@ pub fn histogram_quantile(h: Histogram, q: Float64) -> Float64 {
   var k = 0;
   while k < n {
     acc = acc + h.counts[k];
-    if acc >= target {
+    if (acc as Float64) >= target {
       idx = k;
       k = n;
     }

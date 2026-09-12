@@ -186,7 +186,10 @@ pub fn rwlock_is_write_locked(l: &SyncRwLock) -> Bool {
 /// Returns: the address of the writer cell as an integer.
 /// Complexity: O(1). Frees the state storage.
 pub fn rwlock_into_inner(l: &mut SyncRwLock) -> Int {
-  let handle = l.writer as Int;
+  var handle: Int = 0;
+  unsafe {
+    handle = l.writer as Int;
+  }
   unsafe { alloc.dealloc(l.guard as *UInt8, 8); }
   unsafe { alloc.dealloc(l.readers as *UInt8, 8); }
   unsafe { alloc.dealloc(l.writer as *UInt8, 8); }

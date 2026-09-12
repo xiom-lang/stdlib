@@ -230,8 +230,12 @@ pub fn format2(fmt: Str, arg1: Str, arg2: Str) -> Str {
   format1(s, arg2)
 }
 
-pub fn byte_at(s: Str, pos: Int) -> UInt8 {
-  (xiom_byte_at(s, pos)) as UInt8
+pub fn byte_at(s: Str, pos: Int) -> UInt8
+  requires: true  // extern byte accessor confined below (T002/T007)
+{
+  unsafe {
+    return (xiom_byte_at(s, pos)) as UInt8;
+  }
 }
 
 pub fn char_at(s: Str, pos: Int) -> Option[Char]
@@ -328,7 +332,9 @@ pub fn lines(s: Str) -> Vec[Str]
   str_split(s, "\n")
 }
 
-pub fn words(s: Str) -> Vec[Str] {
+pub fn words(s: Str) -> Vec[Str]
+  requires: true  // extern char_at calls in the loops (T002 confinement)
+{
   var result = Vec[Str].new();
   let len = s.len();
   var i: Int = 0;
@@ -507,7 +513,9 @@ pub fn str_strip_suffix(s: Str, suffix: Str) -> Option[Str] {
 // Escapes special characters (\n, \t, \", \\, \r) in `s`.
 // Returns a new string with escape sequences replaced by their literal representations.
 // O(|s|). For multi-byte UTF-8 chars, only \n \t \" \\ \r are escaped.
-pub fn str_escape(s: Str) -> Str {
+pub fn str_escape(s: Str) -> Str
+  requires: true  // extern char_at call in the loop (T002 confinement)
+{
   var result = "";
   let len = s.len();
   var i: Int = 0;
@@ -559,7 +567,9 @@ pub fn str_escape(s: Str) -> Str {
 // Un-escapes a string that contains escape sequences like \n \t \" \\ \r.
 // Returns the string with literal escape sequences replaced by the actual characters.
 // O(|s|). Unrecognised escape sequences are left unchanged.
-pub fn str_unescape(s: Str) -> Str {
+pub fn str_unescape(s: Str) -> Str
+  requires: true  // extern char_at calls in the loop (T002 confinement)
+{
   var result = "";
   let len = s.len();
   var i: Int = 0;

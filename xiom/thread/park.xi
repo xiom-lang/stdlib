@@ -31,11 +31,11 @@ extern "C" {
 /// ParkToken - a standalone one-shot park/unpark pair not tied to a thread.
 pub type ParkToken = { flag: *Int; }
 
-var _park_flag: *Int = 0 as *Int;
+var _park_flag: *Int = ptr.null[Int]();
 
 /// Obtain the shared park flag, allocating it on first use.
 fn park_get_flag() -> *Int {
-  if _park_flag == 0 as *Int {
+  if ptr.is_null(_park_flag) {
     _park_flag = alloc.alloc(8);
     var p: *Int;
     unsafe { p = _park_flag as *Int; }

@@ -283,6 +283,7 @@ fn _valid_object(s: Str, pos: &mut Int) -> Bool {
       return false;
     }
   }
+  return false;
 }
 
 // Validate [v, ...].
@@ -309,6 +310,7 @@ fn _valid_array(s: Str, pos: &mut Int) -> Bool {
       return false;
     }
   }
+  return false;
 }
 
 // Validate a quoted string (control bytes below 0x20 are rejected).

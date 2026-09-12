@@ -205,19 +205,20 @@ pub fn is_symbol(c: Char) -> Bool {
 }
 
 // Returns true if `c` is a currency symbol.
-// Covers $, c, GBP, $, JPY, and the currency symbols block U+20A0..U+20CF.
+// Covers $, cent, pound, yen, and the currency symbols block U+20A0..U+20CF.
 pub fn is_currency(c: Char) -> Bool {
   let code = to_int_from_char(c);
-  return c == '$' || c == 'c' || c == 'GBP' || c == '$' || c == 'JPY'
+  return code == 0x24 || code == 0xA2 || code == 0xA3 || code == 0xA5
       || (code >= 0x20A0 && code <= 0x20CF);
 }
 
 // Returns true if `c` is a mathematical symbol.
-// Covers +, -, *, /, =, <, >, and the mathematical operators block U+2200..U+22FF.
+// Covers +, -, *, /, =, <, >, the plus-minus sign, and the mathematical
+// operators block U+2200..U+22FF.
 pub fn is_math_symbol(c: Char) -> Bool {
   let code = to_int_from_char(c);
   return c == '+' || c == '-' || c == '*' || c == '/' || c == '=' || c == '<' || c == '>'
-      || c == '+/-' || c == 'x' || c == '/'
+      || code == 0xB1 || c == 'x'
       || (code >= 0x2200 && code <= 0x22FF);
 }
 

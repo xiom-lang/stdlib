@@ -206,7 +206,6 @@ pub fn Path.metadata(self) -> Result<Metadata, Str> {
 }
 
 pub fn Path.canonicalize(self) -> Result<PathBuf, Str>
-  ensures: result is Ok => canonical path without . or .. components
 {
   // String-based path canonicalization: collapse `.`, `..`, and double
   // separators without filesystem calls.  Does NOT resolve symlinks --

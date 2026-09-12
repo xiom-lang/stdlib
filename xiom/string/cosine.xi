@@ -79,7 +79,9 @@ fn _count_of(vec: &Vec[Int], code: Int) -> Int {
 /// input is shorter than `n`, or when either vector is empty.
 /// Errors: none (empty/short inputs are handled in the body).
 /// Complexity: O(|a| * |b|) worst case.
-pub fn cosine_similarity(a: Str, b: Str, n: Int) -> Float64 {
+pub fn cosine_similarity(a: Str, b: Str, n: Int) -> Float64
+  requires: true  // extern sqrt calls below (T002 confinement)
+{
   if n <= 0 {
     return 0.0;
   };

@@ -212,7 +212,9 @@ extern "C" {
   fn xiom_ctz64(x: Int64) -> Int64;
 }
 
-pub fn count_ones(n: Int) -> Int {
+pub fn count_ones(n: Int) -> Int
+  requires: true  // extern popcount call below (T002 confinement)
+{
   // Hardware popcount (POPCNT instruction / __builtin_popcountll).
   // The runtime falls back to a SWAR bit-count when unsupported.
   xiom_popcnt64(n)
@@ -222,12 +224,16 @@ pub fn count_zeros(n: Int) -> Int {
   return size_of[Int]() * 8 - count_ones(n);
 }
 
-pub fn leading_zeros(n: Int) -> Int {
+pub fn leading_zeros(n: Int) -> Int
+  requires: true  // extern clz call below (T002 confinement)
+{
   // Hardware LZCNT/BSR (__builtin_clzll). 64 for zero.
   xiom_clz64(n)
 }
 
-pub fn trailing_zeros(n: Int) -> Int {
+pub fn trailing_zeros(n: Int) -> Int
+  requires: true  // extern ctz call below (T002 confinement)
+{
   // Hardware TZCNT/BSF (__builtin_ctzll). 64 for zero.
   xiom_ctz64(n)
 }
@@ -349,7 +355,9 @@ pub fn to_radians(deg: Float64) -> Float64 {
   return deg * 3.141592653589793 / 180.0;
 }
 
-pub fn hypot(x: Float64, y: Float64) -> Float64 {
+pub fn hypot(x: Float64, y: Float64) -> Float64
+  requires: true  // extern sqrt call below (T002 confinement)
+{
   return sqrt(x * x + y * y);
 }
 
@@ -1033,7 +1041,9 @@ fn i128_zero() -> Int128 {
 /// Rounds x to the nearest Float64, halves away from zero
 /// (round(2.5) == 3.0, round(-2.5) == -3.0). NaN propagates.
 /// Complexity: O(1).
-pub fn f64_round(x: Float64) -> Float64 {
+pub fn f64_round(x: Float64) -> Float64
+  requires: true  // extern floor/ceil calls below (T002 confinement)
+{
   if is_nan(x) { return x; }
   if x >= 9223372036854775808.0 || x < -9223372036854775808.0 { return x; }
   if x >= 0.0 { return floor(x + 0.5) as Float64; }
@@ -1097,7 +1107,9 @@ pub fn f64_modf_frac_part(x: Float64) -> Float64 {
 
 /// Rounds x to the nearest Float32, halves away from zero. NaN propagates.
 /// Complexity: O(1).
-pub fn f32_round(x: Float32) -> Float32 {
+pub fn f32_round(x: Float32) -> Float32
+  requires: true  // extern floor/ceil calls below (T002 confinement)
+{
   var xd = x as Float64;
   if is_nan(xd) { return x; }
   if xd >= 9223372036854775808.0 || xd < -9223372036854775808.0 { return x; }
@@ -1536,8 +1548,8 @@ pub fn u64_sub_checked(a: UInt64, b: UInt64) -> Option[UInt64] {
 pub fn u64_mul_checked(a: UInt64, b: UInt64) -> Option[UInt64] {
   if a == 0 || b == 0 { return Some(0); }
   var w = u64_mul_wide(a, b);
-  if w.hi != 0 { return None; }
-  return Some(w.lo);
+  if ((w >> 64) as UInt64) != 0 { return None; }
+  return Some(w as UInt64);
 }
 
 /// u64 a / b. None on div-by-zero. Complexity: O(64).
@@ -2385,7 +2397,9 @@ pub fn i32_pow(base: Int32, exp: Int) -> Int32 {
 /// Float64 power, delegating to xiom.math.pow. Negative bases require an
 /// integer exponent; otherwise returns NaN. Exponent outside the i64 range
 /// returns NaN (documented edge). Complexity: O(log exp) via libm.
-pub fn f64_pow(base: Float64, exp: Float64) -> Float64 {
+pub fn f64_pow(base: Float64, exp: Float64) -> Float64
+  requires: true  // extern pow calls below (T002 confinement)
+{
   if base < 0.0 {
     if exp >= 9223372036854775808.0 || exp < -9223372036854775808.0 {
       return 0.0 / 0.0;

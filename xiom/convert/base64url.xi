@@ -174,4 +174,3 @@ pub fn base64url_decode_str(s: Str) -> Result[Str, Str] {
     },
   }
 }
-}

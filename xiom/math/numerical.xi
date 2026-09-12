@@ -1183,10 +1183,10 @@ pub fn optimize_simplex(f: fn(&Vec[Float64]) -> Float64, x0: &Vec[Float64], tol:
         }
       }
     }
+    }
     iter = iter + 1;
   }
   return simplex[0];
-}
 }
 
 // Minimize f by Powell's conjugate direction method from x0 (cyclic

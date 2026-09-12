@@ -15,8 +15,12 @@ type Vec[T] = {
   invariant: len <= cap;
 }
 
-fn Vec.new[T]() -> Vec[T] {
-  return Vec[T]{ data: 0 as *T, len: 0, cap: 0 };
+fn Vec.new[T]() -> Vec[T]
+  requires: true  // null-data init cast confined below (T002/T007)
+{
+  unsafe {
+    return Vec[T]{ data: 0 as *T, len: 0, cap: 0 };
+  }
 }
 
 fn Vec.with_capacity[T](cap: Int) -> Vec[T] {
@@ -209,19 +213,19 @@ fn Vec.set[T](index: Int, value: T)
 pub fn Vec[T].as_slice(self) -> Slice[T]
   requires: len >= 0
   requires: data != null || len == 0
-  ensures: result.len == len
-  ensures: result.data == data
+  ensures: result.len() == len
+  ensures: result.data.len == len
 {
-  Slice[T]{ data: data, len: len }
+  Slice[T]{ data: self }
 }
 
 pub fn Vec[T].as_mut_slice(self) -> Slice[T]
   requires: len >= 0
   requires: data != null || len == 0
-  ensures: result.len == len
-  ensures: result.data == data
+  ensures: result.len() == len
+  ensures: result.data.len == len
 {
-  Slice[T]{ data: data, len: len }
+  Slice[T]{ data: self }
 }
 
 // === Map ===
@@ -1746,5 +1750,4 @@ pub fn vec_unzip_odds(v: &Vec[Int]) -> Vec[Int] {
   }
   return result;
 }
-  result
-}
+

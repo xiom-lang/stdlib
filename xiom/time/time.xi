@@ -188,11 +188,15 @@ pub fn Duration.checked_sub(self, other: Duration) -> Option[Duration] {
 // === Instant -- a point in time (monotonic clock) ===
 pub type Instant = { t: Int; }
 
-pub fn Instant.now() -> Instant {
+pub fn Instant.now() -> Instant
+  requires: true  // extern time() call (T002 confinement)
+{
   return Instant{ t: time(0); };
 }
 
-pub fn Instant.elapsed(self) -> Duration {
+pub fn Instant.elapsed(self) -> Duration
+  requires: true  // extern time() call (T002 confinement)
+{
   let now = time(0);
   let diff = now - self.t;
   return Duration.from_secs(diff);
@@ -214,7 +218,9 @@ pub fn Instant.sub(self, d: Duration) -> Instant {
 // === SystemTime -- wall clock time ===
 pub type SystemTime = { secs: Int; nanos: Int; }
 
-pub fn SystemTime.now() -> SystemTime {
+pub fn SystemTime.now() -> SystemTime
+  requires: true  // extern time() call (T002 confinement)
+{
   return SystemTime{ secs: time(0); nanos: 0; };
 }
 
@@ -293,7 +299,9 @@ fn decompose_epoch(epoch: Int) -> DateTime {
   return DateTime{ year: year; month: month; day: day; hour: hour; minute: minute; second: second; weekday: weekday; };
 }
 
-pub fn DateTime.now() -> DateTime {
+pub fn DateTime.now() -> DateTime
+  requires: true  // extern time() call (T002 confinement)
+{
   let epoch = time(0);
   return decompose_epoch(epoch);
 }
@@ -328,7 +336,9 @@ pub fn DateTime.weekday(self) -> Int {
   return self.weekday;
 }
 
-pub fn utc_now() -> DateTime {
+pub fn utc_now() -> DateTime
+  requires: true  // extern time() call (T002 confinement)
+{
   let epoch = time(0);
   return decompose_epoch(epoch);
 }
@@ -338,7 +348,9 @@ pub fn local_now() -> DateTime {
 }
 
 // === Sleep / Wait ===
-pub fn sleep(dur: Duration) {
+pub fn sleep(dur: Duration)
+  requires: true  // extern time() calls in the wait loop (T002 confinement)
+{
   let total_ms = dur.as_millis();
   let start = time(0);
   let end = start + total_ms / MILLIS_PER_SEC;
@@ -346,14 +358,18 @@ pub fn sleep(dur: Duration) {
   };
 }
 
-pub fn sleep_ms(ms: Int) {
+pub fn sleep_ms(ms: Int)
+  requires: true  // extern time() calls in the wait loop (T002 confinement)
+{
   let start = time(0);
   let end = start + ms / MILLIS_PER_SEC;
   while time(0) < end {
   };
 }
 
-pub fn sleep_until(instant: Instant) {
+pub fn sleep_until(instant: Instant)
+  requires: true  // extern time() call in the wait loop (T002 confinement)
+{
   while time(0) < instant.t {
   };
 }
@@ -392,7 +408,9 @@ pub fn date_new(year: Int, month: Int, day: Int) -> Date {
 
 // date_now returns the current date computed from the Unix timestamp.
 // Complexity: O(1). Uses time(0) for the system clock.
-pub fn date_now() -> Date {
+pub fn date_now() -> Date
+  requires: true  // extern time() call (T002 confinement)
+{
   let ts = time(0);
   return timestamp_to_date(ts);
 }
@@ -596,7 +614,9 @@ pub fn date_compare(a: &Date, b: &Date) -> Int {
 
 // unix_timestamp returns the current Unix timestamp (seconds since epoch).
 // Delegates to the C time(2) call.  Complexity: O(1).
-pub fn unix_timestamp() -> Int {
+pub fn unix_timestamp() -> Int
+  requires: true  // extern time() call (T002 confinement)
+{
   return time(0);
 }
 

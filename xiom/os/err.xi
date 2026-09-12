@@ -149,7 +149,7 @@ pub fn strerror(code: Int) -> Str {
 /// Complexity: O(1). Pure.
 pub fn perror(msg: Str) -> Unit {
   let joined = msg + ": " + errno_message();
-  io.println(joined);
+  let _ = io.println(joined);
 }
 
 /// Return the message for the current errno value.
