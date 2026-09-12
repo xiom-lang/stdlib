@@ -109,7 +109,9 @@ pub fn uf_connected(uf: &UnionFind, x: Int, y: Int) -> Bool {
 /// Size of the set containing `x` (number of elements in its component).
 /// Returns 0 for an out-of-range id.
 /// O(alpha n) amortized (read-only traversal).
-pub fn uf_component_size(uf: &UnionFind, x: Int) -> Int {
+pub fn uf_component_size(uf: &UnionFind, x: Int) -> Int
+  ensures: result >= 0
+{
   var root = _find_no_compress(uf, x);
   if root == -1 {
     return 0;

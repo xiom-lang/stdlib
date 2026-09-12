@@ -110,7 +110,9 @@ pub fn trie_contains(t: &Trie, word: Str) -> Bool {
 }
 
 /// Number of words stored.
-pub fn trie_size(t: &Trie) -> Int {
+pub fn trie_size(t: &Trie) -> Int
+  ensures: result >= 0
+{
   return t.size;
 }
 

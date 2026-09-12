@@ -63,6 +63,8 @@ pub fn fenwick_get(t: &FenwickTree, idx: Int) -> Int {
 }
 
 /// Number of slots.
-pub fn fenwick_size(t: &FenwickTree) -> Int {
+pub fn fenwick_size(t: &FenwickTree) -> Int
+  ensures: result >= 0
+{
   return t.n;
 }

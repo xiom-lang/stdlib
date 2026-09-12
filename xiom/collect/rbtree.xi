@@ -323,7 +323,9 @@ pub fn rbtree_remove(t: &mut RbTree, key: Int) -> Bool {
 }
 
 /// Number of keys. O(1).
-pub fn rbtree_size(t: &RbTree) -> Int {
+pub fn rbtree_size(t: &RbTree) -> Int
+  ensures: result >= 0
+{
   return t.size;
 }
 

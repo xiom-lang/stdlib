@@ -88,12 +88,16 @@ pub fn pqueue_peek(q: &PHeap) -> Option[Int] {
 }
 
 /// Number of elements in the queue. O(1).
-pub fn pqueue_len(q: &PHeap) -> Int {
+pub fn pqueue_len(q: &PHeap) -> Int
+  ensures: result >= 0
+{
   var len = q.data.len();
   return len;
 }
 
 /// True if the queue holds no elements. O(1).
-pub fn pqueue_is_empty(q: &PHeap) -> Bool {
+pub fn pqueue_is_empty(q: &PHeap) -> Bool
+  ensures: result == (pqueue_len(q) == 0)
+{
   return q.data.len() == 0;
 }

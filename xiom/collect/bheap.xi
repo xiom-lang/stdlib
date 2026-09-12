@@ -49,6 +49,8 @@ pub fn bheap_peek(h: &PHeap) -> Option[Int] {
 /// Params: h - the heap.
 /// Returns: the number of elements currently stored.
 /// Complexity: O(n) (reachable-node walk).
-pub fn bheap_len(h: &PHeap) -> Int {
+pub fn bheap_len(h: &PHeap) -> Int
+  ensures: result >= 0
+{
   return pheap_size(h);
 }

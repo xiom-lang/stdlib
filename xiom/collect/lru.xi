@@ -122,7 +122,9 @@ pub fn lru_remove(c: &mut LruCache, key: Int) -> Bool {
 
 /// Number of entries currently cached.
 /// O(1).
-pub fn lru_size(c: &mut LruCache) -> Int {
+pub fn lru_size(c: &mut LruCache) -> Int
+  ensures: result >= 0
+{
   return c.keys.len();
 }
 
@@ -134,7 +136,9 @@ pub fn lru_capacity(c: &mut LruCache) -> Int {
 
 /// Remove all entries from the cache.
 /// O(1).
-pub fn lru_clear(c: &mut LruCache) {
+pub fn lru_clear(c: &mut LruCache)
+  ensures: lru_size(c) == 0
+{
   while c.keys.len() > 0 {
     c.keys.pop();
     c.values.pop();

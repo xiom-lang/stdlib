@@ -53,7 +53,9 @@ pub fn ring_pop(r: &mut SpscRing) -> Option[Int] {
 }
 
 /// Number of buffered elements. O(1).
-pub fn ring_len(r: &SpscRing) -> Int {
+pub fn ring_len(r: &SpscRing) -> Int
+  ensures: result >= 0
+{
   var n = r.tail - r.head;
   if n < 0 { n = 0; }
   if n > r.cap { n = r.cap; }
@@ -61,7 +63,9 @@ pub fn ring_len(r: &SpscRing) -> Int {
 }
 
 /// True when the ring holds no elements. O(1).
-pub fn ring_is_empty(r: &SpscRing) -> Bool {
+pub fn ring_is_empty(r: &SpscRing) -> Bool
+  ensures: result == (ring_len(r) == 0)
+{
   return r.head >= r.tail;
 }
 

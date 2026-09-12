@@ -218,13 +218,17 @@ pub fn hamt_remove(h: &mut Hamt, key: Int) -> Bool {
 
 /// Number of key/value pairs in the map.
 /// O(1).
-pub fn hamt_size(h: &Hamt) -> Int {
+pub fn hamt_size(h: &Hamt) -> Int
+  ensures: result >= 0
+{
   return h.size;
 }
 
 /// Remove all entries, leaving the map empty.
 /// O(1) (arena memory is retained).
-pub fn hamt_clear(h: &mut Hamt) {
+pub fn hamt_clear(h: &mut Hamt)
+  ensures: hamt_size(h) == 0
+{
   var fresh = hamt_new();
   h.root = fresh.root;
   h.size = 0;

@@ -43,12 +43,16 @@ pub fn workqueue_peek(q: &WorkQueue) -> Option[Int] {
 }
 
 /// Number of items currently in the queue.
-pub fn workqueue_len(q: &WorkQueue) -> Int {
+pub fn workqueue_len(q: &WorkQueue) -> Int
+  ensures: result >= 0
+{
   return q.items.len() - q.head;
 }
 
 /// True if the queue contains no items.
-pub fn workqueue_is_empty(q: &WorkQueue) -> Bool {
+pub fn workqueue_is_empty(q: &WorkQueue) -> Bool
+  ensures: result == (workqueue_len(q) == 0)
+{
   return q.head >= q.items.len();
 }
 
@@ -106,12 +110,16 @@ pub fn deque_pop_back(d: &mut Deque) -> Option[Int] {
 }
 
 /// Number of items currently in the deque.
-pub fn deque_len(d: &Deque) -> Int {
+pub fn deque_len(d: &Deque) -> Int
+  ensures: result >= 0
+{
   return d.tail - d.head;
 }
 
 /// True if the deque contains no items.
-pub fn deque_is_empty(d: &Deque) -> Bool {
+pub fn deque_is_empty(d: &Deque) -> Bool
+  ensures: result == (deque_len(d) == 0)
+{
   return d.head >= d.tail;
 }
 
@@ -164,7 +172,9 @@ pub fn spsc_ring_pop(r: &mut SpscRing) -> Option[Int] {
 }
 
 /// Number of items currently in the ring (approximate under concurrency).
-pub fn spsc_ring_len(r: &SpscRing) -> Int {
+pub fn spsc_ring_len(r: &SpscRing) -> Int
+  ensures: result >= 0
+{
   var t = r.tail.load();
   var h = r.head.load();
   var n = t - h;
@@ -174,7 +184,9 @@ pub fn spsc_ring_len(r: &SpscRing) -> Int {
 }
 
 /// True when the ring is empty (approximate under concurrency).
-pub fn spsc_ring_is_empty(r: &SpscRing) -> Bool {
+pub fn spsc_ring_is_empty(r: &SpscRing) -> Bool
+  ensures: result == (spsc_ring_len(r) == 0)
+{
   return r.tail.load() == r.head.load();
 }
 

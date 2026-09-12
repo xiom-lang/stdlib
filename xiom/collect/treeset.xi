@@ -175,7 +175,9 @@ pub fn treeset_remove(s: &mut BTreeSet, value: Int) -> Bool {
 }
 
 /// Number of elements. O(1).
-pub fn treeset_size(s: &BTreeSet) -> Int {
+pub fn treeset_size(s: &BTreeSet) -> Int
+  ensures: result >= 0
+{
   return s.size;
 }
 

@@ -195,7 +195,9 @@ pub fn treemap_remove(m: &mut BTreeMap, key: Int) -> Bool {
 }
 
 /// Number of entries. O(1).
-pub fn treemap_size(m: &BTreeMap) -> Int {
+pub fn treemap_size(m: &BTreeMap) -> Int
+  ensures: result >= 0
+{
   return m.size;
 }
 

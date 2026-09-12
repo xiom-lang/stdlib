@@ -84,11 +84,15 @@ pub fn deque_back(d: &Deque) -> Option[Int] {
 }
 
 /// Number of elements in the deque. O(1).
-pub fn deque_len(d: &Deque) -> Int {
+pub fn deque_len(d: &Deque) -> Int
+  ensures: result >= 0
+{
   return d.tail - d.head;
 }
 
 /// True if the deque holds no elements. O(1).
-pub fn deque_is_empty(d: &Deque) -> Bool {
+pub fn deque_is_empty(d: &Deque) -> Bool
+  ensures: result == (deque_len(d) == 0)
+{
   return d.head >= d.tail;
 }

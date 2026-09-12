@@ -139,7 +139,9 @@ pub fn bst_remove(b: &mut Bst, key: Int) -> Bool {
 }
 
 /// Number of reachable nodes.
-pub fn bst_size(b: &Bst) -> Int {
+pub fn bst_size(b: &Bst) -> Int
+  ensures: result >= 0
+{
   var count = 0;
   var stack = Vec[Int].new();
   var cur = b.root;
@@ -347,7 +349,9 @@ pub fn avl_contains(a: &Avl, key: Int) -> Bool {
 }
 
 /// Number of nodes in the tree.
-pub fn avl_size(a: &Avl) -> Int {
+pub fn avl_size(a: &Avl) -> Int
+  ensures: result >= 0
+{
   return a.keys.len();
 }
 

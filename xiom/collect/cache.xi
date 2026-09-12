@@ -86,7 +86,9 @@ pub fn lru_contains(c: &LruCache, key: Int) -> Bool {
 }
 
 /// Number of entries currently cached.
-pub fn lru_size(c: &LruCache) -> Int {
+pub fn lru_size(c: &LruCache) -> Int
+  ensures: result >= 0
+{
   return c.keys.len();
 }
 
@@ -179,7 +181,9 @@ pub fn lfu_contains(c: &LfuCache, key: Int) -> Bool {
 }
 
 /// Number of entries currently cached.
-pub fn lfu_size(c: &LfuCache) -> Int {
+pub fn lfu_size(c: &LfuCache) -> Int
+  ensures: result >= 0
+{
   return c.keys.len();
 }
 
@@ -431,7 +435,9 @@ pub fn arc_contains(c: &ArcCache, key: Int) -> Bool {
 }
 
 /// Number of cached entries.
-pub fn arc_size(c: &ArcCache) -> Int {
+pub fn arc_size(c: &ArcCache) -> Int
+  ensures: result >= 0
+{
   return c.t1k.len() + c.t2k.len();
 }
 

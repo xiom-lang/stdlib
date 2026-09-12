@@ -339,7 +339,9 @@ pub fn uf_connected(u: &UnionFind, a: Int, b: Int) -> Bool {
 }
 
 /// Number of distinct roots (sets).
-pub fn uf_count(u: &UnionFind) -> Int {
+pub fn uf_count(u: &UnionFind) -> Int
+  ensures: result >= 0
+{
   var seen = Vec[Int].new();
   var i = 0;
   while i < u.parent.len() {

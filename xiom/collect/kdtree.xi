@@ -208,6 +208,8 @@ pub fn kdtree_range(t: &KdTree, x1: Int, y1: Int, x2: Int, y2: Int) -> Vec[Int] 
 
 /// Number of stored points.
 /// O(1).
-pub fn kdtree_size(t: &KdTree) -> Int {
+pub fn kdtree_size(t: &KdTree) -> Int
+  ensures: result >= 0
+{
   return t.size;
 }

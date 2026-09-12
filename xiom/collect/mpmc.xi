@@ -72,7 +72,9 @@ pub fn mpmc_pop(q: &mut MpmcQueue) -> Option[Int] {
 /// Params: q - the queue.
 /// Returns: an approximation of the number of items currently buffered.
 /// Complexity: O(1).
-pub fn mpmc_size(q: &MpmcQueue) -> Int {
+pub fn mpmc_size(q: &MpmcQueue) -> Int
+  ensures: result >= 0
+{
   var t = q.tail.load();
   var h = q.head.load();
   var n = t - h;

@@ -84,7 +84,9 @@ pub fn pool_shutdown(p: &mut ThreadPool) {
 /// Params: p - the pool.
 /// Returns: the fixed worker count.
 /// Complexity: O(1).
-pub fn pool_size(p: &ThreadPool) -> Int {
+pub fn pool_size(p: &ThreadPool) -> Int
+  ensures: result >= 0
+{
   return p.workers;
 }
 
@@ -92,7 +94,9 @@ pub fn pool_size(p: &ThreadPool) -> Int {
 /// Params: p - the pool.
 /// Returns: workers not currently assigned a job.
 /// Complexity: O(1).
-pub fn pool_idle_count(p: &ThreadPool) -> Int {
+pub fn pool_idle_count(p: &ThreadPool) -> Int
+  ensures: result >= 0
+{
   return p.idle;
 }
 
@@ -100,6 +104,8 @@ pub fn pool_idle_count(p: &ThreadPool) -> Int {
 /// Params: p - the pool.
 /// Returns: workers currently assigned a job (does not include queued work).
 /// Complexity: O(1).
-pub fn pool_busy_count(p: &ThreadPool) -> Int {
+pub fn pool_busy_count(p: &ThreadPool) -> Int
+  ensures: result >= 0
+{
   return p.busy;
 }

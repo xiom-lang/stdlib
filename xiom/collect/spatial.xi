@@ -206,7 +206,9 @@ pub fn kdtree_range(t: &KdTree, x1: Int, y1: Int, x2: Int, y2: Int) -> Vec[Int] 
 
 /// Number of points in the tree.
 /// O(1).
-pub fn kdtree_size(t: &KdTree) -> Int {
+pub fn kdtree_size(t: &KdTree) -> Int
+  ensures: result >= 0
+{
   return t.size;
 }
 
@@ -442,7 +444,9 @@ pub fn quadtree_query(q: &Quadtree, x1: Int, y1: Int, x2: Int, y2: Int) -> Vec[I
 
 /// Number of points in the tree.
 /// O(1).
-pub fn quadtree_size(q: &Quadtree) -> Int {
+pub fn quadtree_size(q: &Quadtree) -> Int
+  ensures: result >= 0
+{
   return q.size;
 }
 
@@ -700,6 +704,8 @@ pub fn octree_query(o: &Octree, x1: Int, y1: Int, z1: Int, x2: Int, y2: Int, z2:
 
 /// Number of points in the tree.
 /// O(1).
-pub fn octree_size(o: &Octree) -> Int {
+pub fn octree_size(o: &Octree) -> Int
+  ensures: result >= 0
+{
   return o.size;
 }

@@ -198,6 +198,8 @@ pub fn cuckoo_remove(m: &mut CuckooMap, key: Int) -> Bool {
 }
 
 /// Number of stored keys.
-pub fn cuckoo_size(m: &CuckooMap) -> Int {
+pub fn cuckoo_size(m: &CuckooMap) -> Int
+  ensures: result >= 0
+{
   return m.size;
 }

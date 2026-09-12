@@ -56,7 +56,9 @@ pub fn pvec_get(v: &PVec, idx: Int) -> Option[Int] {
 /// Params: v - the vector.
 /// Returns: the number of elements.
 /// Complexity: O(1).
-pub fn pvec_len(v: &PVec) -> Int {
+pub fn pvec_len(v: &PVec) -> Int
+  ensures: result >= 0
+{
   return v.items.len();
 }
 
