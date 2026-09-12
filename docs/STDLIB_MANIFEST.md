@@ -402,6 +402,7 @@ Generated from the frozen layout (9aa95d35). Module -> file mapping for all 512 
 | xiom.serialize.csv | stdlib/xiom/serialize/csv.xi |
 | xiom.serialize.endian | stdlib/xiom/serialize/endian.xi |
 | xiom.serialize.json | stdlib/xiom/serialize/json.xi |
+| xiom.serialize.toml | stdlib/xiom/serialize/toml.xi |
 | xiom.serialize | stdlib/xiom/serialize/serialize.xi |
 | xiom.serialize.varint | stdlib/xiom/serialize/varint.xi |
 | xiom.serialize.yaml_lite | stdlib/xiom/serialize/yaml_lite.xi |

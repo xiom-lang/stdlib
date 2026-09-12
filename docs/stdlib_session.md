@@ -11,8 +11,9 @@ explicit paths only. Branch: `feat/architect`.
 State (verified 2026-09-12 late; r34/r35 isolated builds = committed HEAD
 8c921c32, after the compiler lane's R9 fix b581184d):
 - Sweeps: r33 935/935; r34 935/935 (fast-path re-land); r35 935/935
-  (contract wave 2); r36 935/935 (Item A findings burn-down).
-  Four consecutive all-green corpora (+ ratchet OK).
+  (contract wave 2); r36 935/935 (Item A findings burn-down). Four
+  consecutive all-green corpora (+ ratchet OK). r37 (round-56 compiler)
+  is BLOCKED by R17; do not treat it as a baseline.
 - Item A stdlib status (2026-09-12, after compiler round 56 = 9e625094):
   catalog corpus CLEAN -- 0 findings / 0 hard errors / 0 parse errors;
   is_clean() true; the strict-flip is the compiler lane's next two edits.
@@ -22,8 +23,12 @@ State (verified 2026-09-12 late; r34/r35 isolated builds = committed HEAD
   clauses / 11.1% pub-with-clause; dedup audit R15 logged + ascii85
   direction corrected (e42520c1); string fast-path re-land + R16
   (a47ac737); memory-quartet namespace wave 2 (78b107fb).
-- Part-3 deliverable: Item A findings burn-down (b71d839f) -- 237 -> 2
-  findings, 17 -> 1 parse errors (rest are compiler D4/D5/D1); see 2.10.
+- Part-3 deliverables: Item A findings burn-down (b71d839f) + Item A
+  closed after compiler round 56 (e4d3ee1d: catalog corpus CLEAN 0/0/0,
+  is_clean true); TOML v1 landed (xiom.serialize.toml + smoke). R17
+  (round-56 nested-index concat regression) blocks the definitive r37
+  sweep until the compiler lane fixes it; r36 remains the last all-green
+  baseline. See sections 2.10/2.11.
 - Part-1 deliverables (same day, newest first): xiom.serialize.csv RFC
   4180 + smoke (e398df2f); endian trio dedup shim (9616b72f); contract
   wave 1 + ratchet gate #7 (69a07b7e); collect namespace wave 1
@@ -1103,4 +1108,31 @@ Stdlib burn-down on committed HEAD (b71d839f):
 - **Verification:** re-measure = `cargo test -p xiom-check
   catalog_corpus_is_clean -- --ignored --nocapture` (isolated
   CARGO_TARGET_DIR); full **r36 sweep 935/935 PASS**, coverage ratchet OK.
+
+## 2.11. Round-56 interplay: <=> closed, R15 re-tested, TOML v1 landed
+
+- **Item A closed on the stdlib side.** `xiom.time:232`'s non-operator
+  `<=>` replaced with the exact active contract (`result.is_ok ==
+  (self.secs > earlier.secs || (self.secs == earlier.secs &&
+  self.nanos >= earlier.nanos))`; probe p_duration_since covers all five
+  branches). The in-tree `catalog_corpus_is_clean` test now PASSES ->
+  is_clean() true; the compiler lane's strict flip is unblocked.
+  Runtime: 39/39 time smokes green.
+- **R15 re-tested on round 56 (target_r37): NOT fixed.** The same-leaf +
+  same-name shim now compiles but returns a SILENT EMPTY value for the
+  same-name fns (`base32_encode` -> ""; differently-named `base32hex_*`
+  legs are correct). Shim reverted again; encoding-family consolidation
+  stays gated; evidence + probes in COMPILER_BUGS R15.
+- **R17 found (round-56 regression, critical):** R14's concat-operand
+  fallback misclassifies NESTED-index Str elements (`rows[0][0]`) as
+  integers -- smoke_serialize_csv prints pointer values on r37 (green on
+  r34); minimal probe p_nested_index_concat. Blocks the definitive r37
+  sweep until the compiler lane fixes it; r36 (r34) remains the last
+  all-green baseline. Details in COMPILER_BUGS R17.
+- **TOML v1 landed:** `xiom.serialize.toml` (reader subset: comments,
+  `[table]`/`[a.b]`, bare/quoted keys, basic literal strings + escapes,
+  ints with `_`, floats, bools, typed arrays, section-qualified getters,
+  line-numbered errors) + smoke_serialize_toml (vectors + 6 error paths).
+  Green on both r34 and r37; manifest updated. Remaining capability gaps:
+  tzdata phase 1 and TLS schannel.
 
