@@ -11,9 +11,9 @@ explicit paths only. Branch: `feat/architect`.
 State (verified 2026-09-12 late; r34/r35 isolated builds = committed HEAD
 8c921c32, after the compiler lane's R9 fix b581184d):
 - Sweeps: r33 935/935; r34 935/935 (fast-path re-land); r35 935/935
-  (contract wave 2); r36 935/935 (Item A findings burn-down). Four
-  consecutive all-green corpora (+ ratchet OK). r37 (round-56 compiler)
-  is BLOCKED by R17; do not treat it as a baseline.
+  (contract wave 2); r36 935/935 (Item A findings burn-down). r37 was
+  blocked by R17; r38 (round-57, 936 files incl. TOML) is the current
+  gate -- see 2.12 for its result. Do not treat r37 as a baseline.
 - Item A stdlib status (2026-09-12, after compiler round 56 = 9e625094):
   catalog corpus CLEAN -- 0 findings / 0 hard errors / 0 parse errors;
   is_clean() true; the strict-flip is the compiler lane's next two edits.
@@ -25,10 +25,10 @@ State (verified 2026-09-12 late; r34/r35 isolated builds = committed HEAD
   (a47ac737); memory-quartet namespace wave 2 (78b107fb).
 - Part-3 deliverables: Item A findings burn-down (b71d839f) + Item A
   closed after compiler round 56 (e4d3ee1d: catalog corpus CLEAN 0/0/0,
-  is_clean true); TOML v1 landed (xiom.serialize.toml + smoke). R17
-  (round-56 nested-index concat regression) blocks the definitive r37
-  sweep until the compiler lane fixes it; r36 remains the last all-green
-  baseline. See sections 2.10/2.11.
+  is_clean true); TOML v1 landed (xiom.serialize.toml + smoke);
+  round-57 section Q import discipline closed again (0de47e11: 149 -> 0
+  under isolated contexts). R17 verified fixed on r38; r15 still open.
+  See sections 2.10/2.11/2.12.
 - Part-1 deliverables (same day, newest first): xiom.serialize.csv RFC
   4180 + smoke (e398df2f); endian trio dedup shim (9616b72f); contract
   wave 1 + ratchet gate #7 (69a07b7e); collect namespace wave 1
@@ -1135,4 +1135,45 @@ Stdlib burn-down on committed HEAD (b71d839f):
   line-numbered errors) + smoke_serialize_toml (vectors + 6 error paths).
   Green on both r34 and r37; manifest updated. Remaining capability gaps:
   tzdata phase 1 and TLS schannel.
+
+## 2.12. Round-57: R17 verified, section Q (import discipline) closed
+
+- **R17 verified fixed** on target_r38 (round-57): p_nested_index_concat
+  and p_iter_pipeline_r32 exit 0; smoke_serialize_csv green again. Full
+  r38 sweep launched as the definitive runtime gate (936 files, now
+  including smoke_serialize_toml).
+- **Section Q closed:** under the faithful isolated contexts (93df90b5),
+  the gate showed 149 import-discipline findings (xiom.os 100,
+  net.https 21, log 12, collections 8, crypto 3, encoding 3, simd 2).
+  Fixed in 0de47e11: imports for os (env/io/string/core),
+  net.https (string), log (io), simd (math); collections declares the
+  realloc/free externs its `@realloc`/`@free` intrinsic calls need in
+  scope; crypto declares malloc/free; encoding.percent_encode uses the
+  bare same-module `url_encode` (self-qualification is now rejected).
+  Re-measure: **0 findings / 0 hard errors / 0 parse errors, test
+  PASSES** -- the strict flip is unblocked again. 76/76 targeted smokes
+  green; ratchet floors refreshed to coverage_floors36.json.
+- **R15 stays open:** round-57's qualified-first symbol attempt fixed the
+  local repro but duplicated `@network.ping` emission (e2e_m34_j08), was
+  reverted; the real fix needs module-scoped alias plumbing. Encoding
+  family (base32/percent/punycode + base16/base64/base58) stays gated.
+
+## 2.13. tzdata phase 1 landed (2026-09-14)
+
+- **`xiom.time.tz`**: DST-aware OS local offset via the C runtime
+  (`_localtime64_s` + `_mkgmtime64`; offset = mkgmtime(local(t)) - t).
+  API: `tz_offset_secs_at(epoch)`, `tz_local_offset_secs()`,
+  `tz_is_dst()`, `tz_local_epoch_secs()`, `tz_local_now()`. Documents the
+  honest scope: host zone only, no historical/arbitrary-zone data
+  (phase 2 = tzdata files).
+- `xiom.time` gained `datetime_from_epoch(epoch)` (public wrapper over the
+  calendar decomposition); `local_now()` stays the UTC alias with a
+  pointer to `xiom.time.tz`.
+- Probe-first: p_tz_ffi validated the struct-tm offsets (sec/min/hour/
+  mday/mon/year at 0/4/8/12/16/20, isdst at 32; 4-byte Int32 reads, not
+  8-byte Int) and the mkgmtime difference on the host (+10800s DST).
+- Verification: smoke_time_tz green (offset alignment/range, offset_at
+  round-trip, sane local DateTime); 40/40 time smokes green; corpus gate
+  still CLEAN (0/0/0); ratchet floors refreshed to coverage_floors37.json
+  (tz diluted time 13% -> 12.4%; global 12.0% with TOML+tz).
 

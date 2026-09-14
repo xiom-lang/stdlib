@@ -517,4 +517,5 @@ Generated from the frozen layout (9aa95d35). Module -> file mapping for all 512 
 | xiom.time.duration | stdlib/xiom/time/duration.xi |
 | xiom.time.instant | stdlib/xiom/time/instant.xi |
 | xiom.time.iso8601 | stdlib/xiom/time/iso8601.xi |
+| xiom.time.tz | stdlib/xiom/time/tz.xi |
 | xiom.time | stdlib/xiom/time/time.xi |
