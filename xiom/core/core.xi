@@ -6,7 +6,6 @@ module xiom.core
 
 use xiom.string;
 use xiom.convert;
-use xiom.mem;
 
 extern "C" {
   fn malloc(size: UInt) -> *UInt8;

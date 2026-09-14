@@ -1,6 +1,5 @@
 module smoke_bigfloat
 use xiom.num.bigfloat;
-use xiom.bigfloat;
 use xiom.string;
 use xiom.io;
 
