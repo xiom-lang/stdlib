@@ -87,7 +87,7 @@ pub fn hmac_final(h: Hmac) -> Vec[UInt8] {
 
 fn _hmac_digest(hash: Int, data: &Vec[UInt8]) -> Vec[UInt8] {
   if hash == 2 { return crypto.sha512(data); }
-  if hash == 3 { return crypto.md5(data); }
+  if hash == 3 { return crypto.md5_bytes(data); }
   return crypto.sha256(data);
 }
 

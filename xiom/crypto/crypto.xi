@@ -741,6 +741,14 @@ pub fn md5(data: &Vec[UInt8]) -> Vec[UInt8]
   return result;
 }
 
+/// Alias for `md5` whose name cannot collide with the legacy
+/// xiom.crypto.md5 module in dotted call position (strict import gate).
+pub fn md5_bytes(data: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: result.len() == 16
+{
+  return md5(data);
+}
+
 // ============================================================================
 // BLAKE3 -- Real Implementation (single + multi-chunk tree)
 // Spec: https://github.com/BLAKE3-team/BLAKE3-specs

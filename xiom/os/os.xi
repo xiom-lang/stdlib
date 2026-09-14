@@ -20,7 +20,8 @@ extern "C" {
   fn mkdir(path: *UInt8) -> Int32;
   fn rmdir(path: *UInt8) -> Int32;
   fn remove(path: *UInt8) -> Int32;
-  fn rename(old: *UInt8, new: *UInt8) -> Int32;
+  // NOTE: the libc `rename` extern was removed -- unused here and its bare
+  // name shadowed xiom.io.rename in io consumers (strict import gate).
   fn getenv(name: *UInt8) -> *UInt8;
   fn setenv(name: *UInt8, value: *UInt8, overwrite: Int32) -> Int32;
   fn unsetenv(name: *UInt8) -> Int32;

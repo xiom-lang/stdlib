@@ -15,7 +15,7 @@ use xiom.os.unix;
 use xiom.io;
 
 fn main() -> Int {
-  // --- fs_ffi: chmod (delegates to xiom.io) ---
+  // --- fs_ffi: chmod_path (delegates to xiom.io) ---
   let tmp = "os_ffi_chmod_tmp.txt";
   {
     let w = io.write_file(tmp, "test");
@@ -25,7 +25,7 @@ fn main() -> Int {
     }
   }
   {
-    let r = fs_ffi.chmod(tmp, 644);
+    let r = fs_ffi.chmod_path(tmp, 644);
     if r.is_err {
       io.println("ffi-chmod");
       return 2;
