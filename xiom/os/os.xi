@@ -8,6 +8,10 @@ use xiom.os.mmap;
 use xiom.os.sync_io;
 use xiom.os.win;
 use xiom.os.unix;
+use xiom.env;
+use xiom.io;
+use xiom.string;
+use xiom.core;
 
 extern "C" {
   fn system(command: *UInt8) -> Int32;

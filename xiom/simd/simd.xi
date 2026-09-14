@@ -12,9 +12,9 @@ use xiom.simd.vec4;
 use xiom.simd.vec8;
 use xiom.simd.mask;
 use xiom.simd.gather;
-
 use xiom.alloc;
 use xiom.ptr;
+use xiom.math;
 
 // ================================================================
 // SIMD Vector Types
