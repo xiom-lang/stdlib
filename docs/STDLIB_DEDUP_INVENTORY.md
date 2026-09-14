@@ -62,10 +62,11 @@ DONE:
   Round-56 re-test: the crash became a SILENT EMPTY return for the
   same-name fns (differently-named legs like base32hex_* work), so the
   gate stands -- probes p_b32_s5a/s5b + reverted shim recorded in
-  COMPILER_BUGS R15. The same blocks the old base16/base64/base58
-  copy-paste family. Workaround in place: keep the local
-  implementations; consolidate after the compiler lane keys the codegen
-  symbols by the FULL module path.
+  COMPILER_BUGS R15. Round-58 re-test (a07507c4, target_r40):
+  Str-returning legs now correct, but Result-returning legs still yield
+  an empty-payload Err to the shim consumer (unstable across program
+  shapes) and the smoke AVs -- recorded as COMPILER_BUGS R20. The gate
+  therefore stands for base32/percent/punycode (all expose Results).
 
 PARITY-SMOKE CONVENTION (hardened by R9): a shim's lock compares the twin
 against official/expected vectors with the twin imported + alias calls;
