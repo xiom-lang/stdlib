@@ -1214,16 +1214,36 @@ Stdlib burn-down on committed HEAD (b71d839f):
   leaf alias (`xiom.num.bigfloat` + `xiom.bigfloat`); the redundant
   aggregate import was dropped, green solo. Both r38 reds were re-run
   green and are included in the r39 937/937.
-- **R15 still NOT fixed** after 4311b5db (definition-side): the base32
-  shim re-test on r39 still returns silent EMPTY for same-name fns
-  (probe p_b32_s5a) and crashes smoke_convert_base32 (0xC0000005); shim
-  reverted again. Encoding-family consolidation stays gated.
+- **R15:** partially fixed by a07507c4 -- Str-returning same-name
+  delegation is now correct (base32_encode/base32hex_encode print the
+  right values through the shim); Result-returning legs still deliver an
+  empty-payload Err to the shim consumer and smoke_convert_base32 still
+  AVs (p_b32_residual probe). Logged as **R20**; shim reverted, local
+  impl green on r40. Encoding dedup stays gated.
 - **R18** (payload-vs-param contract false positive) remains compiler-side;
   no landed clause uses the shape.
-- **Round-58 R15 attempt:** a07507c4 fixed the Str-returning same-name
-  delegation (base32_encode/base32hex_encode now correct through the
-  shim), but Result-returning legs still deliver an empty-payload Err to
-  the shim consumer and smoke_convert_base32 still AVs (p_b32_residual
-  probe). Logged as **R20**; shim reverted, local impl green on r40.
-  Encoding dedup stays gated. Tree returns to the r39-verified state.
+
+## 2.16. Round-58 follow-up: bare-name worklist ZERO; strict flip re-ready
+
+- **Detector built:** a per-module import probe (`use xiom.X` alone)
+  exposes that catalog body under its own imports, exactly like the
+  isolated corpus gate. Swept all 509 manifest modules with 8 workers
+  (`stdlib_ws\barename_worker.ps1` + `launch_barename_scan.ps1`).
+  First pass: 13 unique findings in 5 modules.
+- **Fixes (all 13):** core `zeroed` -> qualified `mem.zeroed[T]()`;
+  os dropped its unused libc `rename` extern; `fs_ffi.chmod` ->
+  `chmod_path` (smoke_os_ffi updated); console stdio externs harmonized
+  to `-> Int` + casts (no more shadowing io's accessors); collections
+  `vec_sort_by` -> local insertion sort (keeps the Int-comparator API);
+  `bucket_idx` -> `*key as Int`; `use xiom.hash as hsh` to dodge the
+  collect.hash/crypto.hash leaf shadowing; `crypto.md5_bytes` wrapper
+  for `mac._hmac_digest` (dotted `crypto.md5` resolved to the legacy
+  module).
+- **Verification:** 509/509 probes -> 0 catalog-body findings;
+  101/101 targeted battery (core/mem/collections/io/console/os_ffi/
+  crypto-hmac); corpus gate green; r40 full sweep is the runtime gate.
+- **Note:** the earlier R19 "workaround" (removing core's mem import) is
+  superseded: mem is imported and `zeroed` is called qualified. R19
+  (generic ptr store) remains compiler-side; watch closures pulling
+  core+mem+ptr.
 

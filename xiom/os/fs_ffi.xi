@@ -71,7 +71,7 @@ pub fn chown(path: Str, uid: Int, gid: Int) -> Result[Unit, Str] {
 /// Parameters: path -- the file path; mode -- the permission bits.
 /// Returns: Ok(()) on success, Err with the underlying message otherwise.
 /// Complexity: O(1). Pure (OS call).
-pub fn chmod(path: Str, mode: Int) -> Result[Unit, Str] {
+pub fn chmod_path(path: Str, mode: Int) -> Result[Unit, Str] {
   let r = io.set_permissions(path, mode);
   match r {
     Ok(()) => Ok(());

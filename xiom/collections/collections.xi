@@ -921,7 +921,7 @@ fn Slice.get[T](index: Int) -> Option[T]
 
 use xiom.sort;
 use xiom.string;
-use xiom.hash;
+use xiom.hash as hsh;  // alias: leaf `hash` is shadowed by collect.hash/crypto.hash
 
 // The Vec buffer allocator intrinsics (@realloc/@free at the call sites)
 // need the C symbols in scope for the import-discipline gate.
@@ -953,9 +953,11 @@ fn HashMap.new[K, V]() -> HashMap[K, V] {
   return HashMap[K, V]{ data: data; len: 0; cap: cap };
 }
 
-/// Compute bucket index from key hash.
+/// Compute bucket index from key hash. Int-like keys only: the legacy
+/// container predates the hasher interface, so the generic key is cast
+/// to Int for the hash (the strict catalog gate rejects the bare K form).
 fn HashMap.bucket_idx[K, V](key: &K) -> Int {
-  var h = hash.hash_combine(0, *key);
+  var h = hsh.hash_combine(0, *key as Int);
   if h < 0 { h = -h; }
   return h % cap;
 }
@@ -1422,7 +1424,24 @@ pub fn set_from_vec[T](v: &Vec[T]) -> Set[T] {
 /// NOTE: the comparator must be a NAMED function -- inline lambdas crash the
 /// current runtime (see xiom.sort comparator note).
 pub fn vec_sort_by[T](v: &mut Vec[T], compare: fn(&T, &T) -> Int) {
-  xiom.sort.sort_by(v, compare);
+  // Local insertion sort keeps the Int-comparator API (xiom.sort.sort_by
+  // takes an Ordering comparator) and avoids the full-path import gate.
+  let n = v.len();
+  var i = 1;
+  while i < n {
+    var j = i;
+    while j > 0 {
+      if compare(&v[j - 1], &v[j]) <= 0 {
+        j = 0;
+      } else {
+        let tmp = v[j - 1];
+        v[j - 1] = v[j];
+        v[j] = tmp;
+        j = j - 1;
+      }
+    }
+    i = i + 1;
+  }
 }
 
 /// Sliding-window maximum: for each window of size `k` starting at index 0,

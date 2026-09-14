@@ -6,6 +6,7 @@ module xiom.core
 
 use xiom.string;
 use xiom.convert;
+use xiom.mem;  // zeroed[T] is used by MaybeUninit.uninit (bare name)
 
 extern "C" {
   fn malloc(size: UInt) -> *UInt8;
@@ -893,7 +894,7 @@ pub type MaybeUninit[T] = { data: T; initialized: Bool; }
 pub fn MaybeUninit[T].uninit() -> MaybeUninit[T]
   ensures: !result.initialized
 {
-  return MaybeUninit { data: zeroed, initialized: false };
+  return MaybeUninit { data: mem.zeroed[T](), initialized: false };
 }
 
 pub fn MaybeUninit[T].new(value: T) -> MaybeUninit[T]

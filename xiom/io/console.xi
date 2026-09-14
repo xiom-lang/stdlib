@@ -21,9 +21,9 @@ extern "C" {
   fn fgetc(stream: *UInt8) -> Int32;
   fn fwrite(buf: *UInt8, size: UInt, count: UInt, stream: *UInt8) -> UInt;
   fn fflush(stream: *UInt8) -> Int32;
-  fn xiom_stdin() -> *UInt8;
-  fn xiom_stdout() -> *UInt8;
-  fn xiom_stderr() -> *UInt8;
+  fn xiom_stdin() -> Int;
+  fn xiom_stdout() -> Int;
+  fn xiom_stderr() -> Int;
   fn system(command: *UInt8) -> Int32;
 }
 
@@ -48,7 +48,7 @@ pub fn console_read_line() -> Result[Str, Str> {
   var buf: [4096]UInt8;
   let ptr: *UInt8;
   unsafe {
-    ptr = fgets(&buf[0], 4096 as Int32, xiom_stdin());
+    ptr = fgets(&buf[0], 4096 as Int32, xiom_stdin() as *UInt8);
   }
   if ptr == 0 {
     return Err("console read failed");
@@ -61,7 +61,7 @@ pub fn console_read_line() -> Result[Str, Str> {
 /// Returns: Some(char) read from stdin, None at EOF.
 /// Complexity: O(1).
 pub fn console_read_char() -> Option[Char] {
-  let c = unsafe { fgetc(xiom_stdin()) };
+  let c = unsafe { fgetc(xiom_stdin() as *UInt8) };
   if c == -1 {
     return None;
   }
@@ -73,7 +73,7 @@ pub fn console_read_char() -> Option[Char] {
 ///          the runtime; this reads one buffered character.
 /// Complexity: O(1).
 pub fn console_read_key() -> Option[Char] {
-  let c = unsafe { fgetc(xiom_stdin()) };
+  let c = unsafe { fgetc(xiom_stdin() as *UInt8) };
   if c == -1 {
     return None;
   }
@@ -108,7 +108,7 @@ pub fn console_write_line(s: Str)
 pub fn console_write_error(s: Str) {
   let c = s.c_str();
   unsafe {
-    let _ = fwrite(c, 1 as UInt, s.len() as UInt, xiom_stderr());
+    let _ = fwrite(c, 1 as UInt, s.len() as UInt, xiom_stderr() as *UInt8);
   }
 }
 
@@ -166,7 +166,7 @@ pub fn console_read_until_eof() -> Result[Str, Str> {
   var out: Vec[UInt8] = Vec[UInt8].new();
   var done = false;
   while !done {
-    let c = unsafe { fgetc(xiom_stdin()) };
+    let c = unsafe { fgetc(xiom_stdin() as *UInt8) };
     if c == -1 {
       done = true;
     } else {
@@ -182,6 +182,6 @@ pub fn console_flush()
   requires: true
 {
   unsafe {
-    let _ = fflush(xiom_stdout());
+    let _ = fflush(xiom_stdout() as *UInt8);
   }
 }
