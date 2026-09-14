@@ -12,9 +12,10 @@ State (verified 2026-09-12 late; r34/r35 isolated builds = committed HEAD
 8c921c32, after the compiler lane's R9 fix b581184d):
 - Sweeps: r33 935/935; r34 935/935 (fast-path re-land); r35 935/935
   (contract wave 2); r36 935/935 (Item A findings burn-down);
-  **r39 937/937** (strict flip + R15 definition-side fix + tz/TOML/wave 3,
-  ratchet OK). r37 was blocked by R17; r38 had 2 compile reds (R19
-  workaround + bigfloat alias) both fixed and re-run green in r39.
+  r39 937/937 (strict flip + R15 definition-side fix); **r40 937/937**
+  (round-58 flip worklist closed + os/core closure split, ratchet OK).
+  r37 was blocked by R17; r38 had 2 compile reds (R19 workaround +
+  bigfloat alias) both fixed and re-run green in r39.
 - Item A status: COMPLETE including the strict flip (42943cd2) -- the
   un-ignored corpus gate passes on the current stdlib (0 findings under
   hard-error strictness) and r39 is 937/937. See 2.10-2.15.
@@ -1241,7 +1242,8 @@ Stdlib burn-down on committed HEAD (b71d839f):
   module).
 - **Verification:** 509/509 probes -> 0 catalog-body findings;
   101/101 targeted battery (core/mem/collections/io/console/os_ffi/
-  crypto-hmac); corpus gate green; r40 full sweep is the runtime gate.
+  crypto-hmac); corpus gate green; **r40 full sweep 937/937 PASS +
+  ratchet OK** (definitive runtime gate).
 - **Note:** the earlier R19 "workaround" (removing core's mem import) is
   superseded: mem is imported and `zeroed` is called qualified. R19
   (generic ptr store) remains compiler-side; watch closures pulling
