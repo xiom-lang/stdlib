@@ -131,7 +131,9 @@ pub fn lfu_size(c: &mut LfuCache) -> Int
 
 /// Maximum number of entries the cache can hold.
 /// O(1).
-pub fn lfu_capacity(c: &mut LfuCache) -> Int {
+pub fn lfu_capacity(c: &mut LfuCache) -> Int
+  ensures: result >= 0
+{
   return c.capacity;
 }
 

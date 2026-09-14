@@ -60,6 +60,8 @@ pub fn arc_size(c: &mut ArcCache) -> Int
 /// Params: c - the cache.
 /// Returns: the configured capacity.
 /// Complexity: O(1).
-pub fn arc_capacity(c: &mut ArcCache) -> Int {
+pub fn arc_capacity(c: &mut ArcCache) -> Int
+  ensures: result >= 0
+{
   return xiom.collect.cache.arc_capacity(c);
 }

@@ -62,6 +62,8 @@ pub fn pool_available(p: &ObjectPool) -> Int {
 }
 
 /// Total capacity.
-pub fn pool_capacity(p: &ObjectPool) -> Int {
+pub fn pool_capacity(p: &ObjectPool) -> Int
+  ensures: result >= 0
+{
   return p.capacity;
 }

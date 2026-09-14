@@ -45,6 +45,8 @@ pub fn str_concat(a: Str, b: Str) -> Str
 }
 
 pub fn str_slice(s: Str, start: Int, end: Int) -> Str
+  ensures: end >= start && start >= 0 && end <= s.len() => result.len() == end - start
+  ensures: result.len() <= s.len()
 {
   let len = s.len();
   var s_start = start;
@@ -65,7 +67,9 @@ pub fn str_slice(s: Str, start: Int, end: Int) -> Str
   }
 }
 
-pub fn str_contains(s: Str, substr: Str) -> Bool {
+pub fn str_contains(s: Str, substr: Str) -> Bool
+  ensures: substr.len() == 0 => result
+{
   let result = index_of(s, substr);
   result.is_some
 }
@@ -87,7 +91,9 @@ fn _matches_at(s: Str, at: Int, sub: Str) -> Bool {
   return true;
 }
 
-pub fn str_starts_with(s: Str, prefix: Str) -> Bool {
+pub fn str_starts_with(s: Str, prefix: Str) -> Bool
+  ensures: prefix.len() == 0 => result
+{
   let prefix_len = prefix.len();
   if prefix_len > s.len() {
     return false;
@@ -95,7 +101,9 @@ pub fn str_starts_with(s: Str, prefix: Str) -> Bool {
   _matches_at(s, 0, prefix)
 }
 
-pub fn str_ends_with(s: Str, suffix: Str) -> Bool {
+pub fn str_ends_with(s: Str, suffix: Str) -> Bool
+  ensures: suffix.len() == 0 => result
+{
   let suffix_len = suffix.len();
   let s_len = s.len();
   if suffix_len > s_len {
@@ -353,7 +361,9 @@ pub fn words(s: Str) -> Vec[Str]
   result
 }
 
-pub fn is_empty(s: Str) -> Bool {
+pub fn is_empty(s: Str) -> Bool
+  ensures: result == (s.len() == 0)
+{
   s.len() == 0
 }
 
@@ -361,7 +371,9 @@ pub fn is_empty(s: Str) -> Bool {
 // compiler's receiver-typed method lookup needs the Str receiver decl
 // (method-form `x.is_empty()` otherwise falls through to a Vec/array
 // is_empty leaf or a stub and always returns false).
-pub fn Str.is_empty(self) -> Bool {
+pub fn Str.is_empty(self) -> Bool
+  ensures: result == (self.len() == 0)
+{
   self.len() == 0
 }
 
@@ -402,7 +414,9 @@ pub fn str_index_of(haystack: Str, needle: Str) -> Option[Int]
 
 // Returns the last byte index of needle in haystack, or None if not found.
 // O(n*m) reverse naive search. For an empty needle, returns Some(haystack.len()).
-pub fn str_rindex_of(haystack: Str, needle: Str) -> Option[Int] {
+pub fn str_rindex_of(haystack: Str, needle: Str) -> Option[Int]
+  ensures: result is Some => result >= 0 && result <= haystack.len()
+{
   last_index_of(haystack, needle)
 }
 
@@ -610,7 +624,9 @@ pub fn str_unescape(s: Str) -> Str
 // Converts `s` to Title Case: first character of each space-separated word
 // is uppercased, remaining characters are lowercased.
 // O(|s|) byte-by-byte. Only handles ASCII letter case correctly.
-pub fn str_title_case(s: Str) -> Str {
+pub fn str_title_case(s: Str) -> Str
+  ensures: result.len() == s.len()
+{
   let len = s.len();
   var new_word = true;
   unsafe {
@@ -637,7 +653,9 @@ pub fn str_title_case(s: Str) -> Str {
 // Swaps the case of every character in `s`: uppercase becomes lowercase and
 // vice versa. Characters that are neither are left unchanged.
 // O(|s|) byte-by-byte. Only handles ASCII letter case correctly.
-pub fn str_swap_case(s: Str) -> Str {
+pub fn str_swap_case(s: Str) -> Str
+  ensures: result.len() == s.len()
+{
   let len = s.len();
   unsafe {
     var buf = malloc(len + 1);
@@ -662,7 +680,9 @@ pub fn str_swap_case(s: Str) -> Str {
 
 // Returns true if `s` has zero length.
 // O(1).
-pub fn str_is_empty(s: Str) -> Bool {
+pub fn str_is_empty(s: Str) -> Bool
+  ensures: result == (s.len() == 0)
+{
   s.len() == 0
 }
 
@@ -804,7 +824,9 @@ pub fn str_center(s: Str, width: Int) -> Str
 
 // Returns true if `s` starts with any of the given prefixes.
 // O(n * k) where n = |s|, k = prefixes.len().
-pub fn str_starts_with_any(s: Str, prefixes: &Vec[Str]) -> Bool {
+pub fn str_starts_with_any(s: Str, prefixes: &Vec[Str]) -> Bool
+  ensures: prefixes.len() == 0 => result == false
+{
   var i: Int = 0;
   while i < prefixes.len() {
     if str_starts_with(s, prefixes[i]) {
@@ -817,7 +839,9 @@ pub fn str_starts_with_any(s: Str, prefixes: &Vec[Str]) -> Bool {
 
 // Returns true if `s` ends with any of the given suffixes.
 // O(n * k) where n = |s|, k = suffixes.len().
-pub fn str_ends_with_any(s: Str, suffixes: &Vec[Str]) -> Bool {
+pub fn str_ends_with_any(s: Str, suffixes: &Vec[Str]) -> Bool
+  ensures: suffixes.len() == 0 => result == false
+{
   var i: Int = 0;
   while i < suffixes.len() {
     if str_ends_with(s, suffixes[i]) {
@@ -830,7 +854,9 @@ pub fn str_ends_with_any(s: Str, suffixes: &Vec[Str]) -> Bool {
 
 // Returns true if `s` contains any of the given substrings.
 // O(n * m * k) where n = |s|, m = max substring length, k = needles.len().
-pub fn str_contains_any(s: Str, needles: &Vec[Str]) -> Bool {
+pub fn str_contains_any(s: Str, needles: &Vec[Str]) -> Bool
+  ensures: needles.len() == 0 => result == false
+{
   var i: Int = 0;
   while i < needles.len() {
     if str_contains(s, needles[i]) {
