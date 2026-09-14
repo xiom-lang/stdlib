@@ -11,7 +11,7 @@ use xiom.os.unix;
 use xiom.env;
 use xiom.io;
 use xiom.string;
-use xiom.core;
+use xiom.convert;
 
 extern "C" {
   fn system(command: *UInt8) -> Int32;
@@ -204,7 +204,7 @@ fn temp_file() -> Result[Str, Str] {
   match t {
     Ok(d) => {
       let ts = io.time_now();
-      let name = string.str_concat(string.str_concat(d, env.path_separator()), string.str_concat("xiom_", core.to_string(ts)));
+      let name = string.str_concat(string.str_concat(d, env.path_separator()), string.str_concat("xiom_", convert.int_to_string(ts)));
       return Ok(string.str_concat(name, ".tmp"));
     };
     Err(e) => Err(e);

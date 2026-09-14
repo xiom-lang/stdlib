@@ -1245,5 +1245,8 @@ Stdlib burn-down on committed HEAD (b71d839f):
 - **Note:** the earlier R19 "workaround" (removing core's mem import) is
   superseded: mem is imported and `zeroed` is called qualified. R19
   (generic ptr store) remains compiler-side; watch closures pulling
-  core+mem+ptr.
+  core+mem+ptr. To keep BOTH the flip class and R19 quiet, os.xi now
+  uses `convert.int_to_string(ts)` instead of `core.to_string(ts)` and no
+  longer imports core -- core/mem/ptr stay out of the os/path closure
+  (509-probe scan 0, path_components green, 101/101 battery, gate green).
 
