@@ -91,7 +91,9 @@ pub fn bq_size(q: &BlockingQueue) -> Int
 /// Params: q - the queue.
 /// Returns: the fixed capacity.
 /// Complexity: O(1).
-pub fn bq_capacity(q: &BlockingQueue) -> Int {
+pub fn bq_capacity(q: &BlockingQueue) -> Int
+  ensures: result >= 0
+{
   return q.capacity;
 }
 

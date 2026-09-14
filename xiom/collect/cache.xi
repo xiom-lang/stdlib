@@ -93,7 +93,9 @@ pub fn lru_size(c: &LruCache) -> Int
 }
 
 /// Maximum number of entries the cache can hold.
-pub fn lru_capacity(c: &LruCache) -> Int {
+pub fn lru_capacity(c: &LruCache) -> Int
+  ensures: result >= 0
+{
   return c.capacity;
 }
 
@@ -442,7 +444,9 @@ pub fn arc_size(c: &ArcCache) -> Int
 }
 
 /// Capacity.
-pub fn arc_capacity(c: &ArcCache) -> Int {
+pub fn arc_capacity(c: &ArcCache) -> Int
+  ensures: result >= 0
+{
   return c.capacity;
 }
 

@@ -70,6 +70,8 @@ pub fn ring_is_empty(r: &SpscRing) -> Bool
 }
 
 /// Maximum number of buffered elements. O(1).
-pub fn ring_capacity(r: &SpscRing) -> Int {
+pub fn ring_capacity(r: &SpscRing) -> Int
+  ensures: result >= 0
+{
   return r.cap;
 }

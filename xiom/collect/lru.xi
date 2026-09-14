@@ -130,7 +130,9 @@ pub fn lru_size(c: &mut LruCache) -> Int
 
 /// Maximum number of entries the cache can hold.
 /// O(1).
-pub fn lru_capacity(c: &mut LruCache) -> Int {
+pub fn lru_capacity(c: &mut LruCache) -> Int
+  ensures: result >= 0
+{
   return c.capacity;
 }
 

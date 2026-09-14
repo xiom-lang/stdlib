@@ -1177,3 +1177,20 @@ Stdlib burn-down on committed HEAD (b71d839f):
   still CLEAN (0/0/0); ratchet floors refreshed to coverage_floors37.json
   (tz diluted time 13% -> 12.4%; global 12.0% with TOML+tz).
 
+## 2.14. Contract wave 3 + R18 (2026-09-14)
+
+- Wave 3: 22 clauses, every shape pre-validated in p_wave3_shapes --
+  `str_slice` exact-length under valid bounds + clamped bound; empty
+  needle => result for contains/starts/ends; `result == (len == 0)` for
+  the three is_empty variants; `prefixes/suffixes/needles.len() == 0 =>
+  result == false` for the *_any family; str_rindex_of Some-bounds;
+  title/swap byte-length locks; 9 collect capacity fns `>= 0`.
+  Result: string 17.1% -> 22.4%, collect 18.9% -> 20.8%, global
+  13.6% clauses / 12.3% pub-with-clause. 173/173 targeted smokes green;
+  floors refreshed to coverage_floors38.json.
+- R18 logged (COMPILER_BUGS): contract false positive for
+  `result is Some => result.value.len() <= s.len()` -- the constant-bound
+  payload form passes, so the payload getter is fine; comparing against a
+  param's `.len()` always violates. No landed clause uses the shape; the
+  probe p_wave3_opt is preserved as the negative lock.
+

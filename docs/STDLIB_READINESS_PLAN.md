@@ -189,9 +189,13 @@ T1/T2 yields.
       added 40 clauses on touched io/string/IntMap/StringMap fns; wave 2
       added 83 clauses across 56 collect containers (size/len/count >= 0,
       is_empty == (len == 0), clear -> size 0), lifting collect
-      2.0% -> 18.9%. Ratchet: coverage_scan.ps1 -RatchetFile
-      coverage_floors37.json (stdlib_ws tooling; positive + negative runs
-      verified; earlier floors kept at coverage_floors32/34/35/36.json).
+      2.0% -> 18.9%. Wave 3 (2026-09-14): 22 clauses (str_slice bounds,
+      empty-needle predicates, is_empty equalities, rindex/title/swap
+      length locks, 9 cache/ring capacities) -> string 22.4%, collect
+      20.8%, global 13.6% clauses / 12.3% pub-with-clause. Ratchet:
+      coverage_scan.ps1 -RatchetFile coverage_floors38.json (stdlib_ws
+      tooling; positive + negative runs verified; earlier floors kept at
+      coverage_floors32/34/35/36/37.json).
       Floors are per top-level stdlib/xiom directory and must be refreshed
       when a module is ADDED (new uncovered pub fns dilute the percentage
       -- TOML dropped serialize 6.1% -> 5.4%, tz dropped time 13% ->

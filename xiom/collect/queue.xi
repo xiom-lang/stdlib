@@ -191,7 +191,9 @@ pub fn spsc_ring_is_empty(r: &SpscRing) -> Bool
 }
 
 /// Capacity (number of slots).
-pub fn spsc_ring_capacity(r: &SpscRing) -> Int {
+pub fn spsc_ring_capacity(r: &SpscRing) -> Int
+  ensures: result >= 0
+{
   return r.cap;
 }
 
