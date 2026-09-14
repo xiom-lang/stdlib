@@ -923,6 +923,13 @@ use xiom.sort;
 use xiom.string;
 use xiom.hash;
 
+// The Vec buffer allocator intrinsics (@realloc/@free at the call sites)
+// need the C symbols in scope for the import-discipline gate.
+extern "C" {
+  fn realloc(ptr: *UInt8, size: UInt) -> *UInt8;
+  fn free(ptr: *UInt8);
+}
+
 pub type HashMap[K, V] = {
   data: Vec[HashMapBucket[K, V]];
   len: Int;

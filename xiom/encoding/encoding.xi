@@ -466,10 +466,10 @@ pub fn url_decode(encoded: Str) -> Result[Str, Str]
 pub fn percent_encode(data: Str) -> Str
   ensures: result.len() >= data.len()
 {
-  // Module-qualified call (deterministic resolution -- the bare `url_encode`
-  // form intermittently miscompiles at -O2 with alwaysinline: the return
-  // value came back corrupted ~5% of runs, flaky by code layout).
-  encoding.url_encode(data)
+  // Bare call into the same module; the historical -O2 flake was the
+  // pre-dispatch bare-name bug (fixed), and the import gate rejects
+  // self-qualified calls.
+  url_encode(data)
 }
 
 pub fn percent_decode(encoded: Str) -> Result[Str, Str]

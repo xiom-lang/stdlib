@@ -9,6 +9,7 @@ use xiom.log.sinks;
 use xiom.log.json;
 use xiom.log.color;
 use xiom.convert;
+use xiom.io;
 
 pub type LogLevel = enum { Trace, Debug, Info, Warn, Error, Fatal }
 pub type LogEntry = {

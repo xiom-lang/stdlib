@@ -31,6 +31,8 @@ use xiom.poly1305;
 // ============================================================================
 
 extern "C" {
+  fn malloc(size: UInt) -> *UInt8;
+  fn free(ptr: *UInt8);
   fn xiom_crypto_aesni_available() -> Int32;
   fn xiom_crypto_shani_available() -> Int32;
   fn xiom_aesni_encrypt_block(plaintext: *UInt8, round_keys: *UInt8, rounds: Int32, ciphertext: *UInt8);

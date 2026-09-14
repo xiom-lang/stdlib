@@ -21,6 +21,7 @@ module xiom.net.https
 
 use xiom.net.http;
 use xiom.net.url;
+use xiom.string;
 
 // https_default_port returns the default HTTPS port (443).
 // Complexity: O(1). Pure.
