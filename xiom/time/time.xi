@@ -345,6 +345,15 @@ pub fn utc_now() -> DateTime
   return decompose_epoch(epoch);
 }
 
+/// DateTime from a Unix epoch (seconds since 1970-01-01T00:00:00Z) in UTC.
+/// Public wrapper over the calendar decomposition; local-time conversion in
+/// xiom.time.tz builds on it.
+pub fn datetime_from_epoch(epoch: Int) -> DateTime {
+  return decompose_epoch(epoch);
+}
+
+// local_now is the UTC alias for backward compatibility; real local
+// wall-clock conversion lives in xiom.time.tz (tzdata phase 1).
 pub fn local_now() -> DateTime {
   return utc_now();
 }

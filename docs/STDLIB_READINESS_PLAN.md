@@ -190,12 +190,12 @@ T1/T2 yields.
       added 83 clauses across 56 collect containers (size/len/count >= 0,
       is_empty == (len == 0), clear -> size 0), lifting collect
       2.0% -> 18.9%. Ratchet: coverage_scan.ps1 -RatchetFile
-      coverage_floors35.json (stdlib_ws tooling; positive + negative runs
-      verified; wave-1 floors kept at coverage_floors32.json, wave-2 at
-      coverage_floors34.json). Floors are per top-level stdlib/xiom
-      directory and must be refreshed when a module is ADDED (new
-      uncovered pub fns dilute the percentage -- TOML's 10 fns dropped
-      serialize 6.1% -> 5.4% and required the wave-3 refresh).
+      coverage_floors37.json (stdlib_ws tooling; positive + negative runs
+      verified; earlier floors kept at coverage_floors32/34/35/36.json).
+      Floors are per top-level stdlib/xiom directory and must be refreshed
+      when a module is ADDED (new uncovered pub fns dilute the percentage
+      -- TOML dropped serialize 6.1% -> 5.4%, tz dropped time 13% ->
+      12.4%; global is 12.0% after both modules).
 
 ## 9. Status audit -- 2026-09-10 (rounds 15-29, sweep29 in flight)
 
