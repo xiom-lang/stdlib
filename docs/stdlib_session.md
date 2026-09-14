@@ -8,78 +8,86 @@ and edits `stdlib/runtime/` occasionally; its uncommitted crates changes
 can appear in the shared tree at any time -- NEVER `git add -A`; stage
 explicit paths only. Branch: `feat/architect`.
 
-State (verified 2026-09-12 late; r34/r35 isolated builds = committed HEAD
-8c921c32, after the compiler lane's R9 fix b581184d):
-- Sweeps: r33 935/935; r34 935/935 (fast-path re-land); r35 935/935
-  (contract wave 2); r36 935/935 (Item A findings burn-down);
-  r39 937/937 (strict flip + R15 definition-side fix); **r40 937/937**
-  (round-58 flip worklist closed + os/core closure split, ratchet OK).
-  r37 was blocked by R17; r38 had 2 compile reds (R19 workaround +
-  bigfloat alias) both fixed and re-run green in r39.
-- Item A status: COMPLETE including the strict flip (42943cd2) -- the
-  un-ignored corpus gate passes on the current stdlib (0 findings under
-  hard-error strictness) and r39 is 937/937. See 2.10-2.15.
-- Part-2 deliverables (newest first): contract wave 2 -- 83 clauses
-  across 56 collect containers, collect 2.0% -> 18.9%, global 12.6%
-  clauses / 11.1% pub-with-clause; dedup audit R15 logged + ascii85
-  direction corrected (e42520c1); string fast-path re-land + R16
-  (a47ac737); memory-quartet namespace wave 2 (78b107fb).
-- Part-3 deliverables: Item A findings burn-down (b71d839f) + Item A
-  closed after compiler round 56 (e4d3ee1d: catalog corpus CLEAN 0/0/0,
-  is_clean true); TOML v1 landed (xiom.serialize.toml + smoke);
-  round-57 section Q import discipline closed again (0de47e11: 149 -> 0
-  under isolated contexts). R17 verified fixed on r38; r15 still open.
-  See sections 2.10/2.11/2.12.
-- Part-1 deliverables (same day, newest first): xiom.serialize.csv RFC
-  4180 + smoke (e398df2f); endian trio dedup shim (9616b72f); contract
-  wave 1 + ratchet gate #7 (69a07b7e); collect namespace wave 1
-  (0d63c6b0); legacy quarantine (0dc8d90a + 8ea8e324); r32/R11-R13 log.
-- Open compiler findings: R15 (same-leaf + same-name codegen key
-  collision; blocks base32/percent/punycode + base16/base64/base58
-  consolidation), R16 (ptr + int in call args; Int-cast workaround in
-  use), R14 (latent combined-iter AV, compiler lane). R9 FIXED by
-  b581184d; Item A step 2 (843a5a88) + stdlib findings report
-  (695af0f0) drive the next work block.
+State (HEAD 4d071961, includes compiler round-59 0c1e3dff):
+- **r40 definitive sweep: 937/937 PASS + ratchet OK** (isolation target_r40;
+  tooling sweep40). r39 937/937 and r33-r36 baselines stand; r37 was
+  blocked by R17, r38 had 2 reds (both re-run green in r39).
+- **Strict catalog flip: RE-HELD by the compiler lane.** With strict on,
+  stdlib-exec is 85/85, but the wider e2e surface exposed an
+  ORDER-DEPENDENT bare/method resolution class the all-imports corpus
+  cannot see: `xiom.encoding:151,156,162,244,249` -- bare
+  `write_base64_triplet` can bind a same-named fn whose first param is Box,
+  and `data.get(i).value` can bind a UInt8-returning `get`. This is the
+  ONLY open stdlib item blocking the flip (next queue item 1).
+- **Round-58 flip worklist CLOSED** (35249785 + 16e18958): per-module
+  import-probe scan (509 modules) went 13 -> 0 catalog findings --
+  qualified `mem.zeroed[T]()`, `fs_ffi.chmod_path`, console stdio externs
+  `-> Int` + casts, os's unused libc `rename` extern deleted, local
+  vec_sort_by, `use xiom.hash as hsh`, `bucket_idx *key as Int`,
+  `crypto.md5_bytes`; os reroutes `core.to_string` ->
+  `convert.int_to_string` so core/mem/ptr stay out of the os/path closure.
+- R19 FIXED by the compiler lane (0c1e3dff: deref-store stripped ALL `*`
+  from the pointee, i8** became i8). Catalog alias isolation landed in the
+  same commit. Nothing to revert stdlib-side (core already imports mem
+  again for the qualified zeroed call).
+- Capability/coverage: CSV + TOML v1 + tzdata phase 1
+  (`xiom.time.tz`) landed with smokes; contract waves 1-3 -> string
+  22.4%, collect 20.8%, global 13.6% clauses / 12.3% pub-with-clause;
+  ratchet floors at coverage_floors38.json (wave 4 owed).
+- Open compiler findings: R20 (Result-returning same-leaf delegation
+  returns empty-payload Err; blocks encoding-family dedup), R18 (contract
+  false positive: payload `.len()` vs param `.len()`), R15b (same-leaf
+  modules declared in the user program), order-independent resolution
+  (flip permanence). R16 (`ptr + int` in call args) workaround remains in
+  the string fast path.
+- Compiler queue after the flip: Stage 5 (LSP index, dbg DWARF,
+  fuzz+ASAN CI, clap migration, supply chain), Stage 6 performance,
+  Stage 7 selfhost.
 NEXT QUEUE (ordered):
-1. Compiler lane: R9 FIXED (b581184d); R11-R13 fixed (b8e2fa43); open
-   R15 (encoding-family dedup gate), R16 (ptr+int workaround), R14
-   (latent). Re-sweep per compiler round (r34/r35 tooling ready).
-2. Item A stdlib findings (docs/ITEM_A_STDLIB_FINDINGS.md, 237 findings,
-   0 hard errors): D2.1 unsafe confinement (~60), T003 (7), T007 (8),
-   T006 (3), numeric mixing (~30), missing returns (9), individual bugs.
-   Re-measure with `cargo test -p xiom-check catalog_corpus_is_clean
-   -- --ignored --nocapture` (isolated CARGO_TARGET_DIR).
-3. Contract wave 3: collect depth (18.9%), string (17.1%), io (38.9%)
-   toward the 60% gate; refresh ratchet floors each wave (current:
-   coverage_floors34.json).
-4. Dedup: after R15, consolidate base32/percent/punycode +
-   base16/base64/base58; ip4/ip6 translation unit; console/terminal and
-   platform audited (layered / name-collision hazard); json after heap.
-5. Capability: TOML, tzdata phase 1 (OS timezone FFI), async stress
-   suite, TLS schannel binding.
+1. **Encoding qualification (flip unblocker):** in `encoding.xi`, replace
+   `data.get(i).value` with `data[i]` at the in-bounds loop sites and
+   rename the private `write_base64_triplet` ->
+   `_enc_write_base64_triplet` and `write_base64url_triplet` ->
+   `_enc_write_base64url_triplet` (unique private names; same-named
+   binding from other modules is the reported load-order class). Verify:
+   encoding smoke battery + 509-probe bare-name scan (expect 0) +
+   corpus gate; then report "flip ready" to the compiler lane.
+2. **Re-land the encoding dedup shims** once R20 is fixed (base32/
+   percent/punycode + base16/base64/base58; Str legs work since
+   a07507c4, Result legs blocked). Parity = twin-vs-vectors.
+3. **Contract wave 4:** io/string/collect depth toward the 60% gate;
+   refresh ratchet floors each wave (current coverage_floors38.json).
+4. **Remaining capability:** TLS schannel binding (TLS_DECISION.md),
+   async stress suite, runtime symbol bind-or-delete (~194 unbound),
+   console/os.terminal consolidation, property tests for collections.
+5. Re-run the full smoke sweep when the compiler's order-independent
+   resolution + R20/R18 land; r40 937/937 is the last baseline.
 
 Environment & tooling:
 - Isolated binary build (preferred; ~30s warm):
   `$env:CARGO_TARGET_DIR="C:\Users\lefte\AppData\Local\Temp\kilo\stdlib_ws\target_rNN"; cargo build -p xiom`
   then use `...\target_rNN\debug\xiom.exe`. A fresh target dir is a
   from-scratch build (~10 min); reuse per round.
-- Binary provenance: r32 = clean-HEAD artifact copied from r31 (excludes
-  the compiler lane's then-WIP); r33 = fresh build of b8e2fa43;
-  r34 = fresh build of committed HEAD 8c921c32 (R9 fix + Item A step 2);
-  r34/r35 sweeps are the current all-green baselines (sweep35 tooling:
-  sweep_worker35/launch_sweep35/triage_sweep35). The triage script also
-  runs the coverage ratchet (gate #7) on the floors file.
+- Binary provenance: r39 = fresh build of a07507c4-era codegen;
+  r40 = fresh build of R19-era codegen. NOTE: the compiler's R19 fix
+  (0c1e3dff) postdates the r40 build -- rebuild as target_r41 and re-sweep
+  before trusting codegen-sensitive results; always check `git log -1`.
 - Coverage ratchet (gate #7): stdlib_ws\coverage_scan.ps1
-  [-Detail] [-DumpFloors coverage_floors34.json] [-RatchetFile ...];
-  per-top-level-dir pub-coverage floors; positive + negative runs
-  verified 2026-09-12; wave-1 floors kept at coverage_floors32.json.
-  Re-dump floors after each contract wave.
-- Sweep tooling (copy + bump the paths per round; r32 set current):
-  C:\Users\lefte\AppData\Local\Temp\kilo\stdlib_ws\
-  {sweep_worker32.ps1, launch_sweep32.ps1, triage_sweep32.ps1,
-  compare_r29_r32.ps1, launch_verify32.ps1} + coverage_scan.ps1.
-  8 workers; per-file CSV rows; error logs per worker. Workers redirect
-  child stdin from NUL (a stdin-reading smoke must not hang a worker).
+  [-Detail] [-DumpFloors coverage_floorsNN.json] [-RatchetFile ...];
+  per-top-level-dir pub-coverage floors. Floors history: 32 (wave 1),
+  34 (wave 2), 35 (TOML), 36 (section Q), 37 (tz), 38 (wave 3).
+  Re-dump floors after any contract wave OR new module (new uncovered pub
+  fns dilute the percentage and trip the ratchet otherwise).
+- Sweep/verify tooling (copy + bump per round; r40 set current):
+  stdlib_ws\{sweep_worker40.ps1, launch_sweep40.ps1, triage_sweep40.ps1,
+  launch_verify38.ps1} + coverage_scan.ps1. 8 workers; per-file CSV rows;
+  child stdin redirected from NUL (a stdin-reading smoke must not hang a
+  worker). Triage runs the ratchet (gate #7).
+- Bare-name scan (the strict-flip detector): stdlib_ws\
+  {barename_worker.ps1, launch_barename_scan.ps1, modlist_all.txt} --
+  compiles a `use xiom.X` probe for each of the 509 manifest modules and
+  greps stderr for 'catalog body'. Expect 0 findings before reporting the
+  strict flip ready to the compiler lane.
 - Probes preserved: C:\Users\lefte\AppData\Local\Temp\kilo\stdlib_ws\probes\
   (p_*, probe_*, kat probes). Run verification with CWD = repo root so
   the CWD-relative stdlib root and the binary's baked manifest root are
@@ -105,11 +113,13 @@ Conventions / hazards (hard-won):
   COMPILER_BUGS.md (shared with the compiler lane).
 
 Historical detail: sections 1 .. 2.7 below are prior-session logs; the
-most recent (rounds 26-32, incl. the seeded-siphash unit) is section 2.7.
+newest status is sections 2.16 (round-58 flip worklist) and 2.17
+(round-59: R19 fixed, alias isolation, flip re-held on encoding).
 Key docs: STDLIB_READINESS_PLAN.md (phases T/E/O/C/S + section 9 status),
-COMPILER_BUGS.md (open: R9 latent only), STDLIB_DEDUP_INVENTORY.md
-(progress + parity convention), STDLIB_CONTAINER_TUNING.md (iteration
-order + hash-DoS posture), STR_OWNERSHIP.md, REPORT_TO_COMPILER_SESSION.md.
+COMPILER_BUGS.md (open: R20/R18/R15b + order-independent resolution),
+STDLIB_DEDUP_INVENTORY.md (progress + parity convention),
+STDLIB_CONTAINER_TUNING.md (iteration order + hash-DoS posture),
+STR_OWNERSHIP.md, ITEM_A_STDLIB_FINDINGS.md.
 
 ---
 
@@ -1251,4 +1261,35 @@ Stdlib burn-down on committed HEAD (b71d839f):
   uses `convert.int_to_string(ts)` instead of `core.to_string(ts)` and no
   longer imports core -- core/mem/ptr stay out of the os/path closure
   (509-probe scan 0, path_components green, 101/101 battery, gate green).
+
+## 2.17. Round-59 (2026-09-14): R19 fixed, catalog alias isolation, flip re-held on encoding
+
+- **R19 FIXED (0c1e3dff):** the deref-store path stripped ALL `*` from the
+  pointee type (i8** became i8), so `ptr.replace_Str` emitted
+  `store i8 %ptr, i8**` (clang ptr/i8 mismatch, reached via
+  `mem.replace[Str]`). It now strips exactly one star (stmt.rs deref
+  assign + call.rs ptr.write/read); locked by e2e_m73_ptr_replace_str.
+  Stdlib consequence: the earlier core-mem workaround is obsolete --
+  core.xi already imports mem again for the qualified `mem.zeroed[T]()`;
+  os.xi remains on `convert.int_to_string` so core/mem/ptr stay out of
+  the os/path closure (belt and braces; both shapes are now safe).
+- **Catalog alias isolation (same commit):** flush_catalog_bodies checks
+  each body under its own use bindings, closing the corpus alias hijack
+  (`use xiom.collect.hash` shadowing collections' own hash_combine).
+- **Flip re-held -- the last stdlib blocker is encoding qualification.**
+  Strict stdlib-exec is 85/85, but the wider e2e surface exposed an
+  order-dependent bare/method resolution class:
+  `xiom.encoding:151,156,162,244,249` -- `write_base64_triplet(buf, ...)`
+  can bind a same-named fn from another module whose first param is Box,
+  and `data.get(i).value` can bind a UInt8-returning `get`. In the
+  corpus's load order the correct signatures win, so the gate stays
+  clean. Stdlib fix = qualify/rename (queue item 1); compiler follow-up
+  (queued) = scope-first, load-order-independent resolution.
+- **No full sweep was run after 0c1e3dff** (codegen changed: rebuild
+  target_r41 first). r40 937/937 at 4d071961 remains the last baseline.
+  Next session: land the encoding qualification, re-run the 509-probe
+  scan + encoding battery + full r41 sweep, then report flip-ready.
+- New committed probes/locks from the compiler lane: e2e_m73_ptr_replace_str,
+  m34_j08 + m65/m71/m72 locks green; checker 188/188, feature-reg 510/510,
+  stdlib-exec 85/85 (+2 ignored), e2e 2320/2320.
 
