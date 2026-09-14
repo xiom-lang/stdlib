@@ -1220,4 +1220,10 @@ Stdlib burn-down on committed HEAD (b71d839f):
   reverted again. Encoding-family consolidation stays gated.
 - **R18** (payload-vs-param contract false positive) remains compiler-side;
   no landed clause uses the shape.
+- **Round-58 R15 attempt:** a07507c4 fixed the Str-returning same-name
+  delegation (base32_encode/base32hex_encode now correct through the
+  shim), but Result-returning legs still deliver an empty-payload Err to
+  the shim consumer and smoke_convert_base32 still AVs (p_b32_residual
+  probe). Logged as **R20**; shim reverted, local impl green on r40.
+  Encoding dedup stays gated. Tree returns to the r39-verified state.
 
