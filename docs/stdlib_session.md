@@ -11,13 +11,13 @@ explicit paths only. Branch: `feat/architect`.
 State (verified 2026-09-12 late; r34/r35 isolated builds = committed HEAD
 8c921c32, after the compiler lane's R9 fix b581184d):
 - Sweeps: r33 935/935; r34 935/935 (fast-path re-land); r35 935/935
-  (contract wave 2); r36 935/935 (Item A findings burn-down). r37 was
-  blocked by R17; r38 (round-57, 936 files incl. TOML) is the current
-  gate -- see 2.12 for its result. Do not treat r37 as a baseline.
-- Item A stdlib status (2026-09-12, after compiler round 56 = 9e625094):
-  catalog corpus CLEAN -- 0 findings / 0 hard errors / 0 parse errors;
-  is_clean() true; the strict-flip is the compiler lane's next two edits.
-  See section 2.10.
+  (contract wave 2); r36 935/935 (Item A findings burn-down);
+  **r39 937/937** (strict flip + R15 definition-side fix + tz/TOML/wave 3,
+  ratchet OK). r37 was blocked by R17; r38 had 2 compile reds (R19
+  workaround + bigfloat alias) both fixed and re-run green in r39.
+- Item A status: COMPLETE including the strict flip (42943cd2) -- the
+  un-ignored corpus gate passes on the current stdlib (0 findings under
+  hard-error strictness) and r39 is 937/937. See 2.10-2.15.
 - Part-2 deliverables (newest first): contract wave 2 -- 83 clauses
   across 56 collect containers, collect 2.0% -> 18.9%, global 12.6%
   clauses / 11.1% pub-with-clause; dedup audit R15 logged + ascii85
@@ -1193,4 +1193,31 @@ Stdlib burn-down on committed HEAD (b71d839f):
   payload form passes, so the payload getter is fine; comparing against a
   param's `.len()` always violates. No landed clause uses the shape; the
   probe p_wave3_opt is preserved as the negative lock.
+
+## 2.15. Round-57 follow-up: strict flip PASSES, r39 937/937, R19/R15 status
+
+- **Strict flip landed (42943cd2)** and the now-un-ignored gate PASSES on
+  the current stdlib: `cargo test -p xiom-check catalog_corpus_is_clean`
+  (no `--ignored`) -> 1 passed, 0 findings under hard-error strictness.
+  Section Q import discipline stayed at 0 through waves 3 + tz.
+- **r39 full sweep: 937/937 PASS / 0 RUNFAIL / 0 COMPILEFAIL**, coverage
+  ratchet OK (target_r39 = flip + R15 definition-side fix + codegen WIP).
+- **R19 found + worked around:** the r38 sweep showed
+  smoke_stress_path_components clang-failing (`ptr.replace_Str` stores the
+  Str as i8). It reproduced on r34 and r38 binaries against the current
+  stdlib graph, i.e. triggered by my `os -> core` import pulling
+  `core -> mem -> ptr` into the closure; `core.xi`'s `use xiom.mem;` was
+  UNUSED, so dropping it fixed the smoke (51/51 battery green). Logged
+  with IR evidence; the generic store miscompile remains latent for real
+  `mem.replace[Str]` callers.
+- **smoke_bigfloat** also failed compile in the r38 sweep from a duplicate
+  leaf alias (`xiom.num.bigfloat` + `xiom.bigfloat`); the redundant
+  aggregate import was dropped, green solo. Both r38 reds were re-run
+  green and are included in the r39 937/937.
+- **R15 still NOT fixed** after 4311b5db (definition-side): the base32
+  shim re-test on r39 still returns silent EMPTY for same-name fns
+  (probe p_b32_s5a) and crashes smoke_convert_base32 (0xC0000005); shim
+  reverted again. Encoding-family consolidation stays gated.
+- **R18** (payload-vs-param contract false positive) remains compiler-side;
+  no landed clause uses the shape.
 
