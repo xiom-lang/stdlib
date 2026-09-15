@@ -1362,7 +1362,7 @@ Stdlib burn-down on committed HEAD (b71d839f):
     punycode/base58 also deferred (divergent surfaces + same consumer
     shape). Explicit consumer alias of a catalog module AVs (0xC0000005,
     pre-existing on r40; p_b32_alias/p_b32_encalias).
-    **R22 CLOSED (r44, compiler 907a728a):** explicit-alias shapes fixed on
+    **R22 CLOSED (r44, compiler 907a728a + a5e8b1dc):** explicit-alias shapes fixed on
     r43; the leaf-qualified binding fixed by the deterministic module-
     collision work on r44. The **percent shim LANDED**: component + decode
     legs delegate to `encoding.percent`; `percent_encode` stays local
