@@ -8,14 +8,14 @@ and edits `stdlib/runtime/` occasionally; its uncommitted crates changes
 can appear in the shared tree at any time -- NEVER `git add -A`; stage
 explicit paths only. Branch: `feat/architect`.
 
-State (round-60; HEAD 936c9c39; compiler flip 6e7d72e5 + R20 a2a456c4):
-- **r42 sweep: 940/940 PASS + ratchet OK with strict_catalog_findings=true**
-  (target_r42 = clean HEAD after the compiler flip + R20; tooling
-  sweep42; corpus grew 937 -> 940 with the collection property smokes).
-  This is the new definitive baseline: the strict flip is ON and the
-  stdlib corpus is fully green under it. (r41 936/937 was the WIP-binary
-  precursor; its one red, the R21 chain regression, is fixed by R21b's
-  container-only receiver guard -- p_path_chain green on r42.)
+State (round-60; HEAD f47beed3; compiler commits 6e7d72e5/a2a456c4/
+c3b56e1d/34f69981/8643f74a):
+- **r43 sweep: 940/940 PASS + ratchet OK with strict_catalog_findings=true**
+  (target_r43 = HEAD + the compiler lane's current working tree, including
+  the R18/R16/R15b codegen fixes; tooling sweep43; corpus 940 files).
+  r42 940/940 (flip + R20 only) and r41 936/937 (WIP precursor) are the
+  prior rounds. The strict flip is ON and the stdlib corpus is fully green
+  under the newest codegen; this is the definitive baseline.
 - **Encoding qualification LANDED (1f4f0aad) -- the last stdlib flip
   blocker from round 59 is closed.** 28 in-bounds loop reads
   `data.get(i + n).value` -> `data[i + n]`; private helpers renamed
@@ -73,9 +73,11 @@ Environment & tooling:
   r40 = fresh build of R19-era codegen (PREDATES the R19 fix 0c1e3dff);
   r41 = fresh build of 1f4f0aad + the compiler lane's R21 WIP (936/937);
   r42 = fresh build of clean HEAD 6e7d72e5 + a2a456c4 + e6d31a1a
-  (strict flip ON + R20 fix): 937/937. Always check `git log -1` and
-  `git status --short -- crates` before trusting a round's provenance; a
-  dirty crates tree is normal (shared lane).
+  (strict flip ON + R20 fix): 937/937, then 940/940 with the property
+  smokes; r43 = HEAD f47beed3 + the R18/R16/R15b working tree: 940/940
+  (strict). Always check `git log -1` and `git status --short -- crates`
+  before trusting a round's provenance; a dirty crates tree is normal
+  (shared lane).
 - Coverage ratchet (gate #7): stdlib_ws\coverage_scan.ps1
   [-Detail] [-DumpFloors coverage_floorsNN.json] [-RatchetFile ...];
   per-top-level-dir pub-coverage floors. Floors history: 32 (wave 1),
