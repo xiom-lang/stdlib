@@ -87,20 +87,18 @@ ENCODING-FAMILY SHIMS LANDED (2026-09-15, round 60, after R20 a2a456c4):
   smoke_encoding_hex/base64 + url stress; p_b32_s5a/s5b now print
   `B-enc=MZXW6===` through the shim (the old R15/R20 evidence probes).
 
-PERCENT DEFERRED (new compiler finding R22): the component/decode legs are
-identical to encoding.percent, but `convert.percent_encode` is a unique
-full-URL mode (reserved separators pass through). With the shim in place, a
-consumer's leaf-qualified call (`use xiom.convert.percent;` +
-`percent.percent_encode`) bound `xiom.encoding.percent` (component mode)
-instead of the shim -- probe p_pct_probe. Also: an explicit consumer alias
-of a catalog module (`use xiom.X as a; a.fn()`) AVs at runtime (0xC0000005)
-even without any shim (pre-existing on r40; p_b32_alias/p_b32_encalias), so
-the same-leaf consumer shape is not yet safe for divergent twins. Reverted
-to the local implementation; re-attempt after the compiler fix.
-RE-TEST r43 (2026-09-15): explicit-alias shapes (empty/AV) are FIXED; the
-plain leaf-qualified binding still picks the sibling same-leaf module, so
-percent stays local. r43 probes: p_pct_probe as-alias OK, leaf-qualified
-still wrong.
+PERCENT LANDED (2026-09-15, r44): the component + decode legs now delegate
+to `xiom.encoding.percent` (`percent_encode_component`,
+`percent_decode`, `percent_decode_component` -> `percent_decode_www_form`);
+`percent_encode` stays LOCAL (unique full-URL mode: reserved separators
+pass through; no canonical counterpart). The earlier R22 blocker --
+a plain `use xiom.convert.percent;` leaf alias binding the sibling
+`xiom.encoding.percent` once the shim pulled it into the graph -- was
+fixed by the compiler's deterministic module-collision work (907a728a);
+r44 probes p_pct_probe (both alias forms correct) + smoke_convert_percent
+green; full r44 sweep 940/940 + ratchet OK; corpus gate clean (41.7s).
+R22 history: explicit consumer aliases (empty/AV) were fixed on r43; the
+leaf-qualified binding on r44. All three R22 shapes are closed.
 
 PUNYCODE/BASE58 DEFERRED: divergent surfaces (convert.punycode's idna_* vs
 xiom.encoding.idna; convert.base58's Result from_base58 vs num.convert's

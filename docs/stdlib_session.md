@@ -36,22 +36,19 @@ c3b56e1d/34f69981/8643f74a):
   contract waves 1-4 -> string 30.2%, collect 23.4%, io 45.4%, global
   14.2% clauses / 13.2% pub-with-clause; ratchet floors at
   coverage_floors39.json (wave 5 owed).
-- Open compiler findings: **R22** (catalog same-leaf CONSUMER aliases:
-  the plain leaf-qualified call still binds the sibling same-leaf module
-  once both are loaded -- blocks percent/punycode dedup; explicit `as`
-  aliases are FIXED as of r43), plus the R21d follow-up (catalog index
-  collision determinism). R18/R16/R15b/R19/R20 all FIXED (c3b56e1d/
-  34f69981/8643f74a/0c1e3dff/a2a456c4). With R16 fixed, the string
-  fast-path `(ptr as Int + n) as *UInt8` workaround can be revisited; with
-  R18 fixed, payload-vs-param contract shapes are usable again.
+- Open compiler findings: none from the stdlib lane (R19/R20/R18/R16/R15b
+  and R22 all FIXED; R21d collision determinism landed as 907a728a).
+  With R16 fixed, the string fast-path `(ptr as Int + n) as *UInt8`
+  workaround can be revisited; with R18 fixed, payload-vs-param contract
+  shapes are usable again.
 NEXT QUEUE (ordered):
 1. ~~Encoding qualification (flip unblocker)~~ DONE 2026-09-15 (1f4f0aad):
    strict flip verified green (r42 937/937). No stdlib work blocks it.
-2. **Encoding dedup:** base16/base32/base64/base64url shims LANDED
-   2026-09-15 (r42 937/937 with them, corpus gate clean). percent/
-   punycode/base58 DEFERRED behind R22 (catalog same-leaf consumer alias
-   binding + explicit-alias AV); `convert.percent` stays local. Re-attempt
-   after the compiler fixes the consumer-side use-path/leaf resolution.
+2. **Encoding dedup:** base16/base32/base64/base64url + percent shims
+   LANDED 2026-09-15 (r44 940/940 with them, corpus gate clean).
+   Remaining: punycode (API translation to encoding.punycode/idna) and
+   base58 (INT_MIN divergence in num.convert.to_base58) -- both need a
+   translation pass, not a blind shim.
 3. **Contract wave 5:** string/collect/io depth toward the 60% gate
    (wave 4 landed: floors coverage_floors39.json, string 30.2%, collect
    23.4%, io 45.4%). Pre-validate new shapes in a probe first (R18:
@@ -1365,11 +1362,15 @@ Stdlib burn-down on committed HEAD (b71d839f):
     punycode/base58 also deferred (divergent surfaces + same consumer
     shape). Explicit consumer alias of a catalog module AVs (0xC0000005,
     pre-existing on r40; p_b32_alias/p_b32_encalias).
-    **r43 re-test (2026-09-15, HEAD + R18/R16/R15b):** the explicit-alias
-    empty/AV shapes are FIXED; the plain leaf-qualified binding STILL picks
-    the sibling same-leaf module, so percent remains local (reverted
-    again). base58 additionally diverges on INT_MIN
-    (num.convert.to_base58 negates INT_MIN without digits).
+    **R22 CLOSED (r44, compiler 907a728a):** explicit-alias shapes fixed on
+    r43; the leaf-qualified binding fixed by the deterministic module-
+    collision work on r44. The **percent shim LANDED**: component + decode
+    legs delegate to `encoding.percent`; `percent_encode` stays local
+    (unique full-URL mode). r44 verification: p_pct_probe both alias forms
+    correct, smoke_convert_percent + percent/ascii85 green, full sweep
+    940/940 + ratchet OK, corpus gate 41.7s. base58 still deferred
+    (num.convert.to_base58 INT_MIN divergence); punycode still needs an
+    API translation pass.
   - **r42 re-sweep with the shims: 937/937 PASS + ratchet OK; corpus gate
     clean (142s).** Dedup inventory updated with the landed/deferred split.
 - **Contract wave 4 (2026-09-15): +61 clauses, floors coverage_floors39.json.**
