@@ -1,6 +1,6 @@
 # XIOM Stdlib Session -- Handoff
 
-## 0. START HERE -- current handoff (2026-09-12)
+## 0. START HERE -- current handoff (2026-09-15)
 
 Lane boundary: this session owns `stdlib/**`, `examples/stdlib_smoke/**`,
 and the docs listed below. A PARALLEL COMPILER SESSION owns `crates/**`
@@ -8,50 +8,46 @@ and edits `stdlib/runtime/` occasionally; its uncommitted crates changes
 can appear in the shared tree at any time -- NEVER `git add -A`; stage
 explicit paths only. Branch: `feat/architect`.
 
-State (HEAD 4d071961, includes compiler round-59 0c1e3dff):
-- **r40 definitive sweep: 937/937 PASS + ratchet OK** (isolation target_r40;
-  tooling sweep40). r39 937/937 and r33-r36 baselines stand; r37 was
-  blocked by R17, r38 had 2 reds (both re-run green in r39).
-- **Strict catalog flip: RE-HELD by the compiler lane.** With strict on,
-  stdlib-exec is 85/85, but the wider e2e surface exposed an
-  ORDER-DEPENDENT bare/method resolution class the all-imports corpus
-  cannot see: `xiom.encoding:151,156,162,244,249` -- bare
-  `write_base64_triplet` can bind a same-named fn whose first param is Box,
-  and `data.get(i).value` can bind a UInt8-returning `get`. This is the
-  ONLY open stdlib item blocking the flip (next queue item 1).
-- **Round-58 flip worklist CLOSED** (35249785 + 16e18958): per-module
-  import-probe scan (509 modules) went 13 -> 0 catalog findings --
-  qualified `mem.zeroed[T]()`, `fs_ffi.chmod_path`, console stdio externs
-  `-> Int` + casts, os's unused libc `rename` extern deleted, local
-  vec_sort_by, `use xiom.hash as hsh`, `bucket_idx *key as Int`,
-  `crypto.md5_bytes`; os reroutes `core.to_string` ->
-  `convert.int_to_string` so core/mem/ptr stay out of the os/path closure.
-- R19 FIXED by the compiler lane (0c1e3dff: deref-store stripped ALL `*`
-  from the pointee, i8** became i8). Catalog alias isolation landed in the
-  same commit. Nothing to revert stdlib-side (core already imports mem
-  again for the qualified zeroed call).
-- Capability/coverage: CSV + TOML v1 + tzdata phase 1
-  (`xiom.time.tz`) landed with smokes; contract waves 1-3 -> string
-  22.4%, collect 20.8%, global 13.6% clauses / 12.3% pub-with-clause;
-  ratchet floors at coverage_floors38.json (wave 4 owed).
+State (round-60; HEAD 1f4f0aad encoding qualification + the
+sync/thread/reflect intrinsic imports from this round):
+- **r41 sweep: 936/937 PASS + ratchet OK** (target_r41 = HEAD 1f4f0aad +
+  the compiler lane's working tree at build time: R21 scope-first
+  resolution + `strict_catalog_findings: true`; tooling sweep41). r40
+  937/937 remains the pre-strict baseline. The single r41 red is
+  COMPILER-side: R21 regressed method calls chained directly on a
+  method-call result (`smoke_stress_path_join`; minimal probe
+  p_path_chain.xi) -- reported in COMPILER_BUGS round-60.
+- **Encoding qualification LANDED (1f4f0aad) -- the last stdlib flip
+  blocker from round 59 is closed.** 28 in-bounds loop reads
+  `data.get(i + n).value` -> `data[i + n]`; private helpers renamed
+  `_enc_write_base64_triplet` / `_enc_write_base64url_triplet`. Verified:
+  p_enc_qual probe (pre+post), encoding battery 16/16, 509-module
+  bare-name scan 0, corpus gate clean (46.1s).
+- **Strict-gate intrinsic gap fixed this round:** `xiom.sync` (5 sites),
+  `xiom.thread` (3), `xiom.reflect` (2: size_of + align_of) called the
+  bare intrinsics with no `use`; strict turns the on-demand catalog-body
+  warnings into hard errors (smoke_sync_arc_battery was red on r41 before
+  the fix). Fixed with `use xiom.core.size_of;` (+ align_of in reflect),
+  locked by p_sync_sizeof. Lesson: the trivial `use xiom.X` 509-probe
+  scan cannot see on-demand bodies -- the full sweep is the strict-on
+  detector of record.
+- R19 FIXED (0c1e3dff); round-58 flip worklist remains CLOSED (509 scan 0).
+- Capability/coverage unchanged since round 59: CSV + TOML v1 + tzdata
+  phase 1 (`xiom.time.tz`); contract waves 1-3 -> string 22.4%, collect
+  20.8%, global 13.6% clauses / 12.3% pub-with-clause; ratchet floors at
+  coverage_floors38.json (wave 4 owed).
 - Open compiler findings: R20 (Result-returning same-leaf delegation
-  returns empty-payload Err; blocks encoding-family dedup), R18 (contract
-  false positive: payload `.len()` vs param `.len()`), R15b (same-leaf
-  modules declared in the user program), order-independent resolution
-  (flip permanence). R16 (`ptr + int` in call args) workaround remains in
-  the string fast path.
-- Compiler queue after the flip: Stage 5 (LSP index, dbg DWARF,
-  fuzz+ASAN CI, clap migration, supply chain), Stage 6 performance,
-  Stage 7 selfhost.
+  yields empty-payload Err; blocks encoding-family dedup), R21 chained-
+  method regression (new, from the uncommitted scope-first work), R18
+  (contract false positive: payload `.len()` vs param `.len()`), R15b
+  (same-leaf modules declared in the user program), order-independent
+  resolution (flip permanence). R16 (`ptr + int` in call args) workaround
+  remains in the string fast path.
 NEXT QUEUE (ordered):
-1. **Encoding qualification (flip unblocker):** in `encoding.xi`, replace
-   `data.get(i).value` with `data[i]` at the in-bounds loop sites and
-   rename the private `write_base64_triplet` ->
-   `_enc_write_base64_triplet` and `write_base64url_triplet` ->
-   `_enc_write_base64url_triplet` (unique private names; same-named
-   binding from other modules is the reported load-order class). Verify:
-   encoding smoke battery + 509-probe bare-name scan (expect 0) +
-   corpus gate; then report "flip ready" to the compiler lane.
+1. ~~Encoding qualification (flip unblocker)~~ DONE 2026-09-15 (1f4f0aad):
+   flip-ready report posted to COMPILER_BUGS. Remaining flip step is
+   compiler-side: fix the R21 chain regression, then re-run stdlib-exec +
+   e2e with strict on. No stdlib work blocks the flip.
 2. **Re-land the encoding dedup shims** once R20 is fixed (base32/
    percent/punycode + base16/base64/base58; Str legs work since
    a07507c4, Result legs blocked). Parity = twin-vs-vectors.
@@ -60,8 +56,9 @@ NEXT QUEUE (ordered):
 4. **Remaining capability:** TLS schannel binding (TLS_DECISION.md),
    async stress suite, runtime symbol bind-or-delete (~194 unbound),
    console/os.terminal consolidation, property tests for collections.
-5. Re-run the full smoke sweep when the compiler's order-independent
-   resolution + R20/R18 land; r40 937/937 is the last baseline.
+5. Re-run the full smoke sweep when the compiler's R20/R18/R21 items
+   land; r41 936/937 (strict + R21 WIP) and r40 937/937 (pre-strict) are
+   the baselines.
 
 Environment & tooling:
 - Isolated binary build (preferred; ~30s warm):
@@ -69,25 +66,32 @@ Environment & tooling:
   then use `...\target_rNN\debug\xiom.exe`. A fresh target dir is a
   from-scratch build (~10 min); reuse per round.
 - Binary provenance: r39 = fresh build of a07507c4-era codegen;
-  r40 = fresh build of R19-era codegen. NOTE: the compiler's R19 fix
-  (0c1e3dff) postdates the r40 build -- rebuild as target_r41 and re-sweep
-  before trusting codegen-sensitive results; always check `git log -1`.
+  r40 = fresh build of R19-era codegen (PREDATES the R19 fix 0c1e3dff);
+  r41 = fresh build of HEAD 1f4f0aad + the compiler lane's working tree at
+  build time (R21 scope-first resolution + strict_catalog_findings: true).
+  Always check `git log -1` and `git status --short -- crates` before
+  trusting a round's provenance; a dirty crates tree is normal (shared).
 - Coverage ratchet (gate #7): stdlib_ws\coverage_scan.ps1
   [-Detail] [-DumpFloors coverage_floorsNN.json] [-RatchetFile ...];
   per-top-level-dir pub-coverage floors. Floors history: 32 (wave 1),
   34 (wave 2), 35 (TOML), 36 (section Q), 37 (tz), 38 (wave 3).
   Re-dump floors after any contract wave OR new module (new uncovered pub
   fns dilute the percentage and trip the ratchet otherwise).
-- Sweep/verify tooling (copy + bump per round; r40 set current):
-  stdlib_ws\{sweep_worker40.ps1, launch_sweep40.ps1, triage_sweep40.ps1,
+- Sweep/verify tooling (copy + bump per round; r41 set current):
+  stdlib_ws\{sweep_worker41.ps1, launch_sweep41.ps1, triage_sweep41.ps1,
   launch_verify38.ps1} + coverage_scan.ps1. 8 workers; per-file CSV rows;
   child stdin redirected from NUL (a stdin-reading smoke must not hang a
-  worker). Triage runs the ratchet (gate #7).
+  worker). Triage runs the ratchet (gate #7; triage41 uses
+  coverage_floors38.json). GOTCHA: the launcher APPENDS to results*.csv --
+  delete sweepNN\results*.csv and errors*.log before a clean re-run.
 - Bare-name scan (the strict-flip detector): stdlib_ws\
   {barename_worker.ps1, launch_barename_scan.ps1, modlist_all.txt} --
   compiles a `use xiom.X` probe for each of the 509 manifest modules and
   greps stderr for 'catalog body'. Expect 0 findings before reporting the
-  strict flip ready to the compiler lane.
+  strict flip ready to the compiler lane. BLIND SPOT (round 60): a trivial
+  probe never checks a module's ON-DEMAND bodies, so strict-only findings
+  such as the bare sync size_of intrinsic do not appear; the full 937-file
+  sweep with a strict binary is the detector of record for that class.
 - Probes preserved: C:\Users\lefte\AppData\Local\Temp\kilo\stdlib_ws\probes\
   (p_*, probe_*, kat probes). Run verification with CWD = repo root so
   the CWD-relative stdlib root and the binary's baked manifest root are
@@ -1318,4 +1322,23 @@ Stdlib burn-down on committed HEAD (b71d839f):
     (isolated target_r40): 1 passed / 0 failed, 46.1s.
 - NEXT: full r41 sweep (rebuild binary + tooling 41) -> then flip-ready
   report to the compiler lane (COMPILER_BUGS note + section 0 refresh).
+- **r41 sweep (target_r41 = HEAD 1f4f0aad + compiler-lane working tree:
+  R21 scope-first resolution + strict_catalog_findings: true): 936/937 PASS
+  + ratchet OK.** Two NEW reds triaged:
+  - `smoke_sync_arc_battery` -- STDLIB, fixed this round: strict turned the
+    on-demand `catalog body [xiom.sync]: undefined variable 'size_of'`
+    warnings into hard errors. `xiom.sync`/`xiom.thread`/`xiom.reflect`
+    called the bare intrinsics without a binding; explicit
+    `use xiom.core.size_of;` added (+ `align_of` in reflect), locked by
+    `probes\p_sync_sizeof.xi`; sync/thread/reflect smokes green after.
+    The 509-probe scan cannot see this class (trivial probes never check
+    on-demand bodies) -- the strict-binary sweep is the detector.
+  - `smoke_stress_path_join` -- COMPILER (R21 regression): chained method
+    call on a method-call result loses the receiver type
+    (`p.join("a").join("b")` -> `cannot call 'join'`); minimal probe
+    `probes\p_path_chain.xi` is green on r40 and red on r41 with a passing
+    single-join control. Reported in COMPILER_BUGS round-60, not fixable
+    stdlib-side.
+- **Flip status: stdlib side READY.** Encoding qualified, scan 0, corpus
+  gate clean, r41 936/937 with the only red owned by the compiler lane.
 
