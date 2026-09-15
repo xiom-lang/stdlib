@@ -192,10 +192,16 @@ T1/T2 yields.
       2.0% -> 18.9%. Wave 3 (2026-09-14): 22 clauses (str_slice bounds,
       empty-needle predicates, is_empty equalities, rindex/title/swap
       length locks, 9 cache/ring capacities) -> string 22.4%, collect
-      20.8%, global 13.6% clauses / 12.3% pub-with-clause. Ratchet:
-      coverage_scan.ps1 -RatchetFile coverage_floors38.json (stdlib_ws
+      20.8%, global 13.6% clauses / 12.3% pub-with-clause. Wave 4
+      (2026-09-15): 61 clauses (distance-family non-negativity,
+      unicode counts/grapheme stepping, char radix guards + len_utf8
+      bounds, rotate length-preservation, collect heights/pool/graph/
+      unionfind/tinylfu/radix, io line/args length clauses) -> string
+      30.2%, collect 23.4%, io 45.4%, global 14.2% clauses / 13.2%
+      pub-with-clause. Ratchet:
+      coverage_scan.ps1 -RatchetFile coverage_floors39.json (stdlib_ws
       tooling; positive + negative runs verified; earlier floors kept at
-      coverage_floors32/34/35/36/37.json).
+      coverage_floors32/34/35/36/37/38.json).
       Floors are per top-level stdlib/xiom directory and must be refreshed
       when a module is ADDED (new uncovered pub fns dilute the percentage
       -- TOML dropped serialize 6.1% -> 5.4%, tz dropped time 13% ->
@@ -300,8 +306,9 @@ T1/T2 yields.
   cancellation-storm/saturation validation.
 - ~194 runtime symbols defined but unbound by any module (dead surface;
   audit pending). Runtime is 441 xiom_* fns vs 247 stdlib externs.
-- Contract coverage 12.6% globally / 11.1% pub-with-clause; key modules
-  io 38.9%, string 17.1%, collect 18.9% (target >=60%; waves 3+ owed).
+- Contract coverage 14.2% globally / 13.2% pub-with-clause (wave 4,
+  2026-09-15); key modules io 45.4%, string 30.2%, collect 23.4%
+  (target >=60%; waves 5+ owed).
 - Namespace/identity debt: collect vs collections, memory quartet,
   package.xi identity, geom/twin module names.
 - No fuzz/property infrastructure (stage-5 dependent); the coverage

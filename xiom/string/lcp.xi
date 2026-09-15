@@ -21,7 +21,9 @@ use xiom.string;
 /// Returns: the shared prefix length in 0..min(|a|, |b|).
 /// Errors: none.
 /// Complexity: O(min(|a|, |b|)).
-pub fn longest_common_prefix(a: Str, b: Str) -> Int {
+pub fn longest_common_prefix(a: Str, b: Str) -> Int
+  ensures: result >= 0
+{
   similarity.longest_common_prefix(a, b)
 }
 
@@ -32,7 +34,9 @@ pub fn longest_common_prefix(a: Str, b: Str) -> Int {
 /// Returns: the shared prefix length (>= 0).
 /// Errors: none (the empty vector is handled in the body).
 /// Complexity: O(total bytes of all strings).
-pub fn lcp_of_many(strings: &Vec[Str]) -> Int {
+pub fn lcp_of_many(strings: &Vec[Str]) -> Int
+  ensures: result >= 0
+{
   let count = strings.len();
   if count == 0 {
     return 0;

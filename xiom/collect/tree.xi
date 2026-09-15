@@ -206,7 +206,9 @@ fn bst_height_at(b: &Bst, idx: Int) -> Int {
 }
 
 /// Height of the tree; empty tree has height 0.
-pub fn bst_height(b: &Bst) -> Int {
+pub fn bst_height(b: &Bst) -> Int
+  ensures: result >= 0
+{
   return bst_height_at(b, b.root);
 }
 
@@ -375,6 +377,8 @@ pub fn avl_inorder(a: &Avl) -> Vec[Int] {
 }
 
 /// Height of the tree; empty tree has height 0.
-pub fn avl_height(a: &Avl) -> Int {
+pub fn avl_height(a: &Avl) -> Int
+  ensures: result >= 0
+{
   return avl_height_node(a, a.root);
 }

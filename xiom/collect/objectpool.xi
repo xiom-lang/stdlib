@@ -52,12 +52,16 @@ pub fn pool_release(p: &mut ObjectPool, handle: Int) -> Bool {
 }
 
 /// Number of handles currently in use.
-pub fn pool_in_use(p: &ObjectPool) -> Int {
+pub fn pool_in_use(p: &ObjectPool) -> Int
+  ensures: result >= 0
+{
   return p.next - p.free.len();
 }
 
 /// Number of handles available for acquire.
-pub fn pool_available(p: &ObjectPool) -> Int {
+pub fn pool_available(p: &ObjectPool) -> Int
+  ensures: result >= 0
+{
   return p.capacity - p.next + p.free.len();
 }
 

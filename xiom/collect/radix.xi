@@ -239,7 +239,9 @@ pub fn radix_remove(r: &mut RadixTrie, key: Str) -> Bool {
 
 /// Length of the longest stored key that is a prefix of `key` (0 if none).
 /// O(L).
-pub fn radix_longest_prefix(r: &RadixTrie, key: Str) -> Int {
+pub fn radix_longest_prefix(r: &RadixTrie, key: Str) -> Int
+  ensures: result >= 0
+{
   var node = r.root;
   var rem = key;
   var acc = 0;

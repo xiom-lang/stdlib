@@ -72,6 +72,8 @@ pub fn to_uppercase(c: Char) -> Char {
 }
 
 pub fn to_digit(c: Char, radix: Int) -> Option[Int]
+  ensures: radix < 2 || radix > 36 => result is None
+  ensures: result is Some => result.value >= 0
 {
   if radix < 2 || radix > 36 {
     return None;
@@ -102,6 +104,8 @@ pub fn to_digit(c: Char, radix: Int) -> Option[Int]
 }
 
 pub fn from_digit(n: Int, radix: Int) -> Option[Char]
+  ensures: n < 0 || n >= radix => result is None
+  ensures: radix < 2 || radix > 36 => result is None
 {
   if radix < 2 || radix > 36 {
     return None;
@@ -115,7 +119,9 @@ pub fn from_digit(n: Int, radix: Int) -> Option[Char]
   return Some(to_char(n - 10 + 65));
 }
 
-pub fn len_utf8(c: Char) -> Int {
+pub fn len_utf8(c: Char) -> Int
+  ensures: result >= 1 && result <= 4
+{
   let code = to_int_from_char(c);
   if code <= 0x7F {
     return 1;

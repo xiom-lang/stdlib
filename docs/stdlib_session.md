@@ -32,10 +32,10 @@ R20 a2a456c4):
 - R19 FIXED (0c1e3dff); R20 FIXED (a2a456c4) -- encoding-family dedup is
   UNBLOCKED (next queue item 2). Round-58 flip worklist remains CLOSED
   (509 scan 0).
-- Capability/coverage unchanged since round 59: CSV + TOML v1 + tzdata
-  phase 1 (`xiom.time.tz`); contract waves 1-3 -> string 22.4%, collect
-  20.8%, global 13.6% clauses / 12.3% pub-with-clause; ratchet floors at
-  coverage_floors38.json (wave 4 owed).
+- Capability/coverage: CSV + TOML v1 + tzdata phase 1 (`xiom.time.tz`);
+  contract waves 1-4 -> string 30.2%, collect 23.4%, io 45.4%, global
+  14.2% clauses / 13.2% pub-with-clause; ratchet floors at
+  coverage_floors39.json (wave 5 owed).
 - Open compiler findings: R22 (catalog same-leaf CONSUMER aliases:
   leaf-qualified call binds a sibling module; `use X as a` empty/AV;
   blocks percent/punycode/base58 dedup), R18 (contract false positive:
@@ -51,8 +51,10 @@ NEXT QUEUE (ordered):
    punycode/base58 DEFERRED behind R22 (catalog same-leaf consumer alias
    binding + explicit-alias AV); `convert.percent` stays local. Re-attempt
    after the compiler fixes the consumer-side use-path/leaf resolution.
-3. **Contract wave 4:** io/string/collect depth toward the 60% gate;
-   refresh ratchet floors each wave (current coverage_floors38.json).
+3. **Contract wave 5:** string/collect/io depth toward the 60% gate
+   (wave 4 landed: floors coverage_floors39.json, string 30.2%, collect
+   23.4%, io 45.4%). Pre-validate new shapes in a probe first (R18:
+   avoid payload-vs-param `.len()` comparisons).
 4. **Remaining capability:** TLS schannel binding (TLS_DECISION.md),
    async stress suite, runtime symbol bind-or-delete (~194 unbound),
    console/os.terminal consolidation, property tests for collections.
@@ -1360,4 +1362,27 @@ Stdlib burn-down on committed HEAD (b71d839f):
     pre-existing on r40; p_b32_alias/p_b32_encalias).
   - **r42 re-sweep with the shims: 937/937 PASS + ratchet OK; corpus gate
     clean (142s).** Dedup inventory updated with the landed/deferred split.
+- **Contract wave 4 (2026-09-15): +61 clauses, floors coverage_floors39.json.**
+  - Pre-validated shapes in `probes\p_wave4_shapes.xi` (Option-implies for
+    to_digit/from_digit with invalid radix, `len_utf8` 1..4 through all four
+    UTF-8 lengths, rotate length-preservation, Option/value bounds).
+  - string: distance-family non-negativity (damerau/osa/levenshtein/
+    edit_distance + limited, lcp/lcs/lcsuffix, ngram_count, hamming with the
+    `a.len() == b.len() =>` guard -- the plain `>= 0` clause was WRONG and
+    caught by smoke_string_hamming), unicode counts/grapheme stepping/
+    combining/bidi/ea width, char.xi radix guards + len_utf8 bounds,
+    combinatorics rotate `result.len() == s.len()`, template placeholder
+    count. string 22.4% -> 30.2%.
+  - collect: heights (avl/bst), pool in-use/available, graph degree/component
+    count, uf_find (`x in range => result >= 0`; the plain clause was WRONG
+    for the documented -1 sentinel and caught by smoke_collect_unionfind),
+    uf_components, tinylfu/cms estimates, radix longest prefix, dag node id.
+    collect 20.8% -> 23.4%.
+  - io: args/BufReader.lines/read_line/read_line_trim/stdin_read_line/
+    read_all_stdin/fs_temp_dir length clauses. io 38.9% -> 45.4%.
+  - Global: clauses/fns 13.6% -> 14.2%, pub-with-clause 12.3% -> 13.2%.
+  - Verification: targeted battery green after the two contract fixes;
+    **full r42 sweep 937/937 + ratchet OK (floors39)**; corpus gate passes
+    via the prebuilt test binary (the in-tree `cargo test` rebuild was
+    blocked by the compiler lane's in-flight catalog.rs WIP at session end).
 

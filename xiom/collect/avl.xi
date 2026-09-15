@@ -187,6 +187,8 @@ pub fn avl_max(t: &Avl) -> Option[Int] {
 }
 
 /// Height of the tree; an empty tree has height 0. O(1).
-pub fn avl_height(t: &Avl) -> Int {
+pub fn avl_height(t: &Avl) -> Int
+  ensures: result >= 0
+{
   return avl_height_node(t, t.root);
 }

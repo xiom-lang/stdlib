@@ -360,7 +360,9 @@ pub fn unicode_grapheme_clusters(s: Str) -> Vec[Str] {
 }
 
 /// Number of extended grapheme clusters in `s`.
-pub fn unicode_grapheme_count(s: Str) -> Int {
+pub fn unicode_grapheme_count(s: Str) -> Int
+  ensures: result >= 0
+{
   let clusters = unicode_grapheme_clusters(s);
   clusters.len()
 }
@@ -371,7 +373,9 @@ pub fn unicode_word_boundaries(s: Str) -> Vec[Int] {
 }
 
 /// Number of words in `s`.
-pub fn unicode_word_count(s: Str) -> Int {
+pub fn unicode_word_count(s: Str) -> Int
+  ensures: result >= 0
+{
   let words = wordbreak.unicode_split_words(s);
   words.len()
 }
@@ -382,7 +386,9 @@ pub fn unicode_sentence_boundaries(s: Str) -> Vec[Int] {
 }
 
 /// Number of sentences in `s`.
-pub fn unicode_sentence_count(s: Str) -> Int {
+pub fn unicode_sentence_count(s: Str) -> Int
+  ensures: result >= 0
+{
   let sents = sentencebreak.unicode_split_sentences(s);
   sents.len()
 }
@@ -398,7 +404,9 @@ pub fn unicode_line_breaks(s: Str) -> Vec[Str] {
 }
 
 /// Byte offset just past the grapheme starting at `offset`.
-pub fn unicode_next_grapheme(s: Str, offset: Int) -> Int {
+pub fn unicode_next_grapheme(s: Str, offset: Int) -> Int
+  ensures: result >= 0
+{
   let len = string.str_len(s);
   if offset < 0 || offset >= len {
     return len;
@@ -421,7 +429,9 @@ pub fn unicode_next_grapheme(s: Str, offset: Int) -> Int {
 }
 
 /// Byte offset of the grapheme start ending before `offset`.
-pub fn unicode_prev_grapheme(s: Str, offset: Int) -> Int {
+pub fn unicode_prev_grapheme(s: Str, offset: Int) -> Int
+  ensures: result >= 0
+{
   let len = string.str_len(s);
   if offset <= 0 {
     return 0;
@@ -451,12 +461,16 @@ pub fn unicode_prev_grapheme(s: Str, offset: Int) -> Int {
 // -- Display width -----------------------------------------------------------
 
 /// East Asian Width of `c`: 0, 1 or 2.
-pub fn unicode_ea_width(c: Char) -> Int {
+pub fn unicode_ea_width(c: Char) -> Int
+  ensures: result >= 0
+{
   ea_width.unicode_ea_width(c)
 }
 
 /// Total display width of `s` in cells.
-pub fn unicode_display_width(s: Str) -> Int {
+pub fn unicode_display_width(s: Str) -> Int
+  ensures: result >= 0
+{
   ea_width.unicode_display_width(s)
 }
 
@@ -542,7 +556,9 @@ pub fn unicode_is_emoji(c: Char) -> Bool {
 }
 
 /// Number of emoji characters and components in `s`.
-pub fn unicode_count_emoji(s: Str) -> Int {
+pub fn unicode_count_emoji(s: Str) -> Int
+  ensures: result >= 0
+{
   emoji.unicode_count_emoji(s)
 }
 
@@ -649,7 +665,9 @@ pub fn unicode_age(c: Char) -> Str {
 }
 
 /// Canonical combining class of `c`, 0 when spacing.
-pub fn unicode_combining_class(c: Char) -> Int {
+pub fn unicode_combining_class(c: Char) -> Int
+  ensures: result >= 0
+{
   let cp = to_int_from_char(c);
   _ccc_cp(cp)
 }
@@ -773,7 +791,9 @@ pub fn unicode_bidi_brackets(s: Str) -> Vec[Str] {
 }
 
 /// Implicit bidi embedding level of `c`: 0 (L), 1 (R/AL), 2 (EN/AN).
-pub fn unicode_bidi_level(c: Char) -> Int {
+pub fn unicode_bidi_level(c: Char) -> Int
+  ensures: result >= 0
+{
   let cls = bidi.unicode_bidi_class(c);
   if cls == "R" || cls == "AL" {
     return 1;

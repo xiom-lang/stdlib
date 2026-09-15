@@ -23,7 +23,9 @@ use xiom.text.similarity;
 /// Returns: the edit distance (>= 0).
 /// Errors: none.
 /// Complexity: O(|a| * |b|) time, O(|b|) space.
-pub fn damerau_levenshtein_distance(a: Str, b: Str) -> Int {
+pub fn damerau_levenshtein_distance(a: Str, b: Str) -> Int
+  ensures: result >= 0
+{
   misc.damerau_levenshtein_distance(a, b)
 }
 
@@ -35,6 +37,8 @@ pub fn damerau_levenshtein_distance(a: Str, b: Str) -> Int {
 /// Returns: the OSA distance (>= 0).
 /// Errors: none.
 /// Complexity: O(|a| * |b|) time, O(|b|) space.
-pub fn osa_distance(a: Str, b: Str) -> Int {
+pub fn osa_distance(a: Str, b: Str) -> Int
+  ensures: result >= 0
+{
   similarity.damerau_levenshtein(a, b)
 }

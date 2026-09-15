@@ -20,6 +20,8 @@ use xiom.misc;
 /// Returns: the number of differing positions; -1 when a.len() != b.len().
 /// Error case: a length mismatch is reported via the -1 return (no trap).
 /// Complexity: O(|a|).
-pub fn hamming_distance(a: Str, b: Str) -> Int {
+pub fn hamming_distance(a: Str, b: Str) -> Int
+  ensures: a.len() == b.len() => result >= 0
+{
   misc.hamming_distance(a, b)
 }

@@ -22,7 +22,9 @@ use xiom.string;
 /// Returns: the edit distance (>= 0).
 /// Errors: none.
 /// Complexity: O(|a| * |b|) time, O(|b|) space.
-pub fn edit_distance(a: Str, b: Str) -> Int {
+pub fn edit_distance(a: Str, b: Str) -> Int
+  ensures: result >= 0
+{
   similarity.levenshtein(a, b)
 }
 
@@ -36,7 +38,9 @@ pub fn edit_distance(a: Str, b: Str) -> Int {
 /// Errors: none (every input combination is handled in the body).
 /// Complexity: O(|a| * |b|) time worst case, O(|b|) space; the DP arithmetic
 /// runs only within the band |i - j| <= max.
-pub fn edit_distance_limited(a: Str, b: Str, max: Int) -> Int {
+pub fn edit_distance_limited(a: Str, b: Str, max: Int) -> Int
+  ensures: result >= 0
+{
   if max < 0 {
     return similarity.levenshtein(a, b);
   };

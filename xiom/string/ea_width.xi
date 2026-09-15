@@ -30,7 +30,9 @@ use xiom.char;
 /// Returns: 0, 1 or 2 display cells.
 /// Error case: none.
 /// Complexity: O(1).
-pub fn unicode_ea_width(c: Char) -> Int {
+pub fn unicode_ea_width(c: Char) -> Int
+  ensures: result >= 0
+{
   _ea_w(to_int_from_char(c))
 }
 
@@ -40,7 +42,9 @@ pub fn unicode_ea_width(c: Char) -> Int {
 /// Returns: total display width in cells (>= 0).
 /// Error case: none; malformed UTF-8 bytes are counted as width 1.
 /// Complexity: O(|s|).
-pub fn unicode_display_width(s: Str) -> Int {
+pub fn unicode_display_width(s: Str) -> Int
+  ensures: result >= 0
+{
   let len = string.str_len(s);
   var total: Int = 0;
   var i: Int = 0;

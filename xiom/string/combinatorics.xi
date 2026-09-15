@@ -316,7 +316,9 @@ pub fn str_shuffle_words_seeded(s: Str, seed: Int) -> Str {
 /// Returns: the rotated string.
 /// Error case: none; the empty string is returned unchanged.
 /// Complexity: O(|s|).
-pub fn str_rotate(s: Str, n: Int) -> Str {
+pub fn str_rotate(s: Str, n: Int) -> Str
+  ensures: result.len() == s.len()
+{
   let len = string.str_len(s);
   if len == 0 {
     return s;
@@ -341,7 +343,9 @@ pub fn str_rotate(s: Str, n: Int) -> Str {
 /// Returns: the rotated string.
 /// Error case: none; the empty string is returned unchanged.
 /// Complexity: O(|s|).
-pub fn str_rotate_left(s: Str, n: Int) -> Str {
+pub fn str_rotate_left(s: Str, n: Int) -> Str
+  ensures: result.len() == s.len()
+{
   let len = string.str_len(s);
   if len == 0 {
     return s;
@@ -365,7 +369,9 @@ pub fn str_rotate_left(s: Str, n: Int) -> Str {
 /// Returns: the rotated string.
 /// Error case: none; the empty string is returned unchanged.
 /// Complexity: O(|s|).
-pub fn str_rotate_right(s: Str, n: Int) -> Str {
+pub fn str_rotate_right(s: Str, n: Int) -> Str
+  ensures: result.len() == s.len()
+{
   let r = str_rotate(s, n);
   r
 }

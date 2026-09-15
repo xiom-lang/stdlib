@@ -319,6 +319,8 @@ pub fn fs_touch(path: Str) -> Result[Unit, Str> {
 /// Return a usable temporary directory path.
 /// Returns: the system temporary directory.
 /// Complexity: O(1).
-pub fn fs_temp_dir() -> Str {
+pub fn fs_temp_dir() -> Str
+  ensures: result.len() >= 0
+{
   return os.temp_dir();
 }
