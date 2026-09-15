@@ -6,6 +6,8 @@ module xiom.reflect
 
 use xiom.reflect.typeinfo;
 use xiom.reflect.fields;
+use xiom.core.size_of;  // bare intrinsic binding (strict catalog gate)
+use xiom.core.align_of;
 
 // === FFI: compiler-emitted RTTI table ===
 // These accessors are backed by an additive, read-only metadata table that the

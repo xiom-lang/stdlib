@@ -12,6 +12,7 @@ use xiom.sync.rwlock;
 
 use xiom.alloc;
 use xiom.ptr;
+use xiom.core.size_of;  // bare intrinsic binding (strict catalog gate)
 
 // Declare threading runtime functions
 extern "C" {

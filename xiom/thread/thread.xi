@@ -10,6 +10,7 @@ use xiom.thread.local;
 
 use xiom.alloc;
 use xiom.ptr;
+use xiom.core.size_of;  // bare intrinsic binding (strict catalog gate)
 
 extern "C" {
   fn xiom_thread_create(fn_ptr: *UInt8, arg: *UInt8) -> *UInt8;
