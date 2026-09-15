@@ -292,7 +292,14 @@ T1/T2 yields.
 
 **D. Scale discipline (S)**
 16. Property tests for collections (BST balance, heap shape, hash
-    distribution).
+    distribution). STARTED 2026-09-15: smoke_prop_collect_avl (512-key
+    deterministic LCG Fisher-Yates permutation: membership + AVL height
+    bound across random-order inserts/removals, min/max, empty-out),
+    smoke_prop_collect_heap (pairing-heap extract_min non-decreasing +
+    exact size tracking), smoke_prop_collect_lhmap (LhMap overwrite/remove
+    size + value consistency + strictly ascending keys_in_order). Corpus
+    937 -> 940; r42 sweep 940/940 + ratchet OK. Next: bloom/persistent/
+    hash-distribution invariants.
 17. Parser fuzz ladder (url/ip/header/cookie/mime/json/utf) once stage-5
     fuzz infra lands.
 18. Coverage ratchet in CI-equivalent script; async/CLI-of-everything.
@@ -311,8 +318,10 @@ T1/T2 yields.
   (target >=60%; waves 5+ owed).
 - Namespace/identity debt: collect vs collections, memory quartet,
   package.xi identity, geom/twin module names.
-- No fuzz/property infrastructure (stage-5 dependent); the coverage
-  number IS published + ratcheted (gate #7) as of 2026-09-12.
+- No fuzz infrastructure (stage-5 dependent); collection property smokes
+  landed 2026-09-15 (avl balance/membership, pairing-heap ordering, LhMap
+  overwrite/remove invariants); the coverage number IS published +
+  ratcheted (gate #7) as of 2026-09-12.
 - Item A catalog findings: stdlib burn-down DONE 2026-09-12 (237 -> 2
   findings, 17 -> 1 parse errors; the remainder are the compiler-side
   D4 iter:413 / D5 path:261 / D1 time `<=>` items) -- full details in
