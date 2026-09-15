@@ -245,11 +245,15 @@ T1/T2 yields.
    the coverage number + add a ratchet mode~~ DONE 2026-09-12 (see gate #7).
 6. Dedup continuation: ~~endian three-way~~ DONE 2026-09-12
    (convert/endian -> delegating shim over serialize.endian + bits;
-   twin-vs-vectors pinned by smoke_convert_endian). Remaining:
-   base32/ascii85/percent/punycode, ip4+ip6 (needs an API translation
-   pass -- Result/Vec[UInt8] vs Option/Vec[UInt16], not a blind shim),
-   console/os.terminal/os.term, core.platform/os.platform -- each lands
-   with a parity smoke.
+   twin-vs-vectors pinned by smoke_convert_endian). UPDATE 2026-09-15
+   (R20 fixed): convert.base16/base32/base64/base64url -> delegating
+   shims over xiom.encoding.hex/base32/base64 (r42 937/937 + corpus gate
+   clean with them). percent/punycode/base58 DEFERRED behind compiler
+   finding R22 (catalog same-leaf consumer aliases bind wrong module /
+   AV; probes p_pct_probe/p_b32_alias). Still queued: ip4+ip6 (needs an
+   API translation pass -- Result/Vec[UInt8] vs Option/Vec[UInt16], not a
+   blind shim), console/os.terminal/os.term, core.platform/os.platform --
+   each lands with a parity smoke.
 
 **B. Capability (C)**
 7. Runtime symbol audit: 441 xiom_* defs vs 247 stdlib externs => ~194

@@ -36,16 +36,21 @@ R20 a2a456c4):
   phase 1 (`xiom.time.tz`); contract waves 1-3 -> string 22.4%, collect
   20.8%, global 13.6% clauses / 12.3% pub-with-clause; ratchet floors at
   coverage_floors38.json (wave 4 owed).
-- Open compiler findings: R18 (contract false positive: payload `.len()`
-  vs param `.len()`), R16 (`ptr + int` in call args; workaround remains in
-  the string fast path), R15b (same-leaf modules declared in the user
-  program). Catalog index collision determinism (R21d follow-up).
+- Open compiler findings: R22 (catalog same-leaf CONSUMER aliases:
+  leaf-qualified call binds a sibling module; `use X as a` empty/AV;
+  blocks percent/punycode/base58 dedup), R18 (contract false positive:
+  payload `.len()` vs param `.len()`), R16 (`ptr + int` in call args;
+  workaround remains in the string fast path), R15b (same-leaf modules
+  declared in the user program). Catalog index collision determinism
+  (R21d follow-up).
 NEXT QUEUE (ordered):
 1. ~~Encoding qualification (flip unblocker)~~ DONE 2026-09-15 (1f4f0aad):
    strict flip verified green (r42 937/937). No stdlib work blocks it.
-2. **Re-land the encoding dedup shims (R20 fixed):** base32/percent/
-   punycode + base16/base64/base58; Str + Result legs both work since
-   a2a456c4/m75. Parity = twin-vs-vectors, endian-shim precedent.
+2. **Encoding dedup:** base16/base32/base64/base64url shims LANDED
+   2026-09-15 (r42 937/937 with them, corpus gate clean). percent/
+   punycode/base58 DEFERRED behind R22 (catalog same-leaf consumer alias
+   binding + explicit-alias AV); `convert.percent` stays local. Re-attempt
+   after the compiler fixes the consumer-side use-path/leaf resolution.
 3. **Contract wave 4:** io/string/collect depth toward the 60% gate;
    refresh ratchet floors each wave (current coverage_floors38.json).
 4. **Remaining capability:** TLS schannel binding (TLS_DECISION.md),
@@ -1336,4 +1341,23 @@ Stdlib burn-down on committed HEAD (b71d839f):
     stdlib-side.
 - **Flip status: stdlib side READY.** Encoding qualified, scan 0, corpus
   gate clean, r41 936/937 with the only red owned by the compiler lane.
+- **Dedup re-land (R20 fixed, a2a456c4): 4 shims LANDED, 3 deferred.**
+  - Landed (all shared bodies byte-identical to the canonical; each shim
+    imports its target via an `as` alias and keeps the legacy 4-fn surface):
+    `convert.base16` -> `encoding.hex`; `convert.base32` ->
+    `encoding.base32`; `convert.base64` -> `encoding.base64`;
+    `convert.base64url` -> `encoding.base64` byte legs (str wrappers stay
+    local -- no url-safe str variants on the canonical).
+  - Locks green: smoke_convert_base16/base32/base64, kat_convert_base64_parity,
+    kat_encoding_base32/base64_rfc4648, smoke_encoding_hex/base64 + url
+    stress; p_b32_s5a/s5b now print `B-enc=MZXW6===` through the shim.
+  - Deferred behind the NEW compiler finding **R22** (catalog same-leaf
+    CONSUMER aliases): `convert.percent` stays local (unique full-URL mode;
+    with the shim, `percent.percent_encode` bound `xiom.encoding.percent`
+    component mode -- probe p_pct_probe; `use ... as cvt` returned "");
+    punycode/base58 also deferred (divergent surfaces + same consumer
+    shape). Explicit consumer alias of a catalog module AVs (0xC0000005,
+    pre-existing on r40; p_b32_alias/p_b32_encalias).
+  - **r42 re-sweep with the shims: 937/937 PASS + ratchet OK; corpus gate
+    clean (142s).** Dedup inventory updated with the landed/deferred split.
 

@@ -8,8 +8,16 @@ module xiom.convert.percent
 
 // ============================================================================
 // Percent-encoding (RFC 3986) for full URLs and for path/query components.
-// Implemented locally (same-name delegation to xiom.encoding crashes the
-// compiler -- see xiom.convert.base58 for the probe reference).
+// LOCAL implementation retained (dedup deferred 2026-09-15): the shared
+// component/decode legs are behaviorally identical to xiom.encoding.percent,
+// but importing that module here makes its leaf "percent" live in the same
+// graph as this module. A consumer's leaf-qualified call
+// (`use xiom.convert.percent;` + `percent.percent_encode`) then binds the
+// WRONG module (component mode instead of this full-URL mode) -- probes
+// p_pct_probe / p_b32_alias in stdlib_ws\probes; reported in COMPILER_BUGS.
+// This module's percent_encode is the only full-URL mode in the stdlib, so
+// a wrong-wide binding here changes results. Re-attempt the delegation once
+// same-leaf alias resolution is scope-first/order-independent.
 // ============================================================================
 
 use xiom.string;

@@ -73,6 +73,36 @@ against official/expected vectors with the twin imported + alias calls;
 do NOT write side-by-side calls to two modules in one smoke until R9 is
 fixed.
 
+ENCODING-FAMILY SHIMS LANDED (2026-09-15, round 60, after R20 a2a456c4):
+- `convert.base16` -> `xiom.encoding.hex`;
+  `convert.base32` -> `xiom.encoding.base32`;
+  `convert.base64` -> `xiom.encoding.base64`;
+  `convert.base64url` -> `xiom.encoding.base64` (byte legs; the str wrappers
+  stay local -- the canonical has no url-safe str variants).
+- All four pairs' shared bodies were byte-identical (per-file diff), so the
+  same-leaf delegation is behavior-preserving; every shim imports the
+  canonical through an `as` alias and keeps the legacy 4-fn surface.
+- Locks green: smoke_convert_base16/base32/base64,
+  kat_convert_base64_parity, kat_encoding_base32/base64_rfc4648,
+  smoke_encoding_hex/base64 + url stress; p_b32_s5a/s5b now print
+  `B-enc=MZXW6===` through the shim (the old R15/R20 evidence probes).
+
+PERCENT DEFERRED (new compiler finding R22): the component/decode legs are
+identical to encoding.percent, but `convert.percent_encode` is a unique
+full-URL mode (reserved separators pass through). With the shim in place, a
+consumer's leaf-qualified call (`use xiom.convert.percent;` +
+`percent.percent_encode`) bound `xiom.encoding.percent` (component mode)
+instead of the shim -- probe p_pct_probe. Also: an explicit consumer alias
+of a catalog module (`use xiom.X as a; a.fn()`) AVs at runtime (0xC0000005)
+even without any shim (pre-existing on r40; p_b32_alias/p_b32_encalias), so
+the same-leaf consumer shape is not yet safe for divergent twins. Reverted
+to the local implementation; re-attempt after the compiler fix.
+
+PUNYCODE/BASE58 DEFERRED: divergent surfaces (convert.punycode's idna_* vs
+xiom.encoding.idna; convert.base58's Result from_base58 vs num.convert's
+Option). Both need the R22 scope-first fix plus an API translation pass;
+queued behind it.
+
 ALREADY DONE before this session (verified):
 - `string/levenshtein.xi` delegates to `misc.levenshtein_distance`
   (canonical = misc.levenshtein, table direction stale).
