@@ -8,12 +8,12 @@ and edits `stdlib/runtime/` occasionally; its uncommitted crates changes
 can appear in the shared tree at any time -- NEVER `git add -A`; stage
 explicit paths only. Branch: `feat/architect`.
 
-State (round-60; HEAD e6d31a1a on top of the compiler flip 6e7d72e5 +
-R20 a2a456c4):
-- **r42 sweep: 937/937 PASS + ratchet OK with strict_catalog_findings=true**
+State (round-60; HEAD 936c9c39; compiler flip 6e7d72e5 + R20 a2a456c4):
+- **r42 sweep: 940/940 PASS + ratchet OK with strict_catalog_findings=true**
   (target_r42 = clean HEAD after the compiler flip + R20; tooling
-  sweep42). This is the new definitive baseline: the strict flip is ON and
-  the stdlib corpus is fully green under it. (r41 936/937 was the WIP-binary
+  sweep42; corpus grew 937 -> 940 with the collection property smokes).
+  This is the new definitive baseline: the strict flip is ON and the
+  stdlib corpus is fully green under it. (r41 936/937 was the WIP-binary
   precursor; its one red, the R21 chain regression, is fixed by R21b's
   container-only receiver guard -- p_path_chain green on r42.)
 - **Encoding qualification LANDED (1f4f0aad) -- the last stdlib flip
@@ -1384,7 +1384,11 @@ Stdlib burn-down on committed HEAD (b71d839f):
     read_all_stdin/fs_temp_dir length clauses. io 38.9% -> 45.4%.
   - Global: clauses/fns 13.6% -> 14.2%, pub-with-clause 12.3% -> 13.2%.
   - Verification: targeted battery green after the two contract fixes;
-    **full r42 sweep 937/937 + ratchet OK (floors39)**; corpus gate passes
-    via the prebuilt test binary (the in-tree `cargo test` rebuild was
-    blocked by the compiler lane's in-flight catalog.rs WIP at session end).
+    **full r42 sweep 937/937 + ratchet OK (floors39)** at wave-4 close
+    (940/940 after the collection property smokes landed; see below);
+    canonical corpus gate `cargo test -p xiom-check catalog_corpus_is_clean`
+    PASS (64.1s; a mid-session retry had failed only because the compiler
+    lane's in-flight catalog.rs WIP did not compile -- the prebuilt gate
+    binary was green throughout, and the canonical rebuild is green at
+    session end).
 
