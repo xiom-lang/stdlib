@@ -92,7 +92,7 @@ fn write_hex_byte_lower(dst: *UInt8, dst_idx: Int, byte: UInt8)
   };
 }
 
-fn write_base64_triplet(dst: *UInt8, dst_idx: Int, b0: UInt8, b1: UInt8, b2: UInt8, pad1: Bool, pad2: Bool)
+fn _enc_write_base64_triplet(dst: *UInt8, dst_idx: Int, b0: UInt8, b1: UInt8, b2: UInt8, pad1: Bool, pad2: Bool)
   requires: dst_idx >= 0  // dst must have capacity for dst_idx + 3
 {
   let alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
@@ -115,7 +115,7 @@ fn write_base64_triplet(dst: *UInt8, dst_idx: Int, b0: UInt8, b1: UInt8, b2: UIn
   };
 }
 
-fn write_base64url_triplet(dst: *UInt8, dst_idx: Int, b0: UInt8, b1: UInt8, b2: UInt8, has_one: Bool, has_two: Bool)
+fn _enc_write_base64url_triplet(dst: *UInt8, dst_idx: Int, b0: UInt8, b1: UInt8, b2: UInt8, has_one: Bool, has_two: Bool)
   requires: dst_idx >= 0  // dst must have capacity: 2 bytes if no continuation, 3 if has_one, 4 if has_two
 {
   let alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
@@ -148,23 +148,23 @@ pub fn base64_encode(data: &Vec[UInt8]) -> Str
     var i = 0;
     var out = 0;
     while i + 2 < len {
-      write_base64_triplet(buf, out, data.get(i).value, data.get(i + 1).value, data.get(i + 2).value, false, false);
+      _enc_write_base64_triplet(buf, out, data[i], data[i + 1], data[i + 2], false, false);
       out = out + 4;
       i = i + 3;
     };
     if i < len {
-      var b0 = data.get(i).value;
+      var b0 = data[i];
       var b1: UInt8 = 0;
       var b2: UInt8 = 0;
       var pad1 = false;
       var pad2 = false;
       if i + 1 < len {
-        b1 = data.get(i + 1).value;
+        b1 = data[i + 1];
         pad2 = true;
       } else {
         pad1 = true;
       };
-      write_base64_triplet(buf, out, b0, b1, b2, pad1, pad2);
+      _enc_write_base64_triplet(buf, out, b0, b1, b2, pad1, pad2);
       out = out + 4;
     };
     buf[out_len] = 0;
@@ -241,23 +241,23 @@ pub fn base64url_encode(data: &Vec[UInt8]) -> Str
     var i = 0;
     var out = 0;
     while i + 2 < len {
-      write_base64url_triplet(buf, out, data.get(i).value, data.get(i + 1).value, data.get(i + 2).value, true, true);
+      _enc_write_base64url_triplet(buf, out, data[i], data[i + 1], data[i + 2], true, true);
       out = out + 4;
       i = i + 3;
     };
     if i < len {
-      var b0 = data.get(i).value;
+      var b0 = data[i];
       var b1: UInt8 = 0;
       var b2: UInt8 = 0;
       var has_one = i + 1 < len;
       var has_two = i + 2 < len;
       if has_one {
-        b1 = data.get(i + 1).value;
+        b1 = data[i + 1];
       };
       if has_two {
-        b2 = data.get(i + 2).value;
+        b2 = data[i + 2];
       };
-      write_base64url_triplet(buf, out, b0, b1, b2, has_one, has_two);
+      _enc_write_base64url_triplet(buf, out, b0, b1, b2, has_one, has_two);
       out = out + 4;
     };
     buf[actual_len] = 0;
@@ -322,7 +322,7 @@ pub fn hex_encode(data: &Vec[UInt8]) -> Str
     var buf = malloc(out_len + 1);
     var i = 0;
     while i < len {
-      write_hex_byte_lower(buf, i * 2, data.get(i).value);
+      write_hex_byte_lower(buf, i * 2, data[i]);
       i = i + 1;
     };
     buf[out_len] = 0;
@@ -361,7 +361,7 @@ pub fn hex_encode_upper(data: &Vec[UInt8]) -> Str
     var buf = malloc(out_len + 1);
     var i = 0;
     while i < len {
-      write_hex_byte_upper(buf, i * 2, data.get(i).value);
+      write_hex_byte_upper(buf, i * 2, data[i]);
       i = i + 1;
     };
     buf[out_len] = 0;
@@ -503,7 +503,7 @@ pub fn utf8_decode(data: &Vec[UInt8]) -> Result[Str, Str]
   var i = 0;
   var out_len = 0;
   while i < len {
-    let b0 = data.get(i).value as Int;
+    let b0 = data[i] as Int;
     var clen = 0;
     if b0 <= 0x7F {
       clen = 1;
@@ -523,21 +523,21 @@ pub fn utf8_decode(data: &Vec[UInt8]) -> Result[Str, Str]
     if clen == 1 {
       cp = b0;
     } elif clen == 2 {
-      let b1 = data.get(i + 1).value as Int;
+      let b1 = data[i + 1] as Int;
       if (b1 & 0xC0) != 0x80 { return Err("invalid UTF-8 continuation byte"); };
       cp = ((b0 & 0x1F) << 6) | (b1 & 0x3F);
       if cp < 0x80 { return Err("overlong UTF-8 encoding"); };
     } elif clen == 3 {
-      let b1 = data.get(i + 1).value as Int;
-      let b2 = data.get(i + 2).value as Int;
+      let b1 = data[i + 1] as Int;
+      let b2 = data[i + 2] as Int;
       if (b1 & 0xC0) != 0x80 || (b2 & 0xC0) != 0x80 { return Err("invalid UTF-8 continuation byte"); };
       cp = ((b0 & 0x0F) << 12) | ((b1 & 0x3F) << 6) | (b2 & 0x3F);
       if cp < 0x800 { return Err("overlong UTF-8 encoding"); };
       if cp >= 0xD800 && cp <= 0xDFFF { return Err("invalid surrogate code point"); };
     } else {
-      let b1 = data.get(i + 1).value as Int;
-      let b2 = data.get(i + 2).value as Int;
-      let b3 = data.get(i + 3).value as Int;
+      let b1 = data[i + 1] as Int;
+      let b2 = data[i + 2] as Int;
+      let b3 = data[i + 3] as Int;
       if (b1 & 0xC0) != 0x80 || (b2 & 0xC0) != 0x80 || (b3 & 0xC0) != 0x80 { return Err("invalid UTF-8 continuation byte"); };
       cp = ((b0 & 0x07) << 18) | ((b1 & 0x3F) << 12) | ((b2 & 0x3F) << 6) | (b3 & 0x3F);
       if cp < 0x10000 { return Err("overlong UTF-8 encoding"); };
@@ -551,7 +551,7 @@ pub fn utf8_decode(data: &Vec[UInt8]) -> Result[Str, Str]
     i = 0;
     out_len = 0;
     while i < len {
-      let b0 = data.get(i).value as Int;
+      let b0 = data[i] as Int;
       var clen = 0;
       if b0 <= 0x7F {
         clen = 1;
@@ -564,7 +564,7 @@ pub fn utf8_decode(data: &Vec[UInt8]) -> Result[Str, Str]
       };
       var j = 0;
       while j < clen {
-        buf[out_len] = data.get(i + j).value;
+        buf[out_len] = data[i + j];
         out_len = out_len + 1;
         j = j + 1;
       };
@@ -581,7 +581,7 @@ pub fn utf8_valid(data: &Vec[UInt8]) -> Bool
   let len = data.len();
   var i = 0;
   while i < len {
-    let b0 = data.get(i).value as Int;
+    let b0 = data[i] as Int;
     var clen = 0;
     if b0 <= 0x7F {
       clen = 1;
@@ -600,22 +600,22 @@ pub fn utf8_valid(data: &Vec[UInt8]) -> Bool
     if clen == 1 {
       // valid
     } elif clen == 2 {
-      let b1 = data.get(i + 1).value as Int;
+      let b1 = data[i + 1] as Int;
       if (b1 & 0xC0) != 0x80 { return false; };
       let cp = ((b0 & 0x1F) << 6) | (b1 & 0x3F);
       if cp < 0x80 { return false; };
     } elif clen == 3 {
-      let b1 = data.get(i + 1).value as Int;
-      let b2 = data.get(i + 2).value as Int;
+      let b1 = data[i + 1] as Int;
+      let b2 = data[i + 2] as Int;
       if (b1 & 0xC0) != 0x80 { return false; };
       if (b2 & 0xC0) != 0x80 { return false; };
       let cp = ((b0 & 0x0F) << 12) | ((b1 & 0x3F) << 6) | (b2 & 0x3F);
       if cp < 0x800 { return false; };
       if cp >= 0xD800 && cp <= 0xDFFF { return false; };
     } else {
-      let b1 = data.get(i + 1).value as Int;
-      let b2 = data.get(i + 2).value as Int;
-      let b3 = data.get(i + 3).value as Int;
+      let b1 = data[i + 1] as Int;
+      let b2 = data[i + 2] as Int;
+      let b3 = data[i + 3] as Int;
       if (b1 & 0xC0) != 0x80 { return false; };
       if (b2 & 0xC0) != 0x80 { return false; };
       if (b3 & 0xC0) != 0x80 { return false; };
