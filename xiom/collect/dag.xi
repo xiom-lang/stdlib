@@ -34,7 +34,9 @@ pub fn dag_new() -> Dag {
 
 /// Add a node and return its id (0-based, monotonically increasing).
 /// O(1).
-pub fn dag_add_node(g: &mut Dag) -> Int {
+pub fn dag_add_node(g: &mut Dag) -> Int
+  ensures: result >= 0
+{
   var id = g.n;
   g.head.push(-1);
   g.n = g.n + 1;

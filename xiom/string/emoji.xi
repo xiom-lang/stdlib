@@ -38,7 +38,9 @@ pub fn unicode_is_emoji(c: Char) -> Bool {
 /// Returns: the count of emoji codepoints (>= 0).
 /// Error case: none; malformed UTF-8 bytes are skipped.
 /// Complexity: O(|s|).
-pub fn unicode_count_emoji(s: Str) -> Int {
+pub fn unicode_count_emoji(s: Str) -> Int
+  ensures: result >= 0
+{
   let len = string.str_len(s);
   var count: Int = 0;
   var i: Int = 0;

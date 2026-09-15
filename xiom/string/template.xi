@@ -426,7 +426,9 @@ pub fn template_placeholders(tpl: Str) -> Vec[Str] {
 /// Params: tpl the template text.
 /// Returns: the placeholder count.
 /// Complexity: O(|tpl|).
-pub fn template_placeholder_count(tpl: Str) -> Int {
+pub fn template_placeholder_count(tpl: Str) -> Int
+  ensures: result >= 0
+{
   var names = Vec[Str].new();
   let n = _scan_tolerant(tpl, &names);
   n

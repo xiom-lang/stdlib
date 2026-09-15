@@ -21,7 +21,9 @@ use xiom.text.similarity;
 /// longest common subsequence is "ADH".
 /// Errors: none.
 /// Complexity: O(|a| * |b|) time, O(|b|) space.
-pub fn longest_common_subsequence(a: Str, b: Str) -> Int {
+pub fn longest_common_subsequence(a: Str, b: Str) -> Int
+  ensures: result >= 0
+{
   similarity.longest_common_subsequence(a, b)
 }
 
@@ -32,6 +34,8 @@ pub fn longest_common_subsequence(a: Str, b: Str) -> Int {
 /// whose longest common substring is "cde".
 /// Errors: none.
 /// Complexity: O(|a| * |b|) time, O(|b|) space.
-pub fn longest_common_substring(a: Str, b: Str) -> Int {
+pub fn longest_common_substring(a: Str, b: Str) -> Int
+  ensures: result >= 0
+{
   similarity.longest_common_substring(a, b)
 }

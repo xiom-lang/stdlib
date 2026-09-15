@@ -80,7 +80,9 @@ pub fn println(msg: Str)
   }
 }
 
-pub fn read_line() -> Str {
+pub fn read_line() -> Str
+  ensures: result.len() >= 0
+{
   var buf: Vec[UInt8] = Vec[UInt8]::with_capacity(4096);
   let ptr: *UInt8;
   unsafe {
@@ -395,7 +397,9 @@ pub fn exit(code: Int)
   }
 }
 
-pub fn args() -> Vec[Str] {
+pub fn args() -> Vec[Str]
+  ensures: result.len() >= 0
+{
   let argc: Int;
   unsafe {
     argc = xiom_get_argc();
@@ -538,7 +542,9 @@ pub fn BufReader.read_line(self, buf: &mut Str) -> Result[Int, IOError]
   Ok(total)
 }
 
-pub fn BufReader.lines(self) -> Vec[Str] {
+pub fn BufReader.lines(self) -> Vec[Str]
+  ensures: result.len() >= 0
+{
   var result: Vec[Str] = Vec[Str]::new();
   var raw: Vec[UInt8] = Vec[UInt8]::with_capacity(4096);
   let nread: UInt;
@@ -805,7 +811,9 @@ pub fn is_absolute(path: Str) -> Bool {
 // read_line_trim reads a line from stdin and trims trailing
 // whitespace (including \r, \n).  Delegates to read_line + trim.
 // Complexity: O(n) where n is line length.
-pub fn read_line_trim() -> Str {
+pub fn read_line_trim() -> Str
+  ensures: result.len() >= 0
+{
   let line = read_line();
   return line.trim();
 }
@@ -814,7 +822,9 @@ pub fn read_line_trim() -> Str {
 // and returns the concatenated content.  Returns "" if stdin is empty.
 // Complexity: O(N) where N is total bytes read.  Each call to read_line
 // allocates up to 4096 bytes; memory usage peaks at ~2x input size.
-pub fn read_all_stdin() -> Str {
+pub fn read_all_stdin() -> Str
+  ensures: result.len() >= 0
+{
   var result = "";
   var done = false;
   while !done {
@@ -829,7 +839,9 @@ pub fn read_all_stdin() -> Str {
 }
 
 // stdin_read_line is an alias for read_line.
-pub fn stdin_read_line() -> Str {
+pub fn stdin_read_line() -> Str
+  ensures: result.len() >= 0
+{
   return read_line();
 }
 

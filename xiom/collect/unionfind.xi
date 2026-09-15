@@ -55,7 +55,9 @@ fn _find_no_compress(u: &UnionFind, x: Int) -> Int {
 /// Return the representative (root) of the element `x`, applying path
 /// compression. Returns -1 for an out-of-range element id.
 /// O(alpha n) amortized.
-pub fn uf_find(uf: &mut UnionFind, x: Int) -> Int {
+pub fn uf_find(uf: &mut UnionFind, x: Int) -> Int
+  ensures: x >= 0 && x < uf.parent.len() => result >= 0
+{
   if x < 0 || x >= uf.parent.len() {
     return -1;
   }
@@ -121,6 +123,8 @@ pub fn uf_component_size(uf: &UnionFind, x: Int) -> Int
 
 /// Number of disjoint sets.
 /// O(1).
-pub fn uf_components(uf: &UnionFind) -> Int {
+pub fn uf_components(uf: &UnionFind) -> Int
+  ensures: result >= 0
+{
   return uf.count;
 }

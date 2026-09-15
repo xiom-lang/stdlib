@@ -22,7 +22,9 @@ use xiom.convert;
 /// Returns: the edit distance (>= 0).
 /// Errors: none.
 /// Complexity: O(|a| * |b|) time, O(min(|a|,|b|)) space.
-pub fn levenshtein_distance(a: Str, b: Str) -> Int {
+pub fn levenshtein_distance(a: Str, b: Str) -> Int
+  ensures: result >= 0
+{
   misc.levenshtein_distance(a, b)
 }
 

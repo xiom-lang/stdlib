@@ -32,7 +32,9 @@ pub fn ngram_extract(s: Str, n: Int) -> Vec[Str] {
 /// Returns: the n-gram count; 0 when n < 1 or when s is shorter than `n`.
 /// Errors: none.
 /// Complexity: O(1).
-pub fn ngram_count(s: Str, n: Int) -> Int {
+pub fn ngram_count(s: Str, n: Int) -> Int
+  ensures: result >= 0
+{
   if n <= 0 {
     return 0;
   };

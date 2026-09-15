@@ -72,7 +72,9 @@ pub fn cms_add(sketch: &mut CountMinSketch, key: Int) {
 /// Params: sketch - the CMS; key - Int key.
 /// Returns: the minimum row count, which is >= the true count.
 /// Complexity: O(depth).
-pub fn cms_estimate(sketch: &CountMinSketch, key: Int) -> Int {
+pub fn cms_estimate(sketch: &CountMinSketch, key: Int) -> Int
+  ensures: result >= 0
+{
   var best: Int = 0;
   var first = true;
   var r: Int = 0;
@@ -119,7 +121,9 @@ pub fn tinylfu_new(capacity: Int) -> TinyLfu {
 /// Params: f - the filter; key - Int key.
 /// Returns: the CMS estimate for the key (never underestimates).
 /// Complexity: O(1) with a constant number of rows.
-pub fn tinylfu_estimate(f: &TinyLfu, key: Int) -> Int {
+pub fn tinylfu_estimate(f: &TinyLfu, key: Int) -> Int
+  ensures: result >= 0
+{
   return cms_estimate(&f.sketch, key);
 }
 

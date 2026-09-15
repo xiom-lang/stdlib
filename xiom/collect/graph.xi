@@ -72,7 +72,9 @@ pub fn graph_add_directed_edge(g: &mut Graph, u: Int, v: Int) {
 }
 
 /// Number of neighbors of node `u`.
-pub fn graph_degree(g: &Graph, u: Int) -> Int {
+pub fn graph_degree(g: &Graph, u: Int) -> Int
+  ensures: result >= 0
+{
   if u < 0 || u >= g.n { return 0; }
   var count = 0;
   var id = g.head[u];
@@ -157,7 +159,9 @@ pub fn graph_dfs(g: &Graph, start: Int) -> Vec[Int] {
 }
 
 /// Number of connected components in the graph.
-pub fn graph_connected_components(g: &Graph) -> Int {
+pub fn graph_connected_components(g: &Graph) -> Int
+  ensures: result >= 0
+{
   var visited = Vec[Bool].new();
   var i = 0;
   while i < g.n {

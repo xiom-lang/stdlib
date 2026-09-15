@@ -20,6 +20,8 @@ use xiom.text.similarity;
 /// Returns: the shared suffix length in 0..min(|a|, |b|).
 /// Errors: none.
 /// Complexity: O(min(|a|, |b|)).
-pub fn longest_common_suffix(a: Str, b: Str) -> Int {
+pub fn longest_common_suffix(a: Str, b: Str) -> Int
+  ensures: result >= 0
+{
   similarity.longest_common_suffix(a, b)
 }
