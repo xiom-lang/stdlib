@@ -8,57 +8,51 @@ and edits `stdlib/runtime/` occasionally; its uncommitted crates changes
 can appear in the shared tree at any time -- NEVER `git add -A`; stage
 explicit paths only. Branch: `feat/architect`.
 
-State (round-60; HEAD 1f4f0aad encoding qualification + the
-sync/thread/reflect intrinsic imports from this round):
-- **r41 sweep: 936/937 PASS + ratchet OK** (target_r41 = HEAD 1f4f0aad +
-  the compiler lane's working tree at build time: R21 scope-first
-  resolution + `strict_catalog_findings: true`; tooling sweep41). r40
-  937/937 remains the pre-strict baseline. The single r41 red is
-  COMPILER-side: R21 regressed method calls chained directly on a
-  method-call result (`smoke_stress_path_join`; minimal probe
-  p_path_chain.xi) -- reported in COMPILER_BUGS round-60.
+State (round-60; HEAD e6d31a1a on top of the compiler flip 6e7d72e5 +
+R20 a2a456c4):
+- **r42 sweep: 937/937 PASS + ratchet OK with strict_catalog_findings=true**
+  (target_r42 = clean HEAD after the compiler flip + R20; tooling
+  sweep42). This is the new definitive baseline: the strict flip is ON and
+  the stdlib corpus is fully green under it. (r41 936/937 was the WIP-binary
+  precursor; its one red, the R21 chain regression, is fixed by R21b's
+  container-only receiver guard -- p_path_chain green on r42.)
 - **Encoding qualification LANDED (1f4f0aad) -- the last stdlib flip
   blocker from round 59 is closed.** 28 in-bounds loop reads
   `data.get(i + n).value` -> `data[i + n]`; private helpers renamed
   `_enc_write_base64_triplet` / `_enc_write_base64url_triplet`. Verified:
   p_enc_qual probe (pre+post), encoding battery 16/16, 509-module
   bare-name scan 0, corpus gate clean (46.1s).
-- **Strict-gate intrinsic gap fixed this round:** `xiom.sync` (5 sites),
-  `xiom.thread` (3), `xiom.reflect` (2: size_of + align_of) called the
-  bare intrinsics with no `use`; strict turns the on-demand catalog-body
-  warnings into hard errors (smoke_sync_arc_battery was red on r41 before
-  the fix). Fixed with `use xiom.core.size_of;` (+ align_of in reflect),
-  locked by p_sync_sizeof. Lesson: the trivial `use xiom.X` 509-probe
-  scan cannot see on-demand bodies -- the full sweep is the strict-on
-  detector of record.
-- R19 FIXED (0c1e3dff); round-58 flip worklist remains CLOSED (509 scan 0).
+- **Strict-gate intrinsic gap fixed this round (e6d31a1a):** `xiom.sync`
+  (5 sites), `xiom.thread` (3), `xiom.reflect` (2: size_of + align_of)
+  called the bare intrinsics with no `use`; strict turned the on-demand
+  catalog-body warnings into hard errors. Fixed with
+  `use xiom.core.size_of;` (+ align_of in reflect), locked by
+  p_sync_sizeof. Lesson: the trivial `use xiom.X` 509-probe scan cannot see
+  on-demand bodies -- the full sweep is the strict-on detector of record.
+- R19 FIXED (0c1e3dff); R20 FIXED (a2a456c4) -- encoding-family dedup is
+  UNBLOCKED (next queue item 2). Round-58 flip worklist remains CLOSED
+  (509 scan 0).
 - Capability/coverage unchanged since round 59: CSV + TOML v1 + tzdata
   phase 1 (`xiom.time.tz`); contract waves 1-3 -> string 22.4%, collect
   20.8%, global 13.6% clauses / 12.3% pub-with-clause; ratchet floors at
   coverage_floors38.json (wave 4 owed).
-- Open compiler findings: R20 (Result-returning same-leaf delegation
-  yields empty-payload Err; blocks encoding-family dedup), R21 chained-
-  method regression (new, from the uncommitted scope-first work), R18
-  (contract false positive: payload `.len()` vs param `.len()`), R15b
-  (same-leaf modules declared in the user program), order-independent
-  resolution (flip permanence). R16 (`ptr + int` in call args) workaround
-  remains in the string fast path.
+- Open compiler findings: R18 (contract false positive: payload `.len()`
+  vs param `.len()`), R16 (`ptr + int` in call args; workaround remains in
+  the string fast path), R15b (same-leaf modules declared in the user
+  program). Catalog index collision determinism (R21d follow-up).
 NEXT QUEUE (ordered):
 1. ~~Encoding qualification (flip unblocker)~~ DONE 2026-09-15 (1f4f0aad):
-   flip-ready report posted to COMPILER_BUGS. Remaining flip step is
-   compiler-side: fix the R21 chain regression, then re-run stdlib-exec +
-   e2e with strict on. No stdlib work blocks the flip.
-2. **Re-land the encoding dedup shims** once R20 is fixed (base32/
-   percent/punycode + base16/base64/base58; Str legs work since
-   a07507c4, Result legs blocked). Parity = twin-vs-vectors.
+   strict flip verified green (r42 937/937). No stdlib work blocks it.
+2. **Re-land the encoding dedup shims (R20 fixed):** base32/percent/
+   punycode + base16/base64/base58; Str + Result legs both work since
+   a2a456c4/m75. Parity = twin-vs-vectors, endian-shim precedent.
 3. **Contract wave 4:** io/string/collect depth toward the 60% gate;
    refresh ratchet floors each wave (current coverage_floors38.json).
 4. **Remaining capability:** TLS schannel binding (TLS_DECISION.md),
    async stress suite, runtime symbol bind-or-delete (~194 unbound),
    console/os.terminal consolidation, property tests for collections.
-5. Re-run the full smoke sweep when the compiler's R20/R18/R21 items
-   land; r41 936/937 (strict + R21 WIP) and r40 937/937 (pre-strict) are
-   the baselines.
+5. Re-run the full sweep after the dedup re-land; r42 937/937 (strict) is
+   the baseline to preserve.
 
 Environment & tooling:
 - Isolated binary build (preferred; ~30s warm):
@@ -67,18 +61,19 @@ Environment & tooling:
   from-scratch build (~10 min); reuse per round.
 - Binary provenance: r39 = fresh build of a07507c4-era codegen;
   r40 = fresh build of R19-era codegen (PREDATES the R19 fix 0c1e3dff);
-  r41 = fresh build of HEAD 1f4f0aad + the compiler lane's working tree at
-  build time (R21 scope-first resolution + strict_catalog_findings: true).
-  Always check `git log -1` and `git status --short -- crates` before
-  trusting a round's provenance; a dirty crates tree is normal (shared).
+  r41 = fresh build of 1f4f0aad + the compiler lane's R21 WIP (936/937);
+  r42 = fresh build of clean HEAD 6e7d72e5 + a2a456c4 + e6d31a1a
+  (strict flip ON + R20 fix): 937/937. Always check `git log -1` and
+  `git status --short -- crates` before trusting a round's provenance; a
+  dirty crates tree is normal (shared lane).
 - Coverage ratchet (gate #7): stdlib_ws\coverage_scan.ps1
   [-Detail] [-DumpFloors coverage_floorsNN.json] [-RatchetFile ...];
   per-top-level-dir pub-coverage floors. Floors history: 32 (wave 1),
   34 (wave 2), 35 (TOML), 36 (section Q), 37 (tz), 38 (wave 3).
   Re-dump floors after any contract wave OR new module (new uncovered pub
   fns dilute the percentage and trip the ratchet otherwise).
-- Sweep/verify tooling (copy + bump per round; r41 set current):
-  stdlib_ws\{sweep_worker41.ps1, launch_sweep41.ps1, triage_sweep41.ps1,
+- Sweep/verify tooling (copy + bump per round; r42 set current):
+  stdlib_ws\{sweep_worker42.ps1, launch_sweep42.ps1, triage_sweep42.ps1,
   launch_verify38.ps1} + coverage_scan.ps1. 8 workers; per-file CSV rows;
   child stdin redirected from NUL (a stdin-reading smoke must not hang a
   worker). Triage runs the ratchet (gate #7; triage41 uses
