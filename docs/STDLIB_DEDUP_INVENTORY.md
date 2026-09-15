@@ -94,7 +94,7 @@ to `xiom.encoding.percent` (`percent_encode_component`,
 pass through; no canonical counterpart). The earlier R22 blocker --
 a plain `use xiom.convert.percent;` leaf alias binding the sibling
 `xiom.encoding.percent` once the shim pulled it into the graph -- was
-fixed by the compiler's deterministic module-collision work (907a728a);
+fixed by the compiler's deterministic module-collision work (907a728a) plus the R22 plain-import receiver bind (a5e8b1dc);
 r44 probes p_pct_probe (both alias forms correct) + smoke_convert_percent
 green; full r44 sweep 940/940 + ratchet OK; corpus gate clean (41.7s).
 R22 history: explicit consumer aliases (empty/AV) were fixed on r43; the
