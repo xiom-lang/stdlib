@@ -1293,3 +1293,29 @@ Stdlib burn-down on committed HEAD (b71d839f):
   m34_j08 + m65/m71/m72 locks green; checker 188/188, feature-reg 510/510,
   stdlib-exec 85/85 (+2 ignored), e2e 2320/2320.
 
+## 2.18. Round-60 (2026-09-15): encoding qualification landed -- flip unblocker cleared (r41 sweep pending)
+
+- **`encoding.xi` qualified (the only open flip blocker from 2.17):**
+  - all 28 in-bounds loop reads `data.get(i + n).value` -> `data[i + n]`
+    (base64_encode 151/156/162, base64url_encode 244/249/255/258,
+    hex_encode 325, hex_encode_upper 364, utf8_decode 506/526/531/532/
+    538/539/540/554/567, utf8_valid 584/603/608/609/616/617/618) --
+    removes the method-wildcard `get` -> UInt8-returning candidate class.
+  - private helpers renamed to unique names:
+    `write_base64_triplet` -> `_enc_write_base64_triplet` and
+    `write_base64url_triplet` -> `_enc_write_base64url_triplet`
+    (definition + call sites 151/167 and 244/260) -- removes the bare-name
+    same-name candidate class (Box-first-param twin).
+- **Verification (target_r40 binary, CWD = repo root):**
+  - new probe `probes\p_enc_qual.xi` (imports `xiom.encoding` + all encoding
+    submodules; RFC 4648 tails, url alphabet `0xFB 0xFF -> "-_8"`, hex both
+    cases, url/percent, utf8 2/3/4-byte + overlong/truncated/surrogate/
+    >10FFFF rejects, base32 sibling): green pre-edit and post-edit.
+  - encoding battery 16/16 PASS (13 `smoke_encoding*` / `smoke_stress_encoding*`
+    + 3 `kat_encoding_*`), zero catalog-body findings in stderr.
+  - 509-module bare-name scan: 0 findings.
+  - corpus gate `cargo test -p xiom-check catalog_corpus_is_clean -- --nocapture`
+    (isolated target_r40): 1 passed / 0 failed, 46.1s.
+- NEXT: full r41 sweep (rebuild binary + tooling 41) -> then flip-ready
+  report to the compiler lane (COMPILER_BUGS note + section 0 refresh).
+
