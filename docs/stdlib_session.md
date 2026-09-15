@@ -57,7 +57,9 @@ NEXT QUEUE (ordered):
    avoid payload-vs-param `.len()` comparisons).
 4. **Remaining capability:** TLS schannel binding (TLS_DECISION.md),
    async stress suite, runtime symbol bind-or-delete (~194 unbound),
-   console/os.terminal consolidation, property tests for collections.
+   console/os.terminal consolidation. Collection property smokes STARTED
+   2026-09-15 (avl/heap/lhmap, corpus 937 -> 940; next: bloom/hash
+   distribution/persistent).
 5. Re-run the full sweep after the dedup re-land; r42 937/937 (strict) is
    the baseline to preserve.
 
