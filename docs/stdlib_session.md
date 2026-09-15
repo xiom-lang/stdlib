@@ -36,13 +36,14 @@ State (round-60; HEAD 936c9c39; compiler flip 6e7d72e5 + R20 a2a456c4):
   contract waves 1-4 -> string 30.2%, collect 23.4%, io 45.4%, global
   14.2% clauses / 13.2% pub-with-clause; ratchet floors at
   coverage_floors39.json (wave 5 owed).
-- Open compiler findings: R22 (catalog same-leaf CONSUMER aliases:
-  leaf-qualified call binds a sibling module; `use X as a` empty/AV;
-  blocks percent/punycode/base58 dedup), R18 (contract false positive:
-  payload `.len()` vs param `.len()`), R16 (`ptr + int` in call args;
-  workaround remains in the string fast path), R15b (same-leaf modules
-  declared in the user program). Catalog index collision determinism
-  (R21d follow-up).
+- Open compiler findings: **R22** (catalog same-leaf CONSUMER aliases:
+  the plain leaf-qualified call still binds the sibling same-leaf module
+  once both are loaded -- blocks percent/punycode dedup; explicit `as`
+  aliases are FIXED as of r43), plus the R21d follow-up (catalog index
+  collision determinism). R18/R16/R15b/R19/R20 all FIXED (c3b56e1d/
+  34f69981/8643f74a/0c1e3dff/a2a456c4). With R16 fixed, the string
+  fast-path `(ptr as Int + n) as *UInt8` workaround can be revisited; with
+  R18 fixed, payload-vs-param contract shapes are usable again.
 NEXT QUEUE (ordered):
 1. ~~Encoding qualification (flip unblocker)~~ DONE 2026-09-15 (1f4f0aad):
    strict flip verified green (r42 937/937). No stdlib work blocks it.
@@ -1362,6 +1363,11 @@ Stdlib burn-down on committed HEAD (b71d839f):
     punycode/base58 also deferred (divergent surfaces + same consumer
     shape). Explicit consumer alias of a catalog module AVs (0xC0000005,
     pre-existing on r40; p_b32_alias/p_b32_encalias).
+    **r43 re-test (2026-09-15, HEAD + R18/R16/R15b):** the explicit-alias
+    empty/AV shapes are FIXED; the plain leaf-qualified binding STILL picks
+    the sibling same-leaf module, so percent remains local (reverted
+    again). base58 additionally diverges on INT_MIN
+    (num.convert.to_base58 negates INT_MIN without digits).
   - **r42 re-sweep with the shims: 937/937 PASS + ratchet OK; corpus gate
     clean (142s).** Dedup inventory updated with the landed/deferred split.
 - **Contract wave 4 (2026-09-15): +61 clauses, floors coverage_floors39.json.**

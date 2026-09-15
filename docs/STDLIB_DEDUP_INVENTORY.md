@@ -97,6 +97,10 @@ of a catalog module (`use xiom.X as a; a.fn()`) AVs at runtime (0xC0000005)
 even without any shim (pre-existing on r40; p_b32_alias/p_b32_encalias), so
 the same-leaf consumer shape is not yet safe for divergent twins. Reverted
 to the local implementation; re-attempt after the compiler fix.
+RE-TEST r43 (2026-09-15): explicit-alias shapes (empty/AV) are FIXED; the
+plain leaf-qualified binding still picks the sibling same-leaf module, so
+percent stays local. r43 probes: p_pct_probe as-alias OK, leaf-qualified
+still wrong.
 
 PUNYCODE/BASE58 DEFERRED: divergent surfaces (convert.punycode's idna_* vs
 xiom.encoding.idna; convert.base58's Result from_base58 vs num.convert's
