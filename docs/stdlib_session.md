@@ -1506,7 +1506,21 @@ Stdlib burn-down on committed HEAD (b71d839f):
   incl. "host:-1"), `is_valid_port == (p > 0 && p <= 65535)`
   (p_net_specs 19 checks). Global 15.2% clauses / 14.5% pub-with-clause;
   floors42; r46 sweep 944/944 + ratchet OK.
+- **Contract wave 6 part 3 (+7):** misc.natural sign bounds
+  (-1..1 for natural_compare / ignore_case / numeric, p_wave6p3_specs
+  8+ sign checks) and unicode wrapper specs (`unicode_is_wide ==
+  (ea_width == 2)`, NFC/NFKC quick-checks == (normalize(s) == s),
+  `unicode_is_emoji == emoji.unicode_is_emoji`). Global 15.3% clauses /
+  14.6% pub-with-clause; floors43.
+- **Collection property smokes completed (2026-09-16):**
+  smoke_prop_collect_rbtree (512-key LCG shuffle: inorder strictly
+  ascending + exact sequence, size/get/contains/min/max, preorder/
+  postorder completeness, even-key removals keep BST order) and
+  smoke_prop_collect_hashchurn (1000-key array model vs LhMap through
+  bulk insert / overwrite / remove-third / 2000 mixed LCG ops with full
+  model verification). Corpus 944 -> 946; r46 sweep 946/946 + ratchet OK.
 - Verified on r46 (HEAD 9acb9bdd = R23+R24): net/ip/dns/term smokes + all
-  parity batteries green; **full r46 sweeps 944/944 + ratchet OK**
-  (floors41 during the delegation rounds, floors42 after wave 6 part 2).
+  parity batteries green; **full r46 sweeps 944/944 -> 946/946 + ratchet
+  OK** (floors41 during the delegation rounds, floors42 for wave 6p2,
+  floors43 for wave 6p3 + property smokes).
 

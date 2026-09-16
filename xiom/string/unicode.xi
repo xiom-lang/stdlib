@@ -143,13 +143,17 @@ pub fn unicode_combining_sequence(s: Str) -> Vec[Str] {
 }
 
 /// Fast check: true when `s` is already NFC.
-pub fn unicode_nfc_quick_check(s: Str) -> Bool {
+pub fn unicode_nfc_quick_check(s: Str) -> Bool
+  ensures: result == (unicode_normalize_nfc(s) == s)
+{
   let norm = normalize.unicode_normalize_nfc(s);
   norm == s
 }
 
 /// Fast check: true when `s` is already NFKC.
-pub fn unicode_nfkc_quick_check(s: Str) -> Bool {
+pub fn unicode_nfkc_quick_check(s: Str) -> Bool
+  ensures: result == (unicode_normalize_nfkc(s) == s)
+{
   let norm = normalize.unicode_normalize_nfkc(s);
   norm == s
 }
@@ -543,7 +547,9 @@ pub fn unicode_display_slice(s: Str, start: Int, end: Int) -> Str {
 }
 
 /// True when `c` has East Asian Width W or F.
-pub fn unicode_is_wide(c: Char) -> Bool {
+pub fn unicode_is_wide(c: Char) -> Bool
+  ensures: result == (ea_width.unicode_ea_width(c) == 2)
+{
   let w = ea_width.unicode_ea_width(c);
   w == 2
 }
@@ -551,7 +557,9 @@ pub fn unicode_is_wide(c: Char) -> Bool {
 // -- Emoji -------------------------------------------------------------------
 
 /// True when `c` is an emoji or emoji component codepoint.
-pub fn unicode_is_emoji(c: Char) -> Bool {
+pub fn unicode_is_emoji(c: Char) -> Bool
+  ensures: result == emoji.unicode_is_emoji(c)
+{
   emoji.unicode_is_emoji(c)
 }
 
