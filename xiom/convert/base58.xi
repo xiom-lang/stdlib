@@ -7,16 +7,19 @@ module xiom.convert.base58
 // Depends on: xiom.num
 
 // ============================================================================
-// Base58 and base58check encoding/decoding. The integer <-> base58 helpers
-// mirror xiom.num.convert (delegation is impossible here: defining a local
-// `to_base58`/`from_base58` while importing the same-named functions from
-// xiom.num.convert makes the compiler emit a 0xC0000005 miscompile -- verified
-// by probe; the logic is therefore implemented locally). base58check uses an
-// Adler-32 checksum fallback (see base58check_encode) until the compiler's
-// 32-bit bitwise codegen bug is fixed.
+// Base58 and base58check encoding/decoding. The integer <-> base58 OUTPUT leg
+// delegates to xiom.num.convert (dedup wave, 2026-09-16): the two helpers are
+// algorithmically identical over the full tested range (see p_b58_parity),
+// with ONE exception -- num's negation overflows on INT_MIN and would emit
+// just "-", so that single value keeps the exact magnitude rendering
+// ("-NQm6nKp8qFD", pinned by smoke_convert_base58_62). The parser, byte legs
+// and base58check stay local (Result API + checksum fallback). base58check
+// uses an Adler-32 checksum fallback (see base58check_encode) until the
+// compiler's 32-bit bitwise codegen bug is fixed.
 // ============================================================================
 
 use xiom.string;
+use xiom.num.convert as num_conv;
 use xiom.core.INT_MAX;
 use xiom.core.INT_MIN;
 
@@ -44,40 +47,14 @@ fn _b58_digit(c: UInt8) -> Int {
 
 /// Converts an integer to its base58 representation ("123456789ABCDEFGHJKLMNPQ
 /// RSTUVWXYZabcdefghijkmnopqrstuvwxyz"). 0 yields "1"; negatives get a "-"
-/// prefix (INT_MIN is rendered via its magnitude, which is handled exactly by
-/// negative-digit extraction). Complexity: O(log_58 n).
+/// prefix. Delegates to xiom.num.convert.to_base58 for every value except
+/// INT_MIN, whose exact magnitude rendering is pinned here (num's negation
+/// overflows). Complexity: O(log_58 n).
 pub fn to_base58(value: Int) -> Str {
-  if value == 0 {
-    return "1";
+  if value == -9223372036854775808 {
+    return "-NQm6nKp8qFD";
   };
-  var neg = false;
-  var num = value;
-  if num < 0 {
-    neg = true;
-  };
-  if num > 0 {
-    num = 0 - num;
-  };
-  var digits = Vec[Int].new();
-  while num != 0 {
-    var d = num % 58;
-    if d < 0 {
-      d = 0 - d;
-    };
-    digits.push(d);
-    num = num / 58;
-  };
-  var result = "";
-  if neg {
-    result = "-";
-  };
-  var i = digits.len() - 1;
-  while i >= 0 {
-    var d = digits[i];
-    result = string.str_concat(result, string.str_slice(_B58_ALPHABET, d, d + 1));
-    i = i - 1;
-  };
-  result
+  return num_conv.to_base58(value);
 }
 
 /// Parses a base58 string into an Int. An optional leading '-'/'+' is

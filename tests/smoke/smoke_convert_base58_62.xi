@@ -14,6 +14,15 @@ fn main() -> Int {
   if base58.to_base58(58) != "21" { io.println(string.str_concat("b58 58 ", base58.to_base58(58))); return 2; }
   if base58.to_base58(10) != "B" { io.println(string.str_concat("b58 10 ", base58.to_base58(10))); return 3; }
   if base58.to_base58(-10) != "-B" { io.println(string.str_concat("b58 -10 ", base58.to_base58(-10))); return 4; }
+  // Dedup delegation vectors (to_base58 -> xiom.num.convert; p_b58_parity).
+  if base58.to_base58(1) != "2" { io.println("b58 1"); return 41; }
+  if base58.to_base58(57) != "z" { io.println("b58 57"); return 42; }
+  if base58.to_base58(255) != "5Q" { io.println("b58 255"); return 43; }
+  if base58.to_base58(-1) != "-2" { io.println("b58 -1"); return 44; }
+  if base58.to_base58(-58) != "-21" { io.println("b58 -58"); return 45; }
+  if base58.to_base58(9223372036854775807) != "NQm6nKp8qFC" { io.println("b58 max"); return 46; }
+  if base58.to_base58(-9223372036854775807) != "-NQm6nKp8qFC" { io.println("b58 -max"); return 47; }
+  if base58.to_base58(-9223372036854775808) != "-NQm6nKp8qFD" { io.println("b58 min-exact"); return 48; }
 
   var f10 = base58.from_base58("B");
   match f10 {
