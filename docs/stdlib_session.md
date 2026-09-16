@@ -2,11 +2,73 @@
 
 ## 0. START HERE -- current handoff (2026-09-16)
 
-Lane boundary: this session owns `stdlib/**`, `examples/stdlib_smoke/**`,
-and the docs listed below. A PARALLEL COMPILER SESSION owns `crates/**`
-and edits `stdlib/runtime/` occasionally; its uncommitted crates changes
-can appear in the shared tree at any time -- NEVER `git add -A`; stage
-explicit paths only. Branch: `feat/architect`.
+### 0.0 POST-SPLIT BOOTSTRAP -- read first if you are a new agent in `xiom-lang/stdlib`
+
+This document migrated in the R0 repo split. The repo layout is normalized:
+
+    xiom/          <- the module tree (was stdlib/xiom/); `use xiom.foo`
+                      resolves to xiom/foo.xi at the repo root
+    runtime/       <- the C/asm runtime (was stdlib/runtime/); owned by THIS
+                      repo now -- the compiler's codegen references it, so
+                      treat changes as cross-repo API changes
+    tests/smoke/   <- the corpus (was examples/stdlib_smoke/): smoke_*.xi,
+                      kat_*.xi, smoke_prop_*.xi, probe_*.xi
+    docs/          <- the stdlib docs incl. this file
+    package.xi     <- stdlib manifest
+
+Inherited working rules (still valid):
+- Do NOT edit the compiler repo (`xiom-lang/xiom`). Compiler bugs found
+  while working here go to that repo's issue tracker with a MINIMAL `.xi`
+  probe; keep a copy of the probe under `tests/tools/probes/` so it
+  survives, and note the compiler version/commit.
+- Contracts are ACTIVE at runtime (violations abort); probe-first; one fix
+  = one probe = one verified rerun; no edits while a sweep is in flight;
+  batch-commit per family; pure-ASCII commits; stage explicit paths only.
+- The coverage ratchet (gate #7) is a release gate -- see
+  `docs/STDLIB_READINESS_PLAN.md` section 8; re-dump floors after every
+  contract wave or new module.
+- Beta scope/exclusions: `docs/STDLIB_BETA_LIMITATIONS.md`.
+
+Tooling: the monorepo-era scripts lived OUTSIDE git in
+`C:\Users\lefte\AppData\Local\Temp\kilo\stdlib_ws\` (sweep_worker47.ps1,
+launch_sweep47.ps1, triage_round63.ps1, coverage_scan.ps1,
+barename_worker.ps1 + modlist_all.txt, probes\p_*.xi). At migration time,
+copy `coverage_scan.ps1`, `barename_worker.ps1`, `modlist_all.txt`, the
+latest sweep scripts and `probes/` into `tests/tools/` and re-point the
+corpus glob at `tests/smoke/`. The new repo CI should implement the Linux
+equivalents described by the release/infra lane (RELEASE_INFRA_PLAN.md
+section 4 lives with the release lane, not in this repo): check-only
+compile of all modules against the pinned released compiler, corpus run (8
+workers), coverage ratchet, KAT gates. If the temp copies are lost the
+scripts are small -- recreate from the verification protocol below.
+
+GREENLIGHT (2026-09-16): the stdlib-side R0 deliverables are MET --
+r47 sweep 947/947 + ratchet OK with the strict flip ON, corpus gate clean,
+no open compiler findings from this lane, beta scope documented. The split
+may proceed from a tagged commit; recommended hardening: one freeze-time
+sweep freshly built from the tag (the r47 binary was built mid-flight).
+
+Probe index (keep these alive in `tests/tools/probes/`; each proves a
+specific lock -- re-run after any compiler bump):
+- `p_enc_qual` (encoding qualification), `p_puny_parity` (punycode
+  convention divergence), `p_b58_parity` (base58 delegation vectors),
+  `p_b32_s5a/s5b` (same-leaf shim evidence, MZXW6=== through the shim).
+- `p_ip_parity` / `p_ip_parity2` / `p_dns_parity` / `p_netip_parity`
+  (ip-family delegation: 28+9 / 17+8 / 12+2+9 vectors, 0 mismatches).
+- `p_payload_read` (R28 temporary `.value`; now expected CORRECT),
+  `p_match_vec_codegen` (R29 match-arm Vec; now expected OK).
+- `p_sync_sizeof` (strict-gate intrinsic binding), `p_path_chain`
+  (R21b chain regression lock, green), `p_async_p5/p7/p9` (R23 reduced
+  shapes, now green).
+- Contract shape validations: `p_char_specs`, `p_char_specs2`,
+  `p_wave5_specs`, `p_wave6_specs`, `p_wave6p3_specs`, `p_ansi_specs`,
+  `p_net_specs`, `p_iter_specs`.
+
+Lane boundary (pre-split history): this session owned `stdlib/**`,
+`examples/stdlib_smoke/**`, and the docs listed below. A PARALLEL COMPILER
+SESSION owned `crates/**` and occasionally edited `stdlib/runtime/`;
+NEVER `git add -A` in the monorepo; stage explicit paths only. Branch:
+`feat/architect`. After the split this boundary becomes the repo boundary.
 
 State (round-62; HEAD 537014d4 + the compiler R28/R29 fixes; the r47
 binary was built from the R28+R29 working tree and verified 947/947):
@@ -48,24 +110,41 @@ NEXT QUEUE (ordered):
    net.dns + net.ip v6 legs + net.net validator over net.ip4/ip6;
    p_ip_parity/p_dns_parity/p_netip_parity 0 mismatches; local v6 parser
    removed); os.term shimmed (stubs -> os.terminal, styles ->
-   format.terminal). Remaining dedup: console surface (NOT a duplicate --
-   documented), platform, net.address (semantics differ).
+   format.terminal). Remaining dedup: platform only; console surface and
+   net.address are NOT duplicates (documented).
 3. **Contract wave 7:** string/collect/io + broad dirs toward the 60% gate
    (wave 6 parts 1-3 landed: floors43, iter 9.8%, sync 29.1%, net 5.4%,
    format 13.0%, global 14.6% pub-with-clause). Pre-validate new shapes in
    a probe first; R18 is fixed, so payload `.value.len()` vs param `.len()`
    shapes are usable.
-4. **Remaining capability:** TLS schannel binding (TLS_DECISION.md; still
-   gated on the compiler's stage-5 FFI hardening), async stress suite DONE
-   (2026-09-16), runtime symbol audit DONE (docs/RUNTIME_SYMBOL_AUDIT.md:
-   192 unbound -> 83 codegen + 83 runtime-internal + 20 delete candidates;
-   nothing to bind), dedup DONE except platform/console-surface notes.
-   Collection property smokes CLOSED (avl/heap/lhmap/bloom/persistent/
-   rbtree/hashchurn).
-5. Re-run the full sweep after each batch; **r46 946/946 (strict) is the
-   baseline to preserve**.
+4. **Remaining capability:** TLS schannel binding (TLS_DECISION.md; v1.0,
+   cross-repo once the compiler FFI hardening lands), TOML writer,
+   stdlib parser fuzz harness, runtime symbol follow-up (20 delete
+   candidates now live in this repo's `runtime/` -- confirm no dynamic
+   references, then delete or marker them). Done: async stress +
+   cancellation, runtime symbol audit, collection property smokes.
+5. Re-run the full sweep after each batch; **r47 947/947 (strict) is the
+   baseline to preserve** (r46 946 -> 947 with smoke_async_cancel).
 
-Environment & tooling:
+POST-SPLIT ORDER OF WORK (first tasks in the new repo):
+1. Land the stdlib CI: check-only compile of every module against the
+   pinned released compiler, corpus runner over `tests/smoke/`, coverage
+   ratchet, KAT gates (CI spec: release/infra lane -- ask for it if it was
+   not copied into this repo); port the tooling as described in 0.0.
+2. If not already done at freeze: one verification sweep freshly built
+   from the split tag; record the numbers in the repo README/release notes.
+3. Wave 7+ contract coverage toward the 60% key-module gate (ratchet must
+   move with each wave; floors history 32..43 in the plan).
+4. Runtime `runtime/` ownership tasks: the 20 definition-only delete
+   candidates, then a refreshed symbol audit (script method in
+   docs/RUNTIME_SYMBOL_AUDIT.md).
+5. Platform dedup (last consolidation item), TOML writer, stdlib parser
+   fuzz harness.
+6. TLS/schannel (v1.0; needs the compiler repo's FFI hardening first).
+
+Environment & tooling (pre-split monorepo paths -- post-split reader: see 0.0
+for the ported layout; after the split the compiler binary comes from the
+released artifact or the xiom repo's CI, not from `cargo build` here):
 - Isolated binary build (preferred; ~30s warm):
   `$env:CARGO_TARGET_DIR="C:\Users\lefte\AppData\Local\Temp\kilo\stdlib_ws\target_rNN"; cargo build -p xiom`
   then use `...\target_rNN\debug\xiom.exe`. A fresh target dir is a
@@ -78,31 +157,35 @@ Environment & tooling:
   smokes; r43 = HEAD f47beed3 + the R18/R16/R15b working tree: 940/940
   (strict); r44 = HEAD + R21d/R22 (percent shim green): 940/940; r45 =
   clean HEAD 8bc08cf0 (round 61 dedup+wave-5 stdlib edits applied after
-  the build): 941/941. Always check `git log -1` and
+  the build): 941/941; r46 = HEAD 9acb9bdd (R23+R24) + round-62 edits:
+  947/947; r47 = R28 90261793 + R29 bf627c2e + round-62 edits: 947/947.
+  Always check `git log -1` and
   `git status --short -- crates` before trusting a round's provenance;
   a dirty crates tree is normal (shared lane).
 - Coverage ratchet (gate #7): stdlib_ws\coverage_scan.ps1
   [-Detail] [-DumpFloors coverage_floorsNN.json] [-RatchetFile ...];
   per-top-level-dir pub-coverage floors. Floors history: 32 (wave 1),
   34 (wave 2), 35 (TOML), 36 (section Q), 37 (tz), 38 (wave 3),
-  39 (wave 4), 40 (wave 5). Re-dump floors after any contract wave OR new
-  module (new uncovered pub fns dilute the percentage and trip the ratchet
-  otherwise).
-- Sweep/verify tooling (copy + bump per round; r45 set current):
-  stdlib_ws\{sweep_worker45.ps1, launch_sweep45.ps1, triage_wave5.ps1,
+  39 (wave 4), 40 (wave 5), 41 (wave 6p1), 42 (wave 6p2), 43 (wave 6p3).
+  Re-dump floors after any contract wave OR new module (new uncovered pub
+  fns dilute the percentage and trip the ratchet otherwise). Post-split:
+  port this to `tests/tools/` and re-point at the repo root (see 0.0).
+- Sweep/verify tooling (copy + bump per round; r47 set current):
+  stdlib_ws\{sweep_worker47.ps1, launch_sweep47.ps1, triage_round63.ps1,
   launch_verify38.ps1} + coverage_scan.ps1. 8 workers; per-file CSV rows;
   child stdin redirected from NUL (a stdin-reading smoke must not hang a
-  worker). Triage runs the ratchet (gate #7; triage_wave5 uses
-  coverage_floors40.json). GOTCHA: the launcher APPENDS to results*.csv --
+  worker). Triage runs the ratchet (gate #7; triage_round63 uses
+  coverage_floors43.json). GOTCHA: the launcher APPENDS to results*.csv --
   delete sweepNN\results*.csv and errors*.log before a clean re-run.
 - Bare-name scan (the strict-flip detector): stdlib_ws\
-  {barename_worker.ps1, launch_barename_scan.ps1, modlist_all.txt} --
+  {barename_worker47.ps1, launch_barename_scan47.ps1, modlist_all.txt} --
   compiles a `use xiom.X` probe for each of the 509 manifest modules and
-  greps stderr for 'catalog body'. Expect 0 findings before reporting the
-  strict flip ready to the compiler lane. BLIND SPOT (round 60): a trivial
-  probe never checks a module's ON-DEMAND bodies, so strict-only findings
-  such as the bare sync size_of intrinsic do not appear; the full 941-file
-  sweep with a strict binary is the detector of record for that class.
+  greps stderr for 'catalog body'. LAST RUN: r47, 2026-09-16 -> 0 hits.
+  Expect 0 findings before declaring a compiler round clean. BLIND SPOT
+  (round 60): a trivial probe never checks a module's ON-DEMAND bodies, so
+  strict-only findings such as the bare sync size_of intrinsic do not
+  appear; the full 947-file sweep with a strict binary is the detector of
+  record for that class.
 - Probes preserved: C:\Users\lefte\AppData\Local\Temp\kilo\stdlib_ws\probes\
   (p_*, probe_*, kat probes). Run verification with CWD = repo root so
   the CWD-relative stdlib root and the binary's baked manifest root are
