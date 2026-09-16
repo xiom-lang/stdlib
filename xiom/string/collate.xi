@@ -24,7 +24,9 @@ use xiom.convert;
 /// Returns: negative / zero / positive per the byte-wise ordering of a vs b.
 /// Error case: none.
 /// Complexity: O(min(|a|, |b|)).
-pub fn collate_compare(a: Str, b: Str) -> Int {
+pub fn collate_compare(a: Str, b: Str) -> Int
+  ensures: result >= -1 && result <= 1
+{
   let alen = a.len();
   let blen = b.len();
   var n = alen;
@@ -71,7 +73,9 @@ pub fn collate_compare_numeric(a: Str, b: Str) -> Int {
 /// Returns: a key string whose byte-wise order matches the collation order.
 /// Error case: none.
 /// Complexity: O(|s|).
-pub fn collate_key(s: Str) -> Str {
+pub fn collate_key(s: Str) -> Str
+  ensures: result.len() == s.len()
+{
   let len = s.len();
   if len == 0 {
     return "";

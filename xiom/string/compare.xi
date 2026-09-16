@@ -23,7 +23,9 @@ use xiom.string;
 /// Returns: negative/zero/positive.
 /// Error case: none.
 /// Complexity: O(min(|a|, |b|)).
-pub fn str_compare(a: Str, b: Str) -> Int {
+pub fn str_compare(a: Str, b: Str) -> Int
+  ensures: result >= -1 && result <= 1
+{
   let la = string.str_len(a);
   let lb = string.str_len(b);
   var i: Int = 0;
@@ -55,7 +57,9 @@ pub fn str_compare(a: Str, b: Str) -> Int {
 /// Returns: negative/zero/positive.
 /// Error case: none.
 /// Complexity: O(min(|a|, |b|)).
-pub fn str_compare_ignore_case(a: Str, b: Str) -> Int {
+pub fn str_compare_ignore_case(a: Str, b: Str) -> Int
+  ensures: result >= -1 && result <= 1
+{
   let la = string.str_len(a);
   let lb = string.str_len(b);
   var i: Int = 0;
@@ -93,7 +97,9 @@ pub fn str_compare_ignore_case(a: Str, b: Str) -> Int {
 /// Returns: negative/zero/positive.
 /// Error case: none.
 /// Complexity: O(|a| + |b|).
-pub fn str_compare_natural(a: Str, b: Str) -> Int {
+pub fn str_compare_natural(a: Str, b: Str) -> Int
+  ensures: result >= -1 && result <= 1
+{
   let la = string.str_len(a);
   let lb = string.str_len(b);
   var i: Int = 0;
