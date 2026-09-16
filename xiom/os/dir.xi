@@ -1,6 +1,6 @@
 // XIOM -- Directory Helpers (xiom.os.dir)
-// Copyright (c) 2026 Eleftherios Notas
-// Licensed under the MIT or Apache-2.0 license, at your option.
+// Copyright (c) 2026 Eleftherios Notas - XIOM Foundation
+// Licensed under the Apache-2.0 license.
 //
 // Directory helpers built on the xiom.io and xiom.env runtime
 // primitives. Delegates to the flat xiom.io / xiom.env modules.

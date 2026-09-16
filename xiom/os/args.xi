@@ -1,6 +1,6 @@
 // XIOM - Command-line argument access and parsing
-// Copyright (c) 2026 Eleftherios Notas
-// Licensed under the MIT or Apache-2.0 license, at your option.
+// Copyright (c) 2026 Eleftherios Notas - XIOM Foundation
+// Licensed under the Apache-2.0 license.
 //
 // Thin binding over the runtime's captured argc/argv (xiom_get_argc /
 // xiom_get_argv, filled by the generated main) plus pure helpers for the

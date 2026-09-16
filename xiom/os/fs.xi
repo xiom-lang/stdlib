@@ -1,6 +1,6 @@
 // XIOM -- Filesystem Helpers (xiom.os.fs)
-// Copyright (c) 2026 Eleftherios Notas
-// Licensed under the MIT or Apache-2.0 license, at your option.
+// Copyright (c) 2026 Eleftherios Notas - XIOM Foundation
+// Licensed under the Apache-2.0 license.
 //
 // Pure-computation filesystem helpers built on the existing
 // xiom.io / xiom.os runtime primitives. No new FFI is invented;

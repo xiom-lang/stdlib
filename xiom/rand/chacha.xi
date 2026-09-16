@@ -1,6 +1,6 @@
 // XIOM -- ChaCha20-based RNG (32-bit words)
-// Copyright (c) 2026 Eleftherios Notas
-// Licensed under the MIT or Apache-2.0 license, at your option.
+// Copyright (c) 2026 Eleftherios Notas - XIOM Foundation
+// Licensed under the Apache-2.0 license.
 //
 // A deterministic PRNG that derives its output from ChaCha20 blocks.
 // The 16-word state holds the "expand 32-byte k" constants, an 8-word key,

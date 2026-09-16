@@ -1,6 +1,6 @@
 // XIOM -- PCG (Permuted Congruential Generator) XSH-RR 64/32 PRNG
-// Copyright (c) 2026 Eleftherios Notas
-// Licensed under the MIT or Apache-2.0 license, at your option.
+// Copyright (c) 2026 Eleftherios Notas - XIOM Foundation
+// Licensed under the Apache-2.0 license.
 //
 // Faithful port of the pcg32 variant (XSH-RR): a 64-bit LCG state with the
 // standard output transformation xorshift-high and variable rotate. Uses

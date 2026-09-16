@@ -1,6 +1,6 @@
 // XIOM - math/core.xi - GENERIC numeric tower (3c, 2026-08-10)
-// Copyright (c) 2026 Eleftherios Notas
-// Licensed under the MIT or Apache-2.0 license, at your option.
+// Copyright (c) 2026 Eleftherios Notas - XIOM Foundation
+// Licensed under the Apache-2.0 license.
 //
 // D4 category module: math/core. The flat math.xi keeps the frozen concrete
 // contract (math.sqrt(Float64) etc.) as freeze-gated shims; THIS module hosts

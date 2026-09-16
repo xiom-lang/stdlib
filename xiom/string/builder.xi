@@ -1,6 +1,6 @@
 // XIOM - String Builder
-// Copyright (c) 2026 Eleftherios Notas
-// Licensed under the MIT or Apache-2.0 license, at your option.
+// Copyright (c) 2026 Eleftherios Notas - XIOM Foundation
+// Licensed under the Apache-2.0 license.
 //
 // Amortized O(1) string construction over a plain Vec[UInt8]. Every append
 // is a push; only sb_to_str performs ONE allocation (the final NUL-

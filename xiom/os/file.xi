@@ -1,6 +1,6 @@
 // XIOM -- File Helpers (xiom.os.file)
-// Copyright (c) 2026 Eleftherios Notas
-// Licensed under the MIT or Apache-2.0 license, at your option.
+// Copyright (c) 2026 Eleftherios Notas - XIOM Foundation
+// Licensed under the Apache-2.0 license.
 //
 // File helpers built on the xiom.io runtime primitives. Delegates to
 // the flat xiom.io module.

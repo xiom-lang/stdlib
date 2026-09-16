@@ -1,6 +1,6 @@
 // XIOM -- TLS Protocol Helpers (xiom.net.tls)
-// Copyright (c) 2026 Eleftherios Notas
-// Licensed under the MIT or Apache-2.0 license, at your option.
+// Copyright (c) 2026 Eleftherios Notas - XIOM Foundation
+// Licensed under the Apache-2.0 license.
 //
 // Pure TLS version/cipher/alert/handshake name helpers per RFC 5246
 // and related RFCs. No network I/O or cryptography is performed here.

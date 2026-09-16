@@ -1,6 +1,6 @@
 // XIOM -- HTTP Server Helpers (xiom.net.server)
-// Copyright (c) 2026 Eleftherios Notas
-// Licensed under the MIT or Apache-2.0 license, at your option.
+// Copyright (c) 2026 Eleftherios Notas - XIOM Foundation
+// Licensed under the Apache-2.0 license.
 //
 // Pure HTTP server-side helpers: request-line parsing, status line and
 // response construction, and status-text lookup. No network I/O.

@@ -1,6 +1,6 @@
 // XIOM SIMD Runtime -- SSE/AVX/NEON intrinsics
-// Copyright (c) 2026 Eleftherios Notas
-// Licensed under the MIT or Apache-2.0 license, at your option.
+// Copyright (c) 2026 Eleftherios Notas - XIOM Foundation
+// Licensed under the Apache-2.0 license.
 
 #include <stdint.h>
 #include <stdlib.h>   /* malloc -- used by every backend (x86/arm/scalar) */

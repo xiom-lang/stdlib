@@ -1,6 +1,6 @@
 // XIOM -- URL Parsing Utilities (xiom.net.url)
-// Copyright (c) 2026 Eleftherios Notas
-// Licensed under the MIT or Apache-2.0 license, at your option.
+// Copyright (c) 2026 Eleftherios Notas - XIOM Foundation
+// Licensed under the Apache-2.0 license.
 //
 // Pure URL/URI parsing helpers. All string operations are implemented
 // locally on top of the safe xiom.string / xiom.encoding primitives so the

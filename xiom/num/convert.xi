@@ -1,6 +1,6 @@
 // XIOM -- Numeric Base Conversion (xiom.num.convert)
-// Copyright (c) 2026 Eleftherios Notas
-// Licensed under the MIT or Apache-2.0 license, at your option.
+// Copyright (c) 2026 Eleftherios Notas - XIOM Foundation
+// Licensed under the Apache-2.0 license.
 //
 // Pure numeric conversion helpers: Base58/Base62 encoders and decoders,
 // Adobe ASCII85 encoding/decoding, and Roman numeral conversion. All

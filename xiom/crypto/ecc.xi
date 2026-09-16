@@ -1,6 +1,6 @@
 // XIOM -- Elliptic Curve Cryptography (ECC) & Ed25519
-// Copyright (c) 2026 Eleftherios Notas
-// Licensed under the MIT or Apache-2.0 license, at your option.
+// Copyright (c) 2026 Eleftherios Notas - XIOM Foundation
+// Licensed under the Apache-2.0 license.
 //
 // WARNING -- EDUCATIONAL / EXPERIMENTAL IMPLEMENTATION:
 //   XIOM Int is 64-bit signed (i64). Full 256-bit field arithmetic for

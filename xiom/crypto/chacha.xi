@@ -1,6 +1,6 @@
 // XIOM -- ChaCha20 Stream Cipher (RFC 8439)
-// Copyright (c) 2026 Eleftherios Notas
-// Licensed under the MIT or Apache-2.0 license, at your option.
+// Copyright (c) 2026 Eleftherios Notas - XIOM Foundation
+// Licensed under the Apache-2.0 license.
 //
 // ChaCha20 is a fast, constant-time stream cipher designed by Daniel J. Bernstein.
 // It generates a keystream by applying 20 rounds (10 double-rounds) of a

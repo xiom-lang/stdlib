@@ -1,6 +1,6 @@
 // XIOM -- Platform Abstraction (OS, arch, environment detection)
-// Copyright (c) 2026 Eleftherios Notas
-// Licensed under the MIT or Apache-2.0 license, at your option.
+// Copyright (c) 2026 Eleftherios Notas - XIOM Foundation
+// Licensed under the Apache-2.0 license.
 //
 // Provides a unified interface for querying the runtime platform.
 // All functions are free-standing and delegate to xiom.env, xiom.os, or

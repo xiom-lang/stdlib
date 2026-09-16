@@ -1,6 +1,6 @@
 // XIOM - OS: proc_ffi (process control via FFI syscalls)
-// Copyright (c) 2026 Eleftherios Notas
-// Licensed under the MIT or Apache-2.0 license, at your option.
+// Copyright (c) 2026 Eleftherios Notas - XIOM Foundation
+// Licensed under the Apache-2.0 license.
 
 module xiom.os.proc_ffi
 
