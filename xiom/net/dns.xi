@@ -190,7 +190,7 @@ fn split_whitespace(s: Str) -> Vec[Str] {
 // dns_parse_ipv4 parses "a.b.c.d" into 4 bytes, or None on invalid input.
 // Delegates to the canonical xiom.net.ip4 (dedup wave, 2026-09-16; parity
 // proven in p_dns_parity). The Option/Result translation binds the parsed
-// value to a named local first (R24 workaround: `.value` on a temporary
+// value to a named local first (R28 workaround: `.value` on a temporary
 // aggregate payload is corrupt).
 pub fn dns_parse_ipv4(s: Str) -> Option[Vec[UInt8]] {
   let r = net4.ip4_parse(s);

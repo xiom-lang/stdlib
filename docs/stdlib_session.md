@@ -34,9 +34,9 @@ earlier R-fixes all in tree):
 - **Encoding qualification + dedup shims landed** (round-60): encoding
   loop reads -> `data[i]`, `_enc_*` triplet helpers; shims for
   convert.base16/base32/base64/base64url/percent over xiom.encoding.
-- Open compiler findings: **R25** (`.value` on a temporary aggregate Option
+- Open compiler findings: **R28** (`.value` on a temporary aggregate Option
   payload returns zeroed Vec data; minimal repro `probes\p_payload_read.xi`;
-  workaround: named local or match) and **R26** (Vec built in a match arm
+  workaround: named local or match) and **R29** (Vec built in a match arm
   over a `Result[Vec[...]]` payload fails clang codegen; repro
   `probes\p_match_vec_codegen.xi`; workaround: named local + early return).
   R19/R20/R18/R16/R15b/R22/R23/R24 are all FIXED (R23 = fn()-typed values
@@ -1470,7 +1470,7 @@ Stdlib burn-down on committed HEAD (b71d839f):
   sync 29.1%, global 14.9% clauses / 14.0% pub-with-clause; floors41;
   r45 sweep 944/944 + ratchet OK.
 
-## 2.20. Round-62 stdlib (2026-09-16): ip/dns dedup delegation + R25 payload finding
+## 2.20. Round-62 stdlib (2026-09-16): ip/dns dedup delegation + R28/R29 compiler findings
 
 - **IP family delegated (dedup gate):** `convert.ip` validators +
   dotted-quad parser delegate to `net.ip4`/`net.ip6` (parity: p_ip_parity
@@ -1483,12 +1483,12 @@ Stdlib burn-down on committed HEAD (b71d839f):
   `net.net.is_valid_ipv4` delegates to `net.ip4` (9 vectors, 0 diffs).
   The combined canonicalizer, permissive v4 formatter, raw-bytes form,
   and dns_reverse_ipv4 stay local (unique semantics).
-- **R25 (compiler, logged):** reading `.value` off a TEMPORARY aggregate
+- **R28 (compiler, logged):** reading `.value` off a TEMPORARY aggregate
   Option (call result) returns a Vec with zeroed data (Int payloads and
   named locals fine; match fine). Found via the parity probes (probe
   p_payload_read.xi; NOT fixed by R23/R24). All new shims use named
   locals/match; the compiler lane should fix before user code hits it.
-- **R26 (compiler, logged):** building a Vec inside a match arm over a
+- **R29 (compiler, logged):** building a Vec inside a match arm over a
   `Result[Vec[...]]` payload breaks clang codegen (`%struct.Vec` type
   mismatch); minimal repro p_match_vec_codegen.xi (`conv_match` fails,
   `conv_named` compiles). Worked around in net.ip.ipv6_parse.

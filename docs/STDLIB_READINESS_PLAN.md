@@ -186,7 +186,7 @@ T1/T2 yields.
       conventions) and locked by smoke_convert_punycode. UPDATE 2026-09-16
       (round 62): the ip family is PARTIALLY DELEGATED -- convert.ip
       validators/parser and net.dns ip helpers delegate to net.ip4/net.ip6
-      (p_ip_parity/p_dns_parity zero mismatches; R25-safe named-local
+      (p_ip_parity/p_dns_parity zero mismatches; R28-safe named-local
       binding). Remaining: net.ip's Option-based masks + net.address/
       net.net validators over the same canonicals, console/terminal +
       platform still queued.
