@@ -11,12 +11,12 @@ explicit paths only. Branch: `feat/architect`.
 State (round-62; HEAD 09d0c6de; the r46 binary was built from clean HEAD
 9acb9bdd = compiler R23+R24, before the round-62 stdlib edits; compiler
 R25/R26/R27 landed after):
-- **r46 sweep: 946/946 PASS + ratchet OK with strict_catalog_findings=true**
+- **r46 sweep: 947/947 PASS + ratchet OK with strict_catalog_findings=true**
   (target_r46 = HEAD 9acb9bdd + the round-62 stdlib edits applied on top;
-  tooling sweep46; corpus 946 files after the punycode/async/property
-  smokes). r45 944/944, r44 940/940, r43 940/940, r42 940/940 and r41
-  936/937 are the prior rounds. The strict flip is ON and the corpus is
-  fully green under the newest codegen.
+  tooling sweep46; corpus 947 files after the punycode/async/cancel/
+  property smokes). r45 944/944, r44 940/940, r43 940/940, r42 940/940
+  and r41 936/937 are the prior rounds. The strict flip is ON and the
+  corpus is fully green under the newest codegen.
 - **Dedup closure (round 61):** `convert.base58.to_base58` delegates to
   `xiom.num.convert` with a pinned INT_MIN constant (p_b58_parity);
   punycode audited as NOT A TWIN (ACE-label vs RFC raw-payload
@@ -1520,6 +1520,19 @@ Stdlib burn-down on committed HEAD (b71d839f):
   smoke_prop_collect_hashchurn (1000-key array model vs LhMap through
   bulk insert / overwrite / remove-third / 2000 mixed LCG ops with full
   model verification). Corpus 944 -> 946; r46 sweep 946/946 + ratchet OK.
+- **Async cancellation validated (2026-09-16):** NEW smoke_async_cancel.xi
+  -- executor_shutdown drops 1000 pending tasks (none run afterwards,
+  tasks==0 stable), timer-wheel cancel-all fires nothing, selective
+  cancel fires exactly the survivors, unknown cancel ids are no-ops
+  (note: timer ids are monotonic per wheel, not deadlines), channel close
+  drains FIFO then recv/try_recv return None and send/try_send fail.
+  R23 re-verified FIXED on r46 (p_async_p5/p7/p9 reduced shapes green).
+  Corpus 946 -> 947; final r46 sweep 947/947 + ratchet OK (floors43).
+- **Beta scoping (for the R0 split):** NEW docs/STDLIB_BETA_LIMITATIONS.md
+  -- shipped surface, v1.0 exclusions (TLS, tzdata, TOML writer, parser
+  fuzz, platform), intentional divergences (punycode, console/terminal),
+  R28/R29 user-facing workarounds, operational notes. The stale R0 WIP
+  blocker in RELEASE_INFRA_PLAN.md is corrected (stdlib WIP committed).
 - Verified on r46 (HEAD 9acb9bdd = R23+R24): net/ip/dns/term smokes + all
   parity batteries green; **full r46 sweeps 944/944 -> 946/946 + ratchet
   OK** (floors41 during the delegation rounds, floors42 for wave 6p2,

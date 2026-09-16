@@ -338,12 +338,16 @@ T1/T2 yields.
 - CSV and TOML (v1 reader) landed 2026-09-12; still missing: timezone
   database/zoneinfo and TLS -- the remaining "not a complete systems
   stdlib yet" items.
-- Async runtime is minimal (executor/timer/channel); saturation validation
-  STARTED 2026-09-16: smoke_async_stress.xi (2000-task executor storm with
-  side-effect verification, 2000 channel FIFO pairs, 1000 broadcast
-  ordering, 200-timer wheel fire/cancel storm). Compiler finding R23
-  (executor stored-fn invocation shape-dependence) limits single-purpose
-  async programs; cancellation semantics still unvalidated.
+- Async runtime is minimal (executor/timer/channel); saturation +
+  cancellation VALIDATED 2026-09-16: smoke_async_stress.xi (2000-task
+  executor storm with side-effect verification, 2000 channel FIFO pairs,
+  1000 broadcast ordering, 200-timer wheel fire/cancel storm) and
+  smoke_async_cancel.xi (executor_shutdown drops 1000 pending tasks;
+  wheel cancel-all/selective/unknown-id; channel close drain + Err/false
+  semantics). Compiler finding R23 (executor stored-fn shape-dependence)
+  is FIXED (2e06a3e7) and re-verified on r46. No preemptive cancellation
+  API exists (cooperative model) -- documented in
+  docs/STDLIB_BETA_LIMITATIONS.md.
 - Runtime symbol audit DONE 2026-09-16 (docs/RUNTIME_SYMBOL_AUDIT.md):
   322 unique xiom_* runtime definitions vs 138 stdlib extern names; 192
   unbound = 83 codegen-referenced (keep), 83 runtime-internal (keep), 20
