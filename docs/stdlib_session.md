@@ -8,29 +8,29 @@ and edits `stdlib/runtime/` occasionally; its uncommitted crates changes
 can appear in the shared tree at any time -- NEVER `git add -A`; stage
 explicit paths only. Branch: `feat/architect`.
 
-State (round-61; HEAD d55020a1; the r45 binary was built from clean HEAD
-8bc08cf0 before the round-61 stdlib edits; compiler round-68 a5e8b1dc and
-earlier R-fixes all in tree):
-- **r45 sweep: 944/944 PASS + ratchet OK with strict_catalog_findings=true**
-  (target_r45 = clean HEAD 8bc08cf0 before the round-61 stdlib edits; the
-  compiler lane's in-flight call.rs edit postdates it; tooling sweep45;
-  corpus 944 files after smoke_convert_punycode + smoke_async_stress +
-  the bloom/persistent property smokes). r44 940/940, r43 940/940,
-  r42 940/940 and r41 936/937 are the prior rounds. The strict flip is ON
-  and the corpus is fully green under the newest codegen.
+State (round-62; HEAD 09d0c6de; the r46 binary was built from clean HEAD
+9acb9bdd = compiler R23+R24, before the round-62 stdlib edits; compiler
+R25/R26/R27 landed after):
+- **r46 sweep: 946/946 PASS + ratchet OK with strict_catalog_findings=true**
+  (target_r46 = HEAD 9acb9bdd + the round-62 stdlib edits applied on top;
+  tooling sweep46; corpus 946 files after the punycode/async/property
+  smokes). r45 944/944, r44 940/940, r43 940/940, r42 940/940 and r41
+  936/937 are the prior rounds. The strict flip is ON and the corpus is
+  fully green under the newest codegen.
 - **Dedup closure (round 61):** `convert.base58.to_base58` delegates to
   `xiom.num.convert` with a pinned INT_MIN constant (p_b58_parity);
   punycode audited as NOT A TWIN (ACE-label vs RFC raw-payload
   conventions; p_puny_parity) and locked by the new
-  smoke_convert_punycode. Remaining dedup: ip4/ip6, console/os.terminal,
-  core.platform/os.platform.
+  smoke_convert_punycode. Remaining dedup: console surface (documented
+  as NOT a duplicate), platform, net.address (semantics differ).
 - **Contract waves:** wave 5 (+46 clauses, mostly REAL range specs: char
   predicate family, compare/collate sign bounds, collate_key length,
   bloom FPR) -> string 30.2% -> 39.5%, global 13.2% -> 13.8%; floors40.
-  Wave 6 parts 1-2 (+47: iter lengths/counts, sync channel/barrier
-  counts, 25 ANSI ESC-prefix specs, net ftp/port/cookie/address real
-  specs) -> global 15.2% clauses / 14.5% pub-with-clause; floors42.
-  (Waves 1-4: 145 clauses, floors 32-39.)
+  Wave 6 parts 1-3 (+78: iter lengths/counts, sync channel/barrier
+  counts, 25 ANSI ESC-prefix specs, net ftp/port/cookie/address,
+  natural-order sign bounds, unicode wrapper specs) -> global 15.3%
+  clauses / 14.6% pub-with-clause; floors43. (Waves 1-4: 145 clauses,
+  floors 32-39.)
 - **Encoding qualification + dedup shims landed** (round-60): encoding
   loop reads -> `data[i]`, `_enc_*` triplet helpers; shims for
   convert.base16/base32/base64/base64url/percent over xiom.encoding.
@@ -53,18 +53,19 @@ NEXT QUEUE (ordered):
    removed); os.term shimmed (stubs -> os.terminal, styles ->
    format.terminal). Remaining dedup: console surface (NOT a duplicate --
    documented), platform, net.address (semantics differ).
-3. **Contract wave 6:** string/collect/io + iter/sync toward the 60% gate
-   (wave 6 part 1 landed: floors41, iter 9.8%, sync 29.1%, global 14.0%
-   pub-with-clause). Pre-validate new shapes in a probe first; R18 is
-   fixed, so payload `.value.len()` vs param `.len()` shapes are usable.
-4. **Remaining capability:** TLS schannel binding (TLS_DECISION.md),
-   async stress suite DONE (2026-09-16, R23 logged), runtime symbol audit
-   DONE (docs/RUNTIME_SYMBOL_AUDIT.md: 192 unbound -> 83 codegen + 83
-   runtime-internal + 20 delete candidates; nothing to bind),
-   console/os.terminal consolidation, ip4/ip6 dedup translation.
-   Collection property smokes DONE for avl/heap/lhmap/bloom/persistent;
-   next: hash distribution, rbtree/btree invariants.
-5. Re-run the full sweep after each batch; **r45 941/941 (strict) is the
+3. **Contract wave 7:** string/collect/io + broad dirs toward the 60% gate
+   (wave 6 parts 1-3 landed: floors43, iter 9.8%, sync 29.1%, net 5.4%,
+   format 13.0%, global 14.6% pub-with-clause). Pre-validate new shapes in
+   a probe first; R18 is fixed, so payload `.value.len()` vs param `.len()`
+   shapes are usable.
+4. **Remaining capability:** TLS schannel binding (TLS_DECISION.md; still
+   gated on the compiler's stage-5 FFI hardening), async stress suite DONE
+   (2026-09-16), runtime symbol audit DONE (docs/RUNTIME_SYMBOL_AUDIT.md:
+   192 unbound -> 83 codegen + 83 runtime-internal + 20 delete candidates;
+   nothing to bind), dedup DONE except platform/console-surface notes.
+   Collection property smokes CLOSED (avl/heap/lhmap/bloom/persistent/
+   rbtree/hashchurn).
+5. Re-run the full sweep after each batch; **r46 946/946 (strict) is the
    baseline to preserve**.
 
 Environment & tooling:
