@@ -17,7 +17,9 @@ use xiom.char;
 /// Compare a and b in natural order: -1, 0, or 1. Embedded digit runs are
 /// compared numerically (so "file2" < "file10"); other characters compare by
 /// code point. O(min(len_a, len_b)).
-pub fn natural_compare(a: Str, b: Str) -> Int {
+pub fn natural_compare(a: Str, b: Str) -> Int
+  ensures: result >= -1 && result <= 1
+{
   var alen = a.len();
   var blen = b.len();
   var ai = 0;
@@ -54,7 +56,9 @@ pub fn natural_compare(a: Str, b: Str) -> Int {
 
 /// Natural comparison ignoring case: digit runs compare numerically, letters
 /// compare by lowercase code point. O(min(len_a, len_b)).
-pub fn natural_compare_ignore_case(a: Str, b: Str) -> Int {
+pub fn natural_compare_ignore_case(a: Str, b: Str) -> Int
+  ensures: result >= -1 && result <= 1
+{
   var alen = a.len();
   var blen = b.len();
   var ai = 0;
@@ -224,7 +228,9 @@ pub fn natural_is_digit_run(s: Str, i: Int) -> Bool {
 
 /// Compare two pure numeric strings by value (leading zeros are ignored).
 /// O(n). Returns -1, 0, or 1. Non-digit content compares lexicographically.
-pub fn natural_compare_numeric(a: Str, b: Str) -> Int {
+pub fn natural_compare_numeric(a: Str, b: Str) -> Int
+  ensures: result >= -1 && result <= 1
+{
   var alen = a.len();
   var blen = b.len();
   var ai = 0;

@@ -216,10 +216,12 @@ T1/T2 yields.
       pub-with-clause. Wave 6 part 2 (2026-09-16): 31 clauses (25 ANSI
       ESC-prefix specs + net ftp/port/cookie/address real specs) ->
       net 5.4%, format 13.0%, global 15.2% clauses / 14.5%
+      pub-with-clause. Wave 6 part 3 (2026-09-16): 7 clauses (natural-order
+      sign bounds, unicode wrapper specs) -> global 15.3% clauses / 14.6%
       pub-with-clause. Ratchet:
-      coverage_scan.ps1 -RatchetFile coverage_floors42.json (stdlib_ws
+      coverage_scan.ps1 -RatchetFile coverage_floors43.json (stdlib_ws
       tooling; positive + negative runs verified; earlier floors kept at
-      coverage_floors32/34/35/36/37/38/39/40/41.json).
+      coverage_floors32/34/35/36/37/38/39/40/41/42.json).
       Floors are per top-level stdlib/xiom directory and must be refreshed
       when a module is ADDED (new uncovered pub fns dilute the percentage
       -- TOML dropped serialize 6.1% -> 5.4%, tz dropped time 13% ->
@@ -321,9 +323,12 @@ T1/T2 yields.
     size + value consistency + strictly ascending keys_in_order).
     EXTENDED 2026-09-16: smoke_prop_collect_bloom (no false negatives over
     500 LCG keys, rate in [0,1] non-decreasing, clear empties),
-    smoke_prop_collect_persistent (PVec/PMap structural persistence).
-    Corpus 937 -> 944; r45 sweep 944/944 + ratchet OK. Next: hash
-    distribution quality, rbtree/btree invariants.
+    smoke_prop_collect_persistent (PVec/PMap structural persistence),
+    smoke_prop_collect_rbtree (inorder exactness/ordering under 512-key
+    shuffle + removals), smoke_prop_collect_hashchurn (1000-key model vs
+    LhMap through 2000 mixed ops). Corpus 937 -> 946; r46 sweep 946/946 +
+    ratchet OK. Property-smoke queue CLOSED (avl/heap/lhmap/bloom/
+    persistent/rbtree/hashchurn).
 17. Parser fuzz ladder (url/ip/header/cookie/mime/json/utf) once stage-5
     fuzz infra lands.
 18. Coverage ratchet in CI-equivalent script; async/CLI-of-everything.
