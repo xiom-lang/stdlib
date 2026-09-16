@@ -65,8 +65,15 @@ DONE:
   - All four shims bind call results to named locals (R25 workaround:
     `.value` on a temporary aggregate payload is corrupt -- probe
     p_payload_read, COMPILER_BUGS R25).
-  - Still queued: `net.ip` (Option-based v4/v6 + masks) and
-    `net.address`/`net.net` validators over the same canonicals.
+  - `net.ip.ipv6_parse`/`ipv6_to_string` delegate to net.ip6 as well
+    (p_netip_parity: 12 v6 vectors + 2 formatter sets, 0 mismatches) and
+    the local v6 parser machinery was REMOVED (~140 lines: `_parse_v6`,
+    `_parse_groups`, `_dcolon_index`); `net.net.is_valid_ipv4` delegates
+    to net.ip4 (9 vectors, 0 diffs). The match-arm form of the
+    translation hits COMPILER_BUGS R26, so the delegated code uses the
+    named-local + early-return shape.
+  - Still queued: `net.address` (address-with-port semantics, not a
+    duplicate) and console/terminal + platform.
 - ASCII85 DIRECTION CORRECTED (2026-09-12): the pair is ALREADY layered --
   `xiom.encoding.ascii85` imports `xiom.convert.ascii85.to_ascii85/
   from_ascii85` (different names, so no R15 collision) and adds the

@@ -6,6 +6,7 @@ module xiom.net
 
 use xiom.net.http;
 use xiom.net.ip;
+use xiom.net.ip4 as net4;
 use xiom.net.socket;
 use xiom.net.tls_helper;
 
@@ -657,34 +658,10 @@ pub fn tcp_connect_str(host: Str, port: Int) -> Result[TcpStream, NetError] {
 // -- Validation Helpers ---------------------------------------------
 
 /// Returns `true` if `s` is a valid IPv4 address (e.g. "192.168.1.1").
+/// Delegates to the canonical xiom.net.ip4 (parity proven in p_netip_parity).
 /// Complexity: O(n). Pure, no side effects.
 pub fn is_valid_ipv4(s: Str) -> Bool {
-  let len = s.len();
-  if len < 7 { return false; };
-  if len > 15 { return false; };
-  var dots: Int = 0;
-  var octet: Int = 0;
-  var digits: Int = 0;
-  var i: Int = 0;
-  while i < len {
-    let b = s.byte_at(i);
-    if b == 46 {
-      if digits == 0 || octet > 255 { return false; };
-      dots = dots + 1;
-      octet = 0;
-      digits = 0;
-    } elif b >= 48 && b <= 57 {
-      octet = octet * 10 + (b as Int - 48);
-      digits = digits + 1;
-      if octet > 255 { return false; };
-    } else {
-      return false;
-    };
-    i = i + 1;
-  };
-  if dots != 3 { return false; };
-  if digits == 0 || octet > 255 { return false; };
-  return true;
+  return net4.ip4_validate(s);
 }
 
 /// Returns `true` if `p` is a valid TCP/UDP port number (1-65535).
