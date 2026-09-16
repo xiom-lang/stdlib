@@ -184,12 +184,15 @@ T1/T2 yields.
       delegates to_base58 to num.convert with the INT_MIN pin;
       convert.punycode audited as NOT A TWIN (ACE-label vs RFC raw-payload
       conventions) and locked by smoke_convert_punycode. UPDATE 2026-09-16
-      (round 62): the ip family is PARTIALLY DELEGATED -- convert.ip
-      validators/parser and net.dns ip helpers delegate to net.ip4/net.ip6
-      (p_ip_parity/p_dns_parity zero mismatches; R28-safe named-local
-      binding). Remaining: net.ip's Option-based masks + net.address/
-      net.net validators over the same canonicals, console/terminal +
-      platform still queued.
+      (round 62): the ip family is DELEGATED -- convert.ip validators/
+      parser, net.dns ip helpers, net.ip v6 legs (+ local v6 parser
+      removed) and net.net's v4 validator all delegate to net.ip4/net.ip6
+      (p_ip_parity/p_ip_parity2/p_dns_parity/p_netip_parity zero
+      mismatches; R28-safe named-local binding). os.term shimmed onto
+      os.terminal + format.terminal. Remaining: platform consolidation
+      only; net.address and io.console-vs-os.terminal audited as NOT
+      duplicates (documented in STDLIB_DEDUP_INVENTORY.md and
+      STDLIB_BETA_LIMITATIONS.md).
 - [x] Coverage number published + ratcheted in CI-equivalent sweep script --
       DELIVERED 2026-09-12: global 1092 clauses / 8634 fns = 12.6%
       (pub-with-clause 720/6469 = 11.1%); key modules io 38.9%,
