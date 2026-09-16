@@ -411,7 +411,9 @@ pub fn cookie_jar_matches(c: Cookie, url: Str) -> Bool {
 /// Parameters: jar -- the jar.
 /// Returns: the number of cookies.
 /// Complexity: O(1). Pure.
-pub fn cookie_jar_size(jar: &CookieJar) -> Int {
+pub fn cookie_jar_size(jar: &CookieJar) -> Int
+  ensures: result >= 0
+{
   jar.cookies.len()
 }
 

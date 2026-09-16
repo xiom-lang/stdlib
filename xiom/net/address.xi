@@ -165,7 +165,9 @@ pub fn address_host(s: Str) -> Str {
 /// Parameters: s -- the address string.
 /// Returns: the port number (0 when absent), or 0 for an invalid address.
 /// Complexity: O(n). Pure.
-pub fn address_port(s: Str) -> Int {
+pub fn address_port(s: Str) -> Int
+  ensures: result >= 0
+{
   let parsed = address_parse(s);
   match parsed {
     Some(a) => a.port;
