@@ -1,0 +1,10 @@
+dns len=4
+dns b[0]=1
+dns b[1]=2
+dns b[2]=3
+dns b[3]=4
+net len=4
+net b[0]=1
+net b[1]=2
+net b[2]=3
+net b[3]=4
