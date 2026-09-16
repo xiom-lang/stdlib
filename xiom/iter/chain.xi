@@ -99,12 +99,16 @@ pub fn iter_all(v: &Vec[Int], pred: fn(&Int) -> Bool) -> Bool {
 }
 
 /// Number of elements in v. O(1).
-pub fn iter_count(v: &Vec[Int]) -> Int {
+pub fn iter_count(v: &Vec[Int]) -> Int
+  ensures: result == v.len()
+{
   v.len()
 }
 
 /// Number of elements satisfying pred. O(n).
-pub fn iter_count_if(v: &Vec[Int], pred: fn(&Int) -> Bool) -> Int {
+pub fn iter_count_if(v: &Vec[Int], pred: fn(&Int) -> Bool) -> Int
+  ensures: result >= 0 && result <= v.len()
+{
   var count = 0;
   var i = 0;
   while i < v.len() {

@@ -108,7 +108,9 @@ pub fn barrier_wait(b: &mut SyncBarrier) -> Bool {
 /// Params: b - the barrier.
 /// Returns: the number of threads the barrier was created for.
 /// Complexity: O(1).
-pub fn barrier_count(b: &SyncBarrier) -> Int {
+pub fn barrier_count(b: &SyncBarrier) -> Int
+  ensures: result >= 1
+{
   return b.count;
 }
 

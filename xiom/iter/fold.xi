@@ -16,7 +16,10 @@ module xiom.iter.fold
 
 /// Fold without a seed using the first element, or None if v is empty. O(n).
 /// f(acc, element) returns the next accumulator.
-pub fn iter_fold1(v: &Vec[Int], f: fn(&Int, &Int) -> Int) -> Option[Int] {
+pub fn iter_fold1(v: &Vec[Int], f: fn(&Int, &Int) -> Int) -> Option[Int]
+  ensures: v.len() == 0 => result is None
+  ensures: result is Some => v.len() > 0
+{
   if v.len() == 0 { return None; }
   var acc = v[0];
   var i = 1;
@@ -31,7 +34,9 @@ pub fn iter_fold1(v: &Vec[Int], f: fn(&Int, &Int) -> Int) -> Option[Int] {
 /// Running-accumulator fold emitting every intermediate state. O(n).
 /// The result starts with init, followed by each new accumulator, so it
 /// always has v.len() + 1 elements.
-pub fn iter_scan(v: &Vec[Int], init: Int, f: fn(Int, &Int) -> Int) -> Vec[Int] {
+pub fn iter_scan(v: &Vec[Int], init: Int, f: fn(Int, &Int) -> Int) -> Vec[Int]
+  ensures: result.len() == v.len() + 1
+{
   var out = Vec[Int].new();
   out.push(init);
   var acc = init;
@@ -137,7 +142,10 @@ pub fn iter_windows(v: &Vec[Int], n: Int) -> Vec[Vec[Int]] {
 }
 
 /// v repeated n times concatenated. O(n * v.len()). n <= 0 yields empty.
-pub fn iter_cycle(v: &Vec[Int], n: Int) -> Vec[Int] {
+pub fn iter_cycle(v: &Vec[Int], n: Int) -> Vec[Int]
+  ensures: n >= 0 => result.len() == v.len() * n
+  ensures: n < 0 => result.len() == 0
+{
   var out = Vec[Int].new();
   if n <= 0 || v.len() == 0 { return out; }
   var rep = 0;
@@ -153,7 +161,10 @@ pub fn iter_cycle(v: &Vec[Int], n: Int) -> Vec[Int] {
 }
 
 /// item repeated n times. O(n). n <= 0 yields an empty vector.
-pub fn iter_repeat(item: Int, n: Int) -> Vec[Int] {
+pub fn iter_repeat(item: Int, n: Int) -> Vec[Int]
+  ensures: n >= 0 => result.len() == n
+  ensures: n < 0 => result.len() == 0
+{
   var out = Vec[Int].new();
   var i = 0;
   while i < n {
@@ -164,7 +175,9 @@ pub fn iter_repeat(item: Int, n: Int) -> Vec[Int] {
 }
 
 /// Elements of v in reverse order. O(n).
-pub fn iter_reverse(v: &Vec[Int]) -> Vec[Int] {
+pub fn iter_reverse(v: &Vec[Int]) -> Vec[Int]
+  ensures: result.len() == v.len()
+{
   var out = Vec[Int].new();
   var i = v.len() - 1;
   while i >= 0 {
@@ -218,7 +231,9 @@ fn fold_sort_range(v: &mut Vec[Int], tmp: &mut Vec[Int], lo: Int, hi: Int) {
 }
 
 /// Sorted copy of v. O(n log n), stable.
-pub fn iter_sort(v: &Vec[Int]) -> Vec[Int] {
+pub fn iter_sort(v: &Vec[Int]) -> Vec[Int]
+  ensures: result.len() == v.len()
+{
   var out = Vec[Int].new();
   var i = 0;
   while i < v.len() {
