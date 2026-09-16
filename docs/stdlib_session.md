@@ -10,12 +10,13 @@ explicit paths only. Branch: `feat/architect`.
 
 State (round-61; HEAD 8bc08cf0 + round-61 stdlib edits; compiler round-68
 a5e8b1dc and earlier R-fixes all in tree):
-- **r45 sweep: 941/941 PASS + ratchet OK with strict_catalog_findings=true**
+- **r45 sweep: 942/942 PASS + ratchet OK with strict_catalog_findings=true**
   (target_r45 = clean HEAD 8bc08cf0 before the round-61 stdlib edits; the
   compiler lane's in-flight call.rs edit postdates it; tooling sweep45;
-  corpus 941 files after smoke_convert_punycode). r44 940/940, r43
-  940/940, r42 940/940 and r41 936/937 are the prior rounds. The strict
-  flip is ON and the corpus is fully green under the newest codegen.
+  corpus 942 files after smoke_convert_punycode + smoke_async_stress).
+  r44 940/940, r43 940/940, r42 940/940 and r41 936/937 are the prior
+  rounds. The strict flip is ON and the corpus is fully green under the
+  newest codegen.
 - **Dedup closure (round 61):** `convert.base58.to_base58` delegates to
   `xiom.num.convert` with a pinned INT_MIN constant (p_b58_parity);
   punycode audited as NOT A TWIN (ACE-label vs RFC raw-payload
@@ -29,9 +30,11 @@ a5e8b1dc and earlier R-fixes all in tree):
 - **Encoding qualification + dedup shims landed** (round-60): encoding
   loop reads -> `data[i]`, `_enc_*` triplet helpers; shims for
   convert.base16/base32/base64/base64url/percent over xiom.encoding.
-- Open compiler findings: none from the stdlib lane (R19/R20/R18/R16/R15b
-  and R22 all FIXED; R21d collision determinism landed). R16 fixed ->
-  the string fast-path `(ptr as Int + n) as *UInt8` workaround can be
+- Open compiler findings: **R23** (async executor stored-fn invocation AVs
+  in reduced program shapes; minimal repro p_async_p7; workaround is the
+  full-surface shape used by smoke_async_stress). R19/R20/R18/R16/R15b and
+  R22 are all FIXED; R21d collision determinism landed. R16 fixed -> the
+  string fast-path `(ptr as Int + n) as *UInt8` workaround can be
   revisited; R18 fixed -> payload-vs-param contract shapes usable again.
 NEXT QUEUE (ordered):
 1. ~~Encoding qualification (flip unblocker)~~ DONE 2026-09-15 (1f4f0aad):
@@ -1426,6 +1429,15 @@ Stdlib burn-down on committed HEAD (b71d839f):
   blocks (p_char_specs, p_char_specs2, p_wave5_specs). string 30.2% ->
   39.5% pub-covered, global 13.2% -> 13.8%; floors40.json.
 - **r45 sweep (clean HEAD + the compiler R18/R16/R15b/R22 fixes):
-  941/941 PASS + ratchet OK** (corpus 940 -> 941 with
-  smoke_convert_punycode); corpus gate clean (77.9s).
+  941/941 PASS then 942/942 PASS with the async stress smoke + ratchet OK**
+  (corpus 940 -> 941 -> 942); corpus gate clean (77.9s).
+- **Async stress suite (capability gate, 2026-09-16): NEW
+  smoke_async_stress.xi** -- 2000-task executor storm with side-effect
+  verification, 2000 channel send/try_recv FIFO pairs, 1000-item broadcast
+  ordering, 200-timer wheel fire/cancel storm (exactly 100 fire, no
+  double-fire), stopwatch + async-io locks. NEW compiler finding **R23**:
+  the executor's stored-fn invocation AVs in reduced program shapes
+  (probes p_async_p5/p7/p8/p9/p10; a renamed copy of smoke_async plus the
+  2000-spawn scale works), so the smoke keeps the full async surface and
+  scales counts; logged in COMPILER_BUGS with the minimal repro.
 
