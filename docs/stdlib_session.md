@@ -8,8 +8,9 @@ and edits `stdlib/runtime/` occasionally; its uncommitted crates changes
 can appear in the shared tree at any time -- NEVER `git add -A`; stage
 explicit paths only. Branch: `feat/architect`.
 
-State (round-61; HEAD 8bc08cf0 + round-61 stdlib edits; compiler round-68
-a5e8b1dc and earlier R-fixes all in tree):
+State (round-61; HEAD d55020a1; the r45 binary was built from clean HEAD
+8bc08cf0 before the round-61 stdlib edits; compiler round-68 a5e8b1dc and
+earlier R-fixes all in tree):
 - **r45 sweep: 944/944 PASS + ratchet OK with strict_catalog_findings=true**
   (target_r45 = clean HEAD 8bc08cf0 before the round-61 stdlib edits; the
   compiler lane's in-flight call.rs edit postdates it; tooling sweep45;
