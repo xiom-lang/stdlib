@@ -1,4 +1,6 @@
 // XIOM -- Smoke test for the stdlib/xiom/rand/ folder modules:
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // mt19937 (Mersenne Twister), pcg (PCG-XSH-RR), chacha (ChaCha20 RNG).
 module smoke_rand_folder
 use xiom.rand.mt19937;

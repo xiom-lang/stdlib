@@ -1,4 +1,6 @@
 // XIOM stdlib smoke test -- xiom.net.http + xiom.net.https
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // HTTP/HTTPS request line, request building, response parsing helpers.
 // Returns 0 on success, nonzero on failure (process exit code).
 

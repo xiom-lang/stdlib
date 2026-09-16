@@ -1,4 +1,6 @@
 // p_netip_b.xi -- only the delegated ipv6_to_string.
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 module p_netip_b
 use xiom.net.ip as netip;
 use xiom.io;

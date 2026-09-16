@@ -1,4 +1,6 @@
 // XIOM stdlib stress -- io integer/float parsing.
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // The stdin line readers (io.read_int / io.read_float) cannot be exercised
 // deterministically in-process, so this smoke pins their exposed parsing
 // cores io.parse_int / io.parse_float. Do NOT call read_int()/read_float()

@@ -1,4 +1,6 @@
 // XIOM stdlib stress -- xiom.string.replace multiple occurrences
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Tests replacing all occurrences of a pattern in a repeated string.
 // Returns 0 on success, nonzero on failure.
 

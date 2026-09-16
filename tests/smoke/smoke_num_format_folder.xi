@@ -1,4 +1,6 @@
 // XIOM stdlib smoke test -- xiom.num.convert, xiom.format.number, xiom.format.dump
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Returns 0 on success, 1 on failure (process exit code).
 //
 // NOTE on ASCII85 vectors: the standard Adobe ASCII85 encoding of the

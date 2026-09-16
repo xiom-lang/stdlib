@@ -1,4 +1,6 @@
 # sweep_worker32.ps1 -- round-32 worker: compile+run a slice of the smoke corpus.
+# Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+# SPDX-License-Identifier: MIT OR Apache-2.0
 # Stdin of every child is redirected from NUL (a stdin-reading smoke must not hang a worker).
 param([int]$WorkerId, [string]$FileList, [string]$ResultsCsv, [string]$ErrLog)
 $exe = "C:\Users\lefte\AppData\Local\Temp\kilo\stdlib_ws\target_r47\debug\xiom.exe"

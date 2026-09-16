@@ -1,4 +1,6 @@
 // kat_convert_utf8_encoder.xi -- UTF-8 ENCODER known-answer tests
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Every codepoint boundary class encodes to its exact byte sequence and
 // round-trips through utf8_decode. Complements kat_convert_utf8_decoder
 // (which pins the reject side).

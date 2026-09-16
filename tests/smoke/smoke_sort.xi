@@ -1,4 +1,6 @@
 // XIOM stdlib smoke test - xiom.sort submodules
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // heap + intro + merge + quick + radix
 // Returns 0 on success, nonzero on failure (process exit code).
 

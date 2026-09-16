@@ -1,6 +1,6 @@
 // XIOM -- DNS Record Utilities (xiom.net.dns)
-// Copyright (c) 2026 Eleftherios Notas - XIOM Foundation
-// Licensed under the Apache-2.0 license.
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //
 // Pure DNS record-string utilities: IP address presentation parsing,
 // hostname validation, and zone-file record line parsing. No wire protocol.

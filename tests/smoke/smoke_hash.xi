@@ -1,4 +1,6 @@
 // XIOM stdlib smoke test -- xiom.hash
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Returns 0 on success, nonzero on failure (process exit code).
 
 module smoke_hash

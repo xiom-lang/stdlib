@@ -1,4 +1,6 @@
 // XIOM stdlib smoke test -- xiom.os.sync_io + xiom.os.terminal
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Synchronous fd helpers (documented stubs) and terminal helpers.
 // Returns 0 on success, nonzero on failure (process exit code).
 

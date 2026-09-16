@@ -1,4 +1,6 @@
 // XIOM stdlib smoke test - itos/ftos/tostring/toint/tofloat/parse/atoi
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Checks: string formatting and parsing helpers.
 
 module smoke_convert_strings

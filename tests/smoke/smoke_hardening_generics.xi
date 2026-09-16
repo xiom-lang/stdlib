@@ -1,4 +1,6 @@
 // Hardening smoke: generic Float64/Float32 correctness + interface impl
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // dispatch + explicit generic type args. Returns 0 on success.
 interface Num[T] {
   fn add(a: T, b: T) -> T;

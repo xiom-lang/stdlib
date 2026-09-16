@@ -1,4 +1,6 @@
 // XIOM stdlib stress -- math.log10 and math.log2
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Tests log10 and log2 at known values.
 // Returns 0 on success, nonzero on failure.
 

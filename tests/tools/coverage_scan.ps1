@@ -1,4 +1,6 @@
 # coverage_scan.ps1 -- contract-coverage scanner for stdlib/xiom (readiness gate #7).
+# Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+# SPDX-License-Identifier: MIT OR Apache-2.0
 # Counts fn declarations and contract clauses (requires:/ensures:/invariant:).
 # Metrics:
 #   - clauses/fns            (the previously published global metric)

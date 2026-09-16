@@ -1,4 +1,6 @@
 // smoke_async_cancel.xi -- async cancellation semantics (capability gate).
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Covers: executor_shutdown drops every pending task (none run afterwards);
 // timer-wheel cancel-all fires nothing, selective cancel fires exactly the
 // survivors, unknown cancel ids are no-ops; channel close drains FIFO, then

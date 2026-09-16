@@ -1,4 +1,6 @@
 // XIOM stdlib stress -- xiom.fmt Float64.to_str precision handling
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Tests that floats with many decimal digits produce non-empty strings.
 // Returns 0 on success, nonzero on failure.
 

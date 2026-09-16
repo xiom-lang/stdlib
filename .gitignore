@@ -1,3 +1,5 @@
+# Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+# SPDX-License-Identifier: MIT OR Apache-2.0
 # Build/test artifacts generated inside the stdlib tree (runtime shims, smoke
 # executables, IR dumps). The compiler repo ignores the whole stdlib/ checkout
 # post-split; this file travels with the stdlib repo.

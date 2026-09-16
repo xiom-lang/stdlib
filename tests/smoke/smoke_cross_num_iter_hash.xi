@@ -1,3 +1,5 @@
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 module smoke_cross_num_iter_hash
 use xiom.num;
 use xiom.iter;

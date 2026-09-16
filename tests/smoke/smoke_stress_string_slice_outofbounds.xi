@@ -1,4 +1,6 @@
 // XIOM stdlib stress -- xiom.string.str_slice out-of-bounds handling
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Requests slice beyond string length; verifies graceful truncation or error.
 // Returns 0 on success.
 

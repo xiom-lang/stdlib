@@ -1,4 +1,6 @@
 // XIOM stdlib stress -- xiom.regex Regex.replace_all replaces all matches
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Tests replace_all for full replacement and empty-text edge case.
 // Returns 0 on success, nonzero on failure.
 

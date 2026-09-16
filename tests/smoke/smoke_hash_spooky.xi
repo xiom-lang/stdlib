@@ -1,4 +1,6 @@
 // XIOM stdlib smoke test -- xiom.hash.spooky
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // SpookyHash 32/64/128 determinism, empty input, different inputs and seeds.
 // Returns 0 on success, nonzero on failure.
 

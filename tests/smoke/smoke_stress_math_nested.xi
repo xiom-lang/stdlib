@@ -1,4 +1,6 @@
 // XIOM stdlib stress -- math nested function calls
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Tests composing multiple math functions in expressions.
 // Returns 0 on success, nonzero on failure.
 

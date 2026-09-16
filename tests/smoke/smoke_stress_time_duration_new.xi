@@ -1,4 +1,6 @@
 // XIOM stdlib stress -- xiom.time Duration.new with various secs/nanos combos
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Returns 0 on success, nonzero on failure.
 
 module smoke_stress_time_duration_new

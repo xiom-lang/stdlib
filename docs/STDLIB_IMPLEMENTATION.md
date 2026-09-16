@@ -1,3 +1,7 @@
+<!--
+Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+SPDX-License-Identifier: MIT OR Apache-2.0
+-->
 # XIOM Stdlib -- Production Implementation Guide (handoff for the next session)
 
 > Master guide for turning the 400+ comment-only stubs into 100% production-grade,

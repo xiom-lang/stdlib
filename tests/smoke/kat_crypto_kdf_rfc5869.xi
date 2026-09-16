@@ -1,4 +1,6 @@
 // kat_crypto_kdf_rfc5869.xi -- RFC 5869 HKDF-SHA-256 known-answer tests
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Test cases 1-3 verbatim. TC3 exercises the EMPTY salt/info paths, which are
 // classic off-by-one traps in extract-and-expand implementations.
 // (Formerly blocked by the multi-call cluster; round-17 fixed it --

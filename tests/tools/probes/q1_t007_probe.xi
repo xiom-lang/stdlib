@@ -1,4 +1,6 @@
 // q1_t007_probe.xi -- exercises the whole-body-unsafe fns the Round-19
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // catalog flags as lacking `requires` (T007). Compile must be warning-free
 // after the Q1 fixes; exit 0 on success.
 module q1_t007_probe

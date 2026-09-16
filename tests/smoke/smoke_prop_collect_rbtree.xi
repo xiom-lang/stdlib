@@ -1,4 +1,6 @@
 // smoke_prop_collect_rbtree.xi -- red-black tree property smoke.
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // 512 distinct keys in a deterministic (LCG Fisher-Yates) shuffle:
 // insert order must not matter -- inorder must always be strictly ascending,
 // size/get/contains/min/max must agree, removals must keep the BST order,

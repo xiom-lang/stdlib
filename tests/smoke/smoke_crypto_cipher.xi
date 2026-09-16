@@ -1,4 +1,6 @@
 // XIOM stdlib smoke test -- xiom.crypto.cipher (+ aead dependency surface)
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Tests the paths that the current compiler build can execute reliably:
 //   - ChaCha20 stream round-trip with explicit counter
 //   - AES key generation and passphrase-derived keys (PBKDF2-HMAC-SHA256)

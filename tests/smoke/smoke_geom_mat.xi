@@ -1,4 +1,6 @@
 // Smoke: xiom.geom.mat + xiom.geom.matrix.
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Returns 0 on success; prints the failing tag on failure.
 use xiom.geom.mat;
 use xiom.geom.matrix;

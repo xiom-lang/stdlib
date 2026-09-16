@@ -1,3 +1,7 @@
+<!--
+Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+SPDX-License-Identifier: MIT OR Apache-2.0
+-->
 # Report to the STDLIB session -- Stage 3 Item A step 2 (compiler-lane triage)
 
 From: compiler lane. To: stdlib session.

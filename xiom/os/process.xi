@@ -1,6 +1,6 @@
 // XIOM -- Process Management (exit, spawn, env, PID)
-// Copyright (c) 2026 Eleftherios Notas - XIOM Foundation
-// Licensed under the Apache-2.0 license.
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //
 // Provides a cross-platform process management interface.
 // Delegates to xiom.os, xiom.io, xiom.env, and xiom.thread where possible.

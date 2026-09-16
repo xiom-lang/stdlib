@@ -1,3 +1,7 @@
+<!--
+Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+SPDX-License-Identifier: MIT OR Apache-2.0
+-->
 # STDLIB AUDIT - doc says X -> tree has Y
 
 > **Scope:** docs/STDLIB_EXTENSION.md vs `stdlib/xiom/` (read-only audit, 2026-08-11).

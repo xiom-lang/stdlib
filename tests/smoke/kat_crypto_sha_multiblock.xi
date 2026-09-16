@@ -1,4 +1,6 @@
 // kat_crypto_sha_multiblock.xi -- SHA-256/512 block-boundary known answers
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Vectors computed with python hashlib (oracle). The 55/56 (SHA-256) and
 // 111/112 (SHA-512) boundaries exercise the length-field placement where
 // padding spills into a second block -- the classic off-by-one region for

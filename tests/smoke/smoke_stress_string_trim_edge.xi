@@ -1,4 +1,6 @@
 // XIOM stdlib stress -- xiom.string.str_trim edge cases
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Tests trim on whitespace-only, already-trimmed, and mixed strings.
 // Returns 0 on success, nonzero on failure.
 

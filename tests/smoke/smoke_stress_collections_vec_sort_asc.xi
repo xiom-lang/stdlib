@@ -1,4 +1,6 @@
 // XIOM stdlib stress -- Vec sort ascending
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Pushes unsorted values, sorts, verifies ascending order.
 // Returns 0 on success, nonzero on failure.
 

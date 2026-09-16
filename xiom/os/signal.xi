@@ -1,6 +1,6 @@
 // XIOM -- Signal Info (xiom.os.signal)
-// Copyright (c) 2026 Eleftherios Notas - XIOM Foundation
-// Licensed under the Apache-2.0 license.
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //
 // Signal name/code mapping and classification helpers. Pure mapping
 // tables. The module deliberately does NOT import the flat xiom.os

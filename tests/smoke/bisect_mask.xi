@@ -1,4 +1,6 @@
 // BUG 26 #5: high-bit mask AND on byte-extracted values
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 fn main() -> Int {
   var b0 = 0xC3 as Int;   // a lead byte (byte_at-derived)
   var chk = 0;

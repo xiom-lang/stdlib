@@ -1,4 +1,6 @@
 // Smoke: xiom.geom.collision + xiom.geom.curves + xiom.geom.polyhedra.
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Returns 0 on success; prints the failing tag on failure. Checks are split
 // across small helper functions to avoid whole-function compiler miscompiles.
 use xiom.geom.collision;

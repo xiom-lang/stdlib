@@ -1,4 +1,6 @@
 // p_netip_a.xi -- only the delegated ipv6_parse.
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 module p_netip_a
 use xiom.net.ip as netip;
 use xiom.io;

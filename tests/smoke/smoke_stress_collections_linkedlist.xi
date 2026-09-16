@@ -1,4 +1,6 @@
 // XIOM stdlib stress -- LinkedList push_front/back and pop_front/back
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Tests doubly-linked list insertion and removal at both ends.
 // Returns 0 on success, nonzero on failure.
 

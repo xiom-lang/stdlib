@@ -1,4 +1,6 @@
 // p_os_direct20.xi -- OS-entropy multi-draw shape (recreation of the r17
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // p_os_direct17 probe family). Cross-module calls into
 // crypto.os_secure_random_bytes and crypto_random_bytes, multi-draw with
 // value compares. STATUS_BREAKPOINT / garbage == still compiler-broken;

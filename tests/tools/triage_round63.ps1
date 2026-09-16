@@ -1,4 +1,6 @@
 # triage_sweep47.ps1 -- consolidate round-32 worker CSVs, classify results.
+# Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+# SPDX-License-Identifier: MIT OR Apache-2.0
 $work = "C:\Users\lefte\AppData\Local\Temp\kilo\stdlib_ws\sweep47"
 $all = @()
 Get-ChildItem "$work\results*.csv" | ForEach-Object { $all += Get-Content $_.FullName }

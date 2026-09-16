@@ -1,4 +1,6 @@
 // p_async_p7.xi -- two spawns + run, assert drain and side-effect count.
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 module p_async_p7
 use xiom.async.executor;
 use xiom.convert;

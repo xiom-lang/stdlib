@@ -1,2 +1,5 @@
 XIOM Standard Library (stdlib)
-Copyright (c) 2026 Eleftherios Notas - XIOM Foundation
+Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+
+Third-party attributions:
+- runtime/sha256_sw.c, runtime/sha256_sw.h: SHA-256 implementation by Brad Conte.

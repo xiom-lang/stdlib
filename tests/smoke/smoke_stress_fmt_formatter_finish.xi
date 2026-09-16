@@ -1,4 +1,6 @@
 // XIOM stdlib stress -- xiom.fmt Formatter.finish after mixed writes
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Tests Formatter with a sequence of mixed-type writes producing a combined result.
 // Returns 0 on success, nonzero on failure.
 

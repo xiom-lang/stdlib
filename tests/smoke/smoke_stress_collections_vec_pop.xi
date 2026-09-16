@@ -1,4 +1,6 @@
 // XIOM stdlib stress -- Vec pop
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Pushes items, pops them, verifies LIFO order and empty state.
 // Returns 0 on success, nonzero on failure.
 

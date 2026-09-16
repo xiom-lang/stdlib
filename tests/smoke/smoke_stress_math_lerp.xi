@@ -1,4 +1,6 @@
 // XIOM stdlib stress -- math.lerp
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Tests linear interpolation at t=0, t=0.5, t=1.
 // Returns 0 on success, nonzero on failure.
 

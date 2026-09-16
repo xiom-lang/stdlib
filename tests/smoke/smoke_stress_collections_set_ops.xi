@@ -1,4 +1,6 @@
 // XIOM stdlib stress -- Set insert, contains, remove, intersection, union, diff
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Tests Set basic operations and set algebra.
 // Returns 0 on success, nonzero on failure.
 

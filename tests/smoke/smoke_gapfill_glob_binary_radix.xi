@@ -1,3 +1,5 @@
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 module smoke_gapfill_glob_binary_radix
 use xiom.misc.glob;
 use xiom.search.binary;

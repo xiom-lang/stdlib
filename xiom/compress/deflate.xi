@@ -1,6 +1,6 @@
 // XIOM - DEFLATE (RFC 1951) + helpers
-// Copyright (c) 2026 Eleftherios Notas - XIOM Foundation
-// Licensed under the Apache-2.0 license.
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //
 // REAL RFC 1951 implementation (replaced the pre-1.0 custom container on
 // 2026-08-27). Producer: STORED blocks (level 0) or FIXED-Huffman blocks

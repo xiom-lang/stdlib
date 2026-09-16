@@ -1,4 +1,6 @@
 // XIOM stdlib stress -- xiom.string.str_len on boundary strings
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Tests length of empty string and single-character string.
 // Returns 0 on success.
 

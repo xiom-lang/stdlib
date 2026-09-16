@@ -1,4 +1,6 @@
 // Smoke test for xiom.string.cosine + xiom.string.jaccard
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Returns 0 on success, non-zero on the first failing assertion.
 //
 // KNOWN COMPILER ISSUES on this machine (AMD Zen 2, no AVX-512):

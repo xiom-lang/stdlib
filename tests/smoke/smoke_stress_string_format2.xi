@@ -1,4 +1,6 @@
 // XIOM stdlib stress -- xiom.string.format2 with two args
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Tests format with two placeholders and two replacement values.
 // Returns 0 on success, nonzero on failure.
 

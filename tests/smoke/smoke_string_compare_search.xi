@@ -1,3 +1,5 @@
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 module smoke_string_compare_search
 use xiom.string.compare;
 use xiom.string.search;

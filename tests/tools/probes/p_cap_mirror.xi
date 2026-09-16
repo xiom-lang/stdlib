@@ -1,3 +1,5 @@
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 module p_cap_mirror
 use xiom.io.console;
 type M2 = { start: Int; end: Int; text: Str; }

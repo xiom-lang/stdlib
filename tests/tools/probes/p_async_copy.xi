@@ -1,4 +1,6 @@
 // XIOM stdlib smoke - xiom.async.executor / timer / channel / io
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Returns 0 on success with "OK" printed; nonzero + tag on failure.
 
 module p_async_copy

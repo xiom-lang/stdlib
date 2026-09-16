@@ -1,4 +1,6 @@
 // XIOM stdlib stress -- Captures.get surface.
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // get(0) is the whole match; get(1) is None because the engine does not
 // extract groups yet (regex.xi documents the no-group limitation).
 module smoke_stress_regex_captures_get

@@ -1,3 +1,7 @@
+<!--
+Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+SPDX-License-Identifier: MIT OR Apache-2.0
+-->
 # STDLIB Container Tuning -- Documented Guarantees
 
 **Status:** factual documentation of current behavior (phase E4) -

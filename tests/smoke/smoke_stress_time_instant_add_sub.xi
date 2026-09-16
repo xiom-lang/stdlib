@@ -1,3 +1,5 @@
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 module smoke_stress_time_instant_add_sub
 use xiom.time.instant;
 use xiom.time.duration;

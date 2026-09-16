@@ -1,4 +1,6 @@
 // p_dns_debug.xi -- print dns vs net4 octets for one valid address.
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 module p_dns_debug
 use xiom.net.dns;
 use xiom.net.ip4 as net4;

@@ -1,4 +1,6 @@
 // p_str_memcpy2.xi -- characterize the Str-cast memcpy failure:
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // (A) single source copy; (B) second source at buf+len_a; (C) byte-loop tail.
 module p_str_memcpy2
 use xiom.io;

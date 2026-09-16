@@ -1,4 +1,6 @@
 // q1_verify_all.xi -- imports every module edited by the Q1 T007 pass.
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Compile-only graph check: no T007 warnings may remain for these modules.
 module q1_verify_all
 use xiom.io;

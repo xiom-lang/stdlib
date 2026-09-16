@@ -1,4 +1,6 @@
 // XIOM stdlib stress -- xiom.string.byte_at / char_at boundary
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Accesses first and last byte/char of a string, verifies correctness.
 // Returns 0 on success.
 

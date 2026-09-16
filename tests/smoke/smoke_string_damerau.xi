@@ -1,4 +1,6 @@
 // Smoke test for xiom.string.damerau
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Returns 0 on success, non-zero on the first failing assertion.
 //
 // NOTE: damerau_levenshtein_distance delegates to misc.damerau_levenshtein_

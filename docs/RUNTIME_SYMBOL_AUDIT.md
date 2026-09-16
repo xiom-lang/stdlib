@@ -1,3 +1,7 @@
+<!--
+Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+SPDX-License-Identifier: MIT OR Apache-2.0
+-->
 # XIOM Runtime Symbol Audit (stdlib lane, 2026-09-16)
 
 Scope: every `xiom_*` symbol DEFINED in `stdlib/runtime/**` (C, asm, headers)

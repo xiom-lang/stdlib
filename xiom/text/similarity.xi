@@ -1,6 +1,6 @@
 // XIOM -- Text Similarity Algorithms (xiom.text.similarity)
-// Copyright (c) 2026 Eleftherios Notas - XIOM Foundation
-// Licensed under the Apache-2.0 license.
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //
 // Pure string-similarity algorithms. All functions operate on raw byte
 // sequences via string.byte_at and therefore assume ASCII input; multi-byte

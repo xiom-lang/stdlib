@@ -1,4 +1,6 @@
 // XIOM stdlib smoke test - xiom.compress.lz4 + xiom.compress.snappy
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Returns 0 on success, nonzero on failure (process exit code).
 //
 // Full round-trips restored (BUG 26 #1 FIXED 4e95717e -- catalog-returned

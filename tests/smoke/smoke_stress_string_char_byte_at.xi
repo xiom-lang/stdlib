@@ -1,4 +1,6 @@
 // XIOM stdlib stress -- xiom.string.byte_at / char_at access
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Verifies byte_at returns ASCII codes, char_at returns Some for valid.
 // Returns 0 on success.
 

@@ -1,4 +1,6 @@
 // XIOM stdlib smoke test - xiom.convert.base32
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Checks: RFC 4648 base32 and base32hex known-answer vectors + round-trips.
 
 module smoke_convert_base32

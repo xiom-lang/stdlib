@@ -1,4 +1,6 @@
 // p_async_p10.xi -- P7 shape plus channel/timer calls (closure shape test).
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 module p_async_p10
 use xiom.async.executor;
 use xiom.async.channel;

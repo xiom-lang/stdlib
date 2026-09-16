@@ -1,4 +1,6 @@
 // XIOM stdlib smoke test - xiom.iter submodules
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // chain + filter + fold + map + range + zip
 // Returns 0 on success, nonzero on failure (process exit code).
 

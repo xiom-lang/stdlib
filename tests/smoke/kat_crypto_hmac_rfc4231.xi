@@ -1,4 +1,6 @@
 // kat_crypto_hmac_rfc4231.xi -- RFC 4231 HMAC-SHA-256/512 known-answer tests
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Test cases 1, 2, 3, 6, 7 (SHA-256) and case 1 (SHA-512), verbatim from the RFC.
 module kat_crypto_hmac_rfc4231
 use xiom.crypto;

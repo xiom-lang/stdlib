@@ -1,3 +1,7 @@
+<!--
+Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+SPDX-License-Identifier: MIT OR Apache-2.0
+-->
 # Stdlib Module Manifest (2026-08-13) -- for stdlib_tests.rs / api_freeze path sync
 
 Generated from the frozen layout (9aa95d35). Module -> file mapping for all 512 stdlib .xi files.

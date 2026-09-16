@@ -1,4 +1,6 @@
 // XIOM stdlib smoke test - xiom.convert.percent
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Checks: percent encode/decode (full URL and component).
 // NOTE: split from smoke_convert_percent_bytes (combination with xiom.convert.bytes
 // miscompiles percent_encode -- BUG 24/26 family; isolated module verified).

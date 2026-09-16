@@ -1,3 +1,7 @@
+<!--
+Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+SPDX-License-Identifier: MIT OR Apache-2.0
+-->
 # TLS Decision -- Recommended Path for XIOM
 
 **Status:** decision doc (stdlib session) - **Created:** 2026-08-25

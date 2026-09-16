@@ -1,4 +1,6 @@
 // XIOM stdlib stress -- xiom.string.str_slice edge positions
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Slices at start=0, start==end, and end==len; verifies each case.
 // Returns 0 on success.
 

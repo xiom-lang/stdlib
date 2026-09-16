@@ -1,4 +1,6 @@
 // XIOM stdlib stress -- xiom.regex Regex.replace replaces first match
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Tests replace for first occurrence replacement and no-match passthrough.
 // Returns 0 on success, nonzero on failure.
 

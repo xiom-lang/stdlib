@@ -1,4 +1,6 @@
 // XIOM stdlib stress -- Vec push large (1000 elements)
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Pushes 1000 ints and verifies length.
 // Returns 0 on success.
 

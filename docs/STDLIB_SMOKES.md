@@ -1,3 +1,7 @@
+<!--
+Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+SPDX-License-Identifier: MIT OR Apache-2.0
+-->
 # Stdlib Smoke Registration List (2026-08-13) -- for stdlib_execution_tests.rs
 
 All smokes in examples/stdlib_smoke/ verified exit 0 on the current compiler

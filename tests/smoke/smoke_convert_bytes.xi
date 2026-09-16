@@ -1,4 +1,6 @@
 // XIOM stdlib smoke test - xiom.convert.bytes
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Checks: integer <-> bytes round-trips, hex rendering, concat, reverse.
 module smoke_convert_bytes
 use xiom.convert.bytes;

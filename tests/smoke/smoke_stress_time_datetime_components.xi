@@ -1,4 +1,6 @@
 // XIOM stdlib stress -- xiom.time DateTime component accessors
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Verifies month in [1,12], day in [1,31], hour in [0,23],
 // minute in [0,59], second in [0,59]. All within valid ranges.
 // Returns 0 on success, nonzero on failure.

@@ -1,4 +1,6 @@
 // XIOM stdlib smoke test -- xiom.net.jwt + xiom.net.tls_helper
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // JWT encode/decode/verify and TLS PEM/DER certificate helpers.
 // Returns 0 on success, nonzero on failure (process exit code).
 

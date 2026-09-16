@@ -1,6 +1,6 @@
 // XIOM -- RSA Public-Key Cryptosystem (Educational / Small-Key)
-// Copyright (c) 2026 Eleftherios Notas - XIOM Foundation
-// Licensed under the Apache-2.0 license.
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //
 // WARNING -- EDUCATIONAL IMPLEMENTATION:
 //   XIOM Int is 64-bit signed (i64, max ~= 9.22e18). This limits RSA to

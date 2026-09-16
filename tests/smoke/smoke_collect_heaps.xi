@@ -1,4 +1,6 @@
 // XIOM stdlib smoke -- xiom.collect.pairingheap / bheap / fheap
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Pairing heap (push/pop/peek/merge/decrease-key), binary heap adapter,
 // Fibonacci heap adapter with merge.
 // Returns 0 on success, nonzero + tag on failure.

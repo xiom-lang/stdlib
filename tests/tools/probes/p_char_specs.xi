@@ -1,4 +1,6 @@
 // p_char_specs.xi -- wave-5 contract-shape pre-validation for char specs.
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Sweeps printable + control chars through the range predicates; a wrong
 // ensures (result == <range expression>) aborts on the mismatching code.
 module p_char_specs

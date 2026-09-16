@@ -1,4 +1,6 @@
 // XIOM stdlib smoke test -- xiom.net.ntp + xiom.net.ping + xiom.net.unix
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // NTP packet encode/decode, ICMP checksum, and unix socket stubs.
 // Returns 0 on success, nonzero on failure (process exit code).
 // NOTE: ntp_packet_to_bytes triggers an LLVM codegen bug (a module fn taking

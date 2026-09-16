@@ -1,6 +1,6 @@
 // XIOM -- Serialization Library
-// Copyright (c) 2026 Eleftherios Notas - XIOM Foundation
-// Licensed under the Apache-2.0 license.
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //
 // derive[Serialize, Deserialize] with contract preservation.
 // A deserialized struct is validated against its invariants.

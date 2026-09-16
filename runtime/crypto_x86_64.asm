@@ -1,7 +1,7 @@
 ; ================================================================
 ; XIOM Crypto Assembly — x86_64 (NASM syntax, win64/elf64)
-; Copyright (c) 2026 Eleftherios Notas - XIOM Foundation
-; Licensed under the Apache-2.0 license.
+; Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+; SPDX-License-Identifier: MIT OR Apache-2.0
 ;
 ; Hand-tuned assembly for hardware-accelerated crypto:
 ;   - AES-128 encrypt/decrypt single block (AES-NI)

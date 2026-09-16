@@ -1,4 +1,6 @@
 // XIOM stdlib property smoke -- xiom.collect.heap (pairing heap)
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // 512 deterministic LCG values: extract_min must yield them in non-decreasing
 // order, size must track inserts/extracts exactly, and the heap must empty.
 // Returns 0 on success, nonzero on failure (process exit code).

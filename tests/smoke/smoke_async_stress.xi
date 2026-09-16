@@ -1,4 +1,6 @@
 // smoke_async_stress.xi -- xiom.async stress suite (capability gate).
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Scales the smoke_async surface: executor task storm (2000 spawns with
 // side-effect verification), channel FIFO saturation, timer-wheel
 // fire/cancel storm, broadcast ordering. Deterministic, bounded runtime.

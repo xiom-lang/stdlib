@@ -1,3 +1,7 @@
+<!--
+Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+SPDX-License-Identifier: MIT OR Apache-2.0
+-->
 # STDLIB GENERICS VS CONCRETE - Implementation Policy
 
 Status: authoritative 2026-08-11. Source of truth for signature mode selection in

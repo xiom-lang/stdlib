@@ -1,6 +1,6 @@
 // XIOM -- MT19937 (Mersenne Twister) 32-bit PRNG
-// Copyright (c) 2026 Eleftherios Notas - XIOM Foundation
-// Licensed under the Apache-2.0 license.
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //
 // Faithful implementation of the classic 32-bit Mersenne Twister by
 // Makoto Matsumoto and Takuji Nishimura (1998). All internal arithmetic

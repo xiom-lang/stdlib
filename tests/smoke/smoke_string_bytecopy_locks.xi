@@ -1,4 +1,6 @@
 // smoke_string_bytecopy_locks.xi -- permanent locks for the round-14 string
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // byte-copy fixes (9fb83acd + c607b42a family):
 //   1. str_slice copies BYTES (byte_at), never truncating multibyte chars
 //   2. str_lower/str_upper map ASCII only, passing multibyte bytes through

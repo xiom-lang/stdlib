@@ -1,3 +1,5 @@
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 module q1v_ab
 use xiom.thread; use xiom.thread.spawn; use xiom.thread.park; use xiom.async; use xiom.async.timer;
 use xiom.mem; use xiom.ptr; use xiom.cell; use xiom.rc; use xiom.sync; use xiom.sync.condvar;

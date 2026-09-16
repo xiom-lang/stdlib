@@ -1,4 +1,6 @@
 // smoke_stress_crypto_secure_random_seeded.xi -- locks for the CSPRNG
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // pipeline (2026-09-09):
 // 1. secure_random_bytes is OS-entropy backed (R4 flip after the
 //    confined-block growth fix, 041e8bb3); two draws MUST differ.

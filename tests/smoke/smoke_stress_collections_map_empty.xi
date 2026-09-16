@@ -1,4 +1,6 @@
 // XIOM stdlib stress -- Map empty operations
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Tests operations on empty map: get, contains, len, keys, values, clear.
 // Returns 0 on success, nonzero on failure.
 

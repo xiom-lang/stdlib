@@ -1,4 +1,6 @@
 // XIOM stdlib stress -- xiom.path Path.parent for various depths
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Tests parent() on 1, 2, and 3 component paths.
 // Returns 0 on success, nonzero on failure.
 

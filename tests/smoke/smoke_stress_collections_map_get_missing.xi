@@ -1,4 +1,6 @@
 // XIOM stdlib stress -- Map get missing key
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Tests .get() on keys not present in map, expects None.
 // Returns 0 on success, nonzero on failure.
 

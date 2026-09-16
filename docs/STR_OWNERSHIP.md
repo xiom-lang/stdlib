@@ -1,3 +1,7 @@
+<!--
+Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+SPDX-License-Identifier: MIT OR Apache-2.0
+-->
 # STR / Malloc Buffer Ownership Convention
 
 **Status:** normative for `stdlib/**` code review - **Created:** 2026-08-24

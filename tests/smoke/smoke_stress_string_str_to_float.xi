@@ -1,4 +1,6 @@
 // XIOM stdlib stress -- xiom.string.str_to_float valid and edge
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Parses a valid float, verifies invalid input returns Err.
 // Returns 0 on success.
 

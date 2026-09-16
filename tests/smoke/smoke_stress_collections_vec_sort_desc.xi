@@ -1,4 +1,6 @@
 // XIOM stdlib stress -- Vec sort with negative and positive values
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Pushes mixed-sign values, sorts, verifies correct order.
 // Returns 0 on success, nonzero on failure.
 

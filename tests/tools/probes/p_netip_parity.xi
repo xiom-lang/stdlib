@@ -1,4 +1,6 @@
 // p_netip_parity.xi -- parity: net.ip v6 legs + net.net.is_valid_ipv4 vs
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // the canonical net.ip4/net.ip6. Uses named-local binding (R25).
 module p_netip_parity
 use xiom.net.ip as netip;

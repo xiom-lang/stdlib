@@ -1,4 +1,6 @@
 // XIOM stdlib stress -- Vec mixed operations
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Interleaves push, pop, set, and get to stress internal state.
 // Returns 0 on success, nonzero on failure.
 

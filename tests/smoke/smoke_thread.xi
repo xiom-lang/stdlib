@@ -1,4 +1,6 @@
 // XIOM stdlib smoke - xiom.thread.local / park / pool / spawn
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Returns 0 on success with "OK" printed; nonzero + tag on failure.
 // NOTE: `xiom.thread.spawn` must be imported LAST: its module name collides
 // with the exported `spawn` fn (keep-first module-name rule, BUG 25 #9).

@@ -1,4 +1,6 @@
 // XIOM stdlib stress -- xiom.regex regex_escape escapes special chars
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Tests that escaped strings are treated as literals by Regex.
 // Returns 0 on success, nonzero on failure.
 

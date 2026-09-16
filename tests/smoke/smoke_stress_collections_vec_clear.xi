@@ -1,4 +1,6 @@
 // XIOM stdlib stress -- Vec clear
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Pushes items, clears, verifies empty and can reuse.
 // Returns 0 on success, nonzero on failure.
 

@@ -1,4 +1,6 @@
 // Smoke: xiom.math.finance, mathematical_economics, game_theory,
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // information_theory, mathematical_physics, graph_theory, machine_learning,
 // mathematical_biology, mathematical_logic, fuzzy, chaos.
 // Returns 0 on success.

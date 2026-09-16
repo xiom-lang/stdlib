@@ -1,6 +1,6 @@
 // XIOM -- SIMD Module (Single Instruction Multiple Data)
-// Copyright (c) 2026 Eleftherios Notas - XIOM Foundation
-// Licensed under the Apache-2.0 license.
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //
 // High-performance SIMD vector types and operations.
 // Backed by SSE/SSE2/AVX/AVX2/AVX-512 on x86_64 and NEON on ARM64.

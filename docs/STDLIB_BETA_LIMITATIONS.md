@@ -1,3 +1,7 @@
+<!--
+Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+SPDX-License-Identifier: MIT OR Apache-2.0
+-->
 # XIOM Stdlib -- Beta Known Limitations (2026-09-16, v0.60-pre-split)
 
 Audience: release/infra lane (public known-limitations page), beta users.

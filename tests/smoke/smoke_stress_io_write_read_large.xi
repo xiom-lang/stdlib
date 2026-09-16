@@ -1,4 +1,6 @@
 // XIOM stdlib stress -- io.write_file / io.read_file large content
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Writes multi-line repeated content, reads it back, verifies.
 // Returns 0 on success, nonzero on failure.
 

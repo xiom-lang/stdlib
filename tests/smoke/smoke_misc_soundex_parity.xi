@@ -1,4 +1,6 @@
 // smoke_misc_soundex_parity.xi -- locks the consolidated soundex surface
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // (misc.soundex -> text.similarity delegation, 2026-09-10).
 // 1. All three public paths agree on the classic vectors.
 // 2. Canonical empty-string semantics across all paths ("" not "0000").

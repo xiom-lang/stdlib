@@ -1,4 +1,6 @@
 # barename_worker.ps1 -- compile a per-module probe and harvest catalog-body warnings.
+# Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+# SPDX-License-Identifier: MIT OR Apache-2.0
 param([int]$WorkerId, [string]$ListFile, [string]$OutFile, [string]$WorkDir)
 $exe = "C:\Users\lefte\AppData\Local\Temp\kilo\stdlib_ws\target_r40\debug\xiom.exe"
 $dir = Join-Path $WorkDir ("w" + $WorkerId)

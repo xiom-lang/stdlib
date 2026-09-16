@@ -1,4 +1,6 @@
 // XIOM stdlib stress -- math.exp and math.ln
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Tests exp and natural log with known values.
 // Returns 0 on success, nonzero on failure.
 

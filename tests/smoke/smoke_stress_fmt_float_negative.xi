@@ -1,4 +1,6 @@
 // XIOM stdlib stress -- xiom.fmt Float64.to_str for negative values
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Tests that negative floats produce non-empty, distinct strings.
 // Returns 0 on success, nonzero on failure.
 

@@ -1,4 +1,6 @@
 // XIOM stdlib stress -- math.min_float and math.max_float
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Tests min/max on floating point values.
 // Returns 0 on success, nonzero on failure.
 

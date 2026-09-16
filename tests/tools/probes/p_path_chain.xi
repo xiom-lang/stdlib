@@ -1,4 +1,6 @@
 // p_path_chain.xi -- R21 regression probe (compiler lane, 2026-09-15).
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // r40: compiles+runs (exit 0). r41 (HEAD + R21 WIP): type errors on the
 // chained method receivers -- "cannot call 'join' on this expression".
 // Controls: (a) single join + as_path on a named local works; (b) chained

@@ -1,6 +1,6 @@
 // XIOM -- Terminal Helpers (xiom.os.term)
-// Copyright (c) 2026 Eleftherios Notas - XIOM Foundation
-// Licensed under the Apache-2.0 license.
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //
 // Pure terminal escape-sequence helpers plus documented stubs for the
 // operations that would require termios/ioctl FFI (not exposed by the

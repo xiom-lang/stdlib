@@ -1,6 +1,6 @@
 // XIOM -- System Info (xiom.os.sysinfo)
-// Copyright (c) 2026 Eleftherios Notas - XIOM Foundation
-// Licensed under the Apache-2.0 license.
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //
 // System information helpers. The module deliberately does NOT import
 // the flat xiom.os module: flat os exposes externs and functions named

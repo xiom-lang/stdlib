@@ -1,4 +1,6 @@
 // XIOM stdlib stress -- xiom.regex is_valid_regex validates patterns
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Tests valid and invalid pattern detection without compilation.
 // Returns 0 on success, nonzero on failure.
 

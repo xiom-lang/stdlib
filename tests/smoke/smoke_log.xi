@@ -1,4 +1,6 @@
 // XIOM stdlib smoke -- xiom.log.levels + color + json + sinks
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Returns 0 on success, nonzero (and a tag) on failure.
 
 module smoke_log

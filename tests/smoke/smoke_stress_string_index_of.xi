@@ -1,4 +1,6 @@
 // XIOM stdlib stress -- xiom.string.index_of / last_index_of
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Tests first and last occurrence positions including not-found case.
 // Returns 0 on success.
 

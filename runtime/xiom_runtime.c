@@ -1,4 +1,6 @@
 // Guarded against redefinition: the xiom compiler and JIT also pass these via
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // -D on the command line for some targets (a bare re-#define triggers clang's
 // -Wmacro-redefined).
 #ifndef _CRT_SECURE_NO_WARNINGS

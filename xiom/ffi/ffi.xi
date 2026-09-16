@@ -1,6 +1,6 @@
 // XIOM -- FFI Library (C Foreign Function Interface)
-// Copyright (c) 2026 Eleftherios Notas - XIOM Foundation
-// Licensed under the Apache-2.0 license.
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //
 // Production-grade C interop foundation for the XIOM ecosystem.
 // All C-binding packages (vulkan, imgui, glfw, etc.) depend on this module.

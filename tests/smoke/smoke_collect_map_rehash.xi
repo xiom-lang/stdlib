@@ -1,4 +1,6 @@
 // smoke_collect_map_rehash.xi -- IntMap rehash/tombstone behavior
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Heavy delete+insert workloads degrade lookup probe sequences; map_rehash
 // rebuilds in place and restores exact semantics (same entries, same
 // values, clears tombstones, size preserved).

@@ -1,4 +1,6 @@
 // XIOM stdlib stress -- xiom.fmt Formatter.write_str and finish
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Tests Formatter building a string from string writes.
 // Returns 0 on success, nonzero on failure.
 

@@ -1,4 +1,6 @@
 // p_b32_alias2: explicit alias only, convert.base32 (shim).
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 module p_b32_alias2
 use xiom.convert.base32 as cvt;
 use xiom.io;

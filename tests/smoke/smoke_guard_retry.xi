@@ -1,4 +1,6 @@
 // Phase 6 smoke: Transient Fault Retry (requirement h) -- Unsafe Confinement.
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // A transient fault (faults on first run, succeeds on retry) is retried ONCE
 // on a fresh memory slot and the block's value is delivered. A permanent fault
 // faults twice -> Err (recoverable, process survives). `#[unsafe_no_retry]`

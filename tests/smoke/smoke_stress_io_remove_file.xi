@@ -1,4 +1,6 @@
 // XIOM stdlib stress -- io.remove_file success and verification
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Writes file, removes it, verifies file is gone.
 // Returns 0 on success.
 

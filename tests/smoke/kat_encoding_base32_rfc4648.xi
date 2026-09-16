@@ -1,4 +1,6 @@
 // kat_encoding_base32_rfc4648.xi -- RFC 4648 section 10 base32 vectors
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Standard alphabet (A-Z, 2-7, '=' pad) plus base32hex variants.
 module kat_encoding_base32_rfc4648
 use xiom.encoding.base32;

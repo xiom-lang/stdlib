@@ -1,4 +1,6 @@
 // XIOM stdlib stress -- Vec len tracking
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Verifies len grows and shrinks with push/pop/clear.
 // Returns 0 on success, nonzero on failure.
 

@@ -1,4 +1,6 @@
 // p_str_memcpy.xi -- re-test of the reverted string fast-path shape:
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // str_concat via Str-as-pointer casts + xiom_memcpy_dispatch in CHAINED
 // self-concat (the night-session finding 13 failure mode).
 module p_str_memcpy

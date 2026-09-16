@@ -1,4 +1,6 @@
 // XIOM stdlib smoke test -- xiom.encoding.percent and xiom.encoding.ascii85
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Percent (URL/form/component/bytes) known answers and Ascii85 known answers.
 // Returns 0 on success, nonzero on failure.
 

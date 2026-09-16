@@ -1,4 +1,6 @@
 // p_pct_probe.xi -- characterize the convert.percent shim binding.
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Full-URL mode must return "/a?b=1&c=2" (reserved separators pass through);
 // component mode encodes them.
 module p_pct_probe

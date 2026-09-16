@@ -1,6 +1,6 @@
 // XIOM -- Process Query Helpers (xiom.os.proc)
-// Copyright (c) 2026 Eleftherios Notas - XIOM Foundation
-// Licensed under the Apache-2.0 license.
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //
 // Process query helpers built on the existing xiom.process / xiom.os
 // runtime primitives (xiom_process_spawn/kill/wait/running).

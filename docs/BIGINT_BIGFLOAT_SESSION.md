@@ -1,3 +1,7 @@
+<!--
+Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+SPDX-License-Identifier: MIT OR Apache-2.0
+-->
 # XIOM -- BigInt/BigFloat Production-Grade Stdlib Session
 
 **Version:** v0.57 | **Branch:** `feat/architect` | **Date:** 2026-08-10

@@ -1,4 +1,6 @@
 // XIOM stdlib smoke test -- xiom.crypto (enhanced)
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Tests: sha256 raw, sha256_hex, known-vector verification
 // Returns 0 on success, unique error code on failure.
 

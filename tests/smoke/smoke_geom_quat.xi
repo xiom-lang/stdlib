@@ -1,4 +1,6 @@
 // Smoke: xiom.geom.quat + xiom.geom.quaternion.
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Returns 0 on success; prints the failing tag on failure.
 use xiom.geom.quat;
 use xiom.geom.quaternion;

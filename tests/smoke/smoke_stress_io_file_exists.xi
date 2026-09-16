@@ -1,4 +1,6 @@
 // XIOM stdlib stress -- io.file_exists true/false
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Writes a file, confirms exists, removes, confirms gone.
 // Returns 0 on success.
 

@@ -1,4 +1,6 @@
 // Smoke: xiom.math.number_theory (primality, factorization, symbols, divisors).
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Returns 0 on success.
 use xiom.math;
 use xiom.io;

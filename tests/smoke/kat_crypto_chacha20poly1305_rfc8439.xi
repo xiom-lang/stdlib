@@ -1,4 +1,6 @@
 // kat_crypto_chacha20poly1305_rfc8439.xi -- RFC 8439 section 2.8.2 AEAD vector
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Keystream correctness (ciphertext) and AAD-inclusion correctness (tag) are
 // pinned independently: ct proves the ChaCha20 stream, tag proves Poly1305
 // covered the AAD. Round-trip + tamper rejection close the loop.

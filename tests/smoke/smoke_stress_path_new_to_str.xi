@@ -1,4 +1,6 @@
 // XIOM stdlib stress -- xiom.path Path.new and to_str round-trip
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Tests construction and string representation for multiple paths.
 // Returns 0 on success, nonzero on failure.
 

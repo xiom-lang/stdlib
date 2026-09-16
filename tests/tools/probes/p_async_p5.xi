@@ -1,4 +1,6 @@
 // p_async_p5.xi -- stderr-marked executor probe (stderr is unbuffered).
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 module p_async_p5
 use xiom.async.executor;
 use xiom.io.console;

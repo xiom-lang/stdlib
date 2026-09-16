@@ -1,4 +1,6 @@
 // Smoke: xiom.math.algebra_extended (group/ring/field/module/category axioms).
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Returns 0 on success.
 //
 // NOTE: several predicates cannot be exercised by this compiler build:

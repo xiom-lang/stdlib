@@ -1,6 +1,6 @@
 // XIOM -- BigFloat: arbitrary-precision decimal floating point (xiom.num.bigfloat)
-// Copyright (c) 2026 Eleftherios Notas - XIOM Foundation
-// Licensed under the Apache-2.0 license.
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //
 // Category: num/ (D4). Imported as `use xiom.num.bigfloat;` (leaf calls:
 // `bigfloat.bigfloat_add(...)`) or through the flat aggregate

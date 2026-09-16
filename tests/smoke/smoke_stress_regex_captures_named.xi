@@ -1,4 +1,6 @@
 // XIOM stdlib stress -- Captures.get_named surface.
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Named captures are NOT implemented: get_named always returns None
 // (documented stub in regex.xi). This smoke pins that contract so a future
 // implementation flips it deliberately.

@@ -1,3 +1,5 @@
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 /* ============================================================================
  * fp128 (IEEE 754 quadruple / Float128) soft-float helpers
  * (BUG 13 fix -- 2026-08-11)

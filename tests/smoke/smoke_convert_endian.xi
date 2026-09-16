@@ -1,4 +1,6 @@
 // XIOM stdlib smoke test - xiom.convert.endian + xiom.convert.swap + xiom.bits.endianness
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Checks: byte-vector endian conversions, byte swaps, host endianness, and
 // the bits.endianness fixed-width swaps.
 

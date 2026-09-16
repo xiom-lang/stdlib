@@ -1,4 +1,6 @@
 // XIOM stdlib smoke test - xiom.serialize.csv (RFC 4180)
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Checks: basic/CRLF records, quoted fields (commas, doubled quotes,
 // embedded newlines), empty fields, trailing terminator behavior, custom
 // delimiters, error on unterminated quotes, writer quoting, and round-trips.

@@ -1,4 +1,6 @@
 // smoke_prop_collect_bloom.xi -- Bloom filter property smoke.
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Core properties: no false negatives for inserted keys, clear() empties the
 // filter, and the estimated false-positive rate stays in [0, 1] and is
 // non-decreasing across insert batches. Returns 0 on success.

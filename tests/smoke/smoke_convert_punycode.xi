@@ -1,4 +1,6 @@
 // smoke_convert_punycode.xi -- convention lock for xiom.convert.punycode.
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //
 // AUDIT (dedup wave, 2026-09-16): convert.punycode is NOT a blind twin of
 // xiom.encoding.punycode -- both share the module leaf and fn names, but the

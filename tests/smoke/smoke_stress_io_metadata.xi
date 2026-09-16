@@ -1,4 +1,6 @@
 // XIOM stdlib stress -- io.metadata on a regular file
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Writes a file, queries metadata, verifies is_file and size > 0.
 // Returns 0 on success.
 

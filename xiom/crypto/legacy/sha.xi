@@ -1,3 +1,5 @@
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 module xiom.crypto.sha
 // ============================================================================
 // !!! SHA-1 IS LEGACY / DEPRECATED -- DO NOT USE IN NEW SYSTEMS !!!

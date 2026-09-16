@@ -1,4 +1,6 @@
 # launch_sweep47.ps1 -- fan out the full smoke corpus over 8 workers (round-32 binary).
+# Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+# SPDX-License-Identifier: MIT OR Apache-2.0
 # Run with CWD = E:\Projects\AXIOM so both stdlib resolution roots point at one tree.
 $root = "E:\Projects\AXIOM\examples\stdlib_smoke"
 $work = "C:\Users\lefte\AppData\Local\Temp\kilo\stdlib_ws\sweep47"

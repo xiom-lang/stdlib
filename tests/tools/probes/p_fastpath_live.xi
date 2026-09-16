@@ -1,4 +1,6 @@
 // p_fastpath_live.xi -- live probe after the memcpy fast-path re-land:
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // chained str_concat (the finding-13 failure mode) + builder materialize.
 module p_fastpath_live
 use xiom.string;

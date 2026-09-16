@@ -1,4 +1,6 @@
 // XIOM stdlib stress -- xiom.path Path.file_stem extraction
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Tests file_stem() for files with single and multiple extensions.
 // Returns 0 on success, nonzero on failure.
 

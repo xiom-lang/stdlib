@@ -1,6 +1,6 @@
 // XIOM -- Hex/Octal/Binary Dump (xiom.format.dump)
-// Copyright (c) 2026 Eleftherios Notas - XIOM Foundation
-// Licensed under the Apache-2.0 license.
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //
 // Byte-buffer dump utilities. hexdump mirrors the output style of
 // xiom.fmt.format_hexdump (lowercase hex, 8+8 grouping, ASCII column);

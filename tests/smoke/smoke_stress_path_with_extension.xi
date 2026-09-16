@@ -1,4 +1,6 @@
 // XIOM stdlib stress -- xiom.path Path.with_extension replacement
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Tests with_extension replacing and adding extensions.
 // Returns 0 on success, nonzero on failure.
 

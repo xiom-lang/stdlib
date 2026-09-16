@@ -1,4 +1,6 @@
 // XIOM stdlib stress -- io.copy_file content preservation
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Copies a file, reads destination, verifies content matches.
 // Returns 0 on success.
 

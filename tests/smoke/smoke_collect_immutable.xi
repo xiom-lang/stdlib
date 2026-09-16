@@ -1,4 +1,6 @@
 // XIOM stdlib smoke -- xiom.collect.immutable / persistent
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Copy-on-write (mutating) and functional (returning new) persistent
 // structures. Both modules export the same pvec_*/pmap_* names, so they are
 // called through their short module prefixes.

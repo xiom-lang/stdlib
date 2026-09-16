@@ -1,4 +1,6 @@
 // kat_convert_utf8_decoder.xi -- UTF-8 decoder known-answer tests
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Valid sequences (Markus Kuhn UTF-8 stress class + Unicode boundaries) must
 // decode to the exact codepoint; malformed sequences (overlongs, surrogate
 // halves, bare continuations, truncations, > U+10FFFF) must be REJECTED.

@@ -1,4 +1,6 @@
 // XIOM stdlib smoke test - xiom.string.format + xiom.string.printf + xiom.string.scanf
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Returns 0 on success, nonzero on failure (process exit code).
 //
 // NOTE (compiler, BUG 27 #2 -- FIXED 4e95717e): the sublib path now resolves

@@ -1,4 +1,6 @@
 // XIOM stdlib smoke test - xiom.serialize.toml (v1 subset)
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Checks: comments, [table]/[a.b] headers, bare/quoted keys, basic +
 // literal strings with escapes, integers with '_' separators, floats,
 // booleans, string/int arrays, section-qualified lookups, typed getters,

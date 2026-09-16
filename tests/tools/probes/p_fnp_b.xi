@@ -1,3 +1,5 @@
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 module p_fnp_b
 use xiom.io;
 fn action5(r: Int, v: Int) -> Int { return (r + v) % 5; }

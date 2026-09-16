@@ -1,4 +1,6 @@
 // XIOM stdlib stress -- xiom.string.str_trim whitespace removal
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Trims leading/trailing spaces from a string.
 // Returns 0 on success.
 

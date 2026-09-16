@@ -1,4 +1,6 @@
 // p_enc_qual.xi -- encoding qualification probe (flip unblocker).
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Replicates the load-order-sensitive surface: imports xiom.encoding PLUS the
 // sibling encoding submodules (the wider e2e import shape) and exercises every
 // public entry point whose loop bodies were changed from data.get(i).value to

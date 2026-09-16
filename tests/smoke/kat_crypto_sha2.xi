@@ -1,4 +1,6 @@
 // kat_crypto_sha2.xi -- NIST CAVP / FIPS 180-4 known-answer tests
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Vectors: SHA-224/256/384/512 over "", "abc", and the 448-bit message.
 // Source: NIST CSRC example hashes (FIPS 180-4 appendix B / CAVP SHS).
 // Exit 0 = all digests match; nonzero + tag = first mismatch.

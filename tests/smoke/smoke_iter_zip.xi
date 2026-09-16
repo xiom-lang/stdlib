@@ -1,4 +1,6 @@
 // XIOM stdlib smoke test - xiom.iter.zip module
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Split from smoke_iter because importing 5+ sibling xiom.iter submodules
 // together with xiom.iter.zip breaks qualified name resolution in the
 // current compiler (smoke_iter covers chain/filter/fold/map/range).

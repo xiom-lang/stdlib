@@ -1,4 +1,6 @@
 // XIOM stdlib stress -- xiom.fmt Int.to_str for negative boundary values
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Tests integer to string for negative values including near-min.
 // Returns 0 on success, nonzero on failure.
 

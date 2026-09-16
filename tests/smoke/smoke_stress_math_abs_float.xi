@@ -1,4 +1,6 @@
 // XIOM stdlib stress -- math.abs_float
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Tests abs_float on positive, negative, zero, and negative zero.
 // Returns 0 on success, nonzero on failure.
 

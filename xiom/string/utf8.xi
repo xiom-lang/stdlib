@@ -1,6 +1,6 @@
 // XIOM -- UTF-8 Codec (byte-level encode/decode/validate)
-// Copyright (c) 2026 Eleftherios Notas - XIOM Foundation
-// Licensed under the Apache-2.0 license.
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //
 // Pure algorithm implementations of the UTF-8 encoding scheme (RFC 3629).
 // Operates on raw bytes (Vec[UInt8]) and codepoints (Int), not on Str.

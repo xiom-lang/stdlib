@@ -1,4 +1,6 @@
 // XIOM stdlib stress -- xiom.path Path.is_absolute and is_relative
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Tests absolute/relative detection on multiple path styles.
 // Returns 0 on success, nonzero on failure.
 

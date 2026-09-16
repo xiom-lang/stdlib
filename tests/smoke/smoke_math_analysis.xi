@@ -1,4 +1,6 @@
 // Smoke: xiom.math.trigonometry, differential_equations, queueing,
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // number_systems, interfaces (the analysis-flavoured sublibs).
 // Returns 0 on success.
 use xiom.math;

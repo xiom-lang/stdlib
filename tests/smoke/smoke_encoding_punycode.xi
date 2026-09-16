@@ -1,4 +1,6 @@
 // XIOM stdlib smoke test — xiom.encoding.punycode and xiom.encoding.idna
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // RFC 3492 punycode known answer, round trips, IDNA A-label conversion.
 // Returns 0 on success, nonzero on failure.
 

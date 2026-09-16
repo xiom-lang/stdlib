@@ -1,4 +1,6 @@
 // XIOM stdlib smoke test -- xiom.hash.fnv, xiom.hash.adler, xiom.hash.checksum
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // FNV-1a known answers, Adler-32 known answer and combine, classic checksums.
 // Returns 0 on success, nonzero on failure.
 

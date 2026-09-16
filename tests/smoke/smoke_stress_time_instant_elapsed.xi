@@ -1,4 +1,6 @@
 // XIOM stdlib stress -- xiom.time Instant.elapsed monotonic growth
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Two calls to elapsed on the same Instant should return increasing values.
 // Returns 0 on success, nonzero on failure.
 

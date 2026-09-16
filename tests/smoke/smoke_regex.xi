@@ -1,4 +1,6 @@
 // XIOM stdlib smoke -- xiom.regex.engine + syntax + pcre_lite
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Returns 0 on success, nonzero (and a tag) on failure.
 //
 // NOTE: the statement order below matters -- this build's codegen corrupts

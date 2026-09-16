@@ -1,4 +1,6 @@
 // XIOM stdlib stress -- xiom.string.lines on empty string
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Tests lines() returns correct count for empty and blank input.
 // Returns 0 on success, nonzero on failure.
 

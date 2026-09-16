@@ -1,4 +1,6 @@
 // XIOM stdlib smoke test - checked/saturating/wrapping/overflow/exact/lossy/
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // unchecked/roundtrip conversion helpers.
 
 module smoke_convert_checked

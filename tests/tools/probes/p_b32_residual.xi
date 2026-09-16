@@ -1,4 +1,6 @@
 // p_b32_residual.xi -- R15 residual after a07507c4: same-name delegation
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // of Result/Str-returning catalog fns is frame-dependent.
 module p_b32_residual
 use xiom.convert.base32;

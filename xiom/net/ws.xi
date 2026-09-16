@@ -1,6 +1,6 @@
 // XIOM -- WebSocket URL Helpers (xiom.net.ws)
-// Copyright (c) 2026 Eleftherios Notas - XIOM Foundation
-// Licensed under the Apache-2.0 license.
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //
 // Pure WebSocket URL parsing and building helpers for the ws:// and
 // wss:// schemes. No network I/O.

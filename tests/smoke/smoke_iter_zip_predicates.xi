@@ -1,4 +1,6 @@
 // smoke_iter_zip_predicates.xi -- permanent lock for the round-15 fix family
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // "by-value fn(T) -> Bool tuple instantiations / payload-extractor parens"
 // (probe_zip_h/j/k + probe_iter_terminals shapes, verified GREEN in the
 // round-15 battery). Also pins zip/cartesian tuple element reads (.0/.1).

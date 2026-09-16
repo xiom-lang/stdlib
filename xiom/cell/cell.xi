@@ -1,6 +1,6 @@
 // XIOM -- Interior Mutability (Cell + RefCell)
-// Copyright (c) 2026 Eleftherios Notas - XIOM Foundation
-// Licensed under the Apache-2.0 license.
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //
 // Sprint 6D.1: Fixed permanent borrow bug -- Ref/RefMut now hold raw pointers
 // to the original RefCell and `release()` decrements the borrow counter.

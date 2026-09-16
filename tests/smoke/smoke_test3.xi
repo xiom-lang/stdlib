@@ -1,4 +1,6 @@
 // XIOM stdlib smoke -- xiom.test.harness
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Returns 0 on success, nonzero (and a tag) on failure.
 //
 // NOTE: see smoke_test2.xi -- assert and harness cannot be imported together

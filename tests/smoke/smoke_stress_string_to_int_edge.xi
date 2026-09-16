@@ -1,4 +1,6 @@
 // XIOM stdlib stress -- xiom.string.str_to_int valid and invalid input
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Parses a valid integer, verifies invalid input returns Err.
 // Returns 0 on success.
 

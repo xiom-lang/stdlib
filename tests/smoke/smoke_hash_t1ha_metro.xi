@@ -1,4 +1,6 @@
 // XIOM stdlib smoke test -- xiom.hash.t1ha and xiom.hash.metro
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Determinism, empty input, different inputs, seeded variants, 128-bit twins.
 // Returns 0 on success, nonzero on failure.
 

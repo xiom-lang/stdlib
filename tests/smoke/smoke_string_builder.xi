@@ -1,4 +1,6 @@
 // smoke_string_builder.xi -- xiom.string.builder
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Locks: append/len/materialize round-trip, int append (sign, zero, min-ish),
 // clear-and-reuse, multibyte passthrough. Complements the alloc-heavy
 // str_concat path with the amortized builder (audit 5.2).

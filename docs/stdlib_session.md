@@ -1,3 +1,7 @@
+<!--
+Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+SPDX-License-Identifier: MIT OR Apache-2.0
+-->
 # XIOM Stdlib Session -- Handoff
 
 ## 0. START HERE -- current handoff (2026-09-16)

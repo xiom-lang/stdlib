@@ -1,4 +1,6 @@
 // XIOM stdlib stress -- xiom.string.str_concat repeated growth
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Builds a large string via repeated concatenation and verifies length.
 // Returns 0 on success.
 

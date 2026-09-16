@@ -1,4 +1,6 @@
 // XIOM stdlib stress -- math.sin, math.cos, math.tan
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Tests trig functions at known angles.
 // Returns 0 on success, nonzero on failure.
 

@@ -1,4 +1,6 @@
 // XIOM stdlib stress -- Vec insert and remove at positions
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Tests middle and end insertion/removal in a Vec.
 // Returns 0 on success, nonzero on failure.
 

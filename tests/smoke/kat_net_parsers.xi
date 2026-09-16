@@ -1,4 +1,6 @@
 // kat_net_parsers.xi -- URL / percent / query / IPv4 known-answer tests
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // RFC 3986 example semantics plus IPv4 special ranges (RFC 1918 / 5735
 // classes). Pure parsers -- the highest-value fuzz surface in net.
 module kat_net_parsers

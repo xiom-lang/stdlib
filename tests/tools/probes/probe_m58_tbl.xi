@@ -1,4 +1,6 @@
 // probe_m58_tbl.xi -- module-level [256]Int mutable array materialization
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // (M58 family: reads through a module fn must see the initialized values,
 // never zeroed/garbage stack copies). GREEN: all reads match the literal.
 module probe_m58_tbl

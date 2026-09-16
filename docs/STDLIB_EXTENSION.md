@@ -1,3 +1,7 @@
+<!--
+Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+SPDX-License-Identifier: MIT OR Apache-2.0
+-->
 # XIOM Standard Library & Package Architecture Plan
 
 > **Status: PLANNING (v0.56.0, 2026-08-07)**

@@ -1,4 +1,6 @@
 // XIOM stdlib stress -- io.append_file concatenation
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Writes first part, appends second, verifies concatenated content.
 // Returns 0 on success.
 

@@ -1,4 +1,6 @@
 // XIOM stdlib smoke test - bits/bitarray, bits/bitfield, bits/bitwise,
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // bits/popcount, bits/rotation.
 
 module smoke_bits_bitarray

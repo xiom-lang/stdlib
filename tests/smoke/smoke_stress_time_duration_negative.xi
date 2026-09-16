@@ -1,4 +1,6 @@
 // XIOM stdlib stress -- xiom.time Duration subtraction resulting in negative
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Duration sub should handle results where earlier > later (negative duration).
 // Returns 0 on success, nonzero on failure.
 

@@ -1,6 +1,6 @@
 // XIOM -- Hash Collection (Bloom Filter + Insertion-ordered Map)
-// Copyright (c) 2026 Eleftherios Notas - XIOM Foundation
-// Licensed under the Apache-2.0 license.
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 
 module xiom.collect.hash
 

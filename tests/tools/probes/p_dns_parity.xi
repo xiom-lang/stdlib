@@ -1,4 +1,6 @@
 // p_dns_parity.xi -- dedup parity: xiom.net.dns ip helpers vs canonical
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // xiom.net.ip4 / xiom.net.ip6.
 module p_dns_parity
 use xiom.net.dns;

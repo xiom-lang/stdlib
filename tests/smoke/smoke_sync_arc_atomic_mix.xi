@@ -1,3 +1,5 @@
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 module smoke_sync_arc_atomic_mix
 use xiom.sync.atomics;
 use xiom.collect.arc;

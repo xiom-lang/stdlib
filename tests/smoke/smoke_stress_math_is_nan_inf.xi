@@ -1,4 +1,6 @@
 // XIOM stdlib stress -- math.is_nan and math.is_inf
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // Tests NaN and infinity detection.
 // Returns 0 on success, nonzero on failure.
 

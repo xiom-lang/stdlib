@@ -1,4 +1,6 @@
 // q1_probe2.xi -- io wrapper surface without io.sleep (Windows link bug, see
+// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// SPDX-License-Identifier: MIT OR Apache-2.0
 // probe log). Exercises print/println/time_now/rename + thread.yield_now.
 module q1_probe2
 use xiom.io;
