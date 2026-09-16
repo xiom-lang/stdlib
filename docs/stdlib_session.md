@@ -27,8 +27,10 @@ earlier R-fixes all in tree):
 - **Contract waves:** wave 5 (+46 clauses, mostly REAL range specs: char
   predicate family, compare/collate sign bounds, collate_key length,
   bloom FPR) -> string 30.2% -> 39.5%, global 13.2% -> 13.8%; floors40.
-  Wave 6 part 1 (+16: iter lengths/counts, sync channel/barrier counts)
-  -> global 14.0%; floors41. (Waves 1-4: 145 clauses, floors 32-39.)
+  Wave 6 parts 1-2 (+47: iter lengths/counts, sync channel/barrier
+  counts, 25 ANSI ESC-prefix specs, net ftp/port/cookie/address real
+  specs) -> global 15.2% clauses / 14.5% pub-with-clause; floors42.
+  (Waves 1-4: 145 clauses, floors 32-39.)
 - **Encoding qualification + dedup shims landed** (round-60): encoding
   loop reads -> `data[i]`, `_enc_*` triplet helpers; shims for
   convert.base16/base32/base64/base64url/percent over xiom.encoding.
@@ -1495,7 +1497,16 @@ Stdlib burn-down on committed HEAD (b71d839f):
   sequences delegate to `format.terminal.ansi_*` (identical bytes);
   clear/cursor/256-color stay local. io.console vs os.terminal are NOT
   duplicates (I/O surface vs termios/pty) -- documented, no shim.
+- **Contract wave 6 part 2 (+31):** the 25 format.ansi builders get
+  `result.byte_at(0) == 27` (every builder must emit an ESC-prefixed
+  sequence; validated for all of them incl. clamped/negative/rgb/256
+  cases in p_ansi_specs); net gets real specs -- `ftp_default_port == 21`,
+  ftp reply-class predicates (`result == (code >= 200 && code < 300)` /
+  1xx), `cookie_jar_size >= 0`, `address_port >= 0` (0 for unparsable,
+  incl. "host:-1"), `is_valid_port == (p > 0 && p <= 65535)`
+  (p_net_specs 19 checks). Global 15.2% clauses / 14.5% pub-with-clause;
+  floors42; r46 sweep 944/944 + ratchet OK.
 - Verified on r46 (HEAD 9acb9bdd = R23+R24): net/ip/dns/term smokes + all
-  parity batteries green; **full r46 sweep 944/944 + ratchet OK
-  (floors41)** after all three delegation rounds.
+  parity batteries green; **full r46 sweeps 944/944 + ratchet OK**
+  (floors41 during the delegation rounds, floors42 after wave 6 part 2).
 

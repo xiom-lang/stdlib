@@ -666,7 +666,9 @@ pub fn is_valid_ipv4(s: Str) -> Bool {
 
 /// Returns `true` if `p` is a valid TCP/UDP port number (1-65535).
 /// Complexity: O(1). Pure.
-pub fn is_valid_port(p: Int) -> Bool {
+pub fn is_valid_port(p: Int) -> Bool
+  ensures: result == (p > 0 && p <= 65535)
+{
   return p > 0 && p <= 65535;
 }
 

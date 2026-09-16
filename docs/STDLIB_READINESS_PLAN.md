@@ -213,10 +213,13 @@ T1/T2 yields.
       pub-with-clause. Wave 6 part 1 (2026-09-16): 16 clauses (iter
       count/length equalities + bounds, sync channel/barrier counts) ->
       iter 9.8%, sync 29.1%, global 14.9% clauses / 14.0%
+      pub-with-clause. Wave 6 part 2 (2026-09-16): 31 clauses (25 ANSI
+      ESC-prefix specs + net ftp/port/cookie/address real specs) ->
+      net 5.4%, format 13.0%, global 15.2% clauses / 14.5%
       pub-with-clause. Ratchet:
-      coverage_scan.ps1 -RatchetFile coverage_floors41.json (stdlib_ws
+      coverage_scan.ps1 -RatchetFile coverage_floors42.json (stdlib_ws
       tooling; positive + negative runs verified; earlier floors kept at
-      coverage_floors32/34/35/36/37/38/39/40.json).
+      coverage_floors32/34/35/36/37/38/39/40/41.json).
       Floors are per top-level stdlib/xiom directory and must be refreshed
       when a module is ADDED (new uncovered pub fns dilute the percentage
       -- TOML dropped serialize 6.1% -> 5.4%, tz dropped time 13% ->

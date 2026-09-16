@@ -11,7 +11,9 @@ use xiom.string;
 
 // ftp_default_port returns the default FTP control port (21).
 // Complexity: O(1). Pure.
-pub fn ftp_default_port() -> Int {
+pub fn ftp_default_port() -> Int
+  ensures: result == 21
+{
   21
 }
 
@@ -95,12 +97,16 @@ pub fn ftp_parse_reply(line: Str) -> Option[(Int, Str)] {
 
 // ftp_reply_is_success returns true for 2xx replies.
 // Complexity: O(1). Pure.
-pub fn ftp_reply_is_success(code: Int) -> Bool {
+pub fn ftp_reply_is_success(code: Int) -> Bool
+  ensures: result == (code >= 200 && code < 300)
+{
   code >= 200 && code < 300
 }
 
 // ftp_reply_is_positive_preliminary returns true for 1xx replies.
 // Complexity: O(1). Pure.
-pub fn ftp_reply_is_positive_preliminary(code: Int) -> Bool {
+pub fn ftp_reply_is_positive_preliminary(code: Int) -> Bool
+  ensures: result == (code >= 100 && code < 200)
+{
   code >= 100 && code < 200
 }
