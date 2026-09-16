@@ -200,156 +200,25 @@ pub fn ipv4_to_string(octets: &Vec[UInt8]) -> Str {
 /// Returns: Some(eight groups) for a valid address, None otherwise.
 /// Complexity: O(n). Pure.
 pub fn ipv6_parse(s: Str) -> Option[Vec[UInt16]] {
-  var groups = Vec[UInt16].new();
-  let ok = _parse_v6(s, &groups);
-  if !ok {
+  let r = ip6.ip6_parse(s);
+  if r.is_err {
     return None;
-  }
-  Some(groups)
+  };
+  let b = r.value;
+  var groups = Vec[UInt16].new();
+  var i = 0;
+  while i + 1 < b.len() {
+    let hi = b[i] as Int;
+    let lo = b[i + 1] as Int;
+    groups.push(((hi << 8) | lo) as UInt16);
+    i = i + 2;
+  };
+  return Some(groups);
 }
 
-// Parse an IPv6 string into exactly 8 16-bit groups (zeros expanded).
-// Returns false for malformed input.
-fn _parse_v6(s: Str, groups: &mut Vec[UInt16]) -> Bool {
-  let len = s.len();
-  if len == 0 {
-    return false;
-  }
-  if len > 39 {
-    return false;
-  }
-  var has_dcolon = false;
-  var i: Int = 0;
-  while i + 1 < len {
-    let b = s.byte_at(i);
-    if b == 58 {
-      let next = s.byte_at(i + 1);
-      if next == 58 {
-        if has_dcolon {
-          return false;
-        }
-        has_dcolon = true;
-        i = i + 1;
-      }
-    }
-    i = i + 1;
-  }
-  var left = Vec[Int].new();
-  var right = Vec[Int].new();
-  if has_dcolon {
-    let dpos = _dcolon_index(s);
-    if dpos < 0 {
-      return false;
-    }
-    let lpart = string.str_slice(s, 0, dpos);
-    let rpart = string.str_slice(s, dpos + 2, len);
-    let lres = _parse_groups(lpart, &left);
-    if !lres {
-      return false;
-    }
-    let rres = _parse_groups(rpart, &right);
-    if !rres {
-      return false;
-    }
-    let total = left.len() + right.len();
-    if total >= 8 {
-      return false;
-    }
-    var k: Int = 0;
-    while k < left.len() {
-      let v = left[k];
-      groups.push(v as UInt16);
-      k = k + 1;
-    }
-    let missing = 8 - total;
-    var z: Int = 0;
-    while z < missing {
-      groups.push(0 as UInt16);
-      z = z + 1;
-    }
-    var j: Int = 0;
-    while j < right.len() {
-      let v2 = right[j];
-      groups.push(v2 as UInt16);
-      j = j + 1;
-    }
-  } else {
-    let gres = _parse_groups(s, &left);
-    if !gres {
-      return false;
-    }
-    if left.len() != 8 {
-      return false;
-    }
-    var k2: Int = 0;
-    while k2 < 8 {
-      let v3 = left[k2];
-      groups.push(v3 as UInt16);
-      k2 = k2 + 1;
-    }
-  }
-  true
-}
+// (local IPv6 parser removed 2026-09-16: ipv6_parse/ipv6_to_string delegate
+// to xiom.net.ip6; parity proven in p_netip_parity)
 
-// Parse a colon-separated run of 1..4-hex-digit groups into the Int vector.
-fn _parse_groups(s: Str, out: &mut Vec[Int]) -> Bool {
-  let len = s.len();
-  if len == 0 {
-    return true;
-  }
-  var i: Int = 0;
-  while i < len {
-    var digits: Int = 0;
-    var value: Int = 0;
-    while i < len {
-      let b = s.byte_at(i);
-      if b == 58 {
-        break;
-      }
-      let d = hex_digit_value(b);
-      if d < 0 {
-        return false;
-      }
-      value = value * 16 + d;
-      digits = digits + 1;
-      if digits > 4 {
-        return false;
-      }
-      i = i + 1;
-    }
-    if digits == 0 {
-      return false;
-    }
-    out.push(value);
-    if i < len {
-      if i + 1 < len {
-        let n2 = s.byte_at(i + 1);
-        if n2 == 58 {
-          return false;
-        }
-      }
-      i = i + 1;
-    }
-  }
-  true
-}
-
-// Return the byte index of the "::" marker, or -1.
-fn _dcolon_index(s: Str) -> Int {
-  var i: Int = 0;
-  let len = s.len();
-  while i + 1 < len {
-    let b = s.byte_at(i);
-    if b == 58 {
-      let n = s.byte_at(i + 1);
-      if n == 58 {
-        return i;
-      }
-    }
-    i = i + 1;
-  }
-  -1
-}
 
 /// Format eight 16-bit parts as a full-form IPv6 string (no "::" compression,
 /// leading zeros elided).
@@ -360,17 +229,19 @@ pub fn ipv6_to_string(parts: &Vec[UInt16]) -> Str {
   if parts.len() != 8 {
     return "";
   }
-  var result = "";
+  var b = Vec[UInt8].new();
   var i = 0;
   while i < 8 {
-    if i > 0 {
-      result = result + ":";
-    }
     let g = parts[i] as Int;
-    result = result + hex4(g);
+    b.push(((g >> 8) & 0xFF) as UInt8);
+    b.push((g & 0xFF) as UInt8);
     i = i + 1;
+  };
+  let r = ip6.ip6_to_str(&b);
+  match r {
+    Ok(s) => { return s; },
+    Err(_) => { return ""; },
   }
-  result
 }
 
 /// Parse an IPv4 or IPv6 string into an IpAddr.

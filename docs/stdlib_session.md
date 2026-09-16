@@ -34,11 +34,13 @@ earlier R-fixes all in tree):
   convert.base16/base32/base64/base64url/percent over xiom.encoding.
 - Open compiler findings: **R25** (`.value` on a temporary aggregate Option
   payload returns zeroed Vec data; minimal repro `probes\p_payload_read.xi`;
-  workaround: named local or match). R19/R20/R18/R16/R15b/R22/R23/R24 are
-  all FIXED (R23 = fn()-typed values env-first, m80; R24 = catalog-body
-  externs under isolation, selfhost gate). R16 fixed -> the string
-  fast-path `(ptr as Int + n) as *UInt8` workaround can be revisited;
-  R18 fixed -> payload-vs-param contract shapes usable.
+  workaround: named local or match) and **R26** (Vec built in a match arm
+  over a `Result[Vec[...]]` payload fails clang codegen; repro
+  `probes\p_match_vec_codegen.xi`; workaround: named local + early return).
+  R19/R20/R18/R16/R15b/R22/R23/R24 are all FIXED (R23 = fn()-typed values
+  env-first, m80; R24 = catalog-body externs under isolation, selfhost
+  gate). R16 fixed -> the string fast-path `(ptr as Int + n) as *UInt8`
+  workaround can be revisited; R18 fixed -> payload-vs-param shapes usable.
 NEXT QUEUE (ordered):
 1. ~~Encoding qualification (flip unblocker)~~ DONE 2026-09-15 (1f4f0aad):
    strict flip verified green (r42 937/937). No stdlib work blocks it.
@@ -1471,6 +1473,10 @@ Stdlib burn-down on committed HEAD (b71d839f):
   28 vectors, p_ip_parity2 9 vectors, 0 mismatches); `net.dns`
   dns_parse_ipv4/ipv6 + dns_ipv4_to_str/dns_ipv6_to_str delegate as well
   (parity: p_dns_parity 17 parser + 8 formatter cases, 0 mismatches).
+  `net.ip.ipv6_parse`/`ipv6_to_string` now delegate too (p_netip_parity:
+  12 v6 vectors + 2 formatter sets, 0 mismatches) and the local v6 parser
+  (`_parse_v6` + `_parse_groups` + `_dcolon_index`, ~140 lines) is REMOVED;
+  `net.net.is_valid_ipv4` delegates to `net.ip4` (9 vectors, 0 diffs).
   The combined canonicalizer, permissive v4 formatter, raw-bytes form,
   and dns_reverse_ipv4 stay local (unique semantics).
 - **R25 (compiler, logged):** reading `.value` off a TEMPORARY aggregate
@@ -1478,7 +1484,11 @@ Stdlib burn-down on committed HEAD (b71d839f):
   named locals fine; match fine). Found via the parity probes (probe
   p_payload_read.xi; NOT fixed by R23/R24). All new shims use named
   locals/match; the compiler lane should fix before user code hits it.
-- Verified on r46 (HEAD 9acb9bdd = R23+R24): net/ip/dns smokes + both
+- **R26 (compiler, logged):** building a Vec inside a match arm over a
+  `Result[Vec[...]]` payload breaks clang codegen (`%struct.Vec` type
+  mismatch); minimal repro p_match_vec_codegen.xi (`conv_match` fails,
+  `conv_named` compiles). Worked around in net.ip.ipv6_parse.
+- Verified on r46 (HEAD 9acb9bdd = R23+R24): net/ip/dns smokes + all
   parity batteries green; **full r46 sweep 944/944 + ratchet OK
-  (floors41)**.
+  (floors41)** after both delegation rounds.
 
