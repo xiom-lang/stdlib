@@ -111,7 +111,9 @@ pub fn bloom_clear(b: &mut BloomFilter) {
 
 /// Estimated false positive rate: (1 - e^(-k*n/m))^k using the tracked
 /// insertion count, where k = num_hashes, n = inserted, m = bit_count.
-pub fn bloom_false_positive_rate(b: &BloomFilter) -> Float64 {
+pub fn bloom_false_positive_rate(b: &BloomFilter) -> Float64
+  ensures: result >= 0.0
+{
   var k = b.num_hashes as Float64;
   var n = b.inserted as Float64;
   var m = b.bit_count as Float64;

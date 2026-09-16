@@ -1,6 +1,6 @@
 # XIOM Stdlib Session -- Handoff
 
-## 0. START HERE -- current handoff (2026-09-15)
+## 0. START HERE -- current handoff (2026-09-16)
 
 Lane boundary: this session owns `stdlib/**`, `examples/stdlib_smoke/**`,
 and the docs listed below. A PARALLEL COMPILER SESSION owns `crates/**`
@@ -8,58 +8,50 @@ and edits `stdlib/runtime/` occasionally; its uncommitted crates changes
 can appear in the shared tree at any time -- NEVER `git add -A`; stage
 explicit paths only. Branch: `feat/architect`.
 
-State (round-60; HEAD f47beed3; compiler commits 6e7d72e5/a2a456c4/
-c3b56e1d/34f69981/8643f74a):
-- **r43 sweep: 940/940 PASS + ratchet OK with strict_catalog_findings=true**
-  (target_r43 = HEAD + the compiler lane's current working tree, including
-  the R18/R16/R15b codegen fixes; tooling sweep43; corpus 940 files).
-  r42 940/940 (flip + R20 only) and r41 936/937 (WIP precursor) are the
-  prior rounds. The strict flip is ON and the stdlib corpus is fully green
-  under the newest codegen; this is the definitive baseline.
-- **Encoding qualification LANDED (1f4f0aad) -- the last stdlib flip
-  blocker from round 59 is closed.** 28 in-bounds loop reads
-  `data.get(i + n).value` -> `data[i + n]`; private helpers renamed
-  `_enc_write_base64_triplet` / `_enc_write_base64url_triplet`. Verified:
-  p_enc_qual probe (pre+post), encoding battery 16/16, 509-module
-  bare-name scan 0, corpus gate clean (46.1s).
-- **Strict-gate intrinsic gap fixed this round (e6d31a1a):** `xiom.sync`
-  (5 sites), `xiom.thread` (3), `xiom.reflect` (2: size_of + align_of)
-  called the bare intrinsics with no `use`; strict turned the on-demand
-  catalog-body warnings into hard errors. Fixed with
-  `use xiom.core.size_of;` (+ align_of in reflect), locked by
-  p_sync_sizeof. Lesson: the trivial `use xiom.X` 509-probe scan cannot see
-  on-demand bodies -- the full sweep is the strict-on detector of record.
-- R19 FIXED (0c1e3dff); R20 FIXED (a2a456c4) -- encoding-family dedup is
-  UNBLOCKED (next queue item 2). Round-58 flip worklist remains CLOSED
-  (509 scan 0).
-- Capability/coverage: CSV + TOML v1 + tzdata phase 1 (`xiom.time.tz`);
-  contract waves 1-4 -> string 30.2%, collect 23.4%, io 45.4%, global
-  14.2% clauses / 13.2% pub-with-clause; ratchet floors at
-  coverage_floors39.json (wave 5 owed).
+State (round-61; HEAD 8bc08cf0 + round-61 stdlib edits; compiler round-68
+a5e8b1dc and earlier R-fixes all in tree):
+- **r45 sweep: 941/941 PASS + ratchet OK with strict_catalog_findings=true**
+  (target_r45 = clean HEAD 8bc08cf0 before the round-61 stdlib edits; the
+  compiler lane's in-flight call.rs edit postdates it; tooling sweep45;
+  corpus 941 files after smoke_convert_punycode). r44 940/940, r43
+  940/940, r42 940/940 and r41 936/937 are the prior rounds. The strict
+  flip is ON and the corpus is fully green under the newest codegen.
+- **Dedup closure (round 61):** `convert.base58.to_base58` delegates to
+  `xiom.num.convert` with a pinned INT_MIN constant (p_b58_parity);
+  punycode audited as NOT A TWIN (ACE-label vs RFC raw-payload
+  conventions; p_puny_parity) and locked by the new
+  smoke_convert_punycode. Remaining dedup: ip4/ip6, console/os.terminal,
+  core.platform/os.platform.
+- **Contract wave 5 (+46 clauses, mostly REAL range specs):** char
+  predicate family, compare/collate sign bounds, collate_key length,
+  bloom FPR >= 0. string 30.2% -> 39.5% pub-covered, global 13.2% ->
+  13.8%; floors40.json. (Wave 4 was: 61 clauses, floors39.)
+- **Encoding qualification + dedup shims landed** (round-60): encoding
+  loop reads -> `data[i]`, `_enc_*` triplet helpers; shims for
+  convert.base16/base32/base64/base64url/percent over xiom.encoding.
 - Open compiler findings: none from the stdlib lane (R19/R20/R18/R16/R15b
-  and R22 all FIXED; R21d collision determinism landed as 907a728a).
-  With R16 fixed, the string fast-path `(ptr as Int + n) as *UInt8`
-  workaround can be revisited; with R18 fixed, payload-vs-param contract
-  shapes are usable again.
+  and R22 all FIXED; R21d collision determinism landed). R16 fixed ->
+  the string fast-path `(ptr as Int + n) as *UInt8` workaround can be
+  revisited; R18 fixed -> payload-vs-param contract shapes usable again.
 NEXT QUEUE (ordered):
 1. ~~Encoding qualification (flip unblocker)~~ DONE 2026-09-15 (1f4f0aad):
    strict flip verified green (r42 937/937). No stdlib work blocks it.
 2. **Encoding dedup:** base16/base32/base64/base64url + percent shims
-   LANDED 2026-09-15 (r44 940/940 with them, corpus gate clean).
-   Remaining: punycode (API translation to encoding.punycode/idna) and
-   base58 (INT_MIN divergence in num.convert.to_base58) -- both need a
-   translation pass, not a blind shim.
-3. **Contract wave 5:** string/collect/io depth toward the 60% gate
-   (wave 4 landed: floors coverage_floors39.json, string 30.2%, collect
-   23.4%, io 45.4%). Pre-validate new shapes in a probe first (R18:
-   avoid payload-vs-param `.len()` comparisons).
+   LANDED 2026-09-15; base58 `to_base58` delegation + punycode audit
+   landed 2026-09-16 (round 61). Remaining dedup: ip4/ip6 (API
+   translation), console/os.terminal, core.platform/os.platform.
+3. **Contract wave 6:** string/collect/io (+ broad dirs) toward the 60%
+   gate (wave 5 landed: floors coverage_floors40.json, string 39.5%,
+   collect 23.6%, io 45.4%, global 13.8% pub-with-clause). Pre-validate
+   new shapes in a probe first; R18 is fixed, so payload `.value.len()`
+   vs param `.len()` shapes are usable again.
 4. **Remaining capability:** TLS schannel binding (TLS_DECISION.md),
    async stress suite, runtime symbol bind-or-delete (~194 unbound),
-   console/os.terminal consolidation. Collection property smokes STARTED
-   2026-09-15 (avl/heap/lhmap, corpus 937 -> 940; next: bloom/hash
-   distribution/persistent).
-5. Re-run the full sweep after the dedup re-land; r42 937/937 (strict) is
-   the baseline to preserve.
+   console/os.terminal consolidation, ip4/ip6 dedup translation.
+   Collection property smokes STARTED 2026-09-15 (avl/heap/lhmap); next:
+   bloom/hash-distribution/persistent.
+5. Re-run the full sweep after each batch; **r45 941/941 (strict) is the
+   baseline to preserve**.
 
 Environment & tooling:
 - Isolated binary build (preferred; ~30s warm):
@@ -72,21 +64,24 @@ Environment & tooling:
   r42 = fresh build of clean HEAD 6e7d72e5 + a2a456c4 + e6d31a1a
   (strict flip ON + R20 fix): 937/937, then 940/940 with the property
   smokes; r43 = HEAD f47beed3 + the R18/R16/R15b working tree: 940/940
-  (strict). Always check `git log -1` and `git status --short -- crates`
-  before trusting a round's provenance; a dirty crates tree is normal
-  (shared lane).
+  (strict); r44 = HEAD + R21d/R22 (percent shim green): 940/940; r45 =
+  clean HEAD 8bc08cf0 (round 61 dedup+wave-5 stdlib edits applied after
+  the build): 941/941. Always check `git log -1` and
+  `git status --short -- crates` before trusting a round's provenance;
+  a dirty crates tree is normal (shared lane).
 - Coverage ratchet (gate #7): stdlib_ws\coverage_scan.ps1
   [-Detail] [-DumpFloors coverage_floorsNN.json] [-RatchetFile ...];
   per-top-level-dir pub-coverage floors. Floors history: 32 (wave 1),
-  34 (wave 2), 35 (TOML), 36 (section Q), 37 (tz), 38 (wave 3).
-  Re-dump floors after any contract wave OR new module (new uncovered pub
-  fns dilute the percentage and trip the ratchet otherwise).
-- Sweep/verify tooling (copy + bump per round; r42 set current):
-  stdlib_ws\{sweep_worker42.ps1, launch_sweep42.ps1, triage_sweep42.ps1,
+  34 (wave 2), 35 (TOML), 36 (section Q), 37 (tz), 38 (wave 3),
+  39 (wave 4), 40 (wave 5). Re-dump floors after any contract wave OR new
+  module (new uncovered pub fns dilute the percentage and trip the ratchet
+  otherwise).
+- Sweep/verify tooling (copy + bump per round; r45 set current):
+  stdlib_ws\{sweep_worker45.ps1, launch_sweep45.ps1, triage_wave5.ps1,
   launch_verify38.ps1} + coverage_scan.ps1. 8 workers; per-file CSV rows;
   child stdin redirected from NUL (a stdin-reading smoke must not hang a
-  worker). Triage runs the ratchet (gate #7; triage41 uses
-  coverage_floors38.json). GOTCHA: the launcher APPENDS to results*.csv --
+  worker). Triage runs the ratchet (gate #7; triage_wave5 uses
+  coverage_floors40.json). GOTCHA: the launcher APPENDS to results*.csv --
   delete sweepNN\results*.csv and errors*.log before a clean re-run.
 - Bare-name scan (the strict-flip detector): stdlib_ws\
   {barename_worker.ps1, launch_barename_scan.ps1, modlist_all.txt} --
@@ -94,7 +89,7 @@ Environment & tooling:
   greps stderr for 'catalog body'. Expect 0 findings before reporting the
   strict flip ready to the compiler lane. BLIND SPOT (round 60): a trivial
   probe never checks a module's ON-DEMAND bodies, so strict-only findings
-  such as the bare sync size_of intrinsic do not appear; the full 937-file
+  such as the bare sync size_of intrinsic do not appear; the full 941-file
   sweep with a strict binary is the detector of record for that class.
 - Probes preserved: C:\Users\lefte\AppData\Local\Temp\kilo\stdlib_ws\probes\
   (p_*, probe_*, kat probes). Run verification with CWD = repo root so
@@ -1303,6 +1298,7 @@ Stdlib burn-down on committed HEAD (b71d839f):
 
 ## 2.18. Round-60 (2026-09-15): encoding qualification landed -- flip unblocker cleared (r41 sweep pending)
 
+
 - **`encoding.xi` qualified (the only open flip blocker from 2.17):**
   - all 28 in-bounds loop reads `data.get(i + n).value` -> `data[i + n]`
     (base64_encode 151/156/162, base64url_encode 244/249/255/258,
@@ -1400,4 +1396,36 @@ Stdlib burn-down on committed HEAD (b71d839f):
     lane's in-flight catalog.rs WIP did not compile -- the prebuilt gate
     binary was green throughout, and the canonical rebuild is green at
     session end).
+
+## 2.19. Round-61 stdlib (2026-09-16): dedup closure audit + contract wave 5
+
+- **Dedup closure:**
+  - `convert.base58.to_base58` now delegates to `xiom.num.convert.to_base58`
+    (probe p_b58_parity: identical for 0/1/57/58/255/-1/-10/-58/INT_MAX/
+    -INT_MAX) with a pinned INT_MIN constant ("-NQm6nKp8qFD"; num's
+    negation overflows). from_base58, the byte legs and base58check stay
+    local. smoke_convert_base58_62 extended with 8 delegation vectors.
+  - punycode audited = NOT A TWIN: same module leaf and fn names but
+    ACE-label (convert) vs RFC 3492 raw-payload (encoding) conventions --
+    probe p_puny_parity shows 10/16 shared vectors differ by convention,
+    not by bug. Both stay; NEW smoke_convert_punycode pins the convert-side
+    convention (16 vectors incl. uts46/is_valid forms: Unicode input is
+    invalid, ACE/ASCII are valid).
+  - Remaining dedup queue: ip4/ip6 (API translation), console/os.terminal,
+    core.platform/os.platform.
+- **Contract wave 5 (+46 clauses, REAL specs largely):** char.xi predicate
+  family gets `ensures: result == <range expression>` (is_alphabetic,
+  is_alphanumeric, is_ascii, is_control, is_digit, is_lowercase,
+  is_uppercase, is_numeric, is_punctuation, is_whitespace, is_letter,
+  is_control_char, is_hex_digit, is_binary_digit, is_octal_digit,
+  is_currency, is_math_symbol, is_emoji, is_combining_mark, is_symbol,
+  all is_ascii_* aliases, is_uppercase_ascii/is_lowercase_ascii,
+  to_ascii_upper/lower, is_whitespace_or_separator); compare/collate sign
+  bounds (-1..1) and collate_key length preservation; bloom false-positive
+  rate >= 0.0. Shapes validated across codes 0..0x2800 + emoji/separator
+  blocks (p_char_specs, p_char_specs2, p_wave5_specs). string 30.2% ->
+  39.5% pub-covered, global 13.2% -> 13.8%; floors40.json.
+- **r45 sweep (clean HEAD + the compiler R18/R16/R15b/R22 fixes):
+  941/941 PASS + ratchet OK** (corpus 940 -> 941 with
+  smoke_convert_punycode); corpus gate clean (77.9s).
 
