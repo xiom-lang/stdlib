@@ -178,9 +178,14 @@ T1/T2 yields.
 - [~] Duplication consolidated -- 2026-09-12 waves: endian trio unit
       landed; namespace waves (collect dirs, memory quartet); ascii85
       audited (= already layered: convert canonical, encoding wrappers, no
-      action); base32/percent/punycode and the base16/base64/base58 family
-      are COMPILER-GATED by R15 (same-leaf + same-name codegen key
-      collision); ip4/ip6 needs a translation pass; console/terminal +
+      action). UPDATE 2026-09-15/16 (R15/R20/R22 fixed): convert.base16/
+      base32/base64/base64url/percent are delegating shims over
+      xiom.encoding (r44/r45 green + corpus gate clean); convert.base58
+      delegates to_base58 to num.convert with the INT_MIN pin;
+      convert.punycode audited as NOT A TWIN (ACE-label vs RFC raw-payload
+      conventions) and locked by smoke_convert_punycode. Remaining:
+      ip4/ip6/ip (three API conventions across net.ip4/net.ip6/net.ip/
+      net.dns/convert.ip -- needs a translation pass), console/terminal +
       platform still queued.
 - [x] Coverage number published + ratcheted in CI-equivalent sweep script --
       DELIVERED 2026-09-12: global 1092 clauses / 8634 fns = 12.6%
@@ -198,10 +203,14 @@ T1/T2 yields.
       bounds, rotate length-preservation, collect heights/pool/graph/
       unionfind/tinylfu/radix, io line/args length clauses) -> string
       30.2%, collect 23.4%, io 45.4%, global 14.2% clauses / 13.2%
+      pub-with-clause. Wave 5 (2026-09-16): 46 clauses, mostly REAL range
+      specs (char predicate family `result == <range expression>`, compare/
+      collate sign bounds, collate_key length preservation, bloom FPR) ->
+      string 39.5%, collect 23.6%, io 45.4%, global 14.7% clauses / 13.8%
       pub-with-clause. Ratchet:
-      coverage_scan.ps1 -RatchetFile coverage_floors39.json (stdlib_ws
+      coverage_scan.ps1 -RatchetFile coverage_floors40.json (stdlib_ws
       tooling; positive + negative runs verified; earlier floors kept at
-      coverage_floors32/34/35/36/37/38.json).
+      coverage_floors32/34/35/36/37/38/39.json).
       Floors are per top-level stdlib/xiom directory and must be refreshed
       when a module is ADDED (new uncovered pub fns dilute the percentage
       -- TOML dropped serialize 6.1% -> 5.4%, tz dropped time 13% ->
@@ -312,8 +321,12 @@ T1/T2 yields.
 - CSV and TOML (v1 reader) landed 2026-09-12; still missing: timezone
   database/zoneinfo and TLS -- the remaining "not a complete systems
   stdlib yet" items.
-- Async runtime is minimal (executor/timer/channel + 1 smoke); no
-  cancellation-storm/saturation validation.
+- Async runtime is minimal (executor/timer/channel); saturation validation
+  STARTED 2026-09-16: smoke_async_stress.xi (2000-task executor storm with
+  side-effect verification, 2000 channel FIFO pairs, 1000 broadcast
+  ordering, 200-timer wheel fire/cancel storm). Compiler finding R23
+  (executor stored-fn invocation shape-dependence) limits single-purpose
+  async programs; cancellation semantics still unvalidated.
 - ~194 runtime symbols defined but unbound by any module (dead surface;
   audit pending). Runtime is 441 xiom_* fns vs 247 stdlib externs.
 - Contract coverage 14.2% globally / 13.2% pub-with-clause (wave 4,
