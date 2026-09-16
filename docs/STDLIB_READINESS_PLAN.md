@@ -333,8 +333,13 @@ T1/T2 yields.
   ordering, 200-timer wheel fire/cancel storm). Compiler finding R23
   (executor stored-fn invocation shape-dependence) limits single-purpose
   async programs; cancellation semantics still unvalidated.
-- ~194 runtime symbols defined but unbound by any module (dead surface;
-  audit pending). Runtime is 441 xiom_* fns vs 247 stdlib externs.
+- Runtime symbol audit DONE 2026-09-16 (docs/RUNTIME_SYMBOL_AUDIT.md):
+  322 unique xiom_* runtime definitions vs 138 stdlib extern names; 192
+  unbound = 83 codegen-referenced (keep), 83 runtime-internal (keep), 20
+  definition-only delete candidates (mostly the hot-reload family +
+  API-completeness stubs). Nothing is worth BINDING: the unbound remainder
+  is compiler runtime ABI or dead code. Compiler lane to confirm dynamic
+  use and delete/annotate the 20.
 - Contract coverage 14.2% globally / 13.2% pub-with-clause (wave 4,
   2026-09-15); key modules io 45.4%, string 30.2%, collect 23.4%
   (target >=60%; waves 5+ owed).

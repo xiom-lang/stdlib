@@ -50,10 +50,12 @@ NEXT QUEUE (ordered):
    pub-with-clause). Pre-validate new shapes in a probe first; R18 is
    fixed, so payload `.value.len()` vs param `.len()` shapes are usable.
 4. **Remaining capability:** TLS schannel binding (TLS_DECISION.md),
-   async stress suite, runtime symbol bind-or-delete (~194 unbound),
+   async stress suite DONE (2026-09-16, R23 logged), runtime symbol audit
+   DONE (docs/RUNTIME_SYMBOL_AUDIT.md: 192 unbound -> 83 codegen + 83
+   runtime-internal + 20 delete candidates; nothing to bind),
    console/os.terminal consolidation, ip4/ip6 dedup translation.
-   Collection property smokes STARTED 2026-09-15 (avl/heap/lhmap); next:
-   bloom/hash-distribution/persistent.
+   Collection property smokes DONE for avl/heap/lhmap/bloom/persistent;
+   next: hash distribution, rbtree/btree invariants.
 5. Re-run the full sweep after each batch; **r45 941/941 (strict) is the
    baseline to preserve**.
 
