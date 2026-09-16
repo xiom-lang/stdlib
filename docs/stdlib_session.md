@@ -10,13 +10,13 @@ explicit paths only. Branch: `feat/architect`.
 
 State (round-61; HEAD 8bc08cf0 + round-61 stdlib edits; compiler round-68
 a5e8b1dc and earlier R-fixes all in tree):
-- **r45 sweep: 942/942 PASS + ratchet OK with strict_catalog_findings=true**
+- **r45 sweep: 944/944 PASS + ratchet OK with strict_catalog_findings=true**
   (target_r45 = clean HEAD 8bc08cf0 before the round-61 stdlib edits; the
   compiler lane's in-flight call.rs edit postdates it; tooling sweep45;
-  corpus 942 files after smoke_convert_punycode + smoke_async_stress).
-  r44 940/940, r43 940/940, r42 940/940 and r41 936/937 are the prior
-  rounds. The strict flip is ON and the corpus is fully green under the
-  newest codegen.
+  corpus 944 files after smoke_convert_punycode + smoke_async_stress +
+  the bloom/persistent property smokes). r44 940/940, r43 940/940,
+  r42 940/940 and r41 936/937 are the prior rounds. The strict flip is ON
+  and the corpus is fully green under the newest codegen.
 - **Dedup closure (round 61):** `convert.base58.to_base58` delegates to
   `xiom.num.convert` with a pinned INT_MIN constant (p_b58_parity);
   punycode audited as NOT A TWIN (ACE-label vs RFC raw-payload
@@ -1429,8 +1429,9 @@ Stdlib burn-down on committed HEAD (b71d839f):
   blocks (p_char_specs, p_char_specs2, p_wave5_specs). string 30.2% ->
   39.5% pub-covered, global 13.2% -> 13.8%; floors40.json.
 - **r45 sweep (clean HEAD + the compiler R18/R16/R15b/R22 fixes):
-  941/941 PASS then 942/942 PASS with the async stress smoke + ratchet OK**
-  (corpus 940 -> 941 -> 942); corpus gate clean (77.9s).
+  942/942 then 944/944 PASS with the async stress + bloom/persistent
+  property smokes + ratchet OK** (corpus 940 -> 941 -> 942 -> 944);
+  corpus gate clean (77.9s).
 - **Async stress suite (capability gate, 2026-09-16): NEW
   smoke_async_stress.xi** -- 2000-task executor storm with side-effect
   verification, 2000 channel send/try_recv FIFO pairs, 1000-item broadcast
@@ -1440,4 +1441,10 @@ Stdlib burn-down on committed HEAD (b71d839f):
   (probes p_async_p5/p7/p8/p9/p10; a renamed copy of smoke_async plus the
   2000-spawn scale works), so the smoke keeps the full async surface and
   scales counts; logged in COMPILER_BUGS with the minimal repro.
+- **Collection property smokes extended (2026-09-16):**
+  smoke_prop_collect_bloom (no false negatives over 500 LCG keys, rate in
+  [0,1] and non-decreasing, clear empties the filter) and
+  smoke_prop_collect_persistent (PVec/PMap structural persistence: every
+  update returns a new version and leaves the old one unchanged, lengths
+  and values consistent, remove persistence). Corpus 944.
 
