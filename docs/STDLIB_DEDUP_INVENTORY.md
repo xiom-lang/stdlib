@@ -100,10 +100,22 @@ green; full r44 sweep 940/940 + ratchet OK; corpus gate clean (41.7s).
 R22 history: explicit consumer aliases (empty/AV) were fixed on r43; the
 leaf-qualified binding on r44. All three R22 shapes are closed.
 
-PUNYCODE/BASE58 DEFERRED: divergent surfaces (convert.punycode's idna_* vs
-xiom.encoding.idna; convert.base58's Result from_base58 vs num.convert's
-Option). Both need the R22 scope-first fix plus an API translation pass;
-queued behind it.
+PUNYCODE AUDITED = NOT A TWIN (2026-09-16): same module leaf and fn names,
+but different API conventions -- `convert.punycode_encode` returns the full
+ACE label ("xn--bcher-kva", ASCII input passes through) while
+`encoding.punycode_encode` returns the RFC 3492 RAW payload ("bcher-kva",
+KAT-locked by kat_encoding_punycode); decode/idna conventions differ the
+same way (probe p_puny_parity: 10/16 shared vectors differ by convention,
+not by bug). A blind shim would silently change one side's public
+semantics, so both stay; the convert-side convention is now pinned by
+smoke_convert_punycode (16 vectors, incl. idna_uts46/idna_is_valid forms).
+
+BASE58 PARTIALLY DELEGATED (2026-09-16): `to_base58` now delegates to
+`xiom.num.convert.to_base58` (p_b58_parity: outputs identical for
+0/1/57/58/255/-1/-10/-58/INT_MAX/-INT_MAX) with a pinned INT_MIN constant
+("-NQm6nKp8qFD"; num's negation overflows). `from_base58` (Result API +
+overflow messages), the byte legs and base58check stay local. Delegation
+vectors added to smoke_convert_base58_62.
 
 ALREADY DONE before this session (verified):
 - `string/levenshtein.xi` delegates to `misc.levenshtein_distance`
