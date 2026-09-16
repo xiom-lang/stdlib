@@ -74,6 +74,15 @@ DONE:
     named-local + early-return shape.
   - Still queued: `net.address` (address-with-port semantics, not a
     duplicate) and console/terminal + platform.
+- OS.TERM SHIMMED (2026-09-16, round 62): `os.term.term_is_tty` ->
+  `os.terminal.isatty` and `term_width` -> `os.terminal.terminal_width`
+  (both were independent "unknown" stubs; now one policy point), and
+  `term_reset/bold/dim/underline` -> `format.terminal.ansi_*` (identical
+  bytes). clear_screen / 256-color fg / cursor helpers stay local (no
+  canonical counterpart). Aliased imports keep the same-leaf "terminal"
+  pair apart; consumers (probe_combo8, smoke_os_env/folder/sync) green.
+  Remaining console/terminal work: `io.console` (I/O surface) vs
+  `os.terminal` (termios/pty) are NOT duplicates -- documented, no shim.
 - ASCII85 DIRECTION CORRECTED (2026-09-12): the pair is ALREADY layered --
   `xiom.encoding.ascii85` imports `xiom.convert.ascii85.to_ascii85/
   from_ascii85` (different names, so no R15 collision) and adds the
