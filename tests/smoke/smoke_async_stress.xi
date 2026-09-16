@@ -4,10 +4,11 @@
 // fire/cancel storm, broadcast ordering. Deterministic, bounded runtime.
 // Returns 0 on success (prints OK); nonzero + tag on failure.
 //
-// NOTE: the executor's stored-fn invocation codegen is shape-dependent on
-// this toolchain (see smoke_async's comment and COMPILER_BUGS R23); this
-// smoke therefore keeps the full async surface of smoke_async and only
-// scales the counts.
+// NOTE: the executor's stored-fn invocation was shape-dependent on this
+// toolchain (see COMPILER_BUGS R23, FIXED in 2e06a3e7). This smoke keeps
+// the full async surface of smoke_async and scales the counts; reduced
+// shapes are covered by smoke_async_cancel.xi and the p_async_p5/p7/p9
+// probes.
 
 module smoke_async_stress
 use xiom.async.executor;
