@@ -1,0 +1,20 @@
+# Build/test artifacts generated inside the stdlib tree (runtime shims, smoke
+# executables, IR dumps). The compiler repo ignores the whole stdlib/ checkout
+# post-split; this file travels with the stdlib repo.
+*.exe
+*.exe.ll
+*.ll
+*.o
+*.obj
+*.pdb
+*.dll
+*.so
+*.dylib
+*.lib
+*.a
+*.bc
+*.wat
+*.wasm
+*.tmp
+.DS_Store
+Thumbs.db
