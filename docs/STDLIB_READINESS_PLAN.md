@@ -183,9 +183,12 @@ T1/T2 yields.
       xiom.encoding (r44/r45 green + corpus gate clean); convert.base58
       delegates to_base58 to num.convert with the INT_MIN pin;
       convert.punycode audited as NOT A TWIN (ACE-label vs RFC raw-payload
-      conventions) and locked by smoke_convert_punycode. Remaining:
-      ip4/ip6/ip (three API conventions across net.ip4/net.ip6/net.ip/
-      net.dns/convert.ip -- needs a translation pass), console/terminal +
+      conventions) and locked by smoke_convert_punycode. UPDATE 2026-09-16
+      (round 62): the ip family is PARTIALLY DELEGATED -- convert.ip
+      validators/parser and net.dns ip helpers delegate to net.ip4/net.ip6
+      (p_ip_parity/p_dns_parity zero mismatches; R25-safe named-local
+      binding). Remaining: net.ip's Option-based masks + net.address/
+      net.net validators over the same canonicals, console/terminal +
       platform still queued.
 - [x] Coverage number published + ratcheted in CI-equivalent sweep script --
       DELIVERED 2026-09-12: global 1092 clauses / 8634 fns = 12.6%
