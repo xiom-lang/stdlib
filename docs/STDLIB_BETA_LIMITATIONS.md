@@ -60,18 +60,19 @@ files, corpus gate clean.
 - **`net.address`**: address-with-port semantics differ from ip4/ip6
   literals; left local by design.
 
-## Known compiler issues affecting stdlib users (until fixed)
+## Compiler issues that affected stdlib users (now FIXED, kept for history)
 
 - **R28**: reading `.value` off a **temporary** aggregate Option/Result
-  call result (e.g. `let v = f().value;`) silently yields zeroed element
-  data. Workaround: bind the Option/Result to a named local first, or use
-  `match`. Minimal repro `stdlib_ws\probes\p_payload_read.xi`;
-  documented in `docs/COMPILER_BUGS.md` R28.
+  call result (e.g. `let v = f().value;`) silently yielded zeroed element
+  data. FIXED (90261793); re-verified by the stdlib lane on r47
+  (`p_payload_read.xi` correct, full sweep 947/947). The named-local/
+  `match` patterns in the ip/dns shims remain as harmless explicitness.
 - **R29**: building a Vec inside a `match` arm over a `Result[Vec[...]]`
-  payload fails clang codegen. Workaround: named local + early return.
-  Minimal repro `probes\p_match_vec_codegen.xi`; COMPILER_BUGS R29.
-- Both are being fixed compiler-side; re-check `docs/COMPILER_BUGS.md`
-  before repeating this page's warning in a release.
+  payload failed clang codegen. FIXED (bf627c2e); re-verified on r47
+  (`p_match_vec_codegen.xi` green, m83 lock compiler-side, full sweep
+  947/947).
+- Both fixes are in the r47 baseline; keep `docs/COMPILER_BUGS.md` as the
+  live status source before repeating any warning in a release.
 
 ## Operational notes
 

@@ -8,15 +8,14 @@ and edits `stdlib/runtime/` occasionally; its uncommitted crates changes
 can appear in the shared tree at any time -- NEVER `git add -A`; stage
 explicit paths only. Branch: `feat/architect`.
 
-State (round-62; HEAD 09d0c6de; the r46 binary was built from clean HEAD
-9acb9bdd = compiler R23+R24, before the round-62 stdlib edits; compiler
-R25/R26/R27 landed after):
-- **r46 sweep: 947/947 PASS + ratchet OK with strict_catalog_findings=true**
-  (target_r46 = HEAD 9acb9bdd + the round-62 stdlib edits applied on top;
-  tooling sweep46; corpus 947 files after the punycode/async/cancel/
-  property smokes). r45 944/944, r44 940/940, r43 940/940, r42 940/940
-  and r41 936/937 are the prior rounds. The strict flip is ON and the
-  corpus is fully green under the newest codegen.
+State (round-62; HEAD 537014d4 + the compiler R28/R29 fixes; the r47
+binary was built from the R28+R29 working tree and verified 947/947):
+- **r47 sweep: 947/947 PASS + ratchet OK with strict_catalog_findings=true**
+  (target_r47 = R28 90261793 + R29 bf627c2e + round-62 stdlib edits;
+  tooling sweep47; corpus 947 files). r46 947/947, r45 944/944, r44
+  940/940, r43 940/940, r42 940/940 and r41 936/937 are the prior rounds.
+  The strict flip is ON and the corpus is fully green under the newest
+  codegen.
 - **Dedup closure (round 61):** `convert.base58.to_base58` delegates to
   `xiom.num.convert` with a pinned INT_MIN constant (p_b58_parity);
   punycode audited as NOT A TWIN (ACE-label vs RFC raw-payload
@@ -34,14 +33,12 @@ R25/R26/R27 landed after):
 - **Encoding qualification + dedup shims landed** (round-60): encoding
   loop reads -> `data[i]`, `_enc_*` triplet helpers; shims for
   convert.base16/base32/base64/base64url/percent over xiom.encoding.
-- Open compiler findings: **R28** (`.value` on a temporary aggregate Option
-  payload returns zeroed Vec data; minimal repro `probes\p_payload_read.xi`;
-  workaround: named local or match) and **R29** (Vec built in a match arm
-  over a `Result[Vec[...]]` payload fails clang codegen; repro
-  `probes\p_match_vec_codegen.xi`; workaround: named local + early return).
-  R19/R20/R18/R16/R15b/R22/R23/R24 are all FIXED (R23 = fn()-typed values
-  env-first, m80; R24 = catalog-body externs under isolation, selfhost
-  gate). R16 fixed -> the string fast-path `(ptr as Int + n) as *UInt8`
+- Open compiler findings: **none from the stdlib lane.** R28
+  (temporary `.value`) and R29 (Vec in match arm) were logged this round
+  and FIXED by the compiler lane (90261793 / bf627c2e), both re-verified
+  by the stdlib lane on r47 (probes p_payload_read / p_match_vec_codegen,
+  full sweep 947/947). R19/R20/R18/R16/R15b/R22/R23/R24/R25/R30 all
+  FIXED. R16 fixed -> the string fast-path `(ptr as Int + n) as *UInt8`
   workaround can be revisited; R18 fixed -> payload-vs-param shapes usable.
 NEXT QUEUE (ordered):
 1. ~~Encoding qualification (flip unblocker)~~ DONE 2026-09-15 (1f4f0aad):
@@ -1484,15 +1481,15 @@ Stdlib burn-down on committed HEAD (b71d839f):
   `net.net.is_valid_ipv4` delegates to `net.ip4` (9 vectors, 0 diffs).
   The combined canonicalizer, permissive v4 formatter, raw-bytes form,
   and dns_reverse_ipv4 stay local (unique semantics).
-- **R28 (compiler, logged):** reading `.value` off a TEMPORARY aggregate
-  Option (call result) returns a Vec with zeroed data (Int payloads and
-  named locals fine; match fine). Found via the parity probes (probe
-  p_payload_read.xi; NOT fixed by R23/R24). All new shims use named
-  locals/match; the compiler lane should fix before user code hits it.
-- **R29 (compiler, logged):** building a Vec inside a match arm over a
-  `Result[Vec[...]]` payload breaks clang codegen (`%struct.Vec` type
-  mismatch); minimal repro p_match_vec_codegen.xi (`conv_match` fails,
-  `conv_named` compiles). Worked around in net.ip.ipv6_parse.
+- **R28 (compiler, logged then FIXED 90261793):** reading `.value` off a
+  TEMPORARY aggregate Option (call result) returned a Vec with zeroed data
+  (Int payloads and named locals fine; match fine). Found via the parity
+  probes (probe p_payload_read.xi; re-verified correct on r47).
+- **R29 (compiler, logged then FIXED bf627c2e):** building a Vec inside a
+  match arm over a `Result[Vec[...]]` payload broke clang codegen
+  (`%struct.Vec` type mismatch); minimal repro p_match_vec_codegen.xi
+  (`conv_match` failed, `conv_named` compiled). Worked around in
+  net.ip.ipv6_parse; re-verified both shapes green on r47 (m83 lock).
 - **os.term shimmed (2026-09-16):** `term_is_tty`/`term_width` delegate to
   `os.terminal` (single "unknown" stub policy) and the four basic style
   sequences delegate to `format.terminal.ansi_*` (identical bytes);
@@ -1528,6 +1525,9 @@ Stdlib burn-down on committed HEAD (b71d839f):
   drains FIFO then recv/try_recv return None and send/try_send fail.
   R23 re-verified FIXED on r46 (p_async_p5/p7/p9 reduced shapes green).
   Corpus 946 -> 947; final r46 sweep 947/947 + ratchet OK (floors43).
+- **R28/R29 re-verified FIXED on r47:** `p_payload_read.xi` B b0=1 (was 0),
+  `p_match_vec_codegen.xi` P_MATCH_VEC_CODEGEN OK (both shapes); full r47
+  sweep 947/947 + ratchet OK. Open stdlib-lane compiler findings: none.
 - **Beta scoping (for the R0 split):** NEW docs/STDLIB_BETA_LIMITATIONS.md
   -- shipped surface, v1.0 exclusions (TLS, tzdata, TOML writer, parser
   fuzz, platform), intentional divergences (punycode, console/terminal),
