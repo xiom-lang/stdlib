@@ -7,22 +7,26 @@ module xiom.convert.ip
 // Depends on: xiom.net
 
 // ============================================================================
-// IPv4/IPv6 validation, parsing, and serialization helpers. The reference
-// implementation lives in xiom.net; because the function names collide
-// (BUG 25 #1: same-name delegation miscompiles) the logic is reimplemented
-// locally. IPv4 addresses are dotted decimals; IPv6 addresses support the
-// "::" compression and are canonicalized with longest-zero-run elision.
+// IPv4/IPv6 validation, parsing, and serialization helpers. The validators
+// and the dotted-quad parser DELEGATE to the canonical xiom.net.ip4 /
+// xiom.net.ip6 (dedup wave, 2026-09-16; parity proven in p_ip_parity /
+// p_ip_parity2 -- 28 + 9 vectors, zero mismatches). The combined canonical
+// text form (`ip_parse`), the permissive formatter (`ipv4_to_string`), and
+// the raw-bytes form (`ip_to_bytes`) stay LOCAL: they have no counterpart in
+// xiom.net (longest-zero-run elision from mixed v4/v6 input, first-four
+// octet formatting). IPv6 support includes "::" compression.
 // ============================================================================
 
 use xiom.string;
+use xiom.net.ip4 as net4;
+use xiom.net.ip6 as net6;
 
 /// Check that a string is a valid IPv4 address.
 /// Parameters: s -- the candidate address.
 /// Returns: true for a dotted-quad with four octets in 0..255.
 /// Complexity: O(n).
 pub fn is_valid_ipv4(s: Str) -> Bool {
-  var opt = _parse_v4(s);
-  return opt.is_some;
+  return net4.ip4_validate(s);
 }
 
 /// Check that a string is a valid IPv6 address (with optional "::"
@@ -31,8 +35,7 @@ pub fn is_valid_ipv4(s: Str) -> Bool {
 /// Returns: true for a well-formed IPv6 address.
 /// Complexity: O(n).
 pub fn is_valid_ipv6(s: Str) -> Bool {
-  var groups = Vec[Int].new();
-  return _parse_v6(s, &groups);
+  return net6.ip6_validate(s);
 }
 
 /// Format four octets as a dotted IPv4 address.
@@ -59,23 +62,11 @@ pub fn ipv4_to_string(octets: &Vec[UInt8]) -> Str {
 /// Returns: Some(four octets) for a valid address, None otherwise.
 /// Complexity: O(n).
 pub fn string_to_ipv4(s: Str) -> Option[Vec[UInt8]] {
-  var opt = _parse_v4(s);
-  if !opt.is_some {
-    return None;
+  let r = net4.ip4_parse(s);
+  match r {
+    Ok(bytes) => { return Some(bytes); },
+    Err(_) => { return None; },
   }
-  var bytes = Vec[UInt8].new();
-  match opt {
-    Some(octets) => {
-      var i: Int = 0;
-      while i < octets.len() {
-        bytes.push(octets[i] as UInt8);
-        i = i + 1;
-      }
-    },
-    None => {
-    },
-  }
-  return Some(bytes);
 }
 
 /// Parse an IP address, returning its canonical text form (IPv4 dotted-quad

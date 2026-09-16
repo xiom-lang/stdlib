@@ -8,6 +8,8 @@
 module xiom.net.dns
 
 use xiom.string;
+use xiom.net.ip4 as net4;
+use xiom.net.ip6 as net6;
 
 // idx_of returns the byte index of needle in hay, or -1 if not found.
 fn idx_of(hay: Str, needle: Str) -> Int {
@@ -186,118 +188,49 @@ fn split_whitespace(s: Str) -> Vec[Str] {
 }
 
 // dns_parse_ipv4 parses "a.b.c.d" into 4 bytes, or None on invalid input.
+// Delegates to the canonical xiom.net.ip4 (dedup wave, 2026-09-16; parity
+// proven in p_dns_parity). The Option/Result translation binds the parsed
+// value to a named local first (R24 workaround: `.value` on a temporary
+// aggregate payload is corrupt).
 pub fn dns_parse_ipv4(s: Str) -> Option[Vec[UInt8]] {
-  let parts = split(s, ".");
-  if parts.len() != 4 {
-    return None;
+  let r = net4.ip4_parse(s);
+  match r {
+    Ok(b) => { return Some(b); },
+    Err(_) => { return None; },
   }
-  var result: Vec[UInt8] = Vec[UInt8]::new();
-  var i = 0;
-  while i < 4 {
-    let num = parse_octet(parts[i]);
-    if num.is_none {
-      return None;
-    }
-    result.push(num.value as UInt8);
-    i = i + 1;
-  }
-  Some(result)
 }
 
 // dns_ipv4_to_str formats 4 bytes as "a.b.c.d", or None if the length is
-// not 4.
+// not 4. Delegates to the canonical xiom.net.ip4.
 pub fn dns_ipv4_to_str(octets: &Vec[UInt8]) -> Option[Str] {
-  if octets.len() != 4 {
-    return None;
+  let r = net4.ip4_to_str(octets);
+  match r {
+    Ok(s) => { return Some(s); },
+    Err(_) => { return None; },
   }
-  var result = "";
-  var i = 0;
-  while i < 4 {
-    if i > 0 {
-      result = result + ".";
-    }
-    let o = octets[i] as Int;
-    result = result + o.to_str();
-    i = i + 1;
-  }
-  Some(result)
 }
 
 // dns_parse_ipv6 parses a full-form IPv6 address (8 hex groups) or a
 // compressed form with a single "::" into 16 bytes. Returns None on
-// invalid input.
+// invalid input. Delegates to the canonical xiom.net.ip6 (parity proven in
+// p_dns_parity).
 pub fn dns_parse_ipv6(s: Str) -> Option[Vec[UInt8]] {
-  var result: Vec[UInt8] = Vec[UInt8]::new();
-  var ok = true;
-  let double = idx_of(s, "::");
-  if double >= 0 {
-    let after = string.str_slice(s, double + 2, s.len());
-    if idx_of(after, "::") >= 0 {
-      ok = false;
-    } else {
-      let left = string.str_slice(s, 0, double);
-      let right = string.str_slice(s, double + 2, s.len());
-      let lg = parse_groups(left);
-      let rg = parse_groups(right);
-      if has_bad_group(&lg) || has_bad_group(&rg) || lg.len() + rg.len() >= 8 {
-        ok = false;
-      } else {
-        var i = 0;
-        while i < lg.len() {
-          push_hex16(&mut result, lg[i]);
-          i = i + 1;
-        }
-        var zeros = 8 - lg.len() - rg.len();
-        var z = 0;
-        while z < zeros {
-          result.push(0 as UInt8);
-          result.push(0 as UInt8);
-          z = z + 1;
-        }
-        var j = 0;
-        while j < rg.len() {
-          push_hex16(&mut result, rg[j]);
-          j = j + 1;
-        }
-      }
-    }
-  } else {
-    let g = parse_groups(s);
-    if has_bad_group(&g) || g.len() != 8 {
-      ok = false;
-    } else {
-      var i = 0;
-      while i < 8 {
-        push_hex16(&mut result, g[i]);
-        i = i + 1;
-      }
-    }
+  let r = net6.ip6_parse(s);
+  match r {
+    Ok(b) => { return Some(b); },
+    Err(_) => { return None; },
   }
-  if !ok {
-    return None;
-  }
-  return Some(result);
 }
 
 // dns_ipv6_to_str formats 16 bytes as a full-form IPv6 address (8 groups,
-// no "::" compression).
+// no "::" compression). Delegates to the canonical xiom.net.ip6 (same
+// full-form convention; parity proven in p_dns_parity).
 pub fn dns_ipv6_to_str(bytes: &Vec[UInt8]) -> Option[Str] {
-  if bytes.len() != 16 {
-    return None;
+  let r = net6.ip6_to_str(bytes);
+  match r {
+    Ok(s) => { return Some(s); },
+    Err(_) => { return None; },
   }
-  var result = "";
-  var i = 0;
-  while i < 16 {
-    if i > 0 {
-      result = result + ":";
-    }
-    let hi = bytes[i] as Int;
-    let lo = bytes[i + 1] as Int;
-    let group = (hi << 8) | lo;
-    result = result + hex4(group);
-    i = i + 2;
-  }
-  Some(result)
 }
 
 // dns_parse_record_line parses a presentation-format zone record line

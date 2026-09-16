@@ -49,6 +49,24 @@ DONE:
   (Vec[UInt8] v4 / Vec[UInt16] v6 + IpAddr + masking/subnet). Delegation
   needs an API translation pass; queued as its own unit with a
   twin-vs-vectors lock.
+- IP FAMILY PARTIALLY DELEGATED (2026-09-16, round 62):
+  - `convert.ip` validators + dotted-quad parser now delegate to
+    `net.ip4`/`net.ip6` (is_valid_ipv4 -> ip4_validate, is_valid_ipv6 ->
+    ip6_validate, string_to_ipv4 -> ip4_parse translated Result->Option);
+    parity proven in p_ip_parity (28 vectors) + p_ip_parity2 (9 vectors,
+    bytes) with zero mismatches. The combined canonicalizer (`ip_parse`),
+    permissive formatter (`ipv4_to_string`), and raw-bytes form
+    (`ip_to_bytes`) stay LOCAL (unique semantics; phase 2 candidates).
+  - `net.dns` ip helpers now delegate: dns_parse_ipv4/ipv6 -> net.ip4/ip6
+    parse; dns_ipv4_to_str/dns_ipv6_to_str -> net.ip4/ip6 to_str (both
+    full-form for v6). Parity proven in p_dns_parity (17 parser vectors +
+    8 formatter lengths), zero mismatches. dns_reverse_ipv4 stays local
+    (in-addr.arpa suffix).
+  - All four shims bind call results to named locals (R25 workaround:
+    `.value` on a temporary aggregate payload is corrupt -- probe
+    p_payload_read, COMPILER_BUGS R25).
+  - Still queued: `net.ip` (Option-based v4/v6 + masks) and
+    `net.address`/`net.net` validators over the same canonicals.
 - ASCII85 DIRECTION CORRECTED (2026-09-12): the pair is ALREADY layered --
   `xiom.encoding.ascii85` imports `xiom.convert.ascii85.to_ascii85/
   from_ascii85` (different names, so no R15 collision) and adds the

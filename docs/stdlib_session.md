@@ -32,19 +32,21 @@ earlier R-fixes all in tree):
 - **Encoding qualification + dedup shims landed** (round-60): encoding
   loop reads -> `data[i]`, `_enc_*` triplet helpers; shims for
   convert.base16/base32/base64/base64url/percent over xiom.encoding.
-- Open compiler findings: **R23** (async executor stored-fn invocation AVs
-  in reduced program shapes; minimal repro p_async_p7; workaround is the
-  full-surface shape used by smoke_async_stress). R19/R20/R18/R16/R15b and
-  R22 are all FIXED; R21d collision determinism landed. R16 fixed -> the
-  string fast-path `(ptr as Int + n) as *UInt8` workaround can be
-  revisited; R18 fixed -> payload-vs-param contract shapes usable again.
+- Open compiler findings: **R25** (`.value` on a temporary aggregate Option
+  payload returns zeroed Vec data; minimal repro `probes\p_payload_read.xi`;
+  workaround: named local or match). R19/R20/R18/R16/R15b/R22/R23/R24 are
+  all FIXED (R23 = fn()-typed values env-first, m80; R24 = catalog-body
+  externs under isolation, selfhost gate). R16 fixed -> the string
+  fast-path `(ptr as Int + n) as *UInt8` workaround can be revisited;
+  R18 fixed -> payload-vs-param contract shapes usable.
 NEXT QUEUE (ordered):
 1. ~~Encoding qualification (flip unblocker)~~ DONE 2026-09-15 (1f4f0aad):
    strict flip verified green (r42 937/937). No stdlib work blocks it.
-2. **Encoding dedup:** base16/base32/base64/base64url + percent shims
-   LANDED 2026-09-15; base58 `to_base58` delegation + punycode audit
-   landed 2026-09-16 (round 61). Remaining dedup: ip4/ip6 (API
-   translation), console/os.terminal, core.platform/os.platform.
+2. **Dedup:** base16/base32/base64/base64url/percent/base58/punycode
+   resolved (rounds 60-61); ip family delegated round 62 (convert.ip +
+   net.dns over net.ip4/ip6; p_ip_parity/p_dns_parity 0 mismatches).
+   Remaining dedup: net.ip (Option-based masks) + net.address/net.net
+   validators over the same canonicals, console/terminal, platform.
 3. **Contract wave 6:** string/collect/io + iter/sync toward the 60% gate
    (wave 6 part 1 landed: floors41, iter 9.8%, sync 29.1%, global 14.0%
    pub-with-clause). Pre-validate new shapes in a probe first; R18 is
@@ -1461,4 +1463,22 @@ Stdlib burn-down on committed HEAD (b71d839f):
   p_wave6_specs (channel capacity clamp, barrier clamp). iter 9.8%,
   sync 29.1%, global 14.9% clauses / 14.0% pub-with-clause; floors41;
   r45 sweep 944/944 + ratchet OK.
+
+## 2.20. Round-62 stdlib (2026-09-16): ip/dns dedup delegation + R25 payload finding
+
+- **IP family delegated (dedup gate):** `convert.ip` validators +
+  dotted-quad parser delegate to `net.ip4`/`net.ip6` (parity: p_ip_parity
+  28 vectors, p_ip_parity2 9 vectors, 0 mismatches); `net.dns`
+  dns_parse_ipv4/ipv6 + dns_ipv4_to_str/dns_ipv6_to_str delegate as well
+  (parity: p_dns_parity 17 parser + 8 formatter cases, 0 mismatches).
+  The combined canonicalizer, permissive v4 formatter, raw-bytes form,
+  and dns_reverse_ipv4 stay local (unique semantics).
+- **R25 (compiler, logged):** reading `.value` off a TEMPORARY aggregate
+  Option (call result) returns a Vec with zeroed data (Int payloads and
+  named locals fine; match fine). Found via the parity probes (probe
+  p_payload_read.xi; NOT fixed by R23/R24). All new shims use named
+  locals/match; the compiler lane should fix before user code hits it.
+- Verified on r46 (HEAD 9acb9bdd = R23+R24): net/ip/dns smokes + both
+  parity batteries green; **full r46 sweep 944/944 + ratchet OK
+  (floors41)**.
 
