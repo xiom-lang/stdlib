@@ -18,3 +18,5 @@
 *.tmp
 .DS_Store
 Thumbs.db
+*.code-workspace
+kilo.jsonc
