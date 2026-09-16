@@ -46,9 +46,11 @@ NEXT QUEUE (ordered):
    strict flip verified green (r42 937/937). No stdlib work blocks it.
 2. **Dedup:** base16/base32/base64/base64url/percent/base58/punycode
    resolved (rounds 60-61); ip family delegated round 62 (convert.ip +
-   net.dns over net.ip4/ip6; p_ip_parity/p_dns_parity 0 mismatches).
-   Remaining dedup: net.ip (Option-based masks) + net.address/net.net
-   validators over the same canonicals, console/terminal, platform.
+   net.dns + net.ip v6 legs + net.net validator over net.ip4/ip6;
+   p_ip_parity/p_dns_parity/p_netip_parity 0 mismatches; local v6 parser
+   removed); os.term shimmed (stubs -> os.terminal, styles ->
+   format.terminal). Remaining dedup: console surface (NOT a duplicate --
+   documented), platform, net.address (semantics differ).
 3. **Contract wave 6:** string/collect/io + iter/sync toward the 60% gate
    (wave 6 part 1 landed: floors41, iter 9.8%, sync 29.1%, global 14.0%
    pub-with-clause). Pre-validate new shapes in a probe first; R18 is
@@ -1488,7 +1490,12 @@ Stdlib burn-down on committed HEAD (b71d839f):
   `Result[Vec[...]]` payload breaks clang codegen (`%struct.Vec` type
   mismatch); minimal repro p_match_vec_codegen.xi (`conv_match` fails,
   `conv_named` compiles). Worked around in net.ip.ipv6_parse.
-- Verified on r46 (HEAD 9acb9bdd = R23+R24): net/ip/dns smokes + all
+- **os.term shimmed (2026-09-16):** `term_is_tty`/`term_width` delegate to
+  `os.terminal` (single "unknown" stub policy) and the four basic style
+  sequences delegate to `format.terminal.ansi_*` (identical bytes);
+  clear/cursor/256-color stay local. io.console vs os.terminal are NOT
+  duplicates (I/O surface vs termios/pty) -- documented, no shim.
+- Verified on r46 (HEAD 9acb9bdd = R23+R24): net/ip/dns/term smokes + all
   parity batteries green; **full r46 sweep 944/944 + ratchet OK
-  (floors41)** after both delegation rounds.
+  (floors41)** after all three delegation rounds.
 
