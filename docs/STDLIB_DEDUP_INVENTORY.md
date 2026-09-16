@@ -62,15 +62,15 @@ DONE:
     full-form for v6). Parity proven in p_dns_parity (17 parser vectors +
     8 formatter lengths), zero mismatches. dns_reverse_ipv4 stays local
     (in-addr.arpa suffix).
-  - All four shims bind call results to named locals (R25 workaround:
+  - All four shims bind call results to named locals (R28 workaround:
     `.value` on a temporary aggregate payload is corrupt -- probe
-    p_payload_read, COMPILER_BUGS R25).
+    p_payload_read, COMPILER_BUGS R28).
   - `net.ip.ipv6_parse`/`ipv6_to_string` delegate to net.ip6 as well
     (p_netip_parity: 12 v6 vectors + 2 formatter sets, 0 mismatches) and
     the local v6 parser machinery was REMOVED (~140 lines: `_parse_v6`,
     `_parse_groups`, `_dcolon_index`); `net.net.is_valid_ipv4` delegates
     to net.ip4 (9 vectors, 0 diffs). The match-arm form of the
-    translation hits COMPILER_BUGS R26, so the delegated code uses the
+    translation hits COMPILER_BUGS R29, so the delegated code uses the
     named-local + early-return shape.
   - Still queued: `net.address` (address-with-port semantics, not a
     duplicate) and console/terminal + platform.
