@@ -23,10 +23,11 @@ a5e8b1dc and earlier R-fixes all in tree):
   conventions; p_puny_parity) and locked by the new
   smoke_convert_punycode. Remaining dedup: ip4/ip6, console/os.terminal,
   core.platform/os.platform.
-- **Contract wave 5 (+46 clauses, mostly REAL range specs):** char
+- **Contract waves:** wave 5 (+46 clauses, mostly REAL range specs: char
   predicate family, compare/collate sign bounds, collate_key length,
-  bloom FPR >= 0. string 30.2% -> 39.5% pub-covered, global 13.2% ->
-  13.8%; floors40.json. (Wave 4 was: 61 clauses, floors39.)
+  bloom FPR) -> string 30.2% -> 39.5%, global 13.2% -> 13.8%; floors40.
+  Wave 6 part 1 (+16: iter lengths/counts, sync channel/barrier counts)
+  -> global 14.0%; floors41. (Waves 1-4: 145 clauses, floors 32-39.)
 - **Encoding qualification + dedup shims landed** (round-60): encoding
   loop reads -> `data[i]`, `_enc_*` triplet helpers; shims for
   convert.base16/base32/base64/base64url/percent over xiom.encoding.
@@ -43,11 +44,10 @@ NEXT QUEUE (ordered):
    LANDED 2026-09-15; base58 `to_base58` delegation + punycode audit
    landed 2026-09-16 (round 61). Remaining dedup: ip4/ip6 (API
    translation), console/os.terminal, core.platform/os.platform.
-3. **Contract wave 6:** string/collect/io (+ broad dirs) toward the 60%
-   gate (wave 5 landed: floors coverage_floors40.json, string 39.5%,
-   collect 23.6%, io 45.4%, global 13.8% pub-with-clause). Pre-validate
-   new shapes in a probe first; R18 is fixed, so payload `.value.len()`
-   vs param `.len()` shapes are usable again.
+3. **Contract wave 6:** string/collect/io + iter/sync toward the 60% gate
+   (wave 6 part 1 landed: floors41, iter 9.8%, sync 29.1%, global 14.0%
+   pub-with-clause). Pre-validate new shapes in a probe first; R18 is
+   fixed, so payload `.value.len()` vs param `.len()` shapes are usable.
 4. **Remaining capability:** TLS schannel binding (TLS_DECISION.md),
    async stress suite, runtime symbol bind-or-delete (~194 unbound),
    console/os.terminal consolidation, ip4/ip6 dedup translation.
@@ -1447,4 +1447,15 @@ Stdlib burn-down on committed HEAD (b71d839f):
   smoke_prop_collect_persistent (PVec/PMap structural persistence: every
   update returns a new version and leaves the old one unchanged, lengths
   and values consistent, remove persistence). Corpus 944.
+- **Contract wave 6, part 1 (2026-09-16, +16 clauses, floors41):**
+  iter length/count specs -- `iter_count == v.len()`,
+  `iter_count_if <= v.len()`, filter/take/skip/dedup/unique `len <=
+  v.len()`, `iter_scan == v.len() + 1`, `iter_cycle == v.len() * n`
+  (n >= 0), `iter_repeat == n` (n >= 0), reverse/sort length equality,
+  fold1 None/Some shape; sync counts -- `barrier_count >= 1` (clamped at
+  construction), `channel_len >= 0`, `channel_capacity >= 0`.
+  Validated in p_iter_specs (empty/single/dup/negative vectors) +
+  p_wave6_specs (channel capacity clamp, barrier clamp). iter 9.8%,
+  sync 29.1%, global 14.9% clauses / 14.0% pub-with-clause; floors41;
+  r45 sweep 944/944 + ratchet OK.
 

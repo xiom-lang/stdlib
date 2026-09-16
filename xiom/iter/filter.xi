@@ -14,7 +14,9 @@ module xiom.iter.filter
 // ============================================================================
 
 /// New vector with the elements of v satisfying pred, in order. O(n).
-pub fn iter_filter(v: &Vec[Int], pred: fn(&Int) -> Bool) -> Vec[Int] {
+pub fn iter_filter(v: &Vec[Int], pred: fn(&Int) -> Bool) -> Vec[Int]
+  ensures: result.len() <= v.len()
+{
   var out = Vec[Int].new();
   var i = 0;
   while i < v.len() {
@@ -45,7 +47,9 @@ pub fn iter_filter_mut(v: &mut Vec[Int], pred: fn(&Int) -> Bool) {
 
 /// First n elements of v (or fewer if v is shorter). O(n).
 /// n <= 0 yields an empty vector.
-pub fn iter_take(v: &Vec[Int], n: Int) -> Vec[Int] {
+pub fn iter_take(v: &Vec[Int], n: Int) -> Vec[Int]
+  ensures: result.len() <= v.len()
+{
   var out = Vec[Int].new();
   var count = n;
   if count > v.len() { count = v.len(); }
@@ -58,7 +62,9 @@ pub fn iter_take(v: &Vec[Int], n: Int) -> Vec[Int] {
 }
 
 /// All elements of v after the first n. O(n). n <= 0 returns all of v.
-pub fn iter_skip(v: &Vec[Int], n: Int) -> Vec[Int] {
+pub fn iter_skip(v: &Vec[Int], n: Int) -> Vec[Int]
+  ensures: result.len() <= v.len()
+{
   var out = Vec[Int].new();
   var start = n;
   if start < 0 { start = 0; }
@@ -104,7 +110,9 @@ pub fn iter_skip_while(v: &Vec[Int], pred: fn(&Int) -> Bool) -> Vec[Int] {
 
 /// Drop consecutive equal elements from v. O(n).
 /// [1,1,2,2,3,1] -> [1,2,3,1].
-pub fn iter_dedup(v: &Vec[Int]) -> Vec[Int] {
+pub fn iter_dedup(v: &Vec[Int]) -> Vec[Int]
+  ensures: result.len() <= v.len()
+{
   var out = Vec[Int].new();
   var i = 0;
   while i < v.len() {
@@ -123,7 +131,9 @@ pub fn iter_dedup(v: &Vec[Int]) -> Vec[Int] {
 }
 
 /// Keep the first occurrence of each value, dropping later duplicates. O(n^2).
-pub fn iter_unique(v: &Vec[Int]) -> Vec[Int] {
+pub fn iter_unique(v: &Vec[Int]) -> Vec[Int]
+  ensures: result.len() <= v.len()
+{
   var out = Vec[Int].new();
   var i = 0;
   while i < v.len() {

@@ -207,10 +207,13 @@ T1/T2 yields.
       specs (char predicate family `result == <range expression>`, compare/
       collate sign bounds, collate_key length preservation, bloom FPR) ->
       string 39.5%, collect 23.6%, io 45.4%, global 14.7% clauses / 13.8%
+      pub-with-clause. Wave 6 part 1 (2026-09-16): 16 clauses (iter
+      count/length equalities + bounds, sync channel/barrier counts) ->
+      iter 9.8%, sync 29.1%, global 14.9% clauses / 14.0%
       pub-with-clause. Ratchet:
-      coverage_scan.ps1 -RatchetFile coverage_floors40.json (stdlib_ws
+      coverage_scan.ps1 -RatchetFile coverage_floors41.json (stdlib_ws
       tooling; positive + negative runs verified; earlier floors kept at
-      coverage_floors32/34/35/36/37/38/39.json).
+      coverage_floors32/34/35/36/37/38/39/40.json).
       Floors are per top-level stdlib/xiom directory and must be refreshed
       when a module is ADDED (new uncovered pub fns dilute the percentage
       -- TOML dropped serialize 6.1% -> 5.4%, tz dropped time 13% ->

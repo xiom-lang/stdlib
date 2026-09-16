@@ -130,7 +130,9 @@ pub fn channel_is_closed[T](ch: &Channel[T]) -> Bool {
 /// Params: ch - the channel.
 /// Returns: the queue length.
 /// Complexity: O(1).
-pub fn channel_len[T](ch: &Channel[T]) -> Int {
+pub fn channel_len[T](ch: &Channel[T]) -> Int
+  ensures: result >= 0
+{
   return ch.items.len();
 }
 
@@ -138,7 +140,9 @@ pub fn channel_len[T](ch: &Channel[T]) -> Int {
 /// Params: ch - the channel.
 /// Returns: the capacity configured at creation.
 /// Complexity: O(1).
-pub fn channel_capacity[T](ch: &Channel[T]) -> Int {
+pub fn channel_capacity[T](ch: &Channel[T]) -> Int
+  ensures: result >= 0
+{
   return ch.cap;
 }
 
