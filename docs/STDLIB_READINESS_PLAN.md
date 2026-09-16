@@ -309,9 +309,12 @@ T1/T2 yields.
     bound across random-order inserts/removals, min/max, empty-out),
     smoke_prop_collect_heap (pairing-heap extract_min non-decreasing +
     exact size tracking), smoke_prop_collect_lhmap (LhMap overwrite/remove
-    size + value consistency + strictly ascending keys_in_order). Corpus
-    937 -> 940; r42 sweep 940/940 + ratchet OK. Next: bloom/persistent/
-    hash-distribution invariants.
+    size + value consistency + strictly ascending keys_in_order).
+    EXTENDED 2026-09-16: smoke_prop_collect_bloom (no false negatives over
+    500 LCG keys, rate in [0,1] non-decreasing, clear empties),
+    smoke_prop_collect_persistent (PVec/PMap structural persistence).
+    Corpus 937 -> 944; r45 sweep 944/944 + ratchet OK. Next: hash
+    distribution quality, rbtree/btree invariants.
 17. Parser fuzz ladder (url/ip/header/cookie/mime/json/utf) once stage-5
     fuzz infra lands.
 18. Coverage ratchet in CI-equivalent script; async/CLI-of-everything.
@@ -335,8 +338,9 @@ T1/T2 yields.
 - Namespace/identity debt: collect vs collections, memory quartet,
   package.xi identity, geom/twin module names.
 - No fuzz infrastructure (stage-5 dependent); collection property smokes
-  landed 2026-09-15 (avl balance/membership, pairing-heap ordering, LhMap
-  overwrite/remove invariants); the coverage number IS published +
+  landed 2026-09-15/16 (avl balance/membership, pairing-heap ordering,
+  LhMap overwrite/remove invariants, bloom no-false-negatives/rate/clear,
+  PVec+PMap structural persistence); the coverage number IS published +
   ratcheted (gate #7) as of 2026-09-12.
 - Item A catalog findings: stdlib burn-down DONE 2026-09-12 (237 -> 2
   findings, 17 -> 1 parse errors; the remainder are the compiler-side
