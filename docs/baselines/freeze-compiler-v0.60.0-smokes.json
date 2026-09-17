@@ -1,0 +1,12 @@
+{
+    "generated":  "2026-09-17T17:45:56+03:00",
+    "compiler":  "xiom tag v0.60.0 (debug build; + resource/ assets from main, see docs/VERIFICATION_BASELINE.md)",
+    "corpus":  "tests/smoke",
+    "workers":  8,
+    "total":  947,
+    "pass":  947,
+    "compilefail":  0,
+    "runfail":  0,
+    "seconds":  1260.7,
+    "failures":  []
+}

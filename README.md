@@ -38,9 +38,10 @@ CI lives in `.github/workflows/` (PR gates, weekly heavy suites, release).
 
 ## Baseline (last verified)
 
-- 2026-09-16, compiler r47 (R28+R29 fixes, strict catalog findings ON):
-  full strict sweep **947/947**, coverage ratchet OK (floors43),
-  bare-name scan 0 hits, corpus gate clean.
+- 2026-09-17, compiler tag `v0.60.0` (strict catalog findings ON), clean
+  freeze build: full strict sweep **947/947 PASS**, module check
+  **509/509 clean**, bare-name scan **0 hits**, coverage ratchet OK
+  (floors43). Full record: `docs/VERIFICATION_BASELINE.md`.
 - 15 KAT files (RFC 4648/4231/5869/8439/1952, NIST SHS, JSONTestSuite
   subset, Kuhn UTF-8), collection property smokes, async stress +
   cancellation smokes all green.

@@ -163,6 +163,9 @@ T1/T2 yields.
       935 PASS / 0 RUNFAIL / 0 COMPILEFAIL (includes smoke_serialize_csv).
       History: r20 903/937; r29 916/935; r32 927/934 with three compiler
       WIP regressions (R11/R12/R13) which b8e2fa43 superseded and closed.
+      Freeze re-verification 2026-09-17 on compiler tag v0.60.0:
+      947/947 PASS, 509/509 module check, 0 bare-name hits, ratchet OK
+      (docs/VERIFICATION_BASELINE.md).
 - [x] KAT corpus committed and passing for encodings/UTF-8/hashes/MACs/AEAD/
       parsers -- 15 files, ALL un-gated as of 2026-09-10 (kdf + json last)
 - [x] CSPRNG bound to OS entropy with documented reseed policy -- flip

@@ -7,8 +7,9 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 Audience: release/infra lane (public known-limitations page), beta users.
 Source of truth for status/next work: `docs/stdlib_session.md` (section 0)
 and `docs/STDLIB_READINESS_PLAN.md`. Verification baselines: strict
-flip ON, r46 sweep 946/946 + coverage ratchet OK (floors43), 15 KAT
-files, corpus gate clean.
+flip ON, freeze sweep on compiler tag v0.60.0 = 947/947 + module check
+509/509 + bare-name 0 hits + coverage ratchet OK (floors43),
+`docs/VERIFICATION_BASELINE.md`, 15 KAT files, corpus gate clean.
 
 ## Shipped and verified
 

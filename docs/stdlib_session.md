@@ -45,8 +45,11 @@ against that pin; see `tools/README.md`.
 GREENLIGHT (2026-09-16): the stdlib-side R0 deliverables are MET --
 r47 sweep 947/947 + ratchet OK with the strict flip ON, corpus gate clean,
 no open compiler findings from this lane, beta scope documented. The split
-may proceed from a tagged commit; recommended hardening: one freeze-time
-sweep freshly built from the tag (the r47 binary was built mid-flight).
+may proceed from a tagged commit. FREEZE HARDENING DONE (2026-09-17): the
+post-split tooling was ported repo-relative, CI added, and the freeze sweep
+on a clean compiler tag v0.60.0 build is 947/947 (strict) + 509/509 module
+check + 0 bare-name hits + ratchet OK -- full record in
+`docs/VERIFICATION_BASELINE.md`.
 
 Probe index (keep these alive in `tools/probes/`; each proves a
 specific lock -- re-run after any compiler bump):

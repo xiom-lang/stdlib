@@ -23,10 +23,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Verified
 
-- Full strict sweep 947/947 with compiler r47 (R28/R29 fixes, strict
-  catalog findings ON); coverage ratchet OK (floors43, global 15.3%
-  clauses / 14.6% pub-with-clause); bare-name scan 0 hits across 509
-  modules; canonical corpus gate clean.
+- Freeze sweep 2026-09-17 on a clean compiler tag `v0.60.0` build:
+  947/947 strict PASS, 509/509 module check clean, 0 bare-name hits,
+  coverage ratchet OK (floors43, global 15.3% clauses / 14.6%
+  pub-with-clause). Full record: `docs/VERIFICATION_BASELINE.md`.
 - 15 KAT files, collection property smokes (avl/heap/lhmap/bloom/
   persistent/rbtree/hashchurn), async stress + cancellation smokes.
 
