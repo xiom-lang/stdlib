@@ -184,10 +184,25 @@ DEFERRED / CORRECTED:
   aliases, so a thin re-export shim is impossible today -> API translation
   unit (extend the canonical surface with the missing names, migrate the
   consumer; twin removal waits on the compiler api_freeze snapshot regen).
+  EXECUTION CHECKLIST (function diff verified 2026-09-17):
+    1. hash.xi: add `lhmap_first`/`lhmap_last`/`lhmap_iter` (bodies exist
+       in linkedhash.xi; iter == keys_in_order).
+    2. linkedhash.xi: delegate the shared surface to `xiom.collect.hash`
+       (aliased import) with the Unit-returning `lhmap_remove` wrapper.
+    3. Re-point smoke_collect_linkedhash's extra assertions at the canonical
+       first/last/iter (parity smoke keeps both paths green).
+    4. Remove the twin only with the compiler snapshot regen.
 - `collect/cache` vs `collect/lru` (found 2026-09-17): cache = LRU+LFU+ARC
   (arc.xi + 3 smokes); lru = standalone near-copy LRU (1 smoke). The LRU
   cores are copies; receiver mutability differs (`&` vs `&mut`). Same
   translation-unit treatment as above.
+  EXECUTION CHECKLIST (function diff verified 2026-09-17):
+    1. cache.xi: add `lru_remove` (Bool) and `lru_clear` (mirror lru.xi
+       bodies; keep the `&` receivers used by the rest of cache.xi).
+    2. lru.xi: delegate to `xiom.collect.cache` (aliased import); wrap the
+       `&mut` signatures the module exposes.
+    3. Re-point smoke_collect_lfu_lru at the canonical surface.
+    4. Remove the twin only with the compiler snapshot regen.
 - `bits/endian + convert/endian + serialize/endian`: three-way merge onto
   serialize.endian still open (convert side partially delegated).
 - `net/ip4+ip6`, base32/ascii85/percent/punycode twins, io/console vs
