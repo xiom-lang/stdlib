@@ -56,6 +56,17 @@ flip ON, freeze sweep on compiler tag v0.60.0 = 947/947 + module check
   `tools/probes/p_http_resp_codegen.xi`. Use
   `http_parse_response_headers` (total, exercised by the harness) until
   the compiler fix lands.
+- **`x25519_keypair` codegen failure (compiler-lane finding)**: any call
+  fails codegen on v0.60.0 (`cannot take a reference to 'v': it is already
+  a reference`). Minimal probe:
+  `tools/probes/p_x25519_keypair_codegen.xi`. The key-exchange entry point
+  is unusable until fixed; other `crypto.keyx` entry points are unaffected.
+- **Untested public surface**: a reference scan (2026-09-17) found **1010
+  of 5777** public functions are never referenced by any smoke or module.
+  The 72 zero-arg ones are now compiled+run by
+  `tools/probes/p_never_called_zeroarg.xi` (this is how the x25519 finding
+  surfaced); arg-taking functions still need generated call probes. More
+  latent codegen findings in this class are likely.
 
 ## Intentional design divergences (not bugs)
 

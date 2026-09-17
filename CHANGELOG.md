@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - CI: PR gates, weekly heavy suites, release pipeline, reusable compiler
   build action; `COMPILER_VERSION` compiler pin.
+- Untested-surface sweep: `tools/probes/p_never_called_zeroarg.xi` now
+  compiles+runs the zero-arg public API that no smoke references; it
+  surfaced the `x25519_keypair` codegen failure (open compiler finding,
+  minimal probe kept).
 - Parser fuzz harness: deterministic mutation stress smoke over
   json/toml/csv/url parsing (+ writer round-trip stability) and http
   header totalness, seeded for reproducibility.

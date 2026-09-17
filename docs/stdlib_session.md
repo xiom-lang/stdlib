@@ -1693,6 +1693,15 @@ Stdlib burn-down on committed HEAD (b71d839f):
   read_file_lines Ok-length). string 44.6% -> **48.5%**, io 45.4% ->
   **50.9%**, global 16.3% clauses / **15.7%** pub-with-clause; floors46.
   Battery: 241 smokes green (string 102, io 139).
+- **Untested-surface sweep (2026-09-17):** reference scan over tests/ +
+  xiom/ found **1010/5777 public fns never referenced anywhere**. The
+  zero-arg subset (72; blocking/exit functions excluded) is now
+  compiled+run by NEW `tools/probes/p_never_called_zeroarg.xi`; it found
+  that `x25519_keypair` FAILS CODEGEN on v0.60.0 ("cannot take a reference
+  to 'v': it is already a reference") -- minimal probe
+  `tools/probes/p_x25519_keypair_codegen.xi` for the compiler lane. The
+  other 71 calls compile+run green. Follow-up: generated call probes for
+  the arg-taking subset (expect more findings of this class).
 - **Parser fuzz harness + http finding (2026-09-17):** NEW
   `smoke_stress_fuzz_parsers.xi` -- 600 deterministic generated/mutated
   inputs against json/toml/csv/url parse (+ writer round-trip stability)
