@@ -1,0 +1,47 @@
+# git-cliff configuration for the XIOM standard library.
+# Generate with: git cliff --tag stdlib-vX.Y.Z -o CHANGELOG.md
+[changelog]
+header = """
+# Changelog\n
+All notable changes to the XIOM standard library are documented here.\n
+"""
+body = """
+{% if version %}\
+## [{{ version | trim_start_matches(pat="stdlib-v") }}] - {{ timestamp | date(format="%Y-%m-%d") }}
+{% else %}\
+## [Unreleased]
+{% endif %}\
+{% for group, commits in commits | group_by(attribute="group") %}
+### {{ group | striptags | trim | upper_first }}
+{% for commit in commits %}\
+- {{ commit.message | upper_first }} ({{ commit.id | truncate(length=7, end="") }})
+{% endfor %}\
+{% endfor %}\n
+"""
+footer = ""
+trim = true
+
+[git]
+conventional_commits = true
+filter_unconventional = true
+split_commits = false
+protect_breaking_commits = false
+filter_commits = false
+tag_pattern = "stdlib-v[0-9]*"
+skip_tags = "v0.60.0-pre-split"
+ignore_tags = ""
+topo_order = false
+sort_commits = "oldest"
+commit_parsers = [
+  { message = "^feat", group = "Added" },
+  { message = "^fix", group = "Fixed" },
+  { message = "^refactor", group = "Changed" },
+  { message = "^perf", group = "Changed" },
+  { message = "^docs", group = "Documentation" },
+  { message = "^test", group = "Testing" },
+  { message = "^chore\\(release\\)", skip = true },
+  { message = "^chore", group = "Maintenance" },
+  { message = "^ci", group = "Maintenance" },
+  { message = "^style", group = "Style" },
+  { message = "^revert", group = "Reverted" },
+]

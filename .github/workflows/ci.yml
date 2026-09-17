@@ -1,0 +1,68 @@
+# Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+# SPDX-License-Identifier: MIT OR Apache-2.0
+#
+# Tier 1 CI: pull requests + manual dispatch. Keeps private-repo minutes
+# sustainable: the compiler is built once on Linux, then the coverage ratchet,
+# module check, strict bare-name scan and the KAT files run against it.
+# The full 947-file corpus on Windows + Linux runs in heavy.yml (weekly /
+# dispatch) and in release.yml before anything is published.
+#
+# Cross-repo: building the compiler needs secrets.XIOM_CROSS_REPO_TOKEN while
+# xiom-lang/xiom is private. Fork PRs cannot read the secret (documented).
+name: XIOM Stdlib CI
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  static:
+    name: coverage ratchet (gate 7)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Contract-coverage ratchet
+        shell: pwsh
+        run: ./tools/coverage_scan.ps1 -RatchetFile ./tools/coverage_floors43.json
+
+  compiler-gates:
+    name: compiler gates (ubuntu)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read COMPILER_VERSION
+        id: pin
+        shell: bash
+        run: echo "ref=$(tr -d '\r\n ' < COMPILER_VERSION)" >> "$GITHUB_OUTPUT"
+
+      - name: Build pinned compiler
+        id: compiler
+        uses: ./.github/actions/build-compiler
+        with:
+          ref: ${{ steps.pin.outputs.ref }}
+          token: ${{ secrets.XIOM_CROSS_REPO_TOKEN || github.token }}
+
+      - name: Check-only type-check of every module
+        shell: pwsh
+        run: ./tools/check_modules.ps1 -Compiler '${{ steps.compiler.outputs.binary }}' -Workers 8 -Quiet
+
+      - name: Strict bare-name scan (509 modules)
+        shell: pwsh
+        run: ./tools/barename_scan.ps1 -Compiler '${{ steps.compiler.outputs.binary }}' -Workers 8 -Quiet
+
+      - name: KAT gate (kat_*.xi)
+        shell: bash
+        run: bash ./tools/run_smokes.sh --compiler '${{ steps.compiler.outputs.binary }}' --filter kat_ --workers 4 --json kat-results.json
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stdlib-ci-results
+          path: kat-results.json
+          if-no-files-found: ignore

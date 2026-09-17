@@ -1,0 +1,80 @@
+# Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+# SPDX-License-Identifier: MIT OR Apache-2.0
+#
+# Tier 2 (heavy): full 947-file corpus on Windows + Linux, plus the module
+# check and strict bare-name scan. Weekly and on demand; scheduled runs test
+# the compiler's main branch (drift detector), manual runs default to the
+# COMPILER_VERSION pin.
+name: XIOM Stdlib Heavy Suites
+
+on:
+  schedule:
+    - cron: "0 4 * * 1"
+  workflow_dispatch:
+    inputs:
+      compiler_ref:
+        description: "xiom ref to test (default: COMPILER_VERSION pin)"
+        required: false
+        default: ""
+
+jobs:
+  full-corpus:
+    name: full corpus (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read COMPILER_VERSION
+        id: pin
+        shell: bash
+        run: echo "ref=$(tr -d '\r\n ' < COMPILER_VERSION)" >> "$GITHUB_OUTPUT"
+
+      - name: Select compiler ref
+        id: ref
+        shell: bash
+        run: |
+          ref="${{ github.event.inputs.compiler_ref }}"
+          if [ -z "$ref" ]; then
+            if [ "${{ github.event_name }}" = "schedule" ]; then
+              ref="main"
+            else
+              ref="${{ steps.pin.outputs.ref }}"
+            fi
+          fi
+          echo "ref=$ref" >> "$GITHUB_OUTPUT"
+          echo "testing compiler ref: $ref"
+
+      - name: Build compiler
+        id: compiler
+        uses: ./.github/actions/build-compiler
+        with:
+          ref: ${{ steps.ref.outputs.ref }}
+          token: ${{ secrets.XIOM_CROSS_REPO_TOKEN || github.token }}
+
+      - name: Full smoke corpus
+        shell: pwsh
+        run: ./tools/run_smokes.ps1 -Compiler '${{ steps.compiler.outputs.binary }}' -Workers 8 -RetryFailed -Json smoke-results.json
+
+      - name: Check-only type-check of every module
+        shell: pwsh
+        run: ./tools/check_modules.ps1 -Compiler '${{ steps.compiler.outputs.binary }}' -Workers 8 -Quiet
+
+      - name: Strict bare-name scan (509 modules)
+        shell: pwsh
+        run: ./tools/barename_scan.ps1 -Compiler '${{ steps.compiler.outputs.binary }}' -Workers 8 -Quiet
+
+      - name: Coverage ratchet
+        shell: pwsh
+        run: ./tools/coverage_scan.ps1 -RatchetFile ./tools/coverage_floors43.json
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stdlib-heavy-${{ matrix.os }}
+          path: smoke-results.json
+          if-no-files-found: ignore

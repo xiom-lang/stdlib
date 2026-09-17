@@ -1,0 +1,79 @@
+# Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+# SPDX-License-Identifier: MIT OR Apache-2.0
+#
+# Composite action: checkout xiom-lang/xiom at a pinned ref and build the
+# compiler binary (debug). Used by ci.yml, heavy.yml and release.yml so the
+# acquisition logic lives in one place.
+#
+# Notes:
+# - Cross-repo checkout needs secrets.XIOM_CROSS_REPO_TOKEN (fine-grained PAT,
+#   Contents: read on xiom-lang/xiom) while both repos are private.
+# - Tags before the resource-asset fix (e3714884, 2026-09-17) cannot build on
+#   Windows: crates/xiom/build.rs needs resource/img/xiom-icon.ico. The step
+#   below pulls resource/ from main when the pinned tree lacks it.
+name: Build XIOM compiler
+description: Checkout xiom at a ref and build the xiom binary (debug).
+inputs:
+  ref:
+    description: xiom ref (tag/branch/sha) to build
+    required: true
+  path:
+    description: checkout directory for the compiler sources
+    required: false
+    default: .compiler-src
+  token:
+    description: token used for the cross-repo checkout
+    required: false
+    default: ""
+outputs:
+  binary:
+    description: path to the built compiler binary
+    value: ${{ steps.resolve.outputs.binary }}
+runs:
+  using: composite
+  steps:
+    - name: Checkout compiler at the pin
+      uses: actions/checkout@v4
+      with:
+        repository: xiom-lang/xiom
+        ref: ${{ inputs.ref }}
+        path: ${{ inputs.path }}
+        token: ${{ inputs.token }}
+
+    - name: Resource assets workaround (tags predating e3714884)
+      shell: bash
+      working-directory: ${{ inputs.path }}
+      run: |
+        if [ ! -f resource/img/xiom-icon.ico ]; then
+          echo "resource/ missing at ${{ inputs.ref }}; pulling it from main"
+          git fetch --depth=1 origin main
+          git checkout origin/main -- resource
+        fi
+
+    - uses: dtolnay/rust-toolchain@stable
+
+    - name: Cache cargo
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry/
+          ~/.cargo/git/
+          ${{ inputs.path }}/target/
+        key: ${{ runner.os }}-compiler-${{ inputs.ref }}-${{ hashFiles(format('{0}/Cargo.lock', inputs.path)) }}
+        restore-keys: |
+          ${{ runner.os }}-compiler-
+
+    - name: Build xiom (debug)
+      shell: bash
+      working-directory: ${{ inputs.path }}
+      run: cargo build --locked -p xiom
+
+    - name: Resolve binary path
+      id: resolve
+      shell: bash
+      run: |
+        if [ -f "${{ inputs.path }}/target/debug/xiom.exe" ]; then
+          echo "binary=${{ inputs.path }}/target/debug/xiom.exe" >> "$GITHUB_OUTPUT"
+        else
+          echo "binary=${{ inputs.path }}/target/debug/xiom" >> "$GITHUB_OUTPUT"
+        fi

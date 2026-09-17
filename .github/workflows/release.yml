@@ -1,0 +1,184 @@
+# Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+# SPDX-License-Identifier: MIT OR Apache-2.0
+#
+# Stdlib release (docs/RELEASE_INFRA_PLAN.md R3/5.2):
+#   tag stdlib-vX.Y.Z -> validate package.xi (identity + compiler range)
+#   -> full gates on Windows + Linux -> tar xiom/ runtime/ package.xi
+#   -> sha256 + optional minisign -> GitHub Release
+#   -> open the STDLIB_VERSION pin PR against xiom (if the release token is set).
+#
+# Registry publish (registry-publish environment) is intentionally NOT wired
+# yet: it needs the registry lane's publish endpoint/auth contract (plan R5)
+# before it can be scripted. Do not claim the registry entry until that lands.
+name: XIOM Stdlib Release
+
+on:
+  push:
+    tags: ["stdlib-v*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "dry-run version label (no release is created)"
+        required: false
+        default: "0.0.0-dev"
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  validate:
+    name: validate package.xi
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.parse.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Identity, version and compiler range
+        id: parse
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            ver="${{ github.ref_name }}"
+            ver="${ver#stdlib-v}"
+          else
+            ver="${{ github.event.inputs.version }}"
+          fi
+          echo "version=$ver" >> "$GITHUB_OUTPUT"
+          grep -q 'name: "xiom-std"' package.xi
+          grep -q "version: \"$ver\"" package.xi
+          grep -Eq 'compiler[[:space:]]*=[[:space:]]*">=' package.xi
+          echo "package.xi validated for version $ver:"
+          grep -E 'name:|version:|compiler' package.xi
+
+  gates:
+    name: release gates (${{ matrix.os }})
+    needs: validate
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read COMPILER_VERSION
+        id: pin
+        shell: bash
+        run: echo "ref=$(tr -d '\r\n ' < COMPILER_VERSION)" >> "$GITHUB_OUTPUT"
+
+      - name: Build pinned compiler
+        id: compiler
+        uses: ./.github/actions/build-compiler
+        with:
+          ref: ${{ steps.pin.outputs.ref }}
+          token: ${{ secrets.XIOM_CROSS_REPO_TOKEN || github.token }}
+
+      - name: Full smoke corpus (solo re-run of failures)
+        shell: pwsh
+        run: ./tools/run_smokes.ps1 -Compiler '${{ steps.compiler.outputs.binary }}' -Workers 8 -RetryFailed -Json "smoke-results-${{ matrix.os }}.json"
+
+      - name: Check-only type-check of every module
+        shell: pwsh
+        run: ./tools/check_modules.ps1 -Compiler '${{ steps.compiler.outputs.binary }}' -Workers 8 -Quiet
+
+      - name: Strict bare-name scan (509 modules)
+        shell: pwsh
+        run: ./tools/barename_scan.ps1 -Compiler '${{ steps.compiler.outputs.binary }}' -Workers 8 -Quiet
+
+      - name: Coverage ratchet
+        shell: pwsh
+        run: ./tools/coverage_scan.ps1 -RatchetFile ./tools/coverage_floors43.json
+
+      - name: Upload gate results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stdlib-release-gates-${{ matrix.os }}
+          path: smoke-results-${{ matrix.os }}.json
+          if-no-files-found: ignore
+
+  package:
+    name: package + GitHub Release
+    needs: [validate, gates]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Stage the release tree
+        run: |
+          ver="${{ needs.validate.outputs.version }}"
+          mkdir -p stage
+          cp -r xiom runtime package.xi stage/
+          cp LICENSE-MIT LICENSE-APACHE NOTICE README.md CHANGELOG.md stage/
+          tar -czf "xiom-std-${ver}.tar.gz" -C stage .
+          sha256sum "xiom-std-${ver}.tar.gz" > SHA256SUMS
+          ls -la
+
+      - name: Sign (minisign, optional)
+        if: env.MINISIGN_SECRET_KEY != ''
+        env:
+          MINISIGN_SECRET_KEY: ${{ secrets.MINISIGN_SECRET_KEY }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y minisign
+          printf '%s' "$MINISIGN_SECRET_KEY" > minisign.key
+          minisign -Sm "xiom-std-${{ needs.validate.outputs.version }}.tar.gz" -s minisign.key
+          minisign -Sm SHA256SUMS -s minisign.key
+          rm -f minisign.key
+
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: stdlib-release-package
+          path: |
+            xiom-std-*.tar.gz
+            SHA256SUMS
+            *.minisig
+
+      - name: Create GitHub Release
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ver="${{ needs.validate.outputs.version }}"
+          files="xiom-std-${ver}.tar.gz SHA256SUMS"
+          for f in *.minisig; do
+            if [ -e "$f" ]; then files="$files $f"; fi
+          done
+          gh release create "${{ github.ref_name }}" $files \
+            --title "XIOM stdlib $ver" \
+            --notes "Stdlib release $ver. Verified against compiler pin $(tr -d '\r\n ' < COMPILER_VERSION)."
+
+  pin-pr:
+    name: STDLIB_VERSION pin PR (xiom)
+    needs: [validate, package]
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    env:
+      RELEASE_TOKEN: ${{ secrets.XIOM_RELEASE_TOKEN }}
+    steps:
+      - name: Open the pin PR
+        if: env.RELEASE_TOKEN != ''
+        env:
+          GH_TOKEN: ${{ secrets.XIOM_RELEASE_TOKEN }}
+        run: |
+          ver="${{ needs.validate.outputs.version }}"
+          branch="chore/pin-stdlib-v${ver}"
+          git clone --depth 1 "https://x-access-token:${RELEASE_TOKEN}@github.com/xiom-lang/xiom.git" xiom-repo
+          cd xiom-repo
+          git checkout -b "$branch"
+          printf 'stdlib-v%s\n' "$ver" > STDLIB_VERSION
+          git -c user.name="xiom-release-bot" -c user.email="release@xiom-lang.org" commit -am "chore: pin STDLIB_VERSION to stdlib-v${ver}"
+          git push origin "$branch"
+          gh pr create --repo xiom-lang/xiom --base main --head "$branch" \
+            --title "chore: pin STDLIB_VERSION to stdlib-v${ver}" \
+            --body "Automated stdlib release PR. Release: https://github.com/xiom-lang/stdlib/releases/tag/stdlib-v${ver}"
+
+      - name: Manual step notice (no token)
+        if: env.RELEASE_TOKEN == ''
+        run: |
+          echo "XIOM_RELEASE_TOKEN is not set; update xiom/STDLIB_VERSION manually to stdlib-v${{ needs.validate.outputs.version }} via a reviewed PR."
