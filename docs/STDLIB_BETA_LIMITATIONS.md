@@ -44,9 +44,18 @@ flip ON, freeze sweep on compiler tag v0.60.0 = 947/947 + module check
   current machine (`xiom.time.tz`: `tz_offset_secs_at`,
   `tz_local_offset_secs`, `tz_is_dst`, `tz_local_epoch_secs`,
   `tz_local_now`). No bundled historical/global transition tables.
-- **Stdlib parser fuzzing**: the Stage-5 fuzz workspace exists (compiler
-  lane, `fuzz/` over lexer/parser/CTFE); stdlib parsers (json/toml/csv/
-  url/http) are not yet fuzzed. Pending a stdlib-side harness.
+- **Stdlib parser fuzzing**: a deterministic mutation harness now runs in
+  the corpus (`smoke_stress_fuzz_parsers.xi`: 600 generated/mutated inputs
+  across json/toml/csv/url plus http header totalness, with writer
+  round-trip stability). The Stage-5 coverage-guided workspace (compiler
+  lane, `fuzz/`) remains the deeper fuzzing home.
+- **`http_parse_response` codegen failure (compiler-lane finding)**: any
+  program calling `http.http_parse_response` fails codegen on compiler
+  v0.60.0 (clang: invalid getelementptr on `%struct.HttpResponse`, field
+  index 2; the struct carries a `Vec[(Str, Str)]` field). Minimal probe:
+  `tools/probes/p_http_resp_codegen.xi`. Use
+  `http_parse_response_headers` (total, exercised by the harness) until
+  the compiler fix lands.
 
 ## Intentional design divergences (not bugs)
 

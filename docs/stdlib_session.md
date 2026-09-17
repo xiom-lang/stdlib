@@ -1693,6 +1693,16 @@ Stdlib burn-down on committed HEAD (b71d839f):
   read_file_lines Ok-length). string 44.6% -> **48.5%**, io 45.4% ->
   **50.9%**, global 16.3% clauses / **15.7%** pub-with-clause; floors46.
   Battery: 241 smokes green (string 102, io 139).
+- **Parser fuzz harness + http finding (2026-09-17):** NEW
+  `smoke_stress_fuzz_parsers.xi` -- 600 deterministic generated/mutated
+  inputs against json/toml/csv/url parse (+ writer round-trip stability)
+  and http header totalness; reproduces from a fixed seed. While building
+  it: `http_parse_response` had NEVER been exercised by any smoke and FAILS
+  CODEGEN on compiler v0.60.0 (clang "invalid getelementptr" on
+  `%struct.HttpResponse` field 2; the struct has a `Vec[(Str, Str)]`
+  field). Minimal probe kept at `tools/probes/p_http_resp_codegen.xi`;
+  harness excludes the call. OPEN FINDING for the compiler lane; follow-up:
+  sweep never-exercised public functions for the same latent class.
 - **TOML writer shipped (2026-09-17):** `toml_write(t: &TomlTable) -> Str`
   emits the v1 subset -- root keys first, `[section]` blocks in
   first-appearance order, the five reader escapes, quoted keys when not

@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - CI: PR gates, weekly heavy suites, release pipeline, reusable compiler
   build action; `COMPILER_VERSION` compiler pin.
+- Parser fuzz harness: deterministic mutation stress smoke over
+  json/toml/csv/url parsing (+ writer round-trip stability) and http
+  header totalness, seeded for reproducibility.
 - TOML writer: `toml_write` emits the v1 subset (root keys first,
   `[section]` blocks in first-appearance order, the five common escapes,
   float markers for round-tripping) with a full round-trip smoke.
