@@ -8,7 +8,7 @@ Audience: release/infra lane (public known-limitations page), beta users.
 Source of truth for status/next work: `docs/stdlib_session.md` (section 0)
 and `docs/STDLIB_READINESS_PLAN.md`. Verification baselines: strict
 flip ON, freeze sweep on compiler tag v0.60.0 = 947/947 + module check
-509/509 + bare-name 0 hits + coverage ratchet OK (floors43),
+509/509 + bare-name 0 hits + coverage ratchet OK (floors47),
 `docs/VERIFICATION_BASELINE.md`, 15 KAT files, corpus gate clean.
 
 ## Shipped and verified
@@ -18,7 +18,7 @@ flip ON, freeze sweep on compiler tag v0.60.0 = 947/947 + module check
   encoding (base16/32/64/64url/percent/ascii85/punycode/idna), convert,
   net (http/url/dns/ip4/ip6/tls-helper stubs), crypto (hashes/macs/kdf/
   AEAD ciphers/sign/keyx/curves with KATs), compress (lz77/huffman/
-  deflate/zlib/gzip/snappy/lz4), serialize (json/csv/toml-reader),
+  deflate/zlib/gzip/snappy/lz4), serialize (json/csv/toml reader+writer),
   time/date, io/fs/os/args, format (ANSI/progress/dump), random,
   regex, math family, async (executor/channels/timers), sync
   (mutex/rwlock/barrier/channel/atomics), thread/threadpool, test.
@@ -44,8 +44,6 @@ flip ON, freeze sweep on compiler tag v0.60.0 = 947/947 + module check
   current machine (`xiom.time.tz`: `tz_offset_secs_at`,
   `tz_local_offset_secs`, `tz_is_dst`, `tz_local_epoch_secs`,
   `tz_local_now`). No bundled historical/global transition tables.
-- **TOML writer**: v1 reader only (`toml_parse` + typed getters +
-  `toml_keys`); serialization/writer is owed.
 - **Stdlib parser fuzzing**: the Stage-5 fuzz workspace exists (compiler
   lane, `fuzz/` over lexer/parser/CTFE); stdlib parsers (json/toml/csv/
   url/http) are not yet fuzzed. Pending a stdlib-side harness.

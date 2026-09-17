@@ -48,9 +48,8 @@ CI lives in `.github/workflows/` (PR gates, weekly heavy suites, release).
 
 ## Known limitations
 
-See `docs/STDLIB_BETA_LIMITATIONS.md` (TLS, full tzdata, TOML writer,
-parser fuzzing, platform consolidation) and `docs/STDLIB_READINESS_PLAN.md`
-for the production gate status.
+See `docs/STDLIB_BETA_LIMITATIONS.md` (TLS, full tzdata, parser fuzzing)
+and `docs/STDLIB_READINESS_PLAN.md` for the production gate status.
 
 ## License
 

@@ -17,8 +17,10 @@ use xiom.convert;
 // ("package.name"), in file order.
 //
 // NOT in v1: dates/times, multi-line strings, inline tables,
-// arrays-of-tables, dotted keys in assignment position, writer/emitter.
-// Errors carry the 1-based line number.
+// arrays-of-tables, dotted keys in assignment position. The WRITER
+// (`toml_write`) emits the same subset: flat section-qualified keys, root
+// keys first, `[section]` blocks in first-appearance order, the five
+// common escapes. Errors carry the 1-based line number.
 // ============================================================================
 
 pub type TomlValue = enum {
@@ -456,4 +458,165 @@ pub fn toml_get_int_array(t: &TomlTable, key: Str) -> Option[Vec[Int]] {
 /// All keys in file order.
 pub fn toml_keys(t: &TomlTable) -> Vec[Str] {
   return t.keys;
+}
+
+// ============================================================================
+// TOML writer (emitter) -- mirrors the reader subset exactly.
+// ============================================================================
+
+fn _toml_escape(s: Str) -> Str {
+  var out = "";
+  let len = string.str_len(s);
+  var i = 0;
+  while i < len {
+    let b = string.byte_at(s, i);
+    if b == 92 {
+      out = out + "\\\\";
+    } elif b == 34 {
+      out = out + "\\\"";
+    } elif b == 10 {
+      out = out + "\\n";
+    } elif b == 9 {
+      out = out + "\\t";
+    } elif b == 13 {
+      out = out + "\\r";
+    } else {
+      out = out + string.str_slice(s, i, i + 1);
+    }
+    i = i + 1;
+  }
+  return out;
+}
+
+fn _toml_bare_byte(b: Int) -> Bool {
+  if b >= 65 && b <= 90 { return true; }
+  if b >= 97 && b <= 122 { return true; }
+  if b >= 48 && b <= 57 { return true; }
+  return b == 95 || b == 45;
+}
+
+fn _toml_write_key(k: Str) -> Str {
+  let len = string.str_len(k);
+  if len == 0 { return "\"\""; }
+  var i = 0;
+  while i < len {
+    if !_toml_bare_byte(string.byte_at(k, i)) {
+      return "\"" + _toml_escape(k) + "\"";
+    }
+    i = i + 1;
+  }
+  return k;
+}
+
+fn _toml_has_float_marker(s: Str) -> Bool {
+  var i = 0;
+  let len = string.str_len(s);
+  while i < len {
+    let b = string.byte_at(s, i);
+    if b == 46 || b == 101 || b == 69 { return true; }
+    i = i + 1;
+  }
+  return false;
+}
+
+fn _toml_write_float(f: Float64) -> Str {
+  if f != f { return "nan"; }
+  let s = convert.float_to_string(f);
+  if s == "inf" || s == "-inf" { return s; }
+  if _toml_has_float_marker(s) { return s; }
+  return s + ".0";
+}
+
+fn _toml_write_value(v: TomlValue) -> Str {
+  match v {
+    TomlValue.TStr(s) => { return "\"" + _toml_escape(s) + "\""; },
+    TomlValue.TInt(n) => { return convert.int_to_string(n); },
+    TomlValue.TFloat(f) => { return _toml_write_float(f); },
+    TomlValue.TBool(b) => {
+      if b { return "true"; }
+      return "false";
+    },
+    TomlValue.TStrArray(items) => {
+      var out = "[";
+      var i = 0;
+      while i < items.len() {
+        if i > 0 { out = out + ", "; }
+        out = out + "\"" + _toml_escape(items[i]) + "\"";
+        i = i + 1;
+      }
+      return out + "]";
+    },
+    TomlValue.TIntArray(items) => {
+      var out = "[";
+      var i = 0;
+      while i < items.len() {
+        if i > 0 { out = out + ", "; }
+        out = out + convert.int_to_string(items[i]);
+        i = i + 1;
+      }
+      return out + "]";
+    },
+    TomlValue.TFloatArray(items) => {
+      var out = "[";
+      var i = 0;
+      while i < items.len() {
+        if i > 0 { out = out + ", "; }
+        out = out + _toml_write_float(items[i]);
+        i = i + 1;
+      }
+      return out + "]";
+    },
+    _ => { return ""; },
+  }
+}
+
+fn _toml_list_has(items: &Vec[Str], s: Str) -> Bool {
+  var i = 0;
+  while i < items.len() {
+    if items[i] == s { return true; }
+    i = i + 1;
+  }
+  return false;
+}
+
+/// Render `t` as TOML text for the v1 subset: root keys first (file order),
+/// then one `[section]` block per dotted-key prefix, in first-appearance
+/// order. Round-trips through `toml_parse` except for non-finite floats
+/// (written as `nan`/`inf`, which the v1 reader does not accept back).
+/// Complexity: O(n^2) worst case in the number of keys (section grouping).
+pub fn toml_write(t: &TomlTable) -> Str {
+  var out = "";
+  var i = 0;
+  while i < t.keys.len() {
+    if !string.str_rindex_of(t.keys[i], ".").is_some {
+      out = out + _toml_write_key(t.keys[i]) + " = " + _toml_write_value(t.values[i]) + "\n";
+    }
+    i = i + 1;
+  }
+  var sections = Vec[Str].new();
+  i = 0;
+  while i < t.keys.len() {
+    let dot_opt = string.str_rindex_of(t.keys[i], ".");
+    if dot_opt.is_some {
+      let dot = dot_opt.value;
+      let section = string.str_slice(t.keys[i], 0, dot);
+      if !_toml_list_has(&sections, section) {
+        sections.push(section);
+        out = out + "[" + section + "]\n";
+        var j = 0;
+        while j < t.keys.len() {
+          let dot2_opt = string.str_rindex_of(t.keys[j], ".");
+          if dot2_opt.is_some {
+            let dot2 = dot2_opt.value;
+            if string.str_slice(t.keys[j], 0, dot2) == section {
+              out = out + _toml_write_key(string.str_slice(t.keys[j], dot2 + 1, string.str_len(t.keys[j]))) + " = " + _toml_write_value(t.values[j]) + "\n";
+            }
+          }
+          j = j + 1;
+        }
+      }
+    }
+    i = i + 1;
+  }
+  return out;
 }

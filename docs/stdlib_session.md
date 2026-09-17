@@ -1693,6 +1693,13 @@ Stdlib burn-down on committed HEAD (b71d839f):
   read_file_lines Ok-length). string 44.6% -> **48.5%**, io 45.4% ->
   **50.9%**, global 16.3% clauses / **15.7%** pub-with-clause; floors46.
   Battery: 241 smokes green (string 102, io 139).
+- **TOML writer shipped (2026-09-17):** `toml_write(t: &TomlTable) -> Str`
+  emits the v1 subset -- root keys first, `[section]` blocks in
+  first-appearance order, the five reader escapes, quoted keys when not
+  bare, float markers (`.0` / scientific) so floats re-parse as TFloat.
+  Round-trip locked by NEW `smoke_serialize_toml_write.xi` (all 7 value
+  kinds + escapes + quoted key + empty table); serialize battery 24/24.
+  Removed from the beta limitations page.
 - **Contract wave 10:** 18 clauses -- rbtree full surface (constructor
   size, insert/remove `@pre` size relations + membership, get
   is_some==contains, min/max Some-iff-nonempty, inorder/preorder/
