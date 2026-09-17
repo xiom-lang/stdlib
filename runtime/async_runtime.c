@@ -57,28 +57,3 @@ long long xiom_async_now_ms(void) {
     return (long long)((clock() * 1000LL) / (long long)CLOCKS_PER_SEC);
 #endif
 }
-
-/* Monotonic microseconds -- a finer-grained companion helper. Optional; kept
- * uniquely prefixed and self-contained so it is always safe to link. */
-long long xiom_async_now_us(void) {
-#ifdef _WIN32
-    static LARGE_INTEGER freq;
-    static int have_freq = 0;
-    LARGE_INTEGER now;
-    if (!have_freq) {
-        QueryPerformanceFrequency(&freq);
-        have_freq = 1;
-    }
-    QueryPerformanceCounter(&now);
-    if (freq.QuadPart == 0) {
-        return 0;
-    }
-    return (long long)((now.QuadPart * 1000000LL) / freq.QuadPart);
-#elif defined(CLOCK_MONOTONIC)
-    struct timespec ts;
-    clock_gettime(CLOCK_MONOTONIC, &ts);
-    return (long long)ts.tv_sec * 1000000LL + (long long)ts.tv_nsec / 1000LL;
-#else
-    return (long long)((clock() * 1000000LL) / (long long)CLOCKS_PER_SEC);
-#endif
-}

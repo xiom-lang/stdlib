@@ -23,6 +23,16 @@
 //   - Table bounds checking on every access
 //   - Reference counting for safe unload: don't swap pointers while in-flight
 //   - State versioning: embed layout hash to detect struct changes
+//
+// AUDIT (2026-09-17): several entry points in this file are exported ABI
+// surface for live patching and are intentionally kept even though textual
+// scans find no in-tree callers:
+//   xiom_hot_init (dynamically loaded by tools/xiom_hot_host.c),
+//   xiom_hot_enter/leave/register/generation/get_version/is_stale,
+//   xiom_hot_set_contract_checker/verify_contracts,
+//   xiom_hot_save_state_legacy/restore_state_legacy.
+// Compiler codegen emits xiom_hot_get_ptr/set_ptr thunks; the host calls
+// xiom_hot_save_state/restore_state by name. See docs/RUNTIME_SYMBOL_AUDIT.md.
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -314,3 +324,4 @@ int xiom_hot_verify_contracts(const char* module_name) {
     }
     return 0; // no checker = pass (permissive mode)
 }
+

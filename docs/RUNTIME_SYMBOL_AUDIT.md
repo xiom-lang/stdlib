@@ -30,6 +30,42 @@ stdlib lane should bind.
 Results: **83 codegen-referenced, 83 runtime-internal, 20
 definition-only candidates.**
 
+## Re-run 2026-09-17 (post-split; adds the dynamic-reference pass)
+
+The original method only grepped `crates/**` for literal references and could
+not see dynamic name lookups. The post-split re-run added:
+
+- `GetProcAddress`/`dlsym` sites across the compiler repo;
+- exact-name search for all 20 candidates across `xiom-lang/xiom`
+  (`crates`, `tools`, `selfhost`, `editors`) and this repo's `xiom/**`
+  (stdlib externs);
+- occurrence recount across `runtime/**`.
+
+Findings:
+
+- **Dynamic reach is real for the hot-reload family.** The compiler repo's
+  `tools/xiom_hot_host.c` loads `xiom_hot_init` / `xiom_hot_save_state` /
+  `xiom_hot_restore_state` via `GetProcAddress`, and codegen emits
+  `xiom_hot_get_ptr`/`set_ptr` thunks plus the state save/restore functions.
+  The remaining `xiom_hot_*` entry points are exported ABI surface for live
+  patching even though no in-tree code calls them textually.
+- The other 9 candidates have no static reference in either repo, no stdlib
+  extern, and no dynamic lookup.
+
+Disposition:
+
+- **Deleted** (9): `xiom_asm_sha256_compress` (XIOM_NO_ASM stub),
+  `xiom_async_now_us`, `xiom_channel_close`, `xiom_f128_norm_sig`,
+  `xiom_f256_is_one`, `xiom_guard_heap_depth`, `xiom_guard_page_is_armed`,
+  `xiom_threadpool_shutdown`, `xiom_trampoline_clear_returned`.
+- **Kept + annotated** (11) as intentional hot-reload ABI: a comment block
+  at the top of `runtime/xiom_hot_reload.c` lists `xiom_hot_init/enter/
+  leave/register/generation/get_version/is_stale/set_contract_checker/
+  verify_contracts/save_state_legacy/restore_state_legacy`.
+- **Verification:** runtime-heavy battery (async/thread/sync/core, 46 files)
+  green after the trim; the full corpus + module check + bare-name scan are
+  re-run on compiler tag v0.60.0 (see `docs/VERIFICATION_BASELINE.md`).
+
 ## Disposition
 
 - **Bind: nothing from the unbound set.** No user-facing capability gap was
@@ -48,7 +84,9 @@ definition-only candidates.**
   helpers used by the compiler-rt entry points, trampoline/task/threadpool
   plumbing that other runtime units call.
 - **Delete candidates (20, definition-only as of this audit):** listed
-  below with defining file:line. CAVEAT before deleting: dynamic symbol
+  below with defining file:line. SUPERSEDED by the 2026-09-17 re-run above:
+  the 9 non-hot entries were deleted, the 11 `xiom_hot_*` entries are kept
+  and annotated in `runtime/xiom_hot_reload.c`. CAVEAT before deleting: dynamic symbol
   lookup is invisible to this method -- `GetProcAddress`/`dlsym`, symbol
   names built from prefixes (`"xiom_hot_" + op`), and asm-level external
   references. The hot-reload family in particular is loaded by CLI tooling

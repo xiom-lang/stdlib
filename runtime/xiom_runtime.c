@@ -59,7 +59,6 @@ typedef struct {
 #include <stddef.h>
 
 /* crypto stubs */
-static void xiom_asm_sha256_compress(uint32_t s[8], const uint8_t* b) { (void)s; (void)b; } /* NOTE: SHA-256 uses SHA-NI intrinsics in simd_runtime.c, not raw asm */
 static void xiom_asm_aes128_encrypt_block(const uint8_t* p, const uint8_t* rk, uint8_t* c) { (void)p; (void)rk; (void)c; }
 static void xiom_asm_aes128_decrypt_block(const uint8_t* c, const uint8_t* rk, uint8_t* p) { (void)c; (void)rk; (void)p; }
 static void xiom_asm_aes128_key_expand(const uint8_t* k, uint8_t* rk) { (void)k; (void)rk; }
@@ -351,11 +350,6 @@ char* xiom_guard_copy_str(const char* src) {
     return p;
 }
 
-/* Current guard-heap nesting depth (0 = no active unsafe block). */
-int xiom_guard_heap_depth(void) {
-    return xiom_guard_arena.active;
-}
-
 /* True when p falls inside one of the current arena slabs. Used to decide
    whether a confined-block realloc may stay in the arena (block-local data)
    or must use the plain heap (data that outlives the block). */
@@ -454,12 +448,6 @@ void xiom_guard_page_disarm(void) {
     mprotect(xiom_guard_page_ptr, (size_t)page, PROT_READ | PROT_WRITE);
 #endif
     xiom_guard_page_armed = 0;
-}
-
-/* Whether a guard page is currently armed (for the fault handler to
-   distinguish confined-block overflows from genuine faults). */
-int xiom_guard_page_is_armed(void) {
-    return xiom_guard_page_armed;
 }
 
 /* ================================================================
@@ -748,11 +736,6 @@ const char* xiom_trap_signal_name(int code) {    switch (code) {
    since the trampoline's own return value is the fault code. */
 int64_t xiom_trampoline_get_result(void) {
     return xiom_trampoline_last_result;
-}
-
-/* Reset the block-fn "did a return" flag at trampoline entry. */
-void xiom_trampoline_clear_returned(void) {
-    xiom_trampoline_returned = 0;
 }
 
 /* Called by the block fn right before returning from a `return` statement.
@@ -5378,15 +5361,6 @@ int64_t xiom_channel_try_recv(void* handle, int64_t* out) {
     return 1;
 }
 
-void xiom_channel_close(void* handle) {
-    xiom_channel_t* ch = (xiom_channel_t*)handle;
-    xiom_mutex_lock(&ch->mutex);
-    ch->closed = 1;
-    xiom_cond_broadcast(&ch->cond_send);
-    xiom_cond_broadcast(&ch->cond_recv);
-    xiom_mutex_unlock(&ch->mutex);
-}
-
 // ============================================================================
 // v0.56: Thread Pool -- work-stealing worker threads for spawn tasks
 // ============================================================================
@@ -5500,22 +5474,6 @@ void xiom_threadpool_spawn(void (*fn)(void*), void* arg) {
     xiom_mutex_unlock(&w->mutex);
 }
 
-void xiom_threadpool_shutdown(void) {
-    if (!xiom_tp_initialized) return;
-    for (int i = 0; i < xiom_tp_num_workers; i++) {
-        xiom_tp_worker_t* w = xiom_tp_workers[i];
-        xiom_mutex_lock(&w->mutex);
-        w->shutdown = 1;
-        xiom_cond_signal(&w->cond_work);
-        xiom_mutex_unlock(&w->mutex);
-        xiom_thread_join(w->thread);
-        xiom_mutex_destroy(&w->mutex);
-        free(w);
-    }
-    xiom_tp_initialized = 0;
-    xiom_tp_num_workers = 0;
-}
-
 /* ================================================================
    ECC: 256-bit Field Arithmetic & Elliptic Curves (secp256k1, Ed25519)
    Uses u64[4] little-endian limb arrays for all 256-bit values.
@@ -5572,10 +5530,6 @@ static uint64_t xiom_subb2(uint64_t a, uint64_t b, uint64_t bin, uint64_t* bout)
 /* -- 256-bit zero/one/copy/compare -- */
 static int xiom_f256_is_zero(const uint64_t a[4]) {
     return (a[0] | a[1] | a[2] | a[3]) == 0;
-}
-
-static int xiom_f256_is_one(const uint64_t a[4]) {
-    return a[0] == 1 && a[1] == 0 && a[2] == 0 && a[3] == 0;
 }
 
 static int xiom_f256_eq(const uint64_t a[4], const uint64_t b[4]) {

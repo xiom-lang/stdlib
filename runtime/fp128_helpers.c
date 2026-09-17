@@ -74,18 +74,6 @@ static xiom_f128 xiom_f128_round_pack(int sign, int exp, unsigned __int128 sig, 
     return xiom_f128_pack(sign, exp, (uint64_t)(rounded >> 64), (uint64_t)rounded);
 }
 
-/* Normalize an unnormalized significand (leading zeros) to 113 bits. */
-static void xiom_f128_norm_sig(unsigned __int128* sig, int* exp) {
-    if (*sig == 0) return;
-    int n = 128;
-    unsigned __int128 s = *sig;
-    while ((s >> 127) == 0) { s <<= 1; n--; }
-    /* s has bit 127 set; shift right to bit 112 */
-    int shift = 127 - 112;
-    *sig = s >> shift;
-    *exp += n - 113;
-}
-
 /* ============================ ADD / SUB =================================== */
 /* Both operands unpacked; returns a+b or a-b with exact IEEE rounding. */
 static xiom_f128 xiom_f128_addsub(xiom_f128 a, xiom_f128 b, int subtract) {
@@ -627,4 +615,5 @@ int __lttf2(xiom_f128 a, xiom_f128 b) {
     int c = __cmptf2(a, b);
     return c < 0 ? -1 : 0;
 }
+
 
