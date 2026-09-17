@@ -1693,6 +1693,22 @@ Stdlib burn-down on committed HEAD (b71d839f):
   read_file_lines Ok-length). string 44.6% -> **48.5%**, io 45.4% ->
   **50.9%**, global 16.3% clauses / **15.7%** pub-with-clause; floors46.
   Battery: 241 smokes green (string 102, io 139).
+- **Compiler findings resolved (2026-09-17, compiler R43/R44):**
+  `x25519_keypair` was a compiler guard bug on reference-typed locals
+  (`&v` where `var v = b` is a reference binding); FIXED in R43
+  (`274184be`), verified locally against a build of that commit
+  (probe p_x25519_keypair_codegen compiles + runs 0). `http_parse_response`
+  was NOT a compiler ABI bug: `net.net.HttpResponse` (2 fields) and
+  `net.http.HttpResponse` (3 fields) both injected as bare
+  `%struct.HttpResponse` (R44 same-leaf collision); FIXED stdlib-side by
+  renaming the legacy type to `NetHttpResponse` -- probe compiles+runs on
+  v0.60.0, the fuzz harness regains `http_parse_response`, net battery
+  11/11 and check-modules 509/509 green. R44 inventory: 40 same-leaf
+  non-generic pub-type groups stdlib-wide; wholesale compiler
+  qualification broke 6 smokes + 2 shape-triage smokes, so a dedicated
+  compiler+stdlib slice is the path (compiler docs/COMPILER_BUGS.md R44).
+  Compiler-side `stdlib_execution_tests` tree/cache contract reds are
+  stale-checkout drift: both smokes pass in this repo.
 - **Untested-surface sweep (2026-09-17):** reference scan over tests/ +
   xiom/ found **1010/5777 public fns never referenced anywhere**. The
   zero-arg subset (72; blocking/exit functions excluded) is now

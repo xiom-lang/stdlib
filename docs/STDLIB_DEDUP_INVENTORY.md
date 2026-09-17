@@ -163,6 +163,16 @@ ALREADY DONE before this session (verified):
 - `convert/endian.xi` delegates swap primitives to bits.byte_swap64.
 
 DEFERRED / CORRECTED:
+- **Same-leaf public TYPE collisions (R44 class, found 2026-09-17)**: 40
+  non-generic same-leaf pub-type groups (same bare leaf in different
+  modules) can collide in codegen (`%struct.<Leaf>` injection). Fixed:
+  `net.net.HttpResponse` renamed `NetHttpResponse` (the only pair that
+  clobbered fields -- net.http's 3-field struct vs net.net's 2-field
+  legacy copy). Remaining groups (collect Avl/PHeap/PMap/..., geom
+  Vec2/Vec3/Mat4, math Graph, regex Regex/Match, sync AtomicInt,
+  serialize JsonValue, ...) are latent: dedup or rename under a dedicated
+  compiler+stdlib qualification slice (compiler docs/COMPILER_BUGS.md
+  R44). Do not blind-rename: qualify with the compiler experiment first.
 - `convert/json.xi`: inventory said "json heap cluster must land first" --
   confirmed: json heap Part 1 (298ba5af) fixed
   smoke_stress_serialize_json_parse_valid only; the other json smokes

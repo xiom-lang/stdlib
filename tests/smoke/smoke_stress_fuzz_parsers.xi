@@ -6,10 +6,8 @@
 //   - no parser crashes, aborts or hangs on any input;
 //   - successful JSON/TOML/CSV parses round-trip through their writers and
 //     re-parse successfully (writer/reader agreement);
-//   - http_parse_response_headers is total (always returns a Vec).
-// http_parse_response (body parsing) is excluded: it currently fails
-// codegen on compiler v0.60.0 (open compiler-lane finding, minimal probe
-// tools/probes/p_http_resp_codegen.xi).
+//   - http_parse_response and http_parse_response_headers are total on any
+//     input (Ok or Err, no crash).
 // Deterministic LCG so failures reproduce from the seed. This is the
 // stdlib-side mutation harness; coverage-guided fuzzing stays with the
 // compiler Stage-5 workspace.
@@ -138,6 +136,7 @@ fn main() -> Int {
   var ok_toml = 0;
   var ok_csv = 0;
   var ok_url = 0;
+  var ok_http = 0;
 
   while iter < 600 {
     seed = next_seed(seed);
@@ -170,6 +169,11 @@ fn main() -> Int {
       Ok(_) => { ok_url = ok_url + 1; },
       Err(_) => {},
     }
+    let http_res = http_parse_response(input);
+    match http_res {
+      Ok(_) => { ok_http = ok_http + 1; },
+      Err(_) => {},
+    }
     let headers = http_parse_response_headers(input);
     if headers.len() < 0 { io.println("http headers"); return 40; }
 
@@ -179,6 +183,6 @@ fn main() -> Int {
     iter = iter + 1;
   };
 
-  io.println("fuzz: 600 inputs, json=" + ok_json + " toml=" + ok_toml + " csv=" + ok_csv + " url=" + ok_url);
+  io.println("fuzz: 600 inputs, json=" + ok_json + " toml=" + ok_toml + " csv=" + ok_csv + " url=" + ok_url + " http=" + ok_http);
   return 0;
 }

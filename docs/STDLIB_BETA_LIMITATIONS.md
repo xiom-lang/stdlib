@@ -49,24 +49,20 @@ flip ON, freeze sweep on compiler tag v0.60.0 = 947/947 + module check
   across json/toml/csv/url plus http header totalness, with writer
   round-trip stability). The Stage-5 coverage-guided workspace (compiler
   lane, `fuzz/`) remains the deeper fuzzing home.
-- **`http_parse_response` codegen failure (compiler-lane finding)**: any
-  program calling `http.http_parse_response` fails codegen on compiler
-  v0.60.0 (clang: invalid getelementptr on `%struct.HttpResponse`, field
-  index 2; the struct carries a `Vec[(Str, Str)]` field). Minimal probe:
-  `tools/probes/p_http_resp_codegen.xi`. Use
-  `http_parse_response_headers` (total, exercised by the harness) until
-  the compiler fix lands.
-- **`x25519_keypair` codegen failure (compiler-lane finding)**: any call
-  fails codegen on v0.60.0 (`cannot take a reference to 'v': it is already
-  a reference`). Minimal probe:
-  `tools/probes/p_x25519_keypair_codegen.xi`. The key-exchange entry point
-  is unusable until fixed; other `crypto.keyx` entry points are unaffected.
 - **Untested public surface**: a reference scan (2026-09-17) found **1010
   of 5777** public functions are never referenced by any smoke or module.
   The 72 zero-arg ones are now compiled+run by
-  `tools/probes/p_never_called_zeroarg.xi` (this is how the x25519 finding
-  surfaced); arg-taking functions still need generated call probes. More
-  latent codegen findings in this class are likely.
+  `tools/probes/p_never_called_zeroarg.xi` (it surfaced the
+  `x25519_keypair` codegen break, fixed in compiler R43 `274184be`);
+  arg-taking functions still need generated call probes. More latent
+  codegen findings in this class are likely.
+- **Same-leaf public type collisions (R44 class)**: 40 non-generic
+  same-leaf pub-type groups exist stdlib-wide (e.g. `collect.Avl`,
+  `geom.Vec2`, `regex.Regex`, `sync.AtomicInt`). One pair
+  (`net.net.HttpResponse` vs `net.http.HttpResponse`) actually clobbered
+  fields; it is fixed by renaming the legacy net.net type to
+  `NetHttpResponse` (2026-09-17). The rest need a compiler+stdlib
+  qualification slice (compiler `docs/COMPILER_BUGS.md` R44).
 
 ## Intentional design divergences (not bugs)
 

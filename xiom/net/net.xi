@@ -170,12 +170,15 @@ pub fn TcpListener.accept(self) -> Result[(TcpStream, Str), NetError]
 }
 
 // === HTTP ===
-pub type HttpResponse = {
+// NOTE: named NetHttpResponse to keep the bare type leaf distinct from
+// xiom.net.http.HttpResponse (R44 same-leaf struct collision; both used to
+// inject as %struct.HttpResponse and clobbered each other's fields).
+pub type NetHttpResponse = {
   status: Int;
   body: Str;
 } derive[Clone]
 
-pub fn http_get(url: Str) -> Result[HttpResponse, NetError]
+pub fn http_get(url: Str) -> Result[NetHttpResponse, NetError]
   requires: url.len() > 0
 {
   let parsed = parse_url(url)?;
@@ -221,7 +224,7 @@ pub fn http_get(url: Str) -> Result[HttpResponse, NetError]
   parse_http_response(raw)
 }
 
-pub fn http_post(url: Str, body: Str) -> Result[HttpResponse, NetError] {
+pub fn http_post(url: Str, body: Str) -> Result[NetHttpResponse, NetError] {
   let parsed = parse_url(url)?;
   var request: Str = "POST " + parsed.path;
   if parsed.query.len() > 0 {
@@ -268,7 +271,7 @@ pub fn http_post(url: Str, body: Str) -> Result[HttpResponse, NetError] {
   parse_http_response(raw)
 }
 
-fn parse_http_response(raw: Str) -> Result[HttpResponse, NetError] {
+fn parse_http_response(raw: Str) -> Result[NetHttpResponse, NetError] {
   let sp = string.index_of(raw, " ");
   if sp.is_none {
     return Err(NetError{ message: "invalid HTTP response: no status line"; code: -10; });
@@ -300,7 +303,7 @@ fn parse_http_response(raw: Str) -> Result[HttpResponse, NetError] {
       body = "";
     }
   }
-  Ok(HttpResponse{ status: status; body: body; })
+  Ok(NetHttpResponse{ status: status; body: body; })
 }
 
 // === UDP ===

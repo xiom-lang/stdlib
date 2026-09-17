@@ -43,6 +43,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- Same-leaf `HttpResponse` collision (compiler R44): `net.net`'s legacy
+  2-field type renamed to `NetHttpResponse`, unblocking
+  `net.http.http_parse_response` (probe + fuzz harness green).
 - Verification tooling no longer depends on pre-split temp paths; the
   runner always tests `XIOM_STDLIB=<repo root>`.
 
