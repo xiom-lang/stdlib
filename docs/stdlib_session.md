@@ -23,7 +23,7 @@ This document migrated in the R0 repo split. The repo layout is normalized:
 Inherited working rules (still valid):
 - Do NOT edit the compiler repo (`xiom-lang/xiom`). Compiler bugs found
   while working here go to that repo's issue tracker with a MINIMAL `.xi`
-  probe; keep a copy of the probe under `tests/tools/probes/` so it
+  probe; keep a copy of the probe under `tools/probes/` so it
   survives, and note the compiler version/commit.
 - Contracts are ACTIVE at runtime (violations abort); probe-first; one fix
   = one probe = one verified rerun; no edits while a sweep is in flight;
@@ -33,18 +33,14 @@ Inherited working rules (still valid):
   contract wave or new module.
 - Beta scope/exclusions: `docs/STDLIB_BETA_LIMITATIONS.md`.
 
-Tooling: the monorepo-era scripts lived OUTSIDE git in
-`C:\Users\lefte\AppData\Local\Temp\kilo\stdlib_ws\` (sweep_worker47.ps1,
-launch_sweep47.ps1, triage_round63.ps1, coverage_scan.ps1,
-barename_worker.ps1 + modlist_all.txt, probes\p_*.xi). At migration time,
-copy `coverage_scan.ps1`, `barename_worker.ps1`, `modlist_all.txt`, the
-latest sweep scripts and `probes/` into `tests/tools/` and re-point the
-corpus glob at `tests/smoke/`. The new repo CI should implement the Linux
-equivalents described by the release/infra lane (RELEASE_INFRA_PLAN.md
-section 4 lives with the release lane, not in this repo): check-only
-compile of all modules against the pinned released compiler, corpus run (8
-workers), coverage ratchet, KAT gates. If the temp copies are lost the
-scripts are small -- recreate from the verification protocol below.
+Tooling (ported 2026-09-17): `tools/` is the home -- `run_smokes.ps1` +
+`run_smokes.sh` (contract runner; `-Compiler`/`--compiler`, filter, workers,
+JSON, `-RetryFailed`), `coverage_scan.ps1` (ratchet; floors
+`coverage_floors*.json`), `barename_scan.ps1` (509-module strict detector),
+`check_modules.ps1` (check-only all modules), `modlist_all.txt`, and
+`probes/` (versioned `.xi` locks only). The compiler pin is
+`COMPILER_VERSION` (v0.60.0). CI (`.github/workflows/`) runs the R2 gates
+against that pin; see `tools/README.md`.
 
 GREENLIGHT (2026-09-16): the stdlib-side R0 deliverables are MET --
 r47 sweep 947/947 + ratchet OK with the strict flip ON, corpus gate clean,
@@ -52,7 +48,7 @@ no open compiler findings from this lane, beta scope documented. The split
 may proceed from a tagged commit; recommended hardening: one freeze-time
 sweep freshly built from the tag (the r47 binary was built mid-flight).
 
-Probe index (keep these alive in `tests/tools/probes/`; each proves a
+Probe index (keep these alive in `tools/probes/`; each proves a
 specific lock -- re-run after any compiler bump):
 - `p_enc_qual` (encoding qualification), `p_puny_parity` (punycode
   convention divergence), `p_b58_parity` (base58 delegation vectors),

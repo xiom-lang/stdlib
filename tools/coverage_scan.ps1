@@ -1,4 +1,4 @@
-# coverage_scan.ps1 -- contract-coverage scanner for stdlib/xiom (readiness gate #7).
+# coverage_scan.ps1 -- contract-coverage scanner for xiom/ (readiness gate #7).
 # Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
 # SPDX-License-Identifier: MIT OR Apache-2.0
 # Counts fn declarations and contract clauses (requires:/ensures:/invariant:).
@@ -7,12 +7,16 @@
 #   - pub fns with >=1 clause / pub fns   (the >=60% per-module gate metric)
 # Ratchet mode: pass -RatchetFile <json> to fail (exit 1) when any recorded
 # module metric regresses below the stored floor.
+# Repo-relative by default: scans <repo root>/xiom, so the script works from
+# any CWD and from CI checkouts. Runs on PowerShell 5.1 and pwsh 7+.
 param(
-  [string]$Root = "E:\Projects\AXIOM\stdlib\xiom",
+  [string]$Root = "",
   [string]$RatchetFile = "",
   [string]$DumpFloors = "",
   [switch]$Detail
 )
+if ($Root -eq "") { $Root = Join-Path (Split-Path -Parent $PSScriptRoot) "xiom" }
+if (-not (Test-Path -LiteralPath $Root)) { Write-Output ("ERROR: root not found: " + $Root); exit 2 }
 $files = Get-ChildItem -Path $Root -Filter *.xi -Recurse | Sort-Object FullName
 $rows = @()
 $totFns = 0; $totPub = 0; $totClauses = 0; $totPubCovered = 0
@@ -56,8 +60,9 @@ foreach ($f in $files) {
     if ($line -match '^\s*invariant\s*:') { $clauses++ }
     $i++
   }
-  $rel = $f.FullName.Substring($Root.Length).TrimStart('\')
-  $dir = if ($rel.Contains('\')) { $rel.Substring(0, $rel.IndexOf('\')) } else { '(root)' }
+  $rel = $f.FullName.Substring($Root.Length).TrimStart('\', '/')
+  $idx = $rel.IndexOfAny([char[]]@('\', '/'))
+  $dir = if ($idx -ge 0) { $rel.Substring(0, $idx) } else { '(root)' }
   $rows += [pscustomobject]@{
     File = $rel; Dir = $dir; Fns = $fns; PubFns = $pubFns
     Clauses = $clauses; PubCovered = $pubCovered
@@ -83,8 +88,8 @@ Write-Output ""
 Write-Output "PER-DIRECTORY (worst pub coverage first):"
 $byDir | Format-Table Dir, Fns, PubFns, Clauses, ClausesPerFn, PubPct -AutoSize | Out-String -Width 200 | Write-Output
 if ($Detail) {
-  Write-Output "PER-FILE (io/string/collections + any pub coverage < 60%):"
-  $rows | Where-Object { $_.Dir -in @('io','string','collections') -or ($_.PubFns -gt 0 -and $_.PubPct -lt 60) } |
+  Write-Output "PER-FILE (io/string/collect + any pub coverage < 60%):"
+  $rows | Where-Object { $_.Dir -in @('io','string','collect') -or ($_.PubFns -gt 0 -and $_.PubPct -lt 60) } |
     Sort-Object Dir, File | Format-Table File, Fns, PubFns, Clauses, PubPct -AutoSize | Out-String -Width 200 | Write-Output
 }
 if ($DumpFloors -ne "") {

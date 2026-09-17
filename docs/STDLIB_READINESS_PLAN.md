@@ -226,8 +226,9 @@ T1/T2 yields.
       pub-with-clause. Wave 6 part 3 (2026-09-16): 7 clauses (natural-order
       sign bounds, unicode wrapper specs) -> global 15.3% clauses / 14.6%
       pub-with-clause. Ratchet:
-      coverage_scan.ps1 -RatchetFile coverage_floors43.json (stdlib_ws
-      tooling; positive + negative runs verified; earlier floors kept at
+      tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors43.json
+      (repo tooling as of the split; positive + negative runs verified;
+      earlier floors kept at
       coverage_floors32/34/35/36/37/38/39/40/41/42.json).
       Floors are per top-level stdlib/xiom directory and must be refreshed
       when a module is ADDED (new uncovered pub fns dilute the percentage
