@@ -68,7 +68,9 @@ flip ON, freeze sweep on compiler tag v0.60.0 = 947/947 + module check
   (`net.net.HttpResponse` vs `net.http.HttpResponse`) actually clobbered
   fields; it is fixed by renaming the legacy net.net type to
   `NetHttpResponse` (2026-09-17). The rest need a compiler+stdlib
-  qualification slice (compiler `docs/COMPILER_BUGS.md` R44).
+  qualification slice (compiler `docs/COMPILER_BUGS.md` R44); worklist and
+  dispositions: `docs/SAME_LEAF_TYPE_CONFLICTS.md` (16 conflicting leaves,
+  24 shape-identical duplicate leaves).
 
 ## Intentional design divergences (not bugs)
 

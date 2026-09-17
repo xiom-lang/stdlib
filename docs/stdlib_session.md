@@ -1693,6 +1693,15 @@ Stdlib burn-down on committed HEAD (b71d839f):
   read_file_lines Ok-length). string 44.6% -> **48.5%**, io 45.4% ->
   **50.9%**, global 16.3% clauses / **15.7%** pub-with-clause; floors46.
   Battery: 241 smokes green (string 102, io 139).
+- **R44 same-leaf conflicts inventoried (2026-09-17):** NEW
+  `tools/same_leaf_audit.ps1` (repo-relative, read-only) + generated
+  `docs/baselines/same-leaf-conflicts.md`: 313 pub-type declarations,
+  40 multi-declaration leaves, **16 with genuinely different shapes**
+  (Executor, Future, Graph, UnionFind, PHeap, IntervalTree, IntMap,
+  StringMap, SpscRing, FloatScan, Aabb/Sphere/Ray/Plane, Regex/Match) and
+  24 shape-identical duplicates (benign for codegen, dedup candidates).
+  Dispositions/rules: `docs/SAME_LEAF_TYPE_CONFLICTS.md`. This is the
+  stdlib worklist for the compiler R44 qualification slice.
 - **Compiler findings resolved (2026-09-17, compiler R43/R44):**
   `x25519_keypair` was a compiler guard bug on reference-typed locals
   (`&v` where `var v = b` is a reference binding); FIXED in R43
