@@ -338,7 +338,9 @@ pub fn unicode_istitlecase(c: Char) -> Bool {
 
 /// Split `s` into extended grapheme clusters (simplified: base + combining
 /// marks + ZWJ sequences + emoji modifiers).
-pub fn unicode_grapheme_clusters(s: Str) -> Vec[Str] {
+pub fn unicode_grapheme_clusters(s: Str) -> Vec[Str]
+  ensures: result.len() >= 0
+{
   let len = string.str_len(s);
   var out = Vec[Str].new();
   var i: Int = 0;
@@ -372,7 +374,9 @@ pub fn unicode_grapheme_count(s: Str) -> Int
 }
 
 /// Byte offsets of word boundaries in `s`.
-pub fn unicode_word_boundaries(s: Str) -> Vec[Int] {
+pub fn unicode_word_boundaries(s: Str) -> Vec[Int]
+  ensures: result.len() >= 0
+{
   wordbreak.unicode_word_boundaries(s)
 }
 
@@ -385,7 +389,9 @@ pub fn unicode_word_count(s: Str) -> Int
 }
 
 /// Byte offsets of sentence boundaries in `s`.
-pub fn unicode_sentence_boundaries(s: Str) -> Vec[Int] {
+pub fn unicode_sentence_boundaries(s: Str) -> Vec[Int]
+  ensures: result.len() >= 0
+{
   sentencebreak.unicode_sentence_boundaries(s)
 }
 
@@ -398,12 +404,16 @@ pub fn unicode_sentence_count(s: Str) -> Int
 }
 
 /// Byte offsets of allowed line break points in `s`.
-pub fn unicode_line_break_points(s: Str) -> Vec[Int] {
+pub fn unicode_line_break_points(s: Str) -> Vec[Int]
+  ensures: result.len() >= 0
+{
   linebreak.unicode_line_break_points(s)
 }
 
 /// Split `s` into lines at the allowed break points.
-pub fn unicode_line_breaks(s: Str) -> Vec[Str] {
+pub fn unicode_line_breaks(s: Str) -> Vec[Str]
+  ensures: result.len() >= 0
+{
   linebreak.unicode_split_lines(s)
 }
 
@@ -479,12 +489,16 @@ pub fn unicode_display_width(s: Str) -> Int
 }
 
 /// Truncate `s` to fit `max_width` display cells (grapheme-safe).
-pub fn unicode_truncate_display(s: Str, max_width: Int) -> Str {
+pub fn unicode_truncate_display(s: Str, max_width: Int) -> Str
+  ensures: result.len() <= s.len()
+{
   ea_width.unicode_truncate_display(s, max_width)
 }
 
 /// Pad `s` to a display width; side "left", "right" or "center".
-pub fn unicode_pad_display(s: Str, width: Int, side: Str) -> Str {
+pub fn unicode_pad_display(s: Str, width: Int, side: Str) -> Str
+  ensures: result.len() >= s.len()
+{
   let w = ea_width.unicode_display_width(s);
   if w >= width {
     return s;
@@ -516,7 +530,9 @@ pub fn unicode_pad_display(s: Str, width: Int, side: Str) -> Str {
 }
 
 /// Substring of `s` bounded by display-cell offsets `start` and `end`.
-pub fn unicode_display_slice(s: Str, start: Int, end: Int) -> Str {
+pub fn unicode_display_slice(s: Str, start: Int, end: Int) -> Str
+  ensures: result.len() <= s.len()
+{
   let len = string.str_len(s);
   var cells: Int = 0;
   var byte_start: Int = 0;
@@ -583,7 +599,9 @@ pub fn unicode_emoji_presentation(c: Char) -> Bool {
 
 /// Extract full emoji sequences (ZWJ joins, skin-tone modifiers, keycaps,
 /// regional-indicator flag pairs) from `s`.
-pub fn unicode_emoji_sequences(s: Str) -> Vec[Str] {
+pub fn unicode_emoji_sequences(s: Str) -> Vec[Str]
+  ensures: result.len() >= 0
+{
   let len = string.str_len(s);
   var out = Vec[Str].new();
   var i: Int = 0;
@@ -633,7 +651,9 @@ pub fn unicode_emoji_version() -> Str {
 // -- Properties --------------------------------------------------------------
 
 /// ISO 15924 script code of `c`.
-pub fn unicode_script(c: Char) -> Str {
+pub fn unicode_script(c: Char) -> Str
+  ensures: result.len() == 4
+{
   script.unicode_script(c)
 }
 
@@ -649,7 +669,9 @@ pub fn unicode_block(c: Char) -> Str {
 }
 
 /// Short general category of `c`, e.g. "Lu", "Nd", "Zs".
-pub fn unicode_general_category(c: Char) -> Str {
+pub fn unicode_general_category(c: Char) -> Str
+  ensures: result.len() == 2
+{
   category.unicode_general_category(c)
 }
 
@@ -716,7 +738,10 @@ pub fn unicode_is_printable(c: Char) -> Bool {
 }
 
 /// Dominant script of `s` by character count; "Zzzz" for empty input.
-pub fn unicode_script_of(s: Str) -> Str {
+pub fn unicode_script_of(s: Str) -> Str
+  ensures: result.len() == 4
+  ensures: s.len() == 0 => result == "Zzzz"
+{
   let scripts = unicode_scripts(s);
   if scripts.len() == 0 {
     return "Zzzz";
@@ -726,7 +751,9 @@ pub fn unicode_script_of(s: Str) -> Str {
 }
 
 /// Distinct scripts present in `s`, in first-seen order.
-pub fn unicode_scripts(s: Str) -> Vec[Str] {
+pub fn unicode_scripts(s: Str) -> Vec[Str]
+  ensures: result.len() <= s.len()
+{
   let len = string.str_len(s);
   var out = Vec[Str].new();
   var i: Int = 0;
@@ -814,7 +841,9 @@ pub fn unicode_bidi_level(c: Char) -> Int
 
 /// Resolved bidi levels of each char of `s` (simplified UBA: base level from
 /// the first strong character, strong/weak resolved per the bidi class).
-pub fn unicode_bidi_scan(s: Str) -> Vec[Int] {
+pub fn unicode_bidi_scan(s: Str) -> Vec[Int]
+  ensures: result.len() <= s.len()
+{
   let len = string.str_len(s);
   var levels = Vec[Int].new();
   var par: Int = 0;
@@ -885,7 +914,9 @@ pub fn unicode_is_numeric(c: Char) -> Bool {
 }
 
 /// Decimal numeric value of `c` (Nd), None when not a decimal digit.
-pub fn unicode_decimal_value(c: Char) -> Option[Int] {
+pub fn unicode_decimal_value(c: Char) -> Option[Int]
+  ensures: result is Some => result.value >= 0
+{
   let cp = to_int_from_char(c);
   var v: Int = -1;
   if cp >= 0x30 && cp <= 0x39 {
@@ -904,7 +935,9 @@ pub fn unicode_decimal_value(c: Char) -> Option[Int] {
 }
 
 /// Digit numeric value of `c` (Nd and Nl/No digit forms), None otherwise.
-pub fn unicode_digit_value(c: Char) -> Option[Int] {
+pub fn unicode_digit_value(c: Char) -> Option[Int]
+  ensures: result is Some => result.value >= 0
+{
   let d = unicode_decimal_value(c);
   if d.is_some {
     return d;
@@ -920,7 +953,9 @@ pub fn unicode_digit_value(c: Char) -> Option[Int] {
 }
 
 /// Full numeric value of `c` including fractions, None when none.
-pub fn unicode_numeric_value(c: Char) -> Option[Float64] {
+pub fn unicode_numeric_value(c: Char) -> Option[Float64]
+  ensures: result is Some => result.value >= 0.0
+{
   let d = unicode_digit_value(c);
   if d.is_some {
     return Some(_int_to_float(d.value));

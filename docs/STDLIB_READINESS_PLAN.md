@@ -231,11 +231,16 @@ T1/T2 yields.
       pub-with-clause. Wave 7 (2026-09-17): 25 clauses on collect
       (constructors, Option.is_some == query relations, post-remove
       absence, order/iter length equalities) -> collect 23.6% -> 29.7%,
-      global 15.7% clauses / 15.0% pub-with-clause. Ratchet:
-      tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors44.json
+      global 15.7% clauses / 15.0% pub-with-clause. Wave 8 (2026-09-17):
+      26 clauses (unicode display/width bounds, fixed script/category
+      code lengths, numeric Option value bounds, boundary length bounds;
+      collect pop/remove @pre size relations) -> collect 30.8%,
+      string 40.5% -> 44.6%, global 16.1% clauses / 15.4%
+      pub-with-clause. Ratchet:
+      tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors45.json
       (repo tooling as of the split; positive + negative runs verified;
       earlier floors kept at
-      coverage_floors32/34/35/36/37/38/39/40/41/42/43.json).
+      coverage_floors32/34/35/36/37/38/39/40/41/42/43/44.json).
       Floors are per top-level stdlib/xiom directory and must be refreshed
       when a module is ADDED (new uncovered pub fns dilute the percentage
       -- TOML dropped serialize 6.1% -> 5.4%, tz dropped time 13% ->

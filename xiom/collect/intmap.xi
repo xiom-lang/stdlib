@@ -186,6 +186,8 @@ pub fn int_map_contains(m: &IntMap, key: Int) -> Bool {
 /// O(n) amortized (order compaction).
 pub fn int_map_remove(m: &mut IntMap, key: Int) -> Bool
   ensures: int_map_contains(m, key) == false
+  ensures: result == true => int_map_size(m) == int_map_size(m)@pre - 1
+  ensures: result == false => int_map_size(m) == int_map_size(m)@pre
 {
   var slot = _imap_find(m, key);
   if slot < 0 {
@@ -300,6 +302,8 @@ pub fn string_map_contains(m: &StringMap, key: Str) -> Bool {
 /// O(n).
 pub fn string_map_remove(m: &mut StringMap, key: Str) -> Bool
   ensures: string_map_contains(m, key) == false
+  ensures: result == true => string_map_size(m) == string_map_size(m)@pre - 1
+  ensures: result == false => string_map_size(m) == string_map_size(m)@pre
 {
   var i = 0;
   while i < m.keys.len() {

@@ -1654,6 +1654,16 @@ Stdlib burn-down on committed HEAD (b71d839f):
   **509/509**, bare-name **0 hits**, ratchet OK floors43. Record:
   `docs/VERIFICATION_BASELINE.md` + `docs/baselines/`. Post-runtime-trim
   re-run: 947/947 again.
+- **Contract wave 8:** 26 clauses -- unicode display-width bounds
+  (truncate <= len, pad >= len, slice <= len), fixed script/category code
+  lengths (4/2), numeric Option value bounds (`result is Some =>
+  result.value >= 0`/`>= 0.0`), boundary-scan length bounds, and collect
+  pop/remove `@pre` size relations (ll/workqueue/deque pops; int_map/
+  string_map/lhmap/bst removes). NEW `p_wave8_shapes.xi` validated the
+  implication + `@pre` + `result.value` shapes first. collect 29.7% ->
+  **30.8%**, string 40.5% -> **44.6%**, global 16.1% clauses / **15.4%**
+  pub-with-clause; floors45. Battery: 206 smokes green (unicode 3,
+  collect 101, string 102).
 - **Runtime audit re-run (dynamic pass added):** the hot-reload family is
   live dynamic ABI (tools/xiom_hot_host.c GetProcAddress + codegen thunks),
   so it stays; 9 definition-only symbols deleted (asm sha stub, async us

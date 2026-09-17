@@ -29,7 +29,7 @@ compiler's codegen targets.
 
 ```powershell
 ./tools/run_smokes.ps1 -Compiler C:\path\to\xiom.exe   # full corpus
-./tools/coverage_scan.ps1 -RatchetFile ./tools/coverage_floors44.json
+./tools/coverage_scan.ps1 -RatchetFile ./tools/coverage_floors45.json
 ./tools/barename_scan.ps1 -Compiler C:\path\to\xiom.exe
 ./tools/check_modules.ps1 -Compiler C:\path\to\xiom.exe
 ```

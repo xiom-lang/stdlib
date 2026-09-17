@@ -71,7 +71,10 @@ pub fn ll_push_back(l: &mut LinkedList, value: Int) {
 }
 
 /// Remove and return the front value. None if the list is empty. O(1).
-pub fn ll_pop_front(l: &mut LinkedList) -> Option[Int] {
+pub fn ll_pop_front(l: &mut LinkedList) -> Option[Int]
+  ensures: result is Some => ll_len(l) == ll_len(l)@pre - 1
+  ensures: result is None => ll_len(l) == ll_len(l)@pre
+{
   if l.size == 0 { return None; }
   var id = l.head;
   var value = l.values[id];
@@ -86,7 +89,10 @@ pub fn ll_pop_front(l: &mut LinkedList) -> Option[Int] {
 }
 
 /// Remove and return the back value. None if the list is empty. O(1).
-pub fn ll_pop_back(l: &mut LinkedList) -> Option[Int] {
+pub fn ll_pop_back(l: &mut LinkedList) -> Option[Int]
+  ensures: result is Some => ll_len(l) == ll_len(l)@pre - 1
+  ensures: result is None => ll_len(l) == ll_len(l)@pre
+{
   if l.size == 0 { return None; }
   var id = l.tail;
   var value = l.values[id];
