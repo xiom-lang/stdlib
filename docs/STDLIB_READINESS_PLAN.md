@@ -196,10 +196,16 @@ T1/T2 yields.
       removed) and net.net's v4 validator all delegate to net.ip4/net.ip6
       (p_ip_parity/p_ip_parity2/p_dns_parity/p_netip_parity zero
       mismatches; R28-safe named-local binding). os.term shimmed onto
-      os.terminal + format.terminal. Remaining: platform consolidation
-      only; net.address and io.console-vs-os.terminal audited as NOT
-      duplicates (documented in STDLIB_DEDUP_INVENTORY.md and
-      STDLIB_BETA_LIMITATIONS.md).
+      os.terminal + format.terminal. Platform audited 2026-09-17 and found
+      NOT a duplicate pair: xiom.platform (ergonomic os_name/is_bsd/
+      newline/path_sep surface, declared in core/platform.xi) and
+      xiom.os.platform (platform_* surface + hostname/user) have disjoint
+      names and both have consumers; core/platform already delegates to
+      xiom.os/env. net.address and io.console-vs-os.terminal also audited
+      as NOT duplicates. Remaining consolidation units (translation, no
+      blind shims): collect/hash vs collect/linkedhash, collect/cache vs
+      collect/lru, geom short/long names; twin removal waits on the
+      compiler api_freeze snapshot regen.
 - [x] Coverage number published + ratcheted in CI-equivalent sweep script --
       DELIVERED 2026-09-12: global 1092 clauses / 8634 fns = 12.6%
       (pub-with-clause 720/6469 = 11.1%); key modules io 38.9%,

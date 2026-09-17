@@ -1679,6 +1679,14 @@ Stdlib burn-down on committed HEAD (b71d839f):
 - **Dedup finding:** two unlisted collect twin pairs (`hash/linkedhash`,
   `cache/lru`) are API translation units -- XIOM has no cross-module type
   aliases, so no thin shim; inventory updated.
+- **Platform dedup audit (2026-09-17): NOT duplicates.** `xiom.platform`
+  (core/platform.xi; ergonomic os_name/is_windows/is_bsd/newline/path_sep/
+  cpu_count/os_version, consumed by smoke_platform) and `xiom.os.platform`
+  (platform_* prefixed surface + hostname/user, consumed by smoke_os_env)
+  have disjoint names; core/platform already delegates to xiom.os/env, so
+  there is no duplicated logic. Documented in the dedup inventory; the
+  file/declaration mismatch (core/platform.xi declares xiom.platform) is a
+  coordinated hygiene follow-up, not a blocker.
 - Commits this round (local): 66cd23b, 547a164, 4fe005e, 1e2db86, 9dab881,
   d6449a4, plus the wave-7/dedup commit.
 

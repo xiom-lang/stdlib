@@ -223,7 +223,7 @@ kat_convert_base64_parity.xi as the template).
 | time/date / convert/date | time.date | same | - |
 | io/fs / os/fs / os/fs_ffi | io.fs | public facade; os/fs_ffi stays private impl | fs_ffi NOT deprecated (impl detail) |
 | io/console / os/terminal / os/term | os.terminal | richest surface | audit before choosing |
-| core/platform / os/platform | os.platform | runtime-backed | - |
+| core/platform / os/platform | NOT duplicates (audited 2026-09-17) | xiom.platform ergonomic surface vs xiom.os.platform platform_* surface; disjoint names, both consumed | no shim needed |
 | collect/hash / collect/linkedhash | collect.hash | richer surface + most consumers | no type aliases; translation unit |
 | collect/cache / collect/lru | collect.cache | LRU+LFU+ARC + most consumers | translation unit |
 | geom mat/matrix vec/vector quat/quaternion | *long names* | match user expectations from other langs | pure rename pair |
@@ -238,6 +238,17 @@ kat_convert_base64_parity.xi as the template).
   the method-call surface.
 - deflate bare-name binding hazard: after consolidation, ALL internal calls
   must be module-prefixed (bare names have bound wrong overloads).
+- platform: `core/platform.xi` declares `module xiom.platform` (not
+  `xiom.core.platform`) with an un-prefixed ergonomic surface (os_name,
+  is_windows, newline, path_sep, cpu_count, os_version) consumed by
+  smoke_platform.xi; `os/platform.xi` declares `xiom.os.platform` with a
+  disjoint `platform_*` surface (family, hostname, user) consumed by
+  smoke_os_env.xi. core/platform already delegates to xiom.os/env, so
+  there is no duplicated logic to remove -- audited 2026-09-17 as NOT
+  duplicates. Hygiene follow-up (do not rush): the file/declaration
+  mismatch (`core/platform.xi` -> module xiom.platform) is the same class
+  as the rc case; moving it to `xiom/platform.xi` should be coordinated
+  with a compiler api_freeze snapshot regen.
 
 ## Execution checklist (per pair)
 

@@ -49,8 +49,6 @@ flip ON, freeze sweep on compiler tag v0.60.0 = 947/947 + module check
 - **Stdlib parser fuzzing**: the Stage-5 fuzz workspace exists (compiler
   lane, `fuzz/` over lexer/parser/CTFE); stdlib parsers (json/toml/csv/
   url/http) are not yet fuzzed. Pending a stdlib-side harness.
-- **Platform module consolidation**: `core.platform`/`os.platform`
-  overlap audit is queued, not done.
 
 ## Intentional design divergences (not bugs)
 
