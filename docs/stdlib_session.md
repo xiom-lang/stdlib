@@ -1717,7 +1717,11 @@ Stdlib burn-down on committed HEAD (b71d839f):
   to 'v': it is already a reference") -- minimal probe
   `tools/probes/p_x25519_keypair_codegen.xi` for the compiler lane. The
   other 71 calls compile+run green. Follow-up: generated call probes for
-  the arg-taking subset (expect more findings of this class).
+  the arg-taking subset (expect more findings of this class). The
+  single-param tranche (139 calls, 54 modules) hits an OPEN codegen
+  interaction: `Tuple__Int__Int` returned where `Tuple__Int__Bool` is
+  expected; subset bisection is non-monotone, so the full repro is kept at
+  `tools/known_failures/p_sweep_single_param.xi` for compiler triage.
 - **Parser fuzz harness + http finding (2026-09-17):** NEW
   `smoke_stress_fuzz_parsers.xi` -- 600 deterministic generated/mutated
   inputs against json/toml/csv/url parse (+ writer round-trip stability)
