@@ -28,7 +28,9 @@ pub type RbTree = {
 }
 
 /// Create an empty red-black tree. O(1).
-pub fn rbtree_new() -> RbTree {
+pub fn rbtree_new() -> RbTree
+  ensures: result.size == 0
+{
   return RbTree{
     root: -1;
     keys: Vec[Int].new(); values: Vec[Int].new();
@@ -156,7 +158,11 @@ fn rb_insert_fixup(t: &mut RbTree, z: Int) {
 
 /// Insert `key` -> `value`; returns false if the key already exists.
 /// O(log n).
-pub fn rbtree_insert(t: &mut RbTree, key: Int, value: Int) -> Bool {
+pub fn rbtree_insert(t: &mut RbTree, key: Int, value: Int) -> Bool
+  ensures: rbtree_contains(t, key) == true
+  ensures: result == true => rbtree_size(t) == rbtree_size(t)@pre + 1
+  ensures: result == false => rbtree_size(t) == rbtree_size(t)@pre
+{
   if rb_find_node(t, key) != -1 { return false; }
   var z = rb_new_node(t, key, value);
   var y: Int = -1;
@@ -183,7 +189,9 @@ pub fn rbtree_insert(t: &mut RbTree, key: Int, value: Int) -> Bool {
 }
 
 /// Value for `key`, or None if absent. O(log n).
-pub fn rbtree_get(t: &RbTree, key: Int) -> Option[Int] {
+pub fn rbtree_get(t: &RbTree, key: Int) -> Option[Int]
+  ensures: result.is_some == rbtree_contains(t, key)
+{
   var n = rb_find_node(t, key);
   if n == -1 { return None; }
   return Some(t.values[n]);
@@ -276,7 +284,11 @@ fn rb_delete_fixup(t: &mut RbTree, x: Int, xp: Int) {
 }
 
 /// Remove `key`; returns true if it was present. O(log n).
-pub fn rbtree_remove(t: &mut RbTree, key: Int) -> Bool {
+pub fn rbtree_remove(t: &mut RbTree, key: Int) -> Bool
+  ensures: rbtree_contains(t, key) == false
+  ensures: result == true => rbtree_size(t) == rbtree_size(t)@pre - 1
+  ensures: result == false => rbtree_size(t) == rbtree_size(t)@pre
+{
   var z = rb_find_node(t, key);
   if z == -1 { return false; }
   var y = z;
@@ -330,13 +342,17 @@ pub fn rbtree_size(t: &RbTree) -> Int
 }
 
 /// Smallest key, or None if the tree is empty. O(log n).
-pub fn rbtree_min(t: &RbTree) -> Option[Int] {
+pub fn rbtree_min(t: &RbTree) -> Option[Int]
+  ensures: result.is_some == (rbtree_size(t) > 0)
+{
   if t.root == -1 { return None; }
   return Some(t.keys[rb_minimum(t, t.root)]);
 }
 
 /// Largest key, or None if the tree is empty. O(log n).
-pub fn rbtree_max(t: &RbTree) -> Option[Int] {
+pub fn rbtree_max(t: &RbTree) -> Option[Int]
+  ensures: result.is_some == (rbtree_size(t) > 0)
+{
   if t.root == -1 { return None; }
   var cur = t.root;
   while t.right[cur] != -1 {
@@ -353,7 +369,9 @@ fn rb_walk_inorder(t: &RbTree, node: Int, out: &mut Vec[Int]) {
 }
 
 /// Keys in ascending order. O(n).
-pub fn rbtree_inorder(t: &RbTree) -> Vec[Int] {
+pub fn rbtree_inorder(t: &RbTree) -> Vec[Int]
+  ensures: result.len() == rbtree_size(t)
+{
   var out = Vec[Int].new();
   rb_walk_inorder(t, t.root, &mut out);
   return out;
@@ -367,7 +385,9 @@ fn rb_walk_preorder(t: &RbTree, node: Int, out: &mut Vec[Int]) {
 }
 
 /// Keys in preorder (node, left, right). O(n).
-pub fn rbtree_preorder(t: &RbTree) -> Vec[Int] {
+pub fn rbtree_preorder(t: &RbTree) -> Vec[Int]
+  ensures: result.len() == rbtree_size(t)
+{
   var out = Vec[Int].new();
   rb_walk_preorder(t, t.root, &mut out);
   return out;
@@ -381,7 +401,9 @@ fn rb_walk_postorder(t: &RbTree, node: Int, out: &mut Vec[Int]) {
 }
 
 /// Keys in postorder (left, right, node). O(n).
-pub fn rbtree_postorder(t: &RbTree) -> Vec[Int] {
+pub fn rbtree_postorder(t: &RbTree) -> Vec[Int]
+  ensures: result.len() == rbtree_size(t)
+{
   var out = Vec[Int].new();
   rb_walk_postorder(t, t.root, &mut out);
   return out;

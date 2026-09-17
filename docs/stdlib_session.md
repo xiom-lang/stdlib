@@ -1693,6 +1693,13 @@ Stdlib burn-down on committed HEAD (b71d839f):
   read_file_lines Ok-length). string 44.6% -> **48.5%**, io 45.4% ->
   **50.9%**, global 16.3% clauses / **15.7%** pub-with-clause; floors46.
   Battery: 241 smokes green (string 102, io 139).
+- **Contract wave 10:** 18 clauses -- rbtree full surface (constructor
+  size, insert/remove `@pre` size relations + membership, get
+  is_some==contains, min/max Some-iff-nonempty, inorder/preorder/
+  postorder length == size) and cache (LRU/LFU/ARC constructor field
+  specs, get is_some==contains, put-membership invariants). collect
+  30.8% -> **34.4%**, global 16.6% clauses / **16.0%** pub-with-clause;
+  floors47. Battery: 101/101 collect smokes green.
 - **Platform dedup audit (2026-09-17): NOT duplicates.** `xiom.platform`
   (core/platform.xi; ergonomic os_name/is_windows/is_bsd/newline/path_sep/
   cpu_count/os_version, consumed by smoke_platform) and `xiom.os.platform`

@@ -20,7 +20,9 @@ pub type LruCache = {
 }
 
 /// Create an LRU cache holding at most `capacity` entries.
-pub fn lru_new(capacity: Int) -> LruCache {
+pub fn lru_new(capacity: Int) -> LruCache
+  ensures: result.keys.len() == 0
+{
   var cap = capacity;
   if cap < 1 { cap = 1; }
   return LruCache{ capacity: cap; keys: Vec[Int].new(); values: Vec[Int].new(); order: Vec[Int].new(); };
@@ -50,7 +52,9 @@ fn lru_find(c: &LruCache, key: Int) -> Int {
 }
 
 /// Fetch a value, marking the key as most recently used. None if absent.
-pub fn lru_get(c: &mut LruCache, key: Int) -> Option[Int] {
+pub fn lru_get(c: &mut LruCache, key: Int) -> Option[Int]
+  ensures: result.is_some == lru_contains(c, key)
+{
   var idx = lru_find(c, key);
   if idx < 0 { return None; }
   var val = c.values[idx];
@@ -59,7 +63,9 @@ pub fn lru_get(c: &mut LruCache, key: Int) -> Option[Int] {
 }
 
 /// Insert or update a key. Evicts the least recently used key when full.
-pub fn lru_put(c: &mut LruCache, key: Int, value: Int) {
+pub fn lru_put(c: &mut LruCache, key: Int, value: Int)
+  ensures: lru_contains(c, key) == true
+{
   var idx = lru_find(c, key);
   if idx >= 0 {
     c.values[idx] = value;
@@ -116,14 +122,18 @@ pub type LfuCache = {
 }
 
 /// Create an LFU cache holding at most `capacity` entries.
-pub fn lfu_new(capacity: Int) -> LfuCache {
+pub fn lfu_new(capacity: Int) -> LfuCache
+  ensures: result.keys.len() == 0
+{
   var cap = capacity;
   if cap < 1 { cap = 1; }
   return LfuCache{ capacity: cap; keys: Vec[Int].new(); values: Vec[Int].new(); counts: Vec[Int].new(); seq: Vec[Int].new(); next_seq: 0; };
 }
 
 /// Fetch a value and increment its access frequency. None if absent.
-pub fn lfu_get(c: &mut LfuCache, key: Int) -> Option[Int] {
+pub fn lfu_get(c: &mut LfuCache, key: Int) -> Option[Int]
+  ensures: result.is_some == lfu_contains(c, key)
+{
   var i = 0;
   while i < c.keys.len() {
     if c.keys[i] == key {
@@ -137,7 +147,9 @@ pub fn lfu_get(c: &mut LfuCache, key: Int) -> Option[Int] {
 
 /// Insert or update a key. On overflow, evicts the lowest-frequency key
 /// (tie-break: least recently inserted among the minimum-frequency group).
-pub fn lfu_put(c: &mut LfuCache, key: Int, value: Int) {
+pub fn lfu_put(c: &mut LfuCache, key: Int, value: Int)
+  ensures: lfu_contains(c, key) == true
+{
   var i = 0;
   while i < c.keys.len() {
     if c.keys[i] == key {
@@ -401,7 +413,9 @@ fn _ghost_pop_back(c: &mut ArcCache, ghost: Int) {
 }
 
 /// Create an ARC cache with `capacity` entries (>= 1).
-pub fn arc_new(capacity: Int) -> ArcCache {
+pub fn arc_new(capacity: Int) -> ArcCache
+  ensures: result.p == 0
+{
   var c = capacity;
   if c < 1 { c = 1; }
   return ArcCache{
@@ -417,7 +431,9 @@ pub fn arc_new(capacity: Int) -> ArcCache {
 }
 
 /// Value for `key` (promotes recent->frequent on hit). None on miss.
-pub fn arc_get(c: &mut ArcCache, key: Int) -> Option[Int] {
+pub fn arc_get(c: &mut ArcCache, key: Int) -> Option[Int]
+  ensures: result.is_some == arc_contains(c, key)
+{
   var i1 = _find_idx(&c.t1k, key);
   if i1 >= 0 {
     _move_to_front(c, 0, i1);
@@ -471,7 +487,9 @@ fn _arc_replace(c: &mut ArcCache) {
 }
 
 /// Insert or update `key` -> `value`, adapting p on ghost hits.
-pub fn arc_put(c: &mut ArcCache, key: Int, value: Int) {
+pub fn arc_put(c: &mut ArcCache, key: Int, value: Int)
+  ensures: arc_contains(c, key) == true
+{
   var i1 = _find_idx(&c.t1k, key);
   if i1 >= 0 {
     c.t1v[i1] = value;

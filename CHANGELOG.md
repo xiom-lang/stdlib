@@ -18,12 +18,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
-- Contract waves 7-9: wave 7 (25 collect clauses: constructors,
+- Contract waves 7-10: wave 7 (25 collect clauses: constructors,
   Option/query relations, post-remove absence, order/iter lengths); wave 8
   (26 clauses: unicode width/code-length/value bounds; collect pop/remove
   `@pre` size relations); wave 9 (22 clauses: combinatorics length/count
-  specs, io helper specs). collect 23.6% -> 30.8%, string 40.5% -> 48.5%,
-  io 45.4% -> 50.9%, global pub-with-clause 14.6% -> 15.7% (floors46).
+  specs, io helper specs); wave 10 (18 clauses: rbtree full surface,
+  cache membership/constructor specs). collect 23.6% -> 34.4%, string
+  40.5% -> 48.5%, io 45.4% -> 50.9%, global pub-with-clause 14.6% ->
+  16.0% (floors47).
 - Runtime: removed 9 definition-only symbols; annotated the hot-reload ABI
   family as intentionally exported.
 - `package.xi`: identity `xiom-std` + compiler range `>=0.60.0 <1.0.0`.
