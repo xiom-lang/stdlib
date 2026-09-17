@@ -1,5 +1,0 @@
-A named-len=4 b0=1
-B tmp-len=4 b0=1
-C tmp-int=7
-D named-int=8
-E match-len=4 b0=5

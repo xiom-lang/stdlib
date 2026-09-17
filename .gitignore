@@ -18,7 +18,26 @@
 *.wat
 *.wasm
 *.tmp
+*.log
+
+# tools/probes/ versions ONLY the .xi probe corpus (the verification locks
+# referenced by the session handoff and CI). Run captures (.out/.err/.log),
+# IR dumps and debug patches are output, never source.
+tools/probes/*
+!tools/probes/*.xi
+tools/_work/
+tools/out/
+
+# Editor / OS / local agent state
 .DS_Store
 Thumbs.db
 *.code-workspace
 kilo.jsonc
+.kilo/worktrees/
+.vscode/
+.idea/
+
+# Python tooling caches (CI helpers)
+__pycache__/
+*.pyc
+.venv/
