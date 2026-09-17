@@ -25,7 +25,9 @@ pub type LinkedList = {
 }
 
 /// Create a new empty linked list. O(1).
-pub fn linked_list_new() -> LinkedList {
+pub fn linked_list_new() -> LinkedList
+  ensures: result.size == 0
+{
   return LinkedList{
     head: -1; tail: -1; size: 0;
     values: Vec[Int].new(); prevs: Vec[Int].new(); nexts: Vec[Int].new();
@@ -99,13 +101,17 @@ pub fn ll_pop_back(l: &mut LinkedList) -> Option[Int] {
 }
 
 /// Return the front value without removing it. None if empty. O(1).
-pub fn ll_front(l: &LinkedList) -> Option[Int] {
+pub fn ll_front(l: &LinkedList) -> Option[Int]
+  ensures: result.is_some == (ll_len(l) > 0)
+{
   if l.size == 0 { return None; }
   return Some(l.values[l.head]);
 }
 
 /// Return the back value without removing it. None if empty. O(1).
-pub fn ll_back(l: &LinkedList) -> Option[Int] {
+pub fn ll_back(l: &LinkedList) -> Option[Int]
+  ensures: result.is_some == (ll_len(l) > 0)
+{
   if l.size == 0 { return None; }
   return Some(l.values[l.tail]);
 }
@@ -125,7 +131,9 @@ pub fn ll_is_empty(l: &LinkedList) -> Bool
 }
 
 /// Value at index `idx` (0 = front). None when idx is out of bounds. O(n).
-pub fn ll_get(l: &LinkedList, idx: Int) -> Option[Int] {
+pub fn ll_get(l: &LinkedList, idx: Int) -> Option[Int]
+  ensures: result.is_some == (idx >= 0 && idx < ll_len(l))
+{
   if idx < 0 || idx >= l.size { return None; }
   var cur = l.head;
   var i: Int = 0;

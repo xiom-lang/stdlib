@@ -6,6 +6,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- CI: PR gates, weekly heavy suites, release pipeline, reusable compiler
+  build action; `COMPILER_VERSION` compiler pin.
+- Repo-relative verification tooling in `tools/` (runner, coverage ratchet,
+  bare-name scan, module check, probes) and `p_wave7_shapes.xi`.
+
+### Changed
+
+- Contract wave 7: 25 collect clauses (constructors, Option/query
+  relations, post-remove absence, order/iter lengths); collect pub coverage
+  23.6% -> 29.7%, global pub-with-clause 15.0% (floors44).
+- Runtime: removed 9 definition-only symbols; annotated the hot-reload ABI
+  family as intentionally exported.
+- `package.xi`: identity `xiom-std` + compiler range `>=0.60.0 <1.0.0`.
+- `tools/probes/` versions only `.xi` locks (713 run captures removed).
+
+### Fixed
+
+- Verification tooling no longer depends on pre-split temp paths; the
+  runner always tests `XIOM_STDLIB=<repo root>`.
+
 ## [0.60.0] - 2026-09-16
 
 ### Added

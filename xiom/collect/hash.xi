@@ -133,7 +133,9 @@ pub type LhMap = {
 }
 
 /// Create an empty insertion-ordered map.
-pub fn lhmap_new() -> LhMap {
+pub fn lhmap_new() -> LhMap
+  ensures: result.keys.len() == 0
+{
   return LhMap{ keys: Vec[Int].new(); values: Vec[Int].new(); };
 }
 
@@ -159,7 +161,9 @@ pub fn lhmap_put(m: &mut LhMap, key: Int, value: Int) {
 }
 
 /// Fetch a value by key. None if absent.
-pub fn lhmap_get(m: &LhMap, key: Int) -> Option[Int] {
+pub fn lhmap_get(m: &LhMap, key: Int) -> Option[Int]
+  ensures: result.is_some == lhmap_contains(m, key)
+{
   var idx = lhmap_find(m, key);
   if idx < 0 { return None; }
   return Some(m.values[idx]);
@@ -172,7 +176,9 @@ pub fn lhmap_contains(m: &LhMap, key: Int) -> Bool {
 
 /// Remove a key, preserving the relative order of the remaining entries.
 /// Returns true if the key was present.
-pub fn lhmap_remove(m: &mut LhMap, key: Int) -> Bool {
+pub fn lhmap_remove(m: &mut LhMap, key: Int) -> Bool
+  ensures: lhmap_contains(m, key) == false
+{
   var idx = lhmap_find(m, key);
   if idx < 0 { return false; }
   var j = idx;
@@ -194,7 +200,9 @@ pub fn lhmap_size(m: &LhMap) -> Int
 }
 
 /// The keys in insertion order.
-pub fn lhmap_keys_in_order(m: &LhMap) -> Vec[Int] {
+pub fn lhmap_keys_in_order(m: &LhMap) -> Vec[Int]
+  ensures: result.len() == lhmap_size(m)
+{
   var result = Vec[Int].new();
   var i = 0;
   while i < m.keys.len() {

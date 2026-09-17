@@ -42,7 +42,9 @@ fn pheap_merge(h: &mut PHeap, a: Int, b: Int) -> Int {
 }
 
 /// Create an empty pairing heap.
-pub fn pheap_new() -> PHeap {
+pub fn pheap_new() -> PHeap
+  ensures: result.root == -1
+{
   return PHeap{ root: -1; keys: Vec[Int].new(); children: Vec[Vec[Int]].new(); };
 }
 
@@ -56,7 +58,9 @@ pub fn pheap_insert(h: &mut PHeap, key: Int) {
 }
 
 /// Minimum key, or None if the heap is empty.
-pub fn pheap_find_min(h: &PHeap) -> Option[Int] {
+pub fn pheap_find_min(h: &PHeap) -> Option[Int]
+  ensures: result.is_some == (pheap_size(h) > 0)
+{
   if h.root == -1 { return None; }
   return Some(h.keys[3 * h.root]);
 }
@@ -158,7 +162,9 @@ fn fib_heap_new_node(h: &mut FibHeap, key: Int) -> Int {
 }
 
 /// Create an empty Fibonacci heap.
-pub fn fib_heap_new() -> FibHeap {
+pub fn fib_heap_new() -> FibHeap
+  ensures: result.n == 0
+{
   return FibHeap{ min: -1; n: 0; keys: Vec[Int].new(); parent: Vec[Int].new(); child: Vec[Int].new(); left: Vec[Int].new(); right: Vec[Int].new(); degree: Vec[Int].new(); mark: Vec[Bool].new(); };
 }
 
@@ -183,7 +189,9 @@ pub fn fib_heap_insert(h: &mut FibHeap, key: Int) {
 }
 
 /// Minimum key, or None if the heap is empty.
-pub fn fib_heap_find_min(h: &FibHeap) -> Option[Int] {
+pub fn fib_heap_find_min(h: &FibHeap) -> Option[Int]
+  ensures: result.is_some == (fib_heap_size(h) > 0)
+{
   if h.min == -1 { return None; }
   return Some(h.keys[h.min]);
 }

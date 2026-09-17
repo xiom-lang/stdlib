@@ -69,7 +69,7 @@ jobs:
 
       - name: Coverage ratchet
         shell: pwsh
-        run: ./tools/coverage_scan.ps1 -RatchetFile ./tools/coverage_floors43.json
+        run: ./tools/coverage_scan.ps1 -RatchetFile ./tools/coverage_floors44.json
 
       - name: Upload results
         if: always()

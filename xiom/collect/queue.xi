@@ -19,7 +19,9 @@ pub type WorkQueue = {
 }
 
 /// Create an empty work queue.
-pub fn workqueue_new() -> WorkQueue {
+pub fn workqueue_new() -> WorkQueue
+  ensures: result.head == 0
+{
   return WorkQueue{ items: Vec[Int].new(); head: 0; };
 }
 
@@ -37,7 +39,9 @@ pub fn workqueue_pop(q: &mut WorkQueue) -> Option[Int] {
 }
 
 /// Return the front item without removing it. None if empty.
-pub fn workqueue_peek(q: &WorkQueue) -> Option[Int] {
+pub fn workqueue_peek(q: &WorkQueue) -> Option[Int]
+  ensures: result.is_some == (workqueue_len(q) > 0)
+{
   if q.head >= q.items.len() { return None; }
   return Some(q.items[q.head]);
 }
@@ -70,7 +74,9 @@ pub type Deque = {
 }
 
 /// Create an empty deque.
-pub fn deque_new() -> Deque {
+pub fn deque_new() -> Deque
+  ensures: result.head == 0 && result.tail == 0
+{
   return Deque{ items: Vec[Int].new(); head: 0; tail: 0; };
 }
 
@@ -137,7 +143,9 @@ pub fn deque_is_empty(d: &Deque) -> Bool
 pub type SpscRing = { buf: Vec[Int]; cap: Int; head: AtomicInt; tail: AtomicInt; }
 
 /// Create an spsc ring with `cap` slots.
-pub fn spsc_ring_new(cap: Int) -> SpscRing {
+pub fn spsc_ring_new(cap: Int) -> SpscRing
+  ensures: result.cap == cap
+{
   var buf = Vec[Int].new();
   var i: Int = 0;
   while i < cap {

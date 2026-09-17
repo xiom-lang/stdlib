@@ -1624,3 +1624,51 @@ Stdlib burn-down on committed HEAD (b71d839f):
   OK** (floors41 during the delegation rounds, floors42 for wave 6p2,
   floors43 for wave 6p3 + property smokes).
 
+## 2.21. Post-split round (2026-09-17): tooling, CI, freeze baseline, wave 7
+
+- **Tooling ported to `tools/` (repo-relative, per REPO_MIGRATION_RUNBOOK
+  6.1):** `run_smokes.ps1` + `run_smokes.sh` (`-Compiler`/XIOM_COMPILER/PATH
+  resolution; filter/workers/JSON/RetryFailed; always exports
+  `XIOM_STDLIB=<repo root>`), portable `coverage_scan.ps1` (ratchet +
+  dump), `barename_scan.ps1`, `check_modules.ps1` (check-only via `use`
+  probes; a bare module file cannot be `--check`ed -- script mode wraps it
+  in implicit main), `COMPILER_VERSION` (= v0.60.0), `tools/README.md`.
+  713 tracked probe run captures (.out/.err/.log) dropped; `tools/probes/`
+  now versions only `.xi` locks.
+- **CI added (`.github/workflows/`):** `ci.yml` (PR: ratchet + compiler
+  build from the pin + check-modules + bare-name + KAT gate, ubuntu),
+  `heavy.yml` (weekly full corpus win+linux; scheduled runs test compiler
+  main as a drift detector), `release.yml` (tag stdlib-v*: validate
+  package.xi identity/version/compiler range -> gates -> tarball +
+  SHA256SUMS + optional minisign -> GitHub Release -> STDLIB_VERSION pin
+  PR). Reusable compiler build in `.github/actions/build-compiler`.
+  Registry publish intentionally left as a documented TODO (needs the
+  registry lane's R5 contract).
+- **`package.xi` fixed:** identity `xiom-std`, version 0.60.0, license,
+  `compiler = ">=0.60.0 <1.0.0"` (the old xiom-bench/xiom-std dep was
+  stale). README.md, CHANGELOG.md, cliff.toml added.
+- **Freeze verification (post-split order item 2, DONE):** clean build of
+  compiler tag v0.60.0 (tag predates the resource-asset fix e3714884; the
+  asset dir was copied from main and the CI action carries the same
+  documented workaround) -> strict sweep **947/947**, check-modules
+  **509/509**, bare-name **0 hits**, ratchet OK floors43. Record:
+  `docs/VERIFICATION_BASELINE.md` + `docs/baselines/`. Post-runtime-trim
+  re-run: 947/947 again.
+- **Runtime audit re-run (dynamic pass added):** the hot-reload family is
+  live dynamic ABI (tools/xiom_hot_host.c GetProcAddress + codegen thunks),
+  so it stays; 9 definition-only symbols deleted (asm sha stub, async us
+  helper, channel_close, f128 norm, f256 is_one, guard depth/armed,
+  threadpool_shutdown, trampoline_clear_returned); 11 hot symbols annotated
+  in `runtime/xiom_hot_reload.c`; audit doc updated with the re-run.
+- **Contract wave 7:** 25 clauses across collect (constructors
+  field/length specs, Option.is_some == query relations, post-remove
+  absence, iter/order length equalities); NEW `p_wave7_shapes.xi` probe
+  validated every new shape first. collect 23.6% -> **29.7%**, global
+  15.7% clauses / **15.0%** pub-with-clause; floors44 dumped and wired
+  into CI/README.
+- **Dedup finding:** two unlisted collect twin pairs (`hash/linkedhash`,
+  `cache/lru`) are API translation units -- XIOM has no cross-module type
+  aliases, so no thin shim; inventory updated.
+- Commits this round (local): 66cd23b, 547a164, 4fe005e, 1e2db86, 9dab881,
+  d6449a4, plus the wave-7/dedup commit.
+

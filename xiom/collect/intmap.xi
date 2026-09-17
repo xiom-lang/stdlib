@@ -136,7 +136,9 @@ fn _imap_find(m: &IntMap, key: Int) -> Int {
 /// Create an Int-keyed map with `capacity` slots. The table grows
 /// automatically, so `capacity` is an initial hint; it is clamped to >= 1.
 /// O(capacity).
-pub fn int_map_new(capacity: Int) -> IntMap {
+pub fn int_map_new(capacity: Int) -> IntMap
+  ensures: result.size == 0
+{
   var m = IntMap{ cap: 0; size: 0; keys: Vec[Int].new(); vals: Vec[Int].new(); occ: Vec[Bool].new(); tomb: Vec[Bool].new(); order: Vec[Int].new(); };
   var cap = capacity;
   if cap < 1 {
@@ -164,7 +166,9 @@ pub fn int_map_put(m: &mut IntMap, key: Int, value: Int) {
 
 /// Value for `key`, or None if absent.
 /// O(1) amortized.
-pub fn int_map_get(m: &IntMap, key: Int) -> Option[Int] {
+pub fn int_map_get(m: &IntMap, key: Int) -> Option[Int]
+  ensures: result.is_some == int_map_contains(m, key)
+{
   var slot = _imap_find(m, key);
   if slot < 0 {
     return Option[Int]{ is_some: false; value: 0; };
@@ -180,7 +184,9 @@ pub fn int_map_contains(m: &IntMap, key: Int) -> Bool {
 
 /// Remove `key`. Returns true if it was present.
 /// O(n) amortized (order compaction).
-pub fn int_map_remove(m: &mut IntMap, key: Int) -> Bool {
+pub fn int_map_remove(m: &mut IntMap, key: Int) -> Bool
+  ensures: int_map_contains(m, key) == false
+{
   var slot = _imap_find(m, key);
   if slot < 0 {
     return false;
@@ -214,7 +220,9 @@ pub fn int_map_size(m: &IntMap) -> Int
 
 /// All keys in insertion order.
 /// O(n).
-pub fn int_map_iter(m: &IntMap) -> Vec[Int] {
+pub fn int_map_iter(m: &IntMap) -> Vec[Int]
+  ensures: result.len() == int_map_size(m)
+{
   var out = Vec[Int].new();
   var i = 0;
   while i < m.order.len() {
@@ -235,7 +243,9 @@ pub type StringMap = {
 
 /// Create a Str-keyed map.
 /// O(1).
-pub fn string_map_new() -> StringMap {
+pub fn string_map_new() -> StringMap
+  ensures: result.keys.len() == 0
+{
   return StringMap{ keys: Vec[Str].new(); vals: Vec[Int].new(); };
 }
 
@@ -258,7 +268,9 @@ pub fn string_map_put(m: &mut StringMap, key: Str, value: Int) {
 
 /// Value for `key`, or None if absent.
 /// O(n).
-pub fn string_map_get(m: &StringMap, key: Str) -> Option[Int] {
+pub fn string_map_get(m: &StringMap, key: Str) -> Option[Int]
+  ensures: result.is_some == string_map_contains(m, key)
+{
   var i = 0;
   while i < m.keys.len() {
     var k = m.keys[i];
@@ -286,7 +298,9 @@ pub fn string_map_contains(m: &StringMap, key: Str) -> Bool {
 
 /// Remove `key`. Returns true if it was present.
 /// O(n).
-pub fn string_map_remove(m: &mut StringMap, key: Str) -> Bool {
+pub fn string_map_remove(m: &mut StringMap, key: Str) -> Bool
+  ensures: string_map_contains(m, key) == false
+{
   var i = 0;
   while i < m.keys.len() {
     var k = m.keys[i];

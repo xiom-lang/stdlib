@@ -28,8 +28,9 @@ flip ON, freeze sweep on compiler tag v0.60.0 = 947/947 + module check
 - Dedup waves: endian trio, base16/32/64/64url/percent, base58
   `to_base58`, ip family (convert.ip / net.dns / net.ip v6 / net.net),
   os.term; punycode audited as intentionally divergent (see below).
-- Contract coverage published + ratcheted (gate #7): 15.3% of functions
-  carry >=1 clause; 14.6% of pub fns; floors `coverage_floors43.json`.
+- Contract coverage published + ratcheted (gate #7): 15.7% of functions
+  carry >=1 clause; 15.0% of pub fns (wave 7, 2026-09-17); floors
+  `coverage_floors44.json`.
   Growth target: >=60% on key modules (io/string/collect) in later waves.
 
 ## Excluded from beta (tracked for v1.0)

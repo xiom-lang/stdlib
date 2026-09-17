@@ -175,6 +175,19 @@ DEFERRED / CORRECTED:
   Vec[Vec[Float64]], 554+204+144 lines) while the long-name modules carry
   the Mat2/3/4 typed domain. Consolidation needs an API translation pass;
   plan as its own unit (do not blind-shim).
+- `collect/hash` vs `collect/linkedhash` (found 2026-09-17, was NOT in the
+  table): `xiom.collect.hash` = BloomFilter + LhMap (consumed by 3 property
+  smokes + smoke_collect_cache); `xiom.collect.linkedhash` = LhMap only
+  (consumed by smoke_collect_linkedhash). Surfaces diverged: hash has
+  `lhmap_keys_in_order` + Bool-returning `lhmap_remove`; linkedhash has
+  `lhmap_first/last/iter` + Unit remove. XIOM has no cross-module type
+  aliases, so a thin re-export shim is impossible today -> API translation
+  unit (extend the canonical surface with the missing names, migrate the
+  consumer; twin removal waits on the compiler api_freeze snapshot regen).
+- `collect/cache` vs `collect/lru` (found 2026-09-17): cache = LRU+LFU+ARC
+  (arc.xi + 3 smokes); lru = standalone near-copy LRU (1 smoke). The LRU
+  cores are copies; receiver mutability differs (`&` vs `&mut`). Same
+  translation-unit treatment as above.
 - `bits/endian + convert/endian + serialize/endian`: three-way merge onto
   serialize.endian still open (convert side partially delegated).
 - `net/ip4+ip6`, base32/ascii85/percent/punycode twins, io/console vs
@@ -211,6 +224,8 @@ kat_convert_base64_parity.xi as the template).
 | io/fs / os/fs / os/fs_ffi | io.fs | public facade; os/fs_ffi stays private impl | fs_ffi NOT deprecated (impl detail) |
 | io/console / os/terminal / os/term | os.terminal | richest surface | audit before choosing |
 | core/platform / os/platform | os.platform | runtime-backed | - |
+| collect/hash / collect/linkedhash | collect.hash | richer surface + most consumers | no type aliases; translation unit |
+| collect/cache / collect/lru | collect.cache | LRU+LFU+ARC + most consumers | translation unit |
 | geom mat/matrix vec/vector quat/quaternion | *long names* | match user expectations from other langs | pure rename pair |
 | memory/rc (declares xiom.rc!) / callers using xiom.rc | xiom.rc name | existing smokes bind it | fix directory==module violation by MOVING file to rc/ |
 

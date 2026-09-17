@@ -19,7 +19,9 @@ pub type Bst = {
 }
 
 /// Create an empty BST.
-pub fn bst_new() -> Bst {
+pub fn bst_new() -> Bst
+  ensures: result.root == -1
+{
   return Bst{ root: -1; keys: Vec[Int].new(); left: Vec[Int].new(); right: Vec[Int].new(); };
 }
 
@@ -76,7 +78,9 @@ pub fn bst_contains(b: &Bst, key: Int) -> Bool {
 
 /// Remove a key. Two-child nodes are replaced by their in-order successor.
 /// Returns true if the key was found and removed.
-pub fn bst_remove(b: &mut Bst, key: Int) -> Bool {
+pub fn bst_remove(b: &mut Bst, key: Int) -> Bool
+  ensures: bst_contains(b, key) == false
+{
   if b.root == -1 { return false; }
   var cur = b.root;
   var parent = -1;
@@ -160,7 +164,9 @@ pub fn bst_size(b: &Bst) -> Int
 }
 
 /// Minimum key, or None if the tree is empty.
-pub fn bst_min(b: &Bst) -> Option[Int] {
+pub fn bst_min(b: &Bst) -> Option[Int]
+  ensures: result.is_some == (bst_size(b) > 0)
+{
   if b.root == -1 { return None; }
   var cur = b.root;
   while b.left[cur] != -1 {
@@ -170,7 +176,9 @@ pub fn bst_min(b: &Bst) -> Option[Int] {
 }
 
 /// Maximum key, or None if the tree is empty.
-pub fn bst_max(b: &Bst) -> Option[Int] {
+pub fn bst_max(b: &Bst) -> Option[Int]
+  ensures: result.is_some == (bst_size(b) > 0)
+{
   if b.root == -1 { return None; }
   var cur = b.root;
   while b.right[cur] != -1 {
@@ -180,7 +188,9 @@ pub fn bst_max(b: &Bst) -> Option[Int] {
 }
 
 /// In-order traversal as a sorted vector.
-pub fn bst_inorder(b: &Bst) -> Vec[Int] {
+pub fn bst_inorder(b: &Bst) -> Vec[Int]
+  ensures: result.len() == bst_size(b)
+{
   var result = Vec[Int].new();
   var stack = Vec[Int].new();
   var cur = b.root;
@@ -239,7 +249,9 @@ pub type Avl = {
 }
 
 /// Create an empty AVL tree.
-pub fn avl_new() -> Avl {
+pub fn avl_new() -> Avl
+  ensures: result.root == -1
+{
   return Avl{ root: -1; keys: Vec[Int].new(); left: Vec[Int].new(); right: Vec[Int].new(); heights: Vec[Int].new(); };
 }
 
@@ -358,7 +370,9 @@ pub fn avl_size(a: &Avl) -> Int
 }
 
 /// In-order traversal as a sorted vector.
-pub fn avl_inorder(a: &Avl) -> Vec[Int] {
+pub fn avl_inorder(a: &Avl) -> Vec[Int]
+  ensures: result.len() == avl_size(a)
+{
   var result = Vec[Int].new();
   var stack = Vec[Int].new();
   var cur = a.root;
