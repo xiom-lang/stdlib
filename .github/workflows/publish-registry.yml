@@ -1,0 +1,83 @@
+# Registry publish -- DISPATCH ONLY until staging is verified.
+# Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+# SPDX-License-Identifier: MIT OR Apache-2.0
+#
+# Contract:
+#   XIOM_REGISTRY=https://registry.xiom-lang.org
+#   XIOM_REGISTRY_TOKEN=${{ secrets.REGISTRY_PUBLISH_TOKEN }}  (created after
+#   registry staging is live; org secret, never repo-level)
+#   tool: `xiom pkg publish` run inside the extracted stdlib release package.
+#
+# Inputs: the stdlib release version (e.g. 0.60.0). The compiler pin is read
+# from COMPILER_VERSION at the matching stdlib tag; the compiler binary and
+# the package tarball come from public GitHub Releases (no token).
+#
+# Do not enable this on push until staging has been verified end to end.
+# Credentials policy: docs/CI.md.
+name: XIOM Stdlib Registry Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "stdlib release version to publish (e.g. 0.60.0)"
+        required: true
+      registry:
+        description: "registry base URL"
+        required: false
+        default: "https://registry.xiom-lang.org"
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: xiom pkg publish
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolve versions
+        id: ver
+        run: |
+          ver="${{ github.event.inputs.version }}"
+          ver="${ver#stdlib-v}"
+          pin="$(curl -fsSL "https://raw.githubusercontent.com/xiom-lang/stdlib/stdlib-v${ver}/COMPILER_VERSION" | tr -d '\r\n ')"
+          if [ -z "$pin" ]; then
+            echo "cannot resolve COMPILER_VERSION for stdlib-v${ver}" >&2
+            exit 1
+          fi
+          echo "version=$ver" >> "$GITHUB_OUTPUT"
+          echo "compiler=$pin" >> "$GITHUB_OUTPUT"
+          echo "publishing stdlib $ver against compiler pin $pin"
+
+      - name: Download stdlib package (public release asset)
+        run: |
+          ver="${{ steps.ver.outputs.version }}"
+          mkdir -p pkg
+          curl -fsSL -o "xiom-std-${ver}.tar.gz" \
+            "https://github.com/xiom-lang/stdlib/releases/download/stdlib-v${ver}/xiom-std-${ver}.tar.gz"
+          tar -xzf "xiom-std-${ver}.tar.gz" -C pkg
+          test -f pkg/package.xi
+          echo "package contents:"; ls -la pkg
+
+      - name: Download compiler (public xiom release asset)
+        run: |
+          pin="${{ steps.ver.outputs.compiler }}"
+          pv="${pin#v}"
+          curl -fsSL -o xiom-compiler.tar.gz \
+            "https://github.com/xiom-lang/xiom/releases/download/${pin}/xiom-${pv}-linux-x64.tar.gz"
+          mkdir -p compiler
+          tar -xzf xiom-compiler.tar.gz -C compiler
+          if [ ! -x compiler/bin/xiom ]; then
+            echo "compiler release asset has no bin/xiom" >&2
+            exit 1
+          fi
+          echo "XIOM_BIN=$(realpath compiler/bin/xiom)" >> "$GITHUB_ENV"
+          compiler/bin/xiom --version
+
+      - name: Publish to the registry
+        working-directory: pkg
+        env:
+          XIOM_REGISTRY: ${{ github.event.inputs.registry }}
+          XIOM_REGISTRY_TOKEN: ${{ secrets.REGISTRY_PUBLISH_TOKEN }}
+        run: |
+          "$XIOM_BIN" pkg publish

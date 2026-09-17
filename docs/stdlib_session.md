@@ -1640,10 +1640,15 @@ Stdlib burn-down on committed HEAD (b71d839f):
   `heavy.yml` (weekly full corpus win+linux; scheduled runs test compiler
   main as a drift detector), `release.yml` (tag stdlib-v*: validate
   package.xi identity/version/compiler range -> gates -> tarball +
-  SHA256SUMS + optional minisign -> GitHub Release -> STDLIB_VERSION pin
-  PR). Reusable compiler build in `.github/actions/build-compiler`.
-  Registry publish intentionally left as a documented TODO (needs the
-  registry lane's R5 contract).
+  SHA256SUMS + build-provenance attestation -> GitHub Release ->
+  STDLIB_VERSION pin PR). Reusable compiler build in
+  `.github/actions/build-compiler` (anonymous: xiom is public).
+  `publish-registry.yml` added (dispatch-only until staging verified):
+  `xiom pkg publish` with XIOM_REGISTRY / XIOM_REGISTRY_TOKEN, compiler and
+  package from public release assets. Credentials policy -- org secrets;
+  `XIOM_RELEASE_TOKEN || GITHUB_TOKEN` for writes; XIOM_CROSS_REPO_TOKEN no
+  longer needed; minisign deferred in favour of attestations -- see
+  `docs/CI.md`.
 - **`package.xi` fixed:** identity `xiom-std`, version 0.60.0, license,
   `compiler = ">=0.60.0 <1.0.0"` (the old xiom-bench/xiom-std dep was
   stale). README.md, CHANGELOG.md, cliff.toml added.

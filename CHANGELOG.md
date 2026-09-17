@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - CI: PR gates, weekly heavy suites, release pipeline, reusable compiler
   build action; `COMPILER_VERSION` compiler pin.
+- Registry publish workflow (dispatch-only until staging is verified) and
+  `docs/CI.md` credentials policy; releases ship SHA256SUMS plus a
+  build-provenance attestation (minisign deferred).
 - Repo-relative verification tooling in `tools/` (runner, coverage ratchet,
   bare-name scan, module check, probes) and `p_wave7_shapes.xi`.
 

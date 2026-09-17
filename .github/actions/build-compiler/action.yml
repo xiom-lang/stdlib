@@ -6,8 +6,9 @@
 # acquisition logic lives in one place.
 #
 # Notes:
-# - Cross-repo checkout needs secrets.XIOM_CROSS_REPO_TOKEN (fine-grained PAT,
-#   Contents: read on xiom-lang/xiom) while both repos are private.
+# - xiom-lang/xiom is PUBLIC: the cross-repo checkout is anonymous. Do NOT
+#   add XIOM_CROSS_REPO_TOKEN here; it is not required (same pattern the
+#   registry e2e uses).
 # - Tags before the resource-asset fix (e3714884, 2026-09-17) cannot build on
 #   Windows: crates/xiom/build.rs needs resource/img/xiom-icon.ico. The step
 #   below pulls resource/ from main when the pinned tree lacks it.
@@ -21,10 +22,6 @@ inputs:
     description: checkout directory for the compiler sources
     required: false
     default: .compiler-src
-  token:
-    description: token used for the cross-repo checkout
-    required: false
-    default: ""
 outputs:
   binary:
     description: path to the built compiler binary
@@ -38,7 +35,6 @@ runs:
         repository: xiom-lang/xiom
         ref: ${{ inputs.ref }}
         path: ${{ inputs.path }}
-        token: ${{ inputs.token }}
 
     - name: Resource assets workaround (tags predating e3714884)
       shell: bash

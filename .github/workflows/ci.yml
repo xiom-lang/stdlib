@@ -7,8 +7,8 @@
 # The full 947-file corpus on Windows + Linux runs in heavy.yml (weekly /
 # dispatch) and in release.yml before anything is published.
 #
-# Cross-repo: building the compiler needs secrets.XIOM_CROSS_REPO_TOKEN while
-# xiom-lang/xiom is private. Fork PRs cannot read the secret (documented).
+# Cross-repo: xiom-lang/xiom is public, so the compiler checkout is anonymous
+# (no PAT). Credentials policy: docs/CI.md.
 name: XIOM Stdlib CI
 
 on:
@@ -45,7 +45,6 @@ jobs:
         uses: ./.github/actions/build-compiler
         with:
           ref: ${{ steps.pin.outputs.ref }}
-          token: ${{ secrets.XIOM_CROSS_REPO_TOKEN || github.token }}
 
       - name: Check-only type-check of every module
         shell: pwsh

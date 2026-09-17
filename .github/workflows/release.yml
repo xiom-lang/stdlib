@@ -4,12 +4,13 @@
 # Stdlib release (docs/RELEASE_INFRA_PLAN.md R3/5.2):
 #   tag stdlib-vX.Y.Z -> validate package.xi (identity + compiler range)
 #   -> full gates on Windows + Linux -> tar xiom/ runtime/ package.xi
-#   -> sha256 + optional minisign -> GitHub Release
-#   -> open the STDLIB_VERSION pin PR against xiom (if the release token is set).
+#   -> SHA256SUMS + GitHub build-provenance attestation -> GitHub Release
+#   -> open the STDLIB_VERSION pin PR against xiom.
 #
-# Registry publish (registry-publish environment) is intentionally NOT wired
-# yet: it needs the registry lane's publish endpoint/auth contract (plan R5)
-# before it can be scripted. Do not claim the registry entry until that lands.
+# minisign is DEFERRED (key ceremony pending): do not add MINISIGN references.
+# Registry publish is a separate dispatch-gated workflow
+# (.github/workflows/publish-registry.yml) until staging is verified.
+# Credentials policy: docs/CI.md.
 name: XIOM Stdlib Release
 
 on:
@@ -75,7 +76,6 @@ jobs:
         uses: ./.github/actions/build-compiler
         with:
           ref: ${{ steps.pin.outputs.ref }}
-          token: ${{ secrets.XIOM_CROSS_REPO_TOKEN || github.token }}
 
       - name: Full smoke corpus (solo re-run of failures)
         shell: pwsh
@@ -105,6 +105,10 @@ jobs:
     name: package + GitHub Release
     needs: [validate, gates]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
     steps:
       - uses: actions/checkout@v4
 
@@ -118,17 +122,10 @@ jobs:
           sha256sum "xiom-std-${ver}.tar.gz" > SHA256SUMS
           ls -la
 
-      - name: Sign (minisign, optional)
-        if: env.MINISIGN_SECRET_KEY != ''
-        env:
-          MINISIGN_SECRET_KEY: ${{ secrets.MINISIGN_SECRET_KEY }}
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y minisign
-          printf '%s' "$MINISIGN_SECRET_KEY" > minisign.key
-          minisign -Sm "xiom-std-${{ needs.validate.outputs.version }}.tar.gz" -s minisign.key
-          minisign -Sm SHA256SUMS -s minisign.key
-          rm -f minisign.key
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be # v2
+        with:
+          subject-path: xiom-std-*.tar.gz
 
       - name: Upload release artifacts
         uses: actions/upload-artifact@v4
@@ -137,7 +134,6 @@ jobs:
           path: |
             xiom-std-*.tar.gz
             SHA256SUMS
-            *.minisig
 
       - name: Create GitHub Release
         if: github.event_name == 'push'
@@ -145,11 +141,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           ver="${{ needs.validate.outputs.version }}"
-          files="xiom-std-${ver}.tar.gz SHA256SUMS"
-          for f in *.minisig; do
-            if [ -e "$f" ]; then files="$files $f"; fi
-          done
-          gh release create "${{ github.ref_name }}" $files \
+          gh release create "${{ github.ref_name }}" \
+            "xiom-std-${ver}.tar.gz" SHA256SUMS \
             --title "XIOM stdlib $ver" \
             --notes "Stdlib release $ver. Verified against compiler pin $(tr -d '\r\n ' < COMPILER_VERSION)."
 
@@ -159,16 +152,13 @@ jobs:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     env:
-      RELEASE_TOKEN: ${{ secrets.XIOM_RELEASE_TOKEN }}
+      GH_TOKEN: ${{ secrets.XIOM_RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
     steps:
       - name: Open the pin PR
-        if: env.RELEASE_TOKEN != ''
-        env:
-          GH_TOKEN: ${{ secrets.XIOM_RELEASE_TOKEN }}
         run: |
           ver="${{ needs.validate.outputs.version }}"
           branch="chore/pin-stdlib-v${ver}"
-          git clone --depth 1 "https://x-access-token:${RELEASE_TOKEN}@github.com/xiom-lang/xiom.git" xiom-repo
+          git clone --depth 1 "https://x-access-token:${GH_TOKEN}@github.com/xiom-lang/xiom.git" xiom-repo
           cd xiom-repo
           git checkout -b "$branch"
           printf 'stdlib-v%s\n' "$ver" > STDLIB_VERSION
@@ -177,8 +167,3 @@ jobs:
           gh pr create --repo xiom-lang/xiom --base main --head "$branch" \
             --title "chore: pin STDLIB_VERSION to stdlib-v${ver}" \
             --body "Automated stdlib release PR. Release: https://github.com/xiom-lang/stdlib/releases/tag/stdlib-v${ver}"
-
-      - name: Manual step notice (no token)
-        if: env.RELEASE_TOKEN == ''
-        run: |
-          echo "XIOM_RELEASE_TOKEN is not set; update xiom/STDLIB_VERSION manually to stdlib-v${{ needs.validate.outputs.version }} via a reviewed PR."
