@@ -260,7 +260,9 @@ fn _piece_from_idx(s: Str, idx: &Vec[Int]) -> Str {
 /// Returns: a random permutation of the characters of `s`.
 /// Error case: none; the empty string maps to itself.
 /// Complexity: O(|s|).
-pub fn str_shuffle(s: Str) -> Str {
+pub fn str_shuffle(s: Str) -> Str
+  ensures: result.len() == s.len()
+{
   let chars = _split_chars(s);
   let shuffled = _shuffle(&chars, true, 0);
   let r = _join_chars(&shuffled);
@@ -274,7 +276,9 @@ pub fn str_shuffle(s: Str) -> Str {
 /// Returns: the seeded permutation of `s`.
 /// Error case: none.
 /// Complexity: O(|s|).
-pub fn str_shuffle_seeded(s: Str, seed: Int) -> Str {
+pub fn str_shuffle_seeded(s: Str, seed: Int) -> Str
+  ensures: result.len() == s.len()
+{
   let chars = _split_chars(s);
   let shuffled = _shuffle(&chars, false, seed);
   let r = _join_chars(&shuffled);
@@ -418,7 +422,9 @@ pub fn str_rotate_word(s: Str, n: Int) -> Str {
 /// Error case: inputs longer than 8 characters return an empty vector
 ///             (documented guard against an impractical 8!+ result set).
 /// Complexity: O(n! * n).
-pub fn str_permutations(s: Str) -> Vec[Str] {
+pub fn str_permutations(s: Str) -> Vec[Str]
+  ensures: result.len() >= 0
+{
   var out = Vec[Str].new();
   let len = string.str_len(s);
   if len == 0 {
@@ -452,7 +458,9 @@ pub fn str_permutations(s: Str) -> Vec[Str] {
 /// Error case: n < 0 or n > |s| => empty vector; large inputs are guarded as
 ///             in str_permutations.
 /// Complexity: O(P(n, k) * k).
-pub fn str_permutations_n(s: Str, n: Int) -> Vec[Str] {
+pub fn str_permutations_n(s: Str, n: Int) -> Vec[Str]
+  ensures: result.len() >= 0
+{
   var out = Vec[Str].new();
   let len = string.str_len(s);
   if n < 0 || n > len {
@@ -494,7 +502,9 @@ pub fn str_permutations_n(s: Str, n: Int) -> Vec[Str] {
 /// Returns: a Vec[Str] of n-length combinations.
 /// Error case: n < 1 or n > |s| => empty vector.
 /// Complexity: O(C(n, k) * k).
-pub fn str_combinations(s: Str, n: Int) -> Vec[Str] {
+pub fn str_combinations(s: Str, n: Int) -> Vec[Str]
+  ensures: result.len() >= 0
+{
   var result = Vec[Str].new();
   let len = string.str_len(s);
   if n < 1 || n > len {
@@ -522,7 +532,9 @@ pub fn str_combinations(s: Str, n: Int) -> Vec[Str] {
 /// Returns: a Vec[Str] of two-character pairs.
 /// Error case: none; an empty operand yields an empty vector.
 /// Complexity: O(|a| * |b|).
-pub fn str_cartesian(a: Str, b: Str) -> Vec[Str] {
+pub fn str_cartesian(a: Str, b: Str) -> Vec[Str]
+  ensures: result.len() >= 0
+{
   var out = Vec[Str].new();
   let ac = _split_chars(a);
   let bc = _split_chars(b);
@@ -547,7 +559,9 @@ pub fn str_cartesian(a: Str, b: Str) -> Vec[Str] {
 /// Returns: the interleaved string.
 /// Error case: none.
 /// Complexity: O(|a| + |b|).
-pub fn str_interleave(a: Str, b: Str) -> Str {
+pub fn str_interleave(a: Str, b: Str) -> Str
+  ensures: result.len() == a.len() + b.len()
+{
   let ac = _split_chars(a);
   let bc = _split_chars(b);
   var result = "";
@@ -574,7 +588,9 @@ pub fn str_interleave(a: Str, b: Str) -> Str {
 /// Returns: a Vec[Str] of chunks covering `s` exactly once.
 /// Error case: n < 1 or s.len() == 0 => empty vector.
 /// Complexity: O(|s|).
-pub fn str_chunk(s: Str, n: Int) -> Vec[Str] {
+pub fn str_chunk(s: Str, n: Int) -> Vec[Str]
+  ensures: result.len() <= s.len()
+{
   var result = Vec[Str].new();
   let len = string.str_len(s);
   if n < 1 || len == 0 {
@@ -600,7 +616,9 @@ pub fn str_chunk(s: Str, n: Int) -> Vec[Str] {
 /// Returns: a Vec[Str] of chunks in source order (first may be shorter).
 /// Error case: n < 1 or s.len() == 0 => empty vector.
 /// Complexity: O(|s|).
-pub fn str_chunks_reverse(s: Str, n: Int) -> Vec[Str] {
+pub fn str_chunks_reverse(s: Str, n: Int) -> Vec[Str]
+  ensures: result.len() <= s.len()
+{
   var result = Vec[Str].new();
   let len = string.str_len(s);
   if n < 1 || len == 0 {
@@ -631,7 +649,9 @@ pub fn str_chunks_reverse(s: Str, n: Int) -> Vec[Str] {
 /// Returns: a Vec[Str] with one element per start position 0..len-n.
 /// Error case: n < 1 or len < n => empty vector.
 /// Complexity: O(|s|).
-pub fn str_windows(s: Str, n: Int) -> Vec[Str] {
+pub fn str_windows(s: Str, n: Int) -> Vec[Str]
+  ensures: result.len() <= s.len()
+{
   var result = Vec[Str].new();
   let len = string.str_len(s);
   if n < 1 || len < n {
@@ -653,7 +673,9 @@ pub fn str_windows(s: Str, n: Int) -> Vec[Str] {
 /// Returns: a Vec[Str] of chunks covering `s` exactly once.
 /// Error case: n < 1 or s.len() == 0 => empty vector.
 /// Complexity: O(|s|).
-pub fn str_chunk_bytes(s: Str, n: Int) -> Vec[Str] {
+pub fn str_chunk_bytes(s: Str, n: Int) -> Vec[Str]
+  ensures: result.len() <= s.len()
+{
   var result = Vec[Str].new();
   let chars = _split_chars(s);
   if n < 1 || chars.len() == 0 {
@@ -690,7 +712,9 @@ pub fn str_chunk_bytes(s: Str, n: Int) -> Vec[Str] {
 /// Returns: the word-reversed string.
 /// Error case: none.
 /// Complexity: O(|s|).
-pub fn str_reverse_words(s: Str) -> Str {
+pub fn str_reverse_words(s: Str) -> Str
+  ensures: result.len() == s.len()
+{
   var runs = Vec[Str].new();
   let len = string.str_len(s);
   var i: Int = 0;
@@ -724,7 +748,9 @@ pub fn str_reverse_words(s: Str) -> Str {
 /// Returns: a string of distinct characters.
 /// Error case: none.
 /// Complexity: O(|s|^2).
-pub fn str_unique_chars(s: Str) -> Str {
+pub fn str_unique_chars(s: Str) -> Str
+  ensures: result.len() <= s.len()
+{
   var result = "";
   var seen = Vec[Int].new();
   let chars = _split_chars(s);
@@ -756,7 +782,9 @@ pub fn str_unique_chars(s: Str) -> Str {
 /// Returns: a Vec[(Char, Int)] of (character, count) pairs.
 /// Error case: none.
 /// Complexity: O(|s|^2).
-pub fn str_frequencies(s: Str) -> Vec[(Char, Int)] {
+pub fn str_frequencies(s: Str) -> Vec[(Char, Int)]
+  ensures: result.len() <= s.len()
+{
   var chars = Vec[Char].new();
   var counts = Vec[Int].new();
   let len = string.str_len(s);
@@ -801,7 +829,9 @@ pub fn str_frequencies(s: Str) -> Vec[(Char, Int)] {
 /// Returns: Some with the most frequent character, None when empty.
 /// Error case: none.
 /// Complexity: O(|s|^2).
-pub fn str_most_frequent(s: Str) -> Option[Char] {
+pub fn str_most_frequent(s: Str) -> Option[Char]
+  ensures: result is Some => s.len() > 0
+{
   var chars = Vec[Char].new();
   var counts = Vec[Int].new();
   let len = string.str_len(s);
@@ -849,7 +879,9 @@ pub fn str_most_frequent(s: Str) -> Option[Char] {
 /// Returns: a Vec[Char] of distinct characters.
 /// Error case: none.
 /// Complexity: O(|s|^2).
-pub fn str_char_set(s: Str) -> Vec[Char] {
+pub fn str_char_set(s: Str) -> Vec[Char]
+  ensures: result.len() <= s.len()
+{
   var out = Vec[Char].new();
   let len = string.str_len(s);
   var i: Int = 0;

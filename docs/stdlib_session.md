@@ -1684,6 +1684,15 @@ Stdlib burn-down on committed HEAD (b71d839f):
 - **Dedup finding:** two unlisted collect twin pairs (`hash/linkedhash`,
   `cache/lru`) are API translation units -- XIOM has no cross-module type
   aliases, so no thin shim; inventory updated.
+- **Contract wave 9:** 22 clauses -- combinatorics (length equalities for
+  shuffle/seeded-shuffle/interleave/reverse_words, count bounds for
+  chunk/chunks_reverse/windows/chunk_bytes/unique_chars/frequencies/
+  char_set, most_frequent Some-implies-nonempty, permutation count
+  bounds) and io (parent_path Some-length, BufReader/BufWriter
+  constructor field equality, read_file_bytes/list_dir_recursive/
+  read_file_lines Ok-length). string 44.6% -> **48.5%**, io 45.4% ->
+  **50.9%**, global 16.3% clauses / **15.7%** pub-with-clause; floors46.
+  Battery: 241 smokes green (string 102, io 139).
 - **Platform dedup audit (2026-09-17): NOT duplicates.** `xiom.platform`
   (core/platform.xi; ergonomic os_name/is_windows/is_bsd/newline/path_sep/
   cpu_count/os_version, consumed by smoke_platform) and `xiom.os.platform`

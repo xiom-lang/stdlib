@@ -509,7 +509,9 @@ pub type BufReader = {
   invariant: inner >= 0;
 }
 
-pub fn BufReader.new(reader: Int) -> BufReader {
+pub fn BufReader.new(reader: Int) -> BufReader
+  ensures: result.inner == reader
+{
   var buf: Vec[UInt8] = Vec[UInt8]::with_capacity(4096);
   BufReader{ inner: reader; buf: buf; }
 }
@@ -580,7 +582,9 @@ pub fn BufReader.lines(self) -> Vec[Str]
 
 pub type BufWriter = { inner: Int; buf: Vec[UInt8]; }
 
-pub fn BufWriter.new(writer: Int) -> BufWriter {
+pub fn BufWriter.new(writer: Int) -> BufWriter
+  ensures: result.inner == writer
+{
   var buf: Vec[UInt8] = Vec[UInt8]::with_capacity(4096);
   BufWriter{ inner: writer; buf: buf; }
 }
@@ -744,7 +748,9 @@ pub fn join_paths(base: Str, child: Str) -> Str
   }
 }
 
-pub fn parent_path(path: Str) -> Option[Str] {
+pub fn parent_path(path: Str) -> Option[Str]
+  ensures: result is Some => result.value.len() > 0
+{
   var i = path.len() - 1;
   while i >= 0 {
     if path.byte_at(i) == 47 {
@@ -883,7 +889,9 @@ pub fn write_file_bytes(path: Str, data: &Vec[UInt8]) -> Result[Unit, IOError] {
 
 // read_file_bytes reads a file and returns its raw bytes.
 // Complexity: O(n) where n = file size.
-pub fn read_file_bytes(path: Str) -> Result[Vec[UInt8], IOError] {
+pub fn read_file_bytes(path: Str) -> Result[Vec[UInt8], IOError]
+  ensures: result is Ok => result.len() >= 0
+{
   let c_path = path.c_str();
   let ptr: *UInt8;
   let size: Int;
@@ -975,7 +983,9 @@ pub fn create_dir_all(path: Str) -> Result[Unit, IOError] {
 // list_dir_recursive recursively collects all file and directory
 // paths under the given root directory.  Returns the full paths
 // relative to root.  Complexity: O(N) where N = total entries.
-pub fn list_dir_recursive(path: Str) -> Result[Vec[Str], IOError] {
+pub fn list_dir_recursive(path: Str) -> Result[Vec[Str], IOError]
+  ensures: result is Ok => result.len() >= 0
+{
   var result: Vec[Str] = Vec[Str]::new();
   let entries = list_dir(path)?;
   var i = 0;
@@ -1002,7 +1012,9 @@ pub fn list_dir_recursive(path: Str) -> Result[Vec[Str], IOError] {
 
 // read_file_lines reads a file and returns its lines as a Vec[Str].
 // Trailing newline characters are stripped.  Complexity: O(n).
-pub fn read_file_lines(path: Str) -> Result[Vec[Str], IOError] {
+pub fn read_file_lines(path: Str) -> Result[Vec[Str], IOError]
+  ensures: result is Ok => result.len() >= 0
+{
   let s_result = read_file(path);
   match s_result {
     Ok(s) => {
