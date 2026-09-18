@@ -185,6 +185,7 @@ fn _combine_signed(sign: Bool, lower: Int) -> Int {
 
 // === Basic ===
 
+/// Square root of `x` via libm. Requires `x >= 0`.
 pub fn sqrt(x: Float64) -> Float64
   requires: x >= 0.0
   ensures:  result >= 0.0
@@ -192,55 +193,66 @@ pub fn sqrt(x: Float64) -> Float64
   unsafe { return sqrt(x); }
 }
 
+/// `base` raised to `exp` via libm. A negative base requires an integer
+/// exponent.
 pub fn pow(base: Float64, exp: Float64) -> Float64
   requires: base >= 0.0 || exp == to_int(exp)  // negative base only for integer exp
 {
   unsafe { return pow(base, exp); }
 }
 
+/// Absolute value of an Int, returned as Int.
 pub fn abs_int(x: Int) -> Int {
   if x >= 0 { return x; }
   return -x;
 }
 
+/// Absolute value of a Float64 via libm `fabs`.
 pub fn abs_float(x: Float64) -> Float64
   requires: true
 {
   unsafe { return fabs(x); }
 }
 
+/// Smaller of two Ints.
 pub fn min_int(a: Int, b: Int) -> Int {
   if a < b { return a; }
   return b;
 }
 
+/// Larger of two Ints.
 pub fn max_int(a: Int, b: Int) -> Int {
   if a > b { return a; }
   return b;
 }
 
+/// Smaller of two Float64s.
 pub fn min_float(a: Float64, b: Float64) -> Float64 {
   if a < b { return a; }
   return b;
 }
 
+/// Larger of two Float64s.
 pub fn max_float(a: Float64, b: Float64) -> Float64 {
   if a > b { return a; }
   return b;
 }
 
+/// Largest integer not greater than `x` (libm `floor`).
 pub fn floor(x: Float64) -> Float64
   requires: true
 {
   unsafe { return floor(x); }
 }
 
+/// Smallest integer not less than `x` (libm `ceil`).
 pub fn ceil(x: Float64) -> Float64
   requires: true
 {
   unsafe { return ceil(x); }
 }
 
+/// Nearest integer to `x`, halves rounded away from zero.
 pub fn round(x: Float64) -> Int {
   if x >= 0.0 { return to_int(x + 0.5); }
   return to_int(x - 0.5);
@@ -248,42 +260,50 @@ pub fn round(x: Float64) -> Int {
 
 // === Trig ===
 
+/// Sine of `x` radians (libm).
 pub fn sin(x: Float64) -> Float64
   requires: true
 {
   unsafe { return sin(x); }
 }
 
+/// Cosine of `x` radians (libm).
 pub fn cos(x: Float64) -> Float64
   requires: true
 {
   unsafe { return cos(x); }
 }
 
+/// Tangent of `x` radians (libm).
 pub fn tan(x: Float64) -> Float64
   requires: true
 {
   unsafe { return tan(x); }
 }
 
+/// Arc sine of `x` in [-pi/2, pi/2]; requires `x` in [-1, 1] (libm).
 pub fn asin(x: Float64) -> Float64
   requires: x >= -1.0 && x <= 1.0
 {
   unsafe { return asin(x); }
 }
 
+/// Arc cosine of `x` in [0, pi]; requires `x` in [-1, 1] (libm).
 pub fn acos(x: Float64) -> Float64
   requires: x >= -1.0 && x <= 1.0
 {
   unsafe { return acos(x); }
 }
 
+/// Arc tangent of `x` in [-pi/2, pi/2] (libm).
 pub fn atan(x: Float64) -> Float64
   requires: true
 {
   unsafe { return atan(x); }
 }
 
+/// Arc tangent of `y/x` using both signs to pick the quadrant; `(0, 0)` is
+/// rejected (libm `atan2`).
 pub fn atan2(y: Float64, x: Float64) -> Float64
   requires: x != 0.0 || y != 0.0  // both zero is undefined
 {
@@ -320,24 +340,28 @@ fn exp_inner(x: Float64) -> Float64 {
   return result;
 }
 
+/// e raised to `x` (libm).
 pub fn exp(x: Float64) -> Float64
   requires: true
 {
   unsafe { return exp(x); }
 }
 
+/// Natural logarithm of `x`; requires `x > 0` (libm).
 pub fn ln(x: Float64) -> Float64
   requires: x > 0.0
 {
   unsafe { return log(x); }
 }
 
+/// Base-10 logarithm of `x`; requires `x > 0` (libm).
 pub fn log10(x: Float64) -> Float64
   requires: x > 0.0
 {
   unsafe { return log10(x); }
 }
 
+/// Base-2 logarithm of `x`; requires `x > 0` (derived from libm `log`).
 pub fn log2(x: Float64) -> Float64
   requires: x > 0.0
 {
@@ -346,6 +370,7 @@ pub fn log2(x: Float64) -> Float64
 
 // === Bitwise ===
 
+/// Bitwise AND of two Ints (two's-complement semantics, sign preserved).
 pub fn bit_and(a: Int, b: Int) -> Int {
   var sign_a = a < 0;
   var sign_b = b < 0;
@@ -366,6 +391,7 @@ pub fn bit_and(a: Int, b: Int) -> Int {
   return _combine_signed(sign_a && sign_b, result);
 }
 
+/// Bitwise OR of two Ints (two's-complement semantics, sign preserved).
 pub fn bit_or(a: Int, b: Int) -> Int {
   var sign_a = a < 0;
   var sign_b = b < 0;
@@ -386,6 +412,7 @@ pub fn bit_or(a: Int, b: Int) -> Int {
   return _combine_signed(sign_a || sign_b, result);
 }
 
+/// Bitwise XOR of two Ints (two's-complement semantics, sign preserved).
 pub fn bit_xor(a: Int, b: Int) -> Int {
   var sign_a = a < 0;
   var sign_b = b < 0;
@@ -406,10 +433,13 @@ pub fn bit_xor(a: Int, b: Int) -> Int {
   return _combine_signed(sign_a != sign_b, result);
 }
 
+/// Bitwise complement of `a` (equivalent to `-1 - a`).
 pub fn bit_not(a: Int) -> Int {
   return -1 - a;
 }
 
+/// Logical shift left by `n` bits; `n <= 0` returns `a` unchanged, `n >= 64`
+/// returns 0.
 pub fn shl(a: Int, n: Int) -> Int {
   if n <= 0 { return a; }
   if n >= 64 { return 0; }
@@ -420,6 +450,8 @@ pub fn shl(a: Int, n: Int) -> Int {
   return a * _pow2(n);
 }
 
+/// Arithmetic shift right by `n` bits; `n <= 0` returns `a` unchanged, and
+/// negative values shift in sign bits.
 pub fn shr(a: Int, n: Int) -> Int {
   if n <= 0 { return a; }
   if n >= 64 {
@@ -438,6 +470,7 @@ pub fn shr(a: Int, n: Int) -> Int {
 
 // === Random ===
 
+/// Seed the module-level Lehmer RNG; seed 0 is mapped to 1.
 pub fn seed_rng(seed: Int) {
   if seed == 0 {
     _rng_state = 1;
@@ -446,6 +479,7 @@ pub fn seed_rng(seed: Int) {
   }
 }
 
+/// Next pseudo-random Float64 in [0, 1) from the module RNG (minstd LCG).
 pub fn random() -> Float64
   ensures: result >= 0.0
   ensures: result < 1.0
@@ -457,6 +491,7 @@ pub fn random() -> Float64
   return (_rng_state as Float64) / 2147483647.0;
 }
 
+/// Uniform Int in [min, max] (inclusive) from the module RNG.
 pub fn random_range(min: Int, max: Int) -> Int
   requires: min <= max
   ensures:  result >= min
@@ -469,26 +504,31 @@ pub fn random_range(min: Int, max: Int) -> Int
   return min + val;
 }
 
+/// Alias of `random`; the next Float64 in [0, 1).
 pub fn random_float() -> Float64 {
   return random();
 }
 
 // === Misc ===
 
+/// Clamp `x` into [lo, hi]; assumes `lo <= hi`.
 pub fn clamp(x: Float64, lo: Float64, hi: Float64) -> Float64 {
   if x < lo { return lo; }
   if x > hi { return hi; }
   return x;
 }
 
+/// Linear interpolation: `a + (b - a) * t` (no clamping of `t`).
 pub fn lerp(a: Float64, b: Float64, t: Float64) -> Float64 {
   return a + (b - a) * t;
 }
 
+/// True when `x` is NaN (`x != x`).
 pub fn is_nan(x: Float64) -> Bool {
   return x != x;
 }
 
+/// True when `x` is positive or negative infinity.
 pub fn is_inf(x: Float64) -> Bool {
   return x == 1.0 / 0.0 || x == -1.0 / 0.0;
 }
@@ -497,6 +537,7 @@ pub fn is_inf(x: Float64) -> Bool {
 // These are the original Taylor series / iterative implementations
 // available when libm FFI is unavailable or precision is preferred.
 
+/// Pure-XIOM square root (Newton iteration); no libm needed.
 pub fn sqrt_pure(x: Float64) -> Float64
   requires: x >= 0.0
   ensures:  result >= 0.0
@@ -512,6 +553,8 @@ pub fn sqrt_pure(x: Float64) -> Float64
   return guess;
 }
 
+/// Pure-XIOM `base ^ exp` via `exp(exp * ln(base))`; negative base requires an
+/// integer exponent.
 pub fn pow_pure(base: Float64, exp: Float64) -> Float64
   requires: base >= 0.0 || exp == to_int(exp)
 {
@@ -521,11 +564,13 @@ pub fn pow_pure(base: Float64, exp: Float64) -> Float64
   return exp_inner(exp * _ln_impl(base));
 }
 
+/// Pure-XIOM absolute value of a Float64.
 pub fn abs_float_pure(x: Float64) -> Float64 {
   if x >= 0.0 { return x; }
   return -x;
 }
 
+/// Pure-XIOM floor (truncation adjusted for negatives).
 pub fn floor_pure(x: Float64) -> Float64 {
   var i = to_int(x);
   if x >= 0.0 { return to_float(i); }
@@ -533,6 +578,7 @@ pub fn floor_pure(x: Float64) -> Float64 {
   return to_float(i - 1);
 }
 
+/// Pure-XIOM ceil (truncation adjusted for positives).
 pub fn ceil_pure(x: Float64) -> Float64 {
   var i = to_int(x);
   if x <= 0.0 { return to_float(i); }
@@ -540,18 +586,22 @@ pub fn ceil_pure(x: Float64) -> Float64 {
   return to_float(i + 1);
 }
 
+/// Pure-XIOM sine via angle reduction + 10-term Taylor series.
 pub fn sin_pure(x: Float64) -> Float64 {
   return _sin_taylor(_normalize_angle(x));
 }
 
+/// Pure-XIOM cosine via angle reduction + 10-term Taylor series.
 pub fn cos_pure(x: Float64) -> Float64 {
   return _cos_taylor(_normalize_angle(x));
 }
 
+/// Pure-XIOM tangent as `sin_pure / cos_pure`.
 pub fn tan_pure(x: Float64) -> Float64 {
   return sin_pure(x) / cos_pure(x);
 }
 
+/// Pure-XIOM arc sine; requires `x` in [-1, 1].
 pub fn asin_pure(x: Float64) -> Float64
   requires: x >= -1.0 && x <= 1.0
 {
@@ -561,6 +611,7 @@ pub fn asin_pure(x: Float64) -> Float64
   return atan_pure(x / sqrt_pure(1.0 - x * x));
 }
 
+/// Pure-XIOM arc cosine; requires `x` in [-1, 1].
 pub fn acos_pure(x: Float64) -> Float64
   requires: x >= -1.0 && x <= 1.0
 {
@@ -568,12 +619,15 @@ pub fn acos_pure(x: Float64) -> Float64
   return PI / 2.0 - asin_pure(x);
 }
 
+/// Pure-XIOM arc tangent via series with reciprocal reduction.
 pub fn atan_pure(x: Float64) -> Float64 {
   if x > 1.0 { return PI / 2.0 - _atan_small(1.0 / x); }
   if x < -1.0 { return -PI / 2.0 - _atan_small(1.0 / x); }
   return _atan_small(x);
 }
 
+/// Pure-XIOM two-argument arc tangent with quadrant selection; rejects
+/// `(0, 0)`.
 pub fn atan2_pure(y: Float64, x: Float64) -> Float64
   requires: x != 0.0 || y != 0.0
 {
@@ -587,22 +641,26 @@ pub fn atan2_pure(y: Float64, x: Float64) -> Float64
   return 0.0;
 }
 
+/// Pure-XIOM `e ^ x` via range reduction + 25-term series (overflow guard).
 pub fn exp_pure(x: Float64) -> Float64 {
   return exp_inner(x);
 }
 
+/// Pure-XIOM natural logarithm with atanh series; requires `x > 0`.
 pub fn ln_pure(x: Float64) -> Float64
   requires: x > 0.0
 {
   return _ln_impl(x);
 }
 
+/// Pure-XIOM base-10 logarithm; requires `x > 0`.
 pub fn log10_pure(x: Float64) -> Float64
   requires: x > 0.0
 {
   return _ln_impl(x) / 2.302585092994046;
 }
 
+/// Pure-XIOM base-2 logarithm; requires `x > 0`.
 pub fn log2_pure(x: Float64) -> Float64
   requires: x > 0.0
 {

@@ -104,3 +104,19 @@ pwsh tools/gen_call_probes.ps1 -Compiler C:\path\to\xiom.exe -MinParams 2 -MaxPa
 The zero-arg tranche is locked by `tools/probes/p_never_called_zeroarg.xi`;
 the single-param tranche is currently a known compiler failure
 (`tools/known_failures/p_sweep_single_param.xi`).
+
+## Documentation coverage
+
+`tools/doc_scan.ps1` counts pub declarations with a preceding `///` doc line
+(the prose the API-docs generator publishes) and reports global + per-dir
+coverage. `-Detail` lists per-file rows; `-DumpBaseline <json>` records a
+ratchet floor (`tools/doc_baseline1.json`); `-RatchetFile <json>` fails when
+any directory or the global count drops below it.
+
+```powershell
+pwsh tools/doc_scan.ps1 -Detail
+pwsh tools/doc_scan.ps1 -RatchetFile tools/doc_baseline1.json
+```
+
+Baseline (2026-09-18): 3,518/6,984 documented (50.4%); the biggest gaps are
+`math` (1,010 missing), `geom` (460), `os`/`net` (~190 each).
