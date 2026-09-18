@@ -167,7 +167,9 @@ pub fn fs_exists(path: Str) -> Bool {
 /// Params: path - the path.
 /// Returns: true if the path is a regular file.
 /// Complexity: O(1).
-pub fn fs_is_file(path: Str) -> Bool {
+pub fn fs_is_file(path: Str) -> Bool
+  ensures: result == true => fs_exists(path)
+{
   let r = io.metadata(path);
   match r {
     Ok(m) => m.is_file;
@@ -179,7 +181,9 @@ pub fn fs_is_file(path: Str) -> Bool {
 /// Params: path - the path.
 /// Returns: true if the path is a directory.
 /// Complexity: O(1).
-pub fn fs_is_dir(path: Str) -> Bool {
+pub fn fs_is_dir(path: Str) -> Bool
+  ensures: result == true => fs_exists(path)
+{
   return io.is_dir(path);
 }
 

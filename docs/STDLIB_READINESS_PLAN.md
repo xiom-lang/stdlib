@@ -259,11 +259,15 @@ T1/T2 yields.
       union-find relations, spatial size @pre + query count bounds,
       persistent length relations, LFU/ARC membership, CMS/TinyLFU
       estimate bounds) -> collect 34.9% -> 44.8%, global 17.3% clauses /
-      16.8% pub-with-clause. Ratchet:
-      tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors49.json
+      16.8% pub-with-clause. Wave 13 (2026-09-18): 21 clauses (string
+      case/normalize empty-input implications; io buffer Result-Ok and
+      constructor field specs; fs is_file/is_dir imply exists) -> string
+      48.5% -> 50.7%, io 50.9% -> 62.0% (the first key module across the
+      60% gate), global 17.6% clauses / 17.1% pub-with-clause. Ratchet:
+      tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors50.json
       (repo tooling as of the split; positive + negative runs verified;
       earlier floors kept at
-      coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48.json).
+      coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49.json).
       Floors are per top-level stdlib/xiom directory and must be refreshed
       when a module is ADDED (new uncovered pub fns dilute the percentage
       -- TOML dropped serialize 6.1% -> 5.4%, tz dropped time 13% ->

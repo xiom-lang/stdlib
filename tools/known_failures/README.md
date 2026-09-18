@@ -13,6 +13,20 @@ xiom --force -o out.exe tools/known_failures/<file>.xi
 
 ## Current
 
+- `p_result_payload_contract.xi` (2026-09-18): MINIMAL codegen repro found
+  while pre-validating wave-13 contract shapes on main R46b (`504fcc1e`).
+  One module with TWO Result-returning functions whose `ensures` clauses
+  read the payload (`result.value`): a scalar payload (Int) plus a Vec
+  payload breaks clang:
+  `'%tmp46' defined with type '%struct.Vec' but expected 'ptr'` at
+  `call i64 @xiom_str_len(i8* %tmp46)`. Either function compiles alone; the
+  pair is the trigger. The `is Err` payload form
+  (`ensures: result is Err => result.value.len() > 0`) fails the same way
+  when combined with a Vec-payload Ok contract. Bare `result is Ok` across
+  Str/Vec/Unit payloads, and scalar+Str payload contracts, are clean.
+  Impact: wave-13 stdlib contracts use only the clean forms; payload-reading
+  Result clauses stay out of io/fs.xi until the compiler lane fixes this.
+
 - `p_sweep_single_param.xi` (2026-09-17): 139 calls to single-parameter
   public functions that no smoke/module references, across 54 imported
   modules. Fails codegen on v0.60.0 and on main R43 (`274184be`) with:

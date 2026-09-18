@@ -232,7 +232,9 @@ pub fn str_sentence_case(s: Str) -> Str
 // Converts `s` to lowerCamelCase: the first word is lowercased and each
 // following word is capitalized; separators are dropped.
 // Complexity: O(|s|).
-pub fn str_to_camel_case(s: Str) -> Str {
+pub fn str_to_camel_case(s: Str) -> Str
+  ensures: s.len() == 0 => result.len() == 0
+{
   var words = _split_words(s);
   if words.len() == 0 {
     return "";
@@ -250,20 +252,26 @@ pub fn str_to_camel_case(s: Str) -> Str {
 
 // Converts `s` to snake_case: words are lowercased and joined with '_'.
 // Complexity: O(|s|).
-pub fn str_to_snake_case(s: Str) -> Str {
+pub fn str_to_snake_case(s: Str) -> Str
+  ensures: s.len() == 0 => result.len() == 0
+{
   _join_lower(s, "_")
 }
 
 // Converts `s` to kebab-case: words are lowercased and joined with '-'.
 // Complexity: O(|s|).
-pub fn str_to_kebab_case(s: Str) -> Str {
+pub fn str_to_kebab_case(s: Str) -> Str
+  ensures: s.len() == 0 => result.len() == 0
+{
   _join_lower(s, "-")
 }
 
 // Converts `s` to PascalCase: every word is capitalized and joined without a
 // separator.
 // Complexity: O(|s|).
-pub fn str_to_pascal_case(s: Str) -> Str {
+pub fn str_to_pascal_case(s: Str) -> Str
+  ensures: s.len() == 0 => result.len() == 0
+{
   var words = _split_words(s);
   var result = "";
   var i: Int = 0;

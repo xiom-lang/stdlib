@@ -39,7 +39,9 @@ fn buf_pop_front(b: &mut Vec[UInt8]) -> UInt8 {
 /// Params: fd - the file descriptor (FILE* as Int).
 /// Returns: a buffered reader over `fd`.
 /// Complexity: O(1).
-pub fn buf_reader_new(fd: Int) -> BufReader {
+pub fn buf_reader_new(fd: Int) -> BufReader
+  ensures: result.inner == fd
+{
   return BufReader{ inner: fd; buf: Vec[UInt8].new(); }
 }
 
@@ -47,7 +49,9 @@ pub fn buf_reader_new(fd: Int) -> BufReader {
 /// Params: r - the reader.
 /// Returns: Ok(line without the trailing newline), Err on read failure.
 /// Complexity: O(n) where n is the line length.
-pub fn br_read_line(r: &mut BufReader) -> Result[Str, Str] {
+pub fn br_read_line(r: &mut BufReader) -> Result[Str, Str]
+  ensures: result is Ok
+{
   var line: Vec[UInt8] = Vec[UInt8].new();
   var done = false;
   while !done {
@@ -88,7 +92,9 @@ pub fn br_read_line(r: &mut BufReader) -> Result[Str, Str] {
 /// Params: r - the reader; n - the byte count (clamped to >= 0).
 /// Returns: Ok(bytes read; fewer than n only at EOF), Err on read failure.
 /// Complexity: O(n).
-pub fn br_read_bytes(r: &mut BufReader, n: Int) -> Result[Vec[UInt8], Str> {
+pub fn br_read_bytes(r: &mut BufReader, n: Int) -> Result[Vec[UInt8], Str]
+  ensures: result is Ok
+{
   var count = n;
   if count < 0 {
     count = 0;
@@ -121,7 +127,9 @@ pub fn br_read_bytes(r: &mut BufReader, n: Int) -> Result[Vec[UInt8], Str> {
 /// Params: r - the reader; delim - the delimiter byte.
 /// Returns: Ok(bytes including the delimiter), Err on read failure.
 /// Complexity: O(n) where n is the number of bytes read.
-pub fn br_read_until(r: &mut BufReader, delim: UInt8) -> Result[Vec[UInt8], Str> {
+pub fn br_read_until(r: &mut BufReader, delim: UInt8) -> Result[Vec[UInt8], Str]
+  ensures: result is Ok
+{
   var out: Vec[UInt8] = Vec[UInt8].new();
   var done = false;
   while !done {
@@ -163,7 +171,9 @@ pub fn br_read_until(r: &mut BufReader, delim: UInt8) -> Result[Vec[UInt8], Str>
 /// Params: r - the reader; n - the byte count (clamped to >= 0).
 /// Returns: Ok(bytes staged in the internal buffer), Err on read failure.
 /// Complexity: O(n).
-pub fn br_peek(r: &mut BufReader, n: Int) -> Result[Vec[UInt8], Str> {
+pub fn br_peek(r: &mut BufReader, n: Int) -> Result[Vec[UInt8], Str]
+  ensures: result is Ok
+{
   var count = n;
   if count < 0 {
     count = 0;
@@ -214,7 +224,9 @@ pub fn br_tell(r: &BufReader) -> Int
 /// Params: fd - the file descriptor (FILE* as Int).
 /// Returns: a buffered writer over `fd`.
 /// Complexity: O(1).
-pub fn buf_writer_new(fd: Int) -> BufWriter {
+pub fn buf_writer_new(fd: Int) -> BufWriter
+  ensures: result.inner == fd
+{
   return BufWriter{ inner: fd; buf: Vec[UInt8].new(); }
 }
 
@@ -222,7 +234,9 @@ pub fn buf_writer_new(fd: Int) -> BufWriter {
 /// Params: w - the writer; data - the bytes to buffer.
 /// Returns: Ok(()) on success.
 /// Complexity: O(n) where n is the data length.
-pub fn bw_write(w: &mut BufWriter, data: &Vec[UInt8]) -> Result[Unit, Str> {
+pub fn bw_write(w: &mut BufWriter, data: &Vec[UInt8]) -> Result[Unit, Str]
+  ensures: result is Ok
+{
   var i: Int = 0;
   while i < data.len() {
     w.buf.push(data[i]);
@@ -235,7 +249,9 @@ pub fn bw_write(w: &mut BufWriter, data: &Vec[UInt8]) -> Result[Unit, Str> {
 /// Params: w - the writer; s - the string.
 /// Returns: Ok(()) on success.
 /// Complexity: O(n) where n is the string length.
-pub fn bw_write_str(w: &mut BufWriter, s: Str) -> Result[Unit, Str> {
+pub fn bw_write_str(w: &mut BufWriter, s: Str) -> Result[Unit, Str]
+  ensures: result is Ok
+{
   var i: Int = 0;
   while i < s.len() {
     w.buf.push(s.byte_at(i));
@@ -248,7 +264,9 @@ pub fn bw_write_str(w: &mut BufWriter, s: Str) -> Result[Unit, Str> {
 /// Params: w - the writer.
 /// Returns: Ok(()) on success, Err if fewer bytes than buffered were written.
 /// Complexity: O(n) where n is the buffer length.
-pub fn bw_flush(w: &mut BufWriter) -> Result[Unit, Str> {
+pub fn bw_flush(w: &mut BufWriter) -> Result[Unit, Str]
+  ensures: result is Ok => w.buf.len() == 0
+{
   if w.buf.len() == 0 {
     return Ok(());
   }
@@ -274,7 +292,9 @@ pub fn bw_flush(w: &mut BufWriter) -> Result[Unit, Str> {
 /// Params: w - the writer (consumed).
 /// Returns: the file descriptor.
 /// Complexity: O(n) where n is the buffer length.
-pub fn bw_into_inner(w: &mut BufWriter) -> Int {
+pub fn bw_into_inner(w: &mut BufWriter) -> Int
+  ensures: result == w.inner
+{
   let fd = w.inner;
   let r = bw_flush(w);
   return fd;

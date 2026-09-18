@@ -33,7 +33,9 @@ use xiom.char;
 /// Returns: the NFC-normalized string.
 /// Error case: none; malformed UTF-8 bytes pass through approximately.
 /// Complexity: O(|s|).
-pub fn unicode_normalize_nfc(s: Str) -> Str {
+pub fn unicode_normalize_nfc(s: Str) -> Str
+  ensures: s.len() == 0 => result.len() == 0
+{
   var cps = Vec[Int].new();
   _walk_decomp(s, &mut cps);
   _reorder(&mut cps);
@@ -48,7 +50,9 @@ pub fn unicode_normalize_nfc(s: Str) -> Str {
 /// Returns: the NFD-normalized string.
 /// Error case: none; malformed UTF-8 bytes pass through approximately.
 /// Complexity: O(|s|).
-pub fn unicode_normalize_nfd(s: Str) -> Str {
+pub fn unicode_normalize_nfd(s: Str) -> Str
+  ensures: s.len() == 0 => result.len() == 0
+{
   var cps = Vec[Int].new();
   _walk_decomp(s, &mut cps);
   _reorder(&mut cps);
@@ -63,7 +67,9 @@ pub fn unicode_normalize_nfd(s: Str) -> Str {
 /// Returns: the NFKC-normalized string.
 /// Error case: none; malformed UTF-8 bytes pass through approximately.
 /// Complexity: O(|s|).
-pub fn unicode_normalize_nfkc(s: Str) -> Str {
+pub fn unicode_normalize_nfkc(s: Str) -> Str
+  ensures: s.len() == 0 => result.len() == 0
+{
   var cps = Vec[Int].new();
   _walk_compat(s, &mut cps);
   _reorder(&mut cps);
@@ -77,7 +83,9 @@ pub fn unicode_normalize_nfkc(s: Str) -> Str {
 /// Returns: the NFKD-normalized string.
 /// Error case: none; malformed UTF-8 bytes pass through approximately.
 /// Complexity: O(|s|).
-pub fn unicode_normalize_nfkd(s: Str) -> Str {
+pub fn unicode_normalize_nfkd(s: Str) -> Str
+  ensures: s.len() == 0 => result.len() == 0
+{
   var cps = Vec[Int].new();
   _walk_compat(s, &mut cps);
   _reorder(&mut cps);
@@ -93,7 +101,9 @@ pub fn unicode_normalize_nfkd(s: Str) -> Str {
 /// Returns: an ASCII-only string.
 /// Error case: none; malformed UTF-8 bytes pass through approximately.
 /// Complexity: O(|s|).
-pub fn str_normalize_ascii(s: Str) -> Str {
+pub fn str_normalize_ascii(s: Str) -> Str
+  ensures: s.len() == 0 => result.len() == 0
+{
   let len = string.str_len(s);
   var out = Vec[UInt8].new();
   var i: Int = 0;
