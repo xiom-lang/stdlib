@@ -4,80 +4,102 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 -->
 # XIOM Stdlib Session -- Handoff
 
-## 0A. CONTINUE HERE -- handoff snapshot (2026-09-18)
+## 0A. CONTINUE HERE -- handoff snapshot (2026-09-18, evening session)
 
-**Repo**: `xiom-lang/stdlib` at `E:\xiom-lang\stdlib` (branch `main`,
-working tree clean; ~40 local commits since the split -- pushed only when
-the release lane says so). Compiler pin: `COMPILER_VERSION` = **v0.60.0**
-(release tag `v0.60.1` predates the R43/R45 fixes, so the pin waits for a
-release that contains them; the nightly heavy CI already tests compiler
-`main`).
+**Repo**: `xiom-lang/stdlib` at `E:\xiom-lang\stdlib` (branch `main`).
+Compiler pin: `COMPILER_VERSION` = **v0.60.0** (v0.60.1 and the pin predate
+R43-R46; the nightly heavy CI already tests compiler `main`). NOTE: history
+was rewritten this session (owner-authorized): every author/committer/tagger
+is now `Lefteris Notas <lefterisnotas@gmail.com>`, `main` force-pushed to
+HEAD `926e888`; every other clone must be re-cloned. The protected tag
+`stdlib-v0.60.0` still carries the old tagger on the remote (its force-push
+was rejected by tag rules -- owner action needed).
 
-**Verified state (2026-09-17/18)**
-- Freeze baseline on tag v0.60.0: 947/947 strict corpus, 509/509 module
-  check, 0 bare-name hits, ratchet OK -- `docs/VERIFICATION_BASELINE.md`.
-- Corpus is now **950 files** (`smoke_serialize_toml_write.xi`,
-  `smoke_stress_fuzz_parsers.xi` added).
-- Coverage (floors50): **io 62.0%, string 50.7%, collect 44.8%**; global
-  17.6% clauses / **17.1% pub-with-clause**. v1.0 gate: >=60% on
-  io/string/collect (io crossed on 2026-09-18 with wave 13).
-- Findings from this lane: `x25519_keypair` FIXED (compiler R43
-  `274184be`, verified locally); `http_parse_response` FIXED stdlib-side
-  (R44 same-leaf collision -- `net.net.HttpResponse` renamed
-  `NetHttpResponse`, verified on the pin); single-param sweep repro STILL
-  OPEN -- fails/hangs on compiler main `483f283e` (R45), repro at
-  `tools/known_failures/p_sweep_single_param.xi`.
-- Compiler R46 (`12148d43`, bench graph clang-clean) fixed generic
-  same-leaf collisions, struct-vs-variant `Node` disambiguation and mono
-  tuple params. New compiler open finding (recorded in the compiler
-  SESSION.md): cross-module calls to generic methods on a
-  module-qualified receiver fall back to erased stubs -- stdlib impact
-  unassessed; check whether any smoke uses generic methods through a
-  qualified receiver.
+**Verified state (2026-09-18)**
+- Compiler main built twice this session via `git archive` + `cargo build
+  --locked -p xiom`: `12148d43` (R46) and `504fcc1e` (R46b, includes the
+  qualified-receiver generic-method fix). All results below use R46b unless
+  noted.
+- Corpus gates run green after every batch: R44 batches 1-3 and wave 13 =
+  `check_modules` **509/509** + full corpus **949/949** (runner file count;
+  `docs/VERIFICATION_BASELINE.md` freeze says 950 -- the runner counted 949
+  in all four runs).
+- Coverage (floors50): **io 62.0%** (first key module across the 60% v1.0
+  gate), **string 50.7%, collect 44.8%**; global 17.6% clauses / **17.1%
+  pub-with-clause**.
+- R44 dedup landed: `priority.xi` PHeap -> `IntMaxHeap`, `ring.xi` SpscRing
+  -> `RingBuffer`, `range.xi` IntervalTree -> `IntervalSet`; same-leaf
+  conflicts **16 -> 13** (`docs/baselines/same-leaf-conflicts.md`
+  regenerated); no frozen `api_freeze` signatures changed (pqueue/spsc/ring
+  entries are not in the compiler snapshot).
+- Compiler verification: `p_sweep_single_param.xi` STILL FAILS on R46 and
+  R46b, NO HANG -- it is now a clang 22.1.8 crash
+  (`Exception Code 0xC0000005`, `X86 DAG->DAG Instruction Selection` on
+  `@__unsafe_block_77`); IR deterministic (4,596,577 bytes, identical
+  sha256 on both). Evidence: `tools/known_failures/p_sweep_single_param.clang-crash.txt`.
+  The old R45 "hang" was the debug driver being slow, not a hang.
+- R46b qualified-generic-receiver finding: NEW probe
+  `tools/probes/p_r46b_qualified_generic.xi` is green on R46 and R46b.
+  Stdlib impact assessed as NONE: only `cell.Cell/RefCell`, `rc.Rc`,
+  `mem.ManuallyDrop`, `cmp.Reverse` are called through module-qualified
+  generic receivers, and none has a same-leaf twin.
+- NEW findings this session: `p_result_payload_contract.xi` (a module with
+  a scalar-payload Result contract AND a Vec-payload Result contract fails
+  clang; blocks Err-payload clauses -- wave 13 used bare `result is Ok`
+  only) and `p_os_env_set_link.xi` (Windows link gap: `setenv` undefined;
+  `os.env_set`/`xiom.env.set_var` unusable on Windows MSVC).
+- CI: all third-party actions pinned to full SHAs per
+  `sha_pinning_required` (checkout `11d5960a...`, upload-artifact
+  `ea165f8d...`, rust-toolchain `6bed0761...`, cache `0057852b...`).
+- Probes added: `p_r46b_qualified_generic`, `p_wave12_shapes`,
+  `p_wave13_shapes`. Floors 49/50 dumped and wired (workflows now ratchet
+  against `tools/coverage_floors50.json`).
+- Untested-surface sweep: NEW generator `tools/gen_call_probes.ps1`
+  (`-EmitOnly`, `-OnlyCalls`, `-Limit`; module-grouped probes). Scan found
+  **47 modules / 179 scalar multi-param never-referenced calls**; compiled
+  25 single-call + 8 two-call groups -> 32 OK, 1 FAIL (the os env link
+  gap). The 3..58-call groups are not yet compiled.
 
 **Next-session queue, in order**
-1. Rebuild compiler `main` (12148d43+) and re-test
-   `tools/known_failures/p_sweep_single_param.xi`: green -> promote it to
-   `tools/probes/`, update the known_failures README + this doc, then
-   re-baseline (check_modules + full corpus sweep). Failing -> keep the
-   repro, refresh the error evidence. Hanging -> capture a minimal hang
-   repro (each attempt with its own timeout; subset bisection is
-   non-monotone, so bisect by MODULE group instead of call subset).
-2. R44 slice prep: execute `docs/SAME_LEAF_TYPE_CONFLICTS.md` batches
-   (16 conflicting leaves; dispositions + rules in that doc). Start with
-   the clear legacy twins: `collect/priority.xi` PHeap vs
-   `collect/heap.xi`; `collect/ring.xi` SpscRing vs `collect/queue.xi`;
-   `collect/range.xi` IntervalTree vs `collect/interval.xi`. Every rename
-   is a public-API change: batch with the compiler `api_freeze` snapshot
-   regen; after each batch require `tools/same_leaf_audit.ps1` count drop
-   + `tools/check_modules.ps1` 509/509 + corpus battery green.
-3. Contract waves 12+: keep pushing toward the 60% gate. Biggest
-   surfaces: remaining collect method bodies (graph/spatial/persistent,
-   cache LFU/ARC leftovers), string case/normalize wrappers, io Result
-   helpers. Toolbox: `=>` implications, `@pre` relations,
-   `result is Some/None/Ok`, `result.value`, field equality, count bounds.
-   Pre-validate every NEW shape in a `p_waveN_shapes.xi` probe; dump
-   `coverage_floorsN+1.json` and wire it into CI/READMEs in the same
-   commit.
-4. Untested-surface sweep: 1010/5777 public fns were never referenced.
-   Zero-arg subset is locked by
-   `tools/probes/p_never_called_zeroarg.xi`; the single-param tranche is
-   blocked on item 1; multi-param functions need generated call probes.
-5. TLS/schannel (compiler-FFI-blocked) and tzdata phase 2 stay last;
+1. Compiler lane: minimize/fix `p_sweep_single_param` (clang ISel crash,
+   `@__unsafe_block_77`, xiom.net) and `p_result_payload_contract`
+   (scalar+Vec Result payload contract in one module).
+2. Finish the generator groups (`-OnlyCalls 3` .. `-OnlyCalls 58`, or
+   `-Limit`), triage failures; when the compiler fixes land, promote the
+   zero/single-param tranches into `tools/probes/` and re-baseline.
+3. R44 continue: 13 conflicts left (`Executor, Future, Graph, UnionFind,
+   IntMap, StringMap, FloatScan, Aabb, Sphere, Ray, Plane, Regex, Match`);
+   dispositions per `docs/SAME_LEAF_TYPE_CONFLICTS.md`; regenerate the
+   audit baseline and gate each batch (audit drop + 509/509 + corpus).
+4. Wave 14+: push string/collect toward 60% with the clean shapes (bare
+   `result is Ok`, `=>`, `@pre`, count bounds); payload-reading Result
+   clauses only after p_result_payload_contract is fixed. Pre-validate new
+   shapes in `p_waveN_shapes.xi`; dump/wire floorsN+1 in the same commit.
+5. Windows env link gap: runtime shim (`_putenv_s`) or compiler FFI
+   hardening, then an env smoke. TLS/schannel and tzdata phase 2 stay last;
    registry publish activation is the user's (dispatch-only
    `publish-registry.yml`).
 
 **Recipes**
 - Build a compiler ref: export it (`git -C E:\xiom-lang\xiom archive
   --format=zip -o <zip> <ref>`), expand to a temp dir, set
-  `CARGO_TARGET_DIR=<temp>\target`, `cargo build --locked -p xiom`; run it
-  with `XIOM_STDLIB=E:\xiom-lang\stdlib` (the runner does this too).
+  `CARGO_TARGET_DIR=<temp>\target`, `cargo build --locked -p xiom`. GOTCHA:
+  if you reuse a warm target dir, TOUCH all extracted sources first
+  (git-archive mtimes can be older than the artifacts, so cargo skips the
+  rebuild). Run with `XIOM_STDLIB=E:\xiom-lang\stdlib`.
 - Gates: `./tools/run_smokes.ps1 -Compiler <exe> -RetryFailed`;
-  `pwsh tools/check_modules.ps1 -Compiler <exe>`;
-  `pwsh tools/barename_scan.ps1 -Compiler <exe>`;
-  `pwsh tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors50.json`.
+  `powershell -NoProfile -File tools/check_modules.ps1 -Compiler <exe>`
+  (this box has NO `pwsh` -- use `powershell`);
+  `powershell -NoProfile -File tools/barename_scan.ps1 -Compiler <exe>`;
+  `powershell -NoProfile -File tools/coverage_scan.ps1 -RatchetFile
+  tools/coverage_floors50.json`.
+- The corpus takes 20-40 min with 8 workers when the compiler lane runs its
+  e2e suite concurrently; check per-worker CSVs for liveness, not just the
+  log (a low-row worker is usually CPU-starved, not stuck).
 - No stdlib edits while a sweep is in flight; one fix = one probe = one
-  verified rerun; stage explicit paths; pure-ASCII commits.
+  verified rerun; stage explicit paths; pure-ASCII commits; verify
+  `git log -1 --format='%an <%ae>'` prints Lefteris Notas
+  <lefterisnotas@gmail.com> before every push.
 - Key docs: `tools/README.md`, `docs/CI.md`,
   `docs/VERIFICATION_BASELINE.md`, `docs/STDLIB_READINESS_PLAN.md`
   (gates), `docs/STDLIB_BETA_LIMITATIONS.md`,

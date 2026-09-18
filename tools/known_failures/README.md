@@ -13,6 +13,19 @@ xiom --force -o out.exe tools/known_failures/<file>.xi
 
 ## Current
 
+- `p_os_env_set_link.xi` (2026-09-18): Windows link failure found by the new
+  `tools/gen_call_probes.ps1` sweep (never-referenced multi-param surface).
+  `xiom.os.env_set` (and `xiom.env.set_var` / `set_var_if_absent` /
+  `remove_var`) declares and calls the C `setenv`/`unsetenv`
+  (`xiom/os/os.xi:26-27,312,320`; `xiom/os/env.xi:12-13,80,88`), which do
+  not exist in MSVC. Any Windows program referencing them fails at link:
+  `lld-link: error: undefined symbol: setenv` (undefined symbol: unsetenv
+  for the remove path). `xiom.os.win.win_set_environment_var` already
+  documents the gap and returns Err. Fix needs a runtime shim
+  (`_putenv_s` on Windows) or compiler FFI hardening; until then these
+  public functions are unusable on Windows. No smoke calls them, so the
+  corpus does not cover the gap.
+
 - `p_result_payload_contract.xi` (2026-09-18): MINIMAL codegen repro found
   while pre-validating wave-13 contract shapes on main R46b (`504fcc1e`).
   One module with TWO Result-returning functions whose `ensures` clauses

@@ -85,3 +85,22 @@ tracked; run captures are ignored). Each probe locks a specific compiler or
 contract behavior from the session handoff probe index; re-run them after
 every compiler bump. `tools/modlist_all.txt` is the manifest module list used
 by the bare-name and check-module scans.
+
+## Generated call probes (untested-surface sweep)
+
+`tools/gen_call_probes.ps1` covers the multi-parameter tranche of the
+never-referenced public surface: it scans `xiom/` for `pub fn` declarations
+whose parameters are all scalar (`Int*`/`UInt*`/`Bool`/`Char`/`Float*`/`Str`),
+keeps the ones never referenced in `tests/` or `xiom/`, and emits ONE probe
+per declaring module (calls are module-qualified). Each probe is
+`--check`ed, then fully compiled (not run: generated arguments may violate
+active contracts). Failures are localized by module group and the stderr is
+saved next to the probe.
+
+```powershell
+pwsh tools/gen_call_probes.ps1 -Compiler C:\path\to\xiom.exe -MinParams 2 -MaxParams 4
+```
+
+The zero-arg tranche is locked by `tools/probes/p_never_called_zeroarg.xi`;
+the single-param tranche is currently a known compiler failure
+(`tools/known_failures/p_sweep_single_param.xi`).
