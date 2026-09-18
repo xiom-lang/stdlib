@@ -1,0 +1,57 @@
+clang 22.1.8 crash on the IR emitted for
+tools/known_failures/p_sweep_single_param.xi
+(compiler main R46b 504fcc1e, 2026-09-18; R46 12148d43 emits byte-identical IR)
+
+Command: clang -c -x ir <work>\p_sweep1.exe.ll -o <work>\manual.o
+
+PLEASE submit a bug report to https://github.com/llvm/llvm-project/issues/ and include the crash backtrace,
+preprocessed source, and associated run script.
+Stack dump:
+0. Program arguments: clang.exe -c -x ir <work>\p_sweep1.exe.ll -o <work>\manual.o
+1. Code generation
+2. Running pass 'Function Pass Manager' on module '<work>\p_sweep1.exe.ll'.
+3. Running pass 'X86 DAG->DAG Instruction Selection' on function '@__unsafe_block_77'
+Exception Code: 0xC0000005
+ #0 0x00007ff73909ca85 (clang.exe+0x1b0ca85)
+ #1 0x00007ff738ff503a (clang.exe+0x1a6503a)
+ #2 0x00007ff738fd3a4b (clang.exe+0x1a43a4b)
+ #3 0x00007ff738fcb4bb (clang.exe+0x1a3b4bb)
+ #4 0x00007ff738fc808c (clang.exe+0x1a3808c)
+ #5 0x00007ff7391cfc42 (clang.exe+0x1c3fc42)
+ #6 0x00007ff73793ff99 (clang.exe+0x3aff99)
+ #7 0x00007ff737b13884 (clang.exe+0x583884)
+ #8 0x00007ff739167c0d (clang.exe+0x1bd7c0d)
+ #9 0x00007ff73891f99d (clang.exe+0x138f99d)
+#10 0x00007ff73760e14a (clang.exe+0x7e14a)
+#11 0x00007ff73760dbf8 (clang.exe+0x7dbf8)
+#12 0x00007ff73760825f (clang.exe+0x7825f)
+#13 0x00007ff737dbfa46 (clang.exe+0x82fa46)
+#14 0x00007ff737bc8193 (clang.exe+0x638193)
+#15 0x00007ff737bc7dcd (clang.exe+0x637dcd)
+#16 0x00007ff737bc5fc9 (clang.exe+0x635fc9)
+#17 0x00007ff737bc1eaf (clang.exe+0x631eaf)
+#18 0x00007ff737bc0825 (clang.exe+0x630825)
+#19 0x00007ff7385191ed (clang.exe+0xf891ed)
+#20 0x00007ff737d90635 (clang.exe+0x800635)
+#21 0x00007ff737d90428 (clang.exe+0x800428)
+#22 0x00007ff7376d05cb (clang.exe+0x1405cb)
+#23 0x00007ff7376cff0e (clang.exe+0x13ff0e)
+#24 0x00007ff7376cfc22 (clang.exe+0x13fc22)
+#25 0x00007ff7376c789d (clang.exe+0x13789d)
+#26 0x00007ff7376c4813 (clang.exe+0x134813)
+#27 0x00007ff7395ed4ec (clang.exe+0x205d4ec)
+#28 0x00007ff8b779cd87 (KERNEL32.DLL+0x2cd87)
+#29 0x00007ff8b85ccaec (ntdll.dll+0xacaec)
+clang: error: clang frontend command failed due to signal (use -v to see invocation)
+clang version 22.1.8 (https://github.com/llvm/llvm-project ca7933e47d3a3451d81e72ac174dcb5aa28b59d1)
+Target: x86_64-pc-windows-msvc
+Thread model: posix
+InstalledDir: C:\Program Files\LLVM\bin
+clang: note: diagnostic msg: <work>\p_sweep1.exe-6981a6.ll (preprocessed source, per-run name)
+
+IR fingerprint (both R46 and R46b): 4,596,577 bytes,
+sha256 949d633ada86dfa41a3190c3c5d437f2eaad9bc9f03325c932699cea41c9e3d1.
+Crashing function definition starts at IR line 63912:
+  define i64 @__unsafe_block_77(i8* %ctx_raw)
+The function materializes a 65536-byte stack alloca and operates on
+TcpStream / Vec ctx slots (xiom.net unsafe block).
