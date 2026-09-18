@@ -1693,6 +1693,21 @@ Stdlib burn-down on committed HEAD (b71d839f):
   read_file_lines Ok-length). string 44.6% -> **48.5%**, io 45.4% ->
   **50.9%**, global 16.3% clauses / **15.7%** pub-with-clause; floors46.
   Battery: 241 smokes green (string 102, io 139).
+- **R45 verification (compiler main `483f283e`, 2026-09-17):** all four
+  codegen probes pass (`p_x25519_keypair_codegen`, `p_http_resp_codegen`,
+  `p_async_read_line_codegen`, `p_match_vec_codegen`) and check-modules is
+  509/509 -- but the single-param sweep repro is NOT fixed: with a fresh
+  process it either fails codegen fast or HANGS (>5-15 min, no output,
+  several attempts) on `tools/known_failures/p_sweep_single_param.xi`.
+  Handed back to the compiler lane (needs a fresh minimal hang repro).
+  Note: release tag `v0.60.1` predates R43/R45, so `COMPILER_VERSION`
+  stays `v0.60.0` until a release contains them; nightly already tests
+  main.
+- **Contract wave 11 (2026-09-17):** 4 constructor clauses on
+  `collect/concurrent.xi` (mpmc/mpsc/spmc queues `cap >= 1`, concurrent
+  stack `items.len() == 0`), runtime-exercised by smoke_collect_concurrent
+  and smoke_collect_mpmc; collect battery 101/101; global 16.6% clauses /
+  16.1% pub-with-clause; floors48.
 - **R44 same-leaf conflicts inventoried (2026-09-17):** NEW
   `tools/same_leaf_audit.ps1` (repo-relative, read-only) + generated
   `docs/baselines/same-leaf-conflicts.md`: 313 pub-type declarations,

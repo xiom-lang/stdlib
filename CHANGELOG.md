@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - CI: PR gates, weekly heavy suites, release pipeline, reusable compiler
   build action; `COMPILER_VERSION` compiler pin.
+- Contract wave 11: 4 `collect.concurrent` constructor clauses
+  (queue capacity clamp, empty stack); collect pub coverage 34.4% ->
+  34.9%, global pub-with-clause 16.1% (floors48).
 - Same-leaf type audit: `tools/same_leaf_audit.ps1` + generated conflict
   worklist (`docs/SAME_LEAF_TYPE_CONFLICTS.md`) for the compiler R44
   qualification slice: 16 genuinely conflicting leaves, 24 benign.

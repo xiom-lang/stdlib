@@ -67,7 +67,9 @@ fn ccq_pop(q: &mut ConcurrentQueue) -> Option[Int] {
 /// Params: capacity - number of buffered slots (clamped to >= 1).
 /// Returns: a new MPMC queue.
 /// Complexity: O(capacity).
-pub fn mpmc_queue_new(capacity: Int) -> ConcurrentQueue {
+pub fn mpmc_queue_new(capacity: Int) -> ConcurrentQueue
+  ensures: result.cap >= 1
+{
   return ccq_new(capacity);
 }
 
@@ -91,7 +93,9 @@ pub fn mpmc_pop(q: &mut ConcurrentQueue) -> Option[Int] {
 /// Params: capacity - number of buffered slots (clamped to >= 1).
 /// Returns: a new MPSC queue.
 /// Complexity: O(capacity).
-pub fn mpsc_queue_new(capacity: Int) -> ConcurrentQueue {
+pub fn mpsc_queue_new(capacity: Int) -> ConcurrentQueue
+  ensures: result.cap >= 1
+{
   return ccq_new(capacity);
 }
 
@@ -115,7 +119,9 @@ pub fn mpsc_pop(q: &mut ConcurrentQueue) -> Option[Int] {
 /// Params: capacity - number of buffered slots (clamped to >= 1).
 /// Returns: a new SPMC queue.
 /// Complexity: O(capacity).
-pub fn spmc_queue_new(capacity: Int) -> ConcurrentQueue {
+pub fn spmc_queue_new(capacity: Int) -> ConcurrentQueue
+  ensures: result.cap >= 1
+{
   return ccq_new(capacity);
 }
 
@@ -143,7 +149,9 @@ pub type ConcurrentStack = {
 /// Create a concurrent LIFO stack.
 /// Returns: a new, open concurrent stack.
 /// Complexity: O(1).
-pub fn concurrent_stack_new() -> ConcurrentStack {
+pub fn concurrent_stack_new() -> ConcurrentStack
+  ensures: result.items.len() == 0
+{
   return ConcurrentStack{ items: Vec[Int].new(); closed: false; };
 }
 

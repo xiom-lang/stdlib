@@ -61,7 +61,10 @@ flip ON, freeze sweep on compiler tag v0.60.0 = 947/947 + module check
   codegen tuple-type mismatch (`Tuple__Int__Int` returned where
   `Tuple__Int__Bool` is expected); most calls compile in isolation, so it
   is an import-set interaction. Reproduction (expected to fail):
-  `tools/known_failures/p_sweep_single_param.xi`.
+  `tools/known_failures/p_sweep_single_param.xi`. Status 2026-09-17:
+  still failing on compiler main `483f283e` (R45) and now intermittently
+  HANGING the compiler (no output, >5 min, several attempts) -- compiler
+  triage in progress.
 - **Same-leaf public type collisions (R44 class)**: 40 non-generic
   same-leaf pub-type groups exist stdlib-wide (e.g. `collect.Avl`,
   `geom.Vec2`, `regex.Regex`, `sync.AtomicInt`). One pair
