@@ -9,6 +9,11 @@ module xiom.collect.range
 // ============================================================================
 // Interval tree storing Int intervals with values, supporting point queries.
 //
+// R44 same-leaf: the public type leaf here is `IntervalSet` (renamed from
+// `IntervalTree`, which collided with the real tree in collect/interval.xi).
+// Function names stay `interval_*`; both modules share the call surface, so
+// always `use` the module you call.
+//
 // Flat-arena style. Intervals are stored in insertion order in parallel
 // Vec[Int]s (`starts`/`ends`/`vals`) with a parallel liveness flag `alive`.
 // Point queries scan the intervals and return the values of the live intervals
@@ -19,7 +24,7 @@ module xiom.collect.range
 // intervals are rejected by insert.
 // ============================================================================
 
-pub type IntervalTree = {
+pub type IntervalSet = {
   starts: Vec[Int];
   ends: Vec[Int];
   vals: Vec[Int];
@@ -28,14 +33,14 @@ pub type IntervalTree = {
 
 /// Create a new empty interval tree.
 /// O(1).
-pub fn interval_tree_new() -> IntervalTree {
-  return IntervalTree{ starts: Vec[Int].new(); ends: Vec[Int].new(); vals: Vec[Int].new(); alive: Vec[Bool].new(); };
+pub fn interval_tree_new() -> IntervalSet {
+  return IntervalSet{ starts: Vec[Int].new(); ends: Vec[Int].new(); vals: Vec[Int].new(); alive: Vec[Bool].new(); };
 }
 
 /// Insert an interval with its value. Duplicate intervals are allowed; an
 /// interval with start > end is rejected (ignored).
 /// O(1) amortized.
-pub fn interval_insert(t: &mut IntervalTree, start: Int, end: Int, value: Int) {
+pub fn interval_insert(t: &mut IntervalSet, start: Int, end: Int, value: Int) {
   if start > end {
     return;
   }
@@ -47,7 +52,7 @@ pub fn interval_insert(t: &mut IntervalTree, start: Int, end: Int, value: Int) {
 
 /// Values of the live intervals covering `point` (inclusive on both ends).
 /// O(n).
-pub fn interval_query(t: &IntervalTree, point: Int) -> Vec[Int] {
+pub fn interval_query(t: &IntervalSet, point: Int) -> Vec[Int] {
   var out = Vec[Int].new();
   var i = 0;
   while i < t.starts.len() {
@@ -64,7 +69,7 @@ pub fn interval_query(t: &IntervalTree, point: Int) -> Vec[Int] {
 /// Remove the first live interval matching [start, end]. Returns true if one
 /// was found and removed.
 /// O(n).
-pub fn interval_remove(t: &mut IntervalTree, start: Int, end: Int) -> Bool {
+pub fn interval_remove(t: &mut IntervalSet, start: Int, end: Int) -> Bool {
   var i = 0;
   while i < t.starts.len() {
     if t.alive[i] {

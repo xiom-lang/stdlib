@@ -6,8 +6,9 @@ different shapes under one leaf can clobber each other's fields. This is
 exactly how `net.net.HttpResponse` (2 fields) vs `net.http.HttpResponse`
 (3 fields) broke `http_parse_response`; the legacy net.net type was renamed
 `NetHttpResponse` on 2026-09-17, the priority-queue `PHeap` twin was
-renamed `IntMaxHeap` and the dependency-free `SpscRing` twin was renamed
-`RingBuffer` on 2026-09-18, leaving **14 conflicts**. The generated
+renamed `IntMaxHeap`, the dependency-free `SpscRing` twin was renamed
+`RingBuffer`, and the flat-arena `IntervalTree` twin was renamed
+`IntervalSet` on 2026-09-18, leaving **13 conflicts**. The generated
 audit (`docs/baselines/same-leaf-conflicts.md`) is the count of record.
 
 - Generated evidence: `docs/baselines/same-leaf-conflicts.md`
@@ -24,7 +25,7 @@ audit (`docs/baselines/same-leaf-conflicts.md`) is the count of record.
 | `Graph` | `collect/graph.xi`, `math/graph_theory.xi` | dedup graph family |
 | `UnionFind` | `collect/graph.xi`, `collect/unionfind.xi` | dedup (one owner) |
 | `PHeap` | `collect/priority.xi`, `collect/heap.xi` | **RESOLVED 2026-09-18:** `priority.xi` renamed its type `IntMaxHeap` (binary max-heap queue); `heap.xi` keeps the production pairing-heap `PHeap` that `bheap.xi`/`pairingheap.xi` delegate to |
-| `IntervalTree` | `collect/range.xi`, `collect/interval.xi` | dedup interval family |
+| `IntervalTree` | `collect/range.xi`, `collect/interval.xi` | **RESOLVED 2026-09-18:** `range.xi` renamed its flat-arena store `IntervalSet`; `interval.xi` keeps the canonical `IntervalTree` |
 | `IntMap` | `collect/map.xi`, `collect/intmap.xi` | dedup map family |
 | `StringMap` | `collect/stringmap.xi`, `collect/intmap.xi` | dedup map family |
 | `SpscRing` | `collect/ring.xi`, `collect/queue.xi` | **RESOLVED 2026-09-18:** `ring.xi` renamed its "Depends on: none" variant `RingBuffer`; `queue.xi` keeps the reference atomic-counter `SpscRing` |
