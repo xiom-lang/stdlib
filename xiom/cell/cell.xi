@@ -52,6 +52,9 @@ pub fn Cell.swap[T](&mut self, other: &mut Cell[T])
 // borrows > 0: active shared borrows
 // borrows == -1: one active mutable borrow
 // borrows == 0: no active borrows
+/// borrows > 0: active shared borrows
+/// borrows == -1: one active mutable borrow
+/// borrows == 0: no active borrows
 pub type RefCell[T] = {
   value: T;
   borrows: Int;
@@ -59,9 +62,11 @@ pub type RefCell[T] = {
 }
 
 // 6D.1: Ref holds a raw pointer to the ORIGINAL RefCell, not a copy.
+/// 6D.1: Ref holds a raw pointer to the ORIGINAL RefCell, not a copy.
 pub type Ref[T] = { ptr: *mut RefCell[T]; }
 
 // 6D.1: RefMut holds a raw pointer to the ORIGINAL RefCell.
+/// 6D.1: RefMut holds a raw pointer to the ORIGINAL RefCell.
 pub type RefMut[T] = { ptr: *mut RefCell[T]; }
 
 pub fn RefCell.new[T](value: T) -> RefCell[T]
@@ -140,6 +145,8 @@ pub fn RefCell.replace[T](&mut self, value: T) -> T
 
 // Release the shared borrow. Must be called when done with the Ref.
 // Without Drop trait support, the user is responsible for calling this.
+/// Release the shared borrow. Must be called when done with the Ref.
+/// Without Drop trait support, the user is responsible for calling this.
 pub fn Ref.release[T](self)
   requires: true  // whole-body unsafe borrow release (T007)
 {
@@ -153,6 +160,7 @@ pub fn Ref.release[T](self)
 }
 
 // Get the CURRENT value from the RefCell (not a stale copy).
+/// Get the CURRENT value from the RefCell (not a stale copy).
 pub fn Ref.get[T](self) -> T
   requires: ptr != null
 {
@@ -166,6 +174,7 @@ pub fn Ref.get[T](self) -> T
 // ============================================================================
 
 // Release the mutable borrow. Restores borrows from -1 to 0.
+/// Release the mutable borrow. Restores borrows from -1 to 0.
 pub fn RefMut.release[T](self)
   requires: true  // whole-body unsafe borrow release (T007)
 {
@@ -177,6 +186,7 @@ pub fn RefMut.release[T](self)
 }
 
 // Get the current value. Returns by value (XIOM limitation: no &T references yet).
+/// Get the current value. Returns by value (XIOM limitation: no &T references yet).
 pub fn RefMut.get[T](self) -> T
   requires: ptr != null
 {
@@ -186,6 +196,7 @@ pub fn RefMut.get[T](self) -> T
 }
 
 // Set a new value through the mutable borrow.
+/// Set a new value through the mutable borrow.
 pub fn RefMut.set[T](self, value: T)
   requires: ptr != null
 {

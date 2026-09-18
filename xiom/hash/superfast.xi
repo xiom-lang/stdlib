@@ -10,6 +10,7 @@ module xiom.hash.superfast
 // "message digest" -> 0x32bb9891.
 
 // 4-byte block loop plus 1-3 byte tail; all 32-bit wrapping via masks.
+/// 4-byte block loop plus 1-3 byte tail; all 32-bit wrapping via masks.
 pub fn superfast32(data: &Vec[UInt8]) -> Int {
   var len = data.len();
   if len <= 0 {

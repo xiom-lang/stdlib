@@ -59,6 +59,7 @@ fn contract_post_count(idx: Int) -> Int
 // ============================================================================
 
 // A single contract clause (requires, ensures, or invariant)
+/// A single contract clause (requires, ensures, or invariant)
 pub type ContractClause = {
   kind: Int;           // 0=requires, 1=ensures, 2=invariant
   expression: Str;     // the contract text, e.g. "b != 0.0"
@@ -68,6 +69,7 @@ pub type ContractClause = {
 } derive[Eq, Clone]
 
 // All contracts for a function
+/// All contracts for a function
 pub type FunctionContracts = {
   name: Str;
   requires: Vec[ContractClause];
@@ -77,6 +79,7 @@ pub type FunctionContracts = {
 } derive[Clone]
 
 // All contracts for a type
+/// All contracts for a type
 pub type TypeContracts = {
   name: Str;
   invariants: Vec[ContractClause];
@@ -84,6 +87,7 @@ pub type TypeContracts = {
 } derive[Clone]
 
 // Complete contract index for a package
+/// Complete contract index for a package
 pub type ContractIndex = {
   package: Str;
   version: Str;
@@ -107,6 +111,7 @@ var _coverage: Map[Str, Bool] = Map[Str, Bool].new();
 // ============================================================================
 
 // Result of a contract check
+/// Result of a contract check
 pub type ContractCheckResult = {
   passed: Bool;
   clause: ContractClause;
@@ -116,6 +121,8 @@ pub type ContractCheckResult = {
 
 // Verify ALL invariants of a type against a value at runtime.
 // Returns list of failures (empty = all passed).
+/// Verify ALL invariants of a type against a value at runtime.
+/// Returns list of failures (empty = all passed).
 pub fn verify_invariants[T](value: &T) -> Vec[ContractCheckResult]
   ensures: result.len() == 0
 {
@@ -125,12 +132,15 @@ pub fn verify_invariants[T](value: &T) -> Vec[ContractCheckResult]
 
 // Verify ALL contracts of a function against its actual call.
 // Called automatically by the compiler at runtime.
+/// Verify ALL contracts of a function against its actual call.
+/// Called automatically by the compiler at runtime.
 pub fn verify_function_contracts(func: Str, args: Map[Str, Str]) -> Vec[ContractCheckResult] {
   // Bootstrap: compiler contract metadata not yet available
   Vec[ContractCheckResult].new()
 }
 
 // Verify a single invariant expression against a value.
+/// Verify a single invariant expression against a value.
 pub fn check_invariant[T](value: &T, invariant: Str) -> ContractCheckResult {
   let clause = ContractClause{
     kind: 2;
@@ -161,6 +171,11 @@ fn _get_index() -> ContractIndex {
 // REAL: reads function names and requires/ensures counts from the compiler
 // contract table. LIMITED: clause expression text, locations, params, return
 // types and type invariants are not embedded, so those remain empty.
+/// Build a complete contract index for the current package.
+/// This is what --dump-contracts does at compile time, but available at runtime.
+/// REAL: reads function names and requires/ensures counts from the compiler
+/// contract table. LIMITED: clause expression text, locations, params, return
+/// types and type invariants are not embedded, so those remain empty.
 pub fn build_contract_index() -> ContractIndex
   ensures: result.functions.len() >= 0
   ensures: result.total_clauses >= 0
@@ -228,6 +243,7 @@ pub fn build_contract_index() -> ContractIndex
 }
 
 // Query contracts for a specific function.
+/// Query contracts for a specific function.
 pub fn get_function_contracts(name: Str) -> Option<Vec[FunctionContracts>> {
   let idx = _get_index();
   var result = Vec[FunctionContracts].new();
@@ -243,6 +259,7 @@ pub fn get_function_contracts(name: Str) -> Option<Vec[FunctionContracts>> {
 }
 
 // Query contracts for a specific type.
+/// Query contracts for a specific type.
 pub fn get_type_contracts(name: Str) -> Option<Vec<TypeContracts>> {
   let idx = _get_index();
   var result = Vec[TypeContracts].new();
@@ -258,6 +275,7 @@ pub fn get_type_contracts(name: Str) -> Option<Vec<TypeContracts>> {
 }
 
 // Find all functions whose contracts reference a given type.
+/// Find all functions whose contracts reference a given type.
 pub fn find_functions_using_type(type_name: Str) -> Vec[Str] {
   let idx = _get_index();
   var result = Vec[Str].new();
@@ -280,6 +298,7 @@ pub fn find_functions_using_type(type_name: Str) -> Vec[Str] {
 }
 
 // Find all invariants that reference a given field.
+/// Find all invariants that reference a given field.
 pub fn find_invariants_using_field(type_name: Str, field_name: Str) -> Vec[ContractClause] {
   var idx = _get_index();
   var result = Vec[ContractClause].new();
@@ -307,6 +326,7 @@ pub fn find_invariants_using_field(type_name: Str, field_name: Str) -> Vec[Contr
 // ============================================================================
 
 // Export the contract index as JSON (same format as --dump-contracts).
+/// Export the contract index as JSON (same format as --dump-contracts).
 pub fn export_contracts_json() -> Str {
   let idx = _get_index();
   var json = "{\n";
@@ -327,6 +347,7 @@ pub fn export_contracts_json() -> Str {
 }
 
 // Export the contract index as structured documentation.
+/// Export the contract index as structured documentation.
 pub fn export_contracts_markdown() -> Str {
   let idx = _get_index();
   var md = "# Contract Index\n\n";
@@ -349,6 +370,7 @@ pub fn export_contracts_markdown() -> Str {
 }
 
 // Export contract index as OpenAPI/Swagger-like spec.
+/// Export contract index as OpenAPI/Swagger-like spec.
 pub fn export_contracts_openapi() -> Str {
   let idx = _get_index();
   var yaml = "openapi: \"3.0.0\"\n";
@@ -376,6 +398,7 @@ pub fn export_contracts_openapi() -> Str {
 // ============================================================================
 
 // Track which contracts have been exercised by tests.
+/// Track which contracts have been exercised by tests.
 pub fn reset_contract_coverage() {
   _coverage = Map[Str, Bool].new();
 }
@@ -456,6 +479,8 @@ pub fn coverage_percentage() -> Float64
 
 // Given two functions f and g, can g's output satisfy f's requires?
 // Returns the condition that must hold, or "impossible" if never.
+/// Given two functions f and g, can g's output satisfy f's requires?
+/// Returns the condition that must hold, or "impossible" if never.
 pub fn can_compose(f_requires: Vec[ContractClause], g_ensures: Vec[ContractClause]) -> Str {
   // Bootstrap: SMT-based contract composition not yet available.
   // In the future this will use Z3/Boogie to check contract compatibility.
@@ -463,6 +488,7 @@ pub fn can_compose(f_requires: Vec[ContractClause], g_ensures: Vec[ContractClaus
 }
 
 // Given a chain of function calls, verify contract propagation.
+/// Given a chain of function calls, verify contract propagation.
 pub fn verify_chain(fns: Vec<Str>) -> Result[Unit, Vec[ContractCheckResult]] {
   // Bootstrap: chained contract verification not yet available.
   Ok(Unit)

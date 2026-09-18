@@ -123,6 +123,9 @@ fn push_hex16(dst: &mut Vec[UInt8], group: Int) {
 // ip6_parse parses an IPv6 string (full form or with a single "::"
 // compression) into 16 bytes. Invalid input returns Err.
 // Complexity: O(n). Pure.
+/// ip6_parse parses an IPv6 string (full form or with a single "::"
+/// compression) into 16 bytes. Invalid input returns Err.
+/// Complexity: O(n). Pure.
 pub fn ip6_parse(s: Str) -> Result[Vec[UInt8], Str] {
   let len = s.len();
   if len < 2 {
@@ -182,6 +185,8 @@ pub fn ip6_parse(s: Str) -> Result[Vec[UInt8], Str] {
 
 // ip6_validate returns true if s is a valid IPv6 address.
 // Complexity: O(n). Pure.
+/// ip6_validate returns true if s is a valid IPv6 address.
+/// Complexity: O(n). Pure.
 pub fn ip6_validate(s: Str) -> Bool {
   let parsed = ip6_parse(s);
   parsed.is_ok
@@ -218,6 +223,9 @@ fn hex4(group: Int) -> Str {
 // ip6_to_str formats 16 bytes as a full-form IPv6 address (eight
 // 16-bit groups, no "::" compression). Returns Err if the length is
 // not 16. Complexity: O(n). Pure.
+/// ip6_to_str formats 16 bytes as a full-form IPv6 address (eight
+/// 16-bit groups, no "::" compression). Returns Err if the length is
+/// not 16. Complexity: O(n). Pure.
 pub fn ip6_to_str(bytes: &Vec[UInt8]) -> Result[Str, Str] {
   if bytes.len() != 16 {
     return Err("invalid IPv6 address: expected 16 bytes");
@@ -253,6 +261,9 @@ fn pad4(group: Int) -> Str {
 // ip6_expand returns the full eight-group form of an IPv6 string,
 // expanding "::" and zero-padding each group to four hex digits.
 // Returns Err on invalid input. Complexity: O(n). Pure.
+/// ip6_expand returns the full eight-group form of an IPv6 string,
+/// expanding "::" and zero-padding each group to four hex digits.
+/// Returns Err on invalid input. Complexity: O(n). Pure.
 pub fn ip6_expand(s: Str) -> Result[Str, Str] {
   let parsed = ip6_parse(s);
   match parsed {
@@ -277,6 +288,8 @@ pub fn ip6_expand(s: Str) -> Result[Str, Str] {
 
 // ip6_is_loopback returns true for ::1.
 // Complexity: O(n). Pure.
+/// ip6_is_loopback returns true for ::1.
+/// Complexity: O(n). Pure.
 pub fn ip6_is_loopback(s: Str) -> Bool {
   let parsed = ip6_parse(s);
   match parsed {
@@ -297,6 +310,8 @@ pub fn ip6_is_loopback(s: Str) -> Bool {
 
 // ip6_is_unspecified returns true for ::
 // Complexity: O(n). Pure.
+/// ip6_is_unspecified returns true for ::
+/// Complexity: O(n). Pure.
 pub fn ip6_is_unspecified(s: Str) -> Bool {
   let parsed = ip6_parse(s);
   match parsed {
@@ -317,6 +332,8 @@ pub fn ip6_is_unspecified(s: Str) -> Bool {
 
 // ip6_is_multicast returns true for ff00::/8.
 // Complexity: O(n). Pure.
+/// ip6_is_multicast returns true for ff00::/8.
+/// Complexity: O(n). Pure.
 pub fn ip6_is_multicast(s: Str) -> Bool {
   let parsed = ip6_parse(s);
   match parsed {
@@ -327,6 +344,8 @@ pub fn ip6_is_multicast(s: Str) -> Bool {
 
 // ip6_is_link_local returns true for fe80::/10.
 // Complexity: O(n). Pure.
+/// ip6_is_link_local returns true for fe80::/10.
+/// Complexity: O(n). Pure.
 pub fn ip6_is_link_local(s: Str) -> Bool {
   let parsed = ip6_parse(s);
   match parsed {

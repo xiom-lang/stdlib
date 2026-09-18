@@ -35,6 +35,7 @@ extern "C" {
 }
 
 // === Mutex ===
+/// === Mutex ===
 pub type Mutex[T] = {
   inner: *UInt8;  // platform mutex (sizeof(pthread_mutex_t) or CRITICAL_SECTION)
   data: *T;       // heap-allocated protected data
@@ -100,6 +101,7 @@ pub fn MutexGuard.drop[T](self)
 }
 
 // === RwLock ===
+/// === RwLock ===
 pub type RwLock[T] = {
   inner: *UInt8;     // platform mutex
   rcond: *UInt8;     // condvar for readers
@@ -222,6 +224,7 @@ pub fn WriteGuard.drop[T](self) {
 }
 
 // === Condvar ===
+/// === Condvar ===
 pub type Condvar = { inner: *UInt8; }
 
 pub fn Condvar.new() -> Condvar {
@@ -248,6 +251,7 @@ pub fn Condvar.notify_all(self)
 }
 
 // === Once ===
+/// === Once ===
 pub type Once = {
   inner: *UInt8;     // platform mutex
   state: *Int;       // atomic: 0=not run, 1=in progress, 2=done
@@ -288,6 +292,7 @@ pub fn Once.is_completed(self) -> Bool
 }
 
 // === Barrier ===
+/// === Barrier ===
 pub type Barrier = {
   inner: *UInt8;     // platform mutex
   cond: *UInt8;      // condvar
@@ -333,6 +338,7 @@ pub fn Barrier.wait(self) {
 }
 
 // === Arc (Atomic Reference Counted) ===
+/// === Arc (Atomic Reference Counted) ===
 pub type Arc[T] = {
   ptr: *ArcInner[T];
   invariant: ptr != null => (*ptr).count >= 1;
@@ -410,6 +416,9 @@ pub fn Arc.drop[T](self)
 // === M7: Deref impl for Arc[T] ===
 // Arc provides shared (atomic) access. Deref allows `*arc` and auto-deref.
 // DerefMut is NOT implemented -- Arc provides shared access only.
+/// === M7: Deref impl for Arc[T] ===
+/// Arc provides shared (atomic) access. Deref allows `*arc` and auto-deref.
+/// DerefMut is NOT implemented -- Arc provides shared access only.
 pub fn Arc[T].deref(self) -> &T
   requires: ptr != null
   ensures: true
@@ -426,6 +435,7 @@ pub fn Arc[T].as_ref(self) -> &T
 }
 
 // === AtomicBool -- real atomic operations ===
+/// === AtomicBool -- real atomic operations ===
 pub type AtomicBool = { ptr: *Int; }
 
 pub fn AtomicBool.new(val: Bool) -> AtomicBool {
@@ -467,6 +477,7 @@ pub fn AtomicBool.compare_exchange(self, current: Bool, new: Bool) -> Bool {
 }
 
 // === AtomicInt -- real atomic operations ===
+/// === AtomicInt -- real atomic operations ===
 pub type AtomicInt = { ptr: *Int; }
 
 pub fn AtomicInt.new(val: Int) -> AtomicInt {

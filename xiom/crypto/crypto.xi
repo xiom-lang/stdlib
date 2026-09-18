@@ -2473,6 +2473,11 @@ pub fn chacha20_poly1305_decrypt(key: &Vec[UInt8], nonce: &Vec[UInt8], aad: &Vec
 // xiom_sha256_sw_compress miscompiles (zero-offset store corruption into the
 // malloc'd state buffer; probed 2026-08-24 -- wrong digests for any non-empty
 // message while empty passed). Same architecture as sha256 below.
+/// SHA-224 delegates to the runtime C path (xiom_sha224_hash in
+/// runtime/sha256_sw.c). The previous XIOM-side state marshalling around
+/// xiom_sha256_sw_compress miscompiles (zero-offset store corruption into the
+/// malloc'd state buffer; probed 2026-08-24 -- wrong digests for any non-empty
+/// message while empty passed). Same architecture as sha256 below.
 pub fn sha224(data: &Vec[UInt8]) -> Vec[UInt8]
   ensures: result.len() == 28
 {

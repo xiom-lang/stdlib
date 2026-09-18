@@ -90,6 +90,7 @@ extern "C" {
 }
 
 // === Constants ===
+/// === Constants ===
 pub const PI: Float64 = 3.141592653589793;
 pub const E: Float64 = 2.718281828459045;
 pub const TAU: Float64 = 6.283185307179586;

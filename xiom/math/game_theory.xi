@@ -25,6 +25,11 @@ use xiom.core.to_float;
 // matrix is a Vec[Vec[Float64]] whose element reads return garbage (BUG 23 #1
 // residual; verified by minimal probe). Keep the frozen signature; revisit
 // when nested float Vec reads land.
+/// Mixed Nash equilibria of a two-player bimatrix game.
+/// TODO(compiler): NOT IMPLEMENTABLE in this compiler build - the payoff
+/// matrix is a Vec[Vec[Float64]] whose element reads return garbage (BUG 23 #1
+/// residual; verified by minimal probe). Keep the frozen signature; revisit
+/// when nested float Vec reads land.
 pub fn nash_equilibrium(payoffs: &Vec[Vec[Float64]]) -> Vec[(Float64, Float64)] {
   var out = Vec[(Float64, Float64)].new();
   return out;
@@ -33,6 +38,9 @@ pub fn nash_equilibrium(payoffs: &Vec[Vec[Float64]]) -> Vec[(Float64, Float64)] 
 // Minimax value of a zero-sum game.
 // TODO(compiler): NOT IMPLEMENTABLE - see nash_equilibrium (payoff matrix
 // reads return garbage in this compiler build).
+/// Minimax value of a zero-sum game.
+/// TODO(compiler): NOT IMPLEMENTABLE - see nash_equilibrium (payoff matrix
+/// reads return garbage in this compiler build).
 pub fn minimax(payoffs: &Vec[Vec[Float64]]) -> Float64 {
   return 0.0;
 }
@@ -41,6 +49,10 @@ pub fn minimax(payoffs: &Vec[Vec[Float64]]) -> Float64 {
 // `game(move_sequence) -> terminal value`. Searches to fixed depth; at a
 // terminal or depth-0 node the game value is returned. Complexity:
 // O(branch^depth) with pruning.
+/// Minimax search with alpha-beta pruning over a game tree given by
+/// `game(move_sequence) -> terminal value`. Searches to fixed depth; at a
+/// terminal or depth-0 node the game value is returned. Complexity:
+/// O(branch^depth) with pruning.
 pub fn alpha_beta(game: fn(&Vec[Int]) -> Float64, depth: Int, alpha: Float64, beta: Float64) -> Float64 {
   return _ab(game, depth, alpha, beta, true);
 }
@@ -80,6 +92,9 @@ fn _ab(game: fn(&Vec[Int]) -> Float64, depth: Int, alpha: Float64, beta: Float64
 // Index of a strictly dominant strategy, if any.
 // TODO(compiler): NOT IMPLEMENTABLE - see nash_equilibrium (payoff matrix
 // reads return garbage in this compiler build).
+/// Index of a strictly dominant strategy, if any.
+/// TODO(compiler): NOT IMPLEMENTABLE - see nash_equilibrium (payoff matrix
+/// reads return garbage in this compiler build).
 pub fn dominant_strategy(payoffs: &Vec[Vec[Float64]]) -> Option[Int] {
   return Option[Int]{ is_some: false, value: -1 };
 }
@@ -87,6 +102,9 @@ pub fn dominant_strategy(payoffs: &Vec[Vec[Float64]]) -> Option[Int] {
 // Indices of Pareto-optimal strategy profiles.
 // TODO(compiler): NOT IMPLEMENTABLE - see nash_equilibrium (payoff matrix
 // reads return garbage in this compiler build).
+/// Indices of Pareto-optimal strategy profiles.
+/// TODO(compiler): NOT IMPLEMENTABLE - see nash_equilibrium (payoff matrix
+/// reads return garbage in this compiler build).
 pub fn pareto_optimal(payoffs: &Vec[Vec[Float64]]) -> Vec[Int] {
   var out = Vec[Int].new();
   return out;
@@ -95,6 +113,9 @@ pub fn pareto_optimal(payoffs: &Vec[Vec[Float64]]) -> Vec[Int] {
 // Grand-coalition value v(all players) and a feasible imputation: the tuple
 // is (grand_coalition_value, equal-share imputation value). Complexity: O(1)
 // plus the cost of v on the grand coalition.
+/// Grand-coalition value v(all players) and a feasible imputation: the tuple
+/// is (grand_coalition_value, equal-share imputation value). Complexity: O(1)
+/// plus the cost of v on the grand coalition.
 pub fn cooperative_game(v: fn(&Vec[Int]) -> Float64, n: Int) -> (Float64, Float64) {
   var all = Vec[Int].new();
   var i = 0;
@@ -114,6 +135,10 @@ pub fn cooperative_game(v: fn(&Vec[Int]) -> Float64, n: Int) -> (Float64, Float6
 // over all player permutations (exact for n <= 6 via permutations_enum,
 // approximate for larger n by iterating cyclic shifts). Complexity:
 // O(n! * n) exact / O(n^2) approximate.
+/// Shapley value of each of the n players: the average marginal contribution
+/// over all player permutations (exact for n <= 6 via permutations_enum,
+/// approximate for larger n by iterating cyclic shifts). Complexity:
+/// O(n! * n) exact / O(n^2) approximate.
 pub fn shapley_value(v: fn(&Vec[Int]) -> Float64, n: Int) -> Vec[Float64] {
   var out = Vec[Float64].new();
   if n <= 0 { return out; }
@@ -177,6 +202,10 @@ pub fn shapley_value(v: fn(&Vec[Int]) -> Float64, n: Int) -> Vec[Float64] {
 // set of allocations (x1, x2) with x1 + x2 = v({0,1}) and x_i >= v({i}); the
 // function returns a sample of its extreme points. For other n the function
 // returns a documented greedy sample. Complexity: O(2^n * v) for small n.
+/// Imputations in the core of a cooperative game. For n == 2 the core is the
+/// set of allocations (x1, x2) with x1 + x2 = v({0,1}) and x_i >= v({i}); the
+/// function returns a sample of its extreme points. For other n the function
+/// returns a documented greedy sample. Complexity: O(2^n * v) for small n.
 pub fn game_core(v: fn(&Vec[Int]) -> Float64, n: Int) -> Vec[Vec[Float64]] {
   var out = Vec[Vec[Float64]].new();
   if n <= 0 { return out; }
@@ -222,6 +251,10 @@ pub fn game_core(v: fn(&Vec[Int]) -> Float64, n: Int) -> Vec[Vec[Float64]] {
 // the highest bid at or above the reserve wins at its own bid. Returns
 // (price, winner_index) or (0, -1) when no bid clears the reserve.
 // Complexity: O(n).
+/// Winning price and winner index of a first-price auction with a reserve:
+/// the highest bid at or above the reserve wins at its own bid. Returns
+/// (price, winner_index) or (0, -1) when no bid clears the reserve.
+/// Complexity: O(n).
 pub fn auction(bids: &Vec[Float64], reserve: Float64) -> (Float64, Int) {
   var best_idx = -1;
   var best = reserve;
@@ -241,6 +274,8 @@ pub fn auction(bids: &Vec[Float64], reserve: Float64) -> (Float64, Int) {
 
 // Dominant-strategy incentive-compatible allocation: bidder i receives a
 // share of the type-space value proportional to values(i). Complexity: O(n).
+/// Dominant-strategy incentive-compatible allocation: bidder i receives a
+/// share of the type-space value proportional to values(i). Complexity: O(n).
 pub fn mechanism_design(type_space: &Vec[Float64], values: fn(Int) -> Float64) -> Vec[Float64] {
   var out = Vec[Float64].new();
   var n = type_space.len();
@@ -269,6 +304,12 @@ pub fn mechanism_design(type_space: &Vec[Float64], values: fn(Int) -> Float64) -
 // matrix is a Vec[Vec[Float64]] whose element reads return garbage (BUG 23 #1
 // residual; verified by minimal probe). Keep the frozen signature; revisit
 // when nested float Vec reads land.
+/// Next-generation population shares under replicator dynamics:
+/// x_i' = x_i (f_i - mean) where f_i is the i-th strategy's expected payoff.
+/// TODO(compiler): NOT IMPLEMENTABLE in this compiler build - the payoff
+/// matrix is a Vec[Vec[Float64]] whose element reads return garbage (BUG 23 #1
+/// residual; verified by minimal probe). Keep the frozen signature; revisit
+/// when nested float Vec reads land.
 pub fn evolutionary_game(payoffs: &Vec[Vec[Float64]], population: &Vec[Float64]) -> Vec[Float64] {
   var out = Vec[Float64].new();
   return out;
@@ -277,6 +318,9 @@ pub fn evolutionary_game(payoffs: &Vec[Vec[Float64]], population: &Vec[Float64])
 // Iterated replicator dynamics over `steps` generations.
 // TODO(compiler): NOT IMPLEMENTABLE - see evolutionary_game (payoff matrix
 // reads return garbage in this compiler build).
+/// Iterated replicator dynamics over `steps` generations.
+/// TODO(compiler): NOT IMPLEMENTABLE - see evolutionary_game (payoff matrix
+/// reads return garbage in this compiler build).
 pub fn replicator_dynamics(payoffs: &Vec[Vec[Float64]], population: &Vec[Float64], steps: Int) -> Vec[Vec[Float64]] {
   var out = Vec[Vec[Float64]].new();
   return out;
@@ -284,6 +328,8 @@ pub fn replicator_dynamics(payoffs: &Vec[Vec[Float64]], population: &Vec[Float64
 
 // Payoffs of the one-shot prisoner's dilemma: the tuple is
 // (mutual_cooperation, mutual_defection) payoff. Complexity: O(1).
+/// Payoffs of the one-shot prisoner's dilemma: the tuple is
+/// (mutual_cooperation, mutual_defection) payoff. Complexity: O(1).
 pub fn prisoner_dilemma(defect: Float64, cooperate: Float64) -> (Float64, Float64) {
   return (cooperate, defect);
 }

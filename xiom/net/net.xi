@@ -37,6 +37,7 @@ const SOCK_STREAM: Int = 1;
 const SOCK_DGRAM: Int = 2;
 
 // === TCP ===
+/// === TCP ===
 pub type TcpStream = { fd: Int; } derive[Clone]
 
 pub type TcpListener = { fd: Int; } derive[Clone]
@@ -173,6 +174,10 @@ pub fn TcpListener.accept(self) -> Result[(TcpStream, Str), NetError]
 // NOTE: named NetHttpResponse to keep the bare type leaf distinct from
 // xiom.net.http.HttpResponse (R44 same-leaf struct collision; both used to
 // inject as %struct.HttpResponse and clobbered each other's fields).
+/// === HTTP ===
+/// NOTE: named NetHttpResponse to keep the bare type leaf distinct from
+/// xiom.net.http.HttpResponse (R44 same-leaf struct collision; both used to
+/// inject as %struct.HttpResponse and clobbered each other's fields).
 pub type NetHttpResponse = {
   status: Int;
   body: Str;
@@ -307,6 +312,7 @@ fn parse_http_response(raw: Str) -> Result[NetHttpResponse, NetError] {
 }
 
 // === UDP ===
+/// === UDP ===
 pub type UdpSocket = { fd: Int; }
 
 pub fn udp_bind(host: Str, port: Int) -> Result[UdpSocket, NetError] {
@@ -395,6 +401,7 @@ pub fn UdpSocket.close(self) -> Result[Unit, NetError] {
 }
 
 // === DNS ===
+/// === DNS ===
 pub fn resolve_host(hostname: Str) -> Result[Vec[Str], NetError]
   requires: true
 {
@@ -479,6 +486,7 @@ pub fn local_addr(port: Int) -> Result[Str, NetError]
 }
 
 // === URL parsing ===
+/// === URL parsing ===
 pub type UrlParts = {
   scheme: Str;
   host: Str;
@@ -579,6 +587,7 @@ pub fn parse_url(url: Str) -> Result[UrlParts, NetError] {
 }
 
 // === HTTP methods ===
+/// === HTTP methods ===
 pub type HttpMethod = enum { GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS }
 
 // === Helpers: string utilities ===

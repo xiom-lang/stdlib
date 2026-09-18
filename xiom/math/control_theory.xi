@@ -23,6 +23,10 @@ use xiom.core.to_int;
 // error sample, which the frozen signature does not carry, so the output is
 // the proportional + integral action kp*e + ki*I_new. Returns (output,
 // integral_new) with integral_new = integral + error*dt. Complexity: O(1).
+/// PID output and updated integral: the derivative term requires a previous
+/// error sample, which the frozen signature does not carry, so the output is
+/// the proportional + integral action kp*e + ki*I_new. Returns (output,
+/// integral_new) with integral_new = integral + error*dt. Complexity: O(1).
 pub fn pid_controller(kp: Float64, ki: Float64, kd: Float64, error: Float64, dt: Float64, integral: Float64) -> (Float64, Float64) {
   var i_new = integral + error * dt;
   var out = kp * error + ki * i_new;
@@ -31,6 +35,8 @@ pub fn pid_controller(kp: Float64, ki: Float64, kd: Float64, error: Float64, dt:
 
 // Rational transfer function evaluated at s: num(s) / den(s) by Horner's
 // scheme. NaN when the denominator vanishes. Complexity: O(degree).
+/// Rational transfer function evaluated at s: num(s) / den(s) by Horner's
+/// scheme. NaN when the denominator vanishes. Complexity: O(degree).
 pub fn transfer_function(num: &Vec[Float64], den: &Vec[Float64], s: Float64) -> Float64 {
   if num.len() == 0 || den.len() == 0 { return 0.0 / 0.0; }
   var n = num[0];
@@ -54,6 +60,11 @@ pub fn transfer_function(num: &Vec[Float64], den: &Vec[Float64], s: Float64) -> 
 // Vec[Vec[Float64]] whose element reads return garbage (BUG 23 #1 residual;
 // verified by minimal probe). Keep the frozen signature; revisit when nested
 // float Vec reads land.
+/// Canonical state-space realization.
+/// TODO(compiler): NOT IMPLEMENTABLE in this compiler build - the matrices are
+/// Vec[Vec[Float64]] whose element reads return garbage (BUG 23 #1 residual;
+/// verified by minimal probe). Keep the frozen signature; revisit when nested
+/// float Vec reads land.
 pub fn state_space(a: &Vec[Vec[Float64]], b: &Vec[Vec[Float64]], c: &Vec[Vec[Float64]], d: &Vec[Vec[Float64]]) -> (Vec[Vec[Float64]], Vec[Vec[Float64]], Vec[Vec[Float64]], Vec[Vec[Float64]]) {
   var e1 = Vec[Vec[Float64]].new();
   var e2 = Vec[Vec[Float64]].new();
@@ -65,6 +76,9 @@ pub fn state_space(a: &Vec[Vec[Float64]], b: &Vec[Vec[Float64]], c: &Vec[Vec[Flo
 // Whether the pair (A, C) is observable.
 // TODO(compiler): NOT IMPLEMENTABLE - the matrices are Vec[Vec[Float64]]
 // whose element reads return garbage in this compiler build.
+/// Whether the pair (A, C) is observable.
+/// TODO(compiler): NOT IMPLEMENTABLE - the matrices are Vec[Vec[Float64]]
+/// whose element reads return garbage in this compiler build.
 pub fn observability(a: &Vec[Vec[Float64]], c: &Vec[Vec[Float64]]) -> Bool {
   return false;
 }
@@ -72,6 +86,9 @@ pub fn observability(a: &Vec[Vec[Float64]], c: &Vec[Vec[Float64]]) -> Bool {
 // Whether the pair (A, B) is controllable.
 // TODO(compiler): NOT IMPLEMENTABLE - the matrices are Vec[Vec[Float64]]
 // whose element reads return garbage in this compiler build.
+/// Whether the pair (A, B) is controllable.
+/// TODO(compiler): NOT IMPLEMENTABLE - the matrices are Vec[Vec[Float64]]
+/// whose element reads return garbage in this compiler build.
 pub fn controllability(a: &Vec[Vec[Float64]], b: &Vec[Vec[Float64]]) -> Bool {
   return false;
 }
@@ -88,6 +105,10 @@ type _RRow = {
 // highest power first). Returns false for an empty or non-positive leading
 // coefficient. Routh table rows hold at most 4 entries (degree <= 8).
 // Complexity: O(n^2).
+/// Routh-Hurwitz stability test on the denominator polynomial (coefficients
+/// highest power first). Returns false for an empty or non-positive leading
+/// coefficient. Routh table rows hold at most 4 entries (degree <= 8).
+/// Complexity: O(n^2).
 pub fn stability_routh_hurwitz(den: &Vec[Float64]) -> Bool {
   var n = den.len();
   if n == 0 { return false; }
@@ -170,6 +191,10 @@ fn _row_el(r: _RRow, col: Int, len: Int) -> Float64 {
 // each frequency and returned as (real, imag) with imag = 0 (a real-valued
 // tf(omega) cannot carry phase in this signature; documented). Complexity:
 // O(freqs * cost(tf)).
+/// Nyquist curve points for a transfer function: the function is evaluated at
+/// each frequency and returned as (real, imag) with imag = 0 (a real-valued
+/// tf(omega) cannot carry phase in this signature; documented). Complexity:
+/// O(freqs * cost(tf)).
 pub fn nyquist_plot(tf: fn(Float64) -> Float64, freqs: &Vec[Float64]) -> Vec[(Float64, Float64)] {
   var out = Vec[(Float64, Float64)].new();
   var i = 0;
@@ -183,6 +208,8 @@ pub fn nyquist_plot(tf: fn(Float64) -> Float64, freqs: &Vec[Float64]) -> Vec[(Fl
 
 // Bode plot points: (frequency, magnitude) with the magnitude supplied by
 // tf(omega). Complexity: O(freqs * cost(tf)).
+/// Bode plot points: (frequency, magnitude) with the magnitude supplied by
+/// tf(omega). Complexity: O(freqs * cost(tf)).
 pub fn bode_plot(tf: fn(Float64) -> Float64, freqs: &Vec[Float64]) -> Vec[(Float64, Float64)] {
   var out = Vec[(Float64, Float64)].new();
   var i = 0;
@@ -198,6 +225,10 @@ pub fn bode_plot(tf: fn(Float64) -> Float64, freqs: &Vec[Float64]) -> Vec[(Float
 // transfer num/den: the closed-loop characteristic polynomial den + K num is
 // solved for each gain (exact for degree <= 2; empty otherwise, documented).
 // Complexity: O(gains * degree).
+/// Closed-loop pole locations (real, imag) over a list of gains for the loop
+/// transfer num/den: the closed-loop characteristic polynomial den + K num is
+/// solved for each gain (exact for degree <= 2; empty otherwise, documented).
+/// Complexity: O(gains * degree).
 pub fn root_locus(num: &Vec[Float64], den: &Vec[Float64], gains: &Vec[Float64]) -> Vec[(Float64, Float64)] {
   var out = Vec[(Float64, Float64)].new();
   var deg = 0;
@@ -246,6 +277,9 @@ pub fn root_locus(num: &Vec[Float64], den: &Vec[Float64], gains: &Vec[Float64]) 
 // State-feedback gain K that places the poles.
 // TODO(compiler): NOT IMPLEMENTABLE - the matrices are Vec[Vec[Float64]]
 // whose element reads return garbage in this compiler build.
+/// State-feedback gain K that places the poles.
+/// TODO(compiler): NOT IMPLEMENTABLE - the matrices are Vec[Vec[Float64]]
+/// whose element reads return garbage in this compiler build.
 pub fn pole_placement(a: &Vec[Vec[Float64]], b: &Vec[Vec[Float64]], poles: &Vec[Float64]) -> Vec[Vec[Float64]] {
   var out = Vec[Vec[Float64]].new();
   return out;
@@ -254,6 +288,9 @@ pub fn pole_placement(a: &Vec[Vec[Float64]], b: &Vec[Vec[Float64]], poles: &Vec[
 // LQR gain and value matrix.
 // TODO(compiler): NOT IMPLEMENTABLE - the matrices are Vec[Vec[Float64]]
 // whose element reads return garbage in this compiler build.
+/// LQR gain and value matrix.
+/// TODO(compiler): NOT IMPLEMENTABLE - the matrices are Vec[Vec[Float64]]
+/// whose element reads return garbage in this compiler build.
 pub fn lqr(a: &Vec[Vec[Float64]], b: &Vec[Vec[Float64]], q: &Vec[Vec[Float64]], r: &Vec[Vec[Float64]]) -> (Vec[Vec[Float64]], Vec[Vec[Float64]]) {
   var e1 = Vec[Vec[Float64]].new();
   var e2 = Vec[Vec[Float64]].new();
@@ -263,6 +300,9 @@ pub fn lqr(a: &Vec[Vec[Float64]], b: &Vec[Vec[Float64]], q: &Vec[Vec[Float64]], 
 // LQG controller combining LQR with a Kalman filter.
 // TODO(compiler): NOT IMPLEMENTABLE - the matrices are Vec[Vec[Float64]]
 // whose element reads return garbage in this compiler build.
+/// LQG controller combining LQR with a Kalman filter.
+/// TODO(compiler): NOT IMPLEMENTABLE - the matrices are Vec[Vec[Float64]]
+/// whose element reads return garbage in this compiler build.
 pub fn lqg(a: &Vec[Vec[Float64]], b: &Vec[Vec[Float64]], c: &Vec[Vec[Float64]], q: &Vec[Vec[Float64]], r: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {
   var out = Vec[Vec[Float64]].new();
   return out;
@@ -273,6 +313,11 @@ pub fn lqg(a: &Vec[Vec[Float64]], b: &Vec[Vec[Float64]], c: &Vec[Vec[Float64]], 
 // not readable in this compiler build, so the update degenerates to a
 // documented identity step (estimate unchanged).
 // TODO(compiler): matrix inputs (A, B, C) unreadable (BUG 23 #1 residual).
+/// One Kalman filtering step updating the state estimate. The measurement
+/// y and the prior estimate x_hat are used directly; the system matrices are
+/// not readable in this compiler build, so the update degenerates to a
+/// documented identity step (estimate unchanged).
+/// TODO(compiler): matrix inputs (A, B, C) unreadable (BUG 23 #1 residual).
 pub fn kalman_filter(a: &Vec[Vec[Float64]], b: &Vec[Vec[Float64]], c: &Vec[Vec[Float64]], y: &Vec[Float64], x_hat: &Vec[Float64]) -> Vec[Float64] {
   var out = Vec[Float64].new();
   var i = 0;
@@ -286,6 +331,9 @@ pub fn kalman_filter(a: &Vec[Vec[Float64]], b: &Vec[Vec[Float64]], c: &Vec[Vec[F
 // H-infinity optimal controller synthesis from a plant.
 // TODO(compiler): NOT IMPLEMENTABLE - the plant is a Vec[Vec[Float64]]
 // whose element reads return garbage in this compiler build.
+/// H-infinity optimal controller synthesis from a plant.
+/// TODO(compiler): NOT IMPLEMENTABLE - the plant is a Vec[Vec[Float64]]
+/// whose element reads return garbage in this compiler build.
 pub fn h_infinity(p: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {
   var out = Vec[Vec[Float64]].new();
   return out;
@@ -294,6 +342,9 @@ pub fn h_infinity(p: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {
 // Small-gain robust stability check: the loop is robustly stable when
 // max_omega |nominal(i omega)| * uncertainty < 1 over a log-spaced sweep of
 // omega in [0.01, 100]. Complexity: O(50 * cost(nominal)).
+/// Small-gain robust stability check: the loop is robustly stable when
+/// max_omega |nominal(i omega)| * uncertainty < 1 over a log-spaced sweep of
+/// omega in [0.01, 100]. Complexity: O(50 * cost(nominal)).
 pub fn robust_control(nominal: fn(Float64) -> Float64, uncertainty: Float64) -> Bool {
   var maxmag = 0.0;
   var i = 0;

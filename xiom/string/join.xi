@@ -18,6 +18,9 @@ use xiom.convert;
 // Joins `parts` with `sep` between consecutive elements.
 // Returns an empty string when `parts` is empty.
 // Complexity: O(total bytes of parts).
+/// Joins `parts` with `sep` between consecutive elements.
+/// Returns an empty string when `parts` is empty.
+/// Complexity: O(total bytes of parts).
 pub fn str_join(parts: &Vec[Str], sep: Str) -> Str {
   var result = "";
   let len = parts.len();
@@ -37,6 +40,10 @@ pub fn str_join(parts: &Vec[Str], sep: Str) -> Str {
 // `after <= 0`, no separator is inserted at all.
 // Returns an empty string when `parts` is empty.
 // Complexity: O(total bytes of parts).
+/// Joins `parts`, inserting `sep` after every `after`-th element. When
+/// `after <= 0`, no separator is inserted at all.
+/// Returns an empty string when `parts` is empty.
+/// Complexity: O(total bytes of parts).
 pub fn str_join_after(parts: &Vec[Str], sep: Str, after: Int) -> Str {
   var result = "";
   let len = parts.len();
@@ -58,6 +65,9 @@ pub fn str_join_after(parts: &Vec[Str], sep: Str, after: Int) -> Str {
 // Joins the `Int` values in `values` with `sep` between consecutive elements.
 // Returns an empty string when `values` is empty.
 // Complexity: O(total digits of values).
+/// Joins the `Int` values in `values` with `sep` between consecutive elements.
+/// Returns an empty string when `values` is empty.
+/// Complexity: O(total digits of values).
 pub fn vec_int_join(values: &Vec[Int], sep: Str) -> Str {
   var result = "";
   let len = values.len();
@@ -76,6 +86,9 @@ pub fn vec_int_join(values: &Vec[Int], sep: Str) -> Str {
 // Joins the `Float64` values in `values` with `sep` between consecutive
 // elements. Returns an empty string when `values` is empty.
 // Complexity: O(total digits of values).
+/// Joins the `Float64` values in `values` with `sep` between consecutive
+/// elements. Returns an empty string when `values` is empty.
+/// Complexity: O(total digits of values).
 pub fn vec_float_join(values: &Vec[Float64], sep: Str) -> Str {
   var result = "";
   let len = values.len();

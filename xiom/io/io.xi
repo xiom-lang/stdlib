@@ -53,15 +53,18 @@ extern "C" {
 }
 
 // === Error type ===
+/// === Error type ===
 pub type IOError = {
   message: Str;
   code: Int;
 }
 
 // === SeekFrom ===
+/// === SeekFrom ===
 pub type SeekFrom = enum { Start(Int), End(Int), Current(Int) }
 
 // === Console ===
+/// === Console ===
 pub fn print(msg: Str)
   // T007: confined printf wrapper. Str is always NUL-terminated by type
   // invariant, so the C side has no additional precondition.
@@ -196,6 +199,7 @@ pub fn parse_float(s: Str) -> Result[Float64, Str] {
 }
 
 // === File system ===
+/// === File system ===
 pub fn read_file(path: Str) -> Result[Str, IOError]
   requires: path.len() > 0
   ensures:  result is Ok => result.len() >= 0
@@ -389,6 +393,7 @@ pub fn rename(src: Str, dst: Str) -> Result[Unit, IOError]
 }
 
 // === Process ===
+/// === Process ===
 pub fn exit(code: Int)
   requires: code >= 0
 {
@@ -431,6 +436,7 @@ pub fn env_var(name: Str) -> Option[Str]
 }
 
 // === Time ===
+/// === Time ===
 pub fn time_now() -> Int
   requires: true
 {
@@ -448,6 +454,7 @@ pub fn sleep(ms: Int)
 }
 
 // === Read / Write / Seek traits ===
+/// === Read / Write / Seek traits ===
 pub interface Read {
   fn read(self, buf: &mut Vec[UInt8]) -> Result[Int, IOError];
   fn read_to_end(self, buf: &mut Vec[UInt8]) -> Result[Int, IOError];
@@ -503,6 +510,7 @@ pub fn close(handle: Int) -> Result[Unit, IOError]
 }
 
 // === Buffered I/O ===
+/// === Buffered I/O ===
 pub type BufReader = {
   inner: Int;
   buf: Vec[UInt8];
@@ -590,6 +598,7 @@ pub fn BufWriter.new(writer: Int) -> BufWriter
 }
 
 // === File metadata ===
+/// === File metadata ===
 pub type Metadata = {
   size: Int;
   is_file: Bool;
@@ -647,6 +656,8 @@ pub fn set_permissions(path: Str, perm: Int) -> Result[Unit, IOError]
 
 // === Standard streams ===
 // Numeric file descriptors (for fd-based APIs: pipe/dup/close).
+/// === Standard streams ===
+/// Numeric file descriptors (for fd-based APIs: pipe/dup/close).
 pub fn stdin() -> Int
   ensures: result >= 0
 {
@@ -708,6 +719,7 @@ fn print_line(s: Str)
 }
 
 // === Memory I/O ===
+/// === Memory I/O ===
 pub type Cursor = {
   data: Vec[UInt8];
   pos: Int;
@@ -728,6 +740,7 @@ pub fn Cursor.into_inner(self) -> Vec[UInt8]
 }
 
 // === Path operations ===
+/// === Path operations ===
 pub fn join_paths(base: Str, child: Str) -> Str
   ensures: result.len() >= base.len()
 {
@@ -817,6 +830,9 @@ pub fn is_absolute(path: Str) -> Bool {
 // read_line_trim reads a line from stdin and trims trailing
 // whitespace (including \r, \n).  Delegates to read_line + trim.
 // Complexity: O(n) where n is line length.
+/// read_line_trim reads a line from stdin and trims trailing
+/// whitespace (including \r, \n).  Delegates to read_line + trim.
+/// Complexity: O(n) where n is line length.
 pub fn read_line_trim() -> Str
   ensures: result.len() >= 0
 {
@@ -828,6 +844,10 @@ pub fn read_line_trim() -> Str
 // and returns the concatenated content.  Returns "" if stdin is empty.
 // Complexity: O(N) where N is total bytes read.  Each call to read_line
 // allocates up to 4096 bytes; memory usage peaks at ~2x input size.
+/// read_all_stdin reads the entire standard input stream until EOF
+/// and returns the concatenated content.  Returns "" if stdin is empty.
+/// Complexity: O(N) where N is total bytes read.  Each call to read_line
+/// allocates up to 4096 bytes; memory usage peaks at ~2x input size.
 pub fn read_all_stdin() -> Str
   ensures: result.len() >= 0
 {
@@ -845,6 +865,7 @@ pub fn read_all_stdin() -> Str
 }
 
 // stdin_read_line is an alias for read_line.
+/// stdin_read_line is an alias for read_line.
 pub fn stdin_read_line() -> Str
   ensures: result.len() >= 0
 {
@@ -854,6 +875,9 @@ pub fn stdin_read_line() -> Str
 // flush_stdout is a no-op: the Xiom runtime does not expose fflush
 // via externs, but stdio is line-buffered by default so explicit
 // flushing is rarely required.
+/// flush_stdout is a no-op: the Xiom runtime does not expose fflush
+/// via externs, but stdio is line-buffered by default so explicit
+/// flushing is rarely required.
 pub fn flush_stdout() {
 }
 
@@ -863,6 +887,8 @@ pub fn flush_stdout() {
 
 // write_file_bytes writes raw bytes to a file, truncating if it exists.
 // Complexity: O(n) where n = data.len().
+/// write_file_bytes writes raw bytes to a file, truncating if it exists.
+/// Complexity: O(n) where n = data.len().
 pub fn write_file_bytes(path: Str, data: &Vec[UInt8]) -> Result[Unit, IOError] {
   let file: *UInt8;
   unsafe {
@@ -889,6 +915,8 @@ pub fn write_file_bytes(path: Str, data: &Vec[UInt8]) -> Result[Unit, IOError] {
 
 // read_file_bytes reads a file and returns its raw bytes.
 // Complexity: O(n) where n = file size.
+/// read_file_bytes reads a file and returns its raw bytes.
+/// Complexity: O(n) where n = file size.
 pub fn read_file_bytes(path: Str) -> Result[Vec[UInt8], IOError]
   ensures: result is Ok => result.len() >= 0
 {
@@ -920,6 +948,8 @@ pub fn read_file_bytes(path: Str) -> Result[Vec[UInt8], IOError]
 
 // file_size returns the size of a file in bytes, or None if
 // the path cannot be stated.
+/// file_size returns the size of a file in bytes, or None if
+/// the path cannot be stated.
 pub fn file_size(path: Str) -> Option[Int]
   ensures: result is Some => result.value >= 0
 {
@@ -932,6 +962,8 @@ pub fn file_size(path: Str) -> Option[Int]
 
 // file_modified_time returns the last modification time of a file
 // as a Unix timestamp, or None if the path cannot be stated.
+/// file_modified_time returns the last modification time of a file
+/// as a Unix timestamp, or None if the path cannot be stated.
 pub fn file_modified_time(path: Str) -> Option[Int] {
   let m = metadata(path);
   match m {
@@ -946,11 +978,14 @@ pub fn file_modified_time(path: Str) -> Option[Int] {
 
 // move_file renames (moves) a file or directory from src to dst.
 // Alias for rename.  Complexity: O(1) OS call.
+/// move_file renames (moves) a file or directory from src to dst.
+/// Alias for rename.  Complexity: O(1) OS call.
 pub fn move_file(src: Str, dst: Str) -> Result[Unit, IOError] {
   return rename(src, dst);
 }
 
 // dir_exists returns true if the path exists and is a directory.
+/// dir_exists returns true if the path exists and is a directory.
 pub fn dir_exists(path: Str) -> Bool {
   return is_dir(path);
 }
@@ -958,6 +993,9 @@ pub fn dir_exists(path: Str) -> Bool {
 // create_dir_all creates the directory and all missing parent
 // directories along the path.  Returns Ok(()) on success.
 // Complexity: O(d) where d = directory depth.
+/// create_dir_all creates the directory and all missing parent
+/// directories along the path.  Returns Ok(()) on success.
+/// Complexity: O(d) where d = directory depth.
 pub fn create_dir_all(path: Str) -> Result[Unit, IOError] {
   if path.is_empty() {
     return Ok(());
@@ -983,6 +1021,9 @@ pub fn create_dir_all(path: Str) -> Result[Unit, IOError] {
 // list_dir_recursive recursively collects all file and directory
 // paths under the given root directory.  Returns the full paths
 // relative to root.  Complexity: O(N) where N = total entries.
+/// list_dir_recursive recursively collects all file and directory
+/// paths under the given root directory.  Returns the full paths
+/// relative to root.  Complexity: O(N) where N = total entries.
 pub fn list_dir_recursive(path: Str) -> Result[Vec[Str], IOError]
   ensures: result is Ok => result.len() >= 0
 {
@@ -1012,6 +1053,8 @@ pub fn list_dir_recursive(path: Str) -> Result[Vec[Str], IOError]
 
 // read_file_lines reads a file and returns its lines as a Vec[Str].
 // Trailing newline characters are stripped.  Complexity: O(n).
+/// read_file_lines reads a file and returns its lines as a Vec[Str].
+/// Trailing newline characters are stripped.  Complexity: O(n).
 pub fn read_file_lines(path: Str) -> Result[Vec[Str], IOError]
   ensures: result is Ok => result.len() >= 0
 {
@@ -1027,6 +1070,8 @@ pub fn read_file_lines(path: Str) -> Result[Vec[Str], IOError]
 
 // write_file_lines writes a Vec[Str] to a file, one line per entry.
 // Lines are separated by '\n'.  Complexity: O(n).
+/// write_file_lines writes a Vec[Str] to a file, one line per entry.
+/// Lines are separated by '\n'.  Complexity: O(n).
 pub fn write_file_lines(path: Str, lines: &Vec[Str]) -> Result[Unit, IOError] {
   var content = "";
   var i = 0;
@@ -1044,6 +1089,9 @@ pub fn write_file_lines(path: Str, lines: &Vec[Str]) -> Result[Unit, IOError] {
 // append_line appends a single line (followed by '\n') to a file.
 // If the file does not exist it will be created.
 // Complexity: O(n) where n = line length.
+/// append_line appends a single line (followed by '\n') to a file.
+/// If the file does not exist it will be created.
+/// Complexity: O(n) where n = line length.
 pub fn append_line(path: Str, line: Str) -> Result[Unit, IOError] {
   return append_file(path, line + "\n");
 }

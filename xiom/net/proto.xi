@@ -71,6 +71,8 @@ fn trim(s: Str) -> Str {
 
 // jsonrpc_request builds a JSON-RPC 2.0 request object. The params value
 // is embedded verbatim as pre-serialized JSON.
+/// jsonrpc_request builds a JSON-RPC 2.0 request object. The params value
+/// is embedded verbatim as pre-serialized JSON.
 pub fn jsonrpc_request(id: Int, method: Str, params_json: Str) -> Str {
   var result = "{\"jsonrpc\":\"2.0\",\"id\":";
   result = result + id.to_str();
@@ -84,6 +86,8 @@ pub fn jsonrpc_request(id: Int, method: Str, params_json: Str) -> Str {
 
 // jsonrpc_success builds a JSON-RPC 2.0 success response. The result value
 // is embedded verbatim as pre-serialized JSON.
+/// jsonrpc_success builds a JSON-RPC 2.0 success response. The result value
+/// is embedded verbatim as pre-serialized JSON.
 pub fn jsonrpc_success(id: Int, result_json: Str) -> Str {
   var result = "{\"jsonrpc\":\"2.0\",\"id\":";
   result = result + id.to_str();
@@ -94,6 +98,7 @@ pub fn jsonrpc_success(id: Int, result_json: Str) -> Str {
 }
 
 // jsonrpc_error builds a JSON-RPC 2.0 error response.
+/// jsonrpc_error builds a JSON-RPC 2.0 error response.
 pub fn jsonrpc_error(id: Int, code: Int, message: Str) -> Str {
   var result = "{\"jsonrpc\":\"2.0\",\"id\":";
   result = result + id.to_str();
@@ -125,6 +130,8 @@ fn sse_data_lines(data: Str) -> Str {
 
 // sse_format_event formats an SSE event with an "event:" line followed by
 // "data:" lines and a terminating blank line.
+/// sse_format_event formats an SSE event with an "event:" line followed by
+/// "data:" lines and a terminating blank line.
 pub fn sse_format_event(event: Str, data: Str) -> Str {
   var result = "event: ";
   result = result + event;
@@ -136,12 +143,16 @@ pub fn sse_format_event(event: Str, data: Str) -> Str {
 
 // sse_format_data formats a single SSE data message with a terminating
 // blank line.
+/// sse_format_data formats a single SSE data message with a terminating
+/// blank line.
 pub fn sse_format_data(data: Str) -> Str {
   sse_data_lines(data) + "\n"
 }
 
 // http_header_parse parses a block of "Name: value" lines (one per line,
 // '\r' tolerated) into (name, value) pairs. Blank lines are skipped.
+/// http_header_parse parses a block of "Name: value" lines (one per line,
+/// '\r' tolerated) into (name, value) pairs. Blank lines are skipped.
 pub fn http_header_parse(headers: Str) -> Vec[(Str, Str)] {
   var result: Vec[(Str, Str)] = Vec[(Str, Str)]::new();
   let lines = split(headers, "\n");
@@ -167,6 +178,8 @@ pub fn http_header_parse(headers: Str) -> Vec[(Str, Str)] {
 
 // http_header_get finds the value for a header name in a parsed header
 // list, matching case-insensitively and returning the first match.
+/// http_header_get finds the value for a header name in a parsed header
+/// list, matching case-insensitively and returning the first match.
 pub fn http_header_get(headers: Vec[(Str, Str)], name: Str) -> Option[Str] {
   let lname = string.str_lower(name);
   var i = 0;
@@ -182,17 +195,22 @@ pub fn http_header_get(headers: Vec[(Str, Str)], name: Str) -> Option[Str] {
 
 // basic_auth_header builds a "Basic <base64(user:password)>" Authorization
 // header value.
+/// basic_auth_header builds a "Basic <base64(user:password)>" Authorization
+/// header value.
 pub fn basic_auth_header(username: Str, password: Str) -> Str {
   "Basic " + encoding.base64_encode_str(username + ":" + password)
 }
 
 // bearer_auth_header builds a "Bearer <token>" Authorization header value.
+/// bearer_auth_header builds a "Bearer <token>" Authorization header value.
 pub fn bearer_auth_header(token: Str) -> Str {
   "Bearer " + token
 }
 
 // http_status_text maps an HTTP status code to its standard reason phrase,
 // or "Unknown" for codes not in the table.
+/// http_status_text maps an HTTP status code to its standard reason phrase,
+/// or "Unknown" for codes not in the table.
 pub fn http_status_text(code: Int) -> Str {
   if code == 200 { return "OK"; }
   if code == 201 { return "Created"; }

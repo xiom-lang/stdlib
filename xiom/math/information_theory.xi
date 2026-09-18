@@ -34,6 +34,8 @@ fn _kl_term(p: Float64, q: Float64) -> Float64 {
 
 // Shannon entropy H(p) = -sum p_i log2 p_i (bits). NaN for a negative
 // probability. Complexity: O(n).
+/// Shannon entropy H(p) = -sum p_i log2 p_i (bits). NaN for a negative
+/// probability. Complexity: O(n).
 pub fn entropy(probs: &Vec[Float64]) -> Float64 {
   var sum = 0.0;
   var i = 0;
@@ -51,6 +53,11 @@ pub fn entropy(probs: &Vec[Float64]) -> Float64 {
 // distribution is a Vec[Vec[Float64]] whose element reads return garbage
 // (BUG 23 #1 residual; verified by minimal probe). Keep the frozen signature;
 // revisit when nested float Vec reads land.
+/// Entropy of a joint distribution over pairs: H(X, Y) = -sum p_ij log2 p_ij.
+/// TODO(compiler): NOT IMPLEMENTABLE in this compiler build - the joint
+/// distribution is a Vec[Vec[Float64]] whose element reads return garbage
+/// (BUG 23 #1 residual; verified by minimal probe). Keep the frozen signature;
+/// revisit when nested float Vec reads land.
 pub fn joint_entropy(p_joint: &Vec[Vec[Float64]]) -> Float64 {
   return 0.0;
 }
@@ -58,6 +65,9 @@ pub fn joint_entropy(p_joint: &Vec[Vec[Float64]]) -> Float64 {
 // Conditional entropy H(X|Y) = -sum_ij p_ij log2(p_ij / p_j) (bits).
 // TODO(compiler): NOT IMPLEMENTABLE - see joint_entropy (matrix element reads
 // return garbage in this compiler build).
+/// Conditional entropy H(X|Y) = -sum_ij p_ij log2(p_ij / p_j) (bits).
+/// TODO(compiler): NOT IMPLEMENTABLE - see joint_entropy (matrix element reads
+/// return garbage in this compiler build).
 pub fn conditional_entropy(p_joint: &Vec[Vec[Float64]]) -> Float64 {
   return 0.0;
 }
@@ -65,12 +75,17 @@ pub fn conditional_entropy(p_joint: &Vec[Vec[Float64]]) -> Float64 {
 // Mutual information I(X; Y) = sum_ij p_ij log2(p_ij / (p_i p_j)) (bits).
 // TODO(compiler): NOT IMPLEMENTABLE - see joint_entropy (matrix element reads
 // return garbage in this compiler build).
+/// Mutual information I(X; Y) = sum_ij p_ij log2(p_ij / (p_i p_j)) (bits).
+/// TODO(compiler): NOT IMPLEMENTABLE - see joint_entropy (matrix element reads
+/// return garbage in this compiler build).
 pub fn mutual_information(p_joint: &Vec[Vec[Float64]]) -> Float64 {
   return 0.0;
 }
 
 // Kullback-Leibler divergence D(p || q) = sum p_i log2(p_i / q_i) (bits).
 // NaN for a zero q_i with positive p_i. Complexity: O(n).
+/// Kullback-Leibler divergence D(p || q) = sum p_i log2(p_i / q_i) (bits).
+/// NaN for a zero q_i with positive p_i. Complexity: O(n).
 pub fn kl_divergence(p: &Vec[Float64], q: &Vec[Float64]) -> Float64 {
   if p.len() != q.len() { return 0.0 / 0.0; }
   var sum = 0.0;
@@ -84,6 +99,8 @@ pub fn kl_divergence(p: &Vec[Float64], q: &Vec[Float64]) -> Float64 {
 
 // Jensen-Shannon divergence JSD(p || q) = 0.5 D(p || m) + 0.5 D(q || m) with
 // m = (p + q)/2 (bits; values in [0, 1]). NaN on length mismatch. Complexity: O(n).
+/// Jensen-Shannon divergence JSD(p || q) = 0.5 D(p || m) + 0.5 D(q || m) with
+/// m = (p + q)/2 (bits; values in [0, 1]). NaN on length mismatch. Complexity: O(n).
 pub fn js_divergence(p: &Vec[Float64], q: &Vec[Float64]) -> Float64 {
   if p.len() != q.len() { return 0.0 / 0.0; }
   var m = Vec[Float64].new();
@@ -103,6 +120,8 @@ pub fn js_divergence(p: &Vec[Float64], q: &Vec[Float64]) -> Float64 {
 
 // Cross entropy H(p, q) = -sum p_i log2 q_i (bits). NaN for a zero q_i with
 // positive p_i. Complexity: O(n).
+/// Cross entropy H(p, q) = -sum p_i log2 q_i (bits). NaN for a zero q_i with
+/// positive p_i. Complexity: O(n).
 pub fn cross_entropy(p: &Vec[Float64], q: &Vec[Float64]) -> Float64 {
   if p.len() != q.len() { return 0.0 / 0.0; }
   var sum = 0.0;
@@ -121,6 +140,8 @@ pub fn cross_entropy(p: &Vec[Float64], q: &Vec[Float64]) -> Float64 {
 
 // Perplexity = 2^H (exponential of the entropy in bits). NaN for negative
 // probabilities. Complexity: O(n).
+/// Perplexity = 2^H (exponential of the entropy in bits). NaN for negative
+/// probabilities. Complexity: O(n).
 pub fn perplexity(probs: &Vec[Float64]) -> Float64 {
   var h = entropy(probs);
   if h != h { return h; }
@@ -129,6 +150,8 @@ pub fn perplexity(probs: &Vec[Float64]) -> Float64 {
 
 // Self information -log2(p) of a single event (bits). p <= 0 returns +inf.
 // Complexity: O(1).
+/// Self information -log2(p) of a single event (bits). p <= 0 returns +inf.
+/// Complexity: O(1).
 pub fn self_information(p: Float64) -> Float64 {
   if p <= 0.0 { return 1.0 / 0.0; }
   return -math.log2(p);
@@ -138,6 +161,10 @@ pub fn self_information(p: Float64) -> Float64 {
 // transition matrix).
 // TODO(compiler): NOT IMPLEMENTABLE - the transition matrix is a
 // Vec[Vec[Float64]] whose element reads return garbage in this compiler build.
+/// Entropy rate of a stationary Markov source: sum_j s_j H(row j of the
+/// transition matrix).
+/// TODO(compiler): NOT IMPLEMENTABLE - the transition matrix is a
+/// Vec[Vec[Float64]] whose element reads return garbage in this compiler build.
 pub fn entropy_rate(p_transition: &Vec[Vec[Float64]], stationary: &Vec[Float64]) -> Float64 {
   return 0.0;
 }
@@ -148,12 +175,20 @@ pub fn entropy_rate(p_transition: &Vec[Vec[Float64]], stationary: &Vec[Float64])
 // (verified by minimal probe); the resulting q values become NaN and violate
 // math.ln's positivity requirement. Keep the frozen signature; revisit when
 // nested float Vec reads land.
+/// Channel capacity by the Blahut-Arimoto algorithm.
+/// TODO(compiler): NOT IMPLEMENTABLE - the channel matrix is a
+/// Vec[Vec[Float64]] whose element reads return garbage in this compiler build
+/// (verified by minimal probe); the resulting q values become NaN and violate
+/// math.ln's positivity requirement. Keep the frozen signature; revisit when
+/// nested float Vec reads land.
 pub fn channel_capacity(p_transition: &Vec[Vec[Float64]]) -> Float64 {
   return 0.0;
 }
 
 // Lower bound on the average code length for a distribution: its entropy
 // (bits). NaN for negative probabilities. Complexity: O(n).
+/// Lower bound on the average code length for a distribution: its entropy
+/// (bits). NaN for negative probabilities. Complexity: O(n).
 pub fn data_compression_bound(dist: &Vec[Float64]) -> Float64 {
   return entropy(dist);
 }
@@ -161,6 +196,9 @@ pub fn data_compression_bound(dist: &Vec[Float64]) -> Float64 {
 // Prefix-free Huffman code for a probability distribution. The result holds
 // (symbol index, codeword) pairs with codewords of "0"/"1"; NaN inputs or an
 // empty distribution yield an empty result. Complexity: O(n^2).
+/// Prefix-free Huffman code for a probability distribution. The result holds
+/// (symbol index, codeword) pairs with codewords of "0"/"1"; NaN inputs or an
+/// empty distribution yield an empty result. Complexity: O(n^2).
 pub fn huffman_coding(probs: &Vec[Float64]) -> Vec[(Int, Str)] {
   var out = Vec[(Int, Str)].new();
   var n = probs.len();
@@ -235,6 +273,9 @@ pub fn huffman_coding(probs: &Vec[Float64]) -> Vec[(Int, Str)] {
 // Arithmetic coding of the symbol sequence seq under the distribution probs:
 // returns the midpoint of the final code interval in [0, 1). Invalid symbols
 // (outside the distribution) contribute nothing (documented). Complexity: O(len(seq) * n).
+/// Arithmetic coding of the symbol sequence seq under the distribution probs:
+/// returns the midpoint of the final code interval in [0, 1). Invalid symbols
+/// (outside the distribution) contribute nothing (documented). Complexity: O(len(seq) * n).
 pub fn arithmetic_coding(probs: &Vec[Float64], seq: &Vec[Int]) -> Float64 {
   var n = probs.len();
   var cum = Vec[Float64].new();

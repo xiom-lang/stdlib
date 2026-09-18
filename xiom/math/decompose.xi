@@ -88,6 +88,9 @@ fn _frexp_impl(x: Float64) -> (Float64, Int) {
 // Split x into (fraction, exponent) with x == fraction * 2^exponent and
 // fraction in [0.5, 1). frexp(8.0) == (0.5, 4), frexp(0.0) == (0.0, 0).
 // Exact. Complexity: O(1074) worst case.
+/// Split x into (fraction, exponent) with x == fraction * 2^exponent and
+/// fraction in [0.5, 1). frexp(8.0) == (0.5, 4), frexp(0.0) == (0.0, 0).
+/// Exact. Complexity: O(1074) worst case.
 pub fn frexp(x: Float64) -> (Float64, Int) {
   return _frexp_impl(x);
 }
@@ -96,6 +99,10 @@ pub fn frexp(x: Float64) -> (Float64, Int) {
 // range the result is +-inf (n > 1100) or 0.0 (n < -1100); subnormal results
 // flush correctly. Exact for all finite representable outcomes.
 // Complexity: O(1074 + 1024).
+/// x * 2^n with a single rounding. For n beyond the representable exponent
+/// range the result is +-inf (n > 1100) or 0.0 (n < -1100); subnormal results
+/// flush correctly. Exact for all finite representable outcomes.
+/// Complexity: O(1074 + 1024).
 pub fn ldexp(x: Float64, n: Int) -> Float64 {
   return ldexp_pure(x, n);
 }
@@ -104,6 +111,10 @@ pub fn ldexp(x: Float64, n: Int) -> Float64 {
 // ilogb(8.0) == 3, ilogb(0.5) == -1. For x == 0 returns INT_MIN (C
 // FP_ILOGB0), for +-inf returns INT_MAX (C FP_ILOGB... convention).
 // Complexity: O(1074) worst case.
+/// Binary exponent of x: the e with |x| == m * 2^e and 1 <= m < 2.
+/// ilogb(8.0) == 3, ilogb(0.5) == -1. For x == 0 returns INT_MIN (C
+/// FP_ILOGB0), for +-inf returns INT_MAX (C FP_ILOGB... convention).
+/// Complexity: O(1074) worst case.
 pub fn ilogb(x: Float64) -> Int {
   if x == 0.0 { return -9223372036854775808; }
   if x == 1.0 / 0.0 || x == -1.0 / 0.0 { return 9223372036854775807; }
@@ -113,6 +124,8 @@ pub fn ilogb(x: Float64) -> Int {
 
 // Binary exponent of x as a float: logb(8.0) == 3.0. For x == 0 returns -inf,
 // for +-inf returns +inf (C semantics). Complexity: O(1074) worst case.
+/// Binary exponent of x as a float: logb(8.0) == 3.0. For x == 0 returns -inf,
+/// for +-inf returns +inf (C semantics). Complexity: O(1074) worst case.
 pub fn logb(x: Float64) -> Float64 {
   if x == 0.0 { return -1.0 / 0.0; }
   if x == 1.0 / 0.0 || x == -1.0 / 0.0 { return 1.0 / 0.0; }
@@ -120,12 +133,15 @@ pub fn logb(x: Float64) -> Float64 {
 }
 
 // x * 2^n (FLT_RADIX == 2). Same semantics as ldexp. Complexity: O(ldexp).
+/// x * 2^n (FLT_RADIX == 2). Same semantics as ldexp. Complexity: O(ldexp).
 pub fn scalbn(x: Float64, n: Int) -> Float64 {
   return ldexp(x, n);
 }
 
 // x * 2^n with a long (Int64) exponent. Same semantics as ldexp.
 // Complexity: O(ldexp).
+/// x * 2^n with a long (Int64) exponent. Same semantics as ldexp.
+/// Complexity: O(ldexp).
 pub fn scalbln(x: Float64, n: Int64) -> Float64 {
   return ldexp(x, n as Int);
 }
@@ -133,6 +149,9 @@ pub fn scalbln(x: Float64, n: Int64) -> Float64 {
 // Normalized fraction of x in [0.5, 1), sign preserved (frexp fraction).
 // significand(8.0) == 0.5, significand(0.0) == 0.0; +-inf pass through.
 // Complexity: O(1074) worst case.
+/// Normalized fraction of x in [0.5, 1), sign preserved (frexp fraction).
+/// significand(8.0) == 0.5, significand(0.0) == 0.0; +-inf pass through.
+/// Complexity: O(1074) worst case.
 pub fn significand(x: Float64) -> Float64 {
   if x == 0.0 { return 0.0; }
   if x == 1.0 / 0.0 || x == -1.0 / 0.0 { return x; }
@@ -142,12 +161,16 @@ pub fn significand(x: Float64) -> Float64 {
 
 // Binary exponent of x. Alias of ilogb: exponent(8.0) == 3, exponent(0) ==
 // INT_MIN, exponent(+-inf) == INT_MAX. Complexity: O(ilogb).
+/// Binary exponent of x. Alias of ilogb: exponent(8.0) == 3, exponent(0) ==
+/// INT_MIN, exponent(+-inf) == INT_MAX. Complexity: O(ilogb).
 pub fn exponent(x: Float64) -> Int {
   return ilogb(x);
 }
 
 // frexp without libm. Identical semantics to frexp (the algorithm is exact
 // integer scaling; no libm involved). Complexity: O(1074) worst case.
+/// frexp without libm. Identical semantics to frexp (the algorithm is exact
+/// integer scaling; no libm involved). Complexity: O(1074) worst case.
 pub fn frexp_pure(x: Float64) -> (Float64, Int) {
   return _frexp_impl(x);
 }
@@ -155,6 +178,9 @@ pub fn frexp_pure(x: Float64) -> (Float64, Int) {
 // ldexp without libm. x * 2^n via exact frexp decomposition and power-of-two
 // scaling (all intermediate steps are exact or correctly flushed). For
 // n > 1100 returns +-inf, for n < -1100 returns 0.0. Complexity: O(1074).
+/// ldexp without libm. x * 2^n via exact frexp decomposition and power-of-two
+/// scaling (all intermediate steps are exact or correctly flushed). For
+/// n > 1100 returns +-inf, for n < -1100 returns 0.0. Complexity: O(1074).
 pub fn ldexp_pure(x: Float64, n: Int) -> Float64 {
   if x == 0.0 { return 0.0; }
   if n > 1100 {
@@ -184,6 +210,8 @@ pub fn ldexp_pure(x: Float64, n: Int) -> Float64 {
 
 // True iff x is a normal (non-subnormal, non-zero, finite) Float64:
 // 2^-1022 <= |x| < +inf. Complexity: O(1).
+/// True iff x is a normal (non-subnormal, non-zero, finite) Float64:
+/// 2^-1022 <= |x| < +inf. Complexity: O(1).
 pub fn is_normal(x: Float64) -> Bool {
   if x == 0.0 { return false; }
   if x == 1.0 / 0.0 || x == -1.0 / 0.0 { return false; }
@@ -193,6 +221,7 @@ pub fn is_normal(x: Float64) -> Bool {
 }
 
 // True iff x is a subnormal Float64: 0 < |x| < 2^-1022. Complexity: O(1).
+/// True iff x is a subnormal Float64: 0 < |x| < 2^-1022. Complexity: O(1).
 pub fn is_subnormal(x: Float64) -> Bool {
   if x == 0.0 { return false; }
   if x == 1.0 / 0.0 || x == -1.0 / 0.0 { return false; }
@@ -205,6 +234,10 @@ pub fn is_subnormal(x: Float64) -> Bool {
 // Zero. NaN classification is unreachable from code compiled by this
 // compiler (BUG 19 cannot produce NaN), but is detected if one arrives.
 // Complexity: O(1).
+/// Classify x into the FloatClass taxonomy: NaN, Infinity, Normal, Subnormal,
+/// Zero. NaN classification is unreachable from code compiled by this
+/// compiler (BUG 19 cannot produce NaN), but is detected if one arrives.
+/// Complexity: O(1).
 pub fn classify(x: Float64) -> FloatClass {
   if x == 1.0 / 0.0 || x == -1.0 / 0.0 { return FloatClass.Infinity; }
   if x != x { return FloatClass.NaN; }
@@ -218,12 +251,19 @@ pub fn classify(x: Float64) -> FloatClass {
 // arithmetic ulp walk). nextafter(max, +inf) == +inf.
 // TODO(compiler): an exact implementation normally uses a float<->int
 // bitcast; the arithmetic form is exact for finite values (see primitives).
+/// Next representable Float64 from x toward y. Exact for all finite normal
+/// and subnormal values; delegates to math.primitives.nextafter (the same
+/// arithmetic ulp walk). nextafter(max, +inf) == +inf.
+/// TODO(compiler): an exact implementation normally uses a float<->int
+/// bitcast; the arithmetic form is exact for finite values (see primitives).
 pub fn nextafter(x: Float64, y: Float64) -> Float64 {
   return math.primitives.nextafter(x, y);
 }
 
 // Next representable Float64 from x toward y. Float64 has no distinct long
 // double, so this is the same operation as nextafter.
+/// Next representable Float64 from x toward y. Float64 has no distinct long
+/// double, so this is the same operation as nextafter.
 pub fn nexttoward(x: Float64, y: Float64) -> Float64 {
   return math.primitives.nextafter(x, y);
 }

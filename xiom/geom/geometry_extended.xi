@@ -20,6 +20,9 @@ use xiom.math;
 // Bounded Voronoi diagram of sites clipped to bounds: one cell per site, each
 // cell the intersection of the half-planes defined by the perpendicular
 // bisectors with every other site. O(k^2 * n).
+/// Bounded Voronoi diagram of sites clipped to bounds: one cell per site, each
+/// cell the intersection of the half-planes defined by the perpendicular
+/// bisectors with every other site. O(k^2 * n).
 pub fn voronoi(sites: &Vec[Point2], bounds: Rect) -> Vec[Polygon2] {
   var out = Vec[Polygon2].new();
   var k = sites.len();
@@ -76,6 +79,9 @@ pub fn voronoi(sites: &Vec[Point2], bounds: Rect) -> Vec[Polygon2] {
 // Delaunay triangulation of points via the Bowyer-Watson algorithm (bounded
 // by a super-triangle). Returns a non-empty triangle list for >= 3 points.
 // O(n^2) typical.
+/// Delaunay triangulation of points via the Bowyer-Watson algorithm (bounded
+/// by a super-triangle). Returns a non-empty triangle list for >= 3 points.
+/// O(n^2) typical.
 pub fn delaunay(points: &Vec[Point2]) -> Vec[Triangle2] {
   var out = Vec[Triangle2].new();
   var n = points.len();
@@ -164,6 +170,7 @@ pub fn delaunay(points: &Vec[Point2]) -> Vec[Triangle2] {
 }
 
 // Point on a Bezier curve with de Casteljau's algorithm. O(k^2).
+/// Point on a Bezier curve with de Casteljau's algorithm. O(k^2).
 pub fn bezier_curve(controls: &Vec[Vec2], t: Float64) -> Vec2 {
   var n = controls.len();
   if n == 0 { return Vec2{ x: 0.0; y: 0.0; }; }
@@ -196,6 +203,10 @@ pub fn bezier_curve(controls: &Vec[Vec2], t: Float64) -> Vec2 {
 // algorithm. Knots must satisfy knots.len() == controls.len() + 3 and be
 // clamped (non-decreasing, endpoints repeated); t is clamped to [0, 1].
 // Returns the zero vector on inconsistent input. O(1).
+/// Uniform open (clamped) quadratic B-spline evaluation with de Boor's
+/// algorithm. Knots must satisfy knots.len() == controls.len() + 3 and be
+/// clamped (non-decreasing, endpoints repeated); t is clamped to [0, 1].
+/// Returns the zero vector on inconsistent input. O(1).
 pub fn b_spline(controls: &Vec[Vec2], knots: &Vec[Float64], t: Float64) -> Vec2 {
   var zero = Vec2{ x: 0.0; y: 0.0; };
   var np = controls.len();
@@ -253,6 +264,9 @@ pub fn b_spline(controls: &Vec[Vec2], knots: &Vec[Float64], t: Float64) -> Vec2 
 // NURBS evaluation: weighted rational B-spline with de Boor's algorithm.
 // weights.len() must equal controls.len() and knots must satisfy the clamped
 // B-spline sizing. O(1).
+/// NURBS evaluation: weighted rational B-spline with de Boor's algorithm.
+/// weights.len() must equal controls.len() and knots must satisfy the clamped
+/// B-spline sizing. O(1).
 pub fn nurbs(controls: &Vec[Vec2], weights: &Vec[Float64], knots: &Vec[Float64], t: Float64) -> Vec2 {
   var zero = Vec2{ x: 0.0; y: 0.0; };
   var np = controls.len();
@@ -317,6 +331,9 @@ pub fn nurbs(controls: &Vec[Vec2], weights: &Vec[Float64], knots: &Vec[Float64],
 // Midpoint subdivision surface refinement: every triangle is split into four
 // by inserting edge midpoints (no shared-edge deduplication). The triangle
 // count quadruples per iteration. O(iterations * n).
+/// Midpoint subdivision surface refinement: every triangle is split into four
+/// by inserting edge midpoints (no shared-edge deduplication). The triangle
+/// count quadruples per iteration. O(iterations * n).
 pub fn subdivision(mesh: Mesh, iterations: Int) -> Mesh {
   var out = Mesh{ vertices: Vec[Point3].new(); indices: Vec[Int].new(); };
   var i = 0;
@@ -382,6 +399,8 @@ fn _midpoint(a: Point3, b: Point3) -> Point3 {
 
 // Mesh cleanup pipeline: removes duplicate vertices (exact position match)
 // and rewrites the index list accordingly. Returns the cleaned mesh. O(n^2).
+/// Mesh cleanup pipeline: removes duplicate vertices (exact position match)
+/// and rewrites the index list accordingly. Returns the cleaned mesh. O(n^2).
 pub fn mesh_processing(mesh: Mesh) -> Mesh {
   var out = Mesh{ vertices: Vec[Point3].new(); indices: Vec[Int].new(); };
   var remap = Vec[Int].new();
@@ -417,6 +436,9 @@ pub fn mesh_processing(mesh: Mesh) -> Mesh {
 // Apply a projective transform to the points: each point (x, y, z) is mapped
 // to (x/w, y/w, z/w) with the perspective weight w = 1 + x + y + z. Points
 // whose weight is zero are left unchanged. O(n).
+/// Apply a projective transform to the points: each point (x, y, z) is mapped
+/// to (x/w, y/w, z/w) with the perspective weight w = 1 + x + y + z. Points
+/// whose weight is zero are left unchanged. O(n).
 pub fn projective_geometry(points: &Vec[Vec3]) -> Vec[Vec3] {
   var out = Vec[Vec3].new();
   var i = 0;
@@ -436,6 +458,8 @@ pub fn projective_geometry(points: &Vec[Vec3]) -> Vec[Vec3] {
 
 // Hyperbolic distance in the Poincare ball model:
 // 2 * atanh(|a - b| / |1 - a.b|). Returns 0 for identical points. O(1).
+/// Hyperbolic distance in the Poincare ball model:
+/// 2 * atanh(|a - b| / |1 - a.b|). Returns 0 for identical points. O(1).
 pub fn hyperbolic_geometry(a: &Vec[Float64], b: &Vec[Float64]) -> Float64 {
   var n = a.len();
   if b.len() != n || n == 0 { return 0.0 / 0.0; }
@@ -459,6 +483,8 @@ pub fn hyperbolic_geometry(a: &Vec[Float64], b: &Vec[Float64]) -> Float64 {
 
 // Elliptic (spherical) distance between two unit vectors: acos(a.b) in
 // [0, PI]. Returns 0 for identical unit vectors. O(n).
+/// Elliptic (spherical) distance between two unit vectors: acos(a.b) in
+/// [0, PI]. Returns 0 for identical unit vectors. O(n).
 pub fn elliptic_geometry(a: &Vec[Float64], b: &Vec[Float64]) -> Float64 {
   var n = a.len();
   if b.len() != n || n == 0 { return 0.0 / 0.0; }
@@ -475,12 +501,16 @@ pub fn elliptic_geometry(a: &Vec[Float64], b: &Vec[Float64]) -> Float64 {
 
 // Generic non-Euclidean metric: the Poincare hyperbolic distance (see
 // hyperbolic_geometry). O(n).
+/// Generic non-Euclidean metric: the Poincare hyperbolic distance (see
+/// hyperbolic_geometry). O(n).
 pub fn non_euclidean(a: &Vec[Float64], b: &Vec[Float64]) -> Float64 {
   return hyperbolic_geometry(a, b);
 }
 
 // Incidence predicate: true iff every point lies on at least one of the
 // lines. O(p * l).
+/// Incidence predicate: true iff every point lies on at least one of the
+/// lines. O(p * l).
 pub fn incidence_geometry(points: &Vec[Point2], lines: &Vec[Line2]) -> Bool {
   var i = 0;
   while i < points.len() {
@@ -505,6 +535,8 @@ pub fn incidence_geometry(points: &Vec[Point2], lines: &Vec[Line2]) -> Bool {
 
 // Convex decomposition/combination of a point set: returns the convex hull of
 // the points as a Polygon2. O(n log n).
+/// Convex decomposition/combination of a point set: returns the convex hull of
+/// the points as a Polygon2. O(n log n).
 pub fn convex_geometry(points: &Vec[Vec2]) -> Polygon2 {
   var pts = Vec[Point2].new();
   var i = 0;
@@ -517,6 +549,8 @@ pub fn convex_geometry(points: &Vec[Vec2]) -> Polygon2 {
 
 // General computational geometry entry point: returns the convex hull of the
 // points as a single-cell polygon list. O(n log n).
+/// General computational geometry entry point: returns the convex hull of the
+/// points as a single-cell polygon list. O(n log n).
 pub fn computational_geometry(points: &Vec[Vec2]) -> Vec[Polygon2] {
   var out = Vec[Polygon2].new();
   var pts = Vec[Point2].new();

@@ -181,6 +181,7 @@ pub fn encode_utf8(c: Char, buf: &mut Vec[UInt8]) {
 // -- Aliases & Shorthands --
 
 // Alias for is_alphabetic. Returns true if `c` is an ASCII letter (a-z, A-Z).
+/// Alias for is_alphabetic. Returns true if `c` is an ASCII letter (a-z, A-Z).
 pub fn is_letter(c: Char) -> Bool
   ensures: result == is_alphabetic(c)
 {
@@ -188,6 +189,7 @@ pub fn is_letter(c: Char) -> Bool
 }
 
 // Alias for is_control. Returns true if `c` is a C0 control character or DEL.
+/// Alias for is_control. Returns true if `c` is a C0 control character or DEL.
 pub fn is_control_char(c: Char) -> Bool
   ensures: result == is_control(c)
 {
@@ -197,6 +199,7 @@ pub fn is_control_char(c: Char) -> Bool
 // -- Digit Classification --
 
 // Returns true if `c` is a hexadecimal digit (0-9, a-f, A-F).
+/// Returns true if `c` is a hexadecimal digit (0-9, a-f, A-F).
 pub fn is_hex_digit(c: Char) -> Bool
   ensures: result == ((to_int_from_char(c) >= 48 && to_int_from_char(c) <= 57) || (to_int_from_char(c) >= 65 && to_int_from_char(c) <= 70) || (to_int_from_char(c) >= 97 && to_int_from_char(c) <= 102))
 {
@@ -205,6 +208,7 @@ pub fn is_hex_digit(c: Char) -> Bool
 }
 
 // Returns true if `c` is a binary digit ('0' or '1').
+/// Returns true if `c` is a binary digit ('0' or '1').
 pub fn is_binary_digit(c: Char) -> Bool
   ensures: result == (c == '0' || c == '1')
 {
@@ -212,6 +216,7 @@ pub fn is_binary_digit(c: Char) -> Bool
 }
 
 // Returns true if `c` is an octal digit ('0' through '7').
+/// Returns true if `c` is an octal digit ('0' through '7').
 pub fn is_octal_digit(c: Char) -> Bool
   ensures: result == (c >= '0' && c <= '7')
 {
@@ -222,6 +227,8 @@ pub fn is_octal_digit(c: Char) -> Bool
 
 // Returns true if `c` is a symbol character (punctuation, currency, math, or modifier).
 // Covers ASCII punctuation + common Unicode symbol ranges.
+/// Returns true if `c` is a symbol character (punctuation, currency, math, or modifier).
+/// Covers ASCII punctuation + common Unicode symbol ranges.
 pub fn is_symbol(c: Char) -> Bool
   ensures: result == (is_currency(c) || is_math_symbol(c) || is_punctuation(c) || (to_int_from_char(c) >= 0x00A0 && to_int_from_char(c) <= 0x00BF) || (to_int_from_char(c) >= 0x00D7 && to_int_from_char(c) <= 0x00F7) || (to_int_from_char(c) >= 0x2010 && to_int_from_char(c) <= 0x2027) || (to_int_from_char(c) >= 0x2030 && to_int_from_char(c) <= 0x205E) || (to_int_from_char(c) >= 0x2190 && to_int_from_char(c) <= 0x21FF) || (to_int_from_char(c) >= 0x2300 && to_int_from_char(c) <= 0x23FF) || (to_int_from_char(c) >= 0x2500 && to_int_from_char(c) <= 0x257F) || (to_int_from_char(c) >= 0x2580 && to_int_from_char(c) <= 0x259F) || (to_int_from_char(c) >= 0x25A0 && to_int_from_char(c) <= 0x25FF) || (to_int_from_char(c) >= 0x2600 && to_int_from_char(c) <= 0x26FF) || (to_int_from_char(c) >= 0x2700 && to_int_from_char(c) <= 0x27BF))
 {
@@ -244,6 +251,8 @@ pub fn is_symbol(c: Char) -> Bool
 
 // Returns true if `c` is a currency symbol.
 // Covers $, cent, pound, yen, and the currency symbols block U+20A0..U+20CF.
+/// Returns true if `c` is a currency symbol.
+/// Covers $, cent, pound, yen, and the currency symbols block U+20A0..U+20CF.
 pub fn is_currency(c: Char) -> Bool
   ensures: result == (to_int_from_char(c) == 0x24 || to_int_from_char(c) == 0xA2 || to_int_from_char(c) == 0xA3 || to_int_from_char(c) == 0xA5 || (to_int_from_char(c) >= 0x20A0 && to_int_from_char(c) <= 0x20CF))
 {
@@ -255,6 +264,9 @@ pub fn is_currency(c: Char) -> Bool
 // Returns true if `c` is a mathematical symbol.
 // Covers +, -, *, /, =, <, >, the plus-minus sign, and the mathematical
 // operators block U+2200..U+22FF.
+/// Returns true if `c` is a mathematical symbol.
+/// Covers +, -, *, /, =, <, >, the plus-minus sign, and the mathematical
+/// operators block U+2200..U+22FF.
 pub fn is_math_symbol(c: Char) -> Bool
   ensures: result == (c == '+' || c == '-' || c == '*' || c == '/' || c == '=' || c == '<' || c == '>' || to_int_from_char(c) == 0xB1 || c == 'x' || (to_int_from_char(c) >= 0x2200 && to_int_from_char(c) <= 0x22FF))
 {
@@ -266,6 +278,8 @@ pub fn is_math_symbol(c: Char) -> Bool
 
 // Returns true if `c` falls within basic emoji code point ranges.
 // Covers emoticons, miscellaneous symbols, transport, supplemental symbols.
+/// Returns true if `c` falls within basic emoji code point ranges.
+/// Covers emoticons, miscellaneous symbols, transport, supplemental symbols.
 pub fn is_emoji(c: Char) -> Bool
   ensures: result == ((to_int_from_char(c) >= 0x1F600 && to_int_from_char(c) <= 0x1F64F) || (to_int_from_char(c) >= 0x1F300 && to_int_from_char(c) <= 0x1F5FF) || (to_int_from_char(c) >= 0x1F680 && to_int_from_char(c) <= 0x1F6FF) || (to_int_from_char(c) >= 0x1F900 && to_int_from_char(c) <= 0x1F9FF))
 {
@@ -277,6 +291,7 @@ pub fn is_emoji(c: Char) -> Bool
 }
 
 // Returns true if `c` is a combining diacritical mark (U+0300..U+036F).
+/// Returns true if `c` is a combining diacritical mark (U+0300..U+036F).
 pub fn is_combining_mark(c: Char) -> Bool
   ensures: result == (to_int_from_char(c) >= 0x0300 && to_int_from_char(c) <= 0x036F)
 {
@@ -288,6 +303,8 @@ pub fn is_combining_mark(c: Char) -> Bool
 
 // Returns the title-case version of `c`. For a single character this is
 // equivalent to to_uppercase.
+/// Returns the title-case version of `c`. For a single character this is
+/// equivalent to to_uppercase.
 pub fn to_title_case(c: Char) -> Char {
   to_uppercase(c)
 }
@@ -295,6 +312,7 @@ pub fn to_title_case(c: Char) -> Char {
 // -- ASCII Subclassifications --
 
 // Returns true if `c` is an ASCII letter (a-z, A-Z).
+/// Returns true if `c` is an ASCII letter (a-z, A-Z).
 pub fn is_ascii_letter(c: Char) -> Bool
   ensures: result == is_alphabetic(c)
 {
@@ -302,6 +320,7 @@ pub fn is_ascii_letter(c: Char) -> Bool
 }
 
 // Returns true if `c` is an ASCII digit (0-9). Alias for is_digit.
+/// Returns true if `c` is an ASCII digit (0-9). Alias for is_digit.
 pub fn is_ascii_digit(c: Char) -> Bool
   ensures: result == is_digit(c)
 {
@@ -309,6 +328,7 @@ pub fn is_ascii_digit(c: Char) -> Bool
 }
 
 // Returns true if `c` is an ASCII hexadecimal digit (0-9, a-f, A-F).
+/// Returns true if `c` is an ASCII hexadecimal digit (0-9, a-f, A-F).
 pub fn is_ascii_hex_digit(c: Char) -> Bool
   ensures: result == is_hex_digit(c)
 {
@@ -316,6 +336,7 @@ pub fn is_ascii_hex_digit(c: Char) -> Bool
 }
 
 // Returns true if `c` is ASCII punctuation (codes 33-47, 58-64, 91-96, 123-126).
+/// Returns true if `c` is ASCII punctuation (codes 33-47, 58-64, 91-96, 123-126).
 pub fn is_ascii_punctuation(c: Char) -> Bool
   ensures: result == is_punctuation(c)
 {
@@ -323,6 +344,7 @@ pub fn is_ascii_punctuation(c: Char) -> Bool
 }
 
 // Returns true if `c` is ASCII whitespace (space, tab, newline, carriage return).
+/// Returns true if `c` is ASCII whitespace (space, tab, newline, carriage return).
 pub fn is_ascii_whitespace(c: Char) -> Bool
   ensures: result == is_whitespace(c)
 {
@@ -330,6 +352,7 @@ pub fn is_ascii_whitespace(c: Char) -> Bool
 }
 
 // Returns true if `c` is an ASCII control character (codes 0-31 or 127).
+/// Returns true if `c` is an ASCII control character (codes 0-31 or 127).
 pub fn is_ascii_control(c: Char) -> Bool
   ensures: result == is_control(c)
 {
@@ -337,6 +360,7 @@ pub fn is_ascii_control(c: Char) -> Bool
 }
 
 // Returns true if `c` is an ASCII graphic character (codes 33-126, visible + space).
+/// Returns true if `c` is an ASCII graphic character (codes 33-126, visible + space).
 pub fn is_ascii_graphic(c: Char) -> Bool
   ensures: result == (to_int_from_char(c) >= 33 && to_int_from_char(c) <= 126)
 {
@@ -345,6 +369,7 @@ pub fn is_ascii_graphic(c: Char) -> Bool
 }
 
 // Returns true if `c` is an ASCII printable character (codes 32-126, includes space).
+/// Returns true if `c` is an ASCII printable character (codes 32-126, includes space).
 pub fn is_ascii_printable(c: Char) -> Bool
   ensures: result == (to_int_from_char(c) >= 32 && to_int_from_char(c) <= 126)
 {
@@ -355,11 +380,13 @@ pub fn is_ascii_printable(c: Char) -> Bool
 // -- Digit Value Conversion --
 
 // Returns the numeric value (0-9) of a digit character, or None if `c` is not a digit.
+/// Returns the numeric value (0-9) of a digit character, or None if `c` is not a digit.
 pub fn char_to_digit_value(c: Char) -> Option[Int] {
   to_digit(c, 10)
 }
 
 // Returns the character representation of a single digit value `n` (0-9), or None if out of range.
+/// Returns the character representation of a single digit value `n` (0-9), or None if out of range.
 pub fn digit_value_to_char(n: Int) -> Option[Char] {
   from_digit(n, 10)
 }
@@ -367,6 +394,7 @@ pub fn digit_value_to_char(n: Int) -> Option[Char] {
 // -- ASCII Case --
 
 // Returns true if `c` is an uppercase ASCII letter (A-Z).
+/// Returns true if `c` is an uppercase ASCII letter (A-Z).
 pub fn is_uppercase_ascii(c: Char) -> Bool
   ensures: result == is_uppercase(c)
 {
@@ -374,6 +402,7 @@ pub fn is_uppercase_ascii(c: Char) -> Bool
 }
 
 // Returns true if `c` is a lowercase ASCII letter (a-z).
+/// Returns true if `c` is a lowercase ASCII letter (a-z).
 pub fn is_lowercase_ascii(c: Char) -> Bool
   ensures: result == is_lowercase(c)
 {
@@ -382,6 +411,8 @@ pub fn is_lowercase_ascii(c: Char) -> Bool
 
 // Returns the ASCII uppercase version of `c`. If `c` is not a lowercase ASCII letter,
 // it is returned unchanged.
+/// Returns the ASCII uppercase version of `c`. If `c` is not a lowercase ASCII letter,
+/// it is returned unchanged.
 pub fn to_ascii_upper(c: Char) -> Char
   ensures: result == to_uppercase(c)
 {
@@ -390,6 +421,8 @@ pub fn to_ascii_upper(c: Char) -> Char
 
 // Returns the ASCII lowercase version of `c`. If `c` is not an uppercase ASCII letter,
 // it is returned unchanged.
+/// Returns the ASCII lowercase version of `c`. If `c` is not an uppercase ASCII letter,
+/// it is returned unchanged.
 pub fn to_ascii_lower(c: Char) -> Char
   ensures: result == to_lowercase(c)
 {
@@ -400,6 +433,8 @@ pub fn to_ascii_lower(c: Char) -> Char
 
 // Returns true if `c` is whitespace or a Unicode separator character.
 // Covers ASCII whitespace + line/paragraph separators (U+2028, U+2029).
+/// Returns true if `c` is whitespace or a Unicode separator character.
+/// Covers ASCII whitespace + line/paragraph separators (U+2028, U+2029).
 pub fn is_whitespace_or_separator(c: Char) -> Bool
   ensures: result == (is_whitespace(c) || to_int_from_char(c) == 0x2028 || to_int_from_char(c) == 0x2029)
 {

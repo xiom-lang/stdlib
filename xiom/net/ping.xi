@@ -15,6 +15,8 @@ module xiom.net.ping
 
 // struct PingStats { sent: Int; received: Int; min_ms: Int; avg_ms: Int;
 //                    max_ms: Int }
+/// struct PingStats { sent: Int; received: Int; min_ms: Int; avg_ms: Int;
+///                    max_ms: Int }
 pub type PingStats = {
   sent: Int;
   received: Int;

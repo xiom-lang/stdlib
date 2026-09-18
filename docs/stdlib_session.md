@@ -59,6 +59,15 @@ was rejected by tag rules -- owner action needed).
   **47 modules / 179 scalar multi-param never-referenced calls**; compiled
   25 single-call + 8 two-call groups -> 32 OK, 1 FAIL (the os env link
   gap). The 3..58-call groups are not yet compiled.
+- API docs prose: `tools/doc_scan.ps1` (coverage + ratchet) and
+  `tools/doc_promote.ps1` (plain `//` -> `///` promoter) added; 2,223
+  attached comment blocks promoted (4,714 lines, comment-only diff
+  verified), documented pub decls 3,570 -> 5,793 of 6,984 (**82.9%**, was
+  50.4%); `check_modules` 509/509 after the mass edit; baseline
+  `tools/doc_baseline2.json`. Remaining 1,191 prose-less decls are
+  concentrated in `iter/iter.xi` (136), `num` (119), `os` (85),
+  `crypto` (72), `core` (68), `sort/sort.xi` (20), `bits/bits.xi` (28),
+  `ptr/ptr.xi` (19).
 
 **Next-session queue, in order**
 1. Compiler lane: minimize/fix `p_sweep_single_param` (clang ISel crash,
@@ -79,6 +88,12 @@ was rejected by tag rules -- owner action needed).
    hardening, then an env smoke. TLS/schannel and tzdata phase 2 stay last;
    registry publish activation is the user's (dispatch-only
    `publish-registry.yml`).
+6. Docs prose: fill the remaining 1,191 prose-less pub declarations
+   (start with `iter/iter.xi`, `sort/sort.xi`, `bits/bits.xi`,
+   `ptr/ptr.xi`); run `tools/doc_promote.ps1` again first in case new plain
+   comments landed; dump the next doc baseline and keep
+   `doc_scan.ps1 -RatchetFile` green. The website-side API docs improve
+   directly with each `///` added.
 
 **Recipes**
 - Build a compiler ref: export it (`git -C E:\xiom-lang\xiom archive

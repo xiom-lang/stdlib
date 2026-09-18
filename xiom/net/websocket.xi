@@ -14,6 +14,7 @@ use xiom.encoding;
 use xiom.math;
 
 // struct WsFrame { opcode: Int; fin: Bool; masked: Bool; payload: Vec[UInt8] }
+/// struct WsFrame { opcode: Int; fin: Bool; masked: Bool; payload: Vec[UInt8] }
 pub type WsFrame = {
   opcode: Int;
   fin: Bool;
@@ -22,6 +23,7 @@ pub type WsFrame = {
 } derive[Clone]
 
 // struct WsConnection { socket: TcpStream; key: Str; open: Bool }
+/// struct WsConnection { socket: TcpStream; key: Str; open: Bool }
 pub type WsConnection = {
   fd: Int;
   key: Str;
@@ -92,6 +94,8 @@ fn str_to_int(s: Str) -> Int {
 
 // ws_handshake_request builds a client upgrade request for the given
 // host, path, and Sec-WebSocket-Key value. Complexity: O(1). Pure.
+/// ws_handshake_request builds a client upgrade request for the given
+/// host, path, and Sec-WebSocket-Key value. Complexity: O(1). Pure.
 pub fn ws_handshake_request(host: Str, path: Str, key: Str) -> Str {
   var request = "GET ";
   var p = path;
@@ -256,6 +260,8 @@ fn sha1(data: &Vec[UInt8]) -> Vec[UInt8] {
 
 // ws_accept_key computes the Sec-WebSocket-Accept value for a client
 // key per RFC 6455: base64(SHA-1(key + GUID)). Complexity: O(n).
+/// ws_accept_key computes the Sec-WebSocket-Accept value for a client
+/// key per RFC 6455: base64(SHA-1(key + GUID)). Complexity: O(n).
 pub fn ws_accept_key(key: Str) -> Str {
   var input: Vec[UInt8] = Vec[UInt8]::new();
   var i = 0;
@@ -276,6 +282,9 @@ pub fn ws_accept_key(key: Str) -> Str {
 // ws_handshake_verify checks a server upgrade response against the
 // client key: the status line must be 101 and the Sec-WebSocket-Accept
 // header must match the computed accept value. Complexity: O(n). Pure.
+/// ws_handshake_verify checks a server upgrade response against the
+/// client key: the status line must be 101 and the Sec-WebSocket-Accept
+/// header must match the computed accept value. Complexity: O(n). Pure.
 pub fn ws_handshake_verify(response: Str, key: Str) -> Bool {
   let nl = idx_of(response, "\r\n");
   var status_line = response;
@@ -314,6 +323,9 @@ pub fn ws_handshake_verify(response: Str, key: Str) -> Bool {
 // ws_frame_encode serializes one WebSocket frame. When mask is true a
 // random-looking client mask (derived from payload length) is applied.
 // Complexity: O(n). Pure.
+/// ws_frame_encode serializes one WebSocket frame. When mask is true a
+/// random-looking client mask (derived from payload length) is applied.
+/// Complexity: O(n). Pure.
 pub fn ws_frame_encode(opcode: Int, payload: &Vec[UInt8], mask: Bool) -> Vec[UInt8] {
   var out: Vec[UInt8] = Vec[UInt8]::new();
   let plen = payload.len();
@@ -371,6 +383,8 @@ pub fn ws_frame_encode(opcode: Int, payload: &Vec[UInt8], mask: Bool) -> Vec[UIn
 
 // ws_frame_decode parses one WebSocket frame from bytes. Returns Err on
 // truncated or invalid input. Complexity: O(n). Pure.
+/// ws_frame_decode parses one WebSocket frame from bytes. Returns Err on
+/// truncated or invalid input. Complexity: O(n). Pure.
 pub fn ws_frame_decode(frame: &Vec[UInt8]) -> Result[WsFrame, Str] {
   if frame.len() < 2 {
     return Err("frame too short");
@@ -433,6 +447,9 @@ pub fn ws_frame_decode(frame: &Vec[UInt8]) -> Result[WsFrame, Str] {
 // ws_random_key generates a Sec-WebSocket-Key value (base64 of 16
 // bytes) for use in client handshakes. Deterministic derivation from
 // the current time keeps the module free of external RNG state.
+/// ws_random_key generates a Sec-WebSocket-Key value (base64 of 16
+/// bytes) for use in client handshakes. Deterministic derivation from
+/// the current time keeps the module free of external RNG state.
 pub fn ws_random_key() -> Str {
   let t = time_seed();
   var bytes: Vec[UInt8] = Vec[UInt8]::new();
@@ -467,6 +484,9 @@ fn io_now() -> Int {
 // ws_parse_url splits a ws:// or wss:// URL into host, port, and path.
 // The port is the explicit port when present, otherwise the scheme
 // default. Returns Err for malformed input. Complexity: O(n). Pure.
+/// ws_parse_url splits a ws:// or wss:// URL into host, port, and path.
+/// The port is the explicit port when present, otherwise the scheme
+/// default. Returns Err for malformed input. Complexity: O(n). Pure.
 pub fn ws_parse_url(url: Str) -> Result[(Str, Int, Str), Str] {
   let len = url.len();
   if len == 0 {
@@ -540,6 +560,9 @@ extern "C" {
 // ws_connect opens a WebSocket connection to a ws:// or wss:// URL,
 // performing the client handshake. TLS (wss) is not supported by the
 // runtime socket layer; use ws://. Complexity: network I/O.
+/// ws_connect opens a WebSocket connection to a ws:// or wss:// URL,
+/// performing the client handshake. TLS (wss) is not supported by the
+/// runtime socket layer; use ws://. Complexity: network I/O.
 pub fn ws_connect(url: Str) -> Result[WsConnection, Str] {
   let parsed = ws_parse_url(url);
   var host = "";
@@ -613,6 +636,8 @@ pub fn ws_connect(url: Str) -> Result[WsConnection, Str] {
 
 // ws_send sends a text message over an open connection.
 // Complexity: network I/O.
+/// ws_send sends a text message over an open connection.
+/// Complexity: network I/O.
 pub fn ws_send(conn: &WsConnection, text: Str) -> Result[Unit, Str] {
   if !conn.open {
     return Err("connection closed");
@@ -629,6 +654,8 @@ pub fn ws_send(conn: &WsConnection, text: Str) -> Result[Unit, Str] {
 
 // ws_send_binary sends a binary message over an open connection.
 // Complexity: network I/O.
+/// ws_send_binary sends a binary message over an open connection.
+/// Complexity: network I/O.
 pub fn ws_send_binary(conn: &WsConnection, data: &Vec[UInt8]) -> Result[Unit, Str] {
   if !conn.open {
     return Err("connection closed");
@@ -658,6 +685,8 @@ fn ws_send_frame(conn: &WsConnection, frame: Vec[UInt8]) -> Result[Unit, Str] {
 
 // ws_recv receives the next frame from the connection.
 // Complexity: network I/O.
+/// ws_recv receives the next frame from the connection.
+/// Complexity: network I/O.
 pub fn ws_recv(conn: &WsConnection) -> Result[WsFrame, Str] {
   if !conn.open {
     return Err("connection closed");
@@ -685,6 +714,8 @@ pub fn ws_recv(conn: &WsConnection) -> Result[WsFrame, Str] {
 
 // ws_close sends a close frame and tears down the connection.
 // Complexity: network I/O.
+/// ws_close sends a close frame and tears down the connection.
+/// Complexity: network I/O.
 pub fn ws_close(conn: &WsConnection, code: Int) {
   var payload: Vec[UInt8] = Vec[UInt8]::new();
   payload.push(((code >> 8) & 0xFF) as UInt8);
@@ -696,6 +727,8 @@ pub fn ws_close(conn: &WsConnection, code: Int) {
 
 // ws_ping sends a ping frame.
 // Complexity: network I/O.
+/// ws_ping sends a ping frame.
+/// Complexity: network I/O.
 pub fn ws_ping(conn: &WsConnection) {
   let empty: Vec[UInt8] = Vec[UInt8]::new();
   let frame = ws_frame_encode(9, &empty, true);
@@ -704,6 +737,8 @@ pub fn ws_ping(conn: &WsConnection) {
 
 // ws_pong sends a pong frame.
 // Complexity: network I/O.
+/// ws_pong sends a pong frame.
+/// Complexity: network I/O.
 pub fn ws_pong(conn: &WsConnection) {
   let empty: Vec[UInt8] = Vec[UInt8]::new();
   let frame = ws_frame_encode(10, &empty, true);

@@ -30,6 +30,10 @@ use xiom.math;
 // share a sign the interval is sampled (64 points) for a sub-bracket; if
 // none is found NaN (0.0/0.0) is returned (documented). Convergence to
 // interval width tol, at most 200 iterations. Complexity: O(log((b-a)/tol)).
+/// Root of f in [a, b] via bisection on a sign change. When f(a) and f(b)
+/// share a sign the interval is sampled (64 points) for a sub-bracket; if
+/// none is found NaN (0.0/0.0) is returned (documented). Convergence to
+/// interval width tol, at most 200 iterations. Complexity: O(log((b-a)/tol)).
 pub fn bisection(f: fn(Float64) -> Float64, a: Float64, b: Float64, tol: Float64) -> Float64 {
   var lo = a;
   var hi = b;
@@ -75,6 +79,9 @@ pub fn bisection(f: fn(Float64) -> Float64, a: Float64, b: Float64, tol: Float64
 // Root of f via Newton's method from x0: x <- x - f(x)/f'(x). Returns x0
 // when the derivative vanishes (documented), at most 200 iterations.
 // Complexity: O(200 * cost(f + f')).
+/// Root of f via Newton's method from x0: x <- x - f(x)/f'(x). Returns x0
+/// when the derivative vanishes (documented), at most 200 iterations.
+/// Complexity: O(200 * cost(f + f')).
 pub fn newton(f: fn(Float64) -> Float64, fprime: fn(Float64) -> Float64, x0: Float64, tol: Float64) -> Float64 {
   var x = x0;
   var i = 0;
@@ -94,6 +101,9 @@ pub fn newton(f: fn(Float64) -> Float64, fprime: fn(Float64) -> Float64, x0: Flo
 // Root of f via the secant method from x0, x1. Returns x1 when f(x1) ==
 // f(x0) (documented, division by zero guard), at most 200 iterations.
 // Complexity: O(200 * cost(f)).
+/// Root of f via the secant method from x0, x1. Returns x1 when f(x1) ==
+/// f(x0) (documented, division by zero guard), at most 200 iterations.
+/// Complexity: O(200 * cost(f)).
 pub fn secant(f: fn(Float64) -> Float64, x0: Float64, x1: Float64, tol: Float64) -> Float64 {
   var a = x0;
   var b = x1;
@@ -118,6 +128,9 @@ pub fn secant(f: fn(Float64) -> Float64, x0: Float64, x1: Float64, tol: Float64)
 // Root of f in [a, b] via regula falsi (false position) with the Illinois
 // anti-stalling adjustment. Returns NaN when no sign change exists in
 // [a, b] (documented), at most 200 iterations. Complexity: O(200 * cost(f)).
+/// Root of f in [a, b] via regula falsi (false position) with the Illinois
+/// anti-stalling adjustment. Returns NaN when no sign change exists in
+/// [a, b] (documented), at most 200 iterations. Complexity: O(200 * cost(f)).
 pub fn falsi(f: fn(Float64) -> Float64, a: Float64, b: Float64, tol: Float64) -> Float64 {
   var lo = a;
   var hi = b;
@@ -154,6 +167,10 @@ pub fn falsi(f: fn(Float64) -> Float64, a: Float64, b: Float64, tol: Float64) ->
 // with bisection fallback). The most robust of the bracketing methods;
 // returns NaN when no sign change exists in [a, b] (documented). At most
 // 200 iterations. Complexity: O(200 * cost(f)).
+/// Root of f in [a, b] via Brent's method (inverse quadratic interpolation
+/// with bisection fallback). The most robust of the bracketing methods;
+/// returns NaN when no sign change exists in [a, b] (documented). At most
+/// 200 iterations. Complexity: O(200 * cost(f)).
 pub fn brent(f: fn(Float64) -> Float64, a: Float64, b: Float64, tol: Float64) -> Float64 {
   var fa = f(a);
   var fb = f(b);
@@ -226,6 +243,8 @@ pub fn brent(f: fn(Float64) -> Float64, a: Float64, b: Float64, tol: Float64) ->
 
 // Fixed point of g by iteration x <- g(x) from x0. Convergence when
 // |g(x) - x| < tol; at most 1000 iterations. Complexity: O(1000 * cost(g)).
+/// Fixed point of g by iteration x <- g(x) from x0. Convergence when
+/// |g(x) - x| < tol; at most 1000 iterations. Complexity: O(1000 * cost(g)).
 pub fn fixed_point(g: fn(Float64) -> Float64, x0: Float64, tol: Float64) -> Float64 {
   var x = x0;
   var i = 0;
@@ -243,6 +262,11 @@ pub fn fixed_point(g: fn(Float64) -> Float64, x0: Float64, tol: Float64) -> Floa
 // x <- x - f(x)^2 / (f(x + f(x)) - f(x)). Returns x when the denominator
 // vanishes (documented), at most 200 iterations.
 // Complexity: O(200 * cost(f)).
+/// Root of f via Steffensen's accelerated iteration, which achieves
+/// quadratic convergence without derivatives:
+/// x <- x - f(x)^2 / (f(x + f(x)) - f(x)). Returns x when the denominator
+/// vanishes (documented), at most 200 iterations.
+/// Complexity: O(200 * cost(f)).
 pub fn steffensen(f: fn(Float64) -> Float64, x0: Float64, tol: Float64) -> Float64 {
   var x = x0;
   var i = 0;
@@ -267,6 +291,10 @@ pub fn steffensen(f: fn(Float64) -> Float64, x0: Float64, tol: Float64) -> Float
 // Jacobian supplied by jac. Solves J * d = -f by Gaussian elimination each
 // iteration; converges to norm(d) < tol (at most 100 iterations). Returns
 // the last iterate. Complexity: O(iters * n^3).
+/// Root of the nonlinear system fs(x) = 0 via Newton's method with the
+/// Jacobian supplied by jac. Solves J * d = -f by Gaussian elimination each
+/// iteration; converges to norm(d) < tol (at most 100 iterations). Returns
+/// the last iterate. Complexity: O(iters * n^3).
 pub fn newton_multi(fs: &Vec[fn(&Vec[Float64]) -> Float64], jac: fn(&Vec[Float64]) -> Vec[Vec[Float64]],
                     x0: &Vec[Float64], tol: Float64) -> Vec[Float64] {
   var n = x0.len();
@@ -293,6 +321,8 @@ pub fn newton_multi(fs: &Vec[fn(&Vec[Float64]) -> Float64], jac: fn(&Vec[Float64
 
 // Multi-variable Newton-Raphson root of the system fs(x) = 0. Alias of
 // newton_multi. Complexity: O(iters * n^3).
+/// Multi-variable Newton-Raphson root of the system fs(x) = 0. Alias of
+/// newton_multi. Complexity: O(iters * n^3).
 pub fn newton_raphson_multi(fs: &Vec[fn(&Vec[Float64]) -> Float64], jac: fn(&Vec[Float64]) -> Vec[Vec[Float64]],
                             x0: &Vec[Float64], tol: Float64) -> Vec[Float64] {
   return newton_multi(fs, jac, x0, tol);
@@ -302,6 +332,10 @@ pub fn newton_raphson_multi(fs: &Vec[fn(&Vec[Float64]) -> Float64], jac: fn(&Vec
 // diagonal; returns the last iterate (at most 1000 iterations, convergence
 // on the sup-norm of the increment). The empty vector is returned for
 // empty input. Complexity: O(iters * n^2).
+/// Solve Ax = b by Gauss-Seidel iteration from x0. Requires a non-zero
+/// diagonal; returns the last iterate (at most 1000 iterations, convergence
+/// on the sup-norm of the increment). The empty vector is returned for
+/// empty input. Complexity: O(iters * n^2).
 pub fn gauss_seidel(a: &Vec[Vec[Float64]], b: &Vec[Float64], x0: &Vec[Float64], tol: Float64) -> Vec[Float64] {
   var n = x0.len();
   if n == 0 { return Vec[Float64].new(); }
@@ -337,6 +371,9 @@ pub fn gauss_seidel(a: &Vec[Vec[Float64]], b: &Vec[Float64], x0: &Vec[Float64], 
 // Solve Ax = b by Jacobi iteration from x0 (updates use the previous
 // iterate). Requires a non-zero diagonal; returns the last iterate.
 // Complexity: O(iters * n^2).
+/// Solve Ax = b by Jacobi iteration from x0 (updates use the previous
+/// iterate). Requires a non-zero diagonal; returns the last iterate.
+/// Complexity: O(iters * n^2).
 pub fn jacobi_iterative(a: &Vec[Vec[Float64]], b: &Vec[Float64], x0: &Vec[Float64], tol: Float64) -> Vec[Float64] {
   var n = x0.len();
   if n == 0 { return Vec[Float64].new(); }
@@ -377,6 +414,9 @@ pub fn jacobi_iterative(a: &Vec[Vec[Float64]], b: &Vec[Float64], x0: &Vec[Float6
 // Solve SPD Ax = b by the conjugate gradient method from x0. Requires a
 // symmetric positive-definite system; returns the last iterate (at most
 // n + 200 iterations). Complexity: O(iters * n^2).
+/// Solve SPD Ax = b by the conjugate gradient method from x0. Requires a
+/// symmetric positive-definite system; returns the last iterate (at most
+/// n + 200 iterations). Complexity: O(iters * n^2).
 pub fn conjugate_gradient(a: &Vec[Vec[Float64]], b: &Vec[Float64], x0: &Vec[Float64], tol: Float64) -> Vec[Float64] {
   var n = x0.len();
   if n == 0 { return Vec[Float64].new(); }
@@ -436,6 +476,9 @@ pub fn conjugate_gradient(a: &Vec[Vec[Float64]], b: &Vec[Float64], x0: &Vec[Floa
 // Minimize f(x) by gradient descent with learning rate lr from x0.
 // Returns the last iterate (at most 10000 steps, stop when |lr * grad| <
 // tol). Complexity: O(steps * cost(grad)).
+/// Minimize f(x) by gradient descent with learning rate lr from x0.
+/// Returns the last iterate (at most 10000 steps, stop when |lr * grad| <
+/// tol). Complexity: O(steps * cost(grad)).
 pub fn gradient_descent(f: fn(&Vec[Float64]) -> Float64, grad: fn(&Vec[Float64]) -> Vec[Float64],
                         x0: &Vec[Float64], lr: Float64, tol: Float64) -> Vec[Float64] {
   var n = x0.len();
@@ -462,6 +505,10 @@ pub fn gradient_descent(f: fn(&Vec[Float64]) -> Float64, grad: fn(&Vec[Float64])
 // (secant update of the inverse-Jacobian estimate, no derivatives needed).
 // Returns the last iterate (at most 100 iterations). Complexity:
 // O(iters * n^2).
+/// Solve the nonlinear system fs(x) = 0 by Broyden's quasi-Newton method
+/// (secant update of the inverse-Jacobian estimate, no derivatives needed).
+/// Returns the last iterate (at most 100 iterations). Complexity:
+/// O(iters * n^2).
 pub fn broyden(fs: &Vec[fn(&Vec[Float64]) -> Float64], x0: &Vec[Float64], tol: Float64) -> Vec[Float64] {
   var n = x0.len();
   var x = clone_vec(x0);
@@ -532,6 +579,10 @@ pub fn broyden(fs: &Vec[fn(&Vec[Float64]) -> Float64], x0: &Vec[Float64], tol: F
 // (fixed-point map x - fs(x)), keeping a history of the last m residuals.
 // Returns the last iterate (at most 1000 outer iterations). Complexity:
 // O(iters * m * n).
+/// Anderson-accelerated fixed-point iteration for the system fs(x) = 0
+/// (fixed-point map x - fs(x)), keeping a history of the last m residuals.
+/// Returns the last iterate (at most 1000 outer iterations). Complexity:
+/// O(iters * m * n).
 pub fn anderson(fs: &Vec[fn(&Vec[Float64]) -> Float64], x0: &Vec[Float64], m: Int, tol: Float64) -> Vec[Float64] {
   var n = x0.len();
   var x = clone_vec(x0);
@@ -593,6 +644,8 @@ pub fn anderson(fs: &Vec[fn(&Vec[Float64]) -> Float64], x0: &Vec[Float64], m: In
 
 // General nonlinear system solver from x0. Broyden requires no Jacobian, so
 // it is the natural default; delegates to broyden. Complexity: O(iters*n^2).
+/// General nonlinear system solver from x0. Broyden requires no Jacobian, so
+/// it is the natural default; delegates to broyden. Complexity: O(iters*n^2).
 pub fn solver_system(fs: &Vec[fn(&Vec[Float64]) -> Float64], x0: &Vec[Float64], tol: Float64) -> Vec[Float64] {
   return broyden(fs, x0, tol);
 }
@@ -604,6 +657,9 @@ pub fn solver_system(fs: &Vec[fn(&Vec[Float64]) -> Float64], x0: &Vec[Float64], 
 // Piecewise linear interpolation of the points (xs, ys) at x. x outside
 // [xs[0], xs[n-1]] is clamped to the nearest endpoint (documented).
 // Returns NaN for empty or mismatched input. Complexity: O(n).
+/// Piecewise linear interpolation of the points (xs, ys) at x. x outside
+/// [xs[0], xs[n-1]] is clamped to the nearest endpoint (documented).
+/// Returns NaN for empty or mismatched input. Complexity: O(n).
 pub fn interp_linear(xs: &Vec[Float64], ys: &Vec[Float64], x: Float64) -> Float64 {
   var n = xs.len();
   if n == 0 || ys.len() != n { return 0.0 / 0.0; }
@@ -626,6 +682,9 @@ pub fn interp_linear(xs: &Vec[Float64], ys: &Vec[Float64], x: Float64) -> Float6
 // Polynomial interpolation through the points (xs, ys) evaluated at x
 // (Lagrange form). Returns NaN for empty, mismatched, or repeated-x input
 // (division by zero guard). Complexity: O(n^2).
+/// Polynomial interpolation through the points (xs, ys) evaluated at x
+/// (Lagrange form). Returns NaN for empty, mismatched, or repeated-x input
+/// (division by zero guard). Complexity: O(n^2).
 pub fn interp_polynomial(xs: &Vec[Float64], ys: &Vec[Float64], x: Float64) -> Float64 {
   var n = xs.len();
   if n == 0 || ys.len() != n { return 0.0 / 0.0; }
@@ -652,6 +711,10 @@ pub fn interp_polynomial(xs: &Vec[Float64], ys: &Vec[Float64], x: Float64) -> Fl
 // points (xs, ys). Same semantics as interp_cubic. Returns NaN for empty,
 // mismatched, or fewer-than-2-points input. Complexity: O(n) per call after
 // an O(n) setup.
+/// Default spline interpolation at x: a natural cubic spline through the
+/// points (xs, ys). Same semantics as interp_cubic. Returns NaN for empty,
+/// mismatched, or fewer-than-2-points input. Complexity: O(n) per call after
+/// an O(n) setup.
 pub fn interp_spline(xs: &Vec[Float64], ys: &Vec[Float64], x: Float64) -> Float64 {
   return interp_cubic(xs, ys, x);
 }
@@ -659,6 +722,9 @@ pub fn interp_spline(xs: &Vec[Float64], ys: &Vec[Float64], x: Float64) -> Float6
 // Natural cubic spline interpolation at x through the points (xs, ys)
 // (zero second derivatives at the ends). Returns NaN for empty, mismatched,
 // or fewer-than-2-points input. Complexity: O(n) setup + O(n) evaluation.
+/// Natural cubic spline interpolation at x through the points (xs, ys)
+/// (zero second derivatives at the ends). Returns NaN for empty, mismatched,
+/// or fewer-than-2-points input. Complexity: O(n) setup + O(n) evaluation.
 pub fn interp_cubic(xs: &Vec[Float64], ys: &Vec[Float64], x: Float64) -> Float64 {
   var n = xs.len();
   if n < 2 || ys.len() != n { return 0.0 / 0.0; }
@@ -671,6 +737,10 @@ pub fn interp_cubic(xs: &Vec[Float64], ys: &Vec[Float64], x: Float64) -> Float64
 // NaN for empty, mismatched input, or fewer than 2 points. x outside the
 // data range is clamped to the nearest endpoint (documented).
 // Complexity: O(n).
+/// Hermite cubic interpolation at x using derivative values dys. Returns
+/// NaN for empty, mismatched input, or fewer than 2 points. x outside the
+/// data range is clamped to the nearest endpoint (documented).
+/// Complexity: O(n).
 pub fn interp_hermite(xs: &Vec[Float64], ys: &Vec[Float64], dys: &Vec[Float64], x: Float64) -> Float64 {
   var n = xs.len();
   if n < 2 || ys.len() != n || dys.len() != n { return 0.0 / 0.0; }
@@ -703,6 +773,10 @@ pub fn interp_hermite(xs: &Vec[Float64], ys: &Vec[Float64], dys: &Vec[Float64], 
 // 2 * (n - 1) values, one (slope, intercept) pair per segment (documented
 // layout). Returns the empty vector for fewer than 2 points or mismatched
 // input. Complexity: O(n).
+/// Build linear spline coefficients: for n points the returned vector holds
+/// 2 * (n - 1) values, one (slope, intercept) pair per segment (documented
+/// layout). Returns the empty vector for fewer than 2 points or mismatched
+/// input. Complexity: O(n).
 pub fn spline_linear(xs: &Vec[Float64], ys: &Vec[Float64]) -> Vec[Float64] {
   var out = Vec[Float64].new();
   var n = xs.len();
@@ -729,6 +803,11 @@ pub fn spline_linear(xs: &Vec[Float64], ys: &Vec[Float64]) -> Vec[Float64] {
 // p(x) = a + b*(x - x_i) + c*(x - x_i)^2 + d*(x - x_i)^3 (documented
 // layout). Returns the empty vector for fewer than 2 points or mismatched
 // input. Complexity: O(n).
+/// Build natural cubic spline coefficients: for n points the returned
+/// vector holds 4 * (n - 1) values, one (a, b, c, d) tuple per segment with
+/// p(x) = a + b*(x - x_i) + c*(x - x_i)^2 + d*(x - x_i)^3 (documented
+/// layout). Returns the empty vector for fewer than 2 points or mismatched
+/// input. Complexity: O(n).
 pub fn spline_cubic(xs: &Vec[Float64], ys: &Vec[Float64]) -> Vec[Float64] {
   var out = Vec[Float64].new();
   var n = xs.len();
@@ -749,6 +828,12 @@ pub fn spline_cubic(xs: &Vec[Float64], ys: &Vec[Float64]) -> Vec[Float64] {
 // for degree 1 the data points are returned as control points; other
 // degrees fall back to the degree-3 fit (documented). Returns the empty
 // vector for fewer than 2 points. Complexity: O(n) Thomas solve.
+/// Build B-spline control points of degree degree interpolating the data
+/// points ys (uniform knots). For degree 3 the interior control points come
+/// from the standard tridiagonal system c_(i-1) + 4 c_i + c_(i+1) = 6 y_i;
+/// for degree 1 the data points are returned as control points; other
+/// degrees fall back to the degree-3 fit (documented). Returns the empty
+/// vector for fewer than 2 points. Complexity: O(n) Thomas solve.
 pub fn spline_b_spline(xs: &Vec[Float64], ys: &Vec[Float64], degree: Int) -> Vec[Float64] {
   var n = ys.len();
   var out = Vec[Float64].new();
@@ -799,6 +884,11 @@ pub fn spline_b_spline(xs: &Vec[Float64], ys: &Vec[Float64], degree: Int) -> Vec
 // (documented layout; an evaluator divides through by the weights).
 // Returns the empty vector when weights do not match ys or the data is
 // empty. Complexity: O(n).
+/// Build NURBS control points from ys with the per-point weights: returns
+/// the homogeneous (weighted) control points w_i * y_i, one per data point
+/// (documented layout; an evaluator divides through by the weights).
+/// Returns the empty vector when weights do not match ys or the data is
+/// empty. Complexity: O(n).
 pub fn spline_nurbs(xs: &Vec[Float64], ys: &Vec[Float64], weights: &Vec[Float64], degree: Int) -> Vec[Float64] {
   var out = Vec[Float64].new();
   var n = ys.len();
@@ -817,6 +907,8 @@ pub fn spline_nurbs(xs: &Vec[Float64], ys: &Vec[Float64], weights: &Vec[Float64]
 
 // Composite trapezoidal rule for the integral of f over [a, b] with n
 // subintervals. Returns 0.0 for n <= 0 (documented). Complexity: O(n).
+/// Composite trapezoidal rule for the integral of f over [a, b] with n
+/// subintervals. Returns 0.0 for n <= 0 (documented). Complexity: O(n).
 pub fn quadrature_trapezoid(f: fn(Float64) -> Float64, a: Float64, b: Float64, n: Int) -> Float64 {
   if n <= 0 { return 0.0; }
   var h = (b - a) / (n as Float64);
@@ -832,6 +924,9 @@ pub fn quadrature_trapezoid(f: fn(Float64) -> Float64, a: Float64, b: Float64, n
 // Composite Simpson's rule for the integral of f over [a, b] with n
 // subintervals (n is clamped up to an even count; returns 0.0 for n <= 0).
 // Complexity: O(n).
+/// Composite Simpson's rule for the integral of f over [a, b] with n
+/// subintervals (n is clamped up to an even count; returns 0.0 for n <= 0).
+/// Complexity: O(n).
 pub fn quadrature_simpson(f: fn(Float64) -> Float64, a: Float64, b: Float64, n: Int) -> Float64 {
   if n <= 0 { return 0.0; }
   var m = n;
@@ -854,6 +949,10 @@ pub fn quadrature_simpson(f: fn(Float64) -> Float64, a: Float64, b: Float64, n: 
 // on the fly by Newton iteration on the Legendre polynomial (valid for any
 // n >= 1); returns 0.0 for n <= 0 (documented). Exact for polynomials of
 // degree <= 2n - 1. Complexity: O(n^2).
+/// n-point Gauss-Legendre quadrature over [a, b]. Nodes/weights are computed
+/// on the fly by Newton iteration on the Legendre polynomial (valid for any
+/// n >= 1); returns 0.0 for n <= 0 (documented). Exact for polynomials of
+/// degree <= 2n - 1. Complexity: O(n^2).
 pub fn quadrature_gauss(f: fn(Float64) -> Float64, a: Float64, b: Float64, n: Int) -> Float64 {
   if n <= 0 { return 0.0; }
   var nodes = _legendre_nodes(n);
@@ -870,6 +969,9 @@ pub fn quadrature_gauss(f: fn(Float64) -> Float64, a: Float64, b: Float64, n: In
 // Adaptive quadrature to absolute tolerance tol via recursive Simpson
 // refinement (a global error bookkeeping loop, at most 32 levels deep).
 // Returns NaN for tol <= 0 (documented). Complexity: O(refinements * cost(f)).
+/// Adaptive quadrature to absolute tolerance tol via recursive Simpson
+/// refinement (a global error bookkeeping loop, at most 32 levels deep).
+/// Returns NaN for tol <= 0 (documented). Complexity: O(refinements * cost(f)).
 pub fn quadrature_adaptive(f: fn(Float64) -> Float64, a: Float64, b: Float64, tol: Float64) -> Float64 {
   if tol <= 0.0 { return 0.0 / 0.0; }
   var whole = _simp(f, a, b);
@@ -881,6 +983,9 @@ pub fn quadrature_adaptive(f: fn(Float64) -> Float64, a: Float64, b: Float64, to
 // Monte Carlo quadrature of f over [a, b] with n samples using the seeded
 // xiom RNG (math.random). Returns 0.0 for n <= 0 (documented). Error ~
 // O(sigma / sqrt(n)). Complexity: O(n).
+/// Monte Carlo quadrature of f over [a, b] with n samples using the seeded
+/// xiom RNG (math.random). Returns 0.0 for n <= 0 (documented). Error ~
+/// O(sigma / sqrt(n)). Complexity: O(n).
 pub fn quadrature_monte_carlo(f: fn(Float64) -> Float64, a: Float64, b: Float64, n: Int) -> Float64 {
   if n <= 0 { return 0.0; }
   var s = 0.0;
@@ -900,6 +1005,9 @@ pub fn quadrature_monte_carlo(f: fn(Float64) -> Float64, a: Float64, b: Float64,
 // Minimize the univariate f over [a, b] by golden-section search to width
 // tol. Returns the minimizing x (at most 200 iterations). Complexity:
 // O(200 * cost(f)).
+/// Minimize the univariate f over [a, b] by golden-section search to width
+/// tol. Returns the minimizing x (at most 200 iterations). Complexity:
+/// O(200 * cost(f)).
 pub fn optimize_golden(f: fn(Float64) -> Float64, a: Float64, b: Float64, tol: Float64) -> Float64 {
   var phi_inv = 0.6180339887498949;
   var lo = a;
@@ -932,6 +1040,9 @@ pub fn optimize_golden(f: fn(Float64) -> Float64, a: Float64, b: Float64, tol: F
 // Minimize the univariate f over [a, b] by ternary search to width tol.
 // Returns the minimizing x (at most 200 iterations). Complexity:
 // O(200 * cost(f)).
+/// Minimize the univariate f over [a, b] by ternary search to width tol.
+/// Returns the minimizing x (at most 200 iterations). Complexity:
+/// O(200 * cost(f)).
 pub fn optimize_ternary(f: fn(Float64) -> Float64, a: Float64, b: Float64, tol: Float64) -> Float64 {
   var lo = a;
   var hi = b;
@@ -958,6 +1069,10 @@ pub fn optimize_ternary(f: fn(Float64) -> Float64, a: Float64, b: Float64, tol: 
 // Hessian updated by the secant formula; line search = fixed step 1).
 // Returns the last iterate (at most 200 iterations). Complexity:
 // O(iters * n^2).
+/// Minimize f by the BFGS quasi-Newton method from x0 (approximate inverse
+/// Hessian updated by the secant formula; line search = fixed step 1).
+/// Returns the last iterate (at most 200 iterations). Complexity:
+/// O(iters * n^2).
 pub fn optimize_bfgs(f: fn(&Vec[Float64]) -> Float64, grad: fn(&Vec[Float64]) -> Vec[Float64],
                      x0: &Vec[Float64], tol: Float64) -> Vec[Float64] {
   var n = x0.len();
@@ -1013,6 +1128,9 @@ pub fn optimize_bfgs(f: fn(&Vec[Float64]) -> Float64, grad: fn(&Vec[Float64]) ->
 // Minimize f by limited-memory BFGS from x0 keeping the last m update
 // pairs. Falls back to steepest descent when the history is empty. Returns
 // the last iterate (at most 200 iterations). Complexity: O(iters * m * n).
+/// Minimize f by limited-memory BFGS from x0 keeping the last m update
+/// pairs. Falls back to steepest descent when the history is empty. Returns
+/// the last iterate (at most 200 iterations). Complexity: O(iters * m * n).
 pub fn optimize_lbfgs(f: fn(&Vec[Float64]) -> Float64, grad: fn(&Vec[Float64]) -> Vec[Float64],
                       x0: &Vec[Float64], m: Int, tol: Float64) -> Vec[Float64] {
   var n = x0.len();
@@ -1094,6 +1212,8 @@ pub fn optimize_lbfgs(f: fn(&Vec[Float64]) -> Float64, grad: fn(&Vec[Float64]) -
 
 // Minimize f by the Nelder-Mead downhill simplex method from x0. Returns
 // the best vertex (at most 500 iterations). Complexity: O(iters * n).
+/// Minimize f by the Nelder-Mead downhill simplex method from x0. Returns
+/// the best vertex (at most 500 iterations). Complexity: O(iters * n).
 pub fn optimize_simplex(f: fn(&Vec[Float64]) -> Float64, x0: &Vec[Float64], tol: Float64) -> Vec[Float64] {
   var n = x0.len();
   var simplex = Vec[Vec[Float64]].new();
@@ -1193,6 +1313,10 @@ pub fn optimize_simplex(f: fn(&Vec[Float64]) -> Float64, x0: &Vec[Float64], tol:
 // one-dimensional golden-section line searches along a direction set).
 // Returns the best point (at most 100 outer iterations). Complexity:
 // O(iters * n * golden).
+/// Minimize f by Powell's conjugate direction method from x0 (cyclic
+/// one-dimensional golden-section line searches along a direction set).
+/// Returns the best point (at most 100 outer iterations). Complexity:
+/// O(iters * n * golden).
 pub fn optimize_powell(f: fn(&Vec[Float64]) -> Float64, x0: &Vec[Float64], tol: Float64) -> Vec[Float64] {
   var n = x0.len();
   var x = clone_vec(x0);
@@ -1235,6 +1359,9 @@ pub fn optimize_powell(f: fn(&Vec[Float64]) -> Float64, x0: &Vec[Float64], tol: 
 // Minimize f by nonlinear conjugate gradient (Polak-Ribiere) from x0 with
 // an exact-ish line search. Returns the last iterate (at most 500
 // iterations). Complexity: O(iters * cost(grad)).
+/// Minimize f by nonlinear conjugate gradient (Polak-Ribiere) from x0 with
+/// an exact-ish line search. Returns the last iterate (at most 500
+/// iterations). Complexity: O(iters * cost(grad)).
 pub fn optimize_cg(f: fn(&Vec[Float64]) -> Float64, grad: fn(&Vec[Float64]) -> Vec[Float64],
                    x0: &Vec[Float64], tol: Float64) -> Vec[Float64] {
   var n = x0.len();
@@ -1271,6 +1398,8 @@ pub fn optimize_cg(f: fn(&Vec[Float64]) -> Float64, grad: fn(&Vec[Float64]) -> V
 
 // Minimize f by gradient descent with learning rate lr from x0. Alias of
 // gradient_descent. Complexity: O(steps * cost(grad)).
+/// Minimize f by gradient descent with learning rate lr from x0. Alias of
+/// gradient_descent. Complexity: O(steps * cost(grad)).
 pub fn optimize_gradient(f: fn(&Vec[Float64]) -> Float64, grad: fn(&Vec[Float64]) -> Vec[Float64],
                          x0: &Vec[Float64], lr: Float64, tol: Float64) -> Vec[Float64] {
   return gradient_descent(f, grad, x0, lr, tol);
@@ -1279,6 +1408,9 @@ pub fn optimize_gradient(f: fn(&Vec[Float64]) -> Float64, grad: fn(&Vec[Float64]
 // Minimize f by Newton's method with the Hessian from x0: solve
 // H d = -g and step. Returns the last iterate (at most 100 iterations).
 // Complexity: O(iters * n^3).
+/// Minimize f by Newton's method with the Hessian from x0: solve
+/// H d = -g and step. Returns the last iterate (at most 100 iterations).
+/// Complexity: O(iters * n^3).
 pub fn optimize_newton(f: fn(&Vec[Float64]) -> Float64, grad: fn(&Vec[Float64]) -> Vec[Float64],
                        hess: fn(&Vec[Float64]) -> Vec[Vec[Float64]], x0: &Vec[Float64], tol: Float64) -> Vec[Float64] {
   var n = x0.len();
@@ -1306,6 +1438,10 @@ pub fn optimize_newton(f: fn(&Vec[Float64]) -> Float64, grad: fn(&Vec[Float64]) 
 // the residual Jacobian; a one-sided finite-difference Jacobian is used
 // when not available through the residual function alone). Returns the last
 // iterate (at most 100 iterations). Complexity: O(iters * n^3).
+/// Minimize the sum of squared residuals by Gauss-Newton from x0 (requires
+/// the residual Jacobian; a one-sided finite-difference Jacobian is used
+/// when not available through the residual function alone). Returns the last
+/// iterate (at most 100 iterations). Complexity: O(iters * n^3).
 pub fn optimize_least_squares(residuals: fn(&Vec[Float64]) -> Vec[Float64], x0: &Vec[Float64], tol: Float64) -> Vec[Float64] {
   var n = x0.len();
   var x = clone_vec(x0);
@@ -1352,18 +1488,24 @@ pub fn optimize_least_squares(residuals: fn(&Vec[Float64]) -> Vec[Float64], x0: 
 
 // Bracketing root finder via bisection. Alias of bisection.
 // Complexity: O(log((b-a)/tol)).
+/// Bracketing root finder via bisection. Alias of bisection.
+/// Complexity: O(log((b-a)/tol)).
 pub fn bisection_root(f: fn(Float64) -> Float64, a: Float64, b: Float64, tol: Float64) -> Float64 {
   return bisection(f, a, b, tol);
 }
 
 // Derivative-based Newton root finder. Alias of newton.
 // Complexity: O(200 * cost(f + f')).
+/// Derivative-based Newton root finder. Alias of newton.
+/// Complexity: O(200 * cost(f + f')).
 pub fn newton_root(f: fn(Float64) -> Float64, fprime: fn(Float64) -> Float64, x0: Float64, tol: Float64) -> Float64 {
   return newton(f, fprime, x0, tol);
 }
 
 // General single-equation root solver over [a, b]. Uses Brent's method
 // (robust bracketing with quadratic convergence). Alias of brent.
+/// General single-equation root solver over [a, b]. Uses Brent's method
+/// (robust bracketing with quadratic convergence). Alias of brent.
 pub fn solver_single(f: fn(Float64) -> Float64, a: Float64, b: Float64, tol: Float64) -> Float64 {
   return brent(f, a, b, tol);
 }

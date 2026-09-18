@@ -26,6 +26,10 @@ use xiom.math;
 // spline (the default smooth interpolant). Delegates to
 // math.numerical.interp_cubic. Returns NaN for empty, mismatched, or
 // fewer-than-2-points input. Complexity: O(n).
+/// Interpolated value at point through the data (x, y): a natural cubic
+/// spline (the default smooth interpolant). Delegates to
+/// math.numerical.interp_cubic. Returns NaN for empty, mismatched, or
+/// fewer-than-2-points input. Complexity: O(n).
 pub fn interpolation(x: &Vec[Float64], y: &Vec[Float64], point: Float64) -> Float64 {
   return math.numerical.interp_cubic(x, y, point);
 }
@@ -34,6 +38,10 @@ pub fn interpolation(x: &Vec[Float64], y: &Vec[Float64], point: Float64) -> Floa
 // linear extension of the two nearest end segments. Points inside the range
 // are interpolated (cubic spline). Returns NaN for empty, mismatched, or
 // fewer-than-2-points input. Complexity: O(n).
+/// Extrapolated value at point outside the sample range [x[0], x[n-1]]: the
+/// linear extension of the two nearest end segments. Points inside the range
+/// are interpolated (cubic spline). Returns NaN for empty, mismatched, or
+/// fewer-than-2-points input. Complexity: O(n).
 pub fn extrapolation(x: &Vec[Float64], y: &Vec[Float64], point: Float64) -> Float64 {
   var n = x.len();
   if n < 2 || y.len() != n { return 0.0 / 0.0; }
@@ -51,6 +59,11 @@ pub fn extrapolation(x: &Vec[Float64], y: &Vec[Float64], point: Float64) -> Floa
 // the coefficient vector [c0, c1, ..., c_degree] with c0 the constant term;
 // the empty vector for empty/mismatched input or degree < 0 (documented).
 // Complexity: O(n * d^2 + d^3).
+/// Least-squares polynomial fit of degree degree through (x, y): solves the
+/// (A^T A) c = A^T y normal equations over the Vandermonde basis. Returns
+/// the coefficient vector [c0, c1, ..., c_degree] with c0 the constant term;
+/// the empty vector for empty/mismatched input or degree < 0 (documented).
+/// Complexity: O(n * d^2 + d^3).
 pub fn polynomial_approx(x: &Vec[Float64], y: &Vec[Float64], degree: Int) -> Vec[Float64] {
   var empty = Vec[Float64].new();
   var n = x.len();
@@ -91,6 +104,12 @@ pub fn polynomial_approx(x: &Vec[Float64], y: &Vec[Float64], degree: Int) -> Vec
 // Returns [p0..pm, q1..qn] (the leading denominator coefficient is fixed at
 // 1); the empty vector for empty/mismatched input or m, n < 0 (documented).
 // Complexity: O(k * (m+n)^2 + (m+n)^3).
+/// Rational approximation (num degree m, den degree n) of the data (x, y) by
+/// linearized least squares:
+/// y ~= (p0 + p1 x + ... + pm x^m) / (1 + q1 x + ... + qn x^n).
+/// Returns [p0..pm, q1..qn] (the leading denominator coefficient is fixed at
+/// 1); the empty vector for empty/mismatched input or m, n < 0 (documented).
+/// Complexity: O(k * (m+n)^2 + (m+n)^3).
 pub fn rational_approx(x: &Vec[Float64], y: &Vec[Float64], m: Int, n: Int) -> Vec[Float64] {
   var empty = Vec[Float64].new();
   var k = x.len();
@@ -132,6 +151,11 @@ pub fn rational_approx(x: &Vec[Float64], y: &Vec[Float64], m: Int, n: Int) -> Ve
 // one period). Returns [a0, a1..aH, b1..bH] where a0 is the DC term and
 // a_k/b_k the cosine/sine amplitudes; the empty vector for empty/mismatched
 // input or harmonics < 0 (documented). Complexity: O(k * H).
+/// Fourier series coefficients of the sampled data (x, y) with harmonics
+/// sine/cosine terms (the sample points are treated as uniformly spaced over
+/// one period). Returns [a0, a1..aH, b1..bH] where a0 is the DC term and
+/// a_k/b_k the cosine/sine amplitudes; the empty vector for empty/mismatched
+/// input or harmonics < 0 (documented). Complexity: O(k * H).
 pub fn trigonometric_approx(x: &Vec[Float64], y: &Vec[Float64], harmonics: Int) -> Vec[Float64] {
   var empty = Vec[Float64].new();
   var n = x.len();
@@ -168,6 +192,11 @@ pub fn trigonometric_approx(x: &Vec[Float64], y: &Vec[Float64], harmonics: Int) 
 // [a, b]. Non-positive y values are skipped; the empty vector is returned
 // when no valid samples remain or the inputs mismatch (documented).
 // Complexity: O(k).
+/// Fitted exponential model y ~= a * e^(b x) of the data (x, y) by
+/// least squares on the linearized problem ln y = ln a + b x. Returns
+/// [a, b]. Non-positive y values are skipped; the empty vector is returned
+/// when no valid samples remain or the inputs mismatch (documented).
+/// Complexity: O(k).
 pub fn exponential_approx(x: &Vec[Float64], y: &Vec[Float64]) -> Vec[Float64] {
   var empty = Vec[Float64].new();
   var n = x.len();
@@ -208,6 +237,10 @@ pub fn exponential_approx(x: &Vec[Float64], y: &Vec[Float64]) -> Vec[Float64] {
 // Chebyshev-Gauss quadrature c_k = (2/N) sum_i f(c) T_k over the N mapped
 // Chebyshev nodes (c_0 averaged). Returns [c0, c1, ..., c_degree].
 // The empty vector for degree < 0 (documented). Complexity: O(N * degree).
+/// Chebyshev series coefficients of f on [a, b] up to degree: the
+/// Chebyshev-Gauss quadrature c_k = (2/N) sum_i f(c) T_k over the N mapped
+/// Chebyshev nodes (c_0 averaged). Returns [c0, c1, ..., c_degree].
+/// The empty vector for degree < 0 (documented). Complexity: O(N * degree).
 pub fn chebyshev_approx(f: fn(Float64) -> Float64, a: Float64, b: Float64, degree: Int) -> Vec[Float64] {
   var out = Vec[Float64].new();
   if degree < 0 { return out; }
@@ -240,6 +273,16 @@ pub fn chebyshev_approx(f: fn(Float64) -> Float64, a: Float64, b: Float64, degre
 // reads return garbage data pointers; len fields are correct). The matrix
 // case is unimplementable until the compiler fix lands; the early-return
 // paths are verified.
+/// Normal-equation least-squares solution of A x = b: solves (A^T A) x =
+/// A^T b by Gaussian elimination. Returns the empty vector for empty or
+/// mismatched input (documented). Complexity: O(m * n^2 + n^3).
+/// Least-squares solution of A x = b via the normal equations (A^T A x = A^T b).
+/// Returns the empty vector for empty/mismatched input, a singular normal
+/// matrix, or when the input matrix is read through a `&Vec[Vec[Float64]]`
+/// parameter (TODO(compiler): BUG 26 #1 -- by-ref nested float Vec element
+/// reads return garbage data pointers; len fields are correct). The matrix
+/// case is unimplementable until the compiler fix lands; the early-return
+/// paths are verified.
 pub fn least_squares(a: &Vec[Vec[Float64]], b: &Vec[Float64]) -> Vec[Float64] {
   var empty = Vec[Float64].new();
   var m = a.len();
@@ -279,6 +322,10 @@ pub fn least_squares(a: &Vec[Vec[Float64]], b: &Vec[Float64]) -> Vec[Float64] {
 // Computed by the Remez exchange algorithm (see remez); the returned vector
 // holds power-basis coefficients from the constant term. Complexity:
 // O(iters * degree^3).
+/// Minimax polynomial coefficients of degree degree for f on [a, b].
+/// Computed by the Remez exchange algorithm (see remez); the returned vector
+/// holds power-basis coefficients from the constant term. Complexity:
+/// O(iters * degree^3).
 pub fn minimax(f: fn(Float64) -> Float64, a: Float64, b: Float64, degree: Int) -> Vec[Float64] {
   return remez(f, a, b, degree);
 }
@@ -290,6 +337,13 @@ pub fn minimax(f: fn(Float64) -> Float64, a: Float64, b: Float64, degree: Int) -
 // m, n < 0 (documented). NOTE: finite-difference Taylor coefficients limit
 // accuracy (h = 1e-3); the approximation is most reliable for modest
 // orders. Complexity: O((m+n) * cost(f)).
+/// Pade approximant of order (m, n) of f at x0: builds the Taylor
+/// coefficients c0..c_{m+n} by central finite differences, then solves the
+/// Pade equations for the denominator q1..qn (q0 = 1) and folds the
+/// numerators p0..pm. Returns [p0..pm, q1..qn]; the empty vector for
+/// m, n < 0 (documented). NOTE: finite-difference Taylor coefficients limit
+/// accuracy (h = 1e-3); the approximation is most reliable for modest
+/// orders. Complexity: O((m+n) * cost(f)).
 pub fn pade_approx(f: fn(Float64) -> Float64, m: Int, n: Int, x0: Float64) -> Vec[Float64] {
   var empty = Vec[Float64].new();
   if m < 0 || n < 0 { return empty; }
@@ -362,6 +416,12 @@ pub fn pade_approx(f: fn(Float64) -> Float64, m: Int, n: Int, x0: Float64) -> Ve
 // largest deviation on a dense grid. Returns power-basis coefficients from
 // the constant term; the empty vector for degree < 0 (documented).
 // Complexity: O(iters * degree^3).
+/// Remez exchange algorithm producing the degree-degree minimax polynomial
+/// of f on [a, b]. Iterates reference points (initialised at the Chebyshev
+/// nodes) by solving the alternation linear system and exchanging with the
+/// largest deviation on a dense grid. Returns power-basis coefficients from
+/// the constant term; the empty vector for degree < 0 (documented).
+/// Complexity: O(iters * degree^3).
 pub fn remez(f: fn(Float64) -> Float64, a: Float64, b: Float64, degree: Int) -> Vec[Float64] {
   var empty = Vec[Float64].new();
   if degree < 0 { return empty; }
@@ -465,6 +525,11 @@ pub fn remez(f: fn(Float64) -> Float64, a: Float64, b: Float64, degree: Int) -> 
 // p(x) = a + b*t + c*t^2 + d*t^3 with t = x - x_i (natural spline). The
 // empty matrix for fewer than 2 points or mismatched input (documented).
 // Complexity: O(n).
+/// Cubic spline segment coefficients through the data (x, y): for n points
+/// the result holds n - 1 rows, each [a, b, c, d] describing
+/// p(x) = a + b*t + c*t^2 + d*t^3 with t = x - x_i (natural spline). The
+/// empty matrix for fewer than 2 points or mismatched input (documented).
+/// Complexity: O(n).
 pub fn spline_approx(x: &Vec[Float64], y: &Vec[Float64]) -> Vec[Vec[Float64]] {
   var out = Vec[Vec[Float64]].new();
   var n = x.len();
@@ -493,6 +558,14 @@ pub fn spline_approx(x: &Vec[Float64], y: &Vec[Float64]) -> Vec[Vec[Float64]] {
 // normal equations sampled at 64 points. Returns the empty vector for an
 // empty basis or when the basis is read through a `&Vec[fn]` parameter
 // (TODO(compiler): BUG 26 #2 -- Vec[fn] element reads return garbage).
+/// Best least-squares coefficients of f in the given basis functions over
+/// [a, b]: samples f and the basis on a 64-point uniform grid and solves the
+/// normal equations. Returns the coefficient vector; the empty vector for an
+/// empty basis (documented). Complexity: O(64 * m^2 + m^3).
+/// Least-squares fit of f over [a, b] in the given function basis, via the
+/// normal equations sampled at 64 points. Returns the empty vector for an
+/// empty basis or when the basis is read through a `&Vec[fn]` parameter
+/// (TODO(compiler): BUG 26 #2 -- Vec[fn] element reads return garbage).
 pub fn best_approx(f: fn(Float64) -> Float64, basis: &Vec[fn(Float64) -> Float64], a: Float64, b: Float64) -> Vec[Float64] {
   var empty = Vec[Float64].new();
   var m = basis.len();

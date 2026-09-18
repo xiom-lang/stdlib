@@ -62,6 +62,10 @@ fn _reverse_chars_impl(s: Str) -> Str {
 // so multi-byte characters are preserved.
 // Returns a new string with the same byte length as `s`.
 // Complexity: O(|s|).
+/// Reverses the characters of `s`, iterating over UTF-8 character boundaries
+/// so multi-byte characters are preserved.
+/// Returns a new string with the same byte length as `s`.
+/// Complexity: O(|s|).
 pub fn str_reverse(s: Str) -> Str
   ensures: result.len() == s.len()
 {
@@ -72,6 +76,10 @@ pub fn str_reverse(s: Str) -> Str
 // whitespace between words are preserved as runs; only the token order is
 // reversed. Returns `s` unchanged when `s` has no words.
 // Complexity: O(|s|).
+/// Reverses the order of the whitespace-separated words of `s`. The runs of
+/// whitespace between words are preserved as runs; only the token order is
+/// reversed. Returns `s` unchanged when `s` has no words.
+/// Complexity: O(|s|).
 pub fn str_reverse_words(s: Str) -> Str {
   var runs = Vec[Str].new();
   let len = xiom.string.str_len(s);
@@ -99,6 +107,8 @@ pub fn str_reverse_words(s: Str) -> Str {
 
 // Alias of `str_reverse`: reverses the characters of `s`.
 // Complexity: O(|s|).
+/// Alias of `str_reverse`: reverses the characters of `s`.
+/// Complexity: O(|s|).
 pub fn str_reverse_chars(s: Str) -> Str
   ensures: result.len() == s.len()
 {

@@ -17,6 +17,7 @@ module xiom.os.fs_ffi
 use xiom.io;
 
 // struct MappedFile { ptr: Int; length: Int; fd: Int; } - mmap result.
+/// struct MappedFile { ptr: Int; length: Int; fd: Int; } - mmap result.
 pub type MappedFile = {
   ptr: Int;
   length: Int;

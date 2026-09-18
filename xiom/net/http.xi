@@ -17,6 +17,8 @@ use xiom.net.url;
 
 // type HttpResponse - an HTTP response: status code (Int), headers, and
 // raw body bytes.
+/// type HttpResponse - an HTTP response: status code (Int), headers, and
+/// raw body bytes.
 pub type HttpResponse = {
   status: Int;
   headers: Vec[(Str, Str)];
@@ -88,6 +90,8 @@ fn trim_ws(s: Str) -> Str {
 
 // http_status_text returns the standard reason phrase for a status
 // code, or "Unknown" for codes not in the table. Complexity: O(1).
+/// http_status_text returns the standard reason phrase for a status
+/// code, or "Unknown" for codes not in the table. Complexity: O(1).
 pub fn http_status_text(code: Int) -> Str {
   if code == 200 { return "OK"; }
   if code == 201 { return "Created"; }
@@ -124,6 +128,9 @@ pub fn http_status_text(code: Int) -> Str {
 // http_request_line builds the request line for a method and target,
 // e.g. http_request_line("GET", "/") == "GET / HTTP/1.1".
 // Complexity: O(1). Pure.
+/// http_request_line builds the request line for a method and target,
+/// e.g. http_request_line("GET", "/") == "GET / HTTP/1.1".
+/// Complexity: O(1). Pure.
 pub fn http_request_line(method: Str, target: Str) -> Str {
   method + " " + target + " HTTP/1.1"
 }
@@ -131,6 +138,9 @@ pub fn http_request_line(method: Str, target: Str) -> Str {
 // http_build_request builds a full HTTP/1.1 request text from a parsed
 // URL, method, headers, and body. Used by the client and exposed for
 // callers that want to send raw requests themselves.
+/// http_build_request builds a full HTTP/1.1 request text from a parsed
+/// URL, method, headers, and body. Used by the client and exposed for
+/// callers that want to send raw requests themselves.
 pub fn http_build_request(method: Str, url_str: Str, headers: &Vec[(Str, Str)], body: &Vec[UInt8]) -> Result[Str, Str] {
   let parsed = url.url_parse(url_str);
   match parsed {
@@ -196,6 +206,9 @@ fn http_parse_status(line: Str) -> Int {
 // http_response_status extracts the HTTP status code from a raw
 // response without allocating a full response value. Returns None if
 // the status line is malformed. Complexity: O(1). Pure.
+/// http_response_status extracts the HTTP status code from a raw
+/// response without allocating a full response value. Returns None if
+/// the status line is malformed. Complexity: O(1). Pure.
 pub fn http_response_status(raw: Str) -> Option[Int] {
   let nl = idx_of(raw, "\r\n");
   var status_line = raw;
@@ -217,6 +230,9 @@ pub fn http_response_status(raw: Str) -> Option[Int] {
 // http_parse_response_headers extracts the (name, value) header pairs
 // from a raw HTTP response block (everything after the status line and
 // before the blank line). Complexity: O(n). Pure.
+/// http_parse_response_headers extracts the (name, value) header pairs
+/// from a raw HTTP response block (everything after the status line and
+/// before the blank line). Complexity: O(n). Pure.
 pub fn http_parse_response_headers(raw: Str) -> Vec[(Str, Str)] {
   var result: Vec[(Str, Str)] = Vec[(Str, Str)]::new();
   let nl = idx_of(raw, "\r\n");
@@ -259,6 +275,8 @@ pub fn http_parse_response_headers(raw: Str) -> Vec[(Str, Str)] {
 
 // http_parse_response parses a raw HTTP/1.1 response into an
 // HttpResponse. Invalid input returns Err. Complexity: O(n). Pure.
+/// http_parse_response parses a raw HTTP/1.1 response into an
+/// HttpResponse. Invalid input returns Err. Complexity: O(n). Pure.
 pub fn http_parse_response(raw: Str) -> Result[HttpResponse, Str] {
   let nl = idx_of(raw, "\r\n");
   var status_line = raw;
@@ -303,12 +321,16 @@ pub fn http_parse_response(raw: Str) -> Result[HttpResponse, Str] {
 
 // http_status_code returns the HTTP status code of a response.
 // Complexity: O(1). Pure.
+/// http_status_code returns the HTTP status code of a response.
+/// Complexity: O(1). Pure.
 pub fn http_status_code(resp: &HttpResponse) -> Int {
   resp.status
 }
 
 // http_header returns the value of a named response header (matched
 // case-insensitively), or None if absent. Complexity: O(h). Pure.
+/// http_header returns the value of a named response header (matched
+/// case-insensitively), or None if absent. Complexity: O(h). Pure.
 pub fn http_header(resp: &HttpResponse, name: Str) -> Option[Str] {
   let lname = string.str_lower(name);
   var i = 0;
@@ -324,6 +346,8 @@ pub fn http_header(resp: &HttpResponse, name: Str) -> Option[Str] {
 
 // http_body_text decodes the response body bytes as UTF-8 text.
 // Complexity: O(n). Pure.
+/// http_body_text decodes the response body bytes as UTF-8 text.
+/// Complexity: O(n). Pure.
 pub fn http_body_text(resp: &HttpResponse) -> Str {
   var buf: Vec[UInt8] = Vec[UInt8]::new();
   var i = 0;
@@ -337,6 +361,8 @@ pub fn http_body_text(resp: &HttpResponse) -> Str {
 
 // http_url_encode percent-encodes a string for use in a URL.
 // Complexity: O(n). Pure.
+/// http_url_encode percent-encodes a string for use in a URL.
+/// Complexity: O(n). Pure.
 pub fn http_url_encode(s: Str) -> Str {
   var result = "";
   let len = s.len();
@@ -378,6 +404,8 @@ fn hex_digit_value(b: UInt8) -> Int {
 
 // http_url_decode percent-decodes a URL-encoded string. Returns Err on
 // truncated or invalid escapes. Complexity: O(n). Pure.
+/// http_url_decode percent-decodes a URL-encoded string. Returns Err on
+/// truncated or invalid escapes. Complexity: O(n). Pure.
 pub fn http_url_decode(s: Str) -> Result[Str, Str] {
   let len = s.len();
   var out: Vec[UInt8] = Vec[UInt8]::new();
@@ -422,42 +450,56 @@ extern "C" {
 
 // http_get performs an HTTP GET request and returns the response.
 // Complexity: network I/O.
+/// http_get performs an HTTP GET request and returns the response.
+/// Complexity: network I/O.
 pub fn http_get(url: Str) -> Result[HttpResponse, Str] {
   http_request("GET", url, Vec[(Str, Str)]::new(), Vec[UInt8]::new())
 }
 
 // http_post performs an HTTP POST with a raw byte body.
 // Complexity: network I/O.
+/// http_post performs an HTTP POST with a raw byte body.
+/// Complexity: network I/O.
 pub fn http_post(url: Str, body: &Vec[UInt8]) -> Result[HttpResponse, Str] {
   http_request("POST", url, Vec[(Str, Str)]::new(), body)
 }
 
 // http_put performs an HTTP PUT with a raw byte body.
 // Complexity: network I/O.
+/// http_put performs an HTTP PUT with a raw byte body.
+/// Complexity: network I/O.
 pub fn http_put(url: Str, body: &Vec[UInt8]) -> Result[HttpResponse, Str] {
   http_request("PUT", url, Vec[(Str, Str)]::new(), body)
 }
 
 // http_delete performs an HTTP DELETE request.
 // Complexity: network I/O.
+/// http_delete performs an HTTP DELETE request.
+/// Complexity: network I/O.
 pub fn http_delete(url: Str) -> Result[HttpResponse, Str] {
   http_request("DELETE", url, Vec[(Str, Str)]::new(), Vec[UInt8]::new())
 }
 
 // http_head performs an HTTP HEAD request.
 // Complexity: network I/O.
+/// http_head performs an HTTP HEAD request.
+/// Complexity: network I/O.
 pub fn http_head(url: Str) -> Result[HttpResponse, Str] {
   http_request("HEAD", url, Vec[(Str, Str)]::new(), Vec[UInt8]::new())
 }
 
 // http_patch performs an HTTP PATCH with a raw byte body.
 // Complexity: network I/O.
+/// http_patch performs an HTTP PATCH with a raw byte body.
+/// Complexity: network I/O.
 pub fn http_patch(url: Str, body: &Vec[UInt8]) -> Result[HttpResponse, Str] {
   http_request("PATCH", url, Vec[(Str, Str)]::new(), body)
 }
 
 // http_get_text performs an HTTP GET and returns the response body
 // decoded as text. Complexity: network I/O.
+/// http_get_text performs an HTTP GET and returns the response body
+/// decoded as text. Complexity: network I/O.
 pub fn http_get_text(url: Str) -> Result[Str, Str] {
   let resp = http_get(url);
   match resp {
@@ -468,6 +510,8 @@ pub fn http_get_text(url: Str) -> Result[Str, Str] {
 
 // http_get_bytes performs an HTTP GET and returns the raw body bytes.
 // Complexity: network I/O.
+/// http_get_bytes performs an HTTP GET and returns the raw body bytes.
+/// Complexity: network I/O.
 pub fn http_get_bytes(url: Str) -> Result[Vec[UInt8], Str] {
   let resp = http_get(url);
   match resp {
@@ -478,6 +522,8 @@ pub fn http_get_bytes(url: Str) -> Result[Vec[UInt8], Str] {
 
 // http_redirect_follow follows up to max HTTP redirects (301/302/303/
 // 307/308) before returning the final response. Complexity: network I/O.
+/// http_redirect_follow follows up to max HTTP redirects (301/302/303/
+/// 307/308) before returning the final response. Complexity: network I/O.
 pub fn http_redirect_follow(url: Str, max: Int) -> Result[HttpResponse, Str] {
   var current = url;
   var hops = 0;
@@ -508,6 +554,8 @@ pub fn http_redirect_follow(url: Str, max: Int) -> Result[HttpResponse, Str] {
 
 // http_request performs a generic HTTP request; each tuple in headers
 // is a (name, value) header pair. Complexity: network I/O.
+/// http_request performs a generic HTTP request; each tuple in headers
+/// is a (name, value) header pair. Complexity: network I/O.
 pub fn http_request(method: Str, url: Str, headers: &Vec[(Str, Str)], body: &Vec[UInt8]) -> Result[HttpResponse, Str] {
   let parsed = url.url_parse(url);
   var host = "";

@@ -62,6 +62,9 @@ fn parse_octet(seg: Str) -> Option[Int] {
 // ip4_parse parses a dotted-quad IPv4 string into four octets.
 // Invalid input (wrong segment count, non-numeric, or out-of-range
 // octets) returns Err. Complexity: O(n). Pure.
+/// ip4_parse parses a dotted-quad IPv4 string into four octets.
+/// Invalid input (wrong segment count, non-numeric, or out-of-range
+/// octets) returns Err. Complexity: O(n). Pure.
 pub fn ip4_parse(s: Str) -> Result[Vec[UInt8], Str] {
   let len = s.len();
   if len < 7 || len > 15 {
@@ -86,6 +89,8 @@ pub fn ip4_parse(s: Str) -> Result[Vec[UInt8], Str] {
 
 // ip4_validate returns true if s is a valid dotted-quad IPv4 address.
 // Complexity: O(n). Pure.
+/// ip4_validate returns true if s is a valid dotted-quad IPv4 address.
+/// Complexity: O(n). Pure.
 pub fn ip4_validate(s: Str) -> Bool {
   let parsed = ip4_parse(s);
   parsed.is_ok
@@ -93,6 +98,8 @@ pub fn ip4_validate(s: Str) -> Bool {
 
 // ip4_to_str formats four octets as a dotted-quad string.
 // Returns Err if octets.len() is not 4. Complexity: O(1). Pure.
+/// ip4_to_str formats four octets as a dotted-quad string.
+/// Returns Err if octets.len() is not 4. Complexity: O(1). Pure.
 pub fn ip4_to_str(octets: &Vec[UInt8]) -> Result[Str, Str] {
   if octets.len() != 4 {
     return Err("invalid IPv4 address: expected 4 octets");
@@ -112,6 +119,8 @@ pub fn ip4_to_str(octets: &Vec[UInt8]) -> Result[Str, Str] {
 
 // ip4_octets splits a dotted-quad IPv4 string into its four numeric
 // octets as Int. Invalid input returns an empty vector. Pure.
+/// ip4_octets splits a dotted-quad IPv4 string into its four numeric
+/// octets as Int. Invalid input returns an empty vector. Pure.
 pub fn ip4_octets(s: Str) -> Vec[Int] {
   var result: Vec[Int] = Vec[Int]::new();
   let parsed = ip4_parse(s);
@@ -140,6 +149,8 @@ fn octet_of(s: Str, n: Int) -> Option[Int] {
 
 // ip4_is_loopback returns true for 127.0.0.0/8.
 // Complexity: O(n). Pure.
+/// ip4_is_loopback returns true for 127.0.0.0/8.
+/// Complexity: O(n). Pure.
 pub fn ip4_is_loopback(s: Str) -> Bool {
   let first = octet_of(s, 0);
   match first {
@@ -151,6 +162,9 @@ pub fn ip4_is_loopback(s: Str) -> Bool {
 // ip4_is_private returns true for RFC 1918 ranges
 // (10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16).
 // Complexity: O(n). Pure.
+/// ip4_is_private returns true for RFC 1918 ranges
+/// (10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16).
+/// Complexity: O(n). Pure.
 pub fn ip4_is_private(s: Str) -> Bool {
   let parsed = ip4_parse(s);
   match parsed {
@@ -168,6 +182,8 @@ pub fn ip4_is_private(s: Str) -> Bool {
 
 // ip4_is_link_local returns true for 169.254.0.0/16.
 // Complexity: O(n). Pure.
+/// ip4_is_link_local returns true for 169.254.0.0/16.
+/// Complexity: O(n). Pure.
 pub fn ip4_is_link_local(s: Str) -> Bool {
   let parsed = ip4_parse(s);
   match parsed {
@@ -182,6 +198,8 @@ pub fn ip4_is_link_local(s: Str) -> Bool {
 
 // ip4_is_multicast returns true for 224.0.0.0/4.
 // Complexity: O(n). Pure.
+/// ip4_is_multicast returns true for 224.0.0.0/4.
+/// Complexity: O(n). Pure.
 pub fn ip4_is_multicast(s: Str) -> Bool {
   let first = octet_of(s, 0);
   match first {
@@ -192,6 +210,8 @@ pub fn ip4_is_multicast(s: Str) -> Bool {
 
 // ip4_is_unspecified returns true for 0.0.0.0.
 // Complexity: O(n). Pure.
+/// ip4_is_unspecified returns true for 0.0.0.0.
+/// Complexity: O(n). Pure.
 pub fn ip4_is_unspecified(s: Str) -> Bool {
   let parsed = ip4_parse(s);
   match parsed {
@@ -212,6 +232,8 @@ pub fn ip4_is_unspecified(s: Str) -> Bool {
 
 // ip4_is_broadcast returns true for 255.255.255.255.
 // Complexity: O(n). Pure.
+/// ip4_is_broadcast returns true for 255.255.255.255.
+/// Complexity: O(n). Pure.
 pub fn ip4_is_broadcast(s: Str) -> Bool {
   let parsed = ip4_parse(s);
   match parsed {

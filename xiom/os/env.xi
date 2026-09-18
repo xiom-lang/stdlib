@@ -247,6 +247,9 @@ pub fn path_separator() -> Str {
 // var_or returns the value of the environment variable name,
 // or default if the variable is not set.
 // Complexity: O(1).
+/// var_or returns the value of the environment variable name,
+/// or default if the variable is not set.
+/// Complexity: O(1).
 pub fn var_or(name: Str, default: Str) -> Str {
   let result = var_opt(name);
   match result {
@@ -257,6 +260,8 @@ pub fn var_or(name: Str, default: Str) -> Str {
 
 // has_var returns true if the environment variable name is set.
 // Complexity: O(1).
+/// has_var returns true if the environment variable name is set.
+/// Complexity: O(1).
 pub fn has_var(name: Str) -> Bool {
   let result = var_opt(name);
   match result {
@@ -268,6 +273,9 @@ pub fn has_var(name: Str) -> Bool {
 // all_var_names returns an empty vector on all platforms -- the Xiom
 // runtime does not support iterating over environment variables
 // via the C standard library.
+/// all_var_names returns an empty vector on all platforms -- the Xiom
+/// runtime does not support iterating over environment variables
+/// via the C standard library.
 pub fn all_var_names() -> Vec[Str] {
   var result: Vec[Str] = Vec[Str]::new();
   return result;
@@ -275,6 +283,8 @@ pub fn all_var_names() -> Vec[Str] {
 
 // all_var_values returns an empty vector on all platforms -- see
 // all_var_names for rationale.
+/// all_var_values returns an empty vector on all platforms -- see
+/// all_var_names for rationale.
 pub fn all_var_values() -> Vec[Str] {
   var result: Vec[Str] = Vec[Str]::new();
   return result;
@@ -282,6 +292,8 @@ pub fn all_var_values() -> Vec[Str] {
 
 // set_var_if_absent sets name to value only if name is not already set.
 // Complexity: O(1).  WARNING: setenv is not available on Windows MSVC.
+/// set_var_if_absent sets name to value only if name is not already set.
+/// Complexity: O(1).  WARNING: setenv is not available on Windows MSVC.
 pub fn set_var_if_absent(name: Str, value: Str) {
   if !has_var(name) {
     let _ = set_var(name, value);
@@ -290,6 +302,8 @@ pub fn set_var_if_absent(name: Str, value: Str) {
 
 // clear_var removes the environment variable name.
 // Alias for remove_var.  Same Windows caveat.
+/// clear_var removes the environment variable name.
+/// Alias for remove_var.  Same Windows caveat.
 pub fn clear_var(name: Str) {
   let _ = remove_var(name);
 }
@@ -300,6 +314,8 @@ pub fn clear_var(name: Str) {
 
 // args_len returns the number of command-line arguments.
 // Complexity: O(1).
+/// args_len returns the number of command-line arguments.
+/// Complexity: O(1).
 pub fn args_len() -> Int {
   let a = io.args();
   return a.len();
@@ -307,6 +323,8 @@ pub fn args_len() -> Int {
 
 // arg_at returns the i-th command-line argument, or None if
 // i is out of bounds.  Complexity: O(1).
+/// arg_at returns the i-th command-line argument, or None if
+/// i is out of bounds.  Complexity: O(1).
 pub fn arg_at(i: Int) -> Option[Str] {
   let a = io.args();
   if i < 0 || i >= a.len() {
@@ -317,6 +335,8 @@ pub fn arg_at(i: Int) -> Option[Str] {
 
 // arg_contains returns true if any command-line argument equals s.
 // Complexity: O(n) where n = arg count.
+/// arg_contains returns true if any command-line argument equals s.
+/// Complexity: O(n) where n = arg count.
 pub fn arg_contains(s: Str) -> Bool {
   let a = io.args();
   var i = 0;
@@ -336,6 +356,9 @@ pub fn arg_contains(s: Str) -> Bool {
 // current_dir_str returns the current working directory as a Str,
 // or "." if the OS call fails.  Wraps getcwd directly.
 // Complexity: O(1).
+/// current_dir_str returns the current working directory as a Str,
+/// or "." if the OS call fails.  Wraps getcwd directly.
+/// Complexity: O(1).
 pub fn current_dir_str() -> Str
   requires: true
 {

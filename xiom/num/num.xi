@@ -36,6 +36,7 @@ use xiom.core.to_string;
 use xiom.math.pow;
 
 // Extended numeric traits (Add/Sub/Mul/Div are in core)
+/// Extended numeric traits (Add/Sub/Mul/Div are in core)
 pub interface Neg { fn neg(self) -> Self; }
 pub interface Rem { fn rem(self, other: Self) -> Self; }
 pub interface Abs { fn abs(self) -> Self; }
@@ -43,6 +44,7 @@ pub interface Pow { fn pow(self, exp: Self) -> Self; }
 pub interface Sqrt { fn sqrt(self) -> Self; }
 
 // Numeric bounds
+/// Numeric bounds
 pub interface Bounded {
   fn min_value() -> Self;
   fn max_value() -> Self;
@@ -173,6 +175,7 @@ pub fn epsilon[T: Bounded]() -> T {
 }
 
 // Integer-specific
+/// Integer-specific
 pub fn gcd(a: Int, b: Int) -> Int
   ensures: result >= 0
   ensures: a == 0 && b == 0 => result == 0
@@ -292,6 +295,7 @@ pub fn from_le(n: Int) -> Int {
 }
 
 // Float-specific
+/// Float-specific
 pub fn is_finite(x: Float64) -> Bool {
   var not_nan = !(is_nan(x));
   var not_inf = !(is_inf(x));
@@ -362,6 +366,7 @@ pub fn hypot(x: Float64, y: Float64) -> Float64
 }
 
 // Saturation arithmetic
+/// Saturation arithmetic
 pub fn saturating_add[T: Bounded + Ord + Add](a: T, b: T) -> T {
   var z = T.zero();
   var max_val = T.max_value();
@@ -393,6 +398,7 @@ pub fn saturating_mul[T: Bounded + Ord + Mul + Div](a: T, b: T) -> T {
 }
 
 // Checked arithmetic
+/// Checked arithmetic
 pub fn checked_add[T: Bounded + Ord + Add](a: T, b: T) -> Option[T] {
   var z = T.zero();
   var max_val = T.max_value();
@@ -432,6 +438,7 @@ pub fn checked_div[T: Bounded + Eq + Div](a: T, b: T) -> Option[T]
 }
 
 // Wrapping arithmetic
+/// Wrapping arithmetic
 pub fn wrapping_add[T: Bounded + Add](a: T, b: T) -> T {
   return a + b;
 }
@@ -445,6 +452,7 @@ pub fn wrapping_mul[T: Bounded + Mul](a: T, b: T) -> T {
 }
 
 // Parse
+/// Parse
 pub fn parse_int(s: Str) -> Result[Int, Str] {
   return to_int_from_str(s);
 }
@@ -912,12 +920,15 @@ pub fn from_base(s: Str, base: Int) -> Option[Int] {
 // implementation was removed with the D1 native primitive landing.
 
 // -- Rational number (num / den, den > 0, always reduced) -------------------
+/// -- Rational number (num / den, den > 0, always reduced) -------------------
 pub type Fraction = { num: Int; den: Int; }
 
 // Internal: unsigned 64-bit division result.
+/// Internal: unsigned 64-bit division result.
 pub type U64DivRem = { quot: UInt64; rem: UInt64; }
 
 // Internal: Int128 division by a small scalar.
+/// Internal: Int128 division by a small scalar.
 pub type I128DivRem = { quot: Int128; rem: Int; }
 
 // -- UInt64 core helpers ----------------------------------------------------

@@ -32,6 +32,9 @@ const _TAU: Float64 = 6.283185307179586;
 // Discrete Fourier transform by direct summation. Returns the interleaved
 // complex spectrum [re0, im0, ...] of length 2n; empty for an empty input.
 // Complexity: O(n^2).
+/// Discrete Fourier transform by direct summation. Returns the interleaved
+/// complex spectrum [re0, im0, ...] of length 2n; empty for an empty input.
+/// Complexity: O(n^2).
 pub fn dft(x: &Vec[Float64]) -> Vec[Float64] {
   var out = Vec[Float64].new();
   var n = x.len();
@@ -57,6 +60,9 @@ pub fn dft(x: &Vec[Float64]) -> Vec[Float64] {
 // Inverse discrete Fourier transform: the interleaved complex input is
 // inverted and the real part is returned. Empty for an empty input.
 // Complexity: O(n^2).
+/// Inverse discrete Fourier transform: the interleaved complex input is
+/// inverted and the real part is returned. Empty for an empty input.
+/// Complexity: O(n^2).
 pub fn idft(x: &Vec[Float64]) -> Vec[Float64] {
   var out = Vec[Float64].new();
   var n = x.len() / 2;
@@ -81,6 +87,9 @@ pub fn idft(x: &Vec[Float64]) -> Vec[Float64] {
 // Fast Fourier transform (iterative radix-2) of a real signal; non-power-of-
 // two lengths fall back to the direct DFT. Returns the interleaved spectrum.
 // Complexity: O(n log n).
+/// Fast Fourier transform (iterative radix-2) of a real signal; non-power-of-
+/// two lengths fall back to the direct DFT. Returns the interleaved spectrum.
+/// Complexity: O(n log n).
 pub fn fft(x: &Vec[Float64]) -> Vec[Float64] {
   var n = x.len();
   if n == 0 { return Vec[Float64].new(); }
@@ -163,17 +172,23 @@ pub fn fft(x: &Vec[Float64]) -> Vec[Float64] {
 // Inverse fast Fourier transform: inverts the interleaved complex spectrum
 // by the direct inverse DFT (O(n^2)); the real signal is returned.
 // Complexity: O(n^2).
+/// Inverse fast Fourier transform: inverts the interleaved complex spectrum
+/// by the direct inverse DFT (O(n^2)); the real signal is returned.
+/// Complexity: O(n^2).
 pub fn ifft(x: &Vec[Float64]) -> Vec[Float64] {
   return idft(x);
 }
 
 // FFT specialized for real-valued input (same routine as fft).
 // Complexity: O(n log n).
+/// FFT specialized for real-valued input (same routine as fft).
+/// Complexity: O(n log n).
 pub fn fft_real(x: &Vec[Float64]) -> Vec[Float64] {
   return fft(x);
 }
 
 // Inverse FFT returning the real signal. Complexity: O(n log n).
+/// Inverse FFT returning the real signal. Complexity: O(n log n).
 pub fn ifft_real(x: &Vec[Float64]) -> Vec[Float64] {
   return ifft(x);
 }
@@ -183,6 +198,7 @@ pub fn ifft_real(x: &Vec[Float64]) -> Vec[Float64] {
 // ---------------------------------------------------------------------------
 
 // Orthonormal discrete cosine transform (type II). Complexity: O(n^2).
+/// Orthonormal discrete cosine transform (type II). Complexity: O(n^2).
 pub fn dct(x: &Vec[Float64]) -> Vec[Float64] {
   var out = Vec[Float64].new();
   var n = x.len();
@@ -208,6 +224,8 @@ pub fn dct(x: &Vec[Float64]) -> Vec[Float64] {
 
 // Inverse discrete cosine transform (type III, unnormalized-compatible with
 // dct). Complexity: O(n^2).
+/// Inverse discrete cosine transform (type III, unnormalized-compatible with
+/// dct). Complexity: O(n^2).
 pub fn idct(x: &Vec[Float64]) -> Vec[Float64] {
   var out = Vec[Float64].new();
   var n = x.len();
@@ -234,16 +252,19 @@ pub fn idct(x: &Vec[Float64]) -> Vec[Float64] {
 }
 
 // Discrete cosine transform type II (alias of dct). Complexity: O(n^2).
+/// Discrete cosine transform type II (alias of dct). Complexity: O(n^2).
 pub fn dct_type2(x: &Vec[Float64]) -> Vec[Float64] {
   return dct(x);
 }
 
 // Discrete cosine transform type III (alias of idct). Complexity: O(n^2).
+/// Discrete cosine transform type III (alias of idct). Complexity: O(n^2).
 pub fn dct_type3(x: &Vec[Float64]) -> Vec[Float64] {
   return idct(x);
 }
 
 // Discrete sine transform (DST-I). Complexity: O(n^2).
+/// Discrete sine transform (DST-I). Complexity: O(n^2).
 pub fn dst(x: &Vec[Float64]) -> Vec[Float64] {
   var out = Vec[Float64].new();
   var n = x.len();
@@ -264,6 +285,7 @@ pub fn dst(x: &Vec[Float64]) -> Vec[Float64] {
 }
 
 // Inverse discrete sine transform (IDST-I). Complexity: O(n^2).
+/// Inverse discrete sine transform (IDST-I). Complexity: O(n^2).
 pub fn idst(x: &Vec[Float64]) -> Vec[Float64] {
   var out = Vec[Float64].new();
   var n = x.len();
@@ -291,6 +313,9 @@ pub fn idst(x: &Vec[Float64]) -> Vec[Float64] {
 // Haar discrete wavelet transform to the given level: the approximation
 // coefficients followed by the detail coefficients of each level. Returns
 // the empty vector for level <= 0 or an empty signal. Complexity: O(n).
+/// Haar discrete wavelet transform to the given level: the approximation
+/// coefficients followed by the detail coefficients of each level. Returns
+/// the empty vector for level <= 0 or an empty signal. Complexity: O(n).
 pub fn wavelet_haar(x: &Vec[Float64], level: Int) -> Vec[Float64] {
   var out = Vec[Float64].new();
   var n = x.len();
@@ -333,6 +358,8 @@ pub fn wavelet_haar(x: &Vec[Float64], level: Int) -> Vec[Float64] {
 
 // Level multi-resolution discrete wavelet transform (Haar basis). Alias of
 // wavelet_haar. Complexity: O(n).
+/// Level multi-resolution discrete wavelet transform (Haar basis). Alias of
+/// wavelet_haar. Complexity: O(n).
 pub fn wavelet_dwt(x: &Vec[Float64], level: Int) -> Vec[Float64] {
   return wavelet_haar(x, level);
 }
@@ -340,6 +367,9 @@ pub fn wavelet_dwt(x: &Vec[Float64], level: Int) -> Vec[Float64] {
 // Inverse Haar wavelet transform: the input holds the detail coefficients of
 // each level (level 1 first) followed by the final approximation block, as
 // produced by wavelet_haar. Complexity: O(n).
+/// Inverse Haar wavelet transform: the input holds the detail coefficients of
+/// each level (level 1 first) followed by the final approximation block, as
+/// produced by wavelet_haar. Complexity: O(n).
 pub fn wavelet_idwt(coeffs: &Vec[Float64], level: Int) -> Vec[Float64] {
   var out = Vec[Float64].new();
   var total = coeffs.len();
@@ -392,6 +422,8 @@ pub fn wavelet_idwt(coeffs: &Vec[Float64], level: Int) -> Vec[Float64] {
 
 // Daubechies wavelet transform with the D4 filter for taps == 4; other tap
 // counts fall back to the Haar basis. Complexity: O(n).
+/// Daubechies wavelet transform with the D4 filter for taps == 4; other tap
+/// counts fall back to the Haar basis. Complexity: O(n).
 pub fn wavelet_daubechies(x: &Vec[Float64], taps: Int, level: Int) -> Vec[Float64] {
   if taps == 4 {
     var out = Vec[Float64].new();
@@ -448,6 +480,9 @@ pub fn wavelet_daubechies(x: &Vec[Float64], taps: Int, level: Int) -> Vec[Float6
 // One-pass first-order alpha filter: y[n] = y[n-1] + a (x[n] - y[n-1]) with
 // a = cutoff / (1 + cutoff). filter_lowpass applies it `order` times.
 // Complexity: O(n * order).
+/// One-pass first-order alpha filter: y[n] = y[n-1] + a (x[n] - y[n-1]) with
+/// a = cutoff / (1 + cutoff). filter_lowpass applies it `order` times.
+/// Complexity: O(n * order).
 pub fn filter_lowpass(x: &Vec[Float64], cutoff: Float64, order: Int) -> Vec[Float64] {
   var out = Vec[Float64].new();
   var n = x.len();
@@ -482,6 +517,8 @@ pub fn filter_lowpass(x: &Vec[Float64], cutoff: Float64, order: Int) -> Vec[Floa
 
 // First-order high-pass filter: y[n] = alpha (y[n-1] + x[n] - x[n-1]), applied
 // `order` times. Complexity: O(n * order).
+/// First-order high-pass filter: y[n] = alpha (y[n-1] + x[n] - x[n-1]), applied
+/// `order` times. Complexity: O(n * order).
 pub fn filter_highpass(x: &Vec[Float64], cutoff: Float64, order: Int) -> Vec[Float64] {
   var out = Vec[Float64].new();
   var n = x.len();
@@ -519,6 +556,8 @@ pub fn filter_highpass(x: &Vec[Float64], cutoff: Float64, order: Int) -> Vec[Flo
 
 // Band-pass filter: a low-pass at hi cascaded with a high-pass at lo.
 // Complexity: O(n * order).
+/// Band-pass filter: a low-pass at hi cascaded with a high-pass at lo.
+/// Complexity: O(n * order).
 pub fn filter_bandpass(x: &Vec[Float64], lo: Float64, hi: Float64, order: Int) -> Vec[Float64] {
   var lp = filter_lowpass(x, hi, order);
   return filter_highpass(&lp, lo, order);
@@ -526,6 +565,8 @@ pub fn filter_bandpass(x: &Vec[Float64], lo: Float64, hi: Float64, order: Int) -
 
 // Band-stop filter: the input minus the band-passed signal.
 // Complexity: O(n * order).
+/// Band-stop filter: the input minus the band-passed signal.
+/// Complexity: O(n * order).
 pub fn filter_bandstop(x: &Vec[Float64], lo: Float64, hi: Float64, order: Int) -> Vec[Float64] {
   var out = Vec[Float64].new();
   var n = x.len();
@@ -541,6 +582,8 @@ pub fn filter_bandstop(x: &Vec[Float64], lo: Float64, hi: Float64, order: Int) -
 
 // Butterworth low-pass filter (maximally flat): implemented as the cascaded
 // first-order alpha low-pass of filter_lowpass. Complexity: O(n * order).
+/// Butterworth low-pass filter (maximally flat): implemented as the cascaded
+/// first-order alpha low-pass of filter_lowpass. Complexity: O(n * order).
 pub fn filter_butterworth(x: &Vec[Float64], cutoff: Float64, order: Int) -> Vec[Float64] {
   return filter_lowpass(x, cutoff, order);
 }
@@ -548,6 +591,9 @@ pub fn filter_butterworth(x: &Vec[Float64], cutoff: Float64, order: Int) -> Vec[
 // Chebyshev low-pass filter with passband ripple: implemented as the
 // cascaded alpha low-pass (the ripple parameter shapes the alpha gain).
 // Complexity: O(n * order).
+/// Chebyshev low-pass filter with passband ripple: implemented as the
+/// cascaded alpha low-pass (the ripple parameter shapes the alpha gain).
+/// Complexity: O(n * order).
 pub fn filter_chebyshev(x: &Vec[Float64], cutoff: Float64, ripple: Float64, order: Int) -> Vec[Float64] {
   var c = cutoff;
   if ripple > 0.0 {
@@ -558,12 +604,16 @@ pub fn filter_chebyshev(x: &Vec[Float64], cutoff: Float64, ripple: Float64, orde
 
 // Bessel low-pass filter (maximally flat group delay): implemented as the
 // cascaded alpha low-pass. Complexity: O(n * order).
+/// Bessel low-pass filter (maximally flat group delay): implemented as the
+/// cascaded alpha low-pass. Complexity: O(n * order).
 pub fn filter_bessel(x: &Vec[Float64], cutoff: Float64, order: Int) -> Vec[Float64] {
   return filter_lowpass(x, cutoff, order);
 }
 
 // Finite impulse response filter: y[n] = sum_k coeffs[k] x[n-k].
 // Complexity: O(n * taps).
+/// Finite impulse response filter: y[n] = sum_k coeffs[k] x[n-k].
+/// Complexity: O(n * taps).
 pub fn filter_fir(x: &Vec[Float64], coeffs: &Vec[Float64]) -> Vec[Float64] {
   var out = Vec[Float64].new();
   var n = x.len();
@@ -589,6 +639,9 @@ pub fn filter_fir(x: &Vec[Float64], coeffs: &Vec[Float64]) -> Vec[Float64] {
 // Infinite impulse response filter with numerator b and denominator a:
 // y[n] = (sum_k b_k x[n-k] - sum_{k>=1} a_k y[n-k]) / a_0.
 // Complexity: O(n * taps).
+/// Infinite impulse response filter with numerator b and denominator a:
+/// y[n] = (sum_k b_k x[n-k] - sum_{k>=1} a_k y[n-k]) / a_0.
+/// Complexity: O(n * taps).
 pub fn filter_iir(x: &Vec[Float64], b: &Vec[Float64], a: &Vec[Float64]) -> Vec[Float64] {
   var out = Vec[Float64].new();
   var n = x.len();
@@ -622,6 +675,7 @@ pub fn filter_iir(x: &Vec[Float64], b: &Vec[Float64], a: &Vec[Float64]) -> Vec[F
 }
 
 // Linear convolution of x with kernel (length n + m - 1). Complexity: O(n*m).
+/// Linear convolution of x with kernel (length n + m - 1). Complexity: O(n*m).
 pub fn convolve(x: &Vec[Float64], kernel: &Vec[Float64]) -> Vec[Float64] {
   var out = Vec[Float64].new();
   var n = x.len();
@@ -647,6 +701,8 @@ pub fn convolve(x: &Vec[Float64], kernel: &Vec[Float64]) -> Vec[Float64] {
 
 // Cross-correlation of x with kernel at lags - (m-1) .. (n-1).
 // Complexity: O(n*m).
+/// Cross-correlation of x with kernel at lags - (m-1) .. (n-1).
+/// Complexity: O(n*m).
 pub fn correlate(x: &Vec[Float64], kernel: &Vec[Float64]) -> Vec[Float64] {
   var out = Vec[Float64].new();
   var n = x.len();
@@ -672,6 +728,7 @@ pub fn correlate(x: &Vec[Float64], kernel: &Vec[Float64]) -> Vec[Float64] {
 }
 
 // Autocorrelation of x at lags 0 .. n-1. Complexity: O(n^2).
+/// Autocorrelation of x at lags 0 .. n-1. Complexity: O(n^2).
 pub fn autocorrelate(x: &Vec[Float64]) -> Vec[Float64] {
   var out = Vec[Float64].new();
   var n = x.len();
@@ -696,6 +753,8 @@ pub fn autocorrelate(x: &Vec[Float64]) -> Vec[Float64] {
 
 // Length-n Hanning window: 0.5 (1 - cos(2 pi i / (n-1))). Empty for n <= 0.
 // Complexity: O(n).
+/// Length-n Hanning window: 0.5 (1 - cos(2 pi i / (n-1))). Empty for n <= 0.
+/// Complexity: O(n).
 pub fn window_hanning(n: Int) -> Vec[Float64] {
   var out = Vec[Float64].new();
   if n <= 0 { return out; }
@@ -709,6 +768,7 @@ pub fn window_hanning(n: Int) -> Vec[Float64] {
 }
 
 // Length-n Hamming window: 0.54 - 0.46 cos(2 pi i / (n-1)). Complexity: O(n).
+/// Length-n Hamming window: 0.54 - 0.46 cos(2 pi i / (n-1)). Complexity: O(n).
 pub fn window_hamming(n: Int) -> Vec[Float64] {
   var out = Vec[Float64].new();
   if n <= 0 { return out; }
@@ -722,6 +782,7 @@ pub fn window_hamming(n: Int) -> Vec[Float64] {
 }
 
 // Length-n Blackman window. Complexity: O(n).
+/// Length-n Blackman window. Complexity: O(n).
 pub fn window_blackman(n: Int) -> Vec[Float64] {
   var out = Vec[Float64].new();
   if n <= 0 { return out; }
@@ -737,6 +798,8 @@ pub fn window_blackman(n: Int) -> Vec[Float64] {
 
 // Length-n Kaiser window with shape beta (zeroth-order modified Bessel
 // approximation). Complexity: O(n).
+/// Length-n Kaiser window with shape beta (zeroth-order modified Bessel
+/// approximation). Complexity: O(n).
 pub fn window_kaiser(n: Int, beta: Float64) -> Vec[Float64] {
   var out = Vec[Float64].new();
   if n <= 0 { return out; }
@@ -766,6 +829,7 @@ fn _i0(x: Float64) -> Float64 {
 }
 
 // Length-n Bartlett triangular window. Complexity: O(n).
+/// Length-n Bartlett triangular window. Complexity: O(n).
 pub fn window_bartlett(n: Int) -> Vec[Float64] {
   var out = Vec[Float64].new();
   if n <= 0 { return out; }
@@ -780,6 +844,7 @@ pub fn window_bartlett(n: Int) -> Vec[Float64] {
 }
 
 // Length-n Gaussian window with deviation sigma. Complexity: O(n).
+/// Length-n Gaussian window with deviation sigma. Complexity: O(n).
 pub fn window_gaussian(n: Int, sigma: Float64) -> Vec[Float64] {
   var out = Vec[Float64].new();
   if n <= 0 { return out; }
@@ -798,6 +863,7 @@ pub fn window_gaussian(n: Int, sigma: Float64) -> Vec[Float64] {
 // ---------------------------------------------------------------------------
 
 // Magnitude spectrum |FFT(x)|. Complexity: O(n log n).
+/// Magnitude spectrum |FFT(x)|. Complexity: O(n log n).
 pub fn spectrum(x: &Vec[Float64]) -> Vec[Float64] {
   var out = Vec[Float64].new();
   var n = x.len();
@@ -814,6 +880,7 @@ pub fn spectrum(x: &Vec[Float64]) -> Vec[Float64] {
 }
 
 // Power spectral density |FFT(x)|^2 / N. Complexity: O(n log n).
+/// Power spectral density |FFT(x)|^2 / N. Complexity: O(n log n).
 pub fn psd(x: &Vec[Float64]) -> Vec[Float64] {
   var out = Vec[Float64].new();
   var n = x.len();
@@ -832,6 +899,9 @@ pub fn psd(x: &Vec[Float64]) -> Vec[Float64] {
 // Time-frequency spectrogram matrix: windowed magnitude spectra, one row per
 // frame (frames start every `hop` samples, width `win_size`). Complexity:
 // O(frames * win_size^2).
+/// Time-frequency spectrogram matrix: windowed magnitude spectra, one row per
+/// frame (frames start every `hop` samples, width `win_size`). Complexity:
+/// O(frames * win_size^2).
 pub fn spectrogram(x: &Vec[Float64], win_size: Int, hop: Int) -> Vec[Vec[Float64]] {
   var out = Vec[Vec[Float64]].new();
   var n = x.len();
@@ -875,6 +945,7 @@ fn window_hann_internal(n: Int) -> Vec[Float64] {
 }
 
 // Cepstrum: |IDFT(ln(|DFT(x)| + eps))|. Complexity: O(n log n).
+/// Cepstrum: |IDFT(ln(|DFT(x)| + eps))|. Complexity: O(n log n).
 pub fn cepstrum(x: &Vec[Float64]) -> Vec[Float64] {
   var out = Vec[Float64].new();
   var n = x.len();
@@ -902,6 +973,8 @@ pub fn cepstrum(x: &Vec[Float64]) -> Vec[Float64] {
 
 // Mel-scale triangular filter bank: n_filters rows of fft_size/2 + 1 weights.
 // Complexity: O(n_filters * fft_size).
+/// Mel-scale triangular filter bank: n_filters rows of fft_size/2 + 1 weights.
+/// Complexity: O(n_filters * fft_size).
 pub fn mel_filterbank(n_filters: Int, fft_size: Int, sample_rate: Float64) -> Vec[Vec[Float64]] {
   var out = Vec[Vec[Float64]].new();
   if n_filters <= 0 || fft_size <= 0 || sample_rate <= 0 { return out; }
@@ -945,6 +1018,9 @@ pub fn mel_filterbank(n_filters: Int, fft_size: Int, sample_rate: Float64) -> Ve
 // Mel-frequency cepstral coefficients: the log-mel spectrum of x followed by
 // the DCT, keeping the first n_coeffs coefficients. Empty for degenerate
 // input. Complexity: O(n log n + filters * fft_size + filters^2).
+/// Mel-frequency cepstral coefficients: the log-mel spectrum of x followed by
+/// the DCT, keeping the first n_coeffs coefficients. Empty for degenerate
+/// input. Complexity: O(n log n + filters * fft_size + filters^2).
 pub fn mfcc(x: &Vec[Float64], n_coeffs: Int, sample_rate: Float64) -> Vec[Float64] {
   var out = Vec[Float64].new();
   var n = x.len();

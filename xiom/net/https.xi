@@ -25,6 +25,8 @@ use xiom.string;
 
 // https_default_port returns the default HTTPS port (443).
 // Complexity: O(1). Pure.
+/// https_default_port returns the default HTTPS port (443).
+/// Complexity: O(1). Pure.
 pub fn https_default_port() -> Int {
   443
 }
@@ -32,6 +34,9 @@ pub fn https_default_port() -> Int {
 // https_request_line builds the request line for a method and target,
 // e.g. https_request_line("GET", "/") == "GET / HTTP/1.1".
 // Complexity: O(1). Pure.
+/// https_request_line builds the request line for a method and target,
+/// e.g. https_request_line("GET", "/") == "GET / HTTP/1.1".
+/// Complexity: O(1). Pure.
 pub fn https_request_line(method: Str, target: Str) -> Str {
   method + " " + target + " HTTP/1.1"
 }
@@ -39,6 +44,9 @@ pub fn https_request_line(method: Str, target: Str) -> Str {
 // https_build_request builds a full HTTPS request text from a URL,
 // method, headers, and body. The Host header carries the explicit port
 // only when it differs from 443. Complexity: O(n). Pure.
+/// https_build_request builds a full HTTPS request text from a URL,
+/// method, headers, and body. The Host header carries the explicit port
+/// only when it differs from 443. Complexity: O(n). Pure.
 pub fn https_build_request(method: Str, url_str: Str, headers: &Vec[(Str, Str)], body: &Vec[UInt8]) -> Result[Str, Str] {
   let parsed = url.url_parse(url_str);
   match parsed {
@@ -103,6 +111,8 @@ fn https_parse_status_line(line: Str) -> Int {
 
 // https_status_text returns the standard reason phrase for a status
 // code, or "Unknown" for codes not in the table. Complexity: O(1).
+/// https_status_text returns the standard reason phrase for a status
+/// code, or "Unknown" for codes not in the table. Complexity: O(1).
 pub fn https_status_text(code: Int) -> Str {
   if code == 200 { return "OK"; }
   if code == 201 { return "Created"; }
@@ -134,6 +144,8 @@ pub fn https_status_text(code: Int) -> Str {
 
 // https_response_status extracts the HTTP status code from a raw
 // response. Returns None if malformed. Complexity: O(1). Pure.
+/// https_response_status extracts the HTTP status code from a raw
+/// response. Returns None if malformed. Complexity: O(1). Pure.
 pub fn https_response_status(raw: Str) -> Option[Int] {
   let nl = idx_of(raw, "\r\n");
   var status_line = raw;
@@ -154,18 +166,24 @@ pub fn https_response_status(raw: Str) -> Option[Int] {
 
 // https_parse_response_headers extracts the (name, value) header pairs
 // from a raw response block. Complexity: O(n). Pure.
+/// https_parse_response_headers extracts the (name, value) header pairs
+/// from a raw response block. Complexity: O(n). Pure.
 pub fn https_parse_response_headers(raw: Str) -> Vec[(Str, Str)] {
   http.http_parse_response_headers(raw)
 }
 
 // https_url_encode percent-encodes a string for use in a URL.
 // Complexity: O(n). Pure.
+/// https_url_encode percent-encodes a string for use in a URL.
+/// Complexity: O(n). Pure.
 pub fn https_url_encode(s: Str) -> Str {
   http.http_url_encode(s)
 }
 
 // https_url_decode percent-decodes a URL-encoded string.
 // Complexity: O(n). Pure.
+/// https_url_decode percent-decodes a URL-encoded string.
+/// Complexity: O(n). Pure.
 pub fn https_url_decode(s: Str) -> Result[Str, Str] {
   http.http_url_decode(s)
 }

@@ -22,6 +22,8 @@ use xiom.core.to_int;
 
 // Cobb-Douglas utility of a consumption bundle: prod x_i^w_i. NaN for a
 // negative bundle entry or a length mismatch. Complexity: O(n).
+/// Cobb-Douglas utility of a consumption bundle: prod x_i^w_i. NaN for a
+/// negative bundle entry or a length mismatch. Complexity: O(n).
 pub fn utility(bundle: &Vec[Float64], weights: &Vec[Float64]) -> Float64 {
   if bundle.len() != weights.len() { return 0.0 / 0.0; }
   var result = 1.0;
@@ -40,6 +42,8 @@ pub fn utility(bundle: &Vec[Float64], weights: &Vec[Float64]) -> Float64 {
 
 // Cobb-Douglas production function A L^alpha K^beta. NaN for negative inputs.
 // Complexity: O(1).
+/// Cobb-Douglas production function A L^alpha K^beta. NaN for negative inputs.
+/// Complexity: O(1).
 pub fn production_cobb_douglas(a: Float64, alpha: Float64, beta: Float64, labor: Float64, capital: Float64) -> Float64 {
   if a < 0.0 || labor < 0.0 || capital < 0.0 { return 0.0 / 0.0; }
   if labor == 0.0 || capital == 0.0 { return 0.0; }
@@ -50,6 +54,8 @@ pub fn production_cobb_douglas(a: Float64, alpha: Float64, beta: Float64, labor:
 
 // Quantity demanded at price p with constant elasticity: income * p^-e.
 // Complexity: O(1).
+/// Quantity demanded at price p with constant elasticity: income * p^-e.
+/// Complexity: O(1).
 pub fn demand(price: Float64, income: Float64, elasticity: Float64) -> Float64 {
   if price <= 0.0 { return 0.0 / 0.0; }
   return income * math.pow(price, -elasticity);
@@ -57,6 +63,8 @@ pub fn demand(price: Float64, income: Float64, elasticity: Float64) -> Float64 {
 
 // Quantity supplied at price p with constant elasticity: cost * p^e.
 // Complexity: O(1).
+/// Quantity supplied at price p with constant elasticity: cost * p^e.
+/// Complexity: O(1).
 pub fn supply(price: Float64, cost: Float64, elasticity: Float64) -> Float64 {
   if price <= 0.0 { return 0.0 / 0.0; }
   return cost * math.pow(price, elasticity);
@@ -65,6 +73,9 @@ pub fn supply(price: Float64, cost: Float64, elasticity: Float64) -> Float64 {
 // Equilibrium price and quantity where demand_fn(p) == supply_fn(p), found
 // by bisection over [0, 1000] (300 iterations). NaN when no crossing exists.
 // Complexity: O(300 * cost(demand_fn + supply_fn)).
+/// Equilibrium price and quantity where demand_fn(p) == supply_fn(p), found
+/// by bisection over [0, 1000] (300 iterations). NaN when no crossing exists.
+/// Complexity: O(300 * cost(demand_fn + supply_fn)).
 pub fn market_equilibrium(demand_fn: fn(Float64) -> Float64, supply_fn: fn(Float64) -> Float64) -> (Float64, Float64) {
   var lo = 0.0;
   var hi = 1000.0;
@@ -95,6 +106,8 @@ pub fn market_equilibrium(demand_fn: fn(Float64) -> Float64, supply_fn: fn(Float
 
 // Arc elasticity: ((q1 - q0)/((q0+q1)/2)) / ((p1 - p0)/((p0+p1)/2)).
 // NaN for zero midpoints. Complexity: O(1).
+/// Arc elasticity: ((q1 - q0)/((q0+q1)/2)) / ((p1 - p0)/((p0+p1)/2)).
+/// NaN for zero midpoints. Complexity: O(1).
 pub fn elasticity(q0: Float64, q1: Float64, p0: Float64, p1: Float64) -> Float64 {
   var qm = 0.5 * (q0 + q1);
   var pm = 0.5 * (p0 + p1);
@@ -104,6 +117,8 @@ pub fn elasticity(q0: Float64, q1: Float64, p0: Float64, p1: Float64) -> Float64
 
 // Finite-difference marginal value of f at x: (f(x+h) - f(x-h)) / (2h).
 // NaN for h <= 0. Complexity: O(1) with 2 evaluations.
+/// Finite-difference marginal value of f at x: (f(x+h) - f(x-h)) / (2h).
+/// NaN for h <= 0. Complexity: O(1) with 2 evaluations.
 pub fn marginal(f: fn(Float64) -> Float64, x: Float64, h: Float64) -> Float64 {
   if h <= 0.0 { return 0.0 / 0.0; }
   var fp = f(x + h);
@@ -115,6 +130,10 @@ pub fn marginal(f: fn(Float64) -> Float64, x: Float64, h: Float64) -> Float64 {
 // proportion to the marginal-utility weights supplied by `utilities`; the
 // returned bundle sums to `income`. Empty for a length mismatch.
 // Complexity: O(n * cost(utilities)).
+/// Optimal consumption bundle: the income is allocated across goods in
+/// proportion to the marginal-utility weights supplied by `utilities`; the
+/// returned bundle sums to `income`. Empty for a length mismatch.
+/// Complexity: O(n * cost(utilities)).
 pub fn consumer_theory(prices: &Vec[Float64], income: Float64, utilities: fn(&Vec[Float64]) -> Float64) -> Vec[Float64] {
   var out = Vec[Float64].new();
   var n = prices.len();
@@ -153,6 +172,10 @@ pub fn consumer_theory(prices: &Vec[Float64], income: Float64, utilities: fn(&Ve
 // unit input vector, scale each input to maximize prices-x - costs(x).
 // Returns the input vector. Empty for a price mismatch.
 // Complexity: O(steps * n * cost(costs)).
+/// Profit-maximizing input combination by coordinate search: starting from a
+/// unit input vector, scale each input to maximize prices-x - costs(x).
+/// Returns the input vector. Empty for a price mismatch.
+/// Complexity: O(steps * n * cost(costs)).
 pub fn producer_theory(prices: &Vec[Float64], costs: fn(&Vec[Float64]) -> Float64) -> Vec[Float64] {
   var out = Vec[Float64].new();
   var n = prices.len();
@@ -229,6 +252,11 @@ pub fn producer_theory(prices: &Vec[Float64], costs: fn(&Vec[Float64]) -> Float6
 // matrix is a Vec[Vec[Float64]] and the utility vector is a Vec[fn], whose
 // element reads return garbage (BUG 23 #1 residual; verified by minimal
 // probe). Keep the frozen signature; revisit when the fixes land.
+/// Walrasian equilibrium price vector.
+/// TODO(compiler): NOT IMPLEMENTABLE in this compiler build - the endowment
+/// matrix is a Vec[Vec[Float64]] and the utility vector is a Vec[fn], whose
+/// element reads return garbage (BUG 23 #1 residual; verified by minimal
+/// probe). Keep the frozen signature; revisit when the fixes land.
 pub fn general_equilibrium(endowments: &Vec[Vec[Float64]], utilities: &Vec[fn(&Vec[Float64]) -> Float64]) -> Vec[Float64] {
   var out = Vec[Float64].new();
   return out;
@@ -238,6 +266,10 @@ pub fn general_equilibrium(endowments: &Vec[Vec[Float64]], utilities: &Vec[fn(&V
 // highest bid wins and pays the second-highest bid; bidders are private
 // values. Returns (price, winner_index); a single bidder pays the reserve.
 // Complexity: O(n).
+/// Equilibrium revenue and winner of a second-price (Vickrey) auction: the
+/// highest bid wins and pays the second-highest bid; bidders are private
+/// values. Returns (price, winner_index); a single bidder pays the reserve.
+/// Complexity: O(n).
 pub fn auction_theory(bidders: &Vec[Float64], private_values: &Vec[Float64]) -> (Float64, Int) {
   var n = bidders.len();
   if n == 0 || private_values.len() != n {
@@ -271,6 +303,9 @@ pub fn auction_theory(bidders: &Vec[Float64], private_values: &Vec[Float64]) -> 
 // Incentive-compatible allocation rule: the total type space is allocated so
 // that each type i receives a share proportional to valuations(i, types[i]).
 // Empty for a mismatch. Complexity: O(n).
+/// Incentive-compatible allocation rule: the total type space is allocated so
+/// that each type i receives a share proportional to valuations(i, types[i]).
+/// Empty for a mismatch. Complexity: O(n).
 pub fn mechanism_design(types: &Vec[Float64], valuations: fn(Int, Float64) -> Float64) -> Vec[Float64] {
   var out = Vec[Float64].new();
   var n = types.len();

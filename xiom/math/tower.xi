@@ -19,6 +19,10 @@ module xiom.math.tower
 // Implemented by every numeric width. New widths register by adding one
 // `impl Num[Width] { ... }` block - every generic function below then serves
 // that width automatically.
+/// -- Num interface (the numeric tower contract) ------------------------------
+/// Implemented by every numeric width. New widths register by adding one
+/// `impl Num[Width] { ... }` block - every generic function below then serves
+/// that width automatically.
 pub interface Num[T] {
   fn add(a: T, b: T) -> T;
   fn sub(a: T, b: T) -> T;

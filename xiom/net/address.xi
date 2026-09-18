@@ -18,6 +18,8 @@ use xiom.net.ip;
 
 // struct Address { family: Str; host: Str; port: Int }
 //   family is "ipv4", "ipv6" or "hostname"; port 0 means "no explicit port".
+/// struct Address { family: Str; host: Str; port: Int }
+///   family is "ipv4", "ipv6" or "hostname"; port 0 means "no explicit port".
 pub type Address = {
   family: Str;
   host: Str;

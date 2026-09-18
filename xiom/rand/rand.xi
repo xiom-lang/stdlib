@@ -14,6 +14,7 @@ extern "C" {
 }
 
 // === RNG trait ===
+/// === RNG trait ===
 pub interface Rng {
   fn next_int(self) -> Int;
   fn next_float(self) -> Float64;
@@ -33,6 +34,7 @@ fn _lcg_step(state: Int) -> Int {
 }
 
 // === Standard RNG ===
+/// === Standard RNG ===
 pub type StdRng = { state: Int; } derive[Clone]
 
 pub fn StdRng.new() -> StdRng

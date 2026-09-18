@@ -14,6 +14,7 @@ module xiom.net.unix
 // ============================================================================
 
 // struct UnixSocket { fd: Int; path: Str; listening: Bool }
+/// struct UnixSocket { fd: Int; path: Str; listening: Bool }
 pub type UnixSocket = {
   fd: Int;
   path: Str;

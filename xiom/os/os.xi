@@ -609,6 +609,9 @@ pub fn file_size_bytes(path: Str) -> Result[Int, Str]
 // hostname returns the system hostname via gethostname (POSIX) or
 // GetComputerNameA (Windows).  Uses an internal static buffer in the
 // C runtime.  Returns Err on failure.
+/// hostname returns the system hostname via gethostname (POSIX) or
+/// GetComputerNameA (Windows).  Uses an internal static buffer in the
+/// C runtime.  Returns Err on failure.
 pub fn hostname() -> Result[Str, Str]
   requires: true
 {
@@ -624,6 +627,9 @@ pub fn hostname() -> Result[Str, Str]
 // os_version_str returns a best-effort OS version string via the
 // xiom_os_version_str runtime intrinsic (GetVersionExA on Windows,
 // uname on POSIX).
+/// os_version_str returns a best-effort OS version string via the
+/// xiom_os_version_str runtime intrinsic (GetVersionExA on Windows,
+/// uname on POSIX).
 pub fn os_version_str() -> Str
   requires: true
 {
@@ -634,12 +640,15 @@ pub fn os_version_str() -> Str
 }
 
 // is_unix returns true if the platform is linux or macos.
+/// is_unix returns true if the platform is linux or macos.
 pub fn is_unix() -> Bool {
   return is_linux() || is_macos();
 }
 
 // user_name returns the current user name by reading the
 // USERNAME (Windows) or USER (Unix) environment variable.
+/// user_name returns the current user name by reading the
+/// USERNAME (Windows) or USER (Unix) environment variable.
 pub fn user_name() -> Option[Str] {
   let v = env.var_opt("USERNAME");
   match v {
@@ -651,6 +660,8 @@ pub fn user_name() -> Option[Str] {
 
 // total_memory_mb returns total system memory in MiB.
 // Wraps total_memory() / (1024 * 1024).  Complexity: O(1).
+/// total_memory_mb returns total system memory in MiB.
+/// Wraps total_memory() / (1024 * 1024).  Complexity: O(1).
 pub fn total_memory_mb() -> Int {
   let total = total_memory();
   return total / (1024 * 1024);
@@ -658,6 +669,8 @@ pub fn total_memory_mb() -> Int {
 
 // free_memory_mb returns free system memory in MiB.
 // Wraps free_memory() / (1024 * 1024).  Complexity: O(1).
+/// free_memory_mb returns free system memory in MiB.
+/// Wraps free_memory() / (1024 * 1024).  Complexity: O(1).
 pub fn free_memory_mb() -> Int {
   let free = free_memory();
   return free / (1024 * 1024);
@@ -665,18 +678,24 @@ pub fn free_memory_mb() -> Int {
 
 // page_size returns the system page size in bytes.
 // Returns 4096 -- the runtime does not expose sysconf(_SC_PAGESIZE).
+/// page_size returns the system page size in bytes.
+/// Returns 4096 -- the runtime does not expose sysconf(_SC_PAGESIZE).
 pub fn page_size() -> Int {
   return 4096;
 }
 
 // terminal_width returns the terminal width in columns, if detectable.
 // The Xiom runtime does not expose TIOCGWINSZ -- always returns None.
+/// terminal_width returns the terminal width in columns, if detectable.
+/// The Xiom runtime does not expose TIOCGWINSZ -- always returns None.
 pub fn terminal_width() -> Option[Int] {
   return None;
 }
 
 // sleep_millis sleeps for at least the given number of milliseconds.
 // Uses busy-wait; usleep is not available on Windows MSVC.
+/// sleep_millis sleeps for at least the given number of milliseconds.
+/// Uses busy-wait; usleep is not available on Windows MSVC.
 pub fn sleep_millis(ms: Int) {
   if ms <= 0 {
     return;
@@ -695,6 +714,8 @@ pub fn sleep_millis(ms: Int) {
 
 // current_exe_path returns the path of the currently running executable.
 // Delegates to env.current_exe().  Returns None on failure.
+/// current_exe_path returns the path of the currently running executable.
+/// Delegates to env.current_exe().  Returns None on failure.
 pub fn current_exe_path() -> Option[Str] {
   let result = env.current_exe();
   match result {
@@ -705,6 +726,8 @@ pub fn current_exe_path() -> Option[Str] {
 
 // process_id returns the current process ID via the xiom_getpid
 // runtime intrinsic.
+/// process_id returns the current process ID via the xiom_getpid
+/// runtime intrinsic.
 pub fn process_id() -> Int
   requires: true
 {
@@ -716,6 +739,9 @@ pub fn process_id() -> Int
 // cpu_model returns a human-readable CPU model string.
 // The Xiom runtime does not expose CPUID or /proc/cpuinfo.
 // Always returns "unknown".
+/// cpu_model returns a human-readable CPU model string.
+/// The Xiom runtime does not expose CPUID or /proc/cpuinfo.
+/// Always returns "unknown".
 pub fn cpu_model() -> Str {
   return "unknown";
 }

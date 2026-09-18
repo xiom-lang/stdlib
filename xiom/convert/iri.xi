@@ -15,6 +15,7 @@ module xiom.convert.iri
 use xiom.string;
 
 // Iri -- parsed IRI components.
+/// Iri -- parsed IRI components.
 pub type Iri = {
   scheme: Str;
   authority: Str;

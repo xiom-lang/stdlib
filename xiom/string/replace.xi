@@ -40,6 +40,9 @@ fn _matches_at(s: Str, pos: Int, from: Str) -> Bool {
 // Replaces all non-overlapping occurrences of `from` with `to` in `s`.
 // Returns `s` unchanged when `from` is empty or does not occur.
 // Complexity: O(|s| * |from|).
+/// Replaces all non-overlapping occurrences of `from` with `to` in `s`.
+/// Returns `s` unchanged when `from` is empty or does not occur.
+/// Complexity: O(|s| * |from|).
 pub fn str_replace(s: Str, from: Str, to: Str) -> Str {
   let from_len = xiom.string.str_len(from);
   if from_len == 0 {
@@ -65,6 +68,9 @@ pub fn str_replace(s: Str, from: Str, to: Str) -> Str {
 // Replaces all non-overlapping occurrences of `from` with `to` in `s`.
 // Returns `s` unchanged when `from` is empty or does not occur.
 // Complexity: O(|s| * |from|).
+/// Replaces all non-overlapping occurrences of `from` with `to` in `s`.
+/// Returns `s` unchanged when `from` is empty or does not occur.
+/// Complexity: O(|s| * |from|).
 pub fn str_replace_all(s: Str, from: Str, to: Str) -> Str {
   str_replace(s, from, to)
 }
@@ -73,6 +79,10 @@ pub fn str_replace_all(s: Str, from: Str, to: Str) -> Str {
 // When `n <= 0`, returns `s` unchanged.
 // Returns `s` unchanged when `from` is empty or does not occur.
 // Complexity: O(|s| * |from|).
+/// Replaces at most `n` non-overlapping occurrences of `from` with `to` in `s`.
+/// When `n <= 0`, returns `s` unchanged.
+/// Returns `s` unchanged when `from` is empty or does not occur.
+/// Complexity: O(|s| * |from|).
 pub fn str_replace_n(s: Str, from: Str, to: Str, n: Int) -> Str {
   let from_len = xiom.string.str_len(from);
   if from_len == 0 {
@@ -103,6 +113,9 @@ pub fn str_replace_n(s: Str, from: Str, to: Str, n: Int) -> Str {
 // Replaces the first occurrence of `from` with `to` in `s`.
 // Returns `s` unchanged when `from` is empty or does not occur.
 // Complexity: O(|s| * |from|).
+/// Replaces the first occurrence of `from` with `to` in `s`.
+/// Returns `s` unchanged when `from` is empty or does not occur.
+/// Complexity: O(|s| * |from|).
 pub fn str_replace_first(s: Str, from: Str, to: Str) -> Str {
   let from_len = xiom.string.str_len(from);
   if from_len == 0 {
@@ -122,6 +135,9 @@ pub fn str_replace_first(s: Str, from: Str, to: Str) -> Str {
 // Replaces the last occurrence of `from` with `to` in `s`.
 // Returns `s` unchanged when `from` is empty or does not occur.
 // Complexity: O(|s| * |from|).
+/// Replaces the last occurrence of `from` with `to` in `s`.
+/// Returns `s` unchanged when `from` is empty or does not occur.
+/// Complexity: O(|s| * |from|).
 pub fn str_replace_last(s: Str, from: Str, to: Str) -> Str {
   let from_len = xiom.string.str_len(from);
   if from_len == 0 {

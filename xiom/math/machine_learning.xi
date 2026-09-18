@@ -21,6 +21,8 @@ use xiom.core.to_int;
 
 // Logistic sigmoid 1/(1+exp(-x)). Saturated to 1 for large x and to 0 for
 // very negative x. Complexity: O(1).
+/// Logistic sigmoid 1/(1+exp(-x)). Saturated to 1 for large x and to 0 for
+/// very negative x. Complexity: O(1).
 pub fn activation_sigmoid(x: Float64) -> Float64 {
   if x != x { return x; }
   if x >= 0.0 {
@@ -33,6 +35,8 @@ pub fn activation_sigmoid(x: Float64) -> Float64 {
 
 // Hyperbolic tangent activation tanh(x) = (1 - exp(-2x))/(1 + exp(-2x)),
 // stable for all x. Complexity: O(1).
+/// Hyperbolic tangent activation tanh(x) = (1 - exp(-2x))/(1 + exp(-2x)),
+/// stable for all x. Complexity: O(1).
 pub fn activation_tanh(x: Float64) -> Float64 {
   if x != x { return x; }
   if x >= 0.0 {
@@ -44,12 +48,14 @@ pub fn activation_tanh(x: Float64) -> Float64 {
 }
 
 // Rectified linear unit max(0, x). Complexity: O(1).
+/// Rectified linear unit max(0, x). Complexity: O(1).
 pub fn activation_relu(x: Float64) -> Float64 {
   if x > 0.0 { return x; }
   return 0.0;
 }
 
 // Gaussian error linear unit 0.5 x (1 + erf(x / sqrt(2))). Complexity: O(1).
+/// Gaussian error linear unit 0.5 x (1 + erf(x / sqrt(2))). Complexity: O(1).
 pub fn activation_gelu(x: Float64) -> Float64 {
   if x != x { return x; }
   var a = x / 1.4142135623730951;
@@ -58,6 +64,7 @@ pub fn activation_gelu(x: Float64) -> Float64 {
 }
 
 // Swish activation x * sigmoid(x). Complexity: O(1).
+/// Swish activation x * sigmoid(x). Complexity: O(1).
 pub fn activation_swish(x: Float64) -> Float64 {
   var s = activation_sigmoid(x);
   return x * s;
@@ -65,6 +72,8 @@ pub fn activation_swish(x: Float64) -> Float64 {
 
 // Mean squared error of y_true vs y_pred. NaN on length mismatch or NaN
 // input. Complexity: O(n).
+/// Mean squared error of y_true vs y_pred. NaN on length mismatch or NaN
+/// input. Complexity: O(n).
 pub fn loss_mse(y_true: &Vec[Float64], y_pred: &Vec[Float64]) -> Float64 {
   if y_true.len() != y_pred.len() { return 0.0 / 0.0; }
   var s = 0.0;
@@ -78,6 +87,7 @@ pub fn loss_mse(y_true: &Vec[Float64], y_pred: &Vec[Float64]) -> Float64 {
 }
 
 // Mean absolute error of y_true vs y_pred. Complexity: O(n).
+/// Mean absolute error of y_true vs y_pred. Complexity: O(n).
 pub fn loss_mae(y_true: &Vec[Float64], y_pred: &Vec[Float64]) -> Float64 {
   if y_true.len() != y_pred.len() { return 0.0 / 0.0; }
   var s = 0.0;
@@ -93,6 +103,8 @@ pub fn loss_mae(y_true: &Vec[Float64], y_pred: &Vec[Float64]) -> Float64 {
 
 // Huber loss with threshold delta: quadratic inside delta, linear outside.
 // NaN for delta <= 0. Complexity: O(n).
+/// Huber loss with threshold delta: quadratic inside delta, linear outside.
+/// NaN for delta <= 0. Complexity: O(n).
 pub fn loss_huber(y_true: &Vec[Float64], y_pred: &Vec[Float64], delta: Float64) -> Float64 {
   if y_true.len() != y_pred.len() { return 0.0 / 0.0; }
   if delta <= 0.0 { return 0.0 / 0.0; }
@@ -113,6 +125,8 @@ pub fn loss_huber(y_true: &Vec[Float64], y_pred: &Vec[Float64], delta: Float64) 
 
 // Categorical cross entropy -sum y_true_i log(y_pred_i). NaN for zero
 // predictions with positive target or length mismatch. Complexity: O(n).
+/// Categorical cross entropy -sum y_true_i log(y_pred_i). NaN for zero
+/// predictions with positive target or length mismatch. Complexity: O(n).
 pub fn loss_cross_entropy(y_true: &Vec[Float64], y_pred: &Vec[Float64]) -> Float64 {
   if y_true.len() != y_pred.len() { return 0.0 / 0.0; }
   var s = 0.0;
@@ -132,6 +146,8 @@ pub fn loss_cross_entropy(y_true: &Vec[Float64], y_pred: &Vec[Float64]) -> Float
 
 // Hinge loss sum max(0, 1 - y_true_i * y_pred_i) (targets in {-1, +1}).
 // Complexity: O(n).
+/// Hinge loss sum max(0, 1 - y_true_i * y_pred_i) (targets in {-1, +1}).
+/// Complexity: O(n).
 pub fn loss_hinge(y_true: &Vec[Float64], y_pred: &Vec[Float64]) -> Float64 {
   if y_true.len() != y_pred.len() { return 0.0 / 0.0; }
   var s = 0.0;
@@ -147,6 +163,7 @@ pub fn loss_hinge(y_true: &Vec[Float64], y_pred: &Vec[Float64]) -> Float64 {
 }
 
 // Fraction of correct predictions (labels in {0, 1}). Complexity: O(n).
+/// Fraction of correct predictions (labels in {0, 1}). Complexity: O(n).
 pub fn metric_accuracy(y_true: &Vec[Int], y_pred: &Vec[Int]) -> Float64 {
   if y_true.len() != y_pred.len() { return 0.0 / 0.0; }
   if y_true.len() == 0 { return 0.0; }
@@ -163,6 +180,8 @@ pub fn metric_accuracy(y_true: &Vec[Int], y_pred: &Vec[Int]) -> Float64 {
 
 // Precision of the positive class (labels in {0, 1}): TP / (TP + FP).
 // Returns 0 when no positive prediction exists (documented). Complexity: O(n).
+/// Precision of the positive class (labels in {0, 1}): TP / (TP + FP).
+/// Returns 0 when no positive prediction exists (documented). Complexity: O(n).
 pub fn metric_precision(y_true: &Vec[Int], y_pred: &Vec[Int]) -> Float64 {
   if y_true.len() != y_pred.len() { return 0.0 / 0.0; }
   var tp = 0;
@@ -180,6 +199,8 @@ pub fn metric_precision(y_true: &Vec[Int], y_pred: &Vec[Int]) -> Float64 {
 
 // Recall of the positive class (labels in {0, 1}): TP / (TP + FN).
 // Returns 0 when no positive label exists (documented). Complexity: O(n).
+/// Recall of the positive class (labels in {0, 1}): TP / (TP + FN).
+/// Returns 0 when no positive label exists (documented). Complexity: O(n).
 pub fn metric_recall(y_true: &Vec[Int], y_pred: &Vec[Int]) -> Float64 {
   if y_true.len() != y_pred.len() { return 0.0 / 0.0; }
   var tp = 0;
@@ -197,6 +218,8 @@ pub fn metric_recall(y_true: &Vec[Int], y_pred: &Vec[Int]) -> Float64 {
 
 // F1 score: harmonic mean of precision and recall. Returns 0 when both are
 // zero (documented). Complexity: O(n).
+/// F1 score: harmonic mean of precision and recall. Returns 0 when both are
+/// zero (documented). Complexity: O(n).
 pub fn metric_f1(y_true: &Vec[Int], y_pred: &Vec[Int]) -> Float64 {
   var p = metric_precision(y_true, y_pred);
   var r = metric_recall(y_true, y_pred);
@@ -207,6 +230,9 @@ pub fn metric_f1(y_true: &Vec[Int], y_pred: &Vec[Int]) -> Float64 {
 // Area under the ROC curve computed by the rank-sum (Mann-Whitney) formula:
 // AUC = (sum of ranks of positives - P(P+1)/2) / (P * N). NaN on length
 // mismatch or empty classes. Complexity: O(n log n).
+/// Area under the ROC curve computed by the rank-sum (Mann-Whitney) formula:
+/// AUC = (sum of ranks of positives - P(P+1)/2) / (P * N). NaN on length
+/// mismatch or empty classes. Complexity: O(n log n).
 pub fn metric_auc(y_true: &Vec[Int], y_pred: &Vec[Float64]) -> Float64 {
   if y_true.len() != y_pred.len() { return 0.0 / 0.0; }
   var n = y_true.len();
@@ -291,6 +317,7 @@ fn _sort_pairs(pairs: &Vec[(Float64, Int)]) -> Vec[(Float64, Int)] {
 }
 
 // L1 penalty lambda * sum |w_i|. Complexity: O(n).
+/// L1 penalty lambda * sum |w_i|. Complexity: O(n).
 pub fn regularization_l1(weights: &Vec[Float64], lambda: Float64) -> Float64 {
   var s = 0.0;
   var i = 0;
@@ -304,6 +331,7 @@ pub fn regularization_l1(weights: &Vec[Float64], lambda: Float64) -> Float64 {
 }
 
 // L2 penalty lambda * sum w_i^2. Complexity: O(n).
+/// L2 penalty lambda * sum w_i^2. Complexity: O(n).
 pub fn regularization_l2(weights: &Vec[Float64], lambda: Float64) -> Float64 {
   var s = 0.0;
   var i = 0;
@@ -315,6 +343,7 @@ pub fn regularization_l2(weights: &Vec[Float64], lambda: Float64) -> Float64 {
 }
 
 // Elastic-net penalty lambda1 * L1 + lambda2 * L2. Complexity: O(n).
+/// Elastic-net penalty lambda1 * L1 + lambda2 * L2. Complexity: O(n).
 pub fn regularization_elastic_net(weights: &Vec[Float64], lambda1: Float64, lambda2: Float64) -> Float64 {
   return regularization_l1(weights, lambda1) + regularization_l2(weights, lambda2);
 }
@@ -326,6 +355,13 @@ pub fn regularization_elastic_net(weights: &Vec[Float64], lambda1: Float64, lamb
 // matrix is a Vec[Vec[Float64]] whose element reads return garbage (BUG 23 #1
 // residual; verified by minimal probe). Keep the frozen signature; revisit
 // when nested float Vec reads land.
+/// Batch normalization over the batch dimension (per-feature mean/variance,
+/// with epsilon 1e-5 stabilization; no learned scale/shift). NaN for empty
+/// input. Complexity: O(batch * features).
+/// TODO(compiler): NOT IMPLEMENTABLE in this compiler build - the batch/feature
+/// matrix is a Vec[Vec[Float64]] whose element reads return garbage (BUG 23 #1
+/// residual; verified by minimal probe). Keep the frozen signature; revisit
+/// when nested float Vec reads land.
 pub fn normalization_batch(x: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {
   var out = Vec[Vec[Float64]].new();
   return out;
@@ -333,6 +369,8 @@ pub fn normalization_batch(x: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {
 
 // Layer normalization of a feature vector: (x - mean) / sqrt(var + eps).
 // NaN for empty input. Complexity: O(n).
+/// Layer normalization of a feature vector: (x - mean) / sqrt(var + eps).
+/// NaN for empty input. Complexity: O(n).
 pub fn normalization_layer(x: &Vec[Float64]) -> Vec[Float64] {
   var out = Vec[Float64].new();
   var n = x.len();
@@ -363,6 +401,9 @@ pub fn normalization_layer(x: &Vec[Float64]) -> Vec[Float64] {
 // Group normalization: channels (vector positions) are split into `groups`
 // contiguous groups, each normalized to zero mean and unit variance.
 // NaN for groups <= 0 or a non-divisible length. Complexity: O(n).
+/// Group normalization: channels (vector positions) are split into `groups`
+/// contiguous groups, each normalized to zero mean and unit variance.
+/// NaN for groups <= 0 or a non-divisible length. Complexity: O(n).
 pub fn normalization_group(x: &Vec[Float64], groups: Int) -> Vec[Float64] {
   var out = Vec[Float64].new();
   var n = x.len();
@@ -400,6 +441,9 @@ pub fn normalization_group(x: &Vec[Float64], groups: Int) -> Vec[Float64] {
 // Training-time dropout: each element is kept with probability 1 - rate
 // (scaled by 1/(1 - rate)); the RNG is seeded with `seed` for reproducible
 // masks. NaN for rate outside [0, 1). Complexity: O(n).
+/// Training-time dropout: each element is kept with probability 1 - rate
+/// (scaled by 1/(1 - rate)); the RNG is seeded with `seed` for reproducible
+/// masks. NaN for rate outside [0, 1). Complexity: O(n).
 pub fn dropout(x: &Vec[Float64], rate: Float64, seed: Int) -> Vec[Float64] {
   var out = Vec[Float64].new();
   if rate < 0.0 || rate >= 1.0 { return out; }
@@ -420,6 +464,8 @@ pub fn dropout(x: &Vec[Float64], rate: Float64, seed: Int) -> Vec[Float64] {
 
 // Radial basis function kernel exp(-gamma * ||x - y||^2). NaN on length
 // mismatch. Complexity: O(n).
+/// Radial basis function kernel exp(-gamma * ||x - y||^2). NaN on length
+/// mismatch. Complexity: O(n).
 pub fn kernel_rbf(x: &Vec[Float64], y: &Vec[Float64], gamma: Float64) -> Float64 {
   if x.len() != y.len() { return 0.0 / 0.0; }
   var s = 0.0;
@@ -434,6 +480,8 @@ pub fn kernel_rbf(x: &Vec[Float64], y: &Vec[Float64], gamma: Float64) -> Float64
 
 // Polynomial kernel (dot(x, y) + coef0)^degree. NaN on length mismatch.
 // Complexity: O(n).
+/// Polynomial kernel (dot(x, y) + coef0)^degree. NaN on length mismatch.
+/// Complexity: O(n).
 pub fn kernel_polynomial(x: &Vec[Float64], y: &Vec[Float64], degree: Int, coef0: Float64) -> Float64 {
   if x.len() != y.len() { return 0.0 / 0.0; }
   var d = coef0;
@@ -447,6 +495,8 @@ pub fn kernel_polynomial(x: &Vec[Float64], y: &Vec[Float64], degree: Int, coef0:
 
 // Sigmoid kernel tanh(gamma * dot(x, y) + coef0). NaN on length mismatch.
 // Complexity: O(n).
+/// Sigmoid kernel tanh(gamma * dot(x, y) + coef0). NaN on length mismatch.
+/// Complexity: O(n).
 pub fn kernel_sigmoid(x: &Vec[Float64], y: &Vec[Float64], gamma: Float64, coef0: Float64) -> Float64 {
   if x.len() != y.len() { return 0.0 / 0.0; }
   var d = 0.0;
@@ -459,6 +509,7 @@ pub fn kernel_sigmoid(x: &Vec[Float64], y: &Vec[Float64], gamma: Float64, coef0:
 }
 
 // Euclidean distance ||a - b||. NaN on length mismatch. Complexity: O(n).
+/// Euclidean distance ||a - b||. NaN on length mismatch. Complexity: O(n).
 pub fn distance_euclidean(a: &Vec[Float64], b: &Vec[Float64]) -> Float64 {
   if a.len() != b.len() { return 0.0 / 0.0; }
   var s = 0.0;
@@ -472,6 +523,7 @@ pub fn distance_euclidean(a: &Vec[Float64], b: &Vec[Float64]) -> Float64 {
 }
 
 // Manhattan (L1) distance sum |a_i - b_i|. Complexity: O(n).
+/// Manhattan (L1) distance sum |a_i - b_i|. Complexity: O(n).
 pub fn distance_manhattan(a: &Vec[Float64], b: &Vec[Float64]) -> Float64 {
   if a.len() != b.len() { return 0.0 / 0.0; }
   var s = 0.0;
@@ -486,6 +538,7 @@ pub fn distance_manhattan(a: &Vec[Float64], b: &Vec[Float64]) -> Float64 {
 }
 
 // Cosine distance 1 - cos_similarity. Complexity: O(n).
+/// Cosine distance 1 - cos_similarity. Complexity: O(n).
 pub fn distance_cosine(a: &Vec[Float64], b: &Vec[Float64]) -> Float64 {
   if a.len() != b.len() { return 0.0 / 0.0; }
   var sim = similarity_cosine(a, b);
@@ -495,6 +548,8 @@ pub fn distance_cosine(a: &Vec[Float64], b: &Vec[Float64]) -> Float64 {
 
 // Minkowski distance (sum |a_i - b_i|^p)^(1/p). NaN for p <= 0 or length
 // mismatch. Complexity: O(n).
+/// Minkowski distance (sum |a_i - b_i|^p)^(1/p). NaN for p <= 0 or length
+/// mismatch. Complexity: O(n).
 pub fn distance_minkowski(a: &Vec[Float64], b: &Vec[Float64], p: Float64) -> Float64 {
   if a.len() != b.len() { return 0.0 / 0.0; }
   if p <= 0.0 { return 0.0 / 0.0; }
@@ -511,6 +566,8 @@ pub fn distance_minkowski(a: &Vec[Float64], b: &Vec[Float64], p: Float64) -> Flo
 
 // Cosine similarity dot(a, b) / (||a|| ||b||). NaN for zero norms or length
 // mismatch. Complexity: O(n).
+/// Cosine similarity dot(a, b) / (||a|| ||b||). NaN for zero norms or length
+/// mismatch. Complexity: O(n).
 pub fn similarity_cosine(a: &Vec[Float64], b: &Vec[Float64]) -> Float64 {
   if a.len() != b.len() { return 0.0 / 0.0; }
   var dot = 0.0;
@@ -530,6 +587,8 @@ pub fn similarity_cosine(a: &Vec[Float64], b: &Vec[Float64]) -> Float64 {
 
 // Jaccard similarity for non-negative vectors: sum min(a, b) / sum max(a, b).
 // Returns 1 for two zero vectors (documented). Complexity: O(n).
+/// Jaccard similarity for non-negative vectors: sum min(a, b) / sum max(a, b).
+/// Returns 1 for two zero vectors (documented). Complexity: O(n).
 pub fn similarity_jaccard(a: &Vec[Float64], b: &Vec[Float64]) -> Float64 {
   if a.len() != b.len() { return 0.0 / 0.0; }
   var mn = 0.0;
@@ -551,6 +610,8 @@ pub fn similarity_jaccard(a: &Vec[Float64], b: &Vec[Float64]) -> Float64 {
 
 // Dice coefficient 2 * sum min(a, b) / (sum a + sum b). Returns 1 for two
 // zero vectors (documented). Complexity: O(n).
+/// Dice coefficient 2 * sum min(a, b) / (sum a + sum b). Returns 1 for two
+/// zero vectors (documented). Complexity: O(n).
 pub fn similarity_dice(a: &Vec[Float64], b: &Vec[Float64]) -> Float64 {
   if a.len() != b.len() { return 0.0 / 0.0; }
   var inter = 0.0;

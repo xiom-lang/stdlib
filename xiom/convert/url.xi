@@ -17,6 +17,7 @@ use xiom.string;
 use xiom.encoding;
 
 // Url -- parsed URL components.
+/// Url -- parsed URL components.
 pub type Url = {
   scheme: Str;
   host: Str;

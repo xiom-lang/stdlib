@@ -468,12 +468,16 @@ pub fn is_valid_regex(pattern: Str) -> Bool {
 
 // Replaces all non-overlapping matches of `re` in `text` with `replacement`.
 // Uses literal replacement (no $1 group references).
+/// Replaces all non-overlapping matches of `re` in `text` with `replacement`.
+/// Uses literal replacement (no $1 group references).
 pub fn regex_replace_all(re: Regex, text: Str, replacement: Str) -> Str {
   re.replace_all(text, replacement)
 }
 
 // Finds the first match of `re` in `text` and returns the matched substring.
 // Returns None if no match is found.
+/// Finds the first match of `re` in `text` and returns the matched substring.
+/// Returns None if no match is found.
 pub fn regex_find_first_str(re: Regex, text: Str) -> Option[Str] {
   let m_result = re.find(text);
   match m_result {
@@ -488,11 +492,14 @@ pub fn regex_find_first_str(re: Regex, text: Str) -> Option[Str] {
 
 // Splits `text` around all non-overlapping matches of `re`.
 // Returns a Vec of substrings between matches.
+/// Splits `text` around all non-overlapping matches of `re`.
+/// Returns a Vec of substrings between matches.
 pub fn regex_split(re: Regex, text: Str) -> Vec[Str] {
   re.split(text)
 }
 
 // Returns the number of non-overlapping matches of `re` in `text`.
+/// Returns the number of non-overlapping matches of `re` in `text`.
 pub fn regex_count_matches(re: Regex, text: Str) -> Int {
   re.match_count(text)
 }
@@ -501,6 +508,8 @@ pub fn regex_count_matches(re: Regex, text: Str) -> Int {
 
 // Returns all non-overlapping matches of `re` in `text` as Match objects.
 // Wraps Regex.find_all.
+/// Returns all non-overlapping matches of `re` in `text` as Match objects.
+/// Wraps Regex.find_all.
 pub fn regex_matches_all(re: Regex, text: Str) -> Vec[Match] {
   re.find_all(text)
 }
@@ -511,6 +520,10 @@ pub fn regex_matches_all(re: Regex, text: Str) -> Vec[Match] {
 // Returns a Vec where each element is the text of a captured group,
 // or None if that group did not participate in the match.
 // The first element (index 0) is the full match.
+/// Extracts capture groups from the first match of `re` in `text`.
+/// Returns a Vec where each element is the text of a captured group,
+/// or None if that group did not participate in the match.
+/// The first element (index 0) is the full match.
 pub fn regex_extract_groups(re: Regex, text: Str) -> Vec[Option[Str]] {
   var result = Vec[Option[Str]].new();
   let opt_caps = re.captures(text);
@@ -535,6 +548,8 @@ pub fn regex_extract_groups(re: Regex, text: Str) -> Vec[Option[Str]] {
 
 // Escapes regex metacharacters in `s` so it can be used as a literal pattern.
 // Wraps regex_escape.
+/// Escapes regex metacharacters in `s` so it can be used as a literal pattern.
+/// Wraps regex_escape.
 pub fn regex_escape_literal(s: Str) -> Str {
   regex_escape(s)
 }
@@ -542,6 +557,9 @@ pub fn regex_escape_literal(s: Str) -> Str {
 // Returns true if `pattern` is a syntactically valid regex.
 // Checks for balanced brackets and valid quantifier positions.
 // Wraps is_valid_regex.
+/// Returns true if `pattern` is a syntactically valid regex.
+/// Checks for balanced brackets and valid quantifier positions.
+/// Wraps is_valid_regex.
 pub fn regex_is_valid(pattern: Str) -> Bool {
   is_valid_regex(pattern)
 }

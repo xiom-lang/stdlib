@@ -11,6 +11,8 @@ use xiom.string;
 
 // server_default_port returns the default HTTP server port (80).
 // Complexity: O(1). Pure.
+/// server_default_port returns the default HTTP server port (80).
+/// Complexity: O(1). Pure.
 pub fn server_default_port() -> Int {
   80
 }
@@ -19,6 +21,10 @@ pub fn server_default_port() -> Int {
 // "GET /path HTTP/1.1" into (method, target, version). Returns None if
 // the line does not contain three space-separated tokens.
 // Complexity: O(n). Pure.
+/// server_parse_request_line parses an HTTP request line like
+/// "GET /path HTTP/1.1" into (method, target, version). Returns None if
+/// the line does not contain three space-separated tokens.
+/// Complexity: O(n). Pure.
 pub fn server_parse_request_line(line: Str) -> Option[(Str, Str, Str)] {
   let sp1 = idx_of(line, " ");
   if sp1 <= 0 {
@@ -40,12 +46,16 @@ pub fn server_parse_request_line(line: Str) -> Option[(Str, Str, Str)] {
 
 // server_build_status_line builds a status line like
 // "HTTP/1.1 200 OK". Complexity: O(1). Pure.
+/// server_build_status_line builds a status line like
+/// "HTTP/1.1 200 OK". Complexity: O(1). Pure.
 pub fn server_build_status_line(code: Int) -> Str {
   "HTTP/1.1 " + code.to_str() + " " + server_status_text(code)
 }
 
 // server_build_response builds a minimal HTTP/1.1 response with a
 // text/plain body. Complexity: O(n). Pure.
+/// server_build_response builds a minimal HTTP/1.1 response with a
+/// text/plain body. Complexity: O(n). Pure.
 pub fn server_build_response(code: Int, body: Str) -> Str {
   var resp = server_build_status_line(code);
   resp = resp + "\r\n";
@@ -59,6 +69,8 @@ pub fn server_build_response(code: Int, body: Str) -> Str {
 
 // server_build_response_headers builds an HTTP/1.1 response with custom
 // (name, value) header pairs and a text body. Complexity: O(n). Pure.
+/// server_build_response_headers builds an HTTP/1.1 response with custom
+/// (name, value) header pairs and a text body. Complexity: O(n). Pure.
 pub fn server_build_response_headers(code: Int, headers: &Vec[(Str, Str)], body: Str) -> Str {
   var resp = server_build_status_line(code);
   resp = resp + "\r\n";
@@ -75,6 +87,8 @@ pub fn server_build_response_headers(code: Int, headers: &Vec[(Str, Str)], body:
 
 // server_status_text returns the standard reason phrase for a status
 // code, or "Unknown" for codes not in the table. Complexity: O(1).
+/// server_status_text returns the standard reason phrase for a status
+/// code, or "Unknown" for codes not in the table. Complexity: O(1).
 pub fn server_status_text(code: Int) -> Str {
   if code == 200 { return "OK"; }
   if code == 201 { return "Created"; }

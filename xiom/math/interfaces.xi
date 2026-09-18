@@ -18,6 +18,7 @@ module xiom.math.interfaces
 // ============================================================================
 
 // Numeric arithmetic contract: add/sub/mul/div plus the identity elements.
+/// Numeric arithmetic contract: add/sub/mul/div plus the identity elements.
 pub interface Numeric {
   fn add(a: Self, b: Self) -> Self;
   fn sub(a: Self, b: Self) -> Self;
@@ -32,6 +33,8 @@ pub interface Numeric {
 
 // Integer arithmetic contract: division with remainder and quotient plus
 // Int construction.
+/// Integer arithmetic contract: division with remainder and quotient plus
+/// Int construction.
 pub interface Integer {
   fn add(a: Self, b: Self) -> Self;
   fn sub(a: Self, b: Self) -> Self;
@@ -47,6 +50,7 @@ pub interface Integer {
 }
 
 // Signed arithmetic contract: add/sub/mul/div with sign operations.
+/// Signed arithmetic contract: add/sub/mul/div with sign operations.
 pub interface Signed {
   fn add(a: Self, b: Self) -> Self;
   fn sub(a: Self, b: Self) -> Self;
@@ -60,6 +64,7 @@ pub interface Signed {
 }
 
 // Unsigned arithmetic contract: no negation, remainder and quotient only.
+/// Unsigned arithmetic contract: no negation, remainder and quotient only.
 pub interface Unsigned {
   fn add(a: Self, b: Self) -> Self;
   fn sub(a: Self, b: Self) -> Self;
@@ -73,6 +78,7 @@ pub interface Unsigned {
 }
 
 // Floating-point contract: arithmetic plus the IEEE rounding family.
+/// Floating-point contract: arithmetic plus the IEEE rounding family.
 pub interface Float {
   fn add(a: Self, b: Self) -> Self;
   fn sub(a: Self, b: Self) -> Self;
@@ -90,6 +96,7 @@ pub interface Float {
 }
 
 // Total-order comparison contract.
+/// Total-order comparison contract.
 pub interface Ord {
   fn cmp(a: Self, b: Self) -> Int;
   fn lt(a: Self, b: Self) -> Bool;
@@ -101,6 +108,7 @@ pub interface Ord {
 }
 
 // Bounded-value contract: the representable range and finiteness tests.
+/// Bounded-value contract: the representable range and finiteness tests.
 pub interface Bounded {
   fn min_value() -> Self;
   fn max_value() -> Self;
@@ -109,11 +117,13 @@ pub interface Bounded {
 }
 
 // Parse-from-string contract.
+/// Parse-from-string contract.
 pub interface FromStr {
   fn from_str(s: Str) -> Result[Self, Str];
 }
 
 // Human-readable rendering contract.
+/// Human-readable rendering contract.
 pub interface Display {
   fn to_string(a: Self) -> Str;
 }

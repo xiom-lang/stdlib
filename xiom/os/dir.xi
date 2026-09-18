@@ -13,6 +13,8 @@ use xiom.os.fs;
 
 // dir_current returns the current working directory.
 // Delegates to env.current_dir. Complexity: O(1) syscall.
+/// dir_current returns the current working directory.
+/// Delegates to env.current_dir. Complexity: O(1) syscall.
 pub fn dir_current() -> Result[Str, Str] {
   let r = env.current_dir();
   match r {
@@ -23,6 +25,8 @@ pub fn dir_current() -> Result[Str, Str] {
 
 // dir_create creates a single directory.
 // Delegates to io.create_dir. Complexity: O(1) syscall.
+/// dir_create creates a single directory.
+/// Delegates to io.create_dir. Complexity: O(1) syscall.
 pub fn dir_create(path: Str) -> Result[Unit, Str] {
   if path.len() == 0 {
     return Err("dir_create: empty path");
@@ -36,6 +40,8 @@ pub fn dir_create(path: Str) -> Result[Unit, Str] {
 
 // dir_create_all creates a directory and all missing parents.
 // Delegates to io.create_dir_all. Complexity: O(depth) syscalls.
+/// dir_create_all creates a directory and all missing parents.
+/// Delegates to io.create_dir_all. Complexity: O(depth) syscalls.
 pub fn dir_create_all(path: Str) -> Result[Unit, Str] {
   if path.len() == 0 {
     return Ok(());
@@ -49,6 +55,8 @@ pub fn dir_create_all(path: Str) -> Result[Unit, Str] {
 
 // dir_list returns the names of entries in a directory.
 // Delegates to io.list_dir. Complexity: O(n) syscalls.
+/// dir_list returns the names of entries in a directory.
+/// Delegates to io.list_dir. Complexity: O(n) syscalls.
 pub fn dir_list(path: Str) -> Result[Vec[Str], Str] {
   if path.len() == 0 {
     return Err("dir_list: empty path");
@@ -62,6 +70,8 @@ pub fn dir_list(path: Str) -> Result[Vec[Str], Str] {
 
 // dir_exists returns true if path exists and is a directory.
 // Delegates to io.is_dir. Complexity: O(1) syscall.
+/// dir_exists returns true if path exists and is a directory.
+/// Delegates to io.is_dir. Complexity: O(1) syscall.
 pub fn dir_exists(path: Str) -> Bool {
   if path.len() == 0 {
     return false;
@@ -72,6 +82,9 @@ pub fn dir_exists(path: Str) -> Bool {
 // dir_remove removes an empty directory.
 // Delegates to io.remove_file (which handles both files and dirs via
 // the C runtime). Complexity: O(1) syscall.
+/// dir_remove removes an empty directory.
+/// Delegates to io.remove_file (which handles both files and dirs via
+/// the C runtime). Complexity: O(1) syscall.
 pub fn dir_remove(path: Str) -> Result[Unit, Str] {
   if path.len() == 0 {
     return Err("dir_remove: empty path");
@@ -85,18 +98,24 @@ pub fn dir_remove(path: Str) -> Result[Unit, Str] {
 
 // dir_temp returns the system temporary directory.
 // Delegates to env.temp_dir. Complexity: O(1).
+/// dir_temp returns the system temporary directory.
+/// Delegates to env.temp_dir. Complexity: O(1).
 pub fn dir_temp() -> Str {
   env.temp_dir()
 }
 
 // dir_home returns the current user's home directory, if known.
 // Delegates to env.home_dir. Complexity: O(1).
+/// dir_home returns the current user's home directory, if known.
+/// Delegates to env.home_dir. Complexity: O(1).
 pub fn dir_home() -> Option[Str] {
   env.home_dir()
 }
 
 // dir_is_empty returns true if a directory contains no entries.
 // Complexity: O(n) syscalls.
+/// dir_is_empty returns true if a directory contains no entries.
+/// Complexity: O(n) syscalls.
 pub fn dir_is_empty(path: Str) -> Bool {
   if !io.is_dir(path) {
     return false;
@@ -110,12 +129,16 @@ pub fn dir_is_empty(path: Str) -> Bool {
 
 // dir_join joins two path components with the OS separator.
 // Delegates to io.join_paths. Complexity: O(1).
+/// dir_join joins two path components with the OS separator.
+/// Delegates to io.join_paths. Complexity: O(1).
 pub fn dir_join(a: Str, b: Str) -> Str {
   io.join_paths(a, b)
 }
 
 // dir_parent returns the parent directory of path, or None if there is
 // none. Delegates to fs.fs_parent_dir. Complexity: O(n).
+/// dir_parent returns the parent directory of path, or None if there is
+/// none. Delegates to fs.fs_parent_dir. Complexity: O(n).
 pub fn dir_parent(path: Str) -> Option[Str] {
   fs.fs_parent_dir(path)
 }

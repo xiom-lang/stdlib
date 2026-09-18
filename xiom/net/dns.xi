@@ -192,6 +192,11 @@ fn split_whitespace(s: Str) -> Vec[Str] {
 // proven in p_dns_parity). The Option/Result translation binds the parsed
 // value to a named local first (R28 workaround: `.value` on a temporary
 // aggregate payload is corrupt).
+/// dns_parse_ipv4 parses "a.b.c.d" into 4 bytes, or None on invalid input.
+/// Delegates to the canonical xiom.net.ip4 (dedup wave, 2026-09-16; parity
+/// proven in p_dns_parity). The Option/Result translation binds the parsed
+/// value to a named local first (R28 workaround: `.value` on a temporary
+/// aggregate payload is corrupt).
 pub fn dns_parse_ipv4(s: Str) -> Option[Vec[UInt8]] {
   let r = net4.ip4_parse(s);
   match r {
@@ -202,6 +207,8 @@ pub fn dns_parse_ipv4(s: Str) -> Option[Vec[UInt8]] {
 
 // dns_ipv4_to_str formats 4 bytes as "a.b.c.d", or None if the length is
 // not 4. Delegates to the canonical xiom.net.ip4.
+/// dns_ipv4_to_str formats 4 bytes as "a.b.c.d", or None if the length is
+/// not 4. Delegates to the canonical xiom.net.ip4.
 pub fn dns_ipv4_to_str(octets: &Vec[UInt8]) -> Option[Str] {
   let r = net4.ip4_to_str(octets);
   match r {
@@ -214,6 +221,10 @@ pub fn dns_ipv4_to_str(octets: &Vec[UInt8]) -> Option[Str] {
 // compressed form with a single "::" into 16 bytes. Returns None on
 // invalid input. Delegates to the canonical xiom.net.ip6 (parity proven in
 // p_dns_parity).
+/// dns_parse_ipv6 parses a full-form IPv6 address (8 hex groups) or a
+/// compressed form with a single "::" into 16 bytes. Returns None on
+/// invalid input. Delegates to the canonical xiom.net.ip6 (parity proven in
+/// p_dns_parity).
 pub fn dns_parse_ipv6(s: Str) -> Option[Vec[UInt8]] {
   let r = net6.ip6_parse(s);
   match r {
@@ -225,6 +236,9 @@ pub fn dns_parse_ipv6(s: Str) -> Option[Vec[UInt8]] {
 // dns_ipv6_to_str formats 16 bytes as a full-form IPv6 address (8 groups,
 // no "::" compression). Delegates to the canonical xiom.net.ip6 (same
 // full-form convention; parity proven in p_dns_parity).
+/// dns_ipv6_to_str formats 16 bytes as a full-form IPv6 address (8 groups,
+/// no "::" compression). Delegates to the canonical xiom.net.ip6 (same
+/// full-form convention; parity proven in p_dns_parity).
 pub fn dns_ipv6_to_str(bytes: &Vec[UInt8]) -> Option[Str] {
   let r = net6.ip6_to_str(bytes);
   match r {
@@ -235,6 +249,8 @@ pub fn dns_ipv6_to_str(bytes: &Vec[UInt8]) -> Option[Str] {
 
 // dns_parse_record_line parses a presentation-format zone record line
 // such as "example.com. 3600 IN A 93.184.216.34" into (name, type, rdata).
+/// dns_parse_record_line parses a presentation-format zone record line
+/// such as "example.com. 3600 IN A 93.184.216.34" into (name, type, rdata).
 pub fn dns_parse_record_line(line: Str) -> Option[(Str, Str, Str)] {
   let tokens = split_whitespace(line);
   if tokens.len() < 4 {
@@ -257,6 +273,9 @@ pub fn dns_parse_record_line(line: Str) -> Option[(Str, Str, Str)] {
 // dns_is_valid_hostname validates a hostname: labels of [A-Za-z0-9-] with
 // no leading/trailing hyphen, 1-63 chars each, total length <= 253, at
 // least one label, and no empty labels. A single trailing dot is allowed.
+/// dns_is_valid_hostname validates a hostname: labels of [A-Za-z0-9-] with
+/// no leading/trailing hyphen, 1-63 chars each, total length <= 253, at
+/// least one label, and no empty labels. A single trailing dot is allowed.
 pub fn dns_is_valid_hostname(name: Str) -> Bool {
   let len = name.len();
   if len == 0 || len > 253 {
@@ -295,6 +314,8 @@ pub fn dns_is_valid_hostname(name: Str) -> Bool {
 
 // dns_reverse_ipv4 formats 4 bytes as the in-addr.arpa reverse name,
 // or None if the length is not 4.
+/// dns_reverse_ipv4 formats 4 bytes as the in-addr.arpa reverse name,
+/// or None if the length is not 4.
 pub fn dns_reverse_ipv4(octets: &Vec[UInt8]) -> Option[Str] {
   if octets.len() != 4 {
     return None;
@@ -315,6 +336,8 @@ pub fn dns_reverse_ipv4(octets: &Vec[UInt8]) -> Option[Str] {
 
 // dns_well_known_port maps a well-known service name to its default port,
 // or None for unknown services.
+/// dns_well_known_port maps a well-known service name to its default port,
+/// or None for unknown services.
 pub fn dns_well_known_port(service: Str) -> Option[Int] {
   if service == "http" { return Some(80); }
   if service == "https" { return Some(443); }

@@ -17,6 +17,7 @@ use xiom.encoding;
 use xiom.io;
 
 // struct Part { name: Str; filename: Str; content_type: Str; data: Vec[UInt8] }
+/// struct Part { name: Str; filename: Str; content_type: Str; data: Vec[UInt8] }
 pub type Part = {
   name: Str;
   filename: Str;

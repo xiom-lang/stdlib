@@ -103,6 +103,8 @@ fn starts_with(s: Str, prefix: Str) -> Bool {
 
 // url_parse parses a URL into its scheme/host/port/path/query/fragment
 // components. Userinfo (user:pass@) is skipped.
+/// url_parse parses a URL into its scheme/host/port/path/query/fragment
+/// components. Userinfo (user:pass@) is skipped.
 pub fn url_parse(url: Str) -> Result[UrlParts, Str] {
   let len = url.len();
   if len == 0 {
@@ -166,6 +168,8 @@ pub fn url_parse(url: Str) -> Result[UrlParts, Str] {
 
 // url_decode_component percent-decodes %XX sequences. '+' is left as-is
 // (component semantics -- '+' is only a space in form-encoding).
+/// url_decode_component percent-decodes %XX sequences. '+' is left as-is
+/// (component semantics -- '+' is only a space in form-encoding).
 pub fn url_decode_component(s: Str) -> Result[Str, Str] {
   let len = s.len();
   if len == 0 {
@@ -196,6 +200,8 @@ pub fn url_decode_component(s: Str) -> Result[Str, Str] {
 
 // url_encode_component percent-encodes everything except the unreserved
 // characters A-Z a-z 0-9 - _ . ~ (reuses xiom.encoding.percent_encode).
+/// url_encode_component percent-encodes everything except the unreserved
+/// characters A-Z a-z 0-9 - _ . ~ (reuses xiom.encoding.percent_encode).
 pub fn url_encode_component(s: Str) -> Result[Str, Str] {
   // Bind the module-qualified Str-returning call to a local first (compiler
   // bug: using its result directly in an expression emits inttoptr of a ptr).
@@ -206,6 +212,9 @@ pub fn url_encode_component(s: Str) -> Result[Str, Str] {
 // url_query_parse splits a query string on '&' and each pair on the first
 // '=', percent-decoding both sides and converting '+' to a space
 // (application/x-www-form-urlencoded semantics).
+/// url_query_parse splits a query string on '&' and each pair on the first
+/// '=', percent-decoding both sides and converting '+' to a space
+/// (application/x-www-form-urlencoded semantics).
 pub fn url_query_parse(query: Str) -> Vec[(Str, Str)] {
   var result: Vec[(Str, Str)] = Vec[(Str, Str)]::new();
   if query.len() == 0 {
@@ -241,6 +250,8 @@ pub fn url_query_parse(query: Str) -> Vec[(Str, Str)] {
 }
 // url_query_build joins key/value pairs as k=v separated by '&', applying
 // component encoding to both keys and values.
+/// url_query_build joins key/value pairs as k=v separated by '&', applying
+/// component encoding to both keys and values.
 pub fn url_query_build(pairs: Vec[(Str, Str)]) -> Str {
   var result = "";
   var i = 0;
@@ -298,6 +309,8 @@ fn normalize_path(path: Str) -> Str {
 
 // url_normalize lowercases the scheme and host, strips the default port,
 // and removes dot segments from the path. Query and fragment are kept.
+/// url_normalize lowercases the scheme and host, strips the default port,
+/// and removes dot segments from the path. Query and fragment are kept.
 pub fn url_normalize(url: Str) -> Result[Str, Str] {
   let parsed = url_parse(url);
   match parsed {
@@ -326,6 +339,8 @@ pub fn url_normalize(url: Str) -> Result[Str, Str] {
 
 // url_is_absolute returns true if the URL carries a scheme (a ':' before
 // any '/').
+/// url_is_absolute returns true if the URL carries a scheme (a ':' before
+/// any '/').
 pub fn url_is_absolute(url: Str) -> Bool {
   let len = url.len();
   var i = 0;
@@ -355,6 +370,9 @@ fn path_dir(path: Str) -> Str {
 // url_join resolves a relative reference against a base URL (RFC 3986 S5.3
 // merge), then normalizes dot segments. If the reference carries its own
 // scheme it is returned unchanged.
+/// url_join resolves a relative reference against a base URL (RFC 3986 S5.3
+/// merge), then normalizes dot segments. If the reference carries its own
+/// scheme it is returned unchanged.
 pub fn url_join(base: Str, relative: Str) -> Result[Str, Str] {
   if url_is_absolute(relative) {
     return Ok(relative);

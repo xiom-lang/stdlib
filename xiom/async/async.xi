@@ -55,6 +55,9 @@ type Timer = {
 // === Executor ===
 // A cooperative single-threaded scheduler: a FIFO-ish ready-queue plus a set
 // of pending timers. Stored 8-byte-per-slot exactly like `Vec[LogEntry]`.
+/// === Executor ===
+/// A cooperative single-threaded scheduler: a FIFO-ish ready-queue plus a set
+/// of pending timers. Stored 8-byte-per-slot exactly like `Vec[LogEntry]`.
 pub type Executor = {
   ready: Vec[fn()];
   timers: Vec[Timer];
@@ -65,17 +68,21 @@ pub fn Executor.new() -> Executor {
 }
 
 // Enqueue a task onto the ready-queue. It runs on the next drain, not now.
+/// Enqueue a task onto the ready-queue. It runs on the next drain, not now.
 pub fn Executor.spawn(self, task: fn()) {
   self.ready.push(task);
 }
 
 // Register a task to become ready once the clock reaches `deadline`.
+/// Register a task to become ready once the clock reaches `deadline`.
 pub fn Executor.at(self, deadline: Int, task: fn()) {
   self.timers.push(Timer{ deadline: deadline, task: task });
 }
 
 // Run a single ready task. Returns true if one was run, false if the
 // ready-queue was empty.
+/// Run a single ready task. Returns true if one was run, false if the
+/// ready-queue was empty.
 pub fn Executor.step(self) -> Bool {
   if self.ready.len() == 0 {
     return false;
@@ -91,6 +98,8 @@ pub fn Executor.step(self) -> Bool {
 
 // Advance pending timers: sleep until the earliest deadline, then move every
 // timer that is now due onto the ready-queue (keeping the rest pending).
+/// Advance pending timers: sleep until the earliest deadline, then move every
+/// timer that is now due onto the ready-queue (keeping the rest pending).
 pub fn Executor.fire_due_timers(self) {
   if self.timers.len() == 0 {
     return;
@@ -131,6 +140,7 @@ pub fn Executor.fire_due_timers(self) {
 }
 
 // Drive the scheduler until both the ready-queue and the timer set are empty.
+/// Drive the scheduler until both the ready-queue and the timer set are empty.
 pub fn Executor.run(self) {
   while self.ready.len() > 0 || self.timers.len() > 0 {
     // Drain every currently-ready task (tasks may enqueue more as they run).
@@ -145,6 +155,7 @@ pub fn Executor.run(self) {
 }
 
 // Spawn a task then drive to completion.
+/// Spawn a task then drive to completion.
 pub fn Executor.block_on(self, task: fn()) {
   self.spawn(task);
   self.run();
@@ -172,22 +183,29 @@ fn _pump() -> Bool {
 // Enqueue an async task onto the global executor's ready-queue.
 // NOTE: unlike the old stub, this no longer runs `task` inline -- it is
 // scheduled and runs when the executor is driven via `run`/`block_on`.
+/// === Spawn ===
+/// Enqueue an async task onto the global executor's ready-queue.
+/// NOTE: unlike the old stub, this no longer runs `task` inline -- it is
+/// scheduled and runs when the executor is driven via `run`/`block_on`.
 pub fn spawn(task: fn()) {
   _exec.spawn(task);
 }
 
 // Drive the global executor until all tasks and timers are complete.
+/// Drive the global executor until all tasks and timers are complete.
 pub fn run() {
   _exec.run();
 }
 
 // Spawn a task and drive the global executor to completion.
+/// Spawn a task and drive the global executor to completion.
 pub fn block_on(task: fn()) {
   _exec.spawn(task);
   _exec.run();
 }
 
 // Schedule `task` to become ready after `ms` milliseconds (real timer).
+/// Schedule `task` to become ready after `ms` milliseconds (real timer).
 pub fn delay(ms: Int, task: fn())
   requires: ms >= 0
 {
@@ -198,6 +216,10 @@ pub fn delay(ms: Int, task: fn())
 // tasks, so the single thread keeps making progress during the wait.
 // NOTE: with no coroutine transform this blocks the calling frame; it does
 // not suspend-and-resume it. Use `delay` for true fire-after-deadline tasks.
+/// Cooperative sleep: wait `ms` milliseconds while still driving other ready
+/// tasks, so the single thread keeps making progress during the wait.
+/// NOTE: with no coroutine transform this blocks the calling frame; it does
+/// not suspend-and-resume it. Use `delay` for true fire-after-deadline tasks.
 pub fn sleep_ms(ms: Int) {
   let deadline = _now() + ms;
   while _now() < deadline {
@@ -211,6 +233,7 @@ pub fn sleep_ms(ms: Int) {
 }
 
 // === Channel type ===
+/// === Channel type ===
 pub type Channel[T] = {
   items: Vec[T];
   closed: Bool;

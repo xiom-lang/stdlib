@@ -31,6 +31,10 @@ use xiom.math;
 // associativity, the two-sided identity law, and the existence of a
 // two-sided inverse for every element. An empty carrier is vacuously a
 // group of order zero. Complexity: O(|G|^3) plus inverse search O(|G|^3).
+/// Validates the group axioms of (elements, operation, identity): closure,
+/// associativity, the two-sided identity law, and the existence of a
+/// two-sided inverse for every element. An empty carrier is vacuously a
+/// group of order zero. Complexity: O(|G|^3) plus inverse search O(|G|^3).
 pub fn group_theory(operation: fn(Int, Int) -> Int, elements: &Vec[Int], identity: Int) -> Bool {
   var n = elements.len();
   if n == 0 { return true; }
@@ -79,6 +83,13 @@ pub fn group_theory(operation: fn(Int, Int) -> Int, elements: &Vec[Int], identit
 // avoid the compiler's built-in operator identifiers (`add`/`mul` resolve
 // to Int/Float64 +/* regardless of the parameter, a name-resolution bug).
 // Complexity: O(|R|^4).
+/// Validates the ring axioms of (elements, op_add, op_mul, zero, one): the
+/// abelian group (elements, op_add, zero), the monoid (elements, op_mul,
+/// one), and both distributive laws. Multiplication is not required to
+/// commute (non-commutative rings are accepted). NOTE: the parameter names
+/// avoid the compiler's built-in operator identifiers (`add`/`mul` resolve
+/// to Int/Float64 +/* regardless of the parameter, a name-resolution bug).
+/// Complexity: O(|R|^4).
 pub fn ring_theory(op_add: fn(Int, Int) -> Int, op_mul: fn(Int, Int) -> Int, elements: &Vec[Int], zero: Int, one: Int) -> Bool {
   var n = elements.len();
   if n == 0 { return true; }
@@ -165,6 +176,11 @@ pub fn ring_theory(op_add: fn(Int, Int) -> Int, op_mul: fn(Int, Int) -> Int, ele
 // inverse for every element other than zero. Parameter names avoid the
 // compiler's built-in operator identifiers (see ring_theory). Complexity:
 // O(|F|^4).
+/// Validates the field axioms of (elements, op_add, op_mul, zero, one): the
+/// ring axioms plus a commutative multiplication and a multiplicative
+/// inverse for every element other than zero. Parameter names avoid the
+/// compiler's built-in operator identifiers (see ring_theory). Complexity:
+/// O(|F|^4).
 pub fn field_theory(op_add: fn(Float64, Float64) -> Float64, op_mul: fn(Float64, Float64) -> Float64,
                     elements: &Vec[Float64], zero: Float64, one: Float64) -> Bool {
   var n = elements.len();
@@ -220,6 +236,12 @@ pub fn field_theory(op_add: fn(Float64, Float64) -> Float64, op_mul: fn(Float64,
 // closure of the action (r*v in module for every r, v) and the unital law
 // assuming ring[0] is the multiplicative identity of the ring (documented
 // convention). Complexity: O(|R| * |M|).
+/// Validates the module axioms of (ring, module, action): the ring set is
+/// treated as the scalars and the module set as the vectors. Given the
+/// frozen signature (no scalar/vector addition functions), the check covers
+/// closure of the action (r*v in module for every r, v) and the unital law
+/// assuming ring[0] is the multiplicative identity of the ring (documented
+/// convention). Complexity: O(|R| * |M|).
 pub fn module_theory(action: fn(Int, Int) -> Int, ring: &Vec[Int], module_set: &Vec[Int]) -> Bool {
   var n = module_set.len();
   if n == 0 { return true; }
@@ -245,6 +267,10 @@ pub fn module_theory(action: fn(Int, Int) -> Int, ring: &Vec[Int], module_set: &
 // separable over the field F_p: gcd(p, p') == 1 modulo p. Returns false for
 // prime <= 1 (no field), or an empty/constant polynomial. Complexity:
 // O(deg^2) modular Euclid.
+/// True iff the polynomial (coefficients from the constant term) is
+/// separable over the field F_p: gcd(p, p') == 1 modulo p. Returns false for
+/// prime <= 1 (no field), or an empty/constant polynomial. Complexity:
+/// O(deg^2) modular Euclid.
 pub fn galois_theory(polynomial: &Vec[Int], prime: Int) -> Bool {
   if prime <= 1 { return false; }
   var d = polynomial.len();
@@ -268,6 +294,9 @@ pub fn galois_theory(polynomial: &Vec[Int], prime: Int) -> Bool {
 // True iff alpha is a root of the polynomial (coefficients from the
 // constant term) within 1e-9 tolerance. Returns false for an empty
 // polynomial. Complexity: O(deg).
+/// True iff alpha is a root of the polynomial (coefficients from the
+/// constant term) within 1e-9 tolerance. Returns false for an empty
+/// polynomial. Complexity: O(deg).
 pub fn algebraic_number(alpha: Float64, polynomial: &Vec[Float64]) -> Bool {
   var val = _poly_eval(alpha, polynomial);
   if val < 0.0 { val = -val; }
@@ -280,6 +309,12 @@ pub fn algebraic_number(alpha: Float64, polynomial: &Vec[Float64]) -> Bool {
 // frozen signature omits the ring addition, so the additive ideal laws are
 // not checked (documented). Parameter name avoids the built-in operator
 // identifiers (see ring_theory). Complexity: O(|R| * |I|).
+/// True iff the ideal is closed and absorbing in the ring under op_mul: the
+/// ideal is a subset of the ring, mul-closed on itself, and absorbing
+/// (r * i in the ideal for every ring element r and ideal element i). The
+/// frozen signature omits the ring addition, so the additive ideal laws are
+/// not checked (documented). Parameter name avoids the built-in operator
+/// identifiers (see ring_theory). Complexity: O(|R| * |I|).
 pub fn commutative_algebra(ideal: &Vec[Int], ring: &Vec[Int], op_mul: fn(Int, Int) -> Int) -> Bool {
   var i = 0;
   while i < ideal.len() {
@@ -308,6 +343,11 @@ pub fn commutative_algebra(ideal: &Vec[Int], ring: &Vec[Int], op_mul: fn(Int, In
 // or a vector of zeros) of stage i+2. Each chain row is a set of elements;
 // a single element is wrapped in a one-element vector before applying the
 // corresponding map. Complexity: O(stages * |chain| * cost(map)).
+/// True iff the chain complex squares to zero: for every chain group element
+/// v at stage i, maps[i+1](maps[i](v)) is the zero element (an empty vector
+/// or a vector of zeros) of stage i+2. Each chain row is a set of elements;
+/// a single element is wrapped in a one-element vector before applying the
+/// corresponding map. Complexity: O(stages * |chain| * cost(map)).
 pub fn homological_algebra(chain: &Vec[Vec[Int]], maps: &Vec[fn(&Vec[Int]) -> Vec[Int]>) -> Bool {
   var stages = chain.len();
   if stages == 0 { return true; }
@@ -334,6 +374,11 @@ pub fn homological_algebra(chain: &Vec[Vec[Int]], maps: &Vec[fn(&Vec[Int]) -> Ve
 // composition of any composable pair (a, b) and (b, c) exists as a
 // morphism (a, c). With the pair representation composition is then
 // automatically associative (documented). Complexity: O(|M|^2).
+/// True iff (objects, morphisms) is a category: morphism endpoints lie in
+/// objects, an identity morphism (x, x) exists for every object, and the
+/// composition of any composable pair (a, b) and (b, c) exists as a
+/// morphism (a, c). With the pair representation composition is then
+/// automatically associative (documented). Complexity: O(|M|^2).
 pub fn category_theory(objects: &Vec[Int], morphisms: &Vec[(Int, Int)]) -> Bool {
   var m = 0;
   while m < morphisms.len() {
@@ -364,6 +409,10 @@ pub fn category_theory(objects: &Vec[Int], morphisms: &Vec[(Int, Int)]) -> Bool 
 // arity: the operation is closed on elements (the result of every arity-
 // tuple of elements is itself an element). Returns false for arity <= 0
 // (documented). Complexity: O(|A|^arity).
+/// Validates an equational algebra signature with one operation of the given
+/// arity: the operation is closed on elements (the result of every arity-
+/// tuple of elements is itself an element). Returns false for arity <= 0
+/// (documented). Complexity: O(|A|^arity).
 pub fn universal_algebra(operation: fn(&Vec[Int]) -> Int, arity: Int, elements: &Vec[Int]) -> Bool {
   if arity <= 0 { return false; }
   var n = elements.len();
@@ -398,6 +447,12 @@ pub fn universal_algebra(operation: fn(&Vec[Int]) -> Int, arity: Int, elements: 
 // tolerance. Parameter name avoids the built-in operator identifiers (see
 // ring_theory). Returns false when the assignment does not cover the group.
 // Complexity: O(|G|^3 * dim^3).
+/// True iff the matrix assignment preserves group multiplication: assuming
+/// matrices[i] is the image of group[i] (documented correspondence), every
+/// pair (i, j) satisfies M[op_mul(g_i, g_j)] == M[i] * M[j] within 1e-9
+/// tolerance. Parameter name avoids the built-in operator identifiers (see
+/// ring_theory). Returns false when the assignment does not cover the group.
+/// Complexity: O(|G|^3 * dim^3).
 pub fn representation_theory(group: &Vec[Int], op_mul: fn(Int, Int) -> Int, matrices: &Vec[Vec[Vec[Float64]]]) -> Bool {
   var n = group.len();
   if n == 0 { return true; }
@@ -424,6 +479,12 @@ pub fn representation_theory(group: &Vec[Int], op_mul: fn(Int, Int) -> Int, matr
 // (using pair addition), and bracket(x, bracket(y, z)) + bracket(y,
 // bracket(z, x)) + bracket(z, bracket(x, y)) == (0, 0). Complexity:
 // O(|B|^3).
+/// True iff the bilinear alternating bracket satisfies the Jacobi identity
+/// on the basis (vectors over Z, represented as (Int, Int) pairs):
+/// anticommutativity bracket(x, x) == (0, 0), bilinearity in both arguments
+/// (using pair addition), and bracket(x, bracket(y, z)) + bracket(y,
+/// bracket(z, x)) + bracket(z, bracket(x, y)) == (0, 0). Complexity:
+/// O(|B|^3).
 pub fn lie_algebra(bracket: fn((Int, Int), (Int, Int)) -> (Int, Int), basis: &Vec[(Int, Int)]) -> Bool {
   var n = basis.len();
   if n == 0 { return true; }
@@ -460,6 +521,12 @@ pub fn lie_algebra(bracket: fn((Int, Int), (Int, Int)) -> (Int, Int), basis: &Ve
 // their generator bitmask, 1 = e_1e_2...). The metric is the quadratic
 // form of the underlying space; only its diagonal is used (documented).
 // Returns the empty matrix for dim < 0 (documented). Complexity: O(4^dim).
+/// Basis of the Clifford algebra for the diagonal metric: returns the 2^dim
+/// x 2^dim scalar table M with M[i][j] the coefficient such that
+/// blade_i * blade_j = M[i][j] * blade_{i xor j} (basis blades indexed by
+/// their generator bitmask, 1 = e_1e_2...). The metric is the quadratic
+/// form of the underlying space; only its diagonal is used (documented).
+/// Returns the empty matrix for dim < 0 (documented). Complexity: O(4^dim).
 pub fn clifford_algebra(metric: &Vec[Vec[Float64]], dim: Int) -> Vec[Vec[Float64]] {
   var out = Vec[Vec[Float64]].new();
   if dim < 0 { return out; }

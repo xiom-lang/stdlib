@@ -131,6 +131,8 @@ pub fn println(s: Str) {
 
 // Formats a simple aligned-column table with `|` separators.
 // O(r * c). No padding -- cells are left-aligned as-is.
+/// Formats a simple aligned-column table with `|` separators.
+/// O(r * c). No padding -- cells are left-aligned as-is.
 pub fn format_table(headers: &Vec[Str], cells: &Vec[Str], col_count: Int) -> Str {
   if col_count <= 0 || headers.len() == 0 {
     return "";
@@ -185,6 +187,9 @@ pub fn format_table(headers: &Vec[Str], cells: &Vec[Str], col_count: Int) -> Str
 // Arranges `items` into multiple columns, wrapping at `width`.
 // Items are placed column-by-column (top-to-bottom then left-to-right).
 // O(n) where n = items.len().
+/// Arranges `items` into multiple columns, wrapping at `width`.
+/// Items are placed column-by-column (top-to-bottom then left-to-right).
+/// O(n) where n = items.len().
 pub fn format_columns(items: &Vec[Str], width: Int) -> Str {
   if items.len() == 0 {
     return "";
@@ -237,6 +242,9 @@ pub fn format_columns(items: &Vec[Str], width: Int) -> Str {
 // Wraps `text` at word boundaries to fit within `width` characters.
 // Words longer than `width` are placed on their own line.
 // O(n) where n = |text|.
+/// Wraps `text` at word boundaries to fit within `width` characters.
+/// Words longer than `width` are placed on their own line.
+/// O(n) where n = |text|.
 pub fn format_wrap(text: Str, width: Int) -> Str {
   if width <= 0 || string.str_len(text) == 0 {
     return text;
@@ -276,6 +284,8 @@ pub fn format_wrap(text: Str, width: Int) -> Str {
 
 // Adds `spaces` spaces at the beginning of each line in `text`.
 // O(n + lines * spaces).
+/// Adds `spaces` spaces at the beginning of each line in `text`.
+/// O(n + lines * spaces).
 pub fn format_indent(text: Str, spaces: Int) -> Str {
   if spaces <= 0 {
     return text;
@@ -306,6 +316,9 @@ pub fn format_indent(text: Str, spaces: Int) -> Str {
 // Formats a byte buffer as a classic hexdump: offset, hex bytes, ASCII preview.
 // `width` controls bytes per line (default 16). Returns multi-line string.
 // O(n) where n = data.len().
+/// Formats a byte buffer as a classic hexdump: offset, hex bytes, ASCII preview.
+/// `width` controls bytes per line (default 16). Returns multi-line string.
+/// O(n) where n = data.len().
 pub fn format_hexdump(data: &Vec[UInt8], width: Int) -> Str {
   if data.len() == 0 {
     return "";
@@ -376,6 +389,8 @@ pub fn format_hexdump(data: &Vec[UInt8], width: Int) -> Str {
 
 // Zero-pads integer `n` to `width` digits. Negative numbers are handled
 // (the sign is not counted in the width). Returns the string representation.
+/// Zero-pads integer `n` to `width` digits. Negative numbers are handled
+/// (the sign is not counted in the width). Returns the string representation.
 pub fn format_pad_number(n: Int, width: Int) -> Str {
   if width <= 0 {
     return convert.int_to_string(n);
@@ -402,6 +417,10 @@ pub fn format_pad_number(n: Int, width: Int) -> Str {
 // (2026-08-11: previously truncated via the old float_to_string, which itself
 // was fptosi-garbage -- see convert.xi; now delegates to the exact
 // scaled-integer formatter).
+/// Formats a float with `decimals` decimal places, ROUNDED half away from zero
+/// (2026-08-11: previously truncated via the old float_to_string, which itself
+/// was fptosi-garbage -- see convert.xi; now delegates to the exact
+/// scaled-integer formatter).
 pub fn format_float_fixed(f: Float64, decimals: Int) -> Str {
   if decimals < 0 { return convert.float_to_string(f); }
   return convert.float_to_fixed_str(f, decimals);
@@ -410,22 +429,27 @@ pub fn format_float_fixed(f: Float64, decimals: Int) -> Str {
 // -- Simple Formatting --
 
 // Converts a boolean to "true" or "false".
+/// Converts a boolean to "true" or "false".
 pub fn format_bool(b: Bool) -> Str {
   convert.bool_to_string(b)
 }
 
 // Left-aligns `s` within a field of `width` characters by right-padding with spaces.
+/// Left-aligns `s` within a field of `width` characters by right-padding with spaces.
 pub fn format_align_left(s: Str, width: Int) -> Str {
   string.str_pad_right(s, width, ' ')
 }
 
 // Right-aligns `s` within a field of `width` characters by left-padding with spaces.
+/// Right-aligns `s` within a field of `width` characters by left-padding with spaces.
 pub fn format_align_right(s: Str, width: Int) -> Str {
   string.str_pad_left(s, width, ' ')
 }
 
 // Joins `items` into a single string separated by `sep`.
 // O(n * |sep|) where n = items.len().
+/// Joins `items` into a single string separated by `sep`.
+/// O(n * |sep|) where n = items.len().
 pub fn format_join(items: &Vec[Str], sep: Str) -> Str {
   if items.len() == 0 {
     return "";
@@ -440,12 +464,15 @@ pub fn format_join(items: &Vec[Str], sep: Str) -> Str {
 }
 
 // Repeats `s` `n` times. Delegates to string.str_repeat.
+/// Repeats `s` `n` times. Delegates to string.str_repeat.
 pub fn format_repeat(s: Str, n: Int) -> Str {
   string.str_repeat(s, n)
 }
 
 // Formats a line with a prefix and body, separated by ": ".
 // Useful for key-value display: format_line("Name", "Alice") -> "Name: Alice"
+/// Formats a line with a prefix and body, separated by ": ".
+/// Useful for key-value display: format_line("Name", "Alice") -> "Name: Alice"
 pub fn format_line(prefix: Str, body: Str) -> Str {
   string.str_concat(string.str_concat(prefix, ": "), body)
 }
@@ -897,6 +924,11 @@ pub fn sprintf_s2(spec: Str, a: Str, b: Str) -> Result[Str, Str] {
 // compiler's generic Result[Vec[struct], _] instantiation collides with
 // Result[Int, _] in mono layout (docs/COMPILER_BUGS.md), so the engine
 // returns a concrete named struct instead.
+/// Captured tokens (parallel arrays: convs 0=int(%d/%i/%u), 1=hex(%x/%X),
+/// 2=float(%f/%e/%g), 3=str(%s), 4=char(%c)). Plain struct on purpose: the
+/// compiler's generic Result[Vec[struct], _] instantiation collides with
+/// Result[Int, _] in mono layout (docs/COMPILER_BUGS.md), so the engine
+/// returns a concrete named struct instead.
 pub type ScanResult = { is_ok: Bool; convs: Vec[Int]; texts: Vec[Str]; error: Str; }
 
 fn _skip_ws(s: Str, i: Int) -> Int {
@@ -1268,6 +1300,10 @@ pub fn sscanf_ints(s: Str, spec: Str) -> Result[Vec[Int], Str] {
 // Vec[Float64] (BUG 12: float container element reads broken -- TODO(compiler)
 // restore a Vec-based API once fixed). Specs with more than 8 float
 // conversions -> is_ok = false ("too many float conversions").
+/// Float results of sscanf_floats. Fixed 8 scalar slots instead of a
+/// Vec[Float64] (BUG 12: float container element reads broken -- TODO(compiler)
+/// restore a Vec-based API once fixed). Specs with more than 8 float
+/// conversions -> is_ok = false ("too many float conversions").
 pub type FloatScan = {
   is_ok: Bool;
   count: Int;

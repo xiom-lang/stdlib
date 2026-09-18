@@ -118,56 +118,67 @@ impl PrecisionLimits[Float64] {
 }
 
 // Smallest finite value representable by T.
+/// Smallest finite value representable by T.
 pub fn min_value[T: PrecisionLimits]() -> T {
   return PrecisionLimits[T].min_value();
 }
 
 // Largest finite value representable by T.
+/// Largest finite value representable by T.
 pub fn max_value[T: PrecisionLimits]() -> T {
   return PrecisionLimits[T].max_value();
 }
 
 // Machine epsilon of T: smallest x such that 1 + x != 1.
+/// Machine epsilon of T: smallest x such that 1 + x != 1.
 pub fn epsilon[T: PrecisionLimits]() -> T {
   return PrecisionLimits[T].epsilon();
 }
 
 // Number of significant decimal digits (floats) or decimal digits (integers).
+/// Number of significant decimal digits (floats) or decimal digits (integers).
 pub fn digits[T: PrecisionLimits]() -> Int {
   return PrecisionLimits[T].digits();
 }
 
 // Number of bits in the significand of T (magnitude bits for integers).
+/// Number of bits in the significand of T (magnitude bits for integers).
 pub fn mantissa_digits[T: PrecisionLimits]() -> Int {
   return PrecisionLimits[T].mantissa_digits();
 }
 
 // Exponent bias of T (floats); 0 for integers.
+/// Exponent bias of T (floats); 0 for integers.
 pub fn exponent_bias[T: PrecisionLimits]() -> Int {
   return PrecisionLimits[T].exponent_bias();
 }
 
 // Minimum binary exponent of T (floats); 0 for integers.
+/// Minimum binary exponent of T (floats); 0 for integers.
 pub fn min_exponent[T: PrecisionLimits]() -> Int {
   return PrecisionLimits[T].min_exponent();
 }
 
 // Maximum binary exponent of T (floats); 0 for integers.
+/// Maximum binary exponent of T (floats); 0 for integers.
 pub fn max_exponent[T: PrecisionLimits]() -> Int {
   return PrecisionLimits[T].max_exponent();
 }
 
 // True iff T can represent negative values.
+/// True iff T can represent negative values.
 pub fn is_signed[T: PrecisionLimits]() -> Bool {
   return PrecisionLimits[T].is_signed();
 }
 
 // Number of bits in a value of T.
+/// Number of bits in a value of T.
 pub fn bit_width[T: PrecisionLimits]() -> Int {
   return PrecisionLimits[T].bit_width();
 }
 
 // Number of bytes in a value of T.
+/// Number of bytes in a value of T.
 pub fn byte_width[T: PrecisionLimits]() -> Int {
   return PrecisionLimits[T].byte_width();
 }

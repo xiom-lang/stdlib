@@ -24,7 +24,11 @@ if (-not (Test-Path -LiteralPath $Root)) { Write-Output ("ERROR: root not found:
 $files = Get-ChildItem -Path $Root -Filter *.xi -Recurse | Sort-Object FullName
 $totalBlocks = 0; $totalLines = 0; $skipped = 0; $changedFiles = @()
 foreach ($f in $files) {
-  $lines = [System.IO.File]::ReadAllLines($f.FullName)
+  # Split on LF only: CRLF files keep their trailing CR per line, mixed files
+  # keep their exact bytes, and a final newline survives as a trailing ""
+  # element when the file is re-joined with LF.
+  $raw = [System.IO.File]::ReadAllText($f.FullName)
+  $lines = $raw -split "`n"
   $out = New-Object System.Collections.Generic.List[string]
   $fileBlocks = 0; $fileLines = 0
   $i = 0
@@ -67,10 +71,9 @@ foreach ($f in $files) {
     $changedFiles += $rel
     if ($Detail) { Write-Output ("  {0}: blocks={1} lines={2}" -f $rel, $fileBlocks, $fileLines) }
     if ($Apply) {
-      $raw = [System.IO.File]::ReadAllText($f.FullName)
-      $nl = "`n"
-      if ($raw.Contains("`r`n")) { $nl = "`r`n" }
-      [System.IO.File]::WriteAllText($f.FullName, ($out -join $nl), (New-Object System.Text.ASCIIEncoding))
+      # UTF-8 WITHOUT BOM: some modules carry non-ASCII string literals
+      # (e.g. number_systems.xi); writing ASCII would corrupt them.
+      [System.IO.File]::WriteAllText($f.FullName, ($out -join "`n"), (New-Object System.Text.UTF8Encoding($false)))
     }
   }
 }

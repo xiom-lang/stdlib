@@ -38,6 +38,9 @@ fn _char_in_str(s: Str, b: UInt8) -> Bool {
 // Removes leading and trailing whitespace from `s`.
 // Returns a new string no longer than `s`.
 // Complexity: O(|s|).
+/// Removes leading and trailing whitespace from `s`.
+/// Returns a new string no longer than `s`.
+/// Complexity: O(|s|).
 pub fn str_trim(s: Str) -> Str
   ensures: result.len() <= s.len()
 {
@@ -47,6 +50,9 @@ pub fn str_trim(s: Str) -> Str
 // Removes leading whitespace from `s`.
 // Returns a new string no longer than `s`.
 // Complexity: O(|s|).
+/// Removes leading whitespace from `s`.
+/// Returns a new string no longer than `s`.
+/// Complexity: O(|s|).
 pub fn str_trim_start(s: Str) -> Str
   ensures: result.len() <= s.len()
 {
@@ -61,6 +67,9 @@ pub fn str_trim_start(s: Str) -> Str
 // Removes trailing whitespace from `s`.
 // Returns a new string no longer than `s`.
 // Complexity: O(|s|).
+/// Removes trailing whitespace from `s`.
+/// Returns a new string no longer than `s`.
+/// Complexity: O(|s|).
 pub fn str_trim_end(s: Str) -> Str
   ensures: result.len() <= s.len()
 {
@@ -76,6 +85,10 @@ pub fn str_trim_end(s: Str) -> Str
 // When `chars` is empty, `s` is returned unchanged.
 // Returns a new string no longer than `s`.
 // Complexity: O(|s| * |chars|).
+/// Removes leading and trailing characters listed in `chars` from `s`.
+/// When `chars` is empty, `s` is returned unchanged.
+/// Returns a new string no longer than `s`.
+/// Complexity: O(|s| * |chars|).
 pub fn str_trim_matches(s: Str, chars: Str) -> Str
   ensures: result.len() <= s.len()
 {
@@ -95,6 +108,10 @@ pub fn str_trim_matches(s: Str, chars: Str) -> Str
 // When `chars` is empty, `s` is returned unchanged.
 // Returns a new string no longer than `s`.
 // Complexity: O(|s| * |chars|).
+/// Removes leading characters listed in `chars` from `s`.
+/// When `chars` is empty, `s` is returned unchanged.
+/// Returns a new string no longer than `s`.
+/// Complexity: O(|s| * |chars|).
 pub fn str_trim_start_matches(s: Str, chars: Str) -> Str
   ensures: result.len() <= s.len()
 {
@@ -110,6 +127,10 @@ pub fn str_trim_start_matches(s: Str, chars: Str) -> Str
 // When `chars` is empty, `s` is returned unchanged.
 // Returns a new string no longer than `s`.
 // Complexity: O(|s| * |chars|).
+/// Removes trailing characters listed in `chars` from `s`.
+/// When `chars` is empty, `s` is returned unchanged.
+/// Returns a new string no longer than `s`.
+/// Complexity: O(|s| * |chars|).
 pub fn str_trim_end_matches(s: Str, chars: Str) -> Str
   ensures: result.len() <= s.len()
 {

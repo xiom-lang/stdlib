@@ -102,6 +102,11 @@ pub fn neg_infinity() -> Float64 {
 // literals only). IEEE semantics verified: `nan() != nan()` is true and
 // math.is_nan(nan()) is true since BUG 19's fcmp-one/Str+Float64-concat
 // defects were fixed (2026-08-11, `9c3a2f9e`/`88f924ea`).
+/// NAN (not-a-number) -- constructor fn (no NaN literal syntax exists; a const
+/// initializer can't hold the `0.0 / 0.0` expression -- const-fold handles
+/// literals only). IEEE semantics verified: `nan() != nan()` is true and
+/// math.is_nan(nan()) is true since BUG 19's fcmp-one/Str+Float64-concat
+/// defects were fixed (2026-08-11, `9c3a2f9e`/`88f924ea`).
 pub fn nan() -> Float64 {
   return 0.0 / 0.0;
 }

@@ -43,6 +43,7 @@ fn assert(condition: Bool, msg: Str)
 }
 
 // === Numeric conversions ===
+/// === Numeric conversions ===
 pub fn to_int(x: Float64) -> Int {
   return x as Int;
 }
@@ -237,6 +238,7 @@ pub fn to_int_from_char(c: Char) -> Int {
 }
 
 // === Collection contract methods ===
+/// === Collection contract methods ===
 pub fn is_sorted[T: Ord](items: &Slice[T]) -> Bool {
   var i: Int = 1;
   while i < items.len() {
@@ -623,6 +625,9 @@ fn Box.drop[T](b: Box[T])
 // === M7: Deref / DerefMut impl for Box[T] ===
 // Box is a heap-allocated single-owner pointer. Deref allows `*box` and
 // auto-deref in method resolution (e.g., `box.method()` calls T's method).
+/// === M7: Deref / DerefMut impl for Box[T] ===
+/// Box is a heap-allocated single-owner pointer. Deref allows `*box` and
+/// auto-deref in method resolution (e.g., `box.method()` calls T's method).
 pub fn Box[T].deref(self) -> &T
   requires: ptr != null
   ensures: true
@@ -642,6 +647,7 @@ pub fn Box[T].deref_mut(self) -> &mut T
 }
 
 // === M7: AsRef / AsMut impl for Box[T] ===
+/// === M7: AsRef / AsMut impl for Box[T] ===
 pub fn Box[T].as_ref(self) -> &T
   requires: ptr != null
 {
@@ -655,11 +661,13 @@ pub fn Box[T].as_mut(self) -> &mut T
 }
 
 // === M7: AsRef[Str] impl for Str ===
+/// === M7: AsRef[Str] impl for Str ===
 pub fn Str.as_ref(self) -> &Str {
   return &self;
 }
 
 // === M7: AsRef<[UInt8]> impl for Str ===
+/// === M7: AsRef<[UInt8]> impl for Str ===
 pub fn Str.as_bytes(self) -> &Slice[UInt8]
   requires: true
 {
@@ -669,6 +677,7 @@ pub fn Str.as_bytes(self) -> &Slice[UInt8]
 }
 
 // 8B/M7: Clone-on-Write -- either owned or borrowed
+/// 8B/M7: Clone-on-Write -- either owned or borrowed
 pub type Cow[T: Clone] = enum {
   Borrowed(value: T),
   Owned(value: T),
@@ -705,6 +714,7 @@ pub fn Cow[T: Clone].into_owned(self) -> T
 }
 
 // M12/P1: Read the inner value regardless of variant (no cloning).
+/// M12/P1: Read the inner value regardless of variant (no cloning).
 pub fn Cow[T: Clone].borrow(self) -> &T
   ensures: true
 {
@@ -771,6 +781,7 @@ pub interface TryInto[T] {
 // === M7: From/Into implementations for primitive types ===
 
 // Int -> Float64 (lossless for reasonable values)
+/// Int -> Float64 (lossless for reasonable values)
 pub fn Int.from(value: Float64) -> Int {
   return to_int(value);
 }
@@ -779,6 +790,7 @@ pub fn Float64.into(self) -> Int {
 }
 
 // Float64 -> Int (may truncate)
+/// Float64 -> Int (may truncate)
 pub fn Float64.from(value: Int) -> Float64 {
   return to_float(value);
 }
@@ -787,6 +799,7 @@ pub fn Int.into(self) -> Float64 {
 }
 
 // Int -> Str
+/// Int -> Str
 pub fn Str.from(value: Int) -> Str {
   return to_string(value);
 }
@@ -795,6 +808,7 @@ pub fn Int.into(self) -> Str {
 }
 
 // Float64 -> Str
+/// Float64 -> Str
 pub fn Str.from(value: Float64) -> Str {
   return xiom.convert.float_to_string(value);
 }
@@ -803,6 +817,7 @@ pub fn Float64.into(self) -> Str {
 }
 
 // Bool -> Str
+/// Bool -> Str
 pub fn Str.from(value: Bool) -> Str {
   return convert.bool_to_string(value);
 }
@@ -811,6 +826,7 @@ pub fn Bool.into(self) -> Str {
 }
 
 // Bool -> Int
+/// Bool -> Int
 pub fn Int.from(value: Bool) -> Int {
   if value { return 1; }
   return 0;
@@ -821,6 +837,7 @@ pub fn Bool.into(self) -> Int {
 }
 
 // Char -> Int
+/// Char -> Int
 pub fn Int.from(value: Char) -> Int {
   return to_int_from_char(value);
 }
@@ -829,6 +846,7 @@ pub fn Char.into(self) -> Int {
 }
 
 // Int -> Char (may fail, returns first char)
+/// Int -> Char (may fail, returns first char)
 pub fn Char.from(value: Int) -> Char {
   return to_char(value);
 }
@@ -872,12 +890,16 @@ fn panic_if(condition: Bool, msg: Str)
 
 // === Type-level operations ===
 // Compiler intrinsic: returns size of type in bytes
+/// === Type-level operations ===
+/// Compiler intrinsic: returns size of type in bytes
 pub fn size_of[T]() -> Int;
 
 // Compiler intrinsic: returns alignment of type in bytes
+/// Compiler intrinsic: returns alignment of type in bytes
 pub fn align_of[T]() -> Int;
 
 // === Numeric limits ===
+/// === Numeric limits ===
 pub const INT_MAX: Int = 9223372036854775807;
 pub const INT_MIN: Int = -9223372036854775808;
 pub const FLOAT64_MAX: Float64 = 1.7976931348623157e308;
@@ -885,9 +907,11 @@ pub const FLOAT64_MIN: Float64 = 2.2250738585072014e-308;
 pub const FLOAT64_EPSILON: Float64 = 2.220446049250313e-16;
 
 // 8B/M7: Zero-size type marker for generic parameters
+/// 8B/M7: Zero-size type marker for generic parameters
 pub type PhantomData[T] = { }
 
 // 8B/M7: Uninitialized memory container
+/// 8B/M7: Uninitialized memory container
 pub type MaybeUninit[T] = { data: T; initialized: Bool; }
   derive[Clone]
 

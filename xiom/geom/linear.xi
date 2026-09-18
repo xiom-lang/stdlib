@@ -243,6 +243,9 @@ fn _vec_norm(v: &Vec[Float64]) -> Float64 {
 // Orthonormalise a set of vectors (each row is a vector) via the modified
 // Gram-Schmidt process. Linearly dependent vectors collapse to the zero
 // vector. O(k^2 * n).
+/// Orthonormalise a set of vectors (each row is a vector) via the modified
+/// Gram-Schmidt process. Linearly dependent vectors collapse to the zero
+/// vector. O(k^2 * n).
 pub fn gram_schmidt(vectors: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {
   var out = Vec[Vec[Float64]].new();
   var vc = Vec[Vec[Float64]].new();
@@ -290,6 +293,8 @@ pub fn gram_schmidt(vectors: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {
 
 // Orthogonalise a set of vectors (each row is a vector) without normalising
 // the output. Linearly dependent vectors collapse to the zero vector. O(k^2 * n).
+/// Orthogonalise a set of vectors (each row is a vector) without normalising
+/// the output. Linearly dependent vectors collapse to the zero vector. O(k^2 * n).
 pub fn orthogonalize(vectors: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {
   var out = Vec[Vec[Float64]].new();
   var vc = Vec[Vec[Float64]].new();
@@ -340,6 +345,8 @@ pub fn orthogonalize(vectors: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {
 
 // Normalise every column of m to unit length. Columns with zero length are
 // left as-is. Empty matrix for a ragged input. O(n*m).
+/// Normalise every column of m to unit length. Columns with zero length are
+/// left as-is. Empty matrix for a ragged input. O(n*m).
 pub fn normalize_columns(m: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {
   var out = Vec[Vec[Float64]].new();
   var mc = Vec[Vec[Float64]].new();
@@ -376,6 +383,8 @@ pub fn normalize_columns(m: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {
 
 // Normalise every row of m to unit length. Rows with zero length are left
 // as-is. Empty matrix for a ragged input. O(n*m).
+/// Normalise every row of m to unit length. Rows with zero length are left
+/// as-is. Empty matrix for a ragged input. O(n*m).
 pub fn normalize_rows(m: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {
   var out = Vec[Vec[Float64]].new();
   var mc = Vec[Vec[Float64]].new();
@@ -409,6 +418,8 @@ pub fn normalize_rows(m: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {
 
 // True iff m is orthogonal: m * m^T is the identity (within 1e-9). Empty or
 // non-square matrices are false. O(n^3).
+/// True iff m is orthogonal: m * m^T is the identity (within 1e-9). Empty or
+/// non-square matrices are false. O(n^3).
 pub fn is_orthogonal(m: &Vec[Vec[Float64]]) -> Bool {
   var mc = Vec[Vec[Float64]].new();
   var i = 0;
@@ -444,6 +455,7 @@ pub fn is_orthogonal(m: &Vec[Vec[Float64]]) -> Bool {
 }
 
 // True iff m equals its transpose (exact component equality). O(n^2).
+/// True iff m equals its transpose (exact component equality). O(n^2).
 pub fn is_symmetric(m: &Vec[Vec[Float64]]) -> Bool {
   var mc = Vec[Vec[Float64]].new();
   var i = 0;
@@ -469,6 +481,8 @@ pub fn is_symmetric(m: &Vec[Vec[Float64]]) -> Bool {
 
 // True iff m equals minus its transpose (exact component equality, diagonal
 // must be zero). O(n^2).
+/// True iff m equals minus its transpose (exact component equality, diagonal
+/// must be zero). O(n^2).
 pub fn is_skew_symmetric(m: &Vec[Vec[Float64]]) -> Bool {
   var mc = Vec[Vec[Float64]].new();
   var i = 0;
@@ -494,6 +508,8 @@ pub fn is_skew_symmetric(m: &Vec[Vec[Float64]]) -> Bool {
 
 // True iff m is symmetric positive definite: symmetric and every leading
 // principal minor is positive (checked via a Cholesky-style sweep). O(n^2).
+/// True iff m is symmetric positive definite: symmetric and every leading
+/// principal minor is positive (checked via a Cholesky-style sweep). O(n^2).
 pub fn is_positive_definite(m: &Vec[Vec[Float64]]) -> Bool {
   var mc = Vec[Vec[Float64]].new();
   var i = 0;
@@ -550,6 +566,8 @@ pub fn is_positive_definite(m: &Vec[Vec[Float64]]) -> Bool {
 
 // True iff m is diagonally dominant: |m[i][i]| >= sum of the absolute values
 // of the off-diagonal entries in the same row, for every row. O(n^2).
+/// True iff m is diagonally dominant: |m[i][i]| >= sum of the absolute values
+/// of the off-diagonal entries in the same row, for every row. O(n^2).
 pub fn is_diagonal_dominant(m: &Vec[Vec[Float64]]) -> Bool {
   var mc = Vec[Vec[Float64]].new();
   var i = 0;
@@ -583,6 +601,9 @@ pub fn is_diagonal_dominant(m: &Vec[Vec[Float64]]) -> Bool {
 // Matrix exponential of m via the Taylor series exp(M) = sum M^k / k!,
 // iterated until the added term is negligible (or 60 terms). Empty matrix on
 // non-square input. O(n^3 * terms).
+/// Matrix exponential of m via the Taylor series exp(M) = sum M^k / k!,
+/// iterated until the added term is negligible (or 60 terms). Empty matrix on
+/// non-square input. O(n^3 * terms).
 pub fn matrix_exponential(m: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {
   var mc = Vec[Vec[Float64]].new();
   var i = 0;
@@ -649,6 +670,9 @@ pub fn matrix_exponential(m: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {
 // Principal matrix logarithm of m via the series log(M) = sum (-1)^(k+1) (M-I)^k / k,
 // which converges when M is close to the identity. Returns the zero matrix for
 // the identity and an empty matrix for non-square input. O(n^3 * terms).
+/// Principal matrix logarithm of m via the series log(M) = sum (-1)^(k+1) (M-I)^k / k,
+/// which converges when M is close to the identity. Returns the zero matrix for
+/// the identity and an empty matrix for non-square input. O(n^3 * terms).
 pub fn matrix_logarithm(m: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {
   var mc = Vec[Vec[Float64]].new();
   var i = 0;
@@ -731,6 +755,9 @@ pub fn matrix_logarithm(m: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {
 // Principal matrix square root of m via Newton iteration
 // X_{k+1} = (X_k + M * X_k^-1) / 2 (converges for well-conditioned SPD-like
 // inputs). Empty matrix on non-square input. O(n^3 * iterations).
+/// Principal matrix square root of m via Newton iteration
+/// X_{k+1} = (X_k + M * X_k^-1) / 2 (converges for well-conditioned SPD-like
+/// inputs). Empty matrix on non-square input. O(n^3 * iterations).
 pub fn matrix_sqrt(m: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {
   var mc = Vec[Vec[Float64]].new();
   var i = 0;
@@ -805,6 +832,9 @@ pub fn matrix_sqrt(m: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {
 // Integer matrix power m^p. p == 0 yields the identity, p < 0 inverts first,
 // and repeated squaring keeps it to O(log |p|) multiplications. Empty matrix
 // on non-square or singular input. O(n^3 * log |p|).
+/// Integer matrix power m^p. p == 0 yields the identity, p < 0 inverts first,
+/// and repeated squaring keeps it to O(log |p|) multiplications. Empty matrix
+/// on non-square or singular input. O(n^3 * log |p|).
 pub fn matrix_power(m: &Vec[Vec[Float64]], p: Int) -> Vec[Vec[Float64]] {
   var mc = Vec[Vec[Float64]].new();
   var i = 0;
@@ -874,6 +904,8 @@ pub fn matrix_power(m: &Vec[Vec[Float64]], p: Int) -> Vec[Vec[Float64]] {
 
 // Skew-symmetric matrix [v]_x of a 3-vector v. Empty matrix unless v has
 // exactly 3 elements. O(1).
+/// Skew-symmetric matrix [v]_x of a 3-vector v. Empty matrix unless v has
+/// exactly 3 elements. O(1).
 pub fn vec_to_skew(v: &Vec[Float64]) -> Vec[Vec[Float64]] {
   var out = Vec[Vec[Float64]].new();
   if v.len() != 3 { return out; }
@@ -897,6 +929,8 @@ pub fn vec_to_skew(v: &Vec[Float64]) -> Vec[Vec[Float64]] {
 
 // The 3-vector v such that vec_to_skew(v) == m, extracted from a skew-symmetric
 // matrix. Empty vector unless m is 3x3. O(1).
+/// The 3-vector v such that vec_to_skew(v) == m, extracted from a skew-symmetric
+/// matrix. Empty vector unless m is 3x3. O(1).
 pub fn skew_to_vec(m: &Vec[Vec[Float64]]) -> Vec[Float64] {
   var out = Vec[Float64].new();
   var mc = Vec[Vec[Float64]].new();

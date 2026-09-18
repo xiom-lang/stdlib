@@ -132,6 +132,7 @@ pub fn yield_now()
 }
 
 // Scoped threads (borrows from parent scope)
+/// Scoped threads (borrows from parent scope)
 pub type Scope = {}
 
 pub fn scope[T](f: fn(&Scope) -> T) -> T {

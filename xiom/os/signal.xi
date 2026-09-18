@@ -17,6 +17,8 @@ extern "C" {
 
 // signal_name returns the canonical name for a signal number, or
 // "unknown" for numbers outside the table. Complexity: O(1). Pure.
+/// signal_name returns the canonical name for a signal number, or
+/// "unknown" for numbers outside the table. Complexity: O(1). Pure.
 pub fn signal_name(num: Int) -> Str {
   if num == 1 { return "HUP"; }
   if num == 2 { return "INT"; }
@@ -54,6 +56,8 @@ pub fn signal_name(num: Int) -> Str {
 
 // signal_code returns the signal number for a canonical name, or None.
 // Matching is case-insensitive on the letters. Complexity: O(1). Pure.
+/// signal_code returns the signal number for a canonical name, or None.
+/// Matching is case-insensitive on the letters. Complexity: O(1). Pure.
 pub fn signal_code(name: Str) -> Option[Int] {
   let n = name;
   if n == "HUP" || n == "SIGHUP" { return Some(1); }
@@ -91,18 +95,24 @@ pub fn signal_code(name: Str) -> Option[Int] {
 
 // signal_is_ignorable returns true for signals that can be ignored
 // (not SIGKILL or SIGSTOP). Complexity: O(1). Pure.
+/// signal_is_ignorable returns true for signals that can be ignored
+/// (not SIGKILL or SIGSTOP). Complexity: O(1). Pure.
 pub fn signal_is_ignorable(num: Int) -> Bool {
   num != 9 && num != 19 && num > 0
 }
 
 // signal_is_catchable returns true for signals a process can install a
 // handler for (not SIGKILL or SIGSTOP). Complexity: O(1). Pure.
+/// signal_is_catchable returns true for signals a process can install a
+/// handler for (not SIGKILL or SIGSTOP). Complexity: O(1). Pure.
 pub fn signal_is_catchable(num: Int) -> Bool {
   num != 9 && num != 19 && num > 0
 }
 
 // signal_default_action returns the default disposition ("term", "core",
 // "stop", "cont", "ignore", or "unknown"). Complexity: O(1). Pure.
+/// signal_default_action returns the default disposition ("term", "core",
+/// "stop", "cont", "ignore", or "unknown"). Complexity: O(1). Pure.
 pub fn signal_default_action(num: Int) -> Str {
   if num == 18 { return "cont"; }
   if num == 19 || num == 20 || num == 21 || num == 22 { return "stop"; }
@@ -116,6 +126,8 @@ pub fn signal_default_action(num: Int) -> Str {
 
 // signal_raise sends a signal to the current process via the runtime
 // raise() primitive. Complexity: O(1) syscall.
+/// signal_raise sends a signal to the current process via the runtime
+/// raise() primitive. Complexity: O(1) syscall.
 pub fn signal_raise(num: Int) -> Result[Unit, Str] {
   if num <= 0 {
     return Err("signal_raise: invalid signal number");

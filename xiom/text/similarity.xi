@@ -721,6 +721,8 @@ pub fn soundex(word: Str) -> Str {
 
 // All contiguous n-grams of `s` (n = 1 -> single chars). Empty input or
 // n < 1 -> empty Vec. O(len) with O(len) output.
+/// All contiguous n-grams of `s` (n = 1 -> single chars). Empty input or
+/// n < 1 -> empty Vec. O(len) with O(len) output.
 pub fn ngram_extract(s: Str, n: Int) -> Vec[Str] {
   var out = Vec[Str].new();
   var len = xiom.string.str_len(s);
@@ -757,6 +759,9 @@ fn _str_eq(a: Str, b: Str) -> Bool {
 // Jaccard similarity over n-grams: |A & B| / |A | B| in Float64 (0 when
 // both inputs have no n-grams, 1 when identical). O(|a|-|b|) naive set
 // comparison -- the compiler's Set is not usable for Str elements here.
+/// Jaccard similarity over n-grams: |A & B| / |A | B| in Float64 (0 when
+/// both inputs have no n-grams, 1 when identical). O(|a|-|b|) naive set
+/// comparison -- the compiler's Set is not usable for Str elements here.
 pub fn jaccard_similarity(a: Str, b: Str, n: Int) -> Float64 {
   var ga = ngram_extract(a, n);
   var gb = ngram_extract(b, n);
@@ -787,6 +792,7 @@ pub fn jaccard_similarity(a: Str, b: Str, n: Int) -> Float64 {
 }
 
 // Length of the longest common prefix of a and b. O(min(|a|,|b|)).
+/// Length of the longest common prefix of a and b. O(min(|a|,|b|)).
 pub fn longest_common_prefix(a: Str, b: Str) -> Int {
   var la = xiom.string.str_len(a);
   var lb = xiom.string.str_len(b);
@@ -803,6 +809,7 @@ pub fn longest_common_prefix(a: Str, b: Str) -> Int {
 }
 
 // Length of the longest common suffix of a and b. O(min(|a|,|b|)).
+/// Length of the longest common suffix of a and b. O(min(|a|,|b|)).
 pub fn longest_common_suffix(a: Str, b: Str) -> Int {
   var la = xiom.string.str_len(a);
   var lb = xiom.string.str_len(b);

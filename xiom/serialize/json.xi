@@ -34,6 +34,11 @@ use xiom.collections;
 // `JsonValue` type (Object: Map[Str, JsonValue]). The compiler unifies the
 // two same-named types, so this module MUST use the identical enum shape
 // (Map-backed objects) or LLVM lowering fails.
+/// NOTE: The parent module xiom.serialize is always present in the compile
+/// unit when any xiom.serialize.* submodule is used, and it defines its own
+/// `JsonValue` type (Object: Map[Str, JsonValue]). The compiler unifies the
+/// two same-named types, so this module MUST use the identical enum shape
+/// (Map-backed objects) or LLVM lowering fails.
 pub type JsonValue = enum {
   Null,
   Bool(value: Bool),

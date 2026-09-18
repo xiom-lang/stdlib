@@ -16,6 +16,7 @@ use xiom.convert;
 use xiom.encoding;
 
 // === Serialize trait ===
+/// === Serialize trait ===
 pub interface Serialize {
   fn serialize(self) -> Result[Str, SerializeError];
   fn serialize_json(self) -> Result[Str, SerializeError];
@@ -23,6 +24,7 @@ pub interface Serialize {
 }
 
 // === Deserialize trait (with contract preservation) ===
+/// === Deserialize trait (with contract preservation) ===
 pub interface Deserialize {
   fn deserialize(data: Str) -> Result[Self, SerializeError]
     ensures: result is Ok => self.invariant_check()
@@ -33,6 +35,7 @@ pub interface Deserialize {
 }
 
 // === Error type ===
+/// === Error type ===
 pub type SerializeError = {
   kind: Int;
   message: Str;
@@ -57,6 +60,7 @@ pub fn SerializeError.format_error() -> Str {
 }
 
 // === Format detection ===
+/// === Format detection ===
 pub fn detect_format(data: &Vec[UInt8]) -> Str
   ensures: result.len() > 0
 {
@@ -90,6 +94,7 @@ pub fn is_valid_bytes(data: &Vec[UInt8]) -> Bool {
 }
 
 // === JSON helpers ===
+/// === JSON helpers ===
 pub fn json_string(s: Str) -> Str {
   var result = "\"";
   let len = s.len();
@@ -535,6 +540,7 @@ pub fn JsonValue.index(self, i: Int) -> Option[JsonValue] {
 }
 
 // === Binary helpers ===
+/// === Binary helpers ===
 pub fn little_endian() -> Bool {
   return true;
 }

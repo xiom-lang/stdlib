@@ -21,6 +21,7 @@ use xiom.math;
 // ================================================================
 
 // 128-bit vectors (SSE / NEON)
+/// 128-bit vectors (SSE / NEON)
 pub type Vec4f = { data: *Float32; invariant: data != null; }  // 4 x f32
 
 pub type Vec2d = { data: *Float64; }  // 2 x f64
@@ -32,6 +33,7 @@ pub type Vec8s = { data: *Int16; }    // 8 x i16
 pub type Vec16b = { data: *Int8; }    // 16 x i8
 
 // 256-bit vectors (AVX / AVX2)
+/// 256-bit vectors (AVX / AVX2)
 pub type Vec8f = { data: *Float32; invariant: data != null; }  // 8 x f32
 
 pub type Vec4d = { data: *Float64; }  // 4 x f64
@@ -39,6 +41,7 @@ pub type Vec4d = { data: *Float64; }  // 4 x f64
 pub type Vec8i = { data: *Int32; }    // 8 x i32
 
 // 512-bit vectors (AVX-512)
+/// 512-bit vectors (AVX-512)
 pub type Vec16f = { data: *Float32; } // 16 x f32
 
 pub type Vec8d = { data: *Float64; }  // 8 x f64

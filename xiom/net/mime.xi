@@ -23,6 +23,12 @@ use xiom.encoding;
 //   see probe in agent_net2); the main-type field is named `kind` because the
 //   reserved word `type` is unreadable at call sites (P001) and breaks
 //   cross-module resolution. Params are stored as ordered (name, value) pairs.
+/// struct MimeType { kind: Str; subtype: Str; params: Vec[(Str, Str)] }
+///   NOTE: the frozen spec documents `params: Map[Str, Str]`. The compiler
+///   cannot construct/return a struct containing a Map field (hangs/0xC0000005,
+///   see probe in agent_net2); the main-type field is named `kind` because the
+///   reserved word `type` is unreadable at call sites (P001) and breaks
+///   cross-module resolution. Params are stored as ordered (name, value) pairs.
 pub type MimeType = {
   subtype: Str;
   params: Vec[(Str, Str)];
@@ -30,6 +36,7 @@ pub type MimeType = {
 }
 
 // struct Link { href: Str; rel: Str; title: Str; kind: Str }
+/// struct Link { href: Str; rel: Str; title: Str; kind: Str }
 pub type Link = {
   href: Str;
   rel: Str;

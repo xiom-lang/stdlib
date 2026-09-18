@@ -46,6 +46,11 @@ pub fn get[T, const N: Int](arr: &[N]T, index: Int) -> Option[T]
 // VALUE into the Option payload while call sites auto-deref the payload
 // as a pointer (inttoptr of the value -> AV). All consumers must use
 // the value form.
+/// Value-returning read (like Vec.get). The Option<&T> reference form is
+/// not representable on this compiler: the mono'd body boxes the element
+/// VALUE into the Option payload while call sites auto-deref the payload
+/// as a pointer (inttoptr of the value -> AV). All consumers must use
+/// the value form.
 pub fn get_mut[T, const N: Int](arr: &mut [N]T, index: Int) -> Option[T]
   ensures: index < 0 || index >= N => result is None {
   if index < 0 || index >= N {

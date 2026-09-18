@@ -20,48 +20,63 @@ use xiom.geom;
 use xiom.math;
 
 // 3D point.
+/// 3D point.
 pub type Point3 = { x: Float64; y: Float64; z: Float64; }
 
 // Infinite line: point plus direction.
+/// Infinite line: point plus direction.
 pub type Line3 = { point: Point3; dir: Vec3; }
 
 // Ray: origin plus (not necessarily unit) direction.
+/// Ray: origin plus (not necessarily unit) direction.
 pub type Ray3 = { origin: Point3; dir: Vec3; }
 
 // Segment between two points.
+/// Segment between two points.
 pub type Segment3 = { a: Point3; b: Point3; }
 
 // Plane normal . p = d.
+/// Plane normal . p = d.
 pub type Plane = { normal: Vec3; d: Float64; }
 
 // Sphere with center and radius.
+/// Sphere with center and radius.
 pub type Sphere = { center: Point3; radius: Float64; }
 
 // Capsule: segment (a, b) with radius.
+/// Capsule: segment (a, b) with radius.
 pub type Capsule = { a: Point3; b: Point3; radius: Float64; }
 
 // Cylinder: axis segment plus radius.
+/// Cylinder: axis segment plus radius.
 pub type Cylinder = { axis: Segment3; radius: Float64; }
 
 // Cone: apex, axis direction, and half angle in radians.
+/// Cone: apex, axis direction, and half angle in radians.
 pub type Cone = { apex: Point3; axis: Vec3; half_angle: Float64; }
 
 // Axis-aligned box defined by min and max corners.
+/// Axis-aligned box defined by min and max corners.
 pub type Box = { min: Point3; max: Point3; }
 
 // Oriented box: center, orthonormal axes, half extents.
+/// Oriented box: center, orthonormal axes, half extents.
 pub type OBB = { center: Point3; axes: Vec[Vec3]; half_extents: Vec[Float64]; }
 
 // Triangle with three vertices.
+/// Triangle with three vertices.
 pub type Triangle3 = { a: Point3; b: Point3; c: Point3; }
 
 // Polygon: vertex list in boundary order.
+/// Polygon: vertex list in boundary order.
 pub type Polygon3 = { vertices: Vec[Point3]; }
 
 // Triangle mesh: vertices plus triangle index list (3 indices per triangle).
+/// Triangle mesh: vertices plus triangle index list (3 indices per triangle).
 pub type Mesh = { vertices: Vec[Point3]; indices: Vec[Int]; }
 
 // Euclidean distance between two points. O(1).
+/// Euclidean distance between two points. O(1).
 pub fn point_distance(a: Point3, b: Point3) -> Float64 {
   var dx = a.x - b.x;
   var dy = a.y - b.y;
@@ -70,6 +85,7 @@ pub fn point_distance(a: Point3, b: Point3) -> Float64 {
 }
 
 // Distance from p to the sphere surface (0 when p is inside). O(1).
+/// Distance from p to the sphere surface (0 when p is inside). O(1).
 pub fn point_sphere_distance(p: Point3, s: Sphere) -> Float64 {
   var d = point_distance(p, s.center) - s.radius;
   if d < 0.0 { d = 0.0; }
@@ -77,6 +93,7 @@ pub fn point_sphere_distance(p: Point3, s: Sphere) -> Float64 {
 }
 
 // Signed distance from p to the plane (positive on the normal side). O(1).
+/// Signed distance from p to the plane (positive on the normal side). O(1).
 pub fn point_plane_distance(p: Point3, pl: Plane) -> Float64 {
   var len = geom.vec3_length(pl.normal);
   if len == 0.0 { return 0.0; }
@@ -85,6 +102,7 @@ pub fn point_plane_distance(p: Point3, pl: Plane) -> Float64 {
 }
 
 // Absolute distance from p to the plane. Alias of point_plane_distance. O(1).
+/// Absolute distance from p to the plane. Alias of point_plane_distance. O(1).
 pub fn plane_point_distance(pl: Plane, p: Point3) -> Float64 {
   var d = point_plane_distance(p, pl);
   if d < 0.0 { d = -d; }
@@ -92,6 +110,7 @@ pub fn plane_point_distance(pl: Plane, p: Point3) -> Float64 {
 }
 
 // Shortest distance from p to the infinite line l. O(1).
+/// Shortest distance from p to the infinite line l. O(1).
 pub fn line_point_distance(l: Line3, p: Point3) -> Float64 {
   var dl = geom.vec3_length(l.dir);
   if dl == 0.0 { return point_distance(p, l.point); }
@@ -101,6 +120,7 @@ pub fn line_point_distance(l: Line3, p: Point3) -> Float64 {
 }
 
 // Shortest distance from p to the segment s. O(1).
+/// Shortest distance from p to the segment s. O(1).
 pub fn segment_point_distance(s: Segment3, p: Point3) -> Float64 {
   var abx = s.b.x - s.a.x;
   var aby = s.b.y - s.a.y;
@@ -118,6 +138,8 @@ pub fn segment_point_distance(s: Segment3, p: Point3) -> Float64 {
 
 // Ray-plane intersection: parameter t along the ray; None when parallel or
 // behind the origin. O(1).
+/// Ray-plane intersection: parameter t along the ray; None when parallel or
+/// behind the origin. O(1).
 pub fn ray_plane_intersection(r: Ray3, pl: Plane) -> Option[Float64] {
   var denom = geom.vec3_dot(r.dir, pl.normal);
   if math.abs_float(denom) < 0.000000000001 {
@@ -132,6 +154,8 @@ pub fn ray_plane_intersection(r: Ray3, pl: Plane) -> Option[Float64] {
 
 // Ray-triangle intersection via the Moller-Trumbore algorithm. Returns the
 // nearest positive t; None on miss or behind the origin. O(1).
+/// Ray-triangle intersection via the Moller-Trumbore algorithm. Returns the
+/// nearest positive t; None on miss or behind the origin. O(1).
 pub fn ray_triangle_intersection(r: Ray3, t: Triangle3) -> Option[Float64] {
   var e1 = Vec3{ x: t.b.x - t.a.x; y: t.b.y - t.a.y; z: t.b.z - t.a.z; };
   var e2 = Vec3{ x: t.c.x - t.a.x; y: t.c.y - t.a.y; z: t.c.z - t.a.z; };
@@ -157,6 +181,7 @@ pub fn ray_triangle_intersection(r: Ray3, t: Triangle3) -> Option[Float64] {
 }
 
 // Ray-sphere intersection: nearest positive t; None on miss. O(1).
+/// Ray-sphere intersection: nearest positive t; None on miss. O(1).
 pub fn ray_sphere_intersection(r: Ray3, s: Sphere) -> Option[Float64] {
   var oc = Vec3{
     x: r.origin.x - s.center.x;
@@ -179,6 +204,8 @@ pub fn ray_sphere_intersection(r: Ray3, s: Sphere) -> Option[Float64] {
 
 // Ray-box intersection via the slab method: nearest positive t; None on miss.
 // O(1).
+/// Ray-box intersection via the slab method: nearest positive t; None on miss.
+/// O(1).
 pub fn ray_box_intersection(r: Ray3, b: Box) -> Option[Float64] {
   var tmin = 0.0;
   var tmax = 0.0;
@@ -231,6 +258,7 @@ pub fn ray_box_intersection(r: Ray3, b: Box) -> Option[Float64] {
 }
 
 // Line of intersection of two planes; None when parallel. O(1).
+/// Line of intersection of two planes; None when parallel. O(1).
 pub fn plane_plane_intersection(p1: Plane, p2: Plane) -> Option[Line3] {
   var dir = geom.vec3_cross(p1.normal, p2.normal);
   var dl = geom.vec3_length(dir);
@@ -257,6 +285,7 @@ pub fn plane_plane_intersection(p1: Plane, p2: Plane) -> Option[Line3] {
 }
 
 // True if the two spheres overlap or touch. O(1).
+/// True if the two spheres overlap or touch. O(1).
 pub fn sphere_sphere_intersection(a: Sphere, b: Sphere) -> Bool {
   var dx = a.center.x - b.center.x;
   var dy = a.center.y - b.center.y;
@@ -267,6 +296,7 @@ pub fn sphere_sphere_intersection(a: Sphere, b: Sphere) -> Bool {
 }
 
 // True if the two axis-aligned boxes overlap or touch. O(1).
+/// True if the two axis-aligned boxes overlap or touch. O(1).
 pub fn aabb_intersection(a: Box, b: Box) -> Bool {
   if a.max.x < b.min.x || a.min.x > b.max.x { return false; }
   if a.max.y < b.min.y || a.min.y > b.max.y { return false; }
@@ -275,6 +305,7 @@ pub fn aabb_intersection(a: Box, b: Box) -> Bool {
 }
 
 // True if p lies inside (or on) the box. O(1).
+/// True if p lies inside (or on) the box. O(1).
 pub fn aabb_contains(b: Box, p: Point3) -> Bool {
   return p.x >= b.min.x && p.x <= b.max.x
       && p.y >= b.min.y && p.y <= b.max.y
@@ -282,6 +313,7 @@ pub fn aabb_contains(b: Box, p: Point3) -> Bool {
 }
 
 // Closest point on the segment s to p. O(1).
+/// Closest point on the segment s to p. O(1).
 pub fn closest_point_on_segment(s: Segment3, p: Point3) -> Point3 {
   var abx = s.b.x - s.a.x;
   var aby = s.b.y - s.a.y;
@@ -298,6 +330,7 @@ pub fn closest_point_on_segment(s: Segment3, p: Point3) -> Point3 {
 }
 
 // Orthogonal projection of p onto the plane. O(1).
+/// Orthogonal projection of p onto the plane. O(1).
 pub fn closest_point_on_plane(pl: Plane, p: Point3) -> Point3 {
   var len = geom.vec3_length(pl.normal);
   if len == 0.0 { return p; }
@@ -313,6 +346,8 @@ pub fn closest_point_on_plane(pl: Plane, p: Point3) -> Point3 {
 
 // Unit normal of the triangle (right-handed, b-a cross c-a). Returns the zero
 // vector for a degenerate triangle. O(1).
+/// Unit normal of the triangle (right-handed, b-a cross c-a). Returns the zero
+/// vector for a degenerate triangle. O(1).
 pub fn triangle_normal(t: Triangle3) -> Vec3 {
   var e1 = Vec3{ x: t.b.x - t.a.x; y: t.b.y - t.a.y; z: t.b.z - t.a.z; };
   var e2 = Vec3{ x: t.c.x - t.a.x; y: t.c.y - t.a.y; z: t.c.z - t.a.z; };
@@ -325,6 +360,8 @@ pub fn triangle_normal(t: Triangle3) -> Vec3 {
 
 // Signed volume of a closed mesh via the divergence theorem (sum of signed
 // tetrahedron volumes about the origin). O(n).
+/// Signed volume of a closed mesh via the divergence theorem (sum of signed
+/// tetrahedron volumes about the origin). O(n).
 pub fn mesh_volume(m: Mesh) -> Float64 {
   var vol = 0.0;
   var i = 0;
@@ -345,6 +382,7 @@ pub fn mesh_volume(m: Mesh) -> Float64 {
 }
 
 // Total surface area of a mesh (sum of triangle areas). O(n).
+/// Total surface area of a mesh (sum of triangle areas). O(n).
 pub fn mesh_surface_area(m: Mesh) -> Float64 {
   var area = 0.0;
   var i = 0;
@@ -372,6 +410,8 @@ pub fn mesh_surface_area(m: Mesh) -> Float64 {
 
 // Volume-weighted centroid of a closed mesh. Returns the zero point for a
 // degenerate mesh. O(n).
+/// Volume-weighted centroid of a closed mesh. Returns the zero point for a
+/// degenerate mesh. O(n).
 pub fn mesh_centroid(m: Mesh) -> Point3 {
   var vol = 0.0;
   var cx = 0.0;
@@ -403,6 +443,9 @@ pub fn mesh_centroid(m: Mesh) -> Point3 {
 // Convex hull of a point cloud as a triangle mesh. Every oriented face is a
 // triangle (i, j, k) such that all other points lie on (or behind) the plane
 // of that triangle. O(n^4); exact for small point sets.
+/// Convex hull of a point cloud as a triangle mesh. Every oriented face is a
+/// triangle (i, j, k) such that all other points lie on (or behind) the plane
+/// of that triangle. O(n^4); exact for small point sets.
 pub fn convex_hull_3d(points: &Vec[Point3]) -> Mesh {
   var out = Mesh{ vertices: Vec[Point3].new(); indices: Vec[Int].new(); };
   var n = points.len();

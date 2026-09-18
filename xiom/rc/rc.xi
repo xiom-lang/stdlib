@@ -119,6 +119,9 @@ pub fn Rc.drop[T](self)
 // === M7: Deref impl for Rc[T] ===
 // Rc is a shared-ownership pointer. Deref allows `*rc` and auto-deref.
 // Note: DerefMut is NOT implemented -- Rc provides shared access only.
+/// === M7: Deref impl for Rc[T] ===
+/// Rc is a shared-ownership pointer. Deref allows `*rc` and auto-deref.
+/// Note: DerefMut is NOT implemented -- Rc provides shared access only.
 pub fn Rc[T].deref(self) -> &T
   requires: ptr != null
   ensures: true

@@ -110,13 +110,20 @@ the single-param tranche is currently a known compiler failure
 `tools/doc_scan.ps1` counts pub declarations with a preceding `///` doc line
 (the prose the API-docs generator publishes) and reports global + per-dir
 coverage. `-Detail` lists per-file rows; `-DumpBaseline <json>` records a
-ratchet floor (`tools/doc_baseline1.json`); `-RatchetFile <json>` fails when
+ratchet floor (`tools/doc_baseline2.json`); `-RatchetFile <json>` fails when
 any directory or the global count drops below it.
+`tools/doc_promote.ps1` converts the contiguous plain `//` comment block
+directly above a pub declaration into `///` (dry-run by default, `-Apply` to
+write; skips banners/separators; preserves LF/CRLF and UTF-8 without BOM).
 
 ```powershell
 pwsh tools/doc_scan.ps1 -Detail
-pwsh tools/doc_scan.ps1 -RatchetFile tools/doc_baseline1.json
+pwsh tools/doc_promote.ps1 -Detail
+pwsh tools/doc_promote.ps1 -Apply
+pwsh tools/doc_scan.ps1 -RatchetFile tools/doc_baseline2.json
 ```
 
-Baseline (2026-09-18): 3,518/6,984 documented (50.4%); the biggest gaps are
-`math` (1,010 missing), `geom` (460), `os`/`net` (~190 each).
+State (2026-09-18): 5,793/6,984 documented (82.9%; was 50.4% before the
+promotion of 2,223 attached comment blocks). Remaining prose-less surface is
+concentrated in `iter/iter.xi` (136), `num` (119), `os` (85), `crypto` (72),
+`core` (68), `sort/sort.xi` (20), `bits/bits.xi` (28), `ptr/ptr.xi` (19).

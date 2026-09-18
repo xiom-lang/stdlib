@@ -20,6 +20,7 @@ use xiom.math;
 const _SQRT_2PI: Float64 = 2.5066282746310002;
 
 // Uniform density on [a, b]. Complexity: O(1).
+/// Uniform density on [a, b]. Complexity: O(1).
 pub fn uniform_pdf(x: Float64, a: Float64, b: Float64) -> Float64 {
   if b <= a { return 0.0 / 0.0; }
   if x >= a && x <= b { return 1.0 / (b - a); }
@@ -27,6 +28,7 @@ pub fn uniform_pdf(x: Float64, a: Float64, b: Float64) -> Float64 {
 }
 
 // Uniform cumulative distribution on [a, b]. Complexity: O(1).
+/// Uniform cumulative distribution on [a, b]. Complexity: O(1).
 pub fn uniform_cdf(x: Float64, a: Float64, b: Float64) -> Float64 {
   if b <= a { return 0.0 / 0.0; }
   if x <= a { return 0.0; }
@@ -36,6 +38,8 @@ pub fn uniform_cdf(x: Float64, a: Float64, b: Float64) -> Float64 {
 
 // Normal density with mean mu and stddev sigma. NaN for sigma <= 0.
 // Complexity: O(1).
+/// Normal density with mean mu and stddev sigma. NaN for sigma <= 0.
+/// Complexity: O(1).
 pub fn normal_pdf(x: Float64, mu: Float64, sigma: Float64) -> Float64 {
   if sigma <= 0.0 { return 0.0 / 0.0; }
   var d = (x - mu) / sigma;
@@ -43,6 +47,7 @@ pub fn normal_pdf(x: Float64, mu: Float64, sigma: Float64) -> Float64 {
 }
 
 // Normal cumulative distribution. Complexity: O(1).
+/// Normal cumulative distribution. Complexity: O(1).
 pub fn normal_cdf(x: Float64, mu: Float64, sigma: Float64) -> Float64 {
   if sigma <= 0.0 { return 0.0 / 0.0; }
   var z = (x - mu) / (sigma * 1.4142135623730951);
@@ -51,6 +56,8 @@ pub fn normal_cdf(x: Float64, mu: Float64, sigma: Float64) -> Float64 {
 
 // Normal percent point (inverse CDF) for probability p in (0, 1).
 // Complexity: O(1).
+/// Normal percent point (inverse CDF) for probability p in (0, 1).
+/// Complexity: O(1).
 pub fn normal_ppf(p: Float64, mu: Float64, sigma: Float64) -> Float64 {
   if p <= 0.0 || p >= 1.0 { return 0.0 / 0.0; }
   var z = math.special.erfinv(2.0 * p - 1.0) * 1.4142135623730951;
@@ -58,12 +65,14 @@ pub fn normal_ppf(p: Float64, mu: Float64, sigma: Float64) -> Float64 {
 }
 
 // Exponential density with rate lambda. Complexity: O(1).
+/// Exponential density with rate lambda. Complexity: O(1).
 pub fn exponential_pdf(x: Float64, lambda: Float64) -> Float64 {
   if lambda <= 0.0 || x < 0.0 { return 0.0 / 0.0; }
   return lambda * math.exp(-lambda * x);
 }
 
 // Exponential cumulative distribution. Complexity: O(1).
+/// Exponential cumulative distribution. Complexity: O(1).
 pub fn exponential_cdf(x: Float64, lambda: Float64) -> Float64 {
   if lambda <= 0.0 || x < 0.0 { return 0.0 / 0.0; }
   return 1.0 - math.exp(-lambda * x);
@@ -72,6 +81,9 @@ pub fn exponential_cdf(x: Float64, lambda: Float64) -> Float64 {
 // Poisson probability mass at k with mean lambda (k is passed as a Float64
 // and used via the gamma function, so non-integer k is defined as well).
 // Complexity: O(1).
+/// Poisson probability mass at k with mean lambda (k is passed as a Float64
+/// and used via the gamma function, so non-integer k is defined as well).
+/// Complexity: O(1).
 pub fn poisson_pmf(k: Float64, lambda: Float64) -> Float64 {
   if lambda < 0.0 || k < 0.0 { return 0.0 / 0.0; }
   if lambda == 0.0 {
@@ -84,6 +96,8 @@ pub fn poisson_pmf(k: Float64, lambda: Float64) -> Float64 {
 
 // Binomial probability of k successes in n trials (k and n passed as
 // Float64). NaN for invalid parameters. Complexity: O(1).
+/// Binomial probability of k successes in n trials (k and n passed as
+/// Float64). NaN for invalid parameters. Complexity: O(1).
 pub fn binomial_pmf(k: Float64, n: Float64, p: Float64) -> Float64 {
   if p < 0.0 || p > 1.0 || k < 0.0 || n < 0.0 || k > n { return 0.0 / 0.0; }
   var log_p = math.special.gamma_ln(n + 1.0) - math.special.gamma_ln(k + 1.0)
@@ -92,12 +106,14 @@ pub fn binomial_pmf(k: Float64, n: Float64, p: Float64) -> Float64 {
 }
 
 // Geometric probability of first success at trial k. Complexity: O(1).
+/// Geometric probability of first success at trial k. Complexity: O(1).
 pub fn geometric_pmf(k: Float64, p: Float64) -> Float64 {
   if p <= 0.0 || p > 1.0 || k < 1.0 { return 0.0 / 0.0; }
   return math.pow(1.0 - p, k - 1.0) * p;
 }
 
 // Chi-squared density with k degrees of freedom. Complexity: O(1).
+/// Chi-squared density with k degrees of freedom. Complexity: O(1).
 pub fn chi_squared_pdf(x: Float64, k: Float64) -> Float64 {
   if x < 0.0 || k <= 0.0 { return 0.0 / 0.0; }
   if x == 0.0 {
@@ -111,6 +127,7 @@ pub fn chi_squared_pdf(x: Float64, k: Float64) -> Float64 {
 }
 
 // Student's t density with v degrees of freedom. Complexity: O(1).
+/// Student's t density with v degrees of freedom. Complexity: O(1).
 pub fn student_t_pdf(x: Float64, v: Float64) -> Float64 {
   if v <= 0.0 { return 0.0 / 0.0; }
   var log_p = math.special.gamma_ln((v + 1.0) / 2.0) - math.special.gamma_ln(v / 2.0)
@@ -120,6 +137,7 @@ pub fn student_t_pdf(x: Float64, v: Float64) -> Float64 {
 }
 
 // Beta density with shape parameters a and b. Complexity: O(1).
+/// Beta density with shape parameters a and b. Complexity: O(1).
 pub fn beta_pdf(x: Float64, a: Float64, b: Float64) -> Float64 {
   if a <= 0.0 || b <= 0.0 { return 0.0 / 0.0; }
   if x <= 0.0 || x >= 1.0 { return 0.0; }
@@ -130,6 +148,8 @@ pub fn beta_pdf(x: Float64, a: Float64, b: Float64) -> Float64 {
 
 // Draw a normal sample with mean mu and stddev sigma (Box-Muller over the
 // seeded xiom RNG). Complexity: O(1).
+/// Draw a normal sample with mean mu and stddev sigma (Box-Muller over the
+/// seeded xiom RNG). Complexity: O(1).
 pub fn sample_normal(mu: Float64, sigma: Float64) -> Float64 {
   if sigma <= 0.0 { return 0.0 / 0.0; }
   var u1 = math.random();
@@ -140,6 +160,7 @@ pub fn sample_normal(mu: Float64, sigma: Float64) -> Float64 {
 }
 
 // Draw a uniform sample from [a, b]. Complexity: O(1).
+/// Draw a uniform sample from [a, b]. Complexity: O(1).
 pub fn sample_uniform(a: Float64, b: Float64) -> Float64 {
   if b <= a { return 0.0 / 0.0; }
   return a + (b - a) * math.random();

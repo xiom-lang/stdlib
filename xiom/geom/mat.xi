@@ -23,6 +23,7 @@ use xiom.geom;
 use xiom.math;
 
 // n x n identity matrix. O(n^2).
+/// n x n identity matrix. O(n^2).
 pub fn mat_identity(n: Int) -> Vec[Vec[Float64]] {
   var out = Vec[Vec[Float64]].new();
   var i = 0;
@@ -41,6 +42,8 @@ pub fn mat_identity(n: Int) -> Vec[Vec[Float64]] {
 
 // Matrix product a * b. Returns an empty matrix when the inner dimensions do
 // not match. O(n^3).
+/// Matrix product a * b. Returns an empty matrix when the inner dimensions do
+/// not match. O(n^3).
 pub fn mat_mul(a: &Vec[Vec[Float64]], b: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {
   var out = Vec[Vec[Float64]].new();
   var ac = Vec[Vec[Float64]].new();
@@ -84,6 +87,8 @@ pub fn mat_mul(a: &Vec[Vec[Float64]], b: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]
 
 // Determinant of a square matrix via Gaussian elimination with partial
 // pivoting. Returns NaN for a non-square matrix and 0 for a singular one. O(n^3).
+/// Determinant of a square matrix via Gaussian elimination with partial
+/// pivoting. Returns NaN for a non-square matrix and 0 for a singular one. O(n^3).
 pub fn mat_det(m: &Vec[Vec[Float64]]) -> Float64 {
   var sc = Vec[Vec[Float64]].new();
   var i = 0;
@@ -150,6 +155,8 @@ pub fn mat_det(m: &Vec[Vec[Float64]]) -> Float64 {
 
 // Inverse of a square matrix via Gauss-Jordan elimination with partial
 // pivoting. None when the matrix is singular or non-square. O(n^3).
+/// Inverse of a square matrix via Gauss-Jordan elimination with partial
+/// pivoting. None when the matrix is singular or non-square. O(n^3).
 pub fn mat_inv(m: &Vec[Vec[Float64]]) -> Option[Vec[Vec[Float64]]] {
   var sc = Vec[Vec[Float64]].new();
   var i = 0;
@@ -249,6 +256,7 @@ pub fn mat_inv(m: &Vec[Vec[Float64]]) -> Option[Vec[Vec[Float64]]] {
 }
 
 // Transpose of a matrix. Empty matrix for a ragged input. O(n*m).
+/// Transpose of a matrix. Empty matrix for a ragged input. O(n*m).
 pub fn mat_transpose(m: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {
   var out = Vec[Vec[Float64]].new();
   var mc = Vec[Vec[Float64]].new();
@@ -277,6 +285,9 @@ pub fn mat_transpose(m: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {
 // Compose the 4x4 matrix m with a translation (x, y, z): returns T * m where
 // T is the translation matrix, so the translation is applied after m.
 // Empty matrix unless m is 4x4. O(64).
+/// Compose the 4x4 matrix m with a translation (x, y, z): returns T * m where
+/// T is the translation matrix, so the translation is applied after m.
+/// Empty matrix unless m is 4x4. O(64).
 pub fn mat_translate(m: &Vec[Vec[Float64]], x: Float64, y: Float64, z: Float64) -> Vec[Vec[Float64]] {
   var mc = Vec[Vec[Float64]].new();
   var i = 0;
@@ -308,6 +319,9 @@ pub fn mat_translate(m: &Vec[Vec[Float64]], x: Float64, y: Float64, z: Float64) 
 // Compose the 4x4 matrix m with a rotation of angle (radians) about the axis
 // direction: returns R * m where R is the Rodrigues rotation matrix (the axis
 // is normalised first). Empty matrix unless m is 4x4. O(64).
+/// Compose the 4x4 matrix m with a rotation of angle (radians) about the axis
+/// direction: returns R * m where R is the Rodrigues rotation matrix (the axis
+/// is normalised first). Empty matrix unless m is 4x4. O(64).
 pub fn mat_rotate(m: &Vec[Vec[Float64]], angle: Float64, axis: &Vec[Float64]) -> Vec[Vec[Float64]] {
   var mc = Vec[Vec[Float64]].new();
   var i = 0;
@@ -371,6 +385,8 @@ pub fn mat_rotate(m: &Vec[Vec[Float64]], angle: Float64, axis: &Vec[Float64]) ->
 
 // Compose the 4x4 matrix m with a scale (x, y, z): returns S * m where S is
 // the scale matrix, applied after m. Empty matrix unless m is 4x4. O(64).
+/// Compose the 4x4 matrix m with a scale (x, y, z): returns S * m where S is
+/// the scale matrix, applied after m. Empty matrix unless m is 4x4. O(64).
 pub fn mat_scale(m: &Vec[Vec[Float64]], x: Float64, y: Float64, z: Float64) -> Vec[Vec[Float64]] {
   var mc = Vec[Vec[Float64]].new();
   var i = 0;
@@ -401,6 +417,8 @@ pub fn mat_scale(m: &Vec[Vec[Float64]], x: Float64, y: Float64, z: Float64) -> V
 
 // Right-handed look-at view matrix: camera at eye looking at target with up
 // direction. Column-major 4x4. O(1).
+/// Right-handed look-at view matrix: camera at eye looking at target with up
+/// direction. Column-major 4x4. O(1).
 pub fn mat_look_at(eye: &Vec[Float64], target: &Vec[Float64], up: &Vec[Float64]) -> Vec[Vec[Float64]] {
   var ex = 0.0;
   var ey = 0.0;
@@ -469,6 +487,8 @@ pub fn mat_look_at(eye: &Vec[Float64], target: &Vec[Float64], up: &Vec[Float64])
 
 // Perspective projection matrix (right-handed, standard OpenGL mapping).
 // fovy is the vertical field of view in radians; near/far must differ. 4x4. O(1).
+/// Perspective projection matrix (right-handed, standard OpenGL mapping).
+/// fovy is the vertical field of view in radians; near/far must differ. 4x4. O(1).
 pub fn mat_perspective(fovy: Float64, aspect: Float64, near: Float64, far: Float64) -> Vec[Vec[Float64]] {
   var f = 1.0 / math.tan(fovy * 0.5);
   var nf = 1.0 / (near - far);
@@ -502,6 +522,8 @@ pub fn mat_perspective(fovy: Float64, aspect: Float64, near: Float64, far: Float
 
 // Orthographic projection matrix mapping [left,right] x [bottom,top] x
 // [near,far] to NDC [-1,1]^3. 4x4. O(1).
+/// Orthographic projection matrix mapping [left,right] x [bottom,top] x
+/// [near,far] to NDC [-1,1]^3. 4x4. O(1).
 pub fn mat_ortho(left: Float64, right: Float64, bottom: Float64, top: Float64, near: Float64, far: Float64) -> Vec[Vec[Float64]] {
   var rl = right - left;
   var tb = top - bottom;
@@ -537,6 +559,9 @@ pub fn mat_ortho(left: Float64, right: Float64, bottom: Float64, top: Float64, n
 // Transform the point p (3 or 4 components, w defaults to 1) by the 4x4
 // matrix m including the perspective divide. Returns the zero vector when the
 // transformed w is zero. Empty vector for a non-4x4 matrix. O(16).
+/// Transform the point p (3 or 4 components, w defaults to 1) by the 4x4
+/// matrix m including the perspective divide. Returns the zero vector when the
+/// transformed w is zero. Empty vector for a non-4x4 matrix. O(16).
 pub fn mat_transform_point(m: &Vec[Vec[Float64]], p: &Vec[Float64]) -> Vec[Float64] {
   var out = Vec[Float64].new();
   var mc = Vec[Vec[Float64]].new();

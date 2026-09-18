@@ -21,6 +21,10 @@ use xiom.time;
 //                 max_age: Int; secure: Bool; http_only: Bool; same_site: Str }
 //   expires is a unix timestamp (0 = session cookie); same_site is "Strict",
 //   "Lax" or "None" ("" when unset).
+/// struct Cookie { name: Str; value: Str; domain: Str; path: Str; expires: Int;
+///                 max_age: Int; secure: Bool; http_only: Bool; same_site: Str }
+///   expires is a unix timestamp (0 = session cookie); same_site is "Strict",
+///   "Lax" or "None" ("" when unset).
 pub type Cookie = {
   name: Str;
   value: Str;
@@ -34,6 +38,7 @@ pub type Cookie = {
 }
 
 // struct CookieJar - an ordered collection of cookies.
+/// struct CookieJar - an ordered collection of cookies.
 pub type CookieJar = {
   cookies: Vec[Cookie];
 }

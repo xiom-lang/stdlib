@@ -21,6 +21,7 @@ use xiom.math;
 use xiom.core.to_int;
 
 // A fixed-bin histogram over [min, max) with `bins` bins.
+/// A fixed-bin histogram over [min, max) with `bins` bins.
 pub type Histogram = {
   bins: Int;
   min: Float64;
@@ -29,6 +30,7 @@ pub type Histogram = {
 }
 
 // Histogram over [min, max] with `bins` bins. Complexity: O(bins).
+/// Histogram over [min, max] with `bins` bins. Complexity: O(bins).
 pub fn histogram_new(bins: Int, min: Float64, max: Float64) -> Histogram {
   var h = Histogram{ bins: bins, min: min, max: max, counts: Vec[Int].new() };
   if bins <= 0 || max <= min {
@@ -45,6 +47,9 @@ pub fn histogram_new(bins: Int, min: Float64, max: Float64) -> Histogram {
 // Record a value into h (by-value parameter: the caller's copy is not
 // updated under XIOM move semantics; the frozen signature has no return).
 // Values outside [min, max) are dropped. Complexity: O(1).
+/// Record a value into h (by-value parameter: the caller's copy is not
+/// updated under XIOM move semantics; the frozen signature has no return).
+/// Values outside [min, max) are dropped. Complexity: O(1).
 pub fn histogram_add(h: Histogram, value: Float64) {
   if h.counts.len() == 0 { return; }
   if value < h.min || value >= h.max { return; }
@@ -59,6 +64,7 @@ pub fn histogram_add(h: Histogram, value: Float64) {
 }
 
 // Per-bin counts. Complexity: O(1) (returns a copy).
+/// Per-bin counts. Complexity: O(1) (returns a copy).
 pub fn histogram_counts(h: Histogram) -> Vec[Int] {
   var out = Vec[Int].new();
   var i = 0;
@@ -70,6 +76,7 @@ pub fn histogram_counts(h: Histogram) -> Vec[Int] {
 }
 
 // Bin edge positions, length bins + 1. Complexity: O(bins).
+/// Bin edge positions, length bins + 1. Complexity: O(bins).
 pub fn histogram_edges(h: Histogram) -> Vec[Float64] {
   var out = Vec[Float64].new();
   var n = h.bins;
@@ -84,6 +91,8 @@ pub fn histogram_edges(h: Histogram) -> Vec[Float64] {
 
 // Counts normalized to a probability density (total count over bin width).
 // Empty for an empty histogram. Complexity: O(bins).
+/// Counts normalized to a probability density (total count over bin width).
+/// Empty for an empty histogram. Complexity: O(bins).
 pub fn histogram_normalize(h: Histogram) -> Vec[Float64] {
   var out = Vec[Float64].new();
   var n = h.counts.len();
@@ -106,6 +115,8 @@ pub fn histogram_normalize(h: Histogram) -> Vec[Float64] {
 
 // Mean estimated from the bin midpoints. NaN for an empty histogram.
 // Complexity: O(bins).
+/// Mean estimated from the bin midpoints. NaN for an empty histogram.
+/// Complexity: O(bins).
 pub fn histogram_mean(h: Histogram) -> Float64 {
   var n = h.counts.len();
   if n == 0 { return 0.0 / 0.0; }
@@ -124,6 +135,8 @@ pub fn histogram_mean(h: Histogram) -> Float64 {
 
 // Variance estimated from the bin midpoints. NaN for an empty histogram.
 // Complexity: O(bins).
+/// Variance estimated from the bin midpoints. NaN for an empty histogram.
+/// Complexity: O(bins).
 pub fn histogram_variance(h: Histogram) -> Float64 {
   var n = h.counts.len();
   if n == 0 { return 0.0 / 0.0; }
@@ -144,6 +157,8 @@ pub fn histogram_variance(h: Histogram) -> Float64 {
 
 // q-th quantile (q in [0, 1]) from the cumulative counts; NaN for an empty
 // histogram or invalid q. Complexity: O(bins).
+/// q-th quantile (q in [0, 1]) from the cumulative counts; NaN for an empty
+/// histogram or invalid q. Complexity: O(bins).
 pub fn histogram_quantile(h: Histogram, q: Float64) -> Float64 {
   var n = h.counts.len();
   if n == 0 { return 0.0 / 0.0; }
@@ -172,6 +187,8 @@ pub fn histogram_quantile(h: Histogram, q: Float64) -> Float64 {
 
 // Index of the most populated bin (first on ties). Returns -1 for an empty
 // histogram. Complexity: O(bins).
+/// Index of the most populated bin (first on ties). Returns -1 for an empty
+/// histogram. Complexity: O(bins).
 pub fn histogram_mode(h: Histogram) -> Int {
   var n = h.counts.len();
   if n == 0 { return -1; }
@@ -191,6 +208,9 @@ pub fn histogram_mode(h: Histogram) -> Int {
 // Combined histogram over the matching ranges: the counts of a and b are
 // added (a's bin structure is used). Returns a copy of a when the ranges or
 // bin counts differ (documented). Complexity: O(bins).
+/// Combined histogram over the matching ranges: the counts of a and b are
+/// added (a's bin structure is used). Returns a copy of a when the ranges or
+/// bin counts differ (documented). Complexity: O(bins).
 pub fn histogram_merge(a: Histogram, b: Histogram) -> Histogram {
   if a.bins != b.bins || a.min != b.min || a.max != b.max {
     return a;

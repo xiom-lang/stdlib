@@ -15,34 +15,43 @@ module xiom.geom.vector
 use xiom.math;
 
 // 2-component vector (x, y).
+/// 2-component vector (x, y).
 pub type Vec2 = { x: Float64; y: Float64; }
 
 // 3-component vector (x, y, z).
+/// 3-component vector (x, y, z).
 pub type Vec3 = { x: Float64; y: Float64; z: Float64; }
 
 // 4-component vector (x, y, z, w).
+/// 4-component vector (x, y, z, w).
 pub type Vec4 = { x: Float64; y: Float64; z: Float64; w: Float64; }
 
 // Dynamic N-component vector.
+/// Dynamic N-component vector.
 pub type VecN = { data: Vec[Float64]; }
 
 // Construct a 2D vector. O(1).
+/// Construct a 2D vector. O(1).
 pub fn v2_new(x: Float64, y: Float64) -> Vec2 {
   return Vec2{ x: x; y: y; };
 }
 
 // Construct a 3D vector. O(1).
+/// Construct a 3D vector. O(1).
 pub fn v3_new(x: Float64, y: Float64, z: Float64) -> Vec3 {
   return Vec3{ x: x; y: y; z: z; };
 }
 
 // Construct a 4D vector. O(1).
+/// Construct a 4D vector. O(1).
 pub fn v4_new(x: Float64, y: Float64, z: Float64, w: Float64) -> Vec4 {
   return Vec4{ x: x; y: y; z: z; w: w; };
 }
 
 // Dot product of two equal-length dynamic vectors. Returns NaN (0.0/0.0) when
 // the lengths differ or either is empty (documented; no silent garbage). O(n).
+/// Dot product of two equal-length dynamic vectors. Returns NaN (0.0/0.0) when
+/// the lengths differ or either is empty (documented; no silent garbage). O(n).
 pub fn dot(a: &Vec[Float64], b: &Vec[Float64]) -> Float64 {
   var n = a.len();
   if b.len() != n { return 0.0 / 0.0; }
@@ -57,6 +66,8 @@ pub fn dot(a: &Vec[Float64], b: &Vec[Float64]) -> Float64 {
 
 // 3D cross product of two 3-element dynamic vectors. Returns an empty vector
 // when either input is not exactly length 3 (documented). O(3).
+/// 3D cross product of two 3-element dynamic vectors. Returns an empty vector
+/// when either input is not exactly length 3 (documented). O(3).
 pub fn cross(a: &Vec[Float64], b: &Vec[Float64]) -> Vec[Float64] {
   var out = Vec[Float64].new();
   if a.len() != 3 || b.len() != 3 { return out; }
@@ -67,11 +78,13 @@ pub fn cross(a: &Vec[Float64], b: &Vec[Float64]) -> Vec[Float64] {
 }
 
 // 2D cross product (signed area) of two 2D vectors. O(1).
+/// 2D cross product (signed area) of two 2D vectors. O(1).
 pub fn cross2(a: Vec2, b: Vec2) -> Float64 {
   return a.x * b.y - a.y * b.x;
 }
 
 // Outer product matrix a (x) b: row i, col j holds a[i] * b[j]. O(n*m).
+/// Outer product matrix a (x) b: row i, col j holds a[i] * b[j]. O(n*m).
 pub fn outer(a: &Vec[Float64], b: &Vec[Float64]) -> Vec[Vec[Float64]] {
   var out = Vec[Vec[Float64]].new();
   var i = 0;
@@ -89,6 +102,7 @@ pub fn outer(a: &Vec[Float64], b: &Vec[Float64]) -> Vec[Vec[Float64]] {
 }
 
 // Euclidean length of a dynamic vector. O(n).
+/// Euclidean length of a dynamic vector. O(n).
 pub fn norm(v: &Vec[Float64]) -> Float64 {
   var s = 0.0;
   var i = 0;
@@ -100,6 +114,7 @@ pub fn norm(v: &Vec[Float64]) -> Float64 {
 }
 
 // Squared Euclidean length of a dynamic vector (avoids sqrt). O(n).
+/// Squared Euclidean length of a dynamic vector (avoids sqrt). O(n).
 pub fn norm_sq(v: &Vec[Float64]) -> Float64 {
   var s = 0.0;
   var i = 0;
@@ -112,6 +127,8 @@ pub fn norm_sq(v: &Vec[Float64]) -> Float64 {
 
 // Unit vector of v. Returns the zero vector when the length is zero
 // (documented). O(n).
+/// Unit vector of v. Returns the zero vector when the length is zero
+/// (documented). O(n).
 pub fn normalize(v: &Vec[Float64]) -> Vec[Float64] {
   var out = Vec[Float64].new();
   var len = norm(v);
@@ -126,12 +143,15 @@ pub fn normalize(v: &Vec[Float64]) -> Vec[Float64] {
 }
 
 // Alias of normalize. O(n).
+/// Alias of normalize. O(n).
 pub fn unit(v: &Vec[Float64]) -> Vec[Float64] {
   return normalize(v);
 }
 
 // Euclidean distance between two equal-length vectors. Returns NaN when the
 // lengths differ (documented). O(n).
+/// Euclidean distance between two equal-length vectors. Returns NaN when the
+/// lengths differ (documented). O(n).
 pub fn distance(a: &Vec[Float64], b: &Vec[Float64]) -> Float64 {
   var n = a.len();
   if b.len() != n { return 0.0 / 0.0; }
@@ -147,6 +167,8 @@ pub fn distance(a: &Vec[Float64], b: &Vec[Float64]) -> Float64 {
 
 // Squared Euclidean distance between two equal-length vectors. Returns NaN
 // when the lengths differ (documented). O(n).
+/// Squared Euclidean distance between two equal-length vectors. Returns NaN
+/// when the lengths differ (documented). O(n).
 pub fn distance_sq(a: &Vec[Float64], b: &Vec[Float64]) -> Float64 {
   var n = a.len();
   if b.len() != n { return 0.0 / 0.0; }
@@ -162,6 +184,8 @@ pub fn distance_sq(a: &Vec[Float64], b: &Vec[Float64]) -> Float64 {
 
 // Angle in radians between two equal-length non-zero vectors, in [0, PI].
 // Returns 0 when either vector is degenerate. O(n).
+/// Angle in radians between two equal-length non-zero vectors, in [0, PI].
+/// Returns 0 when either vector is degenerate. O(n).
 pub fn angle(a: &Vec[Float64], b: &Vec[Float64]) -> Float64 {
   var la = norm(a);
   var lb = norm(b);
@@ -174,6 +198,8 @@ pub fn angle(a: &Vec[Float64], b: &Vec[Float64]) -> Float64 {
 
 // Projection of a onto b: b * dot(a,b) / dot(b,b). Returns the zero vector
 // when b is degenerate. O(n).
+/// Projection of a onto b: b * dot(a,b) / dot(b,b). Returns the zero vector
+/// when b is degenerate. O(n).
 pub fn project(a: &Vec[Float64], b: &Vec[Float64]) -> Vec[Float64] {
   var out = Vec[Float64].new();
   var bb = dot(b, b);
@@ -189,6 +215,8 @@ pub fn project(a: &Vec[Float64], b: &Vec[Float64]) -> Vec[Float64] {
 
 // Reject a from b: a - project(a,b), the component of a perpendicular to b.
 // Requires equal-length inputs; empty vector otherwise. O(n).
+/// Reject a from b: a - project(a,b), the component of a perpendicular to b.
+/// Requires equal-length inputs; empty vector otherwise. O(n).
 pub fn reject(a: &Vec[Float64], b: &Vec[Float64]) -> Vec[Float64] {
   var out = Vec[Float64].new();
   var p = project(a, b);
@@ -203,6 +231,8 @@ pub fn reject(a: &Vec[Float64], b: &Vec[Float64]) -> Vec[Float64] {
 
 // Linear interpolation between a and b by t (t outside [0,1] extrapolates).
 // Requires equal-length inputs; empty vector otherwise. O(n).
+/// Linear interpolation between a and b by t (t outside [0,1] extrapolates).
+/// Requires equal-length inputs; empty vector otherwise. O(n).
 pub fn lerp(a: &Vec[Float64], b: &Vec[Float64], t: Float64) -> Vec[Float64] {
   var out = Vec[Float64].new();
   if a.len() != b.len() { return out; }
@@ -217,6 +247,9 @@ pub fn lerp(a: &Vec[Float64], b: &Vec[Float64], t: Float64) -> Vec[Float64] {
 // Spherical linear interpolation between two equal-length non-zero vectors at
 // parameter t in [0,1], with constant angular velocity. Falls back to lerp for
 // near-parallel inputs; returns the empty vector for degenerate inputs. O(n).
+/// Spherical linear interpolation between two equal-length non-zero vectors at
+/// parameter t in [0,1], with constant angular velocity. Falls back to lerp for
+/// near-parallel inputs; returns the empty vector for degenerate inputs. O(n).
 pub fn slerp(a: &Vec[Float64], b: &Vec[Float64], t: Float64) -> Vec[Float64] {
   var out = Vec[Float64].new();
   if a.len() != b.len() { return out; }
@@ -247,6 +280,8 @@ pub fn slerp(a: &Vec[Float64], b: &Vec[Float64], t: Float64) -> Vec[Float64] {
 
 // Reflect v about the (not necessarily unit) normal: v - 2*dot(v,n)/dot(n,n)*n.
 // Empty vector when the normal is degenerate or lengths differ. O(n).
+/// Reflect v about the (not necessarily unit) normal: v - 2*dot(v,n)/dot(n,n)*n.
+/// Empty vector when the normal is degenerate or lengths differ. O(n).
 pub fn reflect(v: &Vec[Float64], normal: &Vec[Float64]) -> Vec[Float64] {
   var out = Vec[Float64].new();
   if v.len() != normal.len() { return out; }
@@ -263,6 +298,8 @@ pub fn reflect(v: &Vec[Float64], normal: &Vec[Float64]) -> Vec[Float64] {
 
 // Refract v across an interface with relative index eta (both inputs unit).
 // Returns None on total internal reflection (k < 0) or length mismatch. O(n).
+/// Refract v across an interface with relative index eta (both inputs unit).
+/// Returns None on total internal reflection (k < 0) or length mismatch. O(n).
 pub fn refract(v: &Vec[Float64], normal: &Vec[Float64], eta: Float64) -> Option[Vec[Float64]] {
   if v.len() != normal.len() || v.len() == 0 {
     return Option[Vec[Float64]]{ is_some: false, value: Vec[Float64].new() };
@@ -284,6 +321,7 @@ pub fn refract(v: &Vec[Float64], normal: &Vec[Float64], eta: Float64) -> Option[
 }
 
 // Clamp each component of v into [lo, hi]. O(n).
+/// Clamp each component of v into [lo, hi]. O(n).
 pub fn clamp(v: &Vec[Float64], lo: Float64, hi: Float64) -> Vec[Float64] {
   var out = Vec[Float64].new();
   var i = 0;
@@ -298,6 +336,7 @@ pub fn clamp(v: &Vec[Float64], lo: Float64, hi: Float64) -> Vec[Float64] {
 }
 
 // Smallest component of v. Returns NaN for an empty vector (documented). O(n).
+/// Smallest component of v. Returns NaN for an empty vector (documented). O(n).
 pub fn component_min(v: &Vec[Float64]) -> Float64 {
   if v.len() == 0 { return 0.0 / 0.0; }
   var m = v[0];
@@ -310,6 +349,7 @@ pub fn component_min(v: &Vec[Float64]) -> Float64 {
 }
 
 // Largest component of v. Returns NaN for an empty vector (documented). O(n).
+/// Largest component of v. Returns NaN for an empty vector (documented). O(n).
 pub fn component_max(v: &Vec[Float64]) -> Float64 {
   if v.len() == 0 { return 0.0 / 0.0; }
   var m = v[0];
@@ -323,6 +363,8 @@ pub fn component_max(v: &Vec[Float64]) -> Float64 {
 
 // Component-wise product (Hadamard) of two equal-length vectors. Empty vector
 // on length mismatch (documented). O(n).
+/// Component-wise product (Hadamard) of two equal-length vectors. Empty vector
+/// on length mismatch (documented). O(n).
 pub fn hadamard(a: &Vec[Float64], b: &Vec[Float64]) -> Vec[Float64] {
   var out = Vec[Float64].new();
   if a.len() != b.len() { return out; }
