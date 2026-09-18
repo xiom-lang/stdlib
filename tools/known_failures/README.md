@@ -20,6 +20,11 @@ xiom --force -o out.exe tools/known_failures/<file>.xi
   '%struct.Tuple__Int__Bool'` (clang rejects the IR). The failure is an
   interaction of the import set: most calls compile in isolation (e.g.
   `xiom.async.io.async_read_line(0)` alone compiles fine), so this needs
-  compiler-side triage before minimization. Regenerate the call list with
-  the reference scan described in `docs/stdlib_session.md` (2.21,
-  untested-surface sweep).
+  compiler-side triage before minimization.
+  **Status on main R45 (`483f283e`, 2026-09-17):** the repro is NOT fixed.
+  One fresh run failed codegen fast (clang), subsequent clean runs HANG
+  with no output for >5-15 minutes (several attempts, processes killed);
+  re-checked after cleanup, still hangs. Compiler-lane follow-up needs a
+  fresh minimal hang repro. Note `v0.60.1` predates R43/R45.
+  Regenerate the call list with the reference scan described in
+  `docs/stdlib_session.md` (2.21, untested-surface sweep).
