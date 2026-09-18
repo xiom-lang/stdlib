@@ -30,7 +30,10 @@ pub type LfuCache = {
 /// Create a new LFU cache holding at most `capacity` entries.
 /// Capacity is clamped to >= 1.
 /// O(1).
-pub fn lfu_new(capacity: Int) -> LfuCache {
+pub fn lfu_new(capacity: Int) -> LfuCache
+  ensures: result.capacity >= 1
+  ensures: result.keys.len() == 0
+{
   var cap = capacity;
   if cap < 1 {
     cap = 1;
@@ -40,7 +43,9 @@ pub fn lfu_new(capacity: Int) -> LfuCache {
 
 /// Get the value for `key`, increasing its frequency. None if absent.
 /// O(n).
-pub fn lfu_get(c: &mut LfuCache, key: Int) -> Option[Int] {
+pub fn lfu_get(c: &mut LfuCache, key: Int) -> Option[Int]
+  ensures: result.is_some == lfu_contains(c, key)
+{
   var i = 0;
   while i < c.keys.len() {
     if c.keys[i] == key {
@@ -56,7 +61,9 @@ pub fn lfu_get(c: &mut LfuCache, key: Int) -> Option[Int] {
 /// when full (tie-break: least recently inserted among the minimum-frequency
 /// group). A put on an existing key increases its frequency.
 /// O(n).
-pub fn lfu_put(c: &mut LfuCache, key: Int, value: Int) {
+pub fn lfu_put(c: &mut LfuCache, key: Int, value: Int)
+  ensures: lfu_contains(c, key)
+{
   var i = 0;
   while i < c.keys.len() {
     if c.keys[i] == key {
@@ -93,7 +100,9 @@ pub fn lfu_put(c: &mut LfuCache, key: Int, value: Int) {
 
 /// Check whether `key` is present (does not change its frequency).
 /// O(n).
-pub fn lfu_contains(c: &mut LfuCache, key: Int) -> Bool {
+pub fn lfu_contains(c: &mut LfuCache, key: Int) -> Bool
+  ensures: result == true => lfu_size(c) > 0
+{
   var i = 0;
   while i < c.keys.len() {
     if c.keys[i] == key {
@@ -106,7 +115,10 @@ pub fn lfu_contains(c: &mut LfuCache, key: Int) -> Bool {
 
 /// Remove `key`, returning whether it was present.
 /// O(n).
-pub fn lfu_remove(c: &mut LfuCache, key: Int) -> Bool {
+pub fn lfu_remove(c: &mut LfuCache, key: Int) -> Bool
+  ensures: result == true => lfu_contains(c, key) == false
+  ensures: result == false => lfu_contains(c, key)
+{
   var i = 0;
   while i < c.keys.len() {
     if c.keys[i] == key {

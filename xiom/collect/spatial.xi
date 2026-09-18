@@ -34,13 +34,17 @@ pub type KdTree = {
 
 /// Create an empty KD-tree.
 /// O(1).
-pub fn kdtree_new() -> KdTree {
+pub fn kdtree_new() -> KdTree
+  ensures: result.size == 0
+{
   return KdTree{ root: -1; size: 0; xs: Vec[Int].new(); ys: Vec[Int].new(); vals: Vec[Int].new(); left: Vec[Int].new(); right: Vec[Int].new(); };
 }
 
 /// Insert a 2D point (x, y) with its value. Duplicates are allowed.
 /// O(h) expected, O(n) worst case.
-pub fn kdtree_insert(t: &mut KdTree, x: Int, y: Int, value: Int) {
+pub fn kdtree_insert(t: &mut KdTree, x: Int, y: Int, value: Int)
+  ensures: kdtree_size(t) == kdtree_size(t)@pre + 1
+{
   var id = t.xs.len();
   t.xs.push(x);
   t.ys.push(y);
@@ -143,7 +147,10 @@ fn _nn(t: &KdTree, node: Int, x: Int, y: Int, depth: Int, best: &mut Nearest) {
 
 /// Value of the closest point to (x, y), or None if the tree is empty.
 /// O(n) worst case, O(log n) expected.
-pub fn kdtree_nearest(t: &KdTree, x: Int, y: Int) -> Option[Int] {
+pub fn kdtree_nearest(t: &KdTree, x: Int, y: Int) -> Option[Int]
+  ensures: result is Some => kdtree_size(t) > 0
+  ensures: result is None => kdtree_size(t) == 0
+{
   if t.root == -1 {
     return Option[Int]{ is_some: false; value: 0; };
   }
@@ -181,7 +188,9 @@ fn _range(t: &KdTree, node: Int, x1: Int, y1: Int, x2: Int, y2: Int, depth: Int,
 
 /// Values of the points inside the rectangle [x1, x2] x [y1, y2] (inclusive).
 /// O(n) worst case.
-pub fn kdtree_range(t: &KdTree, x1: Int, y1: Int, x2: Int, y2: Int) -> Vec[Int] {
+pub fn kdtree_range(t: &KdTree, x1: Int, y1: Int, x2: Int, y2: Int) -> Vec[Int]
+  ensures: result.len() <= kdtree_size(t)
+{
   var out = Vec[Int].new();
   if t.root == -1 {
     return out;
@@ -363,7 +372,9 @@ fn _qt_insert_at(q: &mut Quadtree, node: Int, x: Int, y: Int, value: Int, depth:
 
 /// Create a quadtree for the given bounds (top-left (x, y), size (w, h)).
 /// O(1).
-pub fn quadtree_new(x: Int, y: Int, w: Int, h: Int) -> Quadtree {
+pub fn quadtree_new(x: Int, y: Int, w: Int, h: Int) -> Quadtree
+  ensures: result.size == 0
+{
   var q = Quadtree{ root: -1; size: 0; nx: Vec[Int].new(); ny: Vec[Int].new(); nw: Vec[Int].new(); nh: Vec[Int].new(); kids: Vec[Int].new(); phead: Vec[Int].new(); px: Vec[Int].new(); py: Vec[Int].new(); pv: Vec[Int].new(); pnxt: Vec[Int].new(); };
   var ww = w;
   var hh = h;
@@ -377,7 +388,10 @@ pub fn quadtree_new(x: Int, y: Int, w: Int, h: Int) -> Quadtree {
 /// Insert a 2D point (x, y) with its value. Returns false if the point lies
 /// outside the quadtree bounds.
 /// O(depth).
-pub fn quadtree_insert(q: &mut Quadtree, x: Int, y: Int, value: Int) -> Bool {
+pub fn quadtree_insert(q: &mut Quadtree, x: Int, y: Int, value: Int) -> Bool
+  ensures: result == true => quadtree_size(q) == quadtree_size(q)@pre + 1
+  ensures: result == false => quadtree_size(q) == quadtree_size(q)@pre
+{
   if !_qt_contains(q, q.root, x, y) {
     return false;
   }
@@ -422,7 +436,9 @@ fn _qt_rect(q: &Quadtree, node: Int, x1: Int, y1: Int, x2: Int, y2: Int, out: &m
 
 /// Values of the points inside the rectangle [x1, x2] x [y1, y2] (inclusive).
 /// O(n) worst case.
-pub fn quadtree_query(q: &Quadtree, x1: Int, y1: Int, x2: Int, y2: Int) -> Vec[Int] {
+pub fn quadtree_query(q: &Quadtree, x1: Int, y1: Int, x2: Int, y2: Int) -> Vec[Int]
+  ensures: result.len() <= quadtree_size(q)
+{
   var out = Vec[Int].new();
   var rx1 = x1;
   var ry1 = y1;
@@ -608,7 +624,9 @@ fn _oc_insert_at(o: &mut Octree, node: Int, x: Int, y: Int, z: Int, value: Int, 
 
 /// Create an octree for the given bounds (corner (x, y, z), size (w, h, d)).
 /// O(1).
-pub fn octree_new(x: Int, y: Int, z: Int, w: Int, h: Int, d: Int) -> Octree {
+pub fn octree_new(x: Int, y: Int, z: Int, w: Int, h: Int, d: Int) -> Octree
+  ensures: result.size == 0
+{
   var o = Octree{ root: -1; size: 0; nx: Vec[Int].new(); ny: Vec[Int].new(); nz: Vec[Int].new(); nw: Vec[Int].new(); nh: Vec[Int].new(); nd: Vec[Int].new(); kids: Vec[Int].new(); phead: Vec[Int].new(); px: Vec[Int].new(); py: Vec[Int].new(); pz: Vec[Int].new(); pv: Vec[Int].new(); pnxt: Vec[Int].new(); };
   var ww = w;
   var hh = h;
@@ -624,7 +642,10 @@ pub fn octree_new(x: Int, y: Int, z: Int, w: Int, h: Int, d: Int) -> Octree {
 /// Insert a 3D point (x, y, z) with its value. Returns false if the point lies
 /// outside the octree bounds.
 /// O(depth).
-pub fn octree_insert(o: &mut Octree, x: Int, y: Int, z: Int, value: Int) -> Bool {
+pub fn octree_insert(o: &mut Octree, x: Int, y: Int, z: Int, value: Int) -> Bool
+  ensures: result == true => octree_size(o) == octree_size(o)@pre + 1
+  ensures: result == false => octree_size(o) == octree_size(o)@pre
+{
   if !_oc_contains(o, o.root, x, y, z) {
     return false;
   }
@@ -675,7 +696,9 @@ fn _oc_box(o: &Octree, node: Int, x1: Int, y1: Int, z1: Int, x2: Int, y2: Int, z
 
 /// Values of the points inside the box [x1, x2] x [y1, y2] x [z1, z2]
 /// (inclusive). O(n) worst case.
-pub fn octree_query(o: &Octree, x1: Int, y1: Int, z1: Int, x2: Int, y2: Int, z2: Int) -> Vec[Int] {
+pub fn octree_query(o: &Octree, x1: Int, y1: Int, z1: Int, x2: Int, y2: Int, z2: Int) -> Vec[Int]
+  ensures: result.len() <= octree_size(o)
+{
   var out = Vec[Int].new();
   var rx1 = x1;
   var ry1 = y1;

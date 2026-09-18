@@ -19,7 +19,10 @@ use xiom.collect.cache;
 /// Params: capacity - maximum number of cached entries (clamped to >= 1).
 /// Returns: an empty ArcCache.
 /// Complexity: O(1).
-pub fn arc_new(capacity: Int) -> ArcCache {
+pub fn arc_new(capacity: Int) -> ArcCache
+  ensures: result.capacity >= 1
+  ensures: result.p == 0
+{
   return xiom.collect.cache.arc_new(capacity);
 }
 
@@ -27,14 +30,18 @@ pub fn arc_new(capacity: Int) -> ArcCache {
 /// Params: c - the cache; key - Int key.
 /// Returns: Some(value) if cached, None otherwise.
 /// Complexity: O(n) (linear scan of the four lists).
-pub fn arc_get(c: &mut ArcCache, key: Int) -> Option[Int] {
+pub fn arc_get(c: &mut ArcCache, key: Int) -> Option[Int]
+  ensures: result.is_some == arc_contains(c, key)
+{
   return xiom.collect.cache.arc_get(c, key);
 }
 
 /// Insert or update `key` -> `value`, adapting the cache to the workload.
 /// Params: c - the cache; key - Int key; value - Int value.
 /// Complexity: O(n) (linear scan of the four lists).
-pub fn arc_put(c: &mut ArcCache, key: Int, value: Int) {
+pub fn arc_put(c: &mut ArcCache, key: Int, value: Int)
+  ensures: arc_contains(c, key)
+{
   xiom.collect.cache.arc_put(c, key, value);
 }
 
@@ -42,7 +49,9 @@ pub fn arc_put(c: &mut ArcCache, key: Int, value: Int) {
 /// Params: c - the cache; key - Int key.
 /// Returns: true if the key is cached.
 /// Complexity: O(n) (linear scan of T1 and T2).
-pub fn arc_contains(c: &mut ArcCache, key: Int) -> Bool {
+pub fn arc_contains(c: &mut ArcCache, key: Int) -> Bool
+  ensures: result == true => arc_size(c) > 0
+{
   return xiom.collect.cache.arc_contains(c, key);
 }
 

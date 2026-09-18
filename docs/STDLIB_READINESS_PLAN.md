@@ -253,11 +253,17 @@ T1/T2 yields.
       get/is_some==contains, min/max Some-iff-nonempty, walk lengths;
       cache LRU/LFU/ARC constructor field, get/is_some==contains,
       put-membership) -> collect 30.8% -> 34.4%, global 16.6% clauses /
-      16.0% pub-with-clause. Ratchet:
-      tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors47.json
+      16.0% pub-with-clause. Wave 11 (2026-09-18): concurrent constructors
+      -> collect 34.9%, global 16.6% clauses / 16.1% pub-with-clause;
+      floors48. Wave 12 (2026-09-18): 60 clauses (graph traversal/
+      union-find relations, spatial size @pre + query count bounds,
+      persistent length relations, LFU/ARC membership, CMS/TinyLFU
+      estimate bounds) -> collect 34.9% -> 44.8%, global 17.3% clauses /
+      16.8% pub-with-clause. Ratchet:
+      tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors49.json
       (repo tooling as of the split; positive + negative runs verified;
       earlier floors kept at
-      coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46.json).
+      coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48.json).
       Floors are per top-level stdlib/xiom directory and must be refreshed
       when a module is ADDED (new uncovered pub fns dilute the percentage
       -- TOML dropped serialize 6.1% -> 5.4%, tz dropped time 13% ->

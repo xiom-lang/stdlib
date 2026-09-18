@@ -91,7 +91,7 @@ jobs:
 
       - name: Coverage ratchet
         shell: pwsh
-        run: ./tools/coverage_scan.ps1 -RatchetFile ./tools/coverage_floors48.json
+        run: ./tools/coverage_scan.ps1 -RatchetFile ./tools/coverage_floors49.json
 
       - name: Upload gate results
         if: always()

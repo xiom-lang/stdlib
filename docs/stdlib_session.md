@@ -18,8 +18,8 @@ release that contains them; the nightly heavy CI already tests compiler
   check, 0 bare-name hits, ratchet OK -- `docs/VERIFICATION_BASELINE.md`.
 - Corpus is now **950 files** (`smoke_serialize_toml_write.xi`,
   `smoke_stress_fuzz_parsers.xi` added).
-- Coverage (floors48): **io 50.9%, string 48.5%, collect 34.9%**; global
-  16.6% clauses / **16.1% pub-with-clause**. v1.0 gate: >=60% on
+- Coverage (floors49): **io 50.9%, string 48.5%, collect 44.8%**; global
+  17.3% clauses / **16.8% pub-with-clause**. v1.0 gate: >=60% on
   io/string/collect.
 - Findings from this lane: `x25519_keypair` FIXED (compiler R43
   `274184be`, verified locally); `http_parse_response` FIXED stdlib-side
@@ -75,7 +75,7 @@ release that contains them; the nightly heavy CI already tests compiler
 - Gates: `./tools/run_smokes.ps1 -Compiler <exe> -RetryFailed`;
   `pwsh tools/check_modules.ps1 -Compiler <exe>`;
   `pwsh tools/barename_scan.ps1 -Compiler <exe>`;
-  `pwsh tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors48.json`.
+  `pwsh tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors49.json`.
 - No stdlib edits while a sweep is in flight; one fix = one probe = one
   verified rerun; stage explicit paths; pure-ASCII commits.
 - Key docs: `tools/README.md`, `docs/CI.md`,

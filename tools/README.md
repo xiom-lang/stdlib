@@ -42,10 +42,10 @@ always tests THIS checkout, never an installed copy. The CI pin lives in
 ./tools/run_smokes.ps1 -Compiler C:\path\to\xiom.exe -Json out/smokes.json
 
 # coverage ratchet (floors live in tools/coverage_floors*.json)
-pwsh tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors48.json
+pwsh tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors49.json
 
 # dump new floors after a contract wave or a new module
-pwsh tools/coverage_scan.ps1 -DumpFloors tools/coverage_floors49.json
+pwsh tools/coverage_scan.ps1 -DumpFloors tools/coverage_floors50.json
 
 # strict bare-name gate over all 509 manifest modules
 pwsh tools/barename_scan.ps1 -Compiler C:\path\to\xiom.exe
