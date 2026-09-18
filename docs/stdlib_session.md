@@ -4,6 +4,85 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 -->
 # XIOM Stdlib Session -- Handoff
 
+## 0A. CONTINUE HERE -- handoff snapshot (2026-09-18)
+
+**Repo**: `xiom-lang/stdlib` at `E:\xiom-lang\stdlib` (branch `main`,
+working tree clean; ~40 local commits since the split -- pushed only when
+the release lane says so). Compiler pin: `COMPILER_VERSION` = **v0.60.0**
+(release tag `v0.60.1` predates the R43/R45 fixes, so the pin waits for a
+release that contains them; the nightly heavy CI already tests compiler
+`main`).
+
+**Verified state (2026-09-17/18)**
+- Freeze baseline on tag v0.60.0: 947/947 strict corpus, 509/509 module
+  check, 0 bare-name hits, ratchet OK -- `docs/VERIFICATION_BASELINE.md`.
+- Corpus is now **950 files** (`smoke_serialize_toml_write.xi`,
+  `smoke_stress_fuzz_parsers.xi` added).
+- Coverage (floors48): **io 50.9%, string 48.5%, collect 34.9%**; global
+  16.6% clauses / **16.1% pub-with-clause**. v1.0 gate: >=60% on
+  io/string/collect.
+- Findings from this lane: `x25519_keypair` FIXED (compiler R43
+  `274184be`, verified locally); `http_parse_response` FIXED stdlib-side
+  (R44 same-leaf collision -- `net.net.HttpResponse` renamed
+  `NetHttpResponse`, verified on the pin); single-param sweep repro STILL
+  OPEN -- fails/hangs on compiler main `483f283e` (R45), repro at
+  `tools/known_failures/p_sweep_single_param.xi`.
+- Compiler R46 (`12148d43`, bench graph clang-clean) fixed generic
+  same-leaf collisions, struct-vs-variant `Node` disambiguation and mono
+  tuple params. New compiler open finding (recorded in the compiler
+  SESSION.md): cross-module calls to generic methods on a
+  module-qualified receiver fall back to erased stubs -- stdlib impact
+  unassessed; check whether any smoke uses generic methods through a
+  qualified receiver.
+
+**Next-session queue, in order**
+1. Rebuild compiler `main` (12148d43+) and re-test
+   `tools/known_failures/p_sweep_single_param.xi`: green -> promote it to
+   `tools/probes/`, update the known_failures README + this doc, then
+   re-baseline (check_modules + full corpus sweep). Failing -> keep the
+   repro, refresh the error evidence. Hanging -> capture a minimal hang
+   repro (each attempt with its own timeout; subset bisection is
+   non-monotone, so bisect by MODULE group instead of call subset).
+2. R44 slice prep: execute `docs/SAME_LEAF_TYPE_CONFLICTS.md` batches
+   (16 conflicting leaves; dispositions + rules in that doc). Start with
+   the clear legacy twins: `collect/priority.xi` PHeap vs
+   `collect/heap.xi`; `collect/ring.xi` SpscRing vs `collect/queue.xi`;
+   `collect/range.xi` IntervalTree vs `collect/interval.xi`. Every rename
+   is a public-API change: batch with the compiler `api_freeze` snapshot
+   regen; after each batch require `tools/same_leaf_audit.ps1` count drop
+   + `tools/check_modules.ps1` 509/509 + corpus battery green.
+3. Contract waves 12+: keep pushing toward the 60% gate. Biggest
+   surfaces: remaining collect method bodies (graph/spatial/persistent,
+   cache LFU/ARC leftovers), string case/normalize wrappers, io Result
+   helpers. Toolbox: `=>` implications, `@pre` relations,
+   `result is Some/None/Ok`, `result.value`, field equality, count bounds.
+   Pre-validate every NEW shape in a `p_waveN_shapes.xi` probe; dump
+   `coverage_floorsN+1.json` and wire it into CI/READMEs in the same
+   commit.
+4. Untested-surface sweep: 1010/5777 public fns were never referenced.
+   Zero-arg subset is locked by
+   `tools/probes/p_never_called_zeroarg.xi`; the single-param tranche is
+   blocked on item 1; multi-param functions need generated call probes.
+5. TLS/schannel (compiler-FFI-blocked) and tzdata phase 2 stay last;
+   registry publish activation is the user's (dispatch-only
+   `publish-registry.yml`).
+
+**Recipes**
+- Build a compiler ref: export it (`git -C E:\xiom-lang\xiom archive
+  --format=zip -o <zip> <ref>`), expand to a temp dir, set
+  `CARGO_TARGET_DIR=<temp>\target`, `cargo build --locked -p xiom`; run it
+  with `XIOM_STDLIB=E:\xiom-lang\stdlib` (the runner does this too).
+- Gates: `./tools/run_smokes.ps1 -Compiler <exe> -RetryFailed`;
+  `pwsh tools/check_modules.ps1 -Compiler <exe>`;
+  `pwsh tools/barename_scan.ps1 -Compiler <exe>`;
+  `pwsh tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors48.json`.
+- No stdlib edits while a sweep is in flight; one fix = one probe = one
+  verified rerun; stage explicit paths; pure-ASCII commits.
+- Key docs: `tools/README.md`, `docs/CI.md`,
+  `docs/VERIFICATION_BASELINE.md`, `docs/STDLIB_READINESS_PLAN.md`
+  (gates), `docs/STDLIB_BETA_LIMITATIONS.md`,
+  `docs/SAME_LEAF_TYPE_CONFLICTS.md`, `docs/STDLIB_DEDUP_INVENTORY.md`.
+
 ## 0. START HERE -- current handoff (2026-09-16)
 
 ### 0.0 POST-SPLIT BOOTSTRAP -- read first if you are a new agent in `xiom-lang/stdlib`
@@ -1754,7 +1833,8 @@ Stdlib burn-down on committed HEAD (b71d839f):
   CODEGEN on compiler v0.60.0 (clang "invalid getelementptr" on
   `%struct.HttpResponse` field 2; the struct has a `Vec[(Str, Str)]`
   field). Minimal probe kept at `tools/probes/p_http_resp_codegen.xi`;
-  harness excludes the call. OPEN FINDING for the compiler lane; follow-up:
+  the harness now includes the call (resolved 2026-09-17 by the R44
+  stdlib rename `net.net.HttpResponse` -> `NetHttpResponse`); follow-up:
   sweep never-exercised public functions for the same latent class.
 - **TOML writer shipped (2026-09-17):** `toml_write(t: &TomlTable) -> Str`
   emits the v1 subset -- root keys first, `[section]` blocks in
@@ -1780,4 +1860,51 @@ Stdlib burn-down on committed HEAD (b71d839f):
   coordinated hygiene follow-up, not a blocker.
 - Commits this round (local): 66cd23b, 547a164, 4fe005e, 1e2db86, 9dab881,
   d6449a4, plus the wave-7/dedup commit.
+
+## 2.22. Compiler R46 report ingested (2026-09-18) + verification status
+
+Compiler lane (from the xiom repo session):
+- **R46 `12148d43` -- bench graph clang-clean.** Three same-leaf-family
+  defects fixed with locks: (a) generic same-leaf collisions
+  (`benchmark.generics.Box[T]` vs `generics_hard.Box[T]` collapsed into one
+  bare `%struct.Box`) -- the R39 triage now includes generic types but
+  splits only conflicting shapes, so identical generic re-declarations
+  keep leaf-derived keys (lock m88); (b) a bare literal that is both a
+  struct and an enum variant (`Node(value,left,right)` vs
+  `benchmark.memory.Node`) is disambiguated by the literal's field names,
+  struct preference preserved when both match (lock m89); (c) mono tuple
+  params now name elements with the concrete substitution for the current
+  function (m87 extended; a broader lookup regressed m44/m48, so it stays
+  deliberately narrow). Hardening in the same slice: mono symbol names
+  sanitize concrete type parts; bare variants inside method bodies resolve
+  leaf-scope-first.
+- **Verification:** `clang -c` on the bench IR exits 0; bench IR
+  deterministic at 5,808,645 bytes (budget 6.3 MB); e2e 2337/2337 with the
+  stdlib checkout active; feature-reg 510/510; checker 194/194; perf 2/2;
+  robustness 63/63; pkg/dbg/lsp/mcp 63/34/44/39; release build clean.
+  `stdlib_execution_tests` remains 83/85 -- the two pre-existing
+  tree/cache contract reds are stale-checkout drift (both smokes pass in
+  THIS repo).
+- **NEW compiler open finding (not bench-gating):** cross-module calls to
+  generic methods on a module-qualified receiver
+  (`main -> h.Box.pack[Int](42)`) and generic methods whose type arg is
+  inferable only from the receiver (`is_sealed[T]` on `Box[Int]`)
+  fall back to erased stubs returning `zeroinitializer`. Repro + fix shape
+  live in the compiler `SESSION.md`. STDLIB ACTION: check whether any
+  stdlib module or smoke calls generic methods through a module-qualified
+  receiver; if so, add a probe to this repo.
+- Remaining compiler queue: R44 same-leaf class (waits on the stdlib dedup
+  + qualification slice), then Stage 5's clap migration, LSP
+  incremental/cross-file index, fmt inline comments, cargo-vet.
+
+Stdlib status after this session (actionable list in 0A): waves 7-11
+landed; TOML writer + parser fuzz harness shipped; runtime symbol audit
+closed (9 dead symbols deleted, hot-reload ABI annotated);
+untested-surface sweep built (1010/5777 never referenced; zero-arg subset
+locked by `p_never_called_zeroarg.xi`); R44 worklist generated (16 real
+conflicts, 24 benign, `docs/SAME_LEAF_TYPE_CONFLICTS.md`); CI credentials
+policy applied (`docs/CI.md`, attestations, dispatch-gated registry
+publish). The single-param sweep repro remains the one open
+stdlib->compiler handoff (fails/hangs on main R45 `483f283e`; repro and
+current evidence in `tools/known_failures/README.md`).
 
