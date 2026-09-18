@@ -5,8 +5,9 @@ stdlib modules. Codegen injects `%struct.<Leaf>` / enum tags by bare leaf, so
 different shapes under one leaf can clobber each other's fields. This is
 exactly how `net.net.HttpResponse` (2 fields) vs `net.http.HttpResponse`
 (3 fields) broke `http_parse_response`; the legacy net.net type was renamed
-`NetHttpResponse` on 2026-09-17 and the priority-queue `PHeap` twin was
-renamed `IntMaxHeap` on 2026-09-18, leaving **15 conflicts**. The generated
+`NetHttpResponse` on 2026-09-17, the priority-queue `PHeap` twin was
+renamed `IntMaxHeap` and the dependency-free `SpscRing` twin was renamed
+`RingBuffer` on 2026-09-18, leaving **14 conflicts**. The generated
 audit (`docs/baselines/same-leaf-conflicts.md`) is the count of record.
 
 - Generated evidence: `docs/baselines/same-leaf-conflicts.md`
@@ -26,7 +27,7 @@ audit (`docs/baselines/same-leaf-conflicts.md`) is the count of record.
 | `IntervalTree` | `collect/range.xi`, `collect/interval.xi` | dedup interval family |
 | `IntMap` | `collect/map.xi`, `collect/intmap.xi` | dedup map family |
 | `StringMap` | `collect/stringmap.xi`, `collect/intmap.xi` | dedup map family |
-| `SpscRing` | `collect/ring.xi`, `collect/queue.xi` | dedup ring twin |
+| `SpscRing` | `collect/ring.xi`, `collect/queue.xi` | **RESOLVED 2026-09-18:** `ring.xi` renamed its "Depends on: none" variant `RingBuffer`; `queue.xi` keeps the reference atomic-counter `SpscRing` |
 | `FloatScan` | `format/fmt.xi`, `string/scanf.xi` | rename one leaf (scanner twins) |
 | `Aabb` | `geom/collision.xi`, `geom/geom.xi`, `geom/geometry_3d.xi` | dedup into the geom core |
 | `Sphere` | `geom/collision.xi`, `geom/geom.xi`, `geom/geometry_3d.xi` | dedup into the geom core |

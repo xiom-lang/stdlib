@@ -16,7 +16,7 @@ module xiom.collect.ring
 // single-threaded contract exercised by the smoke tests.
 // ============================================================================
 
-pub type SpscRing = {
+pub type RingBuffer = {
   buf: Vec[Int];
   cap: Int;
   head: Int;
@@ -24,7 +24,7 @@ pub type SpscRing = {
 }
 
 /// Create a ring with `cap` slots. A capacity below 1 is clamped to 1. O(cap).
-pub fn ring_new(cap: Int) -> SpscRing {
+pub fn ring_new(cap: Int) -> RingBuffer {
   var n = cap;
   if n < 1 { n = 1; }
   var buf = Vec[Int].new();
@@ -33,11 +33,11 @@ pub fn ring_new(cap: Int) -> SpscRing {
     buf.push(0);
     i = i + 1;
   }
-  return SpscRing{ buf: buf; cap: n; head: 0; tail: 0; };
+  return RingBuffer{ buf: buf; cap: n; head: 0; tail: 0; };
 }
 
 /// Try to enqueue `value`; returns false when the ring is full. O(1).
-pub fn ring_push(r: &mut SpscRing, value: Int) -> Bool {
+pub fn ring_push(r: &mut RingBuffer, value: Int) -> Bool {
   if r.tail - r.head >= r.cap { return false; }
   r.buf[r.tail % r.cap] = value;
   r.tail = r.tail + 1;
@@ -45,7 +45,7 @@ pub fn ring_push(r: &mut SpscRing, value: Int) -> Bool {
 }
 
 /// Dequeue a value. None when the ring is empty. O(1).
-pub fn ring_pop(r: &mut SpscRing) -> Option[Int] {
+pub fn ring_pop(r: &mut RingBuffer) -> Option[Int] {
   if r.head >= r.tail { return None; }
   var value = r.buf[r.head % r.cap];
   r.head = r.head + 1;
@@ -53,7 +53,7 @@ pub fn ring_pop(r: &mut SpscRing) -> Option[Int] {
 }
 
 /// Number of buffered elements. O(1).
-pub fn ring_len(r: &SpscRing) -> Int
+pub fn ring_len(r: &RingBuffer) -> Int
   ensures: result >= 0
 {
   var n = r.tail - r.head;
@@ -63,14 +63,14 @@ pub fn ring_len(r: &SpscRing) -> Int
 }
 
 /// True when the ring holds no elements. O(1).
-pub fn ring_is_empty(r: &SpscRing) -> Bool
+pub fn ring_is_empty(r: &RingBuffer) -> Bool
   ensures: result == (ring_len(r) == 0)
 {
   return r.head >= r.tail;
 }
 
 /// Maximum number of buffered elements. O(1).
-pub fn ring_capacity(r: &SpscRing) -> Int
+pub fn ring_capacity(r: &RingBuffer) -> Int
   ensures: result >= 0
 {
   return r.cap;
