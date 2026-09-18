@@ -30,7 +30,7 @@ runs:
   using: composite
   steps:
     - name: Checkout compiler at the pin
-      uses: actions/checkout@v4
+      uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
       with:
         repository: xiom-lang/xiom
         ref: ${{ inputs.ref }}
@@ -46,10 +46,10 @@ runs:
           git checkout origin/main -- resource
         fi
 
-    - uses: dtolnay/rust-toolchain@stable
+    - uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87
 
     - name: Cache cargo
-      uses: actions/cache@v4
+      uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
       with:
         path: |
           ~/.cargo/registry/

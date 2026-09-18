@@ -24,7 +24,7 @@ jobs:
     name: coverage ratchet (gate 7)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
       - name: Contract-coverage ratchet
         shell: pwsh
         run: ./tools/coverage_scan.ps1 -RatchetFile ./tools/coverage_floors48.json
@@ -33,7 +33,7 @@ jobs:
     name: compiler gates (ubuntu)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
 
       - name: Read COMPILER_VERSION
         id: pin
@@ -60,7 +60,7 @@ jobs:
 
       - name: Upload results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: stdlib-ci-results
           path: kat-results.json
