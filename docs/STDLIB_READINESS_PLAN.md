@@ -97,7 +97,11 @@ it. ASAN pass deferred until compiler stage-5 infra exists.
    until the language has borrowed views; keep API compatible.
 3. **Route bulk copies through runtime memops**: bind the already-exported
    `xiom_asm_memcpy/memmove/memset`; concat/copy fast-path above a length
-   threshold.
+   threshold. Bound via `xiom.mem`/`xiom.ffi.c`; the `XIOM_NO_ASM` C
+   fallbacks in `runtime/xiom_runtime.c` now carry external linkage
+   (2026-09-20) so no-NASM compiler builds link those externs; locked by
+   `tools/probes/p_asm_fallback_link.xi`. The length-threshold fast-path
+   for concat/copy remains open.
 4. **Container tuning docs**: load/growth/shrink factors, iteration-order
    guarantees; make keyed siphash the default Map hasher (hash-DoS).
 5. **CSPRNG binding** (audit security top item): inspect `rng_crypto.xi`

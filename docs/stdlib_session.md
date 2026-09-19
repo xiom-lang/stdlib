@@ -4,7 +4,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 -->
 # XIOM Stdlib Session -- Handoff
 
-## 0A. CONTINUE HERE -- handoff snapshot (updated 2026-09-19, after compiler R49)
+## 0A. CONTINUE HERE -- handoff snapshot (updated 2026-09-20, after compiler R49)
 
 **Repo**: `xiom-lang/stdlib` at `E:\xiom-lang\stdlib` (branch `main`).
 Compiler pin: `COMPILER_VERSION` = **v0.60.0** (v0.60.1 and the pin predate
@@ -15,7 +15,48 @@ HEAD `926e888`; every other clone must be re-cloned. The protected tag
 `stdlib-v0.60.0` still carries the old tagger on the remote (its force-push
 was rejected by tag rules -- owner action needed).
 
-**FINAL STATE (2026-09-19, compiler main R49 `306073ba`; local main `3f839e1`)**
+**SESSION 2026-09-20 (multi-param tranche closure + no-NASM runtime link fix)**
+- Local main: `ebae67c` + `b4f2655` (runtime fallback linkage + probe),
+  `820fae6` (module purpose lines/header fix), `fe92b84` (generator
+  `-Timeout`), this docs commit. Not pushed (release lane decides).
+- Item 1 DONE -- untested-surface multi-param tranche, R49, compile-only:
+  the `-EmitOnly` scan is 47 module groups / 179 calls; the previously
+  uncompiled 3..58 tranche is 14 modules / 138 calls, all OK:
+  N=3 convert.overflow, math.chaos, math.number_systems (9);
+  N=4 fmt, geom, net (12); N=5 ffi.c (5); N=6 ffi, math.queueing (12);
+  N=7 test (7); N=11 format.textual (11); N=12 math.special,
+  stats.probability (24); N=58 num (58, 44s). No module groups exist for
+  N=8..10 / 13..57.
+- `xiom.net` crosses the compiler's default 300s compile watchdog
+  (COMPILEFAIL "compilation timed out"): with `--timeout 0` it compiles
+  and links in 461s -- slowness, not a codegen defect. The generator now
+  takes `-Timeout <sec>` (0 disables) and the README records it.
+- FIXED stdlib-side: `runtime/xiom_runtime.c` `XIOM_NO_ASM` fallback stubs
+  were `static`, so a no-NASM compiler build (the handoff recipe
+  `cargo build --locked -p xiom` has `nasm` off by default) had no
+  definitions for the stdlib's direct externs (`xiom.mem`, `xiom.ffi.c` ->
+  `xiom_asm_memcpy/memset/memcmp`): `lld-link: error: undefined symbol`.
+  Fallbacks are now externally linked (the branch compiles only when the
+  NASM objects are absent, so no clash). Locked by
+  `tools/probes/p_asm_fallback_link.xi` (RED before, link + run exit 0
+  after); the ffi.c generator group passes after the fix. NOTE for the
+  compiler lane: all session binaries so far were built WITHOUT
+  `--features nasm`; build with it (NASM 3.02 is installed) to exercise
+  the asm path.
+- Website-session relay DONE (comment-only): `// Purpose:` lines in
+  `core`, `async`, `bench`, `stats` (+ the missing `// XIOM -- Statistics`
+  title); `error.xi` header mojibake `?` -> `--`. The five modules check
+  clean through the probe gate (5/5, 8.5s).
+- Gates on this final tree (R49): `check_modules` 509/509 (289.2s);
+  corpus 949/949, 0 compilefail, 0 runfail (2792s, `-RetryFailed`);
+  coverage ratchet floors53 OK; doc ratchet doc_baseline4 OK
+  (6,984/6,984). `barename_scan` not re-run this session (last R49 run
+  green; the diffs are comment-only plus the runtime C fallback linkage).
+- Item 2 (contract wave / floors54) NOT started -- it is a full unit
+  (new-shape probe -> clauses -> floors wiring -> check_modules +
+  corpus); the queue below is unchanged.
+
+**R49 baseline state (2026-09-19, local main then `3f839e1`)**
 - ALL GATES GREEN on the final tree: `check_modules` **509/509** (262.5s);
   corpus **949/949**, 0 compilefail, 0 runfail (**1525.7s**, `-RetryFailed`);
   coverage ratchet floors53 OK; `barename_scan` **0 hits / 509**
@@ -155,11 +196,13 @@ was rejected by tag rules -- owner action needed).
    restore the strong size clauses in the nine blocked `collect/*` modules,
    move `p_wave8_shapes.xi` green, and promote `p_sweep` if it compiles.
    Keep `p_sweep`'s current evidence unchanged until then.
-2. Untested-surface generator: compile the remaining groups
+2. ~~Untested-surface generator: compile the remaining groups
    (`-OnlyCalls 3` .. `-OnlyCalls 58`, or `-Limit N` for triage) against
    the R49 binary; triage failures into `tools/known_failures/` with
-   evidence and passes into `tools/probes/`. The single-param tranche
-   stays blocked on item 1.
+   evidence and passes into `tools/probes/`.~~ **DONE 2026-09-20**
+   (138/138 compile-only; the one failure was the fixed no-NASM runtime
+   link gap; see the session block above). The single-param tranche stays
+   blocked on item 1.
 3. Coverage (optional push): payload-reading Result clauses are now
    allowed (R49-3); pre-validate new shapes in `p_waveN_shapes.xi`, then
    dump `coverage_floorsN+1.json` and wire it into all workflows + READMEs
