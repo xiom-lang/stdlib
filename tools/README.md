@@ -93,7 +93,10 @@ and `-OutDir`. Nothing is written inside the repo.
 tracked; run captures are ignored). Each probe locks a specific compiler or
 contract behavior from the session handoff probe index; re-run them after
 every compiler bump. `tools/modlist_all.txt` is the manifest module list used
-by the bare-name and check-module scans.
+by the bare-name and check-module scans. State 2026-09-20: the corpus root
+still contains 18 historical debug/evidence probes that fail identically on
+R49 and R52 (11 compilefail + 7 runfail; see `docs/VERIFICATION_BASELINE.md`
+R52 section), so a full-corpus run is 157/175 until they are curated out.
 
 ## Generated call probes (untested-surface sweep)
 

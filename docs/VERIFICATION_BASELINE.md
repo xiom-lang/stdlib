@@ -61,6 +61,39 @@ field increments).
 ratchet floors53 OK. `p_wave8_shapes.xi` stays red at its scalar-field
 clause as the residual lock.
 
+## R52 compiler update (2026-09-20) -- @pre residual closed; collect contracts restored
+
+Compiler main `1fcb4855` (R52; debug build from `git archive`, binary
+`%TEMP%\kilo\stdlib_ws\xiom_r52.exe`) includes R51 `c235b3fe` -- the `@pre`
+walkers descend through Imply/Is so implication-wrapped clauses emit entry
+snapshots -- and `a8bda203` (L4: `@pre` `.len()` receivers, range-shadowing
+for-in). The callee-mutation residual is gone: `p_pre_capture_callee.xi` and
+`p_wave8_shapes.xi` both compile and run exit 0, so the former is **moved to
+`tools/probes/`** and wave-8 is now a live lock.
+
+The strong size relations weakened by `81eba6f` were restored in
+`collect/{list,queue,rbtree,tree,spatial,hash,intmap}`
+(ll_pop_front/back, workqueue_pop, deque_pop_front/back,
+rbtree_insert/remove, bst_remove, kdtree/quadtree/octree_insert,
+lhmap_remove, int_map_remove, string_map_remove). `lfu` never had an `@pre`
+size relation (nothing to restore) and `fenwick` kept its wave-14 relation
+throughout. Targeted smoke families 20/20 on R52 (130.1s).
+
+**R52 gate results:** check_modules **509/509** (243.6s); corpus **949/949**,
+0 compilefail, 0 runfail (**1437.1s**, 8 workers, `-RetryFailed`); coverage
+ratchet floors53 OK (global clauses 19.2%, pub-with-clause 18.9%); doc
+ratchet doc_baseline4 OK; barename scan **0 hits / 509** (527.5s).
+
+**Probe-corpus hygiene (open):** a full `-Corpus tools/probes` run is
+157/175 on R52 -- 11 compilefail + 7 runfail, an IDENTICAL set on R49
+(verified by re-running the 18 on R49: same names, same exit codes), so R52
+introduces no probe regressions. The red files are historical debug/evidence
+probes (`p_regex_dbg*`, `p_puny_parity`, `p_fnref`, `p_async_read_line_codegen`
+0xC0000409, `p_generic_push`/`p_gp_b`/`p_gp_c` 0xC0000005, ...). The
+documented Probes gate cannot be green while they sit in the corpus root;
+curate them into `tools/known_failures/` or an evidence subdirectory next
+session (the probe run is not wired into CI).
+
 ## Provenance note
 
 Tag `v0.60.0` predates the resource-asset fix (`e3714884`, 2026-09-17

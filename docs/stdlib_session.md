@@ -56,6 +56,38 @@ was rejected by tag rules -- owner action needed).
   (new-shape probe -> clauses -> floors wiring -> check_modules +
   corpus); the queue below is unchanged.
 
+**SESSION 2026-09-20 PART 2 (R52: @pre residual closed; collect contracts restored)**
+- Compiler relay verified: R52 (`1fcb4855`, includes R51 `c235b3fe` --
+  `@pre` walkers descend through Imply/Is -- and `a8bda203` L4) fixes the
+  callee-mutation `@pre` residual; built from `git archive` per the recipe
+  (`cargo build --locked -p xiom`, debug) ->
+  `%TEMP%\kilo\stdlib_ws\xiom_r52.exe` (reports v0.61.0).
+  `tools/probes/p_pre_capture_callee.xi` and `tools/probes/p_wave8_shapes.xi`
+  compile + run exit 0.
+- Item 3 DONE: restored the strong size relations in
+  `collect/{list,queue,rbtree,tree,spatial,hash,intmap}`
+  (ll_pop_front/back, workqueue_pop, deque_pop_front/back,
+  rbtree_insert/remove, bst_remove, kdtree/quadtree/octree_insert,
+  lhmap_remove, int_map_remove, string_map_remove). `lfu` never had an
+  `@pre` size relation (nothing was weakened) and `fenwick` kept its wave-14
+  relation throughout -- both already fully specified. `p_pre_capture_callee`
+  moved from `known_failures/` to `tools/probes/`; `p_wave8_shapes` header
+  updated to GREEN. Targeted smoke families 20/20 on R52 (130.1s).
+- R52 gates (tree at `53fc651` + this docs commit): check_modules **509/509**
+  (243.6s); corpus **949/949**, 0 compilefail, 0 runfail (**1437.1s**,
+  `-RetryFailed`); coverage ratchet floors53 OK (global clauses 19.2%,
+  pub-with-clause 18.9%); doc ratchet doc_baseline4 OK; barename **0 hits /
+  509** (527.5s).
+- Probe-corpus hygiene (NEW, open): a full `-Corpus tools/probes` run is
+  157/175 on R52 -- 11 compilefail + 7 runfail, the IDENTICAL set on R49
+  (re-ran the 18 on R49: same names and exit codes), so R52 introduces no
+  probe regressions. Historical debug/evidence probes still sit in the
+  corpus root, so the documented Probes gate cannot be green until they are
+  curated out (not wired into CI). Detail: `docs/VERIFICATION_BASELINE.md`
+  R52 section.
+- The compiler lane verified both build configurations (default no-NASM and
+  `--features nasm`); the `b4f2655` runtime fix keeps both linkable.
+
 **R49 baseline state (2026-09-19, local main then `3f839e1`)**
 - ALL GATES GREEN on the final tree: `check_modules` **509/509** (262.5s);
   corpus **949/949**, 0 compilefail, 0 runfail (**1525.7s**, `-RetryFailed`);
@@ -190,12 +222,13 @@ was rejected by tag rules -- owner action needed).
   `ptr/ptr.xi` (19).
 
 **Next-session queue, in order**
-1. Compiler lane follow-ups (relay via the user): R49-4
-   `p_sweep_single_param` clang ISel crash; the `@pre` scalar-field
-   aliasing residual in `p_pre_capture_callee.xi`. When either lands:
-   restore the strong size clauses in the nine blocked `collect/*` modules,
-   move `p_wave8_shapes.xi` green, and promote `p_sweep` if it compiles.
-   Keep `p_sweep`'s current evidence unchanged until then.
+1. Compiler lane follow-up (relay via the user): R49-4
+   `p_sweep_single_param` clang ISel crash remains the only filed ISel
+   blocker. When it lands: promote `p_sweep` to `tools/probes/` and
+   re-baseline (check_modules + full corpus). Keep `p_sweep`'s current
+   evidence unchanged until then. (The `@pre` scalar-field residual was
+   fixed by R52 `c235b3fe`; the strong `collect/*` clauses are restored and
+   `p_wave8_shapes` is green -- see PART 2 above.)
 2. ~~Untested-surface generator: compile the remaining groups
    (`-OnlyCalls 3` .. `-OnlyCalls 58`, or `-Limit N` for triage) against
    the R49 binary; triage failures into `tools/known_failures/` with
@@ -211,6 +244,12 @@ was rejected by tag rules -- owner action needed).
    last; registry publish activation is the user's (dispatch-only
    `publish-registry.yml`). Every new pub declaration needs `///` prose
    (100% doc ratchet).
+5. Probe-corpus curation: the full `tools/probes` run is 157/175 on R49 AND
+   R52 (identical 18: 11 compilefail + 7 runfail; list in
+   `docs/VERIFICATION_BASELINE.md` R52 section). Triage the historical
+   debug/evidence probes into `tools/known_failures/` (still-open compiler
+   findings) or an `evidence/` subdirectory the runner does not pick up, so
+   the documented Probes gate can go green. Not wired into CI today.
 
 **Recipes**
 - Build a compiler ref: export it (`git -C E:\xiom-lang\xiom archive
