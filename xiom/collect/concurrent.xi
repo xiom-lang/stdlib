@@ -159,7 +159,9 @@ pub fn concurrent_stack_new() -> ConcurrentStack
 /// Params: s - the stack; item - value to push.
 /// Returns: true on success, false when closed.
 /// Complexity: O(1) amortized.
-pub fn cstack_push(s: &mut ConcurrentStack, item: Int) -> Bool {
+pub fn cstack_push(s: &mut ConcurrentStack, item: Int) -> Bool
+  ensures: result == true => s.items.len() >= 1
+{
   if s.closed { return false; }
   s.items.push(item);
   return true;
@@ -169,7 +171,9 @@ pub fn cstack_push(s: &mut ConcurrentStack, item: Int) -> Bool {
 /// Params: s - the stack.
 /// Returns: the most recently pushed item, or None when empty.
 /// Complexity: O(1).
-pub fn cstack_pop(s: &mut ConcurrentStack) -> Option[Int] {
+pub fn cstack_pop(s: &mut ConcurrentStack) -> Option[Int]
+  ensures: result is None => s.items.len() == 0
+{
   if s.items.len() == 0 { return None; }
   var idx = s.items.len() - 1;
   var val = s.items[idx];

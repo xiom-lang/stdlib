@@ -21,12 +21,17 @@ pub type Deque = {
 }
 
 /// Create an empty deque. O(1).
-pub fn deque_new() -> Deque {
+pub fn deque_new() -> Deque
+  ensures: result.head == 0
+  ensures: result.tail == 0
+{
   return Deque{ items: Vec[Int].new(); head: 0; tail: 0; };
 }
 
 /// Append `value` to the back of the deque. O(1).
-pub fn deque_push_back(d: &mut Deque, value: Int) {
+pub fn deque_push_back(d: &mut Deque, value: Int)
+  ensures: d.tail - d.head >= 1
+{
   if d.tail < d.items.len() {
     d.items[d.tail] = value;
   } else {
@@ -37,7 +42,9 @@ pub fn deque_push_back(d: &mut Deque, value: Int) {
 
 /// Prepend `value` to the front of the deque. O(1) amortized (O(n) when the
 /// window must be rebuilt).
-pub fn deque_push_front(d: &mut Deque, value: Int) {
+pub fn deque_push_front(d: &mut Deque, value: Int)
+  ensures: d.tail - d.head >= 1
+{
   if d.head > 0 {
     d.head = d.head - 1;
     d.items[d.head] = value;
@@ -56,7 +63,9 @@ pub fn deque_push_front(d: &mut Deque, value: Int) {
 }
 
 /// Remove and return the front value. None if the deque is empty. O(1).
-pub fn deque_pop_front(d: &mut Deque) -> Option[Int] {
+pub fn deque_pop_front(d: &mut Deque) -> Option[Int]
+  ensures: result is None => d.tail - d.head == 0
+{
   if d.head >= d.tail { return None; }
   var value = d.items[d.head];
   d.head = d.head + 1;
@@ -64,20 +73,26 @@ pub fn deque_pop_front(d: &mut Deque) -> Option[Int] {
 }
 
 /// Remove and return the back value. None if the deque is empty. O(1).
-pub fn deque_pop_back(d: &mut Deque) -> Option[Int] {
+pub fn deque_pop_back(d: &mut Deque) -> Option[Int]
+  ensures: result is None => d.tail - d.head == 0
+{
   if d.head >= d.tail { return None; }
   d.tail = d.tail - 1;
   return Some(d.items[d.tail]);
 }
 
 /// Return the front value without removing it. None if empty. O(1).
-pub fn deque_front(d: &Deque) -> Option[Int] {
+pub fn deque_front(d: &Deque) -> Option[Int]
+  ensures: result is None => d.tail - d.head == 0
+{
   if d.head >= d.tail { return None; }
   return Some(d.items[d.head]);
 }
 
 /// Return the back value without removing it. None if empty. O(1).
-pub fn deque_back(d: &Deque) -> Option[Int] {
+pub fn deque_back(d: &Deque) -> Option[Int]
+  ensures: result is None => d.tail - d.head == 0
+{
   if d.head >= d.tail { return None; }
   var last = d.tail - 1;
   return Some(d.items[last]);

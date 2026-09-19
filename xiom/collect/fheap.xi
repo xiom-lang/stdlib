@@ -25,14 +25,18 @@ pub type FibNode = {
 /// Create a new empty Fibonacci heap.
 /// Returns: an empty FibHeap.
 /// Complexity: O(1).
-pub fn fheap_new() -> FibHeap {
+pub fn fheap_new() -> FibHeap
+  ensures: result.n == 0
+{
   return fib_heap_new();
 }
 
 /// Insert an element.
 /// Params: h - the heap; value - Int element to insert.
 /// Complexity: O(1) amortized.
-pub fn fheap_push(h: &mut FibHeap, value: Int) {
+pub fn fheap_push(h: &mut FibHeap, value: Int)
+  ensures: h.n >= 1
+{
   fib_heap_insert(h, value);
 }
 
@@ -40,7 +44,9 @@ pub fn fheap_push(h: &mut FibHeap, value: Int) {
 /// Params: h - the heap.
 /// Returns: the minimum element, or None when empty.
 /// Complexity: O(log n) amortized.
-pub fn fheap_pop(h: &mut FibHeap) -> Option[Int] {
+pub fn fheap_pop(h: &mut FibHeap) -> Option[Int]
+  ensures: result is None => h.n == 0
+{
   return fib_heap_extract_min(h);
 }
 
@@ -48,14 +54,18 @@ pub fn fheap_pop(h: &mut FibHeap) -> Option[Int] {
 /// Params: h - the heap.
 /// Returns: the minimum element without removing it, or None when empty.
 /// Complexity: O(1).
-pub fn fheap_peek(h: &FibHeap) -> Option[Int] {
+pub fn fheap_peek(h: &FibHeap) -> Option[Int]
+  ensures: result is None => h.n == 0
+{
   return fib_heap_find_min(h);
 }
 
 /// Merge `other` into this heap, leaving `other` empty.
 /// Params: h - the receiving heap; other - the heap to consume.
 /// Complexity: O(n log n) worst-case (drains via extract-min + insert).
-pub fn fheap_merge(h: &mut FibHeap, other: &mut FibHeap) {
+pub fn fheap_merge(h: &mut FibHeap, other: &mut FibHeap)
+  ensures: other.n == 0
+{
   while fib_heap_size(other) > 0 {
     var m = fib_heap_extract_min(other);
     match m {

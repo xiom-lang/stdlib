@@ -270,11 +270,15 @@ T1/T2 yields.
       17.7% pub-with-clause. Wave 15 (2026-09-19): 38 clauses (string
       builder/align/pad/join/replace/search/escape/wrap no-op + empty
       relations) -> string 50.7% -> 60.0% (second key module across the
-      60% gate), global 18.7% clauses / 18.3% pub-with-clause. Ratchet:
-      tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors52.json
+      60% gate), global 18.7% clauses / 18.3% pub-with-clause. Wave 16
+      (2026-09-19): 35 clauses (bitmap/deque/bheap/blockingqueue/hash/
+      concurrent/fheap size + membership relations) -> collect 53.2% ->
+      60.7% (all three key modules now above the gate), global 18.9%
+      clauses / 18.9% pub-with-clause. Ratchet:
+      tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors53.json
       (repo tooling as of the split; positive + negative runs verified;
       earlier floors kept at
-      coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51.json).
+      coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52.json).
       Floors are per top-level stdlib/xiom directory and must be refreshed
       when a module is ADDED (new uncovered pub fns dilute the percentage
       -- TOML dropped serialize 6.1% -> 5.4%, tz dropped time 13% ->

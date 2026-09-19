@@ -21,7 +21,10 @@ pub type Bitmap = {
 
 /// Create a bitmap of `n` bits, all clear. A size below 1 yields 0 bits.
 /// O(n/8).
-pub fn bitmap_new(n: Int) -> Bitmap {
+pub fn bitmap_new(n: Int) -> Bitmap
+  ensures: result.nbits >= 0
+  ensures: n >= 0 => result.nbits == n
+{
   var nb = n;
   if nb < 0 { nb = 0; }
   var nbytes = (nb + 7) / 8;
@@ -40,7 +43,9 @@ fn bm_valid(b: &Bitmap, pos: Int) -> Bool {
 }
 
 /// Set the bit at `pos`. Positions outside [0, n) are ignored. O(1).
-pub fn bitmap_set(b: &mut Bitmap, pos: Int) {
+pub fn bitmap_set(b: &mut Bitmap, pos: Int)
+  ensures: pos < 0 || pos >= b.nbits || bitmap_test(b, pos)
+{
   if !bm_valid(b, pos) { return; }
   var byte_idx = pos / 8;
   var bit_idx = pos % 8;
@@ -50,7 +55,9 @@ pub fn bitmap_set(b: &mut Bitmap, pos: Int) {
 }
 
 /// Clear the bit at `pos`. Positions outside [0, n) are ignored. O(1).
-pub fn bitmap_clear(b: &mut Bitmap, pos: Int) {
+pub fn bitmap_clear(b: &mut Bitmap, pos: Int)
+  ensures: pos < 0 || pos >= b.nbits || bitmap_test(b, pos) == false
+{
   if !bm_valid(b, pos) { return; }
   var byte_idx = pos / 8;
   var bit_idx = pos % 8;
@@ -60,7 +67,9 @@ pub fn bitmap_clear(b: &mut Bitmap, pos: Int) {
 }
 
 /// Test the bit at `pos`. Positions outside [0, n) read as false. O(1).
-pub fn bitmap_test(b: &Bitmap, pos: Int) -> Bool {
+pub fn bitmap_test(b: &Bitmap, pos: Int) -> Bool
+  ensures: pos < 0 || pos >= b.nbits => result == false
+{
   if !bm_valid(b, pos) { return false; }
   var byte_idx = pos / 8;
   var bit_idx = pos % 8;
@@ -69,7 +78,9 @@ pub fn bitmap_test(b: &Bitmap, pos: Int) -> Bool {
 }
 
 /// Flip the bit at `pos`. Positions outside [0, n) are ignored. O(1).
-pub fn bitmap_flip(b: &mut Bitmap, pos: Int) {
+pub fn bitmap_flip(b: &mut Bitmap, pos: Int)
+  ensures: pos < 0 || pos >= b.nbits || b.nbits >= 1
+{
   if !bm_valid(b, pos) { return; }
   var byte_idx = pos / 8;
   var bit_idx = pos % 8;
@@ -94,7 +105,10 @@ pub fn bitmap_count(b: &Bitmap) -> Int
 }
 
 /// Index of the first set bit, or None when the bitmap is empty. O(n).
-pub fn bitmap_first_set(b: &Bitmap) -> Option[Int] {
+pub fn bitmap_first_set(b: &Bitmap) -> Option[Int]
+  ensures: result is None => bitmap_count(b) == 0
+  ensures: result is Some => bitmap_count(b) >= 1
+{
   var i: Int = 0;
   while i < b.nbits {
     if bitmap_test(b, i) {

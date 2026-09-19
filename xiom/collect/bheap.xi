@@ -18,14 +18,18 @@ use xiom.collect.heap;
 /// Create a new empty binary heap.
 /// Returns: an empty PHeap-backed heap.
 /// Complexity: O(1).
-pub fn bheap_new() -> PHeap {
+pub fn bheap_new() -> PHeap
+  ensures: result.root == -1
+{
   return pheap_new();
 }
 
 /// Insert an element.
 /// Params: h - the heap; value - Int element to insert.
 /// Complexity: O(log n) amortized.
-pub fn bheap_push(h: &mut PHeap, value: Int) {
+pub fn bheap_push(h: &mut PHeap, value: Int)
+  ensures: bheap_len(h) >= 1
+{
   pheap_insert(h, value);
 }
 
@@ -33,7 +37,9 @@ pub fn bheap_push(h: &mut PHeap, value: Int) {
 /// Params: h - the heap.
 /// Returns: the minimum element, or None when the heap is empty.
 /// Complexity: O(log n) amortized.
-pub fn bheap_pop(h: &mut PHeap) -> Option[Int] {
+pub fn bheap_pop(h: &mut PHeap) -> Option[Int]
+  ensures: result is None => bheap_len(h) == 0
+{
   return pheap_extract_min(h);
 }
 
@@ -41,7 +47,9 @@ pub fn bheap_pop(h: &mut PHeap) -> Option[Int] {
 /// Params: h - the heap.
 /// Returns: the minimum element without removing it, or None when empty.
 /// Complexity: O(1).
-pub fn bheap_peek(h: &PHeap) -> Option[Int] {
+pub fn bheap_peek(h: &PHeap) -> Option[Int]
+  ensures: result is None => bheap_len(h) == 0
+{
   return pheap_find_min(h);
 }
 

@@ -25,7 +25,10 @@ pub type BlockingQueue = {
 /// Params: capacity - maximum number of queued items (clamped to >= 1).
 /// Returns: a new, open blocking queue.
 /// Complexity: O(1).
-pub fn blocking_queue_new(capacity: Int) -> BlockingQueue {
+pub fn blocking_queue_new(capacity: Int) -> BlockingQueue
+  ensures: result.capacity >= 1
+  ensures: result.closed == false
+{
   var cap = capacity;
   if cap < 1 { cap = 1; }
   return BlockingQueue{ buf: Vec[Int].new(); head: 0; capacity: cap; closed: false; };
@@ -36,7 +39,9 @@ pub fn blocking_queue_new(capacity: Int) -> BlockingQueue {
 /// Params: q - the queue; item - value to enqueue.
 /// Returns: true on success; false if the queue is full or closed.
 /// Complexity: O(1) amortized.
-pub fn bq_push(q: &mut BlockingQueue, item: Int) -> Bool {
+pub fn bq_push(q: &mut BlockingQueue, item: Int) -> Bool
+  ensures: result == true => bq_size(q) >= 1
+{
   if q.closed { return false; }
   if q.buf.len() - q.head >= q.capacity { return false; }
   q.buf.push(item);
@@ -48,7 +53,9 @@ pub fn bq_push(q: &mut BlockingQueue, item: Int) -> Bool {
 /// Params: q - the queue.
 /// Returns: the oldest item, or None when empty or closed and drained.
 /// Complexity: O(1).
-pub fn bq_pop(q: &mut BlockingQueue) -> Option[Int] {
+pub fn bq_pop(q: &mut BlockingQueue) -> Option[Int]
+  ensures: result is None => bq_size(q) == 0
+{
   if q.head >= q.buf.len() { return None; }
   var val = q.buf[q.head];
   q.head = q.head + 1;
@@ -59,7 +66,9 @@ pub fn bq_pop(q: &mut BlockingQueue) -> Option[Int] {
 /// Params: q - the queue; item - value to enqueue.
 /// Returns: true on success; false if the queue is full or closed.
 /// Complexity: O(1) amortized.
-pub fn bq_try_push(q: &mut BlockingQueue, item: Int) -> Bool {
+pub fn bq_try_push(q: &mut BlockingQueue, item: Int) -> Bool
+  ensures: result == true => bq_size(q) >= 1
+{
   if q.closed { return false; }
   if q.buf.len() - q.head >= q.capacity { return false; }
   q.buf.push(item);
@@ -70,7 +79,9 @@ pub fn bq_try_push(q: &mut BlockingQueue, item: Int) -> Bool {
 /// Params: q - the queue.
 /// Returns: the oldest item, or None when empty or closed and drained.
 /// Complexity: O(1).
-pub fn bq_try_pop(q: &mut BlockingQueue) -> Option[Int] {
+pub fn bq_try_pop(q: &mut BlockingQueue) -> Option[Int]
+  ensures: result is None => bq_size(q) == 0
+{
   if q.head >= q.buf.len() { return None; }
   var val = q.buf[q.head];
   q.head = q.head + 1;
@@ -100,7 +111,9 @@ pub fn bq_capacity(q: &BlockingQueue) -> Int
 /// Close the queue: push fails afterwards, pop drains the remainder.
 /// Params: q - the queue.
 /// Complexity: O(1).
-pub fn bq_close(q: &mut BlockingQueue) {
+pub fn bq_close(q: &mut BlockingQueue)
+  ensures: bq_is_closed(q)
+{
   q.closed = true;
 }
 
@@ -108,6 +121,8 @@ pub fn bq_close(q: &mut BlockingQueue) {
 /// Params: q - the queue.
 /// Returns: whether bq_close has been called.
 /// Complexity: O(1).
-pub fn bq_is_closed(q: &BlockingQueue) -> Bool {
+pub fn bq_is_closed(q: &BlockingQueue) -> Bool
+  ensures: result == q.closed
+{
   return q.closed;
 }

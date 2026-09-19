@@ -14,6 +14,15 @@ All scripts are repo-relative: they work from any CWD and from CI checkouts.
 | Module check | `check_modules.ps1` | `xiom --check` type-checks every manifest module |
 | Probes | `run_smokes.ps1 -Corpus tools/probes` | re-run the per-lock probes after a compiler bump |
 
+**Runtime-detection fix (2026-09-19):** Windows PowerShell 5.1 rejects
+`-RedirectStandardInput 'NUL'` (it resolves the device name against the CWD),
+so `Start-Process` failed, `$p.ExitCode` was `$null` and `[int]$null` recorded
+`run=0` for EVERY smoke: the corpus was runtime-blind and contract-violation
+aborts showed as passes. `run_smokes.ps1` now uses a real empty stdin file and
+records `run=-997` when the process fails to start. Any `runfail=0` result
+from before this fix is not evidence of runtime correctness; see the
+correction in `docs/VERIFICATION_BASELINE.md`.
+
 ## Compiler selection
 
 Every tool resolves the compiler in this order:
@@ -42,10 +51,10 @@ always tests THIS checkout, never an installed copy. The CI pin lives in
 ./tools/run_smokes.ps1 -Compiler C:\path\to\xiom.exe -Json out/smokes.json
 
 # coverage ratchet (floors live in tools/coverage_floors*.json)
-pwsh tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors52.json
+pwsh tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors53.json
 
 # dump new floors after a contract wave or a new module
-pwsh tools/coverage_scan.ps1 -DumpFloors tools/coverage_floors53.json
+pwsh tools/coverage_scan.ps1 -DumpFloors tools/coverage_floors54.json
 
 # strict bare-name gate over all 509 manifest modules
 pwsh tools/barename_scan.ps1 -Compiler C:\path\to\xiom.exe
