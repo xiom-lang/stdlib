@@ -29,12 +29,14 @@ pub fn alloc(size: Int) -> *UInt8
   unsafe { return malloc(size as UInt); }
 }
 
+/// Free a C-allocated pointer.
 pub fn free(ptr: *UInt8)
   requires: ptr != null
 {
   unsafe { free(ptr); }
 }
 
+/// C memcpy over raw pointers.
 pub fn memcpy(dest: *UInt8, src: *UInt8, size: Int)
   requires: dest != null
   requires: src != null
@@ -427,6 +429,7 @@ pub type FFIBuffer = {
   capacity: Int;
 }
 
+/// Allocate an FFI byte buffer; Err on failure.
 pub fn buffer_new(capacity: Int) -> Result[FFIBuffer, Str]
   requires: capacity > 0
 {
@@ -434,6 +437,7 @@ pub fn buffer_new(capacity: Int) -> Result[FFIBuffer, Str]
   Ok(FFIBuffer { data: Vec[Int].new(); capacity: capacity })
 }
 
+/// Append Int byte values; Ok(bytes written) or Err.
 pub fn buffer_write(buf: &mut FFIBuffer, data: &Vec[Int]) -> Result[Int, Str]
   requires: data.len() > 0
 {
@@ -450,6 +454,7 @@ fn buffer_append_all(buf: &mut FFIBuffer, data: &Vec[Int], idx: Int) {
   }
 }
 
+/// Read `len` bytes at `offset`; Ok(values) or Err.
 pub fn buffer_read(buf: &FFIBuffer, offset: Int, len: Int) -> Result[Vec[Int], Str]
   requires: offset >= 0
   requires: len > 0
@@ -465,14 +470,17 @@ fn buffer_read_slice(buf: &FFIBuffer, offset: Int, len: Int, idx: Int, acc: Vec[
   buffer_read_slice(buf, offset, len, idx + 1, acc)
 }
 
+/// Reset the buffer length to zero.
 pub fn buffer_clear(buf: &mut FFIBuffer) {
   buf.data = Vec[Int].new();
 }
 
+/// Current buffer length in bytes.
 pub fn buffer_len(buf: &FFIBuffer) -> Int {
   buf.data.len()
 }
 
+/// True when the buffer is empty.
 pub fn buffer_is_empty(buf: &FFIBuffer) -> Bool {
   buf.data.len() == 0
 }
@@ -513,8 +521,10 @@ pub fn ffi_check_nonzero(code: Int, msg: Str) -> Result[Int, FFIError] {
   }
 }
 
+/// FFI success code (0).
 pub fn ffi_ok() -> Int { 0 }
 
+/// FFI error value from a code and message.
 pub fn ffi_error(code: Int, msg: Str) -> FFIError {
   FFIError { code: code; message: msg }
 }
@@ -583,8 +593,10 @@ pub fn write_str_at(dest: Int, offset: Int, s: Str)
 
 /// ---- Utility --------------------------------------------------------------------------------------------------------------------------------
 pub fn size_of[T]() -> Int { return 0; }
+/// Alignment of T in bytes (0 when unknown).
 pub fn align_of[T]() -> Int { return 0; }
 
+/// FFI extern-C symbol handle by name.
 pub fn extern_c(name: Str) -> Int
   requires: name.len() > 0
 {

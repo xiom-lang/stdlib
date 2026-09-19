@@ -171,6 +171,7 @@ pub fn base64_encode(data: &Vec[UInt8]) -> Str
   }
 }
 
+/// Decode standard base64; Err on invalid input.
 pub fn base64_decode(encoded: Str) -> Result[Vec[UInt8], Str]
   requires: encoded.len() % 4 == 0
   ensures:  result is Ok => result.len() <= (encoded.len() / 4) * 3
@@ -226,6 +227,7 @@ pub fn base64_decode(encoded: Str) -> Result[Vec[UInt8], Str]
   Ok(result)
 }
 
+/// URL-safe base64 encoding (no padding).
 pub fn base64url_encode(data: &Vec[UInt8]) -> Str
   ensures: result.len() >= 0
 {
@@ -264,6 +266,7 @@ pub fn base64url_encode(data: &Vec[UInt8]) -> Str
   }
 }
 
+/// Decode URL-safe base64; Err on invalid input.
 pub fn base64url_decode(encoded: Str) -> Result[Vec[UInt8], Str]
   // Unpadded base64url: the (len/4)*3 bound assumes padding; the true
   // max is floor(len*3/4) (len%4 == 1 inputs are rejected as invalid).
@@ -328,6 +331,7 @@ pub fn hex_encode(data: &Vec[UInt8]) -> Str
   }
 }
 
+/// Decode hex (either case); Err on bad input.
 pub fn hex_decode(encoded: Str) -> Result[Vec[UInt8], Str]
   requires: encoded.len() % 2 == 0
   ensures:  result is Ok => result.len() == encoded.len() / 2
@@ -350,6 +354,7 @@ pub fn hex_decode(encoded: Str) -> Result[Vec[UInt8], Str]
   Ok(result)
 }
 
+/// Uppercase hex encoding.
 pub fn hex_encode_upper(data: &Vec[UInt8]) -> Str
   ensures: result.len() == data.len() * 2
 {
@@ -413,6 +418,7 @@ pub fn url_encode(data: Str) -> Str
   }
 }
 
+/// Percent-decode a URL component; Err on malformed escapes.
 pub fn url_decode(encoded: Str) -> Result[Str, Str]
   ensures: result is Ok => result.len() <= encoded.len()
 {
@@ -468,6 +474,7 @@ pub fn percent_encode(data: Str) -> Str
   url_encode(data)
 }
 
+/// Alias of url_decode (percent-decoding).
 pub fn percent_decode(encoded: Str) -> Result[Str, Str]
   ensures: result is Ok => result.len() <= encoded.len()
 {
@@ -489,6 +496,7 @@ pub fn utf8_encode(s: Str) -> Vec[UInt8]
   result
 }
 
+/// Decode UTF-8 bytes to a Str; Err on invalid sequences.
 pub fn utf8_decode(data: &Vec[UInt8]) -> Result[Str, Str]
   requires: data.len() > 0
   ensures:  result is Ok => result.len() <= data.len()
@@ -570,6 +578,7 @@ pub fn utf8_decode(data: &Vec[UInt8]) -> Result[Str, Str]
   }
 }
 
+/// True when the bytes are valid UTF-8.
 pub fn utf8_valid(data: &Vec[UInt8]) -> Bool
   ensures: result == true => utf8_decode(data) is Ok
 {
@@ -623,6 +632,7 @@ pub fn utf8_valid(data: &Vec[UInt8]) -> Bool
   true
 }
 
+/// UTF-8 sequence length implied by the first byte (0 when invalid).
 pub fn utf8_char_len(first_byte: UInt8) -> Int
   ensures: result >= 1 && result <= 4
 {
@@ -661,6 +671,7 @@ pub fn binary_to_text(data: &Vec[UInt8], format: Int) -> Str
   base64_encode(data)
 }
 
+/// Encode text into bytes using the given format code; Err on unknown format.
 pub fn text_to_binary(text: Str, format: Int) -> Result[Vec[UInt8], Str]
   requires: format >= 0 && format <= 2
   ensures:  format == 0 => (result is Ok => result.len() <= (text.len() / 4) * 3)

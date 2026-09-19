@@ -23,10 +23,12 @@ pub interface Compressor {
 /// === Gzip ===
 pub type GzipCompressor = { level: Int; }
 
+/// Streaming gzip compressor with the default level.
 pub fn GzipCompressor.new() -> GzipCompressor {
   return GzipCompressor{ level: 6 };
 }
 
+/// Streaming gzip compressor with a level 0..9.
 pub fn GzipCompressor.with_level(level: Int) -> GzipCompressor {
   var lvl = level;
   if lvl < 0 { lvl = 0; };
@@ -179,6 +181,7 @@ pub fn gzip_compress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str]
   Ok(gzip.gzip_compress(data))
 }
 
+/// Gzip-compress with a level 0..9; Err on failure.
 pub fn gzip_compress_level(data: &Vec[UInt8], level: Int) -> Result[Vec[UInt8], Str]
   ensures:  result is Ok => result.len() >= 18
 {
@@ -197,6 +200,7 @@ pub fn deflate_decompress_capped(data: &Vec[UInt8], max_out: Int) -> Result[Vec[
   return deflate.deflate_decompress_capped(data, max_out);
 }
 
+/// Decompress gzip data; Err on malformed input.
 pub fn gzip_decompress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str]
   ensures:  result is Ok => result.len() >= 0
 {
@@ -210,12 +214,14 @@ pub fn deflate_compress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str]
   Ok(deflate.deflate_compress(data))
 }
 
+/// Deflate-compress with a level 0..9; Err on failure.
 pub fn deflate_compress_level(data: &Vec[UInt8], level: Int) -> Result[Vec[UInt8], Str]
   ensures:  result is Ok => result.len() >= 0
 {
   Ok(deflate.deflate_compress_level(data, level))
 }
 
+/// Decompress raw deflate data; Err on malformed input.
 pub fn deflate_decompress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str]
   ensures:  result is Ok => result.len() >= 0
 {
@@ -229,12 +235,14 @@ pub fn zlib_compress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str]
   Ok(zlib.zlib_compress(data))
 }
 
+/// Zlib-compress with a level 0..9; Err on failure.
 pub fn zlib_compress_level(data: &Vec[UInt8], level: Int) -> Result[Vec[UInt8], Str]
   ensures:  result is Ok => result.len() >= 6
 {
   Ok(zlib.zlib_compress_level(data, level))
 }
 
+/// Decompress zlib data; Err on malformed input.
 pub fn zlib_decompress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str]
   ensures:  result is Ok => result.len() >= 0
 {
@@ -248,12 +256,14 @@ pub fn brotli_compress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str]
   Ok(brotli.brotli_compress(data))
 }
 
+/// Brotli-compress with a quality 0..11; Err on failure.
 pub fn brotli_compress_level(data: &Vec[UInt8], quality: Int) -> Result[Vec[UInt8], Str]
   ensures:  result is Ok => result.len() >= 8
 {
   Ok(brotli.brotli_compress_quality(data, quality))
 }
 
+/// Decompress Brotli data; Err on malformed input.
 pub fn brotli_decompress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str]
   ensures:  result is Ok => result.len() >= 0
 {
@@ -267,6 +277,7 @@ pub fn lz4_compress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str]
   Ok(lz4.lz4_compress(data))
 }
 
+/// Decompress an LZ4 block; Err on malformed input.
 pub fn lz4_decompress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str]
   ensures:  result is Ok => result.len() >= 0
 {
@@ -280,12 +291,14 @@ pub fn snappy_compress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str]
   Ok(snappy.snappy_compress(data))
 }
 
+/// Decompress Snappy data; Err on malformed input.
 pub fn snappy_decompress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str]
   ensures:  result is Ok => result.len() >= 0
 {
   snappy.snappy_decompress(data)
 }
 
+/// compressed/original ratio (0 when original is 0).
 pub fn compression_ratio(original: Int, compressed: Int) -> Float64
   requires: original >= 0
   requires: compressed >= 0
@@ -297,6 +310,7 @@ pub fn compression_ratio(original: Int, compressed: Int) -> Float64
   (original as Float64) / (compressed as Float64)
 }
 
+/// True when the bytes start with a recognized compression header.
 pub fn is_compressed(data: &Vec[UInt8]) -> Bool
   requires: data.len() >= 0
 {
@@ -318,6 +332,7 @@ pub fn is_compressed(data: &Vec[UInt8]) -> Bool
   return false;
 }
 
+/// Name of the detected compression format, or "" when unrecognized.
 pub fn detect_format(data: &Vec[UInt8]) -> Str
   requires: data.len() >= 0
 {

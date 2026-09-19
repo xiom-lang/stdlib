@@ -69,6 +69,7 @@ pub fn detect_format(data: &Vec[UInt8]) -> Str
   return "binary";
 }
 
+/// True when the text parses as JSON.
 pub fn is_valid_json(data: Str) -> Bool
   requires: data.len() >= 0
 {
@@ -76,6 +77,7 @@ pub fn is_valid_json(data: Str) -> Bool
   result.is_ok
 }
 
+/// True when the bytes contain valid UTF-8 JSON.
 pub fn is_valid_bytes(data: &Vec[UInt8]) -> Bool {
   var buf = Vec[UInt8].new();
   var i = 0;
@@ -118,19 +120,23 @@ pub fn json_string(s: Str) -> Str {
   return result;
 }
 
+/// JSON number literal for the value.
 pub fn json_number(n: Float64) -> Str {
   return convert.float_to_string(n);
 }
 
+/// JSON literal "true"/"false".
 pub fn json_bool(b: Bool) -> Str {
   if b { return "true"; }
   return "false";
 }
 
+/// JSON literal "null".
 pub fn json_null() -> Str {
   return "null";
 }
 
+/// JSON array from pre-rendered element strings.
 pub fn json_array(items: Vec[Str]) -> Str {
   var result = "[";
   var i: Int = 0;
@@ -145,6 +151,7 @@ pub fn json_array(items: Vec[Str]) -> Str {
   return result;
 }
 
+/// JSON object from pre-rendered key/value pairs.
 pub fn json_object(pairs: Vec[(Str, Str)]) -> Str {
   var result = "{";
   var i: Int = 0;
@@ -162,10 +169,12 @@ pub fn json_object(pairs: Vec[(Str, Str)]) -> Str {
   return result;
 }
 
+/// Serialize a value to JSON; Err on failure.
 pub fn to_json[T: Serialize](value: T) -> Result[Str, SerializeError] {
   return value.serialize_json();
 }
 
+/// Deserialize a value from JSON; Err on failure.
 pub fn from_json[T: Deserialize](s: Str) -> Result[T, SerializeError] {
   return T.deserialize_json(s);
 }
@@ -435,6 +444,7 @@ fn parse_number(s: Str, pos: &mut Int) -> Result[JsonValue, SerializeError] {
   }
 }
 
+/// Parse JSON text into a JsonValue; Err with position info.
 pub fn json_parse(data: Str) -> Result[JsonValue, SerializeError]
   requires: data.len() >= 0
   ensures: true
@@ -453,10 +463,12 @@ pub fn json_parse(data: Str) -> Result[JsonValue, SerializeError]
   return Ok(result);
 }
 
+/// Alias of json_parse (parse JSON text).
 pub fn parse_json(s: Str) -> Result[JsonValue, SerializeError] {
   return json_parse(s);
 }
 
+/// Parsed JSON value (null/bool/number/string/array/object).
 pub type JsonValue = enum {
   Null,
   Bool(value: Bool),
@@ -508,6 +520,7 @@ pub fn JsonValue.to_str(self) -> Str {
   }
 }
 
+/// Object member by key, or None.
 pub fn JsonValue.get(self, key: Str) -> Option[JsonValue] {
   match self {
     Object(entries) => {
@@ -522,6 +535,7 @@ pub fn JsonValue.get(self, key: Str) -> Option[JsonValue] {
   }
 }
 
+/// Array element by index, or None.
 pub fn JsonValue.index(self, i: Int) -> Option[JsonValue] {
   match self {
     Array(items) => {
@@ -537,6 +551,7 @@ pub fn little_endian() -> Bool {
   return true;
 }
 
+/// True when the target is big-endian (false on x86_64).
 pub fn big_endian() -> Bool {
   return false;
 }

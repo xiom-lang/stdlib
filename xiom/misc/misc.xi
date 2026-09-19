@@ -699,6 +699,7 @@ fn _misc_capitalize(s: Str) -> Str {
   return xiom.string.str_concat(first, rest);
 }
 
+/// Convert to camelCase.
 pub fn to_camel_case(s: Str) -> Str {
   var words = _misc_split_words(s);
   var result = "";
@@ -712,6 +713,7 @@ pub fn to_camel_case(s: Str) -> Str {
   return result;
 }
 
+/// Convert to PascalCase.
 pub fn to_pascal_case(s: Str) -> Str {
   var words = _misc_split_words(s);
   var result = "";
@@ -723,6 +725,7 @@ pub fn to_pascal_case(s: Str) -> Str {
   return result;
 }
 
+/// Convert to snake_case.
 pub fn to_snake_case(s: Str) -> Str {
   var words = _misc_split_words(s);
   var result = "";
@@ -735,6 +738,7 @@ pub fn to_snake_case(s: Str) -> Str {
   return result;
 }
 
+/// Convert to kebab-case.
 pub fn to_kebab_case(s: Str) -> Str {
   var words = _misc_split_words(s);
   var result = "";
@@ -825,30 +829,37 @@ pub fn celsius_to_fahrenheit(c: Float64) -> Float64 {
   return c * 1.8 + 32.0;
 }
 
+/// Fahrenheit to Celsius.
 pub fn fahrenheit_to_celsius(f: Float64) -> Float64 {
   return (f - 32.0) / 1.8;
 }
 
+/// Celsius to Kelvin.
 pub fn celsius_to_kelvin(c: Float64) -> Float64 {
   return c + 273.15;
 }
 
+/// Kelvin to Celsius.
 pub fn kelvin_to_celsius(k: Float64) -> Float64 {
   return k - 273.15;
 }
 
+/// Fahrenheit to Kelvin.
 pub fn fahrenheit_to_kelvin(f: Float64) -> Float64 {
   return (f + 459.67) * 5.0 / 9.0;
 }
 
+/// Kelvin to Fahrenheit.
 pub fn kelvin_to_fahrenheit(k: Float64) -> Float64 {
   return k * 1.8 - 459.67;
 }
 
+/// Miles to kilometres.
 pub fn miles_to_km(m: Float64) -> Float64 {
   return m * 1.609344;
 }
 
+/// Kilometres to miles.
 pub fn km_to_miles(km: Float64) -> Float64 {
   return km / 1.609344;
 }
