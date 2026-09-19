@@ -8,6 +8,7 @@ use xiom.error.chain;
 use xiom.error.context;
 use xiom.error.backtrace;
 
+/// Common interface for error values (message plus chaining).
 pub interface Error {
   fn source(self) -> Option<Error>;
   fn description(self) -> Str;
@@ -15,8 +16,10 @@ pub interface Error {
   fn cause(self) -> Option<Error>; // alias for source
 }
 
+/// Chain of error messages collected from an error value.
 pub type ErrorChain = { errors: Vec<Str>; } derive[Clone]
 
+/// Collect this error's message chain (outermost first).
 pub fn Error.chain(self) -> ErrorChain
   ensures: result.errors.len() >= 1
 {
@@ -30,6 +33,7 @@ pub fn Error.chain(self) -> ErrorChain
   return ErrorChain{ errors: errors };
 }
 
+/// Render the chain as a single multi-line string.
 pub fn ErrorChain.display(self) -> Str {
   var result: Str = "";
   var i: Int = 0;
@@ -57,6 +61,7 @@ pub fn wrap_error[T, E](result: Result[T, E], context: Str) -> Result[T, Str] {
   }
 }
 
+/// Wrap a Result error with an additional context message.
 pub fn context[T, E](result: Result[T, E], msg: Str) -> Result[T, Str] {
   match result {
     Ok(v) => { return Ok(v); }
@@ -64,12 +69,15 @@ pub fn context[T, E](result: Result[T, E], msg: Str) -> Result[T, Str] {
   }
 }
 
+/// Captured call-site frames (best-effort, platform dependent).
 pub type Backtrace = { frames: Vec<Str>; } derive[Clone]
 
+/// Capture the current backtrace.
 pub fn capture_backtrace() -> Backtrace {
   return Backtrace{ frames: Vec[Str].new() };
 }
 
+/// Render the frames as a single multi-line string.
 pub fn Backtrace.display(self) -> Str {
   if self.frames.len() == 0 {
     return "";
@@ -134,4 +142,5 @@ pub fn option_ok_or[T](o: Option[T], msg: Str) -> Result[T, Str] {
 /// error returned when an unsafe block traps (SIGSEGV/SIGILL/SIGFPE/...).
 pub type HardwareFault = { signal: Str; pc: UInt64; retried: Bool; }
 
+/// Description of a violated contract (used by the runtime).
 pub type ContractViolation = { contract: Str; }

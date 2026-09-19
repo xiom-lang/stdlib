@@ -28,10 +28,13 @@ extern "C" {
   fn xiom_thread_spawn_with_result(fn_ptr: *UInt8, result_buf: *UInt8) -> *UInt8;
 }
 
+/// OS thread handle plus its identifier.
 pub type Thread = { handle: *UInt8; id: Int; }
 
+/// Handle to a spawned thread and its result slot.
 pub type JoinHandle[T] = { thread: Thread; result_buf: *UInt8; }
 
+/// Spawn a thread running `f`; join it to get the result.
 pub fn spawn[T](f: fn() -> T) -> JoinHandle[T]
   requires: true
   ensures: result.thread.handle != 0 {
@@ -48,12 +51,14 @@ pub fn spawn[T](f: fn() -> T) -> JoinHandle[T]
   }
 }
 
+/// Spawn a named thread (the name is advisory on some platforms).
 pub fn spawn_with_name[T](name: Str, f: fn() -> T) -> JoinHandle[T]
   requires: name.len() >= 0
 {
   spawn[T](f)
 }
 
+/// Wait for the thread and return its result, or Err with the message.
 pub fn JoinHandle.join[T](self) -> Result[T, Str]
   requires: self.thread.handle != 0
   ensures: true
@@ -71,6 +76,7 @@ pub fn JoinHandle.join[T](self) -> Result[T, Str]
   }
 }
 
+/// True when the thread has already terminated.
 pub fn JoinHandle.is_finished[T](self) -> Bool
   requires: self.result_buf != 0
 {
@@ -81,12 +87,14 @@ pub fn JoinHandle.is_finished[T](self) -> Bool
   }
 }
 
+/// The underlying thread handle (a copy; joining is not affected).
 pub fn JoinHandle.thread[T](self) -> Thread
   ensures: result.handle == self.thread.handle
 {
   self.thread
 }
 
+/// Detach the handle; the thread's result is discarded.
 pub fn JoinHandle.detach[T](self)
   requires: self.thread.handle != 0
   requires: self.result_buf != 0
@@ -97,6 +105,7 @@ pub fn JoinHandle.detach[T](self)
   }
 }
 
+/// Handle for the calling thread.
 pub fn Thread.current() -> Thread
   requires: true
 {
@@ -107,24 +116,29 @@ pub fn Thread.current() -> Thread
   }
 }
 
+/// Numeric thread id.
 pub fn Thread.id(self) -> Int {
   self.id
 }
 
+/// Thread name when one was set at spawn, else None.
 pub fn Thread.name(self) -> Option[Str] {
   None
 }
 
+/// Sleep for `ms` milliseconds (negative values return immediately).
 pub fn sleep_ms(ms: Int)
   requires: ms >= 0
 {
   unsafe { xiom_thread_sleep_ms(ms); }
 }
 
+/// Alias of `sleep_ms` (sleeps `ms` milliseconds).
 pub fn sleep(ms: Int) {
   sleep_ms(ms);
 }
 
+/// Give up the remainder of the current time slice.
 pub fn yield_now()
   requires: true
 {
@@ -134,15 +148,18 @@ pub fn yield_now()
 /// Scoped threads (borrows from parent scope)
 pub type Scope = {}
 
+/// Run `f` with a scope that joins every thread spawned through it.
 pub fn scope[T](f: fn(&Scope) -> T) -> T {
   let s = Scope{};
   f(&s)
 }
 
+/// Spawn a thread joined when the enclosing scope exits.
 pub fn Scope.spawn[T](self, f: fn() -> T) -> JoinHandle[T] {
   spawn[T](f)
 }
 
+/// Number of usable CPUs (at least 1).
 pub fn available_parallelism() -> Int
   requires: true
   ensures: result >= 1
@@ -154,10 +171,12 @@ pub fn available_parallelism() -> Int
   }
 }
 
+/// Alias of `available_parallelism`.
 pub fn hardware_threads() -> Int {
   available_parallelism()
 }
 
+/// Numeric id of the calling thread.
 pub fn current_thread_id() -> Int
   requires: true
 {

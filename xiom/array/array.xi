@@ -9,14 +9,17 @@ use xiom.array.dynamic;
 
 use xiom.cmp;
 
+/// Number of elements in the fixed-size array.
 pub fn len[T, const N: Int](arr: &[N]T) -> Int {
   N
 }
 
+/// True when the array has zero length.
 pub fn is_empty[T, const N: Int](arr: &[N]T) -> Bool {
   N == 0
 }
 
+/// First element, or None for an empty array.
 pub fn first[T, const N: Int](arr: &[N]T) -> Option[T]
   ensures: N == 0 => result is None {
   if N == 0 {
@@ -25,6 +28,7 @@ pub fn first[T, const N: Int](arr: &[N]T) -> Option[T]
   Some(arr[0])
 }
 
+/// Last element, or None for an empty array.
 pub fn last[T, const N: Int](arr: &[N]T) -> Option[T]
   ensures: N == 0 => result is None {
   if N == 0 {
@@ -33,6 +37,7 @@ pub fn last[T, const N: Int](arr: &[N]T) -> Option[T]
   Some(arr[N - 1])
 }
 
+/// Element at `index`, or None when out of bounds.
 pub fn get[T, const N: Int](arr: &[N]T, index: Int) -> Option[T]
   ensures: index < 0 || index >= N => result is None {
   if index < 0 || index >= N {
@@ -54,6 +59,7 @@ pub fn get_mut[T, const N: Int](arr: &mut [N]T, index: Int) -> Option[T]
   Some(arr[index])
 }
 
+/// Apply `f` to every element, returning a new array.
 pub fn map[T, U, const N: Int](arr: [N]T, f: fn(T) -> U) -> [N]U {
   var result: [N]U;
   var i = 0;
@@ -64,6 +70,7 @@ pub fn map[T, U, const N: Int](arr: [N]T, f: fn(T) -> U) -> [N]U {
   return result;
 }
 
+/// Pair the elements of two arrays positionally.
 pub fn zip[T, U, const N: Int](a: [N]T, b: [N]U) -> [N](T, U) {
   var result: [N](T, U);
   var i = 0;
@@ -74,6 +81,7 @@ pub fn zip[T, U, const N: Int](a: [N]T, b: [N]U) -> [N](T, U) {
   return result;
 }
 
+/// Fold the elements with `f`, starting from `init`.
 pub fn fold[T, B, const N: Int](arr: [N]T, init: B, f: fn(B, T) -> B) -> B {
   var acc = init;
   var i = 0;
@@ -84,18 +92,21 @@ pub fn fold[T, B, const N: Int](arr: [N]T, init: B, f: fn(B, T) -> B) -> B {
   return acc;
 }
 
+/// Borrow the array as a Slice.
 pub fn as_slice[T, const N: Int](arr: &[N]T) -> Slice[T]
   requires: N > 0
   ensures: result.len == N {
   Slice { data: &arr[0] as *T, len: N }
 }
 
+/// Mutably borrow the array as a Slice.
 pub fn as_mut_slice[T, const N: Int](arr: &mut [N]T) -> Slice[T]
   requires: N > 0
   ensures: result.len == N {
   Slice { data: &mut arr[0] as *T, len: N }
 }
 
+/// Array of shared references to each element.
 pub fn each_ref[T, const N: Int](arr: &[N]T) -> [N]&T {
   var result: [N]&T;
   var i = 0;
@@ -106,6 +117,7 @@ pub fn each_ref[T, const N: Int](arr: &[N]T) -> [N]&T {
   return result;
 }
 
+/// Array of mutable references to each element.
 pub fn each_mut[T, const N: Int](arr: &mut [N]T) -> [N]&mut T {
   var result: [N]&mut T;
   var i = 0;
@@ -116,6 +128,7 @@ pub fn each_mut[T, const N: Int](arr: &mut [N]T) -> [N]&mut T {
   return result;
 }
 
+/// Set every element to a clone of `value`.
 pub fn fill[T: Clone, const N: Int](arr: &mut [N]T, value: T)
   ensures: true {
   var i = 0;
@@ -125,6 +138,7 @@ pub fn fill[T: Clone, const N: Int](arr: &mut [N]T, value: T)
   }
 }
 
+/// Swap the elements at `a` and `b`.
 pub fn swap[T, const N: Int](arr: &mut [N]T, a: Int, b: Int)
   requires: a >= 0 && a < N
   requires: b >= 0 && b < N {
@@ -147,11 +161,13 @@ fn reverse_range[T, const N: Int](arr: &mut [N]T, start: Int, count: Int)
   }
 }
 
+/// Reverse the elements in place.
 pub fn reverse[T, const N: Int](arr: &mut [N]T)
   ensures: true {
   reverse_range(arr, 0, N);
 }
 
+/// Rotate the elements left by `mid` positions.
 pub fn rotate_left[T, const N: Int](arr: &mut [N]T, mid: Int)
   requires: mid >= 0
   requires: mid <= N {
@@ -163,6 +179,7 @@ pub fn rotate_left[T, const N: Int](arr: &mut [N]T, mid: Int)
   reverse_range(arr, 0, N);
 }
 
+/// Rotate the elements right by `k` positions.
 pub fn rotate_right[T, const N: Int](arr: &mut [N]T, k: Int)
   requires: k >= 0 {
   if N <= 1 {
@@ -177,6 +194,7 @@ pub fn rotate_right[T, const N: Int](arr: &mut [N]T, k: Int)
   reverse_range(arr, 0, N);
 }
 
+/// Sort the elements in place (ascending).
 pub fn sort[T: Ord, const N: Int](arr: &mut [N]T)
   ensures: arr.is_sorted() {
   var i = 1;
@@ -196,6 +214,7 @@ pub fn sort[T: Ord, const N: Int](arr: &mut [N]T)
   }
 }
 
+/// Sort with a comparator returning an Ordering.
 pub fn sort_by[T, const N: Int](arr: &mut [N]T, compare: fn(&T, &T) -> Ordering)
   ensures: arr.is_sorted_by(compare) {
   var i = 1;
@@ -215,6 +234,7 @@ pub fn sort_by[T, const N: Int](arr: &mut [N]T, compare: fn(&T, &T) -> Ordering)
   }
 }
 
+/// Binary search in a sorted array: Ok(index) or Err(insertion point).
 pub fn binary_search[T: Ord, const N: Int](arr: &[N]T, x: &T) -> Result[Int, Int]
   requires: N >= 0
   requires: arr.is_sorted() {
@@ -234,6 +254,7 @@ pub fn binary_search[T: Ord, const N: Int](arr: &[N]T, x: &T) -> Result[Int, Int
   Err(low)
 }
 
+/// True when the array contains `x`.
 pub fn contains[T: Eq, const N: Int](arr: &[N]T, x: &T) -> Bool
   ensures: result == true => arr.contains(x) {
   var i = 0;
