@@ -20,10 +20,17 @@ was rejected by tag rules -- owner action needed).
   --locked -p xiom`: `12148d43` (R46) and `504fcc1e` (R46b, includes the
   qualified-receiver generic-method fix). All results below use R46b unless
   noted.
-- Corpus gates run green after every batch: R44 batches 1-3 and wave 13 =
-  `check_modules` **509/509** + full corpus **949/949** (runner file count;
+- Corpus gates run green after every batch: R44 batches 1-3 and waves 12-15 =
+  `check_modules` **509/509** + corpus **949/949** (runner file count;
   `docs/VERIFICATION_BASELINE.md` freeze says 950 -- the runner counted 949
-  in all four runs).
+  in all runs). **CORRECTION 2026-09-19:** those `runfail=0` numbers were
+  false-green -- `run_smokes.ps1` passed `-RedirectStandardInput 'NUL'`,
+  which PS 5.1 rejects, so the process never started and `$null` exit code
+  was recorded as 0. Fixed in `68e8324` (empty-file stdin; failed start =
+  `run=-997`). The true baseline was 938/949 with 11 runtime contract
+  aborts; all were remediated stdlib-side (call-`@pre` clauses replaced with
+  `@pre`-free equivalents + four inverted `remove` clauses fixed) and the
+  confirmation run is **949/949, 0 runfail (2435.3s)** on R46b.
 - Coverage (floors51): **io 62.0%, string 50.7%, collect 53.2%**; global
   18.3% clauses / **17.7% pub-with-clause**. Wave 14 added 38 collect
   clauses (btree/btreeplus/bloom/fenwick/cuckoo/avl/dag).
@@ -63,7 +70,10 @@ was rejected by tag rules -- owner action needed).
 - More compiler findings/status: `tools/known_failures/p_pre_call_capture.xi`
   -- `@pre` on a CALL expression in `ensures` reads post-state (field
   `@pre` works), which makes `tools/probes/p_wave8_shapes.xi` line 75 RED
-  on R46/R46b. `encoding/ascii85.xi` produced T001 in the compiler's
+  on R46/R46b. It was aborting 11 corpus smokes once runtime detection
+  worked; all stdlib call-`@pre` clauses were replaced with safe forms
+  (see the correction bullet above). Restore the stronger size relations
+  only after the compiler fix. `encoding/ascii85.xi` produced T001 in the compiler's
   combined-import gate (`stdlib_all_modules_compile_to_ir`); FIXED
   stdlib-side by fully qualifying the `xiom.convert.ascii85` calls (the
   bare alias bound to `num.convert`'s Option-returning `from_ascii85`) --
@@ -95,9 +105,19 @@ was rejected by tag rules -- owner action needed).
   `ptr/ptr.xi` (19).
 
 **Next-session queue, in order**
-1. Compiler lane: minimize/fix `p_sweep_single_param` (clang ISel crash,
+1. Compiler lane: fix `p_pre_call_capture` (`@pre` call capture reads
+   post-state; it aborts valid calls and is the reason the stdlib uses
+   weaker clauses now), `p_sweep_single_param` (clang ISel crash,
    `@__unsafe_block_77`, xiom.net) and `p_result_payload_contract`
-   (scalar+Vec Result payload contract in one module).
+   (scalar+Vec Result payload contract in one module). The compiler repo's
+   own gate tests now pass against current main except the freeze snapshot
+   (compiler-side resolver + regen; see below).
+   Freeze-gate evidence (2026-09-19, current main): 212 frozen signatures
+   missing = 154 resolver misses (`sha/md5/path/fmt/char/cmp/env/contracts/
+   aes` moved; compiler-side `resolve_module_path`/manifest) + 58 drift (49
+   pre-existing + 9 from renames: `async Executor.*` x7, `net
+   http_get/http_post` x2). Pinned checkout baseline is 203. The IR gate
+   `stdlib_all_modules_compile_to_ir` PASSES after the ascii85 fix.
 2. Finish the generator groups (`-OnlyCalls 3` .. `-OnlyCalls 58`, or
    `-Limit`), triage failures; when the compiler fixes land, promote the
    zero/single-param tranches into `tools/probes/` and re-baseline.

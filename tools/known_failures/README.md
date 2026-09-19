@@ -21,7 +21,12 @@ xiom --force -o out.exe tools/known_failures/<file>.xi
   `tools/probes/p_wave8_shapes.xi` line 75 red
   (`int_map_size(m) == int_map_size(m)@pre - 1`). Wave-14 contracts avoid
   the shape; any contract of this form must stay out of the stdlib until
-  fixed.
+  fixed. IMPACT (2026-09-19): after fixing the run_smokes runtime-detection
+  bug, 11 corpus smokes were failing on these clauses (kdtree/rbtree/tree/
+  list/intmap/hash/lfu/btree/cache); every call-`@pre` clause in the stdlib
+  was replaced with an `@pre`-free equivalent (membership/no-op forms), and
+  the corpus is green again. Restore the stronger size-relation clauses only
+  after the compiler fix lands.
 
 - `p_os_env_set_link.xi` -- **RESOLVED 2026-09-19**, moved to
   `tools/probes/p_os_env_set_link.xi`. `runtime/xiom_runtime.c` now exports
