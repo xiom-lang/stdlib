@@ -35,6 +35,7 @@ fn _lcg_step(state: Int) -> Int {
 /// === Standard RNG ===
 pub type StdRng = { state: Int; } derive[Clone]
 
+/// Seeded standard RNG (OS/time entropy when available).
 pub fn StdRng.new() -> StdRng
   requires: true  // extern clock call below (T002 confinement)
 {
@@ -48,6 +49,7 @@ pub fn StdRng.new() -> StdRng
   return StdRng{ state: seed; };
 }
 
+/// Deterministic standard RNG from an integer seed.
 pub fn StdRng.from_seed(seed: Int) -> StdRng {
   if seed == 0 {
     return StdRng{ state: 1; };
@@ -83,6 +85,7 @@ pub fn random() -> Float64
   return (_global_state as Float64) / 2147483647.0;
 }
 
+/// Uniform Int in [min, max] (inclusive).
 pub fn random_int(min: Int, max: Int) -> Int
   requires: min <= max
   ensures:  result >= min && result <= max
@@ -99,14 +102,17 @@ pub fn random_int(min: Int, max: Int) -> Int
   return min + val;
 }
 
+/// Uniform Float64 in [min, max).
 pub fn random_float(min: Float64, max: Float64) -> Float64 { // [min, max)
   return min + random() * (max - min);
 }
 
+/// Fair coin flip.
 pub fn random_bool() -> Bool {
   return random() >= 0.5;
 }
 
+/// `count` random bytes (empty when count <= 0).
 pub fn random_bytes(count: Int) -> Vec[UInt8] {
   var result = Vec[UInt8].new();
   var i: Int = 0;
@@ -123,6 +129,7 @@ pub fn sample_uniform(min: Float64, max: Float64) -> Float64 {
   return min + random() * (max - min);
 }
 
+/// Normal (Gaussian) sample with the given mean and stddev.
 pub fn sample_normal(mean: Float64, stddev: Float64) -> Float64 {
   let u1 = random();
   let u2 = random();
@@ -136,6 +143,7 @@ pub fn sample_normal(mean: Float64, stddev: Float64) -> Float64 {
   return mean + z0 * stddev;
 }
 
+/// Exponential sample with the given rate lambda.
 pub fn sample_exponential(lambda: Float64) -> Float64 {
   var u = random();
   if u <= 0.0 {
@@ -144,10 +152,12 @@ pub fn sample_exponential(lambda: Float64) -> Float64 {
   return -xiom.math.ln(u) / lambda;
 }
 
+/// Bernoulli trial: true with probability p.
 pub fn sample_bernoulli(p: Float64) -> Bool {
   return random() < p;
 }
 
+/// Binomial sample: successes in `n` independent trials with probability p.
 pub fn sample_binomial(n: Int, p: Float64) -> Int {
   var count: Int = 0;
   var i: Int = 0;
@@ -160,6 +170,7 @@ pub fn sample_binomial(n: Int, p: Float64) -> Int {
   return count;
 }
 
+/// Poisson sample with mean lambda.
 pub fn sample_poisson(lambda: Float64) -> Int {
   let L = xiom.math.exp(-lambda);
   var k: Int = 0;
@@ -171,6 +182,7 @@ pub fn sample_poisson(lambda: Float64) -> Int {
   return k - 1;
 }
 
+/// Gamma sample with the given shape and scale.
 pub fn sample_gamma(shape: Float64, scale: Float64) -> Float64 {
   if shape <= 0.0 {
     return 0.0;
@@ -206,6 +218,7 @@ pub fn sample_gamma(shape: Float64, scale: Float64) -> Float64 {
   };
 }
 
+/// Beta sample with parameters alpha and beta.
 pub fn sample_beta(alpha: Float64, beta: Float64) -> Float64 {
   if alpha <= 0.0 || beta <= 0.0 {
     return 0.0;
@@ -231,6 +244,7 @@ pub fn shuffle[T](items: &mut Vec[T])
   };
 }
 
+/// Uniformly pick one element, or None for an empty vector.
 pub fn pick[T](items: &Vec[T]) -> Option<&T> {
   let len = items.len();
   if len == 0 {
@@ -243,6 +257,7 @@ pub fn pick[T](items: &Vec[T]) -> Option<&T> {
   return Some(&items[idx]);
 }
 
+/// Uniformly pick `n` distinct elements (fewer when the vector is shorter).
 pub fn pick_n[T](items: &Vec[T], n: Int) -> Vec<&T> {
   let len = items.len();
   var count = n;
@@ -277,6 +292,8 @@ pub fn pick_n[T](items: &Vec[T], n: Int) -> Vec<&T> {
   return result;
 }
 
+/// Pick an element with probability proportional to its weight; None when
+/// the vector is empty or all weights are <= 0.
 pub fn weighted_pick[T](items: &Vec[T], weights: &Vec[Float64]) -> Option<&T> {
   let len = items.len();
   if len == 0 || weights.len() != len {
@@ -332,6 +349,7 @@ fn _format_uuid(bytes: &Vec[UInt8]) -> Str {
   }
 }
 
+/// Random (version 4) UUID string.
 pub fn uuid_v4() -> Str
   ensures: result.len() == 36
 {
@@ -347,6 +365,7 @@ pub fn uuid_v4() -> Str
   return _format_uuid(&bytes);
 }
 
+/// Time-ordered (version 7) UUID string.
 pub fn uuid_v7() -> Str
   ensures: result.len() == 36
 {
@@ -384,6 +403,7 @@ pub fn seed_from_entropy()
   _global_state = seed;
 }
 
+/// Reseed the global RNG from the current time.
 pub fn seed_from_time()
   requires: true  // extern time call below (T002 confinement)
 {
@@ -395,6 +415,7 @@ pub fn seed_from_time()
   _global_state = seed;
 }
 
+/// Reseed the global RNG from an explicit value.
 pub fn seed_from_value(seed: Int) {
   if seed == 0 {
     _global_state = 1;

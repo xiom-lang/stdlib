@@ -302,6 +302,7 @@ fn _int_to_be_bytes(x: Int, buf: &mut Vec[UInt8], offset: Int) {
   }
 }
 
+/// SHA-256 digest (32 bytes).
 pub fn sha256(data: &Vec[UInt8]) -> Vec[UInt8] {
   var result = Vec[UInt8].new();
   var i = 0;
@@ -315,6 +316,7 @@ pub fn sha256(data: &Vec[UInt8]) -> Vec[UInt8] {
   return result;
 }
 
+/// SHA-256 using the hardware-accelerated path when available.
 pub fn sha256_accelerated(data: &Vec[UInt8]) -> Vec[UInt8]
   requires: data.len() > 0
   ensures:  result.len() == 32
@@ -325,6 +327,7 @@ pub fn sha256_accelerated(data: &Vec[UInt8]) -> Vec[UInt8]
   return sha256(data);
 }
 
+/// Lowercase hex SHA-256 digest.
 pub fn sha256_hex(data: &Vec[UInt8]) -> Str {
   var hash = sha256(data);
   var result = Vec[UInt8].new();
@@ -577,6 +580,7 @@ fn _i64_byte(v: Int, pos: Int) -> UInt8 {
   return b as UInt8;
 }
 
+/// SHA-512 digest (64 bytes).
 pub fn sha512(data: &Vec[UInt8]) -> Vec[UInt8]
   ensures: result.len() == 64
 {
@@ -641,6 +645,7 @@ fn _md5_i(x: Int, y: Int, z: Int) -> Int {
   return _u32_mask(y ^ (x | (~z)));
 }
 
+/// MD5 digest (legacy; not for security use).
 pub fn md5(data: &Vec[UInt8]) -> Vec[UInt8]
   ensures: result.len() == 16
 {
@@ -1104,6 +1109,7 @@ const _HMAC_BLOCK_SIZE: Int = 64;
 const _HMAC_IPAD: UInt8 = 0x36;
 const _HMAC_OPAD: UInt8 = 0x5c;
 
+/// HMAC-SHA-256 of `data` with `key`.
 pub fn hmac_sha256(key: &Vec[UInt8], data: &Vec[UInt8]) -> Vec[UInt8]
   ensures: result.len() == 32
 {
@@ -1456,6 +1462,7 @@ fn _pkcs7_unpad(data: &Vec[UInt8]) -> Result<Vec[UInt8], Str> {
 return Ok(result);
 }
 
+/// AES encrypt with the given key; Err on bad key/data lengths.
 pub fn aes_encrypt(key: &Vec[UInt8], plaintext: &Vec[UInt8]) -> Result[Vec[UInt8], Str]
   // No requires clauses: the body validates and returns Err gracefully
   // (documented stdlib rule -- contracts trap on violation, BUG 22 #5).
@@ -1513,6 +1520,7 @@ pub fn aes_encrypt(key: &Vec[UInt8], plaintext: &Vec[UInt8]) -> Result[Vec[UInt8
   return Ok(result);
 }
 
+/// AES decrypt with the given key; Err on bad key/data or padding.
 pub fn aes_decrypt(key: &Vec[UInt8], ciphertext: &Vec[UInt8]) -> Result<Vec[UInt8], Str>
   // No requires clauses: the body validates and returns Err gracefully
   // (documented stdlib rule -- contracts trap on violation, BUG 22 #5).
@@ -1732,6 +1740,7 @@ fn _gcm_j0(nonce: &Vec[UInt8]) -> Vec[UInt8] {
   return j0;
 }
 
+/// AES-GCM encrypt: Ok((ciphertext, tag)); Err on bad lengths.
 pub fn aes_encrypt_gcm(key: &Vec[UInt8], nonce: &Vec[UInt8], plaintext: &Vec[UInt8], aad: &Vec[UInt8]) -> Result<(Vec[UInt8], Vec[UInt8]), Str> {
   if key.len() != 16 && key.len() != 24 && key.len() != 32 {
     return Err("invalid key length: must be 16, 24, or 32 bytes");
@@ -1781,6 +1790,7 @@ pub fn aes_encrypt_gcm(key: &Vec[UInt8], nonce: &Vec[UInt8], plaintext: &Vec[UIn
   return Ok((ciphertext, tag));
 }
 
+/// AES-GCM decrypt and verify the tag; Err on failure.
 pub fn aes_decrypt_gcm(key: &Vec[UInt8], nonce: &Vec[UInt8], ciphertext: &Vec[UInt8], tag: &Vec[UInt8], aad: &Vec[UInt8]) -> Result<Vec[UInt8], Str> {
   if key.len() != 16 && key.len() != 24 && key.len() != 32 {
     return Err("invalid key length: must be 16, 24, or 32 bytes");
@@ -1895,6 +1905,7 @@ fn _be_vec_to_int(data: &Vec[UInt8]) -> Int {
   return result;
 }
 
+/// Generate an RSA key pair of `bits` bits; Err on failure.
 pub fn generate_rsa_keypair(bits: Int) -> Result<KeyPair, Str> {
   if bits < 16 || bits > 32 {
     return Err("RSA key size out of practical range for pure XIOM (use 16-32 bits)");
@@ -1972,6 +1983,7 @@ fn _rsa_parse_key(key: &Vec[UInt8]) -> (Int, Int, Int) {
   return (n, exp, key_size);
 }
 
+/// RSA encrypt with a public key; Err on failure.
 pub fn rsa_encrypt(public_key: &Vec[UInt8], data: &Vec[UInt8]) -> Result<Vec[UInt8], Str> {
   let (n, e, key_size) = _rsa_parse_key(public_key);
   var data_int = _be_vec_to_int(data);
@@ -1980,6 +1992,7 @@ pub fn rsa_encrypt(public_key: &Vec[UInt8], data: &Vec[UInt8]) -> Result<Vec[UIn
   return Ok(_int_to_be_vec(cipher, key_size));
 }
 
+/// RSA decrypt with a private key; Err on failure.
 pub fn rsa_decrypt(private_key: &Vec[UInt8], data: &Vec[UInt8]) -> Result<Vec[UInt8], Str> {
   let (n, d, key_size) = _rsa_parse_key(private_key);
   var cipher_int = _be_vec_to_int(data);
@@ -1988,10 +2001,12 @@ pub fn rsa_decrypt(private_key: &Vec[UInt8], data: &Vec[UInt8]) -> Result<Vec[UI
   return Ok(_int_to_be_vec(plain, key_size));
 }
 
+/// RSA signature over `data`; Err on failure.
 pub fn rsa_sign(private_key: &Vec[UInt8], data: &Vec[UInt8]) -> Result<Vec[UInt8], Str> {
   return rsa_decrypt(private_key, data);
 }
 
+/// Verify an RSA signature; Ok(true/false) or Err.
 pub fn rsa_verify(public_key: &Vec[UInt8], data: &Vec[UInt8], signature: &Vec[UInt8]) -> Result<Bool, Str> {
   let decrypted = rsa_encrypt(public_key, signature);
   match decrypted {
@@ -2067,6 +2082,7 @@ pub fn pbkdf2(password: &Str, salt: &Vec[UInt8], iterations: Int, key_len: Int) 
   return final_result;
 }
 
+/// Argon2 key derivation with the given memory/iteration/parallelism costs.
 pub fn argon2(password: &Str, salt: &Vec[UInt8], memory: Int, iterations: Int, parallelism: Int) -> Vec[UInt8] {
   var effective_iterations = iterations;
   if memory > 0 { effective_iterations = iterations + memory / 1024; }
@@ -2151,6 +2167,7 @@ pub fn os_secure_random_bytes(count: Int) -> Vec[UInt8] {
   return result;
 }
 
+/// OS-entropy random bytes (the CSPRNG source for the crypto modules).
 pub fn secure_random_bytes(count: Int) -> Vec[UInt8] {
   // OS-entropy CSPRNG: ProcessPrng/RtlGenRandom on Windows, /dev/urandom on
   // Unix (xiom_os_entropy in the runtime; multi-draw shapes unblocked by the
@@ -2163,6 +2180,7 @@ pub fn secure_random_bytes(count: Int) -> Vec[UInt8] {
   return os_secure_random_bytes(count);
 }
 
+/// True when the byte strings are equal, in constant time.
 pub fn constant_time_compare(a: &Vec[UInt8], b: &Vec[UInt8]) -> Bool
   ensures: result == true => a.len() == b.len()  // equal length needed for equality
 {
@@ -2508,6 +2526,7 @@ fn _sha384_iv() -> Vec[Int] {
   return v;
 }
 
+/// SHA-384 digest (48 bytes).
 pub fn sha384(data: &Vec[UInt8]) -> Vec[UInt8]
   ensures: result.len() == 48
 {
