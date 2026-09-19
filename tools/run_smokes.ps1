@@ -67,6 +67,13 @@ function Invoke-Worker {
   New-Item -ItemType Directory -Path $logs -Force | Out-Null
   $env:XIOM_STDLIB = $repoRoot
   Set-Location -LiteralPath $repoRoot
+  # FIX 2026-09-19: Windows PowerShell 5.1 rejects -RedirectStandardInput 'NUL'
+  # (it resolves the device name relative to the CWD -> FileNotFoundException);
+  # Start-Process then returns $null, $p.ExitCode is $null and [int]$null is 0,
+  # so EVERY smoke was recorded run=0 PASS. Use a real empty file, and treat a
+  # null process as a loud failure instead of a green.
+  $emptyIn = Join-Path $WorkDir "empty.stdin"
+  if (-not (Test-Path -LiteralPath $emptyIn)) { New-Item -ItemType File -Path $emptyIn -Force | Out-Null }
   foreach ($file in $files) {
     $name = [System.IO.Path]::GetFileNameWithoutExtension($file)
     $bin = Join-Path $WorkDir ("bin/" + $name + $binSuffix)
@@ -86,8 +93,8 @@ function Invoke-Worker {
       $runOut = Join-Path $logs ($name + ".run.out")
       $runErr = Join-Path $logs ($name + ".run.err")
       $p = Start-Process -FilePath $bin -NoNewWindow -Wait -PassThru `
-        -RedirectStandardInput $nulDevice -RedirectStandardOutput $runOut -RedirectStandardError $runErr
-      $runRc = $p.ExitCode
+        -RedirectStandardInput $emptyIn -RedirectStandardOutput $runOut -RedirectStandardError $runErr
+      if ($null -eq $p) { $runRc = -997 } else { $runRc = $p.ExitCode }
     }
     $dur = ((Get-Date) - $start).TotalSeconds
     Write-ResultsLine -csv $results -name $name -compileRc $compileRc -compileOk $compileOk -runRc $runRc -secs $dur
