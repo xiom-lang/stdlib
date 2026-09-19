@@ -296,13 +296,13 @@ pub fn graph_path_exists(g: &Graph, a: Int, b: Int) -> Bool
 // `uf_connected` and `uf_count` so they can take an immutable reference.
 // ============================================================================
 
-pub type UnionFind = {
+pub type GraphUnionFind = {
   parent: Vec[Int];
   rank: Vec[Int];
 }
 
 /// Create a disjoint set with elements 0..n-1, each in its own set.
-pub fn uf_new(n: Int) -> UnionFind
+pub fn uf_new(n: Int) -> GraphUnionFind
   ensures: result.parent.len() == result.rank.len()
 {
   var parent = Vec[Int].new();
@@ -313,11 +313,11 @@ pub fn uf_new(n: Int) -> UnionFind
     rank.push(0);
     i = i + 1;
   }
-  return UnionFind{ parent: parent; rank: rank; };
+  return GraphUnionFind{ parent: parent; rank: rank; };
 }
 
 /// Find the root of `x` (read-only, no path compression).
-fn uf_find_no_compress(u: &UnionFind, x: Int) -> Int {
+fn uf_find_no_compress(u: &GraphUnionFind, x: Int) -> Int {
   var cur = x;
   while cur < u.parent.len() && u.parent[cur] != cur {
     cur = u.parent[cur];
@@ -326,7 +326,7 @@ fn uf_find_no_compress(u: &UnionFind, x: Int) -> Int {
 }
 
 /// Find the root of `x` with path compression.
-pub fn uf_find(u: &mut UnionFind, x: Int) -> Int
+pub fn uf_find(u: &mut GraphUnionFind, x: Int) -> Int
   ensures: x >= 0 && x < u.parent.len() => result >= 0
 {
   var root = x;
@@ -344,7 +344,7 @@ pub fn uf_find(u: &mut UnionFind, x: Int) -> Int
 
 /// Merge the sets containing `a` and `b` (union by rank).
 /// Returns true if the two sets were merged (i.e. previously disjoint).
-pub fn uf_union(u: &mut UnionFind, a: Int, b: Int) -> Bool
+pub fn uf_union(u: &mut GraphUnionFind, a: Int, b: Int) -> Bool
   ensures: a >= 0 && a < u.parent.len() && b >= 0 && b < u.parent.len() => uf_connected(u, a, b)
 {
   var ra = uf_find(u, a);
@@ -362,7 +362,7 @@ pub fn uf_union(u: &mut UnionFind, a: Int, b: Int) -> Bool
 }
 
 /// True if `a` and `b` are in the same set.
-pub fn uf_connected(u: &UnionFind, a: Int, b: Int) -> Bool
+pub fn uf_connected(u: &GraphUnionFind, a: Int, b: Int) -> Bool
   ensures: a == b => result == true
 {
   var ra = uf_find_no_compress(u, a);
@@ -371,7 +371,7 @@ pub fn uf_connected(u: &UnionFind, a: Int, b: Int) -> Bool
 }
 
 /// Number of distinct roots (sets).
-pub fn uf_count(u: &UnionFind) -> Int
+pub fn uf_count(u: &GraphUnionFind) -> Int
   ensures: result >= 0
 {
   var seen = Vec[Int].new();

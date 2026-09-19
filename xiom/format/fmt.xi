@@ -1304,7 +1304,7 @@ pub fn sscanf_ints(s: Str, spec: Str) -> Result[Vec[Int], Str] {
 /// Vec[Float64] (BUG 12: float container element reads broken -- TODO(compiler)
 /// restore a Vec-based API once fixed). Specs with more than 8 float
 /// conversions -> is_ok = false ("too many float conversions").
-pub type FloatScan = {
+pub type FormatFloatScan = {
   is_ok: Bool;
   count: Int;
   v0: Float64;
@@ -1318,19 +1318,19 @@ pub type FloatScan = {
   error: Str;
 }
 
-fn _scan_ok(count: Int, v0: Float64, v1: Float64, v2: Float64, v3: Float64, v4: Float64, v5: Float64, v6: Float64, v7: Float64) -> FloatScan {
-  return FloatScan{ is_ok: true; count: count; v0: v0; v1: v1; v2: v2; v3: v3; v4: v4; v5: v5; v6: v6; v7: v7; error: ""; };
+fn _scan_ok(count: Int, v0: Float64, v1: Float64, v2: Float64, v3: Float64, v4: Float64, v5: Float64, v6: Float64, v7: Float64) -> FormatFloatScan {
+  return FormatFloatScan{ is_ok: true; count: count; v0: v0; v1: v1; v2: v2; v3: v3; v4: v4; v5: v5; v6: v6; v7: v7; error: ""; };
 }
 
-fn _scan_err(msg: Str) -> FloatScan {
-  return FloatScan{ is_ok: false; count: 0; v0: 0.0; v1: 0.0; v2: 0.0; v3: 0.0; v4: 0.0; v5: 0.0; v6: 0.0; v7: 0.0; error: msg; };
+fn _scan_err(msg: Str) -> FormatFloatScan {
+  return FormatFloatScan{ is_ok: false; count: 0; v0: 0.0; v1: 0.0; v2: 0.0; v3: 0.0; v4: 0.0; v5: 0.0; v6: 0.0; v7: 0.0; error: msg; };
 }
 
 /// sscanf + typed float extraction: converts %f/%e/%g tokens to Float64
 /// (normalized ".5" -> "0.5" for the builtin parser). Non-float conversions
 /// in the spec or more than 8 float conversions -> is_ok = false with error.
 /// Values land in v0..v7 in token order; `count` says how many are valid.
-pub fn sscanf_floats(s: Str, spec: Str) -> FloatScan {
+pub fn sscanf_floats(s: Str, spec: Str) -> FormatFloatScan {
   var res = _sscanf_engine(s, spec);
   if !res.is_ok {
     return _scan_err(res.error);
@@ -1346,7 +1346,7 @@ pub fn sscanf_floats(s: Str, spec: Str) -> FloatScan {
   if n > 8 {
     return _scan_err("sscanf_floats: more than 8 float conversions");
   }
-  var values: FloatScan = _scan_ok(0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+  var values: FormatFloatScan = _scan_ok(0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
   var idx: Int = 0;
   var k2: Int = 0;
   while k2 < res.convs.len() {

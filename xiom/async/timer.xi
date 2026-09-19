@@ -9,7 +9,7 @@ module xiom.async.timer
 // ============================================================================
 // Async timers, delays, intervals, timer wheels, and stopwatches.
 // Self-contained implementation over the monotonic xiom_async_now_ms clock.
-// A `Timer` is a deadline handle; `Future` is an opaque pending-operation
+// A `Timer` is a deadline handle; `TimerFuture` is an opaque pending-operation
 // marker; `TimerWheel` is a slot-based scheduler whose `tick` advances one
 // millisecond and fires due tasks; `Stopwatch` measures elapsed wall time.
 // ============================================================================
@@ -31,8 +31,8 @@ pub type Timer = {
   armed: Bool;
 }
 
-/// Future - an opaque handle to a pending async operation.
-pub type Future = {
+/// TimerFuture - an opaque handle to a pending async operation.
+pub type TimerFuture = {
   ready: Bool;
   deadline: Int;
 }
@@ -73,14 +73,14 @@ pub fn timer_sleep(ms: Int) {
 
 /// Schedule a task to become ready after `ms` milliseconds.
 /// Params: ms - the delay in milliseconds.
-/// Returns: a Future whose deadline is `ms` from now.
+/// Returns: a TimerFuture whose deadline is `ms` from now.
 /// Complexity: O(1).
-pub fn timer_delay(ms: Int) -> Future {
+pub fn timer_delay(ms: Int) -> TimerFuture {
   var m = ms;
   if m < 0 {
     m = 0;
   }
-  return Future{ ready: false; deadline: _now() + m; }
+  return TimerFuture{ ready: false; deadline: _now() + m; }
 }
 
 /// Create a repeating interval timer.

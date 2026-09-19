@@ -4,7 +4,7 @@
 //
 // A REAL cooperative single-threaded executor.
 //
-//   * `Executor` owns a real ready-queue (`ready: Vec[fn()]`) and a real
+//   * `AsyncExecutor` owns a real ready-queue (`ready: Vec[fn()]`) and a real
 //     timer set (`timers: Vec[Timer]`).
 //   * `spawn` ENQUEUES a task onto the ready-queue; it does NOT run inline.
 //   * `run` / `block_on` drive the ready-queue to completion, sleeping only
@@ -52,30 +52,30 @@ type Timer = {
   task: fn();
 }
 
-// === Executor ===
+// === AsyncExecutor ===
 // A cooperative single-threaded scheduler: a FIFO-ish ready-queue plus a set
 // of pending timers. Stored 8-byte-per-slot exactly like `Vec[LogEntry]`.
-/// === Executor ===
+/// === AsyncExecutor ===
 /// A cooperative single-threaded scheduler: a FIFO-ish ready-queue plus a set
 /// of pending timers. Stored 8-byte-per-slot exactly like `Vec[LogEntry]`.
-pub type Executor = {
+pub type AsyncExecutor = {
   ready: Vec[fn()];
   timers: Vec[Timer];
 }
 
-pub fn Executor.new() -> Executor {
-  return Executor{ ready: Vec[fn()].new(), timers: Vec[Timer].new() };
+pub fn AsyncExecutor.new() -> AsyncExecutor {
+  return AsyncExecutor{ ready: Vec[fn()].new(), timers: Vec[Timer].new() };
 }
 
 // Enqueue a task onto the ready-queue. It runs on the next drain, not now.
 /// Enqueue a task onto the ready-queue. It runs on the next drain, not now.
-pub fn Executor.spawn(self, task: fn()) {
+pub fn AsyncExecutor.spawn(self, task: fn()) {
   self.ready.push(task);
 }
 
 // Register a task to become ready once the clock reaches `deadline`.
 /// Register a task to become ready once the clock reaches `deadline`.
-pub fn Executor.at(self, deadline: Int, task: fn()) {
+pub fn AsyncExecutor.at(self, deadline: Int, task: fn()) {
   self.timers.push(Timer{ deadline: deadline, task: task });
 }
 
@@ -83,7 +83,7 @@ pub fn Executor.at(self, deadline: Int, task: fn()) {
 // ready-queue was empty.
 /// Run a single ready task. Returns true if one was run, false if the
 /// ready-queue was empty.
-pub fn Executor.step(self) -> Bool {
+pub fn AsyncExecutor.step(self) -> Bool {
   if self.ready.len() == 0 {
     return false;
   }
@@ -100,7 +100,7 @@ pub fn Executor.step(self) -> Bool {
 // timer that is now due onto the ready-queue (keeping the rest pending).
 /// Advance pending timers: sleep until the earliest deadline, then move every
 /// timer that is now due onto the ready-queue (keeping the rest pending).
-pub fn Executor.fire_due_timers(self) {
+pub fn AsyncExecutor.fire_due_timers(self) {
   if self.timers.len() == 0 {
     return;
   }
@@ -141,7 +141,7 @@ pub fn Executor.fire_due_timers(self) {
 
 // Drive the scheduler until both the ready-queue and the timer set are empty.
 /// Drive the scheduler until both the ready-queue and the timer set are empty.
-pub fn Executor.run(self) {
+pub fn AsyncExecutor.run(self) {
   while self.ready.len() > 0 || self.timers.len() > 0 {
     // Drain every currently-ready task (tasks may enqueue more as they run).
     while self.ready.len() > 0 {
@@ -156,14 +156,14 @@ pub fn Executor.run(self) {
 
 // Spawn a task then drive to completion.
 /// Spawn a task then drive to completion.
-pub fn Executor.block_on(self, task: fn()) {
+pub fn AsyncExecutor.block_on(self, task: fn()) {
   self.spawn(task);
   self.run();
 }
 
 // === Global executor ===
 // The process-wide cooperative scheduler used by the free functions below.
-var _exec: Executor = Executor.new();
+var _exec: AsyncExecutor = AsyncExecutor.new();
 
 // Make progress on the global executor: run one ready task, else fire timers.
 // Returns false only when the executor is completely idle.
@@ -341,23 +341,23 @@ pub fn async_spawn_delayed(ms: Int, f: fn()) {
   _exec.at(_now() + ms, f);
 }
 
-// -- Executor Inspection & Control ----------------------------------
+// -- AsyncExecutor Inspection & Control ----------------------------------
 
 /// Runs one step of the given executor. Returns `true` if a task was run.
 /// Complexity: O(1). Thread-safe if executor is not shared.
-pub fn async_step_once(exec: &mut Executor) -> Bool {
+pub fn async_step_once(exec: &mut AsyncExecutor) -> Bool {
   return exec.step();
 }
 
 /// Returns `true` if the executor has pending tasks or timers.
 /// Complexity: O(1). Thread-safe: reads immutable data.
-pub fn async_has_pending(exec: &Executor) -> Bool {
+pub fn async_has_pending(exec: &AsyncExecutor) -> Bool {
   return exec.ready.len() > 0 || exec.timers.len() > 0;
 }
 
 /// Drains all ready tasks from the executor without advancing timers.
 /// Complexity: O(ready_queue_size).
-pub fn async_run_until_idle(exec: &mut Executor) {
+pub fn async_run_until_idle(exec: &mut AsyncExecutor) {
   while exec.ready.len() > 0 {
     exec.step();
   };
@@ -365,6 +365,6 @@ pub fn async_run_until_idle(exec: &mut Executor) {
 
 /// Returns the number of pending timers in the executor.
 /// Complexity: O(1). Thread-safe: reads immutable data.
-pub fn async_timer_count(exec: &Executor) -> Int {
+pub fn async_timer_count(exec: &AsyncExecutor) -> Int {
   return exec.timers.len();
 }

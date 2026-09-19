@@ -3,11 +3,10 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Returns 0 on success; prints the failing tag on failure. Checks are split
 // across small helper functions to avoid whole-function compiler miscompiles.
-// NOTE: geometry_3d.Sphere/Plane/Box cannot be constructed smoke-side because
-// geom.xi's Sphere/Plane (and core's generic Box) shadow those names through
-// the transitive xiom.geom import (compiler type-identity bug) - the
-// sphere/plane/box query functions are therefore verified indirectly through
-// the primitive types that are constructible.
+// The former same-leaf shadowing of geometry_3d.Sphere/Plane by geom.xi's
+// types (R44) is fixed: geometry_3d now declares Sphere3d/Plane3d and this
+// smoke constructs them directly. core's generic Box still shadows any
+// geometry_3d Box through the transitive import, so box queries stay indirect.
 use xiom.geom.geometry_3d;
 use xiom.geom.vec;
 use xiom.io;
@@ -79,6 +78,27 @@ fn chk_hull() -> Int {
   return 0;
 }
 
+fn chk_sphere_plane() -> Int {
+  var s = Sphere3d{ center: p3(0.0, 0.0, 0.0); radius: 2.0; };
+  if !near(geometry_3d.point_sphere_distance(p3(3.0, 0.0, 0.0), s), 1.0) { io.println("s1"); return 1; }
+  var s2 = Sphere3d{ center: p3(4.0, 0.0, 0.0); radius: 3.0; };
+  if !geometry_3d.sphere_sphere_intersection(s, s2) { io.println("s2"); return 2; }
+  var s3 = Sphere3d{ center: p3(9.0, 0.0, 0.0); radius: 1.0; };
+  if geometry_3d.sphere_sphere_intersection(s, s3) { io.println("s3"); return 3; }
+  var pl = Plane3d{ normal: vec.vec3_new(0.0, 0.0, 1.0); d: 0.0; };
+  if !near(geometry_3d.point_plane_distance(p3(0.0, 0.0, 5.0), pl), 5.0) { io.println("p1"); return 4; }
+  var ray = Ray3{ origin: p3(0.0, 0.0, 5.0); dir: vec.vec3_new(0.0, 0.0, -1.0); };
+  match geometry_3d.ray_plane_intersection(ray, pl) {
+    Some(t) => { if !near(t, 5.0) { io.println("p2"); return 5; } },
+    None => { io.println("p3"); return 6; },
+  };
+  match geometry_3d.ray_sphere_intersection(ray, s) {
+    Some(t) => { if !near(t, 3.0) { io.println("s4"); return 7; } },
+    None => { io.println("s5"); return 8; },
+  };
+  return 0;
+}
+
 fn main() -> Int {
   var r = chk_distances();
   if r != 0 { return r; }
@@ -88,6 +108,8 @@ fn main() -> Int {
   if r != 0 { return r + 40; }
   r = chk_hull();
   if r != 0 { return r + 60; }
+  r = chk_sphere_plane();
+  if r != 0 { return r + 80; }
   io.println("OK");
   return 0;
 }

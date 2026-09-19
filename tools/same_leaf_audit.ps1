@@ -20,6 +20,25 @@ param(
 if ($Root -eq "") { $Root = Join-Path (Split-Path -Parent $PSScriptRoot) "xiom" }
 if (-not (Test-Path -LiteralPath $Root)) { Write-Output ("ERROR: root not found: " + $Root); exit 2 }
 
+# Split a struct/enum body into fields/variants at top level: newlines and
+# semicolons always separate; commas separate only outside ()/[] so generic
+# and tuple types like Vec[(Int, Int)] stay one item. Fixes the former
+# one-line-body parse gap (inline `pub type X = { a: Int; b: Int; }` used to
+# count as a single field and produced false conflicts).
+function Split-BodyItems([string]$body) {
+  $items = @(); $cur = ""; $depth = 0
+  foreach ($ch in $body.ToCharArray()) {
+    if ($ch -eq '(' -or $ch -eq '[') { $depth++ }
+    elseif (($ch -eq ')' -or $ch -eq ']') -and $depth -gt 0) { $depth-- }
+    if ($ch -eq "`n" -or $ch -eq ';' -or ($ch -eq ',' -and $depth -eq 0)) {
+      if ($cur.Trim() -ne '') { $items += $cur.Trim() }
+      $cur = ""
+    } else { $cur += $ch }
+  }
+  if ($cur.Trim() -ne '') { $items += $cur.Trim() }
+  return $items
+}
+
 $decls = @()
 foreach ($f in (Get-ChildItem -Path $Root -Filter *.xi -Recurse | Sort-Object FullName)) {
   $text = Get-Content -Raw -LiteralPath $f.FullName
@@ -27,8 +46,8 @@ foreach ($f in (Get-ChildItem -Path $Root -Filter *.xi -Recurse | Sort-Object Fu
   $rel = $f.FullName.Substring($Root.Length).TrimStart('\', '/')
   foreach ($m in [regex]::Matches($text, '(?s)pub type (\w+) = (enum )?\{([^{}]*)\}')) {
     $fields = @()
-    foreach ($line in ($m.Groups[3].Value -split "`n")) {
-      $t = ($line -replace '//.*$', '').Trim()
+    foreach ($t in (Split-BodyItems $m.Groups[3].Value)) {
+      $t = ($t -replace '//.*$', '').Trim()
       if ($t -ne '' -and $t -notmatch '^derive') { $fields += $t }
     }
     $canon = ((($fields -join '|') -replace '\s+', ' ') -replace '[\s,|]+$', '')

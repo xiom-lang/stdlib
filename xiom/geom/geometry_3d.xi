@@ -35,13 +35,13 @@ pub type Ray3 = { origin: Point3; dir: Vec3; }
 /// Segment between two points.
 pub type Segment3 = { a: Point3; b: Point3; }
 
-// Plane normal . p = d.
-/// Plane normal . p = d.
-pub type Plane = { normal: Vec3; d: Float64; }
+// Plane3d normal . p = d.
+/// Plane3d normal . p = d.
+pub type Plane3d = { normal: Vec3; d: Float64; }
 
-// Sphere with center and radius.
-/// Sphere with center and radius.
-pub type Sphere = { center: Point3; radius: Float64; }
+// Sphere3d with center and radius.
+/// Sphere3d with center and radius.
+pub type Sphere3d = { center: Point3; radius: Float64; }
 
 // Capsule: segment (a, b) with radius.
 /// Capsule: segment (a, b) with radius.
@@ -86,7 +86,7 @@ pub fn point_distance(a: Point3, b: Point3) -> Float64 {
 
 // Distance from p to the sphere surface (0 when p is inside). O(1).
 /// Distance from p to the sphere surface (0 when p is inside). O(1).
-pub fn point_sphere_distance(p: Point3, s: Sphere) -> Float64 {
+pub fn point_sphere_distance(p: Point3, s: Sphere3d) -> Float64 {
   var d = point_distance(p, s.center) - s.radius;
   if d < 0.0 { d = 0.0; }
   return d;
@@ -94,7 +94,7 @@ pub fn point_sphere_distance(p: Point3, s: Sphere) -> Float64 {
 
 // Signed distance from p to the plane (positive on the normal side). O(1).
 /// Signed distance from p to the plane (positive on the normal side). O(1).
-pub fn point_plane_distance(p: Point3, pl: Plane) -> Float64 {
+pub fn point_plane_distance(p: Point3, pl: Plane3d) -> Float64 {
   var len = geom.vec3_length(pl.normal);
   if len == 0.0 { return 0.0; }
   var dot = geom.vec3_dot(pl.normal, Vec3{ x: p.x; y: p.y; z: p.z; });
@@ -103,7 +103,7 @@ pub fn point_plane_distance(p: Point3, pl: Plane) -> Float64 {
 
 // Absolute distance from p to the plane. Alias of point_plane_distance. O(1).
 /// Absolute distance from p to the plane. Alias of point_plane_distance. O(1).
-pub fn plane_point_distance(pl: Plane, p: Point3) -> Float64 {
+pub fn plane_point_distance(pl: Plane3d, p: Point3) -> Float64 {
   var d = point_plane_distance(p, pl);
   if d < 0.0 { d = -d; }
   return d;
@@ -140,7 +140,7 @@ pub fn segment_point_distance(s: Segment3, p: Point3) -> Float64 {
 // behind the origin. O(1).
 /// Ray-plane intersection: parameter t along the ray; None when parallel or
 /// behind the origin. O(1).
-pub fn ray_plane_intersection(r: Ray3, pl: Plane) -> Option[Float64] {
+pub fn ray_plane_intersection(r: Ray3, pl: Plane3d) -> Option[Float64] {
   var denom = geom.vec3_dot(r.dir, pl.normal);
   if math.abs_float(denom) < 0.000000000001 {
     return None;
@@ -182,7 +182,7 @@ pub fn ray_triangle_intersection(r: Ray3, t: Triangle3) -> Option[Float64] {
 
 // Ray-sphere intersection: nearest positive t; None on miss. O(1).
 /// Ray-sphere intersection: nearest positive t; None on miss. O(1).
-pub fn ray_sphere_intersection(r: Ray3, s: Sphere) -> Option[Float64] {
+pub fn ray_sphere_intersection(r: Ray3, s: Sphere3d) -> Option[Float64] {
   var oc = Vec3{
     x: r.origin.x - s.center.x;
     y: r.origin.y - s.center.y;
@@ -259,7 +259,7 @@ pub fn ray_box_intersection(r: Ray3, b: Box) -> Option[Float64] {
 
 // Line of intersection of two planes; None when parallel. O(1).
 /// Line of intersection of two planes; None when parallel. O(1).
-pub fn plane_plane_intersection(p1: Plane, p2: Plane) -> Option[Line3] {
+pub fn plane_plane_intersection(p1: Plane3d, p2: Plane3d) -> Option[Line3] {
   var dir = geom.vec3_cross(p1.normal, p2.normal);
   var dl = geom.vec3_length(dir);
   if dl < 0.000000000001 {
@@ -286,7 +286,7 @@ pub fn plane_plane_intersection(p1: Plane, p2: Plane) -> Option[Line3] {
 
 // True if the two spheres overlap or touch. O(1).
 /// True if the two spheres overlap or touch. O(1).
-pub fn sphere_sphere_intersection(a: Sphere, b: Sphere) -> Bool {
+pub fn sphere_sphere_intersection(a: Sphere3d, b: Sphere3d) -> Bool {
   var dx = a.center.x - b.center.x;
   var dy = a.center.y - b.center.y;
   var dz = a.center.z - b.center.z;
@@ -331,7 +331,7 @@ pub fn closest_point_on_segment(s: Segment3, p: Point3) -> Point3 {
 
 // Orthogonal projection of p onto the plane. O(1).
 /// Orthogonal projection of p onto the plane. O(1).
-pub fn closest_point_on_plane(pl: Plane, p: Point3) -> Point3 {
+pub fn closest_point_on_plane(pl: Plane3d, p: Point3) -> Point3 {
   var len = geom.vec3_length(pl.normal);
   if len == 0.0 { return p; }
   var dot = geom.vec3_dot(pl.normal, Vec3{ x: p.x; y: p.y; z: p.z; });

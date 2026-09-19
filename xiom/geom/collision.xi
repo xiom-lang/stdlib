@@ -2,7 +2,7 @@
 // Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Home: geom.xi - this sublib splits the intersection/containment domain; the
-// canonical Aabb, Sphere, Ray types live in geom.xi.
+// canonical CollisionAabb, CollisionSphere, CollisionRay types live in geom.xi.
 
 module xiom.geom.collision
 
@@ -22,27 +22,27 @@ use xiom.math;
 
 // Axis-aligned bounding box defined by min and max corners.
 /// Axis-aligned bounding box defined by min and max corners.
-pub type Aabb = { min: Vec[Float64]; max: Vec[Float64]; }
+pub type CollisionAabb = { min: Vec[Float64]; max: Vec[Float64]; }
 
-// Sphere primitive defined by centre point and radius.
-/// Sphere primitive defined by centre point and radius.
-pub type Sphere = { center: Vec[Float64]; radius: Float64; }
+// CollisionSphere primitive defined by centre point and radius.
+/// CollisionSphere primitive defined by centre point and radius.
+pub type CollisionSphere = { center: Vec[Float64]; radius: Float64; }
 
-// Ray primitive: infinite line from origin along dir.
-/// Ray primitive: infinite line from origin along dir.
-pub type Ray = { origin: Vec[Float64]; dir: Vec[Float64]; }
+// CollisionRay primitive: infinite line from origin along dir.
+/// CollisionRay primitive: infinite line from origin along dir.
+pub type CollisionRay = { origin: Vec[Float64]; dir: Vec[Float64]; }
 
 // Construct an AABB from min and max corners (3 components each). O(1).
 /// Construct an AABB from min and max corners (3 components each). O(1).
-pub fn aabb_new(min: &Vec[Float64], max: &Vec[Float64]) -> Aabb {
-  return Aabb{ min: min; max: max; };
+pub fn aabb_new(min: &Vec[Float64], max: &Vec[Float64]) -> CollisionAabb {
+  return CollisionAabb{ min: min; max: max; };
 }
 
 // True iff p lies inside the AABB (inclusive). A point with fewer than 3
 // components is not inside. O(1).
 /// True iff p lies inside the AABB (inclusive). A point with fewer than 3
 /// components is not inside. O(1).
-pub fn aabb_contains(a: Aabb, p: &Vec[Float64]) -> Bool {
+pub fn aabb_contains(a: CollisionAabb, p: &Vec[Float64]) -> Bool {
   if p.len() < 3 { return false; }
   if a.min.len() < 3 || a.max.len() < 3 { return false; }
   return p[0] >= a.min[0] && p[0] <= a.max[0]
@@ -52,7 +52,7 @@ pub fn aabb_contains(a: Aabb, p: &Vec[Float64]) -> Bool {
 
 // True iff the two AABBs overlap or touch. O(1).
 /// True iff the two AABBs overlap or touch. O(1).
-pub fn aabb_intersects(a: Aabb, b: Aabb) -> Bool {
+pub fn aabb_intersects(a: CollisionAabb, b: CollisionAabb) -> Bool {
   if a.min.len() < 3 || a.max.len() < 3 { return false; }
   if b.min.len() < 3 || b.max.len() < 3 { return false; }
   if a.max[0] < b.min[0] || a.min[0] > b.max[0] { return false; }
@@ -63,13 +63,13 @@ pub fn aabb_intersects(a: Aabb, b: Aabb) -> Bool {
 
 // Construct a sphere from center and radius. O(1).
 /// Construct a sphere from center and radius. O(1).
-pub fn sphere_new(center: &Vec[Float64], radius: Float64) -> Sphere {
-  return Sphere{ center: center; radius: radius; };
+pub fn sphere_new(center: &Vec[Float64], radius: Float64) -> CollisionSphere {
+  return CollisionSphere{ center: center; radius: radius; };
 }
 
 // True iff p lies inside the sphere (inclusive). O(1).
 /// True iff p lies inside the sphere (inclusive). O(1).
-pub fn sphere_contains(s: Sphere, p: &Vec[Float64]) -> Bool {
+pub fn sphere_contains(s: CollisionSphere, p: &Vec[Float64]) -> Bool {
   if p.len() < 3 || s.center.len() < 3 { return false; }
   var dx = p[0] - s.center[0];
   var dy = p[1] - s.center[1];
@@ -79,7 +79,7 @@ pub fn sphere_contains(s: Sphere, p: &Vec[Float64]) -> Bool {
 
 // True iff the two spheres overlap or touch. O(1).
 /// True iff the two spheres overlap or touch. O(1).
-pub fn sphere_intersects(a: Sphere, b: Sphere) -> Bool {
+pub fn sphere_intersects(a: CollisionSphere, b: CollisionSphere) -> Bool {
   if a.center.len() < 3 || b.center.len() < 3 { return false; }
   var dx = a.center[0] - b.center[0];
   var dy = a.center[1] - b.center[1];
@@ -91,13 +91,13 @@ pub fn sphere_intersects(a: Sphere, b: Sphere) -> Bool {
 
 // Construct a ray from origin and direction. O(1).
 /// Construct a ray from origin and direction. O(1).
-pub fn ray_new(origin: &Vec[Float64], dir: &Vec[Float64]) -> Ray {
-  return Ray{ origin: origin; dir: dir; };
+pub fn ray_new(origin: &Vec[Float64], dir: &Vec[Float64]) -> CollisionRay {
+  return CollisionRay{ origin: origin; dir: dir; };
 }
 
-// Ray-sphere intersection: nearest positive t; None on miss. O(1).
-/// Ray-sphere intersection: nearest positive t; None on miss. O(1).
-pub fn ray_sphere_intersect(r: Ray, s: Sphere) -> Option[Float64] {
+// CollisionRay-sphere intersection: nearest positive t; None on miss. O(1).
+/// CollisionRay-sphere intersection: nearest positive t; None on miss. O(1).
+pub fn ray_sphere_intersect(r: CollisionRay, s: CollisionSphere) -> Option[Float64] {
   if r.origin.len() < 3 || r.dir.len() < 3 || s.center.len() < 3 {
     return None;
   }
@@ -121,11 +121,11 @@ pub fn ray_sphere_intersect(r: Ray, s: Sphere) -> Option[Float64] {
   return None;
 }
 
-// Ray-AABB intersection via the slab method: nearest positive t; None on miss.
+// CollisionRay-AABB intersection via the slab method: nearest positive t; None on miss.
 // O(1).
-/// Ray-AABB intersection via the slab method: nearest positive t; None on miss.
+/// CollisionRay-AABB intersection via the slab method: nearest positive t; None on miss.
 /// O(1).
-pub fn ray_aabb_intersect(r: Ray, a: Aabb) -> Option[Float64] {
+pub fn ray_aabb_intersect(r: CollisionRay, a: CollisionAabb) -> Option[Float64] {
   if r.origin.len() < 3 || r.dir.len() < 3 { return None; }
   if a.min.len() < 3 || a.max.len() < 3 { return None; }
   var tmin = 0.0;
@@ -178,11 +178,11 @@ pub fn ray_aabb_intersect(r: Ray, a: Aabb) -> Option[Float64] {
   return Some(tmin);
 }
 
-// Ray-plane intersection against the plane (n, d) given as the 4-element
+// CollisionRay-plane intersection against the plane (n, d) given as the 4-element
 // vector [nx, ny, nz, d] with n.p = d. None when parallel or behind. O(1).
-/// Ray-plane intersection against the plane (n, d) given as the 4-element
+/// CollisionRay-plane intersection against the plane (n, d) given as the 4-element
 /// vector [nx, ny, nz, d] with n.p = d. None when parallel or behind. O(1).
-pub fn ray_plane_intersect(r: Ray, plane: &Vec[Float64]) -> Option[Float64] {
+pub fn ray_plane_intersect(r: CollisionRay, plane: &Vec[Float64]) -> Option[Float64] {
   if r.origin.len() < 3 || r.dir.len() < 3 { return None; }
   if plane.len() < 4 { return None; }
   var nx = plane[0];

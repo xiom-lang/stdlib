@@ -235,26 +235,26 @@ pub fn int_map_iter(m: &IntMap) -> Vec[Int]
 }
 
 // ============================================================================
-// StringMap (Str keys -> Int values, insertion-ordered)
+// OrderedStringMap (Str keys -> Int values, insertion-ordered)
 // ============================================================================
 
-pub type StringMap = {
+pub type OrderedStringMap = {
   keys: Vec[Str];
   vals: Vec[Int];
 }
 
 /// Create a Str-keyed map.
 /// O(1).
-pub fn string_map_new() -> StringMap
+pub fn string_map_new() -> OrderedStringMap
   ensures: result.keys.len() == 0
 {
-  return StringMap{ keys: Vec[Str].new(); vals: Vec[Int].new(); };
+  return OrderedStringMap{ keys: Vec[Str].new(); vals: Vec[Int].new(); };
 }
 
 /// Insert or overwrite `key` -> `value`. A re-insert of an existing key
 /// updates its value without changing its insertion position.
 /// O(n).
-pub fn string_map_put(m: &mut StringMap, key: Str, value: Int) {
+pub fn string_map_put(m: &mut OrderedStringMap, key: Str, value: Int) {
   var i = 0;
   while i < m.keys.len() {
     var k = m.keys[i];
@@ -270,7 +270,7 @@ pub fn string_map_put(m: &mut StringMap, key: Str, value: Int) {
 
 /// Value for `key`, or None if absent.
 /// O(n).
-pub fn string_map_get(m: &StringMap, key: Str) -> Option[Int]
+pub fn string_map_get(m: &OrderedStringMap, key: Str) -> Option[Int]
   ensures: result.is_some == string_map_contains(m, key)
 {
   var i = 0;
@@ -286,7 +286,7 @@ pub fn string_map_get(m: &StringMap, key: Str) -> Option[Int]
 
 /// True if `key` is present.
 /// O(n).
-pub fn string_map_contains(m: &StringMap, key: Str) -> Bool {
+pub fn string_map_contains(m: &OrderedStringMap, key: Str) -> Bool {
   var i = 0;
   while i < m.keys.len() {
     var k = m.keys[i];
@@ -300,7 +300,7 @@ pub fn string_map_contains(m: &StringMap, key: Str) -> Bool {
 
 /// Remove `key`. Returns true if it was present.
 /// O(n).
-pub fn string_map_remove(m: &mut StringMap, key: Str) -> Bool
+pub fn string_map_remove(m: &mut OrderedStringMap, key: Str) -> Bool
   ensures: string_map_contains(m, key) == false
   ensures: result == true => string_map_size(m) == string_map_size(m)@pre - 1
   ensures: result == false => string_map_size(m) == string_map_size(m)@pre
@@ -326,7 +326,7 @@ pub fn string_map_remove(m: &mut StringMap, key: Str) -> Bool
 
 /// Number of key/value pairs.
 /// O(1).
-pub fn string_map_size(m: &StringMap) -> Int
+pub fn string_map_size(m: &OrderedStringMap) -> Int
   ensures: result >= 0
 {
   return m.keys.len();

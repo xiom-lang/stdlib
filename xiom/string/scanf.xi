@@ -19,11 +19,11 @@ use xiom.fmt;
 /// On failure `is_ok` is false, `count` is 0, the value slots are 0.0 and
 /// `remainder` carries the error message.
 ///
-/// LAYOUT NOTE: this struct is deliberately index-compatible with
-/// `xiom.fmt.FloatScan` (Bool, Int, 8x Float64, Str) because the codegen layer
-/// deduplicates same-named struct types by name; the shared layout keeps all
-/// field accesses valid. The field occupying the shared Str slot is named
-/// `remainder` here (it doubles as the error message on failure).
+/// LAYOUT NOTE (R44, 2026-09-18): this struct was formerly unified with
+/// `xiom.fmt.FloatScan` by the codegen same-name dedup, which hid a type
+/// mismatch in `str_scanf_floats`. The fmt twin is now `FormatFloatScan`
+/// and this wrapper copies every field explicitly, so the two leaves are
+/// genuinely independent (same field order/types, different leaf + names).
 pub type FloatScan = {
   is_ok: Bool;
   count: Int;
@@ -70,18 +70,29 @@ pub fn str_scanf_ints(s: Str, spec: Str) -> Result[Vec[Int], Str] {
 /// than eight float conversions, or with a non-float conversion, yield
 /// is_ok = false with `error` set.
 ///
-/// NOTE (compiler): the `remainder` slot aliases `xiom.fmt.FloatScan.error`
-/// (the structs are index-compatible and the codegen layer unifies same-named
-/// types), so on success `remainder` is the empty string and on failure it
-/// carries the error message. The unconsumed input tail is not populated; use
-/// `str_scanf` with a trailing capture to observe unconsumed input.
+/// NOTE (R44): `xiom.fmt.FloatScan` was renamed `FormatFloatScan`; this
+/// wrapper copies the fields explicitly, so `remainder` is the fmt `error`
+/// slot on failure and the empty string on success. The unconsumed input
+/// tail is not populated; use `str_scanf` with a trailing capture to observe
+/// unconsumed input.
 /// Params: s the input string; spec the scanf-style format.
 /// Returns: a FloatScan struct.
 /// Error case: parse failure, too many float conversions, non-float conversion.
 /// Complexity: O(|s| + |spec|).
 pub fn str_scanf_floats(s: Str, spec: Str) -> FloatScan {
   let r = fmt.sscanf_floats(s, spec);
-  let out = r;
-  out
+  return FloatScan{
+    is_ok: r.is_ok;
+    count: r.count;
+    v0: r.v0;
+    v1: r.v1;
+    v2: r.v2;
+    v3: r.v3;
+    v4: r.v4;
+    v5: r.v5;
+    v6: r.v6;
+    v7: r.v7;
+    remainder: r.error;
+  };
 }
 

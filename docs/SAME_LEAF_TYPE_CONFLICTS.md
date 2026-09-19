@@ -4,46 +4,39 @@ Public-type leaves are declared with **different shapes** in two or more
 stdlib modules. Codegen injects `%struct.<Leaf>` / enum tags by bare leaf, so
 different shapes under one leaf can clobber each other's fields. This is
 exactly how `net.net.HttpResponse` (2 fields) vs `net.http.HttpResponse`
-(3 fields) broke `http_parse_response`; the legacy net.net type was renamed
-`NetHttpResponse` on 2026-09-17, the priority-queue `PHeap` twin was
-renamed `IntMaxHeap`, the dependency-free `SpscRing` twin was renamed
-`RingBuffer`, and the flat-arena `IntervalTree` twin was renamed
-`IntervalSet` on 2026-09-18, leaving **13 conflicts**. The generated
-audit (`docs/baselines/same-leaf-conflicts.md`) is the count of record.
+(3 fields) broke `http_parse_response`.
+
+**STATUS 2026-09-18: 0 conflicts.** All 16 original groups are resolved
+stdlib-side (renames in `tools/same_leaf_audit.ps1` batches 1-5) or
+reclassified by the audit parser fix for inline bodies:
+
+| Leaf | Resolution |
+|---|---|
+| `HttpResponse` | `net.net` renamed `NetHttpResponse` (2026-09-17) |
+| `PHeap` | `collect/priority.xi` renamed `IntMaxHeap` |
+| `SpscRing` | `collect/ring.xi` renamed `RingBuffer` |
+| `IntervalTree` | `collect/range.xi` renamed `IntervalSet` |
+| `UnionFind` | `collect/graph.xi` renamed `GraphUnionFind` |
+| `IntMap` | `collect/map.xi` renamed `HashIntMap` |
+| `StringMap` | `collect/intmap.xi` renamed `OrderedStringMap` |
+| `Graph` | `math/graph_theory.xi` renamed `WeightedGraph` |
+| `Executor` | `async/async.xi` renamed `AsyncExecutor` |
+| `Future` | `async/timer.xi` renamed `TimerFuture` |
+| `FloatScan` | `format/fmt.xi` renamed `FormatFloatScan` |
+| `Aabb`/`Sphere`/`Ray` | `geom/collision.xi` renamed `CollisionAabb`/`CollisionSphere`/`CollisionRay`; `geom/geom.xi` keeps the Vec3 core types |
+| `Sphere`/`Plane` | `geom/geometry_3d.xi` renamed `Sphere3d`/`Plane3d` (smoke_geom_3d.xi now constructs them directly instead of working around the shadowing) |
+| `Regex`/`Match` | `regex/engine.xi` vs `regex/regex.xi` were shape-identical; the old audit counted the one-line body as a single field. Parser fixed: `Split-BodyItems` splits on `;`/newline and top-level commas with bracket depth tracking |
 
 - Generated evidence: `docs/baselines/same-leaf-conflicts.md`
-  (reproduce with `tools/same_leaf_audit.ps1`).
+  (reproduce with `tools/same_leaf_audit.ps1`; conflicts list is now empty).
 - Compiler-side context and the failed wholesale-qualification experiment:
   `docs/COMPILER_BUGS.md` R44 in the compiler repo.
+- The remaining multi-declaration leaves are **shape-identical** after syntax
+  normalization (`Vec<...>` vs `Vec[...]` etc.) -- benign for codegen, but
+  still dedup candidates (e.g. `JsonValue` is the same enum in
+  `serialize/json.xi` and `serialize/serialize.xi`).
 
-## Groups
-
-| Leaf | Modules (declaring) | Suggested disposition |
-|---|---|---|
-| `Executor` | `async/async.xi`, `async/executor.xi` | dedup executor family (pick one owner) |
-| `Future` | `async/io.xi`, `async/timer.xi` | keep both; rename one leaf (domain-specific) |
-| `Graph` | `collect/graph.xi`, `math/graph_theory.xi` | dedup graph family |
-| `UnionFind` | `collect/graph.xi`, `collect/unionfind.xi` | dedup (one owner) |
-| `PHeap` | `collect/priority.xi`, `collect/heap.xi` | **RESOLVED 2026-09-18:** `priority.xi` renamed its type `IntMaxHeap` (binary max-heap queue); `heap.xi` keeps the production pairing-heap `PHeap` that `bheap.xi`/`pairingheap.xi` delegate to |
-| `IntervalTree` | `collect/range.xi`, `collect/interval.xi` | **RESOLVED 2026-09-18:** `range.xi` renamed its flat-arena store `IntervalSet`; `interval.xi` keeps the canonical `IntervalTree` |
-| `IntMap` | `collect/map.xi`, `collect/intmap.xi` | dedup map family |
-| `StringMap` | `collect/stringmap.xi`, `collect/intmap.xi` | dedup map family |
-| `SpscRing` | `collect/ring.xi`, `collect/queue.xi` | **RESOLVED 2026-09-18:** `ring.xi` renamed its "Depends on: none" variant `RingBuffer`; `queue.xi` keeps the reference atomic-counter `SpscRing` |
-| `FloatScan` | `format/fmt.xi`, `string/scanf.xi` | rename one leaf (scanner twins) |
-| `Aabb` | `geom/collision.xi`, `geom/geom.xi`, `geom/geometry_3d.xi` | dedup into the geom core |
-| `Sphere` | `geom/collision.xi`, `geom/geom.xi`, `geom/geometry_3d.xi` | dedup into the geom core |
-| `Ray` | `geom/collision.xi`, `geom/geom.xi`, `geom/geometry_3d.xi` | dedup into the geom core |
-| `Plane` | `geom/geom.xi`, `geom/geometry_3d.xi` | dedup into the geom core |
-| `Regex` | `regex/engine.xi`, `regex/regex.xi` | dedup regex family |
-| `Match` | `regex/engine.xi`, `regex/regex.xi` | dedup regex family |
-
-24 further multi-declaration leaves are **shape-identical** after syntax
-normalization (`Vec<...>` vs `Vec[...]` etc.) -- benign for codegen, but
-still dedup candidates (e.g. `JsonValue` is the same enum in
-`serialize/json.xi` and `serialize/serialize.xi`). The audit separates the
-two sets: run `tools/same_leaf_audit.ps1`.
-
-## Rules for the slice
+## Rules for the slice (kept for future regressions)
 
 1. **Do not blind-rename**: some leaves are semantically distinct types that
    happen to share a name; each group's owner module decides rename vs merge.
