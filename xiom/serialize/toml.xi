@@ -30,6 +30,7 @@ pub type TomlValue = enum {
   TFloatArray(Vec[Float64]),
 }
 
+/// Parsed TOML table (ordered key -> value map).
 pub type TomlTable = {
   keys: Vec[Str];
   values: Vec[TomlValue];
@@ -368,6 +369,7 @@ pub fn toml_parse(text: Str) -> Result[TomlTable, Str] {
   return Ok(t);
 }
 
+/// Value for `key`, or None when missing.
 pub fn toml_get(t: &TomlTable, key: Str) -> Option[TomlValue] {
   let idx = _table_find(t, key);
   if idx < 0 {
@@ -376,10 +378,12 @@ pub fn toml_get(t: &TomlTable, key: Str) -> Option[TomlValue] {
   return Some(t.values[idx]);
 }
 
+/// True when `key` exists.
 pub fn toml_has(t: &TomlTable, key: Str) -> Bool {
   return _table_find(t, key) >= 0;
 }
 
+/// String value for `key`, or None when missing or of another type.
 pub fn toml_get_str(t: &TomlTable, key: Str) -> Option[Str] {
   match toml_get(t, key) {
     Some(v) => {
@@ -392,6 +396,7 @@ pub fn toml_get_str(t: &TomlTable, key: Str) -> Option[Str] {
   }
 }
 
+/// Int value for `key`, or None when missing or of another type.
 pub fn toml_get_int(t: &TomlTable, key: Str) -> Option[Int] {
   match toml_get(t, key) {
     Some(v) => {
@@ -404,6 +409,7 @@ pub fn toml_get_int(t: &TomlTable, key: Str) -> Option[Int] {
   }
 }
 
+/// Float value for `key`, or None when missing or of another type.
 pub fn toml_get_float(t: &TomlTable, key: Str) -> Option[Float64] {
   match toml_get(t, key) {
     Some(v) => {
@@ -416,6 +422,7 @@ pub fn toml_get_float(t: &TomlTable, key: Str) -> Option[Float64] {
   }
 }
 
+/// Bool value for `key`, or None when missing or of another type.
 pub fn toml_get_bool(t: &TomlTable, key: Str) -> Option[Bool] {
   match toml_get(t, key) {
     Some(v) => {
@@ -428,6 +435,7 @@ pub fn toml_get_bool(t: &TomlTable, key: Str) -> Option[Bool] {
   }
 }
 
+/// String-array value for `key`, or None when missing or of another type.
 pub fn toml_get_str_array(t: &TomlTable, key: Str) -> Option[Vec[Str]] {
   match toml_get(t, key) {
     Some(v) => {
@@ -440,6 +448,7 @@ pub fn toml_get_str_array(t: &TomlTable, key: Str) -> Option[Vec[Str]] {
   }
 }
 
+/// Int-array value for `key`, or None when missing or of another type.
 pub fn toml_get_int_array(t: &TomlTable, key: Str) -> Option[Vec[Int]] {
   match toml_get(t, key) {
     Some(v) => {

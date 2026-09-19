@@ -10,8 +10,11 @@ use xiom.regex.pcre_lite;
 
 use xiom.string;
 
+/// Compiled regular expression (wraps the pattern string).
 pub type Regex = { pattern: Str; compiled: Int; } derive[Clone]
+/// A matched span of the input.
 pub type Match = { start: Int; end: Int; text: Str; } derive[Eq, Clone]
+/// Capture groups of the first match; None for unmatched groups.
 pub type Captures = { groups: Vec[Option[Match]]; } derive[Clone]
 
 // -- Simplified regex engine --
@@ -263,6 +266,7 @@ fn find_first_match(pattern: Str, text: Str) -> Option[Match] {
   None
 }
 
+/// Compile a pattern; Err with a message on syntax errors.
 pub fn Regex.new(pattern: Str) -> Result<Regex, Str> {
   if !is_valid_regex(pattern) {
     return Err("invalid regex pattern");
@@ -270,16 +274,19 @@ pub fn Regex.new(pattern: Str) -> Result<Regex, Str> {
   Ok(Regex{ pattern: pattern; compiled: 0; })
 }
 
+/// True when the pattern matches anywhere in `text`.
 pub fn Regex.is_match(self, text: Str) -> Bool {
   find_first_match(self.pattern, text).is_some
 }
 
+/// First match in `text`, or None.
 pub fn Regex.find(self, text: Str) -> Option[Match]
   ensures: result.is_some => result.value.start >= 0 && result.value.end >= result.value.start
 {
   find_first_match(self.pattern, text)
 }
 
+/// All non-overlapping matches in `text`.
 pub fn Regex.find_all(self, text: Str) -> Vec[Match] {
   var matches = Vec[Match].new();
   let pat = self.pattern;
@@ -317,6 +324,7 @@ pub fn Regex.find_all(self, text: Str) -> Vec[Match] {
   matches
 }
 
+/// Capture groups of the first match, or None.
 pub fn Regex.captures(self, text: Str) -> Option<Captures> {
   let m = find_first_match(self.pattern, text);
   match m {
@@ -329,6 +337,7 @@ pub fn Regex.captures(self, text: Str) -> Option<Captures> {
   }
 }
 
+/// Replace the first match with `replacement`.
 pub fn Regex.replace(self, text: Str, replacement: Str) -> Str {
   let m = find_first_match(self.pattern, text);
   match m {
@@ -341,6 +350,7 @@ pub fn Regex.replace(self, text: Str, replacement: Str) -> Str {
   }
 }
 
+/// Replace all non-overlapping matches.
 pub fn Regex.replace_all(self, text: Str, replacement: Str) -> Str {
   let matches = engine.regex_find_all(self, text);
   if matches.len() == 0 {
@@ -358,6 +368,7 @@ pub fn Regex.replace_all(self, text: Str, replacement: Str) -> Str {
   string.str_concat(result, string.str_slice(text, pos, text.len()))
 }
 
+/// Split `text` on matches of the pattern.
 pub fn Regex.split(self, text: Str) -> Vec[Str] {
   var result = Vec[Str].new();
   let pat = self.pattern;
@@ -393,6 +404,7 @@ pub fn Regex.split(self, text: Str) -> Vec[Str] {
   result
 }
 
+/// Number of non-overlapping matches.
 pub fn Regex.match_count(self, text: Str) -> Int {
   // Was: find_all(self.pattern, text).len() -- the legacy local matcher,
   // which disagrees with Regex.find_all (engine path): 2 vs 3 on
@@ -400,6 +412,7 @@ pub fn Regex.match_count(self, text: Str) -> Int {
   return self.find_all(text).len();
 }
 
+/// Group at `index` (0 = whole match), or None when absent.
 pub fn Captures.get(self, index: Int) -> Option[Match] {
   if index < 0 || index >= self.groups.len() {
     return None;
@@ -407,14 +420,17 @@ pub fn Captures.get(self, index: Int) -> Option[Match] {
   self.groups[index]
 }
 
+/// Named group by name, or None when absent.
 pub fn Captures.get_named(self, name: Str) -> Option[Match] {
   None
 }
 
+/// Number of capture groups including the whole match.
 pub fn Captures.len(self) -> Int {
   self.groups.len()
 }
 
+/// Escape regex metacharacters so the result matches literally.
 pub fn regex_escape(pattern: Str) -> Str {
   var result = "";
   var i: Int = 0;
@@ -432,6 +448,7 @@ pub fn regex_escape(pattern: Str) -> Str {
   result
 }
 
+/// True when the pattern compiles.
 pub fn is_valid_regex(pattern: Str) -> Bool {
   var i: Int = 0;
   var bracket_depth: Int = 0;

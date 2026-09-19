@@ -14,18 +14,22 @@ use xiom.ptr;
 /// Cell -- simple interior mutability via unsafe pointer casts
 pub type Cell[T] = { value: T; }
 
+/// Create a new cell holding `value`.
 pub fn Cell.new[T](value: T) -> Cell[T] {
   return Cell[T]{ value: value };
 }
 
+/// Copy the current value out.
 pub fn Cell.get[T](self) -> T {
   return value;
 }
 
+/// Replace the stored value.
 pub fn Cell.set[T](&mut self, value: T) {
     self.value = value;
 }
 
+/// Replace the stored value, returning the previous one.
 pub fn Cell.replace[T](&mut self, value: T) -> T
   ensures: result == value@pre
 {
@@ -34,6 +38,7 @@ pub fn Cell.replace[T](&mut self, value: T) -> T
   return old;
 }
 
+/// Swap the values of two cells.
 pub fn Cell.swap[T](&mut self, other: &mut Cell[T])
   ensures: value == other.value@pre
 {
@@ -61,12 +66,14 @@ pub type Ref[T] = { ptr: *mut RefCell[T]; }
 /// 6D.1: RefMut holds a raw pointer to the ORIGINAL RefCell.
 pub type RefMut[T] = { ptr: *mut RefCell[T]; }
 
+/// Create a new RefCell holding `value`.
 pub fn RefCell.new[T](value: T) -> RefCell[T]
   ensures: borrows == 0
 {
   return RefCell[T]{ value: value; borrows: 0 };
 }
 
+/// Shared borrow; aborts when a mutable borrow is active.
 pub fn RefCell.borrow[T](&mut self) -> Ref[T]
   requires: borrows >= 0
 {
@@ -80,6 +87,7 @@ pub fn RefCell.borrow[T](&mut self) -> Ref[T]
   }
 }
 
+/// Exclusive borrow; aborts when any borrow is active.
 pub fn RefCell.borrow_mut[T](&mut self) -> RefMut[T]
   requires: borrows == 0
 {
@@ -93,6 +101,7 @@ pub fn RefCell.borrow_mut[T](&mut self) -> RefMut[T]
   }
 }
 
+/// Shared borrow, or None when a mutable borrow is active.
 pub fn RefCell.try_borrow[T](&mut self) -> Option[Ref[T]]
   requires: true
 {
@@ -106,6 +115,7 @@ pub fn RefCell.try_borrow[T](&mut self) -> Option[Ref[T]]
   }
 }
 
+/// Exclusive borrow, or None when any borrow is active.
 pub fn RefCell.try_borrow_mut[T](&mut self) -> Option[RefMut[T]]
   requires: true
 {
@@ -119,6 +129,7 @@ pub fn RefCell.try_borrow_mut[T](&mut self) -> Option[RefMut[T]]
   }
 }
 
+/// Replace the value, returning the previous one.
 pub fn RefCell.replace[T](&mut self, value: T) -> T
   requires: true
   ensures: result == value@pre
