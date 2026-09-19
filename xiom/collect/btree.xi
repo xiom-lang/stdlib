@@ -50,7 +50,11 @@ fn btree_new_node(t: &mut BTree, is_leaf: Int) -> Int {
 
 /// Create an empty B-tree with the given order. The root is allocated lazily
 /// on the first insert. O(1).
-pub fn btree_new(order: Int) -> BTree {
+pub fn btree_new(order: Int) -> BTree
+  ensures: result.root == -1
+  ensures: result.size == 0
+  ensures: result.mk >= 1
+{
   var ord = order;
   if ord < 2 { ord = 2; }
   return BTree{
@@ -92,7 +96,10 @@ fn btree_search(t: &BTree, key: Int) -> Int {
 }
 
 /// Value for `key`, or None when absent. O(log n).
-pub fn btree_get(t: &BTree, key: Int) -> Option[Int] {
+pub fn btree_get(t: &BTree, key: Int) -> Option[Int]
+  ensures: result is Some => btree_contains(t, key)
+  ensures: result is None => btree_contains(t, key) == false
+{
   var node = btree_search(t, key);
   if node == -1 { return None; }
   var mk = t.mk;
@@ -109,7 +116,9 @@ pub fn btree_get(t: &BTree, key: Int) -> Option[Int] {
 }
 
 /// True if `key` is present. O(log n).
-pub fn btree_contains(t: &BTree, key: Int) -> Bool {
+pub fn btree_contains(t: &BTree, key: Int) -> Bool
+  ensures: result == true => btree_size(t) >= 1
+{
   return btree_search(t, key) != -1;
 }
 
@@ -215,7 +224,9 @@ fn btree_insert_nonfull(t: &mut BTree, node: Int, key: Int, value: Int) {
 }
 
 /// Insert or update `key` -> `value`. O(log n).
-pub fn btree_insert(t: &mut BTree, key: Int, value: Int) {
+pub fn btree_insert(t: &mut BTree, key: Int, value: Int)
+  ensures: btree_contains(t, key)
+{
   if t.root == -1 {
     t.root = btree_new_node(t, 1);
   }
@@ -282,14 +293,20 @@ fn btree_rebuild_without(t: &mut BTree, key: Int) {
 
 /// Remove `key`; returns true if it was present. O(n) worst case (the tree is
 /// rebuilt so it stays perfectly balanced).
-pub fn btree_remove(t: &mut BTree, key: Int) -> Bool {
+pub fn btree_remove(t: &mut BTree, key: Int) -> Bool
+  ensures: result == true => btree_contains(t, key) == false
+  ensures: result == false => btree_contains(t, key)
+{
   if !btree_contains(t, key) { return false; }
   btree_rebuild_without(t, key);
   return true;
 }
 
 /// Smallest key, or None when the tree is empty. O(log n).
-pub fn btree_min(t: &BTree) -> Option[Int] {
+pub fn btree_min(t: &BTree) -> Option[Int]
+  ensures: result is Some => btree_size(t) > 0
+  ensures: result is None => btree_size(t) == 0
+{
   if t.size == 0 { return None; }
   var mk = t.mk;
   var cur = t.root;
@@ -301,7 +318,10 @@ pub fn btree_min(t: &BTree) -> Option[Int] {
 }
 
 /// Largest key, or None when the tree is empty. O(log n).
-pub fn btree_max(t: &BTree) -> Option[Int] {
+pub fn btree_max(t: &BTree) -> Option[Int]
+  ensures: result is Some => btree_size(t) > 0
+  ensures: result is None => btree_size(t) == 0
+{
   if t.size == 0 { return None; }
   var mk = t.mk;
   var cur = t.root;

@@ -28,7 +28,9 @@ pub type Dag = {
 
 /// Create a new empty DAG (no nodes).
 /// O(1).
-pub fn dag_new() -> Dag {
+pub fn dag_new() -> Dag
+  ensures: result.n == 0
+{
   return Dag{ n: 0; head: Vec[Int].new(); to: Vec[Int].new(); next: Vec[Int].new(); };
 }
 
@@ -45,7 +47,9 @@ pub fn dag_add_node(g: &mut Dag) -> Int
 
 /// True if the edge `from` -> `to` exists.
 /// O(degree(from)).
-pub fn dag_has_edge(g: &Dag, from: Int, to: Int) -> Bool {
+pub fn dag_has_edge(g: &Dag, from: Int, to: Int) -> Bool
+  ensures: from < 0 || from >= g.n => result == false
+{
   if from < 0 || from >= g.n {
     return false;
   }
@@ -100,7 +104,9 @@ fn _reachable(g: &Dag, src: Int, dst: Int) -> Bool {
 /// cycle (i.e. `to` can already reach `from`). True when the edge is newly
 /// added. Self loops are rejected.
 /// O(V + E) for the cycle check.
-pub fn dag_add_edge(g: &mut Dag, from: Int, to: Int) -> Bool {
+pub fn dag_add_edge(g: &mut Dag, from: Int, to: Int) -> Bool
+  ensures: result == true => dag_has_edge(g, from, to)
+{
   if from < 0 || from >= g.n || to < 0 || to >= g.n {
     return false;
   }
@@ -123,7 +129,10 @@ pub fn dag_add_edge(g: &mut Dag, from: Int, to: Int) -> Bool {
 /// All transitive predecessors of `node` (nodes u != node with a path
 /// u -> ... -> node). Order is BFS order over the reversed edges.
 /// O(V + E).
-pub fn dag_ancestors(g: &Dag, node: Int) -> Vec[Int] {
+pub fn dag_ancestors(g: &Dag, node: Int) -> Vec[Int]
+  ensures: node < 0 || node >= g.n => result.len() == 0
+  ensures: result.len() <= g.n
+{
   var out = Vec[Int].new();
   if node < 0 || node >= g.n {
     return out;
@@ -178,7 +187,10 @@ pub fn dag_ancestors(g: &Dag, node: Int) -> Vec[Int] {
 /// All transitive successors of `node` (nodes v != node with a path
 /// node -> ... -> v). Order is BFS order.
 /// O(V + E).
-pub fn dag_descendants(g: &Dag, node: Int) -> Vec[Int] {
+pub fn dag_descendants(g: &Dag, node: Int) -> Vec[Int]
+  ensures: node < 0 || node >= g.n => result.len() == 0
+  ensures: result.len() <= g.n
+{
   var out = Vec[Int].new();
   if node < 0 || node >= g.n {
     return out;
@@ -214,7 +226,9 @@ pub fn dag_descendants(g: &Dag, node: Int) -> Vec[Int] {
 /// contains a cycle, the returned order is partial (the cyclic nodes are
 /// omitted).
 /// O(V + E).
-pub fn dag_topological_order(g: &Dag) -> Vec[Int] {
+pub fn dag_topological_order(g: &Dag) -> Vec[Int]
+  ensures: result.len() <= g.n
+{
   var indeg = Vec[Int].new();
   var i = 0;
   while i < g.n {
@@ -260,7 +274,9 @@ pub fn dag_topological_order(g: &Dag) -> Vec[Int] {
 /// Check whether the graph contains a cycle (a topological sort covers all
 /// nodes iff the graph is acyclic).
 /// O(V + E).
-pub fn dag_has_cycle(g: &Dag) -> Bool {
+pub fn dag_has_cycle(g: &Dag) -> Bool
+  ensures: result == true => g.n >= 1
+{
   var topo = dag_topological_order(g);
   return topo.len() < g.n;
 }

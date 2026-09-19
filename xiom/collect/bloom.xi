@@ -43,7 +43,11 @@ fn bf_hash2(v: Int) -> Int {
 /// Create a Bloom filter with `bits` usable bits and `hashes` hash functions.
 /// Both values are clamped to at least 1; the bit count is rounded up to a
 /// whole number of bytes. O(bits/8).
-pub fn bloom_new(bits: Int, hashes: Int) -> BloomFilter {
+pub fn bloom_new(bits: Int, hashes: Int) -> BloomFilter
+  ensures: result.bit_count >= 8
+  ensures: result.num_hashes >= 1
+  ensures: result.inserted == 0
+{
   var nbytes = (bits + 7) / 8;
   if nbytes < 1 { nbytes = 1; }
   var bit_count = nbytes * 8;
@@ -59,7 +63,9 @@ pub fn bloom_new(bits: Int, hashes: Int) -> BloomFilter {
 }
 
 /// Insert `value` into the filter. O(k).
-pub fn bloom_insert(b: &mut BloomFilter, value: Int) {
+pub fn bloom_insert(b: &mut BloomFilter, value: Int)
+  ensures: bloom_may_contain(b, value)
+{
   var h1 = bf_hash1(value);
   var h2 = bf_hash2(value);
   var i: Int = 0;
@@ -77,7 +83,9 @@ pub fn bloom_insert(b: &mut BloomFilter, value: Int) {
 }
 
 /// True if `value` may be present. Never reports a false negative. O(k).
-pub fn bloom_may_contain(b: &BloomFilter, value: Int) -> Bool {
+pub fn bloom_may_contain(b: &BloomFilter, value: Int) -> Bool
+  ensures: b.inserted == 0 => result == false
+{
   var h1 = bf_hash1(value);
   var h2 = bf_hash2(value);
   var i: Int = 0;
@@ -94,7 +102,9 @@ pub fn bloom_may_contain(b: &BloomFilter, value: Int) -> Bool {
 }
 
 /// Reset all bits and the insertion counter. O(m/8).
-pub fn bloom_clear(b: &mut BloomFilter) {
+pub fn bloom_clear(b: &mut BloomFilter)
+  ensures: b.inserted == 0
+{
   var i: Int = 0;
   while i < b.bits.len() {
     b.bits[i] = (0) as UInt8;
@@ -106,7 +116,10 @@ pub fn bloom_clear(b: &mut BloomFilter) {
 /// Estimated false positive rate (1 - e^(-k*n/m))^k for the current
 /// insertion count, where k = num_hashes, n = inserted, m = bit_count.
 /// O(1).
-pub fn bloom_false_positive_rate(b: &BloomFilter) -> Float64 {
+pub fn bloom_false_positive_rate(b: &BloomFilter) -> Float64
+  ensures: result >= 0.0
+  ensures: result <= 1.0
+{
   var k = b.num_hashes as Float64;
   var n = b.inserted as Float64;
   var m = b.bit_count as Float64;

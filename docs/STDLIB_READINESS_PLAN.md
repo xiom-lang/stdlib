@@ -263,11 +263,15 @@ T1/T2 yields.
       case/normalize empty-input implications; io buffer Result-Ok and
       constructor field specs; fs is_file/is_dir imply exists) -> string
       48.5% -> 50.7%, io 50.9% -> 62.0% (the first key module across the
-      60% gate), global 17.6% clauses / 17.1% pub-with-clause. Ratchet:
-      tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors50.json
+      60% gate), global 17.6% clauses / 17.1% pub-with-clause. Wave 14
+      (2026-09-18): 38 clauses (btree/btreeplus/bloom/fenwick/cuckoo/avl/dag
+      size + membership relations; no call-`@pre` clauses -- see the
+      compiler bug) -> collect 44.8% -> 53.2%, global 18.3% clauses /
+      17.7% pub-with-clause. Ratchet:
+      tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors51.json
       (repo tooling as of the split; positive + negative runs verified;
       earlier floors kept at
-      coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49.json).
+      coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50.json).
       Floors are per top-level stdlib/xiom directory and must be refreshed
       when a module is ADDED (new uncovered pub fns dilute the percentage
       -- TOML dropped serialize 6.1% -> 5.4%, tz dropped time 13% ->

@@ -25,7 +25,9 @@ pub type Avl = {
 }
 
 /// Create a new empty AVL tree. O(1).
-pub fn avl_new() -> Avl {
+pub fn avl_new() -> Avl
+  ensures: result.root == -1
+{
   return Avl{ root: -1; keys: Vec[Int].new(); left: Vec[Int].new(); right: Vec[Int].new(); heights: Vec[Int].new(); };
 }
 
@@ -116,12 +118,16 @@ fn avl_insert_at(a: &mut Avl, idx: Int, value: Int) -> Int {
 }
 
 /// Insert `value`, rebalancing as needed. Duplicates are ignored. O(log n).
-pub fn avl_insert(t: &mut Avl, value: Int) {
+pub fn avl_insert(t: &mut Avl, value: Int)
+  ensures: avl_contains(t, value)
+{
   t.root = avl_insert_at(t, t.root, value);
 }
 
 /// True if `value` is present. O(log n).
-pub fn avl_contains(t: &Avl, value: Int) -> Bool {
+pub fn avl_contains(t: &Avl, value: Int) -> Bool
+  ensures: result == true => t.root != -1
+{
   var cur = t.root;
   while cur != -1 {
     var k = t.keys[cur];
@@ -162,12 +168,17 @@ fn avl_remove_at(a: &mut Avl, idx: Int, value: Int) -> Int {
 
 /// Remove `value`, rebalancing as needed. Missing values are a no-op.
 /// O(log n).
-pub fn avl_remove(t: &mut Avl, value: Int) {
+pub fn avl_remove(t: &mut Avl, value: Int)
+  ensures: avl_contains(t, value) == false
+{
   t.root = avl_remove_at(t, t.root, value);
 }
 
 /// Smallest value, or None if the tree is empty. O(log n).
-pub fn avl_min(t: &Avl) -> Option[Int] {
+pub fn avl_min(t: &Avl) -> Option[Int]
+  ensures: result is None => t.root == -1
+  ensures: result is Some => t.root != -1
+{
   if t.root == -1 { return None; }
   var cur = t.root;
   while t.left[cur] != -1 {
@@ -177,7 +188,10 @@ pub fn avl_min(t: &Avl) -> Option[Int] {
 }
 
 /// Largest value, or None if the tree is empty. O(log n).
-pub fn avl_max(t: &Avl) -> Option[Int] {
+pub fn avl_max(t: &Avl) -> Option[Int]
+  ensures: result is None => t.root == -1
+  ensures: result is Some => t.root != -1
+{
   if t.root == -1 { return None; }
   var cur = t.root;
   while t.right[cur] != -1 {

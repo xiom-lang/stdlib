@@ -52,7 +52,11 @@ fn bp_new_node(t: &mut BPlusTree, is_leaf: Int) -> Int {
 
 /// Create an empty B+ tree with the given order. The root is allocated
 /// lazily on the first insert. O(1).
-pub fn bptree_new(order: Int) -> BPlusTree {
+pub fn bptree_new(order: Int) -> BPlusTree
+  ensures: result.root == -1
+  ensures: result.size == 0
+  ensures: result.mk >= 1
+{
   var ord = order;
   if ord < 2 { ord = 2; }
   return BPlusTree{
@@ -204,7 +208,9 @@ fn bp_insert_nonfull(t: &mut BPlusTree, node: Int, key: Int, value: Int) {
 }
 
 /// Insert or update `key` -> `value`. O(log n).
-pub fn bptree_insert(t: &mut BPlusTree, key: Int, value: Int) {
+pub fn bptree_insert(t: &mut BPlusTree, key: Int, value: Int)
+  ensures: bptree_contains(t, key)
+{
   if t.root == -1 {
     t.root = bp_new_node(t, 1);
   }
@@ -233,7 +239,10 @@ fn bp_find_leaf(t: &BPlusTree, key: Int) -> Int {
 }
 
 /// Value for `key`, or None when absent. O(log n).
-pub fn bptree_get(t: &BPlusTree, key: Int) -> Option[Int] {
+pub fn bptree_get(t: &BPlusTree, key: Int) -> Option[Int]
+  ensures: result is Some => bptree_contains(t, key)
+  ensures: result is None => bptree_contains(t, key) == false
+{
   var leaf = bp_find_leaf(t, key);
   if leaf == -1 { return None; }
   var nk = t.nkeys[leaf];
@@ -251,7 +260,9 @@ pub fn bptree_get(t: &BPlusTree, key: Int) -> Option[Int] {
 }
 
 /// True if `key` is present. O(log n).
-pub fn bptree_contains(t: &BPlusTree, key: Int) -> Bool {
+pub fn bptree_contains(t: &BPlusTree, key: Int) -> Bool
+  ensures: result == true => bptree_size(t) >= 1
+{
   var leaf = bp_find_leaf(t, key);
   if leaf == -1 { return false; }
   var nk = t.nkeys[leaf];
@@ -268,7 +279,10 @@ pub fn bptree_contains(t: &BPlusTree, key: Int) -> Bool {
 
 /// Remove `key`; returns true if it was present. The key is removed from its
 /// leaf (lazy deletion); routing keys stay valid as separators. O(log n).
-pub fn bptree_remove(t: &mut BPlusTree, key: Int) -> Bool {
+pub fn bptree_remove(t: &mut BPlusTree, key: Int) -> Bool
+  ensures: result == true => bptree_contains(t, key) == false
+  ensures: result == false => bptree_contains(t, key)
+{
   var leaf = bp_find_leaf(t, key);
   if leaf == -1 { return false; }
   var nk = t.nkeys[leaf];
@@ -301,7 +315,10 @@ pub fn bptree_size(t: &BPlusTree) -> Int
 
 /// Values of keys in the inclusive range [l, r], in ascending key order,
 /// collected by walking the linked leaf chain. O(log n + m).
-pub fn bptree_range(t: &BPlusTree, l: Int, r: Int) -> Vec[Int] {
+pub fn bptree_range(t: &BPlusTree, l: Int, r: Int) -> Vec[Int]
+  ensures: result.len() <= bptree_size(t)
+  ensures: r < l => result.len() == 0
+{
   var out = Vec[Int].new();
   if t.size == 0 { return out; }
   var cur = bp_find_leaf(t, l);

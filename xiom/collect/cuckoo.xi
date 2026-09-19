@@ -47,7 +47,11 @@ fn _empty_table(n: Int) -> Vec[Int] {
 
 /// Create an empty cuckoo map with at least `capacity` slots (rounded up to
 /// a power of two).
-pub fn cuckoo_new(capacity: Int) -> CuckooMap {
+pub fn cuckoo_new(capacity: Int) -> CuckooMap
+  ensures: result.cap >= 8
+  ensures: result.size == 0
+  ensures: result.t0_keys.len() == result.cap
+{
   var n: Int = 8;
   while n < capacity {
     n = n * 2;
@@ -118,7 +122,9 @@ fn _grow(m: &mut CuckooMap) {
 
 /// Insert or overwrite `key` -> `value`. Doubles the tables when the
 /// displacement bound is exceeded.
-pub fn cuckoo_put(m: &mut CuckooMap, key: Int, value: Int) {
+pub fn cuckoo_put(m: &mut CuckooMap, key: Int, value: Int)
+  ensures: cuckoo_contains(m, key)
+{
   var existing = _lookup(m, key);
   if existing.2 == 1 {
     if existing.0 == 0 {
@@ -169,7 +175,9 @@ pub fn cuckoo_put(m: &mut CuckooMap, key: Int, value: Int) {
 }
 
 /// Value for `key` (None if absent).
-pub fn cuckoo_get(m: &CuckooMap, key: Int) -> Option[Int] {
+pub fn cuckoo_get(m: &CuckooMap, key: Int) -> Option[Int]
+  ensures: result.is_some == cuckoo_contains(m, key)
+{
   var found = _lookup(m, key);
   if found.2 == 0 {
     return Option[Int]{ is_some: false; value: 0; };
@@ -178,12 +186,17 @@ pub fn cuckoo_get(m: &CuckooMap, key: Int) -> Option[Int] {
 }
 
 /// True if `key` is present.
-pub fn cuckoo_contains(m: &CuckooMap, key: Int) -> Bool {
+pub fn cuckoo_contains(m: &CuckooMap, key: Int) -> Bool
+  ensures: result == true => cuckoo_size(m) >= 1
+{
   return _lookup(m, key).2 == 1;
 }
 
 /// Remove `key`. Returns true if it was present.
-pub fn cuckoo_remove(m: &mut CuckooMap, key: Int) -> Bool {
+pub fn cuckoo_remove(m: &mut CuckooMap, key: Int) -> Bool
+  ensures: result == true => cuckoo_contains(m, key) == false
+  ensures: result == false => cuckoo_contains(m, key)
+{
   var found = _lookup(m, key);
   if found.2 == 0 {
     return false;
