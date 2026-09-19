@@ -23,24 +23,31 @@ use xiom.math;
 /// 128-bit vectors (SSE / NEON)
 pub type Vec4f = { data: *Float32; invariant: data != null; }  // 4 x f32
 
+/// 128-bit vector of 2 f64 lanes.
 pub type Vec2d = { data: *Float64; }  // 2 x f64
 
+/// 128-bit vector of 4 i32 lanes.
 pub type Vec4i = { data: *Int32; }    // 4 x i32
 
+/// 128-bit vector of 8 i16 lanes.
 pub type Vec8s = { data: *Int16; }    // 8 x i16
 
+/// 128-bit vector of 16 i8 lanes.
 pub type Vec16b = { data: *Int8; }    // 16 x i8
 
 /// 256-bit vectors (AVX / AVX2)
 pub type Vec8f = { data: *Float32; invariant: data != null; }  // 8 x f32
 
+/// 256-bit vector of 4 f64 lanes (AVX).
 pub type Vec4d = { data: *Float64; }  // 4 x f64
 
+/// 256-bit vector of 8 i32 lanes (AVX).
 pub type Vec8i = { data: *Int32; }    // 8 x i32
 
 /// 512-bit vectors (AVX-512)
 pub type Vec16f = { data: *Float32; } // 16 x f32
 
+/// 512-bit vector of 8 f64 lanes (AVX-512).
 pub type Vec8d = { data: *Float64; }  // 8 x f64
 
 // ================================================================
@@ -87,44 +94,55 @@ extern "C" {
   fn xiom_simd_i32_to_f32(src: *Int32, dst: *Float32);
 }
 
-/// ISA Detection
+/// Feature bit: SSE (128-bit float).
 pub const SIMD_SSE:    Int = 1;
+/// Feature bit: SSE2 (128-bit integer/double).
 pub const SIMD_SSE2:   Int = 2;
+/// Feature bit: AVX (256-bit float).
 pub const SIMD_AVX:    Int = 4;
+/// Feature bit: AVX2 (256-bit integer).
 pub const SIMD_AVX2:   Int = 8;
+/// Feature bit: AVX-512 (512-bit).
 pub const SIMD_AVX512: Int = 16;
+/// Feature bit: NEON (ARM64 128-bit).
 pub const SIMD_NEON:   Int = 32;
 
+/// True when the backend reports usable SIMD support.
 pub fn simd_supported() -> Bool
   requires: true
 {
   unsafe { return xiom_simd_available() != 0; }
 }
 
+/// True when SSE is available on this CPU.
 pub fn has_sse() -> Bool
   requires: true
 {
   unsafe { return xiom_simd_has_sse() != 0; }
 }
 
+/// True when AVX is available on this CPU.
 pub fn has_avx() -> Bool
   requires: true
 {
   unsafe { return xiom_simd_has_avx() != 0; }
 }
 
+/// True when AVX2 is available on this CPU.
 pub fn has_avx2() -> Bool
   requires: true
 {
   unsafe { return xiom_simd_has_avx2() != 0; }
 }
 
+/// True when AVX-512 is available on this CPU.
 pub fn has_avx512() -> Bool
   requires: true
 {
   unsafe { return xiom_simd_has_avx512() != 0; }
 }
 
+/// True when NEON is available on this CPU (ARM64).
 pub fn has_neon() -> Bool
   requires: true
 {
@@ -145,14 +163,17 @@ pub fn Vec4f.new(x: Float32, y: Float32, z: Float32, w: Float32) -> Vec4f {
   }
 }
 
+/// Vector with all four lanes set to `value`.
 pub fn Vec4f.splat(value: Float32) -> Vec4f {
   return Vec4f.new(value, value, value, value);
 }
 
+/// All-zero vector.
 pub fn Vec4f.zero() -> Vec4f {
   return Vec4f.splat(0.0);
 }
 
+/// Lane-wise addition.
 pub fn Vec4f.add(self, other: Vec4f) -> Vec4f
   requires: simd_supported()
 {
@@ -165,6 +186,7 @@ pub fn Vec4f.add(self, other: Vec4f) -> Vec4f
   }
 }
 
+/// Lane-wise subtraction.
 pub fn Vec4f.sub(self, other: Vec4f) -> Vec4f
   requires: simd_supported()
 {
@@ -176,6 +198,7 @@ pub fn Vec4f.sub(self, other: Vec4f) -> Vec4f
   }
 }
 
+/// Lane-wise multiplication.
 pub fn Vec4f.mul(self, other: Vec4f) -> Vec4f
   requires: simd_supported()
 {
@@ -187,6 +210,7 @@ pub fn Vec4f.mul(self, other: Vec4f) -> Vec4f
   }
 }
 
+/// Lane-wise division.
 pub fn Vec4f.div(self, other: Vec4f) -> Vec4f {
   let out = alloc.alloc(16);
   unsafe { xiom_simd_f32x4_div(data, other.data, out as *Float32); }
@@ -196,6 +220,7 @@ pub fn Vec4f.div(self, other: Vec4f) -> Vec4f {
   }
 }
 
+/// Lane-wise square root.
 pub fn Vec4f.sqrt(self) -> Vec4f
   requires: simd_supported()
 {
@@ -207,6 +232,7 @@ pub fn Vec4f.sqrt(self) -> Vec4f
   }
 }
 
+/// Dot product of the two vectors.
 pub fn Vec4f.dot(self, other: Vec4f) -> Float32
   requires: simd_supported()
 {
@@ -216,22 +242,26 @@ pub fn Vec4f.dot(self, other: Vec4f) -> Float32
   return result;
 }
 
+/// Lane value at `index` (0..3).
 pub fn Vec4f.get(self, index: Int) -> Float32
   requires: index >= 0 && index < 4
 {
   unsafe { return ptr.read((data + index * 4) as *Float32); }
 }
 
+/// Write `value` to lane `index` (0..3).
 pub fn Vec4f.set(self, index: Int, value: Float32)
   requires: index >= 0 && index < 4
 {
   unsafe { ptr.write((data + index * 4) as *Float32, value); }
 }
 
+/// Euclidean length of the vector.
 pub fn Vec4f.len(self) -> Float32 {
   return math.sqrt(dot(self, self));
 }
 
+/// Unit vector in the same direction (a zero vector stays zero).
 pub fn Vec4f.normalize(self) -> Vec4f {
   let l = len(self);
   if l == 0.0 {
@@ -244,6 +274,7 @@ pub fn Vec4f.normalize(self) -> Vec4f {
   return result;
 }
 
+/// Cross product using the first three lanes.
 pub fn Vec4f.cross3(self, other: Vec4f) -> Vec4f {
   let x = get(1) * other.get(2) - get(2) * other.get(1);
   let y = get(2) * other.get(0) - get(0) * other.get(2);
@@ -253,6 +284,7 @@ pub fn Vec4f.cross3(self, other: Vec4f) -> Vec4f {
   return Vec4f.new(x, y, z, 0.0);
 }
 
+/// Free the underlying lane storage.
 pub fn Vec4f.drop(self)
   requires: true
 {
@@ -260,6 +292,7 @@ pub fn Vec4f.drop(self)
 }
 
 /// Scalar fallback when SIMD unavailable
+/// Add the scalar in lane 0 to every lane.
 pub fn Vec4f.add_scalar(self, other: Vec4f) -> Vec4f {
   return Vec4f.new(
     get(0) + other.get(0),
@@ -269,6 +302,7 @@ pub fn Vec4f.add_scalar(self, other: Vec4f) -> Vec4f {
   );
 }
 
+/// Multiply every lane by the scalar in lane 0.
 pub fn Vec4f.mul_scalar(self, other: Vec4f) -> Vec4f {
   return Vec4f.new(
     get(0) * other.get(0),
@@ -279,6 +313,7 @@ pub fn Vec4f.mul_scalar(self, other: Vec4f) -> Vec4f {
 }
 
 /// Vec8f Operations (8 x f32, AVX)
+/// Build an 8-lane vector from eight lane values.
 pub fn Vec8f.new(v0: Float32, v1: Float32, v2: Float32, v3: Float32,
                   v4: Float32, v5: Float32, v6: Float32, v7: Float32) -> Vec8f {
   let data = alloc.alloc(32);  // 8 * 4 = 32 bytes (256-bit)
@@ -294,6 +329,7 @@ pub fn Vec8f.new(v0: Float32, v1: Float32, v2: Float32, v3: Float32,
   }
 }
 
+/// Lane-wise addition (AVX).
 pub fn Vec8f.add(self, other: Vec8f) -> Vec8f
   requires: has_avx()
 {
@@ -304,6 +340,7 @@ pub fn Vec8f.add(self, other: Vec8f) -> Vec8f
   }
 }
 
+/// Lane-wise multiplication (AVX).
 pub fn Vec8f.mul(self, other: Vec8f) -> Vec8f
   requires: has_avx()
 {

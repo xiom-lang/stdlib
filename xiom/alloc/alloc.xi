@@ -11,20 +11,25 @@ extern "C" {
   fn memset(ptr: *mut UInt8, value: Int, size: UInt) -> *mut UInt8;
 }
 
+/// Memory layout: byte size and alignment.
 pub type Layout = { size: Int; align: Int; } derive[Eq, Clone]
 
+/// Layout with the given size and natural (8-byte) alignment.
 pub fn Layout.new(size: Int) -> Layout {
   Layout{ size: size, align: 8 }
 }
 
+/// Same size with the given alignment.
 pub fn Layout.with_align(self, align: Int) -> Layout {
   Layout{ size: self.size, align: align }
 }
 
+/// Size rounded up to a multiple of the alignment.
 pub fn Layout.padded_size(self) -> Int {
   (self.size + self.align - 1) / self.align * self.align
 }
 
+/// Allocator interface implemented by `GlobalAlloc` and custom allocators.
 pub interface Allocator {
   fn allocate(self, layout: Layout) -> Result<*mut UInt8, AllocError>;
   fn deallocate(self, ptr: *mut UInt8, layout: Layout);
@@ -33,8 +38,9 @@ pub interface Allocator {
   fn shrink(self, ptr: *mut UInt8, old: Layout, new: Layout) -> Result<*mut UInt8, AllocError>;
 }
 
+/// Allocation failure with a human-readable message.
 pub type AllocError = { message: Str; } derive[Clone]
-
+/// The process-global allocator (stateless handle).
 pub type GlobalAlloc = { }
 
 /// Returns the concrete GlobalAlloc (the Allocator interface is a bound for
@@ -43,6 +49,7 @@ pub fn global_alloc() -> GlobalAlloc {
   GlobalAlloc{ }
 }
 
+/// Allocate `layout.size` bytes; Err on failure.
 pub fn GlobalAlloc.allocate(self, layout: Layout) -> Result<*mut UInt8, AllocError>
   requires: layout.size > 0
   ensures:  result is Ok => result != null
@@ -56,6 +63,7 @@ pub fn GlobalAlloc.allocate(self, layout: Layout) -> Result<*mut UInt8, AllocErr
   }
 }
 
+/// Free a block previously returned by `allocate`.
 pub fn GlobalAlloc.deallocate(self, ptr: *mut UInt8, layout: Layout)
   requires: ptr != null
 {
@@ -64,6 +72,7 @@ pub fn GlobalAlloc.deallocate(self, ptr: *mut UInt8, layout: Layout)
   }
 }
 
+/// Allocate zeroed memory for `layout`; Err on failure.
 pub fn GlobalAlloc.allocate_zeroed(self, layout: Layout) -> Result<*mut UInt8, AllocError>
   requires: layout.size > 0
   ensures:  result is Ok => result != null
@@ -78,6 +87,7 @@ pub fn GlobalAlloc.allocate_zeroed(self, layout: Layout) -> Result<*mut UInt8, A
   }
 }
 
+/// Grow an allocation in place or by copy; Err on failure.
 pub fn GlobalAlloc.grow(self, ptr: *mut UInt8, old: Layout, new: Layout) -> Result<*mut UInt8, AllocError>
   requires: ptr != null
   requires: new.size > old.size
@@ -91,6 +101,7 @@ pub fn GlobalAlloc.grow(self, ptr: *mut UInt8, old: Layout, new: Layout) -> Resu
   }
 }
 
+/// Shrink an allocation in place or by copy; Err on failure.
 pub fn GlobalAlloc.shrink(self, ptr: *mut UInt8, old: Layout, new: Layout) -> Result<*mut UInt8, AllocError>
   requires: ptr != null
   requires: new.size < old.size
@@ -115,6 +126,7 @@ pub fn alloc(size: Int) -> *mut UInt8
   }
 }
 
+/// Allocate `size` zeroed bytes (8-byte aligned); null on failure.
 pub fn alloc_zeroed(size: Int) -> *mut UInt8
   requires: size > 0
   ensures:  result != null
@@ -139,6 +151,7 @@ pub fn realloc_sized(ptr: *mut UInt8, old_size: Int, new_size: Int) -> *mut UInt
   }
 }
 
+/// Free a block of `size` bytes.
 pub fn dealloc(ptr: *mut UInt8, size: Int)
   requires: ptr != null
 {
@@ -157,6 +170,7 @@ pub fn alloc_layout(layout: Layout) -> *mut UInt8
   }
 }
 
+/// Free a block allocated with `layout`.
 pub fn dealloc_layout(ptr: *mut UInt8, layout: Layout)
   requires: ptr != null
 {
