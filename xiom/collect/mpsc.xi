@@ -16,6 +16,7 @@ module xiom.collect.mpsc
 
 use xiom.sync;
 
+/// Multi-producer, single-consumer queue.
 pub type MpscQueue = {
   buf: Vec[Int];
   cap: Int;

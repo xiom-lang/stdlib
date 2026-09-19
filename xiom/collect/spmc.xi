@@ -16,6 +16,7 @@ module xiom.collect.spmc
 
 use xiom.sync;
 
+/// Single-producer, multi-consumer queue.
 pub type SpmcQueue = {
   buf: Vec[Int];
   cap: Int;

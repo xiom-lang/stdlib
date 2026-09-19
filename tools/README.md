@@ -133,12 +133,13 @@ pwsh tools/doc_scan.ps1 -Detail
 pwsh tools/doc_promote.ps1 -Detail
 pwsh tools/doc_promote.ps1 -Apply
 pwsh tools/doc_promote.ps1 -Dedupe -Apply
-pwsh tools/doc_scan.ps1 -RatchetFile tools/doc_baseline3.json
+pwsh tools/doc_scan.ps1 -RatchetFile tools/doc_baseline4.json
 ```
 
-State (2026-09-19): 5,981/6,984 documented (85.6%). The banner promotion
-fixed bits (100%), sort (83%), search (95%) and parts of iter/crypto; the
-first promoter pass had duplicated 4,711 comment lines, all removed by
-`-Dedupe`. Remaining prose-less surface is concentrated in `iter/iter.xi`
-(133), `num` (~119), `os` (~85), `core` (~68), `ptr/ptr.xi` (19), plus
-smaller tails.
+State (2026-09-19): **6,984/6,984 pub declarations documented (100%)**.
+The banner promotion fixed bits/sort/search/iter/crypto and the follow-up
+batches covered every remaining module (core, io, sync, num, bigint,
+bigfloat, time, string, net, log, fmt, serialize, compress, ffi, misc,
+encoding, reflect, hash, mem, test, cell, regex, convert, toml, rand,
+crypto). `tools/doc_baseline4.json` is the 100% floor: any new pub
+declaration without a `///` line fails the ratchet until documented.

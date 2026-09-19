@@ -60,6 +60,7 @@ pub type AsyncExecutor = {
   timers: Vec[Timer];
 }
 
+/// Create an executor with empty ready/timer queues.
 pub fn AsyncExecutor.new() -> AsyncExecutor {
   return AsyncExecutor{ ready: Vec[fn()].new(), timers: Vec[Timer].new() };
 }
@@ -218,16 +219,19 @@ pub type Channel[T] = {
   invariant: items.len() <= cap || cap == 0;
 }
 
+/// Bounded channel holding at most `capacity` values.
 pub fn Channel.bounded[T](capacity: Int) -> Channel[T]
   requires: capacity > 0
 {
   return Channel[T]{ items: Vec[T].with_capacity(capacity), closed: false, cap: capacity };
 }
 
+/// Unbounded channel.
 pub fn Channel.unbounded[T]() -> Channel[T] {
   return Channel[T]{ items: Vec[T].new(), closed: false, cap: 0 };
 }
 
+/// Send a value (blocking when the channel is full).
 pub fn Channel.send[T](&mut self, value: T) {
   if closed {
     return;
@@ -242,6 +246,7 @@ pub fn Channel.send[T](&mut self, value: T) {
   items.push(value);
 }
 
+/// Receive a value (blocking until one is available).
 pub fn Channel.recv[T](&mut self) -> T {
   // Cooperative receive: when empty, yield to the executor so a queued sender
   // can run, then return the value. Never panics during normal flow.
@@ -260,6 +265,7 @@ pub fn Channel.recv[T](&mut self) -> T {
   return val;
 }
 
+/// Non-blocking receive; None when the channel is empty.
 pub fn Channel.try_recv[T](&mut self) -> Option[T] {
   if items.len() == 0 { return None; }
   var val = items[0];
@@ -272,6 +278,7 @@ pub fn Channel.try_recv[T](&mut self) -> Option[T] {
   return Some(val);
 }
 
+/// Close the channel.
 pub fn Channel.close[T](self) {
   closed = true;
 }

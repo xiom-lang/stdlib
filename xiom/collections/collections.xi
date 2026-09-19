@@ -217,6 +217,7 @@ pub fn Vec[T].as_slice(self) -> Slice[T]
   Slice[T]{ data: self }
 }
 
+/// Mutably borrow the vector's data as a Slice.
 pub fn Vec[T].as_mut_slice(self) -> Slice[T]
   requires: len >= 0
   requires: data != null || len == 0
@@ -928,6 +929,7 @@ extern "C" {
   fn free(ptr: *UInt8);
 }
 
+/// Open-addressed hash map with linear probing.
 pub type HashMap[K, V] = {
   data: Vec[HashMapBucket[K, V]];
   len: Int;

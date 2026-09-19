@@ -30,6 +30,7 @@ use xiom.crypto;
 use xiom.poly1305;
 use xiom.crypto.cipher;
 
+/// HMAC context (keyed hash state).
 pub type Hmac = {
   key: Vec[UInt8];
   hash: Int;

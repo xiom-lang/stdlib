@@ -196,6 +196,7 @@ fn _snappy_write_copy2(out: &mut Vec[UInt8], mlen: Int, moff: Int) {
 // limit and also rejects a lying varint declared length up-front.
 const _SNAPPY_DEFAULT_CAP: Int = 1073741824;
 
+/// Decompress Snappy data; Err on malformed input.
 pub fn snappy_decompress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str] {
   return snappy_decompress_capped(data, _SNAPPY_DEFAULT_CAP);
 }

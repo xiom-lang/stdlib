@@ -36,6 +36,7 @@ fn _mt_seed_state(seed: UInt32) -> Vec[UInt32] {
   return st;
 }
 
+/// Mersenne Twister (MT19937) RNG state.
 pub type Mt19937 = {
   state: Vec[UInt32];
   index: Int;

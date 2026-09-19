@@ -6,6 +6,7 @@ module xiom.mem
 
 use xiom.ptr;
 
+/// Swap two values in place.
 pub fn swap[T](a: &mut T, b: &mut T)
   requires: true  // whole-body unsafe pointer swap (T007)
   ensures: a == b@pre && b == a@pre
@@ -19,6 +20,7 @@ pub fn swap[T](a: &mut T, b: &mut T)
   };
 }
 
+/// Replace `*dest` with `src`, returning the previous value.
 pub fn replace[T](dest: &mut T, src: T) -> T
   requires: true
   ensures: result == dest@pre
@@ -29,12 +31,14 @@ pub fn replace[T](dest: &mut T, src: T) -> T
   }
 }
 
+/// Replace with the default value and return the previous one.
 pub fn take[T: Default](dest: &mut T) -> T
   ensures: true
 {
   return replace(dest, T.default());
 }
 
+/// Drop a value (explicit destructor call).
 pub fn drop[T](value: T)
   ensures: true
 {
@@ -50,6 +54,7 @@ pub fn size_of[T]() -> Int
 pub fn align_of[T]() -> Int
   ensures: result > 0;
 
+/// Size of the pointed-to value in bytes.
 pub fn size_of_val[T](value: &T) -> Int
   ensures: result > 0
   ensures: result == size_of[T]()
@@ -57,6 +62,7 @@ pub fn size_of_val[T](value: &T) -> Int
   return size_of[T]();
 }
 
+/// Minimum alignment of the pointed-to value in bytes.
 pub fn min_align_of_val[T](value: &T) -> Int
   ensures: result > 0
   ensures: result == align_of[T]()
@@ -75,21 +81,25 @@ pub fn uninitialized[T]() -> T
 /// Manually drop (defer cleanup)
 pub type ManuallyDrop[T] = { value: T; }
 
+/// Wrap a value that must not be dropped automatically.
 pub fn ManuallyDrop.new[T](value: T) -> ManuallyDrop[T] {
   return ManuallyDrop[T]{ value: value };
 }
 
+/// Take the value out (no destructor run).
 pub fn ManuallyDrop.into_inner[T](self) -> T
   requires: true {
   return value;
 }
 
+/// Take the value out, leaving the slot uninitialized.
 pub fn ManuallyDrop.take[T](self) -> T
   requires: true
   ensures: true {
   return value;
 }
 
+/// Destroy the wrapper without dropping the value.
 pub fn ManuallyDrop.drop[T](self)
   requires: true
   ensures: true {

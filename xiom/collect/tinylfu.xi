@@ -16,6 +16,7 @@ pub type CountMinSketch = {
   counts: Vec[Int];
 }
 
+/// TinyLFU admission filter over a count-min sketch.
 pub type TinyLfu = {
   sketch: CountMinSketch;
   capacity: Int;

@@ -20,6 +20,7 @@ module xiom.collect.concurrent
 
 use xiom.sync;
 
+/// Mutex-protected FIFO queue.
 pub type ConcurrentQueue = {
   buf: Vec[Int];
   cap: Int;
@@ -141,6 +142,7 @@ pub fn spmc_pop(q: &mut ConcurrentQueue) -> Option[Int] {
   return ccq_pop(q);
 }
 
+/// Mutex-protected LIFO stack.
 pub type ConcurrentStack = {
   items: Vec[Int];
   closed: Bool;
@@ -181,6 +183,7 @@ pub fn cstack_pop(s: &mut ConcurrentStack) -> Option[Int]
   return Some(val);
 }
 
+/// Mutex-protected integer counter.
 pub type ConcurrentCounter = {
   c: AtomicInt;
 }

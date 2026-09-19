@@ -98,6 +98,7 @@ pub fn lz4_bound(len: Int) -> Int {
 // own decoded size before the per-block check fires.
 const _LZ4_DEFAULT_CAP: Int = 1073741824;
 
+/// Decompress an LZ4 block; Err on malformed input.
 pub fn lz4_decompress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str] {
   return lz4_decompress_capped(data, _LZ4_DEFAULT_CAP);
 }

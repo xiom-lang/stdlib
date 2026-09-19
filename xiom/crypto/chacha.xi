@@ -220,6 +220,7 @@ fn _pack_u32_le(bytes: &Vec[UInt8], offset: Int) -> Int {
   return result & 0xFFFFFFFF;
 }
 
+/// ChaCha20 stream cipher context from a key and nonce.
 pub fn chacha20_new(key: &Vec[UInt8], nonce_bytes: &Vec[UInt8]) -> ChaCha20 {
   var state = Vec[Int].new();
 

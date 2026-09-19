@@ -15,6 +15,7 @@ const _CHACHA_C1: Int = 0x3320646e; // "nd 3"
 const _CHACHA_C2: Int = 0x79622d32; // "2-by"
 const _CHACHA_C3: Int = 0x6b206574; // "te k"
 
+/// ChaCha20-based deterministic RNG state.
 pub type ChaChaRng = {
   state: Vec[UInt32];
   pos: Int;

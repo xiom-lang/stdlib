@@ -595,6 +595,7 @@ fn _blake2b_store64(out: &mut Vec[UInt8], v: Int) {
   }
 }
 
+/// BLAKE2b-512 digest (64 bytes).
 pub fn crypto_hash_blake2b(data: &Vec[UInt8]) -> Vec[UInt8]
   ensures: result.len() == 64
 {

@@ -28,6 +28,7 @@ module xiom.serialize.yaml_lite
 
 use xiom.string;
 
+/// Parsed YAML-lite value (scalar/map/sequence).
 pub type YamlValue = enum {
   Scalar(value: Str),
   Sequence(items: Vec[YamlValue]),

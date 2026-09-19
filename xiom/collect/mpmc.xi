@@ -15,6 +15,7 @@ module xiom.collect.mpmc
 
 use xiom.sync;
 
+/// Multi-producer, multi-consumer bounded queue.
 pub type MpmcQueue = {
   buf: Vec[Int];
   cap: Int;

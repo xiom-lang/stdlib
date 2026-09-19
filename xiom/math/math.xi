@@ -91,7 +91,9 @@ extern "C" {
 
 /// === Constants ===
 pub const PI: Float64 = 3.141592653589793;
+/// Euler's number e.
 pub const E: Float64 = 2.718281828459045;
+/// Full-circle constant tau (2*pi).
 pub const TAU: Float64 = 6.283185307179586;
 
 // === RNG State ===

@@ -380,10 +380,12 @@ pub fn reset_contract_coverage() {
   _coverage = Map[Str, Bool].new();
 }
 
+/// Record that `clause` was exercised with the given inputs.
 pub fn record_contract_hit(clause: ContractClause, input_values: Map[Str, Str]) {
   _coverage.insert(clause.expression, true);
 }
 
+/// Map from clause id to whether it has been hit.
 pub fn get_contract_coverage() -> Map[Str, Bool] {
   var result = Map[Str, Bool].new();
   let keys = _coverage.keys();
@@ -400,6 +402,7 @@ pub fn get_contract_coverage() -> Map[Str, Bool] {
   result
 }
 
+/// Clauses that have not been hit yet.
 pub fn get_uncovered_contracts() -> Vec[ContractClause] {
   let idx = _get_index();
   var result = Vec[ContractClause].new();
@@ -440,6 +443,7 @@ pub fn get_uncovered_contracts() -> Vec[ContractClause] {
   result
 }
 
+/// Percentage of registered clauses that have been hit.
 pub fn coverage_percentage() -> Float64
   ensures: result >= 0.0 && result <= 100.0
 {
@@ -475,26 +479,32 @@ pub fn total_contracts() -> Int
   _get_index().total_clauses
 }
 
+/// Number of registered `requires` clauses.
 pub fn total_requires() -> Int {
   _get_index().requires_count
 }
 
+/// Number of registered `ensures` clauses.
 pub fn total_ensures() -> Int {
   _get_index().ensures_count
 }
 
+/// Number of registered type invariants.
 pub fn total_invariants() -> Int {
   _get_index().invariant_count
 }
 
+/// Number of functions carrying at least one clause.
 pub fn functions_with_contracts() -> Int {
   _get_index().functions.len()
 }
 
+/// Number of types carrying invariants.
 pub fn types_with_invariants() -> Int {
   _get_index().types.len()
 }
 
+/// Clauses per function across the registered catalog.
 pub fn contract_density() -> Float64 {
   let idx = _get_index();
   let fn_count = idx.functions.len();

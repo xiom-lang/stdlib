@@ -723,6 +723,7 @@ fn _inflate_capped(data: &Vec[UInt8], max_out: Int) -> Result[Vec[UInt8], Str] {
 
 const _DEFLATE_DEFAULT_CAP: Int = 1073741824;
 
+/// Decompress raw deflate data; Err on malformed input.
 pub fn deflate_decompress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str] {
   return deflate_decompress_capped(data, _DEFLATE_DEFAULT_CAP);
 }

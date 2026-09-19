@@ -28,10 +28,12 @@ pub interface BuildHasher {
 /// === DefaultHasher -- DJB2-based concrete hasher ===
 pub type DefaultHasher = { state: Int; } derive[Clone]
 
+/// Create a hasher with the default seed.
 pub fn DefaultHasher.new() -> DefaultHasher {
   return DefaultHasher { state: 5381; };
 }
 
+/// Feed bytes into the hasher.
 pub fn DefaultHasher.write(self, bytes: &Vec[UInt8]) {
   var i: Int = 0;
   while i < bytes.len() {
@@ -40,6 +42,7 @@ pub fn DefaultHasher.write(self, bytes: &Vec[UInt8]) {
   }
 }
 
+/// Feed an Int into the hasher.
 pub fn DefaultHasher.write_int(self, n: Int) {
   var val: Int = n;
   var i: Int = 0;
@@ -50,6 +53,7 @@ pub fn DefaultHasher.write_int(self, n: Int) {
   }
 }
 
+/// Feed the bytes of a string into the hasher.
 pub fn DefaultHasher.write_str(self, s: Str) {
   var i: Int = 0;
   let len: Int = str_len(s);
@@ -63,6 +67,7 @@ pub fn DefaultHasher.write_str(self, s: Str) {
   }
 }
 
+/// Finalize and return the 64-bit hash.
 pub fn DefaultHasher.finish(self) -> Int {
   return self.state;
 }
@@ -84,6 +89,7 @@ pub fn Int.hash(self) -> UInt64
   h
 }
 
+/// Stable hash of a Bool.
 pub fn Bool.hash(self) -> UInt64 {
   var h: Int = 5381;
   if self {
@@ -105,14 +111,17 @@ pub fn hash_value[T: Hash](value: T) -> Int {
   return h as Int;
 }
 
+/// Combine two hashes into one (order-dependent).
 pub fn hash_combine(seed: Int, hash: Int) -> Int {
   return seed ^ (hash + 0x9e3779b9 + (seed << 6) + (seed >> 2));
 }
 
+/// Hash any `Hash`-implementing value.
 pub fn hash[T: Hash](value: T) -> UInt64 {
   value.hash()
 }
 
+/// SipHash-2-4 of the bytes (64-bit).
 pub fn sip_hash(data: &Vec[UInt8]) -> UInt64 {
   var hasher: DefaultHasher = DefaultHasher.new();
   hasher.write(data);

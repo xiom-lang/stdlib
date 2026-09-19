@@ -82,6 +82,7 @@ pub fn lz77_compress(data: &Vec[UInt8]) -> Vec[UInt8] {
 // stdlib-roundtrip data. Capped variants accept an explicit limit.
 const _LZ77_DEFAULT_CAP: Int = 1073741824;
 
+/// Decompress LZ77 data; Err on malformed input.
 pub fn lz77_decompress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str] {
   return lz77_decompress_capped(data, _LZ77_DEFAULT_CAP);
 }

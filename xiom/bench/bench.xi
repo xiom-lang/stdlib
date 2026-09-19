@@ -8,6 +8,7 @@ use xiom.time;
 use xiom.convert;
 use xiom.string;
 
+/// Timing result of one benchmark run.
 pub type BenchResult = {
   name: Str;
   iterations: Int;
@@ -29,6 +30,7 @@ fn isqrt(n: Int) -> Int {
   return x;
 }
 
+/// Time `f` once and return the result.
 pub fn run_bench(name: Str, f: fn()) -> BenchResult
   requires: name.len() > 0 {
   let start = time.Instant.now();
@@ -45,6 +47,7 @@ pub fn run_bench(name: Str, f: fn()) -> BenchResult
   };
 }
 
+/// Time `f` over `iterations` runs; returns aggregate stats.
 pub fn run_bench_n(name: Str, iterations: Int, f: fn()) -> BenchResult
   requires: name.len() > 0
   requires: iterations >= 0
@@ -105,6 +108,7 @@ pub fn run_bench_n(name: Str, iterations: Int, f: fn()) -> BenchResult
   };
 }
 
+/// Human-readable comparison of two benchmark results.
 pub fn compare(a: BenchResult, b: BenchResult) -> Str
   ensures: result.len() > 0
 {
@@ -117,6 +121,7 @@ pub fn compare(a: BenchResult, b: BenchResult) -> Str
   };
 }
 
+/// Opaque identity that prevents the optimizer from eliding the value.
 pub fn black_box[T](value: T) -> T {
   return value;
 }

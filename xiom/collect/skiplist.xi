@@ -21,6 +21,7 @@ module xiom.collect.skiplist
 
 const MAX_LEVEL: Int = 16;
 
+/// Skip list over Int keys.
 pub type SkipList = { head: Int; keys: Vec[Int]; nexts: Vec[Int]; size: Int; rng: Int; }
 
 fn _lcg(s: Int) -> Int {

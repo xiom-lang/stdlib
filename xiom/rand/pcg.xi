@@ -10,6 +10,7 @@ module xiom.rand.pcg
 
 const _PCG_MULT: Int = 6364136223846793005;
 
+/// PCG64 RNG state.
 pub type Pcg = {
   state: UInt64;
   inc: UInt64;

@@ -225,6 +225,7 @@ pub fn kdtree_size(t: &KdTree) -> Int
 const QT_MAX_PTS: Int = 4;
 const QT_MAX_DEPTH: Int = 12;
 
+/// Quadtree spatial index over integer coordinates.
 pub type Quadtree = {
   root: Int;
   size: Int;

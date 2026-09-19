@@ -13,6 +13,7 @@ pub type PVec = {
   items: Vec[Int];
 }
 
+/// Persistent map built on immutable vectors.
 pub type PMap = {
   keys: Vec[Int];
   values: Vec[Int];

@@ -22,6 +22,7 @@ module xiom.collect.octree
 const MAX_PTS: Int = 4;
 const MAX_DEPTH: Int = 12;
 
+/// Octree spatial index over integer coordinates.
 pub type Octree = {
   root: Int;
   size: Int;

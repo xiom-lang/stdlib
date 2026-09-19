@@ -25,6 +25,7 @@ module xiom.collect.quadtree
 const MAX_PTS: Int = 4;
 const MAX_DEPTH: Int = 12;
 
+/// Quadtree spatial index over integer coordinates.
 pub type Quadtree = {
   root: Int;
   size: Int;

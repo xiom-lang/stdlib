@@ -19,6 +19,7 @@ module xiom.collect.stringmap
 use xiom.string;
 use xiom.hash.siphash;
 
+/// Insertion-ordered string-keyed map.
 pub type StringMap = {
   buckets: Vec[Int];
   keys: Vec[Str];

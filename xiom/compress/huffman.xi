@@ -410,6 +410,7 @@ pub fn huffman_compress(data: &Vec[UInt8]) -> Vec[UInt8] {
 // limit; see lz77.xi for the same convention.
 const _HUFF_DEFAULT_CAP: Int = 1073741824;
 
+/// Decompress Huffman-coded data; Err on malformed input.
 pub fn huffman_decompress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str] {
   return huffman_decompress_capped(data, _HUFF_DEFAULT_CAP);
 }

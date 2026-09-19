@@ -69,27 +69,33 @@ pub fn type_field_count(id: Int) -> Int
   }
 }
 
+/// Stable numeric identity of a type.
 pub type TypeId = { id: Int; } derive[Eq, Clone, Hash]
 
 var next_type_id: Int = 0;
 
+/// TypeId of T.
 pub fn TypeId.of[T]() -> TypeId {
   return TypeId{ id: 0; };
 }
 
+/// Marker interface for downcastable values.
 pub interface Any {
   fn type_id(self) -> TypeId;
 }
 
+/// Source name of T.
 pub fn type_name[T]() -> Str
   ensures: result.len() > 0 {
   return "unknown";
 }
 
+/// Size of T in bytes.
 pub fn type_size[T]() -> Int {
   return size_of[T]();
 }
 
+/// Alignment of T in bytes.
 pub fn type_align[T]() -> Int {
   return align_of[T]();
 }
@@ -99,10 +105,12 @@ pub fn downcast_ref[T: Any](value: &dyn Any) -> Option<&T> {
   return None;
 }
 
+/// Downcast a dyn Any to &mut T, or None on mismatch.
 pub fn downcast_mut[T: Any](value: &mut dyn Any) -> Option<&mut T> {
   return None;
 }
 
+/// Reflected type description (name, size, alignment, fields).
 pub type TypeInfo = {
   name: Str;
   size: Int;
@@ -113,12 +121,14 @@ pub type TypeInfo = {
   derives: Vec<Str>;
 } derive[Clone]
 
+/// Reflected field description (name, offset, type name).
 pub type FieldInfo = {
   name: Str;
   type_name: Str;
   offset: Int;
 } derive[Clone]
 
+/// TypeInfo for T.
 pub fn reflect_type[T]() -> TypeInfo {
   return TypeInfo{
     name: type_name[T]();

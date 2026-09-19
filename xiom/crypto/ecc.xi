@@ -133,6 +133,7 @@ pub fn curve_small_test() -> EcCurve {
   return EcCurve{ p: 17; a: 2; b: 2; n: 19; gx: 5; gy: 1; };
 }
 
+/// The secp256k1 curve parameters.
 pub fn curve_secp256k1() -> EcCurve {
   return EcCurve{ p: 0; a: 0; b: 7; n: 0; gx: 0; gy: 0; };
 }
@@ -146,11 +147,13 @@ pub fn ec_is_on_curve(point: &EcPoint, curve: &EcCurve) -> Bool {
   return lhs == rhs;
 }
 
+/// Negate a point (None for the point at infinity).
 pub fn ec_neg(point: EcPointOpt, curve: &EcCurve) -> EcPointOpt {
   if point.is_some == false { return _none_pt(); }
   return _some_pt(_mod(point.pt.x, curve.p), _mod(-point.pt.y, curve.p));
 }
 
+/// Point doubling; None for the point at infinity.
 pub fn ec_double(point: &EcPoint, curve: &EcCurve) -> EcPointOpt {
   let x = _mod(point.x, curve.p);
   let y = _mod(point.y, curve.p);
@@ -168,6 +171,7 @@ pub fn ec_double(point: &EcPoint, curve: &EcCurve) -> EcPointOpt {
   return _some_pt(x3, y3);
 }
 
+/// Point addition; None when the result is the point at infinity.
 pub fn ec_add(p: EcPointOpt, q: EcPointOpt, curve: &EcCurve) -> EcPointOpt {
   if p.is_some == false { return q; }
   if q.is_some == false { return p; }
@@ -192,6 +196,7 @@ pub fn ec_add(p: EcPointOpt, q: EcPointOpt, curve: &EcCurve) -> EcPointOpt {
   return _some_pt(x3, y3);
 }
 
+/// Scalar multiplication `k * point`; None for the point at infinity.
 pub fn ec_mul(k: Int, point: &EcPoint, curve: &EcCurve) -> EcPointOpt {
   if k <= 0 { return _none_pt(); }
 
@@ -232,12 +237,14 @@ fn _ints_to_bytes(ints: &Vec[Int]) -> Vec[UInt8] {
   return result;
 }
 
+/// Generate an Ed25519 key pair.
 pub fn ed25519_keygen() -> Ed25519KeyPair {
   var private_key = random_bytes(32);
   var pk_hash = sha256(&private_key);
   return Ed25519KeyPair{ public_key: pk_hash; private_key: private_key; };
 }
 
+/// Ed25519 signature over the message.
 pub fn ed25519_sign(message: &Vec[Int], keypair: &Ed25519KeyPair) -> Ed25519Signature {
   var msg_bytes = _ints_to_bytes(message);
   var r_input = _concat(&keypair.private_key, &msg_bytes);
@@ -261,6 +268,7 @@ pub fn ed25519_sign(message: &Vec[Int], keypair: &Ed25519KeyPair) -> Ed25519Sign
   return Ed25519Signature{ r: r_commitment; s: s_bytes; };
 }
 
+/// True when the signature verifies under the public key.
 pub fn ed25519_verify(message: &Vec[Int], signature: &Ed25519Signature, public_key: &Vec[UInt8]) -> Bool {
   var msg_bytes = _ints_to_bytes(message);
   var h_input1 = _concat(&signature.r, public_key);

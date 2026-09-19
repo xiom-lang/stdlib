@@ -125,6 +125,7 @@ fn build_command_string(command: Str, args: &Vec[Str]) -> Str {
     cmd
 }
 
+/// Spawn a command with arguments; Ok(pid) or Err.
 pub fn spawn_command(cmd: Str, args: &Vec[Str]) -> Result[Int, Str]
     requires: cmd.len() > 0
     ensures:  result is Ok => result >= 0
