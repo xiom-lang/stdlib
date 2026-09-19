@@ -1,4 +1,5 @@
 // XIOM -- Benchmarking Framework
+// Purpose: Timing and throughput harnesses for micro- and macro-benchmarks.
 // Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
 // SPDX-License-Identifier: MIT OR Apache-2.0
 

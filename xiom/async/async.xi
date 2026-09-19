@@ -1,4 +1,5 @@
 // XIOM -- Async Library
+// Purpose: Cooperative single-threaded async executor: tasks, futures, timers and scheduling-aware channels.
 // Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
 // SPDX-License-Identifier: MIT OR Apache-2.0
 //

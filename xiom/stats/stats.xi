@@ -1,3 +1,5 @@
+// XIOM -- Statistics
+// Purpose: Descriptive statistics, probability distributions, regression and hypothesis tests over Vec-backed samples.
 // Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
 // SPDX-License-Identifier: MIT OR Apache-2.0
 module xiom.stats
