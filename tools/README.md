@@ -110,9 +110,20 @@ saved next to the probe.
 pwsh tools/gen_call_probes.ps1 -Compiler C:\path\to\xiom.exe -MinParams 2 -MaxParams 4
 ```
 
+Flags: `-OnlyCalls N` keeps only modules with exactly N never-referenced
+calls, `-Limit N` caps the module count, `-EmitOnly` writes the probes without
+compiling, and `-Timeout <sec>` passes through to the compiler's compile
+watchdog (default 300; `0` disables). Heavy import sets (`xiom.net`,
+`xiom.num`) can legitimately exceed the default watchdog in a debug build --
+compile those tranches with `-Timeout 0` and record the wall time.
+
 The zero-arg tranche is locked by `tools/probes/p_never_called_zeroarg.xi`;
 the single-param tranche is currently a known compiler failure
-(`tools/known_failures/p_sweep_single_param.xi`).
+(`tools/known_failures/p_sweep_single_param.xi`). Multi-param state
+(2026-09-20, R49): all 47 module groups / 179 calls compile clean,
+compile-only; the `xiom.ffi.c` group exposed a no-NASM runtime link gap
+(fixed, locked by `tools/probes/p_asm_fallback_link.xi`) and the heavy
+`xiom.net` group needs `-Timeout 0`.
 
 ## Documentation coverage
 

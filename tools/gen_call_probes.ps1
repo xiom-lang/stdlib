@@ -22,7 +22,8 @@ param(
   [switch]$KeepPassing,
   [switch]$EmitOnly,
   [int]$OnlyCalls = 0,
-  [int]$Limit = 0
+  [int]$Limit = 0,
+  [int]$Timeout = 300
 )
 # NOTE: do NOT set $ErrorActionPreference = "Stop" here: PowerShell 5.1 turns
 # a native compiler's stderr lines into ErrorRecords, which Stop would treat
@@ -101,7 +102,10 @@ foreach ($g in $byModule) {
   $checkOut = & $Compiler --check $probe 2>&1 | Out-String
   if ($LASTEXITCODE -ne 0) { $report += "CHECKFAIL $($g.Name) calls=$($g.Group.Count)"; $fail += "$safe.check"; continue }
   $bin = Join-Path $OutDir ("gcp_" + $safe + ".exe")
-  $compOut = & $Compiler --force -o $bin $probe 2>&1 | Out-String
+  # -Timeout passes through to the compiler's own compile watchdog (default
+  # 300s). Heavy import sets (xiom.net, xiom.num) legitimately exceed it in a
+  # debug build; pass -Timeout 0 to disable the watchdog for those tranches.
+  $compOut = & $Compiler --force --timeout $Timeout -o $bin $probe 2>&1 | Out-String
   if ($LASTEXITCODE -ne 0) {
     $report += "COMPILEFAIL $($g.Name) calls=$($g.Group.Count)"
     Set-Content -LiteralPath (Join-Path $OutDir ("gcp_" + $safe + ".err.txt")) -Value $compOut -Encoding ASCII
