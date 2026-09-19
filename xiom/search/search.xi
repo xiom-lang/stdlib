@@ -110,6 +110,7 @@ fn exp_binary_search[T: Ord](arr: &Vec[T], target: &T, lo: Int, hi: Int) -> Opti
   return None;
 }
 
+/// Exponential search on a sorted slice; returns the index or None.
 pub fn exponential_search[T: Ord](arr: &Vec[T], target: &T) -> Option[Int] {
   var n = arr.len();
   if n == 0 { return None; }
@@ -140,6 +141,7 @@ fn jump_sqrt(n: Int) -> Int {
   return step - 1;
 }
 
+/// Jump search on a sorted slice; returns the index or None.
 pub fn jump_search[T: Ord](arr: &Vec[T], target: &T) -> Option[Int] {
   var n = arr.len();
   if n == 0 { return None; }

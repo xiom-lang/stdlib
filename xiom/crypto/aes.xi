@@ -21,6 +21,7 @@ type StateHolder = { s: AesState; }
 
 type KeyExpState = { temp0: Int; temp1: Int; temp2: Int; temp3: Int; rcon_iteration: Int; }
 
+/// AES S-box substitution for one byte (0-255).
 pub fn aes_sbox(b: Int) -> Int
   requires: b >= 0 && b <= 255
   ensures: result >= 0 && result <= 255
@@ -285,6 +286,7 @@ pub fn aes_sbox(b: Int) -> Int
   return 0;
 }
 
+/// Inverse AES S-box substitution for one byte (0-255).
 pub fn aes_inv_sbox(b: Int) -> Int
   requires: b >= 0 && b <= 255
   ensures: result >= 0 && result <= 255
@@ -549,6 +551,7 @@ pub fn aes_inv_sbox(b: Int) -> Int
   return 0;
 }
 
+/// Rijndael round constant for `round` (1-based).
 pub fn aes_rcon(round: Int) -> Int
   requires: round >= 1 && round <= 10
 {
@@ -913,6 +916,7 @@ fn aes_decrypt_block(input: &Vec[Int], round_keys: &Vec[Int], rounds: Int) -> Ve
   return state_to_vec(h.s);
 }
 
+/// AES-128 encrypt one 16-byte block with a 16-byte key; Err on bad lengths.
 pub fn aes128_encrypt(plaintext: &Vec[Int], key: &Vec[Int]) -> Result[Vec[Int], Str]
   requires: plaintext.len() == 16
   requires: key.len() == 16
@@ -930,6 +934,7 @@ pub fn aes128_encrypt(plaintext: &Vec[Int], key: &Vec[Int]) -> Result[Vec[Int], 
   return Ok(result);
 }
 
+/// AES-128 decrypt one 16-byte block with a 16-byte key; Err on bad lengths.
 pub fn aes128_decrypt(ciphertext: &Vec[Int], key: &Vec[Int]) -> Result[Vec[Int], Str]
   requires: ciphertext.len() == 16
   requires: key.len() == 16
@@ -946,6 +951,7 @@ pub fn aes128_decrypt(ciphertext: &Vec[Int], key: &Vec[Int]) -> Result[Vec[Int],
   return Ok(result);
 }
 
+/// AES-256 encrypt one 16-byte block with a 32-byte key; Err on bad lengths.
 pub fn aes256_encrypt(plaintext: &Vec[Int], key: &Vec[Int]) -> Result[Vec[Int], Str]
   requires: plaintext.len() == 16
   requires: key.len() == 32
@@ -962,6 +968,7 @@ pub fn aes256_encrypt(plaintext: &Vec[Int], key: &Vec[Int]) -> Result[Vec[Int], 
   return Ok(result);
 }
 
+/// AES-256 decrypt one 16-byte block with a 32-byte key; Err on bad lengths.
 pub fn aes256_decrypt(ciphertext: &Vec[Int], key: &Vec[Int]) -> Result[Vec[Int], Str]
   requires: ciphertext.len() == 16
   requires: key.len() == 32

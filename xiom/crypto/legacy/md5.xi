@@ -200,6 +200,7 @@ fn md5_i(x: Int, y: Int, z: Int) -> Int {
   return xiom.math.bit_xor(s.y, t);
 }
 
+/// MD5 digest of the byte values (legacy hash; not for security use).
 pub fn md5(data: &Vec[Int]) -> Vec[Int]
   requires: data.len() > 0
   ensures: result.len() == 16
@@ -268,6 +269,7 @@ pub fn md5(data: &Vec[Int]) -> Vec[Int]
   return result;
 }
 
+/// Lowercase hex MD5 digest (legacy hash; not for security use).
 pub fn md5_hex(data: &Vec[Int]) -> Str
   requires: data.len() > 0
   ensures: result.len() == 32

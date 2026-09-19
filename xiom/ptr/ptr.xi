@@ -4,6 +4,7 @@
 
 module xiom.ptr
 
+/// Null pointer of type `*T` (escape hatch; never dereference).
 pub fn null[T]() -> *T
   requires: true  // deliberate null pointer (T003 raw-pointer escape hatch / T007)
 {
@@ -12,6 +13,7 @@ pub fn null[T]() -> *T
   }
 }
 
+/// Null pointer of type `*mut T` (escape hatch; never dereference).
 pub fn null_mut[T]() -> *mut T
   requires: true  // deliberate null pointer (T003 raw-pointer escape hatch / T007)
 {
@@ -20,6 +22,7 @@ pub fn null_mut[T]() -> *mut T
   }
 }
 
+/// Non-null marker pointer that must never be dereferenced.
 pub fn dangling[T]() -> *T
   // Deliberate marker pointer (never dereference); no input precondition.
   requires: true
@@ -29,10 +32,12 @@ pub fn dangling[T]() -> *T
   }
 }
 
+/// True when `ptr` is a null pointer.
 pub fn is_null[T](ptr: *const T) -> Bool {
   return ptr == null[T]();
 }
 
+/// Read the value at `ptr`; requires a non-null, valid pointer.
 pub fn read[T](ptr: *const T) -> T
   requires: ptr != null
 {
@@ -41,6 +46,7 @@ pub fn read[T](ptr: *const T) -> T
   }
 }
 
+/// Write `value` to `ptr`; requires a non-null, valid pointer.
 pub fn write[T](ptr: *mut T, value: T)
   requires: ptr != null
 {
@@ -49,6 +55,7 @@ pub fn write[T](ptr: *mut T, value: T)
   }
 }
 
+/// Volatile read at `ptr` (no elision/reordering by the backend).
 pub fn read_volatile[T](ptr: *const T) -> T
   requires: ptr != null
 {
@@ -57,6 +64,7 @@ pub fn read_volatile[T](ptr: *const T) -> T
   }
 }
 
+/// Volatile write of `value` to `ptr`.
 pub fn write_volatile[T](ptr: *mut T, value: T)
   requires: ptr != null
 {
@@ -65,6 +73,7 @@ pub fn write_volatile[T](ptr: *mut T, value: T)
   }
 }
 
+/// Swap the values at `a` and `b`; both must be non-null and valid.
 pub fn swap[T](a: *mut T, b: *mut T)
   requires: a != null
   requires: b != null
@@ -76,6 +85,7 @@ pub fn swap[T](a: *mut T, b: *mut T)
   }
 }
 
+/// Replace `*dest` with `src`, returning the previous value.
 pub fn replace[T](dest: *mut T, src: T) -> T
   requires: dest != null
   ensures:  result == old_value
@@ -87,6 +97,7 @@ pub fn replace[T](dest: *mut T, src: T) -> T
   }
 }
 
+/// Copy `count` values from `src` to `dst`; ranges may overlap.
 pub fn copy[T](src: *const T, dst: *mut T, count: Int)
   requires: src != null
   requires: dst != null
@@ -101,6 +112,7 @@ pub fn copy[T](src: *const T, dst: *mut T, count: Int)
   }
 }
 
+/// Copy `count` values from `src` to `dst`; ranges must not overlap.
 pub fn copy_nonoverlapping[T](src: *const T, dst: *mut T, count: Int)
   requires: src != null
   requires: dst != null
@@ -115,10 +127,12 @@ pub fn copy_nonoverlapping[T](src: *const T, dst: *mut T, count: Int)
   }
 }
 
+/// Pointer equality (address comparison).
 pub fn eq[T](a: *const T, b: *const T) -> Bool {
   return a == b;
 }
 
+/// Pointer arithmetic: `ptr + count` elements.
 pub fn offset[T](ptr: *const T, count: Int) -> *const T
   requires: ptr != null
 {
@@ -127,6 +141,7 @@ pub fn offset[T](ptr: *const T, count: Int) -> *const T
   }
 }
 
+/// Wrapping pointer arithmetic (no in-bounds requirement).
 pub fn wrapping_offset[T](ptr: *const T, count: Int) -> *const T
   requires: true
 {
@@ -135,6 +150,7 @@ pub fn wrapping_offset[T](ptr: *const T, count: Int) -> *const T
   }
 }
 
+/// `ptr + count` elements; requires a non-null pointer.
 pub fn add[T](ptr: *const T, count: Int) -> *const T
   requires: ptr != null
 {
@@ -143,6 +159,7 @@ pub fn add[T](ptr: *const T, count: Int) -> *const T
   }
 }
 
+/// `ptr - count` elements; requires a non-null pointer.
 pub fn sub[T](ptr: *const T, count: Int) -> *const T
   requires: ptr != null
 {
@@ -151,6 +168,7 @@ pub fn sub[T](ptr: *const T, count: Int) -> *const T
   }
 }
 
+/// Convert a shared reference to a raw pointer (escape hatch).
 pub fn from_ref[T](r: &T) -> *const T
   requires: true  // ref-to-pointer cast, allocator-style escape hatch (T003/T007)
 {
@@ -159,6 +177,7 @@ pub fn from_ref[T](r: &T) -> *const T
   }
 }
 
+/// Convert a mutable reference to a raw mutable pointer (escape hatch).
 pub fn from_mut[T](r: &mut T) -> *mut T
   requires: true  // ref-to-pointer cast, allocator-style escape hatch (T003/T007)
 {

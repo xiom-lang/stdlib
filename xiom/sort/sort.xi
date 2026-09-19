@@ -168,6 +168,7 @@ fn quick_sort_3way_range[T: Ord](arr: &mut Vec[T], lo: Int, hi: Int) {
   quick_sort_3way_range(arr, gt + 1, hi);
 }
 
+/// In-place quicksort: average O(n log n), worst case O(n^2).
 pub fn sort_quick[T: Ord](arr: &mut Vec[T]) {
   var n = arr.len();
   if n <= 1 { return; }
@@ -224,6 +225,7 @@ fn merge_sort_range[T: Ord](arr: &mut Vec[T], temp: &mut Vec[T], lo: Int, hi: In
   merge_merge(arr, temp, lo, mid, hi);
 }
 
+/// In-place merge sort with O(n log n) worst case.
 pub fn sort_merge[T: Ord](arr: &mut Vec[T]) {
   var n = arr.len();
   if n <= 1 { return; }
@@ -262,6 +264,7 @@ fn heap_sift_down[T: Ord](arr: &mut Vec[T], start: Int, end: Int) {
   }
 }
 
+/// In-place heapsort: O(n log n) worst case, O(1) extra space.
 pub fn sort_heap[T: Ord](arr: &mut Vec[T]) {
   var n = arr.len();
   if n <= 1 { return; }
@@ -412,6 +415,7 @@ fn radix_counting_pass(arr: &mut Vec[Int], exp: Int, n: Int) {
   }
 }
 
+/// Radix sort for Int keys; O(n) expected for fixed-width values.
 pub fn sort_radix(arr: &mut Vec[Int]) {
   var n = arr.len();
   if n <= 1 { return; }
@@ -494,6 +498,7 @@ fn quick_sort_by_range[T](arr: &mut Vec[T], compare: fn(&T, &T) -> Int, lo: Int,
   quick_sort_by_range(arr, compare, j + 1, hi);
 }
 
+/// Sort with a caller comparator: negative means less, positive greater.
 pub fn sort_by[T](arr: &mut Vec[T], compare: fn(&T, &T) -> Int) {
   var n = arr.len();
   if n <= 1 { return; }
@@ -574,6 +579,7 @@ fn merge_sort_by_range[T](arr: &mut Vec[T], temp: &mut Vec[T], compare: fn(&T, &
   merge_by_range(arr, temp, compare, lo, mid, hi);
 }
 
+/// Stable sort with a caller comparator (equal elements keep their order).
 pub fn stable_sort_by[T](arr: &mut Vec[T], compare: fn(&T, &T) -> Int) {
   var n = arr.len();
   if n <= 1 { return; }
@@ -638,6 +644,8 @@ fn nth_partition[T: Ord](arr: &mut Vec[T], lo: Int, hi: Int) -> Int {
   return j;
 }
 
+/// Partition so the `n`-th element is in final position; returns it (None
+/// when `n` is out of range).
 pub fn nth_element[T: Ord](arr: &mut Vec[T], n: Int) -> Option[T] {
   var len = arr.len();
   if n < 0 || n >= len { return None; }
@@ -748,6 +756,7 @@ fn dual_pivot_range[T: Ord](arr: &mut Vec[T], lo: Int, hi: Int) {
   dual_pivot_range(arr, gt + 2, hi);
 }
 
+/// Dual-pivot quicksort (in-place, average O(n log n)).
 pub fn sort_dual_pivot[T: Ord](arr: &mut Vec[T]) {
   var n = arr.len();
   if n <= 1 { return; }
