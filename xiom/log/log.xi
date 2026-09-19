@@ -11,7 +11,9 @@ use xiom.log.color;
 use xiom.convert;
 use xiom.io;
 
+/// Severity levels, from most to least verbose.
 pub type LogLevel = enum { Trace, Debug, Info, Warn, Error, Fatal }
+/// One log record (level, message, timestamp, fields).
 pub type LogEntry = {
   level: LogLevel;
   message: Str;
@@ -94,6 +96,7 @@ pub fn trace(msg: Str)
   };
 }
 
+/// Log at debug level.
 pub fn debug(msg: Str)
   requires: msg.len() >= 0
 {
@@ -102,6 +105,7 @@ pub fn debug(msg: Str)
   };
 }
 
+/// Log at info level.
 pub fn info(msg: Str)
   requires: msg.len() > 0
 {
@@ -110,6 +114,7 @@ pub fn info(msg: Str)
   };
 }
 
+/// Log at warn level.
 pub fn warn(msg: Str)
   requires: msg.len() > 0
 {
@@ -118,6 +123,7 @@ pub fn warn(msg: Str)
   };
 }
 
+/// Log at error level.
 pub fn error(msg: Str)
   requires: msg.len() > 0
 {
@@ -126,6 +132,7 @@ pub fn error(msg: Str)
   };
 }
 
+/// Log at fatal level.
 pub fn fatal(msg: Str)
   requires: msg.len() >= 0
 {
@@ -143,6 +150,7 @@ pub fn trace_with(msg: Str, data: Map[Str, Str])
   };
 }
 
+/// Log at debug level with structured fields.
 pub fn debug_with(msg: Str, data: Map[Str, Str])
   requires: msg.len() >= 0
 {
@@ -151,6 +159,7 @@ pub fn debug_with(msg: Str, data: Map[Str, Str])
   };
 }
 
+/// Log at info level with structured fields.
 pub fn info_with(msg: Str, data: Map[Str, Str])
   requires: msg.len() > 0
 {
@@ -159,6 +168,7 @@ pub fn info_with(msg: Str, data: Map[Str, Str])
   };
 }
 
+/// Log at warn level with structured fields.
 pub fn warn_with(msg: Str, data: Map[Str, Str])
   requires: msg.len() > 0
 {
@@ -167,6 +177,7 @@ pub fn warn_with(msg: Str, data: Map[Str, Str])
   };
 }
 
+/// Log at error level with structured fields.
 pub fn error_with(msg: Str, data: Map[Str, Str])
   requires: msg.len() > 0
 {
@@ -180,10 +191,12 @@ pub fn set_level(level: LogLevel) {
   current_level = level;
 }
 
+/// Current minimum level that is emitted.
 pub fn get_level() -> LogLevel {
   current_level
 }
 
+/// Redirect log output to a file; Err when it cannot be opened.
 pub fn set_output(file: Str) -> Result[Unit, Str]
   requires: file.len() > 0
 {
@@ -197,10 +210,12 @@ pub fn set_output(file: Str) -> Result[Unit, Str]
   }
 }
 
+/// Enable/disable JSON-lines output.
 pub fn set_output_json(enabled: Bool) {
   json_mode = enabled;
 }
 
+/// Enable/disable ANSI color output.
 pub fn set_output_color(enabled: Bool) {
   color_mode = enabled;
 }
@@ -221,6 +236,7 @@ pub fn entries_since(instant: Instant) -> Vec[LogEntry]
   result
 }
 
+/// Clear any file output and revert to the default sink.
 pub fn clear_log() {
   entries = Vec[LogEntry]::new();
 }

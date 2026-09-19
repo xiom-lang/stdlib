@@ -15,13 +15,17 @@ use xiom.convert;
 use xiom.io;
 use xiom.num;
 
+/// Types that can render themselves into a Formatter.
 pub interface Display {
   fn fmt(self, f: &mut Formatter) -> Result[Unit, FmtError];
 }
 
+/// Accumulates formatted output with width/precision/align options.
 pub type Formatter = { buf: Str; width: Int; precision: Int; align: Int; } derive[Clone]
+/// Formatting failure with a message.
 pub type FmtError = { message: Str; } derive[Clone]
 
+/// Create an empty formatter.
 pub fn Formatter.new() -> Formatter
   ensures: result.buf == ""
   ensures: result.width == 0
@@ -30,6 +34,7 @@ pub fn Formatter.new() -> Formatter
   Formatter { buf: ""; width: 0; precision: 6; align: 0; }
 }
 
+/// Append a string rendering.
 pub fn Formatter.write_str(self, s: Str) -> Result[Unit, FmtError]
   ensures: true
 {
@@ -37,6 +42,7 @@ pub fn Formatter.write_str(self, s: Str) -> Result[Unit, FmtError]
   Result[Unit, FmtError] { is_ok: true; value: (); error: FmtError { message: ""; }; }
 }
 
+/// Append an integer rendering.
 pub fn Formatter.write_int(self, n: Int) -> Result[Unit, FmtError]
   ensures: result.is_ok
 {
@@ -45,6 +51,7 @@ pub fn Formatter.write_int(self, n: Int) -> Result[Unit, FmtError]
   Result[Unit, FmtError] { is_ok: true; value: (); error: FmtError { message: ""; }; }
 }
 
+/// Append a float rendering.
 pub fn Formatter.write_float(self, f: Float64) -> Result[Unit, FmtError]
   ensures: result.is_ok
 {
@@ -53,6 +60,7 @@ pub fn Formatter.write_float(self, f: Float64) -> Result[Unit, FmtError]
   Result[Unit, FmtError] { is_ok: true; value: (); error: FmtError { message: ""; }; }
 }
 
+/// Append a bool rendering.
 pub fn Formatter.write_bool(self, b: Bool) -> Result[Unit, FmtError]
   ensures: result.is_ok
 {
@@ -61,6 +69,7 @@ pub fn Formatter.write_bool(self, b: Bool) -> Result[Unit, FmtError]
   Result[Unit, FmtError] { is_ok: true; value: (); error: FmtError { message: ""; }; }
 }
 
+/// Consume the formatter and return the accumulated text.
 pub fn Formatter.finish(self) -> Str
   ensures: result == self.buf@pre
 {
@@ -74,14 +83,17 @@ pub fn Int.to_str() -> Str {
   convert.int_to_string(self)
 }
 
+/// String rendering of the Float64.
 pub fn Float64.to_str() -> Str {
   convert.float_to_string(self)
 }
 
+/// String rendering of the Bool.
 pub fn Bool.to_str() -> Str {
   convert.bool_to_string(self)
 }
 
+/// String rendering of the Str (identity).
 pub fn Str.to_str() -> Str {
   self
 }
@@ -100,11 +112,13 @@ pub fn format1[T](fmt: Str, arg: T) -> Str {
   }
 }
 
+/// Format with two generic arguments substituted into `{}` placeholders.
 pub fn format2[T, U](fmt: Str, arg1: T, arg2: U) -> Str {
   let s = format1(fmt, arg1);
   format1(s, arg2)
 }
 
+/// Format with three generic arguments substituted into `{}` placeholders.
 pub fn format3[T, U, V](fmt: Str, arg1: T, arg2: U, arg3: V) -> Str {
   let s = format1(fmt, arg1);
   let s2 = format1(s, arg2);
@@ -116,6 +130,7 @@ pub fn print(s: Str) {
   io.print(s);
 }
 
+/// Write a line to standard output.
 pub fn println(s: Str) {
   io.println(s);
 }

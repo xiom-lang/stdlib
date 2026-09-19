@@ -39,10 +39,13 @@ const SOCK_DGRAM: Int = 2;
 /// === TCP ===
 pub type TcpStream = { fd: Int; } derive[Clone]
 
+/// Listening TCP socket handle.
 pub type TcpListener = { fd: Int; } derive[Clone]
 
+/// Network error with a message and an OS error code.
 pub type NetError = { message: Str; code: Int; }
 
+/// Connect to host:port; Err with the OS message.
 pub fn tcp_connect(host: Str, port: Int) -> Result[TcpStream, NetError]
   requires: host.len() > 0
   requires: port > 0 && port <= 65535 {
@@ -74,6 +77,7 @@ pub fn tcp_connect(host: Str, port: Int) -> Result[TcpStream, NetError]
   }
 }
 
+/// Bind and listen on host:port; Err on failure.
 pub fn tcp_listen(host: Str, port: Int) -> Result[TcpListener, NetError]
   requires: host.len() > 0
   requires: port > 0 && port <= 65535 {
@@ -97,6 +101,7 @@ pub fn tcp_listen(host: Str, port: Int) -> Result[TcpListener, NetError]
   }
 }
 
+/// Read up to buffer capacity; Ok(bytes, 0 at EOF) or Err.
 pub fn TcpStream.read(self, buf: &mut Vec[UInt8]) -> Result[Int, NetError]
   requires: true
 {
@@ -115,6 +120,7 @@ pub fn TcpStream.read(self, buf: &mut Vec[UInt8]) -> Result[Int, NetError]
   }
 }
 
+/// Write bytes; Ok(bytes written) or Err.
 pub fn TcpStream.write(self, data: &Vec[UInt8]) -> Result[Int, NetError]
   requires: true
 {
@@ -137,6 +143,7 @@ pub fn TcpStream.write(self, data: &Vec[UInt8]) -> Result[Int, NetError]
   }
 }
 
+/// Close the stream; Err on failure.
 pub fn TcpStream.close(self) -> Result[Unit, NetError] {
   unsafe {
     xiom_socket_close(self.fd);
@@ -144,6 +151,7 @@ pub fn TcpStream.close(self) -> Result[Unit, NetError] {
   Ok(())
 }
 
+/// Accept a connection; Ok((stream, peer address)) or Err.
 pub fn TcpListener.accept(self) -> Result[(TcpStream, Str), NetError]
   requires: true
 {
@@ -178,6 +186,7 @@ pub type NetHttpResponse = {
   body: Str;
 } derive[Clone]
 
+/// HTTP GET; Ok parsed response or Err (transport or parse).
 pub fn http_get(url: Str) -> Result[NetHttpResponse, NetError]
   requires: url.len() > 0
 {
@@ -224,6 +233,7 @@ pub fn http_get(url: Str) -> Result[NetHttpResponse, NetError]
   parse_http_response(raw)
 }
 
+/// HTTP POST with a body; Ok parsed response or Err.
 pub fn http_post(url: Str, body: Str) -> Result[NetHttpResponse, NetError] {
   let parsed = parse_url(url)?;
   var request: Str = "POST " + parsed.path;
@@ -309,6 +319,7 @@ fn parse_http_response(raw: Str) -> Result[NetHttpResponse, NetError] {
 /// === UDP ===
 pub type UdpSocket = { fd: Int; }
 
+/// Bind a UDP socket to host:port; Err on failure.
 pub fn udp_bind(host: Str, port: Int) -> Result[UdpSocket, NetError] {
   if port <= 0 || port >= 65536 {
     return Err(NetError{ message: "port out of range (1-65535)"; code: -101; });
@@ -326,6 +337,7 @@ pub fn udp_bind(host: Str, port: Int) -> Result[UdpSocket, NetError] {
   }
 }
 
+/// Send a datagram to addr:port; Ok(bytes) or Err.
 pub fn UdpSocket.send_to(self, data: &Vec[UInt8], addr: Str, port: Int) -> Result[Int, NetError]
   requires: true
 {
@@ -356,6 +368,7 @@ pub fn UdpSocket.send_to(self, data: &Vec[UInt8], addr: Str, port: Int) -> Resul
   }
 }
 
+/// Receive a datagram; Ok((bytes, peer address, port)) or Err.
 pub fn UdpSocket.recv_from(self, buf: &mut Vec[UInt8]) -> Result[(Int, Str, Int), NetError]
   requires: true
 {
@@ -387,6 +400,7 @@ pub fn UdpSocket.recv_from(self, buf: &mut Vec[UInt8]) -> Result[(Int, Str, Int)
   }
 }
 
+/// Close the socket; Err on failure.
 pub fn UdpSocket.close(self) -> Result[Unit, NetError] {
   unsafe {
     xiom_socket_close(self.fd);
@@ -429,6 +443,7 @@ pub fn resolve_host(hostname: Str) -> Result[Vec[Str], NetError]
   }
 }
 
+/// Local address for binding to `port`; Err on failure.
 pub fn local_addr(port: Int) -> Result[Str, NetError]
   requires: true
 {
@@ -488,6 +503,7 @@ pub type UrlParts = {
   fragment: Str;
 }
 
+/// Split a URL into scheme/host/port/path; Err on malformed input.
 pub fn parse_url(url: Str) -> Result[UrlParts, NetError] {
   let len = url.len();
   if len == 0 {
