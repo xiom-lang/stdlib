@@ -17,12 +17,14 @@ extern "C" {
   fn xiom_byte_at(s: Str, pos: Int) -> Int;
 }
 
+/// Byte length of the string.
 pub fn str_len(s: Str) -> Int
   ensures: result >= 0
 {
   s.len()
 }
 
+/// Concatenation of two strings.
 pub fn str_concat(a: Str, b: Str) -> Str
   ensures: result.len() == a.len() + b.len()
 {
@@ -44,6 +46,7 @@ pub fn str_concat(a: Str, b: Str) -> Str
   }
 }
 
+/// Byte slice [start, end) of the string.
 pub fn str_slice(s: Str, start: Int, end: Int) -> Str
   ensures: end >= start && start >= 0 && end <= s.len() => result.len() == end - start
   ensures: result.len() <= s.len()
@@ -67,6 +70,7 @@ pub fn str_slice(s: Str, start: Int, end: Int) -> Str
   }
 }
 
+/// True when `substr` occurs in the string.
 pub fn str_contains(s: Str, substr: Str) -> Bool
   ensures: substr.len() == 0 => result
 {
@@ -91,6 +95,7 @@ fn _matches_at(s: Str, at: Int, sub: Str) -> Bool {
   return true;
 }
 
+/// True when the string starts with `prefix`.
 pub fn str_starts_with(s: Str, prefix: Str) -> Bool
   ensures: prefix.len() == 0 => result
 {
@@ -101,6 +106,7 @@ pub fn str_starts_with(s: Str, prefix: Str) -> Bool
   _matches_at(s, 0, prefix)
 }
 
+/// True when the string ends with `suffix`.
 pub fn str_ends_with(s: Str, suffix: Str) -> Bool
   ensures: suffix.len() == 0 => result
 {
@@ -112,6 +118,7 @@ pub fn str_ends_with(s: Str, suffix: Str) -> Bool
   _matches_at(s, s_len - suffix_len, suffix)
 }
 
+/// Split on `delimiter` into parts (empty parts preserved).
 pub fn str_split(s: Str, delimiter: Str) -> Vec[Str]
   ensures:  result.len() >= 1  // always at least one element
 {
@@ -144,6 +151,7 @@ pub fn str_split(s: Str, delimiter: Str) -> Vec[Str]
   result
 }
 
+/// Copy without leading/trailing ASCII whitespace.
 pub fn str_trim(s: Str) -> Str
   ensures: result.len() <= s.len()  // trim never increases length
 {
@@ -159,16 +167,19 @@ pub fn str_trim(s: Str) -> Str
   str_slice(s, start, end)
 }
 
+/// Parse an Int; Err with a message on bad input.
 pub fn str_to_int(s: Str) -> Result[Int, Str]
 {
   xiom.core.to_int_from_str(s)
 }
 
+/// Parse a Float64; Err with a message on bad input.
 pub fn str_to_float(s: Str) -> Result[Float64, Str]
 {
   xiom.core.to_float_from_str(s)
 }
 
+/// Copy with lowercase letters uppercased.
 pub fn str_upper(s: Str) -> Str
   ensures: result.len() == s.len()
 {
@@ -193,6 +204,7 @@ pub fn str_upper(s: Str) -> Str
   }
 }
 
+/// Copy with uppercase letters lowercased.
 pub fn str_lower(s: Str) -> Str
   ensures: result.len() == s.len()
 {
@@ -215,10 +227,12 @@ pub fn str_lower(s: Str) -> Str
   }
 }
 
+/// Return `fmt` unchanged (formatting with no arguments).
 pub fn format(fmt: Str) -> Str {
   fmt
 }
 
+/// Substitute the first `{}` placeholder with `arg`.
 pub fn format1(fmt: Str, arg: Str) -> Str
   ensures: result.len() >= fmt.len() - 2 + arg.len()
 {
@@ -233,11 +247,13 @@ pub fn format1(fmt: Str, arg: Str) -> Str
   }
 }
 
+/// Substitute the first two `{}` placeholders with the arguments.
 pub fn format2(fmt: Str, arg1: Str, arg2: Str) -> Str {
   let s = format1(fmt, arg1);
   format1(s, arg2)
 }
 
+/// Byte value at `pos`, or 0 when out of bounds.
 pub fn byte_at(s: Str, pos: Int) -> UInt8
   requires: true  // extern byte accessor confined below (T002/T007)
 {
@@ -246,6 +262,7 @@ pub fn byte_at(s: Str, pos: Int) -> UInt8
   }
 }
 
+/// UTF-8 character at byte position `pos`, or None.
 pub fn char_at(s: Str, pos: Int) -> Option[Char]
   // char_at indexes BYTE positions (like byte_at); contracts mirror the body
   // guard. Restored after the R8 contract-codegen fix (20aa3d07): the old
@@ -261,6 +278,7 @@ pub fn char_at(s: Str, pos: Int) -> Option[Char]
   Some(xiom_char_at(s, pos))
 }
 
+/// Byte index of the first occurrence, or None.
 pub fn index_of(s: Str, substr: Str) -> Option[Int]
   requires: substr.len() > 0
   ensures:  result is Some => result >= 0 && result < s.len()
@@ -283,6 +301,7 @@ pub fn index_of(s: Str, substr: Str) -> Option[Int]
   None
 }
 
+/// Byte index of the last occurrence, or None.
 pub fn last_index_of(s: Str, substr: Str) -> Option[Int]
   ensures: result is Some => result >= 0 && result <= s.len()
 {
@@ -304,6 +323,7 @@ pub fn last_index_of(s: Str, substr: Str) -> Option[Int]
   None
 }
 
+/// Replace all occurrences of `from` with `to`.
 pub fn replace(s: Str, from: Str, to: Str) -> Str
 {
   let from_len = from.len();
@@ -334,12 +354,14 @@ pub fn replace(s: Str, from: Str, to: Str) -> Str
   result
 }
 
+/// Lines split on newlines (terminators removed).
 pub fn lines(s: Str) -> Vec[Str]
   ensures: result.len() >= 1
 {
   str_split(s, "\n")
 }
 
+/// Whitespace-separated words.
 pub fn words(s: Str) -> Vec[Str]
   requires: true  // extern char_at calls in the loops (T002 confinement)
 {
@@ -361,6 +383,7 @@ pub fn words(s: Str) -> Vec[Str]
   result
 }
 
+/// True when the string has zero bytes.
 pub fn is_empty(s: Str) -> Bool
   ensures: result == (s.len() == 0)
 {
@@ -377,6 +400,7 @@ pub fn Str.is_empty(self) -> Bool
   self.len() == 0
 }
 
+/// Number of UTF-8 characters.
 pub fn char_count(s: Str) -> Int
   ensures: result >= 0
 {
@@ -392,6 +416,7 @@ pub fn char_count(s: Str) -> Int
   count
 }
 
+/// Number of bytes.
 pub fn byte_count(s: Str) -> Int
   ensures: result >= 0
 {

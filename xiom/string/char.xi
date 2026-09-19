@@ -4,6 +4,7 @@
 
 module xiom.char
 
+/// True when the character is alphabetic.
 pub fn is_alphabetic(c: Char) -> Bool
   ensures: result == ((to_int_from_char(c) >= 65 && to_int_from_char(c) <= 90) || (to_int_from_char(c) >= 97 && to_int_from_char(c) <= 122))
 {
@@ -11,12 +12,14 @@ pub fn is_alphabetic(c: Char) -> Bool
   return (code >= 65 && code <= 90) || (code >= 97 && code <= 122);
 }
 
+/// True when the character is alphabetic or numeric.
 pub fn is_alphanumeric(c: Char) -> Bool
   ensures: result == (is_alphabetic(c) || is_digit(c))
 {
   return is_alphabetic(c) || is_digit(c);
 }
 
+/// True when the code point is below 128.
 pub fn is_ascii(c: Char) -> Bool
   ensures: result == (to_int_from_char(c) <= 127)
 {
@@ -24,6 +27,7 @@ pub fn is_ascii(c: Char) -> Bool
   return code <= 127;
 }
 
+/// True when the character is a control code.
 pub fn is_control(c: Char) -> Bool
   ensures: result == ((to_int_from_char(c) >= 0 && to_int_from_char(c) <= 31) || to_int_from_char(c) == 127)
 {
@@ -31,6 +35,7 @@ pub fn is_control(c: Char) -> Bool
   return (code >= 0 && code <= 31) || code == 127;
 }
 
+/// True when the character is an ASCII decimal digit.
 pub fn is_digit(c: Char) -> Bool
   ensures: result == (to_int_from_char(c) >= 48 && to_int_from_char(c) <= 57)
 {
@@ -38,6 +43,7 @@ pub fn is_digit(c: Char) -> Bool
   return code >= 48 && code <= 57;
 }
 
+/// True when the character is lowercase.
 pub fn is_lowercase(c: Char) -> Bool
   ensures: result == (to_int_from_char(c) >= 97 && to_int_from_char(c) <= 122)
 {
@@ -45,6 +51,7 @@ pub fn is_lowercase(c: Char) -> Bool
   return code >= 97 && code <= 122;
 }
 
+/// True when the character is uppercase.
 pub fn is_uppercase(c: Char) -> Bool
   ensures: result == (to_int_from_char(c) >= 65 && to_int_from_char(c) <= 90)
 {
@@ -52,12 +59,14 @@ pub fn is_uppercase(c: Char) -> Bool
   return code >= 65 && code <= 90;
 }
 
+/// True when the character is numeric.
 pub fn is_numeric(c: Char) -> Bool
   ensures: result == is_digit(c)
 {
   return is_digit(c);
 }
 
+/// True when the character is punctuation.
 pub fn is_punctuation(c: Char) -> Bool
   ensures: result == ((to_int_from_char(c) >= 33 && to_int_from_char(c) <= 47) || (to_int_from_char(c) >= 58 && to_int_from_char(c) <= 64) || (to_int_from_char(c) >= 91 && to_int_from_char(c) <= 96) || (to_int_from_char(c) >= 123 && to_int_from_char(c) <= 126))
 {
@@ -68,6 +77,7 @@ pub fn is_punctuation(c: Char) -> Bool
       || (code >= 123 && code <= 126);
 }
 
+/// True when the character is whitespace.
 pub fn is_whitespace(c: Char) -> Bool
   ensures: result == (to_int_from_char(c) == 32 || to_int_from_char(c) == 9 || to_int_from_char(c) == 10 || to_int_from_char(c) == 13)
 {
@@ -75,6 +85,7 @@ pub fn is_whitespace(c: Char) -> Bool
   return code == 32 || code == 9 || code == 10 || code == 13;
 }
 
+/// Lowercase mapping of the character.
 pub fn to_lowercase(c: Char) -> Char {
   let code = to_int_from_char(c);
   if code >= 65 && code <= 90 {
@@ -83,6 +94,7 @@ pub fn to_lowercase(c: Char) -> Char {
   return c;
 }
 
+/// Uppercase mapping of the character.
 pub fn to_uppercase(c: Char) -> Char {
   let code = to_int_from_char(c);
   if code >= 97 && code <= 122 {
@@ -91,6 +103,7 @@ pub fn to_uppercase(c: Char) -> Char {
   return c;
 }
 
+/// Numeric value in the given radix (2..36), or None.
 pub fn to_digit(c: Char, radix: Int) -> Option[Int]
   ensures: radix < 2 || radix > 36 => result is None
   ensures: result is Some => result.value >= 0
@@ -123,6 +136,7 @@ pub fn to_digit(c: Char, radix: Int) -> Option[Int]
   return None;
 }
 
+/// Character for a digit value in the given radix, or None.
 pub fn from_digit(n: Int, radix: Int) -> Option[Char]
   ensures: n < 0 || n >= radix => result is None
   ensures: radix < 2 || radix > 36 => result is None
@@ -139,6 +153,7 @@ pub fn from_digit(n: Int, radix: Int) -> Option[Char]
   return Some(to_char(n - 10 + 65));
 }
 
+/// UTF-8 encoding length of the character (1..4).
 pub fn len_utf8(c: Char) -> Int
   ensures: result >= 1 && result <= 4
 {
@@ -155,6 +170,7 @@ pub fn len_utf8(c: Char) -> Int
   return 4;
 }
 
+/// Append the UTF-8 encoding of the character to `buf`.
 pub fn encode_utf8(c: Char, buf: &mut Vec[UInt8]) {
   let code = to_int_from_char(c);
   if code <= 0x7F {
