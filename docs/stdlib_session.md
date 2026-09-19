@@ -16,10 +16,11 @@ HEAD `926e888`; every other clone must be re-cloned. The protected tag
 was rejected by tag rules -- owner action needed).
 
 **Verified state (2026-09-18)**
-- Compiler main built twice this session via `git archive` + `cargo build
-  --locked -p xiom`: `12148d43` (R46) and `504fcc1e` (R46b, includes the
-  qualified-receiver generic-method fix). All results below use R46b unless
-  noted.
+- Compiler main built three times this session via `git archive` + `cargo
+  build --locked -p xiom`: `12148d43` (R46), `504fcc1e` (R46b, the
+  qualified-receiver generic-method fix) and `306073ba` (R49, the
+  `@pre`/path-identity/Result-payload fixes). All results below use R46b
+  unless noted; the final gate battery uses R49.
 - Corpus gates run green after every batch: R44 batches 1-3 and waves 12-15 =
   `check_modules` **509/509** + corpus **949/949** (runner file count;
   `docs/VERIFICATION_BASELINE.md` freeze says 950 -- the runner counted 949
@@ -67,13 +68,18 @@ was rejected by tag rules -- owner action needed).
   `os.os`/`os.env` call the shims, and the moved probe
   `tools/probes/p_os_env_set_link.xi` round-trips set/get/remove; the six
   `smoke_env*` smokes + `check_modules` 509/509 pass.
-- More compiler findings/status: `tools/known_failures/p_pre_call_capture.xi`
-  -- `@pre` on a CALL expression in `ensures` reads post-state (field
-  `@pre` works), which makes `tools/probes/p_wave8_shapes.xi` line 75 RED
-  on R46/R46b. It was aborting 11 corpus smokes once runtime detection
-  worked; all stdlib call-`@pre` clauses were replaced with safe forms
-  (see the correction bullet above). Restore the stronger size relations
-  only after the compiler fix. `encoding/ascii85.xi` produced T001 in the compiler's
+- More compiler findings/status: compiler main **R49 (`306073ba`)** closed
+  the direct call-`@pre` snapshot bug, the module path/declared-name identity
+  bug (freeze test 2/2, 0 missing) and the Result-payload contract bug; the
+  three repros moved to `tools/probes/` (`p_pre_call_capture`,
+  `p_module_path_alias`, `p_result_payload_contract`). **Residual**
+  (`tools/known_failures/p_pre_capture_callee.xi`): ref-param snapshots
+  still alias scalar fields and computed-index Vec loops, so
+  `collect/{list,queue,rbtree,tree,spatial,hash,intmap,lfu,fenwick}` keep
+  weak clauses while `collections.xi`, `rc` and `sync` carry the restored
+  strong ones (verified by smokes). `p_wave8_shapes.xi` stays red as the
+  residual lock. R49 gates: 509/509 modules, corpus 949/949 (1525.7s),
+  ratchet floors53 OK. `encoding/ascii85.xi` produced T001 in the compiler's
   combined-import gate (`stdlib_all_modules_compile_to_ir`); FIXED
   stdlib-side by fully qualifying the `xiom.convert.ascii85` calls (the
   bare alias bound to `num.convert`'s Option-returning `from_ascii85`) --
@@ -105,19 +111,12 @@ was rejected by tag rules -- owner action needed).
   `ptr/ptr.xi` (19).
 
 **Next-session queue, in order**
-1. Compiler lane: fix `p_pre_call_capture` (`@pre` call capture reads
-   post-state; it aborts valid calls and is the reason the stdlib uses
-   weaker clauses now), `p_sweep_single_param` (clang ISel crash,
-   `@__unsafe_block_77`, xiom.net) and `p_result_payload_contract`
-   (scalar+Vec Result payload contract in one module). The compiler repo's
-   own gate tests now pass against current main except the freeze snapshot
-   (compiler-side resolver + regen; see below).
-   Freeze-gate evidence (2026-09-19, current main): 212 frozen signatures
-   missing = 154 resolver misses (`sha/md5/path/fmt/char/cmp/env/contracts/
-   aes` moved; compiler-side `resolve_module_path`/manifest) + 58 drift (49
-   pre-existing + 9 from renames: `async Executor.*` x7, `net
-   http_get/http_post` x2). Pinned checkout baseline is 203. The IR gate
-   `stdlib_all_modules_compile_to_ir` PASSES after the ascii85 fix.
+1. Compiler lane: R49 (`306073ba`) closed the direct `@pre` snapshot,
+   path/declared-name identity (+freeze 2/2) and Result-payload bugs; verify
+   in the compiler repo before the next pin. Residual `@pre` aliasing for
+   scalar fields / computed-index Vec loops is filed as
+   `p_pre_capture_callee.xi` (keeps p_wave8 red). `p_sweep_single_param`
+   (clang ISel crash, `@__unsafe_block_77`, R49-4) remains open.
 2. Finish the generator groups (`-OnlyCalls 3` .. `-OnlyCalls 58`, or
    `-Limit`), triage failures; when the compiler fixes land, promote the
    zero/single-param tranches into `tools/probes/` and re-baseline.

@@ -13,32 +13,31 @@ xiom --force -o out.exe tools/known_failures/<file>.xi
 
 ## Current
 
-- `p_module_path_alias.xi` (2026-09-19): importing a module by its FILE PATH
-  when the path differs from the declared module name breaks the catalog.
-  `use xiom.crypto.legacy.md5;` (file declares `xiom.crypto.md5`) makes
-  `xiom --check` report 33 T001s in `xiom.crypto.rng_crypto`
-  (`cannot call 'secure_random_bytes' on this expression`); the declared-name
-  import is clean, and so is rng_crypto alone. Same for
-  `xiom.crypto.legacy.sha`. Neither an alias import nor full-path calls
-  help. 19 modules currently have path/name mismatches (list in the probe);
-  they overlap the modules the compiler `stdlib_api_freeze` test cannot
-  resolve, so a resolver fix that registers the declared identity probably
-  clears both.
+- `p_pre_capture_callee.xi` (2026-09-19): residual `@pre` bug after compiler
+  R49. The direct-mutation shape (`p_pre_call_capture.xi`) is FIXED and
+  verified on compiler main `306073ba`; but when the mutation happens inside
+  a CALLEE, the entry snapshot of a ref-param expression still aliases the
+  live storage: `wrapper` snapshots `total(b)`, calls `pop_like` (mutates
+  `b.n` 3 -> 2), and the ensures sees 2 == 2 - 1 -> runtime abort. Keeps
+  `tools/probes/p_wave8_shapes.xi` (s_pop_len, line ~68) red.
 
-- `p_pre_call_capture.xi` (2026-09-18): a call expression with `@pre` in an
-  `ensures` clause reads the POST-state instead of the pre-state, so
-  `f(x) == f(x)@pre + delta` always violates at runtime. Minimal repro is
-  13 lines; field `@pre` (`b.v[0] == b.v[0]@pre`) works. Reproduced on
-  compiler main R46 (`12148d43`) and R46b (`504fcc1e`); it makes
-  `tools/probes/p_wave8_shapes.xi` line 75 red
-  (`int_map_size(m) == int_map_size(m)@pre - 1`). Wave-14 contracts avoid
-  the shape; any contract of this form must stay out of the stdlib until
-  fixed. IMPACT (2026-09-19): after fixing the run_smokes runtime-detection
-  bug, 11 corpus smokes were failing on these clauses (kdtree/rbtree/tree/
-  list/intmap/hash/lfu/btree/cache); every call-`@pre` clause in the stdlib
-  was replaced with an `@pre`-free equivalent (membership/no-op forms), and
-  the corpus is green again. Restore the stronger size-relation clauses only
-  after the compiler fix lands.
+- `p_module_path_alias.xi` -- **RESOLVED 2026-09-19** on compiler main
+  `306073ba` (R49-1), **moved to `tools/probes/`**: the catalog keys modules
+  by their declared header, `process_use` rewrites non-declared paths
+  up-front, and the freeze resolver gained a declared-header index. Path
+  imports of the 19 mismatched modules (`crypto/legacy/*`,
+  `core/{cmp,contracts,platform}`, `os/*`, ...) are `--check` clean and
+  `stdlib_api_freeze_tests` is 2/2 (0 missing).
+
+- `p_pre_call_capture.xi` (2026-09-18) -- **RESOLVED 2026-09-19** on compiler
+  main `306073ba` (R49, `0f2213bc`), **moved to `tools/probes/`**: `--run`
+  exits 0, no contract violation. IMPACT history: after fixing the
+  run_smokes runtime-detection bug, 11 corpus smokes were aborting on these
+  clauses; every call-`@pre` clause in the stdlib was replaced with an
+  `@pre`-free equivalent. The direct shape is fixed, so the restored
+  clauses are verified in `collections.xi` (method receivers) and
+  `rc`/`sync` clone counters; the callee-mutation residual above still
+  blocks scalar-field shapes.
 
 - `p_os_env_set_link.xi` -- **RESOLVED 2026-09-19**, moved to
   `tools/probes/p_os_env_set_link.xi`. `runtime/xiom_runtime.c` now exports

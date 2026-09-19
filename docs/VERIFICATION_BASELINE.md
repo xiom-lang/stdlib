@@ -36,6 +36,31 @@ with an `@pre`-free equivalent, and the inverted clauses were fixed.
 check 509/509.** Stronger size-relation clauses can be restored once the
 compiler's `@pre` call capture is fixed.
 
+## R49 compiler update (2026-09-19) -- relayed bugs closed
+
+Compiler main `306073ba` (R49) fixed three stdlib-relayed findings:
+
+- call-`@pre` direct snapshots (`0f2213bc`): `p_pre_call_capture.xi` runs
+  clean (exit 0); lock `e2e_m95`.
+- module path/declared-name identity + freeze gate (`82041941`, `e2e_m99`):
+  all 19 mismatched path imports `--check` clean; `stdlib_api_freeze_tests`
+  2/2 (was 212 missing -> 0).
+- Result-payload contracts (`306073ba`, `e2e_m100`):
+  `p_result_payload_contract.xi` compiles clean.
+  All three repros were **moved to `tools/probes/`**.
+
+Empirical residual (filed as `p_pre_capture_callee.xi`): ref-param snapshots
+still alias SCALAR FIELDS and computed-index Vec loops, so the stdlib keeps
+`@pre`-free clauses in `collect/{list,queue,rbtree,tree,spatial,hash,intmap,
+lfu,fenwick}`. Restored and verified with R49 (smokes + gates):
+`collections.xi` (method receivers), `rc`/`sync` clone counters (direct
+field increments).
+
+**R49 gate results:** check_modules **509/509** (262.5s); corpus **949/949**,
+0 compilefail, 0 runfail (**1525.7s**, 8 workers, `-RetryFailed`); coverage
+ratchet floors53 OK. `p_wave8_shapes.xi` stays red at its scalar-field
+clause as the residual lock.
+
 ## Provenance note
 
 Tag `v0.60.0` predates the resource-asset fix (`e3714884`, 2026-09-17

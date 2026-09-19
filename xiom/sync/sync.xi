@@ -394,7 +394,7 @@ pub fn Arc.new[T](value: T) -> Arc[T]
 /// Increment the strong count and return a second handle.
 pub fn Arc.clone[T](self) -> Arc[T]
   requires: ptr != null
-  ensures:  strong_count() >= 1
+  ensures:  strong_count() == strong_count()@pre + 1
 {
   unsafe {
     xiom_atomic_fetch_add(ptr.count, 1);

@@ -2,10 +2,10 @@
 // Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
 // SPDX-License-Identifier: MIT OR Apache-2.0
 //
-// STATUS 2026-09-18: RED on compiler main R46/R46b. The `@pre` call-capture
-// bug (tools/known_failures/p_pre_call_capture.xi) makes s_imap_remove's
-// `int_map_size(m) == int_map_size(m)@pre - 1` violate at runtime. This file
-// stays as the regression lock; do not weaken it.
+// STATUS 2026-09-19: RED. Compiler R49 fixed the direct-mutation `@pre`
+// shape (p_pre_call_capture.xi passes), but the callee-mutation shape at
+// s_pop_len (line ~68) still reads post-state; minimal repro:
+// tools/known_failures/p_pre_capture_callee.xi. Do not weaken this file.
 // Validates the NEW clause shapes before they are applied to the stdlib:
 // 1. `result is Some => result.value >= 0` (Int Option implication)
 // 2. `result is Some => result.value >= 0.0` (Float64 Option implication)
