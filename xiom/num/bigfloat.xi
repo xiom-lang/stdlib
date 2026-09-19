@@ -31,8 +31,10 @@ use xiom.core.to_int;
 use xiom.core.to_float;
 use xiom.math;
 
+/// Rounding mode for BigFloat operations.
 pub type RoundMode = enum { Nearest, Up, Down, Zero }
 
+/// Arbitrary-precision floating-point value.
 pub type BigFloat = {
   sign: Bool;
   exponent: Int;
@@ -55,18 +57,22 @@ pub fn bigfloat_zero() -> BigFloat {
                    significand: xiom.bigint.bigint_zero(); precision: _default_precision; };
 }
 
+/// Constant 1.0 with default precision.
 pub fn bigfloat_one() -> BigFloat {
   return bigfloat_from_int(1);
 }
 
+/// Constant 2.0 with default precision.
 pub fn bigfloat_two() -> BigFloat {
   return bigfloat_from_int(2);
 }
 
+/// Constant 10.0 with default precision.
 pub fn bigfloat_ten() -> BigFloat {
   return bigfloat_from_int(10);
 }
 
+/// Constant 0.5 with default precision.
 pub fn bigfloat_half() -> BigFloat {
   return BigFloat{ sign: false; exponent: -1;
                    significand: xiom.bigint.bigint_from_int(5); precision: _default_precision; };
@@ -190,6 +196,7 @@ pub fn bigfloat_set_round_mode(mode: RoundMode) {
   _default_round = mode;
 }
 
+/// Current global rounding mode.
 pub fn bigfloat_get_round_mode() -> RoundMode {
   return _default_round;
 }
@@ -297,12 +304,14 @@ pub fn bigfloat_from_str(s: Str) -> Result[BigFloat, Str] {
   }
 }
 
+/// Convert a BigInt to BigFloat.
 pub fn bigfloat_from_bigint(b: &BigInt) -> BigFloat {
   var neg = xiom.bigint.bigint_is_negative(b);
   var mag = xiom.bigint.bigint_abs(b);
   return BigFloat{ sign: neg; exponent: 0; significand: mag; precision: _default_precision; };
 }
 
+/// Value `n` with the given decimal working precision.
 pub fn bigfloat_with_precision(n: Int, precision: Int) -> BigFloat
   requires: precision >= 1
 {
@@ -462,21 +471,25 @@ pub fn bigfloat_is_zero(f: &BigFloat) -> Bool {
   return xiom.bigint.bigint_is_zero(&f.significand);
 }
 
+/// True when the value is negative.
 pub fn bigfloat_is_negative(f: &BigFloat) -> Bool {
   return f.sign && !bigfloat_is_zero(f);
 }
 
+/// True when the value equals 1.
 pub fn bigfloat_is_one(f: &BigFloat) -> Bool {
   var one = _one_at(f.precision);
   return bigfloat_eq(f, &one);
 }
 
+/// -1, 0 or 1 according to the sign.
 pub fn bigfloat_sign(f: &BigFloat) -> Int {
   if bigfloat_is_zero(f) { return 0; }
   if f.sign { return -1; }
   return 1;
 }
 
+/// Working precision in decimal digits.
 pub fn bigfloat_precision(f: &BigFloat) -> Int {
   return f.precision;
 }
@@ -510,12 +523,14 @@ pub fn bigfloat_add(a: &BigFloat, b: &BigFloat) -> BigFloat {
   return _round_to_precision(&n);
 }
 
+/// Difference of two BigFloats.
 pub fn bigfloat_sub(a: &BigFloat, b: &BigFloat) -> BigFloat {
   var nb = _copy_bf(b);
   nb.sign = !b.sign;
   return bigfloat_add(a, &nb);
 }
 
+/// Product of two BigFloats.
 pub fn bigfloat_mul(a: &BigFloat, b: &BigFloat) -> BigFloat {
   var prec = _prec_of(a, b);
   if bigfloat_is_zero(a) || bigfloat_is_zero(b) {
@@ -553,12 +568,14 @@ pub fn bigfloat_div(a: &BigFloat, b: &BigFloat) -> BigFloat
   return _round_to_precision(&n);
 }
 
+/// Negation.
 pub fn bigfloat_neg(f: &BigFloat) -> BigFloat {
   var result = _copy_bf(f);
   if !bigfloat_is_zero(f) { result.sign = !f.sign; }
   return result;
 }
 
+/// Absolute value.
 pub fn bigfloat_abs(f: &BigFloat) -> BigFloat {
   var result = _copy_bf(f);
   result.sign = false;
@@ -641,12 +658,14 @@ fn _split_int_frac(f: &BigFloat) -> IntFrac {
   return IntFrac{ q: dm.0; r: dm.1; d: d; };
 }
 
+/// Round toward zero.
 pub fn bigfloat_trunc(f: &BigFloat) -> BigFloat {
   var split = _split_int_frac(f);
   return BigFloat{ sign: f.sign; exponent: 0;
                    significand: split.q; precision: f.precision; };
 }
 
+/// Round toward negative infinity.
 pub fn bigfloat_floor(f: &BigFloat) -> BigFloat {
   var split = _split_int_frac(f);
   var q = split.q;
@@ -658,6 +677,7 @@ pub fn bigfloat_floor(f: &BigFloat) -> BigFloat {
                    significand: q; precision: f.precision; };
 }
 
+/// Round toward positive infinity.
 pub fn bigfloat_ceil(f: &BigFloat) -> BigFloat {
   var split = _split_int_frac(f);
   var q = split.q;
@@ -737,22 +757,27 @@ pub fn bigfloat_compare(a: &BigFloat, b: &BigFloat) -> Int {
   return cmp;
 }
 
+/// Exact equality.
 pub fn bigfloat_eq(a: &BigFloat, b: &BigFloat) -> Bool {
   return bigfloat_compare(a, b) == 0;
 }
 
+/// Strictly less than.
 pub fn bigfloat_lt(a: &BigFloat, b: &BigFloat) -> Bool {
   return bigfloat_compare(a, b) < 0;
 }
 
+/// Less than or equal.
 pub fn bigfloat_le(a: &BigFloat, b: &BigFloat) -> Bool {
   return bigfloat_compare(a, b) <= 0;
 }
 
+/// Strictly greater than.
 pub fn bigfloat_gt(a: &BigFloat, b: &BigFloat) -> Bool {
   return bigfloat_compare(a, b) > 0;
 }
 
+/// Greater than or equal.
 pub fn bigfloat_ge(a: &BigFloat, b: &BigFloat) -> Bool {
   return bigfloat_compare(a, b) >= 0;
 }
@@ -984,6 +1009,7 @@ pub fn bigfloat_pi_with_precision(precision: Int) -> BigFloat
   return _finish(&pi, precision);
 }
 
+/// Euler's number e to the given decimal precision.
 pub fn bigfloat_e_with_precision(precision: Int) -> BigFloat
   requires: precision >= 1
 {
@@ -1051,6 +1077,7 @@ pub fn bigfloat_ln(f: &BigFloat) -> BigFloat
   return _finish(&s, f.precision);
 }
 
+/// Base-10 logarithm.
 pub fn bigfloat_log10(f: &BigFloat) -> BigFloat
   requires: !bigfloat_is_negative(f)
   requires: !bigfloat_is_zero(f)
@@ -1095,14 +1122,17 @@ fn _sincos(f: &BigFloat, want_cos: Bool) -> BigFloat {
   return _finish(&result, f.precision);
 }
 
+/// Sine of the value (radians).
 pub fn bigfloat_sin(f: &BigFloat) -> BigFloat {
   return _sincos(f, false);
 }
 
+/// Cosine of the value (radians).
 pub fn bigfloat_cos(f: &BigFloat) -> BigFloat {
   return _sincos(f, true);
 }
 
+/// Tangent of the value (radians).
 pub fn bigfloat_tan(f: &BigFloat) -> BigFloat {
   var s = bigfloat_sin(f);
   var c = bigfloat_cos(f);
@@ -1269,12 +1299,14 @@ pub fn bigfloat_sinh(f: &BigFloat) -> BigFloat {
   return bigfloat_div(&bigfloat_sub(&e, &en), &bigfloat_two());
 }
 
+/// Hyperbolic cosine.
 pub fn bigfloat_cosh(f: &BigFloat) -> BigFloat {
   var e = bigfloat_exp(f);
   var en = bigfloat_exp(&bigfloat_neg(f));
   return bigfloat_div(&bigfloat_add(&e, &en), &bigfloat_two());
 }
 
+/// Hyperbolic tangent.
 pub fn bigfloat_tanh(f: &BigFloat) -> BigFloat {
   var s = bigfloat_sinh(f);
   var c = bigfloat_cosh(f);
@@ -1393,14 +1425,17 @@ pub fn bigfloat_floor_int(f: &BigFloat) -> Result[Int, Str] {
   return xiom.bigint.bigint_to_int(&bigfloat_to_bigint(&bigfloat_floor(f)));
 }
 
+/// Convert to Int after ceiling; Err when out of range.
 pub fn bigfloat_ceil_int(f: &BigFloat) -> Result[Int, Str] {
   return xiom.bigint.bigint_to_int(&bigfloat_to_bigint(&bigfloat_ceil(f)));
 }
 
+/// Convert to Int after rounding; Err when out of range.
 pub fn bigfloat_round_int(f: &BigFloat) -> Result[Int, Str] {
   return xiom.bigint.bigint_to_int(&bigfloat_to_bigint(&bigfloat_round(f)));
 }
 
+/// Convert to Int after truncation; Err when out of range.
 pub fn bigfloat_trunc_int(f: &BigFloat) -> Result[Int, Str] {
   return xiom.bigint.bigint_to_int(&bigfloat_to_bigint(&bigfloat_trunc(f)));
 }
