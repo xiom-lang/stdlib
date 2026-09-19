@@ -4,7 +4,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 -->
 # XIOM Stdlib Session -- Handoff
 
-## 0A. CONTINUE HERE -- handoff snapshot (2026-09-18, evening session)
+## 0A. CONTINUE HERE -- handoff snapshot (updated 2026-09-19, after compiler R49)
 
 **Repo**: `xiom-lang/stdlib` at `E:\xiom-lang\stdlib` (branch `main`).
 Compiler pin: `COMPILER_VERSION` = **v0.60.0** (v0.60.1 and the pin predate
@@ -14,6 +14,44 @@ is now `Lefteris Notas <lefterisnotas@gmail.com>`, `main` force-pushed to
 HEAD `926e888`; every other clone must be re-cloned. The protected tag
 `stdlib-v0.60.0` still carries the old tagger on the remote (its force-push
 was rejected by tag rules -- owner action needed).
+
+**FINAL STATE (2026-09-19, compiler main R49 `306073ba`; local main `3f839e1`)**
+- ALL GATES GREEN on the final tree: `check_modules` **509/509** (262.5s);
+  corpus **949/949**, 0 compilefail, 0 runfail (**1525.7s**, `-RetryFailed`);
+  coverage ratchet floors53 OK; `barename_scan` **0 hits / 509**
+  (1162.8s). Runtime detection is trustworthy only after the
+  `run_smokes.ps1` fix (`68e8324`); treat any older `runfail=0` as
+  false-green.
+- Coverage (floors53, wired in all workflows): **io 62.0%, string 60.0%,
+  collect 60.7%** -- all key modules above the v1.0 60% gate; global 18.9%
+  clauses / 18.9% pub-with-clause.
+- API docs: **100%** (6,984/6,984 pub declarations carry `///` prose);
+  `tools/doc_baseline4.json` is the 100% ratchet floor. New pub
+  declarations MUST be documented or the ratchet fails.
+- R44 same-leaf dedup COMPLETE (16 -> 0; empty audit baseline). R49 closed
+  the relayed calls: direct `@pre` snapshots (`p_pre_call_capture`), module
+  path/declared identity + freeze (`p_module_path_alias`; freeze 212
+  missing -> 0), Result payloads (`p_result_payload_contract`) -- all three
+  promoted to `tools/probes/`.
+- OPEN compiler findings: `tools/known_failures/p_pre_capture_callee.xi`
+  (R49 residual: ref-param `@pre` snapshots alias SCALAR FIELDS and
+  computed-index Vec loops; method receivers and constant-index Vec work --
+  this keeps `p_wave8_shapes.xi` red) and
+  `tools/known_failures/p_sweep_single_param.xi` (R49-4 clang ISel crash on
+  `@__unsafe_block_77`, IR deterministic, no hang).
+- Contracts: strong `@pre` relations restored + verified in
+  `collections.xi` (smoke 21/21), `rc` (6/6), `sync` (22/22); weak
+  `@pre`-free clauses kept in `collect/{list,queue,rbtree,tree,spatial,
+  hash,intmap,lfu,fenwick}` (each restored form aborted -- evidence in the
+  residual file).
+- Untested-surface generator `tools/gen_call_probes.ps1`
+  (`-EmitOnly/-OnlyCalls/-Limit`): scan = 47 modules / 179 scalar
+  multi-param never-referenced calls; the 1- and 2-call groups are compiled
+  (32 OK; the single FAIL was the now-fixed os env link gap). Groups with
+  3..58 calls are NOT yet compiled.
+- Windows env link gap FIXED (`runtime/xiom_runtime.c` shims). CI actions
+  pinned to full SHAs. Docs tooling: `doc_scan.ps1` + `doc_promote.ps1`
+  (with `-Dedupe`).
 
 **Verified state (2026-09-18)**
 - Compiler main built three times this session via `git archive` + `cargo
@@ -111,35 +149,25 @@ was rejected by tag rules -- owner action needed).
   `ptr/ptr.xi` (19).
 
 **Next-session queue, in order**
-1. Compiler lane: R49 (`306073ba`) closed the direct `@pre` snapshot,
-   path/declared-name identity (+freeze 2/2) and Result-payload bugs; verify
-   in the compiler repo before the next pin. Residual `@pre` aliasing for
-   scalar fields / computed-index Vec loops is filed as
-   `p_pre_capture_callee.xi` (keeps p_wave8 red). `p_sweep_single_param`
-   (clang ISel crash, `@__unsafe_block_77`, R49-4) remains open.
-2. Finish the generator groups (`-OnlyCalls 3` .. `-OnlyCalls 58`, or
-   `-Limit`), triage failures; when the compiler fixes land, promote the
-   zero/single-param tranches into `tools/probes/` and re-baseline.
-3. R44 is COMPLETE (0 conflicts). Freeze-gate coordination with the
-   compiler lane: their `resolve_module_path` must handle the moved modules
-   (154 entries) and the FROZEN snapshot must be regenerated (58 drifted,
-   incl. the 9 from these renames); the IR gate is already green against
-   current main.
-4. Wave 15: push string/collect toward 60% with clean shapes (bare
-   `result is Ok`, `=>`, count bounds, field `@pre`) -- do NOT use call
-   `@pre` until p_pre_call_capture is fixed. Payload-reading Result clauses
-   only after p_result_payload_contract is fixed. Pre-validate new shapes in
-   `p_waveN_shapes.xi`; dump/wire floorsN+1 in the same commit.
-5. Windows env link gap: **DONE 2026-09-19** (runtime shims
-   `xiom_env_set`/`xiom_env_unset`; probe + smoke_env* + check_modules
-   509/509 green). TLS/schannel and tzdata phase 2 stay last; registry
-   publish activation is the user's (dispatch-only `publish-registry.yml`).
-6. Docs prose: fill the remaining 1,191 prose-less pub declarations
-   (start with `iter/iter.xi`, `sort/sort.xi`, `bits/bits.xi`,
-   `ptr/ptr.xi`); run `tools/doc_promote.ps1` again first in case new plain
-   comments landed; dump the next doc baseline and keep
-   `doc_scan.ps1 -RatchetFile` green. The website-side API docs improve
-   directly with each `///` added.
+1. Compiler lane follow-ups (relay via the user): R49-4
+   `p_sweep_single_param` clang ISel crash; the `@pre` scalar-field
+   aliasing residual in `p_pre_capture_callee.xi`. When either lands:
+   restore the strong size clauses in the nine blocked `collect/*` modules,
+   move `p_wave8_shapes.xi` green, and promote `p_sweep` if it compiles.
+   Keep `p_sweep`'s current evidence unchanged until then.
+2. Untested-surface generator: compile the remaining groups
+   (`-OnlyCalls 3` .. `-OnlyCalls 58`, or `-Limit N` for triage) against
+   the R49 binary; triage failures into `tools/known_failures/` with
+   evidence and passes into `tools/probes/`. The single-param tranche
+   stays blocked on item 1.
+3. Coverage (optional push): payload-reading Result clauses are now
+   allowed (R49-3); pre-validate new shapes in `p_waveN_shapes.xi`, then
+   dump `coverage_floorsN+1.json` and wire it into all workflows + READMEs
+   in the same commit.
+4. Windows TLS/schannel (compiler FFI hardening) and tzdata phase 2 stay
+   last; registry publish activation is the user's (dispatch-only
+   `publish-registry.yml`). Every new pub declaration needs `///` prose
+   (100% doc ratchet).
 
 **Recipes**
 - Build a compiler ref: export it (`git -C E:\xiom-lang\xiom archive
@@ -147,13 +175,17 @@ was rejected by tag rules -- owner action needed).
   `CARGO_TARGET_DIR=<temp>\target`, `cargo build --locked -p xiom`. GOTCHA:
   if you reuse a warm target dir, TOUCH all extracted sources first
   (git-archive mtimes can be older than the artifacts, so cargo skips the
-  rebuild). Run with `XIOM_STDLIB=E:\xiom-lang\stdlib`.
-- Gates: `./tools/run_smokes.ps1 -Compiler <exe> -RetryFailed`;
+  rebuild). Run with `XIOM_STDLIB=E:\xiom-lang\stdlib`. Built this session:
+  R46 `12148d43`, R46b `504fcc1e`, R49 `306073ba`; binaries stashed under
+  `%TEMP%\kilo\stdlib_ws\` (`xiom_r49.exe` is the current one).
+- Gates: `./tools/run_smokes.ps1 -Compiler <exe> -Workers 8 -RetryFailed`;
   `powershell -NoProfile -File tools/check_modules.ps1 -Compiler <exe>`
   (this box has NO `pwsh` -- use `powershell`);
   `powershell -NoProfile -File tools/barename_scan.ps1 -Compiler <exe>`;
   `powershell -NoProfile -File tools/coverage_scan.ps1 -RatchetFile
-  tools/coverage_floors51.json`.
+  tools/coverage_floors53.json`;
+  `powershell -NoProfile -File tools/doc_scan.ps1 -RatchetFile
+  tools/doc_baseline4.json`.
 - Compiler gate tests (run from the extracted compiler source):
   set `CARGO_TARGET_DIR` + `XIOM_STDLIB=E:\xiom-lang\stdlib`, copy
   `target\debug\xiom.exe` into `<extracted-src>\target\debug` (the test's
@@ -161,13 +193,14 @@ was rejected by tag rules -- owner action needed).
   `cargo test -p xiom-codegen --test stdlib_tests stdlib_all_modules_compile_to_ir`
   and
   `cargo test -p xiom-codegen --test stdlib_api_freeze_tests stdlib_api_freeze_no_removals`.
-- The corpus takes 20-40 min with 8 workers when the compiler lane runs its
+- The corpus takes 20-45 min with 8 workers when the compiler lane runs its
   e2e suite concurrently; check per-worker CSVs for liveness, not just the
   log (a low-row worker is usually CPU-starved, not stuck).
 - No stdlib edits while a sweep is in flight; one fix = one probe = one
   verified rerun; stage explicit paths; pure-ASCII commits; verify
   `git log -1 --format='%an <%ae>'` prints Lefteris Notas
-  <lefterisnotas@gmail.com> before every push.
+  <lefterisnotas@gmail.com> before every push. Local main is normally ahead
+  of origin -- push only when the release lane asks.
 - Key docs: `tools/README.md`, `docs/CI.md`,
   `docs/VERIFICATION_BASELINE.md`, `docs/STDLIB_READINESS_PLAN.md`
   (gates), `docs/STDLIB_BETA_LIMITATIONS.md`,
