@@ -280,8 +280,7 @@ pub fn bptree_contains(t: &BPlusTree, key: Int) -> Bool
 /// Remove `key`; returns true if it was present. The key is removed from its
 /// leaf (lazy deletion); routing keys stay valid as separators. O(log n).
 pub fn bptree_remove(t: &mut BPlusTree, key: Int) -> Bool
-  ensures: result == true => bptree_contains(t, key) == false
-  ensures: result == false => bptree_contains(t, key)
+  ensures: bptree_contains(t, key) == false
 {
   var leaf = bp_find_leaf(t, key);
   if leaf == -1 { return false; }

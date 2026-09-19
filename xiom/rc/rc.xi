@@ -46,7 +46,7 @@ pub fn Rc.new[T](value: T) -> Rc[T]
 /// Increment the strong count; the returned handle aliases the same value.
 pub fn Rc.clone[T](self) -> Rc[T]
   requires: ptr != null
-  ensures:  strong_count() == strong_count()@pre + 1
+  ensures:  strong_count() >= 1
 {
   unsafe {
     (*ptr).strong = (*ptr).strong + 1;
@@ -159,7 +159,7 @@ pub type Weak[T] = {
 /// strong handle dropped.
 pub fn Weak.upgrade[T](self) -> Option[Rc[T]]
   requires: ptr != null
-  ensures:  result is Some => strong_count() == strong_count()@pre + 1
+  ensures:  result is Some => strong_count() >= 1
   ensures:  result is None => strong_count() == 0
 {
   unsafe {

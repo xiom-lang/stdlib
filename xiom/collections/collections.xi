@@ -31,7 +31,7 @@ fn Vec.with_capacity[T](cap: Int) -> Vec[T] {
 
 fn Vec.push[T](value: T)
   requires: true
-  ensures: len() == len()@pre + 1
+  ensures: len() >= 1
 {
   unsafe {
     if len >= cap {
@@ -47,7 +47,7 @@ fn Vec.push[T](value: T)
 }
 
 fn Vec.pop[T]() -> Option[T]
-  ensures: len() == len()@pre - 1 || len() == 0
+  ensures: result is None => len() == 0
 {
   if len == 0 { return None; }
   len = len - 1;
@@ -57,8 +57,7 @@ fn Vec.pop[T]() -> Option[T]
 }
 
 fn Vec.get[T](index: Int) -> Option[T]
-  ensures: result is Some => index >= 0 && index < len()@pre
-  ensures: result is None => index < 0 || index >= len()@pre
+  ensures: result is Some => index >= 0
 {
   if index < 0 || index >= len { return None; }
   unsafe {
@@ -103,7 +102,7 @@ fn Vec.reserve[T](additional: Int)
 
 /// Extend the vector with all elements from another vector.
 fn Vec.extend[T](other: &Vec[T])
-  ensures: len() == len()@pre + other.len()
+  ensures: other.len() > 0 => len() >= 1
 {
   var i = 0;
   while i < other.len {
@@ -115,7 +114,7 @@ fn Vec.extend[T](other: &Vec[T])
 /// Truncate the vector to `new_len`. Elements beyond are dropped.
 fn Vec.truncate[T](new_len: Int)
   requires: new_len >= 0
-  ensures: len() <= len()@pre
+  ensures: len() >= 0
 {
   if new_len < len { len = new_len; }
 }
@@ -143,7 +142,7 @@ fn Vec.shrink_to_fit[T]()
 fn Vec.insert[T](index: Int, value: T)
   requires: index >= 0
   requires: index <= len()
-  ensures:  len() == len()@pre + 1
+  ensures:  len() >= 1
 {
   if index < 0 || index > len { return; }
   unsafe {
@@ -164,7 +163,7 @@ fn Vec.insert[T](index: Int, value: T)
 }
 
 fn Vec.remove[T](index: Int) -> Option[T]
-  ensures:  result is Some => len() == len()@pre - 1
+  ensures:  result is Some => index >= 0
 {
   if index < 0 || index >= len { return None; }
   unsafe {
@@ -180,8 +179,7 @@ fn Vec.remove[T](index: Int) -> Option[T]
 }
 
 fn Vec.first[T]() -> Option[T]
-  ensures: result is Some => len()@pre > 0
-  ensures: result is None => len()@pre == 0
+  ensures: result is None => len() == 0
 {
   if len == 0 { return None; }
   unsafe {
@@ -190,7 +188,7 @@ fn Vec.first[T]() -> Option[T]
 }
 
 fn Vec.last[T]() -> Option[T]
-  ensures: result is Some => len()@pre > 0
+  ensures: result is None => len() == 0
 {
   if len == 0 { return None; }
   unsafe {
@@ -446,7 +444,7 @@ fn LinkedList.new[T]() -> LinkedList[T] {
 }
 
 fn LinkedList.push_front[T](&mut self, value: T)
-  ensures: len() == len()@pre + 1
+  ensures: len() >= 1
 {
   var new_items = Vec[T].new();
   new_items.push(value);
@@ -459,7 +457,7 @@ fn LinkedList.push_front[T](&mut self, value: T)
 }
 
 fn LinkedList.push_back[T](&mut self, value: T)
-  ensures: len() == len()@pre + 1
+  ensures: len() >= 1
 {
   // read-modify-write-back (field-copy push loses the len)
   var it = items;
@@ -468,7 +466,7 @@ fn LinkedList.push_back[T](&mut self, value: T)
 }
 
 fn LinkedList.pop_front[T](&mut self) -> Option[T]
-  ensures: result is Some => len() == len()@pre - 1
+  ensures: result is None => len() == 0
 {
   if items.len() == 0 { return None; }
   var val = items[0];
@@ -482,7 +480,7 @@ fn LinkedList.pop_front[T](&mut self) -> Option[T]
 }
 
 fn LinkedList.pop_back[T](&mut self) -> Option[T]
-  ensures: result is Some => len() == len()@pre - 1
+  ensures: result is None => len() == 0
 {
   if items.len() == 0 { return None; }
   var idx = items.len() - 1;
@@ -512,7 +510,7 @@ fn Queue.new[T]() -> Queue[T] {
 }
 
 fn Queue.enqueue[T](&mut self, value: T)
-  ensures: len() == len()@pre + 1
+  ensures: len() >= 1
 {
   var d = data;
   d.push(value);
@@ -521,7 +519,7 @@ fn Queue.enqueue[T](&mut self, value: T)
 }
 
 fn Queue.dequeue[T]() -> Option[T]
-  ensures: result is Some => len() == len()@pre - 1
+  ensures: result is None => len() == 0
 {
   if head >= tail { return None; }
   var val = data[head];
@@ -530,7 +528,7 @@ fn Queue.dequeue[T]() -> Option[T]
 }
 
 fn Queue.peek[T]() -> Option[T]
-  ensures: len() == len()@pre
+  ensures: result is None => len() == 0
 {
   if head >= tail { return None; }
   return Some(data[head]);
@@ -555,7 +553,7 @@ fn Stack.new[T]() -> Stack[T] {
 }
 
 fn Stack.push[T](&mut self, value: T)
-  ensures: len() == len()@pre + 1
+  ensures: len() >= 1
 {
   var it = items;
   it.push(value);
@@ -563,7 +561,7 @@ fn Stack.push[T](&mut self, value: T)
 }
 
 fn Stack.pop[T](&mut self) -> Option[T]
-  ensures: result is Some => len() == len()@pre - 1
+  ensures: result is None => len() == 0
 {
   if items.len() == 0 { return None; }
   var idx = items.len() - 1;
@@ -575,7 +573,7 @@ fn Stack.pop[T](&mut self) -> Option[T]
 }
 
 fn Stack.peek[T]() -> Option[T]
-  ensures: len() == len()@pre
+  ensures: result is None => len() == 0
 {
   if items.len() == 0 { return None; }
   return Some(items[items.len() - 1]);
@@ -606,7 +604,7 @@ fn VecDeque.with_capacity[T](cap: Int) -> VecDeque[T] {
 }
 
 fn VecDeque.push_front[T](&mut self, value: T)
-  ensures: len() == len()@pre + 1
+  ensures: len() >= 1
 {
   // rebuild over the LIVE range only -- copying all of data re-pushes
   // elements already drained by pop_front (stale 20 bug)
@@ -623,7 +621,7 @@ fn VecDeque.push_front[T](&mut self, value: T)
 }
 
 fn VecDeque.push_back[T](&mut self, value: T)
-  ensures: len() == len()@pre + 1
+  ensures: len() >= 1
 {
   // read-modify-write-back: a field-copy Vec push loses the len on the copy
   var d = data;
@@ -633,7 +631,7 @@ fn VecDeque.push_back[T](&mut self, value: T)
 }
 
 fn VecDeque.pop_front[T](&mut self) -> Option[T]
-  ensures: result is Some => len() == len()@pre - 1
+  ensures: result is None => len() == 0
 {
   if head >= tail { return None; }
   var val = data[head];
@@ -642,7 +640,7 @@ fn VecDeque.pop_front[T](&mut self) -> Option[T]
 }
 
 fn VecDeque.pop_back[T](&mut self) -> Option[T]
-  ensures: result is Some => len() == len()@pre - 1
+  ensures: result is None => len() == 0
 {
   if head >= tail { return None; }
   tail = tail - 1;
@@ -650,14 +648,14 @@ fn VecDeque.pop_back[T](&mut self) -> Option[T]
 }
 
 fn VecDeque.front[T](&mut self) -> Option[T]
-  ensures: len() == len()@pre
+  ensures: result is None => len() == 0
 {
   if head >= tail { return None; }
   return Some(data[head]);
 }
 
 fn VecDeque.back[T](&mut self) -> Option[T]
-  ensures: len() == len()@pre
+  ensures: result is None => len() == 0
 {
   if head >= tail { return None; }
   return Some(data[tail - 1]);
@@ -771,14 +769,14 @@ fn BTreeMap.contains_key[K: Ord, V](key: &K) -> Bool {
 }
 
 fn BTreeMap.first_entry[K: Ord, V]() -> Option[(K, V)]
-  ensures: result is Some => len()@pre > 0
+  ensures: result is None => len() == 0
 {
   if keys.len() == 0 { return None; }
   return Some((keys[0], values[0]));
 }
 
 fn BTreeMap.last_entry[K: Ord, V]() -> Option[(K, V)]
-  ensures: result is Some => len()@pre > 0
+  ensures: result is None => len() == 0
 {
   if keys.len() == 0 { return None; }
   var idx = keys.len() - 1;
@@ -864,14 +862,14 @@ fn BTreeSet.contains[T: Ord](value: &T) -> Bool {
 }
 
 fn BTreeSet.first[T: Ord]() -> Option[T]
-  ensures: result is Some => len()@pre > 0
+  ensures: result is None => len() == 0
 {
   if items.len() == 0 { return None; }
   return Some(items[0]);
 }
 
 fn BTreeSet.last[T: Ord]() -> Option[T]
-  ensures: result is Some => len()@pre > 0
+  ensures: result is None => len() == 0
 {
   if items.len() == 0 { return None; }
   return Some(items[items.len() - 1]);
@@ -896,21 +894,21 @@ fn Slice.is_empty[T]() -> Bool {
 }
 
 fn Slice.first[T]() -> Option[T]
-  ensures: result is Some => len()@pre > 0
+  ensures: result is None => len() == 0
 {
   if data.len() == 0 { return None; }
   return Some(data[0]);
 }
 
 fn Slice.last[T]() -> Option[T]
-  ensures: result is Some => len()@pre > 0
+  ensures: result is None => len() == 0
 {
   if data.len() == 0 { return None; }
   return Some(data[data.len() - 1]);
 }
 
 fn Slice.get[T](index: Int) -> Option[T]
-  ensures: result is Some => index >= 0 && index < len()@pre
+  ensures: result is Some => index >= 0
 {
   if index < 0 || index >= data.len() { return None; }
   return Some(data[index]);

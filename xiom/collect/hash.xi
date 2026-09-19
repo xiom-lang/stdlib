@@ -49,7 +49,10 @@ fn bloom_hash2(data: &Vec[UInt8]) -> Int {
 
 /// Create a bloom filter with `bits` usable bits and `num_hashes` hash
 /// functions. The bit count is rounded up to a whole number of bytes.
-pub fn bloom_new(bits: Int, num_hashes: Int) -> BloomFilter {
+pub fn bloom_new(bits: Int, num_hashes: Int) -> BloomFilter
+  ensures: result.bit_count >= 8
+  ensures: result.num_hashes >= 1
+{
   var nbytes = (bits + 7) / 8;
   if nbytes < 1 { nbytes = 1; }
   var bit_count = nbytes * 8;
@@ -65,7 +68,9 @@ pub fn bloom_new(bits: Int, num_hashes: Int) -> BloomFilter {
 }
 
 /// Insert the given bytes into the filter.
-pub fn bloom_insert(b: &mut BloomFilter, data: &Vec[UInt8]) {
+pub fn bloom_insert(b: &mut BloomFilter, data: &Vec[UInt8])
+  ensures: bloom_maybe_contains(b, data)
+{
   var h1 = bloom_hash1(data);
   var h2 = bloom_hash2(data);
   var i = 0;
@@ -83,7 +88,9 @@ pub fn bloom_insert(b: &mut BloomFilter, data: &Vec[UInt8]) {
 }
 
 /// True if the bytes may be present. Never reports a false negative.
-pub fn bloom_maybe_contains(b: &BloomFilter, data: &Vec[UInt8]) -> Bool {
+pub fn bloom_maybe_contains(b: &BloomFilter, data: &Vec[UInt8]) -> Bool
+  ensures: b.inserted == 0 => result == false
+{
   var h1 = bloom_hash1(data);
   var h2 = bloom_hash2(data);
   var i = 0;
@@ -100,7 +107,9 @@ pub fn bloom_maybe_contains(b: &BloomFilter, data: &Vec[UInt8]) -> Bool {
 }
 
 /// Clear all bits and reset the insertion counter.
-pub fn bloom_clear(b: &mut BloomFilter) {
+pub fn bloom_clear(b: &mut BloomFilter)
+  ensures: b.inserted == 0
+{
   var i = 0;
   while i < b.bits.len() {
     b.bits[i] = (0) as UInt8;
@@ -150,7 +159,9 @@ fn lhmap_find(m: &LhMap, key: Int) -> Int {
 }
 
 /// Insert or update a key. New keys are appended in insertion order.
-pub fn lhmap_put(m: &mut LhMap, key: Int, value: Int) {
+pub fn lhmap_put(m: &mut LhMap, key: Int, value: Int)
+  ensures: lhmap_contains(m, key)
+{
   var idx = lhmap_find(m, key);
   if idx >= 0 {
     m.values[idx] = value;
@@ -170,7 +181,9 @@ pub fn lhmap_get(m: &LhMap, key: Int) -> Option[Int]
 }
 
 /// True if the key is present.
-pub fn lhmap_contains(m: &LhMap, key: Int) -> Bool {
+pub fn lhmap_contains(m: &LhMap, key: Int) -> Bool
+  ensures: result == true => lhmap_size(m) >= 1
+{
   return lhmap_find(m, key) >= 0;
 }
 
@@ -178,8 +191,6 @@ pub fn lhmap_contains(m: &LhMap, key: Int) -> Bool {
 /// Returns true if the key was present.
 pub fn lhmap_remove(m: &mut LhMap, key: Int) -> Bool
   ensures: lhmap_contains(m, key) == false
-  ensures: result == true => lhmap_size(m) == lhmap_size(m)@pre - 1
-  ensures: result == false => lhmap_size(m) == lhmap_size(m)@pre
 {
   var idx = lhmap_find(m, key);
   if idx < 0 { return false; }

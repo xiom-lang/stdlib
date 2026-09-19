@@ -294,8 +294,7 @@ fn btree_rebuild_without(t: &mut BTree, key: Int) {
 /// Remove `key`; returns true if it was present. O(n) worst case (the tree is
 /// rebuilt so it stays perfectly balanced).
 pub fn btree_remove(t: &mut BTree, key: Int) -> Bool
-  ensures: result == true => btree_contains(t, key) == false
-  ensures: result == false => btree_contains(t, key)
+  ensures: btree_contains(t, key) == false
 {
   if !btree_contains(t, key) { return false; }
   btree_rebuild_without(t, key);

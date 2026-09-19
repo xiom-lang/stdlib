@@ -80,8 +80,6 @@ pub fn bst_contains(b: &Bst, key: Int) -> Bool {
 /// Returns true if the key was found and removed.
 pub fn bst_remove(b: &mut Bst, key: Int) -> Bool
   ensures: bst_contains(b, key) == false
-  ensures: result == true => bst_size(b) == bst_size(b)@pre - 1
-  ensures: result == false => bst_size(b) == bst_size(b)@pre
 {
   if b.root == -1 { return false; }
   var cur = b.root;

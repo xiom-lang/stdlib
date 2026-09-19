@@ -116,8 +116,7 @@ pub fn lfu_contains(c: &mut LfuCache, key: Int) -> Bool
 /// Remove `key`, returning whether it was present.
 /// O(n).
 pub fn lfu_remove(c: &mut LfuCache, key: Int) -> Bool
-  ensures: result == true => lfu_contains(c, key) == false
-  ensures: result == false => lfu_contains(c, key)
+  ensures: lfu_contains(c, key) == false
 {
   var i = 0;
   while i < c.keys.len() {

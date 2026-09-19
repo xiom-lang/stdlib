@@ -194,8 +194,7 @@ pub fn cuckoo_contains(m: &CuckooMap, key: Int) -> Bool
 
 /// Remove `key`. Returns true if it was present.
 pub fn cuckoo_remove(m: &mut CuckooMap, key: Int) -> Bool
-  ensures: result == true => cuckoo_contains(m, key) == false
-  ensures: result == false => cuckoo_contains(m, key)
+  ensures: cuckoo_contains(m, key) == false
 {
   var found = _lookup(m, key);
   if found.2 == 0 {
