@@ -1,6 +1,11 @@
 // p_wave8_shapes.xi -- contract shape validation for wave 8.
 // Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
 // SPDX-License-Identifier: MIT OR Apache-2.0
+//
+// STATUS 2026-09-18: RED on compiler main R46/R46b. The `@pre` call-capture
+// bug (tools/known_failures/p_pre_call_capture.xi) makes s_imap_remove's
+// `int_map_size(m) == int_map_size(m)@pre - 1` violate at runtime. This file
+// stays as the regression lock; do not weaken it.
 // Validates the NEW clause shapes before they are applied to the stdlib:
 // 1. `result is Some => result.value >= 0` (Int Option implication)
 // 2. `result is Some => result.value >= 0.0` (Float64 Option implication)

@@ -13,6 +13,16 @@ xiom --force -o out.exe tools/known_failures/<file>.xi
 
 ## Current
 
+- `p_pre_call_capture.xi` (2026-09-18): a call expression with `@pre` in an
+  `ensures` clause reads the POST-state instead of the pre-state, so
+  `f(x) == f(x)@pre + delta` always violates at runtime. Minimal repro is
+  13 lines; field `@pre` (`b.v[0] == b.v[0]@pre`) works. Reproduced on
+  compiler main R46 (`12148d43`) and R46b (`504fcc1e`); it makes
+  `tools/probes/p_wave8_shapes.xi` line 75 red
+  (`int_map_size(m) == int_map_size(m)@pre - 1`). Wave-14 contracts avoid
+  the shape; any contract of this form must stay out of the stdlib until
+  fixed.
+
 - `p_os_env_set_link.xi` (2026-09-18): Windows link failure found by the new
   `tools/gen_call_probes.ps1` sweep (never-referenced multi-param surface).
   `xiom.os.env_set` (and `xiom.env.set_var` / `set_var_if_absent` /
