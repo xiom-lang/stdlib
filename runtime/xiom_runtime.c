@@ -59,18 +59,23 @@ typedef struct {
 #include <stddef.h>
 
 /* crypto stubs */
-static void xiom_asm_aes128_encrypt_block(const uint8_t* p, const uint8_t* rk, uint8_t* c) { (void)p; (void)rk; (void)c; }
-static void xiom_asm_aes128_decrypt_block(const uint8_t* c, const uint8_t* rk, uint8_t* p) { (void)c; (void)rk; (void)p; }
-static void xiom_asm_aes128_key_expand(const uint8_t* k, uint8_t* rk) { (void)k; (void)rk; }
-static int  xiom_asm_constant_time_compare(const uint8_t* a, const uint8_t* b, size_t n) { (void)a; (void)b; (void)n; return 0; }
+/* NOTE: the stubs are NOT static -- stdlib modules (xiom.mem, xiom.ffi.c)
+   declare these symbols in their own extern blocks and link against them, so
+   a no-NASM build must expose the fallbacks with external linkage. This block
+   only compiles when the compiler passes -DXIOM_NO_ASM, which happens exactly
+   when the NASM objects are absent, so there is no duplicate-symbol clash. */
+void xiom_asm_aes128_encrypt_block(const uint8_t* p, const uint8_t* rk, uint8_t* c) { (void)p; (void)rk; (void)c; }
+void xiom_asm_aes128_decrypt_block(const uint8_t* c, const uint8_t* rk, uint8_t* p) { (void)c; (void)rk; (void)p; }
+void xiom_asm_aes128_key_expand(const uint8_t* k, uint8_t* rk) { (void)k; (void)rk; }
+int  xiom_asm_constant_time_compare(const uint8_t* a, const uint8_t* b, size_t n) { (void)a; (void)b; (void)n; return 0; }
 
 /* mem stubs */
-static void* xiom_asm_memcpy(void* d, const void* s, size_t n) { return memcpy(d, s, n); }
-static void* xiom_asm_memset(void* d, int c, size_t n) { return memset(d, c, n); }
-static int   xiom_asm_memcmp(const void* a, const void* b, size_t n) { return memcmp(a, b, n); }
-static void* xiom_asm_memmove(void* d, const void* s, size_t n) { return memmove(d, s, n); }
-static void  xiom_asm_bzero(void* d, size_t n) { memset(d, 0, n); }
-static int   xiom_asm_memcmp_ct(const void* a, const void* b, size_t n) { (void)a; (void)b; (void)n; return 0; }
+void* xiom_asm_memcpy(void* d, const void* s, size_t n) { return memcpy(d, s, n); }
+void* xiom_asm_memset(void* d, int c, size_t n) { return memset(d, c, n); }
+int   xiom_asm_memcmp(const void* a, const void* b, size_t n) { return memcmp(a, b, n); }
+void* xiom_asm_memmove(void* d, const void* s, size_t n) { return memmove(d, s, n); }
+void  xiom_asm_bzero(void* d, size_t n) { memset(d, 0, n); }
+int   xiom_asm_memcmp_ct(const void* a, const void* b, size_t n) { (void)a; (void)b; (void)n; return 0; }
 
 /* context stubs */
 int xiom_ctx_save(xiom_context* ctx) { (void)ctx; return 0; }
