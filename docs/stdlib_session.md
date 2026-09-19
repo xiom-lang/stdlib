@@ -54,7 +54,12 @@ was rejected by tag rules -- owner action needed).
   a scalar-payload Result contract AND a Vec-payload Result contract fails
   clang; blocks Err-payload clauses -- wave 13 used bare `result is Ok`
   only) and `p_os_env_set_link.xi` (Windows link gap: `setenv` undefined;
-  `os.env_set`/`xiom.env.set_var` unusable on Windows MSVC).
+  `os.env_set`/`xiom.env.set_var` unusable on Windows MSVC) -- the env gap
+  was FIXED 2026-09-19: `runtime/xiom_runtime.c` exports `xiom_env_set` /
+  `xiom_env_unset` (`_putenv_s` on Windows, `setenv`/`unsetenv` elsewhere),
+  `os.os`/`os.env` call the shims, and the moved probe
+  `tools/probes/p_os_env_set_link.xi` round-trips set/get/remove; the six
+  `smoke_env*` smokes + `check_modules` 509/509 pass.
 - More compiler findings/status: `tools/known_failures/p_pre_call_capture.xi`
   -- `@pre` on a CALL expression in `ensures` reads post-state (field
   `@pre` works), which makes `tools/probes/p_wave8_shapes.xi` line 75 RED
@@ -106,10 +111,10 @@ was rejected by tag rules -- owner action needed).
    `@pre` until p_pre_call_capture is fixed. Payload-reading Result clauses
    only after p_result_payload_contract is fixed. Pre-validate new shapes in
    `p_waveN_shapes.xi`; dump/wire floorsN+1 in the same commit.
-5. Windows env link gap: runtime shim (`_putenv_s`) or compiler FFI
-   hardening, then an env smoke. TLS/schannel and tzdata phase 2 stay last;
-   registry publish activation is the user's (dispatch-only
-   `publish-registry.yml`).
+5. Windows env link gap: **DONE 2026-09-19** (runtime shims
+   `xiom_env_set`/`xiom_env_unset`; probe + smoke_env* + check_modules
+   509/509 green). TLS/schannel and tzdata phase 2 stay last; registry
+   publish activation is the user's (dispatch-only `publish-registry.yml`).
 6. Docs prose: fill the remaining 1,191 prose-less pub declarations
    (start with `iter/iter.xi`, `sort/sort.xi`, `bits/bits.xi`,
    `ptr/ptr.xi`); run `tools/doc_promote.ps1` again first in case new plain

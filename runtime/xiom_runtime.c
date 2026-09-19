@@ -861,6 +861,31 @@ long xiom_char_at(const char* str, long pos) {
     return cp;
 }
 
+// 0A fix (2026-09-19): portable environment mutation for the stdlib os/env
+// modules. MSVC has no setenv/unsetenv, so xiom.os.env_set / xiom.env.set_var
+// failed at LINK time on Windows (known_failures/p_os_env_set_link.xi).
+// _putenv_s removes a variable when the value is the empty string, which is
+// what remove_var wants; both shims return 0 on success / nonzero on failure,
+// matching the setenv/unsetenv ABI the stdlib previously declared.
+long xiom_env_set(const char* name, const char* value) {
+    if (!name) return -1;
+    if (!value) value = "";
+#ifdef _WIN32
+    return (long)_putenv_s(name, value);
+#else
+    return (long)setenv(name, value, 1);
+#endif
+}
+
+long xiom_env_unset(const char* name) {
+    if (!name) return -1;
+#ifdef _WIN32
+    return (long)_putenv_s(name, "");
+#else
+    return (long)unsetenv(name);
+#endif
+}
+
 long xiom_str_len(const char* str) {
     if (!str) return -1;
     return (long)strlen(str);

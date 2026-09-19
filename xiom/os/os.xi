@@ -23,8 +23,10 @@ extern "C" {
   // NOTE: the libc `rename` extern was removed -- unused here and its bare
   // name shadowed xiom.io.rename in io consumers (strict import gate).
   fn getenv(name: *UInt8) -> *UInt8;
-  fn setenv(name: *UInt8, value: *UInt8, overwrite: Int32) -> Int32;
-  fn unsetenv(name: *UInt8) -> Int32;
+  // 0A (2026-09-19): portable shims in runtime/xiom_runtime.c; MSVC has no
+  // setenv/unsetenv (the bare externs failed to link on Windows).
+  fn xiom_env_set(name: *UInt8, value: *UInt8) -> Int32;
+  fn xiom_env_unset(name: *UInt8) -> Int32;
   fn xiom_total_memory() -> UInt64;
   fn xiom_free_memory() -> UInt64;
   fn xiom_cpu_count() -> Int32;
@@ -309,7 +311,7 @@ fn set_env(name: Str, value: Str)
   requires: true
 {
   unsafe {
-    let _ = setenv(cstr(name), cstr(value), 1);
+    let _ = xiom_env_set(cstr(name), cstr(value));
   }
 }
 
@@ -317,7 +319,7 @@ fn unset_env(name: Str)
   requires: true
 {
   unsafe {
-    let _ = unsetenv(cstr(name));
+    let _ = xiom_env_unset(cstr(name));
   }
 }
 

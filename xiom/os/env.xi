@@ -9,8 +9,10 @@ use xiom.string;
 
 extern "C" {
   fn getenv(name: *UInt8) -> *UInt8;
-  fn setenv(name: *UInt8, value: *UInt8, overwrite: Int32) -> Int32;
-  fn unsetenv(name: *UInt8) -> Int32;
+  // 0A (2026-09-19): portable shims in runtime/xiom_runtime.c (MSVC has no
+  // setenv/unsetenv; the bare externs failed to link on Windows).
+  fn xiom_env_set(name: *UInt8, value: *UInt8) -> Int32;
+  fn xiom_env_unset(name: *UInt8) -> Int32;
   fn getcwd(buf: *UInt8, size: UInt) -> *UInt8;
   fn chdir(path: *UInt8) -> Int32;
 }
@@ -77,7 +79,7 @@ pub fn set_var(name: Str, value: Str)
   requires: name.len() > 0
 {
   unsafe {
-    let _ = setenv(cstr(name), cstr(value), 1);
+    let _ = xiom_env_set(cstr(name), cstr(value));
   }
 }
 
@@ -85,7 +87,7 @@ pub fn remove_var(name: Str)
   requires: name.len() > 0
 {
   unsafe {
-    let _ = unsetenv(cstr(name));
+    let _ = xiom_env_unset(cstr(name));
   }
 }
 
