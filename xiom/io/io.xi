@@ -72,6 +72,7 @@ pub fn print(msg: Str)
   }
 }
 
+/// Write a line to standard output.
 pub fn println(msg: Str)
   requires: true
 {
@@ -80,6 +81,7 @@ pub fn println(msg: Str)
   }
 }
 
+/// Read one line from standard input (newline stripped).
 pub fn read_line() -> Str
   ensures: result.len() >= 0
 {
@@ -108,11 +110,13 @@ fn strip_trailing_newline(s: Str) -> Str {
   }
 }
 
+/// Read and parse an Int from standard input; Err on bad input.
 pub fn read_int() -> Result[Int, Str] {
   let line = read_line();
   return parse_int(line);
 }
 
+/// Read and parse a Float64 from standard input; Err on bad input.
 pub fn read_float() -> Result[Float64, Str] {
   let line = read_line();
   return parse_float(line);
@@ -222,6 +226,7 @@ pub fn read_file(path: Str) -> Result[Str, IOError]
   Ok(Str::from_utf8(buf))
 }
 
+/// Write (create/truncate) a file; Err with the OS message.
 pub fn write_file(path: Str, content: Str) -> Result[Unit, IOError]
   requires: path.len() > 0
   ensures:  result is Ok => file_exists(path)
@@ -246,6 +251,7 @@ pub fn write_file(path: Str, content: Str) -> Result[Unit, IOError]
   Ok(())
 }
 
+/// Append to a file, creating it when missing; Err.
 pub fn append_file(path: Str, content: Str) -> Result[Unit, IOError]
   requires: path.len() > 0
   ensures:  result is Ok => file_exists(path)
@@ -270,6 +276,7 @@ pub fn append_file(path: Str, content: Str) -> Result[Unit, IOError]
   Ok(())
 }
 
+/// True when the path exists (file or directory).
 pub fn file_exists(path: Str) -> Bool
   // Graceful query: empty path is a valid false answer (locked by
   // smoke_io_file_exists) -- deliberately no path requires.
@@ -287,6 +294,7 @@ pub fn file_exists(path: Str) -> Bool
   true
 }
 
+/// True when the path exists and is a directory.
 pub fn is_dir(path: Str) -> Bool
   // Graceful query (false on any unusable path) -- deliberately no requires.
 {
@@ -297,6 +305,7 @@ pub fn is_dir(path: Str) -> Bool
   result != 0
 }
 
+/// Create a directory (with missing parents); Err on failure.
 pub fn create_dir(path: Str) -> Result[Unit, IOError]
   requires: path.len() > 0
   requires: !file_exists(path)
@@ -312,6 +321,7 @@ pub fn create_dir(path: Str) -> Result[Unit, IOError]
   Ok(())
 }
 
+/// Directory entry names, or Err with the OS message.
 pub fn list_dir(path: Str) -> Result[Vec[Str], IOError]
   requires: path.len() > 0
   requires: is_dir(path)
@@ -348,6 +358,7 @@ pub fn list_dir(path: Str) -> Result[Vec[Str], IOError]
   Ok(entries)
 }
 
+/// Delete a file; Err with the OS message.
 pub fn remove_file(path: Str) -> Result[Unit, IOError]
   requires: path.len() > 0
   ensures:  result is Ok => !file_exists(path)
@@ -362,6 +373,7 @@ pub fn remove_file(path: Str) -> Result[Unit, IOError]
   Ok(())
 }
 
+/// Copy a file's contents to a new path; Err.
 pub fn copy_file(src: Str, dst: Str) -> Result[Unit, IOError]
   requires: src.len() > 0
   requires: dst.len() > 0
@@ -373,6 +385,7 @@ pub fn copy_file(src: Str, dst: Str) -> Result[Unit, IOError]
   write_file(dst, content)
 }
 
+/// Rename or move a path; Err with the OS message.
 pub fn rename(src: Str, dst: Str) -> Result[Unit, IOError]
   requires: src.len() > 0
   requires: dst.len() > 0
@@ -397,6 +410,7 @@ pub fn exit(code: Int)
   }
 }
 
+/// Process arguments.
 pub fn args() -> Vec[Str]
   ensures: result.len() >= 0
 {
@@ -417,6 +431,7 @@ pub fn args() -> Vec[Str]
   result
 }
 
+/// Environment variable value, or None when unset.
 pub fn env_var(name: Str) -> Option[Str]
   requires: name.len() > 0
 {
@@ -439,6 +454,7 @@ pub fn time_now() -> Int
   }
 }
 
+/// Sleep for `ms` milliseconds.
 pub fn sleep(ms: Int)
   requires: ms >= 0
 {
@@ -455,12 +471,14 @@ pub interface Read {
   fn read_exact(self, buf: &mut Vec[UInt8]) -> Result[Unit, IOError];
 }
 
+/// Byte/string writing interface.
 pub interface Write {
   fn write(self, buf: &Vec[UInt8]) -> Result[Int, IOError];
   fn write_all(self, buf: &Vec[UInt8]) -> Result[Unit, IOError];
   fn flush(self) -> Result[Unit, IOError];
 }
 
+/// Seekable stream interface.
 pub interface Seek {
   fn seek(self, pos: SeekFrom) -> Result[Int, IOError];
   fn stream_position(self) -> Result[Int, IOError];
@@ -509,6 +527,7 @@ pub type BufReader = {
   invariant: inner >= 0;
 }
 
+/// Wrap a file descriptor in a buffered reader.
 pub fn BufReader.new(reader: Int) -> BufReader
   ensures: result.inner == reader
 {
@@ -516,6 +535,7 @@ pub fn BufReader.new(reader: Int) -> BufReader
   BufReader{ inner: reader; buf: buf; }
 }
 
+/// Read one line into `buf`; Ok(bytes) including the newline, 0 at EOF.
 pub fn BufReader.read_line(self, buf: &mut Str) -> Result[Int, IOError]
   requires: inner >= 0
   ensures:  result is Ok => result >= 0
@@ -544,6 +564,7 @@ pub fn BufReader.read_line(self, buf: &mut Str) -> Result[Int, IOError]
   Ok(total)
 }
 
+/// All remaining lines (newlines stripped).
 pub fn BufReader.lines(self) -> Vec[Str]
   ensures: result.len() >= 0
 {
@@ -580,8 +601,10 @@ pub fn BufReader.lines(self) -> Vec[Str]
   result
 }
 
+/// Buffered writer over a file descriptor.
 pub type BufWriter = { inner: Int; buf: Vec[UInt8]; }
 
+/// Wrap a file descriptor in a buffered writer.
 pub fn BufWriter.new(writer: Int) -> BufWriter
   ensures: result.inner == writer
 {
@@ -599,6 +622,7 @@ pub type Metadata = {
   permissions: Int;
 }
 
+/// File metadata (size, timestamps, permissions), or Err.
 pub fn metadata(path: Str) -> Result[Metadata, IOError]
   requires: path.len() > 0
   ensures:  result is Ok => result.size >= 0
@@ -631,6 +655,7 @@ pub fn metadata(path: Str) -> Result[Metadata, IOError]
   })
 }
 
+/// Set POSIX permission bits; Err on failure.
 pub fn set_permissions(path: Str, perm: Int) -> Result[Unit, IOError]
   requires: path.len() > 0
   requires: perm >= 0
@@ -653,12 +678,14 @@ pub fn stdin() -> Int
   0
 }
 
+/// File descriptor for standard output.
 pub fn stdout() -> Int
   ensures: result >= 0
 {
   1
 }
 
+/// File descriptor for standard error.
 pub fn stderr() -> Int
   ensures: result >= 0
 {
@@ -715,12 +742,14 @@ pub type Cursor = {
   invariant: pos <= data.len();
 }
 
+/// In-memory cursor over a byte vector.
 pub fn Cursor.new(data: Vec[UInt8]) -> Cursor
   ensures: self.pos == 0
 {
   Cursor{ data: data; pos: 0; }
 }
 
+/// Consume the cursor and return its bytes.
 pub fn Cursor.into_inner(self) -> Vec[UInt8]
   ensures: result.len() == self.data.len()
 {
@@ -748,6 +777,7 @@ pub fn join_paths(base: Str, child: Str) -> Str
   }
 }
 
+/// Parent directory of the path, or None.
 pub fn parent_path(path: Str) -> Option[Str]
   ensures: result is Some => result.value.len() > 0
 {
@@ -764,6 +794,7 @@ pub fn parent_path(path: Str) -> Option[Str]
   None
 }
 
+/// Final component of the path, or None.
 pub fn file_name(path: Str) -> Option[Str]
   ensures: result is Some => result.value.len() > 0
 {
@@ -783,6 +814,7 @@ pub fn file_name(path: Str) -> Option[Str]
   Some(path)
 }
 
+/// Extension after the final dot of the file name, or None.
 pub fn extension(path: Str) -> Option[Str]
   ensures: result is Some => result.value.len() > 0
 {
@@ -803,6 +835,7 @@ pub fn extension(path: Str) -> Option[Str]
   None
 }
 
+/// True when the path is absolute.
 pub fn is_absolute(path: Str) -> Bool {
   if path.is_empty() {
     return false;
