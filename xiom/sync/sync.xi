@@ -40,6 +40,7 @@ pub type Mutex[T] = {
   data: *T;       // heap-allocated protected data
 }
 
+/// Create an unlocked mutex holding `value`.
 pub fn Mutex.new[T](value: T) -> Mutex[T] {
   let m = alloc.alloc(64);  // enough for any platform mutex
   unsafe { xiom_mutex_init(m); }
@@ -48,11 +49,13 @@ pub fn Mutex.new[T](value: T) -> Mutex[T] {
   return Mutex[T]{ inner: m; data: d; }
 }
 
+/// Block until the lock is acquired; returns the guard.
 pub fn Mutex.lock[T](self) -> MutexGuard[T] {
   unsafe { xiom_mutex_lock(inner); }
   return MutexGuard[T]{ mutex: self; }
 }
 
+/// Non-blocking lock attempt; None when already locked.
 pub fn Mutex.try_lock[T](self) -> Option[MutexGuard[T]]
   requires: inner != null
 {
@@ -64,6 +67,7 @@ pub fn Mutex.try_lock[T](self) -> Option[MutexGuard[T]]
   }
 }
 
+/// Consume the mutex and return the value.
 pub fn Mutex.into_inner[T](self) -> T
   requires: inner != null
   requires: data != null
@@ -77,22 +81,26 @@ pub fn Mutex.into_inner[T](self) -> T
   }
 }
 
+/// RAII guard holding the mutex lock.
 pub type MutexGuard[T] = {
   mutex: Mutex[T];
 }
 
+/// Read the guarded value.
 pub fn MutexGuard.get[T](self) -> T
   requires: mutex.data != null
 {
   unsafe { return ptr.read(mutex.data as *T); }
 }
 
+/// Mutable access to the guarded value (returns it by value).
 pub fn MutexGuard.get_mut[T](self) -> T
   requires: mutex.data != null
 {
   unsafe { return ptr.read(mutex.data as *T); }
 }
 
+/// Release the lock.
 pub fn MutexGuard.drop[T](self)
   requires: mutex.inner != null
 {
@@ -108,6 +116,7 @@ pub type RwLock[T] = {
   state: *Int;       // atomic state: 0=free, >0 = reader count, -1 = writer
 }
 
+/// Create an unlocked read-write lock holding `data`.
 pub fn RwLock.new[T](data: T) -> RwLock[T] {
   let m = alloc.alloc(64);
   unsafe { xiom_mutex_init(m); }
@@ -122,6 +131,7 @@ pub fn RwLock.new[T](data: T) -> RwLock[T] {
   return RwLock[T]{ inner: m; rcond: rc; wcond: wc; data: d; state: s; }
 }
 
+/// Acquire a shared read guard (blocks while a writer holds the lock).
 pub fn RwLock.read[T](self) -> ReadGuard[T] {
   unsafe { xiom_mutex_lock(inner); }
   unsafe {
@@ -136,6 +146,7 @@ pub fn RwLock.read[T](self) -> ReadGuard[T] {
   return ReadGuard[T]{ lock: self; }
 }
 
+/// Acquire an exclusive write guard.
 pub fn RwLock.write[T](self) -> WriteGuard[T] {
   unsafe { xiom_mutex_lock(inner); }
   unsafe {
@@ -150,6 +161,7 @@ pub fn RwLock.write[T](self) -> WriteGuard[T] {
   return WriteGuard[T]{ lock: self; }
 }
 
+/// Non-blocking shared read; None when a writer holds the lock.
 pub fn RwLock.try_read[T](self) -> Option[ReadGuard[T]] {
   unsafe { xiom_mutex_lock(inner); }
   unsafe {
@@ -164,6 +176,7 @@ pub fn RwLock.try_read[T](self) -> Option[ReadGuard[T]] {
   return Some(ReadGuard[T]{ lock: self; });
 }
 
+/// Non-blocking exclusive write; None when the lock is held.
 pub fn RwLock.try_write[T](self) -> Option[WriteGuard[T]] {
   unsafe { xiom_mutex_lock(inner); }
   unsafe {
@@ -178,14 +191,17 @@ pub fn RwLock.try_write[T](self) -> Option[WriteGuard[T]] {
   return Some(WriteGuard[T]{ lock: self; });
 }
 
+/// RAII guard for shared read access.
 pub type ReadGuard[T] = { lock: RwLock[T]; }
 
+/// Read the guarded value.
 pub fn ReadGuard.get[T](self) -> T
   requires: lock.data != null
 {
   unsafe { return ptr.read(lock.data as *T); }
 }
 
+/// Release the shared read lock.
 pub fn ReadGuard.drop[T](self) {
   unsafe { xiom_mutex_lock(lock.inner); }
   unsafe {
@@ -197,20 +213,24 @@ pub fn ReadGuard.drop[T](self) {
   unsafe { xiom_mutex_unlock(lock.inner); }
 }
 
+/// RAII guard for exclusive write access.
 pub type WriteGuard[T] = { lock: RwLock[T]; }
 
+/// Read the guarded value.
 pub fn WriteGuard.get[T](self) -> T
   requires: lock.data != null
 {
   unsafe { return ptr.read(lock.data as *T); }
 }
 
+/// Mutable access to the guarded value (returns it by value).
 pub fn WriteGuard.get_mut[T](self) -> T
   requires: lock.data != null
 {
   unsafe { return ptr.read(lock.data as *T); }
 }
 
+/// Release the exclusive lock.
 pub fn WriteGuard.drop[T](self) {
   unsafe { xiom_mutex_lock(lock.inner); }
   unsafe {
@@ -224,23 +244,27 @@ pub fn WriteGuard.drop[T](self) {
 /// === Condvar ===
 pub type Condvar = { inner: *UInt8; }
 
+/// Create a condition variable.
 pub fn Condvar.new() -> Condvar {
   let c = alloc.alloc(64);
   unsafe { xiom_cond_init(c); }
   return Condvar{ inner: c; }
 }
 
+/// Wait for a notification, releasing and re-acquiring the mutex.
 pub fn Condvar.wait[T](self, guard: MutexGuard[T]) -> MutexGuard[T] {
   unsafe { xiom_cond_wait(inner, guard.mutex.inner); }
   return guard;
 }
 
+/// Wake one waiting thread.
 pub fn Condvar.notify_one(self)
   requires: inner != null
 {
   unsafe { xiom_cond_signal(inner); }
 }
 
+/// Wake all waiting threads.
 pub fn Condvar.notify_all(self)
   requires: inner != null
 {
@@ -253,6 +277,7 @@ pub type Once = {
   state: *Int;       // atomic: 0=not run, 1=in progress, 2=done
 }
 
+/// Create a one-shot initializer.
 pub fn Once.new() -> Once {
   let m = alloc.alloc(64);
   unsafe { xiom_mutex_init(m); }
@@ -261,6 +286,7 @@ pub fn Once.new() -> Once {
   return Once{ inner: m; state: s; }
 }
 
+/// Run `f` exactly once; later calls return immediately.
 pub fn Once.call_once(self, f: fn())
   requires: inner != null
   requires: state != null
@@ -281,6 +307,7 @@ pub fn Once.call_once(self, f: fn())
   }
 }
 
+/// True when the initializer already ran.
 pub fn Once.is_completed(self) -> Bool
   requires: state != null
 {
@@ -297,6 +324,7 @@ pub type Barrier = {
   invariant: count > 0;
 }
 
+/// Create a barrier for `n` threads (n is clamped to at least 1).
 pub fn Barrier.new(n: Int) -> Barrier
   requires: n > 0
 {
@@ -311,6 +339,7 @@ pub fn Barrier.new(n: Int) -> Barrier
   return Barrier{ inner: m; cond: c; count: n; waiting: w; generation: g; }
 }
 
+/// Block until `n` threads arrive, then release them together.
 pub fn Barrier.wait(self) {
   unsafe { xiom_mutex_lock(inner); }
   unsafe {
@@ -338,11 +367,13 @@ pub type Arc[T] = {
   invariant: ptr != null => (*ptr).count >= 1;
 }
 
+/// Control block behind `Arc`: atomic strong count plus the value.
 pub type ArcInner[T] = {
   count: *Int;  // atomic reference count
   value: T;
 }
 
+/// Allocate a shared-ownership pointer with strong count 1.
 pub fn Arc.new[T](value: T) -> Arc[T]
   ensures:  strong_count == 1
 {
@@ -360,6 +391,7 @@ pub fn Arc.new[T](value: T) -> Arc[T]
   }
 }
 
+/// Increment the strong count and return a second handle.
 pub fn Arc.clone[T](self) -> Arc[T]
   requires: ptr != null
   ensures:  strong_count() >= 1
@@ -370,6 +402,7 @@ pub fn Arc.clone[T](self) -> Arc[T]
   return Arc[T]{ ptr: ptr; }
 }
 
+/// Read the shared value (by value).
 pub fn Arc.get[T](self) -> T
   requires: ptr != null
 {
@@ -378,6 +411,7 @@ pub fn Arc.get[T](self) -> T
   }
 }
 
+/// Current strong count (atomic).
 pub fn Arc.strong_count[T](self) -> Int
   requires: ptr != null
   ensures:  result >= 1
@@ -387,6 +421,7 @@ pub fn Arc.strong_count[T](self) -> Int
   }
 }
 
+/// True when both handles point at the same control block.
 pub fn Arc.ptr_eq[T, U](self, other: &Arc[U]) -> Bool
   requires: true  // whole-body unsafe pointer compare (T007)
 {
@@ -395,6 +430,7 @@ pub fn Arc.ptr_eq[T, U](self, other: &Arc[U]) -> Bool
   }
 }
 
+/// Decrement the strong count; free when it reaches zero.
 pub fn Arc.drop[T](self)
   requires: ptr != null
 {
@@ -419,6 +455,7 @@ pub fn Arc[T].deref(self) -> &T
   }
 }
 
+/// Borrow the value as `&T`.
 pub fn Arc[T].as_ref(self) -> &T
   requires: ptr != null
 {
@@ -428,6 +465,7 @@ pub fn Arc[T].as_ref(self) -> &T
 /// === AtomicBool -- real atomic operations ===
 pub type AtomicBool = { ptr: *Int; }
 
+/// Create an atomic bool.
 pub fn AtomicBool.new(val: Bool) -> AtomicBool {
   let p = alloc.alloc(8);
   let iv: Int = if val { 1 } else { 0 };
@@ -437,22 +475,26 @@ pub fn AtomicBool.new(val: Bool) -> AtomicBool {
   }
 }
 
+/// Current value with acquire ordering.
 pub fn AtomicBool.load(self) -> Bool
   requires: ptr != null
 {
   unsafe { return xiom_atomic_load(ptr) != 0; }
 }
 
+/// Store with release ordering.
 pub fn AtomicBool.store(self, val: Bool) {
   let iv: Int = if val { 1 } else { 0 };
   unsafe { xiom_atomic_store(ptr, iv); }
 }
 
+/// Atomically replace the value, returning the previous one.
 pub fn AtomicBool.swap(self, val: Bool) -> Bool {
   let iv: Int = if val { 1 } else { 0 };
   unsafe { return xiom_atomic_exchange(ptr, iv) != 0; }
 }
 
+/// Set to `new` when the value equals `current`; true on success.
 pub fn AtomicBool.compare_exchange(self, current: Bool, new: Bool) -> Bool {
   let c: Int = if current { 1 } else { 0 };
   let n: Int = if new { 1 } else { 0 };
@@ -469,6 +511,7 @@ pub fn AtomicBool.compare_exchange(self, current: Bool, new: Bool) -> Bool {
 /// === AtomicInt -- real atomic operations ===
 pub type AtomicInt = { ptr: *Int; }
 
+/// Create an atomic Int.
 pub fn AtomicInt.new(val: Int) -> AtomicInt {
   let p = alloc.alloc(8);
   unsafe { *(p as *Int) = val; }
@@ -477,12 +520,14 @@ pub fn AtomicInt.new(val: Int) -> AtomicInt {
   }
 }
 
+/// Current value with acquire ordering.
 pub fn AtomicInt.load(self) -> Int
   requires: ptr != null
 {
   unsafe { return xiom_atomic_load(ptr); }
 }
 
+/// Store with release ordering; returns the atomic.
 pub fn AtomicInt.store(self, val: Int) -> AtomicInt
   requires: ptr != null
 {
@@ -490,24 +535,28 @@ pub fn AtomicInt.store(self, val: Int) -> AtomicInt
   self
 }
 
+/// Atomically add, returning the previous value.
 pub fn AtomicInt.fetch_add(self, val: Int) -> Int
   requires: ptr != null
 {
   unsafe { return xiom_atomic_fetch_add(ptr, val); }
 }
 
+/// Atomically subtract, returning the previous value.
 pub fn AtomicInt.fetch_sub(self, val: Int) -> Int
   requires: ptr != null
 {
   unsafe { return xiom_atomic_fetch_sub(ptr, val); }
 }
 
+/// Atomically replace, returning the previous value.
 pub fn AtomicInt.swap(self, val: Int) -> Int
   requires: ptr != null
 {
   unsafe { return xiom_atomic_exchange(ptr, val); }
 }
 
+/// Set to `new` when the value equals `current`; true on success.
 pub fn AtomicInt.compare_exchange(self, current: Int, new: Int) -> Bool
   requires: ptr != null
 {
