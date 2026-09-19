@@ -6,7 +6,9 @@ module xiom.path
 
 use xiom.env;
 
+/// Borrowed path (wraps a Str); construct with `Path.new`.
 pub type Path = { inner: Str; } derive[Eq, Clone, Hash, Ord]
+/// Owned, mutable path buffer.
 pub type PathBuf = { inner: Str; } derive[Eq, Clone]
 
 /// Path constructors
@@ -16,12 +18,14 @@ pub fn Path.new(s: Str) -> Path
   Path{ inner: s; }
 }
 
+/// Create an empty PathBuf.
 pub fn PathBuf.new() -> PathBuf
   ensures: result.inner == ""
 {
   PathBuf{ inner: ""; }
 }
 
+/// Create a PathBuf from a string.
 pub fn PathBuf.from(s: Str) -> PathBuf
   ensures: result.inner == s
 {
@@ -61,6 +65,7 @@ pub fn Path.parent(self) -> Option<Path>
   return None;
 }
 
+/// Final component of the path, or None when there is none.
 pub fn Path.file_name(self) -> Option<Str>
 {
   // Find the last path separator and return everything after it.
@@ -83,6 +88,7 @@ pub fn Path.file_name(self) -> Option<Str>
   return Some(s);
 }
 
+/// Extension after the final dot of the file name, or None.
 pub fn Path.extension(self) -> Option<Str>
   ensures: result.is_some => self.inner.len() > 0 {
   // Find the last '.' in the file name and return everything after it.
@@ -99,6 +105,7 @@ pub fn Path.extension(self) -> Option<Str>
   }
 }
 
+/// File name without its final extension, or None.
 pub fn Path.file_stem(self) -> Option<Str> {
   var name_opt = self.file_name();
   match name_opt {
@@ -114,6 +121,7 @@ pub fn Path.file_stem(self) -> Option<Str> {
   }
 }
 
+/// True when the path is absolute.
 pub fn Path.is_absolute(self) -> Bool
   ensures: result => self.inner.len() >= 1 {
   var s = self.inner;
@@ -127,10 +135,12 @@ pub fn Path.is_absolute(self) -> Bool
   return false;
 }
 
+/// True when the path is relative.
 pub fn Path.is_relative(self) -> Bool {
   return !self.is_absolute();
 }
 
+/// True when the path starts at a root component.
 pub fn Path.has_root(self) -> Bool {
   var s = self.inner;
   if xiom.string.str_len(s) >= 1 {
@@ -143,6 +153,7 @@ pub fn Path.has_root(self) -> Bool {
   return false;
 }
 
+/// Path components as strings (separators normalized).
 pub fn Path.components(self) -> Vec<Str>
   ensures: result.len() >= 1
 {
@@ -150,14 +161,17 @@ pub fn Path.components(self) -> Vec<Str>
   return str_split(normalized, "/");
 }
 
+/// The underlying string.
 pub fn Path.to_str(self) -> Str {
   self.inner
 }
 
+/// Append `child`, inserting a separator when needed.
 pub fn Path.join(self, child: Str) -> PathBuf {
   PathBuf{ inner: join_paths(self.inner, child); }
 }
 
+/// Replace the extension with `ext`; an existing extension is removed.
 pub fn Path.with_extension(self, ext: Str) -> PathBuf {
   var stem = self.file_stem();
   match stem {
@@ -176,6 +190,7 @@ pub fn Path.with_extension(self, ext: Str) -> PathBuf {
   }
 }
 
+/// Replace the final component with `name`.
 pub fn Path.with_file_name(self, name: Str) -> PathBuf {
   var p = self.parent();
   match p {
@@ -184,19 +199,23 @@ pub fn Path.with_file_name(self, name: Str) -> PathBuf {
   }
 }
 
+/// True when the path exists on disk.
 pub fn Path.exists(self) -> Bool {
   return file_exists(self.inner);
 }
 
+/// True when the path exists and is a regular file.
 pub fn Path.is_file(self) -> Bool {
   if !file_exists(self.inner) { return false; }
   return !is_dir(self.inner);
 }
 
+/// True when the path exists and is a directory.
 pub fn Path.is_dir(self) -> Bool {
   return is_dir(self.inner);
 }
 
+/// File metadata, or Err carrying the OS message.
 pub fn Path.metadata(self) -> Result<Metadata, Str> {
   var result = metadata(self.inner);
   match result {
@@ -205,6 +224,7 @@ pub fn Path.metadata(self) -> Result<Metadata, Str> {
   }
 }
 
+/// Absolute, symlink-resolved path, or Err carrying the OS message.
 pub fn Path.canonicalize(self) -> Result<PathBuf, Str>
 {
   // String-based path canonicalization: collapse `.`, `..`, and double
@@ -243,10 +263,12 @@ pub fn Path.canonicalize(self) -> Result<PathBuf, Str>
   return Ok(PathBuf{ inner: result });
 }
 
+/// True when `base` is a component-prefix of this path.
 pub fn Path.starts_with(self, base: Path) -> Bool {
   return str_starts_with(self.inner, base.inner);
 }
 
+/// True when `child` is a component-suffix of this path.
 pub fn Path.ends_with(self, child: Path) -> Bool {
   return str_ends_with(self.inner, child.inner);
 }
@@ -269,6 +291,7 @@ pub fn PathBuf.push(&mut self, component: Str)
   self.inner = str_concat(str_concat(self.inner, "/"), component);
 }
 
+/// Remove the final component; false when the buffer is already empty.
 pub fn PathBuf.pop(&mut self) -> Bool {
   var p = parent_path(self.inner);
   match p {
@@ -280,10 +303,12 @@ pub fn PathBuf.pop(&mut self) -> Bool {
   }
 }
 
+/// Borrow as a `Path`.
 pub fn PathBuf.as_path(self) -> Path {
   Path{ inner: self.inner; }
 }
 
+/// Empty the buffer.
 pub fn PathBuf.clear(&mut self) {
   self.inner = "";
 }

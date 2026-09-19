@@ -25,15 +25,24 @@ type WordBuildState = { word: Int; j: Int; }
 type AppendState = { j: Int; }
 type IntW = { v: Int; }
 
+/// SHA-256 initial hash value H0 (FIPS 180-4).
 pub fn sha256_initial_h0() -> Int { return 0x6a09e667; }
+/// SHA-256 initial hash value H1 (FIPS 180-4).
 pub fn sha256_initial_h1() -> Int { return 0xbb67ae85; }
+/// SHA-256 initial hash value H2 (FIPS 180-4).
 pub fn sha256_initial_h2() -> Int { return 0x3c6ef372; }
+/// SHA-256 initial hash value H3 (FIPS 180-4).
 pub fn sha256_initial_h3() -> Int { return 0xa54ff53a; }
+/// SHA-256 initial hash value H4 (FIPS 180-4).
 pub fn sha256_initial_h4() -> Int { return 0x510e527f; }
+/// SHA-256 initial hash value H5 (FIPS 180-4).
 pub fn sha256_initial_h5() -> Int { return 0x9b05688c; }
+/// SHA-256 initial hash value H6 (FIPS 180-4).
 pub fn sha256_initial_h6() -> Int { return 0x1f83d9ab; }
+/// SHA-256 initial hash value H7 (FIPS 180-4).
 pub fn sha256_initial_h7() -> Int { return 0x5be0cd19; }
 
+/// SHA-256 round constant K[index] (0..63).
 pub fn sha256_k(index: Int) -> Int {
   var idx = IntW{ v: index; };
   if idx.v == 0 { return 0x428a2f98; };
@@ -133,6 +142,7 @@ fn sigma1_small(x: Int) -> Int {
   return xiom.math.bit_xor(xiom.math.bit_xor(rotr(x, 7), rotr(x, 18)), xiom.math.bit_and(xiom.math.shr(x, 3), 0x1FFFFFFF));
 }
 
+/// SHA-256 digest of the byte values (32 bytes).
 pub fn sha256(data: &Vec[Int]) -> Vec[Int]
   ensures: result.len() == 32
 {
@@ -243,6 +253,7 @@ pub fn sha256(data: &Vec[Int]) -> Vec[Int]
   return result;
 }
 
+/// Lowercase hex SHA-256 digest.
 pub fn sha256_hex(data: &Vec[Int]) -> Str
   requires: data.len() > 0
   ensures: result.len() == 64
@@ -251,6 +262,7 @@ pub fn sha256_hex(data: &Vec[Int]) -> Str
   return xiom.encoding.hex_encode(&hash);
 }
 
+/// HMAC-SHA-256 with `key` over the byte values.
 pub fn sha256_hmac(data: &Vec[Int], key: &Vec[Int]) -> Vec[Int]
   requires: data.len() > 0
   requires: key.len() > 0
@@ -320,15 +332,24 @@ pub fn sha256_hmac(data: &Vec[Int], key: &Vec[Int]) -> Vec[Int]
   return sha256(&outer_data);
 }
 
+/// SHA-512 initial hash value H0 (FIPS 180-4).
 pub fn sha512_initial_h0() -> Int { return 0x6a09e667f3bcc908; }
+/// SHA-512 initial hash value H1 (FIPS 180-4).
 pub fn sha512_initial_h1() -> Int { return 0xbb67ae8584caa73b; }
+/// SHA-512 initial hash value H2 (FIPS 180-4).
 pub fn sha512_initial_h2() -> Int { return 0x3c6ef372fe94f82b; }
+/// SHA-512 initial hash value H3 (FIPS 180-4).
 pub fn sha512_initial_h3() -> Int { return 0xa54ff53a5f1d36f1; }
+/// SHA-512 initial hash value H4 (FIPS 180-4).
 pub fn sha512_initial_h4() -> Int { return 0x510e527fade682d1; }
+/// SHA-512 initial hash value H5 (FIPS 180-4).
 pub fn sha512_initial_h5() -> Int { return 0x9b05688c2b3e6c1f; }
+/// SHA-512 initial hash value H6 (FIPS 180-4).
 pub fn sha512_initial_h6() -> Int { return 0x1f83d9abfb41bd6b; }
+/// SHA-512 initial hash value H7 (FIPS 180-4).
 pub fn sha512_initial_h7() -> Int { return 0x5be0cd19137e2179; }
 
+/// SHA-512 round constant K[index] (0..79).
 pub fn sha512_k(index: Int) -> Int {
   var idx = IntW{ v: index; };
   if idx.v == 0 { return 0x428a2f98d728ae22; };
@@ -436,6 +457,7 @@ fn sigma1_small_64(x: Int) -> Int {
   return xiom.math.bit_xor(xiom.math.bit_xor(rotr64(x, 19), rotr64(x, 61)), xiom.math.bit_and(xiom.math.shr(x, 6), 0x3FFFFFFFFFFFFFF));
 }
 
+/// SHA-512 digest of the byte values (64 bytes).
 pub fn sha512(data: &Vec[Int]) -> Vec[Int]
   ensures: result.len() == 64
 {
@@ -525,6 +547,7 @@ pub fn sha512(data: &Vec[Int]) -> Vec[Int]
   return result;
 }
 
+/// Lowercase hex SHA-512 digest.
 pub fn sha512_hex(data: &Vec[Int]) -> Str
   requires: data.len() > 0
   ensures: result.len() == 128

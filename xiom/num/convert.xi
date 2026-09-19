@@ -15,6 +15,7 @@ const BASE58_ALPHABET: Str = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqr
 const BASE62_ALPHABET: Str = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 const A85_ALPHABET: Str = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_\x60abcdefghijklmnopqrstuvwxyz";
 
+/// Base58 (Bitcoin alphabet) encoding of `n`.
 pub fn to_base58(n: Int) -> Str {
   if n == 0 {
     return "1";
@@ -55,6 +56,7 @@ fn base58_digit(c: UInt8) -> Int {
   -1
 }
 
+/// Decode base58; None on invalid characters or overflow.
 pub fn from_base58(s: Str) -> Option[Int] {
   if s.len() == 0 {
     return None;
@@ -199,6 +201,7 @@ fn encode_a85_group(value: Int) -> Str {
   result
 }
 
+/// Adobe Ascii85 encoding of the bytes (see also xiom.convert.ascii85).
 pub fn to_ascii85(data: &Vec[UInt8]) -> Str {
   var result = "";
   var len = data.len();
@@ -243,6 +246,7 @@ fn a85_digit(c: UInt8) -> Int {
   code - 33
 }
 
+/// Decode Ascii85 into bytes; None on malformed input.
 pub fn from_ascii85(s: Str) -> Option[Vec[UInt8]] {
   var result = Vec[UInt8].new();
   var len = s.len();
@@ -315,6 +319,7 @@ fn roman_value(c: UInt8) -> Int {
   -1
 }
 
+/// Roman numeral for 1..3999, or None outside that range.
 pub fn to_roman(n: Int) -> Option[Str] {
   if n <= 0 || n > 3999 {
     return None;
@@ -360,6 +365,7 @@ pub fn to_roman(n: Int) -> Option[Str] {
   Some(result)
 }
 
+/// Parse a Roman numeral; None on invalid input.
 pub fn from_roman(s: Str) -> Option[Int] {
   if s.len() == 0 {
     return None;

@@ -15,6 +15,7 @@ module xiom.convert.bytes
 use xiom.string;
 use xiom.encoding;
 
+/// Little-endian byte representation of `n` (8 bytes).
 pub fn to_bytes(n: Int) -> Vec[UInt8] {
   var result = Vec[UInt8].new();
   var i = 7;
@@ -48,14 +49,17 @@ pub fn from_bytes(bytes: &Vec[UInt8]) -> Int {
   result
 }
 
+/// Lowercase hex encoding of the bytes.
 pub fn bytes_to_hex(bytes: &Vec[UInt8]) -> Str {
   encoding.hex_encode(bytes)
 }
 
+/// Decode hex (either case); Err on odd length or a bad digit.
 pub fn hex_to_bytes(s: Str) -> Result[Vec[UInt8], Str] {
   encoding.hex_decode(s)
 }
 
+/// Concatenation of `a` followed by `b`.
 pub fn bytes_concat(a: &Vec[UInt8], b: &Vec[UInt8]) -> Vec[UInt8] {
   var result = Vec[UInt8].new();
   var i: Int = 0;
@@ -71,6 +75,7 @@ pub fn bytes_concat(a: &Vec[UInt8], b: &Vec[UInt8]) -> Vec[UInt8] {
   result
 }
 
+/// Copy of the bytes in reverse order.
 pub fn bytes_reverse(bytes: &Vec[UInt8]) -> Vec[UInt8] {
   var result = Vec[UInt8].new();
   var i = bytes.len() - 1;
