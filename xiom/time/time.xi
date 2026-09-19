@@ -43,16 +43,19 @@ fn normalize_duration(secs: Int, nanos: Int) -> Duration {
   return Duration{ secs: s; nanos: n; };
 }
 
+/// Duration from whole seconds plus a nanosecond remainder (normalized).
 pub fn Duration.new(secs: Int, nanos: Int) -> Duration
   ensures: 0 <= result.nanos && result.nanos < NANOS_PER_SEC
 {
   return normalize_duration(secs, nanos);
 }
 
+/// Duration of `s` whole seconds.
 pub fn Duration.from_secs(s: Int) -> Duration {
   return Duration{ secs: s; nanos: 0; };
 }
 
+/// Duration from fractional seconds (truncated toward zero).
 pub fn Duration.from_secs_f64(secs: Float64) -> Duration {
   var s = secs as Int;
   var frac = secs - (s as Float64);
@@ -67,6 +70,7 @@ pub fn Duration.from_secs_f64(secs: Float64) -> Duration {
   return Duration{ secs: s; nanos: n; };
 }
 
+/// Duration of `ms` milliseconds.
 pub fn Duration.from_millis(ms: Int) -> Duration {
   let s = ms / MILLIS_PER_SEC;
   var n = (ms - s * MILLIS_PER_SEC) * NANOS_PER_MILLI;
@@ -78,6 +82,7 @@ pub fn Duration.from_millis(ms: Int) -> Duration {
   return Duration{ secs: secs; nanos: n; };
 }
 
+/// Duration of `us` microseconds.
 pub fn Duration.from_micros(us: Int) -> Duration {
   let s = us / 1000000;
   var n = (us - s * 1000000) * NANOS_PER_MICRO;
@@ -89,6 +94,7 @@ pub fn Duration.from_micros(us: Int) -> Duration {
   return Duration{ secs: secs; nanos: n; };
 }
 
+/// Duration of `ns` nanoseconds.
 pub fn Duration.from_nanos(ns: Int) -> Duration {
   let s = ns / NANOS_PER_SEC;
   var n = ns - s * NANOS_PER_SEC;
@@ -100,44 +106,53 @@ pub fn Duration.from_nanos(ns: Int) -> Duration {
   return Duration{ secs: secs; nanos: n; };
 }
 
+/// Whole seconds of the duration.
 pub fn Duration.as_secs(self) -> Int {
   return self.secs;
 }
 
+/// Whole milliseconds of the duration.
 pub fn Duration.as_millis(self) -> Int {
   return self.secs * MILLIS_PER_SEC + self.nanos / NANOS_PER_MILLI;
 }
 
+/// Whole microseconds of the duration.
 pub fn Duration.as_micros(self) -> Int {
   return self.secs * 1000000 + self.nanos / NANOS_PER_MICRO;
 }
 
+/// Total nanoseconds of the duration.
 pub fn Duration.as_nanos(self) -> Int {
   return self.secs * NANOS_PER_SEC + self.nanos;
 }
 
+/// Duration as fractional seconds.
 pub fn Duration.as_secs_f64(self) -> Float64 {
   var result = self.secs as Float64;
   result = result + (self.nanos as Float64) / (NANOS_PER_SEC as Float64);
   return result;
 }
 
+/// Nanosecond remainder within the current second.
 pub fn Duration.subsec_nanos(self) -> Int {
   return self.nanos;
 }
 
+/// Sum of two durations.
 pub fn Duration.add(self, other: Duration) -> Duration
   ensures: 0 <= result.nanos && result.nanos < NANOS_PER_SEC
 {
   return normalize_duration(self.secs + other.secs, self.nanos + other.nanos);
 }
 
+/// Difference of two durations.
 pub fn Duration.sub(self, other: Duration) -> Duration
   ensures: 0 <= result.nanos && result.nanos < NANOS_PER_SEC
 {
   return normalize_duration(self.secs - other.secs, self.nanos - other.nanos);
 }
 
+/// Duration multiplied by an integer factor.
 pub fn Duration.mul(self, factor: Int) -> Duration
   requires: factor >= 0
   ensures: 0 <= result.nanos && result.nanos < NANOS_PER_SEC
@@ -147,6 +162,7 @@ pub fn Duration.mul(self, factor: Int) -> Duration
   return normalize_duration(result_ns / NANOS_PER_SEC, result_ns - (result_ns / NANOS_PER_SEC) * NANOS_PER_SEC);
 }
 
+/// Duration divided by an integer divisor.
 pub fn Duration.div(self, divisor: Int) -> Duration
   requires: divisor != 0
 {
@@ -155,6 +171,7 @@ pub fn Duration.div(self, divisor: Int) -> Duration
   return normalize_duration(result_ns / NANOS_PER_SEC, result_ns - (result_ns / NANOS_PER_SEC) * NANOS_PER_SEC);
 }
 
+/// Checked sum; None on overflow.
 pub fn Duration.checked_add(self, other: Duration) -> Option[Duration] {
   var total_secs = self.secs + other.secs;
   var total_nanos = self.nanos + other.nanos;
@@ -169,6 +186,7 @@ pub fn Duration.checked_add(self, other: Duration) -> Option[Duration] {
   return Some(Duration{ secs: total_secs; nanos: total_nanos; });
 }
 
+/// Checked difference; None when it would be negative.
 pub fn Duration.checked_sub(self, other: Duration) -> Option[Duration] {
   if self.as_nanos() < other.as_nanos() {
     return None;
@@ -188,12 +206,14 @@ pub fn Duration.checked_sub(self, other: Duration) -> Option[Duration] {
 /// === Instant -- a point in time (monotonic clock) ===
 pub type Instant = { t: Int; }
 
+/// Monotonic clock reading for measuring elapsed time.
 pub fn Instant.now() -> Instant
   requires: true  // extern time() call (T002 confinement)
 {
   return Instant{ t: time(0); };
 }
 
+/// Time elapsed since this instant.
 pub fn Instant.elapsed(self) -> Duration
   requires: true  // extern time() call (T002 confinement)
 {
@@ -202,15 +222,18 @@ pub fn Instant.elapsed(self) -> Duration
   return Duration.from_secs(diff);
 }
 
+/// Time from `earlier` to this instant.
 pub fn Instant.duration_since(self, earlier: Instant) -> Duration {
   let diff = self.t - earlier.t;
   return Duration.from_secs(diff);
 }
 
+/// Instant shifted forward by `d`.
 pub fn Instant.add(self, d: Duration) -> Instant {
   return Instant{ t: self.t + d.secs; };
 }
 
+/// Instant shifted backward by `d`.
 pub fn Instant.sub(self, d: Duration) -> Instant {
   return Instant{ t: self.t - d.secs; };
 }
@@ -218,16 +241,19 @@ pub fn Instant.sub(self, d: Duration) -> Instant {
 /// === SystemTime -- wall clock time ===
 pub type SystemTime = { secs: Int; nanos: Int; }
 
+/// Wall-clock reading (may move backwards when the clock is adjusted).
 pub fn SystemTime.now() -> SystemTime
   requires: true  // extern time() call (T002 confinement)
 {
   return SystemTime{ secs: time(0); nanos: 0; };
 }
 
+/// The Unix epoch (1970-01-01T00:00:00Z).
 pub fn SystemTime.unix_epoch() -> SystemTime {
   return SystemTime{ secs: 0; nanos: 0; };
 }
 
+/// Time from `earlier` to this reading; Err when it precedes it.
 pub fn SystemTime.duration_since(self, earlier: SystemTime) -> Result[Duration, Str]
   // Ok iff the duration is non-negative; the nanos borrow decides the
   // equal-seconds edge (10.200 - 10.500 is Err, not Ok).
@@ -245,6 +271,7 @@ pub fn SystemTime.duration_since(self, earlier: SystemTime) -> Result[Duration, 
   return Ok(Duration{ secs: sec_diff; nanos: nano_diff; });
 }
 
+/// Whole seconds since the Unix epoch.
 pub fn SystemTime.secs_since_epoch(self) -> Int {
   return self.secs;
 }
@@ -301,6 +328,7 @@ fn decompose_epoch(epoch: Int) -> DateTime {
   return DateTime{ year: year; month: month; day: day; hour: hour; minute: minute; second: second; weekday: weekday; };
 }
 
+/// Current UTC date and time.
 pub fn DateTime.now() -> DateTime
   requires: true  // extern time() call (T002 confinement)
 {
@@ -308,36 +336,44 @@ pub fn DateTime.now() -> DateTime
   return decompose_epoch(epoch);
 }
 
+/// Year component (UTC).
 pub fn DateTime.year(self) -> Int {
   return self.year;
 }
 
+/// Month component 1..12 (UTC).
 pub fn DateTime.month(self) -> Int
   ensures: 1 <= result && result <= 12
 {
   return self.month;
 }
 
+/// Day-of-month component 1..31 (UTC).
 pub fn DateTime.day(self) -> Int {
   return self.day;
 }
 
+/// Hour component 0..23 (UTC).
 pub fn DateTime.hour(self) -> Int {
   return self.hour;
 }
 
+/// Minute component 0..59 (UTC).
 pub fn DateTime.minute(self) -> Int {
   return self.minute;
 }
 
+/// Second component 0..59 (UTC).
 pub fn DateTime.second(self) -> Int {
   return self.second;
 }
 
+/// Numeric day of week.
 pub fn DateTime.weekday(self) -> Int {
   return self.weekday;
 }
 
+/// Current UTC DateTime (alias of `DateTime.now`).
 pub fn utc_now() -> DateTime
   requires: true  // extern time() call (T002 confinement)
 {
@@ -369,6 +405,7 @@ pub fn sleep(dur: Duration)
   };
 }
 
+/// Sleep for `ms` milliseconds (blocking).
 pub fn sleep_ms(ms: Int)
   requires: true  // extern time() calls in the wait loop (T002 confinement)
 {
@@ -378,6 +415,7 @@ pub fn sleep_ms(ms: Int)
   };
 }
 
+/// Sleep until the given monotonic instant.
 pub fn sleep_until(instant: Instant)
   requires: true  // extern time() call in the wait loop (T002 confinement)
 {
@@ -778,6 +816,8 @@ fn _parse_fail() -> DateParse {
   return DateParse{ is_ok: false; date: Date{ year: 0; month: 1; day: 1; }; };
 }
 
+/// Parse a date/time string with a strftime-style spec; unparsed fields
+/// are left at their defaults with the error set.
 pub fn strptime(s: Str, spec: Str) -> DateParse {
   var year: Int = 0;
   var month: Int = 1;
