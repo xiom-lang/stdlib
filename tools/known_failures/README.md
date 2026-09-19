@@ -13,6 +13,18 @@ xiom --force -o out.exe tools/known_failures/<file>.xi
 
 ## Current
 
+- `p_module_path_alias.xi` (2026-09-19): importing a module by its FILE PATH
+  when the path differs from the declared module name breaks the catalog.
+  `use xiom.crypto.legacy.md5;` (file declares `xiom.crypto.md5`) makes
+  `xiom --check` report 33 T001s in `xiom.crypto.rng_crypto`
+  (`cannot call 'secure_random_bytes' on this expression`); the declared-name
+  import is clean, and so is rng_crypto alone. Same for
+  `xiom.crypto.legacy.sha`. Neither an alias import nor full-path calls
+  help. 19 modules currently have path/name mismatches (list in the probe);
+  they overlap the modules the compiler `stdlib_api_freeze` test cannot
+  resolve, so a resolver fix that registers the declared identity probably
+  clears both.
+
 - `p_pre_call_capture.xi` (2026-09-18): a call expression with `@pre` in an
   `ensures` clause reads the POST-state instead of the pre-state, so
   `f(x) == f(x)@pre + delta` always violates at runtime. Minimal repro is
