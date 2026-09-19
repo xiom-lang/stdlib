@@ -2,10 +2,10 @@
 // Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
 // SPDX-License-Identifier: MIT OR Apache-2.0
 //
-// STATUS 2026-09-19: RED. Compiler R49 fixed the direct-mutation `@pre`
-// shape (p_pre_call_capture.xi passes), but the callee-mutation shape at
-// s_pop_len (line ~68) still reads post-state; minimal repro:
-// tools/known_failures/p_pre_capture_callee.xi. Do not weaken this file.
+// STATUS 2026-09-20: GREEN on compiler main R52 (R51 `c235b3fe`: @pre
+// walkers descend through Imply/Is; plus `a8bda203` L4). The callee-mutation
+// `@pre` residual is fixed, the collect/* size relations are restored and
+// this file is the live regression lock. Do not weaken this file.
 // Validates the NEW clause shapes before they are applied to the stdlib:
 // 1. `result is Some => result.value >= 0` (Int Option implication)
 // 2. `result is Some => result.value >= 0.0` (Float64 Option implication)

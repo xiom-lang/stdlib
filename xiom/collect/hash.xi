@@ -185,6 +185,8 @@ pub fn lhmap_contains(m: &LhMap, key: Int) -> Bool
 /// Returns true if the key was present.
 pub fn lhmap_remove(m: &mut LhMap, key: Int) -> Bool
   ensures: lhmap_contains(m, key) == false
+  ensures: result == true => lhmap_size(m) == lhmap_size(m)@pre - 1
+  ensures: result == false => lhmap_size(m) == lhmap_size(m)@pre
 {
   var idx = lhmap_find(m, key);
   if idx < 0 { return false; }

@@ -13,13 +13,15 @@ xiom --force -o out.exe tools/known_failures/<file>.xi
 
 ## Current
 
-- `p_pre_capture_callee.xi` (2026-09-19): residual `@pre` bug after compiler
-  R49. The direct-mutation shape (`p_pre_call_capture.xi`) is FIXED and
-  verified on compiler main `306073ba`; but when the mutation happens inside
-  a CALLEE, the entry snapshot of a ref-param expression still aliases the
-  live storage: `wrapper` snapshots `total(b)`, calls `pop_like` (mutates
-  `b.n` 3 -> 2), and the ensures sees 2 == 2 - 1 -> runtime abort. Keeps
-  `tools/probes/p_wave8_shapes.xi` (s_pop_len, line ~68) red.
+- `p_pre_capture_callee.xi` -- **RESOLVED 2026-09-20** on compiler main
+  R52 (R51 `c235b3fe`: the `@pre` walkers descend through Imply/Is so
+  implication-wrapped clauses emit entry snapshots), **moved to
+  `tools/probes/`**: `--run` exits 0. IMPACT history: the R49 residual
+  aliased ref-param entry snapshots when a CALLEE mutated scalar fields /
+  computed-index Vec loops, which kept `tools/probes/p_wave8_shapes.xi` red
+  and forced `@pre`-free clauses in nine `collect/*` modules; the strong
+  size relations are restored and the targeted smoke families (20/20) pass
+  on R52. Compiler-side lock: e2e_m104.
 
 - `p_module_path_alias.xi` -- **RESOLVED 2026-09-19** on compiler main
   `306073ba` (R49-1), **moved to `tools/probes/`**: the catalog keys modules

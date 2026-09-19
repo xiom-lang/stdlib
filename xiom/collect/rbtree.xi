@@ -157,7 +157,8 @@ fn rb_insert_fixup(t: &mut RbTree, z: Int) {
 /// O(log n).
 pub fn rbtree_insert(t: &mut RbTree, key: Int, value: Int) -> Bool
   ensures: rbtree_contains(t, key) == true
-  ensures: result == true => rbtree_size(t) >= 1
+  ensures: result == true => rbtree_size(t) == rbtree_size(t)@pre + 1
+  ensures: result == false => rbtree_size(t) == rbtree_size(t)@pre
 {
   if rb_find_node(t, key) != -1 { return false; }
   var z = rb_new_node(t, key, value);
@@ -282,6 +283,8 @@ fn rb_delete_fixup(t: &mut RbTree, x: Int, xp: Int) {
 /// Remove `key`; returns true if it was present. O(log n).
 pub fn rbtree_remove(t: &mut RbTree, key: Int) -> Bool
   ensures: rbtree_contains(t, key) == false
+  ensures: result == true => rbtree_size(t) == rbtree_size(t)@pre - 1
+  ensures: result == false => rbtree_size(t) == rbtree_size(t)@pre
 {
   var z = rb_find_node(t, key);
   if z == -1 { return false; }

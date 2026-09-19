@@ -40,7 +40,7 @@ pub fn kdtree_new() -> KdTree
 /// Insert a 2D point (x, y) with its value. Duplicates are allowed.
 /// O(h) expected, O(n) worst case.
 pub fn kdtree_insert(t: &mut KdTree, x: Int, y: Int, value: Int)
-  ensures: kdtree_size(t) >= 1
+  ensures: kdtree_size(t) == kdtree_size(t)@pre + 1
 {
   var id = t.xs.len();
   t.xs.push(x);
@@ -387,7 +387,8 @@ pub fn quadtree_new(x: Int, y: Int, w: Int, h: Int) -> Quadtree
 /// outside the quadtree bounds.
 /// O(depth).
 pub fn quadtree_insert(q: &mut Quadtree, x: Int, y: Int, value: Int) -> Bool
-  ensures: result == true => quadtree_size(q) >= 1
+  ensures: result == true => quadtree_size(q) == quadtree_size(q)@pre + 1
+  ensures: result == false => quadtree_size(q) == quadtree_size(q)@pre
 {
   if !_qt_contains(q, q.root, x, y) {
     return false;
@@ -637,7 +638,8 @@ pub fn octree_new(x: Int, y: Int, z: Int, w: Int, h: Int, d: Int) -> Octree
 /// outside the octree bounds.
 /// O(depth).
 pub fn octree_insert(o: &mut Octree, x: Int, y: Int, z: Int, value: Int) -> Bool
-  ensures: result == true => octree_size(o) >= 1
+  ensures: result == true => octree_size(o) == octree_size(o)@pre + 1
+  ensures: result == false => octree_size(o) == octree_size(o)@pre
 {
   if !_oc_contains(o, o.root, x, y, z) {
     return false;

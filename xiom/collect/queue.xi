@@ -29,7 +29,8 @@ pub fn workqueue_push(q: &mut WorkQueue, item: Int) {
 
 /// Remove and return the front item. None if empty.
 pub fn workqueue_pop(q: &mut WorkQueue) -> Option[Int]
-  ensures: result is None => workqueue_len(q) == 0
+  ensures: result is Some => workqueue_len(q) == workqueue_len(q)@pre - 1
+  ensures: result is None => workqueue_len(q) == workqueue_len(q)@pre
 {
   if q.head >= q.items.len() { return None; }
   var val = q.items[q.head];
@@ -98,7 +99,8 @@ pub fn deque_push_front(d: &mut Deque, item: Int) {
 
 /// Remove and return the front item. None if empty.
 pub fn deque_pop_front(d: &mut Deque) -> Option[Int]
-  ensures: result is None => deque_len(d) == 0
+  ensures: result is Some => deque_len(d) == deque_len(d)@pre - 1
+  ensures: result is None => deque_len(d) == deque_len(d)@pre
 {
   if d.head >= d.tail { return None; }
   var val = d.items[d.head];
@@ -108,7 +110,8 @@ pub fn deque_pop_front(d: &mut Deque) -> Option[Int]
 
 /// Remove and return the back item. None if empty.
 pub fn deque_pop_back(d: &mut Deque) -> Option[Int]
-  ensures: result is None => deque_len(d) == 0
+  ensures: result is Some => deque_len(d) == deque_len(d)@pre - 1
+  ensures: result is None => deque_len(d) == deque_len(d)@pre
 {
   if d.head >= d.tail { return None; }
   d.tail = d.tail - 1;
