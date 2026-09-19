@@ -66,6 +66,7 @@ pub fn platform() -> Str
   return env.OS;
 }
 
+/// Number of logical CPUs.
 pub fn cpu_count() -> Int
   requires: true
   ensures: result > 0
@@ -79,6 +80,7 @@ pub fn cpu_count() -> Int
   }
 }
 
+/// Total physical memory in bytes (0 when unknown).
 pub fn total_memory() -> Int
   requires: true
   ensures: result >= 0
@@ -88,6 +90,7 @@ pub fn total_memory() -> Int
   }
 }
 
+/// Free physical memory in bytes (0 when unknown).
 pub fn free_memory() -> Int
   requires: true
   ensures: result >= 0
@@ -97,14 +100,17 @@ pub fn free_memory() -> Int
   }
 }
 
+/// Set an environment variable (overwrites; portable shim).
 pub fn env_set(name: Str, value: Str) {
   env.set_var(name, value);
 }
 
+/// Remove an environment variable (portable shim).
 pub fn env_unset(name: Str) {
   env.remove_var(name);
 }
 
+/// Process working directory ("" on failure).
 pub fn current_dir() -> Str
   ensures: result.len() > 0
 {
@@ -115,18 +121,21 @@ pub fn current_dir() -> Str
   }
 }
 
+/// Change the working directory, or Err with the OS message.
 pub fn set_current_dir(path: Str) -> Result[Unit, Str]
   requires: path.len() > 0
 {
   return env.set_current_dir(path);
 }
 
+/// Platform temporary directory.
 pub fn temp_dir() -> Str
   ensures: result.len() > 0
 {
   return env.temp_dir();
 }
 
+/// User home directory, or None when it cannot be resolved.
 pub fn home_dir() -> Option[Str]
   ensures: result is Some => result.len() > 0
 {
@@ -279,6 +288,7 @@ fn kill(pid: Int) -> Result[Unit, Str]
   return Ok(());
 }
 
+/// Spawned child process handle.
 pub type ChildProcess = {
   pid: Int;
   stdin: Int;
@@ -286,18 +296,21 @@ pub type ChildProcess = {
   stderr: Int;
 }
 
+/// Wait for the child; Ok(exit code) or Err with the OS message.
 pub fn ChildProcess.wait(self) -> Result[Int, Str]
   requires: self.pid > 0
 {
   return wait(self.pid);
 }
 
+/// Terminate the child; Err when it cannot be killed.
 pub fn ChildProcess.kill(self) -> Result[Unit, Str]
   requires: pid > 0
 {
   return kill(self.pid);
 }
 
+/// OS process id of the child.
 pub fn ChildProcess.id(self) -> Int
   ensures: result >= 0
 {
@@ -378,6 +391,8 @@ pub fn walk_dir(path: Str, callback: fn(Str, Metadata) -> Unit) -> Result[Unit, 
   }
 }
 
+/// Walk `path` calling `callback(path, metadata)` for entries whose name
+/// matches `pattern`; Err on traversal failure.
 pub fn walk_dir_filtered(path: Str, pattern: Str, callback: fn(Str, Metadata) -> Unit) -> Result[Unit, Str]
   requires: path.len() > 0
 {
@@ -419,12 +434,14 @@ pub type FileWatcher = {
   recursive: Bool;
 }
 
+/// Watch a single file for changes, or Err with the OS message.
 pub fn watch_file(path: Str) -> Result[FileWatcher, Str]
   requires: path.len() > 0
 {
   return watch_dir(path, false);
 }
 
+/// Watch a directory (optionally recursive), or Err.
 pub fn watch_dir(path: Str, recursive: Bool) -> Result[FileWatcher, Str]
   requires: path.len() > 0
 {
@@ -434,6 +451,7 @@ pub fn watch_dir(path: Str, recursive: Bool) -> Result[FileWatcher, Str]
   });
 }
 
+/// Non-blocking poll for accumulated events; Err on failure.
 pub fn FileWatcher.poll(self) -> Result[Vec[FileEvent], Str]
   ensures: result is Ok => result.len() >= 0
 {
@@ -465,9 +483,11 @@ pub fn FileWatcher.poll(self) -> Result[Vec[FileEvent], Str]
   }
 }
 
+/// Stop watching and release the watcher.
 pub fn FileWatcher.close(self) {
 }
 
+/// Kind of filesystem change reported by a watcher.
 pub type FileEvent = enum {
   Created(path: Str),
   Modified(path: Str),
@@ -481,6 +501,7 @@ pub fn on_signal(signal: Int, handler: fn(Int) -> Unit)
 {
 }
 
+/// Raise a signal in the current process (POSIX; unsupported on Windows).
 pub fn raise_signal(signal: Int)
   requires: signal > 0
 {
@@ -489,10 +510,15 @@ pub fn raise_signal(signal: Int)
   }
 }
 
+/// SIGINT signal number.
 pub const SIGINT: Int = 2;
+/// SIGTERM signal number.
 pub const SIGTERM: Int = 15;
+/// SIGKILL signal number.
 pub const SIGKILL: Int = 9;
+/// SIGUSR1 signal number.
 pub const SIGUSR1: Int = 10;
+/// SIGUSR2 signal number.
 pub const SIGUSR2: Int = 12;
 
 /// === Pipe ===
@@ -501,6 +527,7 @@ pub type Pipe = {
   write_fd: Int;
 }
 
+/// Create an OS pipe, or Err with the OS message.
 pub fn create_pipe() -> Result[Pipe, Str]
   ensures: result is Ok => result.read_fd >= 0 && result.write_fd >= 0
 {
@@ -518,6 +545,7 @@ pub fn create_pipe() -> Result[Pipe, Str]
   });
 }
 
+/// Read into `buf`; Ok(bytes read, 0 at EOF) or Err.
 pub fn Pipe.read(self, buf: &mut Vec[UInt8]) -> Result[Int, Str]
   requires: self.read_fd >= 0
   ensures:  result is Ok => result >= 0
@@ -532,6 +560,7 @@ pub fn Pipe.read(self, buf: &mut Vec[UInt8]) -> Result[Int, Str]
   return Ok(n);
 }
 
+/// Write bytes; Ok(bytes written) or Err.
 pub fn Pipe.write(self, data: &Vec[UInt8]) -> Result[Int, Str]
   requires: self.write_fd >= 0
   ensures:  result is Ok => result >= 0
@@ -546,6 +575,7 @@ pub fn Pipe.write(self, data: &Vec[UInt8]) -> Result[Int, Str]
   return Ok(n);
 }
 
+/// Close the read end of the pipe.
 pub fn Pipe.close_read(self)
   requires: self.read_fd >= 0
 {
@@ -554,6 +584,7 @@ pub fn Pipe.close_read(self)
   }
 }
 
+/// Close the write end of the pipe.
 pub fn Pipe.close_write(self)
   requires: self.write_fd >= 0
 {
@@ -575,6 +606,7 @@ pub fn disk_free(path: Str) -> Result[Int, Str]
   return Ok(free as Int);
 }
 
+/// Total bytes on the filesystem containing `path`, or Err.
 pub fn disk_total(path: Str) -> Result[Int, Str]
   requires: path.len() > 0
   ensures:  result is Ok => result >= 0
@@ -587,6 +619,7 @@ pub fn disk_total(path: Str) -> Result[Int, Str]
   return Ok(total as Int);
 }
 
+/// Size of the file in bytes, or Err with the OS message.
 pub fn file_size_bytes(path: Str) -> Result[Int, Str]
   requires: path.len() > 0
   ensures:  result is Ok => result >= 0

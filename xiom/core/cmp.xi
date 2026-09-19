@@ -4,8 +4,10 @@
 
 module xiom.cmp
 
+/// Three-way comparison result.
 pub type Ordering = enum { Less, Equal, Greater }
 
+/// Swap Less and Greater (Equal is unchanged).
 pub fn Ordering.reverse(self) -> Ordering
   ensures: match self { Less => result == Greater, Equal => result == Equal, Greater => result == Less }
 {
@@ -16,6 +18,7 @@ pub fn Ordering.reverse(self) -> Ordering
   }
 }
 
+/// If this is Equal, return `other`; otherwise keep this ordering.
 pub fn Ordering.then(self, other: Ordering) -> Ordering
   ensures: self != Equal => result == self
 {
@@ -25,6 +28,7 @@ pub fn Ordering.then(self, other: Ordering) -> Ordering
   other
 }
 
+/// If this is Equal, evaluate `f`; otherwise keep this ordering.
 pub fn Ordering.then_with(self, f: fn() -> Ordering) -> Ordering {
   if self != Equal {
     return self;
@@ -32,6 +36,7 @@ pub fn Ordering.then_with(self, f: fn() -> Ordering) -> Ordering {
   f()
 }
 
+/// Smaller of two values.
 pub fn min[T: Ord](a: T, b: T) -> T
   ensures: result == a || result == b
   ensures: result.compare(a) <= 0 && result.compare(b) <= 0
@@ -43,6 +48,7 @@ pub fn min[T: Ord](a: T, b: T) -> T
   }
 }
 
+/// Larger of two values.
 pub fn max[T: Ord](a: T, b: T) -> T
   ensures: result == a || result == b
   ensures: result.compare(a) >= 0 && result.compare(b) >= 0
@@ -54,6 +60,7 @@ pub fn max[T: Ord](a: T, b: T) -> T
   }
 }
 
+/// Clamp `value` into [min_val, max_val].
 pub fn clamp[T: Ord](value: T, min_val: T, max_val: T) -> T
   requires: min_val.compare(max_val) <= 0
   ensures: result.compare(min_val) >= 0 && result.compare(max_val) <= 0
@@ -67,6 +74,7 @@ pub fn clamp[T: Ord](value: T, min_val: T, max_val: T) -> T
   }
 }
 
+/// Value that compares smaller under `compare`.
 pub fn min_by[T](a: T, b: T, compare: fn(&T, &T) -> Ordering) -> T {
   match compare(&a, &b) {
     Less => a;
@@ -75,6 +83,7 @@ pub fn min_by[T](a: T, b: T, compare: fn(&T, &T) -> Ordering) -> T {
   }
 }
 
+/// Value that compares greater under `compare`.
 pub fn max_by[T](a: T, b: T, compare: fn(&T, &T) -> Ordering) -> T {
   match compare(&a, &b) {
     Greater => a;
@@ -83,14 +92,17 @@ pub fn max_by[T](a: T, b: T, compare: fn(&T, &T) -> Ordering) -> T {
   }
 }
 
+/// Larger of two Ints.
 pub fn max_int(a: Int, b: Int) -> Int {
   if a >= b { a } else { b }
 }
 
+/// Smaller of two Ints.
 pub fn min_int(a: Int, b: Int) -> Int {
   if a <= b { a } else { b }
 }
 
+/// Clamp an Int into [min_val, max_val].
 pub fn clamp_int(value: Int, min_val: Int, max_val: Int) -> Int
   requires: min_val <= max_val
   ensures: min_val <= result <= max_val
@@ -104,14 +116,17 @@ pub fn clamp_int(value: Int, min_val: Int, max_val: Int) -> Int
   }
 }
 
+/// Larger of two Float64s.
 pub fn max_float(a: Float64, b: Float64) -> Float64 {
   if a >= b { a } else { b }
 }
 
+/// Smaller of two Float64s.
 pub fn min_float(a: Float64, b: Float64) -> Float64 {
   if a <= b { a } else { b }
 }
 
+/// Clamp a Float64 into [min_val, max_val].
 pub fn clamp_float(value: Float64, min_val: Float64, max_val: Float64) -> Float64 {
   if value < min_val {
     min_val
@@ -127,6 +142,7 @@ pub interface PartialEq[Rhs: Self] {
   fn eq(self, other: &Rhs) -> Bool;
   fn ne(self, other: &Rhs) -> Bool;
 }
+/// Partial ordering against `Rhs` (None when incomparable).
 pub interface PartialOrd[Rhs: Self] {
   fn partial_cmp(self, other: &Rhs) -> Option[Ordering];
   fn lt(self, other: &Rhs) -> Bool;
@@ -137,6 +153,7 @@ pub interface PartialOrd[Rhs: Self] {
 
 /// Reverse ordering wrapper
 pub type Reverse[T] = { value: T; }
+/// Wrap a value so its ordering is reversed.
 pub fn Reverse.new[T](value: T) -> Reverse[T] {
   Reverse { value: value; }
 }

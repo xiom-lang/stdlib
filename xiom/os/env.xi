@@ -17,8 +17,11 @@ extern "C" {
   fn chdir(path: *UInt8) -> Int32;
 }
 
+/// Compile-time target OS name (lowercase).
 pub const OS: Str = "windows";     // compile-time target OS
+/// Compile-time target architecture name.
 pub const ARCH: Str = "x86_64";    // compile-time target architecture
+/// Target family: "unix" or "windows".
 pub const FAMILY: Str = "windows"; // "unix" or "windows"
 
 fn cstr(s: Str) -> *UInt8
@@ -30,6 +33,7 @@ fn cstr(s: Str) -> *UInt8
   }
 }
 
+/// Environment variable value; Err with a message when unset.
 pub fn get_var(name: Str) -> Result<Str, Str>
   requires: name.len() > 0
 {
@@ -40,6 +44,7 @@ pub fn get_var(name: Str) -> Result<Str, Str>
   }
 }
 
+/// Environment variable value, or None when unset.
 pub fn var_opt(name: Str) -> Option<Str>
   requires: name.len() > 0
 {
@@ -75,6 +80,7 @@ pub fn var_opt(name: Str) -> Option<Str>
   return Some(Str::from_utf8(buf));
 }
 
+/// Set an environment variable (overwrites; portable runtime shim).
 pub fn set_var(name: Str, value: Str)
   requires: name.len() > 0
 {
@@ -83,6 +89,7 @@ pub fn set_var(name: Str, value: Str)
   }
 }
 
+/// Remove an environment variable.
 pub fn remove_var(name: Str)
   requires: name.len() > 0
 {
@@ -91,6 +98,7 @@ pub fn remove_var(name: Str)
   }
 }
 
+/// All environment variables as (name, value) pairs.
 pub fn vars() -> Vec<(Str, Str)> {
   // OS env var iteration is not supported via the C standard library.
   // On Unix, the `environ` external variable could be accessed but
@@ -98,14 +106,17 @@ pub fn vars() -> Vec<(Str, Str)> {
   return Vec[(Str, Str)].new();
 }
 
+/// Process arguments (UTF-8, lossy).
 pub fn args() -> Vec<Str> {
   return io.args();
 }
 
+/// Process arguments (OS-native strings; same representation here).
 pub fn args_os() -> Vec<Str> {
   return args();
 }
 
+/// Path of the running executable, or Err with the OS message.
 pub fn current_exe() -> Result<Str, Str> {
   let a = args();
   if a.len() > 0 {
@@ -114,6 +125,7 @@ pub fn current_exe() -> Result<Str, Str> {
   return Err("cannot determine executable path");
 }
 
+/// Process working directory, or Err with the OS message.
 pub fn current_dir() -> Result<Str, Str>
   requires: true
   ensures: result is Ok => result.len() > 0
@@ -128,6 +140,7 @@ pub fn current_dir() -> Result<Str, Str>
   }
 }
 
+/// Change the working directory, or Err with the OS message.
 pub fn set_current_dir(path: Str) -> Result<Unit, Str>
   requires: path.len() > 0
 {
@@ -140,6 +153,7 @@ pub fn set_current_dir(path: Str) -> Result<Unit, Str>
   }
 }
 
+/// Platform temporary directory.
 pub fn temp_dir() -> Str
   ensures: result.len() > 0
 {
@@ -161,6 +175,7 @@ pub fn temp_dir() -> Str
   return "/tmp";
 }
 
+/// User home directory, or None when it cannot be resolved.
 pub fn home_dir() -> Option<Str>
   ensures: result is Some => result.len() > 0
 {
@@ -177,6 +192,7 @@ pub fn home_dir() -> Option<Str>
   return None;
 }
 
+/// Per-user data directory, or None.
 pub fn data_dir() -> Option<Str> {
   let v = var_opt("XDG_DATA_HOME");
   match v {
@@ -190,6 +206,7 @@ pub fn data_dir() -> Option<Str> {
   }
 }
 
+/// Per-user cache directory, or None.
 pub fn cache_dir() -> Option<Str> {
   let v = var_opt("XDG_CACHE_HOME");
   match v {
@@ -203,6 +220,7 @@ pub fn cache_dir() -> Option<Str> {
   }
 }
 
+/// Per-user configuration directory, or None.
 pub fn config_dir() -> Option<Str> {
   let v = var_opt("XDG_CONFIG_HOME");
   match v {
@@ -216,6 +234,7 @@ pub fn config_dir() -> Option<Str> {
   }
 }
 
+/// Directory containing the running executable, or None.
 pub fn executable_dir() -> Option<Str> {
   let exe = current_exe();
   match exe {
@@ -231,10 +250,12 @@ pub fn executable_dir() -> Option<Str> {
   }
 }
 
+/// Join two path fragments with the platform separator.
 pub fn join_paths(a: Str, b: Str) -> Str {
   return string.str_concat(string.str_concat(a, path_separator()), b);
 }
 
+/// Platform path separator ("/" or "\\").
 pub fn path_separator() -> Str {
   if FAMILY == "windows" {
     return "\\";
