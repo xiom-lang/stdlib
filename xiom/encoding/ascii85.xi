@@ -8,14 +8,15 @@ module xiom.encoding.ascii85
 
 // ============================================================================
 // Adobe Ascii85 (Base85) encoding and decoding. The core codec delegates to
-// xiom.convert.ascii85.to_ascii85 / from_ascii85 (different names, so the
-// same-name delegation AV does not apply); the string and delimiter wrappers
-// are implemented locally.
+// xiom.convert.ascii85.to_ascii85 / from_ascii85 with FULL module-qualified
+// calls: num.convert also exports a same-named `from_ascii85` returning
+// Option[Vec[UInt8]], and in a combined import set the bare alias bound to
+// the wrong one (compiler IR gate stdlib_all_modules_compile_to_ir, T001
+// return type mismatch). The string and delimiter wrappers are local.
 // ============================================================================
 
 use xiom.string;
-use xiom.convert.ascii85.to_ascii85;
-use xiom.convert.ascii85.from_ascii85;
+use xiom.convert.ascii85;
 
 extern "C" {
   fn malloc(size: UInt) -> *UInt8;
@@ -26,14 +27,14 @@ extern "C" {
 /// Encodes bytes as an Ascii85 string ('!'..'u'; runs of four zero bytes
 /// collapse to 'z'). Empty input yields "". Complexity: O(n).
 pub fn ascii85_encode(data: &Vec[UInt8]) -> Str {
-  to_ascii85(data)
+  xiom.convert.ascii85.to_ascii85(data)
 }
 
 /// Decodes an Ascii85 string back into bytes. Accepts 'z' for zero runs.
 /// Returns Err on an invalid character, a 'z' inside a group, an out-of-range
 /// group value, or a degenerate tail group. Complexity: O(n).
 pub fn ascii85_decode(s: Str) -> Result[Vec[UInt8], Str] {
-  from_ascii85(s)
+  xiom.convert.ascii85.from_ascii85(s)
 }
 
 /// Encodes a string's UTF-8 bytes as Ascii85. Complexity: O(n).
@@ -46,14 +47,14 @@ pub fn ascii85_encode_str(s: Str) -> Str {
     xiom.char.encode_utf8(c, &bytes);
     i = i + xiom.char.len_utf8(c);
   };
-  to_ascii85(&bytes)
+  xiom.convert.ascii85.to_ascii85(&bytes)
 }
 
 /// Decodes Ascii85 into a UTF-8 string (bytes copied verbatim; the caller is
 /// responsible for the UTF-8 validity of the decoded content). Returns Err on
 /// invalid Ascii85. Complexity: O(n).
 pub fn ascii85_decode_str(s: Str) -> Result[Str, Str] {
-  var r = from_ascii85(s);
+  var r = xiom.convert.ascii85.from_ascii85(s);
   match r {
     Ok(bytes) => {
       let blen = bytes.len();
@@ -80,7 +81,7 @@ pub fn ascii85_decode_str(s: Str) -> Result[Str, Str] {
 /// Encodes bytes as Ascii85 wrapped in the Adobe delimiters "<~" and "~>".
 /// Complexity: O(n).
 pub fn ascii85_encode_with_delim(data: &Vec[UInt8]) -> Str {
-  string.str_concat(string.str_concat("<~", to_ascii85(data)), "~>")
+  string.str_concat(string.str_concat("<~", xiom.convert.ascii85.to_ascii85(data)), "~>")
 }
 
 /// Decodes an Ascii85 string that is wrapped in the Adobe delimiters "<~" and
@@ -98,5 +99,5 @@ pub fn ascii85_decode_with_delim(s: Str) -> Result[Vec[UInt8], Str] {
     return Err("ascii85 closing delimiter missing");
   };
   let inner = string.str_slice(s, 2, len - 2);
-  from_ascii85(inner)
+  xiom.convert.ascii85.from_ascii85(inner)
 }
