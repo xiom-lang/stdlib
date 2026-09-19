@@ -24,14 +24,21 @@ was rejected by tag rules -- owner action needed).
   `check_modules` **509/509** + full corpus **949/949** (runner file count;
   `docs/VERIFICATION_BASELINE.md` freeze says 950 -- the runner counted 949
   in all four runs).
-- Coverage (floors50): **io 62.0%** (first key module across the 60% v1.0
-  gate), **string 50.7%, collect 44.8%**; global 17.6% clauses / **17.1%
-  pub-with-clause**.
-- R44 dedup landed: `priority.xi` PHeap -> `IntMaxHeap`, `ring.xi` SpscRing
-  -> `RingBuffer`, `range.xi` IntervalTree -> `IntervalSet`; same-leaf
-  conflicts **16 -> 13** (`docs/baselines/same-leaf-conflicts.md`
-  regenerated); no frozen `api_freeze` signatures changed (pqueue/spsc/ring
-  entries are not in the compiler snapshot).
+- Coverage (floors51): **io 62.0%, string 50.7%, collect 53.2%**; global
+  18.3% clauses / **17.7% pub-with-clause**. Wave 14 added 38 collect
+  clauses (btree/btreeplus/bloom/fenwick/cuckoo/avl/dag).
+- R44 dedup COMPLETE: same-leaf conflicts **16 -> 0** (PHeap ->
+  IntMaxHeap, SpscRing -> RingBuffer, IntervalTree -> IntervalSet, graph
+  UnionFind -> GraphUnionFind, map IntMap -> HashIntMap, intmap StringMap ->
+  OrderedStringMap, math Graph -> WeightedGraph, async Executor ->
+  AsyncExecutor, timer Future -> TimerFuture, fmt FloatScan ->
+  FormatFloatScan, collision Aabb/Sphere/Ray -> Collision*,
+  geometry_3d Sphere/Plane -> Sphere3d/Plane3d).
+  `tools/same_leaf_audit.ps1` gained a depth-aware inline-body parser
+  (Regex/Match were false positives). smoke_geom_3d now constructs
+  Sphere3d/Plane3d directly. The fmt rename surfaced a latent `scanf.xi`
+  mismatch (it returned fmt's type under its own leaf name, masked by the
+  same-name dedup); fixed with an explicit field copy.
 - Compiler verification: `p_sweep_single_param.xi` STILL FAILS on R46 and
   R46b, NO HANG -- it is now a clang 22.1.8 crash
   (`Exception Code 0xC0000005`, `X86 DAG->DAG Instruction Selection` on
@@ -48,12 +55,25 @@ was rejected by tag rules -- owner action needed).
   clang; blocks Err-payload clauses -- wave 13 used bare `result is Ok`
   only) and `p_os_env_set_link.xi` (Windows link gap: `setenv` undefined;
   `os.env_set`/`xiom.env.set_var` unusable on Windows MSVC).
+- More compiler findings/status: `tools/known_failures/p_pre_call_capture.xi`
+  -- `@pre` on a CALL expression in `ensures` reads post-state (field
+  `@pre` works), which makes `tools/probes/p_wave8_shapes.xi` line 75 RED
+  on R46/R46b. `encoding/ascii85.xi` produced T001 in the compiler's
+  combined-import gate (`stdlib_all_modules_compile_to_ir`); FIXED
+  stdlib-side by fully qualifying the `xiom.convert.ascii85` calls (the
+  bare alias bound to `num.convert`'s Option-returning `from_ascii85`) --
+  that compiler test now PASSES against current main. Freeze gate evidence
+  (current main): 212 frozen signatures missing = 154 resolver misses
+  (`sha/md5/path/fmt/char/cmp/env/contracts/aes` moved; compiler-side
+  `resolve_module_path`/manifest) + 58 drift (49 pre-existing + 9 from
+  renames: `async Executor.*` x7, `net http_get/http_post` x2). Pinned
+  checkout baseline is 203.
 - CI: all third-party actions pinned to full SHAs per
   `sha_pinning_required` (checkout `11d5960a...`, upload-artifact
   `ea165f8d...`, rust-toolchain `6bed0761...`, cache `0057852b...`).
 - Probes added: `p_r46b_qualified_generic`, `p_wave12_shapes`,
-  `p_wave13_shapes`. Floors 49/50 dumped and wired (workflows now ratchet
-  against `tools/coverage_floors50.json`).
+  `p_wave13_shapes`. Floors 49/50/51 dumped and wired (workflows now ratchet
+  against `tools/coverage_floors51.json`).
 - Untested-surface sweep: NEW generator `tools/gen_call_probes.ps1`
   (`-EmitOnly`, `-OnlyCalls`, `-Limit`; module-grouped probes). Scan found
   **47 modules / 179 scalar multi-param never-referenced calls**; compiled
@@ -76,14 +96,16 @@ was rejected by tag rules -- owner action needed).
 2. Finish the generator groups (`-OnlyCalls 3` .. `-OnlyCalls 58`, or
    `-Limit`), triage failures; when the compiler fixes land, promote the
    zero/single-param tranches into `tools/probes/` and re-baseline.
-3. R44 continue: 13 conflicts left (`Executor, Future, Graph, UnionFind,
-   IntMap, StringMap, FloatScan, Aabb, Sphere, Ray, Plane, Regex, Match`);
-   dispositions per `docs/SAME_LEAF_TYPE_CONFLICTS.md`; regenerate the
-   audit baseline and gate each batch (audit drop + 509/509 + corpus).
-4. Wave 14+: push string/collect toward 60% with the clean shapes (bare
-   `result is Ok`, `=>`, `@pre`, count bounds); payload-reading Result
-   clauses only after p_result_payload_contract is fixed. Pre-validate new
-   shapes in `p_waveN_shapes.xi`; dump/wire floorsN+1 in the same commit.
+3. R44 is COMPLETE (0 conflicts). Freeze-gate coordination with the
+   compiler lane: their `resolve_module_path` must handle the moved modules
+   (154 entries) and the FROZEN snapshot must be regenerated (58 drifted,
+   incl. the 9 from these renames); the IR gate is already green against
+   current main.
+4. Wave 15: push string/collect toward 60% with clean shapes (bare
+   `result is Ok`, `=>`, count bounds, field `@pre`) -- do NOT use call
+   `@pre` until p_pre_call_capture is fixed. Payload-reading Result clauses
+   only after p_result_payload_contract is fixed. Pre-validate new shapes in
+   `p_waveN_shapes.xi`; dump/wire floorsN+1 in the same commit.
 5. Windows env link gap: runtime shim (`_putenv_s`) or compiler FFI
    hardening, then an env smoke. TLS/schannel and tzdata phase 2 stay last;
    registry publish activation is the user's (dispatch-only
@@ -107,7 +129,14 @@ was rejected by tag rules -- owner action needed).
   (this box has NO `pwsh` -- use `powershell`);
   `powershell -NoProfile -File tools/barename_scan.ps1 -Compiler <exe>`;
   `powershell -NoProfile -File tools/coverage_scan.ps1 -RatchetFile
-  tools/coverage_floors50.json`.
+  tools/coverage_floors51.json`.
+- Compiler gate tests (run from the extracted compiler source):
+  set `CARGO_TARGET_DIR` + `XIOM_STDLIB=E:\xiom-lang\stdlib`, copy
+  `target\debug\xiom.exe` into `<extracted-src>\target\debug` (the test's
+  `xiom_path()` resolves there), then
+  `cargo test -p xiom-codegen --test stdlib_tests stdlib_all_modules_compile_to_ir`
+  and
+  `cargo test -p xiom-codegen --test stdlib_api_freeze_tests stdlib_api_freeze_no_removals`.
 - The corpus takes 20-40 min with 8 workers when the compiler lane runs its
   e2e suite concurrently; check per-worker CSVs for liveness, not just the
   log (a low-row worker is usually CPU-starved, not stuck).
