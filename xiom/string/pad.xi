@@ -21,7 +21,9 @@ use xiom.string;
 /// Pads `s` on the left with `pad` up to `width` bytes.
 /// Returns `s` unchanged when `s` is already at least `width` bytes long.
 /// Complexity: O(width - |s|).
-pub fn str_pad_left(s: Str, width: Int, pad: Char) -> Str {
+pub fn str_pad_left(s: Str, width: Int, pad: Char) -> Str
+  ensures: width <= s.len() => result == s
+{
   return string.str_pad_left(s, width, pad);
 }
 
@@ -31,7 +33,9 @@ pub fn str_pad_left(s: Str, width: Int, pad: Char) -> Str {
 /// Pads `s` on the right with `pad` up to `width` bytes.
 /// Returns `s` unchanged when `s` is already at least `width` bytes long.
 /// Complexity: O(width - |s|).
-pub fn str_pad_right(s: Str, width: Int, pad: Char) -> Str {
+pub fn str_pad_right(s: Str, width: Int, pad: Char) -> Str
+  ensures: width <= s.len() => result == s
+{
   return string.str_pad_right(s, width, pad);
 }
 
@@ -45,7 +49,9 @@ pub fn str_pad_right(s: Str, width: Int, pad: Char) -> Str {
 /// is odd.
 /// Returns `s` unchanged when `s` is already at least `width` bytes long.
 /// Complexity: O(width - |s|).
-pub fn str_pad_both(s: Str, width: Int, pad: Char) -> Str {
+pub fn str_pad_both(s: Str, width: Int, pad: Char) -> Str
+  ensures: width <= s.len() => result == s
+{
   let s_len = string.str_len(s);
   if s_len >= width {
     return s;
@@ -65,7 +71,9 @@ pub fn str_pad_both(s: Str, width: Int, pad: Char) -> Str {
 /// `str_pad_both`.
 /// Returns `s` unchanged when `s` is already at least `width` bytes long.
 /// Complexity: O(width - |s|).
-pub fn str_center(s: Str, width: Int, pad: Char) -> Str {
+pub fn str_center(s: Str, width: Int, pad: Char) -> Str
+  ensures: width <= s.len() => result == s
+{
   str_pad_both(s, width, pad)
 }
 
@@ -73,7 +81,9 @@ pub fn str_center(s: Str, width: Int, pad: Char) -> Str {
 // Complexity: O(width - |s|).
 /// Alias of `str_pad_left`: pads `s` at the start with `pad` up to `width`.
 /// Complexity: O(width - |s|).
-pub fn str_pad_start(s: Str, width: Int, pad: Char) -> Str {
+pub fn str_pad_start(s: Str, width: Int, pad: Char) -> Str
+  ensures: width <= s.len() => result == s
+{
   return string.str_pad_left(s, width, pad);
 }
 
@@ -81,6 +91,8 @@ pub fn str_pad_start(s: Str, width: Int, pad: Char) -> Str {
 // Complexity: O(width - |s|).
 /// Alias of `str_pad_right`: pads `s` at the end with `pad` up to `width`.
 /// Complexity: O(width - |s|).
-pub fn str_pad_end(s: Str, width: Int, pad: Char) -> Str {
+pub fn str_pad_end(s: Str, width: Int, pad: Char) -> Str
+  ensures: width <= s.len() => result == s
+{
   return string.str_pad_right(s, width, pad);
 }

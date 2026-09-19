@@ -30,18 +30,24 @@ extern "C" {
 use xiom.string;
 
 /// New empty builder. Complexity: O(1).
-pub fn sb_new() -> Vec[UInt8] {
+pub fn sb_new() -> Vec[UInt8]
+  ensures: result.len() == 0
+{
   return Vec[UInt8].new();
 }
 
 /// Append one byte. Complexity: O(1) amortized.
-pub fn sb_push_byte(sb: &mut Vec[UInt8], b: UInt8) {
+pub fn sb_push_byte(sb: &mut Vec[UInt8], b: UInt8)
+  ensures: sb.len() >= 1
+{
   sb.push(b);
 }
 
 /// Append a whole string (byte copy; UTF-8 safe -- bytes are opaque here).
 /// Complexity: O(s.len()) amortized.
-pub fn sb_push_str(sb: &mut Vec[UInt8], s: Str) {
+pub fn sb_push_str(sb: &mut Vec[UInt8], s: Str)
+  ensures: s.len() > 0 => sb.len() >= 1
+{
   var i = 0;
   let n = s.len();
   while i < n {
@@ -53,7 +59,9 @@ pub fn sb_push_str(sb: &mut Vec[UInt8], s: Str) {
 /// Append the decimal representation of `v` (sign-aware, zero-safe).
 /// Emits digits without any temporary Str allocation.
 /// Complexity: O(digits).
-pub fn sb_push_int(sb: &mut Vec[UInt8], v: Int) {
+pub fn sb_push_int(sb: &mut Vec[UInt8], v: Int)
+  ensures: sb.len() >= 1
+{
   var neg = false;
   var n = v;
   if n < 0 {
@@ -84,7 +92,9 @@ pub fn sb_push_int(sb: &mut Vec[UInt8], v: Int) {
 /// NUL-terminated buffer moves into the result Str ([XFER]). The builder
 /// vector is untouched and remains usable.
 /// Complexity: O(n).
-pub fn sb_to_str(sb: &Vec[UInt8]) -> Str {
+pub fn sb_to_str(sb: &Vec[UInt8]) -> Str
+  ensures: result.len() == sb.len()
+{
   let n = sb.len();
   unsafe {
     var buf = malloc(n + 1);
@@ -97,7 +107,9 @@ pub fn sb_to_str(sb: &Vec[UInt8]) -> Str {
 }
 
 /// Reset to empty. Complexity: O(n).
-pub fn sb_clear(sb: &mut Vec[UInt8]) {
+pub fn sb_clear(sb: &mut Vec[UInt8])
+  ensures: sb.len() == 0
+{
   var n = sb.len();
   while n > 0 {
     sb.pop();

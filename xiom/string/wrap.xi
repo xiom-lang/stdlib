@@ -22,7 +22,9 @@ use xiom.string;
 /// Returns: a Vec[Str] of wrapped lines.
 /// Error case: width < 1 => empty vector.
 /// Complexity: O(|s|).
-pub fn str_wrap(s: Str, width: Int) -> Vec[Str] {
+pub fn str_wrap(s: Str, width: Int) -> Vec[Str]
+  ensures: width < 1 => result.len() == 0
+{
   var lines = Vec[Str].new();
   if width < 1 {
     return lines;
@@ -69,7 +71,9 @@ pub fn str_wrap(s: Str, width: Int) -> Vec[Str] {
 /// Returns: a Vec[Str] of fixed-width lines (the last may be shorter).
 /// Error case: width < 1 => empty vector.
 /// Complexity: O(|s|).
-pub fn str_wrap_hard(s: Str, width: Int) -> Vec[Str] {
+pub fn str_wrap_hard(s: Str, width: Int) -> Vec[Str]
+  ensures: width < 1 => result.len() == 0
+{
   var lines = Vec[Str].new();
   if width < 1 {
     return lines;
@@ -95,7 +99,9 @@ pub fn str_wrap_hard(s: Str, width: Int) -> Vec[Str] {
 /// Returns: a Vec[Str] of wrapped lines.
 /// Error case: width < 1 => empty vector.
 /// Complexity: O(|s|).
-pub fn str_wrap_soft(s: Str, width: Int) -> Vec[Str] {
+pub fn str_wrap_soft(s: Str, width: Int) -> Vec[Str]
+  ensures: width < 1 => result.len() == 0
+{
   var lines = Vec[Str].new();
   if width < 1 {
     return lines;
@@ -134,7 +140,9 @@ pub fn str_wrap_soft(s: Str, width: Int) -> Vec[Str] {
 /// Returns: the wrapped lines joined by `sep`.
 /// Error case: width < 1 => "".
 /// Complexity: O(|s|).
-pub fn str_wrap_join(s: Str, width: Int, sep: Str) -> Str {
+pub fn str_wrap_join(s: Str, width: Int, sep: Str) -> Str
+  ensures: width < 1 => result.len() == 0
+{
   var lines = str_wrap(s, width);
   var result = "";
   var i: Int = 0;

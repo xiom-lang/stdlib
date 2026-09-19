@@ -21,7 +21,9 @@ use xiom.convert;
 /// Joins `parts` with `sep` between consecutive elements.
 /// Returns an empty string when `parts` is empty.
 /// Complexity: O(total bytes of parts).
-pub fn str_join(parts: &Vec[Str], sep: Str) -> Str {
+pub fn str_join(parts: &Vec[Str], sep: Str) -> Str
+  ensures: parts.len() == 0 => result.len() == 0
+{
   var result = "";
   let len = parts.len();
   var i: Int = 0;
@@ -44,7 +46,9 @@ pub fn str_join(parts: &Vec[Str], sep: Str) -> Str {
 /// `after <= 0`, no separator is inserted at all.
 /// Returns an empty string when `parts` is empty.
 /// Complexity: O(total bytes of parts).
-pub fn str_join_after(parts: &Vec[Str], sep: Str, after: Int) -> Str {
+pub fn str_join_after(parts: &Vec[Str], sep: Str, after: Int) -> Str
+  ensures: after <= 0 => result.len() == 0
+{
   var result = "";
   let len = parts.len();
   if after <= 0 {
@@ -68,7 +72,9 @@ pub fn str_join_after(parts: &Vec[Str], sep: Str, after: Int) -> Str {
 /// Joins the `Int` values in `values` with `sep` between consecutive elements.
 /// Returns an empty string when `values` is empty.
 /// Complexity: O(total digits of values).
-pub fn vec_int_join(values: &Vec[Int], sep: Str) -> Str {
+pub fn vec_int_join(values: &Vec[Int], sep: Str) -> Str
+  ensures: values.len() == 0 => result.len() == 0
+{
   var result = "";
   let len = values.len();
   var i: Int = 0;
@@ -89,7 +95,9 @@ pub fn vec_int_join(values: &Vec[Int], sep: Str) -> Str {
 /// Joins the `Float64` values in `values` with `sep` between consecutive
 /// elements. Returns an empty string when `values` is empty.
 /// Complexity: O(total digits of values).
-pub fn vec_float_join(values: &Vec[Float64], sep: Str) -> Str {
+pub fn vec_float_join(values: &Vec[Float64], sep: Str) -> Str
+  ensures: values.len() == 0 => result.len() == 0
+{
   var result = "";
   let len = values.len();
   var i: Int = 0;

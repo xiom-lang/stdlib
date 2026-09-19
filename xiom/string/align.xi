@@ -21,7 +21,9 @@ use xiom.string;
 /// Returns: the left-aligned string.
 /// Error case: none; width < 0 is a no-op.
 /// Complexity: O(width).
-pub fn str_align_left(s: Str, width: Int) -> Str {
+pub fn str_align_left(s: Str, width: Int) -> Str
+  ensures: width < 0 => result == s
+{
   if width < 0 {
     return s;
   };
@@ -35,7 +37,9 @@ pub fn str_align_left(s: Str, width: Int) -> Str {
 /// Returns: the right-aligned string.
 /// Error case: none; width < 0 is a no-op.
 /// Complexity: O(width).
-pub fn str_align_right(s: Str, width: Int) -> Str {
+pub fn str_align_right(s: Str, width: Int) -> Str
+  ensures: width < 0 => result == s
+{
   if width < 0 {
     return s;
   };
@@ -50,7 +54,9 @@ pub fn str_align_right(s: Str, width: Int) -> Str {
 /// Returns: the centered string.
 /// Error case: none; width < 0 is a no-op.
 /// Complexity: O(width).
-pub fn str_align_center(s: Str, width: Int) -> Str {
+pub fn str_align_center(s: Str, width: Int) -> Str
+  ensures: width < 0 => result == s
+{
   if width < 0 {
     return s;
   };
@@ -65,7 +71,9 @@ pub fn str_align_center(s: Str, width: Int) -> Str {
 /// Returns: the justified string.
 /// Error case: none; width < 0 is a no-op.
 /// Complexity: O(|s| + width).
-pub fn str_align_justify(s: Str, width: Int) -> Str {
+pub fn str_align_justify(s: Str, width: Int) -> Str
+  ensures: width < 0 => result == s
+{
   if width < 0 {
     return s;
   };

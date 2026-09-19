@@ -46,7 +46,9 @@ fn _code_point_at(s: Str, pos: Int) -> Int {
 /// Returns: the escaped string.
 /// Error case: none.
 /// Complexity: O(|s|).
-pub fn str_escape(s: Str) -> Str {
+pub fn str_escape(s: Str) -> Str
+  ensures: s.len() == 0 => result.len() == 0
+{
   string.str_escape(s)
 }
 
@@ -57,7 +59,9 @@ pub fn str_escape(s: Str) -> Str {
 /// Returns: the unescaped string.
 /// Error case: none.
 /// Complexity: O(|s|).
-pub fn str_unescape(s: Str) -> Str {
+pub fn str_unescape(s: Str) -> Str
+  ensures: s.len() == 0 => result.len() == 0
+{
   string.str_unescape(s)
 }
 
@@ -93,7 +97,9 @@ fn _hex4(v: Int) -> Str {
 /// Returns: the ASCII-escaped string.
 /// Error case: none.
 /// Complexity: O(|s|).
-pub fn str_escape_ascii(s: Str) -> Str {
+pub fn str_escape_ascii(s: Str) -> Str
+  ensures: s.len() == 0 => result.len() == 0
+{
   var result = "";
   let len = string.str_len(s);
   var i: Int = 0;
@@ -119,7 +125,9 @@ pub fn str_escape_ascii(s: Str) -> Str {
 /// Returns: the Unicode-escaped string.
 /// Error case: none.
 /// Complexity: O(|s|).
-pub fn str_escape_unicode(s: Str) -> Str {
+pub fn str_escape_unicode(s: Str) -> Str
+  ensures: s.len() == 0 => result.len() == 0
+{
   var result = "";
   let len = string.str_len(s);
   var i: Int = 0;

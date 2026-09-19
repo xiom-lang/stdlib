@@ -20,7 +20,9 @@ use xiom.string;
 /// Returns: Some(offset) on the first match, None when absent.
 /// Error case: none.
 /// Complexity: O(|s| * |needle|).
-pub fn str_index_of(s: Str, needle: Str) -> Option[Int] {
+pub fn str_index_of(s: Str, needle: Str) -> Option[Int]
+  ensures: needle.len() == 0 => result.is_some
+{
   if string.str_len(needle) == 0 {
     return Some(0);
   };
@@ -34,7 +36,9 @@ pub fn str_index_of(s: Str, needle: Str) -> Option[Int] {
 /// Returns: Some(offset) on the last match, None when absent.
 /// Error case: none.
 /// Complexity: O(|s| * |needle|).
-pub fn str_last_index_of(s: Str, needle: Str) -> Option[Int] {
+pub fn str_last_index_of(s: Str, needle: Str) -> Option[Int]
+  ensures: needle.len() == 0 => result.is_some
+{
   if string.str_len(needle) == 0 {
     return Some(string.str_len(s));
   };
@@ -46,7 +50,9 @@ pub fn str_last_index_of(s: Str, needle: Str) -> Option[Int] {
 /// Returns: true on a match, false otherwise (including an empty needle).
 /// Error case: none.
 /// Complexity: O(|s| * |needle|).
-pub fn str_contains(s: Str, needle: Str) -> Bool {
+pub fn str_contains(s: Str, needle: Str) -> Bool
+  ensures: needle.len() == 0 => result == true
+{
   if string.str_len(needle) == 0 {
     return true;
   };
@@ -58,7 +64,9 @@ pub fn str_contains(s: Str, needle: Str) -> Bool {
 /// Returns: true on the first needle found, false when none match.
 /// Error case: none.
 /// Complexity: O(k * |s| * max |needle|) where k = needles.len().
-pub fn str_contains_any(s: Str, needles: &Vec[Str]) -> Bool {
+pub fn str_contains_any(s: Str, needles: &Vec[Str]) -> Bool
+  ensures: needles.len() == 0 => result == false
+{
   string.str_contains_any(s, needles)
 }
 
@@ -98,7 +106,9 @@ pub fn str_count_occurrences(s: Str, needle: Str) -> Int
 /// Returns: Some(offset) of the earliest match, None when none match.
 /// Error case: none.
 /// Complexity: O(k * |s| * max |needle|) where k = needles.len().
-pub fn str_find_any(s: Str, needles: &Vec[Str]) -> Option[Int] {
+pub fn str_find_any(s: Str, needles: &Vec[Str]) -> Option[Int]
+  ensures: needles.len() == 0 => result.is_some == false
+{
   let ncount = needles.len();
   var best: Int = -1;
   var found = false;
