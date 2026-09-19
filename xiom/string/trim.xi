@@ -35,9 +35,6 @@ fn _char_in_str(s: Str, b: UInt8) -> Bool {
   false
 }
 
-// Removes leading and trailing whitespace from `s`.
-// Returns a new string no longer than `s`.
-// Complexity: O(|s|).
 /// Removes leading and trailing whitespace from `s`.
 /// Returns a new string no longer than `s`.
 /// Complexity: O(|s|).
@@ -47,9 +44,6 @@ pub fn str_trim(s: Str) -> Str
   return string.str_trim(s);
 }
 
-// Removes leading whitespace from `s`.
-// Returns a new string no longer than `s`.
-// Complexity: O(|s|).
 /// Removes leading whitespace from `s`.
 /// Returns a new string no longer than `s`.
 /// Complexity: O(|s|).
@@ -64,9 +58,6 @@ pub fn str_trim_start(s: Str) -> Str
   string.str_slice(s, start, len)
 }
 
-// Removes trailing whitespace from `s`.
-// Returns a new string no longer than `s`.
-// Complexity: O(|s|).
 /// Removes trailing whitespace from `s`.
 /// Returns a new string no longer than `s`.
 /// Complexity: O(|s|).
@@ -81,10 +72,6 @@ pub fn str_trim_end(s: Str) -> Str
   string.str_slice(s, 0, end)
 }
 
-// Removes leading and trailing characters listed in `chars` from `s`.
-// When `chars` is empty, `s` is returned unchanged.
-// Returns a new string no longer than `s`.
-// Complexity: O(|s| * |chars|).
 /// Removes leading and trailing characters listed in `chars` from `s`.
 /// When `chars` is empty, `s` is returned unchanged.
 /// Returns a new string no longer than `s`.
@@ -104,10 +91,6 @@ pub fn str_trim_matches(s: Str, chars: Str) -> Str
   string.str_slice(s, start, end)
 }
 
-// Removes leading characters listed in `chars` from `s`.
-// When `chars` is empty, `s` is returned unchanged.
-// Returns a new string no longer than `s`.
-// Complexity: O(|s| * |chars|).
 /// Removes leading characters listed in `chars` from `s`.
 /// When `chars` is empty, `s` is returned unchanged.
 /// Returns a new string no longer than `s`.
@@ -123,10 +106,6 @@ pub fn str_trim_start_matches(s: Str, chars: Str) -> Str
   string.str_slice(s, start, len)
 }
 
-// Removes trailing characters listed in `chars` from `s`.
-// When `chars` is empty, `s` is returned unchanged.
-// Returns a new string no longer than `s`.
-// Complexity: O(|s| * |chars|).
 /// Removes trailing characters listed in `chars` from `s`.
 /// When `chars` is empty, `s` is returned unchanged.
 /// Returns a new string no longer than `s`.

@@ -15,7 +15,6 @@ module xiom.convert.uri
 
 use xiom.string;
 
-// Uri -- parsed URI components.
 /// Uri -- parsed URI components.
 pub type Uri = {
   scheme: Str;

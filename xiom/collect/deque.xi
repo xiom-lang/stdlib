@@ -6,14 +6,11 @@ module xiom.collect.deque
 
 // Depends on: none
 
-// ============================================================================
-// Double-ended queue of Int elements with O(1) push and pop at both ends.
-// Backed by a single Vec[Int] with `head`/`tail` offsets defining the live
-// window [head, tail). Pops advance the offsets (stale slots are later
-// overwritten); `deque_push_front` rebuilds the window when there is no
-// room at the front. All pops/peeks are bounds-checked (None on empty).
-// ============================================================================
-
+/// Double-ended queue of Int elements with O(1) push and pop at both ends.
+/// Backed by a single Vec[Int] with `head`/`tail` offsets defining the live
+/// window [head, tail). Pops advance the offsets (stale slots are later
+/// overwritten); `deque_push_front` rebuilds the window when there is no
+/// room at the front. All pops/peeks are bounds-checked (None on empty).
 pub type Deque = {
   items: Vec[Int];
   head: Int;

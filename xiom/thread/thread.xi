@@ -131,7 +131,6 @@ pub fn yield_now()
   unsafe { xiom_thread_yield(); }
 }
 
-// Scoped threads (borrows from parent scope)
 /// Scoped threads (borrows from parent scope)
 pub type Scope = {}
 

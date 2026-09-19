@@ -187,8 +187,6 @@ fn _gl_weights(n: Int) -> Vec[Float64] {
 // Newton-Cotes rules
 // ---------------------------------------------------------------------------
 
-// Riemann sum over n subintervals using left endpoints. Returns 0.0 for
-// n <= 0 (documented). Complexity: O(n).
 /// Riemann sum over n subintervals using left endpoints. Returns 0.0 for
 /// n <= 0 (documented). Complexity: O(n).
 pub fn integrate_riemann(f: fn(Float64) -> Float64, a: Float64, b: Float64, n: Int) -> Float64 {
@@ -198,8 +196,6 @@ pub fn integrate_riemann(f: fn(Float64) -> Float64, a: Float64, b: Float64, n: I
   return s * h;
 }
 
-// Composite trapezoidal rule over n subintervals. Returns 0.0 for n <= 0
-// (documented). Complexity: O(n).
 /// Composite trapezoidal rule over n subintervals. Returns 0.0 for n <= 0
 /// (documented). Complexity: O(n).
 pub fn integrate_trapezoid(f: fn(Float64) -> Float64, a: Float64, b: Float64, n: Int) -> Float64 {
@@ -212,8 +208,6 @@ pub fn integrate_trapezoid(f: fn(Float64) -> Float64, a: Float64, b: Float64, n:
   return total * h;
 }
 
-// Composite midpoint rule over n subintervals. Returns 0.0 for n <= 0
-// (documented). Complexity: O(n).
 /// Composite midpoint rule over n subintervals. Returns 0.0 for n <= 0
 /// (documented). Complexity: O(n).
 pub fn integrate_midpoint(f: fn(Float64) -> Float64, a: Float64, b: Float64, n: Int) -> Float64 {
@@ -223,8 +217,6 @@ pub fn integrate_midpoint(f: fn(Float64) -> Float64, a: Float64, b: Float64, n: 
   return s * h;
 }
 
-// Composite Simpson's rule over n subintervals. An odd n is reduced to n - 1
-// (documented). Returns 0.0 for n <= 0 (documented). Complexity: O(n).
 /// Composite Simpson's rule over n subintervals. An odd n is reduced to n - 1
 /// (documented). Returns 0.0 for n <= 0 (documented). Complexity: O(n).
 pub fn integrate_simpson(f: fn(Float64) -> Float64, a: Float64, b: Float64, n: Int) -> Float64 {
@@ -241,15 +233,6 @@ pub fn integrate_simpson(f: fn(Float64) -> Float64, a: Float64, b: Float64, n: I
 // Adaptive and Gaussian rules
 // ---------------------------------------------------------------------------
 
-// Adaptive Simpson quadrature refining [a, b] until the local error estimate
-// falls under tol (depth-capped to 40 refinements per interval). Returns 0.0
-// for tol <= 0 (documented). Complexity: depends on the integrand's
-// smoothness; O(refinements).
-// TODO(compiler): NOT IMPLEMENTABLE in this compiler build - the recursive
-// refinement threading a fn-typed param together with Float64 parameters
-// makes any program that links it crash at startup with 0xC000001D (BUG 20
-// AVX-512 codegen on Zen 2), even before main. Keep the frozen signature;
-// revisit when the vectorizer cannot touch this shape.
 /// Adaptive Simpson quadrature refining [a, b] until the local error estimate
 /// falls under tol (depth-capped to 40 refinements per interval). Returns 0.0
 /// for tol <= 0 (documented). Complexity: depends on the integrand's
@@ -263,9 +246,6 @@ pub fn integrate_adaptive(f: fn(Float64) -> Float64, a: Float64, b: Float64, tol
   return 0.0;
 }
 
-// n-point Gauss-Legendre quadrature over [a, b]. Supported point counts are
-// 1..8 (standard node/weight tables); other counts fall back to the 8-point
-// rule (documented). Complexity: O(n).
 /// n-point Gauss-Legendre quadrature over [a, b]. Supported point counts are
 /// 1..8 (standard node/weight tables); other counts fall back to the 8-point
 /// rule (documented). Complexity: O(n).
@@ -286,12 +266,6 @@ fn _gl_rec(f: fn(Float64) -> Float64, nodes: &Vec[Float64], weights: &Vec[Float6
   return term + _gl_rec(f, nodes, weights, mid, half, i + 1);
 }
 
-// Default high-accuracy definite integral over [a, b]. Returns 0.0 when
-// a == b. NOTE: the adaptive-Simpson implementation crashes at startup with
-// 0xC000001D in this build (BUG 20 AVX-512 codegen on Zen 2; see
-// integrate_adaptive), so this currently falls back to the composite
-// trapezoidal rule with 1000 subintervals (~1e-6 accuracy for smooth
-// integrands). Complexity: O(1000).
 /// Default high-accuracy definite integral over [a, b]. Returns 0.0 when
 /// a == b. NOTE: the adaptive-Simpson implementation crashes at startup with
 /// 0xC000001D in this build (BUG 20 AVX-512 codegen on Zen 2; see

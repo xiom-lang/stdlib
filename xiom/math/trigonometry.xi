@@ -31,25 +31,21 @@ fn _norm(x: Float64) -> Float64 {
   return r;
 }
 
-// Sine of x (radians). NaN/infinite inputs propagate. Complexity: O(1).
 /// Sine of x (radians). NaN/infinite inputs propagate. Complexity: O(1).
 pub fn sin(x: Float64) -> Float64 {
   return math.sin(x);
 }
 
-// Cosine of x (radians). Complexity: O(1).
 /// Cosine of x (radians). Complexity: O(1).
 pub fn cos(x: Float64) -> Float64 {
   return math.cos(x);
 }
 
-// Tangent of x (radians); a pole (cos(x) == 0) yields +-infinity. Complexity: O(1).
 /// Tangent of x (radians); a pole (cos(x) == 0) yields +-infinity. Complexity: O(1).
 pub fn tan(x: Float64) -> Float64 {
   return math.tan(x);
 }
 
-// Cosecant of x: 1/sin(x); a zero sine yields +inf (documented). Complexity: O(1).
 /// Cosecant of x: 1/sin(x); a zero sine yields +inf (documented). Complexity: O(1).
 pub fn csc(x: Float64) -> Float64 {
   var s = math.sin(x);
@@ -57,7 +53,6 @@ pub fn csc(x: Float64) -> Float64 {
   return 1.0 / s;
 }
 
-// Secant of x: 1/cos(x); a zero cosine yields +inf (documented). Complexity: O(1).
 /// Secant of x: 1/cos(x); a zero cosine yields +inf (documented). Complexity: O(1).
 pub fn sec(x: Float64) -> Float64 {
   var c = math.cos(x);
@@ -65,7 +60,6 @@ pub fn sec(x: Float64) -> Float64 {
   return 1.0 / c;
 }
 
-// Cotangent of x: cos(x)/sin(x); a zero sine yields +inf (documented). Complexity: O(1).
 /// Cotangent of x: cos(x)/sin(x); a zero sine yields +inf (documented). Complexity: O(1).
 pub fn cot(x: Float64) -> Float64 {
   var c = math.cos(x);
@@ -74,7 +68,6 @@ pub fn cot(x: Float64) -> Float64 {
   return c / s;
 }
 
-// Pair (sin(x), cos(x)) computed once. Complexity: O(1).
 /// Pair (sin(x), cos(x)) computed once. Complexity: O(1).
 pub fn sincos(x: Float64) -> (Float64, Float64) {
   var s = math.sin(x);
@@ -82,7 +75,6 @@ pub fn sincos(x: Float64) -> (Float64, Float64) {
   return (s, c);
 }
 
-// Pair (sin(pi*x), cos(pi*x)). Complexity: O(1).
 /// Pair (sin(pi*x), cos(pi*x)). Complexity: O(1).
 pub fn sincospi(x: Float64) -> (Float64, Float64) {
   var px = _PI * x;
@@ -91,7 +83,6 @@ pub fn sincospi(x: Float64) -> (Float64, Float64) {
   return (s, c);
 }
 
-// Sine via the normalized Taylor series (no libm), 10 terms. Complexity: O(10).
 /// Sine via the normalized Taylor series (no libm), 10 terms. Complexity: O(10).
 pub fn sin_pure(x: Float64) -> Float64 {
   var a = _norm(x);
@@ -107,7 +98,6 @@ pub fn sin_pure(x: Float64) -> Float64 {
   return result;
 }
 
-// Cosine via the normalized Taylor series (no libm), 10 terms. Complexity: O(10).
 /// Cosine via the normalized Taylor series (no libm), 10 terms. Complexity: O(10).
 pub fn cos_pure(x: Float64) -> Float64 {
   var a = _norm(x);
@@ -123,7 +113,6 @@ pub fn cos_pure(x: Float64) -> Float64 {
   return result;
 }
 
-// Tangent via pure sin/cos. Complexity: O(10).
 /// Tangent via pure sin/cos. Complexity: O(10).
 pub fn tan_pure(x: Float64) -> Float64 {
   var s = sin_pure(x);
@@ -132,8 +121,6 @@ pub fn tan_pure(x: Float64) -> Float64 {
   return s / c;
 }
 
-// sin(pi*x), accurate for large x by reducing x into [0, 2) first.
-// Complexity: O(1).
 /// sin(pi*x), accurate for large x by reducing x into [0, 2) first.
 /// Complexity: O(1).
 pub fn sinpi(x: Float64) -> Float64 {
@@ -149,8 +136,6 @@ pub fn sinpi(x: Float64) -> Float64 {
   return math.sin(_PI * r);
 }
 
-// cos(pi*x), accurate for large x by reducing x into [0, 2) first.
-// Complexity: O(1).
 /// cos(pi*x), accurate for large x by reducing x into [0, 2) first.
 /// Complexity: O(1).
 pub fn cospi(x: Float64) -> Float64 {
@@ -165,8 +150,6 @@ pub fn cospi(x: Float64) -> Float64 {
   return math.cos(_PI * r);
 }
 
-// tan(pi*x), accurate for large x by reducing x into [0, 2) first. A pole
-// yields +-infinity. Complexity: O(1).
 /// tan(pi*x), accurate for large x by reducing x into [0, 2) first. A pole
 /// yields +-infinity. Complexity: O(1).
 pub fn tanpi(x: Float64) -> Float64 {

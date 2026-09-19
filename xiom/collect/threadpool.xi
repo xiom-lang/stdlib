@@ -6,19 +6,16 @@ module xiom.collect.threadpool
 
 // Depends on: xiom.thread, xiom.sync
 
-// ============================================================================
-// Thread pool. Spawns a fixed number of worker threads that drain a shared job
-// queue. pool_submit enqueues a closure; pool_join waits for all pending jobs
-// to finish; pool_shutdown stops the workers and releases their threads.
-//
-// Pure-XIOM data structure (no OS threads): the pool tracks `workers` worker
-// slots, an `idle`/`busy` split and a FIFO queue of Int job handles. Each
-// submit hands the job to an idle worker if one is free (busy++), otherwise
-// the handle waits in the queue; pool_join completes every pending job
-// instantly (no real work runs) and returns all workers to idle. Submit after
-// shutdown returns false.
-// ============================================================================
-
+/// Thread pool. Spawns a fixed number of worker threads that drain a shared job
+/// queue. pool_submit enqueues a closure; pool_join waits for all pending jobs
+/// to finish; pool_shutdown stops the workers and releases their threads.
+/// 
+/// Pure-XIOM data structure (no OS threads): the pool tracks `workers` worker
+/// slots, an `idle`/`busy` split and a FIFO queue of Int job handles. Each
+/// submit hands the job to an idle worker if one is free (busy++), otherwise
+/// the handle waits in the queue; pool_join completes every pending job
+/// instantly (no real work runs) and returns all workers to idle. Submit after
+/// shutdown returns false.
 pub type ThreadPool = {
   workers: Int;
   idle: Int;

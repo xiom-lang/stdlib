@@ -6,11 +6,8 @@ module xiom.collect.stack
 
 // Depends on: none
 
-// ============================================================================
-// LIFO stack of Int elements backed by the built-in Vec[Int]. All operations
-// are O(1); `stack_pop`/`stack_peek` return None on an empty stack.
-// ============================================================================
-
+/// LIFO stack of Int elements backed by the built-in Vec[Int]. All operations
+/// are O(1); `stack_pop`/`stack_peek` return None on an empty stack.
 pub type Stack = {
   items: Vec[Int];
 }

@@ -6,13 +6,10 @@ module xiom.collect.tinylfu
 
 // Depends on: none (pure)
 
-// ============================================================================
-// TinyLFU admission filter for caches. Uses a count-min sketch (CMS) of
-// estimated access frequencies to decide whether an incoming key should
-// displace an existing one. Includes the underlying CMS primitives as the
-// building block; tinylfu_reset halves all counters to avoid saturation.
-// ============================================================================
-
+/// TinyLFU admission filter for caches. Uses a count-min sketch (CMS) of
+/// estimated access frequencies to decide whether an incoming key should
+/// displace an existing one. Includes the underlying CMS primitives as the
+/// building block; tinylfu_reset halves all counters to avoid saturation.
 pub type CountMinSketch = {
   width: Int;
   depth: Int;

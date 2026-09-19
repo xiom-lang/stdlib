@@ -6,21 +6,18 @@ module xiom.collect.kdtree
 
 // Depends on: xiom.math
 
-// ============================================================================
-// 2D k-d tree of Int points with values, supporting nearest-neighbor and
-// rectangular range queries.
-//
-// Flat-arena style (the established collect/ pattern -- tree.xi/graph.xi use
-// parallel Vec[Int]s because Vec-of-struct instantiations collide at startup
-// in combined programs). Node i lives in the parallel vectors `xs`/`ys`/`vals`
-// plus its `left`/`right` children; the splitting axis alternates by depth
-// (x at even depth, y at odd depth), which is re-derived during every walk so
-// no depth field needs to be stored. Distances are squared Int distances, so
-// no floating point is involved. `kdtree_insert` is an incremental insert
-// (O(h) with h the tree height); the worst case is O(n) per insert for
-// degenerate orders, expected O(log n).
-// ============================================================================
-
+/// 2D k-d tree of Int points with values, supporting nearest-neighbor and
+/// rectangular range queries.
+/// 
+/// Flat-arena style (the established collect/ pattern -- tree.xi/graph.xi use
+/// parallel Vec[Int]s because Vec-of-struct instantiations collide at startup
+/// in combined programs). Node i lives in the parallel vectors `xs`/`ys`/`vals`
+/// plus its `left`/`right` children; the splitting axis alternates by depth
+/// (x at even depth, y at odd depth), which is re-derived during every walk so
+/// no depth field needs to be stored. Distances are squared Int distances, so
+/// no floating point is involved. `kdtree_insert` is an incremental insert
+/// (O(h) with h the tree height); the worst case is O(n) per insert for
+/// degenerate orders, expected O(log n).
 pub type KdTree = {
   root: Int;
   size: Int;

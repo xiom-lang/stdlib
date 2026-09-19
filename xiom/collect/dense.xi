@@ -6,16 +6,13 @@ module xiom.collect.dense
 
 // Depends on: none
 
-// ============================================================================
-// Dense set of unique Int elements backed by a bitmap for compact storage.
-//
-// Non-negative values are stored as a single bit each; the bitmap lives in a
-// `Vec[UInt8]` (value v occupies bit v % 8 of byte v / 8) that grows on demand
-// to cover the largest inserted value. All core operations are O(1); iteration
-// is O(bits) plus the set size. Negative values cannot be represented and are
-// rejected by `dense_add` (documented, no silent failure).
-// ============================================================================
-
+/// Dense set of unique Int elements backed by a bitmap for compact storage.
+/// 
+/// Non-negative values are stored as a single bit each; the bitmap lives in a
+/// `Vec[UInt8]` (value v occupies bit v % 8 of byte v / 8) that grows on demand
+/// to cover the largest inserted value. All core operations are O(1); iteration
+/// is O(bits) plus the set size. Negative values cannot be represented and are
+/// rejected by `dense_add` (documented, no silent failure).
 pub type DenseSet = {
   bits: Vec[UInt8];
   size: Int;

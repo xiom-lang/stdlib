@@ -18,8 +18,6 @@ use xiom.string;
 use xiom.net.ip4;
 use xiom.net.ip6;
 
-// type IpAddr - an IP address enum: V4 holding four octets, V6 holding eight
-// 16-bit parts.
 /// type IpAddr - an IP address enum: V4 holding four octets, V6 holding eight
 /// 16-bit parts.
 pub type IpAddr = enum {

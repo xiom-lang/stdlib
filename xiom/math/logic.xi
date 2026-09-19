@@ -25,9 +25,6 @@ module xiom.math.logic
 // Boolean operators and connectives
 // ---------------------------------------------------------------------------
 
-// Evaluate a named Boolean operator over the inputs a and b. Supported names
-// (case-sensitive): "and", "or", "xor", "nand", "nor", "xnor", "implies",
-// "iff". Any other name returns false (documented). Complexity: O(1).
 /// Evaluate a named Boolean operator over the inputs a and b. Supported names
 /// (case-sensitive): "and", "or", "xor", "nand", "nor", "xnor", "implies",
 /// "iff". Any other name returns false (documented). Complexity: O(1).
@@ -46,14 +43,11 @@ pub fn boolean_expression(op: Str, a: Bool, b: Bool) -> Bool {
   return false;
 }
 
-// Logical biconditional: true when a equals b. Complexity: O(1).
 /// Logical biconditional: true when a equals b. Complexity: O(1).
 pub fn iff(a: Bool, b: Bool) -> Bool {
   return a == b;
 }
 
-// Logical implication: false only when a is true and b is false.
-// Complexity: O(1).
 /// Logical implication: false only when a is true and b is false.
 /// Complexity: O(1).
 pub fn implies(a: Bool, b: Bool) -> Bool {
@@ -61,19 +55,16 @@ pub fn implies(a: Bool, b: Bool) -> Bool {
   return true;
 }
 
-// Exclusive or: true when a differs from b. Complexity: O(1).
 /// Exclusive or: true when a differs from b. Complexity: O(1).
 pub fn xor(a: Bool, b: Bool) -> Bool {
   return a != b;
 }
 
-// Not-and of a and b. Complexity: O(1).
 /// Not-and of a and b. Complexity: O(1).
 pub fn nand(a: Bool, b: Bool) -> Bool {
   return !(a && b);
 }
 
-// Not-or of a and b. Complexity: O(1).
 /// Not-or of a and b. Complexity: O(1).
 pub fn nor(a: Bool, b: Bool) -> Bool {
   return !(a || b);

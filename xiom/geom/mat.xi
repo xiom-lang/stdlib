@@ -22,7 +22,6 @@ module xiom.geom.mat
 use xiom.geom;
 use xiom.math;
 
-// n x n identity matrix. O(n^2).
 /// n x n identity matrix. O(n^2).
 pub fn mat_identity(n: Int) -> Vec[Vec[Float64]] {
   var out = Vec[Vec[Float64]].new();
@@ -40,8 +39,6 @@ pub fn mat_identity(n: Int) -> Vec[Vec[Float64]] {
   return out;
 }
 
-// Matrix product a * b. Returns an empty matrix when the inner dimensions do
-// not match. O(n^3).
 /// Matrix product a * b. Returns an empty matrix when the inner dimensions do
 /// not match. O(n^3).
 pub fn mat_mul(a: &Vec[Vec[Float64]], b: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {
@@ -85,8 +82,6 @@ pub fn mat_mul(a: &Vec[Vec[Float64]], b: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]
   return out;
 }
 
-// Determinant of a square matrix via Gaussian elimination with partial
-// pivoting. Returns NaN for a non-square matrix and 0 for a singular one. O(n^3).
 /// Determinant of a square matrix via Gaussian elimination with partial
 /// pivoting. Returns NaN for a non-square matrix and 0 for a singular one. O(n^3).
 pub fn mat_det(m: &Vec[Vec[Float64]]) -> Float64 {
@@ -153,8 +148,6 @@ pub fn mat_det(m: &Vec[Vec[Float64]]) -> Float64 {
   return det * sign;
 }
 
-// Inverse of a square matrix via Gauss-Jordan elimination with partial
-// pivoting. None when the matrix is singular or non-square. O(n^3).
 /// Inverse of a square matrix via Gauss-Jordan elimination with partial
 /// pivoting. None when the matrix is singular or non-square. O(n^3).
 pub fn mat_inv(m: &Vec[Vec[Float64]]) -> Option[Vec[Vec[Float64]]] {
@@ -255,7 +248,6 @@ pub fn mat_inv(m: &Vec[Vec[Float64]]) -> Option[Vec[Vec[Float64]]] {
   return Some(out);
 }
 
-// Transpose of a matrix. Empty matrix for a ragged input. O(n*m).
 /// Transpose of a matrix. Empty matrix for a ragged input. O(n*m).
 pub fn mat_transpose(m: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {
   var out = Vec[Vec[Float64]].new();
@@ -282,9 +274,6 @@ pub fn mat_transpose(m: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {
   return out;
 }
 
-// Compose the 4x4 matrix m with a translation (x, y, z): returns T * m where
-// T is the translation matrix, so the translation is applied after m.
-// Empty matrix unless m is 4x4. O(64).
 /// Compose the 4x4 matrix m with a translation (x, y, z): returns T * m where
 /// T is the translation matrix, so the translation is applied after m.
 /// Empty matrix unless m is 4x4. O(64).
@@ -316,9 +305,6 @@ pub fn mat_translate(m: &Vec[Vec[Float64]], x: Float64, y: Float64, z: Float64) 
   return out;
 }
 
-// Compose the 4x4 matrix m with a rotation of angle (radians) about the axis
-// direction: returns R * m where R is the Rodrigues rotation matrix (the axis
-// is normalised first). Empty matrix unless m is 4x4. O(64).
 /// Compose the 4x4 matrix m with a rotation of angle (radians) about the axis
 /// direction: returns R * m where R is the Rodrigues rotation matrix (the axis
 /// is normalised first). Empty matrix unless m is 4x4. O(64).
@@ -383,8 +369,6 @@ pub fn mat_rotate(m: &Vec[Vec[Float64]], angle: Float64, axis: &Vec[Float64]) ->
   return out;
 }
 
-// Compose the 4x4 matrix m with a scale (x, y, z): returns S * m where S is
-// the scale matrix, applied after m. Empty matrix unless m is 4x4. O(64).
 /// Compose the 4x4 matrix m with a scale (x, y, z): returns S * m where S is
 /// the scale matrix, applied after m. Empty matrix unless m is 4x4. O(64).
 pub fn mat_scale(m: &Vec[Vec[Float64]], x: Float64, y: Float64, z: Float64) -> Vec[Vec[Float64]] {
@@ -415,8 +399,6 @@ pub fn mat_scale(m: &Vec[Vec[Float64]], x: Float64, y: Float64, z: Float64) -> V
   return out;
 }
 
-// Right-handed look-at view matrix: camera at eye looking at target with up
-// direction. Column-major 4x4. O(1).
 /// Right-handed look-at view matrix: camera at eye looking at target with up
 /// direction. Column-major 4x4. O(1).
 pub fn mat_look_at(eye: &Vec[Float64], target: &Vec[Float64], up: &Vec[Float64]) -> Vec[Vec[Float64]] {
@@ -485,8 +467,6 @@ pub fn mat_look_at(eye: &Vec[Float64], target: &Vec[Float64], up: &Vec[Float64])
   return out;
 }
 
-// Perspective projection matrix (right-handed, standard OpenGL mapping).
-// fovy is the vertical field of view in radians; near/far must differ. 4x4. O(1).
 /// Perspective projection matrix (right-handed, standard OpenGL mapping).
 /// fovy is the vertical field of view in radians; near/far must differ. 4x4. O(1).
 pub fn mat_perspective(fovy: Float64, aspect: Float64, near: Float64, far: Float64) -> Vec[Vec[Float64]] {
@@ -520,8 +500,6 @@ pub fn mat_perspective(fovy: Float64, aspect: Float64, near: Float64, far: Float
   return out;
 }
 
-// Orthographic projection matrix mapping [left,right] x [bottom,top] x
-// [near,far] to NDC [-1,1]^3. 4x4. O(1).
 /// Orthographic projection matrix mapping [left,right] x [bottom,top] x
 /// [near,far] to NDC [-1,1]^3. 4x4. O(1).
 pub fn mat_ortho(left: Float64, right: Float64, bottom: Float64, top: Float64, near: Float64, far: Float64) -> Vec[Vec[Float64]] {
@@ -556,9 +534,6 @@ pub fn mat_ortho(left: Float64, right: Float64, bottom: Float64, top: Float64, n
   return out;
 }
 
-// Transform the point p (3 or 4 components, w defaults to 1) by the 4x4
-// matrix m including the perspective divide. Returns the zero vector when the
-// transformed w is zero. Empty vector for a non-4x4 matrix. O(16).
 /// Transform the point p (3 or 4 components, w defaults to 1) by the 4x4
 /// matrix m including the perspective divide. Returns the zero vector when the
 /// transformed w is zero. Empty vector for a non-4x4 matrix. O(16).

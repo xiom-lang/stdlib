@@ -19,10 +19,7 @@ use xiom.core.to_int_from_char;
 var _BASE: Int = 1000000000;
 var _BASE_DIGITS: Int = 9;
 
-// ============================================================================
-// Type -- BigInt
-// ============================================================================
-
+/// Type -- BigInt
 pub type BigInt = { digits: Vec[Int]; negative: Bool; }
 
 // ============================================================================
@@ -215,10 +212,7 @@ fn _div_mod_base(n: &BigInt) -> DivModResult {
   return DivModResult{ quot: q; rem: r; };
 }
 
-// ============================================================================
-// Construction -- from Int, from Str
-// ============================================================================
-
+/// Construction -- from Int, from Str
 pub fn bigint_from_int(n: Int) -> BigInt {
   var result = BigInt{ digits: Vec[Int].new(); negative: false; };
   if n == 0 { return result; }
@@ -232,10 +226,6 @@ pub fn bigint_from_int(n: Int) -> BigInt {
   return result;
 }
 
-// Build from an unsigned 64-bit value. The compiler emits SIGNED LLVM
-// instructions for UInt64 `/` and `%`, so the proven unsigned helpers from
-// xiom.num (u64_div_floor / u64_mod_euclid) are used instead -- exact for the
-// full 0 .. 2^64-1 range.
 /// Build from an unsigned 64-bit value. The compiler emits SIGNED LLVM
 /// instructions for UInt64 `/` and `%`, so the proven unsigned helpers from
 /// xiom.num (u64_div_floor / u64_mod_euclid) are used instead -- exact for the
@@ -253,8 +243,6 @@ pub fn bigint_from_u64(n: UInt64) -> BigInt {
   return result;
 }
 
-// Parse decimal string. Uses xiom.string.str_slice for char access.
-// O(n2) due to repeated multiply-by-10-and-add during accumulation.
 /// Parse decimal string. Uses xiom.string.str_slice for char access.
 /// O(n2) due to repeated multiply-by-10-and-add during accumulation.
 pub fn bigint_from_str(s: Str) -> Result[BigInt, Str] {
@@ -299,7 +287,6 @@ fn _parse_digit(c: Str) -> Int {
 // Conversion -- to string
 // ============================================================================
 
-// Convert to decimal string via repeated division by BASE.
 /// Convert to decimal string via repeated division by BASE.
 pub fn bigint_to_str(b: &BigInt) -> Str {
   if bigint_is_zero(b) { return "0"; }
@@ -379,10 +366,7 @@ fn _digit_char(d: Int) -> Str {
   return "9";
 }
 
-// ============================================================================
-// Core arithmetic -- add, sub, mul, div_mod
-// ============================================================================
-
+/// Core arithmetic -- add, sub, mul, div_mod
 pub fn bigint_add(a: &BigInt, b: &BigInt) -> BigInt {
   if a.negative == b.negative {
     var sum = _abs_add(a, b);
@@ -594,10 +578,7 @@ pub fn bigint_div_mod(a: &BigInt, b: &BigInt) -> (BigInt, BigInt) {
   return (quotient, remainder);
 }
 
-// ============================================================================
-// Comparison, zero, sign, abs, neg
-// ============================================================================
-
+/// Comparison, zero, sign, abs, neg
 pub fn bigint_compare(a: &BigInt, b: &BigInt) -> Int {
   if a.negative && !b.negative { return -1; }
   if !a.negative && b.negative { return 1; }
@@ -635,10 +616,7 @@ pub fn bigint_sign(b: &BigInt) -> Int {
   return 1;
 }
 
-// ============================================================================
-// Modular arithmetic and advanced operations
-// ============================================================================
-
+/// Modular arithmetic and advanced operations
 pub fn bigint_mod(a: &BigInt, m: &BigInt) -> BigInt {
   var pair = bigint_div_mod(a, m);
   var r = pair.1;
@@ -690,12 +668,11 @@ pub fn bigint_shift_left(b: &BigInt, shift: Int) -> BigInt {
 // from the original API) while `shift_right` is a true arithmetic bit shift
 // (division by 2^n, floor semantics for negatives).
 
-// -- Constants ---------------------------------------------------------------
-// NOTE (2026-08-10): module-global initializers cannot call functions (the
-// compiler silently leaves them zero -- see docs/COMPILER_BUGS.md), so the
-// spec constants BIGINT_ZERO/ONE/TEN are exposed as pure constructors that
-// return a fresh value. Zero-cost, immutable by construction.
-
+/// -- Constants ---------------------------------------------------------------
+/// NOTE (2026-08-10): module-global initializers cannot call functions (the
+/// compiler silently leaves them zero -- see docs/COMPILER_BUGS.md), so the
+/// spec constants BIGINT_ZERO/ONE/TEN are exposed as pure constructors that
+/// return a fresh value. Zero-cost, immutable by construction.
 pub fn bigint_zero() -> BigInt {
   return BigInt{ digits: Vec[Int].new(); negative: false; };
 }
@@ -725,7 +702,6 @@ fn _parse_digit_base(c: Str) -> Int {
   return -1;
 }
 
-// Parse a string in base 2..36 (optional leading - or +).
 /// Parse a string in base 2..36 (optional leading - or +).
 pub fn bigint_from_base(s: Str, base: Int) -> Result[BigInt, Str]
   requires: base >= 2 && base <= 36
@@ -754,14 +730,11 @@ pub fn bigint_from_base(s: Str, base: Int) -> Result[BigInt, Str]
   return Ok(result);
 }
 
-// Parse hexadecimal ("ff", "-1a"). Case-insensitive; no "0x" prefix.
 /// Parse hexadecimal ("ff", "-1a"). Case-insensitive; no "0x" prefix.
 pub fn bigint_from_hex(s: Str) -> Result[BigInt, Str] {
   return bigint_from_base(s, 16);
 }
 
-// Convert to a string in base 2..36 (digits 0-9, A-Z; "-" prefix for negatives).
-// Returns "" for an invalid base.
 /// Convert to a string in base 2..36 (digits 0-9, A-Z; "-" prefix for negatives).
 /// Returns "" for an invalid base.
 pub fn bigint_to_base(b: &BigInt, base: Int) -> Str {
@@ -789,7 +762,6 @@ pub fn bigint_to_base(b: &BigInt, base: Int) -> Str {
   return result;
 }
 
-// Lowercase hexadecimal (matches the parse examples "ff"/"-1a").
 /// Lowercase hexadecimal (matches the parse examples "ff"/"-1a").
 pub fn bigint_to_hex(b: &BigInt) -> Str {
   if bigint_is_zero(b) { return "0"; }
@@ -815,7 +787,6 @@ pub fn bigint_to_hex(b: &BigInt) -> Str {
   return result;
 }
 
-// Range-checked conversion to Int (i64). Err on overflow.
 /// Range-checked conversion to Int (i64). Err on overflow.
 pub fn bigint_to_int(b: &BigInt) -> Result[Int, Str] {
   var limit = bigint_from_int(INT_MAX);
@@ -843,7 +814,6 @@ pub fn bigint_to_int(b: &BigInt) -> Result[Int, Str] {
 // The accumulation uses native LLVM i128/UInt128 arithmetic (no soft-float
 // helpers); the range pre-check guarantees no wraparound.
 
-// Convert to UInt64 (0 .. 2^64-1). Negative or >= 2^64 -> Err.
 /// Convert to UInt64 (0 .. 2^64-1). Negative or >= 2^64 -> Err.
 pub fn bigint_to_u64(b: &BigInt) -> Result[UInt64, Str] {
   if bigint_is_negative(b) { return Err("out of u64 range"); }
@@ -859,7 +829,6 @@ pub fn bigint_to_u64(b: &BigInt) -> Result[UInt64, Str] {
   return Ok(r);
 }
 
-// Convert to UInt128 (0 .. 2^128-1). Negative or >= 2^128 -> Err.
 /// Convert to UInt128 (0 .. 2^128-1). Negative or >= 2^128 -> Err.
 pub fn bigint_to_u128(b: &BigInt) -> Result[UInt128, Str] {
   if bigint_is_negative(b) { return Err("out of u128 range"); }
@@ -880,7 +849,6 @@ pub fn bigint_to_u128(b: &BigInt) -> Result[UInt128, Str] {
   return Ok(r);
 }
 
-// Convert to Int128 (-2^127 .. 2^127-1). Out of range -> Err.
 /// Convert to Int128 (-2^127 .. 2^127-1). Out of range -> Err.
 pub fn bigint_to_i128(b: &BigInt) -> Result[Int128, Str] {
   var lo = bigint_from_base("80000000000000000000000000000000", 16);
@@ -912,8 +880,7 @@ pub fn bigint_to_i128(b: &BigInt) -> Result[Int128, Str] {
   return Ok(r);
 }
 
-// -- Predicates ---------------------------------------------------------------
-
+/// -- Predicates ---------------------------------------------------------------
 pub fn bigint_is_one(b: &BigInt) -> Bool {
   return bigint_compare(b, &bigint_one()) == 0;
 }
@@ -933,7 +900,6 @@ pub fn bigint_is_negative(b: &BigInt) -> Bool {
 
 // -- Arithmetic ---------------------------------------------------------------
 
-// Truncating division (quotient of bigint_div_mod).
 /// Truncating division (quotient of bigint_div_mod).
 pub fn bigint_div(a: &BigInt, b: &BigInt) -> BigInt
   requires: !bigint_is_zero(b)
@@ -943,7 +909,6 @@ pub fn bigint_div(a: &BigInt, b: &BigInt) -> BigInt
   return dm.0;
 }
 
-// Modular exponentiation: (base^exp) mod m. exp >= 0, m != 0. Square-and-multiply.
 /// Modular exponentiation: (base^exp) mod m. exp >= 0, m != 0. Square-and-multiply.
 pub fn bigint_pow_mod(base: &BigInt, exp: &BigInt, m: &BigInt) -> BigInt
   requires: !bigint_is_zero(m)
@@ -966,8 +931,6 @@ pub fn bigint_pow_mod(base: &BigInt, exp: &BigInt, m: &BigInt) -> BigInt
   return result;
 }
 
-// Integer square root (floor): Newton's method with a decimal-digit-based
-// initial guess 10^ceil(D/2) >= sqrt(n). Quadratic convergence.
 /// Integer square root (floor): Newton's method with a decimal-digit-based
 /// initial guess 10^ceil(D/2) >= sqrt(n). Quadratic convergence.
 pub fn bigint_sqrt(b: &BigInt) -> BigInt
@@ -990,7 +953,6 @@ pub fn bigint_sqrt(b: &BigInt) -> BigInt
   return x;
 }
 
-// (floor sqrt, n - sqrt^2).
 /// (floor sqrt, n - sqrt^2).
 pub fn bigint_sqrt_rem(b: &BigInt) -> (BigInt, BigInt)
   requires: !bigint_is_negative(b)
@@ -1002,7 +964,6 @@ pub fn bigint_sqrt_rem(b: &BigInt) -> (BigInt, BigInt)
 
 // -- Number theory ------------------------------------------------------------
 
-// Least common multiple. lcm(0, x) == 0.
 /// Least common multiple. lcm(0, x) == 0.
 pub fn bigint_lcm(a: &BigInt, b: &BigInt) -> BigInt {
   if bigint_is_zero(a) || bigint_is_zero(b) { return bigint_zero(); }
@@ -1011,8 +972,6 @@ pub fn bigint_lcm(a: &BigInt, b: &BigInt) -> BigInt {
   return bigint_abs(&bigint_div(&prod, &g));
 }
 
-// Extended Euclidean algorithm: returns (g, x, y) with a*x + b*y == g,
-// g = gcd(|a|, |b|) > 0.
 /// Extended Euclidean algorithm: returns (g, x, y) with a*x + b*y == g,
 /// g = gcd(|a|, |b|) > 0.
 pub fn bigint_ext_gcd(a: &BigInt, b: &BigInt) -> (BigInt, BigInt, BigInt) {
@@ -1041,8 +1000,6 @@ pub fn bigint_ext_gcd(a: &BigInt, b: &BigInt) -> (BigInt, BigInt, BigInt) {
   return (old_r, x, y);
 }
 
-// Miller-Rabin primality test. Deterministic for n < 3.3e24 (bases
-// 2..37), probabilistic (error < 4^-rounds) above.
 /// Miller-Rabin primality test. Deterministic for n < 3.3e24 (bases
 /// 2..37), probabilistic (error < 4^-rounds) above.
 pub fn bigint_is_prime(b: &BigInt) -> Bool {
@@ -1091,7 +1048,6 @@ pub fn bigint_is_prime(b: &BigInt) -> Bool {
   return true;
 }
 
-// Smallest prime strictly greater than b. next_prime(1) == 2.
 /// Smallest prime strictly greater than b. next_prime(1) == 2.
 pub fn bigint_next_prime(b: &BigInt) -> BigInt {
   var two = bigint_from_int(2);
@@ -1103,7 +1059,6 @@ pub fn bigint_next_prime(b: &BigInt) -> BigInt {
   return c;
 }
 
-// n! for n >= 0. O(n) BigInt multiplications.
 /// n! for n >= 0. O(n) BigInt multiplications.
 pub fn bigint_factorial(n: Int) -> BigInt
   requires: n >= 0
@@ -1119,8 +1074,6 @@ pub fn bigint_factorial(n: Int) -> BigInt
   return result;
 }
 
-// C(n, k) for 0 <= k <= n. Multiplicative formula; every intermediate
-// division is exact.
 /// C(n, k) for 0 <= k <= n. Multiplicative formula; every intermediate
 /// division is exact.
 pub fn bigint_binomial(n: Int, k: Int) -> BigInt
@@ -1143,7 +1096,6 @@ pub fn bigint_binomial(n: Int, k: Int) -> BigInt
   return result;
 }
 
-// F(n): F(0)=0, F(1)=1. Iterative, O(n) BigInt additions.
 /// F(n): F(0)=0, F(1)=1. Iterative, O(n) BigInt additions.
 pub fn bigint_fibonacci(n: Int) -> BigInt
   requires: n >= 0
@@ -1298,8 +1250,6 @@ pub fn bigint_bit_xor(a: &BigInt, b: &BigInt) -> BigInt {
   return _from_twos_bits(&r);
 }
 
-// Arithmetic (floor) right shift by n bits: b >> n. For negative b this
-// rounds toward -inf (true arithmetic shift).
 /// Arithmetic (floor) right shift by n bits: b >> n. For negative b this
 /// rounds toward -inf (true arithmetic shift).
 pub fn bigint_shift_right(b: &BigInt, n: Int) -> BigInt
@@ -1319,7 +1269,6 @@ pub fn bigint_shift_right(b: &BigInt, n: Int) -> BigInt
   return q;
 }
 
-// Number of set bits in |b| (well-defined for all signs).
 /// Number of set bits in |b| (well-defined for all signs).
 pub fn bigint_popcount(b: &BigInt) -> Int {
   var bits = _bigint_bit_array(b);
@@ -1332,15 +1281,13 @@ pub fn bigint_popcount(b: &BigInt) -> Int {
   return count;
 }
 
-// Bits needed to represent |b|; 0 for zero.
 /// Bits needed to represent |b|; 0 for zero.
 pub fn bigint_bit_len(b: &BigInt) -> Int {
   var bits = _bigint_bit_array(b);
   return bits.len();
 }
 
-// -- Comparison wrappers ------------------------------------------------------
-
+/// -- Comparison wrappers ------------------------------------------------------
 pub fn bigint_eq(a: &BigInt, b: &BigInt) -> Bool {
   return bigint_compare(a, b) == 0;
 }

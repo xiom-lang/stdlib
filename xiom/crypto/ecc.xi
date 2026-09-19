@@ -126,12 +126,9 @@ fn _none_pt() -> EcPointOpt {
   return EcPointOpt{ is_some: false; pt: EcPoint{ x: 0; y: 0; }; };
 }
 
-// ============================================================================
-// Small Test Curve: y2 = x3 + 2x + 2  mod 17
-//
-// Order 19 (prime). Generator: (5, 1).
-// ============================================================================
-
+/// Small Test Curve: y2 = x3 + 2x + 2  mod 17
+/// 
+/// Order 19 (prime). Generator: (5, 1).
 pub fn curve_small_test() -> EcCurve {
   return EcCurve{ p: 17; a: 2; b: 2; n: 19; gx: 5; gy: 1; };
 }
@@ -140,10 +137,7 @@ pub fn curve_secp256k1() -> EcCurve {
   return EcCurve{ p: 0; a: 0; b: 7; n: 0; gx: 0; gy: 0; };
 }
 
-// ============================================================================
-// Point Operations
-// ============================================================================
-
+/// Point Operations
 pub fn ec_is_on_curve(point: &EcPoint, curve: &EcCurve) -> Bool {
   let x = _mod(point.x, curve.p);
   let y = _mod(point.y, curve.p);

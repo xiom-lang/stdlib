@@ -6,18 +6,15 @@ module xiom.collect.hasharray
 
 // Depends on: none
 
-// ============================================================================
-// Hash-array mapped trie (HAMT) map of Int keys to Int values.
-// Flat-arena style (the established collect/ pattern): every node owns 32
-// child slots in the flat `kids` vector (`kids[i * 32 + slot]`), so table
-// nodes and leaf nodes share one uniform layout. Leaf nodes carry the key,
-// the value and the full 64-bit hash; `is_leaf[i]` distinguishes the kinds.
-// The 5-bit window of the key hash at depth d selects the child slot, so a
-// path is at most 13 nodes deep (64 hash bits / 5 bits). Node 0 is always a
-// table node (the root). Inserts are upserts: re-inserting a key updates its
-// value. Average O(log_32 n) operations.
-// ============================================================================
-
+/// Hash-array mapped trie (HAMT) map of Int keys to Int values.
+/// Flat-arena style (the established collect/ pattern): every node owns 32
+/// child slots in the flat `kids` vector (`kids[i * 32 + slot]`), so table
+/// nodes and leaf nodes share one uniform layout. Leaf nodes carry the key,
+/// the value and the full 64-bit hash; `is_leaf[i]` distinguishes the kinds.
+/// The 5-bit window of the key hash at depth d selects the child slot, so a
+/// path is at most 13 nodes deep (64 hash bits / 5 bits). Node 0 is always a
+/// table node (the root). Inserts are upserts: re-inserting a key updates its
+/// value. Average O(log_32 n) operations.
 pub type Hamt = {
   root: Int;
   size: Int;

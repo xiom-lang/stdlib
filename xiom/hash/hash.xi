@@ -7,13 +7,11 @@ module xiom.hash
 use xiom.string;
 use xiom.encoding;
 
-// === Hash interface (hasher-based) ===
 /// === Hash interface (hasher-based) ===
 pub interface Hash {
   fn hash(self, hasher: Hasher);
 }
 
-// === Hasher interface ===
 /// === Hasher interface ===
 pub interface Hasher {
   fn write(self, bytes: &Vec[UInt8]);
@@ -22,13 +20,11 @@ pub interface Hasher {
   fn finish(self) -> Int;
 }
 
-// === BuildHasher interface ===
 /// === BuildHasher interface ===
 pub interface BuildHasher {
   fn build_hasher(self) -> Hasher;
 }
 
-// === DefaultHasher -- DJB2-based concrete hasher ===
 /// === DefaultHasher -- DJB2-based concrete hasher ===
 pub type DefaultHasher = { state: Int; } derive[Clone]
 
@@ -71,8 +67,6 @@ pub fn DefaultHasher.finish(self) -> Int {
   return self.state;
 }
 
-// === Hash implementations for standard types ===
-// Full DJB2 hash computation. Each type hashes its bytes directly.
 /// === Hash implementations for standard types ===
 /// Full DJB2 hash computation. Each type hashes its bytes directly.
 pub fn Int.hash(self) -> UInt64
@@ -100,12 +94,6 @@ pub fn Bool.hash(self) -> UInt64 {
   h
 }
 
-// === Free functions ===
-// NOTE: these dispatch to the concrete 0-arg `.hash()` methods (Int/Bool)
-// like the sibling `hash` below. The hasher-based `Hash` interface
-// (hash(self, hasher)) is defined above but has no concrete impls yet;
-// calling through it from a &T receiver produced invalid IR
-// (ptr->i64) -- keep by-value params until the interface path is complete.
 /// === Free functions ===
 /// NOTE: these dispatch to the concrete 0-arg `.hash()` methods (Int/Bool)
 /// like the sibling `hash` below. The hasher-based `Hash` interface
@@ -243,7 +231,6 @@ pub fn murmur3_32(data: &Vec[UInt8], seed: Int) -> Int {
 
 // -- xxHash32 ----------------------------------------------------------------
 
-// Helper: rotates left within 32 bits.
 /// Helper: rotates left within 32 bits.
 pub fn _rotl32(x: Int, r: Int) -> Int {
   let a = (x & 0xFFFFFFFF) << r;
@@ -492,8 +479,6 @@ fn _xxh64_merge_round(acc: Int, val: Int) -> Int {
   return v;
 }
 
-// xxHash64 (seed 0 compatible with the reference implementation; 64-bit
-// results wrap naturally in i64 arithmetic -- masks are no-ops at 64 bits).
 /// xxHash64 (seed 0 compatible with the reference implementation; 64-bit
 /// results wrap naturally in i64 arithmetic -- masks are no-ops at 64 bits).
 pub fn xxhash64(data: &Vec[UInt8], seed: Int) -> Int {
@@ -556,7 +541,6 @@ pub fn xxhash64(data: &Vec[UInt8], seed: Int) -> Int {
   return h;
 }
 
-// FNV-1 32-bit (multiply before XOR, unlike FNV-1a).
 /// FNV-1 32-bit (multiply before XOR, unlike FNV-1a).
 pub fn fnv1_32(s: Str) -> Int {
   var h: Int = 2166136261;

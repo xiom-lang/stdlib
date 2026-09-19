@@ -6,16 +6,13 @@ module xiom.collect.avl
 
 // Depends on: none
 
-// ============================================================================
-// Self-balancing AVL tree of unique Int elements.
-// Flat-arena representation (the established collect/ pattern, shared with
-// collect.tree): nodes live in parallel Vec[Int]s addressed by a root index;
-// -1 is the "no node" sentinel. `heights[i]` holds the height of node i
-// (leaf = 1, empty subtree = 0); every insert/remove rebalances via
-// single/double rotations so |balance factor| <= 1 holds on every node.
-// Removed nodes become unreachable arena entries.
-// ============================================================================
-
+/// Self-balancing AVL tree of unique Int elements.
+/// Flat-arena representation (the established collect/ pattern, shared with
+/// collect.tree): nodes live in parallel Vec[Int]s addressed by a root index;
+/// -1 is the "no node" sentinel. `heights[i]` holds the height of node i
+/// (leaf = 1, empty subtree = 0); every insert/remove rebalances via
+/// single/double rotations so |balance factor| <= 1 holds on every node.
+/// Removed nodes become unreachable arena entries.
 pub type Avl = {
   root: Int;
   keys: Vec[Int];

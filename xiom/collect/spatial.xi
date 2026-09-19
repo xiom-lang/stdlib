@@ -18,10 +18,7 @@ module xiom.collect.spatial
 // roots grow on demand); points outside the bounds are rejected by insert.
 // ============================================================================
 
-// ============================================================================
-// KD-tree (2D Int points with values)
-// ============================================================================
-
+/// KD-tree (2D Int points with values)
 pub type KdTree = {
   root: Int;
   size: Int;
@@ -465,10 +462,7 @@ pub fn quadtree_size(q: &Quadtree) -> Int
   return q.size;
 }
 
-// ============================================================================
-// Octree (fixed bounds, 3D)
-// ============================================================================
-
+/// Octree (fixed bounds, 3D)
 pub type Octree = {
   root: Int;
   size: Int;

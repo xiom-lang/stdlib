@@ -1838,10 +1838,7 @@ pub fn aes_decrypt_gcm(key: &Vec[UInt8], nonce: &Vec[UInt8], ciphertext: &Vec[UI
   return Ok(plaintext);
 }
 
-// ============================================================================
-// Asymmetric (RSA)
-// ============================================================================
-
+/// Asymmetric (RSA)
 pub type KeyPair = { public: Vec[UInt8]; private: Vec[UInt8]; }
 
 fn _simple_mod_pow(base: Int, exp: Int, modulus: Int) -> Int {
@@ -2010,10 +2007,7 @@ pub fn rsa_verify(public_key: &Vec[UInt8], data: &Vec[UInt8], signature: &Vec[UI
   }
 }
 
-// ============================================================================
-// Key Derivation
-// ============================================================================
-
+/// Key Derivation
 pub fn pbkdf2(password: &Str, salt: &Vec[UInt8], iterations: Int, key_len: Int) -> Vec[UInt8]
   requires: iterations > 0
   requires: key_len > 0
@@ -2182,30 +2176,27 @@ pub fn constant_time_compare(a: &Vec[UInt8], b: &Vec[UInt8]) -> Bool
   return diff == 0;
 }
 
-// ============================================================================
-// HKDF (RFC 5869) -- HMAC-based Key Derivation Function
-//
-// HKDF consists of two steps:
-//   1. Extract: PRK = HMAC-SHA256(salt, IKM)
-//   2. Expand: OKM = T(1) || T(2) || ... || T(N) truncated to okm_len
-//      where T(0) = empty, T(i) = HMAC-SHA256(PRK, T(i-1) || info || i)
-//      i is a single byte counter (1, 2, 3, ...)
-//
-// RFC 5869 test case 1:
-//   IKM  = 0x0b0b0b... (22 times)
-//   salt = 0x000102030405060708090a0b0c
-//   info = 0xf0f1f2f3f4f5f6f7f8f9
-//   L    = 42
-//   OKM  = 3cb25f25faacd57a90434f64d0362f2a
-//          2d2d0a90cf1a5a4c5db02d56ecc4c5bf
-//          34007208d5b887185865
-//
-// Security notes:
-//   - Extract step concentrates entropy from IKM.
-//   - Salt should be random but not secret; can be all-zeros.
-//   - Info binds derived key to context; must be unique per key.
-// ============================================================================
-
+/// HKDF (RFC 5869) -- HMAC-based Key Derivation Function
+/// 
+/// HKDF consists of two steps:
+///   1. Extract: PRK = HMAC-SHA256(salt, IKM)
+///   2. Expand: OKM = T(1) || T(2) || ... || T(N) truncated to okm_len
+///      where T(0) = empty, T(i) = HMAC-SHA256(PRK, T(i-1) || info || i)
+///      i is a single byte counter (1, 2, 3, ...)
+/// 
+/// RFC 5869 test case 1:
+///   IKM  = 0x0b0b0b... (22 times)
+///   salt = 0x000102030405060708090a0b0c
+///   info = 0xf0f1f2f3f4f5f6f7f8f9
+///   L    = 42
+///   OKM  = 3cb25f25faacd57a90434f64d0362f2a
+///          2d2d0a90cf1a5a4c5db02d56ecc4c5bf
+///          34007208d5b887185865
+/// 
+/// Security notes:
+///   - Extract step concentrates entropy from IKM.
+///   - Salt should be random but not secret; can be all-zeros.
+///   - Info binds derived key to context; must be unique per key.
 pub fn hkdf_sha256(ikm: &Vec[UInt8], salt: &Vec[UInt8], info: &Vec[UInt8], okm_len: Int) -> Result[Vec[UInt8], Str] {
   if okm_len < 1 { return Err("okm_len must be >= 1"); }
   let hash_len = 32;
@@ -2251,38 +2242,35 @@ pub fn hkdf_sha256(ikm: &Vec[UInt8], salt: &Vec[UInt8], info: &Vec[UInt8], okm_l
   return Ok(result);
 }
 
-// ============================================================================
-// ChaCha20-Poly1305 AEAD (RFC 8439 Section 2.8)
-//
-// Authenticated Encryption with Associated Data using ChaCha20 and Poly1305.
-//
-// Algorithm:
-//   1. Generate 32-byte Poly1305 one-time key from ChaCha20 block 0 keystream.
-//   2. Encrypt plaintext using ChaCha20 keystream starting from block 1.
-//   3. Compute Poly1305 tag over: pad16(AAD) || pad16(ciphertext) ||
-//      le64(AAD_len) || le64(CT_len).
-//
-// Key: 32 bytes (256-bit). Nonce: 12 bytes (96-bit), MUST be unique per key.
-// AAD: arbitrary bytes, authenticated but NOT encrypted.
-// Plaintext: arbitrary bytes to encrypt and authenticate.
-// ciphertext: out-param, populated with encrypted data (same length as plaintext).
-// tag: out-param, populated with 16-byte authentication tag.
-// Returns: true on success.
-//
-// RFC 8439 test vector (Section 2.8.2):
-//   key = 808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9f
-//   nonce = 070000004041424344454647
-//   aad = 50515253c0c1c2c3c4c5c6c7
-//   plaintext = "Ladies and Gentlemen of the class of '99..."
-//   ciphertext = d31a8d34648e60db7b86afbc53ef7ec2...
-//   tag = 1ae10b594f09e26a7e902ecbd0600691
-//
-// Security notes:
-//   - Nonce MUST be unique for every message under the same key.
-//   - Nonce reuse completely breaks confidentiality AND authenticity.
-//   - The 16-byte tag provides 128-bit authentication strength.
-// ============================================================================
-
+/// ChaCha20-Poly1305 AEAD (RFC 8439 Section 2.8)
+/// 
+/// Authenticated Encryption with Associated Data using ChaCha20 and Poly1305.
+/// 
+/// Algorithm:
+///   1. Generate 32-byte Poly1305 one-time key from ChaCha20 block 0 keystream.
+///   2. Encrypt plaintext using ChaCha20 keystream starting from block 1.
+///   3. Compute Poly1305 tag over: pad16(AAD) || pad16(ciphertext) ||
+///      le64(AAD_len) || le64(CT_len).
+/// 
+/// Key: 32 bytes (256-bit). Nonce: 12 bytes (96-bit), MUST be unique per key.
+/// AAD: arbitrary bytes, authenticated but NOT encrypted.
+/// Plaintext: arbitrary bytes to encrypt and authenticate.
+/// ciphertext: out-param, populated with encrypted data (same length as plaintext).
+/// tag: out-param, populated with 16-byte authentication tag.
+/// Returns: true on success.
+/// 
+/// RFC 8439 test vector (Section 2.8.2):
+///   key = 808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9f
+///   nonce = 070000004041424344454647
+///   aad = 50515253c0c1c2c3c4c5c6c7
+///   plaintext = "Ladies and Gentlemen of the class of '99..."
+///   ciphertext = d31a8d34648e60db7b86afbc53ef7ec2...
+///   tag = 1ae10b594f09e26a7e902ecbd0600691
+/// 
+/// Security notes:
+///   - Nonce MUST be unique for every message under the same key.
+///   - Nonce reuse completely breaks confidentiality AND authenticity.
+///   - The 16-byte tag provides 128-bit authentication strength.
 pub fn chacha20_poly1305_encrypt(key: &Vec[UInt8], nonce: &Vec[UInt8], aad: &Vec[UInt8], plaintext: &Vec[UInt8], ciphertext: &mut Vec[UInt8], tag: &mut Vec[UInt8]) -> Bool {
   if key.len() != 32 { return false; }
   if nonce.len() != 12 { return false; }
@@ -2360,27 +2348,24 @@ pub fn chacha20_poly1305_encrypt(key: &Vec[UInt8], nonce: &Vec[UInt8], aad: &Vec
   return true;
 }
 
-// ============================================================================
-// ChaCha20-Poly1305 AEAD -- Decrypt
-//
-// Algorithm:
-//   1. Re-generate Poly1305 one-time key from ChaCha20 block 0.
-//   2. Compute expected tag over: pad16(AAD) || pad16(ciphertext) ||
-//      le64(AAD_len) || le64(CT_len).
-//   3. Compare expected_tag with provided tag in constant time.
-//   4. If match, decrypt ciphertext to plaintext using ChaCha20 block 1+ keystream.
-//
-// Key: 32 bytes. Nonce: 12 bytes. AAD: authenticated but unencrypted data.
-// ciphertext: encrypted data to authenticate and decrypt.
-// tag: 16-byte authentication tag to verify.
-// plaintext: out-param, populated with decrypted data on success.
-// Returns: true if authentication passed and decryption succeeded.
-//
-// Security notes:
-//   - Decryption only proceeds if tag verification passes (encrypt-then-MAC).
-//   - Constant-time tag comparison prevents timing oracle attacks.
-// ============================================================================
-
+/// ChaCha20-Poly1305 AEAD -- Decrypt
+/// 
+/// Algorithm:
+///   1. Re-generate Poly1305 one-time key from ChaCha20 block 0.
+///   2. Compute expected tag over: pad16(AAD) || pad16(ciphertext) ||
+///      le64(AAD_len) || le64(CT_len).
+///   3. Compare expected_tag with provided tag in constant time.
+///   4. If match, decrypt ciphertext to plaintext using ChaCha20 block 1+ keystream.
+/// 
+/// Key: 32 bytes. Nonce: 12 bytes. AAD: authenticated but unencrypted data.
+/// ciphertext: encrypted data to authenticate and decrypt.
+/// tag: 16-byte authentication tag to verify.
+/// plaintext: out-param, populated with decrypted data on success.
+/// Returns: true if authentication passed and decryption succeeded.
+/// 
+/// Security notes:
+///   - Decryption only proceeds if tag verification passes (encrypt-then-MAC).
+///   - Constant-time tag comparison prevents timing oracle attacks.
 pub fn chacha20_poly1305_decrypt(key: &Vec[UInt8], nonce: &Vec[UInt8], aad: &Vec[UInt8], ciphertext: &Vec[UInt8], tag: &Vec[UInt8], plaintext: &mut Vec[UInt8]) -> Bool {
   if key.len() != 32 { return false; }
   if nonce.len() != 12 { return false; }
@@ -2468,11 +2453,6 @@ pub fn chacha20_poly1305_decrypt(key: &Vec[UInt8], nonce: &Vec[UInt8], aad: &Vec
 //   - Preimage resistance matches the full SHA-256 (256-bit).
 // ============================================================================
 
-// SHA-224 delegates to the runtime C path (xiom_sha224_hash in
-// runtime/sha256_sw.c). The previous XIOM-side state marshalling around
-// xiom_sha256_sw_compress miscompiles (zero-offset store corruption into the
-// malloc'd state buffer; probed 2026-08-24 -- wrong digests for any non-empty
-// message while empty passed). Same architecture as sha256 below.
 /// SHA-224 delegates to the runtime C path (xiom_sha224_hash in
 /// runtime/sha256_sw.c). The previous XIOM-side state marshalling around
 /// xiom_sha256_sw_compress miscompiles (zero-offset store corruption into the

@@ -26,12 +26,6 @@ pub fn to_bytes(n: Int) -> Vec[UInt8] {
   result
 }
 
-// TODO(compiler): `from_bytes` collides with a compiler-builtin name. Any
-// call to a module function named `from_bytes` taking a `&Vec[T]` (or Str)
-// parameter produces invalid LLVM IR ("invalid getelementptr indices" on
-// %struct.Vec) -- verified by minimal probe. The real algorithm is kept below
-// (it is correct once the name collision is fixed); callers must avoid it
-// until then.
 /// TODO(compiler): `from_bytes` collides with a compiler-builtin name. Any
 /// call to a module function named `from_bytes` taking a `&Vec[T]` (or Str)
 /// parameter produces invalid LLVM IR ("invalid getelementptr indices" on

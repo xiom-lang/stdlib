@@ -6,14 +6,11 @@ module xiom.collect.bitmap
 
 // Depends on: none
 
-// ============================================================================
-// Compact set of bits indexed 0..n-1 with O(1) test/set/clear/flip.
-// Bits are packed into UInt8 bytes (the pattern proven in collect.hash); the
-// padding bits of the last byte are never reported. Index arithmetic uses
-// only small masks (0..255) so the compiler's large-Int AND bug (BUG 25 #7)
-// cannot be hit. Out-of-range positions are ignored (documented).
-// ============================================================================
-
+/// Compact set of bits indexed 0..n-1 with O(1) test/set/clear/flip.
+/// Bits are packed into UInt8 bytes (the pattern proven in collect.hash); the
+/// padding bits of the last byte are never reported. Index arithmetic uses
+/// only small masks (0..255) so the compiler's large-Int AND bug (BUG 25 #7)
+/// cannot be hit. Out-of-range positions are ignored (documented).
 pub type Bitmap = {
   bytes: Vec[UInt8];
   nbits: Int;

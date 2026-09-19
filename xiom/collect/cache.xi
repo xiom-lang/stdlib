@@ -4,14 +4,11 @@
 
 module xiom.collect.cache
 
-// ============================================================================
-// LRU Cache (Int keys, Int values)
-// Simple bookkeeping: `keys`/`values` are parallel vectors and `order` is a
-// vector of keys in recency order, front = most recently used. `lru_get` and
-// `lru_put` move an accessed key to the front; when full, the key at the back
-// of `order` (least recently used) is evicted.
-// ============================================================================
-
+/// LRU Cache (Int keys, Int values)
+/// Simple bookkeeping: `keys`/`values` are parallel vectors and `order` is a
+/// vector of keys in recency order, front = most recently used. `lru_get` and
+/// `lru_put` move an accessed key to the front; when full, the key at the back
+/// of `order` (least recently used) is evicted.
 pub type LruCache = {
   capacity: Int;
   keys: Vec[Int];
@@ -105,13 +102,10 @@ pub fn lru_capacity(c: &LruCache) -> Int
   return c.capacity;
 }
 
-// ============================================================================
-// LFU Cache (Int keys, Int values)
-// Parallel `keys`/`values`/`counts` vectors plus an insertion-sequence vector
-// `seq` used as a deterministic tie-break: when several keys share the lowest
-// frequency, the least recently inserted one is evicted first.
-// ============================================================================
-
+/// LFU Cache (Int keys, Int values)
+/// Parallel `keys`/`values`/`counts` vectors plus an insertion-sequence vector
+/// `seq` used as a deterministic tie-break: when several keys share the lowest
+/// frequency, the least recently inserted one is evicted first.
 pub type LfuCache = {
   capacity: Int;
   keys: Vec[Int];
@@ -201,21 +195,18 @@ pub fn lfu_size(c: &LfuCache) -> Int
   return c.keys.len();
 }
 
-// ============================================================================
-// ArcCache ? Adaptive Replacement Cache (2026-08-11)
-// Standard ARC (Megiddo & Modha): T1 (recent) / T2 (frequent) hold cached
-// (key, value) pairs, B1/B2 are ghost lists (keys only). `p` is the target
-// size of T1 and adapts on ghost hits. Lists are parallel Vecs with the MRU
-// at the FRONT; lookups are O(n) linear scans (documented ? this is a
-// correctness-focused reference implementation; the compiler's Vec lacks a
-// map container for struct elements). Int keys/values.
-//
-// NOTE: all list operations are inlined on the &mut ArcCache struct ? helper
-// fns taking `&mut Vec[Int]` params get a fresh-alloca COPY for non-ident
-// args (`&mut c.t1k`), so their push/pop/shift mutations would be lost
-// (COMPILER_BUGS.md BUG 16).
-// ============================================================================
-
+/// ArcCache ? Adaptive Replacement Cache (2026-08-11)
+/// Standard ARC (Megiddo & Modha): T1 (recent) / T2 (frequent) hold cached
+/// (key, value) pairs, B1/B2 are ghost lists (keys only). `p` is the target
+/// size of T1 and adapts on ghost hits. Lists are parallel Vecs with the MRU
+/// at the FRONT; lookups are O(n) linear scans (documented ? this is a
+/// correctness-focused reference implementation; the compiler's Vec lacks a
+/// map container for struct elements). Int keys/values.
+/// 
+/// NOTE: all list operations are inlined on the &mut ArcCache struct ? helper
+/// fns taking `&mut Vec[Int]` params get a fresh-alloca COPY for non-ident
+/// args (`&mut c.t1k`), so their push/pop/shift mutations would be lost
+/// (COMPILER_BUGS.md BUG 16).
 pub type ArcCache = {
   capacity: Int;
   p: Int;

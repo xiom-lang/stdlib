@@ -15,9 +15,6 @@ module xiom.string.join
 use xiom.string;
 use xiom.convert;
 
-// Joins `parts` with `sep` between consecutive elements.
-// Returns an empty string when `parts` is empty.
-// Complexity: O(total bytes of parts).
 /// Joins `parts` with `sep` between consecutive elements.
 /// Returns an empty string when `parts` is empty.
 /// Complexity: O(total bytes of parts).
@@ -38,10 +35,6 @@ pub fn str_join(parts: &Vec[Str], sep: Str) -> Str
   result
 }
 
-// Joins `parts`, inserting `sep` after every `after`-th element. When
-// `after <= 0`, no separator is inserted at all.
-// Returns an empty string when `parts` is empty.
-// Complexity: O(total bytes of parts).
 /// Joins `parts`, inserting `sep` after every `after`-th element. When
 /// `after <= 0`, no separator is inserted at all.
 /// Returns an empty string when `parts` is empty.
@@ -66,9 +59,6 @@ pub fn str_join_after(parts: &Vec[Str], sep: Str, after: Int) -> Str
   result
 }
 
-// Joins the `Int` values in `values` with `sep` between consecutive elements.
-// Returns an empty string when `values` is empty.
-// Complexity: O(total digits of values).
 /// Joins the `Int` values in `values` with `sep` between consecutive elements.
 /// Returns an empty string when `values` is empty.
 /// Complexity: O(total digits of values).
@@ -89,9 +79,6 @@ pub fn vec_int_join(values: &Vec[Int], sep: Str) -> Str
   result
 }
 
-// Joins the `Float64` values in `values` with `sep` between consecutive
-// elements. Returns an empty string when `values` is empty.
-// Complexity: O(total digits of values).
 /// Joins the `Float64` values in `values` with `sep` between consecutive
 /// elements. Returns an empty string when `values` is empty.
 /// Complexity: O(total digits of values).

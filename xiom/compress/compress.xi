@@ -14,14 +14,12 @@ use xiom.compress.snappy;
 
 use xiom.string;
 
-// === Compression traits ===
 /// === Compression traits ===
 pub interface Compressor {
   fn compress(self, data: &Vec[UInt8]) -> Result<Vec[UInt8], Str>;
   fn decompress(self, data: &Vec[UInt8]) -> Result<Vec[UInt8], Str>;
 }
 
-// === Gzip ===
 /// === Gzip ===
 pub type GzipCompressor = { level: Int; }
 
@@ -171,10 +169,6 @@ fn rle_decode(data: &Vec[UInt8]) -> Result<Vec[UInt8], Str> {
   return Ok(result);
 }
 
-// === Gzip functions ===
-// Aggregate facade: delegate to the real sublib implementations
-// (xiom.compress.gzip). The earlier RLE-based duplicates trapped on
-// empty input (requires: data.len() > 0) and were not gzip-compatible.
 /// === Gzip functions ===
 /// Aggregate facade: delegate to the real sublib implementations
 /// (xiom.compress.gzip). The earlier RLE-based duplicates trapped on
@@ -191,14 +185,12 @@ pub fn gzip_compress_level(data: &Vec[UInt8], level: Int) -> Result[Vec[UInt8], 
   Ok(gzip.gzip_compress(data))
 }
 
-// Capped variant: hard ceiling on decompressed size (bomb guard).
 /// Capped variant: hard ceiling on decompressed size (bomb guard).
 pub fn gzip_decompress_capped(data: &Vec[UInt8], max_out: Int) -> Result[Vec[UInt8], Str]
 {
   return gzip.gzip_decompress_capped(data, max_out);
 }
 
-// Capped variant: hard ceiling on decompressed size (bomb guard).
 /// Capped variant: hard ceiling on decompressed size (bomb guard).
 pub fn deflate_decompress_capped(data: &Vec[UInt8], max_out: Int) -> Result[Vec[UInt8], Str]
 {
@@ -211,7 +203,6 @@ pub fn gzip_decompress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str]
   gzip.gzip_decompress(data)
 }
 
-// === Deflate / Raw ===
 /// === Deflate / Raw ===
 pub fn deflate_compress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str]
   ensures:  result is Ok => result.len() >= 0
@@ -231,7 +222,6 @@ pub fn deflate_decompress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str]
   deflate.deflate_decompress(data)
 }
 
-// === Zlib ===
 /// === Zlib ===
 pub fn zlib_compress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str]
   ensures:  result is Ok => result.len() >= 6
@@ -251,7 +241,6 @@ pub fn zlib_decompress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str]
   zlib.zlib_decompress(data)
 }
 
-// === Brotli ===
 /// === Brotli ===
 pub fn brotli_compress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str]
   ensures:  result is Ok => result.len() >= 8
@@ -271,7 +260,6 @@ pub fn brotli_decompress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str]
   brotli.brotli_decompress(data)
 }
 
-// === LZ4 ===
 /// === LZ4 ===
 pub fn lz4_compress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str]
   ensures:  result is Ok => result.len() >= 1
@@ -285,7 +273,6 @@ pub fn lz4_decompress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str]
   lz4.lz4_decompress(data)
 }
 
-// === Snappy ===
 /// === Snappy ===
 pub fn snappy_compress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str]
   ensures:  result is Ok => result.len() >= 1

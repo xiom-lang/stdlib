@@ -6,15 +6,12 @@ module xiom.collect.hash
 
 use xiom.math;
 
-// ============================================================================
-// Bloom Filter (UInt8 byte inputs)
-// `bits` is a byte array holding `bit_count` usable bits (rounded up to a byte
-// multiple). Two independent base hashes (FNV-1a and DJB2) are combined into
-// `num_hashes` positions via h1 + i*h2 mod m. `inserted` tracks the number of
-// insertions so the false positive rate can be estimated as
-// (1 - e^(-k*n/m))^k.
-// ============================================================================
-
+/// Bloom Filter (UInt8 byte inputs)
+/// `bits` is a byte array holding `bit_count` usable bits (rounded up to a byte
+/// multiple). Two independent base hashes (FNV-1a and DJB2) are combined into
+/// `num_hashes` positions via h1 + i*h2 mod m. `inserted` tracks the number of
+/// insertions so the false positive rate can be estimated as
+/// (1 - e^(-k*n/m))^k.
 pub type BloomFilter = {
   bits: Vec[UInt8];
   bit_count: Int;
@@ -131,11 +128,8 @@ pub fn bloom_false_positive_rate(b: &BloomFilter) -> Float64
   return xiom.math.pow(inner, k);
 }
 
-// ============================================================================
-// LhMap -- insertion-ordered map (Int keys -> Int values)
-// Inserting a new key appends; updating an existing key keeps its position.
-// ============================================================================
-
+/// LhMap -- insertion-ordered map (Int keys -> Int values)
+/// Inserting a new key appends; updating an existing key keeps its position.
 pub type LhMap = {
   keys: Vec[Int];
   values: Vec[Int];

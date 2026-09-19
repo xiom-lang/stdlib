@@ -64,17 +64,14 @@ fn _u32_rotl(x: Int, n: Int) -> Int {
   return _u32_mask(left | right);
 }
 
-// ============================================================================
-// ChaCha20 State Type
-//
-// The 512-bit state is arranged as a 4x4 matrix of 32-bit words (16 words total).
-// Layout (RFC 8439 Section 2.3):
-//   state[0..3]  = constants    (row 0)
-//   state[4..11] = key          (rows 1,2)
-//   state[12]    = block counter (row 3, col 0)
-//   state[13..15]= nonce         (row 3, cols 1-3)
-// ============================================================================
-
+/// ChaCha20 State Type
+/// 
+/// The 512-bit state is arranged as a 4x4 matrix of 32-bit words (16 words total).
+/// Layout (RFC 8439 Section 2.3):
+///   state[0..3]  = constants    (row 0)
+///   state[4..11] = key          (rows 1,2)
+///   state[12]    = block counter (row 3, col 0)
+///   state[13..15]= nonce         (row 3, cols 1-3)
 pub type ChaCha20 = {
   state: Vec[Int];
 }

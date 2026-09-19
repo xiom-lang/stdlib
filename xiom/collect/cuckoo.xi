@@ -4,13 +4,10 @@
 
 module xiom.collect.cuckoo
 
-// ============================================================================
-// CuckooMap (Int keys, Int values)
-// Two power-of-two tables with two independent multiplicative hashes. Insert
-// displaces the victim to the other table (bounded at 16 relocations, then
-// the tables double). O(1) expected lookups with at most 2 probes.
-// ============================================================================
-
+/// CuckooMap (Int keys, Int values)
+/// Two power-of-two tables with two independent multiplicative hashes. Insert
+/// displaces the victim to the other table (bounded at 16 relocations, then
+/// the tables double). O(1) expected lookups with at most 2 probes.
 pub type CuckooMap = {
   t0_keys: Vec[Int];
   t0_vals: Vec[Int];

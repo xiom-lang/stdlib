@@ -52,8 +52,6 @@ fn _ps_rec(coeffs: &Vec[Float64], x: Float64, lo: Int, hi: Int) -> Float64 {
 // Summation
 // ---------------------------------------------------------------------------
 
-// Sum of terms(0) + terms(1) + ... + terms(n-1). Returns 0.0 for n <= 0.
-// Complexity: O(n).
 /// Sum of terms(0) + terms(1) + ... + terms(n-1). Returns 0.0 for n <= 0.
 /// Complexity: O(n).
 pub fn series_sum(terms: fn(Int) -> Float64, n: Int) -> Float64 {
@@ -61,8 +59,6 @@ pub fn series_sum(terms: fn(Int) -> Float64, n: Int) -> Float64 {
   return _sum_rec(terms, 0, n - 1);
 }
 
-// Value of the power series sum c[i] * x^i over the coefficients. Returns
-// 0.0 for an empty coefficient list. Complexity: O(n log n).
 /// Value of the power series sum c[i] * x^i over the coefficients. Returns
 /// 0.0 for an empty coefficient list. Complexity: O(n log n).
 pub fn power_series(coefficients: &Vec[Float64], x: Float64) -> Float64 {
@@ -71,9 +67,6 @@ pub fn power_series(coefficients: &Vec[Float64], x: Float64) -> Float64 {
   return _ps_rec(coefficients, x, 0, n - 1);
 }
 
-// Sum of the first n terms of the geometric series a, a*r, a*r^2, ... via the
-// closed form a*(1 - r^n)/(1 - r) for r != 1 and a*n for r == 1. Returns
-// 0.0 for n <= 0. Complexity: O(log n).
 /// Sum of the first n terms of the geometric series a, a*r, a*r^2, ... via the
 /// closed form a*(1 - r^n)/(1 - r) for r != 1 and a*n for r == 1. Returns
 /// 0.0 for n <= 0. Complexity: O(log n).
@@ -84,8 +77,6 @@ pub fn geometric_series(a: Float64, r: Float64, n: Int) -> Float64 {
   return a * (1.0 - p) / (1.0 - r);
 }
 
-// Sum of the first n terms of the arithmetic series a, a+d, a+2d, ... via the
-// closed form n/2 * (2a + (n-1)d). Returns 0.0 for n <= 0. Complexity: O(1).
 /// Sum of the first n terms of the arithmetic series a, a+d, a+2d, ... via the
 /// closed form n/2 * (2a + (n-1)d). Returns 0.0 for n <= 0. Complexity: O(1).
 pub fn arithmetic_series(a: Float64, d: Float64, n: Int) -> Float64 {
@@ -94,8 +85,6 @@ pub fn arithmetic_series(a: Float64, d: Float64, n: Int) -> Float64 {
   return nf / 2.0 * (2.0 * a + (nf - 1.0) * d);
 }
 
-// The n-th harmonic number: sum of 1/k for k = 1..n. Returns 0.0 for n <= 0.
-// Complexity: O(n).
 /// The n-th harmonic number: sum of 1/k for k = 1..n. Returns 0.0 for n <= 0.
 /// Complexity: O(n).
 pub fn harmonic(n: Int) -> Float64 {
@@ -112,16 +101,6 @@ fn _inv_k(k: Int) -> Float64 {
 // Function approximations
 // ---------------------------------------------------------------------------
 
-// Truncated Maclaurin (Taylor at 0) approximation of f to the given order:
-// sum_{k=0..order} f^(k)(0)/k! * x^k. The derivatives are obtained with the
-// order-2 central-difference stencil at step 0.001, so the approximation is
-// accurate for smooth f and small |x|. Returns 0.0 for order < 0.
-// Complexity: O(order^2).
-// TODO(compiler): NOT IMPLEMENTABLE in this compiler build - the implementation
-// (recursive stencil accumulation over fn-typed params with Int->Float64 casts)
-// makes any program that links it crash at startup with 0xC000001D (BUG 20
-// AVX-512 codegen on Zen 2), even before main. Keep the frozen signature;
-// revisit when the vectorizer cannot touch this shape.
 /// Truncated Maclaurin (Taylor at 0) approximation of f to the given order:
 /// sum_{k=0..order} f^(k)(0)/k! * x^k. The derivatives are obtained with the
 /// order-2 central-difference stencil at step 0.001, so the approximation is
@@ -136,11 +115,6 @@ pub fn maclaurin_series(f: fn(Float64) -> Float64, order: Int, x: Float64) -> Fl
   return 0.0;
 }
 
-// Value of the simple continued fraction [coeffs[0]; coeffs[1], ...] =
-// c0 + 1/(c1 + 1/(c2 + ...)), evaluated from the last coefficient backwards
-// by recursion (one term per frame; the smoke uses a handful of terms).
-// Returns 0.0 for an empty list. A zero partial denominator propagates as +/-
-// infinity (IEEE semantics). Complexity: O(len(coeffs)).
 /// Value of the simple continued fraction [coeffs[0]; coeffs[1], ...] =
 /// c0 + 1/(c1 + 1/(c2 + ...)), evaluated from the last coefficient backwards
 /// by recursion (one term per frame; the smoke uses a handful of terms).
@@ -163,19 +137,12 @@ fn _cf_rec(coeffs: &Vec[Float64], i: Int) -> Float64 {
 // Recurrence sequences
 // ---------------------------------------------------------------------------
 
-// The n-th Fibonacci number F(n), 0-indexed (F(0) = 0, F(1) = 1); returns 0
-// for n < 0. Delegates to xiom.math.combinatorics.fibonacci. Complexity: O(n).
 /// The n-th Fibonacci number F(n), 0-indexed (F(0) = 0, F(1) = 1); returns 0
 /// for n < 0. Delegates to xiom.math.combinatorics.fibonacci. Complexity: O(n).
 pub fn fib(n: Int) -> Int {
   return math.combinatorics.fibonacci(n);
 }
 
-// The n-th Fibonacci number via the fast-doubling identities
-// F(2k) = F(k)(2F(k+1) - F(k)), F(2k+1) = F(k)^2 + F(k+1)^2. Returns 0 for
-// n < 0 and 0 (documented) for n > 91, where the doubling intermediates
-// exceed Int range (the plain iteration in math.combinatorics.fibonacci
-// reaches F(92)). Complexity: O(log n).
 /// The n-th Fibonacci number via the fast-doubling identities
 /// F(2k) = F(k)(2F(k+1) - F(k)), F(2k+1) = F(k)^2 + F(k+1)^2. Returns 0 for
 /// n < 0 and 0 (documented) for n > 91, where the doubling intermediates
@@ -203,16 +170,6 @@ fn _fib_doubling(n: Int) -> (Int, Int) {
   return (d, e);
 }
 
-// Estimated order of convergence p of the sequence seq: using the last
-// consecutive-difference triple (e0, e1, e2) with all ratios valid, p =
-// ln(e2/e1) / ln(e1/e0). Returns 0.0 when fewer than 4 terms are supplied or
-// when no valid triple exists (documented; e.g. a zero difference anywhere).
-// Complexity: O(len(seq)).
-// TODO(compiler): NOT IMPLEMENTABLE in this compiler build - the recursive
-// walk threading a Bool accumulator and math.ln results makes any program
-// that links it crash at startup with 0xC000001D (BUG 20 AVX-512 codegen on
-// Zen 2), even before main. Keep the frozen signature; revisit when the
-// vectorizer cannot touch this shape.
 /// Estimated order of convergence p of the sequence seq: using the last
 /// consecutive-difference triple (e0, e1, e2) with all ratios valid, p =
 /// ln(e2/e1) / ln(e1/e0). Returns 0.0 when fewer than 4 terms are supplied or

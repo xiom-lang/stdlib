@@ -13,7 +13,6 @@ use xiom.core;
 use xiom.convert;
 use xiom.time;
 
-// Test result with contract details
 /// Test result with contract details
 pub type TestResult = {
   passed: Bool;

@@ -8,17 +8,14 @@ module xiom.collect.bloom
 
 use xiom.math;
 
-// ============================================================================
-// Space-efficient probabilistic set over Int values with no false negatives
-// and a tunable false positive rate. `bits` holds `bit_count` usable bits
-// packed into UInt8 bytes (the collect.hash pattern). Two independent
-// multiplicative hashes (the collect.cuckoo pattern) are combined into
-// `num_hashes` positions via h1 + i*h2 mod m; hashing uses shifts and
-// multiplies only, so the large-Int AND compiler bug (BUG 25 #7) is avoided.
-// `inserted` tracks insertions so the false positive rate can be estimated
-// as (1 - e^(-k*n/m))^k.
-// ============================================================================
-
+/// Space-efficient probabilistic set over Int values with no false negatives
+/// and a tunable false positive rate. `bits` holds `bit_count` usable bits
+/// packed into UInt8 bytes (the collect.hash pattern). Two independent
+/// multiplicative hashes (the collect.cuckoo pattern) are combined into
+/// `num_hashes` positions via h1 + i*h2 mod m; hashing uses shifts and
+/// multiplies only, so the large-Int AND compiler bug (BUG 25 #7) is avoided.
+/// `inserted` tracks insertions so the false positive rate can be estimated
+/// as (1 - e^(-k*n/m))^k.
 pub type BloomFilter = {
   bits: Vec[UInt8];
   bit_count: Int;

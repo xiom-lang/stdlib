@@ -96,9 +96,6 @@ fn _comb_rec(elems: &Vec[Int], k: Int, start: Int, cur: &mut Vec[Int], out: &mut
 // Basic counting
 // ---------------------------------------------------------------------------
 
-// Number of k-permutations of n distinct items: n!/(n-k)!. Delegates to
-// xiom.math.factorial.falling_factorial (returns 0 for invalid input and on
-// overflow). Complexity: O(k).
 /// Number of k-permutations of n distinct items: n!/(n-k)!. Delegates to
 /// xiom.math.factorial.falling_factorial (returns 0 for invalid input and on
 /// overflow). Complexity: O(k).
@@ -106,17 +103,12 @@ pub fn permutations(n: Int, k: Int) -> Int {
   return math.factorial.falling_factorial(n, k);
 }
 
-// Number of k-combinations of n distinct items: C(n, k). Delegates to
-// xiom.math.factorial.binomial. Complexity: O(min(k, n-k)).
 /// Number of k-combinations of n distinct items: C(n, k). Delegates to
 /// xiom.math.factorial.binomial. Complexity: O(min(k, n-k)).
 pub fn combinations(n: Int, k: Int) -> Int {
   return math.factorial.binomial(n, k);
 }
 
-// Number of ordered k-selections from n items with repetition: n^k. Returns 0
-// for n < 0 or k < 0 (documented), 1 for k == 0, and 0 (documented overflow)
-// when n^k exceeds Int range. Complexity: O(k).
 /// Number of ordered k-selections from n items with repetition: n^k. Returns 0
 /// for n < 0 or k < 0 (documented), 1 for k == 0, and 0 (documented overflow)
 /// when n^k exceeds Int range. Complexity: O(k).
@@ -134,9 +126,6 @@ pub fn permutations_with_repetition(n: Int, k: Int) -> Int {
   return result;
 }
 
-// Number of unordered k-selections from n items with repetition:
-// C(n + k - 1, k). Returns 0 for n < 0 or k < 0 and on overflow (documented).
-// Complexity: O(min(k, n-1)).
 /// Number of unordered k-selections from n items with repetition:
 /// C(n + k - 1, k). Returns 0 for n < 0 or k < 0 and on overflow (documented).
 /// Complexity: O(min(k, n-1)).
@@ -152,41 +141,30 @@ pub fn combinations_with_repetition(n: Int, k: Int) -> Int {
   return math.factorial.binomial(m, k);
 }
 
-// Number of derangements of n items (fixed-point-free permutations). Delegates
-// to xiom.math.factorial.subfactorial. Complexity: O(n).
 /// Number of derangements of n items (fixed-point-free permutations). Delegates
 /// to xiom.math.factorial.subfactorial. Complexity: O(n).
 pub fn derangements(n: Int) -> Int {
   return math.factorial.subfactorial(n);
 }
 
-// Bell number B(n): partitions of an n-set. Delegates to
-// xiom.math.factorial.bell. Complexity: O(n^2).
 /// Bell number B(n): partitions of an n-set. Delegates to
 /// xiom.math.factorial.bell. Complexity: O(n^2).
 pub fn bell_numbers(n: Int) -> Int {
   return math.factorial.bell(n);
 }
 
-// Catalan number C_n. Delegates to xiom.math.factorial.catalan. Complexity:
-// O(n).
 /// Catalan number C_n. Delegates to xiom.math.factorial.catalan. Complexity:
 /// O(n).
 pub fn catalan_numbers(n: Int) -> Int {
   return math.factorial.catalan(n);
 }
 
-// Eulerian number A(n, k): permutations of n items with exactly k ascents.
-// Delegates to xiom.math.factorial.eulerian. Complexity: O(n*k).
 /// Eulerian number A(n, k): permutations of n items with exactly k ascents.
 /// Delegates to xiom.math.factorial.eulerian. Complexity: O(n*k).
 pub fn eulerian_numbers(n: Int, k: Int) -> Int {
   return math.factorial.eulerian(n, k);
 }
 
-// Signed Stirling numbers of the first kind s(n, k). Derived from the unsigned
-// numbers: s(n,k) = (-1)^(n-k) * |s(n,k)|. Delegates to
-// xiom.math.factorial.stirling_first. Complexity: O(n*k).
 /// Signed Stirling numbers of the first kind s(n, k). Derived from the unsigned
 /// numbers: s(n,k) = (-1)^(n-k) * |s(n,k)|. Delegates to
 /// xiom.math.factorial.stirling_first. Complexity: O(n*k).
@@ -196,9 +174,6 @@ pub fn stirling_numbers_1(n: Int, k: Int) -> Int {
   return s;
 }
 
-// Stirling numbers of the second kind S(n, k): partitions of an n-set into k
-// blocks. Delegates to xiom.math.factorial.stirling_second. Complexity:
-// O(n*k).
 /// Stirling numbers of the second kind S(n, k): partitions of an n-set into k
 /// blocks. Delegates to xiom.math.factorial.stirling_second. Complexity:
 /// O(n*k).
@@ -206,16 +181,12 @@ pub fn stirling_numbers_2(n: Int, k: Int) -> Int {
   return math.factorial.stirling_second(n, k);
 }
 
-// Lah numbers L(n, k). Delegates to xiom.math.factorial.lah. Complexity:
-// O(min(k, n-k) + (n-k)).
 /// Lah numbers L(n, k). Delegates to xiom.math.factorial.lah. Complexity:
 /// O(min(k, n-k) + (n-k)).
 pub fn lah_numbers(n: Int, k: Int) -> Int {
   return math.factorial.lah(n, k);
 }
 
-// Narayana numbers N(n, k). Delegates to xiom.math.factorial.narayana.
-// Complexity: O(min(k, n-k)).
 /// Narayana numbers N(n, k). Delegates to xiom.math.factorial.narayana.
 /// Complexity: O(min(k, n-k)).
 pub fn narayana_numbers(n: Int, k: Int) -> Int {
@@ -226,9 +197,6 @@ pub fn narayana_numbers(n: Int, k: Int) -> Int {
 // Sequences
 // ---------------------------------------------------------------------------
 
-// Fibonacci number F(n), 0-indexed: F(0) = 0, F(1) = 1. Returns 0 for n < 0
-// and 0 (documented overflow) when F(n) exceeds Int range (n > 92).
-// Complexity: O(n).
 /// Fibonacci number F(n), 0-indexed: F(0) = 0, F(1) = 1. Returns 0 for n < 0
 /// and 0 (documented overflow) when F(n) exceeds Int range (n > 92).
 /// Complexity: O(n).
@@ -248,10 +216,6 @@ pub fn fibonacci(n: Int) -> Int {
   return b;
 }
 
-// Term n of the Fibonacci-like sequence beginning with a and b (term 0 is a,
-// term 1 is b, each later term is the sum of the previous two). Returns 0 for
-// n < 0 and 0 (documented overflow) when the term exceeds Int range.
-// Complexity: O(n).
 /// Term n of the Fibonacci-like sequence beginning with a and b (term 0 is a,
 /// term 1 is b, each later term is the sum of the previous two). Returns 0 for
 /// n < 0 and 0 (documented overflow) when the term exceeds Int range.
@@ -274,9 +238,6 @@ pub fn fibonacci_start(a: Int, b: Int, n: Int) -> Int {
   return t1;
 }
 
-// Lucas number L(n): L(0) = 2, L(1) = 1, L(n) = L(n-1) + L(n-2). Returns 0
-// for n < 0 and 0 (documented overflow) when L(n) exceeds Int range.
-// Complexity: O(n).
 /// Lucas number L(n): L(0) = 2, L(1) = 1, L(n) = L(n-1) + L(n-2). Returns 0
 /// for n < 0 and 0 (documented overflow) when L(n) exceeds Int range.
 /// Complexity: O(n).
@@ -297,9 +258,6 @@ pub fn lucas(n: Int) -> Int {
   return b;
 }
 
-// Tribonacci number T(n): T(0) = T(1) = 0, T(2) = 1,
-// T(n) = T(n-1) + T(n-2) + T(n-3). Returns 0 for n < 0 and 0 (documented
-// overflow) when T(n) exceeds Int range. Complexity: O(n).
 /// Tribonacci number T(n): T(0) = T(1) = 0, T(2) = 1,
 /// T(n) = T(n-1) + T(n-2) + T(n-3). Returns 0 for n < 0 and 0 (documented
 /// overflow) when T(n) exceeds Int range. Complexity: O(n).
@@ -324,9 +282,6 @@ pub fn tribonacci(n: Int) -> Int {
   return c;
 }
 
-// Tetranacci number T(n): T(0) = T(1) = T(2) = 0, T(3) = 1, and each later
-// term is the sum of the previous four. Returns 0 for n < 0 and 0 (documented
-// overflow) when T(n) exceeds Int range. Complexity: O(n).
 /// Tetranacci number T(n): T(0) = T(1) = T(2) = 0, T(3) = 1, and each later
 /// term is the sum of the previous four. Returns 0 for n < 0 and 0 (documented
 /// overflow) when T(n) exceeds Int range. Complexity: O(n).
@@ -355,25 +310,18 @@ pub fn tetranacci(n: Int) -> Int {
   return d;
 }
 
-// Number of integer partitions p(n). Delegates to
-// xiom.math.factorial.partition_count. Complexity: O(n * sqrt(n)).
 /// Number of integer partitions p(n). Delegates to
 /// xiom.math.factorial.partition_count. Complexity: O(n * sqrt(n)).
 pub fn partitions(n: Int) -> Int {
   return math.factorial.partition_count(n);
 }
 
-// All integer partitions of n as lists. Delegates to
-// xiom.math.factorial.integer_partitions. Complexity: O(p(n) * n).
 /// All integer partitions of n as lists. Delegates to
 /// xiom.math.factorial.integer_partitions. Complexity: O(p(n) * n).
 pub fn integer_partitions(n: Int) -> Vec[Vec[Int]] {
   return math.factorial.integer_partitions(n);
 }
 
-// Number of compositions of n into exactly k positive parts: C(n-1, k-1).
-// Returns 0 for n < 0, k <= 0, and k > n; n == 0, k == 0 yields 1 (the empty
-// composition) and n == 0 with k > 0 yields 0. Complexity: O(min(k, n-k)).
 /// Number of compositions of n into exactly k positive parts: C(n-1, k-1).
 /// Returns 0 for n < 0, k <= 0, and k > n; n == 0, k == 0 yields 1 (the empty
 /// composition) and n == 0 with k > 0 yields 0. Complexity: O(min(k, n-k)).
@@ -388,9 +336,6 @@ pub fn compositions(n: Int, k: Int) -> Int {
   return math.factorial.binomial(n - 1, k - 1);
 }
 
-// Total number of compositions of n: 2^(n-1) for n >= 1, 1 for n == 0.
-// Returns 0 for n < 0 and 0 (documented overflow) when 2^(n-1) exceeds Int
-// range (n > 63). Complexity: O(n).
 /// Total number of compositions of n: 2^(n-1) for n >= 1, 1 for n == 0.
 /// Returns 0 for n < 0 and 0 (documented overflow) when 2^(n-1) exceeds Int
 /// range (n > 63). Complexity: O(n).
@@ -407,9 +352,6 @@ pub fn compositions_all(n: Int) -> Int {
   return result;
 }
 
-// Number of onto (surjective) functions from an n-set to a k-set:
-// k! * S(n, k). Returns 0 for n < 0, k < 0, k > n, and 0 (documented
-// overflow) when the count exceeds Int range. Complexity: O(n*k + k).
 /// Number of onto (surjective) functions from an n-set to a k-set:
 /// k! * S(n, k). Returns 0 for n < 0, k < 0, k > n, and 0 (documented
 /// overflow) when the count exceeds Int range. Complexity: O(n*k + k).
@@ -424,10 +366,6 @@ pub fn surjections(n: Int, k: Int) -> Int {
   return s * f;
 }
 
-// Number of involutions on n elements (self-inverse permutations). Uses the
-// recurrence I(n) = I(n-1) + (n-1)*I(n-2), I(0) = I(1) = 1. Returns 0 for
-// n < 0 and 0 (documented overflow) when I(n) exceeds Int range.
-// Complexity: O(n).
 /// Number of involutions on n elements (self-inverse permutations). Uses the
 /// recurrence I(n) = I(n-1) + (n-1)*I(n-2), I(0) = I(1) = 1. Returns 0 for
 /// n < 0 and 0 (documented overflow) when I(n) exceeds Int range.
@@ -454,8 +392,6 @@ pub fn involutions(n: Int) -> Int {
 // Enumeration
 // ---------------------------------------------------------------------------
 
-// All fixed-point-free permutations of 1..n as lists. Returns the empty list
-// for n < 0; n == 0 yields a single empty permutation. Complexity: O(!n * n).
 /// All fixed-point-free permutations of 1..n as lists. Returns the empty list
 /// for n < 0; n == 0 yields a single empty permutation. Complexity: O(!n * n).
 pub fn derangements_enum(n: Int) -> Vec[Vec[Int]] {
@@ -476,8 +412,6 @@ pub fn derangements_enum(n: Int) -> Vec[Vec[Int]] {
   _derange_rec(&elems, &cur, &out);
   return out;
 }
-// All permutations of elems as lists (n! results). Returns an empty list for
-// an empty input. Complexity: O(n! * n).
 /// All permutations of elems as lists (n! results). Returns an empty list for
 /// an empty input. Complexity: O(n! * n).
 pub fn permutations_enum(elems: &Vec[Int]) -> Vec[Vec[Int]] {
@@ -487,8 +421,6 @@ pub fn permutations_enum(elems: &Vec[Int]) -> Vec[Vec[Int]] {
   return out;
 }
 
-// All k-combinations of elems as lists (C(n, k) results). Returns an empty
-// list for k < 0 or k > n. Complexity: O(C(n, k) * k).
 /// All k-combinations of elems as lists (C(n, k) results). Returns an empty
 /// list for k < 0 or k > n. Complexity: O(C(n, k) * k).
 pub fn combinations_enum(elems: &Vec[Int], k: Int) -> Vec[Vec[Int]] {
@@ -499,17 +431,12 @@ pub fn combinations_enum(elems: &Vec[Int], k: Int) -> Vec[Vec[Int]] {
   return out;
 }
 
-// All k-element subsets of elems as lists. Alias of combinations_enum.
-// Complexity: O(C(n, k) * k).
 /// All k-element subsets of elems as lists. Alias of combinations_enum.
 /// Complexity: O(C(n, k) * k).
 pub fn subsets_enum(elems: &Vec[Int], k: Int) -> Vec[Vec[Int]] {
   return combinations_enum(elems, k);
 }
 
-// All subsets of elems as lists (2^n results). Returns an empty list when
-// n > 20 (documented guard against an impractical 2^n result set).
-// Complexity: O(2^n * n).
 /// All subsets of elems as lists (2^n results). Returns an empty list when
 /// n > 20 (documented guard against an impractical 2^n result set).
 /// Complexity: O(2^n * n).

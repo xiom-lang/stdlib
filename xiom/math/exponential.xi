@@ -20,30 +20,22 @@ use xiom.math;
 // crash on violation, so all domain handling is guarded inside the bodies.
 // ============================================================================
 
-// e^x. Returns +inf for x > 700 (overflow) and 0.0 for x < -745
-// (underflow) via libm. Complexity: O(1), libm exp.
 /// e^x. Returns +inf for x > 700 (overflow) and 0.0 for x < -745
 /// (underflow) via libm. Complexity: O(1), libm exp.
 pub fn exp(x: Float64) -> Float64 {
   return math.exp(x);
 }
 
-// 2^x. Complexity: O(1), libm pow.
 /// 2^x. Complexity: O(1), libm pow.
 pub fn exp2(x: Float64) -> Float64 {
   return math.pow(2.0, x);
 }
 
-// 10^x. Complexity: O(1), libm pow.
 /// 10^x. Complexity: O(1), libm pow.
 pub fn exp10(x: Float64) -> Float64 {
   return math.pow(10.0, x);
 }
 
-// e^x - 1, accurate for small x. Uses the Taylor series x + x^2/2! + ...
-// for |x| <= 1e-4 (where exp(x) - 1.0 suffers catastrophic cancellation)
-// and libm exp - 1.0 otherwise. Returns -1.0 for x < -700 and +inf for
-// x > 700. Complexity: O(20) series terms / O(1) libm.
 /// e^x - 1, accurate for small x. Uses the Taylor series x + x^2/2! + ...
 /// for |x| <= 1e-4 (where exp(x) - 1.0 suffers catastrophic cancellation)
 /// and libm exp - 1.0 otherwise. Returns -1.0 for x < -700 and +inf for
@@ -65,8 +57,6 @@ pub fn expm1(x: Float64) -> Float64 {
   return sum;
 }
 
-// Natural logarithm of x. Requires x > 0. For x <= 0 returns NaN
-// (IEEE semantics; BUG 19 fixed -- NaN ops now work).
 /// Natural logarithm of x. Requires x > 0. For x <= 0 returns NaN
 /// (IEEE semantics; BUG 19 fixed -- NaN ops now work).
 pub fn ln(x: Float64) -> Float64 {
@@ -74,8 +64,6 @@ pub fn ln(x: Float64) -> Float64 {
   return math.ln(x);
 }
 
-// Base-2 logarithm of x. Requires x > 0. For x <= 0 returns NaN
-// (see ln). Complexity: O(1), libm log2.
 /// Base-2 logarithm of x. Requires x > 0. For x <= 0 returns NaN
 /// (see ln). Complexity: O(1), libm log2.
 pub fn log2(x: Float64) -> Float64 {
@@ -83,8 +71,6 @@ pub fn log2(x: Float64) -> Float64 {
   return math.log2(x);
 }
 
-// Base-10 logarithm of x. Requires x > 0. For x <= 0 returns NaN
-// (see ln). Complexity: O(1), libm log10.
 /// Base-10 logarithm of x. Requires x > 0. For x <= 0 returns NaN
 /// (see ln). Complexity: O(1), libm log10.
 pub fn log10(x: Float64) -> Float64 {
@@ -92,9 +78,6 @@ pub fn log10(x: Float64) -> Float64 {
   return math.log10(x);
 }
 
-// ln(1 + x), accurate for small x. Requires x > -1. Uses the alternating
-// series x - x^2/2 + x^3/3 - ... for |x| <= 1e-4 and libm ln(1+x) otherwise.
-// log1p(-1.0) == -inf (ln 0), log1p(x < -1) returns NaN (IEEE semantics).
 /// ln(1 + x), accurate for small x. Requires x > -1. Uses the alternating
 /// series x - x^2/2 + x^3/3 - ... for |x| <= 1e-4 and libm ln(1+x) otherwise.
 /// log1p(-1.0) == -inf (ln 0), log1p(x < -1) returns NaN (IEEE semantics).
@@ -118,15 +101,11 @@ pub fn log1p(x: Float64) -> Float64 {
   return sum;
 }
 
-// ln(1 + x), alias of log1p. See log1p for semantics and domain handling.
 /// ln(1 + x), alias of log1p. See log1p for semantics and domain handling.
 pub fn ln_1_plus(x: Float64) -> Float64 {
   return log1p(x);
 }
 
-// base^exp. Uses libm pow; negative bases require an integral exponent
-// (libm semantics). For a negative base with a non-integral exponent
-// returns NaN (IEEE semantics). Complexity: O(1), libm pow.
 /// base^exp. Uses libm pow; negative bases require an integral exponent
 /// (libm semantics). For a negative base with a non-integral exponent
 /// returns NaN (IEEE semantics). Complexity: O(1), libm pow.
@@ -137,10 +116,6 @@ pub fn pow(base: Float64, exp: Float64) -> Float64 {
   return math.pow(base, exp);
 }
 
-// base raised to an integer power via binary exponentiation (square-and-
-// multiply). pow_int(2, 10) == 1024, pow_int(2, -2) == 0.25. 0^0 == 1.0;
-// 0^negative == +inf; base^INT_MIN is handled by magnitude (|base| < 1 -> 0,
-// == 1 -> 1, > 1 -> +inf). Complexity: O(log |exp|) multiplications.
 /// base raised to an integer power via binary exponentiation (square-and-
 /// multiply). pow_int(2, 10) == 1024, pow_int(2, -2) == 0.25. 0^0 == 1.0;
 /// 0^negative == +inf; base^INT_MIN is handled by magnitude (|base| < 1 -> 0,
@@ -177,8 +152,6 @@ pub fn pow_int(base: Float64, exp: Int) -> Float64 {
   return result;
 }
 
-// base^exp for a float exponent. See pow for semantics and domain handling.
-// Complexity: O(1), libm pow.
 /// base^exp for a float exponent. See pow for semantics and domain handling.
 /// Complexity: O(1), libm pow.
 pub fn pow_float(base: Float64, exp: Float64) -> Float64 {
@@ -188,8 +161,6 @@ pub fn pow_float(base: Float64, exp: Float64) -> Float64 {
   return math.pow(base, exp);
 }
 
-// sqrt(base)^exp. Requires base >= 0. For base < 0 returns NaN (IEEE).
-// Complexity: O(1), libm.
 /// sqrt(base)^exp. Requires base >= 0. For base < 0 returns NaN (IEEE).
 /// Complexity: O(1), libm.
 pub fn sqrt_power(base: Float64, exp: Float64) -> Float64
@@ -199,16 +170,12 @@ pub fn sqrt_power(base: Float64, exp: Float64) -> Float64
   return math.pow(math.sqrt(base), exp);
 }
 
-// e^x via the pure range-reduced Taylor series (math.exp_pure), no libm.
-// Returns +inf for x > 700 and 0.0 for x < -700. Complexity: O(25 + log).
 /// e^x via the pure range-reduced Taylor series (math.exp_pure), no libm.
 /// Returns +inf for x > 700 and 0.0 for x < -700. Complexity: O(25 + log).
 pub fn exp_pure(x: Float64) -> Float64 {
   return math.exp_pure(x);
 }
 
-// Natural logarithm via the pure atanh series (math.ln_pure), no libm.
-// Requires x > 0; for x <= 0 returns NaN (IEEE semantics).
 /// Natural logarithm via the pure atanh series (math.ln_pure), no libm.
 /// Requires x > 0; for x <= 0 returns NaN (IEEE semantics).
 pub fn ln_pure(x: Float64) -> Float64 {
@@ -216,8 +183,6 @@ pub fn ln_pure(x: Float64) -> Float64 {
   return math.ln_pure(x);
 }
 
-// Base-2 logarithm via the pure series (math.log2_pure), no libm. Requires
-// x > 0; for x <= 0 returns NaN (IEEE semantics).
 /// Base-2 logarithm via the pure series (math.log2_pure), no libm. Requires
 /// x > 0; for x <= 0 returns NaN (IEEE semantics).
 pub fn log2_pure(x: Float64) -> Float64 {
@@ -225,8 +190,6 @@ pub fn log2_pure(x: Float64) -> Float64 {
   return math.log2_pure(x);
 }
 
-// Base-10 logarithm via the pure series (math.log10_pure), no libm.
-// Requires x > 0; for x <= 0 returns NaN (IEEE semantics).
 /// Base-10 logarithm via the pure series (math.log10_pure), no libm.
 /// Requires x > 0; for x <= 0 returns NaN (IEEE semantics).
 pub fn log10_pure(x: Float64) -> Float64 {
@@ -234,11 +197,6 @@ pub fn log10_pure(x: Float64) -> Float64 {
   return math.log10_pure(x);
 }
 
-// base^exp via the pure exp/ln series (math.pow_pure), no libm. Negative
-// bases are handled before delegation because math.pow_pure declares
-// `requires: base >= 0.0 || exp integral` (runtime-enforced in this
-// compiler); a negative base with a non-integral exponent returns NaN
-// (IEEE semantics). Complexity: O(ln + exp).
 /// base^exp via the pure exp/ln series (math.pow_pure), no libm. Negative
 /// bases are handled before delegation because math.pow_pure declares
 /// `requires: base >= 0.0 || exp integral` (runtime-enforced in this

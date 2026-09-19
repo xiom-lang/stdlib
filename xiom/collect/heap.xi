@@ -4,18 +4,15 @@
 
 module xiom.collect.heap
 
-// ============================================================================
-// Pairing Heap (Int keys)
-// Arena of nodes; node i lives at the i-th triple of the `keys` vector:
-//   keys[3i]   = key
-//   keys[3i+1] = first child
-//   keys[3i+2] = next sibling
-// (nested `Vec[Vec[Int]]` element access is unreliable in the current
-// compiler, so the child lists are stored as first-child/next-sibling links
-// in the flat arena; the `children` field is retained per the module spec.)
-// Merge works on concrete Int keys; extract uses the two-pass pairwise merge.
-// ============================================================================
-
+/// Pairing Heap (Int keys)
+/// Arena of nodes; node i lives at the i-th triple of the `keys` vector:
+///   keys[3i]   = key
+///   keys[3i+1] = first child
+///   keys[3i+2] = next sibling
+/// (nested `Vec[Vec[Int]]` element access is unreliable in the current
+/// compiler, so the child lists are stored as first-child/next-sibling links
+/// in the flat arena; the `children` field is retained per the module spec.)
+/// Merge works on concrete Int keys; extract uses the two-pass pairwise merge.
 pub type PHeap = {
   root: Int;
   keys: Vec[Int];
@@ -128,14 +125,11 @@ pub fn pheap_is_empty(h: &PHeap) -> Bool
   return h.root == -1;
 }
 
-// ============================================================================
-// Fibonacci Heap (Int keys)
-// Arena of parallel vectors. The root list and every child list are circular
-// doubly-linked rings through the `left`/`right` vectors; sentinel index -1
-// denotes "no node". Extract-min consolidates the root list with 64 degree
-// buckets. Decrease-key performs a cut + cascading cut (CLRS).
-// ============================================================================
-
+/// Fibonacci Heap (Int keys)
+/// Arena of parallel vectors. The root list and every child list are circular
+/// doubly-linked rings through the `left`/`right` vectors; sentinel index -1
+/// denotes "no node". Extract-min consolidates the root list with 64 degree
+/// buckets. Decrease-key performs a cut + cascading cut (CLRS).
 pub type FibHeap = {
   min: Int;
   n: Int;

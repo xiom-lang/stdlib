@@ -17,11 +17,6 @@ module xiom.net.ntp
 use xiom.string;
 use xiom.io;
 
-// struct NtpPacket { li: Int; vn: Int; mode: Int; stratum: Int; poll: Int;
-//   precision: Int; root_delay: Float64; root_dispersion: Float64; ref_id: Int;
-//   ref_timestamp: Int; origin_timestamp: Int; recv_timestamp: Int;
-//   transmit_timestamp: Int }
-//   Timestamps are 64-bit NTP era timestamps (seconds since 1900-01-01).
 /// struct NtpPacket { li: Int; vn: Int; mode: Int; stratum: Int; poll: Int;
 ///   precision: Int; root_delay: Float64; root_dispersion: Float64; ref_id: Int;
 ///   ref_timestamp: Int; origin_timestamp: Int; recv_timestamp: Int;

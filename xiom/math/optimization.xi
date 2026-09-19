@@ -21,9 +21,6 @@ module xiom.math.optimization
 use xiom.math;
 use xiom.core.to_int;
 
-// Minimize c'x subject to Ax <= b and bounds.
-// TODO(compiler): NOT IMPLEMENTABLE - the constraint matrix A is a
-// Vec[Vec[Float64]] whose element reads return garbage in this compiler build.
 /// Minimize c'x subject to Ax <= b and bounds.
 /// TODO(compiler): NOT IMPLEMENTABLE - the constraint matrix A is a
 /// Vec[Vec[Float64]] whose element reads return garbage in this compiler build.
@@ -32,9 +29,6 @@ pub fn linear_programming(c: &Vec[Float64], a: &Vec[Vec[Float64]], b: &Vec[Float
   return out;
 }
 
-// Solve a linear program with integer variables.
-// TODO(compiler): NOT IMPLEMENTABLE - the constraint matrix A is a
-// Vec[Vec[Float64]] whose element reads return garbage in this compiler build.
 /// Solve a linear program with integer variables.
 /// TODO(compiler): NOT IMPLEMENTABLE - the constraint matrix A is a
 /// Vec[Vec[Float64]] whose element reads return garbage in this compiler build.
@@ -43,9 +37,6 @@ pub fn integer_programming(c: &Vec[Float64], a: &Vec[Vec[Float64]], b: &Vec[Floa
   return out;
 }
 
-// Solve a MILP with continuous and integer variables.
-// TODO(compiler): NOT IMPLEMENTABLE - the constraint matrix A is a
-// Vec[Vec[Float64]] whose element reads return garbage in this compiler build.
 /// Solve a MILP with continuous and integer variables.
 /// TODO(compiler): NOT IMPLEMENTABLE - the constraint matrix A is a
 /// Vec[Vec[Float64]] whose element reads return garbage in this compiler build.
@@ -54,9 +45,6 @@ pub fn mixed_integer_programming(c: &Vec[Float64], a: &Vec[Vec[Float64]], b: &Ve
   return out;
 }
 
-// Minimize 1/2 x'Qx + c'x subject to Ax <= b.
-// TODO(compiler): NOT IMPLEMENTABLE - the matrices are Vec[Vec[Float64]]
-// whose element reads return garbage in this compiler build.
 /// Minimize 1/2 x'Qx + c'x subject to Ax <= b.
 /// TODO(compiler): NOT IMPLEMENTABLE - the matrices are Vec[Vec[Float64]]
 /// whose element reads return garbage in this compiler build.
@@ -65,9 +53,6 @@ pub fn quadratic_programming(q: &Vec[Vec[Float64]], c: &Vec[Float64], a: &Vec[Ve
   return out;
 }
 
-// Minimize f subject to constraints cons from x0.
-// TODO(compiler): NOT IMPLEMENTABLE - the constraint vector is a Vec[fn]
-// whose element reads return garbage in this compiler build.
 /// Minimize f subject to constraints cons from x0.
 /// TODO(compiler): NOT IMPLEMENTABLE - the constraint vector is a Vec[fn]
 /// whose element reads return garbage in this compiler build.
@@ -76,9 +61,6 @@ pub fn nonlinear_programming(f: fn(&Vec[Float64]) -> Float64, cons: &Vec[fn(&Vec
   return out;
 }
 
-// Solve a linear program by the simplex method.
-// TODO(compiler): NOT IMPLEMENTABLE - the constraint matrix A is a
-// Vec[Vec[Float64]] whose element reads return garbage in this compiler build.
 /// Solve a linear program by the simplex method.
 /// TODO(compiler): NOT IMPLEMENTABLE - the constraint matrix A is a
 /// Vec[Vec[Float64]] whose element reads return garbage in this compiler build.
@@ -87,9 +69,6 @@ pub fn lp_simplex(c: &Vec[Float64], a: &Vec[Vec[Float64]], b: &Vec[Float64]) -> 
   return out;
 }
 
-// Solve a linear program by the interior-point method.
-// TODO(compiler): NOT IMPLEMENTABLE - the constraint matrix A is a
-// Vec[Vec[Float64]] whose element reads return garbage in this compiler build.
 /// Solve a linear program by the interior-point method.
 /// TODO(compiler): NOT IMPLEMENTABLE - the constraint matrix A is a
 /// Vec[Vec[Float64]] whose element reads return garbage in this compiler build.
@@ -98,9 +77,6 @@ pub fn lp_interior_point(c: &Vec[Float64], a: &Vec[Vec[Float64]], b: &Vec[Float6
   return out;
 }
 
-// Solve an ILP by branch and bound.
-// TODO(compiler): NOT IMPLEMENTABLE - the constraint matrix A is a
-// Vec[Vec[Float64]] whose element reads return garbage in this compiler build.
 /// Solve an ILP by branch and bound.
 /// TODO(compiler): NOT IMPLEMENTABLE - the constraint matrix A is a
 /// Vec[Vec[Float64]] whose element reads return garbage in this compiler build.
@@ -109,9 +85,6 @@ pub fn branch_and_bound(c: &Vec[Float64], a: &Vec[Vec[Float64]], b: &Vec[Float64
   return out;
 }
 
-// Solve an ILP by the cutting-plane method.
-// TODO(compiler): NOT IMPLEMENTABLE - the constraint matrix A is a
-// Vec[Vec[Float64]] whose element reads return garbage in this compiler build.
 /// Solve an ILP by the cutting-plane method.
 /// TODO(compiler): NOT IMPLEMENTABLE - the constraint matrix A is a
 /// Vec[Vec[Float64]] whose element reads return garbage in this compiler build.
@@ -120,9 +93,6 @@ pub fn cutting_plane(c: &Vec[Float64], a: &Vec[Vec[Float64]], b: &Vec[Float64]) 
   return out;
 }
 
-// Minimize constrained f by sequential quadratic programming.
-// TODO(compiler): NOT IMPLEMENTABLE - the constraint vector is a Vec[fn]
-// whose element reads return garbage in this compiler build.
 /// Minimize constrained f by sequential quadratic programming.
 /// TODO(compiler): NOT IMPLEMENTABLE - the constraint vector is a Vec[fn]
 /// whose element reads return garbage in this compiler build.
@@ -131,9 +101,6 @@ pub fn sequential_quadratic(f: fn(&Vec[Float64]) -> Float64, cons: &Vec[fn(&Vec[
   return out;
 }
 
-// Minimize constrained f via penalty functions.
-// TODO(compiler): NOT IMPLEMENTABLE - the constraint vector is a Vec[fn]
-// whose element reads return garbage in this compiler build.
 /// Minimize constrained f via penalty functions.
 /// TODO(compiler): NOT IMPLEMENTABLE - the constraint vector is a Vec[fn]
 /// whose element reads return garbage in this compiler build.
@@ -142,9 +109,6 @@ pub fn penalty_method(f: fn(&Vec[Float64]) -> Float64, cons: &Vec[fn(&Vec[Float6
   return out;
 }
 
-// Minimize inequality-constrained f via barrier functions.
-// TODO(compiler): NOT IMPLEMENTABLE - the constraint vector is a Vec[fn]
-// whose element reads return garbage in this compiler build.
 /// Minimize inequality-constrained f via barrier functions.
 /// TODO(compiler): NOT IMPLEMENTABLE - the constraint vector is a Vec[fn]
 /// whose element reads return garbage in this compiler build.
@@ -153,9 +117,6 @@ pub fn barrier_method(f: fn(&Vec[Float64]) -> Float64, cons: &Vec[fn(&Vec[Float6
   return out;
 }
 
-// Minimize constrained f via the augmented Lagrangian method.
-// TODO(compiler): NOT IMPLEMENTABLE - the constraint vector is a Vec[fn]
-// whose element reads return garbage in this compiler build.
 /// Minimize constrained f via the augmented Lagrangian method.
 /// TODO(compiler): NOT IMPLEMENTABLE - the constraint vector is a Vec[fn]
 /// whose element reads return garbage in this compiler build.
@@ -164,9 +125,6 @@ pub fn augmented_lagrangian(f: fn(&Vec[Float64]) -> Float64, cons: &Vec[fn(&Vec[
   return out;
 }
 
-// Minimize f by a genetic algorithm.
-// TODO(compiler): NOT IMPLEMENTABLE - the search bounds are a
-// Vec[Vec[Float64]] whose element reads return garbage in this compiler build.
 /// Minimize f by a genetic algorithm.
 /// TODO(compiler): NOT IMPLEMENTABLE - the search bounds are a
 /// Vec[Vec[Float64]] whose element reads return garbage in this compiler build.
@@ -175,11 +133,6 @@ pub fn genetic_algorithm(f: fn(&Vec[Float64]) -> Float64, bounds: &Vec[Vec[Float
   return out;
 }
 
-// Minimize f by simulated annealing from x0: at each temperature a
-// neighboring point x + N(0, t) is sampled and accepted when it improves the
-// objective or with probability exp(-(df)/t); the temperature follows
-// schedule(t, i). Returns the best point found. Empty for an empty x0.
-// Complexity: O(iters * n * cost(f)).
 /// Minimize f by simulated annealing from x0: at each temperature a
 /// neighboring point x + N(0, t) is sampled and accepted when it improves the
 /// objective or with probability exp(-(df)/t); the temperature follows
@@ -242,9 +195,6 @@ pub fn simulated_annealing(f: fn(&Vec[Float64]) -> Float64, x0: &Vec[Float64], t
   return out;
 }
 
-// Minimize f by particle swarm optimization.
-// TODO(compiler): NOT IMPLEMENTABLE - the search bounds are a
-// Vec[Vec[Float64]] whose element reads return garbage in this compiler build.
 /// Minimize f by particle swarm optimization.
 /// TODO(compiler): NOT IMPLEMENTABLE - the search bounds are a
 /// Vec[Vec[Float64]] whose element reads return garbage in this compiler build.
@@ -253,10 +203,6 @@ pub fn particle_swarm(f: fn(&Vec[Float64]) -> Float64, bounds: &Vec[Vec[Float64]
   return out;
 }
 
-// Optimize a combinatorial problem by ant colony optimization: ants build
-// candidate permutations of the n_nodes cities, biased toward the best tour
-// found so far; the best tour (as a permutation of city ids) is returned.
-// Empty for n_nodes <= 0. Complexity: O(iters * n_nodes^2 + iters * cost(cost)).
 /// Optimize a combinatorial problem by ant colony optimization: ants build
 /// candidate permutations of the n_nodes cities, biased toward the best tour
 /// found so far; the best tour (as a permutation of city ids) is returned.
@@ -332,9 +278,6 @@ pub fn ant_colony(cost: fn(&Vec[Int]) -> Float64, n_nodes: Int, iters: Int) -> V
   return out;
 }
 
-// Minimize f by differential evolution.
-// TODO(compiler): NOT IMPLEMENTABLE - the search bounds are a
-// Vec[Vec[Float64]] whose element reads return garbage in this compiler build.
 /// Minimize f by differential evolution.
 /// TODO(compiler): NOT IMPLEMENTABLE - the search bounds are a
 /// Vec[Vec[Float64]] whose element reads return garbage in this compiler build.
@@ -343,9 +286,6 @@ pub fn differential_evolution(f: fn(&Vec[Float64]) -> Float64, bounds: &Vec[Vec[
   return out;
 }
 
-// Minimize f by Bayesian optimization with a surrogate model.
-// TODO(compiler): NOT IMPLEMENTABLE - the search bounds are a
-// Vec[Vec[Float64]] whose element reads return garbage in this compiler build.
 /// Minimize f by Bayesian optimization with a surrogate model.
 /// TODO(compiler): NOT IMPLEMENTABLE - the search bounds are a
 /// Vec[Vec[Float64]] whose element reads return garbage in this compiler build.
@@ -354,9 +294,6 @@ pub fn bayesian_optimization(f: fn(&Vec[Float64]) -> Float64, bounds: &Vec[Vec[F
   return out;
 }
 
-// Minimize f by exhaustive grid search with n points per axis.
-// TODO(compiler): NOT IMPLEMENTABLE - the search bounds are a
-// Vec[Vec[Float64]] whose element reads return garbage in this compiler build.
 /// Minimize f by exhaustive grid search with n points per axis.
 /// TODO(compiler): NOT IMPLEMENTABLE - the search bounds are a
 /// Vec[Vec[Float64]] whose element reads return garbage in this compiler build.
@@ -365,9 +302,6 @@ pub fn grid_search(f: fn(&Vec[Float64]) -> Float64, bounds: &Vec[Vec[Float64]], 
   return out;
 }
 
-// Minimize f by uniform random sampling.
-// TODO(compiler): NOT IMPLEMENTABLE - the search bounds are a
-// Vec[Vec[Float64]] whose element reads return garbage in this compiler build.
 /// Minimize f by uniform random sampling.
 /// TODO(compiler): NOT IMPLEMENTABLE - the search bounds are a
 /// Vec[Vec[Float64]] whose element reads return garbage in this compiler build.

@@ -20,24 +20,18 @@ use xiom.math;
 // crash on violation, so all domain handling is guarded inside the bodies.
 // ============================================================================
 
-// Hyperbolic sine of x. sinh(0.0) == 0.0; |x| > ~710 overflows to +-inf.
-// Complexity: O(1), libm exp.
 /// Hyperbolic sine of x. sinh(0.0) == 0.0; |x| > ~710 overflows to +-inf.
 /// Complexity: O(1), libm exp.
 pub fn sinh(x: Float64) -> Float64 {
   return (math.exp(x) - math.exp(-x)) / 2.0;
 }
 
-// Hyperbolic cosine of x. cosh(0.0) == 1.0; |x| > ~710 overflows to +inf.
-// Complexity: O(1), libm exp.
 /// Hyperbolic cosine of x. cosh(0.0) == 1.0; |x| > ~710 overflows to +inf.
 /// Complexity: O(1), libm exp.
 pub fn cosh(x: Float64) -> Float64 {
   return (math.exp(x) + math.exp(-x)) / 2.0;
 }
 
-// Hyperbolic tangent of x. tanh(0.0) == 0.0; saturates to +-1.0 for
-// |x| > 20. Uses (exp(2x)-1)/(exp(2x)+1) for stability. Complexity: O(1).
 /// Hyperbolic tangent of x. tanh(0.0) == 0.0; saturates to +-1.0 for
 /// |x| > 20. Uses (exp(2x)-1)/(exp(2x)+1) for stability. Complexity: O(1).
 pub fn tanh(x: Float64) -> Float64 {
@@ -47,31 +41,23 @@ pub fn tanh(x: Float64) -> Float64 {
   return (ex - 1.0) / (ex + 1.0);
 }
 
-// Hyperbolic cosecant, 1/sinh(x). csch(0.0) == +inf (native 1.0/0.0).
-// Complexity: O(1), libm exp.
 /// Hyperbolic cosecant, 1/sinh(x). csch(0.0) == +inf (native 1.0/0.0).
 /// Complexity: O(1), libm exp.
 pub fn csch(x: Float64) -> Float64 {
   return 1.0 / sinh(x);
 }
 
-// Hyperbolic secant, 1/cosh(x). Always finite (cosh > 0). Complexity: O(1).
 /// Hyperbolic secant, 1/cosh(x). Always finite (cosh > 0). Complexity: O(1).
 pub fn sech(x: Float64) -> Float64 {
   return 1.0 / cosh(x);
 }
 
-// Hyperbolic cotangent, 1/tanh(x). coth(0.0) == +inf (native 1.0/0.0).
-// Complexity: O(1), libm exp.
 /// Hyperbolic cotangent, 1/tanh(x). coth(0.0) == +inf (native 1.0/0.0).
 /// Complexity: O(1), libm exp.
 pub fn coth(x: Float64) -> Float64 {
   return 1.0 / tanh(x);
 }
 
-// Inverse hyperbolic sine: ln(x + sqrt(x^2 + 1)). Odd function. For
-// |x| > 1e150 uses ln(|x|) + ln 2 (avoids x^2 overflow and cancellation).
-// asinh(1.0) == 0.881373587019543. Complexity: O(1), libm ln/sqrt.
 /// Inverse hyperbolic sine: ln(x + sqrt(x^2 + 1)). Odd function. For
 /// |x| > 1e150 uses ln(|x|) + ln 2 (avoids x^2 overflow and cancellation).
 /// asinh(1.0) == 0.881373587019543. Complexity: O(1), libm ln/sqrt.
@@ -90,10 +76,6 @@ pub fn asinh(x: Float64) -> Float64 {
   return r;
 }
 
-// Inverse hyperbolic cosine: ln(x + sqrt(x^2 - 1)). Requires x >= 1.
-// For x < 1 returns NaN (IEEE semantics). For x > 1e150 uses ln(x) + ln 2
-// (avoids overflow). acosh(1.0) == 0.0, acosh(cosh(1.0)) == 1.0.
-// Complexity: O(1), libm ln/sqrt.
 /// Inverse hyperbolic cosine: ln(x + sqrt(x^2 - 1)). Requires x >= 1.
 /// For x < 1 returns NaN (IEEE semantics). For x > 1e150 uses ln(x) + ln 2
 /// (avoids overflow). acosh(1.0) == 0.0, acosh(cosh(1.0)) == 1.0.
@@ -107,10 +89,6 @@ pub fn acosh(x: Float64) -> Float64 {
   return math.ln(x + math.sqrt(x * x - 1.0));
 }
 
-// Inverse hyperbolic tangent: 0.5 * ln((1+x)/(1-x)). Requires |x| < 1.
-// For |x| > 1 returns NaN (IEEE semantics);
-// atanh(1.0) == +inf and atanh(-1.0) == -inf (native, ln 0/inf).
-// atanh(0.0) == 0.0. Complexity: O(1), libm ln.
 /// Inverse hyperbolic tangent: 0.5 * ln((1+x)/(1-x)). Requires |x| < 1.
 /// For |x| > 1 returns NaN (IEEE semantics);
 /// atanh(1.0) == +inf and atanh(-1.0) == -inf (native, ln 0/inf).
@@ -120,24 +98,18 @@ pub fn atanh(x: Float64) -> Float64 {
   return 0.5 * math.ln((1.0 + x) / (1.0 - x));
 }
 
-// Hyperbolic sine via the pure exp series (math.exponential.exp_pure), no
-// libm. sinh_pure(0.0) == 0.0. Complexity: O(exp_pure).
 /// Hyperbolic sine via the pure exp series (math.exponential.exp_pure), no
 /// libm. sinh_pure(0.0) == 0.0. Complexity: O(exp_pure).
 pub fn sinh_pure(x: Float64) -> Float64 {
   return (math.exponential.exp_pure(x) - math.exponential.exp_pure(-x)) / 2.0;
 }
 
-// Hyperbolic cosine via the pure exp series, no libm. cosh_pure(0.0) == 1.0.
-// Complexity: O(exp_pure).
 /// Hyperbolic cosine via the pure exp series, no libm. cosh_pure(0.0) == 1.0.
 /// Complexity: O(exp_pure).
 pub fn cosh_pure(x: Float64) -> Float64 {
   return (math.exponential.exp_pure(x) + math.exponential.exp_pure(-x)) / 2.0;
 }
 
-// Hyperbolic tangent via pure sinh/cosh series, no libm. Saturates to +-1.0
-// for |x| > 20. tanh_pure(0.0) == 0.0. Complexity: O(exp_pure).
 /// Hyperbolic tangent via pure sinh/cosh series, no libm. Saturates to +-1.0
 /// for |x| > 20. tanh_pure(0.0) == 0.0. Complexity: O(exp_pure).
 pub fn tanh_pure(x: Float64) -> Float64 {

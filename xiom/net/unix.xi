@@ -13,7 +13,6 @@ module xiom.net.unix
 // documented default) with the fd-based helpers left for the FFI layer.
 // ============================================================================
 
-// struct UnixSocket { fd: Int; path: Str; listening: Bool }
 /// struct UnixSocket { fd: Int; path: Str; listening: Bool }
 pub type UnixSocket = {
   fd: Int;

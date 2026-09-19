@@ -13,8 +13,6 @@ module xiom.net.ping
 // expose -- they are documented stubs returning Err.
 // ============================================================================
 
-// struct PingStats { sent: Int; received: Int; min_ms: Int; avg_ms: Int;
-//                    max_ms: Int }
 /// struct PingStats { sent: Int; received: Int; min_ms: Int; avg_ms: Int;
 ///                    max_ms: Int }
 pub type PingStats = {

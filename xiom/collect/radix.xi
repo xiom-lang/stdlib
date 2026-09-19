@@ -8,22 +8,19 @@ module xiom.collect.radix
 
 use xiom.string;
 
-// ============================================================================
-// Compressed prefix tree over decimal digit strings mapping keys to Int
-// values.
-//
-// Flat-arena style. Every node carries the label of its incoming edge
-// (`labels[i]`, the empty string at the root), a terminal flag plus the stored
-// key/value for nodes that end a key, and a child list threaded through
-// `child_head[i]` / `sibling[i]` (linked list of child node ids). Insertion
-// follows the classic radix-trie algorithm: match a child whose label shares
-// a prefix with the remaining key, split that label at the divergence point,
-// and re-link the pieces. Removal marks a terminal node non-terminal (the
-// node itself and its labels stay, so no recompaction is needed). All string
-// reads go through xiom.string; Vec[Str] elements are bound to locals before
-// comparison (compiler BUG 8 workaround).
-// ============================================================================
-
+/// Compressed prefix tree over decimal digit strings mapping keys to Int
+/// values.
+/// 
+/// Flat-arena style. Every node carries the label of its incoming edge
+/// (`labels[i]`, the empty string at the root), a terminal flag plus the stored
+/// key/value for nodes that end a key, and a child list threaded through
+/// `child_head[i]` / `sibling[i]` (linked list of child node ids). Insertion
+/// follows the classic radix-trie algorithm: match a child whose label shares
+/// a prefix with the remaining key, split that label at the divergence point,
+/// and re-link the pieces. Removal marks a terminal node non-terminal (the
+/// node itself and its labels stay, so no recompaction is needed). All string
+/// reads go through xiom.string; Vec[Str] elements are bound to locals before
+/// comparison (compiler BUG 8 workaround).
 pub type RadixTrie = {
   root: Int;
   size: Int;

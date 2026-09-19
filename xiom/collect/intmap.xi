@@ -6,22 +6,19 @@ module xiom.collect.intmap
 
 // Depends on: xiom.string
 
-// ============================================================================
-// Optimized keyed maps. int_map uses a flat open-addressing table sized for the
-// expected capacity (Int keys -> Int values); string_map uses a string-keyed
-// variant. Both reject duplicate keys and iterate over stored keys in
-// insertion order via int_map_iter.
-//
-// Flat-arena style. The int_map table stores parallel `keys`/`vals`/`occ`/
-// `tomb` vectors of `cap` slots with linear probing and a multiplicative hash
-// (high 32 bits of key * golden ratio, forced non-negative) so INT_MIN and
-// other pathological keys are safe. Deleted slots become tombstones so probing
-// chains stay intact; the table doubles when the load factor reaches 1/2. A
-// separate `order` vector tracks the insertion order of live keys for
-// `int_map_iter`. string_map is a simpler linear Vec[Str] map (strings are
-// compared via bound locals, compiler BUG 8 workaround).
-// ============================================================================
-
+/// Optimized keyed maps. int_map uses a flat open-addressing table sized for the
+/// expected capacity (Int keys -> Int values); string_map uses a string-keyed
+/// variant. Both reject duplicate keys and iterate over stored keys in
+/// insertion order via int_map_iter.
+/// 
+/// Flat-arena style. The int_map table stores parallel `keys`/`vals`/`occ`/
+/// `tomb` vectors of `cap` slots with linear probing and a multiplicative hash
+/// (high 32 bits of key * golden ratio, forced non-negative) so INT_MIN and
+/// other pathological keys are safe. Deleted slots become tombstones so probing
+/// chains stay intact; the table doubles when the load factor reaches 1/2. A
+/// separate `order` vector tracks the insertion order of live keys for
+/// `int_map_iter`. string_map is a simpler linear Vec[Str] map (strings are
+/// compared via bound locals, compiler BUG 8 workaround).
 pub type IntMap = {
   cap: Int;
   size: Int;
@@ -232,10 +229,7 @@ pub fn int_map_iter(m: &IntMap) -> Vec[Int]
   return out;
 }
 
-// ============================================================================
-// OrderedStringMap (Str keys -> Int values, insertion-ordered)
-// ============================================================================
-
+/// OrderedStringMap (Str keys -> Int values, insertion-ordered)
 pub type OrderedStringMap = {
   keys: Vec[Str];
   vals: Vec[Int];

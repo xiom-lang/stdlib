@@ -6,21 +6,18 @@ module xiom.collect.interval
 
 // Depends on: none (pure)
 
-// ============================================================================
-// Interval tree (Int start/end, Int value). Stores [start, end] intervals and
-// answers stabbing queries (which intervals contain a point) and range queries
-// (which intervals overlap [start, end]) in O(log n + k) where k is the number
-// of reported intervals. Intervals are inclusive on both ends.
-//
-// Flat-arena style (the established collect/ pattern). The tree is a BST keyed
-// by `start`; each node also tracks `max_ends`, the largest `end` in its
-// subtree, which prunes subtrees that cannot intersect a query. Equal starts
-// are inserted to the right (multi-map semantics). Removed intervals are
-// marked dead (`alive = false`) and skipped by every query, so removal never
-// disturbs the tree shape. Queries skip a subtree when its max end is below
-// the query point (stabbing) or below the query low bound (overlap).
-// ============================================================================
-
+/// Interval tree (Int start/end, Int value). Stores [start, end] intervals and
+/// answers stabbing queries (which intervals contain a point) and range queries
+/// (which intervals overlap [start, end]) in O(log n + k) where k is the number
+/// of reported intervals. Intervals are inclusive on both ends.
+/// 
+/// Flat-arena style (the established collect/ pattern). The tree is a BST keyed
+/// by `start`; each node also tracks `max_ends`, the largest `end` in its
+/// subtree, which prunes subtrees that cannot intersect a query. Equal starts
+/// are inserted to the right (multi-map semantics). Removed intervals are
+/// marked dead (`alive = false`) and skipped by every query, so removal never
+/// disturbs the tree shape. Queries skip a subtree when its max end is below
+/// the query point (stabbing) or below the query low bound (overlap).
 pub type IntervalTree = {
   root: Int;
   size: Int;

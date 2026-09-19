@@ -26,7 +26,6 @@ use xiom.encoding;
 use xiom.encoding.base64;
 use xiom.crypto;
 
-// struct Jwt { header: Str; payload: Str; signature: Str }
 /// struct Jwt { header: Str; payload: Str; signature: Str }
 pub type Jwt = {
   header: Str;

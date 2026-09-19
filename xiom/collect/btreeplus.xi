@@ -6,20 +6,17 @@ module xiom.collect.btreeplus
 
 // Depends on: none
 
-// ============================================================================
-// B+ tree ordered map of Int keys to Int values, leaves linked for fast
-// range scans. All data lives in leaves; internal nodes hold routing keys
-// and child pointers only. `order` is the maximum number of children per
-// internal node (clamped to >= 2); every node holds at most `mk = order-1`
-// keys. Flat-arena representation: per-node blocks of `mk` key/value slots
-// and `mk+1` child slots in parallel Vec[Int]s, with per-node key counts,
-// leaf flags and a `nexts` leaf chain. Inserts pre-split full nodes on the
-// way down (O(log n)). Removals delete lazily from the leaf (routing keys
-// stay valid as range separators; empty leaves remain traversable), so
-// `bptree_range` walks the leaf chain in O(log n + m). Removed nodes become
-// unreachable arena entries.
-// ============================================================================
-
+/// B+ tree ordered map of Int keys to Int values, leaves linked for fast
+/// range scans. All data lives in leaves; internal nodes hold routing keys
+/// and child pointers only. `order` is the maximum number of children per
+/// internal node (clamped to >= 2); every node holds at most `mk = order-1`
+/// keys. Flat-arena representation: per-node blocks of `mk` key/value slots
+/// and `mk+1` child slots in parallel Vec[Int]s, with per-node key counts,
+/// leaf flags and a `nexts` leaf chain. Inserts pre-split full nodes on the
+/// way down (O(log n)). Removals delete lazily from the leaf (routing keys
+/// stay valid as range separators; empty leaves remain traversable), so
+/// `bptree_range` walks the leaf chain in O(log n + m). Removed nodes become
+/// unreachable arena entries.
 pub type BPlusTree = {
   root: Int;
   mk: Int;

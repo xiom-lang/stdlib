@@ -9,7 +9,6 @@ use xiom.env;
 pub type Path = { inner: Str; } derive[Eq, Clone, Hash, Ord]
 pub type PathBuf = { inner: Str; } derive[Eq, Clone]
 
-// Path constructors
 /// Path constructors
 pub fn Path.new(s: Str) -> Path
   ensures: result.inner == s
@@ -29,7 +28,6 @@ pub fn PathBuf.from(s: Str) -> PathBuf
   PathBuf{ inner: s; }
 }
 
-// Path operations
 /// Path operations
 pub fn Path.parent(self) -> Option<Path>
   // (was: ensures prose -- contract-eval Str field read corrupts the fn, BUG 56 family; the prose is documentation, moved here)
@@ -253,10 +251,6 @@ pub fn Path.ends_with(self, child: Path) -> Bool {
   return str_ends_with(self.inner, child.inner);
 }
 
-// PathBuf operations
-// NOTE: These take &mut self (the old by-value forms mutated a copy and
-// required callers to capture the return -- the stale "&mut self not
-// supported" note predates the BUG 55 fixes; cell.xi &mut self works).
 /// PathBuf operations
 /// NOTE: These take &mut self (the old by-value forms mutated a copy and
 /// required callers to capture the return -- the stale "&mut self not
@@ -294,13 +288,11 @@ pub fn PathBuf.clear(&mut self) {
   self.inner = "";
 }
 
-// Utility
 /// Utility
 pub fn path_separator() -> Str {
   return env.path_separator();
 }
 
-// path_is_absolute_str returns true if p starts with '/' or '\\'.
 /// path_is_absolute_str returns true if p starts with '/' or '\\'.
 pub fn path_is_absolute_str(p: Str) -> Bool {
   if p.is_empty() { return false; };

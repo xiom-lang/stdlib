@@ -9,8 +9,6 @@ module xiom.net.ftp
 
 use xiom.string;
 
-// ftp_default_port returns the default FTP control port (21).
-// Complexity: O(1). Pure.
 /// ftp_default_port returns the default FTP control port (21).
 /// Complexity: O(1). Pure.
 pub fn ftp_default_port() -> Int
@@ -19,40 +17,30 @@ pub fn ftp_default_port() -> Int
   21
 }
 
-// ftp_command_user formats a USER command.
-// Complexity: O(1). Pure.
 /// ftp_command_user formats a USER command.
 /// Complexity: O(1). Pure.
 pub fn ftp_command_user(user: Str) -> Str {
   "USER " + user + "\r\n"
 }
 
-// ftp_command_pass formats a PASS command.
-// Complexity: O(1). Pure.
 /// ftp_command_pass formats a PASS command.
 /// Complexity: O(1). Pure.
 pub fn ftp_command_pass(pass: Str) -> Str {
   "PASS " + pass + "\r\n"
 }
 
-// ftp_command_retr formats a RETR command for a remote path.
-// Complexity: O(1). Pure.
 /// ftp_command_retr formats a RETR command for a remote path.
 /// Complexity: O(1). Pure.
 pub fn ftp_command_retr(path: Str) -> Str {
   "RETR " + path + "\r\n"
 }
 
-// ftp_command_stor formats a STOR command for a remote path.
-// Complexity: O(1). Pure.
 /// ftp_command_stor formats a STOR command for a remote path.
 /// Complexity: O(1). Pure.
 pub fn ftp_command_stor(path: Str) -> Str {
   "STOR " + path + "\r\n"
 }
 
-// ftp_command_list formats a LIST command with an optional path.
-// Complexity: O(1). Pure.
 /// ftp_command_list formats a LIST command with an optional path.
 /// Complexity: O(1). Pure.
 pub fn ftp_command_list(path: Str) -> Str {
@@ -62,33 +50,24 @@ pub fn ftp_command_list(path: Str) -> Str {
   "LIST " + path + "\r\n"
 }
 
-// ftp_command_quit formats a QUIT command.
-// Complexity: O(1). Pure.
 /// ftp_command_quit formats a QUIT command.
 /// Complexity: O(1). Pure.
 pub fn ftp_command_quit() -> Str {
   "QUIT\r\n"
 }
 
-// ftp_command_cwd formats a CWD command.
-// Complexity: O(1). Pure.
 /// ftp_command_cwd formats a CWD command.
 /// Complexity: O(1). Pure.
 pub fn ftp_command_cwd(dir: Str) -> Str {
   "CWD " + dir + "\r\n"
 }
 
-// ftp_command_type formats a TYPE command (A or I).
-// Complexity: O(1). Pure.
 /// ftp_command_type formats a TYPE command (A or I).
 /// Complexity: O(1). Pure.
 pub fn ftp_command_type(kind: Str) -> Str {
   "TYPE " + kind + "\r\n"
 }
 
-// ftp_parse_reply parses an FTP reply line like "220 Ready" into
-// (code, text). Returns None if the line does not start with a
-// 3-digit code. Complexity: O(1). Pure.
 /// ftp_parse_reply parses an FTP reply line like "220 Ready" into
 /// (code, text). Returns None if the line does not start with a
 /// 3-digit code. Complexity: O(1). Pure.
@@ -116,8 +95,6 @@ pub fn ftp_parse_reply(line: Str) -> Option[(Int, Str)] {
   Some((code, text))
 }
 
-// ftp_reply_is_success returns true for 2xx replies.
-// Complexity: O(1). Pure.
 /// ftp_reply_is_success returns true for 2xx replies.
 /// Complexity: O(1). Pure.
 pub fn ftp_reply_is_success(code: Int) -> Bool
@@ -126,8 +103,6 @@ pub fn ftp_reply_is_success(code: Int) -> Bool
   code >= 200 && code < 300
 }
 
-// ftp_reply_is_positive_preliminary returns true for 1xx replies.
-// Complexity: O(1). Pure.
 /// ftp_reply_is_positive_preliminary returns true for 1xx replies.
 /// Complexity: O(1). Pure.
 pub fn ftp_reply_is_positive_preliminary(code: Int) -> Bool

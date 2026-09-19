@@ -6,23 +6,20 @@ module xiom.collect.hamt
 
 // Depends on: none (pure)
 
-// ============================================================================
-// Hash array mapped trie (Int keys, Int values). A space-efficient persistent
-// map built on a trie of 32-way nodes using the hash of the key. Average
-// O(log_32 n) operations with fast structural sharing and cache locality.
-// Duplicate keys are rejected by insert.
-//
-// Flat-arena style (the established collect/ pattern -- tree.xi/graph.xi use
-// parallel Vec[Int]s because Vec-of-struct instantiations collide at startup
-// in combined programs). Every node owns 32 child slots in the flat `kids`
-// vector (`kids[i * 32 + slot]`), so table nodes and leaf nodes share one
-// uniform layout. Leaf nodes additionally carry the key, the value and the
-// full 64-bit hash of the key; `is_leaf[i]` distinguishes the two kinds.
-// The 5-bit window of the key hash at depth d selects the child slot, so a
-// path is at most 13 nodes deep (64 hash bits / 5 bits). Node 0 is always a
-// table node (the root).
-// ============================================================================
-
+/// Hash array mapped trie (Int keys, Int values). A space-efficient persistent
+/// map built on a trie of 32-way nodes using the hash of the key. Average
+/// O(log_32 n) operations with fast structural sharing and cache locality.
+/// Duplicate keys are rejected by insert.
+/// 
+/// Flat-arena style (the established collect/ pattern -- tree.xi/graph.xi use
+/// parallel Vec[Int]s because Vec-of-struct instantiations collide at startup
+/// in combined programs). Every node owns 32 child slots in the flat `kids`
+/// vector (`kids[i * 32 + slot]`), so table nodes and leaf nodes share one
+/// uniform layout. Leaf nodes additionally carry the key, the value and the
+/// full 64-bit hash of the key; `is_leaf[i]` distinguishes the two kinds.
+/// The 5-bit window of the key hash at depth d selects the child slot, so a
+/// path is at most 13 nodes deep (64 hash bits / 5 bits). Node 0 is always a
+/// table node (the root).
 pub type Hamt = {
   root: Int;
   size: Int;

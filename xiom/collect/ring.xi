@@ -6,16 +6,13 @@ module xiom.collect.ring
 
 // Depends on: none
 
-// ============================================================================
-// Bounded single-producer single-consumer ring buffer of Int elements.
-// Fixed `cap` slots; `head`/`tail` are monotonic counters, the slot index is
-// (counter % cap). When full, push returns false without blocking; when
-// empty, pop returns None. NOTE: the reference collect.queue SpscRing uses
-// AtomicInt counters; this module keeps the "Depends on: none" contract and
-// uses plain Int counters, which are exactly equivalent for the SPSC
-// single-threaded contract exercised by the smoke tests.
-// ============================================================================
-
+/// Bounded single-producer single-consumer ring buffer of Int elements.
+/// Fixed `cap` slots; `head`/`tail` are monotonic counters, the slot index is
+/// (counter % cap). When full, push returns false without blocking; when
+/// empty, pop returns None. NOTE: the reference collect.queue SpscRing uses
+/// AtomicInt counters; this module keeps the "Depends on: none" contract and
+/// uses plain Int counters, which are exactly equivalent for the SPSC
+/// single-threaded contract exercised by the smoke tests.
 pub type RingBuffer = {
   buf: Vec[Int];
   cap: Int;

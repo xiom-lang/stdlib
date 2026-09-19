@@ -13,10 +13,6 @@ module xiom.string.titlecase
 
 use xiom.string;
 
-// Converts `s` to title case: the first character of each whitespace-separated
-// word is uppercased and the remaining characters are lowercased.
-// Returns a new string with the same byte length as `s`.
-// Complexity: O(|s|).
 /// Converts `s` to title case: the first character of each whitespace-separated
 /// word is uppercased and the remaining characters are lowercased.
 /// Returns a new string with the same byte length as `s`.
@@ -27,9 +23,6 @@ pub fn str_titlecase(s: Str) -> Str
   return string.str_title_case(s);
 }
 
-// Converts each word of `s` to title case, exactly like `str_titlecase`.
-// Returns a new string with the same byte length as `s`.
-// Complexity: O(|s|).
 /// Converts each word of `s` to title case, exactly like `str_titlecase`.
 /// Returns a new string with the same byte length as `s`.
 /// Complexity: O(|s|).

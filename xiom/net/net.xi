@@ -36,7 +36,6 @@ const AF_INET: Int = 2;
 const SOCK_STREAM: Int = 1;
 const SOCK_DGRAM: Int = 2;
 
-// === TCP ===
 /// === TCP ===
 pub type TcpStream = { fd: Int; } derive[Clone]
 
@@ -170,10 +169,6 @@ pub fn TcpListener.accept(self) -> Result[(TcpStream, Str), NetError]
   }
 }
 
-// === HTTP ===
-// NOTE: named NetHttpResponse to keep the bare type leaf distinct from
-// xiom.net.http.HttpResponse (R44 same-leaf struct collision; both used to
-// inject as %struct.HttpResponse and clobbered each other's fields).
 /// === HTTP ===
 /// NOTE: named NetHttpResponse to keep the bare type leaf distinct from
 /// xiom.net.http.HttpResponse (R44 same-leaf struct collision; both used to
@@ -311,7 +306,6 @@ fn parse_http_response(raw: Str) -> Result[NetHttpResponse, NetError] {
   Ok(NetHttpResponse{ status: status; body: body; })
 }
 
-// === UDP ===
 /// === UDP ===
 pub type UdpSocket = { fd: Int; }
 
@@ -400,7 +394,6 @@ pub fn UdpSocket.close(self) -> Result[Unit, NetError] {
   Ok(())
 }
 
-// === DNS ===
 /// === DNS ===
 pub fn resolve_host(hostname: Str) -> Result[Vec[Str], NetError]
   requires: true
@@ -485,7 +478,6 @@ pub fn local_addr(port: Int) -> Result[Str, NetError]
   }
 }
 
-// === URL parsing ===
 /// === URL parsing ===
 pub type UrlParts = {
   scheme: Str;
@@ -586,7 +578,6 @@ pub fn parse_url(url: Str) -> Result[UrlParts, NetError] {
   })
 }
 
-// === HTTP methods ===
 /// === HTTP methods ===
 pub type HttpMethod = enum { GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS }
 

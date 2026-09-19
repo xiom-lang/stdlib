@@ -6,14 +6,11 @@ module xiom.collect.linkedhash
 
 // Depends on: none
 
-// ============================================================================
-// Hash map preserving insertion order of Int keys. Keys and values live in
-// two parallel Vec[Int]s in insertion order: putting an existing key updates
-// its value without moving it; putting a new key appends. `lhmap_first`/
-// `lhmap_last`/`lhmap_iter` read that order. Lookup is a linear scan (O(n)),
-// which keeps the API dependency-free; removal compacts the vectors.
-// ============================================================================
-
+/// Hash map preserving insertion order of Int keys. Keys and values live in
+/// two parallel Vec[Int]s in insertion order: putting an existing key updates
+/// its value without moving it; putting a new key appends. `lhmap_first`/
+/// `lhmap_last`/`lhmap_iter` read that order. Lookup is a linear scan (O(n)),
+/// which keeps the API dependency-free; removal compacts the vectors.
 pub type LhMap = {
   keys: Vec[Int];
   values: Vec[Int];

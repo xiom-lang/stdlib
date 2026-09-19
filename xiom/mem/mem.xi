@@ -41,14 +41,11 @@ pub fn drop[T](value: T)
   return;
 }
 
-// Size queries
-// Compiler intrinsic -- requires compiler support
 /// Size queries
 /// Compiler intrinsic -- requires compiler support
 pub fn size_of[T]() -> Int
   ensures: result > 0;
 
-// Compiler intrinsic -- requires compiler support
 /// Compiler intrinsic -- requires compiler support
 pub fn align_of[T]() -> Int
   ensures: result > 0;
@@ -67,17 +64,14 @@ pub fn min_align_of_val[T](value: &T) -> Int
   return align_of[T]();
 }
 
-// Zeroed memory -- all bytes set to zero
 /// Zeroed memory -- all bytes set to zero
 pub fn zeroed[T]() -> T
   ensures: true;
 
-// Uninitialized memory (unsafe -- reading before writing is UB)
 /// Uninitialized memory (unsafe -- reading before writing is UB)
 pub fn uninitialized[T]() -> T
   ensures: true;
 
-// Manually drop (defer cleanup)
 /// Manually drop (defer cleanup)
 pub type ManuallyDrop[T] = { value: T; }
 

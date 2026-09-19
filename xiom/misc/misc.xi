@@ -408,7 +408,6 @@ pub fn truncate(s: Str, max_len: Int) -> Str
 // numerals, ordinal/pluralize, units. ASCII-oriented where noted.
 // ============================================================================
 
-// Damerau-Levenshtein distance (insert/delete/substitute/transpose), O(n*m).
 /// Damerau-Levenshtein distance (insert/delete/substitute/transpose), O(n*m).
 pub fn damerau_levenshtein_distance(a: Str, b: Str) -> Int {
   var la = a.len();
@@ -449,7 +448,6 @@ pub fn damerau_levenshtein_distance(a: Str, b: Str) -> Int {
   return dp[la * cols + lb];
 }
 
-// Jaro similarity in [0, 1] (ASCII-aware matching window).
 /// Jaro similarity in [0, 1] (ASCII-aware matching window).
 pub fn jaro_similarity(a: Str, b: Str) -> Float64 {
   var la = a.len();
@@ -511,7 +509,6 @@ pub fn jaro_similarity(a: Str, b: Str) -> Float64 {
   return jaro;
 }
 
-// Jaro-Winkler similarity (prefix bonus up to 4 chars, scale 0.1).
 /// Jaro-Winkler similarity (prefix bonus up to 4 chars, scale 0.1).
 pub fn jaro_winkler_similarity(a: Str, b: Str) -> Float64 {
   var j = jaro_similarity(a, b);
@@ -529,7 +526,6 @@ pub fn jaro_winkler_similarity(a: Str, b: Str) -> Float64 {
   return j + pf * 0.1 * (1.0 - j);
 }
 
-// Hamming distance; -1 if lengths differ.
 /// Hamming distance; -1 if lengths differ.
 pub fn hamming_distance(a: Str, b: Str) -> Int {
   if a.len() != b.len() { return -1; }
@@ -542,7 +538,6 @@ pub fn hamming_distance(a: Str, b: Str) -> Int {
   return d;
 }
 
-// Longest common subsequence (not substring), O(n*m).
 /// Longest common subsequence (not substring), O(n*m).
 pub fn longest_common_subsequence(a: Str, b: Str) -> Str {
   var la = a.len();
@@ -585,7 +580,6 @@ pub fn longest_common_subsequence(a: Str, b: Str) -> Str {
   return result;
 }
 
-// Roman numerals for 1..3999; "" outside the range.
 /// Roman numerals for 1..3999; "" outside the range.
 pub fn to_roman(n: Int) -> Str
   requires: n >= 1
@@ -613,7 +607,6 @@ pub fn to_roman(n: Int) -> Str
   return result;
 }
 
-// Parse a Roman numeral; 0 if invalid.
 /// Parse a Roman numeral; 0 if invalid.
 pub fn from_roman(s: Str) -> Int {
   var total = 0;
@@ -754,7 +747,6 @@ pub fn to_kebab_case(s: Str) -> Str {
   return result;
 }
 
-// Ordinal suffix: 1st, 2nd, 3rd, 11th, 21st, ...
 /// Ordinal suffix: 1st, 2nd, 3rd, 11th, 21st, ...
 pub fn ordinal(n: Int) -> Str {
   var suffix = "th";
@@ -768,7 +760,6 @@ pub fn ordinal(n: Int) -> Str {
   return xiom.string.str_concat(xiom.core.to_string(n), suffix);
 }
 
-// Naive pluralize: count == 1 keeps the singular; otherwise +s / +es / +ies.
 /// Naive pluralize: count == 1 keeps the singular; otherwise +s / +es / +ies.
 pub fn pluralize(s: Str, count: Int) -> Str {
   if count == 1 { return s; }
@@ -802,7 +793,6 @@ pub fn pluralize(s: Str, count: Int) -> Str {
   return xiom.string.str_concat(s, "s");
 }
 
-// Anagrams (ASCII case-insensitive letter counts).
 /// Anagrams (ASCII case-insensitive letter counts).
 pub fn is_anagram(a: Str, b: Str) -> Bool {
   var counts = Vec[Int].new();
@@ -830,8 +820,7 @@ pub fn is_anagram(a: Str, b: Str) -> Bool {
   return true;
 }
 
-// ---- Units ----
-
+/// ---- Units ----
 pub fn celsius_to_fahrenheit(c: Float64) -> Float64 {
   return c * 1.8 + 32.0;
 }
@@ -864,8 +853,6 @@ pub fn km_to_miles(km: Float64) -> Float64 {
   return km / 1.609344;
 }
 
-// Human-readable byte size: "512 B", "1.5 KB", "3.2 MB", ...
-// Integer math only (the runtime lacks decimal float formatting).
 /// Human-readable byte size: "512 B", "1.5 KB", "3.2 MB", ...
 /// Integer math only (the runtime lacks decimal float formatting).
 pub fn human_size(bytes: Int) -> Str {

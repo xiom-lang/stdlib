@@ -18,7 +18,6 @@ module xiom.stats.statistics
 
 use xiom.math;
 
-// Arithmetic mean; 0 for an empty sample. Complexity: O(n).
 /// Arithmetic mean; 0 for an empty sample. Complexity: O(n).
 pub fn mean(data: &Vec[Float64]) -> Float64 {
   var n = data.len();
@@ -32,8 +31,6 @@ pub fn mean(data: &Vec[Float64]) -> Float64 {
   return s / (n as Float64);
 }
 
-// Middle value of the sorted sample; average of the two middles when even.
-// NaN for an empty sample. Complexity: O(n log n).
 /// Middle value of the sorted sample; average of the two middles when even.
 /// NaN for an empty sample. Complexity: O(n log n).
 pub fn median(data: &Vec[Float64]) -> Float64 {
@@ -46,8 +43,6 @@ pub fn median(data: &Vec[Float64]) -> Float64 {
   return 0.5 * (s[n / 2 - 1] + s[n / 2]);
 }
 
-// Most frequently occurring value. NaN for an empty sample; the first mode
-// wins ties (documented). Complexity: O(n^2).
 /// Most frequently occurring value. NaN for an empty sample; the first mode
 /// wins ties (documented). Complexity: O(n^2).
 pub fn mode(data: &Vec[Float64]) -> Option[Float64] {
@@ -76,7 +71,6 @@ pub fn mode(data: &Vec[Float64]) -> Option[Float64] {
   return Option[Float64]{ is_some: true, value: best };
 }
 
-// Sample variance (n - 1); 0 for fewer than 2 samples. Complexity: O(n).
 /// Sample variance (n - 1); 0 for fewer than 2 samples. Complexity: O(n).
 pub fn variance(data: &Vec[Float64]) -> Float64 {
   var n = data.len();
@@ -92,7 +86,6 @@ pub fn variance(data: &Vec[Float64]) -> Float64 {
   return s / ((n - 1) as Float64);
 }
 
-// Population variance (n); 0 for an empty sample. Complexity: O(n).
 /// Population variance (n); 0 for an empty sample. Complexity: O(n).
 pub fn variance_pop(data: &Vec[Float64]) -> Float64 {
   var n = data.len();
@@ -108,19 +101,16 @@ pub fn variance_pop(data: &Vec[Float64]) -> Float64 {
   return s / (n as Float64);
 }
 
-// Sample standard deviation. Complexity: O(n).
 /// Sample standard deviation. Complexity: O(n).
 pub fn stddev(data: &Vec[Float64]) -> Float64 {
   return math.sqrt(variance(data));
 }
 
-// Population standard deviation. Complexity: O(n).
 /// Population standard deviation. Complexity: O(n).
 pub fn stddev_pop(data: &Vec[Float64]) -> Float64 {
   return math.sqrt(variance_pop(data));
 }
 
-// Range (max - min); 0 for an empty sample. Complexity: O(n).
 /// Range (max - min); 0 for an empty sample. Complexity: O(n).
 pub fn range(data: &Vec[Float64]) -> Float64 {
   var n = data.len();
@@ -136,8 +126,6 @@ pub fn range(data: &Vec[Float64]) -> Float64 {
   return mx - mn;
 }
 
-// Interquartile range (Q3 - Q1). NaN for fewer than 2 samples.
-// Complexity: O(n log n).
 /// Interquartile range (Q3 - Q1). NaN for fewer than 2 samples.
 /// Complexity: O(n log n).
 pub fn iqr(data: &Vec[Float64]) -> Float64 {
@@ -146,8 +134,6 @@ pub fn iqr(data: &Vec[Float64]) -> Float64 {
   return q[2] - q[0];
 }
 
-// Quartiles [Q1, Q2, Q3] by linear interpolation. Empty for an empty sample.
-// Complexity: O(n log n).
 /// Quartiles [Q1, Q2, Q3] by linear interpolation. Empty for an empty sample.
 /// Complexity: O(n log n).
 pub fn quartiles(data: &Vec[Float64]) -> Vec[Float64] {
@@ -164,8 +150,6 @@ pub fn quartiles(data: &Vec[Float64]) -> Vec[Float64] {
   return out;
 }
 
-// p-th percentile by linear interpolation (p in [0, 100]). NaN for invalid p.
-// Complexity: O(n log n).
 /// p-th percentile by linear interpolation (p in [0, 100]). NaN for invalid p.
 /// Complexity: O(n log n).
 pub fn percentile(data: &Vec[Float64], p: Float64) -> Float64 {
@@ -176,7 +160,6 @@ pub fn percentile(data: &Vec[Float64], p: Float64) -> Float64 {
   return _quantile_sorted(&s, p / 100.0);
 }
 
-// Standardized third central moment. Complexity: O(n).
 /// Standardized third central moment. Complexity: O(n).
 pub fn skewness(data: &Vec[Float64]) -> Float64 {
   var n = data.len();
@@ -197,7 +180,6 @@ pub fn skewness(data: &Vec[Float64]) -> Float64 {
   return (m3 / (n as Float64)) / denom;
 }
 
-// Excess kurtosis (fourth central moment, zero for normal). Complexity: O(n).
 /// Excess kurtosis (fourth central moment, zero for normal). Complexity: O(n).
 pub fn kurtosis(data: &Vec[Float64]) -> Float64 {
   var n = data.len();
@@ -217,7 +199,6 @@ pub fn kurtosis(data: &Vec[Float64]) -> Float64 {
   return (m4 / (n as Float64)) / (v * v) - 3.0;
 }
 
-// Sample covariance of x and y. Complexity: O(n).
 /// Sample covariance of x and y. Complexity: O(n).
 pub fn covariance(x: &Vec[Float64], y: &Vec[Float64]) -> Float64 {
   var n = x.len();
@@ -234,7 +215,6 @@ pub fn covariance(x: &Vec[Float64], y: &Vec[Float64]) -> Float64 {
   return s / ((n - 1) as Float64);
 }
 
-// Pearson correlation coefficient. Complexity: O(n).
 /// Pearson correlation coefficient. Complexity: O(n).
 pub fn correlation(x: &Vec[Float64], y: &Vec[Float64]) -> Float64 {
   var n = x.len();
@@ -259,8 +239,6 @@ pub fn correlation(x: &Vec[Float64], y: &Vec[Float64]) -> Float64 {
   return num / denom;
 }
 
-// Spearman rank correlation: the Pearson correlation of the ranks.
-// Complexity: O(n log n).
 /// Spearman rank correlation: the Pearson correlation of the ranks.
 /// Complexity: O(n log n).
 pub fn spearman_correlation(x: &Vec[Float64], y: &Vec[Float64]) -> Float64 {
@@ -272,8 +250,6 @@ pub fn spearman_correlation(x: &Vec[Float64], y: &Vec[Float64]) -> Float64 {
   return correlation(&rx, &ry);
 }
 
-// Kendall tau-b rank correlation (concordant minus discordant pairs).
-// Complexity: O(n^2).
 /// Kendall tau-b rank correlation (concordant minus discordant pairs).
 /// Complexity: O(n^2).
 pub fn kendall_correlation(x: &Vec[Float64], y: &Vec[Float64]) -> Float64 {
@@ -304,7 +280,6 @@ pub fn kendall_correlation(x: &Vec[Float64], y: &Vec[Float64]) -> Float64 {
   return ((concordant - discordant) as Float64) / total;
 }
 
-// Root mean square of the sample; 0 for an empty sample. Complexity: O(n).
 /// Root mean square of the sample; 0 for an empty sample. Complexity: O(n).
 pub fn rms(data: &Vec[Float64]) -> Float64 {
   var n = data.len();
@@ -318,7 +293,6 @@ pub fn rms(data: &Vec[Float64]) -> Float64 {
   return math.sqrt(s / (n as Float64));
 }
 
-// Geometric mean via log-space; NaN for non-positive values. Complexity: O(n).
 /// Geometric mean via log-space; NaN for non-positive values. Complexity: O(n).
 pub fn geometric_mean(data: &Vec[Float64]) -> Float64 {
   var n = data.len();
@@ -333,7 +307,6 @@ pub fn geometric_mean(data: &Vec[Float64]) -> Float64 {
   return math.exp(s / (n as Float64));
 }
 
-// Harmonic mean; NaN for non-positive values. Complexity: O(n).
 /// Harmonic mean; NaN for non-positive values. Complexity: O(n).
 pub fn harmonic_mean(data: &Vec[Float64]) -> Float64 {
   var n = data.len();
@@ -349,7 +322,6 @@ pub fn harmonic_mean(data: &Vec[Float64]) -> Float64 {
   return (n as Float64) / s;
 }
 
-// Mean weighted by weights. Complexity: O(n).
 /// Mean weighted by weights. Complexity: O(n).
 pub fn weighted_mean(data: &Vec[Float64], weights: &Vec[Float64]) -> Float64 {
   var n = data.len();
@@ -366,8 +338,6 @@ pub fn weighted_mean(data: &Vec[Float64], weights: &Vec[Float64]) -> Float64 {
   return num / den;
 }
 
-// Mean after removing the fraction `trim` from each sorted tail.
-// NaN for invalid trim or an over-trimmed sample. Complexity: O(n log n).
 /// Mean after removing the fraction `trim` from each sorted tail.
 /// NaN for invalid trim or an over-trimmed sample. Complexity: O(n log n).
 pub fn trimmed_mean(data: &Vec[Float64], trim: Float64) -> Float64 {
@@ -386,8 +356,6 @@ pub fn trimmed_mean(data: &Vec[Float64], trim: Float64) -> Float64 {
   return sum / ((n - 2 * k) as Float64);
 }
 
-// Mean with the fraction `trim` of each tail winsorized to the tail values.
-// NaN for invalid trim. Complexity: O(n log n).
 /// Mean with the fraction `trim` of each tail winsorized to the tail values.
 /// NaN for invalid trim. Complexity: O(n log n).
 pub fn winsorized_mean(data: &Vec[Float64], trim: Float64) -> Float64 {
@@ -411,8 +379,6 @@ pub fn winsorized_mean(data: &Vec[Float64], trim: Float64) -> Float64 {
   return sum / (n as Float64);
 }
 
-// Median absolute deviation from the median. NaN for an empty sample.
-// Complexity: O(n log n).
 /// Median absolute deviation from the median. NaN for an empty sample.
 /// Complexity: O(n log n).
 pub fn mad(data: &Vec[Float64]) -> Float64 {
@@ -430,7 +396,6 @@ pub fn mad(data: &Vec[Float64]) -> Float64 {
   return median(&dev);
 }
 
-// Standardized score (x - mean) / stddev. Complexity: O(1).
 /// Standardized score (x - mean) / stddev. Complexity: O(1).
 pub fn z_score(x: Float64, mean: Float64, stddev: Float64) -> Float64 {
   if stddev == 0.0 { return 0.0 / 0.0; }

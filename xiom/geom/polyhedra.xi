@@ -19,8 +19,6 @@ module xiom.geom.polyhedra
 
 use xiom.math;
 
-// Vertices of a cube centered at the origin with the given side length.
-// Returns 8 vertices, each (x, y, z). O(1).
 /// Vertices of a cube centered at the origin with the given side length.
 /// Returns 8 vertices, each (x, y, z). O(1).
 pub fn cube_vertices(size: Float64) -> Vec[Vec[Float64]] {
@@ -44,7 +42,6 @@ pub fn cube_vertices(size: Float64) -> Vec[Vec[Float64]] {
   return out;
 }
 
-// Face index list for cube_vertices: 12 triangles (3 indices each). O(1).
 /// Face index list for cube_vertices: 12 triangles (3 indices each). O(1).
 pub fn cube_faces() -> Vec[Vec[Int]] {
   var out = Vec[Vec[Int]].new();
@@ -72,8 +69,6 @@ pub fn cube_faces() -> Vec[Vec[Int]] {
   return out;
 }
 
-// UV-sphere vertex grid: (slices + 1) x (stacks + 1) vertices of the form
-// (x, y, z). O(slices * stacks).
 /// UV-sphere vertex grid: (slices + 1) x (stacks + 1) vertices of the form
 /// (x, y, z). O(slices * stacks).
 pub fn sphere_vertices(radius: Float64, slices: Int, stacks: Int) -> Vec[Vec[Float64]] {
@@ -99,8 +94,6 @@ pub fn sphere_vertices(radius: Float64, slices: Int, stacks: Int) -> Vec[Vec[Flo
   return out;
 }
 
-// Unit icosahedron vertices (12) in the standard layout:
-// (+-1, +-phi, 0), (0, +-1, +-phi), (+-phi, 0, +-1). O(1).
 /// Unit icosahedron vertices (12) in the standard layout:
 /// (+-1, +-phi, 0), (0, +-1, +-phi), (+-phi, 0, +-1). O(1).
 pub fn icosahedron_vertices() -> Vec[Vec[Float64]] {
@@ -131,7 +124,6 @@ pub fn icosahedron_vertices() -> Vec[Vec[Float64]] {
   return out;
 }
 
-// Icosahedron faces: 20 triangles referencing icosahedron_vertices. O(1).
 /// Icosahedron faces: 20 triangles referencing icosahedron_vertices. O(1).
 pub fn icosahedron_faces() -> Vec[Vec[Int]] {
   var out = Vec[Vec[Int]].new();
@@ -168,7 +160,6 @@ pub fn icosahedron_faces() -> Vec[Vec[Int]] {
   return out;
 }
 
-// Unit tetrahedron vertices (4). O(1).
 /// Unit tetrahedron vertices (4). O(1).
 pub fn tetrahedron_vertices() -> Vec[Vec[Float64]] {
   var out = Vec[Vec[Float64]].new();
@@ -189,7 +180,6 @@ pub fn tetrahedron_vertices() -> Vec[Vec[Float64]] {
   return out;
 }
 
-// Unit octahedron vertices (6). O(1).
 /// Unit octahedron vertices (6). O(1).
 pub fn octahedron_vertices() -> Vec[Vec[Float64]] {
   var out = Vec[Vec[Float64]].new();
@@ -212,7 +202,6 @@ pub fn octahedron_vertices() -> Vec[Vec[Float64]] {
   return out;
 }
 
-// Unit dodecahedron vertices (20). O(1).
 /// Unit dodecahedron vertices (20). O(1).
 pub fn dodecahedron_vertices() -> Vec[Vec[Float64]] {
   var out = Vec[Vec[Float64]].new();
@@ -278,8 +267,6 @@ pub fn dodecahedron_vertices() -> Vec[Vec[Float64]] {
   return out;
 }
 
-// Convex hull polygon of 2D points (monotone chain). The hull is returned
-// without a duplicated closing vertex. O(n log n).
 /// Convex hull polygon of 2D points (monotone chain). The hull is returned
 /// without a duplicated closing vertex. O(n log n).
 pub fn convex_hull_2d(points: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {
@@ -370,9 +357,6 @@ pub fn convex_hull_2d(points: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {
   return out;
 }
 
-// Convex hull vertices of a 3D point cloud. Every oriented triangle (i, j, k)
-// with all other points on (or behind) its plane is emitted as a hull face.
-// O(n^4); exact for small point sets.
 /// Convex hull vertices of a 3D point cloud. Every oriented triangle (i, j, k)
 /// with all other points on (or behind) its plane is emitted as a hull face.
 /// O(n^4); exact for small point sets.

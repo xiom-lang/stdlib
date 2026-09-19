@@ -121,18 +121,24 @@ the single-param tranche is currently a known compiler failure
 coverage. `-Detail` lists per-file rows; `-DumpBaseline <json>` records a
 ratchet floor (`tools/doc_baseline2.json`); `-RatchetFile <json>` fails when
 any directory or the global count drops below it.
-`tools/doc_promote.ps1` converts the contiguous plain `//` comment block
-directly above a pub declaration into `///` (dry-run by default, `-Apply` to
-write; skips banners/separators; preserves LF/CRLF and UTF-8 without BOM).
+`tools/doc_promote.ps1` converts the comment block directly above a pub
+declaration into `///` (dry-run by default, `-Apply` to write; skips
+banners/separators; preserves LF/CRLF and UTF-8 without BOM). It handles
+`// ----` banner-framed prose (bits/sort/ptr pattern) by promoting the prose
+and dropping the framing, and `-Dedupe` removes plain `//` lines duplicated
+by an adjacent identical `///` run.
 
 ```powershell
 pwsh tools/doc_scan.ps1 -Detail
 pwsh tools/doc_promote.ps1 -Detail
 pwsh tools/doc_promote.ps1 -Apply
-pwsh tools/doc_scan.ps1 -RatchetFile tools/doc_baseline2.json
+pwsh tools/doc_promote.ps1 -Dedupe -Apply
+pwsh tools/doc_scan.ps1 -RatchetFile tools/doc_baseline3.json
 ```
 
-State (2026-09-18): 5,793/6,984 documented (82.9%; was 50.4% before the
-promotion of 2,223 attached comment blocks). Remaining prose-less surface is
-concentrated in `iter/iter.xi` (136), `num` (119), `os` (85), `crypto` (72),
-`core` (68), `sort/sort.xi` (20), `bits/bits.xi` (28), `ptr/ptr.xi` (19).
+State (2026-09-19): 5,981/6,984 documented (85.6%). The banner promotion
+fixed bits (100%), sort (83%), search (95%) and parts of iter/crypto; the
+first promoter pass had duplicated 4,711 comment lines, all removed by
+`-Dedupe`. Remaining prose-less surface is concentrated in `iter/iter.xi`
+(133), `num` (~119), `os` (~85), `core` (~68), `ptr/ptr.xi` (19), plus
+smaller tails.

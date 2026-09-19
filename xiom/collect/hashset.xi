@@ -6,18 +6,15 @@ module xiom.collect.hashset
 
 // Depends on: none
 
-// ============================================================================
-// Hash set of unique Int elements using open addressing (linear probing) with
-// a power-of-two table. A parallel `used` flag vector allows every Int value
-// (including INT_MIN) as an element. The table doubles at 50% load. Hashes
-// are multiplicative and use shifts/multiplies plus a modulo index, so the
-// compiler's large-Int AND bug (BUG 25 #7) is avoided. `hashset_remove`
-// rebuilds the table (correct under tombstones; O(n) but simple and safe).
-// NOTE: the API parameter type is `HashSet`: naming it `Set` collides with
-// the `xiom.collections.Set[T]` generic and crashes the binary at startup
-// (0xC0000005); the fn names and value signatures match the frozen spec.
-// ============================================================================
-
+/// Hash set of unique Int elements using open addressing (linear probing) with
+/// a power-of-two table. A parallel `used` flag vector allows every Int value
+/// (including INT_MIN) as an element. The table doubles at 50% load. Hashes
+/// are multiplicative and use shifts/multiplies plus a modulo index, so the
+/// compiler's large-Int AND bug (BUG 25 #7) is avoided. `hashset_remove`
+/// rebuilds the table (correct under tombstones; O(n) but simple and safe).
+/// NOTE: the API parameter type is `HashSet`: naming it `Set` collides with
+/// the `xiom.collections.Set[T]` generic and crashes the binary at startup
+/// (0xC0000005); the fn names and value signatures match the frozen spec.
 pub type HashSet = {
   slots: Vec[Int];
   used: Vec[Int];

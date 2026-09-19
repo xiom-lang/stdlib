@@ -41,11 +41,6 @@ pub fn get[T, const N: Int](arr: &[N]T, index: Int) -> Option[T]
   Some(arr[index])
 }
 
-// Value-returning read (like Vec.get). The Option<&T> reference form is
-// not representable on this compiler: the mono'd body boxes the element
-// VALUE into the Option payload while call sites auto-deref the payload
-// as a pointer (inttoptr of the value -> AV). All consumers must use
-// the value form.
 /// Value-returning read (like Vec.get). The Option<&T> reference form is
 /// not representable on this compiler: the mono'd body boxes the element
 /// VALUE into the Option payload while call sites auto-deref the payload

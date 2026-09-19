@@ -20,8 +20,6 @@ extern "C" {
   fn xiom_getpid() -> Int64;
 }
 
-// sysinfo_cpu_count returns the number of logical CPUs.
-// Complexity: O(1) syscall.
 /// sysinfo_cpu_count returns the number of logical CPUs.
 /// Complexity: O(1) syscall.
 pub fn sysinfo_cpu_count() -> Int {
@@ -32,8 +30,6 @@ pub fn sysinfo_cpu_count() -> Int {
   count as Int
 }
 
-// sysinfo_total_memory returns total system memory in bytes.
-// Complexity: O(1) syscall.
 /// sysinfo_total_memory returns total system memory in bytes.
 /// Complexity: O(1) syscall.
 pub fn sysinfo_total_memory() -> Int {
@@ -41,8 +37,6 @@ pub fn sysinfo_total_memory() -> Int {
   m as Int
 }
 
-// sysinfo_free_memory returns free system memory in bytes.
-// Complexity: O(1) syscall.
 /// sysinfo_free_memory returns free system memory in bytes.
 /// Complexity: O(1) syscall.
 pub fn sysinfo_free_memory() -> Int {
@@ -50,8 +44,6 @@ pub fn sysinfo_free_memory() -> Int {
   m as Int
 }
 
-// sysinfo_total_memory_mb returns total system memory in MiB.
-// Complexity: O(1).
 /// sysinfo_total_memory_mb returns total system memory in MiB.
 /// Complexity: O(1).
 pub fn sysinfo_total_memory_mb() -> Int {
@@ -59,8 +51,6 @@ pub fn sysinfo_total_memory_mb() -> Int {
   total / (1024 * 1024)
 }
 
-// sysinfo_free_memory_mb returns free system memory in MiB.
-// Complexity: O(1).
 /// sysinfo_free_memory_mb returns free system memory in MiB.
 /// Complexity: O(1).
 pub fn sysinfo_free_memory_mb() -> Int {
@@ -68,16 +58,12 @@ pub fn sysinfo_free_memory_mb() -> Int {
   free / (1024 * 1024)
 }
 
-// sysinfo_page_size returns the system page size in bytes (4096 on the
-// supported runtimes). Complexity: O(1).
 /// sysinfo_page_size returns the system page size in bytes (4096 on the
 /// supported runtimes). Complexity: O(1).
 pub fn sysinfo_page_size() -> Int {
   4096
 }
 
-// sysinfo_hostname returns the system hostname from the COMPUTERNAME
-// (Windows) or HOSTNAME (Unix) environment variable. Complexity: O(1).
 /// sysinfo_hostname returns the system hostname from the COMPUTERNAME
 /// (Windows) or HOSTNAME (Unix) environment variable. Complexity: O(1).
 pub fn sysinfo_hostname() -> Result[Str, Str] {
@@ -104,24 +90,18 @@ pub fn sysinfo_hostname() -> Result[Str, Str] {
   Err("sysinfo_hostname: no hostname variable available")
 }
 
-// sysinfo_os_name returns the OS name.
-// Complexity: O(1). Pure.
 /// sysinfo_os_name returns the OS name.
 /// Complexity: O(1). Pure.
 pub fn sysinfo_os_name() -> Str {
   env.OS
 }
 
-// sysinfo_os_version returns a best-effort OS version string derived
-// from environment constants. Complexity: O(1). Pure.
 /// sysinfo_os_version returns a best-effort OS version string derived
 /// from environment constants. Complexity: O(1). Pure.
 pub fn sysinfo_os_version() -> Str {
   env.OS
 }
 
-// sysinfo_process_id returns the current process ID.
-// Complexity: O(1) syscall.
 /// sysinfo_process_id returns the current process ID.
 /// Complexity: O(1) syscall.
 pub fn sysinfo_process_id() -> Int {
@@ -129,8 +109,6 @@ pub fn sysinfo_process_id() -> Int {
   pid as Int
 }
 
-// sysinfo_user_name returns the current user name from the USERNAME
-// (Windows) or USER (Unix) environment variable. Complexity: O(1).
 /// sysinfo_user_name returns the current user name from the USERNAME
 /// (Windows) or USER (Unix) environment variable. Complexity: O(1).
 pub fn sysinfo_user_name() -> Option[Str] {
@@ -147,8 +125,6 @@ pub fn sysinfo_user_name() -> Option[Str] {
   env.var_opt("USER")
 }
 
-// sysinfo_cpu_model returns a CPU model string. The runtime does not
-// expose CPUID; always returns "unknown". Complexity: O(1).
 /// sysinfo_cpu_model returns a CPU model string. The runtime does not
 /// expose CPUID; always returns "unknown". Complexity: O(1).
 pub fn sysinfo_cpu_model() -> Str {

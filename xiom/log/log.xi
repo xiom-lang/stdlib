@@ -85,7 +85,6 @@ fn write_entry(entry: LogEntry) {
   };
 }
 
-// Core logging
 /// Core logging
 pub fn trace(msg: Str)
   requires: msg.len() >= 0
@@ -135,7 +134,6 @@ pub fn fatal(msg: Str)
   };
 }
 
-// Structured logging (key=value pairs)
 /// Structured logging (key=value pairs)
 pub fn trace_with(msg: Str, data: Map[Str, Str])
   requires: msg.len() >= 0
@@ -177,7 +175,6 @@ pub fn error_with(msg: Str, data: Map[Str, Str])
   };
 }
 
-// Configuration
 /// Configuration
 pub fn set_level(level: LogLevel) {
   current_level = level;
@@ -208,7 +205,6 @@ pub fn set_output_color(enabled: Bool) {
   color_mode = enabled;
 }
 
-// Query
 /// Query
 pub fn entries_since(instant: Instant) -> Vec[LogEntry]
   ensures: result.len() >= 0

@@ -6,13 +6,10 @@ module xiom.collect.immutable
 
 // Depends on: none
 
-// ============================================================================
-// Persistent (copy-on-write) vector and map retaining prior versions.
-// Every update copies the backing arena into a fresh Vec before mutating, so
-// any caller holding an older PVec/PMap value still observes the version it
-// captured. Int elements; accessors return Option[Int].
-// ============================================================================
-
+/// Persistent (copy-on-write) vector and map retaining prior versions.
+/// Every update copies the backing arena into a fresh Vec before mutating, so
+/// any caller holding an older PVec/PMap value still observes the version it
+/// captured. Int elements; accessors return Option[Int].
 pub type PVec = {
   items: Vec[Int];
 }

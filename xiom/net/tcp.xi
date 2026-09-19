@@ -38,25 +38,18 @@ fn str_to_int(s: Str) -> Int {
   result
 }
 
-// tcp_validate_port returns true if p is a valid TCP port (1-65535).
-// Complexity: O(1). Pure.
 /// tcp_validate_port returns true if p is a valid TCP port (1-65535).
 /// Complexity: O(1). Pure.
 pub fn tcp_validate_port(p: Int) -> Bool {
   p > 0 && p <= 65535
 }
 
-// tcp_is_valid_port is an alias for tcp_validate_port.
-// Complexity: O(1). Pure.
 /// tcp_is_valid_port is an alias for tcp_validate_port.
 /// Complexity: O(1). Pure.
 pub fn tcp_is_valid_port(p: Int) -> Bool {
   tcp_validate_port(p)
 }
 
-// tcp_parse_endpoint splits a "host:port" string into (host, port).
-// Returns None if no colon or a malformed port is present. The host may
-// be empty (an empty host string is rejected). Complexity: O(n). Pure.
 /// tcp_parse_endpoint splits a "host:port" string into (host, port).
 /// Returns None if no colon or a malformed port is present. The host may
 /// be empty (an empty host string is rejected). Complexity: O(n). Pure.
@@ -88,8 +81,6 @@ pub fn tcp_parse_endpoint(s: Str) -> Option[(Str, Int)] {
   Some((host, port))
 }
 
-// tcp_format_endpoint builds a "host:port" string.
-// Complexity: O(1). Pure.
 /// tcp_format_endpoint builds a "host:port" string.
 /// Complexity: O(1). Pure.
 pub fn tcp_format_endpoint(host: Str, port: Int) -> Str {

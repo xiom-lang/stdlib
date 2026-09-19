@@ -719,8 +719,6 @@ pub fn soundex(word: Str) -> Str {
 // 2026-08-11 additions: Jaccard, LCP/LCSuffix, n-gram extraction
 // ============================================================================
 
-// All contiguous n-grams of `s` (n = 1 -> single chars). Empty input or
-// n < 1 -> empty Vec. O(len) with O(len) output.
 /// All contiguous n-grams of `s` (n = 1 -> single chars). Empty input or
 /// n < 1 -> empty Vec. O(len) with O(len) output.
 pub fn ngram_extract(s: Str, n: Int) -> Vec[Str] {
@@ -756,9 +754,6 @@ fn _str_eq(a: Str, b: Str) -> Bool {
   return true;
 }
 
-// Jaccard similarity over n-grams: |A & B| / |A | B| in Float64 (0 when
-// both inputs have no n-grams, 1 when identical). O(|a|-|b|) naive set
-// comparison -- the compiler's Set is not usable for Str elements here.
 /// Jaccard similarity over n-grams: |A & B| / |A | B| in Float64 (0 when
 /// both inputs have no n-grams, 1 when identical). O(|a|-|b|) naive set
 /// comparison -- the compiler's Set is not usable for Str elements here.
@@ -791,7 +786,6 @@ pub fn jaccard_similarity(a: Str, b: Str, n: Int) -> Float64 {
   return xiom.convert.int_to_float(inter) / xiom.convert.int_to_float(union);
 }
 
-// Length of the longest common prefix of a and b. O(min(|a|,|b|)).
 /// Length of the longest common prefix of a and b. O(min(|a|,|b|)).
 pub fn longest_common_prefix(a: Str, b: Str) -> Int {
   var la = xiom.string.str_len(a);
@@ -808,7 +802,6 @@ pub fn longest_common_prefix(a: Str, b: Str) -> Int {
   return i;
 }
 
-// Length of the longest common suffix of a and b. O(min(|a|,|b|)).
 /// Length of the longest common suffix of a and b. O(min(|a|,|b|)).
 pub fn longest_common_suffix(a: Str, b: Str) -> Int {
   var la = xiom.string.str_len(a);

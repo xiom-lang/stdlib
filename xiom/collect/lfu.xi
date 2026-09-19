@@ -6,18 +6,15 @@ module xiom.collect.lfu
 
 // Depends on: none
 
-// ============================================================================
-// Least-frequently-used cache with Int keys and values, evicting the least
-// frequently accessed entry when full.
-//
-// Flat-arena style. `keys`/`values`/`counts` are parallel vectors; every
-// access bumps the entry's frequency. `seq` is an insertion-sequence vector
-// used as a deterministic tie-break: when several keys share the lowest
-// frequency, the least recently inserted one is evicted first. `next_seq`
-// hands out increasing sequence numbers. `lfu_get` / `lfu_put` increase the
-// frequency of the touched key (a get on a hit counts as an access).
-// ============================================================================
-
+/// Least-frequently-used cache with Int keys and values, evicting the least
+/// frequently accessed entry when full.
+/// 
+/// Flat-arena style. `keys`/`values`/`counts` are parallel vectors; every
+/// access bumps the entry's frequency. `seq` is an insertion-sequence vector
+/// used as a deterministic tie-break: when several keys share the lowest
+/// frequency, the least recently inserted one is evicted first. `next_seq`
+/// hands out increasing sequence numbers. `lfu_get` / `lfu_put` increase the
+/// frequency of the touched key (a get on a hit counts as an access).
 pub type LfuCache = {
   capacity: Int;
   keys: Vec[Int];

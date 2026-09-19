@@ -11,7 +11,6 @@ pub interface Into[T] { fn into(self) -> T; }
 pub interface TryFrom[T] { fn try_from(value: T) -> Result<Self, Str>; }
 pub interface TryInto[T] { fn try_into(self) -> Result<T, Str>; }
 
-// 8B/M9: Parse a value from a string
 /// 8B/M9: Parse a value from a string
 pub interface FromStr {
   fn from_str(s: Str) -> Result<Self, Str>
@@ -20,12 +19,10 @@ pub interface FromStr {
   ;
 }
 
-// Identity conversion
 /// Identity conversion
 pub fn identity[T](x: T) -> T
 { x }
 
-// Common conversions
 /// Common conversions
 pub fn int_to_float(n: Int) -> Float64 {
   return to_float(n);

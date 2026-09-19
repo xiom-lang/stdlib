@@ -37,9 +37,6 @@ fn _matches_at(s: Str, pos: Int, from: Str) -> Bool {
   xiom.string.str_slice(s, pos, pos + from_len) == from
 }
 
-// Replaces all non-overlapping occurrences of `from` with `to` in `s`.
-// Returns `s` unchanged when `from` is empty or does not occur.
-// Complexity: O(|s| * |from|).
 /// Replaces all non-overlapping occurrences of `from` with `to` in `s`.
 /// Returns `s` unchanged when `from` is empty or does not occur.
 /// Complexity: O(|s| * |from|).
@@ -67,9 +64,6 @@ pub fn str_replace(s: Str, from: Str, to: Str) -> Str
   result
 }
 
-// Replaces all non-overlapping occurrences of `from` with `to` in `s`.
-// Returns `s` unchanged when `from` is empty or does not occur.
-// Complexity: O(|s| * |from|).
 /// Replaces all non-overlapping occurrences of `from` with `to` in `s`.
 /// Returns `s` unchanged when `from` is empty or does not occur.
 /// Complexity: O(|s| * |from|).
@@ -79,10 +73,6 @@ pub fn str_replace_all(s: Str, from: Str, to: Str) -> Str
   str_replace(s, from, to)
 }
 
-// Replaces at most `n` non-overlapping occurrences of `from` with `to` in `s`.
-// When `n <= 0`, returns `s` unchanged.
-// Returns `s` unchanged when `from` is empty or does not occur.
-// Complexity: O(|s| * |from|).
 /// Replaces at most `n` non-overlapping occurrences of `from` with `to` in `s`.
 /// When `n <= 0`, returns `s` unchanged.
 /// Returns `s` unchanged when `from` is empty or does not occur.
@@ -116,9 +106,6 @@ pub fn str_replace_n(s: Str, from: Str, to: Str, n: Int) -> Str
   result
 }
 
-// Replaces the first occurrence of `from` with `to` in `s`.
-// Returns `s` unchanged when `from` is empty or does not occur.
-// Complexity: O(|s| * |from|).
 /// Replaces the first occurrence of `from` with `to` in `s`.
 /// Returns `s` unchanged when `from` is empty or does not occur.
 /// Complexity: O(|s| * |from|).
@@ -140,9 +127,6 @@ pub fn str_replace_first(s: Str, from: Str, to: Str) -> Str
   }
 }
 
-// Replaces the last occurrence of `from` with `to` in `s`.
-// Returns `s` unchanged when `from` is empty or does not occur.
-// Complexity: O(|s| * |from|).
 /// Replaces the last occurrence of `from` with `to` in `s`.
 /// Returns `s` unchanged when `from` is empty or does not occur.
 /// Complexity: O(|s| * |from|).

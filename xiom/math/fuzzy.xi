@@ -21,8 +21,6 @@ use xiom.string;
 
 const _PI: Float64 = 3.141592653589793;
 
-// Membership degrees of the universe elements under the membership fn.
-// Returns an empty vector for an empty universe. Complexity: O(n).
 /// Membership degrees of the universe elements under the membership fn.
 /// Returns an empty vector for an empty universe. Complexity: O(n).
 pub fn fuzzy_set(universe: &Vec[Int], membership: fn(Int) -> Float64) -> Vec[Float64] {
@@ -35,8 +33,6 @@ pub fn fuzzy_set(universe: &Vec[Int], membership: fn(Int) -> Float64) -> Vec[Flo
   return out;
 }
 
-// Membership degree of element in a fuzzy set; elements outside the set's
-// range yield 0.0 (documented). Complexity: O(1).
 /// Membership degree of element in a fuzzy set; elements outside the set's
 /// range yield 0.0 (documented). Complexity: O(1).
 pub fn membership(set: &Vec[Float64], element: Int) -> Float64 {
@@ -44,10 +40,6 @@ pub fn membership(set: &Vec[Float64], element: Int) -> Float64 {
   return set[element];
 }
 
-// Triangular norm/conorm or negation of two truth values, selected by op:
-// "and" -> min, "or" -> max, "not" -> 1 - a, "prod" -> a*b,
-// "sum" -> a + b - a*b (probabilistic or). Unknown op returns NaN.
-// Complexity: O(1).
 /// Triangular norm/conorm or negation of two truth values, selected by op:
 /// "and" -> min, "or" -> max, "not" -> 1 - a, "prod" -> a*b,
 /// "sum" -> a + b - a*b (probabilistic or). Unknown op returns NaN.
@@ -73,8 +65,6 @@ pub fn fuzzy_logic(a: Float64, b: Float64, op: Str) -> Float64 {
   return 0.0 / 0.0;
 }
 
-// Pointwise minimum (intersection) of two fuzzy sets; empty on length
-// mismatch. Complexity: O(n).
 /// Pointwise minimum (intersection) of two fuzzy sets; empty on length
 /// mismatch. Complexity: O(n).
 pub fn fuzzy_intersection(a: &Vec[Float64], b: &Vec[Float64]) -> Vec[Float64] {
@@ -92,8 +82,6 @@ pub fn fuzzy_intersection(a: &Vec[Float64], b: &Vec[Float64]) -> Vec[Float64] {
   return out;
 }
 
-// Pointwise maximum (union) of two fuzzy sets; empty on length mismatch.
-// Complexity: O(n).
 /// Pointwise maximum (union) of two fuzzy sets; empty on length mismatch.
 /// Complexity: O(n).
 pub fn fuzzy_union(a: &Vec[Float64], b: &Vec[Float64]) -> Vec[Float64] {
@@ -111,7 +99,6 @@ pub fn fuzzy_union(a: &Vec[Float64], b: &Vec[Float64]) -> Vec[Float64] {
   return out;
 }
 
-// Pointwise complement 1 - a of a fuzzy set. Complexity: O(n).
 /// Pointwise complement 1 - a of a fuzzy set. Complexity: O(n).
 pub fn fuzzy_complement(a: &Vec[Float64]) -> Vec[Float64] {
   var out = Vec[Float64].new();
@@ -123,12 +110,6 @@ pub fn fuzzy_complement(a: &Vec[Float64]) -> Vec[Float64] {
   return out;
 }
 
-// Validates that every membership degree of the fuzzy relation matrix lies
-// in [0, 1].
-// TODO(compiler): NOT IMPLEMENTABLE in this compiler build - the relation is
-// a Vec[Vec[Float64]] whose element reads return garbage (BUG 23 #1 residual;
-// verified by minimal probe). Keep the frozen signature; revisit when nested
-// float Vec reads land.
 /// Validates that every membership degree of the fuzzy relation matrix lies
 /// in [0, 1].
 /// TODO(compiler): NOT IMPLEMENTABLE in this compiler build - the relation is
@@ -139,11 +120,6 @@ pub fn fuzzy_relation(r: &Vec[Vec[Float64]]) -> Bool {
   return false;
 }
 
-// Max-min composition of two fuzzy relations.
-// TODO(compiler): NOT IMPLEMENTABLE in this compiler build - the relations are
-// Vec[Vec[Float64]] whose element reads return garbage (BUG 23 #1 residual;
-// verified by minimal probe). Keep the frozen signature; revisit when nested
-// float Vec reads land.
 /// Max-min composition of two fuzzy relations.
 /// TODO(compiler): NOT IMPLEMENTABLE in this compiler build - the relations are
 /// Vec[Vec[Float64]] whose element reads return garbage (BUG 23 #1 residual;
@@ -154,9 +130,6 @@ pub fn fuzzy_composition(r: &Vec[Vec[Float64]], s: &Vec[Vec[Float64]]) -> Vec[Ve
   return out;
 }
 
-// Centroid (center-of-gravity) defuzzification of a fuzzy set over the
-// universe values: sum(u_i m_i) / sum(m_i). NaN when the total membership is
-// zero or the lengths differ. Complexity: O(n).
 /// Centroid (center-of-gravity) defuzzification of a fuzzy set over the
 /// universe values: sum(u_i m_i) / sum(m_i). NaN when the total membership is
 /// zero or the lengths differ. Complexity: O(n).
@@ -221,9 +194,6 @@ fn _parse_rule(r: Str) -> (Int, Int, Float64) {
   return (a, b, s);
 }
 
-// Aggregated conclusion degrees from fuzzy rules ("a:b:s" = antecedent,
-// consequent, strength): out[j] = max over rules with consequent j of
-// min(facts[a], s). NaN facts propagate as NaN conclusions. Complexity: O(rules).
 /// Aggregated conclusion degrees from fuzzy rules ("a:b:s" = antecedent,
 /// consequent, strength): out[j] = max over rules with consequent j of
 /// min(facts[a], s). NaN facts propagate as NaN conclusions. Complexity: O(rules).
@@ -254,17 +224,12 @@ pub fn fuzzy_inference(rules: &Vec[Str], facts: &Vec[Float64]) -> Vec[Float64] {
   return out;
 }
 
-// Mamdani-style inference: min implication with max aggregation over the
-// same "a:b:s" rule convention (alias of fuzzy_inference). Complexity: O(rules).
 /// Mamdani-style inference: min implication with max aggregation over the
 /// same "a:b:s" rule convention (alias of fuzzy_inference). Complexity: O(rules).
 pub fn mamdani(rules: &Vec[Str], inputs: &Vec[Float64]) -> Vec[Float64] {
   return fuzzy_inference(rules, inputs);
 }
 
-// Sugeno-style weighted crisp output: rules are decimal strengths s_i and the
-// result is sum(s_i * inputs_i) / sum(s_i). NaN when the weight sum is zero
-// or the rule format is invalid. Complexity: O(rules).
 /// Sugeno-style weighted crisp output: rules are decimal strengths s_i and the
 /// result is sum(s_i * inputs_i) / sum(s_i). NaN when the weight sum is zero
 /// or the rule format is invalid. Complexity: O(rules).
@@ -288,9 +253,6 @@ pub fn sugeno(rules: &Vec[Str], inputs: &Vec[Float64]) -> Float64 {
   return num / den;
 }
 
-// Fuzzy logic controller output (position form): kp * error + ki * error
-// with error = setpoint - measurement (integral term approximated
-// proportionally; documented). Complexity: O(1).
 /// Fuzzy logic controller output (position form): kp * error + ki * error
 /// with error = setpoint - measurement (integral term approximated
 /// proportionally; documented). Complexity: O(1).
@@ -299,8 +261,6 @@ pub fn fuzzy_control(setpoint: Float64, measurement: Float64, kp: Float64, ki: F
   return kp * error + ki * error;
 }
 
-// Index of the best fuzzy-weighted alternative: argmax of alternatives_i *
-// weights_i. Returns -1 for empty or mismatched input. Complexity: O(n).
 /// Index of the best fuzzy-weighted alternative: argmax of alternatives_i *
 /// weights_i. Returns -1 for empty or mismatched input. Complexity: O(n).
 pub fn fuzzy_decision(alternatives: &Vec[Float64], weights: &Vec[Float64]) -> Int {

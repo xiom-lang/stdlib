@@ -6,14 +6,11 @@ module xiom.collect.blockingqueue
 
 // Depends on: xiom.sync
 
-// ============================================================================
-// Blocking queue (Int items) with a fixed capacity. Pure-XIOM data structure:
-// there are no OS threads, so the blocking variants degrade to immediate
-// returns (bq_push -> false when full, bq_pop -> None when empty) while
-// keeping the same contract as a threaded implementation. bq_close wakes all
-// waiters (a no-op here) and makes push fail while pop drains the remainder.
-// ============================================================================
-
+/// Blocking queue (Int items) with a fixed capacity. Pure-XIOM data structure:
+/// there are no OS threads, so the blocking variants degrade to immediate
+/// returns (bq_push -> false when full, bq_pop -> None when empty) while
+/// keeping the same contract as a threaded implementation. bq_close wakes all
+/// waiters (a no-op here) and makes push fail while pop drains the remainder.
 pub type BlockingQueue = {
   buf: Vec[Int];
   head: Int;

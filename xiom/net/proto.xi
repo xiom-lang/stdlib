@@ -69,8 +69,6 @@ fn trim(s: Str) -> Str {
   string.str_slice(s, start, end)
 }
 
-// jsonrpc_request builds a JSON-RPC 2.0 request object. The params value
-// is embedded verbatim as pre-serialized JSON.
 /// jsonrpc_request builds a JSON-RPC 2.0 request object. The params value
 /// is embedded verbatim as pre-serialized JSON.
 pub fn jsonrpc_request(id: Int, method: Str, params_json: Str) -> Str {
@@ -84,8 +82,6 @@ pub fn jsonrpc_request(id: Int, method: Str, params_json: Str) -> Str {
   result
 }
 
-// jsonrpc_success builds a JSON-RPC 2.0 success response. The result value
-// is embedded verbatim as pre-serialized JSON.
 /// jsonrpc_success builds a JSON-RPC 2.0 success response. The result value
 /// is embedded verbatim as pre-serialized JSON.
 pub fn jsonrpc_success(id: Int, result_json: Str) -> Str {
@@ -97,7 +93,6 @@ pub fn jsonrpc_success(id: Int, result_json: Str) -> Str {
   result
 }
 
-// jsonrpc_error builds a JSON-RPC 2.0 error response.
 /// jsonrpc_error builds a JSON-RPC 2.0 error response.
 pub fn jsonrpc_error(id: Int, code: Int, message: Str) -> Str {
   var result = "{\"jsonrpc\":\"2.0\",\"id\":";
@@ -128,8 +123,6 @@ fn sse_data_lines(data: Str) -> Str {
   result
 }
 
-// sse_format_event formats an SSE event with an "event:" line followed by
-// "data:" lines and a terminating blank line.
 /// sse_format_event formats an SSE event with an "event:" line followed by
 /// "data:" lines and a terminating blank line.
 pub fn sse_format_event(event: Str, data: Str) -> Str {
@@ -141,16 +134,12 @@ pub fn sse_format_event(event: Str, data: Str) -> Str {
   result
 }
 
-// sse_format_data formats a single SSE data message with a terminating
-// blank line.
 /// sse_format_data formats a single SSE data message with a terminating
 /// blank line.
 pub fn sse_format_data(data: Str) -> Str {
   sse_data_lines(data) + "\n"
 }
 
-// http_header_parse parses a block of "Name: value" lines (one per line,
-// '\r' tolerated) into (name, value) pairs. Blank lines are skipped.
 /// http_header_parse parses a block of "Name: value" lines (one per line,
 /// '\r' tolerated) into (name, value) pairs. Blank lines are skipped.
 pub fn http_header_parse(headers: Str) -> Vec[(Str, Str)] {
@@ -176,8 +165,6 @@ pub fn http_header_parse(headers: Str) -> Vec[(Str, Str)] {
   result
 }
 
-// http_header_get finds the value for a header name in a parsed header
-// list, matching case-insensitively and returning the first match.
 /// http_header_get finds the value for a header name in a parsed header
 /// list, matching case-insensitively and returning the first match.
 pub fn http_header_get(headers: Vec[(Str, Str)], name: Str) -> Option[Str] {
@@ -193,22 +180,17 @@ pub fn http_header_get(headers: Vec[(Str, Str)], name: Str) -> Option[Str] {
   None
 }
 
-// basic_auth_header builds a "Basic <base64(user:password)>" Authorization
-// header value.
 /// basic_auth_header builds a "Basic <base64(user:password)>" Authorization
 /// header value.
 pub fn basic_auth_header(username: Str, password: Str) -> Str {
   "Basic " + encoding.base64_encode_str(username + ":" + password)
 }
 
-// bearer_auth_header builds a "Bearer <token>" Authorization header value.
 /// bearer_auth_header builds a "Bearer <token>" Authorization header value.
 pub fn bearer_auth_header(token: Str) -> Str {
   "Bearer " + token
 }
 
-// http_status_text maps an HTTP status code to its standard reason phrase,
-// or "Unknown" for codes not in the table.
 /// http_status_text maps an HTTP status code to its standard reason phrase,
 /// or "Unknown" for codes not in the table.
 pub fn http_status_text(code: Int) -> Str {

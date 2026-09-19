@@ -14,12 +14,9 @@ use xiom.cmp;
 use xiom.cmp.min_int;
 use xiom.cmp.max_int;
 
-// ---------------------------------------------------------------------------
-// Linear search -- O(n) worst/average, O(1) best.
-// Scans the array sequentially from index 0. Works on unsorted data.
-// Returns Some(index) of the first match, or None if not found.
-// ---------------------------------------------------------------------------
-
+/// Linear search -- O(n) worst/average, O(1) best.
+/// Scans the array sequentially from index 0. Works on unsorted data.
+/// Returns Some(index) of the first match, or None if not found.
 pub fn linear_search[T: Eq](arr: &Vec[T], target: &T) -> Option[Int] {
   var n = arr.len();
   var i = 0;
@@ -32,13 +29,10 @@ pub fn linear_search[T: Eq](arr: &Vec[T], target: &T) -> Option[Int] {
   return None;
 }
 
-// ---------------------------------------------------------------------------
-// Binary search -- O(log n). Requires a sorted array (non-decreasing).
-// Classic divide-and-conquer: repeatedly narrows the range by comparing
-// the middle element against the target.
-// Returns Some(index) if found, or None if not present.
-// ---------------------------------------------------------------------------
-
+/// Binary search -- O(log n). Requires a sorted array (non-decreasing).
+/// Classic divide-and-conquer: repeatedly narrows the range by comparing
+/// the middle element against the target.
+/// Returns Some(index) if found, or None if not present.
 pub fn binary_search[T: Ord](arr: &Vec[T], target: &T) -> Option[Int] {
   var n = arr.len();
   if n == 0 { return None; }
@@ -58,13 +52,10 @@ pub fn binary_search[T: Ord](arr: &Vec[T], target: &T) -> Option[Int] {
   return None;
 }
 
-// ---------------------------------------------------------------------------
-// Interpolation search -- O(log log n) average on uniformly distributed
-// sorted Int arrays, O(n) worst. Analogous to how one searches a phone book:
-// estimates position based on value range.
-// Returns Some(index) if found, or None if not present.
-// ---------------------------------------------------------------------------
-
+/// Interpolation search -- O(log log n) average on uniformly distributed
+/// sorted Int arrays, O(n) worst. Analogous to how one searches a phone book:
+/// estimates position based on value range.
+/// Returns Some(index) if found, or None if not present.
 pub fn interpolation_search(arr: &Vec[Int], target: Int) -> Option[Int] {
   var n = arr.len();
   if n == 0 { return None; }
@@ -175,12 +166,9 @@ pub fn jump_search[T: Ord](arr: &Vec[T], target: &T) -> Option[Int] {
   return None;
 }
 
-// ---------------------------------------------------------------------------
-// lower_bound -- O(log n). Returns the index of the first element >= target.
-// If all elements are < target, returns arr.len().
-// Requires sorted array.
-// ---------------------------------------------------------------------------
-
+/// lower_bound -- O(log n). Returns the index of the first element >= target.
+/// If all elements are < target, returns arr.len().
+/// Requires sorted array.
 pub fn lower_bound[T: Ord](arr: &Vec[T], target: &T) -> Int {
   var n = arr.len();
   var lo = 0;
@@ -196,12 +184,9 @@ pub fn lower_bound[T: Ord](arr: &Vec[T], target: &T) -> Int {
   return lo;
 }
 
-// ---------------------------------------------------------------------------
-// upper_bound -- O(log n). Returns the index of the first element > target.
-// If all elements are <= target, returns arr.len().
-// Requires sorted array.
-// ---------------------------------------------------------------------------
-
+/// upper_bound -- O(log n). Returns the index of the first element > target.
+/// If all elements are <= target, returns arr.len().
+/// Requires sorted array.
 pub fn upper_bound[T: Ord](arr: &Vec[T], target: &T) -> Int {
   var n = arr.len();
   var lo = 0;
@@ -217,13 +202,10 @@ pub fn upper_bound[T: Ord](arr: &Vec[T], target: &T) -> Int {
   return lo;
 }
 
-// ---------------------------------------------------------------------------
-// binary_search_range -- O(log n). Returns (lower_bound, upper_bound) as a
-// tuple: [lo, hi) of all indices where arr[i] == target.
-// If target is not found, lo == hi (empty range).
-// Requires sorted array.
-// ---------------------------------------------------------------------------
-
+/// binary_search_range -- O(log n). Returns (lower_bound, upper_bound) as a
+/// tuple: [lo, hi) of all indices where arr[i] == target.
+/// If target is not found, lo == hi (empty range).
+/// Requires sorted array.
 pub fn binary_search_range[T: Ord](arr: &Vec[T], target: &T) -> (Int, Int) {
   var lo = lower_bound(arr, target);
   if lo == arr.len() || arr[lo].compare(target) != 0 {

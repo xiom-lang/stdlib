@@ -17,10 +17,6 @@ module xiom.net.cookie
 use xiom.string;
 use xiom.time;
 
-// struct Cookie { name: Str; value: Str; domain: Str; path: Str; expires: Int;
-//                 max_age: Int; secure: Bool; http_only: Bool; same_site: Str }
-//   expires is a unix timestamp (0 = session cookie); same_site is "Strict",
-//   "Lax" or "None" ("" when unset).
 /// struct Cookie { name: Str; value: Str; domain: Str; path: Str; expires: Int;
 ///                 max_age: Int; secure: Bool; http_only: Bool; same_site: Str }
 ///   expires is a unix timestamp (0 = session cookie); same_site is "Strict",
@@ -37,7 +33,6 @@ pub type Cookie = {
   same_site: Str;
 }
 
-// struct CookieJar - an ordered collection of cookies.
 /// struct CookieJar - an ordered collection of cookies.
 pub type CookieJar = {
   cookies: Vec[Cookie];

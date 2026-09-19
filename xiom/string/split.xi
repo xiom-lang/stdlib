@@ -15,9 +15,6 @@ module xiom.string.split
 
 use xiom.string;
 
-// Splits `s` on every occurrence of `delim`.
-// Always returns at least one part.
-// Complexity: O(|s|).
 /// Splits `s` on every occurrence of `delim`.
 /// Always returns at least one part.
 /// Complexity: O(|s|).
@@ -28,10 +25,6 @@ pub fn str_split(s: Str, delim: Str) -> Vec[Str]
   return string.str_split(s, delim);
 }
 
-// Splits `s` on `delim` into at most `n` parts. When `n <= 1`, returns a
-// single part holding all of `s`.
-// Always returns at least one part.
-// Complexity: O(|s|).
 /// Splits `s` on `delim` into at most `n` parts. When `n <= 1`, returns a
 /// single part holding all of `s`.
 /// Always returns at least one part.
@@ -67,11 +60,6 @@ pub fn str_split_n(s: Str, delim: Str, n: Int) -> Vec[Str]
   result
 }
 
-// Splits `s` on any of the delimiters in `delims`. The longest delimiter
-// match at each position wins; when `delims` is empty, returns a single part
-// holding all of `s`.
-// Always returns at least one part.
-// Complexity: O(|s| * |delims|).
 /// Splits `s` on any of the delimiters in `delims`. The longest delimiter
 /// match at each position wins; when `delims` is empty, returns a single part
 /// holding all of `s`.
@@ -115,10 +103,6 @@ pub fn str_split_any(s: Str, delims: &Vec[Str]) -> Vec[Str]
   result
 }
 
-// Splits `s` at the first occurrence of `delim` into a pair holding the part
-// before `delim` and the part after it. When `delim` does not occur in `s`,
-// returns `(s, "")`.
-// Complexity: O(|s|).
 /// Splits `s` at the first occurrence of `delim` into a pair holding the part
 /// before `delim` and the part after it. When `delim` does not occur in `s`,
 /// returns `(s, "")`.
@@ -135,9 +119,6 @@ pub fn str_split_once(s: Str, delim: Str) -> (Str, Str) {
   }
 }
 
-// Splits `s` on newline boundaries; the lines exclude the trailing newline.
-// Always returns at least one part.
-// Complexity: O(|s|).
 /// Splits `s` on newline boundaries; the lines exclude the trailing newline.
 /// Always returns at least one part.
 /// Complexity: O(|s|).
@@ -147,9 +128,6 @@ pub fn str_lines(s: Str) -> Vec[Str]
   return string.lines(s);
 }
 
-// Splits `s` on whitespace boundaries into words.
-// Returns an empty vector when `s` contains no words.
-// Complexity: O(|s|).
 /// Splits `s` on whitespace boundaries into words.
 /// Returns an empty vector when `s` contains no words.
 /// Complexity: O(|s|).
@@ -157,10 +135,6 @@ pub fn str_words(s: Str) -> Vec[Str] {
   return string.words(s);
 }
 
-// Splits `s` on `delim` scanning from the end of `s`; the parts are returned
-// in source order. When `delim` is empty or does not occur, returns a single
-// part holding all of `s`.
-// Complexity: O(|s|).
 /// Splits `s` on `delim` scanning from the end of `s`; the parts are returned
 /// in source order. When `delim` is empty or does not occur, returns a single
 /// part holding all of `s`.

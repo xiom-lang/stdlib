@@ -4,13 +4,10 @@
 
 module xiom.collect.tree
 
-// ============================================================================
-// Binary Search Tree (Int keys)
-// Arena representation: nodes live in parallel Vec[Int]s, addressed by a
-// root index. The sentinel index -1 denotes "no node". Removed nodes become
-// unreachable arena entries; all queries traverse the reachable tree.
-// ============================================================================
-
+/// Binary Search Tree (Int keys)
+/// Arena representation: nodes live in parallel Vec[Int]s, addressed by a
+/// root index. The sentinel index -1 denotes "no node". Removed nodes become
+/// unreachable arena entries; all queries traverse the reachable tree.
 pub type Bst = {
   root: Int;
   keys: Vec[Int];
@@ -233,13 +230,10 @@ pub fn bst_is_bst(b: &Bst) -> Bool {
   return true;
 }
 
-// ============================================================================
-// AVL Tree (Int keys)
-// Same arena layout as the BST plus a parallel `heights` vector. Node height:
-// leaf = 1, empty subtree = 0. Every insert rebalances via single/double
-// rotations so |bf| <= 1 holds on every node.
-// ============================================================================
-
+/// AVL Tree (Int keys)
+/// Same arena layout as the BST plus a parallel `heights` vector. Node height:
+/// leaf = 1, empty subtree = 0. Every insert rebalances via single/double
+/// rotations so |bf| <= 1 holds on every node.
 pub type Avl = {
   root: Int;
   keys: Vec[Int];

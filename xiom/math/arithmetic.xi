@@ -19,9 +19,6 @@ use xiom.math;
 // are guarded inside the body instead of declared as contracts.
 // ============================================================================
 
-// Greatest common divisor of a and b; always non-negative. gcd(0, 0) == 0.
-// The one unrepresentable case gcd(INT_MIN, k) = 2^63 saturates to INT_MAX
-// (documented). Complexity: O(log min(|a|,|b|)).
 /// Greatest common divisor of a and b; always non-negative. gcd(0, 0) == 0.
 /// The one unrepresentable case gcd(INT_MIN, k) = 2^63 saturates to INT_MAX
 /// (documented). Complexity: O(log min(|a|,|b|)).
@@ -42,9 +39,6 @@ pub fn gcd(a: Int, b: Int) -> Int
   return -x;
 }
 
-// Least common multiple of |a| and |b|; always non-negative. 0 when either
-// input is 0, and 0 (documented overflow) when the true lcm exceeds Int
-// range. Complexity: O(gcd).
 /// Least common multiple of |a| and |b|; always non-negative. 0 when either
 /// input is 0, and 0 (documented overflow) when the true lcm exceeds Int
 /// range. Complexity: O(gcd).
@@ -62,8 +56,6 @@ pub fn lcm(a: Int, b: Int) -> Int {
   return ux * uy;
 }
 
-// True iff n is a positive power of two. is_power_of_two(0) == false,
-// is_power_of_two(1) == true. Complexity: O(log n).
 /// True iff n is a positive power of two. is_power_of_two(0) == false,
 /// is_power_of_two(1) == true. Complexity: O(log n).
 pub fn is_power_of_two(n: Int) -> Bool {
@@ -76,9 +68,6 @@ pub fn is_power_of_two(n: Int) -> Bool {
   return true;
 }
 
-// Smallest power of two >= n. Returns 1 for n <= 0. When the next power of
-// two would exceed Int range (n > 2^62) returns 0 (documented overflow).
-// Complexity: O(log n).
 /// Smallest power of two >= n. Returns 1 for n <= 0. When the next power of
 /// two would exceed Int range (n > 2^62) returns 0 (documented overflow).
 /// Complexity: O(log n).
@@ -93,8 +82,6 @@ pub fn next_power_of_two(n: Int) -> Int {
   return p;
 }
 
-// Largest power of two <= n. Returns 0 for n <= 0 (no positive power fits).
-// Complexity: O(log n).
 /// Largest power of two <= n. Returns 0 for n <= 0 (no positive power fits).
 /// Complexity: O(log n).
 pub fn prev_power_of_two(n: Int) -> Int {
@@ -106,8 +93,6 @@ pub fn prev_power_of_two(n: Int) -> Int {
   return p;
 }
 
-// Extended Euclid: returns (g, x, y) with a*x + b*y == g == gcd(a, b).
-// g is non-negative. For a == b == 0 returns (0, 1, 0). Complexity: O(log).
 /// Extended Euclid: returns (g, x, y) with a*x + b*y == g == gcd(a, b).
 /// g is non-negative. For a == b == 0 returns (0, 1, 0). Complexity: O(log).
 pub fn gcd_extended(a: Int, b: Int) -> (Int, Int, Int) {
@@ -135,9 +120,6 @@ pub fn gcd_extended(a: Int, b: Int) -> (Int, Int, Int) {
   return (old_r, old_s, old_t);
 }
 
-// Multiplicative inverse of a mod m: x with (a * x) % m == 1. Returns None
-// when gcd(a, m) != 1 (no inverse exists), when m == 0 (no modulus), and
-// Some(0) for m == 1 (everything is 0 mod 1). Complexity: O(log min(a, m)).
 /// Multiplicative inverse of a mod m: x with (a * x) % m == 1. Returns None
 /// when gcd(a, m) != 1 (no inverse exists), when m == 0 (no modulus), and
 /// Some(0) for m == 1 (everything is 0 mod 1). Complexity: O(log min(a, m)).
@@ -164,10 +146,6 @@ pub fn mod_inverse(a: Int, m: Int) -> Option[Int] {
   return Some(result);
 }
 
-// base^exp mod m via exponentiation by squaring. Result in [0, m).
-// exp < 0 returns 0 (documented; only non-negative exponents are supported),
-// m == 1 returns 0, m == 0 returns 0 (documented, division by zero guard).
-// Complexity: O(log exp).
 /// base^exp mod m via exponentiation by squaring. Result in [0, m).
 /// exp < 0 returns 0 (documented; only non-negative exponents are supported),
 /// m == 1 returns 0, m == 0 returns 0 (documented, division by zero guard).
@@ -191,21 +169,16 @@ pub fn pow_mod(base: Int, exp: Int, m: Int) -> Int {
   return result;
 }
 
-// True iff n is odd (sign-aware: -3 is odd).
 /// True iff n is odd (sign-aware: -3 is odd).
 pub fn is_odd(n: Int) -> Bool {
   return n % 2 != 0;
 }
 
-// True iff n is even (sign-aware: -4 is even).
 /// True iff n is even (sign-aware: -4 is even).
 pub fn is_even(n: Int) -> Bool {
   return n % 2 == 0;
 }
 
-// Integer division rounded toward positive infinity (ceiling).
-// ceil(-7, 2) == -3. Division by zero returns 0; INT_MIN / -1 returns
-// INT_MIN (unrepresentable +2^63). Complexity: O(1).
 /// Integer division rounded toward positive infinity (ceiling).
 /// ceil(-7, 2) == -3. Division by zero returns 0; INT_MIN / -1 returns
 /// INT_MIN (unrepresentable +2^63). Complexity: O(1).
@@ -218,9 +191,6 @@ pub fn div_ceil(a: Int, b: Int) -> Int {
   return q;
 }
 
-// Integer division rounded toward negative infinity (floor).
-// floor(-7, 2) == -4. Division by zero returns 0; INT_MIN / -1 returns
-// INT_MIN. Complexity: O(1).
 /// Integer division rounded toward negative infinity (floor).
 /// floor(-7, 2) == -4. Division by zero returns 0; INT_MIN / -1 returns
 /// INT_MIN. Complexity: O(1).
@@ -233,9 +203,6 @@ pub fn div_floor(a: Int, b: Int) -> Int {
   return q;
 }
 
-// Integer division truncated toward zero (native semantics).
-// trunc(-7, 2) == -3. Division by zero returns 0; INT_MIN / -1 returns
-// INT_MIN. Complexity: O(1).
 /// Integer division truncated toward zero (native semantics).
 /// trunc(-7, 2) == -3. Division by zero returns 0; INT_MIN / -1 returns
 /// INT_MIN. Complexity: O(1).
@@ -245,8 +212,6 @@ pub fn div_trunc(a: Int, b: Int) -> Int {
   return a / b;
 }
 
-// Modulus with result matching the divisor sign. mod_floor(-7, 2) == 1,
-// mod_floor(7, -2) == -1. Division by zero returns 0. Complexity: O(1).
 /// Modulus with result matching the divisor sign. mod_floor(-7, 2) == 1,
 /// mod_floor(7, -2) == -1. Division by zero returns 0. Complexity: O(1).
 pub fn mod_floor(a: Int, b: Int) -> Int {
@@ -256,9 +221,6 @@ pub fn mod_floor(a: Int, b: Int) -> Int {
   return r;
 }
 
-// Modulus with result matching the dividend sign (native semantics).
-// mod_trunc(-7, 2) == -1, mod_trunc(7, -2) == 1. Division by zero returns 0.
-// Complexity: O(1).
 /// Modulus with result matching the dividend sign (native semantics).
 /// mod_trunc(-7, 2) == -1, mod_trunc(7, -2) == 1. Division by zero returns 0.
 /// Complexity: O(1).

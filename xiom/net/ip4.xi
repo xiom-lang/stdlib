@@ -59,9 +59,6 @@ fn parse_octet(seg: Str) -> Option[Int] {
   Some(value)
 }
 
-// ip4_parse parses a dotted-quad IPv4 string into four octets.
-// Invalid input (wrong segment count, non-numeric, or out-of-range
-// octets) returns Err. Complexity: O(n). Pure.
 /// ip4_parse parses a dotted-quad IPv4 string into four octets.
 /// Invalid input (wrong segment count, non-numeric, or out-of-range
 /// octets) returns Err. Complexity: O(n). Pure.
@@ -87,8 +84,6 @@ pub fn ip4_parse(s: Str) -> Result[Vec[UInt8], Str] {
   Ok(result)
 }
 
-// ip4_validate returns true if s is a valid dotted-quad IPv4 address.
-// Complexity: O(n). Pure.
 /// ip4_validate returns true if s is a valid dotted-quad IPv4 address.
 /// Complexity: O(n). Pure.
 pub fn ip4_validate(s: Str) -> Bool {
@@ -96,8 +91,6 @@ pub fn ip4_validate(s: Str) -> Bool {
   parsed.is_ok
 }
 
-// ip4_to_str formats four octets as a dotted-quad string.
-// Returns Err if octets.len() is not 4. Complexity: O(1). Pure.
 /// ip4_to_str formats four octets as a dotted-quad string.
 /// Returns Err if octets.len() is not 4. Complexity: O(1). Pure.
 pub fn ip4_to_str(octets: &Vec[UInt8]) -> Result[Str, Str] {
@@ -117,8 +110,6 @@ pub fn ip4_to_str(octets: &Vec[UInt8]) -> Result[Str, Str] {
   Ok(result)
 }
 
-// ip4_octets splits a dotted-quad IPv4 string into its four numeric
-// octets as Int. Invalid input returns an empty vector. Pure.
 /// ip4_octets splits a dotted-quad IPv4 string into its four numeric
 /// octets as Int. Invalid input returns an empty vector. Pure.
 pub fn ip4_octets(s: Str) -> Vec[Int] {
@@ -147,8 +138,6 @@ fn octet_of(s: Str, n: Int) -> Option[Int] {
   }
 }
 
-// ip4_is_loopback returns true for 127.0.0.0/8.
-// Complexity: O(n). Pure.
 /// ip4_is_loopback returns true for 127.0.0.0/8.
 /// Complexity: O(n). Pure.
 pub fn ip4_is_loopback(s: Str) -> Bool {
@@ -159,9 +148,6 @@ pub fn ip4_is_loopback(s: Str) -> Bool {
   }
 }
 
-// ip4_is_private returns true for RFC 1918 ranges
-// (10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16).
-// Complexity: O(n). Pure.
 /// ip4_is_private returns true for RFC 1918 ranges
 /// (10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16).
 /// Complexity: O(n). Pure.
@@ -180,8 +166,6 @@ pub fn ip4_is_private(s: Str) -> Bool {
   }
 }
 
-// ip4_is_link_local returns true for 169.254.0.0/16.
-// Complexity: O(n). Pure.
 /// ip4_is_link_local returns true for 169.254.0.0/16.
 /// Complexity: O(n). Pure.
 pub fn ip4_is_link_local(s: Str) -> Bool {
@@ -196,8 +180,6 @@ pub fn ip4_is_link_local(s: Str) -> Bool {
   }
 }
 
-// ip4_is_multicast returns true for 224.0.0.0/4.
-// Complexity: O(n). Pure.
 /// ip4_is_multicast returns true for 224.0.0.0/4.
 /// Complexity: O(n). Pure.
 pub fn ip4_is_multicast(s: Str) -> Bool {
@@ -208,8 +190,6 @@ pub fn ip4_is_multicast(s: Str) -> Bool {
   }
 }
 
-// ip4_is_unspecified returns true for 0.0.0.0.
-// Complexity: O(n). Pure.
 /// ip4_is_unspecified returns true for 0.0.0.0.
 /// Complexity: O(n). Pure.
 pub fn ip4_is_unspecified(s: Str) -> Bool {
@@ -230,8 +210,6 @@ pub fn ip4_is_unspecified(s: Str) -> Bool {
   }
 }
 
-// ip4_is_broadcast returns true for 255.255.255.255.
-// Complexity: O(n). Pure.
 /// ip4_is_broadcast returns true for 255.255.255.255.
 /// Complexity: O(n). Pure.
 pub fn ip4_is_broadcast(s: Str) -> Bool {

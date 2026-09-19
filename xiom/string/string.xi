@@ -367,10 +367,6 @@ pub fn is_empty(s: Str) -> Bool
   s.len() == 0
 }
 
-// Method form: `x.is_empty()`. The plain fn above is NOT a method -- the
-// compiler's receiver-typed method lookup needs the Str receiver decl
-// (method-form `x.is_empty()` otherwise falls through to a Vec/array
-// is_empty leaf or a stub and always returns false).
 /// Method form: `x.is_empty()`. The plain fn above is NOT a method -- the
 /// compiler's receiver-typed method lookup needs the Str receiver decl
 /// (method-form `x.is_empty()` otherwise falls through to a Vec/array
@@ -408,8 +404,6 @@ pub fn byte_count(s: Str) -> Int
 
 // -- Search --
 
-// Returns the first byte index of needle in haystack, or None if not found.
-// O(n*m) naive search. For an empty needle, returns Some(0).
 /// Returns the first byte index of needle in haystack, or None if not found.
 /// O(n*m) naive search. For an empty needle, returns Some(0).
 pub fn str_index_of(haystack: Str, needle: Str) -> Option[Int]
@@ -418,8 +412,6 @@ pub fn str_index_of(haystack: Str, needle: Str) -> Option[Int]
   index_of(haystack, needle)
 }
 
-// Returns the last byte index of needle in haystack, or None if not found.
-// O(n*m) reverse naive search. For an empty needle, returns Some(haystack.len()).
 /// Returns the last byte index of needle in haystack, or None if not found.
 /// O(n*m) reverse naive search. For an empty needle, returns Some(haystack.len()).
 pub fn str_rindex_of(haystack: Str, needle: Str) -> Option[Int]
@@ -430,8 +422,6 @@ pub fn str_rindex_of(haystack: Str, needle: Str) -> Option[Int]
 
 // -- Replace --
 
-// Replaces every occurrence of `from` with `to` in `s`.
-// O(n*m) where n = |s|, m = |from|. If `from` is empty, returns `s` unchanged.
 /// Replaces every occurrence of `from` with `to` in `s`.
 /// O(n*m) where n = |s|, m = |from|. If `from` is empty, returns `s` unchanged.
 pub fn str_replace_all(s: Str, from_needle: Str, to_replacement: Str) -> Str
@@ -442,8 +432,6 @@ pub fn str_replace_all(s: Str, from_needle: Str, to_replacement: Str) -> Str
 
 // -- Repeat & Pad --
 
-// Repeats `s` `n` times. Returns empty string if n <= 0.
-// O(n * |s|) using repeated concatenation.
 /// Repeats `s` `n` times. Returns empty string if n <= 0.
 /// O(n * |s|) using repeated concatenation.
 pub fn str_repeat(s: Str, n: Int) -> Str
@@ -461,9 +449,6 @@ pub fn str_repeat(s: Str, n: Int) -> Str
   result
 }
 
-// Left-pads `s` with `pad` until the string reaches `width` bytes.
-// If `s` is already >= `width` in bytes, returns `s` unchanged.
-// O(width - |s|). Only handles single-byte pad characters correctly.
 /// Left-pads `s` with `pad` until the string reaches `width` bytes.
 /// If `s` is already >= `width` in bytes, returns `s` unchanged.
 /// O(width - |s|). Only handles single-byte pad characters correctly.
@@ -489,9 +474,6 @@ pub fn str_pad_left(s: Str, width: Int, pad: Char) -> Str
   str_concat(pad_str, s)
 }
 
-// Right-pads `s` with `pad` until the string reaches `width` bytes.
-// If `s` is already >= `width` in bytes, returns `s` unchanged.
-// O(width - |s|). Only handles single-byte pad characters correctly.
 /// Right-pads `s` with `pad` until the string reaches `width` bytes.
 /// If `s` is already >= `width` in bytes, returns `s` unchanged.
 /// O(width - |s|). Only handles single-byte pad characters correctly.
@@ -518,9 +500,6 @@ pub fn str_pad_right(s: Str, width: Int, pad: Char) -> Str
 
 // -- Strip --
 
-// If `s` starts with `prefix`, returns `Some(s without prefix)`.
-// Otherwise returns `None`.
-// O(|prefix|).
 /// If `s` starts with `prefix`, returns `Some(s without prefix)`.
 /// Otherwise returns `None`.
 /// O(|prefix|).
@@ -532,9 +511,6 @@ pub fn str_strip_prefix(s: Str, prefix: Str) -> Option[Str] {
   None
 }
 
-// If `s` ends with `suffix`, returns `Some(s without suffix)`.
-// Otherwise returns `None`.
-// O(|suffix|).
 /// If `s` ends with `suffix`, returns `Some(s without suffix)`.
 /// Otherwise returns `None`.
 /// O(|suffix|).
@@ -548,9 +524,6 @@ pub fn str_strip_suffix(s: Str, suffix: Str) -> Option[Str] {
 
 // -- Escape/Unescape --
 
-// Escapes special characters (\n, \t, \", \\, \r) in `s`.
-// Returns a new string with escape sequences replaced by their literal representations.
-// O(|s|). For multi-byte UTF-8 chars, only \n \t \" \\ \r are escaped.
 /// Escapes special characters (\n, \t, \", \\, \r) in `s`.
 /// Returns a new string with escape sequences replaced by their literal representations.
 /// O(|s|). For multi-byte UTF-8 chars, only \n \t \" \\ \r are escaped.
@@ -605,9 +578,6 @@ pub fn str_escape(s: Str) -> Str
   result
 }
 
-// Un-escapes a string that contains escape sequences like \n \t \" \\ \r.
-// Returns the string with literal escape sequences replaced by the actual characters.
-// O(|s|). Unrecognised escape sequences are left unchanged.
 /// Un-escapes a string that contains escape sequences like \n \t \" \\ \r.
 /// Returns the string with literal escape sequences replaced by the actual characters.
 /// O(|s|). Unrecognised escape sequences are left unchanged.
@@ -651,9 +621,6 @@ pub fn str_unescape(s: Str) -> Str
 
 // -- Case --
 
-// Converts `s` to Title Case: first character of each space-separated word
-// is uppercased, remaining characters are lowercased.
-// O(|s|) byte-by-byte. Only handles ASCII letter case correctly.
 /// Converts `s` to Title Case: first character of each space-separated word
 /// is uppercased, remaining characters are lowercased.
 /// O(|s|) byte-by-byte. Only handles ASCII letter case correctly.
@@ -683,9 +650,6 @@ pub fn str_title_case(s: Str) -> Str
   }
 }
 
-// Swaps the case of every character in `s`: uppercase becomes lowercase and
-// vice versa. Characters that are neither are left unchanged.
-// O(|s|) byte-by-byte. Only handles ASCII letter case correctly.
 /// Swaps the case of every character in `s`: uppercase becomes lowercase and
 /// vice versa. Characters that are neither are left unchanged.
 /// O(|s|) byte-by-byte. Only handles ASCII letter case correctly.
@@ -714,8 +678,6 @@ pub fn str_swap_case(s: Str) -> Str
 
 // -- Predicates --
 
-// Returns true if `s` has zero length.
-// O(1).
 /// Returns true if `s` has zero length.
 /// O(1).
 pub fn str_is_empty(s: Str) -> Bool
@@ -726,9 +688,6 @@ pub fn str_is_empty(s: Str) -> Bool
 
 // -- Reverse --
 
-// Reverses the characters in `s`. Unicode-aware: iterates by
-// proper UTF-8 character boundaries.
-// O(|s|) -- two passes (collect + build).
 /// Reverses the characters in `s`. Unicode-aware: iterates by
 /// proper UTF-8 character boundaries.
 /// O(|s|) -- two passes (collect + build).
@@ -789,9 +748,6 @@ pub fn str_reverse(s: Str) -> Str
 
 // -- Count --
 
-// Counts the number of Unicode characters in `s` using xiom_char_at.
-// Unicode-aware: advances by the byte length of each character.
-// O(|s|).
 /// Counts the number of Unicode characters in `s` using xiom_char_at.
 /// Unicode-aware: advances by the byte length of each character.
 /// O(|s|).
@@ -803,11 +759,6 @@ pub fn str_count_chars(s: Str) -> Int
 
 // -- Truncate --
 
-// Truncates `s` at the given byte position `max_bytes`, ensuring the result
-// does not split a multi-byte UTF-8 character. If `max_bytes` lands in the
-// middle of a multi-byte sequence, the result is truncated before that
-// character begins.
-// O(|s|).
 /// Truncates `s` at the given byte position `max_bytes`, ensuring the result
 /// does not split a multi-byte UTF-8 character. If `max_bytes` lands in the
 /// middle of a multi-byte sequence, the result is truncated before that
@@ -840,10 +791,6 @@ pub fn str_truncate_utf8(s: Str, max_bytes: Int) -> Str
 
 // -- Center --
 
-// Centers `s` within a field of `width` bytes by adding spaces on both sides.
-// If an odd number of spaces are needed, the extra space goes on the right.
-// Only handles single-byte pad characters correctly.
-// O(width).
 /// Centers `s` within a field of `width` bytes by adding spaces on both sides.
 /// If an odd number of spaces are needed, the extra space goes on the right.
 /// Only handles single-byte pad characters correctly.
@@ -875,8 +822,6 @@ pub fn str_center(s: Str, width: Int) -> Str
 
 // -- Multi-pattern Tests --
 
-// Returns true if `s` starts with any of the given prefixes.
-// O(n * k) where n = |s|, k = prefixes.len().
 /// Returns true if `s` starts with any of the given prefixes.
 /// O(n * k) where n = |s|, k = prefixes.len().
 pub fn str_starts_with_any(s: Str, prefixes: &Vec[Str]) -> Bool
@@ -892,8 +837,6 @@ pub fn str_starts_with_any(s: Str, prefixes: &Vec[Str]) -> Bool
   false
 }
 
-// Returns true if `s` ends with any of the given suffixes.
-// O(n * k) where n = |s|, k = suffixes.len().
 /// Returns true if `s` ends with any of the given suffixes.
 /// O(n * k) where n = |s|, k = suffixes.len().
 pub fn str_ends_with_any(s: Str, suffixes: &Vec[Str]) -> Bool
@@ -909,8 +852,6 @@ pub fn str_ends_with_any(s: Str, suffixes: &Vec[Str]) -> Bool
   false
 }
 
-// Returns true if `s` contains any of the given substrings.
-// O(n * m * k) where n = |s|, m = max substring length, k = needles.len().
 /// Returns true if `s` contains any of the given substrings.
 /// O(n * m * k) where n = |s|, m = max substring length, k = needles.len().
 pub fn str_contains_any(s: Str, needles: &Vec[Str]) -> Bool

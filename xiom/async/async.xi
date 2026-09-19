@@ -52,9 +52,6 @@ type Timer = {
   task: fn();
 }
 
-// === AsyncExecutor ===
-// A cooperative single-threaded scheduler: a FIFO-ish ready-queue plus a set
-// of pending timers. Stored 8-byte-per-slot exactly like `Vec[LogEntry]`.
 /// === AsyncExecutor ===
 /// A cooperative single-threaded scheduler: a FIFO-ish ready-queue plus a set
 /// of pending timers. Stored 8-byte-per-slot exactly like `Vec[LogEntry]`.
@@ -67,20 +64,16 @@ pub fn AsyncExecutor.new() -> AsyncExecutor {
   return AsyncExecutor{ ready: Vec[fn()].new(), timers: Vec[Timer].new() };
 }
 
-// Enqueue a task onto the ready-queue. It runs on the next drain, not now.
 /// Enqueue a task onto the ready-queue. It runs on the next drain, not now.
 pub fn AsyncExecutor.spawn(self, task: fn()) {
   self.ready.push(task);
 }
 
-// Register a task to become ready once the clock reaches `deadline`.
 /// Register a task to become ready once the clock reaches `deadline`.
 pub fn AsyncExecutor.at(self, deadline: Int, task: fn()) {
   self.timers.push(Timer{ deadline: deadline, task: task });
 }
 
-// Run a single ready task. Returns true if one was run, false if the
-// ready-queue was empty.
 /// Run a single ready task. Returns true if one was run, false if the
 /// ready-queue was empty.
 pub fn AsyncExecutor.step(self) -> Bool {
@@ -96,8 +89,6 @@ pub fn AsyncExecutor.step(self) -> Bool {
   return true;
 }
 
-// Advance pending timers: sleep until the earliest deadline, then move every
-// timer that is now due onto the ready-queue (keeping the rest pending).
 /// Advance pending timers: sleep until the earliest deadline, then move every
 /// timer that is now due onto the ready-queue (keeping the rest pending).
 pub fn AsyncExecutor.fire_due_timers(self) {
@@ -139,7 +130,6 @@ pub fn AsyncExecutor.fire_due_timers(self) {
   }
 }
 
-// Drive the scheduler until both the ready-queue and the timer set are empty.
 /// Drive the scheduler until both the ready-queue and the timer set are empty.
 pub fn AsyncExecutor.run(self) {
   while self.ready.len() > 0 || self.timers.len() > 0 {
@@ -154,7 +144,6 @@ pub fn AsyncExecutor.run(self) {
   }
 }
 
-// Spawn a task then drive to completion.
 /// Spawn a task then drive to completion.
 pub fn AsyncExecutor.block_on(self, task: fn()) {
   self.spawn(task);
@@ -179,10 +168,6 @@ fn _pump() -> Bool {
   return false;
 }
 
-// === Spawn ===
-// Enqueue an async task onto the global executor's ready-queue.
-// NOTE: unlike the old stub, this no longer runs `task` inline -- it is
-// scheduled and runs when the executor is driven via `run`/`block_on`.
 /// === Spawn ===
 /// Enqueue an async task onto the global executor's ready-queue.
 /// NOTE: unlike the old stub, this no longer runs `task` inline -- it is
@@ -191,20 +176,17 @@ pub fn spawn(task: fn()) {
   _exec.spawn(task);
 }
 
-// Drive the global executor until all tasks and timers are complete.
 /// Drive the global executor until all tasks and timers are complete.
 pub fn run() {
   _exec.run();
 }
 
-// Spawn a task and drive the global executor to completion.
 /// Spawn a task and drive the global executor to completion.
 pub fn block_on(task: fn()) {
   _exec.spawn(task);
   _exec.run();
 }
 
-// Schedule `task` to become ready after `ms` milliseconds (real timer).
 /// Schedule `task` to become ready after `ms` milliseconds (real timer).
 pub fn delay(ms: Int, task: fn())
   requires: ms >= 0
@@ -212,10 +194,6 @@ pub fn delay(ms: Int, task: fn())
   _exec.at(_now() + ms, task);
 }
 
-// Cooperative sleep: wait `ms` milliseconds while still driving other ready
-// tasks, so the single thread keeps making progress during the wait.
-// NOTE: with no coroutine transform this blocks the calling frame; it does
-// not suspend-and-resume it. Use `delay` for true fire-after-deadline tasks.
 /// Cooperative sleep: wait `ms` milliseconds while still driving other ready
 /// tasks, so the single thread keeps making progress during the wait.
 /// NOTE: with no coroutine transform this blocks the calling frame; it does
@@ -232,7 +210,6 @@ pub fn sleep_ms(ms: Int) {
   }
 }
 
-// === Channel type ===
 /// === Channel type ===
 pub type Channel[T] = {
   items: Vec[T];

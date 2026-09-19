@@ -6,16 +6,13 @@ module xiom.collect.treemap
 
 // Depends on: none
 
-// ============================================================================
-// Balanced binary search tree map keeping Int keys in sorted order.
-// The balance policy is AVL (the proven collect.tree pattern) so put/get/
-// contains/remove run in O(log n). Flat-arena representation: nodes live in
-// parallel Vec[Int]s (`keys`/`values`/`left`/`right`/`heights`) addressed by
-// a root index; -1 is the "no node" sentinel. `treemap_iter` returns
-// (key, value) pairs in ascending key order. Removed nodes become
-// unreachable arena entries.
-// ============================================================================
-
+/// Balanced binary search tree map keeping Int keys in sorted order.
+/// The balance policy is AVL (the proven collect.tree pattern) so put/get/
+/// contains/remove run in O(log n). Flat-arena representation: nodes live in
+/// parallel Vec[Int]s (`keys`/`values`/`left`/`right`/`heights`) addressed by
+/// a root index; -1 is the "no node" sentinel. `treemap_iter` returns
+/// (key, value) pairs in ascending key order. Removed nodes become
+/// unreachable arena entries.
 pub type BTreeMap = {
   root: Int;
   keys: Vec[Int];

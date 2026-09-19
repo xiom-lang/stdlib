@@ -19,8 +19,6 @@ module xiom.math.differential_equations
 
 use xiom.math;
 
-// Explicit Euler steps of y' = f(t, y) from t0 to t1 in n steps. Returns
-// n + 1 values (y(t0), ..., y(t1)); empty for n <= 0. Complexity: O(n).
 /// Explicit Euler steps of y' = f(t, y) from t0 to t1 in n steps. Returns
 /// n + 1 values (y(t0), ..., y(t1)); empty for n <= 0. Complexity: O(n).
 pub fn solve_ode_euler(f: fn(Float64, Float64) -> Float64, y0: Float64, t0: Float64, t1: Float64, n: Int) -> Vec[Float64] {
@@ -40,8 +38,6 @@ pub fn solve_ode_euler(f: fn(Float64, Float64) -> Float64, y0: Float64, t0: Floa
   return out;
 }
 
-// Classical fourth-order Runge-Kutta integration of y' = f(t, y) in n steps.
-// Returns n + 1 values; empty for n <= 0. Complexity: O(n).
 /// Classical fourth-order Runge-Kutta integration of y' = f(t, y) in n steps.
 /// Returns n + 1 values; empty for n <= 0. Complexity: O(n).
 pub fn solve_ode_rk4(f: fn(Float64, Float64) -> Float64, y0: Float64, t0: Float64, t1: Float64, n: Int) -> Vec[Float64] {
@@ -65,10 +61,6 @@ pub fn solve_ode_rk4(f: fn(Float64, Float64) -> Float64, y0: Float64, t0: Float6
   return out;
 }
 
-// Adaptive Dormand-Prince (RK45) integration of y' = f(t, y) to tolerance
-// tol. Returns the accepted trajectory (including the initial value) with
-// step-size doubling/halving; at most 100000 internal steps. NaN for tol <= 0.
-// Complexity: O(steps * cost(f)).
 /// Adaptive Dormand-Prince (RK45) integration of y' = f(t, y) to tolerance
 /// tol. Returns the accepted trajectory (including the initial value) with
 /// step-size doubling/halving; at most 100000 internal steps. NaN for tol <= 0.
@@ -112,9 +104,6 @@ pub fn solve_ode_rk45(f: fn(Float64, Float64) -> Float64, y0: Float64, t0: Float
   return out;
 }
 
-// Generic adaptive step-size integrator of y' = f(t, y) to tolerance tol.
-// Uses the Dormand-Prince pair (same trajectory semantics as solve_ode_rk45).
-// Complexity: O(steps * cost(f)).
 /// Generic adaptive step-size integrator of y' = f(t, y) to tolerance tol.
 /// Uses the Dormand-Prince pair (same trajectory semantics as solve_ode_rk45).
 /// Complexity: O(steps * cost(f)).
@@ -122,10 +111,6 @@ pub fn solve_ode_adaptive(f: fn(Float64, Float64) -> Float64, y0: Float64, t0: F
   return solve_ode_rk45(f, y0, t0, t1, tol);
 }
 
-// Backward differentiation formula of order 1 (implicit backward Euler):
-// y_{n+1} = y_n + h f(t_{n+1}, y_{n+1}) solved by fixed-point iteration
-// (8 iterations per step). Returns n + 1 values; empty for n <= 0.
-// Complexity: O(n * iters * cost(f)).
 /// Backward differentiation formula of order 1 (implicit backward Euler):
 /// y_{n+1} = y_n + h f(t_{n+1}, y_{n+1}) solved by fixed-point iteration
 /// (8 iterations per step). Returns n + 1 values; empty for n <= 0.
@@ -153,10 +138,6 @@ pub fn solve_ode_bdf(f: fn(Float64, Float64) -> Float64, y0: Float64, t0: Float6
   return out;
 }
 
-// Explicit finite-difference (FTCS) solution of the 1-D heat equation
-// u_t = u_xx + f(t, x) on x in [0, 1], u(x, 0) = sin(pi x), zero boundary
-// conditions. Returns nt + 1 rows of nx + 1 spatial samples. Empty for
-// degenerate input. Complexity: O(nt * nx).
 /// Explicit finite-difference (FTCS) solution of the 1-D heat equation
 /// u_t = u_xx + f(t, x) on x in [0, 1], u(x, 0) = sin(pi x), zero boundary
 /// conditions. Returns nt + 1 rows of nx + 1 spatial samples. Empty for
@@ -210,10 +191,6 @@ pub fn solve_pde_fd(f: fn(Float64, Float64) -> Float64, t0: Float64, t1: Float64
   return out;
 }
 
-// Linear finite-element (Galerkin, hat functions, lumped mass) solution of
-// u_t = u_xx + f(t, x) on x in [0, 1] with zero boundaries and initial
-// u = sin(pi x). Returns nt + 1 rows of nx + 1 samples. Empty for degenerate
-// input. Complexity: O(nt * nx).
 /// Linear finite-element (Galerkin, hat functions, lumped mass) solution of
 /// u_t = u_xx + f(t, x) on x in [0, 1] with zero boundaries and initial
 /// u = sin(pi x). Returns nt + 1 rows of nx + 1 samples. Empty for degenerate

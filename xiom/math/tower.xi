@@ -15,10 +15,6 @@ module xiom.math.tower
 // prelude `xiom.core`. STDLIB_GENERICS.md rule R9: no other sublib may be
 // named `core`; the prelude owns that name.
 
-// -- Num interface (the numeric tower contract) ------------------------------
-// Implemented by every numeric width. New widths register by adding one
-// `impl Num[Width] { ... }` block - every generic function below then serves
-// that width automatically.
 /// -- Num interface (the numeric tower contract) ------------------------------
 /// Implemented by every numeric width. New widths register by adding one
 /// `impl Num[Width] { ... }` block - every generic function below then serves
@@ -149,10 +145,9 @@ pub fn negate[T: Num](a: T) -> T {
   return Num[T].sub(Num[T].zero(), a);
 }
 
-// -- FromInt interface (conversions ? separate from arithmetic Num) ----------
-// Widths opt into Int conversion by implementing FromInt. Keeps Num pure
-// arithmetic so the tower contract stays minimal.
-
+/// -- FromInt interface (conversions ? separate from arithmetic Num) ----------
+/// Widths opt into Int conversion by implementing FromInt. Keeps Num pure
+/// arithmetic so the tower contract stays minimal.
 pub interface FromInt[T] {
   fn from_int(v: Int) -> T;
   fn to_float(v: T) -> Float64;
@@ -190,11 +185,10 @@ impl FromInt[Float32] {
 
 // -- Generic conversion + comparison helpers ---------------------------------
 
-// NOTE: generic abs/clamp/sqrt require COMPARISON, which is not part of the
-// Num tower (Num is pure arithmetic). The `Real` interface below extends the
-// tower with comparison + sign ops so abs/clamp/min/max become generic too.
-// Float widths also gain sqrt via their concrete math.sqrt.
-
+/// NOTE: generic abs/clamp/sqrt require COMPARISON, which is not part of the
+/// Num tower (Num is pure arithmetic). The `Real` interface below extends the
+/// tower with comparison + sign ops so abs/clamp/min/max become generic too.
+/// Float widths also gain sqrt via their concrete math.sqrt.
 pub interface Real[T] {
   fn lt(a: T, b: T) -> Bool;
   fn gt(a: T, b: T) -> Bool;

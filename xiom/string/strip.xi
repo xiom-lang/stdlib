@@ -22,9 +22,6 @@ fn _char_at(s: Str, i: Int) -> Char {
   return b as Char;
 }
 
-// If `s` starts with `prefix`, returns `Some(s without the prefix)`.
-// Returns `None` when `s` does not start with `prefix`.
-// Complexity: O(|prefix|).
 /// If `s` starts with `prefix`, returns `Some(s without the prefix)`.
 /// Returns `None` when `s` does not start with `prefix`.
 /// Complexity: O(|prefix|).
@@ -32,9 +29,6 @@ pub fn str_strip_prefix(s: Str, prefix: Str) -> Option[Str] {
   return string.str_strip_prefix(s, prefix);
 }
 
-// If `s` ends with `suffix`, returns `Some(s without the suffix)`.
-// Returns `None` when `s` does not end with `suffix`.
-// Complexity: O(|suffix|).
 /// If `s` ends with `suffix`, returns `Some(s without the suffix)`.
 /// Returns `None` when `s` does not end with `suffix`.
 /// Complexity: O(|suffix|).
@@ -42,9 +36,6 @@ pub fn str_strip_suffix(s: Str, suffix: Str) -> Option[Str] {
   return string.str_strip_suffix(s, suffix);
 }
 
-// Removes all whitespace characters from `s`.
-// Returns a new string no longer than `s`.
-// Complexity: O(|s|).
 /// Removes all whitespace characters from `s`.
 /// Returns a new string no longer than `s`.
 /// Complexity: O(|s|).
@@ -65,9 +56,6 @@ pub fn str_strip_whitespace(s: Str) -> Str
   result
 }
 
-// Removes all control characters from `s`.
-// Returns a new string no longer than `s`.
-// Complexity: O(|s|).
 /// Removes all control characters from `s`.
 /// Returns a new string no longer than `s`.
 /// Complexity: O(|s|).

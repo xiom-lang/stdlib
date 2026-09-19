@@ -15,7 +15,6 @@ extern "C" {
   fn time(ptr: *Int) -> Int;
 }
 
-// === Duration -- a span of time ===
 /// === Duration -- a span of time ===
 pub type Duration = {
   secs: Int;
@@ -186,7 +185,6 @@ pub fn Duration.checked_sub(self, other: Duration) -> Option[Duration] {
   return Some(Duration{ secs: secs; nanos: nanos; });
 }
 
-// === Instant -- a point in time (monotonic clock) ===
 /// === Instant -- a point in time (monotonic clock) ===
 pub type Instant = { t: Int; }
 
@@ -217,7 +215,6 @@ pub fn Instant.sub(self, d: Duration) -> Instant {
   return Instant{ t: self.t - d.secs; };
 }
 
-// === SystemTime -- wall clock time ===
 /// === SystemTime -- wall clock time ===
 pub type SystemTime = { secs: Int; nanos: Int; }
 
@@ -252,7 +249,6 @@ pub fn SystemTime.secs_since_epoch(self) -> Int {
   return self.secs;
 }
 
-// === DateTime -- calendar date and time ===
 /// === DateTime -- calendar date and time ===
 pub type DateTime = {
   year: Int;
@@ -356,15 +352,12 @@ pub fn datetime_from_epoch(epoch: Int) -> DateTime {
   return decompose_epoch(epoch);
 }
 
-// local_now is the UTC alias for backward compatibility; real local
-// wall-clock conversion lives in xiom.time.tz (tzdata phase 1).
 /// local_now is the UTC alias for backward compatibility; real local
 /// wall-clock conversion lives in xiom.time.tz (tzdata phase 1).
 pub fn local_now() -> DateTime {
   return utc_now();
 }
 
-// === Sleep / Wait ===
 /// === Sleep / Wait ===
 pub fn sleep(dur: Duration)
   requires: true  // extern time() calls in the wait loop (T002 confinement)
@@ -392,11 +385,8 @@ pub fn sleep_until(instant: Instant)
   };
 }
 
-// ----------------------------------------------------------
-//  Date -- calendar date (year, month, day) with day-number
-//  arithmetic on the proleptic Gregorian calendar.
-// ----------------------------------------------------------
-
+///  Date -- calendar date (year, month, day) with day-number
+///  arithmetic on the proleptic Gregorian calendar.
 pub type Date = {
   year: Int;
   month: Int;
@@ -418,16 +408,12 @@ fn days_from_civil(y: Int, m: Int, d: Int) -> Int {
   return serial - 719468;
 }
 
-// date_new creates a Date from year, month, day.
-// Complexity: O(1). No validation performed.
 /// date_new creates a Date from year, month, day.
 /// Complexity: O(1). No validation performed.
 pub fn date_new(year: Int, month: Int, day: Int) -> Date {
   return Date{ year: year; month: month; day: day; };
 }
 
-// date_now returns the current date computed from the Unix timestamp.
-// Complexity: O(1). Uses time(0) for the system clock.
 /// date_now returns the current date computed from the Unix timestamp.
 /// Complexity: O(1). Uses time(0) for the system clock.
 pub fn date_now() -> Date
@@ -437,33 +423,24 @@ pub fn date_now() -> Date
   return timestamp_to_date(ts);
 }
 
-// date_year returns the year field of a Date.
-// Complexity: O(1).
 /// date_year returns the year field of a Date.
 /// Complexity: O(1).
 pub fn date_year(d: &Date) -> Int {
   return d.year;
 }
 
-// date_month returns the month field of a Date (1-12).
-// Complexity: O(1).
 /// date_month returns the month field of a Date (1-12).
 /// Complexity: O(1).
 pub fn date_month(d: &Date) -> Int {
   return d.month;
 }
 
-// date_day returns the day-of-month field of a Date (1-31).
-// Complexity: O(1).
 /// date_day returns the day-of-month field of a Date (1-31).
 /// Complexity: O(1).
 pub fn date_day(d: &Date) -> Int {
   return d.day;
 }
 
-// date_is_leap_year returns true if the given year is a leap year
-// in the proleptic Gregorian calendar.
-// Complexity: O(1).
 /// date_is_leap_year returns true if the given year is a leap year
 /// in the proleptic Gregorian calendar.
 /// Complexity: O(1).
@@ -477,9 +454,6 @@ pub fn date_is_leap_year(year: Int) -> Bool {
   return year % 4 == 0;
 }
 
-// date_days_in_month returns the number of days in the given month
-// of the given year (1..31).  Valid for proleptic Gregorian.
-// Complexity: O(1).
 /// date_days_in_month returns the number of days in the given month
 /// of the given year (1..31).  Valid for proleptic Gregorian.
 /// Complexity: O(1).
@@ -496,9 +470,6 @@ pub fn date_days_in_month(year: Int, month: Int) -> Int {
   return 31;
 }
 
-// date_day_of_week returns the day of the week for the given date
-// using Zeller's congruence (Gregorian).  0 = Sunday, ..., 6 = Saturday.
-// Complexity: O(1).
 /// date_day_of_week returns the day of the week for the given date
 /// using Zeller's congruence (Gregorian).  0 = Sunday, ..., 6 = Saturday.
 /// Complexity: O(1).
@@ -519,9 +490,6 @@ pub fn date_day_of_week(year: Int, month: Int, day: Int) -> Int {
   return (r + 6) % 7;
 }
 
-// date_day_of_year returns the ordinal day of the year (1-366)
-// for the given date.
-// Complexity: O(1).
 /// date_day_of_year returns the ordinal day of the year (1-366)
 /// for the given date.
 /// Complexity: O(1).
@@ -535,8 +503,6 @@ pub fn date_day_of_year(year: Int, month: Int, day: Int) -> Int {
   return result;
 }
 
-// date_iso8601 formats a Date as a zero-padded "YYYY-MM-DD" string.
-// Complexity: O(1).  No dynamic allocation overhead beyond str_concat.
 /// date_iso8601 formats a Date as a zero-padded "YYYY-MM-DD" string.
 /// Complexity: O(1).  No dynamic allocation overhead beyond str_concat.
 pub fn date_iso8601(d: &Date) -> Str {
@@ -578,9 +544,6 @@ fn format_int_padded(n: Int, width: Int) -> Str {
   return result;
 }
 
-// date_from_iso8601 parses a "YYYY-MM-DD" string into a Date.
-// Returns None if the format is malformed or values out of range.
-// Complexity: O(1).
 /// date_from_iso8601 parses a "YYYY-MM-DD" string into a Date.
 /// Returns None if the format is malformed or values out of range.
 /// Complexity: O(1).
@@ -617,8 +580,6 @@ pub fn date_from_iso8601(s: Str) -> Option[Date] {
   return Some(Date{ year: year; month: month; day: day; });
 }
 
-// date_add_days returns a new Date offset by the given number of days.
-// Handles negative days correctly.  Complexity: O(1).
 /// date_add_days returns a new Date offset by the given number of days.
 /// Handles negative days correctly.  Complexity: O(1).
 pub fn date_add_days(d: &Date, days: Int) -> Date {
@@ -627,8 +588,6 @@ pub fn date_add_days(d: &Date, days: Int) -> Date {
   return Date{ year: y; month: m; day: day; };
 }
 
-// date_diff_days returns the number of days between a and b (a - b).
-// Complexity: O(1).
 /// date_diff_days returns the number of days between a and b (a - b).
 /// Complexity: O(1).
 pub fn date_diff_days(a: &Date, b: &Date) -> Int {
@@ -637,8 +596,6 @@ pub fn date_diff_days(a: &Date, b: &Date) -> Int {
   return da - db;
 }
 
-// date_compare compares two dates.
-// Returns -1 if a < b, 0 if equal, 1 if a > b.  Complexity: O(1).
 /// date_compare compares two dates.
 /// Returns -1 if a < b, 0 if equal, 1 if a > b.  Complexity: O(1).
 pub fn date_compare(a: &Date, b: &Date) -> Int {
@@ -663,8 +620,6 @@ pub fn date_compare(a: &Date, b: &Date) -> Int {
   return 0;
 }
 
-// unix_timestamp returns the current Unix timestamp (seconds since epoch).
-// Delegates to the C time(2) call.  Complexity: O(1).
 /// unix_timestamp returns the current Unix timestamp (seconds since epoch).
 /// Delegates to the C time(2) call.  Complexity: O(1).
 pub fn unix_timestamp() -> Int
@@ -673,9 +628,6 @@ pub fn unix_timestamp() -> Int
   return time(0);
 }
 
-// timestamp_to_date converts a Unix timestamp (seconds) to a Date.
-// Uses the existing civil_from_days calendar decomposition.
-// Complexity: O(1).
 /// timestamp_to_date converts a Unix timestamp (seconds) to a Date.
 /// Uses the existing civil_from_days calendar decomposition.
 /// Complexity: O(1).
@@ -689,8 +641,6 @@ pub fn timestamp_to_date(ts: Int) -> Date {
   return Date{ year: y; month: m; day: d; };
 }
 
-// date_to_timestamp converts a Date to a Unix timestamp (0:00:00 UTC).
-// Complexity: O(1).
 /// date_to_timestamp converts a Date to a Unix timestamp (0:00:00 UTC).
 /// Complexity: O(1).
 pub fn date_to_timestamp(d: &Date) -> Int {
@@ -698,8 +648,6 @@ pub fn date_to_timestamp(d: &Date) -> Int {
   return days * SECS_PER_DAY;
 }
 
-// iso8601_now returns the current date as an ISO-8601 "YYYY-MM-DD" string.
-// Complexity: O(1).
 /// iso8601_now returns the current date as an ISO-8601 "YYYY-MM-DD" string.
 /// Complexity: O(1).
 pub fn iso8601_now() -> Str {
@@ -707,9 +655,6 @@ pub fn iso8601_now() -> Str {
   return date_iso8601(&d);
 }
 
-// format_timestamp formats a Unix timestamp as a human-readable
-// date-time string "YYYY-MM-DD HH:MM:SS" (UTC).
-// Complexity: O(1).
 /// format_timestamp formats a Unix timestamp as a human-readable
 /// date-time string "YYYY-MM-DD HH:MM:SS" (UTC).
 /// Complexity: O(1).
@@ -825,8 +770,6 @@ pub fn strftime(spec: Str, d: &Date) -> Str {
 /// Parse a date per the supported conversion set (see the module comment).
 /// Returns None when the input does not match the spec, the month/day are
 /// out of range, or the spec uses an unsupported conversion.
-// Result struct instead of Option[Date]: Option-of-struct payloads collide
-// with Option[Int] in combined programs (COMPILER_BUGS.md BUG 12 family).
 /// Result struct instead of Option[Date]: Option-of-struct payloads collide
 /// with Option[Int] in combined programs (COMPILER_BUGS.md BUG 12 family).
 pub type DateParse = { is_ok: Bool; date: Date; }

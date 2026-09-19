@@ -20,7 +20,6 @@ use xiom.math;
 // SIMD Vector Types
 // ================================================================
 
-// 128-bit vectors (SSE / NEON)
 /// 128-bit vectors (SSE / NEON)
 pub type Vec4f = { data: *Float32; invariant: data != null; }  // 4 x f32
 
@@ -32,7 +31,6 @@ pub type Vec8s = { data: *Int16; }    // 8 x i16
 
 pub type Vec16b = { data: *Int8; }    // 16 x i8
 
-// 256-bit vectors (AVX / AVX2)
 /// 256-bit vectors (AVX / AVX2)
 pub type Vec8f = { data: *Float32; invariant: data != null; }  // 8 x f32
 
@@ -40,7 +38,6 @@ pub type Vec4d = { data: *Float64; }  // 4 x f64
 
 pub type Vec8i = { data: *Int32; }    // 8 x i32
 
-// 512-bit vectors (AVX-512)
 /// 512-bit vectors (AVX-512)
 pub type Vec16f = { data: *Float32; } // 16 x f32
 
@@ -90,10 +87,7 @@ extern "C" {
   fn xiom_simd_i32_to_f32(src: *Int32, dst: *Float32);
 }
 
-// ================================================================
-// ISA Detection
-// ================================================================
-
+/// ISA Detection
 pub const SIMD_SSE:    Int = 1;
 pub const SIMD_SSE2:   Int = 2;
 pub const SIMD_AVX:    Int = 4;
@@ -137,10 +131,7 @@ pub fn has_neon() -> Bool
   unsafe { return xiom_simd_has_neon() != 0; }
 }
 
-// ================================================================
-// Vec4f Operations (4 x f32, SSE/NEON)
-// ================================================================
-
+/// Vec4f Operations (4 x f32, SSE/NEON)
 pub fn Vec4f.new(x: Float32, y: Float32, z: Float32, w: Float32) -> Vec4f {
   let data = alloc.alloc(16);  // 4 * 4 bytes = 16 bytes (128-bit aligned)
   unsafe {
@@ -268,10 +259,7 @@ pub fn Vec4f.drop(self)
   unsafe { alloc.free(data as *UInt8); }
 }
 
-// ================================================================
-// Scalar fallback when SIMD unavailable
-// ================================================================
-
+/// Scalar fallback when SIMD unavailable
 pub fn Vec4f.add_scalar(self, other: Vec4f) -> Vec4f {
   return Vec4f.new(
     get(0) + other.get(0),
@@ -290,10 +278,7 @@ pub fn Vec4f.mul_scalar(self, other: Vec4f) -> Vec4f {
   );
 }
 
-// ================================================================
-// Vec8f Operations (8 x f32, AVX)
-// ================================================================
-
+/// Vec8f Operations (8 x f32, AVX)
 pub fn Vec8f.new(v0: Float32, v1: Float32, v2: Float32, v3: Float32,
                   v4: Float32, v5: Float32, v6: Float32, v7: Float32) -> Vec8f {
   let data = alloc.alloc(32);  // 8 * 4 = 32 bytes (256-bit)

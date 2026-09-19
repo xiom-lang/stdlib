@@ -21,11 +21,9 @@ module xiom.math.matrices
 
 use xiom.math;
 
-// 2x2 column-major matrix.
 /// 2x2 column-major matrix.
 pub type Mat2 = { m00: Float64; m01: Float64; m10: Float64; m11: Float64; }
 
-// 3x3 column-major matrix.
 /// 3x3 column-major matrix.
 pub type Mat3 = {
   m00: Float64; m01: Float64; m02: Float64;
@@ -33,7 +31,6 @@ pub type Mat3 = {
   m20: Float64; m21: Float64; m22: Float64;
 }
 
-// 4x4 column-major matrix.
 /// 4x4 column-major matrix.
 pub type Mat4 = {
   m00: Float64; m01: Float64; m02: Float64; m03: Float64;
@@ -46,15 +43,12 @@ pub type Mat4 = {
 // Mat2
 // ============================================================================
 
-// Construct a 2x2 matrix from elements in row-major reading order
-// (a11 a12 / a21 a22) stored column-major. O(1).
 /// Construct a 2x2 matrix from elements in row-major reading order
 /// (a11 a12 / a21 a22) stored column-major. O(1).
 pub fn mat2_new(a11: Float64, a12: Float64, a21: Float64, a22: Float64) -> Mat2 {
   return Mat2{ m00: a11; m01: a12; m10: a21; m11: a22; };
 }
 
-// Matrix product a * b (2x2). O(8) ops.
 /// Matrix product a * b (2x2). O(8) ops.
 pub fn mat2_mul(a: Mat2, b: Mat2) -> Mat2 {
   return Mat2{
@@ -65,15 +59,11 @@ pub fn mat2_mul(a: Mat2, b: Mat2) -> Mat2 {
   };
 }
 
-// Determinant of a 2x2 matrix: m00*m11 - m01*m10. O(1).
 /// Determinant of a 2x2 matrix: m00*m11 - m01*m10. O(1).
 pub fn mat2_det(m: Mat2) -> Float64 {
   return m.m00 * m.m11 - m.m01 * m.m10;
 }
 
-// Inverse of a 2x2 matrix via the adjugate formula. Returns None when the
-// determinant is near zero (|det| < 1e-12, documented singularity cutoff).
-// O(1).
 /// Inverse of a 2x2 matrix via the adjugate formula. Returns None when the
 /// determinant is near zero (|det| < 1e-12, documented singularity cutoff).
 /// O(1).
@@ -89,7 +79,6 @@ pub fn mat2_inv(m: Mat2) -> Option[Mat2] {
   });
 }
 
-// Transpose of a 2x2 matrix. O(1).
 /// Transpose of a 2x2 matrix. O(1).
 pub fn mat2_transpose(m: Mat2) -> Mat2 {
   return Mat2{
@@ -102,8 +91,6 @@ pub fn mat2_transpose(m: Mat2) -> Mat2 {
 // Mat3
 // ============================================================================
 
-// Construct a 3x3 matrix from elements in row-major reading order (three
-// rows) stored column-major. O(1).
 /// Construct a 3x3 matrix from elements in row-major reading order (three
 /// rows) stored column-major. O(1).
 pub fn mat3_new(a11: Float64, a12: Float64, a13: Float64,
@@ -116,7 +103,6 @@ pub fn mat3_new(a11: Float64, a12: Float64, a13: Float64,
   };
 }
 
-// Matrix product a * b (3x3). O(27) ops.
 /// Matrix product a * b (3x3). O(27) ops.
 pub fn mat3_mul(a: Mat3, b: Mat3) -> Mat3 {
   return Mat3{
@@ -132,7 +118,6 @@ pub fn mat3_mul(a: Mat3, b: Mat3) -> Mat3 {
   };
 }
 
-// Determinant of a 3x3 matrix by cofactor expansion. O(9) ops.
 /// Determinant of a 3x3 matrix by cofactor expansion. O(9) ops.
 pub fn mat3_det(m: Mat3) -> Float64 {
   return m.m00 * (m.m11 * m.m22 - m.m12 * m.m21)
@@ -140,9 +125,6 @@ pub fn mat3_det(m: Mat3) -> Float64 {
        + m.m02 * (m.m10 * m.m21 - m.m11 * m.m20);
 }
 
-// Inverse of a 3x3 matrix via the adjugate formula. Returns None when the
-// determinant is near zero (|det| < 1e-12, documented singularity cutoff).
-// O(27) ops.
 /// Inverse of a 3x3 matrix via the adjugate formula. Returns None when the
 /// determinant is near zero (|det| < 1e-12, documented singularity cutoff).
 /// O(27) ops.
@@ -163,7 +145,6 @@ pub fn mat3_inv(m: Mat3) -> Option[Mat3] {
   });
 }
 
-// Transpose of a 3x3 matrix. O(1).
 /// Transpose of a 3x3 matrix. O(1).
 pub fn mat3_transpose(m: Mat3) -> Mat3 {
   return Mat3{
@@ -177,8 +158,6 @@ pub fn mat3_transpose(m: Mat3) -> Mat3 {
 // Mat4
 // ============================================================================
 
-// Construct a 4x4 matrix from elements in row-major reading order (four
-// rows) stored column-major. O(1).
 /// Construct a 4x4 matrix from elements in row-major reading order (four
 /// rows) stored column-major. O(1).
 pub fn mat4_new(a11: Float64, a12: Float64, a13: Float64, a14: Float64,
@@ -193,7 +172,6 @@ pub fn mat4_new(a11: Float64, a12: Float64, a13: Float64, a14: Float64,
   };
 }
 
-// Matrix product a * b (4x4). O(64) ops.
 /// Matrix product a * b (4x4). O(64) ops.
 pub fn mat4_mul(a: Mat4, b: Mat4) -> Mat4 {
   return Mat4{
@@ -216,8 +194,6 @@ pub fn mat4_mul(a: Mat4, b: Mat4) -> Mat4 {
   };
 }
 
-// Determinant of a 4x4 matrix by cofactor expansion along the first row
-// (3x3 sub-determinants of the lower rows). O(48) ops.
 /// Determinant of a 4x4 matrix by cofactor expansion along the first row
 /// (3x3 sub-determinants of the lower rows). O(48) ops.
 pub fn mat4_det(m: Mat4) -> Float64 {
@@ -236,8 +212,6 @@ pub fn mat4_det(m: Mat4) -> Float64 {
   return m.m00 * m00 - m.m01 * m01 + m.m02 * m02 - m.m03 * m03;
 }
 
-// Inverse of a 4x4 matrix via the adjugate (cofactor-transpose / det).
-// Returns None when |det| < 1e-12 (documented singularity cutoff). O(150).
 /// Inverse of a 4x4 matrix via the adjugate (cofactor-transpose / det).
 /// Returns None when |det| < 1e-12 (documented singularity cutoff). O(150).
 pub fn mat4_inv(m: Mat4) -> Option[Mat4] {
@@ -316,7 +290,6 @@ pub fn mat4_inv(m: Mat4) -> Option[Mat4] {
   });
 }
 
-// Transpose of a 4x4 matrix. O(1).
 /// Transpose of a 4x4 matrix. O(1).
 pub fn mat4_transpose(m: Mat4) -> Mat4 {
   return Mat4{
@@ -331,8 +304,6 @@ pub fn mat4_transpose(m: Mat4) -> Mat4 {
 // Dynamic matrices (row-major Vec[Vec[Float64]])
 // ============================================================================
 
-// n x n identity matrix. Returns an empty matrix for n <= 0 (documented).
-// O(n^2).
 /// n x n identity matrix. Returns an empty matrix for n <= 0 (documented).
 /// O(n^2).
 pub fn mat_identity(n: Int) -> Vec[Vec[Float64]] {
@@ -356,9 +327,6 @@ pub fn mat_identity(n: Int) -> Vec[Vec[Float64]] {
   return out;
 }
 
-// Dynamic matrix product a * b. Returns an empty matrix when the inner
-// dimensions disagree (a.cols != b.rows), or when either input is empty
-// (documented; no silent garbage). O(rows * cols * inner).
 /// Dynamic matrix product a * b. Returns an empty matrix when the inner
 /// dimensions disagree (a.cols != b.rows), or when either input is empty
 /// (documented; no silent garbage). O(rows * cols * inner).
@@ -395,9 +363,6 @@ pub fn mat_mul(a: &Vec[Vec[Float64]], b: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]
   return out;
 }
 
-// Determinant of a dynamic square matrix via Laplace cofactor expansion.
-// Returns NaN (0.0/0.0) for non-square or empty input (documented).
-// O(n!).
 /// Determinant of a dynamic square matrix via Laplace cofactor expansion.
 /// Returns NaN (0.0/0.0) for non-square or empty input (documented).
 /// O(n!).
@@ -438,9 +403,6 @@ pub fn mat_det(m: &Vec[Vec[Float64]]) -> Float64 {
   return s;
 }
 
-// Inverse of a dynamic square matrix via Gauss-Jordan elimination.
-// Returns None for non-square, empty, or (numerically) singular input
-// (documented; pivot tolerance 1e-12). O(n^3).
 /// Inverse of a dynamic square matrix via Gauss-Jordan elimination.
 /// Returns None for non-square, empty, or (numerically) singular input
 /// (documented; pivot tolerance 1e-12). O(n^3).
@@ -532,8 +494,6 @@ pub fn mat_inv(m: &Vec[Vec[Float64]]) -> Option[Vec[Vec[Float64]]] {
   return Some(inv);
 }
 
-// m * T where T is the 4x4 translation matrix by (x, y, z). When m is not
-// 4x4 the input is returned unchanged (documented). O(1).
 /// m * T where T is the 4x4 translation matrix by (x, y, z). When m is not
 /// 4x4 the input is returned unchanged (documented). O(1).
 pub fn mat_translate(m: &Vec[Vec[Float64]], x: Float64, y: Float64, z: Float64) -> Vec[Vec[Float64]] {
@@ -542,9 +502,6 @@ pub fn mat_translate(m: &Vec[Vec[Float64]], x: Float64, y: Float64, z: Float64) 
   return _mul4(m, &t);
 }
 
-// m * R where R is the 4x4 rotation by angle radians about axis
-// (axis is normalised internally). A zero axis returns m unchanged
-// (documented); a non-4x4 m is returned unchanged. O(1).
 /// m * R where R is the 4x4 rotation by angle radians about axis
 /// (axis is normalised internally). A zero axis returns m unchanged
 /// (documented); a non-4x4 m is returned unchanged. O(1).
@@ -590,8 +547,6 @@ pub fn mat_rotate(m: &Vec[Vec[Float64]], angle: Float64, axis: &Vec[Float64]) ->
   return _mul4(m, &r);
 }
 
-// m * S where S is the 4x4 scale matrix by (x, y, z). A non-4x4 m is
-// returned unchanged (documented). O(1).
 /// m * S where S is the 4x4 scale matrix by (x, y, z). A non-4x4 m is
 /// returned unchanged (documented). O(1).
 pub fn mat_scale(m: &Vec[Vec[Float64]], x: Float64, y: Float64, z: Float64) -> Vec[Vec[Float64]] {
@@ -624,9 +579,6 @@ pub fn mat_scale(m: &Vec[Vec[Float64]], x: Float64, y: Float64, z: Float64) -> V
   return _mul4(m, &s);
 }
 
-// Right-handed look-at view matrix: camera at eye looking at target with
-// up vector. eye/target/up are length-3 dynamic vectors; vectors of any
-// other length return an empty matrix (documented). O(1).
 /// Right-handed look-at view matrix: camera at eye looking at target with
 /// up vector. eye/target/up are length-3 dynamic vectors; vectors of any
 /// other length return an empty matrix (documented). O(1).
@@ -684,9 +636,6 @@ pub fn mat_look_at(eye: &Vec[Float64], target: &Vec[Float64], up: &Vec[Float64])
   return out;
 }
 
-// Perspective projection matrix (right-handed, standard OpenGL mapping to
-// NDC [-1, 1]^3). Returns an empty matrix for fovy <= 0, aspect <= 0, or
-// near == far (documented). O(1).
 /// Perspective projection matrix (right-handed, standard OpenGL mapping to
 /// NDC [-1, 1]^3). Returns an empty matrix for fovy <= 0, aspect <= 0, or
 /// near == far (documented). O(1).
@@ -722,9 +671,6 @@ pub fn mat_perspective(fovy: Float64, aspect: Float64, near: Float64, far: Float
   return out;
 }
 
-// Orthographic projection matrix mapping [l, r] x [b, t] x [n, f] to NDC
-// [-1, 1]^3. Returns an empty matrix when any two facing planes coincide
-// (documented). O(1).
 /// Orthographic projection matrix mapping [l, r] x [b, t] x [n, f] to NDC
 /// [-1, 1]^3. Returns an empty matrix when any two facing planes coincide
 /// (documented). O(1).

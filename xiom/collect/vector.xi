@@ -6,16 +6,13 @@ module xiom.collect.vector
 
 // Depends on: none
 
-// ============================================================================
-// Growable array of Int elements with amortized O(1) push and O(1) indexed
-// access.
-// The backing store is the built-in Vec[Int]. NOTE: the API parameter type is
-// `IntVec` because defining a struct named `Vec` collides with the built-in
-// `Vec[T]` generic and silently corrupts codegen (compiler BUG 25 family);
-// the fn names and value signatures match the frozen spec exactly.
-// All index access is bounds-checked (Option-returning getters).
-// ============================================================================
-
+/// Growable array of Int elements with amortized O(1) push and O(1) indexed
+/// access.
+/// The backing store is the built-in Vec[Int]. NOTE: the API parameter type is
+/// `IntVec` because defining a struct named `Vec` collides with the built-in
+/// `Vec[T]` generic and silently corrupts codegen (compiler BUG 25 family);
+/// the fn names and value signatures match the frozen spec exactly.
+/// All index access is bounds-checked (Option-returning getters).
 pub type IntVec = {
   items: Vec[Int];
 }

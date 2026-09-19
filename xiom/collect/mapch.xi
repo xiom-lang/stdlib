@@ -6,15 +6,12 @@ module xiom.collect.mapch
 
 // Depends on: none
 
-// ============================================================================
-// Hash map using separate chaining over Int keys and Int values.
-// Bucket heads live in `buckets`; entries are stored in parallel `keys` /
-// `values` / `next` / `live` arenas (the flat-arena collect/ pattern).
-// Removed entries are unlinked and flagged dead but stay in the arena, so
-// chain walkers never see them. The table doubles when the load factor
-// exceeds 0.75, re-linking only live entries. O(1) amortized lookups.
-// ============================================================================
-
+/// Hash map using separate chaining over Int keys and Int values.
+/// Bucket heads live in `buckets`; entries are stored in parallel `keys` /
+/// `values` / `next` / `live` arenas (the flat-arena collect/ pattern).
+/// Removed entries are unlinked and flagged dead but stay in the arena, so
+/// chain walkers never see them. The table doubles when the load factor
+/// exceeds 0.75, re-linking only live entries. O(1) amortized lookups.
 pub type HashMap = {
   buckets: Vec[Int];
   keys: Vec[Int];

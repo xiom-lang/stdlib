@@ -89,7 +89,6 @@ extern "C" {
   fn fmod(x: Float64, y: Float64) -> Float64;
 }
 
-// === Constants ===
 /// === Constants ===
 pub const PI: Float64 = 3.141592653589793;
 pub const E: Float64 = 2.718281828459045;

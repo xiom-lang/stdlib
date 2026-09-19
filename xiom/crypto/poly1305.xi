@@ -282,31 +282,28 @@ fn _finalize(h: &Vec[Int], s: &Vec[Int]) -> Vec[UInt8] {
   return tag;
 }
 
-// ============================================================================
-// Poly1305 MAC -- Main Function
-//
-// Computes a 16-byte authenticator tag for the given message under the
-// given 32-byte one-time key.
-//
-// Algorithm:
-//   1. Split key: r = key[0..15] (clamped), s = key[16..31]
-//   2. Initialize accumulator h = 0 (all 5 limbs = 0)
-//   3. Process each 16-byte message block:
-//      a. Convert block + 0x01 to 5 limbs (n)
-//      b. h = h + n (limb-wise)
-//      c. h = h * r mod p
-//   4. Finalize: tag = low 128 bits of (h + s)
-//
-// Parameters:
-//   key: 32-byte one-time key (Vec[Int] where each element is a byte value 0-255,
-//        or Vec[UInt8])
-//   msg: message to authenticate
-// Returns: 16-byte tag as Vec[Int] (each element 0-255)
-//
-// IMPORTANT: The key MUST be used only once per key. Key reuse breaks security.
-// Use with ChaCha20 as ChaCha20-Poly1305 AEAD for authenticated encryption.
-// ============================================================================
-
+/// Poly1305 MAC -- Main Function
+/// 
+/// Computes a 16-byte authenticator tag for the given message under the
+/// given 32-byte one-time key.
+/// 
+/// Algorithm:
+///   1. Split key: r = key[0..15] (clamped), s = key[16..31]
+///   2. Initialize accumulator h = 0 (all 5 limbs = 0)
+///   3. Process each 16-byte message block:
+///      a. Convert block + 0x01 to 5 limbs (n)
+///      b. h = h + n (limb-wise)
+///      c. h = h * r mod p
+///   4. Finalize: tag = low 128 bits of (h + s)
+/// 
+/// Parameters:
+///   key: 32-byte one-time key (Vec[Int] where each element is a byte value 0-255,
+///        or Vec[UInt8])
+///   msg: message to authenticate
+/// Returns: 16-byte tag as Vec[Int] (each element 0-255)
+/// 
+/// IMPORTANT: The key MUST be used only once per key. Key reuse breaks security.
+/// Use with ChaCha20 as ChaCha20-Poly1305 AEAD for authenticated encryption.
 pub fn poly1305_mac(key: &Vec[UInt8], msg: &Vec[UInt8]) -> Vec[UInt8] {
   // Step 1: Split and clamp key
   var r_bytes = Vec[UInt8].new();

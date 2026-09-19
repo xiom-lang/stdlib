@@ -22,26 +22,20 @@ module xiom.geom.quaternion
 use xiom.geom;
 use xiom.math;
 
-// Quaternion (x, y, z, w); w is the scalar part.
 /// Quaternion (x, y, z, w); w is the scalar part.
 pub type Quat = { x: Float64; y: Float64; z: Float64; w: Float64; }
 
-// Construct a quaternion from components. Implemented locally (name collision
-// with geom.quat_new which takes axis/angle). O(1).
 /// Construct a quaternion from components. Implemented locally (name collision
 /// with geom.quat_new which takes axis/angle). O(1).
 pub fn quat_new(x: Float64, y: Float64, z: Float64, w: Float64) -> Quat {
   return Quat{ x: x; y: y; z: z; w: w; };
 }
 
-// Identity quaternion (no rotation). Implemented locally (name collision). O(1).
 /// Identity quaternion (no rotation). Implemented locally (name collision). O(1).
 pub fn quat_identity() -> Quat {
   return Quat{ x: 0.0; y: 0.0; z: 0.0; w: 1.0; };
 }
 
-// Quaternion rotating angle (radians) about the (non-zero) axis direction.
-// The axis is normalised first. Implemented locally (name collision). O(1).
 /// Quaternion rotating angle (radians) about the (non-zero) axis direction.
 /// The axis is normalised first. Implemented locally (name collision). O(1).
 pub fn quat_from_axis_angle(axis: &Vec[Float64], angle: Float64) -> Quat {
@@ -64,9 +58,6 @@ pub fn quat_from_axis_angle(axis: &Vec[Float64], angle: Float64) -> Quat {
   };
 }
 
-// Quaternion from ZYX intrinsic Euler angles (yaw around Z, pitch around Y,
-// roll around X), in radians. Implemented locally (name collision with
-// geom.quat_from_euler). O(1).
 /// Quaternion from ZYX intrinsic Euler angles (yaw around Z, pitch around Y,
 /// roll around X), in radians. Implemented locally (name collision with
 /// geom.quat_from_euler). O(1).
@@ -85,9 +76,6 @@ pub fn quat_from_euler(yaw: Float64, pitch: Float64, roll: Float64) -> Quat {
   };
 }
 
-// Quaternion equivalent of a 3x3 rotation matrix (trace method). The matrix
-// is copied locally before element access. Returns the identity quaternion
-// for a non-3x3 input. O(1).
 /// Quaternion equivalent of a 3x3 rotation matrix (trace method). The matrix
 /// is copied locally before element access. Returns the identity quaternion
 /// for a non-3x3 input. O(1).
@@ -142,8 +130,6 @@ pub fn quat_from_rotation_matrix(m: &Vec[Vec[Float64]]) -> Quat {
   };
 }
 
-// 3x3 rotation matrix (row-major Vec[Vec[Float64]]) from a quaternion. The
-// quaternion is normalised first. O(1).
 /// 3x3 rotation matrix (row-major Vec[Vec[Float64]]) from a quaternion. The
 /// quaternion is normalised first. O(1).
 pub fn quat_to_matrix(q: Quat) -> Vec[Vec[Float64]] {
@@ -180,9 +166,6 @@ pub fn quat_to_matrix(q: Quat) -> Vec[Vec[Float64]] {
   return out;
 }
 
-// Extract (yaw, pitch, roll) in radians, matching quat_from_euler (ZYX
-// intrinsic). Implemented locally: module-qualified results inside a tuple
-// literal mis-type as Int in this compiler (BUG). O(1).
 /// Extract (yaw, pitch, roll) in radians, matching quat_from_euler (ZYX
 /// intrinsic). Implemented locally: module-qualified results inside a tuple
 /// literal mis-type as Int in this compiler (BUG). O(1).
@@ -196,8 +179,6 @@ pub fn quat_to_euler(q: Quat) -> (Float64, Float64, Float64) {
   return (yaw, pitch, roll);
 }
 
-// Hamilton product a * b (compose rotations; b applied first). Implemented
-// locally (name collision with geom.quat_mul). O(1).
 /// Hamilton product a * b (compose rotations; b applied first). Implemented
 /// locally (name collision with geom.quat_mul). O(1).
 pub fn quat_mul(a: Quat, b: Quat) -> Quat {
@@ -209,8 +190,6 @@ pub fn quat_mul(a: Quat, b: Quat) -> Quat {
   };
 }
 
-// Conjugate of a quaternion: negate the vector part. Delegates to
-// geom.quat_conjugate (name differs). O(1).
 /// Conjugate of a quaternion: negate the vector part. Delegates to
 /// geom.quat_conjugate (name differs). O(1).
 pub fn quat_conj(q: Quat) -> Quat {
@@ -218,8 +197,6 @@ pub fn quat_conj(q: Quat) -> Quat {
   return Quat{ x: gq.x; y: gq.y; z: gq.z; w: gq.w; };
 }
 
-// Inverse of a unit quaternion (the conjugate). Delegates to geom.quat_inverse
-// (name differs). O(1).
 /// Inverse of a unit quaternion (the conjugate). Delegates to geom.quat_inverse
 /// (name differs). O(1).
 pub fn quat_inv(q: Quat) -> Quat {
@@ -227,16 +204,12 @@ pub fn quat_inv(q: Quat) -> Quat {
   return Quat{ x: gq.x; y: gq.y; z: gq.z; w: gq.w; };
 }
 
-// Euclidean length of a quaternion. Delegates to geom.quat_length (name
-// differs). O(1).
 /// Euclidean length of a quaternion. Delegates to geom.quat_length (name
 /// differs). O(1).
 pub fn quat_norm(q: Quat) -> Float64 {
   return geom.quat_length(Quaternion{ x: q.x; y: q.y; z: q.z; w: q.w; });
 }
 
-// Unit quaternion; identity if the length is zero. Implemented locally (name
-// collision with geom.quat_normalize). O(1).
 /// Unit quaternion; identity if the length is zero. Implemented locally (name
 /// collision with geom.quat_normalize). O(1).
 pub fn quat_normalize(q: Quat) -> Quat {
@@ -245,8 +218,6 @@ pub fn quat_normalize(q: Quat) -> Quat {
   return Quat{ x: q.x / len; y: q.y / len; z: q.z / len; w: q.w / len; };
 }
 
-// Rotate the 3D vector v by quaternion q. Delegates to geom.quat_rotate_vec3
-// through the canonical types. O(1).
 /// Rotate the 3D vector v by quaternion q. Delegates to geom.quat_rotate_vec3
 /// through the canonical types. O(1).
 pub fn quat_rotate(q: Quat, v: &Vec[Float64]) -> Vec[Float64] {
@@ -263,8 +234,6 @@ pub fn quat_rotate(q: Quat, v: &Vec[Float64]) -> Vec[Float64] {
   return out;
 }
 
-// Spherical linear interpolation between a and b by t in [0,1] along the
-// shortest arc. Implemented locally (name collision with geom.quat_slerp). O(1).
 /// Spherical linear interpolation between a and b by t in [0,1] along the
 /// shortest arc. Implemented locally (name collision with geom.quat_slerp). O(1).
 pub fn quat_slerp(a: Quat, b: Quat, t: Float64) -> Quat {
@@ -303,8 +272,6 @@ pub fn quat_slerp(a: Quat, b: Quat, t: Float64) -> Quat {
   };
 }
 
-// Normalised linear interpolation between a and b by t (t clamped to [0,1]).
-// Implemented locally (name collision with geom.quat_nlerp). O(1).
 /// Normalised linear interpolation between a and b by t (t clamped to [0,1]).
 /// Implemented locally (name collision with geom.quat_nlerp). O(1).
 pub fn quat_nlerp(a: Quat, b: Quat, t: Float64) -> Quat {
@@ -320,7 +287,6 @@ pub fn quat_nlerp(a: Quat, b: Quat, t: Float64) -> Quat {
   return quat_normalize(n);
 }
 
-// Rotation angle of q in radians, in [0, PI]. 0 for the identity. O(1).
 /// Rotation angle of q in radians, in [0, PI]. 0 for the identity. O(1).
 pub fn quat_angle(q: Quat) -> Float64 {
   var w = q.w;
@@ -329,8 +295,6 @@ pub fn quat_angle(q: Quat) -> Float64 {
   return 2.0 * math.acos(w);
 }
 
-// Unit rotation axis of q (direction of the vector part). Returns the zero
-// vector when q represents no rotation. O(1).
 /// Unit rotation axis of q (direction of the vector part). Returns the zero
 /// vector when q represents no rotation. O(1).
 pub fn quat_axis(q: Quat) -> Vec[Float64] {
@@ -349,8 +313,6 @@ pub fn quat_axis(q: Quat) -> Vec[Float64] {
   return out;
 }
 
-// Orientation quaternion looking from eye towards target with the given up
-// direction (right-handed). Returns the identity for a degenerate look. O(1).
 /// Orientation quaternion looking from eye towards target with the given up
 /// direction (right-handed). Returns the identity for a degenerate look. O(1).
 pub fn quat_look_at(eye: &Vec[Float64], target: &Vec[Float64], up: &Vec[Float64]) -> Quat {
@@ -441,8 +403,6 @@ pub fn quat_look_at(eye: &Vec[Float64], target: &Vec[Float64], up: &Vec[Float64]
   };
 }
 
-// Shortest rotation quaternion mapping the unit direction a onto the unit
-// direction b. Returns the identity when a or b is degenerate. O(1).
 /// Shortest rotation quaternion mapping the unit direction a onto the unit
 /// direction b. Returns the identity when a or b is degenerate. O(1).
 pub fn quat_between(a: &Vec[Float64], b: &Vec[Float64]) -> Quat {

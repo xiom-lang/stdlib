@@ -6,15 +6,12 @@ module xiom.collect.treeset
 
 // Depends on: none
 
-// ============================================================================
-// Balanced binary search tree set keeping Int elements in sorted order.
-// The balance policy is AVL (the proven collect.tree pattern) so insert/
-// contains/remove run in O(log n). Flat-arena representation: nodes live in
-// parallel Vec[Int]s (`keys`/`left`/`right`/`heights`) addressed by a root
-// index; -1 is the "no node" sentinel. Removed nodes become unreachable
-// arena entries.
-// ============================================================================
-
+/// Balanced binary search tree set keeping Int elements in sorted order.
+/// The balance policy is AVL (the proven collect.tree pattern) so insert/
+/// contains/remove run in O(log n). Flat-arena representation: nodes live in
+/// parallel Vec[Int]s (`keys`/`left`/`right`/`heights`) addressed by a root
+/// index; -1 is the "no node" sentinel. Removed nodes become unreachable
+/// arena entries.
 pub type BTreeSet = {
   root: Int;
   keys: Vec[Int];

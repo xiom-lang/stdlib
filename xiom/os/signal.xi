@@ -15,8 +15,6 @@ extern "C" {
   fn raise_sig(sig: Int32) -> Int32;
 }
 
-// signal_name returns the canonical name for a signal number, or
-// "unknown" for numbers outside the table. Complexity: O(1). Pure.
 /// signal_name returns the canonical name for a signal number, or
 /// "unknown" for numbers outside the table. Complexity: O(1). Pure.
 pub fn signal_name(num: Int) -> Str {
@@ -54,8 +52,6 @@ pub fn signal_name(num: Int) -> Str {
   "unknown"
 }
 
-// signal_code returns the signal number for a canonical name, or None.
-// Matching is case-insensitive on the letters. Complexity: O(1). Pure.
 /// signal_code returns the signal number for a canonical name, or None.
 /// Matching is case-insensitive on the letters. Complexity: O(1). Pure.
 pub fn signal_code(name: Str) -> Option[Int] {
@@ -93,24 +89,18 @@ pub fn signal_code(name: Str) -> Option[Int] {
   None
 }
 
-// signal_is_ignorable returns true for signals that can be ignored
-// (not SIGKILL or SIGSTOP). Complexity: O(1). Pure.
 /// signal_is_ignorable returns true for signals that can be ignored
 /// (not SIGKILL or SIGSTOP). Complexity: O(1). Pure.
 pub fn signal_is_ignorable(num: Int) -> Bool {
   num != 9 && num != 19 && num > 0
 }
 
-// signal_is_catchable returns true for signals a process can install a
-// handler for (not SIGKILL or SIGSTOP). Complexity: O(1). Pure.
 /// signal_is_catchable returns true for signals a process can install a
 /// handler for (not SIGKILL or SIGSTOP). Complexity: O(1). Pure.
 pub fn signal_is_catchable(num: Int) -> Bool {
   num != 9 && num != 19 && num > 0
 }
 
-// signal_default_action returns the default disposition ("term", "core",
-// "stop", "cont", "ignore", or "unknown"). Complexity: O(1). Pure.
 /// signal_default_action returns the default disposition ("term", "core",
 /// "stop", "cont", "ignore", or "unknown"). Complexity: O(1). Pure.
 pub fn signal_default_action(num: Int) -> Str {
@@ -124,8 +114,6 @@ pub fn signal_default_action(num: Int) -> Str {
   "unknown"
 }
 
-// signal_raise sends a signal to the current process via the runtime
-// raise() primitive. Complexity: O(1) syscall.
 /// signal_raise sends a signal to the current process via the runtime
 /// raise() primitive. Complexity: O(1) syscall.
 pub fn signal_raise(num: Int) -> Result[Unit, Str] {

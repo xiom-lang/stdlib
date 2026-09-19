@@ -6,18 +6,15 @@ module xiom.collect.btree
 
 // Depends on: none
 
-// ============================================================================
-// B-tree ordered map of Int keys to Int values with a configurable order.
-// `order` is the maximum number of children per node (clamped to >= 2); a
-// node holds at most order-1 keys. Flat-arena representation: every node is
-// `mk = order-1` key/value slots and `mk+1` child slots in parallel Vec[Int]s,
-// with a per-node key count and a leaf flag. Inserts pre-split full nodes on
-// the way down (CLRS), so insert/update is O(log n). `btree_remove` collects
-// the surviving entries and rebuilds the tree, keeping it perfectly balanced
-// (no underflow; O(n), documented). Removed nodes become unreachable arena
-// entries.
-// ============================================================================
-
+/// B-tree ordered map of Int keys to Int values with a configurable order.
+/// `order` is the maximum number of children per node (clamped to >= 2); a
+/// node holds at most order-1 keys. Flat-arena representation: every node is
+/// `mk = order-1` key/value slots and `mk+1` child slots in parallel Vec[Int]s,
+/// with a per-node key count and a leaf flag. Inserts pre-split full nodes on
+/// the way down (CLRS), so insert/update is O(log n). `btree_remove` collects
+/// the surviving entries and rebuilds the tree, keeping it perfectly balanced
+/// (no underflow; O(n), documented). Removed nodes become unreachable arena
+/// entries.
 pub type BTree = {
   root: Int;
   mk: Int;

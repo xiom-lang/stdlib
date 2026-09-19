@@ -14,8 +14,6 @@ use xiom.env;
 use xiom.string;
 use xiom.convert;
 
-// fs_file_name returns the file-name portion of path (after the last
-// '/' or '\'), or None if path is empty or ends in a separator.
 /// fs_file_name returns the file-name portion of path (after the last
 /// '/' or '\'), or None if path is empty or ends in a separator.
 pub fn fs_file_name(path: Str) -> Option[Str] {
@@ -36,8 +34,6 @@ pub fn fs_file_name(path: Str) -> Option[Str] {
   return Some(path);
 }
 
-// fs_parent_dir returns the directory portion of path (everything
-// before the last '/' or '\'), or None if path has no parent.
 /// fs_parent_dir returns the directory portion of path (everything
 /// before the last '/' or '\'), or None if path has no parent.
 pub fn fs_parent_dir(path: Str) -> Option[Str] {
@@ -58,9 +54,6 @@ pub fn fs_parent_dir(path: Str) -> Option[Str] {
   return None;
 }
 
-// fs_extension returns the extension (text after the last dot in the
-// file name), or None if there is no dot or the dot is leading/trailing.
-// "a/b.tar.gz" -> Some("gz"); "a/b" -> None.
 /// fs_extension returns the extension (text after the last dot in the
 /// file name), or None if there is no dot or the dot is leading/trailing.
 /// "a/b.tar.gz" -> Some("gz"); "a/b" -> None.
@@ -93,8 +86,6 @@ pub fn fs_extension(path: Str) -> Option[Str] {
   return Some(string.str_slice(path, dot_i + 1, path.len()));
 }
 
-// fs_stem returns the path with the last extension stripped, or the
-// path unchanged if it has no extension. "a/b.tar.gz" -> "a/b.tar".
 /// fs_stem returns the path with the last extension stripped, or the
 /// path unchanged if it has no extension. "a/b.tar.gz" -> "a/b.tar".
 pub fn fs_stem(path: Str) -> Option[Str] {
@@ -121,8 +112,6 @@ pub fn fs_stem(path: Str) -> Option[Str] {
   }
 }
 
-// fs_is_hidden returns true if the file name starts with a dot,
-// except for the special entries "." and "..".
 /// fs_is_hidden returns true if the file name starts with a dot,
 /// except for the special entries "." and "..".
 pub fn fs_is_hidden(path: Str) -> Bool {
@@ -138,8 +127,6 @@ pub fn fs_is_hidden(path: Str) -> Bool {
   }
 }
 
-// fs_join_parts joins the given components with the OS path separator
-// (env.path_separator: "\\" on Windows, "/" elsewhere).
 /// fs_join_parts joins the given components with the OS path separator
 /// (env.path_separator: "\\" on Windows, "/" elsewhere).
 pub fn fs_join_parts(parts: Vec[Str]) -> Str {
@@ -156,9 +143,6 @@ pub fn fs_join_parts(parts: Vec[Str]) -> Str {
   return result;
 }
 
-// fs_normalize collapses duplicate separators and resolves "." and ".."
-// lexically, without touching the filesystem. Leading "/" and "C:\"-style
-// drive prefixes are preserved. "a/b/../c//d/./e" -> "a/c/d/e".
 /// fs_normalize collapses duplicate separators and resolves "." and ".."
 /// lexically, without touching the filesystem. Leading "/" and "C:\"-style
 /// drive prefixes are preserved. "a/b/../c//d/./e" -> "a/c/d/e".
@@ -208,8 +192,6 @@ pub fn fs_normalize(path: Str) -> Str {
   return result;
 }
 
-// fs_with_extension replaces the extension of path with new_ext, or
-// appends it if path has no extension. "a/b.txt" + "md" -> "a/b.md".
 /// fs_with_extension replaces the extension of path with new_ext, or
 /// appends it if path has no extension. "a/b.txt" + "md" -> "a/b.md".
 pub fn fs_with_extension(path: Str, new_ext: Str) -> Str {
@@ -220,7 +202,6 @@ pub fn fs_with_extension(path: Str, new_ext: Str) -> Str {
   }
 }
 
-// fs_split returns (dir, file) -- the directory and file-name portions.
 /// fs_split returns (dir, file) -- the directory and file-name portions.
 pub fn fs_split(path: Str) -> (Str, Str) {
   let dir_opt = fs_parent_dir(path);
@@ -255,8 +236,6 @@ pub fn fs_split(path: Str) -> (Str, Str) {
   return (path, "");
 }
 
-// fs_unique_path returns dir/name if it does not exist, otherwise appends
-// " (1)", " (2)", ... up to a maximum of 1000 attempts.
 /// fs_unique_path returns dir/name if it does not exist, otherwise appends
 /// " (1)", " (2)", ... up to a maximum of 1000 attempts.
 pub fn fs_unique_path(dir: Str, name: Str) -> Str {

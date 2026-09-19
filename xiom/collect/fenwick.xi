@@ -4,12 +4,9 @@
 
 module xiom.collect.fenwick
 
-// ============================================================================
-// FenwickTree (1-based indices; n = number of slots)
-// Point update + prefix-sum queries in O(log n). `tree[i]` covers the range
-// (i - lowbit(i), i]. All index params are 1-based; 0 is invalid (returns 0).
-// ============================================================================
-
+/// FenwickTree (1-based indices; n = number of slots)
+/// Point update + prefix-sum queries in O(log n). `tree[i]` covers the range
+/// (i - lowbit(i), i]. All index params are 1-based; 0 is invalid (returns 0).
 pub type FenwickTree = { tree: Vec[Int]; n: Int; }
 
 /// Create a fenwick tree with `n` slots, all zero.

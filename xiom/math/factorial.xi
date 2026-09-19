@@ -41,8 +41,6 @@ fn _add_ovf(a: Int, b: Int) -> Bool {
 // Factorial variants
 // ---------------------------------------------------------------------------
 
-// n! for n >= 0. Returns 0 for n < 0 (documented) and 0 (documented overflow)
-// when the true value exceeds Int range (n > 20). Complexity: O(n).
 /// n! for n >= 0. Returns 0 for n < 0 (documented) and 0 (documented overflow)
 /// when the true value exceeds Int range (n > 20). Complexity: O(n).
 pub fn factorial(n: Int) -> Int {
@@ -58,9 +56,6 @@ pub fn factorial(n: Int) -> Int {
   return result;
 }
 
-// Double factorial n!! = product of n, n-2, n-4, ... down to 1 (odd n) or 2
-// (even n). Returns 0 for n < 0 and 0 (documented overflow) when the value
-// exceeds Int range. Complexity: O(n/2).
 /// Double factorial n!! = product of n, n-2, n-4, ... down to 1 (odd n) or 2
 /// (even n). Returns 0 for n < 0 and 0 (documented overflow) when the value
 /// exceeds Int range. Complexity: O(n/2).
@@ -77,10 +72,6 @@ pub fn double_factorial(n: Int) -> Int {
   return result;
 }
 
-// Derangement count !n: the number of fixed-point-free permutations of n
-// items. Uses the recurrence D(0)=1, D(1)=0, D(n) = (n-1)(D(n-1)+D(n-2)).
-// Returns 0 for n < 0 and 0 (documented overflow) when D(n) exceeds Int
-// range. Complexity: O(n).
 /// Derangement count !n: the number of fixed-point-free permutations of n
 /// items. Uses the recurrence D(0)=1, D(1)=0, D(n) = (n-1)(D(n-1)+D(n-2)).
 /// Returns 0 for n < 0 and 0 (documented overflow) when D(n) exceeds Int
@@ -104,9 +95,6 @@ pub fn subfactorial(n: Int) -> Int {
   return b;
 }
 
-// k-th multifactorial of n: product n, n-k, n-2k, ... down to the smallest
-// positive term. Returns 0 for n < 0 or k <= 0 (documented) and 0
-// (documented overflow) when the value exceeds Int range. Complexity: O(n/k).
 /// k-th multifactorial of n: product n, n-k, n-2k, ... down to the smallest
 /// positive term. Returns 0 for n < 0 or k <= 0 (documented) and 0
 /// (documented overflow) when the value exceeds Int range. Complexity: O(n/k).
@@ -128,10 +116,6 @@ pub fn multifactorial(n: Int, k: Int) -> Int {
 // Binomial / multinomial
 // ---------------------------------------------------------------------------
 
-// Binomial coefficient C(n, k). Returns 0 for invalid input (n < 0, k < 0,
-// k > n) and 0 (documented overflow) when C(n, k) exceeds Int range. Uses the
-// multiplicative form with a per-step overflow guard. Complexity: O(min(k,
-// n - k)).
 /// Binomial coefficient C(n, k). Returns 0 for invalid input (n < 0, k < 0,
 /// k > n) and 0 (documented overflow) when C(n, k) exceeds Int range. Uses the
 /// multiplicative form with a per-step overflow guard. Complexity: O(min(k,
@@ -154,16 +138,11 @@ pub fn binomial(n: Int, k: Int) -> Int {
   return result;
 }
 
-// Alias of binomial. Complexity: O(min(k, n - k)).
 /// Alias of binomial. Complexity: O(min(k, n - k)).
 pub fn binomial_coeff(n: Int, k: Int) -> Int {
   return binomial(n, k);
 }
 
-// Multinomial coefficient n!/(k1! k2! ... km!) where the ki sum to n.
-// Returns 0 when the entries are negative or do not sum to n, and 0
-// (documented overflow) when the value exceeds Int range. Computed as a chain
-// of binomial coefficients. Complexity: O(m * min(k_i, ...)).
 /// Multinomial coefficient n!/(k1! k2! ... km!) where the ki sum to n.
 /// Returns 0 when the entries are negative or do not sum to n, and 0
 /// (documented overflow) when the value exceeds Int range. Computed as a chain
@@ -192,9 +171,6 @@ pub fn multinomial(n: Int, ks: &Vec[Int]) -> Int {
   return result;
 }
 
-// Falling factorial x * (x-1) * ... * (x-k+1). Returns 0 for k < 0 and 0
-// (documented overflow) when the magnitude exceeds Int range. k == 0 gives 1.
-// Complexity: O(k).
 /// Falling factorial x * (x-1) * ... * (x-k+1). Returns 0 for k < 0 and 0
 /// (documented overflow) when the magnitude exceeds Int range. k == 0 gives 1.
 /// Complexity: O(k).
@@ -218,9 +194,6 @@ pub fn falling_factorial(x: Int, k: Int) -> Int {
   return result;
 }
 
-// Rising factorial x * (x+1) * ... * (x+k-1). Returns 0 for k < 0 and 0
-// (documented overflow) when the magnitude exceeds Int range. k == 0 gives 1.
-// Complexity: O(k).
 /// Rising factorial x * (x+1) * ... * (x+k-1). Returns 0 for k < 0 and 0
 /// (documented overflow) when the magnitude exceeds Int range. k == 0 gives 1.
 /// Complexity: O(k).
@@ -248,10 +221,6 @@ pub fn rising_factorial(x: Int, k: Int) -> Int {
 // Counting-number families
 // ---------------------------------------------------------------------------
 
-// Unsigned Stirling number of the first kind s(n, k): permutations of n items
-// with exactly k cycles. Row DP over s(n,k) = s(n-1,k-1) + (n-1)*s(n-1,k) with
-// s(0,0) = 1. Returns 0 for invalid input (n < 0, k < 0, k > n) and 0
-// (documented overflow) when the value exceeds Int range. Complexity: O(n*k).
 /// Unsigned Stirling number of the first kind s(n, k): permutations of n items
 /// with exactly k cycles. Row DP over s(n,k) = s(n-1,k-1) + (n-1)*s(n-1,k) with
 /// s(0,0) = 1. Returns 0 for invalid input (n < 0, k < 0, k > n) and 0
@@ -287,10 +256,6 @@ pub fn stirling_first(n: Int, k: Int) -> Int {
   return row[k];
 }
 
-// Stirling number of the second kind S(n, k): partitions of an n-element set
-// into k nonempty blocks. Row DP over S(n,k) = k*S(n-1,k) + S(n-1,k-1) with
-// S(0,0) = 1. Returns 0 for invalid input and 0 (documented overflow) when the
-// value exceeds Int range. Complexity: O(n*k).
 /// Stirling number of the second kind S(n, k): partitions of an n-element set
 /// into k nonempty blocks. Row DP over S(n,k) = k*S(n-1,k) + S(n-1,k-1) with
 /// S(0,0) = 1. Returns 0 for invalid input and 0 (documented overflow) when the
@@ -325,11 +290,6 @@ pub fn stirling_second(n: Int, k: Int) -> Int {
   return row[k];
 }
 
-// Bell number B(n): the number of partitions of an n-element set. Computed
-// via the Aitken / Bell triangle, whose rightmost entry of row k is B(k+1)
-// (row 0 is [1] and B(0) = B(1) = 1), so the value is the last entry of row
-// n - 1. Returns 0 for n < 0 and 0 (documented overflow) when B(n) exceeds
-// Int range. Complexity: O(n^2).
 /// Bell number B(n): the number of partitions of an n-element set. Computed
 /// via the Aitken / Bell triangle, whose rightmost entry of row k is B(k+1)
 /// (row 0 is [1] and B(0) = B(1) = 1), so the value is the last entry of row
@@ -356,8 +316,6 @@ pub fn bell(n: Int) -> Int {
   return row[row.len() - 1];
 }
 
-// Catalan number C_n = C(2n, n)/(n+1). Returns 0 for n < 0 and 0 (documented
-// overflow) when the value exceeds Int range (n > 33). Complexity: O(n).
 /// Catalan number C_n = C(2n, n)/(n+1). Returns 0 for n < 0 and 0 (documented
 /// overflow) when the value exceeds Int range (n > 33). Complexity: O(n).
 pub fn catalan(n: Int) -> Int {
@@ -368,10 +326,6 @@ pub fn catalan(n: Int) -> Int {
   return b / (n + 1);
 }
 
-// Eulerian number A(n, k): permutations of n items with exactly k ascents.
-// Row DP over A(n,k) = (n-k)*A(n-1,k-1) + (k+1)*A(n-1,k) with A(0,0) = 1 and
-// A(n,n) = 0. Returns 0 for invalid input and 0 (documented overflow) when the
-// value exceeds Int range. Complexity: O(n*k).
 /// Eulerian number A(n, k): permutations of n items with exactly k ascents.
 /// Row DP over A(n,k) = (n-k)*A(n-1,k-1) + (k+1)*A(n-1,k) with A(0,0) = 1 and
 /// A(n,n) = 0. Returns 0 for invalid input and 0 (documented overflow) when the
@@ -410,9 +364,6 @@ pub fn eulerian(n: Int, k: Int) -> Int {
   return prev[k];
 }
 
-// Narayana number N(n, k) = C(n, k) * C(n, k-1) / n. Returns 0 for invalid
-// input (n <= 0, k <= 0, k > n) and 0 (documented overflow) when the value
-// exceeds Int range. Complexity: O(min(k, n-k)).
 /// Narayana number N(n, k) = C(n, k) * C(n, k-1) / n. Returns 0 for invalid
 /// input (n <= 0, k <= 0, k > n) and 0 (documented overflow) when the value
 /// exceeds Int range. Complexity: O(min(k, n-k)).
@@ -426,9 +377,6 @@ pub fn narayana(n: Int, k: Int) -> Int {
   return (a * b) / n;
 }
 
-// Lah number L(n, k) = C(n, k) * C(n-1, k-1) * (n-k)!. Returns 0 for invalid
-// input (n <= 0, k <= 0, k > n) and 0 (documented overflow) when the value
-// exceeds Int range. Complexity: O(min(k, n-k) + (n-k)).
 /// Lah number L(n, k) = C(n, k) * C(n-1, k-1) * (n-k)!. Returns 0 for invalid
 /// input (n <= 0, k <= 0, k > n) and 0 (documented overflow) when the value
 /// exceeds Int range. Complexity: O(min(k, n-k) + (n-k)).
@@ -446,10 +394,6 @@ pub fn lah(n: Int, k: Int) -> Int {
   return p * f;
 }
 
-// Motzkin number M_n (lattice paths / non-crossing partitions). Uses the
-// closed recurrence M(n) = ((2n+1)M(n-1) + (3n-3)M(n-2))/(n+2), M(0) = M(1) = 1.
-// Returns 0 for n < 0 and 0 (documented overflow) when M_n exceeds Int range.
-// Complexity: O(n).
 /// Motzkin number M_n (lattice paths / non-crossing partitions). Uses the
 /// closed recurrence M(n) = ((2n+1)M(n-1) + (3n-3)M(n-2))/(n+2), M(0) = M(1) = 1.
 /// Returns 0 for n < 0 and 0 (documented overflow) when M_n exceeds Int range.
@@ -475,9 +419,6 @@ pub fn motzkin(n: Int) -> Int {
   return prev1;
 }
 
-// Large Schroder number S_n. Uses S(n) = S(n-1) + sum_{k=0..n-1} S(k)*S(n-1-k),
-// S(0) = 1. Returns 0 for n < 0 and 0 (documented overflow) when S_n exceeds
-// Int range. Complexity: O(n^2).
 /// Large Schroder number S_n. Uses S(n) = S(n-1) + sum_{k=0..n-1} S(k)*S(n-1-k),
 /// S(0) = 1. Returns 0 for n < 0 and 0 (documented overflow) when S_n exceeds
 /// Int range. Complexity: O(n^2).
@@ -503,10 +444,6 @@ pub fn schroeder(n: Int) -> Int {
   return arr[n];
 }
 
-// Number of integer partitions p(n). Uses the Euler pentagonal-number
-// recurrence p(n) = sum_{k != 0} (-1)^(k+1) p(n - k(3k-1)/2). Returns 0 for
-// n < 0 and 0 (documented overflow) when p(n) exceeds Int range (n > 255).
-// Complexity: O(n * sqrt(n)).
 /// Number of integer partitions p(n). Uses the Euler pentagonal-number
 /// recurrence p(n) = sum_{k != 0} (-1)^(k+1) p(n - k(3k-1)/2). Returns 0 for
 /// n < 0 and 0 (documented overflow) when p(n) exceeds Int range (n > 255).
@@ -550,10 +487,6 @@ pub fn partition_count(n: Int) -> Int {
   return p[n];
 }
 
-// All integer partitions of n as lists (each partition non-increasing,
-// starting from the largest part; the result order is unspecified). Returns an
-// empty list for n < 0; n == 0 yields a single empty partition. Complexity:
-// O(p(n) * n).
 /// All integer partitions of n as lists (each partition non-increasing,
 /// starting from the largest part; the result order is unspecified). Returns an
 /// empty list for n < 0; n == 0 yields a single empty partition. Complexity:
@@ -601,9 +534,6 @@ fn _copy_vec(v: &mut Vec[Int]) -> Vec[Int] {
   return c;
 }
 
-// Number of derangements of n items (fixed-point-free permutations). Alias of
-// subfactorial. Returns 0 for n < 0 and 0 (documented overflow). Complexity:
-// O(n).
 /// Number of derangements of n items (fixed-point-free permutations). Alias of
 /// subfactorial. Returns 0 for n < 0 and 0 (documented overflow). Complexity:
 /// O(n).
@@ -611,11 +541,6 @@ pub fn derangements(n: Int) -> Int {
   return subfactorial(n);
 }
 
-// Bell triangle rows up to n: rows 0..n inclusive. Row 0 is [1]; each later
-// row starts with the previous row's last entry and continues with the sum of
-// the entry to its left and the one above-left, so the rightmost entry of row
-// k is B(k+1) and the leftmost is B(k). Returns an empty list for n < 0. Cells
-// that would overflow Int are stored as 0 (documented). Complexity: O(n^2).
 /// Bell triangle rows up to n: rows 0..n inclusive. Row 0 is [1]; each later
 /// row starts with the previous row's last entry and continues with the sum of
 /// the entry to its left and the one above-left, so the rightmost entry of row

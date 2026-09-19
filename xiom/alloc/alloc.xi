@@ -37,8 +37,6 @@ pub type AllocError = { message: Str; } derive[Clone]
 
 pub type GlobalAlloc = { }
 
-// Returns the concrete GlobalAlloc (the Allocator interface is a bound for
-// generic code, not a value type the checker can return).
 /// Returns the concrete GlobalAlloc (the Allocator interface is a bound for
 /// generic code, not a value type the checker can return).
 pub fn global_alloc() -> GlobalAlloc {
@@ -107,7 +105,6 @@ pub fn GlobalAlloc.shrink(self, ptr: *mut UInt8, old: Layout, new: Layout) -> Re
   }
 }
 
-// Global allocator (wraps malloc/free)
 /// Global allocator (wraps malloc/free)
 pub fn alloc(size: Int) -> *mut UInt8
   requires: size > 0
@@ -129,9 +126,6 @@ pub fn alloc_zeroed(size: Int) -> *mut UInt8
   }
 }
 
-// Resize an allocation. Named realloc_sized to avoid shadowing the C ABI
-// symbol `realloc` -- a same-named wrapper would collide with the extern
-// declaration and be silently dropped from codegen.
 /// Resize an allocation. Named realloc_sized to avoid shadowing the C ABI
 /// symbol `realloc` -- a same-named wrapper would collide with the extern
 /// declaration and be silently dropped from codegen.
@@ -153,7 +147,6 @@ pub fn dealloc(ptr: *mut UInt8, size: Int)
   }
 }
 
-// Sized allocation
 /// Sized allocation
 pub fn alloc_layout(layout: Layout) -> *mut UInt8
   requires: layout.size > 0

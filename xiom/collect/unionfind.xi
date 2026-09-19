@@ -6,20 +6,17 @@ module xiom.collect.unionfind
 
 // Depends on: none
 
-// ============================================================================
-// Disjoint-set (union-find) over Int element ids with path compression and
-// union by size.
-//
-// Flat-arena style: `parent[i]` points at the parent of element i (a root
-// points at itself), `size[i]` is the component size valid at the roots, and
-// `count` tracks the number of disjoint sets. `uf_find` applies path
-// compression (both passes) and takes `&mut`; the immutable read-only
-// traversal `uf_find_no_compress` backs `uf_connected` / `uf_component_size`
-// / `uf_components` so they accept `&UnionFind`. Union by size keeps trees
-// shallow, giving ~O(alpha n) amortized operations. Out-of-range element ids
-// are rejected (no silent failure).
-// ============================================================================
-
+/// Disjoint-set (union-find) over Int element ids with path compression and
+/// union by size.
+/// 
+/// Flat-arena style: `parent[i]` points at the parent of element i (a root
+/// points at itself), `size[i]` is the component size valid at the roots, and
+/// `count` tracks the number of disjoint sets. `uf_find` applies path
+/// compression (both passes) and takes `&mut`; the immutable read-only
+/// traversal `uf_find_no_compress` backs `uf_connected` / `uf_component_size`
+/// / `uf_components` so they accept `&UnionFind`. Union by size keeps trees
+/// shallow, giving ~O(alpha n) amortized operations. Out-of-range element ids
+/// are rejected (no silent failure).
 pub type UnionFind = {
   parent: Vec[Int];
   size: Vec[Int];

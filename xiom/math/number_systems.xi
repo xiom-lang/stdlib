@@ -23,56 +23,44 @@ use xiom.core.to_int;
 
 const _DIGITS: Str = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-// Binary string to Int. Err("invalid") for empty, non-'0'/'1', or overflow
-// input. Complexity: O(len).
 /// Binary string to Int. Err("invalid") for empty, non-'0'/'1', or overflow
 /// input. Complexity: O(len).
 pub fn binary_to_int(s: Str) -> Result[Int, Str] {
   return _parse_radix(s, 2);
 }
 
-// Decimal Int to a binary string. n == 0 yields "0"; negatives get a '-'
-// prefix. Complexity: O(log n).
 /// Decimal Int to a binary string. n == 0 yields "0"; negatives get a '-'
 /// prefix. Complexity: O(log n).
 pub fn int_to_binary(n: Int) -> Str {
   return _to_radix(n, 2);
 }
 
-// Octal string to Int. Err on invalid input. Complexity: O(len).
 /// Octal string to Int. Err on invalid input. Complexity: O(len).
 pub fn octal_to_int(s: Str) -> Result[Int, Str] {
   return _parse_radix(s, 8);
 }
 
-// Decimal Int to an octal string. Complexity: O(log n).
 /// Decimal Int to an octal string. Complexity: O(log n).
 pub fn int_to_octal(n: Int) -> Str {
   return _to_radix(n, 8);
 }
 
-// Hexadecimal string to Int. Err on invalid input. Complexity: O(len).
 /// Hexadecimal string to Int. Err on invalid input. Complexity: O(len).
 pub fn hex_to_int(s: Str) -> Result[Int, Str] {
   return _parse_radix(s, 16);
 }
 
-// Decimal Int to a hexadecimal string (upper-case digits). Complexity: O(log n).
 /// Decimal Int to a hexadecimal string (upper-case digits). Complexity: O(log n).
 pub fn int_to_hex(n: Int) -> Str {
   return _to_radix(n, 16);
 }
 
-// Parse a string in an arbitrary base (2..36) to Int. Err on invalid input,
-// an out-of-range base, or overflow. Complexity: O(len).
 /// Parse a string in an arbitrary base (2..36) to Int. Err on invalid input,
 /// an out-of-range base, or overflow. Complexity: O(len).
 pub fn base_n_to_int(s: Str, base: Int) -> Result[Int, Str] {
   return _parse_radix(s, base);
 }
 
-// Decimal Int to a string in an arbitrary base (2..36). Returns "" for an
-// out-of-range base. Complexity: O(log n).
 /// Decimal Int to a string in an arbitrary base (2..36). Returns "" for an
 /// out-of-range base. Complexity: O(log n).
 pub fn int_to_base_n(n: Int, base: Int) -> Str {
@@ -154,8 +142,6 @@ fn _to_radix(n: Int, base: Int) -> Str {
   return result;
 }
 
-// Roman numeral string to Int. Err for empty or invalid input; subtractive
-// notation (IV, IX, XL, XC, CD, CM) is supported. Complexity: O(len).
 /// Roman numeral string to Int. Err for empty or invalid input; subtractive
 /// notation (IV, IX, XL, XC, CD, CM) is supported. Complexity: O(len).
 pub fn roman_to_int(s: Str) -> Result[Int, Str] {
@@ -200,8 +186,6 @@ fn _roman_val(b: UInt8) -> Int {
   return -1;
 }
 
-// Int to a Roman numeral string (1..3999); "" outside that range.
-// Complexity: O(n).
 /// Int to a Roman numeral string (1..3999); "" outside that range.
 /// Complexity: O(n).
 pub fn int_to_roman(n: Int) -> Str {
@@ -251,8 +235,6 @@ fn _roman_digit(d: Int, one: Str, five: Str, ten: Str) -> Str {
   return one + ten;
 }
 
-// Int to a Chinese numeral string (supports 0..99999999; larger values
-// return the 亿-form with the remainder documented). Complexity: O(log n).
 /// Int to a Chinese numeral string (supports 0..99999999; larger values
 /// return the 亿-form with the remainder documented). Complexity: O(log n).
 pub fn chinese_numerals(n: Int) -> Str {
@@ -332,8 +314,6 @@ fn _cn_digit(d: Int) -> Str {
   return "九";
 }
 
-// Int to a Japanese numeral string (〇一...九 + 十百千万; 0..99999999).
-// Complexity: O(log n).
 /// Int to a Japanese numeral string (〇一...九 + 十百千万; 0..99999999).
 /// Complexity: O(log n).
 pub fn japanese_numerals(n: Int) -> Str {
@@ -395,8 +375,6 @@ fn _jp_digit(d: Int) -> Str {
   return "九";
 }
 
-// Greedy Egyptian fraction expansion of numer/denom as (1, unit) pairs.
-// Empty for a non-positive numerator or denominator. Complexity: O(denom).
 /// Greedy Egyptian fraction expansion of numer/denom as (1, unit) pairs.
 /// Empty for a non-positive numerator or denominator. Complexity: O(denom).
 pub fn egyptian_fractions(numer: Int, denom: Int) -> Vec[(Int, Int)] {
@@ -420,9 +398,6 @@ pub fn egyptian_fractions(numer: Int, denom: Int) -> Vec[(Int, Int)] {
   return out;
 }
 
-// Babylonian-style base-60 notation: the sexagesimal places of n joined by
-// ';' (a documented approximation of cuneiform numerals). n == 0 yields "0".
-// Complexity: O(log_60 n).
 /// Babylonian-style base-60 notation: the sexagesimal places of n joined by
 /// ';' (a documented approximation of cuneiform numerals). n == 0 yields "0".
 /// Complexity: O(log_60 n).
@@ -452,8 +427,6 @@ pub fn babylonian_numerals(n: Int) -> Str {
   return result;
 }
 
-// Int to a Greek alphabetic numeral string (1..999 using the standard
-// archaic digits; "" outside the range). Complexity: O(log n).
 /// Int to a Greek alphabetic numeral string (1..999 using the standard
 /// archaic digits; "" outside the range). Complexity: O(log n).
 pub fn greek_numerals(n: Int) -> Str {
@@ -506,8 +479,6 @@ pub fn greek_numerals(n: Int) -> Str {
   return result;
 }
 
-// Continued-fraction coefficients of x (at most `terms` of them).
-// Complexity: O(terms).
 /// Continued-fraction coefficients of x (at most `terms` of them).
 /// Complexity: O(terms).
 pub fn continued_fraction(x: Float64, terms: Int) -> Vec[Int] {
@@ -529,8 +500,6 @@ pub fn continued_fraction(x: Float64, terms: Int) -> Vec[Int] {
   return out;
 }
 
-// Reduced fraction (numer / gcd, denom / gcd) with the sign on the
-// numerator. Returns (0, 1) for denom == 0. Complexity: O(log n).
 /// Reduced fraction (numer / gcd, denom / gcd) with the sign on the
 /// numerator. Returns (0, 1) for denom == 0. Complexity: O(log n).
 pub fn fraction_new(numer: Int, denom: Int) -> (Int, Int) {
@@ -551,7 +520,6 @@ pub fn fraction_new(numer: Int, denom: Int) -> (Int, Int) {
   return (num / g, den / g);
 }
 
-// Sum of two reduced fractions (reduced again). Complexity: O(log n).
 /// Sum of two reduced fractions (reduced again). Complexity: O(log n).
 pub fn fraction_add(a: (Int, Int), b: (Int, Int)) -> (Int, Int) {
   var num = a.0 * b.1 + b.0 * a.1;
@@ -559,9 +527,6 @@ pub fn fraction_add(a: (Int, Int), b: (Int, Int)) -> (Int, Int) {
   return fraction_new(num, den);
 }
 
-// Simplify sqrt(a)/sqrt(b) to (coefficient, radicand): the largest square
-// factor of a*b is pulled out of the radical. Returns (1, 1) for b == 0.
-// Complexity: O(sqrt(a*b)).
 /// Simplify sqrt(a)/sqrt(b) to (coefficient, radicand): the largest square
 /// factor of a*b is pulled out of the radical. Returns (1, 1) for b == 0.
 /// Complexity: O(sqrt(a*b)).
@@ -597,8 +562,6 @@ pub fn surd_simplify(a: Int, b: Int) -> (Int, Int) {
   return (coeff, ab);
 }
 
-// Componentwise sum of two octonions (8 components). Empty for a length
-// mismatch. Complexity: O(8).
 /// Componentwise sum of two octonions (8 components). Empty for a length
 /// mismatch. Complexity: O(8).
 pub fn octonion_add(a: &Vec[Float64], b: &Vec[Float64]) -> Vec[Float64] {
@@ -612,8 +575,6 @@ pub fn octonion_add(a: &Vec[Float64], b: &Vec[Float64]) -> Vec[Float64] {
   return out;
 }
 
-// Componentwise sum of two sedenions (16 components). Empty for a length
-// mismatch. Complexity: O(16).
 /// Componentwise sum of two sedenions (16 components). Empty for a length
 /// mismatch. Complexity: O(16).
 pub fn sedenion_add(a: &Vec[Float64], b: &Vec[Float64]) -> Vec[Float64] {

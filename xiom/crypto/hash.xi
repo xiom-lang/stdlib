@@ -265,10 +265,7 @@ fn _u64_shr(x: Int, n: Int) -> Int {
   return q + _pow2(64 - n);
 }
 
-// ============================================================================
-// SHA-1 (FIPS 180-1). 20-byte digest. Legacy, interop only.
-// ============================================================================
-
+/// SHA-1 (FIPS 180-1). 20-byte digest. Legacy, interop only.
 pub fn crypto_hash_sha1(data: &Vec[UInt8]) -> Vec[UInt8]
   ensures: result.len() == 20
 {

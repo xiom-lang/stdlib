@@ -21,8 +21,7 @@ extern "C" {
   fn memcpy(dest: *UInt8, src: *UInt8, size: UInt);
 }
 
-// ---- Raw allocation / free (primitive, no wrapper) ----------------------------------------------------
-
+/// ---- Raw allocation / free (primitive, no wrapper) ----------------------------------------------------
 pub fn alloc(size: Int) -> *UInt8
   requires: size > 0
   ensures:  result != null
@@ -44,8 +43,7 @@ pub fn memcpy(dest: *UInt8, src: *UInt8, size: Int)
   unsafe { memcpy(dest, src, size as UInt); }
 }
 
-// ---- SafePtr -- owned pointer with bounds tracking ------------------------------------------------------
-
+/// ---- SafePtr -- owned pointer with bounds tracking ------------------------------------------------------
 pub type SafePtr = {
   ptr: *UInt8;
   size: Int;
@@ -423,8 +421,7 @@ pub fn ptr_write_u64_le(p: *UInt8, v: Int)
   }
 }
 
-// ---- FFIBuffer -- growable byte buffer with capacity guard --------------------------------------
-
+/// ---- FFIBuffer -- growable byte buffer with capacity guard --------------------------------------
 pub type FFIBuffer = {
   data: Vec[Int];   // Vec[UInt8] when compiler supports it (G-XX)
   capacity: Int;
@@ -480,8 +477,7 @@ pub fn buffer_is_empty(buf: &FFIBuffer) -> Bool {
   buf.data.len() == 0
 }
 
-// ---- FFIError -- C error code translation ------------------------------------------------------------------------
-
+/// ---- FFIError -- C error code translation ------------------------------------------------------------------------
 pub type FFIError = {
   code: Int;
   message: Str;
@@ -585,8 +581,7 @@ pub fn write_str_at(dest: Int, offset: Int, s: Str)
   }
 }
 
-// ---- Utility --------------------------------------------------------------------------------------------------------------------------------
-
+/// ---- Utility --------------------------------------------------------------------------------------------------------------------------------
 pub fn size_of[T]() -> Int { return 0; }
 pub fn align_of[T]() -> Int { return 0; }
 

@@ -122,7 +122,6 @@ pub fn clamp_float(value: Float64, min_val: Float64, max_val: Float64) -> Float6
   }
 }
 
-// Partial comparison (for types that may not be comparable)
 /// Partial comparison (for types that may not be comparable)
 pub interface PartialEq[Rhs: Self] {
   fn eq(self, other: &Rhs) -> Bool;
@@ -136,7 +135,6 @@ pub interface PartialOrd[Rhs: Self] {
   fn ge(self, other: &Rhs) -> Bool;
 }
 
-// Reverse ordering wrapper
 /// Reverse ordering wrapper
 pub type Reverse[T] = { value: T; }
 pub fn Reverse.new[T](value: T) -> Reverse[T] {

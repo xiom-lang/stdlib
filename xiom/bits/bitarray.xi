@@ -7,14 +7,11 @@ module xiom.bits.bitarray
 
 // Depends on: none
 
-// ============================================================================
-// Dynamic array of bits backed by a byte vector. Bit i lives in byte i/8 at
-// bit position 7-(i%8) (MSB-first within each byte), so bit_array_to_bytes
-// yields conventional packed bytes. Out-of-range indices are no-ops / false
-// (never trap). Binary ops yield a result with max(len) bits; missing bits in
-// the shorter operand read as 0.
-// ============================================================================
-
+/// Dynamic array of bits backed by a byte vector. Bit i lives in byte i/8 at
+/// bit position 7-(i%8) (MSB-first within each byte), so bit_array_to_bytes
+/// yields conventional packed bytes. Out-of-range indices are no-ops / false
+/// (never trap). Binary ops yield a result with max(len) bits; missing bits in
+/// the shorter operand read as 0.
 pub type BitArray = {
   bits: Vec[UInt8];
   len: Int;

@@ -6,13 +6,10 @@ module xiom.collect.queue
 
 use xiom.sync;
 
-// ============================================================================
-// WorkQueue (Int items)
-// A FIFO queue backed by a Vec plus a head offset. `push` appends at the end,
-// `pop`/`peek` read from `head`. Popped entries are left in place (no
-// compaction) so all operations stay O(1).
-// ============================================================================
-
+/// WorkQueue (Int items)
+/// A FIFO queue backed by a Vec plus a head offset. `push` appends at the end,
+/// `pop`/`peek` read from `head`. Popped entries are left in place (no
+/// compaction) so all operations stay O(1).
 pub type WorkQueue = {
   items: Vec[Int];
   head: Int;
@@ -62,13 +59,10 @@ pub fn workqueue_is_empty(q: &WorkQueue) -> Bool
   return q.head >= q.items.len();
 }
 
-// ============================================================================
-// Deque (Int items)
-// A double-ended queue backed by a Vec with `head`/`tail` offsets. Pushes
-// append, pops advance the offsets. `deque_push_front` rebuilds the active
-// range ([head, tail)) into a fresh Vec so no stale entries leak in.
-// ============================================================================
-
+/// Deque (Int items)
+/// A double-ended queue backed by a Vec with `head`/`tail` offsets. Pushes
+/// append, pops advance the offsets. `deque_push_front` rebuilds the active
+/// range ([head, tail)) into a fresh Vec so no stale entries leak in.
 pub type Deque = {
   items: Vec[Int];
   head: Int;
@@ -135,17 +129,14 @@ pub fn deque_is_empty(d: &Deque) -> Bool
   return d.head >= d.tail;
 }
 
-// ============================================================================
-// SpscRing -- lock-free single-producer / single-consumer ring buffer
-// (2026-08-11). Fixed `cap` slots (power of two not required; modulo via %).
-// head = next slot to pop, tail = next slot to push, both AtomicInt
-// (fetch_add based). Producer and consumer must each be used from exactly
-// one thread. When full, push returns false without blocking; when empty,
-// pop returns None. Slot reuse races are bounded by the documented usage
-// contract (SPSC); a "full" or "empty" state read by the OTHER side may lag
-// one operation, which is safe for SPSC.
-// ============================================================================
-
+/// SpscRing -- lock-free single-producer / single-consumer ring buffer
+/// (2026-08-11). Fixed `cap` slots (power of two not required; modulo via %).
+/// head = next slot to pop, tail = next slot to push, both AtomicInt
+/// (fetch_add based). Producer and consumer must each be used from exactly
+/// one thread. When full, push returns false without blocking; when empty,
+/// pop returns None. Slot reuse races are bounded by the documented usage
+/// contract (SPSC); a "full" or "empty" state read by the OTHER side may lag
+/// one operation, which is safe for SPSC.
 pub type SpscRing = { buf: Vec[Int]; cap: Int; head: AtomicInt; tail: AtomicInt; }
 
 /// Create an spsc ring with `cap` slots.

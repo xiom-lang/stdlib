@@ -13,7 +13,6 @@ extern "C" {
   fn time(ptr: *Int) -> Int;
 }
 
-// === RNG trait ===
 /// === RNG trait ===
 pub interface Rng {
   fn next_int(self) -> Int;
@@ -33,7 +32,6 @@ fn _lcg_step(state: Int) -> Int {
   return s;
 }
 
-// === Standard RNG ===
 /// === Standard RNG ===
 pub type StdRng = { state: Int; } derive[Clone]
 
@@ -76,8 +74,7 @@ fn StdRng.next_bytes(self, buf: &mut Vec[UInt8]) {
   };
 }
 
-// === Basic random values ===
-
+/// === Basic random values ===
 pub fn random() -> Float64
   ensures: result >= 0.0
   ensures: result < 1.0
@@ -121,8 +118,7 @@ pub fn random_bytes(count: Int) -> Vec[UInt8] {
   return result;
 }
 
-// === Distributions ===
-
+/// === Distributions ===
 pub fn sample_uniform(min: Float64, max: Float64) -> Float64 {
   return min + random() * (max - min);
 }
@@ -219,8 +215,7 @@ pub fn sample_beta(alpha: Float64, beta: Float64) -> Float64 {
   return x / (x + y);
 }
 
-// === Shuffle & Pick ===
-
+/// === Shuffle & Pick ===
 pub fn shuffle[T](items: &mut Vec[T])
   ensures: items.len() == items.len()@pre
 {
@@ -375,8 +370,7 @@ pub fn uuid_v7() -> Str
   return _format_uuid(&bytes);
 }
 
-// === Seeding ===
-
+/// === Seeding ===
 pub fn seed_from_entropy()
   requires: true  // extern clock call below (T002 confinement)
 {

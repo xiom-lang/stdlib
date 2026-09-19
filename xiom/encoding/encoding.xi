@@ -136,8 +136,7 @@ fn _enc_write_base64url_triplet(dst: *UInt8, dst_idx: Int, b0: UInt8, b1: UInt8,
   };
 }
 
-// === Base64 ===
-
+/// === Base64 ===
 pub fn base64_encode(data: &Vec[UInt8]) -> Str
   ensures: result.len() == ((data.len() + 2) / 3) * 4
 {
@@ -311,8 +310,7 @@ pub fn base64url_decode(encoded: Str) -> Result[Vec[UInt8], Str]
   Ok(result)
 }
 
-// === Hex ===
-
+/// === Hex ===
 pub fn hex_encode(data: &Vec[UInt8]) -> Str
   ensures: result.len() == data.len() * 2
 {
@@ -369,8 +367,7 @@ pub fn hex_encode_upper(data: &Vec[UInt8]) -> Str
   }
 }
 
-// === URL encoding ===
-
+/// === URL encoding ===
 pub fn url_encode(data: Str) -> Str
   ensures: result.len() >= data.len()
 {
@@ -461,8 +458,7 @@ pub fn url_decode(encoded: Str) -> Result[Str, Str]
   }
 }
 
-// === Percent encoding ===
-
+/// === Percent encoding ===
 pub fn percent_encode(data: Str) -> Str
   ensures: result.len() >= data.len()
 {
@@ -478,8 +474,7 @@ pub fn percent_decode(encoded: Str) -> Result[Str, Str]
   url_decode(encoded)
 }
 
-// === UTF-8 ===
-
+/// === UTF-8 ===
 pub fn utf8_encode(s: Str) -> Vec[UInt8]
   ensures: result.len() >= s.len()
 {
@@ -647,8 +642,7 @@ pub fn utf8_char_len(first_byte: UInt8) -> Int
   1
 }
 
-// === Binary to text ===
-
+/// === Binary to text ===
 pub fn binary_to_text(data: &Vec[UInt8], format: Int) -> Str
   requires: format >= 0 && format <= 2
   ensures:  format == 0 => result.len() == ((data.len() + 2) / 3) * 4

@@ -14,8 +14,6 @@ module xiom.os.event
 // documented stub returning Err.
 // ============================================================================
 
-// struct EpollEvent { events: UInt32, data: UInt64 } - one epoll readiness
-// event; layout matches struct epoll_event.
 /// struct EpollEvent { events: UInt32, data: UInt64 } - one epoll readiness
 /// event; layout matches struct epoll_event.
 pub type EpollEvent = {
@@ -23,8 +21,6 @@ pub type EpollEvent = {
   data: UInt64;
 }
 
-// struct KEvent { ident: UInt64, filter: Int16, flags: UInt16, fflags: UInt32,
-//   data: Int64 } - one kqueue event; layout matches struct kevent.
 /// struct KEvent { ident: UInt64, filter: Int16, flags: UInt16, fflags: UInt32,
 ///   data: Int64 } - one kqueue event; layout matches struct kevent.
 pub type KEvent = {
@@ -35,8 +31,6 @@ pub type KEvent = {
   data: Int64;
 }
 
-// struct PollFd { fd: Int, events: Int16, revents: Int16 } - one poll
-// descriptor; layout matches struct pollfd.
 /// struct PollFd { fd: Int, events: Int16, revents: Int16 } - one poll
 /// descriptor; layout matches struct pollfd.
 pub type PollFd = {

@@ -15,9 +15,6 @@ module xiom.os.terminal
 // expose those syscalls.
 // ============================================================================
 
-// struct Termios { c_iflag: UInt32, c_oflag: UInt32, c_cflag: UInt32,
-//   c_lflag: UInt32, c_cc: Vec[UInt8] } - terminal attribute struct; layout
-// mirrors struct termios.
 /// struct Termios { c_iflag: UInt32, c_oflag: UInt32, c_cflag: UInt32,
 ///   c_lflag: UInt32, c_cc: Vec[UInt8] } - terminal attribute struct; layout
 /// mirrors struct termios.

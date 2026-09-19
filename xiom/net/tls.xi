@@ -7,17 +7,12 @@
 
 module xiom.net.tls
 
-// tls_default_port returns the default TLS port (443).
-// Complexity: O(1). Pure.
 /// tls_default_port returns the default TLS port (443).
 /// Complexity: O(1). Pure.
 pub fn tls_default_port() -> Int {
   443
 }
 
-// tls_version_name maps a TLS version code point to its name.
-// Recognised values: 0x0301 TLSv1.0, 0x0302 TLSv1.1, 0x0303 TLSv1.2,
-// 0x0304 TLSv1.3. Unknown values return "unknown". Complexity: O(1).
 /// tls_version_name maps a TLS version code point to its name.
 /// Recognised values: 0x0301 TLSv1.0, 0x0302 TLSv1.1, 0x0303 TLSv1.2,
 /// 0x0304 TLSv1.3. Unknown values return "unknown". Complexity: O(1).
@@ -30,8 +25,6 @@ pub fn tls_version_name(version: Int) -> Str {
   "unknown"
 }
 
-// tls_handshake_type_name maps a TLS handshake message type to its
-// name. Complexity: O(1).
 /// tls_handshake_type_name maps a TLS handshake message type to its
 /// name. Complexity: O(1).
 pub fn tls_handshake_type_name(t: Int) -> Str {
@@ -52,8 +45,6 @@ pub fn tls_handshake_type_name(t: Int) -> Str {
   "unknown"
 }
 
-// tls_alert_name maps a TLS alert description to its name per RFC 5246
-// and RFC 8446. Complexity: O(1).
 /// tls_alert_name maps a TLS alert description to its name per RFC 5246
 /// and RFC 8446. Complexity: O(1).
 pub fn tls_alert_name(code: Int) -> Str {
@@ -87,9 +78,6 @@ pub fn tls_alert_name(code: Int) -> Str {
   "unknown"
 }
 
-// tls_cipher_suite_name maps a TLS cipher suite code to a
-// human-readable name for the most common suites, or "unknown" (0x0000-
-// 0xFFFF, two-byte IANA code). Complexity: O(1).
 /// tls_cipher_suite_name maps a TLS cipher suite code to a
 /// human-readable name for the most common suites, or "unknown" (0x0000-
 /// 0xFFFF, two-byte IANA code). Complexity: O(1).

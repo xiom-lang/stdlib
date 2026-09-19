@@ -40,10 +40,6 @@ pub type BigFloat = {
   precision: Int;
 }
 
-// Split result of _split_int_frac: magnitude = q + r / 10^d.
-// PUB (not private): catalog fns returning module-local PRIVATE struct types
-// are degraded to i64 by the checker (see docs/COMPILER_BUGS.md BUG 9) -- the
-// type must be part of the module's public surface.
 /// Split result of _split_int_frac: magnitude = q + r / 10^d.
 /// PUB (not private): catalog fns returning module-local PRIVATE struct types
 /// are degraded to i64 by the checker (see docs/COMPILER_BUGS.md BUG 9) -- the
@@ -53,10 +49,7 @@ pub type IntFrac = { q: BigInt; r: BigInt; d: Int; }
 var _default_round: RoundMode = RoundMode.Nearest;
 var _default_precision: Int = 64;
 
-// ============================================================================
-// Constants (constructor functions -- see header note)
-// ============================================================================
-
+/// Constants (constructor functions -- see header note)
 pub fn bigfloat_zero() -> BigFloat {
   return BigFloat{ sign: false; exponent: 0;
                    significand: xiom.bigint.bigint_zero(); precision: _default_precision; };
@@ -79,7 +72,6 @@ pub fn bigfloat_half() -> BigFloat {
                    significand: xiom.bigint.bigint_from_int(5); precision: _default_precision; };
 }
 
-// pi to 100 decimal digits.
 /// pi to 100 decimal digits.
 pub fn bigfloat_pi() -> BigFloat {
   var r = bigfloat_from_str("3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679");
@@ -89,7 +81,6 @@ pub fn bigfloat_pi() -> BigFloat {
   }
 }
 
-// e to 100 decimal digits.
 /// e to 100 decimal digits.
 pub fn bigfloat_e() -> BigFloat {
   var r = bigfloat_from_str("2.7182818284590452353602874713526624977572470936999595749669676277240766303535475945713821785251664274");
@@ -194,10 +185,7 @@ fn _round_to_precision(f: &BigFloat) -> BigFloat {
   return _normalize(&r);
 }
 
-// ============================================================================
-// Rounding mode (thread-local default; whole-value global assignment)
-// ============================================================================
-
+/// Rounding mode (thread-local default; whole-value global assignment)
 pub fn bigfloat_set_round_mode(mode: RoundMode) {
   _default_round = mode;
 }
@@ -206,10 +194,7 @@ pub fn bigfloat_get_round_mode() -> RoundMode {
   return _default_round;
 }
 
-// ============================================================================
-// Constructors
-// ============================================================================
-
+/// Constructors
 pub fn bigfloat_from_int(n: Int) -> BigFloat {
   var neg = n < 0;
   var absn = n;
@@ -218,8 +203,6 @@ pub fn bigfloat_from_int(n: Int) -> BigFloat {
                    significand: xiom.bigint.bigint_from_int(absn); precision: _default_precision; };
 }
 
-// Exact to 15 significant digits (the f64 round-trip guarantee); power-of-10
-// inputs (0.1, 1e300, 3.14) come out exact.
 /// Exact to 15 significant digits (the f64 round-trip guarantee); power-of-10
 /// inputs (0.1, 1e300, 3.14) come out exact.
 pub fn bigfloat_from_float(f: Float64) -> BigFloat
@@ -256,8 +239,6 @@ pub fn bigfloat_from_float(f: Float64) -> BigFloat
   return _normalize(&bf);
 }
 
-// Parse decimal strings: "3.14159", "-1e-10", "2.5E+3", ".5", "3.".
-// Exponent range is Int (i64). Result is normalized.
 /// Parse decimal strings: "3.14159", "-1e-10", "2.5E+3", ".5", "3.".
 /// Exponent range is Int (i64). Result is normalized.
 pub fn bigfloat_from_str(s: Str) -> Result[BigFloat, Str] {
@@ -334,8 +315,6 @@ pub fn bigfloat_with_precision(n: Int, precision: Int) -> BigFloat
 // Conversions
 // ============================================================================
 
-// Exact decimal representation of the stored value ("shortest round-trip"
-// by construction: the representation IS the decimal).
 /// Exact decimal representation of the stored value ("shortest round-trip"
 /// by construction: the representation IS the decimal).
 pub fn bigfloat_to_str(f: &BigFloat) -> Str {
@@ -372,10 +351,6 @@ pub fn bigfloat_to_str(f: &BigFloat) -> Str {
   return xiom.string.str_concat(prefix, body);
 }
 
-// Round to `digits` significant digits (current round mode) then format.
-// Trailing zeros produced by rounding stay significant ("1.41421356237310"
-// is 15 digits); a rounding carry that overflows the digit budget collapses
-// to its normalized form ("1" for 0.999...9 -> 20 digits).
 /// Round to `digits` significant digits (current round mode) then format.
 /// Trailing zeros produced by rounding stay significant ("1.41421356237310"
 /// is 15 digits); a rounding carry that overflows the digit budget collapses
@@ -390,7 +365,6 @@ pub fn bigfloat_to_str_prec(f: &BigFloat, digits: Int) -> Str
   return bigfloat_to_str(&r);
 }
 
-// Truncate toward zero.
 /// Truncate toward zero.
 pub fn bigfloat_to_bigint(f: &BigFloat) -> BigInt {
   var ten = xiom.bigint.bigint_ten();
@@ -483,10 +457,7 @@ pub fn bigfloat_to_float64(f: &BigFloat) -> Option[Float64] {
   return Some(acc);
 }
 
-// ============================================================================
-// Predicates
-// ============================================================================
-
+/// Predicates
 pub fn bigfloat_is_zero(f: &BigFloat) -> Bool {
   return xiom.bigint.bigint_is_zero(&f.significand);
 }
@@ -510,10 +481,7 @@ pub fn bigfloat_precision(f: &BigFloat) -> Int {
   return f.precision;
 }
 
-// ============================================================================
-// Arithmetic (result precision = max of operand precisions, rounded)
-// ============================================================================
-
+/// Arithmetic (result precision = max of operand precisions, rounded)
 pub fn bigfloat_add(a: &BigFloat, b: &BigFloat) -> BigFloat {
   var prec = _prec_of(a, b);
   var e = a.exponent;
@@ -561,8 +529,6 @@ pub fn bigfloat_mul(a: &BigFloat, b: &BigFloat) -> BigFloat {
   return _round_to_precision(&n);
 }
 
-// Truncating long division with guard digits, then rounded to precision.
-// Requires a non-zero divisor.
 /// Truncating long division with guard digits, then rounded to precision.
 /// Requires a non-zero divisor.
 pub fn bigfloat_div(a: &BigFloat, b: &BigFloat) -> BigFloat
@@ -599,7 +565,6 @@ pub fn bigfloat_abs(f: &BigFloat) -> BigFloat {
   return result;
 }
 
-// 1/f with guard digits, rounded to precision.
 /// 1/f with guard digits, rounded to precision.
 pub fn bigfloat_inv(f: &BigFloat) -> BigFloat
   requires: !bigfloat_is_zero(f)
@@ -614,8 +579,6 @@ pub fn bigfloat_inv(f: &BigFloat) -> BigFloat
   return _round_to_precision(&n);
 }
 
-// Square root via Newton on the significand (bigint_sqrt is floor-exact),
-// with 2 guard digits. Requires a non-negative operand.
 /// Square root via Newton on the significand (bigint_sqrt is floor-exact),
 /// with 2 guard digits. Requires a non-negative operand.
 pub fn bigfloat_sqrt(f: &BigFloat) -> BigFloat
@@ -638,7 +601,6 @@ pub fn bigfloat_sqrt(f: &BigFloat) -> BigFloat
   return _round_to_precision(&n);
 }
 
-// Integer power (exp >= 0) by square-and-multiply.
 /// Integer power (exp >= 0) by square-and-multiply.
 pub fn bigfloat_pow(base: &BigFloat, exp: Int) -> BigFloat
   requires: exp >= 0
@@ -707,7 +669,6 @@ pub fn bigfloat_ceil(f: &BigFloat) -> BigFloat {
                    significand: q; precision: f.precision; };
 }
 
-// Round to the nearest integer, ties to even (magnitude rounding).
 /// Round to the nearest integer, ties to even (magnitude rounding).
 pub fn bigfloat_round(f: &BigFloat) -> BigFloat {
   var split = _split_int_frac(f);
@@ -730,7 +691,6 @@ pub fn bigfloat_round(f: &BigFloat) -> BigFloat {
                    significand: q; precision: f.precision; };
 }
 
-// Fractional part with the sign of f: f - trunc(f).
 /// Fractional part with the sign of f: f - trunc(f).
 pub fn bigfloat_fract(f: &BigFloat) -> BigFloat {
   if f.exponent >= 0 {
@@ -743,7 +703,6 @@ pub fn bigfloat_fract(f: &BigFloat) -> BigFloat {
   return _normalize(&result);
 }
 
-// Explicit rounding of `f` to `digits` significant digits with `mode`.
 /// Explicit rounding of `f` to `digits` significant digits with `mode`.
 pub fn bigfloat_with_rounding(f: &BigFloat, mode: RoundMode, digits: Int) -> BigFloat
   requires: digits >= 1
@@ -752,10 +711,7 @@ pub fn bigfloat_with_rounding(f: &BigFloat, mode: RoundMode, digits: Int) -> Big
   return _normalize(&r);
 }
 
-// ============================================================================
-// Comparisons
-// ============================================================================
-
+/// Comparisons
 pub fn bigfloat_compare(a: &BigFloat, b: &BigFloat) -> Int {
   var az = bigfloat_is_zero(a);
   var bz = bigfloat_is_zero(b);
@@ -1018,7 +974,6 @@ fn _finish(result: &BigFloat, target: Int) -> BigFloat {
   return _round_to_precision(&r);
 }
 
-// pi / e at explicit precision.
 /// pi / e at explicit precision.
 pub fn bigfloat_pi_with_precision(precision: Int) -> BigFloat
   requires: precision >= 1
@@ -1038,7 +993,6 @@ pub fn bigfloat_e_with_precision(precision: Int) -> BigFloat
   return _finish(&e, precision);
 }
 
-// exp(x) = exp(r) * 10^k with r = x - k*ln(10) in [-ln(10)/2, ln(10)/2].
 /// exp(x) = exp(r) * 10^k with r = x - k*ln(10) in [-ln(10)/2, ln(10)/2].
 pub fn bigfloat_exp(f: &BigFloat) -> BigFloat {
   var prec = _work_prec(f, f);
@@ -1060,8 +1014,6 @@ pub fn bigfloat_exp(f: &BigFloat) -> BigFloat {
   return _finish(&s, f.precision);
 }
 
-// ln(x): x = m * 10^k with m in [1, 10); reduce m to [1, sqrt(10)) via one
-// sqrt; ln(x) = 2*atanh((m-1)/(m+1)) + k*ln(10).
 /// ln(x): x = m * 10^k with m in [1, 10); reduce m to [1, sqrt(10)) via one
 /// sqrt; ln(x) = 2*atanh((m-1)/(m+1)) + k*ln(10).
 pub fn bigfloat_ln(f: &BigFloat) -> BigFloat
@@ -1157,7 +1109,6 @@ pub fn bigfloat_tan(f: &BigFloat) -> BigFloat {
   return bigfloat_div(&s, &c);
 }
 
-// atan(x) in [-pi/2, pi/2].
 /// atan(x) in [-pi/2, pi/2].
 pub fn bigfloat_atan(f: &BigFloat) -> BigFloat {
   var prec = _work_prec(f, f);
@@ -1179,7 +1130,6 @@ pub fn bigfloat_atan(f: &BigFloat) -> BigFloat {
   return _finish(&result, f.precision);
 }
 
-// atan2(y, x) in [-pi, pi].
 /// atan2(y, x) in [-pi, pi].
 pub fn bigfloat_atan2(y: &BigFloat, x: &BigFloat) -> BigFloat {
   var prec = _work_prec(y, x);
@@ -1212,7 +1162,6 @@ pub fn bigfloat_atan2(y: &BigFloat, x: &BigFloat) -> BigFloat {
   return _finish(&result, target);
 }
 
-// base^exp for base >= 0 via exp(exp * ln(base)); negative exponents via inv.
 /// base^exp for base >= 0 via exp(exp * ln(base)); negative exponents via inv.
 pub fn bigfloat_pow_bf(base: &BigFloat, exp: &BigFloat) -> BigFloat
   requires: !bigfloat_is_negative(base)
@@ -1249,7 +1198,6 @@ fn _ln2_at(prec: Int) -> BigFloat {
   return bigfloat_mul(&_two_at(prec), &_atanh_series(&third, prec));
 }
 
-// log2(x) = ln(x) / ln(2).
 /// log2(x) = ln(x) / ln(2).
 pub fn bigfloat_log2(f: &BigFloat) -> BigFloat
   requires: !bigfloat_is_negative(f)
@@ -1260,7 +1208,6 @@ pub fn bigfloat_log2(f: &BigFloat) -> BigFloat
   return bigfloat_div(&l, &l2);
 }
 
-// exp2(x) = exp(x * ln(2)).
 /// exp2(x) = exp(x * ln(2)).
 pub fn bigfloat_exp2(f: &BigFloat) -> BigFloat {
   var l2 = _ln2_at(_work_prec(f, f));
@@ -1268,9 +1215,6 @@ pub fn bigfloat_exp2(f: &BigFloat) -> BigFloat {
   return bigfloat_exp(&prod);
 }
 
-// Cube root (Newton: x = (2x + n/x^2)/3). Works for negative operands via
-// sign symmetry; the significand is scaled to a multiple-of-3 exponent so
-// the final 10^(exp/3) shift is exact.
 /// Cube root (Newton: x = (2x + n/x^2)/3). Works for negative operands via
 /// sign symmetry; the significand is scaled to a multiple-of-3 exponent so
 /// the final 10^(exp/3) shift is exact.
@@ -1306,7 +1250,6 @@ pub fn bigfloat_cbrt(f: &BigFloat) -> BigFloat {
   return _finish(&guess, f.precision);
 }
 
-// hypot(a, b) = sqrt(a^2 + b^2).
 /// hypot(a, b) = sqrt(a^2 + b^2).
 pub fn bigfloat_hypot(a: &BigFloat, b: &BigFloat) -> BigFloat {
   var prec = _work_prec(a, b);
@@ -1319,7 +1262,6 @@ pub fn bigfloat_hypot(a: &BigFloat, b: &BigFloat) -> BigFloat {
   return _finish(&r, target);
 }
 
-// Hyperbolic functions via exp.
 /// Hyperbolic functions via exp.
 pub fn bigfloat_sinh(f: &BigFloat) -> BigFloat {
   var e = bigfloat_exp(f);
@@ -1339,7 +1281,6 @@ pub fn bigfloat_tanh(f: &BigFloat) -> BigFloat {
   return bigfloat_div(&s, &c);
 }
 
-// asin(x) = atan(x / sqrt(1 - x^2)); asin(+-1) = +-pi/2.
 /// asin(x) = atan(x / sqrt(1 - x^2)); asin(+-1) = +-pi/2.
 pub fn bigfloat_asin(f: &BigFloat) -> BigFloat {
   var prec = _work_prec(f, f);
@@ -1358,7 +1299,6 @@ pub fn bigfloat_asin(f: &BigFloat) -> BigFloat {
   return bigfloat_atan(&t);
 }
 
-// acos(x) = pi/2 - asin(x). Exact endpoints: acos(1) = 0, acos(-1) = pi.
 /// acos(x) = pi/2 - asin(x). Exact endpoints: acos(1) = 0, acos(-1) = pi.
 pub fn bigfloat_acos(f: &BigFloat) -> BigFloat {
   var prec = _work_prec(f, f);
@@ -1372,7 +1312,6 @@ pub fn bigfloat_acos(f: &BigFloat) -> BigFloat {
   return bigfloat_sub(&hp, &a);
 }
 
-// asinh(x) = ln(x + sqrt(x^2 + 1)).
 /// asinh(x) = ln(x + sqrt(x^2 + 1)).
 pub fn bigfloat_asinh(f: &BigFloat) -> BigFloat {
   var prec = _work_prec(f, f);
@@ -1382,7 +1321,6 @@ pub fn bigfloat_asinh(f: &BigFloat) -> BigFloat {
   return bigfloat_ln(&s);
 }
 
-// acosh(x) = ln(x + sqrt(x^2 - 1)); requires x >= 1.
 /// acosh(x) = ln(x + sqrt(x^2 - 1)); requires x >= 1.
 pub fn bigfloat_acosh(f: &BigFloat) -> BigFloat
   requires: !bigfloat_lt(f, &bigfloat_one())
@@ -1394,7 +1332,6 @@ pub fn bigfloat_acosh(f: &BigFloat) -> BigFloat
   return bigfloat_ln(&s);
 }
 
-// atanh(x) = ln((1 + x)/(1 - x)) / 2; requires |x| < 1.
 /// atanh(x) = ln((1 + x)/(1 - x)) / 2; requires |x| < 1.
 pub fn bigfloat_atanh(f: &BigFloat) -> BigFloat
   requires: bigfloat_lt(&bigfloat_abs(f), &bigfloat_one())
@@ -1407,8 +1344,6 @@ pub fn bigfloat_atanh(f: &BigFloat) -> BigFloat
   return bigfloat_div(&l, &bigfloat_two());
 }
 
-// Scientific notation: d.ddd...e[+-]k with `digits` significant digits.
-// Zero renders as "0".
 /// Scientific notation: d.ddd...e[+-]k with `digits` significant digits.
 /// Zero renders as "0".
 pub fn bigfloat_to_str_sci(f: &BigFloat, digits: Int) -> Str
@@ -1438,7 +1373,6 @@ pub fn bigfloat_to_str_sci(f: &BigFloat, digits: Int) -> Str
   return xiom.string.str_concat(prefix, body);
 }
 
-// Exact rational n/d at the default precision.
 /// Exact rational n/d at the default precision.
 pub fn bigfloat_from_ratio(n: Int, d: Int) -> BigFloat
   requires: d != 0
@@ -1447,7 +1381,6 @@ pub fn bigfloat_from_ratio(n: Int, d: Int) -> BigFloat
   return bigfloat_div(&bigfloat_from_int(n), &bigfloat_from_int(d));
 }
 
-// Exact x * 10^n (pure exponent shift; no rounding).
 /// Exact x * 10^n (pure exponent shift; no rounding).
 pub fn bigfloat_pow10(f: &BigFloat, n: Int) -> BigFloat {
   var r = _copy_bf(f);
@@ -1455,7 +1388,6 @@ pub fn bigfloat_pow10(f: &BigFloat, n: Int) -> BigFloat {
   return r;
 }
 
-// Integer-valued helpers (range-checked to i64).
 /// Integer-valued helpers (range-checked to i64).
 pub fn bigfloat_floor_int(f: &BigFloat) -> Result[Int, Str] {
   return xiom.bigint.bigint_to_int(&bigfloat_to_bigint(&bigfloat_floor(f)));

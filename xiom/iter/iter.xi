@@ -11,7 +11,6 @@ use xiom.iter.zip;
 use xiom.iter.chain;
 use xiom.iter.fold;
 
-// === Range types ===
 /// === Range types ===
 pub type Range = { start: Int; end: Int; }
 pub type RangeInclusive = { start: Int; end: Int; current: Int; done: Bool; }
@@ -427,8 +426,7 @@ pub fn ZipIter[T, U].next(self) -> Option[(T, U)] {
   }
 }
 
-// ---- per-adapter transforming + terminal methods ----
-
+/// ---- per-adapter transforming + terminal methods ----
 pub fn MapIter[T, U].map[V](self, f: fn(U) -> V) -> MapIter[U, V] {
   var it = self;
   MapIter[U, V]{ next_fn: fn() -> Option[U] { return it.next(); }, f: f }
@@ -898,7 +896,6 @@ pub fn ZipIter[T, U].last(self) -> Option[(T, U)] {
 
 // === M7: Additional iterator adapters ===
 
-// StepBy -- yields every nth element (1-based step)
 /// StepBy -- yields every nth element (1-based step)
 pub type StepByIter[T] = { iter: Iterator[T]; step: Int; first: Bool; }
 
@@ -923,7 +920,6 @@ pub fn StepByIter[T].next(self) -> Option[T]
   self.iter.next()
 }
 
-// TakeWhile -- yields elements while predicate is true
 /// TakeWhile -- yields elements while predicate is true
 pub type TakeWhileIter[T] = { iter: Iterator[T]; predicate: fn(&T) -> Bool; done: Bool; }
 
@@ -950,7 +946,6 @@ pub fn TakeWhileIter[T].next(self) -> Option[T]
   }
 }
 
-// SkipWhile -- skips elements while predicate is true, then yields rest
 /// SkipWhile -- skips elements while predicate is true, then yields rest
 pub type SkipWhileIter[T] = { iter: Iterator[T]; predicate: fn(&T) -> Bool; skipped: Bool; }
 
@@ -978,7 +973,6 @@ pub fn SkipWhileIter[T].next(self) -> Option[T] {
   self.iter.next()
 }
 
-// Inspect -- calls f on each element for side effects, passes element through
 /// Inspect -- calls f on each element for side effects, passes element through
 pub type InspectIter[T] = { iter: Iterator[T]; f: fn(&T); }
 

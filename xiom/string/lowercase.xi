@@ -14,9 +14,6 @@ module xiom.string.lowercase
 
 use xiom.string;
 
-// Converts all characters of `s` to lowercase.
-// Returns a new string with the same byte length as `s`.
-// Complexity: O(|s|).
 /// Converts all characters of `s` to lowercase.
 /// Returns a new string with the same byte length as `s`.
 /// Complexity: O(|s|).
@@ -26,9 +23,6 @@ pub fn str_lowercase(s: Str) -> Str
   return string.str_lower(s);
 }
 
-// Returns the lowercase variant of `c`, or `c` unchanged when `c` has no
-// lowercase mapping.
-// Complexity: O(1).
 /// Returns the lowercase variant of `c`, or `c` unchanged when `c` has no
 /// lowercase mapping.
 /// Complexity: O(1).

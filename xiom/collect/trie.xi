@@ -12,16 +12,13 @@ module xiom.collect.trie
 use xiom.string;
 use xiom.convert;
 
-// ============================================================================
-// Trie (Str keys, lowercase a-z only; other chars are rejected)
-// Flat-arena style (the established collect/ pattern -- tree.xi/graph.xi use
-// parallel Vec[Int]s because Vec-of-struct instantiations collide at startup
-// in combined programs, COMPILER_BUGS.md BUG 16). Node n's child for letter
-// c is children[n * 26 + c] (-1 = none); ends[n] is 1 for a complete word.
-// `trie_complete` returns all words with a prefix, in DFS lexicographic
-// order. Node 0 is the root.
-// ============================================================================
-
+/// Trie (Str keys, lowercase a-z only; other chars are rejected)
+/// Flat-arena style (the established collect/ pattern -- tree.xi/graph.xi use
+/// parallel Vec[Int]s because Vec-of-struct instantiations collide at startup
+/// in combined programs, COMPILER_BUGS.md BUG 16). Node n's child for letter
+/// c is children[n * 26 + c] (-1 = none); ends[n] is 1 for a complete word.
+/// `trie_complete` returns all words with a prefix, in DFS lexicographic
+/// order. Node 0 is the root.
 pub type Trie = { children: Vec[Int]; ends: Vec[Int]; size: Int; }
 
 fn _slot(node: Int, letter: Int) -> Int {

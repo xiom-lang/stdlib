@@ -6,18 +6,15 @@ module xiom.collect.sparse
 
 // Depends on: none
 
-// ============================================================================
-// Sparse set of unique Int elements with O(1) add, remove and membership
-// checks over dense Int universes.
-//
-// Classic two-array representation: `sparse[value]` holds the index of
-// `value` inside `dense`, and `dense` holds the set members in an arbitrary
-// but stable order. Removal swaps the last element into the removed slot, so
-// all three core operations are O(1). The `sparse` array grows on demand to
-// cover the largest inserted value; negative values cannot be indexed and are
-// therefore rejected by `sparse_add` (documented, no silent failure).
-// ============================================================================
-
+/// Sparse set of unique Int elements with O(1) add, remove and membership
+/// checks over dense Int universes.
+/// 
+/// Classic two-array representation: `sparse[value]` holds the index of
+/// `value` inside `dense`, and `dense` holds the set members in an arbitrary
+/// but stable order. Removal swaps the last element into the removed slot, so
+/// all three core operations are O(1). The `sparse` array grows on demand to
+/// cover the largest inserted value; negative values cannot be indexed and are
+/// therefore rejected by `sparse_add` (documented, no silent failure).
 pub type SparseSet = {
   sparse: Vec[Int];
   dense: Vec[Int];

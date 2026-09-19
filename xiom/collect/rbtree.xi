@@ -6,16 +6,13 @@ module xiom.collect.rbtree
 
 // Depends on: none
 
-// ============================================================================
-// Red-black tree (Int keys, Int values). Self-balancing BST with a color bit
-// per node (1 = red, 0 = black; null is black) that guarantees O(log n)
-// insert, delete and lookup. Flat-arena representation (the established
-// collect/ pattern): nodes live in parallel Vec[Int]s (`keys`/`values`/
-// `left`/`right`/`parent`/`colors`) addressed by a root index; -1 is the
-// "no node" sentinel. Duplicate keys are rejected; inorder/preorder/
-// postorder return the keys. Removed nodes become unreachable arena entries.
-// ============================================================================
-
+/// Red-black tree (Int keys, Int values). Self-balancing BST with a color bit
+/// per node (1 = red, 0 = black; null is black) that guarantees O(log n)
+/// insert, delete and lookup. Flat-arena representation (the established
+/// collect/ pattern): nodes live in parallel Vec[Int]s (`keys`/`values`/
+/// `left`/`right`/`parent`/`colors`) addressed by a root index; -1 is the
+/// "no node" sentinel. Duplicate keys are rejected; inorder/preorder/
+/// postorder return the keys. Removed nodes become unreachable arena entries.
 pub type RbTree = {
   root: Int;
   keys: Vec[Int];

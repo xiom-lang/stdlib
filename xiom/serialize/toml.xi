@@ -7,22 +7,19 @@ module xiom.serialize.toml
 use xiom.string;
 use xiom.convert;
 
-// ============================================================================
-// TOML v1 reader (the subset a package manifest needs).
-//
-// Supported: comments; bare and quoted keys; `[table]` and `[a.b]` headers;
-// basic strings with the five common escapes; literal strings; integers
-// (decimal, optional sign, `_` separators); floats; booleans; arrays of
-// strings/ints/floats. Keys are stored section-qualified with '.'
-// ("package.name"), in file order.
-//
-// NOT in v1: dates/times, multi-line strings, inline tables,
-// arrays-of-tables, dotted keys in assignment position. The WRITER
-// (`toml_write`) emits the same subset: flat section-qualified keys, root
-// keys first, `[section]` blocks in first-appearance order, the five
-// common escapes. Errors carry the 1-based line number.
-// ============================================================================
-
+/// TOML v1 reader (the subset a package manifest needs).
+/// 
+/// Supported: comments; bare and quoted keys; `[table]` and `[a.b]` headers;
+/// basic strings with the five common escapes; literal strings; integers
+/// (decimal, optional sign, `_` separators); floats; booleans; arrays of
+/// strings/ints/floats. Keys are stored section-qualified with '.'
+/// ("package.name"), in file order.
+/// 
+/// NOT in v1: dates/times, multi-line strings, inline tables,
+/// arrays-of-tables, dotted keys in assignment position. The WRITER
+/// (`toml_write`) emits the same subset: flat section-qualified keys, root
+/// keys first, `[section]` blocks in first-appearance order, the five
+/// common escapes. Errors carry the 1-based line number.
 pub type TomlValue = enum {
   TStr(Str),
   TInt(Int),

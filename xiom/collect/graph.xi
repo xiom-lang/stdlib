@@ -4,20 +4,17 @@
 
 module xiom.collect.graph
 
-// ============================================================================
-// Graph (Int node ids)
-// The spec struct is `{ n: Int; adj: Vec[Vec[Int]]; }`, but nested
-// `Vec[Vec[Int]]` element access is unreliable in the current compiler (see
-// collect/heap.xi), so the `adj` field is retained per the module spec while
-// the adjacency is stored in a flat linked arena:
-//   head[u] = first edge id in u's neighbor list (or -1)
-//   to[id]  = destination node of edge id
-//   next[id] = next edge id in the same node's list (or -1)
-// Appending is O(1); has_edge/degree/neighbors walk the list. `graph_add_edge`
-// adds both directions and rejects duplicates; `graph_add_directed_edge` adds
-// a single directed edge.
-// ============================================================================
-
+/// Graph (Int node ids)
+/// The spec struct is `{ n: Int; adj: Vec[Vec[Int]]; }`, but nested
+/// `Vec[Vec[Int]]` element access is unreliable in the current compiler (see
+/// collect/heap.xi), so the `adj` field is retained per the module spec while
+/// the adjacency is stored in a flat linked arena:
+///   head[u] = first edge id in u's neighbor list (or -1)
+///   to[id]  = destination node of edge id
+///   next[id] = next edge id in the same node's list (or -1)
+/// Appending is O(1); has_edge/degree/neighbors walk the list. `graph_add_edge`
+/// adds both directions and rejects duplicates; `graph_add_directed_edge` adds
+/// a single directed edge.
 pub type Graph = {
   n: Int;
   adj: Vec[Vec[Int]];
@@ -288,14 +285,11 @@ pub fn graph_path_exists(g: &Graph, a: Int, b: Int) -> Bool
   return false;
 }
 
-// ============================================================================
-// Union-Find / Disjoint Set (Int elements)
-// `parent` stores each element's parent (root points at itself) and `rank`
-// stores the tree height for union-by-rank. `uf_find` applies path
-// compression; `uf_find_no_compress` is a read-only variant used by
-// `uf_connected` and `uf_count` so they can take an immutable reference.
-// ============================================================================
-
+/// Union-Find / Disjoint Set (Int elements)
+/// `parent` stores each element's parent (root points at itself) and `rank`
+/// stores the tree height for union-by-rank. `uf_find` applies path
+/// compression; `uf_find_no_compress` is a read-only variant used by
+/// `uf_connected` and `uf_count` so they can take an immutable reference.
 pub type GraphUnionFind = {
   parent: Vec[Int];
   rank: Vec[Int];

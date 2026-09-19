@@ -15,7 +15,6 @@ use xiom.collections;
 use xiom.convert;
 use xiom.encoding;
 
-// === Serialize trait ===
 /// === Serialize trait ===
 pub interface Serialize {
   fn serialize(self) -> Result[Str, SerializeError];
@@ -23,7 +22,6 @@ pub interface Serialize {
   fn serialize_bytes(self) -> Result[Vec[UInt8], SerializeError];
 }
 
-// === Deserialize trait (with contract preservation) ===
 /// === Deserialize trait (with contract preservation) ===
 pub interface Deserialize {
   fn deserialize(data: Str) -> Result[Self, SerializeError]
@@ -34,7 +32,6 @@ pub interface Deserialize {
     ensures: result is Ok => self.invariant_check()
 }
 
-// === Error type ===
 /// === Error type ===
 pub type SerializeError = {
   kind: Int;
@@ -44,8 +41,7 @@ pub type SerializeError = {
   col: Int;
 } derive[Eq, Clone, Display]
 
-// Error kinds: 0=Unknown, 1=InvalidFormat, 2=MissingField, 3=TypeMismatch, 4=ContractViolation, 5=UnsupportedType
-
+/// Error kinds: 0=Unknown, 1=InvalidFormat, 2=MissingField, 3=TypeMismatch, 4=ContractViolation, 5=UnsupportedType
 pub fn SerializeError.format_error() -> Str {
   var s = "SerializeError[";
   s = s + convert.int_to_string(self.kind);
@@ -59,7 +55,6 @@ pub fn SerializeError.format_error() -> Str {
   return s;
 }
 
-// === Format detection ===
 /// === Format detection ===
 pub fn detect_format(data: &Vec[UInt8]) -> Str
   ensures: result.len() > 0
@@ -93,7 +88,6 @@ pub fn is_valid_bytes(data: &Vec[UInt8]) -> Bool {
   result.is_ok
 }
 
-// === JSON helpers ===
 /// === JSON helpers ===
 pub fn json_string(s: Str) -> Str {
   var result = "\"";
@@ -472,8 +466,7 @@ pub type JsonValue = enum {
   Object(entries: Map[Str, JsonValue]),
 }
 
-// === JsonValue methods ===
-
+/// === JsonValue methods ===
 pub fn JsonValue.to_str(self) -> Str {
   match self {
     Null => { return "null"; };
@@ -539,7 +532,6 @@ pub fn JsonValue.index(self, i: Int) -> Option[JsonValue] {
   }
 }
 
-// === Binary helpers ===
 /// === Binary helpers ===
 pub fn little_endian() -> Bool {
   return true;

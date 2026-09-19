@@ -6,15 +6,12 @@ module xiom.collect.list
 
 // Depends on: none
 
-// ============================================================================
-// Doubly linked list of Int elements with O(1) push/pop/peek at both ends.
-// Flat-arena representation (the established collect/ pattern): nodes live in
-// three parallel Vec[Int]s (`values`/`prevs`/`nexts`) addressed by index;
-// -1 is the "no node" sentinel. `head`/`tail` index the two ends. Removed
-// nodes become unreachable arena entries. Indexed access is O(n); all index
-// arguments are bounds-checked.
-// ============================================================================
-
+/// Doubly linked list of Int elements with O(1) push/pop/peek at both ends.
+/// Flat-arena representation (the established collect/ pattern): nodes live in
+/// three parallel Vec[Int]s (`values`/`prevs`/`nexts`) addressed by index;
+/// -1 is the "no node" sentinel. `head`/`tail` index the two ends. Removed
+/// nodes become unreachable arena entries. Indexed access is O(n); all index
+/// arguments are bounds-checked.
 pub type LinkedList = {
   head: Int;
   tail: Int;

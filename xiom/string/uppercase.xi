@@ -14,9 +14,6 @@ module xiom.string.uppercase
 
 use xiom.string;
 
-// Converts all characters of `s` to uppercase.
-// Returns a new string with the same byte length as `s`.
-// Complexity: O(|s|).
 /// Converts all characters of `s` to uppercase.
 /// Returns a new string with the same byte length as `s`.
 /// Complexity: O(|s|).
@@ -26,9 +23,6 @@ pub fn str_uppercase(s: Str) -> Str
   return string.str_upper(s);
 }
 
-// Returns the uppercase variant of `c`, or `c` unchanged when `c` has no
-// uppercase mapping.
-// Complexity: O(1).
 /// Returns the uppercase variant of `c`, or `c` unchanged when `c` has no
 /// uppercase mapping.
 /// Complexity: O(1).

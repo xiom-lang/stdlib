@@ -6,12 +6,9 @@ module xiom.collect.priority
 
 // Depends on: none
 
-// ============================================================================
-// Binary max-heap based priority queue of Int elements backed by the built-in
-// Vec[Int]. `pqueue_pop` removes the largest element in O(log n); `pqueue_peek`
-// inspects it in O(1). None on an empty queue.
-// ============================================================================
-
+/// Binary max-heap based priority queue of Int elements backed by the built-in
+/// Vec[Int]. `pqueue_pop` removes the largest element in O(log n); `pqueue_peek`
+/// inspects it in O(1). None on an empty queue.
 pub type IntMaxHeap = {
   data: Vec[Int];
 }

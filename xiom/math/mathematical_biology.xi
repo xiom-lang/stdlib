@@ -15,15 +15,12 @@ module xiom.math.mathematical_biology
 
 use xiom.math;
 
-// Exponential population size N0 * exp(r t). Complexity: O(1).
 /// Exponential population size N0 * exp(r t). Complexity: O(1).
 pub fn population_growth(r: Float64, n0: Float64, t: Float64) -> Float64 {
   var e = math.exp(r * t);
   return n0 * e;
 }
 
-// Logistic growth N(t) = K N0 e^(rt) / (K + N0(e^(rt) - 1)). Returns K for
-// n0 == 0 and 0 for t == 0 with n0 == 0 (documented). Complexity: O(1).
 /// Logistic growth N(t) = K N0 e^(rt) / (K + N0(e^(rt) - 1)). Returns K for
 /// n0 == 0 and 0 for t == 0 with n0 == 0 (documented). Complexity: O(1).
 pub fn logistic_growth(r: Float64, k: Float64, n0: Float64, t: Float64) -> Float64 {
@@ -36,9 +33,6 @@ pub fn logistic_growth(r: Float64, k: Float64, n0: Float64, t: Float64) -> Float
   return k * n0 * e / denom;
 }
 
-// One Euler step of the Lotka-Volterra predator-prey system:
-// prey' = alpha*prey - beta*prey*pred, pred' = delta*prey*pred - gamma*pred.
-// Returns (prey, pred). Complexity: O(1).
 /// One Euler step of the Lotka-Volterra predator-prey system:
 /// prey' = alpha*prey - beta*prey*pred, pred' = delta*prey*pred - gamma*pred.
 /// Returns (prey, pred). Complexity: O(1).
@@ -50,8 +44,6 @@ pub fn lotka_volterra(alpha: Float64, beta: Float64, gamma: Float64, delta: Floa
   return (np, nd);
 }
 
-// One SIR compartment step: S' = -beta S I, I' = beta S I - gamma I,
-// R' = gamma I. Returns (S, I, R). Complexity: O(1).
 /// One SIR compartment step: S' = -beta S I, I' = beta S I - gamma I,
 /// R' = gamma I. Returns (S, I, R). Complexity: O(1).
 pub fn epidemiological_sir(beta: Float64, gamma: Float64, s: Float64, i: Float64, r: Float64, dt: Float64) -> (Float64, Float64, Float64) {
@@ -64,8 +56,6 @@ pub fn epidemiological_sir(beta: Float64, gamma: Float64, s: Float64, i: Float64
   return (ns, ni, nr);
 }
 
-// One SEIR compartment step: S' = -beta S I, E' = beta S I - sigma E,
-// I' = sigma E - gamma I, R' = gamma I. Returns (S, E, I, R). Complexity: O(1).
 /// One SEIR compartment step: S' = -beta S I, E' = beta S I - sigma E,
 /// I' = sigma E - gamma I, R' = gamma I. Returns (S, E, I, R). Complexity: O(1).
 pub fn epidemiological_seir(beta: Float64, sigma: Float64, gamma: Float64, s: Float64, e: Float64, i: Float64, r: Float64, dt: Float64) -> (Float64, Float64, Float64, Float64) {
@@ -80,8 +70,6 @@ pub fn epidemiological_seir(beta: Float64, sigma: Float64, gamma: Float64, s: Fl
   return (ns, ne, ni, nr);
 }
 
-// Tumor size after a treatment step: tumor * exp((growth - kill*dose) dt).
-// Complexity: O(1).
 /// Tumor size after a treatment step: tumor * exp((growth - kill*dose) dt).
 /// Complexity: O(1).
 pub fn chemotherapy(growth: Float64, kill: Float64, tumor: Float64, dose: Float64, dt: Float64) -> Float64 {
@@ -89,9 +77,6 @@ pub fn chemotherapy(growth: Float64, kill: Float64, tumor: Float64, dose: Float6
   return tumor * e;
 }
 
-// Hardy-Weinberg genotype frequencies under selection on the homozygote
-// (aa): p^2 w_AA : 2 p q w_Aa : q^2 w_aa, normalized. Returns a 3-vector
-// (AA, Aa, aa). NaN for p + q far from 1 or negative frequencies. Complexity: O(1).
 /// Hardy-Weinberg genotype frequencies under selection on the homozygote
 /// (aa): p^2 w_AA : 2 p q w_Aa : q^2 w_aa, normalized. Returns a 3-vector
 /// (AA, Aa, aa). NaN for p + q far from 1 or negative frequencies. Complexity: O(1).
@@ -110,13 +95,6 @@ pub fn genetics(p: Float64, q: Float64, selection: Float64) -> Vec[Float64] {
   return out;
 }
 
-// One Lotka-Volterra multi-species step: x_i' = x_i (r_i - sum_j a_ij x_j)
-// with the interaction matrix a and no intrinsic growth vector (r = 1).
-// Returns the next-generation abundances.
-// TODO(compiler): NOT IMPLEMENTABLE in this compiler build - the interaction
-// matrix is a Vec[Vec[Float64]] whose element reads return garbage (BUG 23 #1
-// residual; verified by minimal probe). Keep the frozen signature; revisit
-// when nested float Vec reads land.
 /// One Lotka-Volterra multi-species step: x_i' = x_i (r_i - sum_j a_ij x_j)
 /// with the interaction matrix a and no intrinsic growth vector (r = 1).
 /// Returns the next-generation abundances.
@@ -129,9 +107,6 @@ pub fn ecology(species: &Vec[Float64], interaction: &Vec[Vec[Float64]], dt: Floa
   return out;
 }
 
-// One immune-response step: antigen' = infection_rate*antigen -
-// antibody*antigen, antibody' = antigen*antibody - clearance*antibody.
-// Returns (antigen, antibody). Complexity: O(1).
 /// One immune-response step: antigen' = infection_rate*antigen -
 /// antibody*antigen, antibody' = antigen*antibody - clearance*antibody.
 /// Returns (antigen, antibody). Complexity: O(1).
@@ -167,14 +142,6 @@ fn _neuron_v(v: Float64, input: Float64, tau: Float64, threshold: Float64, dt: F
   return v_new;
 }
 
-// Leaky integrate-and-fire neuron update:
-// v <- v + (input - v)/tau * dt; fires (v resets to 0) when v crosses the
-// threshold. Returns (new_voltage, fired). Complexity: O(1).
-// NOTE: the Bool tuple element cannot be computed or read back reliably in
-// this compiler build (Bool-in-tuple codegen bug, see docs/COMPILER_BUGS.md
-// BUG 23 #7; verified by minimal probes). The returned voltage resets to 0.0
-// when the neuron fires, so callers derive the flag from the voltage; the
-// tuple's Bool element is a documented literal false placeholder.
 /// Leaky integrate-and-fire neuron update:
 /// v <- v + (input - v)/tau * dt; fires (v resets to 0) when v crosses the
 /// threshold. Returns (new_voltage, fired). Complexity: O(1).
@@ -189,9 +156,6 @@ pub fn neuroscience(v: Float64, input: Float64, tau: Float64, threshold: Float64
   return r;
 }
 
-// Next-generation allele frequencies under selection and mutation:
-// x_i' = (x_i w_i + mutation * (1/n - x_i)) / mean fitness, with w_i =
-// fitness[i]. Empty for length mismatch. Complexity: O(n).
 /// Next-generation allele frequencies under selection and mutation:
 /// x_i' = (x_i w_i + mutation * (1/n - x_i)) / mean fitness, with w_i =
 /// fitness[i]. Empty for length mismatch. Complexity: O(n).

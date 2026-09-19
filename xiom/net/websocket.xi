@@ -13,7 +13,6 @@ use xiom.string;
 use xiom.encoding;
 use xiom.math;
 
-// struct WsFrame { opcode: Int; fin: Bool; masked: Bool; payload: Vec[UInt8] }
 /// struct WsFrame { opcode: Int; fin: Bool; masked: Bool; payload: Vec[UInt8] }
 pub type WsFrame = {
   opcode: Int;
@@ -22,7 +21,6 @@ pub type WsFrame = {
   payload: Vec[UInt8];
 } derive[Clone]
 
-// struct WsConnection { socket: TcpStream; key: Str; open: Bool }
 /// struct WsConnection { socket: TcpStream; key: Str; open: Bool }
 pub type WsConnection = {
   fd: Int;
@@ -92,8 +90,6 @@ fn str_to_int(s: Str) -> Int {
 
 // --- Handshake builders -------------------------------------------------------
 
-// ws_handshake_request builds a client upgrade request for the given
-// host, path, and Sec-WebSocket-Key value. Complexity: O(1). Pure.
 /// ws_handshake_request builds a client upgrade request for the given
 /// host, path, and Sec-WebSocket-Key value. Complexity: O(1). Pure.
 pub fn ws_handshake_request(host: Str, path: Str, key: Str) -> Str {
@@ -258,8 +254,6 @@ fn sha1(data: &Vec[UInt8]) -> Vec[UInt8] {
   out
 }
 
-// ws_accept_key computes the Sec-WebSocket-Accept value for a client
-// key per RFC 6455: base64(SHA-1(key + GUID)). Complexity: O(n).
 /// ws_accept_key computes the Sec-WebSocket-Accept value for a client
 /// key per RFC 6455: base64(SHA-1(key + GUID)). Complexity: O(n).
 pub fn ws_accept_key(key: Str) -> Str {
@@ -279,9 +273,6 @@ pub fn ws_accept_key(key: Str) -> Str {
   encoding.base64_encode(&digest)
 }
 
-// ws_handshake_verify checks a server upgrade response against the
-// client key: the status line must be 101 and the Sec-WebSocket-Accept
-// header must match the computed accept value. Complexity: O(n). Pure.
 /// ws_handshake_verify checks a server upgrade response against the
 /// client key: the status line must be 101 and the Sec-WebSocket-Accept
 /// header must match the computed accept value. Complexity: O(n). Pure.
@@ -320,9 +311,6 @@ pub fn ws_handshake_verify(response: Str, key: Str) -> Bool {
 
 // --- Frame encode / decode ----------------------------------------------------
 
-// ws_frame_encode serializes one WebSocket frame. When mask is true a
-// random-looking client mask (derived from payload length) is applied.
-// Complexity: O(n). Pure.
 /// ws_frame_encode serializes one WebSocket frame. When mask is true a
 /// random-looking client mask (derived from payload length) is applied.
 /// Complexity: O(n). Pure.
@@ -381,8 +369,6 @@ pub fn ws_frame_encode(opcode: Int, payload: &Vec[UInt8], mask: Bool) -> Vec[UIn
   out
 }
 
-// ws_frame_decode parses one WebSocket frame from bytes. Returns Err on
-// truncated or invalid input. Complexity: O(n). Pure.
 /// ws_frame_decode parses one WebSocket frame from bytes. Returns Err on
 /// truncated or invalid input. Complexity: O(n). Pure.
 pub fn ws_frame_decode(frame: &Vec[UInt8]) -> Result[WsFrame, Str] {
@@ -444,9 +430,6 @@ pub fn ws_frame_decode(frame: &Vec[UInt8]) -> Result[WsFrame, Str] {
   Ok(WsFrame{ opcode: opcode; fin: fin; masked: masked; payload: payload; })
 }
 
-// ws_random_key generates a Sec-WebSocket-Key value (base64 of 16
-// bytes) for use in client handshakes. Deterministic derivation from
-// the current time keeps the module free of external RNG state.
 /// ws_random_key generates a Sec-WebSocket-Key value (base64 of 16
 /// bytes) for use in client handshakes. Deterministic derivation from
 /// the current time keeps the module free of external RNG state.
@@ -481,9 +464,6 @@ fn io_now() -> Int {
   t
 }
 
-// ws_parse_url splits a ws:// or wss:// URL into host, port, and path.
-// The port is the explicit port when present, otherwise the scheme
-// default. Returns Err for malformed input. Complexity: O(n). Pure.
 /// ws_parse_url splits a ws:// or wss:// URL into host, port, and path.
 /// The port is the explicit port when present, otherwise the scheme
 /// default. Returns Err for malformed input. Complexity: O(n). Pure.
@@ -557,9 +537,6 @@ extern "C" {
   fn xiom_socket_close(sock: Int) -> Int;
 }
 
-// ws_connect opens a WebSocket connection to a ws:// or wss:// URL,
-// performing the client handshake. TLS (wss) is not supported by the
-// runtime socket layer; use ws://. Complexity: network I/O.
 /// ws_connect opens a WebSocket connection to a ws:// or wss:// URL,
 /// performing the client handshake. TLS (wss) is not supported by the
 /// runtime socket layer; use ws://. Complexity: network I/O.
@@ -634,8 +611,6 @@ pub fn ws_connect(url: Str) -> Result[WsConnection, Str] {
   Ok(WsConnection{ fd: fd; key: key; open: true; })
 }
 
-// ws_send sends a text message over an open connection.
-// Complexity: network I/O.
 /// ws_send sends a text message over an open connection.
 /// Complexity: network I/O.
 pub fn ws_send(conn: &WsConnection, text: Str) -> Result[Unit, Str] {
@@ -652,8 +627,6 @@ pub fn ws_send(conn: &WsConnection, text: Str) -> Result[Unit, Str] {
   ws_send_frame(conn, frame)
 }
 
-// ws_send_binary sends a binary message over an open connection.
-// Complexity: network I/O.
 /// ws_send_binary sends a binary message over an open connection.
 /// Complexity: network I/O.
 pub fn ws_send_binary(conn: &WsConnection, data: &Vec[UInt8]) -> Result[Unit, Str] {
@@ -683,8 +656,6 @@ fn ws_send_frame(conn: &WsConnection, frame: Vec[UInt8]) -> Result[Unit, Str] {
   Ok(())
 }
 
-// ws_recv receives the next frame from the connection.
-// Complexity: network I/O.
 /// ws_recv receives the next frame from the connection.
 /// Complexity: network I/O.
 pub fn ws_recv(conn: &WsConnection) -> Result[WsFrame, Str] {
@@ -712,8 +683,6 @@ pub fn ws_recv(conn: &WsConnection) -> Result[WsFrame, Str] {
   ws_frame_decode(&raw)
 }
 
-// ws_close sends a close frame and tears down the connection.
-// Complexity: network I/O.
 /// ws_close sends a close frame and tears down the connection.
 /// Complexity: network I/O.
 pub fn ws_close(conn: &WsConnection, code: Int) {
@@ -725,8 +694,6 @@ pub fn ws_close(conn: &WsConnection, code: Int) {
   unsafe { xiom_socket_close(conn.fd); }
 }
 
-// ws_ping sends a ping frame.
-// Complexity: network I/O.
 /// ws_ping sends a ping frame.
 /// Complexity: network I/O.
 pub fn ws_ping(conn: &WsConnection) {
@@ -735,8 +702,6 @@ pub fn ws_ping(conn: &WsConnection) {
   let _ = ws_send_frame(conn, frame);
 }
 
-// ws_pong sends a pong frame.
-// Complexity: network I/O.
 /// ws_pong sends a pong frame.
 /// Complexity: network I/O.
 pub fn ws_pong(conn: &WsConnection) {

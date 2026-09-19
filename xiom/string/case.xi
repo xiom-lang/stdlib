@@ -149,9 +149,6 @@ fn _join_lower(s: Str, sep: Str) -> Str {
   result
 }
 
-// Converts all characters of `s` to uppercase.
-// Returns a new string with the same byte length as `s`.
-// Complexity: O(|s|).
 /// Converts all characters of `s` to uppercase.
 /// Returns a new string with the same byte length as `s`.
 /// Complexity: O(|s|).
@@ -161,9 +158,6 @@ pub fn str_upper(s: Str) -> Str
   return string.str_upper(s);
 }
 
-// Converts all characters of `s` to lowercase.
-// Returns a new string with the same byte length as `s`.
-// Complexity: O(|s|).
 /// Converts all characters of `s` to lowercase.
 /// Returns a new string with the same byte length as `s`.
 /// Complexity: O(|s|).
@@ -173,10 +167,6 @@ pub fn str_lower(s: Str) -> Str
   return string.str_lower(s);
 }
 
-// Capitalizes the first letter of every word of `s`; remaining characters of
-// each word are lowercased. Whitespace and separators are preserved.
-// Returns a new string with the same byte length as `s`.
-// Complexity: O(|s|).
 /// Capitalizes the first letter of every word of `s`; remaining characters of
 /// each word are lowercased. Whitespace and separators are preserved.
 /// Returns a new string with the same byte length as `s`.
@@ -187,10 +177,6 @@ pub fn str_title(s: Str) -> Str
   return string.str_title_case(s);
 }
 
-// Swaps the case of every letter in `s`; characters that are neither
-// uppercase nor lowercase are left unchanged.
-// Returns a new string with the same byte length as `s`.
-// Complexity: O(|s|).
 /// Swaps the case of every letter in `s`; characters that are neither
 /// uppercase nor lowercase are left unchanged.
 /// Returns a new string with the same byte length as `s`.
@@ -201,9 +187,6 @@ pub fn str_swap_case(s: Str) -> Str
   return string.str_swap_case(s);
 }
 
-// Uppercases the first character of `s` and lowercases the rest.
-// Returns `s` unchanged when `s` is empty.
-// Complexity: O(|s|).
 /// Uppercases the first character of `s` and lowercases the rest.
 /// Returns `s` unchanged when `s` is empty.
 /// Complexity: O(|s|).
@@ -213,10 +196,6 @@ pub fn str_capitalize(s: Str) -> Str
   _capitalize(s)
 }
 
-// Capitalizes the first letter of each sentence of `s`. A sentence boundary is
-// a '.', '!' or '?' character; the next alphabetic character is uppercased.
-// Returns a new string with the same byte length as `s`.
-// Complexity: O(|s|).
 /// Capitalizes the first letter of each sentence of `s`. A sentence boundary is
 /// a '.', '!' or '?' character; the next alphabetic character is uppercased.
 /// Returns a new string with the same byte length as `s`.
@@ -250,9 +229,6 @@ pub fn str_sentence_case(s: Str) -> Str
   result
 }
 
-// Converts `s` to lowerCamelCase: the first word is lowercased and each
-// following word is capitalized; separators are dropped.
-// Complexity: O(|s|).
 /// Converts `s` to lowerCamelCase: the first word is lowercased and each
 /// following word is capitalized; separators are dropped.
 /// Complexity: O(|s|).
@@ -274,8 +250,6 @@ pub fn str_to_camel_case(s: Str) -> Str
   result
 }
 
-// Converts `s` to snake_case: words are lowercased and joined with '_'.
-// Complexity: O(|s|).
 /// Converts `s` to snake_case: words are lowercased and joined with '_'.
 /// Complexity: O(|s|).
 pub fn str_to_snake_case(s: Str) -> Str
@@ -284,8 +258,6 @@ pub fn str_to_snake_case(s: Str) -> Str
   _join_lower(s, "_")
 }
 
-// Converts `s` to kebab-case: words are lowercased and joined with '-'.
-// Complexity: O(|s|).
 /// Converts `s` to kebab-case: words are lowercased and joined with '-'.
 /// Complexity: O(|s|).
 pub fn str_to_kebab_case(s: Str) -> Str
@@ -294,9 +266,6 @@ pub fn str_to_kebab_case(s: Str) -> Str
   _join_lower(s, "-")
 }
 
-// Converts `s` to PascalCase: every word is capitalized and joined without a
-// separator.
-// Complexity: O(|s|).
 /// Converts `s` to PascalCase: every word is capitalized and joined without a
 /// separator.
 /// Complexity: O(|s|).

@@ -29,7 +29,6 @@ extern "C" {
   fn xiom_type_field_count(id: Int) -> Int;
 }
 
-// Number of user types registered in this compilation unit. REAL.
 /// Number of user types registered in this compilation unit. REAL.
 pub fn type_count() -> Int
   requires: true
@@ -40,7 +39,6 @@ pub fn type_count() -> Int
   }
 }
 
-// Name of the type with the given stable id, or "unknown" if out of range. REAL.
 /// Name of the type with the given stable id, or "unknown" if out of range. REAL.
 pub fn type_name_by_id(id: Int) -> Str
   requires: true
@@ -51,7 +49,6 @@ pub fn type_name_by_id(id: Int) -> Str
   }
 }
 
-// Stable id of the type with the given name, or -1 if not found. REAL.
 /// Stable id of the type with the given name, or -1 if not found. REAL.
 pub fn type_id_by_name(name: Str) -> Int
   requires: true
@@ -62,7 +59,6 @@ pub fn type_id_by_name(name: Str) -> Int
   }
 }
 
-// Number of fields of the type with the given id (0 for enums/unknown). REAL.
 /// Number of fields of the type with the given id (0 for enums/unknown). REAL.
 pub fn type_field_count(id: Int) -> Int
   requires: true
@@ -98,7 +94,6 @@ pub fn type_align[T]() -> Int {
   return align_of[T]();
 }
 
-// Downcasting
 /// Downcasting
 pub fn downcast_ref[T: Any](value: &dyn Any) -> Option<&T> {
   return None;
@@ -136,11 +131,6 @@ pub fn reflect_type[T]() -> TypeInfo {
   };
 }
 
-// Look up a type by name and return REAL data from the compiler RTTI table:
-// the canonical `name` and the true field count (materialised as that many
-// placeholder FieldInfo entries so `result.fields.len()` is exact).
-// LIMITED: size/align are reported as 0, kind defaults to 1 (struct), and
-// per-field names/types are "unknown" -- that metadata is not embedded yet.
 /// Look up a type by name and return REAL data from the compiler RTTI table:
 /// the canonical `name` and the true field count (materialised as that many
 /// placeholder FieldInfo entries so `result.fields.len()` is exact).
@@ -174,8 +164,6 @@ pub fn type_info_by_name(name: Str) -> Option<TypeInfo> {
   });
 }
 
-// Enumerate every registered user type with REAL names and field counts.
-// LIMITED: size/align/kind and per-field metadata are placeholders (see above).
 /// Enumerate every registered user type with REAL names and field counts.
 /// LIMITED: size/align/kind and per-field metadata are placeholders (see above).
 pub fn all_types() -> Vec<TypeInfo> {

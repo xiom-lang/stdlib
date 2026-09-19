@@ -6,20 +6,17 @@ module xiom.collect.segment
 
 // Depends on: none (pure)
 
-// ============================================================================
-// Segment tree over an Int array (0-based indices). Builds in O(n), supports
-// point updates and range queries (sum, min, max) in O(log n). Indices are
-// inclusive; out-of-range queries return identity values (0 for sum,
-// INT_MAX for min, INT_MIN for max).
-//
-// Flat-arena style. The tree is stored in three parallel Vec[Int]s of size
-// 4n (`sums`, `mins`, `maxs`) using the classic recursive heap layout: node
-// `k` covers [l, r] with children 2k+1 and 2k+2. Leaves hold a single slot,
-// internal nodes pull from their children. Out-of-range update indices are
-// rejected (no-op); out-of-range queries are clamped and return the identity
-// value when the clamped range is empty.
-// ============================================================================
-
+/// Segment tree over an Int array (0-based indices). Builds in O(n), supports
+/// point updates and range queries (sum, min, max) in O(log n). Indices are
+/// inclusive; out-of-range queries return identity values (0 for sum,
+/// INT_MAX for min, INT_MIN for max).
+/// 
+/// Flat-arena style. The tree is stored in three parallel Vec[Int]s of size
+/// 4n (`sums`, `mins`, `maxs`) using the classic recursive heap layout: node
+/// `k` covers [l, r] with children 2k+1 and 2k+2. Leaves hold a single slot,
+/// internal nodes pull from their children. Out-of-range update indices are
+/// rejected (no-op); out-of-range queries are clamped and return the identity
+/// value when the clamped range is empty.
 pub type SegTree = {
   n: Int;
   sums: Vec[Int];

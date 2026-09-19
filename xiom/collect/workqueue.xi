@@ -6,13 +6,10 @@ module xiom.collect.workqueue
 
 // Depends on: none
 
-// ============================================================================
-// FIFO queue of Int jobs consumed by worker threads.
-// Pure-XIOM data structure (no OS threads): a bounded-by-memory FIFO backed by
-// a flat Vec plus a head offset. push appends, pop reads from `head`; popped
-// slots are left in place (no compaction) so every operation is O(1).
-// ============================================================================
-
+/// FIFO queue of Int jobs consumed by worker threads.
+/// Pure-XIOM data structure (no OS threads): a bounded-by-memory FIFO backed by
+/// a flat Vec plus a head offset. push appends, pop reads from `head`; popped
+/// slots are left in place (no compaction) so every operation is O(1).
 pub type WorkQueue = {
   items: Vec[Int];
   head: Int;

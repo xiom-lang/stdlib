@@ -16,7 +16,6 @@ module xiom.net.sse
 use xiom.string;
 use xiom.net;
 
-// struct SseConnection { socket: TcpStream; url: Str; open: Bool }
 /// struct SseConnection { socket: TcpStream; url: Str; open: Bool }
 pub type SseConnection = {
   socket: net.TcpStream;
@@ -24,7 +23,6 @@ pub type SseConnection = {
   open: Bool;
 }
 
-// struct SseEvent { id: Str; event: Str; data: Str; retry: Int }
 /// struct SseEvent { id: Str; event: Str; data: Str; retry: Int }
 pub type SseEvent = {
   id: Str;

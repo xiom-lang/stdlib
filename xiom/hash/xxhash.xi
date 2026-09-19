@@ -549,8 +549,7 @@ fn _hash_long_64(data: &Vec[UInt8], len: Int, seed: UInt64) -> UInt64 {
   return _merge_accs(&acc, 11, (len as UInt64) * _P64_1, seed);
 }
 
-// ---- 128-bit ----
-
+/// ---- 128-bit ----
 pub type Xxh128 = { low64: UInt64; high64: UInt64; }
 
 fn _len_1to3_128(data: &Vec[UInt8], len: Int, seed: UInt64) -> Xxh128 {

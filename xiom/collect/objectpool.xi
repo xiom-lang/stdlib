@@ -4,13 +4,10 @@
 
 module xiom.collect.objectpool
 
-// ============================================================================
-// ObjectPool (Int handles 0 .. capacity-1)
-// `free` is a LIFO stack of released handles; `next` hands out fresh handles
-// while below capacity. O(1) acquire/release; release validates the handle
-// (double-release is rejected).
-// ============================================================================
-
+/// ObjectPool (Int handles 0 .. capacity-1)
+/// `free` is a LIFO stack of released handles; `next` hands out fresh handles
+/// while below capacity. O(1) acquire/release; release validates the handle
+/// (double-release is rejected).
 pub type ObjectPool = { free: Vec[Int]; next: Int; capacity: Int; }
 
 /// Create a pool with `capacity` handles.

@@ -190,8 +190,6 @@ fn _dummy_struct(x: &Vec[Int]) -> Bool {
   return false;
 }
 
-// Validity of a propositional formula over the variables a..z: the formula
-// evaluates true under every assignment. Complexity: O(2^vars * len).
 /// Validity of a propositional formula over the variables a..z: the formula
 /// evaluates true under every assignment. Complexity: O(2^vars * len).
 pub fn propositional(expr: Str) -> Bool {
@@ -247,8 +245,6 @@ pub fn propositional(expr: Str) -> Bool {
   return true;
 }
 
-// Truth of a first-order formula over a finite domain: atoms P(d) hold when
-// d is a member of the domain. Complexity: O(len).
 /// Truth of a first-order formula over a finite domain: atoms P(d) hold when
 /// d is a member of the domain. Complexity: O(len).
 pub fn predicate(expr: Str, domain: &Vec[Int]) -> Bool {
@@ -262,8 +258,6 @@ pub fn predicate(expr: Str, domain: &Vec[Int]) -> Bool {
   return _iff(&mut st, 1, domain, _dummy_struct, &assign);
 }
 
-// Satisfiability of a formula in a given structure: atoms P(d) are
-// evaluated by structure([d]). Complexity: O(len * cost(structure)).
 /// Satisfiability of a formula in a given structure: atoms P(d) are
 /// evaluated by structure([d]). Complexity: O(len * cost(structure)).
 pub fn first_order(formula: Str, structure: fn(&Vec[Int]) -> Bool) -> Bool {
@@ -277,10 +271,6 @@ pub fn first_order(formula: Str, structure: fn(&Vec[Int]) -> Bool) -> Bool {
   return _iff(&mut st, 2, &Vec[Int].new(), structure, &assign);
 }
 
-// Truth of a modal formula at a world: atoms are P<k> (predicate P holds of
-// world k); [f] is true when f holds at every world reachable from the
-// current one, <f> when it holds at some reachable world. The relations
-// vector is a list of (from, to) pairs. Complexity: O(len * reachable).
 /// Truth of a modal formula at a world: atoms are P<k> (predicate P holds of
 /// world k); [f] is true when f holds at every world reachable from the
 /// current one, <f> when it holds at some reachable world. The relations
@@ -425,9 +415,6 @@ fn _modal_primary(st: &mut _PS, world: Int, relations: &Vec[(Int, Int)]) -> Bool
   return false;
 }
 
-// Temporal-logic truth evaluation along the successor run: atoms are P<k>
-// (true at state k) and the next-time operator X shifts evaluation to
-// next(current). Complexity: O(len * cost(next)).
 /// Temporal-logic truth evaluation along the successor run: atoms are P<k>
 /// (true at state k) and the next-time operator X shifts evaluation to
 /// next(current). Complexity: O(len * cost(next)).
@@ -534,9 +521,6 @@ fn _temp_primary(st: &mut _PS, state: Int, next: fn(Int) -> Int) -> Bool {
   return false;
 }
 
-// Fuzzy truth value in [0, 1] of a formula over the variable truth values in
-// `values` (a..z indexed; unknown variables default to 0). min/max/1-x
-// semantics for &/|/!, and |a - b| for = (documented). Complexity: O(len).
 /// Fuzzy truth value in [0, 1] of a formula over the variable truth values in
 /// `values` (a..z indexed; unknown variables default to 0). min/max/1-x
 /// semantics for &/|/!, and |a - b| for = (documented). Complexity: O(len).
@@ -623,9 +607,6 @@ fn _fuzzy_primary(st: &mut _PS, values: &Vec[Float64]) -> Float64 {
   return 0.0;
 }
 
-// Theorem follows from the axioms via the inference rules: true when the
-// theorem string matches an axiom or a single modus ponens step (an axiom is
-// an implication "a>b" and "a" is derivable). Complexity: O(axioms^2 * len).
 /// Theorem follows from the axioms via the inference rules: true when the
 /// theorem string matches an axiom or a single modus ponens step (an axiom is
 /// an implication "a>b" and "a" is derivable). Complexity: O(axioms^2 * len).
@@ -671,8 +652,6 @@ fn _find_gt(s: Str) -> Int {
   return -1;
 }
 
-// Structure is a model of every sentence (atoms P(d) evaluated by the
-// structure). Complexity: O(sentences * len).
 /// Structure is a model of every sentence (atoms P(d) evaluated by the
 /// structure). Complexity: O(sentences * len).
 pub fn model_theory(sentences: &Vec[Str], structure: fn(&Vec[Int]) -> Bool) -> Bool {
@@ -694,9 +673,6 @@ pub fn model_theory(sentences: &Vec[Str], structure: fn(&Vec[Int]) -> Bool) -> B
   return true;
 }
 
-// All formulas derivable from the axioms under the rule function `rules`
-// (one forward-chaining round, at most 50 derivations; the seed axioms are
-// included first). Complexity: O(50 * cost(rules)).
 /// All formulas derivable from the axioms under the rule function `rules`
 /// (one forward-chaining round, at most 50 derivations; the seed axioms are
 /// included first). Complexity: O(50 * cost(rules)).
@@ -736,10 +712,6 @@ pub fn proof_theory(axioms: &Vec[Str], rules: fn(&Vec[Str]) -> Vec[Str]) -> Vec[
   return out;
 }
 
-// Validates an instance of the set-theoretic axiom schemas: the argument is
-// matched by name against the known axioms (extensionality, empty, pairing,
-// union, powerset, infinity, separation, replacement, regularity, choice).
-// Complexity: O(len).
 /// Validates an instance of the set-theoretic axiom schemas: the argument is
 /// matched by name against the known axioms (extensionality, empty, pairing,
 /// union, powerset, infinity, separation, replacement, regularity, choice).
@@ -758,11 +730,6 @@ pub fn set_theory_axioms(axiom: Str) -> Bool {
   return false;
 }
 
-// Type of a term in a typing context.
-// TODO(compiler): NOT IMPLEMENTABLE - a sound type checker over an arbitrary
-// string term language requires a context/term grammar that the finite
-// string machinery here cannot faithfully represent. Keep the frozen
-// signature; revisit with a concrete term syntax.
 /// Type of a term in a typing context.
 /// TODO(compiler): NOT IMPLEMENTABLE - a sound type checker over an arbitrary
 /// string term language requires a context/term grammar that the finite
@@ -772,10 +739,6 @@ pub fn type_theory(term: Str, context: fn(Str) -> Str) -> Option[Str] {
   return Option[Str]{ is_some: false, value: "" };
 }
 
-// Category axioms on objects and morphisms: the morphisms are (source, name,
-// target) triples; the axioms verified are the existence of an identity per
-// object and the closure/associativity of composition where defined.
-// Complexity: O(morphisms^2).
 /// Category axioms on objects and morphisms: the morphisms are (source, name,
 /// target) triples; the axioms verified are the existence of an identity per
 /// object and the closure/associativity of composition where defined.
@@ -812,11 +775,6 @@ pub fn category_theory(obj: Str, morphisms: &Vec[(Str, Str, Str)]) -> Bool {
   return true;
 }
 
-// Provability in intuitionistic propositional logic.
-// TODO(compiler): NOT IMPLEMENTABLE - requires a genuine proof search (e.g.
-// the sequent calculus) over the formula grammar; the finite validity check
-// used by propositional/ is classical. Keep the frozen signature; revisit
-// with a theorem-prover kernel.
 /// Provability in intuitionistic propositional logic.
 /// TODO(compiler): NOT IMPLEMENTABLE - requires a genuine proof search (e.g.
 /// the sequent calculus) over the formula grammar; the finite validity check
@@ -826,9 +784,6 @@ pub fn intuitionistic(formula: Str) -> Bool {
   return false;
 }
 
-// Provability in resource-sensitive linear logic.
-// TODO(compiler): NOT IMPLEMENTABLE - see intuitionistic (needs a proof
-// search kernel; a truth-table semantics is unsound for linear logic).
 /// Provability in resource-sensitive linear logic.
 /// TODO(compiler): NOT IMPLEMENTABLE - see intuitionistic (needs a proof
 /// search kernel; a truth-table semantics is unsound for linear logic).
@@ -836,9 +791,6 @@ pub fn linear_logic(formula: Str) -> Bool {
   return false;
 }
 
-// Provability in relevance logic.
-// TODO(compiler): NOT IMPLEMENTABLE - see intuitionistic (needs a proof
-// search kernel with the relevance restriction).
 /// Provability in relevance logic.
 /// TODO(compiler): NOT IMPLEMENTABLE - see intuitionistic (needs a proof
 /// search kernel with the relevance restriction).

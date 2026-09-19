@@ -6,24 +6,21 @@ module xiom.collect.range
 
 // Depends on: none
 
-// ============================================================================
-// Interval tree storing Int intervals with values, supporting point queries.
-//
-// R44 same-leaf: the public type leaf here is `IntervalSet` (renamed from
-// `IntervalTree`, which collided with the real tree in collect/interval.xi).
-// Function names stay `interval_*`; both modules share the call surface, so
-// always `use` the module you call.
-//
-// Flat-arena style. Intervals are stored in insertion order in parallel
-// Vec[Int]s (`starts`/`ends`/`vals`) with a parallel liveness flag `alive`.
-// Point queries scan the intervals and return the values of the live intervals
-// covering the point; removal marks the first matching interval dead (lazy
-// deletion). This keeps the API simple and insertion/removal O(1) amortized
-// at the cost of O(n) queries, which is appropriate for the small interval
-// sets this module targets. Intervals are inclusive on both ends; `start > end`
-// intervals are rejected by insert.
-// ============================================================================
-
+/// Interval tree storing Int intervals with values, supporting point queries.
+/// 
+/// R44 same-leaf: the public type leaf here is `IntervalSet` (renamed from
+/// `IntervalTree`, which collided with the real tree in collect/interval.xi).
+/// Function names stay `interval_*`; both modules share the call surface, so
+/// always `use` the module you call.
+/// 
+/// Flat-arena style. Intervals are stored in insertion order in parallel
+/// Vec[Int]s (`starts`/`ends`/`vals`) with a parallel liveness flag `alive`.
+/// Point queries scan the intervals and return the values of the live intervals
+/// covering the point; removal marks the first matching interval dead (lazy
+/// deletion). This keeps the API simple and insertion/removal O(1) amortized
+/// at the cost of O(n) queries, which is appropriate for the small interval
+/// sets this module targets. Intervals are inclusive on both ends; `start > end`
+/// intervals are rejected by insert.
 pub type IntervalSet = {
   starts: Vec[Int];
   ends: Vec[Int];

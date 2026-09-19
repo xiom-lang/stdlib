@@ -6,17 +6,14 @@ module xiom.collect.lru
 
 // Depends on: none
 
-// ============================================================================
-// Least-recently-used cache with O(1) get/put over Int keys and values.
-//
-// Flat-arena style. `keys`/`values` are parallel vectors and `order` is a
-// vector of keys in recency order, front = most recently used. `lru_get` and
-// `lru_put` move an accessed key to the front; when full, the key at the back
-// of `order` (least recently used) is evicted. Lookups are O(n) linear scans
-// (the compiler's Vec has no hash map for struct elements), which is
-// acceptable for the small cache sizes this module targets.
-// ============================================================================
-
+/// Least-recently-used cache with O(1) get/put over Int keys and values.
+/// 
+/// Flat-arena style. `keys`/`values` are parallel vectors and `order` is a
+/// vector of keys in recency order, front = most recently used. `lru_get` and
+/// `lru_put` move an accessed key to the front; when full, the key at the back
+/// of `order` (least recently used) is evicted. Lookups are O(n) linear scans
+/// (the compiler's Vec has no hash map for struct elements), which is
+/// acceptable for the small cache sizes this module targets.
 pub type LruCache = {
   capacity: Int;
   keys: Vec[Int];

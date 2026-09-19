@@ -6,19 +6,16 @@ module xiom.collect.dag
 
 // Depends on: none
 
-// ============================================================================
-// Directed acyclic graph of Int node ids with topological ordering support.
-//
-// Flat-arena style (the same adjacency representation as collect.graph):
-// `head[u]` is the first edge id leaving node u, `to[id]` the destination of
-// edge id, `next[id]` the next edge id in the same list (-1 = none). Node ids
-// are handed out by `dag_add_node` and never reused. `dag_add_edge` refuses
-// to add an edge that would close a cycle (checked via reachability of `from`
-// from `to`); `dag_has_cycle` runs a full topological sort. Reachability and
-// traversal helpers are BFS based (O(V + E)). Out-of-range ids are rejected
-// (no silent failure).
-// ============================================================================
-
+/// Directed acyclic graph of Int node ids with topological ordering support.
+/// 
+/// Flat-arena style (the same adjacency representation as collect.graph):
+/// `head[u]` is the first edge id leaving node u, `to[id]` the destination of
+/// edge id, `next[id]` the next edge id in the same list (-1 = none). Node ids
+/// are handed out by `dag_add_node` and never reused. `dag_add_edge` refuses
+/// to add an edge that would close a cycle (checked via reachability of `from`
+/// from `to`); `dag_has_cycle` runs a full topological sort. Reachability and
+/// traversal helpers are BFS based (O(V + E)). Out-of-range ids are rejected
+/// (no silent failure).
 pub type Dag = {
   n: Int;
   head: Vec[Int];

@@ -39,8 +39,6 @@ fn str_to_int(s: Str) -> Int {
   result
 }
 
-// ws_default_port returns the default port for a ws scheme ("ws" -> 80,
-// "wss" -> 443, anything else -> 80). Complexity: O(1). Pure.
 /// ws_default_port returns the default port for a ws scheme ("ws" -> 80,
 /// "wss" -> 443, anything else -> 80). Complexity: O(1). Pure.
 pub fn ws_default_port(scheme: Str) -> Int {
@@ -50,9 +48,6 @@ pub fn ws_default_port(scheme: Str) -> Int {
   80
 }
 
-// ws_parse_url splits a ws:// or wss:// URL into (host, port, path).
-// The port is the explicit port from the URL when present, otherwise the
-// scheme default. Returns Err for malformed input. Complexity: O(n).
 /// ws_parse_url splits a ws:// or wss:// URL into (host, port, path).
 /// The port is the explicit port from the URL when present, otherwise the
 /// scheme default. Returns Err for malformed input. Complexity: O(n).
@@ -116,8 +111,6 @@ pub fn ws_parse_url(url: Str) -> Result[(Str, Int, Str), Str] {
   Ok((host, port, path))
 }
 
-// ws_build_url builds a ws:// or wss:// URL from host, port, and path.
-// When port matches the scheme default it is omitted. Complexity: O(1).
 /// ws_build_url builds a ws:// or wss:// URL from host, port, and path.
 /// When port matches the scheme default it is omitted. Complexity: O(1).
 pub fn ws_build_url(scheme: Str, host: Str, port: Int, path: Str) -> Str {
@@ -136,8 +129,6 @@ pub fn ws_build_url(scheme: Str, host: Str, port: Int, path: Str) -> Str {
   result + p
 }
 
-// ws_is_ws_url returns true if url starts with ws://.
-// Complexity: O(n). Pure.
 /// ws_is_ws_url returns true if url starts with ws://.
 /// Complexity: O(n). Pure.
 pub fn ws_is_ws_url(url: Str) -> Bool {
@@ -148,8 +139,6 @@ pub fn ws_is_ws_url(url: Str) -> Bool {
   string.str_slice(url, 0, 5) == "ws://"
 }
 
-// ws_is_wss_url returns true if url starts with wss://.
-// Complexity: O(n). Pure.
 /// ws_is_wss_url returns true if url starts with wss://.
 /// Complexity: O(n). Pure.
 pub fn ws_is_wss_url(url: Str) -> Bool {

@@ -130,8 +130,6 @@ pub fn option_ok_or[T](o: Option[T], msg: Str) -> Result[T, Str] {
 }
 
 
-// D2.1 (Unsafe Confinement Phase 5, requirement g): recoverable hardware-fault
-// error returned when an unsafe block traps (SIGSEGV/SIGILL/SIGFPE/...).
 /// D2.1 (Unsafe Confinement Phase 5, requirement g): recoverable hardware-fault
 /// error returned when an unsafe block traps (SIGSEGV/SIGILL/SIGFPE/...).
 pub type HardwareFault = { signal: Str; pc: UInt64; retried: Bool; }

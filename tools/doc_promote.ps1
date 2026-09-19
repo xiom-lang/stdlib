@@ -17,7 +17,8 @@
 param(
   [string]$Root = "",
   [switch]$Apply,
-  [switch]$Detail
+  [switch]$Detail,
+  [switch]$Dedupe
 )
 if ($Root -eq "") { $Root = Join-Path (Split-Path -Parent $PSScriptRoot) "xiom" }
 if (-not (Test-Path -LiteralPath $Root)) { Write-Output ("ERROR: root not found: " + $Root); exit 2 }
@@ -29,34 +30,96 @@ foreach ($f in $files) {
   # element when the file is re-joined with LF.
   $raw = [System.IO.File]::ReadAllText($f.FullName)
   $lines = $raw -split "`n"
+
+  if ($Dedupe) {
+    # Remove plain `// text` lines that an adjacent `/// text` run duplicates.
+    # The first promoter version emitted converted lines IN ADDITION to the
+    # originals for blocks it saw while passing them; this cleans that up.
+    # Comment-only, exact-text match.
+    $dout = New-Object System.Collections.Generic.List[string]
+    $k = 0; $removed = 0
+    while ($k -lt $lines.Count) {
+      $cur = $lines[$k]
+      if ($cur -match '^\s*//(?!/)') {
+        # Maximal plain-comment run [k..m).
+        $m = $k
+        while ($m -lt $lines.Count -and $lines[$m] -match '^\s*//(?!/)') { $m++ }
+        # Following doc run [m..n) must be identical in texts.
+        $n = $m
+        while ($n -lt $lines.Count -and $lines[$n] -match '^\s*///') { $n++ }
+        $plain = @(); for ($x = $k; $x -lt $m; $x++) { $plain += (($lines[$x] -replace '^\s*//\s?', '')).TrimEnd("`r") }
+        $doc = @(); for ($x = $m; $x -lt $n; $x++) { $doc += (($lines[$x] -replace '^\s*///\s?', '')).TrimEnd("`r") }
+        if ($plain.Count -gt 0 -and $plain.Count -eq $doc.Count) {
+          $same = $true
+          for ($x = 0; $x -lt $plain.Count; $x++) { if ($plain[$x] -ne $doc[$x]) { $same = $false; break } }
+          if ($same) {
+            for ($x = $m; $x -lt $n; $x++) { $dout.Add($lines[$x]) | Out-Null }
+            $removed += $plain.Count
+            $k = $n
+            continue
+          }
+        }
+      }
+      $dout.Add($cur) | Out-Null
+      $k++
+    }
+    if ($removed -gt 0) {
+      $rel = $f.FullName.Substring($Root.Length).TrimStart('\', '/')
+      $changedFiles += $rel
+      $totalBlocks++; $totalLines += $removed
+      if ($Detail) { Write-Output ("  {0}: deduped_lines={1}" -f $rel, $removed) }
+      if ($Apply) {
+        [System.IO.File]::WriteAllText($f.FullName, ($dout -join "`n"), (New-Object System.Text.UTF8Encoding($false)))
+      }
+    }
+    continue
+  }
+
   $out = New-Object System.Collections.Generic.List[string]
   $fileBlocks = 0; $fileLines = 0
   $i = 0
   while ($i -lt $lines.Count) {
     $line = $lines[$i]
     if ($line -match '^\s*pub\s+(fn|type|const|static|enum|trait|interface)\b') {
-      # Collect the contiguous plain-comment block directly above.
-      $start = $i
+      # Collect the comment block directly above (tolerating ONE blank line,
+      # the bits/sort/ptr banner pattern).
+      $e = $i - 1
+      $blanks = 0
+      while ($e -ge 0 -and $lines[$e].Trim() -eq '' -and $blanks -lt 1) { $e--; $blanks++ }
+      $start = $e + 1
       while ($start -gt 0 -and $lines[$start - 1] -match '^\s*//(?!/)') { $start-- }
       $block = @()
-      if ($start -lt $i) { $block = $lines[$start..($i - 1)] }
+      if ($start -le $e) { $block = $lines[$start..$e] }
       $convertible = $true
+      $bannerProse = @()
       if ($block.Count -eq 0) { $convertible = $false }
       foreach ($b in $block) {
         $t = $b.Trim()
-        if ($t -match '^//\s*=+\s*$' -or $t -match '^//\s*-+\s*$') { $convertible = $false }
         if ($b -match 'Copyright|SPDX-License|^\s*//\s*XIOM -') { $convertible = $false }
+        if ($t -notmatch '^//\s*=+\s*$' -and $t -notmatch '^//\s*-+\s*$') { $bannerProse += $b }
       }
       if ($block.Count -gt 0 -and $block[0].Trim() -match '^//\s*Depends on:') { $convertible = $false }
-      if ($convertible) {
-        for ($k = 0; $k -lt $block.Count; $k++) {
-          $conv = $block[$k] -replace '^(\s*)//\s?', '$1/// '
+      # Banner-wrapped prose (bits/sort/ptr pattern): a `// ----` framed block
+      # whose middle lines are real prose. Promote the prose lines and drop
+      # the separator framing; separator-only blocks stay untouched.
+      $hasSeparators = ($bannerProse.Count -lt $block.Count)
+      if ($hasSeparators -and $bannerProse.Count -eq 0) { $convertible = $false }
+      if ($convertible -and $bannerProse.Count -gt 0) {
+        # Remove the original block lines (and the blank line) that were
+        # already emitted, so the converted block replaces them instead of
+        # being appended as a duplicate.
+        $removeN = ($i - $start)
+        if ($removeN -gt 0 -and $out.Count -ge $removeN) { $out.RemoveRange($out.Count - $removeN, $removeN) }
+        foreach ($b in $bannerProse) {
+          $conv = $b -replace '^(\s*)//\s?', '$1/// '
           $out.Add($conv) | Out-Null
         }
-        $fileBlocks++; $fileLines += $block.Count
+        # The blank line between a banner block and the declaration is NOT
+        # re-added: the `///` block must sit directly above the decl to be a
+        # doc comment.
+        $fileBlocks++; $fileLines += $bannerProse.Count
       } else {
         if ($block.Count -gt 0) { $skipped++ }
-        foreach ($b in $block) { $out.Add($b) | Out-Null }
       }
       $out.Add($line) | Out-Null
       $i++

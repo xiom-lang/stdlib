@@ -34,7 +34,6 @@ extern "C" {
   fn xiom_thread_yield();
 }
 
-// === Mutex ===
 /// === Mutex ===
 pub type Mutex[T] = {
   inner: *UInt8;  // platform mutex (sizeof(pthread_mutex_t) or CRITICAL_SECTION)
@@ -100,7 +99,6 @@ pub fn MutexGuard.drop[T](self)
   unsafe { xiom_mutex_unlock(mutex.inner); }
 }
 
-// === RwLock ===
 /// === RwLock ===
 pub type RwLock[T] = {
   inner: *UInt8;     // platform mutex
@@ -223,7 +221,6 @@ pub fn WriteGuard.drop[T](self) {
   unsafe { xiom_mutex_unlock(lock.inner); }
 }
 
-// === Condvar ===
 /// === Condvar ===
 pub type Condvar = { inner: *UInt8; }
 
@@ -250,7 +247,6 @@ pub fn Condvar.notify_all(self)
   unsafe { xiom_cond_broadcast(inner); }
 }
 
-// === Once ===
 /// === Once ===
 pub type Once = {
   inner: *UInt8;     // platform mutex
@@ -291,7 +287,6 @@ pub fn Once.is_completed(self) -> Bool
   unsafe { return xiom_atomic_load(state) == 2; }
 }
 
-// === Barrier ===
 /// === Barrier ===
 pub type Barrier = {
   inner: *UInt8;     // platform mutex
@@ -337,7 +332,6 @@ pub fn Barrier.wait(self) {
   unsafe { xiom_mutex_unlock(inner); }
 }
 
-// === Arc (Atomic Reference Counted) ===
 /// === Arc (Atomic Reference Counted) ===
 pub type Arc[T] = {
   ptr: *ArcInner[T];
@@ -413,9 +407,6 @@ pub fn Arc.drop[T](self)
   }
 }
 
-// === M7: Deref impl for Arc[T] ===
-// Arc provides shared (atomic) access. Deref allows `*arc` and auto-deref.
-// DerefMut is NOT implemented -- Arc provides shared access only.
 /// === M7: Deref impl for Arc[T] ===
 /// Arc provides shared (atomic) access. Deref allows `*arc` and auto-deref.
 /// DerefMut is NOT implemented -- Arc provides shared access only.
@@ -434,7 +425,6 @@ pub fn Arc[T].as_ref(self) -> &T
   return deref();
 }
 
-// === AtomicBool -- real atomic operations ===
 /// === AtomicBool -- real atomic operations ===
 pub type AtomicBool = { ptr: *Int; }
 
@@ -476,7 +466,6 @@ pub fn AtomicBool.compare_exchange(self, current: Bool, new: Bool) -> Bool {
   }
 }
 
-// === AtomicInt -- real atomic operations ===
 /// === AtomicInt -- real atomic operations ===
 pub type AtomicInt = { ptr: *Int; }
 

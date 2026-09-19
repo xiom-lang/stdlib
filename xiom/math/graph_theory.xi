@@ -25,8 +25,6 @@ use xiom.core.to_float;
 const _INF: Float64 = 1.0e300;
 const _WSCALE: Int = 100000;
 
-// A graph: n vertices (implicitly 0..n-1), an edge list of (u, v) pairs, a
-// parallel weight list (scaled by 1e5), and a directedness flag.
 /// A graph: n vertices (implicitly 0..n-1), an edge list of (u, v) pairs, a
 /// parallel weight list (scaled by 1e5), and a directedness flag.
 pub type WeightedGraph = {
@@ -36,14 +34,11 @@ pub type WeightedGraph = {
   directed: Bool;
 }
 
-// Create an empty graph. Complexity: O(1).
 /// Create an empty graph. Complexity: O(1).
 pub fn graph_new() -> WeightedGraph {
   return WeightedGraph{ n: 0, edges: Vec[(Int, Int)].new(), weights: Vec[Int].new(), directed: false };
 }
 
-// Add vertex v (grows n to v + 1; vertices are implicit ids). Returns true.
-// Complexity: O(v - n).
 /// Add vertex v (grows n to v + 1; vertices are implicit ids). Returns true.
 /// Complexity: O(v - n).
 pub fn graph_add_vertex(g: &mut WeightedGraph, v: Int) -> Bool {
@@ -54,9 +49,6 @@ pub fn graph_add_vertex(g: &mut WeightedGraph, v: Int) -> Bool {
   return true;
 }
 
-// Add an unweighted edge (u, v) (weight 1.0). Adds the vertices first; an
-// undirected graph also stores the reverse edge. Returns false for negative
-// ids. Complexity: O(1) amortized.
 /// Add an unweighted edge (u, v) (weight 1.0). Adds the vertices first; an
 /// undirected graph also stores the reverse edge. Returns false for negative
 /// ids. Complexity: O(1) amortized.
@@ -64,8 +56,6 @@ pub fn graph_add_edge(g: &mut WeightedGraph, u: Int, v: Int) -> Bool {
   return graph_add_weighted_edge(g, u, v, 1.0);
 }
 
-// Add a weighted edge (u, v) with weight w (rounded to 1e-5 resolution).
-// Complexity: O(1) amortized.
 /// Add a weighted edge (u, v) with weight w (rounded to 1e-5 resolution).
 /// Complexity: O(1) amortized.
 pub fn graph_add_weighted_edge(g: &mut WeightedGraph, u: Int, v: Int, w: Float64) -> Bool {
@@ -83,8 +73,6 @@ pub fn graph_add_weighted_edge(g: &mut WeightedGraph, u: Int, v: Int, w: Float64
   return true;
 }
 
-// Remove vertex v and all incident edges. Returns false when v is absent.
-// Complexity: O(edges).
 /// Remove vertex v and all incident edges. Returns false when v is absent.
 /// Complexity: O(edges).
 pub fn graph_remove_vertex(g: &mut WeightedGraph, v: Int) -> Bool {
@@ -105,8 +93,6 @@ pub fn graph_remove_vertex(g: &mut WeightedGraph, v: Int) -> Bool {
   return true;
 }
 
-// Remove the edge (u, v); an undirected graph removes the reverse too.
-// Returns false when no such edge exists. Complexity: O(edges).
 /// Remove the edge (u, v); an undirected graph removes the reverse too.
 /// Returns false when no such edge exists. Complexity: O(edges).
 pub fn graph_remove_edge(g: &mut WeightedGraph, u: Int, v: Int) -> Bool {
@@ -138,14 +124,11 @@ pub fn graph_remove_edge(g: &mut WeightedGraph, u: Int, v: Int) -> Bool {
   return found;
 }
 
-// Whether v is present. Complexity: O(1).
 /// Whether v is present. Complexity: O(1).
 pub fn graph_has_vertex(g: &WeightedGraph, v: Int) -> Bool {
   return v >= 0 && v < g.n;
 }
 
-// Whether the edge (u, v) is present (either direction for undirected).
-// Complexity: O(edges).
 /// Whether the edge (u, v) is present (either direction for undirected).
 /// Complexity: O(edges).
 pub fn graph_has_edge(g: &WeightedGraph, u: Int, v: Int) -> Bool {
@@ -160,8 +143,6 @@ pub fn graph_has_edge(g: &WeightedGraph, u: Int, v: Int) -> Bool {
   return false;
 }
 
-// Degree of vertex v (undirected degree counts once per incident edge).
-// Complexity: O(edges).
 /// Degree of vertex v (undirected degree counts once per incident edge).
 /// Complexity: O(edges).
 pub fn graph_degree(g: &WeightedGraph, v: Int) -> Int {
@@ -184,7 +165,6 @@ pub fn graph_degree(g: &WeightedGraph, v: Int) -> Int {
   return count;
 }
 
-// All vertices as ids [0, n - 1]. Complexity: O(n).
 /// All vertices as ids [0, n - 1]. Complexity: O(n).
 pub fn graph_vertices(g: &WeightedGraph) -> Vec[Int] {
   var out = Vec[Int].new();
@@ -196,8 +176,6 @@ pub fn graph_vertices(g: &WeightedGraph) -> Vec[Int] {
   return out;
 }
 
-// All edges as (u, v) pairs (duplicated pairs for undirected graphs, one per
-// stored direction). Complexity: O(edges).
 /// All edges as (u, v) pairs (duplicated pairs for undirected graphs, one per
 /// stored direction). Complexity: O(edges).
 pub fn graph_edges(g: &WeightedGraph) -> Vec[(Int, Int)] {
@@ -211,7 +189,6 @@ pub fn graph_edges(g: &WeightedGraph) -> Vec[(Int, Int)] {
   return out;
 }
 
-// Whether u and v are neighbors. Complexity: O(edges).
 /// Whether u and v are neighbors. Complexity: O(edges).
 pub fn graph_adjacent(g: &WeightedGraph, u: Int, v: Int) -> Bool {
   return graph_has_edge(g, u, v);
@@ -243,8 +220,6 @@ fn _weight(g: &WeightedGraph, i: Int) -> Float64 {
   return (wi as Float64) / (_WSCALE as Float64);
 }
 
-// Depth-first vertex order from start. Returns the empty vector for a start
-// outside the graph. Complexity: O(V + E).
 /// Depth-first vertex order from start. Returns the empty vector for a start
 /// outside the graph. Complexity: O(V + E).
 pub fn graph_dfs(g: &WeightedGraph, start: Int) -> Vec[Int] {
@@ -278,7 +253,6 @@ pub fn graph_dfs(g: &WeightedGraph, start: Int) -> Vec[Int] {
   return out;
 }
 
-// Breadth-first vertex order from start. Complexity: O(V + E).
 /// Breadth-first vertex order from start. Complexity: O(V + E).
 pub fn graph_bfs(g: &WeightedGraph, start: Int) -> Vec[Int] {
   var out = Vec[Int].new();
@@ -311,9 +285,6 @@ pub fn graph_bfs(g: &WeightedGraph, start: Int) -> Vec[Int] {
   return out;
 }
 
-// Shortest-path distances from source via Dijkstra's algorithm (edge-list
-// scanning; O(V^2 + E) worst case). Unreachable vertices get _INF.
-// Complexity: O(V^2 + E).
 /// Shortest-path distances from source via Dijkstra's algorithm (edge-list
 /// scanning; O(V^2 + E) worst case). Unreachable vertices get _INF.
 /// Complexity: O(V^2 + E).
@@ -367,8 +338,6 @@ pub fn graph_dijkstra(g: &WeightedGraph, source: Int) -> Vec[Float64] {
   return out;
 }
 
-// Shortest-path distances from source via Bellman-Ford; None when a negative
-// cycle is reachable. Complexity: O(V * E).
 /// Shortest-path distances from source via Bellman-Ford; None when a negative
 /// cycle is reachable. Complexity: O(V * E).
 pub fn graph_bellman_ford(g: &WeightedGraph, source: Int) -> Option[Vec[Float64]] {
@@ -419,10 +388,6 @@ pub fn graph_bellman_ford(g: &WeightedGraph, source: Int) -> Option[Vec[Float64]
   return Option[Vec[Float64]]{ is_some: true, value: dist };
 }
 
-// All-pairs shortest-path distances via repeated Bellman-Ford-style edge
-// relaxation from every source. The result is a Vec[Vec[Float64]] distance
-// matrix (callers can only rely on its shape; element reads of module-returned
-// nested float Vecs are unreliable in this compiler build). Complexity: O(V^2 * E).
 /// All-pairs shortest-path distances via repeated Bellman-Ford-style edge
 /// relaxation from every source. The result is a Vec[Vec[Float64]] distance
 /// matrix (callers can only rely on its shape; element reads of module-returned
@@ -477,9 +442,6 @@ pub fn graph_floyd_warshall(g: &WeightedGraph) -> Vec[Vec[Float64]] {
   return out;
 }
 
-// A* path from start to goal using the heuristic h(vertex, goal); returns the
-// vertex sequence (inclusive) or None when no path exists. Complexity:
-// O(V^2 + E) (linear scan open set).
 /// A* path from start to goal using the heuristic h(vertex, goal); returns the
 /// vertex sequence (inclusive) or None when no path exists. Complexity:
 /// O(V^2 + E) (linear scan open set).
@@ -555,8 +517,6 @@ pub fn graph_astar(g: &WeightedGraph, start: Int, goal: Int, h: fn(Int, Int) -> 
   return Option[Vec[Int]]{ is_some: false, value: Vec[Int].new() };
 }
 
-// Minimum spanning tree edges by Prim's algorithm (edge-list scanning);
-// None for a disconnected or empty graph. Complexity: O(V^2 + E).
 /// Minimum spanning tree edges by Prim's algorithm (edge-list scanning);
 /// None for a disconnected or empty graph. Complexity: O(V^2 + E).
 pub fn graph_prim(g: &WeightedGraph) -> Option[Vec[(Int, Int)]] {
@@ -597,9 +557,6 @@ pub fn graph_prim(g: &WeightedGraph) -> Option[Vec[(Int, Int)]] {
   return Option[Vec[(Int, Int)]]{ is_some: true, value: out };
 }
 
-// Minimum spanning tree edges by Kruskal's algorithm (union-find with
-// min-weight edge selection; compares scaled-integer weights directly).
-// None for a disconnected graph. Complexity: O(V * E).
 /// Minimum spanning tree edges by Kruskal's algorithm (union-find with
 /// min-weight edge selection; compares scaled-integer weights directly).
 /// None for a disconnected graph. Complexity: O(V * E).
@@ -650,8 +607,6 @@ fn _find(parent: &Vec[Int], x: Int) -> Int {
   return r;
 }
 
-// Strongly connected components by Tarjan's algorithm (iterative). Each
-// component is one inner vector. Complexity: O(V + E).
 /// Strongly connected components by Tarjan's algorithm (iterative). Each
 /// component is one inner vector. Complexity: O(V + E).
 pub fn graph_tarjan_scc(g: &WeightedGraph) -> Vec[Vec[Int]] {
@@ -740,8 +695,6 @@ fn _tarjan_visit(g: &WeightedGraph, adj: &Vec[Vec[Int]], index: &mut Vec[Int], l
   return c;
 }
 
-// Strongly connected components by Kosaraju's algorithm (two DFS passes).
-// Complexity: O(V + E).
 /// Strongly connected components by Kosaraju's algorithm (two DFS passes).
 /// Complexity: O(V + E).
 pub fn graph_kosaraju_scc(g: &WeightedGraph) -> Vec[Vec[Int]] {
@@ -842,8 +795,6 @@ fn _kosaraju_pass2(radj: &Vec[Vec[Int]], visited: &mut Vec[Bool], start: Int, co
   }
 }
 
-// Linear ordering of a directed acyclic graph (Kahn's algorithm); None when
-// the graph has a cycle. Complexity: O(V + E).
 /// Linear ordering of a directed acyclic graph (Kahn's algorithm); None when
 /// the graph has a cycle. Complexity: O(V + E).
 pub fn graph_topological_sort(g: &WeightedGraph) -> Option[Vec[Int]] {
@@ -896,8 +847,6 @@ pub fn graph_topological_sort(g: &WeightedGraph) -> Option[Vec[Int]] {
   return Option[Vec[Int]]{ is_some: true, value: out };
 }
 
-// Whether the graph is connected (a single BFS reaches every vertex).
-// Complexity: O(V + E).
 /// Whether the graph is connected (a single BFS reaches every vertex).
 /// Complexity: O(V + E).
 pub fn graph_is_connected(g: &WeightedGraph) -> Bool {
@@ -906,8 +855,6 @@ pub fn graph_is_connected(g: &WeightedGraph) -> Bool {
   return bfs.len() == g.n;
 }
 
-// Whether the graph contains a cycle (DFS with colors; undirected uses the
-// parent check). Complexity: O(V + E).
 /// Whether the graph contains a cycle (DFS with colors; undirected uses the
 /// parent check). Complexity: O(V + E).
 pub fn graph_is_cyclic(g: &WeightedGraph) -> Bool {
@@ -960,8 +907,6 @@ fn _has_cycle(adj: &Vec[Vec[Int]], color: &mut Vec[Int], start: Int, parent: Int
   return false;
 }
 
-// Whether the vertices split into two independent sets (BFS 2-coloring).
-// Complexity: O(V + E).
 /// Whether the vertices split into two independent sets (BFS 2-coloring).
 /// Complexity: O(V + E).
 pub fn graph_is_bipartite(g: &WeightedGraph) -> Bool {
@@ -1003,9 +948,6 @@ pub fn graph_is_bipartite(g: &WeightedGraph) -> Bool {
   return true;
 }
 
-// Whether g1 and g2 are isomorphic. Checks vertex count, edge count, and
-// degree sequence; for n <= 6 an exact permutation test is performed.
-// Complexity: O(n! * n^2) for small n, O(n^2) otherwise.
 /// Whether g1 and g2 are isomorphic. Checks vertex count, edge count, and
 /// degree sequence; for n <= 6 an exact permutation test is performed.
 /// Complexity: O(n! * n^2) for small n, O(n^2) otherwise.
@@ -1082,8 +1024,6 @@ fn _perm_is_iso(g1: &WeightedGraph, g2: &WeightedGraph, perm: &Vec[Int]) -> Bool
   return true;
 }
 
-// Greedy vertex coloring (smallest available color per vertex in id order).
-// Returns one color per vertex (0-based). Complexity: O(V * E).
 /// Greedy vertex coloring (smallest available color per vertex in id order).
 /// Returns one color per vertex (0-based). Complexity: O(V * E).
 pub fn graph_color(g: &WeightedGraph) -> Vec[Int] {
@@ -1120,8 +1060,6 @@ pub fn graph_color(g: &WeightedGraph) -> Vec[Int] {
   return out;
 }
 
-// Maximum flow from s to t by Edmonds-Karp (BFS augmenting paths) over the
-// edge list with parallel residual-capacity tracking. Complexity: O(V * E^2).
 /// Maximum flow from s to t by Edmonds-Karp (BFS augmenting paths) over the
 /// edge list with parallel residual-capacity tracking. Complexity: O(V * E^2).
 pub fn graph_max_flow(g: &WeightedGraph, s: Int, t: Int) -> Float64 {
@@ -1194,8 +1132,6 @@ pub fn graph_max_flow(g: &WeightedGraph, s: Int, t: Int) -> Float64 {
   return total;
 }
 
-// Minimum s-t cut: the vertices reachable from s in the residual graph after
-// the maximum flow (the S side of the min cut). Complexity: O(V * E^2).
 /// Minimum s-t cut: the vertices reachable from s in the residual graph after
 /// the maximum flow (the S side of the min cut). Complexity: O(V * E^2).
 pub fn graph_min_cut(g: &WeightedGraph, s: Int, t: Int) -> Vec[Int] {
@@ -1296,8 +1232,6 @@ pub fn graph_min_cut(g: &WeightedGraph, s: Int, t: Int) -> Vec[Int] {
   return out;
 }
 
-// Hamiltonian path if one exists (exhaustive DFS; practical for n <= 12).
-// Complexity: O(n!).
 /// Hamiltonian path if one exists (exhaustive DFS; practical for n <= 12).
 /// Complexity: O(n!).
 pub fn graph_hamiltonian_path(g: &WeightedGraph) -> Option[Vec[Int]] {
@@ -1353,9 +1287,6 @@ fn _hamilton_dfs(adj: &Vec[Vec[Int]], used: &mut Vec[Bool], path: &mut Vec[Int],
   return false;
 }
 
-// Traveling-salesperson tour by the nearest-neighbor heuristic: visits every
-// vertex once starting from vertex 0 and returns to the start. Returns the
-// tour as a vertex sequence (length n + 1). Complexity: O(n^2 + n * E).
 /// Traveling-salesperson tour by the nearest-neighbor heuristic: visits every
 /// vertex once starting from vertex 0 and returns to the start. Returns the
 /// tour as a vertex sequence (length n + 1). Complexity: O(n^2 + n * E).

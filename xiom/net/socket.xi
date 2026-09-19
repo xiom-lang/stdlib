@@ -30,8 +30,6 @@ const AF_INET: Int = 2;
 const SOCK_STREAM: Int = 1;
 const SOCK_DGRAM: Int = 2;
 
-// socket_tcp creates a TCP socket and returns its fd, or Err.
-// Complexity: O(1) syscall.
 /// socket_tcp creates a TCP socket and returns its fd, or Err.
 /// Complexity: O(1) syscall.
 pub fn socket_tcp() -> Result[Int, Str] {
@@ -42,8 +40,6 @@ pub fn socket_tcp() -> Result[Int, Str] {
   Ok(fd)
 }
 
-// socket_udp creates a UDP socket and returns its fd, or Err.
-// Complexity: O(1) syscall.
 /// socket_udp creates a UDP socket and returns its fd, or Err.
 /// Complexity: O(1) syscall.
 pub fn socket_udp() -> Result[Int, Str] {
@@ -54,9 +50,6 @@ pub fn socket_udp() -> Result[Int, Str] {
   Ok(fd)
 }
 
-// socket_bind binds a socket to addr:port. The runtime binds to the
-// given port on the wildcard address; the addr string is validated for
-// non-emptiness. Complexity: O(1) syscall.
 /// socket_bind binds a socket to addr:port. The runtime binds to the
 /// given port on the wildcard address; the addr string is validated for
 /// non-emptiness. Complexity: O(1) syscall.
@@ -77,8 +70,6 @@ pub fn socket_bind(fd: Int, addr: Str, port: Int) -> Result[Unit, Str] {
   Ok(())
 }
 
-// socket_listen marks a bound TCP socket as listening.
-// Complexity: O(1) syscall.
 /// socket_listen marks a bound TCP socket as listening.
 /// Complexity: O(1) syscall.
 pub fn socket_listen(fd: Int, backlog: Int) -> Result[Unit, Str] {
@@ -95,8 +86,6 @@ pub fn socket_listen(fd: Int, backlog: Int) -> Result[Unit, Str] {
   Ok(())
 }
 
-// socket_accept accepts a connection and returns the new socket fd.
-// Complexity: O(1) blocking syscall.
 /// socket_accept accepts a connection and returns the new socket fd.
 /// Complexity: O(1) blocking syscall.
 pub fn socket_accept(fd: Int) -> Result[Int, Str] {
@@ -112,8 +101,6 @@ pub fn socket_accept(fd: Int) -> Result[Int, Str] {
   Ok(client)
 }
 
-// socket_connect connects a socket to a remote addr:port.
-// Complexity: O(1) syscall.
 /// socket_connect connects a socket to a remote addr:port.
 /// Complexity: O(1) syscall.
 pub fn socket_connect(fd: Int, addr: Str, port: Int) -> Result[Unit, Str] {
@@ -141,8 +128,6 @@ pub fn socket_connect(fd: Int, addr: Str, port: Int) -> Result[Unit, Str] {
   Ok(())
 }
 
-// socket_send sends bytes on a socket; returns the count written.
-// Complexity: O(n) syscall.
 /// socket_send sends bytes on a socket; returns the count written.
 /// Complexity: O(n) syscall.
 pub fn socket_send(fd: Int, data: &Vec[UInt8]) -> Result[Int, Str] {
@@ -166,8 +151,6 @@ pub fn socket_send(fd: Int, data: &Vec[UInt8]) -> Result[Int, Str] {
   Ok(n)
 }
 
-// socket_recv receives up to max bytes; returns the bytes received.
-// Complexity: O(n) blocking syscall.
 /// socket_recv receives up to max bytes; returns the bytes received.
 /// Complexity: O(n) blocking syscall.
 pub fn socket_recv(fd: Int, max: Int) -> Result[Vec[UInt8], Str] {
@@ -195,8 +178,6 @@ pub fn socket_recv(fd: Int, max: Int) -> Result[Vec[UInt8], Str] {
   Ok(result)
 }
 
-// socket_send_to sends a datagram to addr:port; returns the count
-// written. Complexity: O(n) syscall.
 /// socket_send_to sends a datagram to addr:port; returns the count
 /// written. Complexity: O(n) syscall.
 pub fn socket_send_to(fd: Int, data: &Vec[UInt8], addr: Str, port: Int) -> Result[Int, Str] {
@@ -231,8 +212,6 @@ pub fn socket_send_to(fd: Int, data: &Vec[UInt8], addr: Str, port: Int) -> Resul
   Ok(n)
 }
 
-// socket_recv_from receives a datagram; the tuple is
-// (data, peer_addr, peer_port). Complexity: O(n) blocking syscall.
 /// socket_recv_from receives a datagram; the tuple is
 /// (data, peer_addr, peer_port). Complexity: O(n) blocking syscall.
 pub fn socket_recv_from(fd: Int, max: Int) -> Result[(Vec[UInt8], Str, Int), Str] {
@@ -273,8 +252,6 @@ pub fn socket_recv_from(fd: Int, max: Int) -> Result[(Vec[UInt8], Str, Int), Str
   Ok((data, peer, port_val))
 }
 
-// socket_close closes a socket, releasing the fd.
-// Complexity: O(1) syscall.
 /// socket_close closes a socket, releasing the fd.
 /// Complexity: O(1) syscall.
 pub fn socket_close(fd: Int) {
@@ -283,8 +260,6 @@ pub fn socket_close(fd: Int) {
   }
 }
 
-// socket_set_timeout sets the receive timeout in milliseconds. The
-// runtime does not expose SO_RCVTIMEO; always returns a documented Err.
 /// socket_set_timeout sets the receive timeout in milliseconds. The
 /// runtime does not expose SO_RCVTIMEO; always returns a documented Err.
 pub fn socket_set_timeout(fd: Int, ms: Int) -> Result[Unit, Str] {
@@ -297,9 +272,6 @@ pub fn socket_set_timeout(fd: Int, ms: Int) -> Result[Unit, Str] {
   Err("socket_set_timeout: SO_RCVTIMEO not exposed by runtime")
 }
 
-// socket_set_nonblocking enables or disables non-blocking mode. The
-// runtime does not expose FIONBIO/O_NONBLOCK; always returns a
-// documented Err.
 /// socket_set_nonblocking enables or disables non-blocking mode. The
 /// runtime does not expose FIONBIO/O_NONBLOCK; always returns a
 /// documented Err.
@@ -311,9 +283,6 @@ pub fn socket_set_nonblocking(fd: Int, on: Bool) -> Result[Unit, Str] {
   Err("socket_set_nonblocking: non-blocking mode not exposed by runtime")
 }
 
-// socket_shutdown shuts down reading, writing, or both per how
-// (0 = receive, 1 = send, 2 = both). The runtime does not expose
-// shutdown(); always returns a documented Err.
 /// socket_shutdown shuts down reading, writing, or both per how
 /// (0 = receive, 1 = send, 2 = both). The runtime does not expose
 /// shutdown(); always returns a documented Err.
@@ -327,8 +296,6 @@ pub fn socket_shutdown(fd: Int, how: Int) -> Result[Unit, Str] {
   Err("socket_shutdown: shutdown() not exposed by runtime")
 }
 
-// socket_peer_addr returns the connected peer address. The runtime does
-// not expose getpeername(); always returns a documented Err.
 /// socket_peer_addr returns the connected peer address. The runtime does
 /// not expose getpeername(); always returns a documented Err.
 pub fn socket_peer_addr(fd: Int) -> Result[(Str, Int), Str] {
@@ -338,8 +305,6 @@ pub fn socket_peer_addr(fd: Int) -> Result[(Str, Int), Str] {
   Err("socket_peer_addr: getpeername() not exposed by runtime")
 }
 
-// socket_local_addr returns the bound local address. The runtime does
-// not expose getsockname(); always returns a documented Err.
 /// socket_local_addr returns the bound local address. The runtime does
 /// not expose getsockname(); always returns a documented Err.
 pub fn socket_local_addr(fd: Int) -> Result[(Str, Int), Str] {
@@ -349,8 +314,6 @@ pub fn socket_local_addr(fd: Int) -> Result[(Str, Int), Str] {
   Err("socket_local_addr: getsockname() not exposed by runtime")
 }
 
-// socket_available returns the number of bytes currently readable
-// without blocking. The runtime does not expose FIONREAD; returns 0.
 /// socket_available returns the number of bytes currently readable
 /// without blocking. The runtime does not expose FIONREAD; returns 0.
 pub fn socket_available(fd: Int) -> Int {
@@ -358,8 +321,6 @@ pub fn socket_available(fd: Int) -> Int {
   0
 }
 
-// socket_reuse_addr enables or disables SO_REUSEADDR. The runtime does
-// not expose setsockopt(); always returns a documented Err.
 /// socket_reuse_addr enables or disables SO_REUSEADDR. The runtime does
 /// not expose setsockopt(); always returns a documented Err.
 pub fn socket_reuse_addr(fd: Int, on: Bool) -> Result[Unit, Str] {
