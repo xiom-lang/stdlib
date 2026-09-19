@@ -385,6 +385,7 @@ pub fn bigint_add(a: &BigInt, b: &BigInt) -> BigInt {
   return diff;
 }
 
+/// Difference of two BigInts.
 pub fn bigint_sub(a: &BigInt, b: &BigInt) -> BigInt {
   var neg_b = _copy(b);
   neg_b.negative = !neg_b.negative;
@@ -468,6 +469,7 @@ fn _abs_mul_karatsuba(a: &BigInt, b: &BigInt) -> BigInt {
   return r;
 }
 
+/// Product of two BigInts.
 pub fn bigint_mul(a: &BigInt, b: &BigInt) -> BigInt {
   if bigint_is_zero(a) || bigint_is_zero(b) {
     return BigInt{ digits: Vec[Int].new(); negative: false; };
@@ -477,6 +479,7 @@ pub fn bigint_mul(a: &BigInt, b: &BigInt) -> BigInt {
   return result;
 }
 
+/// Truncating division: returns (quotient, remainder).
 pub fn bigint_div_mod(a: &BigInt, b: &BigInt) -> (BigInt, BigInt) {
   if bigint_is_zero(b) {
     return (BigInt{ digits: Vec[Int].new(); negative: false; },
@@ -587,6 +590,7 @@ pub fn bigint_compare(a: &BigInt, b: &BigInt) -> Int {
   return cmp;
 }
 
+/// True when the value is zero.
 pub fn bigint_is_zero(b: &BigInt) -> Bool {
   if b.digits.len() == 0 { return true; }
   var i = 0;
@@ -597,12 +601,14 @@ pub fn bigint_is_zero(b: &BigInt) -> Bool {
   return true;
 }
 
+/// Absolute value.
 pub fn bigint_abs(b: &BigInt) -> BigInt {
   var result = _copy(b);
   result.negative = false;
   return result;
 }
 
+/// Negation.
 pub fn bigint_neg(b: &BigInt) -> BigInt {
   if bigint_is_zero(b) { return BigInt{ digits: Vec[Int].new(); negative: false; }; }
   var result = _copy(b);
@@ -610,6 +616,7 @@ pub fn bigint_neg(b: &BigInt) -> BigInt {
   return result;
 }
 
+/// -1, 0 or 1 according to the sign.
 pub fn bigint_sign(b: &BigInt) -> Int {
   if bigint_is_zero(b) { return 0; }
   if b.negative { return -1; }
@@ -624,6 +631,7 @@ pub fn bigint_mod(a: &BigInt, m: &BigInt) -> BigInt {
   return r;
 }
 
+/// `base` raised to a non-negative Int exponent.
 pub fn bigint_pow(base: &BigInt, exp: Int) -> BigInt {
   if exp < 0 { return BigInt{ digits: Vec[Int].new(); negative: false; }; }
   if exp == 0 { return bigint_from_int(1); }
@@ -638,6 +646,7 @@ pub fn bigint_pow(base: &BigInt, exp: Int) -> BigInt {
   return result;
 }
 
+/// Greatest common divisor (non-negative).
 pub fn bigint_gcd(a: &BigInt, b: &BigInt) -> BigInt {
   var x = bigint_abs(a);
   var y = bigint_abs(b);
@@ -650,6 +659,7 @@ pub fn bigint_gcd(a: &BigInt, b: &BigInt) -> BigInt {
   return x;
 }
 
+/// Shift left by `shift` bits (a negative shift moves right).
 pub fn bigint_shift_left(b: &BigInt, shift: Int) -> BigInt {
   if shift <= 0 { return _copy(b); }
   var ten = bigint_from_int(10);
@@ -677,14 +687,17 @@ pub fn bigint_zero() -> BigInt {
   return BigInt{ digits: Vec[Int].new(); negative: false; };
 }
 
+/// Constant 1 as BigInt.
 pub fn bigint_one() -> BigInt {
   return bigint_from_int(1);
 }
 
+/// Constant 10 as BigInt.
 pub fn bigint_ten() -> BigInt {
   return bigint_from_int(10);
 }
 
+/// Constant 2 as BigInt.
 pub fn bigint_two() -> BigInt {
   return bigint_from_int(2);
 }
@@ -885,15 +898,18 @@ pub fn bigint_is_one(b: &BigInt) -> Bool {
   return bigint_compare(b, &bigint_one()) == 0;
 }
 
+/// True when the value is even.
 pub fn bigint_is_even(b: &BigInt) -> Bool {
   if bigint_is_zero(b) { return true; }
   return b.digits[0] % 2 == 0;
 }
 
+/// True when the value is odd.
 pub fn bigint_is_odd(b: &BigInt) -> Bool {
   return !bigint_is_even(b);
 }
 
+/// True when the value is negative.
 pub fn bigint_is_negative(b: &BigInt) -> Bool {
   return b.negative && !bigint_is_zero(b);
 }
@@ -1196,6 +1212,7 @@ fn _from_twos_bits(bits: &Vec[Int]) -> BigInt {
   return _bits_to_bigint(&mag, true);
 }
 
+/// Bitwise AND on the two's-complement limbs.
 pub fn bigint_bit_and(a: &BigInt, b: &BigInt) -> BigInt {
   var la = bigint_bit_len(a);
   var lb = bigint_bit_len(b);
@@ -1214,6 +1231,7 @@ pub fn bigint_bit_and(a: &BigInt, b: &BigInt) -> BigInt {
   return _from_twos_bits(&r);
 }
 
+/// Bitwise OR on the two's-complement limbs.
 pub fn bigint_bit_or(a: &BigInt, b: &BigInt) -> BigInt {
   var la = bigint_bit_len(a);
   var lb = bigint_bit_len(b);
@@ -1232,6 +1250,7 @@ pub fn bigint_bit_or(a: &BigInt, b: &BigInt) -> BigInt {
   return _from_twos_bits(&r);
 }
 
+/// Bitwise XOR on the two's-complement limbs.
 pub fn bigint_bit_xor(a: &BigInt, b: &BigInt) -> BigInt {
   var la = bigint_bit_len(a);
   var lb = bigint_bit_len(b);
@@ -1292,18 +1311,22 @@ pub fn bigint_eq(a: &BigInt, b: &BigInt) -> Bool {
   return bigint_compare(a, b) == 0;
 }
 
+/// Strictly less than.
 pub fn bigint_lt(a: &BigInt, b: &BigInt) -> Bool {
   return bigint_compare(a, b) < 0;
 }
 
+/// Less than or equal.
 pub fn bigint_le(a: &BigInt, b: &BigInt) -> Bool {
   return bigint_compare(a, b) <= 0;
 }
 
+/// Strictly greater than.
 pub fn bigint_gt(a: &BigInt, b: &BigInt) -> Bool {
   return bigint_compare(a, b) > 0;
 }
 
+/// Greater than or equal.
 pub fn bigint_ge(a: &BigInt, b: &BigInt) -> Bool {
   return bigint_compare(a, b) >= 0;
 }

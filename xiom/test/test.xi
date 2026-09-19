@@ -22,6 +22,7 @@ pub type TestResult = {
   duration_ms: Int;
 } derive[Clone]
 
+/// Recorded contract failure inside a test.
 pub type ContractFailure = {
   clause: Str;      // "requires", "ensures", "invariant"
   expression: Str;  // the contract text
@@ -29,6 +30,7 @@ pub type ContractFailure = {
   location: Str;    // file:line
 } derive[Clone]
 
+/// Pass when `condition` holds, else fail with `name`.
 pub fn assert(condition: Bool, name: Str) -> TestResult
   requires: name.len() > 0 {
   return TestResult{
@@ -40,6 +42,7 @@ pub fn assert(condition: Bool, name: Str) -> TestResult
   };
 }
 
+/// Pass when the values are equal, else fail with `name`.
 pub fn assert_eq[T: Eq](expected: T, actual: T, name: Str) -> TestResult
   requires: name.len() > 0 {
   let passed = expected == actual;
@@ -52,6 +55,7 @@ pub fn assert_eq[T: Eq](expected: T, actual: T, name: Str) -> TestResult
   };
 }
 
+/// Pass when the values differ.
 pub fn assert_ne[T: Eq](expected: T, actual: T, name: Str) -> TestResult {
   let passed = expected != actual;
   return TestResult{
@@ -63,6 +67,7 @@ pub fn assert_ne[T: Eq](expected: T, actual: T, name: Str) -> TestResult {
   };
 }
 
+/// Pass when left < right.
 pub fn assert_lt[T: Ord](left: T, right: T, name: Str) -> TestResult {
   let passed = left < right;
   return TestResult{
@@ -74,6 +79,7 @@ pub fn assert_lt[T: Ord](left: T, right: T, name: Str) -> TestResult {
   };
 }
 
+/// Pass when left > right.
 pub fn assert_gt[T: Ord](left: T, right: T, name: Str) -> TestResult {
   let passed = left > right;
   return TestResult{
@@ -85,6 +91,7 @@ pub fn assert_gt[T: Ord](left: T, right: T, name: Str) -> TestResult {
   };
 }
 
+/// Pass when `haystack` contains `needle`.
 pub fn assert_contains(haystack: Str, needle: Str, name: Str) -> TestResult {
   var passed = string.str_contains(haystack, needle);
   return TestResult{
@@ -96,6 +103,7 @@ pub fn assert_contains(haystack: Str, needle: Str, name: Str) -> TestResult {
   };
 }
 
+/// Pass when the Result is Ok.
 pub fn assert_ok[T, E](result: Result[T, E], name: Str) -> TestResult {
   return TestResult{
     passed: result.is_ok;
@@ -106,6 +114,7 @@ pub fn assert_ok[T, E](result: Result[T, E], name: Str) -> TestResult {
   };
 }
 
+/// Pass when the Result is Err.
 pub fn assert_err[T, E](result: Result[T, E], name: Str) -> TestResult {
   return TestResult{
     passed: !result.is_ok;
@@ -116,6 +125,7 @@ pub fn assert_err[T, E](result: Result[T, E], name: Str) -> TestResult {
   };
 }
 
+/// Pass when the Option is Some.
 pub fn assert_some[T](option: Option[T], name: Str) -> TestResult {
   return TestResult{
     passed: option.is_some;
@@ -126,6 +136,7 @@ pub fn assert_some[T](option: Option[T], name: Str) -> TestResult {
   };
 }
 
+/// Pass when the Option is None.
 pub fn assert_none[T](option: Option[T], name: Str) -> TestResult {
   return TestResult{
     passed: !option.is_some;
@@ -136,6 +147,7 @@ pub fn assert_none[T](option: Option[T], name: Str) -> TestResult {
   };
 }
 
+/// Pass when `predicate` holds for the value.
 pub fn assert_contract[T](value: T, predicate: fn(&T) -> Bool, name: Str) -> TestResult {
   let passed = predicate(&value);
   var failures = Vec[ContractFailure].new();
@@ -157,12 +169,14 @@ pub fn assert_contract[T](value: T, predicate: fn(&T) -> Bool, name: Str) -> Tes
   };
 }
 
+/// Run one test and print the result; returns the exit code (0 = pass).
 pub fn run(test: fn() -> TestResult) -> Int {
   let result = test();
   if result.passed { return 0; };
   return 1;
 }
 
+/// Run every test and print a summary; returns the exit code.
 pub fn run_all(tests: Vec[fn() -> TestResult]) -> Int {
   var failures: Int = 0;
   var i: Int = 0;
@@ -176,6 +190,7 @@ pub fn run_all(tests: Vec[fn() -> TestResult]) -> Int {
   return failures;
 }
 
+/// Run tests whose name contains `filter`; returns the exit code.
 pub fn run_filtered(tests: Vec[fn() -> TestResult], filter: Str) -> Int {
   var failures: Int = 0;
   var i: Int = 0;
@@ -191,6 +206,7 @@ pub fn run_filtered(tests: Vec[fn() -> TestResult], filter: Str) -> Int {
   return failures;
 }
 
+/// Human-readable summary of the results.
 pub fn format_results(results: Vec[TestResult]) -> Str {
   var total: Int = 0;
   var passed: Int = 0;
@@ -214,6 +230,7 @@ pub fn format_results(results: Vec[TestResult]) -> Str {
   return output;
 }
 
+/// JSON summary of the results.
 pub fn format_results_json(results: Vec[TestResult]) -> Str {
   var json: Str = "[";
   var i: Int = 0;
@@ -237,6 +254,7 @@ pub fn format_results_json(results: Vec[TestResult]) -> Str {
   return json;
 }
 
+/// Time `f` once and report it as a benchmark result.
 pub fn bench(name: Str, f: fn()) -> TestResult {
   let start = time.Instant.now();
   f();
