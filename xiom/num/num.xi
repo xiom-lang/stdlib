@@ -37,9 +37,13 @@ use xiom.math.pow;
 
 /// Extended numeric traits (Add/Sub/Mul/Div are in core)
 pub interface Neg { fn neg(self) -> Self; }
+/// Remainder trait: `self % other`.
 pub interface Rem { fn rem(self, other: Self) -> Self; }
+/// Absolute-value trait.
 pub interface Abs { fn abs(self) -> Self; }
+/// Exponentiation trait.
 pub interface Pow { fn pow(self, exp: Self) -> Self; }
+/// Square-root trait.
 pub interface Sqrt { fn sqrt(self) -> Self; }
 
 /// Numeric bounds
@@ -160,14 +164,17 @@ impl Bounded[Float64] {
   fn is_infinite() -> Bool { return false; }
 }
 
+/// Minimum finite value of a bounded numeric type.
 pub fn min_value[T: Bounded]() -> T {
   return T.min_value();
 }
 
+/// Maximum finite value of a bounded numeric type.
 pub fn max_value[T: Bounded]() -> T {
   return T.max_value();
 }
 
+/// Difference between 1.0 and the next representable value.
 pub fn epsilon[T: Bounded]() -> T {
   return T.epsilon();
 }
@@ -188,15 +195,18 @@ pub fn gcd(a: Int, b: Int) -> Int
   return gcd(y, x % y);
 }
 
+/// Least common multiple of two Ints (0 when either is 0).
 pub fn lcm(a: Int, b: Int) -> Int {
   if a == 0 || b == 0 { return 0; }
   return a / gcd(a, b) * b;
 }
 
+/// True when `n > 0` and `n` is a power of two.
 pub fn is_power_of_two(n: Int) -> Bool {
   return n > 0 && bit_and(n, n - 1) == 0;
 }
 
+/// Smallest power of two >= n (1 for n <= 1).
 pub fn next_power_of_two(n: Int) -> Int {
   if n <= 0 { return 1; }
   var p = 1;
@@ -212,6 +222,7 @@ extern "C" {
   fn xiom_ctz64(x: Int64) -> Int64;
 }
 
+/// Number of set bits (popcount).
 pub fn count_ones(n: Int) -> Int
   requires: true  // extern popcount call below (T002 confinement)
 {
@@ -220,10 +231,12 @@ pub fn count_ones(n: Int) -> Int
   xiom_popcnt64(n)
 }
 
+/// Number of cleared bits.
 pub fn count_zeros(n: Int) -> Int {
   return size_of[Int]() * 8 - count_ones(n);
 }
 
+/// Number of leading zero bits.
 pub fn leading_zeros(n: Int) -> Int
   requires: true  // extern clz call below (T002 confinement)
 {
@@ -231,6 +244,7 @@ pub fn leading_zeros(n: Int) -> Int
   xiom_clz64(n)
 }
 
+/// Number of trailing zero bits.
 pub fn trailing_zeros(n: Int) -> Int
   requires: true  // extern ctz call below (T002 confinement)
 {
@@ -238,6 +252,7 @@ pub fn trailing_zeros(n: Int) -> Int
   xiom_ctz64(n)
 }
 
+/// Rotate bits left by `k` positions.
 pub fn rotate_left(n: Int, k: Int) -> Int {
   var bits = size_of[Int]() * 8;
   var shift = k % bits;
@@ -245,6 +260,7 @@ pub fn rotate_left(n: Int, k: Int) -> Int {
   return bit_or(shl(n, shift), shr(n, bits - shift));
 }
 
+/// Rotate bits right by `k` positions.
 pub fn rotate_right(n: Int, k: Int) -> Int {
   var bits = size_of[Int]() * 8;
   var shift = k % bits;
@@ -252,6 +268,7 @@ pub fn rotate_right(n: Int, k: Int) -> Int {
   return bit_or(shr(n, shift), shl(n, bits - shift));
 }
 
+/// Reverse the bit order of the value.
 pub fn reverse_bits(n: Int) -> Int {
   var result = 0;
   var x = n;
@@ -265,6 +282,7 @@ pub fn reverse_bits(n: Int) -> Int {
   return result;
 }
 
+/// Convert from native to big-endian byte order.
 pub fn to_be(n: Int) -> Int {
   var result = 0;
   var x = n;
@@ -279,14 +297,17 @@ pub fn to_be(n: Int) -> Int {
   return result;
 }
 
+/// Convert from native to little-endian byte order.
 pub fn to_le(n: Int) -> Int {
   return n;
 }
 
+/// Convert from big-endian to native byte order.
 pub fn from_be(n: Int) -> Int {
   return to_be(n);
 }
 
+/// Convert from little-endian to native byte order.
 pub fn from_le(n: Int) -> Int {
   return n;
 }
@@ -298,11 +319,13 @@ pub fn is_finite(x: Float64) -> Bool {
   return not_nan && not_inf;
 }
 
+/// True when `x` is finite and neither zero nor subnormal.
 pub fn is_normal(x: Float64) -> Bool {
   if x == 0.0 || is_nan(x) || is_inf(x) { return false; }
   return true;
 }
 
+/// IEEE-754 classification code (see the FLOAT_* constants).
 pub fn classify(x: Float64) -> Int {
   if is_nan(x) { return 0; }
   if is_inf(x) { return 1; }
@@ -310,6 +333,7 @@ pub fn classify(x: Float64) -> Int {
   return 4;
 }
 
+/// Largest integer not greater than `x`.
 pub fn floor(x: Float64) -> Int
   ensures: to_float(result) <= x && x < to_float(result) + 1.0
 {
@@ -319,6 +343,7 @@ pub fn floor(x: Float64) -> Int
   return i - 1;
 }
 
+/// Smallest integer not less than `x`.
 pub fn ceil(x: Float64) -> Int
   ensures: to_float(result) - 1.0 < x && x <= to_float(result)
 {
@@ -328,33 +353,40 @@ pub fn ceil(x: Float64) -> Int
   return i + 1;
 }
 
+/// Nearest integer, with halves rounded away from zero.
 pub fn round(x: Float64) -> Int {
   if x >= 0.0 { return to_int(x + 0.5); }
   return to_int(x - 0.5);
 }
 
+/// Integer part of `x` (truncation toward zero).
 pub fn trunc(x: Float64) -> Int {
   return to_int(x);
 }
 
+/// Fractional part of `x` (`x - trunc(x)`).
 pub fn fract(x: Float64) -> Float64 {
   return x - to_float(to_int(x));
 }
 
+/// Reciprocal `1 / x`.
 pub fn recip(x: Float64) -> Float64
   requires: x != 0.0
 {
   return 1.0 / x;
 }
 
+/// Convert radians to degrees.
 pub fn to_degrees(rad: Float64) -> Float64 {
   return rad * 180.0 / 3.141592653589793;
 }
 
+/// Convert degrees to radians.
 pub fn to_radians(deg: Float64) -> Float64 {
   return deg * 3.141592653589793 / 180.0;
 }
 
+/// Length of the hypotenuse `sqrt(x^2 + y^2)` without intermediate overflow.
 pub fn hypot(x: Float64, y: Float64) -> Float64
   requires: true  // extern sqrt call below (T002 confinement)
 {
@@ -371,6 +403,7 @@ pub fn saturating_add[T: Bounded + Ord + Add](a: T, b: T) -> T {
   return a + b;
 }
 
+/// Subtraction clamped to the type minimum/maximum.
 pub fn saturating_sub[T: Bounded + Ord + Sub](a: T, b: T) -> T {
   var z = T.zero();
   var max_val = T.max_value();
@@ -380,6 +413,7 @@ pub fn saturating_sub[T: Bounded + Ord + Sub](a: T, b: T) -> T {
   return a - b;
 }
 
+/// Multiplication clamped to the type minimum/maximum.
 pub fn saturating_mul[T: Bounded + Ord + Mul + Div](a: T, b: T) -> T {
   var z = T.zero();
   if a == z || b == z { return z; }
@@ -402,6 +436,7 @@ pub fn checked_add[T: Bounded + Ord + Add](a: T, b: T) -> Option[T] {
   return Some(a + b);
 }
 
+/// Subtraction, or None on overflow/underflow.
 pub fn checked_sub[T: Bounded + Ord + Sub](a: T, b: T) -> Option[T] {
   var z = T.zero();
   var max_val = T.max_value();
@@ -411,6 +446,7 @@ pub fn checked_sub[T: Bounded + Ord + Sub](a: T, b: T) -> Option[T] {
   return Some(a - b);
 }
 
+/// Multiplication, or None on overflow.
 pub fn checked_mul[T: Bounded + Ord + Mul + Div](a: T, b: T) -> Option[T] {
   var z = T.zero();
   if a == z || b == z { return Some(z); }
@@ -423,6 +459,7 @@ pub fn checked_mul[T: Bounded + Ord + Mul + Div](a: T, b: T) -> Option[T] {
   return Some(a * b);
 }
 
+/// Division, or None on division by zero/overflow.
 pub fn checked_div[T: Bounded + Eq + Div](a: T, b: T) -> Option[T]
   ensures: b == zero() => result is None
 {
@@ -436,10 +473,12 @@ pub fn wrapping_add[T: Bounded + Add](a: T, b: T) -> T {
   return a + b;
 }
 
+/// Subtraction wrapping around the type range.
 pub fn wrapping_sub[T: Bounded + Sub](a: T, b: T) -> T {
   return a - b;
 }
 
+/// Multiplication wrapping around the type range.
 pub fn wrapping_mul[T: Bounded + Mul](a: T, b: T) -> T {
   return a * b;
 }
@@ -449,10 +488,12 @@ pub fn parse_int(s: Str) -> Result[Int, Str] {
   return to_int_from_str(s);
 }
 
+/// Parse a decimal Float64; Err with a message on bad input.
 pub fn parse_float(s: Str) -> Result[Float64, Str] {
   return to_float_from_str(s);
 }
 
+/// Parse an Int in the given radix (2..36); Err on bad input.
 pub fn parse_int_radix(s: Str, radix: Int) -> Result[Int, Str]
   requires: s.len() > 0
   requires: 2 <= radix && radix <= 36
