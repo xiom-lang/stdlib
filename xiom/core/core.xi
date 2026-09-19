@@ -47,10 +47,12 @@ pub fn to_int(x: Float64) -> Int {
   return x as Int;
 }
 
+/// Convert an Int to Float64 (may lose precision above 2^53).
 pub fn to_float(x: Int) -> Float64 {
   return x as Float64;
 }
 
+/// Decimal string for an Int.
 pub fn to_string(x: Int) -> Str {
   if x == 0 {
     return "0";
@@ -85,6 +87,7 @@ pub fn to_string(x: Int) -> Str {
   }
 }
 
+/// Parse an Int; Err with a message on bad input.
 pub fn to_int_from_str(s: Str) -> Result[Int, Str]
   requires: true  // extern char_at calls below (D2.1/T002 safe-wrapper pattern)
 {
@@ -120,6 +123,7 @@ pub fn to_int_from_str(s: Str) -> Result[Int, Str]
   return Ok(result);
 }
 
+/// Parse a Float64; Err with a message on bad input.
 pub fn to_float_from_str(s: Str) -> Result[Float64, Str]
   requires: true  // extern char_at calls below (D2.1/T002 safe-wrapper pattern)
 {
@@ -218,6 +222,7 @@ pub fn to_float_from_str(s: Str) -> Result[Float64, Str]
   return Ok(value);
 }
 
+/// Parse "true"/"false"; Err on other input.
 pub fn to_bool_from_str(s: Str) -> Result[Bool, Str] {
   if s == "true" {
     return Ok(true);
@@ -228,10 +233,12 @@ pub fn to_bool_from_str(s: Str) -> Result[Bool, Str] {
   }
 }
 
+/// Convert a code point to a Char.
 pub fn to_char(x: Int) -> Char {
   return x as Char;
 }
 
+/// Code point of a Char as Int.
 pub fn to_int_from_char(c: Char) -> Int {
   return c as Int;
 }
@@ -248,6 +255,7 @@ pub fn is_sorted[T: Ord](items: &Slice[T]) -> Bool {
   return true;
 }
 
+/// True when every element satisfies `predicate` (true when empty).
 pub fn all[T](items: &Slice[T], predicate: fn(T) -> Bool) -> Bool {
   var i: Int = 0;
   while i < items.len() {
@@ -259,6 +267,7 @@ pub fn all[T](items: &Slice[T], predicate: fn(T) -> Bool) -> Bool {
   return true;
 }
 
+/// True when no element satisfies `predicate`.
 pub fn none[T](items: &Slice[T], predicate: fn(T) -> Bool) -> Bool {
   var i: Int = 0;
   while i < items.len() {
@@ -270,6 +279,7 @@ pub fn none[T](items: &Slice[T], predicate: fn(T) -> Bool) -> Bool {
   return true;
 }
 
+/// True when `value` occurs in the slice.
 pub fn contains[T: Eq](items: &Slice[T], value: T) -> Bool {
   var i: Int = 0;
   while i < items.len() {
@@ -632,6 +642,7 @@ pub fn Box[T].deref(self) -> &T
   }
 }
 
+/// Mutable dereference to the boxed value.
 pub fn Box[T].deref_mut(self) -> &mut T
   requires: ptr != null
   ensures: true
@@ -648,6 +659,7 @@ pub fn Box[T].as_ref(self) -> &T
   return deref();
 }
 
+/// Borrow the boxed value mutably.
 pub fn Box[T].as_mut(self) -> &mut T
   requires: ptr != null
 {
@@ -674,18 +686,21 @@ pub type Cow[T: Clone] = enum {
   Owned(value: T),
 }
 
+/// True when the value is still borrowed (not cloned).
 pub fn Cow[T: Clone].is_borrowed(self) -> Bool
   ensures: result == (match self { Borrowed(_) => true, Owned(_) => false })
 {
   match self { Borrowed(_) => { return true; }; Owned(_) => { return false; }; }
 }
 
+/// True when the value is owned (cloned).
 pub fn Cow[T: Clone].is_owned(self) -> Bool
   ensures: result == !self.is_borrowed()
 {
   return !self.is_borrowed();
 }
 
+/// Clone on first write and return mutable access.
 pub fn Cow[T: Clone].to_mut(self) -> &mut T
   ensures: true
 {
@@ -698,6 +713,7 @@ pub fn Cow[T: Clone].to_mut(self) -> &mut T
   };
 }
 
+/// Unwrap into an owned value (cloning when borrowed).
 pub fn Cow[T: Clone].into_owned(self) -> T
   ensures: true
 {
@@ -749,18 +765,21 @@ pub interface From[T] {
   ;
 }
 
+/// Conversion into `T` (infallible).
 pub interface Into[T] {
   fn into(self) -> T
     ensures: From::from(result) == self  // round-trip law
   ;
 }
 
+/// Fallible conversion from `T`.
 pub interface TryFrom[T] {
   fn try_from(value: T) -> Result[Self, Str]
     ensures: true
   ;
 }
 
+/// Fallible conversion into `T`.
 pub interface TryInto[T] {
   fn try_into(self) -> Result[T, Str]
     ensures: true
@@ -773,6 +792,7 @@ pub interface TryInto[T] {
 pub fn Int.from(value: Float64) -> Int {
   return to_int(value);
 }
+/// Truncating conversion to Int.
 pub fn Float64.into(self) -> Int {
   return to_int(self);
 }
@@ -781,6 +801,7 @@ pub fn Float64.into(self) -> Int {
 pub fn Float64.from(value: Int) -> Float64 {
   return to_float(value);
 }
+/// Widening conversion to Float64 (lossy above 2^53).
 pub fn Int.into(self) -> Float64 {
   return to_float(self);
 }
@@ -789,6 +810,7 @@ pub fn Int.into(self) -> Float64 {
 pub fn Str.from(value: Int) -> Str {
   return to_string(value);
 }
+/// Decimal string conversion.
 pub fn Int.into(self) -> Str {
   return to_string(self);
 }
@@ -797,6 +819,7 @@ pub fn Int.into(self) -> Str {
 pub fn Str.from(value: Float64) -> Str {
   return xiom.convert.float_to_string(value);
 }
+/// Decimal string conversion.
 pub fn Float64.into(self) -> Str {
   return xiom.convert.float_to_string(self);
 }
@@ -805,6 +828,7 @@ pub fn Float64.into(self) -> Str {
 pub fn Str.from(value: Bool) -> Str {
   return convert.bool_to_string(value);
 }
+/// "true" or "false" conversion.
 pub fn Bool.into(self) -> Str {
   return convert.bool_to_string(self);
 }
@@ -814,6 +838,7 @@ pub fn Int.from(value: Bool) -> Int {
   if value { return 1; }
   return 0;
 }
+/// 1 for true, 0 for false.
 pub fn Bool.into(self) -> Int {
   if self { return 1; }
   return 0;
@@ -823,6 +848,7 @@ pub fn Bool.into(self) -> Int {
 pub fn Int.from(value: Char) -> Int {
   return to_int_from_char(value);
 }
+/// Unicode code point conversion.
 pub fn Char.into(self) -> Int {
   return to_int_from_char(self);
 }
@@ -831,10 +857,12 @@ pub fn Char.into(self) -> Int {
 pub fn Char.from(value: Int) -> Char {
   return to_char(value);
 }
+/// Char for the code point (invalid values map to U+FFFD).
 pub fn Int.into(self) -> Char {
   return to_char(self);
 }
 
+/// Immutable dereference interface.
 pub interface Deref {
   type Target;
   fn deref(self) -> &Target
@@ -842,18 +870,21 @@ pub interface Deref {
   ;
 }
 
+/// Mutable dereference interface.
 pub interface DerefMut: Deref {
   fn deref_mut(self) -> &mut Target
     ensures: true
   ;
 }
 
+/// Cheap reference conversion interface.
 pub interface AsRef[T] {
   fn as_ref(self) -> &T
     ensures: true
   ;
 }
 
+/// Cheap mutable reference conversion interface.
 pub interface AsMut[T] {
   fn as_mut(self) -> &mut T
     ensures: true
@@ -878,9 +909,13 @@ pub fn align_of[T]() -> Int;
 
 /// === Numeric limits ===
 pub const INT_MAX: Int = 9223372036854775807;
+/// Minimum Int value.
 pub const INT_MIN: Int = -9223372036854775808;
+/// Largest finite Float64.
 pub const FLOAT64_MAX: Float64 = 1.7976931348623157e308;
+/// Smallest positive normal Float64.
 pub const FLOAT64_MIN: Float64 = 2.2250738585072014e-308;
+/// Machine epsilon for Float64.
 pub const FLOAT64_EPSILON: Float64 = 2.220446049250313e-16;
 
 /// 8B/M7: Zero-size type marker for generic parameters
@@ -890,18 +925,21 @@ pub type PhantomData[T] = { }
 pub type MaybeUninit[T] = { data: T; initialized: Bool; }
   derive[Clone]
 
+/// Uninitialized value slot.
 pub fn MaybeUninit[T].uninit() -> MaybeUninit[T]
   ensures: !result.initialized
 {
   return MaybeUninit { data: mem.zeroed[T](), initialized: false };
 }
 
+/// Slot initialized with `value`.
 pub fn MaybeUninit[T].new(value: T) -> MaybeUninit[T]
   ensures: result.initialized
 {
   return MaybeUninit { data: value, initialized: true };
 }
 
+/// Read the value out (requires prior initialization).
 pub fn MaybeUninit[T].assume_init(self) -> T
   requires: self.initialized
   ensures: true
@@ -909,6 +947,7 @@ pub fn MaybeUninit[T].assume_init(self) -> T
   return self.data;
 }
 
+/// Write a value into the slot.
 pub fn MaybeUninit[T].write(self, value: T)
   ensures: self.initialized == true
   ensures: self.data == value
