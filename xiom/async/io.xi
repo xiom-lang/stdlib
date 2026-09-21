@@ -15,6 +15,8 @@ module xiom.async.io
 
 extern "C" {
   fn fread(buf: *UInt8, size: UInt, count: UInt, stream: *UInt8) -> UInt;
+  fn xiom_read(fd: Int32, buf: *UInt8, count: UInt) -> Int;
+  fn xiom_write(fd: Int32, buf: *UInt8, count: UInt) -> Int;
   fn fwrite(buf: *UInt8, size: UInt, count: UInt, stream: *UInt8) -> UInt;
   fn fopen(path: *UInt8, mode: *UInt8) -> *UInt8;
   fn fclose(file: *UInt8) -> Int32;
@@ -41,15 +43,17 @@ fn future_ready(value: Int) -> Future {
 /// Returns: a ready Future whose value is the number of bytes read.
 /// Complexity: O(n) syscall.
 pub fn async_read(fd: Int, buf: &mut Vec[UInt8]) -> Future {
+  // Read from the descriptor via the runtime fd helper; never cast an fd to
+  // FILE* (the CRT dereferences it and fast-fails 0xC0000409 at EOF).
   var one: [1]UInt8;
-  var nread: UInt;
+  var nread: Int = 0;
   unsafe {
-    nread = fread(&one[0], 1 as UInt, 1 as UInt, fd as *UInt8);
+    nread = xiom_read(fd as Int32, &one[0], 1 as UInt);
   }
   if nread == 1 {
     buf.push(one[0]);
   }
-  return future_ready(nread as Int);
+  return future_ready(nread);
 }
 
 /// Write `data` without blocking.
@@ -61,11 +65,13 @@ pub fn async_write(fd: Int, data: &Vec[UInt8]) -> Future {
   var i: Int = 0;
   while i < data.len() {
     let b = data[i];
-    let nwritten: UInt;
+    var nwritten: Int = 0;
     unsafe {
-      nwritten = fwrite(&b, 1 as UInt, 1 as UInt, fd as *UInt8);
+      nwritten = xiom_write(fd as Int32, &b, 1 as UInt);
     }
-    total = total + (nwritten as Int);
+    if nwritten > 0 {
+      total = total + nwritten;
+    }
     i = i + 1;
   }
   return future_ready(total);
@@ -165,11 +171,11 @@ pub fn async_read_line(fd: Int) -> Future {
   var done = false;
   while !done {
     var byte_buf: [1]UInt8;
-    var nread: UInt;
+    var nread: Int = 0;
     unsafe {
-      nread = fread(&byte_buf[0], 1 as UInt, 1 as UInt, fd as *UInt8);
+      nread = xiom_read(fd as Int32, &byte_buf[0], 1 as UInt);
     }
-    if nread == 0 {
+    if nread <= 0 {
       done = true;
     } else {
       buf.push(byte_buf[0]);
@@ -191,11 +197,11 @@ pub fn async_read_until(fd: Int, delim: UInt8) -> Future {
   var done = false;
   while !done {
     var byte_buf: [1]UInt8;
-    var nread: UInt;
+    var nread: Int = 0;
     unsafe {
-      nread = fread(&byte_buf[0], 1 as UInt, 1 as UInt, fd as *UInt8);
+      nread = xiom_read(fd as Int32, &byte_buf[0], 1 as UInt);
     }
-    if nread == 0 {
+    if nread <= 0 {
       done = true;
     } else {
       buf.push(byte_buf[0]);
