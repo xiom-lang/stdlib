@@ -4,7 +4,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 -->
 # XIOM Stdlib Session -- Handoff
 
-## 0A. CONTINUE HERE -- handoff snapshot (updated 2026-09-20, after compiler R49)
+## 0A. CONTINUE HERE -- handoff snapshot (updated 2026-09-21, after compiler R54)
 
 **Repo**: `xiom-lang/stdlib` at `E:\xiom-lang\stdlib` (branch `main`).
 Compiler pin: `COMPILER_VERSION` = **v0.60.0** (v0.60.1 and the pin predate
@@ -87,6 +87,46 @@ was rejected by tag rules -- owner action needed).
   R52 section.
 - The compiler lane verified both build configurations (default no-NASM and
   `--features nasm`); the `b4f2655` runtime fix keeps both linkable.
+
+**SESSION 2026-09-21 PART 3 (wave 17 + probe curation + R49-4 resolved in R54)**
+- Local main: `81449da` (pushed) + `578d5d1` (wave 17 / floors54), `5c00bcc`
+  (probe curation), `63ad30a` (single-param promotion) + this docs commit.
+  The 2026-09-21 commits are local; the release lane decides pushes.
+- Item 3 DONE -- wave 17: 23 payload-reading Result clauses across io/fs,
+  io/console and io/pipe (R49-3 unlocked the forms; pre-validated in
+  `tools/probes/p_wave17_shapes.xi`, which pins the mixed Int/Vec/Str payload
+  combination). io 62.0% -> 78.7%, global 19.2% pub-with-clause;
+  `tools/coverage_floors54.json` wired into all three workflows,
+  tools/README.md and the readiness plan in the same commit. io smoke
+  families 41/41 on R52. Future waves repeat the same protocol elsewhere.
+- Item 5 DONE -- probe-corpus curation: the identical 18 failures on R49/R52
+  split into `tools/probes/evidence/` (11: stale APIs, superseded shapes,
+  deliberate parity evidence; README table) and `tools/known_failures/`
+  (7 open: hash-interface `Self` argument, async_read_line EOF crash,
+  generic-ctor push legs `p_gp_b`/`p_gp_c`, `p_fnref` identity needs a
+  compiler ruling, `q1_verify_all` watchdog/perf -- green with
+  `--timeout 0`). `.gitignore` now unignores `tools/probes/evidence/`; the
+  full probe corpus is **159/159** on R53.
+- R49-4 DONE -- compiler main `7837b194` (R54) fixes the large-fixed-array
+  ISel crash; the raw `p_sweep_single_param.xi` compiles+links in ~51s. The
+  promoted lock is `tools/probes/p_sweep_single_param.xi`: a runtime-guarded
+  compile lock (the calls sit behind an `XIOM_SWEEP_RUN` env guard, so they
+  type-check and codegen but never run -- the generated args are unsafe).
+  The raw call set and the clang-crash header moved to
+  `tools/probes/evidence/`. Fresh single-param scan: **60 modules / 239
+  calls, compile-only 60/60** on R53/R54 (`gen_call_probes.ps1 -MinParams 1
+  -MaxParams 1 -Timeout 0`; parallel compile-only pass). NOTE: run the
+  compiler from the repo root (or set `XIOM_RUNTIME_DIR`) -- a worker with a
+  different CWD resolves a partial runtime dir and link-fails on
+  `xiom_simd_*` / `xiom_async_now_ms`.
+- R53/R54 gates on the final tree: check_modules **509/509** (845.2s under
+  load); corpus **949/949**, 0 compilefail, 0 runfail (1832.7s); probe
+  corpus **159/159** (449.9s); coverage floors54 OK; doc ratchet OK;
+  barename **0 hits / 509** (819.9s).
+- Compiler-lane leftovers (L6-40, L5-40, L3-50, L8-14, perf peek, C3/C6)
+  are playground/perf items and do not block the stdlib gate (relay).
+- Queue below: items 1-3 and 5 are DONE; only item 4 (TLS/tzdata/registry)
+  remains, last as always.
 
 **R49 baseline state (2026-09-19, local main then `3f839e1`)**
 - ALL GATES GREEN on the final tree: `check_modules` **509/509** (262.5s);
@@ -222,34 +262,30 @@ was rejected by tag rules -- owner action needed).
   `ptr/ptr.xi` (19).
 
 **Next-session queue, in order**
-1. Compiler lane follow-up (relay via the user): R49-4
+1. ~~Compiler lane follow-up (relay via the user): R49-4
    `p_sweep_single_param` clang ISel crash remains the only filed ISel
-   blocker. When it lands: promote `p_sweep` to `tools/probes/` and
-   re-baseline (check_modules + full corpus). Keep `p_sweep`'s current
-   evidence unchanged until then. (The `@pre` scalar-field residual was
-   fixed by R52 `c235b3fe`; the strong `collect/*` clauses are restored and
-   `p_wave8_shapes` is green -- see PART 2 above.)
+   blocker.~~ **DONE 2026-09-21** (R54 `7837b194`; the guarded lock is
+   promoted, raw evidence archived, single-param tranche 60/60 -- see
+   PART 3). Compiler-lane leftovers are playground/perf only and do not
+   block the gate.
 2. ~~Untested-surface generator: compile the remaining groups
    (`-OnlyCalls 3` .. `-OnlyCalls 58`, or `-Limit N` for triage) against
    the R49 binary; triage failures into `tools/known_failures/` with
    evidence and passes into `tools/probes/`.~~ **DONE 2026-09-20**
    (138/138 compile-only; the one failure was the fixed no-NASM runtime
-   link gap; see the session block above). The single-param tranche stays
-   blocked on item 1.
-3. Coverage (optional push): payload-reading Result clauses are now
+   link gap; see the session block above). The single-param tranche is
+   regenerated and 60/60 compile-only on R53/R54 (PART 3).
+3. Coverage (repeatable, optional): payload-reading Result clauses are
    allowed (R49-3); pre-validate new shapes in `p_waveN_shapes.xi`, then
    dump `coverage_floorsN+1.json` and wire it into all workflows + READMEs
-   in the same commit.
+   in the same commit. Wave 17 (io) landed 2026-09-21 -- see PART 3.
 4. Windows TLS/schannel (compiler FFI hardening) and tzdata phase 2 stay
    last; registry publish activation is the user's (dispatch-only
    `publish-registry.yml`). Every new pub declaration needs `///` prose
    (100% doc ratchet).
-5. Probe-corpus curation: the full `tools/probes` run is 157/175 on R49 AND
-   R52 (identical 18: 11 compilefail + 7 runfail; list in
-   `docs/VERIFICATION_BASELINE.md` R52 section). Triage the historical
-   debug/evidence probes into `tools/known_failures/` (still-open compiler
-   findings) or an `evidence/` subdirectory the runner does not pick up, so
-   the documented Probes gate can go green. Not wired into CI today.
+5. ~~Probe-corpus curation~~ **DONE 2026-09-21** -- the 18 red probes split
+   into `tools/probes/evidence/` (11) and `tools/known_failures/` (7); the
+   probes root is 159/159 on R53. See PART 3.
 
 **Recipes**
 - Build a compiler ref: export it (`git -C E:\xiom-lang\xiom archive
@@ -258,15 +294,19 @@ was rejected by tag rules -- owner action needed).
   if you reuse a warm target dir, TOUCH all extracted sources first
   (git-archive mtimes can be older than the artifacts, so cargo skips the
   rebuild). Run with `XIOM_STDLIB=E:\xiom-lang\stdlib`. Built across the
-  campaign: R46 `12148d43`, R46b `504fcc1e`, R49 `306073ba`, R52 `1fcb4855`;
-  binaries stashed under `%TEMP%\kilo\stdlib_ws\` (`xiom_r52.exe` is the
-  current one; `xiom_r49.exe` the previous baseline binary).
+  campaign: R46 `12148d43`, R46b `504fcc1e`, R49 `306073ba`, R52 `1fcb4855`,
+  R54 `7837b194`; binaries stashed under `%TEMP%\kilo\stdlib_ws\`
+  (`xiom_r53.exe` is the current one -- R54, also verified for the nasm
+  build; `xiom_r52.exe` and `xiom_r49.exe` are the previous baselines).
+  Resolve the runtime from the repo root (or set `XIOM_RUNTIME_DIR`): a
+  different CWD links a partial runtime and fails on `xiom_simd_*` /
+  `xiom_async_now_ms`.
 - Gates: `./tools/run_smokes.ps1 -Compiler <exe> -Workers 8 -RetryFailed`;
   `powershell -NoProfile -File tools/check_modules.ps1 -Compiler <exe>`
   (this box has NO `pwsh` -- use `powershell`);
   `powershell -NoProfile -File tools/barename_scan.ps1 -Compiler <exe>`;
   `powershell -NoProfile -File tools/coverage_scan.ps1 -RatchetFile
-  tools/coverage_floors53.json`;
+  tools/coverage_floors54.json`;
   `powershell -NoProfile -File tools/doc_scan.ps1 -RatchetFile
   tools/doc_baseline4.json`.
 - Compiler gate tests (run from the extracted compiler source):

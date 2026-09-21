@@ -103,6 +103,27 @@ superseded shapes, or deliberate parity evidence) and the 7 open findings to
 needs a compiler ruling), and `q1_verify_all` (compiles with `--timeout 0`;
 watchdog/perf, not correctness). The probes root is green after the move.
 
+## R54 compiler update (2026-09-21) -- R49-4 fixed; single-param surface compiles
+
+Compiler main `7837b194` (R54; debug build from `git archive`, local binary
+`%TEMP%\kilo\stdlib_ws\xiom_r53.exe`) changes large fixed arrays to emit
+memset + address access instead of the crashing aggregate zeroinit /
+whole-array loads. `tools/known_failures/p_sweep_single_param.xi` compiles
+and links in ~51s (previously a clang ISel `0xC0000005` on
+`@__unsafe_block_77`, IR deterministic). The surface is promoted as a
+runtime-guarded lock (`tools/probes/p_sweep_single_param.xi`: the calls sit
+behind an `XIOM_SWEEP_RUN` env guard, so they type-check and codegen but
+never run -- the generated arguments are unsafe to execute); the raw call
+set and its crash header are archived in `tools/probes/evidence/`. A fresh
+scan (`gen_call_probes.ps1 -MinParams 1 -MaxParams 1`) is 60 modules /
+239 calls. The compiler lane also verified both nasm and no-nasm builds.
+
+**R53/R54 gate results (stdlib tree after wave 17 + probe curation):**
+check_modules **509/509** (845.2s under load); corpus **949/949**, 0
+compilefail, 0 runfail (**1832.7s**, 8 workers, `-RetryFailed`); probe
+corpus **159/159** (449.9s); coverage ratchet floors54 OK; doc ratchet
+doc_baseline4 OK; barename scan **0 hits / 509** (819.9s).
+
 ## Provenance note
 
 Tag `v0.60.0` predates the resource-asset fix (`e3714884`, 2026-09-17
