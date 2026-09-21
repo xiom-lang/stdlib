@@ -22,7 +22,9 @@ use xiom.core.size_of;
 
 /// bit_get -- Returns 1 if the bit at position pos (0 = LSB) is set, 0 otherwise.
 /// Position must be in [0, 63] for 64-bit Int.
-pub fn bit_get(n: Int, pos: Int) -> Int {
+pub fn bit_get(n: Int, pos: Int) -> Int
+  ensures: result == 0 || result == 1
+{
   if pos < 0 || pos >= 64 { return 0; }
   var mask = shl(1, pos);
   if bit_and(n, mask) != 0 { return 1; }
@@ -52,7 +54,9 @@ pub fn bit_toggle(n: Int, pos: Int) -> Int {
 
 /// bit_count_ones (popcount) -- Counts set bits (1s) in n.
 /// Delegates to xiom.num.count_ones for the canonical implementation.
-pub fn bit_count_ones(n: Int) -> Int {
+pub fn bit_count_ones(n: Int) -> Int
+  ensures: result >= 0 && result <= 64
+{
   var count = 0;
   var x = n;
   var bits = size_of[Int]() * 8;
@@ -68,19 +72,25 @@ pub fn bit_count_ones(n: Int) -> Int {
 }
 
 /// bit_count_zeros -- Counts cleared bits (0s) in n.
-pub fn bit_count_zeros(n: Int) -> Int {
+pub fn bit_count_zeros(n: Int) -> Int
+  ensures: result >= 0 && result <= 64
+{
   return size_of[Int]() * 8 - bit_count_ones(n);
 }
 
 /// popcount -- Alias for bit_count_ones. Hamming weight of the value.
 /// Delegates to the built-in counting function.
-pub fn popcount(n: Int) -> Int {
+pub fn popcount(n: Int) -> Int
+  ensures: result >= 0 && result <= 64
+{
   return bit_count_ones(n);
 }
 
 /// clz -- Count Leading Zeros. Returns the number of consecutive zero bits
 /// starting from the most significant bit.
-pub fn clz(n: Int) -> Int {
+pub fn clz(n: Int) -> Int
+  ensures: result >= 0 && result <= 64
+{
   if n == 0 { return size_of[Int]() * 8; }
   var count = 0;
   var bits = size_of[Int]() * 8;
@@ -94,7 +104,9 @@ pub fn clz(n: Int) -> Int {
 
 /// ctz -- Count Trailing Zeros. Returns the number of consecutive zero bits
 /// starting from the least significant bit.
-pub fn ctz(n: Int) -> Int {
+pub fn ctz(n: Int) -> Int
+  ensures: result >= 0 && result <= 64
+{
   if n == 0 { return size_of[Int]() * 8; }
   var count = 0;
   var x = n;
@@ -213,13 +225,17 @@ pub fn is_pow2(n: Int) -> Bool {
 }
 
 /// low_nibble -- Extracts the lower 4 bits (nibble) of n. Returns 0-15.
-pub fn low_nibble(n: Int) -> Int {
+pub fn low_nibble(n: Int) -> Int
+  ensures: result >= 0 && result <= 15
+{
   return bit_and(n, 15);
 }
 
 /// high_nibble -- Extracts bits 4-7 (the high nibble of the low byte).
 /// Returns 0-15.
-pub fn high_nibble(n: Int) -> Int {
+pub fn high_nibble(n: Int) -> Int
+  ensures: result >= 0 && result <= 15
+{
   return bit_and(shr(n, 4), 15);
 }
 
@@ -254,14 +270,18 @@ pub fn pack_u32_be(b0: Int, b1: Int, b2: Int, b3: Int) -> Int {
 }
 
 /// unpack_u16_le -- Unpacks a little-endian 16-bit value into (low_byte, high_byte).
-pub fn unpack_u16_le(value: Int) -> (Int, Int) {
+pub fn unpack_u16_le(value: Int) -> (Int, Int)
+  ensures: result.0 >= 0 && result.0 <= 255 && result.1 >= 0 && result.1 <= 255
+{
   var lo = bit_and(value, 255);
   var hi = bit_and(shr(value, 8), 255);
   return (lo, hi);
 }
 
 /// unpack_u16_be -- Unpacks a big-endian 16-bit value into (high_byte, low_byte).
-pub fn unpack_u16_be(value: Int) -> (Int, Int) {
+pub fn unpack_u16_be(value: Int) -> (Int, Int)
+  ensures: result.0 >= 0 && result.0 <= 255 && result.1 >= 0 && result.1 <= 255
+{
   var hi = bit_and(value, 255);
   var lo = bit_and(shr(value, 8), 255);
   return (hi, lo);
@@ -269,7 +289,9 @@ pub fn unpack_u16_be(value: Int) -> (Int, Int) {
 
 /// unpack_u32_le -- Unpacks a little-endian 32-bit value into a 4-tuple of
 /// bytes (b0=LSB .. b3=MSB).
-pub fn unpack_u32_le(value: Int) -> (Int, Int, Int, Int) {
+pub fn unpack_u32_le(value: Int) -> (Int, Int, Int, Int)
+  ensures: result.0 >= 0 && result.0 <= 255 && result.1 >= 0 && result.1 <= 255 && result.2 >= 0 && result.2 <= 255 && result.3 >= 0 && result.3 <= 255
+{
   var b0 = bit_and(value, 255);
   var b1 = bit_and(shr(value, 8), 255);
   var b2 = bit_and(shr(value, 16), 255);
@@ -279,7 +301,9 @@ pub fn unpack_u32_le(value: Int) -> (Int, Int, Int, Int) {
 
 /// unpack_u32_be -- Unpacks a big-endian 32-bit value into a 4-tuple of bytes
 /// (b0=MSB .. b3=LSB).
-pub fn unpack_u32_be(value: Int) -> (Int, Int, Int, Int) {
+pub fn unpack_u32_be(value: Int) -> (Int, Int, Int, Int)
+  ensures: result.0 >= 0 && result.0 <= 255 && result.1 >= 0 && result.1 <= 255 && result.2 >= 0 && result.2 <= 255 && result.3 >= 0 && result.3 <= 255
+{
   var b0 = bit_and(shr(value, 24), 255);
   var b1 = bit_and(shr(value, 16), 255);
   var b2 = bit_and(shr(value, 8), 255);

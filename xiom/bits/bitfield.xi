@@ -24,7 +24,9 @@ fn _bit_in_byte(b: Int, bit: Int) -> Int {
 /// Extracts `width` bits at `offset` as an unsigned, right-justified value.
 /// Out-of-range requests are clamped: width <= 0 yields 0; the field is
 /// truncated at bit 63. Complexity: O(width).
-pub fn bitfield_get(value: Int, offset: Int, width: Int) -> Int {
+pub fn bitfield_get(value: Int, offset: Int, width: Int) -> Int
+  ensures: result >= 0
+{
   if width <= 0 {
     return 0;
   };
@@ -127,7 +129,9 @@ pub fn bitfield_sign_extend(value: Int, width: Int) -> Int {
 
 /// Mask of `width` low bits set. width <= 0 yields 0; width >= 64 yields -1
 /// (all 64 bits). Complexity: O(1).
-pub fn bitfield_mask(width: Int) -> Int {
+pub fn bitfield_mask(width: Int) -> Int
+  ensures: width >= 1 && width <= 63 => result >= 0
+{
   if width <= 0 {
     return 0;
   };
@@ -139,7 +143,9 @@ pub fn bitfield_mask(width: Int) -> Int {
 
 /// Unsigned field extract, right-justified (alias of bitfield_get).
 /// Complexity: O(width).
-pub fn bitfield_extract_u(value: Int, offset: Int, width: Int) -> Int {
+pub fn bitfield_extract_u(value: Int, offset: Int, width: Int) -> Int
+  ensures: result >= 0
+{
   bitfield_get(value, offset, width)
 }
 

@@ -291,11 +291,17 @@ T1/T2 yields.
       bounds for lower/upper_bound, tuple bounds for search_range, merge
       length sum, KMP/Boyer match-window and table length bounds) -> sort 0%
       -> 31.9%, search 0% -> 62.2%, global 19.2% -> 19.8% pub-with-clause;
-      pre-validated by tools/probes/p_wave18_shapes.xi. Ratchet:
-      tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors55.json
+      pre-validated by tools/probes/p_wave18_shapes.xi. Wave 19 (2026-09-21):
+      37 clauses on bits (bit_get/parity disjunctions, popcount/clz/ctz/
+      bit_width/leading-ones/trailing-ones 0..64 bounds, nibble 0..15,
+      unpack byte-range tuples, bitfield_mask implication, scan -1..63,
+      rotate-carry flags, bitarray counts) -> bits 0% -> 36.6%, global 19.8%
+      -> 20.3% pub-with-clause; pre-validated by
+      tools/probes/p_wave19_shapes.xi. Ratchet:
+      tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors56.json
       (repo tooling as of the split; positive + negative runs verified;
       earlier floors kept at
-      coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54.json).
+      coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55.json).
       Floors are per top-level stdlib/xiom directory and must be refreshed
       when a module is ADDED (new uncovered pub fns dilute the percentage
       -- TOML dropped serialize 6.1% -> 5.4%, tz dropped time 13% ->

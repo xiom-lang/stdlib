@@ -14,7 +14,9 @@ module xiom.bits.bitwise
 // ============================================================================
 
 /// Population count: number of set bits in n. Complexity: O(64).
-pub fn popcnt(n: Int) -> Int {
+pub fn popcnt(n: Int) -> Int
+  ensures: result >= 0 && result <= 64
+{
   var count: Int = 0;
   var x = n;
   var i: Int = 0;
@@ -30,7 +32,9 @@ pub fn popcnt(n: Int) -> Int {
 
 /// Count of consecutive zero bits starting from the most significant bit;
 /// 64 for zero. Complexity: O(64).
-pub fn clz(n: Int) -> Int {
+pub fn clz(n: Int) -> Int
+  ensures: result >= 0 && result <= 64
+{
   if n == 0 {
     return 64;
   };
@@ -46,7 +50,9 @@ pub fn clz(n: Int) -> Int {
 
 /// Count of consecutive zero bits starting from the least significant bit;
 /// 64 for zero. Complexity: O(64).
-pub fn ctz(n: Int) -> Int {
+pub fn ctz(n: Int) -> Int
+  ensures: result >= 0 && result <= 64
+{
   if n == 0 {
     return 64;
   };
@@ -132,7 +138,9 @@ pub fn rotate_right(n: Int, k: Int) -> Int {
 /// Number of bits needed to represent n: 0 for zero, 64 for negative values
 /// (the sign bit is counted), otherwise floor(log2 n) + 1.
 /// Complexity: O(64).
-pub fn bit_width(n: Int) -> Int {
+pub fn bit_width(n: Int) -> Int
+  ensures: result >= 0 && result <= 64
+{
   if n == 0 {
     return 0;
   };
@@ -147,13 +155,17 @@ pub fn bit_width(n: Int) -> Int {
 }
 
 /// Alias of bit_width. Complexity: O(64).
-pub fn bit_length(n: Int) -> Int {
+pub fn bit_length(n: Int) -> Int
+  ensures: result >= 0 && result <= 64
+{
   bit_width(n)
 }
 
 /// Count of consecutive 1 bits starting from the most significant bit.
 /// Complexity: O(64).
-pub fn leading_ones(n: Int) -> Int {
+pub fn leading_ones(n: Int) -> Int
+  ensures: result >= 0 && result <= 64
+{
   if n == -1 {
     return 64;
   };
@@ -172,7 +184,9 @@ pub fn leading_ones(n: Int) -> Int {
 
 /// Count of consecutive 1 bits starting from the least significant bit.
 /// Complexity: O(64).
-pub fn trailing_ones(n: Int) -> Int {
+pub fn trailing_ones(n: Int) -> Int
+  ensures: result >= 0 && result <= 64
+{
   if n == -1 {
     return 64;
   };
@@ -188,12 +202,16 @@ pub fn trailing_ones(n: Int) -> Int {
 }
 
 /// 1 if the population count is odd, else 0. Complexity: O(64).
-pub fn bit_parity(n: Int) -> Int {
+pub fn bit_parity(n: Int) -> Int
+  ensures: result == 0 || result == 1
+{
   popcnt(n) & 1
 }
 
 /// Index of the lowest set bit; -1 when n == 0. Complexity: O(64).
-pub fn bit_scan_forward(n: Int) -> Int {
+pub fn bit_scan_forward(n: Int) -> Int
+  ensures: result >= -1 && result <= 63
+{
   if n == 0 {
     return -1;
   };
@@ -208,7 +226,9 @@ pub fn bit_scan_forward(n: Int) -> Int {
 }
 
 /// Index of the highest set bit; -1 when n == 0. Complexity: O(64).
-pub fn bit_scan_reverse(n: Int) -> Int {
+pub fn bit_scan_reverse(n: Int) -> Int
+  ensures: result >= -1 && result <= 63
+{
   if n == 0 {
     return -1;
   };

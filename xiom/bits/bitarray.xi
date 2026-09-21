@@ -90,7 +90,9 @@ pub fn bit_array_flip(ba: &mut BitArray, i: Int) {
 }
 
 /// Number of set bits. Complexity: O(n).
-pub fn bit_array_count(ba: BitArray) -> Int {
+pub fn bit_array_count(ba: BitArray) -> Int
+  ensures: result >= 0
+{
   var count: Int = 0;
   var i: Int = 0;
   while i < ba.bits.len() {
@@ -110,7 +112,9 @@ pub fn bit_array_count(ba: BitArray) -> Int {
 }
 
 /// Number of bits. Complexity: O(1).
-pub fn bit_array_len(ba: BitArray) -> Int {
+pub fn bit_array_len(ba: BitArray) -> Int
+  ensures: result >= 0
+{
   ba.len
 }
 

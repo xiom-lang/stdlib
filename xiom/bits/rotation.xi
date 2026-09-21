@@ -42,7 +42,9 @@ pub fn rotate_right(n: Int, k: Int) -> Int {
 /// moves bit 63 into the carry and shifts the carry into bit 0). Returns
 /// (rotated_value, new_carry). The shift amount is reduced mod 64.
 /// Complexity: O(k).
-pub fn rotate_left_carry(n: Int, k: Int, carry_in: Int) -> (Int, Int) {
+pub fn rotate_left_carry(n: Int, k: Int, carry_in: Int) -> (Int, Int)
+  ensures: result.1 == 0 || result.1 == 1
+{
   var shift = k % 64;
   if shift < 0 {
     shift = shift + 64;
@@ -63,7 +65,9 @@ pub fn rotate_left_carry(n: Int, k: Int, carry_in: Int) -> (Int, Int) {
 /// moves bit 0 into the carry and shifts the carry into bit 63). Returns
 /// (rotated_value, new_carry). The shift amount is reduced mod 64.
 /// Complexity: O(k).
-pub fn rotate_right_carry(n: Int, k: Int, carry_in: Int) -> (Int, Int) {
+pub fn rotate_right_carry(n: Int, k: Int, carry_in: Int) -> (Int, Int)
+  ensures: result.1 == 0 || result.1 == 1
+{
   var shift = k % 64;
   if shift < 0 {
     shift = shift + 64;

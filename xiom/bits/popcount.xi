@@ -15,7 +15,9 @@ module xiom.bits.popcount
 // ============================================================================
 
 /// Number of set bits in n. Complexity: O(64).
-pub fn popcount(n: Int) -> Int {
+pub fn popcount(n: Int) -> Int
+  ensures: result >= 0 && result <= 64
+{
   var count: Int = 0;
   var x = n;
   var i: Int = 0;
@@ -32,7 +34,9 @@ pub fn popcount(n: Int) -> Int {
 /// Number of set bits in a UInt64 value. The low bit of an arithmetic shift
 /// is identical to a logical shift, so `(n >> i) & 1` is exact.
 /// Complexity: O(64).
-pub fn popcount64(n: UInt64) -> Int {
+pub fn popcount64(n: UInt64) -> Int
+  ensures: result >= 0 && result <= 64
+{
   var count: Int = 0;
   var i: Int = 0;
   while i < 64 {
@@ -47,7 +51,9 @@ pub fn popcount64(n: UInt64) -> Int {
 
 /// Consecutive zero bits from the most significant bit; 64 for zero.
 /// Complexity: O(64).
-pub fn count_leading_zeros(n: Int) -> Int {
+pub fn count_leading_zeros(n: Int) -> Int
+  ensures: result >= 0 && result <= 64
+{
   if n == 0 {
     return 64;
   };
@@ -63,7 +69,9 @@ pub fn count_leading_zeros(n: Int) -> Int {
 
 /// Consecutive zero bits from the least significant bit; 64 for zero.
 /// Complexity: O(64).
-pub fn count_trailing_zeros(n: Int) -> Int {
+pub fn count_trailing_zeros(n: Int) -> Int
+  ensures: result >= 0 && result <= 64
+{
   if n == 0 {
     return 64;
   };
@@ -78,23 +86,31 @@ pub fn count_trailing_zeros(n: Int) -> Int {
 }
 
 /// Number of set bits (alias of popcount). Complexity: O(64).
-pub fn count_ones(n: Int) -> Int {
+pub fn count_ones(n: Int) -> Int
+  ensures: result >= 0 && result <= 64
+{
   popcount(n)
 }
 
 /// Number of cleared bits (64 - popcount). Complexity: O(64).
-pub fn count_zeros(n: Int) -> Int {
+pub fn count_zeros(n: Int) -> Int
+  ensures: result >= 0 && result <= 64
+{
   64 - popcount(n)
 }
 
 /// 1 if the population count is odd, else 0. Complexity: O(64).
-pub fn parity(n: Int) -> Int {
+pub fn parity(n: Int) -> Int
+  ensures: result == 0 || result == 1
+{
   popcount(n) & 1
 }
 
 /// Number of bits needed to represent n: 0 for zero, 64 for negative values,
 /// otherwise floor(log2 n) + 1. Complexity: O(64).
-pub fn bit_length(n: Int) -> Int {
+pub fn bit_length(n: Int) -> Int
+  ensures: result >= 0 && result <= 64
+{
   if n == 0 {
     return 0;
   };
