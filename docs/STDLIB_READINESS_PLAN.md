@@ -297,11 +297,17 @@ T1/T2 yields.
       unpack byte-range tuples, bitfield_mask implication, scan -1..63,
       rotate-carry flags, bitarray counts) -> bits 0% -> 36.6%, global 19.8%
       -> 20.3% pub-with-clause; pre-validated by
-      tools/probes/p_wave19_shapes.xi. Ratchet:
-      tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors56.json
+      tools/probes/p_wave19_shapes.xi. Wave 20 (2026-09-21): 44 clauses on
+      geom vectors (component-wise add/sub/mul/div and scalar variants
+      mirrored exactly for Vec2/Vec3/Vec4, dot/cross identities,
+      length/distance/squared non-negativity, lerp mirrors, neg/abs,
+      min/max component bounds) -> geom 0% -> 10.6%, global 20.3% -> 21.0%
+      pub-with-clause; pre-validated by tools/probes/p_wave20_shapes.xi.
+      Ratchet:
+      tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors57.json
       (repo tooling as of the split; positive + negative runs verified;
       earlier floors kept at
-      coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55.json).
+      coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55/56.json).
       Floors are per top-level stdlib/xiom directory and must be refreshed
       when a module is ADDED (new uncovered pub fns dilute the percentage
       -- TOML dropped serialize 6.1% -> 5.4%, tz dropped time 13% ->

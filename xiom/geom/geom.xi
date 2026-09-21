@@ -75,58 +75,80 @@ pub fn vec2_new(x: Float64, y: Float64) -> Vec2 {
 }
 
 /// Add two 2D vectors component-wise. O(1).
-pub fn vec2_add(a: Vec2, b: Vec2) -> Vec2 {
+pub fn vec2_add(a: Vec2, b: Vec2) -> Vec2
+  ensures: result.x == a.x + b.x && result.y == a.y + b.y
+{
   return Vec2{ x: a.x + b.x; y: a.y + b.y; };
 }
 
 /// Subtract b from a component-wise. O(1).
-pub fn vec2_sub(a: Vec2, b: Vec2) -> Vec2 {
+pub fn vec2_sub(a: Vec2, b: Vec2) -> Vec2
+  ensures: result.x == a.x - b.x && result.y == a.y - b.y
+{
   return Vec2{ x: a.x - b.x; y: a.y - b.y; };
 }
 
 /// Multiply two 2D vectors component-wise. O(1).
-pub fn vec2_mul(a: Vec2, b: Vec2) -> Vec2 {
+pub fn vec2_mul(a: Vec2, b: Vec2) -> Vec2
+  ensures: result.x == a.x * b.x && result.y == a.y * b.y
+{
   return Vec2{ x: a.x * b.x; y: a.y * b.y; };
 }
 
 /// Divide a by b component-wise. O(1).
-pub fn vec2_div(a: Vec2, b: Vec2) -> Vec2 {
+pub fn vec2_div(a: Vec2, b: Vec2) -> Vec2
+  ensures: result.x == a.x / b.x && result.y == a.y / b.y
+{
   return Vec2{ x: a.x / b.x; y: a.y / b.y; };
 }
 
 /// Add scalar s to each component of v. O(1).
-pub fn vec2_add_scalar(v: Vec2, s: Float64) -> Vec2 {
+pub fn vec2_add_scalar(v: Vec2, s: Float64) -> Vec2
+  ensures: result.x == v.x + s && result.y == v.y + s
+{
   return Vec2{ x: v.x + s; y: v.y + s; };
 }
 
 /// Subtract scalar s from each component of v. O(1).
-pub fn vec2_sub_scalar(v: Vec2, s: Float64) -> Vec2 {
+pub fn vec2_sub_scalar(v: Vec2, s: Float64) -> Vec2
+  ensures: result.x == v.x - s && result.y == v.y - s
+{
   return Vec2{ x: v.x - s; y: v.y - s; };
 }
 
 /// Multiply each component of v by scalar s. O(1).
-pub fn vec2_mul_scalar(v: Vec2, s: Float64) -> Vec2 {
+pub fn vec2_mul_scalar(v: Vec2, s: Float64) -> Vec2
+  ensures: result.x == v.x * s && result.y == v.y * s
+{
   return Vec2{ x: v.x * s; y: v.y * s; };
 }
 
 /// Divide each component of v by scalar s. O(1).
-pub fn vec2_div_scalar(v: Vec2, s: Float64) -> Vec2 {
+pub fn vec2_div_scalar(v: Vec2, s: Float64) -> Vec2
+  ensures: result.x == v.x / s && result.y == v.y / s
+{
   return Vec2{ x: v.x / s; y: v.y / s; };
 }
 
 /// Dot product of two 2D vectors. O(1).
-pub fn vec2_dot(a: Vec2, b: Vec2) -> Float64 {
+pub fn vec2_dot(a: Vec2, b: Vec2) -> Float64
+  ensures: result == a.x * b.x + a.y * b.y
+{
   return a.x * b.x + a.y * b.y;
 }
 
 /// 2D cross product (scalar): a.x * b.y - a.y * b.x. O(1).
 /// This is the signed area of the parallelogram spanned by a and b.
-pub fn vec2_cross(a: Vec2, b: Vec2) -> Float64 {
+pub fn vec2_cross(a: Vec2, b: Vec2) -> Float64
+  ensures: result == a.x * b.y - a.y * b.x
+{
   return a.x * b.y - a.y * b.x;
 }
 
 /// Euclidean length (magnitude) of v. O(1).
-pub fn vec2_length(v: Vec2) -> Float64 {
+pub fn vec2_length(v: Vec2) -> Float64
+  ensures: result >= 0.0
+{
   return math.sqrt(v.x * v.x + v.y * v.y);
 }
 
@@ -138,12 +160,16 @@ pub fn vec2_normalize(v: Vec2) -> Vec2 {
 }
 
 /// Euclidean distance between two 2D points. O(1).
-pub fn vec2_distance(a: Vec2, b: Vec2) -> Float64 {
+pub fn vec2_distance(a: Vec2, b: Vec2) -> Float64
+  ensures: result >= 0.0
+{
   return vec2_length(vec2_sub(a, b));
 }
 
 /// Linearly interpolate between a and b by t. t=0 -> a, t=1 -> b. O(1).
-pub fn vec2_lerp(a: Vec2, b: Vec2, t: Float64) -> Float64 {
+pub fn vec2_lerp(a: Vec2, b: Vec2, t: Float64) -> Float64
+  ensures: result == math.lerp(a.x, b.x, t)
+{
   return math.lerp(a.x, b.x, t);
 }
 
@@ -157,52 +183,72 @@ pub fn vec3_new(x: Float64, y: Float64, z: Float64) -> Vec3 {
 }
 
 /// Add two 3D vectors component-wise. O(1).
-pub fn vec3_add(a: Vec3, b: Vec3) -> Vec3 {
+pub fn vec3_add(a: Vec3, b: Vec3) -> Vec3
+  ensures: result.x == a.x + b.x && result.y == a.y + b.y && result.z == a.z + b.z
+{
   return Vec3{ x: a.x + b.x; y: a.y + b.y; z: a.z + b.z; };
 }
 
 /// Subtract b from a component-wise. O(1).
-pub fn vec3_sub(a: Vec3, b: Vec3) -> Vec3 {
+pub fn vec3_sub(a: Vec3, b: Vec3) -> Vec3
+  ensures: result.x == a.x - b.x && result.y == a.y - b.y && result.z == a.z - b.z
+{
   return Vec3{ x: a.x - b.x; y: a.y - b.y; z: a.z - b.z; };
 }
 
 /// Multiply two 3D vectors component-wise (Hadamard product). O(1).
-pub fn vec3_mul(a: Vec3, b: Vec3) -> Vec3 {
+pub fn vec3_mul(a: Vec3, b: Vec3) -> Vec3
+  ensures: result.x == a.x * b.x && result.y == a.y * b.y && result.z == a.z * b.z
+{
   return Vec3{ x: a.x * b.x; y: a.y * b.y; z: a.z * b.z; };
 }
 
 /// Divide a by b component-wise. O(1).
-pub fn vec3_div(a: Vec3, b: Vec3) -> Vec3 {
+pub fn vec3_div(a: Vec3, b: Vec3) -> Vec3
+  ensures: result.x == a.x / b.x && result.y == a.y / b.y && result.z == a.z / b.z
+{
   return Vec3{ x: a.x / b.x; y: a.y / b.y; z: a.z / b.z; };
 }
 
 /// Add scalar s to each component of v. O(1).
-pub fn vec3_add_scalar(v: Vec3, s: Float64) -> Vec3 {
+pub fn vec3_add_scalar(v: Vec3, s: Float64) -> Vec3
+  ensures: result.x == v.x + s && result.y == v.y + s && result.z == v.z + s
+{
   return Vec3{ x: v.x + s; y: v.y + s; z: v.z + s; };
 }
 
 /// Subtract scalar s from each component of v. O(1).
-pub fn vec3_sub_scalar(v: Vec3, s: Float64) -> Vec3 {
+pub fn vec3_sub_scalar(v: Vec3, s: Float64) -> Vec3
+  ensures: result.x == v.x - s && result.y == v.y - s && result.z == v.z - s
+{
   return Vec3{ x: v.x - s; y: v.y - s; z: v.z - s; };
 }
 
 /// Multiply each component of v by scalar s. O(1).
-pub fn vec3_mul_scalar(v: Vec3, s: Float64) -> Vec3 {
+pub fn vec3_mul_scalar(v: Vec3, s: Float64) -> Vec3
+  ensures: result.x == v.x * s && result.y == v.y * s && result.z == v.z * s
+{
   return Vec3{ x: v.x * s; y: v.y * s; z: v.z * s; };
 }
 
 /// Divide each component of v by scalar s. O(1).
-pub fn vec3_div_scalar(v: Vec3, s: Float64) -> Vec3 {
+pub fn vec3_div_scalar(v: Vec3, s: Float64) -> Vec3
+  ensures: result.x == v.x / s && result.y == v.y / s && result.z == v.z / s
+{
   return Vec3{ x: v.x / s; y: v.y / s; z: v.z / s; };
 }
 
 /// Dot product of two 3D vectors. O(1).
-pub fn vec3_dot(a: Vec3, b: Vec3) -> Float64 {
+pub fn vec3_dot(a: Vec3, b: Vec3) -> Float64
+  ensures: result == a.x * b.x + a.y * b.y + a.z * b.z
+{
   return a.x * b.x + a.y * b.y + a.z * b.z;
 }
 
 /// 3D cross product: a x b (right-handed). O(1).
-pub fn vec3_cross(a: Vec3, b: Vec3) -> Vec3 {
+pub fn vec3_cross(a: Vec3, b: Vec3) -> Vec3
+  ensures: result.x == a.y * b.z - a.z * b.y && result.y == a.z * b.x - a.x * b.z && result.z == a.x * b.y - a.y * b.x
+{
   return Vec3{
     x: a.y * b.z - a.z * b.y;
     y: a.z * b.x - a.x * b.z;
@@ -211,7 +257,9 @@ pub fn vec3_cross(a: Vec3, b: Vec3) -> Vec3 {
 }
 
 /// Euclidean length (magnitude) of v. O(1).
-pub fn vec3_length(v: Vec3) -> Float64 {
+pub fn vec3_length(v: Vec3) -> Float64
+  ensures: result >= 0.0
+{
   return math.sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
 }
 
@@ -223,7 +271,9 @@ pub fn vec3_normalize(v: Vec3) -> Vec3 {
 }
 
 /// Euclidean distance between two 3D points. O(1).
-pub fn vec3_distance(a: Vec3, b: Vec3) -> Float64 {
+pub fn vec3_distance(a: Vec3, b: Vec3) -> Float64
+  ensures: result >= 0.0
+{
   return vec3_length(vec3_sub(a, b));
 }
 
@@ -587,7 +637,9 @@ pub fn ray_intersect_aabb(r: Ray, box: Aabb) -> Option[Float64] {
 // ============================================================================
 
 /// Negate a 2D vector (component-wise -v). O(1).
-pub fn vec2_neg(v: Vec2) -> Vec2 {
+pub fn vec2_neg(v: Vec2) -> Vec2
+  ensures: result.x == -v.x && result.y == -v.y
+{
   return Vec2{ x: -v.x; y: -v.y; };
 }
 
@@ -642,14 +694,18 @@ pub fn vec2_angle_between(a: Vec2, b: Vec2) -> Float64 {
 }
 
 /// Squared Euclidean distance between two 2D points (avoids sqrt). O(1).
-pub fn vec2_distance_squared(a: Vec2, b: Vec2) -> Float64 {
+pub fn vec2_distance_squared(a: Vec2, b: Vec2) -> Float64
+  ensures: result >= 0.0
+{
   var dx = a.x - b.x;
   var dy = a.y - b.y;
   return dx * dx + dy * dy;
 }
 
 /// Unclamped linear interpolation between a and b by t (t may leave [0,1]). O(1).
-pub fn vec2_lerp_unclamped(a: Vec2, b: Vec2, t: Float64) -> Vec2 {
+pub fn vec2_lerp_unclamped(a: Vec2, b: Vec2, t: Float64) -> Vec2
+  ensures: result.x == a.x + (b.x - a.x) * t && result.y == a.y + (b.y - a.y) * t
+{
   return Vec2{
     x: a.x + (b.x - a.x) * t;
     y: a.y + (b.y - a.y) * t;
@@ -706,19 +762,25 @@ pub fn vec2_approx_eq(a: Vec2, b: Vec2, epsilon: Float64) -> Bool {
 }
 
 /// Smallest component of a 2D vector. O(1).
-pub fn vec2_min_component(v: Vec2) -> Float64 {
+pub fn vec2_min_component(v: Vec2) -> Float64
+  ensures: result <= v.x && result <= v.y
+{
   if v.x < v.y { return v.x; }
   return v.y;
 }
 
 /// Largest component of a 2D vector. O(1).
-pub fn vec2_max_component(v: Vec2) -> Float64 {
+pub fn vec2_max_component(v: Vec2) -> Float64
+  ensures: result >= v.x && result >= v.y
+{
   if v.x > v.y { return v.x; }
   return v.y;
 }
 
 /// Component-wise absolute value of a 2D vector. O(1).
-pub fn vec2_abs(v: Vec2) -> Vec2 {
+pub fn vec2_abs(v: Vec2) -> Vec2
+  ensures: result.x >= 0.0 && result.y >= 0.0
+{
   return Vec2{
     x: math.abs_float(v.x);
     y: math.abs_float(v.y);
@@ -739,7 +801,9 @@ pub fn vec2_clamp_length(v: Vec2, max_len: Float64) -> Vec2 {
 // ============================================================================
 
 /// Negate a 3D vector (component-wise -v). O(1).
-pub fn vec3_neg(v: Vec3) -> Vec3 {
+pub fn vec3_neg(v: Vec3) -> Vec3
+  ensures: result.x == -v.x && result.y == -v.y && result.z == -v.z
+{
   return Vec3{ x: -v.x; y: -v.y; z: -v.z; };
 }
 
@@ -794,7 +858,9 @@ pub fn vec3_angle_between(a: Vec3, b: Vec3) -> Float64 {
 }
 
 /// Squared Euclidean distance between two 3D points (avoids sqrt). O(1).
-pub fn vec3_distance_squared(a: Vec3, b: Vec3) -> Float64 {
+pub fn vec3_distance_squared(a: Vec3, b: Vec3) -> Float64
+  ensures: result >= 0.0
+{
   var dx = a.x - b.x;
   var dy = a.y - b.y;
   var dz = a.z - b.z;
@@ -803,7 +869,9 @@ pub fn vec3_distance_squared(a: Vec3, b: Vec3) -> Float64 {
 
 /// Unclamped linear interpolation between a and b by t (t may leave [0,1]). O(1).
 /// Contrast with vec3_lerp which clamps t into [0,1].
-pub fn vec3_lerp_unclamped(a: Vec3, b: Vec3, t: Float64) -> Vec3 {
+pub fn vec3_lerp_unclamped(a: Vec3, b: Vec3, t: Float64) -> Vec3
+  ensures: result.x == a.x + (b.x - a.x) * t && result.y == a.y + (b.y - a.y) * t && result.z == a.z + (b.z - a.z) * t
+{
   return Vec3{
     x: a.x + (b.x - a.x) * t;
     y: a.y + (b.y - a.y) * t;
@@ -852,21 +920,27 @@ pub fn vec3_approx_eq(a: Vec3, b: Vec3, epsilon: Float64) -> Bool {
 }
 
 /// Smallest component of a 3D vector. O(1).
-pub fn vec3_min_component(v: Vec3) -> Float64 {
+pub fn vec3_min_component(v: Vec3) -> Float64
+  ensures: result <= v.x && result <= v.y && result <= v.z
+{
   if v.x < v.y && v.x < v.z { return v.x; }
   if v.y < v.z { return v.y; }
   return v.z;
 }
 
 /// Largest component of a 3D vector. O(1).
-pub fn vec3_max_component(v: Vec3) -> Float64 {
+pub fn vec3_max_component(v: Vec3) -> Float64
+  ensures: result >= v.x && result >= v.y && result >= v.z
+{
   if v.x > v.y && v.x > v.z { return v.x; }
   if v.y > v.z { return v.y; }
   return v.z;
 }
 
 /// Component-wise absolute value of a 3D vector. O(1).
-pub fn vec3_abs(v: Vec3) -> Vec3 {
+pub fn vec3_abs(v: Vec3) -> Vec3
+  ensures: result.x >= 0.0 && result.y >= 0.0 && result.z >= 0.0
+{
   return Vec3{
     x: math.abs_float(v.x);
     y: math.abs_float(v.y);
@@ -888,22 +962,30 @@ pub fn vec3_clamp_length(v: Vec3, max_len: Float64) -> Vec3 {
 // ============================================================================
 
 /// Multiply two 4D vectors component-wise (Hadamard product). O(1).
-pub fn vec4_mul_component(a: Vec4, b: Vec4) -> Vec4 {
+pub fn vec4_mul_component(a: Vec4, b: Vec4) -> Vec4
+  ensures: result.x == a.x * b.x && result.y == a.y * b.y && result.z == a.z * b.z && result.w == a.w * b.w
+{
   return Vec4{ x: a.x * b.x; y: a.y * b.y; z: a.z * b.z; w: a.w * b.w; };
 }
 
 /// Divide a by b component-wise. O(1).
-pub fn vec4_div_component(a: Vec4, b: Vec4) -> Vec4 {
+pub fn vec4_div_component(a: Vec4, b: Vec4) -> Vec4
+  ensures: result.x == a.x / b.x && result.y == a.y / b.y && result.z == a.z / b.z && result.w == a.w / b.w
+{
   return Vec4{ x: a.x / b.x; y: a.y / b.y; z: a.z / b.z; w: a.w / b.w; };
 }
 
 /// Multiply each component of v by scalar s. O(1).
-pub fn vec4_scale(v: Vec4, s: Float64) -> Vec4 {
+pub fn vec4_scale(v: Vec4, s: Float64) -> Vec4
+  ensures: result.x == v.x * s && result.y == v.y * s && result.z == v.z * s && result.w == v.w * s
+{
   return Vec4{ x: v.x * s; y: v.y * s; z: v.z * s; w: v.w * s; };
 }
 
 /// Negate a 4D vector (component-wise -v). O(1).
-pub fn vec4_neg(v: Vec4) -> Vec4 {
+pub fn vec4_neg(v: Vec4) -> Vec4
+  ensures: result.x == -v.x && result.y == -v.y && result.z == -v.z && result.w == -v.w
+{
   return Vec4{ x: -v.x; y: -v.y; z: -v.z; w: -v.w; };
 }
 
@@ -916,7 +998,9 @@ pub fn vec4_approx_eq(a: Vec4, b: Vec4, epsilon: Float64) -> Bool {
 }
 
 /// Smallest component of a 4D vector. O(1).
-pub fn vec4_min_component(v: Vec4) -> Float64 {
+pub fn vec4_min_component(v: Vec4) -> Float64
+  ensures: result <= v.x && result <= v.y && result <= v.z && result <= v.w
+{
   var m = v.x;
   if v.y < m { m = v.y; }
   if v.z < m { m = v.z; }
@@ -925,7 +1009,9 @@ pub fn vec4_min_component(v: Vec4) -> Float64 {
 }
 
 /// Largest component of a 4D vector. O(1).
-pub fn vec4_max_component(v: Vec4) -> Float64 {
+pub fn vec4_max_component(v: Vec4) -> Float64
+  ensures: result >= v.x && result >= v.y && result >= v.z && result >= v.w
+{
   var m = v.x;
   if v.y > m { m = v.y; }
   if v.z > m { m = v.z; }
@@ -934,7 +1020,9 @@ pub fn vec4_max_component(v: Vec4) -> Float64 {
 }
 
 /// Component-wise absolute value of a 4D vector. O(1).
-pub fn vec4_abs(v: Vec4) -> Vec4 {
+pub fn vec4_abs(v: Vec4) -> Vec4
+  ensures: result.x >= 0.0 && result.y >= 0.0 && result.z >= 0.0 && result.w >= 0.0
+{
   return Vec4{
     x: math.abs_float(v.x);
     y: math.abs_float(v.y);
