@@ -44,7 +44,9 @@ fn strip_nl(s: Str) -> Str {
 /// Read a line from standard input.
 /// Returns: Ok(line without the trailing newline), Err on EOF or failure.
 /// Complexity: O(n) where n is the line length.
-pub fn console_read_line() -> Result[Str, Str> {
+pub fn console_read_line() -> Result[Str, Str>
+  ensures: result is Err => result.value.len() > 0
+{
   var buf: [4096]UInt8;
   let ptr: *UInt8;
   unsafe {
@@ -143,7 +145,9 @@ pub fn console_get_size() -> (Int, Int) {
 /// Whether standard output is an interactive terminal.
 /// Returns: false (the runtime does not expose isatty).
 /// Complexity: O(1).
-pub fn console_is_tty() -> Bool {
+pub fn console_is_tty() -> Bool
+  ensures: result == false
+{
   return false;
 }
 
@@ -151,7 +155,9 @@ pub fn console_is_tty() -> Bool {
 /// Params: prompt - the prompt to display.
 /// Returns: Ok(line) without echo, Err on EOF.
 /// Complexity: O(n) where n is the line length.
-pub fn console_password(prompt: Str) -> Result[Str, Str> {
+pub fn console_password(prompt: Str) -> Result[Str, Str]
+  ensures: result is Err => result.value.len() > 0
+{
   unsafe {
     printf("%s", prompt.c_str());
   }
@@ -162,7 +168,9 @@ pub fn console_password(prompt: Str) -> Result[Str, Str> {
 /// Read all remaining standard input.
 /// Returns: Ok(all bytes until EOF), Err on a read failure.
 /// Complexity: O(N) where N is the total input size.
-pub fn console_read_until_eof() -> Result[Str, Str> {
+pub fn console_read_until_eof() -> Result[Str, Str]
+  ensures: result is Ok
+{
   var out: Vec[UInt8] = Vec[UInt8].new();
   var done = false;
   while !done {

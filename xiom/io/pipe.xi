@@ -37,7 +37,10 @@ pub fn pipe_create() -> (Int, Int) {
 /// Params: fd - the pipe fd; buf - the destination buffer.
 /// Returns: Ok(bytes read), Err on failure.
 /// Complexity: O(n) syscall.
-pub fn pipe_read(fd: Int, buf: &mut Vec[UInt8]) -> Result[Int, Str> {
+pub fn pipe_read(fd: Int, buf: &mut Vec[UInt8]) -> Result[Int, Str]
+  ensures: result is Ok => result.value >= 0
+  ensures: result is Err => result.value.len() > 0
+{
   var one: [256]UInt8;
   let n = unsafe { xiom_read(fd as Int32, &one[0], 256 as UInt) };
   if n < 0 {
@@ -55,7 +58,10 @@ pub fn pipe_read(fd: Int, buf: &mut Vec[UInt8]) -> Result[Int, Str> {
 /// Params: fd - the pipe fd; data - the bytes.
 /// Returns: Ok(bytes written), Err on failure.
 /// Complexity: O(n) syscall.
-pub fn pipe_write(fd: Int, data: &Vec[UInt8]) -> Result[Int, Str> {
+pub fn pipe_write(fd: Int, data: &Vec[UInt8]) -> Result[Int, Str]
+  ensures: result is Ok => result.value >= 0
+  ensures: result is Err => result.value.len() > 0
+{
   var total: Int = 0;
   var i: Int = 0;
   while i < data.len() {
@@ -96,7 +102,9 @@ pub fn pipe_is_open(fd: Int) -> Bool {
 /// Params: fd - the pipe fd.
 /// Returns: Ok(line without the trailing newline), Err on failure.
 /// Complexity: O(n) where n is the line length.
-pub fn pipe_read_line(fd: Int) -> Result[Str, Str> {
+pub fn pipe_read_line(fd: Int) -> Result[Str, Str]
+  ensures: result is Ok
+{
   var out: Vec[UInt8] = Vec[UInt8].new();
   var done = false;
   while !done {
@@ -120,7 +128,9 @@ pub fn pipe_read_line(fd: Int) -> Result[Str, Str> {
 /// Params: fd - the pipe fd; s - the line.
 /// Returns: Ok(()) on success, Err on a short or failed write.
 /// Complexity: O(n) where n is the line length.
-pub fn pipe_write_line(fd: Int, s: Str) -> Result[Unit, Str> {
+pub fn pipe_write_line(fd: Int, s: Str) -> Result[Unit, Str]
+  ensures: result is Err => result.value.len() > 0
+{
   var i: Int = 0;
   while i < s.len() {
     let b = s.byte_at(i);
@@ -152,8 +162,9 @@ pub fn pipe_available(fd: Int) -> Int
 /// Params: fd - the pipe fd; ms - the timeout in milliseconds.
 /// Returns: Ok(bytes read) even if the timeout elapsed, Err on failure.
 /// Complexity: O(ms) polls.
-pub fn pipe_read_timeout(fd: Int, ms: Int) -> Result[Int, Str>
+pub fn pipe_read_timeout(fd: Int, ms: Int) -> Result[Int, Str]
   ensures: result is Ok => result.value >= 0
+  ensures: result is Err => result.value.len() > 0
 {
   var one: [1]UInt8;
   let n = unsafe { xiom_read(fd as Int32, &one[0], 1 as UInt) };
@@ -169,6 +180,7 @@ pub fn pipe_read_timeout(fd: Int, ms: Int) -> Result[Int, Str>
 /// Complexity: O(ms) polls.
 pub fn pipe_write_timeout(fd: Int, data: &Vec[UInt8], ms: Int) -> Result[Int, Str>
   ensures: result is Ok => result.value >= 0
+  ensures: result is Err => result.value.len() > 0
 {
   var budget = ms;
   if budget < 0 {

@@ -33,7 +33,9 @@ fn err_msg(action: Str, path: Str) -> Str {
 /// Params: path - the file path.
 /// Returns: Ok(file bytes), Err on failure.
 /// Complexity: O(n) where n is the file size.
-pub fn fs_read(path: Str) -> Result[Vec[UInt8], Str> {
+pub fn fs_read(path: Str) -> Result[Vec[UInt8], Str>
+  ensures: result is Err => result.value.len() > 0
+{
   let r = io.read_file_bytes(path);
   match r {
     Ok(b) => Ok(b);
@@ -45,7 +47,9 @@ pub fn fs_read(path: Str) -> Result[Vec[UInt8], Str> {
 /// Params: path - the file path; data - the bytes to write.
 /// Returns: Ok(()) on success, Err on failure.
 /// Complexity: O(n) where n is the data length.
-pub fn fs_write(path: Str, data: &Vec[UInt8]) -> Result[Unit, Str> {
+pub fn fs_write(path: Str, data: &Vec[UInt8]) -> Result[Unit, Str>
+  ensures: result is Err => result.value.len() > 0
+{
   let file: *UInt8;
   unsafe {
     file = fopen(path.c_str(), "wb");
@@ -73,7 +77,9 @@ pub fn fs_write(path: Str, data: &Vec[UInt8]) -> Result[Unit, Str> {
 /// Params: path - the file path; data - the bytes to append.
 /// Returns: Ok(()) on success, Err on failure.
 /// Complexity: O(n) where n is the data length.
-pub fn fs_append(path: Str, data: &Vec[UInt8]) -> Result[Unit, Str> {
+pub fn fs_append(path: Str, data: &Vec[UInt8]) -> Result[Unit, Str>
+  ensures: result is Err => result.value.len() > 0
+{
   let file: *UInt8;
   unsafe {
     file = fopen(path.c_str(), "ab");
@@ -101,7 +107,9 @@ pub fn fs_append(path: Str, data: &Vec[UInt8]) -> Result[Unit, Str> {
 /// Params: path - the file path.
 /// Returns: Ok(file content), Err on failure.
 /// Complexity: O(n) where n is the file size.
-pub fn fs_read_text(path: Str) -> Result[Str, Str> {
+pub fn fs_read_text(path: Str) -> Result[Str, Str>
+  ensures: result is Err => result.value.len() > 0
+{
   let r = io.read_file(path);
   match r {
     Ok(s) => Ok(s);
@@ -113,7 +121,9 @@ pub fn fs_read_text(path: Str) -> Result[Str, Str> {
 /// Params: path - the file path; s - the content.
 /// Returns: Ok(()) on success, Err on failure.
 /// Complexity: O(n) where n is the content length.
-pub fn fs_write_text(path: Str, s: Str) -> Result[Unit, Str> {
+pub fn fs_write_text(path: Str, s: Str) -> Result[Unit, Str>
+  ensures: result is Err => result.value.len() > 0
+{
   let r = io.write_file(path, s);
   match r {
     Ok(()) => Ok(());
@@ -125,7 +135,9 @@ pub fn fs_write_text(path: Str, s: Str) -> Result[Unit, Str> {
 /// Params: src - the source path; dst - the destination path.
 /// Returns: Ok(()) on success, Err on failure.
 /// Complexity: O(n) where n is the source size.
-pub fn fs_copy(src: Str, dst: Str) -> Result[Unit, Str> {
+pub fn fs_copy(src: Str, dst: Str) -> Result[Unit, Str>
+  ensures: result is Err => result.value.len() > 0
+{
   // Text-mode copy via the parent read_file/write_file helpers (both are
   // self-contained; io.copy_file's internal `?` miscompiles, and raw byte
   // streaming trips the loop stack protector).
@@ -147,7 +159,9 @@ pub fn fs_copy(src: Str, dst: Str) -> Result[Unit, Str> {
 /// Returns: Ok(()) on success, Err on failure.
 /// Complexity: O(1) syscall (atomic rename via the runtime shim; an existing
 /// dst is replaced, matching POSIX rename semantics on both platforms).
-pub fn fs_move(src: Str, dst: Str) -> Result[Unit, Str> {
+pub fn fs_move(src: Str, dst: Str) -> Result[Unit, Str>
+  ensures: result is Err => result.value.len() > 0
+{
   let r = io.rename(src, dst);
   match r {
     Ok(()) => Ok(()),
@@ -193,6 +207,7 @@ pub fn fs_is_dir(path: Str) -> Bool
 /// Complexity: O(1).
 pub fn fs_size(path: Str) -> Result[Int, Str>
   ensures: result is Ok => result.value >= 0
+  ensures: result is Err => result.value.len() > 0
 {
   let r = io.file_size(path);
   match r {
@@ -205,7 +220,9 @@ pub fn fs_size(path: Str) -> Result[Int, Str>
 /// Params: path - the file path.
 /// Returns: Ok(mtime in seconds since the epoch), Err on failure.
 /// Complexity: O(1).
-pub fn fs_mtime(path: Str) -> Result[Int, Str> {
+pub fn fs_mtime(path: Str) -> Result[Int, Str>
+  ensures: result is Err => result.value.len() > 0
+{
   let r = io.file_modified_time(path);
   match r {
     Some(t) => Ok(t);
@@ -217,7 +234,11 @@ pub fn fs_mtime(path: Str) -> Result[Int, Str> {
 /// Params: path - the file path; offset - the start offset; len - the count.
 /// Returns: Ok(bytes read; fewer only at EOF), Err on failure.
 /// Complexity: O(len).
-pub fn fs_read_range(path: Str, offset: Int, len: Int) -> Result[Vec[UInt8], Str> {
+pub fn fs_read_range(path: Str, offset: Int, len: Int) -> Result[Vec[UInt8], Str>
+  ensures: result is Ok && len >= 0 => result.value.len() <= len
+  ensures: result is Ok && len <= 0 => result.value.len() == 0
+  ensures: result is Err => result.value.len() > 0
+{
   var count = len;
   if count < 0 {
     count = 0;
@@ -270,6 +291,7 @@ pub fn fs_read_range(path: Str, offset: Int, len: Int) -> Result[Vec[UInt8], Str
 /// Complexity: O(n) where n is the data length.
 pub fn fs_write_range(path: Str, offset: Int, data: &Vec[UInt8]) -> Result[Int, Str>
   ensures: result is Ok => result.value >= 0
+  ensures: result is Ok => result.value <= data.len()
 {
   if offset < 0 {
     return Err(err_msg("write range", path));
@@ -306,7 +328,9 @@ pub fn fs_write_range(path: Str, offset: Int, data: &Vec[UInt8]) -> Result[Int, 
 /// Params: path - the file path.
 /// Returns: Ok(()) on success, Err on failure.
 /// Complexity: O(1).
-pub fn fs_touch(path: Str) -> Result[Unit, Str> {
+pub fn fs_touch(path: Str) -> Result[Unit, Str>
+  ensures: result is Err => result.value.len() > 0
+{
   let file: *UInt8;
   unsafe {
     file = fopen(path.c_str(), "ab");
