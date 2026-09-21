@@ -160,6 +160,15 @@ was rejected by tag rules -- owner action needed).
   121/123** -- the same two findings, no new failures from the struct class.
   Remaining untested classes: 44 struct-param fns without a usable ctor,
   45 fn-param fns, 83 generic fns.
+- `-IncludeFns` extension + parser fix: parameter lists now use balanced
+  parens and top-level comma splitting (the old flat regex truncated
+  `fn(...)` types; the "45 fn-param" profile number was inflation). Simple
+  `fn(...)` params (scalar-or-empty inner, scalar/Unit return) get a local
+  helper function in the probe; +4 calls. Inner params that are not scalars
+  and generic fns remain untested. Combined final tranche: **123 modules /
+  738 calls, 121/123** -- the same two findings only. Re-verified the scalar
+  (47/179), refs (112/602) and struct (123/734) tranches are unchanged
+  after the parser fix.
 
 **R49 baseline state (2026-09-19, local main then `3f839e1`)**
 - ALL GATES GREEN on the final tree: `check_modules` **509/509** (262.5s);

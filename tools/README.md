@@ -135,7 +135,12 @@ non-struct params (the probe emits `var s = module.ctor(...)` and lets
 inference type the local). State 2026-09-21: the combined
 `-MinParams 1 -MaxParams 4 -IncludeRefs -IncludeStructs` tranche is 123
 modules / 734 calls, compile-only 121/123 -- the same two findings, no new
-failures from the struct class.
+failures from the struct class. `-IncludeFns` adds `fn(...)` params with
+scalar-or-empty inner params and a scalar or Unit return (the probe emits a
+matching local helper and passes its name; +4 calls); parameter lists are now
+split on top-level commas and scanned with balanced parens, so
+`fn(Int) -> Bool` and bracketed commas parse whole. Combined final tranche:
+123 modules / 738 calls, 121/123 (the same two findings).
 
 The zero-arg tranche is locked by `tools/probes/p_never_called_zeroarg.xi`;
 the single-param tranche is locked by `tools/probes/p_sweep_single_param.xi`

@@ -61,9 +61,11 @@ flip ON, freeze sweep on compiler tag v0.60.0 = 947/947 + module check
   p_result_tuple_vec_loop.xi`, `p_ref_tuple_mangle.xi`); the combined
   `-IncludeStructs` tranche covers struct-typed params through same-module
   public constructors (123 modules / 734 calls, 121/123 clean -- the same two
-  findings). Remaining classes: struct params without a usable constructor
-  (44 fns), fn-typed params (45), generic fns (83), plus the un-targeted
-  remainder.
+  findings). The final `-IncludeFns` addition covers simple `fn(...)` params
+  (scalar-or-empty inner params, scalar/Unit return; +4 calls). Remaining
+  classes: struct params without a usable constructor (44 fns), fn-typed
+  params with non-scalar/other shapes, generic fns (83), plus the
+  un-targeted remainder.
 - **Single-param untested surface**: RESOLVED 2026-09-21 on compiler main
   `7837b194` (R54: large fixed arrays emit memset + address access instead
   of the crashing aggregate loads). The raw call set compiles+links again and

@@ -14,7 +14,11 @@
 # `&T`/`&mut T` (scalar T) and `Vec[E]` by value/reference; -IncludeStructs
 # adds struct-typed params when the declaring module has a public constructor
 # (exact return type, non-struct params) -- the probe emits
-# `var s = module.ctor(...)` and passes it by value/reference.
+# `var s = module.ctor(...)` and passes it by value/reference; -IncludeFns
+# adds `fn(...)` params with scalar-or-empty inner params and a scalar or
+# Unit return -- the probe emits a matching local helper function and passes
+# its name. Parameter lists are split on top-level commas and scanned with
+# balanced parens, so `fn(Int) -> Bool` and bracketed commas parse whole.
 #
 # Output: probes + a report under -OutDir (default: system temp). Nothing is
 # written inside the repo unless -OutDir points there.
@@ -28,6 +32,7 @@ param(
   [switch]$EmitOnly,
   [switch]$IncludeRefs,
   [switch]$IncludeStructs,
+  [switch]$IncludeFns,
   [int]$OnlyCalls = 0,
   [int]$Limit = 0,
   [int]$Timeout = 300
@@ -60,7 +65,23 @@ $scalar = @{
 # reference, and by-value vectors are constructed with `Vec[E].new()`.
 # Anything else (structs, Option/Result/Map/Set, fn types, arrays, self,
 # explicit type args) still skips the function.
-function Get-ParamSpec([string]$text, [bool]$allowRefs, [bool]$allowStructs) {
+# Splits a parameter list on top-level commas only (brackets/parens/quotes
+# aware at one level of nesting), so `Map[Str, Int]` and `fn(Int) -> Bool`
+# stay single params.
+function Split-TopLevel([string]$text) {
+  $parts = @(); $depth = 0
+  $cur = New-Object System.Text.StringBuilder
+  foreach ($ch in $text.ToCharArray()) {
+    if ($ch -eq '(' -or $ch -eq '[' -or $ch -eq '{') { $depth++ }
+    elseif ($ch -eq ')' -or $ch -eq ']' -or $ch -eq '}') { $depth-- }
+    if ($ch -eq ',' -and $depth -eq 0) { $parts += $cur.ToString().Trim(); [void]$cur.Clear(); continue }
+    [void]$cur.Append($ch)
+  }
+  if ($cur.Length -gt 0) { $parts += $cur.ToString().Trim() }
+  return $parts
+}
+
+function Get-ParamSpec([string]$text, [bool]$allowRefs, [bool]$allowStructs, [bool]$allowFns) {
   $t = $text.Trim()
   if ($t -match '^self\b') { return $null }
   $m = [regex]::Match($t, '^[A-Za-z_][A-Za-z0-9_]*\s*:\s*(?:(&)\s*(mut\s+)?)?(.+)$')
@@ -70,6 +91,24 @@ function Get-ParamSpec([string]$text, [bool]$allowRefs, [bool]$allowStructs) {
   $base = $m.Groups[3].Value.Trim()
   if ($isRef -and -not $allowRefs) { return $null }
   $prefix = if ($isMut) { 'refmut' } else { 'ref' }
+  # fn-typed params: fn() / fn(T1, T2, ..) [-> R] with scalar-or-empty inner
+  # params and a scalar-or-Unit return. The probe emits a matching local
+  # helper function and passes its name.
+  if ($allowFns -and $base -match '^fn\(([^)]*)\)\s*(?:->\s*(.+))?$') {
+    $inner = $Matches[1].Trim(); $fret = ''
+    if ($Matches[2]) { $fret = $Matches[2].Trim() }
+    $innerOk = $true
+    if ($inner -ne '') {
+      foreach ($ip in @(Split-TopLevel $inner)) {
+        if ($ip -notmatch '^[A-Za-z_][A-Za-z0-9_]*\s*:\s*(.+)$') { $innerOk = $false; break }
+        if (-not $scalar.ContainsKey($Matches[1].Trim())) { $innerOk = $false; break }
+      }
+    }
+    if ($innerOk -and ($fret -eq '' -or $scalar.ContainsKey($fret))) {
+      return @{ Kind = ($prefix + '_fn'); Base = $base; FnInner = $inner; FnRet = $fret }
+    }
+    return $null
+  }
   if (-not $isRef) {
     if ($scalar.ContainsKey($base)) { return @{ Kind = 'scalar'; Base = $base } }
     if ($allowRefs -and $base -match '^Vec\[([A-Za-z_][A-Za-z0-9_]*)\]$') { return @{ Kind = 'vec'; Base = $Matches[1] } }
@@ -93,17 +132,28 @@ foreach ($f in $files) {
   $src = [System.IO.File]::ReadAllText($f.FullName)
   $mod = "?"
   if ($src -match '(?m)^\s*module\s+([A-Za-z_][\w.]*)') { $mod = $Matches[1] }
-  foreach ($m in [regex]::Matches($src, '(?m)^\s*pub\s+fn\s+([A-Za-z_][A-Za-z0-9_]*)(\s*\[[^\]]*\])?\s*\(([^)]*)\)(?:\s*->\s*([^\r\n{]+))?')) {
+  foreach ($m in [regex]::Matches($src, '(?m)^\s*pub\s+fn\s+([A-Za-z_][A-Za-z0-9_]*)(\s*\[[^\]]*\])?\s*\(')) {
     $name = $m.Groups[1].Value
     if ($m.Groups[2].Value -ne "") { continue }  # generic fns need explicit type args
-    $rawParams = $m.Groups[3].Value.Trim()
+    # Balanced-paren scan for the parameter list: types like fn(Int) -> Bool
+    # contain a ')' that a flat [^)]* capture would truncate.
+    $open = $m.Index + $m.Length - 1
+    $depth = 0; $close = -1
+    for ($ci = $open; $ci -lt $src.Length; $ci++) {
+      $c = $src[$ci]
+      if ($c -eq '(') { $depth++ }
+      elseif ($c -eq ')') { $depth--; if ($depth -eq 0) { $close = $ci; break } }
+    }
+    if ($close -lt 0) { continue }
+    $rawParams = $src.Substring($open + 1, $close - $open - 1).Trim()
     if ($rawParams -eq "") { continue }
     $ret = ""
-    if ($m.Groups[4].Success) { $ret = $m.Groups[4].Value.Trim() }
-    $parts = $rawParams -split ','
+    $rest = $src.Substring($close + 1)
+    if ($rest -match '^\s*->\s*([^\r\n{]+)') { $ret = $Matches[1].Trim() }
+    $parts = @(Split-TopLevel $rawParams)
     $specs = @(); $ok = $true
     foreach ($p in $parts) {
-      $s = Get-ParamSpec $p ([bool]$IncludeRefs) ([bool]$IncludeStructs)
+      $s = Get-ParamSpec $p ([bool]$IncludeRefs) ([bool]$IncludeStructs) ([bool]$IncludeFns)
       if ($null -eq $s) { $ok = $false; break }
       $specs += $s
     }
@@ -119,7 +169,7 @@ foreach ($f in $files) {
 $ctorsByModule = @{}
 foreach ($d in $allPub) {
   if (-not $d.Ret -or $d.Ret -notmatch '^[A-Za-z_][A-Za-z0-9_]*$') { continue }
-  if (($d.Specs | Where-Object { $_.Kind -like '*struct' }).Count -gt 0) { continue }
+  if (($d.Specs | Where-Object { $_.Kind -like '*struct' -or $_.Kind -like '*_fn' }).Count -gt 0) { continue }
   if (-not $ctorsByModule.ContainsKey($d.Module)) { $ctorsByModule[$d.Module] = @{} }
   $perMod = $ctorsByModule[$d.Module]
   if (-not $perMod.ContainsKey($d.Ret)) { $perMod[$d.Ret] = @() }
@@ -153,6 +203,7 @@ foreach ($g in $byModule) {
   $safe = ($g.Name -replace '[^A-Za-z0-9_]', '_')
   $probe = Join-Path $OutDir ("gcp_" + $safe + ".xi")
   $lines = @("module gcp_$safe", "use $($g.Name);", "", "fn main() -> Int {")
+  $helperLines = @()
   $callIdx = 0
   foreach ($d in $g.Group) {
     $args = @(); $k = 0
@@ -167,6 +218,26 @@ foreach ($g in $byModule) {
       elseif ($s.Kind -eq 'ref_vec' -or $s.Kind -eq 'refmut_vec') {
         $lines += ("  var " + $ln + ": Vec[" + $s.Base + "] = Vec[" + $s.Base + "].new();")
         if ($s.Kind -eq 'refmut_vec') { $args += ("&mut " + $ln) } else { $args += ("&" + $ln) }
+      }
+      elseif ($s.Kind -like '*_fn') {
+        $hname = "gp_cb" + $callIdx + "_" + $k
+        $hp = @()
+        if ($s.FnInner -ne '') {
+          $pi = 0
+          foreach ($ip in @(Split-TopLevel $s.FnInner)) {
+            if ($ip -match '^[A-Za-z_][A-Za-z0-9_]*\s*:\s*(.+)$') {
+              $hp += ("p" + $pi + ": " + $Matches[1].Trim())
+            }
+            $pi++
+          }
+        }
+        $sig = "fn " + $hname + "(" + ($hp -join ", ") + ")"
+        if ($s.FnRet -ne '') {
+          $helperLines += ($sig + " -> " + $s.FnRet + " { return " + $scalar[$s.FnRet] + "; }")
+        } else {
+          $helperLines += ($sig + " { }")
+        }
+        $args += $hname
       }
       elseif ($s.Kind -like '*struct') {
         $ctor = $ctorsByModule[$d.Module][$s.Base][0]
@@ -197,6 +268,7 @@ foreach ($g in $byModule) {
     $total++
   }
   $lines += "  return 0;"; $lines += "}"
+  if ($helperLines.Count -gt 0) { $lines += ""; $lines += $helperLines }
   Set-Content -LiteralPath $probe -Value ($lines -join "`n") -Encoding ASCII
   if ($EmitOnly) { $report += "EMITTED $($g.Name) calls=$($g.Group.Count)"; continue }
   $checkOut = & $Compiler --check $probe 2>&1 | Out-String
