@@ -128,6 +128,31 @@ was rejected by tag rules -- owner action needed).
 - Queue below: items 1-3 and 5 are DONE; only item 4 (TLS/tzdata/registry)
   remains, last as always.
 
+**SESSION 2026-09-21 PART 4 (untested-surface extension: `-IncludeRefs` tranche)**
+- `tools/gen_call_probes.ps1` gained `-IncludeRefs`: accepted parameters now
+  include `&T`/`&mut T` (scalar T) and `Vec[E]` by value or reference
+  (locals emitted for references; by-value vectors use `Vec[E].new()`).
+  Scalar behavior unchanged (re-ran the default scan: 47 modules / 179 calls).
+- New tranche on R53 (`-MinParams 1 -MaxParams 4 -IncludeRefs`): **112
+  modules / 602 calls, compile-only 110/112**. Both failures are OPEN
+  compiler findings, not stdlib link gaps:
+  `tools/known_failures/p_result_tuple_vec_loop.xi` -- a
+  `Result[(Vec[Int], Int), Str]` arm whose loop-local feeds the Vec stores
+  the Vec into a scalar-sized Result slot (`%tmp157` type mismatch); breaks
+  `net.tls_helper.cert_public_key_info` / `cert_is_self_signed` via
+  `asn1_read_oid`; and `tools/known_failures/p_ref_tuple_mangle.xi` -- a
+  reference type in a tuple mangles into the struct name
+  (`%struct.Tuple__&Vec__Int`, invalid LLVM identifier) plus the `unknown
+  type '&Vec'` warning; breaks the `crypto.sign` Ed25519/ECDSA/DSA family
+  already stubbed for this class. Relay these to the compiler lane.
+- Untested-surface scan refreshed: **1,113 of 6,103** never-referenced pub
+  fns (was 1,010 of 5,777 on 2026-09-17); covered classes now zero-arg +
+  scalar 1..4 + refs/Vec; remaining: struct params 193, fn params 45,
+  generics 83.
+- Docs: `tools/README.md` (switch + tranche state) and
+  `docs/STDLIB_BETA_LIMITATIONS.md` (single-param RESOLVED on R54, new scan
+  numbers) updated in this commit.
+
 **R49 baseline state (2026-09-19, local main then `3f839e1`)**
 - ALL GATES GREEN on the final tree: `check_modules` **509/509** (262.5s);
   corpus **949/949**, 0 compilefail, 0 runfail (**1525.7s**, `-RetryFailed`);

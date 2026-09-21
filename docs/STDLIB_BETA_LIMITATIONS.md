@@ -49,22 +49,25 @@ flip ON, freeze sweep on compiler tag v0.60.0 = 947/947 + module check
   across json/toml/csv/url plus http header totalness, with writer
   round-trip stability). The Stage-5 coverage-guided workspace (compiler
   lane, `fuzz/`) remains the deeper fuzzing home.
-- **Untested public surface**: a reference scan (2026-09-17) found **1010
-  of 5777** public functions are never referenced by any smoke or module.
-  The 72 zero-arg ones are now compiled+run by
-  `tools/probes/p_never_called_zeroarg.xi` (it surfaced the
-  `x25519_keypair` codegen break, fixed in compiler R43 `274184be`);
-  arg-taking functions still need generated call probes. More latent
-  codegen findings in this class are likely.
-- **Single-param untested surface (open compiler finding)**: the next sweep
-  tranche (139 single-`Int`/`Str`/`Bool` calls across 54 modules) hits a
-  codegen tuple-type mismatch (`Tuple__Int__Int` returned where
-  `Tuple__Int__Bool` is expected); most calls compile in isolation, so it
-  is an import-set interaction. Reproduction (expected to fail):
-  `tools/known_failures/p_sweep_single_param.xi`. Status 2026-09-17:
-  still failing on compiler main `483f283e` (R45) and now intermittently
-  HANGING the compiler (no output, >5 min, several attempts) -- compiler
-  triage in progress.
+- **Untested public surface**: updated scan 2026-09-21 -- **1,113 of 6,103**
+  pub functions are never referenced by any smoke or module. Covered by
+  generated probes (`tools/gen_call_probes.ps1`, compile-only by design):
+  75 zero-arg (`tools/probes/p_never_called_zeroarg.xi`, which surfaced the
+  `x25519_keypair` codegen break fixed in compiler R43), the scalar
+  single-param and multi-param tranches (239 + 179 calls, all clean on
+  R53/R54), and the `-IncludeRefs` tranche (112 modules / 602 calls covering
+  `&T`/`&mut T` scalar and `Vec[E]` parameters) -- 110/112 clean, the two
+  failures filed as compiler findings (`tools/known_failures/
+  p_result_tuple_vec_loop.xi`, `p_ref_tuple_mangle.xi`). Remaining classes:
+  struct-typed params (193), fn-typed params (45), generic fns (83), plus the
+  un-targeted remainder.
+- **Single-param untested surface**: RESOLVED 2026-09-21 on compiler main
+  `7837b194` (R54: large fixed arrays emit memset + address access instead
+  of the crashing aggregate loads). The raw call set compiles+links again and
+  is locked by `tools/probes/p_sweep_single_param.xi`, a runtime-guarded
+  compile lock (the calls sit behind an `XIOM_SWEEP_RUN` env guard); the raw
+  call set and crash header are archived in `tools/probes/evidence/`. See
+  `docs/VERIFICATION_BASELINE.md` R54 section.
 - **Same-leaf public type collisions (R44 class)**: 40 non-generic
   same-leaf pub-type groups exist stdlib-wide (e.g. `collect.Avl`,
   `geom.Vec2`, `regex.Regex`, `sync.AtomicInt`). One pair

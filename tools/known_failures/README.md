@@ -13,6 +13,26 @@ xiom --force -o out.exe tools/known_failures/<file>.xi
 
 ## Current
 
+- `p_result_tuple_vec_loop.xi` (2026-09-21, from the `-IncludeRefs` generated
+  tranche): OPEN. A `Result[(Vec[Int], Int), Str]` whose match arm builds a
+  Vec inside a while loop (loop-local accumulation) emits the Result payload
+  slot as two scalars, so the Vec is stored into a scalar-sized slot:
+  `%tmp334` defined with type `%struct.Vec ...` but expected
+  `%struct.Result = type { i64, i64, i64 }`. Breaks
+  `xiom.net.tls_helper.cert_public_key_info` and `cert_is_self_signed`
+  (through `asn1_read_oid`). Minimal shape verified on R53/R54; nested simple
+  loops and loop-free arms compile fine, so the trigger is the
+  loop-local-to-Vec dataflow inside a tuple-payload Result arm.
+
+- `p_ref_tuple_mangle.xi` (2026-09-21, from the `-IncludeRefs` generated
+  tranche): OPEN. A tuple built from a reference parameter mangles the
+  reference type into the struct NAME:
+  `%struct.Tuple__&Vec__Int = type { i64, i64 }` -- invalid LLVM identifier
+  (`expected '=' after name`), plus `warning: unknown type '&Vec' --
+  defaulting to i64`. Breaks the `xiom.crypto.sign` Ed25519/ECDSA/DSA family
+  (`ed25519_keypair_from_seed` returns `(seed, Vec[UInt8].new())`), whose
+  module header already stubs those functions for this class.
+
 - `q1_verify_all.xi` (moved from `tools/probes/`, 2026-09-21): OPEN --
   performance/watchdog, NOT a correctness failure. The 36-import T007
   verification graph compiles clean with `--timeout 0` (378,368-byte exe on

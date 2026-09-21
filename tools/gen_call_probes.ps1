@@ -21,6 +21,7 @@ param(
   [string]$OutDir = "",
   [switch]$KeepPassing,
   [switch]$EmitOnly,
+  [switch]$IncludeRefs,
   [int]$OnlyCalls = 0,
   [int]$Limit = 0,
   [int]$Timeout = 300
@@ -46,6 +47,33 @@ $scalar = @{
   "Bool" = "false"; "Char" = "65 as Char"; "Float32" = "0.0 as Float32"; "Float64" = "0.0"; "Str" = '""'
 }
 
+# Param-spec classifier. Without -IncludeRefs only by-value scalars pass (the
+# historical tranche definition). With -IncludeRefs the generator additionally
+# accepts `&T` / `&mut T` where T is a scalar, and `Vec[E]` / `&Vec[E]` /
+# `&mut Vec[E]` where E is an identifier: locals are emitted and passed by
+# reference, and by-value vectors are constructed with `Vec[E].new()`.
+# Anything else (structs, Option/Result/Map/Set, fn types, arrays, self,
+# explicit type args) still skips the function.
+function Get-ParamSpec([string]$text, [bool]$allowRefs) {
+  $t = $text.Trim()
+  if ($t -match '^self\b') { return $null }
+  $m = [regex]::Match($t, '^[A-Za-z_][A-Za-z0-9_]*\s*:\s*(?:(&)\s*(mut\s+)?)?(.+)$')
+  if (-not $m.Success) { return $null }
+  $isRef = $m.Groups[1].Success
+  $isMut = $m.Groups[2].Success
+  $base = $m.Groups[3].Value.Trim()
+  if ($isRef -and -not $allowRefs) { return $null }
+  $prefix = if ($isMut) { 'refmut' } else { 'ref' }
+  if (-not $isRef) {
+    if ($scalar.ContainsKey($base)) { return @{ Kind = 'scalar'; Base = $base } }
+    if ($allowRefs -and $base -match '^Vec\[([A-Za-z_][A-Za-z0-9_]*)\]$') { return @{ Kind = 'vec'; Base = $Matches[1] } }
+    return $null
+  }
+  if ($scalar.ContainsKey($base)) { return @{ Kind = ($prefix + '_scalar'); Base = $base } }
+  if ($allowRefs -and $base -match '^Vec\[([A-Za-z_][A-Za-z0-9_]*)\]$') { return @{ Kind = ($prefix + '_vec'); Base = $Matches[1] } }
+  return $null
+}
+
 $files = Get-ChildItem -LiteralPath (Join-Path $repoRoot "xiom") -Filter *.xi -Recurse | Sort-Object FullName
 $corpus = New-Object System.Text.StringBuilder
 foreach ($f in $files) { [void]$corpus.AppendLine([System.IO.File]::ReadAllText($f.FullName)) }
@@ -63,23 +91,19 @@ foreach ($f in $files) {
     $rawParams = $m.Groups[3].Value.Trim()
     if ($rawParams -eq "") { continue }
     $parts = $rawParams -split ','
-    $types = @(); $ok = $true
+    $specs = @(); $ok = $true
     foreach ($p in $parts) {
-      $t = $p.Trim()
-      if ($t -match '^self\b') { $ok = $false; break }
-      if ($t -notmatch '^[A-Za-z_][A-Za-z0-9_]*\s*:\s*(&?mut\s+)?([A-Za-z0-9_\[\]:., ]+)$') { $ok = $false; break }
-      $ty = $Matches[2].Trim()
-      if ($ty.StartsWith("&") -or $ty -match "^(Option|Result|Vec|Map|Set|fn|\[)") { $ok = $false; break }
-      if (-not $scalar.ContainsKey($ty)) { $ok = $false; break }
-      $types += $ty
+      $s = Get-ParamSpec $p ([bool]$IncludeRefs)
+      if ($null -eq $s) { $ok = $false; break }
+      $specs += $s
     }
     if (-not $ok) { continue }
-    if ($types.Count -lt $MinParams -or $types.Count -gt $MaxParams) { continue }
+    if ($specs.Count -lt $MinParams -or $specs.Count -gt $MaxParams) { continue }
     # never-referenced filter: the name must not appear anywhere else.
     $hits = [regex]::Matches($corpusText, "\b" + [regex]::Escape($name) + "\b").Count
     # Declarations themselves count once per declaration; require exactly one decl hit.
     if ($hits -gt 1) { continue }
-    $decls += [pscustomobject]@{ Module = $mod; Name = $name; Types = $types; File = $f.FullName }
+    $decls += [pscustomobject]@{ Module = $mod; Name = $name; Specs = $specs; File = $f.FullName }
   }
 }
 
@@ -91,9 +115,25 @@ foreach ($g in $byModule) {
   $safe = ($g.Name -replace '[^A-Za-z0-9_]', '_')
   $probe = Join-Path $OutDir ("gcp_" + $safe + ".xi")
   $lines = @("module gcp_$safe", "use $($g.Name);", "", "fn main() -> Int {")
+  $callIdx = 0
   foreach ($d in $g.Group) {
-    $args = ($d.Types | ForEach-Object { $scalar[$_] }) -join ", "
-    $lines += "  $($g.Name).$($d.Name)($args);"
+    $args = @(); $k = 0
+    foreach ($s in $d.Specs) {
+      $ln = "a" + $callIdx + "_" + $k
+      if ($s.Kind -eq 'scalar') { $args += $scalar[$s.Base] }
+      elseif ($s.Kind -eq 'vec') { $args += ("Vec[" + $s.Base + "].new()") }
+      elseif ($s.Kind -eq 'ref_scalar' -or $s.Kind -eq 'refmut_scalar') {
+        $lines += ("  var " + $ln + ": " + $s.Base + " = " + $scalar[$s.Base] + ";")
+        if ($s.Kind -eq 'refmut_scalar') { $args += ("&mut " + $ln) } else { $args += ("&" + $ln) }
+      }
+      elseif ($s.Kind -eq 'ref_vec' -or $s.Kind -eq 'refmut_vec') {
+        $lines += ("  var " + $ln + ": Vec[" + $s.Base + "] = Vec[" + $s.Base + "].new();")
+        if ($s.Kind -eq 'refmut_vec') { $args += ("&mut " + $ln) } else { $args += ("&" + $ln) }
+      }
+      $k++
+    }
+    $lines += ("  " + $g.Name + "." + $d.Name + "(" + ($args -join ", ") + ");")
+    $callIdx++
     $total++
   }
   $lines += "  return 0;"; $lines += "}"

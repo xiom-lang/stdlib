@@ -120,7 +120,15 @@ calls, `-Limit N` caps the module count, `-EmitOnly` writes the probes without
 compiling, and `-Timeout <sec>` passes through to the compiler's compile
 watchdog (default 300; `0` disables). Heavy import sets (`xiom.net`,
 `xiom.num`) can legitimately exceed the default watchdog in a debug build --
-compile those tranches with `-Timeout 0` and record the wall time.
+compile those tranches with `-Timeout 0` and record the wall time. The
+`-IncludeRefs` switch widens the accepted parameter set beyond by-value
+scalars to `&T`/`&mut T` (scalar `T`) and `Vec[E]` by value or reference
+(identifier `E`): locals are emitted for the reference arguments and
+by-value vectors use `Vec[E].new()`. State 2026-09-21: the
+`-MinParams 1 -MaxParams 4 -IncludeRefs` tranche is 112 modules / 602 calls,
+compile-only 110/112; the two failures are open compiler findings
+(`tools/known_failures/p_result_tuple_vec_loop.xi` for xiom.net.tls_helper,
+`p_ref_tuple_mangle.xi` for xiom.crypto.sign), not stdlib link gaps.
 
 The zero-arg tranche is locked by `tools/probes/p_never_called_zeroarg.xi`;
 the single-param tranche is locked by `tools/probes/p_sweep_single_param.xi`
