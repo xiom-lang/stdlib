@@ -20,6 +20,11 @@
 # at the matching stdlib tag; the compiler binary and the package tarball come
 # from public GitHub Releases (no token).
 #
+# The workflow waits up to 15 minutes for the same-tag release asset (the
+# release job may still be uploading) and generates an ephemeral ed25519 key
+# immediately before publishing -- trusted first-party tokens require a valid
+# signature (422 otherwise).
+#
 # Credentials policy: docs/CI.md.
 name: XIOM Stdlib Registry Publish
 
@@ -65,6 +70,22 @@ jobs:
           echo "compiler=$pin" >> "$GITHUB_OUTPUT"
           echo "publishing stdlib $ver against compiler pin $pin"
 
+      - name: Wait for the release asset (same-tag release job may still be uploading)
+        run: |
+          ver="${{ steps.ver.outputs.version }}"
+          url="https://github.com/xiom-lang/stdlib/releases/download/stdlib-v${ver}/xiom-std-${ver}.tar.gz"
+          for i in $(seq 1 60); do
+            code="$(curl -s -o /dev/null -w '%{http_code}' -L "$url" || true)"
+            if [ "$code" = "200" ]; then
+              echo "release asset ready: $url"
+              exit 0
+            fi
+            echo "waiting for release asset (attempt $i/60, http $code)"
+            sleep 15
+          done
+          echo "::error::release asset not available after 15 minutes: $url (re-run once the release job has uploaded it)"
+          exit 1
+
       - name: Download stdlib package (public release asset)
         run: |
           ver="${{ steps.ver.outputs.version }}"
@@ -100,6 +121,13 @@ jobs:
           test -n "$token" && test "$token" != "null"
           echo "::add-mask::$token"
           echo "token=$token" >> "$GITHUB_OUTPUT"
+
+      - name: Generate signing key (ephemeral per run)
+        run: |
+          # Trusted first-party tokens require a valid ed25519 signature
+          # (422 otherwise). keygen writes $HOME/.xiom/keys/default.key and
+          # `xiom pkg publish` auto-signs with it; the key is per-run.
+          "$XIOM_BIN" pkg keygen
 
       - name: Publish to the registry
         working-directory: pkg
