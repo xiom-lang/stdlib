@@ -257,9 +257,10 @@ was rejected by tag rules -- owner action needed).
   `CARGO_TARGET_DIR=<temp>\target`, `cargo build --locked -p xiom`. GOTCHA:
   if you reuse a warm target dir, TOUCH all extracted sources first
   (git-archive mtimes can be older than the artifacts, so cargo skips the
-  rebuild). Run with `XIOM_STDLIB=E:\xiom-lang\stdlib`. Built this session:
-  R46 `12148d43`, R46b `504fcc1e`, R49 `306073ba`; binaries stashed under
-  `%TEMP%\kilo\stdlib_ws\` (`xiom_r49.exe` is the current one).
+  rebuild). Run with `XIOM_STDLIB=E:\xiom-lang\stdlib`. Built across the
+  campaign: R46 `12148d43`, R46b `504fcc1e`, R49 `306073ba`, R52 `1fcb4855`;
+  binaries stashed under `%TEMP%\kilo\stdlib_ws\` (`xiom_r52.exe` is the
+  current one; `xiom_r49.exe` the previous baseline binary).
 - Gates: `./tools/run_smokes.ps1 -Compiler <exe> -Workers 8 -RetryFailed`;
   `powershell -NoProfile -File tools/check_modules.ps1 -Compiler <exe>`
   (this box has NO `pwsh` -- use `powershell`);
