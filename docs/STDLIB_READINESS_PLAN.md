@@ -278,7 +278,7 @@ T1/T2 yields.
       (2026-09-19): 35 clauses (bitmap/deque/bheap/blockingqueue/hash/
       concurrent/fheap size + membership relations) -> collect 53.2% ->
       60.7% (all three key modules now above the gate), global 18.9%
-      clauses / 18.9% pub-with-clause. Wave 17 (2026-09-21): 23 clauses
+      clauses / 18.9% pub-with-clause. Wave 17 (2026-09-21): 26 clauses
       (payload-reading Result forms unblocked by R49-3: io/fs Err messages
       non-empty, fs_read_range bounded/zero-length Vec payloads,
       fs_write_range written <= data.len(), io/console + io/pipe Err

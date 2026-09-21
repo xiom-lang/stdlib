@@ -92,7 +92,7 @@ was rejected by tag rules -- owner action needed).
 - Local main: `81449da` (pushed) + `578d5d1` (wave 17 / floors54), `5c00bcc`
   (probe curation), `63ad30a` (single-param promotion) + this docs commit.
   The 2026-09-21 commits are local; the release lane decides pushes.
-- Item 3 DONE -- wave 17: 23 payload-reading Result clauses across io/fs,
+- Item 3 DONE -- wave 17: 26 payload-reading Result clauses across io/fs,
   io/console and io/pipe (R49-3 unlocked the forms; pre-validated in
   `tools/probes/p_wave17_shapes.xi`, which pins the mixed Int/Vec/Str payload
   combination). io 62.0% -> 78.7%, global 19.2% pub-with-clause;
