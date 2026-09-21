@@ -1,5 +1,5 @@
 // XIOM stdlib stress -- xiom.string.str_starts_with / str_ends_with
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Tests prefix/suffix matching with true and false cases.
 // Returns 0 on success.

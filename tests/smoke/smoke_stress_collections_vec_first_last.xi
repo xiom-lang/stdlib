@@ -1,5 +1,5 @@
 // XIOM stdlib stress -- Vec first and last access
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Tests first() and last() on populated and single-element vectors.
 // Returns 0 on success, nonzero on failure.

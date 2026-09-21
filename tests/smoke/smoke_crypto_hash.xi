@@ -1,5 +1,5 @@
 // XIOM stdlib smoke test -- xiom.crypto.hash
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Tests: sha256 (delegated), sha512 (local), sha1 (local), md5 (local),
 // hex wrappers, hmac_sha256 (delegated), hmac_sha512 (local), pbkdf2, hkdf.

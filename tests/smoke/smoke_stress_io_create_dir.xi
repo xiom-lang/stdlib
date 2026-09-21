@@ -1,5 +1,5 @@
 // XIOM stdlib stress -- io.create_dir / io.is_dir
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Creates a directory, confirms is_dir returns true, cleans up.
 // Returns 0 on success.

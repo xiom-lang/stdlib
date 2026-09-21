@@ -1,5 +1,5 @@
 // XIOM stdlib smoke -- xiom.collect.tinylfu
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Count-min sketch primitives + TinyLFU admission decisions and reset.
 // Returns 0 on success, nonzero + tag on failure.

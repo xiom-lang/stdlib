@@ -1,5 +1,5 @@
 // XIOM stdlib smoke -- xiom.collect.mpmc / mpsc / spmc
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Bounded ring queues: FIFO push/pop, overflow/underflow behaviour, size.
 // Returns 0 on success, nonzero + tag on failure.

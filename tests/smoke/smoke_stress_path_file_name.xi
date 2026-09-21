@@ -1,5 +1,5 @@
 // XIOM stdlib stress -- xiom.path Path.file_name extraction
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Tests file_name on paths with and without extensions.
 // Returns 0 on success, nonzero on failure.

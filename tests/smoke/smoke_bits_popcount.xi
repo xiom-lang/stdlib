@@ -1,5 +1,5 @@
 // XIOM stdlib smoke test - xiom.bits.popcount
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Separate file because the `popcount` module name collides with bitwise's
 // `popcount` function when both are imported together.

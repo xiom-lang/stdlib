@@ -1,5 +1,5 @@
 // XIOM stdlib stress -- Regex.match_count surface.
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Regex.new returns Result[Regex, Str]; unwrap before calling methods.
 module smoke_stress_regex_match_count

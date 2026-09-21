@@ -1,5 +1,5 @@
 // XIOM - Command-line argument access and parsing
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 //
 // Thin binding over the runtime's captured argc/argv (xiom_get_argc /

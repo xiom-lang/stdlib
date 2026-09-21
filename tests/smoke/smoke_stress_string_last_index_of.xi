@@ -1,5 +1,5 @@
 // XIOM stdlib stress -- xiom.string.last_index_of boundary
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Tests last_index_of for single char, multi-char substring, and not-found.
 // Returns 0 on success, nonzero on failure.

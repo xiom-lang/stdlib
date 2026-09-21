@@ -1,5 +1,5 @@
 // XIOM -- IPv4 Address Helpers (xiom.net.ip4)
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 //
 // Pure IPv4 address parsing, formatting, and classification helpers.

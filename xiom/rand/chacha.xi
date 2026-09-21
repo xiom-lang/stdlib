@@ -1,5 +1,5 @@
 // XIOM -- ChaCha20-based RNG (32-bit words)
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 //
 // A deterministic PRNG that derives its output from ChaCha20 blocks.

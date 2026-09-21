@@ -1,5 +1,5 @@
 // XIOM stdlib stress -- math.min_int and math.max_int
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Tests min/max on various integer pairs.
 // Returns 0 on success, nonzero on failure.

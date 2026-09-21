@@ -1,5 +1,5 @@
 // p_duration_since.xi -- exercises SystemTime.duration_since across all
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // branches (Ok, Err, equal, nano-borrow edge) to validate the new active
 // contract shape: result.is_ok == (secs > || (secs == && nanos >=)).

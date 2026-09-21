@@ -1,5 +1,5 @@
 // XIOM stdlib stress -- math.random and math.random_range
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Tests random generation and verifies values are in expected range.
 // Returns 0 on success, nonzero on failure.

@@ -1,5 +1,5 @@
 // smoke_compress_crc32.xi -- CRC-32 (IEEE) known-answer tests
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Values cross-checked against zlib.crc32. Guards the bitwise no-table
 // implementation that replaced the mis-materialized module-level table

@@ -1,5 +1,5 @@
 // XIOM stdlib stress -- Queue enqueue, dequeue, peek
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Tests FIFO queue operations including empty queue behavior.
 // Returns 0 on success, nonzero on failure.

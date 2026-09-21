@@ -1,5 +1,5 @@
 // XIOM stdlib stress -- io.read_file on non-existent path
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Expects Err result; returns 0 if Err, 1 if Ok (unexpected).
 // Returns 0 on success.

@@ -1,5 +1,5 @@
 // XIOM - Geom: Mat
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Home: geom.xi - this sublib splits the matrix domain; the canonical Mat2/3/4
 // types and operations live in geom.xi.

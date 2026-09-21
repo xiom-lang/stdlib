@@ -1,5 +1,5 @@
 // XIOM stdlib smoke -- xiom.collect.arc
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // ARC cache (delegates to collect.cache): put/get/evict/contains/size/capacity.
 // Returns 0 on success, nonzero + tag on failure.

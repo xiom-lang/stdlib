@@ -1,5 +1,5 @@
 # run_smokes.ps1 -- XIOM stdlib smoke-corpus runner (Windows / PowerShell).
-# Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+# Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 # SPDX-License-Identifier: MIT OR Apache-2.0
 #
 # Contract (docs/REPO_MIGRATION_RUNBOOK.md section 6.1):

@@ -1,5 +1,5 @@
 # check_modules.ps1 -- check-only compile of every manifest module.
-# Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+# Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 # SPDX-License-Identifier: MIT OR Apache-2.0
 #
 # R2 CI gate: `xiom --check` on a generated `use xiom.X;` probe per module in

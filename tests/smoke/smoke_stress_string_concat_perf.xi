@@ -1,5 +1,5 @@
 // XIOM stdlib stress -- xiom.string.str_concat repeated growth performance
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Chains several concatenations to stress allocator, verifies result.
 // Returns 0 on success.

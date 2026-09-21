@@ -1,5 +1,5 @@
 // XIOM stdlib smoke test - xiom.convert.base16
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Checks: hex_encode/decode round-trips, known-answer hex strings, string wrappers.
 

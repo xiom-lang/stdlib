@@ -1,5 +1,5 @@
 // p_tz_ffi.xi -- probe for tzdata phase 1: OS local-time offset via the
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // CRT (_localtime64_s + _mkgmtime64). struct tm layout (MSVC, x64):
 // sec(0) min(4) hour(8) mday(12) mon(16) year(20) wday(24) yday(28)

@@ -1,5 +1,5 @@
 // XIOM stdlib smoke -- xiom.collect.threadpool / workqueue / blockingqueue
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Pure-XIOM pool simulation (submit/join/shutdown), FIFO work queue, bounded
 // blocking queue with close semantics.

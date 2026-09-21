@@ -1,5 +1,5 @@
 // XIOM -- Text Similarity Algorithms (xiom.text.similarity)
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 //
 // Pure string-similarity algorithms. All functions operate on raw byte

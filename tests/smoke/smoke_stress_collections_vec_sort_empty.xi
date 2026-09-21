@@ -1,5 +1,5 @@
 // XIOM stdlib stress -- Vec sort on empty and single-element
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Verifies sort does not crash on empty or single-element vectors.
 // Returns 0 on success, nonzero on failure.

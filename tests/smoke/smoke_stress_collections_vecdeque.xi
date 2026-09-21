@@ -1,5 +1,5 @@
 // XIOM stdlib stress -- VecDeque push_front/back and pop_front/back
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Tests double-ended queue insertion and removal at both ends.
 // Returns 0 on success, nonzero on failure.

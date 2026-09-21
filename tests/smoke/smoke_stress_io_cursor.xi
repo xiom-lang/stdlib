@@ -1,5 +1,5 @@
 // XIOM stdlib stress -- io.Cursor wrap data and into_inner
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Wraps a Vec[UInt8] in a Cursor, reads inner buffer, verifies length.
 // Returns 0 on success, nonzero on failure.

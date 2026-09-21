@@ -1,5 +1,5 @@
 // XIOM stdlib stress -- Slice first and last access
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Tests slice boundary access on a Vec-derived slice.
 // Returns 0 on success, nonzero on failure.

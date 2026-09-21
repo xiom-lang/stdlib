@@ -1,5 +1,5 @@
 // XIOM stdlib smoke -- xiom.collect.concurrent / mapch
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Concurrent queues (mpmc/mpsc/spmc), stack, counter; chaining hash map.
 // Returns 0 on success, nonzero + tag on failure.

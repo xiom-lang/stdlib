@@ -1,5 +1,5 @@
 // XIOM - Conversion: Utf16
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 module xiom.convert.utf16

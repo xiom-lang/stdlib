@@ -1,5 +1,5 @@
 // XIOM stdlib stress -- xiom.regex Regex.new with invalid patterns
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Tests that malformed regex patterns return Err, not panic.
 // Returns 0 on success, nonzero on failure.

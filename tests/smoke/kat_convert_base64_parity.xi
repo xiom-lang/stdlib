@@ -1,5 +1,5 @@
 // kat_convert_base64_parity.xi -- RFC 4648 section 10 through the
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // xiom.convert.base64 twin (4-fn surface: encode/decode/encode_str/decode_str).
 // Exists because the convert/encoding twins diverged once already (audit 5.1):

@@ -1,5 +1,5 @@
 <!--
-Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 SPDX-License-Identifier: MIT OR Apache-2.0
 -->
 # XIOM Stdlib -- Beta Known Limitations (2026-09-16, v0.60-pre-split)

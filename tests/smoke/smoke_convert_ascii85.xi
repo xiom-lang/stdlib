@@ -1,5 +1,5 @@
 // XIOM stdlib smoke test - xiom.convert.ascii85
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Checks: known-answer vector, zero-run 'z' compression, tail handling,
 // round-trips, and invalid-input rejection.

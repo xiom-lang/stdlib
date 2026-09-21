@@ -1,5 +1,5 @@
 // XIOM stdlib stress -- io.write_file / io.read_file with NUL bytes
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Writes embedded null characters, reads back, verifies length preserved.
 // Returns 0 on success, nonzero on failure.

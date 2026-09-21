@@ -1,5 +1,5 @@
 // p_puny_parity.xi -- dedup parity probe: xiom.convert.punycode vs the
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // canonical xiom.encoding.punycode / xiom.encoding.idna on the shared
 // surface. Prints Ok/Err values side by side; used to decide whether the

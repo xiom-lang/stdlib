@@ -1,5 +1,5 @@
 // XIOM stdlib stress -- xiom.fmt Int.to_str for large positive boundary values
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Tests integer to string for values near max and powers of two.
 // Returns 0 on success, nonzero on failure.

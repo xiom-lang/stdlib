@@ -1,5 +1,5 @@
 // XIOM stdlib smoke test - xiom.misc submodules
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // glob + levenshtein + natural + semver + soundex
 // Returns 0 on success, nonzero on failure (process exit code).

@@ -1,5 +1,5 @@
 // smoke_compress_bomb_guard.xi -- decompression-bomb caps
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Compresses a known payload, then proves gzip_decompress_capped rejects
 // the same stream when the cap is below the real output size, accepts it

@@ -1,5 +1,5 @@
 // XIOM stdlib smoke -- xiom.error.chain + context + backtrace
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Returns 0 on success, nonzero (and a tag) on failure.
 

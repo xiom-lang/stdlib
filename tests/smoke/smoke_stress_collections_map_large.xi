@@ -1,5 +1,5 @@
 // XIOM stdlib stress -- Map large (200 entries)
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Inserts 200 key-value pairs via while loop and verifies count.
 // Returns 0 on success, nonzero on failure.

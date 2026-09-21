@@ -1,5 +1,5 @@
 // XIOM stdlib smoke test -- xiom.crypto.mac
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Tests: hmac_sha256 (RFC 4231 test case 1 known answer), hmac_verify
 // (constant-time), incremental hmac_new/update/final, constant_time_eq /

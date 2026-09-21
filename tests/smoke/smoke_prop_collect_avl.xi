@@ -1,5 +1,5 @@
 // XIOM stdlib property smoke -- xiom.collect.avl
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Deterministic LCG permutation of 512 distinct keys: after random-order
 // inserts the tree must contain every key, stay height-bounded (AVL balance),

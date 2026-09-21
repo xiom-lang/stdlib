@@ -1,5 +1,5 @@
 // p_match_vec_codegen.xi -- minimal repro: building a Vec inside a match arm
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // over a Result[Vec[...]] payload trips clang codegen:
 //   %tmpNNN defined with type %struct.Vec but ... (llvm: type mismatch)

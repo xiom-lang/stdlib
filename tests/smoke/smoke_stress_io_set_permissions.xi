@@ -1,5 +1,5 @@
 // XIOM stdlib stress -- io.set_permissions on temp file
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Creates a test file, sets permissions, cleans up, verifies result.
 // Returns 0 on success, nonzero on failure.

@@ -1,5 +1,5 @@
 // XIOM stdlib smoke test -- xiom.net.cookie + xiom.net.mime +
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // xiom.net.multipart + xiom.net.sse
 // Returns 0 on success, nonzero on failure (process exit code).

@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 //
 // R46b lock (compiler 1a918ae9+): cross-module generic methods called through

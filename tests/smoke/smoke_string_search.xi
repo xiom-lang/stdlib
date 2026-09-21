@@ -1,5 +1,5 @@
 // smoke_string_search.xi -- allocation-free search predicates
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Locks the round-14 byte_at semantics through index_of / last_index_of /
 // str_contains / starts_with / ends_with after the phase-E2 rewrite

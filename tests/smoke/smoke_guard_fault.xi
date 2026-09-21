@@ -1,5 +1,5 @@
 // Phase 5 smoke: Hardware Fault Trapping (requirement f, g) -- Unsafe Confinement.
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Deliberate hardware faults inside confined blocks must be caught by the SEH
 // trampoline; the process must SURVIVE and continue (println after each).

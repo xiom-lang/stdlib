@@ -1,5 +1,5 @@
 // p_payload_read.xi -- R24 minimal repro: `.value` payload reads.
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // A) named Option[Vec] local  -> correct
 // B) temporary call-result Option[Vec].value -> CORRUPT (data bytes zero)

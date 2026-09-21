@@ -1,5 +1,5 @@
 // p_wave8_shapes.xi -- contract shape validation for wave 8.
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 //
 // STATUS 2026-09-20: GREEN on compiler main R52 (R51 `c235b3fe`: @pre

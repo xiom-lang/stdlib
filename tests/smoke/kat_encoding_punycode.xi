@@ -1,5 +1,5 @@
 // kat_encoding_punycode.xi -- RFC 3492 section 7.1-style known-answer tests
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Expected values generated and cross-checked with python's built-in
 // punycode codec (RFC 3492 reference behavior). Covers pure-ASCII inputs

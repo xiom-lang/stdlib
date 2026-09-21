@@ -1,5 +1,5 @@
 // XIOM stdlib smoke test -- xiom.serialize submodules
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Tests: endian (LE/BE reads+writes, i64, f64), varint (LEB128 encode/decode
 // round-trip, zigzag, uvarint), json (construct + stringify + get), yaml_lite

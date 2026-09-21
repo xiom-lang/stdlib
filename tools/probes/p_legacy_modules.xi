@@ -1,5 +1,5 @@
 // p_legacy_modules.xi -- post-move resolution probe: the three quarantined
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // legacy crypto modules must remain importable by their frozen module names
 // (xiom.des / xiom.crypto.md5 / xiom.crypto.sha) from crypto/legacy/.

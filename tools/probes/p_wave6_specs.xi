@@ -1,5 +1,5 @@
 // p_wave6_specs.xi -- wave-6 contract validation: sync counts + iter lengths.
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 module p_wave6_specs
 use xiom.sync.barrier;

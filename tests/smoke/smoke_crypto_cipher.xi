@@ -1,5 +1,5 @@
 // XIOM stdlib smoke test -- xiom.crypto.cipher (+ aead dependency surface)
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Tests the paths that the current compiler build can execute reliably:
 //   - ChaCha20 stream round-trip with explicit counter

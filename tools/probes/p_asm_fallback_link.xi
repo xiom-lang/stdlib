@@ -1,5 +1,5 @@
 // p_asm_fallback_link.xi -- no-NASM runtime fallback must stay linkable.
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // xiom.mem and xiom.ffi.c declare the xiom_asm_mem* symbols in their own
 // extern blocks. Those symbols are defined by the NASM objects only when the

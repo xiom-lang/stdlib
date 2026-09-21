@@ -1,5 +1,5 @@
 // smoke_prop_collect_persistent.xi -- persistence property smoke for
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // xiom.collect.persistent (PVec/PMap). Core property: an operation returns a
 // NEW version and the OLD version is unchanged (structural persistence),

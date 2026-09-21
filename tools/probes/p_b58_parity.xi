@@ -1,5 +1,5 @@
 // p_b58_parity.xi -- dedup parity probe: xiom.convert.base58 int legs vs
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // the xiom.num.convert radix helpers (Result-vs-Option and INT_MIN edges).
 module p_b58_parity

@@ -1,5 +1,5 @@
 // kat_compress_rfc1952.xi -- REAL gzip/DEFLATE interop known-answer tests
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 //
 // The stdlib deflate/gzip stack now speaks RFC 1951/1952 (replaced the

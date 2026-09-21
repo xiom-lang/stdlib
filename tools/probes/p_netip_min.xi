@@ -1,5 +1,5 @@
 // p_netip_min.xi -- minimal compile check for the delegated v6 legs.
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 module p_netip_min
 use xiom.net.ip as netip;

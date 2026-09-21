@@ -1,5 +1,5 @@
 // p_wave4_shapes.xi -- wave-4 contract shape pre-validation.
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Exercises the new char.xi clauses (Option-implies, radix guards, utf8
 // length bounds) on valid + invalid inputs; any clause that is wrong aborts.

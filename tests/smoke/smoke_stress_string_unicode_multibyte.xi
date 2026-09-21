@@ -1,5 +1,5 @@
 // XIOM stdlib stress -- xiom.string multi-byte unicode: char_count vs byte_count
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Tests that char_count and byte_count diverge for multi-byte UTF-8 chars.
 // Returns 0 on success, nonzero on failure.

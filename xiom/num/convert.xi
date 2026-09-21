@@ -1,5 +1,5 @@
 // XIOM -- Numeric Base Conversion (xiom.num.convert)
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 //
 // Pure numeric conversion helpers: Base58/Base62 encoders and decoders,

@@ -1,5 +1,5 @@
 // XIOM stdlib smoke test -- xiom.os.fs_ffi + xiom.os.proc_ffi + xiom.os.ioctl +
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // xiom.os.mmap + xiom.os.win + xiom.os.unix
 // FFI-backed OS helpers: only what each stub documents as implementable is

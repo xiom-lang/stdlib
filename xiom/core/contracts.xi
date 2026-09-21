@@ -1,5 +1,5 @@
 // XIOM -- Queryable Contract Runtime API
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 //
 // Exposes XIOM's contract system as a runtime-queryable API.

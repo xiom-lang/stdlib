@@ -1,5 +1,5 @@
 // Smoke: xiom.geom.geometry_2d + xiom.geom.geometry_extended.
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Returns 0 on success; prints the failing tag on failure. The checks are
 // split across small helper functions to avoid whole-function compiler

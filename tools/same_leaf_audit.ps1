@@ -1,5 +1,5 @@
 # same_leaf_audit.ps1 -- same-leaf public-type conflict inventory.
-# Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+# Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 # SPDX-License-Identifier: MIT OR Apache-2.0
 #
 # Scans xiom/**/*.xi for `pub type <Leaf> = { ... }` / `= enum { ... }`

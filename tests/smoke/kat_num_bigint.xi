@@ -1,5 +1,5 @@
 // kat_num_bigint.xi -- arbitrary-precision integer known-answer tests
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Expected values computed with python 3.x arbitrary integers (oracle).
 // Locks: from_str/to_str round trips, mul, doubling chains, div_mod

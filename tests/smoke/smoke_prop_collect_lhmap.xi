@@ -1,5 +1,5 @@
 // XIOM stdlib property smoke -- xiom.collect.hash (LhMap)
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // 512 distinct keys: put/get/overwrite/remove must keep size exact, values
 // consistent, and keys_in_order strictly ascending after removals.

@@ -1,6 +1,6 @@
 ; ================================================================
 ; XIOM Crypto Assembly — x86_64 (NASM syntax, win64/elf64)
-; Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+; Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 ; SPDX-License-Identifier: MIT OR Apache-2.0
 ;
 ; Hand-tuned assembly for hardware-accelerated crypto:

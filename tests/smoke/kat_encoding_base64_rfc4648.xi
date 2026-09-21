@@ -1,5 +1,5 @@
 // kat_encoding_base64_rfc4648.xi -- RFC 4648 section 10 test vectors
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Covers standard alphabet (padded/unpadded) and URL-safe alphabet.
 // NOTE: the xiom.convert.base64 twin gets its own file

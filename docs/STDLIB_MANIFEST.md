@@ -1,5 +1,5 @@
 <!--
-Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 SPDX-License-Identifier: MIT OR Apache-2.0
 -->
 # Stdlib Module Manifest (2026-08-13) -- for stdlib_tests.rs / api_freeze path sync

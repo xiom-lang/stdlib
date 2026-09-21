@@ -1,5 +1,5 @@
 // XIOM stdlib stress -- io.BufReader over a real file stream.
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Deterministic (no stdin reads): opens a temp file via io.open, reads it
 // with BufReader.lines(), verifies content, closes and cleans up.

@@ -1,5 +1,5 @@
 // p_wave6p3_specs.xi -- wave 6 part 3 validation: natural-order sign bounds +
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // unicode wrapper specs.
 module p_wave6p3_specs

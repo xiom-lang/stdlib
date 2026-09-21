@@ -1,5 +1,5 @@
 // p_ansi_specs.xi -- validate the ESC-prefix contract across all ANSI builders.
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 module p_ansi_specs
 use xiom.format.ansi;

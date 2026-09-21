@@ -1,5 +1,5 @@
 // kat_serialize_json_minimal.xi -- JSON parser known-answer tests
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Accept/reject subset of JSONTestSuite plus RFC 8259 section semantics.
 // Number-formatting assertions are deliberately excluded (float repr is a

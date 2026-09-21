@@ -1,5 +1,5 @@
 // p_os_direct20.xi -- OS-entropy multi-draw shape (recreation of the r17
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // p_os_direct17 probe family). Cross-module calls into
 // crypto.os_secure_random_bytes and crypto_random_bytes, multi-draw with

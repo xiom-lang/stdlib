@@ -1,5 +1,5 @@
 // XIOM stdlib stress -- Map collision stress
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Inserts many entries with keys that may collide internally.
 // Returns 0 on success, nonzero on failure.

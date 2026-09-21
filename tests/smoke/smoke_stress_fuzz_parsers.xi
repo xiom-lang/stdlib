@@ -1,5 +1,5 @@
 // XIOM stdlib stress smoke - parser fuzz harness (deterministic).
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Feeds thousands of generated and mutated inputs to the stdlib parsers
 // (json/toml/csv/url/http) and locks the robustness contract:

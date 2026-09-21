@@ -1,5 +1,5 @@
 // XIOM -- Vec[UInt8] elem_size hardening test
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Verifies that narrow-type Vec stores elements at correct byte width.
 // Vec[UInt8] -> 1 byte per element (not 8).

@@ -1,5 +1,5 @@
 // p_sync_sizeof.xi -- strict-catalog-gate probe for the xiom.sync intrinsic
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // binding (stdlib lane, 2026-09-15). r40 (strict off): compiles with
 // "catalog body [xiom.sync]: undefined variable 'size_of'" warnings.

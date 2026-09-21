@@ -1,5 +1,5 @@
 // XIOM stdlib smoke test -- xiom.crypto.kdf + xiom.crypto.rng_crypto
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Tests: pbkdf2 (RFC 7914 vector), pbkdf2_hmac_sha256, hkdf_extract/expand
 // (RFC 5869), hkdf_sha256, kdf_derive_master, kdf_check_interval, scrypt

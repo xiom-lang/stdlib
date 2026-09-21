@@ -1,5 +1,5 @@
 // 3c smoke: generic numeric tower -- ONE generic implementation serves all
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // widths via interface impl dispatch. Returns 0 on success.
 interface Num[T] {

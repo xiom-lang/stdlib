@@ -1,5 +1,5 @@
 // XIOM stdlib stress -- Captures.len surface.
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Exactly 1 for a successful match (whole match only; no group extraction).
 module smoke_stress_regex_captures_len

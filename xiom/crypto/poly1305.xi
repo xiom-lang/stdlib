@@ -1,5 +1,5 @@
 // XIOM -- Poly1305 One-Time Authenticator (RFC 8439)
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 //
 // Poly1305 is a one-time message authentication code (MAC) designed by

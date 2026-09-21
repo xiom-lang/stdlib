@@ -1,5 +1,5 @@
 // smoke_prop_collect_hashchurn.xi -- hash-map churn property smoke.
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // A 1000-key model (array, -1 = absent) vs LhMap through three phases:
 // bulk insert, overwrite evens, remove every third key, then 2000 mixed

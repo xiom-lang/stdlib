@@ -1,5 +1,5 @@
 // Smoke: all xiom.stats sublibs (moments, statistics, regress, dist,
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // probability, test, histogram). Returns 0 on success.
 use xiom.stats;

@@ -1,5 +1,5 @@
 // XIOM stdlib smoke test -- xiom.os.filetype + xiom.os.err + xiom.os.event
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Byte sniffing, errno tables, and event-loop stubs.
 // Returns 0 on success, nonzero on failure (process exit code).

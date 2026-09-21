@@ -1,5 +1,5 @@
 // smoke_sync_arc_battery.xi -- permanent regression battery for the round-14/15
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // sync-constructor fixes (commit ba6a045b family) + Rc tower.
 // Locks: AtomicInt full op set incl. CAS, AtomicBool, AtomicPtr, Rc clone/

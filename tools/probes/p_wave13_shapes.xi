@@ -1,5 +1,5 @@
 // p_wave13_shapes.xi -- contract shape validation for wave 13.
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 //
 // Locks the clause shapes wave 13 actually applies to the stdlib:

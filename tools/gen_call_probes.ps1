@@ -1,5 +1,5 @@
 # gen_call_probes.ps1 -- generated call probes for never-referenced scalar-arg pub fns.
-# Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+# Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 # SPDX-License-Identifier: MIT OR Apache-2.0
 #
 # The zero-arg tranche is locked by tools/probes/p_never_called_zeroarg.xi and

@@ -1,5 +1,5 @@
 // XIOM stdlib stress -- xiom.string.replace with nonexistent pattern
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Tests replacing a pattern that does not occur in the source string.
 // Returns 0 on success, nonzero on failure.

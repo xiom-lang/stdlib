@@ -1,5 +1,5 @@
 // XIOM stdlib stress -- Vec sort with duplicates
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Pushes values with duplicates, sorts, verifies stability.
 // Returns 0 on success, nonzero on failure.

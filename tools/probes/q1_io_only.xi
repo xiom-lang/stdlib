@@ -1,5 +1,5 @@
 // q1_io_only.xi -- import ONLY xiom.io to surface io.xi catalog warnings.
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 module q1_io_only
 use xiom.io;

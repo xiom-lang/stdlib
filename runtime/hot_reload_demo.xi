@@ -1,5 +1,5 @@
 // XIOM Hot Reload Test -- used with xiom_hot_host.exe
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Demonstrates the hot reload cycle: change this file,
 // save, and the host will recompile and reload automatically.

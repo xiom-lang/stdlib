@@ -1,5 +1,5 @@
 // XIOM stdlib stress -- BTreeMap insert, get, contains, remove
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Tests ordered map operations with sorted key ordering.
 // Returns 0 on success, nonzero on failure.

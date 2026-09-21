@@ -1,5 +1,5 @@
 // XIOM stdlib smoke test - xiom.convert.base64 + xiom.convert.base64url
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Checks: known-answer base64("hello") = "aGVsbG8=", URL-safe unpadded forms,
 // round-trips, and invalid-input rejection.

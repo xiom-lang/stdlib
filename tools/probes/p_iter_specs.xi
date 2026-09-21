@@ -1,5 +1,5 @@
 // p_iter_specs.xi -- wave-6 contract validation for iter length/count specs.
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 module p_iter_specs
 use xiom.iter.chain;

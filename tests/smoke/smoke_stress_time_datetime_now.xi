@@ -1,5 +1,5 @@
 // XIOM stdlib stress -- xiom.time DateTime.now returns a valid DateTime
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // DateTime.now() must return a value whose year is >= 2025.
 // Returns 0 on success, nonzero on failure.

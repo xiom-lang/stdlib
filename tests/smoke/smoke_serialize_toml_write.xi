@@ -1,5 +1,5 @@
 // XIOM stdlib smoke test - xiom.serialize.toml writer (toml_write)
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Round-trips a fixture covering every v1 value kind through
 // toml_write -> toml_parse, checks the emitted layout (root keys first,

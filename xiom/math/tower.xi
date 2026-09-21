@@ -1,5 +1,5 @@
 // XIOM - math/core.xi - GENERIC numeric tower (3c, 2026-08-10)
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 //
 // D4 category module: math/core. The flat math.xi keeps the frozen concrete

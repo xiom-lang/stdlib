@@ -1,5 +1,5 @@
 // p_async_p4.xi -- executor spawn + run with a stored callback.
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 module p_async_p4
 use xiom.async.executor;

@@ -1,5 +1,5 @@
 // XIOM stdlib smoke test -- xiom.net.address + xiom.net.ip + xiom.net.header
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Address host:port parsing, IPv4/IPv6 helpers, and HTTP header lists.
 // Returns 0 on success, nonzero on failure (process exit code).

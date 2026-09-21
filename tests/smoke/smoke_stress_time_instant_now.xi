@@ -1,5 +1,5 @@
 // XIOM stdlib stress -- xiom.time Instant.now returns non-trivial Instant
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Instant.now() must not panic and elapsed duration must be >= 0.
 // Returns 0 on success, nonzero on failure.

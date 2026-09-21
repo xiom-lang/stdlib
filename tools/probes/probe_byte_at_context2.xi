@@ -1,5 +1,5 @@
 // probe_byte_at_context2.xi -- round-20 re-check of the contextual byte_at
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // OOB case that stayed gated through r17 (state-dependent bound check after
 // case+slicing preambles). GREEN: all byte_at OOB reads return 0.

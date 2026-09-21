@@ -1,5 +1,5 @@
 // XIOM stdlib stress -- Regex.captures surface.
-// Copyright (c) 2026 Eleftherios Notas and XIOM Foundation
+// Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // API reality (documented in regex.xi): Regex.new returns Result[Regex, Str];
 // captures() exposes the WHOLE match only (no group extraction), so len() is
