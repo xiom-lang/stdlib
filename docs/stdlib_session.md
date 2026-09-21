@@ -191,6 +191,17 @@ was rejected by tag rules -- owner action needed).
 - Current verification binary: `xiom_r58.exe` (R58, `5bdffaad`);
   `xiom_r53.exe` (R54) and `xiom_r52.exe`/`xiom_r49.exe` are previous
   baselines.
+- Wave 18 DONE (same day, on R58; commit `a3fe12a`): 38 clauses across
+  `xiom.sort` / `xiom.search`, pre-validated by
+  `tools/probes/p_wave18_shapes.xi`. In-place Int sorts gain
+  `is_sorted(v)` postconditions (heap/quick/merge/radix import
+  `xiom.sort.intro` and assert `intro.is_sorted(v)`), search gains
+  index/position/tuple/match-window/table bounds, `merge` gains
+  `result.len() == a.len() + b.len()`. sort 0% -> **31.9%**, search 0% ->
+  **62.2%**, global 19.2% -> **19.8%** pub-with-clause; `floors55` wired in
+  the same commit. Post-wave gates: check_modules **509/509** (352.1s);
+  corpus **949/949**, 0 runfail (1643.4s); probe corpus **161/161**
+  (350.2s); floors55 ratchet OK; sort/search smoke families 9/9.
 
 **R49 baseline state (2026-09-19, local main then `3f839e1`)**
 - ALL GATES GREEN on the final tree: `check_modules` **509/509** (262.5s);
@@ -345,7 +356,9 @@ was rejected by tag rules -- owner action needed).
 3. Coverage (repeatable, optional): payload-reading Result clauses are
    allowed (R49-3); pre-validate new shapes in `p_waveN_shapes.xi`, then
    dump `coverage_floorsN+1.json` and wire it into all workflows + READMEs
-   in the same commit. Wave 17 (io) landed 2026-09-21 -- see PART 3.
+   in the same commit. Wave 17 (io) and wave 18 (sort/search) landed
+   2026-09-21 -- see PART 3/5. Remaining 0-coverage dirs include bits,
+   geom, error, stats, text, convert, regex, test, collections and math.
 4. Windows TLS/schannel (compiler FFI hardening) and tzdata phase 2 stay
    last; registry publish activation is the user's (dispatch-only
    `publish-registry.yml`). Every new pub declaration needs `///` prose

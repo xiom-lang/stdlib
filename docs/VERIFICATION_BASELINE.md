@@ -150,7 +150,19 @@ the two generated-tranche findings `p_result_tuple_vec_loop` and
 `p_ref_tuple_mangle` -- identical error signatures to R54, so they are NOT
 part of the L6-40/L5-40/L3-50/L8-14 set and need their own compiler-lane
 fix. The refs generated tranche re-ran on R58: 110/112, the same two
-failures.
+failures. The struct generated tranche re-ran 121/123 (same two findings).
+
+**Wave 18 (2026-09-21, on R58):** 38 clauses across `xiom.sort` /
+`xiom.search`, pre-validated by `tools/probes/p_wave18_shapes.xi`
+(cross-module predicate calls in postconditions, Option payload index
+bounds, position bounds, tuple-return field bounds, Vec length sum/bound,
+`@pre` length on `&mut Vec`, Str-parameter match-window bounds). sort
+0% -> **31.9%**, search 0% -> **62.2%**, global 19.2% -> **19.8%**
+pub-with-clause; `coverage_floors55.json` wired in the same commit
+(`a3fe12a`). Post-wave gates: check_modules **509/509** (352.1s); corpus
+**949/949**, 0 compilefail, 0 runfail (**1643.4s**); probe corpus
+**161/161** (350.2s); floors55 ratchet OK; targeted sort/search smoke
+families 9/9.
 
 ## Provenance note
 
