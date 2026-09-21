@@ -51,10 +51,10 @@ always tests THIS checkout, never an installed copy. The CI pin lives in
 ./tools/run_smokes.ps1 -Compiler C:\path\to\xiom.exe -Json out/smokes.json
 
 # coverage ratchet (floors live in tools/coverage_floors*.json)
-pwsh tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors56.json
+pwsh tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors57.json
 
 # dump new floors after a contract wave or a new module
-pwsh tools/coverage_scan.ps1 -DumpFloors tools/coverage_floors57.json
+pwsh tools/coverage_scan.ps1 -DumpFloors tools/coverage_floors58.json
 
 # strict bare-name gate over all 509 manifest modules
 pwsh tools/barename_scan.ps1 -Compiler C:\path\to\xiom.exe
@@ -99,8 +99,13 @@ there justifies each file) and the open findings to `tools/known_failures/`
 (hash-interface probe, async_read_line at EOF, generic-ctor push legs,
 function-value identity, plus the two generated-tranche findings). The runner
 does not recurse into `evidence/`, so a full `-Corpus tools/probes` run is
-green (160/160 on compiler R58, including the promoted `q1_verify_all.xi`
-compile-graph lock; it previously exceeded the 300s watchdog).
+green. State 2026-09-22: `known_failures/` holds **no open findings**
+(compiler R61 resolved or ruled the last batch), and the six probes that were
+fixed (`p_generic_push`, `p_gp_b`, `p_gp_c`, `p_ref_tuple_mangle`,
+`p_result_tuple_vec_loop`, `p_async_read_line_codegen` -- the last one
+resolved stdlib-side by replacing fd-as-FILE* reads with the runtime
+`xiom_read`/`xiom_write` helpers) are promoted to the corpus root; the two
+ruled items (`p_hash_probe`, `p_fnref`) are archived in `evidence/`.
 
 ## Generated call probes (untested-surface sweep)
 

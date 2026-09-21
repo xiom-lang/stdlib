@@ -1,9 +1,11 @@
 # Known-failing reproductions (not part of the probe corpus)
 
-Files here are **expected to fail** on the pinned compiler and are excluded
-from `tools/probes/` so the probe runner and CI stay green. Each file is a
-minimal-or-not-yet-minimized reproduction of an OPEN compiler-lane finding,
-kept so the compiler session can iterate without regenerating inputs.
+This directory is the intake for minimal reproductions of compiler-lane
+findings. Files are excluded from `tools/probes/` so the probe runner and CI
+stay green; resolved probes are promoted to `tools/probes/` and ruled-out
+ones to `tools/probes/evidence/`. **There are currently no open findings**
+(2026-09-22, compiler R61); the history below records what was here and how
+each item closed.
 
 Run one manually with:
 
@@ -13,70 +15,43 @@ xiom --force -o out.exe tools/known_failures/<file>.xi
 
 ## Current
 
-- `q1_verify_all.xi` -- **RESOLVED 2026-09-21** on compiler main R58
-  (`5bdffaad`; the R55-R58 batches): the 36-import T007 verification graph
-  now compiles within the default 300s watchdog (`compile=0 run=0` in the
-  re-triage run), so the probe is **moved to `tools/probes/`** as a green
-  compile-graph lock. History: it exceeded the watchdog on R52-R54 and was
-  kept here as a performance/watchdog item (it compiled with `--timeout 0`).
+**No open findings as of 2026-09-22 (compiler R61 `ff293f8e`).** Every probe
+that used to be listed here is resolved or ruled; the green locks live in
+`tools/probes/`.
 
-- `p_result_tuple_vec_loop.xi` (2026-09-21, from the `-IncludeRefs` generated
-  tranche): OPEN. A `Result[(Vec[Int], Int), Str]` whose match arm builds a
-  Vec inside a while loop (loop-local accumulation) emits the Result payload
-  slot as two scalars, so the Vec is stored into a scalar-sized slot:
-  `%tmp334` defined with type `%struct.Vec ...` but expected
-  `%struct.Result = type { i64, i64, i64 }`. Breaks
-  `xiom.net.tls_helper.cert_public_key_info` and `cert_is_self_signed`
-  (through `asn1_read_oid`). Minimal shape verified on R53/R54; nested simple
-  loops and loop-free arms compile fine, so the trigger is the
-  loop-local-to-Vec dataflow inside a tuple-payload Result arm.
+- `p_generic_push.xi`, `p_gp_b.xi`, `p_gp_c.xi` -- **RESOLVED 2026-09-22**
+  on R61 (`ff293f8e`, e2e_m116): a local explicit-generic call
+  (`make_holder[JsonValue]()`) never recorded its substituted return type, so
+  the holder field fell to a scalar 8-byte load; all three now compile and
+  run green (`A=[42]`, `B=["tree"]`, `C=[9]`). **Moved to `tools/probes/`.**
 
-- `p_ref_tuple_mangle.xi` (2026-09-21, from the `-IncludeRefs` generated
-  tranche): OPEN. A tuple built from a reference parameter mangles the
-  reference type into the struct NAME:
-  `%struct.Tuple__&Vec__Int = type { i64, i64 }` -- invalid LLVM identifier
-  (`expected '=' after name`), plus `warning: unknown type '&Vec' --
-  defaulting to i64`. Breaks the `xiom.crypto.sign` Ed25519/ECDSA/DSA family
-  (`ed25519_keypair_from_seed` returns `(seed, Vec[UInt8].new())`), whose
-  module header already stubs those functions for this class.
+- `p_result_tuple_vec_loop.xi`, `p_ref_tuple_mangle.xi` -- **RESOLVED
+  2026-09-22** on R59/R60 (`2aad5ecd`, stdlib findings): match-slot leak into
+  loop bodies and tuple element naming. Both run green on R61. **Moved to
+  `tools/probes/`.**
 
-- `q1_verify_all.xi` (moved from `tools/probes/`, 2026-09-21): OPEN --
-  performance/watchdog, NOT a correctness failure. The 36-import T007
-  verification graph compiles clean with `--timeout 0` (378,368-byte exe on
-  compiler R52) but exceeds the compiler's default 300s compile watchdog,
-  which aborts it. Same class as the heavy generator groups (see
-  `tools/README.md`, `-Timeout`). Kept here so the probe runner stays green;
-  the per-module intent is covered by `check_modules` 509/509.
+- `p_async_read_line_codegen.xi` -- **RESOLVED stdlib-side 2026-09-22**: the
+  compiler lane ruled the 0xC0000409 a stdlib fd/FILE* misuse, not codegen.
+  `xiom.async.io` now reads and writes descriptors through the runtime
+  `xiom_read`/`xiom_write` helpers in `async_read`, `async_write`,
+  `async_read_line` and `async_read_until` (the `fread`/`fwrite` externs stay
+  for real FILE* handles in `async_read_file`/`async_write_file`); the probe
+  runs green on R61. **Moved to `tools/probes/`.**
 
-- `p_hash_probe.xi` (moved from `tools/probes/`, 2026-09-21): OPEN. The
-  hasher-interface path (`impl H2[Int]` in a probe) is unimplemented:
-  `error[T001]: 15:36: argument 1 type mismatch: expected Int, found Self`.
-  `xiom/hash.xi` documents the interface as having no concrete impls yet and
-  a historical pointer-to-i64 IR defect; this is the only repro of the
-  `Self`-typed impl-argument path. Needs compiler-lane triage.
+- `p_hash_probe.xi` -- **RULED 2026-09-22** (R61, e2e_m117): interface-typed
+  parameters erase to i64 and an aggregate argument is now rejected loudly
+  (`error[C001]: unsupported: interface-typed parameter ...`) instead of
+  silently returning a wrong value; the probe locks the rejection. Not a bug.
+  **Archived in `tools/probes/evidence/`** to re-add as a green probe when the
+  interface ABI lands.
 
-- `p_async_read_line_codegen.xi` (moved from `tools/probes/`, 2026-09-21):
-  OPEN. `xiom.async.io.async_read_line(0)` compiles but dies with 0xC0000409
-  (stack cookie) when stdin is at EOF -- the shape run_smokes feeds every
-  probe (empty stdin). The body reads through
-  `fread(&byte_buf[0], 1, 1, fd as *UInt8)` (an fd cast to FILE*), so the
-  crash is either the cast path or the stack buffer under it. The only probe
-  covering async_read_line; keep until the compiler lane rules.
+- `p_fnref.xi` -- **RULED 2026-09-22**: function-value identity is
+  unspecified; the observed behaviour (distinct module-qualified fn values
+  comparing equal) needs a language-spec decision rather than a compiler fix.
+  **Archived in `tools/probes/evidence/`.**
 
-- `p_generic_push.xi`, `p_gp_b.xi`, `p_gp_c.xi` (moved from `tools/probes/`,
-  2026-09-21): OPEN. The R7 generic-constructor residual (compiler
-  COMPILER_BUGS.md): `Vec[V].new()` inside a generic constructor yields a
-  corrupt vector and a later push AVs with 0xC0000005. `p_gp_a.xi`
-  (constructor only) is green; these are the push legs. `p_generic_push` is
-  the combined repro, `p_gp_b`/`p_gp_c` the minimized variants (generic
-  push, concrete push).
-
-- `p_fnref.xi` (moved from `tools/probes/`, 2026-09-21): OPEN, needs a
-  compiler-lane ruling. Two distinct function values (`io.read_int` and
-  `io.read_float`) compare equal: the probe's `if f == g { return 1; }`
-  fires. No spec or test covers module-qualified function-value identity;
-  classify as bug or unsupported feature before closing.
-
+- `q1_verify_all.xi` -- **RESOLVED 2026-09-21** on R58 (watchdog class);
+  promoted to `tools/probes/`.
 - `p_pre_capture_callee.xi` -- **RESOLVED 2026-09-20** on compiler main
   R52 (R51 `c235b3fe`: the `@pre` walkers descend through Imply/Is so
   implication-wrapped clauses emit entry snapshots), **moved to
