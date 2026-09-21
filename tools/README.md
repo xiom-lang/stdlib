@@ -123,8 +123,13 @@ watchdog (default 300; `0` disables). Heavy import sets (`xiom.net`,
 compile those tranches with `-Timeout 0` and record the wall time.
 
 The zero-arg tranche is locked by `tools/probes/p_never_called_zeroarg.xi`;
-the single-param tranche is currently a known compiler failure
-(`tools/known_failures/p_sweep_single_param.xi`). Multi-param state
+the single-param tranche is locked by `tools/probes/p_sweep_single_param.xi`
+-- a runtime-guarded compile lock (the generated calls sit behind an
+`XIOM_SWEEP_RUN` env guard: type-check and codegen always happen, the calls
+never run because the generated arguments are unsafe to execute). The raw
+call set and its R49-4 clang-crash header are archived in
+`tools/probes/evidence/`; R54 `7837b194` fixed the codegen. A fresh scan
+(`-MinParams 1 -MaxParams 1`) is 60 modules / 239 calls. Multi-param state
 (2026-09-20, R49): all 47 module groups / 179 calls compile clean,
 compile-only; the `xiom.ffi.c` group exposed a no-NASM runtime link gap
 (fixed, locked by `tools/probes/p_asm_fallback_link.xi`) and the heavy
