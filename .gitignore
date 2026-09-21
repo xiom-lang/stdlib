@@ -25,6 +25,11 @@
 # IR dumps and debug patches are output, never source.
 tools/probes/*
 !tools/probes/*.xi
+# evidence/ archives probes that are understood to fail (historical APIs,
+# superseded shapes, deliberate parity evidence); the runner does not
+# recurse, so they stay out of the gate. Keep them tracked.
+!tools/probes/evidence/
+!tools/probes/evidence/**
 tools/_work/
 tools/out/
 

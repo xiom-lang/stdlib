@@ -93,10 +93,12 @@ and `-OutDir`. Nothing is written inside the repo.
 tracked; run captures are ignored). Each probe locks a specific compiler or
 contract behavior from the session handoff probe index; re-run them after
 every compiler bump. `tools/modlist_all.txt` is the manifest module list used
-by the bare-name and check-module scans. State 2026-09-20: the corpus root
-still contains 18 historical debug/evidence probes that fail identically on
-R49 and R52 (11 compilefail + 7 runfail; see `docs/VERIFICATION_BASELINE.md`
-R52 section), so a full-corpus run is 157/175 until they are curated out.
+by the bare-name and check-module scans. State 2026-09-21: curated. The
+historical debug/evidence probes moved to `tools/probes/evidence/` (a README
+there justifies each file) and the open findings to `tools/known_failures/`
+(hash-interface probe, async_read_line at EOF, generic-ctor push legs,
+function-value identity, q1 watchdog/perf). The runner does not recurse into
+`evidence/`, so a full `-Corpus tools/probes` run is green.
 
 ## Generated call probes (untested-surface sweep)
 

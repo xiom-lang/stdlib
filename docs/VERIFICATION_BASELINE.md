@@ -94,6 +94,15 @@ documented Probes gate cannot be green while they sit in the corpus root;
 curate them into `tools/known_failures/` or an evidence subdirectory next
 session (the probe run is not wired into CI).
 
+**CURATED 2026-09-21.** The 11 historical/evidence probes moved to
+`tools/probes/evidence/` (justification table in its README: stale APIs,
+superseded shapes, or deliberate parity evidence) and the 7 open findings to
+`tools/known_failures/`: `p_hash_probe` (hasher-interface `Self` argument),
+`p_async_read_line_codegen` (0xC0000409 at EOF), `p_generic_push`/`p_gp_b`/
+`p_gp_c` (R7 generic-ctor push legs), `p_fnref` (function-value identity
+needs a compiler ruling), and `q1_verify_all` (compiles with `--timeout 0`;
+watchdog/perf, not correctness). The probes root is green after the move.
+
 ## Provenance note
 
 Tag `v0.60.0` predates the resource-asset fix (`e3714884`, 2026-09-17

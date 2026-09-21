@@ -13,6 +13,43 @@ xiom --force -o out.exe tools/known_failures/<file>.xi
 
 ## Current
 
+- `q1_verify_all.xi` (moved from `tools/probes/`, 2026-09-21): OPEN --
+  performance/watchdog, NOT a correctness failure. The 36-import T007
+  verification graph compiles clean with `--timeout 0` (378,368-byte exe on
+  compiler R52) but exceeds the compiler's default 300s compile watchdog,
+  which aborts it. Same class as the heavy generator groups (see
+  `tools/README.md`, `-Timeout`). Kept here so the probe runner stays green;
+  the per-module intent is covered by `check_modules` 509/509.
+
+- `p_hash_probe.xi` (moved from `tools/probes/`, 2026-09-21): OPEN. The
+  hasher-interface path (`impl H2[Int]` in a probe) is unimplemented:
+  `error[T001]: 15:36: argument 1 type mismatch: expected Int, found Self`.
+  `xiom/hash.xi` documents the interface as having no concrete impls yet and
+  a historical pointer-to-i64 IR defect; this is the only repro of the
+  `Self`-typed impl-argument path. Needs compiler-lane triage.
+
+- `p_async_read_line_codegen.xi` (moved from `tools/probes/`, 2026-09-21):
+  OPEN. `xiom.async.io.async_read_line(0)` compiles but dies with 0xC0000409
+  (stack cookie) when stdin is at EOF -- the shape run_smokes feeds every
+  probe (empty stdin). The body reads through
+  `fread(&byte_buf[0], 1, 1, fd as *UInt8)` (an fd cast to FILE*), so the
+  crash is either the cast path or the stack buffer under it. The only probe
+  covering async_read_line; keep until the compiler lane rules.
+
+- `p_generic_push.xi`, `p_gp_b.xi`, `p_gp_c.xi` (moved from `tools/probes/`,
+  2026-09-21): OPEN. The R7 generic-constructor residual (compiler
+  COMPILER_BUGS.md): `Vec[V].new()` inside a generic constructor yields a
+  corrupt vector and a later push AVs with 0xC0000005. `p_gp_a.xi`
+  (constructor only) is green; these are the push legs. `p_generic_push` is
+  the combined repro, `p_gp_b`/`p_gp_c` the minimized variants (generic
+  push, concrete push).
+
+- `p_fnref.xi` (moved from `tools/probes/`, 2026-09-21): OPEN, needs a
+  compiler-lane ruling. Two distinct function values (`io.read_int` and
+  `io.read_float`) compare equal: the probe's `if f == g { return 1; }`
+  fires. No spec or test covers module-qualified function-value identity;
+  classify as bug or unsupported feature before closing.
+
 - `p_pre_capture_callee.xi` -- **RESOLVED 2026-09-20** on compiler main
   R52 (R51 `c235b3fe`: the `@pre` walkers descend through Imply/Is so
   implication-wrapped clauses emit entry snapshots), **moved to
@@ -48,19 +85,16 @@ xiom --force -o out.exe tools/known_failures/<file>.xi
   the former Windows link failure (`undefined symbol: setenv`) is gone and
   the probe round-trips set/get/remove on every platform.
 
-- `p_result_payload_contract.xi` (2026-09-18): MINIMAL codegen repro found
-  while pre-validating wave-13 contract shapes on main R46b (`504fcc1e`).
-  One module with TWO Result-returning functions whose `ensures` clauses
-  read the payload (`result.value`): a scalar payload (Int) plus a Vec
-  payload breaks clang:
-  `'%tmp46' defined with type '%struct.Vec' but expected 'ptr'` at
-  `call i64 @xiom_str_len(i8* %tmp46)`. Either function compiles alone; the
-  pair is the trigger. The `is Err` payload form
-  (`ensures: result is Err => result.value.len() > 0`) fails the same way
-  when combined with a Vec-payload Ok contract. Bare `result is Ok` across
-  Str/Vec/Unit payloads, and scalar+Str payload contracts, are clean.
-  Impact: wave-13 stdlib contracts use only the clean forms; payload-reading
-  Result clauses stay out of io/fs.xi until the compiler lane fixes this.
+- `p_result_payload_contract.xi` -- **RESOLVED 2026-09-19** on compiler main
+  `306073ba` (R49-3), **moved to `tools/probes/`**. History: one module with
+  two Result-returning functions whose `ensures` clauses read the payload
+  (`result.value`) -- a scalar payload (Int) plus a Vec payload -- broke
+  clang (`'%tmp46' defined with type '%struct.Vec' but expected 'ptr'`); the
+  `is Err` payload form failed the same way combined with a Vec-payload Ok
+  contract. Impact: wave-13 kept payload-reading clauses out of io/fs;
+  R49-3 unblocked them, and wave 17 (2026-09-21) applies them across
+  io/fs, io/console and io/pipe, pre-validated by
+  `tools/probes/p_wave17_shapes.xi`.
 
 - `p_sweep_single_param.xi` (2026-09-17): 139 calls to single-parameter
   public functions that no smoke/module references, across 54 imported
