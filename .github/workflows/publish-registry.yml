@@ -1,22 +1,31 @@
-# Registry publish -- DISPATCH ONLY until staging is verified.
+# Registry publish -- trusted publishing via GitHub OIDC.
 # Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 # SPDX-License-Identifier: MIT OR Apache-2.0
 #
 # Contract:
-#   XIOM_REGISTRY=https://registry.xiom-lang.org
-#   XIOM_REGISTRY_TOKEN=${{ secrets.REGISTRY_PUBLISH_TOKEN }}  (created after
-#   registry staging is live; org secret, never repo-level)
-#   tool: `xiom pkg publish` run inside the extracted stdlib release package.
+#   XIOM_REGISTRY=https://registry.xiom-lang.org (production) or
+#   https://staging.registry.xiom-lang.org (dispatch canary).
+#   Auth: GitHub OIDC trusted publishing. xiom-lang/stdlib is the trusted
+#   publisher for the stdlib package (audience `xiom-registry`); production
+#   refs are `refs/tags/stdlib-v*`, staging canaries are workflow_dispatch
+#   runs. The JWT is minted in-job, masked, and passed to `xiom pkg publish`
+#   as an opaque bearer via XIOM_REGISTRY_TOKEN. No long-lived publish token
+#   exists.
+#   The publish job runs in the `registry-publish` environment (required
+#   reviewers).
 #
-# Inputs: the stdlib release version (e.g. 0.60.0). The compiler pin is read
-# from COMPILER_VERSION at the matching stdlib tag; the compiler binary and
-# the package tarball come from public GitHub Releases (no token).
+# Inputs (dispatch): the stdlib release version (e.g. 0.60.0) and, for
+# staging canaries, the registry base URL. On tag pushes the version comes
+# from the tag (`stdlib-v*`). The compiler pin is read from COMPILER_VERSION
+# at the matching stdlib tag; the compiler binary and the package tarball come
+# from public GitHub Releases (no token).
 #
-# Do not enable this on push until staging has been verified end to end.
 # Credentials policy: docs/CI.md.
 name: XIOM Stdlib Registry Publish
 
 on:
+  push:
+    tags: ["stdlib-v*"]
   workflow_dispatch:
     inputs:
       version:
@@ -34,11 +43,18 @@ jobs:
   publish:
     name: xiom pkg publish
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    environment: registry-publish
     steps:
       - name: Resolve versions
         id: ver
         run: |
           ver="${{ github.event.inputs.version }}"
+          if [ -z "$ver" ]; then
+            ver="${GITHUB_REF_NAME}"
+          fi
           ver="${ver#stdlib-v}"
           pin="$(curl -fsSL "https://raw.githubusercontent.com/xiom-lang/stdlib/stdlib-v${ver}/COMPILER_VERSION" | tr -d '\r\n ')"
           if [ -z "$pin" ]; then
@@ -74,10 +90,21 @@ jobs:
           echo "XIOM_BIN=$(realpath compiler/bin/xiom)" >> "$GITHUB_ENV"
           compiler/bin/xiom --version
 
+      - name: Mint registry OIDC token
+        id: oidc
+        shell: bash
+        run: |
+          set -euo pipefail
+          token="$(curl -fsSL -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=xiom-registry" | jq -r .value)"
+          test -n "$token" && test "$token" != "null"
+          echo "::add-mask::$token"
+          echo "token=$token" >> "$GITHUB_OUTPUT"
+
       - name: Publish to the registry
         working-directory: pkg
         env:
-          XIOM_REGISTRY: ${{ github.event.inputs.registry }}
-          XIOM_REGISTRY_TOKEN: ${{ secrets.REGISTRY_PUBLISH_TOKEN }}
+          XIOM_REGISTRY: ${{ github.event.inputs.registry || 'https://registry.xiom-lang.org' }}
+          XIOM_REGISTRY_TOKEN: ${{ steps.oidc.outputs.token }}
         run: |
           "$XIOM_BIN" pkg publish
