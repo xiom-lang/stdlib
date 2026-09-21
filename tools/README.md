@@ -129,6 +129,13 @@ by-value vectors use `Vec[E].new()`. State 2026-09-21: the
 compile-only 110/112; the two failures are open compiler findings
 (`tools/known_failures/p_result_tuple_vec_loop.xi` for xiom.net.tls_helper,
 `p_ref_tuple_mangle.xi` for xiom.crypto.sign), not stdlib link gaps.
+`-IncludeStructs` additionally accepts struct-typed params when the declaring
+module has a public constructor with an exact struct return type and
+non-struct params (the probe emits `var s = module.ctor(...)` and lets
+inference type the local). State 2026-09-21: the combined
+`-MinParams 1 -MaxParams 4 -IncludeRefs -IncludeStructs` tranche is 123
+modules / 734 calls, compile-only 121/123 -- the same two findings, no new
+failures from the struct class.
 
 The zero-arg tranche is locked by `tools/probes/p_never_called_zeroarg.xi`;
 the single-param tranche is locked by `tools/probes/p_sweep_single_param.xi`

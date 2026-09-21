@@ -58,9 +58,12 @@ flip ON, freeze sweep on compiler tag v0.60.0 = 947/947 + module check
   R53/R54), and the `-IncludeRefs` tranche (112 modules / 602 calls covering
   `&T`/`&mut T` scalar and `Vec[E]` parameters) -- 110/112 clean, the two
   failures filed as compiler findings (`tools/known_failures/
-  p_result_tuple_vec_loop.xi`, `p_ref_tuple_mangle.xi`). Remaining classes:
-  struct-typed params (193), fn-typed params (45), generic fns (83), plus the
-  un-targeted remainder.
+  p_result_tuple_vec_loop.xi`, `p_ref_tuple_mangle.xi`); the combined
+  `-IncludeStructs` tranche covers struct-typed params through same-module
+  public constructors (123 modules / 734 calls, 121/123 clean -- the same two
+  findings). Remaining classes: struct params without a usable constructor
+  (44 fns), fn-typed params (45), generic fns (83), plus the un-targeted
+  remainder.
 - **Single-param untested surface**: RESOLVED 2026-09-21 on compiler main
   `7837b194` (R54: large fixed arrays emit memset + address access instead
   of the crashing aggregate loads). The raw call set compiles+links again and

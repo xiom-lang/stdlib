@@ -152,6 +152,14 @@ was rejected by tag rules -- owner action needed).
 - Docs: `tools/README.md` (switch + tranche state) and
   `docs/STDLIB_BETA_LIMITATIONS.md` (single-param RESOLVED on R54, new scan
   numbers) updated in this commit.
+- `-IncludeStructs` extension: struct-typed params are accepted when the
+  declaring module has a public constructor (exact struct return type,
+  non-struct params); the probe emits `var s = module.ctor(...)` by
+  inference. 206 never-referenced fns carry struct params, 162 are
+  constructible. Combined tranche: **123 modules / 734 calls, compile-only
+  121/123** -- the same two findings, no new failures from the struct class.
+  Remaining untested classes: 44 struct-param fns without a usable ctor,
+  45 fn-param fns, 83 generic fns.
 
 **R49 baseline state (2026-09-19, local main then `3f839e1`)**
 - ALL GATES GREEN on the final tree: `check_modules` **509/509** (262.5s);
