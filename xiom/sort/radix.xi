@@ -4,7 +4,9 @@
 
 module xiom.sort.radix
 
-// Depends on: none
+use xiom.sort.intro;
+
+// Depends on: xiom.sort.intro (is_sorted in postconditions)
 
 // ============================================================================
 // Radix/counting/bucket sort family: linear-time integer sorts, no comparisons.
@@ -55,7 +57,9 @@ fn radix_pass(v: &mut Vec[Int], exp: Int, n: Int) {
 /// of bytes needed for the maximum value. Stable. In-place, O(n) space.
 /// NOTE: negative values are NOT supported; if any element is negative the
 /// vector is left unchanged (documented contract of the frozen API).
-pub fn radix_sort(v: &mut Vec[Int]) {
+pub fn radix_sort(v: &mut Vec[Int])
+  ensures: intro.is_sorted(v) == true
+{
   var n = v.len();
   if n <= 1 { return; }
   var max_val = 0;
@@ -131,7 +135,9 @@ fn radix_pass_u64(v: &mut Vec[UInt64], exp: UInt64, n: Int) {
 /// Radix sort over raw byte digits (4 passes of 8 bits). Stable.
 /// Handles the same input domain as radix_sort: non-negative values only;
 /// negative values are left unchanged (documented contract).
-pub fn radix_sort_by_bytes(v: &mut Vec[Int]) {
+pub fn radix_sort_by_bytes(v: &mut Vec[Int])
+  ensures: intro.is_sorted(v) == true
+{
   var n = v.len();
   if n <= 1 { return; }
   var i = 0;

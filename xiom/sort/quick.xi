@@ -4,7 +4,9 @@
 
 module xiom.sort.quick
 
-// Depends on: none
+use xiom.sort.intro;
+
+// Depends on: xiom.sort.intro (is_sorted in postconditions)
 
 // ============================================================================
 // Quick sort family: divide-and-conquer with pivot partitioning.
@@ -63,7 +65,9 @@ fn partition(v: &mut Vec[Int], lo: Int, hi: Int) -> Int {
 
 /// In-place quicksort of an Int vector. O(n log n) average, O(n^2) worst.
 /// Unstable. Small ranges use insertion sort for speed.
-pub fn quick_sort(v: &mut Vec[Int]) {
+pub fn quick_sort(v: &mut Vec[Int])
+  ensures: intro.is_sorted(v) == true
+{
   var n = v.len();
   if n <= 1 { return; }
   quick_sort_range(v, 0, n - 1);
@@ -125,7 +129,9 @@ pub fn quick_select(v: &mut Vec[Int], k: Int) -> Int {
 /// Quicksort with 3-way (Dutch national flag) partitioning.
 /// O(n log n) average, O(n^2) worst. Unstable.
 /// Handles vectors with many duplicate values efficiently.
-pub fn quick_sort_3way(v: &mut Vec[Int]) {
+pub fn quick_sort_3way(v: &mut Vec[Int])
+  ensures: intro.is_sorted(v) == true
+{
   var n = v.len();
   if n <= 1 { return; }
   quick_sort_3way_range(v, 0, n - 1);

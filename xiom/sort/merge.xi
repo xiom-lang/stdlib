@@ -4,7 +4,9 @@
 
 module xiom.sort.merge
 
-// Depends on: none
+use xiom.sort.intro;
+
+// Depends on: xiom.sort.intro (is_sorted in postconditions)
 
 // ============================================================================
 // Merge sort family: stable divide-and-conquer using O(n) auxiliary space.
@@ -55,7 +57,9 @@ fn merge_sort_range(v: &mut Vec[Int], tmp: &mut Vec[Int], lo: Int, hi: Int) {
 }
 
 /// Stable in-place merge sort of an Int vector. O(n log n) always, O(n) space.
-pub fn merge_sort(v: &mut Vec[Int]) {
+pub fn merge_sort(v: &mut Vec[Int])
+  ensures: intro.is_sorted(v) == true
+{
   var n = v.len();
   if n <= 1 { return; }
   var tmp = Vec[Int].new();
@@ -69,7 +73,9 @@ pub fn merge_sort(v: &mut Vec[Int]) {
 
 /// Merge two sorted vectors into one sorted vector. O(a.len() + b.len()).
 /// Both inputs must already be sorted in non-decreasing order.
-pub fn merge(a: &Vec[Int], b: &Vec[Int]) -> Vec[Int] {
+pub fn merge(a: &Vec[Int], b: &Vec[Int]) -> Vec[Int]
+  ensures: result.len() == a.len() + b.len()
+{
   var out = Vec[Int].new();
   var i = 0;
   var j = 0;
@@ -155,7 +161,9 @@ fn merge_stable_merge(v: &mut Vec[Int], tmp: &mut Vec[Int], compare: fn(&Int, &I
 /// Natural merge sort: merge sort that exploits existing sorted runs.
 /// O(n log n) worst case, O(n) when v is already sorted, O(n) space.
 /// Stable.
-pub fn natural_merge_sort(v: &mut Vec[Int]) {
+pub fn natural_merge_sort(v: &mut Vec[Int])
+  ensures: intro.is_sorted(v) == true
+{
   var n = v.len();
   if n <= 1 { return; }
   var tmp = Vec[Int].new();

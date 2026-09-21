@@ -13,7 +13,9 @@ module xiom.search.kmp
 /// Longest proper prefix-suffix lengths for each position of pattern.
 /// pi[i] is the length of the longest proper prefix of pattern[0..=i] that is
 /// also a suffix. O(m). Internal building block exposed for reuse.
-pub fn kmp_prefix_table(pattern: Str) -> Vec[Int] {
+pub fn kmp_prefix_table(pattern: Str) -> Vec[Int]
+  ensures: result.len() == pattern.len()
+{
   var m = pattern.len();
   var pi = Vec[Int].new();
   var i = 0;
@@ -38,7 +40,9 @@ pub fn kmp_prefix_table(pattern: Str) -> Vec[Int] {
 
 /// Start index of the first occurrence of pattern in text, or None. O(n + m).
 /// Returns None when pattern is empty or longer than text.
-pub fn kmp_search(text: Str, pattern: Str) -> Option[Int] {
+pub fn kmp_search(text: Str, pattern: Str) -> Option[Int]
+  ensures: result is Some => result.value >= 0 && result.value + pattern.len() <= text.len()
+{
   var m = pattern.len();
   var n = text.len();
   if m == 0 || m > n { return None; }
@@ -62,7 +66,9 @@ pub fn kmp_search(text: Str, pattern: Str) -> Option[Int] {
 
 /// Start indices of every (overlapping) occurrence of pattern in text. O(n+m).
 /// Empty pattern yields an empty result.
-pub fn kmp_search_all(text: Str, pattern: Str) -> Vec[Int] {
+pub fn kmp_search_all(text: Str, pattern: Str) -> Vec[Int]
+  ensures: result.len() >= 0
+{
   var out = Vec[Int].new();
   var m = pattern.len();
   var n = text.len();
@@ -98,7 +104,9 @@ pub fn kmp_contains(text: Str, pattern: Str) -> Bool {
 
 /// Number of non-overlapping occurrences of pattern in text. O(n + m).
 /// Empty pattern yields 0.
-pub fn kmp_count(text: Str, pattern: Str) -> Int {
+pub fn kmp_count(text: Str, pattern: Str) -> Int
+  ensures: result >= 0
+{
   var m = pattern.len();
   var n = text.len();
   if m == 0 || m > n { return 0; }

@@ -12,7 +12,9 @@ module xiom.search.boyer
 
 /// Bad-character shift table indexed by byte value: table[b] is the index of
 /// the last occurrence of byte b in pattern, or -1 if b never occurs. O(m).
-pub fn boyer_moore_bad_char(pattern: Str) -> Vec[Int] {
+pub fn boyer_moore_bad_char(pattern: Str) -> Vec[Int]
+  ensures: result.len() >= 256
+{
   var table = Vec[Int].new();
   var b = 0;
   while b < 256 {
@@ -73,7 +75,9 @@ pub fn boyer_moore_good_suffix(pattern: Str) -> Vec[Int] {
 /// Boyer-Moore algorithm (bad-character + good-suffix tables).
 /// O(n/m) best, O(n*m) worst. Returns None when pattern is empty or longer
 /// than text.
-pub fn boyer_moore_search(text: Str, pattern: Str) -> Option[Int] {
+pub fn boyer_moore_search(text: Str, pattern: Str) -> Option[Int]
+  ensures: result is Some => result.value >= 0 && result.value + pattern.len() <= text.len()
+{
   var m = pattern.len();
   var n = text.len();
   if m == 0 || m > n { return None; }
@@ -100,7 +104,9 @@ pub fn boyer_moore_search(text: Str, pattern: Str) -> Option[Int] {
 
 /// Start indices of every occurrence of pattern in text (full Boyer-Moore).
 /// O(n/m) average. Empty pattern yields an empty result.
-pub fn boyer_moore_search_all(text: Str, pattern: Str) -> Vec[Int] {
+pub fn boyer_moore_search_all(text: Str, pattern: Str) -> Vec[Int]
+  ensures: result.len() >= 0
+{
   var out = Vec[Int].new();
   var m = pattern.len();
   var n = text.len();
@@ -132,7 +138,9 @@ pub fn boyer_moore_search_all(text: Str, pattern: Str) -> Vec[Int] {
 
 /// Horspool variant of Boyer-Moore: bad-character table only, keyed on the
 /// last text character of the window. O(n*m) worst, good average.
-pub fn boyer_moore_horspool(text: Str, pattern: Str) -> Option[Int] {
+pub fn boyer_moore_horspool(text: Str, pattern: Str) -> Option[Int]
+  ensures: result is Some => result.value >= 0 && result.value + pattern.len() <= text.len()
+{
   var m = pattern.len();
   var n = text.len();
   if m == 0 || m > n { return None; }

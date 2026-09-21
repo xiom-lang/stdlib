@@ -12,7 +12,9 @@ module xiom.search.binary
 
 /// Index of target in a sorted v, or None. O(log n). Requires v to be sorted
 /// in non-decreasing order.
-pub fn binary_search(v: &Vec[Int], target: Int) -> Option[Int] {
+pub fn binary_search(v: &Vec[Int], target: Int) -> Option[Int]
+  ensures: result is Some => result.value >= 0 && result.value < v.len()
+{
   var n = v.len();
   if n == 0 { return None; }
   var lo = 0;
@@ -32,7 +34,9 @@ pub fn binary_search(v: &Vec[Int], target: Int) -> Option[Int] {
 
 /// Binary search restricted to the inclusive range v[lo..=hi]. O(log n).
 /// Returns None when the range is empty, inverted, or out of bounds.
-pub fn binary_search_range(v: &Vec[Int], target: Int, lo: Int, hi: Int) -> Option[Int] {
+pub fn binary_search_range(v: &Vec[Int], target: Int, lo: Int, hi: Int) -> Option[Int]
+  ensures: result is Some => result.value >= 0 && result.value < v.len()
+{
   var n = v.len();
   if lo < 0 || hi >= n || lo > hi { return None; }
   var left = lo;
@@ -52,7 +56,9 @@ pub fn binary_search_range(v: &Vec[Int], target: Int, lo: Int, hi: Int) -> Optio
 
 /// Index of the first element >= target; v.len() if none. O(log n).
 /// Requires v to be sorted.
-pub fn lower_bound(v: &Vec[Int], target: Int) -> Int {
+pub fn lower_bound(v: &Vec[Int], target: Int) -> Int
+  ensures: result >= 0 && result <= v.len()
+{
   var n = v.len();
   var lo = 0;
   var hi = n;
@@ -69,7 +75,9 @@ pub fn lower_bound(v: &Vec[Int], target: Int) -> Int {
 
 /// Index of the first element > target; v.len() if none. O(log n).
 /// Requires v to be sorted.
-pub fn upper_bound(v: &Vec[Int], target: Int) -> Int {
+pub fn upper_bound(v: &Vec[Int], target: Int) -> Int
+  ensures: result >= 0 && result <= v.len()
+{
   var n = v.len();
   var lo = 0;
   var hi = n;
@@ -87,7 +95,9 @@ pub fn upper_bound(v: &Vec[Int], target: Int) -> Int {
 /// Binary search with a custom comparator: compare(&v[mid], &target).
 /// O(log n). The comparator must be a named function returning -1/0/1.
 /// Requires v to be sorted per the comparator.
-pub fn binary_search_by(v: &Vec[Int], target: Int, compare: fn(&Int, &Int) -> Int) -> Option[Int] {
+pub fn binary_search_by(v: &Vec[Int], target: Int, compare: fn(&Int, &Int) -> Int) -> Option[Int]
+  ensures: result is Some => result.value >= 0 && result.value < v.len()
+{
   var n = v.len();
   if n == 0 { return None; }
   var lo = 0;
@@ -108,7 +118,9 @@ pub fn binary_search_by(v: &Vec[Int], target: Int, compare: fn(&Int, &Int) -> In
 
 /// (lo, hi) tuple: all occurrences of target span the half-open index range
 /// [lo, hi). If target is absent, lo == hi (empty range). O(log n).
-pub fn search_range(v: &Vec[Int], target: Int) -> (Int, Int) {
+pub fn search_range(v: &Vec[Int], target: Int) -> (Int, Int)
+  ensures: result.0 >= 0 && result.1 >= result.0 && result.1 <= v.len()
+{
   var lo = lower_bound(v, target);
   var n = v.len();
   if lo == n || v[lo] != target {
@@ -122,7 +134,9 @@ pub fn search_range(v: &Vec[Int], target: Int) -> (Int, Int) {
 /// O(log n). Requires v to be sorted ascending (exact IEEE-754 equality
 /// semantics: -0.0 and +0.0 compare equal; NaN never matches because
 /// NaN == NaN is false). Returns None when target is absent.
-pub fn binary_search_float(v: &Vec[Float64], target: Float64) -> Option[Int] {
+pub fn binary_search_float(v: &Vec[Float64], target: Float64) -> Option[Int]
+  ensures: result is Some => result.value >= 0 && result.value < v.len()
+{
   var n = v.len();
   if n == 0 { return None; }
   var lo = 0;

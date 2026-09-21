@@ -13,7 +13,9 @@ module xiom.sort.intro
 /// Introsort: quicksort that switches to heapsort when the recursion depth
 /// budget is exhausted, and to insertion sort on small ranges.
 /// O(n log n) worst case, O(log n) auxiliary space. Unstable.
-pub fn intro_sort(v: &mut Vec[Int]) {
+pub fn intro_sort(v: &mut Vec[Int])
+  ensures: is_sorted(v) == true
+{
   var n = v.len();
   if n <= 1 { return; }
   var depth = 0;
@@ -104,7 +106,9 @@ fn intro_sift(v: &mut Vec[Int], lo: Int, start: Int, end: Int) {
 
 /// O(n^2) insertion sort of the whole vector; fast for small/nearly-sorted
 /// input. Stable.
-pub fn insertion_sort(v: &mut Vec[Int]) {
+pub fn insertion_sort(v: &mut Vec[Int])
+  ensures: is_sorted(v) == true
+{
   insertion_sort_range(v, 0, v.len() - 1);
 }
 
@@ -125,7 +129,9 @@ fn insertion_sort_range(v: &mut Vec[Int], lo: Int, hi: Int) {
 
 /// Timsort: merge sort over natural runs with insertion sort for short runs.
 /// O(n log n) worst case, O(n) best (already sorted). Stable. O(n) space.
-pub fn tim_sort(v: &mut Vec[Int]) {
+pub fn tim_sort(v: &mut Vec[Int])
+  ensures: is_sorted(v) == true
+{
   var n = v.len();
   if n <= 1 { return; }
   var tmp = Vec[Int].new();
@@ -188,7 +194,9 @@ fn tim_merge(v: &mut Vec[Int], tmp: &mut Vec[Int], lo: Int, mid: Int, hi: Int) {
 
 /// Gap-based insertion sort using the Ciura sequence. O(n log^2 n) average,
 /// O(n^2) worst. Unstable. In-place, O(1) space.
-pub fn shell_sort(v: &mut Vec[Int]) {
+pub fn shell_sort(v: &mut Vec[Int])
+  ensures: is_sorted(v) == true
+{
   var n = v.len();
   if n <= 1 { return; }
   var gap = 1;
@@ -213,7 +221,9 @@ pub fn shell_sort(v: &mut Vec[Int]) {
 
 /// Adjacent-swap bubble sort. O(n^2) worst/average, O(n) best. Stable.
 /// Educational only.
-pub fn bubble_sort(v: &mut Vec[Int]) {
+pub fn bubble_sort(v: &mut Vec[Int])
+  ensures: is_sorted(v) == true
+{
   var n = v.len();
   if n <= 1 { return; }
   var i = 0;
@@ -235,7 +245,9 @@ pub fn bubble_sort(v: &mut Vec[Int]) {
 }
 
 /// Minimum-selection sort with O(n) swaps. O(n^2) always. Unstable.
-pub fn selection_sort(v: &mut Vec[Int]) {
+pub fn selection_sort(v: &mut Vec[Int])
+  ensures: is_sorted(v) == true
+{
   var n = v.len();
   if n <= 1 { return; }
   var i = 0;
@@ -329,7 +341,9 @@ pub fn nth_element(v: &mut Vec[Int], n: Int) -> Int {
 
 /// Stable sort guaranteeing equal elements keep their relative order.
 /// Delegates to a stable merge sort. O(n log n), O(n) space.
-pub fn sort_stable(v: &mut Vec[Int]) {
+pub fn sort_stable(v: &mut Vec[Int])
+  ensures: is_sorted(v) == true
+{
   var n = v.len();
   if n <= 1 { return; }
   var tmp = Vec[Int].new();

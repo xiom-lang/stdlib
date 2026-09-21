@@ -11,7 +11,9 @@ module xiom.search.linear
 // ============================================================================
 
 /// Index of the first occurrence of target, or None. O(n). Works on any data.
-pub fn linear_search(v: &Vec[Int], target: Int) -> Option[Int] {
+pub fn linear_search(v: &Vec[Int], target: Int) -> Option[Int]
+  ensures: result is Some => result.value >= 0 && result.value < v.len()
+{
   var n = v.len();
   var i = 0;
   while i < n {
@@ -25,7 +27,9 @@ pub fn linear_search(v: &Vec[Int], target: Int) -> Option[Int] {
 
 /// Index of the first occurrence of target at or after start, or None. O(n).
 /// A negative start behaves as 0; a start beyond the end yields None.
-pub fn linear_search_from(v: &Vec[Int], target: Int, start: Int) -> Option[Int] {
+pub fn linear_search_from(v: &Vec[Int], target: Int, start: Int) -> Option[Int]
+  ensures: result is Some => result.value >= 0 && result.value < v.len()
+{
   var n = v.len();
   var i = start;
   if i < 0 { i = 0; }
@@ -39,7 +43,9 @@ pub fn linear_search_from(v: &Vec[Int], target: Int, start: Int) -> Option[Int] 
 }
 
 /// Indices of every occurrence of target, in ascending order. O(n).
-pub fn linear_search_all(v: &Vec[Int], target: Int) -> Vec[Int] {
+pub fn linear_search_all(v: &Vec[Int], target: Int) -> Vec[Int]
+  ensures: result.len() <= v.len()
+{
   var out = Vec[Int].new();
   var n = v.len();
   var i = 0;

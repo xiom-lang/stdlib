@@ -284,11 +284,18 @@ T1/T2 yields.
       fs_write_range written <= data.len(), io/console + io/pipe Err
       payloads, always-Ok reads, simulated tty false) -> io 62.0% -> 78.7%,
       global 19.2% pub-with-clause; pre-validated by
-      tools/probes/p_wave17_shapes.xi. Ratchet:
-      tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors54.json
+      tools/probes/p_wave17_shapes.xi. Wave 18 (2026-09-21): 38 clauses on
+      sort + search (in-place Int sorts gain `is_sorted(v)` postconditions,
+      incl. cross-module `intro.is_sorted` in heap/quick/merge/radix; search
+      index bounds for binary/interpolation/linear/fibonacci, position
+      bounds for lower/upper_bound, tuple bounds for search_range, merge
+      length sum, KMP/Boyer match-window and table length bounds) -> sort 0%
+      -> 31.9%, search 0% -> 62.2%, global 19.2% -> 19.8% pub-with-clause;
+      pre-validated by tools/probes/p_wave18_shapes.xi. Ratchet:
+      tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors55.json
       (repo tooling as of the split; positive + negative runs verified;
       earlier floors kept at
-      coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53.json).
+      coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54.json).
       Floors are per top-level stdlib/xiom directory and must be refreshed
       when a module is ADDED (new uncovered pub fns dilute the percentage
       -- TOML dropped serialize 6.1% -> 5.4%, tz dropped time 13% ->

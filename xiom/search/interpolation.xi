@@ -13,7 +13,9 @@ module xiom.search.interpolation
 /// Index of target via value-proportional probing. O(log log n) average on
 /// uniformly distributed sorted Int arrays, O(n) worst. Returns Some(index)
 /// or None. Safe on unsorted data (degrades to a probe sequence).
-pub fn interpolation_search(v: &Vec[Int], target: Int) -> Option[Int] {
+pub fn interpolation_search(v: &Vec[Int], target: Int) -> Option[Int]
+  ensures: result is Some => result.value >= 0 && result.value < v.len()
+{
   var n = v.len();
   if n == 0 { return None; }
   var lo = 0;
@@ -45,7 +47,9 @@ pub fn interpolation_search(v: &Vec[Int], target: Int) -> Option[Int] {
 /// Interpolation search assuming the input is already sorted. O(log log n)
 /// average, O(n) worst. Identical probing logic to interpolation_search; the
 /// separate entry point documents the sortedness precondition.
-pub fn interpolation_search_sorted(v: &Vec[Int], target: Int) -> Option[Int] {
+pub fn interpolation_search_sorted(v: &Vec[Int], target: Int) -> Option[Int]
+  ensures: result is Some => result.value >= 0 && result.value < v.len()
+{
   var n = v.len();
   if n == 0 { return None; }
   var lo = 0;
@@ -94,7 +98,9 @@ fn exp_binary(v: &Vec[Int], target: Int, lo: Int, hi: Int) -> Option[Int] {
 /// Exponential (galloping) search: finds a bounding range [2^(k-1), 2^k]
 /// then binary-searches it. O(log i) where i is the target index. Requires a
 /// sorted vector.
-pub fn exponential_search(v: &Vec[Int], target: Int) -> Option[Int] {
+pub fn exponential_search(v: &Vec[Int], target: Int) -> Option[Int]
+  ensures: result is Some => result.value >= 0 && result.value < v.len()
+{
   var n = v.len();
   if n == 0 { return None; }
   if v[0] == target {
@@ -121,7 +127,9 @@ fn jump_step(n: Int) -> Int {
 
 /// Jump search: jumps ahead by sqrt(n) blocks then linearly scans the target
 /// block. O(sqrt(n)). Requires a sorted vector.
-pub fn jump_search(v: &Vec[Int], target: Int) -> Option[Int] {
+pub fn jump_search(v: &Vec[Int], target: Int) -> Option[Int]
+  ensures: result is Some => result.value >= 0 && result.value < v.len()
+{
   var n = v.len();
   if n == 0 { return None; }
   var step = jump_step(n);
@@ -176,7 +184,9 @@ pub fn ternary_search(f: fn(Int) -> Int, lo: Int, hi: Int) -> Int {
 }
 
 /// Fibonacci-number-stepped search of a sorted vector. O(log n).
-pub fn fibonacci_search(v: &Vec[Int], target: Int) -> Option[Int] {
+pub fn fibonacci_search(v: &Vec[Int], target: Int) -> Option[Int]
+  ensures: result is Some => result.value >= 0 && result.value < v.len()
+{
   var n = v.len();
   if n == 0 { return None; }
   var f2 = 0;

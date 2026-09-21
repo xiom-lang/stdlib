@@ -4,7 +4,9 @@
 
 module xiom.sort.heap
 
-// Depends on: none
+use xiom.sort.intro;
+
+// Depends on: xiom.sort.intro (is_sorted in postconditions)
 
 // ============================================================================
 // Heap sort family: in-place selection via a binary max-heap, O(1) space.
@@ -42,7 +44,9 @@ pub fn heapify(v: &mut Vec[Int]) {
 }
 
 /// In-place heap sort of an Int vector. O(n log n), unstable, O(1) space.
-pub fn heap_sort(v: &mut Vec[Int]) {
+pub fn heap_sort(v: &mut Vec[Int])
+  ensures: intro.is_sorted(v) == true
+{
   var n = v.len();
   if n <= 1 { return; }
   heapify(v);
