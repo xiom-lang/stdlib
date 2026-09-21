@@ -170,6 +170,28 @@ was rejected by tag rules -- owner action needed).
   (47/179), refs (112/602) and struct (123/734) tranches are unchanged
   after the parser fix.
 
+**SESSION 2026-09-21 PART 5 (R58 re-baseline; q1 promotion; two findings still open)**
+- Compiler main `5bdffaad` (R58) built from `git archive` and verified; the
+  R55-R58 batch resolved the compiler-lane leftovers L6-40/L5-40/L3-50/L8-14
+  (e2e_m110-m113). No stdlib gate depended on them.
+- All gates green on the stdlib tree: check_modules **509/509** (943.2s);
+  corpus **949/949**, 0 compilefail, 0 runfail (2996.5s, `-RetryFailed`);
+  probe corpus **160/160** (348.3s); barename **0 hits / 509** (585.3s);
+  coverage floors54 OK; doc ratchet OK.
+- The watchdog class also closed: `q1_verify_all` now compiles inside the
+  default 300s watchdog (`compile=0 run=0`) and is PROMOTED to
+  `tools/probes/` (probe corpus 159 -> 160, all green). `known_failures`
+  re-triage on R58: q1 resolved, the other 8 unchanged.
+- The two findings filed from the generated tranches
+  (`tools/known_failures/p_result_tuple_vec_loop.xi` and
+  `p_ref_tuple_mangle.xi`) still fail with IDENTICAL error signatures on R58;
+  the refs tranche re-ran 110/112 with the same two failures. They are NOT
+  part of the L6-40/L5-40/L3-50/L8-14 set and need their own compiler-lane
+  fix. Relay these with the R58 evidence.
+- Current verification binary: `xiom_r58.exe` (R58, `5bdffaad`);
+  `xiom_r53.exe` (R54) and `xiom_r52.exe`/`xiom_r49.exe` are previous
+  baselines.
+
 **R49 baseline state (2026-09-19, local main then `3f839e1`)**
 - ALL GATES GREEN on the final tree: `check_modules` **509/509** (262.5s);
   corpus **949/949**, 0 compilefail, 0 runfail (**1525.7s**, `-RetryFailed`);
@@ -309,7 +331,10 @@ was rejected by tag rules -- owner action needed).
    blocker.~~ **DONE 2026-09-21** (R54 `7837b194`; the guarded lock is
    promoted, raw evidence archived, single-param tranche 60/60 -- see
    PART 3). Compiler-lane leftovers are playground/perf only and do not
-   block the gate.
+   block the gate. Two further probe findings remain open and relayed:
+   `p_result_tuple_vec_loop` (Result tuple payload with a Vec; breaks
+   net.tls_helper) and `p_ref_tuple_mangle` (reference type in a tuple
+   struct name; breaks crypto.sign) -- unchanged on R58, see PART 4/5.
 2. ~~Untested-surface generator: compile the remaining groups
    (`-OnlyCalls 3` .. `-OnlyCalls 58`, or `-Limit N` for triage) against
    the R49 binary; triage failures into `tools/known_failures/` with
@@ -337,9 +362,10 @@ was rejected by tag rules -- owner action needed).
   (git-archive mtimes can be older than the artifacts, so cargo skips the
   rebuild). Run with `XIOM_STDLIB=E:\xiom-lang\stdlib`. Built across the
   campaign: R46 `12148d43`, R46b `504fcc1e`, R49 `306073ba`, R52 `1fcb4855`,
-  R54 `7837b194`; binaries stashed under `%TEMP%\kilo\stdlib_ws\`
-  (`xiom_r53.exe` is the current one -- R54, also verified for the nasm
-  build; `xiom_r52.exe` and `xiom_r49.exe` are the previous baselines).
+  R54 `7837b194`, R58 `5bdffaad`; binaries stashed under
+  `%TEMP%\kilo\stdlib_ws\` (`xiom_r58.exe` is the current one -- R58, also
+  verified for the nasm build at R54; `xiom_r53.exe`/`xiom_r52.exe`/
+  `xiom_r49.exe` are previous baselines).
   Resolve the runtime from the repo root (or set `XIOM_RUNTIME_DIR`): a
   different CWD links a partial runtime and fails on `xiom_simd_*` /
   `xiom_async_now_ms`.

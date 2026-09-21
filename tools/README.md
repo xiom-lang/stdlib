@@ -97,8 +97,10 @@ by the bare-name and check-module scans. State 2026-09-21: curated. The
 historical debug/evidence probes moved to `tools/probes/evidence/` (a README
 there justifies each file) and the open findings to `tools/known_failures/`
 (hash-interface probe, async_read_line at EOF, generic-ctor push legs,
-function-value identity, q1 watchdog/perf). The runner does not recurse into
-`evidence/`, so a full `-Corpus tools/probes` run is green.
+function-value identity, plus the two generated-tranche findings). The runner
+does not recurse into `evidence/`, so a full `-Corpus tools/probes` run is
+green (160/160 on compiler R58, including the promoted `q1_verify_all.xi`
+compile-graph lock; it previously exceeded the 300s watchdog).
 
 ## Generated call probes (untested-surface sweep)
 

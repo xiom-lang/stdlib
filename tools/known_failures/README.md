@@ -13,6 +13,13 @@ xiom --force -o out.exe tools/known_failures/<file>.xi
 
 ## Current
 
+- `q1_verify_all.xi` -- **RESOLVED 2026-09-21** on compiler main R58
+  (`5bdffaad`; the R55-R58 batches): the 36-import T007 verification graph
+  now compiles within the default 300s watchdog (`compile=0 run=0` in the
+  re-triage run), so the probe is **moved to `tools/probes/`** as a green
+  compile-graph lock. History: it exceeded the watchdog on R52-R54 and was
+  kept here as a performance/watchdog item (it compiled with `--timeout 0`).
+
 - `p_result_tuple_vec_loop.xi` (2026-09-21, from the `-IncludeRefs` generated
   tranche): OPEN. A `Result[(Vec[Int], Int), Str]` whose match arm builds a
   Vec inside a while loop (loop-local accumulation) emits the Result payload

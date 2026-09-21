@@ -124,6 +124,34 @@ compilefail, 0 runfail (**1832.7s**, 8 workers, `-RetryFailed`); probe
 corpus **159/159** (449.9s); coverage ratchet floors54 OK; doc ratchet
 doc_baseline4 OK; barename scan **0 hits / 509** (819.9s).
 
+## R58 compiler update (2026-09-21) -- R55-R58 batch; probe corpus 160/160
+
+Compiler main `5bdffaad` (R58; debug build from `git archive`, binary
+`%TEMP%\kilo\stdlib_ws\xiom_r58.exe`) carries R55 `8e618626` (module-scoped
+generic factory type args), R56 `334ea254` (container-payload ABI for
+Map/container elements: inline 32-byte Vec headers in slots), R57 `f2017fa0`
+(aggregate payload unboxing in `?` for tuple-payload Results) and R58
+`5bdffaad` (Str payload resolution for unwrap/unwrap_or on call receivers).
+The compiler-lane leftovers L6-40, L5-40, L3-50 and L8-14 are RESOLVED
+(e2e_m110-m113); no stdlib gate depended on them.
+
+**Gate results on the stdlib tree:** check_modules **509/509** (943.2s under
+load); corpus **949/949**, 0 compilefail, 0 runfail (2996.5s, 8 workers,
+`-RetryFailed`); probe corpus **160/160** (348.3s); coverage ratchet floors54
+OK; doc ratchet doc_baseline4 OK; barename **0 hits / 509** (585.3s).
+
+**known_failures re-triage on R58 (9 files, compile+run):**
+`q1_verify_all` is FIXED -- the 36-import graph now compiles inside the
+default 300s watchdog (the R55-R58 batch also closed the watchdog class), so
+it is promoted to `tools/probes/`. Still open and unchanged on R58:
+`p_hash_probe`, `p_async_read_line_codegen` (0xC0000409 at EOF),
+`p_generic_push`/`p_gp_b`/`p_gp_c` (generic-ctor push legs), `p_fnref`, plus
+the two generated-tranche findings `p_result_tuple_vec_loop` and
+`p_ref_tuple_mangle` -- identical error signatures to R54, so they are NOT
+part of the L6-40/L5-40/L3-50/L8-14 set and need their own compiler-lane
+fix. The refs generated tranche re-ran on R58: 110/112, the same two
+failures.
+
 ## Provenance note
 
 Tag `v0.60.0` predates the resource-asset fix (`e3714884`, 2026-09-17
