@@ -164,6 +164,17 @@ pub-with-clause; `coverage_floors55.json` wired in the same commit
 **161/161** (350.2s); floors55 ratchet OK; targeted sort/search smoke
 families 9/9.
 
+**Wave 19 (2026-09-21, on R58):** 37 clauses across `xiom.bits` (bit_get/
+parity disjunctions, popcount/clz/ctz/bit_width/leading-ones/trailing-ones/
+count_* 0..64 bounds, nibble 0..15, unpack byte-range tuples,
+`bitfield_mask` implication, scan -1..63, rotate-carry flags, bitarray
+counts), pre-validated by `tools/probes/p_wave19_shapes.xi`. bits
+0% -> **36.6%**, global 19.8% -> **20.3%** pub-with-clause;
+`coverage_floors56.json` wired in the same commit (`84b3407`). Post-wave
+gates: check_modules **509/509** (260.9s); corpus **949/949**, 0 compilefail,
+0 runfail (**1513.9s**); probe corpus **162/162** (343s); floors56 ratchet
+OK; targeted bits smoke families 10/10.
+
 ## Provenance note
 
 Tag `v0.60.0` predates the resource-asset fix (`e3714884`, 2026-09-17

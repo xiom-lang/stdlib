@@ -202,6 +202,15 @@ was rejected by tag rules -- owner action needed).
   the same commit. Post-wave gates: check_modules **509/509** (352.1s);
   corpus **949/949**, 0 runfail (1643.4s); probe corpus **161/161**
   (350.2s); floors55 ratchet OK; sort/search smoke families 9/9.
+- Wave 19 DONE (same day, on R58; commit `84b3407`): 37 clauses across
+  `xiom.bits` (disjunctions, 0..64 count bounds, nibble 0..15, unpack
+  byte-range tuples, bitfield_mask implication, scan -1..63, rotate-carry
+  flags, bitarray counts), pre-validated by
+  `tools/probes/p_wave19_shapes.xi`. bits 0% -> **36.6%**, global 19.8% ->
+  **20.3%** pub-with-clause; `floors56` wired in the same commit.
+  Post-wave gates: check_modules **509/509** (260.9s); corpus **949/949**,
+  0 runfail (1513.9s); probe corpus **162/162** (343s); floors56 ratchet
+  OK; bits smoke families 10/10.
 
 **R49 baseline state (2026-09-19, local main then `3f839e1`)**
 - ALL GATES GREEN on the final tree: `check_modules` **509/509** (262.5s);
@@ -356,9 +365,10 @@ was rejected by tag rules -- owner action needed).
 3. Coverage (repeatable, optional): payload-reading Result clauses are
    allowed (R49-3); pre-validate new shapes in `p_waveN_shapes.xi`, then
    dump `coverage_floorsN+1.json` and wire it into all workflows + READMEs
-   in the same commit. Wave 17 (io) and wave 18 (sort/search) landed
-   2026-09-21 -- see PART 3/5. Remaining 0-coverage dirs include bits,
-   geom, error, stats, text, convert, regex, test, collections and math.
+   in the same commit. Wave 17 (io), wave 18 (sort/search) and wave 19
+   (bits) landed 2026-09-21 -- see PART 3/5. Remaining 0-coverage dirs
+   include geom, error, stats, text, convert, regex, test, collections and
+   math.
 4. Windows TLS/schannel (compiler FFI hardening) and tzdata phase 2 stay
    last; registry publish activation is the user's (dispatch-only
    `publish-registry.yml`). Every new pub declaration needs `///` prose
