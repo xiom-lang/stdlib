@@ -212,6 +212,31 @@ corpus **949/949**, 0 compilefail, 0 runfail (**2842.8s**); probe corpus
 OK; doc ratchet OK; targeted geom smoke families 8/8; async smoke families
 3/3.
 
+**Post-release increments (the v0.61.0 artifact stays pinned at `385e1e44`;
+these are later commits):**
+- `tools/gen_call_probes.ps1` gained `-IncludeWrappedCtors`
+  (Result/Option constructors consumed in the success arm) -- the full
+  untested-surface scan is 126 modules / 751 calls, compile-only 126/126 on
+  R61 (refs 112/112, structs 123/123, fns 123/123 re-ran clean).
+- **Wave 21 (2026-09-22):** 19 error clauses pre-validated by
+  `tools/probes/p_wave21_shapes.xi` (identity results, constant length
+  arithmetic, conditional join identities, backtrace/chain/context count
+  relations, push/pop invariants, Option-to-Result mapping); error
+  0% -> **37.5%**, global 21.0% -> **21.2%** pub-with-clause;
+  `coverage_floors58.json` wired in the same commit (`7b1d060`). Post-wave
+  gates: check_modules **509/509** (278.8s); corpus **949/949**, 0
+  compilefail, 0 runfail (**1474s**); probe corpus **170/170** (292.3s);
+  floors58 ratchet OK; targeted error smoke families 9/9.
+
+**Release coordination (2026-09-22, read-only checks):** compiler v0.61.0 is
+**not tagged** (no remote ref; latest release v0.60.1) and the release
+dry-run `35671548976` is blocked on macos-arm64 (`Build release` failed;
+release guard and windows-x64 passed), so no `xiom-0.61.0-linux-x64.tar.gz`
+asset exists for the canary. The stdlib production tag `stdlib-v0.61.0` has
+**not** been created; production tagging waits for the compiler assets, a
+passing staging canary and owner approval (the production trusted-publisher
+entry for `refs/tags/stdlib-v*` is not deployed yet).
+
 ## Provenance note
 
 Tag `v0.60.0` predates the resource-asset fix (`e3714884`, 2026-09-17

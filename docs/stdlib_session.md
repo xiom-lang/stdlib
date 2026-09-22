@@ -241,6 +241,24 @@ was rejected by tag rules -- owner action needed).
   arm), extending the untested-surface scan to **126 modules / 751 calls,
   compile-only 126/126** on R61. Tools-only change: no stdlib sources moved,
   so the v0.61.0 artifact (pinned at `385e1e44`) is untouched.
+- Wave 21 DONE (2026-09-22; commit `7b1d060`): 19 clauses on `xiom.error`
+  (identity results, error_context constant-length arithmetic, conditional
+  error_join identities, backtrace/chain/context count relations, chain
+  push/pop invariants, Option-to-Result mapping), pre-validated by
+  `tools/probes/p_wave21_shapes.xi`. error 0% -> **37.5%**, global 21.0% ->
+  **21.2%** pub-with-clause; `floors58` wired in the same commit. Gates:
+  check_modules **509/509** (278.8s); corpus **949/949**, 0 runfail
+  (1474s); probe corpus **170/170** (292.3s); floors58 ratchet OK; error
+  smokes 9/9.
+- Release coordination (2026-09-22, read-only checks): compiler v0.61.0 is
+  NOT tagged (no remote ref; latest release v0.60.1) and release dry-run
+  `35671548976` is blocked on macos-arm64 (`Build release` failed;
+  windows-x64 and the guard passed), so the compiler tarball asset the
+  stdlib canary downloads does not exist yet. No `stdlib-v0.61.0` tag has
+  been created; production tagging waits for the compiler assets + staging
+  canary + owner approval (the production trusted-publisher entry for
+  `refs/tags/stdlib-v*` is not deployed yet). The stdlib lane holds at the
+  pinned `385e1e44` artifact for the canary.
 
 **R49 baseline state (2026-09-19, local main then `3f839e1`)**
 - ALL GATES GREEN on the final tree: `check_modules` **509/509** (262.5s);
