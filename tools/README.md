@@ -128,26 +128,25 @@ compiling, and `-Timeout <sec>` passes through to the compiler's compile
 watchdog (default 300; `0` disables). Heavy import sets (`xiom.net`,
 `xiom.num`) can legitimately exceed the default watchdog in a debug build --
 compile those tranches with `-Timeout 0` and record the wall time. The
-`-IncludeRefs` switch widens the accepted parameter set beyond by-value
+`-IncludeRefs` widens the accepted parameter set beyond by-value
 scalars to `&T`/`&mut T` (scalar `T`) and `Vec[E]` by value or reference
 (identifier `E`): locals are emitted for the reference arguments and
-by-value vectors use `Vec[E].new()`. State 2026-09-21: the
-`-MinParams 1 -MaxParams 4 -IncludeRefs` tranche is 112 modules / 602 calls,
-compile-only 110/112; the two failures are open compiler findings
-(`tools/known_failures/p_result_tuple_vec_loop.xi` for xiom.net.tls_helper,
-`p_ref_tuple_mangle.xi` for xiom.crypto.sign), not stdlib link gaps.
-`-IncludeStructs` additionally accepts struct-typed params when the declaring
-module has a public constructor with an exact struct return type and
-non-struct params (the probe emits `var s = module.ctor(...)` and lets
-inference type the local). State 2026-09-21: the combined
-`-MinParams 1 -MaxParams 4 -IncludeRefs -IncludeStructs` tranche is 123
-modules / 734 calls, compile-only 121/123 -- the same two findings, no new
-failures from the struct class. `-IncludeFns` adds `fn(...)` params with
-scalar-or-empty inner params and a scalar or Unit return (the probe emits a
-matching local helper and passes its name; +4 calls); parameter lists are now
-split on top-level commas and scanned with balanced parens, so
-`fn(Int) -> Bool` and bracketed commas parse whole. Combined final tranche:
-123 modules / 738 calls, 121/123 (the same two findings).
+by-value vectors use `Vec[E].new()`. `-IncludeStructs` additionally accepts
+struct-typed params when the declaring module has a public constructor with
+an exact struct return type and non-struct params (the probe emits
+`var s = module.ctor(...)` and lets inference type the local).
+`-IncludeFns` adds `fn(...)` params with scalar-or-empty inner params and a
+scalar or Unit return (the probe emits a matching local helper and passes
+its name). `-IncludeWrappedCtors` extends the struct class with
+`Result[T, ...]`/`Option[T]` constructors: the probe binds the call and
+emits the target call inside the success arm (at most one wrapped param per
+call). Parameter lists are split on top-level commas and scanned with
+balanced parens, so `fn(Int) -> Bool` and bracketed commas parse whole.
+State 2026-09-22 on compiler R61: the full
+`-MinParams 1 -MaxParams 4 -IncludeRefs -IncludeStructs -IncludeFns
+-IncludeWrappedCtors` tranche is **126 modules / 751 calls, compile-only
+126/126**; the smaller classes also re-ran clean (refs 112/112, structs
+123/123, fns 123/123).
 
 The zero-arg tranche is locked by `tools/probes/p_never_called_zeroarg.xi`;
 the single-param tranche is locked by `tools/probes/p_sweep_single_param.xi`

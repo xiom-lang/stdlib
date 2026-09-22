@@ -17,7 +17,10 @@
 # `var s = module.ctor(...)` and passes it by value/reference; -IncludeFns
 # adds `fn(...)` params with scalar-or-empty inner params and a scalar or
 # Unit return -- the probe emits a matching local helper function and passes
-# its name. Parameter lists are split on top-level commas and scanned with
+# its name; `-IncludeWrappedCtors` extends the struct class with
+# Result[T, ...]/Option[T] constructors, binding the call and emitting the
+# target call inside the success arm (at most one wrapped param per call).
+# Parameter lists are split on top-level commas and scanned with
 # balanced parens, so `fn(Int) -> Bool` and bracketed commas parse whole.
 #
 # Output: probes + a report under -OutDir (default: system temp). Nothing is
@@ -33,6 +36,7 @@ param(
   [switch]$IncludeRefs,
   [switch]$IncludeStructs,
   [switch]$IncludeFns,
+  [switch]$IncludeWrappedCtors,
   [int]$OnlyCalls = 0,
   [int]$Limit = 0,
   [int]$Timeout = 300
@@ -176,6 +180,24 @@ foreach ($d in $allPub) {
   $perMod[$d.Ret] += $d
 }
 
+# Wrapped-constructor index (used by -IncludeWrappedCtors): same-module pub
+# fns returning Result[T, ...] / Option[T] with T an identifier and all
+# non-struct/non-fn params. The probe binds the call and uses the payload
+# bound in the success arm (at most one wrapped param per generated call).
+$wrappedCtorsByModule = @{}
+foreach ($d in $allPub) {
+  if (-not $d.Ret) { continue }
+  $wm = [regex]::Match($d.Ret, '^(Result|Option)\[([A-Za-z_][A-Za-z0-9_]*)[,\]]')
+  if (-not $wm.Success) { continue }
+  if (($d.Specs | Where-Object { $_.Kind -like '*struct' -or $_.Kind -like '*_fn' }).Count -gt 0) { continue }
+  $t = $wm.Groups[2].Value
+  $wrap = $wm.Groups[1].Value
+  if (-not $wrappedCtorsByModule.ContainsKey($d.Module)) { $wrappedCtorsByModule[$d.Module] = @{} }
+  $perModW = $wrappedCtorsByModule[$d.Module]
+  if (-not $perModW.ContainsKey($t)) { $perModW[$t] = @() }
+  $perModW[$t] += [pscustomobject]@{ Decl = $d; Wrap = $wrap }
+}
+
 # never-referenced filter + constructibility check for struct params.
 $decls = @()
 foreach ($d in $allPub) {
@@ -184,14 +206,25 @@ foreach ($d in $allPub) {
   $hits = [regex]::Matches($corpusText, "\b" + [regex]::Escape($d.Name) + "\b").Count
   if ($hits -gt 1) { continue }
   if ($d.Specs.Count -lt $MinParams -or $d.Specs.Count -gt $MaxParams) { continue }
+  $wrappedNeeded = 0
   $constructible = $true
   foreach ($s in $d.Specs) {
     if ($s.Kind -notlike '*struct') { continue }
-    if (-not $ctorsByModule.ContainsKey($d.Module)) { $constructible = $false; break }
-    $perMod = $ctorsByModule[$d.Module]
-    if (-not $perMod.ContainsKey($s.Base) -or $perMod[$s.Base].Count -eq 0) { $constructible = $false; break }
+    $plain = $false
+    if ($ctorsByModule.ContainsKey($d.Module)) {
+      $perMod = $ctorsByModule[$d.Module]
+      if ($perMod.ContainsKey($s.Base) -and $perMod[$s.Base].Count -gt 0) { $plain = $true }
+    }
+    if ($plain) { continue }
+    $hasWrapped = $false
+    if ($IncludeWrappedCtors -and $wrappedCtorsByModule.ContainsKey($d.Module)) {
+      $perModW = $wrappedCtorsByModule[$d.Module]
+      if ($perModW.ContainsKey($s.Base) -and $perModW[$s.Base].Count -gt 0) { $hasWrapped = $true }
+    }
+    if ($hasWrapped) { $wrappedNeeded++ } else { $constructible = $false; break }
   }
   if (-not $constructible) { continue }
+  if ($wrappedNeeded -gt 1) { continue }
   $decls += $d
 }
 
@@ -206,7 +239,7 @@ foreach ($g in $byModule) {
   $helperLines = @()
   $callIdx = 0
   foreach ($d in $g.Group) {
-    $args = @(); $k = 0
+    $args = @(); $k = 0; $callPrefix = ''; $callSuffix = @()
     foreach ($s in $d.Specs) {
       $ln = "a" + $callIdx + "_" + $k
       if ($s.Kind -eq 'scalar') { $args += $scalar[$s.Base] }
@@ -240,7 +273,17 @@ foreach ($g in $byModule) {
         $args += $hname
       }
       elseif ($s.Kind -like '*struct') {
-        $ctor = $ctorsByModule[$d.Module][$s.Base][0]
+        $plainCtors = $null
+        if ($ctorsByModule.ContainsKey($d.Module)) {
+          $perMod = $ctorsByModule[$d.Module]
+          if ($perMod.ContainsKey($s.Base) -and $perMod[$s.Base].Count -gt 0) { $plainCtors = $perMod[$s.Base] }
+        }
+        $ctor = $null; $wrapped = $null
+        if ($plainCtors) { $ctor = $plainCtors[0] }
+        else {
+          $wrapped = $wrappedCtorsByModule[$d.Module][$s.Base][0]
+          $ctor = $wrapped.Decl
+        }
         $cargs = @(); $j = 0
         foreach ($cs in $ctor.Specs) {
           $cln = "c" + $callIdx + "_" + $k + "_" + $j
@@ -256,14 +299,36 @@ foreach ($g in $byModule) {
           }
           $j++
         }
-        $lines += ("  var " + $ln + " = " + $d.Module + "." + $ctor.Name + "(" + ($cargs -join ", ") + ");")
-        if ($s.Kind -eq 'refmut_struct') { $args += ("&mut " + $ln) }
-        elseif ($s.Kind -eq 'ref_struct') { $args += ("&" + $ln) }
-        else { $args += $ln }
+        if ($plainCtors) {
+          $lines += ("  var " + $ln + " = " + $d.Module + "." + $ctor.Name + "(" + ($cargs -join ", ") + ");")
+          if ($s.Kind -eq 'refmut_struct') { $args += ("&mut " + $ln) }
+          elseif ($s.Kind -eq 'ref_struct') { $args += ("&" + $ln) }
+          else { $args += $ln }
+        } else {
+          # Wrapped constructor: bind the call, use the payload from the
+          # success arm; the target call is emitted inside that arm.
+          $wname = "w" + $callIdx + "_" + $k
+          $vname = "v" + $callIdx + "_" + $k
+          $lines += ("  var " + $wname + " = " + $d.Module + "." + $ctor.Name + "(" + ($cargs -join ", ") + ");")
+          $lines += ("  match " + $wname + " {")
+          if ($wrapped.Wrap -eq 'Result') {
+            $lines += ("    Ok(" + $vname + ") => {")
+            $callSuffix = @("    }", "    Err(e) => { return 97; }", "  }")
+          } else {
+            $lines += ("    Some(" + $vname + ") => {")
+            $callSuffix = @("    }", "    None => { return 97; }", "  }")
+          }
+          $callPrefix = "  "
+          if ($s.Kind -eq 'refmut_struct') { $args += ("&mut " + $vname) }
+          elseif ($s.Kind -eq 'ref_struct') { $args += ("&" + $vname) }
+          else { $args += $vname }
+        }
       }
       $k++
     }
-    $lines += ("  " + $g.Name + "." + $d.Name + "(" + ($args -join ", ") + ");")
+    $indent = if ($callPrefix -ne '') { "  " + $callPrefix } else { "  " }
+    $lines += ($indent + $g.Name + "." + $d.Name + "(" + ($args -join ", ") + ");")
+    if ($callSuffix.Count -gt 0) { $lines += $callSuffix }
     $callIdx++
     $total++
   }

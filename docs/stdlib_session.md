@@ -236,6 +236,11 @@ was rejected by tag rules -- owner action needed).
   tzdata phase 2, registry publish -- user/last); coverage waves are
   repeatable for the remaining dirs (math 4.1%, convert 1.6%, stats 0%,
   error 2.2%, text, regex, test, collections).
+- Post-release tooling increment (2026-09-22): `gen_call_probes.ps1` gained
+  `-IncludeWrappedCtors` (Result/Option constructors consumed in the success
+  arm), extending the untested-surface scan to **126 modules / 751 calls,
+  compile-only 126/126** on R61. Tools-only change: no stdlib sources moved,
+  so the v0.61.0 artifact (pinned at `385e1e44`) is untouched.
 
 **R49 baseline state (2026-09-19, local main then `3f839e1`)**
 - ALL GATES GREEN on the final tree: `check_modules` **509/509** (262.5s);
