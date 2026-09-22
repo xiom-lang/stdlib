@@ -19,6 +19,7 @@ use xiom.async.io.async_write_file;
 use xiom.async.io.async_read_file;
 use xiom.async.channel;
 use xiom.io;
+use xiom.io.fs;
 use xiom.convert;
 
 var _n: Int = 0;
@@ -32,6 +33,7 @@ fn wheel_bump() {
 }
 
 fn main() -> Int {
+  let td = fs.fs_temp_dir();
   // --- 1) executor task storm: 2000 spawns, all must run, queue drains ---
   var exec = executor.executor_new();
   if executor.executor_tasks(&exec) != 0 { io.println("xs:new"); return 1; }
@@ -137,10 +139,10 @@ fn main() -> Int {
 
   // --- 8) async io (kept for shape + regression lock) ---
   var data = bytes("async-stress-io");
-  var wf = async_write_file("C:\\Users\\lefte\\AppData\\Local\\Temp\\kilo\\smoke_async_stress_io.txt", &data);
+  var wf = async_write_file(td + "/smoke_async_stress_io.txt", &data);
   if !wf.ready { io.println("xs:io-write-ready"); return 20; }
   if wf.value != 15 { io.println("xs:io-write-val"); return 21; }
-  var rf = async_read_file("C:\\Users\\lefte\\AppData\\Local\\Temp\\kilo\\smoke_async_stress_io.txt");
+  var rf = async_read_file(td + "/smoke_async_stress_io.txt");
   if !rf.ready { io.println("xs:io-read-ready"); return 22; }
   if rf.data.len() != 15 { io.println("xs:io-read-len"); return 23; }
 

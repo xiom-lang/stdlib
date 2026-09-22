@@ -10,6 +10,7 @@ use xiom.async.io.async_write_file;
 use xiom.async.io.async_read_file;
 use xiom.async.channel;
 use xiom.io;
+use xiom.io.fs;
 use xiom.convert;
 
 
@@ -25,6 +26,7 @@ fn wheel_bump() {
 }
 
 fn main() -> Int {
+  let td = fs.fs_temp_dir();
   // executor: submit/poll semantics (task counts; the call side-effect of
   // popped fn values is shape-dependent on this toolchain, so counts verify)
   var exec = executor.executor_new();
@@ -122,10 +124,10 @@ fn main() -> Int {
 
   // async io: write + read a file through Futures
   var data = bytes("async-io");
-  var wf = async_write_file("C:\\Users\\lefte\\AppData\\Local\\Temp\\kilo\\smoke_async_io.txt", &data);
+  var wf = async_write_file(td + "/smoke_async_io.txt", &data);
   if !wf.ready { io.println("io:write_ready"); return 23; }
   if wf.value != 8 { io.println("io:write_val"); return 24; }
-  var rf = async_read_file("C:\\Users\\lefte\\AppData\\Local\\Temp\\kilo\\smoke_async_io.txt");
+  var rf = async_read_file(td + "/smoke_async_io.txt");
   if !rf.ready { io.println("io:read_ready"); return 25; }
   if rf.value != 8 { io.println("io:read_val"); return 26; }
   if rf.data.len() != 8 { io.println("io:read_data"); return 27; }

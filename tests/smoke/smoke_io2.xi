@@ -12,58 +12,60 @@ use xiom.io;
 use xiom.convert;
 
 fn main() -> Int {
+  let td = fs.fs_temp_dir();
+  if td.len() == 0 { io.println("fs:temp_dir"); return 21; }
   // fs: write/read text + bytes round-trip
   var data = bytes("hello\nworld\n");
-  var w = fs.fs_write("C:\\Users\\lefte\\AppData\\Local\\Temp\\kilo\\smoke_io2_t.bin", &data);
+  var w = fs.fs_write(td + "/smoke_io2_t.bin", &data);
   if w.is_err { io.println("fs:write"); return 1; }
-  var rb = fs.fs_read("C:\\Users\\lefte\\AppData\\Local\\Temp\\kilo\\smoke_io2_t.bin");
+  var rb = fs.fs_read(td + "/smoke_io2_t.bin");
   match rb {
     Ok(b) => { if b.len() != 12 { io.println("fs:read_len"); return 2; } }
     Err(_) => { io.println("fs:read_err"); return 3; }
   }
-  var rt = fs.fs_read_text("C:\\Users\\lefte\\AppData\\Local\\Temp\\kilo\\smoke_io2_t.bin");
+  var rt = fs.fs_read_text(td + "/smoke_io2_t.bin");
   match rt {
     Ok(s) => { if s.len() != 12 { io.println("fs:read_text"); return 4; } }
     Err(_) => { io.println("fs:read_text_err"); return 5; }
   }
-  if !fs.fs_exists("C:\\Users\\lefte\\AppData\\Local\\Temp\\kilo\\smoke_io2_t.bin") { io.println("fs:exists"); return 6; }
-  if !fs.fs_is_file("C:\\Users\\lefte\\AppData\\Local\\Temp\\kilo\\smoke_io2_t.bin") { io.println("fs:is_file"); return 7; }
-  var sz = fs.fs_size("C:\\Users\\lefte\\AppData\\Local\\Temp\\kilo\\smoke_io2_t.bin");
+  if !fs.fs_exists(td + "/smoke_io2_t.bin") { io.println("fs:exists"); return 6; }
+  if !fs.fs_is_file(td + "/smoke_io2_t.bin") { io.println("fs:is_file"); return 7; }
+  var sz = fs.fs_size(td + "/smoke_io2_t.bin");
   match sz {
     Ok(n) => { if n != 12 { io.println("fs:size"); return 8; } }
     Err(_) => { io.println("fs:size_err"); return 9; }
   }
-  var mt = fs.fs_mtime("C:\\Users\\lefte\\AppData\\Local\\Temp\\kilo\\smoke_io2_t.bin");
+  var mt = fs.fs_mtime(td + "/smoke_io2_t.bin");
   if mt.is_err { io.println("fs:mtime"); return 10; }
 
   // fs: copy / move / append / range / touch / temp dir
-  var cp = fs.fs_copy("C:\\Users\\lefte\\AppData\\Local\\Temp\\kilo\\smoke_io2_t.bin", "C:\\Users\\lefte\\AppData\\Local\\Temp\\kilo\\smoke_io2_c.bin");
+  var cp = fs.fs_copy(td + "/smoke_io2_t.bin", td + "/smoke_io2_c.bin");
   if cp.is_err { io.println("fs:copy"); return 11; }
-  if !fs.fs_exists("C:\\Users\\lefte\\AppData\\Local\\Temp\\kilo\\smoke_io2_c.bin") { io.println("fs:copy2"); return 12; }
-  var mv = fs.fs_move("C:\\Users\\lefte\\AppData\\Local\\Temp\\kilo\\smoke_io2_c.bin", "C:\\Users\\lefte\\AppData\\Local\\Temp\\kilo\\smoke_io2_m.bin");
+  if !fs.fs_exists(td + "/smoke_io2_c.bin") { io.println("fs:copy2"); return 12; }
+  var mv = fs.fs_move(td + "/smoke_io2_c.bin", td + "/smoke_io2_m.bin");
   if mv.is_err { io.println("fs:move"); return 13; }
-  if !fs.fs_exists("C:\\Users\\lefte\\AppData\\Local\\Temp\\kilo\\smoke_io2_m.bin") { io.println("fs:move2"); return 14; }
-  var ap = fs.fs_append("C:\\Users\\lefte\\AppData\\Local\\Temp\\kilo\\smoke_io2_t.bin", bytes("X"));
+  if !fs.fs_exists(td + "/smoke_io2_m.bin") { io.println("fs:move2"); return 14; }
+  var ap = fs.fs_append(td + "/smoke_io2_t.bin", bytes("X"));
   if ap.is_err { io.println("fs:append"); return 15; }
-  var rr = fs.fs_read_range("C:\\Users\\lefte\\AppData\\Local\\Temp\\kilo\\smoke_io2_t.bin", 0, 5);
+  var rr = fs.fs_read_range(td + "/smoke_io2_t.bin", 0, 5);
   match rr {
     Ok(b) => { if b.len() != 5 { io.println("fs:range"); return 16; } }
     Err(_) => { io.println("fs:range_err"); return 17; }
   }
-  var wr = fs.fs_write_range("C:\\Users\\lefte\\AppData\\Local\\Temp\\kilo\\smoke_io2_t.bin", 6, bytes("B"));
+  var wr = fs.fs_write_range(td + "/smoke_io2_t.bin", 6, bytes("B"));
   match wr {
     Ok(n) => { if n != 1 { io.println("fs:write_range"); return 18; } }
     Err(_) => { io.println("fs:write_range_err"); return 19; }
   }
-  var tt = fs.fs_touch("C:\\Users\\lefte\\AppData\\Local\\Temp\\kilo\\smoke_io2_touch.txt");
+  var tt = fs.fs_touch(td + "/smoke_io2_touch.txt");
   if tt.is_err { io.println("fs:touch"); return 20; }
   var td = fs.fs_temp_dir();
   if td.len() == 0 { io.println("fs:temp_dir"); return 21; }
 
   // buffer: buffered reader over a file
-  var wb = fs.fs_write("C:\\Users\\lefte\\AppData\\Local\\Temp\\kilo\\smoke_io2_buf.txt", bytes("hello\nworld\n"));
+  var wb = fs.fs_write(td + "/smoke_io2_buf.txt", bytes("hello\nworld\n"));
   if wb.is_err { io.println("buf:setup"); return 22; }
-  var file: *UInt8 = fs.fopen("C:\\Users\\lefte\\AppData\\Local\\Temp\\kilo\\smoke_io2_buf.txt", "r");
+  var file: *UInt8 = fs.fopen(td + "/smoke_io2_buf.txt", "r");
   var fdi: Int;
   unsafe { fdi = file as Int; }
   if fdi == 0 { io.println("buf:open"); return 23; }
@@ -94,7 +96,7 @@ fn main() -> Int {
   fs.fclose(file);
 
   // buffer: buffered writer then flush to file
-  var outfile: *UInt8 = fs.fopen("C:\\Users\\lefte\\AppData\\Local\\Temp\\kilo\\smoke_io2_bw.txt", "w");
+  var outfile: *UInt8 = fs.fopen(td + "/smoke_io2_bw.txt", "w");
   var fdo: Int;
   unsafe { fdo = outfile as Int; }
   if fdo == 0 { io.println("buf:bw_open"); return 33; }
@@ -106,7 +108,7 @@ fn main() -> Int {
   var fd = buffer.bw_into_inner(&mut bw);
   if fd == 0 { io.println("buf:into_inner"); return 36; }
   fs.fclose(outfile);
-  var bwr = fs.fs_read_text("C:\\Users\\lefte\\AppData\\Local\\Temp\\kilo\\smoke_io2_bw.txt");
+  var bwr = fs.fs_read_text(td + "/smoke_io2_bw.txt");
   match bwr {
     Ok(s) => { if s != "buffered" { io.println("buf:bw_read"); return 37; } }
     Err(_) => { io.println("buf:bw_read_err"); return 38; }
