@@ -6734,6 +6734,16 @@ const char* xiom_os_name(void) {
     return "unknown";
 #endif
 }
+
+/* Directory creation: POSIX mkdir takes (path, mode); declaring it one-arg
+   left the mode register uninitialized, so io.create_dir produced dirs with
+   garbage permissions and subsequent writes failed on Linux. */
+#ifdef _WIN32
+#include <direct.h>
+int xiom_mkdir(const char* path) { return _mkdir(path); }
+#else
+int xiom_mkdir(const char* path) { return mkdir(path, 0777); }
+#endif
 #ifdef _WIN32
 uint8_t* xiom_errno_ptr(void) { return (uint8_t*)_errno(); }
 #else

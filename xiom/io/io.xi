@@ -33,7 +33,9 @@ extern "C" {
   // Cross-platform millisecond sleep via the runtime (Sleep on Windows,
   // nanosleep on Unix); libc usleep does not exist on Windows/MSVC.
   fn xiom_thread_sleep_ms(ms: Int);
-  fn mkdir(path: *UInt8) -> Int32;
+  // POSIX mkdir is (path, mode); the one-arg extern left the mode
+  // register uninitialized on Linux. Runtime shim supplies the right arity.
+  fn xiom_mkdir(path: *UInt8) -> Int32;
   fn chmod(path: *UInt8, mode: Int32) -> Int32;
   fn xiom_stdin() -> Int;
   fn xiom_stdout() -> Int;
@@ -313,7 +315,7 @@ pub fn create_dir(path: Str) -> Result[Unit, IOError]
 {
   let rc: Int32;
   unsafe {
-    rc = mkdir(path.c_str());
+    rc = xiom_mkdir(path.c_str());
   }
   if rc != 0 {
     return Err(IOError{ message: "failed to create directory: " + path, code: 6 });

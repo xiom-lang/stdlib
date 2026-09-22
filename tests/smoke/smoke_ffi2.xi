@@ -60,7 +60,7 @@ fn main() -> Int {
   if badopen.is_ok { return fail("d-open-bad"); }
   let derr = dl.dl_error();
   if derr.len() == 0 { return fail("d-error-empty"); }
-  let glob = dl.dl_open_global("kernel32.dll");
+  let glob = dl.dl_open_global(lib);
   match glob {
     Ok(h) => {
       if h == 0 { return fail("d-open-global-zero"); }

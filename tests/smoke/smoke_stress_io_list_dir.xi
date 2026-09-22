@@ -20,9 +20,12 @@ fn main() -> Int {
     return 3;
   }
   let w1 = io.write_file(dir + "/f1.txt", "a");
-  if w1.is_err {
-    io.println("write1 [" + dir + "]");
-    return 4;
+  match w1 {
+    Ok(_) => {},
+    Err(e) => {
+      io.println("write1 [" + dir + "]: " + e.message);
+      return 4;
+    }
   }
   let w2 = io.write_file(dir + "/f2.txt", "b");
   if w2.is_err {
