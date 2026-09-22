@@ -1,0 +1,89 @@
+# XIOM Stdlib Smoke Probe -- manual, ubuntu-only, targeted smoke debug runner.
+# Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
+# SPDX-License-Identifier: MIT OR Apache-2.0
+#
+# Purpose: iterate on Linux-portability failures without waiting for the full
+# heavy/release battery. Selects corpus files by a comma-separated name
+# substring list, runs them with the pinned compiler (or an explicit ref) on
+# ubuntu-latest, and uploads the runner workdir so compile stderr and per-file
+# logs survive the job.
+#
+# This is a debugging aid; it is not a gate. Gates live in ci/heavy/release.
+name: XIOM Stdlib Smoke Probe
+
+on:
+  workflow_dispatch:
+    inputs:
+      filters:
+        description: "comma-separated filename substrings (e.g. smoke_ffi2,bisect_mask)"
+        required: true
+      compiler_ref:
+        description: "xiom ref to build (default: COMPILER_VERSION pin)"
+        required: false
+        default: ""
+      workers:
+        description: "worker count"
+        required: false
+        default: "2"
+      exact:
+        description: "treat each filter as a full file name (without .xi)"
+        type: boolean
+        required: false
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    name: smoke probe (ubuntu)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      - name: Read COMPILER_VERSION
+        id: pin
+        shell: bash
+        run: |
+          ref="${{ github.event.inputs.compiler_ref }}"
+          if [ -z "$ref" ]; then ref="$(tr -d '\r\n ' < COMPILER_VERSION)"; fi
+          echo "ref=$ref" >> "$GITHUB_OUTPUT"
+
+      - name: Build pinned compiler
+        id: compiler
+        uses: ./.github/actions/build-compiler
+        with:
+          ref: ${{ steps.pin.outputs.ref }}
+
+      - name: Stage selected smokes
+        shell: pwsh
+        run: |
+          $filters = "${{ github.event.inputs.filters }}" -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne "" }
+          $exact = "${{ github.event.inputs.exact }}" -eq "true"
+          $all = Get-ChildItem tests/smoke -Filter *.xi
+          $sel = @()
+          foreach ($f in $filters) {
+            if ($exact) {
+              $sel += $all | Where-Object { $_.BaseName -eq $f }
+            } else {
+              $sel += $all | Where-Object { $_.Name -like ("*" + $f + "*") }
+            }
+          }
+          $sel = $sel | Sort-Object Name -Unique
+          if ($sel.Count -eq 0) { Write-Output "ERROR: no files matched"; exit 2 }
+          New-Item -ItemType Directory -Path probe-corpus -Force | Out-Null
+          $sel | Copy-Item -Destination probe-corpus -Force
+          Write-Output ("selected " + $sel.Count + " files:")
+          $sel | ForEach-Object { Write-Output ("  " + $_.Name) }
+
+      - name: Run selected smokes
+        shell: pwsh
+        run: ./tools/run_smokes.ps1 -Compiler '${{ steps.compiler.outputs.binary }}' -Corpus probe-corpus -Workers ${{ github.event.inputs.workers }} -RetryFailed -WorkDir probe-work
+
+      - name: Upload probe workdir
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: smoke-probe-workdir
+          path: probe-work
+          if-no-files-found: ignore
