@@ -255,9 +255,17 @@ was rejected by tag rules -- owner action needed).
   in 39m32s** (`35726136818`, the first fully real Linux gate).
 - Release: `stdlib-v0.61.1`/`v0.61.2` are **dead tags** (gate failures;
   their publish runs were cancelled by the compiler lane). `stdlib-v0.61.3`
-  cut on `c7b4027` (pin v0.61.1); windows release gates finishing, then
-  `package` creates the **first-ever stdlib release asset** and
-  `canary-dispatch` fires the staging publish automatically.
+  cut on `c7b4027` (pin v0.61.1): **both gates green** (ubuntu 39m32s,
+  windows 1h16m6s), `package` published the **first-ever stdlib release**
+  (`xiom-std-0.61.3.tar.gz` + `SHA256SUMS`; local SHA256 verified against
+  the published sums, 584 entries), and `canary-dispatch` auto-fired the
+  **staging** publish run (`35734153403`, waiting in the `registry-publish`
+  environment -- that is the run to approve). The tag-triggered production
+  publish (`35726136811`) stays unapproved.
+- `pin-pr` pushed `chore/pin-stdlib-v0.61.3` (commit `d67b254`) to
+  xiom-lang/xiom but `gh pr create` failed: the release token lacks
+  `createPullRequest` -- open the PR manually or fix the token
+  (https://github.com/xiom-lang/xiom/pull/new/chore/pin-stdlib-v0.61.3).
 - `p_platform_env.xi` is part of the probe corpus and passes on both hosts.
 - Post-release tooling increment (2026-09-22): `gen_call_probes.ps1` gained
   `-IncludeWrappedCtors` (Result/Option constructors consumed in the success
