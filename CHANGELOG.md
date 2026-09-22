@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Notes
+
+- `stdlib-v0.61.1` is a **dead tag**: cut on 2026-09-22 but never published
+  (its release gates failed because three smokes hardcoded a local temp
+  path). The `stdlib-v*` release-tags ruleset blocks moving or deleting
+  tags, so it stays in place; `0.61.2` is the shipping release at the same
+  compiler pin (`v0.61.1`).
+
 ## [0.61.2] - 2026-09-22
 
 Pinned to compiler `v0.61.1`. All compiler findings tracked by this repo are
