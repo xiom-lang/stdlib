@@ -6,20 +6,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.61.1] - 2026-09-22
+
+Pinned to compiler `v0.61.1`. All compiler findings tracked by this repo are
+resolved or ruled; the probe corpus and the generated untested-surface
+tranches are fully green.
+
 ### Added
 
 - CI: PR gates, weekly heavy suites, release pipeline, reusable compiler
   build action; `COMPILER_VERSION` compiler pin.
-- Contract wave 11: 4 `collect.concurrent` constructor clauses
-  (queue capacity clamp, empty stack); collect pub coverage 34.4% ->
-  34.9%, global pub-with-clause 16.1% (floors48).
+- Contract waves 7-21 and their shape probes: collect constructors/pop
+  relations, unicode bounds, combinatorics specs, rbtree/cache surfaces,
+  cache membership, string builder/align/wrap, collect size relations
+  restored after R52, io payload-reading Result clauses, sort/search
+  bounds + sortedness, bits width/count identities, geom component mirrors,
+  error chain/backtrace relations; floors45-58 wired into every workflow.
+  Global pub-with-clause 14.6% -> 21.2%; io 78.7%, search 62.2%, string
+  60.0%, collect 60.7%, error 37.5%, bits 36.6%, sort 31.9%, geom 10.6%.
+- `tools/gen_call_probes.ps1` untested-surface generator: scalar
+  multi-param, `-IncludeRefs` (`&T`/`&mut T`, `Vec[E]`), `-IncludeStructs`,
+  `-IncludeFns`, `-IncludeWrappedCtors` (Result/Option constructors), and
+  `-Timeout` pass-through. Full scan: 126 modules / 751 calls, compile-only
+  126/126 on R61.
 - Same-leaf type audit: `tools/same_leaf_audit.ps1` + generated conflict
   worklist (`docs/SAME_LEAF_TYPE_CONFLICTS.md`) for the compiler R44
   qualification slice: 16 genuinely conflicting leaves, 24 benign.
-- Untested-surface sweep: `tools/probes/p_never_called_zeroarg.xi` now
-  compiles+runs the zero-arg public API that no smoke references; it
-  surfaced the `x25519_keypair` codegen failure (open compiler finding,
-  minimal probe kept).
 - Parser fuzz harness: deterministic mutation stress smoke over
   json/toml/csv/url parsing (+ writer round-trip stability) and http
   header totalness, seeded for reproducibility.
@@ -28,24 +40,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   float markers for round-tripping) with a full round-trip smoke.
 - Registry publish workflow (dispatch-only until staging is verified) and
   `docs/CI.md` credentials policy; releases ship SHA256SUMS plus a
-  build-provenance attestation (minisign deferred).
+  build-provenance attestation (minisign deferred). Publishing now uses
+  GitHub OIDC trusted publishing with a per-run ephemeral ed25519 key and
+  a release-asset wait step.
 - Repo-relative verification tooling in `tools/` (runner, coverage ratchet,
-  bare-name scan, module check, probes) and `p_wave7_shapes.xi`.
+  bare-name scan, module check, probes) and versioned shape probes.
 
 ### Changed
 
-- Contract waves 7-10: wave 7 (25 collect clauses: constructors,
-  Option/query relations, post-remove absence, order/iter lengths); wave 8
-  (26 clauses: unicode width/code-length/value bounds; collect pop/remove
-  `@pre` size relations); wave 9 (22 clauses: combinatorics length/count
-  specs, io helper specs); wave 10 (18 clauses: rbtree full surface,
-  cache membership/constructor specs). collect 23.6% -> 34.4%, string
-  40.5% -> 48.5%, io 45.4% -> 50.9%, global pub-with-clause 14.6% ->
-  16.0% (floors47).
-- Runtime: removed 9 definition-only symbols; annotated the hot-reload ABI
-  family as intentionally exported.
-- `package.xi`: identity `xiom-std` + compiler range `>=0.60.0 <1.0.0`.
-- `tools/probes/` versions only `.xi` locks (713 run captures removed).
+- Probe corpus curated: the 18 historical red files split into
+  `tools/probes/evidence/` (understood failures) and `tools/known_failures/`
+  (open findings), then emptied as R59-R61 resolved or ruled them; six
+  probes promoted back to the running corpus (170/170 on R61).
+- `xiom.async.io` reads and writes descriptors through the runtime
+  `xiom_read`/`xiom_write` helpers; the fd-as-`FILE*` casts are gone.
+- `runtime/xiom_runtime.c`: the `XIOM_NO_ASM` fallback stubs carry external
+  linkage, so no-NASM compiler builds link the stdlib externs; both build
+  configurations verified.
+- Copyright attribution normalized to "Eleftherios Notas and The XIOM
+  Authors" across 1,689 files; `package.xi` metadata uses the collective
+  name.
+- CI: DCO sign-off check added; OIDC trusted publishing for registry
+  publishes (no long-lived token).
+- `package.xi`: identity `xiom-std` + compiler range `>=0.60.0 <1.0.0`
+  (release 0.61.1 pins `COMPILER_VERSION` at `v0.61.1`).
+- `tools/probes/` versions only `.xi` locks (run captures removed).
 
 ### Fixed
 
@@ -54,6 +73,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `net.http.http_parse_response` (probe + fuzz harness green).
 - Verification tooling no longer depends on pre-split temp paths; the
   runner always tests `XIOM_STDLIB=<repo root>`.
+- Windows environment shims: `xiom_env_set`/`xiom_env_unset` exported by the
+  runtime; `xiom.os`/`xiom.env` use them (no more `undefined symbol: setenv`).
+- `collect/*` strong `@pre` size relations restored after R52 fixed the
+  callee-mutation snapshot residual; `p_wave8_shapes` is a live lock.
+- Generated-call link gap: no-NASM fallbacks (above) fixed the `xiom.ffi.c`
+  group; `xiom.net` group compiles with `-Timeout 0`.
+
+### Verified
+
+- Compiler main R61 (`ff293f8e`, with R59/R60 `2aad5ecd`): check_modules
+  509/509; full corpus 949/949 with 0 compilefail / 0 runfail; probe corpus
+  170/170; strict bare-name scan 0 hits / 509 modules; coverage ratchet
+  floors58 OK; doc ratchet 100% (6,984/6,984). Untested-surface tranches
+  126/126. Full record: `docs/VERIFICATION_BASELINE.md` R61 section.
+
+### Known limitations
+
+- No TLS (schannel binding pending compiler FFI hardening), timezone data
+  phase 1 only, untested generic/struct-constructor tail, the same-leaf
+  collision qualification slice, and 20 definition-only runtime delete
+  candidates awaiting compiler-lane confirmation. See
+  `docs/STDLIB_BETA_LIMITATIONS.md`.
 
 ## [0.60.0] - 2026-09-16
 
