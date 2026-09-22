@@ -52,7 +52,9 @@ pub fn error_chain_new(message: Str) -> ChainError {
 /// Add `message` onto the chain and return the new head. The previous chain
 /// becomes the new chain's root portion.
 /// Complexity: O(len(chain)).
-pub fn error_chain_push(e: ChainError, message: Str) -> ChainError {
+pub fn error_chain_push(e: ChainError, message: Str) -> ChainError
+  ensures: error_chain_len(result) == error_chain_len(e) + 1
+{
   var messages = Vec[Str].new();
   messages.push(message);
   var i: Int = 0;
@@ -67,7 +69,10 @@ pub fn error_chain_push(e: ChainError, message: Str) -> ChainError {
 /// Remove and return the head, exposing the previous cause. Returns None when
 /// the chain has only one message (nothing left beneath the head).
 /// Complexity: O(len(chain)).
-pub fn error_chain_pop(e: ChainError) -> Option[ChainError] {
+pub fn error_chain_pop(e: ChainError) -> Option[ChainError]
+  ensures: result is Some => error_chain_len(e) >= 2
+  ensures: result is None => error_chain_len(e) <= 1
+{
   if e.messages.len() <= 1 {
     return None;
   };
@@ -83,13 +88,17 @@ pub fn error_chain_pop(e: ChainError) -> Option[ChainError] {
 
 /// The number of messages in the chain.
 /// Complexity: O(1).
-pub fn error_chain_len(e: ChainError) -> Int {
+pub fn error_chain_len(e: ChainError) -> Int
+  ensures: result >= 0
+{
   e.messages.len()
 }
 
 /// All messages from head to root, newest first.
 /// Complexity: O(len(chain)).
-pub fn error_chain_messages(e: ChainError) -> Vec[Str] {
+pub fn error_chain_messages(e: ChainError) -> Vec[Str]
+  ensures: result.len() == error_chain_len(e)
+{
   let result = e.messages;
   result
 }
@@ -111,7 +120,9 @@ pub fn error_chain_top(e: ChainError) -> Str {
 /// All nodes from head to root. Node `i` is the chain whose head is message
 /// `i`, i.e. an ChainError holding messages `i..len`.
 /// Complexity: O(len(chain)^2) total for the sliced copies.
-pub fn error_chain_iter(e: ChainError) -> Vec[ChainError] {
+pub fn error_chain_iter(e: ChainError) -> Vec[ChainError]
+  ensures: result.len() == error_chain_len(e)
+{
   var nodes = Vec[ChainError].new();
   let n = e.messages.len();
   var i: Int = 0;

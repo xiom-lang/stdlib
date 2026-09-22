@@ -58,7 +58,9 @@ fn hex(n: Int) -> Str {
 
 /// The symbolized backtrace of an error, if captured (empty otherwise).
 /// Complexity: O(frames).
-pub fn error_backtrace(e: BtError) -> Vec[Str] {
+pub fn error_backtrace(e: BtError) -> Vec[Str]
+  ensures: result.len() == error_backtrace_depth(e)
+{
   let frames = e.frames;
   frames
 }
@@ -85,7 +87,9 @@ pub fn error_set_backtrace_enabled(on: Bool) {
 
 /// The raw frame addresses of an error backtrace (empty when none captured).
 /// Complexity: O(frames).
-pub fn error_backtrace_frames(e: BtError) -> Vec[Int] {
+pub fn error_backtrace_frames(e: BtError) -> Vec[Int]
+  ensures: result.len() >= 0
+{
   let raw = e.raw;
   raw
 }
@@ -93,7 +97,9 @@ pub fn error_backtrace_frames(e: BtError) -> Vec[Int] {
 /// Symbolize raw frame addresses as `0x` hex strings. Invalid or negative
 /// addresses render as "0x0".
 /// Complexity: O(frames).
-pub fn error_backtrace_symbolize(frames: &Vec[Int]) -> Vec[Str] {
+pub fn error_backtrace_symbolize(frames: &Vec[Int]) -> Vec[Str]
+  ensures: result.len() == frames.len()
+{
   var symbols = Vec[Str].new();
   var i: Int = 0;
   while i < frames.len() {
@@ -129,6 +135,8 @@ pub fn error_has_backtrace(e: BtError) -> Bool {
 
 /// The number of frames in an error backtrace.
 /// Complexity: O(1).
-pub fn error_backtrace_depth(e: BtError) -> Int {
+pub fn error_backtrace_depth(e: BtError) -> Int
+  ensures: result >= 0
+{
   e.frames.len()
 }

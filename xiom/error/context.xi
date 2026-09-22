@@ -169,7 +169,9 @@ pub fn error_context_get(e: ContextError, key: Str) -> Option[Str] {
 
 /// All context keys of the head layer, in attach order.
 /// Complexity: O(head pairs).
-pub fn error_context_keys(e: ContextError) -> Vec[Str] {
+pub fn error_context_keys(e: ContextError) -> Vec[Str]
+  ensures: result.len() == error_context_all(e).len()
+{
   let keys = e.keys;
   keys
 }

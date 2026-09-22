@@ -303,11 +303,16 @@ T1/T2 yields.
       length/distance/squared non-negativity, lerp mirrors, neg/abs,
       min/max component bounds) -> geom 0% -> 10.6%, global 20.3% -> 21.0%
       pub-with-clause; pre-validated by tools/probes/p_wave20_shapes.xi.
-      Ratchet:
-      tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors57.json
+      Wave 21 (2026-09-22): 19 clauses on error (identity results, constant
+      length arithmetic for error_context, conditional error_join
+      identities, backtrace/chain/context count and length relations,
+      chain push/pop invariants, Option-to-Result mapping) -> error 0% ->
+      37.5%, global 21.0% -> 21.2% pub-with-clause; pre-validated by
+      tools/probes/p_wave21_shapes.xi. Ratchet:
+      tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors58.json
       (repo tooling as of the split; positive + negative runs verified;
       earlier floors kept at
-      coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55/56.json).
+      coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55/56/57.json).
       Floors are per top-level stdlib/xiom directory and must be refreshed
       when a module is ADDED (new uncovered pub fns dilute the percentage
       -- TOML dropped serialize 6.1% -> 5.4%, tz dropped time 13% ->

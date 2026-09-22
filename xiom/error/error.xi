@@ -98,26 +98,36 @@ pub fn Backtrace.display(self) -> Str {
 
 /// Returns the error message unchanged. Identity helper for code clarity.
 /// Complexity: O(1). Pure, no side effects.
-pub fn error_message(err: Str) -> Str {
+pub fn error_message(err: Str) -> Str
+  ensures: result == err
+{
   return err;
 }
 
 /// Creates an error message string. Alias for readability at call-sites.
 /// Complexity: O(1). Pure, no side effects.
-pub fn make_error(msg: Str) -> Str {
+pub fn make_error(msg: Str) -> Str
+  ensures: result == msg
+{
   return msg;
 }
 
 /// Formats `msg` with additional context: `"msg (context: ctx)"`.
 /// Complexity: O(len(msg)+len(ctx)). Pure, no side effects.
-pub fn error_context(msg: Str, ctx: Str) -> Str {
+pub fn error_context(msg: Str, ctx: Str) -> Str
+  ensures: result.len() == msg.len() + ctx.len() + 12
+{
   return msg + " (context: " + ctx + ")";
 }
 
 /// Joins two error messages with `": "` separator.
 /// If `a` is empty, returns `b`. If `b` is empty, returns `a`.
 /// Complexity: O(len(a)+len(b)). Pure, no side effects.
-pub fn error_join(a: Str, b: Str) -> Str {
+pub fn error_join(a: Str, b: Str) -> Str
+  ensures: a.len() == 0 => result == b
+  ensures: b.len() == 0 => result == a
+  ensures: a.len() > 0 && b.len() > 0 => result.len() == a.len() + b.len() + 2
+{
   if a.len() == 0 {
     return b;
   };
@@ -130,7 +140,10 @@ pub fn error_join(a: Str, b: Str) -> Str {
 /// Converts an `Option[T]` into a `Result[T, Str]`.
 /// `Some(v)` ? `Ok(v)`, `None` ? `Err(msg)`.
 /// Complexity: O(1). Pure, no side effects.
-pub fn option_ok_or[T](o: Option[T], msg: Str) -> Result[T, Str] {
+pub fn option_ok_or[T](o: Option[T], msg: Str) -> Result[T, Str]
+  ensures: o is Some => result is Ok
+  ensures: o is None => result is Err
+{
   match o {
     Some(v) => Ok(v);
     None => Err(msg);
