@@ -27,6 +27,7 @@ param(
   [string]$WorkDir = "",
   [switch]$RetryFailed,
   [switch]$Quiet,
+  [switch]$KeepPassing,
   [switch]$WorkerRun,
   [string]$SliceFile = "",
   [int]$WorkerId = 0
@@ -101,7 +102,7 @@ function Invoke-Worker {
     if (-not $Quiet -or $compileOk -eq 0 -or $runRc -ne 0) {
       Write-Output ("[w{0}] {1} compile={2} run={3} ({4}s)" -f $WorkerId, $name, $compileRc, $runRc, [math]::Round($dur, 1))
     }
-    Remove-Item -LiteralPath $bin -ErrorAction SilentlyContinue
+    if (-not $KeepPassing) { Remove-Item -LiteralPath $bin -ErrorAction SilentlyContinue }
   }
 }
 
@@ -141,6 +142,7 @@ function Start-WorkerProcess([int]$id, [string]$slicePath, [switch]$silent) {
     "-SliceFile", ('"{0}"' -f $slicePath)
   )
   if ($silent) { $argList += "-Quiet" }
+  if ($KeepPassing) { $argList += "-KeepPassing" }
   $sp = @{
     FilePath = $hostExe
     ArgumentList = $argList
