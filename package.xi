@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 package xiom_std {
   name: "xiom-std";
-  version: "0.61.2";
+  version: "0.61.3";
   description: "XIOM standard library";
   authors: ["The XIOM Authors"];
   license: "MIT OR Apache-2.0";

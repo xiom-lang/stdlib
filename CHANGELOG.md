@@ -8,13 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Notes
 
-- `stdlib-v0.61.1` is a **dead tag**: cut on 2026-09-22 but never published
-  (its release gates failed because three smokes hardcoded a local temp
-  path). The `stdlib-v*` release-tags ruleset blocks moving or deleting
-  tags, so it stays in place; `0.61.2` is the shipping release at the same
-  compiler pin (`v0.61.1`).
+- `stdlib-v0.61.1` and `stdlib-v0.61.2` are **dead tags**: both were cut on
+  2026-09-22 but never published. The 0.61.1 gates failed because three
+  smokes hardcoded a local temp path; the 0.61.2 gates then exposed the
+  Linux-only gaps this release fixes (the ubuntu job had been a silent no-op
+  before the fail-closed runner change). The `stdlib-v*` release-tags
+  ruleset blocks moving or deleting tags, so they stay in place; `0.61.3` is
+  the shipping release at the same compiler pin (`v0.61.1`).
 
-## [0.61.2] - 2026-09-22
+## [0.61.3] - 2026-09-22
 
 Pinned to compiler `v0.61.1`. All compiler findings tracked by this repo are
 resolved or ruled; the probe corpus and the generated untested-surface
@@ -71,11 +73,22 @@ tranches are fully green.
 - CI: DCO sign-off check added; OIDC trusted publishing for registry
   publishes (no long-lived token).
 - `package.xi`: identity `xiom-std` + compiler range `>=0.60.0 <1.0.0`
-  (release 0.61.2 pins `COMPILER_VERSION` at `v0.61.1`).
+  (release 0.61.3 pins `COMPILER_VERSION` at `v0.61.1`).
 - `tools/probes/` versions only `.xi` locks (run captures removed).
 
 ### Fixed
 
+- Linux portability batch (found by the fail-closed ubuntu gate): runtime
+  shims for dynamic loading (`xiom_dl_*`: LoadLibraryA/dlopen), local time
+  (`xiom_tz_localtime64`/`mkgmtime64`: `_localtime64_s`/`localtime_r`,
+  `_mkgmtime64`/`timegm`), errno (`xiom_errno_ptr`:
+  `_errno`/`__errno_location`/`__error`), directory creation
+  (`xiom_mkdir`: POSIX mode argument) and hostname/user name; runtime OS
+  detection (`xiom_os_name`) backs `xiom.os.platform` and `xiom.platform`
+  because the compile-time `xiom.env` constants report `windows` on Linux;
+  `fs_exists` now answers true for directories (the `fs_is_dir` postcondition
+  was unsatisfiable on POSIX); the runner fails closed on empty result sets
+  and captures short-lived process exit codes reliably.
 - Release/CI gates: `tools/run_smokes.ps1` now launches workers
   cross-platform (the launcher passed Windows-only `-ExecutionPolicy` /
   `-WindowStyle` flags, so `pwsh` workers exited immediately on Linux) and
