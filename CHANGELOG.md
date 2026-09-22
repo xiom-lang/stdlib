@@ -6,6 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Release/CI gates: `tools/run_smokes.ps1` now launches workers
+  cross-platform (the launcher passed Windows-only `-ExecutionPolicy` /
+  `-WindowStyle` flags, so `pwsh` workers exited immediately on Linux) and
+  both runners fail closed when the result rows do not match the corpus
+  count. A silently no-op 0/0 run can no longer report success (observed on
+  the ubuntu `stdlib-v0.61.1` release gates on 2026-09-22).
+
 ## [0.61.1] - 2026-09-22
 
 Pinned to compiler `v0.61.1`. All compiler findings tracked by this repo are

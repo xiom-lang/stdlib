@@ -163,6 +163,12 @@ awk -F, -v quiet="$QUIET" '{
 }' "$RESULTS_ALL"
 
 TOTAL="$(wc -l < "$RESULTS_ALL" | tr -d ' ')"
+# Fail closed: every corpus file must produce one result row (a worker
+# failure used to look like a clean 0/0 run).
+if [ "$TOTAL" -ne "$TOTAL_FILES" ]; then
+  echo "ERROR: expected $TOTAL_FILES result rows, got $TOTAL (workers failed?)" >&2
+  exit 2
+fi
 PASS="$(awk -F, '$3 == 1 && $4 == 0' "$RESULTS_ALL" | wc -l | tr -d ' ')"
 CFAIL="$(awk -F, '$3 == 0' "$RESULTS_ALL" | wc -l | tr -d ' ')"
 RFAIL="$(awk -F, '$3 == 1 && $4 != 0' "$RESULTS_ALL" | wc -l | tr -d ' ')"

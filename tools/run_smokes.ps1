@@ -127,16 +127,29 @@ function Start-WorkerProcess([int]$id, [string]$slicePath, [switch]$silent) {
   $childLog = Join-Path $WorkDir ("worker{0}.out.log" -f $id)
   $childErr = Join-Path $WorkDir ("worker{0}.err.log" -f $id)
   $hostExe = (Get-Process -Id $PID).Path
-  $argList = @(
-    "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", ('"{0}"' -f $scriptPath),
+  # Windows PowerShell needs -ExecutionPolicy; PowerShell 7 on Linux/macOS
+  # rejects that flag, and -WindowStyle is likewise Windows-only. Passing
+  # them unconditionally made every worker exit immediately on Linux, which
+  # the fail-closed result-count check below now refuses to report as green.
+  $argList = @("-NoProfile")
+  if ($null -eq $IsWindows -or $IsWindows) { $argList += @("-ExecutionPolicy", "Bypass") }
+  $argList += @(
+    "-File", ('"{0}"' -f $scriptPath),
     "-WorkerRun", "-WorkerId", "$id",
     "-Compiler", ('"{0}"' -f $Compiler),
     "-WorkDir", ('"{0}"' -f $WorkDir),
     "-SliceFile", ('"{0}"' -f $slicePath)
   )
   if ($silent) { $argList += "-Quiet" }
-  return Start-Process -FilePath $hostExe -ArgumentList $argList -WindowStyle Hidden -PassThru `
-    -RedirectStandardOutput $childLog -RedirectStandardError $childErr
+  $sp = @{
+    FilePath = $hostExe
+    ArgumentList = $argList
+    PassThru = $true
+    RedirectStandardOutput = $childLog
+    RedirectStandardError = $childErr
+  }
+  if ($null -eq $IsWindows -or $IsWindows) { $sp["WindowStyle"] = "Hidden" }
+  return Start-Process @sp
 }
 
 $sw = [System.Diagnostics.Stopwatch]::StartNew()
@@ -192,6 +205,14 @@ if ($RetryFailed) {
 }
 
 $total = @($rows).Count
+# Fail closed: every corpus file must produce exactly one result row. A
+# worker-startup failure used to yield total=0 with exit code 0, which made
+# a silently no-op gate look green (observed on ubuntu-latest release gates
+# on 2026-09-22).
+if ($total -ne @($files).Count) {
+  Write-Output ("ERROR: expected " + @($files).Count + " result rows, got " + $total + " (workers failed to start?)")
+  exit 2
+}
 $pass = @($rows | Where-Object { $_.CompileOk -eq 1 -and $_.RunRc -eq 0 }).Count
 $compileFail = @($rows | Where-Object { $_.CompileOk -eq 0 }).Count
 $runFail = @($rows | Where-Object { $_.CompileOk -eq 1 -and $_.RunRc -ne 0 }).Count
