@@ -11,13 +11,13 @@ use xiom.io;
 // ============================================================================
 // Errno access and C error string helpers.
 //
-// The CRT `_errno()` accessor returns a pointer to the thread-local errno;
-// `strerror` maps codes to messages (verified on this Windows/MSVC toolchain,
-// e.g. errno 2 -> "No such file or directory").
+// The runtime shim `xiom_errno_ptr()` returns a pointer to the thread-local
+// errno cell (MSVC _errno, POSIX __errno_location/__error); `strerror` maps
+// codes to messages (e.g. errno 2 -> "No such file or directory").
 // ============================================================================
 
 extern "C" {
-  fn _errno() -> *UInt8;
+  fn xiom_errno_ptr() -> *UInt8;
   fn strerror(code: Int) -> *UInt8;
 }
 
@@ -31,7 +31,7 @@ pub fn errno_get() -> Int
   requires: true
 {
   unsafe {
-    let p = _errno() as *UInt8;
+    let p = xiom_errno_ptr() as *UInt8;
     let b0 = p[0] as Int;
     let b1 = p[1] as Int;
     let b2 = p[2] as Int;
@@ -50,7 +50,7 @@ pub fn errno_get() -> Int
 /// Complexity: O(1).
 pub fn errno_set(code: Int) {
   unsafe {
-    let p = _errno() as *UInt8;
+    let p = xiom_errno_ptr() as *UInt8;
     p[0] = ( code        & 0xFF) as UInt8;
     p[1] = ((code >>  8) & 0xFF) as UInt8;
     p[2] = ((code >> 16) & 0xFF) as UInt8;

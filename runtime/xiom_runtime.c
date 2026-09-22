@@ -6718,3 +6718,17 @@ int32_t xiom_tz_localtime64(uint8_t* tm, int64_t* t) { time_t tt = (time_t)(*t);
 int64_t xiom_tz_mkgmtime64(uint8_t* tm) { return (int64_t)timegm((struct tm*)tm); }
 #endif
 
+/* errno cell accessor: MSVC exposes _errno(); POSIX uses __errno_location()
+   (glibc) or __error() (macOS). xiom.ffi.errno reads/writes the cell. */
+#ifdef _WIN32
+uint8_t* xiom_errno_ptr(void) { return (uint8_t*)_errno(); }
+#else
+uint8_t* xiom_errno_ptr(void) {
+#ifdef __APPLE__
+    return (uint8_t*)__error();
+#else
+    return (uint8_t*)__errno_location();
+#endif
+}
+#endif
+

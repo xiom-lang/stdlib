@@ -174,7 +174,11 @@ pub fn fs_move(src: Str, dst: Str) -> Result[Unit, Str>
 /// Returns: true if the path can be opened for reading.
 /// Complexity: O(1).
 pub fn fs_exists(path: Str) -> Bool {
-  return io.file_exists(path);
+  // True for files AND directories: io.file_exists is fopen-based and answers
+  // false for directories on POSIX, which made fs_is_dir's postcondition
+  // (result => fs_exists) unsatisfiable for real directories.
+  if io.file_exists(path) { return true; }
+  return io.is_dir(path);
 }
 
 /// Whether the path is a regular file.

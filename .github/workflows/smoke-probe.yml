@@ -17,6 +17,10 @@ on:
       filters:
         description: "comma-separated filename substrings (e.g. smoke_ffi2,bisect_mask)"
         required: true
+      probe_dir:
+        description: "corpus directory to select from"
+        required: false
+        default: "tests/smoke"
       compiler_ref:
         description: "xiom ref to build (default: COMPILER_VERSION pin)"
         required: false
@@ -60,7 +64,7 @@ jobs:
         run: |
           $filters = "${{ github.event.inputs.filters }}" -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne "" }
           $exact = "${{ github.event.inputs.exact }}" -eq "true"
-          $all = Get-ChildItem tests/smoke -Filter *.xi
+          $all = Get-ChildItem "${{ github.event.inputs.probe_dir }}" -Filter *.xi
           $sel = @()
           foreach ($f in $filters) {
             if ($exact) {
@@ -92,17 +96,24 @@ jobs:
         if: always()
         shell: bash
         run: |
+          set +e
+          echo "== pwd =="; pwd
           echo "== bin listing =="
-          ls -la probe-work/bin || true
+          ls -la probe-work/bin
+          echo "== per file =="
           for f in probe-corpus/*.xi; do
             b="probe-work/bin/$(basename "${f%.xi}")"
+            echo "== $b"
             if [ -f "$b" ]; then
-              echo "== $b"
-              ls -l "$b"
-              file "$b" || true
+              stat -c '%s bytes %A' "$b" 2>/dev/null || ls -l "$b"
+              file "$b" 2>/dev/null || true
               "$b" > /tmp/direct.out 2>/tmp/direct.err
-              echo "direct rc=$?"
-              head -c 400 /tmp/direct.out || true
-              head -c 400 /tmp/direct.err || true
+              rc=$?
+              echo "direct rc=$rc"
+              echo "stdout:"; head -c 300 /tmp/direct.out
+              echo "stderr:"; head -c 300 /tmp/direct.err
+            else
+              echo "missing"
             fi
           done
+          exit 0
