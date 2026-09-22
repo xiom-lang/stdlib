@@ -236,6 +236,29 @@ was rejected by tag rules -- owner action needed).
   tzdata phase 2, registry publish -- user/last); coverage waves are
   repeatable for the remaining dirs (math 4.1%, convert 1.6%, stats 0%,
   error 2.2%, text, regex, test, collections).
+
+**SESSION 2026-09-22 PART 7 (Linux gate made real; 0.61.3 cut)**
+- The fail-closed ubuntu gate exposed a Linux portability batch, all fixed
+  on main and verified on the runner: runtime shims for dynamic loading,
+  local time, errno, directory creation (POSIX mode argument) and
+  hostname/user name; runtime OS detection (`xiom_os_name`) because
+  `xiom.env` reported `windows` on Linux (compiler main R65 `3bf6e149`
+  fixes that; lock e2e_m118 -- not in the v0.61.1 pin, so the workaround
+  stays); `fs_exists` now true for directories; runner process capture +
+  cross-platform worker launch + fail-closed accounting; the
+  `check_modules` and `barename` gates got the same cross-platform +
+  fail-closed treatment (`b9f5e24`). Manual ubuntu `smoke-probe.yml` with
+  workdir/bin diagnostics is in the tooling.
+- Evidence: the five original failures **5/5 PASS** on ubuntu
+  (`35718892390`); `smoke_os_env` 1/1 (`35725653902`); the heavy ubuntu
+  corpus was 948/949 before its fix; ubuntu **release gates then went green
+  in 39m32s** (`35726136818`, the first fully real Linux gate).
+- Release: `stdlib-v0.61.1`/`v0.61.2` are **dead tags** (gate failures;
+  their publish runs were cancelled by the compiler lane). `stdlib-v0.61.3`
+  cut on `c7b4027` (pin v0.61.1); windows release gates finishing, then
+  `package` creates the **first-ever stdlib release asset** and
+  `canary-dispatch` fires the staging publish automatically.
+- `p_platform_env.xi` is part of the probe corpus and passes on both hosts.
 - Post-release tooling increment (2026-09-22): `gen_call_probes.ps1` gained
   `-IncludeWrappedCtors` (Result/Option constructors consumed in the success
   arm), extending the untested-surface scan to **126 modules / 751 calls,

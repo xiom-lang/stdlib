@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Notes
 
+- CI gates: `check_modules.ps1` and `barename_scan.ps1` are now
+  cross-platform (Windows-only worker flags made every Linux worker exit
+  instantly, so the ubuntu steps were a silent 2s/0s pass) and fail closed
+  when the result rows / scanned modules do not match the manifest.
+- `xiom.env.OS/ARCH/FAMILY` were wrong on Linux (reported `windows`);
+  compiler main R65 (`3bf6e149`) fixes them. The stdlib keeps its runtime
+  OS detection (`xiom_os_name`) until the compiler pin includes R65.
+
 - `stdlib-v0.61.1` and `stdlib-v0.61.2` are **dead tags**: both were cut on
   2026-09-22 but never published. The 0.61.1 gates failed because three
   smokes hardcoded a local temp path; the 0.61.2 gates then exposed the

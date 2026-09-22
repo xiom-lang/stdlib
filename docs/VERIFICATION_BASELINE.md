@@ -212,6 +212,19 @@ corpus **949/949**, 0 compilefail, 0 runfail (**2842.8s**); probe corpus
 OK; doc ratchet OK; targeted geom smoke families 8/8; async smoke families
 3/3.
 
+## R65 compiler update (2026-09-22) -- target-accurate `xiom.env` constants
+
+Compiler main `3bf6e149` (R65) makes `xiom.env.OS/ARCH/FAMILY`
+target-accurate (lock `e2e_m118_env_platform_constants`): on Linux
+`tools/probes/p_platform_env.xi` now prints `env.OS=[linux]`,
+`env.FAMILY=[unix]`, `env.ARCH=[x86_64]` (before R65 the ubuntu runner
+reported `windows`/`windows`/`x86_64`, which made every platform predicate
+lie). The fix is on compiler main but **not in the `v0.61.1` tag** that
+stdlib 0.61.3 pins, so the runtime OS detection added in `4da1b33`
+(`xiom_os_name`, backing `xiom.os.platform` and `xiom.platform`) stays
+until the pin moves to a compiler release that includes R65.
+`p_platform_env` is part of the probe corpus and passes on both hosts.
+
 **Post-release increments (the v0.61.0 artifact stays pinned at `385e1e44`;
 these are later commits):**
 - `tools/gen_call_probes.ps1` gained `-IncludeWrappedCtors`
