@@ -6744,6 +6744,19 @@ int xiom_mkdir(const char* path) { return _mkdir(path); }
 #else
 int xiom_mkdir(const char* path) { return mkdir(path, 0777); }
 #endif
+
+/* User name: CI runners do not export USERNAME/USER to children, so env-var
+   probing failed (smoke_os_env); ask the OS. xiom_hostname already exists
+   above with per-OS branches. */
+const char* xiom_user_name(void) {
+    const char* u = getenv("USERNAME");
+    if (u != NULL && *u != '\0') { return u; }
+    u = getenv("USER");
+    if (u != NULL && *u != '\0') { return u; }
+    u = getenv("LOGNAME");
+    if (u != NULL && *u != '\0') { return u; }
+    return "";
+}
 #ifdef _WIN32
 uint8_t* xiom_errno_ptr(void) { return (uint8_t*)_errno(); }
 #else

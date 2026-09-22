@@ -14,12 +14,26 @@ use xiom.env;
 use xiom.convert.cstring;
 
 extern "C" {
+  fn xiom_hostname() -> *UInt8;
+  fn xiom_user_name() -> *UInt8;
   fn xiom_os_name() -> *UInt8;
 }
 
 // The compiler's compile-time env.OS/FAMILY constants reported "windows" on
 // the ubuntu runner (2026-09-22), so the OS predicates read the runtime's own
 // build-time OS name instead. env.ARCH stays compile-time.
+fn _rt_hostname() -> Str
+  requires: true
+{
+  unsafe { return cstring.from_cstring(xiom_hostname() as Int); }
+}
+
+fn _rt_user_name() -> Str
+  requires: true
+{
+  unsafe { return cstring.from_cstring(xiom_user_name() as Int); }
+}
+
 fn _rt_os_name() -> Str
   requires: true
 {
@@ -74,6 +88,10 @@ pub fn platform_is_unix() -> Bool {
 /// variable (Windows) or HOSTNAME (Unix) as a best effort. Complexity:
 /// O(1).
 pub fn platform_hostname() -> Result[Str, Str] {
+  let rt = _rt_hostname();
+  if rt.len() > 0 {
+    return Ok(rt);
+  }
   let cn = env.var_opt("COMPUTERNAME");
   match cn {
     Some(v) => {
@@ -106,6 +124,10 @@ pub fn platform_os_version() -> Str {
 /// platform_user_name returns the current user name from the USERNAME
 /// (Windows) or USER (Unix) environment variable. Complexity: O(1).
 pub fn platform_user_name() -> Option[Str] {
+  let rt = _rt_user_name();
+  if rt.len() > 0 {
+    return Some(rt);
+  }
   let un = env.var_opt("USERNAME");
   match un {
     Some(v) => {
