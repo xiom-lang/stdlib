@@ -175,6 +175,43 @@ gates: check_modules **509/509** (260.9s); corpus **949/949**, 0 compilefail,
 0 runfail (**1513.9s**); probe corpus **162/162** (343s); floors56 ratchet
 OK; targeted bits smoke families 10/10.
 
+## R61 compiler update (2026-09-22) -- all remaining findings closed; probe corpus 169/169
+
+Compiler main `ff293f8e` (R61, with the R59/R60 `2aad5ecd` fixes and the
+rulings `bc63df54`; binary `%TEMP%\kilo\stdlib_ws\xiom_r61.exe`):
+- **R59/R60** fixed the two generated-tranche findings (match-slot leak into
+  loop bodies; tuple element naming): `p_result_tuple_vec_loop` and
+  `p_ref_tuple_mangle` now run green.
+- **R61** fixed the R7 generic-constructor residual (e2e_m116):
+  `p_generic_push`, `p_gp_b`, `p_gp_c` compile and run (`A=[42]`,
+  `B=["tree"]`, `C=[9]`).
+- **R61 rulings**: `p_hash_probe` is a loud unsupported-feature rejection
+  (e2e_m117: interface-typed parameters erase to i64; aggregate arguments
+  now `error[C001]` instead of silently returning a wrong value);
+  `p_fnref` is a language-spec question (function-value identity);
+  `p_async_read_line_codegen` was a stdlib fd/FILE* misuse, fixed in
+  `xiom.async.io` (commit `71789f0`: `xiom_read`/`xiom_write` take over from
+  the fd-as-FILE* casts in `async_read`, `async_write`, `async_read_line`
+  and `async_read_until`).
+
+`tools/known_failures/` holds **no open findings**; the six resolved probes
+were promoted to `tools/probes/` and the two ruled ones archived in
+`tools/probes/evidence/`. All generated tranches re-ran 100% on R61: refs
+**112/112**, structs **123/123**, fns **123/123**.
+
+**Wave 20 (2026-09-22, on R61):** 44 geom vector clauses pre-validated by
+`tools/probes/p_wave20_shapes.xi` (component mirrors for Vec2/3/4,
+dot/cross identities, norm/distance non-negativity, lerp mirrors, neg/abs,
+min/max component bounds); geom 0% -> **10.6%**, global 20.3% -> **21.0%**
+pub-with-clause; `coverage_floors57.json` wired in the same commit
+(`385e1e4`).
+
+**R61 gate results (final tree):** check_modules **509/509** (287.3s);
+corpus **949/949**, 0 compilefail, 0 runfail (**2842.8s**); probe corpus
+**169/169** (652s); barename **0 hits / 509** (1448.1s); floors57 ratchet
+OK; doc ratchet OK; targeted geom smoke families 8/8; async smoke families
+3/3.
+
 ## Provenance note
 
 Tag `v0.60.0` predates the resource-asset fix (`e3714884`, 2026-09-17

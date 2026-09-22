@@ -212,6 +212,31 @@ was rejected by tag rules -- owner action needed).
   0 runfail (1513.9s); probe corpus **162/162** (343s); floors56 ratchet
   OK; bits smoke families 10/10.
 
+**SESSION 2026-09-22 PART 6 (R61: every finding closed; waves 18-20; release-ready)**
+- Compiler R59/R60 + R61 + rulings built and verified (`xiom_r61.exe`,
+  `ff293f8e`). `tools/known_failures/` is EMPTY of open findings: six probes
+  promoted to `tools/probes/` (generic-push trio, tuple-payload pair,
+  async_read_line), two ruled and archived in `probes/evidence/`
+  (hash-interface loud rejection, e2e_m117; fnref spec question). The
+  stdlib-side fix for the fd/FILE* misuse landed in `xiom.async.io`
+  (`71789f0`). All generated tranches 100% on R61: refs 112/112,
+  structs 123/123, fns 123/123.
+- Waves: 18 sort/search (a3fe12a/9a4ed97, floors55), 19 bits
+  (84b3407/e1379a8, floors56), 20 geom vectors (385e1e4, floors57).
+  Global pub-with-clause 19.2% -> **21.0%**; sort 31.9, search 62.2,
+  bits 36.6, geom 10.6.
+- R61 gates (final tree): check_modules **509/509** (287.3s); corpus
+  **949/949**, 0 runfail (2842.8s); probe corpus **169/169** (652s);
+  barename **0/509** (1448.1s); floors57 OK; doc ratchet OK; geom smokes
+  8/8; async smokes 3/3.
+- STATUS: the stdlib lane is **release-ready** pending the release lane's
+  call -- no open compiler findings, all gates green on R61, probe corpus
+  fully green.
+- Queue: item 4 remains (Windows TLS/schannel compiler FFI hardening,
+  tzdata phase 2, registry publish -- user/last); coverage waves are
+  repeatable for the remaining dirs (math 4.1%, convert 1.6%, stats 0%,
+  error 2.2%, text, regex, test, collections).
+
 **R49 baseline state (2026-09-19, local main then `3f839e1`)**
 - ALL GATES GREEN on the final tree: `check_modules` **509/509** (262.5s);
   corpus **949/949**, 0 compilefail, 0 runfail (**1525.7s**, `-RetryFailed`);
@@ -385,10 +410,10 @@ was rejected by tag rules -- owner action needed).
   (git-archive mtimes can be older than the artifacts, so cargo skips the
   rebuild). Run with `XIOM_STDLIB=E:\xiom-lang\stdlib`. Built across the
   campaign: R46 `12148d43`, R46b `504fcc1e`, R49 `306073ba`, R52 `1fcb4855`,
-  R54 `7837b194`, R58 `5bdffaad`; binaries stashed under
-  `%TEMP%\kilo\stdlib_ws\` (`xiom_r58.exe` is the current one -- R58, also
-  verified for the nasm build at R54; `xiom_r53.exe`/`xiom_r52.exe`/
-  `xiom_r49.exe` are previous baselines).
+  R54 `7837b194`, R58 `5bdffaad`, R61 `ff293f8e`; binaries stashed under
+  `%TEMP%\kilo\stdlib_ws\` (`xiom_r61.exe` is the current one -- R61;
+  `xiom_r58.exe`/`xiom_r53.exe`/`xiom_r52.exe`/`xiom_r49.exe` are previous
+  baselines).
   Resolve the runtime from the repo root (or set `XIOM_RUNTIME_DIR`): a
   different CWD links a partial runtime and fails on `xiom_simd_*` /
   `xiom_async_now_ms`.
