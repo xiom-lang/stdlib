@@ -74,16 +74,23 @@ jobs:
         run: |
           ver="${{ steps.ver.outputs.version }}"
           url="https://github.com/xiom-lang/stdlib/releases/download/stdlib-v${ver}/xiom-std-${ver}.tar.gz"
-          for i in $(seq 1 60); do
+          # A release tag runs its gates (~50-90 min on hosted Windows) before
+          # the package job uploads the asset, so the wait must outlast the
+          # release run. Prefer dispatching after the asset exists (release.yml
+          # dispatches the staging canary post-package); this loop is the
+          # belt-and-braces path for manual runs.
+          for i in $(seq 1 360); do
             code="$(curl -s -o /dev/null -w '%{http_code}' -L "$url" || true)"
             if [ "$code" = "200" ]; then
               echo "release asset ready: $url"
               exit 0
             fi
-            echo "waiting for release asset (attempt $i/60, http $code)"
+            if [ $((i % 20)) -eq 0 ]; then
+              echo "waiting for release asset (attempt $i/360, http $code)"
+            fi
             sleep 15
           done
-          echo "::error::release asset not available after 15 minutes: $url (re-run once the release job has uploaded it)"
+          echo "::error::release asset not available after 90 minutes: $url (re-run once the release job has uploaded it)"
           exit 1
 
       - name: Download stdlib package (public release asset)

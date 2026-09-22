@@ -14,6 +14,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   both runners fail closed when the result rows do not match the corpus
   count. A silently no-op 0/0 run can no longer report success (observed on
   the ubuntu `stdlib-v0.61.1` release gates on 2026-09-22).
+- Release pipeline: `release.yml` now dispatches the staging registry
+  canary itself once the package job has uploaded `xiom-std-<ver>.tar.gz`,
+  instead of leaving callers to race the upload; the manual
+  `publish-registry.yml` asset wait was extended from 15 to 90 minutes for
+  belt-and-braces re-runs (a Windows-hosted release gate alone can take
+  ~50 minutes before packaging).
 
 ## [0.61.1] - 2026-09-22
 

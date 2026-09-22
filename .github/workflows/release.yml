@@ -167,3 +167,28 @@ jobs:
           gh pr create --repo xiom-lang/xiom --base main --head "$branch" \
             --title "chore: pin STDLIB_VERSION to stdlib-v${ver}" \
             --body "Automated stdlib release PR. Release: https://github.com/xiom-lang/stdlib/releases/tag/stdlib-v${ver}"
+
+  canary-dispatch:
+    name: dispatch staging registry canary
+    # Runs only after the package job has uploaded xiom-std-<ver>.tar.gz, so
+    # the publish workflow never races the asset upload (the old manual path
+    # polled for 15 minutes, which a Windows-hosted release gate exceeds).
+    # The dispatched run still waits for the registry-publish environment
+    # approval before publishing anything. Production publishing stays on the
+    # tag-triggered path (refs/tags/stdlib-v*).
+    needs: [validate, package]
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - name: Dispatch publish-registry.yml against staging
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ver="${{ needs.validate.outputs.version }}"
+          gh workflow run publish-registry.yml --repo "$GITHUB_REPOSITORY" \
+            -f version="$ver" \
+            -f registry="https://staging.registry.xiom-lang.org"
+          echo "dispatched staging canary for $ver; approve the registry-publish environment in the Actions UI"
