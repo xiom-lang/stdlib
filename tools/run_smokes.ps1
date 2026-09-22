@@ -93,9 +93,29 @@ function Invoke-Worker {
     if ($compileOk -eq 1) {
       $runOut = Join-Path $logs ($name + ".run.out")
       $runErr = Join-Path $logs ($name + ".run.err")
-      $p = Start-Process -FilePath $bin -NoNewWindow -Wait -PassThru `
-        -RedirectStandardInput $emptyIn -RedirectStandardOutput $runOut -RedirectStandardError $runErr
-      if ($null -eq $p) { $runRc = -997 } else { $runRc = $p.ExitCode }
+      # .NET process capture instead of Start-Process -PassThru: on Linux,
+      # Start-Process returns $null for very short-lived programs (bisect_mask
+      # exited in ~1ms and was recorded as -997 even though direct execution
+      # returns 0). StandardInput closes immediately = empty stdin (EOF).
+      try {
+        $psi = New-Object System.Diagnostics.ProcessStartInfo
+        $psi.FileName = $bin
+        $psi.UseShellExecute = $false
+        $psi.RedirectStandardInput = $true
+        $psi.RedirectStandardOutput = $true
+        $psi.RedirectStandardError = $true
+        $proc = [System.Diagnostics.Process]::Start($psi)
+        $proc.StandardInput.Close()
+        $outTask = $proc.StandardOutput.ReadToEndAsync()
+        $errTask = $proc.StandardError.ReadToEndAsync()
+        $proc.WaitForExit()
+        Set-Content -LiteralPath $runOut -Value $outTask.Result
+        Set-Content -LiteralPath $runErr -Value $errTask.Result
+        $runRc = $proc.ExitCode
+      } catch {
+        Set-Content -LiteralPath $runErr -Value ("run_smokes: process start failed: " + $_.Exception.Message)
+        $runRc = -997
+      }
     }
     $dur = ((Get-Date) - $start).TotalSeconds
     Write-ResultsLine -csv $results -name $name -compileRc $compileRc -compileOk $compileOk -runRc $runRc -secs $dur
