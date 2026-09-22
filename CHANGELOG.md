@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   cross-platform (Windows-only worker flags made every Linux worker exit
   instantly, so the ubuntu steps were a silent 2s/0s pass) and fail closed
   when the result rows / scanned modules do not match the manifest.
+- Release: the `STDLIB_VERSION pin PR` job is `continue-on-error: true` with
+  a manual-URL warning -- a token-scope gap (the PAT needs Pull requests:
+  write on `xiom-lang/xiom`) no longer paints a release run red.
 - `xiom.env.OS/ARCH/FAMILY` were wrong on Linux (reported `windows`);
   compiler main R65 (`3bf6e149`) fixes them. The stdlib keeps its runtime
   OS detection (`xiom_os_name`) until the compiler pin includes R65.

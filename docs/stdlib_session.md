@@ -264,8 +264,15 @@ was rejected by tag rules -- owner action needed).
   publish (`35726136811`) stays unapproved.
 - `pin-pr` pushed `chore/pin-stdlib-v0.61.3` (commit `d67b254`) to
   xiom-lang/xiom but `gh pr create` failed: the release token lacks
-  `createPullRequest` -- open the PR manually or fix the token
-  (https://github.com/xiom-lang/xiom/pull/new/chore/pin-stdlib-v0.61.3).
+  `createPullRequest`. The compiler lane opened **PR #3** pinning
+  `STDLIB_VERSION` to `stdlib-v0.61.3` (merge is the owner's call). The job
+  is now `continue-on-error: true` with a manual-URL warning, so a token
+  scope gap cannot paint a release run red.
+- **Registry lane VERIFIED the staging canary for `xiom-std@0.61.3`**
+  (provenance + signature re-checked against the served tarball): the OIDC
+  trusted-publish path is proven end to end. The production
+  trusted-publisher entry stays undeployed until the owner approves; the
+  tag-triggered production run (`35726136811`) stays unapproved.
 - `p_platform_env.xi` is part of the probe corpus and passes on both hosts.
 - Post-release tooling increment (2026-09-22): `gen_call_probes.ps1` gained
   `-IncludeWrappedCtors` (Result/Option constructors consumed in the success

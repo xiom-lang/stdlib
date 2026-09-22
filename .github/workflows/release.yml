@@ -150,6 +150,10 @@ jobs:
     name: STDLIB_VERSION pin PR (xiom)
     needs: [validate, package]
     if: github.event_name == 'push'
+    # A token-scope gap here (the PAT needs Pull requests: write on
+    # xiom-lang/xiom) must not paint an otherwise-green release run red; the
+    # branch is still pushed and the warning prints the manual PR link.
+    continue-on-error: true
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ secrets.XIOM_RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
@@ -164,9 +168,13 @@ jobs:
           printf 'stdlib-v%s\n' "$ver" > STDLIB_VERSION
           git -c user.name="xiom-release-bot" -c user.email="release@xiom-lang.org" commit -am "chore: pin STDLIB_VERSION to stdlib-v${ver}"
           git push origin "$branch"
-          gh pr create --repo xiom-lang/xiom --base main --head "$branch" \
-            --title "chore: pin STDLIB_VERSION to stdlib-v${ver}" \
-            --body "Automated stdlib release PR. Release: https://github.com/xiom-lang/stdlib/releases/tag/stdlib-v${ver}"
+          if gh pr create --repo xiom-lang/xiom --base main --head "$branch" \
+               --title "chore: pin STDLIB_VERSION to stdlib-v${ver}" \
+               --body "Automated stdlib release PR. Release: https://github.com/xiom-lang/stdlib/releases/tag/stdlib-v${ver}"; then
+            echo "pin PR created"
+          else
+            echo "::warning::pin PR could not be created automatically; open it at https://github.com/xiom-lang/xiom/pull/new/${branch}"
+          fi
 
   canary-dispatch:
     name: dispatch staging registry canary
