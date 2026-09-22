@@ -57,6 +57,9 @@ function Invoke-Worker {
     Set-Content -LiteralPath $probe -Value ("module p_bare_{0}`nuse {1};`n`nfn main() -> Int {{ return 0; }}`n" -f $safe, $mod) -Encoding ASCII
     $out = & $Compiler --force -o $bin $probe 2>&1 | ForEach-Object { "$_" } | Out-String
     $rc = $LASTEXITCODE
+    # Progress marker for the parent's fail-closed count (clean modules emit
+    # no hits, so hits alone cannot prove the worker ran).
+    Add-Content -LiteralPath (Join-Path $OutDir ("done.w{0}.txt" -f $WorkerId)) -Value $mod
     if ($rc -ne 0 -and ($out -notmatch "catalog body")) {
       Add-Content -LiteralPath $hits -Value ("{0}`tCOMPILE-FAIL rc={1}" -f $mod, $rc)
     }
@@ -101,16 +104,26 @@ for ($w = 0; $w -lt $Workers; $w++) {
   $slicePath = Join-Path $OutDir ("slice.w{0}.txt" -f $w)
   $slice | Set-Content -LiteralPath $slicePath
   $hostExe = (Get-Process -Id $PID).Path
-  $argList = @(
-    "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", ('"{0}"' -f $scriptPath),
+  # pwsh on Linux rejects -ExecutionPolicy/-WindowStyle; passing them made
+  # every worker exit instantly and the gate reported a silent pass.
+  $argList = @("-NoProfile")
+  if ($null -eq $IsWindows -or $IsWindows) { $argList += @("-ExecutionPolicy", "Bypass") }
+  $argList += @(
+    "-File", ('"{0}"' -f $scriptPath),
     "-WorkerRun", "-WorkerId", "$w", "-Quiet",
     "-Compiler", ('"{0}"' -f $Compiler),
     "-OutDir", ('"{0}"' -f $OutDir),
     "-SliceFile", ('"{0}"' -f $slicePath)
   )
-  $procs += Start-Process -FilePath $hostExe -ArgumentList $argList -WindowStyle Hidden -PassThru `
-    -RedirectStandardOutput (Join-Path $OutDir ("worker{0}.out.log" -f $w)) `
-    -RedirectStandardError (Join-Path $OutDir ("worker{0}.err.log" -f $w))
+  $sp = @{
+    FilePath = $hostExe
+    ArgumentList = $argList
+    PassThru = $true
+    RedirectStandardOutput = (Join-Path $OutDir ("worker{0}.out.log" -f $w))
+    RedirectStandardError = (Join-Path $OutDir ("worker{0}.err.log" -f $w))
+  }
+  if ($null -eq $IsWindows -or $IsWindows) { $sp["WindowStyle"] = "Hidden" }
+  $procs += Start-Process @sp
 }
 $procs | ForEach-Object { $_.WaitForExit() }
 
@@ -121,6 +134,16 @@ Get-ChildItem -LiteralPath $OutDir -Filter "hits.w*.txt" -ErrorAction SilentlyCo
   }
 }
 $sw.Stop()
+# Fail closed: every module in the manifest must have been scanned.
+$doneCount = 0
+Get-ChildItem -LiteralPath $OutDir -Filter "done.w*.txt" -ErrorAction SilentlyContinue | ForEach-Object {
+  $doneCount += @(Get-Content -LiteralPath $_.FullName | Where-Object { $_ -ne "" }).Count
+}
+if ($doneCount -ne $mods.Count) {
+  Write-Output ("ERROR: expected " + $mods.Count + " scanned modules, got " + $doneCount + " (workers failed to start?)")
+  Write-Output ("OUTDIR: " + $OutDir)
+  exit 2
+}
 Write-Output ""
 if ($hitLines.Count -eq 0) {
   Write-Output ("BARENAME SCAN: 0 hits in " + $mods.Count + " modules (" + [math]::Round($sw.Elapsed.TotalSeconds, 1) + "s)")

@@ -98,16 +98,26 @@ for ($w = 0; $w -lt $Workers; $w++) {
   $slicePath = Join-Path $OutDir ("slice.w{0}.txt" -f $w)
   $slice | Set-Content -LiteralPath $slicePath
   $hostExe = (Get-Process -Id $PID).Path
-  $argList = @(
-    "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", ('"{0}"' -f $scriptPath),
+  # pwsh on Linux rejects -ExecutionPolicy/-WindowStyle; passing them made
+  # every worker exit instantly and the gate reported a silent pass.
+  $argList = @("-NoProfile")
+  if ($null -eq $IsWindows -or $IsWindows) { $argList += @("-ExecutionPolicy", "Bypass") }
+  $argList += @(
+    "-File", ('"{0}"' -f $scriptPath),
     "-WorkerRun", "-WorkerId", "$w", "-Quiet",
     "-Compiler", ('"{0}"' -f $Compiler),
     "-OutDir", ('"{0}"' -f $OutDir),
     "-SliceFile", ('"{0}"' -f $slicePath)
   )
-  $procs += Start-Process -FilePath $hostExe -ArgumentList $argList -WindowStyle Hidden -PassThru `
-    -RedirectStandardOutput (Join-Path $OutDir ("worker{0}.out.log" -f $w)) `
-    -RedirectStandardError (Join-Path $OutDir ("worker{0}.err.log" -f $w))
+  $sp = @{
+    FilePath = $hostExe
+    ArgumentList = $argList
+    PassThru = $true
+    RedirectStandardOutput = (Join-Path $OutDir ("worker{0}.out.log" -f $w))
+    RedirectStandardError = (Join-Path $OutDir ("worker{0}.err.log" -f $w))
+  }
+  if ($null -eq $IsWindows -or $IsWindows) { $sp["WindowStyle"] = "Hidden" }
+  $procs += Start-Process @sp
 }
 $procs | ForEach-Object { $_.WaitForExit() }
 
@@ -122,6 +132,12 @@ Get-ChildItem -LiteralPath $OutDir -Filter "results.w*.csv" -ErrorAction Silentl
   }
 }
 $failures = @($rows | Where-Object { $_.Ok -eq 0 } | Sort-Object Module)
+# Fail closed: every module must produce exactly one result row.
+if ($rows.Count -ne $mods.Count) {
+  Write-Output ("ERROR: expected " + $mods.Count + " module rows, got " + $rows.Count + " (workers failed to start?)")
+  Write-Output ("OUTDIR: " + $OutDir)
+  exit 2
+}
 $sw.Stop()
 Write-Output ""
 if ($failures.Count -eq 0) {
