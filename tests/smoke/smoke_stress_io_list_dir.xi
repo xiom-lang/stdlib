@@ -16,12 +16,12 @@ fn main() -> Int {
   let dir = fs.fs_temp_dir() + "/__smk_listdir";
   let cd = io.create_dir(dir);
   if cd.is_err && !fs.fs_is_dir(dir) {
-    io.println("create_dir");
+    io.println("create_dir [" + dir + "]");
     return 3;
   }
   let w1 = io.write_file(dir + "/f1.txt", "a");
   if w1.is_err {
-    io.println("write1");
+    io.println("write1 [" + dir + "]");
     return 4;
   }
   let w2 = io.write_file(dir + "/f2.txt", "b");
@@ -37,6 +37,6 @@ fn main() -> Int {
     Ok(files) => {
       if files.len() >= 2 { return 0; } else { io.println("count"); return 1; }
     }
-    Err(_) => { io.println("list_dir"); return 2; }
+    Err(_) => { io.println("list_dir [" + dir + "]"); return 2; }
   }
 }

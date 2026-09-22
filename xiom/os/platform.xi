@@ -11,11 +11,25 @@
 module xiom.os.platform
 
 use xiom.env;
+use xiom.convert.cstring;
+
+extern "C" {
+  fn xiom_os_name() -> *UInt8;
+}
+
+// The compiler's compile-time env.OS/FAMILY constants reported "windows" on
+// the ubuntu runner (2026-09-22), so the OS predicates read the runtime's own
+// build-time OS name instead. env.ARCH stays compile-time.
+fn _rt_os_name() -> Str
+  requires: true
+{
+  unsafe { return cstring.from_cstring(xiom_os_name() as Int); }
+}
 
 /// platform_name returns the OS name ("windows", "linux", "macos", ...).
 /// Complexity: O(1). Pure.
 pub fn platform_name() -> Str {
-  env.OS
+  return _rt_os_name();
 }
 
 /// platform_arch returns the target architecture ("x86_64", ...).
@@ -27,31 +41,32 @@ pub fn platform_arch() -> Str {
 /// platform_family returns "unix" or "windows".
 /// Complexity: O(1). Pure.
 pub fn platform_family() -> Str {
-  env.FAMILY
+  if platform_is_windows() { return "windows"; }
+  return "unix";
 }
 
 /// platform_is_windows returns true on Windows.
 /// Complexity: O(1). Pure.
 pub fn platform_is_windows() -> Bool {
-  env.FAMILY == "windows"
+  return _rt_os_name() == "windows";
 }
 
 /// platform_is_linux returns true on Linux.
 /// Complexity: O(1). Pure.
 pub fn platform_is_linux() -> Bool {
-  env.OS == "linux"
+  return _rt_os_name() == "linux";
 }
 
 /// platform_is_macos returns true on macOS.
 /// Complexity: O(1). Pure.
 pub fn platform_is_macos() -> Bool {
-  env.OS == "macos"
+  return _rt_os_name() == "macos";
 }
 
 /// platform_is_unix returns true on Linux or macOS.
 /// Complexity: O(1). Pure.
 pub fn platform_is_unix() -> Bool {
-  env.FAMILY == "unix"
+  return _rt_os_name() != "windows";
 }
 
 /// platform_hostname returns the system hostname. Implemented locally

@@ -13,6 +13,7 @@ use xiom.ffi.c;
 use xiom.ffi.dl;
 use xiom.ffi.errno;
 use xiom.io;
+use xiom.os.platform;
 
 fn fail(tag: Str) -> Int {
   io.println("smoke_ffi2 FAIL: " + tag);
@@ -46,7 +47,9 @@ fn main() -> Int {
 
   let selfh = dl.dl_self();
   if selfh == 0 { return fail("d-self"); }
-  let handle = dl.dl_open("kernel32.dll");
+  var lib = "kernel32.dll";
+  if !platform.platform_is_windows() { lib = "libc.so.6"; }
+  let handle = dl.dl_open(lib);
   match handle {
     Ok(h) => {
       if h == 0 { return fail("d-handle"); }

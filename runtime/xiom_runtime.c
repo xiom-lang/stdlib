@@ -6720,6 +6720,20 @@ int64_t xiom_tz_mkgmtime64(uint8_t* tm) { return (int64_t)timegm((struct tm*)tm)
 
 /* errno cell accessor: MSVC exposes _errno(); POSIX uses __errno_location()
    (glibc) or __error() (macOS). xiom.ffi.errno reads/writes the cell. */
+/* Runtime OS name -- truthful for the machine this runtime was compiled on.
+   The compiler's compile-time xiom.env constants reported "windows" even on
+   the ubuntu runner (2026-09-22 probe), so platform predicates use this. */
+const char* xiom_os_name(void) {
+#if defined(_WIN32)
+    return "windows";
+#elif defined(__APPLE__)
+    return "macos";
+#elif defined(__linux__)
+    return "linux";
+#else
+    return "unknown";
+#endif
+}
 #ifdef _WIN32
 uint8_t* xiom_errno_ptr(void) { return (uint8_t*)_errno(); }
 #else

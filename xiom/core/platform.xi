@@ -14,6 +14,19 @@ module xiom.platform
 
 use xiom.env;
 use xiom.os;
+use xiom.convert.cstring;
+
+extern "C" {
+  fn xiom_os_name() -> *UInt8;
+}
+
+// Runtime-backed (the compile-time env.OS constant reported "windows" on the
+// ubuntu runner, 2026-09-22); arch_name still uses env.ARCH.
+fn _rt_os_name() -> Str
+  requires: true
+{
+  unsafe { return cstring.from_cstring(xiom_os_name() as Int); }
+}
 
 // -- OS name ------------------------------------------------------------------
 
@@ -23,30 +36,30 @@ use xiom.os;
 pub fn os_name() -> Str
     ensures: result.len() > 0
 {
-    xiom.os.platform()
+    return _rt_os_name();
 }
 
 // -- Boolean OS checks --------------------------------------------------------
 
 /// True when the target OS is Windows.
 pub fn is_windows() -> Bool {
-    xiom.env.OS == "windows"
+    return _rt_os_name() == "windows";
 }
 
 /// True when the target OS is Linux.
 pub fn is_linux() -> Bool {
-    xiom.env.OS == "linux"
+    return _rt_os_name() == "linux";
 }
 
 /// True when the target OS is macOS (Darwin).
 pub fn is_macos() -> Bool {
-    xiom.env.OS == "macos"
+    return _rt_os_name() == "macos";
 }
 
 /// True when the target OS is a BSD variant (freebsd, openbsd, netbsd).
 pub fn is_bsd() -> Bool {
-    let os = xiom.env.OS;
-    os == "freebsd" || os == "openbsd" || os == "netbsd" || os == "dragonfly"
+    let os = _rt_os_name();
+    return os == "freebsd" || os == "openbsd" || os == "netbsd" || os == "dragonfly";
 }
 
 /// True when the target OS is a Unix-like system (Linux, macOS, BSD).

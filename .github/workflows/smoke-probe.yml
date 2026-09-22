@@ -82,7 +82,7 @@ jobs:
 
       - name: Run selected smokes
         shell: pwsh
-        run: ./tools/run_smokes.ps1 -Compiler '${{ steps.compiler.outputs.binary }}' -Corpus probe-corpus -Workers ${{ github.event.inputs.workers }} -RetryFailed -WorkDir probe-work
+        run: ./tools/run_smokes.ps1 -Compiler '${{ steps.compiler.outputs.binary }}' -Corpus probe-corpus -Workers ${{ github.event.inputs.workers }} -RetryFailed -WorkDir probe-work -KeepPassing
 
       - name: Upload probe workdir
         if: always()
