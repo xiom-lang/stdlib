@@ -6685,4 +6685,36 @@ unsigned __int128 __umodti3(unsigned __int128 a, unsigned __int128 b) {
     unsigned __int128 q = xiom_udivti3(a, b);
     return a - q * b;
 }
+/* ================================================================
+   Cross-platform shims: dynamic loading + local-time
+   xiom.ffi.dl and xiom.time.tz used to call Win32/MSVC symbols
+   (LoadLibraryA, GetProcAddress, GetLastError, _localtime64_s,
+   _mkgmtime64) directly, so any program importing those modules failed
+   to link on Linux. These wrappers expose the same semantics on both
+   platforms; cf. smoke_ffi2 / smoke_time_tz.
+   ================================================================ */
+
+#include <time.h>
+
+#ifdef _WIN32
+void* xiom_dl_open(const char* path) { return (void*)LoadLibraryA(path); }
+void* xiom_dl_sym(void* handle, const char* name) { return (void*)GetProcAddress((HMODULE)handle, name); }
+int   xiom_dl_close(void* handle) { return FreeLibrary((HMODULE)handle) ? 1 : 0; }
+long  xiom_dl_error_code(void) { return (long)GetLastError(); }
+void* xiom_dl_self(void) { return (void*)GetModuleHandleA(NULL); }
+int32_t xiom_tz_localtime64(uint8_t* tm, int64_t* t) { return (int32_t)_localtime64_s((struct tm*)tm, (const __time64_t*)t); }
+int64_t xiom_tz_mkgmtime64(uint8_t* tm) { return (int64_t)_mkgmtime64((struct tm*)tm); }
+#else
+#include <dlfcn.h>
+#include <errno.h>
+extern struct tm* localtime_r(const time_t* t, struct tm* out);
+extern time_t timegm(struct tm* t);
+void* xiom_dl_open(const char* path) { return dlopen(path, RTLD_NOW); }
+void* xiom_dl_sym(void* handle, const char* name) { return dlsym(handle, name); }
+int   xiom_dl_close(void* handle) { return dlclose(handle) == 0 ? 1 : 0; }
+long  xiom_dl_error_code(void) { return (long)errno; }
+void* xiom_dl_self(void) { return dlopen(NULL, RTLD_NOW); }
+int32_t xiom_tz_localtime64(uint8_t* tm, int64_t* t) { time_t tt = (time_t)(*t); return localtime_r(&tt, (struct tm*)tm) ? 0 : 1; }
+int64_t xiom_tz_mkgmtime64(uint8_t* tm) { return (int64_t)timegm((struct tm*)tm); }
+#endif
 

@@ -242,7 +242,8 @@ fn main() -> Int {
     }
   }
 
-  // --- win: environment + identity ---
+  // --- win: environment + identity (Windows-only; the module wraps Windows APIs) ---
+  if xiom.os.platform.platform_is_windows() {
   {
     let v = win.win_environment_var("USERNAME");
     match v {
@@ -304,6 +305,8 @@ fn main() -> Int {
       return 44;
     }
   }
+
+  }  // end Windows-only block
 
   // --- unix: environment + documented defaults ---
   {

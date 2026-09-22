@@ -87,3 +87,22 @@ jobs:
           name: smoke-probe-workdir
           path: probe-work
           if-no-files-found: ignore
+
+      - name: Bin diagnostics (permissions + direct exec)
+        if: always()
+        shell: bash
+        run: |
+          echo "== bin listing =="
+          ls -la probe-work/bin || true
+          for f in probe-corpus/*.xi; do
+            b="probe-work/bin/$(basename "${f%.xi}")"
+            if [ -f "$b" ]; then
+              echo "== $b"
+              ls -l "$b"
+              file "$b" || true
+              "$b" > /tmp/direct.out 2>/tmp/direct.err
+              echo "direct rc=$?"
+              head -c 400 /tmp/direct.out || true
+              head -c 400 /tmp/direct.err || true
+            fi
+          done

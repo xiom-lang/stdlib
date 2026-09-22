@@ -13,7 +13,7 @@ use xiom.ptr;
 // Local-time offset (tzdata phase 1).
 //
 // Phase 1 exposes the OS's CURRENT local offset from UTC, DST-aware, via the
-// C runtime (`_localtime64_s` + `_mkgmtime64`: offset = mkgmtime(local(t)) -
+// C runtime (runtime shims `xiom_tz_localtime64` + `xiom_tz_mkgmtime64`: offset = mkgmtime(local(t)) -
 // t). This is exact for the host's configured zone including DST at the
 // queried instant; it is NOT a zone database -- no historical offsets, no
 // zone names, no arbitrary-zone conversion (phase 2 / tzdata files).
@@ -21,8 +21,8 @@ use xiom.ptr;
 
 extern "C" {
   fn time(t: *Int) -> Int;
-  fn _localtime64_s(tm: *UInt8, t: *Int) -> Int32;
-  fn _mkgmtime64(tm: *UInt8) -> Int;
+  fn xiom_tz_localtime64(tm: *UInt8, t: *Int) -> Int32;
+  fn xiom_tz_mkgmtime64(tm: *UInt8) -> Int;
 }
 
 const _TM_BYTES: Int = 64;   // struct tm fields (36 bytes) + padding
@@ -62,14 +62,14 @@ pub fn tz_offset_secs_at(epoch: Int) -> Result[Int, Str] {
   var e = epoch;
   var rc: Int32 = 0;
   unsafe {
-    rc = _localtime64_s(buf.as_mut_ptr(), &e);
+    rc = xiom_tz_localtime64(buf.as_mut_ptr(), &e);
   }
   if rc != 0 {
     return Err("tz: localtime failed for epoch " + convert.int_to_string(epoch));
   }
   var loc: Int = 0;
   unsafe {
-    loc = _mkgmtime64(buf.as_mut_ptr());
+    loc = xiom_tz_mkgmtime64(buf.as_mut_ptr());
   }
   if loc == 0 - 1 {
     return Err("tz: mkgmtime failed for epoch " + convert.int_to_string(epoch));
@@ -88,7 +88,7 @@ pub fn tz_is_dst() -> Result[Bool, Str] {
   var e = _utc_now_secs();
   var rc: Int32 = 0;
   unsafe {
-    rc = _localtime64_s(buf.as_mut_ptr(), &e);
+    rc = xiom_tz_localtime64(buf.as_mut_ptr(), &e);
   }
   if rc != 0 {
     return Err("tz: localtime failed");
