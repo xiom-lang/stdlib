@@ -4,7 +4,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 -->
 # XIOM Stdlib Session -- Handoff
 
-## 0A. CONTINUE HERE -- handoff snapshot (updated 2026-09-21, after compiler R54)
+## 0A. CONTINUE HERE -- handoff snapshot (updated 2026-09-23, after compiler v0.61.3)
 
 **Repo**: `xiom-lang/stdlib` at `E:\xiom-lang\stdlib` (branch `main`).
 Compiler pin: `COMPILER_VERSION` = **v0.60.0** (v0.60.1 and the pin predate
@@ -274,6 +274,54 @@ was rejected by tag rules -- owner action needed).
   trusted-publisher entry stays undeployed until the owner approves; the
   tag-triggered production run (`35726136811`) stays unapproved.
 - `p_platform_env.xi` is part of the probe corpus and passes on both hosts.
+
+**SESSION 2026-09-23 PART 8 (released 0.61.3; compiler v0.61.3 out; next = production-grade push)**
+- Compiler lane released **v0.61.3** (`d62b4d20`, "version parity with
+  stdlib", R64/R65/AI-context/JIT batch; R65 = target-accurate
+  `xiom.env` constants, lock e2e_m118). Stdlib release is also 0.61.3;
+  the stdlib pin is still **v0.61.1** -- bumping it is the first task of
+  the next session.
+- Registry: the staging canary for `xiom-std@0.61.3` was VERIFIED
+  (provenance + signature re-checked against the served tarball), and the
+  tag-triggered **production publish completed successfully**
+  (`35726136811`, owner-approved). `stdlib-v0.61.3` is now the live
+  release; `0.61.1`/`0.61.2` remain dead tags.
+- **Registry relay (repack semantics, important for "promote exactly the
+  canary bytes")**: `xiom pkg publish` re-packs, so published bytes differ
+  from the release asset and across runs; exact promotion needs
+  deterministic packing (`SOURCE_DATE_EPOCH` / fixed mtimes) or a
+  publish-existing-tarball mode. Re-running a release job regenerates the
+  asset, which invalidates the canary's artifact claim -- **re-canary
+  after any asset re-generation**. Tracked as a production-grade item
+  (registry/compiler lanes; stdlib packaging can pin mtimes).
+- Next-session queue (production-grade, 100% readiness, no restrictions):
+  1. **Pin bump to compiler v0.61.3** (build from the tag with the
+     documented recipe), then re-baseline: check_modules + full corpus +
+     probe corpus + barename + ratchets; record as the next
+     `VERIFICATION_BASELINE` section. Then decide on the runtime
+     OS-detection workaround: R65 makes `xiom.env` correct, but the
+     runtime `xiom_os_name` path is still more robust -- recommended to
+     keep it and note why.
+  2. Coverage waves (full protocol per wave: shape probe -> clauses ->
+     `coverage_floorsN+1.json` -> wiring -> check_modules + corpus):
+     `math` (995 pub, 4.1%), `convert` (304, 1.6%), `stats` (140, 0%),
+     `text`, `regex`, `test`, `collections`, `error`/`io` tails.
+  3. Duplication gate `[~]`: translation units (collect/hash vs
+     linkedhash, cache vs lru, geom short/long names); twin removal waits
+     on the compiler api_freeze snapshot regen.
+  4. tzdata phase 2 (full historical/global tables).
+  5. Deterministic stdlib packaging (SOURCE_DATE_EPOCH / fixed mtimes) so
+     published bytes equal the release asset bytes (coordinate with the
+     registry/compiler lanes).
+  6. Untested-surface tail: 44 struct-param fns without a usable ctor,
+     fn-params with non-scalar shapes, 83 generic fns.
+  7. Runtime symbol audit: 20 definition-only delete candidates awaiting
+     compiler-lane confirmation.
+  8. TLS/schannel stays compiler-FFI-gated; registry production
+     activation is now proven, the owner deploys further entries.
+- Subagents are allowed in the next session for parallel
+  reconnaissance/triage (keep repo edits single-threaded; one family =
+  one commit).
 - Post-release tooling increment (2026-09-22): `gen_call_probes.ps1` gained
   `-IncludeWrappedCtors` (Result/Option constructors consumed in the success
   arm), extending the untested-surface scan to **126 modules / 751 calls,
@@ -462,6 +510,10 @@ was rejected by tag rules -- owner action needed).
 5. ~~Probe-corpus curation~~ **DONE 2026-09-21** -- the 18 red probes split
    into `tools/probes/evidence/` (11) and `tools/known_failures/` (7); the
    probes root is 159/159 on R53. See PART 3.
+6. **Production-grade queue (2026-09-23)**: see PART 8 -- compiler pin bump
+   to v0.61.3 + re-baseline, coverage waves, duplication translation,
+   tzdata phase 2, deterministic packaging, untested-surface tail, runtime
+   symbol audit. TLS/schannel stays compiler-FFI-gated.
 
 **Recipes**
 - Build a compiler ref: export it (`git -C E:\xiom-lang\xiom archive
@@ -471,10 +523,11 @@ was rejected by tag rules -- owner action needed).
   (git-archive mtimes can be older than the artifacts, so cargo skips the
   rebuild). Run with `XIOM_STDLIB=E:\xiom-lang\stdlib`. Built across the
   campaign: R46 `12148d43`, R46b `504fcc1e`, R49 `306073ba`, R52 `1fcb4855`,
-  R54 `7837b194`, R58 `5bdffaad`, R61 `ff293f8e`; binaries stashed under
-  `%TEMP%\kilo\stdlib_ws\` (`xiom_r61.exe` is the current one -- R61;
-  `xiom_r58.exe`/`xiom_r53.exe`/`xiom_r52.exe`/`xiom_r49.exe` are previous
-  baselines).
+  R54 `7837b194`, R58 `5bdffaad`, R61 `ff293f8e` (the last verified debug
+  binary is `xiom_r61.exe`, stashed under `%TEMP%\kilo\stdlib_ws\`);
+  release tags now exist: compiler **v0.61.3** (`d62b4d20`) and stdlib
+  **stdlib-v0.61.3** (`c7b4027`). The next session should build the
+  compiler from tag `v0.61.3` (see PART 8), not from a session commit.
   Resolve the runtime from the repo root (or set `XIOM_RUNTIME_DIR`): a
   different CWD links a partial runtime and fails on `xiom_simd_*` /
   `xiom_async_now_ms`.
