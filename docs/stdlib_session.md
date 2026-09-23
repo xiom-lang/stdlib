@@ -4,16 +4,98 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 -->
 # XIOM Stdlib Session -- Handoff
 
-## 0A. CONTINUE HERE -- handoff snapshot (updated 2026-09-23, after compiler v0.61.3)
+## 0A. CONTINUE HERE -- handoff snapshot (updated 2026-09-24, after the v0.61.3 pin bump)
 
 **Repo**: `xiom-lang/stdlib` at `E:\xiom-lang\stdlib` (branch `main`).
-Compiler pin: `COMPILER_VERSION` = **v0.60.0** (v0.60.1 and the pin predate
-R43-R46; the nightly heavy CI already tests compiler `main`). NOTE: history
-was rewritten this session (owner-authorized): every author/committer/tagger
-is now `Lefteris Notas <lefterisnotas@gmail.com>`, `main` force-pushed to
-HEAD `926e888`; every other clone must be re-cloned. The protected tag
+Compiler pin: `COMPILER_VERSION` = **v0.61.3** (compiler tag `d62b4d20`;
+R64/R65 batch -- R65 makes `xiom.env` OS/ARCH/FAMILY target-accurate, lock
+`e2e_m118`). Re-baselined on the tag build 2026-09-23 (PART 9 below plus the
+v0.61.3 section of `docs/VERIFICATION_BASELINE.md`). The nightly heavy CI
+already tests compiler `main`. NOTE: history was rewritten 2026-09-20
+(owner-authorized): every author/committer/tagger is
+`Lefteris Notas <lefterisnotas@gmail.com>`, `main` force-pushed to HEAD
+`926e888`; every other clone must be re-cloned. The protected tag
 `stdlib-v0.60.0` still carries the old tagger on the remote (its force-push
 was rejected by tag rules -- owner action needed).
+
+**SESSION 2026-09-23 PART 9 (production-grade push: pin v0.61.3 + re-baseline;
+package-relay fixes; deterministic packaging; coverage waves 22-24)**
+- Pin bump: compiler tag `v0.61.3` (`d62b4d20`) built with the documented
+  recipe (archive -> warm target from R61 -> touch all extracted sources ->
+  `cargo build --locked -p xiom`); binary
+  `%TEMP%\kilo\stdlib_ws\xiom_v0613.exe` (`XIOM Compiler v0.61.3`).
+  `COMPILER_VERSION` v0.61.1 -> v0.61.3 (`da0d45e`). Re-baseline on the new
+  binary (`78cbccc` + the v0.61.3 VERIFICATION_BASELINE section):
+  check_modules **509/509** (297.4s); corpus **949/949**, 0 compilefail,
+  0 runfail (**2759.5s**, `-RetryFailed`); probe corpus **171/171**
+  (450.6s); barename **0/509** (1664.7s); coverage floors58 OK
+  (21.1%/21.2%); doc ratchet OK (100%). The runtime OS-detection
+  workaround (`xiom_os_name`) is KEPT with the rationale recorded in the
+  baseline (run-time host read beats compile-time constants; R65 fixes the
+  env constants but not relocation/cross-build).
+- Package-relay close-outs (commit `06e513a`, locked by
+  `tools/probes/p_relay_visibility.xi`): the canonical `str_compare` now
+  lives on `xiom.string` (compare delegates); the canonical INT_MIN-exact
+  `to_string` now lives on `xiom.convert` (tostring delegates); NEW
+  `xiom.time.monotonic_ms()` (runtime `xiom_async_now_ms`,
+  QueryPerformanceCounter/CLOCK_MONOTONIC, non-decreasing; `Instant.now`
+  doc corrected to wall-clock); checker warning E001 conservatism
+  reproduced from stdlib smokes (warning-only: smoke_collect_sparse/2a/
+  threadpool compile+run green on v0.61.3); env-mutation thread-safety and
+  the generic fn-pointer claim recorded in
+  `docs/STDLIB_BETA_LIMITATIONS.md` (package-relay section).
+- Deterministic packaging (commit `3885696`): `release.yml` now packs
+  `xiom-std-<ver>.tar.gz` with SOURCE_DATE_EPOCH = tagged commit,
+  `--sort=name --mtime --owner=0 --group=0 --numeric-owner`, `gzip -n`, so
+  a release re-run produces byte-identical assets; verified locally with
+  GNU tar 1.35 (identical SHA256 across mtime shifts + clean extraction
+  round-trip). `xiom pkg publish` still re-packs (registry lane's
+  publish-existing-tarball mode remains open); docs/CI.md updated.
+- Runtime symbol audit closed stdlib-side (commit `33671e0`): the 9 non-hot
+  definition-only candidates are gone (0 references across `runtime/**`),
+  the 11 `xiom_hot_*` entries are kept + AUDIT-annotated; only the compiler
+  lane's confirmation of the kept hot-reload ABI remains.
+- Coverage waves, each = new-shape probe -> clauses -> floors dump ->
+  same-commit wiring (3 workflows + tools/README + readiness plan) ->
+  check_modules + full corpus + probe corpus + ratchets:
+  * **Wave 22** (`652a2bf`, floors59): 45 clauses on `stats/stats.xi` +
+    `stats/probability.xi` (empty/short-input identities, non-negative
+    float bounds incl. the NaN-tolerant disjunction, two-Vec length
+    mismatches, exact histogram bin counts, probability-domain guarded
+    intervals, CDF boundary equalities). stats 0% -> **25%**; corpus
+    949/949 (2727.7s); probes 173/173; check_modules 509/509.
+  * **Wave 23** (`82b7e14`, floors60): 30 clauses on `convert/escape.xi` +
+    `convert/validate.xi` (escape >=, unescape <=, exact quote-wrapper
+    arithmetic, Bool short-circuit guards, disjunctive length guards,
+    empty-input Str guards). convert 2% -> **11.5%**; corpus 949/949
+    (2646.9s); probes 174/174; check_modules 509/509.
+  * **Wave 24** (`dd57e76`, floors61): 42 clauses on `math/modular.xi` +
+    `math/arithmetic.xi` + `math/logic.xi` + `math/set_theory.xi` (uniform
+    modular ranges, sqrt ranges, tuple non-negativity, two-parameter Vec
+    length arithmetic, cardinality bounds, Boolean mirrors, power-of-two
+    guards, sign-matching remainders). math 4.1% -> **8.3%**; global
+    21.2% -> **22.9%** pub-with-clause; corpus 949/949 (2325.2s); probes
+    175/175; check_modules 509/509; doc ratchet OK.
+  * Remaining wave targets (recon done this session): math
+    number_theory/factorial/combinatorics, text, regex, test, collections,
+    error/io tails. The per-dir candidate lists live in the session recon
+    (top candidates: collections ~35 safe clauses, regex ~20, test ~18,
+    text ~18).
+- Compiler-lane relay (R66-R70 on compiler `main`, **NOT in the v0.61.3
+  pin**): R66 contract-method Vec lowering AV, R67 ctor container-leaf,
+  R68 nested extern hoisting, R69 `T.to_str()` mono params, R70
+  `for x in <collection>` real element loops; full e2e 2371/2371 local.
+  The next pin bump carries them and unlocks `for`-loop probe shapes; the
+  compiler lane's `stdlib_api_freeze_no_removals` snapshot regeneration is
+  still open on their side (the duplication-gate twin removal waits on it).
+- Still open from the production queue: duplication translation units
+  (collect/hash vs linkedhash, cache vs lru, geom short/long names --
+  checklists in `docs/STDLIB_DEDUP_INVENTORY.md`), tzdata phase 2,
+  untested-surface tail (44 struct-param fns without a usable ctor,
+  non-scalar fn params, 83 generic fns -- needs new generator classes in
+  `tools/gen_call_probes.ps1`), registry publish-existing-tarball mode.
+  TLS/schannel stays compiler-FFI-gated.
+
 
 **SESSION 2026-09-20 (multi-param tranche closure + no-NASM runtime link fix)**
 - Local main: `ebae67c` + `b4f2655` (runtime fallback linkage + probe),
