@@ -19,7 +19,9 @@ use xiom.string;
 /// Returns: true when there is exactly one '@', a non-empty local part, a
 ///          non-empty domain containing a dot, and no whitespace.
 /// Complexity: O(n).
-pub fn is_valid_email(s: Str) -> Bool {
+pub fn is_valid_email(s: Str) -> Bool
+  ensures: s.len() < 3 => result == false
+{
   var len = string.str_len(s);
   if len < 3 {
     return false;
@@ -53,7 +55,9 @@ pub fn is_valid_email(s: Str) -> Bool {
 /// Parameters: s -- the candidate address.
 /// Returns: true for a well-formed address.
 /// Complexity: O(n).
-pub fn is_valid_email_strict(s: Str) -> Bool {
+pub fn is_valid_email_strict(s: Str) -> Bool
+  ensures: s.len() == 0 => result == false
+{
   var at = _index_of(s, "@");
   if at <= 0 {
     return false;
@@ -109,7 +113,9 @@ pub fn is_valid_email_strict(s: Str) -> Bool {
 /// Returns: true when the number contains 7..15 digits with only allowed
 ///          separator characters.
 /// Complexity: O(n).
-pub fn is_valid_phone(s: Str) -> Bool {
+pub fn is_valid_phone(s: Str) -> Bool
+  ensures: s.len() == 0 => result == false
+{
   var len = string.str_len(s);
   if len == 0 {
     return false;
@@ -137,7 +143,10 @@ pub fn is_valid_phone(s: Str) -> Bool {
 /// Parameters: s -- the candidate number.
 /// Returns: true for an E.164-compliant number.
 /// Complexity: O(n).
-pub fn is_valid_phone_e164(s: Str) -> Bool {
+pub fn is_valid_phone_e164(s: Str) -> Bool
+  ensures: s.len() == 0 => result == false
+  ensures: s.len() > 16 => result == false
+{
   var len = string.str_len(s);
   if len < 1 || len > 16 {
     return false;
@@ -166,7 +175,9 @@ pub fn is_valid_phone_e164(s: Str) -> Bool {
 /// Parameters: s -- the candidate card number (digits, optional spaces).
 /// Returns: true for a valid card number.
 /// Complexity: O(n).
-pub fn is_valid_credit_card(s: Str) -> Bool {
+pub fn is_valid_credit_card(s: Str) -> Bool
+  ensures: s.len() < 13 => result == false
+{
   var digits = _digit_string(s);
   var dlen = digits.len();
   if dlen < 13 || dlen > 19 {
@@ -179,7 +190,9 @@ pub fn is_valid_credit_card(s: Str) -> Bool {
 /// Parameters: s -- a string of digits.
 /// Returns: true when the Luhn checksum passes.
 /// Complexity: O(n).
-pub fn luhn_check(s: Str) -> Bool {
+pub fn luhn_check(s: Str) -> Bool
+  ensures: s.len() == 0 => result == false
+{
   var len = string.str_len(s);
   if len == 0 {
     return false;
@@ -211,7 +224,9 @@ pub fn luhn_check(s: Str) -> Bool {
 /// Parameters: s -- the candidate IBAN (spaces allowed).
 /// Returns: true for a valid IBAN.
 /// Complexity: O(n).
-pub fn is_valid_iban(s: Str) -> Bool {
+pub fn is_valid_iban(s: Str) -> Bool
+  ensures: s.len() < 15 => result == false
+{
   var clean = _strip_spaces(s);
   var len = string.str_len(clean);
   if len < 15 || len > 34 {
@@ -253,7 +268,9 @@ pub fn is_valid_iban(s: Str) -> Bool {
 /// Parameters: s -- the IBAN.
 /// Returns: the country code (uppercase) or "" when too short.
 /// Complexity: O(1).
-pub fn iban_country_code(s: Str) -> Str {
+pub fn iban_country_code(s: Str) -> Str
+  ensures: s.len() < 2 => result.len() == 0
+{
   if string.str_len(s) < 2 {
     return "";
   }
@@ -269,7 +286,9 @@ pub fn iban_country_code(s: Str) -> Str {
 /// Parameters: s -- the IBAN.
 /// Returns: the checksum digits or "" when too short.
 /// Complexity: O(1).
-pub fn iban_checksum(s: Str) -> Str {
+pub fn iban_checksum(s: Str) -> Str
+  ensures: s.len() < 6 => result.len() == 0
+{
   if string.str_len(s) < 6 {
     return "";
   }
@@ -286,7 +305,9 @@ pub fn iban_checksum(s: Str) -> Str {
 /// Returns: true for a valid layout (6 alphanumeric + 2 alpha + optional 3
 ///          alphanumeric).
 /// Complexity: O(1).
-pub fn is_valid_swift(s: Str) -> Bool {
+pub fn is_valid_swift(s: Str) -> Bool
+  ensures: s.len() != 8 && s.len() != 11 => result == false
+{
   var len = string.str_len(s);
   if len != 8 && len != 11 {
     return false;
@@ -312,7 +333,9 @@ pub fn is_valid_swift(s: Str) -> Bool {
 /// Parameters: s -- the candidate BIC.
 /// Returns: true for a valid BIC.
 /// Complexity: O(1).
-pub fn is_valid_bic(s: Str) -> Bool {
+pub fn is_valid_bic(s: Str) -> Bool
+  ensures: s.len() != 8 && s.len() != 11 => result == false
+{
   return is_valid_swift(s);
 }
 
@@ -320,7 +343,9 @@ pub fn is_valid_bic(s: Str) -> Bool {
 /// Parameters: s -- the candidate color.
 /// Returns: true for a well-formed hex color.
 /// Complexity: O(1).
-pub fn is_valid_hex_color(s: Str) -> Bool {
+pub fn is_valid_hex_color(s: Str) -> Bool
+  ensures: s.len() != 4 && s.len() != 7 && s.len() != 9 => result == false
+{
   var len = string.str_len(s);
   if len != 4 && len != 7 && len != 9 {
     return false;
@@ -345,7 +370,9 @@ pub fn is_valid_hex_color(s: Str) -> Bool {
 /// Parameters: s -- the candidate version.
 /// Returns: true for a valid SemVer.
 /// Complexity: O(n).
-pub fn is_valid_semver(s: Str) -> Bool {
+pub fn is_valid_semver(s: Str) -> Bool
+  ensures: s.len() == 0 => result == false
+{
   var main = s;
   var build = "";
   var b_idx = _index_of(s, "+");

@@ -314,11 +314,17 @@ T1/T2 yields.
        two-Vec length-mismatch guards, exact histogram bin counts,
        probability-domain guarded intervals, CDF boundary equalities) ->
        stats 0% -> 25%, global 21.2% -> 21.8% pub-with-clause; pre-validated
-       by tools/probes/p_wave22_shapes.xi. Ratchet:
-       tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors59.json
+       by tools/probes/p_wave22_shapes.xi. Wave 23 (2026-09-23): 30 clauses
+       on convert/escape.xi + convert/validate.xi (escape lower bounds,
+       unescape upper bounds, exact quote-wrapper arithmetic, Bool
+       short-circuit guards, disjunctive length guards, empty-input Str
+       guards) -> convert 2% -> 11.5%, global 21.8% -> 22.3%
+       pub-with-clause; pre-validated by tools/probes/p_wave23_shapes.xi.
+       Ratchet:
+       tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors60.json
        (repo tooling as of the split; positive + negative runs verified;
        earlier floors kept at
-       coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55/56/57/58.json).
+       coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55/56/57/58/59.json).
       Floors are per top-level stdlib/xiom directory and must be refreshed
       when a module is ADDED (new uncovered pub fns dilute the percentage
       -- TOML dropped serialize 6.1% -> 5.4%, tz dropped time 13% ->

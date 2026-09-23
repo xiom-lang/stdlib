@@ -21,7 +21,9 @@ use xiom.string;
 /// Parameters: s -- the input text.
 /// Returns: the escaped text (strictly longer unless no specials).
 /// Complexity: O(n), n = input length.
-pub fn html_escape(s: Str) -> Str {
+pub fn html_escape(s: Str) -> Str
+  ensures: result.len() >= s.len()
+{
   var result = "";
   var i: Int = 0;
   var len = string.str_len(s);
@@ -51,7 +53,9 @@ pub fn html_escape(s: Str) -> Str {
 /// Parameters: s -- the escaped text.
 /// Returns: the decoded text; unrecognized sequences pass through.
 /// Complexity: O(n), n = input length.
-pub fn html_unescape(s: Str) -> Str {
+pub fn html_unescape(s: Str) -> Str
+  ensures: result.len() <= s.len()
+{
   var result = "";
   var i: Int = 0;
   var len = string.str_len(s);
@@ -83,7 +87,9 @@ pub fn html_unescape(s: Str) -> Str {
 /// Parameters: s -- the attribute value text.
 /// Returns: the escaped text.
 /// Complexity: O(n).
-pub fn html_escape_attr(s: Str) -> Str {
+pub fn html_escape_attr(s: Str) -> Str
+  ensures: result.len() >= s.len()
+{
   return html_escape(s);
 }
 
@@ -91,7 +97,9 @@ pub fn html_escape_attr(s: Str) -> Str {
 /// Parameters: s -- the input text.
 /// Returns: the escaped text.
 /// Complexity: O(n).
-pub fn xml_escape(s: Str) -> Str {
+pub fn xml_escape(s: Str) -> Str
+  ensures: result.len() >= s.len()
+{
   var result = "";
   var i: Int = 0;
   var len = string.str_len(s);
@@ -120,7 +128,9 @@ pub fn xml_escape(s: Str) -> Str {
 /// Parameters: s -- the escaped text.
 /// Returns: the decoded text; unrecognized sequences pass through.
 /// Complexity: O(n).
-pub fn xml_unescape(s: Str) -> Str {
+pub fn xml_unescape(s: Str) -> Str
+  ensures: result.len() <= s.len()
+{
   var result = "";
   var i: Int = 0;
   var len = string.str_len(s);
@@ -152,7 +162,9 @@ pub fn xml_unescape(s: Str) -> Str {
 /// Parameters: s -- the raw field value.
 /// Returns: the CSV-ready field.
 /// Complexity: O(n).
-pub fn csv_escape_field(s: Str) -> Str {
+pub fn csv_escape_field(s: Str) -> Str
+  ensures: result.len() >= s.len()
+{
   if !_csv_needs_quote(s) {
     return s;
   }
@@ -178,7 +190,9 @@ pub fn csv_escape_field(s: Str) -> Str {
 /// Parameters: s -- a single CSV field (no separators).
 /// Returns: the raw field value.
 /// Complexity: O(n).
-pub fn csv_unescape_field(s: Str) -> Str {
+pub fn csv_unescape_field(s: Str) -> Str
+  ensures: result.len() <= s.len()
+{
   var len = string.str_len(s);
   if len >= 2 {
     var first = string.byte_at(s, 0);
@@ -216,7 +230,9 @@ pub fn csv_unescape_field(s: Str) -> Str {
 /// Parameters: s -- the raw field value.
 /// Returns: the escaped field.
 /// Complexity: O(n).
-pub fn tsv_escape_field(s: Str) -> Str {
+pub fn tsv_escape_field(s: Str) -> Str
+  ensures: result.len() >= s.len()
+{
   var result = "";
   var i: Int = 0;
   var len = string.str_len(s);
@@ -241,7 +257,9 @@ pub fn tsv_escape_field(s: Str) -> Str {
 /// Parameters: s -- the escaped field.
 /// Returns: the raw field value.
 /// Complexity: O(n).
-pub fn tsv_unescape_field(s: Str) -> Str {
+pub fn tsv_unescape_field(s: Str) -> Str
+  ensures: result.len() <= s.len()
+{
   var result = "";
   var i: Int = 0;
   var len = string.str_len(s);
@@ -277,7 +295,9 @@ pub fn tsv_unescape_field(s: Str) -> Str {
 /// Parameters: s -- the literal text.
 /// Returns: the regex-safe text.
 /// Complexity: O(n).
-pub fn regex_escape(s: Str) -> Str {
+pub fn regex_escape(s: Str) -> Str
+  ensures: result.len() >= s.len()
+{
   var result = "";
   var i: Int = 0;
   var len = string.str_len(s);
@@ -298,7 +318,9 @@ pub fn regex_escape(s: Str) -> Str {
 /// Parameters: s -- the literal text.
 /// Returns: the glob-safe text.
 /// Complexity: O(n).
-pub fn glob_escape(s: Str) -> Str {
+pub fn glob_escape(s: Str) -> Str
+  ensures: result.len() >= s.len()
+{
   var result = "";
   var i: Int = 0;
   var len = string.str_len(s);
@@ -319,7 +341,9 @@ pub fn glob_escape(s: Str) -> Str {
 /// Parameters: s -- the escaped text.
 /// Returns: the literal text.
 /// Complexity: O(n).
-pub fn glob_unescape(s: Str) -> Str {
+pub fn glob_unescape(s: Str) -> Str
+  ensures: result.len() <= s.len()
+{
   var result = "";
   var i: Int = 0;
   var len = string.str_len(s);
@@ -351,7 +375,9 @@ pub fn glob_unescape(s: Str) -> Str {
 /// Parameters: s -- the raw argument.
 /// Returns: the shell-escaped argument.
 /// Complexity: O(n).
-pub fn shell_escape(s: Str) -> Str {
+pub fn shell_escape(s: Str) -> Str
+  ensures: result.len() >= s.len()
+{
   var result = "";
   var i: Int = 0;
   var len = string.str_len(s);
@@ -372,7 +398,9 @@ pub fn shell_escape(s: Str) -> Str {
 /// Parameters: s -- the raw argument.
 /// Returns: the single-quoted argument.
 /// Complexity: O(n).
-pub fn shell_quote(s: Str) -> Str {
+pub fn shell_quote(s: Str) -> Str
+  ensures: result.len() >= s.len() + 2
+{
   var result = "'";
   var i: Int = 0;
   var len = string.str_len(s);
@@ -395,7 +423,9 @@ pub fn shell_quote(s: Str) -> Str {
 /// Parameters: s -- the raw argument.
 /// Returns: the cmd-escaped argument.
 /// Complexity: O(n).
-pub fn cmd_escape(s: Str) -> Str {
+pub fn cmd_escape(s: Str) -> Str
+  ensures: result.len() >= s.len()
+{
   var result = "";
   var i: Int = 0;
   var len = string.str_len(s);
@@ -416,7 +446,9 @@ pub fn cmd_escape(s: Str) -> Str {
 /// Parameters: s -- the raw argument.
 /// Returns: the double-quoted argument.
 /// Complexity: O(n).
-pub fn cmd_quote(s: Str) -> Str {
+pub fn cmd_quote(s: Str) -> Str
+  ensures: result.len() >= s.len() + 2
+{
   var result = "\"";
   var i: Int = 0;
   var len = string.str_len(s);
