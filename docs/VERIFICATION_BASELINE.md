@@ -250,6 +250,33 @@ asset exists for the canary. The stdlib production tag `stdlib-v0.61.0` has
 passing staging canary and owner approval (the production trusted-publisher
 entry for `refs/tags/stdlib-v*` is not deployed yet).
 
+## v0.61.3 re-baseline (2026-09-23) -- pin moved from v0.61.1
+
+Compiler tag `v0.61.3` (`d62b4d20`; R64/R65/AI-context/JIT batch; R65 makes
+the `xiom.env` OS/ARCH/FAMILY constants target-accurate, lock `e2e_m118`)
+built with the documented recipe (`git archive --format=zip`, warm target
+copied from the R61 tree, all extracted sources touched, `cargo build
+--locked -p xiom`); binary stashed as
+`%TEMP%\kilo\stdlib_ws\xiom_v0613.exe` (`XIOM Compiler v0.61.3`). The pin
+bump (`da0d45e`) is the only stdlib change relative to the `stdlib-v0.61.3`
+release tag.
+
+**Gate results (stdlib tree at `da0d45e`):** check_modules **509/509**
+(297.4s); corpus **949/949**, 0 compilefail, 0 runfail (**2759.5s**, 8
+workers, `-RetryFailed`); probe corpus **171/171** (450.6s); barename
+**0 hits / 509** (1664.7s); coverage ratchet `floors58` OK (global 21.1%
+clauses / 21.2% pub-with-clause); doc ratchet `doc_baseline4` OK
+(6,984/6,984 = 100%).
+
+**Runtime OS-detection workaround KEPT (decision).** R65 fixes
+`xiom.env.OS/FAMILY` at the pin, but the runtime detection added in
+`4da1b33` (`xiom_os_name`, backing `xiom.os.platform` and `xiom.platform`)
+stays: it reads the host at RUN time rather than baking compile-time
+constants into the binary, so a cross-built or relocated binary still
+reports its actual host, and it is already covered by
+`tools/probes/p_platform_env.xi` on both hosts. Remove it only together
+with an explicit replacement decision, not implicitly on a pin bump.
+
 ## Provenance note
 
 Tag `v0.60.0` predates the resource-asset fix (`e3714884`, 2026-09-17
