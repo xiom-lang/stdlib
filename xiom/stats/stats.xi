@@ -116,7 +116,9 @@ fn stats_percentile(data: &Vec[Int], p: Int) -> Int
 
 /// Returns the minimum value in a vector of integers.
 /// Returns 0 for empty input.
-pub fn stats_min(data: &Vec[Int]) -> Int {
+pub fn stats_min(data: &Vec[Int]) -> Int
+  ensures: data.len() == 0 => result == 0
+{
   let len = data.len();
   if len == 0 { return 0; };
   var minval: Int = data[0];
@@ -132,7 +134,9 @@ pub fn stats_min(data: &Vec[Int]) -> Int {
 
 /// Returns the maximum value in a vector of integers.
 /// Returns 0 for empty input.
-pub fn stats_max(data: &Vec[Int]) -> Int {
+pub fn stats_max(data: &Vec[Int]) -> Int
+  ensures: data.len() == 0 => result == 0
+{
   let len = data.len();
   if len == 0 { return 0; };
   var maxval: Int = data[0];
@@ -147,7 +151,9 @@ pub fn stats_max(data: &Vec[Int]) -> Int {
 }
 
 /// Returns the range (max - min) of a vector of integers.
-pub fn stats_range(data: &Vec[Int]) -> Int {
+pub fn stats_range(data: &Vec[Int]) -> Int
+  ensures: data.len() == 0 => result == 0
+{
   return stats_max(data) - stats_min(data);
 }
 
@@ -188,7 +194,10 @@ pub fn stats_mode(data: &Vec[Int]) -> Option[Int] {
 
 /// Computes the population variance of a vector of integers.
 /// Sum of squared deviations from the mean divided by N.
-pub fn stats_variance(data: &Vec[Int]) -> Float64 {
+pub fn stats_variance(data: &Vec[Int]) -> Float64
+  ensures: data.len() == 0 => result == 0.0
+  ensures: result >= 0.0
+{
   let len = data.len();
   if len == 0 { return 0.0; };
   let mean = stats_mean(data);
@@ -203,7 +212,10 @@ pub fn stats_variance(data: &Vec[Int]) -> Float64 {
 }
 
 /// Computes the sample variance (Bessel's correction: divide by N-1).
-pub fn stats_sample_variance(data: &Vec[Int]) -> Float64 {
+pub fn stats_sample_variance(data: &Vec[Int]) -> Float64
+  ensures: data.len() < 2 => result == 0.0
+  ensures: result >= 0.0
+{
   let len = data.len();
   if len < 2 { return 0.0; };
   let mean = stats_mean(data);
@@ -218,12 +230,16 @@ pub fn stats_sample_variance(data: &Vec[Int]) -> Float64 {
 }
 
 /// Computes the population standard deviation (Float64).
-pub fn stats_stddev_f(data: &Vec[Int]) -> Float64 {
+pub fn stats_stddev_f(data: &Vec[Int]) -> Float64
+  ensures: result >= 0.0
+{
   return xiom.math.sqrt(stats_variance(data));
 }
 
 /// Computes the sample standard deviation (Float64).
-pub fn stats_sample_stddev(data: &Vec[Int]) -> Float64 {
+pub fn stats_sample_stddev(data: &Vec[Int]) -> Float64
+  ensures: result >= 0.0
+{
   return xiom.math.sqrt(stats_sample_variance(data));
 }
 
@@ -231,7 +247,9 @@ pub fn stats_sample_stddev(data: &Vec[Int]) -> Float64 {
 
 /// Returns the first quartile (Q1) of a sorted vector of integers.
 /// Uses the median-of-lower-half method.
-pub fn stats_q1(data: &Vec[Int]) -> Int {
+pub fn stats_q1(data: &Vec[Int]) -> Int
+  ensures: data.len() == 0 => result == 0
+{
   let len = data.len();
   if len == 0 { return 0; };
   let mid = len / 2;
@@ -240,7 +258,9 @@ pub fn stats_q1(data: &Vec[Int]) -> Int {
 
 /// Returns the third quartile (Q3) of a sorted vector of integers.
 /// Uses the median-of-upper-half method.
-pub fn stats_q3(data: &Vec[Int]) -> Int {
+pub fn stats_q3(data: &Vec[Int]) -> Int
+  ensures: data.len() == 0 => result == 0
+{
   let len = data.len();
   if len == 0 { return 0; };
   let mid = len / 2;
@@ -251,14 +271,18 @@ pub fn stats_q3(data: &Vec[Int]) -> Int {
 }
 
 /// Returns the interquartile range (Q3 - Q1).
-pub fn stats_iqr(data: &Vec[Int]) -> Int {
+pub fn stats_iqr(data: &Vec[Int]) -> Int
+  ensures: data.len() == 0 => result == 0
+{
   return stats_q3(data) - stats_q1(data);
 }
 
 // -- Float64-based statistics ------------------------------------------------
 
 /// Sum of a vector of Float64 values.
-pub fn stats_sum_f(data: &Vec[Float64]) -> Float64 {
+pub fn stats_sum_f(data: &Vec[Float64]) -> Float64
+  ensures: data.len() == 0 => result == 0.0
+{
   var sum: Float64 = 0.0;
   var i: Int = 0;
   let len = data.len();
@@ -270,14 +294,19 @@ pub fn stats_sum_f(data: &Vec[Float64]) -> Float64 {
 }
 
 /// Mean of a vector of Float64 values.
-pub fn stats_mean_f(data: &Vec[Float64]) -> Float64 {
+pub fn stats_mean_f(data: &Vec[Float64]) -> Float64
+  ensures: data.len() == 0 => result == 0.0
+{
   let len = data.len();
   if len == 0 { return 0.0; };
   return stats_sum_f(data) / (len as Float64);
 }
 
 /// Population standard deviation of a vector of Float64 values.
-pub fn stats_stddev_f_f(data: &Vec[Float64]) -> Float64 {
+pub fn stats_stddev_f_f(data: &Vec[Float64]) -> Float64
+  ensures: data.len() == 0 => result == 0.0
+  ensures: result >= 0.0 || result != result
+{
   let len = data.len();
   if len == 0 { return 0.0; };
   let mean = stats_mean_f(data);
@@ -295,7 +324,10 @@ pub fn stats_stddev_f_f(data: &Vec[Float64]) -> Float64 {
 // -- Covariance & Correlation ------------------------------------------------
 
 /// Computes the population covariance between two vectors of equal length.
-pub fn stats_covariance(a: &Vec[Int], b: &Vec[Int]) -> Float64 {
+pub fn stats_covariance(a: &Vec[Int], b: &Vec[Int]) -> Float64
+  ensures: a.len() == 0 => result == 0.0
+  ensures: b.len() != a.len() => result == 0.0
+{
   let n = a.len();
   if n == 0 || b.len() != n { return 0.0; };
   let mean_a = stats_mean(a);
@@ -324,7 +356,11 @@ pub fn stats_correlation(a: &Vec[Int], b: &Vec[Int]) -> Float64 {
 
 /// Builds a histogram with the specified number of bins over [lo, hi].
 /// Each bin counts values in [bin_start, bin_start + bin_width).
-pub fn stats_histogram(data: &Vec[Int], bins: Int, lo: Int, hi: Int) -> Vec[Int] {
+pub fn stats_histogram(data: &Vec[Int], bins: Int, lo: Int, hi: Int) -> Vec[Int]
+  ensures: bins <= 0 => result.len() == 0
+  ensures: hi <= lo => result.len() == 0
+  ensures: bins > 0 && hi > lo => result.len() == bins
+{
   var result = Vec[Int].new();
   if bins <= 0 || hi <= lo {
     return result;
@@ -358,7 +394,10 @@ pub fn stats_histogram(data: &Vec[Int], bins: Int, lo: Int, hi: Int) -> Vec[Int]
 
 /// Computes the geometric mean using logarithms to avoid overflow.
 /// Requires all values to be positive.
-pub fn stats_geometric_mean(data: &Vec[Int]) -> Float64 {
+pub fn stats_geometric_mean(data: &Vec[Int]) -> Float64
+  ensures: data.len() == 0 => result == 0.0
+  ensures: result >= 0.0
+{
   let n = data.len();
   if n == 0 { return 0.0; };
   var log_sum: Float64 = 0.0;
@@ -375,7 +414,10 @@ pub fn stats_geometric_mean(data: &Vec[Int]) -> Float64 {
 // -- Harmonic Mean -----------------------------------------------------------
 
 /// Computes the harmonic mean. Returns 0 if any value is <= 0.
-pub fn stats_harmonic_mean(data: &Vec[Int]) -> Float64 {
+pub fn stats_harmonic_mean(data: &Vec[Int]) -> Float64
+  ensures: data.len() == 0 => result == 0.0
+  ensures: result >= 0.0
+{
   let n = data.len();
   if n == 0 { return 0.0; };
   var recip_sum: Float64 = 0.0;
@@ -392,7 +434,9 @@ pub fn stats_harmonic_mean(data: &Vec[Int]) -> Float64 {
 // -- Z-score -----------------------------------------------------------------
 
 /// Computes the z-score: (value - mean) / stddev.
-pub fn stats_zscore(value: Int, mean: Float64, stddev: Float64) -> Float64 {
+pub fn stats_zscore(value: Int, mean: Float64, stddev: Float64) -> Float64
+  ensures: stddev == 0.0 => result == 0.0
+{
   if stddev == 0.0 { return 0.0; };
   return ((value as Float64) - mean) / stddev;
 }
@@ -400,7 +444,10 @@ pub fn stats_zscore(value: Int, mean: Float64, stddev: Float64) -> Float64 {
 // -- Linear Regression -------------------------------------------------------
 
 /// Computes the slope of the simple linear regression line y = mx + b.
-pub fn stats_slope(x: &Vec[Int], y: &Vec[Int]) -> Float64 {
+pub fn stats_slope(x: &Vec[Int], y: &Vec[Int]) -> Float64
+  ensures: x.len() < 2 => result == 0.0
+  ensures: y.len() != x.len() => result == 0.0
+{
   let n = x.len();
   if n < 2 || y.len() != n { return 0.0; };
   let mean_x = stats_mean(x);
@@ -420,7 +467,9 @@ pub fn stats_slope(x: &Vec[Int], y: &Vec[Int]) -> Float64 {
 }
 
 /// Computes the intercept of the simple linear regression line y = mx + b.
-pub fn stats_intercept(x: &Vec[Int], y: &Vec[Int]) -> Float64 {
+pub fn stats_intercept(x: &Vec[Int], y: &Vec[Int]) -> Float64
+  ensures: y.len() == 0 => result == 0.0
+{
   let mean_y = stats_mean(y);
   let mean_x = stats_mean(x);
   let m = stats_slope(x, y);
@@ -428,7 +477,10 @@ pub fn stats_intercept(x: &Vec[Int], y: &Vec[Int]) -> Float64 {
 }
 
 /// Computes the R-squared (coefficient of determination) for linear regression.
-pub fn stats_r_squared(x: &Vec[Int], y: &Vec[Int]) -> Float64 {
+pub fn stats_r_squared(x: &Vec[Int], y: &Vec[Int]) -> Float64
+  ensures: x.len() < 2 => result == 0.0
+  ensures: y.len() != x.len() => result == 0.0
+{
   let n = x.len();
   if n < 2 || y.len() != n { return 0.0; };
   let mean_y = stats_mean(y);

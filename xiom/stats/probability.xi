@@ -21,14 +21,20 @@ const _SQRT_2PI: Float64 = 2.5066282746310002;
 const _SQRT2: Float64 = 1.4142135623730951;
 
 /// Uniform density on [a, b]. Complexity: O(1).
-pub fn uniform_pdf(x: Float64, a: Float64, b: Float64) -> Float64 {
+pub fn uniform_pdf(x: Float64, a: Float64, b: Float64) -> Float64
+  ensures: b > a && x < a => result == 0.0
+  ensures: b > a && x > b => result == 0.0
+{
   if b <= a { return 0.0 / 0.0; }
   if x >= a && x <= b { return 1.0 / (b - a); }
   return 0.0;
 }
 
 /// Uniform cumulative distribution on [a, b]. Complexity: O(1).
-pub fn uniform_cdf(x: Float64, a: Float64, b: Float64) -> Float64 {
+pub fn uniform_cdf(x: Float64, a: Float64, b: Float64) -> Float64
+  ensures: b > a && x <= a => result == 0.0
+  ensures: b > a && x >= b => result == 1.0
+{
   if b <= a { return 0.0 / 0.0; }
   if x <= a { return 0.0; }
   if x >= b { return 1.0; }
@@ -63,7 +69,9 @@ pub fn exponential_pdf(x: Float64, lambda: Float64) -> Float64 {
 }
 
 /// Exponential cumulative distribution. Complexity: O(1).
-pub fn exponential_cdf(x: Float64, lambda: Float64) -> Float64 {
+pub fn exponential_cdf(x: Float64, lambda: Float64) -> Float64
+  ensures: lambda > 0.0 && x == 0.0 => result == 0.0
+{
   if lambda <= 0.0 || x < 0.0 { return 0.0 / 0.0; }
   return 1.0 - math.exp(-lambda * x);
 }
@@ -82,7 +90,9 @@ pub fn gamma_pdf(x: Float64, k: Float64, theta: Float64) -> Float64 {
 }
 
 /// Gamma cumulative distribution: P(k, x/theta). Complexity: O(iterations).
-pub fn gamma_cdf(x: Float64, k: Float64, theta: Float64) -> Float64 {
+pub fn gamma_cdf(x: Float64, k: Float64, theta: Float64) -> Float64
+  ensures: k > 0.0 && theta > 0.0 && x <= 0.0 => result == 0.0
+{
   if k <= 0.0 || theta <= 0.0 { return 0.0 / 0.0; }
   if x <= 0.0 { return 0.0; }
   return math.special.incomplete_gamma(k, x / theta);
@@ -98,7 +108,10 @@ pub fn beta_pdf(x: Float64, a: Float64, b: Float64) -> Float64 {
 }
 
 /// Beta cumulative distribution: I_x(a, b). Complexity: O(iterations).
-pub fn beta_cdf(x: Float64, a: Float64, b: Float64) -> Float64 {
+pub fn beta_cdf(x: Float64, a: Float64, b: Float64) -> Float64
+  ensures: a > 0.0 && b > 0.0 && x <= 0.0 => result == 0.0
+  ensures: a > 0.0 && b > 0.0 && x >= 1.0 => result == 1.0
+{
   if a <= 0.0 || b <= 0.0 { return 0.0 / 0.0; }
   if x <= 0.0 { return 0.0; }
   if x >= 1.0 { return 1.0; }
@@ -119,7 +132,9 @@ pub fn chi2_pdf(x: Float64, k: Float64) -> Float64 {
 }
 
 /// Chi-squared cumulative distribution: P(k/2, x/2). Complexity: O(iterations).
-pub fn chi2_cdf(x: Float64, k: Float64) -> Float64 {
+pub fn chi2_cdf(x: Float64, k: Float64) -> Float64
+  ensures: k > 0.0 && x <= 0.0 => result == 0.0
+{
   if k <= 0.0 { return 0.0 / 0.0; }
   if x <= 0.0 { return 0.0; }
   return math.special.incomplete_gamma(k / 2.0, x / 2.0);
@@ -159,7 +174,9 @@ pub fn f_pdf(x: Float64, d1: Float64, d2: Float64) -> Float64 {
 
 /// F cumulative distribution: I_{d1 x / (d1 x + d2)}(d1/2, d2/2).
 /// Complexity: O(iterations).
-pub fn f_cdf(x: Float64, d1: Float64, d2: Float64) -> Float64 {
+pub fn f_cdf(x: Float64, d1: Float64, d2: Float64) -> Float64
+  ensures: d1 > 0.0 && d2 > 0.0 && x <= 0.0 => result == 0.0
+{
   if d1 <= 0.0 || d2 <= 0.0 { return 0.0 / 0.0; }
   if x <= 0.0 { return 0.0; }
   var z = d1 * x / (d1 * x + d2);
@@ -180,7 +197,9 @@ pub fn weibull_pdf(x: Float64, shape: Float64, scale: Float64) -> Float64 {
 }
 
 /// Weibull cumulative distribution. Complexity: O(1).
-pub fn weibull_cdf(x: Float64, shape: Float64, scale: Float64) -> Float64 {
+pub fn weibull_cdf(x: Float64, shape: Float64, scale: Float64) -> Float64
+  ensures: shape > 0.0 && scale > 0.0 && x <= 0.0 => result == 0.0
+{
   if shape <= 0.0 || scale <= 0.0 { return 0.0 / 0.0; }
   if x <= 0.0 { return 0.0; }
   return 1.0 - math.exp(-math.pow(x / scale, shape));
@@ -216,7 +235,10 @@ pub fn pareto_cdf(x: Float64, alpha: Float64, xm: Float64) -> Float64 {
 
 /// Poisson probability of k events with mean lambda (integer k).
 /// Complexity: O(1).
-pub fn poisson_pmf(k: Int, lambda: Float64) -> Float64 {
+pub fn poisson_pmf(k: Int, lambda: Float64) -> Float64
+  ensures: lambda == 0.0 && k == 0 => result == 1.0
+  ensures: lambda == 0.0 && k > 0 => result == 0.0
+{
   if lambda < 0.0 || k < 0 { return 0.0 / 0.0; }
   if lambda == 0.0 {
     if k == 0 { return 1.0; }
@@ -227,7 +249,9 @@ pub fn poisson_pmf(k: Int, lambda: Float64) -> Float64 {
 }
 
 /// Poisson cumulative distribution. Complexity: O(k).
-pub fn poisson_cdf(k: Int, lambda: Float64) -> Float64 {
+pub fn poisson_cdf(k: Int, lambda: Float64) -> Float64
+  ensures: lambda == 0.0 && k >= 0 => result == 1.0
+{
   if k < 0 || lambda < 0.0 { return 0.0 / 0.0; }
   var sum = 0.0;
   var i = 0;
@@ -248,7 +272,9 @@ pub fn binomial_pmf(k: Int, n: Int, p: Float64) -> Float64 {
 }
 
 /// Binomial cumulative distribution. Complexity: O(n).
-pub fn binomial_cdf(k: Int, n: Int, p: Float64) -> Float64 {
+pub fn binomial_cdf(k: Int, n: Int, p: Float64) -> Float64
+  ensures: n >= 0 && k >= n => result == 1.0
+{
   if k < 0 || n < 0 { return 0.0 / 0.0; }
   if k >= n { return 1.0; }
   var sum = 0.0;
@@ -261,13 +287,17 @@ pub fn binomial_cdf(k: Int, n: Int, p: Float64) -> Float64 {
 }
 
 /// Geometric probability of first success at trial k. Complexity: O(1).
-pub fn geometric_pmf(k: Int, p: Float64) -> Float64 {
+pub fn geometric_pmf(k: Int, p: Float64) -> Float64
+  ensures: p > 0.0 && p <= 1.0 && k >= 1 => result >= 0.0 && result <= 1.0
+{
   if p <= 0.0 || p > 1.0 || k < 1 { return 0.0 / 0.0; }
   return math.pow(1.0 - p, (k - 1) as Float64) * p;
 }
 
 /// Geometric cumulative distribution. Complexity: O(k).
-pub fn geometric_cdf(k: Int, p: Float64) -> Float64 {
+pub fn geometric_cdf(k: Int, p: Float64) -> Float64
+  ensures: p > 0.0 && p <= 1.0 && k >= 1 => result >= 0.0 && result <= 1.0
+{
   if p <= 0.0 || p > 1.0 || k < 1 { return 0.0 / 0.0; }
   return 1.0 - math.pow(1.0 - p, k as Float64);
 }
@@ -310,7 +340,9 @@ pub fn hypergeometric_pmf(k: Int, n: Int, K: Int, N: Int) -> Float64 {
 }
 
 /// Hypergeometric cumulative distribution. Complexity: O(n).
-pub fn hypergeometric_cdf(k: Int, n: Int, K: Int, N: Int) -> Float64 {
+pub fn hypergeometric_cdf(k: Int, n: Int, K: Int, N: Int) -> Float64
+  ensures: N > 0 && K >= 0 && n >= 0 && k >= K => result == 1.0
+{
   if k < 0 || n < 0 || K < 0 || N <= 0 { return 0.0 / 0.0; }
   if k >= K { return 1.0; }
   var sum = 0.0;
