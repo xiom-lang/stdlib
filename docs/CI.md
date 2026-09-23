@@ -28,6 +28,13 @@ Rules:
 - `release.yml`: on `stdlib-v*` tags -- validate `package.xi`, run the gates
   on Windows + Linux, tar `xiom/ runtime/ package.xi` (+ licenses/README/
   CHANGELOG), `SHA256SUMS`, attest, GitHub Release, then the pin PR to xiom.
+  The tarball is packed **deterministically** (SOURCE_DATE_EPOCH = tagged
+  commit, `--sort=name --mtime --owner=0 --group=0 --numeric-owner`,
+  `gzip -n`), so re-running a release job produces byte-identical assets and
+  a re-run no longer invalidates the registry canary's artifact claim.
+  NOTE (registry relay, unchanged): `xiom pkg publish` re-packs the tree,
+  so registry-published bytes still differ from the release asset; exact
+  promotion needs the registry lane's publish-existing-tarball mode.
 - `publish-registry.yml`: **dispatch only** until staging is verified. Takes
   the stdlib release version, resolves the compiler pin from `COMPILER_VERSION`
   at the matching tag, downloads the public release assets, and runs

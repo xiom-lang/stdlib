@@ -118,7 +118,17 @@ jobs:
           mkdir -p stage
           cp -r xiom runtime package.xi stage/
           cp LICENSE-MIT LICENSE-APACHE NOTICE README.md CHANGELOG.md stage/
-          tar -czf "xiom-std-${ver}.tar.gz" -C stage .
+          # Deterministic packaging: mtimes are pinned to the tagged commit,
+          # entries are sorted, owner/group are zeroed and gzip records no
+          # timestamp/name, so the same tag always packs the same bytes. A
+          # release re-run then keeps the asset digest stable and the
+          # registry canary's artifact claim stays valid. Verified locally
+          # with GNU tar 1.35: identical SHA256 across mtime shifts and a
+          # clean extraction round-trip (same recipe).
+          export SOURCE_DATE_EPOCH="$(git log -1 --format=%ct "$GITHUB_SHA")"
+          tar --sort=name --mtime="@${SOURCE_DATE_EPOCH}" \
+              --owner=0 --group=0 --numeric-owner --format=gnu \
+              -cf - -C stage . | gzip -n -9 > "xiom-std-${ver}.tar.gz"
           sha256sum "xiom-std-${ver}.tar.gz" > SHA256SUMS
           ls -la
 
