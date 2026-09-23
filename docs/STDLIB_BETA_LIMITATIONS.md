@@ -111,12 +111,59 @@ flip ON, freeze sweep on compiler tag v0.60.0 = 947/947 + module check
 - Both fixes are in the r47 baseline; keep `docs/COMPILER_BUGS.md` as the
   live status source before repeating any warning in a release.
 
+## Package-relay close-outs (2026-09-23)
+
+Findings relayed from the package-porting session, with the stdlib-side
+resolution:
+
+- **Aggregate-module visibility (two traps, both closed).** `str_compare`
+  lives in `xiom.string.compare` and `to_string` in
+  `xiom.convert.tostring`; porters who wrote `use xiom.string;` /
+  `use xiom.convert;` and called the bare name hit
+  `error[T001]: undefined variable`. The canonical implementations now sit
+  on the parent aggregates (`xiom.string.str_compare`,
+  `xiom.convert.to_string` -- the latter is INT_MIN-exact) and the
+  submodules delegate to them, so both import styles resolve. Locked by
+  `tools/probes/p_relay_visibility.xi`. Rule of thumb for future
+  additions: the public idiom of a family belongs on its aggregate
+  module; submodules may delegate.
+- **Monotonic millisecond clock: EXISTS** (`xiom.time.monotonic_ms()` now
+  added as the domain-owner entry point; `xiom.async.async_now_ms()` and
+  `xiom.async.timer.Stopwatch` predate it). The runtime source
+  (`xiom_async_now_ms`) is QueryPerformanceCounter on Windows and
+  CLOCK_MONOTONIC on POSIX and is guaranteed non-decreasing. The
+  package-doc claim "no monotonic ms clock exists" is stale; note that
+  `xiom.time.Instant.now()` is the wall-clock `time(0)` path and is NOT
+  monotonic.
+- **Generic fn-pointer codegen**: recorded as a package limitation
+  (specialization workaround). This is a compiler-side behavior, not a
+  stdlib surface; the stdlib's own generic fn-pointer users
+  (`sort_by[T]`, `sort_by_key[T,K]`, comparator-taking search) pass in the
+  corpus. Packages should re-test against compiler v0.61.3 before keeping
+  concrete specializations; any minimal repro belongs in
+  `tools/known_failures/` for the compiler lane.
+- **Checker E001 conservatism (compiler lane, warning-only)**: the borrow
+  checker warns "cannot borrow as mutable while immutably borrowed" for
+  sequential `&local` then `&mut local` calls (no overlap in time). It is
+  warning-only; the stdlib smoke corpus already compiles with it and the
+  full corpus is green (949/949). No stdlib change; relayed to the
+  compiler lane.
+- **`xiom.flags` env thread-safety**: environment mutation
+  (`xiom.os.env_set` / `xiom.env.set_var`) writes process-global state
+  through the runtime shims and is not internally synchronized. Callers
+  that mutate env from several threads must serialize; a stdlib lock
+  cannot cover external C writers. Documented rather than "fixed".
+
 ## Operational notes
 
-- **Runtime symbol audit**: 192 unbound runtime symbols classified
-  (83 codegen-referenced keep, 83 runtime-internal keep, 20
-  definition-only delete candidates awaiting compiler-lane confirmation;
-  no user-visible impact). `docs/RUNTIME_SYMBOL_AUDIT.md`.
+- **Runtime symbol audit** (closed stdlib-side 2026-09-17; re-verified
+  2026-09-23): of the 20 definition-only candidates, 9 non-hot entries
+  were DELETED (0 references in `runtime/**` on the v0.61.3 tree) and the
+  11 `xiom_hot_*` entries are kept + annotated as intentional hot-reload
+  ABI in `runtime/xiom_hot_reload.c` (AUDIT block; dynamic `GetProcAddress`
+  reach via `tools/xiom_hot_host.c`). No user-visible impact; the remaining
+  compiler-lane confirmation applies only to the kept ABI set.
+  `docs/RUNTIME_SYMBOL_AUDIT.md`.
 - **Async cancellation**: validated 2026-09-16 by `smoke_async_cancel`
   (executor shutdown drops pending tasks; timer-wheel cancel-all /
   selective / unknown-id no-op; channel close drain + Err/false

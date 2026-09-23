@@ -37,7 +37,48 @@ pub fn float_to_int(f: Float64) -> Int {
   return to_int(f);
 }
 
-/// Decimal string for an Int.
+/// Formats an Int as a decimal string, exact for the full range including
+/// INT_MIN (the core intrinsic negates in place and mishandles it). The
+/// canonical implementation lives here so `use xiom.convert;` alone resolves
+/// `to_string`; `xiom.convert.tostring.to_string` delegates to it.
+/// Complexity: O(log_10 |n|).
+pub fn to_string(n: Int) -> Str
+  ensures: result.len() >= 1
+{
+  if n == 0 {
+    return "0";
+  };
+  var x = n;
+  var neg = false;
+  if x < 0 {
+    neg = true;
+  };
+  if x > 0 {
+    x = 0 - x;
+  };
+  var digits = Vec[Int].new();
+  while x != 0 {
+    var d = x % 10;
+    if d < 0 {
+      d = 0 - d;
+    };
+    digits.push(d);
+    x = x / 10;
+  };
+  var result = "";
+  if neg {
+    result = "-";
+  };
+  var i = digits.len() - 1;
+  while i >= 0 {
+    var d = digits[i];
+    result = string.str_concat(result, string.str_slice("0123456789", d, d + 1));
+    i = i - 1;
+  };
+  result
+}
+
+/// Decimal string for an Int (alias of `to_string`; the public idiom).
 pub fn int_to_string(n: Int) -> Str {
   return to_string(n);
 }

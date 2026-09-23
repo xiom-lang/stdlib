@@ -7,10 +7,10 @@ module xiom.convert.tostring
 // Depends on: none
 
 // ============================================================================
-// Formatting helpers for primitives as strings. `to_string` shadows the core
-// intrinsic within this module only; the float/bool/radix helpers delegate to
-// the canonical xiom.convert / xiom.num.base implementations (different
-// function names, so delegation is safe from the same-name miscompile).
+// Formatting helpers for primitives as strings. The canonical Int formatter
+// is xiom.convert.to_string (exposed on the parent module so `use
+// xiom.convert;` resolves it); this module delegates to it and keeps the
+// float/bool/char/radix helpers.
 // ============================================================================
 
 use xiom.string;
@@ -24,40 +24,11 @@ extern "C" {
 }
 
 /// Formats an integer as a decimal string. Exact for the full Int range
-/// (including INT_MIN, which the core implementation mishandles by negating
-/// in place). Complexity: O(log_10 |n|).
+/// (including INT_MIN). Canonical implementation: `xiom.convert.to_string`;
+/// this wrapper keeps the `xiom.convert.tostring` path working.
+/// Complexity: O(log_10 |n|).
 pub fn to_string(n: Int) -> Str {
-  if n == 0 {
-    return "0";
-  };
-  var x = n;
-  var neg = false;
-  if x < 0 {
-    neg = true;
-  };
-  if x > 0 {
-    x = 0 - x;
-  };
-  var digits = Vec[Int].new();
-  while x != 0 {
-    var d = x % 10;
-    if d < 0 {
-      d = 0 - d;
-    };
-    digits.push(d);
-    x = x / 10;
-  };
-  var result = "";
-  if neg {
-    result = "-";
-  };
-  var i = digits.len() - 1;
-  while i >= 0 {
-    var d = digits[i];
-    result = string.str_concat(result, string.str_slice("0123456789", d, d + 1));
-    i = i - 1;
-  };
-  result
+  convert.to_string(n)
 }
 
 /// Formats a float as a string (15 significant digits, fixed or scientific,

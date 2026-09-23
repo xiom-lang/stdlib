@@ -13,6 +13,7 @@ use xiom.time.calendar;
 extern "C" {
   fn clock() -> Int;
   fn time(ptr: *Int) -> Int;
+  fn xiom_async_now_ms() -> Int;
 }
 
 /// === Duration -- a span of time ===
@@ -203,10 +204,26 @@ pub fn Duration.checked_sub(self, other: Duration) -> Option[Duration] {
   return Some(Duration{ secs: secs; nanos: nanos; });
 }
 
+/// Monotonic clock reading in milliseconds since an unspecified epoch.
+/// Never decreases and is unaffected by wall-clock adjustments, so it is the
+/// supported source for elapsed-time measurement. Backed by the runtime's
+/// `xiom_async_now_ms` (QueryPerformanceCounter on Windows, CLOCK_MONOTONIC
+/// on POSIX, `clock()` fallback); the same source as
+/// `xiom.async.async_now_ms` and `xiom.async.timer.Stopwatch`.
+/// Complexity: O(1). Thread-safe.
+pub fn monotonic_ms() -> Int
+  requires: true  // xiom_async_now_ms extern call (T002/T007 confinement)
+  ensures: result >= 0
+{
+  unsafe { return xiom_async_now_ms(); }
+}
+
 /// === Instant -- a point in time (monotonic clock) ===
 pub type Instant = { t: Int; }
 
-/// Monotonic clock reading for measuring elapsed time.
+/// Wall-clock reading from `time(0)`, kept for compatibility. For monotonic
+/// elapsed-time measurement prefer `xiom.time.monotonic_ms` (or
+/// `xiom.async.timer.Stopwatch`).
 pub fn Instant.now() -> Instant
   requires: true  // extern time() call (T002 confinement)
 {

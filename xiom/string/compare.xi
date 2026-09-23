@@ -8,17 +8,19 @@ module xiom.string.compare
 
 // ============================================================================
 // Lexicographic and equality comparison of strings, including case-insensitive
-// and natural (numeric-aware) ordering. NOTE: current implementation lives in
-// cmp + string - move the functions here during the implementation phase. TODO(compiler): implement.
+// and natural (numeric-aware) ordering. The canonical byte-wise comparison is
+// `xiom.string.str_compare` (exposed on the parent module so `use xiom.string;`
+// resolves it); this module delegates to it and implements the
+// case-insensitive / natural variants.
 // ============================================================================
 
 use xiom.string;
 
 /// Lexicographic byte-wise comparison of `a` and `b`.
 /// Returns a negative Int when `a` sorts before `b`, 0 when equal, and a
-/// positive Int when `a` sorts after `b`. Comparison is byte-by-byte over the
-/// UTF-8 representation, so the ordering matches Unicode code-point order only
-/// for ASCII inputs; multi-byte sequences compare by their raw bytes.
+/// positive Int when `a` sorts after `b`. Canonical implementation:
+/// `xiom.string.str_compare`; this wrapper keeps the `xiom.string.compare`
+/// path working for existing importers.
 /// Params: a, b the strings to compare.
 /// Returns: negative/zero/positive.
 /// Error case: none.
@@ -26,27 +28,7 @@ use xiom.string;
 pub fn str_compare(a: Str, b: Str) -> Int
   ensures: result >= -1 && result <= 1
 {
-  let la = string.str_len(a);
-  let lb = string.str_len(b);
-  var i: Int = 0;
-  while i < la && i < lb {
-    let ba = string.byte_at(a, i) as Int;
-    let bb = string.byte_at(b, i) as Int;
-    if ba < bb {
-      return -1;
-    };
-    if ba > bb {
-      return 1;
-    };
-    i = i + 1;
-  };
-  if la < lb {
-    return -1;
-  };
-  if la > lb {
-    return 1;
-  };
-  0
+  string.str_compare(a, b)
 }
 
 /// Case-insensitive lexicographic comparison of `a` and `b`.

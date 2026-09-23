@@ -118,6 +118,38 @@ pub fn str_ends_with(s: Str, suffix: Str) -> Bool
   _matches_at(s, s_len - suffix_len, suffix)
 }
 
+/// Lexicographic byte-wise comparison of `a` and `b`: negative when `a`
+/// sorts before `b`, 0 when equal, positive when after. Byte-wise over the
+/// UTF-8 representation (matches Unicode code-point order for ASCII). This
+/// is the canonical implementation exposed on `xiom.string` itself;
+/// `xiom.string.compare.str_compare` delegates here so `use xiom.string;`
+/// alone resolves the call.
+pub fn str_compare(a: Str, b: Str) -> Int
+  ensures: result >= -1 && result <= 1
+{
+  let la = a.len();
+  let lb = b.len();
+  var i: Int = 0;
+  while i < la && i < lb {
+    let ba = byte_at(a, i) as Int;
+    let bb = byte_at(b, i) as Int;
+    if ba < bb {
+      return -1;
+    };
+    if ba > bb {
+      return 1;
+    };
+    i = i + 1;
+  };
+  if la < lb {
+    return -1;
+  };
+  if la > lb {
+    return 1;
+  };
+  0
+}
+
 /// Split on `delimiter` into parts (empty parts preserved).
 pub fn str_split(s: Str, delimiter: Str) -> Vec[Str]
   ensures:  result.len() >= 1  // always at least one element
