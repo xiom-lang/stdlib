@@ -320,11 +320,18 @@ T1/T2 yields.
        short-circuit guards, disjunctive length guards, empty-input Str
        guards) -> convert 2% -> 11.5%, global 21.8% -> 22.3%
        pub-with-clause; pre-validated by tools/probes/p_wave23_shapes.xi.
-       Ratchet:
-       tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors60.json
+       Wave 24 (2026-09-23): 42 clauses on math/modular.xi +
+       math/arithmetic.xi + math/logic.xi + math/set_theory.xi (uniform
+       modular ranges with no-modulus guards, square-root ranges with the
+       small-prime guard, tuple-field non-negativity, two-parameter Vec
+       length arithmetic, cardinality bounds, exact Boolean mirrors,
+       guarded power-of-two results, sign-matching remainders, power-set
+       guard) -> math 4.1% -> 8.3%, global 22.3% -> 22.9% pub-with-clause;
+       pre-validated by tools/probes/p_wave24_shapes.xi. Ratchet:
+       tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors61.json
        (repo tooling as of the split; positive + negative runs verified;
        earlier floors kept at
-       coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55/56/57/58/59.json).
+       coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55/56/57/58/59/60.json).
       Floors are per top-level stdlib/xiom directory and must be refreshed
       when a module is ADDED (new uncovered pub fns dilute the percentage
       -- TOML dropped serialize 6.1% -> 5.4%, tz dropped time 13% ->

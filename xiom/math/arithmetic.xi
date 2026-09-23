@@ -42,7 +42,9 @@ pub fn gcd(a: Int, b: Int) -> Int
 /// Least common multiple of |a| and |b|; always non-negative. 0 when either
 /// input is 0, and 0 (documented overflow) when the true lcm exceeds Int
 /// range. Complexity: O(gcd).
-pub fn lcm(a: Int, b: Int) -> Int {
+pub fn lcm(a: Int, b: Int) -> Int
+  ensures: result >= 0
+{
   if a == 0 || b == 0 { return 0; }
   var g = gcd(a, b);
   var x = a / g;
@@ -58,7 +60,9 @@ pub fn lcm(a: Int, b: Int) -> Int {
 
 /// True iff n is a positive power of two. is_power_of_two(0) == false,
 /// is_power_of_two(1) == true. Complexity: O(log n).
-pub fn is_power_of_two(n: Int) -> Bool {
+pub fn is_power_of_two(n: Int) -> Bool
+  ensures: result == false || n >= 1
+{
   if n <= 0 { return false; }
   var x = n;
   while x > 1 {
@@ -71,7 +75,9 @@ pub fn is_power_of_two(n: Int) -> Bool {
 /// Smallest power of two >= n. Returns 1 for n <= 0. When the next power of
 /// two would exceed Int range (n > 2^62) returns 0 (documented overflow).
 /// Complexity: O(log n).
-pub fn next_power_of_two(n: Int) -> Int {
+pub fn next_power_of_two(n: Int) -> Int
+  ensures: result == 0 || result >= n
+{
   if n <= 0 { return 1; }
   if n == 1 { return 1; }
   var p = 1;
@@ -84,7 +90,9 @@ pub fn next_power_of_two(n: Int) -> Int {
 
 /// Largest power of two <= n. Returns 0 for n <= 0 (no positive power fits).
 /// Complexity: O(log n).
-pub fn prev_power_of_two(n: Int) -> Int {
+pub fn prev_power_of_two(n: Int) -> Int
+  ensures: n <= 0 || (result >= 1 && result <= n)
+{
   if n <= 0 { return 0; }
   var p = 1;
   while p <= n / 2 {
@@ -95,7 +103,9 @@ pub fn prev_power_of_two(n: Int) -> Int {
 
 /// Extended Euclid: returns (g, x, y) with a*x + b*y == g == gcd(a, b).
 /// g is non-negative. For a == b == 0 returns (0, 1, 0). Complexity: O(log).
-pub fn gcd_extended(a: Int, b: Int) -> (Int, Int, Int) {
+pub fn gcd_extended(a: Int, b: Int) -> (Int, Int, Int)
+  ensures: result.0 >= 0
+{
   var old_r = a;
   var r = b;
   var old_s = 1;
@@ -150,7 +160,9 @@ pub fn mod_inverse(a: Int, m: Int) -> Option[Int] {
 /// exp < 0 returns 0 (documented; only non-negative exponents are supported),
 /// m == 1 returns 0, m == 0 returns 0 (documented, division by zero guard).
 /// Complexity: O(log exp).
-pub fn pow_mod(base: Int, exp: Int, m: Int) -> Int {
+pub fn pow_mod(base: Int, exp: Int, m: Int) -> Int
+  ensures: result >= 0 && (m <= 1 || result < m)
+{
   if m == 0 { return 0; }
   if m == 1 { return 0; }
   if exp < 0 { return 0; }
@@ -170,12 +182,16 @@ pub fn pow_mod(base: Int, exp: Int, m: Int) -> Int {
 }
 
 /// True iff n is odd (sign-aware: -3 is odd).
-pub fn is_odd(n: Int) -> Bool {
+pub fn is_odd(n: Int) -> Bool
+  ensures: result == (n % 2 != 0)
+{
   return n % 2 != 0;
 }
 
 /// True iff n is even (sign-aware: -4 is even).
-pub fn is_even(n: Int) -> Bool {
+pub fn is_even(n: Int) -> Bool
+  ensures: result == (n % 2 == 0)
+{
   return n % 2 == 0;
 }
 
@@ -214,7 +230,9 @@ pub fn div_trunc(a: Int, b: Int) -> Int {
 
 /// Modulus with result matching the divisor sign. mod_floor(-7, 2) == 1,
 /// mod_floor(7, -2) == -1. Division by zero returns 0. Complexity: O(1).
-pub fn mod_floor(a: Int, b: Int) -> Int {
+pub fn mod_floor(a: Int, b: Int) -> Int
+  ensures: b == 0 || result == 0 || (result < 0) == (b < 0)
+{
   if b == 0 { return 0; }
   var r = a % b;
   if r != 0 && (r < 0) != (b < 0) { r = r + b; }
@@ -224,7 +242,9 @@ pub fn mod_floor(a: Int, b: Int) -> Int {
 /// Modulus with result matching the dividend sign (native semantics).
 /// mod_trunc(-7, 2) == -1, mod_trunc(7, -2) == 1. Division by zero returns 0.
 /// Complexity: O(1).
-pub fn mod_trunc(a: Int, b: Int) -> Int {
+pub fn mod_trunc(a: Int, b: Int) -> Int
+  ensures: b == 0 || result == 0 || (result < 0) == (a < 0)
+{
   if b == 0 { return 0; }
   return a % b;
 }

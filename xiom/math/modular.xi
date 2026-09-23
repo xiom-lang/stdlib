@@ -90,7 +90,9 @@ fn _mul_ovf(a: Int, b: Int) -> Bool {
 
 /// (a + b) mod m with the result in [0, m). Returns 0 for m <= 0 (no modulus,
 /// documented) and 0 for m == 1 (everything is 0 mod 1). Complexity: O(1).
-pub fn mod_add(a: Int, b: Int, m: Int) -> Int {
+pub fn mod_add(a: Int, b: Int, m: Int) -> Int
+  ensures: result >= 0 && (m <= 1 || result < m)
+{
   if m <= 0 { return 0; }
   if m == 1 { return 0; }
   var x = a % m;
@@ -102,7 +104,9 @@ pub fn mod_add(a: Int, b: Int, m: Int) -> Int {
 
 /// (a - b) mod m with the result in [0, m). Returns 0 for m <= 0 (no modulus,
 /// documented) and 0 for m == 1. Complexity: O(1).
-pub fn mod_sub(a: Int, b: Int, m: Int) -> Int {
+pub fn mod_sub(a: Int, b: Int, m: Int) -> Int
+  ensures: result >= 0 && (m <= 1 || result < m)
+{
   if m <= 0 { return 0; }
   if m == 1 { return 0; }
   var x = a % m;
@@ -117,7 +121,9 @@ pub fn mod_sub(a: Int, b: Int, m: Int) -> Int {
 /// (a * b) mod m with the result in [0, m). Uses overflow-free double-and-add.
 /// Returns 0 for m <= 0 (no modulus, documented) and 0 for m == 1.
 /// Complexity: O(log min(a, b)).
-pub fn mod_mul(a: Int, b: Int, m: Int) -> Int {
+pub fn mod_mul(a: Int, b: Int, m: Int) -> Int
+  ensures: result >= 0 && (m <= 1 || result < m)
+{
   if m <= 0 { return 0; }
   if m == 1 { return 0; }
   return _mulmod(a, b, m);
@@ -127,7 +133,9 @@ pub fn mod_mul(a: Int, b: Int, m: Int) -> Int {
 /// xiom.math.arithmetic.pow_mod. Returns 0 for m <= 0, m == 1, and exp < 0
 /// (documented; only non-negative exponents are supported). Complexity:
 /// O(log exp).
-pub fn mod_pow(base: Int, exp: Int, m: Int) -> Int {
+pub fn mod_pow(base: Int, exp: Int, m: Int) -> Int
+  ensures: result >= 0 && (m <= 1 || result < m)
+{
   return math.arithmetic.pow_mod(base, exp, m);
 }
 
@@ -135,7 +143,9 @@ pub fn mod_pow(base: Int, exp: Int, m: Int) -> Int {
 /// inverse exists (gcd(a, m) != 1), when m == 0 (no modulus) and for m == 1
 /// (documented). Delegates to xiom.math.arithmetic.mod_inverse. Complexity:
 /// O(log min(|a|, |m|)).
-pub fn mod_inverse(a: Int, m: Int) -> Int {
+pub fn mod_inverse(a: Int, m: Int) -> Int
+  ensures: result >= 0 && (m <= 1 || result < m)
+{
   var inv = math.arithmetic.mod_inverse(a, m);
   if !(inv.is_some()) { return 0; }
   return inv.unwrap();
@@ -145,7 +155,9 @@ pub fn mod_inverse(a: Int, m: Int) -> Int {
 /// [0, (p-1)/2]. Returns 0 when no root exists, when p <= 1 (no modulus) and
 /// when p is composite (documented: p must be prime). Delegates to
 /// tonelli_shanks. Complexity: O(log^3 p).
-pub fn mod_sqrt(a: Int, p: Int) -> Int {
+pub fn mod_sqrt(a: Int, p: Int) -> Int
+  ensures: p <= 2 || (result >= 0 && result <= (p - 1) / 2)
+{
   return tonelli_shanks(a, p);
 }
 
@@ -153,7 +165,9 @@ pub fn mod_sqrt(a: Int, p: Int) -> Int {
 /// m-1) == 1 the root is a^((2m-1)/3) mod m; for m == 1 (mod 3) a small scan is
 /// used. Returns 0 when no root exists, for m <= 0 (no modulus) and when m == 1.
 /// Complexity: O(log m) for the closed form, O(m) scan otherwise.
-pub fn mod_cbrt(a: Int, m: Int) -> Int {
+pub fn mod_cbrt(a: Int, m: Int) -> Int
+  ensures: result >= 0 && (m <= 1 || result < m)
+{
   if m <= 0 { return 0; }
   if m == 1 { return 0; }
   var am = a % m;
@@ -175,7 +189,9 @@ pub fn mod_cbrt(a: Int, m: Int) -> Int {
 /// (a / b) mod m: a * b^(-1) mod m. Returns 0 when b has no inverse mod m
 /// (gcd(b, m) != 1), when m <= 0 (no modulus) and for m == 1 (documented).
 /// Complexity: O(log min(|b|, |m|)).
-pub fn mod_div(a: Int, b: Int, m: Int) -> Int {
+pub fn mod_div(a: Int, b: Int, m: Int) -> Int
+  ensures: result >= 0 && (m <= 1 || result < m)
+{
   if m <= 0 { return 0; }
   if m == 1 { return 0; }
   var inv = math.arithmetic.mod_inverse(b, m);
@@ -186,7 +202,9 @@ pub fn mod_div(a: Int, b: Int, m: Int) -> Int {
 /// Least common multiple of a and b reduced mod m. Returns 0 when m <= 0 (no
 /// modulus), for m == 1 and when either input is 0. Uses the overflow-free
 /// modular multiply so the true lcm may exceed Int range. Complexity: O(log).
-pub fn mod_lcm(a: Int, b: Int, m: Int) -> Int {
+pub fn mod_lcm(a: Int, b: Int, m: Int) -> Int
+  ensures: result >= 0 && (m <= 1 || result < m)
+{
   if m <= 0 { return 0; }
   if m == 1 { return 0; }
   var g = math.arithmetic.gcd(a, b);
@@ -204,7 +222,9 @@ pub fn mod_lcm(a: Int, b: Int, m: Int) -> Int {
 /// any modulus is non-positive, when the moduli are not pairwise coprime, and
 /// when the product of the moduli overflows Int (documented). The result lies
 /// in [0, M) with M = prod(m_i). Complexity: O(n^2 * log max(m_i)).
-pub fn crt(remainders: &Vec[Int], moduli: &Vec[Int]) -> Int {
+pub fn crt(remainders: &Vec[Int], moduli: &Vec[Int]) -> Int
+  ensures: result >= 0
+{
   var n = moduli.len();
   if remainders.len() != n { return 0; }
   if n == 0 { return 0; }
@@ -245,7 +265,9 @@ pub fn crt(remainders: &Vec[Int], moduli: &Vec[Int]) -> Int {
 /// iterative merging method. Returns 0 when the list is empty, when any
 /// modulus is non-positive, when the system is inconsistent, and on overflow
 /// (documented). Complexity: O(n * log max(m_i)).
-pub fn crt_solve(congruences: &Vec[(Int, Int)]) -> Int {
+pub fn crt_solve(congruences: &Vec[(Int, Int)]) -> Int
+  ensures: result >= 0
+{
   var n = congruences.len();
   if n == 0 { return 0; }
   var x = congruences[0].0;
@@ -286,7 +308,9 @@ pub fn crt_solve(congruences: &Vec[(Int, Int)]) -> Int {
 /// Solve a*x == b (mod m): returns the least non-negative solution. Returns 0
 /// when m <= 0 (no modulus), when m == 1, when gcd(a, m) does not divide b (no
 /// solution) and on overflow (documented). Complexity: O(log min(|a|, |m|)).
-pub fn linear_congruence(a: Int, b: Int, m: Int) -> Int {
+pub fn linear_congruence(a: Int, b: Int, m: Int) -> Int
+  ensures: result >= 0 && (m <= 1 || result < m)
+{
   if m <= 0 { return 0; }
   if m == 1 { return 0; }
   var g = math.arithmetic.gcd(a, m);
@@ -308,7 +332,9 @@ pub fn linear_congruence(a: Int, b: Int, m: Int) -> Int {
 /// True iff a is a quadratic residue mod prime p, i.e. x^2 == a (mod p) has a
 /// solution. a == 0 (mod p) counts as a residue (x = 0). Returns false for
 /// p <= 1 (no modulus). Uses Euler's criterion. Complexity: O(log p).
-pub fn quadratic_residue(a: Int, p: Int) -> Bool {
+pub fn quadratic_residue(a: Int, p: Int) -> Bool
+  ensures: result == false || p >= 2
+{
   if p <= 1 { return false; }
   var aa = a % p;
   if aa < 0 { aa = aa + p; }
@@ -322,7 +348,9 @@ pub fn quadratic_residue(a: Int, p: Int) -> Bool {
 /// the root in [0, (p-1)/2]. Returns 0 when n is a non-residue mod p, for
 /// p <= 2 (p == 2 is handled directly) and when p is composite (documented: p
 /// must be prime). Complexity: O(log^3 p).
-pub fn tonelli_shanks(n: Int, p: Int) -> Int {
+pub fn tonelli_shanks(n: Int, p: Int) -> Int
+  ensures: p <= 2 || (result >= 0 && result <= (p - 1) / 2)
+{
   if p <= 1 { return 0; }
   if p == 2 { return n % 2; }
   var nn = n % p;
@@ -366,7 +394,9 @@ pub fn tonelli_shanks(n: Int, p: Int) -> Int {
 /// in [0, (p-1)/2]. Returns 0 when n is a non-residue mod p, for p <= 2 (p == 2
 /// is handled directly) and when p is composite (documented: p must be prime).
 /// Complexity: O(log^2 p).
-pub fn cipolla(n: Int, p: Int) -> Int {
+pub fn cipolla(n: Int, p: Int) -> Int
+  ensures: p <= 2 || (result >= 0 && result <= (p - 1) / 2)
+{
   if p <= 1 { return 0; }
   if p == 2 { return n % 2; }
   var nn = n % p;
@@ -419,7 +449,9 @@ pub fn cipolla(n: Int, p: Int) -> Int {
 /// prime m this is sqrt(-d) mod m, e.g. via tonelli_shanks). Returns (0, 0)
 /// when d <= 0, when no representation exists, and on overflow (documented).
 /// Complexity: O(log^2 m).
-pub fn cornacchia(d: Int, b: Int, m: Int) -> (Int, Int) {
+pub fn cornacchia(d: Int, b: Int, m: Int) -> (Int, Int)
+  ensures: result.0 >= 0 && result.1 >= 0
+{
   if d <= 0 { return (0, 0); }
   if m <= 1 { return (0, 0); }
   var a0 = m;
@@ -446,7 +478,9 @@ pub fn cornacchia(d: Int, b: Int, m: Int) -> (Int, Int) {
 /// the explicit epsilon/omega formula is used. Returns 0 when a or b is 0 (the
 /// symbol is degenerate there, documented). Complexity: O(log_p |a| + log_p
 /// |b| + log p).
-pub fn hilbert_symbol(a: Int, b: Int, p: Int) -> Int {
+pub fn hilbert_symbol(a: Int, b: Int, p: Int) -> Int
+  ensures: result >= -1 && result <= 1
+{
   if p <= 1 { return 1; }
   if a == 0 || b == 0 { return 0; }
   var aa = a;
@@ -496,6 +530,8 @@ fn _omega2(x: Int) -> Int {
 /// Fast modular exponentiation base^exp mod m. Alias of
 /// xiom.math.arithmetic.pow_mod; returns 0 for m <= 0, m == 1 and exp < 0
 /// (documented). Complexity: O(log exp).
-pub fn pow_mod_fast(base: Int, exp: Int, m: Int) -> Int {
+pub fn pow_mod_fast(base: Int, exp: Int, m: Int) -> Int
+  ensures: result >= 0 && (m <= 1 || result < m)
+{
   return math.arithmetic.pow_mod(base, exp, m);
 }

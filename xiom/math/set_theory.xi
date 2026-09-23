@@ -45,7 +45,9 @@ fn _share(a: &Vec[Int], b: &Vec[Int]) -> Bool {
 
 /// Union of two sets: every element present in either input, deduplicated.
 /// Complexity: O((|a| + |b|)^2).
-pub fn set_union(a: &Vec[Int], b: &Vec[Int]) -> Vec[Int] {
+pub fn set_union(a: &Vec[Int], b: &Vec[Int]) -> Vec[Int]
+  ensures: result.len() <= a.len() + b.len()
+{
   var out = Vec[Int].new();
   var i = 0;
   while i < a.len() {
@@ -62,7 +64,9 @@ pub fn set_union(a: &Vec[Int], b: &Vec[Int]) -> Vec[Int] {
 
 /// Intersection of two sets: elements present in both inputs, deduplicated.
 /// Complexity: O(|a| * |b|).
-pub fn set_intersection(a: &Vec[Int], b: &Vec[Int]) -> Vec[Int] {
+pub fn set_intersection(a: &Vec[Int], b: &Vec[Int]) -> Vec[Int]
+  ensures: result.len() <= a.len()
+{
   var out = Vec[Int].new();
   var i = 0;
   while i < a.len() {
@@ -76,7 +80,9 @@ pub fn set_intersection(a: &Vec[Int], b: &Vec[Int]) -> Vec[Int] {
 
 /// Difference of two sets: elements of a not present in b, deduplicated.
 /// Complexity: O(|a| * |b|).
-pub fn set_difference(a: &Vec[Int], b: &Vec[Int]) -> Vec[Int] {
+pub fn set_difference(a: &Vec[Int], b: &Vec[Int]) -> Vec[Int]
+  ensures: result.len() <= a.len()
+{
   var out = Vec[Int].new();
   var i = 0;
   while i < a.len() {
@@ -90,7 +96,9 @@ pub fn set_difference(a: &Vec[Int], b: &Vec[Int]) -> Vec[Int] {
 
 /// Symmetric difference: elements present in exactly one of the two inputs,
 /// deduplicated. Complexity: O(|a| * |b| + |b|).
-pub fn set_symmetric_difference(a: &Vec[Int], b: &Vec[Int]) -> Vec[Int] {
+pub fn set_symmetric_difference(a: &Vec[Int], b: &Vec[Int]) -> Vec[Int]
+  ensures: result.len() <= a.len() + b.len()
+{
   var out = Vec[Int].new();
   var i = 0;
   while i < a.len() {
@@ -163,7 +171,9 @@ pub fn set_partition(s: &Vec[Int], blocks: &Vec[Vec[Int]]) -> Bool {
 /// All subsets of s (the power set, 2^n subsets). Returns an empty list when
 /// |s| > 20 (documented guard against an impractical result set).
 /// Complexity: O(2^n * n).
-pub fn set_power_set(s: &Vec[Int]) -> Vec[Vec[Int]] {
+pub fn set_power_set(s: &Vec[Int]) -> Vec[Vec[Int]]
+  ensures: s.len() > 20 || result.len() >= 1
+{
   var out = Vec[Vec[Int]].new();
   var n = s.len();
   if n > 20 { return out; }
@@ -191,7 +201,9 @@ pub fn set_power_set(s: &Vec[Int]) -> Vec[Vec[Int]] {
 }
 
 /// All ordered pairs (x, y) with x in a and y in b. Complexity: O(|a| * |b|).
-pub fn set_cartesian_product(a: &Vec[Int], b: &Vec[Int]) -> Vec[(Int, Int)] {
+pub fn set_cartesian_product(a: &Vec[Int], b: &Vec[Int]) -> Vec[(Int, Int)]
+  ensures: result.len() == a.len() * b.len()
+{
   var out = Vec[(Int, Int)].new();
   var i = 0;
   while i < a.len() {
@@ -207,7 +219,9 @@ pub fn set_cartesian_product(a: &Vec[Int], b: &Vec[Int]) -> Vec[(Int, Int)] {
 
 /// Number of unique elements in s (duplicates in the input are ignored).
 /// Complexity: O(|s|^2).
-pub fn set_cardinality(s: &Vec[Int]) -> Int {
+pub fn set_cardinality(s: &Vec[Int]) -> Int
+  ensures: result >= 0 && result <= s.len()
+{
   var seen = Vec[Int].new();
   var count = 0;
   var i = 0;
@@ -223,7 +237,9 @@ pub fn set_cardinality(s: &Vec[Int]) -> Int {
 
 /// Complement of s relative to universe: every element of universe not present
 /// in s. Complexity: O(|universe| * |s|).
-pub fn set_complement(s: &Vec[Int], universe: &Vec[Int]) -> Vec[Int] {
+pub fn set_complement(s: &Vec[Int], universe: &Vec[Int]) -> Vec[Int]
+  ensures: result.len() <= universe.len()
+{
   var out = Vec[Int].new();
   var i = 0;
   while i < universe.len() {
@@ -235,7 +251,9 @@ pub fn set_complement(s: &Vec[Int], universe: &Vec[Int]) -> Vec[Int] {
 
 /// Elements of universe satisfying the predicate pred, in universe order.
 /// Complexity: O(|universe| * pred).
-pub fn set_comprehension(pred: fn(Int) -> Bool, universe: &Vec[Int]) -> Vec[Int] {
+pub fn set_comprehension(pred: fn(Int) -> Bool, universe: &Vec[Int]) -> Vec[Int]
+  ensures: result.len() <= universe.len()
+{
   var out = Vec[Int].new();
   var i = 0;
   while i < universe.len() {
