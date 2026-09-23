@@ -65,6 +65,13 @@ Disposition:
 - **Verification:** runtime-heavy battery (async/thread/sync/core, 46 files)
   green after the trim; the full corpus + module check + bare-name scan are
   re-run on compiler tag v0.60.0 (see `docs/VERIFICATION_BASELINE.md`).
+  **Re-verified 2026-09-23 on compiler v0.61.3:** the 9 deleted symbols
+  have 0 references across `runtime/**`, the 11 `xiom_hot_*` entries carry
+  the AUDIT block in `runtime/xiom_hot_reload.c`, and the full gate battery
+  is green (corpus 949/949, check_modules 509/509, barename 0/509 -- see
+  the v0.61.3 section of `docs/VERIFICATION_BASELINE.md`). The stdlib lane
+  considers this item closed; only the compiler lane's confirmation of the
+  kept hot-reload ABI remains.
 
 ## Disposition
 
