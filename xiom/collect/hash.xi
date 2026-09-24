@@ -220,3 +220,34 @@ pub fn lhmap_keys_in_order(m: &LhMap) -> Vec[Int]
   }
   return result;
 }
+
+/// First key in insertion order, or None when the map is empty.
+/// Canonical home of the `xiom.collect.linkedhash` order accessors.
+pub fn lhmap_first(m: &LhMap) -> Option[Int]
+  ensures: result.is_some == (lhmap_size(m) > 0)
+{
+  if m.keys.len() == 0 { return None; }
+  return Some(m.keys[0]);
+}
+
+/// Last key in insertion order, or None when the map is empty.
+pub fn lhmap_last(m: &LhMap) -> Option[Int]
+  ensures: result.is_some == (lhmap_size(m) > 0)
+{
+  if m.keys.len() == 0 { return None; }
+  var last = m.keys.len() - 1;
+  return Some(m.keys[last]);
+}
+
+/// All keys in insertion order (same order as lhmap_keys_in_order).
+pub fn lhmap_iter(m: &LhMap) -> Vec[Int]
+  ensures: result.len() == lhmap_size(m)
+{
+  var result = Vec[Int].new();
+  var i = 0;
+  while i < m.keys.len() {
+    result.push(m.keys[i]);
+    i = i + 1;
+  }
+  return result;
+}

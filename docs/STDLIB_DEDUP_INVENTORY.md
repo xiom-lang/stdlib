@@ -203,6 +203,12 @@ DEFERRED / CORRECTED:
     3. Re-point smoke_collect_linkedhash's extra assertions at the canonical
        first/last/iter (parity smoke keeps both paths green).
     4. Remove the twin (unblocked 2026-09-24; m125 freeze snapshot verified on the pin).
+  EXECUTED 2026-09-24 (shim route, steps 1-2; step 3 not needed -- the
+  existing smoke exercises the shim unchanged): `xiom.collect.hash` gained
+  `lhmap_first/last/iter`; `linkedhash.xi` is a pure delegation shim (its
+  duplicate `LhMap` type and private `lhmap_find` removed). Step 4 (file
+  deletion) stays open until consumers migrate; note the api_freeze snapshot
+  does NOT list collect.* modules, so deletion is not freeze-gated.
 - `collect/cache` vs `collect/lru` (found 2026-09-17): cache = LRU+LFU+ARC
   (arc.xi + 3 smokes); lru = standalone near-copy LRU (1 smoke). The LRU
   cores are copies; receiver mutability differs (`&` vs `&mut`). Same
@@ -214,6 +220,23 @@ DEFERRED / CORRECTED:
        `&mut` signatures the module exposes.
     3. Re-point smoke_collect_lfu_lru at the canonical surface.
     4. Remove the twin (unblocked 2026-09-24; m125 freeze snapshot verified on the pin).
+  EXECUTED 2026-09-24 (shim route, steps 1-2; step 3 not needed -- the
+  existing smoke exercises the shim unchanged): `xiom.collect.cache` gained
+  `lru_remove` + `lru_clear`; `lru.xi` is a pure delegation shim (duplicate
+  `LruCache` type and private find/touch helpers removed) keeping the legacy
+  `&mut` receiver spellings. Step 4 stays open until consumers migrate.
+- `collect/cache` LFU section vs `collect/lfu` (third twin, found 2026-09-24
+  by the execution recon; was NOT in the table): same `LfuCache` type and
+  identical `lfu_get/put/contains/size` bodies; `lfu.xi` additionally has
+  `lfu_remove`/`lfu_capacity`/`lfu_clear`. Same translation-unit treatment:
+  add the three extra fns to cache (canonical), then shim `lfu.xi`.
+  Caveat: both modules would export `lfu_*` names, so a consumer importing
+  both must alias (the smoke uses `use xiom.collect.lfu;` only today).
+- geom mat/matrix, vec/vector, quat/quaternion: DEQUEUED from the 2026-09-24
+  pass -- audited as NOT pure rename pairs (short-name modules are distinct
+  dynamic APIs; long-name modules carry the typed Mat2/3/4 domain; consumers
+  span 6 smokes + the geom aggregate). Needs its own audited API-translation
+  unit with a name map + consumer migration; do not blind-shim.
 - `bits/endian + convert/endian + serialize/endian`: three-way merge onto
   serialize.endian still open (convert side partially delegated).
 - `net/ip4+ip6`, base32/ascii85/percent/punycode twins, io/console vs

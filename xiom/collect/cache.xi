@@ -102,6 +102,37 @@ pub fn lru_capacity(c: &LruCache) -> Int
   return c.capacity;
 }
 
+/// Remove `key`, returning whether it was present. Canonical home of the
+/// `xiom.collect.lru` surface.
+pub fn lru_remove(c: &mut LruCache, key: Int) -> Bool
+  ensures: lru_contains(c, key) == false
+{
+  var idx = lru_find(c, key);
+  if idx < 0 { return false; }
+  c.keys.remove(idx);
+  c.values.remove(idx);
+  var i = 0;
+  while i < c.order.len() {
+    if c.order[i] == key {
+      c.order.remove(i);
+      break;
+    }
+    i = i + 1;
+  }
+  return true;
+}
+
+/// Remove all entries from the cache.
+pub fn lru_clear(c: &mut LruCache)
+  ensures: lru_size(c) == 0
+{
+  while c.keys.len() > 0 {
+    c.keys.pop();
+    c.values.pop();
+    c.order.pop();
+  }
+}
+
 /// LFU Cache (Int keys, Int values)
 /// Parallel `keys`/`values`/`counts` vectors plus an insertion-sequence vector
 /// `seq` used as a deterministic tie-break: when several keys share the lowest
