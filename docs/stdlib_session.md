@@ -221,6 +221,37 @@ stub closures; all four recon agents completed)**
   compiler release (v0.62.0) after our next stdlib release cut (release
   notes fragment `release-notes/v0.62.0.md` is ready).
 
+**SESSION 2026-09-25 PART 9 continued (night block: stub batches 2-3,
+clause typing cleanup, release pre-flight alignment)**
+- Stub batch 2 (`ce24e70`): `approximation.least_squares` implemented by
+  repairing the by-ref nested `Vec[Vec[Float64]]` into a local matrix before
+  indexing (row-local copies alone are NOT enough for Float64; the full
+  local-matrix copy is required -- re-verified with probes). Gates:
+  modules 509/509, corpus 951/951 (2806.1s), probes 176/176, barename
+  0/509, ratchets OK.
+- Clause typing cleanup (`a357e54`, compiler-lane follow-up): all clause
+  sites that block strict predicate-Bool checking were fixed --
+  `Rc.new`/`Arc.new` -> `result.strong_count() == 1` + `result.ptr != null`,
+  `ptr.replace` -> `ensures: dest != null`, `math.pow`/`pow_pure` ->
+  `exp == (to_int(exp) as Float64)`, and `array.is_sorted_by` was MISSING
+  and is now implemented (the `sort_by` clause asserts it; row/rc/sync/ptr
+  smoke families green).
+- Stub batch 3 (`89d0d1c`): `differential.gradient/partial_derivative/
+  richardson` implemented with push-only perturbation vectors;
+  `jacobian` stays stubbed (`&Vec[fn]` reads). `smoke_math_calculus`
+  asserts gradient(1,2) = (2,4), the partial, oob/h==0 guards, and
+  Richardson ~= 6. Combined battery: modules 509/509, corpus 951/951
+  (2738.9s), probes 176/176, barename 0/509, ratchets OK.
+- Release pre-flight alignment (`f0911ba`): the compiler lane's draft
+  v0.62.0 notes carry 4 highlights, so the stdlib fragment was trimmed to
+  TWO highlights (contracts coverage; `xiom.time.monotonic_ms`) to respect
+  the merged 6-highlight schema limit; all fields validated against the
+  site's rules.
+- Compiler lane meanwhile fixed `@pre`-on-method-call runtime snapshots and
+  landed `XIOM_STRICT_CLAUSES=1` (default stays light until the stdlib is
+  clean under strict mode); the stdlib clause fixes above are the
+  precondition for flipping that default.
+
 
 **SESSION 2026-09-20 (multi-param tranche closure + no-NASM runtime link fix)**
 - Local main: `ebae67c` + `b4f2655` (runtime fallback linkage + probe),

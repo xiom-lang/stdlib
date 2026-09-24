@@ -17,9 +17,11 @@ mismatch fails the release before the gates run.
 3. **`release-notes/<tag>.md`** -- present and schema-valid (website
    contract `xiom-lang/website/docs/release-notes-schema.md`): Summary
    <= 240 chars, plain ASCII, no internal IDs; highlights are `### Title` +
-   `kind:` + body (<= 320 chars). The compiler release merges these with
-   its own; the merged document must keep <= 6 highlights total.
-   Current draft: `release-notes/v0.62.0.md` (4 highlights).
+   `kind:` + body (<= 320 chars, title <= 60). The compiler release merges
+   these with its own; the merged document must keep <= 6 highlights, and
+   the compiler lane's v0.62.0 draft already carries 4, so the stdlib
+   fragment must stay at **2** highlights.
+   Current draft: `release-notes/v0.62.0.md` (2 highlights).
 4. **`CHANGELOG.md`** -- move `## [Unreleased]` entries under
    `## [X.Y.Z] - YYYY-MM-DD` (Keep a Changelog layout).
 5. **Local gate battery** (must be green on the exact commit):
