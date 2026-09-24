@@ -941,62 +941,92 @@ fn transliterate_with(s: Str, repl: fn(Int) -> Str) -> Str {
 /// maps known scripts (Cyrillic, Greek, Arabic, Hebrew, Devanagari, kana,
 /// hangul and a few CJK characters).
 /// Complexity: O(len(s)).
-pub fn transliterate(s: Str) -> Str {
+pub fn transliterate(s: Str) -> Str
+  ensures: s.len() == 0 => result.len() == 0
+  ensures: result.len() <= 5 * s.len()
+{
   transliterate_to_ascii(s)
 }
 
 /// Transliterate Cyrillic text to Latin.
 /// Complexity: O(len(s)).
-pub fn transliterate_cyrillic(s: Str) -> Str {
+pub fn transliterate_cyrillic(s: Str) -> Str
+  ensures: s.len() == 0 => result.len() == 0
+  ensures: result.len() <= 4 * s.len()
+{
   transliterate_with(s, cyr_repl)
 }
 
 /// Transliterate Greek text to Latin.
 /// Complexity: O(len(s)).
-pub fn transliterate_greek(s: Str) -> Str {
+pub fn transliterate_greek(s: Str) -> Str
+  ensures: s.len() == 0 => result.len() == 0
+  ensures: result.len() <= 2 * s.len()
+{
   transliterate_with(s, greek_repl)
 }
 
 /// Transliterate Arabic text to Latin (best-effort; see header).
 /// Complexity: O(len(s)).
-pub fn transliterate_arabic(s: Str) -> Str {
+pub fn transliterate_arabic(s: Str) -> Str
+  ensures: s.len() == 0 => result.len() == 0
+  ensures: result.len() <= 2 * s.len()
+{
   transliterate_with(s, arabic_repl)
 }
 
 /// Transliterate Hebrew text to Latin (best-effort; see header).
 /// Complexity: O(len(s)).
-pub fn transliterate_hebrew(s: Str) -> Str {
+pub fn transliterate_hebrew(s: Str) -> Str
+  ensures: s.len() == 0 => result.len() == 0
+  ensures: result.len() <= 2 * s.len()
+{
   transliterate_with(s, hebrew_repl)
 }
 
 /// Transliterate Devanagari text to Latin (best-effort; see header).
 /// Complexity: O(len(s)).
-pub fn transliterate_devanagari(s: Str) -> Str {
+pub fn transliterate_devanagari(s: Str) -> Str
+  ensures: s.len() == 0 => result.len() == 0
+  ensures: result.len() <= 3 * s.len()
+{
   transliterate_with(s, devanagari_repl)
 }
 
 /// Convert Chinese characters to pinyin where known (only a few characters
 /// map; everything else passes through).
 /// Complexity: O(len(s)).
-pub fn transliterate_chinese_pinyin(s: Str) -> Str {
+pub fn transliterate_chinese_pinyin(s: Str) -> Str
+  ensures: s.len() == 0 => result.len() == 0
+  ensures: result.len() <= 5 * s.len()
+{
   transliterate_with(s, pinyin_repl)
 }
 
 /// Convert Japanese kana to romaji (best-effort; see header).
 /// Complexity: O(len(s)).
-pub fn transliterate_japanese_romaji(s: Str) -> Str {
+pub fn transliterate_japanese_romaji(s: Str) -> Str
+  ensures: s.len() == 0 => result.len() == 0
+  ensures: result.len() <= 3 * s.len()
+{
   transliterate_with(s, romaji_repl)
 }
 
 /// Romanize Korean hangul (best-effort; see header).
 /// Complexity: O(len(s)).
-pub fn transliterate_korean_roman(s: Str) -> Str {
+pub fn transliterate_korean_roman(s: Str) -> Str
+  ensures: s.len() == 0 => result.len() == 0
+  ensures: result.len() <= 3 * s.len()
+{
   transliterate_with(s, hangul_repl)
 }
 
 /// Strip accents from Latin letters (e -> e, u -> u, ...).
 /// Complexity: O(len(s)).
-pub fn transliterate_accented(s: Str) -> Str {
+pub fn transliterate_accented(s: Str) -> Str
+  ensures: s.len() == 0 => result.len() == 0
+  ensures: result.len() <= 2 * s.len()
+{
   transliterate_with(s, accent_repl)
 }
 
@@ -1004,7 +1034,10 @@ pub fn transliterate_accented(s: Str) -> Str {
 /// the script tables (Cyrillic, Greek, Arabic, Hebrew, Devanagari, kana,
 /// hangul, CJK). Unmapped characters pass through unchanged.
 /// Complexity: O(len(s)).
-pub fn transliterate_to_ascii(s: Str) -> Str {
+pub fn transliterate_to_ascii(s: Str) -> Str
+  ensures: s.len() == 0 => result.len() == 0
+  ensures: result.len() <= 5 * s.len()
+{
   let acc = transliterate_with(s, accent_repl);
   let cyr = transliterate_with(acc, cyr_repl);
   let gre = transliterate_with(cyr, greek_repl);
@@ -1020,7 +1053,10 @@ pub fn transliterate_to_ascii(s: Str) -> Str {
 /// Characters in `s` matching a table char are replaced; everything else is
 /// kept unchanged.
 /// Complexity: O(len(s) * table).
-pub fn transliterate_custom(s: Str, table: &Vec[(Char, Str)]) -> Str {
+pub fn transliterate_custom(s: Str, table: &Vec[(Char, Str)]) -> Str
+  ensures: s.len() == 0 => result.len() == 0
+  ensures: table.len() == 0 => result.len() <= s.len()
+{
   var out = "";
   var i: Int = 0;
   let len = s.len();

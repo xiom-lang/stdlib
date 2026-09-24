@@ -37,7 +37,9 @@ pub type DiffOp = {
 
 /// Read the operation kind of a DiffOp ("eq", "ins" or "del").
 /// Complexity: O(1).
-pub fn diffop_kind(op: DiffOp) -> Str {
+pub fn diffop_kind(op: DiffOp) -> Str
+  ensures: result == "eq" || result == "ins" || result == "del"
+{
   let data = op.data;
   if data.len() > 0 {
     let c = string.byte_at(data, 0);
@@ -56,7 +58,9 @@ pub fn diffop_kind(op: DiffOp) -> Str {
 
 /// Read the operation text of a DiffOp.
 /// Complexity: O(len(data)).
-pub fn diffop_text(op: DiffOp) -> Str {
+pub fn diffop_text(op: DiffOp) -> Str
+  ensures: result.len() <= op.data.len()
+{
   let data = op.data;
   if data.len() > 2 {
     return string.str_slice(data, 2, data.len());
@@ -68,7 +72,10 @@ pub fn diffop_text(op: DiffOp) -> Str {
 /// Vec's backing memory directly, so it is reliable for cross-module results
 /// (passing a DiffOp by value can mislay its layout in this build).
 /// Complexity: O(1).
-pub fn diffop_kind_at(ops: &Vec[DiffOp], i: Int) -> Str {
+pub fn diffop_kind_at(ops: &Vec[DiffOp], i: Int) -> Str
+  requires: i >= 0 && i < ops.len()
+  ensures: result == "eq" || result == "ins" || result == "del"
+{
   let data = ops[i].data;
   if data.len() > 0 {
     let c = string.byte_at(data, 0);
@@ -87,7 +94,10 @@ pub fn diffop_kind_at(ops: &Vec[DiffOp], i: Int) -> Str {
 
 /// Read the operation text of element `i` of a diff result.
 /// Complexity: O(len(data)).
-pub fn diffop_text_at(ops: &Vec[DiffOp], i: Int) -> Str {
+pub fn diffop_text_at(ops: &Vec[DiffOp], i: Int) -> Str
+  requires: i >= 0 && i < ops.len()
+  ensures: result.len() <= ops[i].data.len()
+{
   let data = ops[i].data;
   if data.len() > 2 {
     return string.str_slice(data, 2, data.len());
@@ -224,13 +234,17 @@ fn lcs_ops(a: &Vec[Str], b: &Vec[Str]) -> Vec[DiffOp] {
 /// Compute an optimal line diff with the longest-common-subsequence method
 /// (equivalent result to Myers' algorithm for the edit script).
 /// Complexity: O(|a| * |b|).
-pub fn diff_myers(a: &Vec[Str], b: &Vec[Str]) -> Vec[DiffOp] {
+pub fn diff_myers(a: &Vec[Str], b: &Vec[Str]) -> Vec[DiffOp]
+  ensures: result.len() <= a.len() + b.len()
+{
   lcs_ops(a, b)
 }
 
 /// Split `a` and `b` into lines and diff them.
 /// Complexity: O(|a| * |b|) over the line counts.
-pub fn diff_myers_lines(a: Str, b: Str) -> Vec[DiffOp] {
+pub fn diff_myers_lines(a: Str, b: Str) -> Vec[DiffOp]
+  ensures: result.len() <= a.len() + b.len() + 2
+{
   let la_raw = string.str_split(a, "\n");
   let lb_raw = string.str_split(b, "\n");
   let la = copy_strs(&la_raw);
@@ -240,7 +254,9 @@ pub fn diff_myers_lines(a: Str, b: Str) -> Vec[DiffOp] {
 
 /// Compute a diff via the longest common subsequence.
 /// Complexity: O(|a| * |b|).
-pub fn diff_lcs(a: &Vec[Str], b: &Vec[Str]) -> Vec[DiffOp] {
+pub fn diff_lcs(a: &Vec[Str], b: &Vec[Str]) -> Vec[DiffOp]
+  ensures: result.len() <= a.len() + b.len()
+{
   lcs_ops(a, b)
 }
 
@@ -248,7 +264,9 @@ pub fn diff_lcs(a: &Vec[Str], b: &Vec[Str]) -> Vec[DiffOp] {
 /// (a single hunk covering the whole change is emitted; context-line trimming
 /// is not applied). The header uses `--- a` / `+++ b`.
 /// Complexity: O(|a| * |b|) for the diff plus O(ops) rendering.
-pub fn diff_unified(a: Str, b: Str, context: Int) -> Str {
+pub fn diff_unified(a: Str, b: Str, context: Int) -> Str
+  ensures: result.len() >= 18
+{
   let ops = diff_myers_lines(a, b);
   var out = "--- a\n+++ b\n@@ -0,";
   var before_count: Int = 0;
@@ -364,7 +382,9 @@ pub fn diff_apply(a: Str, patch: Str) -> Result[Str, Str] {
 /// Normalized similarity in [0,1]: length of the longest common byte
 /// subsequence divided by the longer input.
 /// Complexity: O(|a| * |b|).
-pub fn diff_similarity(a: Str, b: Str) -> Float64 {
+pub fn diff_similarity(a: Str, b: Str) -> Float64
+  ensures: result >= 0.0 && result <= 1.0
+{
   let l = byte_lcs_len(a, b);
   let la = a.len();
   let lb = b.len();
@@ -381,7 +401,9 @@ pub fn diff_similarity(a: Str, b: Str) -> Float64 {
 /// 2 * matches / (len_a + len_b) where matches is the longest common byte
 /// subsequence length. Returns 1.0 when both inputs are empty.
 /// Complexity: O(|a| * |b|).
-pub fn diff_ratio(a: Str, b: Str) -> Float64 {
+pub fn diff_ratio(a: Str, b: Str) -> Float64
+  ensures: result >= 0.0 && result <= 1.0
+{
   let l = byte_lcs_len(a, b);
   let la = a.len();
   let lb = b.len();
@@ -458,7 +480,9 @@ fn tokenize(s: Str) -> Vec[Str] {
 /// Diff `a` and `b` tokenized into words (alphanumeric runs and punctuation
 /// characters).
 /// Complexity: O(|tokens|^2).
-pub fn diff_word_level(a: Str, b: Str) -> Vec[DiffOp] {
+pub fn diff_word_level(a: Str, b: Str) -> Vec[DiffOp]
+  ensures: result.len() <= a.len() + b.len()
+{
   let ta = tokenize(a);
   let tb = tokenize(b);
   lcs_ops(&ta, &tb)
@@ -466,7 +490,9 @@ pub fn diff_word_level(a: Str, b: Str) -> Vec[DiffOp] {
 
 /// Diff two byte sequences.
 /// Complexity: O(|a| * |b|).
-pub fn diff_byte_level(a: &Vec[UInt8], b: &Vec[UInt8]) -> Vec[DiffOp] {
+pub fn diff_byte_level(a: &Vec[UInt8], b: &Vec[UInt8]) -> Vec[DiffOp]
+  ensures: result.len() <= a.len() + b.len()
+{
   var ta = Vec[Str].new();
   var i: Int = 0;
   while i < a.len() {

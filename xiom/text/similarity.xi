@@ -86,7 +86,10 @@ fn _ngrams(s: Str, len: Int, n: Int) -> Vec[Int] {
 /// Levenshtein edit distance between `a` and `b` (insertions, deletions,
 /// substitutions each cost 1). Classic two-row DP; ASCII byte comparison.
 /// Complexity: O(|a| * |b|) time, O(|b|) space.
-pub fn levenshtein(a: Str, b: Str) -> Int {
+pub fn levenshtein(a: Str, b: Str) -> Int
+  ensures: result >= 0
+  ensures: a.len() >= b.len() => result <= a.len()
+{
   let la = a.len();
   let lb = b.len();
   var prev = Vec[Int].new();
@@ -129,7 +132,10 @@ pub fn levenshtein(a: Str, b: Str) -> Int {
 /// variant: one transposition of adjacent characters counts as one edit.
 /// Two-row DP plus the row two steps back for the transposition term.
 /// Complexity: O(|a| * |b|) time, O(|b|) space.
-pub fn damerau_levenshtein(a: Str, b: Str) -> Int {
+pub fn damerau_levenshtein(a: Str, b: Str) -> Int
+  ensures: result >= 0
+  ensures: a.len() >= b.len() => result <= a.len()
+{
   let la = a.len();
   let lb = b.len();
   if la == 0 {
@@ -187,7 +193,9 @@ pub fn damerau_levenshtein(a: Str, b: Str) -> Int {
 /// Jaro similarity in [0, 1]. Match window is floor(max(|a|,|b|)/2) - 1
 /// (clamped to 0); transpositions are mismatched match pairs divided by 2.
 /// Returns 0.0 when there are no matches (including empty inputs).
-pub fn jaro(a: Str, b: Str) -> Float64 {
+pub fn jaro(a: Str, b: Str) -> Float64
+  ensures: result >= 0.0 && result <= 1.0
+{
   let la = a.len();
   let lb = b.len();
   if la == 0 || lb == 0 {
@@ -275,7 +283,9 @@ pub fn jaro(a: Str, b: Str) -> Float64 {
 /// Jaro-Winkler similarity: Jaro plus a prefix bonus of
 /// prefix_len * 0.1 * (1 - jaro), where prefix_len is capped at 4 and at the
 /// length of the shorter string.
-pub fn jaro_winkler(a: Str, b: Str) -> Float64 {
+pub fn jaro_winkler(a: Str, b: Str) -> Float64
+  ensures: result >= 0.0 && result <= 1.0
+{
   let j = jaro(a, b);
   let la = a.len();
   let lb = b.len();
@@ -290,7 +300,9 @@ pub fn jaro_winkler(a: Str, b: Str) -> Float64 {
 
 /// Jaccard similarity over the set of character n-grams (as djb2 hash codes)
 /// of `a` and `b`. Returns 0.0 when either side has no n-grams. O(|a|*|b|).
-pub fn ngram_similarity(a: Str, b: Str, n: Int) -> Float64 {
+pub fn ngram_similarity(a: Str, b: Str, n: Int) -> Float64
+  ensures: result >= 0.0 && result <= 1.0
+{
   if n <= 0 {
     return 0.0;
   };
@@ -332,6 +344,7 @@ pub fn ngram_similarity(a: Str, b: Str, n: Int) -> Float64 {
 /// Returns 0.0 when either vector has zero length.
 pub fn cosine_similarity(a: Str, b: Str) -> Float64
   requires: true  // extern sqrt calls below (T002 confinement)
+  ensures: result >= 0.0
 {
   let la = a.len();
   let lb = b.len();
@@ -440,7 +453,9 @@ pub fn cosine_similarity(a: Str, b: Str) -> Float64
 
 /// Length of the longest common subsequence of `a` and `b`.
 /// Two-row DP. Complexity: O(|a| * |b|) time, O(|b|) space.
-pub fn longest_common_subsequence(a: Str, b: Str) -> Int {
+pub fn longest_common_subsequence(a: Str, b: Str) -> Int
+  ensures: result >= 0 && result <= a.len() && result <= b.len()
+{
   let la = a.len();
   let lb = b.len();
   var prev = Vec[Int].new();
@@ -475,7 +490,9 @@ pub fn longest_common_subsequence(a: Str, b: Str) -> Int {
 
 /// Length of the longest common contiguous substring of `a` and `b`.
 /// Two-row DP, resetting to 0 on mismatch. O(|a| * |b|) time, O(|b|) space.
-pub fn longest_common_substring(a: Str, b: Str) -> Int {
+pub fn longest_common_substring(a: Str, b: Str) -> Int
+  ensures: result >= 0 && result <= a.len() && result <= b.len()
+{
   let la = a.len();
   let lb = b.len();
   var prev = Vec[Int].new();
@@ -511,7 +528,10 @@ pub fn longest_common_substring(a: Str, b: Str) -> Int {
 
 /// Hamming distance: number of differing byte positions. Returns None when the
 /// byte lengths differ; Some(0) for empty == empty.
-pub fn hamming(a: Str, b: Str) -> Option[Int] {
+pub fn hamming(a: Str, b: Str) -> Option[Int]
+  ensures: result is Some => a.len() == b.len()
+  ensures: result is None => a.len() != b.len()
+{
   let la = a.len();
   let lb = b.len();
   if la != lb {
@@ -533,7 +553,10 @@ pub fn hamming(a: Str, b: Str) -> Option[Int] {
 /// keeps the first letter (with a few start-of-word rules), drops vowels,
 /// maps the remaining consonants, then removes consecutive duplicate codes
 /// and any H/W that are not the leading letter.
-pub fn metaphone(word: Str) -> Str {
+pub fn metaphone(word: Str) -> Str
+  ensures: word.len() == 0 => result.len() == 0
+  ensures: result.len() <= 2 * word.len()
+{
   let upper = string.str_upper(word);
   let len = upper.len();
   if len == 0 {
@@ -650,7 +673,10 @@ pub fn metaphone(word: Str) -> Str {
 /// the remaining letters to digit codes, drops adjacent duplicates (same code
 /// as the previously emitted code) unless separated by a vowel, then pads
 /// with '0' to exactly 4 characters.
-pub fn soundex(word: Str) -> Str {
+pub fn soundex(word: Str) -> Str
+  ensures: word.len() == 0 => result.len() == 0
+  ensures: word.len() > 0 => result.len() == 4
+{
   let upper = string.str_upper(word);
   let len = upper.len();
   if len == 0 {
@@ -721,7 +747,10 @@ pub fn soundex(word: Str) -> Str {
 
 /// All contiguous n-grams of `s` (n = 1 -> single chars). Empty input or
 /// n < 1 -> empty Vec. O(len) with O(len) output.
-pub fn ngram_extract(s: Str, n: Int) -> Vec[Str] {
+pub fn ngram_extract(s: Str, n: Int) -> Vec[Str]
+  ensures: n < 1 || s.len() < n => result.len() == 0
+  ensures: n >= 1 && s.len() >= n => result.len() == s.len() - n + 1
+{
   var out = Vec[Str].new();
   var len = xiom.string.str_len(s);
   if n < 1 || len < n {
@@ -757,7 +786,9 @@ fn _str_eq(a: Str, b: Str) -> Bool {
 /// Jaccard similarity over n-grams: |A & B| / |A | B| in Float64 (0 when
 /// both inputs have no n-grams, 1 when identical). O(|a|-|b|) naive set
 /// comparison -- the compiler's Set is not usable for Str elements here.
-pub fn jaccard_similarity(a: Str, b: Str, n: Int) -> Float64 {
+pub fn jaccard_similarity(a: Str, b: Str, n: Int) -> Float64
+  ensures: result >= 0.0
+{
   var ga = ngram_extract(a, n);
   var gb = ngram_extract(b, n);
   if ga.len() == 0 && gb.len() == 0 {
@@ -787,7 +818,9 @@ pub fn jaccard_similarity(a: Str, b: Str, n: Int) -> Float64 {
 }
 
 /// Length of the longest common prefix of a and b. O(min(|a|,|b|)).
-pub fn longest_common_prefix(a: Str, b: Str) -> Int {
+pub fn longest_common_prefix(a: Str, b: Str) -> Int
+  ensures: result >= 0 && result <= a.len() && result <= b.len()
+{
   var la = xiom.string.str_len(a);
   var lb = xiom.string.str_len(b);
   var lim = la;
@@ -803,7 +836,9 @@ pub fn longest_common_prefix(a: Str, b: Str) -> Int {
 }
 
 /// Length of the longest common suffix of a and b. O(min(|a|,|b|)).
-pub fn longest_common_suffix(a: Str, b: Str) -> Int {
+pub fn longest_common_suffix(a: Str, b: Str) -> Int
+  ensures: result >= 0 && result <= a.len() && result <= b.len()
+{
   var la = xiom.string.str_len(a);
   var lb = xiom.string.str_len(b);
   var lim = la;
