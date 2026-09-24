@@ -6,8 +6,8 @@
 // NOTE: the checks use INTERVAL COMPARISONS instead of difference-based
 // tolerance, because arithmetic on a value returned by a catalog-module
 // function traps with 0xC000001D (BUG 20 AVX-512 codegen on Zen 2), while
-// relational comparisons are safe. sinh/cosh/tanh/atanh are documented stubs
-// in this build (see the module).
+// relational comparisons are safe. sinh/cosh/tanh/atanh delegate to
+// xiom.math.hyperbolic and are asserted below (stubs refreshed 2026-09-24).
 use xiom.math;
 use xiom.io;
 
@@ -76,6 +76,16 @@ fn main() -> Int {
   if !in_range(cd, 0.999999, 1.000001) { io.println("cos-deg"); return 22; }
   var td = math.trig.tan_deg(45.0);
   if !in_range(td, 0.999999, 1.000001) { io.println("tan-deg"); return 23; }
+
+  // hyperbolic (delegating to xiom.math.hyperbolic since 2026-09-24)
+  var sh1 = math.trig.sinh(1.0);
+  if !in_range(sh1, 1.175, 1.176) { io.println("sinh-1"); return 25; }
+  var ch0 = math.trig.cosh(0.0);
+  if !in_range(ch0, 0.999999, 1.000001) { io.println("cosh-0"); return 26; }
+  var th1 = math.trig.tanh(1.0);
+  if !in_range(th1, 0.7615, 0.7616) { io.println("tanh-1"); return 27; }
+  var ah05 = math.trig.atanh(0.5);
+  if !in_range(ah05, 0.5493, 0.5494) { io.println("atanh-05"); return 28; }
 
   io.println("smoke_math_trig: OK");
   return 0;

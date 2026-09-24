@@ -184,6 +184,41 @@ resolution:
   already parenthesizes (`result.is_some == (size(m) > 0)` etc.). Compiler
   lane: consider rejecting mixed Bool/Int comparisons in clause position.
 
+## Deferred-stub re-triage (2026-09-24)
+
+The 82 files with `TODO(compiler)` / `NOT IMPLEMENTABLE` markers were
+re-classified against the pin (compiler v0.61.3). The old N-class wording
+("nested Vec element reads return garbage") is too absolute: direct
+`m[i][j]` on a by-ref parameter is broken, but the **row-local copy** shape
+works and is proven in two gate-green modules (`geom/matrix.xi`,
+`iter/zip.xi`). Closed this round (all verified on the pin):
+
+- `xiom.math.trig.sinh/cosh/tanh/atanh`: delegate to the gate-green
+  `xiom.math.hyperbolic` (the old BUG-20 inline-arithmetic claim is stale);
+  `smoke_math_trig` now asserts values.
+- `xiom.num.float.float_next_up/float_next_down/float_ulp`: exact via
+  `xiom.math.primitives.nextafter` (no bitcast intrinsic needed);
+  `smoke_num_float` asserts them. `float_bits`/`bits_to_float` still need
+  the bitcast intrinsic.
+- `xiom.math.set_theory.set_partition`: implemented with the row-local
+  nested-Vec read; new `smoke_math_set_partition` covers good/overlap/
+  missing/outside/empty cases.
+- `xiom.async.timer.timer_interval`: was returning an unarmed timer. Root
+  cause: the same-leaf type collision `xiom.async.Timer` vs
+  `xiom.async.timer.Timer` (the private aggregate twin won the leaf and
+  `armed` read the wrong layout). Fixed by renaming the private aggregate
+  type to `AsyncTimerTask`; `smoke_async` now asserts armed + timer_next.
+  Compiler lane: same-leaf *private* types still collide with another
+  module's type of the same leaf name (R44 class).
+
+Still open (own units): the remaining pin-viable rewrites from the
+re-triage (gradients via push-only perturbations, `least_squares` row-copy,
+`integrate_gauss` re-probe, `series.convergence_rate`, `lp_simplex`,
+`control_theory` observability/controllability) and the genuinely
+compiler-gated classes (recursive evaluator returning non-Int, Bool/aggregate
+tuples, `&Vec[fn]` reads, bitcast, fp128, lazy `Iter`). The full ranked list
+is in the session handoff (`docs/stdlib_session.md`, PART 9).
+
 ## Operational notes
 
 - **Runtime symbol audit** (closed stdlib-side 2026-09-17; re-verified

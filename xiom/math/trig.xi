@@ -4,17 +4,18 @@
 
 module xiom.math.trig
 
-// Depends on: none
-
+// Depends on: xiom.math, xiom.math.hyperbolic
 // ============================================================================
-// Trigonometric and hyperbolic functions, radians/degrees conversion. TODO(compiler): implement.
+// Trigonometric and hyperbolic functions, radians/degrees conversion.
 // ============================================================================
 
 use xiom.math;
+use xiom.math.hyperbolic;
 
 // All circular functions delegate to the libm-backed xiom.math wrappers
-// (math.sin/math.cos/...); the hyperbolic and inverse-hyperbolic functions
-// are composed from math.exp/math.ln/math.sqrt. Domain errors return NaN
+// (math.sin/math.cos/...); the hyperbolic ones delegate to
+// xiom.math.hyperbolic (composed from math.exp/math.ln/math.sqrt) and the
+// inverse-hyperbolic asinh/acosh are composed here. Domain errors return NaN
 // (IEEE semantics; BUG 19 fixed), never sentinel values.
 
 /// Sine of x in radians. NaN and infinite inputs propagate. Complexity: O(1).
@@ -60,26 +61,24 @@ pub fn atan2(y: Float64, x: Float64) -> Float64 {
 }
 
 /// Hyperbolic sine of x: (exp(x) - exp(-x))/2. Large |x| propagates as +-
-/// infinity. Complexity: O(1).
-/// TODO(compiler): NOT IMPLEMENTABLE in this compiler build - the exp()-based
-/// inline arithmetic crashes at startup with 0xC000001D (BUG 20 AVX-512 codegen
-/// on Zen 2). Keep the frozen signature; revisit when the arithmetic is not
-/// vectorized.
+/// infinity. Complexity: O(1). Delegates to xiom.math.hyperbolic (the
+/// pure-exp composition is gate-green there; the old inline-arithmetic stub
+/// refreshed 2026-09-24).
 pub fn sinh(x: Float64) -> Float64 {
-  return 0.0;
+  return hyperbolic.sinh(x);
 }
 
 /// Hyperbolic cosine of x: (exp(x) + exp(-x))/2. Complexity: O(1).
-/// TODO(compiler): NOT IMPLEMENTABLE - same crash as sinh (0xC000001D).
+/// Delegates to xiom.math.hyperbolic.
 pub fn cosh(x: Float64) -> Float64 {
-  return 0.0;
+  return hyperbolic.cosh(x);
 }
 
 /// Hyperbolic tangent of x: sinh(x)/cosh(x). Saturated to +-1 for |x| > 20 to
 /// avoid a NaN from inf/inf at the exponent overflow boundary. Complexity: O(1).
-/// TODO(compiler): NOT IMPLEMENTABLE - same crash as sinh (0xC000001D).
+/// Delegates to xiom.math.hyperbolic.
 pub fn tanh(x: Float64) -> Float64 {
-  return 0.0;
+  return hyperbolic.tanh(x);
 }
 
 /// Inverse hyperbolic sine of x: ln(x + sqrt(x^2 + 1)). Well-defined for every
@@ -103,11 +102,9 @@ pub fn acosh(x: Float64) -> Float64 {
 
 /// Inverse hyperbolic tangent of x: ln((1+x)/(1-x))/2. For |x| >= 1 returns
 /// NaN (documented domain error; the function is undefined at the poles).
-/// Complexity: O(1).
-/// TODO(compiler): NOT IMPLEMENTABLE - the ln()-based inline arithmetic crashes
-/// at startup with 0xC000001D (BUG 20 AVX-512 codegen on Zen 2); see sinh.
+/// Complexity: O(1). Delegates to xiom.math.hyperbolic.
 pub fn atanh(x: Float64) -> Float64 {
-  return 0.0;
+  return hyperbolic.atanh(x);
 }
 
 /// Secant of x: 1/cos(x). A pole (cos(x) == 0) yields +-infinity (IEEE).

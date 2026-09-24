@@ -78,13 +78,20 @@ fn main() -> Int {
   }
   var f = timer.timer_delay(10);
   if f.ready { io.println("timer:delay_ready"); return 16; }
-  // interval-timer checks dropped: BUG 28 #5 (catalog struct literal drops
-  // trailing fields when the first is a var) makes timer_interval's armed
-  // read false, so timer_next returns None. Inert-timer path verified below.
+  // interval timer: armed deadline is read back through timer_next. Fixed
+  // 2026-09-24 by removing the same-leaf `Timer` collision in xiom.async
+  // (private aggregate type renamed AsyncTimerTask).
+  var iv = timer.timer_interval(25);
+  if !iv.armed { io.println("timer:interval_armed"); return 17; }
+  var ivn = timer.timer_next(&iv);
+  match ivn {
+    Some(d) => { if d <= 0 { io.println("timer:interval_deadline"); return 18; } }
+    None => { io.println("timer:interval_none"); return 19; }
+  }
   var iv2 = timer.timer_new();
   var ivn2 = timer.timer_next(&iv2);
   match ivn2 {
-    Some(_) => { io.println("timer:inert_armed"); return 17; }
+    Some(_) => { io.println("timer:inert_armed"); return 24; }
     None => {}
   }
   timer.timer_sleep(5);

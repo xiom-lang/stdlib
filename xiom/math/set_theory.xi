@@ -154,14 +154,42 @@ pub fn set_disjoint(a: &Vec[Int], b: &Vec[Int]) -> Bool {
 /// blocks are pairwise disjoint, and their union equals s exactly (each element
 /// of s appears in exactly one block and no block contains an element outside
 /// s). Complexity: O(|blocks|^2 * max block size + |s| * |blocks|).
-/// TODO(compiler): NOT IMPLEMENTABLE in this compiler build - the implementation
-/// must read elements of a nested Vec[Vec[Int]] (blocks[i][j]), and nested
-/// Vec element reads are miscompiled (access violation 0xC0000005; see
-/// docs/COMPILER_BUGS.md BUG 12 family and the collect/graph.xi arena note).
-/// Even a program that merely links this function crashes before main. Keep
-/// the frozen signature; revisit when nested Vec[Vec[T]] element reads work.
+/// Whether `blocks` partitions `s`: every element of `s` appears in exactly
+/// one block and no block carries an element outside `s`.
+/// Implemented with the row-local nested-Vec read (copy `blocks[i]` into a
+/// local before indexing); direct `blocks[i][j]` on a by-ref parameter is
+/// miscompiled on the current compiler (BUG 12 family). Re-verified on
+/// v0.61.3 with the row-copy shape, so the previous NOT-IMPLEMENTABLE stub
+/// is closed.
+/// Complexity: O(|s| * total block elements).
 pub fn set_partition(s: &Vec[Int], blocks: &Vec[Vec[Int]]) -> Bool {
-  return false;
+  var i = 0;
+  while i < s.len() {
+    var count = 0;
+    var bi = 0;
+    while bi < blocks.len() {
+      var blk = blocks[bi];
+      var j = 0;
+      while j < blk.len() {
+        if blk[j] == s[i] { count = count + 1; }
+        j = j + 1;
+      }
+      bi = bi + 1;
+    }
+    if count != 1 { return false; }
+    i = i + 1;
+  }
+  var bi = 0;
+  while bi < blocks.len() {
+    var blk = blocks[bi];
+    var j = 0;
+    while j < blk.len() {
+      if !_contains(s, blk[j]) { return false; }
+      j = j + 1;
+    }
+    bi = bi + 1;
+  }
+  return true;
 }
 
 // ---------------------------------------------------------------------------

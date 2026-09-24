@@ -46,9 +46,14 @@ fn _now() -> Int
   unsafe { return xiom_async_now_ms(); }
 }
 
-// === Timer ===
+// === AsyncTimerTask ===
 // A task scheduled to become ready once the monotonic clock reaches `deadline`.
-type Timer = {
+// NOTE: named `AsyncTimerTask` (not `Timer`) to avoid the same-leaf type
+// collision with `xiom.async.timer.Timer` -- with two `Timer` declarations the
+// compiler resolved the leaf to this one and `timer.Timer`'s trailing `armed`
+// field read false (re-verified on v0.61.3; removing the collision makes
+// timer_interval/timer_next behave).
+type AsyncTimerTask = {
   deadline: Int;
   task: fn();
 }
@@ -58,12 +63,12 @@ type Timer = {
 /// of pending timers. Stored 8-byte-per-slot exactly like `Vec[LogEntry]`.
 pub type AsyncExecutor = {
   ready: Vec[fn()];
-  timers: Vec[Timer];
+  timers: Vec[AsyncTimerTask];
 }
 
 /// Create an executor with empty ready/timer queues.
 pub fn AsyncExecutor.new() -> AsyncExecutor {
-  return AsyncExecutor{ ready: Vec[fn()].new(), timers: Vec[Timer].new() };
+  return AsyncExecutor{ ready: Vec[fn()].new(), timers: Vec[AsyncTimerTask].new() };
 }
 
 /// Enqueue a task onto the ready-queue. It runs on the next drain, not now.
@@ -73,7 +78,7 @@ pub fn AsyncExecutor.spawn(self, task: fn()) {
 
 /// Register a task to become ready once the clock reaches `deadline`.
 pub fn AsyncExecutor.at(self, deadline: Int, task: fn()) {
-  self.timers.push(Timer{ deadline: deadline, task: task });
+  self.timers.push(AsyncTimerTask{ deadline: deadline, task: task });
 }
 
 /// Run a single ready task. Returns true if one was run, false if the
@@ -98,7 +103,7 @@ pub fn AsyncExecutor.fire_due_timers(self) {
     return;
   }
   // Drain every timer into a scratch list, tracking the earliest deadline.
-  var pending = Vec[Timer].new();
+  var pending = Vec[AsyncTimerTask].new();
   var earliest: Int = -1;
   while self.timers.len() > 0 {
     match self.timers.pop() {

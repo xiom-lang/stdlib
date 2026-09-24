@@ -17,15 +17,21 @@ module xiom.num.float
 // (BUG 19) -- NaN is constructible via 0.0/0.0 and detected via f != f.
 //
 // Consequences:
-//   * float_bits / bits_to_float / float_next_up / float_next_down / float_ulp
-//     are implemented as DOCUMENTED FALLBACKS and carry a TODO(compiler)
-//     marker -- they need a bitcast intrinsic to be exact (still missing).
+//   * float_bits / bits_to_float are implemented as DOCUMENTED FALLBACKS and
+//     carry a TODO(compiler) marker -- they need a bitcast intrinsic to be
+//     exact (still missing).
+//   * float_next_up / float_next_down / float_ulp are EXACT since
+//     2026-09-24: they delegate to xiom.math.primitives.nextafter, which
+//     steps the float value (arithmetic-free bit-pattern step), so the
+//     bitcast intrinsic is not required for them.
 //   * float_mantissa / float_exponent are implemented exactly via repeated
 //     halving/doubling (no bitcast, no precision loss: scaling by powers of
 //     two is exact in binary floating point).
 //   * float_is_subnormal uses the comparison |f| < 2^-1022 (exact definition).
 //   * float_is_nan / classify's "nan" branch use f != f (IEEE-correct).
 // ============================================================================
+
+use xiom.math.primitives;
 
 const _MIN_NORMAL: Float64 = 2.2250738585072014e-308;
 const _TWO_POW_52: Float64 = 4503599627370496.0;
@@ -130,30 +136,26 @@ pub fn float_is_infinite(f: Float64) -> Bool {
   f == 1.0 / 0.0 || f == -1.0 / 0.0
 }
 
-// TODO(compiler): needs an i64<->f64 bitcast intrinsic. The exact
-// next-value operations are the classic integer +/-1 on the bit pattern; the
-// fallback returns f unchanged.
+// Bitcast note: the exact next-value operations used to need the missing
+// i64<->f64 bitcast intrinsic; they now delegate to
+// xiom.math.primitives.nextafter (exact stepping, no bitcast).
 /// Smallest Float64 strictly greater than f.
-/// FALLBACK (TODO(compiler): needs bitcast intrinsic): returns f unchanged until
-/// intrinsic lands (exact next-up needs float_bits). Do not rely on the value.
 pub fn float_next_up(f: Float64) -> Float64 {
-  return f;
+  return primitives.nextafter(f, 1.0 / 0.0);
 }
 
-// TODO(compiler): needs an i64<->f64 bitcast intrinsic (see above).
 /// Largest Float64 strictly less than f.
-/// FALLBACK (TODO(compiler): needs bitcast intrinsic): returns f unchanged until
-/// intrinsic lands. Do not rely on the value.
 pub fn float_next_down(f: Float64) -> Float64 {
-  return f;
+  return primitives.nextafter(f, -1.0 / 0.0);
 }
 
-// TODO(compiler): needs an i64<->f64 bitcast intrinsic (see above).
 /// Unit in the last place of f: the distance to the next representable value.
-/// FALLBACK (TODO(compiler): needs bitcast intrinsic): returns 0.0 until one
-/// lands. Do not rely on the value.
+/// NaN for NaN/infinite inputs; 5e-324 for zero (subnormal step).
 pub fn float_ulp(f: Float64) -> Float64 {
-  return 0.0;
+  var up = primitives.nextafter(f, 1.0 / 0.0);
+  var d = up - f;
+  if d < 0.0 { return 0.0 - d; }
+  return d;
 }
 
 /// Classification string: "nan", "inf", "-inf", "subnormal", "zero", or

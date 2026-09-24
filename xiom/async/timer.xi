@@ -87,15 +87,21 @@ pub fn timer_delay(ms: Int) -> TimerFuture {
 /// Params: ms - the interval in milliseconds.
 /// Returns: an armed timer whose next fire deadline is `ms` from now.
 /// Complexity: O(1).
-/// TODO(compiler): BUG 28 #5 -- catalog struct literals drop trailing fields
-/// when the first field expression is a var (Timer{deadline: dl; armed: true}
-/// reads armed=false under 4e95717e; constant-field literals work). timer_next
-/// therefore returns None for interval timers until fixed.
+/// NOTE: builds through `timer_new` + field writes. The literal form
+/// (`Timer{ deadline: _now() + m; armed: true; }`) hits the live compiler
+/// defect where a struct literal whose first field is a computed expression
+/// drops the trailing `armed` field (BUG 28 #5; re-verified on v0.61.3:
+/// timer_next returned None for interval timers before this change).
 pub fn timer_interval(ms: Int) -> Timer {
   var m = ms;
   if m < 0 {
     m = 0;
   }
+  var t = timer_new();
+  t.deadline = _now() + m;
+  t.armed = true;
+  return t;
+}
   return Timer{ deadline: _now() + m; armed: true; }
 }
 
