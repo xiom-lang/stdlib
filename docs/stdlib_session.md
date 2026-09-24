@@ -108,6 +108,19 @@ package-relay fixes; deterministic packaging; coverage waves 22-24)**
   Int -> Str pair is the filed known failure) -> smoke corpus is now 950
   files; verified 1/1 targeted (compile 0, run 0). The full-corpus re-run
   lands with the next wave.
+- Wave 25 + dedup TU 2026-09-24 (commits `6b66b53`, `25bc778`): collections
+  3.5% -> 77.2% pub-with-clause (59 clauses; floors62, global 23.6%) and the
+  `collect/hash` <-> `collect/linkedhash` + `collect/cache` <-> `collect/lru`
+  translation units are SHIMMED (canonical fns extended, twins delegate, no
+  file deletions -- collect.* is not in the api_freeze snapshot). The
+  `collect` smoke family caught a REAL clause bug during verification: in a
+  clause, `A == B > C` parses left-associatively as `(A == B) > C` and the
+  compiler silently coerced the Bool/Int mix, so `lhmap_first/last`'s
+  `result.is_some == lhmap_size(m) > 0` held only at size 1; fixed with
+  parens and the whole corpus was audited for that shape (only these two
+  hits). Compiler lane: consider rejecting mixed Bool/Int comparisons in
+  clause position. Remaining collect twins: `lfu.xi` (cache LFU section)
+  and the geom short/long modules (audited as NOT a pure rename; deferred).
 - Release sequencing (compiler lane, owner decision): ONE combined release,
   no intermediate tags. The compiler lane finishes Sprints A/B/C (front-end
   P0/P1 + fn-value + the packages' fn-ptr probes) on main; the stdlib lane

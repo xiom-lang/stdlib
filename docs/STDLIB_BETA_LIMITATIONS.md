@@ -167,6 +167,22 @@ resolution:
   through the runtime shims and is not internally synchronized. Callers
   that mutate env from several threads must serialize; a stdlib lock
   cannot cover external C writers. Documented rather than "fixed".
+- **Registry compiler-pin correlation (relayed 2026-09-24)**: the registry
+  wants the toolchain pin published as `compiler` per xiom-std version.
+  Dependency: the `xiom pkg` client must emit the field (verified absent in
+  the compiler repo's `crates/xiom-pkg/src/main.rs` by the registry lane).
+  Once it ships, add `compiler: "<pin>"` to the stdlib package manifest (or
+  pass the flag) at publish time -- no registry change needed. Nothing to
+  correlate until then (`xiom-std@0.61.3` has no compiler value).
+- **Clause-parsing precedence trap (stdlib, fixed 2026-09-24)**: in a
+  clause expression, `A == B > C` parses LEFT-ASSOCIATIVELY as
+  `(A == B) > C`; the compiler silently coerces the Bool/Int mix instead of
+  rejecting it, so the clause only holds when B happens to equal the Bool's
+  numeric value. Two new clauses hit this (`lhmap_first/last`:
+  `result.is_some == lhmap_size(m) > 0`); fixed with explicit parentheses
+  and the repo was audited -- every pre-existing clause of this shape
+  already parenthesizes (`result.is_some == (size(m) > 0)` etc.). Compiler
+  lane: consider rejecting mixed Bool/Int comparisons in clause position.
 
 ## Operational notes
 
