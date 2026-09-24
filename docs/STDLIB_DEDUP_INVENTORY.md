@@ -228,10 +228,13 @@ DEFERRED / CORRECTED:
 - `collect/cache` LFU section vs `collect/lfu` (third twin, found 2026-09-24
   by the execution recon; was NOT in the table): same `LfuCache` type and
   identical `lfu_get/put/contains/size` bodies; `lfu.xi` additionally has
-  `lfu_remove`/`lfu_capacity`/`lfu_clear`. Same translation-unit treatment:
-  add the three extra fns to cache (canonical), then shim `lfu.xi`.
-  Caveat: both modules would export `lfu_*` names, so a consumer importing
-  both must alias (the smoke uses `use xiom.collect.lfu;` only today).
+  `lfu_remove`/`lfu_capacity`/`lfu_clear`.
+  EXECUTED 2026-09-25: `xiom.collect.cache` gained
+  `lfu_remove`/`lfu_capacity`/`lfu_clear`; `lfu.xi` is a pure delegation
+  shim (duplicate type + helpers removed), clauses mirrored so the coverage
+  floor holds. Collect smoke family 101/101 green.
+  Caveat: both modules export `lfu_*`, so a consumer importing both must
+  alias (the smoke uses `use xiom.collect.lfu;` only today).
 - geom mat/matrix, vec/vector, quat/quaternion: DEQUEUED from the 2026-09-24
   pass -- audited as NOT pure rename pairs (short-name modules are distinct
   dynamic APIs; long-name modules carry the typed Mat2/3/4 domain; consumers

@@ -226,6 +226,44 @@ pub fn lfu_size(c: &LfuCache) -> Int
   return c.keys.len();
 }
 
+/// Remove `key`, returning whether it was present. Canonical home of the
+/// `xiom.collect.lfu` surface.
+pub fn lfu_remove(c: &mut LfuCache, key: Int) -> Bool
+  ensures: lfu_contains(c, key) == false
+{
+  var i = 0;
+  while i < c.keys.len() {
+    if c.keys[i] == key {
+      c.keys.remove(i);
+      c.values.remove(i);
+      c.counts.remove(i);
+      c.seq.remove(i);
+      return true;
+    }
+    i = i + 1;
+  }
+  return false;
+}
+
+/// Maximum number of entries the cache can hold.
+pub fn lfu_capacity(c: &LfuCache) -> Int
+  ensures: result >= 0
+{
+  return c.capacity;
+}
+
+/// Remove all entries from the cache.
+pub fn lfu_clear(c: &mut LfuCache)
+  ensures: lfu_size(c) == 0
+{
+  while c.keys.len() > 0 {
+    c.keys.pop();
+    c.values.pop();
+    c.counts.pop();
+    c.seq.pop();
+  }
+}
+
 /// ArcCache ? Adaptive Replacement Cache (2026-08-11)
 /// Standard ARC (Megiddo & Modha): T1 (recent) / T2 (frequent) hold cached
 /// (key, value) pairs, B1/B2 are ghost lists (keys only). `p` is the target
