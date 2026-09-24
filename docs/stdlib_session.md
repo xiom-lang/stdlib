@@ -86,8 +86,11 @@ package-relay fixes; deterministic packaging; coverage waves 22-24)**
   R68 nested extern hoisting, R69 `T.to_str()` mono params, R70
   `for x in <collection>` real element loops; full e2e 2371/2371 local.
   The next pin bump carries them and unlocks `for`-loop probe shapes; the
-  compiler lane's `stdlib_api_freeze_no_removals` snapshot regeneration is
-  still open on their side (the duplication-gate twin removal waits on it).
+  compiler lane regenerated the `stdlib_api_freeze` snapshot on 2026-09-24
+  (m125 -- rename-only `AsyncExecutor.*`/`NetHttpResponse` + a CI regen
+  step; relayed -- verify with the freeze test on the next pin build), so
+  the duplication-gate twin removal is UNBLOCKED (see
+  `docs/STDLIB_DEDUP_INVENTORY.md` checklists).
 - Still open from the production queue: duplication translation units
   (collect/hash vs linkedhash, cache vs lru, geom short/long names --
   checklists in `docs/STDLIB_DEDUP_INVENTORY.md`), tzdata phase 2,
