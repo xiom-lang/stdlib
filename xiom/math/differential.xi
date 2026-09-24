@@ -64,23 +64,53 @@ pub fn finite_difference(f: fn(Float64) -> Float64, x: Float64, h: Float64) -> F
 /// combines D(h) and D(h/2) as (4*D(h/2) - D(h))/3 until consecutive estimates
 /// agree within tol. Returns 0.0 for tol <= 0 (documented). Complexity:
 /// O(halvings).
-/// TODO(compiler): NOT IMPLEMENTABLE in this compiler build - the halving
-/// iteration loop emits AVX-512 and crashes with 0xC000001D (BUG 20) on Zen 2.
-/// Keep the frozen signature; revisit when the loop is not vectorized.
+/// Implemented iteratively on v0.61.3 (2026-09-24); the old BUG-20 crash
+/// claim was stale.
 pub fn richardson(f: fn(Float64) -> Float64, x: Float64, h: Float64, tol: Float64) -> Float64 {
-  return 0.0;
+  if tol <= 0.0 { return 0.0; }
+  var hh = h;
+  if hh == 0.0 { hh = 1e-6; }
+  var dprev = derivative(f, x, hh);
+  var i = 0;
+  while i < 100 {
+    hh = hh / 2.0;
+    var dcur = derivative(f, x, hh);
+    var ext = (4.0 * dcur - dprev) / 3.0;
+    if math.abs_float(ext - dprev) <= tol { return ext; }
+    dprev = ext;
+    i = i + 1;
+  }
+  return dprev;
 }
 
 /// Gradient vector of the scalar field f at x: each component is the central
 /// partial difference (f(x + h e_i) - f(x - h e_i))/2h with h = 1e-6.
 /// Complexity: O(n * f).
-/// TODO(compiler): NOT IMPLEMENTABLE in this compiler build - the central
-/// partial-difference loops build and read Vec[Float64] perturbations, which
-/// crash with 0xC0000005 (BUG 12 family Vec[Float64] element reads) and
-/// 0xC000001D (BUG 20 loops). Keep the frozen signature; revisit when
-/// Vec[Float64] element reads and float loops are codegen-correct.
+/// Implemented on v0.61.3 (2026-09-24) with push-only perturbation vectors
+/// (no indexed writes); Vec[Float64] reads and float loops are codegen-correct.
 pub fn gradient(f: fn(&Vec[Float64]) -> Float64, x: &Vec[Float64]) -> Vec[Float64] {
   var out = Vec[Float64].new();
+  var n = x.len();
+  var i = 0;
+  while i < n {
+    var xi = x[i];
+    var xp = Vec[Float64].new();
+    var xm = Vec[Float64].new();
+    var j = 0;
+    while j < n {
+      var xj = x[j];
+      if j == i {
+        xp.push(xi + 1e-6);
+        xm.push(xi - 1e-6);
+      } else {
+        xp.push(xj);
+        xm.push(xj);
+      }
+      j = j + 1;
+    }
+    out.push((f(&xp) - f(&xm)) / (2.0 * 1e-6));
+    i = i + 1;
+  }
   return out;
 }
 
@@ -97,8 +127,24 @@ pub fn jacobian(fs: &Vec[fn(&Vec[Float64]) -> Float64], x: &Vec[Float64]) -> Vec
 /// Partial derivative of f with respect to x[i] at x by the central difference.
 /// Returns 0.0 for h == 0 and for i out of [0, len(x)) (documented).
 /// Complexity: O(f).
-/// TODO(compiler): NOT IMPLEMENTABLE - same Vec[Float64]/loop crash as gradient
-/// (0xC0000005 / 0xC000001D). Keep the frozen signature.
+/// Implemented on v0.61.3 (2026-09-24) with push-only perturbations.
 pub fn partial_derivative(f: fn(&Vec[Float64]) -> Float64, x: &Vec[Float64], i: Int, h: Float64) -> Float64 {
-  return 0.0;
+  var n = x.len();
+  if h == 0.0 { return 0.0; }
+  if i < 0 || i >= n { return 0.0; }
+  var xp = Vec[Float64].new();
+  var xm = Vec[Float64].new();
+  var j = 0;
+  while j < n {
+    var xj = x[j];
+    if j == i {
+      xp.push(xj + h);
+      xm.push(xj - h);
+    } else {
+      xp.push(xj);
+      xm.push(xj);
+    }
+    j = j + 1;
+  }
+  return (f(&xp) - f(&xm)) / (2.0 * h);
 }

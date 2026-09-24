@@ -221,14 +221,27 @@ works and is proven in two gate-green modules (`geom/matrix.xi`,
 - `xiom.math.series.convergence_rate`: iterative implementation (no
   recursive Bool-accumulator walk); `smoke_math_series` asserts ~1.0 for a
   linear sequence and ~2.0 for a quadratically convergent one.
+- `xiom.math.differential.gradient/partial_derivative/richardson`:
+  implemented with push-only perturbation vectors (no indexed writes into
+  fresh Vecs); `smoke_math_calculus` asserts the gradient of x^2+y^2 at
+  (1,2) = (2,4), the partial, the h==0/oob guards, and Richardson of x^2 at
+  3 ~= 6. `jacobian` stays stubbed (`&Vec[fn]` parameter reads are still
+  compiler-gated).
+- Clause sites re-typed for the compiler lane's strict Bool checking
+  (2026-09-25): `Rc.new`/`Arc.new` use `result.strong_count() == 1` and
+  `result.ptr != null`; `ptr.replace` uses `ensures: dest != null`;
+  `math.pow`/`pow_pure` cast `to_int(exp) as Float64`; `array.sort_by` now
+  asserts the real `array.is_sorted_by(arr, compare)` (the helper was
+  missing and has been implemented). All affected smoke families
+  (array/rc/sync/ptr) stay green.
 
 Still open (own units): the remaining pin-viable rewrites from the
-re-triage (gradients via push-only perturbations, `least_squares` row-copy,
-`integrate_gauss` re-probe, `series.convergence_rate`, `lp_simplex`,
-`control_theory` observability/controllability) and the genuinely
-compiler-gated classes (recursive evaluator returning non-Int, Bool/aggregate
-tuples, `&Vec[fn]` reads, bitcast, fp128, lazy `Iter`). The full ranked list
-is in the session handoff (`docs/stdlib_session.md`, PART 9).
+re-triage (`lp_simplex`/`linear_programming`, `control_theory`
+observability/controllability, and the other files in the ranked list) and
+the genuinely compiler-gated classes (recursive evaluator returning non-Int,
+Bool/aggregate tuples, `&Vec[fn]` reads, bitcast, fp128, lazy `Iter`, and
+`differential.jacobian`). The full ranked list is in the session handoff
+(`docs/stdlib_session.md`, PART 9).
 
 ## Operational notes
 
