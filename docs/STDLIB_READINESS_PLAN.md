@@ -331,11 +331,18 @@ T1/T2 yields.
        length arithmetic, cardinality bounds, exact Boolean mirrors,
        guarded power-of-two results, sign-matching remainders, power-set
        guard) -> math 4.1% -> 8.3%, global 22.3% -> 22.9% pub-with-clause;
-       pre-validated by tools/probes/p_wave24_shapes.xi. Ratchet:
-       tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors61.json
+       pre-validated by tools/probes/p_wave24_shapes.xi. Wave 25
+       (2026-09-24): 59 clauses on collections/collections.xi (&mut length
+       preservation through @pre, post-state map reset, empty/short-input
+       identities incl. a Str guard, Option presence mirrors, aggregate and
+       Set/Map bounds, exact sliding-window counts, parity/arithmetic on
+       result lengths, Boolean mirrors) -> collections 3.5% -> 77.2%,
+       global 22.9% -> 23.6% pub-with-clause; pre-validated by
+       tools/probes/p_wave25_shapes.xi. Ratchet:
+       tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors62.json
        (repo tooling as of the split; positive + negative runs verified;
        earlier floors kept at
-       coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55/56/57/58/59/60.json).
+       coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55/56/57/58/59/60/61.json).
       Floors are per top-level stdlib/xiom directory and must be refreshed
       when a module is ADDED (new uncovered pub fns dilute the percentage
       -- TOML dropped serialize 6.1% -> 5.4%, tz dropped time 13% ->

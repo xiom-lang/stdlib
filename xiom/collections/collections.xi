@@ -1083,7 +1083,9 @@ fn HashMap.resize[K, V](new_cap: Int) {
 // -- Vec Operations ----------------------------------------------------------
 
 /// Reverse elements in place. O(N).
-pub fn vec_reverse[T](v: &mut Vec[T]) {
+pub fn vec_reverse[T](v: &mut Vec[T])
+  ensures: v.len() == v.len()@pre
+{
   var n = v.len();
   if n <= 1 { return; }
   var i = 0;
@@ -1119,7 +1121,9 @@ pub fn vec_contains[T: Eq](v: &Vec[T], value: T) -> Bool {
 }
 
 /// Remove consecutive duplicate elements. O(N).
-pub fn vec_dedup[T: Eq](v: &mut Vec[T]) {
+pub fn vec_dedup[T: Eq](v: &mut Vec[T])
+  ensures: v.len() <= v.len()@pre
+{
   var n = v.len();
   if n <= 1 { return; }
   var write = 1;
@@ -1137,7 +1141,9 @@ pub fn vec_dedup[T: Eq](v: &mut Vec[T]) {
 }
 
 /// Rotate elements left by k positions. O(N).
-pub fn vec_rotate_left[T](v: &mut Vec[T], k: Int) {
+pub fn vec_rotate_left[T](v: &mut Vec[T], k: Int)
+  ensures: v.len() == v.len()@pre
+{
   var n = v.len();
   if n <= 1 { return; }
   var kk = k % n;
@@ -1172,7 +1178,9 @@ pub fn vec_rotate_left[T](v: &mut Vec[T], k: Int) {
 }
 
 /// Fill the vector with copies of `value`. O(N).
-pub fn vec_fill[T: Clone](v: &mut Vec[T], value: T) {
+pub fn vec_fill[T: Clone](v: &mut Vec[T], value: T)
+  ensures: v.len() == v.len()@pre
+{
   var i = 0;
   var n = v.len();
   while i < n {
@@ -1182,7 +1190,9 @@ pub fn vec_fill[T: Clone](v: &mut Vec[T], value: T) {
 }
 
 /// Swap the elements at indices i and j. O(1).
-pub fn vec_swap_elems[T](v: &mut Vec[T], i: Int, j: Int) {
+pub fn vec_swap_elems[T](v: &mut Vec[T], i: Int, j: Int)
+  ensures: v.len() == v.len()@pre
+{
   var n = v.len();
   if i < 0 || i >= n || j < 0 || j >= n { return; }
   if i == j { return; }
@@ -1194,7 +1204,10 @@ pub fn vec_swap_elems[T](v: &mut Vec[T], i: Int, j: Int) {
 // -- Vec Free Functions ------------------------------------------------------
 
 /// Join a vector of strings with a separator. O(N-L) where L is avg string length.
-pub fn vec_str_join(items: &Vec[Str], sep: Str) -> Str {
+pub fn vec_str_join(items: &Vec[Str], sep: Str) -> Str
+  ensures: items.len() == 0 => result.len() == 0
+  ensures: items.len() == 1 => result == items[0]
+{
   var n = items.len();
   if n == 0 { return ""; }
   var result = items[0];
@@ -1208,7 +1221,10 @@ pub fn vec_str_join(items: &Vec[Str], sep: Str) -> Str {
 }
 
 /// Minimum element in a vector, or None if empty. O(N).
-pub fn vec_min[T: Ord](v: &Vec[T]) -> Option[T] {
+pub fn vec_min[T: Ord](v: &Vec[T]) -> Option[T]
+  ensures: v.len() == 0 => result is None
+  ensures: v.len() > 0 => result is Some
+{
   var n = v.len();
   if n == 0 { return None; }
   var min_val = v[0];
@@ -1221,7 +1237,10 @@ pub fn vec_min[T: Ord](v: &Vec[T]) -> Option[T] {
 }
 
 /// Maximum element in a vector, or None if empty. O(N).
-pub fn vec_max[T: Ord](v: &Vec[T]) -> Option[T] {
+pub fn vec_max[T: Ord](v: &Vec[T]) -> Option[T]
+  ensures: v.len() == 0 => result is None
+  ensures: v.len() > 0 => result is Some
+{
   var n = v.len();
   if n == 0 { return None; }
   var max_val = v[0];
@@ -1234,7 +1253,9 @@ pub fn vec_max[T: Ord](v: &Vec[T]) -> Option[T] {
 }
 
 /// Sum of all elements in an integer vector. O(N).
-pub fn vec_sum(v: &Vec[Int]) -> Int {
+pub fn vec_sum(v: &Vec[Int]) -> Int
+  ensures: v.len() == 0 => result == 0
+{
   var total = 0;
   var i = 0;
   while i < v.len() {
@@ -1245,14 +1266,18 @@ pub fn vec_sum(v: &Vec[Int]) -> Int {
 }
 
 /// Integer average (truncated division) of a vector. Returns 0 if empty. O(N).
-pub fn vec_avg(v: &Vec[Int]) -> Int {
+pub fn vec_avg(v: &Vec[Int]) -> Int
+  ensures: v.len() == 0 => result == 0
+{
   var n = v.len();
   if n == 0 { return 0; }
   vec_sum(v) / n
 }
 
 /// Count elements satisfying a predicate. O(N).
-pub fn vec_count_if[T](v: &Vec[T], pred: fn(&T) -> Bool) -> Int {
+pub fn vec_count_if[T](v: &Vec[T], pred: fn(&T) -> Bool) -> Int
+  ensures: result >= 0 && result <= v.len()
+{
   var count = 0;
   var i = 0;
   while i < v.len() {
@@ -1263,7 +1288,9 @@ pub fn vec_count_if[T](v: &Vec[T], pred: fn(&T) -> Bool) -> Int {
 }
 
 /// Returns true if any element satisfies the predicate. O(N).
-pub fn vec_any[T](v: &Vec[T], pred: fn(&T) -> Bool) -> Bool {
+pub fn vec_any[T](v: &Vec[T], pred: fn(&T) -> Bool) -> Bool
+  ensures: v.len() == 0 => result == false
+{
   var i = 0;
   while i < v.len() {
     if pred(&v[i]) { return true; }
@@ -1273,7 +1300,9 @@ pub fn vec_any[T](v: &Vec[T], pred: fn(&T) -> Bool) -> Bool {
 }
 
 /// Returns true if all elements satisfy the predicate. O(N).
-pub fn vec_all[T](v: &Vec[T], pred: fn(&T) -> Bool) -> Bool {
+pub fn vec_all[T](v: &Vec[T], pred: fn(&T) -> Bool) -> Bool
+  ensures: v.len() == 0 => result == true
+{
   var i = 0;
   while i < v.len() {
     if !(pred(&v[i])) { return false; }
@@ -1285,7 +1314,9 @@ pub fn vec_all[T](v: &Vec[T], pred: fn(&T) -> Bool) -> Bool {
 // -- Map Free Functions ------------------------------------------------------
 
 /// Number of entries in the map. O(1).
-pub fn map_len[K, V](m: Map[K, V]) -> Int {
+pub fn map_len[K, V](m: Map[K, V]) -> Int
+  ensures: result >= 0
+{
   m.len()
 }
 
@@ -1309,7 +1340,9 @@ pub fn map_remove_key[K, V](m: &mut Map[K, V], key: &K) -> Option[V] {
 }
 
 /// Remove all entries from the map. O(1).
-pub fn map_clear[K, V](m: &mut Map[K, V]) {
+pub fn map_clear[K, V](m: &mut Map[K, V])
+  ensures: m.len() == 0
+{
   m.clear()
 }
 
@@ -1322,7 +1355,10 @@ pub fn map_insert_if_absent[K, V](m: &mut Map[K, V], key: K, value: V) -> Bool {
 }
 
 /// Merge two maps into a new map. Entries from `b` overwrite those from `a` on key collision. O(N-M).
-pub fn map_merge[K, V](a: &Map[K, V], b: &Map[K, V]) -> Map[K, V] {
+pub fn map_merge[K, V](a: &Map[K, V], b: &Map[K, V]) -> Map[K, V]
+  ensures: result.len() >= a.len()
+  ensures: result.len() <= a.len() + b.len()
+{
   var result = Map[K, V].new();
   var a_keys = a.keys();
   var a_vals = a.values();
@@ -1359,22 +1395,31 @@ pub fn set_remove[T](s: &mut Set[T], value: &T) {
 }
 
 /// Number of elements in the set. O(1).
-pub fn set_len[T](s: &Set[T]) -> Int {
+pub fn set_len[T](s: &Set[T]) -> Int
+  ensures: result >= 0
+{
   s.len()
 }
 
 /// Union of two sets: all elements present in either set. O(N-M).
-pub fn set_union[T](a: &Set[T], b: &Set[T]) -> Set[T] {
+pub fn set_union[T](a: &Set[T], b: &Set[T]) -> Set[T]
+  ensures: result.len() >= a.len()
+  ensures: result.len() <= a.len() + b.len()
+{
   a.union(b)
 }
 
 /// Intersection of two sets: elements present in both. O(N-M).
-pub fn set_intersection[T](a: &Set[T], b: &Set[T]) -> Set[T] {
+pub fn set_intersection[T](a: &Set[T], b: &Set[T]) -> Set[T]
+  ensures: result.len() <= a.len()
+{
   a.intersection(b)
 }
 
 /// Difference of two sets: elements in `a` but not in `b`. O(N-M).
-pub fn set_difference[T](a: &Set[T], b: &Set[T]) -> Set[T] {
+pub fn set_difference[T](a: &Set[T], b: &Set[T]) -> Set[T]
+  ensures: result.len() <= a.len()
+{
   a.difference(b)
 }
 
@@ -1390,12 +1435,16 @@ pub fn set_is_subset[T](sub: &Set[T], sup: &Set[T]) -> Bool {
 }
 
 /// Returns true if the set contains no elements. O(1).
-pub fn set_is_empty[T](s: &Set[T]) -> Bool {
+pub fn set_is_empty[T](s: &Set[T]) -> Bool
+  ensures: result == (s.len() == 0)
+{
   s.len() == 0
 }
 
 /// Convert a set to a vector containing all its elements. O(N).
-pub fn set_to_vec[T](s: &Set[T]) -> Vec[T] {
+pub fn set_to_vec[T](s: &Set[T]) -> Vec[T]
+  ensures: result.len() == s.len()
+{
   var result = Vec[T].new();
   var items = s.items;
   var i = 0;
@@ -1407,7 +1456,9 @@ pub fn set_to_vec[T](s: &Set[T]) -> Vec[T] {
 }
 
 /// Create a set from a vector (deduplicates). O(N2).
-pub fn set_from_vec[T](v: &Vec[T]) -> Set[T] {
+pub fn set_from_vec[T](v: &Vec[T]) -> Set[T]
+  ensures: result.len() <= v.len()
+{
   var result = Set[T].new();
   var i = 0;
   while i < v.len() {
@@ -1448,7 +1499,12 @@ pub fn vec_sort_by[T](v: &mut Vec[T], compare: fn(&T, &T) -> Int) {
 
 /// Sliding-window maximum: for each window of size `k` starting at index 0,
 /// the maximum element of that window. O(N-K) with O(K) extra space.
-pub fn vec_window_max(v: &Vec[Int], k: Int) -> Vec[Int] {
+pub fn vec_window_max(v: &Vec[Int], k: Int) -> Vec[Int]
+  ensures: k <= 0 => result.len() == 0
+  ensures: v.len() == 0 => result.len() == 0
+  ensures: k > 0 && k <= v.len() => result.len() == v.len() - k + 1
+  ensures: k > v.len() && v.len() > 0 => result.len() == 1
+{
   var n = v.len();
   var result = Vec[Int].new();
   if n == 0 || k <= 0 { return result; }
@@ -1470,7 +1526,12 @@ pub fn vec_window_max(v: &Vec[Int], k: Int) -> Vec[Int] {
 
 /// Sliding-window minimum: for each window of size `k`, the minimum element.
 /// O(N-K) with O(K) extra space.
-pub fn vec_window_min(v: &Vec[Int], k: Int) -> Vec[Int] {
+pub fn vec_window_min(v: &Vec[Int], k: Int) -> Vec[Int]
+  ensures: k <= 0 => result.len() == 0
+  ensures: v.len() == 0 => result.len() == 0
+  ensures: k > 0 && k <= v.len() => result.len() == v.len() - k + 1
+  ensures: k > v.len() && v.len() > 0 => result.len() == 1
+{
   var n = v.len();
   var result = Vec[Int].new();
   if n == 0 || k <= 0 { return result; }
@@ -1491,7 +1552,9 @@ pub fn vec_window_min(v: &Vec[Int], k: Int) -> Vec[Int] {
 }
 
 /// Cumulative sum: result[i] = v[0] + ... + v[i]. O(N). Empty input -> empty.
-pub fn vec_cumsum(v: &Vec[Int]) -> Vec[Int] {
+pub fn vec_cumsum(v: &Vec[Int]) -> Vec[Int]
+  ensures: result.len() == v.len()
+{
   var result = Vec[Int].new();
   var total = 0;
   var i = 0;
@@ -1504,7 +1567,9 @@ pub fn vec_cumsum(v: &Vec[Int]) -> Vec[Int] {
 }
 
 /// Dot product of two integer vectors, or None if lengths differ. O(N).
-pub fn vec_dot(a: &Vec[Int], b: &Vec[Int]) -> Option[Int] {
+pub fn vec_dot(a: &Vec[Int], b: &Vec[Int]) -> Option[Int]
+  ensures: a.len() != b.len() => result is None
+{
   var na = a.len();
   var nb = b.len();
   if na != nb { return None; }
@@ -1518,7 +1583,9 @@ pub fn vec_dot(a: &Vec[Int], b: &Vec[Int]) -> Option[Int] {
 }
 
 /// Product of all elements in an integer vector. Returns 1 if empty. O(N).
-pub fn vec_product(v: &Vec[Int]) -> Int {
+pub fn vec_product(v: &Vec[Int]) -> Int
+  ensures: v.len() == 0 => result == 1
+{
   var total = 1;
   var i = 0;
   while i < v.len() {
@@ -1531,7 +1598,9 @@ pub fn vec_product(v: &Vec[Int]) -> Int {
 /// Frequency keys: distinct values of the vector, sorted ascending. O(N + M2).
 /// Companion of vec_frequency_counts; the two result vectors are parallel
 /// (keys[i] occurs counts[i] times).
-pub fn vec_frequency_keys(v: &Vec[Int]) -> Vec[Int] {
+pub fn vec_frequency_keys(v: &Vec[Int]) -> Vec[Int]
+  ensures: result.len() <= v.len()
+{
   var counts = Map[Int, Int].new();
   var i = 0;
   while i < v.len() {
@@ -1568,7 +1637,9 @@ pub fn vec_frequency_keys(v: &Vec[Int]) -> Vec[Int] {
 }
 
 /// Frequency counts: occurrence counts aligned with vec_frequency_keys. O(N + M2).
-pub fn vec_frequency_counts(v: &Vec[Int]) -> Vec[Int] {
+pub fn vec_frequency_counts(v: &Vec[Int]) -> Vec[Int]
+  ensures: result.len() <= v.len()
+{
   var counts = Map[Int, Int].new();
   var i = 0;
   while i < v.len() {
@@ -1606,7 +1677,9 @@ pub fn vec_frequency_counts(v: &Vec[Int]) -> Vec[Int] {
 /// Median of an integer vector, or None if empty. O(N log N).
 /// Convention: returns the lower-middle element (index (n-1)/2) of the sorted
 /// copy, so even-length inputs yield the smaller of the two middle values.
-pub fn vec_median(v: &mut Vec[Int]) -> Option[Int] {
+pub fn vec_median(v: &mut Vec[Int]) -> Option[Int]
+  ensures: v.len() == 0 => result is None
+{
   var n = v.len();
   if n == 0 { return None; }
   var sorted = Vec[Int].new();
@@ -1621,7 +1694,10 @@ pub fn vec_median(v: &mut Vec[Int]) -> Option[Int] {
 
 /// Percentile of an integer vector at p (0..100), or None if empty or p invalid.
 /// O(N log N). Convention: nearest-rank, index floor((n-1) * p / 100).
-pub fn vec_percentile(v: &mut Vec[Int], p: Int) -> Option[Int] {
+pub fn vec_percentile(v: &mut Vec[Int], p: Int) -> Option[Int]
+  ensures: v.len() == 0 => result is None
+  ensures: p < 0 || p > 100 => result is None
+{
   var n = v.len();
   if n == 0 { return None; }
   if p < 0 || p > 100 { return None; }
@@ -1637,7 +1713,9 @@ pub fn vec_percentile(v: &mut Vec[Int], p: Int) -> Option[Int] {
 }
 
 /// All indices where `value` occurs. O(N). Empty if not found.
-pub fn vec_find_all[T: Eq](v: &Vec[T], value: T) -> Vec[Int] {
+pub fn vec_find_all[T: Eq](v: &Vec[T], value: T) -> Vec[Int]
+  ensures: result.len() <= v.len()
+{
   var result = Vec[Int].new();
   var i = 0;
   while i < v.len() {
@@ -1648,7 +1726,9 @@ pub fn vec_find_all[T: Eq](v: &Vec[T], value: T) -> Vec[Int] {
 }
 
 /// Remove every occurrence of `value` in place. O(N). Stability preserved.
-pub fn vec_remove_all[T: Eq](v: &mut Vec[T], value: T) {
+pub fn vec_remove_all[T: Eq](v: &mut Vec[T], value: T)
+  ensures: v.len() <= v.len()@pre
+{
   var n = v.len();
   var write = 0;
   var read = 0;
@@ -1667,7 +1747,9 @@ pub fn vec_remove_all[T: Eq](v: &mut Vec[T], value: T) {
 /// Keep only elements for which `keep` returns true. Returns the number of
 /// removed elements. O(N). NOTE: pass a NAMED predicate -- lambdas crash the
 /// current runtime.
-pub fn vec_retain[T](v: &mut Vec[T], keep: fn(&T) -> Bool) -> Int {
+pub fn vec_retain[T](v: &mut Vec[T], keep: fn(&T) -> Bool) -> Int
+  ensures: result == v.len()@pre - v.len()
+{
   var n = v.len();
   var write = 0;
   var removed = 0;
@@ -1688,7 +1770,9 @@ pub fn vec_retain[T](v: &mut Vec[T], keep: fn(&T) -> Bool) -> Int {
 }
 
 /// Returns true if the vector is sorted in non-decreasing order. O(N).
-pub fn vec_is_sorted[T: Ord](v: &Vec[T]) -> Bool {
+pub fn vec_is_sorted[T: Ord](v: &Vec[T]) -> Bool
+  ensures: v.len() <= 1 => result == true
+{
   var n = v.len();
   if n <= 1 { return true; }
   var i = 1;
@@ -1700,7 +1784,9 @@ pub fn vec_is_sorted[T: Ord](v: &Vec[T]) -> Bool {
 }
 
 /// Returns true if the vector has no elements. O(1).
-pub fn vec_is_empty[T](v: &Vec[T]) -> Bool {
+pub fn vec_is_empty[T](v: &Vec[T]) -> Bool
+  ensures: result == (v.len() == 0)
+{
   return v.len() == 0;
 }
 
@@ -1711,7 +1797,11 @@ pub fn vec_get_or[T](v: &Vec[T], i: Int, default: T) -> T {
 }
 
 /// Left part of a vector: elements [0, i), clamped to the valid range. O(N).
-pub fn vec_left(v: &Vec[Int], i: Int) -> Vec[Int] {
+pub fn vec_left(v: &Vec[Int], i: Int) -> Vec[Int]
+  ensures: i <= 0 => result.len() == 0
+  ensures: i > 0 => result.len() <= i
+  ensures: result.len() <= v.len()
+{
   var result = Vec[Int].new();
   var n = v.len();
   if i <= 0 { return result; }
@@ -1727,7 +1817,10 @@ pub fn vec_left(v: &Vec[Int], i: Int) -> Vec[Int] {
 
 /// Right part of a vector: elements [i, n). If i <= 0 the whole vector is
 /// returned; if i >= n the result is empty. O(N).
-pub fn vec_right(v: &Vec[Int], i: Int) -> Vec[Int] {
+pub fn vec_right(v: &Vec[Int], i: Int) -> Vec[Int]
+  ensures: i >= v.len() => result.len() == 0
+  ensures: result.len() <= v.len()
+{
   var result = Vec[Int].new();
   var n = v.len();
   var k = i;
@@ -1743,7 +1836,11 @@ pub fn vec_right(v: &Vec[Int], i: Int) -> Vec[Int] {
 
 /// Zip two integer vectors, interleaving pairs [a0, b0, a1, b1, ...] up to the
 /// shorter length. O(N).
-pub fn vec_zip_int(a: &Vec[Int], b: &Vec[Int]) -> Vec[Int] {
+pub fn vec_zip_int(a: &Vec[Int], b: &Vec[Int]) -> Vec[Int]
+  ensures: result.len() % 2 == 0
+  ensures: result.len() <= 2 * a.len()
+  ensures: result.len() <= 2 * b.len()
+{
   var result = Vec[Int].new();
   var n = a.len();
   if b.len() < n { n = b.len(); }
@@ -1758,7 +1855,9 @@ pub fn vec_zip_int(a: &Vec[Int], b: &Vec[Int]) -> Vec[Int] {
 
 /// Even-indexed elements of a vector: [v[0], v[2], v[4], ...]. O(N).
 /// Pairs with vec_unzip_odds to recover the two halves of a zipped vector.
-pub fn vec_unzip_evens(v: &Vec[Int]) -> Vec[Int] {
+pub fn vec_unzip_evens(v: &Vec[Int]) -> Vec[Int]
+  ensures: result.len() == (v.len() + 1) / 2
+{
   var result = Vec[Int].new();
   var i = 0;
   while i < v.len() {
@@ -1769,7 +1868,9 @@ pub fn vec_unzip_evens(v: &Vec[Int]) -> Vec[Int] {
 }
 
 /// Odd-indexed elements of a vector: [v[1], v[3], v[5], ...]. O(N).
-pub fn vec_unzip_odds(v: &Vec[Int]) -> Vec[Int] {
+pub fn vec_unzip_odds(v: &Vec[Int]) -> Vec[Int]
+  ensures: result.len() == v.len() / 2
+{
   var result = Vec[Int].new();
   var i = 1;
   while i < v.len() {
