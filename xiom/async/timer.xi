@@ -102,8 +102,6 @@ pub fn timer_interval(ms: Int) -> Timer {
   t.armed = true;
   return t;
 }
-  return Timer{ deadline: _now() + m; armed: true; }
-}
 
 /// The next fire deadline of `t`, if armed.
 /// Params: t - the timer.
