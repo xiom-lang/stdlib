@@ -19,7 +19,9 @@ use xiom.collect.cache;
 
 /// Create a new LRU cache holding at most `capacity` entries.
 /// Capacity is clamped to >= 1. O(1).
-pub fn lru_new(capacity: Int) -> LruCache {
+pub fn lru_new(capacity: Int) -> LruCache
+  ensures: result.keys.len() == 0
+{
   return xiom.collect.cache.lru_new(capacity);
 }
 
@@ -40,21 +42,29 @@ pub fn lru_contains(c: &mut LruCache, key: Int) -> Bool {
 }
 
 /// Remove `key`, returning whether it was present. O(n).
-pub fn lru_remove(c: &mut LruCache, key: Int) -> Bool {
+pub fn lru_remove(c: &mut LruCache, key: Int) -> Bool
+  ensures: lru_contains(c, key) == false
+{
   return xiom.collect.cache.lru_remove(c, key);
 }
 
 /// Number of entries currently cached. O(1).
-pub fn lru_size(c: &mut LruCache) -> Int {
+pub fn lru_size(c: &mut LruCache) -> Int
+  ensures: result >= 0
+{
   return xiom.collect.cache.lru_size(c);
 }
 
 /// Maximum number of entries the cache can hold. O(1).
-pub fn lru_capacity(c: &mut LruCache) -> Int {
+pub fn lru_capacity(c: &mut LruCache) -> Int
+  ensures: result >= 0
+{
   return xiom.collect.cache.lru_capacity(c);
 }
 
 /// Remove all entries from the cache. O(1).
-pub fn lru_clear(c: &mut LruCache) {
+pub fn lru_clear(c: &mut LruCache)
+  ensures: lru_size(c) == 0
+{
   xiom.collect.cache.lru_clear(c);
 }

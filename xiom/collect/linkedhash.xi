@@ -16,7 +16,9 @@ module xiom.collect.linkedhash
 use xiom.collect.hash;
 
 /// Create a new empty insertion-ordered map. O(1).
-pub fn lhmap_new() -> LhMap {
+pub fn lhmap_new() -> LhMap
+  ensures: result.keys.len() == 0
+{
   return xiom.collect.hash.lhmap_new();
 }
 
@@ -43,7 +45,9 @@ pub fn lhmap_remove(m: &mut LhMap, key: Int) {
 }
 
 /// Number of entries in the map. O(1).
-pub fn lhmap_size(m: &LhMap) -> Int {
+pub fn lhmap_size(m: &LhMap) -> Int
+  ensures: result >= 0
+{
   return xiom.collect.hash.lhmap_size(m);
 }
 
