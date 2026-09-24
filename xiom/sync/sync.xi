@@ -375,7 +375,7 @@ pub type ArcInner[T] = {
 
 /// Allocate a shared-ownership pointer with strong count 1.
 pub fn Arc.new[T](value: T) -> Arc[T]
-  ensures:  strong_count == 1
+  ensures: result.strong_count() == 1
 {
   let c = alloc.alloc(8);
   unsafe { *(c as *Int) = 1; }

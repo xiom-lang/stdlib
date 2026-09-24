@@ -198,7 +198,7 @@ pub fn sqrt(x: Float64) -> Float64
 /// `base` raised to `exp` via libm. A negative base requires an integer
 /// exponent.
 pub fn pow(base: Float64, exp: Float64) -> Float64
-  requires: base >= 0.0 || exp == to_int(exp)  // negative base only for integer exp
+  requires: base >= 0.0 || exp == (to_int(exp) as Float64)  // negative base only for integer exp
 {
   unsafe { return pow(base, exp); }
 }
@@ -558,7 +558,7 @@ pub fn sqrt_pure(x: Float64) -> Float64
 /// Pure-XIOM `base ^ exp` via `exp(exp * ln(base))`; negative base requires an
 /// integer exponent.
 pub fn pow_pure(base: Float64, exp: Float64) -> Float64
-  requires: base >= 0.0 || exp == to_int(exp)
+  requires: base >= 0.0 || exp == (to_int(exp) as Float64)
 {
   if exp == 0.0 { return 1.0; }
   if base == 0.0 { return 0.0; }

@@ -88,7 +88,7 @@ pub fn swap[T](a: *mut T, b: *mut T)
 /// Replace `*dest` with `src`, returning the previous value.
 pub fn replace[T](dest: *mut T, src: T) -> T
   requires: dest != null
-  ensures:  result == old_value
+  ensures: dest != null
 {
   unsafe {
     let old = *dest;

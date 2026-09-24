@@ -26,8 +26,8 @@ pub type Rc[T] = {
 
 /// Allocate a fresh control block with strong count 1 and no weak handles.
 pub fn Rc.new[T](value: T) -> Rc[T]
-  ensures: strong_count == 1
-  ensures: ptr != null
+  ensures: result.strong_count() == 1
+  ensures: result.ptr != null
 {
   let layout = alloc.Layout.new(size_of[RcInner[T]]());
   let raw = alloc.alloc(layout.size);

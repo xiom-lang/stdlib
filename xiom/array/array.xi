@@ -214,9 +214,22 @@ pub fn sort[T: Ord, const N: Int](arr: &mut [N]T)
   }
 }
 
+/// Whether `arr` is sorted according to `compare` (non-decreasing: no
+/// adjacent pair compares as Greater). O(N).
+pub fn is_sorted_by[T, const N: Int](arr: &[N]T, compare: fn(&T, &T) -> Ordering) -> Bool
+  ensures: arr.len() < 2 => result == true
+{
+  var i = 1;
+  while i < N {
+    if compare(&arr[i - 1], &arr[i]) == Greater { return false; }
+    i = i + 1;
+  }
+  return true;
+}
+
 /// Sort with a comparator returning an Ordering.
 pub fn sort_by[T, const N: Int](arr: &mut [N]T, compare: fn(&T, &T) -> Ordering)
-  ensures: arr.is_sorted_by(compare) {
+  ensures: is_sorted_by(arr, compare) {
   var i = 1;
   while i < N {
     var j = i;
