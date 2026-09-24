@@ -250,7 +250,21 @@ clause typing cleanup, release pre-flight alignment)**
 - Compiler lane meanwhile fixed `@pre`-on-method-call runtime snapshots and
   landed `XIOM_STRICT_CLAUSES=1` (default stays light until the stdlib is
   clean under strict mode); the stdlib clause fixes above are the
-  precondition for flipping that default.
+  precondition for flipping that default. VERIFIED 2026-09-25: a local
+  compiler-main build against this repo runs
+  `XIOM_STRICT_CLAUSES=1 cargo test -p xiom-check catalog_corpus_is_clean`
+  GREEN (51.19s, 1 passed). The strict parser also caught a stray two-line
+  tail left by the `timer_interval` edit in `xiom/async/timer.xi` (pin
+  parser tolerated it, new parser rejected it); removed (`b6286b2`),
+  `smoke_async` 3/3 green. The compiler lane can flip the strict default
+  when convenient; stdlib is clean under it.
+- Release state at the end of this block: all gates green on the current
+  tree (check_modules 509/509, corpus 951/951, probes 176/176, barename
+  0/509, coverage+doc ratchets, strict catalog clean); `release-notes/
+  v0.62.0.md` carries exactly 2 highlights (the compiler draft has 4;
+  merged limit is 6); `docs/RELEASE_CHECKLIST.md` has the cut steps and the
+  open pin dependencies. No release cut yet: the remaining readiness units
+  below are still in progress.
 
 
 **SESSION 2026-09-20 (multi-param tranche closure + no-NASM runtime link fix)**

@@ -233,7 +233,14 @@ works and is proven in two gate-green modules (`geom/matrix.xi`,
   `math.pow`/`pow_pure` cast `to_int(exp) as Float64`; `array.sort_by` now
   asserts the real `array.is_sorted_by(arr, compare)` (the helper was
   missing and has been implemented). All affected smoke families
-  (array/rc/sync/ptr) stay green.
+  (array/rc/sync/ptr) stay green. **Verified clean under the compiler's
+  strict predicate-Bool mode**: `XIOM_STRICT_CLAUSES=1 cargo test -p
+  xiom-check catalog_corpus_is_clean` against this repo passes (51.19s,
+  compiler main 2026-09-25), which is the lane's precondition for flipping
+  the default. The strict parser also surfaced a stray two-line tail left
+  by the `timer_interval` edit in `xiom/async/timer.xi` (tolerated by the
+  pin parser, rejected by the new one); removed, `smoke_async` re-run
+  green.
 
 Still open (own units): the remaining pin-viable rewrites from the
 re-triage (`lp_simplex`/`linear_programming`, `control_theory`
