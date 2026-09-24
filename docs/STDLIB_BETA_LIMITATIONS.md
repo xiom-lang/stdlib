@@ -167,13 +167,14 @@ resolution:
   through the runtime shims and is not internally synchronized. Callers
   that mutate env from several threads must serialize; a stdlib lock
   cannot cover external C writers. Documented rather than "fixed".
-- **Registry compiler-pin correlation (relayed 2026-09-24)**: the registry
-  wants the toolchain pin published as `compiler` per xiom-std version.
-  Dependency: the `xiom pkg` client must emit the field (verified absent in
-  the compiler repo's `crates/xiom-pkg/src/main.rs` by the registry lane).
-  Once it ships, add `compiler: "<pin>"` to the stdlib package manifest (or
-  pass the flag) at publish time -- no registry change needed. Nothing to
-  correlate until then (`xiom-std@0.61.3` has no compiler value).
+- **Registry compiler-pin correlation (CLOSED 2026-09-25)**: the registry
+  wanted the toolchain pin published as `compiler` per xiom-std version.
+  The `xiom pkg` client has emitted that field since m128
+  (`--compiler <tag>` wins over a manifest `compiler:` field), and
+  `publish-registry.yml` now passes the pin resolved from
+  `COMPILER_VERSION` at the tag, so it cannot drift. No manifest change
+  needed; `xiom-std@0.61.3` predates the field and carries no compiler
+  value.
 - **Clause-parsing precedence trap (stdlib, fixed 2026-09-24)**: in a
   clause expression, `A == B > C` parses LEFT-ASSOCIATIVELY as
   `(A == B) > C`; the compiler silently coerces the Bool/Int mix instead of

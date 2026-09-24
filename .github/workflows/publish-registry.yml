@@ -17,8 +17,9 @@
 # Inputs (dispatch): the stdlib release version (e.g. 0.60.0) and, for
 # staging canaries, the registry base URL. On tag pushes the version comes
 # from the tag (`stdlib-v*`). The compiler pin is read from COMPILER_VERSION
-# at the matching stdlib tag; the compiler binary and the package tarball come
-# from public GitHub Releases (no token).
+# at the matching stdlib tag and passed to `xiom pkg publish --compiler` so
+# the registry stores it as the per-version `compiler` field; the compiler
+# binary and the package tarball come from public GitHub Releases (no token).
 #
 # The workflow waits up to 15 minutes for the same-tag release asset (the
 # release job may still be uploading) and generates an ephemeral ed25519 key
@@ -142,4 +143,9 @@ jobs:
           XIOM_REGISTRY: ${{ github.event.inputs.registry || 'https://registry.xiom-lang.org' }}
           XIOM_REGISTRY_TOKEN: ${{ steps.oidc.outputs.token }}
         run: |
-          "$XIOM_BIN" pkg publish
+          # The compiler pin resolved from COMPILER_VERSION at the tag is
+          # passed as the registry's per-version `compiler` field (client
+          # support since m128, `--compiler` wins over the manifest field),
+          # so the website can correlate the package with its toolchain
+          # release without hardcoding the pin in package.xi.
+          "$XIOM_BIN" pkg publish --compiler "${{ steps.ver.outputs.compiler }}"

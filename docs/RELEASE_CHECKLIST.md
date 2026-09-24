@@ -51,12 +51,14 @@ mismatch fails the release before the gates run.
 
 ## Open pin-related dependencies (not blockers for tagging)
 
-- **Registry compiler-pin correlation**: the registry wants the toolchain
-  pin exposed as `compiler` per `xiom-std` version. Blocked on the
-  `xiom pkg` client emitting the field (compiler lane; absent in
-  `crates/xiom-pkg/src/main.rs` as of 2026-09-24). Once it ships, add the
-  exact pin to `package.xi` (field name per the client schema) or pass the
-  publish flag; no registry change is needed. `xiom-std@0.61.3` has no
+- **Registry compiler-pin correlation: RESOLVED (2026-09-25).** The
+  `xiom pkg` client has emitted the per-version `compiler` field since m128
+  (`--compiler <tag>` wins over a manifest `compiler:` field), and
+  `publish-registry.yml` now passes
+  `--compiler "$(COMPILER_VERSION at the tag)"` explicitly, so the pin
+  travels with the publish and cannot drift from the release pin. Nothing
+  to add to `package.xi` (the `compiler = ">=..."` range line stays for
+  `release.yml` validation). `xiom-std@0.61.3` predates this and carries no
   compiler value.
 - **publish-existing-tarball mode** (registry lane): would make registry
   bytes equal the release asset bytes; the release asset itself is already
