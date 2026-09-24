@@ -58,6 +58,10 @@ fn main() -> Int {
   var fd = math.differential.finite_difference(sq, 3.0, 1e-5);
   if !in_range(fd, 5.999, 6.001) { io.println("finite-difference"); return 10; }
 
+  // Gauss-Legendre delegation (unblocked 2026-09-24; cross-module deleg works)
+  var ig = math.calculus.integrate_gauss(sq, 0.0, 1.0, 4);
+  if !in_range(ig, 0.3333, 0.3334) { io.println("integrate-gauss"); return 11; }
+
   io.println("smoke_math_calculus: OK");
   return 0;
 }

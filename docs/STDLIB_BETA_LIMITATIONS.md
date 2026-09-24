@@ -210,6 +210,17 @@ works and is proven in two gate-green modules (`geom/matrix.xi`,
   type to `AsyncTimerTask`; `smoke_async` now asserts armed + timer_next.
   Compiler lane: same-leaf *private* types still collide with another
   module's type of the same leaf name (R44 class).
+- `xiom.math.approximation.least_squares`: implemented on the pin by
+  repairing the by-ref nested `Vec[Vec[Float64]]` into a local matrix
+  before indexing (row-local copies alone are NOT enough for the Float64
+  case; the full local-matrix copy is required). `smoke_math_approximation`
+  now asserts x = [1, 1].
+- `xiom.math.calculus.integrate_gauss`: cross-module delegation to
+  `xiom.math.integral.integrate_gauss_legendre` works (BUG-20 claim stale);
+  `smoke_math_calculus` asserts 1/3 for x^2 on [0, 1].
+- `xiom.math.series.convergence_rate`: iterative implementation (no
+  recursive Bool-accumulator walk); `smoke_math_series` asserts ~1.0 for a
+  linear sequence and ~2.0 for a quadratically convergent one.
 
 Still open (own units): the remaining pin-viable rewrites from the
 re-triage (gradients via push-only perturbations, `least_squares` row-copy,

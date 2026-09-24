@@ -63,6 +63,17 @@ fn main() -> Int {
   if math.series.fib_fast(20) != 6765 { io.println("fibfast-20"); return 10; }
   if math.series.fib_fast(0) != 0 { io.println("fibfast-0"); return 11; }
 
+  // convergence_rate (implemented iteratively 2026-09-24)
+  var lin: Vec[Float64] = Vec[Float64].new();
+  lin.push(1.0); lin.push(0.5); lin.push(0.25); lin.push(0.125); lin.push(0.0625);
+  if !in_range(math.series.convergence_rate(&lin), 0.999, 1.001) { io.println("conv-rate-linear"); return 12; }
+  var quad: Vec[Float64] = Vec[Float64].new();
+  quad.push(1.0); quad.push(0.5); quad.push(0.25); quad.push(0.1875);
+  if !in_range(math.series.convergence_rate(&quad), 1.999, 2.001) { io.println("conv-rate-quad"); return 13; }
+  var short: Vec[Float64] = Vec[Float64].new();
+  short.push(1.0); short.push(0.5); short.push(0.25);
+  if math.series.convergence_rate(&short) != 0.0 { io.println("conv-rate-short"); return 14; }
+
   io.println("smoke_math_series: OK");
   return 0;
 }

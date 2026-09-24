@@ -14,6 +14,7 @@ module xiom.math.calculus
 // ============================================================================
 
 use xiom.math;
+use xiom.math.integral;
 
 // NOTE: on this machine (Zen 2, no AVX-512) the compiler emits AVX-512 for
 // many catalog Float64 constructs (BUG 20, docs/COMPILER_BUGS.md), so several
@@ -80,12 +81,10 @@ pub fn integrate_romberg(f: fn(Float64) -> Float64, a: Float64, b: Float64, tol:
 /// n-point Gauss quadrature over [a, b] (Gauss-Legendre, n in 1..8, otherwise
 /// the 8-point rule). Delegates to xiom.math.integral.integrate_gauss_legendre.
 /// Complexity: O(n).
-/// TODO(compiler): NOT IMPLEMENTABLE in this compiler build - the cross-module
-/// delegation to the Gauss-Legendre recursion crashes at startup with
-/// 0xC000001D (BUG 20 AVX-512 codegen) even though the direct call works. Keep
-/// the frozen signature; revisit when cross-module Float64 delegation is safe.
+/// Re-verified on v0.61.3 (2026-09-24): the cross-module delegation works;
+/// the old BUG-20 crash claim was stale.
 pub fn integrate_gauss(f: fn(Float64) -> Float64, a: Float64, b: Float64, n: Int) -> Float64 {
-  return 0.0;
+  return integral.integrate_gauss_legendre(f, a, b, n);
 }
 
 // ---------------------------------------------------------------------------

@@ -111,10 +111,12 @@ fn main() -> Int {
   ls_b.push(2.0);
   ls_b.push(3.0);
   ls_b.push(4.0);
-  // least_squares core blocked: TODO(compiler) BUG 26 #1 -- by-ref
-  // Vec[Vec[Float64]] element reads return garbage data pointers (len fields
-  // are correct), so the normal-equation core cannot run; only the
-  // empty-input guard is assertable until the compiler fix lands.
+  // least_squares core: fixed 2026-09-24 by repairing the nested matrix into
+  // a local Vec[Vec[Float64]] before indexing (BUG 26 #1 workaround).
+  let lx = math.approximation.least_squares(&ls_a, &ls_b);
+  if lx.len() != 2 { io.println("least-squares-len"); return 25; }
+  if lx[0] < 0.999 || lx[0] > 1.001 { io.println("least-squares-x0"); return 26; }
+  if lx[1] < 0.999 || lx[1] > 1.001 { io.println("least-squares-x1"); return 27; }
   var empty_a = Vec[Vec[Float64]].new();
   var empty_b = Vec[Float64].new();
   if math.approximation.least_squares(&empty_a, &empty_b).len() != 0 { io.println("least-squares-empty"); return 9; }

@@ -233,18 +233,24 @@ pub fn chebyshev_approx(f: fn(Float64) -> Float64, a: Float64, b: Float64, degre
 /// Normal-equation least-squares solution of A x = b: solves (A^T A) x =
 /// A^T b by Gaussian elimination. Returns the empty vector for empty or
 /// mismatched input (documented). Complexity: O(m * n^2 + n^3).
-/// Least-squares solution of A x = b via the normal equations (A^T A x = A^T b).
-/// Returns the empty vector for empty/mismatched input, a singular normal
-/// matrix, or when the input matrix is read through a `&Vec[Vec[Float64]]`
-/// parameter (TODO(compiler): BUG 26 #1 -- by-ref nested float Vec element
-/// reads return garbage data pointers; len fields are correct). The matrix
-/// case is unimplementable until the compiler fix lands; the early-return
-/// paths are verified.
+/// The nested matrix is first repaired into a local matrix (copy row handles
+/// into a fresh `Vec[Vec[Float64]]`, then index that): the inner Vec headers
+/// of a by-ref nested Float64 matrix arrive corrupted on the current
+/// compiler (BUG 26 #1), while a locally built matrix is readable -- the
+/// recipe proven in geom/matrix.xi and re-verified on v0.61.3 (row-local
+/// copies alone are NOT enough for the Float64 case; the full local-matrix
+/// copy is required).
 pub fn least_squares(a: &Vec[Vec[Float64]], b: &Vec[Float64]) -> Vec[Float64] {
   var empty = Vec[Float64].new();
   var m = a.len();
   if m == 0 || b.len() != m { return empty; }
-  var n = a[0].len();
+  var rows: Vec[Vec[Float64]] = Vec[Vec[Float64]].new();
+  var k0 = 0;
+  while k0 < m {
+    rows.push(a[k0]);
+    k0 = k0 + 1;
+  }
+  var n = rows[0].len();
   if n == 0 { return empty; }
   var at = Vec[Vec[Float64]].new();
   var rhs = Vec[Float64].new();
@@ -256,7 +262,7 @@ pub fn least_squares(a: &Vec[Vec[Float64]], b: &Vec[Float64]) -> Vec[Float64] {
       var s = 0.0;
       var k = 0;
       while k < m {
-        s = s + a[k][i] * a[k][j];
+        s = s + rows[k][i] * rows[k][j];
         k = k + 1;
       }
       row.push(s);
@@ -266,7 +272,7 @@ pub fn least_squares(a: &Vec[Vec[Float64]], b: &Vec[Float64]) -> Vec[Float64] {
     var r = 0.0;
     var k2 = 0;
     while k2 < m {
-      r = r + a[k2][i] * b[k2];
+      r = r + rows[k2][i] * b[k2];
       k2 = k2 + 1;
     }
     rhs.push(r);

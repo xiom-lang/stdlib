@@ -175,11 +175,19 @@ fn _fib_doubling(n: Int) -> (Int, Int) {
 /// ln(e2/e1) / ln(e1/e0). Returns 0.0 when fewer than 4 terms are supplied or
 /// when no valid triple exists (documented; e.g. a zero difference anywhere).
 /// Complexity: O(len(seq)).
-/// TODO(compiler): NOT IMPLEMENTABLE in this compiler build - the recursive
-/// walk threading a Bool accumulator and math.ln results makes any program
-/// that links it crash at startup with 0xC000001D (BUG 20 AVX-512 codegen on
-/// Zen 2), even before main. Keep the frozen signature; revisit when the
-/// vectorizer cannot touch this shape.
+/// Implemented iteratively (no recursive Bool-accumulator walk) and verified
+/// on v0.61.3 on 2026-09-24: linear sequences give ~1.0, quadratically
+/// convergent sequences give ~2.0.
 pub fn convergence_rate(seq: &Vec[Float64]) -> Float64 {
-  return 0.0;
+  var n = seq.len();
+  if n < 4 { return 0.0; }
+  var e0 = math.abs_float(seq[1] - seq[0]);
+  var e1 = math.abs_float(seq[2] - seq[1]);
+  var e2 = math.abs_float(seq[3] - seq[2]);
+  if e0 <= 0.0 || e1 <= 0.0 || e2 <= 0.0 { return 0.0; }
+  var r1 = e1 / e0;
+  var r2 = e2 / e1;
+  if r1 <= 0.0 || r2 <= 0.0 { return 0.0; }
+  if r1 == 1.0 { return 0.0; }
+  return math.ln(r2) / math.ln(r1);
 }
