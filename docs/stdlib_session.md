@@ -91,7 +91,23 @@ package-relay fixes; deterministic packaging; coverage waves 22-24)**
   INDEPENDENTLY VERIFIED IT ON THE PIN: freeze suite 2/2 green and
   stdlib-exec 85/85 (+2 ignored) on the `stdlib-v0.61.3` tag, so the
   duplication-gate twin removal is UNBLOCKED with an independent result
-  (see `docs/STDLIB_DEDUP_INVENTORY.md` checklists).
+  (see `docs/STDLIB_DEDUP_INVENTORY.md` checklists). The stdlib lane
+  additionally re-ran the freeze suite on a local compiler-main build
+  against the CURRENT tree (waves 22-24 + relay additions + known-failure
+  probes): `cargo test --locked -p xiom-codegen --test
+  stdlib_api_freeze_tests` = 2/2 ok (no-removals + all-modules-compile,
+  46.47s). Shape re-probes on that build (compiler `main`, R72) confirmed
+  R67/R68/R69/R70/R72 and confirmed the still-open fn-value list
+  (`let` Vec[fn] literal indexed call and `Vec[fn].new()`+push both
+  0xC0000005); the green lock is parked at
+  `tools/probes/evidence/p_r70_pending_shapes.xi` for the pin-bump commit.
+  Note for that commit: `0..b` / `0..=b` for-loops need `use xiom.iter;`
+  so the `range` name resolves (bare sugar is T001 on R72).
+- Coverage/bookkeeping 2026-09-24: new smoke `smoke_sort_by_key` locks the
+  working instantiations (Int key same-type, Str key by length; the broken
+  Int -> Str pair is the filed known failure) -> smoke corpus is now 950
+  files; verified 1/1 targeted (compile 0, run 0). The full-corpus re-run
+  lands with the next wave.
 - Release sequencing (compiler lane, owner decision): ONE combined release,
   no intermediate tags. The compiler lane finishes Sprints A/B/C (front-end
   P0/P1 + fn-value + the packages' fn-ptr probes) on main; the stdlib lane
@@ -103,6 +119,16 @@ package-relay fixes; deterministic packaging; coverage waves 22-24)**
   release notes -- recommendation from the stdlib lane: EXCLUDE (owner
   instruction puts TLS last/user; no HTTPS claim until the FFI hardening
   and interop pass).
+- Release notes (website contract, relayed 2026-09-24): the website renders
+  per-release "What's new" notes (schema at
+  `xiom-lang/website/docs/release-notes-schema.md`). The stdlib fragment is
+  authored at `release-notes/v0.62.0.md` (Summary + four stdlib/tooling
+  highlights: contract coverage on stats/convert/math,
+  `xiom.time.monotonic_ms`, `str_compare`/`to_string` visibility,
+  reproducible archives). The compiler release step merges it from the
+  pinned checkout and tags the bullets "stdlib". RENAME the file to the
+  actual release tag if the release lane cuts a different tag; keep entries
+  user-facing (<=320 chars, plain ASCII, no wave names or task IDs).
 - NEW open compiler finding (2026-09-24, filed on v0.61.3): cross-type
   generic callback returns are miscompiled (`fn(&T) -> U` / `fn(T) -> U`
   with `U` a different runtime type than `T` returns a wrong value; silent).
