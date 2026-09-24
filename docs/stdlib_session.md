@@ -163,6 +163,64 @@ package-relay fixes; deterministic packaging; coverage waves 22-24)**
   ctor, non-scalar fn params, 83 generic fns -- needs new generator classes
   in `tools/gen_call_probes.ps1`), registry publish-existing-tarball mode.
 
+**SESSION 2026-09-24 PART 9 continued (evening block: wave 25, dedup TUs,
+stub closures; all four recon agents completed)**
+- Wave 25 (`6b66b53`, floors62): 59 clauses on `collections/collections.xi`
+  (&mut length preservation via `@pre`, post-state map reset, Option
+  presence mirrors, exact sliding-window counts, Set/Map bounds, parity
+  arithmetic, Boolean mirrors) -> collections 3.5% -> **77.2%**, global
+  **23.6%** pub-with-clause. Gates: modules 509/509, corpus 950/950
+  (3531.8s under heavy external load), probes 176/176, barename 0/509,
+  coverage + doc ratchets OK.
+- Dedup translation units (`25bc778`): `collect/hash` gained
+  `lhmap_first/last/iter`; `collect/linkedhash` and `collect/lru` became
+  pure delegation shims (cache gained `lru_remove`/`lru_clear`); no file
+  deletions (collect.* is NOT in the api_freeze snapshot). The collect
+  smoke family caught a REAL clause bug during verification: in a clause
+  `A == B > C` parses left-associatively as `(A == B) > C` and the compiler
+  silently coerced the Bool/Int mix, so `lhmap_first/last`'s
+  `result.is_some == lhmap_size(m) > 0` held only at size 1; fixed with
+  parens, repo-wide audit found no other instance (`7eb2290`). Shim
+  clauses mirrored so the coverage floor holds (`983ef7f`). Remaining
+  twins: `collect/lfu` (cache LFU section) and geom short/long (audited as
+  NOT a pure rename; own API-translation unit).
+- Stub closures on the pin (`765ae4f`): trig `sinh/cosh/tanh/atanh`
+  delegate to the gate-green `xiom.math.hyperbolic`; `num.float`
+  `next_up/next_down/ulp` exact via `primitives.nextafter` (no bitcast
+  needed); `set_partition` implemented with the row-local nested-Vec read;
+  `timer_interval` fixed by renaming the private `xiom.async.Timer` to
+  `AsyncTimerTask` (same-leaf collision made the trailing `armed` field
+  read the wrong layout -- compiler lane: private same-leaf types still
+  collide, R44 class). Gates: modules 509/509, corpus 951/951 (1633.9s),
+  probes 176/176, barename 0/509, ratchets OK.
+- Agent recon results (all four reports summarized; no code from agents):
+  * untested surface: 28 struct-param (no ctor, non-generic) / 53 non-scalar
+    fn-param / 80 generic never-referenced fns; order b (fn shapes) -> c
+    (generics) -> a (structs); all compile-only; existing scan scripts in
+    `%TEMP%\kilo\stdlib_ws\profile_*.ps1` hold the target lists.
+  * stub re-triage: ~135 real markers across 35 files; ~15 files pin-viable
+    (top-10 ranked; 4 closed today), 10 genuinely compiler-gated
+    (recursive evaluator, Bool tuples, `&Vec[fn]`, bitcast, fp128, lazy
+    Iter). Nested-Vec wording is stale: row-local copy works.
+  * tzdata phase 2: recommended option B (generated gzip+base64 region
+    tables under `xiom/time/zone/data/*.xi` + hand-written
+    `xiom/time/zone.xi` engine; additive API; KAT smoke with a pinned tzdb;
+    post-2100 = last known offset). 7 atomic commits, ~5-7 days; vendoring
+    the pinned tzdb tarball is the offline prerequisite.
+  * dedup: the execution plan above; the full function diffs are in
+    `docs/STDLIB_DEDUP_INVENTORY.md`.
+- Compiler-lane additions from this block: same-leaf PRIVATE type collision
+  (Timer), clause-position Bool/Int mixed comparison silently coerced
+  (precedence trap), plus the earlier cross-type callback matrix and E001.
+- Still open after this block: remaining coverage waves (regex/test/text/
+  error/io tails, math tails), `collect/lfu` + geom dedup units, tzdata
+  phase 2, untested-surface generator classes, the remaining pin-viable
+  stub rewrites (gradients, least_squares, integrate_gauss, convergence_rate,
+  lp_simplex, control-theory observability/controllability), registry
+  publish-existing-tarball + compiler-pin correlation, and the combined
+  compiler release (v0.62.0) after our next stdlib release cut (release
+  notes fragment `release-notes/v0.62.0.md` is ready).
+
 
 **SESSION 2026-09-20 (multi-param tranche closure + no-NASM runtime link fix)**
 - Local main: `ebae67c` + `b4f2655` (runtime fallback linkage + probe),
