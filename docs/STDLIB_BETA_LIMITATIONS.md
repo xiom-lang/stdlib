@@ -135,19 +135,33 @@ resolution:
   package-doc claim "no monotonic ms clock exists" is stale; note that
   `xiom.time.Instant.now()` is the wall-clock `time(0)` path and is NOT
   monotonic.
-- **Generic fn-pointer codegen**: recorded as a package limitation
-  (specialization workaround). This is a compiler-side behavior, not a
-  stdlib surface; the stdlib's own generic fn-pointer users
-  (`sort_by[T]`, `sort_by_key[T,K]`, comparator-taking search) pass in the
-  corpus. Packages should re-test against compiler v0.61.3 before keeping
-  concrete specializations; any minimal repro belongs in
-  `tools/known_failures/` for the compiler lane.
+- **Cross-type generic callback returns (compiler v0.61.3, OPEN)**: a
+  `[T, U]` generic whose callback changes type (`fn(&T) -> U` or
+  `fn(T) -> U`) returns a WRONG value when `U` differs in runtime type from
+  `T` (silent, no diagnostic; some pairs crash). Verified on v0.61.3:
+  Int->Str wrong (by-ref run 23, by-value run 41), Int->Float64 wrong,
+  Int->Int correct, Str->Int correct, concrete callbacks correct. Corpus
+  impact: the smokes only exercise same-type maps
+  (`smoke_core_option_map`/`smoke_core_result_map` map Int -> Int) and
+  `sort_by_key` had no smoke, so the gate is green while these shapes are
+  silently wrong. Stdlib surface to avoid until fixed:
+  `xiom.sort.sort_by_key[Int, Str]` (mis-sorts; `[Str, Int]` and `[Int, Int]`
+  are correct), `xiom.array.map[T,U]` with cross-type `U`,
+  `xiom.iter` `Range.map[U]`/`MapIter.map[V]` with cross-type `U`, and core
+  `Option[T].map[U]`/`Result[T,E].map[U]` with cross-type `U`. Minimal
+  reproductions: `tools/known_failures/p_generic_typechanging_*.xi`
+  (4 files, with the observed exit codes). Packages: keep concrete shims
+  for type-changing maps until the compiler lane fixes the callback ABI;
+  single-type-parameter generic APIs are safe.
 - **Checker E001 conservatism (compiler lane, warning-only)**: the borrow
   checker warns "cannot borrow as mutable while immutably borrowed" for
-  sequential `&local` then `&mut local` calls (no overlap in time). It is
-  warning-only; the stdlib smoke corpus already compiles with it and the
-  full corpus is green (949/949). No stdlib change; relayed to the
-  compiler lane.
+  sequential `&local` then `&mut local` calls (no overlap in time).
+  Warning-only; the stdlib smoke corpus compiles with it and runs green
+  (949/949). Deterministic reproduction on v0.61.3: `run_smokes.ps1
+  -Filter smoke_collect_sparse` emits 7 E001 lines (lines 22/24/28/31/33/
+  50/52); also smoke_collect2a:63 and smoke_collect_threadpool:28. Minimal
+  pattern kept at `tools/probes/evidence/p_e001_borrow_conservatism.xi`.
+  No stdlib change; relayed to the compiler lane.
 - **`xiom.flags` env thread-safety**: environment mutation
   (`xiom.os.env_set` / `xiom.env.set_var`) writes process-global state
   through the runtime shims and is not internally synchronized. Callers

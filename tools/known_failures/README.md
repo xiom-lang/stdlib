@@ -15,7 +15,35 @@ xiom --force -o out.exe tools/known_failures/<file>.xi
 
 ## Current
 
-**No open findings as of 2026-09-22 (compiler R61 `ff293f8e`).** Every probe
+**Open finding 2026-09-24 (compiler v0.61.3): cross-type generic callback
+returns are miscompiled.** A `[T, U]`-style generic whose callback changes
+type (`fn(&T) -> U` or `fn(T) -> U`) returns a wrong value whenever `U` is a
+different runtime type than `T` (Str / Float64 observed); concrete callbacks
+and same-type generic callbacks are correct. Minimal reproductions (all
+verified on v0.61.3, compile 0 + wrong run exit):
+
+- `p_generic_typechanging_fnptr.xi` -- packages-lane `conv[T, U]` shape
+  (by-ref callback, Int -> Str): expected 0, observed run 23.
+- `p_generic_typechanging_map.xi` -- by-value Vec map, Int -> Str:
+  expected 0, observed run 41 (Int -> Float64 also wrong: exit 100).
+- `p_generic_typechanging_core_map.xi` -- core `Option[Int].map[U]`:
+  expected 0, observed run 41 (the `Result[Int,Str].map` leg fails the same).
+- `p_generic_typechanging_sortbykey.xi` -- STDLIB EXPOSURE:
+  `xiom.sort.sort_by_key[Int, Str]` mis-sorts silently (expected 0,
+  observed run 1); `sort_by_key[Str, Int]` and `[Int, Int]` are correct.
+
+Matrix: Int->Str by-ref/by-value broken; Int->Float64 broken; Int->Int
+correct; Str->Int correct; closed-world concrete callbacks correct. Corpus
+impact: the shipped smokes only exercise same-type maps
+(`smoke_core_option_map`/`smoke_core_result_map` map Int -> Int) and
+`sort_by_key` has no smoke at all, so the gate is green while these shapes
+are silently wrong. Also affected in the stdlib surface: `array.map[T,U]`
+and `iter` `Range.map[U]`/`MapIter.map[V]` for cross-type `U` (verified:
+Int -> Str wrong, run 41).
+Promote each file to `tools/probes/` (expected run exit 0) when the
+compiler lane fixes the callback ABI.
+
+**Resolved before 2026-09-22 (compiler R61 `ff293f8e`).** Every probe
 that used to be listed here is resolved or ruled; the green locks live in
 `tools/probes/`.
 

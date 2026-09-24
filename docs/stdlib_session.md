@@ -81,23 +81,48 @@ package-relay fixes; deterministic packaging; coverage waves 22-24)**
     error/io tails. The per-dir candidate lists live in the session recon
     (top candidates: collections ~35 safe clauses, regex ~20, test ~18,
     text ~18).
-- Compiler-lane relay (R66-R70 on compiler `main`, **NOT in the v0.61.3
+- Compiler-lane relay (R66-R72 on compiler `main`, **NOT in the v0.61.3
   pin**): R66 contract-method Vec lowering AV, R67 ctor container-leaf,
   R68 nested extern hoisting, R69 `T.to_str()` mono params, R70
-  `for x in <collection>` real element loops; full e2e 2371/2371 local.
-  The next pin bump carries them and unlocks `for`-loop probe shapes; the
-  compiler lane regenerated the `stdlib_api_freeze` snapshot on 2026-09-24
-  (m125 -- rename-only `AsyncExecutor.*`/`NetHttpResponse` + a CI regen
-  step; relayed -- verify with the freeze test on the next pin build), so
-  the duplication-gate twin removal is UNBLOCKED (see
-  `docs/STDLIB_DEDUP_INVENTORY.md` checklists).
+  `for x in <collection>` real element loops, R71 `.all/.none` inline
+  closures, R72/m127 Vec[fn] indexed calls; full e2e 2373/2373 local.
+  The compiler lane regenerated the `stdlib_api_freeze` snapshot (m125 --
+  rename-only `AsyncExecutor.*`/`NetHttpResponse`, 1:1 verified) and
+  INDEPENDENTLY VERIFIED IT ON THE PIN: freeze suite 2/2 green and
+  stdlib-exec 85/85 (+2 ignored) on the `stdlib-v0.61.3` tag, so the
+  duplication-gate twin removal is UNBLOCKED with an independent result
+  (see `docs/STDLIB_DEDUP_INVENTORY.md` checklists).
+- Release sequencing (compiler lane, owner decision): ONE combined release,
+  no intermediate tags. The compiler lane finishes Sprints A/B/C (front-end
+  P0/P1 + fn-value + the packages' fn-ptr probes) on main; the stdlib lane
+  completes the full readiness plan in parallel and cuts the next stdlib
+  release; the compiler lane then bumps `STDLIB_VERSION` to that tag, runs
+  the full gate list on the pin, and cuts the single compiler release
+  (recommended v0.62.0). Do NOT re-baseline on new shapes before that tag.
+  TLS/schannel: must ship in this window or be explicitly excluded in the
+  release notes -- recommendation from the stdlib lane: EXCLUDE (owner
+  instruction puts TLS last/user; no HTTPS claim until the FFI hardening
+  and interop pass).
+- NEW open compiler finding (2026-09-24, filed on v0.61.3): cross-type
+  generic callback returns are miscompiled (`fn(&T) -> U` / `fn(T) -> U`
+  with `U` a different runtime type than `T` returns a wrong value; silent).
+  Stdlib exposure: `sort_by_key[Int, Str]` mis-sorts, `array.map[T,U]`,
+  `iter` `Range.map[U]`/`MapIter.map[V]`, and core `Option.map[U]`/
+  `Result.map[U]` for cross-type `U`. Corpus impact: existing smokes only
+  map same-type (Int -> Int) and `sort_by_key` had no smoke, so the gate
+  was green. Minimal reproductions:
+  `tools/known_failures/p_generic_typechanging_{fnptr,map,core_map,sortbykey}.xi`
+  (observed run exits 23 / 41 / 41 / 1; concrete and same-type controls
+  pass). E001 conservatism intake pattern:
+  `tools/probes/evidence/p_e001_borrow_conservatism.xi` + the deterministic
+  `-Filter smoke_collect_sparse` reproduction (7 warning lines). Both
+  delivered to the compiler lane.
 - Still open from the production queue: duplication translation units
   (collect/hash vs linkedhash, cache vs lru, geom short/long names --
-  checklists in `docs/STDLIB_DEDUP_INVENTORY.md`), tzdata phase 2,
-  untested-surface tail (44 struct-param fns without a usable ctor,
-  non-scalar fn params, 83 generic fns -- needs new generator classes in
-  `tools/gen_call_probes.ps1`), registry publish-existing-tarball mode.
-  TLS/schannel stays compiler-FFI-gated.
+  UNBLOCKED, checklists in `docs/STDLIB_DEDUP_INVENTORY.md`), tzdata
+  phase 2, untested-surface tail (44 struct-param fns without a usable
+  ctor, non-scalar fn params, 83 generic fns -- needs new generator classes
+  in `tools/gen_call_probes.ps1`), registry publish-existing-tarball mode.
 
 
 **SESSION 2026-09-20 (multi-param tranche closure + no-NASM runtime link fix)**

@@ -194,7 +194,7 @@ DEFERRED / CORRECTED:
   aliases, so a thin re-export shim is impossible today -> API translation
   unit (extend the canonical surface with the missing names, migrate the
   consumer; twin removal UNBLOCKED 2026-09-24 -- the compiler lane
-  regenerated the api_freeze snapshot in m125, relayed).
+  regenerated the api_freeze snapshot in m125 and verified the freeze suite 2/2 + stdlib-exec 85/85 on the pin).
   EXECUTION CHECKLIST (function diff verified 2026-09-17):
     1. hash.xi: add `lhmap_first`/`lhmap_last`/`lhmap_iter` (bodies exist
        in linkedhash.xi; iter == keys_in_order).
@@ -202,8 +202,7 @@ DEFERRED / CORRECTED:
        (aliased import) with the Unit-returning `lhmap_remove` wrapper.
     3. Re-point smoke_collect_linkedhash's extra assertions at the canonical
        first/last/iter (parity smoke keeps both paths green).
-    4. Remove the twin (unblocked 2026-09-24, m125 api_freeze snapshot
-       regen; relayed).
+    4. Remove the twin (unblocked 2026-09-24; m125 freeze snapshot verified on the pin).
 - `collect/cache` vs `collect/lru` (found 2026-09-17): cache = LRU+LFU+ARC
   (arc.xi + 3 smokes); lru = standalone near-copy LRU (1 smoke). The LRU
   cores are copies; receiver mutability differs (`&` vs `&mut`). Same
@@ -214,8 +213,7 @@ DEFERRED / CORRECTED:
     2. lru.xi: delegate to `xiom.collect.cache` (aliased import); wrap the
        `&mut` signatures the module exposes.
     3. Re-point smoke_collect_lfu_lru at the canonical surface.
-    4. Remove the twin (unblocked 2026-09-24, m125 api_freeze snapshot
-       regen; relayed).
+    4. Remove the twin (unblocked 2026-09-24; m125 freeze snapshot verified on the pin).
 - `bits/endian + convert/endian + serialize/endian`: three-way merge onto
   serialize.endian still open (convert side partially delegated).
 - `net/ip4+ip6`, base32/ascii85/percent/punycode twins, io/console vs
@@ -277,7 +275,7 @@ kat_convert_base64_parity.xi as the template).
   mismatch (`core/platform.xi` -> module xiom.platform) is the same class
   as the rc case; moving it to `xiom/platform.xi` should be coordinated
   with a compiler api_freeze snapshot regen (the regen path now exists --
-  m125 + CI step, relayed 2026-09-24).
+  m125 + CI step, verified on the pin 2026-09-24).
 
 ## Execution checklist (per pair)
 

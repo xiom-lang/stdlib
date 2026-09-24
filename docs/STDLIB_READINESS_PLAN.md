@@ -210,10 +210,10 @@ T1/T2 yields.
       blind shims): collect/hash vs collect/linkedhash, collect/cache vs
       collect/lru, geom short/long names. UNBLOCKED 2026-09-24: the
       compiler lane regenerated the api_freeze snapshot (m125 --
-      rename-only AsyncExecutor.*/NetHttpResponse plus a CI regen step;
-      relayed, verify with the freeze test on the next pin build), so the
-      twin removal may proceed with the checklists in
-      docs/STDLIB_DEDUP_INVENTORY.md.
+      rename-only AsyncExecutor.*/NetHttpResponse, 1:1 verified) and
+      INDEPENDENTLY VERIFIED IT ON THE PIN (freeze suite 2/2 + stdlib-exec
+      85/85 on stdlib-v0.61.3), so the twin removal may proceed with the
+      checklists in docs/STDLIB_DEDUP_INVENTORY.md.
 - [x] Coverage number published + ratcheted in CI-equivalent sweep script --
       DELIVERED 2026-09-12: global 1092 clauses / 8634 fns = 12.6%
       (pub-with-clause 720/6469 = 11.1%); key modules io 38.9%,
