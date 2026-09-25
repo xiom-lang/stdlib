@@ -490,6 +490,31 @@ registry pin, agent recon for the rest)**
   safe batch + number_theory safe batch; each fix-first item above lands
   as its own probe + verified rerun per the one-fix rule.
 
+**SESSION 2026-09-25 evening-block (wave 31 + strict-parser bracket prep)**
+- Compiler relay delivered the exact PIN mixed-bracket list (18 type
+  spellings, 7 files). On main 13 remained; canonicalized in `0823433`
+  (core/contracts 231, io/console 47, io/fs 50/80/110/124/138/162/215/230/
+  299/338, io/pipe 185 -- `Result[T, Str>` closers). The other 5
+  (test/harness 34/99, test/test 196/212, math/approximation 502) were
+  already canonical on main. The four touched modules re-check clean via
+  the check_modules probe shape. Strict flip waits on the compiler lane's
+  XIOM_STRICT_BRACKETS=1 diagnostics + pin bump; the arity list is still
+  outstanding (`xiom.cell`'s `ptr.is_null()` is their offset-bug case).
+- Wave 31 (`38b5c32`, floors68): 80 clauses on math/factorial.xi (22 fns:
+  invalid-input guards, exact 0/1 identities, documented-overflow
+  thresholds factorial>=21 / double_factorial>=34 / subfactorial>=21 /
+  catalan>=34, non-negativity of every numeric family, enumeration length
+  shapes). math 14.1% -> **16.3%**, global 27.1% -> **27.4%**
+  pub-with-clause. Probe p_wave31_shapes.xi green before and after;
+  smoke_math_factorial + smoke_math_combinatorics green.
+- Gates on `38b5c32`: modules 509/509 (219.7s), corpus 951/951 (1288.4s),
+  probes 183/183 (263.6s), barename 0/509 (521.8s), floors68 + doc
+  ratchet OK.
+- Remaining for 100%: wave 32 (combinatorics safe batch), wave 33
+  (number_theory safe batch), the fix-first items from the A3/A4 recon
+  (next_prime wrap/hang, binomial false-overflow, p*p wraps, INT_MIN
+  negation), then B/C/D/E/F.
+
 ### HANDOFF 2026-09-25 (context-limit snapshot; read this plus docs/PRODUCTION_READINESS_QUEUE.md)
 
 State: `main` = `a948149` + the handoff docs commit, 38 commits ahead of

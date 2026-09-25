@@ -12,14 +12,15 @@ signal 40/40 and exponential 18/18 pub covered; math 8.3% -> 14.1%,
 global 26.2% -> 27.1%; gates on the commit: modules 509/509, corpus
 951/951, probes 182/182, barename 0/509, both ratchets. Also fixed
 `filter_bandstop` order <= 0 (empty-buffer OOB; probe exit 27 -> 0).
-Next in order: A3/A4, B, C, D, E, F. Relay note: the compiler lane's
-mixed-bracket/arity lists did not arrive and do not match this repo
-(io/fs.xi has no angle generics; ~100 legacy-angle sites in 15 files
-here); `xiom.cell`'s `ptr.is_null()` is the compiler lane's suspected
-offset-bug shape (`xiom/ptr/ptr.xi` free-fn declaration, method-style
-call) -- the exact PIN list has since arrived: 13 of the 18 mixed-bracket
-sites still existed on main and are fixed (item 6); the arity list is
-still outstanding.
+Next in order: wave 32/33, then B, C, D, E, F.
+The compiler lane's mixed-bracket/arity lists have since arrived (item 6); wave 31
+(factorial family, floors68) is also DONE -- see the session doc evening
+block; next are wave 32 (combinatorics) and wave 33 (number_theory).
+Relay note: the exact PIN list arrived in the evening relay; 13 main-side
+mixed-bracket sites were fixed in `0823433` (item 6). `xiom.cell`'s
+`ptr.is_null()` (`xiom/ptr/ptr.xi` free-fn declaration, method-style
+calls) is the compiler lane's offset-bug case; the arity list is still
+outstanding.
 
 Every coverage wave follows the same protocol (see 0A PART 9 for ~8 worked
 examples): recon (agent or direct read) -> new-shape probe(s) in
