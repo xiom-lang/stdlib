@@ -391,8 +391,19 @@ T1/T2 yields.
        numeric family, enumeration length shapes (integer_partitions,
        bell_triangle)) -> math 14.1% -> 16.3%, global 27.1% -> 27.4%
        pub-with-clause; pre-validated by tools/probes/p_wave31_shapes.xi.
+       Wave 32 (2026-09-26): 103 clauses on math/combinatorics.xi (28 fns:
+       invalid-input guards, delegation mirrors for permutations/
+       combinations/derangements/bell/catalan/eulerian/Stirling/Lah/
+       Narayana/partitions, Fibonacci 93 / Lucas 91 / compositions_all 64
+       overflow thresholds, non-negativity, enumeration length shapes incl.
+       powerset 2^n rows and the n > 20 guard) -> math 16.3% -> 19.1%,
+       global 27.4% -> 27.8% pub-with-clause; pre-validated by
+       tools/probes/p_wave32_shapes.xi (the probe caught an involutions
+       n <= 1 overlap before landing). Wave 31 follow-up `71f4d9f`: the
+       zero-row Stirling/Eulerian clauses now require k == 0 (probe RED at
+       ensures 272:12 -> GREEN), full gates re-run green.
        Ratchet:
-       tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors68.json
+       tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors69.json
        (repo tooling as of the split; positive + negative runs verified;
        earlier floors kept at
        coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55/56/57/58/59/60/61/62/63/64/65.json).
