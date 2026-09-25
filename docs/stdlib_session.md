@@ -266,6 +266,54 @@ clause typing cleanup, release pre-flight alignment)**
   open pin dependencies. No release cut yet: the remaining readiness units
   below are still in progress.
 
+**SESSION 2026-09-25 PART 9 pre-dawn block (wave 26 text, LFU dedup,
+registry pin, agent recon for the rest)**
+- Wave 26 (`b1228ab`, floors63): 57 clauses on `text/transliterate.xi` +
+  `text/similarity.xi` + `text/diff.xi` (byte-ratio transliteration
+  bounds, custom-table pass-through, DP integer bounds, exact n-gram
+  counts, exact 4-byte soundex normalization, similarity ranges, Option
+  mirrors, diff op bounds, the constant unified-diff header floor, and a
+  precondition-guarded clause indexing a Vec param). text 2.4% -> **95.1%**
+  (39/41 pub; `diff_patch`/`diff_apply` skipped by design), global
+  23.6% -> **24.3%** pub-with-clause. Gates: modules 509/509, corpus
+  951/951 (1669.7s), probes **177/177** (incl. `p_wave26_shapes.xi`),
+  barename 0/509, ratchets OK.
+- LFU dedup (`50370a7`, third collect twin): `cache` gained
+  `lfu_remove/lfu_capacity/lfu_clear`; `lfu.xi` is a delegation shim with
+  mirrored clauses; collect family 101/101, ratchet OK. Remaining dedup:
+  geom only (its own audited API unit).
+- Registry pin (`9b2d2a2`): `publish-registry.yml` now passes
+  `pkg publish --compiler "$(COMPILER_VERSION at the tag)"`; the m128
+  client emits the field, so the register compiler-pin correlation is
+  CLOSED (docs checklist + limitations updated). No manifest change needed.
+- Recon delivered (agents, read-only; implementation next):
+  * text/regex: regex wave candidates ready (`regex/regex.xi` ~24 clauses,
+    `syntax.xi` ~10, `engine.xi` ~14 with payload caveats, `pcre_lite.xi`
+    ~8 state-free); text already executed as wave 26.
+  * control_theory + optimization: full implementation plan for
+    `observability`/`controllability` (rank of the observability matrix /
+    transposed controllability matrix, local-matrix repair + copied geom
+    rank helpers, tol 1e-12) and `lp_simplex`/`linear_programming` (dense
+    Bland-rule tableau with the documented no-Phase-I/empty-on-failure
+    convention), with a 16-case verification plan. `state_space` deferred
+    (tuple/return-ABI risk). This is the next big feature unit.
+  * math tails: candidates for number_theory (~55 clauses), factorial
+    (~30), combinatorics (~36), signal (~48, pure length invariants),
+    exponential (~16 sign/NaN) -- ready to apply as waves 27+.
+  * tzdata phase 2 plan and untested-surface class plan are in the earlier
+    PART 9 block.
+- Compiler-lane sequence reminder at the bump (from their SESSION): set
+  `stdlib/` to our release ref and bump `STDLIB_VERSION`, run
+  `XIOM_STRICT_CLAUSES=1 cargo test -p xiom-check catalog_corpus_is_clean`
+  (green here), then remove the env gate so strict becomes the default,
+  re-run the stdlib-dependent gates + full e2e, re-convert the notes,
+  version bump, push, tag, registry canary, website notes.
+- Still open after this block: wave 27 (regex: regex/syntax/engine/pcre),
+  waves for the math tails, control_theory + lp_simplex, geom dedup unit,
+  tzdata phase 2, untested-surface generator classes, the test + error/io
+  tails wave (recon agent still pending at write time), and the release
+  cut per `docs/RELEASE_CHECKLIST.md`.
+
 
 **SESSION 2026-09-20 (multi-param tranche closure + no-NASM runtime link fix)**
 - Local main: `ebae67c` + `b4f2655` (runtime fallback linkage + probe),
