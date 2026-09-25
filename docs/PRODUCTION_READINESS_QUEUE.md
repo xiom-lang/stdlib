@@ -12,7 +12,7 @@ signal 40/40 and exponential 18/18 pub covered; math 8.3% -> 14.1%,
 global 26.2% -> 27.1%; gates on the commit: modules 509/509, corpus
 951/951, probes 182/182, barename 0/509, both ratchets. Also fixed
 `filter_bandstop` order <= 0 (empty-buffer OOB; probe exit 27 -> 0).
-Next in order: wave 32/33, then B, C, D, E, F.
+Next in order: wave 33 (number_theory), then B, C, D, E, F.
 The compiler lane's mixed-bracket/arity lists have since arrived (item 6); wave 31
 (factorial family, floors68) is also DONE -- see the session doc evening
 block; next are wave 32 (combinatorics) and wave 33 (number_theory).

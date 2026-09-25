@@ -515,6 +515,30 @@ registry pin, agent recon for the rest)**
   (next_prime wrap/hang, binomial false-overflow, p*p wraps, INT_MIN
   negation), then B/C/D/E/F.
 
+**SESSION 2026-09-26 night-block (wave 32 combinatorics + wave 31 clause fix)**
+- Wave 31 follow-up `71f4d9f`: the Stirling/Eulerian zero-row clause was
+  false for invalid k (`stirling_first(0, 1)` returns 0 while it demanded
+  1); fixed to `(n == 0 && k == 0) => 1`. Probe `p_wave31_shapes.xi`
+  extended with the invalid-k cases (RED `ensures 272:12` -> GREEN).
+  Gates re-run: modules 509/509, corpus 951/951, probes 183/183,
+  barename 0/509, floors68 + doc ratchet OK.
+- Wave 32 (`224060a`, floors69): 103 clauses on math/combinatorics.xi
+  (28 fns: invalid-input guards, delegation mirrors for permutations/
+  combinations/derangements/bell/catalan/eulerian/Stirling/Lah/Narayana/
+  partitions, documented-overflow thresholds Fibonacci >= 93, Lucas >= 91,
+  compositions_all >= 64, non-negativity, enumeration length shapes
+  including powerset 2^n rows and the n > 20 guard). math 16.3% ->
+  **19.1%**, global 27.4% -> **27.8%** pub-with-clause. Probe
+  p_wave32_shapes.xi green before and after; it caught an `involutions`
+  antecedent overlap (`n <= 1` matched negatives) before landing.
+  smoke_math_combinatorics + smoke_math_factorial green.
+- Gates on `224060a`: modules 509/509 (291.9s), corpus 951/951 (1432.7s),
+  probes **184/184** (354.7s), barename 0/509 (800.6s), floors69 + doc
+  ratchet OK.
+- Next: wave 33 (number_theory safe batch; the 7 p*p-wrap families stay
+  DO-NOT-TOUCH until fixed), then the fix-first probes from the recon,
+  then B/C/D/E/F.
+
 ### HANDOFF 2026-09-25 (context-limit snapshot; read this plus docs/PRODUCTION_READINESS_QUEUE.md)
 
 State: `main` = `a948149` + the handoff docs commit, 38 commits ahead of
