@@ -1,0 +1,216 @@
+# Production-readiness remaining queue (handoff 2026-09-25)
+
+Authoritative order for the stdlib lane to reach 100%. State at handoff:
+`main` = `a948149` (+ this docs commit), 38 commits ahead of origin, unpushed;
+compiler pin `v0.61.3`; all gates green (modules 509/509, corpus 951/951,
+probes 181/181, barename 0/509, coverage floors66, doc ratchet, strict-clause
+catalog clean); global pub-with-clause 26.2%; release pre-flight ready
+(`docs/RELEASE_CHECKLIST.md`, `release-notes/v0.62.0.md` = 2 highlights).
+
+Every coverage wave follows the same protocol (see 0A PART 9 for ~8 worked
+examples): recon (agent or direct read) -> new-shape probe(s) in
+`tools/probes/` -> clauses -> `coverage_scan.ps1 -DumpFloors
+tools/coverage_floors<N>.json` -> wire floors into ci.yml/heavy.yml/
+release.yml + tools/README.md + docs/STDLIB_READINESS_PLAN.md in the SAME
+commit -> `check_modules.ps1` + full `run_smokes.ps1 -RetryFailed` + probe
+corpus + `barename_scan.ps1` + both ratchets. One wave per commit.
+
+---
+
+## A. Wave 30+: remaining coverage targets
+
+### A1. `xiom/math/signal.xi` (~40 pub, safest — pure length invariants)
+Candidates verified by reading the module: result-length equalities guarded
+by input sizes (convolution `n + kernel - 1`; correlation lags;
+power-spectrum `n/2 + 1`; upsampling `2n`; downsampling `n/2`; mel filterbank
+`<= n_filters`; MFCC `<= 24`), plus `x.len() == 0 => result.len() == 0`
+guards where the body early-returns. Check every loop bound before landing.
+
+### A2. `xiom/math/exponential.xi` (~16)
+`exp(x) >= 0.0`, `expm1(x) >= -1.0`, `ln(x)`: `x > 0.0 => result >= 0.0 ||
+result != result` (NaN-tolerant), `x > 1.0 => result > 0.0`, empty guards for
+vector variants. All values are Float64; never assert equality.
+
+### A3. `xiom/math/number_theory.xi` (~32 pub) and tails
+Re-run a read-only recon agent with the standard prompt shape (exact
+signature + proposed clause + justification per fn; do-not-touch list);
+expected families: `gcd/lcm >= 0` and `gcd(a,b) <= min(|a|,|b|)` guarded,
+`abs` mirrors, primality Boolean mirrors (`result == false || n >= 2`),
+digit-sum `>= 0`, modular bounds, exact small-input identities. Watch
+overflow: guard identities with input-size antecedents.
+
+### A4. `xiom/math/factorial.xi`, `xiom/math/combinatorics.xi`
+`factorial(n)`: `n < 0 => result == 0` (check actual), `n >= 0 => result
+>= 1`; `combinations(n,k)`: `k < 0 || k > n => result == 0`,
+`0 <= k <= n => result >= 1 && result <= 2^n` style only if the
+implementation cannot overflow for the guarded range; otherwise bound by `n`
+antecedents. Re-derive per function from the source; do not trust family
+generalizations.
+
+### A5. Smaller tails if wanted
+`xiom/geom` (mostly 3D helpers), `xiom/math` remaining <15% files, `xiom/net`
+pure helpers. No correctness impact — coverage only.
+
+---
+
+## B. `control_theory` observability/controllability + `lp_simplex`
+
+Signatures are frozen; every new body must carry at least one clause
+(math floor 8.3% is exactly at the current value).
+Working recipe: repair a by-ref nested `Vec[Vec[Float64]]` into a NEW local
+matrix (`rows.push(m[i])` for all rows) and index the local; row-local
+`var r = m[i]` is NOT enough for Float64 (verified 2026-09-25).
+
+Helpers to add in `xiom/math/control_theory.xi` (math layer cannot import
+`xiom.geom`; copy the gate-green bodies as private `_ct_*`):
+`_ct_copy` (deep copy of a repaired matrix), `_ct_mul`, `_ct_transpose`,
+`_ct_rank` (Gaussian elimination, pivot threshold 1e-12).
+
+- `observability(a, c) -> Bool`: repair A/C; require A square n×n and C p×n;
+  build `O = [C; CA; ...; CA^(n-1)]` by push; return `_ct_rank(&O) == n`.
+  Guards -> false: empty A or C, non-square A, ragged widths, mult failure.
+  Clause: `ensures: !result || a.len() > 0`.
+- `controllability(a, b) -> Bool`: rank of `[B, AB, ...]` equals rank of its
+  transpose `[B^T; B^T A^T; ...]`; build stacked rows, same guards
+  (B must be n×m, m > 0). Same clause.
+- `state_space(a,b,c,d)`: DEFER (4-tuple of aggregates has documented
+  ABI risk); keep the stub, sharpen its doc comment.
+
+`xiom/math/optimization.xi`:
+- `lp_simplex(c, a, b) -> Vec[Float64]`: dense tableau (m+1)×(n+m+1),
+  slacks basis, Bland entering + Bland leaving tie-break, Gauss-Jordan
+  pivots, 10000-iteration cap. Return conventions: empty vec for empty c,
+  no constraints, `b.len() != a.len()`, ragged A, any `b[i] < 0` (no
+  Phase I), unbounded, cap hit; otherwise argmin x of length n.
+  Clause: `ensures: result.len() == 0 || result.len() == c.len()`.
+- `linear_programming(c,a,b,bounds)`: repair bounds too; empty bounds =
+  `x >= 0`; per-variable modes (lo-only, hi-only, both -> add `z <= 1`,
+  free -> split `z+ - z-`); shift/scale A,b,c; delegate to `lp_simplex`;
+  map back (free: `z+ - z-`). Same clause. Documented limitation: shifted
+  `b2 < 0` returns empty (no Phase I).
+
+Verification (add to `tests/smoke/smoke_math_optimization.xi`, float `near`
+1e-9): observability true/false cases (A=[[0,1],[-2,-3]],C=[[1,0]] true;
+A=I,C=[[1,0]] false), controllability (B=[[0],[1]] true; B=[[1],[1]] false;
+multi-input true), guards; `lp_simplex(c=[-3,-2],A=[[1,1],[1,0],[0,1]],
+b=[4,2,3]) == [2,2]`; unbounded/guards; `linear_programming` delegation
+identity; bound modes ([0,1],[0,inf]) -> [1,3]; free variable case.
+First step: a single probe binary exercising observability + lp_simplex
+before touching the smokes.
+
+---
+
+## C. Geom dedup unit (dequeued 2026-09-24)
+
+`xiom/geom/{vec,mat,quat}.xi` vs `{vector,matrix,quaternion}.xi` is NOT a
+pure rename: short-name modules are dynamic APIs, long-name modules carry
+the typed Mat2/3/4/Vec domain; `quat.xi` already partly delegates to
+`geom.xi`. Consumers: `smoke_geom_vec/mat/quat/3d/2d/geom` + the aggregate
+`geom.xi` (imports all six). Needs its own audited API-translation unit:
+name map, consumer migration, then removal with the api_freeze snapshot
+regen (compiler lane). Do not blind-shim.
+
+---
+
+## D. tzdata phase 2
+
+Recommended design (from the 2026-09-24 recon): vendor a pinned IANA tzdb
+release tarball under `tools/tzdata/` (public domain; provenance header per
+generated file; no GPL tooling). Generate region tables as gzip+base64
+payloads in `xiom/time/zone/data/{africa,antarctica,asia,australasia,europe,
+northamerica,southamerica,etcetera}.xi` (private base64 chunks + one pub
+`data_<region>() -> Result[Vec[UInt8], Str]` per region with `ensures`),
+plus a hand-written `xiom/time/zone.xi` engine (~15 KB): format decoder,
+lazy one-time region init into module-level `var Vec[UInt8]`
+(whole-value assignment), public API `zone_offset_at`, `zone_is_dst_at`,
+`zone_abbrev_at`, `zone_to_local`, `zone_local_candidates`,
+`zone_local_to_utc` (Err "nonexistent"/"ambiguous"), `zone_exists`,
+`zone_list`, `zone_canonical_name`, `zone_data_version`.
+KAT smoke `smoke_time_zone.xi` with pre-verified instants (Europe/Athens,
+America/New_York, Australia/Sydney, Pacific/Apia date-line, Europe/Amsterdam
+sub-minute LMT, Dublin negative-SAVE, Kathmandu +5:45, Lord_Howe 30-min DST,
+Chatham +12:45; NY ambiguous/nonexistent local times; link US/Eastern).
+POSIX TZ footer expanded to 2100 at generation time; post-2100 = last known
+offset (documented). Register in `tools/modlist_all.txt` +
+`docs/STDLIB_MANIFEST.md`; new pub fns need clauses to hold the time floor.
+Commit order: probe (encoding/size measure) -> spec -> generator + tarball
+-> data modules -> engine -> KAT smoke -> docs. Offline prerequisite: the
+pinned tzdb tarball must be fetched once (network) or supplied.
+
+---
+
+## E. Untested-surface generator classes
+
+`tools/gen_call_probes.ps1` already has scalar/refs/structs/fns/wrapped
+classes (126 modules / 751 calls compile-only). Remaining, in order:
+1. **fn-param non-scalar shapes (53 fns)**: extend the helper emitter to
+   accept one container level in inner params/returns
+   (`fn(&Vec[Float64]) -> Float64`, `fn(Str) -> Str`, `fn(&Int) ->
+   Option[Int]`, ...); emit helper bodies returning synthetic values.
+2. **generic fns (80)**: substitute each type param with `Int`
+   (bounds `Ord/Eq/Clone/Serialize/Deserialize/Any` -> Int), emit
+   `mod.fn[Int](...)`; skip `&Slice[T]`, `*const/*mut T`, `dyn Any`,
+   `const N` array shapes.
+3. **struct params without ctor (28)**: widen the ctor search to an index
+   by exact type spelling (same-leaf collision risk) or struct-literal
+   `T{...}` construction (probe support first); skip no-public-field structs.
+All compile-only (never execute): generated args are unsafe
+(file I/O, null FFI, @pre aborts); `-Timeout 0` for net/num groups; run
+from the repo root. Matrix run at the end:
+`-MinParams 1 -MaxParams 4 -IncludeRefs -IncludeStructs -IncludeFns
+-IncludeWrappedCtors` + new switches; keep per-class runs for triage.
+Rescans: `profile_untested.ps1` / `profile_struct_params.ps1` /
+`profile_fn_params.ps1` (temp copies existed 2026-09-24; re-derive if gone).
+
+---
+
+## F. Release cut and handover
+
+Follow `docs/RELEASE_CHECKLIST.md`: bump `package.xi` to the tag suffix
+(recommended 0.62.0), keep `COMPILER_VERSION` at an EXISTING tag (currently
+v0.61.3; the combined compiler release happens after our cut), keep the
+2-highlight notes fragment, move CHANGELOG Unreleased, run the local
+battery, verify author, tag `stdlib-vX.Y.Z` + push ONLY when the release
+lane says so, then dispatch the registry publish (the workflow now passes
+`--compiler` from COMPILER_VERSION) and canary. After the release, the
+compiler lane bumps `STDLIB_VERSION`, runs
+`XIOM_STRICT_CLAUSES=1 cargo test -p xiom-check catalog_corpus_is_clean`
+(green here), flips the strict default, re-gates, and cuts v0.62.0.
+
+---
+
+## Environment and gotchas (learned the hard way)
+
+- Compiler binaries: `%TEMP%\kilo\stdlib_ws\xiom_v0613.exe` (pin build);
+  local compiler main with R66-R72 was `xiom_main_r72.exe` (may be gone).
+- No `pwsh` in this shell: `powershell -NoProfile -File tools\<x>.ps1`.
+- The local corpus is 951 files, ~22-60 min depending on machine load; check
+  per-worker CSVs for liveness; do not assume a hang.
+- One fix = one probe = one verified rerun; no repo edits while a sweep runs.
+- Edit-tool gotchas: mixed bracket styles (`Result<X, Y>` vs `Result[X, Y]`)
+  in legacy files; multi-line matches can fail on mixed CRLF/LF (use a
+  single-line anchor and put newlines only in the newString); verify each
+  edit with a grep; one `edit` invoke per message.
+- Contract gotchas: `A == B > C` parses left-associatively
+  (`(A == B) > C`) -- always parenthesize; payload reads in CATALOG clauses
+  are unsafe (see `tools/known_failures/README.md`: Ok-Str reads violate or
+  crash, a nested-Vec payload clause poisons user codegen); Err-payload
+  `.len()` and Option payload mirrors are OK; prefer payload-free guards.
+- Import gotchas: only ONE sibling module per family when bare names overlap
+  (`xiom.test.*`, `xiom.regex.regex` vs `syntax`); cross-module types by
+  unqualified leaf (`Vec[TestResult]`), qualified `mod.Type` silently
+  becomes `Vec[Int]`.
+- Probe corpus currently 181 files; smoke corpus 951; floors64-66 wired.
+
+## Open compiler findings (relay status)
+
+1. Cross-type generic callback returns (`fn(&T)->U` with U != T) wrong --
+   in the compiler lane's Sprint C acceptance matrix.
+2. E001 borrow-conservatism -- queued with our probe as the lock.
+3. Result-Ok Str payload reads in catalog clauses (false violation / AV) --
+   relayed 2026-09-25, filed in known_failures.
+4. Nested-Vec payload clause poisons user codegen -- relayed 2026-09-25,
+   filed with evidence probe.
+5. Same-leaf private type collision (Timer) and clause Bool/Int coercion --
+   fixed in the compiler lane's m134/m135/m136; our tree carries the
+   workarounds; re-verify on the next pin.

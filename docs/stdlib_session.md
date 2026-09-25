@@ -417,7 +417,22 @@ registry pin, agent recon for the rest)**
   first, then number_theory/factorial/combinatorics), control_theory +
   lp_simplex (full plan ready), geom dedup unit, tzdata phase 2,
   untested-surface generator classes, then the release cut (checklist +
-  2-highlight notes fragment ready) and the compiler-lane handover.
+   2-highlight notes fragment ready) and the compiler-lane handover.
+
+### HANDOFF 2026-09-25 (context-limit snapshot; read this plus docs/PRODUCTION_READINESS_QUEUE.md)
+
+State: `main` = `a948149` + the handoff docs commit, 38 commits ahead of
+origin, UNPUSHED; compiler pin v0.61.3; all gates green on this tree
+(check_modules 509/509; corpus 951/951; probes 181/181; barename 0/509;
+coverage floors66; doc ratchet; strict-clause catalog clean). Coverage
+scoreboard: stats 25 / convert 11.5 / math 8.3 / collections 77.2 / text 95.1
+/ test 90.8 / error 90 / io 94.4 / regex 59.2; GLOBAL 26.2% pub-with-clause.
+Release pre-flight done and waiting on stdlib 100% (checklist + 2-highlight
+fragment ready). Full remaining-unit briefs (waves 30+, control/simplex,
+geom, tzdata phase 2, untested-surface classes, release cut) plus all
+environment/contract/import gotchas and the open compiler findings are in
+`docs/PRODUCTION_READINESS_QUEUE.md` -- that file is the first read for the
+next session.
 
 
 **SESSION 2026-09-20 (multi-param tranche closure + no-NASM runtime link fix)**
