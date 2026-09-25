@@ -105,14 +105,21 @@ fn _trial_prime(n: Int) -> Bool {
 /// Deterministic primality test for 64-bit n (Miller-Rabin over the fixed
 /// base set {2, 325, 9375, 28178, 450775, 9780504, 1795265022}, which is
 /// proven for every n < 2^64). Returns false for n < 2. Complexity: O(log^3 n).
-pub fn is_prime(n: Int) -> Bool {
+pub fn is_prime(n: Int) -> Bool
+  ensures: (n < 2) => (result == false)
+  ensures: (n == 2) => (result == true)
+{
   return is_prime_deterministic(n);
 }
 
 /// Strict deterministic primality test: Miller-Rabin with the fixed base set
 /// proven correct for all 64-bit integers. Returns false for n < 2.
 /// Complexity: O(log^3 n).
-pub fn is_prime_deterministic(n: Int) -> Bool {
+pub fn is_prime_deterministic(n: Int) -> Bool
+  ensures: (n < 2) => (result == false)
+  ensures: (n == 2) => (result == true)
+  ensures: (n > 2 && n % 2 == 0) => (result == false)
+{
   if n < 2 { return false; }
   if n == 2 { return true; }
   if n % 2 == 0 { return false; }
@@ -174,8 +181,13 @@ pub fn next_prime(n: Int) -> Int {
 /// Largest prime strictly less than n. Returns 0 for n <= 2 (no such prime)
 /// and 0 (documented) when the search leaves the representable range.
 /// Complexity: O(gap * sqrt(p)).
-pub fn prev_prime(n: Int) -> Int {
+pub fn prev_prime(n: Int) -> Int
+  ensures: (n <= 2) => (result == 0)
+  ensures: (result != 0) => (result < n)
+  ensures: result >= 0
+{
   if n <= 2 { return 0; }
+  if n == 3 { return 2; }
   var cand = n - 1;
   if cand % 2 == 0 { cand = cand - 1; }
   while cand >= 3 {
@@ -191,7 +203,10 @@ pub fn prev_prime(n: Int) -> Int {
 
 /// Prime factorization of n with multiplicity. Returns the empty list for
 /// n <= 1; negative n is factored by absolute value. Complexity: O(sqrt(|n|)).
-pub fn factor(n: Int) -> Vec[Int] {
+pub fn factor(n: Int) -> Vec[Int]
+  ensures: (n <= 1) => (result.len() == 0)
+  ensures: (n > 1) => (result.len() >= 1)
+{
   var out = Vec[Int].new();
   if n <= 1 { return out; }
   var x = n;
@@ -271,7 +286,10 @@ pub fn p_1_factor(n: Int) -> Int {
 /// Returns false for n <= 1, true for n == 2, and false when a is a multiple
 /// of n (the residue is 0, not 1). Primes always pass; composite pseudoprimes
 /// to base a also return true. Complexity: O(log n).
-pub fn is_pseudoprime(n: Int, base: Int) -> Bool {
+pub fn is_pseudoprime(n: Int, base: Int) -> Bool
+  ensures: (n <= 1) => (result == false)
+  ensures: (n == 2) => (result == true)
+{
   if n <= 1 { return false; }
   if n == 2 { return true; }
   if base % n == 0 { return false; }
@@ -283,7 +301,12 @@ pub fn is_pseudoprime(n: Int, base: Int) -> Bool {
 /// a value that passes every base is reported true (likely prime, exactly
 /// prime for n < 2^64 when the base set is the deterministic one).
 /// Complexity: O(|bases| * log^3 n).
-pub fn miller_rabin(n: Int, bases: &Vec[Int]) -> Bool {
+pub fn miller_rabin(n: Int, bases: &Vec[Int]) -> Bool
+  ensures: (n <= 1) => (result == false)
+  ensures: (n == 2) => (result == true)
+  ensures: (n > 2 && n % 2 == 0) => (result == false)
+  ensures: (bases.len() == 0 && n > 2 && n % 2 != 0) => (result == true)
+{
   if n <= 1 { return false; }
   if n == 2 { return true; }
   if n % 2 == 0 { return false; }
@@ -322,14 +345,21 @@ pub fn miller_rabin(n: Int, bases: &Vec[Int]) -> Bool {
 
 /// Fermat compositeness test with base a: true iff a^(n-1) == 1 (mod n).
 /// Alias of is_pseudoprime. Complexity: O(log n).
-pub fn fermat_test(n: Int, a: Int) -> Bool {
+pub fn fermat_test(n: Int, a: Int) -> Bool
+  ensures: (n <= 1) => (result == false)
+  ensures: (n == 2) => (result == true)
+{
   return is_pseudoprime(n, a);
 }
 
 /// Lucas-Lehmer primality test for the Mersenne number M_p = 2^p - 1.
 /// Returns false for p < 2 and when M_p does not fit in Int (p > 62).
 /// Complexity: O(p * mulmod).
-pub fn lucas_lehmer(p: Int) -> Bool {
+pub fn lucas_lehmer(p: Int) -> Bool
+  ensures: (p < 2) => (result == false)
+  ensures: (p == 2) => (result == true)
+  ensures: (p > 62) => (result == false)
+{
   if p < 2 { return false; }
   if p == 2 { return true; }
   var m = 1;
@@ -354,7 +384,11 @@ pub fn lucas_lehmer(p: Int) -> Bool {
 
 /// True iff 2^p - 1 is prime. Alias of lucas_lehmer. Returns false for p < 2
 /// and when M_p exceeds Int range. Complexity: O(p * mulmod).
-pub fn mersenne_prime_p(p: Int) -> Bool {
+pub fn mersenne_prime_p(p: Int) -> Bool
+  ensures: (p < 2) => (result == false)
+  ensures: (p == 2) => (result == true)
+  ensures: (p > 62) => (result == false)
+{
   return lucas_lehmer(p);
 }
 
@@ -517,7 +551,11 @@ pub fn prime_pi(n: Int) -> Int {
 /// The n-th prime, 1-indexed (nth_prime(1) == 2). Returns 0 for n <= 0 and 0
 /// (documented) when the search leaves the representable Int range.
 /// Complexity: O(n * sqrt(p_n)).
-pub fn nth_prime(n: Int) -> Int {
+pub fn nth_prime(n: Int) -> Int
+  ensures: (n <= 0) => (result == 0)
+  ensures: (n == 1) => (result == 2)
+  ensures: (result != 0) => (result >= 2)
+{
   if n <= 0 { return 0; }
   if n == 1 { return 2; }
   var count = 1;
@@ -535,7 +573,12 @@ pub fn nth_prime(n: Int) -> Int {
 /// Product of the first n primes (p_n#). Returns 0 for n <= 0 and 0
 /// (documented overflow) when the product exceeds Int range (n > 15).
 /// Complexity: O(n * sqrt(p_n)).
-pub fn primorial(n: Int) -> Int {
+pub fn primorial(n: Int) -> Int
+  ensures: (n <= 0) => (result == 0)
+  ensures: (n == 1) => (result == 2)
+  ensures: (n >= 16) => (result == 0)
+  ensures: result >= 0
+{
   if n <= 0 { return 0; }
   var result = 1;
   var count = 0;
@@ -557,14 +600,18 @@ pub fn primorial(n: Int) -> Int {
 
 /// True iff n is composite (n > 1 and not prime). Returns false for n <= 1.
 /// Complexity: O(log^3 n) via the Miller-Rabin primality test.
-pub fn is_composite(n: Int) -> Bool {
+pub fn is_composite(n: Int) -> Bool
+  ensures: (n <= 1 || n == 2) => (result == false)
+{
   if n <= 1 { return false; }
   return !is_prime(n);
 }
 
 /// True iff n is a product of exactly two primes (with multiplicity), so
 /// squares of primes count. Returns false for n < 4. Complexity: O(sqrt(n)).
-pub fn is_semiprime(n: Int) -> Bool {
+pub fn is_semiprime(n: Int) -> Bool
+  ensures: (n < 4) => (result == false)
+{
   if n < 4 { return false; }
   var fs = factor(n);
   return fs.len() == 2;
@@ -574,7 +621,9 @@ pub fn is_semiprime(n: Int) -> Bool {
 /// for n <= 1. Uses the prime-exponent gcd criterion: n is a perfect power iff
 /// the gcd of the exponents in its prime factorization exceeds 1.
 /// Complexity: O(sqrt(n)).
-pub fn is_power(n: Int) -> Bool {
+pub fn is_power(n: Int) -> Bool
+  ensures: (n <= 1) => (result == false)
+{
   if n <= 1 { return false; }
   var fs = factor(n);
   if fs.len() <= 1 { return false; }
@@ -597,7 +646,13 @@ pub fn is_power(n: Int) -> Bool {
 /// Special cases: base 0 (only n == 0), base 1 (only n == 1), base -1
 /// (n == 1 or n == -1). Returns false when the power series overflows Int
 /// before reaching n. Complexity: O(log_base |n|).
-pub fn is_power_of(n: Int, base: Int) -> Bool {
+pub fn is_power_of(n: Int, base: Int) -> Bool
+  ensures: (base == 0 && n == 0) => (result == true)
+  ensures: (base == 0 && n != 0) => (result == false)
+  ensures: (base == 1 && n == 1) => (result == true)
+  ensures: (base == 1 && n != 1) => (result == false)
+  ensures: (base == -1 && (n == 1 || n == -1)) => (result == true)
+{
   if base == 0 { return n == 0; }
   if base == 1 { return n == 1; }
   if base == -1 { return n == 1 || n == -1; }
@@ -681,7 +736,10 @@ pub fn rough(n: Int, bound: Int) -> Bool {
 /// non-residue, 0 when p divides a. Uses Euler's criterion a^((p-1)/2) mod p.
 /// p == 2 is handled directly (1 for odd a, 0 for even a); p <= 1 returns 0
 /// (documented, no modulus). Complexity: O(log p).
-pub fn legendre_symbol(a: Int, p: Int) -> Int {
+pub fn legendre_symbol(a: Int, p: Int) -> Int
+  ensures: (p <= 1) => (result == 0)
+  ensures: (result >= -1 && result <= 1)
+{
   if p <= 1 { return 0; }
   if p == 2 {
     if a % 2 == 0 { return 0; }
@@ -699,7 +757,11 @@ pub fn legendre_symbol(a: Int, p: Int) -> Int {
 /// Jacobi symbol is undefined there) and 0 when gcd(a, n) != 1. Uses the
 /// quadratic-reciprocity reduction over the binary expansion of a.
 /// Complexity: O(log^2 n) worst case.
-pub fn jacobi_symbol(a: Int, n: Int) -> Int {
+pub fn jacobi_symbol(a: Int, n: Int) -> Int
+  ensures: (n <= 0) => (result == 0)
+  ensures: (n > 0 && n % 2 == 0) => (result == 0)
+  ensures: (result >= -1 && result <= 1)
+{
   if n <= 0 { return 0; }
   if n % 2 == 0 { return 0; }
   var aa = a % n;
@@ -726,7 +788,12 @@ pub fn jacobi_symbol(a: Int, n: Int) -> Int {
 /// integer n. Returns 1 for n == 1, (a/-1) by the sign of a, and uses the
 /// 2-adic rules for even n. n == 0 gives 1 iff a == 1 or a == -1, else 0.
 /// Complexity: O(log^2 |n|).
-pub fn kronecker_symbol(a: Int, n: Int) -> Int {
+pub fn kronecker_symbol(a: Int, n: Int) -> Int
+  ensures: (n == 0 && a != 1 && a != -1) => (result == 0)
+  ensures: (n == 0 && (a == 1 || a == -1)) => (result == 1)
+  ensures: (n == 1) => (result == 1)
+  ensures: (result >= -1 && result <= 1)
+{
   if n == 0 {
     if a == 1 || a == -1 { return 1; }
     return 0;
@@ -794,7 +861,12 @@ fn _jacobi_odd(a: Int, n: Int) -> Int {
 /// factorization: sigma_k(n) = prod (p^(k(e+1)) - 1)/(p^k - 1); k == 0 is the
 /// divisor count. Returns 0 (documented overflow) when the value exceeds Int
 /// range. Complexity: O(sqrt(n) * log k).
-pub fn divisor_sum(n: Int, k: Int) -> Int {
+pub fn divisor_sum(n: Int, k: Int) -> Int
+  ensures: (n <= 0) => (result == 0)
+  ensures: (n == 1) => (result == 1)
+  ensures: (n > 1 && k < 0) => (result == 0)
+  ensures: result >= 0
+{
   if n <= 0 { return 0; }
   if n == 1 { return 1; }
   if k < 0 { return 0; }
@@ -824,13 +896,20 @@ pub fn divisor_sum(n: Int, k: Int) -> Int {
 
 /// Number of positive divisors of n. Returns 0 for n <= 0. Alias of
 /// divisor_sum(n, 0). Complexity: O(sqrt(n)).
-pub fn divisor_count(n: Int) -> Int {
+pub fn divisor_count(n: Int) -> Int
+  ensures: (n <= 0) => (result == 0)
+  ensures: (n == 1) => (result == 1)
+  ensures: (n > 1) => (result >= 1)
+{
   return divisor_sum(n, 0);
 }
 
 /// All positive divisors of n excluding n itself (unsorted). Returns the empty
 /// list for n <= 1 (1 has no proper divisors). Complexity: O(sqrt(n)).
-pub fn proper_divisors(n: Int) -> Vec[Int] {
+pub fn proper_divisors(n: Int) -> Vec[Int]
+  ensures: (n <= 1) => (result.len() == 0)
+  ensures: (n > 1) => (result.len() >= 1)
+{
   var out = Vec[Int].new();
   if n <= 1 { return out; }
   var i = 1;

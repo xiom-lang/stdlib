@@ -402,8 +402,19 @@ T1/T2 yields.
        n <= 1 overlap before landing). Wave 31 follow-up `71f4d9f`: the
        zero-row Stirling/Eulerian clauses now require k == 0 (probe RED at
        ensures 272:12 -> GREEN), full gates re-run green.
+       Wave 33 (2026-09-26): 57 clauses on math/number_theory.xi (21 safe
+       fns; the 11 p*p-wrap/deferred families stay clause-free): primality
+       guards, factor/prev_prime/nth_prime/primorial shapes, pseudoprime
+       and strong-test mirrors, Lucas-Lehmer thresholds, integer-property
+       guards, symbol ranges ([-1, 1]) with the n == 0/1 mirrors, divisor
+       guards and non-negativity -> math 19.1% -> 21.2%, global 27.8% ->
+       28.2% pub-with-clause; pre-validated by
+       tools/probes/p_wave33_shapes.xi (the probe caught prev_prime(3)
+       returning 0, fixed to 2). Open finding recorded: kronecker_symbol
+       returns 0 for even a with odd n (e.g. 2/7) -- algorithm bug, left
+       for the fix-first batch.
        Ratchet:
-       tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors69.json
+       tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors70.json
        (repo tooling as of the split; positive + negative runs verified;
        earlier floors kept at
        coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55/56/57/58/59/60/61/62/63/64/65.json).
