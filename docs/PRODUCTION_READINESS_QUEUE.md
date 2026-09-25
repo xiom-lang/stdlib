@@ -17,7 +17,9 @@ mixed-bracket/arity lists did not arrive and do not match this repo
 (io/fs.xi has no angle generics; ~100 legacy-angle sites in 15 files
 here); `xiom.cell`'s `ptr.is_null()` is the compiler lane's suspected
 offset-bug shape (`xiom/ptr/ptr.xi` free-fn declaration, method-style
-call) -- await the exact list before editing.
+call) -- the exact PIN list has since arrived: 13 of the 18 mixed-bracket
+sites still existed on main and are fixed (item 6); the arity list is
+still outstanding.
 
 Every coverage wave follows the same protocol (see 0A PART 9 for ~8 worked
 examples): recon (agent or direct read) -> new-shape probe(s) in
@@ -234,3 +236,13 @@ compiler lane bumps `STDLIB_VERSION`, runs
    free-fn declaration; `xiom/cell/cell.xi:155,181` method-style calls) is
    the compiler lane's offset-bug case: compiler fix, not a stdlib arity
    edit.
+   UPDATE 2026-09-25: the compiler lane sent the exact PIN list (18 mixed
+   type spellings, 7 files). On main, 13 remained and were normalized to
+   all-square in `fix(lang)`: core/contracts 231 (`Option<Vec[...>>`),
+   io/console 47, io/fs 50/80/110/124/138/162 (line-shifted) and 215/230/
+   299/338, io/pipe 185 -- all `Result[T, Str>` closers. The other 5
+   (test/harness 34/99, test/test 196/212, math/approximation 502) were
+   already canonical on main (arrows inside square brackets are fine).
+   The four touched modules check clean through the check_modules probe
+   shape. Strict flip waits on the compiler lane's XIOM_STRICT_BRACKETS=1
+   diagnostics + pin bump; the arity list is still outstanding.

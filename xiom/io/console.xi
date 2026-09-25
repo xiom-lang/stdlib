@@ -44,7 +44,7 @@ fn strip_nl(s: Str) -> Str {
 /// Read a line from standard input.
 /// Returns: Ok(line without the trailing newline), Err on EOF or failure.
 /// Complexity: O(n) where n is the line length.
-pub fn console_read_line() -> Result[Str, Str>
+pub fn console_read_line() -> Result[Str, Str]
   ensures: result is Err => result.value.len() > 0
 {
   var buf: [4096]UInt8;

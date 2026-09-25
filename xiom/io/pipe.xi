@@ -182,7 +182,7 @@ pub fn pipe_read_timeout(fd: Int, ms: Int) -> Result[Int, Str]
 /// Params: fd - the pipe fd; data - the bytes; ms - the timeout.
 /// Returns: Ok(bytes written), Err on failure.
 /// Complexity: O(ms) polls.
-pub fn pipe_write_timeout(fd: Int, data: &Vec[UInt8], ms: Int) -> Result[Int, Str>
+pub fn pipe_write_timeout(fd: Int, data: &Vec[UInt8], ms: Int) -> Result[Int, Str]
   ensures: result is Ok => result.value >= 0
   ensures: result is Err => result.value.len() > 0
 {

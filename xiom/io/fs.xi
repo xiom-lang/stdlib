@@ -47,7 +47,7 @@ pub fn fs_read(path: Str) -> Result[Vec[UInt8], Str>
 /// Params: path - the file path; data - the bytes to write.
 /// Returns: Ok(()) on success, Err on failure.
 /// Complexity: O(n) where n is the data length.
-pub fn fs_write(path: Str, data: &Vec[UInt8]) -> Result[Unit, Str>
+pub fn fs_write(path: Str, data: &Vec[UInt8]) -> Result[Unit, Str]
   ensures: result is Err => result.value.len() > 0
 {
   let file: *UInt8;
@@ -77,7 +77,7 @@ pub fn fs_write(path: Str, data: &Vec[UInt8]) -> Result[Unit, Str>
 /// Params: path - the file path; data - the bytes to append.
 /// Returns: Ok(()) on success, Err on failure.
 /// Complexity: O(n) where n is the data length.
-pub fn fs_append(path: Str, data: &Vec[UInt8]) -> Result[Unit, Str>
+pub fn fs_append(path: Str, data: &Vec[UInt8]) -> Result[Unit, Str]
   ensures: result is Err => result.value.len() > 0
 {
   let file: *UInt8;
@@ -107,7 +107,7 @@ pub fn fs_append(path: Str, data: &Vec[UInt8]) -> Result[Unit, Str>
 /// Params: path - the file path.
 /// Returns: Ok(file content), Err on failure.
 /// Complexity: O(n) where n is the file size.
-pub fn fs_read_text(path: Str) -> Result[Str, Str>
+pub fn fs_read_text(path: Str) -> Result[Str, Str]
   ensures: result is Err => result.value.len() > 0
 {
   let r = io.read_file(path);
@@ -121,7 +121,7 @@ pub fn fs_read_text(path: Str) -> Result[Str, Str>
 /// Params: path - the file path; s - the content.
 /// Returns: Ok(()) on success, Err on failure.
 /// Complexity: O(n) where n is the content length.
-pub fn fs_write_text(path: Str, s: Str) -> Result[Unit, Str>
+pub fn fs_write_text(path: Str, s: Str) -> Result[Unit, Str]
   ensures: result is Err => result.value.len() > 0
 {
   let r = io.write_file(path, s);
@@ -135,7 +135,7 @@ pub fn fs_write_text(path: Str, s: Str) -> Result[Unit, Str>
 /// Params: src - the source path; dst - the destination path.
 /// Returns: Ok(()) on success, Err on failure.
 /// Complexity: O(n) where n is the source size.
-pub fn fs_copy(src: Str, dst: Str) -> Result[Unit, Str>
+pub fn fs_copy(src: Str, dst: Str) -> Result[Unit, Str]
   ensures: result is Err => result.value.len() > 0
 {
   // Text-mode copy via the parent read_file/write_file helpers (both are
@@ -159,7 +159,7 @@ pub fn fs_copy(src: Str, dst: Str) -> Result[Unit, Str>
 /// Returns: Ok(()) on success, Err on failure.
 /// Complexity: O(1) syscall (atomic rename via the runtime shim; an existing
 /// dst is replaced, matching POSIX rename semantics on both platforms).
-pub fn fs_move(src: Str, dst: Str) -> Result[Unit, Str>
+pub fn fs_move(src: Str, dst: Str) -> Result[Unit, Str]
   ensures: result is Err => result.value.len() > 0
 {
   let r = io.rename(src, dst);
@@ -212,7 +212,7 @@ pub fn fs_is_dir(path: Str) -> Bool
 /// Params: path - the file path.
 /// Returns: Ok(size in bytes), Err on failure.
 /// Complexity: O(1).
-pub fn fs_size(path: Str) -> Result[Int, Str>
+pub fn fs_size(path: Str) -> Result[Int, Str]
   ensures: result is Ok => result.value >= 0
   ensures: result is Err => result.value.len() > 0
 {
@@ -227,7 +227,7 @@ pub fn fs_size(path: Str) -> Result[Int, Str>
 /// Params: path - the file path.
 /// Returns: Ok(mtime in seconds since the epoch), Err on failure.
 /// Complexity: O(1).
-pub fn fs_mtime(path: Str) -> Result[Int, Str>
+pub fn fs_mtime(path: Str) -> Result[Int, Str]
   ensures: result is Err => result.value.len() > 0
 {
   let r = io.file_modified_time(path);
@@ -296,7 +296,7 @@ pub fn fs_read_range(path: Str, offset: Int, len: Int) -> Result[Vec[UInt8], Str
 /// Params: path - the file path; offset - the start offset; data - the bytes.
 /// Returns: Ok(bytes written), Err on failure.
 /// Complexity: O(n) where n is the data length.
-pub fn fs_write_range(path: Str, offset: Int, data: &Vec[UInt8]) -> Result[Int, Str>
+pub fn fs_write_range(path: Str, offset: Int, data: &Vec[UInt8]) -> Result[Int, Str]
   ensures: result is Ok => result.value >= 0
   ensures: result is Ok => result.value <= data.len()
 {
@@ -335,7 +335,7 @@ pub fn fs_write_range(path: Str, offset: Int, data: &Vec[UInt8]) -> Result[Int, 
 /// Params: path - the file path.
 /// Returns: Ok(()) on success, Err on failure.
 /// Complexity: O(1).
-pub fn fs_touch(path: Str) -> Result[Unit, Str>
+pub fn fs_touch(path: Str) -> Result[Unit, Str]
   ensures: result is Err => result.value.len() > 0
 {
   let file: *UInt8;

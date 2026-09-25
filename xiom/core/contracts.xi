@@ -228,7 +228,7 @@ pub fn build_contract_index() -> ContractIndex
 }
 
 /// Query contracts for a specific function.
-pub fn get_function_contracts(name: Str) -> Option<Vec[FunctionContracts>> {
+pub fn get_function_contracts(name: Str) -> Option[Vec[FunctionContracts]] {
   let idx = _get_index();
   var result = Vec[FunctionContracts].new();
   var i = 0;
