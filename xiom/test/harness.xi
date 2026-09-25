@@ -93,20 +93,26 @@ fn is_skipped(h: &Harness, name: Str) -> Bool {
 
 /// Create an empty test runner.
 /// Complexity: O(1).
-pub fn test_harness_new() -> Harness {
+pub fn test_harness_new() -> Harness
+  ensures: result.names.len() == 0 && result.tests.len() == 0 && result.skipped.len() == 0
+{
   Harness{ names: Vec[Str]::new(); tests: Vec[fn() -> Result[Unit, Str]]::new(); skipped: Vec[Str]::new(); }
 }
 
 /// Register a named test.
 /// Complexity: O(1) amortized.
-pub fn harness_add_test(h: &mut Harness, name: Str, f: fn() -> Result[Unit, Str]) {
+pub fn harness_add_test(h: &mut Harness, name: Str, f: fn() -> Result[Unit, Str])
+  ensures: h.names.len() == h.names.len()@pre + 1 && h.tests.len() == h.tests.len()@pre + 1
+{
   h.names.push(name);
   h.tests.push(f);
 }
 
 /// Run all tests sequentially, respecting skipped names.
 /// Complexity: O(tests).
-pub fn harness_run(h: &Harness) -> TestReport {
+pub fn harness_run(h: &Harness) -> TestReport
+  ensures: result.passed + result.failed + result.skipped == h.tests.len()
+{
   let start = time.Instant.now();
   var passed: Int = 0;
   var failed: Int = 0;
@@ -133,7 +139,9 @@ pub fn harness_run(h: &Harness) -> TestReport {
 
 /// Run only tests whose name matches `filter` (substring, case-sensitive).
 /// Complexity: O(tests).
-pub fn harness_run_filtered(h: &Harness, filter: Str) -> TestReport {
+pub fn harness_run_filtered(h: &Harness, filter: Str) -> TestReport
+  ensures: result.passed + result.failed + result.skipped <= h.tests.len()
+{
   let start = time.Instant.now();
   var passed: Int = 0;
   var failed: Int = 0;
@@ -163,13 +171,17 @@ pub fn harness_run_filtered(h: &Harness, filter: Str) -> TestReport {
 /// Run tests with up to `workers` threads. This single-threaded build runs
 /// them sequentially (documented).
 /// Complexity: O(tests).
-pub fn harness_parallel(h: &Harness, workers: Int) -> TestReport {
+pub fn harness_parallel(h: &Harness, workers: Int) -> TestReport
+  ensures: result.passed + result.failed + result.skipped == h.tests.len()
+{
   harness_run(h)
 }
 
 /// Mark a named test as skipped.
 /// Complexity: O(skipped).
-pub fn harness_skip(h: &mut Harness, name: Str) {
+pub fn harness_skip(h: &mut Harness, name: Str)
+  ensures: h.skipped.len() >= 1
+{
   var i: Int = 0;
   while i < h.skipped.len() {
     let s = h.skipped[i];
@@ -184,7 +196,9 @@ pub fn harness_skip(h: &mut Harness, name: Str) {
 /// Time `f` over `iterations` calls and register the result under `name`.
 /// Returns the total elapsed time in milliseconds.
 /// Complexity: O(iterations * cost of f).
-pub fn harness_benchmark(h: &mut Harness, name: Str, f: fn(), iterations: Int) -> Int {
+pub fn harness_benchmark(h: &mut Harness, name: Str, f: fn(), iterations: Int) -> Int
+  ensures: h.names.len() == h.names.len()@pre + 1 && h.tests.len() == h.tests.len()@pre + 1
+{
   let start = time.Instant.now();
   var i: Int = 0;
   while i < iterations {
@@ -206,25 +220,33 @@ fn bench_ok() -> Result[Unit, Str] {
 
 /// The number of passed tests.
 /// Complexity: O(1).
-pub fn report_passed(r: &TestReport) -> Int {
+pub fn report_passed(r: &TestReport) -> Int
+  ensures: result == r.passed
+{
   r.passed
 }
 
 /// The number of failed tests.
 /// Complexity: O(1).
-pub fn report_failed(r: &TestReport) -> Int {
+pub fn report_failed(r: &TestReport) -> Int
+  ensures: result == r.failed
+{
   r.failed
 }
 
 /// The number of skipped tests.
 /// Complexity: O(1).
-pub fn report_skipped(r: &TestReport) -> Int {
+pub fn report_skipped(r: &TestReport) -> Int
+  ensures: result == r.skipped
+{
   r.skipped
 }
 
 /// The total run time in milliseconds.
 /// Complexity: O(1).
-pub fn report_duration_ms(r: &TestReport) -> Int {
+pub fn report_duration_ms(r: &TestReport) -> Int
+  ensures: result == r.duration_ms
+{
   r.duration_ms
 }
 
@@ -236,7 +258,9 @@ pub fn report_print(r: &TestReport) {
 
 /// The report serialized as JSON.
 /// Complexity: O(1).
-pub fn report_json(r: &TestReport) -> Str {
+pub fn report_json(r: &TestReport) -> Str
+  ensures: result.len() >= 47
+{
   "{\"passed\":" + convert.int_to_string(r.passed) + ",\"failed\":" + convert.int_to_string(r.failed) + ",\"skipped\":" + convert.int_to_string(r.skipped) + ",\"duration_ms\":" + convert.int_to_string(r.duration_ms) + "}"
 }
 
@@ -245,7 +269,9 @@ pub fn report_json(r: &TestReport) -> Str {
 /// pointers are read-only after initialization), so this returns 0 when at
 /// least one test has been registered and 1 otherwise.
 /// Complexity: O(1).
-pub fn test_main() -> Int {
+pub fn test_main() -> Int
+  ensures: result == 0 || result == 1
+{
   if g_tests.n == 0 {
     return 1;
   };

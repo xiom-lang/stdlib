@@ -113,20 +113,26 @@ fn strip_trailing_newline(s: Str) -> Str {
 }
 
 /// Read and parse an Int from standard input; Err on bad input.
-pub fn read_int() -> Result[Int, Str] {
+pub fn read_int() -> Result[Int, Str]
+  ensures: result is Err => result.value.len() > 0
+{
   let line = read_line();
   return parse_int(line);
 }
 
 /// Read and parse a Float64 from standard input; Err on bad input.
-pub fn read_float() -> Result[Float64, Str] {
+pub fn read_float() -> Result[Float64, Str]
+  ensures: result is Err => result.value.len() > 0
+{
   let line = read_line();
   return parse_float(line);
 }
 
 /// Parse a decimal integer (optional leading +/- sign, ASCII digits only).
 /// Deterministic core of read_int, exposed for parsing without stdin.
-pub fn parse_int(s: Str) -> Result[Int, Str] {
+pub fn parse_int(s: Str) -> Result[Int, Str]
+  ensures: result is Err => result.value.len() > 0
+{
   let trimmed = s.trim();
   if trimmed.is_empty() {
     return Err("empty input");
@@ -157,7 +163,9 @@ pub fn parse_int(s: Str) -> Result[Int, Str] {
 
 /// Parse a decimal float (optional sign, one optional '.', ASCII digits;
 /// no exponent support). Deterministic core of read_float.
-pub fn parse_float(s: Str) -> Result[Float64, Str] {
+pub fn parse_float(s: Str) -> Result[Float64, Str]
+  ensures: result is Err => result.value.len() > 0
+{
   let trimmed = s.trim();
   if trimmed.is_empty() {
     return Err("empty input");
@@ -838,7 +846,10 @@ pub fn extension(path: Str) -> Option[Str]
 }
 
 /// True when the path is absolute.
-pub fn is_absolute(path: Str) -> Bool {
+pub fn is_absolute(path: Str) -> Bool
+  ensures: result == true => path.len() >= 1
+  ensures: path.len() == 0 => result == false
+{
   if path.is_empty() {
     return false;
   }
@@ -889,7 +900,9 @@ pub fn stdin_read_line() -> Str
 /// flush_stdout is a no-op: the Xiom runtime does not expose fflush
 /// via externs, but stdio is line-buffered by default so explicit
 /// flushing is rarely required.
-pub fn flush_stdout() {
+pub fn flush_stdout()
+  requires: true
+{
 }
 
 // ----------------------------------------------------------
@@ -898,7 +911,10 @@ pub fn flush_stdout() {
 
 /// write_file_bytes writes raw bytes to a file, truncating if it exists.
 /// Complexity: O(n) where n = data.len().
-pub fn write_file_bytes(path: Str, data: &Vec[UInt8]) -> Result[Unit, IOError] {
+pub fn write_file_bytes(path: Str, data: &Vec[UInt8]) -> Result[Unit, IOError]
+  ensures: result is Ok => file_exists(path)
+  ensures: result is Err => result.value.len() > 0
+{
   let file: *UInt8;
   unsafe {
     file = fopen(path.c_str(), "w");
@@ -981,7 +997,10 @@ pub fn file_modified_time(path: Str) -> Option[Int] {
 
 /// move_file renames (moves) a file or directory from src to dst.
 /// Alias for rename.  Complexity: O(1) OS call.
-pub fn move_file(src: Str, dst: Str) -> Result[Unit, IOError] {
+pub fn move_file(src: Str, dst: Str) -> Result[Unit, IOError]
+  ensures: result is Ok => file_exists(dst)
+  ensures: result is Err => result.value.len() > 0
+{
   return rename(src, dst);
 }
 
@@ -993,7 +1012,9 @@ pub fn dir_exists(path: Str) -> Bool {
 /// create_dir_all creates the directory and all missing parent
 /// directories along the path.  Returns Ok(()) on success.
 /// Complexity: O(d) where d = directory depth.
-pub fn create_dir_all(path: Str) -> Result[Unit, IOError] {
+pub fn create_dir_all(path: Str) -> Result[Unit, IOError]
+  ensures: result is Ok && path.len() > 0 => is_dir(path)
+{
   if path.is_empty() {
     return Ok(());
   };
@@ -1062,7 +1083,10 @@ pub fn read_file_lines(path: Str) -> Result[Vec[Str], IOError]
 
 /// write_file_lines writes a Vec[Str] to a file, one line per entry.
 /// Lines are separated by '\n'.  Complexity: O(n).
-pub fn write_file_lines(path: Str, lines: &Vec[Str]) -> Result[Unit, IOError] {
+pub fn write_file_lines(path: Str, lines: &Vec[Str]) -> Result[Unit, IOError]
+  ensures: result is Ok => file_exists(path)
+  ensures: result is Err => result.value.len() > 0
+{
   var content = "";
   var i = 0;
   var n = lines.len();
@@ -1079,6 +1103,9 @@ pub fn write_file_lines(path: Str, lines: &Vec[Str]) -> Result[Unit, IOError] {
 /// append_line appends a single line (followed by '\n') to a file.
 /// If the file does not exist it will be created.
 /// Complexity: O(n) where n = line length.
-pub fn append_line(path: Str, line: Str) -> Result[Unit, IOError] {
+pub fn append_line(path: Str, line: Str) -> Result[Unit, IOError]
+  ensures: result is Ok => file_exists(path)
+  ensures: result is Err => result.value.len() > 0
+{
   return append_file(path, line + "\n");
 }

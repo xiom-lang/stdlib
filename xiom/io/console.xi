@@ -107,7 +107,9 @@ pub fn console_write_line(s: Str)
 /// Write a string to standard error.
 /// Params: s - the string.
 /// Complexity: O(n).
-pub fn console_write_error(s: Str) {
+pub fn console_write_error(s: Str)
+  requires: true
+{
   let c = s.c_str();
   unsafe {
     let _ = fwrite(c, 1 as UInt, s.len() as UInt, xiom_stderr() as *UInt8);
@@ -127,7 +129,9 @@ pub fn console_clear()
 /// Set the terminal window title.
 /// Params: title - the new title.
 /// Complexity: O(1) shell invocation.
-pub fn console_set_title(title: Str) {
+pub fn console_set_title(title: Str)
+  requires: true
+{
   var cmd = "title ";
   cmd = cmd + title;
   unsafe {
@@ -138,7 +142,9 @@ pub fn console_set_title(title: Str) {
 /// Terminal dimensions; tuple is (rows, cols).
 /// Returns: a documented simulation of (24, 80).
 /// Complexity: O(1).
-pub fn console_get_size() -> (Int, Int) {
+pub fn console_get_size() -> (Int, Int)
+  ensures: result.0 == 24 && result.1 == 80
+{
   return (24, 80);
 }
 

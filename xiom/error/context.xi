@@ -59,14 +59,20 @@ fn build(message: Str, context: Str) -> ContextError {
 /// Create a single-layer Error with `message` and no context. Bootstrap
 /// helper (the frozen stubs provide no constructor).
 /// Complexity: O(1).
-pub fn error_context_new(message: Str) -> ContextError {
+pub fn error_context_new(message: Str) -> ContextError
+  ensures: result.messages.len() == 1 && result.free.len() == 1 && result.keys.len() == 0 && result.values.len() == 0
+{
   build(message, "")
 }
 
 /// Attach a free-form context string to an Error (head layer). Returns a new
 /// Error; the original is unchanged.
 /// Complexity: O(1).
-pub fn error_with_context(e: ContextError, context: Str) -> ContextError {
+pub fn error_with_context(e: ContextError, context: Str) -> ContextError
+  ensures: result.messages.len() == e.messages.len()
+  ensures: result.keys.len() == e.keys.len() && result.values.len() == e.values.len()
+  ensures: result.free.len() >= 1
+{
   var messages = Vec[Str].new();
   var i: Int = 0;
   while i < e.messages.len() {
@@ -91,7 +97,10 @@ pub fn error_with_context(e: ContextError, context: Str) -> ContextError {
 
 /// The free-form context string of the head layer, if any.
 /// Complexity: O(1).
-pub fn error_context(e: ContextError) -> Option[Str] {
+pub fn error_context(e: ContextError) -> Option[Str]
+  ensures: result is Some => result.value.len() > 0
+  ensures: result is None && e.free.len() > 0 => e.free[0].len() == 0
+{
   if e.free.len() > 0 {
     let f = e.free[0];
     if f.len() > 0 {
@@ -103,7 +112,10 @@ pub fn error_context(e: ContextError) -> Option[Str] {
 
 /// Wrap `e` with an outer message. The wrapped Error becomes the cause.
 /// Complexity: O(len(chain)).
-pub fn error_wrap(e: ContextError, message: Str) -> ContextError {
+pub fn error_wrap(e: ContextError, message: Str) -> ContextError
+  ensures: result.messages.len() == e.messages.len() + 1 && result.free.len() == e.free.len() + 1
+  ensures: result.keys.len() == 0 && result.values.len() == 0
+{
   var messages = Vec[Str].new();
   messages.push(message);
   var i: Int = 0;
@@ -125,14 +137,19 @@ pub fn error_wrap(e: ContextError, message: Str) -> ContextError {
 
 /// The underlying message of the Error (head layer).
 /// Complexity: O(1).
-pub fn error_unwrap(e: ContextError) -> Str {
+pub fn error_unwrap(e: ContextError) -> Str
+  requires: e.messages.len() >= 1
+{
   let m = e.messages[0];
   m
 }
 
 /// Attach a named key/value pair to the head layer. Returns a new Error.
 /// Complexity: O(head pairs).
-pub fn error_attach_context(e: ContextError, key: Str, value: Str) -> ContextError {
+pub fn error_attach_context(e: ContextError, key: Str, value: Str) -> ContextError
+  ensures: result.keys.len() == e.keys.len() + 1 && result.values.len() == e.values.len() + 1
+  ensures: result.messages.len() == e.messages.len() && result.free.len() == e.free.len()
+{
   var keys = Vec[Str].new();
   var i: Int = 0;
   while i < e.keys.len() {
@@ -154,7 +171,9 @@ pub fn error_attach_context(e: ContextError, key: Str, value: Str) -> ContextErr
 
 /// The value stored under `key` on the head layer, if any.
 /// Complexity: O(head pairs).
-pub fn error_context_get(e: ContextError, key: Str) -> Option[Str] {
+pub fn error_context_get(e: ContextError, key: Str) -> Option[Str]
+  ensures: result is Some => e.keys.len() >= 1
+{
   var i: Int = 0;
   while i < e.keys.len() {
     let k = e.keys[i];
@@ -178,7 +197,9 @@ pub fn error_context_keys(e: ContextError) -> Vec[Str]
 
 /// All context pairs of the head layer; each tuple is (key, value).
 /// Complexity: O(head pairs).
-pub fn error_context_all(e: ContextError) -> Vec[(Str, Str)] {
+pub fn error_context_all(e: ContextError) -> Vec[(Str, Str)]
+  ensures: result.len() == e.keys.len()
+{
   var pairs = Vec[(Str, Str)].new();
   var i: Int = 0;
   while i < e.keys.len() {
@@ -193,7 +214,9 @@ pub fn error_context_all(e: ContextError) -> Vec[(Str, Str)] {
 /// Format an error for display: `message (context: <free>; k=v, ...)` when
 /// context exists, or just `message` otherwise.
 /// Complexity: O(len(message) + len(context)).
-pub fn error_pretty_print(e: ContextError) -> Str {
+pub fn error_pretty_print(e: ContextError) -> Str
+  requires: e.messages.len() >= 1
+{
   let msg = e.messages[0];
   var suffix = "";
   if e.free.len() > 0 && e.free[0].len() > 0 {
@@ -218,7 +241,9 @@ pub fn error_pretty_print(e: ContextError) -> Str {
 /// Format an Error and its full chain, head first, as
 /// `"outer <- inner (context: ...) <- root"`.
 /// Complexity: O(len(chain) * message lengths).
-pub fn error_pretty_print_chain(e: ContextError) -> Str {
+pub fn error_pretty_print_chain(e: ContextError) -> Str
+  ensures: result.len() >= e.messages.len() - 1
+{
   var result = "";
   var i: Int = 0;
   let n = e.messages.len();

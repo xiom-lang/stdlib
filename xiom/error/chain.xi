@@ -43,7 +43,9 @@ fn str_eq(a: Str, b: Str) -> Bool {
 
 /// Create a chain with a single message.
 /// Complexity: O(1).
-pub fn error_chain_new(message: Str) -> ChainError {
+pub fn error_chain_new(message: Str) -> ChainError
+  ensures: error_chain_len(result) == 1
+{
   var messages = Vec[Str].new();
   messages.push(message);
   ChainError{ messages: messages; }
@@ -105,14 +107,18 @@ pub fn error_chain_messages(e: ChainError) -> Vec[Str]
 
 /// The oldest (root) message.
 /// Complexity: O(1).
-pub fn error_chain_root(e: ChainError) -> Str {
+pub fn error_chain_root(e: ChainError) -> Str
+  requires: e.messages.len() >= 1
+{
   let root = e.messages[e.messages.len() - 1];
   root
 }
 
 /// The newest (head) message.
 /// Complexity: O(1).
-pub fn error_chain_top(e: ChainError) -> Str {
+pub fn error_chain_top(e: ChainError) -> Str
+  requires: e.messages.len() >= 1
+{
   let top = e.messages[0];
   top
 }
@@ -142,7 +148,9 @@ pub fn error_chain_iter(e: ChainError) -> Vec[ChainError]
 
 /// Whether any node in the chain carries `message`.
 /// Complexity: O(len(chain) * len(message)) for the content comparison.
-pub fn error_chain_has(e: ChainError, message: Str) -> Bool {
+pub fn error_chain_has(e: ChainError, message: Str) -> Bool
+  ensures: result == true => error_chain_len(e) >= 1
+{
   var i: Int = 0;
   while i < e.messages.len() {
     let m = e.messages[i];

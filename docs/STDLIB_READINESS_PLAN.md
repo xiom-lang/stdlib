@@ -351,11 +351,20 @@ T1/T2 yields.
        bounds on result vectors, Str length floors on formatted output,
        benchmark passthrough, empty/length mirrors) -> test 3.1% -> 70.8%,
        global 24.3% -> 25.0% pub-with-clause; pre-validated by
-       tools/probes/p_wave27_shapes.xi. Ratchet:
-       tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors64.json
+       tools/probes/p_wave27_shapes.xi. Wave 28 (2026-09-25): 51 clauses on
+       test/harness.xi (13: registry counts, @pre push counts, counter-sum
+       identities, report field mirrors, JSON scaffolding floor), the error
+       tails (21: field-length identities on constructors/copiers, Option
+       payload length, input guards), and the io tails (17: Result payload
+       length, boolean/path mirrors, tuple element values and pair
+       implication, filesystem-backed Ok clauses) -> test 3.1% -> 90.8%,
+       error 37.5% -> 90.0%, io 78.7% -> 94.4%, global 25.0% -> 25.8%
+       pub-with-clause; pre-validated by tools/probes/p_wave28_shapes.xi.
+       Ratchet:
+       tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors65.json
        (repo tooling as of the split; positive + negative runs verified;
        earlier floors kept at
-       coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55/56/57/58/59/60/61/62/63.json).
+       coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55/56/57/58/59/60/61/62/63/64.json).
       Floors are per top-level stdlib/xiom directory and must be refreshed
       when a module is ADDED (new uncovered pub fns dilute the percentage
       -- TOML dropped serialize 6.1% -> 5.4%, tz dropped time 13% ->

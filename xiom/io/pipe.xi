@@ -24,7 +24,9 @@ extern "C" {
 /// Create a pipe; tuple is (read_fd, write_fd).
 /// Returns: (read_fd, write_fd), or (-1, -1) on failure.
 /// Complexity: O(1) syscall.
-pub fn pipe_create() -> (Int, Int) {
+pub fn pipe_create() -> (Int, Int)
+  ensures: result.0 == -1 => result.1 == -1
+{
   var fds: [2]Int32;
   let rc = unsafe { xiom_pipe(&fds[0]) };
   if rc != 0 {
@@ -94,7 +96,9 @@ pub fn pipe_close(fd: Int)
 /// Params: fd - the pipe fd.
 /// Returns: true while the fd is non-negative (documented simulation).
 /// Complexity: O(1).
-pub fn pipe_is_open(fd: Int) -> Bool {
+pub fn pipe_is_open(fd: Int) -> Bool
+  ensures: result == (fd >= 0)
+{
   return fd >= 0;
 }
 

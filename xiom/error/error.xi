@@ -34,7 +34,9 @@ pub fn Error.chain(self) -> ErrorChain
 }
 
 /// Render the chain as a single multi-line string.
-pub fn ErrorChain.display(self) -> Str {
+pub fn ErrorChain.display(self) -> Str
+  ensures: result.len() >= self.errors.len() - 1
+{
   var result: Str = "";
   var i: Int = 0;
   while i < self.errors.len() {
@@ -73,12 +75,16 @@ pub fn context[T, E](result: Result[T, E], msg: Str) -> Result[T, Str] {
 pub type Backtrace = { frames: Vec<Str>; } derive[Clone]
 
 /// Capture the current backtrace.
-pub fn capture_backtrace() -> Backtrace {
+pub fn capture_backtrace() -> Backtrace
+  ensures: result.frames.len() == 0
+{
   return Backtrace{ frames: Vec[Str].new() };
 }
 
 /// Render the frames as a single multi-line string.
-pub fn Backtrace.display(self) -> Str {
+pub fn Backtrace.display(self) -> Str
+  ensures: result.len() >= self.frames.len() - 1
+{
   if self.frames.len() == 0 {
     return "";
   }

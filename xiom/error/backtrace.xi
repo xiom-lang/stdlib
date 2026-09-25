@@ -35,7 +35,9 @@ var capture_enabled: Bool = true;
 /// Create an error carrying `message` and no backtrace. Bootstrap helper
 /// (the frozen stubs provide no constructor).
 /// Complexity: O(1).
-pub fn error_backtrace_new(message: Str) -> BtError {
+pub fn error_backtrace_new(message: Str) -> BtError
+  ensures: result.frames.len() == 0 && result.raw.len() == 0 && result.message.len() == message.len()
+{
   BtError{ message: message; frames: Vec[Str].new(); raw: Vec[Int].new(); }
 }
 
@@ -68,7 +70,9 @@ pub fn error_backtrace(e: BtError) -> Vec[Str]
 /// Capture the current stack as symbol strings. The runtime has no stack
 /// walking intrinsic yet, so this returns an empty vector (documented).
 /// Complexity: O(1).
-pub fn error_capture_backtrace() -> Vec[Str] {
+pub fn error_capture_backtrace() -> Vec[Str]
+  ensures: result.len() == 0
+{
   Vec[Str].new()
 }
 
@@ -119,7 +123,9 @@ pub fn error_backtrace_symbolize(frames: &Vec[Int]) -> Vec[Str]
 /// captured stack is empty (see `error_capture_backtrace`), so the returned
 /// error carries the same message with empty frames.
 /// Complexity: O(1).
-pub fn error_with_backtrace(e: BtError) -> BtError {
+pub fn error_with_backtrace(e: BtError) -> BtError
+  ensures: result.message.len() == e.message.len()
+{
   if !capture_enabled {
     return e;
   };
@@ -129,7 +135,9 @@ pub fn error_with_backtrace(e: BtError) -> BtError {
 
 /// Whether an error carries a backtrace (has at least one frame).
 /// Complexity: O(1).
-pub fn error_has_backtrace(e: BtError) -> Bool {
+pub fn error_has_backtrace(e: BtError) -> Bool
+  ensures: result == (e.frames.len() > 0)
+{
   e.frames.len() > 0
 }
 

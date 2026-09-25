@@ -173,7 +173,10 @@ pub fn fs_move(src: Str, dst: Str) -> Result[Unit, Str>
 /// Params: path - the path.
 /// Returns: true if the path can be opened for reading.
 /// Complexity: O(1).
-pub fn fs_exists(path: Str) -> Bool {
+pub fn fs_exists(path: Str) -> Bool
+  ensures: result == true => io.file_exists(path) || io.is_dir(path)
+  ensures: result == false => !io.file_exists(path) && !io.is_dir(path)
+{
   // True for files AND directories: io.file_exists is fopen-based and answers
   // false for directories on POSIX, which made fs_is_dir's postcondition
   // (result => fs_exists) unsatisfiable for real directories.
