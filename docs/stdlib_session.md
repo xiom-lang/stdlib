@@ -353,6 +353,32 @@ registry pin, agent recon for the rest)**
   (checklist + 2-highlight notes fragment ready) and the compiler-lane
   handover (strict-default flip now unblocked).
 
+**SESSION 2026-09-25 morning-block (wave 28: harness + error + io tails)**
+- Wave 28 (`a774567`, floors65): 51 clauses -- `test/harness.xi` (13:
+  registry counts on the constructor, `@pre` push counts on add/benchmark,
+  counter-sum identities on run/filtered/parallel, report field mirrors,
+  the JSON scaffolding floor, skip non-emptiness), the error tails (21:
+  field-length identities on constructors/copiers, Option payload length
+  in a clause, the None+free guard, input-arity requires), and the io tails
+  (17: Result payload length on the parse/read errors, boolean/path
+  mirrors, exact `console_get_size` tuple, `pipe_create` pair implication,
+  filesystem-backed Ok clauses). test 3.1% -> **90.8%**, error 37.5% ->
+  **90.0%**, io 78.7% -> **94.4%**, global 25.0% -> **25.8%**
+  pub-with-clause. Gates: modules 509/509, corpus 951/951 (1261.1s),
+  probes **179/179** (incl. `p_wave28_shapes.xi`), barename 0/509, ratchets
+  OK. Targeted smokes also run: test 3/3, error 5/5, io 20/20, path 18/18,
+  folder 5/5.
+- Coverage wave scoreboard after waves 22-28: stats 0->25%, convert
+  2->11.5%, math 4.1->8.3%, collections 3.5->77.2%, text 2.4->95.1%,
+  test 3.1->90.8%, error 37.5->90.0%, io 78.7->94.4%; global 21.2% ->
+  **25.8%** pub-with-clause; floors59-65 all wired and green; 179 probes.
+- Remaining for the stdlib 100%: waves 29+ (regex per the ready recon;
+  math tails: signal/number_theory/factorial/combinatorics/exponential),
+  control_theory + lp_simplex (full plan ready), geom dedup unit, tzdata
+  phase 2, untested-surface generator classes, then the release cut
+  (checklist + 2-highlight notes fragment ready) and the compiler-lane
+  handover (strict-default flip now unblocked).
+
 
 **SESSION 2026-09-20 (multi-param tranche closure + no-NASM runtime link fix)**
 - Local main: `ebae67c` + `b4f2655` (runtime fallback linkage + probe),
