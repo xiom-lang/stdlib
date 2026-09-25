@@ -371,8 +371,19 @@ T1/T2 yields.
        clause poisoning user codegen -- tools/known_failures/README.md,
        evidence probe p_result_payload_ir_repro.xi; affected clauses
        replaced by payload-free guards).
+       Wave 30 (2026-09-25): 57 clauses on math/signal.xi (40: exact
+       transform/filter/window output lengths, wavelet coefficient bounds,
+       empty-input and filter-order guards, spectrogram/mel row guards,
+       MFCC cap) and math/exponential.xi (17: NaN-tolerant non-negativity
+       for exp/exp2/exp10/exp_pure, expm1 >= -1, log-domain sign floors
+       for x > 1 / x > 0, positive-base pow sign, pow_int(_, 0) == 1.0)
+       -> math 8.3% -> 14.1% (signal 40/40 and exponential 18/18 pub
+       covered), global 26.2% -> 27.1% pub-with-clause; pre-validated by
+       tools/probes/p_wave30_shapes.xi. Also fixed filter_bandstop reading
+       the empty band-pass buffer for order <= 0 (probe exit 27 before,
+       0 after).
        Ratchet:
-       tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors66.json
+       tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors67.json
        (repo tooling as of the split; positive + negative runs verified;
        earlier floors kept at
        coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55/56/57/58/59/60/61/62/63/64/65.json).
