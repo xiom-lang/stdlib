@@ -314,6 +314,45 @@ registry pin, agent recon for the rest)**
   tails wave (recon agent still pending at write time), and the release
   cut per `docs/RELEASE_CHECKLIST.md`.
 
+**SESSION 2026-09-25 dawn block (wave 27 test, recon for the rest)**
+- Wave 27 (`e7f2d37`, floors64): 46 clauses on `test/test.xi` +
+  `test/assert.xi` (exact Boolean mirrors on the `TestResult.passed` field,
+  panic-mirror ensures on the assert module -- the clause is only reached on
+  the return path where the condition holds, count bounds on result
+  vectors, Str length floors on the formatted outputs, benchmark
+  passthrough, empty/length mirrors). test 3.1% -> **70.8%** (46/65),
+  global 24.3% -> **25.0%** pub-with-clause. Gates: modules 509/509,
+  corpus 951/951 (1357.8s), probes **178/178**, barename 0/509, ratchets OK.
+  Probe constraint learned: only ONE `xiom.test` sibling can be imported per
+  program (the second clobbers the first's exports -- known limitation), and
+  cross-module type names must be referenced by their UNQUALIFIED leaf
+  (`Vec[TestResult]`, not `Vec[test.TestResult]`; the qualified form
+  silently resolves to Vec[Int]).
+- Recon delivered (agent, read-only; implementation next):
+  * test + error + io tails: 95 proposed clauses across ~92 fns
+    (`test/harness.xi` 13, `error/{backtrace,chain,context,error}.xi` 21,
+    `io/{io,console,fs,pipe}.xi` 17, plus the test files now executed).
+    Expected post-wave: test ~91%, error ~90%, io ~94%.
+  * math tails: number_theory (~55 clauses), factorial (~30), combinat-
+    orics (~36), signal (~48 pure length invariants), exponential (~16
+    sign/NaN) -- waves 28+.
+  * regex wave: `regex/regex.xi` ~24 clauses, `syntax.xi` ~10, `engine.xi`
+    ~14 (payload caveats), `pcre_lite.xi` ~8 (state-free only).
+  * control_theory + lp_simplex: full implementation plan with local-matrix
+    repair, copied geom rank/mul helpers, Bland-rule tableau, the
+    documented empty-on-failure convention, and a 16-case verification
+    plan (next big feature unit; `state_space` deferred for tuple-ABI risk).
+- Coverage wave summary so far: waves 22-27 lifted stats 0->25%, convert
+  2->11.5%, math 4.1->8.3%, collections 3.5->77.2%, text 2.4->95.1%, test
+  3.1->70.8%; global 21.2% -> **25.0%** pub-with-clause, all ratcheted
+  (floors59-64), every wave pre-validated by a shape probe and gated by the
+  full corpus.
+- Remaining for the stdlib 100%: waves 28+ (regex, math tails, test/harness,
+  error/io tails), control_theory + lp_simplex, geom dedup unit, tzdata
+  phase 2, untested-surface generator classes, then the release cut
+  (checklist + 2-highlight notes fragment ready) and the compiler-lane
+  handover (strict-default flip now unblocked).
+
 
 **SESSION 2026-09-20 (multi-param tranche closure + no-NASM runtime link fix)**
 - Local main: `ebae67c` + `b4f2655` (runtime fallback linkage + probe),
