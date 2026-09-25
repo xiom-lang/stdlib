@@ -7,6 +7,18 @@ probes 181/181, barename 0/509, coverage floors66, doc ratchet, strict-clause
 catalog clean); global pub-with-clause 26.2%; release pre-flight ready
 (`docs/RELEASE_CHECKLIST.md`, `release-notes/v0.62.0.md` = 2 highlights).
 
+Update 2026-09-25 (wave 30 landed): A1/A2 DONE (`02dde42`, floors67) --
+signal 40/40 and exponential 18/18 pub covered; math 8.3% -> 14.1%,
+global 26.2% -> 27.1%; gates on the commit: modules 509/509, corpus
+951/951, probes 182/182, barename 0/509, both ratchets. Also fixed
+`filter_bandstop` order <= 0 (empty-buffer OOB; probe exit 27 -> 0).
+Next in order: A3/A4, B, C, D, E, F. Relay note: the compiler lane's
+mixed-bracket/arity lists did not arrive and do not match this repo
+(io/fs.xi has no angle generics; ~100 legacy-angle sites in 15 files
+here); `xiom.cell`'s `ptr.is_null()` is the compiler lane's suspected
+offset-bug shape (`xiom/ptr/ptr.xi` free-fn declaration, method-style
+call) -- await the exact list before editing.
+
 Every coverage wave follows the same protocol (see 0A PART 9 for ~8 worked
 examples): recon (agent or direct read) -> new-shape probe(s) in
 `tools/probes/` -> clauses -> `coverage_scan.ps1 -DumpFloors
@@ -214,3 +226,11 @@ compiler lane bumps `STDLIB_VERSION`, runs
 5. Same-leaf private type collision (Timer) and clause Bool/Int coercion --
    fixed in the compiler lane's m134/m135/m136; our tree carries the
    workarounds; re-verify on the next pin.
+6. Strict-parser prep (relay 2026-09-25): the mixed-bracket/arity error
+   lists were relayed without their file/site enumerations. This repo's
+   `io/fs.xi` has no angle-bracket generics; ~100 legacy-angle sites live
+   in 15 other files, so no bracket sweep until the compiler lane sends
+   the exact list. `xiom.cell`'s `ptr.is_null()` (`xiom/ptr/ptr.xi:36`
+   free-fn declaration; `xiom/cell/cell.xi:155,181` method-style calls) is
+   the compiler lane's offset-bug case: compiler fix, not a stdlib arity
+   edit.

@@ -419,6 +419,40 @@ registry pin, agent recon for the rest)**
   untested-surface generator classes, then the release cut (checklist +
    2-highlight notes fragment ready) and the compiler-lane handover.
 
+**SESSION 2026-09-25 afternoon-block (wave 30: signal + exponential contracts)**
+- Wave 30 (`02dde42`, floors67): 57 clauses -- `math/signal.xi` (40: exact
+  transform length identities (dft/fft 2n, idft/ifft n/2, dct/dst/windows/
+  spectrum/psd/cepstrum n, convolve/correlate n+m-1), wavelet coefficient
+  bounds (haar/dwt/daubechies <= n, idwt <= coeffs.len()), empty-input and
+  filter-order guards, spectrogram/mel row guards, MFCC <= 24) and
+  `math/exponential.xi` (17: NaN-tolerant non-negativity for exp/exp2/exp10/
+  exp_pure, expm1 >= -1, log-domain sign floors for x > 1 / x > 0,
+  positive-base pow sign, pow_int(_, 0) == 1.0 exactly). math 8.3% ->
+  **14.1%** (signal 40/40 and exponential 18/18 pub covered), global 26.2%
+  -> **27.1%** pub-with-clause.
+- Fixed a latent OOB in `filter_bandstop`: `order <= 0` indexed the empty
+  band-pass buffer and silently returned the input (probe exit 27 before,
+  0 after; the guard now returns empty, matching the sibling filters).
+- Probe `p_wave30_shapes.xi` (182nd probe) pre-validated every shape with
+  RED evidence captured before the fix and green after. Gates on `02dde42`:
+  modules 509/509 (743.3s), corpus 951/951 (2453.4s), probes 182/182
+  (921.7s), barename 0/509 (1018.1s), coverage floors67 + doc ratchet OK.
+- Relay note (compiler lane, 2026-09-25): the mixed-bracket/arity error
+  lists did not arrive with the relay. This repo's `io/fs.xi` has no
+  angle-bracket generics; a legacy-angle inventory finds ~100 sites in 15
+  files (alloc, compress, convert, core/contracts, crypto aead/cipher/
+  crypto, error, net/tls_helper, os/env, os/path, rand, reflect, regex,
+  serialize), far more than 18/7, so the list needs the compiler lane's
+  exact file/site spellings before any stdlib edit. The `xiom.cell`
+  question is answered: `xiom/ptr/ptr.xi` declares
+  `pub fn is_null[T](ptr: *const T) -> Bool` and `xiom/cell/cell.xi:155,181`
+  call it as `ptr.is_null()` -- the compiler lane's offset-bug case, to be
+  fixed compiler-side instead of changing stdlib call sites.
+- Remaining for the stdlib 100%: queue A3/A4 (number_theory, factorial,
+  combinatorics), B (control_theory observability/controllability +
+  lp_simplex), C (geom dedup), D (tzdata phase 2), E (untested-surface
+  generator classes), F (release cut).
+
 ### HANDOFF 2026-09-25 (context-limit snapshot; read this plus docs/PRODUCTION_READINESS_QUEUE.md)
 
 State: `main` = `a948149` + the handoff docs commit, 38 commits ahead of
