@@ -345,11 +345,17 @@ T1/T2 yields.
        ranges, Option mirrors, diff op bounds, unified-diff header floor,
        precondition-guarded clause indexing) -> text 2.4% -> 95.1%, global
        23.6% -> 24.3% pub-with-clause; pre-validated by
-       tools/probes/p_wave26_shapes.xi. Ratchet:
-       tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors63.json
+       tools/probes/p_wave26_shapes.xi. Wave 27 (2026-09-25): 46 clauses on
+       test/test.xi + test/assert.xi (exact Boolean mirrors on the
+       TestResult field, panic-mirror ensures on the assert module, count
+       bounds on result vectors, Str length floors on formatted output,
+       benchmark passthrough, empty/length mirrors) -> test 3.1% -> 70.8%,
+       global 24.3% -> 25.0% pub-with-clause; pre-validated by
+       tools/probes/p_wave27_shapes.xi. Ratchet:
+       tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors64.json
        (repo tooling as of the split; positive + negative runs verified;
        earlier floors kept at
-       coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55/56/57/58/59/60/61/62.json).
+       coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55/56/57/58/59/60/61/62/63.json).
       Floors are per top-level stdlib/xiom directory and must be refreshed
       when a module is ADDED (new uncovered pub fns dilute the percentage
       -- TOML dropped serialize 6.1% -> 5.4%, tz dropped time 13% ->

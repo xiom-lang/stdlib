@@ -56,7 +56,9 @@ pub fn assert_eq[T: Eq](expected: T, actual: T, name: Str) -> TestResult
 }
 
 /// Pass when the values differ.
-pub fn assert_ne[T: Eq](expected: T, actual: T, name: Str) -> TestResult {
+pub fn assert_ne[T: Eq](expected: T, actual: T, name: Str) -> TestResult
+  ensures: result.passed == (expected != actual)
+{
   let passed = expected != actual;
   return TestResult{
     passed: passed;
@@ -68,7 +70,9 @@ pub fn assert_ne[T: Eq](expected: T, actual: T, name: Str) -> TestResult {
 }
 
 /// Pass when left < right.
-pub fn assert_lt[T: Ord](left: T, right: T, name: Str) -> TestResult {
+pub fn assert_lt[T: Ord](left: T, right: T, name: Str) -> TestResult
+  ensures: result.passed == (left < right)
+{
   let passed = left < right;
   return TestResult{
     passed: passed;
@@ -80,7 +84,9 @@ pub fn assert_lt[T: Ord](left: T, right: T, name: Str) -> TestResult {
 }
 
 /// Pass when left > right.
-pub fn assert_gt[T: Ord](left: T, right: T, name: Str) -> TestResult {
+pub fn assert_gt[T: Ord](left: T, right: T, name: Str) -> TestResult
+  ensures: result.passed == (left > right)
+{
   let passed = left > right;
   return TestResult{
     passed: passed;
@@ -92,7 +98,9 @@ pub fn assert_gt[T: Ord](left: T, right: T, name: Str) -> TestResult {
 }
 
 /// Pass when `haystack` contains `needle`.
-pub fn assert_contains(haystack: Str, needle: Str, name: Str) -> TestResult {
+pub fn assert_contains(haystack: Str, needle: Str, name: Str) -> TestResult
+  ensures: result.passed == string.str_contains(haystack, needle)
+{
   var passed = string.str_contains(haystack, needle);
   return TestResult{
     passed: passed;
@@ -126,7 +134,9 @@ pub fn assert_err[T, E](result: Result[T, E], name: Str) -> TestResult {
 }
 
 /// Pass when the Option is Some.
-pub fn assert_some[T](option: Option[T], name: Str) -> TestResult {
+pub fn assert_some[T](option: Option[T], name: Str) -> TestResult
+  ensures: result.passed == option.is_some
+{
   return TestResult{
     passed: option.is_some;
     name: name;
@@ -137,7 +147,9 @@ pub fn assert_some[T](option: Option[T], name: Str) -> TestResult {
 }
 
 /// Pass when the Option is None.
-pub fn assert_none[T](option: Option[T], name: Str) -> TestResult {
+pub fn assert_none[T](option: Option[T], name: Str) -> TestResult
+  ensures: result.passed == (!option.is_some)
+{
   return TestResult{
     passed: !option.is_some;
     name: name;
@@ -148,7 +160,9 @@ pub fn assert_none[T](option: Option[T], name: Str) -> TestResult {
 }
 
 /// Pass when `predicate` holds for the value.
-pub fn assert_contract[T](value: T, predicate: fn(&T) -> Bool, name: Str) -> TestResult {
+pub fn assert_contract[T](value: T, predicate: fn(&T) -> Bool, name: Str) -> TestResult
+  ensures: result.passed == (result.contract_failures.len() == 0)
+{
   let passed = predicate(&value);
   var failures = Vec[ContractFailure].new();
   if !passed {
@@ -170,14 +184,18 @@ pub fn assert_contract[T](value: T, predicate: fn(&T) -> Bool, name: Str) -> Tes
 }
 
 /// Run one test and print the result; returns the exit code (0 = pass).
-pub fn run(test: fn() -> TestResult) -> Int {
+pub fn run(test: fn() -> TestResult) -> Int
+  ensures: result == 0 || result == 1
+{
   let result = test();
   if result.passed { return 0; };
   return 1;
 }
 
 /// Run every test and print a summary; returns the exit code.
-pub fn run_all(tests: Vec[fn() -> TestResult]) -> Int {
+pub fn run_all(tests: Vec[fn() -> TestResult]) -> Int
+  ensures: result >= 0 && result <= tests.len()
+{
   var failures: Int = 0;
   var i: Int = 0;
   while i < tests.len() {
@@ -191,7 +209,9 @@ pub fn run_all(tests: Vec[fn() -> TestResult]) -> Int {
 }
 
 /// Run tests whose name contains `filter`; returns the exit code.
-pub fn run_filtered(tests: Vec[fn() -> TestResult], filter: Str) -> Int {
+pub fn run_filtered(tests: Vec[fn() -> TestResult], filter: Str) -> Int
+  ensures: result >= 0 && result <= tests.len()
+{
   var failures: Int = 0;
   var i: Int = 0;
   while i < tests.len() {
@@ -207,7 +227,9 @@ pub fn run_filtered(tests: Vec[fn() -> TestResult], filter: Str) -> Int {
 }
 
 /// Human-readable summary of the results.
-pub fn format_results(results: Vec[TestResult]) -> Str {
+pub fn format_results(results: Vec[TestResult]) -> Str
+  ensures: result.len() >= 37
+{
   var total: Int = 0;
   var passed: Int = 0;
   var failed: Int = 0;
@@ -231,7 +253,9 @@ pub fn format_results(results: Vec[TestResult]) -> Str {
 }
 
 /// JSON summary of the results.
-pub fn format_results_json(results: Vec[TestResult]) -> Str {
+pub fn format_results_json(results: Vec[TestResult]) -> Str
+  ensures: result.len() >= 2
+{
   var json: Str = "[";
   var i: Int = 0;
   while i < results.len() {
@@ -255,7 +279,9 @@ pub fn format_results_json(results: Vec[TestResult]) -> Str {
 }
 
 /// Time `f` once and report it as a benchmark result.
-pub fn bench(name: Str, f: fn()) -> TestResult {
+pub fn bench(name: Str, f: fn()) -> TestResult
+  ensures: result.passed == true
+{
   let start = time.Instant.now();
   f();
   let elapsed = start.elapsed();
@@ -273,7 +299,9 @@ pub fn bench(name: Str, f: fn()) -> TestResult {
 
 /// Asserts that `cond` is false.
 /// Complexity: O(1). Pure in test context.
-pub fn assert_false(cond: Bool, name: Str) -> TestResult {
+pub fn assert_false(cond: Bool, name: Str) -> TestResult
+  ensures: result.passed == (!cond)
+{
   return TestResult{
     passed: !cond;
     name: name;
@@ -287,7 +315,9 @@ pub fn assert_false(cond: Bool, name: Str) -> TestResult {
 
 /// Asserts that two `Int` values are equal.
 /// Complexity: O(1). Pure in test context.
-pub fn assert_eq_int(expected: Int, actual: Int, name: Str) -> TestResult {
+pub fn assert_eq_int(expected: Int, actual: Int, name: Str) -> TestResult
+  ensures: result.passed == (expected == actual)
+{
   let passed = expected == actual;
   return TestResult{
     passed: passed;
@@ -300,7 +330,9 @@ pub fn assert_eq_int(expected: Int, actual: Int, name: Str) -> TestResult {
 
 /// Asserts that two `Int` values are not equal.
 /// Complexity: O(1).
-pub fn assert_ne_int(expected: Int, actual: Int, name: Str) -> TestResult {
+pub fn assert_ne_int(expected: Int, actual: Int, name: Str) -> TestResult
+  ensures: result.passed == (expected != actual)
+{
   let passed = expected != actual;
   return TestResult{
     passed: passed;
@@ -313,7 +345,9 @@ pub fn assert_ne_int(expected: Int, actual: Int, name: Str) -> TestResult {
 
 /// Asserts that `left` is strictly greater than `right`.
 /// Complexity: O(1).
-pub fn assert_gt_int(left: Int, right: Int, name: Str) -> TestResult {
+pub fn assert_gt_int(left: Int, right: Int, name: Str) -> TestResult
+  ensures: result.passed == (left > right)
+{
   let passed = left > right;
   return TestResult{
     passed: passed;
@@ -326,7 +360,9 @@ pub fn assert_gt_int(left: Int, right: Int, name: Str) -> TestResult {
 
 /// Asserts that `left` is strictly less than `right`.
 /// Complexity: O(1).
-pub fn assert_lt_int(left: Int, right: Int, name: Str) -> TestResult {
+pub fn assert_lt_int(left: Int, right: Int, name: Str) -> TestResult
+  ensures: result.passed == (left < right)
+{
   let passed = left < right;
   return TestResult{
     passed: passed;
@@ -339,7 +375,9 @@ pub fn assert_lt_int(left: Int, right: Int, name: Str) -> TestResult {
 
 /// Asserts that `left` is greater than or equal to `right`.
 /// Complexity: O(1).
-pub fn assert_ge_int(left: Int, right: Int, name: Str) -> TestResult {
+pub fn assert_ge_int(left: Int, right: Int, name: Str) -> TestResult
+  ensures: result.passed == (left >= right)
+{
   let passed = left >= right;
   return TestResult{
     passed: passed;
@@ -352,7 +390,9 @@ pub fn assert_ge_int(left: Int, right: Int, name: Str) -> TestResult {
 
 /// Asserts that `left` is less than or equal to `right`.
 /// Complexity: O(1).
-pub fn assert_le_int(left: Int, right: Int, name: Str) -> TestResult {
+pub fn assert_le_int(left: Int, right: Int, name: Str) -> TestResult
+  ensures: result.passed == (left <= right)
+{
   let passed = left <= right;
   return TestResult{
     passed: passed;
@@ -365,7 +405,9 @@ pub fn assert_le_int(left: Int, right: Int, name: Str) -> TestResult {
 
 /// Asserts that `value` is within the inclusive range [`lo`, `hi`].
 /// Complexity: O(1).
-pub fn assert_in_range(value: Int, lo: Int, hi: Int, name: Str) -> TestResult {
+pub fn assert_in_range(value: Int, lo: Int, hi: Int, name: Str) -> TestResult
+  ensures: result.passed == (value >= lo && value <= hi)
+{
   let passed = value >= lo && value <= hi;
   return TestResult{
     passed: passed;
@@ -380,7 +422,9 @@ pub fn assert_in_range(value: Int, lo: Int, hi: Int, name: Str) -> TestResult {
 
 /// Counts the number of failing test results in the vector.
 /// Complexity: O(n). Consumes the vector.
-pub fn test_count_failures(results: Vec[TestResult]) -> Int {
+pub fn test_count_failures(results: Vec[TestResult]) -> Int
+  ensures: result >= 0 && result <= results.len()
+{
   var failures: Int = 0;
   var i: Int = 0;
   while i < results.len() {
@@ -394,7 +438,9 @@ pub fn test_count_failures(results: Vec[TestResult]) -> Int {
 
 /// Counts the number of passing test results in the vector.
 /// Complexity: O(n). Consumes the vector.
-pub fn test_pass_count(results: Vec[TestResult]) -> Int {
+pub fn test_pass_count(results: Vec[TestResult]) -> Int
+  ensures: result >= 0 && result <= results.len()
+{
   var passed: Int = 0;
   var i: Int = 0;
   while i < results.len() {
@@ -408,13 +454,17 @@ pub fn test_pass_count(results: Vec[TestResult]) -> Int {
 
 /// Counts the number of failing test results. Alias for `test_count_failures`.
 /// Complexity: O(n). Consumes the vector.
-pub fn test_fail_count(results: Vec[TestResult]) -> Int {
+pub fn test_fail_count(results: Vec[TestResult]) -> Int
+  ensures: result >= 0 && result <= results.len()
+{
   return test_count_failures(results);
 }
 
 /// Returns a one-line summary string: `"P passed, F failed, T total"`.
 /// Complexity: O(n). Consumes the vector.
-pub fn test_summary(results: Vec[TestResult]) -> Str {
+pub fn test_summary(results: Vec[TestResult]) -> Str
+  ensures: result.len() >= 17
+{
   let passed = test_pass_count(results);
   let total = passed;
   return core.to_string(passed) + " passed, " + core.to_string(total) + " total";
@@ -423,7 +473,9 @@ pub fn test_summary(results: Vec[TestResult]) -> Str {
 /// Generates a multi-line test report using `xiom.string.str_concat`.
 /// Includes per-test results followed by a summary footer.
 /// Complexity: O(n). Consumes the vector.
-pub fn test_report(results: Vec[TestResult]) -> Str {
+pub fn test_report(results: Vec[TestResult]) -> Str
+  ensures: result.len() >= 34
+{
   var output: Str = "";
   var i: Int = 0;
   var passed: Int = 0;

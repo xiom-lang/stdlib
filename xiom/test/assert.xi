@@ -23,7 +23,9 @@ use xiom.regex.engine;
 
 /// Fail the test unless `cond` is true.
 /// Complexity: O(1).
-pub fn assert(cond: Bool, msg: Str) {
+pub fn assert(cond: Bool, msg: Str)
+  ensures: cond == true
+{
   if !cond {
     xiom.core.panic(msg);
   };
@@ -31,7 +33,9 @@ pub fn assert(cond: Bool, msg: Str) {
 
 /// Fail unless `a` equals `b`.
 /// Complexity: O(1) for scalars; O(len) for content types.
-pub fn assert_eq[T: Eq](a: T, b: T, msg: Str) {
+pub fn assert_eq[T: Eq](a: T, b: T, msg: Str)
+  ensures: a == b
+{
   if !(a == b) {
     xiom.core.panic(msg);
   };
@@ -39,7 +43,9 @@ pub fn assert_eq[T: Eq](a: T, b: T, msg: Str) {
 
 /// Fail unless `a` differs from `b`.
 /// Complexity: O(1) for scalars; O(len) for content types.
-pub fn assert_ne[T: Eq](a: T, b: T, msg: Str) {
+pub fn assert_ne[T: Eq](a: T, b: T, msg: Str)
+  ensures: a != b
+{
   if a == b {
     xiom.core.panic(msg);
   };
@@ -47,7 +53,9 @@ pub fn assert_ne[T: Eq](a: T, b: T, msg: Str) {
 
 /// Fail unless `a` is less than `b`.
 /// Complexity: O(1).
-pub fn assert_lt[T: Ord](a: T, b: T, msg: Str) {
+pub fn assert_lt[T: Ord](a: T, b: T, msg: Str)
+  ensures: a < b
+{
   if !(a < b) {
     xiom.core.panic(msg);
   };
@@ -55,7 +63,9 @@ pub fn assert_lt[T: Ord](a: T, b: T, msg: Str) {
 
 /// Fail unless `a` is less than or equal to `b`.
 /// Complexity: O(1).
-pub fn assert_le[T: Ord](a: T, b: T, msg: Str) {
+pub fn assert_le[T: Ord](a: T, b: T, msg: Str)
+  ensures: a <= b
+{
   if !(a <= b) {
     xiom.core.panic(msg);
   };
@@ -63,7 +73,9 @@ pub fn assert_le[T: Ord](a: T, b: T, msg: Str) {
 
 /// Fail unless `a` is greater than `b`.
 /// Complexity: O(1).
-pub fn assert_gt[T: Ord](a: T, b: T, msg: Str) {
+pub fn assert_gt[T: Ord](a: T, b: T, msg: Str)
+  ensures: a > b
+{
   if !(a > b) {
     xiom.core.panic(msg);
   };
@@ -71,7 +83,9 @@ pub fn assert_gt[T: Ord](a: T, b: T, msg: Str) {
 
 /// Fail unless `a` is greater than or equal to `b`.
 /// Complexity: O(1).
-pub fn assert_ge[T: Ord](a: T, b: T, msg: Str) {
+pub fn assert_ge[T: Ord](a: T, b: T, msg: Str)
+  ensures: a >= b
+{
   if !(a >= b) {
     xiom.core.panic(msg);
   };
@@ -79,7 +93,9 @@ pub fn assert_ge[T: Ord](a: T, b: T, msg: Str) {
 
 /// Fail unless `cond` is true.
 /// Complexity: O(1).
-pub fn assert_true(cond: Bool, msg: Str) {
+pub fn assert_true(cond: Bool, msg: Str)
+  ensures: cond == true
+{
   if !cond {
     xiom.core.panic(msg);
   };
@@ -87,7 +103,9 @@ pub fn assert_true(cond: Bool, msg: Str) {
 
 /// Fail unless `cond` is false.
 /// Complexity: O(1).
-pub fn assert_false(cond: Bool, msg: Str) {
+pub fn assert_false(cond: Bool, msg: Str)
+  ensures: cond == false
+{
   if cond {
     xiom.core.panic(msg);
   };
@@ -107,7 +125,9 @@ pub fn assert_near(a: Float64, b: Float64, eps: Float64, msg: Str) {
 
 /// Fail unless `haystack` contains `needle`.
 /// Complexity: O(len(haystack) * len(needle)).
-pub fn assert_contains(haystack: Str, needle: Str, msg: Str) {
+pub fn assert_contains(haystack: Str, needle: Str, msg: Str)
+  ensures: string.str_contains(haystack, needle)
+{
   if !string.str_contains(haystack, needle) {
     xiom.core.panic(msg);
   };
@@ -124,7 +144,9 @@ pub fn assert_matches(s: Str, pattern: Str, msg: Str) {
 
 /// Fail on Err and return the Ok value.
 /// Complexity: O(1).
-pub fn assert_ok[T](r: Result[T, Str], msg: Str) -> T {
+pub fn assert_ok[T](r: Result[T, Str], msg: Str) -> T
+  ensures: r.is_ok
+{
   if r.is_ok {
     return r.value;
   };
@@ -134,7 +156,9 @@ pub fn assert_ok[T](r: Result[T, Str], msg: Str) -> T {
 
 /// Fail unless `r` is an Err.
 /// Complexity: O(1).
-pub fn assert_err[T](r: Result[T, Str], msg: Str) {
+pub fn assert_err[T](r: Result[T, Str], msg: Str)
+  ensures: !r.is_ok
+{
   if r.is_ok {
     xiom.core.panic(msg);
   };
@@ -142,7 +166,9 @@ pub fn assert_err[T](r: Result[T, Str], msg: Str) {
 
 /// Fail on None and return the value.
 /// Complexity: O(1).
-pub fn assert_some[T](o: Option[T], msg: Str) -> T {
+pub fn assert_some[T](o: Option[T], msg: Str) -> T
+  ensures: o.is_some
+{
   if o.is_some {
     return o.value;
   };
@@ -152,7 +178,9 @@ pub fn assert_some[T](o: Option[T], msg: Str) -> T {
 
 /// Fail unless `o` is None.
 /// Complexity: O(1).
-pub fn assert_none[T](o: Option[T], msg: Str) {
+pub fn assert_none[T](o: Option[T], msg: Str)
+  ensures: !o.is_some
+{
   if o.is_some {
     xiom.core.panic(msg);
   };
@@ -162,7 +190,9 @@ pub fn assert_none[T](o: Option[T], msg: Str) {
 /// build, so a panic cannot be observed: `f` is invoked and, if it returns
 /// normally, this assertion panics with `msg`.
 /// Complexity: O(cost of f).
-pub fn assert_panics(f: fn(), msg: Str) {
+pub fn assert_panics(f: fn(), msg: Str)
+  requires: true
+{
   f();
   xiom.core.panic(msg);
 }
@@ -170,14 +200,18 @@ pub fn assert_panics(f: fn(), msg: Str) {
 /// Fail unless calling `f` raises an error. Same observable behaviour as
 /// `assert_panics` in this build (no unwind support).
 /// Complexity: O(cost of f).
-pub fn assert_throws(f: fn(), msg: Str) {
+pub fn assert_throws(f: fn(), msg: Str)
+  requires: true
+{
   f();
   xiom.core.panic(msg);
 }
 
 /// Fail unless `v` has no elements.
 /// Complexity: O(1).
-pub fn assert_empty[T](v: &Vec[T], msg: Str) {
+pub fn assert_empty[T](v: &Vec[T], msg: Str)
+  ensures: v.len() == 0
+{
   if v.len() != 0 {
     xiom.core.panic(msg);
   };
@@ -185,7 +219,9 @@ pub fn assert_empty[T](v: &Vec[T], msg: Str) {
 
 /// Fail unless `v` has exactly `n` elements.
 /// Complexity: O(1).
-pub fn assert_len[T](v: &Vec[T], n: Int, msg: Str) {
+pub fn assert_len[T](v: &Vec[T], n: Int, msg: Str)
+  ensures: v.len() == n
+{
   if v.len() != n {
     xiom.core.panic(msg);
   };
