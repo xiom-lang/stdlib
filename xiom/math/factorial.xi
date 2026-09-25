@@ -43,7 +43,12 @@ fn _add_ovf(a: Int, b: Int) -> Bool {
 
 /// n! for n >= 0. Returns 0 for n < 0 (documented) and 0 (documented overflow)
 /// when the true value exceeds Int range (n > 20). Complexity: O(n).
-pub fn factorial(n: Int) -> Int {
+pub fn factorial(n: Int) -> Int
+  ensures: (n < 0) => (result == 0)
+  ensures: (n == 0 || n == 1) => (result == 1)
+  ensures: (n >= 21) => (result == 0)
+  ensures: result >= 0
+{
   if n < 0 { return 0; }
   if n <= 1 { return 1; }
   var result = 1;
@@ -59,7 +64,12 @@ pub fn factorial(n: Int) -> Int {
 /// Double factorial n!! = product of n, n-2, n-4, ... down to 1 (odd n) or 2
 /// (even n). Returns 0 for n < 0 and 0 (documented overflow) when the value
 /// exceeds Int range. Complexity: O(n/2).
-pub fn double_factorial(n: Int) -> Int {
+pub fn double_factorial(n: Int) -> Int
+  ensures: (n < 0) => (result == 0)
+  ensures: (n == 0 || n == 1) => (result == 1)
+  ensures: (n >= 34) => (result == 0)
+  ensures: result >= 0
+{
   if n < 0 { return 0; }
   if n <= 1 { return 1; }
   var result = 1;
@@ -76,7 +86,13 @@ pub fn double_factorial(n: Int) -> Int {
 /// items. Uses the recurrence D(0)=1, D(1)=0, D(n) = (n-1)(D(n-1)+D(n-2)).
 /// Returns 0 for n < 0 and 0 (documented overflow) when D(n) exceeds Int
 /// range. Complexity: O(n).
-pub fn subfactorial(n: Int) -> Int {
+pub fn subfactorial(n: Int) -> Int
+  ensures: (n < 0) => (result == 0)
+  ensures: (n == 0) => (result == 1)
+  ensures: (n == 1) => (result == 0)
+  ensures: (n >= 21) => (result == 0)
+  ensures: result >= 0
+{
   if n < 0 { return 0; }
   if n == 0 { return 1; }
   if n == 1 { return 0; }
@@ -98,7 +114,12 @@ pub fn subfactorial(n: Int) -> Int {
 /// k-th multifactorial of n: product n, n-k, n-2k, ... down to the smallest
 /// positive term. Returns 0 for n < 0 or k <= 0 (documented) and 0
 /// (documented overflow) when the value exceeds Int range. Complexity: O(n/k).
-pub fn multifactorial(n: Int, k: Int) -> Int {
+pub fn multifactorial(n: Int, k: Int) -> Int
+  ensures: (n < 0) => (result == 0)
+  ensures: (k <= 0) => (result == 0)
+  ensures: (n >= 0 && k > 0 && n <= 1) => (result == 1)
+  ensures: result >= 0
+{
   if n < 0 { return 0; }
   if k <= 0 { return 0; }
   if n <= 1 { return 1; }
@@ -120,7 +141,12 @@ pub fn multifactorial(n: Int, k: Int) -> Int {
 /// k > n) and 0 (documented overflow) when C(n, k) exceeds Int range. Uses the
 /// multiplicative form with a per-step overflow guard. Complexity: O(min(k,
 /// n - k)).
-pub fn binomial(n: Int, k: Int) -> Int {
+pub fn binomial(n: Int, k: Int) -> Int
+  ensures: (n < 0 || k < 0 || k > n) => (result == 0)
+  ensures: (n >= 0 && (k == 0 || k == n)) => (result == 1)
+  ensures: (n >= 2 && k == 1) => (result == n)
+  ensures: result >= 0
+{
   if n < 0 { return 0; }
   if k < 0 || k > n { return 0; }
   if k == 0 || k == n { return 1; }
@@ -139,7 +165,10 @@ pub fn binomial(n: Int, k: Int) -> Int {
 }
 
 /// Alias of binomial. Complexity: O(min(k, n - k)).
-pub fn binomial_coeff(n: Int, k: Int) -> Int {
+pub fn binomial_coeff(n: Int, k: Int) -> Int
+  ensures: (n < 0 || k < 0 || k > n) => (result == 0)
+  ensures: result >= 0
+{
   return binomial(n, k);
 }
 
@@ -147,7 +176,12 @@ pub fn binomial_coeff(n: Int, k: Int) -> Int {
 /// Returns 0 when the entries are negative or do not sum to n, and 0
 /// (documented overflow) when the value exceeds Int range. Computed as a chain
 /// of binomial coefficients. Complexity: O(m * min(k_i, ...)).
-pub fn multinomial(n: Int, ks: &Vec[Int]) -> Int {
+pub fn multinomial(n: Int, ks: &Vec[Int]) -> Int
+  ensures: (n < 0) => (result == 0)
+  ensures: (ks.len() == 0 && n != 0) => (result == 0)
+  ensures: (ks.len() == 0 && n == 0) => (result == 1)
+  ensures: result >= 0
+{
   if n < 0 { return 0; }
   var total = 0;
   var i = 0;
@@ -174,7 +208,11 @@ pub fn multinomial(n: Int, ks: &Vec[Int]) -> Int {
 /// Falling factorial x * (x-1) * ... * (x-k+1). Returns 0 for k < 0 and 0
 /// (documented overflow) when the magnitude exceeds Int range. k == 0 gives 1.
 /// Complexity: O(k).
-pub fn falling_factorial(x: Int, k: Int) -> Int {
+pub fn falling_factorial(x: Int, k: Int) -> Int
+  ensures: (k < 0) => (result == 0)
+  ensures: (k == 0) => (result == 1)
+  ensures: (x == 0 && k > 0) => (result == 0)
+{
   if k < 0 { return 0; }
   if k == 0 { return 1; }
   var result = 1;
@@ -197,7 +235,11 @@ pub fn falling_factorial(x: Int, k: Int) -> Int {
 /// Rising factorial x * (x+1) * ... * (x+k-1). Returns 0 for k < 0 and 0
 /// (documented overflow) when the magnitude exceeds Int range. k == 0 gives 1.
 /// Complexity: O(k).
-pub fn rising_factorial(x: Int, k: Int) -> Int {
+pub fn rising_factorial(x: Int, k: Int) -> Int
+  ensures: (k < 0) => (result == 0)
+  ensures: (k == 0) => (result == 1)
+  ensures: (x == 0 && k > 0) => (result == 0)
+{
   if k < 0 { return 0; }
   if k == 0 { return 1; }
   var result = 1;
@@ -225,7 +267,13 @@ pub fn rising_factorial(x: Int, k: Int) -> Int {
 /// with exactly k cycles. Row DP over s(n,k) = s(n-1,k-1) + (n-1)*s(n-1,k) with
 /// s(0,0) = 1. Returns 0 for invalid input (n < 0, k < 0, k > n) and 0
 /// (documented overflow) when the value exceeds Int range. Complexity: O(n*k).
-pub fn stirling_first(n: Int, k: Int) -> Int {
+pub fn stirling_first(n: Int, k: Int) -> Int
+  ensures: (n < 0 || k < 0 || k > n) => (result == 0)
+  ensures: (n == 0) => (result == 1)
+  ensures: (n >= 1 && k == n) => (result == 1)
+  ensures: (n >= 1 && k == 0) => (result == 0)
+  ensures: result >= 0
+{
   if n < 0 || k < 0 || k > n { return 0; }
   if n == 0 { return 1; }
   var row = Vec[Int].new();
@@ -260,7 +308,13 @@ pub fn stirling_first(n: Int, k: Int) -> Int {
 /// into k nonempty blocks. Row DP over S(n,k) = k*S(n-1,k) + S(n-1,k-1) with
 /// S(0,0) = 1. Returns 0 for invalid input and 0 (documented overflow) when the
 /// value exceeds Int range. Complexity: O(n*k).
-pub fn stirling_second(n: Int, k: Int) -> Int {
+pub fn stirling_second(n: Int, k: Int) -> Int
+  ensures: (n < 0 || k < 0 || k > n) => (result == 0)
+  ensures: (n == 0) => (result == 1)
+  ensures: (n >= 1 && k == n) => (result == 1)
+  ensures: (n >= 1 && k == 0) => (result == 0)
+  ensures: result >= 0
+{
   if n < 0 || k < 0 || k > n { return 0; }
   if n == 0 { return 1; }
   var row = Vec[Int].new();
@@ -295,7 +349,11 @@ pub fn stirling_second(n: Int, k: Int) -> Int {
 /// (row 0 is [1] and B(0) = B(1) = 1), so the value is the last entry of row
 /// n - 1. Returns 0 for n < 0 and 0 (documented overflow) when B(n) exceeds
 /// Int range. Complexity: O(n^2).
-pub fn bell(n: Int) -> Int {
+pub fn bell(n: Int) -> Int
+  ensures: (n < 0) => (result == 0)
+  ensures: (n == 0 || n == 1) => (result == 1)
+  ensures: result >= 0
+{
   if n < 0 { return 0; }
   if n == 0 { return 1; }
   var row = Vec[Int].new();
@@ -318,7 +376,12 @@ pub fn bell(n: Int) -> Int {
 
 /// Catalan number C_n = C(2n, n)/(n+1). Returns 0 for n < 0 and 0 (documented
 /// overflow) when the value exceeds Int range (n > 33). Complexity: O(n).
-pub fn catalan(n: Int) -> Int {
+pub fn catalan(n: Int) -> Int
+  ensures: (n < 0) => (result == 0)
+  ensures: (n == 0) => (result == 1)
+  ensures: (n >= 34) => (result == 0)
+  ensures: result >= 0
+{
   if n < 0 { return 0; }
   if n == 0 { return 1; }
   var b = binomial(2 * n, n);
@@ -330,7 +393,13 @@ pub fn catalan(n: Int) -> Int {
 /// Row DP over A(n,k) = (n-k)*A(n-1,k-1) + (k+1)*A(n-1,k) with A(0,0) = 1 and
 /// A(n,n) = 0. Returns 0 for invalid input and 0 (documented overflow) when the
 /// value exceeds Int range. Complexity: O(n*k).
-pub fn eulerian(n: Int, k: Int) -> Int {
+pub fn eulerian(n: Int, k: Int) -> Int
+  ensures: (n < 0 || k < 0 || k > n) => (result == 0)
+  ensures: (n == 0) => (result == 1)
+  ensures: (n >= 1 && k == 0) => (result == 1)
+  ensures: (n >= 1 && k == n) => (result == 0)
+  ensures: result >= 0
+{
   if n < 0 || k < 0 || k > n { return 0; }
   if n == 0 { return 1; }
   var prev = Vec[Int].new();
@@ -367,7 +436,11 @@ pub fn eulerian(n: Int, k: Int) -> Int {
 /// Narayana number N(n, k) = C(n, k) * C(n, k-1) / n. Returns 0 for invalid
 /// input (n <= 0, k <= 0, k > n) and 0 (documented overflow) when the value
 /// exceeds Int range. Complexity: O(min(k, n-k)).
-pub fn narayana(n: Int, k: Int) -> Int {
+pub fn narayana(n: Int, k: Int) -> Int
+  ensures: (n <= 0 || k <= 0 || k > n) => (result == 0)
+  ensures: (n >= 1 && k == 1) => (result == 1)
+  ensures: result >= 0
+{
   if n <= 0 || k <= 0 || k > n { return 0; }
   if k == 1 { return 1; }
   var a = binomial(n, k);
@@ -380,7 +453,11 @@ pub fn narayana(n: Int, k: Int) -> Int {
 /// Lah number L(n, k) = C(n, k) * C(n-1, k-1) * (n-k)!. Returns 0 for invalid
 /// input (n <= 0, k <= 0, k > n) and 0 (documented overflow) when the value
 /// exceeds Int range. Complexity: O(min(k, n-k) + (n-k)).
-pub fn lah(n: Int, k: Int) -> Int {
+pub fn lah(n: Int, k: Int) -> Int
+  ensures: (n <= 0 || k <= 0 || k > n) => (result == 0)
+  ensures: (n >= 1 && k == n) => (result == 1)
+  ensures: result >= 0
+{
   if n <= 0 || k <= 0 || k > n { return 0; }
   if k == n { return 1; }
   if k == 1 { return factorial(n); }
@@ -398,7 +475,11 @@ pub fn lah(n: Int, k: Int) -> Int {
 /// closed recurrence M(n) = ((2n+1)M(n-1) + (3n-3)M(n-2))/(n+2), M(0) = M(1) = 1.
 /// Returns 0 for n < 0 and 0 (documented overflow) when M_n exceeds Int range.
 /// Complexity: O(n).
-pub fn motzkin(n: Int) -> Int {
+pub fn motzkin(n: Int) -> Int
+  ensures: (n < 0) => (result == 0)
+  ensures: (n == 0 || n == 1) => (result == 1)
+  ensures: result >= 0
+{
   if n < 0 { return 0; }
   if n == 0 { return 1; }
   if n == 1 { return 1; }
@@ -422,7 +503,11 @@ pub fn motzkin(n: Int) -> Int {
 /// Large Schroder number S_n. Uses S(n) = S(n-1) + sum_{k=0..n-1} S(k)*S(n-1-k),
 /// S(0) = 1. Returns 0 for n < 0 and 0 (documented overflow) when S_n exceeds
 /// Int range. Complexity: O(n^2).
-pub fn schroeder(n: Int) -> Int {
+pub fn schroeder(n: Int) -> Int
+  ensures: (n < 0) => (result == 0)
+  ensures: (n == 0) => (result == 1)
+  ensures: result >= 0
+{
   if n < 0 { return 0; }
   if n == 0 { return 1; }
   var arr = Vec[Int].new();
@@ -448,7 +533,11 @@ pub fn schroeder(n: Int) -> Int {
 /// recurrence p(n) = sum_{k != 0} (-1)^(k+1) p(n - k(3k-1)/2). Returns 0 for
 /// n < 0 and 0 (documented overflow) when p(n) exceeds Int range (n > 255).
 /// Complexity: O(n * sqrt(n)).
-pub fn partition_count(n: Int) -> Int {
+pub fn partition_count(n: Int) -> Int
+  ensures: (n < 0) => (result == 0)
+  ensures: (n == 0) => (result == 1)
+  ensures: result >= 0
+{
   if n < 0 { return 0; }
   if n == 0 { return 1; }
   var p = Vec[Int].new();
@@ -491,7 +580,11 @@ pub fn partition_count(n: Int) -> Int {
 /// starting from the largest part; the result order is unspecified). Returns an
 /// empty list for n < 0; n == 0 yields a single empty partition. Complexity:
 /// O(p(n) * n).
-pub fn integer_partitions(n: Int) -> Vec[Vec[Int]] {
+pub fn integer_partitions(n: Int) -> Vec[Vec[Int]]
+  ensures: (n < 0) => (result.len() == 0)
+  ensures: (n == 0) => (result.len() == 1)
+  ensures: (n > 0) => (result.len() >= 1)
+{
   var out = Vec[Vec[Int]].new();
   if n < 0 { return out; }
   if n == 0 {
@@ -537,7 +630,12 @@ fn _copy_vec(v: &mut Vec[Int]) -> Vec[Int] {
 /// Number of derangements of n items (fixed-point-free permutations). Alias of
 /// subfactorial. Returns 0 for n < 0 and 0 (documented overflow). Complexity:
 /// O(n).
-pub fn derangements(n: Int) -> Int {
+pub fn derangements(n: Int) -> Int
+  ensures: (n < 0) => (result == 0)
+  ensures: (n == 0) => (result == 1)
+  ensures: (n >= 21) => (result == 0)
+  ensures: result >= 0
+{
   return subfactorial(n);
 }
 
@@ -546,7 +644,11 @@ pub fn derangements(n: Int) -> Int {
 /// the entry to its left and the one above-left, so the rightmost entry of row
 /// k is B(k+1) and the leftmost is B(k). Returns an empty list for n < 0. Cells
 /// that would overflow Int are stored as 0 (documented). Complexity: O(n^2).
-pub fn bell_triangle(n: Int) -> Vec[Vec[Int]] {
+pub fn bell_triangle(n: Int) -> Vec[Vec[Int]]
+  ensures: (n < 0) => (result.len() == 0)
+  ensures: (n == 0) => (result.len() == 1)
+  ensures: (n > 0) => (result.len() > 1)
+{
   var out = Vec[Vec[Int]].new();
   if n < 0 { return out; }
   var row = Vec[Int].new();

@@ -382,8 +382,17 @@ T1/T2 yields.
        tools/probes/p_wave30_shapes.xi. Also fixed filter_bandstop reading
        the empty band-pass buffer for order <= 0 (probe exit 27 before,
        0 after).
+       Wave 31 (2026-09-25): 80 clauses on math/factorial.xi (22 fns:
+       invalid-input guards (negative n/k -> 0; n <= 0 for Narayana/Lah),
+       exact 0/1 identities (factorial(0/1), binomial(n,0/n), Stirling/
+       Eulerian/Narayana/Lah mirrors, subfactorial(0)=1 and (1)=0),
+       documented-overflow thresholds (factorial >= 21, double_factorial
+       >= 34, subfactorial >= 21, catalan >= 34), non-negativity of every
+       numeric family, enumeration length shapes (integer_partitions,
+       bell_triangle)) -> math 14.1% -> 16.3%, global 27.1% -> 27.4%
+       pub-with-clause; pre-validated by tools/probes/p_wave31_shapes.xi.
        Ratchet:
-       tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors67.json
+       tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors68.json
        (repo tooling as of the split; positive + negative runs verified;
        earlier floors kept at
        coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55/56/57/58/59/60/61/62/63/64/65.json).
