@@ -452,6 +452,43 @@ registry pin, agent recon for the rest)**
   combinatorics), B (control_theory observability/controllability +
   lp_simplex), C (geom dedup), D (tzdata phase 2), E (untested-surface
   generator classes), F (release cut).
+- A3/A4 recon DONE (read-only background agent, counts re-verified by
+  direct scan): `math/number_theory.xi` 32 pub fn / 0 clauses,
+  `math/factorial.xi` 22 / 0, `math/combinatorics.xi` 28 / 0 (82 fns, none
+  covered). Recon-verified safe first batch (re-check each against source
+  before landing): number_theory `is_composite` `(n <= 1 || n == 2) => false`,
+  `is_semiprime` `(n < 4) => false`, `is_power` `(n <= 1) => false`,
+  `is_pseudoprime`/`fermat_test` guard mirrors, `legendre/jacobi/kronecker`
+  guard + `result >= -1 && result <= 1`; combinatorics
+  `permutations_with_repetition`, `compositions_all` (n >= 64 => 0),
+  `fibonacci` (n >= 93 => 0), `lucas` (n >= 91 => 0), `surjections`;
+  factorial delegation aliases (`binomial_coeff`, `derangements`,
+  `bell_numbers`, `catalan_numbers`, `eulerian_numbers`,
+  `stirling_numbers_1/2`, `lah_numbers`, `narayana_numbers`,
+  `combinations`, `partitions`) plus the threshold guards on
+  factorial/double_factorial/multifactorial/subfactorial (21/34/--/21).
+- DO-NOT-TOUCH until fixed: `next_prime` (seed-guard gap at n=INT_MAX-2:
+  cand+2 wraps and the loop never terminates; `result > n` unsafe);
+  `euler_phi/mobius/jordan_totient/carmichael/radical/smooth/rough`
+  (unguarded `p*p` wraps for prime cofactors > ~9.22e18 -> multi-billion
+  iteration hang, lines 373/395/423/456/626/650/669); `prime_pi` (O(n)
+  allocation); `pollard_rho`/`p_1_factor` (strong factor clauses false --
+  they return n when no split; `_addmod` precondition violated for small n);
+  `factorial.binomial`/`multinomial` (false-overflow: `binomial(4294967294,
+  2)` returns 0 though the true value fits -- never assert nonzero for the
+  in-range case); `falling_factorial`/`rising_factorial` (INT_MIN negation
+  overflow); `combinatorics.involutions` and the subfactorial wrap test
+  (incomplete heuristic; subfactorial's first wrap is caught, involutions
+  unproven); `combinatorics.permutations(n<0, k)` returns 12, contradicting
+  its doc, so no doc-consistent clause.
+- Other recon findings: `divisor_sum(1, k<0)` returns 1 but doc says 0;
+  `jordan_totient(1, k<0)` returns 1; `next_prime(n<0)` returns 2 not 0;
+  `_trial_prime` is dead code; `_mul_ovf`/`_copy_vec` duplicated across the
+  three modules (DRY backlog); recursion-depth guards missing on
+  `_perm_rec`/`_derange_rec`/`_comb_rec`.
+- Planned next waves: 31 = factorial.xi clauses (22), 32 = combinatorics
+  safe batch + number_theory safe batch; each fix-first item above lands
+  as its own probe + verified rerun per the one-fix rule.
 
 ### HANDOFF 2026-09-25 (context-limit snapshot; read this plus docs/PRODUCTION_READINESS_QUEUE.md)
 
