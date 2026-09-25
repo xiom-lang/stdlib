@@ -267,7 +267,9 @@ fn find_first_match(pattern: Str, text: Str) -> Option[Match] {
 }
 
 /// Compile a pattern; Err with a message on syntax errors.
-pub fn Regex.new(pattern: Str) -> Result<Regex, Str> {
+pub fn Regex.new(pattern: Str) -> Result<Regex, Str>
+  ensures: pattern.len() == 0 => result is Ok
+{
   if !is_valid_regex(pattern) {
     return Err("invalid regex pattern");
   };
@@ -275,19 +277,25 @@ pub fn Regex.new(pattern: Str) -> Result<Regex, Str> {
 }
 
 /// True when the pattern matches anywhere in `text`.
-pub fn Regex.is_match(self, text: Str) -> Bool {
+pub fn Regex.is_match(self, text: Str) -> Bool
+  ensures: self.pattern.len() == 0 => result == true
+{
   find_first_match(self.pattern, text).is_some
 }
 
 /// First match in `text`, or None.
 pub fn Regex.find(self, text: Str) -> Option[Match]
   ensures: result.is_some => result.value.start >= 0 && result.value.end >= result.value.start
+  ensures: result.is_some => result.value.end <= text.len()
 {
   find_first_match(self.pattern, text)
 }
 
 /// All non-overlapping matches in `text`.
-pub fn Regex.find_all(self, text: Str) -> Vec[Match] {
+pub fn Regex.find_all(self, text: Str) -> Vec[Match]
+  ensures: result.len() <= text.len() + 1
+  ensures: self.pattern.len() == 0 => result.len() == text.len() + 1
+{
   var matches = Vec[Match].new();
   let pat = self.pattern;
   let t_len = text.len();
@@ -325,7 +333,9 @@ pub fn Regex.find_all(self, text: Str) -> Vec[Match] {
 }
 
 /// Capture groups of the first match, or None.
-pub fn Regex.captures(self, text: Str) -> Option<Captures> {
+pub fn Regex.captures(self, text: Str) -> Option<Captures>
+  ensures: self.pattern.len() == 0 => result is Some
+{
   let m = find_first_match(self.pattern, text);
   match m {
     Some(match_obj) => {
@@ -338,7 +348,9 @@ pub fn Regex.captures(self, text: Str) -> Option<Captures> {
 }
 
 /// Replace the first match with `replacement`.
-pub fn Regex.replace(self, text: Str, replacement: Str) -> Str {
+pub fn Regex.replace(self, text: Str, replacement: Str) -> Str
+  ensures: result.len() <= text.len() + replacement.len()
+{
   let m = find_first_match(self.pattern, text);
   match m {
     Some(match_obj) => {
@@ -351,7 +363,10 @@ pub fn Regex.replace(self, text: Str, replacement: Str) -> Str {
 }
 
 /// Replace all non-overlapping matches.
-pub fn Regex.replace_all(self, text: Str, replacement: Str) -> Str {
+pub fn Regex.replace_all(self, text: Str, replacement: Str) -> Str
+  ensures: result.len() <= text.len() + (text.len() + 1) * replacement.len()
+  ensures: self.pattern.len() == 0 => result.len() == text.len() + (text.len() + 1) * replacement.len()
+{
   let matches = engine.regex_find_all(self, text);
   if matches.len() == 0 {
     return text;
@@ -369,7 +384,10 @@ pub fn Regex.replace_all(self, text: Str, replacement: Str) -> Str {
 }
 
 /// Split `text` on matches of the pattern.
-pub fn Regex.split(self, text: Str) -> Vec[Str] {
+pub fn Regex.split(self, text: Str) -> Vec[Str]
+  ensures: self.pattern.len() > 0 => result.len() >= 1
+  ensures: result.len() <= text.len() + 2
+{
   var result = Vec[Str].new();
   let pat = self.pattern;
   let t_len = text.len();
@@ -405,7 +423,9 @@ pub fn Regex.split(self, text: Str) -> Vec[Str] {
 }
 
 /// Number of non-overlapping matches.
-pub fn Regex.match_count(self, text: Str) -> Int {
+pub fn Regex.match_count(self, text: Str) -> Int
+  ensures: result >= 0 && result <= text.len() + 1
+{
   // Was: find_all(self.pattern, text).len() -- the legacy local matcher,
   // which disagrees with Regex.find_all (engine path): 2 vs 3 on
   // "a1b22c333". Counting the method's own result keeps the two coherent.
@@ -413,7 +433,10 @@ pub fn Regex.match_count(self, text: Str) -> Int {
 }
 
 /// Group at `index` (0 = whole match), or None when absent.
-pub fn Captures.get(self, index: Int) -> Option[Match] {
+pub fn Captures.get(self, index: Int) -> Option[Match]
+  ensures: result is Some => index >= 0 && index < self.groups.len()
+  ensures: result is None => index < 0 || index >= self.groups.len()
+{
   if index < 0 || index >= self.groups.len() {
     return None;
   };
@@ -421,17 +444,23 @@ pub fn Captures.get(self, index: Int) -> Option[Match] {
 }
 
 /// Named group by name, or None when absent.
-pub fn Captures.get_named(self, name: Str) -> Option[Match] {
+pub fn Captures.get_named(self, name: Str) -> Option[Match]
+  ensures: result is None
+{
   None
 }
 
 /// Number of capture groups including the whole match.
-pub fn Captures.len(self) -> Int {
+pub fn Captures.len(self) -> Int
+  ensures: result == self.groups.len()
+{
   self.groups.len()
 }
 
 /// Escape regex metacharacters so the result matches literally.
-pub fn regex_escape(pattern: Str) -> Str {
+pub fn regex_escape(pattern: Str) -> Str
+  ensures: result.len() >= pattern.len() && result.len() <= 2 * pattern.len()
+{
   var result = "";
   var i: Int = 0;
   let p_len = pattern.len();
@@ -449,7 +478,9 @@ pub fn regex_escape(pattern: Str) -> Str {
 }
 
 /// True when the pattern compiles.
-pub fn is_valid_regex(pattern: Str) -> Bool {
+pub fn is_valid_regex(pattern: Str) -> Bool
+  ensures: pattern.len() == 0 => result == true
+{
   var i: Int = 0;
   var bracket_depth: Int = 0;
   let p_len = pattern.len();
@@ -485,13 +516,19 @@ pub fn is_valid_regex(pattern: Str) -> Bool {
 
 /// Replaces all non-overlapping matches of `re` in `text` with `replacement`.
 /// Uses literal replacement (no $1 group references).
-pub fn regex_replace_all(re: Regex, text: Str, replacement: Str) -> Str {
+pub fn regex_replace_all(re: Regex, text: Str, replacement: Str) -> Str
+  ensures: result.len() <= text.len() + (text.len() + 1) * replacement.len()
+  ensures: re.pattern.len() == 0 => result.len() == text.len() + (text.len() + 1) * replacement.len()
+{
   re.replace_all(text, replacement)
 }
 
 /// Finds the first match of `re` in `text` and returns the matched substring.
 /// Returns None if no match is found.
-pub fn regex_find_first_str(re: Regex, text: Str) -> Option[Str] {
+pub fn regex_find_first_str(re: Regex, text: Str) -> Option[Str]
+  ensures: result is Some => result.value.len() <= text.len()
+  ensures: re.pattern.len() == 0 => result is Some
+{
   let m_result = re.find(text);
   match m_result {
     Some(match_obj) => {
@@ -505,12 +542,16 @@ pub fn regex_find_first_str(re: Regex, text: Str) -> Option[Str] {
 
 /// Splits `text` around all non-overlapping matches of `re`.
 /// Returns a Vec of substrings between matches.
-pub fn regex_split(re: Regex, text: Str) -> Vec[Str] {
+pub fn regex_split(re: Regex, text: Str) -> Vec[Str]
+  ensures: re.pattern.len() > 0 => result.len() >= 1
+{
   re.split(text)
 }
 
 /// Returns the number of non-overlapping matches of `re` in `text`.
-pub fn regex_count_matches(re: Regex, text: Str) -> Int {
+pub fn regex_count_matches(re: Regex, text: Str) -> Int
+  ensures: result >= 0 && result <= text.len() + 1
+{
   re.match_count(text)
 }
 
@@ -518,7 +559,9 @@ pub fn regex_count_matches(re: Regex, text: Str) -> Int {
 
 /// Returns all non-overlapping matches of `re` in `text` as Match objects.
 /// Wraps Regex.find_all.
-pub fn regex_matches_all(re: Regex, text: Str) -> Vec[Match] {
+pub fn regex_matches_all(re: Regex, text: Str) -> Vec[Match]
+  ensures: result.len() <= text.len() + 1
+{
   re.find_all(text)
 }
 
@@ -528,7 +571,9 @@ pub fn regex_matches_all(re: Regex, text: Str) -> Vec[Match] {
 /// Returns a Vec where each element is the text of a captured group,
 /// or None if that group did not participate in the match.
 /// The first element (index 0) is the full match.
-pub fn regex_extract_groups(re: Regex, text: Str) -> Vec[Option[Str]] {
+pub fn regex_extract_groups(re: Regex, text: Str) -> Vec[Option[Str]]
+  ensures: result.len() <= 1
+{
   var result = Vec[Option[Str]].new();
   let opt_caps = re.captures(text);
   if opt_caps.is_some {
@@ -552,13 +597,17 @@ pub fn regex_extract_groups(re: Regex, text: Str) -> Vec[Option[Str]] {
 
 /// Escapes regex metacharacters in `s` so it can be used as a literal pattern.
 /// Wraps regex_escape.
-pub fn regex_escape_literal(s: Str) -> Str {
+pub fn regex_escape_literal(s: Str) -> Str
+  ensures: result.len() >= s.len() && result.len() <= 2 * s.len()
+{
   regex_escape(s)
 }
 
 /// Returns true if `pattern` is a syntactically valid regex.
 /// Checks for balanced brackets and valid quantifier positions.
 /// Wraps is_valid_regex.
-pub fn regex_is_valid(pattern: Str) -> Bool {
+pub fn regex_is_valid(pattern: Str) -> Bool
+  ensures: pattern.len() == 0 => result == true
+{
   is_valid_regex(pattern)
 }

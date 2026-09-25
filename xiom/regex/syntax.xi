@@ -40,7 +40,9 @@ fn peek_byte(s: Str, pos: Int, len: Int) -> Int {
 
 /// Escape every metacharacter in `s` so the text matches literally.
 /// Complexity: O(len(s)).
-pub fn regex_escape(s: Str) -> Str {
+pub fn regex_escape(s: Str) -> Str
+  ensures: result.len() >= s.len() && result.len() <= 2 * s.len()
+{
   var result = "";
   var i: Int = 0;
   let p_len = s.len();
@@ -60,7 +62,10 @@ pub fn regex_escape(s: Str) -> Str {
 /// Any other `\x` sequence decodes to the literal character `x`. A trailing
 /// backslash is an error.
 /// Complexity: O(len(s)).
-pub fn regex_unescape(s: Str) -> Result[Str, Str] {
+pub fn regex_unescape(s: Str) -> Result[Str, Str]
+  ensures: result is Err => result.value.len() > 0
+  ensures: s.len() == 0 => result is Ok
+{
   var result = "";
   var i: Int = 0;
   let p_len = s.len();
@@ -92,7 +97,10 @@ pub fn regex_unescape(s: Str) -> Result[Str, Str] {
 /// Parse `pattern` into a summary `Ast`, or `Err` when the syntax is invalid.
 /// The AST counts pattern elements, groups and character classes.
 /// Complexity: O(len(pattern)).
-pub fn regex_parse(pattern: Str) -> Result[Ast, Str] {
+pub fn regex_parse(pattern: Str) -> Result[Ast, Str]
+  ensures: result is Ok => result.value.group_count <= result.value.node_count && result.value.class_count <= result.value.node_count
+  ensures: pattern.len() == 0 => result is Ok
+{
   let compiled = engine.regex_compile(pattern);
   match compiled {
     Ok(_) => {};
@@ -149,14 +157,18 @@ fn class_end_index(pattern: Str, start: Int) -> Int {
 /// True when `pattern` is syntactically valid (balanced classes, no dangling
 /// escape or leading quantifier).
 /// Complexity: O(len(pattern)).
-pub fn regex_validate(pattern: Str) -> Bool {
+pub fn regex_validate(pattern: Str) -> Bool
+  ensures: pattern.len() == 0 => result == true
+{
   let compiled = engine.regex_compile(pattern);
   compiled.is_ok
 }
 
 /// The first syntax error message for `pattern`, or None when it is valid.
 /// Complexity: O(len(pattern)).
-pub fn regex_syntax_error(pattern: Str) -> Option[Str] {
+pub fn regex_syntax_error(pattern: Str) -> Option[Str]
+  ensures: pattern.len() == 0 => result is None
+{
   let compiled = engine.regex_compile(pattern);
   match compiled {
     Ok(_) => None;
@@ -168,7 +180,10 @@ pub fn regex_syntax_error(pattern: Str) -> Option[Str] {
 /// `alpha`, `digit`, `space`, `alnum`, `upper`, `lower`, `word`, `xdigit`,
 /// `punct`, `graph`, `print`, `any`. Unknown names return the empty string.
 /// Complexity: O(1).
-pub fn regex_character_class(name: Str) -> Str {
+pub fn regex_character_class(name: Str) -> Str
+  ensures: name.len() == 0 => result.len() == 0
+  ensures: result.len() <= 14
+{
   if name.len() == 0 {
     return "";
   };
@@ -213,7 +228,11 @@ pub fn regex_character_class(name: Str) -> Str {
 /// shorthand `{min}` is emitted, when `max < 0` the open form `{min,}` is
 /// emitted. Invalid ranges (max >= 0 and max < min, or min < 0) return "".
 /// Complexity: O(1).
-pub fn regex_quantifier(min: Int, max: Int) -> Str {
+pub fn regex_quantifier(min: Int, max: Int) -> Str
+  ensures: min < 0 => result.len() == 0
+  ensures: max >= 0 && max < min => result.len() == 0
+  ensures: min >= 0 && (max < 0 || max >= min) => result.len() >= 3
+{
   if min < 0 {
     return "";
   };

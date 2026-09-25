@@ -15,6 +15,36 @@ xiom --force -o out.exe tools/known_failures/<file>.xi
 
 ## Current
 
+**Open finding 2026-09-25 (compiler v0.61.3): Result/Option payload reads
+in CATALOG contract clauses are broken and can poison user codegen.**
+Reproduced while landing the regex coverage wave:
+
+1. **Clause poisoning (nested-Vec `Option` payload)**: with
+   `xiom.regex.regex.Regex.captures` carrying
+   `ensures: result is Some => result.value.groups.len() == 1`, every
+   user-side call to `captures` fails to COMPILE -- clang rejects the IR
+   (`error: '%tmp117' defined with type '%struct.Vec'`). Replacing the
+   clause with a payload-free guard (`self.pattern.len() == 0 => result is
+   Some`) makes the same program compile and run. Verified by re-adding the
+   one-line clause (compile rc 1) and removing it (rc 0). Evidence file:
+   `tools/probes/evidence/p_result_payload_ir_repro.xi` (green today; the
+   header records the exact one-line trigger).
+2. **Result-Ok Str payload reads in catalog clauses**: `regex_unescape`'s
+   `result is Ok => result.value.len() <= s.len()` fires a FALSE
+   "contract violated: ensures at 66:12" on every Ok call from a user
+   module (two inputs observed), and `regex_parse`'s
+   `result.value.pattern == pattern` exits 0xC0000005. Int-field consumers
+   of the same Ok payload pass (`group_count <= node_count`), Err-payload
+   length clauses in catalog functions pass (io parse errors), `Option[Str]`
+   payload `.len()` clauses pass (error context), and a user-module
+   function with the same Ok-Str clause passes -- so the failure needs the
+   catalog boundary and the Str payload read.
+   Stdlib mitigation in place: affected clauses replaced with payload-free
+   guards; re-add the full clauses when the compiler lane fixes the payload
+   ABI. Minimal repro shape (needs a catalog function): `pub fn f(s: Str) ->
+   Result[Str, Str] ensures: result is Ok => result.value.len() <= s.len()`
+   called from a user module.
+
 **Open finding 2026-09-24 (compiler v0.61.3): cross-type generic callback
 returns are miscompiled.** A `[T, U]`-style generic whose callback changes
 type (`fn(&T) -> U` or `fn(T) -> U`) returns a wrong value whenever `U` is a

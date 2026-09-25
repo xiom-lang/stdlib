@@ -360,11 +360,22 @@ T1/T2 yields.
        implication, filesystem-backed Ok clauses) -> test 3.1% -> 90.8%,
        error 37.5% -> 90.0%, io 78.7% -> 94.4%, global 25.0% -> 25.8%
        pub-with-clause; pre-validated by tools/probes/p_wave28_shapes.xi.
+       Wave 29 (2026-09-25): 41 clauses on regex/regex.xi + regex/syntax.xi
+       (empty-pattern exact match counts, length upper bounds on
+       replace/split/escape/unescape, capture mirror pairs, Result/
+       quantifier/character-class guards, Option payload bounds for
+       find/first-match) -> regex 2% -> 59.2%, global 25.8% -> 26.2%
+       pub-with-clause; pre-validated by tools/probes/p_wave29_shapes.xi +
+       tools/probes/p_wave29_syntax_shapes.xi. Compiler findings filed
+       (Result-Ok Str payload reads in catalog clauses; nested-Vec payload
+       clause poisoning user codegen -- tools/known_failures/README.md,
+       evidence probe p_result_payload_ir_repro.xi; affected clauses
+       replaced by payload-free guards).
        Ratchet:
-       tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors65.json
+       tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors66.json
        (repo tooling as of the split; positive + negative runs verified;
        earlier floors kept at
-       coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55/56/57/58/59/60/61/62/63/64.json).
+       coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55/56/57/58/59/60/61/62/63/64/65.json).
       Floors are per top-level stdlib/xiom directory and must be refreshed
       when a module is ADDED (new uncovered pub fns dilute the percentage
       -- TOML dropped serialize 6.1% -> 5.4%, tz dropped time 13% ->
