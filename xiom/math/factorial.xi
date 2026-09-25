@@ -269,7 +269,7 @@ pub fn rising_factorial(x: Int, k: Int) -> Int
 /// (documented overflow) when the value exceeds Int range. Complexity: O(n*k).
 pub fn stirling_first(n: Int, k: Int) -> Int
   ensures: (n < 0 || k < 0 || k > n) => (result == 0)
-  ensures: (n == 0) => (result == 1)
+  ensures: (n == 0 && k == 0) => (result == 1)
   ensures: (n >= 1 && k == n) => (result == 1)
   ensures: (n >= 1 && k == 0) => (result == 0)
   ensures: result >= 0
@@ -310,7 +310,7 @@ pub fn stirling_first(n: Int, k: Int) -> Int
 /// value exceeds Int range. Complexity: O(n*k).
 pub fn stirling_second(n: Int, k: Int) -> Int
   ensures: (n < 0 || k < 0 || k > n) => (result == 0)
-  ensures: (n == 0) => (result == 1)
+  ensures: (n == 0 && k == 0) => (result == 1)
   ensures: (n >= 1 && k == n) => (result == 1)
   ensures: (n >= 1 && k == 0) => (result == 0)
   ensures: result >= 0
@@ -395,7 +395,7 @@ pub fn catalan(n: Int) -> Int
 /// value exceeds Int range. Complexity: O(n*k).
 pub fn eulerian(n: Int, k: Int) -> Int
   ensures: (n < 0 || k < 0 || k > n) => (result == 0)
-  ensures: (n == 0) => (result == 1)
+  ensures: (n == 0 && k == 0) => (result == 1)
   ensures: (n >= 1 && k == 0) => (result == 1)
   ensures: (n >= 1 && k == n) => (result == 0)
   ensures: result >= 0

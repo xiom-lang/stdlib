@@ -133,5 +133,11 @@ fn main() -> Int {
   if math.factorial.derangements(0) != 1 { return 81; }
   if math.factorial.derangements(4) != 9 { return 82; }
   if math.factorial.derangements(21) != 0 { return 83; }
+  // invalid-input regression: the zero-row identity needs k == 0
+  if math.factorial.stirling_first(0, 1) != 0 { return 84; }
+  if math.factorial.stirling_first(0, -1) != 0 { return 85; }
+  if math.factorial.stirling_second(0, 1) != 0 { return 86; }
+  if math.factorial.eulerian(0, 1) != 0 { return 87; }
+  if math.factorial.eulerian(0, -1) != 0 { return 88; }
   return 0;
 }
