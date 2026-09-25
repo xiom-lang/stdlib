@@ -34,14 +34,22 @@ Reproduced while landing the regex coverage wave:
    "contract violated: ensures at 66:12" on every Ok call from a user
    module (two inputs observed), and `regex_parse`'s
    `result.value.pattern == pattern` exits 0xC0000005. Int-field consumers
-   of the same Ok payload pass (`group_count <= node_count`), Err-payload
-   length clauses in catalog functions pass (io parse errors), `Option[Str]`
-   payload `.len()` clauses pass (error context), and a user-module
-   function with the same Ok-Str clause passes -- so the failure needs the
-   catalog boundary and the Str payload read.
+   of the same Ok payload pass in isolation (`group_count <= node_count`
+   verified in a small program), BUT the same Int-field clause fails inside
+   the larger `smoke_regex` program ("contract violated: ensures at
+   101:12") even though both `regex_parse` calls pass in isolation and with
+   the smoke's import set -- i.e. it interacts with the documented
+   engine-registry/codegen corruption that smoke_regex's header warns about
+   (statement order matters). Err-payload length clauses in catalog
+   functions pass (io parse errors), `Option[Str]` payload `.len()` clauses
+   pass (error context), and a user-module function with the same Ok-Str
+   clause passes -- so the failure needs the catalog boundary plus the
+   payload read.
    Stdlib mitigation in place: affected clauses replaced with payload-free
-   guards; re-add the full clauses when the compiler lane fixes the payload
-   ABI. Minimal repro shape (needs a catalog function): `pub fn f(s: Str) ->
+   guards (`result is Err => pattern.len() > 0`,
+   `pattern.len() == 0 => result is Ok`); re-add the full clauses when the
+   compiler lane fixes the payload ABI and the engine-registry corruption.
+   Minimal repro shape (needs a catalog function): `pub fn f(s: Str) ->
    Result[Str, Str] ensures: result is Ok => result.value.len() <= s.len()`
    called from a user module.
 

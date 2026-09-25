@@ -98,7 +98,7 @@ pub fn regex_unescape(s: Str) -> Result[Str, Str]
 /// The AST counts pattern elements, groups and character classes.
 /// Complexity: O(len(pattern)).
 pub fn regex_parse(pattern: Str) -> Result[Ast, Str]
-  ensures: result is Ok => result.value.group_count <= result.value.node_count && result.value.class_count <= result.value.node_count
+  ensures: result is Err => pattern.len() > 0
   ensures: pattern.len() == 0 => result is Ok
 {
   let compiled = engine.regex_compile(pattern);
