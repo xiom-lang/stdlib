@@ -379,6 +379,46 @@ registry pin, agent recon for the rest)**
   (checklist + 2-highlight notes fragment ready) and the compiler-lane
   handover (strict-default flip now unblocked).
 
+**SESSION 2026-09-25 mid-day block (wave 29 regex + payload-ABI findings)**
+- Wave 29 (`b7d2b93`, floors66; follow-up `1d45191`): 41 clauses on
+  `regex/regex.xi` + `regex/syntax.xi` (empty-pattern exact match counts,
+  replace/split/escape/unescape length bounds, capture mirror pairs,
+  Result/quantifier/character-class guards, Option payload bounds for
+  find/first-match). regex 2% -> **59.2%**, global 25.8% -> **26.2%**
+  pub-with-clause. Gates after the follow-up fix: modules 509/509, corpus
+  951/951 (2954.1s under load), probes **181/181**, barename 0/509,
+  ratchets OK.
+- COMPILER FINDINGS filed this block (see
+  `tools/known_failures/README.md`, evidence
+  `tools/probes/evidence/p_result_payload_ir_repro.xi`):
+  1. A catalog clause that reads a nested-Vec payload field
+     (`result is Some => result.value.groups.len() == 1` on
+     `Regex.captures`) POISONS user codegen: every user-side call fails to
+     compile with `error: '%tmp...' defined with type '%struct.Vec'`.
+     Removing/replacing the clause makes the same program compile and run
+     (verified both ways). This is why the wave's captures clause is now
+     payload-free.
+  2. Result-Ok Str payload reads in catalog clauses fail: `regex_unescape`'s
+     `.len()` clause fires a FALSE "contract violated" from user modules;
+     `regex_parse`'s Str field compare exits 0xC0000005; an Int-field
+     counter clause passes in isolation but fails inside the larger
+     `smoke_regex` program (interaction with the documented
+     engine-registry/codegen corruption). All affected clauses were
+     replaced with payload-free guards (`result is Err => pattern.len() > 0`,
+     `pattern.len() == 0 => result is Ok`); re-add the full clauses when the
+     compiler lane fixes the payload ABI + engine corruption.
+- Probe constraints learned this block: only ONE sibling module per import
+  family may be imported when the siblings export overlapping bare names
+  (`xiom.regex.regex` vs `xiom.regex.syntax`); cross-module types must be
+  referenced by their unqualified leaf; user-code payload reads can emit
+  invalid IR, so probes assert `is_some`/`is_err` and let the catalog's own
+  contract checker validate payload shapes.
+- Remaining for the stdlib 100%: wave 30+ (math tails: signal/exponential
+  first, then number_theory/factorial/combinatorics), control_theory +
+  lp_simplex (full plan ready), geom dedup unit, tzdata phase 2,
+  untested-surface generator classes, then the release cut (checklist +
+  2-highlight notes fragment ready) and the compiler-lane handover.
+
 
 **SESSION 2026-09-20 (multi-param tranche closure + no-NASM runtime link fix)**
 - Local main: `ebae67c` + `b4f2655` (runtime fallback linkage + probe),
