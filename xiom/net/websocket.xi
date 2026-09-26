@@ -531,7 +531,7 @@ pub fn ws_parse_url(url: Str) -> Result[(Str, Int, Str), Str] {
 
 extern "C" {
   fn xiom_socket_create(family: Int, typ: Int, proto: Int) -> Int;
-  fn xiom_socket_connect(sock: Int, host: *UInt8, port: Int) -> Int;
+  fn xiom_socket_connect(sock: Int, host: *UInt8, port: Int) -> Int32;
   fn xiom_socket_send(sock: Int, buf: *UInt8, len: Int) -> Int;
   fn xiom_socket_recv(sock: Int, buf: *UInt8, len: Int) -> Int;
   fn xiom_socket_close(sock: Int) -> Int;

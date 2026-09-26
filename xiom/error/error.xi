@@ -8,12 +8,13 @@ use xiom.error.chain;
 use xiom.error.context;
 use xiom.error.backtrace;
 
-/// Common interface for error values (message plus chaining).
+/// Common interface for error values (message only). Interface values are
+/// not usable in signatures in this compiler build (W005: no vtables), so
+/// the old `source`/`cause` returns are gone; when an error value must be
+/// stored or returned, use a concrete closed shape instead.
 pub interface Error {
-  fn source(self) -> Option<Error>;
   fn description(self) -> Str;
   fn message(&self) -> Str { return self.description(); }  // M20: default alias
-  fn cause(self) -> Option<Error>; // alias for source
 }
 
 /// Chain of error messages collected from an error value.
@@ -23,13 +24,10 @@ pub type ErrorChain = { errors: Vec<Str>; } derive[Clone]
 pub fn Error.chain(self) -> ErrorChain
   ensures: result.errors.len() >= 1
 {
-  var errors: Vec<Str> = Vec[Str].new();
+  // Description-only until a concrete closed ErrorInfo/ErrorKind design
+  // lands (interface-valued returns are stubbed: COMPILER_BUGS W005).
+  var errors: Vec[Str] = Vec[Str].new();
   errors.push(self.description());
-  var opt = self.source();
-  while opt.is_some {
-    errors.push(opt.value.description());
-    opt = opt.value.source();
-  };
   return ErrorChain{ errors: errors };
 }
 

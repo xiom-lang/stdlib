@@ -623,6 +623,25 @@ registry pin, agent recon for the rest)**
   a pin carrying m142+ is adopted; the `Error.chain` interface-dispatch
   gap remains the open stdlib item (see previous block).
 
+**SESSION 2026-09-27 early-block (relay: m145/m146 + Error interface shape)**
+- `Error.chain` restructure per the compiler lane's answer: the `Error`
+  interface now carries only `description` plus the default `message`
+  alias -- the interface-valued `source`/`cause` returns are gone;
+  `Error.chain` is description-only with a note until a concrete closed
+  ErrorInfo/ErrorKind design has consumers. No implementors or other
+  consumers existed, so the change is contained to error/error.xi;
+  smoke_error green and the floors71/doc ratchets hold.
+- net relay: all four `xiom_socket_connect` extern declarations (net,
+  http, socket, websocket) now say `-> Int32` per the m146 analysis. On the
+  pin the declaration change is behavior-neutral (the signedness-widening
+  bug it needs remains until a pin carrying m146), so tcp_connect's
+  negative-result path is expected to become correct only at the pin bump;
+  eight net smokes plus module checks green.
+  errno/WSAGetLastError propagation into NetError.code is recorded as a net
+  enhancement (not blocking).
+- m145 precedence: no stdlib action (the audited `(n >> hi) & 1 == 1` shape
+  is unchanged). Backlog R-2/R-3/C8 remain compiler-side.
+
 ### HANDOFF 2026-09-25 (context-limit snapshot; read this plus docs/PRODUCTION_READINESS_QUEUE.md)
 
 State: `main` = `a948149` + the handoff docs commit, 38 commits ahead of

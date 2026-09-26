@@ -15,7 +15,7 @@ use xiom.string;
 // === FFI: C Runtime Socket Functions ===
 extern "C" {
   fn xiom_socket_create(family: Int, typ: Int, proto: Int) -> Int;
-  fn xiom_socket_connect(sock: Int, host: *UInt8, port: Int) -> Int;
+  fn xiom_socket_connect(sock: Int, host: *UInt8, port: Int) -> Int32;
   fn xiom_socket_bind(sock: Int, port: Int) -> Int;
   fn xiom_socket_listen(sock: Int, backlog: Int) -> Int;
   fn xiom_socket_accept(sock: Int, client_ip: *UInt8, client_port: *Int) -> Int;
