@@ -156,9 +156,11 @@ pub fn binomial(n: Int, k: Int) -> Int
   var i = 1;
   while i <= kk {
     var num = n - i + 1;
-    if result > 9223372036854775807 / num { return 0; }
-    result = result * num;
-    result = result / i;
+    var g = math.arithmetic.gcd(result, i);
+    var den = i / g;
+    if result / g > 9223372036854775807 / (num / den) { return 0; }
+    result = (result / g) * (num / den);
+    // exact division folded into the guarded multiply above
     i = i + 1;
   }
   return result;

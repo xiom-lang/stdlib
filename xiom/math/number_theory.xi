@@ -173,6 +173,7 @@ pub fn next_prime(n: Int) -> Int {
   var cand = n + 1;
   if cand % 2 == 0 { cand = cand + 1; }
   while !is_prime(cand) {
+    if cand > 9223372036854775807 - 2 { return 0; }
     cand = cand + 2;
   }
   return cand;
@@ -404,7 +405,7 @@ pub fn euler_phi(n: Int) -> Int {
   var result = n;
   var temp = n;
   var p = 2;
-  while p * p <= temp {
+  while p <= temp / p {
     if temp % p == 0 {
       while temp % p == 0 { temp = temp / p; }
       result = result / p * (p - 1);
@@ -426,7 +427,7 @@ pub fn mobius(n: Int) -> Int {
   var x = n;
   var count = 0;
   var p = 2;
-  while p * p <= x {
+  while p <= x / p {
     if x % p == 0 {
       x = x / p;
       if x % p == 0 { return 0; }
@@ -454,7 +455,7 @@ pub fn jordan_totient(n: Int, k: Int) -> Int {
   var result = nk;
   var temp = n;
   var p = 2;
-  while p * p <= temp {
+  while p <= temp / p {
     if temp % p == 0 {
       while temp % p == 0 { temp = temp / p; }
       var pk = _pow(p, k);
@@ -487,7 +488,7 @@ pub fn carmichael(n: Int) -> Int {
   var result = 1;
   var m = n;
   var p = 2;
-  while p * p <= m || p == 2 {
+  while p <= m / p || p == 2 {
     if m % p == 0 {
       var pe = 1;
       while m % p == 0 {
@@ -564,7 +565,8 @@ pub fn nth_prime(n: Int) -> Int
     if is_prime(cand) { count = count + 1; }
     if count < n {
       if cand >= 9223372036854775805 { return 0; }
-      cand = cand + 2;
+    if cand > 9223372036854775807 - 2 { return 0; }
+    cand = cand + 2;
     }
   }
   return cand;
@@ -678,7 +680,7 @@ pub fn radical(n: Int) -> Int {
   if x < 0 { x = -x; }
   var result = 1;
   var p = 2;
-  while p * p <= x {
+  while p <= x / p {
     if x % p == 0 {
       if _mul_ovf(result, p) { return 0; }
       result = result * p;
@@ -702,7 +704,7 @@ pub fn smooth(n: Int, bound: Int) -> Bool {
   var x = n;
   if x < 0 { x = -x; }
   var p = 2;
-  while p * p <= x {
+  while p <= x / p {
     while x % p == 0 {
       if p > bound { return false; }
       x = x / p;
@@ -721,7 +723,7 @@ pub fn rough(n: Int, bound: Int) -> Bool {
   var x = n;
   if x < 0 { x = -x; }
   var p = 2;
-  while p * p <= x {
+  while p <= x / p {
     while x % p == 0 {
       if p <= bound { return false; }
       x = x / p;
@@ -812,12 +814,14 @@ pub fn kronecker_symbol(a: Int, n: Int) -> Int
     nn = nn / 2;
     e = e + 1;
   }
-  var t2 = _kronecker_2(aa);
-  if t2 == 0 { return 0; }
-  var k = 0;
-  while k < e {
-    result = result * t2;
-    k = k + 1;
+  if e > 0 {
+    var t2 = _kronecker_2(aa);
+    if t2 == 0 { return 0; }
+    var k = 0;
+    while k < e {
+      result = result * t2;
+      k = k + 1;
+    }
   }
   if nn == 1 { return result; }
   var j = _jacobi_odd(aa, nn);
