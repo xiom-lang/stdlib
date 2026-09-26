@@ -539,6 +539,27 @@ registry pin, agent recon for the rest)**
   DO-NOT-TOUCH until fixed), then the fix-first probes from the recon,
   then B/C/D/E/F.
 
+**SESSION 2026-09-26 pre-dawn-block (wave 33 number theory)**
+- Wave 33 (`8a294c5`, floors70): 57 clauses on math/number_theory.xi
+  (21 safe fns: primality guards, factor/prev_prime/nth_prime/primorial
+  shapes, pseudoprime/strong-test mirrors, Lucas-Lehmer thresholds,
+  integer-property guards, symbol ranges, divisor guards) -> math 19.1%
+  -> **21.2%**, global 27.8% -> **28.2%** pub-with-clause. The 11
+  p*p-wrap/deferred families stay clause-free.
+- Probe p_wave33_shapes.xi caught `prev_prime(3)` returning 0; fixed to 2
+  (`if n == 3 { return 2; }`) in the same wave.
+- NEW open finding: `kronecker_symbol` returns 0 for even a with odd n
+  (e.g. (2/7)) -- the 2-adic factor is applied unconditionally instead of
+  only to the 2-part of n. Recorded for the fix-first batch together with
+  next_prime wrap/hang, the binomial false-overflow, the p*p wraps and the
+  INT_MIN negation.
+- Gates on `8a294c5`: modules 509/509 (287.9s), corpus 951/951 (1435.1s),
+  probes **185/185** (369.5s), barename 0/509 (586.0s), floors70 + doc
+  ratchet OK.
+- A3/A4 waves 31-33 now carry every safe clause in the three math tails;
+  remaining coverage work is the DO-NOT-TOUCH families after their fixes,
+  then queue B/C/D/E/F and the release cut.
+
 ### HANDOFF 2026-09-25 (context-limit snapshot; read this plus docs/PRODUCTION_READINESS_QUEUE.md)
 
 State: `main` = `a948149` + the handoff docs commit, 38 commits ahead of
