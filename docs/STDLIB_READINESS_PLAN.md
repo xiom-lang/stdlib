@@ -413,8 +413,18 @@ T1/T2 yields.
        returning 0, fixed to 2). Open finding recorded: kronecker_symbol
        returns 0 for even a with odd n (e.g. 2/7) -- algorithm bug, left
        for the fix-first batch.
+       Wave 34 (2026-09-26): queue B part 1 -- `observability` and
+       `controllability` implemented in math/control_theory.xi on the
+       nested-Vec repair pattern (private `_ct_copy`/`_ct_mul`/
+       `_ct_transpose`/`_ct_rank`, pivot threshold 1e-12, two-stage deep
+       copy); clauses `!result || a.len() > 0`; guards for empty/non-square
+       A, width mismatches, empty C/B, zero-column B and multiply failure.
+       Verification cases in tools/probes/p_control_theory_shapes.xi
+       (rank-2/rank-1, multi-input, six guard cases) -> math 21.2% ->
+       21.4%, global 28.2% pub-with-clause. Next: queue B part 2
+       (`lp_simplex` + `linear_programming`).
        Ratchet:
-       tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors70.json
+       tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors71.json
        (repo tooling as of the split; positive + negative runs verified;
        earlier floors kept at
        coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55/56/57/58/59/60/61/62/63/64/65.json).

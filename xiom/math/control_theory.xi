@@ -10,10 +10,12 @@ module xiom.math.control_theory
 // Feedback control: PID, transfer functions, state-space analysis, frequency
 // domain tools, and optimal/robust controllers.
 //
-// State-space functions whose inputs are Vec[Vec[Float64]] matrices are
-// unreliable in this compiler build (BUG 23 #1 residual; element reads return
-// garbage) and are marked TODO(compiler). Scalar and Vec[Float64]-based
-// functions are fully implemented. Complexity is documented per function.
+// State-space functions repair their Vec[Vec[Float64]] parameters into fresh
+// locals before element reads (BUG 23 #1 workaround, verified 2026-09-25).
+// observability and controllability are implemented on that basis; other
+// matrix-valued functions remain TODO(compiler). Scalar and Vec[Float64]-
+// based functions are fully implemented. Complexity is documented per
+// function.
 // ============================================================================
 
 use xiom.math;
@@ -62,18 +64,229 @@ pub fn state_space(a: &Vec[Vec[Float64]], b: &Vec[Vec[Float64]], c: &Vec[Vec[Flo
   return (e1, e2, e3, e4);
 }
 
-/// Whether the pair (A, C) is observable.
-/// TODO(compiler): NOT IMPLEMENTABLE - the matrices are Vec[Vec[Float64]]
-/// whose element reads return garbage in this compiler build.
-pub fn observability(a: &Vec[Vec[Float64]], c: &Vec[Vec[Float64]]) -> Bool {
-  return false;
+// ---------------------------------------------------------------------------
+// State-space matrix helpers. Vec[Vec[Float64]] parameters must be repaired
+// into fresh locals (two-stage deep copy) before any element read; row-local
+// copies are not enough for Float64 (verified 2026-09-25).
+// ---------------------------------------------------------------------------
+
+// Two-stage deep copy of a matrix (the gate-green geom.rank repair pattern).
+fn _ct_copy(m: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {
+  var stage = Vec[Vec[Float64]].new();
+  var i = 0;
+  while i < m.len() {
+    stage.push(m[i]);
+    i = i + 1;
+  }
+  var out = Vec[Vec[Float64]].new();
+  i = 0;
+  while i < stage.len() {
+    var row = Vec[Float64].new();
+    var j = 0;
+    while j < stage[i].len() {
+      row.push(stage[i][j]);
+      j = j + 1;
+    }
+    out.push(row);
+    i = i + 1;
+  }
+  return out;
 }
 
-/// Whether the pair (A, B) is controllable.
-/// TODO(compiler): NOT IMPLEMENTABLE - the matrices are Vec[Vec[Float64]]
-/// whose element reads return garbage in this compiler build.
-pub fn controllability(a: &Vec[Vec[Float64]], b: &Vec[Vec[Float64]]) -> Bool {
-  return false;
+// Matrix product on repaired locals. Empty matrix on inner-dimension mismatch.
+fn _ct_mul(a: &Vec[Vec[Float64]], b: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {
+  var out = Vec[Vec[Float64]].new();
+  var ac = _ct_copy(a);
+  var bc = _ct_copy(b);
+  var ra = ac.len();
+  if ra == 0 { return out; }
+  var ca = ac[0].len();
+  var rb = bc.len();
+  if rb == 0 { return out; }
+  var cb = bc[0].len();
+  if ca != rb { return out; }
+  var i = 0;
+  while i < ra {
+    var row = Vec[Float64].new();
+    var j = 0;
+    while j < cb {
+      var s = 0.0;
+      var k = 0;
+      while k < ca {
+        s = s + ac[i][k] * bc[k][j];
+        k = k + 1;
+      }
+      row.push(s);
+      j = j + 1;
+    }
+    out.push(row);
+    i = i + 1;
+  }
+  return out;
+}
+
+// Matrix transpose on repaired locals. Empty matrix for a ragged input.
+fn _ct_transpose(a: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {
+  var out = Vec[Vec[Float64]].new();
+  var ac = _ct_copy(a);
+  var r = ac.len();
+  if r == 0 { return out; }
+  var c = ac[0].len();
+  var j = 0;
+  while j < c {
+    var col = Vec[Float64].new();
+    var i = 0;
+    while i < r {
+      col.push(ac[i][j]);
+      i = i + 1;
+    }
+    out.push(col);
+    j = j + 1;
+  }
+  return out;
+}
+
+// Rank by Gaussian elimination with partial pivoting (pivot threshold 1e-12).
+fn _ct_rank(a: &Vec[Vec[Float64]]) -> Int {
+  var ac = _ct_copy(a);
+  var r = ac.len();
+  if r == 0 { return 0; }
+  var c = ac[0].len();
+  var rank_val = 0;
+  var row = 0;
+  var col = 0;
+  while row < r && col < c {
+    var p = row;
+    var pk = math.abs_float(ac[row][col]);
+    var t = row + 1;
+    while t < r {
+      var av = math.abs_float(ac[t][col]);
+      if av > pk { pk = av; p = t; }
+      t = t + 1;
+    }
+    if pk < 0.000000000001 {
+      col = col + 1;
+    } else {
+      if p != row {
+        var jj = 0;
+        while jj < c {
+          var tv = ac[p][jj];
+          ac[p][jj] = ac[row][jj];
+          ac[row][jj] = tv;
+          jj = jj + 1;
+        }
+      }
+      var piv = ac[row][col];
+      var rr = 0;
+      while rr < r {
+        if rr != row {
+          var f = ac[rr][col] / piv;
+          var j = col;
+          while j < c {
+            ac[rr][j] = ac[rr][j] - f * ac[row][j];
+            j = j + 1;
+          }
+        }
+        rr = rr + 1;
+      }
+      rank_val = rank_val + 1;
+      row = row + 1;
+      col = col + 1;
+    }
+  }
+  return rank_val;
+}
+
+/// Whether the pair (A, C) is observable: the rank of the stacked
+/// observability matrix [C; CA; ...; C*A^(n-1)] equals n. Returns false for
+/// empty or non-square A, empty C, width mismatches, or a multiply failure.
+/// Complexity: O(n^4) dense rank.
+pub fn observability(a: &Vec[Vec[Float64]], c: &Vec[Vec[Float64]]) -> Bool
+  ensures: !result || a.len() > 0
+{
+  var ac = _ct_copy(a);
+  var cc = _ct_copy(c);
+  var n = ac.len();
+  if n == 0 { return false; }
+  var p = cc.len();
+  if p == 0 { return false; }
+  var width = ac[0].len();
+  if width != n { return false; }
+  var cw = cc[0].len();
+  if cw != n { return false; }
+  var o = Vec[Vec[Float64]].new();
+  var i = 0;
+  while i < p {
+    var row = Vec[Float64].new();
+    var j = 0;
+    while j < cc[i].len() {
+      row.push(cc[i][j]);
+      j = j + 1;
+    }
+    o.push(row);
+    i = i + 1;
+  }
+  var block = cc;
+  var k = 1;
+  while k < n {
+    block = _ct_mul(&block, &ac);
+    if block.len() != p { return false; }
+    i = 0;
+    while i < block.len() {
+      var row = Vec[Float64].new();
+      var j = 0;
+      while j < block[i].len() {
+        row.push(block[i][j]);
+        j = j + 1;
+      }
+      o.push(row);
+      i = i + 1;
+    }
+    k = k + 1;
+  }
+  return _ct_rank(&o) == n;
+}
+
+/// Whether the pair (A, B) is controllable: the rank of the stacked
+/// transpose-form controllability matrix [B^T; B^T A^T; ...;
+/// B^T (A^T)^(n-1)] equals n. Returns false for empty or non-square A,
+/// empty B, B with zero columns, width mismatches, or a multiply failure.
+/// Complexity: O(n^4) dense rank.
+pub fn controllability(a: &Vec[Vec[Float64]], b: &Vec[Vec[Float64]]) -> Bool
+  ensures: !result || a.len() > 0
+{
+  var ac = _ct_copy(a);
+  var bc = _ct_copy(b);
+  var n = ac.len();
+  if n == 0 { return false; }
+  var width = ac[0].len();
+  if width != n { return false; }
+  var rb = bc.len();
+  if rb == 0 { return false; }
+  var m = bc[0].len();
+  if m == 0 { return false; }
+  if rb != n { return false; }
+  var at = _ct_transpose(&ac);
+  var block = _ct_transpose(&bc);
+  var stacked = Vec[Vec[Float64]].new();
+  var k = 0;
+  while k < n {
+    if block.len() == 0 { return false; }
+    var i = 0;
+    while i < block.len() {
+      var row = Vec[Float64].new();
+      var j = 0;
+      while j < block[i].len() {
+        row.push(block[i][j]);
+        j = j + 1;
+      }
+      stacked.push(row);
+      i = i + 1;
+    }
+    block = _ct_mul(&block, &at);
+    k = k + 1;
+  }
+  return _ct_rank(&stacked) == n;
 }
 
 // One Routh-table row (struct, not a tuple: 4-tuple allocas miscompile).
