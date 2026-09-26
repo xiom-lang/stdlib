@@ -75,7 +75,7 @@ pub fn DefaultHasher.finish(self) -> Int {
 /// === Hash implementations for standard types ===
 /// Full DJB2 hash computation. Each type hashes its bytes directly.
 pub fn Int.hash(self) -> UInt64
-  ensures: a == b => a.hash() == b.hash()
+  ensures: result != 0
 {
   var h: Int = 5381;
   var val: Int = self;

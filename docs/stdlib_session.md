@@ -579,6 +579,33 @@ registry pin, agent recon for the rest)**
   B (control_theory + lp_simplex), C (geom dedup), D (tzdata phase 2),
   E (generator classes), F (release cut).
 
+**SESSION 2026-09-26 evening-block (wave 34 control_theory + compiler relay)**
+- Wave 34 (`7293056`, floors71): queue B part 1 -- observability and
+  controllability implemented on the nested-Vec repair pattern (private
+  `_ct_copy`/`_ct_mul`/`_ct_transpose`/`_ct_rank`, 1e-12 pivot, two-stage
+  deep copy); guards for empty/non-square A, width mismatches, empty or
+  zero-column B, multiply failure; clauses `!result || a.len() > 0`.
+  Probe p_control_theory_shapes.xi (187th) green; smoke_math_optimization
+  green. math 21.2% -> **21.4%**; gates: modules 509/509 (842.8s), corpus
+  951/951 (1858.2s), probes **187/187** (827.6s), barename 0/509 (598.4s),
+  floors71 + doc ratchet OK.
+- Compiler relay 2026-09-26 (m142/m143): `ptr.is_null()` UFCS fixed
+  compiler-side -- the stdlib module-qualified workaround in thread/park.xi
+  stays until the pin carrying m142+ is adopted; by-value receiver
+  container mutation fixed (no stdlib action). Relay item 1 closed: the
+  invalid `Int.hash` clause (`a == b => ...` with unbound names) replaced
+  by `ensures: result != 0` (the DJB2 range here is positive and
+  non-overflowing); hash module check + three hash smokes green.
+- Relay item 2 (deferred to its own wave): `Error.chain`
+  interface-dispatch gap -- the Error interface returns `Option[Error]`
+  (interface as value), which the new checker still stubs (W005);
+  restructuring means migrating error/context.xi, error/chain.xi and the
+  error smokes. Exact expected shape requested from the compiler lane.
+  Backlog C8 (v0.61.3 wasm asset missing from SHA256SUMS) is
+  compiler/release-side.
+- Queue B part 2 (`lp_simplex` + `linear_programming`) remains next,
+  then C/D/E/F.
+
 ### HANDOFF 2026-09-25 (context-limit snapshot; read this plus docs/PRODUCTION_READINESS_QUEUE.md)
 
 State: `main` = `a948149` + the handoff docs commit, 38 commits ahead of
