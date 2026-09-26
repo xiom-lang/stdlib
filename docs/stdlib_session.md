@@ -560,6 +560,25 @@ registry pin, agent recon for the rest)**
   remaining coverage work is the DO-NOT-TOUCH families after their fixes,
   then queue B/C/D/E/F and the release cut.
 
+**SESSION 2026-09-26 afternoon-block (fix-first math-tail batch)**
+- `e45386c`: binomial is now exact via the gcd-folded recurrence
+  (binomial(4294967294, 2) RED 0 -> GREEN; true overflows still 0);
+  kronecker_symbol applies the 2-adic factor only when n is even
+  ((2/7) == 1 now); the seven p*p loop conditions (euler_phi, mobius,
+  jordan_totient, carmichael, radical, smooth, rough) use `p <= x / p`;
+  next_prime returns 0 at the top of Int instead of wrapping (boundary
+  calls GREEN; the pre-fix path never returned).
+- Probe `tools/probes/p_fix_math_tails.xi` (186th probe) locks all four;
+  smoke_math_factorial/combinatorics/number_theory green. Gates on
+  `e45386c`: modules 509/509 (544.6s), corpus 951/951 (2577.8s), probes
+  **186/186** (486.1s), barename 0/509 (816.7s), floors70 + doc ratchet OK.
+- The fixed families (euler_phi, mobius, jordan_totient, carmichael,
+  radical, smooth, rough, next_prime, pollard_rho, p_1_factor, prime_pi)
+  can now be reconsidered for clauses in a later wave; binomial /
+  kronecker gained behavior only, no new clauses yet. Remaining queue:
+  B (control_theory + lp_simplex), C (geom dedup), D (tzdata phase 2),
+  E (generator classes), F (release cut).
+
 ### HANDOFF 2026-09-25 (context-limit snapshot; read this plus docs/PRODUCTION_READINESS_QUEUE.md)
 
 State: `main` = `a948149` + the handoff docs commit, 38 commits ahead of
