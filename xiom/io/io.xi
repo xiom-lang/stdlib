@@ -10,7 +10,7 @@ use xiom.io.pipe;
 use xiom.string;
 
 extern "C" {
-  fn printf(format: *UInt8, ...) -> Int32;
+  fn printf(format: *UInt8, arg: *UInt8) -> Int32;
   fn puts(s: *UInt8) -> Int32;
   fn fgets(buf: *UInt8, size: Int32, stream: *UInt8) -> *UInt8;
   fn fopen(path: *UInt8, mode: *UInt8) -> *UInt8;

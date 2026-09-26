@@ -350,7 +350,7 @@ fn _scrypt_romix(b: &Vec[UInt8], n: Int, r: Int) -> Vec[UInt8] {
       v.push(x[j]);
       j = j + 1;
     }
-    x = _scrypt_blockmix(&x);
+    x = _scrypt_blockmix(&x, r);
     i = i + 1;
   }
   i = 0;
@@ -362,7 +362,7 @@ fn _scrypt_romix(b: &Vec[UInt8], n: Int, r: Int) -> Vec[UInt8] {
       x[k] = (x[k] as Int ^ v[j * 128 * r + k] as Int) as UInt8;
       k = k + 1;
     }
-    x = _scrypt_blockmix(&x);
+    x = _scrypt_blockmix(&x, r);
     i = i + 1;
   }
   return x;

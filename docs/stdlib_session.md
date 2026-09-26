@@ -606,6 +606,23 @@ registry pin, agent recon for the rest)**
 - Queue B part 2 (`lp_simplex` + `linear_programming`) remains next,
   then C/D/E/F.
 
+**SESSION 2026-09-26 night-block-2 (compiler relay item-3 call sites)**
+- Relay item 3 closed: all three remaining arity/fix sites landed --
+  kdf.xi passes the dropped `r` to both `_scrypt_blockmix` calls;
+  os/path.xi qualifies `xiom.string.replace` in `Path.components`;
+  io/io.xi and io/console.xi declare `printf(format, arg)` with the fixed
+  shape the three `%s` call sites use (no variadic `...`).
+- Probe `tools/probes/p_relay_arity_fixes.xi` (188th) exercises io.print
+  and Path.components at runtime (scrypt itself stays unexecuted: the
+  returned-Vec-into-&Vec miscompile note in smoke_crypto_kdf still
+  applies); smoke_io_print, smoke_stress_path_components and
+  smoke_crypto_kdf green.
+- Also relayed: m144 fixed the G-10 bare-sibling receiver gap
+  (`collections.get` was a compiler bug, not a stdlib call-site bug); the
+  `ptr.is_null()` module-qualified workaround in thread/park.xi stays until
+  a pin carrying m142+ is adopted; the `Error.chain` interface-dispatch
+  gap remains the open stdlib item (see previous block).
+
 ### HANDOFF 2026-09-25 (context-limit snapshot; read this plus docs/PRODUCTION_READINESS_QUEUE.md)
 
 State: `main` = `a948149` + the handoff docs commit, 38 commits ahead of

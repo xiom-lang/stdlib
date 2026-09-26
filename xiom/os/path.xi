@@ -157,7 +157,7 @@ pub fn Path.has_root(self) -> Bool {
 pub fn Path.components(self) -> Vec<Str>
   ensures: result.len() >= 1
 {
-  var normalized = replace(self.inner, "\\", "/");
+  var normalized = xiom.string.replace(self.inner, "\\", "/");
   return str_split(normalized, "/");
 }
 
