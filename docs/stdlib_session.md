@@ -642,6 +642,20 @@ registry pin, agent recon for the rest)**
 - m145 precedence: no stdlib action (the audited `(n >> hi) & 1 == 1` shape
   is unchanged). Backlog R-2/R-3/C8 remain compiler-side.
 
+**SESSION 2026-09-27 morning-block (wave 35 lp_simplex)**
+- Wave 35 (floors72): `lp_simplex` implemented (minimize c'x, Ax <= b,
+  x >= 0) -- dense tableau, slack basis, Bland entering/leaving,
+  Gauss-Jordan pivots, 10000-iteration cap; empty-result conventions for
+  empty c or A, b mismatch, ragged A, b[i] < 0, unbounded and cap; the
+  objective row is the minimize-c row (the first attempt used the
+  maximization sign and the probe caught it). Private `_opt_copy`
+  (two-stage nested-Vec repair). Probe `p_lp_simplex.xi` (189th): known LP
+  -> [2,2], simple bound, five guards, unbounded -- green. math 21.4% ->
+  **21.5%**.
+- `linear_programming` (bounds repair + delegation) and the
+  smoke_math_optimization cases remain for the next block; `_opt_copy` is
+  ready for reuse.
+
 ### HANDOFF 2026-09-25 (context-limit snapshot; read this plus docs/PRODUCTION_READINESS_QUEUE.md)
 
 State: `main` = `a948149` + the handoff docs commit, 38 commits ahead of

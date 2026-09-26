@@ -423,8 +423,17 @@ T1/T2 yields.
        (rank-2/rank-1, multi-input, six guard cases) -> math 21.2% ->
        21.4%, global 28.2% pub-with-clause. Next: queue B part 2
        (`lp_simplex` + `linear_programming`).
+       Wave 35 (2026-09-27): queue B part 2a -- `lp_simplex` implemented in
+       math/optimization.xi (minimize c'x, Ax <= b, x >= 0): dense tableau
+       (m+1) x (n+m+1), slack basis, Bland entering + leaving, Gauss-Jordan
+       pivots, 10000-iteration cap; returns empty for empty c or A, b-length
+       mismatch, ragged A, b[i] < 0, unbounded, cap exhaustion; else the
+       argmin of length n. Verification in tools/probes/p_lp_simplex.xi
+       (known LP -> [2,2], simple bound, five guards, unbounded) -> math
+       21.4% -> 21.5%. Next: `linear_programming` + the smoke cases.
        Ratchet:
-       tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors71.json
+       tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors72.json
+
        (repo tooling as of the split; positive + negative runs verified;
        earlier floors kept at
        coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55/56/57/58/59/60/61/62/63/64/65.json).

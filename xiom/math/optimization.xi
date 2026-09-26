@@ -9,12 +9,11 @@ module xiom.math.optimization
 // ============================================================================
 // Mathematical programming (LP, QP, NLP) and metaheuristic optimization.
 //
-// Almost every solver here takes either a constraint matrix
-// (Vec[Vec[Float64]]) or a vector of constraint functions (Vec[fn]); both
-// element-read paths are unreliable in this compiler build (BUG 23 #1
-// residual, verified by minimal probes) and those functions are marked
-// TODO(compiler). Simulated annealing (works from a Vec[Float64] initial
-// point) and ant colony optimization (works from a scalar node count) are
+// Constraint matrices (Vec[Vec[Float64]]) and constraint-function vectors
+// (Vec[fn]) still need the repair pattern or compiler work (BUG 23 #1
+// residual); lp_simplex implements the dense simplex on repaired locals.
+// Other matrix/fn solvers remain TODO(compiler). Simulated annealing
+// (Vec[Float64] point) and ant colony optimization (scalar node count) are
 // fully implemented. Complexity is documented per function.
 // ============================================================================
 
@@ -61,12 +60,174 @@ pub fn nonlinear_programming(f: fn(&Vec[Float64]) -> Float64, cons: &Vec[fn(&Vec
   return out;
 }
 
-/// Solve a linear program by the simplex method.
-/// TODO(compiler): NOT IMPLEMENTABLE - the constraint matrix A is a
-/// Vec[Vec[Float64]] whose element reads return garbage in this compiler build.
-pub fn lp_simplex(c: &Vec[Float64], a: &Vec[Vec[Float64]], b: &Vec[Float64]) -> Vec[Float64] {
-  var out = Vec[Float64].new();
+// Two-stage deep copy of a matrix (nested-Vec BUG 23 #1 workaround; a
+// row-local copy is not enough for Float64 element reads).
+fn _opt_copy(m: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {
+  var stage = Vec[Vec[Float64]].new();
+  var i = 0;
+  while i < m.len() {
+    stage.push(m[i]);
+    i = i + 1;
+  }
+  var out = Vec[Vec[Float64]].new();
+  i = 0;
+  while i < stage.len() {
+    var row = Vec[Float64].new();
+    var j = 0;
+    while j < stage[i].len() {
+      row.push(stage[i][j]);
+      j = j + 1;
+    }
+    out.push(row);
+    i = i + 1;
+  }
   return out;
+}
+
+/// Minimize c'x subject to Ax <= b, x >= 0, by the dense simplex method with
+/// Bland's rule (entering: smallest negative reduced cost; leaving: smallest
+/// basis index on ratio ties), Gauss-Jordan pivots and a 10000-iteration
+/// cap. Returns the empty vector for empty c or A, b.len() != a.len(),
+/// ragged A, any b[i] < 0 (no Phase I), unbounded programs, and cap
+/// exhaustion; otherwise the argmin x of length c.len().
+/// Complexity: O(iterations * m * (n + m)).
+pub fn lp_simplex(c: &Vec[Float64], a: &Vec[Vec[Float64]], b: &Vec[Float64]) -> Vec[Float64]
+  ensures: result.len() == 0 || result.len() == c.len()
+{
+  var out = Vec[Float64].new();
+  var n = c.len();
+  if n == 0 { return out; }
+  var m = a.len();
+  if m == 0 { return out; }
+  if b.len() != m { return out; }
+  var cc = Vec[Float64].new();
+  var i = 0;
+  while i < n {
+    cc.push(c[i]);
+    i = i + 1;
+  }
+  var bb = Vec[Float64].new();
+  i = 0;
+  while i < m {
+    if b[i] < 0.0 { return out; }
+    bb.push(b[i]);
+    i = i + 1;
+  }
+  var am = _opt_copy(a);
+  i = 0;
+  while i < m {
+    if am[i].len() != n { return out; }
+    i = i + 1;
+  }
+  // Tableau: m constraint rows then the objective row; n structural columns,
+  // m slack columns, one rhs column. The initial basis is the slacks, whose
+  // objective coefficients are zero, so the row is already canonical.
+  var tab = Vec[Vec[Float64]].new();
+  i = 0;
+  while i < m {
+    var row = Vec[Float64].new();
+    var j = 0;
+    while j < n {
+      row.push(am[i][j]);
+      j = j + 1;
+    }
+    j = 0;
+    while j < m {
+      if j == i { row.push(1.0); } else { row.push(0.0); }
+      j = j + 1;
+    }
+    row.push(bb[i]);
+    tab.push(row);
+    i = i + 1;
+  }
+  var obj = Vec[Float64].new();
+  i = 0;
+  while i < n {
+    obj.push(cc[i]);
+    i = i + 1;
+  }
+  i = 0;
+  while i < m {
+    obj.push(0.0);
+    i = i + 1;
+  }
+  obj.push(0.0);
+  tab.push(obj);
+  var basis = Vec[Int].new();
+  i = 0;
+  while i < m {
+    basis.push(n + i);
+    i = i + 1;
+  }
+  var total = n + m;
+  var iter = 0;
+  var done = false;
+  var unbounded = false;
+  while iter < 10000 && !done && !unbounded {
+    var enter = -1;
+    var j = 0;
+    while j < total && enter < 0 {
+      if tab[m][j] < -0.000000000001 { enter = j; }
+      j = j + 1;
+    }
+    if enter < 0 {
+      done = true;
+    } else {
+      var leave = -1;
+      var best = 0.0;
+      i = 0;
+      while i < m {
+        if tab[i][enter] > 0.000000000001 {
+          var ratio = tab[i][total] / tab[i][enter];
+          if leave < 0 || ratio < best || (ratio == best && basis[i] < basis[leave]) {
+            best = ratio;
+            leave = i;
+          }
+        }
+        i = i + 1;
+      }
+      if leave < 0 {
+        unbounded = true;
+      } else {
+        var piv = tab[leave][enter];
+        var jj = 0;
+        while jj < total + 1 {
+          tab[leave][jj] = tab[leave][jj] / piv;
+          jj = jj + 1;
+        }
+        i = 0;
+        while i < m + 1 {
+          if i != leave {
+            var f = tab[i][enter];
+            if f != 0.0 {
+              jj = 0;
+              while jj < total + 1 {
+                tab[i][jj] = tab[i][jj] - f * tab[leave][jj];
+                jj = jj + 1;
+              }
+            }
+          }
+          i = i + 1;
+        }
+        basis[leave] = enter;
+        iter = iter + 1;
+      }
+    }
+  }
+  if !done || unbounded { return out; }
+  var j = 0;
+  var x = Vec[Float64].new();
+  j = 0;
+  while j < n {
+    x.push(0.0);
+    j = j + 1;
+  }
+  i = 0;
+  while i < m {
+    if basis[i] < n { x[basis[i]] = tab[i][total]; }
+    i = i + 1;
+  }
+  return x;
 }
 
 /// Solve a linear program by the interior-point method.
