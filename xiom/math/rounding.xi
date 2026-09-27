@@ -18,33 +18,43 @@ use xiom.math;
 
 /// Largest integer <= x. For |x| >= 2^63 the result is x itself (such values
 /// are integers). Complexity: O(1), libm floor.
-pub fn floor(x: Float64) -> Float64 {
+pub fn floor(x: Float64) -> Float64
+  ensures: (result <= x) || (result != result)
+{
   return math.floor(x);
 }
 
 /// Smallest integer >= x. For |x| >= 2^63 the result is x itself.
 /// Complexity: O(1), libm ceil.
-pub fn ceil(x: Float64) -> Float64 {
+pub fn ceil(x: Float64) -> Float64
+  ensures: (result >= x) || (result != result)
+{
   return math.ceil(x);
 }
 
 /// Nearest integer, ties away from zero. round(2.5) == 3.0, round(-2.5) == -3.0.
 /// For |x| >= 2^63 the result is x (already integral). Complexity: O(1).
-pub fn round(x: Float64) -> Float64 {
+pub fn round(x: Float64) -> Float64
+  ensures: (((x >= 0.0) && (result >= 0.0)) || ((x < 0.0) && (result <= 0.0))) || (x != x)
+{
   if x >= 0.0 { return math.floor(x + 0.5); }
   return math.ceil(x - 0.5);
 }
 
 /// Integer part of x, truncated toward zero. trunc(2.7) == 2.0,
 /// trunc(-2.7) == -2.0. For |x| >= 2^63 the result is x. Complexity: O(1).
-pub fn trunc(x: Float64) -> Float64 {
+pub fn trunc(x: Float64) -> Float64
+  ensures: (((x >= 0.0) && (result >= 0.0)) || ((x < 0.0) && (result <= 0.0))) || (x != x)
+{
   if x >= 0.0 { return math.floor(x); }
   return math.ceil(x);
 }
 
 /// Fractional part of x: x - trunc(x), same sign as x. fract(2.5) == 0.5,
 /// fract(-2.5) == -0.5. Complexity: O(1).
-pub fn fract(x: Float64) -> Float64 {
+pub fn fract(x: Float64) -> Float64
+  ensures: (((x >= 0.0) && (result >= 0.0) && (result < 1.0)) || ((x < 0.0) && (result <= 0.0) && (result > -1.0))) || (result != result)
+{
   return x - trunc(x);
 }
 
@@ -58,7 +68,9 @@ pub fn modf(x: Float64) -> (Float64, Float64) {
 
 /// Largest integer <= x without libm. Pure-XIOM; see floor() for semantics.
 /// Complexity: O(1).
-pub fn floor_pure(x: Float64) -> Float64 {
+pub fn floor_pure(x: Float64) -> Float64
+  ensures: (x == x) => (result <= x)
+{
   if x >= 9223372036854775808.0 || x <= -9223372036854775808.0 { return x; }
   var i = x as Int;
   if x >= 0.0 { return (i as Float64); }
@@ -68,7 +80,9 @@ pub fn floor_pure(x: Float64) -> Float64 {
 
 /// Smallest integer >= x without libm. Pure-XIOM; see ceil() for semantics.
 /// Complexity: O(1).
-pub fn ceil_pure(x: Float64) -> Float64 {
+pub fn ceil_pure(x: Float64) -> Float64
+  ensures: (x == x) => (result >= x)
+{
   if x >= 9223372036854775808.0 || x <= -9223372036854775808.0 { return x; }
   var i = x as Int;
   if x <= 0.0 { return (i as Float64); }
@@ -78,32 +92,42 @@ pub fn ceil_pure(x: Float64) -> Float64 {
 
 /// Nearest integer, ties away from zero, without libm. See round().
 /// Complexity: O(1).
-pub fn round_pure(x: Float64) -> Float64 {
+pub fn round_pure(x: Float64) -> Float64
+  ensures: (((x >= 0.0) && (result >= 0.0)) || ((x < 0.0) && (result <= 0.0))) || (x != x)
+{
   if x >= 0.0 { return floor_pure(x + 0.5); }
   return ceil_pure(x - 0.5);
 }
 
 /// Integer part truncated toward zero, without libm. See trunc().
 /// Complexity: O(1).
-pub fn trunc_pure(x: Float64) -> Float64 {
+pub fn trunc_pure(x: Float64) -> Float64
+  ensures: (((x >= 0.0) && (result >= 0.0) && (result <= x)) || ((x < 0.0) && (result <= 0.0) && (result >= x))) || (x != x)
+{
   if x >= 9223372036854775808.0 || x <= -9223372036854775808.0 { return x; }
   var i = x as Int;
   return (i as Float64);
 }
 
 /// Fractional part of x without libm. See fract(). Complexity: O(1).
-pub fn fract_pure(x: Float64) -> Float64 {
+pub fn fract_pure(x: Float64) -> Float64
+  ensures: (((x >= 0.0) && (result >= 0.0) && (result < 1.0)) || ((x < 0.0) && (result <= 0.0) && (result > -1.0))) || (result != result)
+{
   return x - trunc_pure(x);
 }
 
 /// Integer part of x (truncated toward zero), as a Float64. Alias of trunc.
 /// Complexity: O(1).
-pub fn integer_part(x: Float64) -> Float64 {
+pub fn integer_part(x: Float64) -> Float64
+  ensures: (((x >= 0.0) && (result >= 0.0)) || ((x < 0.0) && (result <= 0.0))) || (x != x)
+{
   return trunc(x);
 }
 
 /// Fractional part of x. Alias of fract. Complexity: O(1).
-pub fn frac_part(x: Float64) -> Float64 {
+pub fn frac_part(x: Float64) -> Float64
+  ensures: (((x >= 0.0) && (result >= 0.0) && (result < 1.0)) || ((x < 0.0) && (result <= 0.0) && (result > -1.0))) || (result != result)
+{
   return fract(x);
 }
 
@@ -121,7 +145,9 @@ pub fn round_to(x: Float64, places: Int) -> Float64 {
 /// round_nearest(2.5) == 2, round_nearest(3.5) == 4, round_nearest(-2.5) == -2.
 /// For |x| >= 2^63 the result saturates to INT_MAX/INT_MIN (documented;
 /// the true rounded value is outside Int range). Complexity: O(1).
-pub fn round_nearest(x: Float64) -> Int {
+pub fn round_nearest(x: Float64) -> Int
+  ensures: (((x >= 0.0) && (result >= 0)) || ((x <= 0.0) && (result <= 0))) || (x != x)
+{
   if x >= 9223372036854775808.0 { return 9223372036854775807; }
   if x <= -9223372036854775808.0 { return -9223372036854775808; }
   var f = math.floor(x);

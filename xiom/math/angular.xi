@@ -18,59 +18,81 @@ use xiom.math;
 // ============================================================================
 
 /// Degrees to radians: deg * (pi/180).
-pub fn to_radians(deg: Float64) -> Float64 {
+pub fn to_radians(deg: Float64) -> Float64
+  ensures: (((deg > 0.0) && (result >= 0.0)) || ((deg < 0.0) && (result <= 0.0))) || (deg != deg)
+{
   return deg * 0.017453292519943295;
 }
 
 /// Radians to degrees: rad * (180/pi).
-pub fn to_degrees(rad: Float64) -> Float64 {
+pub fn to_degrees(rad: Float64) -> Float64
+  ensures: (((rad > 0.0) && (result >= 0.0)) || ((rad < 0.0) && (result <= 0.0))) || (rad != rad)
+{
   return rad * 57.29577951308232;
 }
 
 /// Degrees to gradians (400 gradians per full circle): deg * (10/9).
-pub fn to_gradians(deg: Float64) -> Float64 {
+pub fn to_gradians(deg: Float64) -> Float64
+  ensures: (((deg > 0.0) && (result >= 0.0)) || ((deg < 0.0) && (result <= 0.0))) || (deg != deg)
+{
   return deg * 1.1111111111111112;
 }
 
 /// Gradians to degrees: grad * (9/10).
-pub fn from_gradians(grad: Float64) -> Float64 {
+pub fn from_gradians(grad: Float64) -> Float64
+  ensures: (((grad > 0.0) && (result >= 0.0)) || ((grad < 0.0) && (result <= 0.0))) || (grad != grad)
+{
   return grad * 0.9;
 }
 
 /// Degrees to milliradians (6400 mils per full circle): deg * (160/9).
-pub fn to_mils(deg: Float64) -> Float64 {
+pub fn to_mils(deg: Float64) -> Float64
+  ensures: (((deg > 0.0) && (result >= 0.0)) || ((deg < 0.0) && (result <= 0.0))) || (deg != deg)
+{
   return deg * 17.77777777777778;
 }
 
 /// Milliradians to degrees: mil * (9/160).
-pub fn from_mils(mil: Float64) -> Float64 {
+pub fn from_mils(mil: Float64) -> Float64
+  ensures: (((mil > 0.0) && (result >= 0.0)) || ((mil < 0.0) && (result <= 0.0))) || (mil != mil)
+{
   return mil * 0.05625;
 }
 
 /// Degrees to arcminutes: deg * 60.
-pub fn to_arcmin(deg: Float64) -> Float64 {
+pub fn to_arcmin(deg: Float64) -> Float64
+  ensures: (((deg > 0.0) && (result >= 0.0)) || ((deg < 0.0) && (result <= 0.0))) || (deg != deg)
+{
   return deg * 60.0;
 }
 
 /// Arcminutes to degrees: arcmin / 60.
-pub fn from_arcmin(arcmin: Float64) -> Float64 {
+pub fn from_arcmin(arcmin: Float64) -> Float64
+  ensures: (((arcmin > 0.0) && (result >= 0.0)) || ((arcmin < 0.0) && (result <= 0.0))) || (arcmin != arcmin)
+{
   return arcmin * 0.016666666666666666;
 }
 
 /// Degrees to arcseconds: deg * 3600.
-pub fn to_arcsec(deg: Float64) -> Float64 {
+pub fn to_arcsec(deg: Float64) -> Float64
+  ensures: (((deg > 0.0) && (result >= 0.0)) || ((deg < 0.0) && (result <= 0.0))) || (deg != deg)
+{
   return deg * 3600.0;
 }
 
 /// Arcseconds to degrees: arcsec / 3600.
-pub fn from_arcsec(arcsec: Float64) -> Float64 {
+pub fn from_arcsec(arcsec: Float64) -> Float64
+  ensures: (((arcsec > 0.0) && (result >= 0.0)) || ((arcsec < 0.0) && (result <= 0.0))) || (arcsec != arcsec)
+{
   return arcsec * 0.0002777777777777778;
 }
 
 /// Wrap radians into (-pi, pi]. normalize_angle(-pi) == pi,
 /// normalize_angle(3*pi) == pi. Infinities pass through unchanged.
 /// Complexity: O(1).
-pub fn normalize_angle(rad: Float64) -> Float64 {
+pub fn normalize_angle(rad: Float64) -> Float64
+  ensures: (((result > -3.141592653589793) && (result <= 3.141592653589793)) || (result == 1.0 / 0.0)) || (result == -1.0 / 0.0) || (result != result)
+{
   if math.is_inf(rad) { return rad; }
   var pi = math.constants.PI;
   var tau = math.constants.TAU;
@@ -83,7 +105,9 @@ pub fn normalize_angle(rad: Float64) -> Float64 {
 
 /// Wrap degrees into (-180, 180]. normalize_angle_deg(-180) == 180,
 /// normalize_angle_deg(540) == 180. Complexity: O(1).
-pub fn normalize_angle_deg(deg: Float64) -> Float64 {
+pub fn normalize_angle_deg(deg: Float64) -> Float64
+  ensures: (((result > -180.0) && (result <= 180.0)) || (result == 1.0 / 0.0)) || (result == -1.0 / 0.0) || (result != result)
+{
   if math.is_inf(deg) { return deg; }
   var r = deg / 360.0;
   var f = r - math.floor(r);
@@ -94,7 +118,9 @@ pub fn normalize_angle_deg(deg: Float64) -> Float64 {
 
 /// Signed angular difference a - b (radians), wrapped into (-pi, pi].
 /// angle_diff(pi/2, 0) == pi/2. Complexity: O(1).
-pub fn angle_diff(a: Float64, b: Float64) -> Float64 {
+pub fn angle_diff(a: Float64, b: Float64) -> Float64
+  ensures: (((result > -3.141592653589793) && (result <= 3.141592653589793)) || (result == 1.0 / 0.0)) || (result == -1.0 / 0.0) || (result != result)
+{
   return normalize_angle(a - b);
 }
 

@@ -456,8 +456,25 @@ T1/T2 yields.
        the docs note the linear reduction. Probe tools/probes/p_trig_family.xi
        (191st) exercises every clause at runtime plus the guards; math
        21.6% -> 24.1%, global 28.2% -> 28.6%. Next: remaining math files.
+       Wave 38 (2026-09-27): coverage wave 2 -- 26 clauses on
+       math/rounding.xi (13) and math/angular.xi (13). rounding: floor <= x,
+       ceil >= x, sign/direction claims for round/trunc/integer_part and the
+       *_pure variants (floor_pure/ceil_pure use (x == x) => bounds so no
+       NaN-cast assumption is needed; trunc_pure bounds by x and 0;
+       fract/fract_pure/frac_part in [0,1) or (-1,0] with NaN tolerance),
+       round_nearest sign by input side; modf and round_to stay clause-free
+       (tuple-result shape / 10^places inf-zero factor). angular: sign
+       preservation for the ten unit conversions (safe under underflow to
+       signed zero and infinities), normalize_angle in (-pi, pi] and
+       normalize_angle_deg in (-180, 180] with +/-inf pass-through and NaN
+       tolerance (the tau/2..tau subtraction is exact, so the range is
+       strict), angle_diff mirrors normalize_angle; angle_lerp stays
+       clause-free (arbitrary t). Pre-validated by
+       tools/probes/p_wave38_shapes.xi (192nd) with ties-to-even, aliases,
+       normalization boundaries, infinities and NaN; math 24.1% -> 26.7%,
+       global 28.6% -> 29.0%. Next: remaining math files.
        Ratchet:
-       tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors74.json
+       tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors75.json
 
        (repo tooling as of the split; positive + negative runs verified;
        earlier floors kept at

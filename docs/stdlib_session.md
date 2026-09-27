@@ -741,6 +741,29 @@ registry pin, agent recon for the rest)**
   minimal repro attached; if it is a stdlib-side iterator-protocol issue it
   needs the repro before any action. Waiting on the compiler lane or a repro.
 
+**SESSION 2026-09-27 evening block (wave 38: rounding + angular coverage)**
+- Wave 38 (floors75): 26 runtime-safe clauses on math/rounding.xi (13) and
+  math/angular.xi (13). rounding: floor <= x, ceil >= x; direction/sign
+  claims for round/trunc/integer_part (result on the input's side of zero)
+  and the *_pure variants (floor_pure/ceil_pure use `(x == x) => bounds` so
+  no NaN-cast assumption is baked in; trunc_pure bounded by x and zero;
+  fract/fract_pure/frac_part in [0, 1) or (-1, 0] with NaN tolerance);
+  round_nearest sign by input side. SKIP: modf (tuple-result clause shape
+  not yet validated) and round_to (10^places can be 0/inf). angular: sign
+  preservation (result >= 0 on positive input, <= 0 on negative, signed
+  zero and infinities included) for the ten unit conversions; the
+  normalization pair wrapped into (-pi, pi] / (-180, 180] with +/-inf
+  pass-through and NaN tolerance (the tau/2..tau subtraction is exact, so
+  the strict range holds); angle_diff mirrors normalize_angle. SKIP:
+  angle_lerp (arbitrary t).
+- Probe tools/probes/p_wave38_shapes.xi (192nd): ties-to-even, aliases,
+  modf, saturation, conversion values, normalization boundaries,
+  infinities and NaN -- all clauses evaluated at runtime; math family 53/53
+  green with the clauses active.
+- math 24.1% -> 26.7%, global 28.6% -> 29.0%; floors75 wired into
+  ci/heavy/release + tools/README.md + docs/STDLIB_READINESS_PLAN.md in the
+  same commit. Full battery on the commit.
+
 ### HANDOFF 2026-09-27 (context-limit snapshot 2; read this plus docs/PRODUCTION_READINESS_QUEUE.md)
 **State**: main @ `1fbb45a`, pushed and synced with origin (two bypass pushes
 this stretch: `c193bc4`, `1fbb45a`; the remote reports PR/status-check

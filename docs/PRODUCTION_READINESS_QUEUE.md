@@ -30,6 +30,13 @@ fix; probe `p_trig_family.xi`; floors74; math 21.6% -> 24.1%, global 28.2% ->
 28.6%. Next: remaining `xiom/math` files, then the low dirs in the order
 above, then C, D, E, F.
 
+Update 2026-09-27 (wave 38 landed): coverage wave 2 DONE -- rounding +
+angular (26 clauses); probe `p_wave38_shapes.xi`; floors75; math 24.1% ->
+26.7%, global 28.6% -> 29.0%. Next: remaining `xiom/math` files (algebra,
+algebra_extended, transcendental, number_systems, topology, queueing,
+finance, complex, numerical, special, vectors, matrices, graph_theory, ...),
+then the low dirs above.
+
 The compiler lane's mixed-bracket/arity lists have since arrived (item 6); wave 31
 (factorial family, floors68) is also DONE -- see the session doc evening
 block; next are wave 32 (combinatorics) and wave 33 (number_theory).
