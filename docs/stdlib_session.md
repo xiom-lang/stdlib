@@ -798,8 +798,17 @@ registry pin, agent recon for the rest)**
   approximation failure); helper now takes tol explicitly.
 - math family 53/53 green; math 26.7% -> 29.0%, global 29.0% -> 29.4%;
   floors76 wired into ci/heavy/release + tools/README.md +
-  docs/STDLIB_READINESS_PLAN.md in the same commit. Full battery on the
-  commit.
+  docs/STDLIB_READINESS_PLAN.md in the same commit.
+- Full battery on f06ce58: check_modules 509/509 -- NOTE: the first run
+  reported 8 rc=-1 CHECK-FAILs, one per worker, across unrelated modules
+  (bits.bitwise, collect.workqueue, convert.tostring, format.terminal,
+  math.finance, net.ping, simd.vec4, string.scanf); a direct `--check`
+  retry of a failed module passed (rc=0) and the immediate full rerun was
+  509/509 in 642.4s, so the rc=-1 batch was a transient runner/process
+  failure, not a source regression. corpus 951/951, 0 compilefail, 0
+  runfail (2470.3s); probe corpus 193/193 (330.9s); barename 0 hits / 509
+  (563.3s); coverage ratchet floors76 OK; doc ratchet OK (6993/6993 =
+  100%). Wave 39 closed.
 
 ### HANDOFF 2026-09-27 (context-limit snapshot 2; read this plus docs/PRODUCTION_READINESS_QUEUE.md)
 **State**: main @ `1fbb45a`, pushed and synced with origin (two bypass pushes
