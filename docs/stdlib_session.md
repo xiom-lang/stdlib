@@ -880,6 +880,18 @@ registry pin, agent recon for the rest)**
   fragment `release-notes/v0.62.0.md` already has the 2 allowed highlights,
   COMPILER_VERSION stays v0.61.3 (existing tag). Tagging/publishing stays
   with the release lane on its go (RELEASE_CHECKLIST items 7-9).
+- Release cut committed as 80e767b (package.xi 0.62.0, CHANGELOG
+  [0.62.0] - 2026-09-27, release-notes/v0.62.0.md already the 2-highlight
+  fragment). Battery on the exact commit, all green: check_modules 509/509
+  (338.8s); corpus 951/951, 0 compilefail, 0 runfail (2045.6s); probe
+  corpus 195/195 (593.3s); barename 0 hits / 509 (780.7s on the rerun --
+  the first pass reported one transient COMPILE-FAIL on xiom.rsa whose
+  probe compiled clean on a direct retry, same load-flake class as the
+  wave-39/41 events); coverage ratchet floors78 OK; doc ratchet OK
+  (6993/6993 = 100%). Author identity verified as
+  Lefteris Notas <lefterisnotas@gmail.com>. GO given to the compiler/
+  release lane for stdlib-v0.62.0; coverage waves resume on main as
+  floors79+ for the following release.
 
 **RELAY 2026-09-27 (compiler -> stdlib)**
 - Compiler item 3 DONE at local commit 0f3f5083 (unpushed, tree clean):
