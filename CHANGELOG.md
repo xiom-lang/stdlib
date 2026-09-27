@@ -6,6 +6,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.62.0] - 2026-09-27
+
+Pinned to compiler `v0.61.3`. Contract coverage is ratchet-gated per
+directory and continues toward 100% in the next release; this cut ships
+because every gate is green on the release commit and every declared
+contract is probe-verified.
+
+### Added
+
+- Contract waves 22-41: runtime-checked contract coverage continued across
+  the standard library (global pub-with-clause 21.2% -> 30.1%, math
+  8.3% -> 33.7%), with coverage floors59-78 wired into the ci/heavy/release
+  workflows and the probe corpus grown to 195 files. Every clause is
+  runtime-enforced and validated by a probe on the pin.
+
+### Fixed
+
+- `math.trigonometry._norm`/`sinpi`/`cospi`/`tanpi` no longer spin forever
+  on +/-inf: non-finite inputs now return NaN (documented).
+- `math.exponential.log1p(-1.0)` returns the documented -inf instead of
+  tripping the `math.ln` runtime precondition.
+- `math.number_theory.prev_prime(3)` returns 2 (was 0).
+- `signal.filter_bandstop` no longer reads the empty band-pass buffer for
+  order <= 0.
+
 ### Notes
 
 - CI gates: `check_modules.ps1` and `barename_scan.ps1` are now
@@ -22,7 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `stdlib-v0.61.1` and `stdlib-v0.61.2` are **dead tags**: both were cut on
   2026-09-22 but never published. The 0.61.1 gates failed because three
   smokes hardcoded a local temp path; the 0.61.2 gates then exposed the
-  Linux-only gaps this release fixes (the ubuntu job had been a silent no-op
+  Linux-only gaps 0.61.3 fixed (the ubuntu job had been a silent no-op
   before the fail-closed runner change). The `stdlib-v*` release-tags
   ruleset blocks moving or deleting tags, so they stay in place; `0.61.3` is
   the shipping release at the same compiler pin (`v0.61.1`).
