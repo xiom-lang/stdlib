@@ -489,10 +489,24 @@ T1/T2 yields.
        error ~1e-7, not exact). Open stdlib finding recorded: sqrt(NaN)
        and ln(NaN) reach the math.sqrt/math.ln requires and abort instead
        of returning NaN. Probe tools/probes/p_wave39_shapes.xi (193rd);
-       math 26.7% -> 29.0%, global 29.0% -> 29.4%. Next: remaining math
+       math 26.7% -> 29.0%,        global 29.0% -> 29.4%. Next: remaining math
        files.
+       Wave 40 (2026-09-27): coverage wave 4 -- 19 clauses on
+       xiom/math/complex.xi (module xiom.complex): NaN-tolerant exact-field
+       equalities for complex_new/from_polar/add/sub/mul/scale/conj (the
+       `(result.re == expr) || (result.re != result.re)` form, since a
+       bare equality would violate on NaN inputs), abs >= 0, arg in
+       [-3.1416, 3.1416], the epsilon predicates false for eps <= 0, exp/
+       pow/sin/cos/tan non-NaN-or-non-negative magnitude, log imaginary
+       part in [-3.1416, 3.1416], sqrt real-branch implication, to_string
+       non-empty; complex_div stays clause-free (inf/inf and NaN component
+       mixed cases make any exact claim unsafe). Struct-field and tuple/
+       field reads in clauses follow the bits.xi/core.xi precedent.
+       Pre-validated by tools/probes/p_wave40_shapes.xi (194th); smoke_
+       complex green; math 29.0% -> 31.0%, global 29.4% -> 29.7%. Next:
+       remaining math files.
        Ratchet:
-       tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors76.json
+       tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors77.json
 
        (repo tooling as of the split; positive + negative runs verified;
        earlier floors kept at

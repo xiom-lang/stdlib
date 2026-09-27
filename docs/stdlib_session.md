@@ -810,6 +810,28 @@ registry pin, agent recon for the rest)**
   (563.3s); coverage ratchet floors76 OK; doc ratchet OK (6993/6993 =
   100%). Wave 39 closed.
 
+**SESSION 2026-09-27 late block (wave 40: complex.xi field clauses)**
+- Wave 40 (floors77): 19 clauses on xiom/math/complex.xi (module
+  `xiom.complex`). Field-equality claims use the NaN-tolerant form
+  `(result.re == expr) || (result.re != result.re)` -- a bare field
+  equality would violate at runtime on NaN inputs. Coverage:
+  complex_new/from_polar/add/sub/mul/scale/conj, abs >= 0, arg range,
+  the epsilon predicates (`eps <= 0 => result == false`),
+  exp/pow/sin/cos/tan non-NaN-or-non-negative magnitude, log imag range,
+  sqrt real-branch implication, to_string non-empty. `complex_div` stays
+  clause-free: exact recomputation fails for NaN components and mixed
+  inf/inf cases (e.g. a=(inf,0), b=(1,0) gives re=inf but im=NaN).
+- Shape precedent checked first: tuple/struct field reads in clauses are
+  already gate-green (bits.xi `result.0`, core.xi `result.initialized`,
+  collect/concurrent.xi `s.items.len()`), so the complex clauses use the
+  established form.
+- Probe tools/probes/p_wave40_shapes.xi (194th): field identities,
+  predicate eps edges, sqrt branches, NaN tolerance; smoke_complex 1/1
+  green with the clauses active (it was not part of the smoke_math filter).
+- math 29.0% -> 31.0%, global 29.4% -> 29.7%; floors77 wired into
+  ci/heavy/release + tools/README.md + docs/STDLIB_READINESS_PLAN.md in the
+  same commit. Full battery on the commit.
+
 ### HANDOFF 2026-09-27 (context-limit snapshot 2; read this plus docs/PRODUCTION_READINESS_QUEUE.md)
 **State**: main @ `1fbb45a`, pushed and synced with origin (two bypass pushes
 this stretch: `c193bc4`, `1fbb45a`; the remote reports PR/status-check

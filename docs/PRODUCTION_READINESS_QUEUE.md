@@ -44,9 +44,16 @@ floors76; math 26.7% -> 29.0%, global 29.0% -> 29.4%. Next: remaining
 `xiom/math` files (number_systems safe subset, complex, numerical, special,
 vectors, matrices, graph_theory, finance, topology, queueing, ...).
 
+Update 2026-09-27 (wave 40 landed): coverage wave 4 DONE -- complex.xi
+(module xiom.complex): 19 NaN-tolerant field clauses; `complex_div` stays
+clause-free (mixed inf/NaN components). Probe `p_wave40_shapes.xi`;
+floors77; math 29.0% -> 31.0%, global 29.4% -> 29.7%. Next: remaining
+`xiom/math` files (number_systems safe subset, numerical, special,
+vectors, matrices, graph_theory, finance, topology, queueing, ...).
+
 Remaining-to-100% snapshot (answer to the packages relay, 2026-09-27):
 the release gate is per-directory 100% pub-with-clause + doc 100% + all
-gates green. Current floors76: global 29.4%; math 29.0%; lowest dirs
+gates green. Current floors77: global 29.7%; math 31.0%; lowest dirs
 async 4.5, net 5.4, serialize 5.4, hash 8.9, reflect 9.1, num 9.6, iter
 9.8, geom 10.6, convert 11.5, format 13, time 13, misc 13.9, os 15.3,
 rand 16, crypto 17, bench 18.8, log 19.1, compress 21.1, encoding 23.7,
