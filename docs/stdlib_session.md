@@ -656,6 +656,84 @@ registry pin, agent recon for the rest)**
   smoke_math_optimization cases remain for the next block; `_opt_copy` is
   ready for reuse.
 
+### HANDOFF 2026-09-27 (context-limit snapshot 2; read this plus docs/PRODUCTION_READINESS_QUEUE.md)
+**State**: main @ `1fbb45a`, pushed and synced with origin (two bypass pushes
+this stretch: `c193bc4`, `1fbb45a`; the remote reports PR/status-check
+bypass). Pin v0.61.3 (`%TEMP%\kilo\stdlib_ws\xiom_v0613.exe`; rebuild recipe
+in the 2026-09-25 handoff). Coverage floors72: global 28.2%, math 21.5%.
+All gates green on the tip: check_modules 509/509, corpus 951/951, probes
+189/189, barename 0/509, coverage + doc ratchets.
+
+**Landed since the 2026-09-25 handoff** (newest first):
+- `1fbb45a` wave 35: `lp_simplex` (Bland simplex on repaired locals; dense
+  tableau, slack basis, 10000-iteration cap, the queue's empty-result
+  conventions) -- probe p_lp_simplex.xi; floors72.
+- `c193bc4` Error interface reshape (only `description` + default `message`;
+  no interface values in signatures; `Error.chain` description-only) + four
+  `xiom_socket_connect -> Int32` declarations (m146 prep; behavior-neutral on
+  the pin, correct once a pin carries m146).
+- `90e9185` relay item-3 call sites: `_scrypt_blockmix` passes `r` (x2);
+  `os/path.xi` qualifies `xiom.string.replace`; `printf` declared fixed
+  `(format, arg)` in io/io.xi + io/console.xi -- probe p_relay_arity_fixes.xi.
+- `0823433` 13 mixed-bracket type spellings canonicalized (strict-parser
+  prep; the other 5 PIN sites were already canonical on main).
+- `7293056` wave 34: control_theory `observability`/`controllability` on the
+  nested-Vec repair pattern (`_ct_copy`/`_ct_mul`/`_ct_transpose`/`_ct_rank`,
+  1e-12 pivot; clause `!result || a.len() > 0`; floors71).
+- `0246885` `Int.hash` valid clause (`result != 0`; compiler relay W005).
+- `e45386c` fix-first batch: exact `binomial` (gcd fold), `kronecker_symbol`
+  2-adic guard, seven `p*p` loops -> `p <= x / p`, `next_prime` ceiling.
+- `71f4d9f` Stirling/Eulerian zero-row clauses require `k == 0`.
+- `224060a` wave 32 combinatorics (floors69); `38b5c32` wave 31 factorial
+  (floors68); `02dde42` wave 30 signal + exponential (floors67; the
+  `filter_bandstop` order guard fix).
+
+**Next units, in order:**
+1. B part 2b: `linear_programming` in `xiom/math/optimization.xi` (bounds
+   repair: entries `Vec[Float64]`; empty bounds = x >= 0; per-variable
+   `[lo, hi]` with +/-inf for absent sides; both-bounded -> add `z <= 1`;
+   free -> split `z+ - z-`; shift/scale A,b,c; delegate to `lp_simplex`;
+   map back; documented limitation: shifted `b2 < 0` returns empty). Probe
+   first, then wire the queue-section-B cases into
+   `tests/smoke/smoke_math_optimization.xi` (float near 1e-9: observability
+   true/false, `lp_simplex` [2,2] + guards + unbounded, `linear_programming`
+   bound modes (`[0,1]`,`[0,inf]`) -> [1,3], free-variable case).
+2. Coverage waves toward 100% (floors73+): remaining `xiom/math` files, then
+   the low dirs -- async 4.5, net 5.4, serialize 5.4, hash 8.9, reflect 9.1,
+   num 9.6, iter 9.8, geom 10.6, convert 11.5, format 13, time 13, misc
+   13.9, os 15.3, rand 16, crypto 17, log 19.1, compress 21.1. Read-only
+   recon agents are allowed per directory; one wave = one commit with probe,
+   `floors<N>` dump, wiring and the full battery.
+3. C: geom dedup API unit (queue section C; needs the `api_freeze` snapshot
+   regen by the compiler lane; do not blind-shim).
+4. D: tzdata phase 2 (queue section D: pinned IANA tzdb vendor under
+   `tools/tzdata/`, generated region payload modules, `xiom/time/zone.xi`
+   engine).
+5. E: untested-surface generator classes. F: release cut + tag handover at
+   100%.
+
+**Pin-gated follow-ups**: revert the `ptr.is_null()` module-qualified
+workaround in thread/park.xi only on a pin carrying m142+; verify
+`tcp_connect` refused-port -> Err on the first pin carrying m146 with stdlib
+>= `c193bc4`; add concrete ErrorInfo/ErrorKind machinery with its first
+consumer.
+
+**Compiler-lane state (relays 2026-09-26/27)**: m142--m147 landed locally;
+item-3 flips are verified-but-off until the stdlib ref is pushed (now pushed:
+`1fbb45a`); next is their pin bump + flip + gates, and item 4 re-pins to the
+stdlib tag at 100%. Backlog R-2/R-3/C8 are compiler-side. The
+playground verifies `tcp_connect` against a refused port at every pin bump
+(stdlib >= `c193bc4`).
+
+**Protocol** (unchanged): recon -> probe-first in `tools/probes/` -> clauses
+-> `coverage_scan.ps1 -DumpFloors tools/coverage_floors<N>.json` -> wire into
+ci/heavy/release yml + tools/README.md + docs/STDLIB_READINESS_PLAN.md in the
+SAME commit -> commit (pure-ASCII, single-quoted -m) -> full battery
+(check_modules; full corpus 951 with `-RetryFailed`; probes corpus; barename;
+both ratchets). One wave = one commit; no edits while a sweep is in flight;
+docs coupling (session block + plan narrative); check
+`git log -1 --format='%an <%ae>'` before any push.
+
 ### HANDOFF 2026-09-25 (context-limit snapshot; read this plus docs/PRODUCTION_READINESS_QUEUE.md)
 
 State: `main` = `a948149` + the handoff docs commit, 38 commits ahead of
