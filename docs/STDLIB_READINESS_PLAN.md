@@ -502,11 +502,25 @@ T1/T2 yields.
        non-empty; complex_div stays clause-free (inf/inf and NaN component
        mixed cases make any exact claim unsafe). Struct-field and tuple/
        field reads in clauses follow the bits.xi/core.xi precedent.
-       Pre-validated by tools/probes/p_wave40_shapes.xi (194th); smoke_
+       Pre-validated by tools/probes/p_wave40_shapes.xi (194th);        smoke_
        complex green; math 29.0% -> 31.0%, global 29.4% -> 29.7%. Next:
        remaining math files.
+       Wave 41 (2026-09-27): coverage wave 5 -- 27 clauses on
+       math/vectors.xi: NaN-tolerant exact-field equalities for the
+       Vec2/Vec3/Vec4 constructors, add/sub/scale, lerp and cross (the
+       `(result.x == expr) || (result.x != result.x)` form), dot products,
+       len/dist >= 0, unit-vector claims (zero vector OR squared magnitude
+       within 1e-12 of 1, NaN-tolerant for the sqrt-free paths), dynamic
+       vec_dot NaN-on-length-mismatch, vec_norm >= 0, vec_scale length
+       preservation. NOTE: hypot/hypot3/vec4_len/vec_norm abort on NaN
+       inputs because they reach math.sqrt's requires (same open finding
+       as wave 39); the clauses stay true because those calls never
+       return. Probe tools/probes/p_wave41_shapes.xi (195th); smoke_
+       math_vectors green; math 31.0% -> 33.7%, global 29.7% -> 30.1%.
+       Next: matrices.xi fixed-size + shape-only claims, then remaining
+       math files.
        Ratchet:
-       tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors77.json
+       tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors78.json
 
        (repo tooling as of the split; positive + negative runs verified;
        earlier floors kept at

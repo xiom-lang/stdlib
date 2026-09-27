@@ -836,6 +836,33 @@ registry pin, agent recon for the rest)**
   barename 0 hits / 509 (553.9s); coverage ratchet floors77 OK; doc ratchet
   OK (6993/6993 = 100%). Wave 40 closed.
 
+**SESSION 2026-09-27 late-night block (wave 41: vectors.xi coverage)**
+- Wave 41 (floors78): 27 clauses on math/vectors.xi. Vec2/Vec3/Vec4
+  constructors, add/sub/scale, lerp and cross use NaN-tolerant exact-field
+  equalities; dot products use exact-or-NaN; len/dist >= 0; unit-vector
+  claims are "zero vector OR squared magnitude within 1e-12 of 1" with NaN
+  tolerance; dynamic vec_dot claims NaN exactly on length mismatch;
+  vec_norm >= 0; vec_scale preserves length. NaN is only passed to
+  sqrt-free paths in the probe: hypot/hypot3/vec4_len/vec_norm still abort
+  on NaN via math.sqrt's requires (the wave-39 open finding), and the
+  clauses stay true because those calls never return.
+- Probe tools/probes/p_wave41_shapes.xi (195th); smoke_math_vectors 1/1
+  green; math 31.0% -> 33.7%, global 29.7% -> 30.1%; floors78 wired into
+  ci/heavy/release + tools/README.md + docs/STDLIB_READINESS_PLAN.md in the
+  same commit. Full battery on the commit.
+
+**RELAY 2026-09-27 (compiler -> stdlib)**
+- Compiler item 3 DONE at local commit 0f3f5083 (unpushed, tree clean):
+  pin STDLIB_VERSION -> stdlib main 0c50ac6 (carries 90e9185 + c193bc4
+  m146-prep); the four exact-arity hunks are ON with call-shape-correct
+  expected counts; three latent resolution defects fixed (derived-compare
+  wildcard capture, receiver-sugar Box.get, interface &Self arity);
+  locks m150_exact_arity + CI; full compiler gates green; tcp_connect
+  refused-path verified on the pin (ERR code=-1). Implication for this
+  lane: the next pin bump can drop the tcp_connect m146 caveat and the
+  ptr.is_null workaround once the pin carries m142+; no stdlib change is
+  required for the pin itself. This lane has not been asked to push.
+
 ### HANDOFF 2026-09-27 (context-limit snapshot 2; read this plus docs/PRODUCTION_READINESS_QUEUE.md)
 **State**: main @ `1fbb45a`, pushed and synced with origin (two bypass pushes
 this stretch: `c193bc4`, `1fbb45a`; the remote reports PR/status-check

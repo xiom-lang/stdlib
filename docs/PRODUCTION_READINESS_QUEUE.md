@@ -51,6 +51,12 @@ floors77; math 29.0% -> 31.0%, global 29.4% -> 29.7%. Next: remaining
 `xiom/math` files (number_systems safe subset, numerical, special,
 vectors, matrices, graph_theory, finance, topology, queueing, ...).
 
+Update 2026-09-27 (wave 41 landed): coverage wave 5 DONE -- vectors.xi
+(27 clauses, NaN-tolerant field/length forms); probe `p_wave41_shapes.xi`;
+floors78; math 31.0% -> 33.7%, global 29.7% -> 30.1%. Next: matrices.xi
+(fixed-size structs + shape-only claims for the nested-Vec entry points),
+then the remaining `xiom/math` files.
+
 Remaining-to-100% snapshot (answer to the packages relay, 2026-09-27):
 the release gate is per-directory 100% pub-with-clause + doc 100% + all
 gates green. Current floors77: global 29.7%; math 31.0%; lowest dirs
