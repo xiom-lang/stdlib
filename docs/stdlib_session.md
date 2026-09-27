@@ -849,7 +849,37 @@ registry pin, agent recon for the rest)**
 - Probe tools/probes/p_wave41_shapes.xi (195th); smoke_math_vectors 1/1
   green; math 31.0% -> 33.7%, global 29.7% -> 30.1%; floors78 wired into
   ci/heavy/release + tools/README.md + docs/STDLIB_READINESS_PLAN.md in the
-  same commit. Full battery on the commit.
+  same commit.
+- Full battery on 1401432: check_modules 509/509 (758.1s); corpus 951/951,
+  0 compilefail, 0 runfail (3456s; 16 files failed the parallel phase and
+  passed the solo retry -- the same transient load pattern as the wave-39
+  rc=-1 batch); probe corpus 195/195 (652.1s); barename 0 hits / 509
+  (1210.9s); coverage ratchet floors78 OK; doc ratchet OK (6993/6993 =
+  100%). Wave 41 closed.
+
+**RELAY 2026-09-27 (packages -> compiler, forwarded here)**
+- Triaged in `xiom-packages` docs/COMPILER-FINDINGS.md: `&mut` and CSE are
+  accepted repro-first candidates; mixed-bracket strictness is planned;
+  `Vec[Float64]`/`Vec[StructType]` items routed to the packages wishlist;
+  the changelog notes the relay and SESSION.md carries the ready-to-run
+  re-test instruction for the next wave. No stdlib-side action.
+
+**RELEASE DECISION 2026-09-27 (owner call, relayed)**
+- The owner asked whether the next release can be cut BEFORE 100% coverage
+  and coverage continued in the release after, given the previous released
+  compiler had major bugs and stability matters more than the coverage
+  number; the compiler lane is waiting for this lane's go/no-go.
+- Decision: YES -- release from the wave-41 tip once the release-cut commit
+  passes the full local battery, because every hard gate is green
+  (check_modules 509/509, corpus 951/951, probes 195/195, barename 0/509,
+  coverage ratchet floors78, doc 100%) and the coverage work is additive
+  (clauses only; each new clause is probe-verified). The 100% target
+  continues on main as floors79+ and moves to the following release.
+- Release cut steps in this lane: package.xi -> 0.62.0, CHANGELOG
+  [Unreleased] -> [0.62.0] - 2026-09-27 (+ a waves 22-41 summary), notes
+  fragment `release-notes/v0.62.0.md` already has the 2 allowed highlights,
+  COMPILER_VERSION stays v0.61.3 (existing tag). Tagging/publishing stays
+  with the release lane on its go (RELEASE_CHECKLIST items 7-9).
 
 **RELAY 2026-09-27 (compiler -> stdlib)**
 - Compiler item 3 DONE at local commit 0f3f5083 (unpushed, tree clean):
