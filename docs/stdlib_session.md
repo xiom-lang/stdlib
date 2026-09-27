@@ -725,7 +725,21 @@ registry pin, agent recon for the rest)**
 - math smoke family 53/53 green with the clauses active; math 21.6% ->
   24.1%, global 28.2% -> 28.6%; floors74 wired into ci/heavy/release +
   tools/README.md + docs/STDLIB_READINESS_PLAN.md in the same commit.
-  Full battery on the commit.
+- Full battery on 0161293: check_modules 509/509 (745.2s); corpus 951/951,
+  0 compilefail, 0 runfail (3259.8s); probe corpus 191/191 (359.6s);
+  barename 0 hits / 509 (602.3s); coverage ratchet floors74 OK; doc ratchet
+  OK (6993/6993 = 100%). Wave 37 closed.
+
+**RELAY 2026-09-27 (playgrounds -> stdlib)**
+- tcp_connect verification target restated (m146 + stdlib >= c193bc4): the
+  `xiom_socket_connect -> Int32` declaration change is already on main; the
+  negative-result path is expected to become correct only on a pin carrying
+  m146, and the playground verifies refused-port -> Err at every pin bump
+  (queue pin-gated list, unchanged).
+- Also relayed (to both lanes; ownership unclear): `for x in Vec` semantics
+  and a checker warning "unknown type 'Iterator' -- defaulting to i64". No
+  minimal repro attached; if it is a stdlib-side iterator-protocol issue it
+  needs the repro before any action. Waiting on the compiler lane or a repro.
 
 ### HANDOFF 2026-09-27 (context-limit snapshot 2; read this plus docs/PRODUCTION_READINESS_QUEUE.md)
 **State**: main @ `1fbb45a`, pushed and synced with origin (two bypass pushes
