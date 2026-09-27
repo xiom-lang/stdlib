@@ -656,6 +656,31 @@ registry pin, agent recon for the rest)**
   smoke_math_optimization cases remain for the next block; `_opt_copy` is
   ready for reuse.
 
+**SESSION 2026-09-27 mid-day block (wave 36: linear_programming + queue-B smokes)**
+- Wave 36 (floors73): `linear_programming` implemented in
+  math/optimization.xi per queue B part 2b. Bounds repair on `_opt_copy`;
+  empty bounds delegates to lp_simplex with x >= 0; per-variable
+  `[lo, hi]` entries with +/-inf for absent sides (an empty entry means
+  [0, +inf), a single entry means [lo, +inf)). Lower-only variables shift
+  (x = lo + z), upper-only reflect (x = hi - z), doubly-bounded ones
+  scale into [0, 1] with an added z <= 1 row, free ones split z+ - z-;
+  the transformed c2/A2/b2 are delegated to lp_simplex and the solution is
+  mapped back. Malformed or infeasible bounds (length mismatch, more than
+  two entries, NaN, lo > hi, lo == +inf, hi == -inf) and the documented
+  shifted-b2-negative case (no Phase I) return empty; clause
+  `result.len() == 0 || result.len() == c.len()`.
+- Probe p_linear_programming.xi (190th): delegation identity, upper-only,
+  both-bounded single, free, fixed, four guards -- RED (exit 1) on the
+  stub, GREEN after.
+- Queue-section-B verification cases wired into
+  smoke_math_optimization.xi: observability true/false + guards,
+  controllability true/false/multi-input + guards, lp_simplex [2,2] +
+  guards + unbounded, linear_programming empty-bounds identity, bound
+  modes ([0,1], [0,inf]) -> [1,3], free variable -> [-1] -- green.
+- math 21.5% -> 21.6%, global 28.2% pub-with-clause; floors73 wired into
+  ci/heavy/release + tools/README.md + docs/STDLIB_READINESS_PLAN.md in
+  the same commit. Full battery re-run on the commit.
+
 ### HANDOFF 2026-09-27 (context-limit snapshot 2; read this plus docs/PRODUCTION_READINESS_QUEUE.md)
 **State**: main @ `1fbb45a`, pushed and synced with origin (two bypass pushes
 this stretch: `c193bc4`, `1fbb45a`; the remote reports PR/status-check

@@ -150,6 +150,127 @@ fn main() -> Int {
   var rv = math.operations_research.revenue_management(100, &fcs);
   if rv.len() != 2 { io.println("revenue"); return 28; }
 
+  // ---- queue B verification: observability, controllability, simplex ----
+  var sa2 = Vec[Vec[Float64]].new();
+  var sa0 = Vec[Float64].new();
+  sa0.push(0.0);
+  sa0.push(1.0);
+  sa2.push(sa0);
+  var sa1 = Vec[Float64].new();
+  sa1.push(-2.0);
+  sa1.push(-3.0);
+  sa2.push(sa1);
+  var sc = Vec[Vec[Float64]].new();
+  var sc0 = Vec[Float64].new();
+  sc0.push(1.0);
+  sc0.push(0.0);
+  sc.push(sc0);
+  if !math.control_theory.observability(&sa2, &sc) { io.println("obs"); return 29; }
+  var si2 = Vec[Vec[Float64]].new();
+  var si0 = Vec[Float64].new();
+  si0.push(1.0);
+  si0.push(0.0);
+  si2.push(si0);
+  var si1 = Vec[Float64].new();
+  si1.push(0.0);
+  si1.push(1.0);
+  si2.push(si1);
+  if math.control_theory.observability(&si2, &sc) { io.println("obs-i2"); return 30; }
+  var sb01 = Vec[Vec[Float64]].new();
+  var sb0 = Vec[Float64].new();
+  sb0.push(0.0);
+  sb01.push(sb0);
+  var sb1 = Vec[Float64].new();
+  sb1.push(1.0);
+  sb01.push(sb1);
+  if !math.control_theory.controllability(&sa2, &sb01) { io.println("ctrl"); return 31; }
+  var sb11 = Vec[Vec[Float64]].new();
+  var sf0 = Vec[Float64].new();
+  sf0.push(1.0);
+  sb11.push(sf0);
+  var sf1 = Vec[Float64].new();
+  sf1.push(1.0);
+  sb11.push(sf1);
+  if math.control_theory.controllability(&si2, &sb11) { io.println("ctrl-i2"); return 32; }
+  if !math.control_theory.controllability(&sa2, &si2) { io.println("ctrl-multi"); return 33; }
+  var sempty = Vec[Vec[Float64]].new();
+  if math.control_theory.observability(&sempty, &sc) { io.println("obs-empty"); return 34; }
+  if math.control_theory.controllability(&sa2, &sempty) { io.println("ctrl-empty"); return 35; }
+  var lc = Vec[Float64].new();
+  lc.push(-3.0);
+  lc.push(-2.0);
+  var la = Vec[Vec[Float64]].new();
+  var lr0 = Vec[Float64].new();
+  lr0.push(1.0);
+  lr0.push(1.0);
+  la.push(lr0);
+  var lr1 = Vec[Float64].new();
+  lr1.push(1.0);
+  lr1.push(0.0);
+  la.push(lr1);
+  var lr2 = Vec[Float64].new();
+  lr2.push(0.0);
+  lr2.push(1.0);
+  la.push(lr2);
+  var lb = Vec[Float64].new();
+  lb.push(4.0);
+  lb.push(2.0);
+  lb.push(3.0);
+  var lx = math.optimization.lp_simplex(&lc, &la, &lb);
+  if lx.len() != 2 { io.println("lp-len"); return 36; }
+  if !near(lx[0], 2.0, 1e-9) { io.println("lp-x"); return 37; }
+  if !near(lx[1], 2.0, 1e-9) { io.println("lp-y"); return 38; }
+  var lempty = Vec[Float64].new();
+  if math.optimization.lp_simplex(&lempty, &la, &lb).len() != 0 { io.println("lp-empty-c"); return 39; }
+  var lneg = Vec[Float64].new();
+  lneg.push(-1.0);
+  lneg.push(2.0);
+  lneg.push(3.0);
+  if math.optimization.lp_simplex(&lc, &la, &lneg).len() != 0 { io.println("lp-neg"); return 40; }
+  var lunb = Vec[Vec[Float64]].new();
+  var lur = Vec[Float64].new();
+  lur.push(-1.0);
+  lunb.push(lur);
+  var luc = Vec[Float64].new();
+  luc.push(-1.0);
+  var lub = Vec[Float64].new();
+  lub.push(2.0);
+  if math.optimization.lp_simplex(&luc, &lunb, &lub).len() != 0 { io.println("lp-unb"); return 41; }
+  var lpb = Vec[Vec[Float64]].new();
+  var lpx = math.optimization.linear_programming(&lc, &la, &lb, &lpb);
+  if lpx.len() != 2 { io.println("lpb-len"); return 42; }
+  if !near(lpx[0], 2.0, 1e-9) { io.println("lpb-x"); return 43; }
+  if !near(lpx[1], 2.0, 1e-9) { io.println("lpb-y"); return 44; }
+  var lbnd = Vec[Vec[Float64]].new();
+  var lb0 = Vec[Float64].new();
+  lb0.push(0.0);
+  lb0.push(1.0);
+  lbnd.push(lb0);
+  var lb1 = Vec[Float64].new();
+  lb1.push(0.0);
+  lb1.push(1.0 / 0.0);
+  lbnd.push(lb1);
+  var lmx = math.optimization.linear_programming(&lc, &la, &lb, &lbnd);
+  if lmx.len() != 2 { io.println("lpm-len"); return 45; }
+  if !near(lmx[0], 1.0, 1e-9) { io.println("lpm-x"); return 46; }
+  if !near(lmx[1], 3.0, 1e-9) { io.println("lpm-y"); return 47; }
+  var lfc = Vec[Float64].new();
+  lfc.push(1.0);
+  var lfa = Vec[Vec[Float64]].new();
+  var lfr = Vec[Float64].new();
+  lfr.push(-1.0);
+  lfa.push(lfr);
+  var lfb = Vec[Float64].new();
+  lfb.push(1.0);
+  var lfbnd = Vec[Vec[Float64]].new();
+  var lf0 = Vec[Float64].new();
+  lf0.push(-1.0 / 0.0);
+  lf0.push(1.0 / 0.0);
+  lfbnd.push(lf0);
+  var lfx = math.optimization.linear_programming(&lfc, &lfa, &lfb, &lfbnd);
+  if lfx.len() != 1 { io.println("lpf-len"); return 48; }
+  if !near(lfx[0], -1.0, 1e-9) { io.println("lpf-x"); return 49; }
+
   io.println("smoke_math_optimization: OK");
   return 0;
 }

@@ -431,8 +431,21 @@ T1/T2 yields.
        argmin of length n. Verification in tools/probes/p_lp_simplex.xi
        (known LP -> [2,2], simple bound, five guards, unbounded) -> math
        21.4% -> 21.5%. Next: `linear_programming` + the smoke cases.
+       Wave 36 (2026-09-27): queue B part 2b -- `linear_programming`
+       implemented in math/optimization.xi on top of lp_simplex: repaired
+       c/A/b/bounds, empty bounds delegates with x >= 0, per-variable
+       [lo, hi] entries with +/-inf for absent sides, lower-only shift
+       (x = lo + z), upper-only reflect (x = hi - z), both-bounded scale
+       into [0,1] with an added z <= 1 row, free split z+ - z-; shifted b2
+       (no Phase I) plus malformed or infeasible bounds return empty;
+       clause result.len() == 0 || result.len() == c.len().
+       Pre-validated by tools/probes/p_linear_programming.xi (identity,
+       three bound modes, free, fixed, four guards) and the queue-section-B
+       cases wired into smoke_math_optimization.xi (observability/
+       controllability true/false, lp_simplex [2,2] + guards + unbounded,
+       bound modes -> [1,3]) -> math 21.5% -> 21.6%. Next: coverage waves.
        Ratchet:
-       tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors72.json
+       tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors73.json
 
        (repo tooling as of the split; positive + negative runs verified;
        earlier floors kept at

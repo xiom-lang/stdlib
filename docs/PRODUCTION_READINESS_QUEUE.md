@@ -13,6 +13,15 @@ global 26.2% -> 27.1%; gates on the commit: modules 509/509, corpus
 951/951, probes 182/182, barename 0/509, both ratchets. Also fixed
 `filter_bandstop` order <= 0 (empty-buffer OOB; probe exit 27 -> 0).
 Next in order: B part 2b (linear_programming + smoke cases), then coverage waves, C, D, E, F.
+
+Update 2026-09-27 (wave 36 landed): B part 2b DONE -- `linear_programming`
+(bounds repair + delegation to lp_simplex) plus the queue-section-B cases in
+`tests/smoke/smoke_math_optimization.xi`; probe p_linear_programming.xi
+(190th); floors73; math 21.5% -> 21.6%. Next: coverage waves toward 100%
+(floors74+: remaining math files, then async 4.5, net 5.4, serialize 5.4,
+hash 8.9, reflect 9.1, num 9.6, iter 9.8, geom 10.6, convert 11.5, format 13,
+time 13, misc 13.9, os 15.3, rand 16, crypto 17, log 19.1, compress 21.1),
+then C, D, E, F.
 The compiler lane's mixed-bracket/arity lists have since arrived (item 6); wave 31
 (factorial family, floors68) is also DONE -- see the session doc evening
 block; next are wave 32 (combinatorics) and wave 33 (number_theory).
