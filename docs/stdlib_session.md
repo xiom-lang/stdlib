@@ -762,7 +762,11 @@ registry pin, agent recon for the rest)**
   green with the clauses active.
 - math 24.1% -> 26.7%, global 28.6% -> 29.0%; floors75 wired into
   ci/heavy/release + tools/README.md + docs/STDLIB_READINESS_PLAN.md in the
-  same commit. Full battery on the commit.
+  same commit.
+- Full battery on e6f0206: check_modules 509/509 (243.7s); corpus 951/951,
+  0 compilefail, 0 runfail (1473.7s); probe corpus 192/192 (340.7s);
+  barename 0 hits / 509 (648s); coverage ratchet floors75 OK; doc ratchet
+  OK (6993/6993 = 100%). Wave 38 closed.
 
 ### HANDOFF 2026-09-27 (context-limit snapshot 2; read this plus docs/PRODUCTION_READINESS_QUEUE.md)
 **State**: main @ `1fbb45a`, pushed and synced with origin (two bypass pushes
