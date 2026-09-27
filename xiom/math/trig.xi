@@ -19,12 +19,16 @@ use xiom.math.hyperbolic;
 // (IEEE semantics; BUG 19 fixed), never sentinel values.
 
 /// Sine of x in radians. NaN and infinite inputs propagate. Complexity: O(1).
-pub fn sin(x: Float64) -> Float64 {
+pub fn sin(x: Float64) -> Float64
+  ensures: ((result >= -1.0) && (result <= 1.0)) || (result != result)
+{
   return math.sin(x);
 }
 
 /// Cosine of x in radians. NaN and infinite inputs propagate. Complexity: O(1).
-pub fn cos(x: Float64) -> Float64 {
+pub fn cos(x: Float64) -> Float64
+  ensures: ((result >= -1.0) && (result <= 1.0)) || (result != result)
+{
   return math.cos(x);
 }
 
@@ -36,26 +40,34 @@ pub fn tan(x: Float64) -> Float64 {
 
 /// Arc sine of x in radians, result in [-pi/2, pi/2]. For x outside [-1, 1]
 /// returns NaN (documented domain error). Complexity: O(1).
-pub fn asin(x: Float64) -> Float64 {
+pub fn asin(x: Float64) -> Float64
+  ensures: ((result >= -1.5708) && (result <= 1.5708)) || (result != result)
+{
   if x < -1.0 || x > 1.0 { return 0.0 / 0.0; }
   return math.asin(x);
 }
 
 /// Arc cosine of x in radians, result in [0, pi]. For x outside [-1, 1]
 /// returns NaN (documented domain error). Complexity: O(1).
-pub fn acos(x: Float64) -> Float64 {
+pub fn acos(x: Float64) -> Float64
+  ensures: ((result >= 0.0) && (result <= 3.1416)) || (result != result)
+{
   if x < -1.0 || x > 1.0 { return 0.0 / 0.0; }
   return math.acos(x);
 }
 
 /// Arc tangent of x in radians, result in (-pi/2, pi/2). Complexity: O(1).
-pub fn atan(x: Float64) -> Float64 {
+pub fn atan(x: Float64) -> Float64
+  ensures: ((result >= -1.5708) && (result <= 1.5708)) || (result != result)
+{
   return math.atan(x);
 }
 
 /// Four-quadrant arc tangent of y/x in radians. When both y and x are zero
 /// returns NaN (documented; the angle is undefined there). Complexity: O(1).
-pub fn atan2(y: Float64, x: Float64) -> Float64 {
+pub fn atan2(y: Float64, x: Float64) -> Float64
+  ensures: ((result >= -3.1416) && (result <= 3.1416)) || (result != result)
+{
   if y == 0.0 && x == 0.0 { return 0.0 / 0.0; }
   return math.atan2(y, x);
 }
@@ -70,20 +82,26 @@ pub fn sinh(x: Float64) -> Float64 {
 
 /// Hyperbolic cosine of x: (exp(x) + exp(-x))/2. Complexity: O(1).
 /// Delegates to xiom.math.hyperbolic.
-pub fn cosh(x: Float64) -> Float64 {
+pub fn cosh(x: Float64) -> Float64
+  ensures: (result >= 0.0) || (result != result)
+{
   return hyperbolic.cosh(x);
 }
 
 /// Hyperbolic tangent of x: sinh(x)/cosh(x). Saturated to +-1 for |x| > 20 to
 /// avoid a NaN from inf/inf at the exponent overflow boundary. Complexity: O(1).
 /// Delegates to xiom.math.hyperbolic.
-pub fn tanh(x: Float64) -> Float64 {
+pub fn tanh(x: Float64) -> Float64
+  ensures: ((result >= -1.0) && (result <= 1.0)) || (result != result)
+{
   return hyperbolic.tanh(x);
 }
 
 /// Inverse hyperbolic sine of x: ln(x + sqrt(x^2 + 1)). Well-defined for every
 /// x. Complexity: O(1).
-pub fn asinh(x: Float64) -> Float64 {
+pub fn asinh(x: Float64) -> Float64
+  ensures: (x >= 0.0) => (result >= 0.0)
+{
   var x2 = x * x;
   var s = math.sqrt(x2 + 1.0);
   var arg = x + s;
@@ -92,7 +110,9 @@ pub fn asinh(x: Float64) -> Float64 {
 
 /// Inverse hyperbolic cosine of x: ln(x + sqrt(x^2 - 1)). For x < 1 returns
 /// NaN (documented domain error). Complexity: O(1).
-pub fn acosh(x: Float64) -> Float64 {
+pub fn acosh(x: Float64) -> Float64
+  ensures: (result >= 0.0) || (result != result)
+{
   if x < 1.0 { return 0.0 / 0.0; }
   var x2 = x * x;
   var s = math.sqrt(x2 - 1.0);
@@ -109,14 +129,18 @@ pub fn atanh(x: Float64) -> Float64 {
 
 /// Secant of x: 1/cos(x). A pole (cos(x) == 0) yields +-infinity (IEEE).
 /// Complexity: O(1).
-pub fn sec(x: Float64) -> Float64 {
+pub fn sec(x: Float64) -> Float64
+  ensures: ((result <= -1.0) || (result >= 1.0)) || (result != result)
+{
   var c = math.cos(x);
   return 1.0 / c;
 }
 
 /// Cosecant of x: 1/sin(x). A pole (sin(x) == 0) yields +-infinity (IEEE).
 /// Complexity: O(1).
-pub fn csc(x: Float64) -> Float64 {
+pub fn csc(x: Float64) -> Float64
+  ensures: ((result <= -1.0) || (result >= 1.0)) || (result != result)
+{
   var s = math.sin(x);
   return 1.0 / s;
 }
@@ -142,13 +166,17 @@ pub fn radians(x: Float64) -> Float64 {
 }
 
 /// Sine of x in degrees. Complexity: O(1).
-pub fn sin_deg(x: Float64) -> Float64 {
+pub fn sin_deg(x: Float64) -> Float64
+  ensures: ((result >= -1.0) && (result <= 1.0)) || (result != result)
+{
   var r = radians(x);
   return math.sin(r);
 }
 
 /// Cosine of x in degrees. Complexity: O(1).
-pub fn cos_deg(x: Float64) -> Float64 {
+pub fn cos_deg(x: Float64) -> Float64
+  ensures: ((result >= -1.0) && (result <= 1.0)) || (result != result)
+{
   var r = radians(x);
   return math.cos(r);
 }

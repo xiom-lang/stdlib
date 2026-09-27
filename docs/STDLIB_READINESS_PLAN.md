@@ -444,8 +444,20 @@ T1/T2 yields.
        cases wired into smoke_math_optimization.xi (observability/
        controllability true/false, lp_simplex [2,2] + guards + unbounded,
        bound modes -> [1,3]) -> math 21.5% -> 21.6%. Next: coverage waves.
+       Wave 37 (2026-09-27): coverage wave 1 -- 25 range clauses across the
+       trig family (math/trig.xi, math/trigonometry.xi, math/hyperbolic.xi):
+       sin/cos/sin_deg/cos_deg/sinpi/cospi in [-1, 1], asin/atan in
+       [-1.5708, 1.5708], acos in [0, 3.1416], atan2 in [-3.1416, 3.1416],
+       cosh/sech/acosh >= 0 (IEEE-safe, no sharp 1.0 claim), tanh in [-1, 1],
+       sec/csc/coth outside (-1, 1), asinh sign implication -- all
+       NaN-tolerant for the documented domain errors. Fix-first (recon):
+       `_norm`/`sinpi`/`cospi`/`tanpi` returned from O(|x|) reduction loops
+       that never terminate on +/-inf; non-finite inputs now return NaN and
+       the docs note the linear reduction. Probe tools/probes/p_trig_family.xi
+       (191st) exercises every clause at runtime plus the guards; math
+       21.6% -> 24.1%, global 28.2% -> 28.6%. Next: remaining math files.
        Ratchet:
-       tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors73.json
+       tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors74.json
 
        (repo tooling as of the split; positive + negative runs verified;
        earlier floors kept at

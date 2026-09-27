@@ -701,6 +701,32 @@ registry pin, agent recon for the rest)**
   check the snapshot there, and tick wishlist Status / announce shipped
   items in the handoff. A push-style feed was offered; pull is fine for now.
 
+**SESSION 2026-09-27 afternoon block (wave 37: trig-family coverage + non-finite guard fix)**
+- Wave 37 (floors74): 25 runtime-safe range clauses across the trig family.
+  math/trig.xi (14): sin/cos/sin_deg/cos_deg in [-1, 1], asin/atan in
+  [-1.5708, 1.5708], acos in [0, 3.1416], atan2 in [-3.1416, 3.1416],
+  cosh >= 0, tanh in [-1, 1], acosh >= 0, asinh sign implication
+  ((x >= 0.0) => (result >= 0.0)), sec/csc outside (-1, 1).
+  math/trigonometry.xi (6): sin/cos/sinpi/cospi in [-1, 1], csc/sec outside
+  (-1, 1). math/hyperbolic.xi (5): cosh/sech/acosh >= 0, tanh in [-1, 1],
+  coth outside (-1, 1). IEEE-safe choices: cosh/sech claim only >= 0 (the
+  naive (exp(x)+exp(-x))/2 can round to 1 - eps, so the sharp >= 1.0 claim
+  was rejected); every range clause is NaN-tolerant (`|| result != result`)
+  for the documented domain errors.
+- Fix-first, found by the read-only recon: `_norm`, `sinpi`, `cospi` and
+  `tanpi` ran O(|x|) reduction loops that never terminate on +/-inf (a hang
+  class, not just a wrong value). Non-finite inputs now return NaN; the
+  sinpi/cospi/tanpi docs were corrected (linear reduction, not O(1), NaN
+  for non-finite input). The stale hyperbolic.xi header claiming a -1.0
+  sentinel for BUG 19 was corrected to the actual NaN returns.
+- Probe tools/probes/p_trig_family.xi (191st): every new clause is evaluated
+  at runtime together with range/domain/KAT checks and the +/-inf guard
+  cases -- RED-by-hang on the old reduction loops, GREEN after the fix.
+- math smoke family 53/53 green with the clauses active; math 21.6% ->
+  24.1%, global 28.2% -> 28.6%; floors74 wired into ci/heavy/release +
+  tools/README.md + docs/STDLIB_READINESS_PLAN.md in the same commit.
+  Full battery on the commit.
+
 ### HANDOFF 2026-09-27 (context-limit snapshot 2; read this plus docs/PRODUCTION_READINESS_QUEUE.md)
 **State**: main @ `1fbb45a`, pushed and synced with origin (two bypass pushes
 this stretch: `c193bc4`, `1fbb45a`; the remote reports PR/status-check

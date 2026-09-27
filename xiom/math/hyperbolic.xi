@@ -14,8 +14,8 @@ use xiom.math;
 // series math.exponential.exp_pure (no libm). tanh uses the stable form
 // (exp(2x)-1)/(exp(2x)+1) with saturation at |x| > 20. Inverse functions:
 // asinh/acosh/atanh via logarithms; domain errors that would produce NaN
-// (acosh x<1, atanh |x|>1) return a documented -1.0 sentinel because BUG 19
-// cannot construct NaN. csch(0) / coth(0) are +inf (native 1.0/0.0).
+// (acosh x<1, atanh |x|>1) return NaN (0.0/0.0). csch(0) / coth(0) are +inf
+// (native 1.0/0.0).
 // NOTE: requires/ensures clauses are runtime-enforced in this compiler and
 // crash on violation, so all domain handling is guarded inside the bodies.
 // ============================================================================
@@ -28,13 +28,17 @@ pub fn sinh(x: Float64) -> Float64 {
 
 /// Hyperbolic cosine of x. cosh(0.0) == 1.0; |x| > ~710 overflows to +inf.
 /// Complexity: O(1), libm exp.
-pub fn cosh(x: Float64) -> Float64 {
+pub fn cosh(x: Float64) -> Float64
+  ensures: (result >= 0.0) || (result != result)
+{
   return (math.exp(x) + math.exp(-x)) / 2.0;
 }
 
 /// Hyperbolic tangent of x. tanh(0.0) == 0.0; saturates to +-1.0 for
 /// |x| > 20. Uses (exp(2x)-1)/(exp(2x)+1) for stability. Complexity: O(1).
-pub fn tanh(x: Float64) -> Float64 {
+pub fn tanh(x: Float64) -> Float64
+  ensures: ((result >= -1.0) && (result <= 1.0)) || (result != result)
+{
   if x > 20.0 { return 1.0; }
   if x < -20.0 { return -1.0; }
   var ex = math.exp(2.0 * x);
@@ -48,13 +52,17 @@ pub fn csch(x: Float64) -> Float64 {
 }
 
 /// Hyperbolic secant, 1/cosh(x). Always finite (cosh > 0). Complexity: O(1).
-pub fn sech(x: Float64) -> Float64 {
+pub fn sech(x: Float64) -> Float64
+  ensures: (result >= 0.0) || (result != result)
+{
   return 1.0 / cosh(x);
 }
 
 /// Hyperbolic cotangent, 1/tanh(x). coth(0.0) == +inf (native 1.0/0.0).
 /// Complexity: O(1), libm exp.
-pub fn coth(x: Float64) -> Float64 {
+pub fn coth(x: Float64) -> Float64
+  ensures: ((result <= -1.0) || (result >= 1.0)) || (result != result)
+{
   return 1.0 / tanh(x);
 }
 
@@ -80,7 +88,9 @@ pub fn asinh(x: Float64) -> Float64 {
 /// For x < 1 returns NaN (IEEE semantics). For x > 1e150 uses ln(x) + ln 2
 /// (avoids overflow). acosh(1.0) == 0.0, acosh(cosh(1.0)) == 1.0.
 /// Complexity: O(1), libm ln/sqrt.
-pub fn acosh(x: Float64) -> Float64 {
+pub fn acosh(x: Float64) -> Float64
+  ensures: (result >= 0.0) || (result != result)
+{
   if x < 1.0 { return 0.0 / 0.0; }
   if x == 1.0 { return 0.0; }
   if x > 1e150 {

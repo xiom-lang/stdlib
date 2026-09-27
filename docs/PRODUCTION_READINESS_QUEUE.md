@@ -22,6 +22,14 @@ Update 2026-09-27 (wave 36 landed): B part 2b DONE -- `linear_programming`
 hash 8.9, reflect 9.1, num 9.6, iter 9.8, geom 10.6, convert 11.5, format 13,
 time 13, misc 13.9, os 15.3, rand 16, crypto 17, log 19.1, compress 21.1),
 then C, D, E, F.
+
+Update 2026-09-27 (wave 37 landed): coverage wave 1 DONE -- trig family
+(`xiom/math/trig.xi`, `trigonometry.xi`, `hyperbolic.xi`) 25 range clauses +
+the recon-found `_norm`/`sinpi`/`cospi`/`tanpi` non-finite-reduction hang
+fix; probe `p_trig_family.xi`; floors74; math 21.6% -> 24.1%, global 28.2% ->
+28.6%. Next: remaining `xiom/math` files, then the low dirs in the order
+above, then C, D, E, F.
+
 The compiler lane's mixed-bracket/arity lists have since arrived (item 6); wave 31
 (factorial family, floors68) is also DONE -- see the session doc evening
 block; next are wave 32 (combinatorics) and wave 33 (number_theory).

@@ -19,8 +19,11 @@ use xiom.math;
 const _PI: Float64 = 3.141592653589793;
 const _TAU: Float64 = 6.283185307179586;
 
-// Normalize an angle into [-pi, pi].
+// Normalize an angle into [-pi, pi]. Non-finite inputs return NaN: the
+// reduction loops below would spin forever on +/-inf.
 fn _norm(x: Float64) -> Float64 {
+  if x != x { return x; }
+  if (x == 1.0 / 0.0) || (x == -1.0 / 0.0) { return 0.0 / 0.0; }
   var r = x;
   while r > _PI {
     r = r - _TAU;
@@ -32,12 +35,16 @@ fn _norm(x: Float64) -> Float64 {
 }
 
 /// Sine of x (radians). NaN/infinite inputs propagate. Complexity: O(1).
-pub fn sin(x: Float64) -> Float64 {
+pub fn sin(x: Float64) -> Float64
+  ensures: ((result >= -1.0) && (result <= 1.0)) || (result != result)
+{
   return math.sin(x);
 }
 
 /// Cosine of x (radians). Complexity: O(1).
-pub fn cos(x: Float64) -> Float64 {
+pub fn cos(x: Float64) -> Float64
+  ensures: ((result >= -1.0) && (result <= 1.0)) || (result != result)
+{
   return math.cos(x);
 }
 
@@ -47,14 +54,18 @@ pub fn tan(x: Float64) -> Float64 {
 }
 
 /// Cosecant of x: 1/sin(x); a zero sine yields +inf (documented). Complexity: O(1).
-pub fn csc(x: Float64) -> Float64 {
+pub fn csc(x: Float64) -> Float64
+  ensures: ((result <= -1.0) || (result >= 1.0)) || (result != result)
+{
   var s = math.sin(x);
   if s == 0.0 { return 1.0 / 0.0; }
   return 1.0 / s;
 }
 
 /// Secant of x: 1/cos(x); a zero cosine yields +inf (documented). Complexity: O(1).
-pub fn sec(x: Float64) -> Float64 {
+pub fn sec(x: Float64) -> Float64
+  ensures: ((result <= -1.0) || (result >= 1.0)) || (result != result)
+{
   var c = math.cos(x);
   if c == 0.0 { return 1.0 / 0.0; }
   return 1.0 / c;
@@ -121,10 +132,14 @@ pub fn tan_pure(x: Float64) -> Float64 {
   return s / c;
 }
 
-/// sin(pi*x), accurate for large x by reducing x into [0, 2) first.
-/// Complexity: O(1).
-pub fn sinpi(x: Float64) -> Float64 {
+/// sin(pi*x): x is reduced into [0, 2) with a linear loop, then the sine is
+/// evaluated on the reduced angle. NaN and infinite inputs return NaN (the
+/// reduction cannot terminate on infinities). Complexity: O(|x|).
+pub fn sinpi(x: Float64) -> Float64
+  ensures: ((result >= -1.0) && (result <= 1.0)) || (result != result)
+{
   if x != x { return x; }
+  if (x == 1.0 / 0.0) || (x == -1.0 / 0.0) { return 0.0 / 0.0; }
   if x == 0.0 { return 0.0; }
   var r = x;
   while r >= 2.0 {
@@ -136,10 +151,14 @@ pub fn sinpi(x: Float64) -> Float64 {
   return math.sin(_PI * r);
 }
 
-/// cos(pi*x), accurate for large x by reducing x into [0, 2) first.
-/// Complexity: O(1).
-pub fn cospi(x: Float64) -> Float64 {
+/// cos(pi*x): x is reduced into [0, 2) with a linear loop, then the cosine
+/// is evaluated on the reduced angle. NaN and infinite inputs return NaN
+/// (the reduction cannot terminate on infinities). Complexity: O(|x|).
+pub fn cospi(x: Float64) -> Float64
+  ensures: ((result >= -1.0) && (result <= 1.0)) || (result != result)
+{
   if x != x { return x; }
+  if (x == 1.0 / 0.0) || (x == -1.0 / 0.0) { return 0.0 / 0.0; }
   var r = x;
   while r >= 2.0 {
     r = r - 2.0;
@@ -150,10 +169,13 @@ pub fn cospi(x: Float64) -> Float64 {
   return math.cos(_PI * r);
 }
 
-/// tan(pi*x), accurate for large x by reducing x into [0, 2) first. A pole
-/// yields +-infinity. Complexity: O(1).
+/// tan(pi*x): x is reduced into [0, 2) with a linear loop, then the tangent
+/// is evaluated on the reduced angle. NaN and infinite inputs return NaN
+/// (the reduction cannot terminate on infinities); a pole yields +-infinity.
+/// Complexity: O(|x|).
 pub fn tanpi(x: Float64) -> Float64 {
   if x != x { return x; }
+  if (x == 1.0 / 0.0) || (x == -1.0 / 0.0) { return 0.0 / 0.0; }
   var r = x;
   while r >= 2.0 {
     r = r - 2.0;
