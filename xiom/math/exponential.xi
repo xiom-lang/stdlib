@@ -99,6 +99,7 @@ pub fn log1p(x: Float64) -> Float64
   ensures: (x > 0.0) => (result >= 0.0)
 {
   if x < -1.0 { return 0.0 / 0.0; }
+  if x == -1.0 { return -1.0 / 0.0; }
   var ax = x;
   if ax < 0.0 { ax = -ax; }
   if ax > 1e-4 { return math.ln(1.0 + x); }

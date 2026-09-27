@@ -768,6 +768,39 @@ registry pin, agent recon for the rest)**
   barename 0 hits / 509 (648s); coverage ratchet floors75 OK; doc ratchet
   OK (6993/6993 = 100%). Wave 38 closed.
 
+**SESSION 2026-09-27 night block (wave 39: algebra + transcendental + two fixes)**
+- Wave 39 (floors76): 23 clauses -- math/algebra.xi (12): gcd/lcm >= 0,
+  Legendre/Jacobi results in {-1,0,1}, binomial/factorial/primorial/
+  nth_prime >= 0, integer_sqrt >= -1, next_power_of_two >= 0,
+  is_power_of_two/is_perfect_square as `result == false || domain`;
+  math/transcendental.xi (11): sqrt/cbrt sign + domain-NaN tolerance,
+  exp/exp2 >= 0, expm1 >= -1, ln/log2/log10 `NaN or x > 0`, log1p with the
+  -inf endpoint, erf in [-1,1], erfc in [0,2].
+- Fix-first (both caught by the probe):
+  1. The wave-38 angular conversion clauses used strict `> 0.0`/`< 0.0`
+     branches, which are BOTH false for -0.0, so to_radians(-0.0) would
+     have aborted at runtime. All ten now use `>= 0.0`/`<= 0.0`; the probe
+     asserts signed-zero preservation (1/result == -inf) for all ten plus
+     floor/trunc/fract.
+  2. `math.exponential.log1p(-1.0)` called `math.ln(0.0)`, tripping the
+     delegate's runtime `requires: x > 0.0` instead of returning the
+     documented -inf; now guarded with an explicit -1.0 -> -inf return.
+  3. Doc correction: transcendental.erf(0) is ~ -3e-8 (continued-fraction
+     approximation, error < 1.2e-7), not exactly 0.
+- Open stdlib finding (recorded, not fixed): sqrt(NaN) and ln(NaN) pass NaN
+  into math.sqrt/math.ln (math.xi:192/354), whose runtime requires abort --
+  the documented "domain errors return NaN" holds for finite domains but
+  not for NaN inputs. Candidate fix-first for a later wave.
+- Probe tools/probes/p_wave39_shapes.xi (193rd): algebra identities,
+  transcendental values/domain-NaN, signed-zero regressions. Also: the
+  probe helper lesson -- `near(a, b, tol)` was declared 2-arg first and
+  extra arguments are silently ignored by the compiler (looked like an
+  approximation failure); helper now takes tol explicitly.
+- math family 53/53 green; math 26.7% -> 29.0%, global 29.0% -> 29.4%;
+  floors76 wired into ci/heavy/release + tools/README.md +
+  docs/STDLIB_READINESS_PLAN.md in the same commit. Full battery on the
+  commit.
+
 ### HANDOFF 2026-09-27 (context-limit snapshot 2; read this plus docs/PRODUCTION_READINESS_QUEUE.md)
 **State**: main @ `1fbb45a`, pushed and synced with origin (two bypass pushes
 this stretch: `c193bc4`, `1fbb45a`; the remote reports PR/status-check

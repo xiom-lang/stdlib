@@ -473,8 +473,26 @@ T1/T2 yields.
        tools/probes/p_wave38_shapes.xi (192nd) with ties-to-even, aliases,
        normalization boundaries, infinities and NaN; math 24.1% -> 26.7%,
        global 28.6% -> 29.0%. Next: remaining math files.
+       Wave 39 (2026-09-27): coverage wave 3 -- 23 clauses on
+       math/algebra.xi (12: gcd/lcm non-negativity, Legendre/Jacobi in
+       {-1,0,1}, binomial/factorial/primorial/nth_prime non-negativity,
+       integer_sqrt >= -1, next_power_of_two >= 0, the
+       is_power_of_two/is_perfect_square true-implies-domain mirrors) and
+       math/transcendental.xi (11: sqrt/cbrt sign + domain NaN, exp/exp2
+       >= 0, expm1 >= -1, ln/log2/log10 NaN-or-positive-domain, log1p
+       domain with the -inf endpoint, erf in [-1,1], erfc in [0,2]).
+       Fix-first from the probe: the wave-38 angular conversion clauses
+       used strict > / < and failed for -0.0 -- now >= / <= with signed
+       zero preserved; exponential.log1p(-1.0) tripped the delegate
+       math.ln requires (x > 0.0) instead of returning the documented
+       -inf -- now guarded; the erf(0) doc was corrected (approximation
+       error ~1e-7, not exact). Open stdlib finding recorded: sqrt(NaN)
+       and ln(NaN) reach the math.sqrt/math.ln requires and abort instead
+       of returning NaN. Probe tools/probes/p_wave39_shapes.xi (193rd);
+       math 26.7% -> 29.0%, global 29.0% -> 29.4%. Next: remaining math
+       files.
        Ratchet:
-       tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors75.json
+       tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors76.json
 
        (repo tooling as of the split; positive + negative runs verified;
        earlier floors kept at

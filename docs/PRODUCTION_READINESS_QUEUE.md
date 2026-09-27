@@ -37,6 +37,29 @@ algebra_extended, transcendental, number_systems, topology, queueing,
 finance, complex, numerical, special, vectors, matrices, graph_theory, ...),
 then the low dirs above.
 
+Update 2026-09-27 (wave 39 landed): coverage wave 3 DONE -- algebra +
+transcendental (23 clauses) + two fix-first items (angular -0.0 clause
+branch; log1p(-1) delegate-requires trap); probe `p_wave39_shapes.xi`;
+floors76; math 26.7% -> 29.0%, global 29.0% -> 29.4%. Next: remaining
+`xiom/math` files (number_systems safe subset, complex, numerical, special,
+vectors, matrices, graph_theory, finance, topology, queueing, ...).
+
+Remaining-to-100% snapshot (answer to the packages relay, 2026-09-27):
+the release gate is per-directory 100% pub-with-clause + doc 100% + all
+gates green. Current floors76: global 29.4%; math 29.0%; lowest dirs
+async 4.5, net 5.4, serialize 5.4, hash 8.9, reflect 9.1, num 9.6, iter
+9.8, geom 10.6, convert 11.5, format 13, time 13, misc 13.9, os 15.3,
+rand 16, crypto 17, bench 18.8, log 19.1, compress 21.1, encoding 23.7,
+debug 24.4, simd 24.4, stats/thread 25, core 26.7, then sync 29.1 up to
+mem 100. Queue units after the waves: C geom dedup (needs the compiler-lane
+api_freeze snapshot regen), D tzdata phase 2 (first unit that lands NEW
+module namespaces -- check `docs/PACKAGE-NAMESPACES.txt` first), E
+untested-surface generator classes, F release cut + tag handover at 100%.
+Pin-gated cleanups: ptr.is_null workaround (m142+ pin), tcp_connect
+refused-port -> Err (m146), concrete ErrorInfo/ErrorKind with its first
+consumer. Package-wishlist items are growth features, not on the 100%
+path.
+
 The compiler lane's mixed-bracket/arity lists have since arrived (item 6); wave 31
 (factorial family, floors68) is also DONE -- see the session doc evening
 block; next are wave 32 (combinatorics) and wave 33 (number_theory).

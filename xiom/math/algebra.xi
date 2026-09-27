@@ -30,14 +30,18 @@ use xiom.math;
 /// Delegates to xiom.math.arithmetic.gcd, which saturates the one
 /// unrepresentable case gcd(INT_MIN, k) = 2^63 to INT_MAX (documented).
 /// Complexity: O(log min(|a|, |b|)).
-pub fn gcd(a: Int, b: Int) -> Int {
+pub fn gcd(a: Int, b: Int) -> Int
+  ensures: result >= 0
+{
   return math.arithmetic.gcd(a, b);
 }
 
 /// Least common multiple of |a| and |b|; always non-negative. 0 when either
 /// input is 0 and 0 (documented overflow) when the true lcm exceeds Int
 /// range. Delegates to xiom.math.arithmetic.lcm. Complexity: O(gcd).
-pub fn lcm(a: Int, b: Int) -> Int {
+pub fn lcm(a: Int, b: Int) -> Int
+  ensures: result >= 0
+{
   return math.arithmetic.lcm(a, b);
 }
 
@@ -109,7 +113,9 @@ pub fn crt(remainders: &Vec[Int], moduli: &Vec[Int]) -> Option[Int] {
 /// criterion a^((p-1)/2) mod p via modular exponentiation. p == 2 is handled
 /// directly (1 for odd a, 0 for even a); p <= 1 returns 0 (documented, no
 /// modulus). Complexity: O(log p).
-pub fn legendre_symbol(a: Int, p: Int) -> Int {
+pub fn legendre_symbol(a: Int, p: Int) -> Int
+  ensures: (result == -1) || (result == 0) || (result == 1)
+{
   if p <= 1 { return 0; }
   if p == 2 {
     if a % 2 == 0 { return 0; }
@@ -127,7 +133,9 @@ pub fn legendre_symbol(a: Int, p: Int) -> Int {
 /// Jacobi symbol is undefined there) and 0 when gcd(a, n) != 1. Uses the
 /// standard quadratic-reciprocity reduction over the binary expansion.
 /// Complexity: O(log^2 n) worst case.
-pub fn jacobi_symbol(a: Int, n: Int) -> Int {
+pub fn jacobi_symbol(a: Int, n: Int) -> Int
+  ensures: (result == -1) || (result == 0) || (result == 1)
+{
   if n <= 0 { return 0; }
   if n % 2 == 0 { return 0; }
   var aa = a % n;
@@ -158,7 +166,9 @@ pub fn jacobi_symbol(a: Int, n: Int) -> Int {
 /// n < 0) and 0 on overflow. Computed by the multiplicative form with an
 /// overflow guard on every step (result * (n - i + 1) / i stays in range).
 /// Complexity: O(min(k, n - k)).
-pub fn binomial(n: Int, k: Int) -> Int {
+pub fn binomial(n: Int, k: Int) -> Int
+  ensures: result >= 0
+{
   if n < 0 { return 0; }
   if k < 0 || k > n { return 0; }
   if k == 0 || k == n { return 1; }
@@ -178,7 +188,9 @@ pub fn binomial(n: Int, k: Int) -> Int {
 
 /// Factorial of n (n!). Returns 0 for n < 0 and 0 on overflow (n >= 21
 /// exceeds Int range). Complexity: O(n).
-pub fn factorial(n: Int) -> Int {
+pub fn factorial(n: Int) -> Int
+  ensures: result >= 0
+{
   if n < 0 { return 0; }
   if n <= 1 { return 1; }
   var result = 1;
@@ -198,7 +210,9 @@ pub fn factorial(n: Int) -> Int {
 /// Product of the first n primes (p_n#). Returns 0 for n <= 0 and 0
 /// (documented overflow) when the product exceeds Int range (n > 15).
 /// Complexity: O(n * sqrt(p_n)) trial division.
-pub fn primorial(n: Int) -> Int {
+pub fn primorial(n: Int) -> Int
+  ensures: result >= 0
+{
   if n <= 0 { return 0; }
   var result = 1;
   var count = 0;
@@ -216,7 +230,9 @@ pub fn primorial(n: Int) -> Int {
 
 /// The n-th prime, 1-indexed (nth_prime(1) == 2). Returns 0 for n <= 0.
 /// Trial-division sieve walking odd candidates. Complexity: O(n * sqrt(p_n)).
-pub fn nth_prime(n: Int) -> Int {
+pub fn nth_prime(n: Int) -> Int
+  ensures: result >= 0
+{
   if n <= 0 { return 0; }
   if n == 1 { return 2; }
   var count = 1;
@@ -235,27 +251,35 @@ pub fn nth_prime(n: Int) -> Int {
 /// floor(sqrt(n)) for n >= 0 via integer Newton iteration (no float, no
 /// overflow). Returns -1 for n < 0 (documented). Delegates to
 /// xiom.math.roots.integer_sqrt. Complexity: O(log n) iterations.
-pub fn integer_sqrt(n: Int) -> Int {
+pub fn integer_sqrt(n: Int) -> Int
+  ensures: result >= -1
+{
   return math.roots.integer_sqrt(n);
 }
 
 /// Smallest power of two >= n. Returns 1 for n <= 0 and 0 (documented
 /// overflow) when the next power of two exceeds Int range (n > 2^62).
 /// Delegates to xiom.math.arithmetic.next_power_of_two. Complexity: O(log n).
-pub fn next_power_of_two(n: Int) -> Int {
+pub fn next_power_of_two(n: Int) -> Int
+  ensures: result >= 0
+{
   return math.arithmetic.next_power_of_two(n);
 }
 
 /// True iff n is a positive power of two (is_power_of_two(0) == false,
 /// is_power_of_two(1) == true). Delegates to
 /// xiom.math.arithmetic.is_power_of_two. Complexity: O(log n).
-pub fn is_power_of_two(n: Int) -> Bool {
+pub fn is_power_of_two(n: Int) -> Bool
+  ensures: (result == false) || (n > 0)
+{
   return math.arithmetic.is_power_of_two(n);
 }
 
 /// True iff n is a perfect square (0 and 1 are squares). Returns false for
 /// n < 0. Uses the exact integer floor-sqrt check. Complexity: O(log n).
-pub fn is_perfect_square(n: Int) -> Bool {
+pub fn is_perfect_square(n: Int) -> Bool
+  ensures: (result == false) || (n >= 0)
+{
   if n < 0 { return false; }
   var r = math.roots.integer_sqrt(n);
   return r * r == n;

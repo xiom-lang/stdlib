@@ -23,56 +23,74 @@ use xiom.math;
 
 /// Square root of x; requires x >= 0. Returns NaN (0.0/0.0) for x < 0.
 /// Delegates to math.roots.sqrt. Complexity: O(1), libm sqrt.
-pub fn sqrt(x: Float64) -> Float64 {
+pub fn sqrt(x: Float64) -> Float64
+  ensures: (((x >= 0.0) && (result >= 0.0)) || ((x < 0.0) && (result != result))) || (x != x)
+{
   return math.roots.sqrt(x);
 }
 
 /// Cube root of x, any sign. Delegates to math.roots.cbrt.
 /// Complexity: O(1), libm pow.
-pub fn cbrt(x: Float64) -> Float64 {
+pub fn cbrt(x: Float64) -> Float64
+  ensures: (((x >= 0.0) && (result >= 0.0)) || ((x <= 0.0) && (result <= 0.0))) || (x != x)
+{
   return math.roots.cbrt(x);
 }
 
 /// e^x. Returns +inf for x > 700 (overflow) and 0.0 for x < -745
 /// (underflow). Delegates to math.exponential.exp. Complexity: O(1), libm.
-pub fn exp(x: Float64) -> Float64 {
+pub fn exp(x: Float64) -> Float64
+  ensures: (result >= 0.0) || (result != result)
+{
   return math.exponential.exp(x);
 }
 
 /// 2^x. Delegates to math.exponential.exp2. Complexity: O(1), libm pow.
-pub fn exp2(x: Float64) -> Float64 {
+pub fn exp2(x: Float64) -> Float64
+  ensures: (result >= 0.0) || (result != result)
+{
   return math.exponential.exp2(x);
 }
 
 /// e^x - 1, accurate for small x (series for |x| <= 1e-4). Returns -1.0 for
 /// x < -700 and +inf for x > 700. Delegates to math.exponential.expm1.
 /// Complexity: O(20) series terms / O(1) libm.
-pub fn expm1(x: Float64) -> Float64 {
+pub fn expm1(x: Float64) -> Float64
+  ensures: (result >= -1.0) || (result != result)
+{
   return math.exponential.expm1(x);
 }
 
 /// Natural logarithm of x; requires x > 0. Returns NaN (0.0/0.0) for x <= 0.
 /// Delegates to math.exponential.ln. Complexity: O(1), libm.
-pub fn ln(x: Float64) -> Float64 {
+pub fn ln(x: Float64) -> Float64
+  ensures: (result != result) || (x > 0.0)
+{
   return math.exponential.ln(x);
 }
 
 /// Base-2 logarithm of x; requires x > 0. Returns NaN for x <= 0.
 /// Delegates to math.exponential.log2. Complexity: O(1), libm.
-pub fn log2(x: Float64) -> Float64 {
+pub fn log2(x: Float64) -> Float64
+  ensures: (result != result) || (x > 0.0)
+{
   return math.exponential.log2(x);
 }
 
 /// Base-10 logarithm of x; requires x > 0. Returns NaN for x <= 0.
 /// Delegates to math.exponential.log10. Complexity: O(1), libm.
-pub fn log10(x: Float64) -> Float64 {
+pub fn log10(x: Float64) -> Float64
+  ensures: (result != result) || (x > 0.0)
+{
   return math.exponential.log10(x);
 }
 
 /// ln(1 + x), accurate for small x (series for |x| <= 1e-4). log1p(-1.0) is
 /// -inf and log1p(x < -1) returns NaN (IEEE). Delegates to
 /// math.exponential.log1p. Complexity: O(30) series terms / O(1) libm.
-pub fn log1p(x: Float64) -> Float64 {
+pub fn log1p(x: Float64) -> Float64
+  ensures: ((result != result) || (x > -1.0)) || (result == -1.0 / 0.0)
+{
   return math.exponential.log1p(x);
 }
 
@@ -130,16 +148,20 @@ pub fn lgamma(x: Float64) -> (Float64, Int) {
 }
 
 /// Error function erf(x). Uses erfc via the Numerical-Recipes continued
-/// fraction (relative error < 1.2e-7). erf(0) == 0, erf(1) ~= 0.8427.
-/// Complexity: O(1).
-pub fn erf(x: Float64) -> Float64 {
+/// fraction (relative error < 1.2e-7). erf(0) ~= 0 (approximation, not exact),
+/// erf(1) ~= 0.8427. Complexity: O(1).
+pub fn erf(x: Float64) -> Float64
+  ensures: ((result >= -1.0) && (result <= 1.0)) || (result != result)
+{
   return 1.0 - _erfcc(x);
 }
 
 /// Complementary error function erfc(x) = 1 - erf(x). erfc(0) == 1,
 /// erfc(3) ~= 2.2e-5. Uses the Numerical-Recipes continued-fraction
 /// approximation. Complexity: O(1).
-pub fn erfc(x: Float64) -> Float64 {
+pub fn erfc(x: Float64) -> Float64
+  ensures: ((result >= 0.0) && (result <= 2.0)) || (result != result)
+{
   return _erfcc(x);
 }
 
