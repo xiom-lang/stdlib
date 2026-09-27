@@ -679,7 +679,27 @@ registry pin, agent recon for the rest)**
   modes ([0,1], [0,inf]) -> [1,3], free variable -> [-1] -- green.
 - math 21.5% -> 21.6%, global 28.2% pub-with-clause; floors73 wired into
   ci/heavy/release + tools/README.md + docs/STDLIB_READINESS_PLAN.md in
-  the same commit. Full battery re-run on the commit.
+  the same commit (533b863).
+- Full battery on 533b863: check_modules 509/509 (349s); corpus 951/951,
+  0 compilefail, 0 runfail (1785.8s); probe corpus 190/190 (376.9s);
+  barename 0 hits / 509 (768s); coverage ratchet floors73 OK; doc ratchet
+  OK (pub 6993/6993 = 100%). Wave 36 closed.
+
+**RELAY 2026-09-27 (packages -> stdlib, growth channel)**
+- The packages lane created a shared growth channel (their hand-to-hand
+  plan): `E:\xiom-packages\packages\docs\STDLIB-WISHLIST.md` (prioritized
+  helpers/modules several packages hand-roll, with requester packages and
+  workarounds; top items include checksum, bitstream, varint, bytes.cursor,
+  encoding.base64, string.utf8 strict validation, text.scan, date.civil,
+  net.addr, bcd, math.int, buf.writer) and
+  `docs\PACKAGE-NAMESPACES.txt` (342 package names / 366 module namespaces,
+  refreshed per wave). Two-way uniqueness rule: before landing a NEW module
+  namespace, check it against PACKAGE-NAMESPACES.txt; their side runs
+  scripts/namespace-check.ps1 -Module <name> against our namespaces before
+  dispatch. No new namespaces in the current coverage waves; the first
+  affected unit is D (tzdata phase 2: `xiom/time/zone` + `zone/data/*`) --
+  check the snapshot there, and tick wishlist Status / announce shipped
+  items in the handoff. A push-style feed was offered; pull is fine for now.
 
 ### HANDOFF 2026-09-27 (context-limit snapshot 2; read this plus docs/PRODUCTION_READINESS_QUEUE.md)
 **State**: main @ `1fbb45a`, pushed and synced with origin (two bypass pushes
