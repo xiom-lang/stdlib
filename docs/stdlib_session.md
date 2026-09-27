@@ -830,7 +830,11 @@ registry pin, agent recon for the rest)**
   green with the clauses active (it was not part of the smoke_math filter).
 - math 29.0% -> 31.0%, global 29.4% -> 29.7%; floors77 wired into
   ci/heavy/release + tools/README.md + docs/STDLIB_READINESS_PLAN.md in the
-  same commit. Full battery on the commit.
+  same commit.
+- Full battery on e707472: check_modules 509/509 (239.1s); corpus 951/951,
+  0 compilefail, 0 runfail (1367.3s); probe corpus 194/194 (307.5s);
+  barename 0 hits / 509 (553.9s); coverage ratchet floors77 OK; doc ratchet
+  OK (6993/6993 = 100%). Wave 40 closed.
 
 ### HANDOFF 2026-09-27 (context-limit snapshot 2; read this plus docs/PRODUCTION_READINESS_QUEUE.md)
 **State**: main @ `1fbb45a`, pushed and synced with origin (two bypass pushes
