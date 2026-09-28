@@ -71,6 +71,15 @@ in smoke_num_float; probe `p_wave43_shapes.xi`; floors80; num 9.6% ->
 17.2%, global 30.9% -> 31.4%. Next: bigint (55 pub), bigfloat (75), then
 num.xi leaves, then geom.
 
+Update 2026-09-29 (CI incident + 0.62.0 recovery): waves 36-42 floors
+wiring broke the YAML indentation of ci/heavy/release (`run:` nested under
+`shell:`), so every GitHub run since the release push 0s-failed as
+"workflow file issue" and stdlib-v0.62.0 had no assets (registry canary
+blocked). Fixed in c491b13 (all workflows PyYAML-clean) and release.yml
+gained a `tag` recovery dispatch that builds/publishes from the tag tree;
+recovery run 36487728296 is executing gates. Registry lane: re-run the
+publish once the 0.62.0 assets exist. Rule: YAML edits get a parse check.
+
 Remaining-to-100% snapshot (answer to the packages relay, 2026-09-27):
 the release gate is per-directory 100% pub-with-clause + doc 100% + all
 gates green. Current floors77: global 29.7%; math 31.0%; lowest dirs

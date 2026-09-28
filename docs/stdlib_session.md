@@ -961,7 +961,40 @@ registry pin, agent recon for the rest)**
   math family 53/53 with the fixes and clauses active; num 9.6% -> 17.2%,
   global 30.9% -> 31.4%; floors80 wired into ci/heavy/release +
   tools/README.md + docs/STDLIB_READINESS_PLAN.md in the same commit.
-  Full battery on the commit.
+- Full battery on 2cd0d5b: check_modules 509/509 (429.3s); corpus 951/951,
+  0 compilefail, 0 runfail (2578.4s); probe corpus 197/197 (353.9s);
+  barename 0 hits / 509 (1028.1s); coverage ratchet floors80 OK; doc ratchet
+  OK (6993/6993 = 100%). Wave 43 closed.
+
+**INCIDENT + RELEASE RECOVERY 2026-09-28/29 (workflow YAML)**
+- Registry relayed that ci.yml/heavy.yml/release.yml failed at 0s on main
+  ("workflow file issue") and stdlib-v0.62.0 had no GitHub Release/assets,
+  blocking the registry canary wait.
+- Root cause (this lane, own mistake): the floors wiring edits
+  (waves 36-42) moved the `run:` line to 10-space indentation under
+  `shell: pwsh` in all three workflows -- invalid YAML (a mapping key more
+  indented than its sibling). GitHub refuses the whole workflow before
+  creating jobs, which is why every run since the release push was 0s.
+  The tag stdlib-v0.62.0 (80e767b) carries the broken files and the
+  release-tags ruleset blocks moving tags.
+- Fix (c491b13): indentation corrected in ci/heavy/release.yml; all six
+  workflow files now parse with PyYAML. Verified `gh run list` shows real
+  jobs executing after the fix.
+- Recovery path added to release.yml (release lane asked for the tag's
+  assets): a new workflow_dispatch input `tag` builds and publishes from
+  the TAG's tree (all three checkouts take `ref: inputs.tag || github.ref`;
+  SOURCE_DATE_EPOCH from HEAD; Create Release / pin-pr / canary-dispatch
+  now also run for a tag-recovery dispatch; tag existence is checked in
+  validate). Dispatched run 36487728296 for `-f tag=stdlib-v0.62.0`:
+  validate PASS in 4s, release gates running on windows+ubuntu; package ->
+  GitHub Release -> canary dispatch follow. The registry lane should
+  re-run/re-dispatch its publish once the assets land; provenance still
+  points at refs/tags/stdlib-v0.62.0 (tree = 80e767b + workflow fix only).
+- Action items from this: (1) never re-indent YAML keys by hand again
+  without a parse check -- a `python -c yaml.safe_load` step over
+  .github/workflows is cheap; (2) waves 44+ must re-run the full battery
+  after this CI-only commit only via the release run itself (code battery
+  already green on 2cd0d5b; c491b13 changes no stdlib source).
 
 **RELAY 2026-09-28 (registry -> compiler/stdlib)**
 - v0.62.0 tag/commit confirmed (80e767b). The registry canary is blocked
