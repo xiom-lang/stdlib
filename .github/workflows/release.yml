@@ -22,6 +22,10 @@ on:
         description: "dry-run version label (no release is created)"
         required: false
         default: "0.0.0-dev"
+      tag:
+        description: "existing tag to release (recovery: builds from the tag tree and creates the GitHub Release for it)"
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -37,6 +41,8 @@ jobs:
       version: ${{ steps.parse.outputs.version }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ inputs.tag || github.ref }}
 
       - name: Identity, version and compiler range
         id: parse
@@ -45,6 +51,11 @@ jobs:
           if [ "${{ github.event_name }}" = "push" ]; then
             ver="${{ github.ref_name }}"
             ver="${ver#stdlib-v}"
+          elif [ -n "${{ inputs.tag }}" ]; then
+            ver="${{ inputs.tag }}"
+            ver="${ver#stdlib-v}"
+            git ls-remote --exit-code --tags origin "refs/tags/${{ inputs.tag }}" >/dev/null \
+              || { echo "::error::tag ${{ inputs.tag }} does not exist"; exit 1; }
           else
             ver="${{ github.event.inputs.version }}"
           fi
@@ -65,6 +76,8 @@ jobs:
         os: [ubuntu-latest, windows-latest]
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ inputs.tag || github.ref }}
 
       - name: Read COMPILER_VERSION
         id: pin
@@ -91,7 +104,7 @@ jobs:
 
       - name: Coverage ratchet
         shell: pwsh
-          run: ./tools/coverage_scan.ps1 -RatchetFile ./tools/coverage_floors80.json
+        run: ./tools/coverage_scan.ps1 -RatchetFile ./tools/coverage_floors80.json
 
       - name: Upload gate results
         if: always()
@@ -111,6 +124,8 @@ jobs:
       attestations: write
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ inputs.tag || github.ref }}
 
       - name: Stage the release tree
         run: |
@@ -125,7 +140,7 @@ jobs:
           # registry canary's artifact claim stays valid. Verified locally
           # with GNU tar 1.35: identical SHA256 across mtime shifts and a
           # clean extraction round-trip (same recipe).
-          export SOURCE_DATE_EPOCH="$(git log -1 --format=%ct "$GITHUB_SHA")"
+          export SOURCE_DATE_EPOCH="$(git log -1 --format=%ct HEAD)"
           tar --sort=name --mtime="@${SOURCE_DATE_EPOCH}" \
               --owner=0 --group=0 --numeric-owner --format=gnu \
               -cf - -C stage . | gzip -n -9 > "xiom-std-${ver}.tar.gz"
@@ -146,12 +161,12 @@ jobs:
             SHA256SUMS
 
       - name: Create GitHub Release
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' || inputs.tag != ''
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           ver="${{ needs.validate.outputs.version }}"
-          gh release create "${{ github.ref_name }}" \
+          gh release create "${{ inputs.tag || github.ref_name }}" \
             "xiom-std-${ver}.tar.gz" SHA256SUMS \
             --title "XIOM stdlib $ver" \
             --notes "Stdlib release $ver. Verified against compiler pin $(tr -d '\r\n ' < COMPILER_VERSION)."
@@ -159,7 +174,7 @@ jobs:
   pin-pr:
     name: STDLIB_VERSION pin PR (xiom)
     needs: [validate, package]
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' || inputs.tag != ''
     # A token-scope gap here (the PAT needs Pull requests: write on
     # xiom-lang/xiom) must not paint an otherwise-green release run red; the
     # branch is still pushed and the warning prints the manual PR link.
@@ -195,7 +210,7 @@ jobs:
     # approval before publishing anything. Production publishing stays on the
     # tag-triggered path (refs/tags/stdlib-v*).
     needs: [validate, package]
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' || inputs.tag != ''
     runs-on: ubuntu-latest
     permissions:
       contents: read
