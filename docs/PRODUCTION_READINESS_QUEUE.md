@@ -73,6 +73,34 @@ refused-port -> Err (m146), concrete ErrorInfo/ErrorKind with its first
 consumer. Package-wishlist items are growth features, not on the 100%
 path.
 
+Readiness outlook (2026-09-28, floors78): 6,499 pub fns total, 1,954
+covered (30.1%). Uncovered 4,545; largest gaps math 660, num 442, geom 370,
+os 310, net 281, convert 270, format 201, collect 190, iter 165, string
+164, crypto 151, time 120, stats 105, core 96, serialize 88, sync 83. At
+the recent per-wave scope (19-27 pub covered, ~25 avg) that is ~180 waves;
+about 70% of the remainder is safely coverable (the rest is
+higher-order/generic/nested-shape SKIP territory), so ~125 waves at the
+current scope, or ~70-80 if whole families are batched at 40-60 pub per
+wave. Units C/D/E add fixed-size work on top; adopting wishlist modules
+grows the denominator and pushes 100% further out.
+
+Packages growth wishlist (external channel): `xiom-packages` repo,
+`docs/STDLIB-WISHLIST.md` (namespace snapshot:
+`docs/PACKAGE-NAMESPACES.txt`, 342 package names / 366 module namespaces).
+Top hand-rolled items requested by packages: checksum (crc32/8/7/24,
+internet checksum, adler32), bitstream (MSB/LSB reader+writer), varint
+(LEB128+zigzag), bytes.cursor (bounds-checked reader), encoding.base64,
+string.utf8 (strict UTF-8 validation -> safe Str), text.scan, date.civil,
+net.addr, bcd, math.int, buf.writer; wave-36 additions: encoding.hex,
+string.cstr, encoding.le, bits.u32, hash.sha256, l10n.iso4217, string.bytes,
+err.at (requesters extended on bitstream, bytes.cursor, math.int, text.scan,
+time.civil, buf.writer, result, test.bytes). Two-way rule: before landing a
+NEW module namespace, check PACKAGE-NAMESPACES.txt; their
+scripts/namespace-check.ps1 scans this repo before dispatch. First affected
+unit: D (tzdata phase 2, `xiom/time/zone`). When a wishlist item ships, tick
+its Status row or announce it in the session handoff. These are growth
+features and are NOT part of the 100% coverage path.
+
 The compiler lane's mixed-bracket/arity lists have since arrived (item 6); wave 31
 (factorial family, floors68) is also DONE -- see the session doc evening
 block; next are wave 32 (combinatorics) and wave 33 (number_theory).

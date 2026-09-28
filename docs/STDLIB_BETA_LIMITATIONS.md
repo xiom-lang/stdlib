@@ -2,14 +2,15 @@
 Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 SPDX-License-Identifier: MIT OR Apache-2.0
 -->
-# XIOM Stdlib -- Beta Known Limitations (2026-09-16, v0.60-pre-split)
+# XIOM Stdlib -- Beta Known Limitations (2026-09-28, v0.62.0)
 
 Audience: release/infra lane (public known-limitations page), beta users.
 Source of truth for status/next work: `docs/stdlib_session.md` (section 0)
 and `docs/STDLIB_READINESS_PLAN.md`. Verification baselines: strict
-flip ON, freeze sweep on compiler tag v0.60.0 = 947/947 + module check
-509/509 + bare-name 0 hits + coverage ratchet OK (floors47),
-`docs/VERIFICATION_BASELINE.md`, 15 KAT files, corpus gate clean.
+flip ON, release battery on the v0.62.0 release commit (80e767b) = smoke
+corpus 951/951 + module check 509/509 + probe corpus 195/195 + bare-name
+0 hits + coverage ratchet OK (floors78) + doc scan 100%,
+`docs/VERIFICATION_BASELINE.md`, KAT files, corpus gate clean.
 
 ## Shipped and verified
 
@@ -28,10 +29,29 @@ flip ON, freeze sweep on compiler tag v0.60.0 = 947/947 + module check
 - Dedup waves: endian trio, base16/32/64/64url/percent, base58
   `to_base58`, ip family (convert.ip / net.dns / net.ip v6 / net.net),
   os.term; punycode audited as intentionally divergent (see below).
-- Contract coverage published + ratcheted (gate #7): 16.6% of functions
-  carry >=1 clause; 16.0% of pub fns (wave 10, 2026-09-17); floors
-  `coverage_floors47.json`.
-  Growth target: >=60% on key modules (io/string/collect) in later waves.
+- Contract coverage published + ratcheted (gate #7): 30.1% of pub
+  functions carry >=1 clause (math 33.7%; io 94.4%, text 95.1%,
+  collections 77.2%, collect 61.9%, string 60.1%); floors
+  `coverage_floors78.json`. Every clause is runtime-enforced and
+  probe-verified; the per-directory ratchet is monotonic and the 100%
+  target continues in the next release.
+
+## 0.62.0 changes users should know
+
+- Fixed: `math.number_theory.prev_prime(3)` returned 0 (now 2);
+  `signal.filter_bandstop` read the empty band-pass buffer for order <= 0;
+  `math.trigonometry.sinpi/cospi/tanpi` and the internal angle reduction
+  spun forever on +/-inf (now NaN); `math.exponential.log1p(-1.0)` tripped
+  the `math.ln` runtime precondition instead of returning the documented
+  -inf.
+- `net.tcp_connect`: the declaration is negative-result ready on main, but
+  the refused-port -> Err guarantee is verified only on compiler builds
+  carrying m146. The v0.62.0 stdlib release pins compiler `v0.61.3`, so do
+  not rely on the refused-port guarantee on that pin combination; it
+  activates with the combined compiler release that carries m146.
+- Contracts are evaluated while programs run: a violated clause aborts with
+  a precise `contract violated: ensures/requires at file:line` message.
+  Report the input to the stdlib lane rather than working around it.
 
 ## Excluded from beta (tracked for v1.0)
 
@@ -243,13 +263,15 @@ works and is proven in two gate-green modules (`geom/matrix.xi`,
   pin parser, rejected by the new one); removed, `smoke_async` re-run
   green.
 
-Still open (own units): the remaining pin-viable rewrites from the
-re-triage (`lp_simplex`/`linear_programming`, `control_theory`
-observability/controllability, and the other files in the ranked list) and
-the genuinely compiler-gated classes (recursive evaluator returning non-Int,
+Still open (own units): coverage waves for the remaining `xiom/math` files
+and the low-coverage directories (math 660 uncovered pub fns, num 442,
+geom 370, os 310, net 281, convert 270, ...), then units C/D/E, plus the
+genuinely compiler-gated classes (recursive evaluator returning non-Int,
 Bool/aggregate tuples, `&Vec[fn]` reads, bitcast, fp128, lazy `Iter`, and
-`differential.jacobian`). The full ranked list is in the session handoff
-(`docs/stdlib_session.md`, PART 9).
+`differential.jacobian`). The re-triaged pin-viable rewrites
+(`lp_simplex`/`linear_programming`, `control_theory`
+observability/controllability) are DONE (waves 34-36). The full ranked
+list is in the session handoff (`docs/stdlib_session.md`, PART 9).
 
 ## Operational notes
 

@@ -893,6 +893,27 @@ registry pin, agent recon for the rest)**
   release lane for stdlib-v0.62.0; coverage waves resume on main as
   floors79+ for the following release.
 
+**SESSION 2026-09-28 docs block (release Q&A + outlook)**
+- Compiler lane is running the 0.62.0 release workflow and waiting for the
+  binary assets; the stdlib go (80e767b, stdlib-v0.62.0 candidate) was
+  given and pushed (main 1770ce6 at the time).
+- Packages wishlist: the channel and rule were recorded at wave 36; the
+  full item list (checksum/bitstream/varint/bytes.cursor/base64/utf8/
+  text.scan/date.civil/net.addr/bcd/math.int/buf.writer + the wave-36
+  additions) is now also in the queue doc under "Packages growth wishlist
+  (external channel)" with the PACKAGE-NAMESPACES.txt two-way rule and the
+  first affected unit (D, tzdata phase 2).
+- Limitations page refreshed for the release: coverage line 16.6% ->
+  30.1% (floors78), a "0.62.0 changes users should know" section (four
+  fixed behaviors + the tcp_connect m146 pin caveat + how contract aborts
+  read to users), and the "still open" rewrite list corrected
+  (lp_simplex/linear_programming and observability/controllability are
+  DONE; what remains is coverage + C/D/E + compiler-gated classes).
+- Readiness outlook recorded in the queue doc: 6,499 pub fns, 1,954
+  covered (30.1%), 4,545 uncovered; ~180 waves at the recent ~25/wave
+  scope, ~125 with the ~70% safely-coverable share, ~70-80 with whole-
+  family batching at 40-60 pub/wave. Wishlist growth stretches the target.
+
 **RELAY 2026-09-27 (compiler -> stdlib)**
 - Compiler item 3 DONE at local commit 0f3f5083 (unpushed, tree clean):
   pin STDLIB_VERSION -> stdlib main 0c50ac6 (carries 90e9185 + c193bc4
