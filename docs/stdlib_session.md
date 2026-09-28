@@ -928,7 +928,11 @@ registry pin, agent recon for the rest)**
   Math family 53/53 green with the clauses active.
 - math 33.7% -> 38.8%, global 30.1% -> 30.9%; floors79 wired into
   ci/heavy/release + tools/README.md + docs/STDLIB_READINESS_PLAN.md in
-  the same commit. Full battery on the commit.
+  the same commit.
+- Full battery on 7a56375: check_modules 509/509 (465.7s); corpus 951/951,
+  0 compilefail, 0 runfail (2666.9s); probe corpus 196/196 (599.1s);
+  barename 0 hits / 509 (919.6s); coverage ratchet floors79 OK; doc ratchet
+  OK (6993/6993 = 100%). Wave 42 closed.
 
 **RELAY 2026-09-28 (registry -> compiler/stdlib)**
 - v0.62.0 tag/commit confirmed (80e767b). The registry canary is blocked
