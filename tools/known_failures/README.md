@@ -50,17 +50,28 @@ Reproduced while landing the regex coverage wave:
    the smoke's import set -- i.e. it interacts with the documented
    engine-registry/codegen corruption that smoke_regex's header warns about
    (statement order matters). Err-payload length clauses in catalog
-   functions pass (io parse errors), `Option[Str]` payload `.len()` clauses
-   pass (error context), and a user-module function with the same Ok-Str
-   clause passes -- so the failure needs the catalog boundary plus the
-   payload read.
+   functions pass on WINDOWS (io parse errors), `Option[Str]` payload
+   `.len()` clauses pass (error context), and a user-module function with
+   the same Ok-Str clause passes -- so the failure needs the catalog
+   boundary plus the payload read.
+   UPDATE 2026-09-28 (release-blocking, Linux): the Err-payload clause on
+   `regex_unescape` (`result is Err => result.value.len() > 0`) passes on
+   Windows but VIOLATES on Linux -- the ubuntu release gates for
+   stdlib-v0.62.0 failed on smoke_regex with "contract violated: ensures at
+   66:12" (run 36487728296), reproduced locally in WSL with the v0.61.3
+   Linux binary, and the same clause site is green after removing it. So
+   Err-Str payload reads are platform-dependent and must be treated as
+   unsafe everywhere, not just for Ok payloads.
    Stdlib mitigation in place: affected clauses replaced with payload-free
    guards (`result is Err => pattern.len() > 0`,
-   `pattern.len() == 0 => result is Ok`); re-add the full clauses when the
+   `pattern.len() == 0 => result is Ok`), and the `regex_unescape`
+   Err-payload clause removed 2026-09-28; re-add the full clauses when the
    compiler lane fixes the payload ABI and the engine-registry corruption.
    Minimal repro shape (needs a catalog function): `pub fn f(s: Str) ->
    Result[Str, Str] ensures: result is Ok => result.value.len() <= s.len()`
-   called from a user module.
+   called from a user module; the Err variant
+   (`ensures: result is Err => result.value.len() > 0`) is the one that
+   differs between Windows and Linux.
 
 **Open finding 2026-09-24 (compiler v0.61.3): cross-type generic callback
 returns are miscompiled.** A `[T, U]`-style generic whose callback changes
