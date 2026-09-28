@@ -893,6 +893,49 @@ registry pin, agent recon for the rest)**
   release lane for stdlib-v0.62.0; coverage waves resume on main as
   floors79+ for the following release.
 
+**SESSION 2026-09-28 block (wave 42: family batch -- matrices + number_systems + queueing)**
+- Owner approved family batching (40-60 pub/wave) to shorten the path to
+  100%. Wave 42 is the first such batch: 53 clauses across three files,
+  51 new pub covered (1,954 -> 2,005).
+- matrices.xi (22): NaN-tolerant field equalities for mat2/mat3/mat4
+  construction, mat2_mul/mat3_mul and transposes; mat3_det exact-or-NaN;
+  mat2_inv/mat3_inv `result is None => det^2 < 1e-24` (payload-free
+  singularity guard); dynamic shape claims: mat_identity row count,
+  mat_mul `empty or a.len()`, mat_det/mat_inv empty guards,
+  mat_translate/rotate/scale preserve `m.len()`, look_at/perspective/ortho
+  `empty or 4`. SKIP: mat4_mul/mat4_det/mat4_inv (clause size).
+- number_systems.xi (17): radix zero/out-of-range guards, roman/greek
+  range guards, Chinese/Japanese/Babylonian non-emptiness, Egyptian
+  length by sign, continued-fraction `len <= terms`, fraction denominator
+  positivity, surd implications (antecedent `a*b > 0` so two's-complement
+  wrap is harmless), octonion/sedenion length shapes. SKIP: the three
+  Result-parsing entries whose only strong claims need Ok payload reads.
+- queueing.xi (14, whole file): invalid -> NaN, unstable -> +inf, stable
+  non-negative/range claims for m_m_1/m_m_c/m_g_1/g_g_1/erlang_b/erlang_c,
+  Little's law and utilization exact-or-NaN, queue_length/waiting_time
+  guards, loss/blocking Erlang-B ranges, heavy_traffic and
+  diffusion_approx case split.
+- Fix-first (probe-caught): `surd_simplify` never multiplied the odd
+  prime exponent back into the radicand, so sqrt(8) returned 2*sqrt(1)
+  instead of 2*sqrt(2). Fixed and locked by four KATs in the probe.
+- Compiler finding filed (tools/known_failures + README): a
+  shape-mismatched `&Vec[Float64]` passed where `&Vec[Vec[Float64]]` is
+  expected compiles with no diagnostic and AVs at the callee's nested
+  read; minimal repro `p_vec_shape_arg_mismatch_av.xi` (found while
+  writing the probe; both-arguments-correct shape is green).
+- Probe lessons: `.value` Option payload reads AV in probe code (use
+  `.unwrap()`); probe p_wave42_shapes.xi (196th) exercises all 53 clauses.
+  Math family 53/53 green with the clauses active.
+- math 33.7% -> 38.8%, global 30.1% -> 30.9%; floors79 wired into
+  ci/heavy/release + tools/README.md + docs/STDLIB_READINESS_PLAN.md in
+  the same commit. Full battery on the commit.
+
+**RELAY 2026-09-28 (registry -> compiler/stdlib)**
+- v0.62.0 tag/commit confirmed (80e767b). The registry canary is blocked
+  on the pending registry-publish environment approval for run 36438204239;
+  approving it completes verification within minutes. That approval is an
+  owner/registry action, not a stdlib change -- no action in this lane.
+
 **SESSION 2026-09-28 docs block (release Q&A + outlook)**
 - Compiler lane is running the 0.62.0 release workflow and waiting for the
   binary assets; the stdlib go (80e767b, stdlib-v0.62.0 candidate) was

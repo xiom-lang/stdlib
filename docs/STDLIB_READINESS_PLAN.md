@@ -516,11 +516,40 @@ T1/T2 yields.
        inputs because they reach math.sqrt's requires (same open finding
        as wave 39); the clauses stay true because those calls never
        return. Probe tools/probes/p_wave41_shapes.xi (195th); smoke_
-       math_vectors green; math 31.0% -> 33.7%, global 29.7% -> 30.1%.
+       math_vectors green;        math 31.0% -> 33.7%, global 29.7% -> 30.1%.
        Next: matrices.xi fixed-size + shape-only claims, then remaining
        math files.
+       Wave 42 (2026-09-28): coverage wave 6 -- first family-batched wave,
+       53 clauses across matrices + number_systems + queueing. matrices.xi
+       (22): NaN-tolerant field equalities for mat2/mat3/mat4
+       construction/mul(2/3)/transpose, mat3_det, the `result is None =>
+       det^2 < 1e-24` singularity guards for mat2_inv/mat3_inv, and
+       shape-only claims for the dynamic entries (mat_identity row count,
+       mat_mul `empty or a.len()`, mat_det/mat_inv empty guards,
+       mat_translate/rotate/scale preserve m.len(), projection helpers
+       `empty or 4`); mat4_mul/det/inv stay clause-free (clause size).
+       number_systems.xi (17): radix zero/out-of-range guards, roman/greek
+       range guards, Chinese/Japanese/Babylonian non-emptiness, Egyptian
+       length by sign, continued-fraction length <= terms, fraction
+       denominator positivity, surd implications (with the a*b > 0
+       overflow-agnostic antecedent), octonion/sedenion length shapes.
+       queueing.xi (14, full file): invalid -> NaN, unstable -> +inf,
+       stable -> non-negative/range claims for m_m_1/m_m_c/m_g_1/g_g_1/
+       erlang_b/erlang_c, Little's law exact, utilization exact,
+       queue_length/waiting_time guards, loss/blocking Erlang-B ranges,
+       heavy_traffic and diffusion_approx case split.
+       Fix-first (probe-caught): `surd_simplify` dropped odd prime
+       exponents (sqrt(8) -> 2*sqrt(1)); it now multiplies the leftover
+       prime back (sqrt(8) -> 2*sqrt(2), sqrt(2) -> 1*sqrt(2),
+       sqrt(18) -> 3*sqrt(2), sqrt(12) -> 2*sqrt(3) locked in the probe).
+       Compiler finding filed: a shape-mismatched `&Vec[Float64]` argument
+       where `&Vec[Vec[Float64]]` is expected compiles silently and AVs
+       (`tools/known_failures/p_vec_shape_arg_mismatch_av.xi`), found while
+       writing the probe. Probe tools/probes/p_wave42_shapes.xi (196th);
+       math family 53/53; math 33.7% -> 38.8%, global 30.1% -> 30.9%.
+       Next: num (489 pub, 442 uncovered) then geom.
        Ratchet:
-       tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors78.json
+       tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors79.json
 
        (repo tooling as of the split; positive + negative runs verified;
        earlier floors kept at

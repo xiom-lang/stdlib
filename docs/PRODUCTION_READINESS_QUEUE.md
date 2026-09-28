@@ -57,6 +57,12 @@ floors78; math 31.0% -> 33.7%, global 29.7% -> 30.1%. Next: matrices.xi
 (fixed-size structs + shape-only claims for the nested-Vec entry points),
 then the remaining `xiom/math` files.
 
+Update 2026-09-28 (wave 42 landed): coverage wave 6 -- first family batch
+(matrices + number_systems + queueing), 53 clauses, 51 new pub covered;
+fix-first: `surd_simplify` odd-exponent bug (probe-caught); new compiler
+finding `p_vec_shape_arg_mismatch_av.xi`; floors79; math 33.7% -> 38.8%,
+global 30.1% -> 30.9%. Next: num (489 pub, 442 uncovered), then geom.
+
 Remaining-to-100% snapshot (answer to the packages relay, 2026-09-27):
 the release gate is per-directory 100% pub-with-clause + doc 100% + all
 gates green. Current floors77: global 29.7%; math 31.0%; lowest dirs

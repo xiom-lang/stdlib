@@ -45,12 +45,16 @@ pub type Mat4 = {
 
 /// Construct a 2x2 matrix from elements in row-major reading order
 /// (a11 a12 / a21 a22) stored column-major. O(1).
-pub fn mat2_new(a11: Float64, a12: Float64, a21: Float64, a22: Float64) -> Mat2 {
+pub fn mat2_new(a11: Float64, a12: Float64, a21: Float64, a22: Float64) -> Mat2
+  ensures: ((((result.m00 == a11) || (result.m00 != result.m00)) && ((result.m01 == a12) || (result.m01 != result.m01))) && ((result.m10 == a21) || (result.m10 != result.m10))) && ((result.m11 == a22) || (result.m11 != result.m11))
+{
   return Mat2{ m00: a11; m01: a12; m10: a21; m11: a22; };
 }
 
 /// Matrix product a * b (2x2). O(8) ops.
-pub fn mat2_mul(a: Mat2, b: Mat2) -> Mat2 {
+pub fn mat2_mul(a: Mat2, b: Mat2) -> Mat2
+  ensures: ((((result.m00 == a.m00 * b.m00 + a.m01 * b.m10) || (result.m00 != result.m00)) && ((result.m01 == a.m00 * b.m01 + a.m01 * b.m11) || (result.m01 != result.m01))) && ((result.m10 == a.m10 * b.m00 + a.m11 * b.m10) || (result.m10 != result.m10))) && ((result.m11 == a.m10 * b.m01 + a.m11 * b.m11) || (result.m11 != result.m11))
+{
   return Mat2{
     m00: a.m00 * b.m00 + a.m01 * b.m10;
     m01: a.m00 * b.m01 + a.m01 * b.m11;
@@ -60,14 +64,18 @@ pub fn mat2_mul(a: Mat2, b: Mat2) -> Mat2 {
 }
 
 /// Determinant of a 2x2 matrix: m00*m11 - m01*m10. O(1).
-pub fn mat2_det(m: Mat2) -> Float64 {
+pub fn mat2_det(m: Mat2) -> Float64
+  ensures: (result == m.m00 * m.m11 - m.m01 * m.m10) || (result != result)
+{
   return m.m00 * m.m11 - m.m01 * m.m10;
 }
 
 /// Inverse of a 2x2 matrix via the adjugate formula. Returns None when the
 /// determinant is near zero (|det| < 1e-12, documented singularity cutoff).
 /// O(1).
-pub fn mat2_inv(m: Mat2) -> Option[Mat2] {
+pub fn mat2_inv(m: Mat2) -> Option[Mat2]
+  ensures: (result is None) => ((m.m00 * m.m11 - m.m01 * m.m10) * (m.m00 * m.m11 - m.m01 * m.m10) < 1e-24)
+{
   var det = m.m00 * m.m11 - m.m01 * m.m10;
   if math.abs_float(det) < 1e-12 { return None; }
   var inv_det = 1.0 / det;
@@ -80,7 +88,9 @@ pub fn mat2_inv(m: Mat2) -> Option[Mat2] {
 }
 
 /// Transpose of a 2x2 matrix. O(1).
-pub fn mat2_transpose(m: Mat2) -> Mat2 {
+pub fn mat2_transpose(m: Mat2) -> Mat2
+  ensures: ((((result.m00 == m.m00) || (result.m00 != result.m00)) && ((result.m01 == m.m10) || (result.m01 != result.m01))) && ((result.m10 == m.m01) || (result.m10 != result.m10))) && ((result.m11 == m.m11) || (result.m11 != result.m11))
+{
   return Mat2{
     m00: m.m00; m01: m.m10;
     m10: m.m01; m11: m.m11;
@@ -95,7 +105,9 @@ pub fn mat2_transpose(m: Mat2) -> Mat2 {
 /// rows) stored column-major. O(1).
 pub fn mat3_new(a11: Float64, a12: Float64, a13: Float64,
                 a21: Float64, a22: Float64, a23: Float64,
-                a31: Float64, a32: Float64, a33: Float64) -> Mat3 {
+                a31: Float64, a32: Float64, a33: Float64) -> Mat3
+  ensures: ((((((result.m00 == a11) || (result.m00 != result.m00)) && ((result.m01 == a12) || (result.m01 != result.m01))) && ((result.m02 == a13) || (result.m02 != result.m02))) && (((result.m10 == a21) || (result.m10 != result.m10)) && ((result.m11 == a22) || (result.m11 != result.m11)))) && (((result.m12 == a23) || (result.m12 != result.m12)) && ((result.m20 == a31) || (result.m20 != result.m20)))) && (((result.m21 == a32) || (result.m21 != result.m21)) && ((result.m22 == a33) || (result.m22 != result.m22)))
+{
   return Mat3{
     m00: a11; m01: a12; m02: a13;
     m10: a21; m11: a22; m12: a23;
@@ -104,7 +116,11 @@ pub fn mat3_new(a11: Float64, a12: Float64, a13: Float64,
 }
 
 /// Matrix product a * b (3x3). O(27) ops.
-pub fn mat3_mul(a: Mat3, b: Mat3) -> Mat3 {
+pub fn mat3_mul(a: Mat3, b: Mat3) -> Mat3
+  ensures: ((result.m00 == a.m00 * b.m00 + a.m01 * b.m10 + a.m02 * b.m20) || (result.m00 != result.m00)) && ((result.m01 == a.m00 * b.m01 + a.m01 * b.m11 + a.m02 * b.m21) || (result.m01 != result.m01)) && ((result.m02 == a.m00 * b.m02 + a.m01 * b.m12 + a.m02 * b.m22) || (result.m02 != result.m02))
+  ensures: ((result.m10 == a.m10 * b.m00 + a.m11 * b.m10 + a.m12 * b.m20) || (result.m10 != result.m10)) && ((result.m11 == a.m10 * b.m01 + a.m11 * b.m11 + a.m12 * b.m21) || (result.m11 != result.m11)) && ((result.m12 == a.m10 * b.m02 + a.m11 * b.m12 + a.m12 * b.m22) || (result.m12 != result.m12))
+  ensures: ((result.m20 == a.m20 * b.m00 + a.m21 * b.m10 + a.m22 * b.m20) || (result.m20 != result.m20)) && ((result.m21 == a.m20 * b.m01 + a.m21 * b.m11 + a.m22 * b.m21) || (result.m21 != result.m21)) && ((result.m22 == a.m20 * b.m02 + a.m21 * b.m12 + a.m22 * b.m22) || (result.m22 != result.m22))
+{
   return Mat3{
     m00: a.m00 * b.m00 + a.m01 * b.m10 + a.m02 * b.m20;
     m01: a.m00 * b.m01 + a.m01 * b.m11 + a.m02 * b.m21;
@@ -119,7 +135,9 @@ pub fn mat3_mul(a: Mat3, b: Mat3) -> Mat3 {
 }
 
 /// Determinant of a 3x3 matrix by cofactor expansion. O(9) ops.
-pub fn mat3_det(m: Mat3) -> Float64 {
+pub fn mat3_det(m: Mat3) -> Float64
+  ensures: (result == m.m00 * (m.m11 * m.m22 - m.m12 * m.m21) - m.m01 * (m.m10 * m.m22 - m.m12 * m.m20) + m.m02 * (m.m10 * m.m21 - m.m11 * m.m20)) || (result != result)
+{
   return m.m00 * (m.m11 * m.m22 - m.m12 * m.m21)
        - m.m01 * (m.m10 * m.m22 - m.m12 * m.m20)
        + m.m02 * (m.m10 * m.m21 - m.m11 * m.m20);
@@ -128,7 +146,9 @@ pub fn mat3_det(m: Mat3) -> Float64 {
 /// Inverse of a 3x3 matrix via the adjugate formula. Returns None when the
 /// determinant is near zero (|det| < 1e-12, documented singularity cutoff).
 /// O(27) ops.
-pub fn mat3_inv(m: Mat3) -> Option[Mat3] {
+pub fn mat3_inv(m: Mat3) -> Option[Mat3]
+  ensures: (result is None) => (((m.m00 * (m.m11 * m.m22 - m.m12 * m.m21) - m.m01 * (m.m10 * m.m22 - m.m12 * m.m20) + m.m02 * (m.m10 * m.m21 - m.m11 * m.m20)) * (m.m00 * (m.m11 * m.m22 - m.m12 * m.m21) - m.m01 * (m.m10 * m.m22 - m.m12 * m.m20) + m.m02 * (m.m10 * m.m21 - m.m11 * m.m20))) < 1e-24)
+{
   var det = mat3_det(m);
   if math.abs_float(det) < 1e-12 { return None; }
   var inv_det = 1.0 / det;
@@ -146,7 +166,9 @@ pub fn mat3_inv(m: Mat3) -> Option[Mat3] {
 }
 
 /// Transpose of a 3x3 matrix. O(1).
-pub fn mat3_transpose(m: Mat3) -> Mat3 {
+pub fn mat3_transpose(m: Mat3) -> Mat3
+  ensures: ((((((result.m00 == m.m00) || (result.m00 != result.m00)) && ((result.m01 == m.m10) || (result.m01 != result.m01))) && ((result.m02 == m.m20) || (result.m02 != result.m02))) && (((result.m10 == m.m01) || (result.m10 != result.m10)) && ((result.m11 == m.m11) || (result.m11 != result.m11)))) && (((result.m12 == m.m21) || (result.m12 != result.m12)) && ((result.m20 == m.m02) || (result.m20 != result.m20)))) && (((result.m21 == m.m12) || (result.m21 != result.m21)) && ((result.m22 == m.m22) || (result.m22 != result.m22)))
+{
   return Mat3{
     m00: m.m00; m01: m.m10; m02: m.m20;
     m10: m.m01; m11: m.m11; m12: m.m21;
@@ -163,7 +185,12 @@ pub fn mat3_transpose(m: Mat3) -> Mat3 {
 pub fn mat4_new(a11: Float64, a12: Float64, a13: Float64, a14: Float64,
                 a21: Float64, a22: Float64, a23: Float64, a24: Float64,
                 a31: Float64, a32: Float64, a33: Float64, a34: Float64,
-                a41: Float64, a42: Float64, a43: Float64, a44: Float64) -> Mat4 {
+                a41: Float64, a42: Float64, a43: Float64, a44: Float64) -> Mat4
+  ensures: ((result.m00 == a11) || (result.m00 != result.m00)) && ((result.m01 == a12) || (result.m01 != result.m01)) && ((result.m02 == a13) || (result.m02 != result.m02)) && ((result.m03 == a14) || (result.m03 != result.m03))
+  ensures: ((result.m10 == a21) || (result.m10 != result.m10)) && ((result.m11 == a22) || (result.m11 != result.m11)) && ((result.m12 == a23) || (result.m12 != result.m12)) && ((result.m13 == a24) || (result.m13 != result.m13))
+  ensures: ((result.m20 == a31) || (result.m20 != result.m20)) && ((result.m21 == a32) || (result.m21 != result.m21)) && ((result.m22 == a33) || (result.m22 != result.m22)) && ((result.m23 == a34) || (result.m23 != result.m23))
+  ensures: ((result.m30 == a41) || (result.m30 != result.m30)) && ((result.m31 == a42) || (result.m31 != result.m31)) && ((result.m32 == a43) || (result.m32 != result.m32)) && ((result.m33 == a44) || (result.m33 != result.m33))
+{
   return Mat4{
     m00: a11; m01: a12; m02: a13; m03: a14;
     m10: a21; m11: a22; m12: a23; m13: a24;
@@ -291,7 +318,12 @@ pub fn mat4_inv(m: Mat4) -> Option[Mat4] {
 }
 
 /// Transpose of a 4x4 matrix. O(1).
-pub fn mat4_transpose(m: Mat4) -> Mat4 {
+pub fn mat4_transpose(m: Mat4) -> Mat4
+  ensures: ((result.m00 == m.m00) || (result.m00 != result.m00)) && ((result.m01 == m.m10) || (result.m01 != result.m01)) && ((result.m02 == m.m20) || (result.m02 != result.m02)) && ((result.m03 == m.m30) || (result.m03 != result.m03))
+  ensures: ((result.m10 == m.m01) || (result.m10 != result.m10)) && ((result.m11 == m.m11) || (result.m11 != result.m11)) && ((result.m12 == m.m21) || (result.m12 != result.m12)) && ((result.m13 == m.m31) || (result.m13 != result.m13))
+  ensures: ((result.m20 == m.m02) || (result.m20 != result.m20)) && ((result.m21 == m.m12) || (result.m21 != result.m21)) && ((result.m22 == m.m22) || (result.m22 != result.m22)) && ((result.m23 == m.m32) || (result.m23 != result.m23))
+  ensures: ((result.m30 == m.m03) || (result.m30 != result.m30)) && ((result.m31 == m.m13) || (result.m31 != result.m31)) && ((result.m32 == m.m23) || (result.m32 != result.m32)) && ((result.m33 == m.m33) || (result.m33 != result.m33))
+{
   return Mat4{
     m00: m.m00; m01: m.m10; m02: m.m20; m03: m.m30;
     m10: m.m01; m11: m.m11; m12: m.m21; m13: m.m31;
@@ -306,7 +338,9 @@ pub fn mat4_transpose(m: Mat4) -> Mat4 {
 
 /// n x n identity matrix. Returns an empty matrix for n <= 0 (documented).
 /// O(n^2).
-pub fn mat_identity(n: Int) -> Vec[Vec[Float64]] {
+pub fn mat_identity(n: Int) -> Vec[Vec[Float64]]
+  ensures: ((n <= 0) => (result.len() == 0)) && ((n > 0) => (result.len() == n))
+{
   var out = Vec[Vec[Float64]].new();
   if n <= 0 { return out; }
   var i = 0;
@@ -330,7 +364,9 @@ pub fn mat_identity(n: Int) -> Vec[Vec[Float64]] {
 /// Dynamic matrix product a * b. Returns an empty matrix when the inner
 /// dimensions disagree (a.cols != b.rows), or when either input is empty
 /// (documented; no silent garbage). O(rows * cols * inner).
-pub fn mat_mul(a: &Vec[Vec[Float64]], b: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {
+pub fn mat_mul(a: &Vec[Vec[Float64]], b: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]]
+  ensures: (result.len() == 0) || (result.len() == a.len())
+{
   var ra = a.len();
   var ca = 0;
   if ra > 0 {
@@ -366,7 +402,9 @@ pub fn mat_mul(a: &Vec[Vec[Float64]], b: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]
 /// Determinant of a dynamic square matrix via Laplace cofactor expansion.
 /// Returns NaN (0.0/0.0) for non-square or empty input (documented).
 /// O(n!).
-pub fn mat_det(m: &Vec[Vec[Float64]]) -> Float64 {
+pub fn mat_det(m: &Vec[Vec[Float64]]) -> Float64
+  ensures: (m.len() == 0) => (result != result)
+{
   var n = m.len();
   if n == 0 { return 0.0 / 0.0; }
   var cols = m[0].len();
@@ -406,7 +444,9 @@ pub fn mat_det(m: &Vec[Vec[Float64]]) -> Float64 {
 /// Inverse of a dynamic square matrix via Gauss-Jordan elimination.
 /// Returns None for non-square, empty, or (numerically) singular input
 /// (documented; pivot tolerance 1e-12). O(n^3).
-pub fn mat_inv(m: &Vec[Vec[Float64]]) -> Option[Vec[Vec[Float64]]] {
+pub fn mat_inv(m: &Vec[Vec[Float64]]) -> Option[Vec[Vec[Float64]]]
+  ensures: (m.len() == 0) => (result is None)
+{
   var n = m.len();
   if n == 0 { return None; }
   var cols = m[0].len();
@@ -496,7 +536,9 @@ pub fn mat_inv(m: &Vec[Vec[Float64]]) -> Option[Vec[Vec[Float64]]] {
 
 /// m * T where T is the 4x4 translation matrix by (x, y, z). When m is not
 /// 4x4 the input is returned unchanged (documented). O(1).
-pub fn mat_translate(m: &Vec[Vec[Float64]], x: Float64, y: Float64, z: Float64) -> Vec[Vec[Float64]] {
+pub fn mat_translate(m: &Vec[Vec[Float64]], x: Float64, y: Float64, z: Float64) -> Vec[Vec[Float64]]
+  ensures: result.len() == m.len()
+{
   if m.len() != 4 { return clone_mat(m); }
   var t = _translation(x, y, z);
   return _mul4(m, &t);
@@ -505,7 +547,9 @@ pub fn mat_translate(m: &Vec[Vec[Float64]], x: Float64, y: Float64, z: Float64) 
 /// m * R where R is the 4x4 rotation by angle radians about axis
 /// (axis is normalised internally). A zero axis returns m unchanged
 /// (documented); a non-4x4 m is returned unchanged. O(1).
-pub fn mat_rotate(m: &Vec[Vec[Float64]], angle: Float64, axis: &Vec[Float64]) -> Vec[Vec[Float64]] {
+pub fn mat_rotate(m: &Vec[Vec[Float64]], angle: Float64, axis: &Vec[Float64]) -> Vec[Vec[Float64]]
+  ensures: result.len() == m.len()
+{
   if m.len() != 4 { return clone_mat(m); }
   if axis.len() != 3 { return clone_mat(m); }
   var ax = axis[0];
@@ -549,7 +593,9 @@ pub fn mat_rotate(m: &Vec[Vec[Float64]], angle: Float64, axis: &Vec[Float64]) ->
 
 /// m * S where S is the 4x4 scale matrix by (x, y, z). A non-4x4 m is
 /// returned unchanged (documented). O(1).
-pub fn mat_scale(m: &Vec[Vec[Float64]], x: Float64, y: Float64, z: Float64) -> Vec[Vec[Float64]] {
+pub fn mat_scale(m: &Vec[Vec[Float64]], x: Float64, y: Float64, z: Float64) -> Vec[Vec[Float64]]
+  ensures: result.len() == m.len()
+{
   if m.len() != 4 { return clone_mat(m); }
   var s = Vec[Vec[Float64]].new();
   var row0 = Vec[Float64].new();
@@ -582,7 +628,9 @@ pub fn mat_scale(m: &Vec[Vec[Float64]], x: Float64, y: Float64, z: Float64) -> V
 /// Right-handed look-at view matrix: camera at eye looking at target with
 /// up vector. eye/target/up are length-3 dynamic vectors; vectors of any
 /// other length return an empty matrix (documented). O(1).
-pub fn mat_look_at(eye: &Vec[Float64], target: &Vec[Float64], up: &Vec[Float64]) -> Vec[Vec[Float64]] {
+pub fn mat_look_at(eye: &Vec[Float64], target: &Vec[Float64], up: &Vec[Float64]) -> Vec[Vec[Float64]]
+  ensures: (result.len() == 0) || (result.len() == 4)
+{
   var out = Vec[Vec[Float64]].new();
   if eye.len() != 3 || target.len() != 3 || up.len() != 3 { return out; }
   var fx = target[0] - eye[0];
@@ -639,7 +687,9 @@ pub fn mat_look_at(eye: &Vec[Float64], target: &Vec[Float64], up: &Vec[Float64])
 /// Perspective projection matrix (right-handed, standard OpenGL mapping to
 /// NDC [-1, 1]^3). Returns an empty matrix for fovy <= 0, aspect <= 0, or
 /// near == far (documented). O(1).
-pub fn mat_perspective(fovy: Float64, aspect: Float64, near: Float64, far: Float64) -> Vec[Vec[Float64]] {
+pub fn mat_perspective(fovy: Float64, aspect: Float64, near: Float64, far: Float64) -> Vec[Vec[Float64]]
+  ensures: (result.len() == 0) || (result.len() == 4)
+{
   var out = Vec[Vec[Float64]].new();
   if fovy <= 0.0 || aspect <= 0.0 || near == far { return out; }
   var f = 1.0 / math.tan(fovy * 0.5);
@@ -675,7 +725,9 @@ pub fn mat_perspective(fovy: Float64, aspect: Float64, near: Float64, far: Float
 /// [-1, 1]^3. Returns an empty matrix when any two facing planes coincide
 /// (documented). O(1).
 pub fn mat_ortho(left: Float64, right: Float64, bottom: Float64, top: Float64,
-                 near: Float64, far: Float64) -> Vec[Vec[Float64]] {
+                 near: Float64, far: Float64) -> Vec[Vec[Float64]]
+  ensures: (result.len() == 0) || (result.len() == 4)
+{
   var out = Vec[Vec[Float64]].new();
   var rl = right - left;
   var tb = top - bottom;

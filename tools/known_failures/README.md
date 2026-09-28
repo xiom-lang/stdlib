@@ -15,6 +15,15 @@ xiom --force -o out.exe tools/known_failures/<file>.xi
 
 ## Current
 
+**Open finding 2026-09-28 (compiler v0.61.3): a shape-mismatched `&Vec`
+argument compiles silently and crashes.** Passing `&Vec[Float64]` where
+`&Vec[Vec[Float64]]` is expected produces no diagnostic; the callee's
+nested element read then AVs (run rc 0xC0000005, -1073741819). Repro:
+`tools/known_failures/p_vec_shape_arg_mismatch_av.xi` (the same program
+with both arguments `Vec[Vec[Float64]]` compiles and runs green in
+`tools/probes/p_wave42_shapes.xi`). Expected: a type error at the call
+site. Found while writing the wave-42 probe.
+
 **Open finding 2026-09-25 (compiler v0.61.3): Result/Option payload reads
 in CATALOG contract clauses are broken and can poison user codegen.**
 Reproduced while landing the regex coverage wave:
