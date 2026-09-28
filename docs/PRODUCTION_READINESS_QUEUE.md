@@ -63,6 +63,14 @@ fix-first: `surd_simplify` odd-exponent bug (probe-caught); new compiler
 finding `p_vec_shape_arg_mismatch_av.xi`; floors79; math 33.7% -> 38.8%,
 global 30.1% -> 30.9%. Next: num (489 pub, 442 uncovered), then geom.
 
+Update 2026-09-28 (wave 43 landed): num sub-batch (float + convert + base +
+precision_integer + precision_rational) 37 clauses; fix-first:
+`nextafter`/`_ilogb_abs` skipped representable values at powers of two
+(both directions) and `primitives.abs` was NaN-intolerant; exact-step KATs
+in smoke_num_float; probe `p_wave43_shapes.xi`; floors80; num 9.6% ->
+17.2%, global 30.9% -> 31.4%. Next: bigint (55 pub), bigfloat (75), then
+num.xi leaves, then geom.
+
 Remaining-to-100% snapshot (answer to the packages relay, 2026-09-27):
 the release gate is per-directory 100% pub-with-clause + doc 100% + all
 gates green. Current floors77: global 29.7%; math 31.0%; lowest dirs

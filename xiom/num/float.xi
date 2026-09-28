@@ -44,7 +44,9 @@ const _TWO_POW_63: Float64 = 9223372036854775808.0;
 /// Raw 64-bit IEEE-754 bit pattern of f.
 /// FALLBACK (TODO(compiler): needs bitcast intrinsic): returns 0 until one
 /// lands. Do not rely on the value.
-pub fn float_bits(f: Float64) -> Int {
+pub fn float_bits(f: Float64) -> Int
+  ensures: result == 0
+{
   return 0;
 }
 
@@ -52,7 +54,9 @@ pub fn float_bits(f: Float64) -> Int {
 /// Float64 reconstructed from a raw 64-bit IEEE-754 bit pattern.
 /// FALLBACK (TODO(compiler): needs bitcast intrinsic): returns 0.0 until one
 /// lands. Do not rely on the value.
-pub fn bits_to_float(bits: Int) -> Float64 {
+pub fn bits_to_float(bits: Int) -> Float64
+  ensures: result == 0.0
+{
   return 0.0;
 }
 
@@ -61,7 +65,9 @@ pub fn bits_to_float(bits: Int) -> Float64 {
 /// map to 0 (documented). Exact: computed by scaling |f| by exact powers of
 /// two until it lies in [1, 2), then multiplying by 2^52 (or 2^(e+1074) for
 /// subnormals). Complexity: O(|exponent|) -- at most ~1074 iterations.
-pub fn float_mantissa(f: Float64) -> Int {
+pub fn float_mantissa(f: Float64) -> Int
+  ensures: result >= 0
+{
   if f == 0.0 { return 0; }
   if float_is_nan(f) || float_is_infinite(f) { return 0; }
   var x = f;
@@ -95,7 +101,9 @@ pub fn float_mantissa(f: Float64) -> Int {
 /// zero would be -1023, but 0 is the conventional frexp-style result).
 /// Exact via repeated halving/doubling. Complexity: O(|e|) -- at most ~1074
 /// iterations.
-pub fn float_exponent(f: Float64) -> Int {
+pub fn float_exponent(f: Float64) -> Int
+  ensures: (result >= -1074) && (result <= 1023)
+{
   if f == 0.0 { return 0; }
   if float_is_nan(f) || float_is_infinite(f) { return 0; }
   var x = f;
@@ -115,7 +123,9 @@ pub fn float_exponent(f: Float64) -> Int {
 /// True iff f is a subnormal value: 0 < |f| < 2^-1022 (the minimum normal).
 /// Zero, NaN, and infinities are not subnormal. Exact via comparison.
 /// Complexity: O(1).
-pub fn float_is_subnormal(f: Float64) -> Bool {
+pub fn float_is_subnormal(f: Float64) -> Bool
+  ensures: (result == false) || (f != 0.0)
+{
   if float_is_nan(f) { return false; }
   if float_is_infinite(f) { return false; }
   if f == 0.0 { return false; }
@@ -126,13 +136,17 @@ pub fn float_is_subnormal(f: Float64) -> Bool {
 
 /// True iff f is NaN (f != f is the IEEE identity).
 /// Complexity: O(1).
-pub fn float_is_nan(f: Float64) -> Bool {
+pub fn float_is_nan(f: Float64) -> Bool
+  ensures: result == (f != f)
+{
   f != f
 }
 
 /// True iff f is +inf or -inf (checked against 1.0/0.0 and -1.0/0.0).
 /// Complexity: O(1).
-pub fn float_is_infinite(f: Float64) -> Bool {
+pub fn float_is_infinite(f: Float64) -> Bool
+  ensures: result == ((f == 1.0 / 0.0) || (f == -1.0 / 0.0))
+{
   f == 1.0 / 0.0 || f == -1.0 / 0.0
 }
 
@@ -140,18 +154,24 @@ pub fn float_is_infinite(f: Float64) -> Bool {
 // i64<->f64 bitcast intrinsic; they now delegate to
 // xiom.math.primitives.nextafter (exact stepping, no bitcast).
 /// Smallest Float64 strictly greater than f.
-pub fn float_next_up(f: Float64) -> Float64 {
+pub fn float_next_up(f: Float64) -> Float64
+  ensures: ((result > f) || (result != result)) || (f == 1.0 / 0.0)
+{
   return primitives.nextafter(f, 1.0 / 0.0);
 }
 
 /// Largest Float64 strictly less than f.
-pub fn float_next_down(f: Float64) -> Float64 {
+pub fn float_next_down(f: Float64) -> Float64
+  ensures: ((result < f) || (result != result)) || (f == -1.0 / 0.0)
+{
   return primitives.nextafter(f, -1.0 / 0.0);
 }
 
 /// Unit in the last place of f: the distance to the next representable value.
 /// NaN for NaN/infinite inputs; 5e-324 for zero (subnormal step).
-pub fn float_ulp(f: Float64) -> Float64 {
+pub fn float_ulp(f: Float64) -> Float64
+  ensures: (result >= 0.0) || (result != result)
+{
   var up = primitives.nextafter(f, 1.0 / 0.0);
   var d = up - f;
   if d < 0.0 { return 0.0 - d; }
@@ -161,7 +181,9 @@ pub fn float_ulp(f: Float64) -> Float64 {
 /// Classification string: "nan", "inf", "-inf", "subnormal", "zero", or
 /// "normal" (checked in that order). The "nan" branch uses f != f (IEEE).
 /// Complexity: O(1).
-pub fn float_classify(f: Float64) -> Str {
+pub fn float_classify(f: Float64) -> Str
+  ensures: (((((result == "nan") || (result == "inf")) || (result == "-inf")) || (result == "subnormal")) || (result == "zero")) || (result == "normal")
+{
   // TODO(compiler): needs bitcast intrinsic -- see module header. The f != f
   // check is correct (BUG 19 fixed); NaN is constructible via 0.0/0.0.
   if float_is_nan(f) { return "nan"; }

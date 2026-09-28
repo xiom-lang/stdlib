@@ -51,7 +51,9 @@ pub fn bigrat_from_int(v: Int) -> BigRat {
 /// Parses "num/den" (optional signs) or a decimal string ("3.14", "-0.5").
 /// None on invalid input, empty parts, or a zero denominator.
 /// Complexity: O(n^2) via the bigint accumulation.
-pub fn bigrat_from_str(s: Str) -> Option[BigRat] {
+pub fn bigrat_from_str(s: Str) -> Option[BigRat]
+  ensures: (s == "") => (result is None)
+{
   if s.len() == 0 { return None; }
   var neg = false;
   var t = s;
@@ -141,7 +143,9 @@ pub fn bigrat_from_str(s: Str) -> Option[BigRat] {
 
 /// String representation: "num" when the denominator is 1, else "num/den".
 /// Complexity: O(n).
-pub fn bigrat_to_str(r: BigRat) -> Str {
+pub fn bigrat_to_str(r: BigRat) -> Str
+  ensures: result != ""
+{
   if xiom.bigint.bigint_is_one(&r.den) {
     return xiom.bigint.bigint_to_str(&r.num);
   }
@@ -194,12 +198,16 @@ pub fn bigrat_div(a: BigRat, b: BigRat) -> Option[BigRat] {
 }
 
 /// Negation. Complexity: O(n).
-pub fn bigrat_neg(a: BigRat) -> BigRat {
+pub fn bigrat_neg(a: BigRat) -> BigRat
+  ensures: (a.num.negative == true) => (result.num.negative == false)
+{
   BigRat{ num: xiom.bigint.bigint_neg(&a.num); den: a.den; }
 }
 
 /// Absolute value. Complexity: O(n).
-pub fn bigrat_abs(a: BigRat) -> BigRat {
+pub fn bigrat_abs(a: BigRat) -> BigRat
+  ensures: result.num.negative == false
+{
   BigRat{ num: xiom.bigint.bigint_abs(&a.num); den: a.den; }
 }
 
@@ -241,7 +249,9 @@ pub fn bigrat_is_zero(r: BigRat) -> Bool {
 
 /// Three-way comparison via cross-multiplication: -1, 0, or 1.
 /// Valid because denominators are positive. Complexity: O(n^2).
-pub fn bigrat_compare(a: BigRat, b: BigRat) -> Int {
+pub fn bigrat_compare(a: BigRat, b: BigRat) -> Int
+  ensures: (result >= -1) && (result <= 1)
+{
   var lhs = xiom.bigint.bigint_mul(&a.num, &b.den);
   var rhs = xiom.bigint.bigint_mul(&b.num, &a.den);
   xiom.bigint.bigint_compare(&lhs, &rhs)
@@ -255,7 +265,9 @@ pub fn bigrat_eq(a: BigRat, b: BigRat) -> Bool {
 /// Converts to Float64 (bigint magnitude accumulation, then division).
 /// The result may be inf for values beyond the Float64 range (documented).
 /// Complexity: O(n).
-pub fn bigrat_to_float(r: BigRat) -> Float64 {
+pub fn bigrat_to_float(r: BigRat) -> Float64
+  ensures: ((r.num.negative == false) => ((result >= 0.0) || (result != result))) && ((r.num.negative == true) => ((result <= 0.0) || (result != result)))
+{
   if xiom.bigint.bigint_is_zero(&r.num) { return 0.0; }
   var num_f = _bigint_to_float(&r.num);
   var den_f = _bigint_to_float(&r.den);

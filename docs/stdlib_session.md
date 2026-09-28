@@ -934,6 +934,35 @@ registry pin, agent recon for the rest)**
   barename 0 hits / 509 (919.6s); coverage ratchet floors79 OK; doc ratchet
   OK (6993/6993 = 100%). Wave 42 closed.
 
+**SESSION 2026-09-28 block 2 (wave 43: num sub-batch + nextafter fix)**
+- Wave 43 (floors80): 37 clauses across num/float.xi (11), num/convert.xi
+  (8), num/base.xi (6), num/precision_integer.xi (6),
+  num/precision_rational.xi (6); 37 new pub covered (2,005 -> 2,042).
+  Highlights: exact float identities (bits fallback == 0, mantissa >= 0,
+  exponent in [-1074, 1023], is_nan/is_infinite as exact Bool formulas,
+  classify result in the six documented strings, next_up/next_down
+  direction with inf endpoints, ulp >= 0); base58/62/ascii85/roman
+  empty-input and range guards; radix guards plus digits length; bigint
+  wrapper non-emptiness and compare range; BigRat parse/compare/sign
+  claims (the `r.num.negative` field-chain shape validated by the probe).
+- Fix-first #1 (probe-caught, significant): `primitives._ilogb_abs`
+  normalized into [0.5, 1) instead of [1, 2), returning floor(log2)+1 at
+  exact powers of two. Consequence: `nextafter(x, +inf)` SKIPPED a
+  representable value when x was any power of two (2^k -> 2^k + 2ulp), and
+  `float_ulp(2^k)` was 2x. Fixed; stepping DOWN from a normal power of two
+  now also uses the lower binade's half spacing (with the min-normal /
+  subnormal exception, where the lower step is still 2^-1074). Exact-step
+  KATs added to smoke_num_float: next_up(1) - 1 == 2^-52,
+  1 - next_down(1) == 2^-53, ulp(1) == 2^-52.
+- Fix-first #2: `primitives.abs` had `ensures: result >= 0.0`, which a NaN
+  input violates; now `(result >= 0.0) || (result != result)`, unblocking
+  float_ulp(NaN) -> NaN (documented) and the nextafter NaN paths.
+- Probe tools/probes/p_wave43_shapes.xi (197th); num smoke family 18/18 and
+  math family 53/53 with the fixes and clauses active; num 9.6% -> 17.2%,
+  global 30.9% -> 31.4%; floors80 wired into ci/heavy/release +
+  tools/README.md + docs/STDLIB_READINESS_PLAN.md in the same commit.
+  Full battery on the commit.
+
 **RELAY 2026-09-28 (registry -> compiler/stdlib)**
 - v0.62.0 tag/commit confirmed (80e767b). The registry canary is blocked
   on the pending registry-publish environment approval for run 36438204239;

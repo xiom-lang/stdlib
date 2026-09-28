@@ -16,7 +16,9 @@ const BASE62_ALPHABET: Str = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmn
 const A85_ALPHABET: Str = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_\x60abcdefghijklmnopqrstuvwxyz";
 
 /// Base58 (Bitcoin alphabet) encoding of `n`.
-pub fn to_base58(n: Int) -> Str {
+pub fn to_base58(n: Int) -> Str
+  ensures: ((n == 0) => (result == "1")) && ((n < 0) => (result != ""))
+{
   if n == 0 {
     return "1";
   }
@@ -57,7 +59,9 @@ fn base58_digit(c: UInt8) -> Int {
 }
 
 /// Decode base58; None on invalid characters or overflow.
-pub fn from_base58(s: Str) -> Option[Int] {
+pub fn from_base58(s: Str) -> Option[Int]
+  ensures: (s == "") => (result is None)
+{
   if s.len() == 0 {
     return None;
   }
@@ -96,7 +100,9 @@ pub fn from_base58(s: Str) -> Option[Int] {
 /// Converts an integer to its Base62 representation ("0-9A-Za-z").
 /// n == 0 yields "0". Negative numbers get a '-' prefix.
 /// Complexity: O(log_62 n).
-pub fn to_base62(n: Int) -> Str {
+pub fn to_base62(n: Int) -> Str
+  ensures: ((n == 0) => (result == "0")) && ((n < 0) => (result != ""))
+{
   if n == 0 {
     return "0";
   }
@@ -143,7 +149,9 @@ fn base62_digit(c: UInt8) -> Int {
 /// characters, overflow, or an empty string. An optional leading '-'/'+'
 /// is accepted.
 /// Complexity: O(n).
-pub fn from_base62(s: Str) -> Option[Int] {
+pub fn from_base62(s: Str) -> Option[Int]
+  ensures: (s == "") => (result is None)
+{
   if s.len() == 0 {
     return None;
   }
@@ -202,7 +210,9 @@ fn encode_a85_group(value: Int) -> Str {
 }
 
 /// Adobe Ascii85 encoding of the bytes (see also xiom.convert.ascii85).
-pub fn to_ascii85(data: &Vec[UInt8]) -> Str {
+pub fn to_ascii85(data: &Vec[UInt8]) -> Str
+  ensures: (data.len() == 0) => (result == "")
+{
   var result = "";
   var len = data.len();
   if len == 0 {
@@ -247,7 +257,9 @@ fn a85_digit(c: UInt8) -> Int {
 }
 
 /// Decode Ascii85 into bytes; None on malformed input.
-pub fn from_ascii85(s: Str) -> Option[Vec[UInt8]] {
+pub fn from_ascii85(s: Str) -> Option[Vec[UInt8]]
+  ensures: (s == "") => (result is Some)
+{
   var result = Vec[UInt8].new();
   var len = s.len();
   if len == 0 {
@@ -320,7 +332,9 @@ fn roman_value(c: UInt8) -> Int {
 }
 
 /// Roman numeral for 1..3999, or None outside that range.
-pub fn to_roman(n: Int) -> Option[Str] {
+pub fn to_roman(n: Int) -> Option[Str]
+  ensures: (((n <= 0) || (n > 3999)) => (result is None)) && (((n >= 1) && (n <= 3999)) => (result is Some))
+{
   if n <= 0 || n > 3999 {
     return None;
   }
@@ -366,7 +380,9 @@ pub fn to_roman(n: Int) -> Option[Str] {
 }
 
 /// Parse a Roman numeral; None on invalid input.
-pub fn from_roman(s: Str) -> Option[Int] {
+pub fn from_roman(s: Str) -> Option[Int]
+  ensures: (s == "") => (result is None)
+{
   if s.len() == 0 {
     return None;
   }

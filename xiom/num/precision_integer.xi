@@ -23,7 +23,9 @@ pub fn bigint_from_int(v: Int) -> BigInt {
 
 /// Parses a decimal string (optional leading '-'/'+'). None on invalid input
 /// (empty string or non-digit character). Complexity: O(n^2) accumulation.
-pub fn bigint_from_str(s: Str) -> Option[BigInt] {
+pub fn bigint_from_str(s: Str) -> Option[BigInt]
+  ensures: (s == "") => (result is None)
+{
   var r = xiom.bigint.bigint_from_str(s);
   match r {
     Ok(v) => { return Some(v); }
@@ -32,22 +34,30 @@ pub fn bigint_from_str(s: Str) -> Option[BigInt] {
 }
 
 /// Decimal string representation. Complexity: O(n).
-pub fn bigint_to_str(b: BigInt) -> Str {
+pub fn bigint_to_str(b: BigInt) -> Str
+  ensures: result != ""
+{
   return xiom.bigint.bigint_to_str(&b);
 }
 
 /// Lowercase hexadecimal string representation ("ff", "-1a"). Complexity: O(n).
-pub fn bigint_to_hex(b: BigInt) -> Str {
+pub fn bigint_to_hex(b: BigInt) -> Str
+  ensures: result != ""
+{
   return xiom.bigint.bigint_to_hex(&b);
 }
 
 /// Binary string representation ("0"/"1" digits). Complexity: O(n).
-pub fn bigint_to_bin(b: BigInt) -> Str {
+pub fn bigint_to_bin(b: BigInt) -> Str
+  ensures: result != ""
+{
   return xiom.bigint.bigint_to_base(&b, 2);
 }
 
 /// Octal string representation. Complexity: O(n).
-pub fn bigint_to_oct(b: BigInt) -> Str {
+pub fn bigint_to_oct(b: BigInt) -> Str
+  ensures: result != ""
+{
   return xiom.bigint.bigint_to_base(&b, 8);
 }
 
@@ -99,7 +109,9 @@ pub fn bigint_abs(a: BigInt) -> BigInt {
 }
 
 /// Three-way comparison: -1, 0, or 1 ordering a vs b. Complexity: O(n).
-pub fn bigint_compare(a: BigInt, b: BigInt) -> Int {
+pub fn bigint_compare(a: BigInt, b: BigInt) -> Int
+  ensures: (result >= -1) && (result <= 1)
+{
   return xiom.bigint.bigint_compare(&a, &b);
 }
 

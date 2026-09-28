@@ -31,11 +31,11 @@ fn _min_subnormal() -> Float64 {
 fn _ilogb_abs(x: Float64) -> Int {
   var e = 0;
   var f = x;
-  while f >= 1.0 {
+  while f >= 2.0 {
     f = f / 2.0;
     e = e + 1;
   }
-  while f < 0.5 {
+  while f < 1.0 {
     f = f * 2.0;
     e = e - 1;
   }
@@ -125,9 +125,9 @@ pub fn clamp(x: Float64, lo: Float64, hi: Float64) -> Float64
   return x;
 }
 
-/// Absolute value of x. Handles -inf correctly (returns +inf).
+/// Absolute value of x. Handles -inf correctly (returns +inf); NaN propagates.
 pub fn abs(x: Float64) -> Float64
-  ensures: result >= 0.0
+  ensures: (result >= 0.0) || (result != result)
 {
   if x >= 0.0 { return x; }
   return -x;
@@ -222,11 +222,19 @@ pub fn nextafter(x: Float64, y: Float64) -> Float64 {
   }
   var ax = abs(x);
   var ulp = _min_subnormal();
+  var e = -1074;
   if ax >= _min_normal() {
-    var e = _ilogb_abs(ax);
+    e = _ilogb_abs(ax);
     ulp = _pow2_f(e - 52);
   }
   if step_up { return x + ulp; }
+  // Stepping down from an exact normal power of two crosses into the lower
+  // binade, whose spacing is half of ulp(x); _pow2_f(e) is exact, so the
+  // equality test is exact. At the minimum normal the lower side is subnormal
+  // with step 2^-1074 == ulp, so e == -1022 must not halve.
+  if e > -1022 {
+    if ax == _pow2_f(e) { return x - ulp / 2.0; }
+  }
   return x - ulp;
 }
 

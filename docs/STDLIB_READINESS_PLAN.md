@@ -546,10 +546,31 @@ T1/T2 yields.
        where `&Vec[Vec[Float64]]` is expected compiles silently and AVs
        (`tools/known_failures/p_vec_shape_arg_mismatch_av.xi`), found while
        writing the probe. Probe tools/probes/p_wave42_shapes.xi (196th);
-       math family 53/53; math 33.7% -> 38.8%, global 30.1% -> 30.9%.
+       math family 53/53;        math 33.7% -> 38.8%, global 30.1% -> 30.9%.
        Next: num (489 pub, 442 uncovered) then geom.
+       Wave 43 (2026-09-28): coverage wave 7 -- num sub-batch (float +
+       convert + base + precision_integer + precision_rational), 37 clauses:
+       float bit fallbacks (bits == 0), mantissa >= 0, exponent in
+       [-1074, 1023], subnormal/nan/infinite exact identities and
+       classification set, next_up/next_down direction with the +inf/-inf
+       endpoints, ulp >= 0; base58/62 zero and empty-input guards, ascii85
+       empty guards, roman range Some/None, radix zero/invalid-base guards
+       and digits length, Result is_ok guards; bigint wrapper non-emptiness
+       and compare range; BigRat empty-parse, compare range, sign-preserving
+       to_float via the `num.negative` field chain, to_str non-emptiness,
+       neg/abs sign fields. Fix-first (probe-caught): `_ilogb_abs` returned
+       floor(log2)+1 at exact powers of two, so `nextafter` skipped a
+       representable value stepping UP from any power of two (and
+       float_ulp doubled there); fixed, and the downward step now crosses
+       into the lower binade with half spacing (min-normal/subnormal
+       boundary kept); exact-step KATs added to smoke_num_float
+       (1+2^-52 up, 1-2^-53 down, ulp(1) = 2^-52). Also `primitives.abs`
+       clause made NaN-tolerant so float_ulp(NaN) propagates NaN as
+       documented. Probe tools/probes/p_wave43_shapes.xi (197th); num 18/18
+       and math 53/53 smoke families; num 9.6% -> 17.2%, global 30.9% ->
+       31.4%. Next: bigint (55 pub) then bigfloat (75) then num.xi leaves.
        Ratchet:
-       tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors79.json
+       tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors80.json
 
        (repo tooling as of the split; positive + negative runs verified;
        earlier floors kept at

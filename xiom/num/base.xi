@@ -38,7 +38,9 @@ fn _digit_value(c: UInt8) -> Int {
 /// NOTE: INT_MIN's magnitude (2^63) has no positive i64 representation, so
 /// to_base(INT_MIN, base) returns "-" (documented edge).
 /// Complexity: O(log_base |n|).
-pub fn to_base(n: Int, base: Int) -> Str {
+pub fn to_base(n: Int, base: Int) -> Str
+  ensures: (((base < 2) || (base > 36)) => (result == "")) && (((base >= 2) && (base <= 36) && (n == 0)) => (result == "0"))
+{
   if base < 2 || base > 36 { return ""; }
   if n == 0 { return "0"; }
   var neg = false;
@@ -66,7 +68,9 @@ pub fn to_base(n: Int, base: Int) -> Str {
 /// accepted; both digit cases are. Err on invalid base, empty string, an
 /// invalid digit, a digit out of range for the base, or overflow.
 /// Complexity: O(len(s)).
-pub fn from_base(s: Str, base: Int) -> Result[Int, Str] {
+pub fn from_base(s: Str, base: Int) -> Result[Int, Str]
+  ensures: (((base < 2) || (base > 36)) => (result.is_ok == false)) && ((s == "") => (result.is_ok == false))
+{
   if base < 2 || base > 36 { return Err("invalid base"); }
   if s.len() == 0 { return Err("empty string"); }
   var neg = false;
@@ -96,7 +100,9 @@ pub fn from_base(s: Str, base: Int) -> Result[Int, Str] {
 /// rounded). Handles sign, "inf"/"-inf", and (for the future) "nan".
 /// Returns "" for an invalid base/prec or for |f| >= 2^63 (the integer part
 /// is then not representable). Complexity: O(prec + log_base |f|).
-pub fn to_base_float(f: Float64, base: Int, prec: Int) -> Str {
+pub fn to_base_float(f: Float64, base: Int, prec: Int) -> Str
+  ensures: (((base < 2) || (base > 36) || (prec < 0)) => (result == "")) && (((f == 1.0 / 0.0) && (base >= 2) && (base <= 36) && (prec >= 0)) => (result == "inf"))
+{
   if base < 2 || base > 36 || prec < 0 { return ""; }
   // TODO(compiler): BUG 19 -- NaN cannot be produced today; the guard is kept
   // for the future and requires no NaN construction.
@@ -135,7 +141,9 @@ pub fn to_base_float(f: Float64, base: Int, prec: Int) -> Str {
 /// sign and a single '.' are accepted; scientific notation is not. Err on
 /// invalid base, empty string, bad digits, or multiple decimal points.
 /// Complexity: O(len(s)).
-pub fn from_base_float(s: Str, base: Int) -> Result[Float64, Str] {
+pub fn from_base_float(s: Str, base: Int) -> Result[Float64, Str]
+  ensures: (((base < 2) || (base > 36)) => (result.is_ok == false)) && ((s == "") => (result.is_ok == false))
+{
   if base < 2 || base > 36 { return Err("invalid base"); }
   if s.len() == 0 { return Err("empty string"); }
   var neg = false;
@@ -179,7 +187,9 @@ pub fn from_base_float(s: Str, base: Int) -> Result[Float64, Str] {
 /// Digits of |n| in the given base, least significant first (little-endian).
 /// n == 0 yields [0]; negatives use the magnitude. Invalid base yields an
 /// empty vector. Complexity: O(log_base |n|).
-pub fn digits_of(n: Int, base: Int) -> Vec[Int] {
+pub fn digits_of(n: Int, base: Int) -> Vec[Int]
+  ensures: (((base < 2) || (base > 36)) => (result.len() == 0)) && (((base >= 2) && (base <= 36)) => (result.len() > 0))
+{
   var result = Vec[Int].new();
   if base < 2 || base > 36 { return result; }
   if n == 0 {
@@ -199,7 +209,9 @@ pub fn digits_of(n: Int, base: Int) -> Vec[Int] {
 /// (inverse of digits_of). Returns 0 on an invalid base, an out-of-range
 /// digit, or overflow (documented -- the signature cannot signal errors).
 /// Complexity: O(len(digits)).
-pub fn from_digits(digits: &Vec[Int], base: Int) -> Int {
+pub fn from_digits(digits: &Vec[Int], base: Int) -> Int
+  ensures: ((base < 2) || (base > 36)) => (result == 0)
+{
   if base < 2 || base > 36 { return 0; }
   var result: Int = 0;
   var i = 0;

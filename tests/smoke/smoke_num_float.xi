@@ -47,11 +47,13 @@ fn main() -> Int {
   // next-value operations (exact since 2026-09-24 via math.primitives.nextafter)
   var nu = float.float_next_up(1.0);
   if nu <= 1.0 { io.println("float: next_up(1.0)"); return 7; }
+  if nu - 1.0 != 2.220446049250313e-16 { io.println("float: next_up exact step"); return 7; }
   var nd = float.float_next_down(1.0);
   if nd >= 1.0 { io.println("float: next_down(1.0)"); return 7; }
+  if 1.0 - nd != 1.1102230246251565e-16 { io.println("float: next_down exact step"); return 7; }
   var uz = float.float_ulp(0.0);
   if uz <= 0.0 { io.println("float: ulp(0.0)"); return 7; }
-  if float.float_ulp(1.0) <= 0.0 { io.println("float: ulp(1.0)"); return 7; }
+  if float.float_ulp(1.0) != 2.220446049250313e-16 { io.println("float: ulp(1.0) exact"); return 7; }
   io.println("smoke_num_float: OK");
   return 0;
 }
