@@ -1184,6 +1184,10 @@ registry pin, agent recon for the rest)**
 - num 31.6% -> 35.8%, global 32.5% -> 32.7%; floors84 wired (YAML
   re-verified) + tools/README.md + plan in the same commit. Full battery on
   the commit.
+- Full battery on 67c5047: check_modules 509/509 (331.3s); corpus 951/951,
+  0 compilefail, 0 runfail (2617.6s); probe corpus 201/201 (571.2s);
+  barename 0 hits / 509 (1109.8s); coverage ratchet floors84 OK; doc
+  ratchet OK; module-smoke ratchet OK. Wave 47 closed.
 
 **RELAY 2026-09-28 (registry -> compiler/stdlib)**
 - v0.62.0 tag/commit confirmed (80e767b). The registry canary is blocked
