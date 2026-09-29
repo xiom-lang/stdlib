@@ -1026,6 +1026,16 @@ registry pin, agent recon for the rest)**
 - Registry lane: re-run/re-dispatch the publish once the assets exist; the
   provenance ref stays refs/tags/stdlib-v0.62.0 and the subject sha is now
   0e63101 (tree = 80e767b + workflow YAML fix + regex clause fix).
+- OUTCOME 2026-09-29 00:10Z: run 36495200067 COMPLETE -- validate, ubuntu
+  gates (1h2m47s), windows gates (1h14m34s), package + GitHub Release all
+  success; staging canary dispatch success; only the known
+  STDLIB_VERSION pin-PR PAT gap stayed red (continue-on-error). Release
+  `stdlib-v0.62.0` published with assets `xiom-std-0.62.0.tar.gz`
+  (1,055,855 bytes) and `SHA256SUMS` at
+  https://github.com/xiom-lang/stdlib/releases/tag/stdlib-v0.62.0.
+  Registry lane informed: assets live, subject sha
+  0e631018100b157539614cc92fc471f22663baff, ref refs/tags/stdlib-v0.62.0;
+  re-dispatch the publish to complete verification.
 
 **RELAY 2026-09-28 (registry -> compiler/stdlib)**
 - v0.62.0 tag/commit confirmed (80e767b). The registry canary is blocked
