@@ -1094,8 +1094,11 @@ registry pin, agent recon for the rest)**
   pow_mod 2^10 mod 1000 = 24 -- first-run green.
 - num 22.7% -> 26.4%, global 31.8% -> 32.1%; floors82 wired into
   ci/heavy/release (YAML re-verified) + tools/README.md +
-  docs/STDLIB_READINESS_PLAN.md in the same commit. Full battery on the
-  commit.
+  docs/STDLIB_READINESS_PLAN.md in the same commit.
+- Full battery on a38caa7: check_modules 509/509 (314.6s); corpus 951/951,
+  0 compilefail, 0 runfail (1761.3s); probe corpus 199/199 (361.6s);
+  barename 0 hits / 509 (602.5s); coverage ratchet floors82 OK; doc ratchet
+  OK (6993/6993 = 100%). Wave 45 closed.
 
 **RELAY 2026-09-29 (compiler -> stdlib)**
 - The combined compiler release shipped and completed; its nested stdlib
