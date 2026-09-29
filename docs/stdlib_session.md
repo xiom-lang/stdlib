@@ -1076,6 +1076,36 @@ registry pin, agent recon for the rest)**
 - The packages lane avoided `&` of call results (binding locals first) and
   kept retry state flat; no stdlib-side change requested.
 
+**SESSION 2026-09-29 block 2 (wave 45: xiom.bigint remainder)**
+- Wave 45 (floors82): 21 clauses completing the bigint surface:
+  from_str/from_base/from_hex `s == "" => is_ok == false`;
+  to_int/to_u64/to_u128/to_i128 `digits.len() == 0 => is_ok == true`
+  (zero fits every conversion); is_even false => digits non-empty; is_odd
+  true => digits non-empty; is_one/is_prime true => negative false;
+  next_prime canonical + non-negative; div_mod canonical on both tuple
+  components (nested `result.0.digits.len()` shape validated by the
+  probe); sqrt_rem canonical both; pow_mod canonical + non-negative;
+  ext_gcd canonical on all three + gcd component non-negative; and exact
+  compare-delegation clauses on eq/lt/le/gt/ge using in-module
+  `bigint_compare` calls in the clause (`result == (bigint_compare(a, b)
+  < 0)`), which the probe validated (199th).
+- Probe p_wave45_shapes.xi: parsing Err paths, 10^30 out of i64 range,
+  parity/prime/next_prime KATs, (17,5) -> (3,2), sqrt_rem(10) -> (3,1),
+  pow_mod 2^10 mod 1000 = 24 -- first-run green.
+- num 22.7% -> 26.4%, global 31.8% -> 32.1%; floors82 wired into
+  ci/heavy/release (YAML re-verified) + tools/README.md +
+  docs/STDLIB_READINESS_PLAN.md in the same commit. Full battery on the
+  commit.
+
+**RELAY 2026-09-29 (compiler -> stdlib)**
+- The combined compiler release shipped and completed; its nested stdlib
+  checkout will refresh to the force-updated tag (0e63101) at the next
+  compiler release.
+- The held XIOM_STRICT_BRACKETS flip plus the 3 mixed-bracket sites
+  (io/fs.xi lines 36 and 244, math/algebra_extended.xi line 311) are ready
+  to ride the next compiler wave; the stdlib must fix those 3 sites in
+  the same wave as the pin bump that enables strict brackets.
+
 **RELAY 2026-09-28 (registry -> compiler/stdlib)**
 - v0.62.0 tag/commit confirmed (80e767b). The registry canary is blocked
   on the pending registry-publish environment approval for run 36438204239;

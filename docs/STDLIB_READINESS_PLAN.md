@@ -588,8 +588,23 @@ T1/T2 yields.
        uppercase vs to_hex lowercase). num 17.2% -> 22.7%, global 31.4% ->
        31.8%. Next: bigint remainder (base parsing/to_int families) then
        bigfloat.
+       Wave 45 (2026-09-29): coverage wave 9 -- xiom.bigint remainder (21
+       clauses): empty/invalid parse guards on from_str/from_base/from_hex,
+       zero-fits-every-conversion on to_int/to_u64/to_u128/to_i128,
+       parity/one/prime predicates (`is_even == false => digits non-empty`,
+       `is_odd == true => digits non-empty`, `is_one == true => negative
+       false`, `is_prime == true => negative false`), next_prime canonical
+       and non-negative, canonical tuple claims on div_mod (both
+       components) and sqrt_rem (both), canonical plus non-negative on
+       pow_mod, non-negative gcd component on ext_gcd, and exact
+       compare-delegation claims on eq/lt/le/gt/ge
+       (`result == (bigint_compare(a, b) < 0)` etc.). Probe
+       tools/probes/p_wave45_shapes.xi (199th): parsing Err paths, zero
+       conversions, 10^30 out of i64, parity/prime/next_prime KATs,
+       (17,5) -> (3,2), sqrt_rem(10) -> (3,1), pow_mod 2^10 mod 1000 = 24.
+       num 22.7% -> 26.4%, global 31.8% -> 32.1%. Next: bigfloat.
        Ratchet:
-       tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors81.json
+       tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors82.json
 
        (repo tooling as of the split; positive + negative runs verified;
        earlier floors kept at

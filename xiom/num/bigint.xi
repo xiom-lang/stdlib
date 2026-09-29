@@ -249,7 +249,9 @@ pub fn bigint_from_u64(n: UInt64) -> BigInt
 
 /// Parse decimal string. Uses xiom.string.str_slice for char access.
 /// O(n2) due to repeated multiply-by-10-and-add during accumulation.
-pub fn bigint_from_str(s: Str) -> Result[BigInt, Str] {
+pub fn bigint_from_str(s: Str) -> Result[BigInt, Str]
+  ensures: (s == "") => (result.is_ok == false)
+{
   if s.len() == 0 { return Err("empty string"); }
   var result = BigInt{ digits: Vec[Int].new(); negative: false; };
   result.digits.push(0);
@@ -492,7 +494,9 @@ pub fn bigint_mul(a: &BigInt, b: &BigInt) -> BigInt
 }
 
 /// Truncating division: returns (quotient, remainder).
-pub fn bigint_div_mod(a: &BigInt, b: &BigInt) -> (BigInt, BigInt) {
+pub fn bigint_div_mod(a: &BigInt, b: &BigInt) -> (BigInt, BigInt)
+  ensures: (((result.0.negative == true) => (result.0.digits.len() > 0)) && ((result.0.digits.len() == 0) => (result.0.negative == false))) && (((result.1.negative == true) => (result.1.digits.len() > 0)) && ((result.1.digits.len() == 0) => (result.1.negative == false)))
+{
   if bigint_is_zero(b) {
     return (BigInt{ digits: Vec[Int].new(); negative: false; },
             BigInt{ digits: Vec[Int].new(); negative: false; });
@@ -754,6 +758,7 @@ fn _parse_digit_base(c: Str) -> Int {
 /// Parse a string in base 2..36 (optional leading - or +).
 pub fn bigint_from_base(s: Str, base: Int) -> Result[BigInt, Str]
   requires: base >= 2 && base <= 36
+  ensures: (s == "") => (result.is_ok == false)
 {
   if s.len() == 0 { return Err("empty string"); }
   if base < 2 || base > 36 { return Err("invalid base"); }
@@ -780,7 +785,9 @@ pub fn bigint_from_base(s: Str, base: Int) -> Result[BigInt, Str]
 }
 
 /// Parse hexadecimal ("ff", "-1a"). Case-insensitive; no "0x" prefix.
-pub fn bigint_from_hex(s: Str) -> Result[BigInt, Str] {
+pub fn bigint_from_hex(s: Str) -> Result[BigInt, Str]
+  ensures: (s == "") => (result.is_ok == false)
+{
   return bigint_from_base(s, 16);
 }
 
@@ -841,7 +848,9 @@ pub fn bigint_to_hex(b: &BigInt) -> Str
 }
 
 /// Range-checked conversion to Int (i64). Err on overflow.
-pub fn bigint_to_int(b: &BigInt) -> Result[Int, Str] {
+pub fn bigint_to_int(b: &BigInt) -> Result[Int, Str]
+  ensures: (b.digits.len() == 0) => (result.is_ok == true)
+{
   var limit = bigint_from_int(INT_MAX);
   if bigint_is_negative(b) {
     var lim_neg = bigint_neg(&bigint_add(&limit, &bigint_one()));
@@ -868,7 +877,9 @@ pub fn bigint_to_int(b: &BigInt) -> Result[Int, Str] {
 // helpers); the range pre-check guarantees no wraparound.
 
 /// Convert to UInt64 (0 .. 2^64-1). Negative or >= 2^64 -> Err.
-pub fn bigint_to_u64(b: &BigInt) -> Result[UInt64, Str] {
+pub fn bigint_to_u64(b: &BigInt) -> Result[UInt64, Str]
+  ensures: (b.digits.len() == 0) => (result.is_ok == true)
+{
   if bigint_is_negative(b) { return Err("out of u64 range"); }
   var max = bigint_from_u64(18446744073709551615 as UInt64);
   if bigint_compare(b, &max) > 0 { return Err("out of u64 range"); }
@@ -883,7 +894,9 @@ pub fn bigint_to_u64(b: &BigInt) -> Result[UInt64, Str] {
 }
 
 /// Convert to UInt128 (0 .. 2^128-1). Negative or >= 2^128 -> Err.
-pub fn bigint_to_u128(b: &BigInt) -> Result[UInt128, Str] {
+pub fn bigint_to_u128(b: &BigInt) -> Result[UInt128, Str]
+  ensures: (b.digits.len() == 0) => (result.is_ok == true)
+{
   if bigint_is_negative(b) { return Err("out of u128 range"); }
   var max = bigint_from_base("ffffffffffffffffffffffffffffffff", 16);
   match max {
@@ -903,7 +916,9 @@ pub fn bigint_to_u128(b: &BigInt) -> Result[UInt128, Str] {
 }
 
 /// Convert to Int128 (-2^127 .. 2^127-1). Out of range -> Err.
-pub fn bigint_to_i128(b: &BigInt) -> Result[Int128, Str] {
+pub fn bigint_to_i128(b: &BigInt) -> Result[Int128, Str]
+  ensures: (b.digits.len() == 0) => (result.is_ok == true)
+{
   var lo = bigint_from_base("80000000000000000000000000000000", 16);
   var hi = bigint_from_base("7fffffffffffffffffffffffffffffff", 16);
   match lo {
@@ -934,18 +949,24 @@ pub fn bigint_to_i128(b: &BigInt) -> Result[Int128, Str] {
 }
 
 /// -- Predicates ---------------------------------------------------------------
-pub fn bigint_is_one(b: &BigInt) -> Bool {
+pub fn bigint_is_one(b: &BigInt) -> Bool
+  ensures: (result == true) => (b.negative == false)
+{
   return bigint_compare(b, &bigint_one()) == 0;
 }
 
 /// True when the value is even.
-pub fn bigint_is_even(b: &BigInt) -> Bool {
+pub fn bigint_is_even(b: &BigInt) -> Bool
+  ensures: (result == false) => (b.digits.len() > 0)
+{
   if bigint_is_zero(b) { return true; }
   return b.digits[0] % 2 == 0;
 }
 
 /// True when the value is odd.
-pub fn bigint_is_odd(b: &BigInt) -> Bool {
+pub fn bigint_is_odd(b: &BigInt) -> Bool
+  ensures: (result == true) => (b.digits.len() > 0)
+{
   return !bigint_is_even(b);
 }
 
@@ -972,6 +993,7 @@ pub fn bigint_div(a: &BigInt, b: &BigInt) -> BigInt
 pub fn bigint_pow_mod(base: &BigInt, exp: &BigInt, m: &BigInt) -> BigInt
   requires: !bigint_is_zero(m)
   requires: !bigint_is_negative(exp)
+  ensures: (((result.negative == true) => (result.digits.len() > 0)) && ((result.digits.len() == 0) => (result.negative == false))) && (result.negative == false)
 {
   if bigint_is_zero(m) { return bigint_zero(); }
   if bigint_is_one(m) { return bigint_zero(); }
@@ -1016,6 +1038,7 @@ pub fn bigint_sqrt(b: &BigInt) -> BigInt
 /// (floor sqrt, n - sqrt^2).
 pub fn bigint_sqrt_rem(b: &BigInt) -> (BigInt, BigInt)
   requires: !bigint_is_negative(b)
+  ensures: (((result.0.negative == true) => (result.0.digits.len() > 0)) && ((result.0.digits.len() == 0) => (result.0.negative == false))) && (((result.1.negative == true) => (result.1.digits.len() > 0)) && ((result.1.digits.len() == 0) => (result.1.negative == false)))
 {
   var s = bigint_sqrt(b);
   var r = bigint_sub(b, &bigint_mul(&s, &s));
@@ -1036,7 +1059,9 @@ pub fn bigint_lcm(a: &BigInt, b: &BigInt) -> BigInt
 
 /// Extended Euclidean algorithm: returns (g, x, y) with a*x + b*y == g,
 /// g = gcd(|a|, |b|) > 0.
-pub fn bigint_ext_gcd(a: &BigInt, b: &BigInt) -> (BigInt, BigInt, BigInt) {
+pub fn bigint_ext_gcd(a: &BigInt, b: &BigInt) -> (BigInt, BigInt, BigInt)
+  ensures: (((((result.0.negative == true) => (result.0.digits.len() > 0)) && ((result.0.digits.len() == 0) => (result.0.negative == false))) && (result.0.negative == false)) && (((result.1.negative == true) => (result.1.digits.len() > 0)) && ((result.1.digits.len() == 0) => (result.1.negative == false)))) && (((result.2.negative == true) => (result.2.digits.len() > 0)) && ((result.2.digits.len() == 0) => (result.2.negative == false)))
+{
   var old_r = bigint_abs(a);
   var r = bigint_abs(b);
   var old_s = bigint_one();
@@ -1064,7 +1089,9 @@ pub fn bigint_ext_gcd(a: &BigInt, b: &BigInt) -> (BigInt, BigInt, BigInt) {
 
 /// Miller-Rabin primality test. Deterministic for n < 3.3e24 (bases
 /// 2..37), probabilistic (error < 4^-rounds) above.
-pub fn bigint_is_prime(b: &BigInt) -> Bool {
+pub fn bigint_is_prime(b: &BigInt) -> Bool
+  ensures: (result == true) => (b.negative == false)
+{
   if bigint_is_negative(b) { return false; }
   var two = bigint_from_int(2);
   if bigint_compare(b, &two) < 0 { return false; }
@@ -1111,7 +1138,9 @@ pub fn bigint_is_prime(b: &BigInt) -> Bool {
 }
 
 /// Smallest prime strictly greater than b. next_prime(1) == 2.
-pub fn bigint_next_prime(b: &BigInt) -> BigInt {
+pub fn bigint_next_prime(b: &BigInt) -> BigInt
+  ensures: (((result.negative == true) => (result.digits.len() > 0)) && ((result.digits.len() == 0) => (result.negative == false))) && (result.negative == false)
+{
   var two = bigint_from_int(2);
   if bigint_compare(b, &two) < 0 { return two; }
   var c = bigint_add(b, &bigint_one());
@@ -1367,27 +1396,37 @@ pub fn bigint_bit_len(b: &BigInt) -> Int
 }
 
 /// -- Comparison wrappers ------------------------------------------------------
-pub fn bigint_eq(a: &BigInt, b: &BigInt) -> Bool {
+pub fn bigint_eq(a: &BigInt, b: &BigInt) -> Bool
+  ensures: result == (bigint_compare(a, b) == 0)
+{
   return bigint_compare(a, b) == 0;
 }
 
 /// Strictly less than.
-pub fn bigint_lt(a: &BigInt, b: &BigInt) -> Bool {
+pub fn bigint_lt(a: &BigInt, b: &BigInt) -> Bool
+  ensures: result == (bigint_compare(a, b) < 0)
+{
   return bigint_compare(a, b) < 0;
 }
 
 /// Less than or equal.
-pub fn bigint_le(a: &BigInt, b: &BigInt) -> Bool {
+pub fn bigint_le(a: &BigInt, b: &BigInt) -> Bool
+  ensures: result == (bigint_compare(a, b) <= 0)
+{
   return bigint_compare(a, b) <= 0;
 }
 
 /// Strictly greater than.
-pub fn bigint_gt(a: &BigInt, b: &BigInt) -> Bool {
+pub fn bigint_gt(a: &BigInt, b: &BigInt) -> Bool
+  ensures: result == (bigint_compare(a, b) > 0)
+{
   return bigint_compare(a, b) > 0;
 }
 
 /// Greater than or equal.
-pub fn bigint_ge(a: &BigInt, b: &BigInt) -> Bool {
+pub fn bigint_ge(a: &BigInt, b: &BigInt) -> Bool
+  ensures: result == (bigint_compare(a, b) >= 0)
+{
   return bigint_compare(a, b) >= 0;
 }
 

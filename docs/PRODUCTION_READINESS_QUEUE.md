@@ -94,6 +94,15 @@ floors81; num 17.2% -> 22.7%, global 31.4% -> 31.8%. Next: bigint
 remaining (base parsing / to_int families, payload-free pass), then
 bigfloat.
 
+Update 2026-09-29 (wave 45 landed): xiom.bigint remainder -- 21 clauses
+(parse Err guards, zero-fits conversions, parity/prime predicates,
+next_prime, div_mod/sqrt_rem/pow_mod/ext_gcd tuple canonical claims,
+exact compare wrappers); probe `p_wave45_shapes.xi` (199th); floors82;
+num 22.7% -> 26.4%, global 31.8% -> 32.1%. Next: bigfloat (75 pub).
+Pin-gated (compiler relay): the held XIOM_STRICT_BRACKETS flip needs the
+3 mixed-bracket sites fixed when the pin bump lands -- io/fs.xi lines
+36+244, math/algebra_extended.xi line 311.
+
 Remaining-to-100% snapshot (answer to the packages relay, 2026-09-27):
 the release gate is per-directory 100% pub-with-clause + doc 100% + all
 gates green. Current floors77: global 29.7%; math 31.0%; lowest dirs
