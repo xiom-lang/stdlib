@@ -1207,6 +1207,40 @@ registry pin, agent recon for the rest)**
   barename 0 hits / 509 (594.3s); coverage ratchet floors85 OK;
   module-smoke ratchet OK; doc ratchet OK. Wave 48 closed.
 
+**SESSION 2026-09-29 block 7 (wave 49: geom primitives, first family batch)**
+- Wave 49 (floors86): 52 clauses on the split geom primitive modules --
+  xiom.geom.vec (29: constructor fields; NaN-tolerant component mirrors on
+  add/sub/scale/dot/cross/lerp; `(result >= 0.0) || (result != result)` on
+  len/dist; zero-vector canonical forms on the three norm functions;
+  reflect `result.len() == 0 || result.len() == v.len()`; project
+  zero-or-NaN-or-length-matched; angle `result >= 0.0 && result < 4.0` or
+  NaN), xiom.geom.quat (11: identity fields; Hamilton-product component
+  mirrors; conjugate field mirrors; identity-or-nonzero forms on
+  inv/normalize/from_axis_angle; norm band; euler bands (-4,+4)/(-2,+2);
+  slerp endpoint-or-interior disjunction; rotate len 0/3), xiom.geom.mat
+  (12: identity/mul length claims; det
+  `(result != result) || (result == 0.0) || (m.len() > 0)`; inv presence
+  mirror; transpose `result.len() == 0 || m.len() > 0`; 4x4 transforms
+  len-0-or-4-and-m-4; look_at/perspective/ortho len 4; transform_point
+  len 0/3).
+- Probe p_wave49_shapes.xi (203rd): 99 return-code checks across the three
+  modules (component math, norms, quaternion products/slerp/rotate,
+  identity/mul/det/inv/transpose, 4x4 transforms, look-at/perspective/
+  ortho, transform-point w=0). First-run RED surfaced a NEW compiler
+  finding (below); green after the clause weakening.
+- NEW compiler finding (filed, tools/known_failures/p_clause_float_vec_index.xi):
+  clause-position indexing of Float64 vector elements reads garbage --
+  `result[0] == 1.0` on a Vec[Float64] result and `result[0].len() == 2` on
+  a Vec[Vec[Float64]] result violate ("contract violated: ensures at
+  <line>:12"); length-only claims on the same results and the identical
+  Vec[Int]/Vec[Vec[Int]] shapes PASS on v0.61.3 (isolation probes
+  t_idx_a..f run outside the repo). Found while landing the mat_identity
+  row claim; the shipped matrix clauses are len-only until the fix.
+- geom 10.6% -> 23.2% (52/414), global 32.8% -> 33.6%; floors86 wired
+  (YAML re-verified) + tools/README.md + plan + queue in the same commit.
+  All 52 wave functions are already referenced by existing geom smokes, so
+  the module-smoke baseline is unchanged (497/517, 3332/6200).
+
 **RELAY 2026-09-29 (packages -> compiler/stdlib)**
 - Pin moved 0.61.3 -> 0.62.1 mid-batch; every package suite re-ran clean,
   no code changes needed for the new compiler. Their sectest caught two

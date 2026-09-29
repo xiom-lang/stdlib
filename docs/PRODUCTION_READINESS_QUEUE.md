@@ -128,6 +128,20 @@ Relay (packages): pin moved 0.61.3 -> 0.62.1 mid-batch; all suites clean,
 no stdlib changes needed; their sectest catalog bugs (obs-fold trimming,
 max-age=abc) were package-side.
 
+Update 2026-09-29 (wave 49 landed): geom primitives -- first family batch
+(xiom.geom.vec + xiom.geom.quat + xiom.geom.mat), 52 clauses (component
+mirrors with NaN-tolerant disjunctions, zero-vector canonical forms for the
+norm functions, non-negative length bands, quaternion identity/slerp/
+axis-angle forms, matrix shape claims, mat_inv presence mirror). New
+compiler finding filed: `p_clause_float_vec_index.xi` -- clause-position
+indexing of Float64 vector elements reads garbage (`result[0]` on
+Vec[Float64] and `result[0].len()` on Vec[Vec[Float64]] violate; Int-vector
+and length-only controls pass), so the matrix row-length claims are
+len-only. Probe `p_wave49_shapes.xi` (203rd); floors86; geom 10.6% ->
+23.2%, global 32.8% -> 33.6%. Next: geom batch 2 (matrix.xi + vector.xi +
+quaternion.xi long-name domain), then curves/collision/geometry/polyhedra/
+linear.
+
 State 2026-09-29 (handoff snapshot 3, main 2a06a90): floors85 global 32.8%,
 math 38.8%, num 37.4%; probes 202; smoke 951; modules 509/509; barename
 0/509; doc 100%; module-smoke ratchet 497/517 modules, 3332/6200 pub fns.

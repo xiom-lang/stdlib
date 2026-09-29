@@ -15,6 +15,20 @@ xiom --force -o out.exe tools/known_failures/<file>.xi
 
 ## Current
 
+**Open finding 2026-09-29 (compiler v0.61.3): clause-position indexing of
+Float64 vector elements reads garbage.** In an `ensures` clause, indexing a
+`Vec[Float64]` return value (`result[0] == 1.0`) or a row of a
+`Vec[Vec[Float64]]` return value (`result[0].len() == 2`) fails with
+"contract violated: ensures at <line>:12" even though the values were just
+stored by the body; length-only claims on the same results (`result.len()`)
+are fine, and the identical shapes on `Vec[Int]` / `Vec[Vec[Int]]` PASS.
+Repro: `tools/known_failures/p_clause_float_vec_index.xi` (Int controls run
+green first, then `bug_f64` violates). Found while landing the wave-49 geom
+clauses; the shipped mat clauses were reduced to len-only claims. Expected:
+the clause sees the stored elements. Stdlib impact: row/column shape claims
+on Float64 matrices (`mat_identity`, `mat_mul`, `mat_transpose`, `mat_det`,
+`mat_inv`) are weakened to length/interval claims until this is fixed.
+
 **Open finding 2026-09-28 (compiler v0.61.3): a shape-mismatched `&Vec`
 argument compiles silently and crashes.** Passing `&Vec[Float64]` where
 `&Vec[Vec[Float64]]` is expected produces no diagnostic; the callee's

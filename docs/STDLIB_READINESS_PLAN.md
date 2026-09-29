@@ -643,13 +643,35 @@ T1/T2 yields.
        to_bigint truncation (1.5 -> 1, -1.5 -> -1), from_ratio (1/4, -3/4),
        pow10 (2e3, 1e-2), and the four *_int conversions on +-1.9 and zero.
        num 35.8% -> 37.4%, global 32.7% -> 32.8%. Next: geom.
+       Wave 49 (2026-09-29): coverage wave 13 -- geom primitives, first
+       family batch (52 clauses). xiom.geom.vec (29): constructor fields;
+       NaN-tolerant component mirrors on add/sub/scale/dot/cross/lerp;
+       non-negative bands on len/dist; zero-vector canonical forms on the
+       three norm functions; reflect len-0-or-input; project
+       zero-or-NaN-or-length-matched; angle [0,4) or NaN. xiom.geom.quat
+       (11): identity fields; Hamilton-product mirrors; conjugate;
+       identity-or-nonzero forms on inv/normalize/axis-angle; norm band;
+       euler bands; slerp endpoint-or-interior; rotate len 0/3.
+       xiom.geom.mat (12): identity/mul length claims; det
+       NaN-or-zero-or-nonempty; inv presence mirror; transpose
+       len-0-or-nonempty; 4x4 transforms len-0-or-4-and-m-4;
+       look_at/perspective/ortho len 4; transform_point len 0/3.
+       Fix-first: NEW compiler finding p_clause_float_vec_index.xi --
+       clause-position indexing of Float64 vector elements reads garbage
+       (Vec[Float64] element and Vec[Vec[Float64]] row reads violate; Int
+       and length-only controls pass), so the matrix row-length claims are
+       len-only until the compiler-lane fix. Probe
+       tools/probes/p_wave49_shapes.xi (203rd): 99 return-code checks
+       across the three modules. geom 10.6% -> 23.2%, global 32.8% ->
+       33.6%. Next: geom batch 2 (matrix/vector/quaternion long-name
+       domain), then curves/collision/geometry/polyhedra/linear.
        Ratchet:
-       tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors85.json
+       tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors86.json
        tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;
        earlier floors kept at
-       coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55/56/57/58/59/60/61/62/63/64/65.json).
+       coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55/56/57/58/59/60/61/62/63/64/65/66/67/68/69/70/71/72/73/74/75/76/77/78/79/80/81/82/83/84/85/86.json).
       Floors are per top-level stdlib/xiom directory and must be refreshed
       when a module is ADDED (new uncovered pub fns dilute the percentage
       -- TOML dropped serialize 6.1% -> 5.4%, tz dropped time 13% ->
