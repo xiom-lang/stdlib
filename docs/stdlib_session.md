@@ -1254,6 +1254,122 @@ registry pin, agent recon for the rest)**
   ptr.is_null workaround once the pin carries m142+; no stdlib change is
   required for the pin itself. This lane has not been asked to push.
 
+### HANDOFF 2026-09-29 (context-limit snapshot 3; read this plus docs/PRODUCTION_READINESS_QUEUE.md)
+
+**State**: main @ `2a06a90`, pushed and synced (bypass pushes noted by the
+remote). Compiler pin for local gates: v0.61.3 at
+`%TEMP%\kilo\stdlib_ws\xiom_v0613.exe` (rebuild recipe in the 2026-09-25
+handoff); the compiler lane shipped the combined release and packages now
+run on pin v0.62.1 (all package suites clean; no stdlib changes needed).
+Coverage floors85: **global 32.8% pub-with-clause, math 38.8%, num 37.4%**;
+probe corpus **202**; smoke corpus 951; modules 509/509 type-check clean;
+barename 0/509; doc scan 100% (6993/6993); **module-smoke ratchet live**
+(baseline `tools/module_smoke_floors.json`: 497/517 source modules exercised
+by a smoke, 3,332/6,200 public fns referenced).
+
+**Shipped**: stdlib **0.62.0 released** — tag `stdlib-v0.62.0` force-updated
+to `0e63101` (ruleset bypass), GitHub Release published 2026-09-29 00:10Z
+with `xiom-std-0.62.0.tar.gz` + `SHA256SUMS`, staging canary dispatched;
+registry lane has the subject sha and re-dispatches its publish. Two release
+blockers were root-caused and fixed on the way: (1) ci/heavy/release YAML
+indentation (`run:` nested under `shell: pwsh` -> invalid YAML; workflows
+0s-failed for every run) fixed in `c491b13` plus a `tag` recovery dispatch
+in release.yml; (2) `regex_unescape`'s Err-Str payload clause violated on
+Linux only (fixed `0e63101`; known_failures README upgraded: Err-payload
+clauses are unsafe on ANY platform).
+
+**Waves 36-48 landed since the last handoff** (all with probe + floors +
+same-commit docs + full battery; probes 190-202): B part 2b
+`linear_programming` (floors73); trig-family 25 clauses + the
+`_norm`/`sinpi`/`cospi`/`tanpi` +-inf hang fix (74); rounding + angular 26
+(75, incl. the angular -0.0 clause fix); algebra + transcendental 23 +
+`log1p(-1)` precondition fix (76); complex 19 (77); vectors 27 (78);
+matrices + number_systems + queueing 53 (79, first family batch);
+num float/convert/base/precision 37 + `_ilogb_abs`/`nextafter` power-of-two
+fix + NaN-tolerant `primitives.abs` (80); bigint core 33 (81); bigint
+remainder 21 (82); bigfloat core 30 (83); bigfloat transcendentals 24 (84);
+bigfloat remainder 9 (85). Also landed: `tools/module_smoke_scan.ps1` +
+baseline + ratchet wired into all three workflows (owner requirement: every
+module must have a smoke).
+
+**Owner directives in force**: (1) family batching allowed, 40-60 pub per
+wave to shorten the path; (2) ensure every module/function has smoke
+coverage — grow the module-smoke ratchet alongside contract waves; (3)
+release before 100% is acceptable when all gates are green, coverage
+continues toward 100% in the next release.
+
+**Rules (unchanged) plus hard-won additions**:
+- Wave protocol: read-only recon (agents OK but they time out on big files;
+  the per-function pass directly against source is often faster) -> new-shape
+  probe in tools/probes/ -> clauses -> `tools/coverage_scan.ps1 -DumpFloors
+  tools/coverage_floors<N>.json` -> wire the floors file into
+  .github/workflows/{ci,heavy,release}.yml + tools/README.md +
+  docs/STDLIB_READINESS_PLAN.md in the SAME commit -> pure-ASCII
+  single-quoted commit -> full battery (check_modules 509, corpus 951 with
+  `-RetryFailed`, probes corpus, barename 0/509, coverage + doc +
+  module-smoke ratchets).
+- YAML edits: after ANY workflow edit run `python -c "import yaml; ..."` on
+  the file; the `run:` line keeps EIGHT spaces under `shell: pwsh` (the
+  release-blocking incident is in this handoff).
+- Contracts run at runtime: every clause certainly true for all inputs
+  (including non-normalized structs a caller can construct); prefer
+  canonical-form/field claims; `result.significand.digits.len()`,
+  `result.0.digits.len()`, in-module clause calls and
+  `(x == expr) || (x != x)` NaN tolerance are proven shapes; NEVER read
+  Result/Option payloads in clauses.
+- One wave = one commit; no stdlib edits while a sweep is in flight; pushes
+  only when the release/compiler lane asks, after
+  `git log -1 --format='%an <%ae>'` shows Lefteris Notas
+  <lefterisnotas@gmail.com>; use `powershell -NoProfile -File tools\<x>.ps1`.
+- Probe lessons: module paths are declarations, not file paths
+  (`xiom.num.bigfloat`, `xiom.complex`); use `use <module>;` + leaf calls;
+  `.value` Option payload reads AV in probe code (use `.unwrap()`); extra
+  call arguments are silently ignored (declare tolerance params explicitly).
+
+**Pin-gated / relayed**: XIOM_STRICT_BRACKETS flip will need the 3
+mixed-bracket sites fixed in the pin-bump wave (`io/fs.xi` lines 36 and 244,
+`math/algebra_extended.xi` line 311); tcp_connect refused-port caveat is now
+activatable on pins carrying m146 (packages verified on 0.62.1); ptr.is_null
+workaround until a pin carries m142+; shape-mismatched `&Vec[Float64]`
+vs `&Vec[Vec[Float64]]` AV is in the compiler backlog
+(`tools/known_failures/p_vec_shape_arg_mismatch_av.xi`); NaN-abort class
+(`math.sqrt`/`math.ln` requires on NaN inputs) recorded but unfixed.
+
+**Remaining to 100% (order)**: wave 49 = **geom** (414 pub / ~370
+uncovered; batch-split: primitives -> curves -> transforms), then the low
+dirs in queue order (net 5.4%, serialize 5.4%, hash 8.9%, reflect 9.1%,
+iter 9.8%, convert 11.5%, format 13%, time 13%, misc 13.9%, os 15.3%,
+rand 16%, crypto 17%, log 19.1%, compress 21.1%, plus remaining core/stats
+gaps), then C (geom dedup, needs compiler-lane api_freeze regen), D (tzdata
+phase 2, check `PACKAGE-NAMESPACES.txt` first), E (untested-surface
+generator classes), F (next release cut). Smoke growth: the 20 modules with
+no smoke and the ~2,868 unreferenced functions are explicit targets; the
+`xiom.bigfloat` manifest-alias quirk in module_smoke_scan needs a look.
+
+**NEXT SESSION PROMPT (paste into a fresh session)**:
+
+```
+Continue the XIOM stdlib production-readiness work in E:\xiom-lang\stdlib (main @ 2a06a90 or later; origin synced).
+
+READ FIRST, in order:
+1. docs/stdlib_session.md -- the "HANDOFF 2026-09-29 (context-limit snapshot 3)" block at the top of the handoff region (plus the 2026-09-27 and 2026-09-25 handoffs for history and the pin rebuild recipe).
+2. docs/PRODUCTION_READINESS_QUEUE.md -- authoritative queue (sections C/D/E/F, the readiness outlook, the module-smoke requirement, and all contract/import gotchas).
+3. docs/RELEASE_CHECKLIST.md before any release action.
+
+STATE: main @ 2a06a90 (pushed; the remote reports PR/status-check bypass). Compiler pin v0.61.3 at %TEMP%\kilo\stdlib_ws\xiom_v0613.exe (rebuild recipe in the 2026-09-25 handoff if missing). Coverage floors85: global 32.8%, math 38.8%, num 37.4%. All gates green on the tip: check_modules 509/509; corpus 951/951; probes 202/202; barename 0/509; coverage ratchet floors85; module-smoke ratchet (497/517 modules, 3332/6200 pub fns); doc 100%. stdlib 0.62.0 is RELEASED (tag stdlib-v0.62.0 at 0e63101 with assets) and the registry lane owns its publish; the next release continues coverage toward 100%.
+
+FIRST TASK -- wave 49: the geom family (xiom/geom, 414 pub / ~370 uncovered). Batch-split per the owner's directive (families of 40-60 pub per wave): vec/quat/matrix primitives first, then curves/intersections/transforms. Protocol for EVERY wave:
+read-only recon (agents time out on big files -- read the source directly if needed) -> new-shape probe in tools/probes/ (RED on the stub/before, GREEN after) -> runtime-safe clauses (contracts run at runtime; every clause certainly true for all inputs incl. non-normalized structs; canonical-form/field claims; NEVER read Result/Option payloads in clauses; NaN-tolerant `(x == expr) || (x != x)` forms; parenthesize mixed comparisons) -> powershell -NoProfile -File tools\coverage_scan.ps1 -DumpFloors tools\coverage_floors<N>.json -> wire the floors file into .github/workflows/{ci,heavy,release}.yml (keep `run:` at EIGHT spaces under `shell: pwsh`; after ANY workflow edit run `python -c "import yaml, yaml.safe_load(...)"` on it) + tools/README.md + docs/STDLIB_READINESS_PLAN.md + docs/stdlib_session.md in the SAME commit -> pure-ASCII single-quoted commit -> full battery: powershell -NoProfile -File tools\check_modules.ps1 -Compiler <pin> ; tools\run_smokes.ps1 -Compiler <pin> -Workers 8 -RetryFailed ; same with -Corpus tools\probes ; tools\barename_scan.ps1 ; tools\coverage_scan.ps1 -RatchetFile tools\coverage_floors<N>.json ; tools\doc_scan.ps1 -RatchetFile tools\doc_baseline4.json ; tools\module_smoke_scan.ps1 -BaselineFile tools\module_smoke_floors.json. One wave = one commit.
+
+ALSO IN SCOPE each wave: smoke-growth (the 20 modules with no smoke and the ~2,868 unreferenced pub fns are ratchet targets; dump tools/module_smoke_floors.json upward as they land) and any fix-first bugs the probe catches.
+
+THEN, in order: remaining geom sub-batches; the low dirs (net 5.4%, serialize 5.4%, hash 8.9%, reflect 9.1%, iter 9.8%, convert 11.5%, format 13%, time 13%, misc 13.9%, os 15.3%, rand 16%, crypto 17%, log 19.1%, compress 21.1%, then core/stats gaps); C (geom dedup, needs the compiler-lane api_freeze snapshot regen); D (tzdata phase 2; check packages' docs/PACKAGE-NAMESPACES.txt before landing new namespaces); E (untested-surface generator classes); F (next release cut). Pin-gated: fix the 3 mixed-bracket sites (io/fs.xi 36+244, math/algebra_extended.xi 311) in the wave that takes the XIOM_STRICT_BRACKETS pin bump; tcp_connect refused-port is verifiable on a pin carrying m146 (0.62.1 verified); ptr.is_null workaround until m142+.
+
+RULES: no stdlib edits while a sweep is in flight; pushes only when the release/compiler lane asks, always after `git log -1 --format='%an <%ae>'` prints Lefteris Notas <lefterisnotas@gmail.com>; no pwsh -- use `powershell -NoProfile -File tools\<script>.ps1`; keep repo edits single-threaded (recon agents read-only); report new compiler bugs in tools/known_failures/ with a minimal probe.
+
+GOTCHAS: module paths are the declared names, not file paths (xiom.num.bigfloat, xiom.complex, xiom.math.optimization); Err/Ok payload reads in clauses are unsafe on any platform (Linux release-blocking incident 2026-09-28); `.value` Option payload reads AV in probe code (use `.unwrap()`); extra call arguments are silently ignored; the transient runner flakes (0s failures, occasional rc=-1/COMPILE-FAIL on a single file) are load-related -- a solo retry/rerun is safe.
+```
+
 ### HANDOFF 2026-09-27 (context-limit snapshot 2; read this plus docs/PRODUCTION_READINESS_QUEUE.md)
 **State**: main @ `1fbb45a`, pushed and synced with origin (two bypass pushes
 this stretch: `c193bc4`, `1fbb45a`; the remote reports PR/status-check

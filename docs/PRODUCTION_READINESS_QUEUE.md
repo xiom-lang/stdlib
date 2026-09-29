@@ -128,6 +128,15 @@ Relay (packages): pin moved 0.61.3 -> 0.62.1 mid-batch; all suites clean,
 no stdlib changes needed; their sectest catalog bugs (obs-fold trimming,
 max-age=abc) were package-side.
 
+State 2026-09-29 (handoff snapshot 3, main 2a06a90): floors85 global 32.8%,
+math 38.8%, num 37.4%; probes 202; smoke 951; modules 509/509; barename
+0/509; doc 100%; module-smoke ratchet 497/517 modules, 3332/6200 pub fns.
+stdlib 0.62.0 released (tag stdlib-v0.62.0 = 0e63101, assets published,
+registry publish owned by that lane). Next unit: wave 49 = geom
+(batch-split primitives -> curves -> transforms, 40-60 pub per wave), then
+the low dirs; smoke-growth runs alongside every wave. Full continuation
+prompt is in docs/stdlib_session.md (HANDOFF 2026-09-29 block).
+
 Remaining-to-100% snapshot (answer to the packages relay, 2026-09-27):
 the release gate is per-directory 100% pub-with-clause + doc 100% + all
 gates green. Current floors77: global 29.7%; math 31.0%; lowest dirs
