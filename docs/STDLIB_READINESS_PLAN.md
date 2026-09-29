@@ -605,6 +605,7 @@ T1/T2 yields.
        num 22.7% -> 26.4%, global 31.8% -> 32.1%. Next: bigfloat.
        Ratchet:
        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors82.json
+       tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;
        earlier floors kept at

@@ -130,6 +130,16 @@ current scope, or ~70-80 if whole families are batched at 40-60 pub per
 wave. Units C/D/E add fixed-size work on top; adopting wishlist modules
 grows the denominator and pushes 100% further out.
 
+Module smoke coverage (owner requirement, 2026-09-29): every stdlib module
+must be exercised by at least one smoke file, tracked as a monotone gate.
+Baseline `tools/module_smoke_floors.json` (from
+`tools/module_smoke_scan.ps1`): 497/517 source modules (96.1%) covered
+(509 manifest modules + 8 transitive submodules), 3,332/6,200 public
+functions (53.7%) referenced by a qualified smoke call. The ratchet is
+wired into ci/heavy/release and fails if the covered module or function
+counts drop; the remaining 20 modules and 2,868 unreferenced functions are
+targets for the smoke-growth waves that accompany the coverage waves.
+
 Packages growth wishlist (external channel): `xiom-packages` repo,
 `docs/STDLIB-WISHLIST.md` (namespace snapshot:
 `docs/PACKAGE-NAMESPACES.txt`, 342 package names / 366 module namespaces).

@@ -1109,6 +1109,24 @@ registry pin, agent recon for the rest)**
   to ride the next compiler wave; the stdlib must fix those 3 sites in
   the same wave as the pin bump that enables strict brackets.
 
+**SESSION 2026-09-29 block 3 (module smoke-coverage gate, owner requirement)**
+- Owner requirement: ensure every stdlib module (and ideally every public
+  function) has smoke coverage. Built `tools/module_smoke_scan.ps1`: a
+  static scan that maps every `module` declaration in xiom/**/*.xi to its
+  public functions and checks each against the smoke corpus by explicit
+  `use <module>;` or a qualified call `<leaf>.<fn>(` (which also matches
+  parent-module aliases like `math.algebra.gcd(`). Baseline dumped to
+  `tools/module_smoke_floors.json` and wired as a monotone ratchet into
+  ci/heavy/release (a step after the coverage ratchet).
+- Baseline: 497/517 source modules (96.1%) covered -- 509 manifest modules
+  plus 8 transitive submodules that exist in source but not the 509-module
+  manifest (xiom.ecc, xiom.math.tower, xiom.net.url, xiom.os.args,
+  xiom.os.platform, xiom.os.signal, xiom.os.sysinfo, xiom.string.builder);
+  3,332/6,200 public functions (53.7%) referenced by a qualified smoke
+  call. The 20 uncovered modules and 2,868 unreferenced functions become
+  explicit targets for the smoke-growth waves alongside the contract
+  coverage waves; the ratchet only lets those numbers grow.
+
 **RELAY 2026-09-28 (registry -> compiler/stdlib)**
 - v0.62.0 tag/commit confirmed (80e767b). The registry canary is blocked
   on the pending registry-publish environment approval for run 36438204239;

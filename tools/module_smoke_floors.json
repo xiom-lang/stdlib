@@ -1,0 +1,29 @@
+﻿{
+    "generated":  "2026-09-29T15:34:37.7148257Z",
+    "totalModules":  517,
+    "coveredModules":  497,
+    "totalPublicFns":  6200,
+    "coveredPublicFns":  3332,
+    "missingModules":  [
+                           "xiom.async",
+                           "xiom.async.io",
+                           "xiom.bigfloat",
+                           "xiom.convert.overflow",
+                           "xiom.crypto.aead",
+                           "xiom.crypto.aes",
+                           "xiom.crypto.md5",
+                           "xiom.crypto.sha",
+                           "xiom.format.number",
+                           "xiom.format.textual",
+                           "xiom.math.interfaces",
+                           "xiom.math.precision",
+                           "xiom.math.tower",
+                           "xiom.math.trigonometric_constants",
+                           "xiom.num.convert",
+                           "xiom.os.signal",
+                           "xiom.reflect",
+                           "xiom.search",
+                           "xiom.simd",
+                           "xiom.thread"
+                       ]
+}

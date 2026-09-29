@@ -70,6 +70,10 @@ jobs:
         shell: pwsh
         run: ./tools/coverage_scan.ps1 -RatchetFile ./tools/coverage_floors82.json
 
+      - name: Module smoke-coverage ratchet
+        shell: pwsh
+        run: ./tools/module_smoke_scan.ps1 -BaselineFile ./tools/module_smoke_floors.json
+
       - name: Upload results
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
