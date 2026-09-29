@@ -1057,8 +1057,24 @@ registry pin, agent recon for the rest)**
   to_base is uppercase), not stdlib bugs.
 - num 17.2% -> 22.7%, global 31.4% -> 31.8%; floors81 wired into
   ci/heavy/release (8-space indent, PyYAML re-verified) + tools/README.md +
-  docs/STDLIB_READINESS_PLAN.md in the same commit. Full battery on the
-  commit.
+  docs/STDLIB_READINESS_PLAN.md in the same commit.
+- Full battery on f48045d: check_modules 509/509 (419.3s); corpus 951/951,
+  0 compilefail, 0 runfail (1982.6s); probe corpus 198/198 (426.2s);
+  barename 0 hits / 509 (684.6s); coverage ratchet floors81 OK; doc ratchet
+  OK (6993/6993 = 100%). Wave 44 closed.
+
+**RELAY 2026-09-29 (packages -> compiler/stdlib)**
+- `Vec.pop()` returns `Option[T]` (not T); the packages pool matches it
+  exhaustively. BigInt `_trim` discards the popped value, which still
+  compiles; no stdlib action.
+- Int constants (1e12) and saturating add/mul helpers compile with
+  wrap-free intermediates.
+- E001 "cannot borrow as mutable while immutably borrowed" advisory
+  warnings appear in the pool (12) and backoff (4) test suites when &/&mut
+  calls interleave on one local -- benign (program_exit=0), same class as
+  the documented tls warnings; compiler-lane awareness only.
+- The packages lane avoided `&` of call results (binding locals first) and
+  kept retry state flat; no stdlib-side change requested.
 
 **RELAY 2026-09-28 (registry -> compiler/stdlib)**
 - v0.62.0 tag/commit confirmed (80e767b). The registry canary is blocked
