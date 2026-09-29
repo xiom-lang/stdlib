@@ -1201,8 +1201,11 @@ registry pin, agent recon for the rest)**
   truncation, from_ratio, pow10, the four *_int conversions on +-1.9 and
   zero -- first-run green.
 - num 35.8% -> 37.4%, global 32.7% -> 32.8%; floors85 wired (YAML
-  re-verified) + tools/README.md + plan in the same commit. Full battery on
-  the commit.
+  re-verified) + tools/README.md + plan in the same commit.
+- Full battery on 75f6987: check_modules 509/509 (460.3s); corpus 951/951,
+  0 compilefail, 0 runfail (1643.8s); probe corpus 202/202 (383.8s);
+  barename 0 hits / 509 (594.3s); coverage ratchet floors85 OK;
+  module-smoke ratchet OK; doc ratchet OK. Wave 48 closed.
 
 **RELAY 2026-09-29 (packages -> compiler/stdlib)**
 - Pin moved 0.61.3 -> 0.62.1 mid-batch; every package suite re-ran clean,
