@@ -1127,6 +1127,23 @@ registry pin, agent recon for the rest)**
   explicit targets for the smoke-growth waves alongside the contract
   coverage waves; the ratchet only lets those numbers grow.
 
+**WAVE 46 PLAN NOTES (bigfloat scoping, 2026-09-29)**
+- `xiom/num/bigfloat.xi` (~75 pub): `pub type BigFloat = { sign: Bool;
+  exponent: Int; significand: BigInt; precision: Int; }`.
+- Canonical form from `_normalize`: zero significand -> sign=false,
+  exponent=0; otherwise significand made positive (`bigint_abs`) with the
+  sign carried in `sign`. Planned claim family (same style as wave 44/45):
+  nested-field canonicality `((result.significand.negative == true) =>
+  (result.significand.digits.len() > 0))`; zero-sign implication
+  `((result.significand.digits.len() == 0) => (result.sign == false))`;
+  exact shapes for bigfloat_zero/one/ten where the body is a literal;
+  compare/sign ranges; to_str non-emptiness. Two new shapes to validate in
+  the probe first: the nested `result.significand.digits.len()` chain and
+  cross-module `xiom.bigint.bigint_is_zero(&...)` calls inside clauses.
+  SKIP payload-returning parsers/conversions unless a payload-free claim
+  is available. The recon agent timed out on this file; do the
+  per-function pass directly against the source next.
+
 **RELAY 2026-09-28 (registry -> compiler/stdlib)**
 - v0.62.0 tag/commit confirmed (80e767b). The registry canary is blocked
   on the pending registry-publish environment approval for run 36438204239;
