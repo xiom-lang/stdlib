@@ -103,6 +103,15 @@ Pin-gated (compiler relay): the held XIOM_STRICT_BRACKETS flip needs the
 3 mixed-bracket sites fixed when the pin bump lands -- io/fs.xi lines
 36+244, math/algebra_extended.xi line 311.
 
+Update 2026-09-29 (wave 46 landed): xiom.num.bigfloat core -- 30 clauses
+(canonical-form family on the normalized results: non-negative
+significand, empty-significand => sign false, sign true => non-empty
+significand; exact zero; predicates/ranges; probe `p_wave46_shapes.xi`
+(200th)); floors83; num 26.4% -> 31.6%, global 32.1% -> 32.5%. Next:
+bigfloat transcendentals, then geom. Note: the module path is
+`xiom.num.bigfloat` (smoke_bigfloat exists; the module-smoke scan's
+`xiom.bigfloat` manifest alias is a baseline quirk to revisit).
+
 Remaining-to-100% snapshot (answer to the packages relay, 2026-09-27):
 the release gate is per-directory 100% pub-with-clause + doc 100% + all
 gates green. Current floors77: global 29.7%; math 31.0%; lowest dirs

@@ -52,34 +52,46 @@ var _default_round: RoundMode = RoundMode.Nearest;
 var _default_precision: Int = 64;
 
 /// Constants (constructor functions -- see header note)
-pub fn bigfloat_zero() -> BigFloat {
+pub fn bigfloat_zero() -> BigFloat
+  ensures: ((result.sign == false) && (result.significand.digits.len() == 0)) && (result.exponent == 0)
+{
   return BigFloat{ sign: false; exponent: 0;
                    significand: xiom.bigint.bigint_zero(); precision: _default_precision; };
 }
 
 /// Constant 1.0 with default precision.
-pub fn bigfloat_one() -> BigFloat {
+pub fn bigfloat_one() -> BigFloat
+  ensures: (((result.significand.negative == false) && ((result.significand.digits.len() == 0) => (result.sign == false))) && ((result.sign == true) => (result.significand.digits.len() > 0)))
+{
   return bigfloat_from_int(1);
 }
 
 /// Constant 2.0 with default precision.
-pub fn bigfloat_two() -> BigFloat {
+pub fn bigfloat_two() -> BigFloat
+  ensures: (((result.significand.negative == false) && ((result.significand.digits.len() == 0) => (result.sign == false))) && ((result.sign == true) => (result.significand.digits.len() > 0)))
+{
   return bigfloat_from_int(2);
 }
 
 /// Constant 10.0 with default precision.
-pub fn bigfloat_ten() -> BigFloat {
+pub fn bigfloat_ten() -> BigFloat
+  ensures: (((result.significand.negative == false) && ((result.significand.digits.len() == 0) => (result.sign == false))) && ((result.sign == true) => (result.significand.digits.len() > 0)))
+{
   return bigfloat_from_int(10);
 }
 
 /// Constant 0.5 with default precision.
-pub fn bigfloat_half() -> BigFloat {
+pub fn bigfloat_half() -> BigFloat
+  ensures: (((result.significand.negative == false) && ((result.significand.digits.len() == 0) => (result.sign == false))) && ((result.sign == true) => (result.significand.digits.len() > 0)))
+{
   return BigFloat{ sign: false; exponent: -1;
                    significand: xiom.bigint.bigint_from_int(5); precision: _default_precision; };
 }
 
 /// pi to 100 decimal digits.
-pub fn bigfloat_pi() -> BigFloat {
+pub fn bigfloat_pi() -> BigFloat
+  ensures: (((result.significand.negative == false) && ((result.significand.digits.len() == 0) => (result.sign == false))) && ((result.sign == true) => (result.significand.digits.len() > 0)))
+{
   var r = bigfloat_from_str("3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679");
   match r {
     Ok(v) => { return v; },
@@ -88,7 +100,9 @@ pub fn bigfloat_pi() -> BigFloat {
 }
 
 /// e to 100 decimal digits.
-pub fn bigfloat_e() -> BigFloat {
+pub fn bigfloat_e() -> BigFloat
+  ensures: (((result.significand.negative == false) && ((result.significand.digits.len() == 0) => (result.sign == false))) && ((result.sign == true) => (result.significand.digits.len() > 0)))
+{
   var r = bigfloat_from_str("2.7182818284590452353602874713526624977572470936999595749669676277240766303535475945713821785251664274");
   match r {
     Ok(v) => { return v; },
@@ -202,7 +216,9 @@ pub fn bigfloat_get_round_mode() -> RoundMode {
 }
 
 /// Constructors
-pub fn bigfloat_from_int(n: Int) -> BigFloat {
+pub fn bigfloat_from_int(n: Int) -> BigFloat
+  ensures: (((result.significand.negative == false) && ((result.significand.digits.len() == 0) => (result.sign == false))) && ((result.sign == true) => (result.significand.digits.len() > 0)))
+{
   var neg = n < 0;
   var absn = n;
   if neg { absn = -absn; }
@@ -248,7 +264,9 @@ pub fn bigfloat_from_float(f: Float64) -> BigFloat
 
 /// Parse decimal strings: "3.14159", "-1e-10", "2.5E+3", ".5", "3.".
 /// Exponent range is Int (i64). Result is normalized.
-pub fn bigfloat_from_str(s: Str) -> Result[BigFloat, Str] {
+pub fn bigfloat_from_str(s: Str) -> Result[BigFloat, Str]
+  ensures: (s == "") => (result.is_ok == false)
+{
   if s.len() == 0 { return Err("empty string"); }
   var neg = false;
   var pos = 0;
@@ -305,7 +323,9 @@ pub fn bigfloat_from_str(s: Str) -> Result[BigFloat, Str] {
 }
 
 /// Convert a BigInt to BigFloat.
-pub fn bigfloat_from_bigint(b: &BigInt) -> BigFloat {
+pub fn bigfloat_from_bigint(b: &BigInt) -> BigFloat
+  ensures: (((result.significand.negative == false) && ((result.significand.digits.len() == 0) => (result.sign == false))) && ((result.sign == true) => (result.significand.digits.len() > 0)))
+{
   var neg = xiom.bigint.bigint_is_negative(b);
   var mag = xiom.bigint.bigint_abs(b);
   return BigFloat{ sign: neg; exponent: 0; significand: mag; precision: _default_precision; };
@@ -314,6 +334,7 @@ pub fn bigfloat_from_bigint(b: &BigInt) -> BigFloat {
 /// Value `n` with the given decimal working precision.
 pub fn bigfloat_with_precision(n: Int, precision: Int) -> BigFloat
   requires: precision >= 1
+  ensures: (((result.significand.negative == false) && ((result.significand.digits.len() == 0) => (result.sign == false))) && ((result.sign == true) => (result.significand.digits.len() > 0)))
 {
   var f = bigfloat_from_int(n);
   f.precision = precision;
@@ -326,7 +347,9 @@ pub fn bigfloat_with_precision(n: Int, precision: Int) -> BigFloat
 
 /// Exact decimal representation of the stored value ("shortest round-trip"
 /// by construction: the representation IS the decimal).
-pub fn bigfloat_to_str(f: &BigFloat) -> Str {
+pub fn bigfloat_to_str(f: &BigFloat) -> Str
+  ensures: result != ""
+{
   if xiom.bigint.bigint_is_zero(&f.significand) { return "0"; }
   var digits = xiom.bigint.bigint_to_str(&f.significand);
   var prefix = "";
@@ -438,7 +461,9 @@ pub fn bigfloat_to_float128(f: &BigFloat) -> Float128 {
 
 /// Float64 conversion. None on exponent overflow/underflow beyond f64 range
 /// (|value| > ~1.8e308); values underflowing to 0.0 return Some(0.0).
-pub fn bigfloat_to_float64(f: &BigFloat) -> Option[Float64] {
+pub fn bigfloat_to_float64(f: &BigFloat) -> Option[Float64]
+  ensures: (f.significand.digits.len() == 0) => (result is Some)
+{
   if xiom.bigint.bigint_is_zero(&f.significand) { return Some(0.0); }
   var acc = 0.0;
   var i = f.significand.digits.len() - 1;
@@ -467,35 +492,47 @@ pub fn bigfloat_to_float64(f: &BigFloat) -> Option[Float64] {
 }
 
 /// Predicates
-pub fn bigfloat_is_zero(f: &BigFloat) -> Bool {
+pub fn bigfloat_is_zero(f: &BigFloat) -> Bool
+  ensures: (result == false) => (f.significand.digits.len() > 0)
+{
   return xiom.bigint.bigint_is_zero(&f.significand);
 }
 
 /// True when the value is negative.
-pub fn bigfloat_is_negative(f: &BigFloat) -> Bool {
+pub fn bigfloat_is_negative(f: &BigFloat) -> Bool
+  ensures: (result == true) => (f.sign == true)
+{
   return f.sign && !bigfloat_is_zero(f);
 }
 
 /// True when the value equals 1.
-pub fn bigfloat_is_one(f: &BigFloat) -> Bool {
+pub fn bigfloat_is_one(f: &BigFloat) -> Bool
+  ensures: (result == true) => (f.sign == false)
+{
   var one = _one_at(f.precision);
   return bigfloat_eq(f, &one);
 }
 
 /// -1, 0 or 1 according to the sign.
-pub fn bigfloat_sign(f: &BigFloat) -> Int {
+pub fn bigfloat_sign(f: &BigFloat) -> Int
+  ensures: (result >= -1) && (result <= 1)
+{
   if bigfloat_is_zero(f) { return 0; }
   if f.sign { return -1; }
   return 1;
 }
 
 /// Working precision in decimal digits.
-pub fn bigfloat_precision(f: &BigFloat) -> Int {
+pub fn bigfloat_precision(f: &BigFloat) -> Int
+  ensures: result == f.precision
+{
   return f.precision;
 }
 
 /// Arithmetic (result precision = max of operand precisions, rounded)
-pub fn bigfloat_add(a: &BigFloat, b: &BigFloat) -> BigFloat {
+pub fn bigfloat_add(a: &BigFloat, b: &BigFloat) -> BigFloat
+  ensures: (((result.significand.negative == false) && ((result.significand.digits.len() == 0) => (result.sign == false))) && ((result.sign == true) => (result.significand.digits.len() > 0)))
+{
   var prec = _prec_of(a, b);
   var e = a.exponent;
   if b.exponent < e { e = b.exponent; }
@@ -524,14 +561,18 @@ pub fn bigfloat_add(a: &BigFloat, b: &BigFloat) -> BigFloat {
 }
 
 /// Difference of two BigFloats.
-pub fn bigfloat_sub(a: &BigFloat, b: &BigFloat) -> BigFloat {
+pub fn bigfloat_sub(a: &BigFloat, b: &BigFloat) -> BigFloat
+  ensures: (((result.significand.negative == false) && ((result.significand.digits.len() == 0) => (result.sign == false))) && ((result.sign == true) => (result.significand.digits.len() > 0)))
+{
   var nb = _copy_bf(b);
   nb.sign = !b.sign;
   return bigfloat_add(a, &nb);
 }
 
 /// Product of two BigFloats.
-pub fn bigfloat_mul(a: &BigFloat, b: &BigFloat) -> BigFloat {
+pub fn bigfloat_mul(a: &BigFloat, b: &BigFloat) -> BigFloat
+  ensures: (((result.significand.negative == false) && ((result.significand.digits.len() == 0) => (result.sign == false))) && ((result.sign == true) => (result.significand.digits.len() > 0)))
+{
   var prec = _prec_of(a, b);
   if bigfloat_is_zero(a) || bigfloat_is_zero(b) {
     return BigFloat{ sign: false; exponent: 0;
@@ -548,6 +589,7 @@ pub fn bigfloat_mul(a: &BigFloat, b: &BigFloat) -> BigFloat {
 /// Requires a non-zero divisor.
 pub fn bigfloat_div(a: &BigFloat, b: &BigFloat) -> BigFloat
   requires: !bigfloat_is_zero(b)
+  ensures: (((result.significand.negative == false) && ((result.significand.digits.len() == 0) => (result.sign == false))) && ((result.sign == true) => (result.significand.digits.len() > 0)))
 {
   var prec = _prec_of(a, b);
   if bigfloat_is_zero(b) { return bigfloat_zero(); }
@@ -569,14 +611,18 @@ pub fn bigfloat_div(a: &BigFloat, b: &BigFloat) -> BigFloat
 }
 
 /// Negation.
-pub fn bigfloat_neg(f: &BigFloat) -> BigFloat {
+pub fn bigfloat_neg(f: &BigFloat) -> BigFloat
+  ensures: result.significand.negative == false
+{
   var result = _copy_bf(f);
   if !bigfloat_is_zero(f) { result.sign = !f.sign; }
   return result;
 }
 
 /// Absolute value.
-pub fn bigfloat_abs(f: &BigFloat) -> BigFloat {
+pub fn bigfloat_abs(f: &BigFloat) -> BigFloat
+  ensures: (result.sign == false) && (result.significand.negative == false)
+{
   var result = _copy_bf(f);
   result.sign = false;
   return result;
@@ -585,6 +631,7 @@ pub fn bigfloat_abs(f: &BigFloat) -> BigFloat {
 /// 1/f with guard digits, rounded to precision.
 pub fn bigfloat_inv(f: &BigFloat) -> BigFloat
   requires: !bigfloat_is_zero(f)
+  ensures: (((result.significand.negative == false) && ((result.significand.digits.len() == 0) => (result.sign == false))) && ((result.sign == true) => (result.significand.digits.len() > 0)))
 {
   if bigfloat_is_zero(f) { return bigfloat_zero(); }
   var k = _digits_of(&f.significand) + f.precision + 2;
@@ -600,6 +647,7 @@ pub fn bigfloat_inv(f: &BigFloat) -> BigFloat
 /// with 2 guard digits. Requires a non-negative operand.
 pub fn bigfloat_sqrt(f: &BigFloat) -> BigFloat
   requires: !bigfloat_is_negative(f)
+  ensures: (((result.significand.negative == false) && ((result.significand.digits.len() == 0) => (result.sign == false))) && ((result.sign == true) => (result.significand.digits.len() > 0)))
 {
   if bigfloat_is_zero(f) { return bigfloat_zero(); }
   var sig = f.significand;
@@ -621,6 +669,7 @@ pub fn bigfloat_sqrt(f: &BigFloat) -> BigFloat
 /// Integer power (exp >= 0) by square-and-multiply.
 pub fn bigfloat_pow(base: &BigFloat, exp: Int) -> BigFloat
   requires: exp >= 0
+  ensures: (((result.significand.negative == false) && ((result.significand.digits.len() == 0) => (result.sign == false))) && ((result.sign == true) => (result.significand.digits.len() > 0)))
 {
   if exp < 0 { return bigfloat_zero(); }
   if exp == 0 {
@@ -712,7 +761,9 @@ pub fn bigfloat_round(f: &BigFloat) -> BigFloat {
 }
 
 /// Fractional part with the sign of f: f - trunc(f).
-pub fn bigfloat_fract(f: &BigFloat) -> BigFloat {
+pub fn bigfloat_fract(f: &BigFloat) -> BigFloat
+  ensures: (((result.significand.negative == false) && ((result.significand.digits.len() == 0) => (result.sign == false))) && ((result.sign == true) => (result.significand.digits.len() > 0)))
+{
   if f.exponent >= 0 {
     return BigFloat{ sign: false; exponent: 0;
                      significand: xiom.bigint.bigint_zero(); precision: f.precision; };
@@ -726,13 +777,16 @@ pub fn bigfloat_fract(f: &BigFloat) -> BigFloat {
 /// Explicit rounding of `f` to `digits` significant digits with `mode`.
 pub fn bigfloat_with_rounding(f: &BigFloat, mode: RoundMode, digits: Int) -> BigFloat
   requires: digits >= 1
+  ensures: (((result.significand.negative == false) && ((result.significand.digits.len() == 0) => (result.sign == false))) && ((result.sign == true) => (result.significand.digits.len() > 0)))
 {
   var r = _round_digits_raw(f, digits, mode);
   return _normalize(&r);
 }
 
 /// Comparisons
-pub fn bigfloat_compare(a: &BigFloat, b: &BigFloat) -> Int {
+pub fn bigfloat_compare(a: &BigFloat, b: &BigFloat) -> Int
+  ensures: (result >= -1) && (result <= 1)
+{
   var az = bigfloat_is_zero(a);
   var bz = bigfloat_is_zero(b);
   if az && bz { return 0; }

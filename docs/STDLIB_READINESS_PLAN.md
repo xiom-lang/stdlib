@@ -603,8 +603,27 @@ T1/T2 yields.
        conversions, 10^30 out of i64, parity/prime/next_prime KATs,
        (17,5) -> (3,2), sqrt_rem(10) -> (3,1), pow_mod 2^10 mod 1000 = 24.
        num 22.7% -> 26.4%, global 31.8% -> 32.1%. Next: bigfloat.
+       Wave 46 (2026-09-29): coverage wave 10 -- xiom.num.bigfloat core
+       (30 clauses). The canonical-form claim family for normalized
+       results: `((result.significand.negative == false) && ((digits.len()
+       == 0) => (result.sign == false))) && ((result.sign == true) =>
+       (digits.len() > 0))` -- 1/x, sqrt, pow, add/mul/div, fract,
+       with_rounding, the constants (one/two/ten/half/pi/e), from_int/
+       from_bigint/with_precision; exact zero shape (sign false, empty
+       significand, exponent 0); conditional non-negative-significand on
+       neg (copy_bf abs's) and unconditional on abs with sign false;
+       is_negative/is_one implications, is_zero false-implies-digits,
+       sign/compare ranges, precision exact, to_str non-empty, from_str
+       empty -> Err, to_float64 zero -> Some. Probe
+       tools/probes/p_wave46_shapes.xi (200th): constant and arithmetic
+       KATs through bigfloat_to_str (1+2=3, 1/2=0.5, sqrt(4)=2, 2^10,
+       fract(1.25)=0.25, with_rounding(pi,5)=3.1416). Probe fix:
+       `xiom.num.bigfloat` is the module path (a smoke exists; the
+       module-smoke scan's `xiom.bigfloat` manifest entry is an alias, to
+       revisit in the smoke-growth wave). num 26.4% -> 31.6%, global 32.1%
+       -> 32.5%. Next: bigfloat transcendentals, then geom.
        Ratchet:
-       tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors82.json
+       tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors83.json
        tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;

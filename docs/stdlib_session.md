@@ -1144,6 +1144,26 @@ registry pin, agent recon for the rest)**
   is available. The recon agent timed out on this file; do the
   per-function pass directly against the source next.
 
+**SESSION 2026-09-29 block 4 (wave 46: bigfloat core)**
+- Wave 46 (floors83): 30 clauses on xiom.num.bigfloat. Canonical-form
+  family `((result.significand.negative == false) && ((digits.len() == 0)
+  => (result.sign == false))) && ((result.sign == true) => (digits.len()
+  > 0))` on one/two/ten/half/pi/e, from_int, from_bigint, with_precision,
+  add/sub/mul/div/inv/sqrt/pow, fract, with_rounding; exact zero shape;
+  neg => significand non-negative; abs => sign false + significand
+  non-negative; is_negative/is_one implications; is_zero false => digits
+  non-empty; sign/compare ranges; precision exact; to_str non-empty;
+  from_str empty => Err; to_float64 zero => Some.
+- Probe p_wave46_shapes.xi (200th) first-run green after two probe fixes:
+  the module path is `xiom.num.bigfloat` (NOT `xiom.bigfloat`; the earlier
+  module-smoke baseline's `xiom.bigfloat` entry is a manifest alias quirk),
+  and with_rounding takes a RoundMode, not Int (use
+  bigfloat_get_round_mode()).
+- num 26.4% -> 31.6%, global 32.1% -> 32.5%; floors83 wired (YAML
+  re-verified) + tools/README.md + plan in the same commit. Full battery on
+  the commit (smoke_bigfloat exists, so the corpus also exercises the new
+  clauses).
+
 **RELAY 2026-09-28 (registry -> compiler/stdlib)**
 - v0.62.0 tag/commit confirmed (80e767b). The registry canary is blocked
   on the pending registry-publish environment approval for run 36438204239;
