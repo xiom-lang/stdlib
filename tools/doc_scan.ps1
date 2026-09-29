@@ -27,7 +27,7 @@ foreach ($f in $files) {
     if ($lines[$i] -match '^\s*pub\s+(fn|type|const|static|enum|trait|interface)\b') {
       $pub++
       $j = $i - 1
-      while ($j -ge 0 -and $lines[$j].Trim() -eq '') { $j-- }
+      while ($j -ge 0 -and ($lines[$j].Trim() -eq '' -or $lines[$j].TrimStart().StartsWith('#['))) { $j-- }
       if ($j -ge 0 -and $lines[$j].TrimStart().StartsWith('///')) { $docs++ }
     }
   }

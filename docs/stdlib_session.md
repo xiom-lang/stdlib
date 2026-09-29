@@ -1245,6 +1245,32 @@ registry pin, agent recon for the rest)**
   barename 0 hits / 509 (741.8s); coverage ratchet floors86 OK; doc ratchet
   OK; module-smoke ratchet OK. Wave 49 closed.
 
+**SESSION 2026-09-29 block 8 (PERF-1 annotation wave: atomics `#[unsafe_direct]`)**
+- Compiler-lane relay (m166, `c2b15112`): annotate every fn in
+  `xiom/sync/atomics.xi` whose body contains an unsafe block with
+  `#[unsafe_direct]`, placed directly above `pub fn`. All 16 pub fns carry
+  unsafe bodies (load/store/fetch/exchange wrappers), so all 16 got the
+  attribute (`atomic_int_new`/`atomic_bool_new`/`atomic_ptr_new` use two
+  unsafe blocks each; the rest one). Pre-m166 compilers raise P001 and drop
+  the attribute silently during recovery -- smoke_sync_atomics green on the
+  v0.61.3 pin; under m166+ (v0.62.2) the wrappers compile direct
+  (compiler-lane local proof: 4M atomic pairs 8000 ms -> 0 ms; PERF-1).
+- `tools/doc_scan.ps1`: the doc-association walk now skips `#[...]`
+  attribute lines as well as blanks (the attribute sits between the `///`
+  block and `pub fn`), keeping the doc ratchet at 100%.
+- `release-notes/v0.62.2.md` added: the stdlib fragment for the compiler
+  v0.62.2 release (1 highlight, "Standard-library atomics run at native
+  speed"; the compiler draft already carries 5, so the merged document is
+  exactly the 6-highlight schema max). Verified locally with the compiler's
+  `xiom-release-notes` tool (`convert --out <temp>` reports 6 highlights;
+  `verify` only fails the committed-JSON sync check until the compiler lane
+  re-runs convert -- run the tool from the xiom root, notes-dir is
+  CWD-relative).
+- Wave tag: `stdlib-perf1` on the wave commit (NOT a stdlib release; does
+  not match the `stdlib-v*` release trigger). This is the pin tag for
+  `STDLIB_VERSION` for v0.62.2 (compiler release gates B/P).
+- Full battery on <wave>: <battery line>.
+
 **RELAY 2026-09-29 (packages -> compiler/stdlib)**
 - Pin moved 0.61.3 -> 0.62.1 mid-batch; every package suite re-ran clean,
   no code changes needed for the new compiler. Their sectest caught two

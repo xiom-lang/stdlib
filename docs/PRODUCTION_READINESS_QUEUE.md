@@ -142,6 +142,17 @@ len-only. Probe `p_wave49_shapes.xi` (203rd); floors86; geom 10.6% ->
 quaternion.xi long-name domain), then curves/collision/geometry/polyhedra/
 linear.
 
+Update 2026-09-29 (PERF-1 annotation wave landed): all 16 pub fns in
+`xiom/sync/atomics.xi` (every one has an unsafe body) carry
+`#[unsafe_direct]` above `pub fn`, per the compiler-lane m166 relay;
+`tools/doc_scan.ps1` treats attribute lines as transparent for the `///`
+association; `release-notes/v0.62.2.md` (1 highlight; merges with the
+compiler draft's 5 to the schema max of 6) added for the compiler v0.62.2
+checkout. Tag `stdlib-perf1` is the `STDLIB_VERSION` pin for v0.62.2. The
+attribute is ignored pre-m166 (gates run on the v0.61.3 pin); under m166
+the wrappers compile direct (compiler-lane proof, PERF-1). Next: geom
+batch 2 (wave 50) as before.
+
 State 2026-09-29 (handoff snapshot 3, main 2a06a90): floors85 global 32.8%,
 math 38.8%, num 37.4%; probes 202; smoke 951; modules 509/509; barename
 0/509; doc 100%; module-smoke ratchet 497/517 modules, 3332/6200 pub fns.
