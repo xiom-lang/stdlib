@@ -569,8 +569,27 @@ T1/T2 yields.
        documented. Probe tools/probes/p_wave43_shapes.xi (197th); num 18/18
        and math 53/53 smoke families; num 9.6% -> 17.2%, global 30.9% ->
        31.4%. Next: bigint (55 pub) then bigfloat (75) then num.xi leaves.
+       Wave 44 (2026-09-29): coverage wave 8 -- xiom.bigint core (33
+       clauses): canonical-representation claims for from_int/from_u64,
+       zero/one/ten/two (exact shapes), add/sub/mul/neg/abs/mod, pow/gcd/
+       lcm, shift_left (decimal) / shift_right (arithmetic bit shift), div,
+       sqrt, factorial/binomial/fibonacci, bit_and/or/xor, plus compare and
+       sign ranges, is_negative, to_str/to_hex non-emptiness, to_base
+       invalid-base emptiness, popcount/bit_len >= 0. The shared claim is
+       `((result.negative == true) => (result.digits.len() > 0)) &&
+       ((result.digits.len() == 0) => (result.negative == false))` -- the
+       _trim canonical form (zero has no digits and negative false; a
+       negative value always has digits). Payload-returning entries
+       (from_str/from_base/to_int/to_u64/to_*) stay clause-free until the
+       payload ABI allows reads. Probe tools/probes/p_wave44_shapes.xi
+       (198th): 53 KATs through bigint_to_str (limb boundary 999999999+1,
+       sign/zero canonical calls, -10/3, -10 mod 3, -7 >> 1, 2^10, gcd/lcm,
+       factorial 20, fibonacci 10, bit ops, base alphabets: to_base
+       uppercase vs to_hex lowercase). num 17.2% -> 22.7%, global 31.4% ->
+       31.8%. Next: bigint remainder (base parsing/to_int families) then
+       bigfloat.
        Ratchet:
-       tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors80.json
+       tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors81.json
 
        (repo tooling as of the split; positive + negative runs verified;
        earlier floors kept at

@@ -87,6 +87,13 @@ release + canary follow. Registry lane: re-dispatch publish when assets
 land. Rules: YAML edits get a parse check; Err-payload clauses are unsafe
 on any platform (known_failures).
 
+Update 2026-09-29 (wave 44 landed): xiom.bigint core -- 33 canonical-form
+clauses (shared _trim invariant: negative => digits non-empty; digits
+empty => negative false), probe `p_wave44_shapes.xi` (198th, 53 KATs);
+floors81; num 17.2% -> 22.7%, global 31.4% -> 31.8%. Next: bigint
+remaining (base parsing / to_int families, payload-free pass), then
+bigfloat.
+
 Remaining-to-100% snapshot (answer to the packages relay, 2026-09-27):
 the release gate is per-directory 100% pub-with-clause + doc 100% + all
 gates green. Current floors77: global 29.7%; math 31.0%; lowest dirs

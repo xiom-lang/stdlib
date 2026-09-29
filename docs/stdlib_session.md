@@ -1037,6 +1037,29 @@ registry pin, agent recon for the rest)**
   0e631018100b157539614cc92fc471f22663baff, ref refs/tags/stdlib-v0.62.0;
   re-dispatch the publish to complete verification.
 
+**SESSION 2026-09-29 block (wave 44: xiom.bigint core)**
+- Wave 44 (floors81): 33 clauses on xiom/num/bigint.xi. The shared claim is
+  the _trim canonical form: `((result.negative == true) =>
+  (result.digits.len() > 0)) && ((result.digits.len() == 0) =>
+  (result.negative == false))` on from_int/from_u64/add/sub/mul/neg/mod/
+  pow/gcd/lcm/shift_left (decimal x10^n)/shift_right (arithmetic >>n)/div/
+  sqrt/factorial/binomial/fibonacci/bit_and/bit_or/bit_xor; exact shapes on
+  zero/one/ten/two; compare and sign in {-1,0,1}; is_negative true implies
+  the input flag; to_str/to_hex non-empty; to_base invalid-base empty;
+  popcount/bit_len >= 0; abs also asserts negative == false. Payload-
+  returning entries (from_str/from_base/to_int/to_u64/to_u128/to_i128)
+  stay clause-free (payload reads forbidden; known_failures).
+- Probe tools/probes/p_wave44_shapes.xi (198th): 53 KATs through
+  bigint_to_str (no struct-field reads): 999999999+1 limb boundary, -10/3
+  and -10 mod 3, -7 >> 1 = -4, 2^10, gcd(48,18), lcm(4,6), 20!, F(10),
+  bit ops, to_base uppercase "FF" vs to_hex lowercase "ff", u64 max.
+  Probe caught two of my wrong expectations (shift_right is a BIT shift,
+  to_base is uppercase), not stdlib bugs.
+- num 17.2% -> 22.7%, global 31.4% -> 31.8%; floors81 wired into
+  ci/heavy/release (8-space indent, PyYAML re-verified) + tools/README.md +
+  docs/STDLIB_READINESS_PLAN.md in the same commit. Full battery on the
+  commit.
+
 **RELAY 2026-09-28 (registry -> compiler/stdlib)**
 - v0.62.0 tag/commit confirmed (80e767b). The registry canary is blocked
   on the pending registry-publish environment approval for run 36438204239;

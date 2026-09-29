@@ -213,7 +213,9 @@ fn _div_mod_base(n: &BigInt) -> DivModResult {
 }
 
 /// Construction -- from Int, from Str
-pub fn bigint_from_int(n: Int) -> BigInt {
+pub fn bigint_from_int(n: Int) -> BigInt
+  ensures: ((result.negative == true) => (result.digits.len() > 0)) && ((result.digits.len() == 0) => (result.negative == false))
+{
   var result = BigInt{ digits: Vec[Int].new(); negative: false; };
   if n == 0 { return result; }
   var abs_n = n;
@@ -230,7 +232,9 @@ pub fn bigint_from_int(n: Int) -> BigInt {
 /// instructions for UInt64 `/` and `%`, so the proven unsigned helpers from
 /// xiom.num (u64_div_floor / u64_mod_euclid) are used instead -- exact for the
 /// full 0 .. 2^64-1 range.
-pub fn bigint_from_u64(n: UInt64) -> BigInt {
+pub fn bigint_from_u64(n: UInt64) -> BigInt
+  ensures: ((result.negative == true) => (result.digits.len() > 0)) && ((result.digits.len() == 0) => (result.negative == false))
+{
   var result = BigInt{ digits: Vec[Int].new(); negative: false; };
   if n == 0 { return result; }
   var base: UInt64 = 1000000000;
@@ -288,7 +292,9 @@ fn _parse_digit(c: Str) -> Int {
 // ============================================================================
 
 /// Convert to decimal string via repeated division by BASE.
-pub fn bigint_to_str(b: &BigInt) -> Str {
+pub fn bigint_to_str(b: &BigInt) -> Str
+  ensures: result != ""
+{
   if bigint_is_zero(b) { return "0"; }
   if b.digits.len() == 1 {
     var s = _limb_to_str(b.digits[0], false);
@@ -367,7 +373,9 @@ fn _digit_char(d: Int) -> Str {
 }
 
 /// Core arithmetic -- add, sub, mul, div_mod
-pub fn bigint_add(a: &BigInt, b: &BigInt) -> BigInt {
+pub fn bigint_add(a: &BigInt, b: &BigInt) -> BigInt
+  ensures: ((result.negative == true) => (result.digits.len() > 0)) && ((result.digits.len() == 0) => (result.negative == false))
+{
   if a.negative == b.negative {
     var sum = _abs_add(a, b);
     sum.negative = a.negative;
@@ -386,7 +394,9 @@ pub fn bigint_add(a: &BigInt, b: &BigInt) -> BigInt {
 }
 
 /// Difference of two BigInts.
-pub fn bigint_sub(a: &BigInt, b: &BigInt) -> BigInt {
+pub fn bigint_sub(a: &BigInt, b: &BigInt) -> BigInt
+  ensures: ((result.negative == true) => (result.digits.len() > 0)) && ((result.digits.len() == 0) => (result.negative == false))
+{
   var neg_b = _copy(b);
   neg_b.negative = !neg_b.negative;
   return bigint_add(a, &neg_b);
@@ -470,7 +480,9 @@ fn _abs_mul_karatsuba(a: &BigInt, b: &BigInt) -> BigInt {
 }
 
 /// Product of two BigInts.
-pub fn bigint_mul(a: &BigInt, b: &BigInt) -> BigInt {
+pub fn bigint_mul(a: &BigInt, b: &BigInt) -> BigInt
+  ensures: ((result.negative == true) => (result.digits.len() > 0)) && ((result.digits.len() == 0) => (result.negative == false))
+{
   if bigint_is_zero(a) || bigint_is_zero(b) {
     return BigInt{ digits: Vec[Int].new(); negative: false; };
   }
@@ -582,7 +594,9 @@ pub fn bigint_div_mod(a: &BigInt, b: &BigInt) -> (BigInt, BigInt) {
 }
 
 /// Comparison, zero, sign, abs, neg
-pub fn bigint_compare(a: &BigInt, b: &BigInt) -> Int {
+pub fn bigint_compare(a: &BigInt, b: &BigInt) -> Int
+  ensures: (result >= -1) && (result <= 1)
+{
   if a.negative && !b.negative { return -1; }
   if !a.negative && b.negative { return 1; }
   var cmp = _abs_compare(a, b);
@@ -602,14 +616,18 @@ pub fn bigint_is_zero(b: &BigInt) -> Bool {
 }
 
 /// Absolute value.
-pub fn bigint_abs(b: &BigInt) -> BigInt {
+pub fn bigint_abs(b: &BigInt) -> BigInt
+  ensures: (((result.negative == true) => (result.digits.len() > 0)) && ((result.digits.len() == 0) => (result.negative == false))) && (result.negative == false)
+{
   var result = _copy(b);
   result.negative = false;
   return result;
 }
 
 /// Negation.
-pub fn bigint_neg(b: &BigInt) -> BigInt {
+pub fn bigint_neg(b: &BigInt) -> BigInt
+  ensures: ((result.negative == true) => (result.digits.len() > 0)) && ((result.digits.len() == 0) => (result.negative == false))
+{
   if bigint_is_zero(b) { return BigInt{ digits: Vec[Int].new(); negative: false; }; }
   var result = _copy(b);
   result.negative = !b.negative;
@@ -617,14 +635,18 @@ pub fn bigint_neg(b: &BigInt) -> BigInt {
 }
 
 /// -1, 0 or 1 according to the sign.
-pub fn bigint_sign(b: &BigInt) -> Int {
+pub fn bigint_sign(b: &BigInt) -> Int
+  ensures: (result >= -1) && (result <= 1)
+{
   if bigint_is_zero(b) { return 0; }
   if b.negative { return -1; }
   return 1;
 }
 
 /// Modular arithmetic and advanced operations
-pub fn bigint_mod(a: &BigInt, m: &BigInt) -> BigInt {
+pub fn bigint_mod(a: &BigInt, m: &BigInt) -> BigInt
+  ensures: ((result.negative == true) => (result.digits.len() > 0)) && ((result.digits.len() == 0) => (result.negative == false))
+{
   var pair = bigint_div_mod(a, m);
   var r = pair.1;
   if r.negative { r = bigint_add(&r, m); }
@@ -632,7 +654,9 @@ pub fn bigint_mod(a: &BigInt, m: &BigInt) -> BigInt {
 }
 
 /// `base` raised to a non-negative Int exponent.
-pub fn bigint_pow(base: &BigInt, exp: Int) -> BigInt {
+pub fn bigint_pow(base: &BigInt, exp: Int) -> BigInt
+  ensures: ((result.negative == true) => (result.digits.len() > 0)) && ((result.digits.len() == 0) => (result.negative == false))
+{
   if exp < 0 { return BigInt{ digits: Vec[Int].new(); negative: false; }; }
   if exp == 0 { return bigint_from_int(1); }
   var result = bigint_from_int(1);
@@ -647,7 +671,9 @@ pub fn bigint_pow(base: &BigInt, exp: Int) -> BigInt {
 }
 
 /// Greatest common divisor (non-negative).
-pub fn bigint_gcd(a: &BigInt, b: &BigInt) -> BigInt {
+pub fn bigint_gcd(a: &BigInt, b: &BigInt) -> BigInt
+  ensures: ((result.negative == true) => (result.digits.len() > 0)) && ((result.digits.len() == 0) => (result.negative == false))
+{
   var x = bigint_abs(a);
   var y = bigint_abs(b);
   if bigint_is_zero(&y) { return x; }
@@ -660,7 +686,9 @@ pub fn bigint_gcd(a: &BigInt, b: &BigInt) -> BigInt {
 }
 
 /// Shift left by `shift` bits (a negative shift moves right).
-pub fn bigint_shift_left(b: &BigInt, shift: Int) -> BigInt {
+pub fn bigint_shift_left(b: &BigInt, shift: Int) -> BigInt
+  ensures: ((result.negative == true) => (result.digits.len() > 0)) && ((result.digits.len() == 0) => (result.negative == false))
+{
   if shift <= 0 { return _copy(b); }
   var ten = bigint_from_int(10);
   var factor = bigint_pow(&ten, shift);
@@ -683,22 +711,30 @@ pub fn bigint_shift_left(b: &BigInt, shift: Int) -> BigInt {
 /// compiler silently leaves them zero -- see docs/COMPILER_BUGS.md), so the
 /// spec constants BIGINT_ZERO/ONE/TEN are exposed as pure constructors that
 /// return a fresh value. Zero-cost, immutable by construction.
-pub fn bigint_zero() -> BigInt {
+pub fn bigint_zero() -> BigInt
+  ensures: (result.digits.len() == 0) && (result.negative == false)
+{
   return BigInt{ digits: Vec[Int].new(); negative: false; };
 }
 
 /// Constant 1 as BigInt.
-pub fn bigint_one() -> BigInt {
+pub fn bigint_one() -> BigInt
+  ensures: (result.digits.len() == 1) && (result.negative == false)
+{
   return bigint_from_int(1);
 }
 
 /// Constant 10 as BigInt.
-pub fn bigint_ten() -> BigInt {
+pub fn bigint_ten() -> BigInt
+  ensures: (result.digits.len() == 1) && (result.negative == false)
+{
   return bigint_from_int(10);
 }
 
 /// Constant 2 as BigInt.
-pub fn bigint_two() -> BigInt {
+pub fn bigint_two() -> BigInt
+  ensures: (result.digits.len() == 1) && (result.negative == false)
+{
   return bigint_from_int(2);
 }
 
@@ -750,7 +786,9 @@ pub fn bigint_from_hex(s: Str) -> Result[BigInt, Str] {
 
 /// Convert to a string in base 2..36 (digits 0-9, A-Z; "-" prefix for negatives).
 /// Returns "" for an invalid base.
-pub fn bigint_to_base(b: &BigInt, base: Int) -> Str {
+pub fn bigint_to_base(b: &BigInt, base: Int) -> Str
+  ensures: ((base < 2) || (base > 36)) => (result == "")
+{
   if base < 2 || base > 36 { return ""; }
   if bigint_is_zero(b) { return "0"; }
   var alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -776,7 +814,9 @@ pub fn bigint_to_base(b: &BigInt, base: Int) -> Str {
 }
 
 /// Lowercase hexadecimal (matches the parse examples "ff"/"-1a").
-pub fn bigint_to_hex(b: &BigInt) -> Str {
+pub fn bigint_to_hex(b: &BigInt) -> Str
+  ensures: result != ""
+{
   if bigint_is_zero(b) { return "0"; }
   var alphabet = "0123456789abcdef";
   var temp = bigint_abs(b);
@@ -910,7 +950,9 @@ pub fn bigint_is_odd(b: &BigInt) -> Bool {
 }
 
 /// True when the value is negative.
-pub fn bigint_is_negative(b: &BigInt) -> Bool {
+pub fn bigint_is_negative(b: &BigInt) -> Bool
+  ensures: (result == true) => (b.negative == true)
+{
   return b.negative && !bigint_is_zero(b);
 }
 
@@ -919,6 +961,7 @@ pub fn bigint_is_negative(b: &BigInt) -> Bool {
 /// Truncating division (quotient of bigint_div_mod).
 pub fn bigint_div(a: &BigInt, b: &BigInt) -> BigInt
   requires: !bigint_is_zero(b)
+  ensures: ((result.negative == true) => (result.digits.len() > 0)) && ((result.digits.len() == 0) => (result.negative == false))
 {
   if bigint_is_zero(b) { return bigint_zero(); }
   var dm = bigint_div_mod(a, b);
@@ -951,6 +994,7 @@ pub fn bigint_pow_mod(base: &BigInt, exp: &BigInt, m: &BigInt) -> BigInt
 /// initial guess 10^ceil(D/2) >= sqrt(n). Quadratic convergence.
 pub fn bigint_sqrt(b: &BigInt) -> BigInt
   requires: !bigint_is_negative(b)
+  ensures: ((result.negative == true) => (result.digits.len() > 0)) && ((result.digits.len() == 0) => (result.negative == false))
 {
   if bigint_is_negative(b) { return bigint_zero(); }
   if bigint_compare(b, &bigint_from_int(2)) < 0 { return _copy(b); }
@@ -981,7 +1025,9 @@ pub fn bigint_sqrt_rem(b: &BigInt) -> (BigInt, BigInt)
 // -- Number theory ------------------------------------------------------------
 
 /// Least common multiple. lcm(0, x) == 0.
-pub fn bigint_lcm(a: &BigInt, b: &BigInt) -> BigInt {
+pub fn bigint_lcm(a: &BigInt, b: &BigInt) -> BigInt
+  ensures: ((result.negative == true) => (result.digits.len() > 0)) && ((result.digits.len() == 0) => (result.negative == false))
+{
   if bigint_is_zero(a) || bigint_is_zero(b) { return bigint_zero(); }
   var g = bigint_gcd(a, b);
   var prod = bigint_mul(a, b);
@@ -1078,6 +1124,7 @@ pub fn bigint_next_prime(b: &BigInt) -> BigInt {
 /// n! for n >= 0. O(n) BigInt multiplications.
 pub fn bigint_factorial(n: Int) -> BigInt
   requires: n >= 0
+  ensures: ((result.negative == true) => (result.digits.len() > 0)) && ((result.digits.len() == 0) => (result.negative == false))
 {
   if n < 0 { return bigint_zero(); }
   var result = bigint_one();
@@ -1096,6 +1143,7 @@ pub fn bigint_binomial(n: Int, k: Int) -> BigInt
   requires: n >= 0
   requires: k >= 0
   requires: k <= n
+  ensures: ((result.negative == true) => (result.digits.len() > 0)) && ((result.digits.len() == 0) => (result.negative == false))
 {
   if k < 0 || k > n { return bigint_zero(); }
   var kk = k;
@@ -1115,6 +1163,7 @@ pub fn bigint_binomial(n: Int, k: Int) -> BigInt
 /// F(n): F(0)=0, F(1)=1. Iterative, O(n) BigInt additions.
 pub fn bigint_fibonacci(n: Int) -> BigInt
   requires: n >= 0
+  ensures: ((result.negative == true) => (result.digits.len() > 0)) && ((result.digits.len() == 0) => (result.negative == false))
 {
   if n < 0 { return bigint_zero(); }
   if n == 0 { return bigint_zero(); }
@@ -1213,7 +1262,9 @@ fn _from_twos_bits(bits: &Vec[Int]) -> BigInt {
 }
 
 /// Bitwise AND on the two's-complement limbs.
-pub fn bigint_bit_and(a: &BigInt, b: &BigInt) -> BigInt {
+pub fn bigint_bit_and(a: &BigInt, b: &BigInt) -> BigInt
+  ensures: ((result.negative == true) => (result.digits.len() > 0)) && ((result.digits.len() == 0) => (result.negative == false))
+{
   var la = bigint_bit_len(a);
   var lb = bigint_bit_len(b);
   var L = la;
@@ -1232,7 +1283,9 @@ pub fn bigint_bit_and(a: &BigInt, b: &BigInt) -> BigInt {
 }
 
 /// Bitwise OR on the two's-complement limbs.
-pub fn bigint_bit_or(a: &BigInt, b: &BigInt) -> BigInt {
+pub fn bigint_bit_or(a: &BigInt, b: &BigInt) -> BigInt
+  ensures: ((result.negative == true) => (result.digits.len() > 0)) && ((result.digits.len() == 0) => (result.negative == false))
+{
   var la = bigint_bit_len(a);
   var lb = bigint_bit_len(b);
   var L = la;
@@ -1251,7 +1304,9 @@ pub fn bigint_bit_or(a: &BigInt, b: &BigInt) -> BigInt {
 }
 
 /// Bitwise XOR on the two's-complement limbs.
-pub fn bigint_bit_xor(a: &BigInt, b: &BigInt) -> BigInt {
+pub fn bigint_bit_xor(a: &BigInt, b: &BigInt) -> BigInt
+  ensures: ((result.negative == true) => (result.digits.len() > 0)) && ((result.digits.len() == 0) => (result.negative == false))
+{
   var la = bigint_bit_len(a);
   var lb = bigint_bit_len(b);
   var L = la;
@@ -1273,6 +1328,7 @@ pub fn bigint_bit_xor(a: &BigInt, b: &BigInt) -> BigInt {
 /// rounds toward -inf (true arithmetic shift).
 pub fn bigint_shift_right(b: &BigInt, n: Int) -> BigInt
   requires: n >= 0
+  ensures: ((result.negative == true) => (result.digits.len() > 0)) && ((result.digits.len() == 0) => (result.negative == false))
 {
   if n <= 0 { return _copy(b); }
   if bigint_is_zero(b) { return bigint_zero(); }
@@ -1289,7 +1345,9 @@ pub fn bigint_shift_right(b: &BigInt, n: Int) -> BigInt
 }
 
 /// Number of set bits in |b| (well-defined for all signs).
-pub fn bigint_popcount(b: &BigInt) -> Int {
+pub fn bigint_popcount(b: &BigInt) -> Int
+  ensures: result >= 0
+{
   var bits = _bigint_bit_array(b);
   var count = 0;
   var i = 0;
@@ -1301,7 +1359,9 @@ pub fn bigint_popcount(b: &BigInt) -> Int {
 }
 
 /// Bits needed to represent |b|; 0 for zero.
-pub fn bigint_bit_len(b: &BigInt) -> Int {
+pub fn bigint_bit_len(b: &BigInt) -> Int
+  ensures: result >= 0
+{
   var bits = _bigint_bit_array(b);
   return bits.len();
 }
