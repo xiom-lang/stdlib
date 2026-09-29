@@ -1056,6 +1056,7 @@ fn _finish(result: &BigFloat, target: Int) -> BigFloat {
 /// pi / e at explicit precision.
 pub fn bigfloat_pi_with_precision(precision: Int) -> BigFloat
   requires: precision >= 1
+  ensures: (((result.significand.negative == false) && ((result.significand.digits.len() == 0) => (result.sign == false))) && ((result.sign == true) => (result.significand.digits.len() > 0)))
 {
   var p = precision;
   if p < 10 { p = 10; }
@@ -1066,6 +1067,7 @@ pub fn bigfloat_pi_with_precision(precision: Int) -> BigFloat
 /// Euler's number e to the given decimal precision.
 pub fn bigfloat_e_with_precision(precision: Int) -> BigFloat
   requires: precision >= 1
+  ensures: (((result.significand.negative == false) && ((result.significand.digits.len() == 0) => (result.sign == false))) && ((result.sign == true) => (result.significand.digits.len() > 0)))
 {
   var p = precision;
   if p < 10 { p = 10; }
@@ -1074,7 +1076,9 @@ pub fn bigfloat_e_with_precision(precision: Int) -> BigFloat
 }
 
 /// exp(x) = exp(r) * 10^k with r = x - k*ln(10) in [-ln(10)/2, ln(10)/2].
-pub fn bigfloat_exp(f: &BigFloat) -> BigFloat {
+pub fn bigfloat_exp(f: &BigFloat) -> BigFloat
+  ensures: (((result.significand.negative == false) && ((result.significand.digits.len() == 0) => (result.sign == false))) && ((result.sign == true) => (result.significand.digits.len() > 0)))
+{
   var prec = _work_prec(f, f);
   var x = _set_prec(f, prec);
   var l10 = _ln10_at(prec);
@@ -1099,6 +1103,7 @@ pub fn bigfloat_exp(f: &BigFloat) -> BigFloat {
 pub fn bigfloat_ln(f: &BigFloat) -> BigFloat
   requires: !bigfloat_is_negative(f)
   requires: !bigfloat_is_zero(f)
+  ensures: (((result.significand.negative == false) && ((result.significand.digits.len() == 0) => (result.sign == false))) && ((result.sign == true) => (result.significand.digits.len() > 0)))
 {
   var prec = _work_prec(f, f);
   var one = _one_at(prec);
@@ -1135,6 +1140,7 @@ pub fn bigfloat_ln(f: &BigFloat) -> BigFloat
 pub fn bigfloat_log10(f: &BigFloat) -> BigFloat
   requires: !bigfloat_is_negative(f)
   requires: !bigfloat_is_zero(f)
+  ensures: (((result.significand.negative == false) && ((result.significand.digits.len() == 0) => (result.sign == false))) && ((result.sign == true) => (result.significand.digits.len() > 0)))
 {
   var l = bigfloat_ln(f);
   var l10 = _ln10_at(_work_prec(&l, &l));
@@ -1177,24 +1183,32 @@ fn _sincos(f: &BigFloat, want_cos: Bool) -> BigFloat {
 }
 
 /// Sine of the value (radians).
-pub fn bigfloat_sin(f: &BigFloat) -> BigFloat {
+pub fn bigfloat_sin(f: &BigFloat) -> BigFloat
+  ensures: (((result.significand.negative == false) && ((result.significand.digits.len() == 0) => (result.sign == false))) && ((result.sign == true) => (result.significand.digits.len() > 0)))
+{
   return _sincos(f, false);
 }
 
 /// Cosine of the value (radians).
-pub fn bigfloat_cos(f: &BigFloat) -> BigFloat {
+pub fn bigfloat_cos(f: &BigFloat) -> BigFloat
+  ensures: (((result.significand.negative == false) && ((result.significand.digits.len() == 0) => (result.sign == false))) && ((result.sign == true) => (result.significand.digits.len() > 0)))
+{
   return _sincos(f, true);
 }
 
 /// Tangent of the value (radians).
-pub fn bigfloat_tan(f: &BigFloat) -> BigFloat {
+pub fn bigfloat_tan(f: &BigFloat) -> BigFloat
+  ensures: (((result.significand.negative == false) && ((result.significand.digits.len() == 0) => (result.sign == false))) && ((result.sign == true) => (result.significand.digits.len() > 0)))
+{
   var s = bigfloat_sin(f);
   var c = bigfloat_cos(f);
   return bigfloat_div(&s, &c);
 }
 
 /// atan(x) in [-pi/2, pi/2].
-pub fn bigfloat_atan(f: &BigFloat) -> BigFloat {
+pub fn bigfloat_atan(f: &BigFloat) -> BigFloat
+  ensures: (((result.significand.negative == false) && ((result.significand.digits.len() == 0) => (result.sign == false))) && ((result.sign == true) => (result.significand.digits.len() > 0)))
+{
   var prec = _work_prec(f, f);
   if bigfloat_is_zero(f) { return bigfloat_zero(); }
   var sign = bigfloat_is_negative(f);
@@ -1215,7 +1229,9 @@ pub fn bigfloat_atan(f: &BigFloat) -> BigFloat {
 }
 
 /// atan2(y, x) in [-pi, pi].
-pub fn bigfloat_atan2(y: &BigFloat, x: &BigFloat) -> BigFloat {
+pub fn bigfloat_atan2(y: &BigFloat, x: &BigFloat) -> BigFloat
+  ensures: (((result.significand.negative == false) && ((result.significand.digits.len() == 0) => (result.sign == false))) && ((result.sign == true) => (result.significand.digits.len() > 0)))
+{
   var prec = _work_prec(y, x);
   var target = y.precision;
   if x.precision > target { target = x.precision; }
@@ -1249,6 +1265,7 @@ pub fn bigfloat_atan2(y: &BigFloat, x: &BigFloat) -> BigFloat {
 /// base^exp for base >= 0 via exp(exp * ln(base)); negative exponents via inv.
 pub fn bigfloat_pow_bf(base: &BigFloat, exp: &BigFloat) -> BigFloat
   requires: !bigfloat_is_negative(base)
+  ensures: (((result.significand.negative == false) && ((result.significand.digits.len() == 0) => (result.sign == false))) && ((result.sign == true) => (result.significand.digits.len() > 0)))
 {
   var target = base.precision;
   if exp.precision > target { target = exp.precision; }
@@ -1286,6 +1303,7 @@ fn _ln2_at(prec: Int) -> BigFloat {
 pub fn bigfloat_log2(f: &BigFloat) -> BigFloat
   requires: !bigfloat_is_negative(f)
   requires: !bigfloat_is_zero(f)
+  ensures: (((result.significand.negative == false) && ((result.significand.digits.len() == 0) => (result.sign == false))) && ((result.sign == true) => (result.significand.digits.len() > 0)))
 {
   var l = bigfloat_ln(f);
   var l2 = _ln2_at(_work_prec(&l, &l));
@@ -1293,7 +1311,9 @@ pub fn bigfloat_log2(f: &BigFloat) -> BigFloat
 }
 
 /// exp2(x) = exp(x * ln(2)).
-pub fn bigfloat_exp2(f: &BigFloat) -> BigFloat {
+pub fn bigfloat_exp2(f: &BigFloat) -> BigFloat
+  ensures: (((result.significand.negative == false) && ((result.significand.digits.len() == 0) => (result.sign == false))) && ((result.sign == true) => (result.significand.digits.len() > 0)))
+{
   var l2 = _ln2_at(_work_prec(f, f));
   var prod = bigfloat_mul(f, &l2);
   return bigfloat_exp(&prod);
@@ -1302,7 +1322,9 @@ pub fn bigfloat_exp2(f: &BigFloat) -> BigFloat {
 /// Cube root (Newton: x = (2x + n/x^2)/3). Works for negative operands via
 /// sign symmetry; the significand is scaled to a multiple-of-3 exponent so
 /// the final 10^(exp/3) shift is exact.
-pub fn bigfloat_cbrt(f: &BigFloat) -> BigFloat {
+pub fn bigfloat_cbrt(f: &BigFloat) -> BigFloat
+  ensures: (((result.significand.negative == false) && ((result.significand.digits.len() == 0) => (result.sign == false))) && ((result.sign == true) => (result.significand.digits.len() > 0)))
+{
   var prec = _work_prec(f, f);
   if bigfloat_is_zero(f) { return bigfloat_zero(); }
   var sign = bigfloat_is_negative(f);
@@ -1335,7 +1357,9 @@ pub fn bigfloat_cbrt(f: &BigFloat) -> BigFloat {
 }
 
 /// hypot(a, b) = sqrt(a^2 + b^2).
-pub fn bigfloat_hypot(a: &BigFloat, b: &BigFloat) -> BigFloat {
+pub fn bigfloat_hypot(a: &BigFloat, b: &BigFloat) -> BigFloat
+  ensures: (((result.significand.negative == false) && ((result.significand.digits.len() == 0) => (result.sign == false))) && ((result.sign == true) => (result.significand.digits.len() > 0)))
+{
   var prec = _work_prec(a, b);
   var target = a.precision;
   if b.precision > target { target = b.precision; }
@@ -1347,28 +1371,36 @@ pub fn bigfloat_hypot(a: &BigFloat, b: &BigFloat) -> BigFloat {
 }
 
 /// Hyperbolic functions via exp.
-pub fn bigfloat_sinh(f: &BigFloat) -> BigFloat {
+pub fn bigfloat_sinh(f: &BigFloat) -> BigFloat
+  ensures: (((result.significand.negative == false) && ((result.significand.digits.len() == 0) => (result.sign == false))) && ((result.sign == true) => (result.significand.digits.len() > 0)))
+{
   var e = bigfloat_exp(f);
   var en = bigfloat_exp(&bigfloat_neg(f));
   return bigfloat_div(&bigfloat_sub(&e, &en), &bigfloat_two());
 }
 
 /// Hyperbolic cosine.
-pub fn bigfloat_cosh(f: &BigFloat) -> BigFloat {
+pub fn bigfloat_cosh(f: &BigFloat) -> BigFloat
+  ensures: (((result.significand.negative == false) && ((result.significand.digits.len() == 0) => (result.sign == false))) && ((result.sign == true) => (result.significand.digits.len() > 0)))
+{
   var e = bigfloat_exp(f);
   var en = bigfloat_exp(&bigfloat_neg(f));
   return bigfloat_div(&bigfloat_add(&e, &en), &bigfloat_two());
 }
 
 /// Hyperbolic tangent.
-pub fn bigfloat_tanh(f: &BigFloat) -> BigFloat {
+pub fn bigfloat_tanh(f: &BigFloat) -> BigFloat
+  ensures: (((result.significand.negative == false) && ((result.significand.digits.len() == 0) => (result.sign == false))) && ((result.sign == true) => (result.significand.digits.len() > 0)))
+{
   var s = bigfloat_sinh(f);
   var c = bigfloat_cosh(f);
   return bigfloat_div(&s, &c);
 }
 
 /// asin(x) = atan(x / sqrt(1 - x^2)); asin(+-1) = +-pi/2.
-pub fn bigfloat_asin(f: &BigFloat) -> BigFloat {
+pub fn bigfloat_asin(f: &BigFloat) -> BigFloat
+  ensures: (((result.significand.negative == false) && ((result.significand.digits.len() == 0) => (result.sign == false))) && ((result.sign == true) => (result.significand.digits.len() > 0)))
+{
   var prec = _work_prec(f, f);
   var one = _one_at(prec);
   if bigfloat_eq(f, &one) {
@@ -1386,7 +1418,9 @@ pub fn bigfloat_asin(f: &BigFloat) -> BigFloat {
 }
 
 /// acos(x) = pi/2 - asin(x). Exact endpoints: acos(1) = 0, acos(-1) = pi.
-pub fn bigfloat_acos(f: &BigFloat) -> BigFloat {
+pub fn bigfloat_acos(f: &BigFloat) -> BigFloat
+  ensures: (((result.significand.negative == false) && ((result.significand.digits.len() == 0) => (result.sign == false))) && ((result.sign == true) => (result.significand.digits.len() > 0)))
+{
   var prec = _work_prec(f, f);
   var one = _one_at(prec);
   if bigfloat_eq(f, &one) { return bigfloat_zero(); }
@@ -1399,7 +1433,9 @@ pub fn bigfloat_acos(f: &BigFloat) -> BigFloat {
 }
 
 /// asinh(x) = ln(x + sqrt(x^2 + 1)).
-pub fn bigfloat_asinh(f: &BigFloat) -> BigFloat {
+pub fn bigfloat_asinh(f: &BigFloat) -> BigFloat
+  ensures: (((result.significand.negative == false) && ((result.significand.digits.len() == 0) => (result.sign == false))) && ((result.sign == true) => (result.significand.digits.len() > 0)))
+{
   var prec = _work_prec(f, f);
   var x2 = bigfloat_mul(f, f);
   var inner = bigfloat_sqrt(&bigfloat_add(&x2, &_one_at(prec)));
@@ -1410,6 +1446,7 @@ pub fn bigfloat_asinh(f: &BigFloat) -> BigFloat {
 /// acosh(x) = ln(x + sqrt(x^2 - 1)); requires x >= 1.
 pub fn bigfloat_acosh(f: &BigFloat) -> BigFloat
   requires: !bigfloat_lt(f, &bigfloat_one())
+  ensures: (((result.significand.negative == false) && ((result.significand.digits.len() == 0) => (result.sign == false))) && ((result.sign == true) => (result.significand.digits.len() > 0)))
 {
   var prec = _work_prec(f, f);
   var x2 = bigfloat_mul(f, f);
@@ -1421,6 +1458,7 @@ pub fn bigfloat_acosh(f: &BigFloat) -> BigFloat
 /// atanh(x) = ln((1 + x)/(1 - x)) / 2; requires |x| < 1.
 pub fn bigfloat_atanh(f: &BigFloat) -> BigFloat
   requires: bigfloat_lt(&bigfloat_abs(f), &bigfloat_one())
+  ensures: (((result.significand.negative == false) && ((result.significand.digits.len() == 0) => (result.sign == false))) && ((result.sign == true) => (result.significand.digits.len() > 0)))
 {
   var prec = _work_prec(f, f);
   var one = _one_at(prec);
@@ -1434,6 +1472,7 @@ pub fn bigfloat_atanh(f: &BigFloat) -> BigFloat
 /// Zero renders as "0".
 pub fn bigfloat_to_str_sci(f: &BigFloat, digits: Int) -> Str
   requires: digits >= 1
+  ensures: result != ""
 {
   if bigfloat_is_zero(f) { return "0"; }
   var raw = _round_digits_raw(f, digits, _default_round);

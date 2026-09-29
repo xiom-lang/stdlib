@@ -622,8 +622,19 @@ T1/T2 yields.
        module-smoke scan's `xiom.bigfloat` manifest entry is an alias, to
        revisit in the smoke-growth wave). num 26.4% -> 31.6%, global 32.1%
        -> 32.5%. Next: bigfloat transcendentals, then geom.
+       Wave 47 (2026-09-29): coverage wave 11 -- bigfloat transcendentals
+       (24 clauses): the same canonical-form family on the _finish-
+       normalized results of exp/ln/log10/log2/exp2, sin/cos/tan, atan/
+       atan2, pow_bf, cbrt, hypot, sinh/cosh/tanh, asin/acos, asinh/acosh/
+       atanh, pi_with_precision/e_with_precision; to_str_sci non-empty.
+       Probe tools/probes/p_wave47_shapes.xi (201st): 27 KATs via
+       bigfloat_to_float64 (e, ln(e), log10(100), log2(8), exp2(10), sin(pi/2),
+       atan(1)=pi/4, cbrt(27), hypot(3,4), asin(1)=pi/2, acos(1)=0,
+       acosh(1)=0, atanh(0)=0, precision-20 pi/e). num 31.6% -> 35.8%,
+       global 32.5% -> 32.7%. Next: bigfloat remainder (from_ratio/pow10/
+       *_int/to_bigint) then geom.
        Ratchet:
-       tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors83.json
+       tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors84.json
        tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;

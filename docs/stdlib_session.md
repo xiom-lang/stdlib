@@ -1169,6 +1169,22 @@ registry pin, agent recon for the rest)**
   coverage ratchet floors83 OK; doc ratchet OK (6993/6993 = 100%);
   module-smoke ratchet OK. Wave 46 closed.
 
+**SESSION 2026-09-29 block 5 (wave 47: bigfloat transcendentals)**
+- Wave 47 (floors84): 24 canonical-form clauses on the _finish-normalized
+  results: exp, ln, log10, log2, exp2, sin/cos/tan, atan, atan2, pow_bf,
+  cbrt, hypot, sinh/cosh/tanh, asin/acos, asinh/acosh/atanh,
+  pi_with_precision/e_with_precision, plus to_str_sci non-empty. Wrapper
+  bodies were verified to end in _finish/_div/_ln (canonical) before
+  claiming; 54 ensures total in the module, no duplicates.
+- Probe p_wave47_shapes.xi (201st): 27 numeric KATs via bigfloat_to_float64
+  (exp(1)=e, ln(e)=1, log10(100)=2, log2(8)=3, exp2(10)=1024, sin(pi/2)=1,
+  atan(1)=pi/4, pow_bf(2,10)=1024, cbrt(27)=3, hypot(3,4)=5,
+  asin(1)=pi/2, acos(1)=0, acosh(1)=0, atanh(0)=0, precision-20 pi/e) --
+  first-run green.
+- num 31.6% -> 35.8%, global 32.5% -> 32.7%; floors84 wired (YAML
+  re-verified) + tools/README.md + plan in the same commit. Full battery on
+  the commit.
+
 **RELAY 2026-09-28 (registry -> compiler/stdlib)**
 - v0.62.0 tag/commit confirmed (80e767b). The registry canary is blocked
   on the pending registry-publish environment approval for run 36438204239;

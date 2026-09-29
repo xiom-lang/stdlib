@@ -112,6 +112,13 @@ bigfloat transcendentals, then geom. Note: the module path is
 `xiom.num.bigfloat` (smoke_bigfloat exists; the module-smoke scan's
 `xiom.bigfloat` manifest alias is a baseline quirk to revisit).
 
+Update 2026-09-29 (wave 47 landed): bigfloat transcendentals -- 24
+canonical-form clauses (exp/ln/log10/log2/exp2, trig, atan/atan2, pow_bf,
+cbrt, hypot, hyperbolics, inverses, explicit-precision pi/e, to_str_sci);
+probe `p_wave47_shapes.xi` (201st, 27 KATs); floors84; num 31.6% ->
+35.8%, global 32.5% -> 32.7%. Next: bigfloat remainder (from_ratio/pow10/
+*_int/to_bigint), then geom.
+
 Remaining-to-100% snapshot (answer to the packages relay, 2026-09-27):
 the release gate is per-directory 100% pub-with-clause + doc 100% + all
 gates green. Current floors77: global 29.7%; math 31.0%; lowest dirs
