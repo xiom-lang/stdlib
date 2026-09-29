@@ -1240,6 +1240,10 @@ registry pin, agent recon for the rest)**
   (YAML re-verified) + tools/README.md + plan + queue in the same commit.
   All 52 wave functions are already referenced by existing geom smokes, so
   the module-smoke baseline is unchanged (497/517, 3332/6200).
+- Full battery on 1bb2d56: check_modules 509/509 (261.5s); corpus 951/951,
+  0 compilefail, 0 runfail (2423.3s); probe corpus 203/203 (410.3s);
+  barename 0 hits / 509 (741.8s); coverage ratchet floors86 OK; doc ratchet
+  OK; module-smoke ratchet OK. Wave 49 closed.
 
 **RELAY 2026-09-29 (packages -> compiler/stdlib)**
 - Pin moved 0.61.3 -> 0.62.1 mid-batch; every package suite re-ran clean,
