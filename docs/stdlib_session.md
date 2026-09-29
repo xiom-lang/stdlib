@@ -1163,6 +1163,11 @@ registry pin, agent recon for the rest)**
   re-verified) + tools/README.md + plan in the same commit. Full battery on
   the commit (smoke_bigfloat exists, so the corpus also exercises the new
   clauses).
+- Full battery on 864ceb5: check_modules 509/509 (315.9s); corpus 951/951,
+  0 compilefail, 0 runfail (1963.1s; 16 parallel-phase flakes passed solo
+  retry); probe corpus 200/200 (554.7s); barename 0 hits / 509 (1145s);
+  coverage ratchet floors83 OK; doc ratchet OK (6993/6993 = 100%);
+  module-smoke ratchet OK. Wave 46 closed.
 
 **RELAY 2026-09-28 (registry -> compiler/stdlib)**
 - v0.62.0 tag/commit confirmed (80e767b). The registry canary is blocked
