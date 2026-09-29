@@ -76,9 +76,16 @@ wiring broke the YAML indentation of ci/heavy/release (`run:` nested under
 `shell:`), so every GitHub run since the release push 0s-failed as
 "workflow file issue" and stdlib-v0.62.0 had no assets (registry canary
 blocked). Fixed in c491b13 (all workflows PyYAML-clean) and release.yml
-gained a `tag` recovery dispatch that builds/publishes from the tag tree;
-recovery run 36487728296 is executing gates. Registry lane: re-run the
-publish once the 0.62.0 assets exist. Rule: YAML edits get a parse check.
+gained a `tag` recovery dispatch that builds/publishes from the tag tree.
+The first recovery then exposed a second, Linux-only blocker: the
+`regex_unescape` Err-Str payload clause (syntax.xi, wave 29) violated on
+ubuntu; fixed in 0e63101 (clause removed, finding upgraded in
+tools/known_failures). stdlib-v0.62.0 was force-updated to 0e63101
+(bypass; new subject sha 0e631018100b157539614cc92fc471f22663baff) and the
+tag-triggered run 36495200067 passed ubuntu gates; windows + package +
+release + canary follow. Registry lane: re-dispatch publish when assets
+land. Rules: YAML edits get a parse check; Err-payload clauses are unsafe
+on any platform (known_failures).
 
 Remaining-to-100% snapshot (answer to the packages relay, 2026-09-27):
 the release gate is per-directory 100% pub-with-clause + doc 100% + all

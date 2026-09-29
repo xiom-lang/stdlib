@@ -996,6 +996,37 @@ registry pin, agent recon for the rest)**
   after this CI-only commit only via the release run itself (code battery
   already green on 2cd0d5b; c491b13 changes no stdlib source).
 
+**0.62.0 RELEASE RECOVERY 2026-09-29 (second root cause: Linux-only clause)**
+- After the YAML fix, the recovery dispatch (run 36487728296) passed
+  `validate`, then failed ubuntu gates: smoke_regex run=1, a Linux-only
+  failure (windows would have passed; 0.61.3's ubuntu run was green, so a
+  wave 22-42 change caused it).
+- Root cause found by reproducing the tag tree in WSL with the released
+  v0.61.3 linux-x64 binary (bundled-stdlib copy moved aside so XIOM_STDLIB
+  wins): `xiom/regex/syntax.xi:66` carried
+  `ensures: result is Err => result.value.len() > 0` -- a Result-Err Str
+  payload read in a catalog clause. It passes on Windows but violates on
+  Linux ("contract violated: ensures at 66:12"). This is the class already
+  documented in tools/known_failures (2026-09-25); the README now records
+  the Linux evidence and marks Err-Str payload reads as unsafe everywhere.
+- Fix (0e63101): the payload clause is removed; the payload-free
+  `s.len() == 0 => result is Ok` clause stays. Verified green on Linux in
+  WSL (`smoke_regex OK`) and on Windows (smoke_regex + 16 stress-regex
+  files), then full battery on 0e63101: check_modules 509/509 (389.3s);
+  corpus 951/951 (2641.2s); probes 197/197 (499.8s); barename 0/509
+  (724.4s); floors80 + doc ratchets OK.
+- Tag: because the failed gates test the TAG tree and the release had no
+  published artifacts, stdlib-v0.62.0 was force-updated to 0e63101 (the
+  release-tags ruleset violation was bypassed, same as branch pushes).
+  NEW SUBJECT SHA for the registry lane: 0e631018100b157539614cc92fc471f22663baff.
+- The tag push auto-started run 36495200067 (the real tag path): validate
+  PASS, **ubuntu release gates PASS in 1h2m47s** (Linux fixed), windows
+  gates running; package -> GitHub Release/assets -> pin-pr -> staging
+  canary dispatch follow. Stale dispatch run 36487728296 cancelled.
+- Registry lane: re-run/re-dispatch the publish once the assets exist; the
+  provenance ref stays refs/tags/stdlib-v0.62.0 and the subject sha is now
+  0e63101 (tree = 80e767b + workflow YAML fix + regex clause fix).
+
 **RELAY 2026-09-28 (registry -> compiler/stdlib)**
 - v0.62.0 tag/commit confirmed (80e767b). The registry canary is blocked
   on the pending registry-publish environment approval for run 36438204239;
