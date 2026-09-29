@@ -231,6 +231,7 @@ pub fn bigfloat_from_int(n: Int) -> BigFloat
 pub fn bigfloat_from_float(f: Float64) -> BigFloat
   requires: !xiom.math.is_nan(f)
   requires: !xiom.math.is_inf(f)
+  ensures: (((result.significand.negative == false) && ((result.significand.digits.len() == 0) => (result.sign == false))) && ((result.sign == true) => (result.significand.digits.len() > 0)))
 {
   if f == 0.0 { return bigfloat_zero(); }
   var neg = f < 0.0;
@@ -389,6 +390,7 @@ pub fn bigfloat_to_str(f: &BigFloat) -> Str
 /// to its normalized form ("1" for 0.999...9 -> 20 digits).
 pub fn bigfloat_to_str_prec(f: &BigFloat, digits: Int) -> Str
   requires: digits >= 1
+  ensures: result != ""
 {
   var r = _round_digits_raw(f, digits, _default_round);
   if _digits_of(&r.significand) > digits {
@@ -398,7 +400,9 @@ pub fn bigfloat_to_str_prec(f: &BigFloat, digits: Int) -> Str
 }
 
 /// Truncate toward zero.
-pub fn bigfloat_to_bigint(f: &BigFloat) -> BigInt {
+pub fn bigfloat_to_bigint(f: &BigFloat) -> BigInt
+  ensures: ((result.negative == true) => (result.digits.len() > 0)) && ((result.digits.len() == 0) => (result.negative == false))
+{
   var ten = xiom.bigint.bigint_ten();
   var mag = f.significand;
   if f.exponent >= 0 {
@@ -1501,35 +1505,46 @@ pub fn bigfloat_to_str_sci(f: &BigFloat, digits: Int) -> Str
 /// Exact rational n/d at the default precision.
 pub fn bigfloat_from_ratio(n: Int, d: Int) -> BigFloat
   requires: d != 0
+  ensures: (((result.significand.negative == false) && ((result.significand.digits.len() == 0) => (result.sign == false))) && ((result.sign == true) => (result.significand.digits.len() > 0)))
 {
   if d == 0 { return bigfloat_zero(); }
   return bigfloat_div(&bigfloat_from_int(n), &bigfloat_from_int(d));
 }
 
 /// Exact x * 10^n (pure exponent shift; no rounding).
-pub fn bigfloat_pow10(f: &BigFloat, n: Int) -> BigFloat {
+pub fn bigfloat_pow10(f: &BigFloat, n: Int) -> BigFloat
+  ensures: result.significand.negative == false
+{
   var r = _copy_bf(f);
   r.exponent = r.exponent + n;
   return r;
 }
 
 /// Integer-valued helpers (range-checked to i64).
-pub fn bigfloat_floor_int(f: &BigFloat) -> Result[Int, Str] {
+pub fn bigfloat_floor_int(f: &BigFloat) -> Result[Int, Str]
+  ensures: (f.significand.digits.len() == 0) => (result.is_ok == true)
+{
   return xiom.bigint.bigint_to_int(&bigfloat_to_bigint(&bigfloat_floor(f)));
 }
 
 /// Convert to Int after ceiling; Err when out of range.
-pub fn bigfloat_ceil_int(f: &BigFloat) -> Result[Int, Str] {
+pub fn bigfloat_ceil_int(f: &BigFloat) -> Result[Int, Str]
+  ensures: (f.significand.digits.len() == 0) => (result.is_ok == true)
+{
   return xiom.bigint.bigint_to_int(&bigfloat_to_bigint(&bigfloat_ceil(f)));
 }
 
 /// Convert to Int after rounding; Err when out of range.
-pub fn bigfloat_round_int(f: &BigFloat) -> Result[Int, Str] {
+pub fn bigfloat_round_int(f: &BigFloat) -> Result[Int, Str]
+  ensures: (f.significand.digits.len() == 0) => (result.is_ok == true)
+{
   return xiom.bigint.bigint_to_int(&bigfloat_to_bigint(&bigfloat_round(f)));
 }
 
 /// Convert to Int after truncation; Err when out of range.
-pub fn bigfloat_trunc_int(f: &BigFloat) -> Result[Int, Str] {
+pub fn bigfloat_trunc_int(f: &BigFloat) -> Result[Int, Str]
+  ensures: (f.significand.digits.len() == 0) => (result.is_ok == true)
+{
   return xiom.bigint.bigint_to_int(&bigfloat_to_bigint(&bigfloat_trunc(f)));
 }
 

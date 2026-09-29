@@ -1189,6 +1189,29 @@ registry pin, agent recon for the rest)**
   barename 0 hits / 509 (1109.8s); coverage ratchet floors84 OK; doc
   ratchet OK; module-smoke ratchet OK. Wave 47 closed.
 
+**SESSION 2026-09-29 block 6 (wave 48: bigfloat remainder)**
+- Wave 48 (floors85): 9 clauses completing the bigfloat surface:
+  from_float (canonical, NaN/inf guarded) and from_ratio canonical;
+  to_bigint bigint-canonical pair; pow10 significand non-negative (copy
+  path; only that invariant is certain); to_str_prec non-empty;
+  floor_int/ceil_int/round_int/trunc_int `zero => is_ok` (payload-free).
+  Remaining unclaused: to_float128, set/get_round_mode (no simple
+  invariants).
+- Probe p_wave48_shapes.xi (202nd): from_float round-trips, to_bigint
+  truncation, from_ratio, pow10, the four *_int conversions on +-1.9 and
+  zero -- first-run green.
+- num 35.8% -> 37.4%, global 32.7% -> 32.8%; floors85 wired (YAML
+  re-verified) + tools/README.md + plan in the same commit. Full battery on
+  the commit.
+
+**RELAY 2026-09-29 (packages -> compiler/stdlib)**
+- Pin moved 0.61.3 -> 0.62.1 mid-batch; every package suite re-ran clean,
+  no code changes needed for the new compiler. Their sectest caught two
+  package-side catalog bugs (obs-fold detection masked by trimming;
+  max-age=abc reported as "without max-age" instead of "is not a number").
+  xiom.string.str_replace_all was used to isolate policy rules; they avoid
+  `==` on Result values (no guaranteed Eq). No stdlib action.
+
 **RELAY 2026-09-28 (registry -> compiler/stdlib)**
 - v0.62.0 tag/commit confirmed (80e767b). The registry canary is blocked
   on the pending registry-publish environment approval for run 36438204239;

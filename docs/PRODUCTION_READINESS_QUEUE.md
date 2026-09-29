@@ -119,6 +119,15 @@ probe `p_wave47_shapes.xi` (201st, 27 KATs); floors84; num 31.6% ->
 35.8%, global 32.5% -> 32.7%. Next: bigfloat remainder (from_ratio/pow10/
 *_int/to_bigint), then geom.
 
+Update 2026-09-29 (wave 48 landed): bigfloat remainder -- 9 clauses
+(from_float/from_ratio canonical, to_bigint bigint-canonical, pow10
+significand, to_str_prec non-empty, zero-fits *_int conversions); probe
+`p_wave48_shapes.xi` (202nd); floors85; num 35.8% -> 37.4%, global 32.7%
+-> 32.8%. Next: geom (the big geometric family), then the low dirs.
+Relay (packages): pin moved 0.61.3 -> 0.62.1 mid-batch; all suites clean,
+no stdlib changes needed; their sectest catalog bugs (obs-fold trimming,
+max-age=abc) were package-side.
+
 Remaining-to-100% snapshot (answer to the packages relay, 2026-09-27):
 the release gate is per-directory 100% pub-with-clause + doc 100% + all
 gates green. Current floors77: global 29.7%; math 31.0%; lowest dirs

@@ -633,8 +633,18 @@ T1/T2 yields.
        acosh(1)=0, atanh(0)=0, precision-20 pi/e). num 31.6% -> 35.8%,
        global 32.5% -> 32.7%. Next: bigfloat remainder (from_ratio/pow10/
        *_int/to_bigint) then geom.
+       Wave 48 (2026-09-29): coverage wave 12 -- bigfloat remainder
+       (9 clauses): canonical-form on from_float (NaN/inf guarded) and
+       from_ratio; to_bigint bigint-canonical pair; pow10 significand
+       non-negative (copy path, so only that invariant is certain);
+       to_str_prec non-empty; zero-fits-is_ok on floor_int/ceil_int/
+       round_int/trunc_int. Probe tools/probes/p_wave48_shapes.xi (202nd):
+       from_float round-trips (0.5/-3.25/0), to_str_prec non-empty,
+       to_bigint truncation (1.5 -> 1, -1.5 -> -1), from_ratio (1/4, -3/4),
+       pow10 (2e3, 1e-2), and the four *_int conversions on +-1.9 and zero.
+       num 35.8% -> 37.4%, global 32.7% -> 32.8%. Next: geom.
        Ratchet:
-       tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors84.json
+       tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors85.json
        tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;
