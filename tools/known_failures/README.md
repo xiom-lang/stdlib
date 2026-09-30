@@ -3,9 +3,10 @@
 This directory is the intake for minimal reproductions of compiler-lane
 findings. Files are excluded from `tools/probes/` so the probe runner and CI
 stay green; resolved probes are promoted to `tools/probes/` and ruled-out
-ones to `tools/probes/evidence/`. **There are currently no open findings**
-(2026-09-22, compiler R61); the history below records what was here and how
-each item closed.
+ones to `tools/probes/evidence/`. There were no open findings as of
+2026-09-22 (compiler R61); the Current section below lists the findings
+opened since, and the history records what was here and how each item
+closed.
 
 Run one manually with:
 
