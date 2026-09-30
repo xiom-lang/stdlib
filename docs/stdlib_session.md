@@ -1316,7 +1316,11 @@ registry pin, agent recon for the rest)**
   whole probe is green on v0.61.3 and v0.62.1.
 - geom 23.2% -> 35.5% (147/414), global 33.6% -> 34.4%; floors87 wired
   (YAML re-verified) + tools/README.md + plan + queue in the same commit.
-- Full battery on <wave>: <battery line>.
+- Full battery on ae9672b: check_modules 509/509 (305.1s); corpus 951/951,
+  0 compilefail, 0 runfail (1733.7s); probe corpus 204/204 (500.7s);
+  barename 0 hits / 509 (885.4s); coverage ratchet floors87 OK; doc ratchet
+  OK; module-smoke ratchet OK. Wave 50 closed (LOCAL-only commits; no push
+  requested).
 
 **RELAY 2026-09-29 (packages -> compiler/stdlib)**
 - Pin moved 0.61.3 -> 0.62.1 mid-batch; every package suite re-ran clean,
@@ -1367,20 +1371,20 @@ registry pin, agent recon for the rest)**
 
 ### HANDOFF 2026-09-29 (context-limit snapshot 3; read this plus docs/PRODUCTION_READINESS_QUEUE.md)
 
-**State**: main @ the `stdlib-perf1` tag (`86c5a48` + battery docs; the tag
-also carries wave 49 and its docs), PUSHED per the compiler-lane relay (main
-+ tag; the remote may report PR/status-check bypass). Tags: `stdlib-perf1`
-= PERF-1 annotation wave pin for compiler v0.62.2 `STDLIB_VERSION`;
-`stdlib-v0.62.0` = the released stdlib 0.62.0. Compiler pin for local gates:
-v0.61.3 at `%TEMP%\kilo\stdlib_ws\xiom_v0613.exe` (rebuild recipe in the
-2026-09-25 handoff); the compiler lane shipped the combined release and
-packages now run on pin v0.62.1 (all package suites clean; no stdlib
-changes needed). Coverage floors86: **global 33.6% pub-with-clause, geom
-23.2%, math 38.8%, num 35.6%**; probe corpus **203**; smoke corpus 951;
-modules 509/509 type-check clean; barename 0/509; doc scan 100%;
-**module-smoke ratchet live** (baseline `tools/module_smoke_floors.json`:
-497/517 source modules exercised by a smoke, 3,332/6,200 public fns
-referenced).
+**State**: main @ `ae9672b` + battery docs (wave 50, LOCAL ONLY -- the
+compiler lane acked the `stdlib-perf1` pin and noted nothing further is
+needed from the stdlib lane for v0.62.2; push when they ask). Tags:
+`stdlib-perf1` = the pushed PERF-1 annotation wave pin for compiler v0.62.2
+`STDLIB_VERSION`; `stdlib-v0.62.0` = the released stdlib 0.62.0. Compiler
+pin for local gates: v0.61.3 at `%TEMP%\kilo\stdlib_ws\xiom_v0613.exe`
+(rebuild recipe in the 2026-09-25 handoff); the compiler lane shipped the
+combined release and packages run on pin v0.62.1; the wave-50 probe is
+green on BOTH v0.61.3 and v0.62.1. Coverage floors87: **global 34.4%
+pub-with-clause, geom 35.5%, math 38.8%, num 35.6%**; probe corpus **204**;
+smoke corpus 951; modules 509/509 type-check clean; barename 0/509; doc
+scan 100%; **module-smoke ratchet live** (baseline
+`tools/module_smoke_floors.json`: 497/517 source modules exercised by a
+smoke, 3,332/6,200 public fns referenced).
 
 **Shipped**: stdlib **0.62.0 released** — tag `stdlib-v0.62.0` force-updated
 to `0e63101` (ruleset bypass), GitHub Release published 2026-09-29 00:10Z
@@ -1409,7 +1413,11 @@ indexing of Float64 vector elements reads garbage, so matrix row claims are
 len-only); PERF-1 atomics `#[unsafe_direct]` annotation on all 16 pub fns
 plus `tools/doc_scan.ps1` attribute transparency and the
 `release-notes/v0.62.2.md` stdlib fragment (tag `stdlib-perf1`, the
-`STDLIB_VERSION` pin for compiler v0.62.2). Also landed:
+`STDLIB_VERSION` pin for compiler v0.62.2); geom batch 2 matrix +
+quaternion 51 (87; found + filed `p_geom_matrix_result_infer.xi` --
+un-annotated matrix-module nested results lose a nesting level; fixed
+`quat_between`'s opposite-direction axis choice, locked by the probe).
+Also landed:
 `tools/module_smoke_scan.ps1` +
 baseline + ratchet wired into all three workflows (owner requirement: every
 module must have a smoke).
@@ -1463,19 +1471,20 @@ vs `&Vec[Vec[Float64]]` AV is in the compiler backlog
 (`tools/known_failures/p_vec_shape_arg_mismatch_av.xi`); NaN-abort class
 (`math.sqrt`/`math.ln` requires on NaN inputs) recorded but unfixed.
 
-**Remaining to 100% (order)**: wave 49 DONE (geom primitives, 52 clauses,
-floors86); wave 50 = **geom batch 2**: `matrix.xi` (32 pub) +
-`quaternion.xi` (19) = 51, then `vector.xi` (24) + `curves.xi`/`collision.xi`
-(19), then `geometry_2d`/`geometry_3d`/`geometry_extended`, `polyhedra`,
-`linear` (82) and the big `geom.xi` aggregate (142 uncovered -> 2-3 waves),
-then the low dirs in queue order (net 5.4%, serialize 5.4%, hash 8.9%,
-reflect 9.1%, iter 9.8%, convert 11.5%, format 13%, time 13%, misc 13.9%,
-os 15.3%, rand 16%, crypto 17%, log 19.1%, compress 21.1%, plus remaining
-core/stats gaps), then C (geom dedup, needs compiler-lane api_freeze regen),
-D (tzdata phase 2, check `PACKAGE-NAMESPACES.txt` first), E (untested-surface
-generator classes), F (next release cut). Smoke growth: the 20 modules with
-no smoke and the ~2,868 unreferenced functions are explicit targets; the
-`xiom.bigfloat` manifest-alias quirk in module_smoke_scan needs a look.
+**Remaining to 100% (order)**: waves 49-50 DONE (geom primitives 52 +
+geom batch 2 matrix/quaternion 51, floors87); wave 51 = **geom batch 3**:
+`vector.xi` (24 pub) + `curves.xi` (7) + `collision.xi` (12) = 43, then
+`geometry_2d`/`geometry_3d`/`geometry_extended` (57) + `polyhedra` (10) +
+`linear` (15), then the big `geom.xi` aggregate (142 uncovered -> 2-3
+waves), then the low dirs in queue order (net 5.4%, serialize 5.4%, hash
+8.9%, reflect 9.1%, iter 9.8%, convert 11.5%, format 13%, time 13%, misc
+13.9%, os 15.3%, rand 16%, crypto 17%, log 19.1%, compress 21.1%, plus
+remaining core/stats gaps), then C (geom dedup, needs compiler-lane
+api_freeze regen), D (tzdata phase 2, check `PACKAGE-NAMESPACES.txt`
+first), E (untested-surface generator classes), F (next release cut).
+Smoke growth: the 20 modules with no smoke and the ~2,868 unreferenced
+functions are explicit targets; the `xiom.bigfloat` manifest-alias quirk in
+module_smoke_scan needs a look.
 
 **NEXT SESSION PROMPT (paste into a fresh session)**:
 
@@ -1487,9 +1496,9 @@ READ FIRST, in order:
 2. docs/PRODUCTION_READINESS_QUEUE.md -- authoritative queue (sections C/D/E/F, the readiness outlook, the module-smoke requirement, and all contract/import gotchas).
 3. docs/RELEASE_CHECKLIST.md before any release action.
 
-STATE: main @ the stdlib-perf1 tag or later (pushed; stdlib-perf1 is the STDLIB_VERSION pin for compiler v0.62.2). Compiler pin v0.61.3 at %TEMP%\kilo\stdlib_ws\xiom_v0613.exe (rebuild recipe in the 2026-09-25 handoff if missing). Coverage floors86: global 33.6%, geom 23.2%, math 38.8%, num 35.6%. All gates green on the tip: check_modules 509/509; corpus 951/951; probes 203/203; barename 0/509; coverage ratchet floors86; module-smoke ratchet (497/517 modules, 3332/6200 pub fns); doc 100%. stdlib 0.62.0 is RELEASED (tag stdlib-v0.62.0 at 0e63101 with assets) and the registry lane owns its publish; the next release continues coverage toward 100%.
+STATE: main @ ae9672b + battery docs or later (LOCAL only; stdlib-perf1 is the pushed STDLIB_VERSION pin for compiler v0.62.2). Compiler pin v0.61.3 at %TEMP%\kilo\stdlib_ws\xiom_v0613.exe (rebuild recipe in the 2026-09-25 handoff if missing); the compiler lane's v0.62.1 binary also lives at E:\xiom-lang\xiom\target\debug\xiom.exe and the wave-50 probe is green on both. Coverage floors87: global 34.4%, geom 35.5%, math 38.8%, num 35.6%. All gates green on the tip: check_modules 509/509; corpus 951/951; probes 204/204; barename 0/509; coverage ratchet floors87; module-smoke ratchet (497/517 modules, 3332/6200 pub fns); doc 100%. stdlib 0.62.0 is RELEASED (tag stdlib-v0.62.0 at 0e63101 with assets) and the registry lane owns its publish; the next release continues coverage toward 100%.
 
-FIRST TASK -- wave 50: geom batch 2 -- matrix.xi (32 pub) + quaternion.xi (19), 51 pub, the long-name typed Mat2/3/4/Quaternion domain (wave 49 already closed the short-name vec/quat/mat primitives, 52 clauses, floors86). Batch-split per the owner's directive (families of 40-60 pub per wave): then vector.xi + curves/collision, then geometry_2d/3d/extended/polyhedra/linear, then the big geom.xi aggregate (142 uncovered). Protocol for EVERY wave:
+FIRST TASK -- wave 51: geom batch 3 -- vector.xi (24 pub) + curves.xi (7) + collision.xi (12) = 43 pub (waves 49-50 closed geom primitives 52 and matrix/quaternion 51; floors87). Batch-split per the owner's directive (families of 40-60 pub per wave): then geometry_2d/geometry_3d/geometry_extended (57) + polyhedra (10) + linear (15), then the big geom.xi aggregate (142 uncovered -> 2-3 waves). Protocol for EVERY wave:
 read-only recon (agents time out on big files -- read the source directly if needed) -> new-shape probe in tools/probes/ (RED on the stub/before, GREEN after) -> runtime-safe clauses (contracts run at runtime; every clause certainly true for all inputs incl. non-normalized structs; canonical-form/field claims; NEVER read Result/Option payloads in clauses; NaN-tolerant `(x == expr) || (x != x)` forms; parenthesize mixed comparisons) -> powershell -NoProfile -File tools\coverage_scan.ps1 -DumpFloors tools\coverage_floors<N>.json -> wire the floors file into .github/workflows/{ci,heavy,release}.yml (keep `run:` at EIGHT spaces under `shell: pwsh`; after ANY workflow edit run `python -c "import yaml, yaml.safe_load(...)"` on it) + tools/README.md + docs/STDLIB_READINESS_PLAN.md + docs/stdlib_session.md in the SAME commit -> pure-ASCII single-quoted commit -> full battery: powershell -NoProfile -File tools\check_modules.ps1 -Compiler <pin> ; tools\run_smokes.ps1 -Compiler <pin> -Workers 8 -RetryFailed ; same with -Corpus tools\probes ; tools\barename_scan.ps1 ; tools\coverage_scan.ps1 -RatchetFile tools\coverage_floors<N>.json ; tools\doc_scan.ps1 -RatchetFile tools\doc_baseline4.json ; tools\module_smoke_scan.ps1 -BaselineFile tools\module_smoke_floors.json. One wave = one commit.
 
 ALSO IN SCOPE each wave: smoke-growth (the 20 modules with no smoke and the ~2,868 unreferenced pub fns are ratchet targets; dump tools/module_smoke_floors.json upward as they land) and any fix-first bugs the probe catches.
@@ -1498,7 +1507,7 @@ THEN, in order: remaining geom sub-batches; the low dirs (net 5.4%, serialize 5.
 
 RULES: no stdlib edits while a sweep is in flight; pushes only when the release/compiler lane asks, always after `git log -1 --format='%an <%ae>'` prints Lefteris Notas <lefterisnotas@gmail.com>; no pwsh -- use `powershell -NoProfile -File tools\<script>.ps1`; keep repo edits single-threaded (recon agents read-only); report new compiler bugs in tools/known_failures/ with a minimal probe.
 
-GOTCHAS: module paths are the declared names, not file paths (xiom.num.bigfloat, xiom.complex, xiom.math.optimization); Err/Ok payload reads in clauses are unsafe on any platform (Linux release-blocking incident 2026-09-28); clause-position indexing of Float64 vector elements reads garbage -- keep Float64-vector/matrix clauses to `.len()`/range claims (`tools/known_failures/p_clause_float_vec_index.xi`, filed 2026-09-29); doc comments stay ABOVE `#[...]` attributes and doc_scan skips attribute lines; the compiler-release stdlib fragment lives at `release-notes/<compiler-tag>.md` (v0.62.2.md, merged schema max 6 highlights; run the compiler's xiom-release-notes from the xiom root -- its notes-dir is CWD-relative); `.value` Option payload reads AV in probe code (use `.unwrap()`); extra call arguments are silently ignored; the transient runner flakes (0s failures, occasional rc=-1/COMPILE-FAIL on a single file) are load-related -- a solo retry/rerun is safe.
+GOTCHAS: module paths are the declared names, not file paths (xiom.num.bigfloat, xiom.complex, xiom.math.optimization); Err/Ok payload reads in clauses are unsafe on any platform (Linux release-blocking incident 2026-09-28); clause-position indexing of Float64 vector elements reads garbage -- keep Float64-vector/matrix clauses to `.len()`/range claims (`tools/known_failures/p_clause_float_vec_index.xi`, filed 2026-09-29); un-annotated `xiom.geom.matrix` Vec[Vec[Float64]] results lose a nesting level at the call site -- annotate every nested matrix-module local (`var x: Vec[Vec[Float64]] = matrix.f(...)`) and annotated tuple extraction in probes/smokes/consumers (`tools/known_failures/p_geom_matrix_result_infer.xi`, filed 2026-09-30; reproduced on v0.61.3 and v0.62.1); check clause field names against the actual return type -- `.x` on a Vec result compiled on v0.61.3 but the v0.62.1 checker rejects it (quat_axis wave-50 catch); doc comments stay ABOVE `#[...]` attributes and doc_scan skips attribute lines; the compiler-release stdlib fragment lives at `release-notes/<compiler-tag>.md` (v0.62.2.md, merged schema max 6 highlights; run the compiler's xiom-release-notes from the xiom root -- its notes-dir is CWD-relative); `.value` Option payload reads AV in probe code (use `.unwrap()`); extra call arguments are silently ignored; the transient runner flakes (0s failures, occasional rc=-1/COMPILE-FAIL on a single file) are load-related -- a solo retry/rerun is safe.
 ```
 
 ### HANDOFF 2026-09-27 (context-limit snapshot 2; read this plus docs/PRODUCTION_READINESS_QUEUE.md)
