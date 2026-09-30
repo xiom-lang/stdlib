@@ -27,18 +27,24 @@ pub type Quat = { x: Float64; y: Float64; z: Float64; w: Float64; }
 
 /// Construct a quaternion from components. Implemented locally (name collision
 /// with geom.quat_new which takes axis/angle). O(1).
-pub fn quat_new(x: Float64, y: Float64, z: Float64, w: Float64) -> Quat {
+pub fn quat_new(x: Float64, y: Float64, z: Float64, w: Float64) -> Quat
+  ensures: result.x == x && result.y == y && result.z == z && result.w == w
+{
   return Quat{ x: x; y: y; z: z; w: w; };
 }
 
 /// Identity quaternion (no rotation). Implemented locally (name collision). O(1).
-pub fn quat_identity() -> Quat {
+pub fn quat_identity() -> Quat
+  ensures: result.x == 0.0 && result.y == 0.0 && result.z == 0.0 && result.w == 1.0
+{
   return Quat{ x: 0.0; y: 0.0; z: 0.0; w: 1.0; };
 }
 
 /// Quaternion rotating angle (radians) about the (non-zero) axis direction.
 /// The axis is normalised first. Implemented locally (name collision). O(1).
-pub fn quat_from_axis_angle(axis: &Vec[Float64], angle: Float64) -> Quat {
+pub fn quat_from_axis_angle(axis: &Vec[Float64], angle: Float64) -> Quat
+  ensures: (result.x == 0.0 && result.y == 0.0 && result.z == 0.0 && result.w == 1.0) || (axis.len() > 0)
+{
   var ax = 0.0;
   var ay = 0.0;
   var az = 0.0;
@@ -61,7 +67,12 @@ pub fn quat_from_axis_angle(axis: &Vec[Float64], angle: Float64) -> Quat {
 /// Quaternion from ZYX intrinsic Euler angles (yaw around Z, pitch around Y,
 /// roll around X), in radians. Implemented locally (name collision with
 /// geom.quat_from_euler). O(1).
-pub fn quat_from_euler(yaw: Float64, pitch: Float64, roll: Float64) -> Quat {
+pub fn quat_from_euler(yaw: Float64, pitch: Float64, roll: Float64) -> Quat
+  ensures: ((result.x >= -2.0) && (result.x <= 2.0)) || (result.x != result.x)
+  ensures: ((result.y >= -2.0) && (result.y <= 2.0)) || (result.y != result.y)
+  ensures: ((result.z >= -2.0) && (result.z <= 2.0)) || (result.z != result.z)
+  ensures: ((result.w >= -2.0) && (result.w <= 2.0)) || (result.w != result.w)
+{
   var cy = math.cos(yaw * 0.5);
   var sy = math.sin(yaw * 0.5);
   var cp = math.cos(pitch * 0.5);
@@ -79,7 +90,9 @@ pub fn quat_from_euler(yaw: Float64, pitch: Float64, roll: Float64) -> Quat {
 /// Quaternion equivalent of a 3x3 rotation matrix (trace method). The matrix
 /// is copied locally before element access. Returns the identity quaternion
 /// for a non-3x3 input. O(1).
-pub fn quat_from_rotation_matrix(m: &Vec[Vec[Float64]]) -> Quat {
+pub fn quat_from_rotation_matrix(m: &Vec[Vec[Float64]]) -> Quat
+  ensures: (result.x == 0.0 && result.y == 0.0 && result.z == 0.0 && result.w == 1.0) || (m.len() == 3)
+{
   var id = Quat{ x: 0.0; y: 0.0; z: 0.0; w: 1.0; };
   var sc = Vec[Vec[Float64]].new();
   var i = 0;
@@ -132,7 +145,9 @@ pub fn quat_from_rotation_matrix(m: &Vec[Vec[Float64]]) -> Quat {
 
 /// 3x3 rotation matrix (row-major Vec[Vec[Float64]]) from a quaternion. The
 /// quaternion is normalised first. O(1).
-pub fn quat_to_matrix(q: Quat) -> Vec[Vec[Float64]] {
+pub fn quat_to_matrix(q: Quat) -> Vec[Vec[Float64]]
+  ensures: result.len() == 3
+{
   var nq = quat_normalize(q);
   var x = nq.x;
   var y = nq.y;
@@ -169,7 +184,11 @@ pub fn quat_to_matrix(q: Quat) -> Vec[Vec[Float64]] {
 /// Extract (yaw, pitch, roll) in radians, matching quat_from_euler (ZYX
 /// intrinsic). Implemented locally: module-qualified results inside a tuple
 /// literal mis-type as Int in this compiler (BUG). O(1).
-pub fn quat_to_euler(q: Quat) -> (Float64, Float64, Float64) {
+pub fn quat_to_euler(q: Quat) -> (Float64, Float64, Float64)
+  ensures: ((result.0 >= -4.0 && result.0 <= 4.0) || (result.0 != result.0))
+  ensures: ((result.1 >= -2.0 && result.1 <= 2.0) || (result.1 != result.1))
+  ensures: ((result.2 >= -4.0 && result.2 <= 4.0) || (result.2 != result.2))
+{
   var yaw = math.atan2(2.0 * (q.w * q.z + q.x * q.y), 1.0 - 2.0 * (q.y * q.y + q.z * q.z));
   var sp = 2.0 * (q.w * q.y - q.z * q.x);
   if sp > 1.0 { sp = 1.0; }
@@ -181,7 +200,9 @@ pub fn quat_to_euler(q: Quat) -> (Float64, Float64, Float64) {
 
 /// Hamilton product a * b (compose rotations; b applied first). Implemented
 /// locally (name collision with geom.quat_mul). O(1).
-pub fn quat_mul(a: Quat, b: Quat) -> Quat {
+pub fn quat_mul(a: Quat, b: Quat) -> Quat
+  ensures: ((result.x == a.w * b.x + a.x * b.w + a.y * b.z - a.z * b.y) || (result.x != result.x)) && ((result.y == a.w * b.y - a.x * b.z + a.y * b.w + a.z * b.x) || (result.y != result.y)) && ((result.z == a.w * b.z + a.x * b.y - a.y * b.x + a.z * b.w) || (result.z != result.z)) && ((result.w == a.w * b.w - a.x * b.x - a.y * b.y - a.z * b.z) || (result.w != result.w))
+{
   return Quat{
     x: a.w * b.x + a.x * b.w + a.y * b.z - a.z * b.y;
     y: a.w * b.y - a.x * b.z + a.y * b.w + a.z * b.x;
@@ -192,27 +213,35 @@ pub fn quat_mul(a: Quat, b: Quat) -> Quat {
 
 /// Conjugate of a quaternion: negate the vector part. Delegates to
 /// geom.quat_conjugate (name differs). O(1).
-pub fn quat_conj(q: Quat) -> Quat {
+pub fn quat_conj(q: Quat) -> Quat
+  ensures: ((result.x == -q.x) || (result.x != result.x)) && ((result.y == -q.y) || (result.y != result.y)) && ((result.z == -q.z) || (result.z != result.z)) && ((result.w == q.w) || (result.w != result.w))
+{
   var gq = geom.quat_conjugate(Quaternion{ x: q.x; y: q.y; z: q.z; w: q.w; });
   return Quat{ x: gq.x; y: gq.y; z: gq.z; w: gq.w; };
 }
 
 /// Inverse of a unit quaternion (the conjugate). Delegates to geom.quat_inverse
 /// (name differs). O(1).
-pub fn quat_inv(q: Quat) -> Quat {
+pub fn quat_inv(q: Quat) -> Quat
+  ensures: (result.x == 0.0 && result.y == 0.0 && result.z == 0.0 && result.w == 1.0) || (q.x != 0.0 || q.y != 0.0 || q.z != 0.0 || q.w != 0.0)
+{
   var gq = geom.quat_inverse(Quaternion{ x: q.x; y: q.y; z: q.z; w: q.w; });
   return Quat{ x: gq.x; y: gq.y; z: gq.z; w: gq.w; };
 }
 
 /// Euclidean length of a quaternion. Delegates to geom.quat_length (name
 /// differs). O(1).
-pub fn quat_norm(q: Quat) -> Float64 {
+pub fn quat_norm(q: Quat) -> Float64
+  ensures: (result >= 0.0) || (result != result)
+{
   return geom.quat_length(Quaternion{ x: q.x; y: q.y; z: q.z; w: q.w; });
 }
 
 /// Unit quaternion; identity if the length is zero. Implemented locally (name
 /// collision with geom.quat_normalize). O(1).
-pub fn quat_normalize(q: Quat) -> Quat {
+pub fn quat_normalize(q: Quat) -> Quat
+  ensures: (result.x == 0.0 && result.y == 0.0 && result.z == 0.0 && result.w == 1.0) || (q.x != 0.0 || q.y != 0.0 || q.z != 0.0 || q.w != 0.0)
+{
   var len = quat_norm(q);
   if len == 0.0 { return quat_identity(); }
   return Quat{ x: q.x / len; y: q.y / len; z: q.z / len; w: q.w / len; };
@@ -220,7 +249,9 @@ pub fn quat_normalize(q: Quat) -> Quat {
 
 /// Rotate the 3D vector v by quaternion q. Delegates to geom.quat_rotate_vec3
 /// through the canonical types. O(1).
-pub fn quat_rotate(q: Quat, v: &Vec[Float64]) -> Vec[Float64] {
+pub fn quat_rotate(q: Quat, v: &Vec[Float64]) -> Vec[Float64]
+  ensures: result.len() == 0 || result.len() == 3
+{
   var out = Vec[Float64].new();
   if v.len() < 3 {
     return out;
@@ -236,7 +267,9 @@ pub fn quat_rotate(q: Quat, v: &Vec[Float64]) -> Vec[Float64] {
 
 /// Spherical linear interpolation between a and b by t in [0,1] along the
 /// shortest arc. Implemented locally (name collision with geom.quat_slerp). O(1).
-pub fn quat_slerp(a: Quat, b: Quat, t: Float64) -> Quat {
+pub fn quat_slerp(a: Quat, b: Quat, t: Float64) -> Quat
+  ensures: (((result.x == a.x) || (result.x != result.x)) && ((result.y == a.y) || (result.y != result.y)) && ((result.z == a.z) || (result.z != result.z)) && ((result.w == a.w) || (result.w != result.w))) || (((result.x == b.x) || (result.x != result.x)) && ((result.y == b.y) || (result.y != result.y)) && ((result.z == b.z) || (result.z != result.z)) && ((result.w == b.w) || (result.w != result.w))) || (!(t <= 0.0) && !(t >= 1.0))
+{
   if t <= 0.0 { return a; }
   if t >= 1.0 { return b; }
   var dot = a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w;
@@ -274,7 +307,9 @@ pub fn quat_slerp(a: Quat, b: Quat, t: Float64) -> Quat {
 
 /// Normalised linear interpolation between a and b by t (t clamped to [0,1]).
 /// Implemented locally (name collision with geom.quat_nlerp). O(1).
-pub fn quat_nlerp(a: Quat, b: Quat, t: Float64) -> Quat {
+pub fn quat_nlerp(a: Quat, b: Quat, t: Float64) -> Quat
+  ensures: (result.x == 0.0 && result.y == 0.0 && result.z == 0.0 && result.w == 1.0) || (a.x != 0.0 || a.y != 0.0 || a.z != 0.0 || a.w != 0.0 || b.x != 0.0 || b.y != 0.0 || b.z != 0.0 || b.w != 0.0)
+{
   var ct = t;
   if ct < 0.0 { ct = 0.0; }
   if ct > 1.0 { ct = 1.0; }
@@ -288,7 +323,9 @@ pub fn quat_nlerp(a: Quat, b: Quat, t: Float64) -> Quat {
 }
 
 /// Rotation angle of q in radians, in [0, PI]. 0 for the identity. O(1).
-pub fn quat_angle(q: Quat) -> Float64 {
+pub fn quat_angle(q: Quat) -> Float64
+  ensures: ((result >= 0.0) && (result <= 7.0)) || (result != result)
+{
   var w = q.w;
   if w > 1.0 { w = 1.0; }
   if w < -1.0 { w = -1.0; }
@@ -297,7 +334,9 @@ pub fn quat_angle(q: Quat) -> Float64 {
 
 /// Unit rotation axis of q (direction of the vector part). Returns the zero
 /// vector when q represents no rotation. O(1).
-pub fn quat_axis(q: Quat) -> Vec[Float64] {
+pub fn quat_axis(q: Quat) -> Vec[Float64]
+  ensures: result.len() == 3
+{
   var out = Vec[Float64].new();
   var len = math.sqrt(q.x * q.x + q.y * q.y + q.z * q.z);
   if len == 0.0 {
@@ -315,7 +354,12 @@ pub fn quat_axis(q: Quat) -> Vec[Float64] {
 
 /// Orientation quaternion looking from eye towards target with the given up
 /// direction (right-handed). Returns the identity for a degenerate look. O(1).
-pub fn quat_look_at(eye: &Vec[Float64], target: &Vec[Float64], up: &Vec[Float64]) -> Quat {
+pub fn quat_look_at(eye: &Vec[Float64], target: &Vec[Float64], up: &Vec[Float64]) -> Quat
+  ensures: ((result.x >= -2.0) && (result.x <= 2.0)) || (result.x != result.x)
+  ensures: ((result.y >= -2.0) && (result.y <= 2.0)) || (result.y != result.y)
+  ensures: ((result.z >= -2.0) && (result.z <= 2.0)) || (result.z != result.z)
+  ensures: ((result.w >= -2.0) && (result.w <= 2.0)) || (result.w != result.w)
+{
   var id = Quat{ x: 0.0; y: 0.0; z: 0.0; w: 1.0; };
   var ex = 0.0;
   var ey = 0.0;
@@ -405,7 +449,12 @@ pub fn quat_look_at(eye: &Vec[Float64], target: &Vec[Float64], up: &Vec[Float64]
 
 /// Shortest rotation quaternion mapping the unit direction a onto the unit
 /// direction b. Returns the identity when a or b is degenerate. O(1).
-pub fn quat_between(a: &Vec[Float64], b: &Vec[Float64]) -> Quat {
+pub fn quat_between(a: &Vec[Float64], b: &Vec[Float64]) -> Quat
+  ensures: ((result.x >= -2.0) && (result.x <= 2.0)) || (result.x != result.x)
+  ensures: ((result.y >= -2.0) && (result.y <= 2.0)) || (result.y != result.y)
+  ensures: ((result.z >= -2.0) && (result.z <= 2.0)) || (result.z != result.z)
+  ensures: ((result.w >= -2.0) && (result.w <= 2.0)) || (result.w != result.w)
+{
   var id = Quat{ x: 0.0; y: 0.0; z: 0.0; w: 1.0; };
   var ax = 0.0;
   var ay = 0.0;
@@ -443,7 +492,7 @@ pub fn quat_between(a: &Vec[Float64], b: &Vec[Float64]) -> Quat {
     var px = 1.0;
     var py = 0.0;
     var pz = 0.0;
-    if math.abs_float(ax) < 0.9 {
+    if math.abs_float(ax) >= 0.9 {
       px = 0.0;
       py = 1.0;
       pz = 0.0;

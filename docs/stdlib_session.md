@@ -1275,6 +1275,49 @@ registry pin, agent recon for the rest)**
   OK; module-smoke ratchet OK. PERF-1 annotation wave closed; tag
   `stdlib-perf1` created and pushed for `STDLIB_VERSION`.
 
+**SESSION 2026-09-30 block 9 (wave 50: geom batch 2 -- matrix + quaternion)**
+- Wave 50 (floors87): 51 clauses -- xiom.geom.matrix (32) and
+  xiom.geom.quaternion (19). Highlights: Mat2/3/4 field mirrors; len/shape
+  claims on identity/zero/one/add/sub/mul/scalar_mul/diag_mul/hadamard/
+  kronecker/transpose/adjugate/diagonal; det/minor/cofactor/trace
+  NaN-or-zero-or-nonempty bands; inverse/cholesky presence mirrors; rank in
+  [0, a.len()]; nullity >= 0; eigenvalues/eigenvectors len 0-or-2; LU/QR
+  tuple and SVD triple length claims; solve_linear 0-or-rows;
+  least_squares nonempty-or-nonempty-input; condition_number >= 0 or NaN;
+  Quat field mirrors; identity-or-nonzero forms on inv/normalize/
+  from_axis_angle; euler +-2 bands; from_rotation_matrix identity-or-3x3;
+  to_matrix len 3; to_euler bands; rotate len 0/3; slerp
+  endpoint-or-interior; nlerp identity-or-not-both-zero; angle [0,7);
+  axis len 3; look_at/between +-2 bands.
+- Probe p_wave50_shapes.xi (204th): 96 return-code checks incl. the LU/QR/
+  Cholesky KATs, solve_linear/least_squares solutions, eigenvalue KATs,
+  the 90-degree z rotation, slerp/nlerp unit norms, look-at and between.
+- Fix-first (probe-caught): `quat_between`'s opposite-direction
+  perpendicular-axis choice was inverted (`if math.abs_float(ax) < 0.9`
+  kept the x-axis probe, which is parallel to x-aligned inputs), so
+  180-degree pairs hit the `ol == 0.0` guard and returned the identity;
+  flipping to `>= 0.9` selects a perpendicular axis. Locked by probe
+  checks 95/96 (w == 0 and unit vector part for a = -b).
+- NEW compiler finding (filed, tools/known_failures/p_geom_matrix_result_infer.xi):
+  un-annotated call-site inference of `xiom.geom.matrix`
+  `Vec[Vec[Float64]]` results loses a nesting level -- `var z =
+  matrix.zero(2,2); z[0].len()` reads 0 (`matrix.one` surfaces the raw
+  double bits as the row length) and tuple extraction (`var l = lu.0`) is
+  the same; explicit `Vec[Vec[Float64]]` annotations (or annotated tuple
+  extraction) fix it; the identical shape via `xiom.geom.mat` is correct;
+  single-level Vec[Float64] returns are unaffected; reproduced on v0.61.3
+  AND v0.62.1. Found because the probe read matrix rows directly;
+  `smoke_geom_mat` already documented the cannot-be-read symptom and
+  verifies through det/trace/rank scalars. The probe now annotates every
+  nested matrix-module local.
+- v0.62.1 cross-check caught a clause bug in `quat_axis`: the original
+  second clause read `.x/.y/.z` on a `Vec[Float64]` result (the v0.61.3
+  checker silently accepted it); replaced with the len-only claim. The
+  whole probe is green on v0.61.3 and v0.62.1.
+- geom 23.2% -> 35.5% (147/414), global 33.6% -> 34.4%; floors87 wired
+  (YAML re-verified) + tools/README.md + plan + queue in the same commit.
+- Full battery on <wave>: <battery line>.
+
 **RELAY 2026-09-29 (packages -> compiler/stdlib)**
 - Pin moved 0.61.3 -> 0.62.1 mid-batch; every package suite re-ran clean,
   no code changes needed for the new compiler. Their sectest caught two

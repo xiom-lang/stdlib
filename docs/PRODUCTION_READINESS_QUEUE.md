@@ -153,6 +153,27 @@ attribute is ignored pre-m166 (gates run on the v0.61.3 pin); under m166
 the wrappers compile direct (compiler-lane proof, PERF-1). Next: geom
 batch 2 (wave 50) as before.
 
+Update 2026-09-30 (wave 50 landed): geom batch 2 -- the typed matrix +
+quaternion domain, 51 clauses (xiom.geom.matrix 32: Mat2/3/4 field
+mirrors, len/shape claims on every builder, det/minor/cofactor/trace
+bands, inverse/cholesky presence mirrors, rank/nullity bounds,
+decomposition tuple lengths, solve_linear 0-or-rows, condition_number
+non-negative-or-NaN; xiom.geom.quaternion 19: Quat field mirrors,
+identity-or-nonzero forms, euler +-2 bands, slerp endpoint-or-interior,
+look_at/between bands). Fix-first: `quat_between`'s opposite-direction
+perpendicular-axis choice was inverted (180-degree pairs returned the
+identity) -- fixed and locked by the probe. New compiler finding filed:
+`p_geom_matrix_result_infer.xi` -- un-annotated `xiom.geom.matrix`
+`Vec[Vec[Float64]]` results lose a nesting level at the call site (row
+reads 0/raw bits; explicit annotation and annotated tuple extraction fix
+it; xiom.geom.mat is unaffected; reproduced on v0.61.3 and v0.62.1). The
+v0.62.1 cross-check also caught the `quat_axis` clause reading `.x` on a
+`Vec[Float64]` result -- replaced with the len-only claim. Probe
+`p_wave50_shapes.xi` (204th, 96 checks, green on both pins); floors87;
+geom 23.2% -> 35.5%, global 33.6% -> 34.4%. Next: geom batch 3
+(vector.xi + curves/collision), then geometry_2d/3d/extended/polyhedra/
+linear, then the geom.xi aggregate.
+
 State 2026-09-29 (handoff snapshot 3, main 2a06a90): floors85 global 32.8%,
 math 38.8%, num 37.4%; probes 202; smoke 951; modules 509/509; barename
 0/509; doc 100%; module-smoke ratchet 497/517 modules, 3332/6200 pub fns.

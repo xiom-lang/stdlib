@@ -665,13 +665,51 @@ T1/T2 yields.
        across the three modules. geom 10.6% -> 23.2%, global 32.8% ->
        33.6%. Next: geom batch 2 (matrix/vector/quaternion long-name
        domain), then curves/collision/geometry/polyhedra/linear.
+       Wave 50 (2026-09-30): coverage wave 14 -- geom batch 2, the typed
+       matrix + quaternion domain (51 clauses). xiom.geom.matrix (32):
+       Mat2/3/4 constructor field mirrors; identity/zero/one/add/sub/mul/
+       diag_mul/hadamard row-count claims; scalar_mul exact-len;
+       transpose/adjugate/kronecker/diagonal shape claims; det/minor/
+       cofactor/trace NaN-or-zero-or-nonempty bands; inverse/cholesky
+       presence mirrors; rank bounds (0 <= result <= a.len()); nullity
+       non-negative; eigenvalues/eigenvectors len 0-or-2; lu/qr tuple
+       len claims; svd triple 0-or-2; solve_linear len 0-or-rows;
+       least_squares nonempty-or-nonempty-input; condition_number
+       non-negative-or-NaN. xiom.geom.quaternion (19): constructor/
+       identity fields; Hamilton-product mirrors; conjugate; inv/
+       normalize/axis-angle identity-or-nonzero forms; euler component
+       bands +-2; from_rotation_matrix identity-or-3x3; to_matrix len 3;
+       to_euler range bands; rotate len 0/3; slerp endpoint-or-interior;
+       nlerp identity-or-not-both-zero; angle [0,7) or NaN; axis len 3;
+       look_at/between component bands +-2.
+       Fix-first: quat_between opposite-direction perpendicular-axis
+       choice was inverted (|ax| < 0.9 picked an axis parallel to a for
+       x-aligned inputs), so 180-degree pairs returned the identity; the
+       probe locks the fix (w == 0, unit vector part). NEW compiler
+       finding p_geom_matrix_result_infer.xi: un-annotated call-site
+       inference of xiom.geom.matrix Vec[Vec[Float64]] results loses a
+       nesting level (row reads return 0/raw bits; explicit
+       `var x: Vec[Vec[Float64]] = ...` and annotated tuple extraction
+       fix it; the same shape via xiom.geom.mat is fine; single-level
+       Vec[Float64] unaffected; reproduced on v0.61.3 AND v0.62.1). The
+       probe annotates every nested matrix-module local. Also caught:
+       quat_axis's original second clause read `.x` on a Vec[Float64]
+       result (pin tolerated it; the v0.62.1 checker rejected it) --
+       replaced with the len-only claim.
+       Probe tools/probes/p_wave50_shapes.xi (204th): 96 return-code
+       checks incl. LU/QR/Cholesky KATs, solve_linear/least_squares
+       solutions, eigenvalue KATs, the 90-degree z rotation, slerp/nlerp
+       unit norms, look-at and between; green on v0.61.3 and v0.62.1.
+       geom 23.2% -> 35.5%, global 33.6% -> 34.4%. Next: geom batch 3
+       (vector.xi 24 + curves/collision 19), then geometry_2d/3d/extended,
+       polyhedra, linear, then the geom.xi aggregate (142 uncovered).
        Ratchet:
-       tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors86.json
+       tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors87.json
        tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;
        earlier floors kept at
-       coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55/56/57/58/59/60/61/62/63/64/65/66/67/68/69/70/71/72/73/74/75/76/77/78/79/80/81/82/83/84/85/86.json).
+       coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55/56/57/58/59/60/61/62/63/64/65/66/67/68/69/70/71/72/73/74/75/76/77/78/79/80/81/82/83/84/85/86/87.json).
       Floors are per top-level stdlib/xiom directory and must be refreshed
       when a module is ADDED (new uncovered pub fns dilute the percentage
       -- TOML dropped serialize 6.1% -> 5.4%, tz dropped time 13% ->

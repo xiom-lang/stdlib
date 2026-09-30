@@ -43,12 +43,18 @@ pub type Mat4 = {
 pub type MatMN = { rows: Int; cols: Int; data: Vec[Float64]; }
 
 /// Construct a 2x2 matrix. O(1).
-pub fn mat2_new(a: Float64, b: Float64, c: Float64, d: Float64) -> Mat2 {
+pub fn mat2_new(a: Float64, b: Float64, c: Float64, d: Float64) -> Mat2
+  ensures: result.m00 == a && result.m01 == b && result.m10 == c && result.m11 == d
+{
   return Mat2{ m00: a; m01: b; m10: c; m11: d; };
 }
 
 /// Construct a 3x3 matrix. O(1).
-pub fn mat3_new(a: Float64, b: Float64, c: Float64, d: Float64, e: Float64, f: Float64, g: Float64, h: Float64, i: Float64) -> Mat3 {
+pub fn mat3_new(a: Float64, b: Float64, c: Float64, d: Float64, e: Float64, f: Float64, g: Float64, h: Float64, i: Float64) -> Mat3
+  ensures: result.m00 == a && result.m01 == b && result.m02 == c
+  ensures: result.m10 == d && result.m11 == e && result.m12 == f
+  ensures: result.m20 == g && result.m21 == h && result.m22 == i
+{
   return Mat3{
     m00: a; m01: b; m02: c;
     m10: d; m11: e; m12: f;
@@ -57,7 +63,12 @@ pub fn mat3_new(a: Float64, b: Float64, c: Float64, d: Float64, e: Float64, f: F
 }
 
 /// Construct a 4x4 matrix. O(1).
-pub fn mat4_new(a: Float64, b: Float64, c: Float64, d: Float64, e: Float64, f: Float64, g: Float64, h: Float64, i: Float64, j: Float64, k: Float64, l: Float64, m: Float64, n: Float64, o: Float64, p: Float64) -> Mat4 {
+pub fn mat4_new(a: Float64, b: Float64, c: Float64, d: Float64, e: Float64, f: Float64, g: Float64, h: Float64, i: Float64, j: Float64, k: Float64, l: Float64, m: Float64, n: Float64, o: Float64, p: Float64) -> Mat4
+  ensures: result.m00 == a && result.m01 == b && result.m02 == c && result.m03 == d
+  ensures: result.m10 == e && result.m11 == f && result.m12 == g && result.m13 == h
+  ensures: result.m20 == i && result.m21 == j && result.m22 == k && result.m23 == l
+  ensures: result.m30 == m && result.m31 == n && result.m32 == o && result.m33 == p
+{
   return Mat4{
     m00: a; m01: b; m02: c; m03: d;
     m10: e; m11: f; m12: g; m13: h;
@@ -67,7 +78,9 @@ pub fn mat4_new(a: Float64, b: Float64, c: Float64, d: Float64, e: Float64, f: F
 }
 
 /// n x n identity matrix. O(n^2).
-pub fn identity(n: Int) -> Vec[Vec[Float64]] {
+pub fn identity(n: Int) -> Vec[Vec[Float64]]
+  ensures: result.len() == 0 || result.len() == n
+{
   var out = Vec[Vec[Float64]].new();
   var i = 0;
   while i < n {
@@ -84,7 +97,9 @@ pub fn identity(n: Int) -> Vec[Vec[Float64]] {
 }
 
 /// rows x cols zero matrix. O(n*m).
-pub fn zero(rows: Int, cols: Int) -> Vec[Vec[Float64]] {
+pub fn zero(rows: Int, cols: Int) -> Vec[Vec[Float64]]
+  ensures: result.len() == 0 || result.len() == rows
+{
   var out = Vec[Vec[Float64]].new();
   var i = 0;
   while i < rows {
@@ -101,7 +116,9 @@ pub fn zero(rows: Int, cols: Int) -> Vec[Vec[Float64]] {
 }
 
 /// rows x cols all-ones matrix. O(n*m).
-pub fn one(rows: Int, cols: Int) -> Vec[Vec[Float64]] {
+pub fn one(rows: Int, cols: Int) -> Vec[Vec[Float64]]
+  ensures: result.len() == 0 || result.len() == rows
+{
   var out = Vec[Vec[Float64]].new();
   var i = 0;
   while i < rows {
@@ -119,7 +136,9 @@ pub fn one(rows: Int, cols: Int) -> Vec[Vec[Float64]] {
 
 /// Element-wise addition of two same-shape matrices. Empty matrix on shape
 /// mismatch. O(n*m).
-pub fn add(a: &Vec[Vec[Float64]], b: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {
+pub fn add(a: &Vec[Vec[Float64]], b: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]]
+  ensures: result.len() == 0 || result.len() == a.len()
+{
   var out = Vec[Vec[Float64]].new();
   var ac = Vec[Vec[Float64]].new();
   var i = 0;
@@ -154,7 +173,9 @@ pub fn add(a: &Vec[Vec[Float64]], b: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {
 
 /// Element-wise subtraction of two same-shape matrices. Empty matrix on shape
 /// mismatch. O(n*m).
-pub fn sub(a: &Vec[Vec[Float64]], b: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {
+pub fn sub(a: &Vec[Vec[Float64]], b: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]]
+  ensures: result.len() == 0 || result.len() == a.len()
+{
   var out = Vec[Vec[Float64]].new();
   var ac = Vec[Vec[Float64]].new();
   var i = 0;
@@ -188,7 +209,9 @@ pub fn sub(a: &Vec[Vec[Float64]], b: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {
 }
 
 /// Matrix product a * b. Empty matrix on inner-dimension mismatch. O(n^3).
-pub fn mul(a: &Vec[Vec[Float64]], b: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {
+pub fn mul(a: &Vec[Vec[Float64]], b: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]]
+  ensures: result.len() == 0 || result.len() == a.len()
+{
   var out = Vec[Vec[Float64]].new();
   var ac = Vec[Vec[Float64]].new();
   var i = 0;
@@ -230,7 +253,9 @@ pub fn mul(a: &Vec[Vec[Float64]], b: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {
 }
 
 /// Scale every element of a by s. O(n*m).
-pub fn scalar_mul(a: &Vec[Vec[Float64]], s: Float64) -> Vec[Vec[Float64]] {
+pub fn scalar_mul(a: &Vec[Vec[Float64]], s: Float64) -> Vec[Vec[Float64]]
+  ensures: result.len() == a.len()
+{
   var out = Vec[Vec[Float64]].new();
   var ac = Vec[Vec[Float64]].new();
   var i = 0;
@@ -253,7 +278,9 @@ pub fn scalar_mul(a: &Vec[Vec[Float64]], s: Float64) -> Vec[Vec[Float64]] {
 }
 
 /// Matrix transpose. Empty matrix for a ragged input. O(n*m).
-pub fn transpose(a: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {
+pub fn transpose(a: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]]
+  ensures: result.len() == 0 || a.len() > 0
+{
   var out = Vec[Vec[Float64]].new();
   var ac = Vec[Vec[Float64]].new();
   var i = 0;
@@ -280,7 +307,9 @@ pub fn transpose(a: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {
 
 /// Determinant of a square matrix via Gaussian elimination with partial
 /// pivoting. NaN for non-square input. O(n^3).
-pub fn det(a: &Vec[Vec[Float64]]) -> Float64 {
+pub fn det(a: &Vec[Vec[Float64]]) -> Float64
+  ensures: (result != result) || (result == 0.0) || (a.len() > 0)
+{
   var sc = Vec[Vec[Float64]].new();
   var i = 0;
   while i < a.len() {
@@ -346,7 +375,9 @@ pub fn det(a: &Vec[Vec[Float64]]) -> Float64 {
 
 /// Inverse of a square matrix via Gauss-Jordan elimination with partial
 /// pivoting. None when singular or non-square. O(n^3).
-pub fn inverse(a: &Vec[Vec[Float64]]) -> Option[Vec[Vec[Float64]]] {
+pub fn inverse(a: &Vec[Vec[Float64]]) -> Option[Vec[Vec[Float64]]]
+  ensures: (result.is_some == false) || (a.len() > 0)
+{
   var sc = Vec[Vec[Float64]].new();
   var i = 0;
   while i < a.len() {
@@ -446,7 +477,9 @@ pub fn inverse(a: &Vec[Vec[Float64]]) -> Option[Vec[Vec[Float64]]] {
 
 /// Determinant of the submatrix obtained by deleting row and col. NaN for
 /// non-square input or out-of-range indices. O(n^3).
-pub fn minor(a: &Vec[Vec[Float64]], row: Int, col: Int) -> Float64 {
+pub fn minor(a: &Vec[Vec[Float64]], row: Int, col: Int) -> Float64
+  ensures: (result != result) || (result == 0.0) || (a.len() > 0)
+{
   var sc = Vec[Vec[Float64]].new();
   var ci = 0;
   while ci < a.len() {
@@ -531,7 +564,9 @@ pub fn minor(a: &Vec[Vec[Float64]], row: Int, col: Int) -> Float64 {
 
 /// Signed minor (cofactor) at (row, col): (-1)^(row+col) * det of the deleted
 /// submatrix. NaN for non-square or out-of-range input. O(n^3).
-pub fn cofactor(a: &Vec[Vec[Float64]], row: Int, col: Int) -> Float64 {
+pub fn cofactor(a: &Vec[Vec[Float64]], row: Int, col: Int) -> Float64
+  ensures: (result != result) || (result == 0.0) || (a.len() > 0)
+{
   var m = minor(a, row, col);
   if m != m { return m; }
   if (row + col) % 2 == 1 { return -m; }
@@ -540,7 +575,9 @@ pub fn cofactor(a: &Vec[Vec[Float64]], row: Int, col: Int) -> Float64 {
 
 /// Adjugate (classical) matrix: the transpose of the cofactor matrix. Empty
 /// matrix for non-square input. O(n^4).
-pub fn adjugate(a: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {
+pub fn adjugate(a: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]]
+  ensures: result.len() == 0 || a.len() > 0
+{
   var out = Vec[Vec[Float64]].new();
   var ac = Vec[Vec[Float64]].new();
   var i = 0;
@@ -567,7 +604,9 @@ pub fn adjugate(a: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {
 }
 
 /// Trace (sum of the main diagonal) of a square matrix. NaN for non-square. O(n).
-pub fn trace(a: &Vec[Vec[Float64]]) -> Float64 {
+pub fn trace(a: &Vec[Vec[Float64]]) -> Float64
+  ensures: (result != result) || (result == 0.0) || (a.len() > 0)
+{
   var ac = Vec[Vec[Float64]].new();
   var i = 0;
   while i < a.len() {
@@ -587,7 +626,9 @@ pub fn trace(a: &Vec[Vec[Float64]]) -> Float64 {
 }
 
 /// Rank of a matrix via Gaussian elimination with partial pivoting. O(n^3).
-pub fn rank(a: &Vec[Vec[Float64]]) -> Int {
+pub fn rank(a: &Vec[Vec[Float64]]) -> Int
+  ensures: (result >= 0) && (result <= a.len())
+{
   var sc = Vec[Vec[Float64]].new();
   var ci = 0;
   while ci < a.len() {
@@ -655,7 +696,9 @@ pub fn rank(a: &Vec[Vec[Float64]]) -> Int {
 }
 
 /// Nullity of a matrix: number of columns minus the rank. O(n^3).
-pub fn nullity(a: &Vec[Vec[Float64]]) -> Int {
+pub fn nullity(a: &Vec[Vec[Float64]]) -> Int
+  ensures: result >= 0
+{
   var ac = Vec[Vec[Float64]].new();
   var i = 0;
   while i < a.len() {
@@ -671,7 +714,9 @@ pub fn nullity(a: &Vec[Vec[Float64]]) -> Int {
 
 /// Eigenvalues of a square matrix. Implemented analytically for 2x2 matrices;
 /// returns the empty vector for any other size (documented). O(1).
-pub fn eigenvalues(a: &Vec[Vec[Float64]]) -> Vec[Float64] {
+pub fn eigenvalues(a: &Vec[Vec[Float64]]) -> Vec[Float64]
+  ensures: result.len() == 0 || result.len() == 2
+{
   var out = Vec[Float64].new();
   var ac = Vec[Vec[Float64]].new();
   var i = 0;
@@ -701,7 +746,9 @@ pub fn eigenvalues(a: &Vec[Vec[Float64]]) -> Vec[Float64] {
 /// Eigenvectors of a square matrix (each row is a unit eigenvector, in the same
 /// order as eigenvalues). Implemented analytically for 2x2 matrices; returns
 /// the empty matrix for any other size (documented). O(1).
-pub fn eigenvectors(a: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {
+pub fn eigenvectors(a: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]]
+  ensures: result.len() == 0 || result.len() == 2
+{
   var out = Vec[Vec[Float64]].new();
   var ac = Vec[Vec[Float64]].new();
   var i = 0;
@@ -747,7 +794,9 @@ fn _eigvec_2x2(a11: Float64, a12: Float64, a21: Float64, a22: Float64, lam: Floa
 }
 
 /// Main diagonal entries of a matrix. Empty vector for a ragged input. O(n).
-pub fn diagonal(a: &Vec[Vec[Float64]]) -> Vec[Float64] {
+pub fn diagonal(a: &Vec[Vec[Float64]]) -> Vec[Float64]
+  ensures: result.len() <= a.len()
+{
   var out = Vec[Float64].new();
   var ac = Vec[Vec[Float64]].new();
   var i = 0;
@@ -769,7 +818,9 @@ pub fn diagonal(a: &Vec[Vec[Float64]]) -> Vec[Float64] {
 
 /// Right-multiply a by the diagonal matrix diag(d): result[i][j] = a[i][j]*d[j].
 /// Empty matrix on size mismatch. O(n*m).
-pub fn diag_mul(a: &Vec[Vec[Float64]], d: &Vec[Float64]) -> Vec[Vec[Float64]] {
+pub fn diag_mul(a: &Vec[Vec[Float64]], d: &Vec[Float64]) -> Vec[Vec[Float64]]
+  ensures: result.len() == 0 || result.len() == a.len()
+{
   var out = Vec[Vec[Float64]].new();
   var ac = Vec[Vec[Float64]].new();
   var i = 0;
@@ -796,7 +847,9 @@ pub fn diag_mul(a: &Vec[Vec[Float64]], d: &Vec[Float64]) -> Vec[Vec[Float64]] {
 
 /// Element-wise (Hadamard) product of two same-shape matrices. Empty matrix on
 /// shape mismatch. O(n*m).
-pub fn hadamard(a: &Vec[Vec[Float64]], b: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {
+pub fn hadamard(a: &Vec[Vec[Float64]], b: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]]
+  ensures: result.len() == 0 || result.len() == a.len()
+{
   var out = Vec[Vec[Float64]].new();
   var ac = Vec[Vec[Float64]].new();
   var i = 0;
@@ -831,7 +884,9 @@ pub fn hadamard(a: &Vec[Vec[Float64]], b: &Vec[Vec[Float64]]) -> Vec[Vec[Float64
 
 /// Kronecker product of a (r x c) and b (p x q): an (r*p) x (c*q) matrix.
 /// Empty matrix for empty input. O(r*p*c*q).
-pub fn kronecker(a: &Vec[Vec[Float64]], b: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {
+pub fn kronecker(a: &Vec[Vec[Float64]], b: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]]
+  ensures: result.len() == 0 || result.len() >= a.len()
+{
   var out = Vec[Vec[Float64]].new();
   var ac = Vec[Vec[Float64]].new();
   var i = 0;
@@ -874,7 +929,9 @@ pub fn kronecker(a: &Vec[Vec[Float64]], b: &Vec[Vec[Float64]]) -> Vec[Vec[Float6
 /// LU factorization of a square matrix (Doolittle, no pivoting): (L, U) with
 /// L unit lower triangular and A = L*U. Returns empty matrices on failure
 /// (non-square or zero pivot). O(n^3).
-pub fn lu_decompose(a: &Vec[Vec[Float64]]) -> (Vec[Vec[Float64]], Vec[Vec[Float64]]) {
+pub fn lu_decompose(a: &Vec[Vec[Float64]]) -> (Vec[Vec[Float64]], Vec[Vec[Float64]])
+  ensures: result.0.len() == 0 || (result.0.len() == a.len() && result.1.len() == a.len())
+{
   var ac = Vec[Vec[Float64]].new();
   var i = 0;
   while i < a.len() {
@@ -937,7 +994,9 @@ pub fn lu_decompose(a: &Vec[Vec[Float64]]) -> (Vec[Vec[Float64]], Vec[Vec[Float6
 
 /// QR factorization of a square matrix via Gram-Schmidt on the columns:
 /// (Q, R) with Q orthogonal and A = Q*R. Empty matrices on failure. O(n^3).
-pub fn qr_decompose(a: &Vec[Vec[Float64]]) -> (Vec[Vec[Float64]], Vec[Vec[Float64]]) {
+pub fn qr_decompose(a: &Vec[Vec[Float64]]) -> (Vec[Vec[Float64]], Vec[Vec[Float64]])
+  ensures: result.0.len() == 0 || (result.0.len() == a.len() && result.1.len() == a.len())
+{
   var ac = Vec[Vec[Float64]].new();
   var i = 0;
   while i < a.len() {
@@ -1037,7 +1096,9 @@ pub fn qr_decompose(a: &Vec[Vec[Float64]]) -> (Vec[Vec[Float64]], Vec[Vec[Float6
 /// SVD of a 2x2 symmetric matrix (U, s, V) via its eigendecomposition with
 /// s holding the eigenvalues in descending order. Empty values for any other
 /// input (documented). O(1).
-pub fn svd_decompose(a: &Vec[Vec[Float64]]) -> (Vec[Vec[Float64]], Vec[Float64], Vec[Vec[Float64]]) {
+pub fn svd_decompose(a: &Vec[Vec[Float64]]) -> (Vec[Vec[Float64]], Vec[Float64], Vec[Vec[Float64]])
+  ensures: result.0.len() == 0 || (result.0.len() == 2 && result.1.len() == 2 && result.2.len() == 2)
+{
   var ac = Vec[Vec[Float64]].new();
   var i = 0;
   while i < a.len() {
@@ -1070,7 +1131,9 @@ pub fn svd_decompose(a: &Vec[Vec[Float64]]) -> (Vec[Vec[Float64]], Vec[Float64],
 
 /// Cholesky factor L (lower triangular) of a symmetric positive definite
 /// matrix such that A = L*L^T. None when not SPD or non-square. O(n^3).
-pub fn cholesky(a: &Vec[Vec[Float64]]) -> Option[Vec[Vec[Float64]]] {
+pub fn cholesky(a: &Vec[Vec[Float64]]) -> Option[Vec[Vec[Float64]]]
+  ensures: (result.is_some == false) || (a.len() > 0)
+{
   var ac = Vec[Vec[Float64]].new();
   var i = 0;
   while i < a.len() {
@@ -1119,7 +1182,9 @@ pub fn cholesky(a: &Vec[Vec[Float64]]) -> Option[Vec[Vec[Float64]]] {
 /// Solve the square linear system A*x = b via Gauss-Jordan elimination with
 /// partial pivoting. Returns the empty vector when A is singular or the shapes
 /// do not match. O(n^3).
-pub fn solve_linear(a: &Vec[Vec[Float64]], b: &Vec[Float64]) -> Vec[Float64] {
+pub fn solve_linear(a: &Vec[Vec[Float64]], b: &Vec[Float64]) -> Vec[Float64]
+  ensures: result.len() == 0 || result.len() == a.len()
+{
   var out = Vec[Float64].new();
   var sc = Vec[Vec[Float64]].new();
   var ci = 0;
@@ -1211,7 +1276,9 @@ pub fn solve_linear(a: &Vec[Vec[Float64]], b: &Vec[Float64]) -> Vec[Float64] {
 /// Least-squares solution of the overdetermined system A*x = b via the normal
 /// equations A^T*A*x = A^T*b. Returns the empty vector on shape mismatch or a
 /// singular normal matrix. O(m*n^2 + n^3).
-pub fn least_squares(a: &Vec[Vec[Float64]], b: &Vec[Float64]) -> Vec[Float64] {
+pub fn least_squares(a: &Vec[Vec[Float64]], b: &Vec[Float64]) -> Vec[Float64]
+  ensures: result.len() == 0 || a.len() > 0
+{
   var out = Vec[Float64].new();
   var ac = Vec[Vec[Float64]].new();
   var i = 0;
@@ -1255,7 +1322,9 @@ pub fn least_squares(a: &Vec[Vec[Float64]], b: &Vec[Float64]) -> Vec[Float64] {
 /// Condition number of a 2x2 matrix: the ratio of the largest to the smallest
 /// singular value (singular values of A^T*A square-rooted). Returns NaN for
 /// non-2x2 input or a singular matrix (documented). O(1).
-pub fn condition_number(a: &Vec[Vec[Float64]]) -> Float64 {
+pub fn condition_number(a: &Vec[Vec[Float64]]) -> Float64
+  ensures: (result >= 0.0) || (result != result)
+{
   var ac = Vec[Vec[Float64]].new();
   var i = 0;
   while i < a.len() {

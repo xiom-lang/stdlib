@@ -15,6 +15,20 @@ xiom --force -o out.exe tools/known_failures/<file>.xi
 
 ## Current
 
+**Open finding 2026-09-30 (compiler v0.61.3 and v0.62.1): call-site
+inference of `xiom.geom.matrix` `Vec[Vec[Float64]]` results loses a nesting
+level.** A local declared without an explicit type (`var z =
+matrix.zero(2, 2);`) reads its rows as garbage (`z[0].len()` is 0;
+`matrix.one` surfaces the raw double bits as the row length), and the same
+happens for tuple elements (`var l2 = lu.0;`). Adding the explicit type
+(`var z: Vec[Vec[Float64]] = ...`) fixes both reads. The identical
+un-annotated shape via `xiom.geom.mat` (`mat_identity`) is correct, and
+single-level `Vec[Float64]` returns are unaffected. Repro:
+`tools/known_failures/p_geom_matrix_result_infer.xi` (returns 1 on the
+pin). Found while landing the wave-50 geom clauses; the wave-50 probe
+annotates every nested matrix-module local, and `smoke_geom_mat.xi`
+already verifies matrix-module results through det/trace/rank scalars.
+
 **Open finding 2026-09-29 (compiler v0.61.3): clause-position indexing of
 Float64 vector elements reads garbage.** In an `ensures` clause, indexing a
 `Vec[Float64]` return value (`result[0] == 1.0`) or a row of a
