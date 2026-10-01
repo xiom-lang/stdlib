@@ -188,6 +188,24 @@ Fix-first: removed the contradicted empty-needle preconditions on
 Coverage unchanged (floors87). Next: geom batch 3 (vector.xi +
 curves/collision) as before.
 
+Update 2026-10-01 (wave 51 landed): geom batch 3 -- vector/curves/collision,
+43 clauses (vector 24: constructor fields, NaN-on-length-mismatch,
+non-negative norm bands, len-0-or-input shape claims, refract presence
+mirrors, empty => NaN component min/max; curves 7: len-0-or-input point
+curves, derivative/b_spline point-count guards, curve_length
+non-negative-or-NaN; collision 12: constructor len mirrors and
+degenerate-length => false/None implications on every query). Two NEW
+compiler findings filed from the probe: `p_geom_vector_result_bits.xi`
+(caller-side element reads of vector.lerp/clamp/hadamard and curves.b_spline
+are bit-reinterpreted; callee-side reads and the other vector functions are
+correct; reproduced on v0.61.3 and v0.62.1; probe mediates via
+vector.distance like smoke_geom_vec) and `p_curve_thunk_zero.xi` (a
+Vec-returning fn-typed parameter arrives empty inside catalog bodies:
+curve_length returns 0 instead of 1.0). Probe `p_wave51_shapes.xi` (206th,
+80 checks, green on both pins); floors88; geom 35.5% -> 45.9%, global 34.4%
+-> 35.1%. Next: geom batch 4 (geometry_2d 22 + geometry_3d 21 = 43), then
+geometry_extended + polyhedra + linear, then the geom.xi aggregate.
+
 State 2026-09-29 (handoff snapshot 3, main 2a06a90): floors85 global 32.8%,
 math 38.8%, num 37.4%; probes 202; smoke 951; modules 509/509; barename
 0/509; doc 100%; module-smoke ratchet 497/517 modules, 3332/6200 pub fns.

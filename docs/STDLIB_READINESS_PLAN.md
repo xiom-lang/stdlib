@@ -702,14 +702,45 @@ T1/T2 yields.
        unit norms, look-at and between; green on v0.61.3 and v0.62.1.
        geom 23.2% -> 35.5%, global 33.6% -> 34.4%. Next: geom batch 3
        (vector.xi 24 + curves/collision 19), then geometry_2d/3d/extended,
-       polyhedra, linear, then the geom.xi aggregate (142 uncovered).
+       polyhedra,        linear, then the geom.xi aggregate (142 uncovered).
+       Wave 51 (2026-10-01): coverage wave 15 -- geom batch 3
+       (vector/curves/collision, 43 clauses). xiom.geom.vector (24):
+       v2/3/4 constructor fields; cross2 mirror; NaN-on-length-mismatch
+       on dot/distance/distance_sq; non-negative bands on norm/norm_sq;
+       len-0-or-input on cross/normalize/unit/project/reject/lerp/slerp/
+       reflect/hadamard; outer and clamp exact-len; angle [0,4);
+       refract presence mirrors (mismatch/empty => None, Some => matched
+       lengths); component_min/max empty => NaN. xiom.geom.curves (7):
+       len-0-or-input on the four point curves; bezier_derivative
+       len-0-or->=2-points; b_spline len-0-or->=4-points; curve_length
+       non-negative-or-NaN. xiom.geom.collision (12): constructor len
+       mirrors; degenerate-length => false/None implications on every
+       query (aabb/sphere/ray/triangle/segment).
+       Findings (both filed with repros): p_geom_vector_result_bits.xi --
+       caller-side element reads of vector.lerp/clamp/hadamard and
+       curves.b_spline results are bit-reinterpreted (stored 1.5 reads as
+       0x3FF8000000000000 as a double); callee-side reads and the
+       cross/normalize/unit/project/reject/slerp/reflect/outer/
+       bezier_quad/cubic/derivative controls are correct; reproduced on
+       v0.61.3 AND v0.62.1; the probe mediates the four through
+       vector.distance (smoke_geom_vec already did) -- and
+       p_curve_thunk_zero.xi -- a fn-typed parameter returning
+       Vec[Float64] arrives empty inside catalog bodies (curve_length
+       returns 0 instead of 1.0); the probe keeps only the n<1 branch.
+       Probe tools/probes/p_wave51_shapes.xi (206th): 80 return-code
+       checks incl. Bezier/Catmull-Rom/B-spline/Hermite KATs and the
+       full collision query set; green on v0.61.3 and v0.62.1. geom
+       35.5% -> 45.9%, global 34.4% -> 35.1%. Next: geom batch 4
+       (geometry_2d 22 + geometry_3d 21 = 43), then geometry_extended 14
+       + polyhedra 10 + linear 15, then the geom.xi aggregate (142
+       uncovered).
        Ratchet:
-       tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors87.json
+       tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors88.json
        tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;
        earlier floors kept at
-       coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55/56/57/58/59/60/61/62/63/64/65/66/67/68/69/70/71/72/73/74/75/76/77/78/79/80/81/82/83/84/85/86/87.json).
+       coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55/56/57/58/59/60/61/62/63/64/65/66/67/68/69/70/71/72/73/74/75/76/77/78/79/80/81/82/83/84/85/86/87/88.json).
       Floors are per top-level stdlib/xiom directory and must be refreshed
       when a module is ADDED (new uncovered pub fns dilute the percentage
       -- TOML dropped serialize 6.1% -> 5.4%, tz dropped time 13% ->

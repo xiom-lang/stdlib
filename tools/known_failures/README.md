@@ -16,6 +16,29 @@ xiom --force -o out.exe tools/known_failures/<file>.xi
 
 ## Current
 
+**Open finding 2026-10-01 (compiler v0.61.3): a fn-typed parameter returning
+`Vec[Float64]` loses its result inside catalog bodies.** `curves.curve_length`
+calling a `fn(Float64) -> Vec[Float64]` argument sees empty vectors and
+returns 0 instead of the arc length; the same function value called directly
+returns the correct value. Vec-returning sibling of the fixed Float64-thunk
+class. Repro: `tools/known_failures/p_curve_thunk_zero.xi` (returns 2).
+Found while landing the wave-51 geom clauses; the wave-51 probe keeps only
+the `n < 1 == 0` branch for `curve_length`.
+
+**Open finding 2026-10-01 (compiler v0.61.3 and v0.62.1): caller-side
+element reads of some `xiom.geom.vector` / `xiom.geom.curves` results are
+bit-reinterpreted.** `vector.lerp` returning `(1.5, 2.0)` reads back as
+`4.6094342186137e+18` (the bit pattern of 1.5 as a double); same for
+`vector.clamp`, `vector.hadamard`, `curves.b_spline`. Callee-side reads are
+correct (passing the results into `vector.norm`/`distance` sees the true
+values), and `cross`/`normalize`/`unit`/`project`/`reject`/`slerp`/
+`reflect`/`outer`/`bezier_quad`/`bezier_cubic`/`bezier_derivative` read
+correctly in the caller. Repro:
+`tools/known_failures/p_geom_vector_result_bits.xi` (control green, then
+two broken reads). Found while landing the wave-51 geom clauses; the
+wave-51 probe and `smoke_geom_vec.xi` mediate those results through
+dot/norm/distance.
+
 **Open finding 2026-09-30 (compiler v0.61.3 and v0.62.1): call-site
 inference of `xiom.geom.matrix` `Vec[Vec[Float64]]` results loses a nesting
 level.** A local declared without an explicit type (`var z =

@@ -30,13 +30,17 @@ pub type CollisionSphere = { center: Vec[Float64]; radius: Float64; }
 pub type CollisionRay = { origin: Vec[Float64]; dir: Vec[Float64]; }
 
 /// Construct an AABB from min and max corners (3 components each). O(1).
-pub fn aabb_new(min: &Vec[Float64], max: &Vec[Float64]) -> CollisionAabb {
+pub fn aabb_new(min: &Vec[Float64], max: &Vec[Float64]) -> CollisionAabb
+  ensures: result.min.len() == min.len() && result.max.len() == max.len()
+{
   return CollisionAabb{ min: min; max: max; };
 }
 
 /// True iff p lies inside the AABB (inclusive). A point with fewer than 3
 /// components is not inside. O(1).
-pub fn aabb_contains(a: CollisionAabb, p: &Vec[Float64]) -> Bool {
+pub fn aabb_contains(a: CollisionAabb, p: &Vec[Float64]) -> Bool
+  ensures: (p.len() < 3 || a.min.len() < 3 || a.max.len() < 3) => result == false
+{
   if p.len() < 3 { return false; }
   if a.min.len() < 3 || a.max.len() < 3 { return false; }
   return p[0] >= a.min[0] && p[0] <= a.max[0]
@@ -45,7 +49,9 @@ pub fn aabb_contains(a: CollisionAabb, p: &Vec[Float64]) -> Bool {
 }
 
 /// True iff the two AABBs overlap or touch. O(1).
-pub fn aabb_intersects(a: CollisionAabb, b: CollisionAabb) -> Bool {
+pub fn aabb_intersects(a: CollisionAabb, b: CollisionAabb) -> Bool
+  ensures: (a.min.len() < 3 || a.max.len() < 3 || b.min.len() < 3 || b.max.len() < 3) => result == false
+{
   if a.min.len() < 3 || a.max.len() < 3 { return false; }
   if b.min.len() < 3 || b.max.len() < 3 { return false; }
   if a.max[0] < b.min[0] || a.min[0] > b.max[0] { return false; }
@@ -55,12 +61,16 @@ pub fn aabb_intersects(a: CollisionAabb, b: CollisionAabb) -> Bool {
 }
 
 /// Construct a sphere from center and radius. O(1).
-pub fn sphere_new(center: &Vec[Float64], radius: Float64) -> CollisionSphere {
+pub fn sphere_new(center: &Vec[Float64], radius: Float64) -> CollisionSphere
+  ensures: result.center.len() == center.len() && result.radius == radius
+{
   return CollisionSphere{ center: center; radius: radius; };
 }
 
 /// True iff p lies inside the sphere (inclusive). O(1).
-pub fn sphere_contains(s: CollisionSphere, p: &Vec[Float64]) -> Bool {
+pub fn sphere_contains(s: CollisionSphere, p: &Vec[Float64]) -> Bool
+  ensures: (p.len() < 3 || s.center.len() < 3) => result == false
+{
   if p.len() < 3 || s.center.len() < 3 { return false; }
   var dx = p[0] - s.center[0];
   var dy = p[1] - s.center[1];
@@ -69,7 +79,9 @@ pub fn sphere_contains(s: CollisionSphere, p: &Vec[Float64]) -> Bool {
 }
 
 /// True iff the two spheres overlap or touch. O(1).
-pub fn sphere_intersects(a: CollisionSphere, b: CollisionSphere) -> Bool {
+pub fn sphere_intersects(a: CollisionSphere, b: CollisionSphere) -> Bool
+  ensures: (a.center.len() < 3 || b.center.len() < 3) => result == false
+{
   if a.center.len() < 3 || b.center.len() < 3 { return false; }
   var dx = a.center[0] - b.center[0];
   var dy = a.center[1] - b.center[1];
@@ -80,12 +92,16 @@ pub fn sphere_intersects(a: CollisionSphere, b: CollisionSphere) -> Bool {
 }
 
 /// Construct a ray from origin and direction. O(1).
-pub fn ray_new(origin: &Vec[Float64], dir: &Vec[Float64]) -> CollisionRay {
+pub fn ray_new(origin: &Vec[Float64], dir: &Vec[Float64]) -> CollisionRay
+  ensures: result.origin.len() == origin.len() && result.dir.len() == dir.len()
+{
   return CollisionRay{ origin: origin; dir: dir; };
 }
 
 /// CollisionRay-sphere intersection: nearest positive t; None on miss. O(1).
-pub fn ray_sphere_intersect(r: CollisionRay, s: CollisionSphere) -> Option[Float64] {
+pub fn ray_sphere_intersect(r: CollisionRay, s: CollisionSphere) -> Option[Float64]
+  ensures: (r.origin.len() < 3 || r.dir.len() < 3 || s.center.len() < 3) => result.is_some == false
+{
   if r.origin.len() < 3 || r.dir.len() < 3 || s.center.len() < 3 {
     return None;
   }
@@ -111,7 +127,9 @@ pub fn ray_sphere_intersect(r: CollisionRay, s: CollisionSphere) -> Option[Float
 
 /// CollisionRay-AABB intersection via the slab method: nearest positive t; None on miss.
 /// O(1).
-pub fn ray_aabb_intersect(r: CollisionRay, a: CollisionAabb) -> Option[Float64] {
+pub fn ray_aabb_intersect(r: CollisionRay, a: CollisionAabb) -> Option[Float64]
+  ensures: (r.origin.len() < 3 || r.dir.len() < 3 || a.min.len() < 3 || a.max.len() < 3) => result.is_some == false
+{
   if r.origin.len() < 3 || r.dir.len() < 3 { return None; }
   if a.min.len() < 3 || a.max.len() < 3 { return None; }
   var tmin = 0.0;
@@ -166,7 +184,9 @@ pub fn ray_aabb_intersect(r: CollisionRay, a: CollisionAabb) -> Option[Float64] 
 
 /// CollisionRay-plane intersection against the plane (n, d) given as the 4-element
 /// vector [nx, ny, nz, d] with n.p = d. None when parallel or behind. O(1).
-pub fn ray_plane_intersect(r: CollisionRay, plane: &Vec[Float64]) -> Option[Float64] {
+pub fn ray_plane_intersect(r: CollisionRay, plane: &Vec[Float64]) -> Option[Float64]
+  ensures: (r.origin.len() < 3 || r.dir.len() < 3 || plane.len() < 4) => result.is_some == false
+{
   if r.origin.len() < 3 || r.dir.len() < 3 { return None; }
   if plane.len() < 4 { return None; }
   var nx = plane[0];
@@ -186,7 +206,9 @@ pub fn ray_plane_intersect(r: CollisionRay, plane: &Vec[Float64]) -> Option[Floa
 
 /// True iff p is inside (or on) the triangle (a, b, c) using same-side tests
 /// on the 2D-projected coordinate with the dominant axis removed. O(1).
-pub fn point_in_triangle(p: &Vec[Float64], a: &Vec[Float64], b: &Vec[Float64], c: &Vec[Float64]) -> Bool {
+pub fn point_in_triangle(p: &Vec[Float64], a: &Vec[Float64], b: &Vec[Float64], c: &Vec[Float64]) -> Bool
+  ensures: (p.len() < 3 || a.len() < 3 || b.len() < 3 || c.len() < 3) => result == false
+{
   if p.len() < 3 || a.len() < 3 || b.len() < 3 || c.len() < 3 { return false; }
   // Project to the 2D plane with the largest normal component removed.
   var ux = b[0] - a[0];
@@ -235,7 +257,9 @@ pub fn point_in_triangle(p: &Vec[Float64], a: &Vec[Float64], b: &Vec[Float64], c
 
 /// Intersection point of segments p1p2 and p3p4; None if disjoint or parallel.
 /// The result is a 3-component point. O(1).
-pub fn segment_intersect(p1: &Vec[Float64], p2: &Vec[Float64], p3: &Vec[Float64], p4: &Vec[Float64]) -> Option[Vec[Float64]] {
+pub fn segment_intersect(p1: &Vec[Float64], p2: &Vec[Float64], p3: &Vec[Float64], p4: &Vec[Float64]) -> Option[Vec[Float64]]
+  ensures: (p1.len() < 2 || p2.len() < 2 || p3.len() < 2 || p4.len() < 2) => result.is_some == false
+{
   var out = Vec[Float64].new();
   if p1.len() < 2 || p2.len() < 2 || p3.len() < 2 || p4.len() < 2 {
     return None;

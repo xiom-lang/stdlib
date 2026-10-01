@@ -18,7 +18,9 @@ module xiom.geom.curves
 use xiom.math;
 
 /// Point on a quadratic Bezier curve at parameter t. O(1).
-pub fn bezier_quad(p0: &Vec[Float64], p1: &Vec[Float64], p2: &Vec[Float64], t: Float64) -> Vec[Float64] {
+pub fn bezier_quad(p0: &Vec[Float64], p1: &Vec[Float64], p2: &Vec[Float64], t: Float64) -> Vec[Float64]
+  ensures: result.len() == 0 || result.len() == p0.len()
+{
   var out = Vec[Float64].new();
   var n = p0.len();
   if p1.len() != n || p2.len() != n || n == 0 { return out; }
@@ -32,7 +34,9 @@ pub fn bezier_quad(p0: &Vec[Float64], p1: &Vec[Float64], p2: &Vec[Float64], t: F
 }
 
 /// Point on a cubic Bezier curve at parameter t. O(1).
-pub fn bezier_cubic(p0: &Vec[Float64], p1: &Vec[Float64], p2: &Vec[Float64], p3: &Vec[Float64], t: Float64) -> Vec[Float64] {
+pub fn bezier_cubic(p0: &Vec[Float64], p1: &Vec[Float64], p2: &Vec[Float64], p3: &Vec[Float64], t: Float64) -> Vec[Float64]
+  ensures: result.len() == 0 || result.len() == p0.len()
+{
   var out = Vec[Float64].new();
   var n = p0.len();
   if p1.len() != n || p2.len() != n || p3.len() != n || n == 0 { return out; }
@@ -49,7 +53,9 @@ pub fn bezier_cubic(p0: &Vec[Float64], p1: &Vec[Float64], p2: &Vec[Float64], p3:
 
 /// Tangent vector of a Bezier curve at t: the derivative of the de Casteljau
 /// ladder. O(k^2).
-pub fn bezier_derivative(points: &Vec[Vec[Float64]], t: Float64) -> Vec[Float64] {
+pub fn bezier_derivative(points: &Vec[Vec[Float64]], t: Float64) -> Vec[Float64]
+  ensures: result.len() == 0 || points.len() >= 2
+{
   var out = Vec[Float64].new();
   var n = points.len();
   if n < 2 { return out; }
@@ -147,7 +153,9 @@ fn _bernstein(degree: Int, i: Int, t: Float64) -> Float64 {
 }
 
 /// Catmull-Rom spline point over [p1, p2] at parameter t in [0, 1]. O(1).
-pub fn catmull_rom(p0: &Vec[Float64], p1: &Vec[Float64], p2: &Vec[Float64], p3: &Vec[Float64], t: Float64) -> Vec[Float64] {
+pub fn catmull_rom(p0: &Vec[Float64], p1: &Vec[Float64], p2: &Vec[Float64], p3: &Vec[Float64], t: Float64) -> Vec[Float64]
+  ensures: result.len() == 0 || result.len() == p0.len()
+{
   var out = Vec[Float64].new();
   var n = p0.len();
   if p1.len() != n || p2.len() != n || p3.len() != n || n == 0 { return out; }
@@ -166,7 +174,9 @@ pub fn catmull_rom(p0: &Vec[Float64], p1: &Vec[Float64], p2: &Vec[Float64], p3: 
 
 /// Uniform cubic B-spline point at parameter t in [0, 1] over the four control
 /// points. O(1).
-pub fn b_spline(points: &Vec[Vec[Float64]], t: Float64) -> Vec[Float64] {
+pub fn b_spline(points: &Vec[Vec[Float64]], t: Float64) -> Vec[Float64]
+  ensures: result.len() == 0 || points.len() >= 4
+{
   var out = Vec[Float64].new();
   if points.len() < 4 { return out; }
   var dim = points[0].len();
@@ -193,7 +203,9 @@ pub fn b_spline(points: &Vec[Vec[Float64]], t: Float64) -> Vec[Float64] {
 }
 
 /// Hermite interpolation with endpoint tangents t0 and t1. O(1).
-pub fn hermite_curve(p0: &Vec[Float64], t0: &Vec[Float64], p1: &Vec[Float64], t1: &Vec[Float64], t: Float64) -> Vec[Float64] {
+pub fn hermite_curve(p0: &Vec[Float64], t0: &Vec[Float64], p1: &Vec[Float64], t1: &Vec[Float64], t: Float64) -> Vec[Float64]
+  ensures: result.len() == 0 || result.len() == p0.len()
+{
   var out = Vec[Float64].new();
   var n = p0.len();
   if t0.len() != n || p1.len() != n || t1.len() != n || n == 0 { return out; }
@@ -213,7 +225,9 @@ pub fn hermite_curve(p0: &Vec[Float64], t0: &Vec[Float64], p1: &Vec[Float64], t1
 
 /// Arc length of a sampled curve over [a, b] by piecewise-linear integration
 /// with n segments. O(n * cost(f)).
-pub fn curve_length(samples: fn(Float64) -> Vec[Float64], a: Float64, b: Float64, n: Int) -> Float64 {
+pub fn curve_length(samples: fn(Float64) -> Vec[Float64], a: Float64, b: Float64, n: Int) -> Float64
+  ensures: (result >= 0.0) || (result != result)
+{
   if n < 1 { return 0.0; }
   var segs = n;
   var total = 0.0;

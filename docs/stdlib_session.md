@@ -1363,6 +1363,41 @@ registry pin, agent recon for the rest)**
   OK; module-smoke ratchet OK. PERF-2 wave closed; tag `stdlib-perf2`
   created and pushed for the next pin.
 
+**SESSION 2026-10-01 block 11 (wave 51: geom batch 3 -- vector/curves/collision)**
+- Wave 51 (floors88): 43 clauses -- xiom.geom.vector (24), xiom.geom.curves
+  (7), xiom.geom.collision (12). Highlights: constructor field len mirrors;
+  NaN-on-length-mismatch on dot/distance/distance_sq; non-negative bands on
+  norm/norm_sq/curve_length; len-0-or-input shape claims on
+  cross/normalize/unit/project/reject/lerp/slerp/reflect/hadamard and the
+  four point curves; outer and clamp exact-len; angle [0,4); refract
+  presence mirrors (mismatch/empty => None, Some => matched lengths);
+  component_min/max empty => NaN; collision constructor len mirrors plus
+  degenerate-length => false/None implications on all twelve queries.
+- Probe p_wave51_shapes.xi (206th): 80 return-code checks incl. the
+  Bezier/Catmull-Rom/B-spline/Hermite KATs and the full AABB/sphere/ray/
+  plane/triangle/segment set; green on v0.61.3 and v0.62.1.
+- NEW compiler finding (filed, p_geom_vector_result_bits.xi): caller-side
+  element reads of vector.lerp/clamp/hadamard and curves.b_spline results
+  are bit-reinterpreted (stored 1.5 reads back as its IEEE bit pattern
+  4.6094342186137e+18; clamp 2.0 -> 4.61168601842739e+18; hadamard 3.0 ->
+  4.61393781824107e+18); callee-side reads are correct (vector.distance/
+  norm see the true values) and the cross/normalize/unit/project/reject/
+  slerp/reflect/outer/bezier_quad/cubic/derivative controls read correctly.
+  Reproduced on v0.61.3 AND v0.62.1. The probe mediates the four affected
+  results through vector.distance -- the same workaround smoke_geom_vec
+  already uses.
+- NEW compiler finding (filed, p_curve_thunk_zero.xi): a fn-typed parameter
+  returning Vec[Float64] arrives empty inside catalog bodies --
+  curves.curve_length(line, 0, 1, 2) returns 0 instead of 1.0 while calling
+  line(0.5) directly is correct (the Vec-returning sibling of the fixed
+  Float64-thunk class). The probe keeps only the n<1 == 0 branch.
+- Probe debugging re-confirmed the Option[Vec[Float64]] payload extraction
+  crash (refract; keep to is_some) and that collision's by-value struct
+  reuse is fine.
+- geom 35.5% -> 45.9% (190/414), global 34.4% -> 35.1%; floors88 wired
+  (YAML re-verified) + tools/README.md + plan + queue in the same commit.
+- Full battery on <wave>: <battery line>.
+
 **RELAY 2026-09-29 (packages -> compiler/stdlib)**
 - Pin moved 0.61.3 -> 0.62.1 mid-batch; every package suite re-ran clean,
   no code changes needed for the new compiler. Their sectest caught two
