@@ -1335,10 +1335,15 @@ registry pin, agent recon for the rest)**
   dropped by error recovery; 22/22 sync smokes green. Under >= 185342f4 the
   wrappers (including receiver-qualified methods -- the t2 residual)
   compile direct, removing the per-call trampoline.
-- Packages relay recorded: `docs/STDLIB-WISHLIST.md` created (~11 rows; 8
-  relayed: the empty-needle defect, allocation-free line accessors, keyed
-  FIFO/mailboxes, stable argmax, event-log cursors, composite-key lookups,
-  non-aborting assertion catalog, fixed-point MSE).
+- Packages relay recorded: `docs/STDLIB-WISHLIST.md` created; 15 rows from
+  the two 2026-10-01 relays (initial 8: the empty-needle defect,
+  allocation-free line accessors, keyed FIFO/mailboxes, stable argmax,
+  event-log cursors, composite-key lookups, non-aborting assertion catalog,
+  fixed-point MSE; plus the wave-46 batch: saturating Int arithmetic,
+  pinned rounding helpers, fixed-point scale-once kernels, fixed-point
+  trigonometry + standalone isqrt, Vec[Int] copy helper, table
+  interpolation, group-by-key folds). Full sheet:
+  `xiom-packages/packages` @ `66f26e1`.
 - Fix-first (packages defect): `xiom.string.index_of` carried
   `requires: substr.len() > 0` while its body returns `Some(0)` for an
   empty needle and `string.str_contains` delegates to it;
@@ -1422,7 +1427,8 @@ smoke corpus 951; modules 509/509 type-check clean; barename 0/509; doc
 scan 100%; **module-smoke ratchet live** (baseline
 `tools/module_smoke_floors.json`: 497/517 source modules exercised by a
 smoke, 3,332/6,200 public fns referenced). Packages intake lives at
-`docs/STDLIB-WISHLIST.md` (8 of ~11 rows relayed 2026-10-01).
+`docs/STDLIB-WISHLIST.md` (15 rows relayed 2026-10-01: initial 8 + the
+wave-46 batch of 7; full sheet at `xiom-packages/packages` @ `66f26e1`).
 
 **Shipped**: stdlib **0.62.0 released** — tag `stdlib-v0.62.0` force-updated
 to `0e63101` (ruleset bypass), GitHub Release published 2026-09-29 00:10Z

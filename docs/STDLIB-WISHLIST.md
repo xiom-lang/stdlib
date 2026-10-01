@@ -19,10 +19,22 @@ Status legend: **open** = not started; **fixed** = landed with a probe lock
 | 6 | Composite-key lookups | feature | Map/set lookups on multi-field keys (struct keys or tuple keys) without manual string packing. | open |
 | 7 | Non-aborting assertion catalog | feature | Test-assertion helpers that report failures and continue (collect-all mode) instead of aborting on the first failure, for packages' conformance suites. | open |
 | 8 | Fixed-point MSE | feature | Mean squared error for the fixed-point numeric types, matching the float stats MSE semantics. | open |
+| 9 | Saturating `Int` arithmetic | feature | `add`/`sub`/`mul` clamping at MIN/MAX on the module face. Requesters: `defi`, `geom3d`, `svm`, `mechanics`, `materials`, `chaincrypto`. | open |
+| 10 | Pinned rounding helpers | feature | `div_round` (half away from zero) and `div_ceil` (toward zero) over signed ints. Requesters: `geom3d`, `svm`, `defi`, `materials`, `boosting`. | open |
+| 11 | Fixed-point scale-once multiply kernels | feature | `mul(a, b, scale)` plus guarded sums, to avoid intermediate overflow. Requesters: `geom3d`, `materials`, `mechanics`, `boosting`. | open |
+| 12 | Fixed-point trigonometry + standalone `isqrt` | feature | `sin`/`cos` with range reduction; Newton `isqrt` usable without importing the `xiom.math` barrel. Requesters: `geom3d`, `defi`. | open |
+| 13 | Typed-vector copy helper | feature | `Vec[Int]` clone (and the same shape for other element types). Requesters: `exchanger`, `chaincrypto`, `actor`, `itest`. | open |
+| 14 | Table interpolation | feature | Linear interpolation over an ordered (tick, value) table. Requesters: `materials`, `discovery`. | open |
+| 15 | Group-by-key fold with running aggregate | feature | Bucketed folds (OHLCV buckets, top-N depth). Requesters: `exchanger`, `stats-ml`. | open |
 
-The relay summary named 8 of the ~11 rows (the remainder land when the
-packages sheet is forwarded). The packages lane's other 2026-10-01 notes
-(catalog bugs obs-fold trimming and `max-age=abc` were package-side and
-fixed there; `str_replace_all` proved useful for policy rewriting; avoid
+Two 2026-10-01 relays from the packages lane: the initial batch named 8
+rows (rows 1-8) and the wave-46 batch adds rows 9-15, all with multiple
+requesters. The full sheet (wave 43-46 rows and requester lists) lives in
+`xiom-packages/packages` at commit `66f26e1`; the packages lane offered to
+forward the whole file. The empty-needle defect (row 1) is acknowledged
+FIXED in the packages sheet; their `compliance` package keeps its
+short-circuit workaround until the next stdlib release. The packages
+lane's other notes (catalog bugs obs-fold trimming and `max-age=abc` were
+package-side; `str_replace_all` proved useful for policy rewriting; avoid
 `==` on Result values in tests -- no guaranteed `Eq`) need no stdlib action
 beyond row 1.
