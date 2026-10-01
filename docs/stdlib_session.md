@@ -1352,7 +1352,11 @@ registry pin, agent recon for the rest)**
   `p_empty_needle_contracts.xi`: RED on the old tree ("contract violated:
   requires at 315:13"), GREEN after. `str_split`'s delimiter precondition
   is genuine and stays.
-- Full battery on <wave>: <battery line>.
+- Full battery on 59bfb1c: check_modules 509/509 (444.9s); corpus 951/951,
+  0 compilefail, 0 runfail (1579.8s); probe corpus 205/205 (394.4s);
+  barename 0 hits / 509 (607.3s); coverage ratchet floors87 OK; doc ratchet
+  OK; module-smoke ratchet OK. PERF-2 wave closed; tag `stdlib-perf2`
+  created and pushed for the next pin.
 
 **RELAY 2026-09-29 (packages -> compiler/stdlib)**
 - Pin moved 0.61.3 -> 0.62.1 mid-batch; every package suite re-ran clean,
@@ -1403,20 +1407,22 @@ registry pin, agent recon for the rest)**
 
 ### HANDOFF 2026-09-29 (context-limit snapshot 3; read this plus docs/PRODUCTION_READINESS_QUEUE.md)
 
-**State**: main @ `ae9672b` + battery docs (wave 50, LOCAL ONLY -- the
-compiler lane acked the `stdlib-perf1` pin and noted nothing further is
-needed from the stdlib lane for v0.62.2; push when they ask). Tags:
-`stdlib-perf1` = the pushed PERF-1 annotation wave pin for compiler v0.62.2
+**State**: main @ `59bfb1c` + battery docs = tag `stdlib-perf2` (PUSHED per
+the compiler-lane relay; the remote may report PR/status-check bypass).
+Tags: `stdlib-perf2` = the PERF-2 sync.xi annotation wave pin for the next
+compiler pin (requires >= 185342f4 for the receiver-qualified method trust);
+`stdlib-perf1` = the PERF-1 atomics pin for compiler v0.62.2
 `STDLIB_VERSION`; `stdlib-v0.62.0` = the released stdlib 0.62.0. Compiler
 pin for local gates: v0.61.3 at `%TEMP%\kilo\stdlib_ws\xiom_v0613.exe`
 (rebuild recipe in the 2026-09-25 handoff); the compiler lane shipped the
 combined release and packages run on pin v0.62.1; the wave-50 probe is
 green on BOTH v0.61.3 and v0.62.1. Coverage floors87: **global 34.4%
-pub-with-clause, geom 35.5%, math 38.8%, num 35.6%**; probe corpus **204**;
+pub-with-clause, geom 35.5%, math 38.8%, num 35.6%**; probe corpus **205**;
 smoke corpus 951; modules 509/509 type-check clean; barename 0/509; doc
 scan 100%; **module-smoke ratchet live** (baseline
 `tools/module_smoke_floors.json`: 497/517 source modules exercised by a
-smoke, 3,332/6,200 public fns referenced).
+smoke, 3,332/6,200 public fns referenced). Packages intake lives at
+`docs/STDLIB-WISHLIST.md` (8 of ~11 rows relayed 2026-10-01).
 
 **Shipped**: stdlib **0.62.0 released** — tag `stdlib-v0.62.0` force-updated
 to `0e63101` (ruleset bypass), GitHub Release published 2026-09-29 00:10Z
@@ -1448,7 +1454,12 @@ plus `tools/doc_scan.ps1` attribute transparency and the
 `STDLIB_VERSION` pin for compiler v0.62.2); geom batch 2 matrix +
 quaternion 51 (87; found + filed `p_geom_matrix_result_infer.xi` --
 un-annotated matrix-module nested results lose a nesting level; fixed
-`quat_between`'s opposite-direction axis choice, locked by the probe).
+`quat_between`'s opposite-direction axis choice, locked by the probe);
+PERF-2 sync.xi `#[unsafe_direct]` on all 56 unsafe-bodied pub fns plus the
+packages intake (`docs/STDLIB-WISHLIST.md`) and the three contradicted
+empty-needle preconditions removed from `string.index_of` /
+`string.str_index_of` / `string.str_replace_all` (`p_empty_needle_contracts.xi`
+RED -> GREEN; tag `stdlib-perf2`).
 Also landed:
 `tools/module_smoke_scan.ps1` +
 baseline + ratchet wired into all three workflows (owner requirement: every
@@ -1528,7 +1539,7 @@ READ FIRST, in order:
 2. docs/PRODUCTION_READINESS_QUEUE.md -- authoritative queue (sections C/D/E/F, the readiness outlook, the module-smoke requirement, and all contract/import gotchas).
 3. docs/RELEASE_CHECKLIST.md before any release action.
 
-STATE: main @ ae9672b + battery docs or later (LOCAL only; stdlib-perf1 is the pushed STDLIB_VERSION pin for compiler v0.62.2). Compiler pin v0.61.3 at %TEMP%\kilo\stdlib_ws\xiom_v0613.exe (rebuild recipe in the 2026-09-25 handoff if missing); the compiler lane's v0.62.1 binary also lives at E:\xiom-lang\xiom\target\debug\xiom.exe and the wave-50 probe is green on both. Coverage floors87: global 34.4%, geom 35.5%, math 38.8%, num 35.6%. All gates green on the tip: check_modules 509/509; corpus 951/951; probes 204/204; barename 0/509; coverage ratchet floors87; module-smoke ratchet (497/517 modules, 3332/6200 pub fns); doc 100%. stdlib 0.62.0 is RELEASED (tag stdlib-v0.62.0 at 0e63101 with assets) and the registry lane owns its publish; the next release continues coverage toward 100%.
+STATE: main @ 59bfb1c + battery docs = tag stdlib-perf2 (pushed; requires compiler >= 185342f4 for the receiver-qualified method trust; stdlib-perf1 remains the v0.62.2 STDLIB_VERSION pin). Compiler pin v0.61.3 at %TEMP%\kilo\stdlib_ws\xiom_v0613.exe (rebuild recipe in the 2026-09-25 handoff if missing); the compiler lane's v0.62.1 binary also lives at E:\xiom-lang\xiom\target\debug\xiom.exe and the wave-50 probe is green on both. Coverage floors87: global 34.4%, geom 35.5%, math 38.8%, num 35.6%. All gates green on the tip: check_modules 509/509; corpus 951/951; probes 205/205; barename 0/509; coverage ratchet floors87; module-smoke ratchet (497/517 modules, 3332/6200 pub fns); doc 100%. Packages intake: docs/STDLIB-WISHLIST.md. stdlib 0.62.0 is RELEASED (tag stdlib-v0.62.0 at 0e63101 with assets) and the registry lane owns its publish; the next release continues coverage toward 100%.
 
 FIRST TASK -- wave 51: geom batch 3 -- vector.xi (24 pub) + curves.xi (7) + collision.xi (12) = 43 pub (waves 49-50 closed geom primitives 52 and matrix/quaternion 51; floors87). Batch-split per the owner's directive (families of 40-60 pub per wave): then geometry_2d/geometry_3d/geometry_extended (57) + polyhedra (10) + linear (15), then the big geom.xi aggregate (142 uncovered -> 2-3 waves). Protocol for EVERY wave:
 read-only recon (agents time out on big files -- read the source directly if needed) -> new-shape probe in tools/probes/ (RED on the stub/before, GREEN after) -> runtime-safe clauses (contracts run at runtime; every clause certainly true for all inputs incl. non-normalized structs; canonical-form/field claims; NEVER read Result/Option payloads in clauses; NaN-tolerant `(x == expr) || (x != x)` forms; parenthesize mixed comparisons) -> powershell -NoProfile -File tools\coverage_scan.ps1 -DumpFloors tools\coverage_floors<N>.json -> wire the floors file into .github/workflows/{ci,heavy,release}.yml (keep `run:` at EIGHT spaces under `shell: pwsh`; after ANY workflow edit run `python -c "import yaml, yaml.safe_load(...)"` on it) + tools/README.md + docs/STDLIB_READINESS_PLAN.md + docs/stdlib_session.md in the SAME commit -> pure-ASCII single-quoted commit -> full battery: powershell -NoProfile -File tools\check_modules.ps1 -Compiler <pin> ; tools\run_smokes.ps1 -Compiler <pin> -Workers 8 -RetryFailed ; same with -Corpus tools\probes ; tools\barename_scan.ps1 ; tools\coverage_scan.ps1 -RatchetFile tools\coverage_floors<N>.json ; tools\doc_scan.ps1 -RatchetFile tools\doc_baseline4.json ; tools\module_smoke_scan.ps1 -BaselineFile tools\module_smoke_floors.json. One wave = one commit.
