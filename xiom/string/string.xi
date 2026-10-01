@@ -312,8 +312,8 @@ pub fn char_at(s: Str, pos: Int) -> Option[Char]
 
 /// Byte index of the first occurrence, or None.
 pub fn index_of(s: Str, substr: Str) -> Option[Int]
-  requires: substr.len() > 0
-  ensures:  result is Some => result >= 0 && result < s.len()
+  ensures: substr.len() == 0 => result.is_some
+  ensures: result is Some => result >= 0 && result <= s.len()
 {
   let s_len = s.len();
   let sub_len = substr.len();
@@ -464,7 +464,7 @@ pub fn byte_count(s: Str) -> Int
 /// Returns the first byte index of needle in haystack, or None if not found.
 /// O(n*m) naive search. For an empty needle, returns Some(0).
 pub fn str_index_of(haystack: Str, needle: Str) -> Option[Int]
-  requires: needle.len() > 0
+  ensures: needle.len() == 0 => result.is_some
 {
   index_of(haystack, needle)
 }
@@ -482,7 +482,7 @@ pub fn str_rindex_of(haystack: Str, needle: Str) -> Option[Int]
 /// Replaces every occurrence of `from` with `to` in `s`.
 /// O(n*m) where n = |s|, m = |from|. If `from` is empty, returns `s` unchanged.
 pub fn str_replace_all(s: Str, from_needle: Str, to_replacement: Str) -> Str
-  requires: from_needle.len() > 0
+  ensures: from_needle.len() == 0 => result.len() == s.len()
 {
   replace(s, from_needle, to_replacement)
 }

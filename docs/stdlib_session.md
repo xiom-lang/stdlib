@@ -1322,6 +1322,38 @@ registry pin, agent recon for the rest)**
   OK; module-smoke ratchet OK. Wave 50 closed (LOCAL-only commits; no push
   requested).
 
+**SESSION 2026-10-01 block 10 (PERF-2 annotation wave + packages intake)**
+- Compiler-lane relay (185342f4, "m166 follow-up -- receiver-qualified trust
+  key for methods"): annotate every fn in `xiom/sync/sync.xi` whose body
+  contains an unsafe block with `#[unsafe_direct]`, directly above
+  `pub fn`; tag `stdlib-perf2` for the next pin. Annotated all 56
+  unsafe-bodied pub fns; the 10 pub fns without unsafe bodies (`sem_*`,
+  `cdl_new`/`cdl_count_down`/`cdl_is_zero`, `barrier_new`, `Arc.as_ref`)
+  are untouched. Coverage verified mechanically (every pub fn with `unsafe`
+  in its body up to its closing brace carries the attribute directly above;
+  no attribute on an unsafe-free fn). On the v0.61.3 pin the attribute is
+  dropped by error recovery; 22/22 sync smokes green. Under >= 185342f4 the
+  wrappers (including receiver-qualified methods -- the t2 residual)
+  compile direct, removing the per-call trampoline.
+- Packages relay recorded: `docs/STDLIB-WISHLIST.md` created (~11 rows; 8
+  relayed: the empty-needle defect, allocation-free line accessors, keyed
+  FIFO/mailboxes, stable argmax, event-log cursors, composite-key lookups,
+  non-aborting assertion catalog, fixed-point MSE).
+- Fix-first (packages defect): `xiom.string.index_of` carried
+  `requires: substr.len() > 0` while its body returns `Some(0)` for an
+  empty needle and `string.str_contains` delegates to it;
+  `string.str_index_of` (doc promises `Some(0)`) and
+  `string.str_replace_all` (doc promises `s` unchanged; `replace` handles
+  it) carried the same contradicted precondition. Removed all three;
+  `index_of` now ensures `substr.len() == 0 => result.is_some` and
+  `result is Some => result >= 0 && result <= s.len()`, `str_index_of` the
+  empty-needle `Some` form, `str_replace_all`
+  `from_needle.len() == 0 => result.len() == s.len()`. Probe
+  `p_empty_needle_contracts.xi`: RED on the old tree ("contract violated:
+  requires at 315:13"), GREEN after. `str_split`'s delimiter precondition
+  is genuine and stays.
+- Full battery on <wave>: <battery line>.
+
 **RELAY 2026-09-29 (packages -> compiler/stdlib)**
 - Pin moved 0.61.3 -> 0.62.1 mid-batch; every package suite re-ran clean,
   no code changes needed for the new compiler. Their sectest caught two

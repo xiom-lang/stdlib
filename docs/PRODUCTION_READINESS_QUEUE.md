@@ -174,6 +174,20 @@ geom 23.2% -> 35.5%, global 33.6% -> 34.4%. Next: geom batch 3
 (vector.xi + curves/collision), then geometry_2d/3d/extended/polyhedra/
 linear, then the geom.xi aggregate.
 
+Update 2026-10-01 (PERF-2 annotation wave + packages intake): all 56
+unsafe-bodied pub fns in `xiom/sync/sync.xi` (mutex/rwlock/guards/
+condvar/once/barrier/arc/atomic types, the standalone `atomic_*` helpers,
+and `cdl_wait_spin`) carry `#[unsafe_direct]` per the compiler-lane
+185342f4 relay; the 10 unsafe-free pub fns are untouched; pin-path sync
+smokes 22/22. Tag `stdlib-perf2` is the next-pin candidate
+(receiver-qualified method trust is the t2 residual). Packages relay
+recorded in `docs/STDLIB-WISHLIST.md` (8 of the ~11 rows relayed).
+Fix-first: removed the contradicted empty-needle preconditions on
+`string.index_of` / `string.str_index_of` / `string.str_replace_all`
+(packages defect; probe `p_empty_needle_contracts.xi` RED -> GREEN).
+Coverage unchanged (floors87). Next: geom batch 3 (vector.xi +
+curves/collision) as before.
+
 State 2026-09-29 (handoff snapshot 3, main 2a06a90): floors85 global 32.8%,
 math 38.8%, num 37.4%; probes 202; smoke 951; modules 509/509; barename
 0/509; doc 100%; module-smoke ratchet 497/517 modules, 3332/6200 pub fns.
