@@ -26,15 +26,23 @@ Status legend: **open** = not started; **fixed** = landed with a probe lock
 | 13 | Typed-vector copy helper | feature | `Vec[Int]` clone (and the same shape for other element types). Requesters: `exchanger`, `chaincrypto`, `actor`, `itest`. | open |
 | 14 | Table interpolation | feature | Linear interpolation over an ordered (tick, value) table. Requesters: `materials`, `discovery`. | open |
 | 15 | Group-by-key fold with running aggregate | feature | Bucketed folds (OHLCV buckets, top-N depth). Requesters: `exchanger`, `stats-ml`. | open |
+| 16 | `xiom.math.fixed` transcendentals | feature | `exp`/`log`/`pow`-class functions for the fixed-point type (overlaps row 12's sin/cos; a broader fixed transcendental surface). | open |
+| 17 | Exact-sum softmax | feature | Softmax with exact-sum accumulation so the denominator does not drift across long inputs. | open |
+| 18 | Bit-set dataflow primitives | feature | Worklist/bit-set primitives for dataflow passes (set union/intersection/iteration over bit sets). | open |
+| 19 | Borrowed `Str` views | feature | Non-owning string slice views (offset+len) to scan without copying. | open |
+| 20 | Dependency-free `Vec[UInt8]` -> `Str` builder | feature | Build a `Str` from a byte vector without importing other modules (allocation-light path). | open |
+| 21 | `Vec.pop` ergonomics | feature | Pop returning an `Option`-shaped result (or a checked variant) instead of the raw representation. | open |
 
 Two 2026-10-01 relays from the packages lane: the initial batch named 8
 rows (rows 1-8) and the wave-46 batch adds rows 9-15, all with multiple
-requesters. The full sheet (wave 43-46 rows and requester lists) lives in
-`xiom-packages/packages` at commit `66f26e1`; the packages lane offered to
-forward the whole file. The empty-needle defect (row 1) is acknowledged
-FIXED in the packages sheet; their `compliance` package keeps its
-short-circuit workaround until the next stdlib release. The packages
-lane's other notes (catalog bugs obs-fold trimming and `max-age=abc` were
-package-side; `str_replace_all` proved useful for policy rewriting; avoid
-`==` on Result values in tests -- no guaranteed `Eq`) need no stdlib action
-beyond row 1.
+requesters. A third relay on 2026-10-02 adds rows 16-21 (fixed
+transcendentals, exact-sum softmax, bit-set dataflow, borrowed Str views,
+Vec[UInt8] -> Str builder, Vec.pop ergonomics). The full sheet (wave 43-46
+rows and requester lists) lives in `xiom-packages/packages` at commit
+`66f26e1`; the packages lane offered to forward the whole file. The
+empty-needle defect (row 1) is acknowledged FIXED in the packages sheet;
+their `compliance` package keeps its short-circuit workaround until the
+next stdlib release. The packages lane's other notes (catalog bugs obs-fold
+trimming and `max-age=abc` were package-side; `str_replace_all` proved
+useful for policy rewriting; avoid `==` on Result values in tests -- no
+guaranteed `Eq`) need no stdlib action beyond row 1.
