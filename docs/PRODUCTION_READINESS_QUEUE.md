@@ -10,10 +10,10 @@ gates flip:
 2. Smoke corpus green -- MET (951/951).
 3. Probe corpus green -- MET (209/209).
 4. Strict bare-name scan clean -- MET (0/509).
-5. Coverage ratchet green -- MET (floors89).
+5. Coverage ratchet green -- MET (floors91).
 6. Documentation ratchet 100% -- MET.
-7. Module-smoke ratchet green -- MET (497/517 modules, 3332/6200 fns).
-8. Contract coverage 100% (every public fn carries clauses) -- OPEN (36.3%).
+7. Module-smoke ratchet green -- MET (497/517 modules, 3377/6200 fns).
+8. Contract coverage 100% (every public fn carries clauses) -- OPEN (37.0%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
    OPEN (11: 10 compiler, 1 stdlib algorithm).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
