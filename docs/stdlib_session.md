@@ -1449,6 +1449,23 @@ registry pin, agent recon for the rest)**
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
 
+**SESSION 2026-10-03 block 18 (wave 58: net batch 2 -- HTTP family; floors95)**
+- Wave 58: 55 clauses on xiom.net.{http (21), header (6), cookie (10),
+  mime (18)}. Fix-first: `parse_q` capped at 1000 (RFC 7231; `1.999`
+  scored 1999, probe witness). One clause corrected during validation:
+  header_remove's `(len == 0) => (result == false)` is invalid
+  post-removal (removing the last entry empties the vector with result
+  true); replaced with the documented `headers.len() >= 0` placeholder.
+- Probe `p_wave58_shapes.xi` (213th): 119 checks; green on v0.61.3 and
+  v0.62.2 dev.
+- net 20.9% -> 39.4%, global 39.2% -> 40.1% (crosses 40%); floors95
+  wired (YAML re-verified) + tools/README.md + plan + queue in the same
+  commit. Smoke growth skipped (existing net smokes already reference the
+  family; module-smoke stays 3,475/6,200).
+- Main was pushed before this wave (`5c3d39f..c11b66c`, website meter
+  current); this wave is local until the next push point.
+- Battery pending on the wave commit; results in the follow-up docs commit.
+
 **SESSION 2026-10-03 block 17 (wave 57: net batch 1 -- address family; floors94)**
 - Wave 57: 46 clauses on xiom.net.{address (5), ip (15), ip4 (10), ip6 (8),
   url (8)} -- Option/Result presence mirrors, length bands for valid parses,

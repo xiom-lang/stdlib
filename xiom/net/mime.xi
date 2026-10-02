@@ -197,7 +197,11 @@ fn parse_q(token: Str) -> Int {
     frac = frac * 10;
     frac_digits = frac_digits + 1;
   }
-  int_part * 1000 + frac
+  let q = int_part * 1000 + frac;
+  if q > 1000 {
+    return 1000;
+  };
+  q
 }
 
 /// Parse a MIME type string into its parts.
@@ -206,7 +210,9 @@ fn parse_q(token: Str) -> Int {
 ///          parameters (in declaration order); Err for a missing slash or an
 ///          empty type.
 /// Complexity: O(n). Pure.
-pub fn mime_parse(s: Str) -> Result[MimeType, Str] {
+pub fn mime_parse(s: Str) -> Result[MimeType, Str]
+  ensures: ((s.len() < 3) => (result.is_err == true)) && ((result.is_ok == true) => (s.len() >= 3))
+{
   var params: Vec[(Str, Str)] = Vec[(Str, Str)].new();
   let semi = idx_of(s, ";");
   var base = s;
@@ -246,7 +252,9 @@ pub fn mime_parse(s: Str) -> Result[MimeType, Str] {
 /// Parameters: path -- the file path.
 /// Returns: the MIME type (lowercase) or "application/octet-stream".
 /// Complexity: O(1). Pure.
-pub fn mime_type_of(path: Str) -> Str {
+pub fn mime_type_of(path: Str) -> Str
+  ensures: result.len() >= 8 && ((path == "index.html") => (result == "text/html")) && ((path == "a.JPEG") => (result == "image/jpeg"))
+{
   let e = ext_of(path);
   if e == "html" || e == "htm" { return "text/html"; }
   if e == "txt" { return "text/plain"; }
@@ -287,7 +295,9 @@ pub fn mime_type_of(path: Str) -> Str {
 /// Parameters: mime -- the MIME type (lowercase).
 /// Returns: the extension without the leading dot, or "" when unknown.
 /// Complexity: O(1). Pure.
-pub fn mime_extension_of(mime: Str) -> Str {
+pub fn mime_extension_of(mime: Str) -> Str
+  ensures: result.len() <= 4 && (result.len() != 1) && ((mime == "text/html") => (result == "html")) && ((mime == "image/jpeg") => (result == "jpg"))
+{
   let m = lower(trim_ws(mime));
   if m == "text/html" { return "html"; }
   if m == "text/plain" { return "txt"; }
@@ -317,7 +327,9 @@ pub fn mime_extension_of(mime: Str) -> Str {
 ///          the actual MIME type.
 /// Returns: true when the pattern matches.
 /// Complexity: O(n). Pure.
-pub fn mime_matches(pattern: Str, mime: Str) -> Bool {
+pub fn mime_matches(pattern: Str, mime: Str) -> Bool
+  ensures: ((pattern == "*/*" || pattern == "*") => (result == true)) && ((pattern == mime) => (result == true))
+{
   let p = lower(pattern);
   let m = lower(mime);
   if p == "*/*" || p == "*" {
@@ -350,7 +362,9 @@ fn type_part(mime: Str) -> Str {
 /// Parameters: mime -- the MIME type.
 /// Returns: true for text/*, application/json, application/xml and related.
 /// Complexity: O(1). Pure.
-pub fn mime_is_text(mime: Str) -> Bool {
+pub fn mime_is_text(mime: Str) -> Bool
+  ensures: ((mime == "text/plain") => (result == true)) && ((mime == "application/json") => (result == true)) && ((result == true) => (mime.len() > 0))
+{
   let m = lower(trim_ws(mime));
   if m == "application/json" || m == "application/xml" || m == "application/javascript" {
     return true;
@@ -365,7 +379,9 @@ pub fn mime_is_text(mime: Str) -> Bool {
 /// Parameters: mime -- the MIME type.
 /// Returns: true for image/* and image/x-* types.
 /// Complexity: O(1). Pure.
-pub fn mime_is_image(mime: Str) -> Bool {
+pub fn mime_is_image(mime: Str) -> Bool
+  ensures: ((result == true) => (mime.len() >= 6)) && ((mime == "image/png") => (result == true))
+{
   let m = lower(trim_ws(mime));
   string.str_starts_with(m, "image/")
 }
@@ -374,7 +390,9 @@ pub fn mime_is_image(mime: Str) -> Bool {
 /// Parameters: mime -- the MIME type.
 /// Returns: true for audio/* types.
 /// Complexity: O(1). Pure.
-pub fn mime_is_audio(mime: Str) -> Bool {
+pub fn mime_is_audio(mime: Str) -> Bool
+  ensures: ((result == true) => (mime.len() >= 6)) && ((mime == "audio/mpeg") => (result == true))
+{
   let m = lower(trim_ws(mime));
   string.str_starts_with(m, "audio/")
 }
@@ -383,7 +401,9 @@ pub fn mime_is_audio(mime: Str) -> Bool {
 /// Parameters: mime -- the MIME type.
 /// Returns: true for video/* types.
 /// Complexity: O(1). Pure.
-pub fn mime_is_video(mime: Str) -> Bool {
+pub fn mime_is_video(mime: Str) -> Bool
+  ensures: ((result == true) => (mime.len() >= 6)) && ((mime == "video/mp4") => (result == true))
+{
   let m = lower(trim_ws(mime));
   string.str_starts_with(m, "video/")
 }
@@ -392,7 +412,9 @@ pub fn mime_is_video(mime: Str) -> Bool {
 /// Parameters: mime -- the MIME type.
 /// Returns: true for application/* types.
 /// Complexity: O(1). Pure.
-pub fn mime_is_application(mime: Str) -> Bool {
+pub fn mime_is_application(mime: Str) -> Bool
+  ensures: ((result == true) => (mime.len() >= 12)) && ((mime == "application/json") => (result == true))
+{
   let m = lower(trim_ws(mime));
   string.str_starts_with(m, "application/")
 }
@@ -407,7 +429,9 @@ fn has_utf8_bom_b(data: &Vec[UInt8]) -> Bool {
 /// Returns: "utf-8", "utf-16le", "utf-16be", "utf-32le", "utf-32be", "ascii"
 ///          or "binary".
 /// Complexity: O(n). Pure.
-pub fn charset_detect(data: &Vec[UInt8]) -> Str {
+pub fn charset_detect(data: &Vec[UInt8]) -> Str
+  ensures: ((data.len() == 0) => (result == "ascii")) && (result.len() >= 5)
+{
   let len = data.len();
   if len >= 4 && data[0] == 255 as UInt8 && data[1] == 254 as UInt8 && data[2] == 0 as UInt8 && data[3] == 0 as UInt8 {
     return "utf-32le";
@@ -452,7 +476,9 @@ pub fn charset_detect(data: &Vec[UInt8]) -> Str {
 /// Returns: Ok(s) for UTF-8/ASCII targets (XIOM strings are always UTF-8),
 ///          Err for unsupported targets.
 /// Complexity: O(1). Pure.
-pub fn charset_normalize(s: Str, charset: Str) -> Result[Str, Str] {
+pub fn charset_normalize(s: Str, charset: Str) -> Result[Str, Str]
+  ensures: ((charset == "") => (result.is_err == true)) && ((charset == "utf-8") => (result.is_ok == true)) && ((charset == "ASCII") => (result.is_ok == true))
+{
   let c = lower(charset);
   if c == "utf-8" || c == "utf8" || c == "us-ascii" || c == "ascii" || c == "iso-8859-1" {
     return Ok(s);
@@ -464,7 +490,9 @@ pub fn charset_normalize(s: Str, charset: Str) -> Result[Str, Str] {
 /// Parameters: content -- the bytes to hash.
 /// Returns: the quoted etag, e.g. "\"a1b2c3...\"".
 /// Complexity: O(n). Pure.
-pub fn etag_new(content: &Vec[UInt8]) -> Str {
+pub fn etag_new(content: &Vec[UInt8]) -> Str
+  ensures: result.len() == 66
+{
   let hash = crypto.sha256(content);
   var fresh_hash = Vec[UInt8].new();
   var i = 0;
@@ -481,7 +509,9 @@ pub fn etag_new(content: &Vec[UInt8]) -> Str {
 ///          value (a comma-separated list, optionally W/ prefixed).
 /// Returns: true when any list entry matches (including "*").
 /// Complexity: O(n). Pure.
-pub fn etag_matches(etag: Str, if_none_match: Str) -> Bool {
+pub fn etag_matches(etag: Str, if_none_match: Str) -> Bool
+  ensures: ((if_none_match == "*") => (result == true)) && ((etag == if_none_match) => (result == true))
+{
   let e = trim_ws(etag);
   if if_none_match == "*" {
     return true;
@@ -505,7 +535,9 @@ pub fn etag_matches(etag: Str, if_none_match: Str) -> Bool {
 /// Parameters: header -- the Accept header value.
 /// Returns: the (pattern, q*1000) entries; malformed entries are skipped.
 /// Complexity: O(n). Pure.
-pub fn accept_parse(header: Str) -> Vec[(Str, Int)] {
+pub fn accept_parse(header: Str) -> Vec[(Str, Int)]
+  ensures: ((header.len() == 0) => (result.len() == 0)) && ((result.len() > 0) => (header.len() > 0))
+{
   var result: Vec[(Str, Int)] = Vec[(Str, Int)].new();
   let items = split(header, ",");
   var i = 0;
@@ -539,7 +571,9 @@ pub fn accept_parse(header: Str) -> Vec[(Str, Int)] {
 /// Parameters: header -- the Accept header value; mime -- the actual MIME type.
 /// Returns: the highest matching q (scaled by 1000), or 0 when absent.
 /// Complexity: O(n). Pure.
-pub fn accept_q_value(header: Str, mime: Str) -> Int {
+pub fn accept_q_value(header: Str, mime: Str) -> Int
+  ensures: result >= 0 && result <= 1000
+{
   let entries = accept_parse(header);
   var best = 0;
   var i = 0;
@@ -560,7 +594,9 @@ pub fn accept_q_value(header: Str, mime: Str) -> Int {
 ///          MIME types.
 /// Returns: Some(best) when a match with q > 0 exists, None otherwise.
 /// Complexity: O(n-m). Pure.
-pub fn accept_negotiate(header: Str, available: &Vec[Str]) -> Option[Str] {
+pub fn accept_negotiate(header: Str, available: &Vec[Str]) -> Option[Str]
+  ensures: ((available.len() == 0) => (result.is_some == false)) && ((result.is_some == true) => (available.len() > 0))
+{
   var best_q = 0;
   var best = "";
   var i = 0;
@@ -584,7 +620,9 @@ pub fn accept_negotiate(header: Str, available: &Vec[Str]) -> Option[Str] {
 ///          "<https://a.com>; rel=\"next\"; title=\"Next\"").
 /// Returns: the parsed links; malformed entries are skipped.
 /// Complexity: O(n). Pure.
-pub fn link_parse(header: Str) -> Vec[Link] {
+pub fn link_parse(header: Str) -> Vec[Link]
+  ensures: ((header.len() == 0) => (result.len() == 0)) && ((result.len() > 0) => (header.len() > 0))
+{
   var result: Vec[Link] = Vec[Link].new();
   let items = split(header, ",");
   var i = 0;
@@ -636,7 +674,9 @@ pub fn link_parse(header: Str) -> Vec[Link] {
 /// Parameters: links -- the parsed links; rel -- the relation type.
 /// Returns: Some(href) for the first matching link, None otherwise.
 /// Complexity: O(n). Pure.
-pub fn link_find(links: &Vec[Link], rel: Str) -> Option[Str] {
+pub fn link_find(links: &Vec[Link], rel: Str) -> Option[Str]
+  ensures: ((links.len() == 0) => (result.is_some == false)) && ((result.is_some == true) => (links.len() > 0))
+{
   var i = 0;
   while i < links.len() {
     let l = links[i];

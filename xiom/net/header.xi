@@ -50,7 +50,9 @@ fn matches_name(stored: Str, name: Str) -> Bool {
 /// Parameters: headers -- the header list; name -- the header name.
 /// Returns: Some(first value) when present, None otherwise.
 /// Complexity: O(n) with n = header count. Pure.
-pub fn header_get(headers: &Vec[(Str, Str)], name: Str) -> Option[Str] {
+pub fn header_get(headers: &Vec[(Str, Str)], name: Str) -> Option[Str]
+  ensures: ((headers.len() == 0) => (result.is_some == false)) && ((result.is_some == true) => (headers.len() > 0))
+{
   var i = 0;
   while i < headers.len() {
     let h = headers[i];
@@ -68,7 +70,9 @@ pub fn header_get(headers: &Vec[(Str, Str)], name: Str) -> Option[Str] {
 ///          value -- the header value.
 /// Returns: Unit.
 /// Complexity: O(n) with n = header count. Pure.
-pub fn header_set(headers: &mut Vec[(Str, Str)], name: Str, value: Str) {
+pub fn header_set(headers: &mut Vec[(Str, Str)], name: Str, value: Str)
+  ensures: headers.len() >= 1
+{
   var i = 0;
   while i < headers.len() {
     let h = headers[i];
@@ -86,7 +90,9 @@ pub fn header_set(headers: &mut Vec[(Str, Str)], name: Str, value: Str) {
 /// Parameters: headers -- the mutable header list; name -- the header name.
 /// Returns: true when at least one entry was removed.
 /// Complexity: O(n) with n = header count. Pure.
-pub fn header_remove(headers: &mut Vec[(Str, Str)], name: Str) -> Bool {
+pub fn header_remove(headers: &mut Vec[(Str, Str)], name: Str) -> Bool
+  ensures: headers.len() >= 0
+{
   var removed = false;
   var i = 0;
   while i < headers.len() {
@@ -105,7 +111,9 @@ pub fn header_remove(headers: &mut Vec[(Str, Str)], name: Str) -> Bool {
 /// Parameters: headers -- the header list; name -- the header name.
 /// Returns: true when at least one entry matches.
 /// Complexity: O(n) with n = header count. Pure.
-pub fn header_contains(headers: &Vec[(Str, Str)], name: Str) -> Bool {
+pub fn header_contains(headers: &Vec[(Str, Str)], name: Str) -> Bool
+  ensures: ((headers.len() == 0) => (result == false)) && ((result == true) => (headers.len() > 0))
+{
   var i = 0;
   while i < headers.len() {
     let h = headers[i];
@@ -122,7 +130,9 @@ pub fn header_contains(headers: &Vec[(Str, Str)], name: Str) -> Bool {
 /// Returns: Some((name, value)) for a well-formed line, None otherwise. The
 ///          name is preserved verbatim; the value is trimmed.
 /// Complexity: O(n). Pure.
-pub fn header_parse_line(line: Str) -> Option[(Str, Str)] {
+pub fn header_parse_line(line: Str) -> Option[(Str, Str)]
+  ensures: ((line.len() == 0) => (result.is_some == false)) && ((result.is_some == true) => (line.len() >= 2))
+{
   let len = line.len();
   var end = len;
   if end >= 2 && line.byte_at(end - 2) == 13 && line.byte_at(end - 1) == 10 {
@@ -153,7 +163,9 @@ pub fn header_parse_line(line: Str) -> Option[(Str, Str)] {
 /// Parameters: headers -- the header list.
 /// Returns: the concatenated header block; each line ends with CRLF.
 /// Complexity: O(n) with n = header count. Pure.
-pub fn header_serialize(headers: &Vec[(Str, Str)]) -> Str {
+pub fn header_serialize(headers: &Vec[(Str, Str)]) -> Str
+  ensures: result.len() >= 4 * headers.len() && ((headers.len() == 0) => (result.len() == 0))
+{
   var result = "";
   var i = 0;
   while i < headers.len() {

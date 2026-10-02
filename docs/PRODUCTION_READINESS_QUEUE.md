@@ -1,19 +1,19 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
 **70% -- 7 of 10 readiness gates complete.**
-**Gates: corpus 951/951, modules 509/509, probes 212/212, barename 0/509.**
+**Gates: corpus 951/951, modules 509/509, probes 213/213, barename 0/509.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
 gates flip:
 1. Modules type-check clean -- MET (509/509).
 2. Smoke corpus green -- MET (951/951).
-3. Probe corpus green -- MET (212/212).
+3. Probe corpus green -- MET (213/213).
 4. Strict bare-name scan clean -- MET (0/509).
-5. Coverage ratchet green -- MET (floors94).
+5. Coverage ratchet green -- MET (floors95).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (497/517 modules, 3475/6200 fns).
-8. Contract coverage 100% (every public fn carries clauses) -- OPEN (39.2%).
+8. Contract coverage 100% (every public fn carries clauses) -- OPEN (40.1%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
    OPEN (12: 11 compiler, 1 stdlib algorithm).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
@@ -350,6 +350,16 @@ header 6, cookie 10, mime 18) flags fix-first candidates for the executor:
 despite its UTF-8/ASCII doc; the cookie matcher/expiry helpers call
 `time.unix_timestamp()` while the module header says "pure" (by design --
 keep probe KATs time-relative or expiry=0).
+
+Update 2026-10-03 (wave 58 landed + push): net batch 2 -- the HTTP family
+(http 21, header 6, cookie 10, mime 18 = 55 clauses). Fix-first:
+`parse_q`/`accept_q_value` now cap q at 1000 per RFC 7231 (`1.999`
+previously scored 1999). Probe `p_wave58_shapes.xi` (213th, 119 checks,
+green on v0.61.3 and v0.62.2 dev); floors95; net 20.9% -> 39.4%, global
+39.2% -> 40.1% (crosses 40%). Main was pushed through `c11b66c` (waves
+54-57 + docs) so the website meter is current; wave 58 is local until the
+next push point. Next: net batches 3+ (transport ~53, then protocols),
+then serialize 5.4%.
 
 State 2026-09-29 (handoff snapshot 3, main 2a06a90): floors85 global 32.8%,
 math 38.8%, num 37.4%; probes 202; smoke 951; modules 509/509; barename

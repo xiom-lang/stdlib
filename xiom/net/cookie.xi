@@ -214,7 +214,9 @@ fn parse_http_date(s: Str) -> Int {
 /// Returns: Ok(Cookie) for the first name=value pair, Err when the header is
 ///          empty or any segment is malformed.
 /// Complexity: O(n). Pure.
-pub fn cookie_parse(header: Str) -> Result[Cookie, Str] {
+pub fn cookie_parse(header: Str) -> Result[Cookie, Str]
+  ensures: ((header.len() == 0) => (result.is_err == true)) && ((result.is_ok == true) => (header.len() > 0))
+{
   let parts = split(header, ";");
   if parts.len() == 0 {
     return Err("empty cookie header");
@@ -261,7 +263,9 @@ pub fn cookie_parse(header: Str) -> Result[Cookie, Str] {
 /// Returns: Ok(Cookie) with attributes applied, Err when the name=value pair
 ///          is missing or malformed.
 /// Complexity: O(n). Pure.
-pub fn cookie_parse_set_cookie(header: Str) -> Result[Cookie, Str] {
+pub fn cookie_parse_set_cookie(header: Str) -> Result[Cookie, Str]
+  ensures: ((header.len() == 0) => (result.is_err == true)) && ((result.is_ok == true) => (header.len() > 0))
+{
   let parts = split(header, ";");
   if parts.len() == 0 {
     return Err("empty Set-Cookie header");
@@ -335,14 +339,18 @@ pub fn cookie_parse_set_cookie(header: Str) -> Result[Cookie, Str] {
 /// Parameters: c -- the cookie.
 /// Returns: the "name=value" string.
 /// Complexity: O(1). Pure.
-pub fn cookie_serialize(c: Cookie) -> Str {
+pub fn cookie_serialize(c: Cookie) -> Str
+  ensures: result == c.name + "=" + c.value
+{
   c.name + "=" + c.value
 }
 
 /// Create an empty cookie jar.
 /// Returns: a jar holding no cookies.
 /// Complexity: O(1). Pure.
-pub fn cookie_jar_new() -> CookieJar {
+pub fn cookie_jar_new() -> CookieJar
+  ensures: result.cookies.len() == 0
+{
   CookieJar{ cookies: Vec[Cookie].new(); }
 }
 
@@ -351,7 +359,9 @@ pub fn cookie_jar_new() -> CookieJar {
 /// Parameters: jar -- the mutable jar; c -- the cookie to store.
 /// Returns: Unit.
 /// Complexity: O(n) with n = jar size. Pure.
-pub fn cookie_jar_set(jar: &mut CookieJar, c: Cookie) {
+pub fn cookie_jar_set(jar: &mut CookieJar, c: Cookie)
+  ensures: jar.cookies.len() >= 1
+{
   var i = 0;
   while i < jar.cookies.len() {
     let cur = jar.cookies[i];
@@ -368,7 +378,9 @@ pub fn cookie_jar_set(jar: &mut CookieJar, c: Cookie) {
 /// Parameters: jar -- the jar; name -- the cookie name; url -- the request url.
 /// Returns: Some(Cookie) for the first matching cookie, None otherwise.
 /// Complexity: O(n) with n = jar size. Pure.
-pub fn cookie_jar_get(jar: &CookieJar, name: Str, url: Str) -> Option[Cookie] {
+pub fn cookie_jar_get(jar: &CookieJar, name: Str, url: Str) -> Option[Cookie]
+  ensures: ((jar.cookies.len() == 0) => (result.is_some == false)) && ((result.is_some == true) => (jar.cookies.len() > 0))
+{
   var i = 0;
   while i < jar.cookies.len() {
     let c = jar.cookies[i];
@@ -385,7 +397,9 @@ pub fn cookie_jar_get(jar: &CookieJar, name: Str, url: Str) -> Option[Cookie] {
 /// Parameters: c -- the cookie; url -- the request url.
 /// Returns: true when the cookie applies.
 /// Complexity: O(n). Pure.
-pub fn cookie_jar_matches(c: Cookie, url: Str) -> Bool {
+pub fn cookie_jar_matches(c: Cookie, url: Str) -> Bool
+  ensures: (c.domain.len() == 0 && c.path.len() == 0 && c.expires <= 0) => (result == true)
+{
   let host = url_host(url);
   let path = url_path(url);
   if c.domain.len() > 0 {
@@ -422,7 +436,9 @@ pub fn cookie_jar_size(jar: &CookieJar) -> Int
 /// Returns: true when the cookie has an expiry and it falls at or before
 ///          now + seconds (already-expired cookies count as expiring).
 /// Complexity: O(1). Pure.
-pub fn cookie_expires_after(c: Cookie, seconds: Int) -> Bool {
+pub fn cookie_expires_after(c: Cookie, seconds: Int) -> Bool
+  ensures: ((c.expires <= 0) => (result == false)) && ((result == true) => (c.expires > 0))
+{
   if c.expires <= 0 {
     return false;
   }
@@ -435,7 +451,9 @@ pub fn cookie_expires_after(c: Cookie, seconds: Int) -> Bool {
 ///          host.
 /// Returns: true when host equals domain or is a subdomain of domain.
 /// Complexity: O(n). Pure.
-pub fn cookie_domain_matches(domain: Str, host: Str) -> Bool {
+pub fn cookie_domain_matches(domain: Str, host: Str) -> Bool
+  ensures: ((domain.len() == 0 || host.len() == 0) => (result == false)) && ((domain.len() > 0 && domain == host) => (result == true)) && ((result == true) => (domain.len() > 0 && host.len() > 0))
+{
   if domain.len() == 0 || host.len() == 0 {
     return false;
   }
@@ -459,7 +477,9 @@ pub fn cookie_domain_matches(domain: Str, host: Str) -> Bool {
 ///          path.
 /// Returns: true when request_path matches the cookie path.
 /// Complexity: O(n). Pure.
-pub fn cookie_path_matches(path: Str, request_path: Str) -> Bool {
+pub fn cookie_path_matches(path: Str, request_path: Str) -> Bool
+  ensures: ((path.len() == 0) => (result == true)) && ((path == request_path) => (result == true)) && ((result == true) => (request_path.len() >= path.len()))
+{
   if path.len() == 0 {
     return true;
   }
