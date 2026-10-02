@@ -43,15 +43,30 @@ Status legend: **open** = not started; **fixed** = landed with a probe lock
 | 30 | UTF-8 code-point helpers | feature | Decode/encode Unicode code points on UTF-8 strings. | open |
 | 31 | `rand.state` | feature | Explicit RNG state save/restore (requester list extended 2026-10-02). | open |
 | 32 | `encoding.le` | feature | Little-endian encode/decode helpers (requester list extended 2026-10-02). | open |
+| 33 | `crypto` linkability defect | defect | Packages report: crypto entry points fail at LINK time in consumer programs. Exact symbols and a minimal repro requested from the packages lane; fix-first once reproduced. | open |
+| 34 | `xiom.hash` FNV-1a over `Str` + masked combine | feature | FNV-1a hashing for `Str` inputs and a masked/truncated combine variant. | open |
+| 35 | ASCII byte classifiers | feature | Byte-domain ASCII digit/alpha/alnum-class predicates. | open |
+| 36 | Delimiter helpers | feature | Multi-delimiter scan/split helpers. | open |
+| 37 | Graph closure/depth | feature | Transitive closure and depth computation over graph structures. | open |
+| 38 | `vec.str` helpers | feature | Requester list extended 2026-10-02 (packages relay); concrete surface follows their sheet. | open |
+| 39 | `Vec` truncation | feature | In-place truncate/resize-down helper; requester list extended 2026-10-02. | open |
+| 40 | `serialize.json` | feature | Requester list extended 2026-10-02 (JSON surface on the module face). | open |
+| 41 | `graph.topo` | feature | Topological sort helper; requester list extended 2026-10-02. | open |
 
-Four relays from the packages lane: the initial batch named 8 rows
+Five relays from the packages lane: the initial batch named 8 rows
 (rows 1-8), the wave-46 batch added rows 9-15 with requester lists, the
-2026-10-02 morning batch added rows 16-21, and the 2026-10-02 afternoon
-batch adds rows 22-32 (compress.zip, deflate dynamic-Huffman reads +
-public tables, neutral CRC32, Keccak-256, the `_u64_lshr` defect,
-fixed-point log2 + integer stats, strict `str_to_int`, XML tokenizer,
-UTF-8 code-point helpers, and the extended requester lists for
-`rand.state` and `encoding.le`). The full sheet (wave 43-46 rows and
+2026-10-02 morning batch added rows 16-21, the 2026-10-02 afternoon batch
+adds rows 22-32 (compress.zip, deflate dynamic-Huffman reads + public
+tables, neutral CRC32, Keccak-256, the `_u64_lshr` defect, fixed-point
+log2 + integer stats, strict `str_to_int`, XML tokenizer, UTF-8
+code-point helpers, and the extended requester lists for `rand.state` and
+`encoding.le`), and the 2026-10-02 evening batch adds rows 33-41 (the
+`crypto` linkability defect -- fix-first once reproduced -- plus FNV-1a
+over `Str` + masked combine, ASCII byte classifiers, delimiter helpers,
+graph closure/depth, and the extended requester lists on `vec.str`, `Vec`
+truncation, `serialize.json` and `graph.topo`). Defects are fix-first:
+row 33 needs the packages lane's exact symbols/repro before any stdlib
+change. The full sheet (wave 43-46 rows and
 requester lists) lives in `xiom-packages/packages` at commit `66f26e1`;
 the packages lane offered to forward the whole file. The empty-needle
 defect (row 1) is acknowledged FIXED in the packages sheet; their

@@ -304,6 +304,14 @@ Next: the low dirs (net 5.4%, serialize 5.4%, hash 8.9%, reflect 9.1%, iter
 9.8%, convert 11.5%, format 13%, time 13%, misc 13.9%, os 15.3%, rand 16%,
 crypto 17%, log 19.1%, compress 21.1%), then C, D, E, F.
 
+Update 2026-10-02 (packages wishlist relay, evening): five more rows land
+(`docs/STDLIB-WISHLIST.md` rows 33-41): the `crypto` linkability defect
+(fix-first once the packages lane supplies the exact symbols/repro), FNV-1a
+over `Str` + masked combine, ASCII byte classifiers, delimiter helpers,
+graph closure/depth, plus extended requester lists on `vec.str`, `Vec`
+truncation, `serialize.json` and `graph.topo`. Growth rows are not part of
+the 100% coverage path; row 33 is the only fix-first candidate.
+
 State 2026-09-29 (handoff snapshot 3, main 2a06a90): floors85 global 32.8%,
 math 38.8%, num 37.4%; probes 202; smoke 951; modules 509/509; barename
 0/509; doc 100%; module-smoke ratchet 497/517 modules, 3332/6200 pub fns.

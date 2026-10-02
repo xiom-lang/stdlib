@@ -1463,8 +1463,13 @@ registry pin, agent recon for the rest)**
   tools/module_smoke_floors.json re-dumped.
 - geom 87.7% -> 100%; global 37.7% -> 38.5%; floors93 wired (YAML
   re-verified) + tools/README.md + plan + queue in the same commit.
-- Battery pending on the wave commit; results recorded in the follow-up
-  docs commit.
+- Full battery on 2acf04f: check_modules 509/509 (410.5s); corpus 951/951,
+  0 compilefail, 0 runfail (2577.5s); probe corpus 211/211 (667.1s);
+  barename 0 hits / 509 (1012.7s); coverage ratchet floors93 OK; doc
+  ratchet OK; module-smoke ratchet OK (3,471/6,200 fns, 497/517 modules).
+  The wave-56 probe is green on v0.61.3 and the v0.62.2 dev binary. Wave
+  56 closed; this battery/docs commit is LOCAL (push on the lane's
+  request).
 
 **RELAY 2026-10-02 (compiler lane -> stdlib; next-pin prep)**
 - `COMPILER_BUGS.md` (updated 2026-10-02) closes two of our findings:
@@ -1611,29 +1616,30 @@ registry pin, agent recon for the rest)**
 
 ### HANDOFF 2026-10-02 (context-limit snapshot 4; read this plus docs/PRODUCTION_READINESS_QUEUE.md)
 
-**State**: main @ `fc42eaf` + this battery/docs commit, LOCAL only (the last
+**State**: main @ `2acf04f` + this battery/docs commit, LOCAL only (the last
 pushed state is `5c3d39f`; push when the release/compiler lane asks -- the
 website fetches the queue's meter/gates lines from origin/main). Compiler
 pin v0.61.3 at `%TEMP%\kilo\stdlib_ws\xiom_v0613.exe` (rebuild recipe in
 the 2026-09-25 handoff); v0.62.2 dev at
 `E:\xiom-lang\xiom\target\debug\xiom.exe` (rebuilt 2026-10-02 21:13, carries
-the m169/m170 fixes -- see the RELAY block); wave-54/55 probes green on the
-v0.61.3 gate pin and the earlier v0.62.1 build (re-verify on v0.62.2 in the
-next pin wave). Pushed tags: `stdlib-perf2` (`59bfb1c`, the
+the m169/m170 fixes -- see the RELAY block); wave-54/55/56 probes green on
+the v0.61.3 gate pin and the v0.62.2 dev binary. Pushed tags:
+`stdlib-perf2` (`59bfb1c`, the
 next compiler-pin candidate, requires >= 185342f4 for the
 receiver-qualified method trust), `stdlib-perf1` (the v0.62.2
 `STDLIB_VERSION` pin), `stdlib-v0.62.0` (released 0.62.0; the registry lane
-owns its publish). Coverage floors92: **global 37.7% pub-with-clause, geom
-87.7%, math 38.8%, num 35.6%**; probe corpus **210**; smoke corpus 951;
+owns its publish). Coverage floors93: **global 38.5% pub-with-clause, geom
+100.0%, math 38.8%, num 35.6%**; probe corpus **211**; smoke corpus 951;
 modules 509/509; barename 0/509; doc 100%; module-smoke 497/517 modules,
-3,421/6,200 fns. Queue-top readiness meter: **70% -- 7 of 10 gates** (open:
-coverage 100% at 37.7%, zero open findings (11: 10 compiler, 1 stdlib),
+3,471/6,200 fns. Queue-top readiness meter: **70% -- 7 of 10 gates** (open:
+coverage 100% at 38.5%, zero open findings (11: 10 compiler, 1 stdlib),
 beta-exit release cut); gates line: corpus 951/951, modules 509/509, probes
-210/210, barename 0/509. Packages intake `docs/STDLIB-WISHLIST.md`: 32 rows
-from the four relays (row 1 empty-needle defect fixed); full sheet
+211/211, barename 0/509. Packages intake `docs/STDLIB-WISHLIST.md`: 41 rows
+from the five relays (row 1 empty-needle defect fixed; evening relay rows
+33-41 incl. the crypto linkability defect fix-first); full sheet
 `xiom-packages/packages` @ `66f26e1`.
 
-**Waves 49-55 landed since snapshot 3** (all probe + floors + same-commit
+**Waves 49-56 landed since snapshot 3** (all probe + floors + same-commit
 docs + full battery): geom batch 1 vec/quat/mat 52 (86); batch 2
 matrix/quaternion 51 (87); batch 3 vector/curves/collision 43 (88); batch 4
 geometry_2d/3d 43 (89); batch 5 geometry_extended/polyhedra/linear 39 (90,
@@ -1642,20 +1648,23 @@ first 46 of 142 (91; fix-first: `quat_from_euler`'s literal was written
 w,x,y,z and struct literals store fields positionally, so Euler rotations
 were scrambled -- reordered + filed `p_struct_literal_field_order.xi`);
 batch 7 the aggregate's quaternion tail + Mat2/Mat3 + Mat4 core 45 (92, no
-fix-first); plus the PERF-1 and PERF-2 annotation waves (tags above), the
-packages wishlist intake and the empty-needle defect fix, and the website
+fix-first); batch 8 the aggregate's Mat4 tail + Aabb + Sphere + Ray + Plane
+51 (93; `geom.xi` 186/186 and the geom directory 414/414 = 100%); plus the
+PERF-1 and PERF-2 annotation waves (tags above), the packages wishlist
+intake (41 rows now) and the empty-needle defect fix, and the website
 readiness meter/gates lines.
 
-**Remaining to 100% (order)**: wave 56+ = the last geom.xi aggregate batch
-(batch 8, 51 uncovered: Mat4 tail 17 + Aabb 14 + Sphere 8 + Ray 8 + Plane
-4), then the low dirs (net 5.4%, serialize 5.4%, hash 8.9%, reflect 9.1%,
-iter 9.8%, convert 11.5%, format 13%, time 13%, misc 13.9%, os 15.3%, rand
-16%, crypto 17%, log 19.1%, compress 21.1%), then C (geom dedup + the Box
+**Remaining to 100% (order)**: wave 57+ = the low dirs, starting with `net`
+(5.4%, 297 pub -- split into 40-60-pub family batches after read-only
+recon), then serialize 5.4%, hash 8.9%, reflect 9.1%, iter 9.8%, convert
+11.5%, format 13%, time 13%, misc 13.9%, os 15.3%, rand 16%, crypto 17%
+(incl. the packages' crypto linkability defect, fix-first once
+reproduced), log 19.1%, compress 21.1%, then C (geom dedup + the Box
 rename; needs compiler-lane api_freeze regen), D (tzdata phase 2, check
 `PACKAGE-NAMESPACES.txt`), E (untested-surface generator classes), F (next
 release cut). Follow-ups: real polygon-clipping for `polygon_difference`;
 the polyhedra nested hulls ride the nested-read fix; smoke growth (20
-modules with no smoke, ~2,779 unreferenced fns).
+modules with no smoke, ~2,729 unreferenced fns).
 
 **Rules (unchanged)**: no stdlib edits while a sweep is in flight; every
 wave updates the queue top's meter/gates lines; read-only recon ->
@@ -1672,7 +1681,7 @@ always after `git log -1 --format='%an <%ae>'` prints
 
 ```
 Continue the XIOM stdlib production-readiness work in E:\xiom-lang\stdlib
-(main @ fc42eaf + battery docs or later; last pushed 5c3d39f; push docs/meter
+(main @ 2acf04f + battery docs or later; last pushed 5c3d39f; push docs/meter
 updates when asked).
 
 READ FIRST, in order:
@@ -1683,24 +1692,26 @@ READ FIRST, in order:
    10-gate list, sections C/D/E/F, module-smoke requirement, gotchas).
 3. docs/RELEASE_CHECKLIST.md before any release action.
 
-STATE: main @ fc42eaf + battery docs or later (LOCAL; last pushed 5c3d39f --
+STATE: main @ 2acf04f + battery docs or later (LOCAL; last pushed 5c3d39f --
 the website fetches the queue's meter/gates lines from origin/main, so push
 when the release/compiler lane asks). Compiler pin v0.61.3 at
 %TEMP%\kilo\stdlib_ws\xiom_v0613.exe; the compiler lane's v0.62.2 dev binary
 (carries m169/m170, see the RELAY block) is at
-E:\xiom-lang\xiom\target\debug\xiom.exe; wave-54/55 probes green on the gate
-pin. Coverage floors92: global 37.7%, geom 87.7%, math 38.8%, num 35.6%.
-All gates green on the tip: check_modules 509/509; corpus 951/951; probes
-210/210; barename 0/509; coverage floors92; module-smoke ratchet (497/517
-modules, 3421/6200 pub fns); doc 100%. Readiness meter 70% (7/10). Packages
-intake: docs/STDLIB-WISHLIST.md (32 rows). stdlib 0.62.0 RELEASED; the
+E:\xiom-lang\xiom\target\debug\xiom.exe; wave-54/55/56 probes green on the
+gate pin and v0.62.2 dev. Coverage floors93: global 38.5%, geom 100%, math
+38.8%, num 35.6%. All gates green on the tip: check_modules 509/509; corpus
+951/951; probes 211/211; barename 0/509; coverage floors93; module-smoke
+ratchet (497/517 modules, 3471/6200 pub fns); doc 100%. Readiness meter 70%
+(7/10). Packages intake: docs/STDLIB-WISHLIST.md (41 rows; row 33 crypto
+linkability defect fix-first once reproduced). stdlib 0.62.0 RELEASED; the
 registry lane owns its publish; the next release continues coverage toward
 100%.
 
-FIRST TASK -- wave 56: geom batch 8 -- the last geom.xi aggregate batch
-(51 pub: Mat4 tail 17 + Aabb 14 + Sphere 8 + Ray 8 + Plane 4; waves 54-55
-covered 91 of the aggregate's 142, floors92; the geom sublibs were closed
-in waves 49-53). Batch-split per the owner's directive (families of
+FIRST TASK -- wave 57: the low dirs -- start with `net` (5.4%, 297 pub;
+read-only recon first, then split into 40-60-pub family batches; net
+submodules include http/dns/url/jwt/proto). Waves 49-56 closed the geom
+sub-libs and the whole geom aggregate (`geom.xi` 186/186; geom directory
+100%, floors93). Batch-split per the owner's directive (families of
 40-60 pub per wave).
 Protocol for EVERY wave: read-only recon -> new-shape probe in
 tools/probes/ (RED on the stub/before, GREEN after) -> runtime-safe
