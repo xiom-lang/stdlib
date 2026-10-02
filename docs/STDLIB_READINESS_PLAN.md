@@ -784,13 +784,35 @@ T1/T2 yields.
        v0.61.3 and v0.62.1. geom 56.3% -> 65.7%, global 35.7% -> 36.3%.
        Next: the geom.xi aggregate (142 uncovered -> 2-3 waves), then the
        low dirs.
+       Wave 54 (2026-10-02): coverage wave 18 -- geom aggregate batch 1
+       (46 of the xiom.geom aggregate's 142 uncovered pub fns: vec2 16,
+       vec3 15, vec4 3, quaternion core 7, scalar helpers 5).
+       Shapes: constructor component mirrors; zero-or-nonzero canonical
+       forms for normalize/project/orthogonal; reflect degenerate-normal
+       implication; refract None-or-nonnegative-k presence mirror; angle
+       bands; clamped-parameter guard for vec3_lerp; rotate mirrors;
+       predicate soundness implications; clamp-length mirror-or-overflow;
+       Hamilton product and quaternion mirrors; Euler -2..2 bands; scalar
+       angle mirrors (all NaN-tolerant).
+       Fix-first: quat_from_euler's literal was written w,x,y,z
+       (declaration order x,y,z,w) -- the compiler assigns literal fields
+       positionally, so every Euler-derived rotation was scrambled;
+       reordered to declaration order. New finding:
+       p_struct_literal_field_order.xi (both pins accept out-of-order
+       literal fields and store them positionally; a checker error or
+       name-keyed semantics is expected).
+       Probe tools/probes/p_wave54_shapes.xi (209th): 99 checks, green on
+       v0.61.3 and v0.62.1. smoke_geom.xi grew to 49 KATs (module-smoke
+       3,332 -> 3,377 fns). geom 65.7% -> 76.8%, global 36.3% -> 37.0%.
+       Next: geom batch 7 (quaternion tail 15 + Mat2 8 + Mat3 12 + Mat4
+       core 10 = 45), then Mat4 tail + Aabb + Sphere + Ray + Plane (51).
        Ratchet:
-       tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors90.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors91.json
        tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;
        earlier floors kept at
-       coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55/56/57/58/59/60/61/62/63/64/65/66/67/68/69/70/71/72/73/74/75/76/77/78/79/80/81/82/83/84/85/86/87/88/89/90.json).
+       coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55/56/57/58/59/60/61/62/63/64/65/66/67/68/69/70/71/72/73/74/75/76/77/78/79/80/81/82/83/84/85/86/87/88/89/90/91.json).
       Floors are per top-level stdlib/xiom directory and must be refreshed
       when a module is ADDED (new uncovered pub fns dilute the percentage
       -- TOML dropped serialize 6.1% -> 5.4%, tz dropped time 13% ->

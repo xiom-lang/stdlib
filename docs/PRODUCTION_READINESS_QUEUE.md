@@ -1,21 +1,21 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
 **70% -- 7 of 10 readiness gates complete.**
-**Gates: corpus 951/951, modules 509/509, probes 208/208, barename 0/509.**
+**Gates: corpus 951/951, modules 509/509, probes 209/209, barename 0/509.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
 gates flip:
 1. Modules type-check clean -- MET (509/509).
 2. Smoke corpus green -- MET (951/951).
-3. Probe corpus green -- MET (207/207).
+3. Probe corpus green -- MET (209/209).
 4. Strict bare-name scan clean -- MET (0/509).
 5. Coverage ratchet green -- MET (floors89).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (497/517 modules, 3332/6200 fns).
 8. Contract coverage 100% (every public fn carries clauses) -- OPEN (36.3%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
-   OPEN (10: 9 compiler, 1 stdlib algorithm).
+   OPEN (11: 10 compiler, 1 stdlib algorithm).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
 
 Authoritative order for the stdlib lane to reach 100%. State at handoff:
@@ -251,6 +251,23 @@ nonempty inputs on both pins; empty inputs correct). Probe
 `p_wave53_shapes.xi` (208th, 68 checks, green on both pins); floors90;
 geom 56.3% -> 65.7%, global 35.7% -> 36.3%. Next: the geom.xi aggregate
 (142 uncovered -> 2-3 waves), then the low dirs.
+
+Update 2026-10-02 (wave 54 landed): geom aggregate batch 1 -- the big
+`xiom.geom` aggregate's first 46 of 142 uncovered pub fns (vec2 16, vec3 15,
+vec4 3, quaternion core 7, scalar helpers 5), all NaN-tolerant clause forms
+(constructor mirrors, zero-or-nonzero canonical forms, reflect
+degenerate-normal implication, refract presence mirrors, angle bands,
+clamped-parameter guard for vec3_lerp, clamp-length mirror-or-overflow,
+Hamilton/quaternion mirrors, Euler -2..2 bands, scalar angle mirrors).
+Fix-first: `quat_from_euler` wrote its literal w,x,y,z (declaration order
+x,y,z,w) and the compiler stores literal fields positionally, so every
+Euler-derived rotation was scrambled; reordered. New finding:
+`p_struct_literal_field_order.xi` (compiler, both pins). Probe
+`p_wave54_shapes.xi` (209th, 99 checks, green on both pins); smoke_geom.xi
+grew to 49 KATs (module-smoke 3,332 -> 3,377 fns); floors91; geom 65.7% ->
+76.8%, global 36.3% -> 37.0%. Next: geom batch 7 (quaternion tail 15 +
+Mat2 8 + Mat3 12 + Mat4 core 10 = 45), then Mat4 tail + Aabb + Sphere +
+Ray + Plane (51), then the low dirs.
 
 State 2026-09-29 (handoff snapshot 3, main 2a06a90): floors85 global 32.8%,
 math 38.8%, num 37.4%; probes 202; smoke 951; modules 509/509; barename

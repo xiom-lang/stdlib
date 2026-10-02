@@ -16,6 +16,19 @@ xiom --force -o out.exe tools/known_failures/<file>.xi
 
 ## Current
 
+**Open finding 2026-10-02 (compiler v0.61.3 and v0.62.1): struct literals
+with out-of-declaration-order fields compile silently and assign fields
+positionally.** `P{ z: 3.0; y: 2.0; x: 1.0 }` for `type P = { x; y; z }`
+yields `p.x == 3.0, p.y == 2.0, p.z == 1.0` on both pins (the checker emits
+no diagnostic; codegen stores the i-th supplied value in declared slot i).
+All other stdlib literals are in declaration order, so one site was
+affected: `xiom.geom.quat_from_euler` wrote `Quaternion{ w; x; y; z; }`
+(declaration order x; y; z; w), scrambling every Euler-derived rotation --
+reordered in wave 54 (fix-first). Repro:
+`tools/known_failures/p_struct_literal_field_order.xi` (returns 1).
+Expected: name-keyed literal semantics, or at least a checker error for
+out-of-order fields.
+
 **Open finding 2026-10-02 (compiler v0.61.3 and v0.62.1):
 `polyhedra.convex_hull_2d`/`convex_hull_3d` collapse on nonempty inputs.**
 The hull of a 4-point square is 2 rows; the hull of a tetrahedron is 0 rows

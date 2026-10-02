@@ -1449,6 +1449,30 @@ registry pin, agent recon for the rest)**
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
 
+**SESSION 2026-10-02 block 14 (wave 54: geom aggregate batch 1 -- vectors + quaternion core + scalar helpers)**
+- Wave 54 (floors91): 46 clauses on the xiom.geom aggregate -- vec2 (16),
+  vec3 (15), vec4 (3), quaternion core (7), scalar helpers (5). See the
+  plan entry for the claim list (all NaN-tolerant forms).
+- Fix-first: `quat_from_euler` returned
+  `Quaternion{ w: ...; x: ...; y: ...; z: ...; }` -- the type declares
+  x; y; z; w, and the compiler assigns literal fields POSITIONALLY, so
+  every Euler-derived rotation was scrambled (yaw=0 returned x=1, w=0).
+  Reordered to declaration order; the probe's identity + yaw rotations
+  lock it. Filed the compiler-side finding
+  `tools/known_failures/p_struct_literal_field_order.xi` (both pins
+  accept out-of-order fields and store them positionally; a repo-wide
+  literal audit found this as the only site).
+- Probe `p_wave54_shapes.xi` (209th): 99 checks; green on v0.61.3 and
+  v0.62.1 (the first run was RED at the quat_from_euler check, then RED
+  at a probe-side -0.0/NaN expectation -- fixed in the probe).
+- smoke_geom.xi grew to 49 KATs (module-smoke 3,332 -> 3,377 fns);
+  tools/module_smoke_floors.json re-dumped.
+- geom 65.7% -> 76.8% (318/414), global 36.3% -> 37.0%; floors91 wired
+  (YAML re-verified) + tools/README.md + plan + queue + the gate-9
+  finding count (now 11: 10 compiler, 1 stdlib) in the same commit.
+- Battery pending on the wave commit; results recorded in the follow-up
+  docs commit.
+
 **SESSION 2026-10-02 block 13 (wave 53: geom batch 5 -- geometry_extended + polyhedra + linear)**
 - Wave 53 (floors90): 39 clauses -- geometry_extended (14), polyhedra (10),
   linear (15). See the plan entry for the claim list.

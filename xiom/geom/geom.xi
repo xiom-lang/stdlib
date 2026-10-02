@@ -70,7 +70,9 @@ pub type Ray = { origin: Vec3; dir: Vec3; }
 // ============================================================================
 
 /// Create a new 2D vector.
-pub fn vec2_new(x: Float64, y: Float64) -> Vec2 {
+pub fn vec2_new(x: Float64, y: Float64) -> Vec2
+  ensures: ((result.x == x) || (result.x != result.x)) && ((result.y == y) || (result.y != result.y))
+{
   return Vec2{ x: x; y: y; };
 }
 
@@ -153,7 +155,9 @@ pub fn vec2_length(v: Vec2) -> Float64
 }
 
 /// Normalise v to unit length. Returns zero vector if length is zero. O(1).
-pub fn vec2_normalize(v: Vec2) -> Vec2 {
+pub fn vec2_normalize(v: Vec2) -> Vec2
+  ensures: (result.x == 0.0 && result.y == 0.0) || (v.x != 0.0 || v.y != 0.0)
+{
   var len = vec2_length(v);
   if len == 0.0 { return Vec2{ x: 0.0; y: 0.0; }; }
   return Vec2{ x: v.x / len; y: v.y / len; };
@@ -178,7 +182,9 @@ pub fn vec2_lerp(a: Vec2, b: Vec2, t: Float64) -> Float64
 // ============================================================================
 
 /// Create a new 3D vector.
-pub fn vec3_new(x: Float64, y: Float64, z: Float64) -> Vec3 {
+pub fn vec3_new(x: Float64, y: Float64, z: Float64) -> Vec3
+  ensures: ((result.x == x) || (result.x != result.x)) && ((result.y == y) || (result.y != result.y)) && ((result.z == z) || (result.z != result.z))
+{
   return Vec3{ x: x; y: y; z: z; };
 }
 
@@ -264,7 +270,9 @@ pub fn vec3_length(v: Vec3) -> Float64
 }
 
 /// Normalise v to unit length. Returns zero vector if length is zero. O(1).
-pub fn vec3_normalize(v: Vec3) -> Vec3 {
+pub fn vec3_normalize(v: Vec3) -> Vec3
+  ensures: (result.x == 0.0 && result.y == 0.0 && result.z == 0.0) || (v.x != 0.0 || v.y != 0.0 || v.z != 0.0)
+{
   var len = vec3_length(v);
   if len == 0.0 { return Vec3{ x: 0.0; y: 0.0; z: 0.0; }; }
   return Vec3{ x: v.x / len; y: v.y / len; z: v.z / len; };
@@ -278,7 +286,9 @@ pub fn vec3_distance(a: Vec3, b: Vec3) -> Float64
 }
 
 /// Linearly interpolate each component between a and b by t. O(1).
-pub fn vec3_lerp(a: Vec3, b: Vec3, t: Float64) -> Vec3 {
+pub fn vec3_lerp(a: Vec3, b: Vec3, t: Float64) -> Vec3
+  ensures: (!((t >= 0.0) && (t <= 1.0))) || (((result.x == a.x + (b.x - a.x) * t) || (result.x != result.x)) && ((result.y == a.y + (b.y - a.y) * t) || (result.y != result.y)) && ((result.z == a.z + (b.z - a.z) * t) || (result.z != result.z)))
+{
   // clamp t for robustness
   var ct = t;
   if ct < 0.0 { ct = 0.0; };
@@ -295,7 +305,9 @@ pub fn vec3_lerp(a: Vec3, b: Vec3, t: Float64) -> Vec3 {
 // ============================================================================
 
 /// Create a new 4D vector.
-pub fn vec4_new(x: Float64, y: Float64, z: Float64, w: Float64) -> Vec4 {
+pub fn vec4_new(x: Float64, y: Float64, z: Float64, w: Float64) -> Vec4
+  ensures: ((result.x == x) || (result.x != result.x)) && ((result.y == y) || (result.y != result.y)) && ((result.z == z) || (result.z != result.z)) && ((result.w == w) || (result.w != result.w))
+{
   return Vec4{ x: x; y: y; z: z; w: w; };
 }
 
@@ -304,13 +316,17 @@ pub fn vec4_new(x: Float64, y: Float64, z: Float64, w: Float64) -> Vec4 {
 // ============================================================================
 
 /// Identity quaternion (no rotation). O(1).
-pub fn quat_identity() -> Quaternion {
+pub fn quat_identity() -> Quaternion
+  ensures: result.x == 0.0 && result.y == 0.0 && result.z == 0.0 && result.w == 1.0
+{
   return Quaternion{ x: 0.0; y: 0.0; z: 0.0; w: 1.0; };
 }
 
 /// Create a quaternion from an axis (must be normalised) and an angle (radians).
 /// Rotation is right-handed around the axis. O(1).
-pub fn quat_new(axis: Vec3, angle: Float64) -> Quaternion {
+pub fn quat_new(axis: Vec3, angle: Float64) -> Quaternion
+  ensures: ((result.x == axis.x * math.sin(angle * 0.5)) || (result.x != result.x)) && ((result.y == axis.y * math.sin(angle * 0.5)) || (result.y != result.y)) && ((result.z == axis.z * math.sin(angle * 0.5)) || (result.z != result.z)) && ((result.w == math.cos(angle * 0.5)) || (result.w != result.w))
+{
   var half = angle * 0.5;
   var s = math.sin(half);
   return Quaternion{
@@ -323,7 +339,9 @@ pub fn quat_new(axis: Vec3, angle: Float64) -> Quaternion {
 
 /// Multiply two quaternions q1 * q2 (compose rotations, q2 applied first). O(1).
 /// Hamilton product: (w1w2 - v1-v2, w1v2 + w2v1 + v1xv2)
-pub fn quat_mul(a: Quaternion, b: Quaternion) -> Quaternion {
+pub fn quat_mul(a: Quaternion, b: Quaternion) -> Quaternion
+  ensures: ((result.x == a.w * b.x + a.x * b.w + a.y * b.z - a.z * b.y) || (result.x != result.x)) && ((result.y == a.w * b.y - a.x * b.z + a.y * b.w + a.z * b.x) || (result.y != result.y)) && ((result.z == a.w * b.z + a.x * b.y - a.y * b.x + a.z * b.w) || (result.z != result.z)) && ((result.w == a.w * b.w - a.x * b.x - a.y * b.y - a.z * b.z) || (result.w != result.w))
+{
   return Quaternion{
     x: a.w * b.x + a.x * b.w + a.y * b.z - a.z * b.y;
     y: a.w * b.y - a.x * b.z + a.y * b.w + a.z * b.x;
@@ -333,7 +351,9 @@ pub fn quat_mul(a: Quaternion, b: Quaternion) -> Quaternion {
 }
 
 /// Normalise a quaternion to unit length. If length is zero, returns identity. O(1).
-pub fn quat_normalize(q: Quaternion) -> Quaternion {
+pub fn quat_normalize(q: Quaternion) -> Quaternion
+  ensures: (result.x == 0.0 && result.y == 0.0 && result.z == 0.0 && result.w == 1.0) || (q.x != 0.0 || q.y != 0.0 || q.z != 0.0 || q.w != 0.0)
+{
   var len = math.sqrt(q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w);
   if len == 0.0 { return quat_identity(); }
   return Quaternion{
@@ -342,13 +362,17 @@ pub fn quat_normalize(q: Quaternion) -> Quaternion {
 }
 
 /// Conjugate of a quaternion. For unit quaternions this is the inverse. O(1).
-pub fn quat_conjugate(q: Quaternion) -> Quaternion {
+pub fn quat_conjugate(q: Quaternion) -> Quaternion
+  ensures: ((result.x == -q.x) || (result.x != result.x)) && ((result.y == -q.y) || (result.y != result.y)) && ((result.z == -q.z) || (result.z != result.z)) && ((result.w == q.w) || (result.w != result.w))
+{
   return Quaternion{ x: -q.x; y: -q.y; z: -q.z; w: q.w; };
 }
 
 /// Rotate a 3D vector by quaternion q (q must be normalised). O(1).
 /// Returns: v + 2.0 * q.xyz x (q.xyz x v + q.w * v)
-pub fn quat_rotate_vec3(q: Quaternion, v: Vec3) -> Vec3 {
+pub fn quat_rotate_vec3(q: Quaternion, v: Vec3) -> Vec3
+  ensures: (((result.x == v.x) || (result.x != result.x)) && ((result.y == v.y) || (result.y != result.y)) && ((result.z == v.z) || (result.z != result.z))) || (q.x != 0.0 || q.y != 0.0 || q.z != 0.0 || q.w != 1.0)
+{
   var qv = Vec3{ x: q.x; y: q.y; z: q.z; };
   var t = vec3_mul_scalar(vec3_cross(qv, v), 2.0);
   var u = vec3_cross(qv, t);
@@ -359,7 +383,12 @@ pub fn quat_rotate_vec3(q: Quaternion, v: Vec3) -> Vec3 {
 
 /// Create a quaternion from Euler angles (ZYX intrinsic = yaw-pitch-roll in radians).
 /// yaw: rotation around Z, pitch: around Y, roll: around X.
-pub fn quat_from_euler(yaw: Float64, pitch: Float64, roll: Float64) -> Quaternion {
+pub fn quat_from_euler(yaw: Float64, pitch: Float64, roll: Float64) -> Quaternion
+  ensures: ((result.x >= -2.0) && (result.x <= 2.0)) || (result.x != result.x)
+  ensures: ((result.y >= -2.0) && (result.y <= 2.0)) || (result.y != result.y)
+  ensures: ((result.z >= -2.0) && (result.z <= 2.0)) || (result.z != result.z)
+  ensures: ((result.w >= -2.0) && (result.w <= 2.0)) || (result.w != result.w)
+{
   var cy = math.cos(yaw * 0.5);
   var sy = math.sin(yaw * 0.5);
   var cp = math.cos(pitch * 0.5);
@@ -367,10 +396,10 @@ pub fn quat_from_euler(yaw: Float64, pitch: Float64, roll: Float64) -> Quaternio
   var cr = math.cos(roll * 0.5);
   var sr = math.sin(roll * 0.5);
   return Quaternion{
-    w: cy * cp * cr + sy * sp * sr;
     x: cy * cp * sr - sy * sp * cr;
     y: sy * cp * sr + cy * sp * cr;
     z: sy * cp * cr - cy * sp * sr;
+    w: cy * cp * cr + sy * sp * sr;
   };
 }
 
@@ -645,7 +674,9 @@ pub fn vec2_neg(v: Vec2) -> Vec2
 
 /// Reflect a 2D incident vector about a surface normal (normal must be unit).
 /// Formula: i - 2 * dot(i, n) * n. Degenerate (zero) normal returns incident. O(1).
-pub fn vec2_reflect(incident: Vec2, normal: Vec2) -> Vec2 {
+pub fn vec2_reflect(incident: Vec2, normal: Vec2) -> Vec2
+  ensures: (((result.x == incident.x) || (result.x != result.x)) && ((result.y == incident.y) || (result.y != result.y))) || (vec2_length(normal) != 0.0)
+{
   var nl = vec2_length(normal);
   if nl == 0.0 { return incident; }
   var n = vec2_div_scalar(normal, nl);
@@ -656,7 +687,9 @@ pub fn vec2_reflect(incident: Vec2, normal: Vec2) -> Vec2 {
 /// Refract a 2D vector across an interface with relative index eta.
 /// Returns None on total internal reflection (k < 0). Both vectors should be
 /// unit length. Formula: eta*i - (eta*dot(i,n) + sqrt(k)) * n, k = 1 - eta2(1 - dot2). O(1).
-pub fn vec2_refract(incident: Vec2, normal: Vec2, eta: Float64) -> Option[Vec2] {
+pub fn vec2_refract(incident: Vec2, normal: Vec2, eta: Float64) -> Option[Vec2]
+  ensures: (result.is_some == false) || !(1.0 - eta * eta * (1.0 - vec2_dot(incident, normal) * vec2_dot(incident, normal)) < 0.0)
+{
   var idotn = vec2_dot(incident, normal);
   var k = 1.0 - eta * eta * (1.0 - idotn * idotn);
   if k < 0.0 {
@@ -669,7 +702,9 @@ pub fn vec2_refract(incident: Vec2, normal: Vec2, eta: Float64) -> Option[Vec2] 
 }
 
 /// Project a onto b: b * dot(a,b) / dot(b,b). Returns zero if b is degenerate. O(1).
-pub fn vec2_project(a: Vec2, b: Vec2) -> Vec2 {
+pub fn vec2_project(a: Vec2, b: Vec2) -> Vec2
+  ensures: (result.x == 0.0 && result.y == 0.0) || (b.x != 0.0 || b.y != 0.0)
+{
   var bb = vec2_dot(b, b);
   if bb == 0.0 { return Vec2{ x: 0.0; y: 0.0; }; }
   var s = vec2_dot(a, b) / bb;
@@ -677,13 +712,17 @@ pub fn vec2_project(a: Vec2, b: Vec2) -> Vec2 {
 }
 
 /// Reject a from b: a - project(a,b), the component of a perpendicular to b. O(1).
-pub fn vec2_reject(a: Vec2, b: Vec2) -> Vec2 {
+pub fn vec2_reject(a: Vec2, b: Vec2) -> Vec2
+  ensures: (((result.x == a.x) || (result.x != result.x)) && ((result.y == a.y) || (result.y != result.y))) || (b.x != 0.0 || b.y != 0.0)
+{
   return vec2_sub(a, vec2_project(a, b));
 }
 
 /// Angle (radians) between two 2D vectors in [0, PI]. Returns 0 if either is zero.
 /// Uses acos of the clamped dot product of the normalised vectors. O(1).
-pub fn vec2_angle_between(a: Vec2, b: Vec2) -> Float64 {
+pub fn vec2_angle_between(a: Vec2, b: Vec2) -> Float64
+  ensures: ((result >= 0.0) && (result < 4.0)) || (result != result)
+{
   var la = vec2_length(a);
   var lb = vec2_length(b);
   if la == 0.0 || lb == 0.0 { return 0.0; }
@@ -714,14 +753,18 @@ pub fn vec2_lerp_unclamped(a: Vec2, b: Vec2, t: Float64) -> Vec2
 
 /// Normalised linear interpolation (nlerp): lerp then normalise the result. O(1).
 /// Cheaper than slerp; not constant angular velocity.
-pub fn vec2_nlerp(a: Vec2, b: Vec2, t: Float64) -> Vec2 {
+pub fn vec2_nlerp(a: Vec2, b: Vec2, t: Float64) -> Vec2
+  ensures: (result.x == 0.0 && result.y == 0.0) || (a.x + (b.x - a.x) * t != 0.0 || a.y + (b.y - a.y) * t != 0.0)
+{
   var v = vec2_lerp_unclamped(a, b, t);
   return vec2_normalize(v);
 }
 
 /// Rotate a 2D vector counter-clockwise by angle (radians) about the origin.
 /// Formula: (x*cos - y*sin, x*sin + y*cos). O(1).
-pub fn vec2_rotate(v: Vec2, angle: Float64) -> Vec2 {
+pub fn vec2_rotate(v: Vec2, angle: Float64) -> Vec2
+  ensures: ((result.x == v.x * math.cos(angle) - v.y * math.sin(angle)) || (result.x != result.x)) && ((result.y == v.x * math.sin(angle) + v.y * math.cos(angle)) || (result.y != result.y))
+{
   var c = math.cos(angle);
   var s = math.sin(angle);
   return Vec2{ x: v.x * c - v.y * s; y: v.x * s + v.y * c; };
@@ -729,34 +772,46 @@ pub fn vec2_rotate(v: Vec2, angle: Float64) -> Vec2 {
 
 /// Rotate v around an arbitrary center point by angle (radians). O(1).
 /// Translates to the origin, rotates, then translates back.
-pub fn vec2_rotate_around(v: Vec2, center: Vec2, angle: Float64) -> Vec2 {
+pub fn vec2_rotate_around(v: Vec2, center: Vec2, angle: Float64) -> Vec2
+  ensures: ((result.x == ((v.x - center.x) * math.cos(angle) - (v.y - center.y) * math.sin(angle)) + center.x) || (result.x != result.x)) && ((result.y == ((v.x - center.x) * math.sin(angle) + (v.y - center.y) * math.cos(angle)) + center.y) || (result.y != result.y))
+{
   var translated = vec2_sub(v, center);
   var rotated = vec2_rotate(translated, angle);
   return vec2_add(rotated, center);
 }
 
 /// Return a vector perpendicular to v: (-y, x). This is v rotated by +90 degrees. O(1).
-pub fn vec2_perpendicular(v: Vec2) -> Vec2 {
+pub fn vec2_perpendicular(v: Vec2) -> Vec2
+  ensures: ((result.x == -v.y) || (result.x != result.x)) && ((result.y == v.x) || (result.y != result.y))
+{
   return Vec2{ x: -v.y; y: v.x; };
 }
 
 /// Unit vector from an angle (radians): (cos(angle), sin(angle)). O(1).
-pub fn vec2_from_angle(angle: Float64) -> Vec2 {
+pub fn vec2_from_angle(angle: Float64) -> Vec2
+  ensures: ((result.x == math.cos(angle)) || (result.x != result.x)) && ((result.y == math.sin(angle)) || (result.y != result.y))
+{
   return Vec2{ x: math.cos(angle); y: math.sin(angle); };
 }
 
 /// True if the length of v is within epsilon of 1.0. O(1).
-pub fn vec2_is_unit(v: Vec2, epsilon: Float64) -> Bool {
+pub fn vec2_is_unit(v: Vec2, epsilon: Float64) -> Bool
+  ensures: (result == true) => ((vec2_length(v) >= (1.0 - epsilon)) && (vec2_length(v) <= (1.0 + epsilon)))
+{
   return f64_approx_eq(vec2_length(v), 1.0, epsilon);
 }
 
 /// True if every component of v is exactly zero. O(1).
-pub fn vec2_is_zero(v: Vec2) -> Bool {
+pub fn vec2_is_zero(v: Vec2) -> Bool
+  ensures: (v.x == 0.0 && v.y == 0.0) => (result == true)
+{
   return v.x == 0.0 && v.y == 0.0;
 }
 
 /// True if every corresponding component of a and b differs by at most epsilon. O(1).
-pub fn vec2_approx_eq(a: Vec2, b: Vec2, epsilon: Float64) -> Bool {
+pub fn vec2_approx_eq(a: Vec2, b: Vec2, epsilon: Float64) -> Bool
+  ensures: (result == true) => (((a.x - b.x) <= epsilon) && ((b.x - a.x) <= epsilon) && ((a.y - b.y) <= epsilon) && ((b.y - a.y) <= epsilon))
+{
   return f64_approx_eq(a.x, b.x, epsilon)
       && f64_approx_eq(a.y, b.y, epsilon);
 }
@@ -789,7 +844,9 @@ pub fn vec2_abs(v: Vec2) -> Vec2
 
 /// Clamp the length of v to max_len. Vectors shorter than max_len are unchanged.
 /// If max_len <= 0 the zero vector is returned. O(1).
-pub fn vec2_clamp_length(v: Vec2, max_len: Float64) -> Vec2 {
+pub fn vec2_clamp_length(v: Vec2, max_len: Float64) -> Vec2
+  ensures: (((result.x == v.x) || (result.x != result.x)) && ((result.y == v.y) || (result.y != result.y))) || (vec2_length(v) > max_len)
+{
   var len = vec2_length(v);
   if len <= max_len { return v; }
   if len == 0.0 { return Vec2{ x: 0.0; y: 0.0; }; }
@@ -809,7 +866,9 @@ pub fn vec3_neg(v: Vec3) -> Vec3
 
 /// Reflect a 3D incident vector about a surface normal (normal must be unit).
 /// Formula: i - 2 * dot(i, n) * n. Degenerate (zero) normal returns incident. O(1).
-pub fn vec3_reflect(incident: Vec3, normal: Vec3) -> Vec3 {
+pub fn vec3_reflect(incident: Vec3, normal: Vec3) -> Vec3
+  ensures: (((result.x == incident.x) || (result.x != result.x)) && ((result.y == incident.y) || (result.y != result.y)) && ((result.z == incident.z) || (result.z != result.z))) || (vec3_length(normal) != 0.0)
+{
   var nl = vec3_length(normal);
   if nl == 0.0 { return incident; }
   var n = vec3_div_scalar(normal, nl);
@@ -820,7 +879,9 @@ pub fn vec3_reflect(incident: Vec3, normal: Vec3) -> Vec3 {
 /// Refract a 3D vector across an interface with relative index eta.
 /// Returns None on total internal reflection (k < 0). Both vectors should be
 /// unit length. Formula: eta*i - (eta*dot(i,n) + sqrt(k)) * n, k = 1 - eta2(1 - dot2). O(1).
-pub fn vec3_refract(incident: Vec3, normal: Vec3, eta: Float64) -> Option[Vec3] {
+pub fn vec3_refract(incident: Vec3, normal: Vec3, eta: Float64) -> Option[Vec3]
+  ensures: (result.is_some == false) || !(1.0 - eta * eta * (1.0 - vec3_dot(incident, normal) * vec3_dot(incident, normal)) < 0.0)
+{
   var idotn = vec3_dot(incident, normal);
   var k = 1.0 - eta * eta * (1.0 - idotn * idotn);
   if k < 0.0 {
@@ -833,7 +894,9 @@ pub fn vec3_refract(incident: Vec3, normal: Vec3, eta: Float64) -> Option[Vec3] 
 }
 
 /// Project a onto b: b * dot(a,b) / dot(b,b). Returns zero if b is degenerate. O(1).
-pub fn vec3_project(a: Vec3, b: Vec3) -> Vec3 {
+pub fn vec3_project(a: Vec3, b: Vec3) -> Vec3
+  ensures: (result.x == 0.0 && result.y == 0.0 && result.z == 0.0) || (b.x != 0.0 || b.y != 0.0 || b.z != 0.0)
+{
   var bb = vec3_dot(b, b);
   if bb == 0.0 { return Vec3{ x: 0.0; y: 0.0; z: 0.0; }; }
   var s = vec3_dot(a, b) / bb;
@@ -841,13 +904,17 @@ pub fn vec3_project(a: Vec3, b: Vec3) -> Vec3 {
 }
 
 /// Reject a from b: a - project(a,b), the component of a perpendicular to b. O(1).
-pub fn vec3_reject(a: Vec3, b: Vec3) -> Vec3 {
+pub fn vec3_reject(a: Vec3, b: Vec3) -> Vec3
+  ensures: (((result.x == a.x) || (result.x != result.x)) && ((result.y == a.y) || (result.y != result.y)) && ((result.z == a.z) || (result.z != result.z))) || (b.x != 0.0 || b.y != 0.0 || b.z != 0.0)
+{
   return vec3_sub(a, vec3_project(a, b));
 }
 
 /// Angle (radians) between two 3D vectors in [0, PI]. Returns 0 if either is zero.
 /// Uses acos of the clamped dot product of the normalised vectors. O(1).
-pub fn vec3_angle_between(a: Vec3, b: Vec3) -> Float64 {
+pub fn vec3_angle_between(a: Vec3, b: Vec3) -> Float64
+  ensures: ((result >= 0.0) && (result < 4.0)) || (result != result)
+{
   var la = vec3_length(a);
   var lb = vec3_length(b);
   if la == 0.0 || lb == 0.0 { return 0.0; }
@@ -881,7 +948,9 @@ pub fn vec3_lerp_unclamped(a: Vec3, b: Vec3, t: Float64) -> Vec3
 
 /// Normalised linear interpolation (nlerp): lerp then normalise the result. O(1).
 /// Cheaper than slerp; not constant angular velocity.
-pub fn vec3_nlerp(a: Vec3, b: Vec3, t: Float64) -> Vec3 {
+pub fn vec3_nlerp(a: Vec3, b: Vec3, t: Float64) -> Vec3
+  ensures: (result.x == 0.0 && result.y == 0.0 && result.z == 0.0) || (a.x + (b.x - a.x) * t != 0.0 || a.y + (b.y - a.y) * t != 0.0 || a.z + (b.z - a.z) * t != 0.0)
+{
   var v = vec3_lerp_unclamped(a, b, t);
   return vec3_normalize(v);
 }
@@ -889,7 +958,9 @@ pub fn vec3_nlerp(a: Vec3, b: Vec3, t: Float64) -> Vec3 {
 /// Return any vector perpendicular to v (unit length), using the
 /// smallest-absolute-component zero method to avoid cancellation.
 /// Returns the zero vector when v is zero. O(1).
-pub fn vec3_orthogonal(v: Vec3) -> Vec3 {
+pub fn vec3_orthogonal(v: Vec3) -> Vec3
+  ensures: (result.x == 0.0 && result.y == 0.0 && result.z == 0.0) || (v.x != 0.0 || v.y != 0.0 || v.z != 0.0)
+{
   var ax = math.abs_float(v.x);
   var ay = math.abs_float(v.y);
   var az = math.abs_float(v.z);
@@ -903,17 +974,23 @@ pub fn vec3_orthogonal(v: Vec3) -> Vec3 {
 }
 
 /// True if the length of v is within epsilon of 1.0. O(1).
-pub fn vec3_is_unit(v: Vec3, epsilon: Float64) -> Bool {
+pub fn vec3_is_unit(v: Vec3, epsilon: Float64) -> Bool
+  ensures: (result == true) => ((vec3_length(v) >= (1.0 - epsilon)) && (vec3_length(v) <= (1.0 + epsilon)))
+{
   return f64_approx_eq(vec3_length(v), 1.0, epsilon);
 }
 
 /// True if every component of v is exactly zero. O(1).
-pub fn vec3_is_zero(v: Vec3) -> Bool {
+pub fn vec3_is_zero(v: Vec3) -> Bool
+  ensures: (v.x == 0.0 && v.y == 0.0 && v.z == 0.0) => (result == true)
+{
   return v.x == 0.0 && v.y == 0.0 && v.z == 0.0;
 }
 
 /// True if every corresponding component of a and b differs by at most epsilon. O(1).
-pub fn vec3_approx_eq(a: Vec3, b: Vec3, epsilon: Float64) -> Bool {
+pub fn vec3_approx_eq(a: Vec3, b: Vec3, epsilon: Float64) -> Bool
+  ensures: (result == true) => (((a.x - b.x) <= epsilon) && ((b.x - a.x) <= epsilon) && ((a.y - b.y) <= epsilon) && ((b.y - a.y) <= epsilon) && ((a.z - b.z) <= epsilon) && ((b.z - a.z) <= epsilon))
+{
   return f64_approx_eq(a.x, b.x, epsilon)
       && f64_approx_eq(a.y, b.y, epsilon)
       && f64_approx_eq(a.z, b.z, epsilon);
@@ -950,7 +1027,9 @@ pub fn vec3_abs(v: Vec3) -> Vec3
 
 /// Clamp the length of v to max_len. Vectors shorter than max_len are unchanged.
 /// If max_len <= 0 the zero vector is returned. O(1).
-pub fn vec3_clamp_length(v: Vec3, max_len: Float64) -> Vec3 {
+pub fn vec3_clamp_length(v: Vec3, max_len: Float64) -> Vec3
+  ensures: (((result.x == v.x) || (result.x != result.x)) && ((result.y == v.y) || (result.y != result.y)) && ((result.z == v.z) || (result.z != result.z))) || (vec3_length(v) > max_len)
+{
   var len = vec3_length(v);
   if len <= max_len { return v; }
   if len == 0.0 { return Vec3{ x: 0.0; y: 0.0; z: 0.0; }; }
@@ -990,7 +1069,9 @@ pub fn vec4_neg(v: Vec4) -> Vec4
 }
 
 /// True if every corresponding component of a and b differs by at most epsilon. O(1).
-pub fn vec4_approx_eq(a: Vec4, b: Vec4, epsilon: Float64) -> Bool {
+pub fn vec4_approx_eq(a: Vec4, b: Vec4, epsilon: Float64) -> Bool
+  ensures: (result == true) => (((a.x - b.x) <= epsilon) && ((b.x - a.x) <= epsilon) && ((a.y - b.y) <= epsilon) && ((b.y - a.y) <= epsilon) && ((a.z - b.z) <= epsilon) && ((b.z - a.z) <= epsilon) && ((a.w - b.w) <= epsilon) && ((b.w - a.w) <= epsilon))
+{
   return f64_approx_eq(a.x, b.x, epsilon)
       && f64_approx_eq(a.y, b.y, epsilon)
       && f64_approx_eq(a.z, b.z, epsilon)
@@ -1032,12 +1113,16 @@ pub fn vec4_abs(v: Vec4) -> Vec4
 }
 
 /// Drop the w component of a 4D vector to produce a 3D vector. O(1).
-pub fn vec3_from_vec4(v: Vec4) -> Vec3 {
+pub fn vec3_from_vec4(v: Vec4) -> Vec3
+  ensures: ((result.x == v.x) || (result.x != result.x)) && ((result.y == v.y) || (result.y != result.y)) && ((result.z == v.z) || (result.z != result.z))
+{
   return Vec3{ x: v.x; y: v.y; z: v.z; };
 }
 
 /// Build a 4D vector from a 3D vector plus an explicit w component. O(1).
-pub fn vec4_from_vec3(v: Vec3, w: Float64) -> Vec4 {
+pub fn vec4_from_vec3(v: Vec3, w: Float64) -> Vec4
+  ensures: ((result.x == v.x) || (result.x != result.x)) && ((result.y == v.y) || (result.y != result.y)) && ((result.z == v.z) || (result.z != result.z)) && ((result.w == w) || (result.w != result.w))
+{
   return Vec4{ x: v.x; y: v.y; z: v.z; w: w; };
 }
 
@@ -1961,26 +2046,36 @@ pub fn plane_intersect_ray(p: &Plane, r: Ray) -> Option[Float64] {
 // ============================================================================
 
 /// True if |a - b| <= eps. The canonical epsilon comparison. O(1).
-pub fn f64_approx_eq(a: Float64, b: Float64, eps: Float64) -> Bool {
+pub fn f64_approx_eq(a: Float64, b: Float64, eps: Float64) -> Bool
+  ensures: (result == true) => (((a - b) <= eps) && ((b - a) <= eps))
+{
   return math.abs_float(a - b) <= eps;
 }
 
 /// Convert degrees to radians: d * PI / 180. O(1).
-pub fn f64_deg_to_rad(d: Float64) -> Float64 {
+pub fn f64_deg_to_rad(d: Float64) -> Float64
+  ensures: (result == d * math.PI / 180.0) || (result != result)
+{
   return d * math.PI / 180.0;
 }
 
 /// Convert radians to degrees: r * 180 / PI. O(1).
-pub fn f64_rad_to_deg(r: Float64) -> Float64 {
+pub fn f64_rad_to_deg(r: Float64) -> Float64
+  ensures: (result == r * 180.0 / math.PI) || (result != result)
+{
   return r * 180.0 / math.PI;
 }
 
 /// Convert degrees to radians (Float32 API: same formula, Float64 arithmetic). O(1).
-pub fn f32_deg_to_rad(d: Float64) -> Float64 {
+pub fn f32_deg_to_rad(d: Float64) -> Float64
+  ensures: (result == d * math.PI / 180.0) || (result != result)
+{
   return d * math.PI / 180.0;
 }
 
 /// Convert radians to degrees (Float32 API: same formula, Float64 arithmetic). O(1).
-pub fn f32_rad_to_deg(r: Float64) -> Float64 {
+pub fn f32_rad_to_deg(r: Float64) -> Float64
+  ensures: (result == r * 180.0 / math.PI) || (result != result)
+{
   return r * 180.0 / math.PI;
 }
