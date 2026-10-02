@@ -1,9 +1,9 @@
 ﻿{
-    "generated":  "2026-10-02T17:10:10.9264347Z",
+    "generated":  "2026-10-02T19:24:40.7392410Z",
     "totalModules":  517,
     "coveredModules":  497,
     "totalPublicFns":  6200,
-    "coveredPublicFns":  3421,
+    "coveredPublicFns":  3471,
     "missingModules":  [
                            "xiom.async",
                            "xiom.async.io",

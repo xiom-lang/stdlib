@@ -1449,6 +1449,39 @@ registry pin, agent recon for the rest)**
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
 
+**SESSION 2026-10-02 block 16 (wave 56: geom aggregate batch 3/final -- Mat4 tail + primitives; geom dir 100%)**
+- Wave 56 (floors93): 51 clauses on the xiom.geom aggregate -- Mat4 tail
+  (17), Aabb (14), Sphere (8), Ray (8), Plane (4). See the plan entry for
+  the claim list. `geom.xi` is now 186/186 pub-with-clause and the geom
+  directory is 414/414 = 100%.
+- No fix-first; probe note: one NaN check moved off `aabb_volume` because
+  its strict wave-49 `vec3_sub` delegate aborts on NaN (the pre-existing
+  NaN-abort class), replaced with an `aabb_closest_point` NaN path.
+- Probe `p_wave56_shapes.xi` (211th): 77 checks; green on v0.61.3 and the
+  v0.62.2 dev binary.
+- smoke_geom.xi grew to 128 KATs (module-smoke 3,421 -> 3,471 fns);
+  tools/module_smoke_floors.json re-dumped.
+- geom 87.7% -> 100%; global 37.7% -> 38.5%; floors93 wired (YAML
+  re-verified) + tools/README.md + plan + queue in the same commit.
+- Battery pending on the wave commit; results recorded in the follow-up
+  docs commit.
+
+**RELAY 2026-10-02 (compiler lane -> stdlib; next-pin prep)**
+- `COMPILER_BUGS.md` (updated 2026-10-02) closes two of our findings:
+  m169 = same-leaf qualified Vec results (`p_geom_vector_result_bits`);
+  m170 a/b = fn-typed param Vec returns (`p_curve_thunk_zero`) + erased
+  Option/Result literal payload slots (the Option-of-Vec `.unwrap()` AV
+  class). Both stdlib repros verified rc=0 on the compiler lane's local
+  v0.62.2 dev binary (`E:\xiom-lang\xiom\target\debug\xiom.exe`, rebuilt
+  2026-10-02 21:13, `--version` = XIOM Compiler v0.62.2; the handoff's
+  v0.62.1 path now holds this build).
+- Still failing on that binary: `p_geom_matrix_result_infer` (run=4),
+  `p_clause_float_vec_index` (run=1), `p_polyhedra_nested_hull` (run=1).
+- Next pin actions: re-run all known_failures repros; promote the two
+  fixed probes to `tools/probes/`; re-add the wave-51 mediation-free reads
+  and consider Option-payload clause opportunities once the pin carries
+  m170b.
+
 **SESSION 2026-10-02 block 15 (wave 55: geom aggregate batch 2 -- quaternion tail + Mat2/Mat3 + Mat4 core)**
 - Wave 55 (floors92): 45 clauses on the xiom.geom aggregate -- quaternion
   tail (15), Mat2 (8), Mat3 (12), Mat4 core (10). See the plan entry for
@@ -1582,8 +1615,11 @@ registry pin, agent recon for the rest)**
 pushed state is `5c3d39f`; push when the release/compiler lane asks -- the
 website fetches the queue's meter/gates lines from origin/main). Compiler
 pin v0.61.3 at `%TEMP%\kilo\stdlib_ws\xiom_v0613.exe` (rebuild recipe in
-the 2026-09-25 handoff); v0.62.1 at `E:\xiom-lang\xiom\target\debug\xiom.exe`;
-wave-54/55 probes green on BOTH. Pushed tags: `stdlib-perf2` (`59bfb1c`, the
+the 2026-09-25 handoff); v0.62.2 dev at
+`E:\xiom-lang\xiom\target\debug\xiom.exe` (rebuilt 2026-10-02 21:13, carries
+the m169/m170 fixes -- see the RELAY block); wave-54/55 probes green on the
+v0.61.3 gate pin and the earlier v0.62.1 build (re-verify on v0.62.2 in the
+next pin wave). Pushed tags: `stdlib-perf2` (`59bfb1c`, the
 next compiler-pin candidate, requires >= 185342f4 for the
 receiver-qualified method trust), `stdlib-perf1` (the v0.62.2
 `STDLIB_VERSION` pin), `stdlib-v0.62.0` (released 0.62.0; the registry lane
@@ -1650,9 +1686,10 @@ READ FIRST, in order:
 STATE: main @ fc42eaf + battery docs or later (LOCAL; last pushed 5c3d39f --
 the website fetches the queue's meter/gates lines from origin/main, so push
 when the release/compiler lane asks). Compiler pin v0.61.3 at
-%TEMP%\kilo\stdlib_ws\xiom_v0613.exe; v0.62.1 at
-E:\xiom-lang\xiom\target\debug\xiom.exe; the wave-54/55 probes are green on
-both. Coverage floors92: global 37.7%, geom 87.7%, math 38.8%, num 35.6%.
+%TEMP%\kilo\stdlib_ws\xiom_v0613.exe; the compiler lane's v0.62.2 dev binary
+(carries m169/m170, see the RELAY block) is at
+E:\xiom-lang\xiom\target\debug\xiom.exe; wave-54/55 probes green on the gate
+pin. Coverage floors92: global 37.7%, geom 87.7%, math 38.8%, num 35.6%.
 All gates green on the tip: check_modules 509/509; corpus 951/951; probes
 210/210; barename 0/509; coverage floors92; module-smoke ratchet (497/517
 modules, 3421/6200 pub fns); doc 100%. Readiness meter 70% (7/10). Packages

@@ -179,5 +179,54 @@ fn main() -> Int {
   if mla.m33 != 1.0 { return 89; }
   var mtv = xiom.geom.mat4_transform_vec3(xiom.geom.mat4_translate(1.0, 2.0, 3.0), xiom.geom.vec3_new(0.0, 0.0, 0.0));
   if !(near(mtv.x, 1.0) && near(mtv.z, 3.0)) { return 90; }
+  // wave-56 aggregate KATs: Mat4 tail + primitives
+  var tr56 = xiom.geom.mat4_translate(1.0, 2.0, 3.0);
+  var tt56 = xiom.geom.mat4_transpose(tr56);
+  if !(tt56.m30 == 1.0 && tt56.m31 == 2.0 && tt56.m32 == 3.0 && tt56.m03 == 0.0) { return 91; }
+  if xiom.geom.mat4_determinant(xiom.geom.mat4_identity()) != 1.0 { return 92; }
+  if !xiom.geom.mat4_inverse(xiom.geom.mat4_identity()).is_some { return 93; }
+  var tv456 = xiom.geom.mat4_transform_vec4(xiom.geom.mat4_identity(), xiom.geom.vec4_new(1.0, 2.0, 3.0, 4.0));
+  if !(near(tv456.x, 1.0) && near(tv456.w, 4.0)) { return 94; }
+  var tp56 = xiom.geom.mat4_transform_point(tr56, xiom.geom.vec3_new(10.0, 20.0, 30.0));
+  if !(near(tp56.x, 11.0) && near(tp56.z, 33.0)) { return 95; }
+  var td56 = xiom.geom.mat4_transform_direction(tr56, xiom.geom.vec3_new(10.0, 20.0, 30.0));
+  if !(near(td56.x, 10.0) && near(td56.z, 30.0)) { return 96; }
+  if xiom.geom.mat4_from_scale(2.0, 3.0, 4.0).m11 != 3.0 { return 97; }
+  if xiom.geom.mat4_from_translation(xiom.geom.vec3_new(1.0, 2.0, 3.0)).m23 != 3.0 { return 98; }
+  if xiom.geom.mat4_translation_xyz(4.0, 5.0, 6.0).m03 != 4.0 { return 99; }
+  if !near(xiom.geom.mat4_from_rotation_x(math.PI / 2.0).m12, -1.0) { return 100; }
+  if !near(xiom.geom.mat4_from_rotation_y(math.PI / 2.0).m02, 1.0) { return 101; }
+  if !near(xiom.geom.mat4_from_rotation_z(math.PI / 2.0).m01, -1.0) { return 102; }
+  if !near(xiom.geom.mat4_from_quat(qaa).m10, 1.0) { return 103; }
+  if !near(xiom.geom.mat4_rotation_axis_angle(xiom.geom.vec3_new(0.0, 0.0, 3.0), math.PI / 2.0).m01, -1.0) { return 104; }
+  var or56 = xiom.geom.mat4_orthographic(-1.0, 1.0, -1.0, 1.0, 1.0, 100.0);
+  if !(near(or56.m00, 1.0) && near(or56.m22, -0.02020202)) { return 105; }
+  if !xiom.geom.mat4_is_identity(xiom.geom.mat4_identity(), 0.0) { return 106; }
+  if !xiom.geom.mat4_approx_eq(xiom.geom.mat4_identity(), xiom.geom.mat4_identity(), 1e-9) { return 107; }
+  var bx56 = xiom.geom.aabb_new(xiom.geom.vec3_new(0.0, 0.0, 0.0), xiom.geom.vec3_new(2.0, 2.0, 2.0));
+  if !xiom.geom.aabb_contains_point(bx56, xiom.geom.vec3_new(1.0, 1.0, 1.0)) { return 108; }
+  if !xiom.geom.aabb_intersects_aabb(bx56, xiom.geom.aabb_from_min_max(xiom.geom.vec3_new(1.0, 1.0, 1.0), xiom.geom.vec3_new(3.0, 3.0, 3.0))) { return 109; }
+  if !(near(xiom.geom.aabb_center(bx56).x, 1.0) && near(xiom.geom.aabb_size(bx56).y, 2.0) && near(xiom.geom.aabb_half_extents(bx56).z, 1.0)) { return 110; }
+  if !xiom.geom.aabb_intersects_sphere(bx56, xiom.geom.sphere_new(xiom.geom.vec3_new(3.0, 1.0, 1.0), 1.1)) { return 111; }
+  if !near(xiom.geom.aabb_closest_point(bx56, xiom.geom.vec3_new(3.0, 1.0, 1.0)).x, 2.0) { return 112; }
+  if !(near(xiom.geom.aabb_surface_area(xiom.geom.aabb_from_min_max(xiom.geom.vec3_new(0.0, 0.0, 0.0), xiom.geom.vec3_new(1.0, 2.0, 3.0))), 22.0) && near(xiom.geom.aabb_volume(xiom.geom.aabb_from_min_max(xiom.geom.vec3_new(0.0, 0.0, 0.0), xiom.geom.vec3_new(1.0, 2.0, 3.0))), 6.0)) { return 113; }
+  if !near(xiom.geom.aabb_expand(bx56, xiom.geom.vec3_new(3.0, 1.0, 1.0)).max.x, 3.0) { return 114; }
+  if !near(xiom.geom.aabb_union(bx56, xiom.geom.aabb_new(xiom.geom.vec3_new(4.0, 0.0, 0.0), xiom.geom.vec3_new(5.0, 1.0, 1.0))).max.x, 5.0) { return 115; }
+  if !xiom.geom.aabb_intersection(bx56, bx56).is_some { return 116; }
+  var sp56 = xiom.geom.sphere_new(xiom.geom.vec3_new(0.0, 0.0, 0.0), 2.0);
+  if !(xiom.geom.sphere_contains_point(sp56, xiom.geom.vec3_new(1.0, 1.0, 1.0)) && xiom.geom.sphere_intersects_sphere(sp56, xiom.geom.sphere_new(xiom.geom.vec3_new(4.0, 0.0, 0.0), 2.0)) && xiom.geom.sphere_intersects_aabb(sp56, bx56)) { return 117; }
+  if !near(xiom.geom.sphere_closest_point(sp56, xiom.geom.vec3_new(3.0, 0.0, 0.0)).x, 2.0) { return 118; }
+  if !(near(xiom.geom.sphere_surface_area(xiom.geom.sphere_new(xiom.geom.vec3_new(0.0, 0.0, 0.0), 1.0)), 4.0 * math.PI) && near(xiom.geom.sphere_volume(xiom.geom.sphere_new(xiom.geom.vec3_new(0.0, 0.0, 0.0), 1.0)), 4.0 / 3.0 * math.PI)) { return 119; }
+  if !near(xiom.geom.sphere_expand(sp56, xiom.geom.vec3_new(3.0, 0.0, 0.0)).radius, 3.0) { return 120; }
+  var ry56 = xiom.geom.ray_new(xiom.geom.vec3_new(0.0, 0.0, 0.0), xiom.geom.vec3_new(1.0, 0.0, 0.0));
+  if !xiom.geom.ray_intersect_sphere(ry56, xiom.geom.sphere_new(xiom.geom.vec3_new(5.0, 0.0, 0.0), 1.0)).is_some { return 121; }
+  if !xiom.geom.ray_intersect_aabb(ry56, xiom.geom.aabb_new(xiom.geom.vec3_new(2.0, -1.0, -1.0), xiom.geom.vec3_new(4.0, 1.0, 1.0))).is_some { return 122; }
+  if !near(xiom.geom.ray_at(ry56, 2.0).x, 2.0) { return 123; }
+  if !(near(xiom.geom.ray_origin(ry56).x, 0.0) && near(xiom.geom.ray_dir(ry56).x, 1.0)) { return 124; }
+  if !xiom.geom.ray_intersect_plane(ry56, xiom.geom.vec3_new(5.0, 0.0, 0.0), xiom.geom.vec3_new(1.0, 0.0, 0.0)).is_some { return 125; }
+  if !near(xiom.geom.ray_distance_to_point(ry56, xiom.geom.vec3_new(1.0, 2.0, 0.0)), 2.0) { return 126; }
+  var pl56 = xiom.geom.plane_new(xiom.geom.vec3_new(0.0, 0.0, 0.0), xiom.geom.vec3_new(0.0, 1.0, 0.0));
+  if !(near(xiom.geom.plane_signed_distance(&pl56, xiom.geom.vec3_new(0.0, 3.0, 0.0)), 3.0) && near(xiom.geom.plane_distance_to_point(&pl56, xiom.geom.vec3_new(0.0, -2.0, 0.0)), 2.0)) { return 127; }
+  if !xiom.geom.plane_intersect_ray(&pl56, xiom.geom.ray_new(xiom.geom.vec3_new(0.0, 3.0, 0.0), xiom.geom.vec3_new(0.0, -1.0, 0.0))).is_some { return 128; }
   return 0;
 }

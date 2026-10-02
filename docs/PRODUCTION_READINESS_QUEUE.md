@@ -1,19 +1,19 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
 **70% -- 7 of 10 readiness gates complete.**
-**Gates: corpus 951/951, modules 509/509, probes 210/210, barename 0/509.**
+**Gates: corpus 951/951, modules 509/509, probes 211/211, barename 0/509.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
 gates flip:
 1. Modules type-check clean -- MET (509/509).
 2. Smoke corpus green -- MET (951/951).
-3. Probe corpus green -- MET (210/210).
+3. Probe corpus green -- MET (211/211).
 4. Strict bare-name scan clean -- MET (0/509).
-5. Coverage ratchet green -- MET (floors92).
+5. Coverage ratchet green -- MET (floors93).
 6. Documentation ratchet 100% -- MET.
-7. Module-smoke ratchet green -- MET (497/517 modules, 3421/6200 fns).
-8. Contract coverage 100% (every public fn carries clauses) -- OPEN (37.7%).
+7. Module-smoke ratchet green -- MET (497/517 modules, 3471/6200 fns).
+8. Contract coverage 100% (every public fn carries clauses) -- OPEN (38.5%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
    OPEN (11: 10 compiler, 1 stdlib algorithm).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
@@ -281,6 +281,28 @@ probe validation and fixed). No fix-first. Probe `p_wave55_shapes.xi`
 (363/414), global 37.0% -> 37.7%. Next: geom batch 8 (Mat4 tail 17 + Aabb
 14 + Sphere 8 + Ray 8 + Plane 4 = 51, the last aggregate batch), then the
 low dirs.
+
+Update 2026-10-02 (compiler relay / next pin): `COMPILER_BUGS.md` m169
+(same-leaf qualified Vec results) and m170 (fn-typed param Vec returns +
+erased Option/Result literal payload slots) close
+`p_geom_vector_result_bits.xi` and `p_curve_thunk_zero.xi`; both verified
+rc=0 on the local v0.62.2 dev binary (pre-fix rc=2). Keep both in
+known_failures until the gate pin carries m169/m170, then promote to
+tools/probes/ and un-mediate the wave-51 reads. Still open on the v0.62.2
+dev binary: `p_geom_matrix_result_infer.xi` (run=4),
+`p_clause_float_vec_index.xi` (run=1), `p_polyhedra_nested_hull.xi`
+(run=1).
+
+Update 2026-10-02 (wave 56 landed): geom aggregate batch 3/final -- Mat4
+tail (17), Aabb (14), Sphere (8), Ray (8), Plane (4), 51 clauses
+(NaN-tolerant mirrors, presence claims, containment/overlap implications,
+reciprocal/shape claims). No fix-first. Probe `p_wave56_shapes.xi` (211th,
+77 checks, green on v0.61.3 and the v0.62.2 dev binary); smoke_geom.xi grew
+to 128 KATs (module-smoke 3,421 -> 3,471 fns); floors93. `geom.xi` is now
+186/186 and the geom directory 414/414 = 100%; global 37.7% -> 38.5%.
+Next: the low dirs (net 5.4%, serialize 5.4%, hash 8.9%, reflect 9.1%, iter
+9.8%, convert 11.5%, format 13%, time 13%, misc 13.9%, os 15.3%, rand 16%,
+crypto 17%, log 19.1%, compress 21.1%), then C, D, E, F.
 
 State 2026-09-29 (handoff snapshot 3, main 2a06a90): floors85 global 32.8%,
 math 38.8%, num 37.4%; probes 202; smoke 951; modules 509/509; barename

@@ -822,13 +822,35 @@ T1/T2 yields.
        -> 37.7%. Next: geom batch 8 (Mat4 tail 17 + Aabb 14 + Sphere 8 +
        Ray 8 + Plane 4 = 51, the last aggregate batch), then the low
        dirs.
+       Wave 56 (2026-10-02): coverage wave 20 -- geom aggregate batch 3/final
+       (51 pub: Mat4 tail 17 + Aabb 14 + Sphere 8 + Ray 8 + Plane 4).
+       Shapes: 16-field NaN-tolerant transposes, full determinant mirrors,
+       inverse presence (abs-det threshold), vec4/point/direction mirrors
+       with w-divide disjunction, delegate and rotation mirrors,
+       affine-shape literals, orthographic reciprocals, approx/identity
+       implications; Aabb/Sphere constructor mirrors, clamped closest
+       point, min/max expand/union mirrors, overlap/containment
+       implications, surface/volume mirrors, Option presence mirrors;
+       ray slab/quadratic/plane presence mirrors, origin/dir/at mirrors,
+       distance bands; plane mirrors and signed/absolute distance bands.
+       No fix-first; the pre-clause probe baseline was green (one NaN
+       check moved off `aabb_volume`, whose strict wave-49 `vec3_sub`
+       delegate aborts on NaN -- the pre-existing NaN-abort class).
+       geom.xi is now 186/186 pub-with-clause; the whole geom directory
+       is 414/414 = 100%. Probe tools/probes/p_wave56_shapes.xi (211th):
+       77 checks, green on v0.61.3 and the v0.62.2 dev binary.
+       smoke_geom.xi grew to 128 KATs (module-smoke 3,421 -> 3,471 fns).
+       global 37.7% -> 38.5%. Next: the low dirs (net 5.4%, serialize
+       5.4%, hash 8.9%, reflect 9.1%, iter 9.8%, convert 11.5%, format
+       13%, time 13%, misc 13.9%, os 15.3%, rand 16%, crypto 17%, log
+       19.1%, compress 21.1%), then C, D, E, F.
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors92.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors93.json
        tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;
        earlier floors kept at
-       coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55/56/57/58/59/60/61/62/63/64/65/66/67/68/69/70/71/72/73/74/75/76/77/78/79/80/81/82/83/84/85/86/87/88/89/90/91/92.json).
+       coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55/56/57/58/59/60/61/62/63/64/65/66/67/68/69/70/71/72/73/74/75/76/77/78/79/80/81/82/83/84/85/86/87/88/89/90/91/92/93.json).
       Floors are per top-level stdlib/xiom directory and must be refreshed
       when a module is ADDED (new uncovered pub fns dilute the percentage
       -- TOML dropped serialize 6.1% -> 5.4%, tz dropped time 13% ->

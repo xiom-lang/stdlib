@@ -591,19 +591,25 @@ pub fn mat3_mul(a: Mat3, b: Mat3) -> Mat3
 // ============================================================================
 
 /// Create an AABB from min and max corners.
-pub fn aabb_new(min: Vec3, max: Vec3) -> Aabb {
+pub fn aabb_new(min: Vec3, max: Vec3) -> Aabb
+  ensures: ((result.min.x == min.x) || (result.min.x != result.min.x)) && ((result.min.y == min.y) || (result.min.y != result.min.y)) && ((result.min.z == min.z) || (result.min.z != result.min.z)) && ((result.max.x == max.x) || (result.max.x != result.max.x)) && ((result.max.y == max.y) || (result.max.y != result.max.y)) && ((result.max.z == max.z) || (result.max.z != result.max.z))
+{
   return Aabb{ min: min; max: max; };
 }
 
 /// Test whether a point is inside the AABB (inclusive). O(1).
-pub fn aabb_contains_point(box: Aabb, point: Vec3) -> Bool {
+pub fn aabb_contains_point(box: Aabb, point: Vec3) -> Bool
+  ensures: (result == true) => (point.x >= box.min.x && point.x <= box.max.x && point.y >= box.min.y && point.y <= box.max.y && point.z >= box.min.z && point.z <= box.max.z)
+{
   return point.x >= box.min.x && point.x <= box.max.x
       && point.y >= box.min.y && point.y <= box.max.y
       && point.z >= box.min.z && point.z <= box.max.z;
 }
 
 /// Test whether two AABBs intersect. O(1).
-pub fn aabb_intersects_aabb(a: Aabb, b: Aabb) -> Bool {
+pub fn aabb_intersects_aabb(a: Aabb, b: Aabb) -> Bool
+  ensures: (result == true) => (!(a.max.x < b.min.x) && !(a.min.x > b.max.x) && !(a.max.y < b.min.y) && !(a.min.y > b.max.y) && !(a.max.z < b.min.z) && !(a.min.z > b.max.z))
+{
   if a.max.x < b.min.x || a.min.x > b.max.x { return false; };
   if a.max.y < b.min.y || a.min.y > b.max.y { return false; };
   if a.max.z < b.min.z || a.min.z > b.max.z { return false; };
@@ -615,12 +621,16 @@ pub fn aabb_intersects_aabb(a: Aabb, b: Aabb) -> Bool {
 // ============================================================================
 
 /// Create a sphere from centre and radius.
-pub fn sphere_new(center: Vec3, radius: Float64) -> Sphere {
+pub fn sphere_new(center: Vec3, radius: Float64) -> Sphere
+  ensures: ((result.center.x == center.x) || (result.center.x != result.center.x)) && ((result.center.y == center.y) || (result.center.y != result.center.y)) && ((result.center.z == center.z) || (result.center.z != result.center.z)) && ((result.radius == radius) || (result.radius != result.radius))
+{
   return Sphere{ center: center; radius: radius; };
 }
 
 /// Test whether a point is inside the sphere (inclusive). O(1).
-pub fn sphere_contains_point(s: Sphere, point: Vec3) -> Bool {
+pub fn sphere_contains_point(s: Sphere, point: Vec3) -> Bool
+  ensures: (result == true) => (vec3_distance(s.center, point) <= s.radius)
+{
   var d = vec3_distance(s.center, point);
   return d <= s.radius;
 }
@@ -630,14 +640,18 @@ pub fn sphere_contains_point(s: Sphere, point: Vec3) -> Bool {
 // ============================================================================
 
 /// Create a ray from origin and direction.
-pub fn ray_new(origin: Vec3, dir: Vec3) -> Ray {
+pub fn ray_new(origin: Vec3, dir: Vec3) -> Ray
+  ensures: ((result.origin.x == origin.x) || (result.origin.x != result.origin.x)) && ((result.origin.y == origin.y) || (result.origin.y != result.origin.y)) && ((result.origin.z == origin.z) || (result.origin.z != result.origin.z)) && ((result.dir.x == dir.x) || (result.dir.x != result.dir.x)) && ((result.dir.y == dir.y) || (result.dir.y != result.dir.y)) && ((result.dir.z == dir.z) || (result.dir.z != result.dir.z))
+{
   return Ray{ origin: origin; dir: dir; };
 }
 
 /// Ray-sphere intersection. Returns Some(t) for the nearest hit, or None.
 /// t is the distance from origin along dir to the intersection point.
 /// Uses quadratic formula; only returns the smaller positive t. O(1).
-pub fn ray_intersect_sphere(r: Ray, s: Sphere) -> Option[Float64] {
+pub fn ray_intersect_sphere(r: Ray, s: Sphere) -> Option[Float64]
+  ensures: (result.is_some == false) || ((2.0 * vec3_dot(vec3_sub(r.origin, s.center), r.dir)) * (2.0 * vec3_dot(vec3_sub(r.origin, s.center), r.dir)) - 4.0 * vec3_dot(r.dir, r.dir) * (vec3_dot(vec3_sub(r.origin, s.center), vec3_sub(r.origin, s.center)) - s.radius * s.radius) >= 0.0) || ((2.0 * vec3_dot(vec3_sub(r.origin, s.center), r.dir)) * (2.0 * vec3_dot(vec3_sub(r.origin, s.center), r.dir)) - 4.0 * vec3_dot(r.dir, r.dir) * (vec3_dot(vec3_sub(r.origin, s.center), vec3_sub(r.origin, s.center)) - s.radius * s.radius) != (2.0 * vec3_dot(vec3_sub(r.origin, s.center), r.dir)) * (2.0 * vec3_dot(vec3_sub(r.origin, s.center), r.dir)) - 4.0 * vec3_dot(r.dir, r.dir) * (vec3_dot(vec3_sub(r.origin, s.center), vec3_sub(r.origin, s.center)) - s.radius * s.radius))
+{
   var oc = vec3_sub(r.origin, s.center);
   var a = vec3_dot(r.dir, r.dir);
   var b = 2.0 * vec3_dot(oc, r.dir);
@@ -658,7 +672,9 @@ pub fn ray_intersect_sphere(r: Ray, s: Sphere) -> Option[Float64] {
 /// Ray-AABB intersection (slab method). Returns Some(t_near) for intersection,
 /// or None if the ray misses the box. O(1).
 /// See: "An Efficient and Robust Ray-Box Intersection Algorithm" by Williams et al.
-pub fn ray_intersect_aabb(r: Ray, box: Aabb) -> Option[Float64] {
+pub fn ray_intersect_aabb(r: Ray, box: Aabb) -> Option[Float64]
+  ensures: (result.is_some == false) || (r.dir.x == r.dir.x || r.dir.y == r.dir.y || r.dir.z == r.dir.z || r.origin.x == r.origin.x || r.origin.y == r.origin.y || r.origin.z == r.origin.z || box.min.x == box.min.x || box.min.y == box.min.y || box.min.z == box.min.z || box.max.x == box.max.x || box.max.y == box.max.y || box.max.z == box.max.z)
+{
   var tmin = (box.min.x - r.origin.x) / r.dir.x;
   var tmax = (box.max.x - r.origin.x) / r.dir.x;
   if tmin > tmax {
@@ -1393,7 +1409,9 @@ pub fn mat3_from_quat(q: Quaternion) -> Mat3
 // ============================================================================
 
 /// Transpose a 4x4 matrix. O(1).
-pub fn mat4_transpose(m: Mat4) -> Mat4 {
+pub fn mat4_transpose(m: Mat4) -> Mat4
+  ensures: ((result.m00 == m.m00) || (result.m00 != result.m00)) && ((result.m01 == m.m10) || (result.m01 != result.m01)) && ((result.m02 == m.m20) || (result.m02 != result.m02)) && ((result.m03 == m.m30) || (result.m03 != result.m03)) && ((result.m10 == m.m01) || (result.m10 != result.m10)) && ((result.m11 == m.m11) || (result.m11 != result.m11)) && ((result.m12 == m.m21) || (result.m12 != result.m12)) && ((result.m13 == m.m31) || (result.m13 != result.m13)) && ((result.m20 == m.m02) || (result.m20 != result.m20)) && ((result.m21 == m.m12) || (result.m21 != result.m21)) && ((result.m22 == m.m22) || (result.m22 != result.m22)) && ((result.m23 == m.m32) || (result.m23 != result.m23)) && ((result.m30 == m.m03) || (result.m30 != result.m30)) && ((result.m31 == m.m13) || (result.m31 != result.m31)) && ((result.m32 == m.m23) || (result.m32 != result.m32)) && ((result.m33 == m.m33) || (result.m33 != result.m33))
+{
   return Mat4{
     m00: m.m00; m01: m.m10; m02: m.m20; m03: m.m30;
     m10: m.m01; m11: m.m11; m12: m.m21; m13: m.m31;
@@ -1404,7 +1422,9 @@ pub fn mat4_transpose(m: Mat4) -> Mat4 {
 
 /// Determinant of a 4x4 matrix by cofactor expansion along the first row. O(48 ops).
 /// Uses 3x3 sub-determinants of the three lower rows.
-pub fn mat4_determinant(m: Mat4) -> Float64 {
+pub fn mat4_determinant(m: Mat4) -> Float64
+  ensures: (result == m.m00 * (m.m11 * (m.m22 * m.m33 - m.m23 * m.m32) - m.m12 * (m.m21 * m.m33 - m.m23 * m.m31) + m.m13 * (m.m21 * m.m32 - m.m22 * m.m31)) - m.m01 * (m.m10 * (m.m22 * m.m33 - m.m23 * m.m32) - m.m12 * (m.m20 * m.m33 - m.m23 * m.m30) + m.m13 * (m.m20 * m.m32 - m.m22 * m.m30)) + m.m02 * (m.m10 * (m.m21 * m.m33 - m.m23 * m.m31) - m.m11 * (m.m20 * m.m33 - m.m23 * m.m30) + m.m13 * (m.m20 * m.m31 - m.m21 * m.m30)) - m.m03 * (m.m10 * (m.m21 * m.m32 - m.m22 * m.m31) - m.m11 * (m.m20 * m.m32 - m.m22 * m.m30) + m.m12 * (m.m20 * m.m31 - m.m21 * m.m30))) || (result != result)
+{
   // Minor of (0,0): rows 1-3, cols 1-3
   var m00 = m.m11 * (m.m22 * m.m33 - m.m23 * m.m32)
           - m.m12 * (m.m21 * m.m33 - m.m23 * m.m31)
@@ -1427,7 +1447,9 @@ pub fn mat4_determinant(m: Mat4) -> Float64 {
 
 /// Inverse of a 4x4 matrix via the adjugate method (cofactor transpose / det).
 /// Returns None when |det| < 1e-12, so the matrix is singular. O(150 ops).
-pub fn mat4_inverse(m: Mat4) -> Option[Mat4] {
+pub fn mat4_inverse(m: Mat4) -> Option[Mat4]
+  ensures: (result.is_some == false) || !(math.abs_float(m.m00 * (m.m11 * (m.m22 * m.m33 - m.m23 * m.m32) - m.m12 * (m.m21 * m.m33 - m.m23 * m.m31) + m.m13 * (m.m21 * m.m32 - m.m22 * m.m31)) - m.m01 * (m.m10 * (m.m22 * m.m33 - m.m23 * m.m32) - m.m12 * (m.m20 * m.m33 - m.m23 * m.m30) + m.m13 * (m.m20 * m.m32 - m.m22 * m.m30)) + m.m02 * (m.m10 * (m.m21 * m.m33 - m.m23 * m.m31) - m.m11 * (m.m20 * m.m33 - m.m23 * m.m30) + m.m13 * (m.m20 * m.m31 - m.m21 * m.m30)) - m.m03 * (m.m10 * (m.m21 * m.m32 - m.m22 * m.m31) - m.m11 * (m.m20 * m.m32 - m.m22 * m.m30) + m.m12 * (m.m20 * m.m31 - m.m21 * m.m30))) < 0.000001 * 0.000001)
+{
   var m00 = m.m11 * (m.m22 * m.m33 - m.m23 * m.m32)
           - m.m12 * (m.m21 * m.m33 - m.m23 * m.m31)
           + m.m13 * (m.m21 * m.m32 - m.m22 * m.m31);
@@ -1522,7 +1544,9 @@ pub fn mat4_inverse(m: Mat4) -> Option[Mat4] {
 }
 
 /// Transform a Vec4 (homogeneous) by a 4x4 matrix: M * v, no perspective divide. O(16 ops).
-pub fn mat4_transform_vec4(m: Mat4, v: Vec4) -> Vec4 {
+pub fn mat4_transform_vec4(m: Mat4, v: Vec4) -> Vec4
+  ensures: ((result.x == m.m00 * v.x + m.m01 * v.y + m.m02 * v.z + m.m03 * v.w) || (result.x != result.x)) && ((result.y == m.m10 * v.x + m.m11 * v.y + m.m12 * v.z + m.m13 * v.w) || (result.y != result.y)) && ((result.z == m.m20 * v.x + m.m21 * v.y + m.m22 * v.z + m.m23 * v.w) || (result.z != result.z)) && ((result.w == m.m30 * v.x + m.m31 * v.y + m.m32 * v.z + m.m33 * v.w) || (result.w != result.w))
+{
   return Vec4{
     x: m.m00 * v.x + m.m01 * v.y + m.m02 * v.z + m.m03 * v.w;
     y: m.m10 * v.x + m.m11 * v.y + m.m12 * v.z + m.m13 * v.w;
@@ -1533,7 +1557,9 @@ pub fn mat4_transform_vec4(m: Mat4, v: Vec4) -> Vec4 {
 
 /// Transform a point (w=1) by a 4x4 matrix, including perspective divide.
 /// If the transformed w is zero, returns the zero vector. O(16 ops).
-pub fn mat4_transform_point(m: Mat4, p: Vec3) -> Vec3 {
+pub fn mat4_transform_point(m: Mat4, p: Vec3) -> Vec3
+  ensures: ((result.x == (m.m00 * p.x + m.m01 * p.y + m.m02 * p.z + m.m03) / (m.m30 * p.x + m.m31 * p.y + m.m32 * p.z + m.m33)) || (result.x != result.x) || (m.m30 * p.x + m.m31 * p.y + m.m32 * p.z + m.m33 == 0.0)) && ((result.y == (m.m10 * p.x + m.m11 * p.y + m.m12 * p.z + m.m13) / (m.m30 * p.x + m.m31 * p.y + m.m32 * p.z + m.m33)) || (result.y != result.y) || (m.m30 * p.x + m.m31 * p.y + m.m32 * p.z + m.m33 == 0.0)) && ((result.z == (m.m20 * p.x + m.m21 * p.y + m.m22 * p.z + m.m23) / (m.m30 * p.x + m.m31 * p.y + m.m32 * p.z + m.m33)) || (result.z != result.z) || (m.m30 * p.x + m.m31 * p.y + m.m32 * p.z + m.m33 == 0.0))
+{
   var w = m.m30 * p.x + m.m31 * p.y + m.m32 * p.z + m.m33;
   if w == 0.0 { return Vec3{ x: 0.0; y: 0.0; z: 0.0; }; }
   return Vec3{
@@ -1545,7 +1571,9 @@ pub fn mat4_transform_point(m: Mat4, p: Vec3) -> Vec3 {
 
 /// Transform a direction (w=0) by a 4x4 matrix: rotation/scale only,
 /// translation is ignored and no perspective divide is applied. O(9 ops).
-pub fn mat4_transform_direction(m: Mat4, d: Vec3) -> Vec3 {
+pub fn mat4_transform_direction(m: Mat4, d: Vec3) -> Vec3
+  ensures: ((result.x == m.m00 * d.x + m.m01 * d.y + m.m02 * d.z) || (result.x != result.x)) && ((result.y == m.m10 * d.x + m.m11 * d.y + m.m12 * d.z) || (result.y != result.y)) && ((result.z == m.m20 * d.x + m.m21 * d.y + m.m22 * d.z) || (result.z != result.z))
+{
   return Vec3{
     x: m.m00 * d.x + m.m01 * d.y + m.m02 * d.z;
     y: m.m10 * d.x + m.m11 * d.y + m.m12 * d.z;
@@ -1554,38 +1582,52 @@ pub fn mat4_transform_direction(m: Mat4, d: Vec3) -> Vec3 {
 }
 
 /// Scale matrix (non-uniform) from three axis factors. Same as mat4_scale. O(1).
-pub fn mat4_from_scale(x: Float64, y: Float64, z: Float64) -> Mat4 {
+pub fn mat4_from_scale(x: Float64, y: Float64, z: Float64) -> Mat4
+  ensures: ((result.m00 == x) || (result.m00 != result.m00)) && result.m01 == 0.0 && result.m02 == 0.0 && result.m03 == 0.0 && result.m10 == 0.0 && ((result.m11 == y) || (result.m11 != result.m11)) && result.m12 == 0.0 && result.m13 == 0.0 && result.m20 == 0.0 && result.m21 == 0.0 && ((result.m22 == z) || (result.m22 != result.m22)) && result.m23 == 0.0 && result.m30 == 0.0 && result.m31 == 0.0 && result.m32 == 0.0 && result.m33 == 1.0
+{
   return mat4_scale(x, y, z);
 }
 
 /// Translation matrix from a Vec3 offset. O(1).
-pub fn mat4_from_translation(t: Vec3) -> Mat4 {
+pub fn mat4_from_translation(t: Vec3) -> Mat4
+  ensures: result.m00 == 1.0 && result.m01 == 0.0 && result.m02 == 0.0 && ((result.m03 == t.x) || (result.m03 != result.m03)) && result.m10 == 0.0 && result.m11 == 1.0 && result.m12 == 0.0 && ((result.m13 == t.y) || (result.m13 != result.m13)) && result.m20 == 0.0 && result.m21 == 0.0 && result.m22 == 1.0 && ((result.m23 == t.z) || (result.m23 != result.m23)) && result.m30 == 0.0 && result.m31 == 0.0 && result.m32 == 0.0 && result.m33 == 1.0
+{
   return mat4_translate(t.x, t.y, t.z);
 }
 
 /// Translation matrix from three components. Same as mat4_translate. O(1).
-pub fn mat4_translation_xyz(x: Float64, y: Float64, z: Float64) -> Mat4 {
+pub fn mat4_translation_xyz(x: Float64, y: Float64, z: Float64) -> Mat4
+  ensures: result.m00 == 1.0 && result.m01 == 0.0 && result.m02 == 0.0 && ((result.m03 == x) || (result.m03 != result.m03)) && result.m10 == 0.0 && result.m11 == 1.0 && result.m12 == 0.0 && ((result.m13 == y) || (result.m13 != result.m13)) && result.m20 == 0.0 && result.m21 == 0.0 && result.m22 == 1.0 && ((result.m23 == z) || (result.m23 != result.m23)) && result.m30 == 0.0 && result.m31 == 0.0 && result.m32 == 0.0 && result.m33 == 1.0
+{
   return mat4_translate(x, y, z);
 }
 
 /// Rotation around the X axis. Same as mat4_rotate_x. O(1).
-pub fn mat4_from_rotation_x(angle: Float64) -> Mat4 {
+pub fn mat4_from_rotation_x(angle: Float64) -> Mat4
+  ensures: result.m00 == 1.0 && result.m01 == 0.0 && result.m02 == 0.0 && result.m03 == 0.0 && result.m10 == 0.0 && ((result.m11 == math.cos(angle)) || (result.m11 != result.m11)) && ((result.m12 == -math.sin(angle)) || (result.m12 != result.m12)) && result.m13 == 0.0 && result.m20 == 0.0 && ((result.m21 == math.sin(angle)) || (result.m21 != result.m21)) && ((result.m22 == math.cos(angle)) || (result.m22 != result.m22)) && result.m23 == 0.0 && result.m30 == 0.0 && result.m31 == 0.0 && result.m32 == 0.0 && result.m33 == 1.0
+{
   return mat4_rotate_x(angle);
 }
 
 /// Rotation around the Y axis. Same as mat4_rotate_y. O(1).
-pub fn mat4_from_rotation_y(angle: Float64) -> Mat4 {
+pub fn mat4_from_rotation_y(angle: Float64) -> Mat4
+  ensures: ((result.m00 == math.cos(angle)) || (result.m00 != result.m00)) && result.m01 == 0.0 && ((result.m02 == math.sin(angle)) || (result.m02 != result.m02)) && result.m03 == 0.0 && result.m10 == 0.0 && result.m11 == 1.0 && result.m12 == 0.0 && result.m13 == 0.0 && ((result.m20 == -math.sin(angle)) || (result.m20 != result.m20)) && result.m21 == 0.0 && ((result.m22 == math.cos(angle)) || (result.m22 != result.m22)) && result.m23 == 0.0 && result.m30 == 0.0 && result.m31 == 0.0 && result.m32 == 0.0 && result.m33 == 1.0
+{
   return mat4_rotate_y(angle);
 }
 
 /// Rotation around the Z axis. Same as mat4_rotate_z. O(1).
-pub fn mat4_from_rotation_z(angle: Float64) -> Mat4 {
+pub fn mat4_from_rotation_z(angle: Float64) -> Mat4
+  ensures: ((result.m00 == math.cos(angle)) || (result.m00 != result.m00)) && ((result.m01 == -math.sin(angle)) || (result.m01 != result.m01)) && result.m02 == 0.0 && result.m03 == 0.0 && ((result.m10 == math.sin(angle)) || (result.m10 != result.m10)) && ((result.m11 == math.cos(angle)) || (result.m11 != result.m11)) && result.m12 == 0.0 && result.m13 == 0.0 && result.m20 == 0.0 && result.m21 == 0.0 && result.m22 == 1.0 && result.m23 == 0.0 && result.m30 == 0.0 && result.m31 == 0.0 && result.m32 == 0.0 && result.m33 == 1.0
+{
   return mat4_rotate_z(angle);
 }
 
 /// Rotation matrix from a (unit) quaternion. The quaternion is normalised first.
 /// Formula: the standard 4x4 rotation matrix derived from q. O(27 ops).
-pub fn mat4_from_quat(q: Quaternion) -> Mat4 {
+pub fn mat4_from_quat(q: Quaternion) -> Mat4
+  ensures: result.m03 == 0.0 && result.m13 == 0.0 && result.m23 == 0.0 && result.m30 == 0.0 && result.m31 == 0.0 && result.m32 == 0.0 && result.m33 == 1.0
+{
   var nq = quat_normalize(q);
   var x = nq.x;
   var y = nq.y;
@@ -1616,7 +1658,9 @@ pub fn mat4_from_quat(q: Quaternion) -> Mat4 {
 
 /// Rotation matrix about an arbitrary axis (unit length) by angle radians.
 /// Uses the Rodrigues formula. The axis is normalised first. O(30 ops).
-pub fn mat4_rotation_axis_angle(axis: Vec3, angle: Float64) -> Mat4 {
+pub fn mat4_rotation_axis_angle(axis: Vec3, angle: Float64) -> Mat4
+  ensures: result.m03 == 0.0 && result.m13 == 0.0 && result.m23 == 0.0 && result.m30 == 0.0 && result.m31 == 0.0 && result.m32 == 0.0 && result.m33 == 1.0
+{
   var n = vec3_normalize(axis);
   var c = math.cos(angle);
   var s = math.sin(angle);
@@ -1646,7 +1690,9 @@ pub fn mat4_rotation_axis_angle(axis: Vec3, angle: Float64) -> Mat4 {
 
 /// Orthographic projection matrix (right-handed, standard OpenGL mapping).
 /// Maps [l,r]x[b,t]x[n,f] to NDC [-1,1]^3. l != r, b != t, n != f required. O(1).
-pub fn mat4_orthographic(l: Float64, r: Float64, b: Float64, t: Float64, n: Float64, f: Float64) -> Mat4 {
+pub fn mat4_orthographic(l: Float64, r: Float64, b: Float64, t: Float64, n: Float64, f: Float64) -> Mat4
+  ensures: ((result.m00 == 2.0 / (r - l)) || (result.m00 != result.m00)) && result.m01 == 0.0 && result.m02 == 0.0 && ((result.m03 == -(r + l) / (r - l)) || (result.m03 != result.m03)) && result.m10 == 0.0 && ((result.m11 == 2.0 / (t - b)) || (result.m11 != result.m11)) && result.m12 == 0.0 && ((result.m13 == -(t + b) / (t - b)) || (result.m13 != result.m13)) && result.m20 == 0.0 && result.m21 == 0.0 && ((result.m22 == -2.0 / (f - n)) || (result.m22 != result.m22)) && ((result.m23 == -(f + n) / (f - n)) || (result.m23 != result.m23)) && result.m30 == 0.0 && result.m31 == 0.0 && result.m32 == 0.0 && result.m33 == 1.0
+{
   var rl = r - l;
   var tb = t - b;
   var fd = f - n;
@@ -1671,12 +1717,16 @@ pub fn mat4_orthographic(l: Float64, r: Float64, b: Float64, t: Float64, n: Floa
 }
 
 /// True if every element of m is within epsilon of the identity matrix. O(16 ops).
-pub fn mat4_is_identity(m: Mat4, eps: Float64) -> Bool {
+pub fn mat4_is_identity(m: Mat4, eps: Float64) -> Bool
+  ensures: (result == true) => ((m.m00 >= (1.0 - eps)) && (m.m00 <= (1.0 + eps)) && (m.m11 >= (1.0 - eps)) && (m.m11 <= (1.0 + eps)) && (m.m22 >= (1.0 - eps)) && (m.m22 <= (1.0 + eps)) && (m.m33 >= (1.0 - eps)) && (m.m33 <= (1.0 + eps)))
+{
   return mat4_approx_eq(m, mat4_identity(), eps);
 }
 
 /// True if every corresponding element of a and b differs by at most epsilon. O(16 ops).
-pub fn mat4_approx_eq(a: Mat4, b: Mat4, eps: Float64) -> Bool {
+pub fn mat4_approx_eq(a: Mat4, b: Mat4, eps: Float64) -> Bool
+  ensures: (result == true) => (((a.m00 - b.m00) <= eps) && ((b.m00 - a.m00) <= eps) && ((a.m01 - b.m01) <= eps) && ((b.m01 - a.m01) <= eps) && ((a.m02 - b.m02) <= eps) && ((b.m02 - a.m02) <= eps) && ((a.m03 - b.m03) <= eps) && ((b.m03 - a.m03) <= eps) && ((a.m10 - b.m10) <= eps) && ((b.m10 - a.m10) <= eps) && ((a.m11 - b.m11) <= eps) && ((b.m11 - a.m11) <= eps) && ((a.m12 - b.m12) <= eps) && ((b.m12 - a.m12) <= eps) && ((a.m13 - b.m13) <= eps) && ((b.m13 - a.m13) <= eps) && ((a.m20 - b.m20) <= eps) && ((b.m20 - a.m20) <= eps) && ((a.m21 - b.m21) <= eps) && ((b.m21 - a.m21) <= eps) && ((a.m22 - b.m22) <= eps) && ((b.m22 - a.m22) <= eps) && ((a.m23 - b.m23) <= eps) && ((b.m23 - a.m23) <= eps) && ((a.m30 - b.m30) <= eps) && ((b.m30 - a.m30) <= eps) && ((a.m31 - b.m31) <= eps) && ((b.m31 - a.m31) <= eps) && ((a.m32 - b.m32) <= eps) && ((b.m32 - a.m32) <= eps) && ((a.m33 - b.m33) <= eps) && ((b.m33 - a.m33) <= eps))
+{
   return f64_approx_eq(a.m00, b.m00, eps)
       && f64_approx_eq(a.m01, b.m01, eps)
       && f64_approx_eq(a.m02, b.m02, eps)
@@ -1904,12 +1954,16 @@ pub fn quat_angle_between(a: Quaternion, b: Quaternion) -> Float64
 // ============================================================================
 
 /// Create an AABB from min and max corners. Same as aabb_new. O(1).
-pub fn aabb_from_min_max(min: Vec3, max: Vec3) -> Aabb {
+pub fn aabb_from_min_max(min: Vec3, max: Vec3) -> Aabb
+  ensures: ((result.min.x == min.x) || (result.min.x != result.min.x)) && ((result.min.y == min.y) || (result.min.y != result.min.y)) && ((result.min.z == min.z) || (result.min.z != result.min.z)) && ((result.max.x == max.x) || (result.max.x != result.max.x)) && ((result.max.y == max.y) || (result.max.y != result.max.y)) && ((result.max.z == max.z) || (result.max.z != result.max.z))
+{
   return aabb_new(min, max);
 }
 
 /// Centre point of an AABB: (min + max) / 2. O(1).
-pub fn aabb_center(box: Aabb) -> Vec3 {
+pub fn aabb_center(box: Aabb) -> Vec3
+  ensures: ((result.x == (box.min.x + box.max.x) * 0.5) || (result.x != result.x)) && ((result.y == (box.min.y + box.max.y) * 0.5) || (result.y != result.y)) && ((result.z == (box.min.z + box.max.z) * 0.5) || (result.z != result.z))
+{
   return Vec3{
     x: (box.min.x + box.max.x) * 0.5;
     y: (box.min.y + box.max.y) * 0.5;
@@ -1918,25 +1972,33 @@ pub fn aabb_center(box: Aabb) -> Vec3 {
 }
 
 /// Size (extent per axis) of an AABB: max - min. O(1).
-pub fn aabb_size(box: Aabb) -> Vec3 {
+pub fn aabb_size(box: Aabb) -> Vec3
+  ensures: ((result.x == box.max.x - box.min.x) || (result.x != result.x)) && ((result.y == box.max.y - box.min.y) || (result.y != result.y)) && ((result.z == box.max.z - box.min.z) || (result.z != result.z))
+{
   return vec3_sub(box.max, box.min);
 }
 
 /// Half-extents of an AABB: size / 2. O(1).
-pub fn aabb_half_extents(box: Aabb) -> Vec3 {
+pub fn aabb_half_extents(box: Aabb) -> Vec3
+  ensures: ((result.x == (box.max.x - box.min.x) * 0.5) || (result.x != result.x)) && ((result.y == (box.max.y - box.min.y) * 0.5) || (result.y != result.y)) && ((result.z == (box.max.z - box.min.z) * 0.5) || (result.z != result.z))
+{
   var s = vec3_sub(box.max, box.min);
   return Vec3{ x: s.x * 0.5; y: s.y * 0.5; z: s.z * 0.5; };
 }
 
 /// True if the sphere intersects the AABB. Uses the closest-point test:
 /// the squared distance from the sphere centre to the box must not exceed r2. O(1).
-pub fn aabb_intersects_sphere(box: Aabb, s: Sphere) -> Bool {
+pub fn aabb_intersects_sphere(box: Aabb, s: Sphere) -> Bool
+  ensures: (result == true) => (vec3_distance_squared(aabb_closest_point(box, s.center), s.center) <= s.radius * s.radius)
+{
   var cp = aabb_closest_point(box, s.center);
   return vec3_distance_squared(cp, s.center) <= s.radius * s.radius;
 }
 
 /// Closest point on (or inside) the AABB to p: p clamped into [min, max]. O(1).
-pub fn aabb_closest_point(box: Aabb, p: Vec3) -> Vec3 {
+pub fn aabb_closest_point(box: Aabb, p: Vec3) -> Vec3
+  ensures: ((result.x == math.clamp(p.x, box.min.x, box.max.x)) || (result.x != result.x)) && ((result.y == math.clamp(p.y, box.min.y, box.max.y)) || (result.y != result.y)) && ((result.z == math.clamp(p.z, box.min.z, box.max.z)) || (result.z != result.z))
+{
   return Vec3{
     x: math.clamp(p.x, box.min.x, box.max.x);
     y: math.clamp(p.y, box.min.y, box.max.y);
@@ -1945,19 +2007,25 @@ pub fn aabb_closest_point(box: Aabb, p: Vec3) -> Vec3 {
 }
 
 /// Surface area of an AABB: 2*(w*h + h*d + w*d). O(1).
-pub fn aabb_surface_area(box: Aabb) -> Float64 {
+pub fn aabb_surface_area(box: Aabb) -> Float64
+  ensures: (result == 2.0 * ((box.max.x - box.min.x) * (box.max.y - box.min.y) + (box.max.y - box.min.y) * (box.max.z - box.min.z) + (box.max.x - box.min.x) * (box.max.z - box.min.z))) || (result != result)
+{
   var s = vec3_sub(box.max, box.min);
   return 2.0 * (s.x * s.y + s.y * s.z + s.x * s.z);
 }
 
 /// Volume of an AABB: w*h*d. O(1).
-pub fn aabb_volume(box: Aabb) -> Float64 {
+pub fn aabb_volume(box: Aabb) -> Float64
+  ensures: (result == (box.max.x - box.min.x) * (box.max.y - box.min.y) * (box.max.z - box.min.z)) || (result != result)
+{
   var s = vec3_sub(box.max, box.min);
   return s.x * s.y * s.z;
 }
 
 /// Expand the AABB to include point p (grow min/max component-wise). O(1).
-pub fn aabb_expand(box: Aabb, p: Vec3) -> Aabb {
+pub fn aabb_expand(box: Aabb, p: Vec3) -> Aabb
+  ensures: ((result.min.x == math.min_float(box.min.x, p.x)) || (result.min.x != result.min.x)) && ((result.min.y == math.min_float(box.min.y, p.y)) || (result.min.y != result.min.y)) && ((result.min.z == math.min_float(box.min.z, p.z)) || (result.min.z != result.min.z)) && ((result.max.x == math.max_float(box.max.x, p.x)) || (result.max.x != result.max.x)) && ((result.max.y == math.max_float(box.max.y, p.y)) || (result.max.y != result.max.y)) && ((result.max.z == math.max_float(box.max.z, p.z)) || (result.max.z != result.max.z))
+{
   return Aabb{
     min: Vec3{
       x: math.min_float(box.min.x, p.x);
@@ -1973,7 +2041,9 @@ pub fn aabb_expand(box: Aabb, p: Vec3) -> Aabb {
 }
 
 /// Smallest AABB that contains both a and b (component-wise min/max). O(1).
-pub fn aabb_union(a: Aabb, b: Aabb) -> Aabb {
+pub fn aabb_union(a: Aabb, b: Aabb) -> Aabb
+  ensures: ((result.min.x == math.min_float(a.min.x, b.min.x)) || (result.min.x != result.min.x)) && ((result.min.y == math.min_float(a.min.y, b.min.y)) || (result.min.y != result.min.y)) && ((result.min.z == math.min_float(a.min.z, b.min.z)) || (result.min.z != result.min.z)) && ((result.max.x == math.max_float(a.max.x, b.max.x)) || (result.max.x != result.max.x)) && ((result.max.y == math.max_float(a.max.y, b.max.y)) || (result.max.y != result.max.y)) && ((result.max.z == math.max_float(a.max.z, b.max.z)) || (result.max.z != result.max.z))
+{
   return Aabb{
     min: Vec3{
       x: math.min_float(a.min.x, b.min.x);
@@ -1990,7 +2060,9 @@ pub fn aabb_union(a: Aabb, b: Aabb) -> Aabb {
 
 /// Overlap of two AABBs. Returns None when the boxes do not intersect.
 /// The result is the intersection volume between them. O(1).
-pub fn aabb_intersection(a: Aabb, b: Aabb) -> Option[Aabb] {
+pub fn aabb_intersection(a: Aabb, b: Aabb) -> Option[Aabb]
+  ensures: (result.is_some == false) || aabb_intersects_aabb(a, b)
+{
   if !aabb_intersects_aabb(a, b) {
     return None;
   }
@@ -2013,20 +2085,26 @@ pub fn aabb_intersection(a: Aabb, b: Aabb) -> Option[Aabb] {
 // ============================================================================
 
 /// True if two spheres intersect (or touch): distance <= r_a + r_b. O(1).
-pub fn sphere_intersects_sphere(a: Sphere, b: Sphere) -> Bool {
+pub fn sphere_intersects_sphere(a: Sphere, b: Sphere) -> Bool
+  ensures: (result == true) => (vec3_distance_squared(a.center, b.center) <= (a.radius + b.radius) * (a.radius + b.radius))
+{
   var d2 = vec3_distance_squared(a.center, b.center);
   var r = a.radius + b.radius;
   return d2 <= r * r;
 }
 
 /// True if a sphere intersects an AABB. Delegates to aabb_intersects_sphere. O(1).
-pub fn sphere_intersects_aabb(s: Sphere, box: Aabb) -> Bool {
+pub fn sphere_intersects_aabb(s: Sphere, box: Aabb) -> Bool
+  ensures: (result == true) => (vec3_distance_squared(aabb_closest_point(box, s.center), s.center) <= s.radius * s.radius)
+{
   return aabb_intersects_sphere(box, s);
 }
 
 /// Closest point on the sphere surface to p. If p equals the centre, the centre
 /// (an arbitrary surface direction) is returned. O(1).
-pub fn sphere_closest_point(s: Sphere, p: Vec3) -> Vec3 {
+pub fn sphere_closest_point(s: Sphere, p: Vec3) -> Vec3
+  ensures: (((result.x == s.center.x) || (result.x != result.x)) && ((result.y == s.center.y) || (result.y != result.y)) && ((result.z == s.center.z) || (result.z != result.z))) || (vec3_length(vec3_sub(p, s.center)) != 0.0)
+{
   var d = vec3_sub(p, s.center);
   var len = vec3_length(d);
   if len == 0.0 { return s.center; }
@@ -2035,18 +2113,24 @@ pub fn sphere_closest_point(s: Sphere, p: Vec3) -> Vec3 {
 }
 
 /// Surface area of a sphere: 4*PI*r2. O(1).
-pub fn sphere_surface_area(s: Sphere) -> Float64 {
+pub fn sphere_surface_area(s: Sphere) -> Float64
+  ensures: (result == 4.0 * math.PI * s.radius * s.radius) || (result != result)
+{
   return 4.0 * math.PI * s.radius * s.radius;
 }
 
 /// Volume of a sphere: (4/3)*PI*r3. O(1).
-pub fn sphere_volume(s: Sphere) -> Float64 {
+pub fn sphere_volume(s: Sphere) -> Float64
+  ensures: (result == 4.0 / 3.0 * math.PI * s.radius * s.radius * s.radius) || (result != result)
+{
   return 4.0 / 3.0 * math.PI * s.radius * s.radius * s.radius;
 }
 
 /// Expand the sphere so it contains point p. If p is already inside, the sphere
 /// is returned unchanged. O(1).
-pub fn sphere_expand(s: Sphere, p: Vec3) -> Sphere {
+pub fn sphere_expand(s: Sphere, p: Vec3) -> Sphere
+  ensures: ((((result.center.x == s.center.x) || (result.center.x != result.center.x)) && ((result.center.y == s.center.y) || (result.center.y != result.center.y)) && ((result.center.z == s.center.z) || (result.center.z != result.center.z)) && ((result.radius == s.radius) || (result.radius != result.radius)))) || (vec3_distance(s.center, p) > s.radius)
+{
   var d = vec3_distance(s.center, p);
   if d <= s.radius {
     return s;
@@ -2059,24 +2143,32 @@ pub fn sphere_expand(s: Sphere, p: Vec3) -> Sphere {
 // ============================================================================
 
 /// Point on the ray at parameter t: origin + dir * t. O(1).
-pub fn ray_at(r: Ray, t: Float64) -> Vec3 {
+pub fn ray_at(r: Ray, t: Float64) -> Vec3
+  ensures: ((result.x == r.origin.x + r.dir.x * t) || (result.x != result.x)) && ((result.y == r.origin.y + r.dir.y * t) || (result.y != result.y)) && ((result.z == r.origin.z + r.dir.z * t) || (result.z != result.z))
+{
   return vec3_add(r.origin, vec3_mul_scalar(r.dir, t));
 }
 
 /// Origin of the ray. O(1).
-pub fn ray_origin(r: Ray) -> Vec3 {
+pub fn ray_origin(r: Ray) -> Vec3
+  ensures: ((result.x == r.origin.x) || (result.x != result.x)) && ((result.y == r.origin.y) || (result.y != result.y)) && ((result.z == r.origin.z) || (result.z != result.z))
+{
   return r.origin;
 }
 
 /// Direction of the ray. O(1).
-pub fn ray_dir(r: Ray) -> Vec3 {
+pub fn ray_dir(r: Ray) -> Vec3
+  ensures: ((result.x == r.dir.x) || (result.x != result.x)) && ((result.y == r.dir.y) || (result.y != result.y)) && ((result.z == r.dir.z) || (result.z != result.z))
+{
   return r.dir;
 }
 
 /// Ray-plane intersection. Returns Some(t) where t is the ray parameter of the
 /// hit, or None if the ray is parallel to the plane or the hit lies behind the
 /// origin. plane_normal need not be unit. O(1).
-pub fn ray_intersect_plane(r: Ray, plane_point: Vec3, plane_normal: Vec3) -> Option[Float64] {
+pub fn ray_intersect_plane(r: Ray, plane_point: Vec3, plane_normal: Vec3) -> Option[Float64]
+  ensures: (result.is_some == false) || !(math.abs_float(vec3_dot(r.dir, plane_normal)) < 0.000001 * 0.000001)
+{
   var denom = vec3_dot(r.dir, plane_normal);
   if math.abs_float(denom) < 0.000001 * 0.000001 {
     return None;
@@ -2090,7 +2182,9 @@ pub fn ray_intersect_plane(r: Ray, plane_point: Vec3, plane_normal: Vec3) -> Opt
 
 /// Distance from a point p to the ray line (not the segment). Uses the 3D
 /// cross-product formula |(p - o) x d| / |d|. Returns 0 if the direction is degenerate. O(1).
-pub fn ray_distance_to_point(r: Ray, p: Vec3) -> Float64 {
+pub fn ray_distance_to_point(r: Ray, p: Vec3) -> Float64
+  ensures: (result >= 0.0) || (result != result)
+{
   var v = vec3_sub(p, r.origin);
   var denom = vec3_length(r.dir);
   if denom == 0.0 {
@@ -2109,25 +2203,33 @@ pub fn ray_distance_to_point(r: Ray, p: Vec3) -> Float64 {
 pub type Plane = { point: Vec3; normal: Vec3; }
 
 /// Create a plane from a point on it and a normal direction. O(1).
-pub fn plane_new(point: Vec3, normal: Vec3) -> Plane {
+pub fn plane_new(point: Vec3, normal: Vec3) -> Plane
+  ensures: ((result.point.x == point.x) || (result.point.x != result.point.x)) && ((result.point.y == point.y) || (result.point.y != result.point.y)) && ((result.point.z == point.z) || (result.point.z != result.point.z)) && ((result.normal.x == normal.x) || (result.normal.x != result.normal.x)) && ((result.normal.y == normal.y) || (result.normal.y != result.normal.y)) && ((result.normal.z == normal.z) || (result.normal.z != result.normal.z))
+{
   return Plane{ point: point; normal: normal; };
 }
 
 /// Signed distance from a point to the plane (positive on the normal side).
 /// Assumes the plane normal is unit length. O(1).
-pub fn plane_signed_distance(p: &Plane, pt: Vec3) -> Float64 {
+pub fn plane_signed_distance(p: &Plane, pt: Vec3) -> Float64
+  ensures: (result == vec3_dot(vec3_sub(pt, p.point), p.normal)) || (result != result)
+{
   return vec3_dot(vec3_sub(pt, p.point), p.normal);
 }
 
 /// Absolute distance from a point to the plane. Assumes a unit normal. O(1).
-pub fn plane_distance_to_point(p: &Plane, pt: Vec3) -> Float64 {
+pub fn plane_distance_to_point(p: &Plane, pt: Vec3) -> Float64
+  ensures: (result >= 0.0) || (result != result)
+{
   var d = plane_signed_distance(p, pt);
   return math.abs_float(d);
 }
 
 /// Ray-plane intersection against a Plane. Returns Some(t) or None.
 /// This is an alias of ray_intersect_plane using the plane's fields. O(1).
-pub fn plane_intersect_ray(p: &Plane, r: Ray) -> Option[Float64] {
+pub fn plane_intersect_ray(p: &Plane, r: Ray) -> Option[Float64]
+  ensures: (result.is_some == false) || !(math.abs_float(vec3_dot(r.dir, p.normal)) < 0.000001 * 0.000001)
+{
   return ray_intersect_plane(r, p.point, p.normal);
 }
 

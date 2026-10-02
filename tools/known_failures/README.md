@@ -67,6 +67,12 @@ returns the correct value. Vec-returning sibling of the fixed Float64-thunk
 class. Repro: `tools/known_failures/p_curve_thunk_zero.xi` (returns 2).
 Found while landing the wave-51 geom clauses; the wave-51 probe keeps only
 the `n < 1 == 0` branch for `curve_length`.
+UPDATE 2026-10-02: FIXED compiler-side (m170 a/b, `COMPILER_BUGS.md`
+2026-10-02): fn-typed param Vec returns keep their element type and the
+erased Option/Result literal payload slot is forced to i64. The stdlib
+repro returns rc=0 on the local v0.62.2 dev binary. The m170b half also
+fixes the erased Option-of-Vec `.unwrap()` AV class (`vector.refract`).
+Promote on the next pin.
 
 **Open finding 2026-10-01 (compiler v0.61.3 and v0.62.1): caller-side
 element reads of some `xiom.geom.vector` / `xiom.geom.curves` results are
@@ -78,9 +84,15 @@ values), and `cross`/`normalize`/`unit`/`project`/`reject`/`slerp`/
 `reflect`/`outer`/`bezier_quad`/`bezier_cubic`/`bezier_derivative` read
 correctly in the caller. Repro:
 `tools/known_failures/p_geom_vector_result_bits.xi` (control green, then
-two broken reads). Found while landing the wave-51 geom clauses; the
-wave-51 probe and `smoke_geom_vec.xi` mediate those results through
-dot/norm/distance.
+   two broken reads). Found while landing the wave-51 geom clauses; the
+   wave-51 probe and `smoke_geom_vec.xi` mediate those results through
+   dot/norm/distance.
+   UPDATE 2026-10-02: FIXED compiler-side (m169, `COMPILER_BUGS.md`
+   2026-10-02): same-leaf qualified results now resolve the exact catalog
+   key. The stdlib repro returns rc=0 on the local v0.62.2 dev binary
+   (pre-fix rc=2). Keep in known_failures until the gate pin carries m169,
+   then promote to `tools/probes/` and un-mediate the wave-51 probe/smoke
+   reads.
 
 **Open finding 2026-09-30 (compiler v0.61.3 and v0.62.1): call-site
 inference of `xiom.geom.matrix` `Vec[Vec[Float64]]` results loses a nesting
