@@ -1474,7 +1474,12 @@ registry pin, agent recon for the rest)**
   runtime/sha256_sw.c in every tag and the driver's build-runtime list
   includes it -- suspect a stale installed runtime library (compiler/install
   lane). Wishlist rows 42-46 added; row 33 updated with the evidence.
-- Battery pending on the wave commit; results in the follow-up docs commit.
+- Full battery on 48ef036: check_modules 509/509 (530.7s); corpus 951/951,
+  0 compilefail, 0 runfail (2298.5s); probe corpus 212/212 (650.2s);
+  barename 0 hits / 509 (991.2s); coverage ratchet floors94 OK; doc
+  ratchet OK; module-smoke ratchet OK (3,475/6,200 fns, 497/517 modules).
+  The wave-57 probe is green on v0.61.3 and v0.62.2 dev. Wave 57 closed;
+  this battery/docs commit is LOCAL (push on the lane's request).
 
 **SESSION 2026-10-02 block 16 (wave 56: geom aggregate batch 3/final -- Mat4 tail + primitives; geom dir 100%)**
 - Wave 56 (floors93): 51 clauses on the xiom.geom aggregate -- Mat4 tail
@@ -1643,30 +1648,32 @@ registry pin, agent recon for the rest)**
 
 ### HANDOFF 2026-10-02 (context-limit snapshot 4; read this plus docs/PRODUCTION_READINESS_QUEUE.md)
 
-**State**: main @ `2acf04f` + this battery/docs commit, LOCAL only (the last
+**State**: main @ `48ef036` + this battery/docs commit, LOCAL only (the last
 pushed state is `5c3d39f`; push when the release/compiler lane asks -- the
 website fetches the queue's meter/gates lines from origin/main). Compiler
 pin v0.61.3 at `%TEMP%\kilo\stdlib_ws\xiom_v0613.exe` (rebuild recipe in
 the 2026-09-25 handoff); v0.62.2 dev at
 `E:\xiom-lang\xiom\target\debug\xiom.exe` (rebuilt 2026-10-02 21:13, carries
-the m169/m170 fixes -- see the RELAY block); wave-54/55/56 probes green on
+the m169/m170 fixes -- see the RELAY block); wave-54..57 probes green on
 the v0.61.3 gate pin and the v0.62.2 dev binary. Pushed tags:
 `stdlib-perf2` (`59bfb1c`, the
 next compiler-pin candidate, requires >= 185342f4 for the
 receiver-qualified method trust), `stdlib-perf1` (the v0.62.2
 `STDLIB_VERSION` pin), `stdlib-v0.62.0` (released 0.62.0; the registry lane
-owns its publish). Coverage floors93: **global 38.5% pub-with-clause, geom
-100.0%, math 38.8%, num 35.6%**; probe corpus **211**; smoke corpus 951;
-modules 509/509; barename 0/509; doc 100%; module-smoke 497/517 modules,
-3,471/6,200 fns. Queue-top readiness meter: **70% -- 7 of 10 gates** (open:
-coverage 100% at 38.5%, zero open findings (11: 10 compiler, 1 stdlib),
-beta-exit release cut); gates line: corpus 951/951, modules 509/509, probes
-211/211, barename 0/509. Packages intake `docs/STDLIB-WISHLIST.md`: 41 rows
-from the five relays (row 1 empty-needle defect fixed; evening relay rows
-33-41 incl. the crypto linkability defect fix-first); full sheet
+owns its publish). Coverage floors94: **global 39.2% pub-with-clause, geom
+100.0%, math 38.8%, num 35.6%, net 20.9%**; probe corpus **212**; smoke
+corpus 951; modules 509/509; barename 0/509; doc 100%; module-smoke 497/517
+modules, 3,475/6,200 fns. Queue-top readiness meter: **70% -- 7 of 10
+gates** (open: coverage 100% at 39.2%, zero open findings (12: 11 compiler,
+1 stdlib), beta-exit release cut); gates line: corpus 951/951, modules
+509/509, probes
+212/212, barename 0/509. Packages intake `docs/STDLIB-WISHLIST.md`: 46 rows
+from the six relays (row 1 empty-needle defect fixed; rows 33-41 evening
+relay; rows 42-46 night batch; the crypto linkability packet does not
+reproduce on main -- compiler/install lane); full sheet
 `xiom-packages/packages` @ `66f26e1`.
 
-**Waves 49-56 landed since snapshot 3** (all probe + floors + same-commit
+**Waves 49-57 landed since snapshot 3** (all probe + floors + same-commit
 docs + full battery): geom batch 1 vec/quat/mat 52 (86); batch 2
 matrix/quaternion 51 (87); batch 3 vector/curves/collision 43 (88); batch 4
 geometry_2d/3d 43 (89); batch 5 geometry_extended/polyhedra/linear 39 (90,
@@ -1676,22 +1683,27 @@ w,x,y,z and struct literals store fields positionally, so Euler rotations
 were scrambled -- reordered + filed `p_struct_literal_field_order.xi`);
 batch 7 the aggregate's quaternion tail + Mat2/Mat3 + Mat4 core 45 (92, no
 fix-first); batch 8 the aggregate's Mat4 tail + Aabb + Sphere + Ray + Plane
-51 (93; `geom.xi` 186/186 and the geom directory 414/414 = 100%); plus the
-PERF-1 and PERF-2 annotation waves (tags above), the packages wishlist
-intake (41 rows now) and the empty-needle defect fix, and the website
+51 (93; `geom.xi` 186/186 and the geom directory 414/414 = 100%); net
+batch 1 the address family 46 (94; fix-firsts `ipv4_to_string` doc-faithful
+first-four octets and `url_join` "//" normalization; new finding
+`p_wave57_probe_ir.xi` -- context-dependent alloca-dominance invalid IR,
+non-monotonic bisection); plus the PERF-1 and PERF-2 annotation waves (tags
+above), the m169/m170 compiler closures (vector-bits and curve-thunk
+findings verified fixed on the v0.62.2 dev binary), the packages wishlist
+intake (46 rows now) and the empty-needle defect fix, and the website
 readiness meter/gates lines.
 
-**Remaining to 100% (order)**: wave 57+ = the low dirs, starting with `net`
-(5.4%, 297 pub -- split into 40-60-pub family batches after read-only
-recon), then serialize 5.4%, hash 8.9%, reflect 9.1%, iter 9.8%, convert
-11.5%, format 13%, time 13%, misc 13.9%, os 15.3%, rand 16%, crypto 17%
-(incl. the packages' crypto linkability defect, fix-first once
-reproduced), log 19.1%, compress 21.1%, then C (geom dedup + the Box
-rename; needs compiler-lane api_freeze regen), D (tzdata phase 2, check
-`PACKAGE-NAMESPACES.txt`), E (untested-surface generator classes), F (next
-release cut). Follow-ups: real polygon-clipping for `polygon_difference`;
-the polyhedra nested hulls ride the nested-read fix; smoke growth (20
-modules with no smoke, ~2,729 unreferenced fns).
+**Remaining to 100% (order)**: wave 58+ = net batches 2+ (address family
+done: 46 clauses; remaining ~251 pub: http/header/cookie/mime ~55,
+transport socket/tcp/udp/unix/tls/tls_helper ~53, protocols
+proto/smtp/ftp/ntp/ping/sse/websocket/ws), then serialize 5.4%, hash 8.9%,
+reflect 9.1%, iter 9.8%, convert 11.5%, format 13%, time 13%, misc 13.9%,
+os 15.3%, rand 16%, crypto 17%, log 19.1%, compress 21.1%, then C (geom
+dedup + the Box rename; needs compiler-lane api_freeze regen), D (tzdata
+phase 2, check `PACKAGE-NAMESPACES.txt`), E (untested-surface generator
+classes), F (next release cut). Follow-ups: real polygon-clipping for
+`polygon_difference`; the polyhedra nested hulls ride the nested-read fix;
+smoke growth (20 modules with no smoke, ~2,725 unreferenced fns).
 
 **Rules (unchanged)**: no stdlib edits while a sweep is in flight; every
 wave updates the queue top's meter/gates lines; read-only recon ->
@@ -1708,7 +1720,7 @@ always after `git log -1 --format='%an <%ae>'` prints
 
 ```
 Continue the XIOM stdlib production-readiness work in E:\xiom-lang\stdlib
-(main @ 2acf04f + battery docs or later; last pushed 5c3d39f; push docs/meter
+(main @ 48ef036 + battery docs or later; last pushed 5c3d39f; push docs/meter
 updates when asked).
 
 READ FIRST, in order:
@@ -1719,27 +1731,26 @@ READ FIRST, in order:
    10-gate list, sections C/D/E/F, module-smoke requirement, gotchas).
 3. docs/RELEASE_CHECKLIST.md before any release action.
 
-STATE: main @ 2acf04f + battery docs or later (LOCAL; last pushed 5c3d39f --
+STATE: main @ 48ef036 + battery docs or later (LOCAL; last pushed 5c3d39f --
 the website fetches the queue's meter/gates lines from origin/main, so push
 when the release/compiler lane asks). Compiler pin v0.61.3 at
 %TEMP%\kilo\stdlib_ws\xiom_v0613.exe; the compiler lane's v0.62.2 dev binary
 (carries m169/m170, see the RELAY block) is at
-E:\xiom-lang\xiom\target\debug\xiom.exe; wave-54/55/56 probes green on the
-gate pin and v0.62.2 dev. Coverage floors93: global 38.5%, geom 100%, math
-38.8%, num 35.6%. All gates green on the tip: check_modules 509/509; corpus
-951/951; probes 211/211; barename 0/509; coverage floors93; module-smoke
-ratchet (497/517 modules, 3471/6200 pub fns); doc 100%. Readiness meter 70%
-(7/10). Packages intake: docs/STDLIB-WISHLIST.md (41 rows; row 33 crypto
-linkability defect fix-first once reproduced). stdlib 0.62.0 RELEASED; the
-registry lane owns its publish; the next release continues coverage toward
-100%.
+E:\xiom-lang\xiom\target\debug\xiom.exe; wave-54..57 probes green on the
+gate pin and v0.62.2 dev. Coverage floors94: global 39.2%, geom 100%, net
+20.9%, math 38.8%, num 35.6%. All gates green on the tip: check_modules
+509/509; corpus 951/951; probes 212/212; barename 0/509; coverage floors94;
+module-smoke ratchet (497/517 modules, 3475/6200 pub fns); doc 100%.
+Readiness meter 70% (7/10). Packages intake: docs/STDLIB-WISHLIST.md (46
+rows; the crypto linkability packet does not reproduce on main --
+compiler/install lane). stdlib 0.62.0 RELEASED; the registry lane owns its
+publish; the next release continues coverage toward 100%.
 
-FIRST TASK -- wave 57: the low dirs -- start with `net` (5.4%, 297 pub;
-read-only recon first, then split into 40-60-pub family batches; net
-submodules include http/dns/url/jwt/proto). Waves 49-56 closed the geom
-sub-libs and the whole geom aggregate (`geom.xi` 186/186; geom directory
-100%, floors93). Batch-split per the owner's directive (families of
-40-60 pub per wave).
+FIRST TASK -- wave 58: net batch 2 -- the HTTP parsing family (http 21 +
+header 6 + cookie 10 + mime 18 = 55 uncovered pub; read-only recon first;
+wave 57 finished the address family: address/ip/ip4/ip6/url 46 clauses,
+floors94). Batch-split per the owner's directive (families of 40-60 pub per
+wave).
 Protocol for EVERY wave: read-only recon -> new-shape probe in
 tools/probes/ (RED on the stub/before, GREEN after) -> runtime-safe
 clauses (contracts run at runtime; every clause certainly true for all
@@ -1790,7 +1801,12 @@ collapse on nonempty inputs on both pins (`p_polyhedra_nested_hull.xi`) --
 empty inputs only; struct literals store fields POSITIONALLY -- always
 write literal fields in declaration order (out-of-order literals compile
 silently and scramble fields on both pins;
-`p_struct_literal_field_order.xi`); struct-payload Options join the
+`p_struct_literal_field_order.xi`); a Result-style match on a Str-returning
+call can emit invalid LLVM IR (alloca dominance; context-dependent and
+non-monotonic under bisection -- `p_wave57_probe_ir.xi`); compare Str
+results directly; the packages' crypto linkability packet does not
+reproduce on stdlib main (row 33; compiler/install lane); struct-payload
+Options join the
 Vec-payload ones as is_some-only; the queue top's meter/gates lines are
 machine-read by the website (keep the exact formats).
 ```
