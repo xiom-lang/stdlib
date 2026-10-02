@@ -1525,6 +1525,136 @@ registry pin, agent recon for the rest)**
   ptr.is_null workaround once the pin carries m142+; no stdlib change is
   required for the pin itself. This lane has not been asked to push.
 
+### HANDOFF 2026-10-02 (context-limit snapshot 4; read this plus docs/PRODUCTION_READINESS_QUEUE.md)
+
+**State**: main @ `2889ebb` (+ this handoff commit), PUSHED to origin (the
+website fetches the queue's meter/gates lines from origin/main). Compiler
+pin v0.61.3 at `%TEMP%\kilo\stdlib_ws\xiom_v0613.exe` (rebuild recipe in
+the 2026-09-25 handoff); v0.62.1 at `E:\xiom-lang\xiom\target\debug\xiom.exe`;
+latest probes green on BOTH. Pushed tags: `stdlib-perf2` (`59bfb1c`, the
+next compiler-pin candidate, requires >= 185342f4 for the
+receiver-qualified method trust), `stdlib-perf1` (the v0.62.2
+`STDLIB_VERSION` pin), `stdlib-v0.62.0` (released 0.62.0; the registry lane
+owns its publish). Coverage floors90: **global 36.3% pub-with-clause, geom
+65.7%, math 38.8%, num 35.6%**; probe corpus **208**; smoke corpus 951;
+modules 509/509; barename 0/509; doc 100%; module-smoke 497/517 modules,
+3,332/6,200 fns. Queue-top readiness meter: **70% -- 7 of 10 gates** (open:
+coverage 100% at 36.3%, zero open findings (10), beta-exit release cut);
+gates line: corpus 951/951, modules 509/509, probes 208/208, barename
+0/509. Packages intake `docs/STDLIB-WISHLIST.md`: 32 rows from the four
+relays (row 1 empty-needle defect fixed); full sheet
+`xiom-packages/packages` @ `66f26e1`.
+
+**Waves 49-53 landed since snapshot 3** (all probe + floors + same-commit
+docs + full battery): geom batch 1 vec/quat/mat 52 (86); batch 2
+matrix/quaternion 51 (87); batch 3 vector/curves/collision 43 (88); batch 4
+geometry_2d/3d 43 (89); batch 5 geometry_extended/polyhedra/linear 39 (90,
+incl. the `math.log` -> `math.ln` fix-first); plus the PERF-1 and PERF-2
+annotation waves (tags above), the packages wishlist intake and the
+empty-needle defect fix, and the website readiness meter/gates lines.
+
+**Remaining to 100% (order)**: wave 54+ = the big `geom.xi` aggregate (142
+uncovered -> 2-3 batches of ~50), then the low dirs (net 5.4%, serialize
+5.4%, hash 8.9%, reflect 9.1%, iter 9.8%, convert 11.5%, format 13%, time
+13%, misc 13.9%, os 15.3%, rand 16%, crypto 17%, log 19.1%, compress
+21.1%), then C (geom dedup + the Box rename; needs compiler-lane api_freeze
+regen), D (tzdata phase 2, check `PACKAGE-NAMESPACES.txt`), E
+(untested-surface generator classes), F (next release cut). Follow-ups:
+real polygon-clipping for `polygon_difference`; the polyhedra nested hulls
+ride the nested-read fix; smoke growth (20 modules with no smoke, ~2,868
+unreferenced fns).
+
+**Rules (unchanged)**: no stdlib edits while a sweep is in flight; every
+wave updates the queue top's meter/gates lines; read-only recon ->
+new-shape probe -> runtime-safe clauses -> floors<N+1> dump -> wire
+ci/heavy/release (8-space `run:`) + tools/README.md + plan + session +
+queue in the SAME commit -> YAML parse check -> pure-ASCII single-quoted
+commit -> full battery (check_modules, corpus, probes, barename, coverage,
+doc, module-smoke); one wave = one commit (+ battery-docs commit). Pushes:
+the website reads origin/main, so push docs/meter updates when asked;
+always after `git log -1 --format='%an <%ae>'` prints
+`Lefteris Notas <lefterisnotas@gmail.com>`.
+
+**Paste-ready continuation prompt**:
+
+```
+Continue the XIOM stdlib production-readiness work in E:\xiom-lang\stdlib
+(main @ 2889ebb or later; origin synced; push docs/meter updates when asked).
+
+READ FIRST, in order:
+1. docs/stdlib_session.md -- the "HANDOFF 2026-10-02 (context-limit
+   snapshot 4)" block, plus snapshot 3 and the 2026-09-27/2026-09-25
+   handoffs for history and the pin rebuild recipe.
+2. docs/PRODUCTION_READINESS_QUEUE.md -- authoritative queue (top meter +
+   10-gate list, sections C/D/E/F, module-smoke requirement, gotchas).
+3. docs/RELEASE_CHECKLIST.md before any release action.
+
+STATE: main @ 2889ebb (pushed). Compiler pin v0.61.3 at
+%TEMP%\kilo\stdlib_ws\xiom_v0613.exe; v0.62.1 at
+E:\xiom-lang\xiom\target\debug\xiom.exe. Coverage floors90: global 36.3%,
+geom 65.7%, math 38.8%, num 35.6%. All gates green on the tip:
+check_modules 509/509; corpus 951/951; probes 208/208; barename 0/509;
+coverage floors90; module-smoke ratchet (497/517 modules, 3332/6200 pub
+fns); doc 100%. Readiness meter 70% (7/10). Packages intake:
+docs/STDLIB-WISHLIST.md (32 rows). stdlib 0.62.0 RELEASED; the registry
+lane owns its publish; the next release continues coverage toward 100%.
+
+FIRST TASK -- wave 54: geom batch 6 -- the big geom.xi aggregate, first
+batch (target 45-55 of its 142 uncovered pub fns; split the rest over the
+following 1-2 waves; waves 49-53 closed the geom sublibs, floors90).
+Batch-split per the owner's directive (families of 40-60 pub per wave).
+Protocol for EVERY wave: read-only recon -> new-shape probe in
+tools/probes/ (RED on the stub/before, GREEN after) -> runtime-safe
+clauses (contracts run at runtime; every clause certainly true for all
+inputs incl. non-normalized structs; canonical-form/field claims; NEVER
+read Result/Option payloads in clauses; NaN-tolerant
+`(x == expr) || (x != x)` forms; parenthesize mixed comparisons; Float64
+matrix/vector clauses are len/range claims only) -> powershell -NoProfile
+-File tools\coverage_scan.ps1 -DumpFloors tools\coverage_floors<N>.json ->
+wire the floors file into .github/workflows/{ci,heavy,release}.yml (keep
+`run:` at EIGHT spaces under `shell: pwsh`; after ANY workflow edit run a
+`python -c "import yaml; yaml.safe_load(...)"` parse check) +
+tools/README.md + docs/STDLIB_READINESS_PLAN.md + docs/stdlib_session.md +
+the queue top's readiness meter/gates lines in the SAME commit ->
+pure-ASCII single-quoted commit -> full battery: powershell -NoProfile
+-File tools\check_modules.ps1 -Compiler <pin> ; tools\run_smokes.ps1
+-Compiler <pin> -Workers 8 -RetryFailed ; same with -Corpus tools\probes ;
+tools\barename_scan.ps1 ; tools\coverage_scan.ps1 -RatchetFile
+tools\coverage_floors<N>.json ; tools\doc_scan.ps1 -RatchetFile
+tools\doc_baseline4.json ; tools\module_smoke_scan.ps1 -BaselineFile
+tools\module_smoke_floors.json. One wave = one commit.
+
+ALSO IN SCOPE each wave: smoke-growth (the 20 modules with no smoke and
+the ~2,868 unreferenced pub fns are ratchet targets) and any fix-first
+bugs the probe catches.
+
+THEN, in order: remaining geom.xi batches; the low dirs (net 5.4%,
+serialize 5.4%, hash 8.9%, reflect 9.1%, iter 9.8%, convert 11.5%,
+format 13%, time 13%, misc 13.9%, os 15.3%, rand 16%, crypto 17%, log
+19.1%, compress 21.1%, then core/stats gaps); C (geom dedup + Box rename,
+needs compiler-lane api_freeze regen); D (tzdata phase 2; check
+packages' docs/PACKAGE-NAMESPACES.txt before landing new namespaces); E
+(untested-surface generator classes); F (next release cut).
+
+RULES: no stdlib edits while a sweep is in flight; pushes only when the
+release/compiler lane asks (the website reads origin/main, so push
+docs/meter updates when asked), always after
+`git log -1 --format='%an <%ae>'` prints Lefteris Notas
+<lefterisnotas@gmail.com>; no pwsh -- use `powershell -NoProfile -File
+tools\<script>.ps1`; keep repo edits single-threaded (recon agents
+read-only); report new compiler bugs in tools/known_failures/ with a
+minimal probe.
+
+GOTCHAS: the full list is in snapshot 3's paste-ready block below
+(unchanged), plus: cross-module calls to NON-PUB externs silently
+zero-stub on the v0.61.3 pin and hard-fail C001 on v0.62.1 -- call public
+wrappers (e.g. `math.ln`, never `math.log`); `polyhedra.convex_hull_2d`/`3d`
+collapse on nonempty inputs on both pins (`p_polyhedra_nested_hull.xi`) --
+empty inputs only; struct-payload Options join the Vec-payload ones as
+is_some-only; the queue top's meter/gates lines are machine-read by the
+website (keep the exact formats).
+```
+
 ### HANDOFF 2026-09-29 (context-limit snapshot 3; read this plus docs/PRODUCTION_READINESS_QUEUE.md)
 
 **State**: main @ `5fc74e3` + this battery/wishlist docs commit, PUSHED
