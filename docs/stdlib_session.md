@@ -1402,6 +1402,37 @@ registry pin, agent recon for the rest)**
   OK; module-smoke ratchet OK. Wave 51 closed (LOCAL commits; no push
   requested).
 
+**SESSION 2026-10-02 block 12 (wave 52: geom batch 4 -- geometry_2d + geometry_3d)**
+- Wave 52 (floors89): 43 clauses -- xiom.geom.geometry_2d (22) and
+  xiom.geom.geometry_3d (21). Highlights: non-negative bands on every
+  distance; center-inside (finite radius), vertex-inside and rect
+  parity implications; vertex-count implications on the polygon queries;
+  zero-determinant => None on line/segment intersection; degenerate line
+  => circle None; concentric => circle-circle None; degenerate triangle
+  => area 0 / zero normal; <3 indices => zero mesh volume/centroid;
+  <4 points => empty hull indices; ray-sphere zero direction => None;
+  equal plane normals => None; zero radii => sphere parity.
+- Probe p_wave52_shapes.xi (207th): 78 return-code checks incl. the
+  distance/containment/intersection KATs, area/centroid/hull, the ray
+  queries, mesh metrics and the 3D hull; green on v0.61.3 and v0.62.1.
+- Finding (non-compiler, filed p_polygon_difference_halfplanes.xi):
+  polygon_difference's inverted clipping intersects b's outside
+  half-planes instead of taking a\b -- disjoint a,b returned None
+  (should be Some(a)). The doc now states the limitation; the probe
+  keeps only the empty-a/empty-b edges; a real polygon-clipping
+  implementation is a queue follow-up.
+- Finding (compiler, filed p_geom_box_unnameable.xi):
+  geometry_3d's `pub type Box` is shadowed by core's `Box[T]` and has no
+  constructor; `Box{...}` resolves to the core type, qualified
+  `geometry_3d.Box{...}` is unknown, and `use ... as` type aliases do not
+  work, so aabb_intersection/aabb_contains/ray_box_intersection cannot
+  be called from any other module. Their clauses are compile-checked
+  only; the wave-52 probe notes the limitation. Fix rides the geom
+  dedup/rename (queue section C) or a constructor addition.
+- geom 45.9% -> 56.3% (233/414), global 35.1% -> 35.7%; floors89 wired
+  (YAML re-verified) + tools/README.md + plan + queue in the same commit.
+- Full battery on <wave>: <battery line>.
+
 **RELAY 2026-09-29 (packages -> compiler/stdlib)**
 - Pin moved 0.61.3 -> 0.62.1 mid-batch; every package suite re-ran clean,
   no code changes needed for the new compiler. Their sectest caught two

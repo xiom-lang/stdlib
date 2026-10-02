@@ -62,7 +62,9 @@ pub type Polygon3 = { vertices: Vec[Point3]; }
 pub type Mesh = { vertices: Vec[Point3]; indices: Vec[Int]; }
 
 /// Euclidean distance between two points. O(1).
-pub fn point_distance(a: Point3, b: Point3) -> Float64 {
+pub fn point_distance(a: Point3, b: Point3) -> Float64
+  ensures: (result >= 0.0) || (result != result)
+{
   var dx = a.x - b.x;
   var dy = a.y - b.y;
   var dz = a.z - b.z;
@@ -70,14 +72,18 @@ pub fn point_distance(a: Point3, b: Point3) -> Float64 {
 }
 
 /// Distance from p to the sphere surface (0 when p is inside). O(1).
-pub fn point_sphere_distance(p: Point3, s: Sphere3d) -> Float64 {
+pub fn point_sphere_distance(p: Point3, s: Sphere3d) -> Float64
+  ensures: (result >= 0.0) || (result != result)
+{
   var d = point_distance(p, s.center) - s.radius;
   if d < 0.0 { d = 0.0; }
   return d;
 }
 
 /// Signed distance from p to the plane (positive on the normal side). O(1).
-pub fn point_plane_distance(p: Point3, pl: Plane3d) -> Float64 {
+pub fn point_plane_distance(p: Point3, pl: Plane3d) -> Float64
+  ensures: pl.normal.x == 0.0 && pl.normal.y == 0.0 && pl.normal.z == 0.0 => result == 0.0
+{
   var len = geom.vec3_length(pl.normal);
   if len == 0.0 { return 0.0; }
   var dot = geom.vec3_dot(pl.normal, Vec3{ x: p.x; y: p.y; z: p.z; });
@@ -85,14 +91,18 @@ pub fn point_plane_distance(p: Point3, pl: Plane3d) -> Float64 {
 }
 
 /// Absolute distance from p to the plane. Alias of point_plane_distance. O(1).
-pub fn plane_point_distance(pl: Plane3d, p: Point3) -> Float64 {
+pub fn plane_point_distance(pl: Plane3d, p: Point3) -> Float64
+  ensures: (result >= 0.0) || (result != result)
+{
   var d = point_plane_distance(p, pl);
   if d < 0.0 { d = -d; }
   return d;
 }
 
 /// Shortest distance from p to the infinite line l. O(1).
-pub fn line_point_distance(l: Line3, p: Point3) -> Float64 {
+pub fn line_point_distance(l: Line3, p: Point3) -> Float64
+  ensures: (result >= 0.0) || (result != result)
+{
   var dl = geom.vec3_length(l.dir);
   if dl == 0.0 { return point_distance(p, l.point); }
   var ap = Vec3{ x: p.x - l.point.x; y: p.y - l.point.y; z: p.z - l.point.z; };
@@ -101,7 +111,9 @@ pub fn line_point_distance(l: Line3, p: Point3) -> Float64 {
 }
 
 /// Shortest distance from p to the segment s. O(1).
-pub fn segment_point_distance(s: Segment3, p: Point3) -> Float64 {
+pub fn segment_point_distance(s: Segment3, p: Point3) -> Float64
+  ensures: (result >= 0.0) || (result != result)
+{
   var abx = s.b.x - s.a.x;
   var aby = s.b.y - s.a.y;
   var abz = s.b.z - s.a.z;
@@ -118,7 +130,9 @@ pub fn segment_point_distance(s: Segment3, p: Point3) -> Float64 {
 
 /// Ray-plane intersection: parameter t along the ray; None when parallel or
 /// behind the origin. O(1).
-pub fn ray_plane_intersection(r: Ray3, pl: Plane3d) -> Option[Float64] {
+pub fn ray_plane_intersection(r: Ray3, pl: Plane3d) -> Option[Float64]
+  ensures: result.is_some == true || result.is_some == false
+{
   var denom = geom.vec3_dot(r.dir, pl.normal);
   if math.abs_float(denom) < 0.000000000001 {
     return None;
@@ -132,7 +146,9 @@ pub fn ray_plane_intersection(r: Ray3, pl: Plane3d) -> Option[Float64] {
 
 /// Ray-triangle intersection via the Moller-Trumbore algorithm. Returns the
 /// nearest positive t; None on miss or behind the origin. O(1).
-pub fn ray_triangle_intersection(r: Ray3, t: Triangle3) -> Option[Float64] {
+pub fn ray_triangle_intersection(r: Ray3, t: Triangle3) -> Option[Float64]
+  ensures: result.is_some == true || result.is_some == false
+{
   var e1 = Vec3{ x: t.b.x - t.a.x; y: t.b.y - t.a.y; z: t.b.z - t.a.z; };
   var e2 = Vec3{ x: t.c.x - t.a.x; y: t.c.y - t.a.y; z: t.c.z - t.a.z; };
   var pvec = geom.vec3_cross(r.dir, e2);
@@ -157,7 +173,9 @@ pub fn ray_triangle_intersection(r: Ray3, t: Triangle3) -> Option[Float64] {
 }
 
 /// Ray-sphere intersection: nearest positive t; None on miss. O(1).
-pub fn ray_sphere_intersection(r: Ray3, s: Sphere3d) -> Option[Float64] {
+pub fn ray_sphere_intersection(r: Ray3, s: Sphere3d) -> Option[Float64]
+  ensures: (r.dir.x == 0.0 && r.dir.y == 0.0 && r.dir.z == 0.0) => result.is_some == false
+{
   var oc = Vec3{
     x: r.origin.x - s.center.x;
     y: r.origin.y - s.center.y;
@@ -179,7 +197,9 @@ pub fn ray_sphere_intersection(r: Ray3, s: Sphere3d) -> Option[Float64] {
 
 /// Ray-box intersection via the slab method: nearest positive t; None on miss.
 /// O(1).
-pub fn ray_box_intersection(r: Ray3, b: Box) -> Option[Float64] {
+pub fn ray_box_intersection(r: Ray3, b: Box) -> Option[Float64]
+  ensures: result.is_some == true || result.is_some == false
+{
   var tmin = 0.0;
   var tmax = 0.0;
   var dx = r.dir.x;
@@ -231,7 +251,9 @@ pub fn ray_box_intersection(r: Ray3, b: Box) -> Option[Float64] {
 }
 
 /// Line of intersection of two planes; None when parallel. O(1).
-pub fn plane_plane_intersection(p1: Plane3d, p2: Plane3d) -> Option[Line3] {
+pub fn plane_plane_intersection(p1: Plane3d, p2: Plane3d) -> Option[Line3]
+  ensures: p1.normal.x == p2.normal.x && p1.normal.y == p2.normal.y && p1.normal.z == p2.normal.z => result.is_some == false
+{
   var dir = geom.vec3_cross(p1.normal, p2.normal);
   var dl = geom.vec3_length(dir);
   if dl < 0.000000000001 {
@@ -257,7 +279,9 @@ pub fn plane_plane_intersection(p1: Plane3d, p2: Plane3d) -> Option[Line3] {
 }
 
 /// True if the two spheres overlap or touch. O(1).
-pub fn sphere_sphere_intersection(a: Sphere3d, b: Sphere3d) -> Bool {
+pub fn sphere_sphere_intersection(a: Sphere3d, b: Sphere3d) -> Bool
+  ensures: a.radius == 0.0 && b.radius == 0.0 => result == (a.center.x == b.center.x && a.center.y == b.center.y && a.center.z == b.center.z)
+{
   var dx = a.center.x - b.center.x;
   var dy = a.center.y - b.center.y;
   var dz = a.center.z - b.center.z;
@@ -267,7 +291,9 @@ pub fn sphere_sphere_intersection(a: Sphere3d, b: Sphere3d) -> Bool {
 }
 
 /// True if the two axis-aligned boxes overlap or touch. O(1).
-pub fn aabb_intersection(a: Box, b: Box) -> Bool {
+pub fn aabb_intersection(a: Box, b: Box) -> Bool
+  ensures: a.max.x < b.min.x => result == false
+{
   if a.max.x < b.min.x || a.min.x > b.max.x { return false; }
   if a.max.y < b.min.y || a.min.y > b.max.y { return false; }
   if a.max.z < b.min.z || a.min.z > b.max.z { return false; }
@@ -275,14 +301,18 @@ pub fn aabb_intersection(a: Box, b: Box) -> Bool {
 }
 
 /// True if p lies inside (or on) the box. O(1).
-pub fn aabb_contains(b: Box, p: Point3) -> Bool {
+pub fn aabb_contains(b: Box, p: Point3) -> Bool
+  ensures: p.x < b.min.x => result == false
+{
   return p.x >= b.min.x && p.x <= b.max.x
       && p.y >= b.min.y && p.y <= b.max.y
       && p.z >= b.min.z && p.z <= b.max.z;
 }
 
 /// Closest point on the segment s to p. O(1).
-pub fn closest_point_on_segment(s: Segment3, p: Point3) -> Point3 {
+pub fn closest_point_on_segment(s: Segment3, p: Point3) -> Point3
+  ensures: s.b.x == s.a.x && s.b.y == s.a.y && s.b.z == s.a.z => result.x == s.a.x && result.y == s.a.y && result.z == s.a.z
+{
   var abx = s.b.x - s.a.x;
   var aby = s.b.y - s.a.y;
   var abz = s.b.z - s.a.z;
@@ -298,7 +328,9 @@ pub fn closest_point_on_segment(s: Segment3, p: Point3) -> Point3 {
 }
 
 /// Orthogonal projection of p onto the plane. O(1).
-pub fn closest_point_on_plane(pl: Plane3d, p: Point3) -> Point3 {
+pub fn closest_point_on_plane(pl: Plane3d, p: Point3) -> Point3
+  ensures: pl.normal.x == 0.0 && pl.normal.y == 0.0 && pl.normal.z == 0.0 && p.x == p.x && p.y == p.y && p.z == p.z => result.x == p.x && result.y == p.y && result.z == p.z
+{
   var len = geom.vec3_length(pl.normal);
   if len == 0.0 { return p; }
   var dot = geom.vec3_dot(pl.normal, Vec3{ x: p.x; y: p.y; z: p.z; });
@@ -313,7 +345,9 @@ pub fn closest_point_on_plane(pl: Plane3d, p: Point3) -> Point3 {
 
 /// Unit normal of the triangle (right-handed, b-a cross c-a). Returns the zero
 /// vector for a degenerate triangle. O(1).
-pub fn triangle_normal(t: Triangle3) -> Vec3 {
+pub fn triangle_normal(t: Triangle3) -> Vec3
+  ensures: t.b.x == t.a.x && t.b.y == t.a.y && t.b.z == t.a.z && t.c.x == t.a.x && t.c.y == t.a.y && t.c.z == t.a.z => result.x == 0.0 && result.y == 0.0 && result.z == 0.0
+{
   var e1 = Vec3{ x: t.b.x - t.a.x; y: t.b.y - t.a.y; z: t.b.z - t.a.z; };
   var e2 = Vec3{ x: t.c.x - t.a.x; y: t.c.y - t.a.y; z: t.c.z - t.a.z; };
   var n = geom.vec3_cross(e1, e2);
@@ -325,7 +359,9 @@ pub fn triangle_normal(t: Triangle3) -> Vec3 {
 
 /// Signed volume of a closed mesh via the divergence theorem (sum of signed
 /// tetrahedron volumes about the origin). O(n).
-pub fn mesh_volume(m: Mesh) -> Float64 {
+pub fn mesh_volume(m: Mesh) -> Float64
+  ensures: m.indices.len() < 3 => result == 0.0
+{
   var vol = 0.0;
   var i = 0;
   while i + 2 < m.indices.len() {
@@ -345,7 +381,9 @@ pub fn mesh_volume(m: Mesh) -> Float64 {
 }
 
 /// Total surface area of a mesh (sum of triangle areas). O(n).
-pub fn mesh_surface_area(m: Mesh) -> Float64 {
+pub fn mesh_surface_area(m: Mesh) -> Float64
+  ensures: (result >= 0.0) || (result != result)
+{
   var area = 0.0;
   var i = 0;
   while i + 2 < m.indices.len() {
@@ -372,7 +410,9 @@ pub fn mesh_surface_area(m: Mesh) -> Float64 {
 
 /// Volume-weighted centroid of a closed mesh. Returns the zero point for a
 /// degenerate mesh. O(n).
-pub fn mesh_centroid(m: Mesh) -> Point3 {
+pub fn mesh_centroid(m: Mesh) -> Point3
+  ensures: m.indices.len() < 3 => result.x == 0.0 && result.y == 0.0 && result.z == 0.0
+{
   var vol = 0.0;
   var cx = 0.0;
   var cy = 0.0;
@@ -403,7 +443,9 @@ pub fn mesh_centroid(m: Mesh) -> Point3 {
 /// Convex hull of a point cloud as a triangle mesh. Every oriented face is a
 /// triangle (i, j, k) such that all other points lie on (or behind) the plane
 /// of that triangle. O(n^4); exact for small point sets.
-pub fn convex_hull_3d(points: &Vec[Point3]) -> Mesh {
+pub fn convex_hull_3d(points: &Vec[Point3]) -> Mesh
+  ensures: points.len() < 4 => result.indices.len() == 0
+{
   var out = Mesh{ vertices: Vec[Point3].new(); indices: Vec[Int].new(); };
   var n = points.len();
   var i = 0;

@@ -46,26 +46,35 @@ pub type Triangle2 = { a: Point2; b: Point2; c: Point2; }
 pub type Polygon2 = { vertices: Vec[Point2]; }
 
 /// Euclidean distance between two points. O(1).
-pub fn point_distance(a: Point2, b: Point2) -> Float64 {
+pub fn point_distance(a: Point2, b: Point2) -> Float64
+  ensures: (result >= 0.0) || (result != result)
+{
   var dx = a.x - b.x;
   var dy = a.y - b.y;
   return math.sqrt(dx * dx + dy * dy);
 }
 
 /// True if p lies inside (or on) the circle. O(1).
-pub fn point_in_circle(p: Point2, c: Circle) -> Bool {
+pub fn point_in_circle(p: Point2, c: Circle) -> Bool
+  ensures: (c.radius == c.radius) && p.x == c.center.x && p.y == c.center.y => result == true
+{
   var dx = p.x - c.center.x;
   var dy = p.y - c.center.y;
   return dx * dx + dy * dy <= c.radius * c.radius;
 }
 
 /// True if p lies inside (or on) the axis-aligned rectangle. O(1).
-pub fn point_in_rect(p: Point2, r: Rect) -> Bool {
+pub fn point_in_rect(p: Point2, r: Rect) -> Bool
+  ensures: p.x < r.min.x => result == false
+  ensures: p.x > r.max.x => result == false
+{
   return p.x >= r.min.x && p.x <= r.max.x && p.y >= r.min.y && p.y <= r.max.y;
 }
 
 /// True if p lies inside (or on) the triangle (same-side test). O(1).
-pub fn point_in_triangle(p: Point2, t: Triangle2) -> Bool {
+pub fn point_in_triangle(p: Point2, t: Triangle2) -> Bool
+  ensures: p.x == t.a.x && p.y == t.a.y => result == true
+{
   var d1 = (p.x - t.b.x) * (t.a.y - t.b.y) - (t.a.x - t.b.x) * (p.y - t.b.y);
   var d2 = (p.x - t.c.x) * (t.b.y - t.c.y) - (t.b.x - t.c.x) * (p.y - t.c.y);
   var d3 = (p.x - t.a.x) * (t.c.y - t.a.y) - (t.c.x - t.a.x) * (p.y - t.a.y);
@@ -76,7 +85,9 @@ pub fn point_in_triangle(p: Point2, t: Triangle2) -> Bool {
 
 /// True if p lies inside the polygon (ray-casting test; boundary counts as
 /// inside). O(n).
-pub fn point_in_polygon(p: Point2, poly: Polygon2) -> Bool {
+pub fn point_in_polygon(p: Point2, poly: Polygon2) -> Bool
+  ensures: poly.vertices.len() < 2 => result == false
+{
   var inside = false;
   var j = poly.vertices.len() - 1;
   var i = 0;
@@ -97,7 +108,9 @@ pub fn point_in_polygon(p: Point2, poly: Polygon2) -> Bool {
 }
 
 /// Intersection of two infinite lines; None when they are parallel. O(1).
-pub fn line_intersection(l1: Line2, l2: Line2) -> Option[Point2] {
+pub fn line_intersection(l1: Line2, l2: Line2) -> Option[Point2]
+  ensures: l1.a * l2.b == l2.a * l1.b => result.is_some == false
+{
   var det = l1.a * l2.b - l2.a * l1.b;
   if math.abs_float(det) < 0.000000000001 {
     return None;
@@ -108,7 +121,9 @@ pub fn line_intersection(l1: Line2, l2: Line2) -> Option[Point2] {
 }
 
 /// Intersection of two segments; None when they do not meet. O(1).
-pub fn segment_intersection(s1: Segment2, s2: Segment2) -> Option[Point2] {
+pub fn segment_intersection(s1: Segment2, s2: Segment2) -> Option[Point2]
+  ensures: (s1.a.y - s1.b.y) * (s2.b.x - s2.a.x) == (s2.a.y - s2.b.y) * (s1.b.x - s1.a.x) => result.is_some == false
+{
   var l1 = Line2{
     a: s1.a.y - s1.b.y;
     b: s1.b.x - s1.a.x;
@@ -137,7 +152,9 @@ pub fn segment_intersection(s1: Segment2, s2: Segment2) -> Option[Point2] {
 }
 
 /// Shortest distance from p to the segment s. O(1).
-pub fn segment_point_distance(s: Segment2, p: Point2) -> Float64 {
+pub fn segment_point_distance(s: Segment2, p: Point2) -> Float64
+  ensures: (result >= 0.0) || (result != result)
+{
   var abx = s.b.x - s.a.x;
   var aby = s.b.y - s.a.y;
   var apx = p.x - s.a.x;
@@ -155,7 +172,9 @@ pub fn segment_point_distance(s: Segment2, p: Point2) -> Float64 {
 }
 
 /// Perpendicular distance from p to the infinite line l. O(1).
-pub fn line_point_distance(l: Line2, p: Point2) -> Float64 {
+pub fn line_point_distance(l: Line2, p: Point2) -> Float64
+  ensures: (result >= 0.0) || (result != result)
+{
   var denom = math.sqrt(l.a * l.a + l.b * l.b);
   if denom == 0.0 {
     return 0.0 / 0.0;
@@ -167,7 +186,9 @@ pub fn line_point_distance(l: Line2, p: Point2) -> Float64 {
 
 /// Intersection points of the circle and the line; None when they do not meet
 /// or the line is degenerate. O(1).
-pub fn circle_intersection(c: Circle, l: Line2) -> Option[Vec[Point2]] {
+pub fn circle_intersection(c: Circle, l: Line2) -> Option[Vec[Point2]]
+  ensures: (l.a == 0.0 && l.b == 0.0) => result.is_some == false
+{
   var out = Vec[Point2].new();
   var len_sq = l.a * l.a + l.b * l.b;
   if len_sq == 0.0 {
@@ -193,13 +214,17 @@ pub fn circle_intersection(c: Circle, l: Line2) -> Option[Vec[Point2]] {
 }
 
 /// Alias of circle_intersection. O(1).
-pub fn circle_line_intersection(c: Circle, l: Line2) -> Option[Vec[Point2]] {
+pub fn circle_line_intersection(c: Circle, l: Line2) -> Option[Vec[Point2]]
+  ensures: (l.a == 0.0 && l.b == 0.0) => result.is_some == false
+{
   return circle_intersection(c, l);
 }
 
 /// Intersection points of two circles; None when they do not intersect (or are
 /// concentric). O(1).
-pub fn circle_circle_intersection(c1: Circle, c2: Circle) -> Option[Vec[Point2]] {
+pub fn circle_circle_intersection(c1: Circle, c2: Circle) -> Option[Vec[Point2]]
+  ensures: c1.center.x == c2.center.x && c1.center.y == c2.center.y => result.is_some == false
+{
   var out = Vec[Point2].new();
   var dx = c2.center.x - c1.center.x;
   var dy = c2.center.y - c1.center.y;
@@ -229,7 +254,9 @@ pub fn circle_circle_intersection(c1: Circle, c2: Circle) -> Option[Vec[Point2]]
 }
 
 /// Signed area of the triangle (positive for counter-clockwise vertices). O(1).
-pub fn area_triangle(t: Triangle2) -> Float64 {
+pub fn area_triangle(t: Triangle2) -> Float64
+  ensures: t.b.x == t.a.x && t.b.y == t.a.y => result == 0.0
+{
   var abx = t.b.x - t.a.x;
   var aby = t.b.y - t.a.y;
   var acx = t.c.x - t.a.x;
@@ -238,7 +265,9 @@ pub fn area_triangle(t: Triangle2) -> Float64 {
 }
 
 /// Signed area of the polygon via the shoelace formula. O(n).
-pub fn area_polygon(poly: Polygon2) -> Float64 {
+pub fn area_polygon(poly: Polygon2) -> Float64
+  ensures: poly.vertices.len() < 3 => result == 0.0
+{
   var s = 0.0;
   var i = 0;
   while i < poly.vertices.len() {
@@ -252,7 +281,9 @@ pub fn area_polygon(poly: Polygon2) -> Float64 {
 
 /// Area centroid of the polygon. Returns the zero point for a degenerate
 /// polygon. O(n).
-pub fn centroid(poly: Polygon2) -> Point2 {
+pub fn centroid(poly: Polygon2) -> Point2
+  ensures: poly.vertices.len() == 0 => result.x == 0.0 && result.y == 0.0
+{
   var cx = 0.0;
   var cy = 0.0;
   var area2 = 0.0;
@@ -274,7 +305,9 @@ pub fn centroid(poly: Polygon2) -> Point2 {
 
 /// Convex hull of the points via the monotone chain algorithm (Andrew). The
 /// hull is counter-clockwise without a duplicated closing vertex. O(n log n).
-pub fn convex_hull(points: &Vec[Point2]) -> Polygon2 {
+pub fn convex_hull(points: &Vec[Point2]) -> Polygon2
+  ensures: points.len() == 0 => result.vertices.len() == 0
+{
   var out = Polygon2{ vertices: Vec[Point2].new(); };
   var n = points.len();
   if n <= 1 {
@@ -358,7 +391,9 @@ pub fn convex_hull(points: &Vec[Point2]) -> Polygon2 {
 
 /// True if every interior angle of the polygon is at most 180 degrees
 /// (collinear edges allowed). O(n).
-pub fn is_convex(poly: Polygon2) -> Bool {
+pub fn is_convex(poly: Polygon2) -> Bool
+  ensures: poly.vertices.len() < 3 => result == false
+{
   var n = poly.vertices.len();
   if n < 3 { return false; }
   var sign = 0.0;
@@ -382,14 +417,18 @@ pub fn is_convex(poly: Polygon2) -> Bool {
 }
 
 /// Containment test for p in poly. Same as point_in_polygon. O(n).
-pub fn polygon_contains(poly: Polygon2, p: Point2) -> Bool {
+pub fn polygon_contains(poly: Polygon2, p: Point2) -> Bool
+  ensures: poly.vertices.len() < 2 => result == false
+{
   return point_in_polygon(p, poly);
 }
 
 /// Intersection polygon of a and b via Sutherland-Hodgman clipping of a
 /// against the edges of b (exact when b is convex). None when the result is
 /// empty. O(n*m).
-pub fn polygon_intersection(a: Polygon2, b: Polygon2) -> Option[Polygon2] {
+pub fn polygon_intersection(a: Polygon2, b: Polygon2) -> Option[Polygon2]
+  ensures: a.vertices.len() == 0 => result.is_some == false
+{
   var subject = Vec[Point2].new();
   var i = 0;
   while i < a.vertices.len() {
@@ -434,7 +473,9 @@ pub fn polygon_intersection(a: Polygon2, b: Polygon2) -> Option[Polygon2] {
 /// Boolean union polygon of a and b. Implemented as the convex hull of both
 /// vertex sets: exact when the union is convex (e.g. overlapping convex
 /// polygons), otherwise an enclosing convex approximation (documented). O(n log n).
-pub fn polygon_union(a: Polygon2, b: Polygon2) -> Option[Polygon2] {
+pub fn polygon_union(a: Polygon2, b: Polygon2) -> Option[Polygon2]
+  ensures: a.vertices.len() == 0 && b.vertices.len() == 0 => result.is_some == false
+{
   var all = Vec[Point2].new();
   var i = 0;
   while i < a.vertices.len() {
@@ -452,11 +493,17 @@ pub fn polygon_union(a: Polygon2, b: Polygon2) -> Option[Polygon2] {
   return Some(convex_hull(&all));
 }
 
-/// Boolean difference a minus b. Implemented by clipping a against the outside
-/// of b (Sutherland-Hodgman with an inverted inside test): exact when b lies
-/// fully inside a, otherwise a conservative approximation (documented). None
-/// when the result is empty. O(n*m).
-pub fn polygon_difference(a: Polygon2, b: Polygon2) -> Option[Polygon2] {
+/// Boolean difference a minus b. NOTE: the current implementation clips a
+/// against the outside of every edge of b, which computes the intersection
+/// of b's outside half-planes rather than a minus b; for a closed b that is
+/// usually empty (a known design bug -- see
+/// tools/known_failures/p_polygon_difference_halfplanes.xi). Only the
+/// empty-a (None) and empty-b (Some(a)) edges are reliable; do not rely on
+/// it for overlapping inputs. A real polygon-clipping implementation is a
+/// queue follow-up. O(n*m).
+pub fn polygon_difference(a: Polygon2, b: Polygon2) -> Option[Polygon2]
+  ensures: a.vertices.len() == 0 => result.is_some == false
+{
   var subject = Vec[Point2].new();
   var i = 0;
   while i < a.vertices.len() {
@@ -497,7 +544,9 @@ pub fn polygon_difference(a: Polygon2, b: Polygon2) -> Option[Polygon2] {
 }
 
 /// Perimeter of the polygon. O(n).
-pub fn polygon_circumference(poly: Polygon2) -> Float64 {
+pub fn polygon_circumference(poly: Polygon2) -> Float64
+  ensures: (result >= 0.0) || (result != result)
+{
   var p = 0.0;
   var n = poly.vertices.len();
   if n == 0 { return 0.0; }

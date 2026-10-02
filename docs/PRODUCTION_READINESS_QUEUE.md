@@ -206,6 +206,21 @@ curve_length returns 0 instead of 1.0). Probe `p_wave51_shapes.xi` (206th,
 -> 35.1%. Next: geom batch 4 (geometry_2d 22 + geometry_3d 21 = 43), then
 geometry_extended + polyhedra + linear, then the geom.xi aggregate.
 
+Update 2026-10-02 (wave 52 landed): geom batch 4 -- geometry_2d (22) +
+geometry_3d (21), 43 clauses (distance bands, degenerate-input
+implications, parity/Bool claims, presence mirrors). Two non-compiler
+findings filed: `p_polygon_difference_halfplanes.xi` (the difference clips
+against b's outside half-planes and intersects them instead of taking a\b
+-- disjoint inputs return None; doc updated; a real polygon-clipping
+implementation is a follow-up) and `p_geom_box_unnameable.xi`
+(`geometry_3d.Box` is shadowed by core's `Box[T]` and has no constructor,
+so `aabb_intersection`/`aabb_contains`/`ray_box_intersection` are
+uncallable from consumers; those three clauses are compile-checked only).
+Probe `p_wave52_shapes.xi` (207th, 78 checks, green on both pins);
+floors89; geom 45.9% -> 56.3%, global 35.1% -> 35.7%. Next: geom batch 5
+(geometry_extended 14 + polyhedra 10 + linear 15 = 39), then the geom.xi
+aggregate.
+
 State 2026-09-29 (handoff snapshot 3, main 2a06a90): floors85 global 32.8%,
 math 38.8%, num 37.4%; probes 202; smoke 951; modules 509/509; barename
 0/509; doc 100%; module-smoke ratchet 497/517 modules, 3332/6200 pub fns.

@@ -16,6 +16,26 @@ xiom --force -o out.exe tools/known_failures/<file>.xi
 
 ## Current
 
+**Open finding 2026-10-01 (stdlib algorithm, not a compiler bug):
+`geometry_2d.polygon_difference` intersects b's outside half-planes instead
+of taking the difference.** For a closed b the result is usually empty, so
+`polygon_difference(a, b)` returns None even for disjoint a and b (where
+Some(a) is expected). Found by the wave-52 probe; the existing smoke never
+exercised the polygon booleans. Repro:
+`tools/known_failures/p_polygon_difference_halfplanes.xi` (returns 1).
+Needs a real polygon-clipping implementation; the doc comment now states
+the limitation.
+
+**Open finding 2026-10-01 (compiler v0.61.3): `xiom.geom.geometry_3d.Box`
+is unnameable from consumers.** The leaf `Box` is shadowed by core's
+`Box[T]`; `Box{...}` resolves to the core type ("no field 'min'"), neither
+`geometry_3d.Box{...}` ("unknown type") nor `use ...Box as GBox;` works, and
+there is no constructor, so `aabb_intersection`/`aabb_contains`/
+`ray_box_intersection` cannot be called from any other module. Repro:
+`tools/known_failures/p_geom_box_unnameable.xi` (compile-fail on the pin).
+Found while landing the wave-52 geom clauses; the wave-52 probe keeps those
+three functions clause-only until the geom dedup/rename (queue section C).
+
 **Open finding 2026-10-01 (compiler v0.61.3): a fn-typed parameter returning
 `Vec[Float64]` loses its result inside catalog bodies.** `curves.curve_length`
 calling a `fn(Float64) -> Vec[Float64]` argument sees empty vectors and

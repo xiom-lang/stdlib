@@ -734,13 +734,44 @@ T1/T2 yields.
        (geometry_2d 22 + geometry_3d 21 = 43), then geometry_extended 14
        + polyhedra 10 + linear 15, then the geom.xi aggregate (142
        uncovered).
+       Wave 52 (2026-10-02): coverage wave 16 -- geom batch 4
+       (geometry_2d 22 + geometry_3d 21 = 43 clauses). geometry_2d:
+       non-negative distance bands; center-inside/vertex-inside/rect
+       parity implications; empty/1-vertex polygon => false; zero-det
+       line/segment => None; degenerate line => circle None; concentric
+       => circle-circle None; degenerate triangle => area 0; <3-vertex
+       polygon => area 0; empty polygon => zero centroid; empty input
+       => empty hull; <3-vertex => not convex; empty subject => None on
+       intersection/difference; both-empty => None union; non-negative
+       circumference. geometry_3d: non-negative distance bands; zero
+       normal => plane distance 0; zero direction => ray-sphere None;
+       equal normals => plane-plane None; zero radii => sphere parity;
+       AABB outside-edge => false; degenerate segment => endpoint
+       return; degenerate triangle => zero normal; <3 indices => zero
+       volume/centroid; <4 points => empty hull indices.
+       Fix-first/findings: the Box-taking trio
+       (aabb_intersection/aabb_contains/ray_box_intersection) is
+       clause-only -- geometry_3d.Box is unnameable from consumers
+       (core's Box[T] shadows the leaf, no constructor; filed
+       p_geom_box_unnameable.xi), so those clauses are compile-checked
+       only. polygon_difference's inverted clipping intersects b's
+       outside half-planes instead of taking a\b (disjoint a,b returned
+       None); filed p_polygon_difference_halfplanes.xi, the doc now
+       states the limitation, and the probe keeps only the empty-a/
+       empty-b edges; a real polygon-clipping implementation is a queue
+       follow-up.
+       Probe tools/probes/p_wave52_shapes.xi (207th): 78 return-code
+       checks; green on v0.61.3 and v0.62.1. geom 45.9% -> 56.3%, global
+       35.1% -> 35.7%. Next: geom batch 5 (geometry_extended 14 +
+       polyhedra 10 + linear 15 = 39), then the geom.xi aggregate (142
+       uncovered).
        Ratchet:
-       tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors88.json
+       tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors89.json
        tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;
        earlier floors kept at
-       coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55/56/57/58/59/60/61/62/63/64/65/66/67/68/69/70/71/72/73/74/75/76/77/78/79/80/81/82/83/84/85/86/87/88.json).
+       coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55/56/57/58/59/60/61/62/63/64/65/66/67/68/69/70/71/72/73/74/75/76/77/78/79/80/81/82/83/84/85/86/87/88/89.json).
       Floors are per top-level stdlib/xiom directory and must be refreshed
       when a module is ADDED (new uncovered pub fns dilute the percentage
       -- TOML dropped serialize 6.1% -> 5.4%, tz dropped time 13% ->
