@@ -1449,6 +1449,30 @@ registry pin, agent recon for the rest)**
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
 
+**SESSION 2026-10-02 block 13 (wave 53: geom batch 5 -- geometry_extended + polyhedra + linear)**
+- Wave 53 (floors90): 39 clauses -- geometry_extended (14), polyhedra (10),
+  linear (15). See the plan entry for the claim list.
+- Fix-first: `hyperbolic_geometry` called the non-pub extern `math.log`
+  (declared inside xiom.math, not exported): on the v0.61.3 pin the call was
+  silently auto-stubbed to zero, so the Poincare distance returned 0 for
+  every distinct point (the probe-side loop and `math.ln` gave the correct
+  log(3)); on v0.62.1 it hard-fails C001 "unresolved function symbol".
+  Fixed by calling the public `math.ln`; the probe now locks the log(3) KAT
+  and is green on BOTH pins. General hazard for the lane: cross-module
+  calls to non-pub externs silently zero-stub on the pin.
+- Finding (compiler, filed `p_polyhedra_nested_hull.xi`):
+  `polyhedra.convex_hull_2d`/`convex_hull_3d` collapse on nonempty inputs
+  (square -> 2 rows, tetra -> 0 rows) on both pins despite the local-copy
+  workaround; empty inputs are correct. The probe keeps only the
+  empty-input hull checks. (An earlier `p_gext_hyperbolic_zero.xi` repro was
+  retired once fixed.)
+- Probe `p_wave53_shapes.xi` (208th): 68 checks; green on v0.61.3 and
+  v0.62.1.
+- geom 56.3% -> 65.7% (272/414), global 35.7% -> 36.3%; floors90 wired
+  (YAML re-verified) + tools/README.md + plan + queue + the meter's gate-9
+  count (findings now 10) in the same commit.
+- Full battery on <wave>: <battery line>.
+
 **RELAY 2026-09-29 (packages -> compiler/stdlib)**
 - Pin moved 0.61.3 -> 0.62.1 mid-batch; every package suite re-ran clean,
   no code changes needed for the new compiler. Their sectest caught two

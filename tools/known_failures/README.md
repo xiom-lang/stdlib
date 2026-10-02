@@ -16,6 +16,16 @@ xiom --force -o out.exe tools/known_failures/<file>.xi
 
 ## Current
 
+**Open finding 2026-10-02 (compiler v0.61.3 and v0.62.1):
+`polyhedra.convex_hull_2d`/`convex_hull_3d` collapse on nonempty inputs.**
+The hull of a 4-point square is 2 rows; the hull of a tetrahedron is 0 rows
+(empty inputs are correct). The bodies already use the local-copy workaround
+for nested float Vec reads, so it is insufficient on both pins; the result
+itself is collapsed (caller and callee length reads agree). Repro:
+`tools/known_failures/p_polyhedra_nested_hull.xi` (returns 1). Found while
+landing the wave-53 geom clauses; the wave-53 probe keeps only the
+empty-input hull checks. `geometry_2d.convex_hull` (Point2 rows) is correct.
+
 **Open finding 2026-10-01 (stdlib algorithm, not a compiler bug):
 `geometry_2d.polygon_difference` intersects b's outside half-planes instead
 of taking the difference.** For a closed b the result is usually empty, so

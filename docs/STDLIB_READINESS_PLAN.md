@@ -765,13 +765,32 @@ T1/T2 yields.
        35.1% -> 35.7%. Next: geom batch 5 (geometry_extended 14 +
        polyhedra 10 + linear 15 = 39), then the geom.xi aggregate (142
        uncovered).
+       Wave 53 (2026-10-02): coverage wave 17 -- geom batch 5
+       (geometry_extended 14 + polyhedra 10 + linear 15 = 39 clauses).
+       Shapes/degenerate implications: voronoi cell count; delaunay >= 3
+       points; bezier/b_spline/nurbs zero-on-inconsistent-input; mesh
+       subdivision/mesh_processing length guards; projective length;
+       hyperbolic/elliptic/non_euclidean mismatch => NaN plus non-negative
+       bands; incidence empty => true; computational geometry 0-or-1;
+       polyhedra vertex/face counts (8/12/12/20/4/6/20) and empty hulls 0;
+       linear len/shape claims plus empty-matrix predicate forms.
+       Fix-first: hyperbolic_geometry called the non-pub extern
+       `math.log` -- a silent zero stub on v0.61.3 (the function returned
+       0) and a hard C001 on v0.62.1; switched to the public `math.ln`,
+       locked by the probe's log(3) KAT. New finding:
+       p_polyhedra_nested_hull.xi (convex_hull_2d/3d collapse on nonempty
+       inputs on both pins; empty inputs are correct).
+       Probe tools/probes/p_wave53_shapes.xi (208th): 68 checks, green on
+       v0.61.3 and v0.62.1. geom 56.3% -> 65.7%, global 35.7% -> 36.3%.
+       Next: the geom.xi aggregate (142 uncovered -> 2-3 waves), then the
+       low dirs.
        Ratchet:
-       tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors89.json
+       tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors90.json
        tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;
        earlier floors kept at
-       coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55/56/57/58/59/60/61/62/63/64/65/66/67/68/69/70/71/72/73/74/75/76/77/78/79/80/81/82/83/84/85/86/87/88/89.json).
+       coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55/56/57/58/59/60/61/62/63/64/65/66/67/68/69/70/71/72/73/74/75/76/77/78/79/80/81/82/83/84/85/86/87/88/89/90.json).
       Floors are per top-level stdlib/xiom directory and must be refreshed
       when a module is ADDED (new uncovered pub fns dilute the percentage
       -- TOML dropped serialize 6.1% -> 5.4%, tz dropped time 13% ->

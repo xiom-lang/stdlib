@@ -21,7 +21,9 @@ use xiom.math;
 
 /// Vertices of a cube centered at the origin with the given side length.
 /// Returns 8 vertices, each (x, y, z). O(1).
-pub fn cube_vertices(size: Float64) -> Vec[Vec[Float64]] {
+pub fn cube_vertices(size: Float64) -> Vec[Vec[Float64]]
+  ensures: result.len() == 8
+{
   var out = Vec[Vec[Float64]].new();
   var h = size * 0.5;
   var i = 0;
@@ -43,7 +45,9 @@ pub fn cube_vertices(size: Float64) -> Vec[Vec[Float64]] {
 }
 
 /// Face index list for cube_vertices: 12 triangles (3 indices each). O(1).
-pub fn cube_faces() -> Vec[Vec[Int]] {
+pub fn cube_faces() -> Vec[Vec[Int]]
+  ensures: result.len() == 12
+{
   var out = Vec[Vec[Int]].new();
   var quads = Vec[Int].new();
   quads.push(0); quads.push(1); quads.push(3); quads.push(2);
@@ -71,7 +75,9 @@ pub fn cube_faces() -> Vec[Vec[Int]] {
 
 /// UV-sphere vertex grid: (slices + 1) x (stacks + 1) vertices of the form
 /// (x, y, z). O(slices * stacks).
-pub fn sphere_vertices(radius: Float64, slices: Int, stacks: Int) -> Vec[Vec[Float64]] {
+pub fn sphere_vertices(radius: Float64, slices: Int, stacks: Int) -> Vec[Vec[Float64]]
+  ensures: (slices < 1 || stacks < 1) => result.len() == 0
+{
   var out = Vec[Vec[Float64]].new();
   if slices < 1 || stacks < 1 { return out; }
   var s = 0;
@@ -96,7 +102,9 @@ pub fn sphere_vertices(radius: Float64, slices: Int, stacks: Int) -> Vec[Vec[Flo
 
 /// Unit icosahedron vertices (12) in the standard layout:
 /// (+-1, +-phi, 0), (0, +-1, +-phi), (+-phi, 0, +-1). O(1).
-pub fn icosahedron_vertices() -> Vec[Vec[Float64]] {
+pub fn icosahedron_vertices() -> Vec[Vec[Float64]]
+  ensures: result.len() == 12
+{
   var out = Vec[Vec[Float64]].new();
   var phi = (1.0 + math.sqrt(5.0)) * 0.5;
   var pts = Vec[Float64].new();
@@ -125,7 +133,9 @@ pub fn icosahedron_vertices() -> Vec[Vec[Float64]] {
 }
 
 /// Icosahedron faces: 20 triangles referencing icosahedron_vertices. O(1).
-pub fn icosahedron_faces() -> Vec[Vec[Int]] {
+pub fn icosahedron_faces() -> Vec[Vec[Int]]
+  ensures: result.len() == 20
+{
   var out = Vec[Vec[Int]].new();
   var tri = Vec[Int].new();
   tri.push(0); tri.push(11); tri.push(5);
@@ -161,7 +171,9 @@ pub fn icosahedron_faces() -> Vec[Vec[Int]] {
 }
 
 /// Unit tetrahedron vertices (4). O(1).
-pub fn tetrahedron_vertices() -> Vec[Vec[Float64]] {
+pub fn tetrahedron_vertices() -> Vec[Vec[Float64]]
+  ensures: result.len() == 4
+{
   var out = Vec[Vec[Float64]].new();
   var pts = Vec[Float64].new();
   pts.push(1.0); pts.push(1.0); pts.push(1.0);
@@ -181,7 +193,9 @@ pub fn tetrahedron_vertices() -> Vec[Vec[Float64]] {
 }
 
 /// Unit octahedron vertices (6). O(1).
-pub fn octahedron_vertices() -> Vec[Vec[Float64]] {
+pub fn octahedron_vertices() -> Vec[Vec[Float64]]
+  ensures: result.len() == 6
+{
   var out = Vec[Vec[Float64]].new();
   var pts = Vec[Float64].new();
   pts.push(1.0); pts.push(0.0); pts.push(0.0);
@@ -203,7 +217,9 @@ pub fn octahedron_vertices() -> Vec[Vec[Float64]] {
 }
 
 /// Unit dodecahedron vertices (20). O(1).
-pub fn dodecahedron_vertices() -> Vec[Vec[Float64]] {
+pub fn dodecahedron_vertices() -> Vec[Vec[Float64]]
+  ensures: result.len() == 20
+{
   var out = Vec[Vec[Float64]].new();
   var phi = (1.0 + math.sqrt(5.0)) * 0.5;
   var inv_phi = 1.0 / phi;
@@ -269,7 +285,9 @@ pub fn dodecahedron_vertices() -> Vec[Vec[Float64]] {
 
 /// Convex hull polygon of 2D points (monotone chain). The hull is returned
 /// without a duplicated closing vertex. O(n log n).
-pub fn convex_hull_2d(points: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {
+pub fn convex_hull_2d(points: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]]
+  ensures: points.len() == 0 => result.len() == 0
+{
   var out = Vec[Vec[Float64]].new();
   var n = points.len();
   if n == 0 { return out; }
@@ -360,7 +378,9 @@ pub fn convex_hull_2d(points: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {
 /// Convex hull vertices of a 3D point cloud. Every oriented triangle (i, j, k)
 /// with all other points on (or behind) its plane is emitted as a hull face.
 /// O(n^4); exact for small point sets.
-pub fn convex_hull_3d(points: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {
+pub fn convex_hull_3d(points: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]]
+  ensures: points.len() == 0 => result.len() == 0
+{
   var out = Vec[Vec[Float64]].new();
   var n = points.len();
   if n == 0 { return out; }

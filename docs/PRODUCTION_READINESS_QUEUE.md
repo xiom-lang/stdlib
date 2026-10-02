@@ -15,7 +15,7 @@ gates flip:
 7. Module-smoke ratchet green -- MET (497/517 modules, 3332/6200 fns).
 8. Contract coverage 100% (every public fn carries clauses) -- OPEN (35.7%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
-   OPEN (9: 8 compiler, 1 stdlib algorithm).
+   OPEN (10: 9 compiler, 1 stdlib algorithm).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
 
 Authoritative order for the stdlib lane to reach 100%. State at handoff:
@@ -238,6 +238,19 @@ Probe `p_wave52_shapes.xi` (207th, 78 checks, green on both pins);
 floors89; geom 45.9% -> 56.3%, global 35.1% -> 35.7%. Next: geom batch 5
 (geometry_extended 14 + polyhedra 10 + linear 15 = 39), then the geom.xi
 aggregate.
+
+Update 2026-10-02 (wave 53 landed): geom batch 5 -- geometry_extended (14)
++ polyhedra (10) + linear (15), 39 clauses (shape/degenerate implications,
+polyhedra count claims, linear length claims and empty-matrix predicates).
+Fix-first: `hyperbolic_geometry` called the non-pub extern `math.log` -- a
+silent zero stub on v0.61.3 (the function returned 0 for all distinct
+points) and a hard C001 on v0.62.1; switched to the public `math.ln` and
+locked by the probe's log(3) KAT. New finding:
+`p_polyhedra_nested_hull.xi` (polyhedra convex_hull_2d/3d collapse on
+nonempty inputs on both pins; empty inputs correct). Probe
+`p_wave53_shapes.xi` (208th, 68 checks, green on both pins); floors90;
+geom 56.3% -> 65.7%, global 35.7% -> 36.3%. Next: the geom.xi aggregate
+(142 uncovered -> 2-3 waves), then the low dirs.
 
 State 2026-09-29 (handoff snapshot 3, main 2a06a90): floors85 global 32.8%,
 math 38.8%, num 37.4%; probes 202; smoke 951; modules 509/509; barename
