@@ -2,6 +2,9 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 module smoke_geom
 use xiom.geom;
+use xiom.geom.Quaternion;
+use xiom.geom.Mat2;
+use xiom.geom.Mat3;
 use xiom.math;
 fn near(a: Float64, b: Float64) -> Bool {
   var d = a - b;
@@ -97,5 +100,84 @@ fn main() -> Int {
   if !near(xiom.geom.f64_rad_to_deg(math.PI), 180.0) { return 47; }
   if !near(xiom.geom.f32_deg_to_rad(90.0), math.PI / 2.0) { return 48; }
   if !near(xiom.geom.f32_rad_to_deg(math.PI / 2.0), 90.0) { return 49; }
+  // wave-55 aggregate KATs: quaternion tail + matrices
+  var qaa = xiom.geom.quat_from_axis_angle(xiom.geom.vec3_new(0.0, 0.0, 2.0), math.PI / 2.0);
+  if !(near(qaa.z, 0.70710678) && near(qaa.w, 0.70710678)) { return 50; }
+  var qmv3 = xiom.geom.quat_mul_vec3(qaa, xiom.geom.vec3_new(1.0, 0.0, 0.0));
+  if !near(qmv3.y, 1.0) { return 51; }
+  var qiv = xiom.geom.quat_inverse(qaa);
+  if !(near(qiv.z, -0.70710678) && near(qiv.w, 0.70710678)) { return 52; }
+  if !near(xiom.geom.quat_dot(qi, qi), 1.0) { return 53; }
+  if !near(xiom.geom.quat_length(qaa), 1.0) { return 54; }
+  if !xiom.geom.quat_is_unit(qaa, 1e-9) { return 55; }
+  var qsl = xiom.geom.quat_slerp(qi, qaa, 0.5);
+  if !(near(qsl.z, 0.38268343) && near(qsl.w, 0.92387953)) { return 56; }
+  var qnl = xiom.geom.quat_nlerp(qi, qaa, 0.5);
+  if !(near(qnl.z, 0.38268343) && near(qnl.w, 0.92387953)) { return 57; }
+  var qm4 = xiom.geom.mat4_from_quat(qaa);
+  var qfm = xiom.geom.quat_from_mat4(&qm4);
+  if !(near(qfm.z, 0.70710678) && near(qfm.w, 0.70710678)) { return 58; }
+  var qtm4 = xiom.geom.quat_to_mat4(qaa);
+  if !(near(qtm4.m00, 0.0) && near(qtm4.m01, -1.0)) { return 59; }
+  var qtm3 = xiom.geom.quat_to_mat3(qaa);
+  if !(near(qtm3.m00, 0.0) && near(qtm3.m10, 1.0)) { return 60; }
+  var qeu = xiom.geom.quat_from_euler(0.3, 0.2, 0.1);
+  if !near(xiom.geom.quat_roll(qeu), 0.1) { return 61; }
+  if !near(xiom.geom.quat_pitch(qeu), 0.2) { return 62; }
+  if !near(xiom.geom.quat_yaw(qeu), 0.3) { return 63; }
+  if !near(xiom.geom.quat_angle_between(qi, qaa), math.PI / 2.0) { return 64; }
+  var m2i = xiom.geom.mat2_identity();
+  if !(m2i.m00 == 1.0 && m2i.m11 == 1.0) { return 65; }
+  var m2 = Mat2{ m00: 1.0; m01: 2.0; m10: 3.0; m11: 4.0; };
+  var m2sq = xiom.geom.mat2_mul(m2, m2);
+  if !(m2sq.m00 == 7.0 && m2sq.m11 == 22.0) { return 66; }
+  var m2t = xiom.geom.mat2_transpose(m2);
+  if !(m2t.m01 == 3.0 && m2t.m10 == 2.0) { return 67; }
+  if xiom.geom.mat2_determinant(m2) != -2.0 { return 68; }
+  if !xiom.geom.mat2_inverse(m2).is_some { return 69; }
+  var m2s = xiom.geom.mat2_scale(3.0);
+  if !(m2s.m00 == 3.0 && m2s.m11 == 3.0) { return 70; }
+  var m2r = xiom.geom.mat2_rotation(math.PI / 2.0);
+  var m2v = xiom.geom.mat2_transform_vec2(m2r, xiom.geom.vec2_new(1.0, 0.0));
+  if !(near(m2v.x, 0.0) && near(m2v.y, 1.0)) { return 71; }
+  var m3i = xiom.geom.mat3_identity();
+  if !(m3i.m00 == 1.0 && m3i.m22 == 1.0) { return 72; }
+  var m3 = Mat3{ m00: 1.0; m01: 2.0; m02: 3.0; m10: 4.0; m11: 5.0; m12: 6.0; m20: 7.0; m21: 8.0; m22: 9.0; };
+  var m3sq = xiom.geom.mat3_mul(m3, m3);
+  if !(m3sq.m00 == 30.0 && m3sq.m22 == 150.0) { return 73; }
+  var m3t = xiom.geom.mat3_transpose(m3);
+  if !(m3t.m01 == 4.0 && m3t.m20 == 3.0) { return 74; }
+  var m3d = Mat3{ m00: 2.0; m01: 0.0; m02: 0.0; m10: 0.0; m11: 3.0; m12: 0.0; m20: 0.0; m21: 0.0; m22: 4.0; };
+  if xiom.geom.mat3_determinant(m3d) != 24.0 { return 75; }
+  if !xiom.geom.mat3_inverse(m3d).is_some { return 76; }
+  var m3rz = xiom.geom.mat3_rotation_z(math.PI / 2.0);
+  var m3v = xiom.geom.mat3_transform_vec3(m3rz, xiom.geom.vec3_new(1.0, 0.0, 0.0));
+  if !near(m3v.y, 1.0) { return 77; }
+  var m3s = xiom.geom.mat3_scale(2.0);
+  if !(m3s.m00 == 2.0 && m3s.m22 == 2.0) { return 78; }
+  var m3sx = xiom.geom.mat3_scale_xyz(2.0, 3.0, 4.0);
+  if !(m3sx.m00 == 2.0 && m3sx.m11 == 3.0 && m3sx.m22 == 4.0) { return 79; }
+  var m3rx = xiom.geom.mat3_rotation_x(math.PI / 2.0);
+  if !(near(m3rx.m12, -1.0) && near(m3rx.m21, 1.0)) { return 80; }
+  var m3ry = xiom.geom.mat3_rotation_y(math.PI / 2.0);
+  if !(near(m3ry.m02, 1.0) && near(m3ry.m20, -1.0)) { return 81; }
+  var m3fq = xiom.geom.mat3_from_quat(qaa);
+  if !(near(m3fq.m01, -1.0) && near(m3fq.m10, 1.0)) { return 82; }
+  var mm4 = xiom.geom.mat4_mul(xiom.geom.mat4_identity(), xiom.geom.mat4_translate(1.0, 2.0, 3.0));
+  if !(near(mm4.m03, 1.0) && near(mm4.m23, 3.0)) { return 83; }
+  var ms4 = xiom.geom.mat4_scale(2.0, 3.0, 4.0);
+  if !(ms4.m00 == 2.0 && ms4.m22 == 4.0) { return 84; }
+  var mr4x = xiom.geom.mat4_rotate_x(math.PI / 2.0);
+  if !(near(mr4x.m12, -1.0) && near(mr4x.m21, 1.0)) { return 85; }
+  var mr4y = xiom.geom.mat4_rotate_y(math.PI / 2.0);
+  if !(near(mr4y.m02, 1.0) && near(mr4y.m20, -1.0)) { return 86; }
+  var mr4z = xiom.geom.mat4_rotate_z(math.PI / 2.0);
+  if !(near(mr4z.m01, -1.0) && near(mr4z.m10, 1.0)) { return 87; }
+  var mp4 = xiom.geom.mat4_perspective(math.PI / 2.0, 1.0, 1.0, 100.0);
+  if !(near(mp4.m22, -1.02020202) && mp4.m32 == -1.0) { return 88; }
+  var mla = xiom.geom.mat4_look_at(xiom.geom.vec3_new(0.0, 0.0, 5.0), xiom.geom.vec3_new(0.0, 0.0, 0.0), xiom.geom.vec3_new(0.0, 1.0, 0.0));
+  if mla.m33 != 1.0 { return 89; }
+  var mtv = xiom.geom.mat4_transform_vec3(xiom.geom.mat4_translate(1.0, 2.0, 3.0), xiom.geom.vec3_new(0.0, 0.0, 0.0));
+  if !(near(mtv.x, 1.0) && near(mtv.z, 3.0)) { return 90; }
   return 0;
 }

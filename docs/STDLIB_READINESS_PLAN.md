@@ -806,13 +806,29 @@ T1/T2 yields.
        3,332 -> 3,377 fns). geom 65.7% -> 76.8%, global 36.3% -> 37.0%.
        Next: geom batch 7 (quaternion tail 15 + Mat2 8 + Mat3 12 + Mat4
        core 10 = 45), then Mat4 tail + Aabb + Sphere + Ray + Plane (51).
+       Wave 55 (2026-10-02): coverage wave 19 -- geom aggregate batch 2
+       (45 pub: quaternion tail 15, Mat2 8, Mat3 12, Mat4 core 10).
+       Shapes: quaternion component mirrors through the in-module
+       normalizer, Hamilton/dot/length mirrors, identity-or-nonzero
+       inverse/nlerp forms, slerp endpoint-or-interior, matrix literal
+       shapes and field mirrors, determinant mirrors, inverse presence
+       mirrors (abs-det threshold), rotation trig mirrors, perspective
+       reciprocal mirrors, look_at bottom-row literals, transform_vec3
+       divide-with-w-zero disjunction, and NaN-tolerant transposes.
+       No fix-first; the probe baseline was green. Probe
+       tools/probes/p_wave55_shapes.xi (210th): 69 checks, green on
+       v0.61.3 and v0.62.1. smoke_geom.xi grew to 90 KATs (module-smoke
+       3,377 -> 3,421 fns). geom 76.8% -> 87.7% (363/414), global 37.0%
+       -> 37.7%. Next: geom batch 8 (Mat4 tail 17 + Aabb 14 + Sphere 8 +
+       Ray 8 + Plane 4 = 51, the last aggregate batch), then the low
+       dirs.
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors91.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors92.json
        tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;
        earlier floors kept at
-       coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55/56/57/58/59/60/61/62/63/64/65/66/67/68/69/70/71/72/73/74/75/76/77/78/79/80/81/82/83/84/85/86/87/88/89/90/91.json).
+       coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55/56/57/58/59/60/61/62/63/64/65/66/67/68/69/70/71/72/73/74/75/76/77/78/79/80/81/82/83/84/85/86/87/88/89/90/91/92.json).
       Floors are per top-level stdlib/xiom directory and must be refreshed
       when a module is ADDED (new uncovered pub fns dilute the percentage
       -- TOML dropped serialize 6.1% -> 5.4%, tz dropped time 13% ->

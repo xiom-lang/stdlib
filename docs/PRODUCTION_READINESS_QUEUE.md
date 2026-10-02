@@ -1,19 +1,19 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
 **70% -- 7 of 10 readiness gates complete.**
-**Gates: corpus 951/951, modules 509/509, probes 209/209, barename 0/509.**
+**Gates: corpus 951/951, modules 509/509, probes 210/210, barename 0/509.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
 gates flip:
 1. Modules type-check clean -- MET (509/509).
 2. Smoke corpus green -- MET (951/951).
-3. Probe corpus green -- MET (209/209).
+3. Probe corpus green -- MET (210/210).
 4. Strict bare-name scan clean -- MET (0/509).
-5. Coverage ratchet green -- MET (floors91).
+5. Coverage ratchet green -- MET (floors92).
 6. Documentation ratchet 100% -- MET.
-7. Module-smoke ratchet green -- MET (497/517 modules, 3377/6200 fns).
-8. Contract coverage 100% (every public fn carries clauses) -- OPEN (37.0%).
+7. Module-smoke ratchet green -- MET (497/517 modules, 3421/6200 fns).
+8. Contract coverage 100% (every public fn carries clauses) -- OPEN (37.7%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
    OPEN (11: 10 compiler, 1 stdlib algorithm).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
@@ -268,6 +268,19 @@ grew to 49 KATs (module-smoke 3,332 -> 3,377 fns); floors91; geom 65.7% ->
 76.8%, global 36.3% -> 37.0%. Next: geom batch 7 (quaternion tail 15 +
 Mat2 8 + Mat3 12 + Mat4 core 10 = 45), then Mat4 tail + Aabb + Sphere +
 Ray + Plane (51), then the low dirs.
+
+Update 2026-10-02 (wave 55 landed): geom aggregate batch 2 -- quaternion
+tail (15: from_axis_angle, mul_vec3, inverse, dot, length, is_unit, slerp,
+nlerp, from_mat4, to_mat4, to_mat3, roll, pitch, yaw, angle_between), Mat2
+(8) and Mat3 (12) full mirrors/presence claims, and the Mat4 core (10:
+identity, mul, translate, scale, rotate_x/y/z, perspective, look_at,
+transform_vec3); all NaN-tolerant (mat2/mat3 transposes caught during
+probe validation and fixed). No fix-first. Probe `p_wave55_shapes.xi`
+(210th, 69 checks, green on both pins); smoke_geom.xi grew to 90 KATs
+(module-smoke 3,377 -> 3,421 fns); floors92; geom 76.8% -> 87.7%
+(363/414), global 37.0% -> 37.7%. Next: geom batch 8 (Mat4 tail 17 + Aabb
+14 + Sphere 8 + Ray 8 + Plane 4 = 51, the last aggregate batch), then the
+low dirs.
 
 State 2026-09-29 (handoff snapshot 3, main 2a06a90): floors85 global 32.8%,
 math 38.8%, num 37.4%; probes 202; smoke 951; modules 509/509; barename

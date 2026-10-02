@@ -1449,6 +1449,25 @@ registry pin, agent recon for the rest)**
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
 
+**SESSION 2026-10-02 block 15 (wave 55: geom aggregate batch 2 -- quaternion tail + Mat2/Mat3 + Mat4 core)**
+- Wave 55 (floors92): 45 clauses on the xiom.geom aggregate -- quaternion
+  tail (15), Mat2 (8), Mat3 (12), Mat4 core (10). See the plan entry for
+  the claim list (all NaN-tolerant forms).
+- No fix-first: the pre-clause probe baseline was green. Probe authoring
+  note: the NaN-tolerance section initially tripped the PRE-EXISTING
+  NaN-abort class (`math.acos` requires at math.xi:295 on NaN dot; the
+  `math.sqrt` class likewise) -- those probe calls were removed, since the
+  abort is the callee's old strict requires, not the new clauses.
+- Probe `p_wave55_shapes.xi` (210th): 69 checks; green on v0.61.3 and
+  v0.62.1. One clause fix during validation: mat2/mat3 transpose mirrors
+  needed the NaN-tolerant disjunction (pure-read mirrors are not exempt).
+- smoke_geom.xi grew to 90 KATs (module-smoke 3,377 -> 3,421 fns);
+  tools/module_smoke_floors.json re-dumped.
+- geom 76.8% -> 87.7% (363/414), global 37.0% -> 37.7%; floors92 wired
+  (YAML re-verified) + tools/README.md + plan + queue in the same commit.
+- Battery pending on the wave commit; results recorded in the follow-up
+  docs commit.
+
 **SESSION 2026-10-02 block 14 (wave 54: geom aggregate batch 1 -- vectors + quaternion core + scalar helpers)**
 - Wave 54 (floors91): 46 clauses on the xiom.geom aggregate -- vec2 (16),
   vec3 (15), vec4 (3), quaternion core (7), scalar helpers (5). See the

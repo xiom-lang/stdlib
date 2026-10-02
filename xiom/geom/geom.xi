@@ -408,7 +408,9 @@ pub fn quat_from_euler(yaw: Float64, pitch: Float64, roll: Float64) -> Quaternio
 // ============================================================================
 
 /// 4x4 identity matrix. O(1).
-pub fn mat4_identity() -> Mat4 {
+pub fn mat4_identity() -> Mat4
+  ensures: result.m00 == 1.0 && result.m11 == 1.0 && result.m22 == 1.0 && result.m33 == 1.0 && result.m01 == 0.0 && result.m02 == 0.0 && result.m03 == 0.0 && result.m10 == 0.0 && result.m12 == 0.0 && result.m13 == 0.0 && result.m20 == 0.0 && result.m21 == 0.0 && result.m23 == 0.0 && result.m30 == 0.0 && result.m31 == 0.0 && result.m32 == 0.0
+{
   return Mat4{
     m00: 1.0; m01: 0.0; m02: 0.0; m03: 0.0;
     m10: 0.0; m11: 1.0; m12: 0.0; m13: 0.0;
@@ -418,7 +420,9 @@ pub fn mat4_identity() -> Mat4 {
 }
 
 /// Multiply two 4x4 matrices: a * b. Row x column dot products. O(64 ops).
-pub fn mat4_mul(a: Mat4, b: Mat4) -> Mat4 {
+pub fn mat4_mul(a: Mat4, b: Mat4) -> Mat4
+  ensures: ((result.m00 == a.m00 * b.m00 + a.m01 * b.m10 + a.m02 * b.m20 + a.m03 * b.m30) || (result.m00 != result.m00)) && ((result.m01 == a.m00 * b.m01 + a.m01 * b.m11 + a.m02 * b.m21 + a.m03 * b.m31) || (result.m01 != result.m01)) && ((result.m02 == a.m00 * b.m02 + a.m01 * b.m12 + a.m02 * b.m22 + a.m03 * b.m32) || (result.m02 != result.m02)) && ((result.m03 == a.m00 * b.m03 + a.m01 * b.m13 + a.m02 * b.m23 + a.m03 * b.m33) || (result.m03 != result.m03)) && ((result.m10 == a.m10 * b.m00 + a.m11 * b.m10 + a.m12 * b.m20 + a.m13 * b.m30) || (result.m10 != result.m10)) && ((result.m11 == a.m10 * b.m01 + a.m11 * b.m11 + a.m12 * b.m21 + a.m13 * b.m31) || (result.m11 != result.m11)) && ((result.m12 == a.m10 * b.m02 + a.m11 * b.m12 + a.m12 * b.m22 + a.m13 * b.m32) || (result.m12 != result.m12)) && ((result.m13 == a.m10 * b.m03 + a.m11 * b.m13 + a.m12 * b.m23 + a.m13 * b.m33) || (result.m13 != result.m13)) && ((result.m20 == a.m20 * b.m00 + a.m21 * b.m10 + a.m22 * b.m20 + a.m23 * b.m30) || (result.m20 != result.m20)) && ((result.m21 == a.m20 * b.m01 + a.m21 * b.m11 + a.m22 * b.m21 + a.m23 * b.m31) || (result.m21 != result.m21)) && ((result.m22 == a.m20 * b.m02 + a.m21 * b.m12 + a.m22 * b.m22 + a.m23 * b.m32) || (result.m22 != result.m22)) && ((result.m23 == a.m20 * b.m03 + a.m21 * b.m13 + a.m22 * b.m23 + a.m23 * b.m33) || (result.m23 != result.m23)) && ((result.m30 == a.m30 * b.m00 + a.m31 * b.m10 + a.m32 * b.m20 + a.m33 * b.m30) || (result.m30 != result.m30)) && ((result.m31 == a.m30 * b.m01 + a.m31 * b.m11 + a.m32 * b.m21 + a.m33 * b.m31) || (result.m31 != result.m31)) && ((result.m32 == a.m30 * b.m02 + a.m31 * b.m12 + a.m32 * b.m22 + a.m33 * b.m32) || (result.m32 != result.m32)) && ((result.m33 == a.m30 * b.m03 + a.m31 * b.m13 + a.m32 * b.m23 + a.m33 * b.m33) || (result.m33 != result.m33))
+{
   return Mat4{
     m00: a.m00 * b.m00 + a.m01 * b.m10 + a.m02 * b.m20 + a.m03 * b.m30;
     m01: a.m00 * b.m01 + a.m01 * b.m11 + a.m02 * b.m21 + a.m03 * b.m31;
@@ -440,7 +444,9 @@ pub fn mat4_mul(a: Mat4, b: Mat4) -> Mat4 {
 }
 
 /// Translation matrix. O(1).
-pub fn mat4_translate(tx: Float64, ty: Float64, tz: Float64) -> Mat4 {
+pub fn mat4_translate(tx: Float64, ty: Float64, tz: Float64) -> Mat4
+  ensures: result.m00 == 1.0 && result.m01 == 0.0 && result.m02 == 0.0 && ((result.m03 == tx) || (result.m03 != result.m03)) && result.m10 == 0.0 && result.m11 == 1.0 && result.m12 == 0.0 && ((result.m13 == ty) || (result.m13 != result.m13)) && result.m20 == 0.0 && result.m21 == 0.0 && result.m22 == 1.0 && ((result.m23 == tz) || (result.m23 != result.m23)) && result.m30 == 0.0 && result.m31 == 0.0 && result.m32 == 0.0 && result.m33 == 1.0
+{
   return Mat4{
     m00: 1.0; m01: 0.0; m02: 0.0; m03: tx;
     m10: 0.0; m11: 1.0; m12: 0.0; m13: ty;
@@ -450,7 +456,9 @@ pub fn mat4_translate(tx: Float64, ty: Float64, tz: Float64) -> Mat4 {
 }
 
 /// Scale matrix (non-uniform). O(1).
-pub fn mat4_scale(sx: Float64, sy: Float64, sz: Float64) -> Mat4 {
+pub fn mat4_scale(sx: Float64, sy: Float64, sz: Float64) -> Mat4
+  ensures: ((result.m00 == sx) || (result.m00 != result.m00)) && result.m01 == 0.0 && result.m02 == 0.0 && result.m03 == 0.0 && result.m10 == 0.0 && ((result.m11 == sy) || (result.m11 != result.m11)) && result.m12 == 0.0 && result.m13 == 0.0 && result.m20 == 0.0 && result.m21 == 0.0 && ((result.m22 == sz) || (result.m22 != result.m22)) && result.m23 == 0.0 && result.m30 == 0.0 && result.m31 == 0.0 && result.m32 == 0.0 && result.m33 == 1.0
+{
   return Mat4{
     m00: sx;  m01: 0.0; m02: 0.0; m03: 0.0;
     m10: 0.0; m11: sy;  m12: 0.0; m13: 0.0;
@@ -460,7 +468,9 @@ pub fn mat4_scale(sx: Float64, sy: Float64, sz: Float64) -> Mat4 {
 }
 
 /// Rotation around X axis by angle radians (right-handed). O(1).
-pub fn mat4_rotate_x(angle: Float64) -> Mat4 {
+pub fn mat4_rotate_x(angle: Float64) -> Mat4
+  ensures: result.m00 == 1.0 && result.m01 == 0.0 && result.m02 == 0.0 && result.m03 == 0.0 && result.m10 == 0.0 && ((result.m11 == math.cos(angle)) || (result.m11 != result.m11)) && ((result.m12 == -math.sin(angle)) || (result.m12 != result.m12)) && result.m13 == 0.0 && result.m20 == 0.0 && ((result.m21 == math.sin(angle)) || (result.m21 != result.m21)) && ((result.m22 == math.cos(angle)) || (result.m22 != result.m22)) && result.m23 == 0.0 && result.m30 == 0.0 && result.m31 == 0.0 && result.m32 == 0.0 && result.m33 == 1.0
+{
   var c = math.cos(angle);
   var s = math.sin(angle);
   return Mat4{
@@ -472,7 +482,9 @@ pub fn mat4_rotate_x(angle: Float64) -> Mat4 {
 }
 
 /// Rotation around Y axis by angle radians (right-handed). O(1).
-pub fn mat4_rotate_y(angle: Float64) -> Mat4 {
+pub fn mat4_rotate_y(angle: Float64) -> Mat4
+  ensures: ((result.m00 == math.cos(angle)) || (result.m00 != result.m00)) && result.m01 == 0.0 && ((result.m02 == math.sin(angle)) || (result.m02 != result.m02)) && result.m03 == 0.0 && result.m10 == 0.0 && result.m11 == 1.0 && result.m12 == 0.0 && result.m13 == 0.0 && ((result.m20 == -math.sin(angle)) || (result.m20 != result.m20)) && result.m21 == 0.0 && ((result.m22 == math.cos(angle)) || (result.m22 != result.m22)) && result.m23 == 0.0 && result.m30 == 0.0 && result.m31 == 0.0 && result.m32 == 0.0 && result.m33 == 1.0
+{
   var c = math.cos(angle);
   var s = math.sin(angle);
   return Mat4{
@@ -484,7 +496,9 @@ pub fn mat4_rotate_y(angle: Float64) -> Mat4 {
 }
 
 /// Rotation around Z axis by angle radians (right-handed). O(1).
-pub fn mat4_rotate_z(angle: Float64) -> Mat4 {
+pub fn mat4_rotate_z(angle: Float64) -> Mat4
+  ensures: ((result.m00 == math.cos(angle)) || (result.m00 != result.m00)) && ((result.m01 == -math.sin(angle)) || (result.m01 != result.m01)) && result.m02 == 0.0 && result.m03 == 0.0 && ((result.m10 == math.sin(angle)) || (result.m10 != result.m10)) && ((result.m11 == math.cos(angle)) || (result.m11 != result.m11)) && result.m12 == 0.0 && result.m13 == 0.0 && result.m20 == 0.0 && result.m21 == 0.0 && result.m22 == 1.0 && result.m23 == 0.0 && result.m30 == 0.0 && result.m31 == 0.0 && result.m32 == 0.0 && result.m33 == 1.0
+{
   var c = math.cos(angle);
   var s = math.sin(angle);
   return Mat4{
@@ -498,7 +512,9 @@ pub fn mat4_rotate_z(angle: Float64) -> Mat4 {
 /// Perspective projection matrix (right-handed, reverse Z [-1,1] NDC).
 /// fov: vertical field of view in radians, aspect: width/height,
 /// near/far: clipping planes. O(1).
-pub fn mat4_perspective(fov: Float64, aspect: Float64, near: Float64, far: Float64) -> Mat4 {
+pub fn mat4_perspective(fov: Float64, aspect: Float64, near: Float64, far: Float64) -> Mat4
+  ensures: ((result.m00 == (1.0 / math.tan(fov * 0.5)) / aspect) || (result.m00 != result.m00)) && result.m01 == 0.0 && result.m02 == 0.0 && result.m03 == 0.0 && result.m10 == 0.0 && ((result.m11 == 1.0 / math.tan(fov * 0.5)) || (result.m11 != result.m11)) && result.m12 == 0.0 && result.m13 == 0.0 && result.m20 == 0.0 && result.m21 == 0.0 && ((result.m22 == (far + near) * (1.0 / (near - far))) || (result.m22 != result.m22)) && ((result.m23 == (2.0 * far * near) * (1.0 / (near - far))) || (result.m23 != result.m23)) && result.m30 == 0.0 && result.m31 == 0.0 && result.m32 == -1.0 && result.m33 == 0.0
+{
   var f = 1.0 / math.tan(fov * 0.5);
   var nf = 1.0 / (near - far);
   return Mat4{
@@ -511,7 +527,9 @@ pub fn mat4_perspective(fov: Float64, aspect: Float64, near: Float64, far: Float
 
 /// Look-at view matrix: camera at eye, looking at target, with up vector.
 /// Right-handed coordinate system. O(1).
-pub fn mat4_look_at(eye: Vec3, target: Vec3, up: Vec3) -> Mat4 {
+pub fn mat4_look_at(eye: Vec3, target: Vec3, up: Vec3) -> Mat4
+  ensures: result.m30 == 0.0 && result.m31 == 0.0 && result.m32 == 0.0 && result.m33 == 1.0
+{
   var f = vec3_normalize(vec3_sub(target, eye));
   var r = vec3_normalize(vec3_cross(f, up));
   var u = vec3_cross(r, f);
@@ -524,7 +542,9 @@ pub fn mat4_look_at(eye: Vec3, target: Vec3, up: Vec3) -> Mat4 {
 }
 
 /// Transform a Vec3 point by a 4x4 matrix (x,y,z,1 homogeneous). O(16 ops).
-pub fn mat4_transform_vec3(m: Mat4, v: Vec3) -> Vec3 {
+pub fn mat4_transform_vec3(m: Mat4, v: Vec3) -> Vec3
+  ensures: ((result.x == (m.m00 * v.x + m.m01 * v.y + m.m02 * v.z + m.m03) / (m.m30 * v.x + m.m31 * v.y + m.m32 * v.z + m.m33)) || (result.x != result.x) || (m.m30 * v.x + m.m31 * v.y + m.m32 * v.z + m.m33 == 0.0)) && ((result.y == (m.m10 * v.x + m.m11 * v.y + m.m12 * v.z + m.m13) / (m.m30 * v.x + m.m31 * v.y + m.m32 * v.z + m.m33)) || (result.y != result.y) || (m.m30 * v.x + m.m31 * v.y + m.m32 * v.z + m.m33 == 0.0)) && ((result.z == (m.m20 * v.x + m.m21 * v.y + m.m22 * v.z + m.m23) / (m.m30 * v.x + m.m31 * v.y + m.m32 * v.z + m.m33)) || (result.z != result.z) || (m.m30 * v.x + m.m31 * v.y + m.m32 * v.z + m.m33 == 0.0))
+{
   var w = m.m30 * v.x + m.m31 * v.y + m.m32 * v.z + m.m33;
   if w == 0.0 { return Vec3{ x: 0.0; y: 0.0; z: 0.0; }; }
   return Vec3{
@@ -539,7 +559,9 @@ pub fn mat4_transform_vec3(m: Mat4, v: Vec3) -> Vec3 {
 // ============================================================================
 
 /// 3x3 identity matrix. O(1).
-pub fn mat3_identity() -> Mat3 {
+pub fn mat3_identity() -> Mat3
+  ensures: result.m00 == 1.0 && result.m01 == 0.0 && result.m02 == 0.0 && result.m10 == 0.0 && result.m11 == 1.0 && result.m12 == 0.0 && result.m20 == 0.0 && result.m21 == 0.0 && result.m22 == 1.0
+{
   return Mat3{
     m00: 1.0; m01: 0.0; m02: 0.0;
     m10: 0.0; m11: 1.0; m12: 0.0;
@@ -548,7 +570,9 @@ pub fn mat3_identity() -> Mat3 {
 }
 
 /// Multiply two 3x3 matrices: a * b. O(27 ops).
-pub fn mat3_mul(a: Mat3, b: Mat3) -> Mat3 {
+pub fn mat3_mul(a: Mat3, b: Mat3) -> Mat3
+  ensures: ((result.m00 == a.m00 * b.m00 + a.m01 * b.m10 + a.m02 * b.m20) || (result.m00 != result.m00)) && ((result.m01 == a.m00 * b.m01 + a.m01 * b.m11 + a.m02 * b.m21) || (result.m01 != result.m01)) && ((result.m02 == a.m00 * b.m02 + a.m01 * b.m12 + a.m02 * b.m22) || (result.m02 != result.m02)) && ((result.m10 == a.m10 * b.m00 + a.m11 * b.m10 + a.m12 * b.m20) || (result.m10 != result.m10)) && ((result.m11 == a.m10 * b.m01 + a.m11 * b.m11 + a.m12 * b.m21) || (result.m11 != result.m11)) && ((result.m12 == a.m10 * b.m02 + a.m11 * b.m12 + a.m12 * b.m22) || (result.m12 != result.m12)) && ((result.m20 == a.m20 * b.m00 + a.m21 * b.m10 + a.m22 * b.m20) || (result.m20 != result.m20)) && ((result.m21 == a.m20 * b.m01 + a.m21 * b.m11 + a.m22 * b.m21) || (result.m21 != result.m21)) && ((result.m22 == a.m20 * b.m02 + a.m21 * b.m12 + a.m22 * b.m22) || (result.m22 != result.m22))
+{
   return Mat3{
     m00: a.m00 * b.m00 + a.m01 * b.m10 + a.m02 * b.m20;
     m01: a.m00 * b.m01 + a.m01 * b.m11 + a.m02 * b.m21;
@@ -1131,7 +1155,9 @@ pub fn vec4_from_vec3(v: Vec3, w: Float64) -> Vec4
 // ============================================================================
 
 /// 2x2 identity matrix. O(1).
-pub fn mat2_identity() -> Mat2 {
+pub fn mat2_identity() -> Mat2
+  ensures: result.m00 == 1.0 && result.m01 == 0.0 && result.m10 == 0.0 && result.m11 == 1.0
+{
   return Mat2{
     m00: 1.0; m01: 0.0;
     m10: 0.0; m11: 1.0;
@@ -1139,7 +1165,9 @@ pub fn mat2_identity() -> Mat2 {
 }
 
 /// Multiply two 2x2 matrices: a * b. O(8 ops).
-pub fn mat2_mul(a: Mat2, b: Mat2) -> Mat2 {
+pub fn mat2_mul(a: Mat2, b: Mat2) -> Mat2
+  ensures: ((result.m00 == a.m00 * b.m00 + a.m01 * b.m10) || (result.m00 != result.m00)) && ((result.m01 == a.m00 * b.m01 + a.m01 * b.m11) || (result.m01 != result.m01)) && ((result.m10 == a.m10 * b.m00 + a.m11 * b.m10) || (result.m10 != result.m10)) && ((result.m11 == a.m10 * b.m01 + a.m11 * b.m11) || (result.m11 != result.m11))
+{
   return Mat2{
     m00: a.m00 * b.m00 + a.m01 * b.m10;
     m01: a.m00 * b.m01 + a.m01 * b.m11;
@@ -1149,7 +1177,9 @@ pub fn mat2_mul(a: Mat2, b: Mat2) -> Mat2 {
 }
 
 /// Transpose a 2x2 matrix in place. O(1).
-pub fn mat2_transpose(m: Mat2) -> Mat2 {
+pub fn mat2_transpose(m: Mat2) -> Mat2
+  ensures: ((result.m00 == m.m00) || (result.m00 != result.m00)) && ((result.m01 == m.m10) || (result.m01 != result.m01)) && ((result.m10 == m.m01) || (result.m10 != result.m10)) && ((result.m11 == m.m11) || (result.m11 != result.m11))
+{
   return Mat2{
     m00: m.m00; m01: m.m10;
     m10: m.m01; m11: m.m11;
@@ -1157,13 +1187,17 @@ pub fn mat2_transpose(m: Mat2) -> Mat2 {
 }
 
 /// Determinant of a 2x2 matrix: m00*m11 - m01*m10. O(1).
-pub fn mat2_determinant(m: Mat2) -> Float64 {
+pub fn mat2_determinant(m: Mat2) -> Float64
+  ensures: (result == m.m00 * m.m11 - m.m01 * m.m10) || (result != result)
+{
   return m.m00 * m.m11 - m.m01 * m.m10;
 }
 
 /// Inverse of a 2x2 matrix via the adjugate / determinant formula.
 /// Returns None when the determinant is (near) zero, so the matrix is singular. O(1).
-pub fn mat2_inverse(m: Mat2) -> Option[Mat2] {
+pub fn mat2_inverse(m: Mat2) -> Option[Mat2]
+  ensures: (result.is_some == false) || !(math.abs_float(m.m00 * m.m11 - m.m01 * m.m10) < 0.000001 * 0.000001)
+{
   var det = mat2_determinant(m);
   if math.abs_float(det) < 0.000001 * 0.000001 {
     return None;
@@ -1178,7 +1212,9 @@ pub fn mat2_inverse(m: Mat2) -> Option[Mat2] {
 }
 
 /// Uniform 2x2 scale matrix with factor s. O(1).
-pub fn mat2_scale(s: Float64) -> Mat2 {
+pub fn mat2_scale(s: Float64) -> Mat2
+  ensures: ((result.m00 == s) || (result.m00 != result.m00)) && result.m01 == 0.0 && result.m10 == 0.0 && ((result.m11 == s) || (result.m11 != result.m11))
+{
   return Mat2{
     m00: s; m01: 0.0;
     m10: 0.0; m11: s;
@@ -1186,7 +1222,9 @@ pub fn mat2_scale(s: Float64) -> Mat2 {
 }
 
 /// 2x2 rotation matrix by angle radians (counter-clockwise). O(1).
-pub fn mat2_rotation(angle: Float64) -> Mat2 {
+pub fn mat2_rotation(angle: Float64) -> Mat2
+  ensures: ((result.m00 == math.cos(angle)) || (result.m00 != result.m00)) && ((result.m01 == -math.sin(angle)) || (result.m01 != result.m01)) && ((result.m10 == math.sin(angle)) || (result.m10 != result.m10)) && ((result.m11 == math.cos(angle)) || (result.m11 != result.m11))
+{
   var c = math.cos(angle);
   var s = math.sin(angle);
   return Mat2{
@@ -1196,7 +1234,9 @@ pub fn mat2_rotation(angle: Float64) -> Mat2 {
 }
 
 /// Transform a 2D vector by a 2x2 matrix: M * v. O(4 ops).
-pub fn mat2_transform_vec2(m: Mat2, v: Vec2) -> Vec2 {
+pub fn mat2_transform_vec2(m: Mat2, v: Vec2) -> Vec2
+  ensures: ((result.x == m.m00 * v.x + m.m01 * v.y) || (result.x != result.x)) && ((result.y == m.m10 * v.x + m.m11 * v.y) || (result.y != result.y))
+{
   return Vec2{
     x: m.m00 * v.x + m.m01 * v.y;
     y: m.m10 * v.x + m.m11 * v.y;
@@ -1208,7 +1248,9 @@ pub fn mat2_transform_vec2(m: Mat2, v: Vec2) -> Vec2 {
 // ============================================================================
 
 /// Transpose a 3x3 matrix. O(1).
-pub fn mat3_transpose(m: Mat3) -> Mat3 {
+pub fn mat3_transpose(m: Mat3) -> Mat3
+  ensures: ((result.m00 == m.m00) || (result.m00 != result.m00)) && ((result.m01 == m.m10) || (result.m01 != result.m01)) && ((result.m02 == m.m20) || (result.m02 != result.m02)) && ((result.m10 == m.m01) || (result.m10 != result.m10)) && ((result.m11 == m.m11) || (result.m11 != result.m11)) && ((result.m12 == m.m21) || (result.m12 != result.m12)) && ((result.m20 == m.m02) || (result.m20 != result.m20)) && ((result.m21 == m.m12) || (result.m21 != result.m21)) && ((result.m22 == m.m22) || (result.m22 != result.m22))
+{
   return Mat3{
     m00: m.m00; m01: m.m10; m02: m.m20;
     m10: m.m01; m11: m.m11; m12: m.m21;
@@ -1217,7 +1259,9 @@ pub fn mat3_transpose(m: Mat3) -> Mat3 {
 }
 
 /// Determinant of a 3x3 matrix by cofactor expansion along the first row. O(9 ops).
-pub fn mat3_determinant(m: Mat3) -> Float64 {
+pub fn mat3_determinant(m: Mat3) -> Float64
+  ensures: (result == m.m00 * (m.m11 * m.m22 - m.m12 * m.m21) - m.m01 * (m.m10 * m.m22 - m.m12 * m.m20) + m.m02 * (m.m10 * m.m21 - m.m11 * m.m20)) || (result != result)
+{
   return m.m00 * (m.m11 * m.m22 - m.m12 * m.m21)
        - m.m01 * (m.m10 * m.m22 - m.m12 * m.m20)
        + m.m02 * (m.m10 * m.m21 - m.m11 * m.m20);
@@ -1225,7 +1269,9 @@ pub fn mat3_determinant(m: Mat3) -> Float64 {
 
 /// Inverse of a 3x3 matrix via the adjugate / determinant formula.
 /// Returns None when the determinant is (near) zero, so the matrix is singular. O(27 ops).
-pub fn mat3_inverse(m: Mat3) -> Option[Mat3] {
+pub fn mat3_inverse(m: Mat3) -> Option[Mat3]
+  ensures: (result.is_some == false) || !(math.abs_float(m.m00 * (m.m11 * m.m22 - m.m12 * m.m21) - m.m01 * (m.m10 * m.m22 - m.m12 * m.m20) + m.m02 * (m.m10 * m.m21 - m.m11 * m.m20)) < 0.000001 * 0.000001)
+{
   var det = mat3_determinant(m);
   if math.abs_float(det) < 0.000001 * 0.000001 {
     return None;
@@ -1245,7 +1291,9 @@ pub fn mat3_inverse(m: Mat3) -> Option[Mat3] {
 }
 
 /// Transform a 3D vector by a 3x3 matrix: M * v. O(9 ops).
-pub fn mat3_transform_vec3(m: Mat3, v: Vec3) -> Vec3 {
+pub fn mat3_transform_vec3(m: Mat3, v: Vec3) -> Vec3
+  ensures: ((result.x == m.m00 * v.x + m.m01 * v.y + m.m02 * v.z) || (result.x != result.x)) && ((result.y == m.m10 * v.x + m.m11 * v.y + m.m12 * v.z) || (result.y != result.y)) && ((result.z == m.m20 * v.x + m.m21 * v.y + m.m22 * v.z) || (result.z != result.z))
+{
   return Vec3{
     x: m.m00 * v.x + m.m01 * v.y + m.m02 * v.z;
     y: m.m10 * v.x + m.m11 * v.y + m.m12 * v.z;
@@ -1254,7 +1302,9 @@ pub fn mat3_transform_vec3(m: Mat3, v: Vec3) -> Vec3 {
 }
 
 /// Uniform 3x3 scale matrix with factor s. O(1).
-pub fn mat3_scale(s: Float64) -> Mat3 {
+pub fn mat3_scale(s: Float64) -> Mat3
+  ensures: ((result.m00 == s) || (result.m00 != result.m00)) && result.m01 == 0.0 && result.m02 == 0.0 && result.m10 == 0.0 && ((result.m11 == s) || (result.m11 != result.m11)) && result.m12 == 0.0 && result.m20 == 0.0 && result.m21 == 0.0 && ((result.m22 == s) || (result.m22 != result.m22))
+{
   return Mat3{
     m00: s; m01: 0.0; m02: 0.0;
     m10: 0.0; m11: s; m12: 0.0;
@@ -1263,7 +1313,9 @@ pub fn mat3_scale(s: Float64) -> Mat3 {
 }
 
 /// Non-uniform 3x3 scale matrix with per-axis factors. O(1).
-pub fn mat3_scale_xyz(x: Float64, y: Float64, z: Float64) -> Mat3 {
+pub fn mat3_scale_xyz(x: Float64, y: Float64, z: Float64) -> Mat3
+  ensures: ((result.m00 == x) || (result.m00 != result.m00)) && result.m01 == 0.0 && result.m02 == 0.0 && result.m10 == 0.0 && ((result.m11 == y) || (result.m11 != result.m11)) && result.m12 == 0.0 && result.m20 == 0.0 && result.m21 == 0.0 && ((result.m22 == z) || (result.m22 != result.m22))
+{
   return Mat3{
     m00: x; m01: 0.0; m02: 0.0;
     m10: 0.0; m11: y; m12: 0.0;
@@ -1272,7 +1324,9 @@ pub fn mat3_scale_xyz(x: Float64, y: Float64, z: Float64) -> Mat3 {
 }
 
 /// 3x3 rotation around the X axis by angle radians (right-handed). O(1).
-pub fn mat3_rotation_x(angle: Float64) -> Mat3 {
+pub fn mat3_rotation_x(angle: Float64) -> Mat3
+  ensures: result.m00 == 1.0 && result.m01 == 0.0 && result.m02 == 0.0 && result.m10 == 0.0 && ((result.m11 == math.cos(angle)) || (result.m11 != result.m11)) && ((result.m12 == -math.sin(angle)) || (result.m12 != result.m12)) && result.m20 == 0.0 && ((result.m21 == math.sin(angle)) || (result.m21 != result.m21)) && ((result.m22 == math.cos(angle)) || (result.m22 != result.m22))
+{
   var c = math.cos(angle);
   var s = math.sin(angle);
   return Mat3{
@@ -1283,7 +1337,9 @@ pub fn mat3_rotation_x(angle: Float64) -> Mat3 {
 }
 
 /// 3x3 rotation around the Y axis by angle radians (right-handed). O(1).
-pub fn mat3_rotation_y(angle: Float64) -> Mat3 {
+pub fn mat3_rotation_y(angle: Float64) -> Mat3
+  ensures: ((result.m00 == math.cos(angle)) || (result.m00 != result.m00)) && result.m01 == 0.0 && ((result.m02 == math.sin(angle)) || (result.m02 != result.m02)) && result.m10 == 0.0 && result.m11 == 1.0 && result.m12 == 0.0 && ((result.m20 == -math.sin(angle)) || (result.m20 != result.m20)) && result.m21 == 0.0 && ((result.m22 == math.cos(angle)) || (result.m22 != result.m22))
+{
   var c = math.cos(angle);
   var s = math.sin(angle);
   return Mat3{
@@ -1294,7 +1350,9 @@ pub fn mat3_rotation_y(angle: Float64) -> Mat3 {
 }
 
 /// 3x3 rotation around the Z axis by angle radians (right-handed). O(1).
-pub fn mat3_rotation_z(angle: Float64) -> Mat3 {
+pub fn mat3_rotation_z(angle: Float64) -> Mat3
+  ensures: ((result.m00 == math.cos(angle)) || (result.m00 != result.m00)) && ((result.m01 == -math.sin(angle)) || (result.m01 != result.m01)) && result.m02 == 0.0 && ((result.m10 == math.sin(angle)) || (result.m10 != result.m10)) && ((result.m11 == math.cos(angle)) || (result.m11 != result.m11)) && result.m12 == 0.0 && result.m20 == 0.0 && result.m21 == 0.0 && result.m22 == 1.0
+{
   var c = math.cos(angle);
   var s = math.sin(angle);
   return Mat3{
@@ -1306,7 +1364,9 @@ pub fn mat3_rotation_z(angle: Float64) -> Mat3 {
 
 /// Rotation matrix from a (unit) quaternion. The quaternion is normalised first.
 /// Formula: the standard 3x3 rotation matrix derived from q. O(27 ops).
-pub fn mat3_from_quat(q: Quaternion) -> Mat3 {
+pub fn mat3_from_quat(q: Quaternion) -> Mat3
+  ensures: (q.x == 0.0 && q.y == 0.0 && q.z == 0.0 && q.w == 0.0) => (result.m00 == 1.0 && result.m01 == 0.0 && result.m02 == 0.0 && result.m10 == 0.0 && result.m11 == 1.0 && result.m12 == 0.0 && result.m20 == 0.0 && result.m21 == 0.0 && result.m22 == 1.0)
+{
   var nq = quat_normalize(q);
   var x = nq.x;
   var y = nq.y;
@@ -1641,7 +1701,9 @@ pub fn mat4_approx_eq(a: Mat4, b: Mat4, eps: Float64) -> Bool {
 
 /// Create a quaternion from an axis and angle (radians). The axis is normalised
 /// first, so any (non-zero) axis is accepted. Rotation is right-handed. O(1).
-pub fn quat_from_axis_angle(axis: Vec3, angle: Float64) -> Quaternion {
+pub fn quat_from_axis_angle(axis: Vec3, angle: Float64) -> Quaternion
+  ensures: ((result.x == vec3_normalize(axis).x * math.sin(angle * 0.5)) || (result.x != result.x)) && ((result.y == vec3_normalize(axis).y * math.sin(angle * 0.5)) || (result.y != result.y)) && ((result.z == vec3_normalize(axis).z * math.sin(angle * 0.5)) || (result.z != result.z)) && ((result.w == math.cos(angle * 0.5)) || (result.w != result.w))
+{
   var n = vec3_normalize(axis);
   var half = angle * 0.5;
   var s = math.sin(half);
@@ -1655,36 +1717,48 @@ pub fn quat_from_axis_angle(axis: Vec3, angle: Float64) -> Quaternion {
 
 /// Rotate a 3D vector by a quaternion: q * v * q^-1 (q must be unit length).
 /// Same as quat_rotate_vec3, provided under the mul_vec3 name. O(1).
-pub fn quat_mul_vec3(q: Quaternion, v: Vec3) -> Vec3 {
+pub fn quat_mul_vec3(q: Quaternion, v: Vec3) -> Vec3
+  ensures: (((result.x == v.x) || (result.x != result.x)) && ((result.y == v.y) || (result.y != result.y)) && ((result.z == v.z) || (result.z != result.z))) || (q.x != 0.0 || q.y != 0.0 || q.z != 0.0 || q.w != 1.0)
+{
   return quat_rotate_vec3(q, v);
 }
 
 /// Inverse of a quaternion: the conjugate of the normalised quaternion.
 /// For a unit quaternion the conjugate is exactly the inverse. O(1).
-pub fn quat_inverse(q: Quaternion) -> Quaternion {
+pub fn quat_inverse(q: Quaternion) -> Quaternion
+  ensures: (result.x == 0.0 && result.y == 0.0 && result.z == 0.0 && result.w == 1.0) || (q.x != 0.0 || q.y != 0.0 || q.z != 0.0 || q.w != 0.0)
+{
   var nq = quat_normalize(q);
   return quat_conjugate(nq);
 }
 
 /// Dot product of two quaternions (4-vector dot). O(4 ops).
-pub fn quat_dot(a: Quaternion, b: Quaternion) -> Float64 {
+pub fn quat_dot(a: Quaternion, b: Quaternion) -> Float64
+  ensures: (result == a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w) || (result != result)
+{
   return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w;
 }
 
 /// Length (magnitude) of a quaternion. O(4 ops + sqrt).
-pub fn quat_length(q: Quaternion) -> Float64 {
+pub fn quat_length(q: Quaternion) -> Float64
+  ensures: (result >= 0.0) || (result != result)
+{
   return math.sqrt(q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w);
 }
 
 /// True if the length of q is within epsilon of 1.0. O(1).
-pub fn quat_is_unit(q: Quaternion, eps: Float64) -> Bool {
+pub fn quat_is_unit(q: Quaternion, eps: Float64) -> Bool
+  ensures: (result == true) => ((quat_length(q) >= (1.0 - eps)) && (quat_length(q) <= (1.0 + eps)))
+{
   return f64_approx_eq(quat_length(q), 1.0, eps);
 }
 
 /// Spherical linear interpolation between two quaternions by t in [0,1].
 /// Handles the shortest path by negating b when dot(a,b) < 0, clamps the dot to
 /// [-1,1], and falls back to nlerp when a and b are nearly parallel. O(1).
-pub fn quat_slerp(a: Quaternion, b: Quaternion, t: Float64) -> Quaternion {
+pub fn quat_slerp(a: Quaternion, b: Quaternion, t: Float64) -> Quaternion
+  ensures: (((result.x == a.x) || (result.x != result.x)) && ((result.y == a.y) || (result.y != result.y)) && ((result.z == a.z) || (result.z != result.z)) && ((result.w == a.w) || (result.w != result.w))) || (((result.x == b.x) || (result.x != result.x)) && ((result.y == b.y) || (result.y != result.y)) && ((result.z == b.z) || (result.z != result.z)) && ((result.w == b.w) || (result.w != result.w))) || (!(t <= 0.0) && !(t >= 1.0))
+{
   if t <= 0.0 { return a; }
   if t >= 1.0 { return b; }
   var dot = quat_dot(a, b);
@@ -1713,7 +1787,9 @@ pub fn quat_slerp(a: Quaternion, b: Quaternion, t: Float64) -> Quaternion {
 
 /// Normalised linear interpolation between two quaternions (fast, not constant
 /// angular velocity). t is clamped into [0,1]. O(1).
-pub fn quat_nlerp(a: Quaternion, b: Quaternion, t: Float64) -> Quaternion {
+pub fn quat_nlerp(a: Quaternion, b: Quaternion, t: Float64) -> Quaternion
+  ensures: (result.x == 0.0 && result.y == 0.0 && result.z == 0.0 && result.w == 1.0) || (a.x != 0.0 || a.y != 0.0 || a.z != 0.0 || a.w != 0.0 || b.x != 0.0 || b.y != 0.0 || b.z != 0.0 || b.w != 0.0)
+{
   var ct = t;
   if ct < 0.0 { ct = 0.0; }
   if ct > 1.0 { ct = 1.0; }
@@ -1727,7 +1803,9 @@ pub fn quat_nlerp(a: Quaternion, b: Quaternion, t: Float64) -> Quaternion {
 
 /// Extract the quaternion from a rotation matrix using the standard trace method.
 /// Handles all three largest-diagonal cases to avoid degenerate sqrt. O(1).
-pub fn quat_from_mat4(m: &Mat4) -> Quaternion {
+pub fn quat_from_mat4(m: &Mat4) -> Quaternion
+  ensures: (m.m00 == 1.0 && m.m01 == 0.0 && m.m02 == 0.0 && m.m03 == 0.0 && m.m10 == 0.0 && m.m11 == 1.0 && m.m12 == 0.0 && m.m13 == 0.0 && m.m20 == 0.0 && m.m21 == 0.0 && m.m22 == 1.0 && m.m23 == 0.0 && m.m30 == 0.0 && m.m31 == 0.0 && m.m32 == 0.0 && m.m33 == 1.0) => (result.x == 0.0 && result.y == 0.0 && result.z == 0.0 && result.w == 1.0)
+{
   var trace = m.m00 + m.m11 + m.m22;
   if trace > 0.0 {
     var s = math.sqrt(trace + 1.0) * 2.0;
@@ -1770,24 +1848,32 @@ pub fn quat_from_mat4(m: &Mat4) -> Quaternion {
 }
 
 /// 4x4 rotation matrix from a quaternion. Same result as mat4_from_quat. O(1).
-pub fn quat_to_mat4(q: Quaternion) -> Mat4 {
+pub fn quat_to_mat4(q: Quaternion) -> Mat4
+  ensures: result.m03 == 0.0 && result.m13 == 0.0 && result.m23 == 0.0 && result.m30 == 0.0 && result.m31 == 0.0 && result.m32 == 0.0 && result.m33 == 1.0
+{
   return mat4_from_quat(q);
 }
 
 /// 3x3 rotation matrix from a quaternion. Same result as mat3_from_quat. O(1).
-pub fn quat_to_mat3(q: Quaternion) -> Mat3 {
+pub fn quat_to_mat3(q: Quaternion) -> Mat3
+  ensures: (q.x == 0.0 && q.y == 0.0 && q.z == 0.0 && q.w == 0.0) => (result.m00 == 1.0 && result.m01 == 0.0 && result.m02 == 0.0 && result.m10 == 0.0 && result.m11 == 1.0 && result.m12 == 0.0 && result.m20 == 0.0 && result.m21 == 0.0 && result.m22 == 1.0)
+{
   return mat3_from_quat(q);
 }
 
 /// Roll (rotation around X, radians) extracted from a quaternion.
 /// Conventions match quat_from_euler (ZYX intrinsic). O(1).
-pub fn quat_roll(q: Quaternion) -> Float64 {
+pub fn quat_roll(q: Quaternion) -> Float64
+  ensures: ((result >= -3.15) && (result <= 3.15)) || (result != result)
+{
   return math.atan2(2.0 * (q.w * q.x + q.y * q.z), 1.0 - 2.0 * (q.x * q.x + q.y * q.y));
 }
 
 /// Pitch (rotation around Y, radians) extracted from a quaternion.
 /// Conventions match quat_from_euler (ZYX intrinsic). Input to asin is clamped. O(1).
-pub fn quat_pitch(q: Quaternion) -> Float64 {
+pub fn quat_pitch(q: Quaternion) -> Float64
+  ensures: ((result >= -1.6) && (result <= 1.6)) || (result != result)
+{
   var sp = 2.0 * (q.w * q.y - q.z * q.x);
   if sp > 1.0 { sp = 1.0; }
   if sp < -1.0 { sp = -1.0; }
@@ -1796,13 +1882,17 @@ pub fn quat_pitch(q: Quaternion) -> Float64 {
 
 /// Yaw (rotation around Z, radians) extracted from a quaternion.
 /// Conventions match quat_from_euler (ZYX intrinsic). O(1).
-pub fn quat_yaw(q: Quaternion) -> Float64 {
+pub fn quat_yaw(q: Quaternion) -> Float64
+  ensures: ((result >= -3.15) && (result <= 3.15)) || (result != result)
+{
   return math.atan2(2.0 * (q.w * q.z + q.x * q.y), 1.0 - 2.0 * (q.y * q.y + q.z * q.z));
 }
 
 /// Angle (radians) between two rotation quaternions in [0, 2*PI].
 /// Returns 2*acos(clamped dot) over the shortest arc. O(1).
-pub fn quat_angle_between(a: Quaternion, b: Quaternion) -> Float64 {
+pub fn quat_angle_between(a: Quaternion, b: Quaternion) -> Float64
+  ensures: ((result >= 0.0) && (result <= 6.3)) || (result != result)
+{
   var dot = quat_dot(a, b);
   if dot < -1.0 { dot = -1.0; }
   if dot > 1.0 { dot = 1.0; }
