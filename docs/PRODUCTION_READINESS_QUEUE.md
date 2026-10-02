@@ -335,6 +335,22 @@ Result-type mismatch laxness are compiler-side; the stdlib-relevant
 additions are wishlist rows 42-46 (glob/regex, Str->Str map, span/
 byte-slice API, strict int parsing with offsets, base32 + percent-encoder).
 
+Update 2026-10-02 (compiler lane ack + JSON note): v0.62.3 can pin the
+already-tagged `stdlib-perf2` (`f011efe`) -- no new pin is needed for the
+release; wave 57 is local and is not part of the release pin (push/tag at
+the next release boundary or on request). The compiler-log check and the
+crypto packet are resolved correctly (`m169`/`m170` verified fixed;
+`xiom_sha256_hash` is an install/deploy stale-runtime issue, not compiler
+or stdlib). JSON legacy bugs (0.05 -> 0.5 parse, `stringify_frac`,
+exponent hang) are folded into the next serialize.json hardening wave, not
+the coverage waves. Wave-58 recon (HTTP family, 55 uncovered pub: http 21,
+header 6, cookie 10, mime 18) flags fix-first candidates for the executor:
+`accept_q_value` returns up to 1999 while RFC 7231 caps q at 1.0
+(`parse_q` accepts `1.999`); `charset_normalize` accepts `iso-8859-1`
+despite its UTF-8/ASCII doc; the cookie matcher/expiry helpers call
+`time.unix_timestamp()` while the module header says "pure" (by design --
+keep probe KATs time-relative or expiry=0).
+
 State 2026-09-29 (handoff snapshot 3, main 2a06a90): floors85 global 32.8%,
 math 38.8%, num 37.4%; probes 202; smoke 951; modules 509/509; barename
 0/509; doc 100%; module-smoke ratchet 497/517 modules, 3332/6200 pub fns.
