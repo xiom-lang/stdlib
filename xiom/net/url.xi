@@ -103,7 +103,9 @@ fn starts_with(s: Str, prefix: Str) -> Bool {
 
 /// url_parse parses a URL into its scheme/host/port/path/query/fragment
 /// components. Userinfo (user:pass@) is skipped.
-pub fn url_parse(url: Str) -> Result[UrlParts, Str] {
+pub fn url_parse(url: Str) -> Result[UrlParts, Str]
+  ensures: (result.is_ok == false) || (url.len() != 0)
+{
   let len = url.len();
   if len == 0 {
     return Err("empty URL");
@@ -166,7 +168,9 @@ pub fn url_parse(url: Str) -> Result[UrlParts, Str] {
 
 /// url_decode_component percent-decodes %XX sequences. '+' is left as-is
 /// (component semantics -- '+' is only a space in form-encoding).
-pub fn url_decode_component(s: Str) -> Result[Str, Str] {
+pub fn url_decode_component(s: Str) -> Result[Str, Str]
+  ensures: (s.len() == 0) => (result.is_ok == true)
+{
   let len = s.len();
   if len == 0 {
     return Ok("");
@@ -196,7 +200,9 @@ pub fn url_decode_component(s: Str) -> Result[Str, Str] {
 
 /// url_encode_component percent-encodes everything except the unreserved
 /// characters A-Z a-z 0-9 - _ . ~ (reuses xiom.encoding.percent_encode).
-pub fn url_encode_component(s: Str) -> Result[Str, Str] {
+pub fn url_encode_component(s: Str) -> Result[Str, Str]
+  ensures: (result.is_ok == true)
+{
   // Bind the module-qualified Str-returning call to a local first (compiler
   // bug: using its result directly in an expression emits inttoptr of a ptr).
   let enc = encoding.percent_encode(s);
@@ -206,7 +212,9 @@ pub fn url_encode_component(s: Str) -> Result[Str, Str] {
 /// url_query_parse splits a query string on '&' and each pair on the first
 /// '=', percent-decoding both sides and converting '+' to a space
 /// (application/x-www-form-urlencoded semantics).
-pub fn url_query_parse(query: Str) -> Vec[(Str, Str)] {
+pub fn url_query_parse(query: Str) -> Vec[(Str, Str)]
+  ensures: ((query.len() == 0) && (result.len() == 0)) || ((query.len() != 0) && (result.len() >= 1))
+{
   var result: Vec[(Str, Str)] = Vec[(Str, Str)]::new();
   if query.len() == 0 {
     return result;
@@ -241,7 +249,9 @@ pub fn url_query_parse(query: Str) -> Vec[(Str, Str)] {
 }
 /// url_query_build joins key/value pairs as k=v separated by '&', applying
 /// component encoding to both keys and values.
-pub fn url_query_build(pairs: Vec[(Str, Str)]) -> Str {
+pub fn url_query_build(pairs: Vec[(Str, Str)]) -> Str
+  ensures: ((pairs.len() == 0) && (result == "")) || ((pairs.len() != 0) && (result.len() >= 1))
+{
   var result = "";
   var i = 0;
   while i < pairs.len() {
@@ -298,7 +308,9 @@ fn normalize_path(path: Str) -> Str {
 
 /// url_normalize lowercases the scheme and host, strips the default port,
 /// and removes dot segments from the path. Query and fragment are kept.
-pub fn url_normalize(url: Str) -> Result[Str, Str] {
+pub fn url_normalize(url: Str) -> Result[Str, Str]
+  ensures: (result.is_ok == false) || (url.len() != 0)
+{
   let parsed = url_parse(url);
   match parsed {
     Ok(p) => {
@@ -326,7 +338,9 @@ pub fn url_normalize(url: Str) -> Result[Str, Str] {
 
 /// url_is_absolute returns true if the URL carries a scheme (a ':' before
 /// any '/').
-pub fn url_is_absolute(url: Str) -> Bool {
+pub fn url_is_absolute(url: Str) -> Bool
+  ensures: (result == true) => (url.len() >= 1)
+{
   let len = url.len();
   var i = 0;
   while i < len {
@@ -355,7 +369,9 @@ fn path_dir(path: Str) -> Str {
 /// url_join resolves a relative reference against a base URL (RFC 3986 S5.3
 /// merge), then normalizes dot segments. If the reference carries its own
 /// scheme it is returned unchanged.
-pub fn url_join(base: Str, relative: Str) -> Result[Str, Str] {
+pub fn url_join(base: Str, relative: Str) -> Result[Str, Str]
+  ensures: (result.is_ok == false) || (relative.len() != 0) || (base.len() != 0)
+{
   if url_is_absolute(relative) {
     return Ok(relative);
   }
@@ -363,7 +379,7 @@ pub fn url_join(base: Str, relative: Str) -> Result[Str, Str] {
   match base_res {
     Ok(bp) => {
       if starts_with(relative, "//") {
-        return Ok(bp.scheme + ":" + relative);
+        return url_normalize(bp.scheme + ":" + relative);
       }
       var merged = bp.scheme + "://" + bp.host;
       if bp.port > 0 {

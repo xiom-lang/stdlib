@@ -16,6 +16,18 @@ xiom --force -o out.exe tools/known_failures/<file>.xi
 
 ## Current
 
+**Open finding 2026-10-02 (compiler v0.61.3 and v0.62.2 dev):
+context-dependent invalid LLVM IR -- clang "Instruction does not dominate
+all uses!" for programs mixing Result/Vec payload matches with a
+Result-style match on a Str-returning call.** Found while writing the
+wave-57 net probe (`match ip.ipv6_to_string(&parts8)`, whose return type is
+Str); the probe was rewritten to compare the Str directly. Bisection was
+NON-monotonic (a prefix through the address+ip4 sections fails, through the
+address section only passes), so the repro
+`tools/known_failures/p_wave57_probe_ir.xi` pins the smallest reliable
+failing prefix (compile fails on both pins; no run). Expected: a checker
+diagnostic for the ill-typed match, or valid IR; never a clang IR error.
+
 **Open finding 2026-10-02 (compiler v0.61.3 and v0.62.1): struct literals
 with out-of-declaration-order fields compile silently and assign fields
 positionally.** `P{ z: 3.0; y: 2.0; x: 1.0 }` for `type P = { x; y; z }`

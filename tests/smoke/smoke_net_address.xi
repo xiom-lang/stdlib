@@ -8,6 +8,9 @@ module smoke_net_address
 
 use xiom.net.address;
 use xiom.net.ip;
+use xiom.net.ip4;
+use xiom.net.ip6;
+use xiom.net.url;
 use xiom.net.header;
 use xiom.io;
 
@@ -305,6 +308,203 @@ fn main() -> Int {
   if serialized != "Content-Type: text/plain\r\n" {
     io.println("hdr-serialize");
     return 53;
+  }
+
+  // wave-57: net address-family coverage growth
+  if !ip4.ip4_validate("127.0.0.1") {
+    io.println("w57-ip4-validate");
+    return 60;
+  }
+  if ip4.ip4_parse("1.2.3").is_ok {
+    io.println("w57-ip4-parse-bad");
+    return 61;
+  }
+  let o4 = ip4.ip4_octets("10.0.0.1");
+  if o4.len() != 4 {
+    io.println("w57-ip4-octets");
+    return 62;
+  }
+  if !ip4.ip4_is_loopback("127.0.0.1") {
+    io.println("w57-ip4-loop");
+    return 63;
+  }
+  if !ip4.ip4_is_private("10.0.0.1") {
+    io.println("w57-ip4-priv");
+    return 64;
+  }
+  if !ip4.ip4_is_link_local("169.254.1.1") {
+    io.println("w57-ip4-ll");
+    return 65;
+  }
+  if !ip4.ip4_is_multicast("224.0.0.1") {
+    io.println("w57-ip4-mc");
+    return 66;
+  }
+  if !ip4.ip4_is_unspecified("0.0.0.0") {
+    io.println("w57-ip4-uns");
+    return 67;
+  }
+  if !ip4.ip4_is_broadcast("255.255.255.255") {
+    io.println("w57-ip4-bc");
+    return 68;
+  }
+  if !ip6.ip6_validate("::1") {
+    io.println("w57-ip6-validate");
+    return 69;
+  }
+  if !ip.ip_parse("1.2.3.4").is_some {
+    io.println("w57-ip-parse4");
+    return 70;
+  }
+  if !ip.ip_parse("::1").is_some {
+    io.println("w57-ip-parse6");
+    return 71;
+  }
+  if !(ip.ip_expand("1.2.3.4") == "1.2.3.4") {
+    io.println("w57-ip-expand-v4");
+    return 72;
+  }
+  if !(ip.ip_expand("::1").len() == 39) {
+    io.println("w57-ip-expand-v6");
+    return 73;
+  }
+  if !(ip.ip_compress("::") == "::") {
+    io.println("w57-ip-compress");
+    return 74;
+  }
+  if !(ip.ip_masked("192.168.1.130", 24) == "192.168.1.0") {
+    io.println("w57-ip-masked");
+    return 75;
+  }
+  if !ip.ip_in_subnet("192.168.1.5", "192.168.1.0/24") {
+    io.println("w57-ip-subnet");
+    return 76;
+  }
+  let o4b = ip.ip_octets("1.2.3.4");
+  if o4b.len() != 4 {
+    io.println("w57-ip-octets");
+    return 77;
+  }
+  if !ip.ip_is_loopback("::1") {
+    io.println("w57-ip-loop6");
+    return 78;
+  }
+  if !ip.ip_is_private("fc00::") {
+    io.println("w57-ip-priv6");
+    return 79;
+  }
+  if !ip.ip_is_link_local("fe80::") {
+    io.println("w57-ip-ll6");
+    return 80;
+  }
+  if !ip.ip_is_multicast("ff02::1") {
+    io.println("w57-ip-mc6");
+    return 81;
+  }
+  if !ip.ip_is_unspecified("::") {
+    io.println("w57-ip-uns6");
+    return 82;
+  }
+  let u1 = url.url_parse("http://example.com:8080/a?b=c");
+  if u1.is_err {
+    io.println("w57-url-parse");
+    return 83;
+  }
+  let ud = url.url_decode_component("a%20b");
+  if ud.is_err {
+    io.println("w57-url-decode");
+    return 84;
+  }
+  let ue = url.url_encode_component("a b");
+  if ue.is_err {
+    io.println("w57-url-encode");
+    return 85;
+  }
+  let qp = url.url_query_parse("a=1&b=2");
+  if qp.len() != 2 {
+    io.println("w57-url-qparse");
+    return 86;
+  }
+  if !(url.url_query_build(qp) == "a=1&b=2") {
+    io.println("w57-url-qbuild");
+    return 87;
+  }
+  let un = url.url_normalize("HTTP://Example.COM:80/a/./b/../c");
+  if un.is_err {
+    io.println("w57-url-normalize");
+    return 88;
+  }
+  if !url.url_is_absolute("http://x") {
+    io.println("w57-url-abs");
+    return 89;
+  }
+  if url.url_is_absolute("/p") {
+    io.println("w57-url-abs2");
+    return 90;
+  }
+  let uj = url.url_join("http://a/b/c", "../d");
+  if uj.is_err {
+    io.println("w57-url-join");
+    return 91;
+  }
+  if ip6.ip6_parse("1::2::3").is_ok {
+    io.println("w57-ip6-bad");
+    return 92;
+  }
+  if !ip6.ip6_is_loopback("::1") {
+    io.println("w57-ip6-loop");
+    return 93;
+  }
+  if !ip6.ip6_is_unspecified("::") {
+    io.println("w57-ip6-uns");
+    return 94;
+  }
+  if !ip6.ip6_is_multicast("ff02::1") {
+    io.println("w57-ip6-mc");
+    return 95;
+  }
+  if !ip6.ip6_is_link_local("fe80::1") {
+    io.println("w57-ip6-ll");
+    return 96;
+  }
+  if !ip.ipv4_parse("1.2.3.4").is_some {
+    io.println("w57-ipv4-parse");
+    return 97;
+  }
+  if !ip.ipv6_parse("::1").is_some {
+    io.println("w57-ipv6-parse");
+    return 98;
+  }
+  let f4 = Vec[UInt8].new();
+  f4.push(1);
+  f4.push(2);
+  f4.push(3);
+  f4.push(4);
+  if !(ip.ipv4_to_string(&f4) == "1.2.3.4") {
+    io.println("w57-ipv4-str");
+    return 99;
+  }
+  if ip4.ip4_to_str(&f4).is_err {
+    io.println("w57-ip4-str");
+    return 100;
+  }
+  let s16 = Vec[UInt8].new();
+  var k = 0;
+  while k < 16 { s16.push(0); k = k + 1; }
+  if ip6.ip6_to_str(&s16).is_err {
+    io.println("w57-ip6-str");
+    return 101;
+  }
+  if ip6.ip6_expand("::1").is_err {
+    io.println("w57-ip6-expand");
+    return 102;
+  }
+  let p8 = Vec[UInt16].new();
+  var k2 = 0;
+  while k2 < 8 { p8.push(0); k2 = k2 + 1; }
+  if !(ip.ipv6_to_string(&p8) == "0:0:0:0:0:0:0:0") {
+    io.println("w57-ipv6-str");
+    return 103;
   }
 
   io.println("OK");

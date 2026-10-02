@@ -134,7 +134,9 @@ fn classify(host: Str) -> Str {
 /// Returns: Some(Address) when the string is well-formed (non-empty host and
 ///          a valid port if present), None otherwise.
 /// Complexity: O(n). Pure.
-pub fn address_parse(s: Str) -> Option[Address] {
+pub fn address_parse(s: Str) -> Option[Address]
+  ensures: (result.is_some == false) || (s.len() != 0)
+{
   if s.len() == 0 {
     return None;
   }
@@ -153,7 +155,9 @@ pub fn address_parse(s: Str) -> Option[Address] {
 /// Returns: the host (without brackets for IPv6 literals), or "" when the
 ///          string is not a valid address.
 /// Complexity: O(n). Pure.
-pub fn address_host(s: Str) -> Str {
+pub fn address_host(s: Str) -> Str
+  ensures: (result == "") || (s.len() != 0)
+{
   let parsed = address_parse(s);
   match parsed {
     Some(a) => a.host;
@@ -179,7 +183,9 @@ pub fn address_port(s: Str) -> Int
 /// Parameters: s -- the address string.
 /// Returns: true when the string parses and its host is dotted-quad IPv4.
 /// Complexity: O(n). Pure.
-pub fn address_is_ipv4(s: Str) -> Bool {
+pub fn address_is_ipv4(s: Str) -> Bool
+  ensures: (result == true) => (s.len() != 0)
+{
   let parsed = address_parse(s);
   match parsed {
     Some(a) => a.family == "ipv4";
@@ -191,7 +197,9 @@ pub fn address_is_ipv4(s: Str) -> Bool {
 /// Parameters: s -- the address string.
 /// Returns: true when the string parses and its host is an IPv6 literal.
 /// Complexity: O(n). Pure.
-pub fn address_is_ipv6(s: Str) -> Bool {
+pub fn address_is_ipv6(s: Str) -> Bool
+  ensures: (result == true) => (s.len() != 0)
+{
   let parsed = address_parse(s);
   match parsed {
     Some(a) => a.family == "ipv6";
@@ -204,7 +212,9 @@ pub fn address_is_ipv6(s: Str) -> Bool {
 /// Returns: true when parsing succeeds with a non-empty host and a valid port
 ///          (0..65535) if one is present.
 /// Complexity: O(n). Pure.
-pub fn address_is_valid(s: Str) -> Bool {
+pub fn address_is_valid(s: Str) -> Bool
+  ensures: (result == true) => (s.len() != 0)
+{
   let parsed = address_parse(s);
   parsed.is_some
 }

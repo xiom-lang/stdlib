@@ -1,21 +1,21 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
 **70% -- 7 of 10 readiness gates complete.**
-**Gates: corpus 951/951, modules 509/509, probes 211/211, barename 0/509.**
+**Gates: corpus 951/951, modules 509/509, probes 212/212, barename 0/509.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
 gates flip:
 1. Modules type-check clean -- MET (509/509).
 2. Smoke corpus green -- MET (951/951).
-3. Probe corpus green -- MET (211/211).
+3. Probe corpus green -- MET (212/212).
 4. Strict bare-name scan clean -- MET (0/509).
-5. Coverage ratchet green -- MET (floors93).
+5. Coverage ratchet green -- MET (floors94).
 6. Documentation ratchet 100% -- MET.
-7. Module-smoke ratchet green -- MET (497/517 modules, 3471/6200 fns).
-8. Contract coverage 100% (every public fn carries clauses) -- OPEN (38.5%).
+7. Module-smoke ratchet green -- MET (497/517 modules, 3475/6200 fns).
+8. Contract coverage 100% (every public fn carries clauses) -- OPEN (39.2%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
-   OPEN (11: 10 compiler, 1 stdlib algorithm).
+   OPEN (12: 11 compiler, 1 stdlib algorithm).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
 
 Authoritative order for the stdlib lane to reach 100%. State at handoff:
@@ -311,6 +311,29 @@ over `Str` + masked combine, ASCII byte classifiers, delimiter helpers,
 graph closure/depth, plus extended requester lists on `vec.str`, `Vec`
 truncation, `serialize.json` and `graph.topo`. Growth rows are not part of
 the 100% coverage path; row 33 is the only fix-first candidate.
+
+Update 2026-10-03 (wave 57 landed + crypto relay): net batch 1 -- the
+address family (address 5, ip 15, ip4 10, ip6 8, url 8 = 46 clauses).
+Fix-firsts: `ipv4_to_string` now uses the first four octets per its doc;
+`url_join`'s "//" branch now normalizes per its doc. New finding
+`p_wave57_probe_ir.xi` (context-dependent alloca-dominance invalid IR;
+non-monotonic under bisection). Probe `p_wave57_shapes.xi` (212th, 141
+checks, green on v0.61.3 and v0.62.2 dev); `smoke_net_address.xi` grew
+(module-smoke 3,471 -> 3,475); floors94; net 5.4% -> 20.9%, global 38.5%
+-> 39.2%.
+
+Crypto link packet (packages `docs/repro/crypto-link` @ 8eb7944f): NOT
+reproduced on stdlib main -- `crypto.sha256_hex` (NIST "abc") and
+`encoding.base64_encode` ("YWJj") link and run green on v0.61.3 and the
+v0.62.2 dev binary, with and without XIOM_STDLIB. The symbol
+`xiom_sha256_hash` is defined in `runtime/sha256_sw.c` (present in
+`stdlib-v0.62.0`, `stdlib-perf1` and main) and the driver's build-runtime
+source list includes it; the undefined-symbol shape points at a stale
+installed runtime library -- hand to the compiler/install lane with the
+packages KATs. In the same relay, `fn` as a reserved identifier and the
+Result-type mismatch laxness are compiler-side; the stdlib-relevant
+additions are wishlist rows 42-46 (glob/regex, Str->Str map, span/
+byte-slice API, strict int parsing with offsets, base32 + percent-encoder).
 
 State 2026-09-29 (handoff snapshot 3, main 2a06a90): floors85 global 32.8%,
 math 38.8%, num 37.4%; probes 202; smoke 951; modules 509/509; barename

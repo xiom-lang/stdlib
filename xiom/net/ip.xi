@@ -171,7 +171,9 @@ fn push_hex16(dst: &mut Vec[UInt8], group: Int) {
 /// Parameters: s -- the address string.
 /// Returns: Some(four octets) for a valid address, None otherwise.
 /// Complexity: O(n). Pure.
-pub fn ipv4_parse(s: Str) -> Option[Vec[UInt8]] {
+pub fn ipv4_parse(s: Str) -> Option[Vec[UInt8]]
+  ensures: (result.is_some == false) || ((s.len() >= 7) && (s.len() <= 15))
+{
   let r = ip4.ip4_parse(s);
   match r {
     Ok(b) => Some(b);
@@ -183,11 +185,19 @@ pub fn ipv4_parse(s: Str) -> Option[Vec[UInt8]] {
 /// Parameters: octets -- at least four octets (only the first four are used).
 /// Returns: the "a.b.c.d" representation, or "" for an undersized vector.
 /// Complexity: O(1). Pure.
-pub fn ipv4_to_string(octets: &Vec[UInt8]) -> Str {
+pub fn ipv4_to_string(octets: &Vec[UInt8]) -> Str
+  ensures: (result == "") || ((octets.len() >= 4) && (result.len() >= 7))
+{
   if octets.len() < 4 {
     return "";
   }
-  let r = ip4.ip4_to_str(octets);
+  var four = Vec[UInt8].new();
+  var i = 0;
+  while i < 4 {
+    four.push(octets[i]);
+    i = i + 1;
+  };
+  let r = ip4.ip4_to_str(&four);
   match r {
     Ok(s) => s;
     Err(_) => "";
@@ -199,7 +209,9 @@ pub fn ipv4_to_string(octets: &Vec[UInt8]) -> Str {
 /// Parameters: s -- the address string.
 /// Returns: Some(eight groups) for a valid address, None otherwise.
 /// Complexity: O(n). Pure.
-pub fn ipv6_parse(s: Str) -> Option[Vec[UInt16]] {
+pub fn ipv6_parse(s: Str) -> Option[Vec[UInt16]]
+  ensures: (result.is_some == false) || (s.len() >= 2)
+{
   let r = ip6.ip6_parse(s);
   if r.is_err {
     return None;
@@ -225,7 +237,9 @@ pub fn ipv6_parse(s: Str) -> Option[Vec[UInt16]] {
 /// Parameters: parts -- exactly eight 16-bit groups.
 /// Returns: the colon-separated string, or "" for a vector of the wrong size.
 /// Complexity: O(8). Pure.
-pub fn ipv6_to_string(parts: &Vec[UInt16]) -> Str {
+pub fn ipv6_to_string(parts: &Vec[UInt16]) -> Str
+  ensures: (result == "") || ((parts.len() == 8) && (result.len() >= 15))
+{
   if parts.len() != 8 {
     return "";
   }
@@ -248,7 +262,9 @@ pub fn ipv6_to_string(parts: &Vec[UInt16]) -> Str {
 /// Parameters: s -- the address string.
 /// Returns: Some(IpAddr) for a valid address, None otherwise.
 /// Complexity: O(n). Pure.
-pub fn ip_parse(s: Str) -> Option[IpAddr] {
+pub fn ip_parse(s: Str) -> Option[IpAddr]
+  ensures: (result.is_some == false) || (s.len() >= 2)
+{
   let v4 = ipv4_parse(s);
   if v4.is_some {
     match v4 {
@@ -268,7 +284,9 @@ pub fn ip_parse(s: Str) -> Option[IpAddr] {
 /// Parameters: s -- the address string.
 /// Returns: true when the address parses and is loopback.
 /// Complexity: O(n). Pure.
-pub fn ip_is_loopback(s: Str) -> Bool {
+pub fn ip_is_loopback(s: Str) -> Bool
+  ensures: (result == true) => (s.len() >= 2)
+{
   let v4 = ipv4_parse(s);
   if v4.is_some {
     match v4 {
@@ -305,7 +323,9 @@ pub fn ip_is_loopback(s: Str) -> Bool {
 /// Parameters: s -- the address string.
 /// Returns: true when the address parses and is private-use.
 /// Complexity: O(n). Pure.
-pub fn ip_is_private(s: Str) -> Bool {
+pub fn ip_is_private(s: Str) -> Bool
+  ensures: (result == true) => (s.len() >= 2)
+{
   let v4 = ipv4_parse(s);
   if v4.is_some {
     match v4 {
@@ -334,7 +354,9 @@ pub fn ip_is_private(s: Str) -> Bool {
 /// Parameters: s -- the address string.
 /// Returns: true when the address parses and is link-local.
 /// Complexity: O(n). Pure.
-pub fn ip_is_link_local(s: Str) -> Bool {
+pub fn ip_is_link_local(s: Str) -> Bool
+  ensures: (result == true) => (s.len() >= 2)
+{
   let v4 = ipv4_parse(s);
   if v4.is_some {
     match v4 {
@@ -360,7 +382,9 @@ pub fn ip_is_link_local(s: Str) -> Bool {
 /// Parameters: s -- the address string.
 /// Returns: true when the address parses and is multicast.
 /// Complexity: O(n). Pure.
-pub fn ip_is_multicast(s: Str) -> Bool {
+pub fn ip_is_multicast(s: Str) -> Bool
+  ensures: (result == true) => (s.len() >= 2)
+{
   let v4 = ipv4_parse(s);
   if v4.is_some {
     match v4 {
@@ -385,7 +409,9 @@ pub fn ip_is_multicast(s: Str) -> Bool {
 /// Parameters: s -- the address string.
 /// Returns: true when the address parses and is all zero.
 /// Complexity: O(n). Pure.
-pub fn ip_is_unspecified(s: Str) -> Bool {
+pub fn ip_is_unspecified(s: Str) -> Bool
+  ensures: (result == true) => (s.len() >= 2)
+{
   let v4 = ipv4_parse(s);
   if v4.is_some {
     match v4 {
@@ -441,7 +467,9 @@ fn ipv4_mask_octet(byte_val: Int, bits: Int) -> Int {
 /// Returns: the masked address, or "" for invalid input or an out-of-range
 ///          prefix.
 /// Complexity: O(n). Pure.
-pub fn ip_masked(s: Str, prefix: Int) -> Str {
+pub fn ip_masked(s: Str, prefix: Int) -> Str
+  ensures: (result == "") || ((prefix >= 0) && (prefix <= 128) && (result.len() >= 7))
+{
   if prefix < 0 {
     return "";
   }
@@ -518,7 +546,9 @@ fn ipv6_mask_group(group: Int, bits: Int) -> Int {
 /// Parameters: ip -- the address string; subnet -- "address/prefix".
 /// Returns: true when the masked addresses are equal.
 /// Complexity: O(n). Pure.
-pub fn ip_in_subnet(ip: Str, subnet: Str) -> Bool {
+pub fn ip_in_subnet(ip: Str, subnet: Str) -> Bool
+  ensures: (result == true) => (subnet.len() >= 2)
+{
   let slash = idx_of(subnet, "/");
   if slash < 0 {
     return false;
@@ -551,7 +581,9 @@ pub fn ip_in_subnet(ip: Str, subnet: Str) -> Bool {
 /// Returns: the "0000:0000:...:0000" form, or "" for invalid input. IPv4
 ///          input is returned unchanged.
 /// Complexity: O(n). Pure.
-pub fn ip_expand(s: Str) -> Str {
+pub fn ip_expand(s: Str) -> Str
+  ensures: (result == "") || (result == s) || (result.len() == 39)
+{
   let v4 = ipv4_parse(s);
   if v4.is_some {
     return s;
@@ -568,7 +600,9 @@ pub fn ip_expand(s: Str) -> Str {
 /// Returns: the canonical compressed form, or "" for invalid input. IPv4
 ///          input is returned unchanged.
 /// Complexity: O(n). Pure.
-pub fn ip_compress(s: Str) -> Str {
+pub fn ip_compress(s: Str) -> Str
+  ensures: (result == "") || (result == s) || ((result.len() >= 2) && (result.len() <= 39))
+{
   let v4 = ipv4_parse(s);
   if v4.is_some {
     return s;
@@ -642,7 +676,9 @@ fn _v6_compress(groups: Vec[UInt16]) -> Str {
 /// Parameters: s -- the address string.
 /// Returns: four octets for a valid address, an empty vector otherwise.
 /// Complexity: O(n). Pure.
-pub fn ip_octets(s: Str) -> Vec[Int] {
+pub fn ip_octets(s: Str) -> Vec[Int]
+  ensures: (result.len() == 0) || (result.len() == 4)
+{
   let result = ip4.ip4_octets(s);
   result
 }

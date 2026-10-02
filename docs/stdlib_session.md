@@ -1449,6 +1449,33 @@ registry pin, agent recon for the rest)**
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
 
+**SESSION 2026-10-03 block 17 (wave 57: net batch 1 -- address family; floors94)**
+- Wave 57: 46 clauses on xiom.net.{address (5), ip (15), ip4 (10), ip6 (8),
+  url (8)} -- Option/Result presence mirrors, length bands for valid parses,
+  exact-string broadcast claim, Bool implications, round-trip claims.
+- Fix-firsts: (F1) `ipv4_to_string` ignored its doc ("first four octets")
+  for len>4 (delegated exact-4 and returned ""); now copies the first four,
+  probe witness. (F2) `url_join`'s "//" branch skipped the documented
+  normalization; now `url_normalize(bp.scheme + ":" + relative)`.
+- New compiler finding `p_wave57_probe_ir.xi`: context-dependent invalid
+  LLVM IR (alloca dominance) when Result-style matches mix with
+  Str-returning calls; bisection NON-monotonic; the probe now compares the
+  Str results of `ipv6_to_string`/`ip_expand` directly.
+- Probe `p_wave57_shapes.xi` (212th): 141 checks; green on v0.61.3 and
+  v0.62.2 dev. `smoke_net_address.xi` grew (module-smoke 3,471 -> 3,475).
+- net 5.4% -> 20.9%, global 38.5% -> 39.2%; floors94 wired (YAML
+  re-verified) + tools/README.md + plan + queue + wishlist in the same
+  commit.
+- Relay: `COMPILER_BUGS.md` m169/m170 close the vector-bits and curve-thunk
+  findings (verified rc=0 on the v0.62.2 dev binary). The packages crypto
+  link packet does NOT reproduce on stdlib main: `crypto.sha256_hex` (NIST
+  "abc") and `encoding.base64_encode` ("YWJj") link and run green on both
+  pins, with and without XIOM_STDLIB; the symbol is defined in
+  runtime/sha256_sw.c in every tag and the driver's build-runtime list
+  includes it -- suspect a stale installed runtime library (compiler/install
+  lane). Wishlist rows 42-46 added; row 33 updated with the evidence.
+- Battery pending on the wave commit; results in the follow-up docs commit.
+
 **SESSION 2026-10-02 block 16 (wave 56: geom aggregate batch 3/final -- Mat4 tail + primitives; geom dir 100%)**
 - Wave 56 (floors93): 51 clauses on the xiom.geom aggregate -- Mat4 tail
   (17), Aabb (14), Sphere (8), Ray (8), Plane (4). See the plan entry for

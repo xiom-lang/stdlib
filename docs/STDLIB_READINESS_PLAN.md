@@ -844,13 +844,28 @@ T1/T2 yields.
        5.4%, hash 8.9%, reflect 9.1%, iter 9.8%, convert 11.5%, format
        13%, time 13%, misc 13.9%, os 15.3%, rand 16%, crypto 17%, log
        19.1%, compress 21.1%), then C, D, E, F.
+       Wave 57 (2026-10-02/03): coverage wave 21 -- net batch 1, address
+       family (46 pub: address 5, ip 15, ip4 10, ip6 8, url 8).
+       Shapes: Option/Result presence mirrors, length bands for valid
+       parses, exact-string broadcast claim, Bool-result implications,
+       empty/nonempty round-trip claims. Fix-firsts: ipv4_to_string now
+       uses the first four octets per its doc (was "" for len>4);
+       url_join's "//" branch now normalizes per its doc. New finding:
+       p_wave57_probe_ir.xi (context-dependent alloca-dominance invalid
+       IR when Result-style matches mix with Str-returning calls;
+       non-monotonic under bisection; the probe now compares Str results
+       directly). Probe tools/probes/p_wave57_shapes.xi (212th): 141
+       checks, green on v0.61.3 and v0.62.2 dev. smoke_net_address.xi
+       grew (module-smoke 3,471 -> 3,475 fns). net 5.4% -> 20.9%,
+       global 38.5% -> 39.2%. Next: net batches 2+ (http/header/cookie/
+       mime ~55; transport ~53; protocols), then the remaining low dirs.
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors93.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors94.json
        tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;
        earlier floors kept at
-       coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55/56/57/58/59/60/61/62/63/64/65/66/67/68/69/70/71/72/73/74/75/76/77/78/79/80/81/82/83/84/85/86/87/88/89/90/91/92/93.json).
+       coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55/56/57/58/59/60/61/62/63/64/65/66/67/68/69/70/71/72/73/74/75/76/77/78/79/80/81/82/83/84/85/86/87/88/89/90/91/92/93/94.json).
       Floors are per top-level stdlib/xiom directory and must be refreshed
       when a module is ADDED (new uncovered pub fns dilute the percentage
       -- TOML dropped serialize 6.1% -> 5.4%, tz dropped time 13% ->

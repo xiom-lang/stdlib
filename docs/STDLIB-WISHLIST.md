@@ -43,7 +43,7 @@ Status legend: **open** = not started; **fixed** = landed with a probe lock
 | 30 | UTF-8 code-point helpers | feature | Decode/encode Unicode code points on UTF-8 strings. | open |
 | 31 | `rand.state` | feature | Explicit RNG state save/restore (requester list extended 2026-10-02). | open |
 | 32 | `encoding.le` | feature | Little-endian encode/decode helpers (requester list extended 2026-10-02). | open |
-| 33 | `crypto` linkability defect | defect | Packages report: crypto entry points fail at LINK time in consumer programs. Exact symbols and a minimal repro requested from the packages lane; fix-first once reproduced. | open |
+| 33 | `crypto` linkability defect | defect | Packages packet `docs/repro/crypto-link` @ 8eb7944f (Windows x64, v0.62.2 installed, stdlib-perf1): `lld-link: undefined symbol: xiom_sha256_hash` from `xiom.crypto.sha256_hex(&Vec[UInt8])` / `xiom.crypto.hash.crypto_hash_sha256(&Vec[UInt8])`; --emit-ir passes. NOT reproduced on stdlib main: both KATs (NIST "abc"; base64 "YWJj") link and run green on v0.61.3 and v0.62.2 dev, with/without XIOM_STDLIB; the symbol is in `runtime/sha256_sw.c` in all tags and in the driver's build-runtime list -- suspect a stale installed runtime library; handed to the compiler/install lane with the packages KATs. | open (compiler/install lane) |
 | 34 | `xiom.hash` FNV-1a over `Str` + masked combine | feature | FNV-1a hashing for `Str` inputs and a masked/truncated combine variant. | open |
 | 35 | ASCII byte classifiers | feature | Byte-domain ASCII digit/alpha/alnum-class predicates. | open |
 | 36 | Delimiter helpers | feature | Multi-delimiter scan/split helpers. | open |
@@ -52,6 +52,11 @@ Status legend: **open** = not started; **fixed** = landed with a probe lock
 | 39 | `Vec` truncation | feature | In-place truncate/resize-down helper; requester list extended 2026-10-02. | open |
 | 40 | `serialize.json` | feature | Requester list extended 2026-10-02 (JSON surface on the module face). | open |
 | 41 | `graph.topo` | feature | Topological sort helper; requester list extended 2026-10-02. | open |
+| 42 | glob/regex helpers | feature | Glob matching (and/or a small regex surface) for path and text filters; relay 2026-10-02 night. | open |
+| 43 | `Str` -> `Str` map | feature | String-keyed map ergonomics on the module face (no manual hashing); relay 2026-10-02 night. | open |
+| 44 | Span/byte-slice API | feature | Non-owning byte-span views over `Str`/`Vec[UInt8]` for zero-copy parsing; relay 2026-10-02 night. | open |
+| 45 | Strict int parsing with offsets | feature | Reject-junk integer parsing that also reports the consumed byte offset (extends row 28); relay 2026-10-02 night. | open |
+| 46 | base32 + percent-encoder | feature | Public base32 encode/decode and a standalone percent-encoder on the encoding face; relay 2026-10-02 night. | open |
 
 Five relays from the packages lane: the initial batch named 8 rows
 (rows 1-8), the wave-46 batch added rows 9-15 with requester lists, the
@@ -64,9 +69,12 @@ code-point helpers, and the extended requester lists for `rand.state` and
 `crypto` linkability defect -- fix-first once reproduced -- plus FNV-1a
 over `Str` + masked combine, ASCII byte classifiers, delimiter helpers,
 graph closure/depth, and the extended requester lists on `vec.str`, `Vec`
-truncation, `serialize.json` and `graph.topo`). Defects are fix-first:
-row 33 needs the packages lane's exact symbols/repro before any stdlib
-change. The full sheet (wave 43-46 rows and
+truncation, `serialize.json` and `graph.topo`); the 2026-10-02 night batch
+adds rows 42-46 (glob/regex helpers, `Str` -> `Str` map, span/byte-slice
+API, strict int parsing with offsets, base32 + percent-encoder). Defects
+are fix-first: row 33's packet is in hand and does not reproduce on stdlib
+main (defined in `runtime/sha256_sw.c`; handed to the compiler/install lane
+with the packages KATs). The full sheet (wave 43-46 rows and
 requester lists) lives in `xiom-packages/packages` at commit `66f26e1`;
 the packages lane offered to forward the whole file. The empty-needle
 defect (row 1) is acknowledged FIXED in the packages sheet; their
