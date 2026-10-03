@@ -15,7 +15,7 @@ gates flip:
 7. Module-smoke ratchet green -- MET (497/517 modules, 3475/6200 fns).
 8. Contract coverage 100% (every public fn carries clauses) -- OPEN (40.1%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
-   OPEN (12: 11 compiler, 1 stdlib algorithm).
+   OPEN (11: 10 compiler, 1 stdlib algorithm).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
 
 Authoritative order for the stdlib lane to reach 100%. State at handoff:
@@ -360,6 +360,18 @@ green on v0.61.3 and v0.62.2 dev); floors95; net 20.9% -> 39.4%, global
 54-57 + docs) so the website meter is current; wave 58 is local until the
 next push point. Next: net batches 3+ (transport ~53, then protocols),
 then serialize 5.4%.
+
+Update 2026-10-03 (m178 closure + net.xi fix-first): the compiler lane's
+m178 checker validation (pattern-vs-type on match arms) landed at compiler
+main `659f6ec1`; our wave-57 invalid-IR finding is FIXED and
+`p_wave57_probe_ir.xi` is retired (the diagnostic is now a clean T001). It
+exposed a real pre-existing stdlib bug in the `xiom.net` aggregate body:
+`str_slice` (`xiom/net/net.xi`) matched `Str::from_utf8(buf)` as `Ok/Err`
+although it returns Str -- replaced with `return Str::from_utf8(buf);`.
+Verified with the m178 binary: `check_modules` 509/509 type-check clean
+(303s) and `smoke_net_address` compiles clean; gate-pin batteries re-run
+green. Findings count 12 -> 11 (10 compiler, 1 stdlib). This unblocks the
+compiler lane's api-freeze and the v0.62.3 tag.
 
 State 2026-09-29 (handoff snapshot 3, main 2a06a90): floors85 global 32.8%,
 math 38.8%, num 37.4%; probes 202; smoke 951; modules 509/509; barename

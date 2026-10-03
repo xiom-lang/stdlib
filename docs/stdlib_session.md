@@ -1449,6 +1449,23 @@ registry pin, agent recon for the rest)**
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
 
+**RELAY 2026-10-03 (m178 closure + net.xi fix-first)**
+- Compiler main `659f6ec1` implements m178 (checker pattern-vs-type on
+  match arms). Our wave-57 invalid-IR finding is FIXED; the diagnostic is
+  a clean T001 now and `tools/known_failures/p_wave57_probe_ir.xi` is
+  retired (README entry removed; findings count 12 -> 11).
+- m178 exposed a real pre-existing stdlib bug in the `xiom.net` aggregate
+  body: `str_slice` (`xiom/net/net.xi`) matched `Str::from_utf8(buf)` as
+  `Ok/Err` although it returns Str -- replaced with
+  `return Str::from_utf8(buf);`.
+- Verified with the m178 binary: `check_modules` 509/509 type-check clean
+  (303s), `smoke_net_address` compiles clean; on the gate pin: smoke_net
+  10/10, p_wave57_shapes and p_wave58_shapes green. This unblocks the
+  compiler lane's api-freeze and the v0.62.3 tag.
+- Wave-58 full battery (pre-hotfix tree, commit e2002e1): check_modules
+  509/509 (396.2s); corpus 951/951 (2364.1s); probes 213/213 (467.8s);
+  barename 0/509 (634s); coverage/doc/module-smoke ratchets OK.
+
 **SESSION 2026-10-03 block 18 (wave 58: net batch 2 -- HTTP family; floors95)**
 - Wave 58: 55 clauses on xiom.net.{http (21), header (6), cookie (10),
   mime (18)}. Fix-first: `parse_q` capped at 1000 (RFC 7231; `1.999`
@@ -1464,7 +1481,11 @@ registry pin, agent recon for the rest)**
   family; module-smoke stays 3,475/6,200).
 - Main was pushed before this wave (`5c3d39f..c11b66c`, website meter
   current); this wave is local until the next push point.
-- Battery pending on the wave commit; results in the follow-up docs commit.
+- Full battery on e2002e1 (pre-hotfix tree): check_modules 509/509
+  (396.2s); corpus 951/951 (2364.1s); probes 213/213 (467.8s); barename
+  0/509 (634s); coverage floors95/doc/module-smoke ratchets OK. After the
+  m178 hotfix, re-verified: check_modules 509/509 on the m178 binary;
+  smoke_net 10/10 and p_wave57/58 probes green on the gate pin.
 
 **SESSION 2026-10-03 block 17 (wave 57: net batch 1 -- address family; floors94)**
 - Wave 57: 46 clauses on xiom.net.{address (5), ip (15), ip4 (10), ip6 (8),

@@ -613,10 +613,7 @@ fn str_slice(s: Str, start: Int, end: Int) -> Str {
     buf.push(s.byte_at(i));
     i = i + 1;
   }
-  match Str::from_utf8(buf) {
-    Ok(s) => { return s; }
-    Err(_) => { return ""; }
-  }
+  return Str::from_utf8(buf);
 }
 
 fn str_to_int(s: Str) -> Int {
