@@ -9,7 +9,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 **Repo**: `xiom-lang/stdlib` at `E:\xiom-lang\stdlib` (branch `main`).
 Compiler pin: **official v0.62.3** (windows-x64 archive, SHA256
 `011af7dd...`, verified against the release SHA256SUMS). The v0.62.3
-re-baseline is DONE: check_modules 509/509, corpus 948/951 (3 filed
+re-baseline is DONE: check_modules 509/509, corpus 950/951 (1 filed
 compiler regressions), probes 220/220, barename 0/509, floors98 -- see
 SESSION block 22 and the HANDOFF 2026-10-03 snapshot 5, which carries the
 paste-ready continuation prompt (FIRST TASK: wave 63, net batch 6). The
@@ -1483,6 +1483,11 @@ registry pin, agent recon for the rest)**
   outside the coverage path. A future mini-wave can land one small item
   (e.g. ASCII byte classifiers or FNV-1a over `Str`) with the same
   probe/battery protocol.
+- Post-wave-62: the peer fix `ac3c58f` (release the borrows in the cell
+  smokes) closed the cell x2 as stdlib-side; the iter-range C001 cleared on
+  the wave-62 tip. Official-pin corpus is **950/951** (only
+  `smoke_compress_lz4_snappy` remains a filed compiler regression), findings
+  Current 9 (8 compiler, 1 stdlib). The queue top lines reflect this.
 
 **SESSION 2026-10-03 block 23 (wave 62: net batch 5 -- sse/websocket/ws/dns/multipart; floors98)**
 - Wave 62: 41 clauses (sse 8, websocket 14, ws 5, dns 8, multipart 6).
@@ -1837,11 +1842,12 @@ verified against the release SHA256SUMS); v0.61.3 at
 STDLIB_VERSION pin), `stdlib-v0.62.0` (released 0.62.0). Coverage floors98:
 **global 42.2% pub-with-clause, geom 100.0%, net 87.2%, math 38.8%, num
 35.6%**; probe corpus **220** (incl. the three p_regress_* promoted repros);
-corpus **948/951 on v0.62.3** (remaining filed failures: `smoke_iter_range`
-C001 and `smoke_compress_lz4_snappy`; the two cell smokes were stdlib-side
--- missing `Ref.release` -- and are fixed 2026-10-03), 951/951 on v0.61.3;
+corpus **950/951 on v0.62.3** (remaining filed failure:
+`smoke_compress_lz4_snappy`; the two cell smokes were stdlib-side
+-- missing `Ref.release` -- fixed 2026-10-03, and the iter-range C001
+cleared on the wave-62 tip), 951/951 on v0.61.3;
 modules 509/509; barename 0/509; doc 100%; module-smoke 497/517 modules,
-3,475/6,200 fns; findings Current 10 (9 compiler, 1 stdlib). Readiness meter 70% (7/10).
+3,475/6,200 fns; findings Current 9 (8 compiler, 1 stdlib). Readiness meter 70% (7/10).
 
 **Waves landed since snapshot 4**: geom aggregate batches 6-8 (46+45+51 =
 142/142; `geom.xi` 186/186; geom directory 100%; fix-first
@@ -1901,10 +1907,10 @@ STATE: main @ 05168e6 (pushed). Compiler pin: official v0.62.3 at
 v0.61.3 at %TEMP%\kilo\stdlib_ws\xiom_v0613.exe and the m178 dev build at
 E:\xiom-lang\xiom\target\debug\xiom.exe for cross-checks. Coverage floors98:
 global 42.2%, net 87.2%, geom 100%, math 38.8%, num 35.6%. Gates on v0.62.3:
-check_modules 509/509; corpus 948/951 (remaining filed compiler-side:
-`smoke_iter_range` C001 + `smoke_compress_lz4_snappy`; cell smokes fixed
-stdlib-side 2026-10-03); probes 220/220; barename 0/509; coverage floors98;
-module-smoke 3,475/6,200; doc 100%. Findings Current 10 (9 compiler,
+check_modules 509/509; corpus 950/951 (remaining filed compiler-side:
+`smoke_compress_lz4_snappy`; cell smokes fixed stdlib-side 2026-10-03 and
+the iter-range C001 cleared on the wave-62 tip); probes 220/220; barename 0/509; coverage floors98;
+module-smoke 3,475/6,200; doc 100%. Findings Current 9 (8 compiler,
 1 stdlib). stdlib-perf3 (2429ac3) is the shipped
 pin for compiler v0.62.3 (PUBLISHED); keep the #[unsafe_direct] annotations
 on xiom/sync/*.
@@ -1942,7 +1948,7 @@ read-only); report new compiler bugs in tools/known_failures/ with a
 minimal repro; update docs/PRODUCTION_READINESS_QUEUE.md every wave.
 
 GOTCHAS (full list in snapshot 3's block, unchanged, plus): v0.62.3 has
-context-dependent codegen regressions (cell x2, lz4) -- minimal forms may
+context-dependent codegen regression (lz4 on v0.62.3) -- minimal forms may
 pass; multipart_parse result Part fields are corrupt (presence-only);
 struct-literal positional scrambling is FIXED on v0.62.3 (still write
 declaration order); bind module-qualified call results to `let` before

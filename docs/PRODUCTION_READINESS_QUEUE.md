@@ -1,14 +1,15 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
 **70% -- 7 of 10 readiness gates complete.**
-**Gates: corpus 948/951, modules 509/509, probes 220/220, barename 0/509.**
+**Gates: corpus 950/951, modules 509/509, probes 220/220, barename 0/509.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
 gates flip:
 1. Modules type-check clean -- MET (509/509).
 2. Smoke corpus green -- MET on the v0.61.3 pin (951/951); the official
-   v0.62.3 baseline is 947/951 (4 compiler-side regressions filed; 2 stale
+   v0.62.3 baseline is 950/951 (cell x2 fixed stdlib-side in `ac3c58f`;
+   `smoke_compress_lz4_snappy` remains a filed compiler regression; 2 stale
    smokes fixed at the pin move).
 3. Probe corpus green -- MET (220/220 on v0.62.3, incl. the 3 promoted
    regression probes).
@@ -18,7 +19,7 @@ gates flip:
 7. Module-smoke ratchet green -- MET (497/517 modules, 3475/6200 fns).
 8. Contract coverage 100% (every public fn carries clauses) -- OPEN (42.2%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
-   OPEN (10: 9 compiler, 1 stdlib algorithm).
+   OPEN (9: 8 compiler, 1 stdlib algorithm).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
 
 Authoritative order for the stdlib lane to reach 100%. State at handoff:
