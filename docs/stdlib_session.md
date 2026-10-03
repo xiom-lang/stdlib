@@ -1452,6 +1452,21 @@ registry pin, agent recon for the rest)**
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
 
+**SESSION 2026-10-03 block 23 (wave 62: net batch 5 -- sse/websocket/ws/dns/multipart; floors98)**
+- Wave 62: 41 clauses (sse 8, websocket 14, ws 5, dns 8, multipart 6).
+- Fix-first: `ws_handshake_verify` scanned the FIRST CRLF of the response
+  for the accept-header line end, so canonical `101 ...` responses with
+  trailing CRLFCRLF verified false; now scans the CRLF after the accept
+  value (probe witness). New finding `p_multipart_parse_name.xi`:
+  `multipart_parse` result Part field reads are corrupt on BOTH v0.61.3
+  and v0.62.3 (`name.len()` reads -1; directly constructed Parts are
+  fine); the probe is presence-only for that path.
+- Probe `p_wave62_shapes.xi` (220th): green on v0.62.3 and v0.61.3.
+- net 73.4% -> 87.2%, global 41.6% -> 42.2%; floors98 wired (YAML
+  re-verified) + tools/README.md + plan + queue in the same commit.
+- Battery pending on the wave commit; results in the follow-up docs
+  commit.
+
 **SESSION 2026-10-03 block 22 (official v0.62.3 baseline at the pin move)**
 - Installed the official v0.62.3 windows-x64 archive (SHA256 `011af7dd...`
   verified against SHA256SUMS + the API digest) at

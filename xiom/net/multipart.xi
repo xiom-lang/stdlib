@@ -126,7 +126,9 @@ fn boundary_final(boundary: Str) -> Str {
 /// Parameters: name -- the field name; value -- the field value.
 /// Returns: a Part with no filename or content type.
 /// Complexity: O(n). Pure.
-pub fn multipart_part(name: Str, value: Str) -> Part {
+pub fn multipart_part(name: Str, value: Str) -> Part
+  ensures: result.name == name && result.filename.len() == 0 && result.content_type.len() == 0 && result.data.len() >= value.len()
+{
   let data = encoding.utf8_encode(value);
   Part{ name: name; filename: ""; content_type: ""; data: data; }
 }
@@ -136,7 +138,9 @@ pub fn multipart_part(name: Str, value: Str) -> Part {
 ///          content_type -- the file's MIME type; data -- the file bytes.
 /// Returns: a Part carrying the file metadata and bytes.
 /// Complexity: O(n). Pure.
-pub fn multipart_part_file(name: Str, filename: Str, content_type: Str, data: &Vec[UInt8]) -> Part {
+pub fn multipart_part_file(name: Str, filename: Str, content_type: Str, data: &Vec[UInt8]) -> Part
+  ensures: result.name == name && result.filename == filename && result.content_type == content_type && result.data.len() == data.len()
+{
   var bytes = Vec[UInt8].new();
   var i = 0;
   while i < data.len() {
@@ -150,7 +154,9 @@ pub fn multipart_part_file(name: Str, filename: Str, content_type: Str, data: &V
 /// Parameters: parts -- the parts to serialize; boundary -- the boundary string.
 /// Returns: the multipart/form-data body bytes.
 /// Complexity: O(n). Pure.
-pub fn multipart_build(parts: &Vec[Part], boundary: Str) -> Vec[UInt8] {
+pub fn multipart_build(parts: &Vec[Part], boundary: Str) -> Vec[UInt8]
+  ensures: (result.len() >= boundary.len() + 6) && ((parts.len() == 0) => (result.len() == boundary.len() + 6))
+{
   var body = Vec[UInt8].new();
   var i = 0;
   while i < parts.len() {
@@ -289,7 +295,9 @@ fn parse_part_headers(header_block: Str) -> (Str, Str, Str) {
 /// Returns: Ok(parts) on success, Err when the body has no boundary markers
 ///          or is malformed.
 /// Complexity: O(n). Pure.
-pub fn multipart_parse(body: &Vec[UInt8], boundary: Str) -> Result[Vec[Part], Str] {
+pub fn multipart_parse(body: &Vec[UInt8], boundary: Str) -> Result[Vec[Part], Str]
+  ensures: ((body.len() == 0) => (result.is_err == true)) && ((result.is_ok == true) => (body.len() > 0))
+{
   let delim_raw = encoding.utf8_encode(boundary_delim(boundary));
   var delim = Vec[UInt8].new();
   var di = 0;
@@ -376,7 +384,9 @@ fn crlf_bytes_t() -> Vec[UInt8] {
 /// Generate a random boundary string.
 /// Returns: a boundary of the form "----xiomboundary<unix timestamp>".
 /// Complexity: O(1). Pure (timestamp-based uniqueness).
-pub fn multipart_boundary_new() -> Str {
+pub fn multipart_boundary_new() -> Str
+  ensures: result.len() > 16
+{
   let ts = io.time_now();
   var result = "----xiomboundary";
   result = result + ts.to_str();
@@ -387,7 +397,9 @@ pub fn multipart_boundary_new() -> Str {
 /// Parameters: boundary -- the boundary string.
 /// Returns: "multipart/form-data; boundary=<boundary>".
 /// Complexity: O(1). Pure.
-pub fn multipart_content_type(boundary: Str) -> Str {
+pub fn multipart_content_type(boundary: Str) -> Str
+  ensures: result.len() == boundary.len() + 30
+{
   var result = "multipart/form-data; boundary=";
   result = result + boundary;
   result

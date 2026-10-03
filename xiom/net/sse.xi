@@ -139,7 +139,9 @@ fn apply_line(e: SseEvent, line: Str) -> SseEvent {
 ///          ending with a blank line).
 /// Returns: Ok(SseEvent) for a well-formed chunk, Err for an empty chunk.
 /// Complexity: O(n). Pure.
-pub fn sse_parse_event(chunk: Str) -> Result[SseEvent, Str] {
+pub fn sse_parse_event(chunk: Str) -> Result[SseEvent, Str]
+  ensures: ((chunk.len() == 0) => (result.is_err == true)) && ((result.is_err == true) => (chunk.len() == 0)) && ((result.is_ok == true) => (chunk.len() > 0))
+{
   if chunk.len() == 0 {
     return Err("empty event chunk");
   }
@@ -158,7 +160,9 @@ pub fn sse_parse_event(chunk: Str) -> Result[SseEvent, Str] {
 /// Parameters: e -- the event.
 /// Returns: Some(id) when the id is non-empty, None otherwise.
 /// Complexity: O(1). Pure.
-pub fn sse_event_id(e: SseEvent) -> Option[Str] {
+pub fn sse_event_id(e: SseEvent) -> Option[Str]
+  ensures: ((e.id.len() == 0) => (result.is_none == true)) && ((result.is_some == true) => (e.id.len() > 0))
+{
   if e.id.len() > 0 {
     return Some(e.id);
   }
@@ -169,7 +173,9 @@ pub fn sse_event_id(e: SseEvent) -> Option[Str] {
 /// Parameters: e -- the event.
 /// Returns: the data field (possibly "").
 /// Complexity: O(1). Pure.
-pub fn sse_event_data(e: SseEvent) -> Str {
+pub fn sse_event_data(e: SseEvent) -> Str
+  ensures: result == e.data
+{
   e.data
 }
 
@@ -177,7 +183,9 @@ pub fn sse_event_data(e: SseEvent) -> Str {
 /// NOT IMPLEMENTED: requires a live TCP connection that the pure stdlib does
 /// not manage.
 /// Returns: Err("sse_connect: TCP connections not available in the pure stdlib").
-pub fn sse_connect(url: Str) -> Result[SseConnection, Str] {
+pub fn sse_connect(url: Str) -> Result[SseConnection, Str]
+  ensures: result.is_err == true
+{
   let _ = url;
   Err("sse_connect: TCP connections not available in the pure stdlib")
 }
@@ -185,7 +193,9 @@ pub fn sse_connect(url: Str) -> Result[SseConnection, Str] {
 /// Connect with custom request headers.
 /// NOT IMPLEMENTED: requires a live TCP connection (see sse_connect).
 /// Returns: Err("sse_connect_headers: TCP connections not available in the pure stdlib").
-pub fn sse_connect_headers(url: Str, headers: &Vec[(Str, Str)]) -> Result[SseConnection, Str] {
+pub fn sse_connect_headers(url: Str, headers: &Vec[(Str, Str)]) -> Result[SseConnection, Str]
+  ensures: result.is_err == true
+{
   let _ = url;
   let _ = headers;
   Err("sse_connect_headers: TCP connections not available in the pure stdlib")
@@ -194,21 +204,27 @@ pub fn sse_connect_headers(url: Str, headers: &Vec[(Str, Str)]) -> Result[SseCon
 /// Read and parse the next event.
 /// NOT IMPLEMENTED: requires a live connection (see sse_connect).
 /// Returns: Err("sse_read_event: connection not available in the pure stdlib").
-pub fn sse_read_event(conn: SseConnection) -> Result[SseEvent, Str] {
+pub fn sse_read_event(conn: SseConnection) -> Result[SseEvent, Str]
+  ensures: result.is_err == true
+{
   let _ = conn;
   Err("sse_read_event: connection not available in the pure stdlib")
 }
 
 /// Close the event stream connection.
 /// NO-OP: no live connection exists in the pure stdlib.
-pub fn sse_close(conn: SseConnection) {
+pub fn sse_close(conn: SseConnection)
+  ensures: true
+{
   let _ = conn;
 }
 
 /// Drain available events into out and return the count.
 /// NOT IMPLEMENTED: requires a live connection (see sse_connect). Always
 /// returns 0 with the output vector untouched.
-pub fn sse_read_events(conn: SseConnection, out: &mut Vec[SseEvent]) -> Int {
+pub fn sse_read_events(conn: SseConnection, out: &mut Vec[SseEvent]) -> Int
+  ensures: result == 0
+{
   let _ = conn;
   let _ = out;
   0

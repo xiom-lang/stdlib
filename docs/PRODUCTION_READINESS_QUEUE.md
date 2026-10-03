@@ -1,7 +1,7 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
 **70% -- 7 of 10 readiness gates complete.**
-**Gates: corpus 947/951, modules 509/509, probes 219/219, barename 0/509.**
+**Gates: corpus 947/951, modules 509/509, probes 220/220, barename 0/509.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -10,15 +10,15 @@ gates flip:
 2. Smoke corpus green -- MET on the v0.61.3 pin (951/951); the official
    v0.62.3 baseline is 947/951 (4 compiler-side regressions filed; 2 stale
    smokes fixed at the pin move).
-3. Probe corpus green -- MET (219/219 on v0.62.3, incl. the 3 promoted
+3. Probe corpus green -- MET (220/220 on v0.62.3, incl. the 3 promoted
    regression probes).
 4. Strict bare-name scan clean -- MET (0/509).
-5. Coverage ratchet green -- MET (floors97).
+5. Coverage ratchet green -- MET (floors98).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (497/517 modules, 3475/6200 fns).
-8. Contract coverage 100% (every public fn carries clauses) -- OPEN (41.6%).
+8. Contract coverage 100% (every public fn carries clauses) -- OPEN (42.2%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
-   OPEN (10: 9 compiler, 1 stdlib algorithm).
+   OPEN (11: 10 compiler, 1 stdlib algorithm).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
 
 Authoritative order for the stdlib lane to reach 100%. State at handoff:
@@ -445,6 +445,18 @@ stale smokes were fixed at the pin move (bomb-guard's gzip Vec API;
 `p_generic_typechanging_fnptr` now passes; `p_curve_thunk_zero`,
 `p_geom_vector_result_bits` and `p_struct_literal_field_order` are
 retired as fixed.
+
+Update 2026-10-03 (wave 62 landed): net batch 5 -- sse (8), websocket
+(14), ws (5), dns (8), multipart (6) = 41 clauses. Fix-first:
+`ws_handshake_verify` now scans the CRLF after the accept value (canonical
+101 responses verified false before). New finding:
+`p_multipart_parse_name.xi` (multipart_parse result Part field reads are
+corrupt on both v0.61.3 and v0.62.3; probe presence-only). Probe
+`p_wave62_shapes.xi` (220th, green on v0.62.3 and v0.61.3); floors98; net
+73.4% -> 87.2%, global 41.6% -> 42.2%. Next: net batch 6 (net.xi 15,
+server 6, jwt 9), then the remaining low dirs (hash 8.9%, reflect 9.1%,
+iter 9.8%, convert 11.5%, format 13%, time 13%, misc 13.9%, os 15.3%,
+rand 16%, crypto 17%, log 19.1%, compress 21.1%), then C, D, E, F.
 
 Update 2026-10-03 (relay resolutions): the 2026-10-02 "missing arguments
 accepted silently" arity row is STALE -- on v0.62.2 `T001: expects N

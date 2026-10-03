@@ -899,13 +899,29 @@ T1/T2 yields.
        websocket 14 + ws 5 + dns 8 + multipart 6 + server 6 + jwt 9 +
        net.xi 15), then the remaining low dirs (hash 8.9%, reflect 9.1%,
        iter 9.8%, ...).
+       Wave 62 (2026-10-03): coverage wave 25 -- net batch 5 (41 pub: sse
+       8, websocket 14, ws 5, dns 8, multipart 6). Shapes: SSE
+       parse/accessor and stub claims, WebSocket handshake exact-length
+       split, accept-key length, frame encode/decode bands, URL parse
+       bands, open-state implications, TLS-free ws twin claims, DNS
+       presence/length bands, multipart constructor mirrors and builder
+       bands. Fix-first: ws_handshake_verify's accept-header line scan
+       searched from the response start (first CRLF), so canonical
+       `101 ...\r\n...Accept: key\r\n\r\n` responses verified false; now
+       scans the CRLF after the accept value. New finding:
+       p_multipart_parse_name.xi (multipart_parse result field reads are
+       corrupt on BOTH the v0.61.3 pin and official v0.62.3; presence-only
+       in the probe). Probe tools/probes/p_wave62_shapes.xi (220th):
+       green on v0.62.3 and v0.61.3. net 73.4% -> 87.2%, global 41.6% ->
+       42.2%. Next: net batch 6 (net.xi 15, server 6, jwt 9), then the
+       remaining low dirs.
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors97.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors98.json
        tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;
        earlier floors kept at
-       coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55/56/57/58/59/60/61/62/63/64/65/66/67/68/69/70/71/72/73/74/75/76/77/78/79/80/81/82/83/84/85/86/87/88/89/90/91/92/93/94/95/96/97.json).
+       coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55/56/57/58/59/60/61/62/63/64/65/66/67/68/69/70/71/72/73/74/75/76/77/78/79/80/81/82/83/84/85/86/87/88/89/90/91/92/93/94/95/96/97/98.json).
       Floors are per top-level stdlib/xiom directory and must be refreshed
       when a module is ADDED (new uncovered pub fns dilute the percentage
       -- TOML dropped serialize 6.1% -> 5.4%, tz dropped time 13% ->

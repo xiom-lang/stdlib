@@ -104,7 +104,7 @@ jobs:
 
       - name: Coverage ratchet
         shell: pwsh
-        run: ./tools/coverage_scan.ps1 -RatchetFile ./tools/coverage_floors97.json
+        run: ./tools/coverage_scan.ps1 -RatchetFile ./tools/coverage_floors98.json
 
       - name: Module smoke-coverage ratchet
         shell: pwsh

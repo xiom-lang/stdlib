@@ -16,6 +16,15 @@ xiom --force -o out.exe tools/known_failures/<file>.xi
 
 ## Current
 
+**Open finding 2026-10-03 (both v0.61.3 and official v0.62.3):
+`multipart_parse` result Part field reads are corrupt.** Build one
+`multipart_part("f", "v")` and parse it back with the same boundary:
+`out[0].name` is neither "f" nor "" (its `.len()` reads -1), while
+directly constructed Parts read correctly and the parsed part count is
+right. Repro `tools/known_failures/p_multipart_parse_name.xi` (rc=1).
+Found in wave 62; the wave probe is presence-only for that path. Expected:
+`out[0].name == "f"`.
+
 **Open finding 2026-10-03 (official v0.62.3 only; GREEN on v0.61.3):
 `iter.range(1, 5).contains(3)` fails at codegen with C001 ("'contains'
 receiver does not expose a concrete Vec/Slice/Array element type -- the
