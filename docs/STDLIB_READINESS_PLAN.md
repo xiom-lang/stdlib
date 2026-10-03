@@ -887,13 +887,25 @@ T1/T2 yields.
        Next: net protocols (proto/smtp/ftp/ntp/ping/sse/websocket/ws),
        then the remaining low dirs (hash 8.9%, reflect 9.1%, iter 9.8%,
        ...).
+       Wave 61 (2026-10-03): coverage wave 24 -- net batch 4, protocol
+       family (48 pub: proto 10, smtp 13, ftp 9, ntp 9, ping 7). Shapes:
+       exact command/format mirrors and length bands, JSON-RPC/SSE
+       skeleton bands, header parse/get presence, auth header mirrors,
+       reply-parser presence bands, NTP structural/encode/decode claims
+       and exact offset/roundtrip mirrors, ICMP checksum empty claim, the
+       nine documented Err stubs. Probe tools/probes/p_wave61_shapes.xi
+       (216th): 72 checks, green on v0.61.3 and the m178 dev binary.
+       net 57.2% -> 73.4%, global 41.6%. Next: net batch 5 (sse 8 +
+       websocket 14 + ws 5 + dns 8 + multipart 6 + server 6 + jwt 9 +
+       net.xi 15), then the remaining low dirs (hash 8.9%, reflect 9.1%,
+       iter 9.8%, ...).
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors96.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors97.json
        tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;
        earlier floors kept at
-       coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55/56/57/58/59/60/61/62/63/64/65/66/67/68/69/70/71/72/73/74/75/76/77/78/79/80/81/82/83/84/85/86/87/88/89/90/91/92/93/94/95/96.json).
+       coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55/56/57/58/59/60/61/62/63/64/65/66/67/68/69/70/71/72/73/74/75/76/77/78/79/80/81/82/83/84/85/86/87/88/89/90/91/92/93/94/95/96/97.json).
       Floors are per top-level stdlib/xiom directory and must be refreshed
       when a module is ADDED (new uncovered pub fns dilute the percentage
       -- TOML dropped serialize 6.1% -> 5.4%, tz dropped time 13% ->

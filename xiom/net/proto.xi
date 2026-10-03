@@ -71,7 +71,9 @@ fn trim(s: Str) -> Str {
 
 /// jsonrpc_request builds a JSON-RPC 2.0 request object. The params value
 /// is embedded verbatim as pre-serialized JSON.
-pub fn jsonrpc_request(id: Int, method: Str, params_json: Str) -> Str {
+pub fn jsonrpc_request(id: Int, method: Str, params_json: Str) -> Str
+  ensures: result.len() >= 46
+{
   var result = "{\"jsonrpc\":\"2.0\",\"id\":";
   result = result + id.to_str();
   result = result + ",\"method\":\"";
@@ -84,7 +86,9 @@ pub fn jsonrpc_request(id: Int, method: Str, params_json: Str) -> Str {
 
 /// jsonrpc_success builds a JSON-RPC 2.0 success response. The result value
 /// is embedded verbatim as pre-serialized JSON.
-pub fn jsonrpc_success(id: Int, result_json: Str) -> Str {
+pub fn jsonrpc_success(id: Int, result_json: Str) -> Str
+  ensures: result.len() >= 34
+{
   var result = "{\"jsonrpc\":\"2.0\",\"id\":";
   result = result + id.to_str();
   result = result + ",\"result\":";
@@ -94,7 +98,9 @@ pub fn jsonrpc_success(id: Int, result_json: Str) -> Str {
 }
 
 /// jsonrpc_error builds a JSON-RPC 2.0 error response.
-pub fn jsonrpc_error(id: Int, code: Int, message: Str) -> Str {
+pub fn jsonrpc_error(id: Int, code: Int, message: Str) -> Str
+  ensures: result.len() >= 56
+{
   var result = "{\"jsonrpc\":\"2.0\",\"id\":";
   result = result + id.to_str();
   result = result + ",\"error\":{\"code\":";
@@ -125,7 +131,9 @@ fn sse_data_lines(data: Str) -> Str {
 
 /// sse_format_event formats an SSE event with an "event:" line followed by
 /// "data:" lines and a terminating blank line.
-pub fn sse_format_event(event: Str, data: Str) -> Str {
+pub fn sse_format_event(event: Str, data: Str) -> Str
+  ensures: result.len() >= event.len() + 16
+{
   var result = "event: ";
   result = result + event;
   result = result + "\n";
@@ -136,13 +144,17 @@ pub fn sse_format_event(event: Str, data: Str) -> Str {
 
 /// sse_format_data formats a single SSE data message with a terminating
 /// blank line.
-pub fn sse_format_data(data: Str) -> Str {
+pub fn sse_format_data(data: Str) -> Str
+  ensures: result.len() >= data.len() + 8
+{
   sse_data_lines(data) + "\n"
 }
 
 /// http_header_parse parses a block of "Name: value" lines (one per line,
 /// '\r' tolerated) into (name, value) pairs. Blank lines are skipped.
-pub fn http_header_parse(headers: Str) -> Vec[(Str, Str)] {
+pub fn http_header_parse(headers: Str) -> Vec[(Str, Str)]
+  ensures: ((headers.len() == 0) => (result.len() == 0)) && (result.len() <= headers.len() + 1)
+{
   var result: Vec[(Str, Str)] = Vec[(Str, Str)]::new();
   let lines = split(headers, "\n");
   var i = 0;
@@ -167,7 +179,9 @@ pub fn http_header_parse(headers: Str) -> Vec[(Str, Str)] {
 
 /// http_header_get finds the value for a header name in a parsed header
 /// list, matching case-insensitively and returning the first match.
-pub fn http_header_get(headers: Vec[(Str, Str)], name: Str) -> Option[Str] {
+pub fn http_header_get(headers: Vec[(Str, Str)], name: Str) -> Option[Str]
+  ensures: ((headers.len() == 0) => (result.is_none == true)) && ((result.is_some == true) => (headers.len() > 0))
+{
   let lname = string.str_lower(name);
   var i = 0;
   while i < headers.len() {
@@ -182,18 +196,24 @@ pub fn http_header_get(headers: Vec[(Str, Str)], name: Str) -> Option[Str] {
 
 /// basic_auth_header builds a "Basic <base64(user:password)>" Authorization
 /// header value.
-pub fn basic_auth_header(username: Str, password: Str) -> Str {
+pub fn basic_auth_header(username: Str, password: Str) -> Str
+  ensures: result.len() >= 6
+{
   "Basic " + encoding.base64_encode_str(username + ":" + password)
 }
 
 /// bearer_auth_header builds a "Bearer <token>" Authorization header value.
-pub fn bearer_auth_header(token: Str) -> Str {
+pub fn bearer_auth_header(token: Str) -> Str
+  ensures: result.len() == token.len() + 7
+{
   "Bearer " + token
 }
 
 /// http_status_text maps an HTTP status code to its standard reason phrase,
 /// or "Unknown" for codes not in the table.
-pub fn http_status_text(code: Int) -> Str {
+pub fn http_status_text(code: Int) -> Str
+  ensures: result.len() >= 2 && result.len() <= 21 && ((code == 200) => (result == "OK")) && ((code == 404) => (result == "Not Found"))
+{
   if code == 200 { return "OK"; }
   if code == 201 { return "Created"; }
   if code == 204 { return "No Content"; }

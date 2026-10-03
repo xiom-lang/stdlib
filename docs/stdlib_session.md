@@ -1449,6 +1449,24 @@ registry pin, agent recon for the rest)**
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
 
+**SESSION 2026-10-03 block 21 (wave 61: net batch 4 -- protocol family; floors97)**
+- Wave 61: 48 clauses on xiom.net.{proto (10), smtp (13), ftp (9), ntp
+  (9), ping (7)}. Exact command/format mirrors and length bands, JSON-RPC/
+  SSE skeleton bands, header parse/get presence, auth mirrors,
+  reply-parser presence bands, NTP structural/encode/decode claims plus
+  exact offset/roundtrip mirrors, the ICMP empty-input claim, and the nine
+  documented Err stubs. Probe KATs are socket-free.
+- Probe `p_wave61_shapes.xi` (216th): 72 checks; green on v0.61.3 and the
+  m178 dev binary. Probe note: `icmp_checksum` results must be bound to a
+  `let` before comparison (`!=` on an inline UInt16 misbehaves; `==` is
+  fine after binding).
+- net 57.2% -> 73.4%, global 41.6%; floors97 wired (YAML re-verified) +
+  tools/README.md + plan + queue in the same commit.
+- Gate P: `stdlib-perf3` tagged at `2429ac3` and pushed for the compiler
+  lane (bump STDLIB_VERSION, api-freeze regen, t2 185342f4, tag v0.62.3).
+- Battery pending on the wave commit; results in the follow-up docs
+  commit.
+
 **SESSION 2026-10-03 block 20 (wave 60: net batch 3 -- transport family; floors96)**
 - Wave 60: 53 clauses on xiom.net.{socket (18), tcp (4), udp (4), unix
   (10), tls (5), tls_helper (12)}. Validation-guard implications on every

@@ -29,7 +29,9 @@ pub type PingStats = {
 /// Parameters: data -- the packet bytes (the checksum field should be zero).
 /// Returns: the 16-bit checksum.
 /// Complexity: O(n). Pure.
-pub fn icmp_checksum(data: &Vec[UInt8]) -> UInt16 {
+pub fn icmp_checksum(data: &Vec[UInt8]) -> UInt16
+  ensures: (data.len() == 0) => (result == 65535)
+{
   var sum: Int = 0;
   var i = 0;
   let len = data.len();
@@ -61,7 +63,9 @@ pub fn icmp_checksum(data: &Vec[UInt8]) -> UInt16 {
 /// NOT IMPLEMENTED: requires raw sockets (ICMP) that the pure stdlib does not
 /// expose.
 /// Returns: Err("ping_send_echo: raw sockets not available in the pure stdlib").
-pub fn ping_send_echo(host: Str, id: Int, seq: Int, payload: &Vec[UInt8]) -> Result[Int, Str] {
+pub fn ping_send_echo(host: Str, id: Int, seq: Int, payload: &Vec[UInt8]) -> Result[Int, Str]
+  ensures: result.is_err == true
+{
   let _ = host;
   let _ = id;
   let _ = seq;
@@ -73,7 +77,9 @@ pub fn ping_send_echo(host: Str, id: Int, seq: Int, payload: &Vec[UInt8]) -> Res
 /// NOT IMPLEMENTED: requires raw sockets (ICMP) that the pure stdlib does not
 /// expose.
 /// Returns: Err("ping_recv_echo: raw sockets not available in the pure stdlib").
-pub fn ping_recv_echo(timeout_ms: Int) -> Result[(Int, Int, Int), Str] {
+pub fn ping_recv_echo(timeout_ms: Int) -> Result[(Int, Int, Int), Str]
+  ensures: result.is_err == true
+{
   let _ = timeout_ms;
   Err("ping_recv_echo: raw sockets not available in the pure stdlib")
 }
@@ -81,7 +87,9 @@ pub fn ping_recv_echo(timeout_ms: Int) -> Result[(Int, Int, Int), Str] {
 /// Send one echo and return the round-trip time in milliseconds.
 /// NOT IMPLEMENTED: requires raw sockets (see ping_send_echo).
 /// Returns: Err("ping_once: raw sockets not available in the pure stdlib").
-pub fn ping_once(host: Str, timeout_ms: Int) -> Result[Int, Str] {
+pub fn ping_once(host: Str, timeout_ms: Int) -> Result[Int, Str]
+  ensures: result.is_err == true
+{
   let _ = host;
   let _ = timeout_ms;
   Err("ping_once: raw sockets not available in the pure stdlib")
@@ -90,7 +98,9 @@ pub fn ping_once(host: Str, timeout_ms: Int) -> Result[Int, Str] {
 /// Run a ping burst and return aggregate stats.
 /// NOT IMPLEMENTED: requires raw sockets (see ping_send_echo).
 /// Returns: Err("ping: raw sockets not available in the pure stdlib").
-pub fn ping(host: Str, timeout_ms: Int) -> Result[PingStats, Str] {
+pub fn ping(host: Str, timeout_ms: Int) -> Result[PingStats, Str]
+  ensures: result.is_err == true
+{
   let _ = host;
   let _ = timeout_ms;
   Err("ping: raw sockets not available in the pure stdlib")
@@ -99,7 +109,9 @@ pub fn ping(host: Str, timeout_ms: Int) -> Result[PingStats, Str] {
 /// Probe a single hop and return its address.
 /// NOT IMPLEMENTED: requires raw sockets (see ping_send_echo).
 /// Returns: Err("traceroute_hop: raw sockets not available in the pure stdlib").
-pub fn traceroute_hop(host: Str, ttl: Int, timeout_ms: Int) -> Result[Str, Str] {
+pub fn traceroute_hop(host: Str, ttl: Int, timeout_ms: Int) -> Result[Str, Str]
+  ensures: result.is_err == true
+{
   let _ = host;
   let _ = ttl;
   let _ = timeout_ms;
@@ -109,7 +121,9 @@ pub fn traceroute_hop(host: Str, ttl: Int, timeout_ms: Int) -> Result[Str, Str] 
 /// Trace the route to a host by hop.
 /// NOT IMPLEMENTED: requires raw sockets (see ping_send_echo).
 /// Returns: Err("traceroute: raw sockets not available in the pure stdlib").
-pub fn traceroute(host: Str, max_hops: Int, timeout_ms: Int) -> Result[Vec[Str], Str] {
+pub fn traceroute(host: Str, max_hops: Int, timeout_ms: Int) -> Result[Vec[Str], Str]
+  ensures: result.is_err == true
+{
   let _ = host;
   let _ = max_hops;
   let _ = timeout_ms;

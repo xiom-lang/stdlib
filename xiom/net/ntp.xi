@@ -98,7 +98,9 @@ fn f64_to_fixed(v: Float64) -> Int {
 /// Returns: an NtpPacket with LI=0, VN=4, Mode=3 (client), a zeroed header
 ///          and the transmit timestamp set to the current NTP time.
 /// Complexity: O(1). Pure.
-pub fn ntp_packet_new() -> NtpPacket {
+pub fn ntp_packet_new() -> NtpPacket
+  ensures: result.li == 0 && result.vn == 4 && result.mode == 3 && result.stratum == 0 && result.poll == 0 && result.precision == 0 && result.root_delay == 0.0 && result.root_dispersion == 0.0
+{
   let now = io_time_secs();
   NtpPacket{
     li: 0;
@@ -127,7 +129,9 @@ fn io_time_secs() -> Int {
 /// Parameters: p -- the packet.
 /// Returns: the 48-byte big-endian packet.
 /// Complexity: O(1). Pure.
-pub fn ntp_packet_to_bytes(p: NtpPacket) -> Vec[UInt8] {
+pub fn ntp_packet_to_bytes(p: NtpPacket) -> Vec[UInt8]
+  ensures: result.len() == 48
+{
   var out = Vec[UInt8].new();
   let b0 = (p.li & 0x3) * 64 + (p.vn & 0x7) * 8 + (p.mode & 0x7);
   out.push(b0 as UInt8);
@@ -148,7 +152,9 @@ pub fn ntp_packet_to_bytes(p: NtpPacket) -> Vec[UInt8] {
 /// Parameters: data -- at least 48 bytes of packet data.
 /// Returns: Ok(NtpPacket) for a readable packet, Err when too short.
 /// Complexity: O(1). Pure.
-pub fn ntp_packet_from_bytes(data: &Vec[UInt8]) -> Result[NtpPacket, Str] {
+pub fn ntp_packet_from_bytes(data: &Vec[UInt8]) -> Result[NtpPacket, Str]
+  ensures: ((data.len() < 48) => (result.is_err == true)) && ((result.is_ok == true) => (data.len() >= 48))
+{
   if data.len() < NTP_PACKET_SIZE {
     return Err("NTP packet too short");
   }
@@ -178,7 +184,9 @@ pub fn ntp_packet_from_bytes(data: &Vec[UInt8]) -> Result[NtpPacket, Str] {
 /// Returns: true when the version is 1..4, the mode is 1..7 (reserved 0
 ///          excluded) and the transmit timestamp is non-zero.
 /// Complexity: O(1). Pure.
-pub fn ntp_validate(p: NtpPacket) -> Bool {
+pub fn ntp_validate(p: NtpPacket) -> Bool
+  ensures: result == (p.vn >= 1 && p.vn <= 4 && p.mode >= 1 && p.mode <= 7 && p.transmit_timestamp != 0)
+{
   if p.vn < 1 || p.vn > 4 {
     return false;
   }
@@ -196,7 +204,9 @@ pub fn ntp_validate(p: NtpPacket) -> Bool {
 ///          (unix seconds); local_t1 -- the client receive time (unix seconds).
 /// Returns: the offset in seconds (positive = local clock is behind).
 /// Complexity: O(1). Pure.
-pub fn ntp_offset(packet: NtpPacket, local_t0: Int, local_t1: Int) -> Float64 {
+pub fn ntp_offset(packet: NtpPacket, local_t0: Int, local_t1: Int) -> Float64
+  ensures: (result == ((((packet.recv_timestamp - packet.origin_timestamp) + (packet.transmit_timestamp - (local_t1 + NTP_UNIX_OFFSET))) as Float64) / 2.0))
+{
   let t1 = local_t0 + NTP_UNIX_OFFSET;
   let t4 = local_t1 + NTP_UNIX_OFFSET;
   let a = packet.recv_timestamp - packet.origin_timestamp;
@@ -209,7 +219,9 @@ pub fn ntp_offset(packet: NtpPacket, local_t0: Int, local_t1: Int) -> Float64 {
 ///          (unix seconds); local_t1 -- the client receive time (unix seconds).
 /// Returns: the roundtrip delay in seconds.
 /// Complexity: O(1). Pure.
-pub fn ntp_roundtrip(packet: NtpPacket, local_t0: Int, local_t1: Int) -> Float64 {
+pub fn ntp_roundtrip(packet: NtpPacket, local_t0: Int, local_t1: Int) -> Float64
+  ensures: (result == ((((local_t1 + NTP_UNIX_OFFSET) - (local_t0 + NTP_UNIX_OFFSET)) - (packet.transmit_timestamp - packet.recv_timestamp)) as Float64))
+{
   let t1 = local_t0 + NTP_UNIX_OFFSET;
   let t4 = local_t1 + NTP_UNIX_OFFSET;
   let rtt = (t4 - t1) - (packet.transmit_timestamp - packet.recv_timestamp);
@@ -221,7 +233,9 @@ pub fn ntp_roundtrip(packet: NtpPacket, local_t0: Int, local_t1: Int) -> Float64
 /// expose. Use ntp_packet_new / ntp_packet_to_bytes / ntp_packet_from_bytes
 /// for offline encode/decode.
 /// Returns: Err("ntp_request: UDP sockets not available in the pure stdlib").
-pub fn ntp_request(server: Str) -> Result[NtpPacket, Str] {
+pub fn ntp_request(server: Str) -> Result[NtpPacket, Str]
+  ensures: result.is_err == true
+{
   let _ = server;
   Err("ntp_request: UDP sockets not available in the pure stdlib")
 }
@@ -229,7 +243,9 @@ pub fn ntp_request(server: Str) -> Result[NtpPacket, Str] {
 /// Fetch the server time as a unix timestamp.
 /// NOT IMPLEMENTED: requires the UDP socket layer (see ntp_request).
 /// Returns: Err("ntp_sync_time: UDP sockets not available in the pure stdlib").
-pub fn ntp_sync_time(server: Str) -> Result[Int, Str] {
+pub fn ntp_sync_time(server: Str) -> Result[Int, Str]
+  ensures: result.is_err == true
+{
   let _ = server;
   Err("ntp_sync_time: UDP sockets not available in the pure stdlib")
 }
@@ -237,7 +253,9 @@ pub fn ntp_sync_time(server: Str) -> Result[Int, Str] {
 /// One-shot SNTP client returning a unix timestamp.
 /// NOT IMPLEMENTED: requires the UDP socket layer (see ntp_request).
 /// Returns: Err("sntp_request: UDP sockets not available in the pure stdlib").
-pub fn sntp_request(server: Str) -> Result[Int, Str] {
+pub fn sntp_request(server: Str) -> Result[Int, Str]
+  ensures: result.is_err == true
+{
   let _ = server;
   Err("sntp_request: UDP sockets not available in the pure stdlib")
 }

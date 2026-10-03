@@ -19,31 +19,41 @@ pub fn ftp_default_port() -> Int
 
 /// ftp_command_user formats a USER command.
 /// Complexity: O(1). Pure.
-pub fn ftp_command_user(user: Str) -> Str {
+pub fn ftp_command_user(user: Str) -> Str
+  ensures: result.len() == user.len() + 7
+{
   "USER " + user + "\r\n"
 }
 
 /// ftp_command_pass formats a PASS command.
 /// Complexity: O(1). Pure.
-pub fn ftp_command_pass(pass: Str) -> Str {
+pub fn ftp_command_pass(pass: Str) -> Str
+  ensures: result.len() == pass.len() + 7
+{
   "PASS " + pass + "\r\n"
 }
 
 /// ftp_command_retr formats a RETR command for a remote path.
 /// Complexity: O(1). Pure.
-pub fn ftp_command_retr(path: Str) -> Str {
+pub fn ftp_command_retr(path: Str) -> Str
+  ensures: result.len() == path.len() + 7
+{
   "RETR " + path + "\r\n"
 }
 
 /// ftp_command_stor formats a STOR command for a remote path.
 /// Complexity: O(1). Pure.
-pub fn ftp_command_stor(path: Str) -> Str {
+pub fn ftp_command_stor(path: Str) -> Str
+  ensures: result.len() == path.len() + 7
+{
   "STOR " + path + "\r\n"
 }
 
 /// ftp_command_list formats a LIST command with an optional path.
 /// Complexity: O(1). Pure.
-pub fn ftp_command_list(path: Str) -> Str {
+pub fn ftp_command_list(path: Str) -> Str
+  ensures: ((path.len() == 0) => (result.len() == 6)) && ((path.len() > 0) => (result.len() == path.len() + 7))
+{
   if path.len() == 0 {
     return "LIST\r\n";
   }
@@ -52,26 +62,34 @@ pub fn ftp_command_list(path: Str) -> Str {
 
 /// ftp_command_quit formats a QUIT command.
 /// Complexity: O(1). Pure.
-pub fn ftp_command_quit() -> Str {
+pub fn ftp_command_quit() -> Str
+  ensures: result.len() == 6
+{
   "QUIT\r\n"
 }
 
 /// ftp_command_cwd formats a CWD command.
 /// Complexity: O(1). Pure.
-pub fn ftp_command_cwd(dir: Str) -> Str {
+pub fn ftp_command_cwd(dir: Str) -> Str
+  ensures: result.len() == dir.len() + 6
+{
   "CWD " + dir + "\r\n"
 }
 
 /// ftp_command_type formats a TYPE command (A or I).
 /// Complexity: O(1). Pure.
-pub fn ftp_command_type(kind: Str) -> Str {
+pub fn ftp_command_type(kind: Str) -> Str
+  ensures: result.len() == kind.len() + 7
+{
   "TYPE " + kind + "\r\n"
 }
 
 /// ftp_parse_reply parses an FTP reply line like "220 Ready" into
 /// (code, text). Returns None if the line does not start with a
 /// 3-digit code. Complexity: O(1). Pure.
-pub fn ftp_parse_reply(line: Str) -> Option[(Int, Str)] {
+pub fn ftp_parse_reply(line: Str) -> Option[(Int, Str)]
+  ensures: ((line.len() < 3) => (result.is_none == true)) && ((result.is_some == true) => (line.len() >= 3))
+{
   let len = line.len();
   if len < 3 {
     return None;
