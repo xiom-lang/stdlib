@@ -418,6 +418,14 @@ probe prints `float_bits(1.5) == 0`), so packages keep raw-octet encodings
 until the bitcast intrinsic lands. Relayed to the compiler lane: the
 intrinsic is the remaining item, no stdlib change wanted.
 
+Update 2026-10-03 (Gate P pin + trap-10): the compiler lane needs a fresh
+stdlib tag >= `8b23b79` for Gate P; tagged `stdlib-perf3` at `5037262`
+(waves 54-60: geom 100%, net 57.2%, global 40.9%; m178 + JSON hardening;
+`#[unsafe_direct]` annotations stay; compiler then bumps STDLIB_VERSION,
+regens api-freeze, t2 `185342f4`, tags v0.62.3). The packages'
+`Vec[StructType]` trap-10 row is a retirement candidate (not reproducible
+on both sides); no local row existed.
+
 State 2026-09-29 (handoff snapshot 3, main 2a06a90): floors85 global 32.8%,
 math 38.8%, num 37.4%; probes 202; smoke 951; modules 509/509; barename
 0/509; doc 100%; module-smoke ratchet 497/517 modules, 3332/6200 pub fns.
