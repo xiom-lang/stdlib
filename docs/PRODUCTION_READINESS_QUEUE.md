@@ -407,6 +407,17 @@ binary); floors96; net 39.4% -> 57.2%, global 40.9%. Next: net protocols
 misc 13.9%, os 15.3%, rand 16%, crypto 17%, log 19.1%, compress 21.1%),
 then C, D, E, F.
 
+Update 2026-10-03 (relay resolutions): the 2026-10-02 "missing arguments
+accepted silently" arity row is STALE -- on v0.62.2 `T001: expects N
+argument(s), found M` rejects missing and extra args, exact-arity control
+green; the registry row is retired and no local row existed to update.
+`Vec[Float64]` push/compare/arith are green; the bitcast half is still
+compiler-pending: `xiom.num.float.float_bits`/`bits_to_float` remain the
+documented fallback stubs (`ensures: result == 0` / `0.0`, TODO(compiler),
+probe prints `float_bits(1.5) == 0`), so packages keep raw-octet encodings
+until the bitcast intrinsic lands. Relayed to the compiler lane: the
+intrinsic is the remaining item, no stdlib change wanted.
+
 State 2026-09-29 (handoff snapshot 3, main 2a06a90): floors85 global 32.8%,
 math 38.8%, num 37.4%; probes 202; smoke 951; modules 509/509; barename
 0/509; doc 100%; module-smoke ratchet 497/517 modules, 3332/6200 pub fns.

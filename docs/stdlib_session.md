@@ -1463,8 +1463,12 @@ registry pin, agent recon for the rest)**
   tools/README.md + plan + queue in the same commit. Smoke growth skipped
   (existing net smokes already reference part of the family; module-smoke
   stays 3,475/6,200).
-- Battery pending on the wave commit; results in the follow-up docs
-  commit.
+- Full battery on 6d5e1fd: check_modules 509/509 (264.8s); corpus
+  951/951, 0 compilefail, 0 runfail (1846.2s); probe corpus 215/215
+  (647.9s); barename 0 hits / 509 (986.9s); coverage floors96 OK; doc
+  ratchet OK; module-smoke ratchet OK (3,475/6,200 fns, 497/517 modules).
+  Wave 60 closed; this battery/docs commit is LOCAL until the next push
+  point.
 
 **SESSION 2026-10-03 block 19 (wave 59: serialize.json hardening -- JSON legacy bugs)**
 - Fix-firsts from the recorded JSON legacy list: (1) number grammar --
@@ -1730,25 +1734,25 @@ registry pin, agent recon for the rest)**
 
 ### HANDOFF 2026-10-02 (context-limit snapshot 4; read this plus docs/PRODUCTION_READINESS_QUEUE.md)
 
-**State**: main @ `bc2e03b` + this battery/docs commit, one push-point behind
-(origin at `8b23b79`; push when the release/compiler lane asks or at the
+**State**: main @ `6d5e1fd` + this battery/docs commit, one push-point behind
+(origin at `fe5992d`; push when the release/compiler lane asks or at the
 next boundary -- the website fetches the queue's meter/gates lines from
 origin/main). Compiler pin v0.61.3 at `%TEMP%\kilo\stdlib_ws\xiom_v0613.exe`
 (rebuild recipe in the 2026-09-25 handoff); the m178 dev build (compiler
 main `659f6ec1`, rebuilt 2026-10-03 02:32) is at
-`E:\xiom-lang\xiom\target\debug\xiom.exe`; wave-54..59 probes green on the
+`E:\xiom-lang\xiom\target\debug\xiom.exe`; wave-54..60 probes green on the
 v0.61.3 gate pin and the m178 dev binary. Pushed tags:
 `stdlib-perf2` (`59bfb1c`, the
 next compiler-pin candidate, requires >= 185342f4 for the
 receiver-qualified method trust), `stdlib-perf1` (the v0.62.2
 `STDLIB_VERSION` pin), `stdlib-v0.62.0` (released 0.62.0; the registry lane
-owns its publish). Coverage floors95: **global 40.1% pub-with-clause, geom
-100.0%, net 39.4%, math 38.8%, num 35.6%**; probe corpus **214**; smoke
+owns its publish). Coverage floors96: **global 40.9% pub-with-clause, geom
+100.0%, net 57.2%, math 38.8%, num 35.6%**; probe corpus **215**; smoke
 corpus 951; modules 509/509; barename 0/509; doc 100%; module-smoke 497/517
 modules, 3,475/6,200 fns. Queue-top readiness meter: **70% -- 7 of 10
-gates** (open: coverage 100% at 40.1%, zero open findings (13: 12 compiler,
+gates** (open: coverage 100% at 40.9%, zero open findings (13: 12 compiler,
 1 stdlib), beta-exit release cut); gates line: corpus 951/951, modules
-509/509, probes 214/214, barename 0/509. Packages intake
+509/509, probes 215/215, barename 0/509. Packages intake
 `docs/STDLIB-WISHLIST.md`: 46 rows from the six relays (row 1 empty-needle
 defect fixed; rows 33-41 evening
 relay; rows 42-46 night batch; the crypto linkability packet does not
@@ -1770,7 +1774,8 @@ batch 1 the address family 46 (94; fix-firsts `ipv4_to_string` doc-faithful
 first-four octets and `url_join` "//" normalization; filed the invalid-IR
 finding); net batch 2 the HTTP family 55 (95; fix-first `parse_q` q-cap at
 1000 per RFC 7231; global crosses 40%); wave 59 the serialize.json
-hardening (number grammar, exponent clamp, non-finite stringify);
+hardening (number grammar, exponent clamp, non-finite stringify); wave 60
+the transport family 53 (96; net 57.2%, global 40.9%);
 the m178 closure (checker pattern-vs-type; the `xiom.net` `str_slice`
 fix-first; repro retired) and the two dev-build findings (contracts
 `any_contracts` AV; sync Arc count -- compiler-side, keep the
@@ -1780,17 +1785,16 @@ curve-thunk findings verified fixed on the v0.62.2 dev binary), the
 packages wishlist intake (46 rows now) and the empty-needle defect fix,
 and the website readiness meter/gates lines.
 
-**Remaining to 100% (order)**: wave 58+ = net batches 2+ (address family
-done: 46 clauses; remaining ~251 pub: http/header/cookie/mime ~55,
-transport socket/tcp/udp/unix/tls/tls_helper ~53, protocols
-proto/smtp/ftp/ntp/ping/sse/websocket/ws), then serialize 5.4%, hash 8.9%,
-reflect 9.1%, iter 9.8%, convert 11.5%, format 13%, time 13%, misc 13.9%,
-os 15.3%, rand 16%, crypto 17%, log 19.1%, compress 21.1%, then C (geom
-dedup + the Box rename; needs compiler-lane api_freeze regen), D (tzdata
-phase 2, check `PACKAGE-NAMESPACES.txt`), E (untested-surface generator
-classes), F (next release cut). Follow-ups: real polygon-clipping for
-`polygon_difference`; the polyhedra nested hulls ride the nested-read fix;
-smoke growth (20 modules with no smoke, ~2,725 unreferenced fns).
+**Remaining to 100% (order)**: wave 61+ = net protocols
+(proto/smtp/ftp/ntp/ping/sse/websocket/ws), then the remaining low dirs
+(hash 8.9%, reflect 9.1%, iter 9.8%, convert 11.5%, format 13%, time 13%,
+misc 13.9%, os 15.3%, rand 16%, crypto 17%, log 19.1%, compress 21.1%),
+then C (geom dedup + the Box rename; needs compiler-lane api_freeze
+regen), D (tzdata phase 2, check `PACKAGE-NAMESPACES.txt`), E
+(untested-surface generator classes), F (next release cut). Follow-ups:
+real polygon-clipping for `polygon_difference`; the polyhedra nested hulls
+ride the nested-read fix; 17-digit JSON float precision; smoke growth
+(20 modules with no smoke, ~2,725 unreferenced fns).
 
 **Rules (unchanged)**: no stdlib edits while a sweep is in flight; every
 wave updates the queue top's meter/gates lines; read-only recon ->
@@ -1833,11 +1837,12 @@ compiler-side dev-build findings; keep the sync #[unsafe_direct]
 annotations). stdlib 0.62.0 RELEASED; the registry lane owns its publish;
 the next release continues coverage toward 100%.
 
-FIRST TASK -- wave 60: net batch 3 -- the transport family (socket 18 +
-tcp 4 + udp 4 + unix 10 + tls 5 + tls_helper 12 = 53 uncovered pub;
-read-only recon first; waves 57-59 closed the address family, the HTTP
-family and the serialize.json hardening). Batch-split per the owner's
-directive (families of 40-60 pub per wave).
+FIRST TASK -- wave 61: net batch 4 -- the protocol modules (proto 10, smtp
+13, ftp 9, ntp 9, ping 7, sse 8, websocket 14, ws 5 uncovered pub; recon
+first, then split into 40-60-pub family batches; waves 57-60 closed the
+address, HTTP and transport families plus the serialize.json hardening,
+floors96). Batch-split per the owner's directive (families of 40-60 pub
+per wave).
 Protocol for EVERY wave: read-only recon -> new-shape probe in
 tools/probes/ (RED on the stub/before, GREEN after) -> runtime-safe
 clauses (contracts run at runtime; every clause certainly true for all
