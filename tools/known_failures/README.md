@@ -16,34 +16,30 @@ xiom --force -o out.exe tools/known_failures/<file>.xi
 
 ## Current
 
-**Open finding 2026-10-03 (compiler main `659f6ec1` / m178 dev build only;
-GREEN on the v0.61.3 gate pin): `xiom.contracts.any_contracts()` crashes
-(0xC0000005).** Minimal repro
-`tools/known_failures/p_contracts_any_av.xi` (v0.61.3 rc=0; m178 build
-rc=0xC0000005). Found bisecting `tools/probes/p_never_called_zeroarg.xi`
-(call 3 of 71) during the pre-v0.62.3 tag check.
+**Open finding 2026-10-03 (official v0.62.3 only; GREEN on v0.61.3):
+`iter.range(1, 5).contains(3)` fails at codegen with C001 ("'contains'
+receiver does not expose a concrete Vec/Slice/Array element type -- the
+inline contract scan needs one").** Repro:
+`tests/smoke/smoke_iter_range.xi` (compile fails on v0.62.3; green on
+v0.61.3). Context-dependent: a standalone minimal
+`iter.range(1, 5).contains(3)` program compiles and runs. Found in the
+fresh v0.62.3 baseline battery.
 
-**Open finding 2026-10-03 (compiler main `659f6ec1` / m178 dev build only;
-GREEN on the v0.61.3 gate pin): `xiom.sync.Arc.new(42).strong_count()` is
-not 1.** Minimal repro `tools/known_failures/p_sync_arc_count.xi` (v0.61.3
-rc=0; m178 build rc=1). Found via `tools/probes/p_sync_sizeof.xi` during
-the pre-v0.62.3 tag check. COMPILER-SIDE per the compiler lane (m166
-direct/inlined unsafe path allocates 8 bytes for a 16-byte ArcInner);
-KEEP the `#[unsafe_direct]` annotations on `xiom/sync/sync.xi` -- Gate P
-depends on them; sync-probe noise is expected until the compiler fix ships.
+**Open finding 2026-10-03 (official v0.62.3 only; GREEN on v0.61.3):
+context-dependent cell/RefCell miscompile.** Repro:
+`tests/smoke/smoke_cell_refcell_basic.xi` and
+`tests/smoke/smoke_cell_ref_get.xi` both return rc=1 on v0.62.3 (the first
+`borrow().get()` check), while a standalone minimal `RefCell.new(42);
+borrow().get()` passes -- so the failure depends on the surrounding unit
+(statement-order/codegen sensitivity). Found in the fresh v0.62.3 baseline
+battery.
 
-**Open finding 2026-10-02 (compiler v0.61.3 and v0.62.1): struct literals
-with out-of-declaration-order fields compile silently and assign fields
-positionally.** `P{ z: 3.0; y: 2.0; x: 1.0 }` for `type P = { x; y; z }`
-yields `p.x == 3.0, p.y == 2.0, p.z == 1.0` on both pins (the checker emits
-no diagnostic; codegen stores the i-th supplied value in declared slot i).
-All other stdlib literals are in declaration order, so one site was
-affected: `xiom.geom.quat_from_euler` wrote `Quaternion{ w; x; y; z; }`
-(declaration order x; y; z; w), scrambling every Euler-derived rotation --
-reordered in wave 54 (fix-first). Repro:
-`tools/known_failures/p_struct_literal_field_order.xi` (returns 1).
-Expected: name-keyed literal semantics, or at least a checker error for
-out-of-order fields.
+**Open finding 2026-10-03 (official v0.62.3 only; GREEN on v0.61.3):
+context-dependent lz4 miscompile.** Repro:
+`tests/smoke/smoke_compress_lz4_snappy.xi` returns rc=5 on v0.62.3
+(`lz4_compress_block` comes back empty), while a standalone minimal
+block-compress passes -- context-dependent. Found in the fresh v0.62.3
+baseline battery.
 
 **Open finding 2026-10-02 (compiler v0.61.3 and v0.62.1):
 `polyhedra.convex_hull_2d`/`convex_hull_3d` collapse on nonempty inputs.**
@@ -74,41 +70,6 @@ there is no constructor, so `aabb_intersection`/`aabb_contains`/
 `tools/known_failures/p_geom_box_unnameable.xi` (compile-fail on the pin).
 Found while landing the wave-52 geom clauses; the wave-52 probe keeps those
 three functions clause-only until the geom dedup/rename (queue section C).
-
-**Open finding 2026-10-01 (compiler v0.61.3): a fn-typed parameter returning
-`Vec[Float64]` loses its result inside catalog bodies.** `curves.curve_length`
-calling a `fn(Float64) -> Vec[Float64]` argument sees empty vectors and
-returns 0 instead of the arc length; the same function value called directly
-returns the correct value. Vec-returning sibling of the fixed Float64-thunk
-class. Repro: `tools/known_failures/p_curve_thunk_zero.xi` (returns 2).
-Found while landing the wave-51 geom clauses; the wave-51 probe keeps only
-the `n < 1 == 0` branch for `curve_length`.
-UPDATE 2026-10-02: FIXED compiler-side (m170 a/b, `COMPILER_BUGS.md`
-2026-10-02): fn-typed param Vec returns keep their element type and the
-erased Option/Result literal payload slot is forced to i64. The stdlib
-repro returns rc=0 on the local v0.62.2 dev binary. The m170b half also
-fixes the erased Option-of-Vec `.unwrap()` AV class (`vector.refract`).
-Promote on the next pin.
-
-**Open finding 2026-10-01 (compiler v0.61.3 and v0.62.1): caller-side
-element reads of some `xiom.geom.vector` / `xiom.geom.curves` results are
-bit-reinterpreted.** `vector.lerp` returning `(1.5, 2.0)` reads back as
-`4.6094342186137e+18` (the bit pattern of 1.5 as a double); same for
-`vector.clamp`, `vector.hadamard`, `curves.b_spline`. Callee-side reads are
-correct (passing the results into `vector.norm`/`distance` sees the true
-values), and `cross`/`normalize`/`unit`/`project`/`reject`/`slerp`/
-`reflect`/`outer`/`bezier_quad`/`bezier_cubic`/`bezier_derivative` read
-correctly in the caller. Repro:
-`tools/known_failures/p_geom_vector_result_bits.xi` (control green, then
-   two broken reads). Found while landing the wave-51 geom clauses; the
-   wave-51 probe and `smoke_geom_vec.xi` mediate those results through
-   dot/norm/distance.
-   UPDATE 2026-10-02: FIXED compiler-side (m169, `COMPILER_BUGS.md`
-   2026-10-02): same-leaf qualified results now resolve the exact catalog
-   key. The stdlib repro returns rc=0 on the local v0.62.2 dev binary
-   (pre-fix rc=2). Keep in known_failures until the gate pin carries m169,
-   then promote to `tools/probes/` and un-mediate the wave-51 probe/smoke
-   reads.
 
 **Open finding 2026-09-30 (compiler v0.61.3 and v0.62.1): call-site
 inference of `xiom.geom.matrix` `Vec[Vec[Float64]]` results loses a nesting
@@ -200,8 +161,11 @@ Reproduced while landing the regex coverage wave:
 returns are miscompiled.** A `[T, U]`-style generic whose callback changes
 type (`fn(&T) -> U` or `fn(T) -> U`) returns a wrong value whenever `U` is a
 different runtime type than `T` (Str / Float64 observed); concrete callbacks
-and same-type generic callbacks are correct. Minimal reproductions (all
-verified on v0.61.3, compile 0 + wrong run exit):
+and same-type generic callbacks are correct. Minimal reproductions
+(per-file status on official v0.62.3): `p_generic_typechanging_fnptr.xi`
+now PASSES; `p_generic_typechanging_map.xi` (run 41),
+`p_generic_typechanging_core_map.xi` (run 41) and
+`p_generic_typechanging_sortbykey.xi` (run 1) still fail. v0.61.3 status:
 
 - `p_generic_typechanging_fnptr.xi` -- packages-lane `conv[T, U]` shape
   (by-ref callback, Int -> Str): expected 0, observed run 23.

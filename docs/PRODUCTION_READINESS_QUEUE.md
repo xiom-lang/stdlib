@@ -1,21 +1,24 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
 **70% -- 7 of 10 readiness gates complete.**
-**Gates: corpus 951/951, modules 509/509, probes 216/216, barename 0/509.**
+**Gates: corpus 947/951, modules 509/509, probes 219/219, barename 0/509.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
 gates flip:
 1. Modules type-check clean -- MET (509/509).
-2. Smoke corpus green -- MET (951/951).
-3. Probe corpus green -- MET (216/216).
+2. Smoke corpus green -- MET on the v0.61.3 pin (951/951); the official
+   v0.62.3 baseline is 947/951 (4 compiler-side regressions filed; 2 stale
+   smokes fixed at the pin move).
+3. Probe corpus green -- MET (219/219 on v0.62.3, incl. the 3 promoted
+   regression probes).
 4. Strict bare-name scan clean -- MET (0/509).
 5. Coverage ratchet green -- MET (floors97).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (497/517 modules, 3475/6200 fns).
 8. Contract coverage 100% (every public fn carries clauses) -- OPEN (41.6%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
-   OPEN (13: 12 compiler, 1 stdlib algorithm).
+   OPEN (10: 9 compiler, 1 stdlib algorithm).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
 
 Authoritative order for the stdlib lane to reach 100%. State at handoff:
@@ -425,6 +428,23 @@ Update 2026-10-03 (release): compiler **v0.62.3 is PUBLISHED** with official
 SHA256SUMS and the nine-tool archives (windows-x64/linux-x64/macos-arm64/
 macos-x64) plus VSIX 0.12.2 and wasm. The shipped pin is `stdlib-perf3`
 (`2429ac3`); no stdlib action needed. Gate P is closed on both sides.
+
+Update 2026-10-03 (official v0.62.3 baseline): the windows-x64 archive
+(SHA256 `011af7dd...` verified against the release SHA256SUMS and the
+GitHub API digest) is installed at
+`%TEMP%\kilo\stdlib_ws\v0623\x\bin\xiom.exe` (reports v0.62.3) and the
+full battery ran on it: check_modules 509/509 (170.4s); corpus 947/951 --
+the 4 failures are compiler-side regressions filed in known_failures
+(`smoke_cell_refcell_basic` + `smoke_cell_ref_get`; `smoke_compress_lz4_snappy`;
+`smoke_iter_range` C001; all green on v0.61.3 and context-dependent, the
+standalone minimal forms pass); probes 219/219 (the m169/m170/m178-fixed
+repros were promoted from known_failures to `tools/probes/` as
+`p_regress_*`); barename 0/509; floors97/doc/module-smoke ratchets OK. Two
+stale smokes were fixed at the pin move (bomb-guard's gzip Vec API;
+`sprintf_i1` arity). Findings Current is now 10 (9 compiler, 1 stdlib):
+`p_generic_typechanging_fnptr` now passes; `p_curve_thunk_zero`,
+`p_geom_vector_result_bits` and `p_struct_literal_field_order` are
+retired as fixed.
 
 Update 2026-10-03 (relay resolutions): the 2026-10-02 "missing arguments
 accepted silently" arity row is STALE -- on v0.62.2 `T001: expects N

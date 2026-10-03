@@ -1452,6 +1452,22 @@ registry pin, agent recon for the rest)**
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
 
+**SESSION 2026-10-03 block 22 (official v0.62.3 baseline at the pin move)**
+- Installed the official v0.62.3 windows-x64 archive (SHA256 `011af7dd...`
+  verified against SHA256SUMS + the API digest) at
+  `%TEMP%\kilo\stdlib_ws\v0623\x\bin\xiom.exe` and re-ran the battery on
+  it: check_modules 509/509 (170.4s); corpus 947/951; probes 219/219;
+  barename 0/509; floors97/doc/module-smoke ratchets OK.
+- Four compiler-side v0.62.3 regressions filed (cell x2, lz4,
+  iter-range C001); all green on v0.61.3 and context-dependent (the
+  standalone minimal forms pass). Two stale smokes fixed at the pin move
+  (bomb-guard's gzip Vec API; `sprintf_i1` arity). Three fixed repros
+  promoted to `tools/probes/` (`p_regress_curve_thunk_zero`,
+  `p_regress_vector_result_bits`, `p_regress_struct_literal_order`).
+  Findings Current 13 -> 10 (9 compiler, 1 stdlib).
+- Pin is now the official v0.62.3 archive; `stdlib-perf3` remains the
+  shipped release pin. Next: wave 62 (net batch 5).
+
 **SESSION 2026-10-03 block 21 (wave 61: net batch 4 -- protocol family; floors97)**
 - Wave 61: 48 clauses on xiom.net.{proto (10), smtp (13), ftp (9), ntp
   (9), ping (7)}. Exact command/format mirrors and length bands, JSON-RPC/
@@ -1759,24 +1775,24 @@ registry pin, agent recon for the rest)**
 
 ### HANDOFF 2026-10-02 (context-limit snapshot 4; read this plus docs/PRODUCTION_READINESS_QUEUE.md)
 
-**State**: main @ `0f46ab8` + this battery/docs commit (origin at `2429ac3`
-plus the `stdlib-perf3` tag; push docs/meter when asked or at the next
-boundary -- the website fetches the queue's meter/gates lines from
-origin/main). Compiler pin v0.61.3 at `%TEMP%\kilo\stdlib_ws\xiom_v0613.exe`
-(rebuild recipe in the 2026-09-25 handoff); the m178 dev build (compiler
-main `659f6ec1`, rebuilt 2026-10-03 02:32) is at
-`E:\xiom-lang\xiom\target\debug\xiom.exe`; wave-54..61 probes green on the
-v0.61.3 gate pin and the m178 dev binary. Pushed tags:
+**State**: main @ this baseline docs commit (origin at `7f270fe`; push
+docs/meter when asked or at the next boundary -- the website fetches the
+queue's meter/gates lines from origin/main). Compiler pin: official
+**v0.62.3** at `%TEMP%\kilo\stdlib_ws\v0623\x\bin\xiom.exe` (SHA256
+`011af7dd...` verified against the release SHA256SUMS; fresh baseline in
+block 22); v0.61.3 and the m178 dev build remain for cross-checks; all 219
+probes green on v0.62.3. Pushed tags:
 `stdlib-perf3` (`2429ac3`, shipped pin for compiler v0.62.3 PUBLISHED
 2026-10-03; includes waves 54-61), `stdlib-perf2` (`59bfb1c`), `stdlib-perf1` (the v0.62.2
 `STDLIB_VERSION` pin), `stdlib-v0.62.0` (released 0.62.0; the registry lane
 owns its publish). Coverage floors97: **global 41.6% pub-with-clause, geom
-100.0%, net 73.4%, math 38.8%, num 35.6%**; probe corpus **216**; smoke
-corpus 951; modules 509/509; barename 0/509; doc 100%; module-smoke 497/517
+100.0%, net 73.4%, math 38.8%, num 35.6%**; probe corpus **219**; smoke
+corpus 947/951 on v0.62.3 (4 compiler-side regressions filed; 951/951 on
+v0.61.3); modules 509/509; barename 0/509; doc 100%; module-smoke 497/517
 modules, 3,475/6,200 fns. Queue-top readiness meter: **70% -- 7 of 10
-gates** (open: coverage 100% at 41.6%, zero open findings (13: 12 compiler,
-1 stdlib), beta-exit release cut); gates line: corpus 951/951, modules
-509/509, probes 216/216, barename 0/509. Packages intake
+gates** (open: coverage 100% at 41.6%, zero open findings (10: 9 compiler,
+1 stdlib), beta-exit release cut); gates line: corpus 947/951, modules
+509/509, probes 219/219, barename 0/509. Packages intake
 `docs/STDLIB-WISHLIST.md`: 46 rows from the six relays (row 1 empty-needle
 defect fixed; rows 33-41 evening
 relay; rows 42-46 night batch; the crypto linkability packet does not

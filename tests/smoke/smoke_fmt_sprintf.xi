@@ -89,7 +89,7 @@ fn main() -> Int {
     Ok(v) => { if expect_s("intmin", v, "-2147483648", "intmin") != 0 { return 27; } };
     Err(e) => { io.println(e); return 28; };
   }
-  var r15 = xiom.fmt.sprintf_i1("100%%");
+  var r15 = xiom.fmt.sprintf_i1("100%%", 0);
   match r15 {
     Ok(v) => { if expect_s("pct", v, "100%", "pct") != 0 { return 29; } };
     Err(e) => { io.println(e); return 30; };

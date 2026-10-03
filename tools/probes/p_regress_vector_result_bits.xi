@@ -24,7 +24,7 @@
 // Stdlib impact: consumers must not read those results element-wise;
 // mediate through vector.dot/norm/distance or copy via a local loop.
 
-module p_geom_vector_result_bits
+module p_regress_vector_result_bits
 
 use xiom.geom.vector;
 

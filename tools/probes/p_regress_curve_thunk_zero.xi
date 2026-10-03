@@ -15,7 +15,7 @@
 // Found while landing the wave-51 geom clauses; the wave-51 probe keeps only
 // the n < 1 == 0 branch for curve_length until this is fixed.
 
-module p_curve_thunk_zero
+module p_regress_curve_thunk_zero
 
 use xiom.geom.curves;
 

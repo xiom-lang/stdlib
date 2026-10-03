@@ -16,7 +16,7 @@
 // wave 54; this file locks the compiler-side behavior for the compiler lane.
 // Returns 1 (wrong fields) while the finding is open.
 
-module p_struct_literal_field_order
+module p_regress_struct_literal_order
 
 pub type P = { x: Float64; y: Float64; z: Float64; }
 

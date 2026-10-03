@@ -19,10 +19,7 @@ fn main() -> Int {
     v.push((65 + (i % 26)) as UInt8);
     i += 1;
   }
-  var g = gzip.gzip_compress(&v);
-  match g {
-    Err(e) => { io.println("compress err: " + e); return 1; }
-    Ok(stream) => {
+  var stream = gzip.gzip_compress(&v);
       // cap far BELOW the true size -> must be rejected
       var low = gzip.gzip_decompress_capped(&stream, 10);
       match low {
@@ -94,8 +91,6 @@ fn main() -> Int {
     }
     Err(e) => { io.println("snappy cap1M err: " + e); return 26; }
   }
-      io.println("OK");
-      return 0;
-    }
-  }
+  io.println("OK");
+  return 0;
 }
