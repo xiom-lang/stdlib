@@ -26,15 +26,6 @@ Found in wave 62; the wave probe is presence-only for that path. Expected:
 `out[0].name == "f"`.
 
 **Open finding 2026-10-03 (official v0.62.3 only; GREEN on v0.61.3):
-context-dependent cell/RefCell miscompile.** Repro:
-`tests/smoke/smoke_cell_refcell_basic.xi` and
-`tests/smoke/smoke_cell_ref_get.xi` both return rc=1 on v0.62.3 (the first
-`borrow().get()` check), while a standalone minimal `RefCell.new(42);
-borrow().get()` passes -- so the failure depends on the surrounding unit
-(statement-order/codegen sensitivity). Found in the fresh v0.62.3 baseline
-battery.
-
-**Open finding 2026-10-03 (official v0.62.3 only; GREEN on v0.61.3):
 context-dependent lz4 miscompile.** Repro:
 `tests/smoke/smoke_compress_lz4_snappy.xi` returns rc=5 on v0.62.3
 (`lz4_compress_block` comes back empty), while a standalone minimal
@@ -187,6 +178,15 @@ and `iter` `Range.map[U]`/`MapIter.map[V]` for cross-type `U` (verified:
 Int -> Str wrong, run 41).
 Promote each file to `tools/probes/` (expected run exit 0) when the
 compiler lane fixes the callback ABI.
+
+**Resolved 2026-10-03 (stdlib-side, not a compiler regression; found in the
+v0.62.3 baseline):** the two cell smokes (`smoke_cell_refcell_basic.xi`,
+`smoke_cell_ref_get.xi`) called `borrow()` and then `borrow_mut()` without the
+documented `Ref.release()`/`RefMut.release()` (6D.1 made the handles
+pointer-based and the caller owns the release until Drop exists). The
+v0.61.3-era copy-by-value RefCell never restored borrow counts, so the
+omission was accidentally green. Both smokes now release; verified green on
+v0.61.3 and official v0.62.3.
 
 **Resolved before 2026-09-22 (compiler R61 `ff293f8e`).** Every probe
 that used to be listed here is resolved or ruled; the green locks live in

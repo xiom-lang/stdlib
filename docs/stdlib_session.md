@@ -1808,11 +1808,11 @@ verified against the release SHA256SUMS); v0.61.3 at
 STDLIB_VERSION pin), `stdlib-v0.62.0` (released 0.62.0). Coverage floors98:
 **global 42.2% pub-with-clause, geom 100.0%, net 87.2%, math 38.8%, num
 35.6%**; probe corpus **220** (incl. the three p_regress_* promoted repros);
-corpus **948/951 on v0.62.3** (the 3 failures are filed context-dependent
-compiler regressions: smoke_cell_refcell_basic, smoke_cell_ref_get,
-smoke_compress_lz4_snappy), 951/951 on v0.61.3; modules 509/509; barename
-0/509; doc 100%; module-smoke 497/517 modules, 3,475/6,200 fns; findings
-Current 10 (9 compiler, 1 stdlib). Readiness meter 70% (7/10).
+corpus **948/951 on v0.62.3** (remaining filed failures: `smoke_iter_range`
+C001 and `smoke_compress_lz4_snappy`; the two cell smokes were stdlib-side
+-- missing `Ref.release` -- and are fixed 2026-10-03), 951/951 on v0.61.3;
+modules 509/509; barename 0/509; doc 100%; module-smoke 497/517 modules,
+3,475/6,200 fns; findings Current 10 (9 compiler, 1 stdlib). Readiness meter 70% (7/10).
 
 **Waves landed since snapshot 4**: geom aggregate batches 6-8 (46+45+51 =
 142/142; `geom.xi` 186/186; geom directory 100%; fix-first
@@ -1842,8 +1842,9 @@ fresh artifact from the pinned tree at the release boundary if wanted (our
 call, low risk, no compiler dependency).
 
 **Open compiler findings** (all in `tools/known_failures/` Current with
-repros): cell/RefCell + lz4 context-dependent regressions on v0.62.3
-(smokes; minimal forms pass), `multipart_parse` Part field reads corrupt
+repros): lz4 + `iter.range contains` C001 context-dependent regressions on
+v0.62.3 (smokes; minimal forms pass; cell/RefCell was stdlib-side and is
+fixed 2026-10-03), `multipart_parse` Part field reads corrupt
 (both pins), clause-position Float64 vector element indexing,
 generic-typechanging map/core_map/sortbykey (`fnptr` now passes), Box
 unnameable, geom matrix nested-result inference, `polygon_difference`
@@ -1871,11 +1872,11 @@ STATE: main @ 05168e6 (pushed). Compiler pin: official v0.62.3 at
 v0.61.3 at %TEMP%\kilo\stdlib_ws\xiom_v0613.exe and the m178 dev build at
 E:\xiom-lang\xiom\target\debug\xiom.exe for cross-checks. Coverage floors98:
 global 42.2%, net 87.2%, geom 100%, math 38.8%, num 35.6%. Gates on v0.62.3:
-check_modules 509/509; corpus 948/951 (the 3 remaining are filed
-context-dependent compiler regressions: smoke_cell_refcell_basic,
-smoke_cell_ref_get, smoke_compress_lz4_snappy); probes 220/220; barename
-0/509; coverage floors98; module-smoke 3,475/6,200; doc 100%. Findings
-Current 10 (9 compiler, 1 stdlib). stdlib-perf3 (2429ac3) is the shipped
+check_modules 509/509; corpus 948/951 (remaining filed compiler-side:
+`smoke_iter_range` C001 + `smoke_compress_lz4_snappy`; cell smokes fixed
+stdlib-side 2026-10-03); probes 220/220; barename 0/509; coverage floors98;
+module-smoke 3,475/6,200; doc 100%. Findings Current 10 (9 compiler,
+1 stdlib). stdlib-perf3 (2429ac3) is the shipped
 pin for compiler v0.62.3 (PUBLISHED); keep the #[unsafe_direct] annotations
 on xiom/sync/*.
 

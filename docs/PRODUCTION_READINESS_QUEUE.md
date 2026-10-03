@@ -434,10 +434,10 @@ Update 2026-10-03 (official v0.62.3 baseline): the windows-x64 archive
 GitHub API digest) is installed at
 `%TEMP%\kilo\stdlib_ws\v0623\x\bin\xiom.exe` (reports v0.62.3) and the
 full battery ran on it: check_modules 509/509 (170.4s); corpus 947/951 --
-the 4 failures are compiler-side regressions filed in known_failures
-(`smoke_cell_refcell_basic` + `smoke_cell_ref_get`; `smoke_compress_lz4_snappy`;
-`smoke_iter_range` C001; all green on v0.61.3 and context-dependent, the
-standalone minimal forms pass); probes 219/219 (the m169/m170/m178-fixed
+filed failures: `smoke_iter_range` C001 and `smoke_compress_lz4_snappy`
+(compiler-side, context-dependent, green on v0.61.3, minimal forms pass);
+the two cell smokes were stdlib-side (missing `Ref.release`) and are fixed
+2026-10-03; probes 219/219 (the m169/m170/m178-fixed
 repros were promoted from known_failures to `tools/probes/` as
 `p_regress_*`); barename 0/509; floors97/doc/module-smoke ratchets OK. Two
 stale smokes were fixed at the pin move (bomb-guard's gzip Vec API;

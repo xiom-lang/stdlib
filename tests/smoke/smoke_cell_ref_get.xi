@@ -8,9 +8,11 @@ fn main() -> Int {
 
   var r = rc.borrow();
   if r.get() != "borrow" { return 1; }
+  r.release();
 
   var rm = rc.borrow_mut();
   if rm.get() != "borrow" { return 2; }
+  rm.release();
 
   return 0;
 }
