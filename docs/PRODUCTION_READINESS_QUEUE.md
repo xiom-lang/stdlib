@@ -1,7 +1,7 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
 **70% -- 7 of 10 readiness gates complete.**
-**Gates: corpus 950/951, modules 509/509, probes 220/220, barename 0/509.**
+**Gates: corpus 950/951, modules 509/509, probes 221/221, barename 0/509.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -11,15 +11,15 @@ gates flip:
    v0.62.3 baseline is 950/951 (cell x2 fixed stdlib-side in `ac3c58f`;
    `smoke_compress_lz4_snappy` remains a filed compiler regression; 2 stale
    smokes fixed at the pin move).
-3. Probe corpus green -- MET (220/220 on v0.62.3, incl. the 3 promoted
+3. Probe corpus green -- MET (221/221 on v0.62.3, incl. the 3 promoted
    regression probes).
 4. Strict bare-name scan clean -- MET (0/509).
-5. Coverage ratchet green -- MET (floors98).
+5. Coverage ratchet green -- MET (floors99).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (497/517 modules, 3475/6200 fns).
-8. Contract coverage 100% (every public fn carries clauses) -- OPEN (42.2%).
+8. Contract coverage 100% (every public fn carries clauses) -- OPEN (43.0%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
-   OPEN (9: 8 compiler, 1 stdlib algorithm).
+   OPEN (10: 9 compiler, 1 stdlib algorithm).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
 
 Authoritative order for the stdlib lane to reach 100%. State at handoff:
@@ -477,6 +477,28 @@ stdlib tag >= `8b23b79` for Gate P; tagged `stdlib-perf3` at `5037262`
 regens api-freeze, t2 `185342f4`, tags v0.62.3). The packages'
 `Vec[StructType]` trap-10 row is a retirement candidate (not reproducible
 on both sides); no local row existed.
+
+Update 2026-10-04 (wave 63 landed): net batch 6 + hash batch 1 -- 53
+clauses / 52 pub covered: net.xi 15 (handle-close Ok claims, empty-URL
+Err implications, udp_bind port-guard bands, parse_url/url_parse_*
+presence bands, alias preconditions), server 6 (default port,
+request-line Option bounds, status-line/response length bands with exact
+200/404/500 mirrors, status-text table mirrors), jwt 9 (base64url length
+bands, alg mirror, decode/verify/expired/claims min-length bands), hash
+22 (adler empty-input claim with the 65521-byte b-wrap case locked by
+the probe, checksum 16-bit bands, CRC empty seeds
+and checksum rows, FNV offset-basis empties, jenkins/murmur Vec length
+claims, superfast mask bound). Probe p_wave63_shapes.xi (221st, 123
+checks, no network I/O; early-error paths + synthetic -1 handles): green
+on v0.62.3 and v0.61.3. New finding p_uint32_high_bit_compare.xi:
+inline module-qualified UInt32 call compares misread high-bit values
+(0xFFFFFFFF reports unequal) on BOTH v0.62.3 and the m178 dev build;
+binding the call to a local is the documented workaround, extended from
+UInt16/UInt8. floors99; net 87.2% -> 97.3%, hash 8.9% -> 33.3%, global
+42.2% -> 43.0%. Findings Current 10 (9 compiler, 1 stdlib). Next: the
+remaining low dirs (reflect 9.1%, iter 9.8%, convert 11.5%, format 13%,
+time 13%, misc 13.9%, os 15.3%, rand 16%, crypto 17%, log 19.1%,
+compress 21.1%), then C, D, E, F.
 
 State 2026-09-29 (handoff snapshot 3, main 2a06a90): floors85 global 32.8%,
 math 38.8%, num 37.4%; probes 202; smoke 951; modules 509/509; barename

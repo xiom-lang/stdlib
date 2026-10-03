@@ -915,13 +915,35 @@ T1/T2 yields.
        green on v0.62.3 and v0.61.3. net 73.4% -> 87.2%, global 41.6% ->
        42.2%. Next: net batch 6 (net.xi 15, server 6, jwt 9), then the
        remaining low dirs.
+       Wave 63 (2026-10-04): coverage wave 26 -- net batch 6 (net.xi 15,
+       server 6, jwt 9) merged with hash batch 1 (22 pub: adler 3,
+       checksum 4, crc 8, fnv 4, jenkins 1, murmur 1, superfast 1) = 53
+       clauses / 52 pub. Shapes: handle-close Ok claims, empty-URL Err
+       bands, udp_bind port-guard implications, parse_url/url_parse_*
+       presence bands, alias preconditions (http_get_str/http_status/
+       tcp_connect_str/dns_lookup), server status-line/response length
+       bands plus exact 200/404/500 mirrors, request-line Option bounds,
+       jwt base64url length bands and decode/verify/expired/claims
+       min-length bands, adler empty-input claim (the 65521-byte b-wrap
+       result is locked by the probe; a non-empty lower bound was
+       re-derived and rejected pre-commit), checksum 16-bit
+       bands, CRC empty-seed claims, FNV offset-basis empties,
+       jenkins/murmur Vec length claims, superfast mask bound. New
+       finding: p_uint32_high_bit_compare.xi (inline module-qualified
+       UInt32 call compares misread high-bit values on official v0.62.3
+       and the m178 dev build; binding to a local is the documented
+       workaround extended from UInt16/UInt8). Probe
+       tools/probes/p_wave63_shapes.xi (221st, 123 checks): no network
+       I/O; green on v0.62.3 and v0.61.3. net 87.2% -> 97.3%, hash
+       8.9% -> 33.3%, global 42.2% -> 43.0%. Next: the remaining low
+       dirs (reflect 9.1%, iter 9.8%, convert 11.5%, format 13%, ...).
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors98.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors99.json
        tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;
        earlier floors kept at
-       coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55/56/57/58/59/60/61/62/63/64/65/66/67/68/69/70/71/72/73/74/75/76/77/78/79/80/81/82/83/84/85/86/87/88/89/90/91/92/93/94/95/96/97/98.json).
+       coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55/56/57/58/59/60/61/62/63/64/65/66/67/68/69/70/71/72/73/74/75/76/77/78/79/80/81/82/83/84/85/86/87/88/89/90/91/92/93/94/95/96/97/98/99.json).
       Floors are per top-level stdlib/xiom directory and must be refreshed
       when a module is ADDED (new uncovered pub fns dilute the percentage
       -- TOML dropped serialize 6.1% -> 5.4%, tz dropped time 13% ->

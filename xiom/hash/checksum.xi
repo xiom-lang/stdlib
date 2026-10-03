@@ -14,7 +14,9 @@ module xiom.hash.checksum
 
 /// BSD sum: 16-bit checksum = rotate-right-1, then add each byte (mod 2^16).
 /// Complexity: O(n).
-pub fn checksum_bsd(data: &Vec[UInt8]) -> UInt32 {
+pub fn checksum_bsd(data: &Vec[UInt8]) -> UInt32
+  ensures: result <= 0xFFFF
+{
   var sum: UInt64 = 0;
   var i = 0;
   var len = data.len();
@@ -29,7 +31,9 @@ pub fn checksum_bsd(data: &Vec[UInt8]) -> UInt32 {
 
 /// SysV sum: 16-bit accumulator that rotates right by one bit after each byte
 /// is added. Complexity: O(n).
-pub fn checksum_sysv(data: &Vec[UInt8]) -> UInt32 {
+pub fn checksum_sysv(data: &Vec[UInt8]) -> UInt32
+  ensures: result <= 0xFFFF
+{
   var sum: UInt64 = 0;
   var i = 0;
   var len = data.len();
@@ -44,7 +48,9 @@ pub fn checksum_sysv(data: &Vec[UInt8]) -> UInt32 {
 
 /// Internet one's-complement checksum (RFC 1071): the one's complement of the
 /// sum of 16-bit big-endian words, with end-around carry. Complexity: O(n).
-pub fn checksum_internet(data: &Vec[UInt8]) -> UInt32 {
+pub fn checksum_internet(data: &Vec[UInt8]) -> UInt32
+  ensures: result <= 0xFFFF
+{
   var total: UInt64 = 0;
   var i = 0;
   var len = data.len();
@@ -66,7 +72,9 @@ pub fn checksum_internet(data: &Vec[UInt8]) -> UInt32 {
 /// Fletcher-16 checksum: two 8-bit accumulators modulo 255, sum1 = running sum
 /// of bytes, sum2 = running sum of sum1 values. The 16-bit result packs them
 /// as (sum2 << 8) | sum1. Complexity: O(n).
-pub fn checksum_fletcher16(data: &Vec[UInt8]) -> UInt16 {
+pub fn checksum_fletcher16(data: &Vec[UInt8]) -> UInt16
+  ensures: result <= 0xFEFE
+{
   var sum1: Int = 0;
   var sum2: Int = 0;
   var i = 0;

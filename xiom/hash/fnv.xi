@@ -21,7 +21,9 @@ const _FNV64_PRIME: UInt64 = 0x00000100000001B3 as UInt64;
 /// FNV-1 128-bit hash: multiply first, then XOR each byte.
 /// Offset basis 0x6C62272E07BB014262B821756295C58D, prime 2^24 + 2^8 + 0x3B.
 /// Empty input yields the offset basis. Complexity: O(n).
-pub fn fnv1_128(data: &Vec[UInt8]) -> UInt128 {
+pub fn fnv1_128(data: &Vec[UInt8]) -> UInt128
+  ensures: (data.len() == 0) => (result == _FNV128_OFFSET)
+{
   var hash: UInt128 = _FNV128_OFFSET;
   var i = 0;
   var len = data.len();
@@ -36,7 +38,9 @@ pub fn fnv1_128(data: &Vec[UInt8]) -> UInt128 {
 
 /// FNV-1a 128-bit hash: XOR first, then multiply each byte.
 /// Empty input yields the offset basis. Complexity: O(n).
-pub fn fnv1a_128(data: &Vec[UInt8]) -> UInt128 {
+pub fn fnv1a_128(data: &Vec[UInt8]) -> UInt128
+  ensures: (data.len() == 0) => (result == _FNV128_OFFSET)
+{
   var hash: UInt128 = _FNV128_OFFSET;
   var i = 0;
   var len = data.len();
@@ -52,7 +56,9 @@ pub fn fnv1a_128(data: &Vec[UInt8]) -> UInt128 {
 /// FNV-1a 128-bit hash starting from an explicit seed. The seed replaces the
 /// offset basis; a zero-length input yields the seed unchanged.
 /// Complexity: O(n).
-pub fn fnv1a_128_seed(data: &Vec[UInt8], seed: UInt128) -> UInt128 {
+pub fn fnv1a_128_seed(data: &Vec[UInt8], seed: UInt128) -> UInt128
+  ensures: (data.len() == 0) => (result == seed)
+{
   var hash: UInt128 = seed;
   var i = 0;
   var len = data.len();
@@ -68,7 +74,9 @@ pub fn fnv1a_128_seed(data: &Vec[UInt8], seed: UInt128) -> UInt128 {
 /// FNV-1a 64-bit hash (completeness companion to the 128-bit variants in this
 /// module). Offset basis 0xCBF29CE484222325, prime 0x100000001B3. Empty input
 /// yields the offset basis. Complexity: O(n).
-pub fn fnv1a64(data: &Vec[UInt8]) -> UInt64 {
+pub fn fnv1a64(data: &Vec[UInt8]) -> UInt64
+  ensures: (data.len() == 0) => (result == _FNV64_OFFSET)
+{
   var hash: UInt64 = _FNV64_OFFSET;
   var i = 0;
   var len = data.len();

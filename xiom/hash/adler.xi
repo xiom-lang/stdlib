@@ -20,7 +20,9 @@ const _ADLER_MOD: Int = 65521;
 /// Computes the Adler-32 checksum over `data` (RFC 1950). The empty input
 /// yields 1 (the initial A value). Check: adler32("Wikipedia") == 0x11E60398.
 /// Complexity: O(n).
-pub fn adler32(data: &Vec[UInt8]) -> UInt32 {
+pub fn adler32(data: &Vec[UInt8]) -> UInt32
+  ensures: (data.len() == 0) => (result == 1)
+{
   var a: Int = 1;
   var b: Int = 0;
   var i = 0;
@@ -35,7 +37,9 @@ pub fn adler32(data: &Vec[UInt8]) -> UInt32 {
 
 /// Computes the Adler-32 checksum of the raw bytes of a string (its UTF-8
 /// encoding, byte by byte). Complexity: O(n).
-pub fn adler32_str(s: Str) -> UInt32 {
+pub fn adler32_str(s: Str) -> UInt32
+  ensures: (s.len() == 0) => (result == 1)
+{
   var a: Int = 1;
   var b: Int = 0;
   var len = s.len();
@@ -52,7 +56,9 @@ pub fn adler32_str(s: Str) -> UInt32 {
 /// Combines two Adler-32 checksums as if the blocks were concatenated:
 /// `a` covers the first block, `b` covers a second block of `len_b` bytes.
 /// Returns 0xFFFFFFFF for a negative `len_b` (zlib convention). Complexity: O(1).
-pub fn adler32_combine(a: UInt32, b: UInt32, len_b: Int) -> UInt32 {
+pub fn adler32_combine(a: UInt32, b: UInt32, len_b: Int) -> UInt32
+  ensures: (len_b < 0) => (result == 0xFFFFFFFF)
+{
   if len_b < 0 {
     return 0xFFFFFFFF as UInt32;
   };

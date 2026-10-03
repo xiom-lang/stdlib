@@ -47,7 +47,9 @@ fn _fmix64(k: UInt64) -> UInt64 {
 }
 
 /// MurmurHash3 x64_128 of a byte string; returns [h1, h2].
-pub fn murmur3_128(data: &Vec[UInt8], seed: UInt32) -> Vec[UInt64] {
+pub fn murmur3_128(data: &Vec[UInt8], seed: UInt32) -> Vec[UInt64]
+  ensures: result.len() == 2
+{
   let len = data.len();
   var h1: UInt64 = seed as UInt64;
   var h2: UInt64 = seed as UInt64;

@@ -1455,6 +1455,36 @@ registry pin, agent recon for the rest)**
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
 
+**SESSION 2026-10-04 block 25 (wave 63: net batch 6 + hash batch 1; floors99)**
+- Wave 63: 53 clauses / 52 pub covered. net.xi 15 (TcpStream/UdpSocket
+  close Ok claims, http_post/http_post_str empty-URL Err implications,
+  udp_bind port-guard bands, parse_url + url_parse_* presence bands, and
+  requires preconditions on http_get_str/http_status/tcp_connect_str/
+  dns_lookup mirroring their delegates -- those entry points abort on
+  empty input at runtime, so an ensures claim would be misleading),
+  server 6 (default port, request-line Option bounds, status-line/
+  response length bands + exact 200/404/500 mirrors, status-text table
+  mirrors), jwt 9 (base64url length bands, alg mirror, min-length bands
+  on decode/verify/expired/claims), hash 22 (adler empty==1 -- a
+  non-empty lower bound was re-derived and REJECTED before commit: b
+  wraps to 0 after 65521 zero bytes so the result is 1 again; the wrap
+  is locked by the probe -- checksum 16-bit bands, CRC empty-seed claims
+  incl. crc16 0xFFFF, FNV offset-basis empties via the module consts,
+  jenkins/murmur3 Vec len==2, superfast mask bound).
+- Probe p_wave63_shapes.xi (221st): 123 checks; no network I/O (empty/
+  malformed URLs, port guards, synthetic -1 handles); green on official
+  v0.62.3, v0.61.3 and the m178 dev build.
+- Probe-caught compiler finding: inline module-qualified UInt32 call
+  compares misread high-bit values (adler32_combine 0xFFFFFFFF compared
+  inline reported unequal). Filed tools/known_failures/
+  p_uint32_high_bit_compare.xi (rc=1 on v0.62.3 AND the m178 dev build;
+  binding to a local is the documented workaround, previously known for
+  UInt16/UInt8). Findings Current 9 -> 10 (9 compiler, 1 stdlib); the
+  wave probe binds results before comparing.
+- net 87.2% -> 97.3%, hash 8.9% -> 33.3%, global 42.2% -> 43.0%; floors99
+  wired (YAML re-verified) + tools/README.md + plan + queue in the same
+  commit.
+
 **SESSION 2026-10-03 block 24 (wave-63 recon only -- execution deferred)**
 - Read-only recon for net batch 6 returned: net.xi 15 uncovered
   (TcpStream.close, http_post, udp_bind, UdpSocket.close, parse_url,

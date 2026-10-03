@@ -144,7 +144,9 @@ pub fn TcpStream.write(self, data: &Vec[UInt8]) -> Result[Int, NetError]
 }
 
 /// Close the stream; Err on failure.
-pub fn TcpStream.close(self) -> Result[Unit, NetError] {
+pub fn TcpStream.close(self) -> Result[Unit, NetError]
+  ensures: result.is_ok == true
+{
   unsafe {
     xiom_socket_close(self.fd);
   }
@@ -234,7 +236,9 @@ pub fn http_get(url: Str) -> Result[NetHttpResponse, NetError]
 }
 
 /// HTTP POST with a body; Ok parsed response or Err.
-pub fn http_post(url: Str, body: Str) -> Result[NetHttpResponse, NetError] {
+pub fn http_post(url: Str, body: Str) -> Result[NetHttpResponse, NetError]
+  ensures: (url.len() == 0) => (result.is_err == true)
+{
   let parsed = parse_url(url)?;
   var request: Str = "POST " + parsed.path;
   if parsed.query.len() > 0 {
@@ -320,7 +324,9 @@ fn parse_http_response(raw: Str) -> Result[NetHttpResponse, NetError] {
 pub type UdpSocket = { fd: Int; }
 
 /// Bind a UDP socket to host:port; Err on failure.
-pub fn udp_bind(host: Str, port: Int) -> Result[UdpSocket, NetError] {
+pub fn udp_bind(host: Str, port: Int) -> Result[UdpSocket, NetError]
+  ensures: ((port <= 0 || port >= 65536) => (result.is_err == true)) && ((result.is_ok == true) => (port > 0 && port <= 65535))
+{
   if port <= 0 || port >= 65536 {
     return Err(NetError{ message: "port out of range (1-65535)"; code: -101; });
   }
@@ -401,7 +407,9 @@ pub fn UdpSocket.recv_from(self, buf: &mut Vec[UInt8]) -> Result[(Int, Str, Int)
 }
 
 /// Close the socket; Err on failure.
-pub fn UdpSocket.close(self) -> Result[Unit, NetError] {
+pub fn UdpSocket.close(self) -> Result[Unit, NetError]
+  ensures: result.is_ok == true
+{
   unsafe {
     xiom_socket_close(self.fd);
   }
@@ -504,7 +512,9 @@ pub type UrlParts = {
 }
 
 /// Split a URL into scheme/host/port/path; Err on malformed input.
-pub fn parse_url(url: Str) -> Result[UrlParts, NetError] {
+pub fn parse_url(url: Str) -> Result[UrlParts, NetError]
+  ensures: ((url.len() == 0) => (result.is_err == true)) && ((result.is_ok == true) => (url.len() > 0))
+{
   let len = url.len();
   if len == 0 {
     return Err(NetError{ message: "empty URL"; code: -30; });
@@ -641,21 +651,27 @@ fn str_to_int(s: Str) -> Int {
 
 /// Performs an HTTP GET request and returns the response body as a string.
 /// Complexity: network I/O. Thread-safe: no shared state.
-pub fn http_get_str(url: Str) -> Result[Str, NetError] {
+pub fn http_get_str(url: Str) -> Result[Str, NetError]
+  requires: url.len() > 0
+{
   let response = http_get(url)?;
   return Ok(response.body);
 }
 
 /// Performs an HTTP POST request and returns the response body as a string.
 /// Complexity: network I/O. Thread-safe: no shared state.
-pub fn http_post_str(url: Str, body: Str) -> Result[Str, NetError] {
+pub fn http_post_str(url: Str, body: Str) -> Result[Str, NetError]
+  ensures: (url.len() == 0) => (result.is_err == true)
+{
   let response = http_post(url, body)?;
   return Ok(response.body);
 }
 
 /// Performs an HTTP GET request and returns only the status code, or `None` on error.
 /// Complexity: network I/O.
-pub fn http_status(url: Str) -> Option[Int] {
+pub fn http_status(url: Str) -> Option[Int]
+  requires: url.len() > 0
+{
   let response = http_get(url);
   match response {
     Ok(r) => Some(r.status);
@@ -667,7 +683,10 @@ pub fn http_status(url: Str) -> Option[Int] {
 
 /// Alias for `tcp_connect`. Connects to a TCP server at `host:port`.
 /// Complexity: network I/O.
-pub fn tcp_connect_str(host: Str, port: Int) -> Result[TcpStream, NetError] {
+pub fn tcp_connect_str(host: Str, port: Int) -> Result[TcpStream, NetError]
+  requires: host.len() > 0
+  requires: port > 0 && port <= 65535
+{
   return tcp_connect(host, port);
 }
 
@@ -676,7 +695,9 @@ pub fn tcp_connect_str(host: Str, port: Int) -> Result[TcpStream, NetError] {
 /// Returns `true` if `s` is a valid IPv4 address (e.g. "192.168.1.1").
 /// Delegates to the canonical xiom.net.ip4 (parity proven in p_netip_parity).
 /// Complexity: O(n). Pure, no side effects.
-pub fn is_valid_ipv4(s: Str) -> Bool {
+pub fn is_valid_ipv4(s: Str) -> Bool
+  ensures: ((s.len() == 0) => (result == false)) && ((result == true) => ((s.len() >= 7) && (s.len() <= 15)))
+{
   return net4.ip4_validate(s);
 }
 
@@ -693,7 +714,9 @@ pub fn is_valid_port(p: Int) -> Bool
 /// Extracts the scheme from a URL (e.g. "https" from "https://example.com").
 /// Returns `None` if the URL is malformed.
 /// Complexity: O(n). Pure.
-pub fn url_parse_scheme(url: Str) -> Option[Str] {
+pub fn url_parse_scheme(url: Str) -> Option[Str]
+  ensures: ((url.len() == 0) => (result.is_none == true)) && ((result.is_some == true) => (url.len() > 0))
+{
   let parsed = parse_url(url);
   match parsed {
     Ok(p) => Some(p.scheme);
@@ -704,7 +727,9 @@ pub fn url_parse_scheme(url: Str) -> Option[Str] {
 /// Extracts the host from a URL (e.g. "example.com" from "https://example.com/path").
 /// Returns `None` if the URL is malformed.
 /// Complexity: O(n). Pure.
-pub fn url_parse_host(url: Str) -> Option[Str] {
+pub fn url_parse_host(url: Str) -> Option[Str]
+  ensures: ((url.len() == 0) => (result.is_none == true)) && ((result.is_some == true) => (url.len() > 0))
+{
   let parsed = parse_url(url);
   match parsed {
     Ok(p) => Some(p.host);
@@ -715,7 +740,9 @@ pub fn url_parse_host(url: Str) -> Option[Str] {
 /// Extracts the path from a URL (e.g. "/path" from "https://example.com/path").
 /// Returns `None` if the URL is malformed.
 /// Complexity: O(n). Pure.
-pub fn url_parse_path(url: Str) -> Option[Str] {
+pub fn url_parse_path(url: Str) -> Option[Str]
+  ensures: ((url.len() == 0) => (result.is_none == true)) && ((result.is_some == true) => (url.len() > 0))
+{
   let parsed = parse_url(url);
   match parsed {
     Ok(p) => Some(p.path);
@@ -726,7 +753,9 @@ pub fn url_parse_path(url: Str) -> Option[Str] {
 /// Extracts the port from a URL (e.g. 8080 from "https://example.com:8080/path").
 /// Returns `None` if the URL is malformed or has no explicit port.
 /// Complexity: O(n). Pure.
-pub fn url_parse_port(url: Str) -> Option[Int] {
+pub fn url_parse_port(url: Str) -> Option[Int]
+  ensures: ((url.len() == 0) => (result.is_none == true)) && ((result.is_some == true) => (url.len() > 0))
+{
   let parsed = parse_url(url);
   match parsed {
     Ok(p) => {
@@ -744,6 +773,8 @@ pub fn url_parse_port(url: Str) -> Option[Int] {
 /// Resolves a hostname to a list of IP addresses.
 /// Delegates to `resolve_host`.
 /// Complexity: DNS network I/O.
-pub fn dns_lookup(host: Str) -> Result[Vec[Str], NetError] {
+pub fn dns_lookup(host: Str) -> Result[Vec[Str], NetError]
+  requires: host.len() > 0
+{
   return resolve_host(host);
 }

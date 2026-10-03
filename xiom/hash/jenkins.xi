@@ -27,7 +27,9 @@ fn _rot(x: UInt64, k: Int) -> UInt64 {
 }
 
 /// lookup3 hashlittle of a byte string with the given seed; returns [a, b].
-pub fn jenkins_lookup3(data: &Vec[UInt8], seed: UInt32) -> Vec[UInt32] {
+pub fn jenkins_lookup3(data: &Vec[UInt8], seed: UInt32) -> Vec[UInt32]
+  ensures: result.len() == 2
+{
   let len = data.len();
   var a: UInt64 = (0xdeadbeef + ((len as UInt64) << 2) + (seed as UInt64)) & 0xFFFFFFFF;
   var b = a;

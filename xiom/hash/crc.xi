@@ -69,7 +69,9 @@ fn _crc64_table_msb() -> [256]UInt64 {
 
 /// CRC-64/ECMA of a byte string (reflected variant, init/xorout all-ones).
 /// Check: crc64_ecma("123456789") == 0x995DC9BBDF1939FA.
-pub fn crc64_ecma(data: &Vec[UInt8]) -> UInt64 {
+pub fn crc64_ecma(data: &Vec[UInt8]) -> UInt64
+  ensures: (data.len() == 0) => (result == 0)
+{
   var t = _crc64_table_refl();
   var crc: UInt64 = 0xFFFFFFFFFFFFFFFF;
   var i = 0;
@@ -84,7 +86,9 @@ pub fn crc64_ecma(data: &Vec[UInt8]) -> UInt64 {
 
 /// CRC-64/WE of a byte string (non-reflected, init/xorout all-ones).
 /// Check: crc64_we("123456789") == 0x62EC59E3F1A4F00A.
-pub fn crc64_we(data: &Vec[UInt8]) -> UInt64 {
+pub fn crc64_we(data: &Vec[UInt8]) -> UInt64
+  ensures: (data.len() == 0) => (result == 0)
+{
   var t = _crc64_table_msb();
   var crc: UInt64 = 0xFFFFFFFFFFFFFFFF;
   var i = 0;
@@ -100,7 +104,9 @@ pub fn crc64_we(data: &Vec[UInt8]) -> UInt64 {
 
 /// CRC-32C (Castagnoli) of a byte string.
 /// Check: crc32c("123456789") == 0xE3069283.
-pub fn crc32c(data: &Vec[UInt8]) -> UInt32 {
+pub fn crc32c(data: &Vec[UInt8]) -> UInt32
+  ensures: (data.len() == 0) => (result == 0)
+{
   var crc: UInt64 = 0xFFFFFFFF;
   var i = 0;
   while i < data.len() {
@@ -123,7 +129,9 @@ pub fn crc32c(data: &Vec[UInt8]) -> UInt32 {
 
 /// CRC-16/CCITT (FALSE) of a byte string.
 /// Check: crc16_ccitt("123456789") == 0x29B1.
-pub fn crc16_ccitt(data: &Vec[UInt8]) -> UInt32 {
+pub fn crc16_ccitt(data: &Vec[UInt8]) -> UInt32
+  ensures: (data.len() == 0) => (result == 0xFFFF)
+{
   var crc: UInt64 = 0xFFFF;
   var i = 0;
   while i < data.len() {
@@ -144,7 +152,9 @@ pub fn crc16_ccitt(data: &Vec[UInt8]) -> UInt32 {
 }
 
 /// BSD sum: 16-bit checksum = rotate-right-1 + byte per byte.
-pub fn checksum_bsd(data: &Vec[UInt8]) -> UInt32 {
+pub fn checksum_bsd(data: &Vec[UInt8]) -> UInt32
+  ensures: result <= 0xFFFF
+{
   var sum: UInt64 = 0;
   var i = 0;
   while i < data.len() {
@@ -157,7 +167,9 @@ pub fn checksum_bsd(data: &Vec[UInt8]) -> UInt32 {
 }
 
 /// SysV sum: 16-bit accumulator with a rotate-right-1 after each byte.
-pub fn checksum_sysv(data: &Vec[UInt8]) -> UInt32 {
+pub fn checksum_sysv(data: &Vec[UInt8]) -> UInt32
+  ensures: result <= 0xFFFF
+{
   var sum: UInt64 = 0;
   var i = 0;
   while i < data.len() {
@@ -171,7 +183,9 @@ pub fn checksum_sysv(data: &Vec[UInt8]) -> UInt32 {
 
 /// RFC 1071 Internet checksum: 16-bit one's complement of the sum of 16-bit
 /// big-endian words.
-pub fn checksum_internet(data: &Vec[UInt8]) -> UInt32 {
+pub fn checksum_internet(data: &Vec[UInt8]) -> UInt32
+  ensures: result <= 0xFFFF
+{
   var total: UInt64 = 0;
   var i = 0;
   let len = data.len();
@@ -193,7 +207,9 @@ pub fn checksum_internet(data: &Vec[UInt8]) -> UInt32 {
 /// Adler-32 (RFC 1950). Verified against a clang-built reference
 /// (2026-08-11): "" -> 0x00000001, "a" -> 0x00620062, "abc" -> 0x024d0127,
 /// "Wikipedia" -> 0x11e60398 (matches the Wikipedia article).
-pub fn adler32(data: &Vec[UInt8]) -> UInt32 {
+pub fn adler32(data: &Vec[UInt8]) -> UInt32
+  ensures: (data.len() == 0) => (result == 1)
+{
   var a: Int = 1;
   var b: Int = 0;
   var i: Int = 0;

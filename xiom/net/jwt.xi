@@ -203,7 +203,9 @@ fn json_number_field(json: Str, key: Str) -> Option[Int] {
 /// Parameters: data -- the bytes to encode.
 /// Returns: the unpadded URL-safe base64 string.
 /// Complexity: O(n). Pure.
-pub fn jwt_base64url_encode(data: &Vec[UInt8]) -> Str {
+pub fn jwt_base64url_encode(data: &Vec[UInt8]) -> Str
+  ensures: ((data.len() == 0) => (result.len() == 0)) && (result.len() >= data.len()) && (result.len() <= data.len() * 2)
+{
   let e = base64.base64url_encode(data);
   e
 }
@@ -212,7 +214,9 @@ pub fn jwt_base64url_encode(data: &Vec[UInt8]) -> Str {
 /// Parameters: s -- the encoded string (padding optional).
 /// Returns: Ok(bytes) on success, Err for an invalid character.
 /// Complexity: O(n). Pure.
-pub fn jwt_base64url_decode(s: Str) -> Result[Vec[UInt8], Str] {
+pub fn jwt_base64url_decode(s: Str) -> Result[Vec[UInt8], Str]
+  ensures: ((s.len() == 0) => (result.is_ok == true)) && ((result.is_err == true) => (s.len() > 0))
+{
   let d = base64.base64url_decode(s);
   d
 }
@@ -221,7 +225,9 @@ pub fn jwt_base64url_decode(s: Str) -> Result[Vec[UInt8], Str] {
 /// Parameters: alg -- the algorithm name.
 /// Returns: true for "HS256" and "none".
 /// Complexity: O(1). Pure.
-pub fn jwt_alg_supported(alg: Str) -> Bool {
+pub fn jwt_alg_supported(alg: Str) -> Bool
+  ensures: result == (alg == "HS256" || alg == "none")
+{
   alg == "HS256" || alg == "none"
 }
 
@@ -247,7 +253,9 @@ fn hmac_sign(secret: Str, input: &Vec[UInt8]) -> Result[Str, Str] {
 /// Returns: Ok("header.payload.signature") on success, Err for an unsupported
 ///          algorithm.
 /// Complexity: O(n). Pure.
-pub fn jwt_encode(header: Str, payload: Str, secret: Str, alg: Str) -> Result[Str, Str] {
+pub fn jwt_encode(header: Str, payload: Str, secret: Str, alg: Str) -> Result[Str, Str]
+  ensures: ((alg != "HS256" && alg != "none") => (result.is_err == true)) && ((alg == "HS256" || alg == "none") => (result.is_ok == true))
+{
   if !jwt_alg_supported(alg) {
     return Err("unsupported JWT algorithm: " + alg);
   }
@@ -265,7 +273,9 @@ pub fn jwt_encode(header: Str, payload: Str, secret: Str, alg: Str) -> Result[St
 /// Returns: Ok("header.payload.signature") on success, Err for an unsupported
 ///          algorithm.
 /// Complexity: O(n). Pure.
-pub fn jwt_sign_b64(header_b64: Str, payload_b64: Str, secret: Str, alg: Str) -> Result[Str, Str] {
+pub fn jwt_sign_b64(header_b64: Str, payload_b64: Str, secret: Str, alg: Str) -> Result[Str, Str]
+  ensures: ((alg != "HS256" && alg != "none") => (result.is_err == true)) && ((alg == "HS256" || alg == "none") => (result.is_ok == true))
+{
   if !jwt_alg_supported(alg) {
     return Err("unsupported JWT algorithm: " + alg);
   }
@@ -292,7 +302,9 @@ fn join_token(a: Str, b: Str, c: Str) -> Str {
 /// Parameters: token -- the full JWT string.
 /// Returns: Ok(Jwt) with exactly three dot-separated parts, Err otherwise.
 /// Complexity: O(n). Pure.
-pub fn jwt_decode(token: Str) -> Result[Jwt, Str] {
+pub fn jwt_decode(token: Str) -> Result[Jwt, Str]
+  ensures: ((token.len() < 4) => (result.is_err == true)) && ((result.is_ok == true) => (token.len() >= 4))
+{
   let parts = string.str_split(token, ".");
   if parts.len() != 3 {
     return Err("invalid JWT: expected three parts");
@@ -312,7 +324,9 @@ pub fn jwt_decode(token: Str) -> Result[Jwt, Str] {
 ///          matches; "none" tokens verify only when the signature part is
 ///          empty.
 /// Complexity: O(n). Pure.
-pub fn jwt_verify(token: Str, secret: Str) -> Bool {
+pub fn jwt_verify(token: Str, secret: Str) -> Bool
+  ensures: ((token.len() < 4) => (result == false)) && ((result == true) => (token.len() >= 4))
+{
   let decoded = jwt_decode(token);
   match decoded {
     Err(_) => return false;
@@ -367,7 +381,9 @@ pub fn jwt_verify(token: Str, secret: Str) -> Bool {
 /// Returns: true when the token has an exp claim at or before now, false when
 ///          there is no exp claim or the token is malformed.
 /// Complexity: O(n). Pure.
-pub fn jwt_expired(token: Str, now: Int) -> Bool {
+pub fn jwt_expired(token: Str, now: Int) -> Bool
+  ensures: ((token.len() < 4) => (result == false)) && ((result == true) => (token.len() >= 4))
+{
   let decoded = jwt_decode(token);
   match decoded {
     Err(_) => return false;
@@ -394,7 +410,9 @@ pub fn jwt_expired(token: Str, now: Int) -> Bool {
 /// Returns: Ok(decoded payload) on success, Err for a malformed token or an
 ///          invalid base64url payload.
 /// Complexity: O(n). Pure.
-pub fn jwt_claims(token: Str) -> Result[Str, Str] {
+pub fn jwt_claims(token: Str) -> Result[Str, Str]
+  ensures: ((token.len() < 4) => (result.is_err == true)) && ((result.is_ok == true) => (token.len() >= 4))
+{
   let decoded = jwt_decode(token);
   match decoded {
     Err(e) => Err(e);

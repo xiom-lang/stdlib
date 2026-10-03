@@ -16,6 +16,16 @@ xiom --force -o out.exe tools/known_failures/<file>.xi
 
 ## Current
 
+**Open finding 2026-10-04 (official v0.62.3 and the m178 dev build):
+inline module-qualified UInt32 call compares misread high-bit values.**
+`adler32_combine(1, 2, -1)` returns UInt32 0xFFFFFFFF; compared inline,
+`!= 0xFFFFFFFF` reports true (and `==` reports false) while the same call
+bound to a local compares correctly. This is the UInt32 instance of the
+inline-unsigned-compare workaround family already recorded for UInt16/
+UInt8 (wave-61 icmp_checksum note). Repro
+`tools/known_failures/p_uint32_high_bit_compare.xi` (rc=1). Caught during
+wave-63 probe authoring; the wave probe binds before comparing.
+
 **Open finding 2026-10-03 (both v0.61.3 and official v0.62.3):
 `multipart_parse` result Part field reads are corrupt.** Build one
 `multipart_part("f", "v")` and parse it back with the same boundary:
