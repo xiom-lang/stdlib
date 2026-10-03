@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+- Compiler pin moved to `v0.62.3` (`COMPILER_VERSION`), per the compiler
+  lane's relay; the registry-publish workflow now verifies the downloaded
+  `xiom-<version>-linux-x64.tar.gz` against the release's published
+  `SHA256SUMS` before using it.
+
 ## [0.62.0] - 2026-09-27
 
 Pinned to compiler `v0.61.3`. Contract coverage is ratchet-gated per

@@ -108,8 +108,13 @@ jobs:
         run: |
           pin="${{ steps.ver.outputs.compiler }}"
           pv="${pin#v}"
-          curl -fsSL -o xiom-compiler.tar.gz \
-            "https://github.com/xiom-lang/xiom/releases/download/${pin}/xiom-${pv}-linux-x64.tar.gz"
+          base="https://github.com/xiom-lang/xiom/releases/download/${pin}"
+          curl -fsSL -o SHA256SUMS "${base}/SHA256SUMS"
+          curl -fsSL -o xiom-compiler.tar.gz "${base}/xiom-${pv}-linux-x64.tar.gz"
+          # The official archive is pinned by its published SHA256SUMS: a
+          # tampered mirror or a truncated download fails here, before the
+          # compiler ever runs in the publish job.
+          grep "xiom-${pv}-linux-x64.tar.gz\$" SHA256SUMS | sha256sum -c -
           mkdir -p compiler
           tar -xzf xiom-compiler.tar.gz -C compiler
           if [ ! -x compiler/bin/xiom ]; then

@@ -4,14 +4,17 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 -->
 # XIOM Stdlib Session -- Handoff
 
-## 0A. CONTINUE HERE -- handoff snapshot (updated 2026-09-24, after the v0.61.3 pin bump)
+## 0A. CONTINUE HERE -- handoff snapshot (updated 2026-10-03, after the v0.62.3 pin bump)
 
 **Repo**: `xiom-lang/stdlib` at `E:\xiom-lang\stdlib` (branch `main`).
-Compiler pin: `COMPILER_VERSION` = **v0.61.3** (compiler tag `d62b4d20`;
-R64/R65 batch -- R65 makes `xiom.env` OS/ARCH/FAMILY target-accurate, lock
-`e2e_m118`). Re-baselined on the tag build 2026-09-23 (PART 9 below plus the
-v0.61.3 section of `docs/VERIFICATION_BASELINE.md`). The nightly heavy CI
-already tests compiler `main`. NOTE: history was rewritten 2026-09-20
+Compiler pin: `COMPILER_VERSION` = **v0.62.3** (compiler lane relay
+2026-10-03). The last full re-baseline is the v0.61.3 one in PART 9 below;
+**re-baseline on v0.62.3 is the next stdlib-lane action before the next
+release.** The registry-publish workflow now verifies the downloaded
+`xiom-<version>-linux-x64.tar.gz` against the release's published
+`SHA256SUMS` (registry lane independently verified the manifest
+`8839e5cc…` and the archive `4cc5d62b…`). The nightly heavy CI already
+tests compiler `main`. NOTE: history was rewritten 2026-09-20
 (owner-authorized): every author/committer/tagger is
 `Lefteris Notas <lefterisnotas@gmail.com>`, `main` force-pushed to HEAD
 `926e888`; every other clone must be re-cloned. The protected tag
