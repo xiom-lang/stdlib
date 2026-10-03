@@ -1470,7 +1470,11 @@ registry pin, agent recon for the rest)**
   (m166 inlined unsafe path allocates 8 bytes for a 16-byte ArcInner);
   KEEP the `#[unsafe_direct]` annotations on `xiom/sync/sync.xi` (Gate P
   depends on them); sync-probe noise is expected until their fix.
-- Battery pending on the wave commit; results in the follow-up docs commit.
+- Full battery on bc2e03b: check_modules 509/509 (296s); corpus 951/951,
+  0 compilefail, 0 runfail (1841.6s); probe corpus 214/214 (476.7s);
+  barename 0 hits / 509 (997.2s); coverage floors95 OK; doc ratchet OK;
+  module-smoke ratchet OK (3,475/6,200 fns, 497/517 modules). Wave 59
+  closed; this battery/docs commit is LOCAL until the next push point.
 
 **RELAY 2026-10-03 (m178 closure + net.xi fix-first)**
 - Compiler main `659f6ec1` implements m178 (checker pattern-vs-type on
@@ -1709,27 +1713,27 @@ registry pin, agent recon for the rest)**
 
 ### HANDOFF 2026-10-02 (context-limit snapshot 4; read this plus docs/PRODUCTION_READINESS_QUEUE.md)
 
-**State**: main @ `48ef036` + this battery/docs commit, LOCAL only (the last
-pushed state is `5c3d39f`; push when the release/compiler lane asks -- the
-website fetches the queue's meter/gates lines from origin/main). Compiler
-pin v0.61.3 at `%TEMP%\kilo\stdlib_ws\xiom_v0613.exe` (rebuild recipe in
-the 2026-09-25 handoff); v0.62.2 dev at
-`E:\xiom-lang\xiom\target\debug\xiom.exe` (rebuilt 2026-10-02 21:13, carries
-the m169/m170 fixes -- see the RELAY block); wave-54..57 probes green on
-the v0.61.3 gate pin and the v0.62.2 dev binary. Pushed tags:
+**State**: main @ `bc2e03b` + this battery/docs commit, one push-point behind
+(origin at `8b23b79`; push when the release/compiler lane asks or at the
+next boundary -- the website fetches the queue's meter/gates lines from
+origin/main). Compiler pin v0.61.3 at `%TEMP%\kilo\stdlib_ws\xiom_v0613.exe`
+(rebuild recipe in the 2026-09-25 handoff); the m178 dev build (compiler
+main `659f6ec1`, rebuilt 2026-10-03 02:32) is at
+`E:\xiom-lang\xiom\target\debug\xiom.exe`; wave-54..59 probes green on the
+v0.61.3 gate pin and the m178 dev binary. Pushed tags:
 `stdlib-perf2` (`59bfb1c`, the
 next compiler-pin candidate, requires >= 185342f4 for the
 receiver-qualified method trust), `stdlib-perf1` (the v0.62.2
 `STDLIB_VERSION` pin), `stdlib-v0.62.0` (released 0.62.0; the registry lane
-owns its publish). Coverage floors94: **global 39.2% pub-with-clause, geom
-100.0%, math 38.8%, num 35.6%, net 20.9%**; probe corpus **212**; smoke
+owns its publish). Coverage floors95: **global 40.1% pub-with-clause, geom
+100.0%, net 39.4%, math 38.8%, num 35.6%**; probe corpus **214**; smoke
 corpus 951; modules 509/509; barename 0/509; doc 100%; module-smoke 497/517
 modules, 3,475/6,200 fns. Queue-top readiness meter: **70% -- 7 of 10
-gates** (open: coverage 100% at 39.2%, zero open findings (12: 11 compiler,
+gates** (open: coverage 100% at 40.1%, zero open findings (13: 12 compiler,
 1 stdlib), beta-exit release cut); gates line: corpus 951/951, modules
-509/509, probes
-212/212, barename 0/509. Packages intake `docs/STDLIB-WISHLIST.md`: 46 rows
-from the six relays (row 1 empty-needle defect fixed; rows 33-41 evening
+509/509, probes 214/214, barename 0/509. Packages intake
+`docs/STDLIB-WISHLIST.md`: 46 rows from the six relays (row 1 empty-needle
+defect fixed; rows 33-41 evening
 relay; rows 42-46 night batch; the crypto linkability packet does not
 reproduce on main -- compiler/install lane); full sheet
 `xiom-packages/packages` @ `66f26e1`.
@@ -1746,13 +1750,18 @@ batch 7 the aggregate's quaternion tail + Mat2/Mat3 + Mat4 core 45 (92, no
 fix-first); batch 8 the aggregate's Mat4 tail + Aabb + Sphere + Ray + Plane
 51 (93; `geom.xi` 186/186 and the geom directory 414/414 = 100%); net
 batch 1 the address family 46 (94; fix-firsts `ipv4_to_string` doc-faithful
-first-four octets and `url_join` "//" normalization; new finding
-`p_wave57_probe_ir.xi` -- context-dependent alloca-dominance invalid IR,
-non-monotonic bisection); plus the PERF-1 and PERF-2 annotation waves (tags
-above), the m169/m170 compiler closures (vector-bits and curve-thunk
-findings verified fixed on the v0.62.2 dev binary), the packages wishlist
-intake (46 rows now) and the empty-needle defect fix, and the website
-readiness meter/gates lines.
+first-four octets and `url_join` "//" normalization; filed the invalid-IR
+finding); net batch 2 the HTTP family 55 (95; fix-first `parse_q` q-cap at
+1000 per RFC 7231; global crosses 40%); wave 59 the serialize.json
+hardening (number grammar, exponent clamp, non-finite stringify);
+the m178 closure (checker pattern-vs-type; the `xiom.net` `str_slice`
+fix-first; repro retired) and the two dev-build findings (contracts
+`any_contracts` AV; sync Arc count -- compiler-side, keep the
+`#[unsafe_direct]` annotations); plus the PERF-1 and PERF-2 annotation
+waves (tags above), the m169/m170 compiler closures (vector-bits and
+curve-thunk findings verified fixed on the v0.62.2 dev binary), the
+packages wishlist intake (46 rows now) and the empty-needle defect fix,
+and the website readiness meter/gates lines.
 
 **Remaining to 100% (order)**: wave 58+ = net batches 2+ (address family
 done: 46 clauses; remaining ~251 pub: http/header/cookie/mime ~55,
@@ -1781,7 +1790,7 @@ always after `git log -1 --format='%an <%ae>'` prints
 
 ```
 Continue the XIOM stdlib production-readiness work in E:\xiom-lang\stdlib
-(main @ 48ef036 + battery docs or later; last pushed 5c3d39f; push docs/meter
+(main @ bc2e03b + battery docs or later; origin at 8b23b79; push docs/meter
 updates when asked).
 
 READ FIRST, in order:
@@ -1792,26 +1801,26 @@ READ FIRST, in order:
    10-gate list, sections C/D/E/F, module-smoke requirement, gotchas).
 3. docs/RELEASE_CHECKLIST.md before any release action.
 
-STATE: main @ 48ef036 + battery docs or later (LOCAL; last pushed 5c3d39f --
-the website fetches the queue's meter/gates lines from origin/main, so push
-when the release/compiler lane asks). Compiler pin v0.61.3 at
-%TEMP%\kilo\stdlib_ws\xiom_v0613.exe; the compiler lane's v0.62.2 dev binary
-(carries m169/m170, see the RELAY block) is at
-E:\xiom-lang\xiom\target\debug\xiom.exe; wave-54..57 probes green on the
-gate pin and v0.62.2 dev. Coverage floors94: global 39.2%, geom 100%, net
-20.9%, math 38.8%, num 35.6%. All gates green on the tip: check_modules
-509/509; corpus 951/951; probes 212/212; barename 0/509; coverage floors94;
-module-smoke ratchet (497/517 modules, 3475/6200 pub fns); doc 100%.
-Readiness meter 70% (7/10). Packages intake: docs/STDLIB-WISHLIST.md (46
-rows; the crypto linkability packet does not reproduce on main --
-compiler/install lane). stdlib 0.62.0 RELEASED; the registry lane owns its
-publish; the next release continues coverage toward 100%.
+STATE: main @ bc2e03b + battery docs or later (origin at 8b23b79 -- the
+website fetches the queue's meter/gates lines from origin/main, so push
+when the release/compiler lane asks or at the next boundary). Compiler pin
+v0.61.3 at %TEMP%\kilo\stdlib_ws\xiom_v0613.exe; the m178 dev build
+(compiler main 659f6ec1) at E:\xiom-lang\xiom\target\debug\xiom.exe;
+wave-54..59 probes green on the gate pin and the m178 dev binary. Coverage
+floors95: global 40.1%, geom 100%, net 39.4%, math 38.8%, num 35.6%. All
+gates green on the tip: check_modules 509/509; corpus 951/951; probes
+214/214; barename 0/509; coverage floors95; module-smoke ratchet (497/517
+modules, 3475/6200 pub fns); doc 100%. Readiness meter 70% (7/10). Packages
+intake: docs/STDLIB-WISHLIST.md (46 rows; sync Arc + contracts AV are
+compiler-side dev-build findings; keep the sync #[unsafe_direct]
+annotations). stdlib 0.62.0 RELEASED; the registry lane owns its publish;
+the next release continues coverage toward 100%.
 
-FIRST TASK -- wave 58: net batch 2 -- the HTTP parsing family (http 21 +
-header 6 + cookie 10 + mime 18 = 55 uncovered pub; read-only recon first;
-wave 57 finished the address family: address/ip/ip4/ip6/url 46 clauses,
-floors94). Batch-split per the owner's directive (families of 40-60 pub per
-wave).
+FIRST TASK -- wave 60: net batch 3 -- the transport family (socket 18 +
+tcp 4 + udp 4 + unix 10 + tls 5 + tls_helper 12 = 53 uncovered pub;
+read-only recon first; waves 57-59 closed the address family, the HTTP
+family and the serialize.json hardening). Batch-split per the owner's
+directive (families of 40-60 pub per wave).
 Protocol for EVERY wave: read-only recon -> new-shape probe in
 tools/probes/ (RED on the stub/before, GREEN after) -> runtime-safe
 clauses (contracts run at runtime; every clause certainly true for all
@@ -1866,7 +1875,10 @@ silently and scramble fields on both pins;
 call can emit invalid LLVM IR (alloca dominance; context-dependent and
 non-monotonic under bisection -- `p_wave57_probe_ir.xi`); compare Str
 results directly; the packages' crypto linkability packet does not
-reproduce on stdlib main (row 33; compiler/install lane); struct-payload
+reproduce on stdlib main (row 33; compiler/install lane); KEEP the
+`#[unsafe_direct]` annotations on `xiom/sync/sync.xi` (Gate P dependency;
+sync-probe noise expected until the compiler m166 inlined-alloc fix);
+struct-payload
 Options join the
 Vec-payload ones as is_some-only; the queue top's meter/gates lines are
 machine-read by the website (keep the exact formats).
