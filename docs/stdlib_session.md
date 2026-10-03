@@ -1495,6 +1495,12 @@ registry pin, agent recon for the rest)**
   (356.6s); barename 0/509 (571.0s); floors99/doc/module-smoke ratchets
   OK (497/517 modules, 3475/6200 fns). This battery/docs commit is LOCAL
   until the next push point.
+- Re-derivation notes for the next pass: the hash/crc.xi duplicate leaves
+  (checksum_bsd/sysv/internet, adler32) are both exercised by existing
+  smokes (`smoke_hash_fnv_adler` -> checksum.*, `smoke_hash_folder` ->
+  crc.*), so both copies' clauses are runtime-checked; `murmur2_64` was
+  left clause-free (its finalization mixes even for empty input, so no
+  seed-identity claim holds).
 
 **SESSION 2026-10-03 block 24 (wave-63 recon only -- execution deferred)**
 - Read-only recon for net batch 6 returned: net.xi 15 uncovered
