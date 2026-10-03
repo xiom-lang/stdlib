@@ -27,7 +27,9 @@ pub type UnixSocket = {
 /// NOT IMPLEMENTED: requires the AF_UNIX socket layer (not available in the
 /// pure stdlib).
 /// Returns: Err("unix_connect: AF_UNIX sockets not available in the pure stdlib").
-pub fn unix_connect(path: Str) -> Result[UnixSocket, Str] {
+pub fn unix_connect(path: Str) -> Result[UnixSocket, Str]
+  ensures: result.is_err == true
+{
   let _ = path;
   Err("unix_connect: AF_UNIX sockets not available in the pure stdlib")
 }
@@ -35,7 +37,9 @@ pub fn unix_connect(path: Str) -> Result[UnixSocket, Str] {
 /// Create a listening socket on a path.
 /// NOT IMPLEMENTED: requires the AF_UNIX socket layer (see unix_connect).
 /// Returns: Err("unix_listen: AF_UNIX sockets not available in the pure stdlib").
-pub fn unix_listen(path: Str) -> Result[UnixSocket, Str] {
+pub fn unix_listen(path: Str) -> Result[UnixSocket, Str]
+  ensures: result.is_err == true
+{
   let _ = path;
   Err("unix_listen: AF_UNIX sockets not available in the pure stdlib")
 }
@@ -43,7 +47,9 @@ pub fn unix_listen(path: Str) -> Result[UnixSocket, Str] {
 /// Accept an incoming connection.
 /// NOT IMPLEMENTED: requires the AF_UNIX socket layer (see unix_connect).
 /// Returns: Err("unix_accept: AF_UNIX sockets not available in the pure stdlib").
-pub fn unix_accept(sock: UnixSocket) -> Result[UnixSocket, Str] {
+pub fn unix_accept(sock: UnixSocket) -> Result[UnixSocket, Str]
+  ensures: result.is_err == true
+{
   let _ = sock;
   Err("unix_accept: AF_UNIX sockets not available in the pure stdlib")
 }
@@ -51,7 +57,9 @@ pub fn unix_accept(sock: UnixSocket) -> Result[UnixSocket, Str] {
 /// Write bytes to a socket.
 /// NOT IMPLEMENTED: requires the AF_UNIX socket layer (see unix_connect).
 /// Returns: Err("unix_send: AF_UNIX sockets not available in the pure stdlib").
-pub fn unix_send(sock: UnixSocket, data: &Vec[UInt8]) -> Result[Int, Str] {
+pub fn unix_send(sock: UnixSocket, data: &Vec[UInt8]) -> Result[Int, Str]
+  ensures: result.is_err == true
+{
   let _ = sock;
   let _ = data;
   Err("unix_send: AF_UNIX sockets not available in the pure stdlib")
@@ -60,7 +68,9 @@ pub fn unix_send(sock: UnixSocket, data: &Vec[UInt8]) -> Result[Int, Str] {
 /// Read up to max bytes from a socket.
 /// NOT IMPLEMENTED: requires the AF_UNIX socket layer (see unix_connect).
 /// Returns: Err("unix_recv: AF_UNIX sockets not available in the pure stdlib").
-pub fn unix_recv(sock: UnixSocket, max: Int) -> Result[Vec[UInt8], Str] {
+pub fn unix_recv(sock: UnixSocket, max: Int) -> Result[Vec[UInt8], Str]
+  ensures: result.is_err == true
+{
   let _ = sock;
   let _ = max;
   Err("unix_recv: AF_UNIX sockets not available in the pure stdlib")
@@ -68,14 +78,18 @@ pub fn unix_recv(sock: UnixSocket, max: Int) -> Result[Vec[UInt8], Str] {
 
 /// Close a socket and its fd.
 /// NO-OP: no live sockets exist in the pure stdlib.
-pub fn unix_close(sock: UnixSocket) {
+pub fn unix_close(sock: UnixSocket)
+  ensures: true
+{
   let _ = sock;
 }
 
 /// Bind a socket to a path.
 /// NOT IMPLEMENTED: requires the AF_UNIX socket layer (see unix_connect).
 /// Returns: Err("unix_bind: AF_UNIX sockets not available in the pure stdlib").
-pub fn unix_bind(path: Str) -> Result[UnixSocket, Str] {
+pub fn unix_bind(path: Str) -> Result[UnixSocket, Str]
+  ensures: result.is_err == true
+{
   let _ = path;
   Err("unix_bind: AF_UNIX sockets not available in the pure stdlib")
 }
@@ -83,7 +97,9 @@ pub fn unix_bind(path: Str) -> Result[UnixSocket, Str] {
 /// Connect with a timeout.
 /// NOT IMPLEMENTED: requires the AF_UNIX socket layer (see unix_connect).
 /// Returns: Err("unix_connect_timeout: AF_UNIX sockets not available in the pure stdlib").
-pub fn unix_connect_timeout(path: Str, timeout_ms: Int) -> Result[UnixSocket, Str] {
+pub fn unix_connect_timeout(path: Str, timeout_ms: Int) -> Result[UnixSocket, Str]
+  ensures: result.is_err == true
+{
   let _ = path;
   let _ = timeout_ms;
   Err("unix_connect_timeout: AF_UNIX sockets not available in the pure stdlib")
@@ -92,14 +108,18 @@ pub fn unix_connect_timeout(path: Str, timeout_ms: Int) -> Result[UnixSocket, St
 /// Create an anonymous connected pair.
 /// NOT IMPLEMENTED: requires the AF_UNIX socket layer (see unix_connect).
 /// Returns: Err("unix_socketpair: AF_UNIX sockets not available in the pure stdlib").
-pub fn unix_socketpair() -> Result[(UnixSocket, UnixSocket), Str] {
+pub fn unix_socketpair() -> Result[(UnixSocket, UnixSocket), Str]
+  ensures: result.is_err == true
+{
   Err("unix_socketpair: AF_UNIX sockets not available in the pure stdlib")
 }
 
 /// Read the peer pid, uid, and gid.
 /// NOT IMPLEMENTED: requires the AF_UNIX socket layer (see unix_connect).
 /// Returns: Err("unix_peer_credentials: AF_UNIX sockets not available in the pure stdlib").
-pub fn unix_peer_credentials(sock: UnixSocket) -> Result[(Int, Int, Int), Str] {
+pub fn unix_peer_credentials(sock: UnixSocket) -> Result[(Int, Int, Int), Str]
+  ensures: result.is_err == true
+{
   let _ = sock;
   Err("unix_peer_credentials: AF_UNIX sockets not available in the pure stdlib")
 }

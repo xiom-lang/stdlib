@@ -69,7 +69,9 @@ fn region_str(data: &Vec[UInt8], from: Int, to: Int) -> Str {
 /// Returns: Ok((length, bytes_consumed)) for short and long forms; Err for
 ///          indefinite lengths or truncated input.
 /// Complexity: O(1). Pure.
-pub fn der_length_decode(data: &Vec[UInt8], pos: Int) -> Result[(Int, Int), Str] {
+pub fn der_length_decode(data: &Vec[UInt8], pos: Int) -> Result[(Int, Int), Str]
+  ensures: ((pos < 0 || pos >= data.len()) => (result.is_err == true)) && ((result.is_ok == true) => (pos >= 0 && pos < data.len()))
+{
   let dlen = data.len();
   if pos < 0 || pos >= dlen {
     return Err("DER length: position out of bounds");
@@ -126,7 +128,9 @@ fn der_read_tlv(data: &Vec[UInt8], pos: Int) -> Result[(Int, Int, Int), Str] {
 /// Parameters: data -- the DER bytes; pos -- the position of the OID tag.
 /// Returns: Ok((oid components, next_pos)) on success, Err on malformed input.
 /// Complexity: O(n). Pure.
-pub fn asn1_read_oid(data: &Vec[UInt8], pos: Int) -> Result[(Vec[Int], Int), Str] {
+pub fn asn1_read_oid(data: &Vec[UInt8], pos: Int) -> Result[(Vec[Int], Int), Str]
+  ensures: ((pos < 0 || pos >= data.len()) => (result.is_err == true)) && ((result.is_ok == true) => (pos >= 0 && pos < data.len()))
+{
   let tlv = der_read_tlv(data, pos);
   match tlv {
     Err(e) => Err(e);
@@ -240,7 +244,9 @@ fn name_cn(data: &Vec[UInt8], start: Int, end: Int) -> Result[Str, Str] {
 /// Parameters: der -- the certificate DER bytes.
 /// Returns: the 32-byte SHA-256 digest.
 /// Complexity: O(n). Pure.
-pub fn cert_fingerprint_sha256(der: &Vec[UInt8]) -> Vec[UInt8] {
+pub fn cert_fingerprint_sha256(der: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: result.len() == 32
+{
   let raw = crypto.sha256(der);
   copy_vec(raw)
 }
@@ -249,7 +255,9 @@ pub fn cert_fingerprint_sha256(der: &Vec[UInt8]) -> Vec[UInt8] {
 /// NOT AVAILABLE: xiom.crypto does not provide SHA-1. Returns an empty
 /// vector.
 /// Complexity: O(1). Pure.
-pub fn cert_fingerprint_sha1(der: &Vec[UInt8]) -> Vec[UInt8] {
+pub fn cert_fingerprint_sha1(der: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: result.len() == 0
+{
   let _ = der;
   var out = Vec[UInt8].new();
   out
@@ -370,7 +378,9 @@ fn validity_dates(der: &Vec[UInt8]) -> Result[(Str, Str), Str] {
 /// Returns: Ok((not_before, not_after)) as ASN.1 time strings, Err when the
 ///          structure cannot be parsed.
 /// Complexity: O(n). Pure.
-pub fn cert_validity_dates(der: &Vec[UInt8]) -> Result[(Str, Str), Str] {
+pub fn cert_validity_dates(der: &Vec[UInt8]) -> Result[(Str, Str), Str]
+  ensures: ((der.len() == 0) => (result.is_err == true)) && ((result.is_ok == true) => (der.len() > 0))
+{
   validity_dates(der)
 }
 
@@ -378,7 +388,9 @@ pub fn cert_validity_dates(der: &Vec[UInt8]) -> Result[(Str, Str), Str] {
 /// Parameters: der -- the certificate DER bytes.
 /// Returns: Ok(CN) on success, Err when unparseable or missing.
 /// Complexity: O(n). Pure.
-pub fn cert_subject_cn(der: &Vec[UInt8]) -> Result[Str, Str] {
+pub fn cert_subject_cn(der: &Vec[UInt8]) -> Result[Str, Str]
+  ensures: ((der.len() == 0) => (result.is_err == true)) && ((result.is_ok == true) => (der.len() > 0))
+{
   let ranges = cert_child_ranges(der);
   match ranges {
     Err(e) => Err(e);
@@ -397,7 +409,9 @@ pub fn cert_subject_cn(der: &Vec[UInt8]) -> Result[Str, Str] {
 /// Parameters: der -- the certificate DER bytes.
 /// Returns: Ok(CN) on success, Err when unparseable or missing.
 /// Complexity: O(n). Pure.
-pub fn cert_issuer_cn(der: &Vec[UInt8]) -> Result[Str, Str] {
+pub fn cert_issuer_cn(der: &Vec[UInt8]) -> Result[Str, Str]
+  ensures: ((der.len() == 0) => (result.is_err == true)) && ((result.is_ok == true) => (der.len() > 0))
+{
   let ranges = cert_child_ranges(der);
   match ranges {
     Err(e) => Err(e);
@@ -438,7 +452,9 @@ fn oid_algorithm_name(oid: &Vec[Int]) -> Str {
 /// Parameters: der -- the certificate DER bytes.
 /// Returns: Ok((algorithm, bits)) on success, Err when unparseable.
 /// Complexity: O(n). Pure.
-pub fn cert_public_key_info(der: &Vec[UInt8]) -> Result[(Str, Int), Str] {
+pub fn cert_public_key_info(der: &Vec[UInt8]) -> Result[(Str, Int), Str]
+  ensures: ((der.len() == 0) => (result.is_err == true)) && ((result.is_ok == true) => (der.len() > 0))
+{
   let ranges = cert_child_ranges(der);
   match ranges {
     Err(e) => Err(e);
@@ -500,7 +516,9 @@ fn data_byte_at(data: &Vec[UInt8], pos: Int) -> UInt8 {
 /// Returns: true when both subject and issuer CNs parse and match; false
 ///          otherwise (including unparseable input).
 /// Complexity: O(n). Pure.
-pub fn cert_is_self_signed(der: &Vec[UInt8]) -> Bool {
+pub fn cert_is_self_signed(der: &Vec[UInt8]) -> Bool
+  ensures: (der.len() == 0) => (result == false)
+{
   let s = cert_subject_cn(der);
   let i = cert_issuer_cn(der);
   match s {
@@ -519,7 +537,9 @@ pub fn cert_is_self_signed(der: &Vec[UInt8]) -> Bool {
 ///          "CERTIFICATE").
 /// Returns: the PEM string with 64-column base64 lines.
 /// Complexity: O(n). Pure.
-pub fn pem_encode(der: &Vec[UInt8], label: Str) -> Str {
+pub fn pem_encode(der: &Vec[UInt8], label: Str) -> Str
+  ensures: result.len() >= der.len() + 2 * label.len() + 32
+{
   let b64 = base64.base64_encode(der);
   var result = "-----BEGIN ";
   result = result + label;
@@ -575,7 +595,9 @@ fn pem_find_block(pem: Str, label: Str) -> Option[Str] {
 /// Parameters: pem -- the PEM string.
 /// Returns: Ok(DER bytes) on success, Err when no matching block is found.
 /// Complexity: O(n). Pure.
-pub fn pem_decode(pem: Str) -> Result[Vec[UInt8], Str] {
+pub fn pem_decode(pem: Str) -> Result[Vec[UInt8], Str]
+  ensures: ((pem.len() == 0) => (result.is_err == true)) && ((result.is_ok == true) => (pem.len() > 0))
+{
   let body = pem_find_block(pem, "CERTIFICATE");
   match body {
     None => {
@@ -594,7 +616,9 @@ pub fn pem_decode(pem: Str) -> Result[Vec[UInt8], Str] {
 /// Returns: Ok(the DER bytes of each CERTIFICATE block) on success, Err when
 ///          no certificate block is present.
 /// Complexity: O(n). Pure.
-pub fn pem_parse_certificates(pem: Str) -> Result[Vec[Vec[UInt8]], Str] {
+pub fn pem_parse_certificates(pem: Str) -> Result[Vec[Vec[UInt8]], Str]
+  ensures: ((pem.len() == 0) => (result.is_err == true)) && ((result.is_ok == true) => (pem.len() > 0))
+{
   var result: Vec[Vec[UInt8]] = Vec[Vec[UInt8]].new();
   var rest = pem;
   var found = false;

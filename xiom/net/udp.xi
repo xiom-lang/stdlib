@@ -40,20 +40,26 @@ fn str_to_int(s: Str) -> Int {
 
 /// udp_validate_port returns true if p is a valid UDP port (1-65535).
 /// Complexity: O(1). Pure.
-pub fn udp_validate_port(p: Int) -> Bool {
+pub fn udp_validate_port(p: Int) -> Bool
+  ensures: result == (p > 0 && p <= 65535)
+{
   p > 0 && p <= 65535
 }
 
 /// udp_is_valid_port is an alias for udp_validate_port.
 /// Complexity: O(1). Pure.
-pub fn udp_is_valid_port(p: Int) -> Bool {
+pub fn udp_is_valid_port(p: Int) -> Bool
+  ensures: result == (p > 0 && p <= 65535)
+{
   udp_validate_port(p)
 }
 
 /// udp_parse_endpoint splits a "host:port" string into (host, port).
 /// Returns None if no colon or a malformed port is present.
 /// Complexity: O(n). Pure.
-pub fn udp_parse_endpoint(s: Str) -> Option[(Str, Int)] {
+pub fn udp_parse_endpoint(s: Str) -> Option[(Str, Int)]
+  ensures: ((s.len() == 0) => (result.is_none == true)) && ((result.is_some == true) => (s.len() >= 3))
+{
   let colon = idx_of(s, ":");
   if colon <= 0 {
     return None;
@@ -83,6 +89,8 @@ pub fn udp_parse_endpoint(s: Str) -> Option[(Str, Int)] {
 
 /// udp_format_endpoint builds a "host:port" string.
 /// Complexity: O(1). Pure.
-pub fn udp_format_endpoint(host: Str, port: Int) -> Str {
+pub fn udp_format_endpoint(host: Str, port: Int) -> Str
+  ensures: result == host + ":" + port.to_str()
+{
   host + ":" + port.to_str()
 }

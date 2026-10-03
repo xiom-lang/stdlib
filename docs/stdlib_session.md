@@ -1449,6 +1449,23 @@ registry pin, agent recon for the rest)**
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
 
+**SESSION 2026-10-03 block 20 (wave 60: net batch 3 -- transport family; floors96)**
+- Wave 60: 53 clauses on xiom.net.{socket (18), tcp (4), udp (4), unix
+  (10), tls (5), tls_helper (12)}. Validation-guard implications on every
+  socket entry point, the documented always-Err stubs, port bands,
+  endpoint format/parse claims, TLS name-table implications, pure DER/PEM
+  presence bands, fingerprint length claims. Probes avoid real
+  connections (constructors create+close one local fd each; all other
+  network fns use early-error paths only).
+- Probe `p_wave60_shapes.xi` (215th): 80 checks; green on v0.61.3 and the
+  m178 dev binary.
+- net 39.4% -> 57.2%, global 40.9%; floors96 wired (YAML re-verified) +
+  tools/README.md + plan + queue in the same commit. Smoke growth skipped
+  (existing net smokes already reference part of the family; module-smoke
+  stays 3,475/6,200).
+- Battery pending on the wave commit; results in the follow-up docs
+  commit.
+
 **SESSION 2026-10-03 block 19 (wave 59: serialize.json hardening -- JSON legacy bugs)**
 - Fix-firsts from the recorded JSON legacy list: (1) number grammar --
   reject leading zeros (`00`/`01`), require integer digits (`.5`/`1.`)

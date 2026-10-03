@@ -1,19 +1,19 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
 **70% -- 7 of 10 readiness gates complete.**
-**Gates: corpus 951/951, modules 509/509, probes 214/214, barename 0/509.**
+**Gates: corpus 951/951, modules 509/509, probes 215/215, barename 0/509.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
 gates flip:
 1. Modules type-check clean -- MET (509/509).
 2. Smoke corpus green -- MET (951/951).
-3. Probe corpus green -- MET (214/214).
+3. Probe corpus green -- MET (215/215).
 4. Strict bare-name scan clean -- MET (0/509).
-5. Coverage ratchet green -- MET (floors95).
+5. Coverage ratchet green -- MET (floors96).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (497/517 modules, 3475/6200 fns).
-8. Contract coverage 100% (every public fn carries clauses) -- OPEN (40.1%).
+8. Contract coverage 100% (every public fn carries clauses) -- OPEN (40.9%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
    OPEN (13: 12 compiler, 1 stdlib algorithm).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
@@ -394,6 +394,18 @@ Compiler lane note: the sync Arc/strong_count finding is compiler-side
 `#[unsafe_direct]` annotations on `xiom/sync/sync.xi` (Gate P depends on
 them); sync-probe noise is expected until the compiler fix. Next: net
 batches 3+ (transport ~53, then protocols), then the remaining low dirs.
+
+Update 2026-10-03 (wave 60 landed): net batch 3 -- the transport family
+(socket 18, tcp 4, udp 4, unix 10, tls 5, tls_helper 12 = 53 clauses).
+Validation-guard implications on every socket entry point, documented
+always-Err stubs, port bands, endpoint format/parse claims, TLS name-table
+implications, DER/PEM presence bands, fingerprint length claims. Probe
+`p_wave60_shapes.xi` (215th, 80 checks, green on v0.61.3 and the m178 dev
+binary); floors96; net 39.4% -> 57.2%, global 40.9%. Next: net protocols
+(proto/smtp/ftp/ntp/ping/sse/websocket/ws), then the remaining low dirs
+(hash 8.9%, reflect 9.1%, iter 9.8%, convert 11.5%, format 13%, time 13%,
+misc 13.9%, os 15.3%, rand 16%, crypto 17%, log 19.1%, compress 21.1%),
+then C, D, E, F.
 
 State 2026-09-29 (handoff snapshot 3, main 2a06a90): floors85 global 32.8%,
 math 38.8%, num 37.4%; probes 202; smoke 951; modules 509/509; barename

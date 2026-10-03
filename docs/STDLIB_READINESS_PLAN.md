@@ -874,13 +874,26 @@ T1/T2 yields.
        40.1%. Next: net batches 3+ (transport socket/tcp/udp/unix/tls/
        tls_helper ~53; protocols proto/smtp/ftp/ntp/ping/sse/websocket/
        ws), then the remaining low dirs (serialize 5.4% first).
+       Wave 60 (2026-10-03): coverage wave 23 -- net batch 3, transport
+       family (53 pub: socket 18, tcp 4, udp 4, unix 10, tls 5,
+       tls_helper 12). Shapes: validation-guard implications on every
+       socket entry point, documented always-Err stubs, port bands,
+       endpoint format/parse claims, TLS name-table implications, pure
+       DER/PEM presence bands, fingerprint length claims. Probes avoid
+       real connections (constructors create+close one local fd; all
+       other network fns use early-error paths only). Probe
+       tools/probes/p_wave60_shapes.xi (215th): 80 checks, green on
+       v0.61.3 and the m178 dev binary. net 39.4% -> 57.2%, global 40.9%.
+       Next: net protocols (proto/smtp/ftp/ntp/ping/sse/websocket/ws),
+       then the remaining low dirs (hash 8.9%, reflect 9.1%, iter 9.8%,
+       ...).
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors95.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors96.json
        tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;
        earlier floors kept at
-       coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55/56/57/58/59/60/61/62/63/64/65/66/67/68/69/70/71/72/73/74/75/76/77/78/79/80/81/82/83/84/85/86/87/88/89/90/91/92/93/94/95.json).
+       coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55/56/57/58/59/60/61/62/63/64/65/66/67/68/69/70/71/72/73/74/75/76/77/78/79/80/81/82/83/84/85/86/87/88/89/90/91/92/93/94/95/96.json).
       Floors are per top-level stdlib/xiom directory and must be refreshed
       when a module is ADDED (new uncovered pub fns dilute the percentage
       -- TOML dropped serialize 6.1% -> 5.4%, tz dropped time 13% ->

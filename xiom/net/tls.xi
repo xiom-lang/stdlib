@@ -9,14 +9,18 @@ module xiom.net.tls
 
 /// tls_default_port returns the default TLS port (443).
 /// Complexity: O(1). Pure.
-pub fn tls_default_port() -> Int {
+pub fn tls_default_port() -> Int
+  ensures: result == 443
+{
   443
 }
 
 /// tls_version_name maps a TLS version code point to its name.
 /// Recognised values: 0x0301 TLSv1.0, 0x0302 TLSv1.1, 0x0303 TLSv1.2,
 /// 0x0304 TLSv1.3. Unknown values return "unknown". Complexity: O(1).
-pub fn tls_version_name(version: Int) -> Str {
+pub fn tls_version_name(version: Int) -> Str
+  ensures: ((version == 0x0300) => (result == "SSLv3")) && ((version == 0x0301) => (result == "TLSv1.0")) && ((version == 0x0302) => (result == "TLSv1.1")) && ((version == 0x0303) => (result == "TLSv1.2")) && ((version == 0x0304) => (result == "TLSv1.3")) && (result.len() > 0)
+{
   if version == 0x0301 { return "TLSv1.0"; }
   if version == 0x0302 { return "TLSv1.1"; }
   if version == 0x0303 { return "TLSv1.2"; }
@@ -27,7 +31,9 @@ pub fn tls_version_name(version: Int) -> Str {
 
 /// tls_handshake_type_name maps a TLS handshake message type to its
 /// name. Complexity: O(1).
-pub fn tls_handshake_type_name(t: Int) -> Str {
+pub fn tls_handshake_type_name(t: Int) -> Str
+  ensures: ((t == 0) => (result == "hello_request")) && ((t == 1) => (result == "client_hello")) && ((t == 2) => (result == "server_hello")) && ((t == 11) => (result == "certificate")) && ((t == 16) => (result == "client_key_exchange")) && ((t == 20) => (result == "finished")) && (result.len() > 0)
+{
   if t == 0 { return "hello_request"; }
   if t == 1 { return "client_hello"; }
   if t == 2 { return "server_hello"; }
@@ -47,7 +53,9 @@ pub fn tls_handshake_type_name(t: Int) -> Str {
 
 /// tls_alert_name maps a TLS alert description to its name per RFC 5246
 /// and RFC 8446. Complexity: O(1).
-pub fn tls_alert_name(code: Int) -> Str {
+pub fn tls_alert_name(code: Int) -> Str
+  ensures: ((code == 0) => (result == "close_notify")) && ((code == 20) => (result == "bad_record_mac")) && ((code == 40) => (result == "handshake_failure")) && ((code == 46) => (result == "certificate_unknown")) && ((code == 48) => (result == "unknown_ca")) && ((code == 70) => (result == "protocol_version")) && ((code == 120) => (result == "no_application_protocol")) && (result.len() > 0)
+{
   if code == 0 { return "close_notify"; }
   if code == 10 { return "unexpected_message"; }
   if code == 20 { return "bad_record_mac"; }
@@ -81,7 +89,9 @@ pub fn tls_alert_name(code: Int) -> Str {
 /// tls_cipher_suite_name maps a TLS cipher suite code to a
 /// human-readable name for the most common suites, or "unknown" (0x0000-
 /// 0xFFFF, two-byte IANA code). Complexity: O(1).
-pub fn tls_cipher_suite_name(code: Int) -> Str {
+pub fn tls_cipher_suite_name(code: Int) -> Str
+  ensures: ((code == 0x002F) => (result == "TLS_RSA_WITH_AES_128_CBC_SHA")) && ((code == 0xC02F) => (result == "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256")) && ((code == 0xC030) => (result == "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384")) && ((code == 0x1301) => (result == "TLS_AES_128_GCM_SHA256")) && ((code == 0x1302) => (result == "TLS_AES_256_GCM_SHA384")) && ((code == 0x1303) => (result == "TLS_CHACHA20_POLY1305_SHA256")) && (result.len() > 0)
+{
   if code == 0x002F { return "TLS_RSA_WITH_AES_128_CBC_SHA"; }
   if code == 0x0035 { return "TLS_RSA_WITH_AES_256_CBC_SHA"; }
   if code == 0x003C { return "TLS_RSA_WITH_AES_128_CBC_SHA256"; }

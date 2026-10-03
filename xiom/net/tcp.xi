@@ -40,20 +40,26 @@ fn str_to_int(s: Str) -> Int {
 
 /// tcp_validate_port returns true if p is a valid TCP port (1-65535).
 /// Complexity: O(1). Pure.
-pub fn tcp_validate_port(p: Int) -> Bool {
+pub fn tcp_validate_port(p: Int) -> Bool
+  ensures: result == (p > 0 && p <= 65535)
+{
   p > 0 && p <= 65535
 }
 
 /// tcp_is_valid_port is an alias for tcp_validate_port.
 /// Complexity: O(1). Pure.
-pub fn tcp_is_valid_port(p: Int) -> Bool {
+pub fn tcp_is_valid_port(p: Int) -> Bool
+  ensures: result == (p > 0 && p <= 65535)
+{
   tcp_validate_port(p)
 }
 
 /// tcp_parse_endpoint splits a "host:port" string into (host, port).
 /// Returns None if no colon or a malformed port is present. The host may
 /// be empty (an empty host string is rejected). Complexity: O(n). Pure.
-pub fn tcp_parse_endpoint(s: Str) -> Option[(Str, Int)] {
+pub fn tcp_parse_endpoint(s: Str) -> Option[(Str, Int)]
+  ensures: ((s.len() == 0) => (result.is_none == true)) && ((result.is_some == true) => (s.len() >= 3))
+{
   let colon = idx_of(s, ":");
   if colon <= 0 {
     return None;
@@ -83,6 +89,8 @@ pub fn tcp_parse_endpoint(s: Str) -> Option[(Str, Int)] {
 
 /// tcp_format_endpoint builds a "host:port" string.
 /// Complexity: O(1). Pure.
-pub fn tcp_format_endpoint(host: Str, port: Int) -> Str {
+pub fn tcp_format_endpoint(host: Str, port: Int) -> Str
+  ensures: result == host + ":" + port.to_str()
+{
   host + ":" + port.to_str()
 }
