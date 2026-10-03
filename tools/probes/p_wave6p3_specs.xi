@@ -20,29 +20,14 @@ fn main() -> Int {
   if natural.natural_compare_numeric("8", "7") != 1 { return 8; };
 
   let ascii = "\u{0041}".char_at(0);
-  match ascii {
-    Some(ca) => {
-      if uni.unicode_is_wide(ca) { io.println("ascii wide"); return 9; };
-      if uni.unicode_is_emoji(ca) { io.println("ascii emoji"); return 10; };
-    },
-    None => { return 11; }
-  };
+  if uni.unicode_is_wide(ascii) { io.println("ascii wide"); return 9; };
+  if uni.unicode_is_emoji(ascii) { io.println("ascii emoji"); return 10; };
 
   var wide = "\u{4E2D}".char_at(0);
-  match wide {
-    Some(cw) => {
-      if !uni.unicode_is_wide(cw) { io.println("cjk not wide"); return 12; };
-    },
-    None => { return 13; }
-  };
+  if !uni.unicode_is_wide(wide) { io.println("cjk not wide"); return 12; };
 
   var emo = "\u{1F600}".char_at(0);
-  match emo {
-    Some(ce) => {
-      if !uni.unicode_is_emoji(ce) { io.println("emoji not emoji"); return 14; };
-    },
-    None => { return 15; }
-  };
+  if !uni.unicode_is_emoji(emo) { io.println("emoji not emoji"); return 14; };
 
   // quick checks: NFC of "e" + combining acute is single-codepoint e-acute.
   if !uni.unicode_nfc_quick_check("abc") { io.println("abc not nfc"); return 16; };

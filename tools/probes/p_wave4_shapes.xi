@@ -9,10 +9,7 @@ use xiom.string.combinatorics;
 use xiom.io;
 
 fn first(s: Str) -> Char {
-  match s.char_at(0) {
-    Some(c) => { return c; },
-    None => { return 'x'; }
-  }
+  return s.char_at(0);
 }
 
 fn main() -> Int {

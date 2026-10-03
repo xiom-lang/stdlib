@@ -16,6 +16,19 @@ xiom --force -o out.exe tools/known_failures/<file>.xi
 
 ## Current
 
+**Open finding 2026-10-03 (compiler main `659f6ec1` / m178 dev build only;
+GREEN on the v0.61.3 gate pin): `xiom.contracts.any_contracts()` crashes
+(0xC0000005).** Minimal repro
+`tools/known_failures/p_contracts_any_av.xi` (v0.61.3 rc=0; m178 build
+rc=0xC0000005). Found bisecting `tools/probes/p_never_called_zeroarg.xi`
+(call 3 of 71) during the pre-v0.62.3 tag check.
+
+**Open finding 2026-10-03 (compiler main `659f6ec1` / m178 dev build only;
+GREEN on the v0.61.3 gate pin): `xiom.sync.Arc.new(42).strong_count()` is
+not 1.** Minimal repro `tools/known_failures/p_sync_arc_count.xi` (v0.61.3
+rc=0; m178 build rc=1). Found via `tools/probes/p_sync_sizeof.xi` during
+the pre-v0.62.3 tag check.
+
 **Open finding 2026-10-02 (compiler v0.61.3 and v0.62.1): struct literals
 with out-of-declaration-order fields compile silently and assign fields
 positionally.** `P{ z: 3.0; y: 2.0; x: 1.0 }` for `type P = { x; y; z }`
