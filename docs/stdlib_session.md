@@ -4,16 +4,21 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 -->
 # XIOM Stdlib Session -- Handoff
 
-## 0A. CONTINUE HERE -- handoff snapshot (updated 2026-10-03, after the official v0.62.3 re-baseline)
+## 0A. CONTINUE HERE -- handoff snapshot (updated 2026-10-04, after wave 63)
 
 **Repo**: `xiom-lang/stdlib` at `E:\xiom-lang\stdlib` (branch `main`).
 Compiler pin: **official v0.62.3** (windows-x64 archive, SHA256
 `011af7dd...`, verified against the release SHA256SUMS). The v0.62.3
 re-baseline is DONE: check_modules 509/509, corpus 950/951 (1 filed
-compiler regressions), probes 220/220, barename 0/509, floors98 -- see
-SESSION block 22 and the HANDOFF 2026-10-03 snapshot 5, which carries the
-paste-ready continuation prompt (FIRST TASK: wave 63, net batch 6). The
-registry-publish workflow verifies the downloaded
+compiler regression), probes 221/221, barename 0/509, floors99 (all
+re-verified on the wave-63 battery) -- see SESSION block 22 and the
+HANDOFF 2026-10-03 snapshot 5, which carries the paste-ready continuation
+prompt. Wave 63 LANDED on 2026-10-04 (block 25, commit 72ecd60: net
+batch 6 + hash batch 1, 53 clauses, floors99; battery corpus 950/951 +
+probes 221/221 + modules 509/509). Snapshot 5's prompt otherwise stands;
+the next task is wave 64 on the remaining low dirs (reflect 9.1%, iter
+9.8%, convert 11.5%, format 13%, time 13%, ...). The registry-publish
+workflow verifies the downloaded
 `xiom-<version>-linux-x64.tar.gz` against the release's published
 `SHA256SUMS` (registry lane independently verified the manifest
 `8839e5cc…` and the archive `4cc5d62b…`). The nightly heavy CI already
@@ -1484,6 +1489,12 @@ registry pin, agent recon for the rest)**
 - net 87.2% -> 97.3%, hash 8.9% -> 33.3%, global 42.2% -> 43.0%; floors99
   wired (YAML re-verified) + tools/README.md + plan + queue in the same
   commit.
+- Full battery on 72ecd60 (official v0.62.3): check_modules 509/509
+  (136.8s); corpus 950/951 -- the only runfail is the filed
+  `smoke_compress_lz4_snappy` regression (1217.1s); probes 221/221
+  (356.6s); barename 0/509 (571.0s); floors99/doc/module-smoke ratchets
+  OK (497/517 modules, 3475/6200 fns). This battery/docs commit is LOCAL
+  until the next push point.
 
 **SESSION 2026-10-03 block 24 (wave-63 recon only -- execution deferred)**
 - Read-only recon for net batch 6 returned: net.xi 15 uncovered
