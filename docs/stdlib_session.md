@@ -4,13 +4,16 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 -->
 # XIOM Stdlib Session -- Handoff
 
-## 0A. CONTINUE HERE -- handoff snapshot (updated 2026-10-03, after the v0.62.3 pin bump)
+## 0A. CONTINUE HERE -- handoff snapshot (updated 2026-10-03, after the official v0.62.3 re-baseline)
 
 **Repo**: `xiom-lang/stdlib` at `E:\xiom-lang\stdlib` (branch `main`).
-Compiler pin: `COMPILER_VERSION` = **v0.62.3** (compiler lane relay
-2026-10-03). The last full re-baseline is the v0.61.3 one in PART 9 below;
-**re-baseline on v0.62.3 is the next stdlib-lane action before the next
-release.** The registry-publish workflow now verifies the downloaded
+Compiler pin: **official v0.62.3** (windows-x64 archive, SHA256
+`011af7dd...`, verified against the release SHA256SUMS). The v0.62.3
+re-baseline is DONE: check_modules 509/509, corpus 948/951 (3 filed
+compiler regressions), probes 220/220, barename 0/509, floors98 -- see
+SESSION block 22 and the HANDOFF 2026-10-03 snapshot 5, which carries the
+paste-ready continuation prompt (FIRST TASK: wave 63, net batch 6). The
+registry-publish workflow verifies the downloaded
 `xiom-<version>-linux-x64.tar.gz` against the release's published
 `SHA256SUMS` (registry lane independently verified the manifest
 `8839e5cc…` and the archive `4cc5d62b…`). The nightly heavy CI already
@@ -1789,6 +1792,134 @@ registry pin, agent recon for the rest)**
   lane: the next pin bump can drop the tcp_connect m146 caveat and the
   ptr.is_null workaround once the pin carries m142+; no stdlib change is
   required for the pin itself. This lane has not been asked to push.
+
+### HANDOFF 2026-10-03 (context-limit snapshot 5; read this plus docs/PRODUCTION_READINESS_QUEUE.md)
+
+**State**: main @ `05168e6` + this handoff commit, PUSHED (origin synced;
+the website fetches the queue's meter/gates lines from origin/main).
+Compiler pin: official **v0.62.3** at
+`%TEMP%\kilo\stdlib_ws\v0623\x\bin\xiom.exe` (SHA256
+`011af7dd823c1bc258565d1f8b9303d93bccde7ea477210768e094edd60406c2`,
+verified against the release SHA256SUMS); v0.61.3 at
+`%TEMP%\kilo\stdlib_ws\xiom_v0613.exe` and the m178 dev build at
+`E:\xiom-lang\xiom\target\debug\xiom.exe` remain for cross-checks. Tags:
+`stdlib-perf3` (`2429ac3`, the shipped pin for compiler v0.62.3 PUBLISHED
+2026-10-03), `stdlib-perf2` (`59bfb1c`), `stdlib-perf1` (the v0.62.2
+STDLIB_VERSION pin), `stdlib-v0.62.0` (released 0.62.0). Coverage floors98:
+**global 42.2% pub-with-clause, geom 100.0%, net 87.2%, math 38.8%, num
+35.6%**; probe corpus **220** (incl. the three p_regress_* promoted repros);
+corpus **948/951 on v0.62.3** (the 3 failures are filed context-dependent
+compiler regressions: smoke_cell_refcell_basic, smoke_cell_ref_get,
+smoke_compress_lz4_snappy), 951/951 on v0.61.3; modules 509/509; barename
+0/509; doc 100%; module-smoke 497/517 modules, 3,475/6,200 fns; findings
+Current 10 (9 compiler, 1 stdlib). Readiness meter 70% (7/10).
+
+**Waves landed since snapshot 4**: geom aggregate batches 6-8 (46+45+51 =
+142/142; `geom.xi` 186/186; geom directory 100%; fix-first
+`quat_from_euler` literal order; floors91-93); net batch 1 address family
+46 (floors94; fix-firsts `ipv4_to_string`/`url_join`); net batch 2 HTTP
+family 55 (floors95; fix-first `parse_q` q-cap); net batch 3 transport 53
+(floors96); net batch 4 protocols 48 (floors97); net batch 5
+sse/websocket/ws/dns/multipart 41 (floors98; fix-first
+`ws_handshake_verify` accept-line scan; new finding
+`p_multipart_parse_name`); serialize.json hardening (grammar, exponent
+clamp, non-finite guard) + the JSON legacy-bug record; m178 closure
+(`net.xi` `str_slice` T001 fix-first); official v0.62.3 baseline + pin
+move; registry-lane pin commit `e36d86d` included.
+
+**Remaining to 100% (order)**: (1) net batch 6: `net.xi` 15 + `server` 6 +
+`jwt` 9 = 30 pub (merge with the first low-dir family after recon to stay
+in 40-60); (2) the low dirs: hash 8.9%, reflect 9.1%, iter 9.8%, convert
+11.5%, format 13%, time 13%, misc 13.9%, os 15.3%, rand 16%, crypto 17%
+(the packages' crypto-link row is install/deploy-lane; nothing to fix),
+log 19.1%, compress 21.1%; (3) C geom dedup + Box rename (needs
+compiler-lane api_freeze regen), D tzdata phase 2 (check
+PACKAGE-NAMESPACES.txt), E untested-surface generator classes, F next
+release cut. **Registry note**: xiom-std 0.62.0 in the registry is a
+pre-fix snapshot; only explicit `xiom pkg install xiom.std` reaches it --
+bump `package.xi` (registries reject duplicate versions) and publish a
+fresh artifact from the pinned tree at the release boundary if wanted (our
+call, low risk, no compiler dependency).
+
+**Open compiler findings** (all in `tools/known_failures/` Current with
+repros): cell/RefCell + lz4 context-dependent regressions on v0.62.3
+(smokes; minimal forms pass), `multipart_parse` Part field reads corrupt
+(both pins), clause-position Float64 vector element indexing,
+generic-typechanging map/core_map/sortbykey (`fnptr` now passes), Box
+unnameable, geom matrix nested-result inference, `polygon_difference`
+(stdlib algorithm), polyhedra nested hulls, shape-mismatched `&Vec` AV.
+Fixed-and-retired on v0.62.3: struct-literal order, vector result bits,
+curve thunk, generic fnptr. Compiler-side post-release queue (their
+relay): R-8 tcp_stream_read, contracts-arena verifier, complex const
+tables, i64<->f64 bitcast (stdlib float stubs stay).
+
+**Paste-ready continuation prompt (snapshot 5; copy below)**:
+
+Continue the XIOM stdlib production-readiness work in E:\xiom-lang\stdlib
+(main @ 05168e6 + handoff docs or later; origin synced; push docs/meter
+updates when asked).
+
+READ FIRST, in order:
+1. docs/stdlib_session.md -- the "HANDOFF 2026-10-03 (context-limit
+   snapshot 5)" block, plus snapshots 4/3 for history.
+2. docs/PRODUCTION_READINESS_QUEUE.md -- authoritative queue (top meter +
+   10-gate list, sections C/D/E/F, module-smoke requirement, gotchas).
+3. docs/RELEASE_CHECKLIST.md before any release action.
+
+STATE: main @ 05168e6 (pushed). Compiler pin: official v0.62.3 at
+%TEMP%\kilo\stdlib_ws\v0623\x\bin\xiom.exe (SHA256 011af7dd... verified);
+v0.61.3 at %TEMP%\kilo\stdlib_ws\xiom_v0613.exe and the m178 dev build at
+E:\xiom-lang\xiom\target\debug\xiom.exe for cross-checks. Coverage floors98:
+global 42.2%, net 87.2%, geom 100%, math 38.8%, num 35.6%. Gates on v0.62.3:
+check_modules 509/509; corpus 948/951 (the 3 remaining are filed
+context-dependent compiler regressions: smoke_cell_refcell_basic,
+smoke_cell_ref_get, smoke_compress_lz4_snappy); probes 220/220; barename
+0/509; coverage floors98; module-smoke 3,475/6,200; doc 100%. Findings
+Current 10 (9 compiler, 1 stdlib). stdlib-perf3 (2429ac3) is the shipped
+pin for compiler v0.62.3 (PUBLISHED); keep the #[unsafe_direct] annotations
+on xiom/sync/*.
+
+FIRST TASK -- wave 63: net batch 6 -- net.xi 15 + server 6 + jwt 9 = 30
+uncovered pub; after read-only recon, merge with the first low-dir family
+if needed to hold the 40-60-pub directive. Protocol per wave: recon
+(read-only) -> new-shape probe in tools/probes/ (RED before, GREEN after)
+-> runtime-safe clauses -> dump tools/coverage_floors99.json -> wire into
+.github/workflows/{ci,heavy,release}.yml (keep `run:` at EIGHT spaces under
+`shell: pwsh`; YAML parse-check after ANY workflow edit) + tools/README.md
++ docs/STDLIB_READINESS_PLAN.md + docs/stdlib_session.md + the queue top
+meter/gates lines in the SAME commit -> pure-ASCII single-quoted commit ->
+full battery: check_modules; run_smokes -Workers 8 -RetryFailed; same with
+-Corpus tools\probes; barename_scan; coverage_scan -RatchetFile; doc_scan
+-RatchetFile tools\doc_baseline4.json; module_smoke_scan -BaselineFile.
+One wave = one commit. Expect exactly the 3 filed corpus failures on
+v0.62.3; everything else must stay green.
+
+ALSO IN SCOPE each wave: smoke-growth (20 modules with no smoke; ~2,725
+unreferenced pub fns) and any fix-first bugs the probe catches.
+
+THEN, in order: the remaining low dirs (hash, reflect, iter, convert,
+format, time, misc, os, rand, crypto, log, compress), then C (geom dedup +
+Box rename, needs compiler-lane api_freeze regen), D (tzdata phase 2), E
+(untested-surface generator classes), F (next release cut; the registry
+xiom-std bump/publish is our call at the boundary).
+
+RULES: no stdlib edits while a sweep is in flight; pushes only when the
+release/compiler lane asks or at a boundary (the website reads
+origin/main); always after git log -1 --format='%an <%ae>' prints Lefteris
+Notas <lefterisnotas@gmail.com>; no pwsh -- use `powershell -NoProfile
+-File tools\<script>.ps1`; keep repo edits single-threaded (recon agents
+read-only); report new compiler bugs in tools/known_failures/ with a
+minimal repro; update docs/PRODUCTION_READINESS_QUEUE.md every wave.
+
+GOTCHAS (full list in snapshot 3's block, unchanged, plus): v0.62.3 has
+context-dependent codegen regressions (cell x2, lz4) -- minimal forms may
+pass; multipart_parse result Part fields are corrupt (presence-only);
+struct-literal positional scrambling is FIXED on v0.62.3 (still write
+declaration order); bind module-qualified call results to `let` before
+comparison when the type is UInt16/UInt8; compare Str-returning calls
+directly (no Result-style match); keep #[unsafe_direct] on xiom/sync/*;
+the queue top's meter/gates lines are machine-read by the website (keep
+the exact formats).
 
 ### HANDOFF 2026-10-02 (context-limit snapshot 4; read this plus docs/PRODUCTION_READINESS_QUEUE.md)
 
