@@ -1,7 +1,7 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
 **70% -- 7 of 10 readiness gates complete.**
-**Gates: corpus 947/951, modules 509/509, probes 220/220, barename 0/509.**
+**Gates: corpus 948/951, modules 509/509, probes 220/220, barename 0/509.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -18,7 +18,7 @@ gates flip:
 7. Module-smoke ratchet green -- MET (497/517 modules, 3475/6200 fns).
 8. Contract coverage 100% (every public fn carries clauses) -- OPEN (42.2%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
-   OPEN (11: 10 compiler, 1 stdlib algorithm).
+   OPEN (10: 9 compiler, 1 stdlib algorithm).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
 
 Authoritative order for the stdlib lane to reach 100%. State at handoff:

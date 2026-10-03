@@ -26,15 +26,6 @@ Found in wave 62; the wave probe is presence-only for that path. Expected:
 `out[0].name == "f"`.
 
 **Open finding 2026-10-03 (official v0.62.3 only; GREEN on v0.61.3):
-`iter.range(1, 5).contains(3)` fails at codegen with C001 ("'contains'
-receiver does not expose a concrete Vec/Slice/Array element type -- the
-inline contract scan needs one").** Repro:
-`tests/smoke/smoke_iter_range.xi` (compile fails on v0.62.3; green on
-v0.61.3). Context-dependent: a standalone minimal
-`iter.range(1, 5).contains(3)` program compiles and runs. Found in the
-fresh v0.62.3 baseline battery.
-
-**Open finding 2026-10-03 (official v0.62.3 only; GREEN on v0.61.3):
 context-dependent cell/RefCell miscompile.** Repro:
 `tests/smoke/smoke_cell_refcell_basic.xi` and
 `tests/smoke/smoke_cell_ref_get.xi` both return rc=1 on v0.62.3 (the first

@@ -1464,8 +1464,10 @@ registry pin, agent recon for the rest)**
 - Probe `p_wave62_shapes.xi` (220th): green on v0.62.3 and v0.61.3.
 - net 73.4% -> 87.2%, global 41.6% -> 42.2%; floors98 wired (YAML
   re-verified) + tools/README.md + plan + queue in the same commit.
-- Battery pending on the wave commit; results in the follow-up docs
-  commit.
+- Full battery on 584ffd1 (official v0.62.3): check_modules 509/509
+  (161.3s); corpus 948/951 (the cell x2 + lz4 context regressions remain;
+  the iter-range C001 cleared on this tip); probes 220/220 (391.3s);
+  barename 0/509 (610.7s); floors98/doc/module-smoke ratchets OK.
 
 **SESSION 2026-10-03 block 22 (official v0.62.3 baseline at the pin move)**
 - Installed the official v0.62.3 windows-x64 archive (SHA256 `011af7dd...`
