@@ -1449,6 +1449,29 @@ registry pin, agent recon for the rest)**
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
 
+**SESSION 2026-10-03 block 19 (wave 59: serialize.json hardening -- JSON legacy bugs)**
+- Fix-firsts from the recorded JSON legacy list: (1) number grammar --
+  reject leading zeros (`00`/`01`), require integer digits (`.5`/`1.`)
+  and at least one exponent digit (`1e`/`1e+`/`1e-`); (2) exponent clamp
+  in `xiom.core` -- accumulation capped at 1000 and at most 400 scaling
+  steps, so `1e4000000000` errors fast instead of ~3s (longer runs hung)
+  and cannot overflow the loop counter; (3) non-finite guard --
+  `json_parse` errors on inf/NaN results and `json_stringify`/
+  `json_pretty` emit `"null"` instead of invalid `"inf"`. The recorded
+  `0.05 -> 0.5` symptom does NOT reproduce on current sources (recon
+  replayed it pre-fix: `0.05` parses correctly); `stringify_frac` has no
+  symbol -- the surviving fractional defect is 15-vs-17-digit precision,
+  recorded as a follow-up, not changed here.
+- Probe `p_wave59_json.xi` (214th): RED pre-fix (run=1, `1e` accepted;
+  stash/restore of the two fixed sources), GREEN post-fix on v0.61.3 and
+  the m178 dev binary. serialize smokes 24/24, json smokes 17/17 on the
+  pin.
+- Compiler relay: the sync Arc/strong_count finding is compiler-side
+  (m166 inlined unsafe path allocates 8 bytes for a 16-byte ArcInner);
+  KEEP the `#[unsafe_direct]` annotations on `xiom/sync/sync.xi` (Gate P
+  depends on them); sync-probe noise is expected until their fix.
+- Battery pending on the wave commit; results in the follow-up docs commit.
+
 **RELAY 2026-10-03 (m178 closure + net.xi fix-first)**
 - Compiler main `659f6ec1` implements m178 (checker pattern-vs-type on
   match arms). Our wave-57 invalid-IR finding is FIXED; the diagnostic is

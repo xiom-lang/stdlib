@@ -312,19 +312,30 @@ fn _json_parse_number(s: Str, pos: &mut Int) -> Result[JsonValue, Str] {
   if *pos >= s.len() {
     return Err("json_parse: expected number");
   }
+  let int_start = *pos;
   while *pos < s.len() {
     let c = _json_get_char(s, *pos);
     if !(_json_is_digit(c)) { break; }
     *pos = *pos + 1;
   }
+  if *pos == int_start {
+    return Err("json_parse: expected number");
+  }
+  if *pos - int_start > 1 && _json_get_char(s, int_start) == '0' {
+    return Err("json_parse: leading zeros are not allowed");
+  }
   if *pos < s.len() {
     let c = _json_get_char(s, *pos);
     if c == '.' {
       *pos = *pos + 1;
+      let frac_start = *pos;
       while *pos < s.len() {
         let d = _json_get_char(s, *pos);
         if !(_json_is_digit(d)) { break; }
         *pos = *pos + 1;
+      }
+      if *pos == frac_start {
+        return Err("json_parse: expected digits after decimal point");
       }
     }
   }
@@ -338,10 +349,14 @@ fn _json_parse_number(s: Str, pos: &mut Int) -> Result[JsonValue, Str] {
           *pos = *pos + 1;
         }
       }
+      let exp_start = *pos;
       while *pos < s.len() {
         let d = _json_get_char(s, *pos);
         if !(_json_is_digit(d)) { break; }
         *pos = *pos + 1;
+      }
+      if *pos == exp_start {
+        return Err("json_parse: expected exponent digits");
       }
     }
   }
@@ -351,7 +366,13 @@ fn _json_parse_number(s: Str, pos: &mut Int) -> Result[JsonValue, Str] {
   let num_str = xiom.string.str_slice(s, start, *pos);
   let parsed = xiom.core.to_float_from_str(num_str);
   match parsed {
-    Ok(n) => Ok(JsonValue.Number(n));
+    Ok(n) => {
+      if n != n { return Err("json_parse: number is not finite"); }
+      if n > 1.7976931348623157e308 || n < -1.7976931348623157e308 {
+        return Err("json_parse: number out of range");
+      }
+      Ok(JsonValue.Number(n))
+    }
     Err(_) => Err("json_parse: invalid number format");
   }
 }
@@ -397,9 +418,11 @@ fn _json_stringify_node(v: JsonValue, depth: Int) -> Str {
       if b { return "true"; }
       return "false";
     }
-    JsonValue.Number(f) => {
-      return convert.float_to_string(f);
-    }
+      JsonValue.Number(f) => {
+        if f != f { return "null"; }
+        if f > 1.7976931348623157e308 || f < -1.7976931348623157e308 { return "null"; }
+        return convert.float_to_string(f);
+      }
     JsonValue.String(s) => {
       return "\"" + _json_escape_impl(s) + "\"";
     }
@@ -452,9 +475,11 @@ fn _json_pretty_node(v: JsonValue, depth: Int) -> Str {
       if b { return "true"; }
       return "false";
     }
-    JsonValue.Number(f) => {
-      return convert.float_to_string(f);
-    }
+      JsonValue.Number(f) => {
+        if f != f { return "null"; }
+        if f > 1.7976931348623157e308 || f < -1.7976931348623157e308 { return "null"; }
+        return convert.float_to_string(f);
+      }
     JsonValue.String(s) => {
       return "\"" + _json_escape_impl(s) + "\"";
     }

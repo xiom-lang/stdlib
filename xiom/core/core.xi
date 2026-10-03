@@ -177,19 +177,22 @@ pub fn to_float_from_str(s: Str) -> Result[Float64, Str]
           return Err("invalid character in exponent");
         }
         exp_val = exp_val * 10 + ((c as Int) - 48);
+        if exp_val > 1000 { exp_val = 1000; };
         i = i + 1;
       }
       var value = int_part + frac_part;
+      var steps = exp_val;
+      if steps > 400 { steps = 400; };
       var mult: Float64 = 1.0;
       if exp_negative {
         var j: Int = 0;
-        while j < exp_val {
+        while j < steps {
           mult = mult * 0.1;
           j = j + 1;
         }
       } else {
         var j: Int = 0;
-        while j < exp_val {
+        while j < steps {
           mult = mult * 10.0;
           j = j + 1;
         }

@@ -1,14 +1,14 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
 **70% -- 7 of 10 readiness gates complete.**
-**Gates: corpus 951/951, modules 509/509, probes 213/213, barename 0/509.**
+**Gates: corpus 951/951, modules 509/509, probes 214/214, barename 0/509.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
 gates flip:
 1. Modules type-check clean -- MET (509/509).
 2. Smoke corpus green -- MET (951/951).
-3. Probe corpus green -- MET (213/213).
+3. Probe corpus green -- MET (214/214).
 4. Strict bare-name scan clean -- MET (0/509).
 5. Coverage ratchet green -- MET (floors95).
 6. Documentation ratchet 100% -- MET.
@@ -377,6 +377,23 @@ the m178 build pre-tag: `p_never_called_zeroarg` AVs at call 3
 (`Arc.strong_count() != 1`) -- both green on v0.61.3; filed as
 `p_contracts_any_av.xi` and `p_sync_arc_count.xi` (dev-build-only compiler
 findings; count 11 -> 13) and relayed to the compiler lane before the tag.
+
+Update 2026-10-03 (wave 59 landed: serialize.json hardening): the JSON
+legacy bugs are fixed -- number grammar (leading zeros rejected;
+integer-digit and exponent-digit requirements), the exponent hang
+(accumulation capped at 1000, at most 400 scaling steps; `1e4000000000`
+now errors fast), and non-finite stringify (`"null"` instead of invalid
+`"inf"`; `json_parse` errors on inf/NaN results). The recorded
+`0.05 -> 0.5` symptom does not reproduce on current sources (replayed
+pre-fix: `0.05` parses correctly); `stringify_frac` has no symbol (the
+surviving 15-vs-17-digit precision defect is recorded as a follow-up).
+Probe `p_wave59_json.xi` (214th) RED pre-fix / GREEN post-fix on v0.61.3
+and the m178 dev binary; serialize smokes 24/24, json smokes 17/17.
+Compiler lane note: the sync Arc/strong_count finding is compiler-side
+(m166 inlined unsafe path, 8-byte alloc for a 16-byte ArcInner); KEEP the
+`#[unsafe_direct]` annotations on `xiom/sync/sync.xi` (Gate P depends on
+them); sync-probe noise is expected until the compiler fix. Next: net
+batches 3+ (transport ~53, then protocols), then the remaining low dirs.
 
 State 2026-09-29 (handoff snapshot 3, main 2a06a90): floors85 global 32.8%,
 math 38.8%, num 37.4%; probes 202; smoke 951; modules 509/509; barename

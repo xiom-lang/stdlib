@@ -27,7 +27,10 @@ rc=0xC0000005). Found bisecting `tools/probes/p_never_called_zeroarg.xi`
 GREEN on the v0.61.3 gate pin): `xiom.sync.Arc.new(42).strong_count()` is
 not 1.** Minimal repro `tools/known_failures/p_sync_arc_count.xi` (v0.61.3
 rc=0; m178 build rc=1). Found via `tools/probes/p_sync_sizeof.xi` during
-the pre-v0.62.3 tag check.
+the pre-v0.62.3 tag check. COMPILER-SIDE per the compiler lane (m166
+direct/inlined unsafe path allocates 8 bytes for a 16-byte ArcInner);
+KEEP the `#[unsafe_direct]` annotations on `xiom/sync/sync.xi` -- Gate P
+depends on them; sync-probe noise is expected until the compiler fix ships.
 
 **Open finding 2026-10-02 (compiler v0.61.3 and v0.62.1): struct literals
 with out-of-declaration-order fields compile silently and assign fields
