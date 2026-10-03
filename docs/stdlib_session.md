@@ -1455,6 +1455,35 @@ registry pin, agent recon for the rest)**
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
 
+**SESSION 2026-10-03 block 24 (wave-63 recon only -- execution deferred)**
+- Read-only recon for net batch 6 returned: net.xi 15 uncovered
+  (TcpStream.close, http_post, udp_bind, UdpSocket.close, parse_url,
+  http_get_str, http_post_str, http_status, tcp_connect_str, is_valid_ipv4,
+  url_parse_scheme/host/path/port, dns_lookup), server.xi 6
+  (server_default_port, server_parse_request_line,
+  server_build_status_line, server_build_response,
+  server_build_response_headers, server_status_text), jwt.xi 9
+  (jwt_base64url_encode/decode, jwt_alg_supported, jwt_encode,
+  jwt_sign_b64, jwt_decode, jwt_verify, jwt_expired, jwt_claims), and a
+  large hash.xi-family surface (adler/crc/city/farm/fnv/hash/highway/
+  jenkins/metro/murmur/siphash/spooky/superfast/t1ha/xxhash).
+- CAVEAT: the recon's suggested clauses are largely placeholder-grade
+  (`is_ok || is_err`, `is_some || is_none`, `result >= 0` on unsigned
+  types, a `djb2` call that is not a symbol) and must be re-derived from
+  the bodies per the runtime-safe rules before any edit. Execution should
+  start fresh from snapshot 5's prompt (or a re-con with the strict
+  clause template); no source was touched, the tree is clean.
+- Note for that pass: `net.xi`'s `http_post` (Str body) coexists with
+  `http.xi`'s form; `hash/crc.xi` re-declares checksum_bsd/sysv/internet
+  and adler32 (same-leaf duplicate-symbol family) -- verify which leaf the
+  smokes resolve before adding clauses.
+- Packages wishlist: no new relay rows arrived; rows 42-46 (glob/regex,
+  `Str` -> `Str` map, span/byte-slice API, strict int parsing with offsets,
+  base32 + percent-encoder) plus rows 33-41 remain optional growth work
+  outside the coverage path. A future mini-wave can land one small item
+  (e.g. ASCII byte classifiers or FNV-1a over `Str`) with the same
+  probe/battery protocol.
+
 **SESSION 2026-10-03 block 23 (wave 62: net batch 5 -- sse/websocket/ws/dns/multipart; floors98)**
 - Wave 62: 41 clauses (sse 8, websocket 14, ws 5, dns 8, multipart 6).
 - Fix-first: `ws_handshake_verify` scanned the FIRST CRLF of the response
