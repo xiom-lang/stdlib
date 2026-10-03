@@ -1767,8 +1767,8 @@ origin/main). Compiler pin v0.61.3 at `%TEMP%\kilo\stdlib_ws\xiom_v0613.exe`
 main `659f6ec1`, rebuilt 2026-10-03 02:32) is at
 `E:\xiom-lang\xiom\target\debug\xiom.exe`; wave-54..61 probes green on the
 v0.61.3 gate pin and the m178 dev binary. Pushed tags:
-`stdlib-perf3` (`2429ac3`, Gate P pin for compiler v0.62.3; includes waves
-54-61), `stdlib-perf2` (`59bfb1c`), `stdlib-perf1` (the v0.62.2
+`stdlib-perf3` (`2429ac3`, shipped pin for compiler v0.62.3 PUBLISHED
+2026-10-03; includes waves 54-61), `stdlib-perf2` (`59bfb1c`), `stdlib-perf1` (the v0.62.2
 `STDLIB_VERSION` pin), `stdlib-v0.62.0` (released 0.62.0; the registry lane
 owns its publish). Coverage floors97: **global 41.6% pub-with-clause, geom
 100.0%, net 73.4%, math 38.8%, num 35.6%**; probe corpus **216**; smoke

@@ -421,6 +421,11 @@ websocket, ws, dns, multipart, server, jwt, net.xi -- split into
 iter 9.8%, convert 11.5%, format 13%, time 13%, misc 13.9%, os 15.3%,
 rand 16%, crypto 17%, log 19.1%, compress 21.1%), then C, D, E, F.
 
+Update 2026-10-03 (release): compiler **v0.62.3 is PUBLISHED** with official
+SHA256SUMS and the nine-tool archives (windows-x64/linux-x64/macos-arm64/
+macos-x64) plus VSIX 0.12.2 and wasm. The shipped pin is `stdlib-perf3`
+(`2429ac3`); no stdlib action needed. Gate P is closed on both sides.
+
 Update 2026-10-03 (relay resolutions): the 2026-10-02 "missing arguments
 accepted silently" arity row is STALE -- on v0.62.2 `T001: expects N
 argument(s), found M` rejects missing and extra args, exact-arity control
