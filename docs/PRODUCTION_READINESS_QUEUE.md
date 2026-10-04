@@ -499,10 +499,11 @@ the next pin); m184/m185 fix nested test-module import and uninit local
 struct; the iter-range C001 is CLOSED (smoke_iter_range rc 0 on the
 v0.62.3 tree; promote the smoke lock when v0.62.4 ships on
 stdlib-perf3); the packages-lane enum-payload Str in-situ case still
-fails on m187 (graphql conformance 9/10 on both v0.62.3 and m187,
-standalone control green -- not the m185 UB); porter rules
-(nested-module workaround, initialize-locals) can drop once the
-packages pin is v0.62.4. No package.xi bump/tag needed now.
+fails on m189 too (local v0.62.4 candidate 355c69d0/HEAD 32ea20f0:
+graphql conformance 9/10, same validate-valid-operation failure,
+standalone control green) -- a FRESH finding per the compiler lane;
+porter rules (nested-module workaround, initialize-locals) can drop
+once the packages pin is v0.62.4. No package.xi bump/tag needed now.
 
 Update 2026-10-04 (wave 63 landed): net batch 6 + hash batch 1 -- 53
 clauses / 52 pub covered: net.xi 15 (handle-close Ok claims, empty-URL

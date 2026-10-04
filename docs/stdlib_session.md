@@ -1499,9 +1499,13 @@ registry pin, agent recon for the rest)**
   iter-range C001 is closed (smoke_iter_range rc 0 on the v0.62.3 tree
   too) and the smoke lock promotes when v0.62.4 ships on stdlib-perf3.
   (c) The packages-lane enum-payload Str in-situ case (xiom.graphql
-  validate_operation) STILL FAILS on m187: conformance 9/10 on both
-  v0.62.3 and m187, standalone control green -- it is not the m185 UB
-  symptom. (d) Porter rules (nested-module workaround,
+  validate_operation) STILL FAILS: it was re-run on an m189-inclusive
+  build (355c69d0; local v0.62.4 candidate, HEAD 32ea20f0, CARGO_PKG_VERSION
+  0.62.4 rebuilt 2026-10-04) and on the pre-m189 m187 binary -- graphql
+  conformance 9/10 on both, same `validate valid operation` failure,
+  standalone control green. Per the compiler lane that makes it a fresh
+  finding (m189's suffix-aware struct-literal disambiguation did not
+  cover this instance). (d) Porter rules (nested-module workaround,
   initialize-locals) can drop once the packages pin is v0.62.4.
   Registry note: no package.xi bump/tag needed now; optional whenever.
 
