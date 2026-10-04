@@ -1,18 +1,18 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
-**70% -- 7 of 10 readiness gates complete.** (Compiler pin: **v0.62.4**.)
-**Gates: corpus 951/952 full (release gate 949/949 with the 3 documented
-carve-outs), modules 509/509, probes 227/227, barename 0/509.**
+**70% -- 7 of 10 readiness gates complete.** (Compiler pin: **v0.63.0**.)
+**Gates: corpus 950/950 release (952 full; 2 C001 carve-outs), modules
+509/509, probes 227/227, barename 0/509.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
 gates flip:
 1. Modules type-check clean -- MET (509/509).
-2. Smoke corpus green -- MET on the v0.61.3 pin (951/951); the official
-   v0.62.3 baseline is 950/951 (cell x2 fixed stdlib-side in `ac3c58f`;
-   `smoke_compress_lz4_snappy` remains a filed compiler regression; 2 stale
-   smokes fixed at the pin move).
-3. Probe corpus green -- MET (227/227 on v0.62.4, incl. the 5 promoted
+2. Smoke corpus green -- MET on the v0.63.0 pin: release gate 950/950
+   (2 C001 carve-outs of 952; `ci`/`heavy` run the full corpus). lz4 is
+   fixed by m190 and rejoined the gate; the iter C001 flake remains the
+   only carve-out.
+3. Probe corpus green -- MET (227/227 on v0.63.0, incl. the 5 promoted
    regression probes).
 4. Strict bare-name scan clean -- MET (0/509).
 5. Coverage ratchet green -- MET (floors102).
@@ -20,7 +20,7 @@ gates flip:
 7. Module-smoke ratchet green -- MET (497/517 modules, 3475/6200 fns).
 8. Contract coverage 100% (every public fn carries clauses) -- OPEN (45.1%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
-   OPEN (12: 11 compiler, 1 stdlib algorithm).
+   OPEN (11: 10 compiler, 1 stdlib algorithm).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
 
 Authoritative order for the stdlib lane to reach 100%. State at handoff:
@@ -478,6 +478,22 @@ stdlib tag >= `8b23b79` for Gate P; tagged `stdlib-perf3` at `5037262`
 regens api-freeze, t2 `185342f4`, tags v0.62.3). The packages'
 `Vec[StructType]` trap-10 row is a retirement candidate (not reproducible
 on both sides); no local row existed.
+
+Update 2026-10-04 (v0.63.0 re-pin + release prep): SHA256-verified
+official v0.63.0; COMPILER_VERSION/package.xi -> 0.63.0. Gate carve-out
+shrinks to the two C001 iter smokes -- m190 fixes lz4 and the smoke is
+green on the archive, so it left gate-exclusions.txt; release notes
+disclose C001 only. Findings: lz4 RETIRED (count 12 -> 11 = 10 compiler +
+1 stdlib); all_types still crashes (v0.63.0, rc -1073740940); multipart
+still rc=1; C001 still flaky (excluded); iter collect call side green.
+Battery on v0.63.0: release corpus 950/950 (2 excluded of 952), probes
+227/227, modules 509/509, barename 0/509, ratchets OK; t2 15/15.
+Caveat: the compiler's own v0.63.0 archive bundles a pre-bound-check
+stdlib runtime; stdlib-v0.63.0 carries the check. The external-extern
+guard-alloc hang is filed on the compiler side. Publish retries for
+0.62.3/0.62.4 continue under the registry lane's db39144 fix (asset-name
+sha256 match); tags re-triggered 17:08Z, publish environment approvals
+pending.
 
 Update 2026-10-04 (wave 66 landed): time core -- 39 clauses / 39 pub
 (duration 15, instant 6, date 12, iso8601 6); time 13.0% -> 41.3%,

@@ -6,6 +6,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.63.0] - 2026-10-04
+
+Re-pinned to compiler `v0.63.0` (SHA256-verified official archive). The
+lz4 empty-block miscompile is fixed (m190) and its release-gate exclusion
+was removed; the C001 classifier flake remains a documented carve-out.
+The stdlib archive carries the arena-audit guard-alloc bound check.
+
+### Added
+
+- Runtime bound check in `xiom_guard_alloc` (reject wrapping sizes before
+  the alignment math) + `tests/smoke/smoke_guard_alloc_wrap.xi`
+  fault-injection lock.
+
+### Changed
+
+- `COMPILER_VERSION` / `package.xi` -> `v0.63.0` / `0.63.0`;
+  `gate-exclusions.txt` now lists only the two C001 iter smokes.
+
+### Notes
+
+- The compiler's own v0.63.0 archive bundles an earlier stdlib revision
+  (pre-bound-check); the `stdlib-v0.63.0` archive carries the check.
+- Known compiler issue disclosed: the C001 run-to-run classifier flake
+  (`tools/known_failures/p_iter_range_contains_c001.xi`).
+
 ## [0.62.4] - 2026-10-04
 
 Re-pinned to compiler `v0.62.4`. The inline UInt32 compare misread (m186)

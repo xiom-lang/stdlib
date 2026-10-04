@@ -16,9 +16,10 @@ xiom --force -o out.exe tools/known_failures/<file>.xi
 
 ## Current
 
-**Open finding 2026-10-04 (official v0.62.3 and v0.62.4): the C001
-classifier is run-to-run nondeterministic.** The direct-form iter-range
-reducer (`range-sums + contains`) flips between compiling and failing
+**Open finding 2026-10-04 (official v0.62.3, v0.62.4, v0.63.0 and
+v0.61.3): the C001 classifier is run-to-run nondeterministic.** The
+direct-form iter-range reducer (`range-sums + contains`) flips between
+compiling and failing
 `C001: 'contains' receiver does not expose a concrete Vec/Slice/Array
 element type` for identical invocations. Six consecutive compiles of the
 reducer on v0.62.4 gave 3 failures and 3 passes; the registry lane's
@@ -30,13 +31,13 @@ HashMap-iteration order -- the wave-62 "cleared" C001 state was
 probabilistic, not fixed. Repro
 `tools/known_failures/p_iter_range_contains_c001.xi` (expected rc 0;
 current pins compile-fail a random subset of runs). The two flaky smokes
-are carve-outs in the release gate
+remain carve-outs in the release gate for the v0.63.0 pin
 (`tools/known_failures/gate-exclusions.txt`); ci/heavy keep the full
 corpus.
 
-**Open finding 2026-10-04 (official v0.62.3, v0.62.4, v0.61.3 and the
-m189 dev build; CALL SIDE FIXED on v0.62.4): `xiom.iter` closure
-lowering.** On v0.62.4, calling the parent-module
+**Open finding 2026-10-04 (official v0.62.3, v0.62.4, v0.63.0, v0.61.3
+and the m189 dev build; CALL SIDE FIXED on v0.62.4+): `xiom.iter`
+closure lowering.** On v0.62.4 and v0.63.0, calling the parent-module
 `iter.range(1, 3).collect()` compiles and runs green (promoted to
 `tools/probes/p_regress_iter_collect.xi`). The CLAUSE side persists:
 adding even `ensures: result >= 0` to `Range.count` (or `Range.find`)
@@ -47,11 +48,12 @@ iter-consuming smokes fail the same way. Repro
 rc 0; the clause-side repro is the Range.count clause + smoke_iter, see
 the code comment). Queued with the v0.63.0 closure work.
 
-**Open finding 2026-10-04 (official v0.62.3, v0.62.4, v0.61.3 and the
-m187+ dev builds): `xiom.reflect.all_types()` heap-corrupts.** The call
-crashes with 0xC0000374 (STATUS_HEAP_CORRUPTION, run rc -1073740940) from
-any program, including an otherwise-empty one; verified again on official
-v0.62.4. The other RTTI entry points pass (type_count, type_name_by_id,
+**Open finding 2026-10-04 (official v0.62.3, v0.62.4, v0.63.0, v0.61.3
+and the m187+ dev builds): `xiom.reflect.all_types()` heap-corrupts.** The
+call crashes with 0xC0000374 (STATUS_HEAP_CORRUPTION, run rc
+-1073740940) from any program, including an otherwise-empty one;
+verified again on official v0.63.0 (still queued with the compiler
+lane). The other RTTI entry points pass (type_count, type_name_by_id,
 type_id_by_name, type_field_count, and type_info_by_name's
 single-TypeInfo return), and a user-module replication of all_types'
 exact build loop (Vec[TypeInfo] of nested Vec fields, 40 iterations) runs
@@ -61,23 +63,15 @@ not the shape. Repro
 observes -1073740940 while open). Found while landing the wave-64 reflect
 clauses; all_types stays clause-free and probe-excluded until fixed.
 
-**Open finding 2026-10-03 (both v0.61.3 and official v0.62.3/v0.62.4):
+**Open finding 2026-10-03 (v0.61.3 and official v0.62.3/v0.62.4/v0.63.0):
 `multipart_parse` result Part field reads are corrupt.** Build one
 `multipart_part("f", "v")` and parse it back with the same boundary:
 `out[0].name` is neither "f" nor "" (its `.len()` reads -1), while
 directly constructed Parts read correctly and the parsed part count is
-right. Repro `tools/known_failures/p_multipart_parse_name.xi` (rc=1).
+right. Repro `tools/known_failures/p_multipart_parse_name.xi` (rc=1,
+re-verified on v0.62.4 and v0.63.0).
 Found in wave 62; the wave probe is presence-only for that path. Expected:
 `out[0].name == "f"`.
-
-**Open finding 2026-10-03 (official v0.62.3 and v0.62.4; GREEN on
-v0.61.3): context-dependent lz4 miscompile.** Repro:
-`tests/smoke/smoke_compress_lz4_snappy.xi` returns rc=5 on both pins
-(`lz4_compress_block` comes back empty; the registry lane's stress
-confirms it deterministically on v0.62.3 and v0.62.4), while a standalone
-minimal block-compress passes -- context-dependent. A release-gate
-carve-out (`tools/known_failures/gate-exclusions.txt`). Found in the
-fresh v0.62.3 baseline battery.
 
 **Open finding 2026-10-02 (compiler v0.61.3 and v0.62.1):
 `polyhedra.convex_hull_2d`/`convex_hull_3d` collapse on nonempty inputs.**
