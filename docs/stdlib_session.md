@@ -10,14 +10,20 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 Compiler pin: **official v0.62.3** (windows-x64 archive, SHA256
 `011af7dd...`, verified against the release SHA256SUMS). The v0.62.3
 re-baseline is DONE: check_modules 509/509, corpus 950/951 (1 filed
-compiler regression), probes 221/221, barename 0/509, floors99 (all
-re-verified on the wave-63 battery) -- see SESSION block 22 and the
+compiler regression), probes 222/222, barename 0/509, floors100 (all
+re-verified on the wave-64 battery) -- see SESSION block 22 and the
 HANDOFF 2026-10-03 snapshot 5, which carries the paste-ready continuation
 prompt. Wave 63 LANDED on 2026-10-04 (block 25, commit 72ecd60: net
 batch 6 + hash batch 1, 53 clauses, floors99; battery corpus 950/951 +
-probes 221/221 + modules 509/509). Snapshot 5's prompt otherwise stands;
-the next task is wave 64 on the remaining low dirs (reflect 9.1%, iter
-9.8%, convert 11.5%, format 13%, time 13%, ...). The registry-publish
+probes 221/221 + modules 509/509) and wave 64 LANDED (block 26, commit
+5939345: reflect + iter adapters, 55 clauses, floors100; battery corpus
+950/951 + probes 222/222). Snapshot 5's prompt otherwise stands; the
+next task is wave 65 on the remaining low dirs (iter.xi/chain/fold
+remain low, then convert 11.5%, format 13%, time 13%, ...). v0.62.4
+should be tagged within hours: re-pin COMPILER_VERSION=v0.62.4, run t2,
+promote the smoke_iter_range lock, retire the m186-fixed
+p_uint32_high_bit_compare (promote its repro), and drop the
+nested-module / initialize-locals porter rules. The registry-publish
 workflow verifies the downloaded
 `xiom-<version>-linux-x64.tar.gz` against the release's published
 `SHA256SUMS` (registry lane independently verified the manifest
@@ -1498,6 +1504,20 @@ registry pin, agent recon for the rest)**
   symptom. (d) Porter rules (nested-module workaround,
   initialize-locals) can drop once the packages pin is v0.62.4.
   Registry note: no package.xi bump/tag needed now; optional whenever.
+
+- Full battery on 5939345 (official v0.62.3): check_modules 509/509
+  (154.8s); corpus 950/951 -- the only runfail is the filed
+  `smoke_compress_lz4_snappy` regression (1440.5s); probes 222/222
+  (452.4s); barename 0/509 (626.3s); floors100/doc/module-smoke ratchets
+  OK. This battery/docs commit is LOCAL until the next push point.
+- v0.62.4 candidate in flight on stdlib-perf3 (ETA ~1.5-2h). Post-tag
+  actions: re-pin COMPILER_VERSION=v0.62.4 and run t2 as usual; promote
+  the smoke_iter_range lock; retire p_uint32_high_bit_compare and promote
+  its repro to tools/probes; restore the named-constant arms in packages'
+  grpc.xi (m188 const-match); drop the nested-module and
+  initialize-locals porter rules. `XIOM_TIMINGS=1` now prints
+  compile-phase marks for baselines. The optional package.xi bump +
+  stdlib-v* tag remains our call.
 
 **SESSION 2026-10-04 block 25 (wave 63: net batch 6 + hash batch 1; floors99)**
 - Wave 63: 53 clauses / 52 pub covered. net.xi 15 (TcpStream/UdpSocket
