@@ -12,27 +12,37 @@ module xiom.convert.wrapping
 // ============================================================================
 
 /// a + b, wrapping on overflow (two's complement). Complexity: O(1).
-pub fn wrapping_add(a: Int, b: Int) -> Int {
+pub fn wrapping_add(a: Int, b: Int) -> Int
+  ensures: (b == 0) => (result == a)
+{
   a + b
 }
 
 /// a - b, wrapping on underflow. Complexity: O(1).
-pub fn wrapping_sub(a: Int, b: Int) -> Int {
+pub fn wrapping_sub(a: Int, b: Int) -> Int
+  ensures: (b == 0) => (result == a)
+{
   a - b
 }
 
 /// a * b, wrapping on overflow. Complexity: O(1).
-pub fn wrapping_mul(a: Int, b: Int) -> Int {
+pub fn wrapping_mul(a: Int, b: Int) -> Int
+  ensures: (b == 1) => (result == a)
+{
   a * b
 }
 
 /// -a, wrapping on overflow (INT_MIN negates to itself). Complexity: O(1).
-pub fn wrapping_neg(a: Int) -> Int {
+pub fn wrapping_neg(a: Int) -> Int
+  ensures: (a == 0) => (result == 0)
+{
   0 - a
 }
 
 /// |a|, wrapping on overflow (INT_MIN maps to itself). Complexity: O(1).
-pub fn wrapping_abs(a: Int) -> Int {
+pub fn wrapping_abs(a: Int) -> Int
+  ensures: ((a == 0) => (result == 0)) && ((a > 0) => (result == a))
+{
   if a < 0 {
     return 0 - a;
   };
@@ -41,7 +51,9 @@ pub fn wrapping_abs(a: Int) -> Int {
 
 /// a << n with the shift amount masked to [0, 64); shifted-out bits are
 /// discarded. Complexity: O(1).
-pub fn wrapping_shl(a: Int, n: Int) -> Int {
+pub fn wrapping_shl(a: Int, n: Int) -> Int
+  ensures: (n == 0) => (result == a)
+{
   var k = n % 64;
   if k < 0 {
     k = k + 64;
@@ -51,7 +63,9 @@ pub fn wrapping_shl(a: Int, n: Int) -> Int {
 
 /// a >> n (arithmetic) with the shift amount masked to [0, 64); shifted-out
 /// bits are discarded. Complexity: O(1).
-pub fn wrapping_shr(a: Int, n: Int) -> Int {
+pub fn wrapping_shr(a: Int, n: Int) -> Int
+  ensures: (n == 0) => (result == a)
+{
   var k = n % 64;
   if k < 0 {
     k = k + 64;

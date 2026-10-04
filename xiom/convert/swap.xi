@@ -16,18 +16,24 @@ use xiom.bits;
 
 /// Swaps the two bytes of a 16-bit value stored in the low 16 bits of an Int.
 /// Complexity: O(1).
-pub fn swap16(n: Int) -> Int {
+pub fn swap16(n: Int) -> Int
+  ensures: (n == 0) => (result == 0)
+{
   bits.byte_swap16(n)
 }
 
 /// Swaps the four bytes of a 32-bit value stored in the low 32 bits of an Int.
 /// Complexity: O(1).
-pub fn swap32(n: Int) -> Int {
+pub fn swap32(n: Int) -> Int
+  ensures: (n == 0) => (result == 0)
+{
   bits.byte_swap32(n)
 }
 
 /// Swaps the eight bytes of a 64-bit value.
 /// Complexity: O(1).
-pub fn swap64(n: Int) -> Int {
+pub fn swap64(n: Int) -> Int
+  ensures: (n == 0) => (result == 0)
+{
   bits.byte_swap64(n)
 }

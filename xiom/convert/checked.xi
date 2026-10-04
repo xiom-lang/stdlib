@@ -17,29 +17,39 @@ use xiom.num;
 use xiom.core.INT_MIN;
 
 /// a + b, returning None on overflow. Complexity: O(1).
-pub fn checked_add(a: Int, b: Int) -> Option[Int] {
+pub fn checked_add(a: Int, b: Int) -> Option[Int]
+  ensures: (b == 0) => (result.is_some == true)
+{
   num.i64_add_checked(a, b)
 }
 
 /// a - b, returning None on overflow. Complexity: O(1).
-pub fn checked_sub(a: Int, b: Int) -> Option[Int] {
+pub fn checked_sub(a: Int, b: Int) -> Option[Int]
+  ensures: (b == 0) => (result.is_some == true)
+{
   num.i64_sub_checked(a, b)
 }
 
 /// a * b, returning None on overflow. Complexity: O(1).
-pub fn checked_mul(a: Int, b: Int) -> Option[Int] {
+pub fn checked_mul(a: Int, b: Int) -> Option[Int]
+  ensures: ((b == 0 || b == 1) => (result.is_some == true))
+{
   num.i64_mul_checked(a, b)
 }
 
 /// a / b, returning None on division by zero or INT_MIN / -1.
 /// Complexity: O(1).
-pub fn checked_div(a: Int, b: Int) -> Option[Int] {
+pub fn checked_div(a: Int, b: Int) -> Option[Int]
+  ensures: (b == 0) => (result.is_none == true)
+{
   num.i64_div_checked(a, b)
 }
 
 /// -a, returning None when a == INT_MIN (no positive inverse).
 /// Complexity: O(1).
-pub fn checked_neg(a: Int) -> Option[Int] {
+pub fn checked_neg(a: Int) -> Option[Int]
+  ensures: ((a == INT_MIN) => (result.is_none == true)) && ((a != INT_MIN) => (result.is_some == true))
+{
   if a == INT_MIN {
     return None;
   };
@@ -48,7 +58,9 @@ pub fn checked_neg(a: Int) -> Option[Int] {
 
 /// |a|, returning None when a == INT_MIN (no positive representation).
 /// Complexity: O(1).
-pub fn checked_abs(a: Int) -> Option[Int] {
+pub fn checked_abs(a: Int) -> Option[Int]
+  ensures: ((a == INT_MIN) => (result.is_none == true)) && ((a != INT_MIN) => (result.is_some == true))
+{
   if a == INT_MIN {
     return None;
   };
@@ -60,7 +72,9 @@ pub fn checked_abs(a: Int) -> Option[Int] {
 
 /// a^e via square-and-multiply, returning None on overflow or a negative
 /// exponent. Complexity: O(log e).
-pub fn checked_pow(a: Int, e: Int) -> Option[Int] {
+pub fn checked_pow(a: Int, e: Int) -> Option[Int]
+  ensures: ((e < 0) => (result.is_none == true)) && ((e == 0) => (result.is_some == true))
+{
   if e < 0 {
     return None;
   };
@@ -93,7 +107,9 @@ pub fn checked_pow(a: Int, e: Int) -> Option[Int] {
 /// a << n, returning None when bits are shifted out of the value or the shift
 /// amount is outside [0, 64). Overflow is detected by verifying that an
 /// arithmetic shift back reproduces a. Complexity: O(1).
-pub fn checked_shl(a: Int, n: Int) -> Option[Int] {
+pub fn checked_shl(a: Int, n: Int) -> Option[Int]
+  ensures: ((n < 0 || n >= 64) => (result.is_none == true)) && ((n == 0) => (result.is_some == true))
+{
   if n < 0 || n >= 64 {
     return None;
   };
@@ -110,7 +126,9 @@ pub fn checked_shl(a: Int, n: Int) -> Option[Int] {
 
 /// a >> n (arithmetic), returning None when the shift amount is outside
 /// [0, 64). Complexity: O(1).
-pub fn checked_shr(a: Int, n: Int) -> Option[Int] {
+pub fn checked_shr(a: Int, n: Int) -> Option[Int]
+  ensures: ((n < 0 || n >= 64) => (result.is_none == true)) && ((n >= 0 && n < 64) => (result.is_some == true))
+{
   if n < 0 || n >= 64 {
     return None;
   };

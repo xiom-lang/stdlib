@@ -27,24 +27,32 @@ extern "C" {
 /// (including INT_MIN). Canonical implementation: `xiom.convert.to_string`;
 /// this wrapper keeps the `xiom.convert.tostring` path working.
 /// Complexity: O(log_10 |n|).
-pub fn to_string(n: Int) -> Str {
+pub fn to_string(n: Int) -> Str
+  ensures: (n == 0) => (result == "0")
+{
   convert.to_string(n)
 }
 
 /// Formats a float as a string (15 significant digits, fixed or scientific,
 /// handling "nan" and "inf"). Complexity: O(|exp10| + 15).
-pub fn to_string_float(f: Float64) -> Str {
+pub fn to_string_float(f: Float64) -> Str
+  ensures: result.len() > 0
+{
   convert.float_to_string(f)
 }
 
 /// Renders a boolean as "true" or "false". Complexity: O(1).
-pub fn to_string_bool(b: Bool) -> Str {
+pub fn to_string_bool(b: Bool) -> Str
+  ensures: ((b == true) => (result == "true")) && ((b == false) => (result == "false"))
+{
   convert.bool_to_string(b)
 }
 
 /// Renders a character as a single-character UTF-8 string.
 /// Complexity: O(1).
-pub fn to_string_char(c: Char) -> Str {
+pub fn to_string_char(c: Char) -> Str
+  ensures: result.len() >= 1
+{
   var tmp = Vec[UInt8].new();
   xiom.char.encode_utf8(c, &tmp);
   let blen = tmp.len();
@@ -62,6 +70,8 @@ pub fn to_string_char(c: Char) -> Str {
 
 /// Formats an integer in an arbitrary radix (2-36, lowercase digits).
 /// Returns "" for an invalid radix. Complexity: O(log_radix |n|).
-pub fn to_string_radix(n: Int, radix: Int) -> Str {
+pub fn to_string_radix(n: Int, radix: Int) -> Str
+  ensures: ((radix < 2 || radix > 36) => (result.len() == 0)) && ((radix >= 2 && radix <= 36) => (result.len() > 0))
+{
   xiom.num.base.to_base(n, radix)
 }

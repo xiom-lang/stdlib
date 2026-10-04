@@ -1472,6 +1472,29 @@ registry pin, agent recon for the rest)**
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
 
+**SESSION 2026-10-04 block 28 (wave 65x: convert shims; floors101; enum-payload bundle pointer)**
+- Wave 65x: 43 clauses / 43 pub in xiom.convert shims: bytes 6,
+  endian 6, checked 9, base64 4, exact 3, swap 3, tostring 5, wrapping
+  7. convert 11.5% -> 25.6%, global 43.9% -> 44.5%; floors101 wired +
+  README/plan/queue in the same commit.
+- Re-derived and REJECTED: `hex_to_bytes`'s "odd length -> Err" claim
+  (the canonical encoding.hex_decode REQUIRES even length and aborts, so
+  odd input never returns Err); the wrapper now carries the
+  `requires: s.len() % 2 == 0` precondition and its doc was corrected.
+  bytes.from_bytes stays compile-checked only (the module header
+  documents its invalid-IR call collision); the rest are exercised.
+- Probe p_wave65x_shapes.xi (224th, 60 checks): green on official
+  v0.62.3, v0.61.3 and the m189/v0.62.4 candidate. Targeted smokes:
+  smoke_convert 37/37, smoke_cross 9/9.
+- Compiler-lane request (enum-payload minimization): the bundle is in
+  the PACKAGES repo, not here -- E:\xiom-packages\packages\
+  docs\repro\enum-payload-str\{README.md,probe_enum_payload_str.xi};
+  the in-situ context is packages\xiom-graphql\graphql.xi
+  (validate_operation) and the failing case is
+  tests\test_conformance.xi -> "validate valid operation" (9/10). The
+  packages lane owns the validator slice; the coordinator should route
+  the bundle to the compiler lane.
+
 **SESSION 2026-10-04 block 27 (wave 65 BLOCKED: iter clause surface reverted; finding filed; floors stay 100)**
 - Wave 65 landed NOTHING: the entire drafted clause set for xiom.iter.xi
   (Range core 7 + closure-delegating methods) was reverted after two

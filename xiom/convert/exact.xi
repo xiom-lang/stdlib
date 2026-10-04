@@ -17,7 +17,9 @@ use xiom.core.INT_MIN;
 
 /// a / b, returning Err on division by zero, the INT_MIN / -1 overflow, or a
 /// non-exact quotient. Complexity: O(1).
-pub fn exact_div(a: Int, b: Int) -> Result[Int, Str] {
+pub fn exact_div(a: Int, b: Int) -> Result[Int, Str]
+  ensures: ((b == 0) => (result.is_err == true)) && ((result.is_ok == true) => (b != 0))
+{
   if b == 0 {
     return Err("division by zero");
   };
@@ -33,7 +35,9 @@ pub fn exact_div(a: Int, b: Int) -> Result[Int, Str] {
 /// a / b in IEEE arithmetic, returning None on division by zero or when the
 /// quotient does not round-trip (q * b != a), i.e. when the division lost
 /// precision. Complexity: O(1).
-pub fn exact_float(a: Float64, b: Float64) -> Option[Float64] {
+pub fn exact_float(a: Float64, b: Float64) -> Option[Float64]
+  ensures: (b == 0.0) => (result.is_none == true)
+{
   if b == 0.0 {
     return None;
   };
@@ -46,7 +50,9 @@ pub fn exact_float(a: Float64, b: Float64) -> Option[Float64] {
 
 /// Reduces a/b to lowest terms as (numerator, denominator) with a positive
 /// denominator. Returns None on division by zero. Complexity: O(log max|a,b|).
-pub fn exact_ratio(a: Int, b: Int) -> Option[(Int, Int)] {
+pub fn exact_ratio(a: Int, b: Int) -> Option[(Int, Int)]
+  ensures: (b == 0) => (result.is_none == true)
+{
   if b == 0 {
     return None;
   };

@@ -16,7 +16,9 @@ use xiom.string;
 use xiom.encoding;
 
 /// Little-endian byte representation of `n` (8 bytes).
-pub fn to_bytes(n: Int) -> Vec[UInt8] {
+pub fn to_bytes(n: Int) -> Vec[UInt8]
+  ensures: result.len() == 8
+{
   var result = Vec[UInt8].new();
   var i = 7;
   while i >= 0 {
@@ -33,7 +35,9 @@ pub fn to_bytes(n: Int) -> Vec[UInt8] {
 /// %struct.Vec) -- verified by minimal probe. The real algorithm is kept below
 /// (it is correct once the name collision is fixed); callers must avoid it
 /// until then.
-pub fn from_bytes(bytes: &Vec[UInt8]) -> Int {
+pub fn from_bytes(bytes: &Vec[UInt8]) -> Int
+  ensures: ((bytes.len() == 0 || bytes.len() > 8) => (result == 0))
+{
   var len = bytes.len();
   if len == 0 || len > 8 {
     return 0;
@@ -50,17 +54,25 @@ pub fn from_bytes(bytes: &Vec[UInt8]) -> Int {
 }
 
 /// Lowercase hex encoding of the bytes.
-pub fn bytes_to_hex(bytes: &Vec[UInt8]) -> Str {
+pub fn bytes_to_hex(bytes: &Vec[UInt8]) -> Str
+  ensures: (bytes.len() == 0) => (result.len() == 0)
+{
   encoding.hex_encode(bytes)
 }
 
-/// Decode hex (either case); Err on odd length or a bad digit.
-pub fn hex_to_bytes(s: Str) -> Result[Vec[UInt8], Str] {
+/// Decode hex (either case) to bytes. Requires an even-length string (the
+/// canonical decoder's precondition); Err on a bad digit.
+pub fn hex_to_bytes(s: Str) -> Result[Vec[UInt8], Str]
+  requires: s.len() % 2 == 0
+  ensures: (s.len() == 0) => (result.is_ok == true)
+{
   encoding.hex_decode(s)
 }
 
 /// Concatenation of `a` followed by `b`.
-pub fn bytes_concat(a: &Vec[UInt8], b: &Vec[UInt8]) -> Vec[UInt8] {
+pub fn bytes_concat(a: &Vec[UInt8], b: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: result.len() == a.len() + b.len()
+{
   var result = Vec[UInt8].new();
   var i: Int = 0;
   while i < a.len() {
@@ -76,7 +88,9 @@ pub fn bytes_concat(a: &Vec[UInt8], b: &Vec[UInt8]) -> Vec[UInt8] {
 }
 
 /// Copy of the bytes in reverse order.
-pub fn bytes_reverse(bytes: &Vec[UInt8]) -> Vec[UInt8] {
+pub fn bytes_reverse(bytes: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: result.len() == bytes.len()
+{
   var result = Vec[UInt8].new();
   var i = bytes.len() - 1;
   while i >= 0 {

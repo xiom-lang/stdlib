@@ -977,13 +977,31 @@ T1/T2 yields.
        stays floors100 (global 43.9%, iter 18.6%); the wave-65 floor
        dump was withdrawn. Resume the whole iter surface once the
        compiler closure lowering and C001 classifier are fixed.
+       Wave 65x (2026-10-04): coverage wave 29 on the convert shims while
+       iter waits -- 43 clauses / 43 pub: convert.bytes (to_bytes len 8,
+       from_bytes empty/oversize band, hex empty band -- the odd-length
+       claim was re-derived and rejected: the canonical decoder REQUIRES
+       even length and aborts, so the wrapper now carries that
+       precondition -- concat/reverse exact lengths), endian (8-byte
+       bands, empty/oversize zero bands, swap zero, host order), checked
+       (checked-add/sub/mul identity bands, div-by-zero None, INT_MIN
+       neg/abs None, pow exponent bands, shift range bands), base64 shims
+       (empty input bands), exact (div-by-zero Err, zero-divisor None,
+       ratio zero None), swap (zero), tostring (zero/decimal, bool
+       exact strings, char non-empty, radix validity bands), wrapping
+       (identity zero/one bands). convert 11.5% -> 25.6%, global 43.9%
+       -> 44.5%; floors101. Probe tools/probes/p_wave65x_shapes.xi
+       (224th, 60 checks): green on v0.62.3, v0.61.3 and m189;
+       bytes.from_bytes stays compile-checked only (calling it is the
+       documented invalid-IR collision). Targeted smokes: convert 37/37,
+       cross 9/9.
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors100.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors101.json
        tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;
        earlier floors kept at
-       coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55/56/57/58/59/60/61/62/63/64/65/66/67/68/69/70/71/72/73/74/75/76/77/78/79/80/81/82/83/84/85/86/87/88/89/90/91/92/93/94/95/96/97/98/99/100.json).
+       coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55/56/57/58/59/60/61/62/63/64/65/66/67/68/69/70/71/72/73/74/75/76/77/78/79/80/81/82/83/84/85/86/87/88/89/90/91/92/93/94/95/96/97/98/99/100/101.json).
       Floors are per top-level stdlib/xiom directory and must be refreshed
       when a module is ADDED (new uncovered pub fns dilute the percentage
       -- TOML dropped serialize 6.1% -> 5.4%, tz dropped time 13% ->

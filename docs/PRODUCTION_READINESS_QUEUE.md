@@ -1,7 +1,7 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
 **70% -- 7 of 10 readiness gates complete.**
-**Gates: corpus 950/951, modules 509/509, probes 223/223, barename 0/509.**
+**Gates: corpus 950/951, modules 509/509, probes 224/224, barename 0/509.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -11,13 +11,13 @@ gates flip:
    v0.62.3 baseline is 950/951 (cell x2 fixed stdlib-side in `ac3c58f`;
    `smoke_compress_lz4_snappy` remains a filed compiler regression; 2 stale
    smokes fixed at the pin move).
-3. Probe corpus green -- MET (223/223 on v0.62.3, incl. the 3 promoted
+3. Probe corpus green -- MET (224/224 on v0.62.3, incl. the 3 promoted
    regression probes).
 4. Strict bare-name scan clean -- MET (0/509).
-5. Coverage ratchet green -- MET (floors100).
+5. Coverage ratchet green -- MET (floors101).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (497/517 modules, 3475/6200 fns).
-8. Contract coverage 100% (every public fn carries clauses) -- OPEN (43.9%).
+8. Contract coverage 100% (every public fn carries clauses) -- OPEN (44.5%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
    OPEN (12: 11 compiler, 1 stdlib algorithm).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
@@ -477,6 +477,23 @@ stdlib tag >= `8b23b79` for Gate P; tagged `stdlib-perf3` at `5037262`
 regens api-freeze, t2 `185342f4`, tags v0.62.3). The packages'
 `Vec[StructType]` trap-10 row is a retirement candidate (not reproducible
 on both sides); no local row existed.
+
+Update 2026-10-04 (wave 65x landed): convert shims -- 43 clauses / 43
+pub: convert.bytes 6, endian 6, checked 9, base64 4, exact 3, swap 3,
+tostring 5, wrapping 7. convert 11.5% -> 25.6%, global 43.9% -> 44.5%;
+floors101. Re-derived and rejected `hex_to_bytes`'s odd-length -> Err
+claim (the canonical decoder REQUIRES even length and aborts); the
+wrapper now carries that precondition and its doc is corrected.
+bytes.from_bytes stays compile-checked only (documented invalid-IR call
+collision). Probe p_wave65x_shapes.xi (224th, 60 checks): green on
+v0.62.3, v0.61.3 and m189; targeted smokes convert 37/37, cross 9/9.
+iter remains deferred (wave 65 blocked; see the entry below). Enum-payload
+minimization materials for the compiler lane: the bundle lives in the
+packages repo (E:\xiom-packages\packages\docs\repro\enum-payload-str\
+{README.md,probe_enum_payload_str.xi}); in-situ context
+packages\xiom-graphql\graphql.xi validate_operation, failing case
+tests\test_conformance.xi "validate valid operation" (9/10) -- packages
+lane owns the slice.
 
 Update 2026-10-04 (wave 65 BLOCKED, nothing landed): every drafted
 xiom.iter clause set was reverted -- with the Range core set (7 clauses

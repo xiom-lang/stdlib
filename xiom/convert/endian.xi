@@ -18,7 +18,9 @@ use xiom.serialize.endian as sendian;
 /// Big-endian byte representation of an integer (exactly 8 bytes, MSB first).
 /// Negative values render as their two's-complement pattern.
 /// Complexity: O(1).
-pub fn to_be_bytes(n: Int) -> Vec[UInt8] {
+pub fn to_be_bytes(n: Int) -> Vec[UInt8]
+  ensures: result.len() == 8
+{
   var out = Vec[UInt8].new();
   sendian.write_u64_be(&mut out, n as UInt64);
   return out;
@@ -26,7 +28,9 @@ pub fn to_be_bytes(n: Int) -> Vec[UInt8] {
 
 /// Little-endian byte representation of an integer (exactly 8 bytes, LSB
 /// first). Complexity: O(1).
-pub fn to_le_bytes(n: Int) -> Vec[UInt8] {
+pub fn to_le_bytes(n: Int) -> Vec[UInt8]
+  ensures: result.len() == 8
+{
   var out = Vec[UInt8].new();
   sendian.write_u64_le(&mut out, n as UInt64);
   return out;
@@ -34,7 +38,9 @@ pub fn to_le_bytes(n: Int) -> Vec[UInt8] {
 
 /// Integer read from big-endian bytes. Reads at most 8 bytes; returns 0 for
 /// an empty vector or more than 8 bytes. Complexity: O(n).
-pub fn from_be_bytes(bytes: &Vec[UInt8]) -> Int {
+pub fn from_be_bytes(bytes: &Vec[UInt8]) -> Int
+  ensures: ((bytes.len() == 0 || bytes.len() > 8) => (result == 0))
+{
   var len = bytes.len();
   if len == 0 || len > 8 {
     return 0;
@@ -55,7 +61,9 @@ pub fn from_be_bytes(bytes: &Vec[UInt8]) -> Int {
 
 /// Integer read from little-endian bytes. Reads at most 8 bytes; returns 0
 /// for an empty vector or more than 8 bytes. Complexity: O(n).
-pub fn from_le_bytes(bytes: &Vec[UInt8]) -> Int {
+pub fn from_le_bytes(bytes: &Vec[UInt8]) -> Int
+  ensures: ((bytes.len() == 0 || bytes.len() > 8) => (result == 0))
+{
   var len = bytes.len();
   if len == 0 || len > 8 {
     return 0;
@@ -76,13 +84,17 @@ pub fn from_le_bytes(bytes: &Vec[UInt8]) -> Int {
 
 /// Reverses the byte order of an integer (all 8 bytes). Delegates to the
 /// canonical xiom.bits.byte_swap64. Complexity: O(1).
-pub fn swap_bytes(n: Int) -> Int {
+pub fn swap_bytes(n: Int) -> Int
+  ensures: (n == 0) => (result == 0)
+{
   bits.byte_swap64(n)
 }
 
 /// Reports the host byte order. The supported x86-64 targets are
 /// little-endian, so this returns true. Complexity: O(1).
-pub fn is_little_endian() -> Bool {
+pub fn is_little_endian() -> Bool
+  ensures: result == true
+{
   true
 }
 

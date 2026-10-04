@@ -20,23 +20,31 @@ use xiom.encoding.base64 as enc_b64;
 
 /// Encodes bytes as a standard base64 string with '=' padding.
 /// Empty input yields "". Complexity: O(n).
-pub fn base64_encode(data: &Vec[UInt8]) -> Str {
+pub fn base64_encode(data: &Vec[UInt8]) -> Str
+  ensures: (data.len() == 0) => (result.len() == 0)
+{
   return enc_b64.base64_encode(data);
 }
 
 /// Decodes a standard base64 string to bytes. Accepts optional '=' padding.
 /// Returns Err on a non-multiple-of-4 length or an invalid character.
-pub fn base64_decode(s: Str) -> Result[Vec[UInt8], Str] {
+pub fn base64_decode(s: Str) -> Result[Vec[UInt8], Str]
+  ensures: (s.len() == 0) => (result.is_ok == true)
+{
   return enc_b64.base64_decode(s);
 }
 
 /// Encodes a string's UTF-8 bytes as standard base64. Complexity: O(n).
-pub fn base64_encode_str(s: Str) -> Str {
+pub fn base64_encode_str(s: Str) -> Str
+  ensures: (s.len() == 0) => (result.len() == 0)
+{
   return enc_b64.base64_encode_str(s);
 }
 
 /// Decodes base64 into a UTF-8 string (bytes copied verbatim; callers are
 /// responsible for UTF-8 validity). Returns Err on invalid base64.
-pub fn base64_decode_str(s: Str) -> Result[Str, Str] {
+pub fn base64_decode_str(s: Str) -> Result[Str, Str]
+  ensures: (s.len() == 0) => (result.is_ok == true)
+{
   return enc_b64.base64_decode_str(s);
 }
