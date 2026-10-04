@@ -19,7 +19,9 @@ use xiom.time;
 /// Params: n - the number of seconds.
 /// Returns: a Duration of exactly `n` seconds.
 /// Complexity: O(1).
-pub fn duration_secs(n: Int) -> Duration {
+pub fn duration_secs(n: Int) -> Duration
+  ensures: result.secs == n && result.nanos == 0
+{
   return time.Duration.from_secs(n);
 }
 
@@ -27,7 +29,9 @@ pub fn duration_secs(n: Int) -> Duration {
 /// Params: n - the number of milliseconds.
 /// Returns: a Duration of exactly `n` milliseconds.
 /// Complexity: O(1).
-pub fn duration_millis(n: Int) -> Duration {
+pub fn duration_millis(n: Int) -> Duration
+  ensures: ((n >= 0 && n % 1000 == 0) => (result.secs == n / 1000 && result.nanos == 0))
+{
   return time.Duration.from_millis(n);
 }
 
@@ -35,7 +39,9 @@ pub fn duration_millis(n: Int) -> Duration {
 /// Params: n - the number of microseconds.
 /// Returns: a Duration of exactly `n` microseconds.
 /// Complexity: O(1).
-pub fn duration_micros(n: Int) -> Duration {
+pub fn duration_micros(n: Int) -> Duration
+  ensures: ((n >= 0 && n % 1000000 == 0) => (result.secs == n / 1000000 && result.nanos == 0))
+{
   return time.Duration.from_micros(n);
 }
 
@@ -43,7 +49,9 @@ pub fn duration_micros(n: Int) -> Duration {
 /// Params: n - the number of nanoseconds.
 /// Returns: a Duration of exactly `n` nanoseconds.
 /// Complexity: O(1).
-pub fn duration_nanos(n: Int) -> Duration {
+pub fn duration_nanos(n: Int) -> Duration
+  ensures: ((n >= 0 && n % 1000000000 == 0) => (result.secs == n / 1000000000 && result.nanos == 0))
+{
   return time.Duration.from_nanos(n);
 }
 
@@ -51,7 +59,9 @@ pub fn duration_nanos(n: Int) -> Duration {
 /// Params: f - the fractional seconds value.
 /// Returns: a Duration equal to `f` seconds.
 /// Complexity: O(1).
-pub fn duration_from_secs_f64(f: Float64) -> Duration {
+pub fn duration_from_secs_f64(f: Float64) -> Duration
+  ensures: (f == 0.0) => (result.secs == 0 && result.nanos == 0)
+{
   return time.Duration.from_secs_f64(f);
 }
 
@@ -59,7 +69,9 @@ pub fn duration_from_secs_f64(f: Float64) -> Duration {
 /// Params: a - the left operand; b - the right operand.
 /// Returns: a + b.
 /// Complexity: O(1).
-pub fn duration_add(a: Duration, b: Duration) -> Duration {
+pub fn duration_add(a: Duration, b: Duration) -> Duration
+  ensures: 0 <= result.nanos && result.nanos < 1000000000
+{
   return a.add(b);
 }
 
@@ -67,7 +79,9 @@ pub fn duration_add(a: Duration, b: Duration) -> Duration {
 /// Params: a - the left operand; b - the right operand.
 /// Returns: a - b.
 /// Complexity: O(1).
-pub fn duration_sub(a: Duration, b: Duration) -> Duration {
+pub fn duration_sub(a: Duration, b: Duration) -> Duration
+  ensures: 0 <= result.nanos && result.nanos < 1000000000
+{
   return a.sub(b);
 }
 
@@ -75,7 +89,10 @@ pub fn duration_sub(a: Duration, b: Duration) -> Duration {
 /// Params: a - the duration; n - the scale factor.
 /// Returns: a * n.
 /// Complexity: O(1).
-pub fn duration_mul(a: Duration, n: Int) -> Duration {
+pub fn duration_mul(a: Duration, n: Int) -> Duration
+  requires: n >= 0
+  ensures: 0 <= result.nanos && result.nanos < 1000000000
+{
   return a.mul(n);
 }
 
@@ -83,7 +100,9 @@ pub fn duration_mul(a: Duration, n: Int) -> Duration {
 /// Params: a - the duration; n - the divisor.
 /// Returns: a / n, or a zero duration if `n` is zero.
 /// Complexity: O(1).
-pub fn duration_div(a: Duration, n: Int) -> Duration {
+pub fn duration_div(a: Duration, n: Int) -> Duration
+  ensures: (n == 0) => (result.secs == 0 && result.nanos == 0)
+{
   if n == 0 {
     return time.Duration.from_secs(0);
   }
@@ -94,7 +113,9 @@ pub fn duration_div(a: Duration, n: Int) -> Duration {
 /// Params: d - the duration.
 /// Returns: the seconds component.
 /// Complexity: O(1).
-pub fn duration_as_secs(d: Duration) -> Int {
+pub fn duration_as_secs(d: Duration) -> Int
+  ensures: result == d.secs
+{
   return d.as_secs();
 }
 
@@ -102,7 +123,9 @@ pub fn duration_as_secs(d: Duration) -> Int {
 /// Params: d - the duration.
 /// Returns: the duration truncated to milliseconds.
 /// Complexity: O(1).
-pub fn duration_as_millis(d: Duration) -> Int {
+pub fn duration_as_millis(d: Duration) -> Int
+  ensures: result == d.secs * 1000 + d.nanos / 1000000
+{
   return d.as_millis();
 }
 
@@ -110,7 +133,9 @@ pub fn duration_as_millis(d: Duration) -> Int {
 /// Params: d - the duration.
 /// Returns: the duration truncated to microseconds.
 /// Complexity: O(1).
-pub fn duration_as_micros(d: Duration) -> Int {
+pub fn duration_as_micros(d: Duration) -> Int
+  ensures: result == d.secs * 1000000 + d.nanos / 1000
+{
   return d.as_micros();
 }
 
@@ -118,7 +143,9 @@ pub fn duration_as_micros(d: Duration) -> Int {
 /// Params: d - the duration.
 /// Returns: the duration truncated to nanoseconds.
 /// Complexity: O(1).
-pub fn duration_as_nanos(d: Duration) -> Int {
+pub fn duration_as_nanos(d: Duration) -> Int
+  ensures: result == d.secs * 1000000000 + d.nanos
+{
   return d.as_nanos();
 }
 
@@ -126,7 +153,9 @@ pub fn duration_as_nanos(d: Duration) -> Int {
 /// Params: a - the left operand; b - the right operand.
 /// Returns: negative, zero, or positive for a before, equal, after b.
 /// Complexity: O(1).
-pub fn duration_compare(a: Duration, b: Duration) -> Int {
+pub fn duration_compare(a: Duration, b: Duration) -> Int
+  ensures: ((a.secs == b.secs && a.nanos == b.nanos) => (result == 0)) && ((a.secs < b.secs) => (result == 0 - 1)) && ((a.secs > b.secs) => (result == 1))
+{
   var sa = a.as_secs();
   var sb = b.as_secs();
   if sa < sb {
@@ -150,6 +179,8 @@ pub fn duration_compare(a: Duration, b: Duration) -> Int {
 /// Params: d - the duration.
 /// Returns: whether both components are zero.
 /// Complexity: O(1).
-pub fn duration_is_zero(d: Duration) -> Bool {
+pub fn duration_is_zero(d: Duration) -> Bool
+  ensures: result == (d.secs == 0 && d.nanos == 0)
+{
   return d.as_secs() == 0 && d.subsec_nanos() == 0;
 }

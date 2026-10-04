@@ -27,7 +27,7 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
       - name: Contract-coverage ratchet
         shell: pwsh
-        run: ./tools/coverage_scan.ps1 -RatchetFile ./tools/coverage_floors101.json
+        run: ./tools/coverage_scan.ps1 -RatchetFile ./tools/coverage_floors102.json
 
       - name: Module smoke-coverage ratchet
         shell: pwsh

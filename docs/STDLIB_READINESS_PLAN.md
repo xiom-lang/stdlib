@@ -1004,13 +1004,28 @@ T1/T2 yields.
        run-to-run nondeterministic on both pins). stdlib 0.62.3 tagged at
        12a3a1b after a 948/948 exclusion battery; stdlib 0.62.4 release
        prep in the v0.62.4 commit.
+       Wave 66 (2026-10-04): coverage wave 30 -- time core, 39 clauses /
+       39 pub: duration 15 (exact constructor fields and unit bands,
+       normalized-nanos bands for add/sub/mul, zero-divisor zero claim,
+       exact as_secs/as_millis/as_micros/as_nanos mirrors, ordered
+       compare, zero predicate), instant 6 (duration_since/add/sub field
+       mirrors, compare, to/from millis), date 12 (constructor, epoch
+       bands for from/to_timestamp + weekday, month bands for
+       days_in_month/leap/day_of_year, n==0 identities for add/sub days,
+       equal-date diff/compare), iso8601 6 (padded length bands,
+       parse min-length bands, exact epoch timestamp). time 13.0% ->
+       41.3%, global 44.5% -> 45.1%; floors102. Probe
+       tools/probes/p_wave66_shapes.xi (227th, 61 checks): green on
+       v0.62.4 and v0.61.3; targeted smoke_time 19/19. Clarify: this wave
+       was executed under the user's "continue on 2" while the compiler
+       lane gates v0.63.0; runtime/ and the iter surface untouched.
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors101.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors102.json
        tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;
        earlier floors kept at
-       coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55/56/57/58/59/60/61/62/63/64/65/66/67/68/69/70/71/72/73/74/75/76/77/78/79/80/81/82/83/84/85/86/87/88/89/90/91/92/93/94/95/96/97/98/99/100/101.json).
+       coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55/56/57/58/59/60/61/62/63/64/65/66/67/68/69/70/71/72/73/74/75/76/77/78/79/80/81/82/83/84/85/86/87/88/89/90/91/92/93/94/95/96/97/98/99/100/101/102.json).
       Floors are per top-level stdlib/xiom directory and must be refreshed
       when a module is ADDED (new uncovered pub fns dilute the percentage
       -- TOML dropped serialize 6.1% -> 5.4%, tz dropped time 13% ->

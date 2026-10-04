@@ -93,7 +93,9 @@ fn date_from_ts_d(ts: Int) -> Date {
 /// Params: year, month, day - the calendar fields.
 /// Returns: a Date. Values are not validated.
 /// Complexity: O(1).
-pub fn date_new(year: Int, month: Int, day: Int) -> Date {
+pub fn date_new(year: Int, month: Int, day: Int) -> Date
+  ensures: result.year == year && result.month == month && result.day == day
+{
   return Date{ year: year; month: month; day: day; }
 }
 
@@ -109,7 +111,9 @@ pub fn date_now() -> Date {
 /// Params: ts - seconds since the Unix epoch.
 /// Returns: the calendar date at that instant.
 /// Complexity: O(1).
-pub fn date_from_timestamp(ts: Int) -> Date {
+pub fn date_from_timestamp(ts: Int) -> Date
+  ensures: (ts == 0) => (result.year == 1970 && result.month == 1 && result.day == 1)
+{
   return date_from_ts_d(ts);
 }
 
@@ -117,7 +121,9 @@ pub fn date_from_timestamp(ts: Int) -> Date {
 /// Params: d - the date.
 /// Returns: seconds since the epoch at 00:00:00 UTC.
 /// Complexity: O(1).
-pub fn date_to_timestamp(d: &Date) -> Int {
+pub fn date_to_timestamp(d: &Date) -> Int
+  ensures: (d.year == 1970 && d.month == 1 && d.day == 1) => (result == 0)
+{
   let days = days_from_civil_d(d.year, d.month, d.day);
   return days * 86400;
 }
@@ -126,7 +132,9 @@ pub fn date_to_timestamp(d: &Date) -> Int {
 /// Params: d - the date.
 /// Returns: 0 for Sunday through 6 for Saturday.
 /// Complexity: O(1).
-pub fn date_weekday(d: &Date) -> Int {
+pub fn date_weekday(d: &Date) -> Int
+  ensures: (d.year == 1970 && d.month == 1 && d.day == 1) => (result == 4)
+{
   let days = days_from_civil_d(d.year, d.month, d.day);
   return weekday_from_days_d(days);
 }
@@ -135,7 +143,9 @@ pub fn date_weekday(d: &Date) -> Int {
 /// Params: d - the date.
 /// Returns: 1 for January 1st.
 /// Complexity: O(month).
-pub fn date_day_of_year(d: &Date) -> Int {
+pub fn date_day_of_year(d: &Date) -> Int
+  ensures: (d.month == 1) => (result == d.day)
+{
   var result = d.day;
   var m: Int = 1;
   while m < d.month {
@@ -149,7 +159,9 @@ pub fn date_day_of_year(d: &Date) -> Int {
 /// Params: d - the date.
 /// Returns: the day field.
 /// Complexity: O(1).
-pub fn date_day_of_month(d: &Date) -> Int {
+pub fn date_day_of_month(d: &Date) -> Int
+  ensures: result == d.day
+{
   return d.day;
 }
 
@@ -157,7 +169,9 @@ pub fn date_day_of_month(d: &Date) -> Int {
 /// Params: year, month - the calendar fields.
 /// Returns: 28-31 days.
 /// Complexity: O(1).
-pub fn date_days_in_month(year: Int, month: Int) -> Int {
+pub fn date_days_in_month(year: Int, month: Int) -> Int
+  ensures: ((month == 2) => (result == 28 || result == 29)) && ((month == 4 || month == 6 || month == 9 || month == 11) => (result == 30)) && ((month == 1 || month == 3 || month == 5 || month == 7 || month == 8 || month == 10 || month == 12) => (result == 31))
+{
   return days_in_month_d(year, month);
 }
 
@@ -165,7 +179,9 @@ pub fn date_days_in_month(year: Int, month: Int) -> Int {
 /// Params: year - the year.
 /// Returns: whether February has 29 days in that year.
 /// Complexity: O(1).
-pub fn date_is_leap(year: Int) -> Bool {
+pub fn date_is_leap(year: Int) -> Bool
+  ensures: ((year % 400 == 0) => (result == true)) && ((year % 4 != 0) => (result == false)) && ((year % 100 == 0 && year % 400 != 0) => (result == false))
+{
   return is_leap_d(year);
 }
 
@@ -173,7 +189,9 @@ pub fn date_is_leap(year: Int) -> Bool {
 /// Params: d - the base date; n - the day offset (may be negative).
 /// Returns: the shifted date.
 /// Complexity: O(1).
-pub fn date_add_days(d: &Date, n: Int) -> Date {
+pub fn date_add_days(d: &Date, n: Int) -> Date
+  ensures: (n == 0) => (result.year == d.year && result.month == d.month && result.day == d.day)
+{
   let total = days_from_civil_d(d.year, d.month, d.day) + n;
   let (y, m, day) = civil_from_days_d(total);
   return Date{ year: y; month: m; day: day; }
@@ -183,7 +201,9 @@ pub fn date_add_days(d: &Date, n: Int) -> Date {
 /// Params: d - the base date; n - the day offset to subtract.
 /// Returns: the shifted date.
 /// Complexity: O(1).
-pub fn date_sub_days(d: &Date, n: Int) -> Date {
+pub fn date_sub_days(d: &Date, n: Int) -> Date
+  ensures: (n == 0) => (result.year == d.year && result.month == d.month && result.day == d.day)
+{
   let total = days_from_civil_d(d.year, d.month, d.day) - n;
   let (y, m, day) = civil_from_days_d(total);
   return Date{ year: y; month: m; day: day; }
@@ -193,7 +213,9 @@ pub fn date_sub_days(d: &Date, n: Int) -> Date {
 /// Params: a - the minuend; b - the subtrahend.
 /// Returns: a - b in days.
 /// Complexity: O(1).
-pub fn date_diff_days(a: &Date, b: &Date) -> Int {
+pub fn date_diff_days(a: &Date, b: &Date) -> Int
+  ensures: (a.year == b.year && a.month == b.month && a.day == b.day) => (result == 0)
+{
   let da = days_from_civil_d(a.year, a.month, a.day);
   let db = days_from_civil_d(b.year, b.month, b.day);
   return da - db;
@@ -203,7 +225,9 @@ pub fn date_diff_days(a: &Date, b: &Date) -> Int {
 /// Params: a - the left operand; b - the right operand.
 /// Returns: negative, zero, or positive for a before, equal, after b.
 /// Complexity: O(1).
-pub fn date_compare(a: &Date, b: &Date) -> Int {
+pub fn date_compare(a: &Date, b: &Date) -> Int
+  ensures: ((a.year == b.year && a.month == b.month && a.day == b.day) => (result == 0)) && ((a.year < b.year) => (result == 0 - 1)) && ((a.year > b.year) => (result == 1))
+{
   if a.year < b.year {
     return -1;
   }

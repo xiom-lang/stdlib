@@ -1473,6 +1473,22 @@ registry pin, agent recon for the rest)**
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
 
+**SESSION 2026-10-04 block 31 (wave 66: time core; floors102)**
+- Wave 66: 39 clauses / 39 pub in xiom.time: duration 15, instant 6,
+  date 12, iso8601 6. time 13.0% -> 41.3%, global 44.5% -> 45.1%;
+  floors102 wired + README/plan/queue in the same commit. No runtime/ or
+  iter changes (the compiler lane is gating v0.63.0 on cd61062).
+- Skipped by design: date_now / instant_now / instant_elapsed (system
+  clock) and the tuple-returning iso8601 helpers + iso8601_date_parse
+  (the catalog tuple-clause restriction from iter_partition; no claim).
+- Probe p_wave66_shapes.xi (227th, 61 checks): green on v0.62.4 and
+  v0.61.3; targeted smoke_time 19/19. `duration_mul` now carries the
+  parent's `requires: n >= 0` (negative factors already aborted inside
+  the delegate; same observable behavior).
+- Battery on this commit (v0.62.4, release-gate form with the 3
+  carve-outs) is recorded below; full corpus 952 files (the guard-alloc
+  wrap smoke from cd61062 included), release gate 949/949 expected.
+
 **SESSION 2026-10-04 block 30 (v0.63.0 pre-release: guard-alloc bound check + lock)**
 - Landed the compiler lane's only stdlib code change for the v0.63.0 sync:
   `runtime/xiom_runtime.c` `xiom_guard_alloc` now rejects

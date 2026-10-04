@@ -1,8 +1,8 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
 **70% -- 7 of 10 readiness gates complete.** (Compiler pin: **v0.62.4**.)
-**Gates: corpus 950/951 full (release gate 948/948 with the 3 documented
-carve-outs), modules 509/509, probes 226/226, barename 0/509.**
+**Gates: corpus 951/952 full (release gate 949/949 with the 3 documented
+carve-outs), modules 509/509, probes 227/227, barename 0/509.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -12,13 +12,13 @@ gates flip:
    v0.62.3 baseline is 950/951 (cell x2 fixed stdlib-side in `ac3c58f`;
    `smoke_compress_lz4_snappy` remains a filed compiler regression; 2 stale
    smokes fixed at the pin move).
-3. Probe corpus green -- MET (226/226 on v0.62.4, incl. the 5 promoted
+3. Probe corpus green -- MET (227/227 on v0.62.4, incl. the 5 promoted
    regression probes).
 4. Strict bare-name scan clean -- MET (0/509).
-5. Coverage ratchet green -- MET (floors101).
+5. Coverage ratchet green -- MET (floors102).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (497/517 modules, 3475/6200 fns).
-8. Contract coverage 100% (every public fn carries clauses) -- OPEN (44.5%).
+8. Contract coverage 100% (every public fn carries clauses) -- OPEN (45.1%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
    OPEN (12: 11 compiler, 1 stdlib algorithm).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
@@ -478,6 +478,17 @@ stdlib tag >= `8b23b79` for Gate P; tagged `stdlib-perf3` at `5037262`
 regens api-freeze, t2 `185342f4`, tags v0.62.3). The packages'
 `Vec[StructType]` trap-10 row is a retirement candidate (not reproducible
 on both sides); no local row existed.
+
+Update 2026-10-04 (wave 66 landed): time core -- 39 clauses / 39 pub
+(duration 15, instant 6, date 12, iso8601 6); time 13.0% -> 41.3%,
+global 44.5% -> 45.1%; floors102. Probe p_wave66_shapes.xi (227th, 61
+checks) green on v0.62.4 and v0.61.3; targeted smoke_time 19/19. Skipped
+by design: the three clock functions and the tuple-returning iso8601
+helpers. No runtime/ or iter changes, so the v0.63.0 pin candidate
+(cd61062) is untouched. Also since the v0.62.4 re-pin: the guard-alloc
+wrapping-size bound check + fault-injection lock (cd61062) and macos-14
+in the weekly heavy matrix (release-matrix promotion after a green heavy
+run).
 
 Update 2026-10-04 (v0.62.4 re-pin + stdlib 0.62.3/0.62.4 release prep):
 COMPILER_VERSION moved to the SHA256-verified official v0.62.4 archive.

@@ -144,7 +144,9 @@ fn parse_time_tail_i(s: Str, pos: Int) -> TimeParse {
 /// Params: d - the date.
 /// Returns: the zero-padded ISO date string.
 /// Complexity: O(1).
-pub fn date_iso8601(d: &Date) -> Str {
+pub fn date_iso8601(d: &Date) -> Str
+  ensures: ((d.year >= 0 && d.year < 10000 && d.month >= 0 && d.month < 100 && d.day >= 0 && d.day < 100) => (result.len() == 10))
+{
   return pad_i(d.year, 4) + "-" + pad_i(d.month, 2) + "-" + pad_i(d.day, 2);
 }
 
@@ -152,7 +154,9 @@ pub fn date_iso8601(d: &Date) -> Str {
 /// Params: dt - the date/time.
 /// Returns: "YYYY-MM-DDTHH:MM:SS".
 /// Complexity: O(1).
-pub fn datetime_iso8601(dt: &DateTime) -> Str {
+pub fn datetime_iso8601(dt: &DateTime) -> Str
+  ensures: ((dt.year >= 0 && dt.year < 10000 && dt.month >= 0 && dt.month < 100 && dt.day >= 0 && dt.day < 100 && dt.hour >= 0 && dt.hour < 100 && dt.minute >= 0 && dt.minute < 100 && dt.second >= 0 && dt.second < 100) => (result.len() == 19))
+{
   let date = pad_i(dt.year, 4) + "-" + pad_i(dt.month, 2) + "-" + pad_i(dt.day, 2);
   let time = pad_i(dt.hour, 2) + ":" + pad_i(dt.minute, 2) + ":" + pad_i(dt.second, 2);
   return date + "T" + time;
@@ -164,7 +168,9 @@ pub fn datetime_iso8601(dt: &DateTime) -> Str {
 /// Returns: Some(DateTime) on success, None on malformed or out-of-range
 ///          input. Offsets are accepted and treated as UTC.
 /// Complexity: O(1).
-pub fn iso8601_parse(s: Str) -> Option[DateTime] {
+pub fn iso8601_parse(s: Str) -> Option[DateTime]
+  ensures: ((s.len() < 10) => (result.is_none == true)) && ((result.is_some == true) => (s.len() >= 10))
+{
   if s.len() < 10 {
     return None;
   }
@@ -195,7 +201,9 @@ pub fn iso8601_parse(s: Str) -> Option[DateTime] {
 /// Params: dt - the date/time.
 /// Returns: "YYYY-MM-DDTHH:MM:SSZ" (UTC).
 /// Complexity: O(1).
-pub fn rfc3339_format(dt: &DateTime) -> Str {
+pub fn rfc3339_format(dt: &DateTime) -> Str
+  ensures: ((dt.year >= 0 && dt.year < 10000 && dt.month >= 0 && dt.month < 100 && dt.day >= 0 && dt.day < 100 && dt.hour >= 0 && dt.hour < 100 && dt.minute >= 0 && dt.minute < 100 && dt.second >= 0 && dt.second < 100) => (result.len() == 20))
+{
   return datetime_iso8601(dt) + "Z";
 }
 
@@ -203,7 +211,9 @@ pub fn rfc3339_format(dt: &DateTime) -> Str {
 /// Params: s - a "YYYY-MM-DDTHH:MM:SS" string with a 'Z' or numeric offset.
 /// Returns: Some(DateTime) on success, None on malformed input.
 /// Complexity: O(1).
-pub fn rfc3339_parse(s: Str) -> Option[DateTime] {
+pub fn rfc3339_parse(s: Str) -> Option[DateTime]
+  ensures: ((s.len() < 10) => (result.is_none == true)) && ((result.is_some == true) => (s.len() >= 10))
+{
   return iso8601_parse(s);
 }
 
@@ -266,7 +276,9 @@ pub fn iso8601_ordinal_date(d: &Date) -> (Int, Int) {
 /// Params: ts - seconds since the Unix epoch.
 /// Returns: "YYYY-MM-DDTHH:MM:SS" in UTC.
 /// Complexity: O(1).
-pub fn timestamp_iso8601(ts: Int) -> Str {
+pub fn timestamp_iso8601(ts: Int) -> Str
+  ensures: (ts == 0) => (result == "1970-01-01T00:00:00")
+{
   let dt = decompose_i(ts);
   return datetime_iso8601(&dt);
 }

@@ -33,7 +33,9 @@ pub fn instant_elapsed(i: Instant) -> Duration {
 /// Params: a - the later instant; b - the earlier instant.
 /// Returns: a - b.
 /// Complexity: O(1).
-pub fn instant_duration_since(a: Instant, b: Instant) -> Duration {
+pub fn instant_duration_since(a: Instant, b: Instant) -> Duration
+  ensures: result.secs == a.t - b.t && result.nanos == 0
+{
   return a.duration_since(b);
 }
 
@@ -41,7 +43,9 @@ pub fn instant_duration_since(a: Instant, b: Instant) -> Duration {
 /// Params: i - the instant; d - the duration to add.
 /// Returns: i + d.
 /// Complexity: O(1).
-pub fn instant_add(i: Instant, d: Duration) -> Instant {
+pub fn instant_add(i: Instant, d: Duration) -> Instant
+  ensures: result.t == i.t + d.secs
+{
   return i.add(d);
 }
 
@@ -49,7 +53,9 @@ pub fn instant_add(i: Instant, d: Duration) -> Instant {
 /// Params: i - the instant; d - the duration to subtract.
 /// Returns: i - d.
 /// Complexity: O(1).
-pub fn instant_sub(i: Instant, d: Duration) -> Instant {
+pub fn instant_sub(i: Instant, d: Duration) -> Instant
+  ensures: result.t == i.t - d.secs
+{
   return i.sub(d);
 }
 
@@ -57,7 +63,9 @@ pub fn instant_sub(i: Instant, d: Duration) -> Instant {
 /// Params: a - the left operand; b - the right operand.
 /// Returns: negative, zero, or positive for a before, equal, after b.
 /// Complexity: O(1).
-pub fn instant_compare(a: Instant, b: Instant) -> Int {
+pub fn instant_compare(a: Instant, b: Instant) -> Int
+  ensures: ((a.t == b.t) => (result == 0)) && ((a.t < b.t) => (result == 0 - 1)) && ((a.t > b.t) => (result == 1))
+{
   if a.t < b.t {
     return -1;
   }
@@ -71,7 +79,9 @@ pub fn instant_compare(a: Instant, b: Instant) -> Int {
 /// Params: i - the instant.
 /// Returns: the underlying second reading scaled to milliseconds.
 /// Complexity: O(1).
-pub fn instant_to_millis(i: Instant) -> Int {
+pub fn instant_to_millis(i: Instant) -> Int
+  ensures: result == i.t * 1000
+{
   return i.t * 1000;
 }
 
@@ -79,6 +89,8 @@ pub fn instant_to_millis(i: Instant) -> Int {
 /// Params: ms - a millisecond reading from the same arbitrary origin.
 /// Returns: the corresponding Instant.
 /// Complexity: O(1).
-pub fn instant_from_millis(ms: Int) -> Instant {
+pub fn instant_from_millis(ms: Int) -> Instant
+  ensures: result.t == ms / 1000
+{
   return Instant{ t: ms / 1000; }
 }
