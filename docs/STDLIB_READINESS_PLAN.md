@@ -995,6 +995,15 @@ T1/T2 yields.
        bytes.from_bytes stays compile-checked only (calling it is the
        documented invalid-IR collision). Targeted smokes: convert 37/37,
        cross 9/9.
+       Release 0.62.3/0.62.4 (2026-10-04): pin moved to the SHA256-verified
+       official v0.62.4 archive; release-gate carve-out
+       (run_smokes.ps1 -ExcludeFile + tools/known_failures/
+       gate-exclusions.txt) wired into release.yml while ci/heavy keep the
+       full corpus; p_regress_uint32_compare/p_regress_iter_collect
+       promoted (probe corpus 226); p_iter_range_contains_c001 filed (C001
+       run-to-run nondeterministic on both pins). stdlib 0.62.3 tagged at
+       12a3a1b after a 948/948 exclusion battery; stdlib 0.62.4 release
+       prep in the v0.62.4 commit.
        Ratchet:
         tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors101.json
        tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json

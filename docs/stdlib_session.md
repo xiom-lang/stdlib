@@ -7,31 +7,30 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 ## 0A. CONTINUE HERE -- handoff snapshot (updated 2026-10-04, after wave 63)
 
 **Repo**: `xiom-lang/stdlib` at `E:\xiom-lang\stdlib` (branch `main`).
-Compiler pin: **official v0.62.3** (windows-x64 archive, SHA256
-`011af7dd...`, verified against the release SHA256SUMS). The v0.62.3
-re-baseline is DONE: check_modules 509/509, corpus 950/951 (1 filed
-compiler regression), probes 224/224, barename 0/509, floors101 (all
-re-verified on the wave-65x final battery) -- see SESSION block 22 and the
-HANDOFF 2026-10-03 snapshot 5, which carries the paste-ready continuation
-prompt. Wave 63 LANDED on 2026-10-04 (block 25, commit 72ecd60: net
-batch 6 + hash batch 1, 53 clauses, floors99; battery corpus 950/951 +
-probes 221/221 + modules 509/509) and wave 64 LANDED (block 26, commit
-5939345: reflect + iter adapters, 55 clauses, floors100; battery corpus
-950/951 + probes 222/222). Wave 65 was ATTEMPTED AND BLOCKED on the pin
-(block 27): the whole xiom.iter clause surface flips between closure
-use-before-def and the C001 classifier error; a finding was filed and
-everything was reverted (nothing landed; the new finding + Range API
-probe are kept). Wave 65x LANDED (block 28, commit f85f873: convert
-shims, 43 clauses, floors101; convert 11.5% -> 25.6%, global 43.9% ->
-44.5%; battery 950/951 + 224/224). The C001 classifier is additionally
-run-to-run random on v0.62.3 (block 28 evidence). Snapshot 5's prompt
-otherwise stands; the next task is wave 66 on another low dir (format
-13%, time 13%, misc 13.9%, os 15.3% ...) while the iter surface waits on
-the compiler closure-lowering + C001 fixes. v0.62.4 should be tagged
-within hours: re-pin COMPILER_VERSION=v0.62.4, run t2, promote the
-smoke_iter_range lock, retire the m186-fixed p_uint32_high_bit_compare
-(promote its repro), and drop the nested-module / initialize-locals
-porter rules. The registry-publish
+Compiler pin: **official v0.62.4** (windows-x64 archive, SHA256
+`ab1c83d2...`, verified against the release SHA256SUMS; v0.62.3 archive
+`011af7dd...` retained for cross-checks). The v0.62.4 re-pin is DONE:
+t2 (kat_) 15/15, release-gate corpus with the documented carve-out
+948/948 (3 excluded), modules 509/509, probes 226/226, barename 0/509,
+floors101 -- see SESSION block 29 and the HANDOFF 2026-10-03 snapshot 5,
+which carries the paste-ready continuation prompt. Wave 63 LANDED on
+2026-10-04 (block 25, commit 72ecd60: net batch 6 + hash batch 1, 53
+clauses, floors99; battery corpus 950/951 + probes 221/221 + modules
+509/509) and wave 64 LANDED (block 26, commit 5939345: reflect + iter
+adapters, 55 clauses, floors100; battery corpus 950/951 + probes
+222/222). Wave 65 was ATTEMPTED AND BLOCKED on the pin (block 27): the
+whole xiom.iter clause surface flips between closure use-before-def and
+the C001 classifier error; a finding was filed and everything was
+reverted (nothing landed; the new finding + Range API probe are kept).
+Wave 65x LANDED (block 28, commit f85f873: convert shims, 43 clauses,
+floors101; convert 11.5% -> 25.6%, global 43.9% -> 44.5%; battery
+950/951 + 224/224). Release engineering (block 29): stdlib 0.62.3
+tagged at 12a3a1b; stdlib 0.62.4 release prep in the v0.62.4 commit;
+publish staging-first then production via the tag push with
+registry-publish environment approval. Snapshot 5's prompt otherwise
+stands; the next task is wave 66 on another low dir (format 13%, time
+13%, misc 13.9%, os 15.3% ...) while the iter surface waits on the
+compiler closure-lowering + C001 fixes. The registry-publish
 workflow verifies the downloaded
 `xiom-<version>-linux-x64.tar.gz` against the release's published
 `SHA256SUMS` (registry lane independently verified the manifest
@@ -1473,6 +1472,42 @@ registry pin, agent recon for the rest)**
   gates; open: contract coverage 100%, zero open findings, beta-exit release
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
+
+**SESSION 2026-10-04 block 29 (v0.62.4 re-pin + stdlib 0.62.3/0.62.4 release prep)**
+- Official v0.62.4 archive downloaded and SHA256-verified
+  (ab1c83d2...): `%TEMP%\kilo\stdlib_ws\v0624\x\bin\xiom.exe`;
+  COMPILER_VERSION moved v0.62.3 -> v0.62.4.
+- Release-gate carve-out (owner decision): `run_smokes.ps1 -ExcludeFile`
+  (name globs; excludes are printed and counted in the JSON summary) +
+  `tools/known_failures/gate-exclusions.txt` (smoke_iter_range,
+  smoke_iter_find_all_any, smoke_compress_lz4_snappy); release.yml wires
+  it; ci/heavy keep the full corpus.
+- New finding filed: `p_iter_range_contains_c001.xi` -- the C001
+  classifier is run-to-run nondeterministic on v0.62.3 AND v0.62.4
+  (6-run split 3 fail / 3 pass here; registry stress 8/20 +
+  12/20 on v0.62.4, 8/20 + 10/20 on v0.62.3). The smoke_iter_range
+  corpus lock is green direct; the reducer is the filed artifact.
+- Promotions: `p_regress_uint32_compare.xi` (m186 fix; rc 0 on v0.62.4;
+  known-failure entry retired) and `p_regress_iter_collect.xi` (call side
+  fixed on v0.62.4; clause side persists, entry kept). Probe corpus 226.
+- v0.62.4 checks: t2 (kat_) 15/15; smoke_iter_range direct green;
+  smoke_iter_find_all_any direct 5/5 but flaky under workers;
+  all_types still crashes; multipart still rc=1; collect call rc 0; a
+  Range.count clause still breaks smoke_iter codegen.
+- stdlib 0.62.3: commit 12a3a1b (package.xi 0.62.3 + release notes +
+  CHANGELOG + carve-out, pin v0.62.3); release battery with exclusions
+  948/948 (3 excluded), check_modules 509/509, barename 0/509,
+  coverage floors101 + module-smoke OK; tag stdlib-v0.62.3 created.
+- stdlib 0.62.4: package.xi 0.62.4 + release notes + CHANGELOG in this
+  commit; battery with exclusions recorded below. Both release notes
+  disclose the C001 flake and the lz4 empty block. Publish: staging-first
+  dispatch, then production via the tag push with registry-publish
+  environment approval.
+- Packages lane (not interleaved): E:\xiom-packages\packages is already
+  re-pinned to v0.62.4 (c477528a) with the v0.62.4 retirements recorded
+  (281db5de); grpc.xi still carries numeric match arms and stays blocked
+  by the Vec[(Str, Str)] read-after-mutation crash on v0.62.4; the
+  const-arm restore + porter-rule drops ride their next push.
 
 **SESSION 2026-10-04 block 28 (wave 65x: convert shims; floors101; enum-payload bundle pointer)**
 - Wave 65x: 43 clauses / 43 pub in xiom.convert shims: bytes 6,

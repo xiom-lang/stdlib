@@ -1,7 +1,8 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
-**70% -- 7 of 10 readiness gates complete.**
-**Gates: corpus 950/951, modules 509/509, probes 224/224, barename 0/509.**
+**70% -- 7 of 10 readiness gates complete.** (Compiler pin: **v0.62.4**.)
+**Gates: corpus 950/951 full (release gate 948/948 with the 3 documented
+carve-outs), modules 509/509, probes 226/226, barename 0/509.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -11,7 +12,7 @@ gates flip:
    v0.62.3 baseline is 950/951 (cell x2 fixed stdlib-side in `ac3c58f`;
    `smoke_compress_lz4_snappy` remains a filed compiler regression; 2 stale
    smokes fixed at the pin move).
-3. Probe corpus green -- MET (224/224 on v0.62.3, incl. the 3 promoted
+3. Probe corpus green -- MET (226/226 on v0.62.4, incl. the 5 promoted
    regression probes).
 4. Strict bare-name scan clean -- MET (0/509).
 5. Coverage ratchet green -- MET (floors101).
@@ -477,6 +478,27 @@ stdlib tag >= `8b23b79` for Gate P; tagged `stdlib-perf3` at `5037262`
 regens api-freeze, t2 `185342f4`, tags v0.62.3). The packages'
 `Vec[StructType]` trap-10 row is a retirement candidate (not reproducible
 on both sides); no local row existed.
+
+Update 2026-10-04 (v0.62.4 re-pin + stdlib 0.62.3/0.62.4 release prep):
+COMPILER_VERSION moved to the SHA256-verified official v0.62.4 archive.
+Release-gate carve-out per the owner decision: run_smokes.ps1
+-ExcludeFile + tools/known_failures/gate-exclusions.txt
+(smoke_iter_range, smoke_iter_find_all_any, smoke_compress_lz4_snappy;
+exclusions printed and counted in the JSON); release.yml wired, ci/heavy
+stay full-corpus. New finding p_iter_range_contains_c001.xi: the C001
+classifier is run-to-run nondeterministic on v0.62.3 AND v0.62.4 (6-run
+3/3 here; registry stress 8/20 + 12/20 and 8/20 + 10/20). Promotions:
+p_regress_uint32_compare.xi (m186 fix, entry retired) and
+p_regress_iter_collect.xi (collect call side fixed on v0.62.4; clause
+side persists, entry kept); probe corpus 226. t2 (kat_) 15/15 on v0.62.4.
+stdlib 0.62.3 (commit 12a3a1b, tag stdlib-v0.62.3): release battery with
+exclusions 948/948, modules 509/509, barename 0/509, ratchets OK.
+stdlib 0.62.4 (this commit, tag stdlib-v0.62.4): package.xi 0.62.4,
+release notes + CHANGELOG; both notes disclose the C001 flake and the
+lz4 empty block. Publish is staging-first (release.yml canary-dispatch)
+then production via the tag push with registry-publish environment
+approval. Packages repo already carries its own v0.62.4 re-pin
+(c477528a/281db5de) not interleaved here.
 
 Update 2026-10-04 (wave 65x landed): convert shims -- 43 clauses / 43
 pub: convert.bytes 6, endian 6, checked 9, base64 4, exact 3, swap 3,

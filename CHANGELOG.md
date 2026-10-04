@@ -6,6 +6,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.62.4] - 2026-10-04
+
+Re-pinned to compiler `v0.62.4`. The inline UInt32 compare misread (m186)
+and the parent-module `Range.collect` codegen failure are fixed on the pin
+and locked by promoted regression probes; the C001 classifier and lz4
+defects remain carve-outs and are disclosed below. t2 (KAT corpus) 15/15;
+the full local battery is green on the SHA256-verified archive.
+
+### Added
+
+- Promoted regression locks `p_regress_uint32_compare.xi` and
+  `p_regress_iter_collect.xi` (retiring their known-failure entries; probe
+  corpus 226).
+
+### Changed
+
+- `COMPILER_VERSION` -> `v0.62.4` (official release archive, SHA256
+  verified against the published `SHA256SUMS`).
+
+### Notes
+
+- Known compiler issues stay disclosed: the C001 run-to-run classifier
+  flake (`tools/known_failures/p_iter_range_contains_c001.xi`) and the lz4
+  empty-block miscompile; both are release-gate carve-outs while ci/heavy
+  run the full corpus.
+
 ## [0.62.3] - 2026-10-04
 
 Pinned to compiler `v0.62.3`. Contract coverage rose 30.1% -> 44.5%
