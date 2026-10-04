@@ -1466,6 +1466,33 @@ registry pin, agent recon for the rest)**
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
 
+**SESSION 2026-10-04 block 27 (wave 65: iter Range core only; floors101; closure-lowering blocker)**
+- Wave 65 landed 7 clauses in xiom.iter: range/range_inclusive
+  constructors, Range.len exact bands replacing the `result >= 0`
+  placeholder, Range.contains mirror, Range.sum/product empty bands,
+  Range.collect exact bands (6 new pub covered + 1 upgrade). iter 18.6%
+  -> 21.9%, global 43.9% -> 44.0%; floors101 wired + README/plan/queue
+  in the same commit.
+- BLOCKED (compiler closure lowering): the drafted iter.chain (14) +
+  iter.fold (8) reduction clauses and the closure-delegating Range
+  method clauses (next @pre, count, find, max/min/nth/last/all/any/
+  enumerate/take/skip) were all reverted after a long bisection. Facts:
+  adding any clause to Range.count (even `ensures: result >= 0`) makes
+  smoke_iter fail with "use of undefined value" in a generated
+  __closure_N; a clause on Range.find does the same; RangeInclusive.next
+  and max/min break in combination. Calling Range.collect() from a user
+  program fails clang with "instruction forward referenced with type
+  'ptr'". All reproduced on official v0.62.3, v0.61.3 and the m189/
+  v0.62.4 candidate (m189's suffix-aware fix does not cover it). Filed
+  tools/known_failures/p_iter_range_collect_forwardref.xi. Findings
+  Current 11 -> 12 (11 compiler, 1 stdlib). Resume the deferred clauses
+  once the compiler fixes the closure lowering.
+- Probe p_wave65_shapes.xi (223rd, 13 checks): constructors +
+  len/contains/sum/product runtime-exercised; Range.collect's clause is
+  declared but probe-excluded (call-side codegen break). Green on
+  v0.62.3, v0.61.3 and m189. Targeted smokes: smoke_iter OK,
+  smoke_iter_range rc 0.
+
 **SESSION 2026-10-04 block 26 (wave 64: reflect + iter adapters; floors100; relay notes)**
 - Wave 64: 55 clauses / 55 pub covered. reflect: fields.xi 10 +
   typeinfo.xi 11 (exact placeholder constants) + reflect.xi 18 (TypeId.of

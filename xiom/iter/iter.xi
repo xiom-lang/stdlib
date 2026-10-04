@@ -1,6 +1,15 @@
 // XIOM -- Iterator Library
 // Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
+//
+// NOTE (wave 65): clauses on the closure-delegating methods (count, find and
+// the max/min/nth/last/all/any/enumerate/take/skip family, and @pre forms on
+// next) break smoke_iter codegen on v0.62.3 AND the m189/v0.62.4 candidate
+// ("use of undefined value" in a generated __closure_N). Verified repro:
+// `ensures: result >= 0` on Range.count, then compile smoke_iter. This module
+// therefore carries only the closure-free claims (range, range_inclusive,
+// Range.len/contains/sum/product/collect); the rest wait on the compiler
+// closure-lowering fix.
 
 module xiom.iter
 
@@ -18,12 +27,16 @@ pub type Range = { start: Int; end: Int; }
 pub type RangeInclusive = { start: Int; end: Int; current: Int; done: Bool; }
 
 /// Create a half-open range [start, end).
-pub fn range(start: Int, end: Int) -> Range {
+pub fn range(start: Int, end: Int) -> Range
+  ensures: result.start == start && result.end == end
+{
   Range { start: start; end: end; }
 }
 
 /// Create an inclusive range [start, end].
-pub fn range_inclusive(start: Int, end: Int) -> RangeInclusive {
+pub fn range_inclusive(start: Int, end: Int) -> RangeInclusive
+  ensures: result.start == start && result.end == end && result.current == start && result.done == false
+{
   RangeInclusive { start: start; end: end; current: start; done: false; }
 }
 
@@ -41,7 +54,8 @@ pub fn Range.next(self) -> Option[Int]
 
 /// Number of integers left in the range.
 pub fn Range.len(self) -> Int
-  ensures: result >= 0 {
+  ensures: ((self.start >= self.end) => (result == 0)) && ((self.start < self.end) => (result == self.end - self.start))
+{
   if self.start < self.end {
     self.end - self.start
   } else {
@@ -50,12 +64,16 @@ pub fn Range.len(self) -> Int
 }
 
 /// True when `x` is inside [start, end); does not consume the range.
-pub fn Range.contains(self, x: Int) -> Bool {
+pub fn Range.contains(self, x: Int) -> Bool
+  ensures: result == (x >= self.start && x < self.end)
+{
   x >= self.start && x < self.end
 }
 
 /// Sum of the remaining integers (0 for an empty range).
-pub fn Range.sum(self) -> Int {
+pub fn Range.sum(self) -> Int
+  ensures: (self.start >= self.end) => (result == 0)
+{
   var total: Int = 0;
   var i: Int = self.start;
   while i < self.end {
@@ -66,7 +84,9 @@ pub fn Range.sum(self) -> Int {
 }
 
 /// Product of the remaining integers (1 for an empty range).
-pub fn Range.product(self) -> Int {
+pub fn Range.product(self) -> Int
+  ensures: (self.start >= self.end) => (result == 1)
+{
   var total: Int = 1;
   var i: Int = self.start;
   if self.start >= self.end {
@@ -316,7 +336,9 @@ pub fn Range.zip(self, other: Range) -> ZipIter[Int, Int] {
 }
 
 /// Drain the remaining integers into a Vec.
-pub fn Range.collect(self) -> Vec[Int] {
+pub fn Range.collect(self) -> Vec[Int]
+  ensures: ((self.start >= self.end) => (result.len() == 0)) && ((self.start < self.end) => (result.len() == self.end - self.start))
+{
   var r = self;
   return _collect_via[Int](fn() -> Option[Int] { return r.next(); });
 }
@@ -328,6 +350,8 @@ pub fn Range.fold[B](self, init: B, f: fn(B, Int) -> B) -> B {
 }
 
 /// Number of remaining integers.
+/// NOTE (wave 65): clause-free -- any clause here breaks smoke_iter codegen
+/// (see the module header).
 pub fn Range.count(self) -> Int {
   var r = self;
   return _count_via[Int](fn() -> Option[Int] { return r.next(); });
@@ -346,6 +370,7 @@ pub fn Range.min(self) -> Option[Int] {
 }
 
 /// First remaining integer satisfying `predicate`, or None.
+/// NOTE (wave 65): clause-free -- see the module header.
 pub fn Range.find(self, predicate: fn(&Int) -> Bool) -> Option[Int] {
   var r = self;
   return _find_via[Int](fn() -> Option[Int] { return r.next(); }, predicate);

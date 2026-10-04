@@ -16,6 +16,19 @@ xiom --force -o out.exe tools/known_failures/<file>.xi
 
 ## Current
 
+**Open finding 2026-10-04 (official v0.62.3, v0.61.3 and the m189 dev
+build): `xiom.iter` Range.collect() breaks codegen.** Calling the
+parent-module `iter.range(1, 3).collect()` fails clang with
+`instruction forward referenced with type 'ptr'`. The loop-based Range
+methods (len/contains/sum/product) compile; the closure-delegating
+siblings share the lowering family (adding even `ensures: result >= 0` to
+`Range.count` makes the unrelated `smoke_iter` fail with "use of
+undefined value" in a generated `__closure_N`). Repro
+`tools/known_failures/p_iter_range_collect_forwardref.xi` (expected rc 0;
+compile rc 1 while open). Found while landing the wave-65 iter clauses;
+the closure-delegating methods are clause-free and probe-excluded until
+fixed.
+
 **Open finding 2026-10-04 (official v0.62.3, v0.61.3 and the m187 dev
 build): `xiom.reflect.all_types()` heap-corrupts.** The call crashes with
 0xC0000374 (STATUS_HEAP_CORRUPTION, run rc -1073740940) from any program,

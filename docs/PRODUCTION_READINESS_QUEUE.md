@@ -1,7 +1,7 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
 **70% -- 7 of 10 readiness gates complete.**
-**Gates: corpus 950/951, modules 509/509, probes 222/222, barename 0/509.**
+**Gates: corpus 950/951, modules 509/509, probes 223/223, barename 0/509.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -11,15 +11,15 @@ gates flip:
    v0.62.3 baseline is 950/951 (cell x2 fixed stdlib-side in `ac3c58f`;
    `smoke_compress_lz4_snappy` remains a filed compiler regression; 2 stale
    smokes fixed at the pin move).
-3. Probe corpus green -- MET (222/222 on v0.62.3, incl. the 3 promoted
+3. Probe corpus green -- MET (223/223 on v0.62.3, incl. the 3 promoted
    regression probes).
 4. Strict bare-name scan clean -- MET (0/509).
-5. Coverage ratchet green -- MET (floors100).
+5. Coverage ratchet green -- MET (floors101).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (497/517 modules, 3475/6200 fns).
-8. Contract coverage 100% (every public fn carries clauses) -- OPEN (43.9%).
+8. Contract coverage 100% (every public fn carries clauses) -- OPEN (44.0%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
-   OPEN (11: 10 compiler, 1 stdlib algorithm).
+   OPEN (12: 11 compiler, 1 stdlib algorithm).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
 
 Authoritative order for the stdlib lane to reach 100%. State at handoff:
@@ -477,6 +477,23 @@ stdlib tag >= `8b23b79` for Gate P; tagged `stdlib-perf3` at `5037262`
 regens api-freeze, t2 `185342f4`, tags v0.62.3). The packages'
 `Vec[StructType]` trap-10 row is a retirement candidate (not reproducible
 on both sides); no local row existed.
+
+Update 2026-10-04 (wave 65 landed, partial): iter Range core -- 7
+clauses (range/range_inclusive constructors, Range.len exact bands,
+Range.contains mirror, Range.sum/product empty bands, Range.collect
+exact bands); iter 18.6% -> 21.9%, global 43.9% -> 44.0%; floors101.
+The drafted iter.chain (14) + iter.fold (8) reduction clauses and the
+remaining closure-delegating Range method clauses were reverted:
+clauses/calls on those catalog fns break codegen -- adding any clause to
+Range.count (even `result >= 0`) makes smoke_iter fail with "use of
+undefined value" in a __closure_N, and calling Range.collect() fails
+clang with "instruction forward referenced with type 'ptr'" -- on
+official v0.62.3, v0.61.3 AND the m189/v0.62.4 candidate. Filed
+tools/known_failures/p_iter_range_collect_forwardref.xi. Findings
+Current 12 (11 compiler, 1 stdlib). Probe p_wave65_shapes.xi (223rd, 13
+checks): green on all three builds; Range.collect's clause is declared
+but probe-excluded. Deferred clauses resume once the closure lowering is
+fixed.
 
 Update 2026-10-04 (wave 64 landed): reflect + iter adapters -- 55
 clauses / 55 pub covered: reflect.fields 10 + reflect.typeinfo 11 (exact
