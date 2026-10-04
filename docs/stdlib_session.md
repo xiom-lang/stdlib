@@ -1496,6 +1496,16 @@ registry pin, agent recon for the rest)**
   floor dump was withdrawn with the clauses. Resume the whole iter
   surface once the compiler closure lowering + C001 classifier are
   fixed.
+- Battery on 2f621f0 (official v0.62.3, final revision after the true
+  iter.xi restore): check_modules 509/509 (125.3s); corpus 950/951 --
+  only the filed lz4 (964.1s); probes 223/223 (296.0s); barename 0/509
+  (411.6s); floors100/doc/module-smoke ratchets OK. One transient note:
+  under -Workers 8/2 smoke_iter_range intermittently hits the C001
+  contains-classifier error (fails in ~1.5s, retries too) while direct
+  and -Workers 1 compiles pass 5/5; a full corpus re-run cleared it
+  (950/951), so the iter C001 remains load/concurrency-sensitive on the
+  pin even without any wave-65 clauses. This battery/docs commit is
+  LOCAL until the next push point.
 
 **SESSION 2026-10-04 block 26 (wave 64: reflect + iter adapters; floors100; relay notes)**
 - Wave 64: 55 clauses / 55 pub covered. reflect: fields.xi 10 +
