@@ -10,8 +10,8 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 Compiler pin: **official v0.62.3** (windows-x64 archive, SHA256
 `011af7dd...`, verified against the release SHA256SUMS). The v0.62.3
 re-baseline is DONE: check_modules 509/509, corpus 950/951 (1 filed
-compiler regression), probes 223/223, barename 0/509, floors100 (all
-re-verified on the wave-65 final battery) -- see SESSION block 22 and the
+compiler regression), probes 224/224, barename 0/509, floors101 (all
+re-verified on the wave-65x final battery) -- see SESSION block 22 and the
 HANDOFF 2026-10-03 snapshot 5, which carries the paste-ready continuation
 prompt. Wave 63 LANDED on 2026-10-04 (block 25, commit 72ecd60: net
 batch 6 + hash batch 1, 53 clauses, floors99; battery corpus 950/951 +
@@ -20,16 +20,18 @@ probes 221/221 + modules 509/509) and wave 64 LANDED (block 26, commit
 950/951 + probes 222/222). Wave 65 was ATTEMPTED AND BLOCKED on the pin
 (block 27): the whole xiom.iter clause surface flips between closure
 use-before-def and the C001 classifier error; a finding was filed and
-everything was reverted (nothing landed, coverage stays floors100; the
-new finding + Range API probe are kept; battery on 2f621f0 is
-950/951 + 223/223). Snapshot 5's prompt otherwise stands; the next task
-is wave 65x on a different low dir (convert 11.5%, format 13%, time 13%,
-misc 13.9%, os 15.3% ...) while the iter surface waits on the compiler
-closure-lowering + C001 fixes. v0.62.4 should be tagged within hours:
-re-pin COMPILER_VERSION=v0.62.4, run t2, promote the smoke_iter_range
-lock, retire the m186-fixed p_uint32_high_bit_compare (promote its
-repro), and drop the nested-module / initialize-locals porter rules.
-The registry-publish
+everything was reverted (nothing landed; the new finding + Range API
+probe are kept). Wave 65x LANDED (block 28, commit f85f873: convert
+shims, 43 clauses, floors101; convert 11.5% -> 25.6%, global 43.9% ->
+44.5%; battery 950/951 + 224/224). The C001 classifier is additionally
+run-to-run random on v0.62.3 (block 28 evidence). Snapshot 5's prompt
+otherwise stands; the next task is wave 66 on another low dir (format
+13%, time 13%, misc 13.9%, os 15.3% ...) while the iter surface waits on
+the compiler closure-lowering + C001 fixes. v0.62.4 should be tagged
+within hours: re-pin COMPILER_VERSION=v0.62.4, run t2, promote the
+smoke_iter_range lock, retire the m186-fixed p_uint32_high_bit_compare
+(promote its repro), and drop the nested-module / initialize-locals
+porter rules. The registry-publish
 workflow verifies the downloaded
 `xiom-<version>-linux-x64.tar.gz` against the release's published
 `SHA256SUMS` (registry lane independently verified the manifest
