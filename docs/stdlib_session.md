@@ -1494,6 +1494,19 @@ registry pin, agent recon for the rest)**
   tests\test_conformance.xi -> "validate valid operation" (9/10). The
   packages lane owns the validator slice; the coordinator should route
   the bundle to the compiler lane.
+- Battery on f85f873 (official v0.62.3): check_modules 509/509 (193.7s);
+  corpus 950/951 -- only the filed lz4 (927.3s, second run); probes
+  224/224 (280.2s); barename 0/509 (402.8s); floors101/doc/module-smoke
+  ratchets OK. C001 nondeterminism evidence: the FIRST corpus run
+  flapped smoke_iter_find_all_any (compile -999, ~2s); the exact same
+  direct compile then failed C001 twice and PASSED on the third try
+  ('all' receiver does not expose a concrete Vec/Slice/Array element
+  type), and the corpus re-run was clean. So the C001 classifier is not
+  only context/load-sensitive but RUN-TO-RUN random on the pin
+  (consistent with HashMap-iteration-order state); the flaky shape is
+  iter.range(...).all/any/find with inline lambdas. Any "cleared" C001
+  state is therefore probabilistic on v0.62.3. This battery/docs commit
+  is LOCAL until the next push point.
 
 **SESSION 2026-10-04 block 27 (wave 65 BLOCKED: iter clause surface reverted; finding filed; floors stay 100)**
 - Wave 65 landed NOTHING: the entire drafted clause set for xiom.iter.xi
