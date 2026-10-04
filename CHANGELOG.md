@@ -6,10 +6,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-- Compiler pin moved to `v0.62.3` (`COMPILER_VERSION`), per the compiler
-  lane's relay; the registry-publish workflow now verifies the downloaded
-  `xiom-<version>-linux-x64.tar.gz` against the release's published
-  `SHA256SUMS` before using it.
+## [0.62.3] - 2026-10-04
+
+Pinned to compiler `v0.62.3`. Contract coverage rose 30.1% -> 44.5%
+global pub-with-clause with floors59-101 wired into ci/heavy/release; the
+probe corpus grew 195 -> 226 files, all green on the pin. Release gates
+gained a documented carve-out for two compiler defects while ci/heavy keep
+the full corpus; the registry-publish workflow verifies the downloaded
+`xiom-<version>-linux-x64.tar.gz` against the release's published
+`SHA256SUMS` before using it.
+
+### Added
+
+- Contract waves 42-65x: runtime-checked clauses across net (97.3%),
+  geom (100.0%), hash, reflect, iter adapters and convert shims, each
+  validated by a probe on the pin; floors59-101 wired into the workflows.
+- `tools/run_smokes.ps1 -ExcludeFile` + `tools/known_failures/
+  gate-exclusions.txt`: documented release-gate carve-out that prints and
+  counts exclusions in the JSON summary.
+
+### Changed
+
+- The release gate corpus now excludes the C001-flaky iter smokes and the
+  lz4 smoke; ci/heavy still run the full 951-file corpus.
+
+### Notes
+
+- Known compiler issues on this pin: the C001 run-to-run classifier flake
+  (`tools/known_failures/p_iter_range_contains_c001.xi`) and the lz4
+  empty-block miscompile, both disclosed in the release notes.
 
 ## [0.62.0] - 2026-09-27
 

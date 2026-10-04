@@ -1,0 +1,16 @@
+# Release-gate carve-out (owner decision 2026-10-04).
+# ci.yml / heavy.yml keep running the FULL corpus so regressions still surface.
+# release.yml passes this file via run_smokes.ps1 -ExcludeFile; exclusions are
+# printed and counted in the JSON summary.
+#
+# smoke_iter_range.xi / smoke_iter_find_all_any.xi
+#   C001 classifier ("receiver does not expose a concrete Vec/Slice/Array
+#   element type") is ~50% run-to-run flaky on BOTH v0.62.3 and v0.62.4
+#   (20-run stress: 8/20 and 12/20 on v0.62.4; 8/20 and 10/20 on v0.62.3).
+#   Compiler finding reopened; disclosed in the release notes.
+# smoke_compress_lz4_snappy.xi
+#   lz4 empty-block miscompile, deterministic run=5 on both pins; disclosed
+#   in the release notes.
+smoke_iter_range.xi
+smoke_iter_find_all_any.xi
+smoke_compress_lz4_snappy.xi

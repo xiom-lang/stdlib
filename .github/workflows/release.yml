@@ -92,7 +92,7 @@ jobs:
 
       - name: Full smoke corpus (solo re-run of failures)
         shell: pwsh
-        run: ./tools/run_smokes.ps1 -Compiler '${{ steps.compiler.outputs.binary }}' -Workers 8 -RetryFailed -Json "smoke-results-${{ matrix.os }}.json"
+        run: ./tools/run_smokes.ps1 -Compiler '${{ steps.compiler.outputs.binary }}' -Workers 8 -RetryFailed -ExcludeFile ./tools/known_failures/gate-exclusions.txt -Json "smoke-results-${{ matrix.os }}.json"
 
       - name: Check-only type-check of every module
         shell: pwsh

@@ -16,6 +16,24 @@ xiom --force -o out.exe tools/known_failures/<file>.xi
 
 ## Current
 
+**Open finding 2026-10-04 (official v0.62.3 and v0.62.4): the C001
+classifier is run-to-run nondeterministic.** The direct-form iter-range
+reducer (`range-sums + contains`) flips between compiling and failing
+`C001: 'contains' receiver does not expose a concrete Vec/Slice/Array
+element type` for identical invocations. Six consecutive compiles of the
+reducer on v0.62.4 gave 3 failures and 3 passes; the registry lane's
+20-run stress measured `smoke_iter_range` 8/20 and
+`smoke_iter_find_all_any` 12/20 on v0.62.4 (8/20 and 10/20 on v0.62.3);
+`smoke_iter_range` also flaps under the 8-worker corpus runner while
+direct compiles pass. Consistent with classifier state derived from
+HashMap-iteration order -- the wave-62 "cleared" C001 state was
+probabilistic, not fixed. Repro
+`tools/known_failures/p_iter_range_contains_c001.xi` (expected rc 0;
+current pins compile-fail a random subset of runs). The two flaky smokes
+are carve-outs in the release gate
+(`tools/known_failures/gate-exclusions.txt`); ci/heavy keep the full
+corpus.
+
 **Open finding 2026-10-04 (official v0.62.3, v0.61.3 and the m189 dev
 build): `xiom.iter` Range.collect() breaks codegen.** Calling the
 parent-module `iter.range(1, 3).collect()` fails clang with

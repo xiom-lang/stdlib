@@ -5,6 +5,10 @@
 # Contract (docs/REPO_MIGRATION_RUNBOOK.md section 6.1):
 #   -Compiler <path>   compiler binary (default: $env:XIOM_COMPILER, then `xiom` on PATH)
 #   -Filter <text>     run only files whose name contains <text>
+#   -ExcludeFile <path> skip corpus files matching name globs listed in <path>
+#                      (one per line, `#` comments) -- used by the release gate
+#                      carve-out in tools/known_failures/gate-exclusions.txt;
+#                      exclusions are printed and counted in the JSON summary
 #   -Workers <n>       parallel workers (default 8)
 #   -Json <path>       write a machine-readable result summary
 # The child compiler always runs with XIOM_STDLIB=<repo root> so the corpus
@@ -23,6 +27,7 @@ param(
   [string]$Filter = "",
   [int]$Workers = 8,
   [string]$Json = "",
+  [string]$ExcludeFile = "",
   [string]$Corpus = "",
   [string]$WorkDir = "",
   [switch]$RetryFailed,
@@ -194,12 +199,38 @@ Get-ChildItem -LiteralPath $WorkDir -Filter "errors.w*.log" -ErrorAction Silentl
 
 $files = Get-ChildItem -LiteralPath $Corpus -Filter *.xi | Sort-Object Name
 if ($Filter -ne "") { $files = $files | Where-Object { $_.Name -like ("*" + $Filter + "*") } }
+$excluded = @()
+$excludePatterns = @()
+if ($ExcludeFile -ne "") {
+  if (-not (Test-Path -LiteralPath $ExcludeFile)) {
+    Write-Output ("ERROR: exclude file not found: " + $ExcludeFile); exit 2
+  }
+  $excludePatterns = @(Get-Content -LiteralPath $ExcludeFile |
+    ForEach-Object { $_.Trim() } |
+    Where-Object { $_ -ne "" -and -not $_.StartsWith("#") })
+  foreach ($pat in $excludePatterns) {
+    $match = @($files | Where-Object { $_.Name -like $pat })
+    if ($match.Count -eq 0) {
+      Write-Output ("run_smokes: WARNING exclude pattern matched nothing: " + $pat)
+      continue
+    }
+    $excluded += $match
+    $files = @($files | Where-Object { $_.Name -notlike $pat })
+  }
+  if (@($excluded).Count -gt 0) {
+    $excluded = @($excluded | Sort-Object FullName -Unique)
+  }
+}
 if ($files.Count -eq 0) { Write-Output "ERROR: no corpus files matched"; exit 2 }
 
 Write-Output ("run_smokes: repo=" + $repoRoot)
 Write-Output ("run_smokes: compiler=" + $Compiler)
 Write-Output ("run_smokes: corpus=" + $Corpus + "  files=" + $files.Count + "  workers=" + $Workers)
 Write-Output ("run_smokes: workdir=" + $WorkDir)
+Write-Output ("run_smokes: excluded=" + @($excluded).Count)
+foreach ($e in @($excluded | Sort-Object Name)) {
+  Write-Output ("run_smokes: excluded-file=" + $e.Name)
+}
 
 $chunk = [math]::Ceiling($files.Count / [double]$Workers)
 $procs = @()
@@ -265,6 +296,8 @@ if ($Json -ne "") {
     pass = $pass
     compilefail = $compileFail
     runfail = $runFail
+    excluded = @($excluded).Count
+    excluded_files = @($excluded | Sort-Object Name | ForEach-Object { $_.Name })
     seconds = [math]::Round($sw.Elapsed.TotalSeconds, 1)
     failures = @($failures | ForEach-Object {
       [pscustomobject]@{ name = $_.Name; compile_rc = $_.CompileRc; run_exit = $_.RunRc }
