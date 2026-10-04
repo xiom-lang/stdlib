@@ -1,7 +1,7 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
 **70% -- 7 of 10 readiness gates complete.**
-**Gates: corpus 950/951, modules 509/509, probes 221/221, barename 0/509.**
+**Gates: corpus 950/951, modules 509/509, probes 222/222, barename 0/509.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -11,15 +11,15 @@ gates flip:
    v0.62.3 baseline is 950/951 (cell x2 fixed stdlib-side in `ac3c58f`;
    `smoke_compress_lz4_snappy` remains a filed compiler regression; 2 stale
    smokes fixed at the pin move).
-3. Probe corpus green -- MET (221/221 on v0.62.3, incl. the 3 promoted
+3. Probe corpus green -- MET (222/222 on v0.62.3, incl. the 3 promoted
    regression probes).
 4. Strict bare-name scan clean -- MET (0/509).
-5. Coverage ratchet green -- MET (floors99).
+5. Coverage ratchet green -- MET (floors100).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (497/517 modules, 3475/6200 fns).
-8. Contract coverage 100% (every public fn carries clauses) -- OPEN (43.0%).
+8. Contract coverage 100% (every public fn carries clauses) -- OPEN (43.9%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
-   OPEN (10: 9 compiler, 1 stdlib algorithm).
+   OPEN (11: 10 compiler, 1 stdlib algorithm).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
 
 Authoritative order for the stdlib lane to reach 100%. State at handoff:
@@ -477,6 +477,32 @@ stdlib tag >= `8b23b79` for Gate P; tagged `stdlib-perf3` at `5037262`
 regens api-freeze, t2 `185342f4`, tags v0.62.3). The packages'
 `Vec[StructType]` trap-10 row is a retirement candidate (not reproducible
 on both sides); no local row existed.
+
+Update 2026-10-04 (wave 64 landed): reflect + iter adapters -- 55
+clauses / 55 pub covered: reflect.fields 10 + reflect.typeinfo 11 (exact
+placeholder constants), reflect 18 (TypeId.of id==0, size/align/total
+>= 0, downcasts is_none, reflect_type shape, type_info_by_name
+empty-name None band, classifier constants), iter.map 5, iter.range 6,
+iter.zip 5 (exact length arithmetic and empty bands). New finding
+p_reflect_all_types_crash.xi: `reflect.all_types()` heap-corrupts
+(0xC0000374) on v0.62.3, v0.61.3 and the m187 dev build; the identical
+build loop replicates green in a user module and type_info_by_name's
+single-TypeInfo return works, so it is catalog-return-path specific --
+all_types is the only reflect pub fn left clause-free. Probe
+p_wave64_shapes.xi (222nd, 47 checks, reflect+iter combined; the
+fields/typeinfo clauses ride smoke_reflect at runtime): green on
+v0.62.3, v0.61.3 and m187. reflect 9.1% -> 97.7%, iter 9.8% -> 18.6%,
+global 43.0% -> 43.9%. floors100. Findings Current 11 (10 compiler, 1
+stdlib). Compiler-lane relay: m186 fixes the wave-63
+p_uint32_high_bit_compare (verified rc 0 on m187; retire + promote at
+the next pin); m184/m185 fix nested test-module import and uninit local
+struct; the iter-range C001 is CLOSED (smoke_iter_range rc 0 on the
+v0.62.3 tree; promote the smoke lock when v0.62.4 ships on
+stdlib-perf3); the packages-lane enum-payload Str in-situ case still
+fails on m187 (graphql conformance 9/10 on both v0.62.3 and m187,
+standalone control green -- not the m185 UB); porter rules
+(nested-module workaround, initialize-locals) can drop once the
+packages pin is v0.62.4. No package.xi bump/tag needed now.
 
 Update 2026-10-04 (wave 63 landed): net batch 6 + hash batch 1 -- 53
 clauses / 52 pub covered: net.xi 15 (handle-close Ok claims, empty-URL

@@ -14,7 +14,9 @@ module xiom.iter.map
 // ============================================================================
 
 /// Apply f to every element of v, producing a new vector. O(n).
-pub fn iter_map(v: &Vec[Int], f: fn(&Int) -> Int) -> Vec[Int] {
+pub fn iter_map(v: &Vec[Int], f: fn(&Int) -> Int) -> Vec[Int]
+  ensures: result.len() == v.len()
+{
   var out = Vec[Int].new();
   var i = 0;
   while i < v.len() {
@@ -26,7 +28,9 @@ pub fn iter_map(v: &Vec[Int], f: fn(&Int) -> Int) -> Vec[Int] {
 }
 
 /// Apply f to every element, then concatenate the result vectors. O(n + m).
-pub fn iter_flat_map(v: &Vec[Int], f: fn(&Int) -> Vec[Int]) -> Vec[Int] {
+pub fn iter_flat_map(v: &Vec[Int], f: fn(&Int) -> Vec[Int]) -> Vec[Int]
+  ensures: (v.len() == 0) => (result.len() == 0)
+{
   var out = Vec[Int].new();
   var i = 0;
   while i < v.len() {
@@ -43,7 +47,9 @@ pub fn iter_flat_map(v: &Vec[Int], f: fn(&Int) -> Vec[Int]) -> Vec[Int] {
 }
 
 /// Keep and unwrap elements where f returns Some. O(n).
-pub fn iter_filter_map(v: &Vec[Int], f: fn(&Int) -> Option[Int]) -> Vec[Int] {
+pub fn iter_filter_map(v: &Vec[Int], f: fn(&Int) -> Option[Int]) -> Vec[Int]
+  ensures: result.len() <= v.len()
+{
   var out = Vec[Int].new();
   var i = 0;
   while i < v.len() {
@@ -59,7 +65,9 @@ pub fn iter_filter_map(v: &Vec[Int], f: fn(&Int) -> Option[Int]) -> Vec[Int] {
 }
 
 /// (index, value) tuple for each element of v. O(n). Returns Vec[(Int, Int)].
-pub fn iter_enumerate(v: &Vec[Int]) -> Vec[(Int, Int)] {
+pub fn iter_enumerate(v: &Vec[Int]) -> Vec[(Int, Int)]
+  ensures: result.len() == v.len()
+{
   var out = Vec[(Int, Int)].new();
   var i = 0;
   while i < v.len() {
@@ -71,7 +79,9 @@ pub fn iter_enumerate(v: &Vec[Int]) -> Vec[(Int, Int)] {
 
 /// (a[i], b[i]) pairs, truncated to the shorter input. O(min(len)).
 /// Returns Vec[(Int, Int)].
-pub fn iter_zip(a: &Vec[Int], b: &Vec[Int]) -> Vec[(Int, Int)] {
+pub fn iter_zip(a: &Vec[Int], b: &Vec[Int]) -> Vec[(Int, Int)]
+  ensures: result.len() <= a.len() && result.len() <= b.len()
+{
   var out = Vec[(Int, Int)].new();
   var n = a.len();
   if b.len() < n { n = b.len(); }

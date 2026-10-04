@@ -20,69 +20,91 @@ module xiom.reflect.typeinfo
 /// The name of type T. LIMITED: the compiler does not expose generic type
 /// names yet -- returns "unknown".
 /// Complexity: O(1).
-pub fn type_name[T]() -> Str {
+pub fn type_name[T]() -> Str
+  ensures: result == "unknown"
+{
   "unknown"
 }
 
 /// A stable numeric id for type T. LIMITED: returns 0.
 /// Complexity: O(1).
-pub fn type_id[T]() -> Int {
+pub fn type_id[T]() -> Int
+  ensures: result == 0
+{
   0
 }
 
 /// The size of type T in bytes. LIMITED: the layout intrinsics are not
 /// emitted yet -- returns 0.
 /// Complexity: O(1).
-pub fn type_size[T]() -> Int {
+pub fn type_size[T]() -> Int
+  ensures: result == 0
+{
   0
 }
 
 /// The alignment of type T in bytes. LIMITED: returns 0.
 /// Complexity: O(1).
-pub fn type_align[T]() -> Int {
+pub fn type_align[T]() -> Int
+  ensures: result == 0
+{
   0
 }
 
 /// Whether T is a primitive type. LIMITED: always false.
 /// Complexity: O(1).
-pub fn type_is_primitive[T]() -> Bool {
+pub fn type_is_primitive[T]() -> Bool
+  ensures: result == false
+{
   false
 }
 
 /// Whether T is a struct type. LIMITED: always false.
 /// Complexity: O(1).
-pub fn type_is_struct[T]() -> Bool {
+pub fn type_is_struct[T]() -> Bool
+  ensures: result == false
+{
   false
 }
 
 /// Whether T is an enum type. LIMITED: always false.
 /// Complexity: O(1).
-pub fn type_is_enum[T]() -> Bool {
+pub fn type_is_enum[T]() -> Bool
+  ensures: result == false
+{
   false
 }
 
 /// Whether T is a generic type. LIMITED: always false.
 /// Complexity: O(1).
-pub fn type_is_generic[T]() -> Bool {
+pub fn type_is_generic[T]() -> Bool
+  ensures: result == false
+{
   false
 }
 
 /// The type name of a value. Delegates to `type_name[T]()`.
 /// Complexity: O(1).
-pub fn type_of[T](value: T) -> Str {
+pub fn type_of[T](value: T) -> Str
+  ensures: result == "unknown"
+{
   type_name[T]()
 }
 
 /// The number of enum variants of T, or 0 when T is not an enum. LIMITED:
 /// always 0.
 /// Complexity: O(1).
-pub fn type_variant_count[T]() -> Int {
+pub fn type_variant_count[T]() -> Int
+  ensures: result == 0
+{
   0
 }
 
 /// Whether T has a known size. All XIOM types are statically sized, so this
 /// is always true.
 /// Complexity: O(1).
-pub fn type_is_sized[T]() -> Bool {
+pub fn type_is_sized[T]() -> Bool
+  ensures: result == true
+{
   true
 }

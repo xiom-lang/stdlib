@@ -937,13 +937,34 @@ T1/T2 yields.
        I/O; green on v0.62.3 and v0.61.3. net 87.2% -> 97.3%, hash
        8.9% -> 33.3%, global 42.2% -> 43.0%. Next: the remaining low
        dirs (reflect 9.1%, iter 9.8%, convert 11.5%, format 13%, ...).
+       Wave 64 (2026-10-04): coverage wave 27 -- reflect (40 pub: fields
+       10, typeinfo 11, reflect 18) + iter build adapters (map 5,
+       range 6, zip 5) = 55 clauses / 55 pub. Shapes: exact placeholder
+       constants (fields/typeinfo), RTTI presence bands plus the
+       single-TypeInfo return claim, reflect_type's nested-struct shape
+       claim, empty/out-of-range length bands, exact length arithmetic
+       (iter_map/enumerate/chain/cartesian/interleave and range/
+       range_step/range_inclusive/range_count), zip-longest max via
+       dual implications. New finding: p_reflect_all_types_crash.xi --
+       `reflect.all_types()` heap-corrupts (0xC0000374) on official
+       v0.62.3 and the m187 dev build; the same build loop replicates
+       green in a user module and type_info_by_name's single-TypeInfo
+       return works, so it is catalog-return-path specific (all_types is
+       the only reflect pub fn left clause-free). Probe
+       tools/probes/p_wave64_shapes.xi (222nd, 47 checks): reflect +
+       iter combined, no network I/O; the fields/typeinfo clauses ride
+       smoke_reflect at runtime instead (the combined probe including
+       those calls hit a context-dependent invalid-IR clang failure;
+       binding `Vec.new()` temporaries passed as `&Vec` call arguments
+       avoids it). reflect 9.1% -> 97.7%, iter 9.8% -> 18.6%, global
+       43.0% -> 43.9%.
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors99.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors100.json
        tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;
        earlier floors kept at
-       coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55/56/57/58/59/60/61/62/63/64/65/66/67/68/69/70/71/72/73/74/75/76/77/78/79/80/81/82/83/84/85/86/87/88/89/90/91/92/93/94/95/96/97/98/99.json).
+       coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55/56/57/58/59/60/61/62/63/64/65/66/67/68/69/70/71/72/73/74/75/76/77/78/79/80/81/82/83/84/85/86/87/88/89/90/91/92/93/94/95/96/97/98/99/100.json).
       Floors are per top-level stdlib/xiom directory and must be refreshed
       when a module is ADDED (new uncovered pub fns dilute the percentage
       -- TOML dropped serialize 6.1% -> 5.4%, tz dropped time 13% ->

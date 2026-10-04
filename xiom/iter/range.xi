@@ -12,7 +12,9 @@ module xiom.iter.range
 
 /// Integers in [start, end): start, start+1, ..., end-1. O(n).
 /// An empty vector is returned when start >= end.
-pub fn range(start: Int, end: Int) -> Vec[Int] {
+pub fn range(start: Int, end: Int) -> Vec[Int]
+  ensures: ((start >= end) => (result.len() == 0)) && ((start < end) => (result.len() == end - start))
+{
   var out = Vec[Int].new();
   var i = start;
   while i < end {
@@ -24,7 +26,9 @@ pub fn range(start: Int, end: Int) -> Vec[Int] {
 
 /// Integers in [start, end) advancing by step. O(n).
 /// An empty vector is returned when step <= 0 or start >= end.
-pub fn range_step(start: Int, end: Int, step: Int) -> Vec[Int] {
+pub fn range_step(start: Int, end: Int, step: Int) -> Vec[Int]
+  ensures: ((step <= 0 || start >= end) => (result.len() == 0)) && ((step > 0 && start < end) => (result.len() <= end - start))
+{
   var out = Vec[Int].new();
   if step <= 0 { return out; }
   var i = start;
@@ -37,7 +41,9 @@ pub fn range_step(start: Int, end: Int, step: Int) -> Vec[Int] {
 
 /// Integers in [start, end] inclusive of both endpoints. O(n).
 /// An empty vector is returned when start > end.
-pub fn range_inclusive(start: Int, end: Int) -> Vec[Int] {
+pub fn range_inclusive(start: Int, end: Int) -> Vec[Int]
+  ensures: ((start > end) => (result.len() == 0)) && ((start <= end) => (result.len() == end - start + 1))
+{
   var out = Vec[Int].new();
   var i = start;
   while i <= end {
@@ -51,7 +57,9 @@ pub fn range_inclusive(start: Int, end: Int) -> Vec[Int] {
 /// An empty vector is returned when step <= 0 or start >= end.
 /// NOTE (BUG 12): element READS of Vec[Float64] are corrupted by the current
 /// compiler; consumers must not index the result until that bug is fixed.
-pub fn range_float(start: Float64, end: Float64, step: Float64) -> Vec[Float64] {
+pub fn range_float(start: Float64, end: Float64, step: Float64) -> Vec[Float64]
+  ensures: (step <= 0.0 || start >= end) => (result.len() == 0)
+{
   var out = Vec[Float64].new();
   if step <= 0.0 { return out; }
   var i = start;
@@ -64,7 +72,9 @@ pub fn range_float(start: Float64, end: Float64, step: Float64) -> Vec[Float64] 
 
 /// Characters with code points in [start, end). O(n).
 /// An empty vector is returned when start >= end.
-pub fn range_char(start: Char, end: Char) -> Vec[Char] {
+pub fn range_char(start: Char, end: Char) -> Vec[Char]
+  ensures: (start >= end) => (result.len() == 0)
+{
   var out = Vec[Char].new();
   var start_cp = start as Int;
   var end_cp = end as Int;
@@ -77,7 +87,9 @@ pub fn range_char(start: Char, end: Char) -> Vec[Char] {
 }
 
 /// Integers in [0, n). O(n). An empty vector is returned when n <= 0.
-pub fn range_count(n: Int) -> Vec[Int] {
+pub fn range_count(n: Int) -> Vec[Int]
+  ensures: ((n <= 0) => (result.len() == 0)) && ((n > 0) => (result.len() == n))
+{
   var out = Vec[Int].new();
   var i = 0;
   while i < n {

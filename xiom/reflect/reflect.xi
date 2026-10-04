@@ -75,7 +75,9 @@ pub type TypeId = { id: Int; } derive[Eq, Clone, Hash]
 var next_type_id: Int = 0;
 
 /// TypeId of T.
-pub fn TypeId.of[T]() -> TypeId {
+pub fn TypeId.of[T]() -> TypeId
+  ensures: result.id == 0
+{
   return TypeId{ id: 0; };
 }
 
@@ -91,22 +93,30 @@ pub fn type_name[T]() -> Str
 }
 
 /// Size of T in bytes.
-pub fn type_size[T]() -> Int {
+pub fn type_size[T]() -> Int
+  ensures: result >= 0
+{
   return size_of[T]();
 }
 
 /// Alignment of T in bytes.
-pub fn type_align[T]() -> Int {
+pub fn type_align[T]() -> Int
+  ensures: result >= 0
+{
   return align_of[T]();
 }
 
 /// Downcasting
-pub fn downcast_ref[T: Any](value: &dyn Any) -> Option<&T> {
+pub fn downcast_ref[T: Any](value: &dyn Any) -> Option[&T]
+  ensures: result.is_none == true
+{
   return None;
 }
 
 /// Downcast a dyn Any to &mut T, or None on mismatch.
-pub fn downcast_mut[T: Any](value: &mut dyn Any) -> Option<&mut T> {
+pub fn downcast_mut[T: Any](value: &mut dyn Any) -> Option[&mut T]
+  ensures: result.is_none == true
+{
   return None;
 }
 
@@ -129,7 +139,9 @@ pub type FieldInfo = {
 } derive[Clone]
 
 /// TypeInfo for T.
-pub fn reflect_type[T]() -> TypeInfo {
+pub fn reflect_type[T]() -> TypeInfo
+  ensures: result.kind == 0 && result.fields.len() == 0 && result.variants.len() == 0 && result.derives.len() == 0 && result.name == "unknown"
+{
   return TypeInfo{
     name: type_name[T]();
     size: type_size[T]();
@@ -146,7 +158,9 @@ pub fn reflect_type[T]() -> TypeInfo {
 /// placeholder FieldInfo entries so `result.fields.len()` is exact).
 /// LIMITED: size/align are reported as 0, kind defaults to 1 (struct), and
 /// per-field names/types are "unknown" -- that metadata is not embedded yet.
-pub fn type_info_by_name(name: Str) -> Option<TypeInfo> {
+pub fn type_info_by_name(name: Str) -> Option<TypeInfo>
+  ensures: ((name.len() == 0) => (result.is_none == true)) && ((result.is_some == true) => (name.len() > 0))
+{
   let id = type_id_by_name(name);
   if id < 0 {
     return None;
@@ -212,34 +226,44 @@ pub fn all_types() -> Vec<TypeInfo> {
 /// Returns true if `T` is a primitive type (Int, Float64, Bool, Char, etc.).
 /// LIMITED: compiler does not expose this metadata yet -- always returns false.
 /// Complexity: O(1).
-pub fn type_is_primitive[T]() -> Bool {
+pub fn type_is_primitive[T]() -> Bool
+  ensures: result == false
+{
   return false;
 }
 
 /// Returns true if `T` is a struct type.
 /// LIMITED: compiler does not expose this metadata yet -- always returns false.
 /// Complexity: O(1).
-pub fn type_is_struct[T]() -> Bool {
+pub fn type_is_struct[T]() -> Bool
+  ensures: result == false
+{
   return false;
 }
 
 /// Returns true if `T` is an enum type.
 /// LIMITED: compiler does not expose this metadata yet -- always returns false.
 /// Complexity: O(1).
-pub fn type_is_enum[T]() -> Bool {
+pub fn type_is_enum[T]() -> Bool
+  ensures: result == false
+{
   return false;
 }
 
 /// Returns true if `T` has generic parameters.
 /// LIMITED: compiler does not expose this metadata yet -- always returns false.
 /// Complexity: O(1).
-pub fn type_is_generic[T]() -> Bool {
+pub fn type_is_generic[T]() -> Bool
+  ensures: result == false
+{
   return false;
 }
 
 /// Always returns `true`: all XIOM types are sized (statically known layout).
 /// Complexity: O(1).
-pub fn type_is_sized[T]() -> Bool {
+pub fn type_is_sized[T]() -> Bool
+  ensures: result == true
+{
   return true;
 }
 
@@ -248,7 +272,9 @@ pub fn type_is_sized[T]() -> Bool {
 /// Returns a human-readable kind string: "primitive", "struct", "enum", or "unknown".
 /// LIMITED: compiler does not expose kind metadata yet -- always returns "unknown".
 /// Complexity: O(1).
-pub fn type_kind[T]() -> Str {
+pub fn type_kind[T]() -> Str
+  ensures: result == "unknown"
+{
   return "unknown";
 }
 
@@ -257,14 +283,18 @@ pub fn type_kind[T]() -> Str {
 /// Returns the type name of the value referenced by `value`.
 /// Delegates to `type_name[T]()`.
 /// Complexity: O(1).
-pub fn type_name_of_value[T](value: &T) -> Str {
+pub fn type_name_of_value[T](value: &T) -> Str
+  ensures: result == "unknown"
+{
   return type_name[T]();
 }
 
 /// Returns the stable type id of the value referenced by `value`.
 /// Delegates to `TypeId.of[T]()`.
 /// Complexity: O(1).
-pub fn type_id_of_value[T](value: &T) -> Int {
+pub fn type_id_of_value[T](value: &T) -> Int
+  ensures: result == 0
+{
   return TypeId.of[T]().id;
 }
 
@@ -273,14 +303,18 @@ pub fn type_id_of_value[T](value: &T) -> Int {
 /// Returns the name of field at index `idx` in type `T`, or "unknown".
 /// LIMITED: per-field metadata not embedded yet -- always returns "unknown".
 /// Complexity: O(1).
-pub fn type_field_name[T](idx: Int) -> Str {
+pub fn type_field_name[T](idx: Int) -> Str
+  ensures: result == "unknown"
+{
   return "unknown";
 }
 
 /// Returns the byte offset of field at index `idx` in type `T`, or 0.
 /// LIMITED: field offset intrinsic not available yet -- always returns 0.
 /// Complexity: O(1).
-pub fn type_field_offset[T](idx: Int) -> Int {
+pub fn type_field_offset[T](idx: Int) -> Int
+  ensures: result == 0
+{
   return 0;
 }
 
@@ -288,6 +322,8 @@ pub fn type_field_offset[T](idx: Int) -> Int {
 
 /// Returns the total size of type `T` in bytes. Alias for `type_size[T]()`.
 /// Complexity: O(1).
-pub fn type_total_size[T]() -> Int {
+pub fn type_total_size[T]() -> Int
+  ensures: result >= 0
+{
   return type_size[T]();
 }

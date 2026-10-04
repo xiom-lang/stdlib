@@ -1460,6 +1460,45 @@ registry pin, agent recon for the rest)**
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
 
+**SESSION 2026-10-04 block 26 (wave 64: reflect + iter adapters; floors100; relay notes)**
+- Wave 64: 55 clauses / 55 pub covered. reflect: fields.xi 10 +
+  typeinfo.xi 11 (exact placeholder constants) + reflect.xi 18 (TypeId.of
+  id==0, type_size/align/total_size >= 0, downcasts is_none,
+  reflect_type shape, type_info_by_name empty-name None band, classifier
+  constants). iter: map 5 (iter_map/iter_enumerate exact len,
+  iter_filter_map <= v.len, iter_zip <= both, iter_flat_map empty),
+  range 6 (exact counts and empty bands), zip 5 (zip_longest max via
+  dual implications, chain/cartesian/interleave exact arithmetic,
+  chain_many empty).
+- all_types() stays clause-free: calling it crashes with heap corruption
+  (0xC0000374) on official v0.62.3, the m187 dev build and v0.61.3;
+  filed tools/known_failures/p_reflect_all_types_crash.xi. The identical
+  build loop in a user module runs green and type_info_by_name's single
+  TypeInfo return works, so it is catalog-return-path specific (likely
+  the aggregate-copy codegen family the compiler lane is tracing for
+  lz4). reflect 9.1% -> 97.7% with all_types the only gap; iter 9.8% ->
+  18.6%; global 43.0% -> 43.9%; floors100 wired + README/plan/queue in
+  the same commit.
+- Probe p_wave64_shapes.xi (222nd, 47 checks): reflect + iter combined,
+  no network I/O; green on v0.62.3, v0.61.3 and the m187 dev build. The
+  fields/typeinfo clauses are runtime-exercised by smoke_reflect;
+  including those calls in the combined probe hit a context-dependent
+  invalid-IR clang failure (copy_bytes helper), and binding `Vec.new()`
+  temporaries passed as `&Vec` args is required for iter_flat_map /
+  iter_chain_many. Targeted smokes: smoke_reflect 1/1, smoke_iter 21/21.
+- Compiler-lane relay (2026-10-04): (a) m186 fixed the wave-63
+  p_uint32_high_bit_compare inline UInt32 compare -- verified rc 0 on the
+  m187 dev build; retire + promote the repro at the next pin bump. (b)
+  m184/m185 fixed nested test-module import and uninit local struct; the
+  iter-range C001 is closed (smoke_iter_range rc 0 on the v0.62.3 tree
+  too) and the smoke lock promotes when v0.62.4 ships on stdlib-perf3.
+  (c) The packages-lane enum-payload Str in-situ case (xiom.graphql
+  validate_operation) STILL FAILS on m187: conformance 9/10 on both
+  v0.62.3 and m187, standalone control green -- it is not the m185 UB
+  symptom. (d) Porter rules (nested-module workaround,
+  initialize-locals) can drop once the packages pin is v0.62.4.
+  Registry note: no package.xi bump/tag needed now; optional whenever.
+
 **SESSION 2026-10-04 block 25 (wave 63: net batch 6 + hash batch 1; floors99)**
 - Wave 63: 53 clauses / 52 pub covered. net.xi 15 (TcpStream/UdpSocket
   close Ok claims, http_post/http_post_str empty-URL Err implications,

@@ -18,61 +18,81 @@ module xiom.reflect.fields
 
 /// The number of fields in struct T. LIMITED: always 0.
 /// Complexity: O(1).
-pub fn field_count[T]() -> Int {
+pub fn field_count[T]() -> Int
+  ensures: result == 0
+{
   0
 }
 
 /// The name of field `i` of T. LIMITED: always None.
 /// Complexity: O(1).
-pub fn field_name[T](i: Int) -> Option[Str] {
+pub fn field_name[T](i: Int) -> Option[Str]
+  ensures: result.is_none == true
+{
   None
 }
 
 /// The type name of field `i` of T. LIMITED: always None.
 /// Complexity: O(1).
-pub fn field_type[T](i: Int) -> Option[Str] {
+pub fn field_type[T](i: Int) -> Option[Str]
+  ensures: result.is_none == true
+{
   None
 }
 
 /// The byte offset of field `i` of T. LIMITED: always None.
 /// Complexity: O(1).
-pub fn field_offset[T](i: Int) -> Option[Int] {
+pub fn field_offset[T](i: Int) -> Option[Int]
+  ensures: result.is_none == true
+{
   None
 }
 
 /// Read field `i` of `obj` as an integer. LIMITED: always None.
 /// Complexity: O(1).
-pub fn field_value[T](obj: &T, i: Int) -> Option[Int] {
+pub fn field_value[T](obj: &T, i: Int) -> Option[Int]
+  ensures: result.is_none == true
+{
   None
 }
 
 /// All field names in declaration order. LIMITED: always empty.
 /// Complexity: O(1).
-pub fn field_names[T]() -> Vec[Str] {
+pub fn field_names[T]() -> Vec[Str]
+  ensures: result.len() == 0
+{
   Vec[Str].new()
 }
 
 /// All field type names in declaration order. LIMITED: always empty.
 /// Complexity: O(1).
-pub fn field_types[T]() -> Vec[Str] {
+pub fn field_types[T]() -> Vec[Str]
+  ensures: result.len() == 0
+{
   Vec[Str].new()
 }
 
 /// All field byte offsets in declaration order. LIMITED: always empty.
 /// Complexity: O(1).
-pub fn field_offsets[T]() -> Vec[Int] {
+pub fn field_offsets[T]() -> Vec[Int]
+  ensures: result.len() == 0
+{
   Vec[Int].new()
 }
 
 /// The name of enum variant `v`. LIMITED: the compiler does not expose
 /// variant metadata -- returns "unknown".
 /// Complexity: O(1).
-pub fn variant_name[T](v: T) -> Str {
+pub fn variant_name[T](v: T) -> Str
+  ensures: result == "unknown"
+{
   "unknown"
 }
 
 /// The index of enum variant `v`. LIMITED: returns 0.
 /// Complexity: O(1).
-pub fn variant_index[T](v: T) -> Int {
+pub fn variant_index[T](v: T) -> Int
+  ensures: result == 0
+{
   0
 }

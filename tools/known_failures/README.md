@@ -16,6 +16,19 @@ xiom --force -o out.exe tools/known_failures/<file>.xi
 
 ## Current
 
+**Open finding 2026-10-04 (official v0.62.3, v0.61.3 and the m187 dev
+build): `xiom.reflect.all_types()` heap-corrupts.** The call crashes with
+0xC0000374 (STATUS_HEAP_CORRUPTION, run rc -1073740940) from any program,
+including an otherwise-empty one. The other RTTI entry points pass
+(type_count, type_name_by_id, type_id_by_name, type_field_count, and
+type_info_by_name's single-TypeInfo return), and a user-module
+replication of all_types' exact build loop (Vec[TypeInfo] of nested Vec
+fields, 40 iterations) runs green -- so the crash is specific to the
+catalog function's return path, not the shape. Repro
+`tools/known_failures/p_reflect_all_types_crash.xi` (expected rc 0;
+observes -1073740940 while open). Found while landing the wave-64 reflect
+clauses; all_types stays clause-free and probe-excluded until fixed.
+
 **Open finding 2026-10-04 (official v0.62.3 and the m178 dev build):
 inline module-qualified UInt32 call compares misread high-bit values.**
 `adler32_combine(1, 2, -1)` returns UInt32 0xFFFFFFFF; compared inline,
@@ -25,6 +38,11 @@ inline-unsigned-compare workaround family already recorded for UInt16/
 UInt8 (wave-61 icmp_checksum note). Repro
 `tools/known_failures/p_uint32_high_bit_compare.xi` (rc=1). Caught during
 wave-63 probe authoring; the wave probe binds before comparing.
+UPDATE 2026-10-04: FIXED on compiler main m186 ("inline module-qualified
+UInt32 compare widens unsigned"); the repro runs rc 0 on the m187 dev
+build while the official v0.62.3 pin stays red (rc 1). Retire this entry
+and promote the repro to tools/probes/ (regression lock) at the next pin
+bump.
 
 **Open finding 2026-10-03 (both v0.61.3 and official v0.62.3):
 `multipart_parse` result Part field reads are corrupt.** Build one

@@ -13,7 +13,9 @@ module xiom.iter.zip
 /// (a[i], b[i]) pairs padded with fill on the shorter input, iterating to the
 /// length of the longer vector. O(max(len)). Returns Vec[(Int, Int)].
 /// fill is the padding value used for whichever side ran out.
-pub fn iter_zip_longest(a: &Vec[Int], b: &Vec[Int], fill: Int) -> Vec[(Int, Int)] {
+pub fn iter_zip_longest(a: &Vec[Int], b: &Vec[Int], fill: Int) -> Vec[(Int, Int)]
+  ensures: ((a.len() >= b.len()) => (result.len() == a.len())) && ((b.len() >= a.len()) => (result.len() == b.len()))
+{
   var out = Vec[(Int, Int)].new();
   var n = a.len();
   if b.len() > n { n = b.len(); }
@@ -32,7 +34,9 @@ pub fn iter_zip_longest(a: &Vec[Int], b: &Vec[Int], fill: Int) -> Vec[(Int, Int)
 }
 
 /// Concatenate a followed by b. O(a.len() + b.len()).
-pub fn iter_chain(a: &Vec[Int], b: &Vec[Int]) -> Vec[Int] {
+pub fn iter_chain(a: &Vec[Int], b: &Vec[Int]) -> Vec[Int]
+  ensures: result.len() == a.len() + b.len()
+{
   var out = Vec[Int].new();
   var i = 0;
   while i < a.len() {
@@ -50,7 +54,9 @@ pub fn iter_chain(a: &Vec[Int], b: &Vec[Int]) -> Vec[Int] {
 /// Concatenate a list of vectors in order. O(sum of lengths).
 /// NOTE: reading elements of the nested Vec[Vec[Int]] is unreliable in the
 /// current compiler; prefer iter_chain for two vectors.
-pub fn iter_chain_many(parts: &Vec[Vec[Int]]) -> Vec[Int] {
+pub fn iter_chain_many(parts: &Vec[Vec[Int]]) -> Vec[Int]
+  ensures: (parts.len() == 0) => (result.len() == 0)
+{
   var out = Vec[Int].new();
   var i = 0;
   while i < parts.len() {
@@ -67,7 +73,9 @@ pub fn iter_chain_many(parts: &Vec[Vec[Int]]) -> Vec[Int] {
 
 /// All (a[i], b[j]) tuple combinations in row-major order. O(len(a) * len(b)).
 /// Returns Vec[(Int, Int)].
-pub fn iter_cartesian_product(a: &Vec[Int], b: &Vec[Int]) -> Vec[(Int, Int)] {
+pub fn iter_cartesian_product(a: &Vec[Int], b: &Vec[Int]) -> Vec[(Int, Int)]
+  ensures: result.len() == a.len() * b.len()
+{
   var out = Vec[(Int, Int)].new();
   var i = 0;
   while i < a.len() {
@@ -84,7 +92,9 @@ pub fn iter_cartesian_product(a: &Vec[Int], b: &Vec[Int]) -> Vec[(Int, Int)] {
 
 /// Alternate elements of a and b: a[0], b[0], a[1], b[1], ...
 /// The tail of the longer vector is appended after pairing stops. O(n + m).
-pub fn iter_interleave(a: &Vec[Int], b: &Vec[Int]) -> Vec[Int] {
+pub fn iter_interleave(a: &Vec[Int], b: &Vec[Int]) -> Vec[Int]
+  ensures: result.len() == a.len() + b.len()
+{
   var out = Vec[Int].new();
   var i = 0;
   var an = a.len();
