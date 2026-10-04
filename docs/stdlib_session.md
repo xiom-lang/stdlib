@@ -1473,6 +1473,42 @@ registry pin, agent recon for the rest)**
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
 
+**SESSION 2026-10-04 block 30 (v0.63.0 pre-release: guard-alloc bound check + lock)**
+- Landed the compiler lane's only stdlib code change for the v0.63.0 sync:
+  `runtime/xiom_runtime.c` `xiom_guard_alloc` now rejects
+  `size > LLONG_MAX - 16` before the `(size + 15) & ~15` alignment math
+  (fail closed; `xiom_alloc` was already safe). New fault-injection lock
+  `tests/smoke/smoke_guard_alloc_wrap.xi` drives the new runtime probe
+  helper `xiom_guard_alloc_probe`; verified rc 0 with the guard and rc 1
+  with the guard temporarily disabled, so the lock genuinely catches the
+  bug. Guard smokes 4/4, alloc smokes 6/6 green on v0.62.4.
+- Probe-authoring note: a direct XIOM `extern` declaration of the runtime
+  symbol `xiom_guard_alloc` makes codegen hang (300s timeout) or fail
+  with "invalid redefinition of function"; the test-only probe helper
+  side-steps it.
+- v0.63.0 sync plan (compiler relay): the compiler pins this ref (commit
+  SHA or stdlib-v0.63.0); the archive bundles the stdlib at
+  STDLIB_VERSION. POST-RELEASE once the first official v0.63.0 archive is
+  SHA256-verified: re-pin `COMPILER_VERSION`/`package.xi` to 0.63.0 with
+  notes/CHANGELOG; DROP `smoke_compress_lz4_snappy.xi` from
+  gate-exclusions (m190 fixes it -- expect green, keep it in the full
+  corpus); KEEP `smoke_iter_range.xi` + `smoke_iter_find_all_any.xi`
+  excluded (C001 still ~50% run-to-run flaky; release notes disclose C001
+  only); keep `p_iter_range_contains_c001.xi` and the iter_collect
+  clause-side entry open.
+- Release cadence policy (registry/owner confirmed): every compiler
+  release the stdlib pins to gets one stdlib release via the same flow --
+  re-pin, package.xi + release notes + CHANGELOG, tag `stdlib-v*`,
+  release.yml gates/package, staging canary dispatch, then production
+  with the registry-publish environment approval. The tag archive bundles
+  the stdlib at the pinned ref (use the commit SHA, not stdlib-perf3).
+- macOS: `heavy.yml` now includes `macos-14` (arm64) so the weekly suite
+  proves the platform; promote macOS into the release gate matrix after
+  one green heavy run. `ci.yml` stays ubuntu-only for fast PR feedback.
+- Wave 66 (format/time) can proceed in parallel with the pin: it does not
+  touch runtime/ or the iter surface, so it cannot disturb the bundled
+  archive.
+
 **SESSION 2026-10-04 block 29 (v0.62.4 re-pin + stdlib 0.62.3/0.62.4 release prep)**
 - Official v0.62.4 archive downloaded and SHA256-verified
   (ab1c83d2...): `%TEMP%\kilo\stdlib_ws\v0624\x\bin\xiom.exe`;

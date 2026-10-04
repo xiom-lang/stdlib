@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #ifdef _WIN32
@@ -290,6 +291,11 @@ void xiom_guard_heap_exit(void) {
 /* Allocate from the guard arena (zeroed, 16-byte aligned). */
 void* xiom_guard_alloc(long long size) {
     if (size <= 0) return NULL;
+    /* Arena-audit bound check (compiler-lane request, v0.63.0): `size + 15`
+       in the alignment math below must not wrap. Sizes above LLONG_MAX - 16
+       can only wrap into a bogus slab offset (silent OOB), so fail closed
+       before any arithmetic. xiom_alloc already rejects such sizes safely. */
+    if (size > LLONG_MAX - 16) return NULL;
     if (xiom_guard_arena.active <= 0) return xiom_alloc(size); /* fallback */
     XiomGuardArena* a = &xiom_guard_arena;
     /* 16-byte alignment */
@@ -329,6 +335,15 @@ void* xiom_guard_alloc(long long size) {
     memset(p, 0, (size_t)aligned);
     a->cur_off += aligned;
     return p;
+}
+
+/* Fault-injection probe for the arena-audit bound check
+   (tests/smoke/smoke_guard_alloc_wrap.xi): returns 1 when xiom_guard_alloc
+   rejects `size` with NULL, 0 when it hands out a pointer. The probe avoids
+   a direct extern call to xiom_guard_alloc, which currently hangs codegen
+   when declared from XIOM. */
+long long xiom_guard_alloc_probe(long long size) {
+    return xiom_guard_alloc(size) == NULL ? 1 : 0;
 }
 
 /* Copy OUT a heap payload from the guard arena to the main heap.
