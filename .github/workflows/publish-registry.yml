@@ -109,14 +109,16 @@ jobs:
           pin="${{ steps.ver.outputs.compiler }}"
           pv="${pin#v}"
           base="https://github.com/xiom-lang/xiom/releases/download/${pin}"
+          asset="xiom-${pv}-linux-x64.tar.gz"
           curl -fsSL -o SHA256SUMS "${base}/SHA256SUMS"
-          curl -fsSL -o xiom-compiler.tar.gz "${base}/xiom-${pv}-linux-x64.tar.gz"
+          curl -fsSL -o "${asset}" "${base}/${asset}"
           # The official archive is pinned by its published SHA256SUMS: a
           # tampered mirror or a truncated download fails here, before the
-          # compiler ever runs in the publish job.
-          grep "xiom-${pv}-linux-x64.tar.gz\$" SHA256SUMS | sha256sum -c -
+          # compiler ever runs in the publish job. Keep the canonical asset
+          # name -- `sha256sum -c` resolves the file name from the manifest.
+          grep " ${asset}\$" SHA256SUMS | sha256sum -c -
           mkdir -p compiler
-          tar -xzf xiom-compiler.tar.gz -C compiler
+          tar -xzf "${asset}" -C compiler
           if [ ! -x compiler/bin/xiom ]; then
             echo "compiler release asset has no bin/xiom" >&2
             exit 1
