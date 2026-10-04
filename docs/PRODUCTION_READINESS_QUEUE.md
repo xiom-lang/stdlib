@@ -14,10 +14,10 @@ gates flip:
 3. Probe corpus green -- MET (223/223 on v0.62.3, incl. the 3 promoted
    regression probes).
 4. Strict bare-name scan clean -- MET (0/509).
-5. Coverage ratchet green -- MET (floors101).
+5. Coverage ratchet green -- MET (floors100).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (497/517 modules, 3475/6200 fns).
-8. Contract coverage 100% (every public fn carries clauses) -- OPEN (44.0%).
+8. Contract coverage 100% (every public fn carries clauses) -- OPEN (43.9%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
    OPEN (12: 11 compiler, 1 stdlib algorithm).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
@@ -478,22 +478,22 @@ regens api-freeze, t2 `185342f4`, tags v0.62.3). The packages'
 `Vec[StructType]` trap-10 row is a retirement candidate (not reproducible
 on both sides); no local row existed.
 
-Update 2026-10-04 (wave 65 landed, partial): iter Range core -- 7
-clauses (range/range_inclusive constructors, Range.len exact bands,
-Range.contains mirror, Range.sum/product empty bands, Range.collect
-exact bands); iter 18.6% -> 21.9%, global 43.9% -> 44.0%; floors101.
-The drafted iter.chain (14) + iter.fold (8) reduction clauses and the
-remaining closure-delegating Range method clauses were reverted:
-clauses/calls on those catalog fns break codegen -- adding any clause to
-Range.count (even `result >= 0`) makes smoke_iter fail with "use of
-undefined value" in a __closure_N, and calling Range.collect() fails
-clang with "instruction forward referenced with type 'ptr'" -- on
-official v0.62.3, v0.61.3 AND the m189/v0.62.4 candidate. Filed
-tools/known_failures/p_iter_range_collect_forwardref.xi. Findings
-Current 12 (11 compiler, 1 stdlib). Probe p_wave65_shapes.xi (223rd, 13
-checks): green on all three builds; Range.collect's clause is declared
-but probe-excluded. Deferred clauses resume once the closure lowering is
-fixed.
+Update 2026-10-04 (wave 65 BLOCKED, nothing landed): every drafted
+xiom.iter clause set was reverted -- with the Range core set (7 clauses
+incl. Range.collect) 12 iter-consuming smokes fail with closure
+use-before-def ("use of undefined value" in a __closure_N); removing the
+collect clause restores them but flips smoke_iter_range back to the old
+C001 contains-classifier error. No subset keeps the iter family green on
+the v0.62.3 pin. Filed
+tools/known_failures/p_iter_range_collect_forwardref.xi (Range.collect
+call fails clang "instruction forward referenced with type 'ptr'"; any
+clause on Range.count/find breaks smoke_iter). Coverage unchanged:
+floors100 (global 43.9%, iter 18.6%); the wave-65 floor dump was
+withdrawn. Kept: the finding + tools/probes/p_wave65_shapes.xi (223rd,
+13 checks) as a behavioral Range-core API lock, green on v0.62.3,
+v0.61.3 and m189. Findings Current 12 (11 compiler, 1 stdlib). Resume
+the iter surface after the compiler closure-lowering and C001 classifier
+fixes.
 
 Update 2026-10-04 (wave 64 landed): reflect + iter adapters -- 55
 clauses / 55 pub covered: reflect.fields 10 + reflect.typeinfo 11 (exact

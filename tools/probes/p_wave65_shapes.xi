@@ -1,15 +1,15 @@
-// p_wave65_shapes.xi -- wave 65 shape validation: xiom.iter Range core
+// p_wave65_shapes.xi -- wave 65 Range-core API lock (no clauses landed)
 // Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 //
-// Exercises the wave-65 landed clauses: xiom.iter range/range_inclusive
-// constructors and Range.len/contains/sum/product (6 runtime-exercised);
-// the Range.collect clause is declared but kept out of this probe because
-// CALLING Range.collect from a user program trips the same closure codegen
-// bug ("instruction forward referenced with type 'ptr'") on this pin. The
-// closure-delegating methods (next/count/find/max/min/nth/last/all/any/
-// enumerate/take/skip) are clause-free and likewise not called.
-// No network or socket I/O; 13 checks; returns 0 when every case holds.
+// Wave 65's iter clause sets were reverted: on the v0.62.3 pin, clauses
+// in xiom.iter make iter-consuming smokes flip between closure
+// use-before-def and the C001 contains-classifier error, and calling
+// Range.collect() fails clang ("instruction forward referenced with type
+// 'ptr'"). This probe stays as a behavioral lock for the non-closure
+// Range core API (constructors, len/contains/sum/product); the
+// closure-delegating methods are deliberately not called here. No
+// network or socket I/O; 13 checks; returns 0 when every case holds.
 
 module p_wave65_shapes
 

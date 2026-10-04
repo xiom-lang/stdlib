@@ -958,31 +958,32 @@ T1/T2 yields.
        binding `Vec.new()` temporaries passed as `&Vec` call arguments
        avoids it). reflect 9.1% -> 97.7%, iter 9.8% -> 18.6%, global
        43.0% -> 43.9%.
-       Wave 65 (2026-10-04): coverage wave 28 -- iter Range core landed
-       after bisection: 7 clauses (range/range_inclusive constructors,
-       Range.len exact bands up from the `result >= 0` placeholder,
-       contains mirror, sum/product empty bands, collect exact bands).
-       iter 18.6% -> 21.9%, global 43.9% -> 44.0%. BLOCKED SURFACE: the
-       closure-delegating Range methods (next/count/find/max/min/nth/
-       last/all/any/enumerate/take/skip) plus the iter.chain/iter.fold
-       reduction clauses (22 drafted) had to be reverted -- adding any
-       clause to Range.count (even `result >= 0`) makes smoke_iter fail
-       with "use of undefined value" in a generated __closure_N, and
-       calling Range.collect() from a user program fails clang with
-       "instruction forward referenced with type 'ptr'" on v0.62.3,
-       v0.61.3 and the m189/v0.62.4 candidate. Filed
-       tools/known_failures/p_iter_range_collect_forwardref.xi; the
-       deferred clauses resume once the closure lowering is fixed.
-       Probe tools/probes/p_wave65_shapes.xi (223rd, 13 checks): green on
-       v0.62.3, v0.61.3 and m189; Range.collect's clause is declared but
-       probe-excluded (calling it breaks codegen).
+       Wave 65 (2026-10-04): BLOCKED -- no clauses landed. The drafted
+       xiom.iter clause sets (Range core 7 + chain 14 + fold 8 + the
+       remaining Range methods) were all reverted after two
+       context-dependent pin failures: with the 7-clause Range core set
+       (incl. Range.collect), 12 iter-consuming smokes fail with closure
+       use-before-def ("use of undefined value" in a __closure_N);
+       removing the collect clause restores them but flips
+       smoke_iter_range back to the old C001 contains-classifier error
+       (the wave-62 context-dependence returns). Filed
+       tools/known_failures/p_iter_range_collect_forwardref.xi (calling
+       Range.collect fails clang "instruction forward referenced with
+       type 'ptr'" on v0.62.3, v0.61.3 and the m189/v0.62.4 candidate;
+       any clause on Range.count/find breaks smoke_iter). Kept as a
+       behavioral Range-core API lock: tools/probes/p_wave65_shapes.xi
+       (223rd, 13 checks; no clauses landed, no closure-delegating
+       methods called; green on v0.62.3, v0.61.3 and m189). Coverage
+       stays floors100 (global 43.9%, iter 18.6%); the wave-65 floor
+       dump was withdrawn. Resume the whole iter surface once the
+       compiler closure lowering and C001 classifier are fixed.
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors101.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors100.json
        tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;
        earlier floors kept at
-       coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55/56/57/58/59/60/61/62/63/64/65/66/67/68/69/70/71/72/73/74/75/76/77/78/79/80/81/82/83/84/85/86/87/88/89/90/91/92/93/94/95/96/97/98/99/100/101.json).
+       coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55/56/57/58/59/60/61/62/63/64/65/66/67/68/69/70/71/72/73/74/75/76/77/78/79/80/81/82/83/84/85/86/87/88/89/90/91/92/93/94/95/96/97/98/99/100.json).
       Floors are per top-level stdlib/xiom directory and must be refreshed
       when a module is ADDED (new uncovered pub fns dilute the percentage
       -- TOML dropped serialize 6.1% -> 5.4%, tz dropped time 13% ->

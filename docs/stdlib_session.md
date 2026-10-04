@@ -1466,32 +1466,36 @@ registry pin, agent recon for the rest)**
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
 
-**SESSION 2026-10-04 block 27 (wave 65: iter Range core only; floors101; closure-lowering blocker)**
-- Wave 65 landed 7 clauses in xiom.iter: range/range_inclusive
-  constructors, Range.len exact bands replacing the `result >= 0`
-  placeholder, Range.contains mirror, Range.sum/product empty bands,
-  Range.collect exact bands (6 new pub covered + 1 upgrade). iter 18.6%
-  -> 21.9%, global 43.9% -> 44.0%; floors101 wired + README/plan/queue
-  in the same commit.
-- BLOCKED (compiler closure lowering): the drafted iter.chain (14) +
-  iter.fold (8) reduction clauses and the closure-delegating Range
-  method clauses (next @pre, count, find, max/min/nth/last/all/any/
-  enumerate/take/skip) were all reverted after a long bisection. Facts:
-  adding any clause to Range.count (even `ensures: result >= 0`) makes
-  smoke_iter fail with "use of undefined value" in a generated
-  __closure_N; a clause on Range.find does the same; RangeInclusive.next
-  and max/min break in combination. Calling Range.collect() from a user
-  program fails clang with "instruction forward referenced with type
-  'ptr'". All reproduced on official v0.62.3, v0.61.3 and the m189/
-  v0.62.4 candidate (m189's suffix-aware fix does not cover it). Filed
-  tools/known_failures/p_iter_range_collect_forwardref.xi. Findings
-  Current 11 -> 12 (11 compiler, 1 stdlib). Resume the deferred clauses
-  once the compiler fixes the closure lowering.
-- Probe p_wave65_shapes.xi (223rd, 13 checks): constructors +
-  len/contains/sum/product runtime-exercised; Range.collect's clause is
-  declared but probe-excluded (call-side codegen break). Green on
-  v0.62.3, v0.61.3 and m189. Targeted smokes: smoke_iter OK,
-  smoke_iter_range rc 0.
+**SESSION 2026-10-04 block 27 (wave 65 BLOCKED: iter clause surface reverted; finding filed; floors stay 100)**
+- Wave 65 landed NOTHING: the entire drafted clause set for xiom.iter.xi
+  (Range core 7 + closure-delegating methods) was reverted after two
+  context-dependent pin failures. With the full set (7 clauses incl.
+  Range.collect), 12 iter-consuming smokes fail to compile with closure
+  use-before-def ("use of undefined value" in a __closure_N):
+  smoke_iter_{map,filter,enumerate,take_skip,chain_zip,pipeline,narrow,
+  collect,chained_adapters} + smoke_collections_mix_iter +
+  smoke_cross_{collections_iter_fold,num_iter_hash}. Removing just the
+  Range.collect clause restores those 12 but immediately flips
+  smoke_iter_range back to the old C001 ("'contains' receiver does not
+  expose a concrete Vec/Slice/Array element type") -- the same
+  context-dependent classifier the wave-62 tip had cleared. No clause
+  subset keeps the whole iter smoke family green on the v0.62.3 pin.
+- Filed tools/known_failures/p_iter_range_collect_forwardref.xi: calling
+  Range.collect() fails clang with "instruction forward referenced with
+  type 'ptr'" on official v0.62.3, v0.61.3 and the m189/v0.62.4
+  candidate; adding any clause to Range.count (even `result >= 0`) or
+  Range.find makes smoke_iter fail with the __closure_N undefined value.
+  Findings Current 11 -> 12 (11 compiler, 1 stdlib).
+- Kept from wave 65: the finding + README entry and
+  tools/probes/p_wave65_shapes.xi (223rd, 13 checks) as a BEHAVIORAL
+  lock for the Range core API (constructors, len/contains/sum/product;
+  no clauses landed, no closure-delegating methods called). Green on
+  v0.62.3, v0.61.3 and m189; smoke_iter_range and smoke_iter green again
+  after the revert.
+- Coverage unchanged: floors100 (global 43.9%, iter 18.6%); the wave-65
+  floor dump was withdrawn with the clauses. Resume the whole iter
+  surface once the compiler closure lowering + C001 classifier are
+  fixed.
 
 **SESSION 2026-10-04 block 26 (wave 64: reflect + iter adapters; floors100; relay notes)**
 - Wave 64: 55 clauses / 55 pub covered. reflect: fields.xi 10 +
