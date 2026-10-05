@@ -33,6 +33,46 @@ Authoritative order: the gates above, then the updates below newest-first.
 Current state: compiler pin v0.63.1; coverage 49.8%, meter 75.0%; handoff
 in `docs/stdlib_session.md` snapshot 12.
 
+## Project Pulse relay (web-framework lane) -- 2026-10-05
+
+Consumer lane `E:\xiom-projects\xiom-pulse` (`docs/STDLIB-WISHLIST-PULSE.md`,
+pin v0.63.1 / stdlib 15cb889, `XIOM_RUNTIME_DIR=...\stdlib\runtime`). All
+items verified against our tree:
+
+- **Confirmed stubs needing real implementations (stdlib, Pulse-hardening
+  wave):** `socket_set_timeout`/`socket_set_nonblocking`/`socket_reuse_addr`
+  at `xiom/net/socket.xi:287/302/360` (documented Err); the Windows
+  `xiom_socket_bind` path lacks `setsockopt(SO_REUSEADDR)` while POSIX sets
+  it (`runtime/xiom_runtime.c:4737` vs `:4816`). Fix: runtime C externs
+  (`xiom_socket_set_timeout/nonblocking/reuse_addr`) plus real wrappers and
+  a deadline-capable recv. Caveat: the compiler archives bundle the older
+  runtime, so consumers need `XIOM_RUNTIME_DIR` (or the next compiler pin)
+  until the updated runtime ships.
+- **TcpStream.write partial-send:** `xiom/net/net.xi:124-144` is a single
+  `xiom_socket_send` returning `Ok(n)`; add `write_all` (loop) + probe and
+  document the single-send semantics of `write`.
+- **Server request-head parser:** `xiom/net/server.xi` exposes only
+  `server_parse_request_line`; add `server_parse_request(bytes)` with header
+  list, `Content-Length` framing and a body span.
+- **`str_bytes`: already exists** at `xiom/string/slice.xi:135`
+  (`ensures: result.len() == s.len()`); Pulse missed it because the root
+  `xiom.string` does not re-export submodule fns -- use
+  `xiom.string.slice`. Answer relayed; no code change.
+- **`flush_stdout` is a no-op** (`xiom/io/io.xi:903`, empty body): implement
+  a real flush through a runtime extern; probe explicit-flush visibility
+  (abnormal-exit durability stays runtime/CRT-dependent).
+- **`hmac_sha256_hex` absent:** add a convenience wrapper (+ probe).
+- **Executable test registry: compiler-owned** (`xiom/test/harness.xi`
+  header: module-scope fn-pointer reassignment unsupported); relay to the
+  compiler lane.
+- **`TcpStream.read` dead (C-PULSE-01): compiler-owned.** Add a
+  `tcp_listen`/`tcp_connect` loopback fixture in `tests/` with read/write
+  to lock the fix and the new write semantics together.
+- **Positives to keep (no action):** raw-fd socket path (145/145 soak,
+  64/64 concurrent), `xiom.serialize.json`, `xiom.env.var_or`, contracts,
+  and crypto KAT with `XIOM_RUNTIME_DIR` set (the default runtime's missing
+  `xiom_sha256_hash` is a compiler-archive/pin issue, not ours).
+
 ## Systems track (bare-metal / GPU / driver-adjacent) -- relayed 2026-10-05
 
 Not a readiness gate yet; do not displace coverage waves before gate 10

@@ -58,6 +58,14 @@ QUEUED (do only when triggered):
   Box rides section C (geom dedup + rename; compiler api_freeze regen
   pending). The `%Q` strptime face no longer exists in time.xi; restore
   only if the compiler asks.
+- Pulse (web-framework lane) relay 2026-10-05: triage in queue section
+  "Project Pulse relay". Stdlib Pulse-hardening wave queued: socket
+  timeout/nonblocking/reuse-addr runtime externs + wrappers + deadline
+  recv, `TcpStream.write_all`, `server_parse_request` (headers +
+  Content-Length + body span), real `flush_stdout`, `hmac_sha256_hex`,
+  and a tcp loopback read/write fixture (also locks compiler C-PULSE-01).
+  `str_bytes` already exists at `xiom.string.slice.str_bytes` (answer
+  relayed). Test registry is compiler-owned.
 - Systems track relayed to the compiler lane 2026-10-05 (queue section
   "Systems track"): asks are freestanding/no-runtime target, repr(C)/
   by-value ABI, volatile/fences/ordered atomics, contract-disable, later
