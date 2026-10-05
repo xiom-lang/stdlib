@@ -107,7 +107,9 @@ fn lower_cp(c: Char) -> Int {
 
 /// A copy of strings sorted naturally (ascending). O(k^2 * n) with insertion
 /// sort; stable.
-pub fn natural_sort(strings: &Vec[Str]) -> Vec[Str] {
+pub fn natural_sort(strings: &Vec[Str]) -> Vec[Str]
+  ensures: result.len() == strings.len()
+{
   var out = Vec[Str].new();
   var i = 0;
   while i < strings.len() {
@@ -137,7 +139,9 @@ pub fn natural_sort(strings: &Vec[Str]) -> Vec[Str] {
 /// O(k^2 * n). The key function must be named and return a Str.
 /// NOTE: implemented as a concrete Vec[Str] specialization of the frozen
 /// generic API (compiler fn-ptr codegen bug - docs/STDLIB_GENERICS.md).
-pub fn natural_sort_by(items: &Vec[Str], key: fn(&Str) -> Str) -> Vec[Str] {
+pub fn natural_sort_by(items: &Vec[Str], key: fn(&Str) -> Str) -> Vec[Str]
+  ensures: result.len() == items.len()
+{
   var out = Vec[Str].new();
   var i = 0;
   while i < items.len() {
@@ -168,7 +172,9 @@ pub fn natural_sort_by(items: &Vec[Str], key: fn(&Str) -> Str) -> Vec[Str] {
 /// The comparison segments of s; each tuple is (digit_value, chunk).
 /// Digit runs yield (parsed_value, digit_string); text runs yield
 /// (0, text_chunk). O(n).
-pub fn natural_key(s: Str) -> Vec[(Int, Str)] {
+pub fn natural_key(s: Str) -> Vec[(Int, Str)]
+  ensures: ((s.len() == 0) => (result.len() == 0)) && ((s.len() > 0) => (result.len() >= 1))
+{
   var out = Vec[(Int, Str)].new();
   var len = s.len();
   var i = 0;
@@ -196,7 +202,9 @@ pub fn natural_key(s: Str) -> Vec[(Int, Str)] {
 }
 
 /// Split s into alternating digit and text chunks. O(n).
-pub fn natural_chunk(s: Str) -> Vec[Str] {
+pub fn natural_chunk(s: Str) -> Vec[Str]
+  ensures: ((s.len() == 0) => (result.len() == 0)) && ((s.len() > 0) => (result.len() >= 1))
+{
   var out = Vec[Str].new();
   var len = s.len();
   var i = 0;
@@ -221,7 +229,9 @@ pub fn natural_chunk(s: Str) -> Vec[Str] {
 
 /// Whether s contains a digit run starting at index i. O(1).
 /// Returns false when i is out of bounds.
-pub fn natural_is_digit_run(s: Str, i: Int) -> Bool {
+pub fn natural_is_digit_run(s: Str, i: Int) -> Bool
+  ensures: ((i < 0 || i >= s.len()) => (result == false)) && ((result == true) => (i >= 0 && i < s.len()))
+{
   if i < 0 || i >= s.len() { return false; }
   xiom.char.is_digit(s.char_at(i))
 }
@@ -261,7 +271,9 @@ pub fn natural_compare_numeric(a: Str, b: Str) -> Int
 }
 
 /// A copy of strings sorted naturally in descending order. O(k^2 * n).
-pub fn natural_sort_desc(strings: &Vec[Str]) -> Vec[Str] {
+pub fn natural_sort_desc(strings: &Vec[Str]) -> Vec[Str]
+  ensures: result.len() == strings.len()
+{
   var out = Vec[Str].new();
   var i = 0;
   while i < strings.len() {

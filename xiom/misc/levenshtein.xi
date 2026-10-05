@@ -17,7 +17,9 @@ extern "C" {
 
 /// The minimum edit distance between a and b (insert/delete/substitute).
 /// O(m*n) time, O(min(m,n)) space via a rolling row.
-pub fn levenshtein_distance(a: Str, b: Str) -> Int {
+pub fn levenshtein_distance(a: Str, b: Str) -> Int
+  ensures: ((a.len() == 0) => (result == b.len())) && ((b.len() == 0) => (result == a.len())) && ((a == b) => (result == 0))
+{
   var m = a.len();
   var n = b.len();
   if m == 0 { return n; }
@@ -67,7 +69,9 @@ pub fn levenshtein_distance(a: Str, b: Str) -> Int {
 /// otherwise returns max + 1 (indicating the distance exceeds the cap).
 /// O(m*n) worst but only evaluates the diagonal band that can stay within
 /// the limit, so long divergent strings exit early.
-pub fn levenshtein_distance_limited(a: Str, b: Str, max: Int) -> Int {
+pub fn levenshtein_distance_limited(a: Str, b: Str, max: Int) -> Int
+  ensures: ((a.len() == 0 && b.len() <= max && max >= 0) => (result == b.len())) && ((a.len() > b.len() + max && max >= 0) => (result == max + 1))
+{
   var m = a.len();
   var n = b.len();
   if m == 0 { var r1 = n; if r1 > max { return max + 1; } return r1; }
@@ -133,7 +137,9 @@ pub fn levenshtein_distance_limited(a: Str, b: Str, max: Int) -> Int {
 
 /// Normalized similarity in [0, 1]: 1 - dist / max(len_a, len_b).
 /// Equal strings score 1.0; completely different strings approach 0.0.
-pub fn levenshtein_similarity(a: Str, b: Str) -> Float64 {
+pub fn levenshtein_similarity(a: Str, b: Str) -> Float64
+  ensures: ((a == b && a.len() > 0) => (result == 1.0)) && ((a.len() == 0 && b.len() == 0) => (result == 1.0))
+{
   var m = a.len();
   var n = b.len();
   var max_len = m;
@@ -147,7 +153,9 @@ pub fn levenshtein_similarity(a: Str, b: Str) -> Float64 {
 /// matrix[i][j] is the edit distance between a[0..i) and b[0..j).
 /// O(m*n). NOTE: nested Vec[Vec[Int]] element access is unreliable in the
 /// current compiler - treat the result as opaque.
-pub fn levenshtein_matrix(a: Str, b: Str) -> Vec[Vec[Int]] {
+pub fn levenshtein_matrix(a: Str, b: Str) -> Vec[Vec[Int]]
+  ensures: (a.len() == 0) => (result.len() == 1)
+{
   var m = a.len();
   var n = b.len();
   var matrix = Vec[Vec[Int]].new();
@@ -279,7 +287,9 @@ pub fn levenshtein_align(a: Str, b: Str) -> (Str, Str) {
 
 /// The sequence of edit operations transforming a into b. Operations are
 /// "keep:c", "del:c", "ins:c" and "sub:x>y". O(m*n).
-pub fn levenshtein_edit_script(a: Str, b: Str) -> Vec[Str] {
+pub fn levenshtein_edit_script(a: Str, b: Str) -> Vec[Str]
+  ensures: ((a.len() == 0 && b.len() == 0) => (result.len() == 0)) && ((a.len() == 0 && b.len() > 0) => (result.len() == b.len()))
+{
   var ops = Vec[Str].new();
   var m = a.len();
   var n = b.len();
@@ -416,7 +426,9 @@ fn op_sub(a: Char, b: Char) -> Str
 
 /// Damerau-Levenshtein distance with unrestricted adjacent transpositions.
 /// O(m*n) time, O(m*n) space. Uses the classic last-occurrence algorithm.
-pub fn damerau_levenshtein(a: Str, b: Str) -> Int {
+pub fn damerau_levenshtein(a: Str, b: Str) -> Int
+  ensures: ((a.len() == 0) => (result == b.len())) && ((b.len() == 0) => (result == a.len()))
+{
   var m = a.len();
   var n = b.len();
   if m == 0 { return n; }
@@ -479,7 +491,9 @@ pub fn damerau_levenshtein(a: Str, b: Str) -> Int {
 /// Optimal string alignment (restricted transposition) distance.
 /// O(m*n) time, O(m*n) space. Only allows adjacent transpositions that are
 /// not themselves part of further transpositions.
-pub fn osa_distance(a: Str, b: Str) -> Int {
+pub fn osa_distance(a: Str, b: Str) -> Int
+  ensures: ((a.len() == 0) => (result == b.len())) && ((b.len() == 0) => (result == a.len()))
+{
   var m = a.len();
   var n = b.len();
   if m == 0 { return n; }
@@ -528,7 +542,9 @@ pub fn osa_distance(a: Str, b: Str) -> Int {
 
 /// Classic Wagner-Fischer edit distance (full-matrix variant of the standard
 /// Levenshtein distance). O(m*n) time, O(m*n) space.
-pub fn wagner_fischer(a: Str, b: Str) -> Int {
+pub fn wagner_fischer(a: Str, b: Str) -> Int
+  ensures: ((a.len() == 0) => (result == b.len())) && ((b.len() == 0) => (result == a.len()))
+{
   var m = a.len();
   var n = b.len();
   if m == 0 { return n; }

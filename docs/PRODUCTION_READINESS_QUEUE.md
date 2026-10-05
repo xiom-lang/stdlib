@@ -2,7 +2,7 @@
 
 **70% -- 7 of 10 readiness gates complete.** (Compiler pin: **v0.63.0**.)
 **Gates: corpus 950/950 release (952 full; 2 C001 carve-outs), modules
-509/509, probes 228/228, barename 0/509.**
+509/509, probes 229/229, barename 0/509.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -12,13 +12,13 @@ gates flip:
    (2 C001 carve-outs of 952; `ci`/`heavy` run the full corpus). lz4 is
    fixed by m190 and rejoined the gate; the iter C001 flake remains the
    only carve-out.
-3. Probe corpus green -- MET (228/228 on v0.63.0, incl. the 5 promoted
+3. Probe corpus green -- MET (229/229 on v0.63.0, incl. the 5 promoted
    regression probes).
 4. Strict bare-name scan clean -- MET (0/509).
-5. Coverage ratchet green -- MET (floors103).
+5. Coverage ratchet green -- MET (floors104).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (497/517 modules, 3475/6200 fns).
-8. Contract coverage 100% (every public fn carries clauses) -- OPEN (45.7%).
+8. Contract coverage 100% (every public fn carries clauses) -- OPEN (46.1%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
    OPEN (11: 10 compiler, 1 stdlib algorithm).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
@@ -478,6 +478,16 @@ stdlib tag >= `8b23b79` for Gate P; tagged `stdlib-perf3` at `5037262`
 regens api-freeze, t2 `185342f4`, tags v0.62.3). The packages'
 `Vec[StructType]` trap-10 row is a retirement candidate (not reproducible
 on both sides); no local row existed.
+
+Update 2026-10-05 (wave 68 landed): misc glob/soundex/natural/
+levenshtein -- 36 clauses / 29 pub; misc 13.9% -> 50.6%, global 45.7% ->
+46.1%; floors104. Probe p_wave68_shapes.xi (229th, 54 checks) green on
+v0.63.0 and v0.61.3; smoke_misc 3/3. Duplicate-leaf fix: the stale
+`xiom.misc.misc.soundex` copy (returned "0000" for empty) now delegates
+to the canonical shim, so bare `soundex("")` returns "" (evidence
+bare=[0000] before); remaining soundex string/similarity shim leaves go
+to the same-leaf audit / compiler parity work. Readiness next: os 15.3%,
+rand 16%, crypto 17%, log 19.1%, compress 21.1%, encoding 23.7%.
 
 Update 2026-10-05 (lz4 duplicate-leaf unblock): the umbrella wrappers
 were renamed to `lz4_compress_checked` / `lz4_decompress_checked`, so a

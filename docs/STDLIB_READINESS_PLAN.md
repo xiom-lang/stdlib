@@ -1028,13 +1028,21 @@ T1/T2 yields.
        global 45.1% -> 45.7%; floors103. Probe p_wave67_shapes.xi (228th,
        59 checks) green on v0.63.0 and v0.61.3; smoke_format 8/8. Next:
        wave 68 on misc 13.9% / os 15.3% / rand 16%.
+       Wave 68 (2026-10-05): coverage wave 32 -- misc core, 36 clauses /
+       29 pub: glob 9, soundex 6, natural 6, levenshtein 8 (empty-input
+       identities, presence and length bands, Result/Option bands).
+       misc 13.9% -> 50.6%, global 45.7% -> 46.1%; floors104. Duplicate-
+       leaf fix alongside: the stale `xiom.misc.misc.soundex` "0000" copy
+       now delegates to the canonical shim. Probe p_wave68_shapes.xi
+       (229th, 54 checks) green on v0.63.0 and v0.61.3; smoke_misc 3/3.
+       Next: wave 69 on os 15.3% / rand 16% / crypto 17%.
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors103.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors104.json
        tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;
        earlier floors kept at
-       coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55/56/57/58/59/60/61/62/63/64/65/66/67/68/69/70/71/72/73/74/75/76/77/78/79/80/81/82/83/84/85/86/87/88/89/90/91/92/93/94/95/96/97/98/99/100/101/102/103.json).
+       coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55/56/57/58/59/60/61/62/63/64/65/66/67/68/69/70/71/72/73/74/75/76/77/78/79/80/81/82/83/84/85/86/87/88/89/90/91/92/93/94/95/96/97/98/99/100/101/102/103/104.json).
       Floors are per top-level stdlib/xiom directory and must be refreshed
       when a module is ADDED (new uncovered pub fns dilute the percentage
       -- TOML dropped serialize 6.1% -> 5.4%, tz dropped time 13% ->

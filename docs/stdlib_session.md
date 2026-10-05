@@ -12,7 +12,7 @@ Compiler pin: **official v0.63.0** (windows-x64 archive, SHA256
 `ab1c83d2...` and v0.62.3 `011af7dd...` archives retained for
 cross-checks). The v0.63.0 re-pin is DONE: t2 (kat_) 15/15,
 release-gate corpus 950/950 (2 C001 carve-outs of 952), modules 509/509,
-probes 228/228, barename 0/509, floors103 -- see SESSION block 32/34 and
+probes 229/229, barename 0/509, floors104 -- see SESSION block 32/34/36 and
 the HANDOFF 2026-10-03 snapshot 5, which carries the paste-ready
 continuation prompt. Waves 63-66 LANDED on 2026-10-04 (blocks 25/26/28/
 31: net batch 6 + hash, reflect + iter adapters, convert shims, time
@@ -23,8 +23,8 @@ finding filed). Release engineering (blocks 29/32): stdlib 0.62.3 and
 (publish staging-first then production with the registry-publish
 environment approval; 0.62.x publish retries under the registry lane's
 db39144 fix). Snapshot 5's prompt otherwise stands; the next task is wave
-68 on another low dir (misc 13.9%, os 15.3%, rand 16%, crypto 17%,
-log 19.1%, compress 21.1%, encoding 23.7% ...) while the
+69 on os 15.3% / rand 16% (then crypto 17%, log 19.1%, compress 21.1%,
+encoding 23.7% ...) while the
 iter surface waits on the compiler closure-lowering + C001 fixes. The
 registry-publish
 workflow verifies the downloaded
@@ -1468,6 +1468,31 @@ registry pin, agent recon for the rest)**
   gates; open: contract coverage 100%, zero open findings, beta-exit release
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
+
+**SESSION 2026-10-05 block 36 (wave 68: misc glob/soundex/natural/levenshtein; floors104; soundex duplicate-leaf fix)**
+- Wave 68: 36 clauses / 29 pub in xiom.misc: glob 9 (empty-pattern
+  identity, "*" universal, escape/quote no-magic identity, has_magic
+  bands, compile Result bands, bad-handle false), soundex 6 (empty
+  bands, equal-input compare, empty-empty/one-empty similarity,
+  variants len 2), natural 6 (sort length preservation, key/chunk
+  presence bands, digit-run bounds), levenshtein 8 (empty-input
+  identities for distance/damerau/osa/wagner, capped-distance bands,
+  similarity 1.0 identities, matrix row shape, edit-script lengths;
+  levenshtein_align stays clause-free -- tuple result). misc 13.9% ->
+  50.6%, global 45.7% -> 46.1%; floors104.
+- Probe p_wave68_shapes.xi (229th, 54 checks): green on v0.63.0 and
+  v0.61.3; targeted smoke_misc 3/3. One claim was re-derived before
+  landing (`levenshtein_distance_limited`: the cap claim needs
+  `a.len() > b.len() + max`, not `a.len() > max`).
+- soundex duplicate-leaf fix (same class as the lz4 relay):
+  `xiom.misc.misc.soundex` was a stale copy returning "0000" for empty
+  input; a bare `soundex("")` bound it (evidence: bare=[0000] len=4,
+  qualified misc/canonical = ""). The stale body now delegates to the
+  canonical shim (`xiom.misc.soundex.soundex`) with its own clause;
+  bare binding now returns "" and smoke_misc2 stays green. Remaining
+  duplicates (`xiom.string.soundex`, `xiom.misc.soundex`,
+  `xiom.text.similarity.soundex` leaves) go to the same-leaf audit /
+  compiler parity work; the probe uses fully qualified calls.
 
 **SESSION 2026-10-05 block 35 (lz4 duplicate-leaf unblock)**
 - Compiler relay: the benchmark lz4 failure root cause is a duplicate

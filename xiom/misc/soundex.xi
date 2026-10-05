@@ -46,29 +46,39 @@ fn _soundex_map(c: Char) -> Int {
 /// Four-character American Soundex code of `s` (canonical: returns "" for
 /// empty input). Params: s the word to encode. Returns: the code.
 /// Complexity: O(|s|).
-pub fn soundex(s: Str) -> Str {
+pub fn soundex(s: Str) -> Str
+  ensures: (s.len() == 0) => (result.len() == 0)
+{
   similarity.soundex(s)
 }
 
 /// Whether two strings share a Soundex code. O(|a| + |b|).
-pub fn soundex_compare(a: Str, b: Str) -> Bool {
+pub fn soundex_compare(a: Str, b: Str) -> Bool
+  ensures: (a == b) => (result == true)
+{
   similarity.soundex(a) == similarity.soundex(b)
 }
 
 /// Alias for soundex (kept for API compatibility). O(|s|).
-pub fn soundex_encode(s: Str) -> Str {
+pub fn soundex_encode(s: Str) -> Str
+  ensures: (s.len() == 0) => (result.len() == 0)
+{
   similarity.soundex(s)
 }
 
 /// Canonical comparison key for s: the standard Soundex code. O(|s|).
-pub fn soundex_key(s: Str) -> Str {
+pub fn soundex_key(s: Str) -> Str
+  ensures: (s.len() == 0) => (result.len() == 0)
+{
   similarity.soundex(s)
 }
 
 /// Similarity in [0, 1] from the number of matching Soundex digits. O(1).
 /// Canonical-aligned edge cases: two empty inputs score 1.0; exactly one
 /// empty input scores 0.0 (the old duplicate compared "0000" codes instead).
-pub fn soundex_similarity(a: Str, b: Str) -> Float64 {
+pub fn soundex_similarity(a: Str, b: Str) -> Float64
+  ensures: ((a.len() == 0 && b.len() == 0) => (result == 1.0)) && ((a.len() == 0 && b.len() > 0) => (result == 0.0))
+{
   var ca = similarity.soundex(a);
   var cb = similarity.soundex(b);
   if ca.len() == 0 && cb.len() == 0 { return 1.0; }
@@ -90,7 +100,9 @@ pub fn soundex_similarity(a: Str, b: Str) -> Float64 {
 /// Deterministic alternate Soundex codes for s. Returns a vector with the
 /// standard code plus a code that encodes the first letter's own digit
 /// (a common variant). O(|s|). The first element is always the canonical code.
-pub fn soundex_variants(s: Str) -> Vec[Str] {
+pub fn soundex_variants(s: Str) -> Vec[Str]
+  ensures: result.len() == 2
+{
   var out = Vec[Str].new();
   var standard = similarity.soundex(s);
   out.push(standard);

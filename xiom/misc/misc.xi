@@ -256,61 +256,14 @@ fn soundex_map(c: Char) -> Int {
 // -- Soundex ------------------------------------------------------------------
 
 /// Compute the classic American Soundex code for a string (4 chars).
+/// Delegates to the canonical `xiom.misc.soundex` shim (pre-1.0 alignment:
+/// the empty string encodes as "", not the legacy "0000"). Kept as a unique
+/// delegation so bare `soundex(...)` calls stop binding the stale copy that
+/// returned "0000" (duplicate-leaf class; see the compiler-lane relay).
 pub fn soundex(code: Str) -> Str
-  requires: true  // extern char_at calls in the loops (T002 confinement)
+  ensures: (code.len() == 0) => (result.len() == 0)
 {
-    let len = code.len();
-    if len == 0 {
-        return "0000";
-    };
-
-    var first: Int = 0;
-    var i: Int = 0;
-    var found_letter: Bool = false;
-    while i < len && !found_letter {
-        let c = xiom_char_at(code, i);
-        if xiom.char.is_alphabetic(c) {
-            first = xiom.char.to_uppercase(c) as Int;
-            i = i + 1;
-            found_letter = true;
-        } else {
-            i = i + 1;
-        };
-    };
-    if first == 0 {
-        return "0000";
-    };
-
-    var prev_code: Int = soundex_map(xiom_char_at(code, i - 1));
-    var count: Int = 0;
-    unsafe {
-        var buf = malloc(5 as UInt);
-        buf[0] = first as UInt8;
-        count = 1;
-
-        while i < len && count < 4 {
-            let c = xiom_char_at(code, i);
-            let d = soundex_map(c);
-            if d > 0 && d != prev_code {
-                buf[count] = (48 + d) as UInt8;
-                count = count + 1;
-                prev_code = d;
-            } elif d == 0 {
-                let v = xiom.char.to_uppercase(c) as Int;
-                if v != 'H' as Int && v != 'W' as Int {
-                    prev_code = 0;
-                };
-            };
-            i = i + 1;
-        };
-
-        while count < 4 {
-            buf[count] = 48; // '0'
-            count = count + 1;
-        };
-        buf[4] = 0;
-        return Str.from_cstring(buf);
-    }
+    return xiom.misc.soundex.soundex(code);
 }
 
 // -- Palindrome ---------------------------------------------------------------

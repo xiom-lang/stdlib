@@ -24,7 +24,9 @@ fn glob_is_magic_char(c: Char) -> Bool {
 /// Match s against a glob pattern supporting '?' (any single character) and
 /// '*' (zero or more characters). O(pattern.len() * s.len()) worst, with the
 /// classic star-backtracking algorithm. Pattern matching is case-sensitive.
-pub fn glob_match(pattern: Str, s: Str) -> Bool {
+pub fn glob_match(pattern: Str, s: Str) -> Bool
+  ensures: ((pattern.len() == 0) => (result == (s.len() == 0))) && ((pattern == "*") => (result == true))
+{
   var plen = pattern.len();
   var slen = s.len();
   var pi = 0;
@@ -55,7 +57,9 @@ pub fn glob_match(pattern: Str, s: Str) -> Bool {
 
 /// Case-insensitive glob match: same semantics as glob_match but compares
 /// characters with case folding. O(pattern.len() * s.len()) worst.
-pub fn glob_match_case_insensitive(pattern: Str, s: Str) -> Bool {
+pub fn glob_match_case_insensitive(pattern: Str, s: Str) -> Bool
+  ensures: ((pattern.len() == 0) => (result == (s.len() == 0))) && ((pattern == "*") => (result == true))
+{
   var plen = pattern.len();
   var slen = s.len();
   var pi = 0;
@@ -117,7 +121,9 @@ fn to_lower(c: Char) -> Char {
 
 /// Escape glob metacharacters ('*', '?', '[') in s with a backslash so the
 /// result matches literally. O(len).
-pub fn glob_escape(s: Str) -> Str {
+pub fn glob_escape(s: Str) -> Str
+  ensures: ((glob_has_magic(s) == false) => (result == s)) && ((s.len() == 0) => (result.len() == 0))
+{
   var len = s.len();
   var extra = 0;
   var i = 0;
@@ -150,7 +156,9 @@ pub fn glob_escape(s: Str) -> Str {
 }
 
 /// Undo glob escaping: remove one backslash before each metacharacter. O(len).
-pub fn glob_unescape(s: Str) -> Str {
+pub fn glob_unescape(s: Str) -> Str
+  ensures: (s.len() == 0) => (result == s)
+{
   var len = s.len();
   if len == 0 {
     return s;
@@ -184,7 +192,9 @@ pub fn glob_unescape(s: Str) -> Str {
 }
 
 /// Whether s contains any glob metacharacter ('*', '?', '['). O(len).
-pub fn glob_has_magic(s: Str) -> Bool {
+pub fn glob_has_magic(s: Str) -> Bool
+  ensures: ((s.len() == 0) => (result == false)) && ((result == true) => (s.len() > 0))
+{
   var i = 0;
   while i < s.len() {
     if glob_is_magic_char(s.char_at(i)) {
@@ -196,13 +206,17 @@ pub fn glob_has_magic(s: Str) -> Bool {
 }
 
 /// Quote s so it matches literally: the same as glob_escape. O(len).
-pub fn glob_quote(s: Str) -> Str {
+pub fn glob_quote(s: Str) -> Str
+  ensures: ((glob_has_magic(s) == false) => (result == s)) && ((s.len() == 0) => (result.len() == 0))
+{
   glob_escape(s)
 }
 
 /// Convert a glob pattern to a regex pattern string: '*' becomes '.*',
 /// '?' becomes '.', and other regex metacharacters are escaped. O(len).
-pub fn glob_translate(pattern: Str) -> Str {
+pub fn glob_translate(pattern: Str) -> Str
+  ensures: (pattern.len() == 0) => (result.len() == 0)
+{
   var len = pattern.len();
   var size = 0;
   var i = 0;
@@ -266,7 +280,9 @@ var _compiled: Str = "";
 /// the returned handle is always 1 (any other value is invalid). Matches use
 /// the same semantics as glob_match ('*' and '?' metacharacters,
 /// case-sensitive). Errors: Err on an empty pattern.
-pub fn glob_compile(pattern: Str) -> Result[Int, Str] {
+pub fn glob_compile(pattern: Str) -> Result[Int, Str]
+  ensures: ((pattern.len() == 0) => (result.is_err == true)) && ((pattern.len() > 0) => (result.is_ok == true))
+{
   if pattern.len() == 0 {
     return Err("glob_compile: empty pattern");
   }
@@ -277,7 +293,9 @@ pub fn glob_compile(pattern: Str) -> Result[Int, Str] {
 /// Match s against the pattern most recently compiled by glob_compile.
 /// Returns false when `compiled` is not the current handle (or the slot is
 /// still empty). O(p * s) worst.
-pub fn glob_compile_match(compiled: Int, s: Str) -> Bool {
+pub fn glob_compile_match(compiled: Int, s: Str) -> Bool
+  ensures: (compiled != 1) => (result == false)
+{
   if compiled != 1 {
     return false;
   }
