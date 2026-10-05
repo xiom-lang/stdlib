@@ -21,7 +21,7 @@ v0.62.4/v0.63.0 archives kept. Registry carries xiom-std 0.62.3, 0.62.4 and 0.63
 (staging then production publishes approved and green); tags pushed:
 stdlib-v0.62.3 (12a3a1b), stdlib-v0.62.4 (3800c08), stdlib-v0.63.0 (179cfea).
 Gates on v0.63.1: release corpus 952/952 FULL (C001 carve-outs retired by
-4bf8cf1e; 20/20 + 20/20 stress), modules 509/509, probes 236/236, barename
+4bf8cf1e; 20/20 + 20/20 stress), modules 509/509, probes 239/239, barename
 0/509, floors111, module-smoke ratchet OK. Coverage = 50.6% global
 pub-with-clause. Waves landed: 63 net+hash, 64 reflect+iter adapters, 65x convert, 66 time, 67 format, 68 misc, 69 os+rand, 70 crypto, 71 log, 72 compress, 73 pin, 74 encoding, 75 encoding-rem+debug. Wave
 65 (iter clauses) is DEFERRED but pin-unblocked (block 27): the C001
@@ -47,11 +47,17 @@ drop the offending clause with a code comment (see blocks 27/65x).
 `tools/README.md`, update plan/session/queue in the same commit, YAML
 check, pure-ASCII conventional commit.
 (5) battery: `run_smokes.ps1 -ExcludeFile tools/known_failures/
-gate-exclusions.txt` (expect 952/952 full), probe corpus (expect 237),
+gate-exclusions.txt` (expect 952/952 full), probe corpus (expect 240),
 check_modules 509/509, barename 0/509, floors112 + module-smoke ratchets;
 record results in the session block; push `main`.
 
 QUEUED (do only when triggered):
+- DONE 2026-10-05 (compiler ask): scrypt / shuffle-choice / BUG-18 cannot
+  be reproduced on v0.63.1; locked by tools/probes/p_regress_scrypt.xi,
+  p_regress_shuffle_choice.xi and p_regress_bug18_combo.xi (probes 239).
+  Box rides section C (geom dedup + rename; compiler api_freeze regen
+  pending). The `%Q` strptime face no longer exists in time.xi; restore
+  only if the compiler asks.
 - Systems track relayed to the compiler lane 2026-10-05 (queue section
   "Systems track"): asks are freestanding/no-runtime target, repr(C)/
   by-value ABI, volatile/fences/ordered atomics, contract-disable, later

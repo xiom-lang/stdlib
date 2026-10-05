@@ -7,7 +7,8 @@ use xiom.text.similarity;
 
 // tr/rot/caesar/atbash, abbreviate/obfuscate, jaccard/lcp/lcsuffix/ngram.
 // strftime/strptime live in smoke_time2 (string + text.similarity + time
-// combined crashes at startup -- COMPILER_BUGS.md BUG 18).
+// combined used to crash at startup -- BUG 18; fixed on v0.63.1 and locked by
+// tools/probes/p_regress_bug18_combo.xi).
 
 fn main() -> Int {
   // -- tr / rot / caesar / atbash --

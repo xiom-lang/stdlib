@@ -5,8 +5,10 @@
 // (RFC 5869), hkdf_sha256, kdf_derive_master, kdf_check_interval, scrypt
 // (determinism + length), argon2id / bcrypt approximations, and CSPRNG
 // helpers (bytes, u64/u32, uniform bounds, float bounds, bool, seed, string).
-// NOTE: crypto_random_shuffle / crypto_random_choice are declared but their
-// generic `&mut Vec[T]` lowering is blocked by a compiler bug in this build.
+// NOTE: crypto_random_shuffle / crypto_random_choice were blocked by the
+// generic `&mut Vec[T]` lowering bug; fixed on v0.63.1 and regression-locked
+// by tools/probes/p_regress_shuffle_choice.xi (not re-added here to keep the
+// smoke split history stable).
 // Returns 0 on success, unique error code on failure.
 
 module smoke_crypto_kdf
@@ -48,8 +50,8 @@ fn main() -> Int {
 
   // ---- scrypt (RFC 7914) ----
   // NOTE: scrypt's ROMix re-enters function-returned Vecs into &Vec params,
-  // which the current compiler miscompiles (heap corruption). The function is
-  // implemented and length-valid, but executing it is blocked in this build.
+  // which used to miscompile (heap corruption). Fixed on v0.63.1; locked by
+  // tools/probes/p_regress_scrypt.xi (N=1024/r=8/p=1/dkLen=64 twice).
 
   // ---- argon2id / bcrypt approximations (shape checks) ----
   var ar = kdf.argon2id(&pass, &salt, 1024, 2, 1, 32);

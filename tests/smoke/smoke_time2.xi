@@ -5,8 +5,8 @@ use xiom.io;
 use xiom.time;
 
 // strftime / strptime (G13 batch). Kept separate from smoke_str2 (string +
-// text.similarity): combining string + text.similarity + time in one
-// program crashes at startup -- COMPILER_BUGS.md BUG 18.
+// text.similarity): that combination used to crash at startup (BUG 18); fixed
+// on v0.63.1 and locked by tools/probes/p_regress_bug18_combo.xi.
 
 fn main() -> Int {
   var d = xiom.time.date_new(2026, 8, 11);

@@ -3,7 +3,7 @@
 **75.1% -- 7 of 10 gates complete; gate 8 at 50.6% (partial credit) and
 gates 9-10 discrete.** (Compiler pin: **v0.63.1**.)
 **Gates: corpus 952/952 full (C001 carve-outs retired on v0.63.1), modules
-509/509, probes 236/236, barename 0/509.**
+509/509, probes 239/239, barename 0/509.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -12,8 +12,9 @@ gates flip:
 2. Smoke corpus green -- MET on the v0.63.1 pin: release gate 952/952
    full, no carve-outs (C001 fixed by 4bf8cf1e; 20/20 + 20/20 stress).
    lz4 is fixed by m190 and stayed in the gate.
-3. Probe corpus green -- MET (236/236 on v0.63.1, incl. the 5 promoted
-   regression probes and the v0.63.1 pin locks; wave-75 probe added).
+3. Probe corpus green -- MET (239/239 on v0.63.1, incl. the promoted
+   regression probes, the v0.63.1 pin locks and the 3 compiler-ask
+   regression locks).
 4. Strict bare-name scan clean -- MET (0/509).
 5. Coverage ratchet green -- MET (floors110).
 6. Documentation ratchet 100% -- MET.
@@ -517,6 +518,23 @@ stdlib tag >= `8b23b79` for Gate P; tagged `stdlib-perf3` at `5037262`
 regens api-freeze, t2 `185342f4`, tags v0.62.3). The packages'
 `Vec[StructType]` trap-10 row is a retirement candidate (not reproducible
 on both sides); no local row existed.
+
+Update 2026-10-05 (compiler help relay -- scrypt/shuffle/choice/BUG-18/Box):
+- The compiler lane asked for failing snippets for scrypt, shuffle/choice
+  and BUG 18, plus a Box decision. Verified on v0.63.1: all three are
+  GREEN and now regression-locked -- tools/probes/p_regress_scrypt.xi
+  (N=4/r=2/p=1/dkLen=32 then RFC-7914-sized 1024/8/1/64 twice),
+  p_regress_shuffle_choice.xi (T=Int and T=Str, both fns in one program),
+  p_regress_bug18_combo.xi (io+string+text.similarity+time with
+  rot13/translate/jaccard/strftime/strptime). Stale "blocked" comments in
+  smoke_crypto_kdf/smoke_str2/smoke_time2 updated. The `%Q` strptime face
+  cannot be re-tested because that path no longer exists in time.xi;
+  restoring it is a small follow-up if the compiler needs it.
+- Box answer: rides queue section C (geom dedup + rename), gated on the
+  compiler-lane api_freeze regen; no special compiler fix is required if
+  the rename lands. A compiler-side shadowing/alias fix would also clear
+  it, but the lane's C plan is the confirmed path.
+- Probe corpus 236 -> 239 (probes-only run 239/239 on v0.63.1).
 
 Update 2026-10-05 (wave 75 landed): encoding remainder + debug --
 50 clauses / 50 new pub (ascii85 6, punycode 7, idna 8, disasm 7,
