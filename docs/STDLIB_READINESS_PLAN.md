@@ -1036,8 +1036,22 @@ T1/T2 yields.
        now delegates to the canonical shim. Probe p_wave68_shapes.xi
        (229th, 54 checks) green on v0.63.0 and v0.61.3; smoke_misc 3/3.
        Next: wave 69 on os 15.3% / rand 16% / crypto 17%.
+        Wave 69 (2026-10-05): coverage wave 33 -- os path/filetype + rand,
+        76 clauses / 76 pub: path 18 (empty-input Option identities,
+        presence bands on parent/file_name/file_stem, to_str/as_path
+        mirrors, join output-length bands, canonicalize is_ok,
+        prefix/suffix length implications, pop @pre length), filetype 22
+        (empty-input identities for eol/bom/binary/text/encoding/magic/
+        mime, output length bands, minimum-length implications on every
+        detector), rand 20 + pcg 5 + mt19937 6 + chacha 5 (exact state/
+        keystream shape mirrors, seed preservation, count/length bands,
+        bounded-next ranges, zero/negative early-return identities).
+        os 15.3% -> 26.2%, rand 16% -> 88%, global 46.1% -> 47.3%;
+        floors105. Probe p_wave69_shapes.xi (230th, 167 checks) green on
+        v0.63.0; targeted smokes rand 42/42, path 18/18, filetype 1/1.
+        Next: crypto 17% / log 19.1% / compress 21.1%.
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors104.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors105.json
        tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;

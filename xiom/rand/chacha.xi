@@ -105,7 +105,10 @@ fn _make_state(key: &Vec[UInt32]) -> Vec[UInt32] {
 
 /// Create a ChaCha RNG with an all-zero key (deterministic default).
 /// Test vector: the first output word of the zero-key block is 0xADE0B876.
-pub fn chacha_rng_new() -> ChaChaRng {
+pub fn chacha_rng_new() -> ChaChaRng
+  ensures: result.state.len() == 16
+  ensures: result.pos == 0
+{
   var key = Vec[UInt32].new();
   var i: Int = 0;
   while i < 8 {
@@ -118,7 +121,10 @@ pub fn chacha_rng_new() -> ChaChaRng {
 
 /// Create a ChaCha RNG from a 64-bit seed.
 /// The seed's two 32-bit halves are replicated into the 8 key words.
-pub fn chacha_rng_from_seed(seed: UInt64) -> ChaChaRng {
+pub fn chacha_rng_from_seed(seed: UInt64) -> ChaChaRng
+  ensures: result.state.len() == 16
+  ensures: result.pos == 0
+{
   var key = Vec[UInt32].new();
   let hi: Int = _u32w((seed >> 32) as Int);
   let lo: Int = _u32w(seed as Int);
@@ -158,18 +164,25 @@ pub fn chacha_rng_next_u32(r: &mut ChaChaRng) -> UInt32 {
 }
 
 /// Return the next value as a signed i64 in [0, 2^32).
-pub fn chacha_rng_next_int(r: &mut ChaChaRng) -> Int {
+pub fn chacha_rng_next_int(r: &mut ChaChaRng) -> Int
+  ensures: result >= 0 && result < 4294967296
+{
   return _u32w(chacha_rng_next_u32(r) as Int);
 }
 
 /// Return the next value as a Float64 in [0, 1).
-pub fn chacha_rng_next_float(r: &mut ChaChaRng) -> Float64 {
+pub fn chacha_rng_next_float(r: &mut ChaChaRng) -> Float64
+  ensures: result >= 0.0 && result < 1.0
+{
   let v: Int = _u32w(chacha_rng_next_u32(r) as Int);
   return (v as Float64) / 4294967296.0;
 }
 
 /// Return the next value in [0, hi). Requires hi > 0.
-pub fn chacha_rng_next_bounded(r: &mut ChaChaRng, hi: Int) -> Int {
+pub fn chacha_rng_next_bounded(r: &mut ChaChaRng, hi: Int) -> Int
+  ensures: (hi <= 0) => (result == 0)
+  ensures: (hi > 0) => (result >= 0 && result < hi)
+{
   if hi <= 0 {
     return 0;
   };

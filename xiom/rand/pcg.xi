@@ -37,7 +37,10 @@ fn _pcg_advance(r: &mut Pcg) {
 }
 
 /// Create a PCG generator with the reference default state/stream constants.
-pub fn pcg_new() -> Pcg {
+pub fn pcg_new() -> Pcg
+  ensures: result.state != 0
+  ensures: result.inc != 0
+{
   var st: UInt64 = 0x853c49e6748fea9b;
   var inc: UInt64 = 0xda3e39cb94b95bdb;
   return Pcg{ state: st; inc: inc; };
@@ -45,7 +48,10 @@ pub fn pcg_new() -> Pcg {
 
 /// Create a PCG generator from a 64-bit seed.
 /// Standard init: state = 0, inc = (seed << 1) | 1, then advance once.
-pub fn pcg_from_seed(seed: UInt64) -> Pcg {
+pub fn pcg_from_seed(seed: UInt64) -> Pcg
+  ensures: result.state != 0
+  ensures: result.inc != 0
+{
   var inc: UInt64 = (seed << 1) | (1 as UInt64);
   var st: UInt64 = 0;
   var r = Pcg{ state: st; inc: inc; };
@@ -69,18 +75,25 @@ pub fn pcg_next_u32(r: &mut Pcg) -> UInt32 {
 }
 
 /// Return the next value as a signed i64 in [0, 2^32).
-pub fn pcg_next_int(r: &mut Pcg) -> Int {
+pub fn pcg_next_int(r: &mut Pcg) -> Int
+  ensures: result >= 0 && result < 4294967296
+{
   return (pcg_next_u32(r) as Int) & 0xFFFFFFFF;
 }
 
 /// Return the next value as a Float64 in [0, 1).
-pub fn pcg_next_float(r: &mut Pcg) -> Float64 {
+pub fn pcg_next_float(r: &mut Pcg) -> Float64
+  ensures: result >= 0.0 && result < 1.0
+{
   let v: Int = (pcg_next_u32(r) as Int) & 0xFFFFFFFF;
   return (v as Float64) / 4294967296.0;
 }
 
 /// Return the next value in [0, hi). Requires hi > 0.
-pub fn pcg_next_bounded(r: &mut Pcg, hi: Int) -> Int {
+pub fn pcg_next_bounded(r: &mut Pcg, hi: Int) -> Int
+  ensures: (hi <= 0) => (result == 0)
+  ensures: (hi > 0) => (result >= 0 && result < hi)
+{
   if hi <= 0 {
     return 0;
   };

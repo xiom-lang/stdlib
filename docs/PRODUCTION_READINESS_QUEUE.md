@@ -2,7 +2,7 @@
 
 **70% -- 7 of 10 readiness gates complete.** (Compiler pin: **v0.63.0**.)
 **Gates: corpus 950/950 release (952 full; 2 C001 carve-outs), modules
-509/509, probes 229/229, barename 0/509.**
+509/509, probes 230/230, barename 0/509.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -18,7 +18,7 @@ gates flip:
 5. Coverage ratchet green -- MET (floors104).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (497/517 modules, 3475/6200 fns).
-8. Contract coverage 100% (every public fn carries clauses) -- OPEN (46.1%).
+8. Contract coverage 100% (every public fn carries clauses) -- OPEN (47.3%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
    OPEN (11: 10 compiler, 1 stdlib algorithm).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
@@ -478,6 +478,17 @@ stdlib tag >= `8b23b79` for Gate P; tagged `stdlib-perf3` at `5037262`
 regens api-freeze, t2 `185342f4`, tags v0.62.3). The packages'
 `Vec[StructType]` trap-10 row is a retirement candidate (not reproducible
 on both sides); no local row existed.
+
+Update 2026-10-05 (wave 69 landed): os path/filetype + rand family --
+76 clauses / 76 pub covered (path 18, filetype 22, rand 20, pcg 5,
+mt19937 6, chacha 5); os 15.3% -> 26.2%, rand 16% -> 88%, global 46.1%
+-> 47.3%; floors105. Probe p_wave69_shapes.xi (230th, 167 checks) green
+on v0.63.0; targeted smokes rand 42/42, path 18/18, filetype 1/1.
+Clause forms: empty-input Option/Str identities, presence bands,
+length/range claims, seed and state-shape mirrors, bounded-next ranges
+(hi <= 0 => 0). Readiness next: crypto 17%, log 19.1%, compress 21.1%,
+encoding 23.7%; os continues with the FFI/event families (err, event,
+fs, file, dir, sysinfo, terminal).
 
 Update 2026-10-05 (wave 68 landed): misc glob/soundex/natural/
 levenshtein -- 36 clauses / 29 pub; misc 13.9% -> 50.6%, global 45.7% ->

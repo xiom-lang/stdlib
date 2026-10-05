@@ -4,13 +4,13 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 -->
 # XIOM Stdlib Session -- Handoff
 
-## 0A. CONTINUE HERE -- handoff snapshot 6 (updated 2026-10-05, context-limit)
+## 0A. CONTINUE HERE -- handoff snapshot 7 (updated 2026-10-05, wave 69 complete)
 
 **PASTE-READY PROMPT FOR THE NEXT SESSION (copy this block):**
 
 ---
 You are continuing the XIOM stdlib lane. Worktree `E:\xiom-lang\stdlib`,
-branch `main`. Read `docs/stdlib_session.md` blocks 36 (latest), 33
+branch `main`. Read `docs/stdlib_session.md` blocks 37 (latest), 36, 33
 (publish), 27 (iter block) and `docs/PRODUCTION_READINESS_QUEUE.md`
 before acting; snapshot 5 below the prompt keeps the deep protocol lore.
 
@@ -21,32 +21,32 @@ verified; v0.62.4/v0.62.3/v0.61.3 archives kept under
 tags pushed: stdlib-v0.62.3 (12a3a1b), stdlib-v0.62.4 (3800c08),
 stdlib-v0.63.0 (179cfea). Gates on v0.63.0: release corpus 950/950 (2 C001
 carve-outs of 952; ci/heavy run the full corpus), modules 509/509, probes
-229/229, barename 0/509, floors104, module-smoke ratchet OK. Coverage =
-46.1% global pub-with-clause (30.1% at 0.62.0). Waves landed: 63 net+hash,
-64 reflect+iter adapters, 65x convert, 66 time, 67 format, 68 misc. Wave
+230/230, barename 0/509, floors105, module-smoke ratchet OK. Coverage =
+47.3% global pub-with-clause. Waves landed: 63 net+hash,
+64 reflect+iter adapters, 65x convert, 66 time, 67 format, 68 misc, 69 os+rand. Wave
 65 (iter clauses) is BLOCKED on the pin (block 27): clauses/calls on
 closure-delegating catalog fns flip between closure use-before-def and the
 C001 classifier; the deferred clause set is documented there.
 
-FIRST TASK (wave 69): coverage wave on the next low dirs -- os 15.3%,
-then rand 16% (merge files to hold 40-60 pub). Mandatory protocol:
+FIRST TASK (wave 70): coverage wave on the next low dirs -- crypto 17%,
+then log 19.1% (merge files to hold 40-60 pub). Mandatory protocol:
 (1) recon bodies and derive every clause from them; no placeholder forms
 (no unsigned `>= 0`, no `is_ok || is_err`, no self-mirrors); clauses run at
 runtime, so never read Result/Option payloads, guard division/NaN, and
 prefer exact mirrors, length/presence bands and `@pre` invariants.
-(2) probe-first: add `tools/probes/p_wave69_shapes.xi` exercising every
+(2) probe-first: add `tools/probes/p_wave70_shapes.xi` exercising every
 clause-guard path; bind module-returned values to `let` before comparing
 (inline unsigned compares misread high bits); bind `Vec.new()`
 temporaries passed as `&Vec`; do not declare externs for runtime guard
 symbols; green on v0.63.0 (v0.61.3 cross-check when cheap).
 (3) apply, run targeted smokes; if unrelated codegen breaks, bisect and
 drop the offending clause with a code comment (see blocks 27/65x).
-(4) dump `tools/coverage_floors105.json`, wire the workflows +
+(4) dump `tools/coverage_floors106.json`, wire the workflows +
 `tools/README.md`, update plan/session/queue in the same commit, YAML
 check, pure-ASCII conventional commit.
 (5) battery: `run_smokes.ps1 -ExcludeFile tools/known_failures/
-gate-exclusions.txt` (expect 950/950), probe corpus (expect 230),
-check_modules 509/509, barename 0/509, floors105 + module-smoke ratchets;
+gate-exclusions.txt` (expect 950/950), probe corpus (expect 231),
+check_modules 509/509, barename 0/509, floors106 + module-smoke ratchets;
 record results in the session block; push `main`.
 
 QUEUED (do only when triggered):
@@ -1534,6 +1534,38 @@ registry pin, agent recon for the rest)**
   gates; open: contract coverage 100%, zero open findings, beta-exit release
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
+
+**SESSION 2026-10-05 block 37 (wave 69: os path/filetype + rand; floors105)**
+- Wave 69: 76 clauses / 76 pub in xiom.path (18), xiom.os.filetype (22),
+  xiom.rand (20), xiom.rand.pcg (5), xiom.rand.mt19937 (6) and
+  xiom.rand.chacha (5). Highlights: path empty-input Option identities,
+  parent/file_name/file_stem presence bands, to_str/as_path exact mirrors,
+  join output-length bands (valid under both join_paths resolutions),
+  canonicalize is_ok, starts/ends_with prefix/suffix length implications,
+  pop @pre length; filetype exact empty-input identities (eol "none",
+  bom "", magic "", mime "text/plain"), output-length bands and
+  per-detector minimum input-length implications; rand seed preservation
+  (from_seed nonzero; Xorshift64 zero -> 1), random_bytes(_crypto)
+  count/length bands, distribution guard identities (normal/gaussian
+  stddev == 0 => mean, exponential lambda > 0 => >= 0, bernoulli p <= 0
+  false / p > 1 true, binomial 0..n, poisson lambda <= 0 => -1 /
+  lambda >= 1 => >= 0, gamma/beta early zero), pick family presence and
+  length bands, bounded-next in [0, hi) with hi <= 0 => 0, and
+  mt/pcg/chacha state-shape mirrors (624/16 state lengths, index/pos).
+- Skipped by design: random_bool, seed_from_value, Xorshift64.next_int,
+  the raw *_next_u32 word returns, Path.exists/is_dir/metadata --
+  no non-placeholder claim derivable (I/O delegation or unbounded word).
+- Probe p_wave69_shapes.xi (230th, 167 checks): green on v0.63.0;
+  targeted smokes rand 42/42, path 18/18, filetype 1/1.
+- Coverage: os 15.3% -> 26.2%, rand 16% -> 88%, global 46.1% -> 47.3%;
+  floors105 wired (ci/heavy/release + tools/README + plan) in this commit.
+- Authoring note: the session read tool renders `Option<...>` as
+  `Option[...]`; raw `Select-String` output is the source of truth for
+  edit anchors. path.xi (CRLF) was rewritten with clauses only; git
+  normalizes EOL, so the committed diff is clause-only.
+- Battery on this commit (v0.63.0): release-gate corpus 950/950 (2 C001
+  carve-outs of 952); probes 230/230; check_modules 509/509; barename
+  0/509; floors105 + module-smoke ratchets OK.
 
 **SESSION 2026-10-05 block 36 (wave 68: misc glob/soundex/natural/levenshtein; floors104; soundex duplicate-leaf fix)**
 - Wave 68: 36 clauses / 29 pub in xiom.misc: glob 9 (empty-pattern

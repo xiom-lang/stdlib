@@ -27,7 +27,10 @@ fn hex_digit(nib: Int) -> UInt8 {
 /// Parameters: data -- the bytes to inspect.
 /// Returns: "lf", "crlf", "cr", "mixed" or "none".
 /// Complexity: O(n). Pure.
-pub fn detect_eol(data: &Vec[UInt8]) -> Str {
+pub fn detect_eol(data: &Vec[UInt8]) -> Str
+  ensures: result.len() >= 2
+  ensures: (data.len() == 0) => (result == "none")
+{
   var lf = 0;
   var cr = 0;
   var crlf_count = 0;
@@ -67,7 +70,9 @@ pub fn detect_eol(data: &Vec[UInt8]) -> Str {
 /// Parameters: data -- the bytes to inspect.
 /// Returns: "utf-8", "utf-16le", "utf-16be", "utf-32le", "utf-32be" or "".
 /// Complexity: O(1). Pure.
-pub fn detect_bom(data: &Vec[UInt8]) -> Str {
+pub fn detect_bom(data: &Vec[UInt8]) -> Str
+  ensures: (data.len() < 2) => (result == "")
+{
   let len = data.len();
   if len >= 4 && data[0] == 255 as UInt8 && data[1] == 254 as UInt8 && data[2] == 0 as UInt8 && data[3] == 0 as UInt8 {
     return "utf-32le";
@@ -91,7 +96,9 @@ pub fn detect_bom(data: &Vec[UInt8]) -> Str {
 /// Parameters: data -- the bytes to inspect.
 /// Returns: true for the EF BB BF prefix.
 /// Complexity: O(1). Pure.
-pub fn has_utf8_bom(data: &Vec[UInt8]) -> Bool {
+pub fn has_utf8_bom(data: &Vec[UInt8]) -> Bool
+  ensures: result => (data.len() >= 3)
+{
   data.len() >= 3 && data[0] == 239 as UInt8 && data[1] == 187 as UInt8 && data[2] == 191 as UInt8
 }
 
@@ -99,7 +106,9 @@ pub fn has_utf8_bom(data: &Vec[UInt8]) -> Bool {
 /// Parameters: data -- the bytes to inspect.
 /// Returns: true for the FF FE prefix.
 /// Complexity: O(1). Pure.
-pub fn has_utf16le_bom(data: &Vec[UInt8]) -> Bool {
+pub fn has_utf16le_bom(data: &Vec[UInt8]) -> Bool
+  ensures: result => (data.len() >= 2)
+{
   data.len() >= 2 && data[0] == 255 as UInt8 && data[1] == 254 as UInt8
 }
 
@@ -107,7 +116,9 @@ pub fn has_utf16le_bom(data: &Vec[UInt8]) -> Bool {
 /// Parameters: data -- the bytes to inspect.
 /// Returns: true for the FE FF prefix.
 /// Complexity: O(1). Pure.
-pub fn has_utf16be_bom(data: &Vec[UInt8]) -> Bool {
+pub fn has_utf16be_bom(data: &Vec[UInt8]) -> Bool
+  ensures: result => (data.len() >= 2)
+{
   data.len() >= 2 && data[0] == 254 as UInt8 && data[1] == 255 as UInt8
 }
 
@@ -115,7 +126,9 @@ pub fn has_utf16be_bom(data: &Vec[UInt8]) -> Bool {
 /// Parameters: data -- the bytes to inspect.
 /// Returns: true for the FF FE 00 00 prefix.
 /// Complexity: O(1). Pure.
-pub fn has_utf32le_bom(data: &Vec[UInt8]) -> Bool {
+pub fn has_utf32le_bom(data: &Vec[UInt8]) -> Bool
+  ensures: result => (data.len() >= 4)
+{
   data.len() >= 4 && data[0] == 255 as UInt8 && data[1] == 254 as UInt8 && data[2] == 0 as UInt8 && data[3] == 0 as UInt8
 }
 
@@ -123,7 +136,9 @@ pub fn has_utf32le_bom(data: &Vec[UInt8]) -> Bool {
 /// Parameters: data -- the bytes to inspect.
 /// Returns: true for the 00 00 FE FF prefix.
 /// Complexity: O(1). Pure.
-pub fn has_utf32be_bom(data: &Vec[UInt8]) -> Bool {
+pub fn has_utf32be_bom(data: &Vec[UInt8]) -> Bool
+  ensures: result => (data.len() >= 4)
+{
   data.len() >= 4 && data[0] == 0 as UInt8 && data[1] == 0 as UInt8 && data[2] == 254 as UInt8 && data[3] == 255 as UInt8
 }
 
@@ -132,7 +147,9 @@ pub fn has_utf32be_bom(data: &Vec[UInt8]) -> Bool {
 /// Returns: true when a NUL byte is present or control bytes exceed 30% of
 ///          the sampled prefix.
 /// Complexity: O(min(n, 1024)). Pure.
-pub fn is_binary(data: &Vec[UInt8]) -> Bool {
+pub fn is_binary(data: &Vec[UInt8]) -> Bool
+  ensures: (data.len() == 0) => (result == false)
+{
   let len = data.len();
   var sample = len;
   if sample > 1024 {
@@ -160,7 +177,9 @@ pub fn is_binary(data: &Vec[UInt8]) -> Bool {
 /// Parameters: data -- the bytes to inspect.
 /// Returns: true when the data is not classified as binary.
 /// Complexity: O(min(n, 1024)). Pure.
-pub fn is_text(data: &Vec[UInt8]) -> Bool {
+pub fn is_text(data: &Vec[UInt8]) -> Bool
+  ensures: (data.len() == 0) => (result == true)
+{
   !is_binary(data)
 }
 
@@ -169,7 +188,10 @@ pub fn is_text(data: &Vec[UInt8]) -> Bool {
 /// Returns: "utf-8", "utf-16le", "utf-16be", "utf-32le", "utf-32be", "ascii"
 ///          or "binary".
 /// Complexity: O(n). Pure.
-pub fn detect_encoding(data: &Vec[UInt8]) -> Str {
+pub fn detect_encoding(data: &Vec[UInt8]) -> Str
+  ensures: result.len() >= 5
+  ensures: (data.len() == 0) => (result == "ascii")
+{
   let bom = detect_bom(data);
   if bom.len() > 0 {
     return bom;
@@ -196,7 +218,11 @@ pub fn detect_encoding(data: &Vec[UInt8]) -> Str {
 /// Parameters: data -- the bytes to inspect.
 /// Returns: the lowercase hex of the first up-to-8 bytes ("" for empty input).
 /// Complexity: O(1). Pure.
-pub fn magic_number(data: &Vec[UInt8]) -> Str {
+pub fn magic_number(data: &Vec[UInt8]) -> Str
+  ensures: (data.len() == 0) => (result == "")
+  ensures: (data.len() > 0 && data.len() <= 8) => (result.len() == data.len() * 2)
+  ensures: (data.len() > 8) => (result.len() == 16)
+{
   let len = data.len();
   if len == 0 {
     return "";
@@ -336,7 +362,10 @@ fn is_macho_magic(data: &Vec[UInt8]) -> Bool {
 /// Parameters: data -- the bytes to inspect.
 /// Returns: a MIME type guessed from magic bytes and text heuristics.
 /// Complexity: O(1). Pure.
-pub fn detect_mime(data: &Vec[UInt8]) -> Str {
+pub fn detect_mime(data: &Vec[UInt8]) -> Str
+  ensures: result.len() >= 9
+  ensures: (data.len() == 0) => (result == "text/plain")
+{
   if is_png_magic(data) { return "image/png"; }
   if is_jpeg_magic(data) { return "image/jpeg"; }
   if is_gif_magic(data) { return "image/gif"; }
@@ -364,7 +393,10 @@ pub fn detect_mime(data: &Vec[UInt8]) -> Str {
 /// Parameters: data -- the bytes to inspect.
 /// Returns: the magic-derived MIME type or "application/octet-stream".
 /// Complexity: O(1). Pure.
-pub fn mime_from_magic(data: &Vec[UInt8]) -> Str {
+pub fn mime_from_magic(data: &Vec[UInt8]) -> Str
+  ensures: result.len() >= 9
+  ensures: (data.len() == 0) => (result == "application/octet-stream")
+{
   if is_png_magic(data) { return "image/png"; }
   if is_jpeg_magic(data) { return "image/jpeg"; }
   if is_gif_magic(data) { return "image/gif"; }
@@ -380,7 +412,9 @@ pub fn mime_from_magic(data: &Vec[UInt8]) -> Str {
 /// Parameters: data -- the bytes to inspect.
 /// Returns: true for PNG/JPEG/GIF/BMP/WebP/ICO signatures.
 /// Complexity: O(1). Pure.
-pub fn is_image_data(data: &Vec[UInt8]) -> Bool {
+pub fn is_image_data(data: &Vec[UInt8]) -> Bool
+  ensures: result => (data.len() >= 2)
+{
   if is_png_magic(data) { return true; }
   if is_jpeg_magic(data) { return true; }
   if is_gif_magic(data) { return true; }
@@ -397,7 +431,9 @@ pub fn is_image_data(data: &Vec[UInt8]) -> Bool {
 /// Parameters: data -- the bytes to inspect.
 /// Returns: true for WAV/OGG/FLAC/MP3 (ID3) signatures.
 /// Complexity: O(1). Pure.
-pub fn is_audio_data(data: &Vec[UInt8]) -> Bool {
+pub fn is_audio_data(data: &Vec[UInt8]) -> Bool
+  ensures: result => (data.len() >= 3)
+{
   if starts_with_ascii(data, "OggS") { return true; }
   if starts_with_ascii(data, "fLaC") { return true; }
   if data.len() >= 3 && data[0] == 73 as UInt8 && data[1] == 68 as UInt8 && data[2] == 51 as UInt8 { return true; }
@@ -413,7 +449,9 @@ pub fn is_audio_data(data: &Vec[UInt8]) -> Bool {
 /// Parameters: data -- the bytes to inspect.
 /// Returns: true for AVI/MP4/MKV/WebM/Ogg signatures.
 /// Complexity: O(1). Pure.
-pub fn is_video_data(data: &Vec[UInt8]) -> Bool {
+pub fn is_video_data(data: &Vec[UInt8]) -> Bool
+  ensures: result => (data.len() >= 4)
+{
   if starts_with_ascii(data, "OggS") { return true; }
   if data.len() >= 4 && data[0] == 26 as UInt8 && data[1] == 69 as UInt8 && data[2] == 223 as UInt8 && data[3] == 163 as UInt8 { return true; }
   if data.len() >= 11 && data[0] == 0 as UInt8 && data[1] == 0 as UInt8 && data[2] == 0 as UInt8 && data[3] == 24 as UInt8 {
@@ -433,7 +471,9 @@ pub fn is_video_data(data: &Vec[UInt8]) -> Bool {
 /// Parameters: data -- the bytes to inspect.
 /// Returns: true for the "%PDF-" header.
 /// Complexity: O(1). Pure.
-pub fn is_pdf_data(data: &Vec[UInt8]) -> Bool {
+pub fn is_pdf_data(data: &Vec[UInt8]) -> Bool
+  ensures: result => (data.len() >= 5)
+{
   is_pdf_magic(data)
 }
 
@@ -441,7 +481,9 @@ pub fn is_pdf_data(data: &Vec[UInt8]) -> Bool {
 /// Parameters: data -- the bytes to inspect.
 /// Returns: true for the "PK\x03\x04" local-file header.
 /// Complexity: O(1). Pure.
-pub fn is_zip_data(data: &Vec[UInt8]) -> Bool {
+pub fn is_zip_data(data: &Vec[UInt8]) -> Bool
+  ensures: result => (data.len() >= 4)
+{
   is_zip_magic(data)
 }
 
@@ -449,7 +491,9 @@ pub fn is_zip_data(data: &Vec[UInt8]) -> Bool {
 /// Parameters: data -- the bytes to inspect.
 /// Returns: true for the 1F 8B header.
 /// Complexity: O(1). Pure.
-pub fn is_gzip_data(data: &Vec[UInt8]) -> Bool {
+pub fn is_gzip_data(data: &Vec[UInt8]) -> Bool
+  ensures: result => (data.len() >= 2)
+{
   is_gzip_magic(data)
 }
 
@@ -457,7 +501,9 @@ pub fn is_gzip_data(data: &Vec[UInt8]) -> Bool {
 /// Parameters: data -- the bytes to inspect.
 /// Returns: true for the 7F 45 4C 46 header.
 /// Complexity: O(1). Pure.
-pub fn is_elf_data(data: &Vec[UInt8]) -> Bool {
+pub fn is_elf_data(data: &Vec[UInt8]) -> Bool
+  ensures: result => (data.len() >= 4)
+{
   is_elf_magic(data)
 }
 
@@ -465,7 +511,9 @@ pub fn is_elf_data(data: &Vec[UInt8]) -> Bool {
 /// Parameters: data -- the bytes to inspect.
 /// Returns: true for the "MZ" DOS header.
 /// Complexity: O(1). Pure.
-pub fn is_pe_data(data: &Vec[UInt8]) -> Bool {
+pub fn is_pe_data(data: &Vec[UInt8]) -> Bool
+  ensures: result => (data.len() >= 2)
+{
   is_pe_magic(data)
 }
 
@@ -473,6 +521,8 @@ pub fn is_pe_data(data: &Vec[UInt8]) -> Bool {
 /// Parameters: data -- the bytes to inspect.
 /// Returns: true for the Mach-O magic numbers.
 /// Complexity: O(1). Pure.
-pub fn is_macho_data(data: &Vec[UInt8]) -> Bool {
+pub fn is_macho_data(data: &Vec[UInt8]) -> Bool
+  ensures: result => (data.len() >= 4)
+{
   is_macho_magic(data)
 }

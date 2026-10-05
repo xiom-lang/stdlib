@@ -50,7 +50,10 @@ pub fn StdRng.new() -> StdRng
 }
 
 /// Deterministic standard RNG from an integer seed.
-pub fn StdRng.from_seed(seed: Int) -> StdRng {
+pub fn StdRng.from_seed(seed: Int) -> StdRng
+  ensures: result.state != 0
+  ensures: (seed != 0) => (result.state == seed)
+{
   if seed == 0 {
     return StdRng{ state: 1; };
   };
@@ -103,7 +106,9 @@ pub fn random_int(min: Int, max: Int) -> Int
 }
 
 /// Uniform Float64 in [min, max).
-pub fn random_float(min: Float64, max: Float64) -> Float64 { // [min, max)
+pub fn random_float(min: Float64, max: Float64) -> Float64
+  ensures: (min <= max) => (result >= min && result <= max)
+{ // [min, max)
   return min + random() * (max - min);
 }
 
@@ -113,7 +118,10 @@ pub fn random_bool() -> Bool {
 }
 
 /// `count` random bytes (empty when count <= 0).
-pub fn random_bytes(count: Int) -> Vec[UInt8] {
+pub fn random_bytes(count: Int) -> Vec[UInt8]
+  ensures: (count > 0) => (result.len() == count)
+  ensures: (count <= 0) => (result.len() == 0)
+{
   var result = Vec[UInt8].new();
   var i: Int = 0;
   while i < count {
@@ -125,12 +133,16 @@ pub fn random_bytes(count: Int) -> Vec[UInt8] {
 }
 
 /// === Distributions ===
-pub fn sample_uniform(min: Float64, max: Float64) -> Float64 {
+pub fn sample_uniform(min: Float64, max: Float64) -> Float64
+  ensures: (min <= max) => (result >= min && result <= max)
+{
   return min + random() * (max - min);
 }
 
 /// Normal (Gaussian) sample with the given mean and stddev.
-pub fn sample_normal(mean: Float64, stddev: Float64) -> Float64 {
+pub fn sample_normal(mean: Float64, stddev: Float64) -> Float64
+  ensures: ((stddev == 0.0) && (mean == mean)) => (result == mean)
+{
   let u1 = random();
   let u2 = random();
   var safe_u1 = u1;
@@ -144,7 +156,9 @@ pub fn sample_normal(mean: Float64, stddev: Float64) -> Float64 {
 }
 
 /// Exponential sample with the given rate lambda.
-pub fn sample_exponential(lambda: Float64) -> Float64 {
+pub fn sample_exponential(lambda: Float64) -> Float64
+  ensures: (lambda > 0.0) => (result >= 0.0)
+{
   var u = random();
   if u <= 0.0 {
     u = 0.0000000001;
@@ -153,12 +167,18 @@ pub fn sample_exponential(lambda: Float64) -> Float64 {
 }
 
 /// Bernoulli trial: true with probability p.
-pub fn sample_bernoulli(p: Float64) -> Bool {
+pub fn sample_bernoulli(p: Float64) -> Bool
+  ensures: (p <= 0.0) => (result == false)
+  ensures: (p > 1.0) => (result == true)
+{
   return random() < p;
 }
 
 /// Binomial sample: successes in `n` independent trials with probability p.
-pub fn sample_binomial(n: Int, p: Float64) -> Int {
+pub fn sample_binomial(n: Int, p: Float64) -> Int
+  ensures: (n >= 0) => (result >= 0 && result <= n)
+  ensures: (n < 0) => (result == 0)
+{
   var count: Int = 0;
   var i: Int = 0;
   while i < n {
@@ -171,7 +191,10 @@ pub fn sample_binomial(n: Int, p: Float64) -> Int {
 }
 
 /// Poisson sample with mean lambda.
-pub fn sample_poisson(lambda: Float64) -> Int {
+pub fn sample_poisson(lambda: Float64) -> Int
+  ensures: (lambda <= 0.0) => (result == -1)
+  ensures: (lambda >= 1.0) => (result >= 0)
+{
   let L = xiom.math.exp(-lambda);
   var k: Int = 0;
   var p: Float64 = 1.0;
@@ -183,7 +206,9 @@ pub fn sample_poisson(lambda: Float64) -> Int {
 }
 
 /// Gamma sample with the given shape and scale.
-pub fn sample_gamma(shape: Float64, scale: Float64) -> Float64 {
+pub fn sample_gamma(shape: Float64, scale: Float64) -> Float64
+  ensures: (shape <= 0.0) => (result == 0.0)
+{
   if shape <= 0.0 {
     return 0.0;
   };
@@ -219,7 +244,9 @@ pub fn sample_gamma(shape: Float64, scale: Float64) -> Float64 {
 }
 
 /// Beta sample with parameters alpha and beta.
-pub fn sample_beta(alpha: Float64, beta: Float64) -> Float64 {
+pub fn sample_beta(alpha: Float64, beta: Float64) -> Float64
+  ensures: (alpha <= 0.0 || beta <= 0.0) => (result == 0.0)
+{
   if alpha <= 0.0 || beta <= 0.0 {
     return 0.0;
   };
@@ -245,7 +272,10 @@ pub fn shuffle[T](items: &mut Vec[T])
 }
 
 /// Uniformly pick one element, or None for an empty vector.
-pub fn pick[T](items: &Vec[T]) -> Option<&T> {
+pub fn pick[T](items: &Vec[T]) -> Option<&T>
+  ensures: (items.len() == 0) => (result.is_none)
+  ensures: (items.len() > 0) => (result.is_some)
+{
   let len = items.len();
   if len == 0 {
     return None;
@@ -258,7 +288,11 @@ pub fn pick[T](items: &Vec[T]) -> Option<&T> {
 }
 
 /// Uniformly pick `n` distinct elements (fewer when the vector is shorter).
-pub fn pick_n[T](items: &Vec[T], n: Int) -> Vec<&T> {
+pub fn pick_n[T](items: &Vec[T], n: Int) -> Vec<&T>
+  ensures: result.len() <= items.len()
+  ensures: (items.len() == 0) => (result.len() == 0)
+  ensures: (n > 0 && n < items.len()) => (result.len() == n)
+{
   let len = items.len();
   var count = n;
   if count > len {
@@ -294,7 +328,11 @@ pub fn pick_n[T](items: &Vec[T], n: Int) -> Vec<&T> {
 
 /// Pick an element with probability proportional to its weight; None when
 /// the vector is empty or all weights are <= 0.
-pub fn weighted_pick[T](items: &Vec[T], weights: &Vec[Float64]) -> Option<&T> {
+pub fn weighted_pick[T](items: &Vec[T], weights: &Vec[Float64]) -> Option<&T>
+  ensures: (items.len() == 0) => (result.is_none)
+  ensures: (weights.len() != items.len()) => (result.is_none)
+  ensures: result.is_some => (items.len() > 0 && weights.len() == items.len())
+{
   let len = items.len();
   if len == 0 || weights.len() != len {
     return None;
@@ -434,7 +472,9 @@ pub type Xorshift64 = { state: Int; } derive[Clone]
 
 /// Creates a new Xorshift64 generator with the given seed.
 /// Seed must be non-zero. Zero seed is replaced with 1.
-pub fn Xorshift64.new(seed: Int) -> Xorshift64 {
+pub fn Xorshift64.new(seed: Int) -> Xorshift64
+  ensures: result.state != 0
+{
   var s = seed;
   if s == 0 {
     s = 1;
@@ -457,7 +497,10 @@ pub fn Xorshift64.next_int(self) -> Int {
 /// Returns None if the vector is empty.
 /// Wraps the existing pick function.
 /// Complexity: O(1).
-pub fn random_choice[T](items: &Vec[T]) -> Option[&T] {
+pub fn random_choice[T](items: &Vec[T]) -> Option[&T]
+  ensures: (items.len() == 0) => (result.is_none)
+  ensures: (items.len() > 0) => (result.is_some)
+{
   return pick(items);
 }
 
@@ -466,14 +509,18 @@ pub fn random_choice[T](items: &Vec[T]) -> Option[&T] {
 /// Shuffles a vector in place using Fisher-Yates.
 /// Wraps the existing shuffle function.
 /// Complexity: O(n), n = items length.
-pub fn random_shuffle[T](items: &mut Vec[T]) {
+pub fn random_shuffle[T](items: &mut Vec[T])
+  ensures: items.len() == items.len()@pre
+{
   shuffle(items);
 }
 
 // -- Random fraction ---------------------------------------------------------
 
 /// Alias for random(). Returns a Float64 in [0, 1).
-pub fn random_fraction() -> Float64 {
+pub fn random_fraction() -> Float64
+  ensures: result >= 0.0 && result < 1.0
+{
   return random();
 }
 
@@ -482,7 +529,9 @@ pub fn random_fraction() -> Float64 {
 /// Generates a normally distributed random number using the Box-Muller transform.
 /// Mean and stddev parameters control the distribution center and spread.
 /// Complexity: O(1).
-pub fn gaussian_box_muller(mean: Float64, stddev: Float64) -> Float64 {
+pub fn gaussian_box_muller(mean: Float64, stddev: Float64) -> Float64
+  ensures: ((stddev == 0.0) && (mean == mean)) => (result == mean)
+{
   let u1 = random();
   let u2 = random();
   var safe_u1 = u1;
@@ -500,6 +549,9 @@ pub fn gaussian_box_muller(mean: Float64, stddev: Float64) -> Float64 {
 /// Fills a buffer with cryptographically secure random bytes.
 /// Delegates to xiom.crypto.secure_random_bytes.
 /// Complexity: O(n), n = count.
-pub fn random_bytes_crypto(count: Int) -> Vec[UInt8] {
+pub fn random_bytes_crypto(count: Int) -> Vec[UInt8]
+  ensures: (count > 0) => (result.len() == count)
+  ensures: (count <= 0) => (result.len() == 0)
+{
   return crypto.secure_random_bytes(count);
 }

@@ -43,17 +43,26 @@ pub type Mt19937 = {
 }
 
 /// Create an MT19937 generator with the classic default seed 5489.
-pub fn mt19937_new() -> Mt19937 {
+pub fn mt19937_new() -> Mt19937
+  ensures: result.state.len() == 624
+  ensures: result.index == 624
+{
   return Mt19937{ state: _mt_seed_state(_MT_DEFAULT_SEED as UInt32); index: _MT_N; };
 }
 
 /// Create an MT19937 generator from an explicit 32-bit seed.
-pub fn mt19937_from_seed(seed: UInt32) -> Mt19937 {
+pub fn mt19937_from_seed(seed: UInt32) -> Mt19937
+  ensures: result.state.len() == 624
+  ensures: result.index == 624
+{
   return Mt19937{ state: _mt_seed_state(seed); index: _MT_N; };
 }
 
 /// Re-seed an existing generator in place using the classic seeding algorithm.
-pub fn mt19937_reseed(r: &mut Mt19937, seed: UInt32) {
+pub fn mt19937_reseed(r: &mut Mt19937, seed: UInt32)
+  ensures: r.index == 624
+  ensures: r.state.len() == r.state.len()@pre
+{
   r.state[0] = seed;
   var i: Int = 1;
   while i < _MT_N {
@@ -101,18 +110,25 @@ pub fn mt19937_next_u32(r: &mut Mt19937) -> UInt32 {
 }
 
 /// Return the next value as a signed i64 in [0, 2^32).
-pub fn mt19937_next_int(r: &mut Mt19937) -> Int {
+pub fn mt19937_next_int(r: &mut Mt19937) -> Int
+  ensures: result >= 0 && result < 4294967296
+{
   return _mt_u32(mt19937_next_u32(r) as Int);
 }
 
 /// Return the next value as a Float64 in [0, 1).
-pub fn mt19937_next_float(r: &mut Mt19937) -> Float64 {
+pub fn mt19937_next_float(r: &mut Mt19937) -> Float64
+  ensures: result >= 0.0 && result < 1.0
+{
   let v: Int = _mt_u32(mt19937_next_u32(r) as Int);
   return (v as Float64) / 4294967296.0;
 }
 
 /// Return the next value in [0, hi). Requires hi > 0.
-pub fn mt19937_next_bounded(r: &mut Mt19937, hi: Int) -> Int {
+pub fn mt19937_next_bounded(r: &mut Mt19937, hi: Int) -> Int
+  ensures: (hi <= 0) => (result == 0)
+  ensures: (hi > 0) => (result >= 0 && result < hi)
+{
   if hi <= 0 {
     return 0;
   };
