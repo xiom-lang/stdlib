@@ -19,7 +19,9 @@ module xiom.stats.moments
 use xiom.math;
 
 /// Arithmetic mean; 0 for an empty sample (documented). Complexity: O(n).
-pub fn mean(data: &Vec[Float64]) -> Float64 {
+pub fn mean(data: &Vec[Float64]) -> Float64
+  ensures: data.len() == 0 => (result == 0.0)
+{
   var n = data.len();
   if n == 0 { return 0.0; }
   var s = 0.0;
@@ -33,7 +35,10 @@ pub fn mean(data: &Vec[Float64]) -> Float64 {
 
 /// Sample variance (Bessel's correction, n - 1); 0 for fewer than 2 samples.
 /// Complexity: O(n).
-pub fn variance(data: &Vec[Float64]) -> Float64 {
+pub fn variance(data: &Vec[Float64]) -> Float64
+  ensures: data.len() < 2 => (result == 0.0)
+  ensures: (result >= 0.0) || (result != result)
+{
   var n = data.len();
   if n < 2 { return 0.0; }
   var m = mean(data);
@@ -48,13 +53,22 @@ pub fn variance(data: &Vec[Float64]) -> Float64 {
 }
 
 /// Sample standard deviation; 0 for fewer than 2 samples. Complexity: O(n).
-pub fn stddev(data: &Vec[Float64]) -> Float64 {
-  return math.sqrt(variance(data));
+pub fn stddev(data: &Vec[Float64]) -> Float64
+  ensures: data.len() < 2 => (result == 0.0)
+  ensures: (result >= 0.0) || (result != result)
+{
+  var v = variance(data);
+  // NaN guard: math.sqrt requires x >= 0.0, and NaN input data yields a NaN
+  // variance (fixed while landing wave 77; probe p_wave77_shapes.xi).
+  if !(v >= 0.0) { return 0.0 / 0.0; }
+  return math.sqrt(v);
 }
 
 /// Standardized third central moment; NaN for fewer than 3 samples.
 /// Complexity: O(n).
-pub fn skewness(data: &Vec[Float64]) -> Float64 {
+pub fn skewness(data: &Vec[Float64]) -> Float64
+  ensures: data.len() < 3 => (result != result)
+{
   var n = data.len();
   if n < 3 { return 0.0 / 0.0; }
   var m = mean(data);
@@ -76,7 +90,9 @@ pub fn skewness(data: &Vec[Float64]) -> Float64 {
 
 /// Excess kurtosis (fourth central moment, zero for a normal distribution);
 /// NaN for fewer than 4 samples. Complexity: O(n).
-pub fn kurtosis(data: &Vec[Float64]) -> Float64 {
+pub fn kurtosis(data: &Vec[Float64]) -> Float64
+  ensures: data.len() < 4 => (result != result)
+{
   var n = data.len();
   if n < 4 { return 0.0 / 0.0; }
   var m = mean(data);
@@ -95,7 +111,10 @@ pub fn kurtosis(data: &Vec[Float64]) -> Float64 {
 }
 
 /// k-th central moment about the mean; NaN for k < 2. Complexity: O(n).
-pub fn central_moment(data: &Vec[Float64], k: Int) -> Float64 {
+pub fn central_moment(data: &Vec[Float64], k: Int) -> Float64
+  ensures: (data.len() == 0 || k < 2) => (result != result)
+  ensures: (data.len() > 0 && k >= 2 && k % 2 == 0) => ((result >= 0.0) || (result != result))
+{
   var n = data.len();
   if n == 0 || k < 2 { return 0.0 / 0.0; }
   var m = mean(data);
@@ -110,7 +129,10 @@ pub fn central_moment(data: &Vec[Float64], k: Int) -> Float64 {
 }
 
 /// k-th raw moment about zero; NaN for k < 1. Complexity: O(n).
-pub fn raw_moment(data: &Vec[Float64], k: Int) -> Float64 {
+pub fn raw_moment(data: &Vec[Float64], k: Int) -> Float64
+  ensures: (data.len() == 0 || k < 1) => (result != result)
+  ensures: (data.len() > 0 && k >= 1 && k % 2 == 0) => ((result >= 0.0) || (result != result))
+{
   var n = data.len();
   if n == 0 || k < 1 { return 0.0 / 0.0; }
   var s = 0.0;
@@ -124,7 +146,10 @@ pub fn raw_moment(data: &Vec[Float64], k: Int) -> Float64 {
 
 /// Sample covariance of x and y; NaN on length mismatch, 0 for fewer than 2
 /// pairs. Complexity: O(n).
-pub fn covariance(x: &Vec[Float64], y: &Vec[Float64]) -> Float64 {
+pub fn covariance(x: &Vec[Float64], y: &Vec[Float64]) -> Float64
+  ensures: x.len() != y.len() => (result != result)
+  ensures: (x.len() == y.len() && x.len() < 2) => (result == 0.0)
+{
   var n = x.len();
   if y.len() != n { return 0.0 / 0.0; }
   if n < 2 { return 0.0; }
@@ -141,7 +166,10 @@ pub fn covariance(x: &Vec[Float64], y: &Vec[Float64]) -> Float64 {
 
 /// Mean weighted by weights; NaN on length mismatch or a zero weight sum.
 /// Complexity: O(n).
-pub fn weighted_mean(data: &Vec[Float64], weights: &Vec[Float64]) -> Float64 {
+pub fn weighted_mean(data: &Vec[Float64], weights: &Vec[Float64]) -> Float64
+  ensures: data.len() != weights.len() => (result != result)
+  ensures: data.len() == 0 => (result != result)
+{
   var n = data.len();
   if weights.len() != n { return 0.0 / 0.0; }
   var num = 0.0;
@@ -157,13 +185,18 @@ pub fn weighted_mean(data: &Vec[Float64], weights: &Vec[Float64]) -> Float64 {
 }
 
 /// Geometric mean via log-space; NaN for non-positive values. Complexity: O(n).
-pub fn geometric_mean(data: &Vec[Float64]) -> Float64 {
+pub fn geometric_mean(data: &Vec[Float64]) -> Float64
+  ensures: data.len() == 0 => (result != result)
+  ensures: (result > 0.0) || (result != result)
+{
   var n = data.len();
   if n == 0 { return 0.0 / 0.0; }
   var s = 0.0;
   var i = 0;
   while i < n {
-    if data[i] <= 0.0 { return 0.0 / 0.0; }
+    // !(> 0.0) also catches NaN: math.ln requires x > 0.0, so NaN data must
+    // return NaN here instead of calling ln (fixed while landing wave 77).
+    if !(data[i] > 0.0) { return 0.0 / 0.0; }
     s = s + math.ln(data[i]);
     i = i + 1;
   }
@@ -171,7 +204,10 @@ pub fn geometric_mean(data: &Vec[Float64]) -> Float64 {
 }
 
 /// Harmonic mean; NaN for non-positive values. Complexity: O(n).
-pub fn harmonic_mean(data: &Vec[Float64]) -> Float64 {
+pub fn harmonic_mean(data: &Vec[Float64]) -> Float64
+  ensures: data.len() == 0 => (result != result)
+  ensures: (result > 0.0) || (result != result)
+{
   var n = data.len();
   if n == 0 { return 0.0 / 0.0; }
   var s = 0.0;
@@ -225,7 +261,9 @@ fn _sorted(data: &Vec[Float64]) -> Vec[Float64] {
 
 /// Middle value of the sorted sample; the average of the two middles when
 /// even. NaN for an empty sample. Complexity: O(n log n).
-pub fn median(data: &Vec[Float64]) -> Float64 {
+pub fn median(data: &Vec[Float64]) -> Float64
+  ensures: data.len() == 0 => (result != result)
+{
   var n = data.len();
   if n == 0 { return 0.0 / 0.0; }
   var s = _sorted(data);
@@ -237,12 +275,24 @@ pub fn median(data: &Vec[Float64]) -> Float64 {
 
 /// q-th quantile by linear interpolation between the sorted values (q in
 /// [0, 1]). NaN for invalid q. Complexity: O(n log n).
-pub fn quantile(data: &Vec[Float64], q: Float64) -> Float64 {
+pub fn quantile(data: &Vec[Float64], q: Float64) -> Float64
+  ensures: (data.len() == 0 || q < 0.0 || q > 1.0) => (result != result)
+{
   var n = data.len();
   if n == 0 { return 0.0 / 0.0; }
   if q < 0.0 || q > 1.0 { return 0.0 / 0.0; }
-  if q == 0.0 { return _sorted(data)[0]; }
-  if q == 1.0 { return _sorted(data)[n - 1]; }
+  // Bind the sorted copy before indexing: rvalue-indexing a returned
+  // Vec[Float64] reads garbage on v0.64.0 (known_failures
+  // p_rvalue_float_vec_index.xi); q == 0.0 / q == 1.0 used to return the raw
+  // bits. Locals index correctly.
+  if q == 0.0 {
+    var s0 = _sorted(data);
+    return s0[0];
+  }
+  if q == 1.0 {
+    var s1 = _sorted(data);
+    return s1[n - 1];
+  }
   var s = _sorted(data);
   var pos = q * ((n - 1) as Float64);
   var lo = pos as Int;

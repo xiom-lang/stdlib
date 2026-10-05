@@ -1149,8 +1149,19 @@ T1/T2 yields.
         checks) green. global 51.3% -> 51.4%; floors113; meter 75.1%.
         multipart stays compiler-owned (v0.64.1); Box stays section C.
         Next: stats 25% / thread 25% / convert 25.6%.
+        Wave 77 (2026-10-05): coverage wave 40 -- stats, 93 clauses / 48
+        new pub (dist 15, histogram 9 -- histogram_add is void with a
+        discarded by-value mutation, moments 13, test 11). Fix-first:
+        moments.quantile q == 0.0 / q == 1.0 returned raw bits (rvalue
+        indexing of a returned Vec[Float64]; new compiler finding
+        p_rvalue_float_vec_index.xi, bound copies used instead);
+        stddev/geometric_mean NaN guards before math.sqrt/math.ln
+        requires. stats 25% -> 59.3%, global 51.4% -> 52.1%, meter 75.2%;
+        floors114. Probe p_wave77_shapes.xi (242nd, 167 checks) green on
+        v0.64.0 pre/post; targeted smoke smoke_stats 1/1. Findings
+        9 -> 10 (9 compiler, 1 stdlib). Next: thread 25% / convert 25.6%.
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors113.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors114.json
        tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;

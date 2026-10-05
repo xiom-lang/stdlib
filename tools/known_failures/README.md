@@ -35,6 +35,18 @@ were removed from the release gate on v0.63.1 (20/20 + 20/20 stress);
 the C001 carve-out file now holds no exclusions, and ci/heavy keep running
 the full corpus.
 
+**Open finding 2026-10-05 (compiler v0.64.0; v0.61.3-v0.63.1 family by
+inspection): inline indexing of a returned `Vec[Float64]` rvalue reads
+garbage.** `mk_f()[0]` on a function returning a one-element `Vec[Float64]`
+misreads the raw bits, while binding the same call to a `var`/`let` local
+first reads correctly and the identical shape on `Vec[Int]` is correct.
+Found by `tools/probes/p_wave77_shapes.xi` while landing the wave-77 stats
+clauses: it broke `xiom.stats.moments.quantile`'s `q == 0.0` / `q == 1.0`
+branches (`return _sorted(data)[0]`), which now bind the sorted copy first.
+Repro: `tools/known_failures/p_rvalue_float_vec_index.xi` (rc 1 on
+v0.64.0; the Int and bound-local controls run green first). Expected when
+fixed: rc 0.
+
 **Open finding 2026-10-04 (official v0.62.3, v0.62.4, v0.63.0, v0.61.3
 and the m189 dev build; CALL SIDE FIXED on v0.62.4+): `xiom.iter`
 closure lowering.** On v0.62.4 and v0.63.0, calling the parent-module

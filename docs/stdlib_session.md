@@ -4,13 +4,13 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 -->
 # XIOM Stdlib Session -- Handoff
 
-## 0A. CONTINUE HERE -- handoff snapshot 16 (updated 2026-10-05, v0.64.0 pin complete, wave 76 complete)
+## 0A. CONTINUE HERE -- handoff snapshot 16 (updated 2026-10-05, v0.64.0 pin complete, wave 77 complete)
 
 **PASTE-READY PROMPT FOR THE NEXT SESSION (copy this block):**
 
 ---
 You are continuing the XIOM stdlib lane. Worktree `E:\xiom-lang\stdlib`,
-branch `main`. Read `docs/stdlib_session.md` blocks 45 (latest), 44, 43
+branch `main`. Read `docs/stdlib_session.md` blocks 46 (latest), 45, 44, 43
 (publish), 27 (iter block) and `docs/PRODUCTION_READINESS_QUEUE.md`
 before acting; snapshot 5 below the prompt keeps the deep protocol lore.
 
@@ -21,47 +21,49 @@ kept. Registry carries xiom-std 0.62.3, 0.62.4 and 0.63.0 (0.63.1 publish
 pending); tags pushed: stdlib-v0.62.3 (12a3a1b), stdlib-v0.62.4 (3800c08),
 stdlib-v0.63.0 (179cfea).
 Gates on v0.64.0: release corpus 953/953 FULL (m196 loopback smoke added),
-modules 509/509, probes 241/241, barename 0/509, floors113, module-smoke
-ratchet OK. Coverage = 51.4% global
-pub-with-clause. Waves landed: 63 net+hash, 64 reflect+iter adapters, 65x convert, 66 time, 67 format, 68 misc, 69 os+rand, 70 crypto, 71 log, 72 compress, 73 pin, 74 encoding, 75 encoding-rem+debug, 76 simd, 64.0 pin. Wave
+modules 509/509, probes 242/242, barename 0/509, floors114, module-smoke
+ratchet OK. Coverage = 52.1% global
+pub-with-clause. Waves landed: 63 net+hash, 64 reflect+iter adapters, 65x convert, 66 time, 67 format, 68 misc, 69 os+rand, 70 crypto, 71 log, 72 compress, 73 pin, 74 encoding, 75 encoding-rem+debug, 76 simd, 64.0 pin, 77 stats. Wave
 65 (iter clauses) is DEFERRED but pin-unblocked (block 27): the C001
 classifier is fixed on v0.63.1 and clauses may read tuple components; the
 deferred clause set (Range core 7 + chain 14 + fold 8 + iter_collect) is documented there.
 
-FIRST TASK (wave 77): stats 25% -- merge files to hold 40-60 pub (dist 15
-+ histogram 10 + moments 13 + test 11 = 49 natural), then thread 25% /
-convert 25.6%. Also now unblocked by v0.64.0 (verify before landing):
-(a) iter clause retry (block 27) -- the compiler closed iter C001/shape on
-this tree, but NOT necessarily the clause-side closure lowering (it failed
-on v0.63.1 with `Range.count` + smoke_iter); re-test by applying
-`ensures: result >= 0` to Range.count and compiling smoke_iter on v0.64.0;
-if green, land the deferred set (Range core 7 + chain 14 + fold 8 +
-iter_collect) probe-first, else update the finding with v0.64.0 evidence.
+FIRST TASK (wave 78): thread 25% (56 pub) then convert 25.6%, holding the
+40-60-pub family batching. Pending from the wave-77 prompt (block 46):
+(a) iter clause retry (block 27) -- the compiler closed iter C001/shape,
+but the clause-side closure lowering failed on v0.63.1 with
+`Range.count` + smoke_iter; re-test by applying `ensures: result >= 0` to
+Range.count and compiling smoke_iter on v0.64.0; if green, land the
+deferred set (Range core 7 + chain 14 + fold 8 + iter_collect)
+probe-first, else update the finding with v0.64.0 evidence.
 (b) Pulse pure-XIOM hardening: TcpStream.write_all, server_parse_request,
 hmac_sha256_hex (the m196 read/write loopback lock already landed).
 (c) runtime-backed Pulse items (socket timeout/nonblocking/reuse-addr,
 real flush_stdout) wait for the compiler bundle or XIOM_RUNTIME_DIR.
 HANDOFF NOTE: new locks are p_pin0640_shapes.xi (m193-m196),
-tests/smoke/smoke_net_tcp_stream.xi (m196), and the m193 guard-alloc
-smoke; p_wave43_shapes was updated for m194 exactness.
+tests/smoke/smoke_net_tcp_stream.xi (m196), the m193 guard-alloc smoke,
+and p_wave77_shapes.xi (wave 77 stats, 167 checks); p_wave43_shapes was
+updated for m194 exactness; p_rvalue_float_vec_index.xi is the new
+known-failure repro for the rvalue Vec[Float64] index finding.
 Mandatory protocol:
 (1) recon bodies and derive every clause from them; no placeholder forms
 (no unsigned `>= 0`, no `is_ok || is_err`, no self-mirrors); clauses run at
 runtime, so never read Result/Option payloads, guard division/NaN, and
 prefer exact mirrors, length/presence bands and `@pre` invariants.
-(2) probe-first: add `tools/probes/p_wave77_shapes.xi` exercising every
+(2) probe-first: add `tools/probes/p_wave78_shapes.xi` exercising every
 clause-guard path; bind module-returned values to `let` before comparing
-(inline unsigned compares misread high bits); bind `Vec.new()`
+(inline unsigned compares misread high bits; inline indexing of a
+returned Vec[Float64] reads garbage -- bind it first); bind `Vec.new()`
 temporaries passed as `&Vec`; do not declare externs for runtime guard
-symbols; green on v0.63.1 (v0.63.0 cross-check when cheap).
+symbols; green on v0.64.0 (v0.63.1 cross-check when cheap).
 (3) apply, run targeted smokes; if unrelated codegen breaks, bisect and
 drop the offending clause with a code comment (see blocks 27/65x).
-(4) dump `tools/coverage_floors114.json`, wire the workflows +
+(4) dump `tools/coverage_floors115.json`, wire the workflows +
 `tools/README.md`, update plan/session/queue in the same commit, YAML
 check, pure-ASCII conventional commit.
 (5) battery: `run_smokes.ps1 -ExcludeFile tools/known_failures/
-gate-exclusions.txt` (expect 953/953 full), probe corpus (expect 242),
-check_modules 509/509, barename 0/509, floors114 + module-smoke ratchets;
+gate-exclusions.txt` (expect 953/953 full), probe corpus (expect 243),
+check_modules 509/509, barename 0/509, floors115 + module-smoke ratchets;
 record results in the session block; push `main`.
 
 QUEUED (do only when triggered):
@@ -1588,6 +1590,37 @@ registry pin, agent recon for the rest)**
   gates; open: contract coverage 100%, zero open findings, beta-exit release
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
+
+**SESSION 2026-10-05 block 46 (wave 77: stats clauses + two fix-firsts; floors114)**
+- Wave 77: 93 clauses / 48 new pub -- dist 15 (invalid-parameter NaN
+  branch mirrors, [0,1] cdf bands, exact chi-squared x == 0 branches),
+  histogram 9 (result field mirrors, counts/edges/normalize length
+  claims, empty-count and out-of-range-quantile guards; histogram_add is
+  void with a discarded by-value mutation and stays clause-free),
+  moments 13 (empty/short-input bands, even-k non-negative moments,
+  NaN-tolerant variance/stddev, weighted_mean mismatch/empty NaN),
+  test 11 (short/mismatched length guards, p-value [0,1] bands, CI tuple
+  NaN/order claims). stats 25% -> 59.3%, global 51.4% -> 52.1%, meter
+  75.2%; floors114 wired (ci/heavy/release + tools/README + plan).
+- Fix-first (probe-caught pre-clause): moments.quantile returned raw bits
+  for q == 0.0 / q == 1.0 -- rvalue indexing of a returned Vec[Float64]
+  (`return _sorted(data)[0]`) misreads on v0.64.0; new compiler finding
+  p_rvalue_float_vec_index.xi (bound var/let reads and the Vec[Int]
+  control are correct; rc 1 on the pin), workaround binds the sorted copy
+  first. Also fixed: stddev and geometric_mean called math.sqrt(NaN) /
+  math.ln(NaN) on NaN input data, violating the callee requires
+  (x >= 0.0 / x > 0.0) and aborting the probe; both now return NaN
+  directly.
+- Probe p_wave77_shapes.xi (242nd, 167 checks): green on v0.64.0 pre- and
+  post-clauses (the pre-clause run caught both fix-firsts); targeted
+  smoke smoke_stats 1/1. Landmine reconfirmed: inline indexing of a
+  returned Vec[Float64] reads garbage -- bind it first.
+- Battery on this commit (v0.64.0): release corpus 953/953 full (804.9s,
+  no exclusions); probes 242/242 (395.1s); check_modules 509/509 (261.3s);
+  barename 0/509 (745.9s); floors114 + module-smoke (497/517, 3477/6200)
+  ratchets OK.
+- Findings 9 -> 10 (9 compiler, 1 stdlib); queue gate 9 and the
+  known_failures Current section updated.
 
 **SESSION 2026-10-05 block 45 (v0.64.0 pin: m193-m196 consumed; floors113)**
 - v0.64.0 re-pin (tag c68d91de; binary extracted to

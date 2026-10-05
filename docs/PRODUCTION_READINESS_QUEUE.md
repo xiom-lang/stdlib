@@ -1,9 +1,9 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
-**75.1% -- 7 of 10 gates complete; gate 8 at 51.4% (partial credit) and
+**75.2% -- 7 of 10 gates complete; gate 8 at 52.1% (partial credit) and
 gates 9-10 discrete.** (Compiler pin: **v0.64.0**.)
 **Gates: corpus 953/953 full (C001 carve-outs retired on v0.63.1; new
-TcpStream loopback smoke added), modules 509/509, probes 241/241,
+TcpStream loopback smoke added), modules 509/509, probes 242/242,
 barename 0/509.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
@@ -14,25 +14,26 @@ gates flip:
    full, no carve-outs (C001 fixed by 4bf8cf1e; 20/20 + 20/20 stress).
    lz4 is fixed by m190 and stayed in the gate; the new TcpStream loopback
    smoke locks m196.
-3. Probe corpus green -- MET (241/241 on v0.64.0, incl. the promoted
-   regression probes, the pin locks and the v0.64.0 m193-m196 probe).
+3. Probe corpus green -- MET (242/242 on v0.64.0, incl. the promoted
+   regression probes, the pin locks, the v0.64.0 m193-m196 probe and the
+   wave-77 stats probe).
 4. Strict bare-name scan clean -- MET (0/509).
-5. Coverage ratchet green -- MET (floors113).
+5. Coverage ratchet green -- MET (floors114).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (497/517 modules, 3475/6200 fns).
-8. Contract coverage 100% (every public fn carries clauses) -- OPEN (51.4%).
+8. Contract coverage 100% (every public fn carries clauses) -- OPEN (52.1%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
-   OPEN (9: 8 compiler, 1 stdlib algorithm).
+   OPEN (10: 9 compiler, 1 stdlib algorithm).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
 
 Meter formula: MET gates count 1.0; gate 8 counts its current
-pub-with-clause fraction (51.4% -> 0.514); gates 9 and 10 get no partial
+pub-with-clause fraction (52.1% -> 0.521); gates 9 and 10 get no partial
 credit (discrete). Update the percentage and the gate-8 fraction in the
 same commit as each floors dump so the meter moves smoothly toward 80%.
 
 Authoritative order: the gates above, then the updates below newest-first.
-Current state: compiler pin v0.63.1; coverage 49.8%, meter 75.0%; handoff
-in `docs/stdlib_session.md` snapshot 12.
+Current state: compiler pin v0.64.0; coverage 52.1%, meter 75.2%; handoff
+in `docs/stdlib_session.md` snapshot 16 (block 46).
 
 ## Project Pulse relay (web-framework lane) -- 2026-10-05
 
@@ -580,6 +581,26 @@ compiler-owned for v0.64.1; Box stays section C. floors113 (global
 51.4%, reflect 100%); meter 75.1%. Battery on v0.64.0: corpus 953/953,
 probes 241/241, modules 509/509, barename 0/509, floors113 +
 module-smoke ratchets OK.
+
+Update 2026-10-05 (wave 77 landed): stats --
+93 clauses / 48 new pub (dist 15, histogram 9 -- histogram_add is void
+with a discarded by-value mutation and stays clause-free, moments 13,
+test 11). Guard-branch NaN mirrors, [0,1] distribution bands, exact
+x == 0 chi-squared branch values, histogram struct field/length mirrors
+and degenerate-histogram guards, even-k non-negative moment bands,
+p-value/interval bands. Fix-first (probe-caught): moments.quantile
+returned raw bits for q == 0.0 / q == 1.0 -- rvalue indexing of a
+returned Vec[Float64] (`_sorted(data)[0]`) misreads; new compiler finding
+p_rvalue_float_vec_index.xi (rc 1 on v0.64.0), bound copies used instead;
+stddev/geometric_mean now guard NaN before math.sqrt/math.ln requires.
+stats 25% -> 59.3%, global 51.4% -> 52.1%; meter 75.2%; floors114.
+Probe p_wave77_shapes.xi (242nd, 167 checks) green on v0.64.0 pre/post;
+targeted smoke smoke_stats 1/1. Findings 9 -> 10 (9 compiler, 1 stdlib).
+Battery on the commit (v0.64.0): corpus 953/953 full (804.9s), probes
+242/242 (395.1s), modules 509/509 (261.3s), barename 0/509 (745.9s),
+floors114 + module-smoke ratchets OK.
+Readiness next: thread 25% / convert 25.6%; then the iter clause retry
+(block 27) and the Pulse hardening wave.
 
 Update 2026-10-05 (wave 76 landed): simd --
 49 clauses / 49 new pub (gather 5, mask 14, vec4 17, vec8 13); simd

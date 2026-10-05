@@ -18,7 +18,9 @@ use xiom.math;
 
 /// One-sample t statistic against population mean mu. NaN for fewer than 2
 /// samples. Complexity: O(n).
-pub fn t_test_one_sample(data: &Vec[Float64], mu: Float64) -> Float64 {
+pub fn t_test_one_sample(data: &Vec[Float64], mu: Float64) -> Float64
+  ensures: data.len() < 2 => (result != result)
+{
   var n = data.len();
   if n < 2 { return 0.0 / 0.0; }
   var m = 0.0;
@@ -42,7 +44,9 @@ pub fn t_test_one_sample(data: &Vec[Float64], mu: Float64) -> Float64 {
 
 /// Independent two-sample t statistic (Welch, unequal variance). NaN for
 /// fewer than 2 samples in either group. Complexity: O(n).
-pub fn t_test_two_sample(a: &Vec[Float64], b: &Vec[Float64]) -> Float64 {
+pub fn t_test_two_sample(a: &Vec[Float64], b: &Vec[Float64]) -> Float64
+  ensures: (a.len() < 2 || b.len() < 2) => (result != result)
+{
   var na = a.len();
   var nb = b.len();
   if na < 2 || nb < 2 { return 0.0 / 0.0; }
@@ -81,7 +85,9 @@ pub fn t_test_two_sample(a: &Vec[Float64], b: &Vec[Float64]) -> Float64 {
 
 /// Paired t statistic on the differences a - b. NaN for a mismatch or fewer
 /// than 2 pairs. Complexity: O(n).
-pub fn t_test_paired(a: &Vec[Float64], b: &Vec[Float64]) -> Float64 {
+pub fn t_test_paired(a: &Vec[Float64], b: &Vec[Float64]) -> Float64
+  ensures: (a.len() != b.len() || a.len() < 2) => (result != result)
+{
   var n = a.len();
   if b.len() != n || n < 2 { return 0.0 / 0.0; }
   var diff = Vec[Float64].new();
@@ -95,7 +101,10 @@ pub fn t_test_paired(a: &Vec[Float64], b: &Vec[Float64]) -> Float64 {
 
 /// Chi-squared goodness-of-fit statistic sum (o - e)^2 / e. NaN for a
 /// mismatch or a zero expected count. Complexity: O(n).
-pub fn chi_squared_test(observed: &Vec[Int], expected: &Vec[Float64]) -> Float64 {
+pub fn chi_squared_test(observed: &Vec[Int], expected: &Vec[Float64]) -> Float64
+  ensures: expected.len() != observed.len() => (result != result)
+  ensures: (result >= 0.0) || (result != result)
+{
   var n = observed.len();
   if expected.len() != n { return 0.0 / 0.0; }
   var s = 0.0;
@@ -112,7 +121,10 @@ pub fn chi_squared_test(observed: &Vec[Int], expected: &Vec[Float64]) -> Float64
 
 /// F statistic as the ratio of the sample variances. NaN for fewer than 2
 /// samples or a zero denominator variance. Complexity: O(n).
-pub fn f_test(a: &Vec[Float64], b: &Vec[Float64]) -> Float64 {
+pub fn f_test(a: &Vec[Float64], b: &Vec[Float64]) -> Float64
+  ensures: (a.len() < 2 || b.len() < 2) => (result != result)
+  ensures: (result >= 0.0) || (result != result)
+{
   var na = a.len();
   var nb = b.len();
   if na < 2 || nb < 2 { return 0.0 / 0.0; }
@@ -155,13 +167,18 @@ pub fn f_test(a: &Vec[Float64], b: &Vec[Float64]) -> Float64 {
 /// Vec[Vec[Float64]] whose element reads return garbage (BUG 23 #1 residual;
 /// verified by minimal probe). Keep the frozen signature; revisit when nested
 /// float Vec reads land.
-pub fn anova_one_way(groups: &Vec[Vec[Float64]]) -> Float64 {
+pub fn anova_one_way(groups: &Vec[Vec[Float64]]) -> Float64
+  ensures: result != result
+{
   return 0.0 / 0.0;
 }
 
 /// Two-tailed p-value for a t statistic with df degrees of freedom:
 /// P(|T| > t) = I_{df/(df + t^2)}(df/2, 1/2). Complexity: O(iterations).
-pub fn p_value_from_t(t: Float64, df: Float64) -> Float64 {
+pub fn p_value_from_t(t: Float64, df: Float64) -> Float64
+  ensures: df <= 0.0 => (result != result)
+  ensures: (result >= 0.0 && result <= 1.0) || (result != result)
+{
   if df <= 0.0 { return 0.0 / 0.0; }
   if t != t { return t; }
   var z = df / (df + t * t);
@@ -171,7 +188,11 @@ pub fn p_value_from_t(t: Float64, df: Float64) -> Float64 {
 
 /// Right-tail p-value for a chi-squared statistic: 1 - P(df/2, x/2).
 /// Complexity: O(iterations).
-pub fn p_value_from_chi2(x: Float64, df: Float64) -> Float64 {
+pub fn p_value_from_chi2(x: Float64, df: Float64) -> Float64
+  ensures: (df <= 0.0 || x < 0.0) => (result != result)
+  ensures: (df > 0.0 && x == 0.0) => (result == 1.0)
+  ensures: (result >= 0.0 && result <= 1.0) || (result != result)
+{
   if df <= 0.0 || x < 0.0 { return 0.0 / 0.0; }
   if x == 0.0 { return 1.0; }
   var p = math.special.incomplete_gamma(df / 2.0, x / 2.0);
@@ -179,7 +200,9 @@ pub fn p_value_from_chi2(x: Float64, df: Float64) -> Float64 {
 }
 
 /// Standardized score (x - mu) / sigma. Complexity: O(1).
-pub fn z_score(x: Float64, mu: Float64, sigma: Float64) -> Float64 {
+pub fn z_score(x: Float64, mu: Float64, sigma: Float64) -> Float64
+  ensures: (sigma == 0.0) => (result != result)
+{
   if sigma == 0.0 { return 0.0 / 0.0; }
   return (x - mu) / sigma;
 }
@@ -209,7 +232,10 @@ fn _t_quantile(df: Float64, level: Float64) -> Float64 {
 /// Confidence interval (lower, upper) for the sample mean at the given
 /// confidence level. NaN for fewer than 2 samples or an invalid level.
 /// Complexity: O(n).
-pub fn confidence_interval(data: &Vec[Float64], level: Float64) -> (Float64, Float64) {
+pub fn confidence_interval(data: &Vec[Float64], level: Float64) -> (Float64, Float64)
+  ensures: (data.len() < 2 || level <= 0.0 || level >= 1.0) => ((result.0 != result.0) && (result.1 != result.1))
+  ensures: (data.len() >= 2 && level > 0.0 && level < 1.0) => ((result.1 >= result.0) || (result.0 != result.0))
+{
   var n = data.len();
   if n < 2 || level <= 0.0 || level >= 1.0 {
     return (0.0 / 0.0, 0.0 / 0.0);
@@ -229,7 +255,10 @@ pub fn confidence_interval(data: &Vec[Float64], level: Float64) -> (Float64, Flo
 }
 
 /// Standard error of the mean. NaN for fewer than 2 samples. Complexity: O(n).
-pub fn standard_error(data: &Vec[Float64]) -> Float64 {
+pub fn standard_error(data: &Vec[Float64]) -> Float64
+  ensures: data.len() < 2 => (result != result)
+  ensures: (result >= 0.0) || (result != result)
+{
   var n = data.len();
   if n < 2 { return 0.0 / 0.0; }
   var m = 0.0;
