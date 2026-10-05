@@ -4,13 +4,13 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 -->
 # XIOM Stdlib Session -- Handoff
 
-## 0A. CONTINUE HERE -- handoff snapshot 7 (updated 2026-10-05, wave 69 complete)
+## 0A. CONTINUE HERE -- handoff snapshot 8 (updated 2026-10-05, wave 70 complete)
 
 **PASTE-READY PROMPT FOR THE NEXT SESSION (copy this block):**
 
 ---
 You are continuing the XIOM stdlib lane. Worktree `E:\xiom-lang\stdlib`,
-branch `main`. Read `docs/stdlib_session.md` blocks 37 (latest), 36, 33
+branch `main`. Read `docs/stdlib_session.md` blocks 38 (latest), 37, 36
 (publish), 27 (iter block) and `docs/PRODUCTION_READINESS_QUEUE.md`
 before acting; snapshot 5 below the prompt keeps the deep protocol lore.
 
@@ -21,32 +21,32 @@ verified; v0.62.4/v0.62.3/v0.61.3 archives kept under
 tags pushed: stdlib-v0.62.3 (12a3a1b), stdlib-v0.62.4 (3800c08),
 stdlib-v0.63.0 (179cfea). Gates on v0.63.0: release corpus 950/950 (2 C001
 carve-outs of 952; ci/heavy run the full corpus), modules 509/509, probes
-230/230, barename 0/509, floors105, module-smoke ratchet OK. Coverage =
-47.3% global pub-with-clause. Waves landed: 63 net+hash,
-64 reflect+iter adapters, 65x convert, 66 time, 67 format, 68 misc, 69 os+rand. Wave
+231/231, barename 0/509, floors106, module-smoke ratchet OK. Coverage =
+47.9% global pub-with-clause. Waves landed: 63 net+hash,
+64 reflect+iter adapters, 65x convert, 66 time, 67 format, 68 misc, 69 os+rand, 70 crypto. Wave
 65 (iter clauses) is BLOCKED on the pin (block 27): clauses/calls on
 closure-delegating catalog fns flip between closure use-before-def and the
 C001 classifier; the deferred clause set is documented there.
 
-FIRST TASK (wave 70): coverage wave on the next low dirs -- crypto 17%,
-then log 19.1% (merge files to hold 40-60 pub). Mandatory protocol:
+FIRST TASK (wave 71): coverage wave on the next low dir -- log 19.1%
+(merge files to hold 40-60 pub), then compress 21.1%. Mandatory protocol:
 (1) recon bodies and derive every clause from them; no placeholder forms
 (no unsigned `>= 0`, no `is_ok || is_err`, no self-mirrors); clauses run at
 runtime, so never read Result/Option payloads, guard division/NaN, and
 prefer exact mirrors, length/presence bands and `@pre` invariants.
-(2) probe-first: add `tools/probes/p_wave70_shapes.xi` exercising every
+(2) probe-first: add `tools/probes/p_wave71_shapes.xi` exercising every
 clause-guard path; bind module-returned values to `let` before comparing
 (inline unsigned compares misread high bits); bind `Vec.new()`
 temporaries passed as `&Vec`; do not declare externs for runtime guard
 symbols; green on v0.63.0 (v0.61.3 cross-check when cheap).
 (3) apply, run targeted smokes; if unrelated codegen breaks, bisect and
 drop the offending clause with a code comment (see blocks 27/65x).
-(4) dump `tools/coverage_floors106.json`, wire the workflows +
+(4) dump `tools/coverage_floors107.json`, wire the workflows +
 `tools/README.md`, update plan/session/queue in the same commit, YAML
 check, pure-ASCII conventional commit.
 (5) battery: `run_smokes.ps1 -ExcludeFile tools/known_failures/
-gate-exclusions.txt` (expect 950/950), probe corpus (expect 231),
-check_modules 509/509, barename 0/509, floors106 + module-smoke ratchets;
+gate-exclusions.txt` (expect 950/950), probe corpus (expect 232),
+check_modules 509/509, barename 0/509, floors107 + module-smoke ratchets;
 record results in the session block; push `main`.
 
 QUEUED (do only when triggered):
@@ -1534,6 +1534,41 @@ registry pin, agent recon for the rest)**
   gates; open: contract coverage 100%, zero open findings, beta-exit release
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
+
+**SESSION 2026-10-05 block 38 (wave 70: crypto mac/kdf/keyx/rng/sign/poly; floors106; hkdf alias fix)**
+- Wave 70: 41 clauses / 41 pub in xiom.crypto: mac 12 (hmac_new block/key
+  shape mirrors, hmac_update @pre length, hmac_final digest length by hash
+  id, hmac_sha256/512 exact lengths, verify tag-length implication,
+  CBC-MAC iv-guarded 16, CMAC 16, constant-time eq length implication and
+  select exact identities), kdf 9 (pbkdf2/pbkdf2_hmac_sha256 exact key_len
+  incl. zero-fit guards, hkdf_extract 32/64 by hash id, hkdf_expand
+  8160/16320 caps, hkdf_sha256/kdf_derive_master exact lengths, interval
+  clamp, argon2id key_len, bcrypt 24), keyx 9 (X25519 public/shared/base
+  and secp256k1 ECDH 32-byte guards, ecdh_p256 empty stub, DH
+  result.len() == prime.len(), key_agreement_derive 8160 cap, validate
+  bands), rng_crypto 5 (bytes count bands, uniform [0, n), float unit
+  band, prime bit-length bands, string length bands), sign 5
+  (ed25519/ecdsa/dsa documented-stub mirrors), poly1305_mac 1 (key >= 32
+  => 16).
+- Fix-first alongside: `hkdf_extract`/`hkdf_expand` called
+  `hash.crypto_hash_hmac_sha512(...)` while their Int parameter `hash`
+  shadows the `use xiom.crypto.hash;` alias, so every hash == 2 call AV'd
+  (0xC0000005; isolated: extract(2) alone). Qualified the calls as
+  `xiom.crypto.hash.crypto_hash_hmac_sha512`; hash-2 extract/expand now
+  green in isolation and in the probe. The hash == 1 paths and the flat
+  hmac_sha512 were always fine, which is why no smoke caught it.
+- Skipped by design: scrypt (ROMix re-enters function-returned Vecs into
+  &Vec params; heap corruption known), crypto_random_shuffle/choice
+  (generic &mut Vec[T] lowering blocked), crypto_random_u64/u32/bool/
+  seed_from_entropy (unsigned/unbiased word, no claim), rsa_sign/verify
+  (payload presence only), the tuple-returning keypair/sign helpers.
+- Probe p_wave70_shapes.xi (231st, 79 checks): green on v0.63.0 (pre- and
+  post-clauses); targeted smokes crypto 36/36, poly 2/2, hash 39/39.
+- Coverage: crypto 17% -> 39.6%, global 47.3% -> 47.9%; floors106 wired
+  (ci/heavy/release + tools/README + plan) in this commit.
+- Battery on this commit (v0.63.0): release-gate corpus 950/950 (2 C001
+  carve-outs of 952); probes 231/231; check_modules 509/509; barename
+  0/509; floors106 + module-smoke ratchets OK.
 
 **SESSION 2026-10-05 block 37 (wave 69: os path/filetype + rand; floors105)**
 - Wave 69: 76 clauses / 76 pub in xiom.path (18), xiom.os.filetype (22),

@@ -1050,8 +1050,24 @@ T1/T2 yields.
         floors105. Probe p_wave69_shapes.xi (230th, 167 checks) green on
         v0.63.0; targeted smokes rand 42/42, path 18/18, filetype 1/1.
         Next: crypto 17% / log 19.1% / compress 21.1%.
+        Wave 70 (2026-10-05): coverage wave 34 -- crypto core, 41 clauses /
+        41 pub: mac 12 (        HMAC block/key shape mirrors, @pre update length,
+        digest-length by hash id, tag-length verify implication, CBC-MAC
+        iv-guarded 16, CMAC 16, constant-time eq/select), kdf 9 (PBKDF2/
+        HKDF exact lengths, 8160/16320 caps, interval
+        clamp, argon2id/bcrypt lengths), keyx 9 (X25519 + secp256k1 ECDH
+        32-byte guards, ecdh_p256 empty stub, DH prime-length mirrors,
+        agreement derive cap and validate bands), rng_crypto 5 (count/
+        range/prime-bits/string bands), sign 5 (documented stub mirrors),
+        poly1305_mac 1. Fix-first: `hkdf_extract`/`hkdf_expand`'s Int
+        parameter `hash` shadowed the module alias, so hash == 2 AV'd;
+        calls fully qualified (`xiom.crypto.hash.…`) and verified.
+        crypto 17% -> 39.6%, global 47.3% -> 47.9%; floors106. Probe
+        p_wave70_shapes.xi (231st, 79 checks) green on v0.63.0;
+        targeted smokes crypto 36/36, poly 2/2, hash 39/39.
+        Next: log 19.1% / compress 21.1% / encoding 23.7%.
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors105.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors106.json
        tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;

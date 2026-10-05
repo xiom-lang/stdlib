@@ -304,7 +304,9 @@ fn _finalize(h: &Vec[Int], s: &Vec[Int]) -> Vec[UInt8] {
 /// 
 /// IMPORTANT: The key MUST be used only once per key. Key reuse breaks security.
 /// Use with ChaCha20 as ChaCha20-Poly1305 AEAD for authenticated encryption.
-pub fn poly1305_mac(key: &Vec[UInt8], msg: &Vec[UInt8]) -> Vec[UInt8] {
+pub fn poly1305_mac(key: &Vec[UInt8], msg: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: (key.len() >= 32) => (result.len() == 16)
+{
   // Step 1: Split and clamp key
   var r_bytes = Vec[UInt8].new();
   var s_bytes = Vec[UInt8].new();

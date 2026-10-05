@@ -41,7 +41,13 @@ pub type Hmac = {
 /// Create an incremental HMAC. `hash` selects the digest (1=SHA-256,
 /// 2=SHA-512, 3=MD5); unknown values fall back to SHA-256.
 /// Complexity: O(key length).
-pub fn hmac_new(key: &Vec[UInt8], hash: Int) -> Hmac {
+pub fn hmac_new(key: &Vec[UInt8], hash: Int) -> Hmac
+  ensures: result.key.len() == result.block
+  ensures: (hash == 2) => (result.block == 128)
+  ensures: (hash != 2) => (result.block == 64)
+  ensures: result.data.len() == 0
+  ensures: result.hash == hash
+{
   var block = 64;
   if hash == 2 { block = 128; }
   var norm_key = Vec[UInt8].new();
@@ -72,7 +78,9 @@ pub fn hmac_new(key: &Vec[UInt8], hash: Int) -> Hmac {
 
 /// Feed data into an in-progress HMAC.
 /// Complexity: O(n), n = data length.
-pub fn hmac_update(h: &mut Hmac, data: &Vec[UInt8]) {
+pub fn hmac_update(h: &mut Hmac, data: &Vec[UInt8])
+  ensures: h.data.len() == h.data.len()@pre + data.len()
+{
   var i = 0;
   while i < data.len() {
     h.data.push(data[i]);
@@ -82,7 +90,11 @@ pub fn hmac_update(h: &mut Hmac, data: &Vec[UInt8]) {
 
 /// Finish an HMAC and return the tag.
 /// Complexity: O(n), n = accumulated data length.
-pub fn hmac_final(h: Hmac) -> Vec[UInt8] {
+pub fn hmac_final(h: Hmac) -> Vec[UInt8]
+  ensures: (h.hash == 2) => (result.len() == 64)
+  ensures: (h.hash == 3) => (result.len() == 16)
+  ensures: (h.hash != 2 && h.hash != 3) => (result.len() == 32)
+{
   return _hmac_from_padded(&h.key, h.hash, h.block, &h.data);
 }
 
@@ -124,7 +136,9 @@ fn _hmac_from_padded(norm_key: &Vec[UInt8], hash: Int, block: Int, data: &Vec[UI
 /// One-shot HMAC-SHA256 (RFC 2104). Implemented locally on xiom.crypto.sha256;
 /// matches the flat hmac_sha256 and RFC 4231 vectors.
 /// Complexity: O(n), n = data length.
-pub fn hmac_sha256(key: &Vec[UInt8], data: &Vec[UInt8]) -> Vec[UInt8] {
+pub fn hmac_sha256(key: &Vec[UInt8], data: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: result.len() == 32
+{
   var ctx = hmac_new(key, 1);
   hmac_update(&mut ctx, data);
   return hmac_final(ctx);
@@ -132,7 +146,9 @@ pub fn hmac_sha256(key: &Vec[UInt8], data: &Vec[UInt8]) -> Vec[UInt8] {
 
 /// One-shot HMAC-SHA512 (RFC 2104). Uses xiom.crypto.sha512 (verified).
 /// Complexity: O(n), n = data length.
-pub fn hmac_sha512(key: &Vec[UInt8], data: &Vec[UInt8]) -> Vec[UInt8] {
+pub fn hmac_sha512(key: &Vec[UInt8], data: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: result.len() == 64
+{
   var ctx = hmac_new(key, 2);
   hmac_update(&mut ctx, data);
   return hmac_final(ctx);
@@ -140,20 +156,26 @@ pub fn hmac_sha512(key: &Vec[UInt8], data: &Vec[UInt8]) -> Vec[UInt8] {
 
 /// Verify an HMAC-SHA256 tag in constant time.
 /// Complexity: O(n), n = data length.
-pub fn hmac_verify(key: &Vec[UInt8], data: &Vec[UInt8], tag: &Vec[UInt8]) -> Bool {
+pub fn hmac_verify(key: &Vec[UInt8], data: &Vec[UInt8], tag: &Vec[UInt8]) -> Bool
+  ensures: result => (tag.len() == 32)
+{
   var computed = hmac_sha256(key, data);
   return constant_time_eq(&computed, tag);
 }
 
 /// Poly1305 one-shot MAC (16 bytes). Delegates to xiom.poly1305.poly1305_mac.
 /// Complexity: O(n), n = message length.
-pub fn poly1305_mac(key: &Vec[UInt8], data: &Vec[UInt8]) -> Vec[UInt8] {
+pub fn poly1305_mac(key: &Vec[UInt8], data: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: (key.len() >= 32) => (result.len() == 16)
+{
   return poly1305.poly1305_mac(key, data);
 }
 
 /// Constant-time Poly1305 verification.
 /// Complexity: O(n), n = message length.
-pub fn poly1305_verify(key: &Vec[UInt8], data: &Vec[UInt8], tag: &Vec[UInt8]) -> Bool {
+pub fn poly1305_verify(key: &Vec[UInt8], data: &Vec[UInt8], tag: &Vec[UInt8]) -> Bool
+  ensures: result => (key.len() >= 32 && tag.len() == 16)
+{
   var computed = poly1305.poly1305_mac(key, data);
   return constant_time_eq(&computed, tag);
 }
@@ -161,7 +183,9 @@ pub fn poly1305_verify(key: &Vec[UInt8], data: &Vec[UInt8], tag: &Vec[UInt8]) ->
 /// CBC-MAC over the message (NIST SP 800-38B style: full 16-byte blocks;
 /// the final partial block is zero-padded). Uses the AES block primitive.
 /// Complexity: O(n), n = data length.
-pub fn cbc_mac(key: &Vec[UInt8], iv: &Vec[UInt8], data: &Vec[UInt8]) -> Vec[UInt8] {
+pub fn cbc_mac(key: &Vec[UInt8], iv: &Vec[UInt8], data: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: (iv.len() >= 16) => (result.len() == 16)
+{
   var acc = Vec[UInt8].new();
   var i = 0;
   while i < 16 {
@@ -207,7 +231,9 @@ pub fn cbc_mac(key: &Vec[UInt8], iv: &Vec[UInt8], data: &Vec[UInt8]) -> Vec[UInt
 
 /// AES-CMAC-128 (NIST SP 800-38B). Uses the AES block primitive.
 /// Complexity: O(n), n = data length.
-pub fn cmac_aes128(key: &Vec[UInt8], data: &Vec[UInt8]) -> Vec[UInt8] {
+pub fn cmac_aes128(key: &Vec[UInt8], data: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: result.len() == 16
+{
   var zero = Vec[UInt8].new();
   var i = 0;
   while i < 16 {
@@ -363,7 +389,10 @@ fn _cmac_pad(key: &Vec[UInt8], start: Int, empty: Bool) -> Vec[UInt8] {
 
 /// Timing-safe byte comparison (arithmetic accumulation, no early exit).
 /// Complexity: O(n), n = byte length.
-pub fn constant_time_eq(a: &Vec[UInt8], b: &Vec[UInt8]) -> Bool {
+pub fn constant_time_eq(a: &Vec[UInt8], b: &Vec[UInt8]) -> Bool
+  ensures: (a.len() != b.len()) => (result == false)
+  ensures: result => (a.len() == b.len())
+{
   if a.len() != b.len() { return false; }
   var diff: Int = 0;
   var i = 0;
@@ -379,7 +408,10 @@ pub fn constant_time_eq(a: &Vec[UInt8], b: &Vec[UInt8]) -> Bool {
 /// Constant-time select: returns `a` when `bit` is true, else `b`. Both
 /// branches are evaluated and combined arithmetically.
 /// Complexity: O(1).
-pub fn constant_time_select(a: Int, b: Int, bit: Bool) -> Int {
+pub fn constant_time_select(a: Int, b: Int, bit: Bool) -> Int
+  ensures: bit => (result == a)
+  ensures: !bit => (result == b)
+{
   var mask = 0;
   if bit { mask = -1; }
   var a_mask = a & mask;

@@ -37,7 +37,9 @@ pub fn x25519_keypair() -> (Vec[UInt8], Vec[UInt8]) {
 
 /// Derive the X25519 public key from a secret key.
 /// Complexity: O(255) field operations.
-pub fn x25519_public_key(sk: &Vec[UInt8]) -> Vec[UInt8] {
+pub fn x25519_public_key(sk: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: (sk.len() == 32) => (result.len() == 32)
+{
   var clamped = curves.curve25519_clamp(sk);
   var bp = curves.curve25519_base_point();
   return curves.curve25519_scalar_mult(&clamped, &bp);
@@ -46,14 +48,18 @@ pub fn x25519_public_key(sk: &Vec[UInt8]) -> Vec[UInt8] {
 /// Compute the X25519 shared secret between a secret key and a peer public
 /// key.
 /// Complexity: O(255) field operations.
-pub fn x25519_shared_secret(sk: &Vec[UInt8], pk: &Vec[UInt8]) -> Vec[UInt8] {
+pub fn x25519_shared_secret(sk: &Vec[UInt8], pk: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: (sk.len() == 32 && pk.len() == 32) => (result.len() == 32)
+{
   var clamped = curves.curve25519_clamp(sk);
   return curves.curve25519_scalar_mult(&clamped, pk);
 }
 
 /// Multiply the base point by sk (public key). Alias of x25519_public_key.
 /// Complexity: O(255) field operations.
-pub fn x25519_base(sk: &Vec[UInt8]) -> Vec[UInt8] {
+pub fn x25519_base(sk: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: (sk.len() == 32) => (result.len() == 32)
+{
   return x25519_public_key(sk);
 }
 
@@ -62,13 +68,17 @@ pub fn x25519_base(sk: &Vec[UInt8]) -> Vec[UInt8] {
 /// NOT possible, so this returns an empty vector until a P-256 point
 /// multiplier is wired in (see report).
 /// Complexity: O(256) point operations.
-pub fn ecdh_p256(sk: &Vec[UInt8], pk: &Vec[UInt8]) -> Vec[UInt8] {
+pub fn ecdh_p256(sk: &Vec[UInt8], pk: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: result.len() == 0
+{
   return Vec[UInt8].new();
 }
 
 /// ECDH shared secret on secp256k1 (x coordinate of sk * pk).
 /// Complexity: O(256) point operations.
-pub fn ecdh_secp256k1(sk: &Vec[UInt8], pk: &Vec[UInt8]) -> Vec[UInt8] {
+pub fn ecdh_secp256k1(sk: &Vec[UInt8], pk: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: (sk.len() == 32 && pk.len() == 32) => (result.len() == 32)
+{
   var p = curves.secp256k1_point_mul(sk, pk);
   var result = Vec[UInt8].new();
   var i = 0;
@@ -81,7 +91,9 @@ pub fn ecdh_secp256k1(sk: &Vec[UInt8], pk: &Vec[UInt8]) -> Vec[UInt8] {
 
 /// Generate a classic DH private key in [2, p-2].
 /// Complexity: O(1) expected.
-pub fn dh_generate_key(prime: &Vec[UInt8], generator: &Vec[UInt8]) -> Vec[UInt8] {
+pub fn dh_generate_key(prime: &Vec[UInt8], generator: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: result.len() == prime.len()
+{
   var p = _bigint_from_bytes(prime);
   var byte_len = prime.len();
   var two = bigint.bigint_two();
@@ -105,7 +117,9 @@ pub fn dh_generate_key(prime: &Vec[UInt8], generator: &Vec[UInt8]) -> Vec[UInt8]
 
 /// Compute the classic DH shared secret: peer_pk ^ own_sk mod prime.
 /// Complexity: O(bitlen^3).
-pub fn dh_shared_secret(prime: &Vec[UInt8], own_sk: &Vec[UInt8], peer_pk: &Vec[UInt8]) -> Vec[UInt8] {
+pub fn dh_shared_secret(prime: &Vec[UInt8], own_sk: &Vec[UInt8], peer_pk: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: result.len() == prime.len()
+{
   var p = _bigint_from_bytes(prime);
   var s = _bigint_from_bytes(own_sk);
   var g = _bigint_from_bytes(peer_pk);
@@ -115,14 +129,20 @@ pub fn dh_shared_secret(prime: &Vec[UInt8], own_sk: &Vec[UInt8], peer_pk: &Vec[U
 
 /// Derive symmetric key bytes from a shared secret (HKDF-SHA256).
 /// Complexity: O(len / 32 + n).
-pub fn key_agreement_derive(shared: &Vec[UInt8], info: &Vec[UInt8], len: Int) -> Vec[UInt8] {
+pub fn key_agreement_derive(shared: &Vec[UInt8], info: &Vec[UInt8], len: Int) -> Vec[UInt8]
+  ensures: (len < 1 || len > 8160) => (result.len() == 0)
+  ensures: (len >= 1 && len <= 8160) => (result.len() == len)
+{
   var empty_salt = Vec[UInt8].new();
   return hash.crypto_hash_hkdf(shared, &empty_salt, info, len);
 }
 
 /// Sanity-check a peer public key: 32 bytes and not all zero.
 /// Complexity: O(1).
-pub fn key_agreement_validate(pk: &Vec[UInt8]) -> Bool {
+pub fn key_agreement_validate(pk: &Vec[UInt8]) -> Bool
+  ensures: (pk.len() != 32) => (result == false)
+  ensures: result => (pk.len() == 32)
+{
   if pk.len() != 32 { return false; }
   var i = 0;
   while i < 32 {

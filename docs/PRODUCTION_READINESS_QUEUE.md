@@ -2,7 +2,7 @@
 
 **70% -- 7 of 10 readiness gates complete.** (Compiler pin: **v0.63.0**.)
 **Gates: corpus 950/950 release (952 full; 2 C001 carve-outs), modules
-509/509, probes 230/230, barename 0/509.**
+509/509, probes 231/231, barename 0/509.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -18,7 +18,7 @@ gates flip:
 5. Coverage ratchet green -- MET (floors104).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (497/517 modules, 3475/6200 fns).
-8. Contract coverage 100% (every public fn carries clauses) -- OPEN (47.3%).
+8. Contract coverage 100% (every public fn carries clauses) -- OPEN (47.9%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
    OPEN (11: 10 compiler, 1 stdlib algorithm).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
@@ -478,6 +478,18 @@ stdlib tag >= `8b23b79` for Gate P; tagged `stdlib-perf3` at `5037262`
 regens api-freeze, t2 `185342f4`, tags v0.62.3). The packages'
 `Vec[StructType]` trap-10 row is a retirement candidate (not reproducible
 on both sides); no local row existed.
+
+Update 2026-10-05 (wave 70 landed): crypto mac/kdf/keyx/rng/sign/poly --
+41 clauses / 41 pub (mac 12, kdf 9, keyx 9, rng_crypto 5, sign 5,
+poly1305_mac 1); crypto 17% -> 39.6%, global 47.3% -> 47.9%; floors106.
+Probe p_wave70_shapes.xi (231st, 79 checks) green on v0.63.0; targeted
+smokes crypto 36/36, poly 2/2, hash 39/39. Fix-first: hkdf_extract/
+hkdf_expand's Int parameter `hash` shadowed the `use xiom.crypto.hash;`
+alias, so every hash == 2 call AV'd; calls now fully qualified and the
+hash-2 paths verified. Skipped by design: scrypt (ROMix heap corruption),
+crypto_random_shuffle/choice (generic lowering blocked), the unsigned
+word returns and tuple helpers. Readiness next: log 19.1%, compress
+21.1%, encoding 23.7%.
 
 Update 2026-10-05 (wave 69 landed): os path/filetype + rand family --
 76 clauses / 76 pub covered (path 18, filetype 22, rand 20, pcg 5,

@@ -36,7 +36,10 @@ use xiom.num;
 
 /// Fill `len` bytes from the CSPRNG. Negative lengths return an empty vector.
 /// Complexity: O(len).
-pub fn crypto_random_bytes(len: Int) -> Vec[UInt8] {
+pub fn crypto_random_bytes(len: Int) -> Vec[UInt8]
+  ensures: (len < 0) => (result.len() == 0)
+  ensures: (len >= 0) => (result.len() == len)
+{
   if len < 0 { return Vec[UInt8].new(); }
   return crypto.secure_random_bytes(len);
 }
@@ -67,7 +70,10 @@ pub fn crypto_random_u32() -> UInt32 {
 
 /// Unbiased random integer in [0, n). Returns 0 for n <= 0.
 /// Complexity: O(1) expected.
-pub fn crypto_random_uniform(n: Int) -> Int {
+pub fn crypto_random_uniform(n: Int) -> Int
+  ensures: (n <= 0) => (result == 0)
+  ensures: (n > 0) => (result >= 0 && result < n)
+{
   if n <= 0 { return 0; }
   if n == 1 { return 0; }
   var bound = 4294967295;
@@ -106,7 +112,9 @@ fn _u64_lshr(x: UInt64, k: Int) -> UInt64 {
 
 /// Random double in [0, 1). Uses the top 53 bits of a 64-bit draw.
 /// Complexity: O(1).
-pub fn crypto_random_float() -> Float64 {
+pub fn crypto_random_float() -> Float64
+  ensures: result >= 0.0 && result < 1.0
+{
   var u = crypto_random_u64();
   var top = num.f64_from_u64(_u64_lshr(u, 11));
   return top / 9007199254740992.0;
@@ -152,7 +160,10 @@ pub fn crypto_seed_from_entropy() -> UInt64 {
 /// Uses bigint_is_prime (probabilistic). Returns an empty vector on invalid
 /// bit lengths or failure.
 /// Complexity: expected O(bits^4) with rejection.
-pub fn crypto_random_prime(bits: Int) -> Vec[UInt8] {
+pub fn crypto_random_prime(bits: Int) -> Vec[UInt8]
+  ensures: (bits < 16 || bits > 2048) => (result.len() == 0)
+  ensures: (bits >= 16 && bits <= 2048) => (result.len() == (bits + 7) / 8)
+{
   if bits < 16 || bits > 2048 { return Vec[UInt8].new(); }
   var byte_len = (bits + 7) / 8;
   var found = false;
@@ -184,7 +195,10 @@ pub fn crypto_random_prime(bits: Int) -> Vec[UInt8] {
 /// Random string drawn from an alphabet (uniform via the CSPRNG). Returns an
 /// empty string when the alphabet is empty or `len` is negative.
 /// Complexity: O(len).
-pub fn crypto_random_string(len: Int, alphabet: Str) -> Str {
+pub fn crypto_random_string(len: Int, alphabet: Str) -> Str
+  ensures: (len < 0 || alphabet.len() == 0) => (result.len() == 0)
+  ensures: (len >= 0 && alphabet.len() > 0) => (result.len() == len)
+{
   if len < 0 { return ""; }
   if alphabet.len() == 0 { return ""; }
   var result = "";

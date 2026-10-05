@@ -33,18 +33,24 @@ pub fn ed25519_keypair() -> (Vec[UInt8], Vec[UInt8]) {
 
 /// Sign a message with an Ed25519 secret key (64-byte signature).
 /// Blocked in the current build (see module header).
-pub fn ed25519_sign(sk: &Vec[UInt8], msg: &Vec[UInt8]) -> Vec[UInt8] {
+pub fn ed25519_sign(sk: &Vec[UInt8], msg: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: result.len() == 0
+{
   return Vec[UInt8].new();
 }
 
 /// Verify an Ed25519 signature. Blocked in the current build.
-pub fn ed25519_verify(pk: &Vec[UInt8], msg: &Vec[UInt8], sig: &Vec[UInt8]) -> Bool {
+pub fn ed25519_verify(pk: &Vec[UInt8], msg: &Vec[UInt8], sig: &Vec[UInt8]) -> Bool
+  ensures: result == false
+{
   return false;
 }
 
 /// Derive the Ed25519 public key from a secret key.
 /// Blocked in the current build (see module header).
-pub fn ed25519_public_key(sk: &Vec[UInt8]) -> Vec[UInt8] {
+pub fn ed25519_public_key(sk: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: result.len() == 0
+{
   return Vec[UInt8].new();
 }
 
@@ -79,7 +85,9 @@ pub fn ecdsa_sign(curve: Int, sk: &Vec[UInt8], msg: &Vec[UInt8]) -> (Vec[UInt8],
 }
 
 /// Verify an ECDSA signature. Blocked in the current build.
-pub fn ecdsa_verify(curve: Int, pk: &Vec[UInt8], msg: &Vec[UInt8], r: &Vec[UInt8], s: &Vec[UInt8]) -> Bool {
+pub fn ecdsa_verify(curve: Int, pk: &Vec[UInt8], msg: &Vec[UInt8], r: &Vec[UInt8], s: &Vec[UInt8]) -> Bool
+  ensures: result == false
+{
   return false;
 }
 
@@ -90,6 +98,8 @@ pub fn dsa_sign(p: &Vec[UInt8], q: &Vec[UInt8], g: &Vec[UInt8], x: &Vec[UInt8], 
 }
 
 /// Verify a DSA signature. Blocked in the current build.
-pub fn dsa_verify(p: &Vec[UInt8], q: &Vec[UInt8], g: &Vec[UInt8], y: &Vec[UInt8], msg: &Vec[UInt8], r: &Vec[UInt8], s: &Vec[UInt8]) -> Bool {
+pub fn dsa_verify(p: &Vec[UInt8], q: &Vec[UInt8], g: &Vec[UInt8], y: &Vec[UInt8], msg: &Vec[UInt8], r: &Vec[UInt8], s: &Vec[UInt8]) -> Bool
+  ensures: result == false
+{
   return false;
 }

@@ -35,7 +35,10 @@ use xiom.crypto.hash;
 /// Generic PBKDF2 key derivation (HMAC-SHA256 based). `iterations` and
 /// `key_len` must be positive; invalid inputs yield an empty vector.
 /// Complexity: O(iterations * key_len / 32).
-pub fn pbkdf2(password: &Vec[UInt8], salt: &Vec[UInt8], iterations: Int, key_len: Int) -> Vec[UInt8] {
+pub fn pbkdf2(password: &Vec[UInt8], salt: &Vec[UInt8], iterations: Int, key_len: Int) -> Vec[UInt8]
+  ensures: (iterations < 1 || key_len < 1) => (result.len() == 0)
+  ensures: (iterations >= 1 && key_len >= 1) => (result.len() == key_len)
+{
   if iterations < 1 { return Vec[UInt8].new(); }
   if key_len < 1 { return Vec[UInt8].new(); }
   let h_len = 32;
@@ -82,7 +85,10 @@ pub fn pbkdf2(password: &Vec[UInt8], salt: &Vec[UInt8], iterations: Int, key_len
 
 /// PBKDF2 with HMAC-SHA256 (alias of pbkdf2).
 /// Complexity: O(iterations * key_len / 32).
-pub fn pbkdf2_hmac_sha256(password: &Vec[UInt8], salt: &Vec[UInt8], iterations: Int, key_len: Int) -> Vec[UInt8] {
+pub fn pbkdf2_hmac_sha256(password: &Vec[UInt8], salt: &Vec[UInt8], iterations: Int, key_len: Int) -> Vec[UInt8]
+  ensures: (iterations < 1 || key_len < 1) => (result.len() == 0)
+  ensures: (iterations >= 1 && key_len >= 1) => (result.len() == key_len)
+{
   return pbkdf2(password, salt, iterations, key_len);
 }
 
@@ -93,7 +99,10 @@ pub fn pbkdf2_hmac_sha256(password: &Vec[UInt8], salt: &Vec[UInt8], iterations: 
 /// HKDF extract step: PRK = HMAC(salt, IKM). `hash` selects SHA-256 (1) or
 /// SHA-512 (2).
 /// Complexity: O(n), n = IKM length.
-pub fn hkdf_extract(hash: Int, ikm: &Vec[UInt8], salt: &Vec[UInt8]) -> Vec[UInt8] {
+pub fn hkdf_extract(hash: Int, ikm: &Vec[UInt8], salt: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: (hash == 2) => (result.len() == 64)
+  ensures: (hash != 2) => (result.len() == 32)
+{
   if hash == 2 {
     var salt512 = Vec[UInt8].new();
     var i = 0;
@@ -101,7 +110,7 @@ pub fn hkdf_extract(hash: Int, ikm: &Vec[UInt8], salt: &Vec[UInt8]) -> Vec[UInt8
       salt512.push(salt[i]);
       i = i + 1;
     }
-    return hash.crypto_hash_hmac_sha512(salt, ikm);
+    return xiom.crypto.hash.crypto_hash_hmac_sha512(salt, ikm);
   }
   return crypto.hmac_sha256(salt, ikm);
 }
@@ -110,7 +119,13 @@ pub fn hkdf_extract(hash: Int, ikm: &Vec[UInt8], salt: &Vec[UInt8]) -> Vec[UInt8
 /// `hash` selects SHA-256 (1) or SHA-512 (2). Returns an empty vector for
 /// `len` out of range.
 /// Complexity: O(len / hash_len).
-pub fn hkdf_expand(hash: Int, prk: &Vec[UInt8], info: &Vec[UInt8], len: Int) -> Vec[UInt8] {
+pub fn hkdf_expand(hash: Int, prk: &Vec[UInt8], info: &Vec[UInt8], len: Int) -> Vec[UInt8]
+  ensures: (len < 1) => (result.len() == 0)
+  ensures: (hash != 2 && len > 8160) => (result.len() == 0)
+  ensures: (hash == 2 && len > 16320) => (result.len() == 0)
+  ensures: (hash != 2 && len >= 1 && len <= 8160) => (result.len() == len)
+  ensures: (hash == 2 && len >= 1 && len <= 16320) => (result.len() == len)
+{
   var hash_len = 32;
   if hash == 2 { hash_len = 64; }
   if len < 1 { return Vec[UInt8].new(); }
@@ -133,7 +148,7 @@ pub fn hkdf_expand(hash: Int, prk: &Vec[UInt8], info: &Vec[UInt8], len: Int) -> 
     hmac_input.push(block_num as UInt8);
     var t = Vec[UInt8].new();
     if hash == 2 {
-      t = hash.crypto_hash_hmac_sha512(prk, &hmac_input);
+      t = xiom.crypto.hash.crypto_hash_hmac_sha512(prk, &hmac_input);
     } else {
       t = crypto.hmac_sha256(prk, &hmac_input);
     }
@@ -150,7 +165,11 @@ pub fn hkdf_expand(hash: Int, prk: &Vec[UInt8], info: &Vec[UInt8], len: Int) -> 
 
 /// One-shot HKDF-SHA256: extract then expand.
 /// Complexity: O(len / 32 + n).
-pub fn hkdf_sha256(ikm: &Vec[UInt8], salt: &Vec[UInt8], info: &Vec[UInt8], len: Int) -> Vec[UInt8] {
+pub fn hkdf_sha256(ikm: &Vec[UInt8], salt: &Vec[UInt8], info: &Vec[UInt8], len: Int) -> Vec[UInt8]
+  ensures: (len < 1) => (result.len() == 0)
+  ensures: (len > 8160) => (result.len() == 0)
+  ensures: (len >= 1 && len <= 8160) => (result.len() == len)
+{
   var prk = hkdf_extract(1, ikm, salt);
   return hkdf_expand(1, &prk, info, len);
 }
@@ -158,13 +177,21 @@ pub fn hkdf_sha256(ikm: &Vec[UInt8], salt: &Vec[UInt8], info: &Vec[UInt8], len: 
 /// Derive a master key from a shared secret (HKDF-SHA256 with the shared
 /// secret as IKM and an empty salt).
 /// Complexity: O(len / 32 + n).
-pub fn kdf_derive_master(secret: &Vec[UInt8], salt: &Vec[UInt8], info: &Vec[UInt8], len: Int) -> Vec[UInt8] {
+pub fn kdf_derive_master(secret: &Vec[UInt8], salt: &Vec[UInt8], info: &Vec[UInt8], len: Int) -> Vec[UInt8]
+  ensures: (len < 1) => (result.len() == 0)
+  ensures: (len > 8160) => (result.len() == 0)
+  ensures: (len >= 1 && len <= 8160) => (result.len() == len)
+{
   return hkdf_sha256(secret, salt, info, len);
 }
 
 /// Validate and adjust a cost parameter: clamps to [1, 1_000_000].
 /// Complexity: O(1).
-pub fn kdf_check_interval(n: Int) -> Int {
+pub fn kdf_check_interval(n: Int) -> Int
+  ensures: result >= 1 && result <= 1000000
+  ensures: (n < 1) => (result == 1)
+  ensures: (n > 1000000) => (result == 1000000)
+{
   if n < 1 { return 1; }
   if n > 1000000 { return 1000000; }
   return n;
@@ -379,7 +406,10 @@ fn _scrypt_romix(b: &Vec[UInt8], n: Int, r: Int) -> Vec[UInt8] {
 /// practical in pure XIOM. Do not use where exact Argon2id compatibility is
 /// required.
 /// Complexity: O(iterations * memory / 1024 + iterations).
-pub fn argon2id(password: &Vec[UInt8], salt: &Vec[UInt8], memory: Int, iterations: Int, parallelism: Int, key_len: Int) -> Vec[UInt8] {
+pub fn argon2id(password: &Vec[UInt8], salt: &Vec[UInt8], memory: Int, iterations: Int, parallelism: Int, key_len: Int) -> Vec[UInt8]
+  ensures: (key_len < 1) => (result.len() == 0)
+  ensures: (key_len >= 1) => (result.len() == key_len)
+{
   var eff = iterations;
   if memory > 0 {
     eff = iterations + memory / 1024;
@@ -396,7 +426,9 @@ pub fn argon2id(password: &Vec[UInt8], salt: &Vec[UInt8], memory: Int, iteration
 /// not practical in pure XIOM. Do not use where exact bcrypt compatibility is
 /// required.
 /// Complexity: O(2^cost).
-pub fn bcrypt(password: &Vec[UInt8], salt: &Vec[UInt8], cost: Int) -> Vec[UInt8] {
+pub fn bcrypt(password: &Vec[UInt8], salt: &Vec[UInt8], cost: Int) -> Vec[UInt8]
+  ensures: result.len() == 24
+{
   var c = cost;
   if c < 4 { c = 4; }
   if c > 20 { c = 20; }
