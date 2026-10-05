@@ -21,9 +21,9 @@ kept. Registry carries xiom-std 0.62.3, 0.62.4 and 0.63.0 (0.63.1 publish
 pending); tags pushed: stdlib-v0.62.3 (12a3a1b), stdlib-v0.62.4 (3800c08),
 stdlib-v0.63.0 (179cfea).
 Gates on v0.64.0: release corpus 953/953 FULL (m196 loopback smoke added),
-modules 509/509, probes 242/242, barename 0/509, floors114, module-smoke
+modules 509/509, probes 243/243, barename 0/509, floors114, module-smoke
 ratchet OK. Coverage = 52.1% global
-pub-with-clause. Waves landed: 63 net+hash, 64 reflect+iter adapters, 65x convert, 66 time, 67 format, 68 misc, 69 os+rand, 70 crypto, 71 log, 72 compress, 73 pin, 74 encoding, 75 encoding-rem+debug, 76 simd, 64.0 pin, 77 stats. Wave
+pub-with-clause. Waves landed: 63 net+hash, 64 reflect+iter adapters, 65x convert, 66 time, 67 format, 68 misc, 69 os+rand, 70 crypto, 71 log, 72 compress, 73 pin, 74 encoding, 75 encoding-rem+debug, 76 simd, 64.0 pin, 77 stats, Pulse hardening (write_all/server_parse_request/hmac_sha256_hex). Wave
 65 (iter clauses) is DEFERRED but pin-unblocked (block 27): the C001
 classifier is fixed on v0.63.1 and clauses may read tuple components; the
 deferred clause set (Range core 7 + chain 14 + fold 8 + iter_collect) is documented there.
@@ -36,13 +36,16 @@ FIRST TASK (wave 78): thread 25% (56 pub) then convert 25.6%, holding the
 compiler-blocked and the finding is updated. Re-retry the deferred set
 (Range core 7 + chain 14 + fold 8 + iter_collect) when the compiler
 closure work lands.
-(b) Pulse pure-XIOM hardening: TcpStream.write_all, server_parse_request,
-hmac_sha256_hex (the m196 read/write loopback lock already landed).
+(b) Pulse pure-XIOM hardening -- DONE 2026-10-05 (block 47):
+TcpStream.write_all, server_parse_request + ServerRequest and
+crypto.hmac_sha256_hex landed, locked by p_pulse_shapes.xi (243rd) and
+the extended smoke_net_tcp_stream.xi.
 (c) runtime-backed Pulse items (socket timeout/nonblocking/reuse-addr,
 real flush_stdout) wait for the compiler bundle or XIOM_RUNTIME_DIR.
 HANDOFF NOTE: new locks are p_pin0640_shapes.xi (m193-m196),
-tests/smoke/smoke_net_tcp_stream.xi (m196), the m193 guard-alloc smoke,
-and p_wave77_shapes.xi (wave 77 stats, 167 checks); p_wave43_shapes was
+tests/smoke/smoke_net_tcp_stream.xi (m196 + write_all), the m193
+guard-alloc smoke, p_wave77_shapes.xi (wave 77 stats, 167 checks) and
+p_pulse_shapes.xi (Pulse hardening, 33 checks); p_wave43_shapes was
 updated for m194 exactness; p_rvalue_float_vec_index.xi is the new
 known-failure repro for the rvalue Vec[Float64] index finding.
 Mandatory protocol:
@@ -62,7 +65,7 @@ drop the offending clause with a code comment (see blocks 27/65x).
 `tools/README.md`, update plan/session/queue in the same commit, YAML
 check, pure-ASCII conventional commit.
 (5) battery: `run_smokes.ps1 -ExcludeFile tools/known_failures/
-gate-exclusions.txt` (expect 953/953 full), probe corpus (expect 243),
+gate-exclusions.txt` (expect 953/953 full), probe corpus (expect 244),
 check_modules 509/509, barename 0/509, floors115 + module-smoke ratchets;
 record results in the session block; push `main`.
 
@@ -1592,6 +1595,28 @@ registry pin, agent recon for the rest)**
   gates; open: contract coverage 100%, zero open findings, beta-exit release
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
+
+**SESSION 2026-10-05 block 47 (Pulse hardening wave: write_all, server_parse_request, hmac_sha256_hex)**
+- New surfaces (Pulse relay follow-up): `TcpStream.write_all` in
+  xiom/net/net.xi (64 KiB staging-buffer loop, advances by the
+  kernel-reported partial count, `(data.len() == 0) => result.is_ok`
+  clause; `write` keeps its documented single-send semantics),
+  `server_parse_request` + `ServerRequest` in xiom/net/server.xi
+  (method/target/version, lowercased header pairs, Content-Length
+  framing and the body span; None on a malformed request line,
+  unterminated head, colon-less header or bad/negative length; reuses
+  server_parse_request_line), and `crypto.hmac_sha256_hex` (flat module;
+  hex_encode(hmac_sha256(...)), `result.len() == 64`).
+- Probe p_pulse_shapes.xi (243rd, 36 checks): RFC 4231 case 1 KAT,
+  crafted request parse plus malformed/empty None paths, and a
+  100000-byte loopback write_all roundtrip (over one chunk; head/mid/
+  tail bytes verified). Green on v0.64.0; smoke_net_tcp_stream.xi
+  extended with a write_all exchange (targeted smoke 1/1). Coverage
+  held: floors114 ratchet OK (6502 pub, 52.1%).
+- Battery on this commit (v0.64.0): release corpus 953/953 full (1390.1s,
+  no exclusions); probes 243/243 (320.1s); check_modules 509/509 (224.4s);
+  barename 0/509 (296.4s); floors114 + module-smoke (497/517, 3477/6202)
+  ratchets OK.
 
 **SESSION 2026-10-05 block 46 (wave 77: stats clauses + two fix-firsts; floors114)**
 - Wave 77: 93 clauses / 48 new pub -- dist 15 (invalid-parameter NaN

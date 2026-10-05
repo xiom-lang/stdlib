@@ -25,6 +25,7 @@ use xiom.math.random_range;
 use xiom.math.seed_rng;
 use xiom.chacha;
 use xiom.poly1305;
+use xiom.encoding;
 
 // ============================================================================
 // Hardware Acceleration FFI
@@ -1158,6 +1159,14 @@ pub fn hmac_sha256(key: &Vec[UInt8], data: &Vec[UInt8]) -> Vec[UInt8]
     i = i + 1;
   }
   return sha256(&outer);
+}
+
+/// Lowercase hex-encoded HMAC-SHA-256 (64 chars). Convenience wrapper for
+/// header/signature consumers (Pulse relay): hex_encode(hmac_sha256(...)).
+pub fn hmac_sha256_hex(key: &Vec[UInt8], data: &Vec[UInt8]) -> Str
+  ensures: result.len() == 64
+{
+  return encoding.hex_encode(hmac_sha256(key, data));
 }
 
 // ============================================================================

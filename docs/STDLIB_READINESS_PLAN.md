@@ -1160,6 +1160,14 @@ T1/T2 yields.
         floors114. Probe p_wave77_shapes.xi (242nd, 167 checks) green on
         v0.64.0 pre/post; targeted smoke smoke_stats 1/1. Findings
         9 -> 10 (9 compiler, 1 stdlib). Next: thread 25% / convert 25.6%.
+        Pulse hardening (2026-10-05): TcpStream.write_all (64 KiB chunked,
+        partial-send aware, empty-Ok lock), server_parse_request +
+        ServerRequest (headers, Content-Length, body span) and
+        crypto.hmac_sha256_hex (RFC 4231 KAT); probe p_pulse_shapes.xi
+        (243rd, 36 checks) + smoke_net_tcp_stream write_all exchange;
+        floors114 ratchet held. Runtime-backed Pulse items (socket
+        options, real flush_stdout) stay queued for the runtime bundle /
+        XIOM_RUNTIME_DIR.
        Ratchet:
         tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors114.json
        tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json

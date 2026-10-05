@@ -42,6 +42,86 @@ pub fn server_parse_request_line(line: Str) -> Option[(Str, Str, Str)]
   Some((method, target, version))
 }
 
+/// Parsed HTTP/1.x request head plus the body span inside the raw buffer.
+/// `body_len` is the Content-Length value (0 when the header is absent);
+/// the body bytes are [body_start, body_start + body_len) in that buffer.
+pub type ServerRequest = {
+  method: Str;
+  target: Str;
+  version: Str;
+  headers: Vec[(Str, Str)];
+  body_start: Int;
+  body_len: Int;
+}
+
+/// server_parse_request parses raw HTTP/1.x request bytes (head + body)
+/// into method/target/version, a lowercased (name, value) header list and
+/// the body span. Returns None when the request line is malformed, the
+/// header block is not CRLF-terminated, a header has no colon, or a
+/// Content-Length value is missing/negative/not an integer. The request
+/// line is parsed by server_parse_request_line. Complexity: O(n). Pure.
+pub fn server_parse_request(bytes: &Vec[UInt8]) -> Option[ServerRequest]
+  ensures: (bytes.len() == 0) => (result.is_none == true)
+{
+  let n = bytes.len();
+  if n == 0 { return None; }
+  var head_end = -1;
+  var body_start = -1;
+  var i = 0;
+  while i + 3 < n {
+    if bytes[i] == 13u8 && bytes[i + 1] == 10u8 && bytes[i + 2] == 13u8 && bytes[i + 3] == 10u8 {
+      head_end = i;
+      body_start = i + 4;
+      i = n;
+    } else {
+      i = i + 1;
+    }
+  }
+  if body_start < 0 { return None; }
+  var head_bytes = Vec[UInt8].new();
+  var j = 0;
+  while j < head_end {
+    head_bytes.push(bytes[j]);
+    j = j + 1;
+  }
+  let head = Str::from_utf8(head_bytes);
+  let rl_end = idx_of(head, "\r\n");
+  if rl_end <= 0 { return None; }
+  let line_res = server_parse_request_line(string.str_slice(head, 0, rl_end));
+  if line_res.is_none { return None; }
+  let (method, target, version) = line_res?;
+  var headers = Vec[(Str, Str)].new();
+  var body_len = 0;
+  var pos = rl_end + 2;
+  while pos < head.len() {
+    var le = _idx_from(head, pos, "\r\n");
+    if le < 0 { le = head.len(); }
+    let hline = string.str_slice(head, pos, le);
+    let colon = idx_of(hline, ":");
+    if colon <= 0 { return None; }
+    let name = string.str_lower(string.str_slice(hline, 0, colon));
+    var vstart = colon + 1;
+    if vstart < hline.len() {
+      if string.str_slice(hline, vstart, vstart + 1) == " " {
+        vstart = vstart + 1;
+      }
+    }
+    let value = string.str_slice(hline, vstart, hline.len());
+    if name == "content-length" {
+      match string.str_to_int(value) {
+        Ok(v) => {
+          if v < 0 { return None; }
+          body_len = v;
+        },
+        Err(_) => { return None; },
+      }
+    }
+    headers.push((name, value));
+    pos = le + 2;
+  }
+  return Some(ServerRequest{ method: method; target: target; version: version; headers: headers; body_start: body_start; body_len: body_len; });
+}
+
 /// server_build_status_line builds a status line like
 /// "HTTP/1.1 200 OK". Complexity: O(1). Pure.
 pub fn server_build_status_line(code: Int) -> Str
@@ -118,6 +198,23 @@ fn idx_of(hay: Str, needle: Str) -> Int {
   if nlen == 0 { return 0; }
   if nlen > hlen { return -1; }
   var i = 0;
+  while i <= hlen - nlen {
+    if string.str_slice(hay, i, i + nlen) == needle {
+      return i;
+    }
+    i = i + 1;
+  }
+  -1
+}
+
+// _idx_from returns the first index >= from where needle occurs, or -1.
+fn _idx_from(hay: Str, from: Int, needle: Str) -> Int {
+  let hlen = hay.len();
+  let nlen = needle.len();
+  if nlen == 0 { return 0; }
+  if from < 0 { return -1; }
+  if nlen > hlen { return -1; }
+  var i = from;
   while i <= hlen - nlen {
     if string.str_slice(hay, i, i + nlen) == needle {
       return i;

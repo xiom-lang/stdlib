@@ -3,7 +3,7 @@
 **75.2% -- 7 of 10 gates complete; gate 8 at 52.1% (partial credit) and
 gates 9-10 discrete.** (Compiler pin: **v0.64.0**.)
 **Gates: corpus 953/953 full (C001 carve-outs retired on v0.63.1; new
-TcpStream loopback smoke added), modules 509/509, probes 242/242,
+TcpStream loopback smoke added), modules 509/509, probes 243/243,
 barename 0/509.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
@@ -14,9 +14,9 @@ gates flip:
    full, no carve-outs (C001 fixed by 4bf8cf1e; 20/20 + 20/20 stress).
    lz4 is fixed by m190 and stayed in the gate; the new TcpStream loopback
    smoke locks m196.
-3. Probe corpus green -- MET (242/242 on v0.64.0, incl. the promoted
-   regression probes, the pin locks, the v0.64.0 m193-m196 probe and the
-   wave-77 stats probe).
+3. Probe corpus green -- MET (243/243 on v0.64.0, incl. the promoted
+   regression probes, the pin locks, the v0.64.0 m193-m196 probe, the
+   wave-77 stats probe and the Pulse hardening probe).
 4. Strict bare-name scan clean -- MET (0/509).
 5. Coverage ratchet green -- MET (floors114).
 6. Documentation ratchet 100% -- MET.
@@ -50,12 +50,17 @@ items verified against our tree:
   a deadline-capable recv. Caveat: the compiler archives bundle the older
   runtime, so consumers need `XIOM_RUNTIME_DIR` (or the next compiler pin)
   until the updated runtime ships.
-- **TcpStream.write partial-send:** `xiom/net/net.xi:124-144` is a single
-  `xiom_socket_send` returning `Ok(n)`; add `write_all` (loop) + probe and
-  document the single-send semantics of `write`.
-- **Server request-head parser:** `xiom/net/server.xi` exposes only
-  `server_parse_request_line`; add `server_parse_request(bytes)` with header
-  list, `Content-Length` framing and a body span.
+- **TcpStream.write partial-send: DONE (2026-10-05).** `write_all` added
+  (`xiom/net/net.xi`: 64 KiB staging-buffer loop, advances by the
+  kernel-reported partial count, empty => Ok(0) clause); `write` keeps
+  its documented single-send semantics. Locked by p_pulse_shapes.xi
+  (100000-byte loopback) and the extended smoke_net_tcp_stream.xi.
+- **Server request-head parser: DONE (2026-10-05).**
+  `server_parse_request(bytes)` + `ServerRequest` added to
+  `xiom/net/server.xi`: method/target/version, lowercased (name, value)
+  header list, Content-Length framing and the body span; None on a
+  malformed request line, unterminated head, header without colon or a
+  bad/negative Content-Length. Reuses `server_parse_request_line`.
 - **`str_bytes`: already exists** at `xiom/string/slice.xi:135`
   (`ensures: result.len() == s.len()`); Pulse missed it because the root
   `xiom.string` does not re-export submodule fns -- use
@@ -65,7 +70,9 @@ items verified against our tree:
   (abnormal-exit durability stays runtime/CRT-dependent). Pulse confirms
   this finding is the root cause of their lagging/truncated redirected
   logs (log evidence now attributed to io.xi:903).
-- **`hmac_sha256_hex` absent:** add a convenience wrapper (+ probe).
+- **`hmac_sha256_hex`: DONE (2026-10-05).** `crypto.hmac_sha256_hex`
+  (flat module; `hex_encode(hmac_sha256(...))`, 64-char ensure) locked
+  against RFC 4231 case 1 by p_pulse_shapes.xi.
 - **Executable test registry: compiler-owned** (`xiom/test/harness.xi`
   header: module-scope fn-pointer reassignment unsupported); relay to the
   compiler lane.
@@ -81,6 +88,12 @@ items verified against our tree:
   truncated redirected logs; runtime-backed items accepted with the
   `XIOM_RUNTIME_DIR` caveat; new loopback smoke noted as the read/write
   lock.
+- Pulse hardening wave landed 2026-10-05: `TcpStream.write_all`,
+  `server_parse_request` + `ServerRequest`, `crypto.hmac_sha256_hex`
+  (probe p_pulse_shapes.xi, 243rd; smoke_net_tcp_stream.xi extended).
+  Remaining runtime-backed items (`socket_set_timeout`/`nonblocking`/
+  `reuse_addr` + real `flush_stdout`) wait for the runtime bundle or
+  `XIOM_RUNTIME_DIR`.
 
 ## Systems track (bare-metal / GPU / driver-adjacent) -- relayed 2026-10-05
 

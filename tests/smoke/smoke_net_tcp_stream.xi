@@ -43,6 +43,16 @@ fn main() -> Int {
                 Err(_) => { return 19; }
               }
               if buf2[1] != 105u8 { return 20; }
+              match s.clone().write_all(&msg) {
+                Ok(n) => { if n != 2 { return 21; } }
+                Err(_) => { return 22; }
+              }
+              var buf3 = Vec[UInt8].new();
+              match c.clone().read(&mut buf3) {
+                Ok(n) => { if n != 2 { return 23; } }
+                Err(_) => { return 24; }
+              }
+              if buf3[0] != 104u8 || buf3[1] != 105u8 { return 25; }
               s.close();
               c.close();
               return 0;

@@ -143,6 +143,48 @@ pub fn TcpStream.write(self, data: &Vec[UInt8]) -> Result[Int, NetError]
   }
 }
 
+/// Write every byte, retrying after partial sends; Ok(total) or Err.
+/// Chunks the payload through a 64 KiB staging buffer and advances by the
+/// kernel-reported count, so payloads larger than the buffer and partial
+/// sends both complete. `write` keeps its documented single-send semantics.
+pub fn TcpStream.write_all(self, data: &Vec[UInt8]) -> Result[Int, NetError]
+  requires: true
+  ensures: (data.len() == 0) => (result.is_ok == true)
+{
+  unsafe {
+    let dlen = data.len();
+    if dlen == 0 {
+      return Ok(0);
+    }
+    var raw_buf: [65536]UInt8;
+    var total = 0;
+    var off = 0;
+    while off < dlen {
+      var end = off + 65536;
+      if end > dlen {
+        end = dlen;
+      }
+      var n = 0;
+      var i = off;
+      while i < end {
+        raw_buf[n] = data[i];
+        n = n + 1;
+        i = i + 1;
+      }
+      let sent = xiom_socket_send(self.fd, &raw_buf as *UInt8, n);
+      if sent < 0 {
+        return Err(NetError{ message: "write_all failed"; code: sent; });
+      }
+      if sent == 0 {
+        return Err(NetError{ message: "write_all stalled"; code: -201; });
+      }
+      total = total + sent;
+      off = off + sent;
+    }
+    return Ok(total);
+  }
+}
+
 /// Close the stream; Err on failure.
 pub fn TcpStream.close(self) -> Result[Unit, NetError]
   ensures: result.is_ok == true
