@@ -1484,6 +1484,10 @@ registry pin, agent recon for the rest)**
   format 27.3%, misc 13.9%, os 15.3%, rand 16%, crypto 17%, log 19.1%,
   compress 21.1%, encoding 23.7%, rand part done next; remaining big
   dirs (ui, net extras, etc.) continue afterwards. Battery recorded below.
+- Battery on 4732c35 (v0.63.0): release-gate corpus 950/950 (2 C001
+  carve-outs of 952; 713.3s); probes 228/228 (259.2s); check_modules
+  509/509 (163.6s); barename 0/509 (218s); floors103 + module-smoke
+  ratchets OK.
 
 **SESSION 2026-10-05 block 33 (stdlib 0.62.3/0.62.4/0.63.0 PUBLISHED; C001 fix on main)**
 - Publish complete, staging-first then production (all environment
