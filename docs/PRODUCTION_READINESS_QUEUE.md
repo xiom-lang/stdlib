@@ -24,16 +24,37 @@ gates flip:
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
 
 Meter formula: MET gates count 1.0; gate 8 counts its current
-pub-with-clause fraction (49.3% -> 0.493); gates 9 and 10 get no partial
+pub-with-clause fraction (49.8% -> 0.498); gates 9 and 10 get no partial
 credit (discrete). Update the percentage and the gate-8 fraction in the
 same commit as each floors dump so the meter moves smoothly toward 80%.
 
-Authoritative order for the stdlib lane to reach 100%. State at handoff:
-`main` = `a948149` (+ this docs commit), 38 commits ahead of origin, unpushed;
-compiler pin `v0.61.3`; all gates green (modules 509/509, corpus 951/951,
-probes 181/181, barename 0/509, coverage floors66, doc ratchet, strict-clause
-catalog clean); global pub-with-clause 26.2%; release pre-flight ready
-(`docs/RELEASE_CHECKLIST.md`, `release-notes/v0.62.0.md` = 2 highlights).
+Authoritative order: the gates above, then the updates below newest-first.
+Current state: compiler pin v0.63.1; coverage 49.8%, meter 75.0%; handoff
+in `docs/stdlib_session.md` snapshot 12.
+
+## Systems track (bare-metal / GPU / driver-adjacent) -- relayed 2026-10-05
+
+Not a readiness gate yet; do not displace coverage waves before gate 10
+(beta-exit cut) unless the owner re-prioritizes.
+
+- Compiler asks (relay to the compiler lane): (1) `--freestanding`/
+  no-runtime target with linker script, allocator hooks and panic/abort
+  paths; (2) `repr(C)`/packed struct layout plus by-value ABI guarantees
+  with regression tests; (3) volatile load/store, memory fences and
+  ordered atomics (CAS variants); (4) compile-time contract-check
+  disable for hard-real-time paths; (5) later: device-code (SPIR-V)
+  target with memory-space/barrier types.
+- Stdlib assets today: `xiom.ffi` (dl/SafePtr/FFIBuffer/marshal; its
+  header names vulkan/imgui/glfw as the consumers), `simd` 90 pub fns,
+  `thread`/`sync` + `AtomicInt`, epoll/kqueue async runtime, mmap/ioctl/
+  os-event modules, guard-page/mprotect machinery in the runtime.
+- Stdlib work on unlock (probe-first, one surface at a time): GPU compute
+  loader skeleton (Vulkan instance/device/compute path, SPIR-V blobs,
+  runtime skip when no loader DLL), mmio/volatile shims via C helpers
+  until volatile lands, RAII/Drop for FFI handles (ffi Phase 2), and a
+  deterministic CPU physics package on math/geom/simd.
+- Cheap prerequisites already in the coverage path (`ffi`, `mem`, `ptr`,
+  `io`, `thread`, `sync`) keep landing as normal waves.
 
 Update 2026-09-25 (wave 30 landed): A1/A2 DONE (`02dde42`, floors67) --
 signal 40/40 and exponential 18/18 pub covered; math 8.3% -> 14.1%,

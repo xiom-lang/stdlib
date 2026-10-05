@@ -52,6 +52,12 @@ check_modules 509/509, barename 0/509, floors111 + module-smoke ratchets;
 record results in the session block; push `main`.
 
 QUEUED (do only when triggered):
+- Systems track relayed to the compiler lane 2026-10-05 (queue section
+  "Systems track"): asks are freestanding/no-runtime target, repr(C)/
+  by-value ABI, volatile/fences/ordered atomics, contract-disable, later
+  SPIR-V device code. Stdlib starts gpu/mmio/handle-RAII skeletons only
+  on unlock, probe-first, and does not displace coverage waves before
+  gate 10.
 - DONE 2026-10-05 (v0.63.1): the C001 carve-outs are retired
   (4bf8cf1e in the release; 20/20 + 20/20 stress). Next: retry the
   wave-65 iter clause set (block 27), now with the v0.63.1
