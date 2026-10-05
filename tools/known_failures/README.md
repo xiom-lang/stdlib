@@ -16,9 +16,9 @@ xiom --force -o out.exe tools/known_failures/<file>.xi
 
 ## Current
 
-**Open finding 2026-10-04 (official v0.62.3, v0.62.4, v0.63.0 and
-v0.61.3): the C001 classifier is run-to-run nondeterministic.** The
-direct-form iter-range reducer (`range-sums + contains`) flips between
+**RESOLVED 2026-10-05 (compiler v0.63.1, fix `4bf8cf1e`): the C001
+classifier is fixed.**
+The direct-form iter-range reducer (`range-sums + contains`) flips between
 compiling and failing
 `C001: 'contains' receiver does not expose a concrete Vec/Slice/Array
 element type` for identical invocations. Six consecutive compiles of the
@@ -31,9 +31,9 @@ HashMap-iteration order -- the wave-62 "cleared" C001 state was
 probabilistic, not fixed. Repro
 `tools/known_failures/p_iter_range_contains_c001.xi` (expected rc 0;
 current pins compile-fail a random subset of runs). The two flaky smokes
-remain carve-outs in the release gate for the v0.63.0 pin
-(`tools/known_failures/gate-exclusions.txt`); ci/heavy keep the full
-corpus.
+were removed from the release gate on v0.63.1 (20/20 + 20/20 stress);
+the C001 carve-out file now holds no exclusions, and ci/heavy keep running
+the full corpus.
 
 **Open finding 2026-10-04 (official v0.62.3, v0.62.4, v0.63.0, v0.61.3
 and the m189 dev build; CALL SIDE FIXED on v0.62.4+): `xiom.iter`

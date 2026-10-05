@@ -221,20 +221,21 @@ pub fn monotonic_ms() -> Int
 /// === Instant -- a point in time (monotonic clock) ===
 pub type Instant = { t: Int; }
 
-/// Wall-clock reading from `time(0)`, kept for compatibility. For monotonic
-/// elapsed-time measurement prefer `xiom.time.monotonic_ms` (or
-/// `xiom.async.timer.Stopwatch`).
+/// The current monotonic instant (second resolution), backed by the runtime
+/// monotonic clock; immune to wall-clock adjustments. Prefer
+/// `xiom.time.monotonic_ms` for millisecond resolution.
 pub fn Instant.now() -> Instant
-  requires: true  // extern time() call (T002 confinement)
+  ensures: result.t >= 0
+  requires: true  // extern/runtime clock confinement (T002)
 {
-  return Instant{ t: time(0); };
+  return Instant{ t: monotonic_ms() / 1000; };
 }
 
-/// Time elapsed since this instant.
+/// Time elapsed since this instant (monotonic clock, second resolution).
 pub fn Instant.elapsed(self) -> Duration
-  requires: true  // extern time() call (T002 confinement)
+  requires: true  // extern/runtime clock confinement (T002)
 {
-  let now = time(0);
+  let now = monotonic_ms() / 1000;
   let diff = now - self.t;
   return Duration.from_secs(diff);
 }
@@ -260,7 +261,7 @@ pub type SystemTime = { secs: Int; nanos: Int; }
 
 /// Wall-clock reading (may move backwards when the clock is adjusted).
 pub fn SystemTime.now() -> SystemTime
-  requires: true  // extern time() call (T002 confinement)
+  requires: true  // extern/runtime clock confinement (T002)
 {
   return SystemTime{ secs: time(0); nanos: 0; };
 }
@@ -347,7 +348,7 @@ fn decompose_epoch(epoch: Int) -> DateTime {
 
 /// Current UTC date and time.
 pub fn DateTime.now() -> DateTime
-  requires: true  // extern time() call (T002 confinement)
+  requires: true  // extern/runtime clock confinement (T002)
 {
   let epoch = time(0);
   return decompose_epoch(epoch);
@@ -392,7 +393,7 @@ pub fn DateTime.weekday(self) -> Int {
 
 /// Current UTC DateTime (alias of `DateTime.now`).
 pub fn utc_now() -> DateTime
-  requires: true  // extern time() call (T002 confinement)
+  requires: true  // extern/runtime clock confinement (T002)
 {
   let epoch = time(0);
   return decompose_epoch(epoch);
@@ -472,7 +473,7 @@ pub fn date_new(year: Int, month: Int, day: Int) -> Date {
 /// date_now returns the current date computed from the Unix timestamp.
 /// Complexity: O(1). Uses time(0) for the system clock.
 pub fn date_now() -> Date
-  requires: true  // extern time() call (T002 confinement)
+  requires: true  // extern/runtime clock confinement (T002)
 {
   let ts = time(0);
   return timestamp_to_date(ts);
@@ -678,7 +679,7 @@ pub fn date_compare(a: &Date, b: &Date) -> Int {
 /// unix_timestamp returns the current Unix timestamp (seconds since epoch).
 /// Delegates to the C time(2) call.  Complexity: O(1).
 pub fn unix_timestamp() -> Int
-  requires: true  // extern time() call (T002 confinement)
+  requires: true  // extern/runtime clock confinement (T002)
 {
   return time(0);
 }

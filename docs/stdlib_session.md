@@ -4,31 +4,31 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 -->
 # XIOM Stdlib Session -- Handoff
 
-## 0A. CONTINUE HERE -- handoff snapshot 10 (updated 2026-10-05, wave 72 complete)
+## 0A. CONTINUE HERE -- handoff snapshot 11 (updated 2026-10-05, v0.63.1 pin complete)
 
 **PASTE-READY PROMPT FOR THE NEXT SESSION (copy this block):**
 
 ---
 You are continuing the XIOM stdlib lane. Worktree `E:\xiom-lang\stdlib`,
-branch `main`. Read `docs/stdlib_session.md` blocks 40 (latest), 39, 38
+branch `main`. Read `docs/stdlib_session.md` blocks 41 (latest), 40, 39
 (publish), 27 (iter block) and `docs/PRODUCTION_READINESS_QUEUE.md`
 before acting; snapshot 5 below the prompt keeps the deep protocol lore.
 
-STATE (2026-10-05): compiler pin = official v0.63.0 (SHA256 `689881f4...`,
-verified; v0.62.4/v0.62.3/v0.61.3 archives kept under
-`%TEMP%\kilo\stdlib_ws\v06*/x/bin`). Registry now carries xiom-std 0.62.3,
-0.62.4 and 0.63.0 (staging then production publishes approved and green);
-tags pushed: stdlib-v0.62.3 (12a3a1b), stdlib-v0.62.4 (3800c08),
-stdlib-v0.63.0 (179cfea). Gates on v0.63.0: release corpus 950/950 (2 C001
-carve-outs of 952; ci/heavy run the full corpus), modules 509/509, probes
-233/233, barename 0/509, floors108, module-smoke ratchet OK. Coverage =
-49.3% global pub-with-clause. Waves landed: 63 net+hash,
-64 reflect+iter adapters, 65x convert, 66 time, 67 format, 68 misc, 69 os+rand, 70 crypto, 71 log, 72 compress. Wave
-65 (iter clauses) is BLOCKED on the pin (block 27): clauses/calls on
-closure-delegating catalog fns flip between closure use-before-def and the
-C001 classifier; the deferred clause set is documented there.
+STATE (2026-10-05): compiler pin = official v0.63.1 (tag c0fa3a2d, release commit
+1b972478; registry-verified SHA256s: manifest 79d6afad..., linux-x64 949707e4...,
+windows-x64 f9dc9ec5...; install at %TEMP%\kilo\stdlib_ws\v0.63.1\bin; v0.62.3/
+v0.62.4/v0.63.0 archives kept. Registry carries xiom-std 0.62.3, 0.62.4 and 0.63.0
+(staging then production publishes approved and green); tags pushed:
+stdlib-v0.62.3 (12a3a1b), stdlib-v0.62.4 (3800c08), stdlib-v0.63.0 (179cfea).
+Gates on v0.63.1: release corpus 952/952 FULL (C001 carve-outs retired by
+4bf8cf1e; 20/20 + 20/20 stress), modules 509/509, probes 234/234, barename
+0/509, floors109, module-smoke ratchet OK. Coverage = 49.3% global
+pub-with-clause. Waves landed: 63 net+hash, 64 reflect+iter adapters, 65x convert, 66 time, 67 format, 68 misc, 69 os+rand, 70 crypto, 71 log, 72 compress, 73 pin. Wave
+65 (iter clauses) is DEFERRED but pin-unblocked (block 27): the C001
+classifier is fixed on v0.63.1 and clauses may read tuple components; the
+deferred clause set (Range core 7 + chain 14 + fold 8 + iter_collect) is documented there.
 
-FIRST TASK (wave 73): coverage wave on the next low dir -- encoding 23.7%
+FIRST TASK (wave 74): coverage wave on the next low dir -- encoding 23.7%
 (merge files to hold 40-60 pub), then debug 24.4%. Fix-first ledger for
 encoding (queue 2026-10-05): utf8_valid(empty) contract abort at
 encoding.xi:501, base64url_decode dangling-char drop (both copies), and
@@ -38,27 +38,32 @@ new clauses. Mandatory protocol:
 (no unsigned `>= 0`, no `is_ok || is_err`, no self-mirrors); clauses run at
 runtime, so never read Result/Option payloads, guard division/NaN, and
 prefer exact mirrors, length/presence bands and `@pre` invariants.
-(2) probe-first: add `tools/probes/p_wave73_shapes.xi` exercising every
+(2) probe-first: add `tools/probes/p_wave74_shapes.xi` exercising every
 clause-guard path; bind module-returned values to `let` before comparing
 (inline unsigned compares misread high bits); bind `Vec.new()`
 temporaries passed as `&Vec`; do not declare externs for runtime guard
-symbols; green on v0.63.0 (v0.61.3 cross-check when cheap).
+symbols; green on v0.63.1 (v0.63.0 cross-check when cheap).
 (3) apply, run targeted smokes; if unrelated codegen breaks, bisect and
 drop the offending clause with a code comment (see blocks 27/65x).
-(4) dump `tools/coverage_floors109.json`, wire the workflows +
+(4) dump `tools/coverage_floors110.json`, wire the workflows +
 `tools/README.md`, update plan/session/queue in the same commit, YAML
 check, pure-ASCII conventional commit.
 (5) battery: `run_smokes.ps1 -ExcludeFile tools/known_failures/
-gate-exclusions.txt` (expect 950/950), probe corpus (expect 234),
-check_modules 509/509, barename 0/509, floors109 + module-smoke ratchets;
+gate-exclusions.txt` (expect 952/952 full), probe corpus (expect 235),
+check_modules 509/509, barename 0/509, floors110 + module-smoke ratchets;
 record results in the session block; push `main`.
 
 QUEUED (do only when triggered):
-- First compiler archive containing `4bf8cf1e`: drop the two C001
-  exclusions, run the 20-run stress on `smoke_iter_range` /
-  `smoke_iter_find_all_any` (expect deterministic green), then promote the
-  lock; afterwards retry the wave-65 iter clause set (block 27) and the
-  iter_collect clause side.
+- DONE 2026-10-05 (v0.63.1): the C001 carve-outs are retired
+  (4bf8cf1e in the release; 20/20 + 20/20 stress). Next: retry the
+  wave-65 iter clause set (block 27), now with the v0.63.1
+  tuple-component clause capability, probe-first; include the
+  iter_collect clause side (Range core 7 + chain 14 + fold 8).
+- Repo-wide `result.value` payload-clause audit (v0.63.1 lowers payload
+  clauses strictly): IOError/struct payload `.len()` shapes are bogus and
+  can break any caller (io/pipe.xi 44/65/136; error/context.xi Option
+  payloads; grep `result\.value`), while Str payloads are valid. Retire
+  per file with a comment; io.xi's four were retired in the pin wave.
 - One green heavy run -> add `macos-14` to the `release.yml` matrix
   (heavy already has it).
 - Same-leaf audit follow-up (lz4 class): soundex leaves in
@@ -66,8 +71,8 @@ QUEUED (do only when triggered):
   lz4 umbrella already renamed to `lz4_compress_checked` /
   `lz4_decompress_checked` (8991c3e) and the stale
   `xiom.misc.misc.soundex` "0000" copy now delegates (e385ca1).
-- Release-only note: the compiler's own v0.63.0 archive bundles a
-  pre-bound-check runtime; `stdlib-v0.63.0` carries the arena-audit fix.
+- Release-only note: the compiler's v0.63.1 archive bundles STDLIB_VERSION
+  cd61062 (pre-wave); stdlib-v0.63.1 carries everything since.
 - Next stdlib release follows the documented flow: re-pin, package.xi +
   release notes + CHANGELOG, tag `stdlib-v*`, release.yml gates/package,
   staging canary, then production with the registry-publish environment
@@ -1538,6 +1543,43 @@ registry pin, agent recon for the rest)**
   gates; open: contract coverage 100%, zero open findings, beta-exit release
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
+
+**SESSION 2026-10-05 block 41 (v0.63.1 pin: Instant monotonic + C001 retire; floors109)**
+- v0.63.1 re-pin: COMPILER_VERSION/package.xi -> v0.63.1 (tag c0fa3a2d,
+  release commit 1b972478; handoff 5666d092). Registry lane SHA256-verified
+  nine entries; STDLIB_VERSION stays cd61062, so everything rides our repo.
+- C001 trigger fired: 4bf8cf1e is an ancestor of 1b972478; 20/20 + 20/20
+  compile+run stress on smoke_iter_range / smoke_iter_find_all_any
+  (registry lane independent 20/20 + 20/20). Both exclusions dropped from
+  gate-exclusions.txt (now zero exclusions); release corpus runs FULL
+  952/952. C001 finding marked RESOLVED in known_failures README.
+- Instant fix-first: Instant.now()/elapsed() switched from wall-clock
+  time(0) to monotonic_ms()/1000 (second resolution); `ensures: result.t >= 0`
+  added to Instant.now; SystemTime stays epoch wall clock; clock-confine
+  comments normalized to "extern/runtime clock confinement (T002)";
+  STDLIB_BETA_LIMITATIONS.md note retired. Locked by p_pin0631_shapes.xi
+  (234th; Instant below epoch scale, SystemTime epoch, elapsed >= 0,
+  instant_* arithmetic, and the bare-lz4 leaf resolution).
+- lz4 rename decision: kept (`lz4_compress_checked` umbrella); compiler
+  v0.63.1 makes the rename optional (bare calls bind the checker's target).
+- Pin effects: duplicate-index W001 warnings gone; contract-evaluator false
+  aborts for tuple/payload clauses fixed (future waves may now clause tuple
+  returns); v0.63.1 also fixes SMT receiver emission and catalog flush.
+- Fix-first caught by the sweep probe on the pin: io.write_file_bytes'
+  Err clause `result.value.len() > 0` (Result[Unit, IOError] payload read;
+  `.len()` on IOError) lowered strictly into str_len(IOError) -- any caller
+  of gzip_compress_file failed clang; same clause retired from move_file,
+  write_file_lines, append_line (io.xi switched to LF for the edit; git
+  normalizes). Repo-wide `result.value` IOError-payload audit queued
+  (io/pipe.xi lines 44/65/136 etc.); the Str-payload versions (read_int/
+  parse_int family) are valid and stay.
+- Probe p_pin0631_shapes.xi (234th, 14 checks): green on v0.63.1.
+- Coverage: time 61 clauses (Instant.now +1; pub% unchanged at 41.3),
+  global 49.3%; floors109 wired (ci/heavy/release + tools/README + plan).
+- Battery on this commit (v0.63.1): release corpus 952/952 full
+  (1081.1s, no exclusions); probes 234/234 (448.6s); check_modules
+  509/509 (302.1s); barename 0/509 (315.0s); floors109 (io clauses 139
+  after the payload-clause retirement) + module-smoke ratchets OK.
 
 **SESSION 2026-10-05 block 40 (wave 72: compress formats gzip/deflate/brotli/zlib/snappy/lz4; floors108)**
 - Wave 72: 39 clauses / 39 new pub in the compress format modules (gzip

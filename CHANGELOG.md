@@ -6,6 +6,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.63.1] - 2026-10-05
+
+Re-pinned to compiler `v0.63.1`. The C001 classifier fix (`4bf8cf1e`) is
+contained in the release, so both iter carve-outs leave the gate and the
+release corpus runs full. `xiom.time.Instant` reads the monotonic runtime
+clock; the lz4 bare-leaf binding is fixed upstream and the wave-68 rename
+is kept (now optional).
+
+### Fixed
+
+- `xiom.time.Instant.now()` / `Instant.elapsed()` now use the runtime
+  monotonic clock (`monotonic_ms() / 1000`, second resolution) instead of
+  the wall-clock `time(0)` path; `SystemTime` remains epoch wall clock.
+  Locked by `tools/probes/p_pin0631_shapes.xi`.
+
+### Changed
+
+- `COMPILER_VERSION` / `package.xi` -> `v0.63.1` / `0.63.1`;
+  `gate-exclusions.txt` dropped the two C001 iter smokes (20/20 stress on
+  both), so the release gate runs the full 952/952.
+
+### Notes
+
+- Compiler v0.63.1 also fixes false contract-evaluator aborts for tuple /
+  payload-length clauses and binds bare duplicate-leaf lz4 calls to the
+  checker's target (the wave-68 `*_checked` rename is now optional; it is
+  kept for leaf uniqueness).
+- `STDLIB_VERSION` in the compiler archive stays `cd61062`; this repo main
+  is ahead of the bundled stdlib.
+
 ## [0.63.0] - 2026-10-04
 
 Re-pinned to compiler `v0.63.0` (SHA256-verified official archive). The

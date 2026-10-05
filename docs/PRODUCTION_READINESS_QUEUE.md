@@ -1,27 +1,26 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
 **74.9% -- 7 of 10 gates complete; gate 8 at 49.3% (partial credit) and
-gates 9-10 discrete.** (Compiler pin: **v0.63.0**.)
-**Gates: corpus 950/950 release (952 full; 2 C001 carve-outs), modules
-509/509, probes 233/233, barename 0/509.**
+gates 9-10 discrete.** (Compiler pin: **v0.63.1**.)
+**Gates: corpus 952/952 full (C001 carve-outs retired on v0.63.1), modules
+509/509, probes 234/234, barename 0/509.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
 gates flip:
 1. Modules type-check clean -- MET (509/509).
-2. Smoke corpus green -- MET on the v0.63.0 pin: release gate 950/950
-   (2 C001 carve-outs of 952; `ci`/`heavy` run the full corpus). lz4 is
-   fixed by m190 and rejoined the gate; the iter C001 flake remains the
-   only carve-out.
-3. Probe corpus green -- MET (229/229 on v0.63.0, incl. the 5 promoted
-   regression probes).
+2. Smoke corpus green -- MET on the v0.63.1 pin: release gate 952/952
+   full, no carve-outs (C001 fixed by 4bf8cf1e; 20/20 + 20/20 stress).
+   lz4 is fixed by m190 and stayed in the gate.
+3. Probe corpus green -- MET (234/234 on v0.63.1, incl. the 5 promoted
+   regression probes and the v0.63.1 pin locks).
 4. Strict bare-name scan clean -- MET (0/509).
-5. Coverage ratchet green -- MET (floors104).
+5. Coverage ratchet green -- MET (floors109).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (497/517 modules, 3475/6200 fns).
 8. Contract coverage 100% (every public fn carries clauses) -- OPEN (49.3%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
-   OPEN (11: 10 compiler, 1 stdlib algorithm).
+   OPEN (10: 9 compiler, 1 stdlib algorithm).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
 
 Meter formula: MET gates count 1.0; gate 8 counts its current
@@ -484,6 +483,34 @@ stdlib tag >= `8b23b79` for Gate P; tagged `stdlib-perf3` at `5037262`
 regens api-freeze, t2 `185342f4`, tags v0.62.3). The packages'
 `Vec[StructType]` trap-10 row is a retirement candidate (not reproducible
 on both sides); no local row existed.
+
+Update 2026-10-05 (v0.63.1 pin wave landed): re-pinned COMPILER_VERSION/
+package.xi to v0.63.1 (release commit 1b972478; tag c0fa3a2d; handoff
+5666d092; STDLIB_VERSION stayed cd61062). C001 trigger fired: 4bf8cf1e is
+an ancestor of the release, both iter carve-outs dropped from
+gate-exclusions.txt after 20/20 + 20/20 stress (registry lane
+independently 20/20 + 20/20) -- the release corpus is now FULL 952/952,
+no exclusions. Instant fix: Instant.now()/elapsed() read the monotonic
+runtime clock (monotonic_ms()/1000); SystemTime stays wall clock; probe
+p_pin0631_shapes.xi (234th) locks it plus the bare-lz4 leaf resolution;
+the wave-68 lz4 rename is kept as an optional no-op per the compiler lane.
+Contract-evaluator false aborts (tuple/payload clauses) and duplicate
+index warnings are gone on the pin. floors109 wired. Fix-first exposed by the pin: io.write_file_bytes' Err
+clause `result.value.len() > 0` (a Result[Unit, IOError] payload read,
+bogus `.len()` on IOError) was lowered strictly by v0.63.1 into
+str_len(IOError), so any caller of the gzip file wrappers failed clang
+(the sweep probe caught it); the same clause was retired from move_file,
+write_file_lines and append_line. The gzip wrappers compile again and are
+runtime-locked by p_pin0631_shapes.xi (empty-path Err). Repo-wide
+`result.value` clause audit (IOError/struct payload `.len()` shapes, e.g.
+io/pipe.xi) queued. Relay from the compiler/benchmark lane: perf residual
+is runtime syscalls (Windows VirtualProtect ablation 438.5 -> 92.5 ms on
+262k entries; POSIX adds sigaction/mprotect per trampoline); fast-path
+design tracked in the compiler COMPILER_BUGS entry, container t3 target
+25-29 ms once the pin moves -- no stdlib action.
+Battery on v0.63.1 (re-run after the io fix): corpus 952/952,
+probes 234/234, modules 509/509, barename 0/509, floors109 +
+module-smoke ratchets OK.
 
 Update 2026-10-05 (wave 72 landed): compress formats --
 39 clauses / 39 new pub (gzip 6, deflate 5, brotli 4, zlib 6, snappy 8,

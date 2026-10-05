@@ -1,17 +1,17 @@
-# Release-gate carve-out (owner decision 2026-10-04; updated for the v0.63.0 pin).
+# Release-gate carve-out (owner decision 2026-10-04; VACATED for the v0.63.1 pin).
 # ci.yml / heavy.yml keep running the FULL corpus so regressions still surface.
 # release.yml passes this file via run_smokes.ps1 -ExcludeFile; exclusions are
 # printed and counted in the JSON summary.
 #
-# smoke_iter_range.xi / smoke_iter_find_all_any.xi
-#   C001 classifier ("receiver does not expose a concrete Vec/Slice/Array
-#   element type") is ~50% run-to-run flaky on v0.62.3, v0.62.4 and v0.63.0
-#   (registry stress: 8/20 and 12/20 on v0.62.4; 8/20 and 10/20 on v0.62.3).
-#   Filed as tools/known_failures/p_iter_range_contains_c001.xi; disclosed
-#   in the release notes.
+# C001 carve-out RETIRED on v0.63.1: compiler fix 4bf8cf1e is in the
+#   release. Both smokes passed 20/20 compile+run stress on the official
+#   archive (stdlib lane 20/20 each; registry lane 20/20 each) and were
+#   removed from the release gate. History: ~50% flaky on v0.62.3/v0.62.4;
+#   v0.63.0 predated 4bf8cf1e and kept the two carve-outs. The repro
+#   p_iter_range_contains_c001.xi is green on this pin.
 #
-# smoke_compress_lz4_snappy.xi was REMOVED for this pin: m190 fixes the
+# smoke_compress_lz4_snappy.xi was removed on the v0.63.0 pin: m190 fixes
 # empty-block miscompile and the smoke is green on the official v0.63.0
 # archive (verified 2026-10-04), so it rejoins the release gate.
-smoke_iter_range.xi
-smoke_iter_find_all_any.xi
+# smoke_iter_range.xi -- re-added to the gate on v0.63.1 (C001 fixed)
+# smoke_iter_find_all_any.xi -- re-added on v0.63.1 (C001 fixed)

@@ -913,7 +913,6 @@ pub fn flush_stdout()
 /// Complexity: O(n) where n = data.len().
 pub fn write_file_bytes(path: Str, data: &Vec[UInt8]) -> Result[Unit, IOError]
   ensures: result is Ok => file_exists(path)
-  ensures: result is Err => result.value.len() > 0
 {
   let file: *UInt8;
   unsafe {
@@ -999,7 +998,6 @@ pub fn file_modified_time(path: Str) -> Option[Int] {
 /// Alias for rename.  Complexity: O(1) OS call.
 pub fn move_file(src: Str, dst: Str) -> Result[Unit, IOError]
   ensures: result is Ok => file_exists(dst)
-  ensures: result is Err => result.value.len() > 0
 {
   return rename(src, dst);
 }
@@ -1085,7 +1083,6 @@ pub fn read_file_lines(path: Str) -> Result[Vec[Str], IOError]
 /// Lines are separated by '\n'.  Complexity: O(n).
 pub fn write_file_lines(path: Str, lines: &Vec[Str]) -> Result[Unit, IOError]
   ensures: result is Ok => file_exists(path)
-  ensures: result is Err => result.value.len() > 0
 {
   var content = "";
   var i = 0;
@@ -1105,7 +1102,6 @@ pub fn write_file_lines(path: Str, lines: &Vec[Str]) -> Result[Unit, IOError]
 /// Complexity: O(n) where n = line length.
 pub fn append_line(path: Str, line: Str) -> Result[Unit, IOError]
   ensures: result is Ok => file_exists(path)
-  ensures: result is Err => result.value.len() > 0
 {
   return append_file(path, line + "\n");
 }

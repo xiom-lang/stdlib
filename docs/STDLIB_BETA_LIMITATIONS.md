@@ -152,9 +152,11 @@ resolution:
   `xiom.async.timer.Stopwatch` predate it). The runtime source
   (`xiom_async_now_ms`) is QueryPerformanceCounter on Windows and
   CLOCK_MONOTONIC on POSIX and is guaranteed non-decreasing. The
-  package-doc claim "no monotonic ms clock exists" is stale; note that
-  `xiom.time.Instant.now()` is the wall-clock `time(0)` path and is NOT
-  monotonic.
+  package-doc claim "no monotonic ms clock exists" is stale.
+  `xiom.time.Instant.now()` and `Instant.elapsed()` now read the same
+  runtime source (`monotonic_ms() / 1000`, second resolution) and are
+  non-decreasing and immune to wall-clock adjustments (v0.63.1 pin wave;
+  locked by `tools/probes/p_pin0631_shapes.xi`).
 - **Cross-type generic callback returns (compiler v0.61.3, OPEN)**: a
   `[T, U]` generic whose callback changes type (`fn(&T) -> U` or
   `fn(T) -> U`) returns a WRONG value when `U` differs in runtime type from

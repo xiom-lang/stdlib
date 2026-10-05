@@ -1092,8 +1092,23 @@ T1/T2 yields.
         26/26, crc 1/1. Next: encoding 23.7% (fix-first: utf8_valid
         empty abort, base64url dangling char, percent '+' divergence) /
         debug 24.4% / simd 24.4%.
+        Pin v0.63.1 (2026-10-05): re-pinned COMPILER_VERSION/package.xi
+        to v0.63.1 (tag c0fa3a2d, release commit 1b972478; registry lane
+        SHA256-verified nine entries; STDLIB_VERSION stayed cd61062).
+        C001 carve-outs retired (4bf8cf1e is an ancestor of the release;
+        20/20 + 20/20 stress on both iter smokes) -- release corpus now
+        FULL 952/952 with zero exclusions; C001 finding marked RESOLVED.
+        Instant.now()/elapsed() switched to the runtime monotonic clock
+        (monotonic_ms()/1000 second resolution) with an
+        `ensures: result.t >= 0` lock; SystemTime stays wall clock; the
+        v0.63.0 limitation note retired. lz4 rename kept as an optional
+        no-op (compiler binds bare duplicate-leaf calls correctly now).
+        Probe p_pin0631_shapes.xi (234th, 12 checks) green on v0.63.1;
+        floors109 wired (time 61 clauses, global 49.3%). Next: encoding
+        23.7% (fix-first ledger) / iter clause retry (pin-unblocked;
+        tuple-component clauses now evaluate) / debug 24.4%.
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors108.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors109.json
        tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;
