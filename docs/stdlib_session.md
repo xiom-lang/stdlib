@@ -59,6 +59,10 @@ QUEUED (do only when triggered):
   wave-65 iter clause set (block 27), now with the v0.63.1
   tuple-component clause capability, probe-first; include the
   iter_collect clause side (Range core 7 + chain 14 + fold 8).
+  BUT: re-verified 2026-10-05 on v0.63.1 -- the clause-side closure
+  lowering still fails (Range.count `ensures: result >= 0` -> smoke_iter
+  clang `use of undefined value`), so the retry stays compiler-blocked;
+  only the C001 half retired.
 - Repo-wide `result.value` payload-clause audit (v0.63.1 lowers payload
   clauses strictly): IOError/struct payload `.len()` shapes are bogus and
   can break any caller (io/pipe.xi 44/65/136; error/context.xi Option
