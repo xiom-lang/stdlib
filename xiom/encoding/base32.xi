@@ -184,30 +184,43 @@ fn _b32_decode(s: Str, hex_alpha: Bool) -> Result[Vec[UInt8], Str] {
 
 /// Encodes bytes as an RFC 4648 base32 string (alphabet A-Z, 2-7), padded
 /// with '=' to a multiple of 8 characters. Complexity: O(n).
-pub fn base32_encode(data: &Vec[UInt8]) -> Str {
+pub fn base32_encode(data: &Vec[UInt8]) -> Str
+  ensures: result.len() == ((data.len() + 4) / 5) * 8
+{
   _b32_encode(data, _B32_ALPHABET)
 }
 
 /// Decodes an RFC 4648 base32 string to bytes. Returns Err on invalid input.
 /// Complexity: O(n).
-pub fn base32_decode(s: Str) -> Result[Vec[UInt8], Str] {
+pub fn base32_decode(s: Str) -> Result[Vec[UInt8], Str]
+  ensures: (s.len() == 0) => (result.is_ok)
+  ensures: result is Ok => result.len() <= (s.len() * 5) / 8
+{
   _b32_decode(s, false)
 }
 
 /// Encodes bytes as a base32hex string (RFC 4648 section 7, alphabet 0-9, A-V),
 /// padded with '='. Complexity: O(n).
-pub fn base32hex_encode(data: &Vec[UInt8]) -> Str {
+pub fn base32hex_encode(data: &Vec[UInt8]) -> Str
+  ensures: result.len() == ((data.len() + 4) / 5) * 8
+{
   _b32_encode(data, _B32HEX_ALPHABET)
 }
 
 /// Decodes a base32hex string to bytes (both digit cases accepted). Returns
 /// Err on invalid input. Complexity: O(n).
-pub fn base32hex_decode(s: Str) -> Result[Vec[UInt8], Str] {
+pub fn base32hex_decode(s: Str) -> Result[Vec[UInt8], Str]
+  ensures: (s.len() == 0) => (result.is_ok)
+  ensures: result is Ok => result.len() <= (s.len() * 5) / 8
+{
   _b32_decode(s, true)
 }
 
 /// Encodes a string's UTF-8 bytes as base32. Complexity: O(n).
-pub fn base32_encode_str(s: Str) -> Str {
+pub fn base32_encode_str(s: Str) -> Str
+  ensures: (s.len() == 0) => (result.len() == 0)
+  ensures: result.len() % 8 == 0
+{
   var bytes = Vec[UInt8].new();
   var i = 0;
   let slen = s.len();
@@ -222,7 +235,10 @@ pub fn base32_encode_str(s: Str) -> Str {
 /// Decodes base32 into a UTF-8 string (bytes copied verbatim; callers are
 /// responsible for UTF-8 validity). Returns Err on invalid base32.
 /// Complexity: O(n).
-pub fn base32_decode_str(s: Str) -> Result[Str, Str] {
+pub fn base32_decode_str(s: Str) -> Result[Str, Str]
+  ensures: (s.len() == 0) => (result.is_ok)
+  ensures: result is Ok => result.len() <= (s.len() * 5) / 8
+{
   var r = base32_decode(s);
   match r {
     Ok(bytes) => {

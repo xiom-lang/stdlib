@@ -175,6 +175,7 @@ pub fn base64_encode(data: &Vec[UInt8]) -> Str
 pub fn base64_decode(encoded: Str) -> Result[Vec[UInt8], Str]
   requires: encoded.len() % 4 == 0
   ensures:  result is Ok => result.len() <= (encoded.len() / 4) * 3
+  ensures:  (encoded.len() == 0) => (result.is_ok)
 {
   var result = Vec[UInt8].new();
   let len = encoded.len();
@@ -229,7 +230,9 @@ pub fn base64_decode(encoded: Str) -> Result[Vec[UInt8], Str]
 
 /// URL-safe base64 encoding (no padding).
 pub fn base64url_encode(data: &Vec[UInt8]) -> Str
-  ensures: result.len() >= 0
+  ensures: (data.len() % 3 == 0) => (result.len() == ((data.len() + 2) / 3) * 4)
+  ensures: (data.len() % 3 == 1) => (result.len() == ((data.len() + 2) / 3) * 4 - 2)
+  ensures: (data.len() % 3 == 2) => (result.len() == ((data.len() + 2) / 3) * 4 - 1)
 {
   let len = data.len();
   let out_len = ((len + 2) / 3) * 4;
@@ -271,6 +274,8 @@ pub fn base64url_decode(encoded: Str) -> Result[Vec[UInt8], Str]
   // Unpadded base64url: the (len/4)*3 bound assumes padding; the true
   // max is floor(len*3/4) (len%4 == 1 inputs are rejected as invalid).
   ensures: result is Ok => result.len() <= (encoded.len() * 3) / 4
+  ensures: (encoded.len() % 4 == 1) => (result.is_err)
+  ensures: (encoded.len() == 0) => (result.is_ok)
 {
   var result = Vec[UInt8].new();
   let len = encoded.len();
@@ -310,6 +315,9 @@ pub fn base64url_decode(encoded: Str) -> Result[Vec[UInt8], Str]
       };
     };
   };
+  if len - i == 1 {
+    return Err("invalid base64url length");
+  };
   Ok(result)
 }
 
@@ -335,6 +343,7 @@ pub fn hex_encode(data: &Vec[UInt8]) -> Str
 pub fn hex_decode(encoded: Str) -> Result[Vec[UInt8], Str]
   requires: encoded.len() % 2 == 0
   ensures:  result is Ok => result.len() == encoded.len() / 2
+  ensures:  (encoded.len() == 0) => (result.is_ok)
 {
   let len = encoded.len();
   if len % 2 != 0 {
@@ -375,6 +384,7 @@ pub fn hex_encode_upper(data: &Vec[UInt8]) -> Str
 /// === URL encoding ===
 pub fn url_encode(data: Str) -> Str
   ensures: result.len() >= data.len()
+  ensures: result.len() <= 3 * data.len()
 {
   // D1 hardening (2026-08-08): SINGLE-PASS encoding. The previous two-pass
   // version (count-then-write) intermittently corrupted the output (~1-in-30
@@ -421,6 +431,7 @@ pub fn url_encode(data: Str) -> Str
 /// Percent-decode a URL component; Err on malformed escapes.
 pub fn url_decode(encoded: Str) -> Result[Str, Str]
   ensures: result is Ok => result.len() <= encoded.len()
+  ensures: (encoded.len() == 0) => (result.is_ok)
 {
   let len = encoded.len();
   if len == 0 { return Ok(""); };
@@ -467,6 +478,7 @@ pub fn url_decode(encoded: Str) -> Result[Str, Str]
 /// === Percent encoding ===
 pub fn percent_encode(data: Str) -> Str
   ensures: result.len() >= data.len()
+  ensures: result.len() <= 3 * data.len()
 {
   // Bare call into the same module; the historical -O2 flake was the
   // pre-dispatch bare-name bug (fixed), and the import gate rejects
@@ -474,9 +486,12 @@ pub fn percent_encode(data: Str) -> Str
   url_encode(data)
 }
 
-/// Alias of url_decode (percent-decoding).
+/// Alias of url_decode (form-style percent-decoding: '+' becomes a space).
+/// The strict RFC 3986 surface that keeps '+' literal is
+/// `xiom.encoding.percent.percent_decode`.
 pub fn percent_decode(encoded: Str) -> Result[Str, Str]
   ensures: result is Ok => result.len() <= encoded.len()
+  ensures: (encoded.len() == 0) => (result.is_ok)
 {
   url_decode(encoded)
 }
@@ -498,8 +513,8 @@ pub fn utf8_encode(s: Str) -> Vec[UInt8]
 
 /// Decode UTF-8 bytes to a Str; Err on invalid sequences.
 pub fn utf8_decode(data: &Vec[UInt8]) -> Result[Str, Str]
-  requires: data.len() > 0
   ensures:  result is Ok => result.len() <= data.len()
+  ensures:  (data.len() == 0) => (result.is_ok)
 {
   let len = data.len();
   if len == 0 { return Ok(""); };
@@ -581,6 +596,7 @@ pub fn utf8_decode(data: &Vec[UInt8]) -> Result[Str, Str]
 /// True when the bytes are valid UTF-8.
 pub fn utf8_valid(data: &Vec[UInt8]) -> Bool
   ensures: result == true => utf8_decode(data) is Ok
+  ensures: (data.len() == 0) => (result == true)
 {
   let len = data.len();
   var i = 0;
@@ -635,6 +651,7 @@ pub fn utf8_valid(data: &Vec[UInt8]) -> Bool
 /// UTF-8 sequence length implied by the first byte (0 when invalid).
 pub fn utf8_char_len(first_byte: UInt8) -> Int
   ensures: result >= 1 && result <= 4
+  ensures: (first_byte >= 248) => (result == 1)
 {
   let b = first_byte as Int;
   if b <= 0x7F {
@@ -657,7 +674,9 @@ pub fn binary_to_text(data: &Vec[UInt8], format: Int) -> Str
   requires: format >= 0 && format <= 2
   ensures:  format == 0 => result.len() == ((data.len() + 2) / 3) * 4
   ensures:  format == 1 => result.len() == data.len() * 2
-  ensures:  result.len() >= 0
+  ensures:  format == 2 && data.len() % 3 == 0 => result.len() == ((data.len() + 2) / 3) * 4
+  ensures:  format == 2 && data.len() % 3 == 1 => result.len() == ((data.len() + 2) / 3) * 4 - 2
+  ensures:  format == 2 && data.len() % 3 == 2 => result.len() == ((data.len() + 2) / 3) * 4 - 1
 {
   if format == 0 {
     return base64_encode(data);
@@ -696,7 +715,9 @@ pub fn text_to_binary(text: Str, format: Int) -> Result[Vec[UInt8], Str]
 /// Processes 5-byte blocks into 8 Base32 characters.
 /// Padding with '=' to multiple of 8.
 /// Complexity: O(n), n = data length.
-pub fn base32_encode(data: &Vec[UInt8]) -> Str {
+pub fn base32_encode(data: &Vec[UInt8]) -> Str
+  ensures: result.len() == ((data.len() + 4) / 5) * 8
+{
   let alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
   let len = data.len();
   let out_len = ((len + 4) / 5) * 8;
@@ -792,7 +813,10 @@ fn base32_char_index(c: Char) -> Int {
 /// Decodes a Base32 string (RFC 4648, with optional '=' padding).
 /// Returns the decoded bytes or an error string.
 /// Complexity: O(n), n = encoded string length.
-pub fn base32_decode(encoded: Str) -> Result[Vec[UInt8], Str] {
+pub fn base32_decode(encoded: Str) -> Result[Vec[UInt8], Str]
+  ensures: (encoded.len() == 0) => (result.is_ok)
+  ensures: result is Ok => result.len() <= (encoded.len() * 5) / 8
+{
   var result = Vec[UInt8].new();
   let len = encoded.len();
   if len == 0 { return Ok(result); };
@@ -831,7 +855,9 @@ pub fn base32_decode(encoded: Str) -> Result[Vec[UInt8], Str] {
 // -- Base16 (hex alias) ------------------------------------------------------
 
 /// Alias for hex_encode. Converts bytes to lowercase hex string.
-pub fn base16_encode(data: &Vec[UInt8]) -> Str {
+pub fn base16_encode(data: &Vec[UInt8]) -> Str
+  ensures: result.len() == data.len() * 2
+{
   return hex_encode(data);
 }
 
@@ -839,7 +865,12 @@ pub fn base16_encode(data: &Vec[UInt8]) -> Str {
 
 /// Converts an integer to a lowercase hexadecimal string.
 /// Complexity: O(log16(n)).
-pub fn int_to_hex(n: Int) -> Str {
+pub fn int_to_hex(n: Int) -> Str
+  ensures: (n == 0) => (result.len() == 1)
+  ensures: result.len() <= 16
+  ensures: (n > 0) => (result.len() >= 1)
+  ensures: (n < 0 && 0 - n > 0) => (result.len() >= 1)
+{
   if n == 0 {
     return "0";
   };
@@ -875,7 +906,10 @@ pub fn int_to_hex(n: Int) -> Str {
 /// Converts a hexadecimal string to an integer.
 /// Returns None if the string contains invalid hex characters.
 /// Complexity: O(n), n = string length.
-pub fn hex_to_int(s: Str) -> Option[Int] {
+pub fn hex_to_int(s: Str) -> Option[Int]
+  ensures: (s.len() == 0) => (result.is_none)
+  ensures: result.is_some => (s.len() > 0)
+{
   let len = s.len();
   if len == 0 {
     return Option[Int]{ is_some: false; value: 0; };
@@ -900,6 +934,8 @@ pub fn hex_to_int(s: Str) -> Option[Int] {
 /// Complexity: O(n), n = string length.
 pub fn base64_encode_str(s: Str) -> Str
   requires: true  // extern char_at call in the loop (T002 confinement)
+  ensures: (s.len() == 0) => (result.len() == 0)
+  ensures: (s.len() > 0) => (result.len() % 4 == 0)
 {
   var bytes = Vec[UInt8].new();
   var i: Int = 0;
@@ -914,7 +950,10 @@ pub fn base64_encode_str(s: Str) -> Str
 
 /// Decodes a Base64 string and returns the original string.
 /// Complexity: O(n), n = encoded string length.
-pub fn base64_decode_str(encoded: Str) -> Result[Str, Str] {
+pub fn base64_decode_str(encoded: Str) -> Result[Str, Str]
+  ensures: (encoded.len() == 0) => (result.is_ok)
+  ensures: result is Ok => result.len() <= (encoded.len() / 4) * 3
+{
   let bytes_result = base64_decode(encoded);
   if !bytes_result.is_ok {
     return Err(bytes_result.error);

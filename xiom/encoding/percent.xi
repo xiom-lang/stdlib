@@ -92,13 +92,19 @@ fn _percent_encode(s: Str, spaces_as_plus: Bool) -> Str {
 /// Percent-encodes every non-unreserved character of `s` per its UTF-8 bytes;
 /// spaces become '%20'. Unreserved characters (A-Z a-z 0-9 - _ . ~) pass
 /// through. Complexity: O(n).
-pub fn percent_encode(s: Str) -> Str {
+pub fn percent_encode(s: Str) -> Str
+  ensures: result.len() >= s.len()
+  ensures: result.len() <= 3 * s.len()
+{
   _percent_encode(s, false)
 }
 
 /// Decodes percent-escapes in `s`. '+' is left as a literal '+'. Returns Err
 /// on a truncated or malformed escape. Complexity: O(n).
-pub fn percent_decode(s: Str) -> Result[Str, Str] {
+pub fn percent_decode(s: Str) -> Result[Str, Str]
+  ensures: result is Ok => result.len() <= 2 * s.len()
+  ensures: (s.len() == 0) => (result.is_ok)
+{
   let len = s.len();
   if len == 0 { return Ok(""); };
   unsafe {
@@ -139,20 +145,29 @@ pub fn percent_decode(s: Str) -> Result[Str, Str] {
 /// Percent-encodes a single URL path or query component: only unreserved
 /// characters pass through; everything else -- including '/', '?', '&', '=' --
 /// is percent-encoded per UTF-8 byte. Complexity: O(n).
-pub fn percent_encode_component(s: Str) -> Str {
+pub fn percent_encode_component(s: Str) -> Str
+  ensures: result.len() >= s.len()
+  ensures: result.len() <= 3 * s.len()
+{
   _percent_encode(s, false)
 }
 
 /// Decodes a URL component: '%XX' escapes are decoded; '+' is left as a
 /// literal '+'. Returns Err on a truncated or malformed escape.
 /// Complexity: O(n).
-pub fn percent_decode_component(s: Str) -> Result[Str, Str] {
+pub fn percent_decode_component(s: Str) -> Result[Str, Str]
+  ensures: result is Ok => result.len() <= 2 * s.len()
+  ensures: (s.len() == 0) => (result.is_ok)
+{
   percent_decode(s)
 }
 
 /// Percent-encodes raw bytes: unreserved ASCII bytes pass through, all other
 /// bytes become '%XX'. Complexity: O(n).
-pub fn percent_encode_bytes(data: &Vec[UInt8]) -> Str {
+pub fn percent_encode_bytes(data: &Vec[UInt8]) -> Str
+  ensures: result.len() >= data.len()
+  ensures: result.len() <= 3 * data.len()
+{
   let len = data.len();
   unsafe {
     var buf = malloc(len * 3 + 1);
@@ -181,7 +196,10 @@ pub fn percent_encode_bytes(data: &Vec[UInt8]) -> Str {
 
 /// Decodes percent-escapes into bytes; '+' is left as a literal '+'. Returns
 /// Err on a truncated or malformed escape. Complexity: O(n).
-pub fn percent_decode_bytes(s: Str) -> Result[Vec[UInt8], Str] {
+pub fn percent_decode_bytes(s: Str) -> Result[Vec[UInt8], Str]
+  ensures: result is Ok => result.len() <= 2 * s.len()
+  ensures: (s.len() == 0) => (result.is_ok)
+{
   var result = Vec[UInt8].new();
   let len = s.len();
   var i = 0;
@@ -215,13 +233,19 @@ pub fn percent_decode_bytes(s: Str) -> Result[Vec[UInt8], Str] {
 /// Encodes as application/x-www-form-urlencoded: spaces become '+', all other
 /// non-unreserved characters are percent-encoded per UTF-8 byte.
 /// Complexity: O(n).
-pub fn percent_encode_www_form(s: Str) -> Str {
+pub fn percent_encode_www_form(s: Str) -> Str
+  ensures: result.len() >= s.len()
+  ensures: result.len() <= 3 * s.len()
+{
   _percent_encode(s, true)
 }
 
 /// Decodes a form body: '+' becomes a space and '%XX' escapes are decoded.
 /// Returns Err on a truncated or malformed escape. Complexity: O(n).
-pub fn percent_decode_www_form(s: Str) -> Result[Str, Str] {
+pub fn percent_decode_www_form(s: Str) -> Result[Str, Str]
+  ensures: result is Ok => result.len() <= 2 * s.len()
+  ensures: (s.len() == 0) => (result.is_ok)
+{
   let len = s.len();
   if len == 0 { return Ok(""); };
   unsafe {

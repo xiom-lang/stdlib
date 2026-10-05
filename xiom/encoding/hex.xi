@@ -44,7 +44,9 @@ fn _hex_nibble_upper(n: Int) -> UInt8 {
 
 /// Encodes a byte vector as a lowercase hexadecimal string (two digits per
 /// byte). Empty input yields "". Complexity: O(n).
-pub fn hex_encode(data: &Vec[UInt8]) -> Str {
+pub fn hex_encode(data: &Vec[UInt8]) -> Str
+  ensures: result.len() == data.len() * 2
+{
   let len = data.len();
   let out_len = len * 2;
   unsafe {
@@ -64,7 +66,10 @@ pub fn hex_encode(data: &Vec[UInt8]) -> Str {
 
 /// Decodes a hexadecimal string into bytes. Accepts both digit cases. Returns
 /// Err on an odd length or an invalid hex character. Complexity: O(n).
-pub fn hex_decode(s: Str) -> Result[Vec[UInt8], Str] {
+pub fn hex_decode(s: Str) -> Result[Vec[UInt8], Str]
+  ensures: (s.len() % 2 != 0) => (result.is_err)
+  ensures: result is Ok => result.len() == s.len() / 2
+{
   let len = s.len();
   if len % 2 != 0 {
     return Err("hex string must have even length");
@@ -85,7 +90,9 @@ pub fn hex_decode(s: Str) -> Result[Vec[UInt8], Str] {
 
 /// Encodes a byte vector as an uppercase hexadecimal string.
 /// Complexity: O(n).
-pub fn hex_encode_upper(data: &Vec[UInt8]) -> Str {
+pub fn hex_encode_upper(data: &Vec[UInt8]) -> Str
+  ensures: result.len() == data.len() * 2
+{
   let len = data.len();
   let out_len = len * 2;
   unsafe {
@@ -104,7 +111,10 @@ pub fn hex_encode_upper(data: &Vec[UInt8]) -> Str {
 }
 
 /// Encodes the UTF-8 bytes of a string as lowercase hex. Complexity: O(n).
-pub fn hex_encode_str(s: Str) -> Str {
+pub fn hex_encode_str(s: Str) -> Str
+  ensures: (s.len() == 0) => (result.len() == 0)
+  ensures: result.len() % 2 == 0
+{
   var bytes = Vec[UInt8].new();
   var i = 0;
   let slen = s.len();
@@ -119,7 +129,10 @@ pub fn hex_encode_str(s: Str) -> Str {
 /// Decodes a hex string back into a string (decoded bytes copied verbatim;
 /// callers are responsible for UTF-8 validity). Returns Err on invalid hex.
 /// Complexity: O(n).
-pub fn hex_decode_str(s: Str) -> Result[Str, Str] {
+pub fn hex_decode_str(s: Str) -> Result[Str, Str]
+  ensures: (s.len() % 2 != 0) => (result.is_err)
+  ensures: result is Ok => result.len() <= s.len() / 2
+{
   var r = hex_decode(s);
   match r {
     Ok(bytes) => {
@@ -146,7 +159,12 @@ pub fn hex_decode_str(s: Str) -> Result[Str, Str] {
 
 /// Encodes an integer as a lowercase hex string (no sign, no prefix; 0 -> "0").
 /// Complexity: O(log16(n)).
-pub fn hex_encode_int(n: Int) -> Str {
+pub fn hex_encode_int(n: Int) -> Str
+  ensures: (n == 0) => (result.len() == 1)
+  ensures: result.len() <= 16
+  ensures: (n > 0) => (result.len() >= 1)
+  ensures: (n < 0 && 0 - n > 0) => (result.len() >= 1)
+{
   if n == 0 {
     return "0";
   };
@@ -177,7 +195,10 @@ pub fn hex_encode_int(n: Int) -> Str {
 
 /// Parses a hex string into an integer. Returns Err on an empty string or an
 /// invalid hex character. Complexity: O(n).
-pub fn hex_decode_int(s: Str) -> Result[Int, Str] {
+pub fn hex_decode_int(s: Str) -> Result[Int, Str]
+  ensures: (s.len() == 0) => (result.is_err)
+  ensures: result is Ok => s.len() > 0
+{
   let len = s.len();
   if len == 0 {
     return Err("empty hex string");
@@ -197,7 +218,9 @@ pub fn hex_decode_int(s: Str) -> Result[Int, Str] {
 
 /// The numeric value of a hex digit character (0-15), or None if `c` is not a
 /// hex digit. Complexity: O(1).
-pub fn hex_nibble_to_int(c: Char) -> Option[Int] {
+pub fn hex_nibble_to_int(c: Char) -> Option[Int]
+  ensures: (c == '\0') => (result.is_none)
+{
   var code = to_int_from_char(c);
   if code >= 48 && code <= 57 { return Some(code - 48); }
   if code >= 97 && code <= 102 { return Some(code - 87); }
@@ -207,7 +230,10 @@ pub fn hex_nibble_to_int(c: Char) -> Option[Int] {
 
 /// The hex digit character for a 0-15 value (lowercase). Returns '\0' for a
 /// value outside that range. Complexity: O(1).
-pub fn hex_int_to_nibble(n: Int) -> Char {
+pub fn hex_int_to_nibble(n: Int) -> Char
+  ensures: (n < 0 || n > 15) => (result == '\0')
+  ensures: (n >= 0 && n <= 15) => (result != '\0')
+{
   if n < 0 || n > 15 {
     return '\0';
   };

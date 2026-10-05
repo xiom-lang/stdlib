@@ -4,13 +4,13 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 -->
 # XIOM Stdlib Session -- Handoff
 
-## 0A. CONTINUE HERE -- handoff snapshot 11 (updated 2026-10-05, v0.63.1 pin complete)
+## 0A. CONTINUE HERE -- handoff snapshot 12 (updated 2026-10-05, wave 74 complete)
 
 **PASTE-READY PROMPT FOR THE NEXT SESSION (copy this block):**
 
 ---
 You are continuing the XIOM stdlib lane. Worktree `E:\xiom-lang\stdlib`,
-branch `main`. Read `docs/stdlib_session.md` blocks 41 (latest), 40, 39
+branch `main`. Read `docs/stdlib_session.md` blocks 42 (latest), 41, 40
 (publish), 27 (iter block) and `docs/PRODUCTION_READINESS_QUEUE.md`
 before acting; snapshot 5 below the prompt keeps the deep protocol lore.
 
@@ -21,36 +21,34 @@ v0.62.4/v0.63.0 archives kept. Registry carries xiom-std 0.62.3, 0.62.4 and 0.63
 (staging then production publishes approved and green); tags pushed:
 stdlib-v0.62.3 (12a3a1b), stdlib-v0.62.4 (3800c08), stdlib-v0.63.0 (179cfea).
 Gates on v0.63.1: release corpus 952/952 FULL (C001 carve-outs retired by
-4bf8cf1e; 20/20 + 20/20 stress), modules 509/509, probes 234/234, barename
-0/509, floors109, module-smoke ratchet OK. Coverage = 49.3% global
-pub-with-clause. Waves landed: 63 net+hash, 64 reflect+iter adapters, 65x convert, 66 time, 67 format, 68 misc, 69 os+rand, 70 crypto, 71 log, 72 compress, 73 pin. Wave
+4bf8cf1e; 20/20 + 20/20 stress), modules 509/509, probes 235/235, barename
+0/509, floors110, module-smoke ratchet OK. Coverage = 49.8% global
+pub-with-clause. Waves landed: 63 net+hash, 64 reflect+iter adapters, 65x convert, 66 time, 67 format, 68 misc, 69 os+rand, 70 crypto, 71 log, 72 compress, 73 pin, 74 encoding. Wave
 65 (iter clauses) is DEFERRED but pin-unblocked (block 27): the C001
 classifier is fixed on v0.63.1 and clauses may read tuple components; the
 deferred clause set (Range core 7 + chain 14 + fold 8 + iter_collect) is documented there.
 
-FIRST TASK (wave 74): coverage wave on the next low dir -- encoding 23.7%
-(merge files to hold 40-60 pub), then debug 24.4%. Fix-first ledger for
-encoding (queue 2026-10-05): utf8_valid(empty) contract abort at
-encoding.xi:501, base64url_decode dangling-char drop (both copies), and
-the percent '+' semantics divergence -- each needs a probe lock before
-new clauses. Mandatory protocol:
+FIRST TASK (wave 75): finish encoding (ascii85 6 + idna 8 + punycode 7),
+then debug 24.4% (merge files to hold 40-60 pub). v0.63.1 additionally
+allows tuple-component clauses (`result.value.0/1`), so revisit skipped
+tuple-returning pub fns opportunistically. Mandatory protocol:
 (1) recon bodies and derive every clause from them; no placeholder forms
 (no unsigned `>= 0`, no `is_ok || is_err`, no self-mirrors); clauses run at
 runtime, so never read Result/Option payloads, guard division/NaN, and
 prefer exact mirrors, length/presence bands and `@pre` invariants.
-(2) probe-first: add `tools/probes/p_wave74_shapes.xi` exercising every
+(2) probe-first: add `tools/probes/p_wave75_shapes.xi` exercising every
 clause-guard path; bind module-returned values to `let` before comparing
 (inline unsigned compares misread high bits); bind `Vec.new()`
 temporaries passed as `&Vec`; do not declare externs for runtime guard
 symbols; green on v0.63.1 (v0.63.0 cross-check when cheap).
 (3) apply, run targeted smokes; if unrelated codegen breaks, bisect and
 drop the offending clause with a code comment (see blocks 27/65x).
-(4) dump `tools/coverage_floors110.json`, wire the workflows +
+(4) dump `tools/coverage_floors111.json`, wire the workflows +
 `tools/README.md`, update plan/session/queue in the same commit, YAML
 check, pure-ASCII conventional commit.
 (5) battery: `run_smokes.ps1 -ExcludeFile tools/known_failures/
-gate-exclusions.txt` (expect 952/952 full), probe corpus (expect 235),
-check_modules 509/509, barename 0/509, floors110 + module-smoke ratchets;
+gate-exclusions.txt` (expect 952/952 full), probe corpus (expect 236),
+check_modules 509/509, barename 0/509, floors111 + module-smoke ratchets;
 record results in the session block; push `main`.
 
 QUEUED (do only when triggered):
@@ -64,10 +62,10 @@ QUEUED (do only when triggered):
   clang `use of undefined value`), so the retry stays compiler-blocked;
   only the C001 half retired.
 - Repo-wide `result.value` payload-clause audit (v0.63.1 lowers payload
-  clauses strictly): IOError/struct payload `.len()` shapes are bogus and
-  can break any caller (io/pipe.xi 44/65/136; error/context.xi Option
-  payloads; grep `result\.value`), while Str payloads are valid. Retire
-  per file with a comment; io.xi's four were retired in the pin wave.
+  clauses strictly): the four io.xi IOError `.len()` sites retired in the
+  pin wave were the ONLY bogus ones; io/pipe.xi, io/fs.xi and
+  io/console.xi Err payloads are Str (valid) and stay. Done 2026-10-05
+  (wave 74).
 - One green heavy run -> add `macos-14` to the `release.yml` matrix
   (heavy already has it).
 - Same-leaf audit follow-up (lz4 class): soundex leaves in
@@ -1547,6 +1545,39 @@ registry pin, agent recon for the rest)**
   gates; open: contract coverage 100%, zero open findings, beta-exit release
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
+
+**SESSION 2026-10-05 block 42 (wave 74: encoding + three fix-first; floors110)**
+- Wave 74: 55 clauses across xiom.encoding (24), xiom.encoding.base64 (8),
+  base32 (6), hex (9), percent (8): exact encoder length identities
+  (base64/base64url rem-conditioned, base32, hex, base16), decoder Ok
+  bands plus empty identities, presence/Err bands, url/percent length
+  bounds, utf8 char-len invalid band, and int_to_hex/hex_encode_int digit
+  bands with the Int.MIN negation guard (`n < 0 && 0 - n > 0`).
+- Fix-first: (1) utf8_decode `requires: data.len() > 0` removed -- it made
+  utf8_valid(empty)'s own clause abort (`contract violated: requires at
+  501:13`) and killed the dead len==0 Ok branch; empty now Ok("")/true.
+  (2) base64url_decode in encoding.xi AND base64.xi now return Err on the
+  dangling final char; the root doc comment's claim is finally true.
+  (3) the percent '+' divergence is pinned by probe and documented on the
+  root function (form-style via url_decode vs the percent module's literal
+  '+') -- no behavior change.
+- Probe p_wave74_shapes.xi (235th, 95 checks): green pre- and
+  post-clauses on v0.63.1; targeted smokes encoding 16/16, base 12/12,
+  utf8 6/6, percent 2/2.
+- Probe landmines avoided (documented for future probes):
+  `xiom.char.to_int_from_char` hits an i32/i64 clang error in probe
+  context (isolated; use `(0 as Char)` comparisons instead), and
+  text_to_binary("0", 1) aborts on hex_decode's requires rather than
+  returning Err (use an invalid-char input like "zz").
+- io payload-clause audit done: the four io.xi IOError `.len()` clauses
+  retired in the pin wave were the only bogus sites; pipe/fs/console use
+  Str payloads and stay.
+- Coverage: encoding 23.7% -> 72.4%, global 49.3% -> 49.8%, meter 75.0%;
+  floors110 wired (ci/heavy/release + tools/README + plan). Remaining
+  encoding: ascii85 6, idna 8, punycode 7.
+- Battery on this commit (v0.63.1): release corpus 952/952 full (663.0s,
+  no exclusions); probes 235/235 (304.4s); check_modules 509/509 (217.8s);
+  barename 0/509 (259.0s); floors110 + module-smoke ratchets OK.
 
 **SESSION 2026-10-05 block 41 (v0.63.1 pin: Instant monotonic + C001 retire; floors109)**
 - v0.63.1 re-pin: COMPILER_VERSION/package.xi -> v0.63.1 (tag c0fa3a2d,

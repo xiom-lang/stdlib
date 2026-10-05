@@ -1103,12 +1103,26 @@ T1/T2 yields.
         `ensures: result.t >= 0` lock; SystemTime stays wall clock; the
         v0.63.0 limitation note retired. lz4 rename kept as an optional
         no-op (compiler binds bare duplicate-leaf calls correctly now).
-        Probe p_pin0631_shapes.xi (234th, 12 checks) green on v0.63.1;
-        floors109 wired (time 61 clauses, global 49.3%). Next: encoding
-        23.7% (fix-first ledger) / iter clause retry (pin-unblocked;
-        tuple-component clauses now evaluate) / debug 24.4%.
+        Probe p_pin0631_shapes.xi (234th, 14 checks) green on v0.63.1;
+        floors109 wired (time 61 clauses, global 49.3%). Iter clause
+        retry NOT unblocked by the pin: clause-side closure lowering
+        re-verified failing on v0.63.1 (Range.count clause -> smoke_iter
+        clang `use of undefined value`), queued with the compiler closure
+        work; tuple-component clauses do now evaluate.
+        Wave 74 (2026-10-05): coverage wave 37 -- encoding + three
+        fix-first, 55 clauses / 37 new pub (encoding.xi 24, base64 8,
+        base32 6, hex 9, percent 8). Fix-first: utf8_decode requires
+        removed (utf8_valid(empty) no longer aborts), both
+        base64url_decode copies reject the dangling final char, percent
+        '+' divergence pinned and documented. encoding 23.7% -> 72.4%,
+        global 49.3% -> 49.8%, meter 75.0%; floors110. Probe
+        p_wave74_shapes.xi (235th, 95 checks) green on v0.63.1; targeted
+        smokes encoding 16/16, base 12/12, utf8 6/6, percent 2/2. io
+        payload-clause audit closed (io.xi four were the only bogus
+        sites). Next: encoding remainder (ascii85/idna/punycode) / debug
+        24.4% / tuple-component clause expansion.
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors109.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors110.json
        tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;

@@ -95,7 +95,9 @@ fn _b64u_write_group(buf: *UInt8, dst_idx: Int, b0: UInt8, b1: UInt8, b2: UInt8,
 
 /// Encodes bytes as a standard base64 string with mandatory '=' padding.
 /// Empty input yields "". Complexity: O(n).
-pub fn base64_encode(data: &Vec[UInt8]) -> Str {
+pub fn base64_encode(data: &Vec[UInt8]) -> Str
+  ensures: result.len() == ((data.len() + 2) / 3) * 4
+{
   let len = data.len();
   let out_len = ((len + 2) / 3) * 4;
   unsafe {
@@ -130,7 +132,10 @@ pub fn base64_encode(data: &Vec[UInt8]) -> Str {
 /// Decodes a standard base64 string to bytes. Accepts optional '=' padding.
 /// Returns Err on a non-multiple-of-4 length or an invalid character.
 /// Complexity: O(n).
-pub fn base64_decode(s: Str) -> Result[Vec[UInt8], Str] {
+pub fn base64_decode(s: Str) -> Result[Vec[UInt8], Str]
+  ensures: result is Ok => result.len() <= (s.len() / 4) * 3
+  ensures: (s.len() == 0) => (result.is_ok)
+{
   var result = Vec[UInt8].new();
   let len = s.len();
   if len % 4 != 0 {
@@ -203,7 +208,10 @@ pub fn base64_decode(s: Str) -> Result[Vec[UInt8], Str] {
 }
 
 /// Encodes a string's UTF-8 bytes as standard base64. Complexity: O(n).
-pub fn base64_encode_str(s: Str) -> Str {
+pub fn base64_encode_str(s: Str) -> Str
+  ensures: (s.len() == 0) => (result.len() == 0)
+  ensures: (s.len() > 0) => (result.len() % 4 == 0)
+{
   var bytes = Vec[UInt8].new();
   var i = 0;
   let slen = s.len();
@@ -218,7 +226,10 @@ pub fn base64_encode_str(s: Str) -> Str {
 /// Decodes base64 into a UTF-8 string (bytes copied verbatim; callers are
 /// responsible for UTF-8 validity). Returns Err on invalid base64.
 /// Complexity: O(n).
-pub fn base64_decode_str(s: Str) -> Result[Str, Str] {
+pub fn base64_decode_str(s: Str) -> Result[Str, Str]
+  ensures: (s.len() == 0) => (result.is_ok)
+  ensures: result is Ok => result.len() <= (s.len() / 4) * 3
+{
   var r = base64_decode(s);
   match r {
     Ok(bytes) => {
@@ -245,7 +256,9 @@ pub fn base64_decode_str(s: Str) -> Result[Str, Str] {
 
 /// Encodes bytes as base64 with mandatory padding. Standard base64 always
 /// pads, so this is equivalent to base64_encode. Complexity: O(n).
-pub fn base64_encode_padded(data: &Vec[UInt8]) -> Str {
+pub fn base64_encode_padded(data: &Vec[UInt8]) -> Str
+  ensures: result.len() == ((data.len() + 2) / 3) * 4
+{
   base64_encode(data)
 }
 
@@ -253,7 +266,11 @@ pub fn base64_encode_padded(data: &Vec[UInt8]) -> Str {
 /// must be a multiple of 4 and the number of trailing '=' characters must
 /// match the data length (0, 1 or 2 for full, 2- and 1-byte tails). Returns
 /// Err on malformed padding or an invalid character. Complexity: O(n).
-pub fn base64_decode_padded(s: Str) -> Result[Vec[UInt8], Str] {
+pub fn base64_decode_padded(s: Str) -> Result[Vec[UInt8], Str]
+  ensures: (s.len() % 4 != 0) => (result.is_err)
+  ensures: (s.len() == 0) => (result.is_err)
+  ensures: result is Ok => result.len() <= (s.len() / 4) * 3
+{
   let len = s.len();
   if len % 4 != 0 {
     return Err("base64 length must be a multiple of 4");
@@ -293,7 +310,11 @@ pub fn base64_decode_padded(s: Str) -> Result[Vec[UInt8], Str] {
 
 /// Encodes bytes as an unpadded URL-safe base64 string (alphabet A-Za-z0-9-_).
 /// Empty input yields "". Complexity: O(n).
-pub fn base64url_encode(data: &Vec[UInt8]) -> Str {
+pub fn base64url_encode(data: &Vec[UInt8]) -> Str
+  ensures: (data.len() % 3 == 0) => (result.len() == ((data.len() + 2) / 3) * 4)
+  ensures: (data.len() % 3 == 1) => (result.len() == ((data.len() + 2) / 3) * 4 - 2)
+  ensures: (data.len() % 3 == 2) => (result.len() == ((data.len() + 2) / 3) * 4 - 1)
+{
   let len = data.len();
   let out_len = ((len + 2) / 3) * 4;
   var actual_len = out_len;
@@ -342,7 +363,11 @@ pub fn base64url_encode(data: &Vec[UInt8]) -> Str {
 
 /// Decodes an unpadded URL-safe base64 string to bytes. Optional '=' padding
 /// is tolerated. Returns Err on an invalid character. Complexity: O(n).
-pub fn base64url_decode(s: Str) -> Result[Vec[UInt8], Str] {
+pub fn base64url_decode(s: Str) -> Result[Vec[UInt8], Str]
+  ensures: (s.len() % 4 == 1) => (result.is_err)
+  ensures: (s.len() == 0) => (result.is_ok)
+  ensures: result is Ok => result.len() <= (s.len() * 3) / 4
+{
   var result = Vec[UInt8].new();
   let len = s.len();
   var i: Int = 0;
@@ -380,6 +405,9 @@ pub fn base64url_decode(s: Str) -> Result[Vec[UInt8], Str] {
         result.push(((v2 << 6) | v3) as UInt8);
       };
     };
+  };
+  if len - i == 1 {
+    return Err("invalid base64url length");
   };
   Ok(result)
 }

@@ -1,9 +1,9 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
-**74.9% -- 7 of 10 gates complete; gate 8 at 49.3% (partial credit) and
+**75.0% -- 7 of 10 gates complete; gate 8 at 49.8% (partial credit) and
 gates 9-10 discrete.** (Compiler pin: **v0.63.1**.)
 **Gates: corpus 952/952 full (C001 carve-outs retired on v0.63.1), modules
-509/509, probes 234/234, barename 0/509.**
+509/509, probes 235/235, barename 0/509.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -12,13 +12,13 @@ gates flip:
 2. Smoke corpus green -- MET on the v0.63.1 pin: release gate 952/952
    full, no carve-outs (C001 fixed by 4bf8cf1e; 20/20 + 20/20 stress).
    lz4 is fixed by m190 and stayed in the gate.
-3. Probe corpus green -- MET (234/234 on v0.63.1, incl. the 5 promoted
+3. Probe corpus green -- MET (235/235 on v0.63.1, incl. the 5 promoted
    regression probes and the v0.63.1 pin locks).
 4. Strict bare-name scan clean -- MET (0/509).
-5. Coverage ratchet green -- MET (floors109).
+5. Coverage ratchet green -- MET (floors110).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (497/517 modules, 3475/6200 fns).
-8. Contract coverage 100% (every public fn carries clauses) -- OPEN (49.3%).
+8. Contract coverage 100% (every public fn carries clauses) -- OPEN (49.8%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
    OPEN (10: 9 compiler, 1 stdlib algorithm).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
@@ -484,6 +484,22 @@ regens api-freeze, t2 `185342f4`, tags v0.62.3). The packages'
 `Vec[StructType]` trap-10 row is a retirement candidate (not reproducible
 on both sides); no local row existed.
 
+Update 2026-10-05 (wave 74 landed): encoding + three fix-first --
+55 clauses / 37 new pub (encoding.xi 24 touched, base64 8, base32 6,
+hex 9, percent 8); encoding 23.7% -> 72.4%, global 49.3% -> 49.8%; meter
+75.0%; floors110. Fix-first: utf8_decode's `requires: data.len() > 0`
+removed (utf8_decode(empty) -> Ok("") and utf8_valid(empty) -> true; the
+old clause aborted callers with `contract violated: requires at 501:13`);
+both base64url_decode copies now return Err for a dangling final char
+(len%4==1, silently dropped before); the percent '+' divergence is pinned
+by probe and documented (root percent_decode is form-style, the percent
+module keeps '+' literal) -- no behavior change. Probe p_wave74_shapes.xi
+(235th, 95 checks) green pre/post on v0.63.1; targeted smokes encoding
+16/16, base 12/12, utf8 6/6, percent 2/2. Remaining encoding: ascii85 6,
+idna 8, punycode 7. Readiness next: debug 24.4%, simd 24.4%, stats 25%,
+thread 25%, convert 25.6%; tuple-component clauses are now allowed by
+v0.63.1.
+
 Update 2026-10-05 (v0.63.1 pin wave landed): re-pinned COMPILER_VERSION/
 package.xi to v0.63.1 (release commit 1b972478; tag c0fa3a2d; handoff
 5666d092; STDLIB_VERSION stayed cd61062). C001 trigger fired: 4bf8cf1e is
@@ -502,8 +518,9 @@ str_len(IOError), so any caller of the gzip file wrappers failed clang
 (the sweep probe caught it); the same clause was retired from move_file,
 write_file_lines and append_line. The gzip wrappers compile again and are
 runtime-locked by p_pin0631_shapes.xi (empty-path Err). Repo-wide
-`result.value` clause audit (IOError/struct payload `.len()` shapes, e.g.
-io/pipe.xi) queued. Relay from the compiler/benchmark lane: perf residual
+`result.value` clause audit (wave 74): the four io.xi IOError `.len()`
+sites were the only bogus ones -- io/pipe.xi, io/fs.xi and io/console.xi
+Err payloads are Str (valid) and stay. Relay from the compiler/benchmark lane: perf residual
 is runtime syscalls (Windows VirtualProtect ablation 438.5 -> 92.5 ms on
 262k entries; POSIX adds sigaction/mprotect per trampoline); fast-path
 design tracked in the compiler COMPILER_BUGS entry, container t3 target
