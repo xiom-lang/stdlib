@@ -1,9 +1,9 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
-**75.0% -- 7 of 10 gates complete; gate 8 at 49.8% (partial credit) and
+**75.1% -- 7 of 10 gates complete; gate 8 at 50.6% (partial credit) and
 gates 9-10 discrete.** (Compiler pin: **v0.63.1**.)
 **Gates: corpus 952/952 full (C001 carve-outs retired on v0.63.1), modules
-509/509, probes 235/235, barename 0/509.**
+509/509, probes 236/236, barename 0/509.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -12,19 +12,19 @@ gates flip:
 2. Smoke corpus green -- MET on the v0.63.1 pin: release gate 952/952
    full, no carve-outs (C001 fixed by 4bf8cf1e; 20/20 + 20/20 stress).
    lz4 is fixed by m190 and stayed in the gate.
-3. Probe corpus green -- MET (235/235 on v0.63.1, incl. the 5 promoted
-   regression probes and the v0.63.1 pin locks).
+3. Probe corpus green -- MET (236/236 on v0.63.1, incl. the 5 promoted
+   regression probes and the v0.63.1 pin locks; wave-75 probe added).
 4. Strict bare-name scan clean -- MET (0/509).
 5. Coverage ratchet green -- MET (floors110).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (497/517 modules, 3475/6200 fns).
-8. Contract coverage 100% (every public fn carries clauses) -- OPEN (49.8%).
+8. Contract coverage 100% (every public fn carries clauses) -- OPEN (50.6%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
    OPEN (10: 9 compiler, 1 stdlib algorithm).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
 
 Meter formula: MET gates count 1.0; gate 8 counts its current
-pub-with-clause fraction (49.8% -> 0.498); gates 9 and 10 get no partial
+pub-with-clause fraction (50.6% -> 0.506); gates 9 and 10 get no partial
 credit (discrete). Update the percentage and the gate-8 fraction in the
 same commit as each floors dump so the meter moves smoothly toward 80%.
 
@@ -55,6 +55,19 @@ Not a readiness gate yet; do not displace coverage waves before gate 10
   deterministic CPU physics package on math/geom/simd.
 - Cheap prerequisites already in the coverage path (`ffi`, `mem`, `ptr`,
   `io`, `thread`, `sync`) keep landing as normal waves.
+- Compiler relay 2026-10-05: plan recorded at compiler
+  `docs/SYSTEMS_TRACK_PLAN.md` (commit 6f4173cd); the order was accepted
+  as asked. Ask (4) is already satisfied (`--no-contracts` exists and
+  release defaults checks off; an IR lock is being added). First unlock
+  pair = S1 freestanding + S2 `repr(C)`, slotted after the current
+  v0.64.0 bug batch (m192/R65/m193/m194/UX landed and fully gated);
+  freestanding sits behind a profile so selfhost parity stays
+  byte-stable. S1 run-lock will be a Linux CI fixture with an asm
+  `_start`; Windows is build-only. Freestanding caveat to carry into the
+  gpu/mmio skeletons: without the OS-backed guard page/trampoline,
+  confined `unsafe` cannot trap hardware faults in that mode -- design
+  those surfaces for explicit checking. Nothing is needed from stdlib
+  until S1/S2 land.
 
 Update 2026-09-25 (wave 30 landed): A1/A2 DONE (`02dde42`, floors67) --
 signal 40/40 and exponential 18/18 pub covered; math 8.3% -> 14.1%,
@@ -504,6 +517,19 @@ stdlib tag >= `8b23b79` for Gate P; tagged `stdlib-perf3` at `5037262`
 regens api-freeze, t2 `185342f4`, tags v0.62.3). The packages'
 `Vec[StructType]` trap-10 row is a retirement candidate (not reproducible
 on both sides); no local row existed.
+
+Update 2026-10-05 (wave 75 landed): encoding remainder + debug --
+50 clauses / 50 new pub (ascii85 6, punycode 7, idna 8, disasm 7,
+heap_report 11, trace 11; debug.hexdump's placeholder replaced).
+encoding 72.4% -> 100%, debug 24.4% -> 95.1% (only the void trace_print/
+trace_log remain uncovered), global 49.8% -> 50.6%; meter 75.1%;
+floors111. Probe p_wave75_shapes.xi (236th, 84 checks) green on v0.63.1;
+targeted smokes ascii85 2/2, punycode 3/3, debug 2/2. Notable clause
+forms: punycode_adapt requires (numpoints > 0, delta >= 0) + result >= 0;
+disasm stub mirrors (all Err/false/None); heap counters mirror module
+vars and reset re-establishes the peak invariant; trace mirrors
+enablement/depth and enter/exit are monotone with @pre. Readiness next:
+simd 24.4%, stats 25%, thread 25%, convert 25.6%, core 26.7%.
 
 Update 2026-10-05 (wave 74 landed): encoding + three fix-first --
 55 clauses / 37 new pub (encoding.xi 24 touched, base64 8, base32 6,

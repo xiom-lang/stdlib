@@ -74,7 +74,10 @@ fn hex(n: Int) -> Str {
 /// intrinsic this returns the traced scope stack (deepest scope first);
 /// empty when tracing has not recorded any scopes.
 /// Complexity: O(scope depth).
-pub fn trace_backtrace() -> Vec[Str] {
+pub fn trace_backtrace() -> Vec[Str]
+  ensures: result.len() <= scope_stack.names.len()
+  ensures: (scope_stack.names.len() == 0) => (result.len() == 0)
+{
   var out = Vec[Str].new();
   let n = scope_stack.names.len();
   var i = n;
@@ -89,7 +92,9 @@ pub fn trace_backtrace() -> Vec[Str] {
 /// Symbolize raw frame addresses as `0x` hex strings. Invalid or negative
 /// addresses render as "0x0".
 /// Complexity: O(frames).
-pub fn trace_backtrace_symbols(frames: &Vec[Int]) -> Vec[Str] {
+pub fn trace_backtrace_symbols(frames: &Vec[Int]) -> Vec[Str]
+  ensures: result.len() == frames.len()
+{
   var symbols = Vec[Str].new();
   var i: Int = 0;
   while i < frames.len() {
@@ -108,7 +113,10 @@ pub fn trace_backtrace_symbols(frames: &Vec[Int]) -> Vec[Str] {
 /// The current source location as "file:line". Without source-location
 /// intrinsics this returns the top of the traced scope stack (or "unknown").
 /// Complexity: O(1).
-pub fn trace_source_location() -> Str {
+pub fn trace_source_location() -> Str
+  ensures: (scope_stack.names.len() == 0) => (result == "unknown")
+  ensures: (result != "unknown") => (scope_stack.names.len() > 0)
+{
   if scope_stack.names.len() > 0 {
     let name = scope_stack.names[scope_stack.names.len() - 1];
     return name;
@@ -119,7 +127,10 @@ pub fn trace_source_location() -> Str {
 /// The name of the calling function: the top of the traced scope stack, or
 /// "unknown".
 /// Complexity: O(1).
-pub fn trace_current_function() -> Str {
+pub fn trace_current_function() -> Str
+  ensures: (scope_stack.names.len() == 0) => (result == "unknown")
+  ensures: (result != "unknown") => (scope_stack.names.len() > 0)
+{
   if scope_stack.names.len() > 0 {
     let name = scope_stack.names[scope_stack.names.len() - 1];
     return name;
@@ -129,13 +140,17 @@ pub fn trace_current_function() -> Str {
 
 /// The file of the calling site. Not available in this build -- "unknown".
 /// Complexity: O(1).
-pub fn trace_current_file() -> Str {
+pub fn trace_current_file() -> Str
+  ensures: result == "unknown"
+{
   "unknown"
 }
 
 /// The line of the calling site. Not available in this build -- 0.
 /// Complexity: O(1).
-pub fn trace_current_line() -> Int {
+pub fn trace_current_line() -> Int
+  ensures: result == 0
+{
   0
 }
 
@@ -162,25 +177,33 @@ pub fn trace_log(msg: Str) {
 
 /// Whether tracing is currently enabled.
 /// Complexity: O(1).
-pub fn trace_enabled() -> Bool {
+pub fn trace_enabled() -> Bool
+  ensures: result == tracing_enabled
+{
   tracing_enabled
 }
 
 /// Enable or disable tracing.
 /// Complexity: O(1).
-pub fn trace_set_enabled(on: Bool) {
+pub fn trace_set_enabled(on: Bool)
+  ensures: tracing_enabled == on
+{
   tracing_enabled = on;
 }
 
 /// The current entry/exit nesting depth.
 /// Complexity: O(1).
-pub fn trace_depth() -> Int {
+pub fn trace_depth() -> Int
+  ensures: result == trace_depth_value
+{
   trace_depth_value
 }
 
 /// Record entry to a named scope: pushes `name` and increments the depth.
 /// Complexity: O(1).
-pub fn trace_enter(name: Str) {
+pub fn trace_enter(name: Str)
+  ensures: scope_stack.names.len() >= scope_stack.names.len()@pre
+{
   if tracing_enabled {
     scope_stack.names.push(name);
     trace_depth_value = trace_depth_value + 1;
@@ -190,7 +213,10 @@ pub fn trace_enter(name: Str) {
 /// Record exit from a named scope: pops the matching scope and decrements the
 /// depth (clamped at 0). No-op when the stack is empty.
 /// Complexity: O(scope depth).
-pub fn trace_exit(name: Str) {
+pub fn trace_exit(name: Str)
+  ensures: trace_depth_value <= trace_depth_value@pre
+  ensures: scope_stack.names.len() <= scope_stack.names.len()@pre
+{
   if !tracing_enabled {
     return;
   };

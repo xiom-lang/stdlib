@@ -64,7 +64,8 @@ pub fn assert_debug(cond: Bool, msg: Str)
 /// Complexity: O(n) where n = data.len().
 pub fn hexdump(data: &Vec[UInt8], width: Int) -> Str
     requires: width > 0
-    ensures:  result.len() >= 0
+    ensures:  (data.len() == 0) => (result.len() == 0)
+    ensures:  (data.len() > 0) => (result.len() > 0)
 {
     let len = data.len();
     if len == 0 {

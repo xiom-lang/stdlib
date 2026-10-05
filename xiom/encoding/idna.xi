@@ -26,13 +26,18 @@ extern "C" {
 
 /// Splits a domain at the dot separators. Empty labels (e.g. a trailing dot)
 /// are preserved. Complexity: O(n).
-pub fn idna_split_labels(domain: Str) -> Vec[Str] {
+pub fn idna_split_labels(domain: Str) -> Vec[Str]
+  ensures: result.len() >= 1
+{
   string.str_split(domain, ".")
 }
 
 /// Joins labels back into a domain with '.' separators.
 /// Complexity: O(n * total length).
-pub fn idna_join_labels(labels: &Vec[Str]) -> Str {
+pub fn idna_join_labels(labels: &Vec[Str]) -> Str
+  ensures: (labels.len() == 0) => (result.len() == 0)
+  ensures: (labels.len() > 0) => (result.len() >= labels.len() - 1)
+{
   var result = "";
   var n = 0;
   while n < labels.len() {
@@ -157,7 +162,10 @@ fn _uts46_map(cp: Int) -> Int {
 /// lowercased and kept; non-ASCII labels are Punycode-encoded with the
 /// "xn--" prefix. Returns Err on an empty domain, an oversized label/domain,
 /// or a punycode failure. Complexity: O(sum of label^2).
-pub fn idna_to_ascii(s: Str) -> Result[Str, Str] {
+pub fn idna_to_ascii(s: Str) -> Result[Str, Str]
+  ensures: (s.len() == 0) => (result.is_err)
+  ensures: result is Ok => result.len() >= 1 && result.len() <= 253
+{
   if string.str_len(s) == 0 {
     return Err("empty domain");
   };
@@ -206,7 +214,9 @@ pub fn idna_to_ascii(s: Str) -> Result[Str, Str] {
 /// Converts an A-label domain to Unicode: labels with the "xn--" prefix are
 /// Punycode-decoded, all others pass through. Returns Err on a punycode
 /// failure. Complexity: O(sum of label^2).
-pub fn idna_to_unicode(s: Str) -> Result[Str, Str] {
+pub fn idna_to_unicode(s: Str) -> Result[Str, Str]
+  ensures: (s.len() == 0) => (result.is_ok)
+{
   var labels = idna_split_labels(s);
   var result = "";
   var n = 0;
@@ -237,7 +247,10 @@ pub fn idna_to_unicode(s: Str) -> Result[Str, Str] {
 /// valid "xn--" A-label whose payload decodes), and neither starting nor
 /// ending with a hyphen. Returns false for any violation.
 /// Complexity: O(total length + sum of label^2).
-pub fn idna_is_valid(s: Str) -> Bool {
+pub fn idna_is_valid(s: Str) -> Bool
+  ensures: (s.len() == 0) => (result == false)
+  ensures: (result == true) => (s.len() >= 1 && s.len() <= 253)
+{
   if string.str_len(s) == 0 {
     return false;
   };
@@ -280,7 +293,10 @@ pub fn idna_is_valid(s: Str) -> Bool {
 /// rejection of control/surrogate characters. (NFC normalization is omitted;
 /// the code points are otherwise preserved.) Returns Err on a disallowed
 /// character. Complexity: O(n).
-pub fn idna_uts46_normalize(s: Str) -> Result[Str, Str] {
+pub fn idna_uts46_normalize(s: Str) -> Result[Str, Str]
+  ensures: (s.len() == 0) => (result.is_ok)
+  ensures: result is Ok => result.len() <= s.len()
+{
   var bytes = Vec[UInt8].new();
   var len = s.len();
   var i = 0;
@@ -322,7 +338,10 @@ pub fn idna_uts46_normalize(s: Str) -> Result[Str, Str] {
 /// case folding (ASCII lowercase), rejection of whitespace, control and
 /// surrogate characters. Returns Err on a disallowed character.
 /// Complexity: O(n).
-pub fn idna_nameprep(s: Str) -> Result[Str, Str] {
+pub fn idna_nameprep(s: Str) -> Result[Str, Str]
+  ensures: (s.len() == 0) => (result.is_ok)
+  ensures: result is Ok => result.len() <= s.len()
+{
   var bytes = Vec[UInt8].new();
   var len = s.len();
   var i = 0;
@@ -415,7 +434,9 @@ fn _is_number(cp: Int) -> Bool {
 /// with an RTL code point or a digit, and contain no LTR letters; labels with
 /// no RTL code point are always acceptable. Applies to every dot-separated
 /// label. Complexity: O(n).
-pub fn idna_is_bidi_valid(s: Str) -> Bool {
+pub fn idna_is_bidi_valid(s: Str) -> Bool
+  ensures: (s.len() == 0) => (result == true)
+{
   var labels = idna_split_labels(s);
   var n = 0;
   while n < labels.len() {

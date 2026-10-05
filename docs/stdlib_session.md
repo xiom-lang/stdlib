@@ -4,13 +4,13 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 -->
 # XIOM Stdlib Session -- Handoff
 
-## 0A. CONTINUE HERE -- handoff snapshot 12 (updated 2026-10-05, wave 74 complete)
+## 0A. CONTINUE HERE -- handoff snapshot 13 (updated 2026-10-05, wave 75 complete)
 
 **PASTE-READY PROMPT FOR THE NEXT SESSION (copy this block):**
 
 ---
 You are continuing the XIOM stdlib lane. Worktree `E:\xiom-lang\stdlib`,
-branch `main`. Read `docs/stdlib_session.md` blocks 42 (latest), 41, 40
+branch `main`. Read `docs/stdlib_session.md` blocks 43 (latest), 42, 41
 (publish), 27 (iter block) and `docs/PRODUCTION_READINESS_QUEUE.md`
 before acting; snapshot 5 below the prompt keeps the deep protocol lore.
 
@@ -21,34 +21,34 @@ v0.62.4/v0.63.0 archives kept. Registry carries xiom-std 0.62.3, 0.62.4 and 0.63
 (staging then production publishes approved and green); tags pushed:
 stdlib-v0.62.3 (12a3a1b), stdlib-v0.62.4 (3800c08), stdlib-v0.63.0 (179cfea).
 Gates on v0.63.1: release corpus 952/952 FULL (C001 carve-outs retired by
-4bf8cf1e; 20/20 + 20/20 stress), modules 509/509, probes 235/235, barename
-0/509, floors110, module-smoke ratchet OK. Coverage = 49.8% global
-pub-with-clause. Waves landed: 63 net+hash, 64 reflect+iter adapters, 65x convert, 66 time, 67 format, 68 misc, 69 os+rand, 70 crypto, 71 log, 72 compress, 73 pin, 74 encoding. Wave
+4bf8cf1e; 20/20 + 20/20 stress), modules 509/509, probes 236/236, barename
+0/509, floors111, module-smoke ratchet OK. Coverage = 50.6% global
+pub-with-clause. Waves landed: 63 net+hash, 64 reflect+iter adapters, 65x convert, 66 time, 67 format, 68 misc, 69 os+rand, 70 crypto, 71 log, 72 compress, 73 pin, 74 encoding, 75 encoding-rem+debug. Wave
 65 (iter clauses) is DEFERRED but pin-unblocked (block 27): the C001
 classifier is fixed on v0.63.1 and clauses may read tuple components; the
 deferred clause set (Range core 7 + chain 14 + fold 8 + iter_collect) is documented there.
 
-FIRST TASK (wave 75): finish encoding (ascii85 6 + idna 8 + punycode 7),
-then debug 24.4% (merge files to hold 40-60 pub). v0.63.1 additionally
-allows tuple-component clauses (`result.value.0/1`), so revisit skipped
-tuple-returning pub fns opportunistically. Mandatory protocol:
+FIRST TASK (wave 76): simd 24.4% + stats 25% (merge files to hold 40-60
+pub), then thread 25% / convert 25.6%. v0.63.1 allows tuple-component
+clauses (`result.value.0/1`), so revisit skipped tuple-returning pub fns
+opportunistically. Mandatory protocol:
 (1) recon bodies and derive every clause from them; no placeholder forms
 (no unsigned `>= 0`, no `is_ok || is_err`, no self-mirrors); clauses run at
 runtime, so never read Result/Option payloads, guard division/NaN, and
 prefer exact mirrors, length/presence bands and `@pre` invariants.
-(2) probe-first: add `tools/probes/p_wave75_shapes.xi` exercising every
+(2) probe-first: add `tools/probes/p_wave76_shapes.xi` exercising every
 clause-guard path; bind module-returned values to `let` before comparing
 (inline unsigned compares misread high bits); bind `Vec.new()`
 temporaries passed as `&Vec`; do not declare externs for runtime guard
 symbols; green on v0.63.1 (v0.63.0 cross-check when cheap).
 (3) apply, run targeted smokes; if unrelated codegen breaks, bisect and
 drop the offending clause with a code comment (see blocks 27/65x).
-(4) dump `tools/coverage_floors111.json`, wire the workflows +
+(4) dump `tools/coverage_floors112.json`, wire the workflows +
 `tools/README.md`, update plan/session/queue in the same commit, YAML
 check, pure-ASCII conventional commit.
 (5) battery: `run_smokes.ps1 -ExcludeFile tools/known_failures/
-gate-exclusions.txt` (expect 952/952 full), probe corpus (expect 236),
-check_modules 509/509, barename 0/509, floors111 + module-smoke ratchets;
+gate-exclusions.txt` (expect 952/952 full), probe corpus (expect 237),
+check_modules 509/509, barename 0/509, floors112 + module-smoke ratchets;
 record results in the session block; push `main`.
 
 QUEUED (do only when triggered):
@@ -58,6 +58,13 @@ QUEUED (do only when triggered):
   SPIR-V device code. Stdlib starts gpu/mmio/handle-RAII skeletons only
   on unlock, probe-first, and does not displace coverage waves before
   gate 10.
+  Compiler reply 2026-10-05: plan at compiler docs/SYSTEMS_TRACK_PLAN.md
+  (6f4173cd); order accepted; ask (4) already exists (--no-contracts,
+  release default off) + IR lock coming; first unlocks S1 freestanding +
+  S2 repr(C) after the v0.64.0 batch; S1 run-lock Linux CI fixture with
+  asm _start, Windows build-only; freestanding has no fault-trapping
+  guard pages -- gpu/mmio designs must check explicitly. Nothing needed
+  from stdlib until S1/S2.
 - DONE 2026-10-05 (v0.63.1): the C001 carve-outs are retired
   (4bf8cf1e in the release; 20/20 + 20/20 stress). Next: retry the
   wave-65 iter clause set (block 27), now with the v0.63.1
@@ -1551,6 +1558,30 @@ registry pin, agent recon for the rest)**
   gates; open: contract coverage 100%, zero open findings, beta-exit release
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
+
+**SESSION 2026-10-05 block 43 (wave 75: encoding remainder + debug; floors111)**
+- Wave 75: 50 clauses / 50 new pub -- encoding remainder (ascii85 6,
+  punycode 7, idna 8) brings xiom.encoding to 100% pub coverage; debug 29
+  (disasm 7 always-Err/false/None stub mirrors, heap_report 11
+  counter/module-var mirrors + reset invariant, trace 11
+  enablement/depth mirrors and monotone enter/exit @pre);
+  debug.hexdump's placeholder replaced with empty/nonempty length
+  claims. Skipped: trace_print/trace_log (void side effects, no
+  derivable claim).
+- Notable clause forms: punycode_adapt requires (numpoints > 0,
+  delta >= 0) + ensures result >= 0; ascii85 max-length bands
+  (((n+3)/4)*5) and the delimiter wrapper's +4; idna join/ascii/is_valid
+  bands; disasm stub mirrors.
+- Probe p_wave75_shapes.xi (236th, 84 checks): green on v0.63.1 with the
+  clauses active (clauses were derived before probe authoring, so the
+  guard-safety run doubles as the post-clause run); targeted smokes
+  ascii85 2/2, punycode 3/3, debug 2/2.
+- Coverage: encoding 72.4% -> 100%, debug 24.4% -> 95.1%, global
+  49.8% -> 50.6%, meter 75.1%; floors111 wired (ci/heavy/release +
+  tools/README + plan).
+- Battery on this commit (v0.63.1): release corpus 952/952 full (660.8s,
+  no exclusions); probes 236/236 (322.7s); check_modules 509/509 (210.0s);
+  barename 0/509 (289.6s); floors111 + module-smoke ratchets OK.
 
 **SESSION 2026-10-05 block 42 (wave 74: encoding + three fix-first; floors110)**
 - Wave 74: 55 clauses across xiom.encoding (24), xiom.encoding.base64 (8),

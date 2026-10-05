@@ -122,7 +122,11 @@ fn _str_to_cps(s: Str) -> Result[Vec[Int], Str] {
 
 /// The RFC-3492 bias adaptation function. Maps a delta to a new bias value.
 /// Complexity: O(log delta).
-pub fn punycode_adapt(delta: Int, numpoints: Int, firsttime: Bool) -> Int {
+pub fn punycode_adapt(delta: Int, numpoints: Int, firsttime: Bool) -> Int
+  requires: numpoints > 0
+  requires: delta >= 0
+  ensures: result >= 0
+{
   var d = delta;
   if firsttime {
     d = d / _DAMP;
@@ -140,7 +144,10 @@ pub fn punycode_adapt(delta: Int, numpoints: Int, firsttime: Bool) -> Int {
 
 /// Maps a 0-35 value to its Punycode digit character (a-z, then 0-9).
 /// Returns '\0' for a value outside 0..35. Complexity: O(1).
-pub fn punycode_encode_digit(d: Int) -> Char {
+pub fn punycode_encode_digit(d: Int) -> Char
+  ensures: (d < 0 || d > 35) => (result == '\0')
+  ensures: (d >= 0 && d <= 35) => (result != '\0')
+{
   if d >= 0 && d <= 25 {
     return to_char(97 + d);
   };
@@ -152,7 +159,9 @@ pub fn punycode_encode_digit(d: Int) -> Char {
 
 /// Maps a Punycode digit character back to a 0-35 value; -1 for invalid.
 /// Complexity: O(1).
-pub fn punycode_decode_digit(c: Char) -> Int {
+pub fn punycode_decode_digit(c: Char) -> Int
+  ensures: result >= -1 && result <= 35
+{
   var code = c as Int;
   if code >= 48 && code <= 57 { return code - 48 + 26; }
   if code >= 97 && code <= 122 { return code - 97; }
@@ -163,7 +172,9 @@ pub fn punycode_decode_digit(c: Char) -> Int {
 /// Encodes a single Unicode label to Punycode (RFC 3492 section 6.3).
 /// Returns Err on an invalid code point or an arithmetic overflow.
 /// Complexity: O(n^2), n = label length in code points.
-pub fn punycode_encode(s: Str) -> Result[Str, Str] {
+pub fn punycode_encode(s: Str) -> Result[Str, Str]
+  ensures: (s.len() == 0) => (result.is_ok)
+{
   var cps = _str_to_cps(s);
   match cps {
     Err(e) => { return Err(e); },
@@ -253,7 +264,9 @@ fn _tm(k: Int, bias: Int) -> Int {
 /// Returns Err on an invalid digit, a truncated sequence, an overflow, a
 /// basic decoded code point, or an invalid code point.
 /// Complexity: O(n^2), n = encoded length.
-pub fn punycode_decode(s: Str) -> Result[Str, Str] {
+pub fn punycode_decode(s: Str) -> Result[Str, Str]
+  ensures: (s.len() == 0) => (result.is_ok)
+{
   var cps = Vec[Int].new();
   var len = s.len();
   var sep = -1;
@@ -355,7 +368,9 @@ fn _has_non_ascii(label: Str) -> Bool {
 /// non-ASCII labels are Punycode-encoded and prefixed with "xn--" (RFC 3490
 /// A-label form). Empty labels are preserved. Returns Err on a punycode
 /// failure. Complexity: O(sum of label^2).
-pub fn punycode_encode_domain(domain: Str) -> Result[Str, Str] {
+pub fn punycode_encode_domain(domain: Str) -> Result[Str, Str]
+  ensures: (domain.len() == 0) => (result.is_ok)
+{
   var labels = string.str_split(domain, ".");
   var result = "";
   var n = 0;
@@ -390,7 +405,9 @@ pub fn punycode_encode_domain(domain: Str) -> Result[Str, Str] {
 /// (case-insensitive) are Punycode-decoded, all others pass through. Empty
 /// labels are preserved. Returns Err on a punycode failure.
 /// Complexity: O(sum of label^2).
-pub fn punycode_decode_domain(domain: Str) -> Result[Str, Str] {
+pub fn punycode_decode_domain(domain: Str) -> Result[Str, Str]
+  ensures: (domain.len() == 0) => (result.is_ok)
+{
   var labels = string.str_split(domain, ".");
   var result = "";
   var n = 0;

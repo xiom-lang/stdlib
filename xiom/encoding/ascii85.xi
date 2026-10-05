@@ -26,19 +26,27 @@ extern "C" {
 
 /// Encodes bytes as an Ascii85 string ('!'..'u'; runs of four zero bytes
 /// collapse to 'z'). Empty input yields "". Complexity: O(n).
-pub fn ascii85_encode(data: &Vec[UInt8]) -> Str {
+pub fn ascii85_encode(data: &Vec[UInt8]) -> Str
+  ensures: (data.len() == 0) => (result.len() == 0)
+  ensures: result.len() <= ((data.len() + 3) / 4) * 5
+{
   xiom.convert.ascii85.to_ascii85(data)
 }
 
 /// Decodes an Ascii85 string back into bytes. Accepts 'z' for zero runs.
 /// Returns Err on an invalid character, a 'z' inside a group, an out-of-range
 /// group value, or a degenerate tail group. Complexity: O(n).
-pub fn ascii85_decode(s: Str) -> Result[Vec[UInt8], Str] {
+pub fn ascii85_decode(s: Str) -> Result[Vec[UInt8], Str]
+  ensures: (s.len() == 0) => (result.is_ok)
+  ensures: result is Ok => result.len() <= 4 * s.len()
+{
   xiom.convert.ascii85.from_ascii85(s)
 }
 
 /// Encodes a string's UTF-8 bytes as Ascii85. Complexity: O(n).
-pub fn ascii85_encode_str(s: Str) -> Str {
+pub fn ascii85_encode_str(s: Str) -> Str
+  ensures: (s.len() == 0) => (result.len() == 0)
+{
   var bytes = Vec[UInt8].new();
   var i = 0;
   let slen = s.len();
@@ -53,7 +61,10 @@ pub fn ascii85_encode_str(s: Str) -> Str {
 /// Decodes Ascii85 into a UTF-8 string (bytes copied verbatim; the caller is
 /// responsible for the UTF-8 validity of the decoded content). Returns Err on
 /// invalid Ascii85. Complexity: O(n).
-pub fn ascii85_decode_str(s: Str) -> Result[Str, Str] {
+pub fn ascii85_decode_str(s: Str) -> Result[Str, Str]
+  ensures: (s.len() == 0) => (result.is_ok)
+  ensures: result is Ok => result.len() <= 4 * s.len()
+{
   var r = xiom.convert.ascii85.from_ascii85(s);
   match r {
     Ok(bytes) => {
@@ -80,14 +91,20 @@ pub fn ascii85_decode_str(s: Str) -> Result[Str, Str] {
 
 /// Encodes bytes as Ascii85 wrapped in the Adobe delimiters "<~" and "~>".
 /// Complexity: O(n).
-pub fn ascii85_encode_with_delim(data: &Vec[UInt8]) -> Str {
+pub fn ascii85_encode_with_delim(data: &Vec[UInt8]) -> Str
+  ensures: result.len() >= 4
+  ensures: result.len() <= ((data.len() + 3) / 4) * 5 + 4
+{
   string.str_concat(string.str_concat("<~", xiom.convert.ascii85.to_ascii85(data)), "~>")
 }
 
 /// Decodes an Ascii85 string that is wrapped in the Adobe delimiters "<~" and
 /// "~>". Returns Err if the delimiters are missing or the payload is invalid.
 /// Complexity: O(n).
-pub fn ascii85_decode_with_delim(s: Str) -> Result[Vec[UInt8], Str] {
+pub fn ascii85_decode_with_delim(s: Str) -> Result[Vec[UInt8], Str]
+  ensures: (s.len() < 4) => (result.is_err)
+  ensures: result is Ok => result.len() <= 4 * s.len()
+{
   let len = s.len();
   if len < 4 {
     return Err("ascii85 delimiters missing");

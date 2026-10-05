@@ -1121,8 +1121,16 @@ T1/T2 yields.
         payload-clause audit closed (io.xi four were the only bogus
         sites). Next: encoding remainder (ascii85/idna/punycode) / debug
         24.4% / tuple-component clause expansion.
+        Wave 75 (2026-10-05): coverage wave 38 -- encoding remainder +
+        debug, 50 clauses / 50 new pub (ascii85 6, punycode 7, idna 8,
+        disasm 7, heap_report 11, trace 11; hexdump placeholder
+        replaced). encoding 72.4% -> 100%, debug 24.4% -> 95.1%, global
+        49.8% -> 50.6%, meter 75.1%; floors111. Probe p_wave75_shapes.xi
+        (236th, 84 checks) green on v0.63.1; targeted smokes ascii85 2/2,
+        punycode 3/3, debug 2/2. Next: simd 24.4% / stats 25% /
+        thread 25% / convert 25.6%.
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors110.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors111.json
        tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;
