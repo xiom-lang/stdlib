@@ -1468,6 +1468,27 @@ registry pin, agent recon for the rest)**
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
 
+**SESSION 2026-10-05 block 33 (stdlib 0.62.3/0.62.4/0.63.0 PUBLISHED; C001 fix on main)**
+- Publish complete, staging-first then production (all environment
+  approvals granted): canaries 37222582904 (0.62.4), 37223911989 (0.63.0),
+  37224370669 (0.62.3) all green on
+  `https://staging.registry.xiom-lang.org` ("Published xiom-std vX --
+  {\"ok\":true,...}", ed25519-signed, compiler pin recorded); production
+  runs 37219378388 (0.62.4), 37221426683 (0.63.0), 37219366825 (0.62.3)
+  all success publishing to `https://registry.xiom-lang.org` with
+  sha256/signature/provenance verification. The registry now carries
+  xiom-std 0.62.3, 0.62.4 and 0.63.0 (was 0.62.0).
+- Compiler relay: C001 is root-caused and FIXED on compiler main
+  (`4bf8cf1e`); the published v0.63.0 archive predates it, so the two
+  C001 smokes STAY excluded for this pin. DROP both exclusions on the
+  first archive containing the fix, then retest with the 20-run stress on
+  `smoke_iter_range` / `smoke_iter_find_all_any` (expect deterministic
+  green) and promote the lock if green. Compiler-side evidence: reducer
+  9/20 -> 20/20, both smokes compile 5/5 + run rc 0, new e2e lock, full
+  e2e 2418/0/4.
+- macOS: `heavy` carries `macos-14`; promotion into `release.yml` is
+  still pending one green heavy run.
+
 **SESSION 2026-10-04 block 32 (v0.63.0 re-pin + release prep)**
 - Official v0.63.0 archive downloaded and SHA256-verified
   (689881f4...): `%TEMP%\kilo\stdlib_ws\v0630\x\bin\xiom.exe`;

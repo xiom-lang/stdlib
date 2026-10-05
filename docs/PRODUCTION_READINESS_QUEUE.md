@@ -479,6 +479,16 @@ regens api-freeze, t2 `185342f4`, tags v0.62.3). The packages'
 `Vec[StructType]` trap-10 row is a retirement candidate (not reproducible
 on both sides); no local row existed.
 
+Update 2026-10-05 (publish complete + C001 fix relay): staging canaries
+for 0.62.3/0.62.4/0.63.0 all green on staging.registry.xiom-lang.org and
+the production publishes all succeeded on registry.xiom-lang.org after
+environment approvals (sha256/signature/provenance verified); the
+registry now carries xiom-std 0.62.3, 0.62.4 and 0.63.0. C001 is fixed on
+compiler main (4bf8cf1e); v0.63.0 predates it, so the two C001 smokes
+stay excluded on this pin -- drop both on the first archive containing
+the fix and run the 20-run stress retest (expect deterministic green)
+before promoting the lock.
+
 Update 2026-10-04 (v0.63.0 re-pin + release prep): SHA256-verified
 official v0.63.0; COMPILER_VERSION/package.xi -> 0.63.0. Gate carve-out
 shrinks to the two C001 iter smokes -- m190 fixes lz4 and the smoke is
