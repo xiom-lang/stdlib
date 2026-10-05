@@ -30,12 +30,12 @@ deferred clause set (Range core 7 + chain 14 + fold 8 + iter_collect) is documen
 
 FIRST TASK (wave 78): thread 25% (56 pub) then convert 25.6%, holding the
 40-60-pub family batching. Pending from the wave-77 prompt (block 46):
-(a) iter clause retry (block 27) -- the compiler closed iter C001/shape,
-but the clause-side closure lowering failed on v0.63.1 with
-`Range.count` + smoke_iter; re-test by applying `ensures: result >= 0` to
-Range.count and compiling smoke_iter on v0.64.0; if green, land the
-deferred set (Range core 7 + chain 14 + fold 8 + iter_collect)
-probe-first, else update the finding with v0.64.0 evidence.
+(a) iter clause retry (block 27) -- DONE on v0.64.0 (wave-77 follow-up):
+`ensures: result >= 0` on Range.count still fails smoke_iter with clang
+`use of undefined value` (%tmp8); the clause-side closure lowering stays
+compiler-blocked and the finding is updated. Re-retry the deferred set
+(Range core 7 + chain 14 + fold 8 + iter_collect) when the compiler
+closure work lands.
 (b) Pulse pure-XIOM hardening: TcpStream.write_all, server_parse_request,
 hmac_sha256_hex (the m196 read/write loopback lock already landed).
 (c) runtime-backed Pulse items (socket timeout/nonblocking/reuse-addr,
@@ -105,7 +105,9 @@ QUEUED (do only when triggered):
   BUT: re-verified 2026-10-05 on v0.63.1 -- the clause-side closure
   lowering still fails (Range.count `ensures: result >= 0` -> smoke_iter
   clang `use of undefined value`), so the retry stays compiler-blocked;
-  only the C001 half retired.
+  only the C001 half retired. RE-VERIFIED on v0.64.0 (wave-77 follow-up):
+  same clang `use of undefined value` (%tmp8); the deferred set stays
+  queued with the compiler closure work.
 - Repo-wide `result.value` payload-clause audit (v0.63.1 lowers payload
   clauses strictly): the four io.xi IOError `.len()` sites retired in the
   pin wave were the ONLY bogus ones; io/pipe.xi, io/fs.xi and

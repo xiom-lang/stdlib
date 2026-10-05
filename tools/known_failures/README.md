@@ -58,10 +58,11 @@ generated `__closure_N`, and landing the 7-clause Range core set makes 12
 iter-consuming smokes fail the same way. Repro
 `tools/known_failures/p_iter_range_collect_forwardref.xi` (call side now
 rc 0; the clause-side repro is the Range.count clause + smoke_iter, see
-the code comment). Clause side RE-VERIFIED on v0.63.1 (2026-10-05):
-`ensures: result >= 0` on Range.count still fails smoke_iter with clang
-`use of undefined value`; the C001 half of the block is fixed, the closure
-half remains. Queued with the compiler closure work.
+the code comment). Clause side RE-VERIFIED on v0.63.1 (2026-10-05) and
+again on v0.64.0 (2026-10-05, wave-77 follow-up): `ensures: result >= 0`
+on Range.count still fails smoke_iter with clang `use of undefined value`
+(`%tmp8` at the same lowering position); the C001 half of the block is
+fixed, the closure half remains. Queued with the compiler closure work.
 
 **RESOLVED 2026-10-05 (compiler v0.64.0, m195): `xiom.reflect.all_types()`
 no longer heap-corrupts; the probe exits 0.** m195 keeps angle-bracket
