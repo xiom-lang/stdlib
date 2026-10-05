@@ -28,7 +28,9 @@ fn esc() -> Str {
 /// The ANSI color sequence for a level (see header for the mapping).
 /// Unknown levels return the reset sequence.
 /// Complexity: O(1).
-pub fn log_color(level: Int) -> Str {
+pub fn log_color(level: Int) -> Str
+  ensures: result.len() >= 4
+{
   let code = log_color_by_level(level);
   if code <= 0 {
     return "\u{001b}[0m";
@@ -38,26 +40,34 @@ pub fn log_color(level: Int) -> Str {
 
 /// The ANSI reset sequence.
 /// Complexity: O(1).
-pub fn log_color_reset() -> Str {
+pub fn log_color_reset() -> Str
+  ensures: result.len() == 4
+{
   "\u{001b}[0m"
 }
 
 /// Whether colored output is enabled.
 /// Complexity: O(1).
-pub fn log_color_enabled() -> Bool {
+pub fn log_color_enabled() -> Bool
+  ensures: result == color_enabled
+{
   color_enabled
 }
 
 /// Enable or disable colored output.
 /// Complexity: O(1).
-pub fn log_set_color_enabled(on: Bool) {
+pub fn log_set_color_enabled(on: Bool)
+  ensures: color_enabled == on
+{
   color_enabled = on;
 }
 
 /// Wrap `msg` in its level color when colored output is enabled; otherwise
 /// return `msg` unchanged.
 /// Complexity: O(len(msg)).
-pub fn log_colorize(level: Int, msg: Str) -> Str {
+pub fn log_colorize(level: Int, msg: Str) -> Str
+  ensures: result.len() >= msg.len()
+{
   if !color_enabled {
     return msg;
   };
@@ -67,7 +77,11 @@ pub fn log_colorize(level: Int, msg: Str) -> Str {
 /// The numeric ANSI color code assigned to a level (31 for ERROR, 32 for
 /// INFO, ...). Returns 0 for unknown levels.
 /// Complexity: O(1).
-pub fn log_color_by_level(level: Int) -> Int {
+pub fn log_color_by_level(level: Int) -> Int
+  ensures: result >= 31 && result <= 90
+  ensures: (level <= 0) => (result == 90)
+  ensures: (level >= 5) => (result == 35)
+{
   if level <= 0 {
     return 90;
   };
@@ -92,7 +106,9 @@ pub fn log_color_by_level(level: Int) -> Int {
 /// Remove ANSI color (CSI) sequences from `s`. Handles sequences of the form
 /// ESC [ params letter, including `ESC [ m`.
 /// Complexity: O(len(s)).
-pub fn log_strip_color(s: Str) -> Str {
+pub fn log_strip_color(s: Str) -> Str
+  ensures: result.len() <= s.len()
+{
   var result = "";
   let len = s.len();
   var i: Int = 0;
@@ -122,7 +138,10 @@ pub fn log_strip_color(s: Str) -> Str {
 
 /// Whether `s` contains an ANSI color (CSI) sequence (`ESC [`).
 /// Complexity: O(len(s)).
-pub fn log_has_color(s: Str) -> Bool {
+pub fn log_has_color(s: Str) -> Bool
+  ensures: (s.len() < 2) => (result == false)
+  ensures: result => (s.len() >= 2)
+{
   let len = s.len();
   var i: Int = 0;
   while i + 1 < len {

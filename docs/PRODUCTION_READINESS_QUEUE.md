@@ -2,7 +2,7 @@
 
 **70% -- 7 of 10 readiness gates complete.** (Compiler pin: **v0.63.0**.)
 **Gates: corpus 950/950 release (952 full; 2 C001 carve-outs), modules
-509/509, probes 231/231, barename 0/509.**
+509/509, probes 232/232, barename 0/509.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -18,7 +18,7 @@ gates flip:
 5. Coverage ratchet green -- MET (floors104).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (497/517 modules, 3475/6200 fns).
-8. Contract coverage 100% (every public fn carries clauses) -- OPEN (47.9%).
+8. Contract coverage 100% (every public fn carries clauses) -- OPEN (48.7%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
    OPEN (11: 10 compiler, 1 stdlib algorithm).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
@@ -478,6 +478,41 @@ stdlib tag >= `8b23b79` for Gate P; tagged `stdlib-perf3` at `5037262`
 regens api-freeze, t2 `185342f4`, tags v0.62.3). The packages'
 `Vec[StructType]` trap-10 row is a retirement candidate (not reproducible
 on both sides); no local row existed.
+
+Update 2026-10-05 (wave 71 recon + packages relay):
+- Packages wishlist source-of-record advanced to 126 rows (waves 47-55;
+  local mirror docs/STDLIB-WISHLIST.md still holds the 46 relayed rows).
+  Actionable intersections: row 124 deflate dynamic-Huffman read path is
+  feature work (the current decoder deliberately Errs on repeat codes
+  16/17/18 -- wave-72 clauses must match that limitation); row 127
+  `_u64_lshr` n=63 defect is a crypto fix-first candidate; row 150
+  is_finite/is_nan + reciprocal is clause-authoring leverage; row 152
+  strict percent_decode (offsets + NUL rejection) aligns with the percent
+  findings below; rows 87/96 are sb_push_int INT_MIN and parse_int 2^63
+  defects. Stale rows to close at next sync: 34 (encoding.base64 shipped),
+  139 (duplicates local row 33). Full 80-row mirror refresh rides a
+  dedicated intake.
+- Wave-72/73 recon findings (verified on v0.63.0, temp evidence):
+  (1) `encoding.utf8_valid(empty)` aborts with a contract violation at
+  encoding.xi:501 (utf8_decode requires data.len() > 0; its len == 0 Ok
+  branch is dead) -- fix-first for the encoding wave; (2)
+  `encoding.base64url_decode("AAAAA")` silently drops the dangling char
+  (len%4==1) in both copies -- fix-first; (3) same-named percent_decode
+  diverges: encoding.percent_decode("a+b") == "a b" vs
+  percent.percent_decode("a+b") == "a+b". Reported only: idna_uts46 cp
+  range, huffman length guards, snappy > 2^24 literal truncation, brotli
+  stream missing got<0, deflate dead got<0 / unchecked fwrite. Compress
+  over-claim traps for wave 72: deflate capped max_out<0 returns Ok on an
+  EOB-only stream, lz4 capped overshoots by one block, no element reads.
+
+Update 2026-10-05 (wave 71 landed): log levels/color/sinks/json/core --
+60 clauses / 49 new pub (levels 12, color 8, sinks 8, json 4, log core
+28); log 19.1% -> 91.2%, global 47.9% -> 48.7%; floors107. Probe
+p_wave71_shapes.xi (232nd, 88 checks) green on v0.63.0; targeted smokes
+log 9/9, json 17/17. Pin quirks: qualified JsonLogEntry construction
+(same-leaf type family) worked around via log_json_parse payload; Map
+field .len() codegen symbol avoided (map-length claim dropped). Readiness
+next: compress 21.1%, encoding 23.7%, debug 24.4%, simd 24.4%.
 
 Update 2026-10-05 (wave 70 landed): crypto mac/kdf/keyx/rng/sign/poly --
 41 clauses / 41 pub (mac 12, kdf 9, keyx 9, rng_crypto 5, sign 5,

@@ -1066,8 +1066,21 @@ T1/T2 yields.
         p_wave70_shapes.xi (231st, 79 checks) green on v0.63.0;
         targeted smokes crypto 36/36, poly 2/2, hash 39/39.
         Next: log 19.1% / compress 21.1% / encoding 23.7%.
+        Wave 71 (2026-10-05): coverage wave 35 -- log core, 60 clauses /
+        49 new pub: levels 12 (constants, name mapping, from-name
+        presence, threshold/enabled module-var mirrors), color 8
+        (by-level boundaries, reset/colorize/strip/has-color bands),
+        sinks 8 (constructor field mirrors, registry parallel-vector
+        invariants, close monotone @pre), json 4 (entry/format length
+        bands, empty fields "{}", thread id 1), log 28 (level-write
+        monotonicity across levels/_with/aliases, level and mode
+        module-var mirrors, entry-count mirror, last-entry presence,
+        text/json serialization bands). log 19.1% -> 91.2%, global
+        47.9% -> 48.7%; floors107. Probe p_wave71_shapes.xi (232nd,
+        88 checks) green on v0.63.0; targeted smokes log 9/9, json 17/17.
+        Next: compress 21.1% / encoding 23.7% / debug 24.4%.
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors106.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors107.json
        tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;

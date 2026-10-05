@@ -77,7 +77,9 @@ fn level_name(level: Int) -> Str {
 /// Build a JSON log line for a level and message, with the current timestamp
 /// and thread id.
 /// Complexity: O(len(msg)).
-pub fn log_json_entry(level: Int, msg: Str) -> Str {
+pub fn log_json_entry(level: Int, msg: Str) -> Str
+  ensures: result.len() >= msg.len() + 40
+{
   var line = "{\"level\":\"" + level_name(level) + "\",\"message\":\"" + json_escape(msg) + "\",\"timestamp\":\"" + log_json_timestamp() + "\",\"thread_id\":" + convert.int_to_string(log_json_thread_id());
   line = string.str_concat(line, "}");
   line
@@ -86,7 +88,10 @@ pub fn log_json_entry(level: Int, msg: Str) -> Str {
 /// Render extra key/value fields as a JSON object: `{"k1":"v1","k2":"v2"}`.
 /// Empty input renders `{}`.
 /// Complexity: O(sum of field lengths).
-pub fn log_json_fields(fields: &Vec[(Str, Str)]) -> Str {
+pub fn log_json_fields(fields: &Vec[(Str, Str)]) -> Str
+  ensures: (fields.len() == 0) => (result == "{}")
+  ensures: result.len() >= 2
+{
   var result = "{";
   var i: Int = 0;
   while i < fields.len() {
@@ -195,7 +200,9 @@ fn parse_level(name: Str) -> Int {
 
 /// Re-serialize a log entry to a JSON line.
 /// Complexity: O(len(message) + fields).
-pub fn log_json_format(entry: JsonLogEntry) -> Str {
+pub fn log_json_format(entry: JsonLogEntry) -> Str
+  ensures: result.len() >= entry.message.len() + 40
+{
   var line = "{\"level\":\"" + level_name(entry.level) + "\",\"message\":\"" + json_escape(entry.message) + "\",\"timestamp\":\"" + entry.timestamp + "\",\"thread_id\":" + convert.int_to_string(entry.thread_id);
   if entry.fields.len() > 0 {
     line = string.str_concat(line, ",\"fields\":");
@@ -207,6 +214,8 @@ pub fn log_json_format(entry: JsonLogEntry) -> Str {
 /// The current thread id for logging. This build is single-threaded, so the
 /// value is always 1.
 /// Complexity: O(1).
-pub fn log_json_thread_id() -> Int {
+pub fn log_json_thread_id() -> Int
+  ensures: result == 1
+{
   1
 }

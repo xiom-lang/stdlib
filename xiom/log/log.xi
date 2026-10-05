@@ -89,6 +89,7 @@ fn write_entry(entry: LogEntry) {
 
 /// Core logging
 pub fn trace(msg: Str)
+  ensures: entries.len() >= entries.len()@pre
   requires: msg.len() >= 0
 {
   if should_log(LogLevel.Trace) {
@@ -98,6 +99,7 @@ pub fn trace(msg: Str)
 
 /// Log at debug level.
 pub fn debug(msg: Str)
+  ensures: entries.len() >= entries.len()@pre
   requires: msg.len() >= 0
 {
   if should_log(LogLevel.Debug) {
@@ -107,6 +109,7 @@ pub fn debug(msg: Str)
 
 /// Log at info level.
 pub fn info(msg: Str)
+  ensures: entries.len() >= entries.len()@pre
   requires: msg.len() > 0
 {
   if should_log(LogLevel.Info) {
@@ -116,6 +119,7 @@ pub fn info(msg: Str)
 
 /// Log at warn level.
 pub fn warn(msg: Str)
+  ensures: entries.len() >= entries.len()@pre
   requires: msg.len() > 0
 {
   if should_log(LogLevel.Warn) {
@@ -125,6 +129,7 @@ pub fn warn(msg: Str)
 
 /// Log at error level.
 pub fn error(msg: Str)
+  ensures: entries.len() >= entries.len()@pre
   requires: msg.len() > 0
 {
   if should_log(LogLevel.Error) {
@@ -134,6 +139,7 @@ pub fn error(msg: Str)
 
 /// Log at fatal level.
 pub fn fatal(msg: Str)
+  ensures: entries.len() >= entries.len()@pre
   requires: msg.len() >= 0
 {
   if should_log(LogLevel.Fatal) {
@@ -143,6 +149,7 @@ pub fn fatal(msg: Str)
 
 /// Structured logging (key=value pairs)
 pub fn trace_with(msg: Str, data: Map[Str, Str])
+  ensures: entries.len() >= entries.len()@pre
   requires: msg.len() >= 0
 {
   if should_log(LogLevel.Trace) {
@@ -152,6 +159,7 @@ pub fn trace_with(msg: Str, data: Map[Str, Str])
 
 /// Log at debug level with structured fields.
 pub fn debug_with(msg: Str, data: Map[Str, Str])
+  ensures: entries.len() >= entries.len()@pre
   requires: msg.len() >= 0
 {
   if should_log(LogLevel.Debug) {
@@ -161,6 +169,7 @@ pub fn debug_with(msg: Str, data: Map[Str, Str])
 
 /// Log at info level with structured fields.
 pub fn info_with(msg: Str, data: Map[Str, Str])
+  ensures: entries.len() >= entries.len()@pre
   requires: msg.len() > 0
 {
   if should_log(LogLevel.Info) {
@@ -170,6 +179,7 @@ pub fn info_with(msg: Str, data: Map[Str, Str])
 
 /// Log at warn level with structured fields.
 pub fn warn_with(msg: Str, data: Map[Str, Str])
+  ensures: entries.len() >= entries.len()@pre
   requires: msg.len() > 0
 {
   if should_log(LogLevel.Warn) {
@@ -179,6 +189,7 @@ pub fn warn_with(msg: Str, data: Map[Str, Str])
 
 /// Log at error level with structured fields.
 pub fn error_with(msg: Str, data: Map[Str, Str])
+  ensures: entries.len() >= entries.len()@pre
   requires: msg.len() > 0
 {
   if should_log(LogLevel.Error) {
@@ -187,12 +198,16 @@ pub fn error_with(msg: Str, data: Map[Str, Str])
 }
 
 /// Configuration
-pub fn set_level(level: LogLevel) {
+pub fn set_level(level: LogLevel)
+  ensures: current_level == level
+{
   current_level = level;
 }
 
 /// Current minimum level that is emitted.
-pub fn get_level() -> LogLevel {
+pub fn get_level() -> LogLevel
+  ensures: result == current_level
+{
   current_level
 }
 
@@ -211,12 +226,16 @@ pub fn set_output(file: Str) -> Result[Unit, Str]
 }
 
 /// Enable/disable JSON-lines output.
-pub fn set_output_json(enabled: Bool) {
+pub fn set_output_json(enabled: Bool)
+  ensures: json_mode == enabled
+{
   json_mode = enabled;
 }
 
 /// Enable/disable ANSI color output.
-pub fn set_output_color(enabled: Bool) {
+pub fn set_output_color(enabled: Bool)
+  ensures: color_mode == enabled
+{
   color_mode = enabled;
 }
 
@@ -237,7 +256,9 @@ pub fn entries_since(instant: Instant) -> Vec[LogEntry]
 }
 
 /// Clear any file output and revert to the default sink.
-pub fn clear_log() {
+pub fn clear_log()
+  ensures: entries.len() == 0
+{
   entries = Vec[LogEntry]::new();
 }
 
@@ -245,25 +266,33 @@ pub fn clear_log() {
 
 /// Logs a debug-level message. Alias for `log.debug` for discoverability.
 /// Complexity: O(1) if level is filtered, O(1) otherwise.
-pub fn log_debug_msg(msg: Str) {
+pub fn log_debug_msg(msg: Str)
+  ensures: entries.len() >= entries.len()@pre
+{
   debug(msg);
 }
 
 /// Logs an info-level message. Alias for `log.info`.
 /// Complexity: O(1).
-pub fn log_info_msg(msg: Str) {
+pub fn log_info_msg(msg: Str)
+  ensures: entries.len() >= entries.len()@pre
+{
   info(msg);
 }
 
 /// Logs a warning-level message. Alias for `log.warn`.
 /// Complexity: O(1).
-pub fn log_warn_msg(msg: Str) {
+pub fn log_warn_msg(msg: Str)
+  ensures: entries.len() >= entries.len()@pre
+{
   warn(msg);
 }
 
 /// Logs an error-level message. Alias for `log.error`.
 /// Complexity: O(1).
-pub fn log_error_msg(msg: Str) {
+pub fn log_error_msg(msg: Str)
+  ensures: entries.len() >= entries.len()@pre
+{
   error(msg);
 }
 
@@ -272,7 +301,11 @@ pub fn log_error_msg(msg: Str) {
 /// Creates and writes a log entry with the given level, message, and key-value fields.
 /// Returns the created `LogEntry`.
 /// Complexity: O(1).
-pub fn log_with_fields(level: LogLevel, msg: Str, fields: Map[Str, Str]) -> LogEntry {
+pub fn log_with_fields(level: LogLevel, msg: Str, fields: Map[Str, Str]) -> LogEntry
+  ensures: result.message == msg
+  ensures: result.file.len() == 0
+  ensures: result.line == 0
+{
   let entry = make_entry(level, msg, fields);
   write_entry(entry);
   return entry;
@@ -283,14 +316,18 @@ pub fn log_with_fields(level: LogLevel, msg: Str, fields: Map[Str, Str]) -> LogE
 /// Sets the minimum log level. Messages below this level are filtered out.
 /// Alias for `set_level`.
 /// Complexity: O(1). Thread-safe: modifies global state.
-pub fn log_set_min_level(level: LogLevel) {
+pub fn log_set_min_level(level: LogLevel)
+  ensures: current_level == level
+{
   set_level(level);
 }
 
 /// Enables or disables JSON output format for log entries.
 /// Alias for `set_output_json`.
 /// Complexity: O(1). Thread-safe: modifies global state.
-pub fn log_enable_json(enable: Bool) {
+pub fn log_enable_json(enable: Bool)
+  ensures: json_mode == enable
+{
   set_output_json(enable);
 }
 
@@ -299,19 +336,26 @@ pub fn log_enable_json(enable: Bool) {
 /// Clears all buffered log entries.
 /// Alias for `clear_log`.
 /// Complexity: O(1). Thread-safe: modifies global state.
-pub fn log_clear_entries() {
+pub fn log_clear_entries()
+  ensures: entries.len() == 0
+{
   clear_log();
 }
 
 /// Returns the number of buffered log entries.
 /// Complexity: O(1). Thread-safe: reads global state.
-pub fn log_entry_count() -> Int {
+pub fn log_entry_count() -> Int
+  ensures: result == entries.len()
+{
   return entries.len();
 }
 
 /// Returns the most recent log entry, or `None` if the buffer is empty.
 /// Complexity: O(1). Thread-safe: reads global state.
-pub fn log_last_entry() -> Option[LogEntry] {
+pub fn log_last_entry() -> Option[LogEntry]
+  ensures: (entries.len() == 0) => (result.is_none)
+  ensures: (entries.len() > 0) => (result.is_some)
+{
   if entries.len() == 0 {
     return None;
   };
@@ -322,7 +366,10 @@ pub fn log_last_entry() -> Option[LogEntry] {
 
 /// Returns all buffered entries as a newline-separated text string.
 /// Complexity: O(n).
-pub fn log_entries_as_text() -> Str {
+pub fn log_entries_as_text() -> Str
+  ensures: (entries.len() == 0) => (result.len() == 0)
+  ensures: result.len() >= entries.len()
+{
   var output: Str = "";
   var i: Int = 0;
   while i < entries.len() {
@@ -337,7 +384,10 @@ pub fn log_entries_as_text() -> Str {
 
 /// Returns all buffered entries as a JSON array string.
 /// Complexity: O(n).
-pub fn log_entries_as_json() -> Str {
+pub fn log_entries_as_json() -> Str
+  ensures: (entries.len() == 0) => (result == "[]")
+  ensures: result.len() >= 2
+{
   var output: Str = "[";
   var i: Int = 0;
   while i < entries.len() {

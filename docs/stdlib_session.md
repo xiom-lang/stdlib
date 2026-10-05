@@ -4,13 +4,13 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 -->
 # XIOM Stdlib Session -- Handoff
 
-## 0A. CONTINUE HERE -- handoff snapshot 8 (updated 2026-10-05, wave 70 complete)
+## 0A. CONTINUE HERE -- handoff snapshot 9 (updated 2026-10-05, wave 71 complete)
 
 **PASTE-READY PROMPT FOR THE NEXT SESSION (copy this block):**
 
 ---
 You are continuing the XIOM stdlib lane. Worktree `E:\xiom-lang\stdlib`,
-branch `main`. Read `docs/stdlib_session.md` blocks 38 (latest), 37, 36
+branch `main`. Read `docs/stdlib_session.md` blocks 39 (latest), 38, 37
 (publish), 27 (iter block) and `docs/PRODUCTION_READINESS_QUEUE.md`
 before acting; snapshot 5 below the prompt keeps the deep protocol lore.
 
@@ -21,32 +21,33 @@ verified; v0.62.4/v0.62.3/v0.61.3 archives kept under
 tags pushed: stdlib-v0.62.3 (12a3a1b), stdlib-v0.62.4 (3800c08),
 stdlib-v0.63.0 (179cfea). Gates on v0.63.0: release corpus 950/950 (2 C001
 carve-outs of 952; ci/heavy run the full corpus), modules 509/509, probes
-231/231, barename 0/509, floors106, module-smoke ratchet OK. Coverage =
-47.9% global pub-with-clause. Waves landed: 63 net+hash,
-64 reflect+iter adapters, 65x convert, 66 time, 67 format, 68 misc, 69 os+rand, 70 crypto. Wave
+232/232, barename 0/509, floors107, module-smoke ratchet OK. Coverage =
+48.7% global pub-with-clause. Waves landed: 63 net+hash,
+64 reflect+iter adapters, 65x convert, 66 time, 67 format, 68 misc, 69 os+rand, 70 crypto, 71 log. Wave
 65 (iter clauses) is BLOCKED on the pin (block 27): clauses/calls on
 closure-delegating catalog fns flip between closure use-before-def and the
 C001 classifier; the deferred clause set is documented there.
 
-FIRST TASK (wave 71): coverage wave on the next low dir -- log 19.1%
-(merge files to hold 40-60 pub), then compress 21.1%. Mandatory protocol:
+FIRST TASK (wave 72): coverage wave on the next low dirs -- compress
+21.1%, then encoding 23.7% (merge files to hold 40-60 pub each).
+Mandatory protocol:
 (1) recon bodies and derive every clause from them; no placeholder forms
 (no unsigned `>= 0`, no `is_ok || is_err`, no self-mirrors); clauses run at
 runtime, so never read Result/Option payloads, guard division/NaN, and
 prefer exact mirrors, length/presence bands and `@pre` invariants.
-(2) probe-first: add `tools/probes/p_wave71_shapes.xi` exercising every
+(2) probe-first: add `tools/probes/p_wave72_shapes.xi` exercising every
 clause-guard path; bind module-returned values to `let` before comparing
 (inline unsigned compares misread high bits); bind `Vec.new()`
 temporaries passed as `&Vec`; do not declare externs for runtime guard
 symbols; green on v0.63.0 (v0.61.3 cross-check when cheap).
 (3) apply, run targeted smokes; if unrelated codegen breaks, bisect and
 drop the offending clause with a code comment (see blocks 27/65x).
-(4) dump `tools/coverage_floors107.json`, wire the workflows +
+(4) dump `tools/coverage_floors108.json`, wire the workflows +
 `tools/README.md`, update plan/session/queue in the same commit, YAML
 check, pure-ASCII conventional commit.
 (5) battery: `run_smokes.ps1 -ExcludeFile tools/known_failures/
-gate-exclusions.txt` (expect 950/950), probe corpus (expect 232),
-check_modules 509/509, barename 0/509, floors107 + module-smoke ratchets;
+gate-exclusions.txt` (expect 950/950), probe corpus (expect 233),
+check_modules 509/509, barename 0/509, floors108 + module-smoke ratchets;
 record results in the session block; push `main`.
 
 QUEUED (do only when triggered):
@@ -1534,6 +1535,36 @@ registry pin, agent recon for the rest)**
   gates; open: contract coverage 100%, zero open findings, beta-exit release
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
+
+**SESSION 2026-10-05 block 39 (wave 71: log levels/color/sinks/json/core; floors107)**
+- Wave 71: 60 clauses / 49 new pub (log 13 -> 62 = 91.2%): levels 12
+  (constants, name mapping with TRACE/FATAL bands, from-name presence,
+  threshold/set-level/enabled module-var mirrors, all-levels length),
+  color 8 (by-level boundaries + [31,90] band, reset length, colorize
+  length lower bound, strip length upper bound, has-color minimum),
+  sinks 8 (constructor target/path/bytes/id mirrors, registry
+  parallel-vector invariant on add/remove, survey length mirror, close
+  monotone @pre), json 4 (entry/format `result.len() >= msg.len() + 40`
+  bands, empty fields == "{}", thread id 1), log core 28 (level-write
+  monotonicity `entries.len() >= entries.len()@pre` on the 6 levels +
+  5 _with + 4 aliases, set_level/get_level/set_output_json/
+  set_output_color module-var mirrors, clear mirrors, entry-count mirror,
+  last-entry presence bands, text/json serialization bands and "[]").
+- Skipped by design: log_sink_file/set_output (Result payload only),
+  log_flush_all/log_sink_rotate/log_flush (no-op, no observable),
+  log_json_timestamp/log_json_parse (delegation/Result payload),
+  entries_since (existing placeholder kept).
+- Pin quirks handled: `xiom.log.json.JsonLogEntry` construction hits the
+  same-leaf qualified-type family, so log_json_format is exercised via a
+  log_json_parse payload; `Map` field `.len()` hits an unresolved
+  `LogEntry.len` codegen symbol, so log_with_fields drops the map-length
+  claim (msg/file/line mirrors only).
+- Probe p_wave71_shapes.xi (232nd, 88 checks): green on v0.63.0 pre- and
+  post-clauses; targeted smokes log 9/9, json 17/17.
+- Coverage: log 19.1% -> 91.2%, global 47.9% -> 48.7%; floors107 wired.
+- Battery on this commit (v0.63.0): release-gate corpus 950/950 (2 C001
+  carve-outs of 952); probes 232/232; check_modules 509/509; barename
+  0/509; floors107 + module-smoke ratchets OK.
 
 **SESSION 2026-10-05 block 38 (wave 70: crypto mac/kdf/keyx/rng/sign/poly; floors106; hkdf alias fix)**
 - Wave 70: 41 clauses / 41 pub in xiom.crypto: mac 12 (hmac_new block/key

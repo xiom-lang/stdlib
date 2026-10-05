@@ -58,6 +58,18 @@ Status legend: **open** = not started; **fixed** = landed with a probe lock
 | 45 | Strict int parsing with offsets | feature | Reject-junk integer parsing that also reports the consumed byte offset (extends row 28); relay 2026-10-02 night. | open |
 | 46 | base32 + percent-encoder | feature | Public base32 encode/decode and a standalone percent-encoder on the encoding face; relay 2026-10-02 night. | open |
 
+Relay status 2026-10-03 (fetched 2026-10-05): the packages source-of-record
+has advanced to 126 rows (waves 47-55); this mirror still carries rows
+1-46. New actionable rows: 124 (deflate dynamic-Huffman read path --
+feature), 127 (`_u64_lshr` n=63 defect -- stdlib fix-first candidate), 150
+(contract-usable is_finite/is_nan + reciprocal), 152 (strict percent_decode
+with relocatable offsets + NUL rejection), 87 (`sb_push_int` INT_MIN),
+96 (`parse_int` 2^63 -> INT64_MIN). Stale: 34 (encoding.base64 shipped),
+139 (duplicates row 33). Full 80-row mirror refresh pending a dedicated
+intake; the packages sheet at
+`E:\xiom-packages\packages\docs\STDLIB-WISHLIST.md` is the source of
+record.
+
 Five relays from the packages lane: the initial batch named 8 rows
 (rows 1-8), the wave-46 batch added rows 9-15 with requester lists, the
 2026-10-02 morning batch added rows 16-21, the 2026-10-02 afternoon batch

@@ -47,7 +47,12 @@ var next_id: Int = 1;
 /// Wrap a raw fd as a log sink. The sink is NOT auto-registered; call
 /// `log_add_sink` to register it.
 /// Complexity: O(1).
-pub fn log_sink_new(target: Int) -> Sink {
+pub fn log_sink_new(target: Int) -> Sink
+  ensures: result.target == target
+  ensures: result.path.len() == 0
+  ensures: result.bytes == 0
+  ensures: result.id >= 1
+{
   let id = next_id;
   next_id = next_id + 1;
   Sink{ id: id; target: target; path: ""; bytes: 0; }
@@ -70,7 +75,12 @@ pub fn log_sink_file(path: Str) -> Result[Sink, Str] {
 
 /// A sink that writes to stdout.
 /// Complexity: O(1).
-pub fn log_sink_stdout() -> Sink {
+pub fn log_sink_stdout() -> Sink
+  ensures: result.target == 1
+  ensures: result.path.len() == 0
+  ensures: result.bytes == 0
+  ensures: result.id >= 1
+{
   let id = next_id;
   next_id = next_id + 1;
   Sink{ id: id; target: 1; path: ""; bytes: 0; }
@@ -78,7 +88,12 @@ pub fn log_sink_stdout() -> Sink {
 
 /// A sink that writes to stderr.
 /// Complexity: O(1).
-pub fn log_sink_stderr() -> Sink {
+pub fn log_sink_stderr() -> Sink
+  ensures: result.target == 2
+  ensures: result.path.len() == 0
+  ensures: result.bytes == 0
+  ensures: result.id >= 1
+{
   let id = next_id;
   next_id = next_id + 1;
   Sink{ id: id; target: 2; path: ""; bytes: 0; }
@@ -86,7 +101,12 @@ pub fn log_sink_stderr() -> Sink {
 
 /// A sink that discards output.
 /// Complexity: O(1).
-pub fn log_sink_null() -> Sink {
+pub fn log_sink_null() -> Sink
+  ensures: result.target == 0
+  ensures: result.path.len() == 0
+  ensures: result.bytes == 0
+  ensures: result.id >= 1
+{
   let id = next_id;
   next_id = next_id + 1;
   Sink{ id: id; target: 0; path: ""; bytes: 0; }
@@ -94,7 +114,9 @@ pub fn log_sink_null() -> Sink {
 
 /// Register a sink for future log lines. Duplicate ids are ignored.
 /// Complexity: O(registered sinks).
-pub fn log_add_sink(s: Sink) {
+pub fn log_add_sink(s: Sink)
+  ensures: sink_list.ids.len() == sink_list.targets.len() && sink_list.ids.len() == sink_list.paths.len()
+{
   var i: Int = 0;
   var present = false;
   while i < sink_list.ids.len() {
@@ -113,7 +135,9 @@ pub fn log_add_sink(s: Sink) {
 
 /// Unregister a sink (matched by id).
 /// Complexity: O(registered sinks).
-pub fn log_remove_sink(s: Sink) {
+pub fn log_remove_sink(s: Sink)
+  ensures: sink_list.ids.len() == sink_list.targets.len() && sink_list.ids.len() == sink_list.paths.len()
+{
   var out_ids = Vec[Int].new();
   var out_targets = Vec[Int].new();
   var out_paths = Vec[Str].new();
@@ -136,7 +160,9 @@ pub fn log_remove_sink(s: Sink) {
 
 /// The currently registered sinks.
 /// Complexity: O(registered sinks).
-pub fn log_sinks() -> Vec[Sink] {
+pub fn log_sinks() -> Vec[Sink]
+  ensures: result.len() == sink_list.ids.len()
+{
   var out = Vec[Sink].new();
   var i: Int = 0;
   while i < sink_list.ids.len() {
@@ -167,6 +193,8 @@ pub fn log_sink_rotate(s: Sink, max_bytes: Int) {
 /// Close a sink and release its resources: unregisters it from the registry.
 /// File handles in this build are per-write and need no explicit release.
 /// Complexity: O(registered sinks).
-pub fn log_sink_close(s: Sink) {
+pub fn log_sink_close(s: Sink)
+  ensures: sink_list.ids.len() <= sink_list.ids.len()@pre
+{
   log_remove_sink(s);
 }

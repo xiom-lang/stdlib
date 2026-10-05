@@ -21,39 +21,55 @@ use xiom.string;
 var threshold: Int = 2;
 
 /// The trace level constant (0).
-pub fn log_level_trace() -> Int {
+pub fn log_level_trace() -> Int
+  ensures: result == 0
+{
   0
 }
 
 /// The debug level constant (1).
-pub fn log_level_debug() -> Int {
+pub fn log_level_debug() -> Int
+  ensures: result == 1
+{
   1
 }
 
 /// The info level constant (2).
-pub fn log_level_info() -> Int {
+pub fn log_level_info() -> Int
+  ensures: result == 2
+{
   2
 }
 
 /// The warn level constant (3).
-pub fn log_level_warn() -> Int {
+pub fn log_level_warn() -> Int
+  ensures: result == 3
+{
   3
 }
 
 /// The error level constant (4).
-pub fn log_level_error() -> Int {
+pub fn log_level_error() -> Int
+  ensures: result == 4
+{
   4
 }
 
 /// The fatal level constant (5).
-pub fn log_level_fatal() -> Int {
+pub fn log_level_fatal() -> Int
+  ensures: result == 5
+{
   5
 }
 
 /// The canonical name of a level: TRACE, DEBUG, INFO, WARN, ERROR or FATAL.
 /// Unknown levels map to "UNKNOWN".
 /// Complexity: O(1).
-pub fn log_level_name(level: Int) -> Str {
+pub fn log_level_name(level: Int) -> Str
+  ensures: result.len() >= 4
+  ensures: (level <= 0) => (result == "TRACE")
+  ensures: (level >= 5) => (result == "FATAL")
+{
   if level <= 0 {
     return "TRACE";
   };
@@ -77,7 +93,10 @@ pub fn log_level_name(level: Int) -> Str {
 
 /// The level for a name, if known. Matching is case-insensitive.
 /// Complexity: O(1).
-pub fn log_level_from_name(s: Str) -> Option[Int] {
+pub fn log_level_from_name(s: Str) -> Option[Int]
+  ensures: (s.len() == 0) => (result.is_none)
+  ensures: result.is_some => (s.len() >= 4)
+{
   let up = string.str_upper(s);
   if up == "TRACE" {
     return Some(0);
@@ -102,26 +121,34 @@ pub fn log_level_from_name(s: Str) -> Option[Int] {
 
 /// The current minimum level that is logged.
 /// Complexity: O(1).
-pub fn log_level_threshold() -> Int {
+pub fn log_level_threshold() -> Int
+  ensures: result == threshold
+{
   threshold
 }
 
 /// Set the minimum level that is logged.
 /// Complexity: O(1).
-pub fn log_set_level(level: Int) {
+pub fn log_set_level(level: Int)
+  ensures: threshold == level
+{
   threshold = level;
 }
 
 /// Whether a level passes the threshold (level >= threshold).
 /// Complexity: O(1).
-pub fn log_enabled(level: Int) -> Bool {
+pub fn log_enabled(level: Int) -> Bool
+  ensures: result == (level >= threshold)
+{
   level >= threshold
 }
 
 /// All level constants in severity order: [TRACE, DEBUG, INFO, WARN, ERROR,
 /// FATAL].
 /// Complexity: O(1).
-pub fn log_level_all() -> Vec[Int] {
+pub fn log_level_all() -> Vec[Int]
+  ensures: result.len() == 6
+{
   var levels = Vec[Int].new();
   levels.push(0);
   levels.push(1);
