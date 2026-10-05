@@ -11,10 +11,10 @@ fn main() -> Int {
     data.push(116u8); data.push(114u8); data.push(105u8);
     data.push(112u8);
 
-    var compressed = compress.lz4_compress(&data);
+    var compressed = compress.lz4_compress_checked(&data);
     match compressed {
       Ok(c) => {
-        var decompressed = compress.lz4_decompress(&c);
+        var decompressed = compress.lz4_decompress_checked(&c);
         match decompressed {
           Ok(result) => {
             if result.len() == data.len() {

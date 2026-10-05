@@ -271,14 +271,19 @@ pub fn brotli_decompress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str]
 }
 
 /// === LZ4 ===
-pub fn lz4_compress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str]
+/// Checked wrapper (Result) around the raw block compressor. Renamed from
+/// `lz4_compress` so the umbrella leaf is unique: a bare `lz4_compress`
+/// resolved to the Vec variant in the checker but bound the Result wrapper
+/// in codegen (compiler-lane root cause, 2026-10-05).
+pub fn lz4_compress_checked(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str]
   ensures:  result is Ok => result.len() >= 1
 {
   Ok(lz4.lz4_compress(data))
 }
 
-/// Decompress an LZ4 block; Err on malformed input.
-pub fn lz4_decompress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str]
+/// Decompress an LZ4 block; Err on malformed input. Renamed from
+/// `lz4_decompress` for the same unique-leaf reason.
+pub fn lz4_decompress_checked(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str]
   ensures:  result is Ok => result.len() >= 0
 {
   lz4.lz4_decompress(data)

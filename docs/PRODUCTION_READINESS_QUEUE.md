@@ -479,6 +479,12 @@ regens api-freeze, t2 `185342f4`, tags v0.62.3). The packages'
 `Vec[StructType]` trap-10 row is a retirement candidate (not reproducible
 on both sides); no local row existed.
 
+Update 2026-10-05 (lz4 duplicate-leaf unblock): the umbrella wrappers
+were renamed to `lz4_compress_checked` / `lz4_decompress_checked`, so a
+bare `lz4_compress` now uniquely resolves to the Vec variant; verified
+against v0.63.0 (stress smoke rc 0, snappy smoke OK, bare-call scratch
+rc 0). Compiler parity fix queued as defense.
+
 Update 2026-10-05 (wave 67 landed): format dump/number/relative/table --
 33 clauses / 33 pub; format 13.0% -> 27.3%, global 45.1% -> 45.7%;
 floors103. Probe p_wave67_shapes.xi (228th, 59 checks) green on v0.63.0

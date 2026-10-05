@@ -1469,6 +1469,19 @@ registry pin, agent recon for the rest)**
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
 
+**SESSION 2026-10-05 block 35 (lz4 duplicate-leaf unblock)**
+- Compiler relay: the benchmark lz4 failure root cause is a duplicate
+  leaf -- `xiom.compress.lz4.lz4_compress` (Vec) vs the xiom.compress
+  umbrella wrapper `lz4_compress` (Result); a bare call type-checked as
+  Vec but bound the Result wrapper in codegen (Result.len unresolved /
+  pointer-garbage lengths; deterministic 3/3, qualified form 10/10).
+  Renamed the umbrella wrappers to `lz4_compress_checked` /
+  `lz4_decompress_checked` (unique leaves) and updated the only caller
+  (`smoke_stress_compress_lz4_roundtrip.xi`). Verified on v0.63.0: stress
+  smoke rc 0, snappy smoke OK, bare-call scratch rc 0 (the failing
+  shape). Compiler parity fix queued on their side as defense.
+  Immediate unblock delivered.
+
 **SESSION 2026-10-05 block 34 (wave 67: format dump/number/relative/table; floors103)**
 - Wave 67: 33 clauses / 33 pub in xiom.format: dump 4 (empty/non-empty
   bands, empty-line length band), number 6 (exact KAT bands for
