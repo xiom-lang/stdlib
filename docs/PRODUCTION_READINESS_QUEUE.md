@@ -1,8 +1,9 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
-**70% -- 7 of 10 readiness gates complete.** (Compiler pin: **v0.63.0**.)
+**74.9% -- 7 of 10 gates complete; gate 8 at 49.3% (partial credit) and
+gates 9-10 discrete.** (Compiler pin: **v0.63.0**.)
 **Gates: corpus 950/950 release (952 full; 2 C001 carve-outs), modules
-509/509, probes 232/232, barename 0/509.**
+509/509, probes 233/233, barename 0/509.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -18,10 +19,15 @@ gates flip:
 5. Coverage ratchet green -- MET (floors104).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (497/517 modules, 3475/6200 fns).
-8. Contract coverage 100% (every public fn carries clauses) -- OPEN (48.7%).
+8. Contract coverage 100% (every public fn carries clauses) -- OPEN (49.3%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
    OPEN (11: 10 compiler, 1 stdlib algorithm).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
+
+Meter formula: MET gates count 1.0; gate 8 counts its current
+pub-with-clause fraction (49.3% -> 0.493); gates 9 and 10 get no partial
+credit (discrete). Update the percentage and the gate-8 fraction in the
+same commit as each floors dump so the meter moves smoothly toward 80%.
 
 Authoritative order for the stdlib lane to reach 100%. State at handoff:
 `main` = `a948149` (+ this docs commit), 38 commits ahead of origin, unpushed;
@@ -478,6 +484,21 @@ stdlib tag >= `8b23b79` for Gate P; tagged `stdlib-perf3` at `5037262`
 regens api-freeze, t2 `185342f4`, tags v0.62.3). The packages'
 `Vec[StructType]` trap-10 row is a retirement candidate (not reproducible
 on both sides); no local row existed.
+
+Update 2026-10-05 (wave 72 landed): compress formats --
+39 clauses / 39 new pub (gzip 6, deflate 5, brotli 4, zlib 6, snappy 8,
+lz4 10); 4 skipped by design (io wrappers gzip_compress_file/
+gzip_decompress_file and FFI streams deflate_compress_stream/
+brotli_decompress_stream have no parameter-derivable claim). compress
+21.1% -> 64.4%, global 48.7% -> 49.3%; floors108; meter 74.9%. Probe
+p_wave72_shapes.xi (233rd, 71 checks) green on v0.63.0; targeted smokes
+compress 26/26, crc 1/1. Deliberate omits carried from recon: deflate
+capped has no `max_out < 0 => Err` (EOB-only fixed stream returns Ok
+empty), lz4 capped has no `<= max_out` (one-block overshoot), dynamic
+repeat codes stay Err (wishlist row 124 is feature work), no element
+reads anywhere. lz77 (6) and huffman (12) remain clause-free for a
+follow-up. Readiness next: encoding 23.7% (fix-first ledger above), then
+debug 24.4%, simd 24.4%, stats 25%.
 
 Update 2026-10-05 (wave 71 recon + packages relay):
 - Packages wishlist source-of-record advanced to 126 rows (waves 47-55;

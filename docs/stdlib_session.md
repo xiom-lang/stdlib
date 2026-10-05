@@ -4,13 +4,13 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 -->
 # XIOM Stdlib Session -- Handoff
 
-## 0A. CONTINUE HERE -- handoff snapshot 9 (updated 2026-10-05, wave 71 complete)
+## 0A. CONTINUE HERE -- handoff snapshot 10 (updated 2026-10-05, wave 72 complete)
 
 **PASTE-READY PROMPT FOR THE NEXT SESSION (copy this block):**
 
 ---
 You are continuing the XIOM stdlib lane. Worktree `E:\xiom-lang\stdlib`,
-branch `main`. Read `docs/stdlib_session.md` blocks 39 (latest), 38, 37
+branch `main`. Read `docs/stdlib_session.md` blocks 40 (latest), 39, 38
 (publish), 27 (iter block) and `docs/PRODUCTION_READINESS_QUEUE.md`
 before acting; snapshot 5 below the prompt keeps the deep protocol lore.
 
@@ -21,33 +21,36 @@ verified; v0.62.4/v0.62.3/v0.61.3 archives kept under
 tags pushed: stdlib-v0.62.3 (12a3a1b), stdlib-v0.62.4 (3800c08),
 stdlib-v0.63.0 (179cfea). Gates on v0.63.0: release corpus 950/950 (2 C001
 carve-outs of 952; ci/heavy run the full corpus), modules 509/509, probes
-232/232, barename 0/509, floors107, module-smoke ratchet OK. Coverage =
-48.7% global pub-with-clause. Waves landed: 63 net+hash,
-64 reflect+iter adapters, 65x convert, 66 time, 67 format, 68 misc, 69 os+rand, 70 crypto, 71 log. Wave
+233/233, barename 0/509, floors108, module-smoke ratchet OK. Coverage =
+49.3% global pub-with-clause. Waves landed: 63 net+hash,
+64 reflect+iter adapters, 65x convert, 66 time, 67 format, 68 misc, 69 os+rand, 70 crypto, 71 log, 72 compress. Wave
 65 (iter clauses) is BLOCKED on the pin (block 27): clauses/calls on
 closure-delegating catalog fns flip between closure use-before-def and the
 C001 classifier; the deferred clause set is documented there.
 
-FIRST TASK (wave 72): coverage wave on the next low dirs -- compress
-21.1%, then encoding 23.7% (merge files to hold 40-60 pub each).
-Mandatory protocol:
+FIRST TASK (wave 73): coverage wave on the next low dir -- encoding 23.7%
+(merge files to hold 40-60 pub), then debug 24.4%. Fix-first ledger for
+encoding (queue 2026-10-05): utf8_valid(empty) contract abort at
+encoding.xi:501, base64url_decode dangling-char drop (both copies), and
+the percent '+' semantics divergence -- each needs a probe lock before
+new clauses. Mandatory protocol:
 (1) recon bodies and derive every clause from them; no placeholder forms
 (no unsigned `>= 0`, no `is_ok || is_err`, no self-mirrors); clauses run at
 runtime, so never read Result/Option payloads, guard division/NaN, and
 prefer exact mirrors, length/presence bands and `@pre` invariants.
-(2) probe-first: add `tools/probes/p_wave72_shapes.xi` exercising every
+(2) probe-first: add `tools/probes/p_wave73_shapes.xi` exercising every
 clause-guard path; bind module-returned values to `let` before comparing
 (inline unsigned compares misread high bits); bind `Vec.new()`
 temporaries passed as `&Vec`; do not declare externs for runtime guard
 symbols; green on v0.63.0 (v0.61.3 cross-check when cheap).
 (3) apply, run targeted smokes; if unrelated codegen breaks, bisect and
 drop the offending clause with a code comment (see blocks 27/65x).
-(4) dump `tools/coverage_floors108.json`, wire the workflows +
+(4) dump `tools/coverage_floors109.json`, wire the workflows +
 `tools/README.md`, update plan/session/queue in the same commit, YAML
 check, pure-ASCII conventional commit.
 (5) battery: `run_smokes.ps1 -ExcludeFile tools/known_failures/
-gate-exclusions.txt` (expect 950/950), probe corpus (expect 233),
-check_modules 509/509, barename 0/509, floors108 + module-smoke ratchets;
+gate-exclusions.txt` (expect 950/950), probe corpus (expect 234),
+check_modules 509/509, barename 0/509, floors109 + module-smoke ratchets;
 record results in the session block; push `main`.
 
 QUEUED (do only when triggered):
@@ -1535,6 +1538,30 @@ registry pin, agent recon for the rest)**
   gates; open: contract coverage 100%, zero open findings, beta-exit release
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
+
+**SESSION 2026-10-05 block 40 (wave 72: compress formats gzip/deflate/brotli/zlib/snappy/lz4; floors108)**
+- Wave 72: 39 clauses / 39 new pub in the compress format modules (gzip
+  6 of 8, deflate 5 of 6, brotli 4 of 5, zlib 6, snappy 8, lz4 10); 4
+  skipped by design for lack of a body-derived claim: the io wrappers
+  gzip_compress_file/gzip_decompress_file and the FFI streams
+  deflate_compress_stream/brotli_decompress_stream (results depend on
+  descriptors, not parameters). Clauses: exact container-size identities
+  (gzip header 10, zlib header 2, brotli >= 12, gzip >= 20, lz4 frame
+  >= 11, zlib >= 8), crc32/adler32 empty identities, empty-input Err
+  bands for every decompressor/validator, max_out < 0 => Err for
+  gzip/snappy/lz4 capped paths (deflate capped intentionally omitted: an
+  EOB-only fixed stream returns Ok empty at max_out < 0), exact bound
+  mirrors (deflate l*5+512, snappy 32+l+l/6, lz4 l+(l>>8)+32 with
+  negative clamp), and deflate level <= 0 stored-size bands. No element
+  reads, no cap-overshoot claims on lz4, no dynamic-Huffman promises.
+- Probe p_wave72_shapes.xi (233rd, 71 checks): green on v0.63.0 pre- and
+  post-clauses; targeted smokes compress 26/26, crc 1/1.
+- Coverage: compress 21.1% -> 64.4%, global 48.7% -> 49.3%; floors108
+  wired (ci/heavy/release + tools/README + plan) in this commit. lz77 (6)
+  and huffman (12) remain clause-free for a follow-up.
+- Battery on this commit (v0.63.0): release-gate corpus 950/950 (2 C001
+  carve-outs of 952); probes 233/233; check_modules 509/509; barename
+  0/509; floors108 + module-smoke ratchets OK.
 
 **SESSION 2026-10-05 block 39 (wave 71: log levels/color/sinks/json/core; floors107)**
 - Wave 71: 60 clauses / 49 new pub (log 13 -> 62 = 91.2%): levels 12

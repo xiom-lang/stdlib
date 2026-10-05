@@ -336,13 +336,19 @@ fn _stored_deflate(data: &Vec[UInt8]) -> Vec[UInt8] {
 
 /// Compress with the RFC 1951 fixed-Huffman encoding (matching the
 /// deterministic reference behavior of zlib Z_FIXED for greedy matchers).
-pub fn deflate_compress(data: &Vec[UInt8]) -> Vec[UInt8] {
+pub fn deflate_compress(data: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: result.len() >= 2
+{
   return deflate_compress_level(data, 6);
 }
 
 /// level 0 => STORED blocks (real, uncompressed); levels 1-9 => FIXED
 /// Huffman blocks.
-pub fn deflate_compress_level(data: &Vec[UInt8], level: Int) -> Vec[UInt8] {
+pub fn deflate_compress_level(data: &Vec[UInt8], level: Int) -> Vec[UInt8]
+  ensures: result.len() >= 2
+  ensures: (level <= 0) => (result.len() >= data.len() + 5)
+  ensures: (level <= 0 && data.len() == 0) => (result.len() == 5)
+{
   var lvl = level;
   if lvl < 0 {
     lvl = 0;
@@ -724,19 +730,26 @@ fn _inflate_capped(data: &Vec[UInt8], max_out: Int) -> Result[Vec[UInt8], Str] {
 const _DEFLATE_DEFAULT_CAP: Int = 1073741824;
 
 /// Decompress raw deflate data; Err on malformed input.
-pub fn deflate_decompress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str] {
+pub fn deflate_decompress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str]
+  ensures: (data.len() == 0) => (result.is_err)
+{
   return deflate_decompress_capped(data, _DEFLATE_DEFAULT_CAP);
 }
 
 /// Decompress a real RFC 1951 stream with a hard output ceiling.
-pub fn deflate_decompress_capped(data: &Vec[UInt8], max_out: Int) -> Result[Vec[UInt8], Str] {
+pub fn deflate_decompress_capped(data: &Vec[UInt8], max_out: Int) -> Result[Vec[UInt8], Str]
+  ensures: (data.len() == 0) => (result.is_err)
+{
   return _inflate_capped(data, max_out);
 }
 
 /// Worst-case compressed size for `len` input bytes under the fixed-Huffman
 /// encoder: per byte at most 9 code bits + headers + match overhead is
 /// always below this bound. O(1).
-pub fn deflate_bound(len: Int) -> Int {
+pub fn deflate_bound(len: Int) -> Int
+  ensures: (len < 0) => (result == 512)
+  ensures: (len >= 0) => (result == len * 5 + 512)
+{
   var l = len;
   if l < 0 {
     l = 0;

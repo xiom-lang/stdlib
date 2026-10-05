@@ -62,7 +62,9 @@ fn _get_varint(data: &Vec[UInt8], start: Int) -> (Int, Int) {
 
 /// Read the varint uncompressed length that opens a raw snappy stream.
 /// Returns Err on a malformed header.
-pub fn snappy_uncompressed_len(data: &Vec[UInt8]) -> Result[Int, Str] {
+pub fn snappy_uncompressed_len(data: &Vec[UInt8]) -> Result[Int, Str]
+  ensures: (data.len() == 0) => (result.is_err)
+{
   var vv = _get_varint(data, 0);
   if vv.1 < 0 {
     return Err("snappy: malformed varint length");
@@ -71,7 +73,9 @@ pub fn snappy_uncompressed_len(data: &Vec[UInt8]) -> Result[Int, Str] {
 }
 
 /// Sanity-check the varint header of a raw snappy stream. O(1)..O(10).
-pub fn snappy_validate(data: &Vec[UInt8]) -> Bool {
+pub fn snappy_validate(data: &Vec[UInt8]) -> Bool
+  ensures: (data.len() == 0) => (result == false)
+{
   if data.len() == 0 {
     return false;
   };
@@ -81,7 +85,10 @@ pub fn snappy_validate(data: &Vec[UInt8]) -> Bool {
 
 /// Upper bound on the compressed size of `len` input bytes (varint + up to
 /// 1/6 expansion for incompressible data). O(1).
-pub fn snappy_max_compressed_len(len: Int) -> Int {
+pub fn snappy_max_compressed_len(len: Int) -> Int
+  ensures: (len < 0) => (result == 32)
+  ensures: (len >= 0) => (result == 32 + len + len / 6)
+{
   var l = len;
   if l < 0 {
     l = 0;
@@ -92,7 +99,10 @@ pub fn snappy_max_compressed_len(len: Int) -> Int {
 /// Compress `data` into a raw snappy stream (varint length + elements).
 /// Greedy matches with a 4KiB window; literals batch until a match is found.
 /// Complexity: O(n * 4096).
-pub fn snappy_compress(data: &Vec[UInt8]) -> Vec[UInt8] {
+pub fn snappy_compress(data: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: (data.len() == 0) => (result.len() == 1)
+  ensures: (data.len() > 0) => (result.len() >= 2)
+{
   var result = Vec[UInt8].new();
   var len = data.len();
   _put_varint(&result, len);
@@ -197,14 +207,19 @@ fn _snappy_write_copy2(out: &mut Vec[UInt8], mlen: Int, moff: Int) {
 const _SNAPPY_DEFAULT_CAP: Int = 1073741824;
 
 /// Decompress Snappy data; Err on malformed input.
-pub fn snappy_decompress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str] {
+pub fn snappy_decompress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str]
+  ensures: (data.len() == 0) => (result.is_err)
+{
   return snappy_decompress_capped(data, _SNAPPY_DEFAULT_CAP);
 }
 
 /// Decompress with a hard ceiling on output size (bomb guard). The
 /// varint-declared length is rejected up-front when it exceeds the cap;
 /// every literal/copy element re-checks before writing.
-pub fn snappy_decompress_capped(data: &Vec[UInt8], max_out: Int) -> Result[Vec[UInt8], Str] {
+pub fn snappy_decompress_capped(data: &Vec[UInt8], max_out: Int) -> Result[Vec[UInt8], Str]
+  ensures: (data.len() == 0) => (result.is_err)
+  ensures: (max_out < 0) => (result.is_err)
+{
   var vv = _get_varint(data, 0);
   if vv.1 < 0 {
     return Err("snappy: malformed varint length");
@@ -305,7 +320,9 @@ pub fn snappy_decompress_capped(data: &Vec[UInt8], max_out: Int) -> Result[Vec[U
 /// Compress `data` into a framed stream: varint(compressed payload length)
 /// followed by the raw snappy stream (which itself starts with the varint
 /// uncompressed length). The frame is self-delimiting.
-pub fn snappy_compress_frame(data: &Vec[UInt8]) -> Vec[UInt8] {
+pub fn snappy_compress_frame(data: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: (data.len() == 0) => (result.len() == 2)
+{
   var inner = snappy_compress(data);
   var result = Vec[UInt8].new();
   _put_varint(&result, inner.len());
@@ -320,7 +337,10 @@ pub fn snappy_compress_frame(data: &Vec[UInt8]) -> Vec[UInt8] {
 
 /// Decompress a snappy_compress_frame stream. Validates the outer varint
 /// against the remaining bytes. Returns Err on any mismatch or malformed data.
-pub fn snappy_decompress_frame(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str] {
+pub fn snappy_decompress_frame(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str]
+  ensures: (data.len() == 0) => (result.is_err)
+  ensures: (data.len() == 1) => (result.is_err)
+{
   var vv = _get_varint(data, 0);
   if vv.1 < 0 {
     return Err("snappy: malformed frame varint");

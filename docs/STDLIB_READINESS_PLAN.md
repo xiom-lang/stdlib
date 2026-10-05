@@ -1079,8 +1079,21 @@ T1/T2 yields.
         47.9% -> 48.7%; floors107. Probe p_wave71_shapes.xi (232nd,
         88 checks) green on v0.63.0; targeted smokes log 9/9, json 17/17.
         Next: compress 21.1% / encoding 23.7% / debug 24.4%.
+        Wave 72 (2026-10-05): coverage wave 36 -- compress formats,
+        39 clauses / 39 new pub (gzip 6, deflate 5, brotli 4, zlib 6,
+        snappy 8, lz4 10; the two io wrappers and two FFI streams skipped
+        for lack of a parameter-derivable claim). Exact container-size
+        identities, checksum empty identities, empty-input Err bands,
+        max_out < 0 => Err on gzip/snappy/lz4 capped (deflate capped
+        omitted: EOB-only Ok empty), exact bound mirrors; no element
+        reads, no lz4 cap-overshoot claims. compress 21.1% -> 64.4%,
+        global 48.7% -> 49.3%; floors108. Probe p_wave72_shapes.xi
+        (233rd, 71 checks) green on v0.63.0; targeted smokes compress
+        26/26, crc 1/1. Next: encoding 23.7% (fix-first: utf8_valid
+        empty abort, base64url dangling char, percent '+' divergence) /
+        debug 24.4% / simd 24.4%.
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors107.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors108.json
        tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;

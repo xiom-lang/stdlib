@@ -28,7 +28,9 @@ module xiom.compress.lz4
 // ============================================================================
 
 /// Compress `data` into a full frame (magic, FLG/BD, block size, payload).
-pub fn lz4_compress(data: &Vec[UInt8]) -> Vec[UInt8] {
+pub fn lz4_compress(data: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: result.len() >= 11
+{
   var block = lz4_compress_block(data);
   var result = Vec[UInt8].new();
   result.push(0x04);
@@ -52,12 +54,16 @@ pub fn lz4_compress(data: &Vec[UInt8]) -> Vec[UInt8] {
 }
 
 /// Alias for lz4_compress: the frame IS the full container in this module.
-pub fn lz4_compress_frame(data: &Vec[UInt8]) -> Vec[UInt8] {
+pub fn lz4_compress_frame(data: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: result.len() >= 11
+{
   return lz4_compress(data);
 }
 
 /// Compress `data` into a frame using the high-compression block encoder.
-pub fn lz4_compress_hc(data: &Vec[UInt8]) -> Vec[UInt8] {
+pub fn lz4_compress_hc(data: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: result.len() >= 11
+{
   var block = lz4_compress_hc_block(data);
   var result = Vec[UInt8].new();
   result.push(0x04);
@@ -82,7 +88,10 @@ pub fn lz4_compress_hc(data: &Vec[UInt8]) -> Vec[UInt8] {
 
 /// Worst-case compressed size for `len` input bytes (literals expand by at
 /// most 1 byte per 255 input bytes plus token/header overhead). O(1).
-pub fn lz4_bound(len: Int) -> Int {
+pub fn lz4_bound(len: Int) -> Int
+  ensures: (len < 0) => (result == 32)
+  ensures: (len >= 0) => (result == len + (len >> 8) + 32)
+{
   var l = len;
   if l < 0 {
     l = 0;
@@ -99,13 +108,18 @@ pub fn lz4_bound(len: Int) -> Int {
 const _LZ4_DEFAULT_CAP: Int = 1073741824;
 
 /// Decompress an LZ4 block; Err on malformed input.
-pub fn lz4_decompress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str] {
+pub fn lz4_decompress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str]
+  ensures: (data.len() < 11) => (result.is_err)
+{
   return lz4_decompress_capped(data, _LZ4_DEFAULT_CAP);
 }
 
 /// Decompress with a hard ceiling on total output size (bomb guard).
 /// Checked after each block's expansion.
-pub fn lz4_decompress_capped(data: &Vec[UInt8], max_out: Int) -> Result[Vec[UInt8], Str] {
+pub fn lz4_decompress_capped(data: &Vec[UInt8], max_out: Int) -> Result[Vec[UInt8], Str]
+  ensures: (data.len() < 11) => (result.is_err)
+  ensures: (max_out < 0) => (result.is_err)
+{
   var len = data.len();
   if len < 11 {
     return Err("lz4: frame too short");
@@ -157,14 +171,18 @@ pub fn lz4_decompress_capped(data: &Vec[UInt8], max_out: Int) -> Result[Vec[UInt
 }
 
 /// Alias for lz4_decompress: parses and decompresses an lz4_compress frame.
-pub fn lz4_decompress_frame(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str] {
+pub fn lz4_decompress_frame(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str]
+  ensures: (data.len() < 11) => (result.is_err)
+{
   return lz4_decompress(data);
 }
 
 /// Compress a raw block payload (no frame header) using the LZ4 block format.
 /// Greedy search with a 4KiB window; matches need length >= 4.
 /// Complexity: O(n * 4096).
-pub fn lz4_compress_block(data: &Vec[UInt8]) -> Vec[UInt8] {
+pub fn lz4_compress_block(data: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: (data.len() == 0) => (result.len() == 1)
+{
   var result = Vec[UInt8].new();
   _lz4_block_core(data, 4096, &result);
   return result;
@@ -172,7 +190,9 @@ pub fn lz4_compress_block(data: &Vec[UInt8]) -> Vec[UInt8] {
 
 /// High-compression block variant: 64KiB search window, longer match scan.
 /// Uses the same block format, so lz4_decompress_block decodes either output.
-pub fn lz4_compress_hc_block(data: &Vec[UInt8]) -> Vec[UInt8] {
+pub fn lz4_compress_hc_block(data: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: (data.len() == 0) => (result.len() == 1)
+{
   var result = Vec[UInt8].new();
   _lz4_block_core(data, 65535, &result);
   return result;
@@ -287,7 +307,9 @@ fn _lz4_write_seq(out: &mut Vec[UInt8], data: &Vec[UInt8], lit_start: Int, lit_l
 
 /// Decompress a raw LZ4 block. Returns Err on truncation, an invalid offset,
 /// or malformed extended lengths.
-pub fn lz4_decompress_block(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str] {
+pub fn lz4_decompress_block(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str]
+  ensures: (data.len() == 0) => (result.is_ok)
+{
   var result = Vec[UInt8].new();
   var len = data.len();
   var pos = 0;

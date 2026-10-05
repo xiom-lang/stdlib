@@ -33,13 +33,17 @@ extern "C" {
 }
 
 /// Compress at the default quality (11) and window exponent (20).
-pub fn brotli_compress(data: &Vec[UInt8]) -> Vec[UInt8] {
+pub fn brotli_compress(data: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: result.len() >= 12
+{
   return brotli_compress_quality(data, 11);
 }
 
 /// Compress with an explicit quality (0-11, clamped). The quality is recorded
 /// in the header and does not change the payload shape.
-pub fn brotli_compress_quality(data: &Vec[UInt8], quality: Int) -> Vec[UInt8] {
+pub fn brotli_compress_quality(data: &Vec[UInt8], quality: Int) -> Vec[UInt8]
+  ensures: result.len() >= 12
+{
   var q = quality;
   if q < 0 {
     q = 0;
@@ -52,7 +56,9 @@ pub fn brotli_compress_quality(data: &Vec[UInt8], quality: Int) -> Vec[UInt8] {
 
 /// Compress with an explicit window size in bytes. The base-2 logarithm is
 /// stored in the header, clamped to 10..24 (window 1KiB..16MiB).
-pub fn brotli_compress_window(data: &Vec[UInt8], window: Int) -> Vec[UInt8] {
+pub fn brotli_compress_window(data: &Vec[UInt8], window: Int) -> Vec[UInt8]
+  ensures: result.len() >= 12
+{
   var w = window;
   if w <= 0 {
     w = 1048576;
@@ -90,7 +96,9 @@ fn _brotli_frame(data: &Vec[UInt8], quality: Int, window_exp: Int) -> Vec[UInt8]
 /// Decompress a brotli_compress frame. Validates magic and the length
 /// trailer, then decompresses the payload. Returns Err on malformed input or
 /// a size mismatch.
-pub fn brotli_decompress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str] {
+pub fn brotli_decompress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str]
+  ensures: (data.len() < 10) => (result.is_err)
+{
   var len = data.len();
   if len < 10 {
     return Err("brotli: data too short for header");

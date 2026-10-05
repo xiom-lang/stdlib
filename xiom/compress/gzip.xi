@@ -52,7 +52,9 @@ fn _gzip_crc32_impl(data: &Vec[UInt8]) -> UInt {
 }
 
 /// Compute the CRC-32 checksum (IEEE 802.3 polynomial) of `data`. O(n).
-pub fn gzip_crc32(data: &Vec[UInt8]) -> UInt32 {
+pub fn gzip_crc32(data: &Vec[UInt8]) -> UInt32
+  ensures: (data.len() == 0) => (result == 0)
+{
   var c = _gzip_crc32_impl(data);
   return c as UInt32;
 }
@@ -60,7 +62,9 @@ pub fn gzip_crc32(data: &Vec[UInt8]) -> UInt32 {
 /// Build a bare gzip header: magic (1F 8B), method (08), flags (00), MTIME
 /// (`mtime`, LE, may be 0), XFL (00) and OS (`os`, masked to 8 bits; use 255
 /// for unknown, 3 for Unix). Returns 10 bytes.
-pub fn gzip_header_new(mtime: Int, os: Int) -> Vec[UInt8] {
+pub fn gzip_header_new(mtime: Int, os: Int) -> Vec[UInt8]
+  ensures: result.len() == 10
+{
   var result = Vec[UInt8].new();
   result.push(0x1F);
   result.push(0x8B);
@@ -77,7 +81,9 @@ pub fn gzip_header_new(mtime: Int, os: Int) -> Vec[UInt8] {
 
 /// Wrap `data` in a gzip stream: header (mtime 0, OS 255) + DEFLATE payload
 /// + CRC32 trailer + ISIZE trailer.
-pub fn gzip_compress(data: &Vec[UInt8]) -> Vec[UInt8] {
+pub fn gzip_compress(data: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: result.len() >= 20
+{
   var result = gzip_header_new(0, 255);
   var payload = deflate.deflate_compress(data);
   var i = 0;
@@ -107,14 +113,19 @@ const _GZIP_DEFAULT_CAP: Int = 1073741824;
 /// Unwrap and validate a gzip stream. Parses the optional header fields,
 /// decompresses the payload, and verifies the CRC32 and ISIZE trailer values.
 /// Returns Err on any mismatch or malformed input.
-pub fn gzip_decompress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str] {
+pub fn gzip_decompress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str]
+  ensures: (data.len() < 18) => (result.is_err)
+{
   return gzip_decompress_capped(data, _GZIP_DEFAULT_CAP);
 }
 
 /// Decompress with a hard ceiling on output size (decompression-bomb
 /// guard). The header's declared ISIZE is rejected up-front when it
 /// exceeds the cap; the payload cap is enforced inside the deflate stages.
-pub fn gzip_decompress_capped(data: &Vec[UInt8], max_out: Int) -> Result[Vec[UInt8], Str] {
+pub fn gzip_decompress_capped(data: &Vec[UInt8], max_out: Int) -> Result[Vec[UInt8], Str]
+  ensures: (data.len() < 18) => (result.is_err)
+  ensures: (max_out < 0) => (result.is_err)
+{
   var len = data.len();
   if len < 18 {
     return Err("gzip: data too short for header");
@@ -236,7 +247,9 @@ pub fn gzip_decompress_file(path: Str) -> Result[Vec[UInt8], Str] {
 }
 
 /// Sanity-check magic, method, and the minimum trailer footprint. O(1).
-pub fn gzip_validate(data: &Vec[UInt8]) -> Bool {
+pub fn gzip_validate(data: &Vec[UInt8]) -> Bool
+  ensures: (data.len() < 18) => (result == false)
+{
   var len = data.len();
   if len < 18 {
     return false;

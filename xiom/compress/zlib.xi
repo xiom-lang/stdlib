@@ -19,7 +19,9 @@ use xiom.compress.deflate;
 // ============================================================================
 
 /// Build the CMF/FLG header bytes for a level (0-9, clamped). Returns 2 bytes.
-pub fn zlib_header_new(level: Int) -> Vec[UInt8] {
+pub fn zlib_header_new(level: Int) -> Vec[UInt8]
+  ensures: result.len() == 2
+{
   var lvl = level;
   if lvl < 0 {
     lvl = 0;
@@ -58,18 +60,24 @@ fn _zlib_adler32_impl(data: &Vec[UInt8]) -> UInt {
 }
 
 /// Compute the Adler-32 checksum of `data`. O(n).
-pub fn zlib_adler32(data: &Vec[UInt8]) -> UInt32 {
+pub fn zlib_adler32(data: &Vec[UInt8]) -> UInt32
+  ensures: (data.len() == 0) => (result == 1)
+{
   var c = _zlib_adler32_impl(data);
   return c as UInt32;
 }
 
 /// Wrap `data` in a zlib stream at the default level (6).
-pub fn zlib_compress(data: &Vec[UInt8]) -> Vec[UInt8] {
+pub fn zlib_compress(data: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: result.len() >= 8
+{
   return zlib_compress_level(data, 6);
 }
 
 /// Wrap `data` in a zlib stream with an explicit level (0-9, clamped).
-pub fn zlib_compress_level(data: &Vec[UInt8], level: Int) -> Vec[UInt8] {
+pub fn zlib_compress_level(data: &Vec[UInt8], level: Int) -> Vec[UInt8]
+  ensures: result.len() >= 8
+{
   var result = zlib_header_new(level);
   var payload = deflate.deflate_compress_level(data, level);
   var i = 0;
@@ -89,7 +97,9 @@ pub fn zlib_compress_level(data: &Vec[UInt8], level: Int) -> Vec[UInt8] {
 /// Unwrap and validate a zlib stream: header method/checksum, payload
 /// decompression, and Adler32 trailer verification. Returns Err on any
 /// mismatch or malformed input.
-pub fn zlib_decompress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str] {
+pub fn zlib_decompress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str]
+  ensures: (data.len() < 6) => (result.is_err)
+{
   var len = data.len();
   if len < 6 {
     return Err("zlib: data too short");
@@ -130,7 +140,9 @@ pub fn zlib_decompress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str] {
 }
 
 /// Sanity-check the zlib header (method and CMF/FLG checksum). O(1).
-pub fn zlib_validate(data: &Vec[UInt8]) -> Bool {
+pub fn zlib_validate(data: &Vec[UInt8]) -> Bool
+  ensures: (data.len() < 6) => (result == false)
+{
   var len = data.len();
   if len < 6 {
     return false;
