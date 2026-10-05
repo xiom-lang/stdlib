@@ -1018,14 +1018,23 @@ T1/T2 yields.
        tools/probes/p_wave66_shapes.xi (227th, 61 checks): green on
        v0.62.4 and v0.61.3; targeted smoke_time 19/19. Clarify: this wave
        was executed under the user's "continue on 2" while the compiler
-       lane gates v0.63.0; runtime/ and the iter surface untouched.
+       lane gates v0.63.0;        runtime/ and the iter surface untouched.
+       Wave 67 (2026-10-05): coverage wave 31 -- format core, 33 clauses /
+       33 pub: dump 4 (empty/non-empty bands + empty-line length), number
+       6 (exact KAT bands for separators/fixed/percent/bytes/duration/
+       ordinal), relative 11 (sub-30s phrases + zero identities), table 12
+       (constructor shape, @pre row increment, widths/rows/cols mirrors,
+       empty-table renders, mutation invariants). format 13.0% -> 27.3%,
+       global 45.1% -> 45.7%; floors103. Probe p_wave67_shapes.xi (228th,
+       59 checks) green on v0.63.0 and v0.61.3; smoke_format 8/8. Next:
+       wave 68 on misc 13.9% / os 15.3% / rand 16%.
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors102.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors103.json
        tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;
        earlier floors kept at
-       coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55/56/57/58/59/60/61/62/63/64/65/66/67/68/69/70/71/72/73/74/75/76/77/78/79/80/81/82/83/84/85/86/87/88/89/90/91/92/93/94/95/96/97/98/99/100/101/102.json).
+       coverage_floors32/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55/56/57/58/59/60/61/62/63/64/65/66/67/68/69/70/71/72/73/74/75/76/77/78/79/80/81/82/83/84/85/86/87/88/89/90/91/92/93/94/95/96/97/98/99/100/101/102/103.json).
       Floors are per top-level stdlib/xiom directory and must be refreshed
       when a module is ADDED (new uncovered pub fns dilute the percentage
       -- TOML dropped serialize 6.1% -> 5.4%, tz dropped time 13% ->

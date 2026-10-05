@@ -66,7 +66,9 @@ fn ascii_of(b: UInt8) -> Str {
 /// xiom.fmt.format_hexdump): 8-digit hex offset, 16 hex bytes grouped
 /// 8+8, then the ASCII column. Missing bytes are space-padded.
 /// Complexity: O(len).
-pub fn hexdump_line(data: &Vec[UInt8], offset: Int, start: Int, len: Int) -> Str {
+pub fn hexdump_line(data: &Vec[UInt8], offset: Int, start: Int, len: Int) -> Str
+  ensures: ((len == 0 && offset >= 0 && offset < 100000000) => (result.len() == 14))
+{
   var offset_pad = string.str_pad_left(convert.int_to_string(offset), 8, '0');
   var hex_part = "";
   var ascii_part = "";
@@ -95,7 +97,9 @@ pub fn hexdump_line(data: &Vec[UInt8], offset: Int, start: Int, len: Int) -> Str
 /// the ASCII column (printable characters or '.'). The layout mirrors
 /// xiom.fmt.format_hexdump with width 16. Empty input yields "".
 /// Complexity: O(n).
-pub fn hexdump(data: &Vec[UInt8]) -> Str {
+pub fn hexdump(data: &Vec[UInt8]) -> Str
+  ensures: ((data.len() == 0) => (result.len() == 0)) && ((data.len() > 0) => (result.len() > 0))
+{
   var result = "";
   if data.len() == 0 {
     return result;
@@ -117,7 +121,9 @@ pub fn hexdump(data: &Vec[UInt8]) -> Str {
 /// 8-digit hex offset, 3-digit octal per byte, ASCII column. Empty input
 /// yields "".
 /// Complexity: O(n).
-pub fn octal_dump(data: &Vec[UInt8]) -> Str {
+pub fn octal_dump(data: &Vec[UInt8]) -> Str
+  ensures: ((data.len() == 0) => (result.len() == 0)) && ((data.len() > 0) => (result.len() > 0))
+{
   var result = "";
   if data.len() == 0 {
     return result;
@@ -155,7 +161,9 @@ pub fn octal_dump(data: &Vec[UInt8]) -> Str {
 /// 8-digit hex offset, 8-bit binary per byte, ASCII column. Empty input
 /// yields "".
 /// Complexity: O(n).
-pub fn binary_dump(data: &Vec[UInt8]) -> Str {
+pub fn binary_dump(data: &Vec[UInt8]) -> Str
+  ensures: ((data.len() == 0) => (result.len() == 0)) && ((data.len() > 0) => (result.len() > 0))
+{
   var result = "";
   if data.len() == 0 {
     return result;

@@ -72,7 +72,9 @@ fn _unit_text(value: Int, name: Str) -> Str {
 }
 
 /// Format a positive offset as "in N units".
-pub fn format_relative_future(seconds: Int) -> Str {
+pub fn format_relative_future(seconds: Int) -> Str
+  ensures: ((seconds < 30 && seconds > 0 - 30) => (result == "in a moment"))
+{
   var s = seconds;
   if s < 0 {
     s = 0 - s;
@@ -85,7 +87,9 @@ pub fn format_relative_future(seconds: Int) -> Str {
 }
 
 /// Format a negative offset as "N units ago".
-pub fn format_relative_past(seconds: Int) -> Str {
+pub fn format_relative_past(seconds: Int) -> Str
+  ensures: ((seconds < 30 && seconds > 0 - 30) => (result == "just now"))
+{
   var s = seconds;
   if s < 0 {
     s = 0 - s;
@@ -98,7 +102,9 @@ pub fn format_relative_past(seconds: Int) -> Str {
 }
 
 /// Format a signed offset in seconds as a full relative phrase.
-pub fn format_relative_time(seconds: Int) -> Str {
+pub fn format_relative_time(seconds: Int) -> Str
+  ensures: ((seconds < 30 && seconds > 0 - 30) => (result == "just now"))
+{
   if seconds < 0 {
     return format_relative_past(seconds);
   };
@@ -132,7 +138,9 @@ fn _short_unit(name: Str) -> Str {
 }
 
 /// Format a signed offset using the compact unit form ("5m", "2d", "now").
-pub fn format_relative_time_short(seconds: Int) -> Str {
+pub fn format_relative_time_short(seconds: Int) -> Str
+  ensures: ((seconds < 30 && seconds > 0 - 30) => (result == "now"))
+{
   var s = seconds;
   if s < 0 {
     s = 0 - s;
@@ -145,7 +153,9 @@ pub fn format_relative_time_short(seconds: Int) -> Str {
 }
 
 /// Format the span between two timestamps as elapsed time ("5 minutes").
-pub fn format_elapsed(start: Int, end: Int) -> Str {
+pub fn format_elapsed(start: Int, end: Int) -> Str
+  ensures: (end == start) => (result == "0 seconds")
+{
   var span = end - start;
   if span < 0 {
     span = 0 - span;
@@ -155,7 +165,9 @@ pub fn format_elapsed(start: Int, end: Int) -> Str {
 }
 
 /// Format a millisecond span as a compact human duration ("1h 2m 3s").
-pub fn format_elapsed_ms(ms: Int) -> Str {
+pub fn format_elapsed_ms(ms: Int) -> Str
+  ensures: (ms == 0) => (result == "0ms")
+{
   var m = ms;
   if m < 0 {
     m = 0 - m;
@@ -168,7 +180,9 @@ pub fn format_elapsed_ms(ms: Int) -> Str {
 
 /// Format how long before `now` the timestamp lies ("5 minutes ago", or the
 /// future form when `timestamp` is after `now`).
-pub fn format_ago(timestamp: Int, now: Int) -> Str {
+pub fn format_ago(timestamp: Int, now: Int) -> Str
+  ensures: (now == timestamp) => (result == "just now")
+{
   var diff = now - timestamp;
   if diff < 0 {
     return format_relative_future(0 - diff);
@@ -178,7 +192,9 @@ pub fn format_ago(timestamp: Int, now: Int) -> Str {
 
 /// Format how long after `now` the timestamp lies ("in 5 minutes", or the
 /// past form when `timestamp` is before `now`).
-pub fn format_until(timestamp: Int, now: Int) -> Str {
+pub fn format_until(timestamp: Int, now: Int) -> Str
+  ensures: (now == timestamp) => (result == "in a moment")
+{
   var diff = timestamp - now;
   if diff < 0 {
     return format_relative_past(0 - diff);
@@ -187,7 +203,9 @@ pub fn format_until(timestamp: Int, now: Int) -> Str {
 }
 
 /// Format an age in days as the largest whole unit ("400 days", "3 months").
-pub fn format_age(days: Int) -> Str {
+pub fn format_age(days: Int) -> Str
+  ensures: (days == 0) => (result == "0 seconds")
+{
   var d = days;
   if d < 0 {
     d = 0 - d;
@@ -199,7 +217,9 @@ pub fn format_age(days: Int) -> Str {
 /// Decompose `seconds` into (magnitude, unit name) pairs from largest to
 /// smallest, using only the non-zero parts (e.g. 3661 -> hour 1, minute 1,
 /// second 1). The sign is ignored; the magnitude is always non-negative.
-pub fn relative_parts(seconds: Int) -> Vec[(Int, Str)] {
+pub fn relative_parts(seconds: Int) -> Vec[(Int, Str)]
+  ensures: (seconds == 0) => (result.len() == 1)
+{
   var result = Vec[(Int, Str)].new();
   var s = seconds;
   if s < 0 {
@@ -246,7 +266,9 @@ pub fn relative_parts(seconds: Int) -> Vec[(Int, Str)] {
 }
 
 /// Format seconds as a compact human duration ("1h 2m 3s", "2m 5s", "45s").
-pub fn format_seconds(secs: Int) -> Str {
+pub fn format_seconds(secs: Int) -> Str
+  ensures: (secs == 0) => (result == "0s")
+{
   var s = secs;
   if s < 0 {
     s = 0 - s;

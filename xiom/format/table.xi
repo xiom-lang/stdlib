@@ -27,7 +27,9 @@ pub type Table = {
 }
 
 /// Create an empty table with the given headers.
-pub fn table_new(headers: &Vec[Str]) -> Table {
+pub fn table_new(headers: &Vec[Str]) -> Table
+  ensures: result.row_count == 0 && result.col_count == headers.len() && result.headers.len() == headers.len() && result.cells.len() == 0
+{
   var h = Vec[Str].new();
   var i = 0;
   while i < headers.len() {
@@ -39,7 +41,9 @@ pub fn table_new(headers: &Vec[Str]) -> Table {
 }
 
 /// Append a row; extra cells are truncated, missing cells pad empty.
-pub fn table_add_row(t: &mut Table, cells: &Vec[Str]) {
+pub fn table_add_row(t: &mut Table, cells: &Vec[Str])
+  ensures: t.row_count == t.row_count@pre + 1
+{
   var i = 0;
   while i < t.col_count {
     var val = "";
@@ -67,7 +71,9 @@ fn _cell_at(t: &Table, row: Int, col: Int) -> Str {
 }
 
 /// The display width of each column (max of header and cells, byte length).
-pub fn table_widths(t: &Table) -> Vec[Int] {
+pub fn table_widths(t: &Table) -> Vec[Int]
+  ensures: result.len() == t.col_count
+{
   var widths = Vec[Int].new();
   var c = 0;
   while c < t.col_count {
@@ -87,12 +93,16 @@ pub fn table_widths(t: &Table) -> Vec[Int] {
 }
 
 /// The number of data rows.
-pub fn table_rows(t: &Table) -> Int {
+pub fn table_rows(t: &Table) -> Int
+  ensures: result == t.row_count
+{
   return t.row_count;
 }
 
 /// The number of columns.
-pub fn table_columns(t: &Table) -> Int {
+pub fn table_columns(t: &Table) -> Int
+  ensures: result == t.col_count
+{
   return t.col_count;
 }
 
@@ -109,7 +119,9 @@ fn _pad(s: Str, width: Int, align: Int) -> Str {
 
 /// Render the table as plain aligned text with left-aligned columns:
 /// "| a | b |" rows separated by "|---|" under the header.
-pub fn table_render(t: &Table) -> Str {
+pub fn table_render(t: &Table) -> Str
+  ensures: ((t.col_count == 0 && t.row_count == 0) => (result == "\n"))
+{
   var align = Vec[Int].new();
   var a = 0;
   while a < t.col_count {
@@ -120,7 +132,9 @@ pub fn table_render(t: &Table) -> Str {
 }
 
 /// Render with per-column alignment (0 left, 1 right, 2 center).
-pub fn table_render_aligned(t: &Table, align: &Vec[Int]) -> Str {
+pub fn table_render_aligned(t: &Table, align: &Vec[Int]) -> Str
+  ensures: ((t.col_count == 0 && t.row_count == 0) => (result == "\n"))
+{
   return _render_rows(t, align);
 }
 
@@ -170,7 +184,9 @@ fn _align_at(align: &Vec[Int], c: Int) -> Int {
 }
 
 /// Render the table as a GitHub-flavored markdown table.
-pub fn table_render_markdown(t: &Table) -> Str {
+pub fn table_render_markdown(t: &Table) -> Str
+  ensures: ((t.col_count == 0 && t.row_count == 0) => (result == "\n"))
+{
   var widths = table_widths(t);
   var result = "";
   var c = 0;
@@ -226,7 +242,9 @@ fn _csv_field(s: Str) -> Str {
 }
 
 /// Render the table as comma-separated values (RFC 4180 style quoting).
-pub fn table_render_csv(t: &Table) -> Str {
+pub fn table_render_csv(t: &Table) -> Str
+  ensures: ((t.col_count == 0 && t.row_count == 0) => (result.len() == 0))
+{
   var result = "";
   var c = 0;
   while c < t.col_count {
@@ -254,7 +272,9 @@ pub fn table_render_csv(t: &Table) -> Str {
 }
 
 /// Render the table as an HTML table.
-pub fn table_render_html(t: &Table) -> Str {
+pub fn table_render_html(t: &Table) -> Str
+  ensures: result.len() > 0
+{
   var result = "<table>\n<thead><tr>";
   var c = 0;
   while c < t.col_count {
@@ -278,7 +298,9 @@ pub fn table_render_html(t: &Table) -> Str {
 }
 
 /// Sort rows in place by a column (stable selection sort by byte order).
-pub fn table_sort_by(t: &mut Table, col: Int) {
+pub fn table_sort_by(t: &mut Table, col: Int)
+  ensures: t.row_count == t.row_count@pre && t.col_count == t.col_count@pre
+{
   var i = 0;
   while i < t.row_count {
     var best = i;
@@ -305,7 +327,9 @@ pub fn table_sort_by(t: &mut Table, col: Int) {
 }
 
 /// Replace a single cell value. Out-of-range cells are ignored.
-pub fn table_set_cell(t: &mut Table, row: Int, col: Int, value: Str) {
+pub fn table_set_cell(t: &mut Table, row: Int, col: Int, value: Str)
+  ensures: t.cells.len() == t.cells.len()@pre
+{
   if row < 0 || col < 0 {
     return;
   };

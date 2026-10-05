@@ -12,7 +12,7 @@ Compiler pin: **official v0.63.0** (windows-x64 archive, SHA256
 `ab1c83d2...` and v0.62.3 `011af7dd...` archives retained for
 cross-checks). The v0.63.0 re-pin is DONE: t2 (kat_) 15/15,
 release-gate corpus 950/950 (2 C001 carve-outs of 952), modules 509/509,
-probes 227/227, barename 0/509, floors102 -- see SESSION block 32 and
+probes 228/228, barename 0/509, floors103 -- see SESSION block 32/34 and
 the HANDOFF 2026-10-03 snapshot 5, which carries the paste-ready
 continuation prompt. Waves 63-66 LANDED on 2026-10-04 (blocks 25/26/28/
 31: net batch 6 + hash, reflect + iter adapters, convert shims, time
@@ -23,7 +23,8 @@ finding filed). Release engineering (blocks 29/32): stdlib 0.62.3 and
 (publish staging-first then production with the registry-publish
 environment approval; 0.62.x publish retries under the registry lane's
 db39144 fix). Snapshot 5's prompt otherwise stands; the next task is wave
-67 on another low dir (format 13%, misc 13.9%, os 15.3% ...) while the
+68 on another low dir (misc 13.9%, os 15.3%, rand 16%, crypto 17%,
+log 19.1%, compress 21.1%, encoding 23.7% ...) while the
 iter surface waits on the compiler closure-lowering + C001 fixes. The
 registry-publish
 workflow verifies the downloaded
@@ -1467,6 +1468,22 @@ registry pin, agent recon for the rest)**
   gates; open: contract coverage 100%, zero open findings, beta-exit release
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
+
+**SESSION 2026-10-05 block 34 (wave 67: format dump/number/relative/table; floors103)**
+- Wave 67: 33 clauses / 33 pub in xiom.format: dump 4 (empty/non-empty
+  bands, empty-line length band), number 6 (exact KAT bands for
+  separators/fixed/percent/bytes/duration/ordinal), relative 11
+  ("just now"/"in a moment"/"now" bands plus zero identities), table 12
+  (constructor shape, row_count @pre increment, widths length, rows/cols
+  mirrors, empty-table exact renders, invariant @pre claims). format
+  13.0% -> 27.3%, global 45.1% -> 45.7%; floors103 wired.
+- Probe p_wave67_shapes.xi (228th, 59 checks): green on v0.63.0 and
+  v0.61.3; targeted smoke_format 8/8. Clause string escapes ("\n") and
+  `&mut` param `@pre` field forms both work on the pin.
+- Readiness toward 100% (pub-with-clause by dir, after this wave):
+  format 27.3%, misc 13.9%, os 15.3%, rand 16%, crypto 17%, log 19.1%,
+  compress 21.1%, encoding 23.7%, rand part done next; remaining big
+  dirs (ui, net extras, etc.) continue afterwards. Battery recorded below.
 
 **SESSION 2026-10-05 block 33 (stdlib 0.62.3/0.62.4/0.63.0 PUBLISHED; C001 fix on main)**
 - Publish complete, staging-first then production (all environment

@@ -15,7 +15,9 @@ use xiom.convert;
 /// right. The sign is preserved: fmt_int_with_separators(-987654, ",")
 /// -> "-987,654". n == 0 -> "0".
 /// Complexity: O(digits).
-pub fn fmt_int_with_separators(n: Int, sep: Str) -> Str {
+pub fn fmt_int_with_separators(n: Int, sep: Str) -> Str
+  ensures: (n == 0) => (result == "0")
+{
   var s = convert.int_to_string(n);
   var neg = false;
   var body = s;
@@ -46,7 +48,9 @@ pub fn fmt_int_with_separators(n: Int, sep: Str) -> Str {
 /// (267.4999...) rounds to "2.67", not "2.68" -- a documented float-math
 /// artifact. Negative values keep their sign.
 /// Complexity: O(decimals).
-pub fn fmt_float_fixed(x: Float64, decimals: Int) -> Str {
+pub fn fmt_float_fixed(x: Float64, decimals: Int) -> Str
+  ensures: ((x == 0.0 && decimals == 0) => (result == "0")) && ((x == 0.0 && decimals == 2) => (result == "0.00"))
+{
   var dec = decimals;
   if dec < 0 {
     dec = 0;
@@ -95,7 +99,9 @@ pub fn fmt_float_fixed(x: Float64, decimals: Int) -> Str {
 /// Formats a fraction (0..1) as a percentage with `decimals` decimals.
 /// fmt_percent(0.125, 1) -> "12.5%". Uses fmt_float_fixed for rounding.
 /// Complexity: O(decimals).
-pub fn fmt_percent(x: Float64, decimals: Int) -> Str {
+pub fn fmt_percent(x: Float64, decimals: Int) -> Str
+  ensures: (x == 0.0 && decimals == 0) => (result == "0%")
+{
   fmt_float_fixed(x * 100.0, decimals) + "%"
 }
 
@@ -103,7 +109,9 @@ pub fn fmt_percent(x: Float64, decimals: Int) -> Str {
 /// Values below 1024 use plain bytes ("512 B"); larger values use one
 /// decimal with KiB/MiB/GiB/TiB ("1.5 KiB"). n == 0 -> "0 B".
 /// Complexity: O(units).
-pub fn fmt_bytes(n: Int) -> Str {
+pub fn fmt_bytes(n: Int) -> Str
+  ensures: ((n == 0) => (result == "0 B")) && ((n == 1024) => (result == "1.0 KiB")) && ((n == 0 - 512) => (result == "512 B"))
+{
   if n == 0 {
     return "0 B";
   }
@@ -138,7 +146,9 @@ pub fn fmt_bytes(n: Int) -> Str {
 /// units while keeping the largest nonzero component. 0 -> "0ms";
 /// 65000 -> "1m 5s"; 90061000 -> "1d 1h 1m 1s".
 /// Complexity: O(1).
-pub fn fmt_duration_ms(ms: Int) -> Str {
+pub fn fmt_duration_ms(ms: Int) -> Str
+  ensures: ((ms == 0) => (result == "0ms")) && ((ms == 65000) => (result == "1m 5s")) && ((ms == 90061000) => (result == "1d 1h 1m 1s")) && ((ms == 0 - 1000) => (result == "-1s"))
+{
   if ms == 0 {
     return "0ms";
   }
@@ -192,7 +202,9 @@ pub fn fmt_duration_ms(ms: Int) -> Str {
 /// Formats an integer with its English ordinal suffix:
 /// 1st, 2nd, 3rd, 4th, ..., 11th, 12th, 13th, 21st, 22nd, 23rd, 111th.
 /// Complexity: O(1).
-pub fn fmt_ordinal(n: Int) -> Str {
+pub fn fmt_ordinal(n: Int) -> Str
+  ensures: ((n == 1) => (result == "1st")) && ((n == 2) => (result == "2nd")) && ((n == 3) => (result == "3rd")) && ((n == 11) => (result == "11th")) && ((n == 21) => (result == "21st")) && ((n == 111) => (result == "111th"))
+{
   var num = n;
   var neg = false;
   if num < 0 {
