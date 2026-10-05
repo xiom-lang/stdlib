@@ -51,20 +51,16 @@ the code comment). Clause side RE-VERIFIED on v0.63.1 (2026-10-05):
 `use of undefined value`; the C001 half of the block is fixed, the closure
 half remains. Queued with the compiler closure work.
 
-**Open finding 2026-10-04 (official v0.62.3, v0.62.4, v0.63.0, v0.61.3
-and the m187+ dev builds): `xiom.reflect.all_types()` heap-corrupts.** The
-call crashes with 0xC0000374 (STATUS_HEAP_CORRUPTION, run rc
--1073740940) from any program, including an otherwise-empty one;
-verified again on official v0.63.0 (still queued with the compiler
-lane). The other RTTI entry points pass (type_count, type_name_by_id,
-type_id_by_name, type_field_count, and type_info_by_name's
-single-TypeInfo return), and a user-module replication of all_types'
-exact build loop (Vec[TypeInfo] of nested Vec fields, 40 iterations) runs
-green -- so the crash is specific to the catalog function's return path,
-not the shape. Repro
-`tools/known_failures/p_reflect_all_types_crash.xi` (expected rc 0;
-observes -1073740940 while open). Found while landing the wave-64 reflect
-clauses; all_types stays clause-free and probe-excluded until fixed.
+**RESOLVED 2026-10-05 (compiler v0.64.0, m195): `xiom.reflect.all_types()`
+no longer heap-corrupts; the probe exits 0.** m195 keeps angle-bracket
+generic receivers' type args, fixing the catalog function's return path.
+`all_types` now carries `ensures: result.len() == type_count()` and is
+exercised by `tools/probes/p_pin0640_shapes.xi` (the repro
+`tools/known_failures/p_reflect_all_types_crash.xi` stays as a regression
+lock and now exits 0). History: crashed with 0xC0000374 (STATUS_HEAP_CORRUPTION,
+run rc -1073740940) on v0.62.3, v0.62.4, v0.63.0, v0.61.3 and the m187+
+dev builds; the wave-64 reflect clauses kept all_types clause-free and
+probe-excluded until fixed.
 
 **Open finding 2026-10-03 (v0.61.3 and official v0.62.3/v0.62.4/v0.63.0):
 `multipart_parse` result Part field reads are corrupt.** Build one

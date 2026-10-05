@@ -1,31 +1,32 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
-**75.1% -- 7 of 10 gates complete; gate 8 at 51.3% (partial credit) and
-gates 9-10 discrete.** (Compiler pin: **v0.63.1**.)
-**Gates: corpus 952/952 full (C001 carve-outs retired on v0.63.1), modules
-509/509, probes 240/240, barename 0/509.**
+**75.1% -- 7 of 10 gates complete; gate 8 at 51.4% (partial credit) and
+gates 9-10 discrete.** (Compiler pin: **v0.64.0**.)
+**Gates: corpus 953/953 full (C001 carve-outs retired on v0.63.1; new
+TcpStream loopback smoke added), modules 509/509, probes 241/241,
+barename 0/509.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
 gates flip:
 1. Modules type-check clean -- MET (509/509).
-2. Smoke corpus green -- MET on the v0.63.1 pin: release gate 952/952
+2. Smoke corpus green -- MET on the v0.64.0 pin: release gate 953/953
    full, no carve-outs (C001 fixed by 4bf8cf1e; 20/20 + 20/20 stress).
-   lz4 is fixed by m190 and stayed in the gate.
-3. Probe corpus green -- MET (240/240 on v0.63.1, incl. the promoted
-   regression probes, the v0.63.1 pin locks, the 3 compiler-ask regression
-   locks and the wave-76 simd probe).
+   lz4 is fixed by m190 and stayed in the gate; the new TcpStream loopback
+   smoke locks m196.
+3. Probe corpus green -- MET (241/241 on v0.64.0, incl. the promoted
+   regression probes, the pin locks and the v0.64.0 m193-m196 probe).
 4. Strict bare-name scan clean -- MET (0/509).
-5. Coverage ratchet green -- MET (floors112).
+5. Coverage ratchet green -- MET (floors113).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (497/517 modules, 3475/6200 fns).
-8. Contract coverage 100% (every public fn carries clauses) -- OPEN (51.3%).
+8. Contract coverage 100% (every public fn carries clauses) -- OPEN (51.4%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
-   OPEN (10: 9 compiler, 1 stdlib algorithm).
+   OPEN (9: 8 compiler, 1 stdlib algorithm).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
 
 Meter formula: MET gates count 1.0; gate 8 counts its current
-pub-with-clause fraction (51.3% -> 0.513); gates 9 and 10 get no partial
+pub-with-clause fraction (51.4% -> 0.514); gates 9 and 10 get no partial
 credit (discrete). Update the percentage and the gate-8 fraction in the
 same commit as each floors dump so the meter moves smoothly toward 80%.
 
@@ -57,10 +58,12 @@ items verified against our tree:
 - **`str_bytes`: already exists** at `xiom/string/slice.xi:135`
   (`ensures: result.len() == s.len()`); Pulse missed it because the root
   `xiom.string` does not re-export submodule fns -- use
-  `xiom.string.slice`. Answer relayed; no code change.
+  `xiom.string.slice`. **Adopted by Pulse 2026-10-05.**
 - **`flush_stdout` is a no-op** (`xiom/io/io.xi:903`, empty body): implement
   a real flush through a runtime extern; probe explicit-flush visibility
-  (abnormal-exit durability stays runtime/CRT-dependent).
+  (abnormal-exit durability stays runtime/CRT-dependent). Pulse confirms
+  this finding is the root cause of their lagging/truncated redirected
+  logs (log evidence now attributed to io.xi:903).
 - **`hmac_sha256_hex` absent:** add a convenience wrapper (+ probe).
 - **Executable test registry: compiler-owned** (`xiom/test/harness.xi`
   header: module-scope fn-pointer reassignment unsupported); relay to the
@@ -72,6 +75,11 @@ items verified against our tree:
   64/64 concurrent), `xiom.serialize.json`, `xiom.env.var_or`, contracts,
   and crypto KAT with `XIOM_RUNTIME_DIR` set (the default runtime's missing
   `xiom_sha256_hash` is a compiler-archive/pin issue, not ours).
+- Pulse reply 2026-10-05: `str_bytes` adopted; the empty-body
+  `flush_stdout` finding is confirmed as the cause of their lagging and
+  truncated redirected logs; runtime-backed items accepted with the
+  `XIOM_RUNTIME_DIR` caveat; new loopback smoke noted as the read/write
+  lock.
 
 ## Systems track (bare-metal / GPU / driver-adjacent) -- relayed 2026-10-05
 
@@ -558,6 +566,20 @@ stdlib tag >= `8b23b79` for Gate P; tagged `stdlib-perf3` at `5037262`
 regens api-freeze, t2 `185342f4`, tags v0.62.3). The packages'
 `Vec[StructType]` trap-10 row is a retirement candidate (not reproducible
 on both sides); no local row existed.
+
+Update 2026-10-05 (v0.64.0 pin wave landed): re-pinned COMPILER_VERSION/
+package.xi to v0.64.0 (tag c68d91de). Consumed the m193-m196 batch:
+m195 resolves reflect.all_types (probe exits 0; clause added, reflect
+100%); m196 restores TcpStream.read, locked by the new
+tests/smoke/smoke_net_tcp_stream.xi loopback (corpus 953/953); m194 makes
+num.float.float_bits/bits_to_float exact (fallback docs and clauses
+replaced with roundtrips); m193 retires the guard-alloc probe shim in
+smoke_guard_alloc_wrap.xi. New probe p_pin0640_shapes.xi (241st) locks
+m194/m195. Findings 10 -> 9 (all_types RESOLVED); multipart stays
+compiler-owned for v0.64.1; Box stays section C. floors113 (global
+51.4%, reflect 100%); meter 75.1%. Battery on v0.64.0: corpus 953/953,
+probes 241/241, modules 509/509, barename 0/509, floors113 +
+module-smoke ratchets OK.
 
 Update 2026-10-05 (wave 76 landed): simd --
 49 clauses / 49 new pub (gather 5, mask 14, vec4 17, vec8 13); simd

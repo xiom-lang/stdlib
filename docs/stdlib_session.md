@@ -4,34 +4,47 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 -->
 # XIOM Stdlib Session -- Handoff
 
-## 0A. CONTINUE HERE -- handoff snapshot 14 (updated 2026-10-05, wave 76 complete)
+## 0A. CONTINUE HERE -- handoff snapshot 16 (updated 2026-10-05, v0.64.0 pin complete, wave 76 complete)
 
 **PASTE-READY PROMPT FOR THE NEXT SESSION (copy this block):**
 
 ---
 You are continuing the XIOM stdlib lane. Worktree `E:\xiom-lang\stdlib`,
-branch `main`. Read `docs/stdlib_session.md` blocks 44 (latest), 43, 42
+branch `main`. Read `docs/stdlib_session.md` blocks 45 (latest), 44, 43
 (publish), 27 (iter block) and `docs/PRODUCTION_READINESS_QUEUE.md`
 before acting; snapshot 5 below the prompt keeps the deep protocol lore.
 
-STATE (2026-10-05): compiler pin = official v0.63.1 (tag c0fa3a2d, release commit
-1b972478; registry-verified SHA256s: manifest 79d6afad..., linux-x64 949707e4...,
-windows-x64 f9dc9ec5...; install at %TEMP%\kilo\stdlib_ws\v0.63.1\bin; v0.62.3/
-v0.62.4/v0.63.0 archives kept. Registry carries xiom-std 0.62.3, 0.62.4 and 0.63.0
-(staging then production publishes approved and green); tags pushed:
-stdlib-v0.62.3 (12a3a1b), stdlib-v0.62.4 (3800c08), stdlib-v0.63.0 (179cfea).
-Gates on v0.63.1: release corpus 952/952 FULL (C001 carve-outs retired by
-4bf8cf1e; 20/20 + 20/20 stress), modules 509/509, probes 240/240, barename
-0/509, floors112, module-smoke ratchet OK. Coverage = 51.3% global
-pub-with-clause. Waves landed: 63 net+hash, 64 reflect+iter adapters, 65x convert, 66 time, 67 format, 68 misc, 69 os+rand, 70 crypto, 71 log, 72 compress, 73 pin, 74 encoding, 75 encoding-rem+debug, 76 simd. Wave
+STATE (2026-10-05): compiler pin = official v0.64.0 (tag c68d91de, pin
+6e60e958 = our wave-74 head; v0.63.1 was c0fa3a2d/1b972478). Binary at
+%TEMP%\kilo\stdlib_ws\v0.64.0; v0.62.3/v0.62.4/v0.63.0/v0.63.1 archives
+kept. Registry carries xiom-std 0.62.3, 0.62.4 and 0.63.0 (0.63.1 publish
+pending); tags pushed: stdlib-v0.62.3 (12a3a1b), stdlib-v0.62.4 (3800c08),
+stdlib-v0.63.0 (179cfea).
+Gates on v0.64.0: release corpus 953/953 FULL (m196 loopback smoke added),
+modules 509/509, probes 241/241, barename 0/509, floors113, module-smoke
+ratchet OK. Coverage = 51.4% global
+pub-with-clause. Waves landed: 63 net+hash, 64 reflect+iter adapters, 65x convert, 66 time, 67 format, 68 misc, 69 os+rand, 70 crypto, 71 log, 72 compress, 73 pin, 74 encoding, 75 encoding-rem+debug, 76 simd, 64.0 pin. Wave
 65 (iter clauses) is DEFERRED but pin-unblocked (block 27): the C001
 classifier is fixed on v0.63.1 and clauses may read tuple components; the
 deferred clause set (Range core 7 + chain 14 + fold 8 + iter_collect) is documented there.
 
 FIRST TASK (wave 77): stats 25% -- merge files to hold 40-60 pub (dist 15
 + histogram 10 + moments 13 + test 11 = 49 natural), then thread 25% /
-convert 25.6%. v0.63.1 allows tuple-component clauses (`result.value.0/1`),
-so revisit skipped tuple-returning pub fns opportunistically. Mandatory protocol:
+convert 25.6%. Also now unblocked by v0.64.0 (verify before landing):
+(a) iter clause retry (block 27) -- the compiler closed iter C001/shape on
+this tree, but NOT necessarily the clause-side closure lowering (it failed
+on v0.63.1 with `Range.count` + smoke_iter); re-test by applying
+`ensures: result >= 0` to Range.count and compiling smoke_iter on v0.64.0;
+if green, land the deferred set (Range core 7 + chain 14 + fold 8 +
+iter_collect) probe-first, else update the finding with v0.64.0 evidence.
+(b) Pulse pure-XIOM hardening: TcpStream.write_all, server_parse_request,
+hmac_sha256_hex (the m196 read/write loopback lock already landed).
+(c) runtime-backed Pulse items (socket timeout/nonblocking/reuse-addr,
+real flush_stdout) wait for the compiler bundle or XIOM_RUNTIME_DIR.
+HANDOFF NOTE: new locks are p_pin0640_shapes.xi (m193-m196),
+tests/smoke/smoke_net_tcp_stream.xi (m196), and the m193 guard-alloc
+smoke; p_wave43_shapes was updated for m194 exactness.
+Mandatory protocol:
 (1) recon bodies and derive every clause from them; no placeholder forms
 (no unsigned `>= 0`, no `is_ok || is_err`, no self-mirrors); clauses run at
 runtime, so never read Result/Option payloads, guard division/NaN, and
@@ -43,12 +56,12 @@ temporaries passed as `&Vec`; do not declare externs for runtime guard
 symbols; green on v0.63.1 (v0.63.0 cross-check when cheap).
 (3) apply, run targeted smokes; if unrelated codegen breaks, bisect and
 drop the offending clause with a code comment (see blocks 27/65x).
-(4) dump `tools/coverage_floors113.json`, wire the workflows +
+(4) dump `tools/coverage_floors114.json`, wire the workflows +
 `tools/README.md`, update plan/session/queue in the same commit, YAML
 check, pure-ASCII conventional commit.
 (5) battery: `run_smokes.ps1 -ExcludeFile tools/known_failures/
-gate-exclusions.txt` (expect 952/952 full), probe corpus (expect 241),
-check_modules 509/509, barename 0/509, floors113 + module-smoke ratchets;
+gate-exclusions.txt` (expect 953/953 full), probe corpus (expect 242),
+check_modules 509/509, barename 0/509, floors114 + module-smoke ratchets;
 record results in the session block; push `main`.
 
 QUEUED (do only when triggered):
@@ -59,7 +72,10 @@ QUEUED (do only when triggered):
   pending). The `%Q` strptime face no longer exists in time.xi; restore
   only if the compiler asks.
 - Pulse (web-framework lane) relay 2026-10-05: triage in queue section
-  "Project Pulse relay". Stdlib Pulse-hardening wave queued: socket
+  "Project Pulse relay". Pulse reply: `str_bytes` adopted; the empty-body
+  `flush_stdout` finding is the root cause of their lagging/truncated
+  redirected logs; runtime-backed items accepted with the
+  `XIOM_RUNTIME_DIR` caveat. Stdlib Pulse-hardening wave queued: socket
   timeout/nonblocking/reuse-addr runtime externs + wrappers + deadline
   recv, `TcpStream.write_all`, `server_parse_request` (headers +
   Content-Length + body span), real `flush_stdout`, `hmac_sha256_hex`,
@@ -1572,6 +1588,38 @@ registry pin, agent recon for the rest)**
   gates; open: contract coverage 100%, zero open findings, beta-exit release
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
+
+**SESSION 2026-10-05 block 45 (v0.64.0 pin: m193-m196 consumed; floors113)**
+- v0.64.0 re-pin (tag c68d91de; binary extracted to
+  %TEMP%\kilo\stdlib_ws\v0.64.0). Pre-flight on the pin: all previous
+  probes and the blocked shapes green (scrypt/shuffle/BUG-18 regression
+  locks, p_wave76, p_pin0631, guard-alloc smoke).
+- m195: reflect.all_types() no longer heap-corrupts; clause added
+  (`ensures: result.len() == type_count()`), reflect 97.7% -> 100%; the
+  finding is RESOLVED (findings 10 -> 9) and
+  p_reflect_all_types_crash.xi stays as a regression lock (exits 0).
+- m196: TcpStream.read works; new tests/smoke/smoke_net_tcp_stream.xi
+  loopback (127.0.0.1:39461, both directions, clones per call) locks it;
+  corpus 952 -> 953.
+- m194: num.float.float_bits / bits_to_float lower to exact bitcasts;
+  fallback docs removed, clauses replaced with `(f == 0.0)` / `(f == 1.0)`
+  pattern claims and `float_bits(result) == bits`; verified including
+  negative zero and a NaN payload roundtrip.
+- Pin-move break found by the probe corpus: p_wave43_shapes asserted the
+  pre-m194 fallbacks (`float_bits(1.5) == 0`, `bits_to_float(7) == 0.0`);
+  updated to the exact values (4609434218613702656 and > 0.0) and
+  re-verified. No other probe broke on v0.64.0.
+- m193: smoke_guard_alloc_wrap.xi now declares `xiom_guard_alloc` directly
+  (xiom_guard_alloc_probe shim retired from the smoke).
+- New probe p_pin0640_shapes.xi (241st, 9 checks): locks m194/m195.
+- Coverage: global 51.3% -> 51.4%; floors113 wired (ci/heavy/release +
+  tools/README + plan). Multipart stays compiler-owned (v0.64.1); Box
+  stays section C.
+- Battery on this commit (v0.64.0): release corpus 953/953 full (885.1s,
+  no exclusions); probes 241/241 after the p_wave43 fix (first battery run
+  240/241; fix re-verified standalone and by the full re-run, 523.5s);
+  check_modules 509/509 (561.7s); barename 0/509 (726.0s); floors113 +
+  module-smoke (497/517, 3477/6200) ratchets OK.
 
 **SESSION 2026-10-05 block 44 (wave 76: simd gather/mask/vec4/vec8; floors112)**
 - Wave 76: 49 clauses / 49 new pub -- gather 5 (length identities and

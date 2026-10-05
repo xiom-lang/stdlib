@@ -6,6 +6,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.64.0] - 2026-10-05
+
+Re-pinned to compiler `v0.64.0` (tag `c68d91de`). Consumes the m193-m196
+batch: exact float bitcasts, direct runtime externs, the angle-bracket
+generic-receiver fix (all_types resolved), and the raw-pointer read builtin
+gating that restores `TcpStream.read`.
+
+### Fixed
+
+- `xiom.reflect.all_types()` is callable again (m195) and now carries
+  `ensures: result.len() == type_count()`; the regression lock
+  `tools/known_failures/p_reflect_all_types_crash.xi` exits 0.
+- `xiom.num.float.float_bits` / `bits_to_float` are exact (m194, LLVM
+  bitcast); fallback docs removed and roundtrip clauses added.
+- `xiom.net.TcpStream.read` works (m196); locked end-to-end by the new
+  `tests/smoke/smoke_net_tcp_stream.xi` loopback.
+- `tests/smoke/smoke_guard_alloc_wrap.xi` declares `xiom_guard_alloc`
+  directly (m193); the `xiom_guard_alloc_probe` shim workaround is retired.
+
+### Changed
+
+- `COMPILER_VERSION` / `package.xi` -> `v0.64.0` / `0.64.0`; floors113.
+
+### Notes
+
+- Closed on this tree per the compiler lane: iter collect/contains, scrypt,
+  shuffle/choice, BUG-18 (all regression-locked in `tools/probes/`).
+- `multipart_parse` field-read fix is compiler-owned, targeted for v0.64.1;
+  `geom.Box` stays on the stdlib section C rename.
+
 ## [0.63.1] - 2026-10-05
 
 Re-pinned to compiler `v0.63.1`. The C001 classifier fix (`4bf8cf1e`) is

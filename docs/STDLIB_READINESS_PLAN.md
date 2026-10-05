@@ -1138,8 +1138,19 @@ T1/T2 yields.
         smokes simd 1/1. Landmine recorded: explicit type args on
         module-qualified generic calls miscompile on v0.63.1. Next:
         stats 25% / thread 25% / convert 25.6%.
+        Pin v0.64.0 (2026-10-05): re-pinned COMPILER_VERSION/package.xi to
+        v0.64.0 (tag c68d91de, pin 6e60e958). Consumed m193-m196: m195
+        resolves reflect.all_types (clause added, reflect 100%, finding
+        RESOLVED, findings 10 -> 9); m196 restores TcpStream.read (new
+        tests/smoke/smoke_net_tcp_stream.xi loopback, corpus 953); m194
+        makes num.float.float_bits/bits_to_float exact (roundtrip clauses,
+        negative-zero and NaN-payload verified); m193 retires the
+        guard-alloc probe shim. Probe p_pin0640_shapes.xi (241st, 9
+        checks) green. global 51.3% -> 51.4%; floors113; meter 75.1%.
+        multipart stays compiler-owned (v0.64.1); Box stays section C.
+        Next: stats 25% / thread 25% / convert 25.6%.
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors112.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors113.json
        tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;

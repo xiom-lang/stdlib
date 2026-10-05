@@ -190,7 +190,11 @@ pub fn type_info_by_name(name: Str) -> Option<TypeInfo>
 
 /// Enumerate every registered user type with REAL names and field counts.
 /// LIMITED: size/align/kind and per-field metadata are placeholders (see above).
-pub fn all_types() -> Vec<TypeInfo> {
+/// v0.64.0 (m195): angle-bracket generic receivers keep their type args, so
+/// this is now callable safely; the result has one entry per registered type.
+pub fn all_types() -> Vec<TypeInfo>
+  ensures: result.len() == type_count()
+{
   var result = Vec<TypeInfo>.new();
   let count = type_count();
   var id = 0;

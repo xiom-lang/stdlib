@@ -10,16 +10,16 @@ module xiom.num.float
 // IEEE-754 float inspection: bit patterns, components, classification, and
 // next-value operations.
 //
-// IMPLEMENTATION NOTE: there is NO i64<->f64 bitcast intrinsic in the
-// language today (core.to_int / core.to_float are numeric, sitofp/fptosi,
-// not reinterprets) and no stdlib module reinterprets float bits (verified:
-// bits.xi, core.xi). IEEE NaN/Inf arithmetic semantics were FIXED 2026-08-11
+// IMPLEMENTATION NOTE: since compiler v0.64.0 (m194), calls to
+// num.float.float_bits / bits_to_float lower to an exact LLVM bitcast and
+// return the true IEEE-754 patterns (verified: float_bits(1.0) ==
+// 0x3FF0000000000000, negative-zero roundtrip, NaN-safe bit roundtrip).
+// The source bodies below are never executed on that pin; they remain as
+// documentation. IEEE NaN/Inf arithmetic semantics were FIXED 2026-08-11
 // (BUG 19) -- NaN is constructible via 0.0/0.0 and detected via f != f.
 //
 // Consequences:
-//   * float_bits / bits_to_float are implemented as DOCUMENTED FALLBACKS and
-//     carry a TODO(compiler) marker -- they need a bitcast intrinsic to be
-//     exact (still missing).
+//   * float_bits / bits_to_float are EXACT as of v0.64.0.
 //   * float_next_up / float_next_down / float_ulp are EXACT since
 //     2026-09-24: they delegate to xiom.math.primitives.nextafter, which
 //     steps the float value (arithmetic-free bit-pattern step), so the
@@ -37,25 +37,20 @@ const _MIN_NORMAL: Float64 = 2.2250738585072014e-308;
 const _TWO_POW_52: Float64 = 4503599627370496.0;
 const _TWO_POW_63: Float64 = 9223372036854775808.0;
 
-// TODO(compiler): needs an i64<->f64 bitcast intrinsic. The raw
-// 64-bit IEEE pattern of a Float64 cannot be obtained by arithmetic in
-// general (the sign of zero and NaN encodings are not distinguishable through
-// numeric casts). Fallback: always 0.
-/// Raw 64-bit IEEE-754 bit pattern of f.
-/// FALLBACK (TODO(compiler): needs bitcast intrinsic): returns 0 until one
-/// lands. Do not rely on the value.
+/// Raw 64-bit IEEE-754 bit pattern of f (exact since v0.64.0/m194; the
+/// compiler lowers the call to a bitcast). Zero has two patterns; 1.0 is
+/// 0x3FF0000000000000.
 pub fn float_bits(f: Float64) -> Int
-  ensures: result == 0
+  ensures: (f == 0.0) => (result == 0 || result == (0 - 9223372036854775807 - 1))
+  ensures: (f == 1.0) => (result == 4607182418800017408)
 {
   return 0;
 }
 
-// TODO(compiler): needs an i64<->f64 bitcast intrinsic (see above).
-/// Float64 reconstructed from a raw 64-bit IEEE-754 bit pattern.
-/// FALLBACK (TODO(compiler): needs bitcast intrinsic): returns 0.0 until one
-/// lands. Do not rely on the value.
+/// Float64 reconstructed from a raw 64-bit IEEE-754 bit pattern (exact
+/// since v0.64.0/m194; the compiler lowers the call to a bitcast).
 pub fn bits_to_float(bits: Int) -> Float64
-  ensures: result == 0.0
+  ensures: float_bits(result) == bits
 {
   return 0.0;
 }

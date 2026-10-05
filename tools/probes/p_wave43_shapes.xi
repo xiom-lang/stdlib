@@ -3,9 +3,9 @@
 // Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 //
-// Every call evaluates the new runtime ensures clauses. Cases: float bit
-// fallbacks, mantissa/exponent, classification, nextafter/ulp; base58/62,
-// ascii85, roman; radix conversions and digits; bigint wrappers and BigRat
+// Every call evaluates the new runtime ensures clauses. Cases: exact float
+// bits (v0.64.0/m194; was fallback 0 before), mantissa/exponent,
+// classification, nextafter/ulp; base58/62, ascii85, roman; radix conversions and digits; bigint wrappers and BigRat
 // construction/arithmetic/compare/float. Returns 0 when every case holds.
 
 module p_wave43_shapes
@@ -32,8 +32,8 @@ fn main() -> Int {
   var inf = 1.0 / 0.0;
 
   // ---- num.float ----
-  if float.float_bits(1.5) != 0 { return 1; }
-  if float.bits_to_float(7) != 0.0 { return 2; }
+  if float.float_bits(1.5) != 4609434218613702656 { return 1; }
+  if !(float.bits_to_float(7) > 0.0) { return 2; }
   if float.float_mantissa(1.0) != 4503599627370496 { return 3; }
   if float.float_mantissa(0.0) != 0 { return 4; }
   if float.float_mantissa(nan) != 0 { return 5; }
