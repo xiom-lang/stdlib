@@ -4,7 +4,73 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 -->
 # XIOM Stdlib Session -- Handoff
 
-## 0A. CONTINUE HERE -- handoff snapshot (updated 2026-10-04, after wave 63)
+## 0A. CONTINUE HERE -- handoff snapshot 6 (updated 2026-10-05, context-limit)
+
+**PASTE-READY PROMPT FOR THE NEXT SESSION (copy this block):**
+
+---
+You are continuing the XIOM stdlib lane. Worktree `E:\xiom-lang\stdlib`,
+branch `main`. Read `docs/stdlib_session.md` blocks 36 (latest), 33
+(publish), 27 (iter block) and `docs/PRODUCTION_READINESS_QUEUE.md`
+before acting; snapshot 5 below the prompt keeps the deep protocol lore.
+
+STATE (2026-10-05): compiler pin = official v0.63.0 (SHA256 `689881f4...`,
+verified; v0.62.4/v0.62.3/v0.61.3 archives kept under
+`%TEMP%\kilo\stdlib_ws\v06*/x/bin`). Registry now carries xiom-std 0.62.3,
+0.62.4 and 0.63.0 (staging then production publishes approved and green);
+tags pushed: stdlib-v0.62.3 (12a3a1b), stdlib-v0.62.4 (3800c08),
+stdlib-v0.63.0 (179cfea). Gates on v0.63.0: release corpus 950/950 (2 C001
+carve-outs of 952; ci/heavy run the full corpus), modules 509/509, probes
+229/229, barename 0/509, floors104, module-smoke ratchet OK. Coverage =
+46.1% global pub-with-clause (30.1% at 0.62.0). Waves landed: 63 net+hash,
+64 reflect+iter adapters, 65x convert, 66 time, 67 format, 68 misc. Wave
+65 (iter clauses) is BLOCKED on the pin (block 27): clauses/calls on
+closure-delegating catalog fns flip between closure use-before-def and the
+C001 classifier; the deferred clause set is documented there.
+
+FIRST TASK (wave 69): coverage wave on the next low dirs -- os 15.3%,
+then rand 16% (merge files to hold 40-60 pub). Mandatory protocol:
+(1) recon bodies and derive every clause from them; no placeholder forms
+(no unsigned `>= 0`, no `is_ok || is_err`, no self-mirrors); clauses run at
+runtime, so never read Result/Option payloads, guard division/NaN, and
+prefer exact mirrors, length/presence bands and `@pre` invariants.
+(2) probe-first: add `tools/probes/p_wave69_shapes.xi` exercising every
+clause-guard path; bind module-returned values to `let` before comparing
+(inline unsigned compares misread high bits); bind `Vec.new()`
+temporaries passed as `&Vec`; do not declare externs for runtime guard
+symbols; green on v0.63.0 (v0.61.3 cross-check when cheap).
+(3) apply, run targeted smokes; if unrelated codegen breaks, bisect and
+drop the offending clause with a code comment (see blocks 27/65x).
+(4) dump `tools/coverage_floors105.json`, wire the workflows +
+`tools/README.md`, update plan/session/queue in the same commit, YAML
+check, pure-ASCII conventional commit.
+(5) battery: `run_smokes.ps1 -ExcludeFile tools/known_failures/
+gate-exclusions.txt` (expect 950/950), probe corpus (expect 230),
+check_modules 509/509, barename 0/509, floors105 + module-smoke ratchets;
+record results in the session block; push `main`.
+
+QUEUED (do only when triggered):
+- First compiler archive containing `4bf8cf1e`: drop the two C001
+  exclusions, run the 20-run stress on `smoke_iter_range` /
+  `smoke_iter_find_all_any` (expect deterministic green), then promote the
+  lock; afterwards retry the wave-65 iter clause set (block 27) and the
+  iter_collect clause side.
+- One green heavy run -> add `macos-14` to the `release.yml` matrix
+  (heavy already has it).
+- Same-leaf audit follow-up (lz4 class): soundex leaves in
+  string/misc/text plus anything `tools/same_leaf_audit.ps1` reports;
+  lz4 umbrella already renamed to `lz4_compress_checked` /
+  `lz4_decompress_checked` (8991c3e) and the stale
+  `xiom.misc.misc.soundex` "0000" copy now delegates (e385ca1).
+- Release-only note: the compiler's own v0.63.0 archive bundles a
+  pre-bound-check runtime; `stdlib-v0.63.0` carries the arena-audit fix.
+- Next stdlib release follows the documented flow: re-pin, package.xi +
+  release notes + CHANGELOG, tag `stdlib-v*`, release.yml gates/package,
+  staging canary, then production with the registry-publish environment
+  approval; disclose open compiler issues in the notes.
+---
+
+### Snapshot 5 (details retained below)
 
 **Repo**: `xiom-lang/stdlib` at `E:\xiom-lang\stdlib` (branch `main`).
 Compiler pin: **official v0.63.0** (windows-x64 archive, SHA256
@@ -1493,6 +1559,18 @@ registry pin, agent recon for the rest)**
   duplicates (`xiom.string.soundex`, `xiom.misc.soundex`,
   `xiom.text.similarity.soundex` leaves) go to the same-leaf audit /
   compiler parity work; the probe uses fully qualified calls.
+- Battery on e385ca1 (v0.63.0): release-gate corpus 950/950 (2 C001
+  carve-outs of 952; 672.9s); probes 229/229 (338.6s); check_modules
+  509/509 (271.5s); barename 0/509 (307.6s); floors104 + module-smoke
+  ratchets OK.
+- lz4 follow-up (compiler relay 07:27Z): the rename
+  (`lz4_compress_checked` / `lz4_decompress_checked`, commit 8991c3e)
+  makes `lz4_compress` a unique leaf; re-verified the exact colliding
+  benchmark shape -- `use xiom.compress; use xiom.compress.lz4;` then a
+  bare `lz4_compress(&d)` -- compiles and returns Vec lengths (rc 0),
+  as does the single-module bare shape. The benchmark file is not in the
+  local checkouts; retest `lz4_compress_only.xi` against stdlib ref
+  8991c3e+.
 
 **SESSION 2026-10-05 block 35 (lz4 duplicate-leaf unblock)**
 - Compiler relay: the benchmark lz4 failure root cause is a duplicate
