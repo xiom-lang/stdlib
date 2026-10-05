@@ -1127,10 +1127,19 @@ T1/T2 yields.
         replaced). encoding 72.4% -> 100%, debug 24.4% -> 95.1%, global
         49.8% -> 50.6%, meter 75.1%; floors111. Probe p_wave75_shapes.xi
         (236th, 84 checks) green on v0.63.1; targeted smokes ascii85 2/2,
-        punycode 3/3, debug 2/2. Next: simd 24.4% / stats 25% /
-        thread 25% / convert 25.6%.
+        punycode 3/3, debug 2/2.
+        Wave 76 (2026-10-05): coverage wave 39 -- simd, 49 clauses / 49
+        new pub (gather 5, mask 14, vec4 17, vec8 13). Exact lane mirrors
+        (field-read clauses verified on the pin), min/max lane
+        disjunctions, mask bit mirrors, gather length identities; omits
+        div/dot/sum/loads/vec8 array constructors by design. simd 24.4%
+        -> 78.9%, global 50.6% -> 51.3%, meter 75.1%; floors112. Probe
+        p_wave76_shapes.xi (240th, 66 checks) green on v0.63.1; targeted
+        smokes simd 1/1. Landmine recorded: explicit type args on
+        module-qualified generic calls miscompile on v0.63.1. Next:
+        stats 25% / thread 25% / convert 25.6%.
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors111.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors112.json
        tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;

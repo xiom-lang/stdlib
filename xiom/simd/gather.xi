@@ -25,7 +25,9 @@ use xiom.simd.mask;
 /// generic memory loads are unavailable -- returns default `T()` values with
 /// one element per index (documented).
 /// Complexity: O(len(indices)).
-pub fn gather_load[T](base: Int, indices: &Vec[Int]) -> Vec[T] {
+pub fn gather_load[T](base: Int, indices: &Vec[Int]) -> Vec[T]
+  ensures: result.len() == indices.len()
+{
   var out = Vec[T].new();
   var i: Int = 0;
   while i < indices.len() {
@@ -52,7 +54,10 @@ pub fn scatter_store[T](base: Int, indices: &Vec[Int], values: &Vec[T]) {
 /// memory loads are unavailable -- returns default `T()` values, one per set
 /// lane (documented).
 /// Complexity: O(32).
-pub fn gather_mask[T](base: Int, indices: &Vec[Int], m: Mask) -> Vec[T] {
+pub fn gather_mask[T](base: Int, indices: &Vec[Int], m: Mask) -> Vec[T]
+  ensures: result.len() <= 32
+  ensures: result.len() == mask.mask_count(m)
+{
   var out = Vec[T].new();
   var i: Int = 0;
   while i < 32 {
@@ -68,7 +73,10 @@ pub fn gather_mask[T](base: Int, indices: &Vec[Int], m: Mask) -> Vec[T] {
 /// fallback: the result holds `values[i]` for every set lane `i`, in lane
 /// order.
 /// Complexity: O(min(values, 32)).
-pub fn gather_compress[T](values: &Vec[T], m: Mask) -> Vec[T] {
+pub fn gather_compress[T](values: &Vec[T], m: Mask) -> Vec[T]
+  ensures: result.len() <= values.len()
+  ensures: result.len() <= 32
+{
   var out = Vec[T].new();
   var i: Int = 0;
   while i < values.len() && i < 32 {
@@ -84,7 +92,9 @@ pub fn gather_compress[T](values: &Vec[T], m: Mask) -> Vec[T] {
 /// fallback: the result has 32 lanes; lane `i` holds the next value from
 /// `values` when the mask bit is set and a default `T()` otherwise.
 /// Complexity: O(32).
-pub fn gather_expand[T](values: &Vec[T], m: Mask) -> Vec[T] {
+pub fn gather_expand[T](values: &Vec[T], m: Mask) -> Vec[T]
+  ensures: result.len() == 32
+{
   var out = Vec[T].new();
   var v: Int = 0;
   var i: Int = 0;
@@ -108,7 +118,10 @@ pub fn gather_expand[T](values: &Vec[T], m: Mask) -> Vec[T] {
 /// construction from an Int is unavailable -- returns default `T()` values,
 /// one per element (documented).
 /// Complexity: O(n).
-pub fn gather_iota[T](base: Int, n: Int) -> Vec[T] {
+pub fn gather_iota[T](base: Int, n: Int) -> Vec[T]
+  ensures: (n > 0) => (result.len() == n)
+  ensures: (n <= 0) => (result.len() == 0)
+{
   var out = Vec[T].new();
   var i: Int = 0;
   while i < n {

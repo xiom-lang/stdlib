@@ -38,25 +38,33 @@ pub type I32x4 = {
 
 /// Build a vector from four lanes.
 /// Complexity: O(1).
-pub fn f32x4_new(a: Float32, b: Float32, c: Float32, d: Float32) -> F32x4 {
+pub fn f32x4_new(a: Float32, b: Float32, c: Float32, d: Float32) -> F32x4
+  ensures: result.a == a && result.b == b && result.c == c && result.d == d
+{
   F32x4{ a: a; b: b; c: c; d: d; }
 }
 
 /// Lane-wise addition.
 /// Complexity: O(1).
-pub fn f32x4_add(x: F32x4, y: F32x4) -> F32x4 {
+pub fn f32x4_add(x: F32x4, y: F32x4) -> F32x4
+  ensures: result.a == x.a + y.a && result.b == x.b + y.b && result.c == x.c + y.c && result.d == x.d + y.d
+{
   F32x4{ a: x.a + y.a; b: x.b + y.b; c: x.c + y.c; d: x.d + y.d; }
 }
 
 /// Lane-wise subtraction.
 /// Complexity: O(1).
-pub fn f32x4_sub(x: F32x4, y: F32x4) -> F32x4 {
+pub fn f32x4_sub(x: F32x4, y: F32x4) -> F32x4
+  ensures: result.a == x.a - y.a && result.b == x.b - y.b && result.c == x.c - y.c && result.d == x.d - y.d
+{
   F32x4{ a: x.a - y.a; b: x.b - y.b; c: x.c - y.c; d: x.d - y.d; }
 }
 
 /// Lane-wise multiplication.
 /// Complexity: O(1).
-pub fn f32x4_mul(x: F32x4, y: F32x4) -> F32x4 {
+pub fn f32x4_mul(x: F32x4, y: F32x4) -> F32x4
+  ensures: result.a == x.a * y.a && result.b == x.b * y.b && result.c == x.c * y.c && result.d == x.d * y.d
+{
   F32x4{ a: x.a * y.a; b: x.b * y.b; c: x.c * y.c; d: x.d * y.d; }
 }
 
@@ -76,7 +84,9 @@ pub fn f32x4_sqrt(x: F32x4) -> F32x4
 
 /// Lane-wise minimum.
 /// Complexity: O(1).
-pub fn f32x4_min(x: F32x4, y: F32x4) -> F32x4 {
+pub fn f32x4_min(x: F32x4, y: F32x4) -> F32x4
+  ensures: (result.a == x.a || result.a == y.a) && (result.b == x.b || result.b == y.b) && (result.c == x.c || result.c == y.c) && (result.d == x.d || result.d == y.d)
+{
   var a = x.a;
   if y.a < a {
     a = y.a;
@@ -98,7 +108,9 @@ pub fn f32x4_min(x: F32x4, y: F32x4) -> F32x4 {
 
 /// Lane-wise maximum.
 /// Complexity: O(1).
-pub fn f32x4_max(x: F32x4, y: F32x4) -> F32x4 {
+pub fn f32x4_max(x: F32x4, y: F32x4) -> F32x4
+  ensures: (result.a == x.a || result.a == y.a) && (result.b == x.b || result.b == y.b) && (result.c == x.c || result.c == y.c) && (result.d == x.d || result.d == y.d)
+{
   var a = x.a;
   if y.a > a {
     a = y.a;
@@ -151,13 +163,20 @@ pub fn f32x4_store(ptr: Int, x: F32x4)
 
 /// Fill every lane with `v`.
 /// Complexity: O(1).
-pub fn f32x4_splat(v: Float32) -> F32x4 {
+pub fn f32x4_splat(v: Float32) -> F32x4
+  ensures: result.a == v && result.b == v && result.c == v && result.d == v
+{
   F32x4{ a: v; b: v; c: v; d: v; }
 }
 
 /// Read lane `i` (0..3).
 /// Complexity: O(1).
-pub fn f32x4_extract(x: F32x4, i: Int) -> Float32 {
+pub fn f32x4_extract(x: F32x4, i: Int) -> Float32
+  ensures: (i <= 0) => (result == x.a)
+  ensures: (i == 1) => (result == x.b)
+  ensures: (i == 2) => (result == x.c)
+  ensures: (i >= 3) => (result == x.d)
+{
   if i <= 0 {
     return x.a;
   };
@@ -172,7 +191,12 @@ pub fn f32x4_extract(x: F32x4, i: Int) -> Float32 {
 
 /// Write lane `i` and return the vector.
 /// Complexity: O(1).
-pub fn f32x4_insert(x: F32x4, i: Int, v: Float32) -> F32x4 {
+pub fn f32x4_insert(x: F32x4, i: Int, v: Float32) -> F32x4
+  ensures: (i <= 0) => (result.a == v)
+  ensures: (i == 1) => (result.b == v)
+  ensures: (i == 2) => (result.c == v)
+  ensures: (i >= 3) => (result.d == v)
+{
   var a = x.a;
   var b = x.b;
   var c = x.c;
@@ -197,31 +221,41 @@ pub fn f32x4_sum(x: F32x4) -> Float32 {
 
 /// Build a vector from four integer lanes.
 /// Complexity: O(1).
-pub fn i32x4_new(a: Int, b: Int, c: Int, d: Int) -> I32x4 {
+pub fn i32x4_new(a: Int, b: Int, c: Int, d: Int) -> I32x4
+  ensures: result.a == a && result.b == b && result.c == c && result.d == d
+{
   I32x4{ a: a; b: b; c: c; d: d; }
 }
 
 /// Lane-wise addition.
 /// Complexity: O(1).
-pub fn i32x4_add(x: I32x4, y: I32x4) -> I32x4 {
+pub fn i32x4_add(x: I32x4, y: I32x4) -> I32x4
+  ensures: result.a == x.a + y.a && result.b == x.b + y.b && result.c == x.c + y.c && result.d == x.d + y.d
+{
   I32x4{ a: x.a + y.a; b: x.b + y.b; c: x.c + y.c; d: x.d + y.d; }
 }
 
 /// Lane-wise subtraction.
 /// Complexity: O(1).
-pub fn i32x4_sub(x: I32x4, y: I32x4) -> I32x4 {
+pub fn i32x4_sub(x: I32x4, y: I32x4) -> I32x4
+  ensures: result.a == x.a - y.a && result.b == x.b - y.b && result.c == x.c - y.c && result.d == x.d - y.d
+{
   I32x4{ a: x.a - y.a; b: x.b - y.b; c: x.c - y.c; d: x.d - y.d; }
 }
 
 /// Lane-wise multiplication.
 /// Complexity: O(1).
-pub fn i32x4_mul(x: I32x4, y: I32x4) -> I32x4 {
+pub fn i32x4_mul(x: I32x4, y: I32x4) -> I32x4
+  ensures: result.a == x.a * y.a && result.b == x.b * y.b && result.c == x.c * y.c && result.d == x.d * y.d
+{
   I32x4{ a: x.a * y.a; b: x.b * y.b; c: x.c * y.c; d: x.d * y.d; }
 }
 
 /// Lane-wise minimum.
 /// Complexity: O(1).
-pub fn i32x4_min(x: I32x4, y: I32x4) -> I32x4 {
+pub fn i32x4_min(x: I32x4, y: I32x4) -> I32x4
+  ensures: (result.a == x.a || result.a == y.a) && (result.b == x.b || result.b == y.b) && (result.c == x.c || result.c == y.c) && (result.d == x.d || result.d == y.d)
+{
   var a = x.a;
   if y.a < a {
     a = y.a;
@@ -243,7 +277,9 @@ pub fn i32x4_min(x: I32x4, y: I32x4) -> I32x4 {
 
 /// Lane-wise maximum.
 /// Complexity: O(1).
-pub fn i32x4_max(x: I32x4, y: I32x4) -> I32x4 {
+pub fn i32x4_max(x: I32x4, y: I32x4) -> I32x4
+  ensures: (result.a == x.a || result.a == y.a) && (result.b == x.b || result.b == y.b) && (result.c == x.c || result.c == y.c) && (result.d == x.d || result.d == y.d)
+{
   var a = x.a;
   if y.a > a {
     a = y.a;
@@ -265,13 +301,20 @@ pub fn i32x4_max(x: I32x4, y: I32x4) -> I32x4 {
 
 /// Fill every lane with `v`.
 /// Complexity: O(1).
-pub fn i32x4_splat(v: Int) -> I32x4 {
+pub fn i32x4_splat(v: Int) -> I32x4
+  ensures: result.a == v && result.b == v && result.c == v && result.d == v
+{
   I32x4{ a: v; b: v; c: v; d: v; }
 }
 
 /// Read lane `i` (0..3).
 /// Complexity: O(1).
-pub fn i32x4_extract(x: I32x4, i: Int) -> Int {
+pub fn i32x4_extract(x: I32x4, i: Int) -> Int
+  ensures: (i <= 0) => (result == x.a)
+  ensures: (i == 1) => (result == x.b)
+  ensures: (i == 2) => (result == x.c)
+  ensures: (i >= 3) => (result == x.d)
+{
   if i <= 0 {
     return x.a;
   };

@@ -1,9 +1,9 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
-**75.1% -- 7 of 10 gates complete; gate 8 at 50.6% (partial credit) and
+**75.1% -- 7 of 10 gates complete; gate 8 at 51.3% (partial credit) and
 gates 9-10 discrete.** (Compiler pin: **v0.63.1**.)
 **Gates: corpus 952/952 full (C001 carve-outs retired on v0.63.1), modules
-509/509, probes 239/239, barename 0/509.**
+509/509, probes 240/240, barename 0/509.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -12,20 +12,20 @@ gates flip:
 2. Smoke corpus green -- MET on the v0.63.1 pin: release gate 952/952
    full, no carve-outs (C001 fixed by 4bf8cf1e; 20/20 + 20/20 stress).
    lz4 is fixed by m190 and stayed in the gate.
-3. Probe corpus green -- MET (239/239 on v0.63.1, incl. the promoted
-   regression probes, the v0.63.1 pin locks and the 3 compiler-ask
-   regression locks).
+3. Probe corpus green -- MET (240/240 on v0.63.1, incl. the promoted
+   regression probes, the v0.63.1 pin locks, the 3 compiler-ask regression
+   locks and the wave-76 simd probe).
 4. Strict bare-name scan clean -- MET (0/509).
-5. Coverage ratchet green -- MET (floors110).
+5. Coverage ratchet green -- MET (floors112).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (497/517 modules, 3475/6200 fns).
-8. Contract coverage 100% (every public fn carries clauses) -- OPEN (50.6%).
+8. Contract coverage 100% (every public fn carries clauses) -- OPEN (51.3%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
    OPEN (10: 9 compiler, 1 stdlib algorithm).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
 
 Meter formula: MET gates count 1.0; gate 8 counts its current
-pub-with-clause fraction (50.6% -> 0.506); gates 9 and 10 get no partial
+pub-with-clause fraction (51.3% -> 0.513); gates 9 and 10 get no partial
 credit (discrete). Update the percentage and the gate-8 fraction in the
 same commit as each floors dump so the meter moves smoothly toward 80%.
 
@@ -558,6 +558,21 @@ stdlib tag >= `8b23b79` for Gate P; tagged `stdlib-perf3` at `5037262`
 regens api-freeze, t2 `185342f4`, tags v0.62.3). The packages'
 `Vec[StructType]` trap-10 row is a retirement candidate (not reproducible
 on both sides); no local row existed.
+
+Update 2026-10-05 (wave 76 landed): simd --
+49 clauses / 49 new pub (gather 5, mask 14, vec4 17, vec8 13); simd
+24.4% -> 78.9%, global 50.6% -> 51.3%; meter 75.1%; floors112. Probe
+p_wave76_shapes.xi (240th, 66 checks) green on v0.63.1; targeted smokes
+simd 1/1. Clause forms: exact lane mirrors on vec4/vec8 structs
+(field-read clauses verified working on the pin), min/max lane
+disjunctions, mask bit-pattern mirrors and guarded set/clr, gather
+length identities. Deliberate omits: div (NaN), dot/sum self-mirrors,
+f32x4_load/store (pointer), vec8 array-param constructors (array element
+reads in clauses), gather_load4 (default-T tuple). Probe landmine
+recorded: explicit type args on module-qualified generic calls
+(`gather_load[Int](...)`) miscompile with an LLVM Vec/ptr error on
+v0.63.1 -- use inference. Readiness next: stats 25%, then thread 25% /
+convert 25.6%.
 
 Update 2026-10-05 (compiler help relay -- scrypt/shuffle/choice/BUG-18/Box):
 - The compiler lane asked for failing snippets for scrypt, shuffle/choice

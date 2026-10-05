@@ -4,13 +4,13 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 -->
 # XIOM Stdlib Session -- Handoff
 
-## 0A. CONTINUE HERE -- handoff snapshot 13 (updated 2026-10-05, wave 75 complete)
+## 0A. CONTINUE HERE -- handoff snapshot 14 (updated 2026-10-05, wave 76 complete)
 
 **PASTE-READY PROMPT FOR THE NEXT SESSION (copy this block):**
 
 ---
 You are continuing the XIOM stdlib lane. Worktree `E:\xiom-lang\stdlib`,
-branch `main`. Read `docs/stdlib_session.md` blocks 43 (latest), 42, 41
+branch `main`. Read `docs/stdlib_session.md` blocks 44 (latest), 43, 42
 (publish), 27 (iter block) and `docs/PRODUCTION_READINESS_QUEUE.md`
 before acting; snapshot 5 below the prompt keeps the deep protocol lore.
 
@@ -21,34 +21,34 @@ v0.62.4/v0.63.0 archives kept. Registry carries xiom-std 0.62.3, 0.62.4 and 0.63
 (staging then production publishes approved and green); tags pushed:
 stdlib-v0.62.3 (12a3a1b), stdlib-v0.62.4 (3800c08), stdlib-v0.63.0 (179cfea).
 Gates on v0.63.1: release corpus 952/952 FULL (C001 carve-outs retired by
-4bf8cf1e; 20/20 + 20/20 stress), modules 509/509, probes 239/239, barename
-0/509, floors111, module-smoke ratchet OK. Coverage = 50.6% global
-pub-with-clause. Waves landed: 63 net+hash, 64 reflect+iter adapters, 65x convert, 66 time, 67 format, 68 misc, 69 os+rand, 70 crypto, 71 log, 72 compress, 73 pin, 74 encoding, 75 encoding-rem+debug. Wave
+4bf8cf1e; 20/20 + 20/20 stress), modules 509/509, probes 240/240, barename
+0/509, floors112, module-smoke ratchet OK. Coverage = 51.3% global
+pub-with-clause. Waves landed: 63 net+hash, 64 reflect+iter adapters, 65x convert, 66 time, 67 format, 68 misc, 69 os+rand, 70 crypto, 71 log, 72 compress, 73 pin, 74 encoding, 75 encoding-rem+debug, 76 simd. Wave
 65 (iter clauses) is DEFERRED but pin-unblocked (block 27): the C001
 classifier is fixed on v0.63.1 and clauses may read tuple components; the
 deferred clause set (Range core 7 + chain 14 + fold 8 + iter_collect) is documented there.
 
-FIRST TASK (wave 76): simd 24.4% + stats 25% (merge files to hold 40-60
-pub), then thread 25% / convert 25.6%. v0.63.1 allows tuple-component
-clauses (`result.value.0/1`), so revisit skipped tuple-returning pub fns
-opportunistically. Mandatory protocol:
+FIRST TASK (wave 77): stats 25% -- merge files to hold 40-60 pub (dist 15
++ histogram 10 + moments 13 + test 11 = 49 natural), then thread 25% /
+convert 25.6%. v0.63.1 allows tuple-component clauses (`result.value.0/1`),
+so revisit skipped tuple-returning pub fns opportunistically. Mandatory protocol:
 (1) recon bodies and derive every clause from them; no placeholder forms
 (no unsigned `>= 0`, no `is_ok || is_err`, no self-mirrors); clauses run at
 runtime, so never read Result/Option payloads, guard division/NaN, and
 prefer exact mirrors, length/presence bands and `@pre` invariants.
-(2) probe-first: add `tools/probes/p_wave76_shapes.xi` exercising every
+(2) probe-first: add `tools/probes/p_wave77_shapes.xi` exercising every
 clause-guard path; bind module-returned values to `let` before comparing
 (inline unsigned compares misread high bits); bind `Vec.new()`
 temporaries passed as `&Vec`; do not declare externs for runtime guard
 symbols; green on v0.63.1 (v0.63.0 cross-check when cheap).
 (3) apply, run targeted smokes; if unrelated codegen breaks, bisect and
 drop the offending clause with a code comment (see blocks 27/65x).
-(4) dump `tools/coverage_floors112.json`, wire the workflows +
+(4) dump `tools/coverage_floors113.json`, wire the workflows +
 `tools/README.md`, update plan/session/queue in the same commit, YAML
 check, pure-ASCII conventional commit.
 (5) battery: `run_smokes.ps1 -ExcludeFile tools/known_failures/
-gate-exclusions.txt` (expect 952/952 full), probe corpus (expect 240),
-check_modules 509/509, barename 0/509, floors112 + module-smoke ratchets;
+gate-exclusions.txt` (expect 952/952 full), probe corpus (expect 241),
+check_modules 509/509, barename 0/509, floors113 + module-smoke ratchets;
 record results in the session block; push `main`.
 
 QUEUED (do only when triggered):
@@ -1572,6 +1572,30 @@ registry pin, agent recon for the rest)**
   gates; open: contract coverage 100%, zero open findings, beta-exit release
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
+
+**SESSION 2026-10-05 block 44 (wave 76: simd gather/mask/vec4/vec8; floors112)**
+- Wave 76: 49 clauses / 49 new pub -- gather 5 (length identities and
+  `result.len() == mask.mask_count(m)`), mask 14 (bit-pattern mirrors,
+  lane access OOR guard, guarded set/clr, logic mirrors, all/any bands),
+  vec4 17 and vec8 13 (exact lane mirrors for add/sub/mul/new/splat,
+  min/max lane disjunctions, extract/insert branch mirrors). simd
+  24.4% -> 78.9%, global 50.6% -> 51.3%, meter 75.1%; floors112 wired.
+- Deliberate omits: div (NaN lanes), dot/sum (self-mirrors), loads/stores
+  (pointers), vec8 array-param constructors (array element reads in
+  clauses), gather_load4 (default-T tuple), sqrt (requires only).
+- Field-read clauses verified working on v0.63.1 with an isolation test
+  (result/param struct fields + cross-module calls) despite the simd
+  header warning about user-code cross-module field reads; probes read
+  mask state through mask_to_bits.
+- Probe landmine recorded: explicit type arguments on module-qualified
+  generic calls (`gather.gather_load[Int](...)`) miscompile with an LLVM
+  `Vec`/`ptr` error on v0.63.1; inference works. (Same family as the
+  earlier tupled/qualified-generic issues; candidate compiler finding.)
+- Probe p_wave76_shapes.xi (240th, 66 checks): green on v0.63.1;
+  targeted smokes simd 1/1.
+- Battery on this commit (v0.63.1): release corpus 952/952 full (747.1s,
+  no exclusions); probes 240/240 (352.6s); check_modules 509/509 (180.5s);
+  barename 0/509 (242.7s); floors112 + module-smoke ratchets OK.
 
 **SESSION 2026-10-05 block 43 (wave 75: encoding remainder + debug; floors111)**
 - Wave 75: 50 clauses / 50 new pub -- encoding remainder (ascii85 6,

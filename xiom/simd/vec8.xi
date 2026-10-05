@@ -51,19 +51,25 @@ pub fn f32x8_new(v: [8]Float32) -> F32x8 {
 
 /// Lane-wise addition.
 /// Complexity: O(1).
-pub fn f32x8_add(x: F32x8, y: F32x8) -> F32x8 {
+pub fn f32x8_add(x: F32x8, y: F32x8) -> F32x8
+  ensures: result.a0 == x.a0 + y.a0 && result.a1 == x.a1 + y.a1 && result.a2 == x.a2 + y.a2 && result.a3 == x.a3 + y.a3 && result.a4 == x.a4 + y.a4 && result.a5 == x.a5 + y.a5 && result.a6 == x.a6 + y.a6 && result.a7 == x.a7 + y.a7
+{
   F32x8{ a0: x.a0 + y.a0; a1: x.a1 + y.a1; a2: x.a2 + y.a2; a3: x.a3 + y.a3; a4: x.a4 + y.a4; a5: x.a5 + y.a5; a6: x.a6 + y.a6; a7: x.a7 + y.a7; }
 }
 
 /// Lane-wise subtraction.
 /// Complexity: O(1).
-pub fn f32x8_sub(x: F32x8, y: F32x8) -> F32x8 {
+pub fn f32x8_sub(x: F32x8, y: F32x8) -> F32x8
+  ensures: result.a0 == x.a0 - y.a0 && result.a1 == x.a1 - y.a1 && result.a2 == x.a2 - y.a2 && result.a3 == x.a3 - y.a3 && result.a4 == x.a4 - y.a4 && result.a5 == x.a5 - y.a5 && result.a6 == x.a6 - y.a6 && result.a7 == x.a7 - y.a7
+{
   F32x8{ a0: x.a0 - y.a0; a1: x.a1 - y.a1; a2: x.a2 - y.a2; a3: x.a3 - y.a3; a4: x.a4 - y.a4; a5: x.a5 - y.a5; a6: x.a6 - y.a6; a7: x.a7 - y.a7; }
 }
 
 /// Lane-wise multiplication.
 /// Complexity: O(1).
-pub fn f32x8_mul(x: F32x8, y: F32x8) -> F32x8 {
+pub fn f32x8_mul(x: F32x8, y: F32x8) -> F32x8
+  ensures: result.a0 == x.a0 * y.a0 && result.a1 == x.a1 * y.a1 && result.a2 == x.a2 * y.a2 && result.a3 == x.a3 * y.a3 && result.a4 == x.a4 * y.a4 && result.a5 == x.a5 * y.a5 && result.a6 == x.a6 * y.a6 && result.a7 == x.a7 * y.a7
+{
   F32x8{ a0: x.a0 * y.a0; a1: x.a1 * y.a1; a2: x.a2 * y.a2; a3: x.a3 * y.a3; a4: x.a4 * y.a4; a5: x.a5 * y.a5; a6: x.a6 * y.a6; a7: x.a7 * y.a7; }
 }
 
@@ -83,7 +89,9 @@ pub fn f32x8_sqrt(x: F32x8) -> F32x8
 
 /// Lane-wise minimum.
 /// Complexity: O(1).
-pub fn f32x8_min(x: F32x8, y: F32x8) -> F32x8 {
+pub fn f32x8_min(x: F32x8, y: F32x8) -> F32x8
+  ensures: (result.a0 == x.a0 || result.a0 == y.a0) && (result.a1 == x.a1 || result.a1 == y.a1) && (result.a2 == x.a2 || result.a2 == y.a2) && (result.a3 == x.a3 || result.a3 == y.a3) && (result.a4 == x.a4 || result.a4 == y.a4) && (result.a5 == x.a5 || result.a5 == y.a5) && (result.a6 == x.a6 || result.a6 == y.a6) && (result.a7 == x.a7 || result.a7 == y.a7)
+{
   var a0 = x.a0;
   if y.a0 < a0 {
     a0 = y.a0;
@@ -121,7 +129,9 @@ pub fn f32x8_min(x: F32x8, y: F32x8) -> F32x8 {
 
 /// Lane-wise maximum.
 /// Complexity: O(1).
-pub fn f32x8_max(x: F32x8, y: F32x8) -> F32x8 {
+pub fn f32x8_max(x: F32x8, y: F32x8) -> F32x8
+  ensures: (result.a0 == x.a0 || result.a0 == y.a0) && (result.a1 == x.a1 || result.a1 == y.a1) && (result.a2 == x.a2 || result.a2 == y.a2) && (result.a3 == x.a3 || result.a3 == y.a3) && (result.a4 == x.a4 || result.a4 == y.a4) && (result.a5 == x.a5 || result.a5 == y.a5) && (result.a6 == x.a6 || result.a6 == y.a6) && (result.a7 == x.a7 || result.a7 == y.a7)
+{
   var a0 = x.a0;
   if y.a0 > a0 {
     a0 = y.a0;
@@ -159,13 +169,24 @@ pub fn f32x8_max(x: F32x8, y: F32x8) -> F32x8 {
 
 /// Fill every lane with `v`.
 /// Complexity: O(1).
-pub fn f32x8_splat(v: Float32) -> F32x8 {
+pub fn f32x8_splat(v: Float32) -> F32x8
+  ensures: result.a0 == v && result.a1 == v && result.a2 == v && result.a3 == v && result.a4 == v && result.a5 == v && result.a6 == v && result.a7 == v
+{
   F32x8{ a0: v; a1: v; a2: v; a3: v; a4: v; a5: v; a6: v; a7: v; }
 }
 
 /// Read lane `i` (0..7).
 /// Complexity: O(1).
-pub fn f32x8_extract(x: F32x8, i: Int) -> Float32 {
+pub fn f32x8_extract(x: F32x8, i: Int) -> Float32
+  ensures: (i <= 0) => (result == x.a0)
+  ensures: (i == 1) => (result == x.a1)
+  ensures: (i == 2) => (result == x.a2)
+  ensures: (i == 3) => (result == x.a3)
+  ensures: (i == 4) => (result == x.a4)
+  ensures: (i == 5) => (result == x.a5)
+  ensures: (i == 6) => (result == x.a6)
+  ensures: (i >= 7) => (result == x.a7)
+{
   if i <= 0 {
     return x.a0;
   };
@@ -192,7 +213,16 @@ pub fn f32x8_extract(x: F32x8, i: Int) -> Float32 {
 
 /// Write lane `i` and return the vector.
 /// Complexity: O(1).
-pub fn f32x8_insert(x: F32x8, i: Int, v: Float32) -> F32x8 {
+pub fn f32x8_insert(x: F32x8, i: Int, v: Float32) -> F32x8
+  ensures: (i <= 0) => (result.a0 == v)
+  ensures: (i == 1) => (result.a1 == v)
+  ensures: (i == 2) => (result.a2 == v)
+  ensures: (i == 3) => (result.a3 == v)
+  ensures: (i == 4) => (result.a4 == v)
+  ensures: (i == 5) => (result.a5 == v)
+  ensures: (i == 6) => (result.a6 == v)
+  ensures: (i >= 7) => (result.a7 == v)
+{
   var a0 = x.a0;
   var a1 = x.a1;
   var a2 = x.a2;
@@ -264,31 +294,48 @@ pub fn i32x8_new(v: [8]Int) -> I32x8 {
 
 /// Lane-wise addition.
 /// Complexity: O(1).
-pub fn i32x8_add(x: I32x8, y: I32x8) -> I32x8 {
+pub fn i32x8_add(x: I32x8, y: I32x8) -> I32x8
+  ensures: result.a0 == x.a0 + y.a0 && result.a1 == x.a1 + y.a1 && result.a2 == x.a2 + y.a2 && result.a3 == x.a3 + y.a3 && result.a4 == x.a4 + y.a4 && result.a5 == x.a5 + y.a5 && result.a6 == x.a6 + y.a6 && result.a7 == x.a7 + y.a7
+{
   I32x8{ a0: x.a0 + y.a0; a1: x.a1 + y.a1; a2: x.a2 + y.a2; a3: x.a3 + y.a3; a4: x.a4 + y.a4; a5: x.a5 + y.a5; a6: x.a6 + y.a6; a7: x.a7 + y.a7; }
 }
 
 /// Lane-wise subtraction.
 /// Complexity: O(1).
-pub fn i32x8_sub(x: I32x8, y: I32x8) -> I32x8 {
+pub fn i32x8_sub(x: I32x8, y: I32x8) -> I32x8
+  ensures: result.a0 == x.a0 - y.a0 && result.a1 == x.a1 - y.a1 && result.a2 == x.a2 - y.a2 && result.a3 == x.a3 - y.a3 && result.a4 == x.a4 - y.a4 && result.a5 == x.a5 - y.a5 && result.a6 == x.a6 - y.a6 && result.a7 == x.a7 - y.a7
+{
   I32x8{ a0: x.a0 - y.a0; a1: x.a1 - y.a1; a2: x.a2 - y.a2; a3: x.a3 - y.a3; a4: x.a4 - y.a4; a5: x.a5 - y.a5; a6: x.a6 - y.a6; a7: x.a7 - y.a7; }
 }
 
 /// Lane-wise multiplication.
 /// Complexity: O(1).
-pub fn i32x8_mul(x: I32x8, y: I32x8) -> I32x8 {
+pub fn i32x8_mul(x: I32x8, y: I32x8) -> I32x8
+  ensures: result.a0 == x.a0 * y.a0 && result.a1 == x.a1 * y.a1 && result.a2 == x.a2 * y.a2 && result.a3 == x.a3 * y.a3 && result.a4 == x.a4 * y.a4 && result.a5 == x.a5 * y.a5 && result.a6 == x.a6 * y.a6 && result.a7 == x.a7 * y.a7
+{
   I32x8{ a0: x.a0 * y.a0; a1: x.a1 * y.a1; a2: x.a2 * y.a2; a3: x.a3 * y.a3; a4: x.a4 * y.a4; a5: x.a5 * y.a5; a6: x.a6 * y.a6; a7: x.a7 * y.a7; }
 }
 
 /// Fill every lane with `v`.
 /// Complexity: O(1).
-pub fn i32x8_splat(v: Int) -> I32x8 {
+pub fn i32x8_splat(v: Int) -> I32x8
+  ensures: result.a0 == v && result.a1 == v && result.a2 == v && result.a3 == v && result.a4 == v && result.a5 == v && result.a6 == v && result.a7 == v
+{
   I32x8{ a0: v; a1: v; a2: v; a3: v; a4: v; a5: v; a6: v; a7: v; }
 }
 
 /// Read lane `i` (0..7).
 /// Complexity: O(1).
-pub fn i32x8_extract(x: I32x8, i: Int) -> Int {
+pub fn i32x8_extract(x: I32x8, i: Int) -> Int
+  ensures: (i <= 0) => (result == x.a0)
+  ensures: (i == 1) => (result == x.a1)
+  ensures: (i == 2) => (result == x.a2)
+  ensures: (i == 3) => (result == x.a3)
+  ensures: (i == 4) => (result == x.a4)
+  ensures: (i == 5) => (result == x.a5)
+  ensures: (i == 6) => (result == x.a6)
+  ensures: (i >= 7) => (result == x.a7)
+{
   if i <= 0 {
     return x.a0;
   };
