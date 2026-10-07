@@ -1635,6 +1635,15 @@ registry pin, agent recon for the rest)**
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
 
+**SESSION 2026-10-07 block 61 (handoff refresh: snapshot 18 updated for the next session)**
+- Snapshot 18 refreshed: read list -> blocks 60 (latest)..; STATE carries
+  the wave-86 gates (probes 252, floors123, coverage 55.2%) and the pin
+  check note (v0.64.0 still Latest; trigger stays queued); FIRST TASK
+  wave 87 (convert tails -- float/json/punycode/cstring, strftime/
+  strptime, tryfrom) with the NEXT PIN trigger unchanged; HANDOFF NOTE
+  lists p_wave86_shapes.xi (252 probes) and floors123.
+- No code changes; heads: wave 86 (dacb229) + this refresh.
+
 **SESSION 2026-10-07 block 60 (wave 86: convert locals + shims; floors123)**
 - Wave 86: 58 clauses / 39 new pub -- date 5 (date_new field mirror;
   date_iso8601 10-byte band; date_from_iso8601 layout guard + epoch
