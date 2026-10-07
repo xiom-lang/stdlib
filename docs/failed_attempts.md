@@ -6,6 +6,11 @@ specific issue, stop, log here, and escalate (here: surface to the owner
 
 ## 2026-10-07 15:07-15:09 UTC -- git push origin main (wave-81 commit 7aac85b)
 
+- RESOLVED 2026-10-07 15:22 UTC: a push retry succeeded on the 4th attempt
+  (no code change needed); `origin/main` advanced to 5ce4785 (wave-81 +
+  this log). The GitHub 500s were transient/repo-side; ls-remote recovered
+  at the same time. Retry wakeup cancelled.
+
 - Context: wave-81 commit `feat(convert): unicode family clauses (38,
   floors118) + wave-81 probe` (7aac85b) ready; commit landed locally.
 - Symptom: `git push origin main` -> `remote: Internal Server Error`
