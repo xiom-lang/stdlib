@@ -1636,6 +1636,15 @@ registry pin, agent recon for the rest)**
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
 
+**SESSION 2026-10-07 block 59 (handoff refresh: snapshot 17 updated for the next session)**
+- Snapshot 17 refreshed: read list -> blocks 58 (latest)..; STATE carries
+  the wave-85 gates (probes 251, floors122, coverage 54.6%) and the pin
+  check note (v0.64.0 still Latest, no re-pin; trigger stays queued);
+  FIRST TASK wave 86 (convert remaining locals -- date/datetime/duration/
+  time, wstring/from/into/roundtrip) with the NEXT PIN trigger unchanged;
+  HANDOFF NOTE lists p_wave85_shapes.xi (251 probes) and floors122.
+- No code changes; heads: wave 85 (b9b98dc) + this refresh.
+
 **SESSION 2026-10-07 block 58 (wave 85: convert ip/lossy/network/timestamp; floors122)**
 - Wave 85: 31 clauses / 20 new pub -- ip 6 (is_valid_ipv4 < 7 / > 15
   and is_valid_ipv6 < 2 => false; ipv4_to_string empty -> "" plus the
