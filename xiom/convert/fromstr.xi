@@ -18,7 +18,9 @@ use xiom.convert.parse;
 /// Parameters: s -- the decimal integer string (optional sign).
 /// Returns: Ok(Int) for well-formed input, Err otherwise.
 /// Complexity: O(n), n = string length.
-pub fn from_str_int(s: Str) -> Result[Int, Str] {
+pub fn from_str_int(s: Str) -> Result[Int, Str]
+  ensures: (s.len() == 0) => (result.is_err == true)
+{
   return parse.parse_int(s);
 }
 
@@ -26,7 +28,9 @@ pub fn from_str_int(s: Str) -> Result[Int, Str] {
 /// Parameters: s -- the decimal float string (optional sign, '.', 'e'/'E').
 /// Returns: Ok(Float64) for well-formed input, Err otherwise.
 /// Complexity: O(n), n = string length.
-pub fn from_str_float(s: Str) -> Result[Float64, Str] {
+pub fn from_str_float(s: Str) -> Result[Float64, Str]
+  ensures: (s.len() == 0) => (result.is_err == true)
+{
   return parse.parse_float(s);
 }
 
@@ -35,6 +39,9 @@ pub fn from_str_float(s: Str) -> Result[Float64, Str] {
 /// Returns: Some(true) for "true", Some(false) for "false" (exact, case
 ///          sensitive), None otherwise.
 /// Complexity: O(1).
-pub fn from_str_bool(s: Str) -> Option[Bool] {
+pub fn from_str_bool(s: Str) -> Option[Bool]
+  ensures: (s == "true") => (result.is_some == true)
+  ensures: ((s != "true") && (s != "false")) => (result.is_none == true)
+{
   return parse.parse_bool(s);
 }

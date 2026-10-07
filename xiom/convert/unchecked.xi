@@ -13,23 +13,31 @@ module xiom.convert.unchecked
 // ============================================================================
 
 /// a + b without overflow checking (wraps). Complexity: O(1).
-pub fn unchecked_add(a: Int, b: Int) -> Int {
+pub fn unchecked_add(a: Int, b: Int) -> Int
+  ensures: (b == 0) => (result == a)
+{
   a + b
 }
 
 /// a - b without overflow checking (wraps). Complexity: O(1).
-pub fn unchecked_sub(a: Int, b: Int) -> Int {
+pub fn unchecked_sub(a: Int, b: Int) -> Int
+  ensures: (b == 0) => (result == a)
+{
   a - b
 }
 
 /// a * b without overflow checking (wraps). Complexity: O(1).
-pub fn unchecked_mul(a: Int, b: Int) -> Int {
+pub fn unchecked_mul(a: Int, b: Int) -> Int
+  ensures: (b == 1) => (result == a)
+{
   a * b
 }
 
 /// a << n without overflow checking (discards shifted-out bits); n is masked
 /// to [0, 64). Complexity: O(1).
-pub fn unchecked_shl(a: Int, n: Int) -> Int {
+pub fn unchecked_shl(a: Int, n: Int) -> Int
+  ensures: (n == 0) => (result == a)
+{
   var k = n % 64;
   if k < 0 {
     k = k + 64;
@@ -39,7 +47,9 @@ pub fn unchecked_shl(a: Int, n: Int) -> Int {
 
 /// a >> n (arithmetic) without overflow checking; n is masked to [0, 64).
 /// Complexity: O(1).
-pub fn unchecked_shr(a: Int, n: Int) -> Int {
+pub fn unchecked_shr(a: Int, n: Int) -> Int
+  ensures: (n == 0) => (result == a)
+{
   var k = n % 64;
   if k < 0 {
     k = k + 64;

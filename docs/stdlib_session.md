@@ -4,14 +4,14 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 -->
 # XIOM Stdlib Session -- Handoff
 
-## 0A. CONTINUE HERE -- handoff snapshot 16 (updated 2026-10-07, v0.64.0 pin complete, wave 78 complete)
+## 0A. CONTINUE HERE -- handoff snapshot 16 (updated 2026-10-07, v0.64.0 pin complete, wave 79 complete)
 
 **PASTE-READY PROMPT FOR THE NEXT SESSION (copy this block):**
 
 ---
 You are continuing the XIOM stdlib lane. Worktree `E:\xiom-lang\stdlib`,
-branch `main`. Read `docs/stdlib_session.md` blocks 49 (latest), 48, 47,
-46, 45, 44, 43
+branch `main`. Read `docs/stdlib_session.md` blocks 50 (latest), 49, 48,
+47, 46, 45, 44, 43
 (publish), 27 (iter block) and `docs/PRODUCTION_READINESS_QUEUE.md`
 before acting; snapshot 5 below the prompt keeps the deep protocol lore.
 
@@ -22,17 +22,20 @@ kept. Registry carries xiom-std 0.62.3, 0.62.4 and 0.63.0 (0.63.1 publish
 pending); tags pushed: stdlib-v0.62.3 (12a3a1b), stdlib-v0.62.4 (3800c08),
 stdlib-v0.63.0 (179cfea).
 Gates on v0.64.0: release corpus 953/953 FULL (m196 loopback smoke added),
-modules 509/509, probes 244/244, barename 0/509, floors115, module-smoke
-ratchet OK. Coverage = 52.5% global
-pub-with-clause. Waves landed: 63 net+hash, 64 reflect+iter adapters, 65x convert, 66 time, 67 format, 68 misc, 69 os+rand, 70 crypto, 71 log, 72 compress, 73 pin, 74 encoding, 75 encoding-rem+debug, 76 simd, 64.0 pin, 77 stats, Pulse hardening (write_all/server_parse_request/hmac_sha256_hex), 78 thread. Wave
+modules 509/509, probes 245/245, barename 0/509, floors116, module-smoke
+ratchet OK. Coverage = 53.1% global
+pub-with-clause. Waves landed: 63 net+hash, 64 reflect+iter adapters, 65x convert, 66 time, 67 format, 68 misc, 69 os+rand, 70 crypto, 71 log, 72 compress, 73 pin, 74 encoding, 75 encoding-rem+debug, 76 simd, 64.0 pin, 77 stats, Pulse hardening (write_all/server_parse_request/hmac_sha256_hex), 78 thread, 79 convert numeric shims. Wave
 65 (iter clauses) is DEFERRED but pin-unblocked (block 27): the C001
 classifier is fixed on v0.63.1 and clauses may read tuple components; the
 deferred clause set (Range core 7 + chain 14 + fold 8 + iter_collect) is documented there.
 
-FIRST TASK (wave 79): convert 25.6% (305 pub, 86 clauses) -- batch within
-the 40-60-pub directive, multiple waves expected; then the remaining low
-dirs (async 4.5%, serialize 5.4%, iter 18.6% -- clause-side blocked,
-bench 18.8%, os 26.2%, core 26.7%, format 27.3%, sync 29.1%, sort 31.9%).
+FIRST TASK (wave 80): convert remainder -- base-codec shims (base16 4,
+base32 4, base58 6, base62 4, base64url 4, ascii85 4, uuencode 7,
+quotedprintable 6, percent 4 = 43 pub) batch within the 40-60-pub
+directive; then the utf16/utf32/utf/lossy families; remaining low dirs
+after that (async 4.5%, serialize 5.4%, iter 18.6% -- clause-side
+blocked, bench 18.8%, os 26.2%, core 26.7%, format 27.3%, sync 29.1%,
+sort 31.9%).
 PENDING/QUEUED:
 (a) iter clause retry: DONE as red on v0.64.0 (block 46); re-retry the
 deferred set (Range core 7 + chain 14 + fold 8 + iter_collect) when the
@@ -57,7 +60,7 @@ Mandatory protocol:
 (no unsigned `>= 0`, no `is_ok || is_err`, no self-mirrors); clauses run at
 runtime, so never read Result/Option payloads, guard division/NaN, and
 prefer exact mirrors, length/presence bands and `@pre` invariants.
-(2) probe-first: add `tools/probes/p_wave79_shapes.xi` exercising every
+(2) probe-first: add `tools/probes/p_wave80_shapes.xi` exercising every
 clause-guard path; bind module-returned values to `let` before comparing
 (inline unsigned compares misread high bits; inline indexing of a
 returned Vec[Float64] reads garbage -- bind it first); bind `Vec.new()`
@@ -65,12 +68,12 @@ temporaries passed as `&Vec`; do not declare externs for runtime guard
 symbols; green on v0.64.0 (v0.63.1 cross-check when cheap).
 (3) apply, run targeted smokes; if unrelated codegen breaks, bisect and
 drop the offending clause with a code comment (see blocks 27/65x).
-(4) dump `tools/coverage_floors116.json`, wire the workflows +
+(4) dump `tools/coverage_floors117.json`, wire the workflows +
 `tools/README.md`, update plan/session/queue in the same commit, YAML
 check, pure-ASCII conventional commit.
 (5) battery: `run_smokes.ps1 -ExcludeFile tools/known_failures/
-gate-exclusions.txt` (expect 953/953 full), probe corpus (expect 245),
-check_modules 509/509, barename 0/509, floors116 + module-smoke ratchets;
+gate-exclusions.txt` (expect 953/953 full), probe corpus (expect 246),
+check_modules 509/509, barename 0/509, floors117 + module-smoke ratchets;
 record results in the session block; push `main`.
 
 QUEUED (do only when triggered):
@@ -1599,6 +1602,27 @@ registry pin, agent recon for the rest)**
   gates; open: contract coverage 100%, zero open findings, beta-exit release
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
+
+**SESSION 2026-10-07 block 50 (wave 79: convert numeric shims; floors116)**
+- Wave 79: 57 clauses / 40 new pub -- parse 5 (empty-string Err guards;
+  parse_bool/parse_char presence), int 8 (zero/negative formatting,
+  invalid radix, base wrappers), toint 2 (NaN -> 0 and >= 2^63 -> INT_MAX
+  saturating; checked is_none guards + is_some range), itos 3 (zero
+  mirror, width guard at n == 0, signed plus-len), atoi 3 (empty -> 0,
+  invalid radix -> 0, atoi_or empty -> default), fromstr 3, ftos 3
+  (nan/inf/-inf branch mirrors + len >= 1), tofloat 3, unchecked 5
+  (b == 0/1, n == 0 identities), saturating 5 (b == 0/1, abs mirror,
+  pow e <= 0 / a == 1). Skips documented: to_int (undefined for NaN/
+  out-of-range), to_int_from_char (char-cast clause avoided),
+  overflow.xi (compiler tuple+Bool codegen, must not be called).
+- Probe p_wave79_shapes.xi (245th, 95 checks): green on v0.64.0 pre- and
+  post-clauses; targeted smokes smoke_convert_int_str,
+  smoke_convert_float_str, smoke_convert_bool_str 1/1 each. convert 25.6%
+  -> 38.7%, global 52.5% -> 53.1%, meter 75.3%; floors116 wired.
+- Battery on this commit (v0.64.0): release corpus 953/953 full (654.5s,
+  no exclusions); probes 245/245 (258.5s); check_modules 509/509 (153.3s);
+  barename 0/509 (234.4s); floors116 + module-smoke (497/517, 3477/6202)
+  ratchets OK.
 
 **SESSION 2026-10-07 block 49 (wave 78: thread clauses; floors115)**
 - Wave 78: 27 clauses / 24 new pub -- thread 8 (Thread.id field mirror,

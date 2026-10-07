@@ -1178,8 +1178,17 @@ T1/T2 yields.
         checks) green on v0.64.0 pre/post; targeted smokes smoke_thread
         1/1, smoke_collect_threadpool 1/1. Next: convert 25.6% (multiple
         waves), then the remaining low dirs.
+        Wave 79 (2026-10-07): coverage wave 42 -- convert numeric shims,
+        57 clauses / 40 new pub (parse 5, int 8, toint 2, itos 3, atoi 3,
+        fromstr 3, ftos 3, tofloat 3, unchecked 5, saturating 5). convert
+        25.6% -> 38.7%, global 52.5% -> 53.1%, meter 75.3%; floors116.
+        Probe p_wave79_shapes.xi (245th, 95 checks) green on v0.64.0
+        pre/post; targeted smokes convert int/float/bool str 1/1. Skips:
+        to_int (undefined NaN/range), to_int_from_char, overflow.xi
+        (compiler tuple+Bool). Next: convert remainder -- base-codec shims
+        (43 pub), then utf16/utf32/utf/lossy families.
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors115.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors116.json
        tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;

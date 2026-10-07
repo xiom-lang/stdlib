@@ -42,14 +42,18 @@ fn _magnitude(n: Int) -> Str {
 }
 
 /// Integer-to-string shorthand (decimal). Complexity: O(log_10 |n|).
-pub fn itos(n: Int) -> Str {
+pub fn itos(n: Int) -> Str
+  ensures: (n == 0) => (result == "0")
+{
   to_string(n)
 }
 
 /// Integer-to-string with zero padding to `width` characters (printf %0Nd
 /// style: the sign, if any, precedes the padding). Widths smaller than the
 /// digit count are ignored. Complexity: O(width).
-pub fn itos_padded(n: Int, width: Int) -> Str {
+pub fn itos_padded(n: Int, width: Int) -> Str
+  ensures: (width > 0 && n == 0) => (result.len() >= width)
+{
   if width <= 0 {
     return to_string(n);
   };
@@ -72,7 +76,10 @@ pub fn itos_padded(n: Int, width: Int) -> Str {
 
 /// Integer-to-string with an explicit sign: positive values get a '+'
 /// prefix; zero and negative values render normally. Complexity: O(log_10 n).
-pub fn itos_signed(n: Int) -> Str {
+pub fn itos_signed(n: Int) -> Str
+  ensures: (n == 0) => (result == "0")
+  ensures: (n > 0) => (result.len() >= 2)
+{
   if n > 0 {
     return string.str_concat("+", to_string(n));
   };

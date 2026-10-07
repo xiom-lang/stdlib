@@ -14,6 +14,7 @@ module xiom.convert.toint
 // ============================================================================
 
 use xiom.num;
+use xiom.core.INT_MAX;
 
 /// Truncates a float toward zero. Behavior for NaN and out-of-range values is
 /// undefined (use the checked/saturating variants for those inputs).
@@ -24,13 +25,21 @@ pub fn to_int(n: Float64) -> Int {
 
 /// Truncates a float toward zero, clamping to INT_MAX/INT_MIN on overflow.
 /// NaN yields 0. Complexity: O(1).
-pub fn to_int_saturating(f: Float64) -> Int {
+pub fn to_int_saturating(f: Float64) -> Int
+  ensures: (f != f) => (result == 0)
+  ensures: (f >= 9223372036854775808.0) => (result == INT_MAX)
+{
   num.f64_trunc_to_int(f)
 }
 
 /// Truncates a float toward zero only when the result fits an Int. Returns
 /// None for NaN or values outside [INT_MIN, INT_MAX). Complexity: O(1).
-pub fn to_int_checked(f: Float64) -> Option[Int] {
+pub fn to_int_checked(f: Float64) -> Option[Int]
+  ensures: (f != f) => (result.is_none == true)
+  ensures: (f >= 9223372036854775808.0) => (result.is_none == true)
+  ensures: (f < -9223372036854775808.0) => (result.is_none == true)
+  ensures: (result.is_some == true) => (f >= -9223372036854775808.0 && f < 9223372036854775808.0)
+{
   if f != f {
     return None;
   };

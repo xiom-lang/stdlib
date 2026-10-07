@@ -18,23 +18,31 @@ use xiom.core.INT_MAX;
 use xiom.core.INT_MIN;
 
 /// a + b, clamping at INT_MAX/INT_MIN on overflow. Complexity: O(1).
-pub fn saturating_add(a: Int, b: Int) -> Int {
+pub fn saturating_add(a: Int, b: Int) -> Int
+  ensures: (b == 0) => (result == a)
+{
   num.i64_add_sat(a, b)
 }
 
 /// a - b, clamping at INT_MAX/INT_MIN on overflow. Complexity: O(1).
-pub fn saturating_sub(a: Int, b: Int) -> Int {
+pub fn saturating_sub(a: Int, b: Int) -> Int
+  ensures: (b == 0) => (result == a)
+{
   num.i64_sub_sat(a, b)
 }
 
 /// a * b, clamping at INT_MAX/INT_MIN on overflow. Complexity: O(1).
-pub fn saturating_mul(a: Int, b: Int) -> Int {
+pub fn saturating_mul(a: Int, b: Int) -> Int
+  ensures: (b == 1) => (result == a)
+{
   num.i64_mul_sat(a, b)
 }
 
 /// |a|, clamping to INT_MAX when a == INT_MIN (no positive representation).
 /// Complexity: O(1).
-pub fn saturating_abs(a: Int) -> Int {
+pub fn saturating_abs(a: Int) -> Int
+  ensures: (a >= 0) => (result == a)
+{
   if a == INT_MIN {
     return INT_MAX;
   };
@@ -46,7 +54,10 @@ pub fn saturating_abs(a: Int) -> Int {
 
 /// a^e via square-and-multiply, clamping at INT_MAX/INT_MIN on overflow.
 /// Negative exponents yield 1 (documented). Complexity: O(log e).
-pub fn saturating_pow(a: Int, e: Int) -> Int {
+pub fn saturating_pow(a: Int, e: Int) -> Int
+  ensures: (e <= 0) => (result == 1)
+  ensures: (a == 1) => (result == 1)
+{
   if e <= 0 {
     return 1;
   };

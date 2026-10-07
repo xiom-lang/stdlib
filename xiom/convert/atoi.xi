@@ -92,7 +92,9 @@ fn _atoi_radix(s: Str, radix: Int) -> (Int, Int) {
 /// leading whitespace is skipped, an optional sign is accepted, and parsing
 /// stops at the first non-digit. Overflow clamps to INT_MAX/INT_MIN.
 /// Complexity: O(n), n = string length.
-pub fn atoi(s: Str) -> Int {
+pub fn atoi(s: Str) -> Int
+  ensures: (s.len() == 0) => (result == 0)
+{
   var r = _atoi_radix(s, 10);
   r.0
 }
@@ -100,7 +102,9 @@ pub fn atoi(s: Str) -> Int {
 /// Parses an integer in the given radix (2-36), returning zero on failure or
 /// an invalid radix. C-style prefix skipping; overflow clamps.
 /// Complexity: O(n), n = string length.
-pub fn atoi_radix(s: Str, radix: Int) -> Int {
+pub fn atoi_radix(s: Str, radix: Int) -> Int
+  ensures: (radix < 2 || radix > 36) => (result == 0)
+{
   if radix < 2 || radix > 36 {
     return 0;
   };
@@ -111,7 +115,9 @@ pub fn atoi_radix(s: Str, radix: Int) -> Int {
 /// Parses a decimal integer with a fallback value: returns `default` when no
 /// digits can be parsed (a genuine "0" still returns 0).
 /// Complexity: O(n), n = string length.
-pub fn atoi_or(s: Str, default: Int) -> Int {
+pub fn atoi_or(s: Str, default: Int) -> Int
+  ensures: (s.len() == 0) => (result == default)
+{
   var r = _atoi_radix(s, 10);
   if r.1 == 1 {
     return r.0;

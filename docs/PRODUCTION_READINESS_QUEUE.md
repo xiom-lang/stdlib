@@ -1,9 +1,9 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
-**75.2% -- 7 of 10 gates complete; gate 8 at 52.5% (partial credit) and
+**75.3% -- 7 of 10 gates complete; gate 8 at 53.1% (partial credit) and
 gates 9-10 discrete.** (Compiler pin: **v0.64.0**.)
 **Gates: corpus 953/953 full (C001 carve-outs retired on v0.63.1; new
-TcpStream loopback smoke added), modules 509/509, probes 244/244,
+TcpStream loopback smoke added), modules 509/509, probes 245/245,
 barename 0/509.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
@@ -14,27 +14,27 @@ gates flip:
    full, no carve-outs (C001 fixed by 4bf8cf1e; 20/20 + 20/20 stress).
    lz4 is fixed by m190 and stayed in the gate; the new TcpStream loopback
    smoke locks m196.
-3. Probe corpus green -- MET (244/244 on v0.64.0, incl. the promoted
+3. Probe corpus green -- MET (245/245 on v0.64.0, incl. the promoted
    regression probes, the pin locks, the v0.64.0 m193-m196 probe, the
-   wave-77 stats probe, the Pulse hardening probe and the wave-78 thread
-   probe).
+   wave-77 stats probe, the Pulse hardening probe, the wave-78 thread
+   probe and the wave-79 convert probe).
 4. Strict bare-name scan clean -- MET (0/509).
-5. Coverage ratchet green -- MET (floors115).
+5. Coverage ratchet green -- MET (floors116).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (497/517 modules, 3475/6200 fns).
-8. Contract coverage 100% (every public fn carries clauses) -- OPEN (52.5%).
+8. Contract coverage 100% (every public fn carries clauses) -- OPEN (53.1%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
    OPEN (10: 9 compiler, 1 stdlib algorithm).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
 
 Meter formula: MET gates count 1.0; gate 8 counts its current
-pub-with-clause fraction (52.5% -> 0.525); gates 9 and 10 get no partial
+pub-with-clause fraction (53.1% -> 0.531); gates 9 and 10 get no partial
 credit (discrete). Update the percentage and the gate-8 fraction in the
 same commit as each floors dump so the meter moves smoothly toward 80%.
 
 Authoritative order: the gates above, then the updates below newest-first.
-Current state: compiler pin v0.64.0; coverage 52.5%, meter 75.2%; handoff
-in `docs/stdlib_session.md` snapshot 16 (block 49).
+Current state: compiler pin v0.64.0; coverage 53.1%, meter 75.3%; handoff
+in `docs/stdlib_session.md` snapshot 16 (block 50).
 
 ## Project Pulse relay (web-framework lane) -- 2026-10-05
 
@@ -626,6 +626,25 @@ compiler-owned for v0.64.1; Box stays section C. floors113 (global
 51.4%, reflect 100%); meter 75.1%. Battery on v0.64.0: corpus 953/953,
 probes 241/241, modules 509/509, barename 0/509, floors113 +
 module-smoke ratchets OK.
+
+Update 2026-10-07 (wave 79 landed): convert numeric shims --
+57 clauses / 40 new pub (parse 5, int 8, toint 2, itos 3, atoi 3,
+fromstr 3, ftos 3, tofloat 3, unchecked 5, saturating 5). convert 25.6%
+-> 38.7%, global 52.5% -> 53.1%; meter 75.3%; floors116. Clause forms:
+empty-string Err/None guards through the parse/delegate stack,
+zero/negative formatting mirrors, invalid-radix empty/zero claims,
+toint NaN/range clamps (f != f => 0; >= 2^63 => INT_MAX; checked is_none
+guards + is_some range), itos width >= guard at n == 0, atoi C-style
+zero-on-empty, ftos nan/inf/-inf branch mirrors plus len >= 1, unchecked
+`b == 0/1` and `n == 0` identities, saturating b == 0/1, abs mirror and
+pow e <= 0 / a == 1. Skips: to_int (undefined for NaN/out-of-range),
+to_int_from_char (char-cast clause avoided), overflow.xi
+(compiler-blocked tuple+Bool codegen, must not be called). Probe
+p_wave79_shapes.xi (245th, 95 checks) green on v0.64.0 pre/post;
+targeted smokes smoke_convert_int_str / float_str / bool_str 1/1 each.
+Readiness next: convert remainder -- base-codec shims (base16/base32/
+base58/base62/base64url/ascii85/uuencode/quotedprintable/percent,
+43 pub), then the utf16/utf32/utf/lossy families.
 
 Update 2026-10-07 (wave 78 landed): thread --
 27 clauses / 24 new pub (thread 8, spawn 5, pool 8, park 1, local 5;

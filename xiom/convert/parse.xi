@@ -20,7 +20,9 @@ use xiom.core.INT_MAX;
 /// Parses a decimal integer string. An optional leading '-'/'+' is accepted.
 /// Returns Err on an empty string, an invalid character, or overflow.
 /// Complexity: O(n), n = string length.
-pub fn parse_int(s: Str) -> Result[Int, Str] {
+pub fn parse_int(s: Str) -> Result[Int, Str]
+  ensures: (s.len() == 0) => (result.is_err == true)
+{
   _parse_int_radix(s, 10)
 }
 
@@ -28,7 +30,10 @@ pub fn parse_int(s: Str) -> Result[Int, Str] {
 /// accepted). An optional leading '-'/'+' is accepted. Returns Err on an
 /// invalid radix, an empty string, an invalid digit, a digit out of range
 /// for the radix, or overflow. Complexity: O(n), n = string length.
-pub fn parse_int_radix(s: Str, radix: Int) -> Result[Int, Str] {
+pub fn parse_int_radix(s: Str, radix: Int) -> Result[Int, Str]
+  ensures: (radix < 2 || radix > 36) => (result.is_err == true)
+  ensures: (s.len() == 0) => (result.is_err == true)
+{
   if radix < 2 || radix > 36 {
     return Err("invalid radix");
   };
@@ -88,7 +93,9 @@ fn _digit_value(c: UInt8) -> Int {
 /// point, and an 'e'/'E' exponent. Returns Err on empty input, missing
 /// digits, invalid characters, multiple decimal points, or a malformed
 /// exponent. Complexity: O(n), n = string length.
-pub fn parse_float(s: Str) -> Result[Float64, Str] {
+pub fn parse_float(s: Str) -> Result[Float64, Str]
+  ensures: (s.len() == 0) => (result.is_err == true)
+{
   let len = s.len();
   if len == 0 {
     return Err("empty string");
@@ -194,7 +201,10 @@ pub fn parse_float(s: Str) -> Result[Float64, Str] {
 
 /// Parses "true" or "false" (exact, case-sensitive). Returns None otherwise.
 /// Complexity: O(1).
-pub fn parse_bool(s: Str) -> Option[Bool] {
+pub fn parse_bool(s: Str) -> Option[Bool]
+  ensures: (s == "true") => (result.is_some == true)
+  ensures: ((s != "true") && (s != "false")) => (result.is_none == true)
+{
   if s == "true" {
     return Some(true);
   };
@@ -207,7 +217,9 @@ pub fn parse_bool(s: Str) -> Option[Bool] {
 /// Returns the first character of a single-character string. Returns None for
 /// an empty string or a multi-character string (documented: this helper
 /// parses exactly one character). Complexity: O(1).
-pub fn parse_char(s: Str) -> Option[Char] {
+pub fn parse_char(s: Str) -> Option[Char]
+  ensures: (s.len() != 1) => (result.is_none == true)
+{
   let len = s.len();
   if len != 1 {
     return None;

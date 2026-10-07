@@ -27,7 +27,10 @@ use xiom.convert.parse;
 /// Parameters: n -- the integer value.
 /// Returns: the decimal representation.
 /// Complexity: O(log_10 |n|).
-pub fn int_to_string(n: Int) -> Str {
+pub fn int_to_string(n: Int) -> Str
+  ensures: (n == 0) => (result == "0")
+  ensures: (n < 0) => (result.len() >= 2)
+{
   if n == 0 {
     return "0";
   }
@@ -65,7 +68,9 @@ pub fn int_to_string(n: Int) -> Str {
 /// Parameters: s -- the decimal integer string (optional sign).
 /// Returns: Ok(Int) for well-formed input, Err otherwise.
 /// Complexity: O(n), n = string length.
-pub fn string_to_int(s: Str) -> Result[Int, Str] {
+pub fn string_to_int(s: Str) -> Result[Int, Str]
+  ensures: (s.len() == 0) => (result.is_err == true)
+{
   return parse.parse_int(s);
 }
 
@@ -73,7 +78,10 @@ pub fn string_to_int(s: Str) -> Result[Int, Str] {
 /// Parameters: n -- the integer value; base -- the radix.
 /// Returns: the base representation; "" for an invalid radix.
 /// Complexity: O(log_base |n|).
-pub fn int_to_base(n: Int, base: Int) -> Str {
+pub fn int_to_base(n: Int, base: Int) -> Str
+  ensures: (base < 2 || base > 36) => (result == "")
+  ensures: (n == 0 && base >= 2 && base <= 36) => (result == "0")
+{
   if base < 2 || base > 36 {
     return "";
   }
@@ -115,7 +123,9 @@ pub fn int_to_base(n: Int, base: Int) -> Str {
 /// Returns: Ok(Int) for well-formed input, Err for an invalid radix, an
 ///          empty string, an out-of-range digit, or overflow.
 /// Complexity: O(n), n = string length.
-pub fn base_to_int(s: Str, base: Int) -> Result[Int, Str] {
+pub fn base_to_int(s: Str, base: Int) -> Result[Int, Str]
+  ensures: (s.len() == 0) => (result.is_err == true)
+{
   return parse.parse_int_radix(s, base);
 }
 
@@ -123,7 +133,9 @@ pub fn base_to_int(s: Str, base: Int) -> Result[Int, Str] {
 /// Parameters: n -- the integer value.
 /// Returns: the hexadecimal representation ("0" for zero).
 /// Complexity: O(log_16 |n|).
-pub fn int_to_hex(n: Int) -> Str {
+pub fn int_to_hex(n: Int) -> Str
+  ensures: (n == 0) => (result == "0")
+{
   return int_to_base(n, 16);
 }
 
@@ -131,7 +143,9 @@ pub fn int_to_hex(n: Int) -> Str {
 /// Parameters: s -- the hex digit string (both digit cases accepted).
 /// Returns: Ok(Int) for well-formed input, Err otherwise.
 /// Complexity: O(n), n = string length.
-pub fn int_from_hex(s: Str) -> Result[Int, Str] {
+pub fn int_from_hex(s: Str) -> Result[Int, Str]
+  ensures: (s.len() == 0) => (result.is_err == true)
+{
   return parse.parse_int_radix(s, 16);
 }
 
@@ -139,7 +153,9 @@ pub fn int_from_hex(s: Str) -> Result[Int, Str] {
 /// Parameters: n -- the integer value.
 /// Returns: the octal representation ("0" for zero).
 /// Complexity: O(log_8 |n|).
-pub fn int_to_octal(n: Int) -> Str {
+pub fn int_to_octal(n: Int) -> Str
+  ensures: (n == 0) => (result == "0")
+{
   return int_to_base(n, 8);
 }
 
@@ -147,7 +163,9 @@ pub fn int_to_octal(n: Int) -> Str {
 /// Parameters: n -- the integer value.
 /// Returns: the binary representation ("0" for zero).
 /// Complexity: O(log_2 |n|).
-pub fn int_to_binary(n: Int) -> Str {
+pub fn int_to_binary(n: Int) -> Str
+  ensures: (n == 0) => (result == "0")
+{
   return int_to_base(n, 2);
 }
 

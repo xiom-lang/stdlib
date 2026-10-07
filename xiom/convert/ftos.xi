@@ -16,18 +16,30 @@ use xiom.convert;
 
 /// Float-to-string shorthand: 15 significant digits in the canonical fixed /
 /// scientific layout. Handles "nan" and "inf". Complexity: O(|exp10| + 15).
-pub fn ftos(f: Float64) -> Str {
+pub fn ftos(f: Float64) -> Str
+  ensures: result.len() >= 1
+  ensures: (f != f) => (result == "nan")
+  ensures: (f > 1.7976931348623157e308) => (result == "inf")
+{
   convert.float_to_string(f)
 }
 
 /// Float-to-string with exactly `prec` fraction digits (fixed notation,
 /// rounded half away from zero). Complexity: O(prec).
-pub fn ftos_prec(f: Float64, prec: Int) -> Str {
+pub fn ftos_prec(f: Float64, prec: Int) -> Str
+  ensures: (f != f) => (result == "nan")
+  ensures: (f > 1.7976931348623157e308) => (result == "inf")
+  ensures: (f < -1.7976931348623157e308) => (result == "-inf")
+{
   convert.float_to_fixed_str(f, prec)
 }
 
 /// Float-to-string in scientific notation "d.ddde+/-XX" with `prec` fraction
 /// digits. Complexity: O(|exp10| + prec).
-pub fn ftos_sci(f: Float64, prec: Int) -> Str {
+pub fn ftos_sci(f: Float64, prec: Int) -> Str
+  ensures: (f != f) => (result == "nan")
+  ensures: (f > 1.7976931348623157e308) => (result == "inf")
+  ensures: (f < -1.7976931348623157e308) => (result == "-inf")
+{
   convert.float_to_sci_str(f, prec)
 }

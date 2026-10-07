@@ -17,14 +17,18 @@ module xiom.convert.tofloat
 use xiom.string;
 
 /// Widens an integer to a float (exact up to 2^53). Complexity: O(1).
-pub fn to_float(n: Int) -> Float64 {
+pub fn to_float(n: Int) -> Float64
+  ensures: (n == 0) => (result == 0.0)
+{
   n as Float64
 }
 
 /// Parses a string into a float, clamping on failure: malformed input
 /// (empty, no digits, invalid characters) yields 0.0. Supports sign, decimal
 /// point, and 'e'/'E' exponent. Complexity: O(n), n = string length.
-pub fn to_float_saturating(s: Str) -> Float64 {
+pub fn to_float_saturating(s: Str) -> Float64
+  ensures: (s.len() == 0) => (result == 0.0)
+{
   var r = _parse_float(s);
   match r {
     Some(v) => { return v; },
@@ -34,7 +38,9 @@ pub fn to_float_saturating(s: Str) -> Float64 {
 
 /// Parses a string into a float only when the input is well-formed. Returns
 /// None on malformed input. Complexity: O(n), n = string length.
-pub fn to_float_checked(s: Str) -> Option[Float64] {
+pub fn to_float_checked(s: Str) -> Option[Float64]
+  ensures: (s.len() == 0) => (result.is_none == true)
+{
   _parse_float(s)
 }
 
