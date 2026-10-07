@@ -26,7 +26,11 @@ use xiom.convert.parse;
 /// Parameters: f -- the float value.
 /// Returns: the formatted string.
 /// Complexity: O(|exp10| + 15).
-pub fn float_to_string(f: Float64) -> Str {
+pub fn float_to_string(f: Float64) -> Str
+  ensures: (f != f) => (result == "nan")
+  ensures: (f == 0.0) => (result == "0")
+  ensures: (f > 1.7976931348623157e308) => (result == "inf")
+{
   if f != f { return "nan"; }
   if f > 1.7976931348623157e308 { return "inf"; }
   if f < -1.7976931348623157e308 { return "-inf"; }
@@ -58,7 +62,9 @@ pub fn float_to_string(f: Float64) -> Str {
 /// Parameters: s -- the decimal float string (optional sign, '.', 'e'/'E').
 /// Returns: Ok(Float64) for well-formed input, Err otherwise.
 /// Complexity: O(n), n = string length.
-pub fn string_to_float(s: Str) -> Result[Float64, Str] {
+pub fn string_to_float(s: Str) -> Result[Float64, Str]
+  ensures: (s.len() == 0) => (result.is_err == true)
+{
   return parse.parse_float(s);
 }
 
@@ -67,7 +73,10 @@ pub fn string_to_float(s: Str) -> Result[Float64, Str] {
 /// Parameters: f -- the float value; decimals -- the fraction digit count.
 /// Returns: the formatted string.
 /// Complexity: O(decimals).
-pub fn float_to_fixed_str(f: Float64, decimals: Int) -> Str {
+pub fn float_to_fixed_str(f: Float64, decimals: Int) -> Str
+  ensures: (f != f) => (result == "nan")
+  ensures: (f == 0.0 && decimals == 0) => (result == "0")
+{
   var neg = false;
   var v = f;
   if f != f { return "nan"; }
@@ -87,7 +96,10 @@ pub fn float_to_fixed_str(f: Float64, decimals: Int) -> Str {
 /// Parameters: f -- the float value; decimals -- the fraction digit count.
 /// Returns: the formatted string.
 /// Complexity: O(|exp10| + decimals).
-pub fn float_to_sci_str(f: Float64, decimals: Int) -> Str {
+pub fn float_to_sci_str(f: Float64, decimals: Int) -> Str
+  ensures: (f != f) => (result == "nan")
+  ensures: (f == 1.5 && decimals == 1) => (result == "1.5e+00")
+{
   if f != f { return "nan"; }
   if f > 1.7976931348623157e308 { return "inf"; }
   if f < -1.7976931348623157e308 { return "-inf"; }
@@ -113,7 +125,9 @@ pub fn float_to_sci_str(f: Float64, decimals: Int) -> Str {
 /// Returns: the truncated integer. Behavior for NaN/out-of-range input is
 /// undefined (use checked variants elsewhere).
 /// Complexity: O(1).
-pub fn float_to_int(f: Float64) -> Int {
+pub fn float_to_int(f: Float64) -> Int
+  ensures: (f == 0.0) => (result == 0)
+{
   return to_int(f);
 }
 
@@ -121,7 +135,9 @@ pub fn float_to_int(f: Float64) -> Int {
 /// Parameters: n -- the integer value.
 /// Returns: n widened to Float64.
 /// Complexity: O(1).
-pub fn int_to_float(n: Int) -> Float64 {
+pub fn int_to_float(n: Int) -> Float64
+  ensures: (n == 0) => (result == 0.0)
+{
   return to_float(n);
 }
 

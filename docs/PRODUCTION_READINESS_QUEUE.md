@@ -1,10 +1,10 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
-**75.5% -- 7 of 10 gates complete; gate 8 at 55.2% (partial credit) and
+**75.6% -- 7 of 10 gates complete; gate 8 at 55.7% (partial credit) and
 gates 9-10 discrete.** (Compiler pin: **v0.64.0**.)
 **Gates: corpus 954/954 full (C001 carve-outs retired on v0.63.1; new
 TcpStream loopback and uuencode roundtrip smokes added), modules 509/509,
-probes 252/252, barename 0/509.**
+probes 253/253, barename 0/509.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -14,19 +14,19 @@ gates flip:
    full, no carve-outs (C001 fixed by 4bf8cf1e; 20/20 + 20/20 stress).
    lz4 is fixed by m190 and stayed in the gate; the new TcpStream loopback
    smoke locks m196.
-3. Probe corpus green -- MET (252/252 on v0.64.0, incl. the promoted
+3. Probe corpus green -- MET (253/253 on v0.64.0, incl. the promoted
    regression probes, the pin locks, the v0.64.0 m193-m196 probe, the
    wave-77 stats probe, the Pulse hardening probe, the wave-78 thread
    probe, the wave-79 convert probe, the wave-80 base-codec probe, the
    wave-81 unicode probe, the wave-82 codec-guard probe, the wave-83
    codec-tail probe, the wave-84 uri/url/urn probe, the wave-85
-   ip/lossy/network/timestamp probe and the wave-86 convert-locals
-   probe).
+   ip/lossy/network/timestamp probe, the wave-86 convert-locals probe
+   and the wave-87 convert-tails probe).
 4. Strict bare-name scan clean -- MET (0/509).
-5. Coverage ratchet green -- MET (floors123).
+5. Coverage ratchet green -- MET (floors124).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (497/517 modules, 3477/6202 fns).
-8. Contract coverage 100% (every public fn carries clauses) -- OPEN (55.2%).
+8. Contract coverage 100% (every public fn carries clauses) -- OPEN (55.7%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
    OPEN (11: 10 compiler, 1 stdlib algorithm).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
@@ -37,8 +37,8 @@ credit (discrete). Update the percentage and the gate-8 fraction in the
 same commit as each floors dump so the meter moves smoothly toward 80%.
 
 Authoritative order: the gates above, then the updates below newest-first.
-Current state: compiler pin v0.64.0; coverage 55.2%, meter 75.5%; handoff
-in `docs/stdlib_session.md` snapshot 18 (block 60).
+Current state: compiler pin v0.64.0; coverage 55.7%, meter 75.6%; handoff
+in `docs/stdlib_session.md` snapshot 19 (block 62).
 
 ## Project Pulse relay (web-framework lane) -- 2026-10-05
 
@@ -630,6 +630,28 @@ compiler-owned for v0.64.1; Box stays section C. floors113 (global
 51.4%, reflect 100%); meter 75.1%. Battery on v0.64.0: corpus 953/953,
 probes 241/241, modules 509/509, barename 0/509, floors113 +
 module-smoke ratchets OK.
+
+Update 2026-10-07 (wave 87 landed): convert tails -- 52 clauses / 33 new
+pub. Root convert 6 (int_to_float/float_to_int/int_to_string zero pins,
+fixed/sci string pins + the nan branch mirror, bool mirrors) plus the
+int_to_char placeholder `ensures: true` replaced by the OOR-None /
+65-some pins; cstring 2 (null-pointer identities; to_cstring/cstring_copy
+stay clause-free, pointers); float 6 (nan/zero pins, empty -> Err parse
+guard, fixed/sci pins, zero pins on the int<->float legs); json 5 (empty
+identities, `""` quote pin, escape result >= input band); punycode/idna 8
+(empty -> Ok identities on encode/decode/domains/idna and
+idna_is_valid(empty) -> false); strftime 2 (empty/percent/ISO pins);
+strptime 2 (empty -> false, <10 -> false, the full layout pin incl.
+result.date fields); tryfrom 3 (NaN/2^63 Err guards, empty -> Err,
+zero -> Ok). First-pass green at runtime (incl. the nested result.date
+clause). convert 83.3% -> 94.1%, global 55.2% -> 55.7%; meter 75.6%;
+floors124. Probe p_wave87_shapes.xi (253rd, 57 checks) green on v0.64.0
+pre/post; targeted smokes convert float/json/punycode/strftime/try +
+all_directions/identity/narrow 1/1 each. Readiness next: the low dirs
+(async 4.5%, serialize 5.4%, iter 18.6% -- clause-side blocked -- bench
+18.8%, os 26.2%, core 26.7%, format 27.3%); convert leftovers stay
+clause-free by design (overflow compiler-blocked, toint char-casts,
+pointer/generic surfaces).
 
 Update 2026-10-07 (wave 86 landed): convert locals + shims -- 58 clauses
 / 39 new pub. date 5 (date_new field mirror; date_iso8601 10-byte band;

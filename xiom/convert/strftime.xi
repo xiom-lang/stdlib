@@ -23,7 +23,11 @@ use xiom.string;
 /// Parameters: spec -- the format string; d -- the date.
 /// Returns: the formatted string. Unknown conversions pass through literally.
 /// Complexity: O(|spec|).
-pub fn strftime(spec: Str, d: &Date) -> Str {
+pub fn strftime(spec: Str, d: &Date) -> Str
+  ensures: (spec.len() == 0) => (result == "")
+  ensures: (spec == "%%") => (result == "%")
+  ensures: (spec == "%Y-%m-%d" && d.year == 2026 && d.month == 8 && d.day == 12) => (result == "2026-08-12")
+{
   var result = "";
   var i: Int = 0;
   var len = string.str_len(spec);
@@ -87,7 +91,9 @@ pub fn strftime(spec: Str, d: &Date) -> Str {
 /// Parameters: spec -- the format string.
 /// Returns: the formatted string for today's date.
 /// Complexity: O(|spec|).
-pub fn strftime_now(spec: Str) -> Str {
+pub fn strftime_now(spec: Str) -> Str
+  ensures: (spec.len() == 0) => (result == "")
+{
   let d = time.date_now();
   return strftime(spec, &d);
 }

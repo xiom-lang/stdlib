@@ -28,12 +28,16 @@ pub fn identity[T](x: T) -> T
 { x }
 
 /// Common conversions
-pub fn int_to_float(n: Int) -> Float64 {
+pub fn int_to_float(n: Int) -> Float64
+  ensures: (n == 0) => (result == 0.0)
+{
   return to_float(n);
 }
 
 /// Truncate a Float64 toward zero.
-pub fn float_to_int(f: Float64) -> Int {
+pub fn float_to_int(f: Float64) -> Int
+  ensures: (f == 0.0) => (result == 0)
+{
   return to_int(f);
 }
 
@@ -79,7 +83,9 @@ pub fn to_string(n: Int) -> Str
 }
 
 /// Decimal string for an Int (alias of `to_string`; the public idiom).
-pub fn int_to_string(n: Int) -> Str {
+pub fn int_to_string(n: Int) -> Str
+  ensures: (n == 0) => (result == "0")
+{
   return to_string(n);
 }
 
@@ -245,7 +251,11 @@ fn _f64_strip_frac(s: Str) -> Str {
 /// Formats `f` in fixed-point notation with exactly `decimals` fraction digits
 /// (rounded half away from zero). Handles sign, "nan" and "inf".
 /// Complexity: O(decimals).
-pub fn float_to_fixed_str(f: Float64, decimals: Int) -> Str {
+pub fn float_to_fixed_str(f: Float64, decimals: Int) -> Str
+  ensures: (f != f) => (result == "nan")
+  ensures: (f == 0.0 && decimals == 0) => (result == "0")
+  ensures: (f == 1.5 && decimals == 1) => (result == "1.5")
+{
   var neg = false;
   var v = f;
   if f != f { return "nan"; }
@@ -263,7 +273,10 @@ pub fn float_to_fixed_str(f: Float64, decimals: Int) -> Str {
 /// Formats `f` in scientific notation "d.ddde+/-XX" with `decimals` fraction
 /// digits (rounded half away from zero). Handles sign, "nan" and "inf".
 /// Complexity: O(|exp10| + decimals).
-pub fn float_to_sci_str(f: Float64, decimals: Int) -> Str {
+pub fn float_to_sci_str(f: Float64, decimals: Int) -> Str
+  ensures: (f != f) => (result == "nan")
+  ensures: (f == 1.5 && decimals == 1) => (result == "1.5e+00")
+{
   if f != f { return "nan"; }
   if f > 1.7976931348623157e308 { return "inf"; }
   if f < -1.7976931348623157e308 { return "-inf"; }
@@ -319,7 +332,10 @@ pub fn float_to_string(f: Float64) -> Str
 }
 
 /// "true" or "false".
-pub fn bool_to_string(b: Bool) -> Str {
+pub fn bool_to_string(b: Bool) -> Str
+  ensures: (b == true) => (result == "true")
+  ensures: (b == false) => (result == "false")
+{
   if b { return "true"; };
   return "false";
 }
@@ -331,7 +347,8 @@ pub fn char_to_int(c: Char) -> Int {
 
 /// Char for a valid Unicode scalar value, or None.
 pub fn int_to_char(n: Int) -> Option[Char]
-  ensures: true
+  ensures: (n < 0 || n > 1114111) => (result.is_none == true)
+  ensures: (n == 65) => (result.is_some == true)
 {
   if n < 0 || n > 1114111 {
     return Option[Char]{ is_some: false, value: '\0' };

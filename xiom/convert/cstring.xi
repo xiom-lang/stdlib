@@ -22,7 +22,9 @@ extern "C" {
 /// Parameters: ptr -- the address of the C string (0 returns "").
 /// Returns: the XIOM string.
 /// Complexity: O(n), n = string length.
-pub fn from_cstring(ptr: Int) -> Str {
+pub fn from_cstring(ptr: Int) -> Str
+  ensures: (ptr == 0) => (result == "")
+{
   if ptr == 0 {
     return "";
   }
@@ -67,7 +69,9 @@ pub fn to_cstring(s: Str) -> Int {
 /// Parameters: ptr -- the address of the C string (0 returns 0).
 /// Returns: the byte count before the first NUL.
 /// Complexity: O(n).
-pub fn cstring_len(ptr: Int) -> Int {
+pub fn cstring_len(ptr: Int) -> Int
+  ensures: (ptr == 0) => (result == 0)
+{
   if ptr == 0 {
     return 0;
   }

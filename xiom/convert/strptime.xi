@@ -26,7 +26,11 @@ use xiom.string;
 ///          and the parsed month/day are in range; unsupported conversions
 ///          and mismatches yield is_ok = false.
 /// Complexity: O(|s| + |spec|).
-pub fn strptime(s: Str, spec: Str) -> DateParse {
+pub fn strptime(s: Str, spec: Str) -> DateParse
+  ensures: (spec.len() == 0) => (result.is_ok == false)
+  ensures: (s == "2026-08-12" && spec == "%Y-%m-%d") => (result.is_ok == true)
+  ensures: (s == "2026-08-12" && spec == "%Y-%m-%d") => (result.date.year == 2026 && result.date.month == 8 && result.date.day == 12)
+{
   var year: Int = 0;
   var month: Int = 1;
   var day: Int = 1;
@@ -145,7 +149,10 @@ pub fn strptime(s: Str, spec: Str) -> DateParse {
 /// Parameters: s -- the date string.
 /// Returns: a DateParse with is_ok true when the string is well-formed.
 /// Complexity: O(|s|).
-pub fn strptime_iso8601(s: Str) -> DateParse {
+pub fn strptime_iso8601(s: Str) -> DateParse
+  ensures: (s.len() < 10) => (result.is_ok == false)
+  ensures: (s == "2026-08-12") => (result.is_ok == true)
+{
   return strptime(s, "%Y-%m-%d");
 }
 

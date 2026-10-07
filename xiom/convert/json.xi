@@ -22,7 +22,10 @@ use xiom.string;
 /// Parameters: s -- the raw text.
 /// Returns: the escaped text.
 /// Complexity: O(n), n = string length.
-pub fn json_escape(s: Str) -> Str {
+pub fn json_escape(s: Str) -> Str
+  ensures: (s.len() == 0) => (result == "")
+  ensures: result.len() >= s.len()
+{
   var result = "";
   var len = string.str_len(s);
   var i: Int = 0;
@@ -57,7 +60,9 @@ pub fn json_escape(s: Str) -> Str {
 /// Returns: Ok(text) on success; Err on an invalid escape or a truncated
 ///          \u sequence.
 /// Complexity: O(n), n = string length.
-pub fn json_unescape(s: Str) -> Result[Str, Str] {
+pub fn json_unescape(s: Str) -> Result[Str, Str]
+  ensures: (s.len() == 0) => (result.is_ok == true)
+{
   var result = "";
   var len = string.str_len(s);
   var i: Int = 0;
@@ -113,7 +118,9 @@ pub fn json_unescape(s: Str) -> Result[Str, Str] {
 /// Parameters: s -- the raw text.
 /// Returns: the quoted, escaped JSON string literal.
 /// Complexity: O(n).
-pub fn json_quote(s: Str) -> Str {
+pub fn json_quote(s: Str) -> Str
+  ensures: (s.len() == 0) => (result == "\"\"")
+{
   return string.str_concat("\"", string.str_concat(json_escape(s), "\""));
 }
 
@@ -121,7 +128,9 @@ pub fn json_quote(s: Str) -> Str {
 /// Parameters: s -- the candidate JSON text.
 /// Returns: true when the whole input parses as one JSON value.
 /// Complexity: O(n).
-pub fn json_is_valid(s: Str) -> Bool {
+pub fn json_is_valid(s: Str) -> Bool
+  ensures: (s.len() == 0) => (result == false)
+{
   var pos: Int = 0;
   _skip_ws(s, &pos);
   if !_valid_value(s, &pos) {
@@ -136,7 +145,9 @@ pub fn json_is_valid(s: Str) -> Bool {
 /// Returns: Ok(pretty) on success; Err for invalid JSON (unterminated
 ///          string or unbalanced brackets).
 /// Complexity: O(n), n = input length.
-pub fn json_pretty(s: Str) -> Result[Str, Str] {
+pub fn json_pretty(s: Str) -> Result[Str, Str]
+  ensures: (s.len() == 0) => (result.is_ok == true)
+{
   var result = "";
   var len = string.str_len(s);
   var i: Int = 0;

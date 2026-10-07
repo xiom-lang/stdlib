@@ -29,7 +29,9 @@ const _DAMP: Int = 700;
 /// Returns: Ok("xn--...") for a label with non-ASCII code points; Ok(s)
 ///          unchanged when the label is entirely ASCII.
 /// Complexity: O(n^2) worst case, O(n) typical.
-pub fn punycode_encode(s: Str) -> Result[Str, Str] {
+pub fn punycode_encode(s: Str) -> Result[Str, Str]
+  ensures: (s.len() == 0) => (result.is_ok == true)
+{
   var cps = _collect_cps(s);
   var n = cps.len();
   if n == 0 {
@@ -110,7 +112,9 @@ pub fn punycode_encode(s: Str) -> Result[Str, Str] {
 ///          ASCII labels pass through unchanged.
 /// Returns: Ok(Unicode label) on success; Err on malformed input.
 /// Complexity: O(n^2) worst case.
-pub fn punycode_decode(s: Str) -> Result[Str, Str] {
+pub fn punycode_decode(s: Str) -> Result[Str, Str]
+  ensures: (s.len() == 0) => (result.is_ok == true)
+{
   var len = string.str_len(s);
   if len == 0 {
     return Ok("");
@@ -209,7 +213,9 @@ pub fn punycode_decode(s: Str) -> Result[Str, Str] {
 /// Parameters: domain -- a dotted domain (labels separated by '.').
 /// Returns: Ok(encoded domain) on success; Err for an empty label.
 /// Complexity: O(n) labels x encode cost.
-pub fn punycode_encode_domain(domain: Str) -> Result[Str, Str] {
+pub fn punycode_encode_domain(domain: Str) -> Result[Str, Str]
+  ensures: (domain.len() == 0) => (result.is_ok == true)
+{
   var labels = _split(domain, ".");
   var result = "";
   var i: Int = 0;
@@ -231,7 +237,9 @@ pub fn punycode_encode_domain(domain: Str) -> Result[Str, Str] {
 /// Parameters: domain -- a dotted domain.
 /// Returns: Ok(Unicode domain) on success; Err for a malformed label.
 /// Complexity: O(n) labels x decode cost.
-pub fn punycode_decode_domain(domain: Str) -> Result[Str, Str] {
+pub fn punycode_decode_domain(domain: Str) -> Result[Str, Str]
+  ensures: (domain.len() == 0) => (result.is_ok == true)
+{
   var labels = _split(domain, ".");
   var result = "";
   var i: Int = 0;
@@ -253,7 +261,9 @@ pub fn punycode_decode_domain(domain: Str) -> Result[Str, Str] {
 /// Parameters: s -- the Unicode domain.
 /// Returns: Ok(A-label domain) on success; Err for invalid input.
 /// Complexity: O(n).
-pub fn idna_to_ascii(s: Str) -> Result[Str, Str] {
+pub fn idna_to_ascii(s: Str) -> Result[Str, Str]
+  ensures: (s.len() == 0) => (result.is_ok == true)
+{
   var low = _lower(s);
   var enc = punycode_encode_domain(low);
   if !enc.is_ok {
@@ -270,7 +280,9 @@ pub fn idna_to_ascii(s: Str) -> Result[Str, Str] {
 /// Parameters: s -- the A-label domain.
 /// Returns: Ok(U-label domain) on success; Err for invalid input.
 /// Complexity: O(n).
-pub fn idna_to_unicode(s: Str) -> Result[Str, Str] {
+pub fn idna_to_unicode(s: Str) -> Result[Str, Str]
+  ensures: (s.len() == 0) => (result.is_ok == true)
+{
   var dec = punycode_decode_domain(s);
   if !dec.is_ok {
     return Err(dec.error);
@@ -282,7 +294,9 @@ pub fn idna_to_unicode(s: Str) -> Result[Str, Str] {
 /// Parameters: s -- the candidate domain (A-label or U-label).
 /// Returns: true when every label is a valid IDNA label.
 /// Complexity: O(n).
-pub fn idna_is_valid(s: Str) -> Bool {
+pub fn idna_is_valid(s: Str) -> Bool
+  ensures: (s.len() == 0) => (result == false)
+{
   var labels = _split(s, ".");
   var i: Int = 0;
   while i < labels.len() {
@@ -321,7 +335,9 @@ pub fn idna_is_valid(s: Str) -> Bool {
 /// Parameters: s -- the raw domain.
 /// Returns: Ok(normalized) on success; Err when an invalid character remains.
 /// Complexity: O(n).
-pub fn idna_uts46_normalize(s: Str) -> Result[Str, Str] {
+pub fn idna_uts46_normalize(s: Str) -> Result[Str, Str]
+  ensures: (s.len() == 0) => (result.is_ok == true)
+{
   var low = _lower(s);
   var len = string.str_len(low);
   var i: Int = 0;

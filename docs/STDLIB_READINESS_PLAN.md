@@ -1264,8 +1264,27 @@ T1/T2 yields.
         smoke_convert_url 1/1 each. Next: convert tails (float/json/
         punycode/cstring, strftime/strptime, tryfrom/tostring/bytes/
         validate) then the low dirs.
+        Wave 87 (2026-10-07): coverage wave 50 -- convert tails, 52
+        clauses / 33 new pub. Root convert 6 (int_to_float/float_to_int/
+        int_to_string zero pins, fixed/sci string pins + nan branch,
+        bool mirrors; int_to_char's placeholder `ensures: true` replaced
+        with the range-OOR None / 65 some pins), cstring 2 (null-pointer
+        identities), float 6 (nan/zero pins, empty-Err parse guard),
+        json 5 (empty identities, quote pin, escape >= input band),
+        punycode/idna 8 (empty-Ok identities + idna_is_valid => false),
+        strftime 2 (empty/percent/ISO pins), strptime 2 (empty/short
+        guards + layout pin incl. result.date fields), tryfrom 3
+        (NaN/2^63 Err guards, empty-Err, zero-Ok). convert 83.3% ->
+        94.1%, global 55.2% -> 55.7%, meter 75.6%; floors124. Probe
+        p_wave87_shapes.xi (253rd, 57 checks) green on v0.64.0 pre/post;
+        targeted smokes convert float/json/punycode/strftime/try +
+        all_directions/identity/narrow 1/1 each. Next: the low dirs
+        (async 4.5%, serialize 5.4%, iter 18.6% -- clause-side blocked --
+        bench 18.8%, os 26.2%, core 26.7%, format 27.3%) or the convert
+        leftovers (overflow stays compiler-blocked; toint/char-cast and
+        pointer/generic surfaces stay clause-free).
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors123.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors124.json
         tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;

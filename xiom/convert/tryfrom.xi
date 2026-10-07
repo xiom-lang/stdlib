@@ -20,7 +20,9 @@ use xiom.convert.parse;
 /// Parameters: n -- the integer value.
 /// Returns: Ok(Float64) when n fits exactly (|n| <= 2^53), Err otherwise.
 /// Complexity: O(1).
-pub fn try_from_int(n: Int) -> Result[Float64, Str] {
+pub fn try_from_int(n: Int) -> Result[Float64, Str]
+  ensures: (n == 0) => (result.is_ok == true)
+{
   var f = convert.int_to_float(n);
   var back = convert.float_to_int(f);
   if back == n {
@@ -34,7 +36,12 @@ pub fn try_from_int(n: Int) -> Result[Float64, Str] {
 /// Returns: Ok(Int) for finite in-range values, Err for NaN or values
 ///          outside the Int range.
 /// Complexity: O(1).
-pub fn try_from_float(f: Float64) -> Result[Int, Str] {
+pub fn try_from_float(f: Float64) -> Result[Int, Str]
+  ensures: (f != f) => (result.is_err == true)
+  ensures: (f >= 9223372036854775808.0) => (result.is_err == true)
+  ensures: (f < -9223372036854775808.0) => (result.is_err == true)
+  ensures: (f == 0.0) => (result.is_ok == true)
+{
   if f != f {
     return Err("cannot convert NaN to an integer");
   }
@@ -51,6 +58,8 @@ pub fn try_from_float(f: Float64) -> Result[Int, Str] {
 /// Parameters: s -- the decimal integer string (optional sign).
 /// Returns: Ok(Int) for well-formed input, Err otherwise.
 /// Complexity: O(n), n = string length.
-pub fn try_from_str(s: Str) -> Result[Int, Str] {
+pub fn try_from_str(s: Str) -> Result[Int, Str]
+  ensures: (s.len() == 0) => (result.is_err == true)
+{
   return parse.parse_int(s);
 }
