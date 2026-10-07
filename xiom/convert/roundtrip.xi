@@ -19,7 +19,10 @@ use xiom.num.base;
 
 /// True iff s is a canonical decimal integer: parsing it succeeds and
 /// formatting the result reproduces s exactly. Complexity: O(n).
-pub fn roundtrip_int(s: Str) -> Bool {
+pub fn roundtrip_int(s: Str) -> Bool
+  ensures: (s.len() == 0) => (result == false)
+  ensures: (s == "0") => (result == true)
+{
   var r = string.str_to_int(s);
   if !r.is_ok {
     return false;
@@ -34,7 +37,9 @@ pub fn roundtrip_int(s: Str) -> Bool {
 /// True iff parsing s, formatting canonically, and re-parsing yields the same
 /// value (the value is stable under the canonical float formatter).
 /// Complexity: O(n).
-pub fn roundtrip_float(s: Str) -> Bool {
+pub fn roundtrip_float(s: Str) -> Bool
+  ensures: (s.len() == 0) => (result == false)
+{
   var f1 = _parse_float(s);
   match f1 {
     Some(v1) => {
@@ -57,7 +62,10 @@ pub fn roundtrip_float(s: Str) -> Bool {
 
 /// True iff formatting f with exactly `decimals` fraction digits and parsing
 /// the result back reproduces f. Complexity: O(decimals).
-pub fn roundtrip_fixed(f: Float64, decimals: Int) -> Bool {
+pub fn roundtrip_fixed(f: Float64, decimals: Int) -> Bool
+  ensures: (f == 0.0 && decimals == 0) => (result == true)
+  ensures: (f == 1.5 && decimals == 1) => (result == true)
+{
   var formatted = convert.float_to_fixed_str(f, decimals);
   var r = _parse_float(formatted);
   match r {
@@ -72,7 +80,10 @@ pub fn roundtrip_fixed(f: Float64, decimals: Int) -> Bool {
 
 /// True iff formatting n in the given base and parsing it back reproduces n.
 /// Returns false for an invalid base (2-36 required). Complexity: O(log n).
-pub fn roundtrip_base(n: Int, base: Int) -> Bool {
+pub fn roundtrip_base(n: Int, base: Int) -> Bool
+  ensures: (base < 2 || base > 36) => (result == false)
+  ensures: (n == 0 && base >= 2 && base <= 36) => (result == true)
+{
   var formatted = xiom.num.base.to_base(n, base);
   var r = xiom.num.base.from_base(formatted, base);
   if !r.is_ok {

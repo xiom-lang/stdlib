@@ -21,7 +21,9 @@ use xiom.string;
 /// Parameters: year (proleptic Gregorian), month 1..12, day 1..31.
 /// Returns: the constructed Date.
 /// Complexity: O(1).
-pub fn date_new(year: Int, month: Int, day: Int) -> Date {
+pub fn date_new(year: Int, month: Int, day: Int) -> Date
+  ensures: result.year == year && result.month == month && result.day == day
+{
   return Date{ year: year; month: month; day: day; };
 }
 
@@ -37,7 +39,9 @@ pub fn date_now() -> Date {
 /// Parameters: d -- the date to format.
 /// Returns: the formatted string (always 10 bytes).
 /// Complexity: O(1).
-pub fn date_iso8601(d: &Date) -> Str {
+pub fn date_iso8601(d: &Date) -> Str
+  ensures: (d.year >= 0 && d.year <= 9999 && d.month >= 1 && d.month <= 12 && d.day >= 1 && d.day <= 31) => (result.len() == 10)
+{
   var r = _pad4(d.year);
   r = string.str_concat(r, "-");
   r = string.str_concat(r, _pad2(d.month));
@@ -51,7 +55,10 @@ pub fn date_iso8601(d: &Date) -> Str {
 /// Returns: Some(Date) when well-formed and within calendar range,
 ///          None otherwise (malformed layout or out-of-range fields).
 /// Complexity: O(1).
-pub fn date_from_iso8601(s: Str) -> Option[Date] {
+pub fn date_from_iso8601(s: Str) -> Option[Date]
+  ensures: (s.len() != 10) => (result.is_none)
+  ensures: (s == "1970-01-01") => (result.is_some)
+{
   if string.str_len(s) != 10 {
     return None;
   }
@@ -83,7 +90,10 @@ pub fn date_from_iso8601(s: Str) -> Option[Date] {
 /// Parameters: d -- the date.
 /// Returns: weekday index.
 /// Complexity: O(1).
-pub fn date_weekday(d: &Date) -> Int {
+pub fn date_weekday(d: &Date) -> Int
+  ensures: result >= 0 && result <= 6
+  ensures: (d.year == 1970 && d.month == 1 && d.day == 1) => (result == 4)
+{
   return time.date_day_of_week(d.year, d.month, d.day);
 }
 
@@ -91,7 +101,10 @@ pub fn date_weekday(d: &Date) -> Int {
 /// Parameters: d -- the date.
 /// Returns: the day-of-year index.
 /// Complexity: O(month) in the worst case (small constant).
-pub fn date_day_of_year(d: &Date) -> Int {
+pub fn date_day_of_year(d: &Date) -> Int
+  ensures: (d.month >= 1 && d.month <= 12 && d.day >= 1 && d.day <= 31) => (result >= 1 && result <= 366)
+  ensures: (d.year == 2026 && d.month == 8 && d.day == 12) => (result == 224)
+{
   var result = d.day;
   var m: Int = 1;
   while m < d.month {

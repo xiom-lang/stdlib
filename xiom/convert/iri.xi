@@ -27,7 +27,10 @@ pub type Iri = {
 /// Parameters: s -- the IRI string (non-ASCII characters allowed).
 /// Returns: Ok(Iri) on success; Err for an empty IRI.
 /// Complexity: O(n).
-pub fn iri_parse(s: Str) -> Result[Iri, Str] {
+pub fn iri_parse(s: Str) -> Result[Iri, Str]
+  ensures: (s.len() == 0) => (result.is_err == true)
+  ensures: (s.len() > 0) => (result.is_ok == true)
+{
   var len = string.str_len(s);
   if len == 0 {
     return Err("empty IRI");
@@ -93,7 +96,10 @@ pub fn iri_parse(s: Str) -> Result[Iri, Str] {
 /// Parameters: s -- the IRI string.
 /// Returns: Ok(URI) on success; Err for an empty IRI.
 /// Complexity: O(n).
-pub fn iri_to_uri(s: Str) -> Result[Str, Str] {
+pub fn iri_to_uri(s: Str) -> Result[Str, Str]
+  ensures: (s.len() == 0) => (result.is_err == true)
+  ensures: (s.len() > 0) => (result.is_ok == true)
+{
   var parsed = iri_parse(s);
   if !parsed.is_ok {
     return Err(parsed.error);
@@ -121,7 +127,10 @@ pub fn iri_to_uri(s: Str) -> Result[Str, Str] {
 /// Parameters: s -- the IRI string.
 /// Returns: Ok(canonical) on success; Err for an empty IRI.
 /// Complexity: O(n).
-pub fn iri_normalize(s: Str) -> Result[Str, Str] {
+pub fn iri_normalize(s: Str) -> Result[Str, Str]
+  ensures: (s.len() == 0) => (result.is_err == true)
+  ensures: (s.len() > 0) => (result.is_ok == true)
+{
   var parsed = iri_parse(s);
   if !parsed.is_ok {
     return Err(parsed.error);

@@ -18,7 +18,10 @@ use xiom.time;
 /// Parameters: n -- the number of seconds (may be negative).
 /// Returns: a normalized Duration (nanos in [0, 1e9)).
 /// Complexity: O(1).
-pub fn duration_seconds(n: Int) -> Duration {
+pub fn duration_seconds(n: Int) -> Duration
+  ensures: (n == 0) => (result.secs == 0 && result.nanos == 0)
+  ensures: (n == -5) => (result.secs == -5 && result.nanos == 0)
+{
   return time.Duration.from_secs(n);
 }
 
@@ -26,7 +29,10 @@ pub fn duration_seconds(n: Int) -> Duration {
 /// Parameters: n -- the number of milliseconds (may be negative).
 /// Returns: a normalized Duration.
 /// Complexity: O(1).
-pub fn duration_millis(n: Int) -> Duration {
+pub fn duration_millis(n: Int) -> Duration
+  ensures: (n == 0) => (result.secs == 0 && result.nanos == 0)
+  ensures: (n == -1) => (result.secs == -1 && result.nanos == 999000000)
+{
   return time.Duration.from_millis(n);
 }
 
@@ -34,7 +40,10 @@ pub fn duration_millis(n: Int) -> Duration {
 /// Parameters: n -- the number of microseconds (may be negative).
 /// Returns: a normalized Duration.
 /// Complexity: O(1).
-pub fn duration_micros(n: Int) -> Duration {
+pub fn duration_micros(n: Int) -> Duration
+  ensures: (n == 0) => (result.secs == 0 && result.nanos == 0)
+  ensures: (n == 1500000) => (result.secs == 1 && result.nanos == 500000000)
+{
   return time.Duration.from_micros(n);
 }
 
@@ -42,7 +51,10 @@ pub fn duration_micros(n: Int) -> Duration {
 /// Parameters: n -- the number of nanoseconds (may be negative).
 /// Returns: a normalized Duration.
 /// Complexity: O(1).
-pub fn duration_nanos(n: Int) -> Duration {
+pub fn duration_nanos(n: Int) -> Duration
+  ensures: (n == 0) => (result.secs == 0 && result.nanos == 0)
+  ensures: (n == -1) => (result.secs == -1 && result.nanos == 999999999)
+{
   return time.Duration.from_nanos(n);
 }
 
@@ -50,7 +62,9 @@ pub fn duration_nanos(n: Int) -> Duration {
 /// Parameters: d -- the duration.
 /// Returns: the seconds field (sub-second parts dropped).
 /// Complexity: O(1).
-pub fn duration_as_secs(d: Duration) -> Int {
+pub fn duration_as_secs(d: Duration) -> Int
+  ensures: result == d.secs
+{
   return d.as_secs();
 }
 
@@ -58,6 +72,8 @@ pub fn duration_as_secs(d: Duration) -> Int {
 /// Parameters: d -- the duration.
 /// Returns: the total milliseconds (sub-millisecond parts dropped).
 /// Complexity: O(1).
-pub fn duration_as_ms(d: Duration) -> Int {
+pub fn duration_as_ms(d: Duration) -> Int
+  ensures: result == d.secs * 1000 + d.nanos / 1000000
+{
   return d.as_millis();
 }

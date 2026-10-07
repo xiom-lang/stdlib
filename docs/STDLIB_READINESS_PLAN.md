@@ -1244,8 +1244,28 @@ T1/T2 yields.
         smoke_convert_ip, smoke_convert_time, smoke_convert_checked 1/1
         each. Next: convert remaining locals (date/datetime/duration/
         time, wstring/from/into/roundtrip) then the low dirs.
+        Wave 86 (2026-10-07): coverage wave 49 -- convert locals + shims,
+        58 clauses / 39 new pub (date 5: field mirror, ISO length band +
+        <10 None/pin, weekday [0,6] band + epoch pin, day-of-year band +
+        2026-08-12 pin; datetime 3: field mirrors, ISO >= 19 band +
+        epoch string pin, layout guard; duration 6: zero/negative
+        normalization pins + accessor mirrors (secs; secs*1000 +
+        nanos/1e6); time 3: time_of_day [0,86399] band + timestamp pins;
+        wstring 2: null-pointer identities; from 3 / into 2: zero pins +
+        bool mirrors; roundtrip 4: empty/invalid/zero pins; uuid 4 /
+        mac 4: length + layout guards and 36/17/16 length claims;
+        iri 3: empty-Err / nonempty-Ok presences). Clause-free by design:
+        date_now/datetime_now/timestamp_now (system clock), to_wstring
+        (unsafe pointer), from_char (char-cast), into_str (generic
+        display). convert 70.5% -> 83.3%, global 54.6% -> 55.2%, meter
+        75.5%; floors123. Probe p_wave86_shapes.xi (252nd, 72 checks)
+        green on v0.64.0 pre/post; targeted smokes smoke_convert_time,
+        smoke_convert_traits, smoke_convert_checked, smoke_convert_ip,
+        smoke_convert_url 1/1 each. Next: convert tails (float/json/
+        punycode/cstring, strftime/strptime, tryfrom/tostring/bytes/
+        validate) then the low dirs.
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors122.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors123.json
         tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;

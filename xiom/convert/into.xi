@@ -23,7 +23,9 @@ module xiom.convert.into
 /// Returns: the truncated integer. Behavior for NaN/out-of-range input is
 /// undefined (use the checked variants elsewhere).
 /// Complexity: O(1).
-pub fn into_int(n: Float64) -> Int {
+pub fn into_int(n: Float64) -> Int
+  ensures: (n == 0.0) => (result == 0)
+{
   return to_int(n);
 }
 
@@ -31,7 +33,9 @@ pub fn into_int(n: Float64) -> Int {
 /// Parameters: n -- the integer value.
 /// Returns: n widened to Float64.
 /// Complexity: O(1).
-pub fn into_float(n: Int) -> Float64 {
+pub fn into_float(n: Int) -> Float64
+  ensures: (n == 0) => (result == 0.0)
+{
   return to_float(n);
 }
 

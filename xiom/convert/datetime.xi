@@ -20,7 +20,9 @@ use xiom.string;
 /// Returns: a DateTime whose weekday is computed from the calendar date.
 /// No range validation is performed.
 /// Complexity: O(1).
-pub fn datetime_new(year: Int, month: Int, day: Int, hour: Int, minute: Int, second: Int) -> DateTime {
+pub fn datetime_new(year: Int, month: Int, day: Int, hour: Int, minute: Int, second: Int) -> DateTime
+  ensures: result.year == year && result.month == month && result.day == day && result.hour == hour && result.minute == minute && result.second == second
+{
   var w = time.date_day_of_week(year, month, day);
   return DateTime{ year: year; month: month; day: day; hour: hour; minute: minute; second: second; weekday: w; };
 }
@@ -36,7 +38,10 @@ pub fn datetime_now() -> DateTime {
 /// Parameters: dt -- the date-time value.
 /// Returns: the formatted string (always 19 bytes).
 /// Complexity: O(1).
-pub fn datetime_iso8601(dt: &DateTime) -> Str {
+pub fn datetime_iso8601(dt: &DateTime) -> Str
+  ensures: result.len() >= 19
+  ensures: (dt.year == 1970 && dt.month == 1 && dt.day == 1 && dt.hour == 0 && dt.minute == 0 && dt.second == 0) => (result == "1970-01-01T00:00:00")
+{
   var r = _pad4(dt.year);
   r = string.str_concat(r, "-");
   r = string.str_concat(r, _pad2(dt.month));
@@ -55,7 +60,10 @@ pub fn datetime_iso8601(dt: &DateTime) -> Str {
 /// Parameters: s -- the date-time string.
 /// Returns: Some(DateTime) when well-formed and within range, None otherwise.
 /// Complexity: O(1).
-pub fn datetime_from_iso8601(s: Str) -> Option[DateTime] {
+pub fn datetime_from_iso8601(s: Str) -> Option[DateTime]
+  ensures: (s.len() != 19) => (result.is_none)
+  ensures: (s == "1970-01-01T00:00:00") => (result.is_some)
+{
   if string.str_len(s) != 19 {
     return None;
   }

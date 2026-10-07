@@ -23,7 +23,9 @@ extern "C" {
 /// Parameters: ptr -- the address of the UTF-16 wide string (0 returns "").
 /// Returns: the XIOM string.
 /// Complexity: O(n).
-pub fn from_wstring(ptr: Int) -> Str {
+pub fn from_wstring(ptr: Int) -> Str
+  ensures: (ptr == 0) => (result == "")
+{
   if ptr == 0 {
     return "";
   }
@@ -118,7 +120,9 @@ pub fn to_wstring(s: Str) -> Int {
 /// Parameters: ptr -- the address of the UTF-16 wide string (0 returns 0).
 /// Returns: the number of code units before the terminating zero.
 /// Complexity: O(n).
-pub fn wstring_len(ptr: Int) -> Int {
+pub fn wstring_len(ptr: Int) -> Int
+  ensures: (ptr == 0) => (result == 0)
+{
   if ptr == 0 {
     return 0;
   }

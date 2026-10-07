@@ -50,7 +50,9 @@ fn _next_byte() -> UInt8
 ///          (e.g. "aa:bb:cc:dd:ee:ff" or "AA-BB-CC-DD-EE-FF").
 /// Returns: Some(six octets) for a well-formed address, None otherwise.
 /// Complexity: O(1).
-pub fn mac_parse(s: Str) -> Option[Vec[UInt8]] {
+pub fn mac_parse(s: Str) -> Option[Vec[UInt8]]
+  ensures: (s.len() != 17) => (result.is_none)
+{
   if string.str_len(s) != 17 {
     return None;
   }
@@ -79,7 +81,10 @@ pub fn mac_parse(s: Str) -> Option[Vec[UInt8]] {
 /// Parameters: bytes -- at least six octets (only the first six are used).
 /// Returns: the "xx:xx:xx:xx:xx:xx" representation.
 /// Complexity: O(1).
-pub fn mac_to_string(bytes: &Vec[UInt8]) -> Str {
+pub fn mac_to_string(bytes: &Vec[UInt8]) -> Str
+  ensures: (bytes.len() == 0) => (result == "")
+  ensures: (bytes.len() >= 6) => (result.len() == 17)
+{
   var result = "";
   var i: Int = 0;
   while i < 6 && i < bytes.len() {
@@ -100,7 +105,9 @@ pub fn mac_to_string(bytes: &Vec[UInt8]) -> Str {
 /// Parameters: s -- the candidate string.
 /// Returns: true when well-formed.
 /// Complexity: O(1).
-pub fn mac_is_valid(s: Str) -> Bool {
+pub fn mac_is_valid(s: Str) -> Bool
+  ensures: (s.len() != 17) => (result == false)
+{
   var opt = mac_parse(s);
   return opt.is_some;
 }
@@ -108,7 +115,9 @@ pub fn mac_is_valid(s: Str) -> Bool {
 /// Generate a random MAC address string (locally administered, unicast).
 /// Returns: a 17-character MAC address.
 /// Complexity: O(1).
-pub fn mac_random() -> Str {
+pub fn mac_random() -> Str
+  ensures: result.len() == 17
+{
   var bytes = Vec[UInt8].new();
   var i: Int = 0;
   while i < 6 {

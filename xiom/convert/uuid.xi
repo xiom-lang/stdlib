@@ -59,7 +59,9 @@ fn _random_bytes(count: Int) -> Vec[UInt8] {
 /// Generate a random RFC 4122 version 4 UUID string (8-4-4-4-12, lowercase).
 /// Returns: a 36-character UUID string.
 /// Complexity: O(1).
-pub fn uuid_v4() -> Str {
+pub fn uuid_v4() -> Str
+  ensures: result.len() == 36
+{
   var bytes = _random_bytes(16);
   var b6 = bytes[6] as Int;
   var b8 = bytes[8] as Int;
@@ -75,7 +77,9 @@ pub fn uuid_v4() -> Str {
 /// Returns: Some((time_low, time_mid, time_hi_and_version, clock_and_node))
 ///          for a well-formed string, None otherwise.
 /// Complexity: O(1).
-pub fn uuid_parse(s: Str) -> Option[(Int, Int, Int, Int)] {
+pub fn uuid_parse(s: Str) -> Option[(Int, Int, Int, Int)]
+  ensures: (s.len() != 36) => (result.is_none)
+{
   if !uuid_is_valid(s) {
     return None;
   }
@@ -92,7 +96,9 @@ pub fn uuid_parse(s: Str) -> Option[(Int, Int, Int, Int)] {
 /// Parameters: s -- the candidate string.
 /// Returns: true when the layout matches.
 /// Complexity: O(1).
-pub fn uuid_is_valid(s: Str) -> Bool {
+pub fn uuid_is_valid(s: Str) -> Bool
+  ensures: (s.len() != 36) => (result == false)
+{
   if string.str_len(s) != 36 {
     return false;
   }
@@ -126,7 +132,9 @@ pub fn uuid_is_valid(s: Str) -> Bool {
 /// Generate the raw 16 bytes of a random RFC 4122 version 4 UUID.
 /// Returns: 16 bytes with the version (0100) and variant (10) bits set.
 /// Complexity: O(1).
-pub fn uuid_v4_bytes() -> Vec[UInt8] {
+pub fn uuid_v4_bytes() -> Vec[UInt8]
+  ensures: result.len() == 16
+{
   var bytes = _random_bytes(16);
   var b6 = bytes[6] as Int;
   var b8 = bytes[8] as Int;

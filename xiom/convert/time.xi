@@ -18,7 +18,9 @@ use xiom.time;
 /// Seconds since midnight (local time, which this runtime equates to UTC).
 /// Returns: 0..86399.
 /// Complexity: O(1).
-pub fn time_now() -> Int {
+pub fn time_now() -> Int
+  ensures: (result >= 0 && result <= 86399)
+{
   let dt = time.utc_now();
   var seconds = dt.hour * 3600;
   seconds = seconds + dt.minute * 60;
@@ -37,7 +39,11 @@ pub fn timestamp_now() -> Int {
 /// Parameters: ts -- the timestamp.
 /// Returns: the corresponding Date (UTC).
 /// Complexity: O(1).
-pub fn timestamp_to_date(ts: Int) -> Date {
+pub fn timestamp_to_date(ts: Int) -> Date
+  ensures: (ts == 0) => (result.year == 1970 && result.month == 1 && result.day == 1)
+  ensures: (ts == 86400) => (result.year == 1970 && result.month == 1 && result.day == 2)
+  ensures: (ts == -1) => (result.year == 1969 && result.month == 12 && result.day == 31)
+{
   var days = ts / 86400;
   var tod = ts - days * 86400;
   if tod < 0 {
@@ -51,7 +57,9 @@ pub fn timestamp_to_date(ts: Int) -> Date {
 /// Parameters: d -- the date.
 /// Returns: epoch seconds for 00:00:00Z of that date.
 /// Complexity: O(1).
-pub fn date_to_timestamp(d: &Date) -> Int {
+pub fn date_to_timestamp(d: &Date) -> Int
+  ensures: (d.year == 1970 && d.month == 1 && d.day == 1) => (result == 0)
+{
   let days = _days_from_civil(d.year, d.month, d.day);
   return days * 86400;
 }

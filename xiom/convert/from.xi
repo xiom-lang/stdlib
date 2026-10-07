@@ -20,7 +20,9 @@ use xiom.convert;
 /// Parameters: n -- the integer value.
 /// Returns: n widened to Float64.
 /// Complexity: O(1).
-pub fn from_int(n: Int) -> Float64 {
+pub fn from_int(n: Int) -> Float64
+  ensures: (n == 0) => (result == 0.0)
+{
   return convert.int_to_float(n);
 }
 
@@ -29,7 +31,9 @@ pub fn from_int(n: Int) -> Float64 {
 /// Returns: the truncated integer. Behavior for NaN/out-of-range input is
 /// undefined (use the checked variants elsewhere).
 /// Complexity: O(1).
-pub fn from_float(f: Float64) -> Int {
+pub fn from_float(f: Float64) -> Int
+  ensures: (f == 0.0) => (result == 0)
+{
   return convert.float_to_int(f);
 }
 
@@ -45,7 +49,10 @@ pub fn from_char(c: Char) -> Int {
 /// Parameters: b -- the boolean.
 /// Returns: 1 when true, 0 when false.
 /// Complexity: O(1).
-pub fn from_bool(b: Bool) -> Int {
+pub fn from_bool(b: Bool) -> Int
+  ensures: (b == true) => (result == 1)
+  ensures: (b == false) => (result == 0)
+{
   if b {
     return 1;
   }
