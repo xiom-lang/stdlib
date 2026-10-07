@@ -50,7 +50,10 @@ fn _b58_digit(c: UInt8) -> Int {
 /// prefix. Delegates to xiom.num.convert.to_base58 for every value except
 /// INT_MIN, whose exact magnitude rendering is pinned here (num's negation
 /// overflows). Complexity: O(log_58 n).
-pub fn to_base58(value: Int) -> Str {
+pub fn to_base58(value: Int) -> Str
+  ensures: (value == 0) => (result == "1")
+  ensures: (value == INT_MIN) => (result == "-NQm6nKp8qFD")
+{
   if value == -9223372036854775808 {
     return "-NQm6nKp8qFD";
   };
@@ -61,7 +64,9 @@ pub fn to_base58(value: Int) -> Str {
 /// accepted. Returns Err on an empty string, an invalid character, or
 /// overflow. Negative magnitudes accumulate in signed space, so INT_MIN
 /// round-trips exactly. Complexity: O(n), n = string length.
-pub fn from_base58(s: Str) -> Result[Int, Str] {
+pub fn from_base58(s: Str) -> Result[Int, Str]
+  ensures: (s.len() == 0) => (result.is_err == true)
+{
   let slen = s.len();
   if slen == 0 {
     return Err("empty base58 string");
@@ -111,7 +116,9 @@ pub fn from_base58(s: Str) -> Result[Int, Str] {
 /// base 58). Leading zero bytes produce leading '1' characters, matching the
 /// Bitcoin convention. Empty input yields "". Complexity: O(n^2) worst case
 /// (per-byte long division), O(n * log_58(2^8n)) typical.
-pub fn base58_encode(data: &Vec[UInt8]) -> Str {
+pub fn base58_encode(data: &Vec[UInt8]) -> Str
+  ensures: (data.len() == 0) => (result == "")
+{
   let len = data.len();
   if len == 0 {
     return "";

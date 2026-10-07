@@ -145,7 +145,9 @@ pub fn qp_soft_linebreak(s: Str, width: Int) -> Str {
 /// Parameters: s -- the candidate text.
 /// Returns: true when the content is too binary.
 /// Complexity: O(n).
-pub fn qp_is_binary(s: Str) -> Bool {
+pub fn qp_is_binary(s: Str) -> Bool
+  ensures: (s.len() == 0) => (result == false)
+{
   var len = string.str_len(s);
   if len == 0 {
     return false;
@@ -171,7 +173,9 @@ pub fn qp_is_binary(s: Str) -> Bool {
 /// Parameters: b -- the byte.
 /// Returns: a three-character "=HH" string (uppercase hex).
 /// Complexity: O(1).
-pub fn qp_escape_byte(b: UInt8) -> Str {
+pub fn qp_escape_byte(b: UInt8) -> Str
+  ensures: result.len() == 3
+{
   var v = b as Int;
   v = v & 0xFF;
   var result = "=";

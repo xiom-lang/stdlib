@@ -20,24 +20,35 @@ use xiom.encoding.hex as enc_hex;
 
 /// Encodes bytes as a lowercase hexadecimal string (two hex digits per byte).
 /// Empty input yields "". Complexity: O(n).
-pub fn hex_encode(data: &Vec[UInt8]) -> Str {
+pub fn hex_encode(data: &Vec[UInt8]) -> Str
+  ensures: result.len() == data.len() * 2
+{
   return enc_hex.hex_encode(data);
 }
 
 /// Decodes a hexadecimal string back into bytes. Accepts both digit cases.
 /// Returns Err on an odd length or an invalid hex character.
-pub fn hex_decode(s: Str) -> Result[Vec[UInt8], Str] {
+pub fn hex_decode(s: Str) -> Result[Vec[UInt8], Str]
+  ensures: (s.len() % 2 != 0) => (result.is_err == true)
+  ensures: result is Ok => result.len() == s.len() / 2
+{
   return enc_hex.hex_decode(s);
 }
 
 /// Encodes a string's UTF-8 bytes as a lowercase hex string.
-pub fn hex_encode_str(s: Str) -> Str {
+pub fn hex_encode_str(s: Str) -> Str
+  ensures: (s.len() == 0) => (result.len() == 0)
+  ensures: result.len() % 2 == 0
+{
   return enc_hex.hex_encode_str(s);
 }
 
 /// Decodes a hex string into a UTF-8 string. The decoded bytes are copied
 /// verbatim; callers are responsible for UTF-8 validity of their hex input.
 /// Returns Err on invalid hex.
-pub fn hex_decode_str(s: Str) -> Result[Str, Str] {
+pub fn hex_decode_str(s: Str) -> Result[Str, Str]
+  ensures: (s.len() % 2 != 0) => (result.is_err == true)
+  ensures: result is Ok => result.len() <= s.len() / 2
+{
   return enc_hex.hex_decode_str(s);
 }

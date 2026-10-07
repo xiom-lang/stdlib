@@ -1187,8 +1187,18 @@ T1/T2 yields.
         to_int (undefined NaN/range), to_int_from_char, overflow.xi
         (compiler tuple+Bool). Next: convert remainder -- base-codec shims
         (43 pub), then utf16/utf32/utf/lossy families.
+        Wave 80 (2026-10-07): coverage wave 43 -- convert base-codec
+        shims, 40 clauses / 25 new pub (base16 4, base32 4, base64url 4,
+        percent 4, base58 3, base62 3, uuencode 1, quotedprintable 2).
+        convert 38.7% -> 46.9%, global 53.1% -> 53.5%, meter 75.3%;
+        floors117. Protocol finding: `(result.is_ok == true) =>
+        result.len()` does not guard payload reads; the canonical
+        `result is Ok => result.len()` form is required. Probe
+        p_wave80_shapes.xi (246th, 45 checks) green on v0.64.0 pre/post;
+        targeted codec smokes 1/1. Split: local codec bodies + utf family
+        arrive in wave 81.
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors116.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors117.json
        tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;

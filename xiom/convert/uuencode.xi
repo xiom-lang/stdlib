@@ -300,7 +300,10 @@ pub fn xxdecode(s: Str) -> Result[Vec[UInt8], Str] {
 /// Parameters: len -- the input byte count.
 /// Returns: the UU-encoded text length.
 /// Complexity: O(1).
-pub fn uu_encoded_length(len: Int) -> Int {
+pub fn uu_encoded_length(len: Int) -> Int
+  ensures: (len <= 0) => (result == 0)
+  ensures: (len > 0) => (result % 61 == 0)
+{
   if len <= 0 {
     return 0;
   }

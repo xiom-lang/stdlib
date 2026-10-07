@@ -31,7 +31,9 @@ fn _b62_digit(c: UInt8) -> Int {
 /// Converts an integer to its base62 representation ("0-9A-Za-z"). 0 yields
 /// "0"; negatives get a "-" prefix. INT_MIN is rendered exactly via negative-
 /// digit extraction. Complexity: O(log_62 n).
-pub fn to_base62(value: Int) -> Str {
+pub fn to_base62(value: Int) -> Str
+  ensures: (value == 0) => (result == "0")
+{
   if value == 0 {
     return "0";
   };
@@ -69,7 +71,9 @@ pub fn to_base62(value: Int) -> Str {
 /// accepted. Returns Err on an empty string, an invalid character, or
 /// overflow. Negative magnitudes accumulate in signed space, so INT_MIN
 /// round-trips exactly. Complexity: O(n), n = string length.
-pub fn from_base62(s: Str) -> Result[Int, Str] {
+pub fn from_base62(s: Str) -> Result[Int, Str]
+  ensures: (s.len() == 0) => (result.is_err == true)
+{
   let slen = s.len();
   if slen == 0 {
     return Err("empty base62 string");
@@ -118,7 +122,9 @@ pub fn from_base62(s: Str) -> Result[Int, Str] {
 /// Encodes bytes as a base62 string (big-endian base-256 value written in
 /// base 62). Leading zero bytes produce leading '0' characters. Empty input
 /// yields "". Complexity: O(n^2) worst case.
-pub fn base62_encode(data: &Vec[UInt8]) -> Str {
+pub fn base62_encode(data: &Vec[UInt8]) -> Str
+  ensures: (data.len() == 0) => (result == "")
+{
   let len = data.len();
   if len == 0 {
     return "";

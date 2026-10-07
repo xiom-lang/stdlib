@@ -4,14 +4,14 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 -->
 # XIOM Stdlib Session -- Handoff
 
-## 0A. CONTINUE HERE -- handoff snapshot 16 (updated 2026-10-07, v0.64.0 pin complete, wave 79 complete)
+## 0A. CONTINUE HERE -- handoff snapshot 16 (updated 2026-10-07, v0.64.0 pin complete, wave 80 complete)
 
 **PASTE-READY PROMPT FOR THE NEXT SESSION (copy this block):**
 
 ---
 You are continuing the XIOM stdlib lane. Worktree `E:\xiom-lang\stdlib`,
-branch `main`. Read `docs/stdlib_session.md` blocks 50 (latest), 49, 48,
-47, 46, 45, 44, 43
+branch `main`. Read `docs/stdlib_session.md` blocks 51 (latest), 50, 49,
+48, 47, 46, 45, 44, 43
 (publish), 27 (iter block) and `docs/PRODUCTION_READINESS_QUEUE.md`
 before acting; snapshot 5 below the prompt keeps the deep protocol lore.
 
@@ -22,20 +22,20 @@ kept. Registry carries xiom-std 0.62.3, 0.62.4 and 0.63.0 (0.63.1 publish
 pending); tags pushed: stdlib-v0.62.3 (12a3a1b), stdlib-v0.62.4 (3800c08),
 stdlib-v0.63.0 (179cfea).
 Gates on v0.64.0: release corpus 953/953 FULL (m196 loopback smoke added),
-modules 509/509, probes 245/245, barename 0/509, floors116, module-smoke
-ratchet OK. Coverage = 53.1% global
-pub-with-clause. Waves landed: 63 net+hash, 64 reflect+iter adapters, 65x convert, 66 time, 67 format, 68 misc, 69 os+rand, 70 crypto, 71 log, 72 compress, 73 pin, 74 encoding, 75 encoding-rem+debug, 76 simd, 64.0 pin, 77 stats, Pulse hardening (write_all/server_parse_request/hmac_sha256_hex), 78 thread, 79 convert numeric shims. Wave
+modules 509/509, probes 246/246, barename 0/509, floors117, module-smoke
+ratchet OK. Coverage = 53.5% global
+pub-with-clause. Waves landed: 63 net+hash, 64 reflect+iter adapters, 65x convert, 66 time, 67 format, 68 misc, 69 os+rand, 70 crypto, 71 log, 72 compress, 73 pin, 74 encoding, 75 encoding-rem+debug, 76 simd, 64.0 pin, 77 stats, Pulse hardening (write_all/server_parse_request/hmac_sha256_hex), 78 thread, 79 convert numeric shims, 80 convert base shims. Wave
 65 (iter clauses) is DEFERRED but pin-unblocked (block 27): the C001
 classifier is fixed on v0.63.1 and clauses may read tuple components; the
 deferred clause set (Range core 7 + chain 14 + fold 8 + iter_collect) is documented there.
 
-FIRST TASK (wave 80): convert remainder -- base-codec shims (base16 4,
-base32 4, base58 6, base62 4, base64url 4, ascii85 4, uuencode 7,
-quotedprintable 6, percent 4 = 43 pub) batch within the 40-60-pub
-directive; then the utf16/utf32/utf/lossy families; remaining low dirs
-after that (async 4.5%, serialize 5.4%, iter 18.6% -- clause-side
-blocked, bench 18.8%, os 26.2%, core 26.7%, format 27.3%, sync 29.1%,
-sort 31.9%).
+FIRST TASK (wave 81): convert local codec bodies + utf family -- ascii85
+4, uuencode 6 remaining, quotedprintable 4 remaining, base58 byte/check
+legs 3, base62 byte legs 1, plus utf 14 / utf8 4 / utf16 4 / utf32 4,
+batching within the 40-60-pub directive; then lossy/uri/url/urn/ip
+families and the remaining low dirs (async 4.5%, serialize 5.4%, iter
+18.6% -- clause-side blocked, bench 18.8%, os 26.2%, core 26.7%, format
+27.3%, sync 29.1%, sort 31.9%).
 PENDING/QUEUED:
 (a) iter clause retry: DONE as red on v0.64.0 (block 46); re-retry the
 deferred set (Range core 7 + chain 14 + fold 8 + iter_collect) when the
@@ -60,7 +60,7 @@ Mandatory protocol:
 (no unsigned `>= 0`, no `is_ok || is_err`, no self-mirrors); clauses run at
 runtime, so never read Result/Option payloads, guard division/NaN, and
 prefer exact mirrors, length/presence bands and `@pre` invariants.
-(2) probe-first: add `tools/probes/p_wave80_shapes.xi` exercising every
+(2) probe-first: add `tools/probes/p_wave81_shapes.xi` exercising every
 clause-guard path; bind module-returned values to `let` before comparing
 (inline unsigned compares misread high bits; inline indexing of a
 returned Vec[Float64] reads garbage -- bind it first); bind `Vec.new()`
@@ -68,12 +68,12 @@ temporaries passed as `&Vec`; do not declare externs for runtime guard
 symbols; green on v0.64.0 (v0.63.1 cross-check when cheap).
 (3) apply, run targeted smokes; if unrelated codegen breaks, bisect and
 drop the offending clause with a code comment (see blocks 27/65x).
-(4) dump `tools/coverage_floors117.json`, wire the workflows +
+(4) dump `tools/coverage_floors118.json`, wire the workflows +
 `tools/README.md`, update plan/session/queue in the same commit, YAML
 check, pure-ASCII conventional commit.
 (5) battery: `run_smokes.ps1 -ExcludeFile tools/known_failures/
-gate-exclusions.txt` (expect 953/953 full), probe corpus (expect 246),
-check_modules 509/509, barename 0/509, floors117 + module-smoke ratchets;
+gate-exclusions.txt` (expect 953/953 full), probe corpus (expect 247),
+check_modules 509/509, barename 0/509, floors118 + module-smoke ratchets;
 record results in the session block; push `main`.
 
 QUEUED (do only when triggered):
@@ -1602,6 +1602,31 @@ registry pin, agent recon for the rest)**
   gates; open: contract coverage 100%, zero open findings, beta-exit release
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
+
+**SESSION 2026-10-07 block 51 (wave 80: convert base-codec shims; floors117)**
+- Wave 80: 40 clauses / 25 new pub -- base16 4 (hex 2n identity, odd-len
+  Err, str parity), base32 4 (RFC 4648 length identity, empty-Ok, Ok len
+  bound), base64url 4 (modulo-3 length trio, %4==1 Err, empty-Ok, local
+  str wrappers), percent 4 (>=n / <=3n encode bands, Ok<=2n + empty-Ok),
+  base58 3 (zero -> "1", INT_MIN -> "-NQm6nKp8qFD" pins, empty -> ""),
+  base62 3 (zero -> "0", empty Err, empty -> ""), uuencode 1
+  (uu_encoded_length <=0 -> 0, positive % 61 == 0), quotedprintable 2
+  (qp_is_binary empty -> false, qp_escape_byte len == 3).
+- Protocol finding (probe-caught): `(result.is_ok == true) =>
+  result.len()` violates at runtime -- the guard does not protect the
+  payload read; the canonical `result is Ok => result.len()` form is
+  required (6 clauses switched). Recorded for the protocol lore.
+- Split documented for wave 81: local codec bodies (ascii85 4, uuencode
+  6, quotedprintable 4, base58 byte/check legs 3, base62 byte legs 1)
+  plus the utf/utf8/utf16/utf32 and lossy families.
+- Probe p_wave80_shapes.xi (246th, 45 checks): green on v0.64.0 pre- and
+  post-clauses; targeted smokes base16/base32/base64/percent/base58_62
+  1/1 each. convert 38.7% -> 46.9%, global 53.1% -> 53.5%, meter 75.3%;
+  floors117 wired.
+- Battery on this commit (v0.64.0): release corpus 953/953 full (633.5s,
+  no exclusions); probes 246/246 (340.3s); check_modules 509/509 (542.6s);
+  barename 0/509 (384.8s); floors117 + module-smoke (497/517, 3477/6202)
+  ratchets OK.
 
 **SESSION 2026-10-07 block 50 (wave 79: convert numeric shims; floors116)**
 - Wave 79: 57 clauses / 40 new pub -- parse 5 (empty-string Err guards;

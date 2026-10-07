@@ -20,22 +20,32 @@ use xiom.encoding.base32 as enc32;
 
 /// Encodes bytes as a base32 string (RFC 4648 alphabet A-Z, 2-7), padded
 /// with '=' to a multiple of 8 characters. Complexity: O(n).
-pub fn base32_encode(data: &Vec[UInt8]) -> Str {
+pub fn base32_encode(data: &Vec[UInt8]) -> Str
+  ensures: result.len() == ((data.len() + 4) / 5) * 8
+{
   return enc32.base32_encode(data);
 }
 
 /// Decodes a base32 string to bytes. Returns Err on invalid input.
-pub fn base32_decode(s: Str) -> Result[Vec[UInt8], Str] {
+pub fn base32_decode(s: Str) -> Result[Vec[UInt8], Str]
+  ensures: (s.len() == 0) => (result.is_ok == true)
+  ensures: result is Ok => result.len() <= (s.len() * 5) / 8
+{
   return enc32.base32_decode(s);
 }
 
 /// Encodes bytes as a base32hex string (RFC 4648 S7, alphabet 0-9, A-V),
 /// padded with '='. Complexity: O(n).
-pub fn base32hex_encode(data: &Vec[UInt8]) -> Str {
+pub fn base32hex_encode(data: &Vec[UInt8]) -> Str
+  ensures: result.len() == ((data.len() + 4) / 5) * 8
+{
   return enc32.base32hex_encode(data);
 }
 
 /// Decodes a base32hex string to bytes. Returns Err on invalid input.
-pub fn base32hex_decode(s: Str) -> Result[Vec[UInt8], Str] {
+pub fn base32hex_decode(s: Str) -> Result[Vec[UInt8], Str]
+  ensures: (s.len() == 0) => (result.is_ok == true)
+  ensures: result is Ok => result.len() <= (s.len() * 5) / 8
+{
   return enc32.base32hex_decode(s);
 }

@@ -24,18 +24,28 @@ extern "C" {
 
 /// Encodes bytes as an unpadded URL-safe base64 string (alphabet A-Za-z0-9-_).
 /// Empty input yields "". Complexity: O(n).
-pub fn base64url_encode(data: &Vec[UInt8]) -> Str {
+pub fn base64url_encode(data: &Vec[UInt8]) -> Str
+  ensures: (data.len() % 3 == 0) => (result.len() == ((data.len() + 2) / 3) * 4)
+  ensures: (data.len() % 3 == 1) => (result.len() == ((data.len() + 2) / 3) * 4 - 2)
+  ensures: (data.len() % 3 == 2) => (result.len() == ((data.len() + 2) / 3) * 4 - 1)
+{
   return enc_b64.base64url_encode(data);
 }
 
 /// Decodes an unpadded URL-safe base64 string to bytes. Optional '=' padding
 /// is tolerated. Returns Err on an invalid character. Complexity: O(n).
-pub fn base64url_decode(s: Str) -> Result[Vec[UInt8], Str] {
+pub fn base64url_decode(s: Str) -> Result[Vec[UInt8], Str]
+  ensures: (s.len() % 4 == 1) => (result.is_err == true)
+  ensures: (s.len() == 0) => (result.is_ok == true)
+  ensures: result is Ok => result.len() <= (s.len() * 3) / 4
+{
   return enc_b64.base64url_decode(s);
 }
 
 /// Encodes a string's UTF-8 bytes as URL-safe base64. Complexity: O(n).
-pub fn base64url_encode_str(s: Str) -> Str {
+pub fn base64url_encode_str(s: Str) -> Str
+  ensures: (s.len() == 0) => (result.len() == 0)
+{
   var bytes = Vec[UInt8].new();
   var i: Int = 0;
   let slen = s.len();
@@ -50,7 +60,9 @@ pub fn base64url_encode_str(s: Str) -> Str {
 /// Decodes URL-safe base64 into a UTF-8 string (bytes copied verbatim; the
 /// caller is responsible for the UTF-8 validity of the decoded content).
 /// Returns Err on invalid base64url. Complexity: O(n).
-pub fn base64url_decode_str(s: Str) -> Result[Str, Str] {
+pub fn base64url_decode_str(s: Str) -> Result[Str, Str]
+  ensures: (s.len() == 0) => (result.is_ok == true)
+{
   var r = enc_b64.base64url_decode(s);
   match r {
     Ok(bytes) => {

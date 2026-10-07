@@ -1,9 +1,9 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
-**75.3% -- 7 of 10 gates complete; gate 8 at 53.1% (partial credit) and
+**75.3% -- 7 of 10 gates complete; gate 8 at 53.5% (partial credit) and
 gates 9-10 discrete.** (Compiler pin: **v0.64.0**.)
 **Gates: corpus 953/953 full (C001 carve-outs retired on v0.63.1; new
-TcpStream loopback smoke added), modules 509/509, probes 245/245,
+TcpStream loopback smoke added), modules 509/509, probes 246/246,
 barename 0/509.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
@@ -14,27 +14,27 @@ gates flip:
    full, no carve-outs (C001 fixed by 4bf8cf1e; 20/20 + 20/20 stress).
    lz4 is fixed by m190 and stayed in the gate; the new TcpStream loopback
    smoke locks m196.
-3. Probe corpus green -- MET (245/245 on v0.64.0, incl. the promoted
+3. Probe corpus green -- MET (246/246 on v0.64.0, incl. the promoted
    regression probes, the pin locks, the v0.64.0 m193-m196 probe, the
    wave-77 stats probe, the Pulse hardening probe, the wave-78 thread
-   probe and the wave-79 convert probe).
+   probe, the wave-79 convert probe and the wave-80 base-codec probe).
 4. Strict bare-name scan clean -- MET (0/509).
-5. Coverage ratchet green -- MET (floors116).
+5. Coverage ratchet green -- MET (floors117).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (497/517 modules, 3475/6200 fns).
-8. Contract coverage 100% (every public fn carries clauses) -- OPEN (53.1%).
+8. Contract coverage 100% (every public fn carries clauses) -- OPEN (53.5%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
    OPEN (10: 9 compiler, 1 stdlib algorithm).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
 
 Meter formula: MET gates count 1.0; gate 8 counts its current
-pub-with-clause fraction (53.1% -> 0.531); gates 9 and 10 get no partial
+pub-with-clause fraction (53.5% -> 0.535); gates 9 and 10 get no partial
 credit (discrete). Update the percentage and the gate-8 fraction in the
 same commit as each floors dump so the meter moves smoothly toward 80%.
 
 Authoritative order: the gates above, then the updates below newest-first.
-Current state: compiler pin v0.64.0; coverage 53.1%, meter 75.3%; handoff
-in `docs/stdlib_session.md` snapshot 16 (block 50).
+Current state: compiler pin v0.64.0; coverage 53.5%, meter 75.3%; handoff
+in `docs/stdlib_session.md` snapshot 16 (block 51).
 
 ## Project Pulse relay (web-framework lane) -- 2026-10-05
 
@@ -626,6 +626,24 @@ compiler-owned for v0.64.1; Box stays section C. floors113 (global
 51.4%, reflect 100%); meter 75.1%. Battery on v0.64.0: corpus 953/953,
 probes 241/241, modules 509/509, barename 0/509, floors113 +
 module-smoke ratchets OK.
+
+Update 2026-10-07 (wave 80 landed): convert base-codec shims --
+40 clauses / 25 new pub (base16 4, base32 4, base64url 4, percent 4,
+base58 3: to_base58/from_base58/base58_encode, base62 3: to_base62/
+from_base62/base62_encode, uuencode 1: uu_encoded_length, quotedprintable
+2: qp_is_binary/qp_escape_byte). convert 38.7% -> 46.9%, global 53.1% ->
+53.5%; meter 75.3%; floors117. Clause forms: canonical length identities
+mirrored through the shims (hex 2n; base32 ((n+4)/5)*8; base64url
+modulo-3 trio; percent bands), empty-string Ok/""/Err guards, base58
+zero -> "1" and INT_MIN -> "-NQm6nKp8qFD" pins, base62 zero -> "0",
+uu_encoded_length block math (% 61), QP helpers. Protocol finding:
+`(result.is_ok == true) => result.len()` does not protect payload reads
+at runtime; the canonical `result is Ok => result.len()` guard form is
+required (6 clauses fixed). Split for wave 81: the local codec bodies
+(ascii85 4, uuencode 6 remaining, quotedprintable 4, base58 byte/check
+legs 3, base62 byte legs 1) plus the utf family. Probe p_wave80_shapes.xi
+(246th, 45 checks) green on v0.64.0 pre/post; targeted smokes
+base16/base32/base64/percent/base58_62 1/1 each.
 
 Update 2026-10-07 (wave 79 landed): convert numeric shims --
 57 clauses / 40 new pub (parse 5, int 8, toint 2, itos 3, atoi 3,

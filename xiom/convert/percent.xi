@@ -89,14 +89,20 @@ fn _percent_encode_url(s: Str) -> Str {
 /// Percent-encodes a full URL string. Reserved separators ('/', ':', '?',
 /// '&', '=', '+', '#', '@', etc.) pass through; all other non-unreserved
 /// characters are percent-encoded per UTF-8 byte. Complexity: O(n).
-pub fn percent_encode(s: Str) -> Str {
+pub fn percent_encode(s: Str) -> Str
+  ensures: result.len() >= s.len()
+  ensures: result.len() <= 3 * s.len()
+{
   return _percent_encode_url(s);
 }
 
 /// Percent-decodes a URL string: '%XX' escapes are decoded; '+' is left as a
 /// literal '+'. Returns Err on a truncated or malformed escape.
 /// Complexity: O(n).
-pub fn percent_decode(s: Str) -> Result[Str, Str] {
+pub fn percent_decode(s: Str) -> Result[Str, Str]
+  ensures: result is Ok => result.len() <= 2 * s.len()
+  ensures: (s.len() == 0) => (result.is_ok == true)
+{
   return enc_pct.percent_decode(s);
 }
 
@@ -104,13 +110,19 @@ pub fn percent_decode(s: Str) -> Result[Str, Str] {
 /// unreserved characters (A-Z a-z 0-9 - _ . ~) pass through; everything else
 /// -- including '/', '?', '&', '=', ':' -- is percent-encoded per UTF-8 byte.
 /// Complexity: O(n).
-pub fn percent_encode_component(s: Str) -> Str {
+pub fn percent_encode_component(s: Str) -> Str
+  ensures: result.len() >= s.len()
+  ensures: result.len() <= 3 * s.len()
+{
   return enc_pct.percent_encode_component(s);
 }
 
 /// Percent-decodes a URL component: '%XX' escapes are decoded and '+' is
 /// converted to a space (application/x-www-form-urlencoded semantics).
 /// Returns Err on a truncated or malformed escape. Complexity: O(n).
-pub fn percent_decode_component(s: Str) -> Result[Str, Str] {
+pub fn percent_decode_component(s: Str) -> Result[Str, Str]
+  ensures: result is Ok => result.len() <= 2 * s.len()
+  ensures: (s.len() == 0) => (result.is_ok == true)
+{
   return enc_pct.percent_decode_www_form(s);
 }
