@@ -21,7 +21,9 @@ use xiom.char;
 /// Returns: one UTF-16 code unit per BMP code point, surrogate pairs for
 ///          supplementary characters.
 /// Complexity: O(n), n = code points.
-pub fn utf16_encode(s: Str) -> Vec[UInt16] {
+pub fn utf16_encode(s: Str) -> Vec[UInt16]
+  ensures: (s.len() == 0) => (result.len() == 0)
+{
   var result = Vec[UInt16].new();
   var cps = _collect_cps(s);
   var i: Int = 0;
@@ -46,7 +48,9 @@ pub fn utf16_encode(s: Str) -> Vec[UInt16] {
 /// Returns: Ok(Str) on success; Err for a lone surrogate, an invalid code
 ///          unit range, or an overlong result.
 /// Complexity: O(n).
-pub fn utf16_decode(bytes: &Vec[UInt16]) -> Result[Str, Str] {
+pub fn utf16_decode(bytes: &Vec[UInt16]) -> Result[Str, Str]
+  ensures: (bytes.len() == 0) => (result.is_ok == true)
+{
   var cps = Vec[Int].new();
   var i: Int = 0;
   var n = bytes.len();
@@ -80,7 +84,10 @@ pub fn utf16_decode(bytes: &Vec[UInt16]) -> Result[Str, Str] {
 /// Parameters: s -- the input string.
 /// Returns: the little-endian byte sequence.
 /// Complexity: O(n).
-pub fn utf16le_to_bytes(s: Str) -> Vec[UInt8] {
+pub fn utf16le_to_bytes(s: Str) -> Vec[UInt8]
+  ensures: (s.len() == 0) => (result.len() == 2)
+  ensures: result.len() % 2 == 0
+{
   var result = Vec[UInt8].new();
   result.push(0xFF);
   result.push(0xFE);
@@ -99,7 +106,10 @@ pub fn utf16le_to_bytes(s: Str) -> Vec[UInt8] {
 /// Parameters: s -- the input string.
 /// Returns: the big-endian byte sequence.
 /// Complexity: O(n).
-pub fn utf16be_to_bytes(s: Str) -> Vec[UInt8] {
+pub fn utf16be_to_bytes(s: Str) -> Vec[UInt8]
+  ensures: (s.len() == 0) => (result.len() == 2)
+  ensures: result.len() % 2 == 0
+{
   var result = Vec[UInt8].new();
   result.push(0xFE);
   result.push(0xFF);

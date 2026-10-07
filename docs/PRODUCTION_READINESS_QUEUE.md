@@ -1,9 +1,9 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
-**75.3% -- 7 of 10 gates complete; gate 8 at 53.5% (partial credit) and
+**75.4% -- 7 of 10 gates complete; gate 8 at 53.9% (partial credit) and
 gates 9-10 discrete.** (Compiler pin: **v0.64.0**.)
 **Gates: corpus 953/953 full (C001 carve-outs retired on v0.63.1; new
-TcpStream loopback smoke added), modules 509/509, probes 246/246,
+TcpStream loopback smoke added), modules 509/509, probes 247/247,
 barename 0/509.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
@@ -14,27 +14,28 @@ gates flip:
    full, no carve-outs (C001 fixed by 4bf8cf1e; 20/20 + 20/20 stress).
    lz4 is fixed by m190 and stayed in the gate; the new TcpStream loopback
    smoke locks m196.
-3. Probe corpus green -- MET (246/246 on v0.64.0, incl. the promoted
+3. Probe corpus green -- MET (247/247 on v0.64.0, incl. the promoted
    regression probes, the pin locks, the v0.64.0 m193-m196 probe, the
    wave-77 stats probe, the Pulse hardening probe, the wave-78 thread
-   probe, the wave-79 convert probe and the wave-80 base-codec probe).
+   probe, the wave-79 convert probe, the wave-80 base-codec probe and the
+   wave-81 unicode probe).
 4. Strict bare-name scan clean -- MET (0/509).
-5. Coverage ratchet green -- MET (floors117).
+5. Coverage ratchet green -- MET (floors118).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (497/517 modules, 3475/6200 fns).
-8. Contract coverage 100% (every public fn carries clauses) -- OPEN (53.5%).
+8. Contract coverage 100% (every public fn carries clauses) -- OPEN (53.9%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
    OPEN (10: 9 compiler, 1 stdlib algorithm).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
 
 Meter formula: MET gates count 1.0; gate 8 counts its current
-pub-with-clause fraction (53.5% -> 0.535); gates 9 and 10 get no partial
+pub-with-clause fraction (53.9% -> 0.539); gates 9 and 10 get no partial
 credit (discrete). Update the percentage and the gate-8 fraction in the
 same commit as each floors dump so the meter moves smoothly toward 80%.
 
 Authoritative order: the gates above, then the updates below newest-first.
-Current state: compiler pin v0.64.0; coverage 53.5%, meter 75.3%; handoff
-in `docs/stdlib_session.md` snapshot 16 (block 51).
+Current state: compiler pin v0.64.0; coverage 53.9%, meter 75.4%; handoff
+in `docs/stdlib_session.md` snapshot 16 (block 52).
 
 ## Project Pulse relay (web-framework lane) -- 2026-10-05
 
@@ -626,6 +627,21 @@ compiler-owned for v0.64.1; Box stays section C. floors113 (global
 51.4%, reflect 100%); meter 75.1%. Battery on v0.64.0: corpus 953/953,
 probes 241/241, modules 509/509, barename 0/509, floors113 +
 module-smoke ratchets OK.
+
+Update 2026-10-07 (wave 81 landed): convert unicode family --
+38 clauses / 26 new pub (utf8 4, utf16 4, utf32 4, utf 14). convert 46.9%
+-> 55.4%, global 53.5% -> 53.9%; meter 75.4%; floors118. Clause forms:
+empty-input identities (Vec/Str/units empty), BOM-only byte lengths
+(UTF-16 -> 2, UTF-32 -> 4), even/quad byte-count parity, odd-length Err
+guards on the LE/BE decoders, empty-Ok decode paths, utf8 encode 1..4
+range, valid_sequences <= s.len(), is_valid empty -> true, surrogate
+arithmetic claims (code_point_to_utf16: invalid => equal components,
+valid => unequal; surrogate_pair_to_code_point: -1 or >= 0x10000).
+Probe p_wave81_shapes.xi (247th, 36 checks) green on v0.64.0 pre/post;
+targeted smokes smoke_convert_utf + utf8 encoder/decoder KATs 1/1 each.
+Readiness next: convert local codec bodies (ascii85 4, uuencode 6,
+quotedprintable 4, base58 byte/check legs 3, base62 byte leg 1) plus the
+uri/url/urn/ip families, then lossy/network/timestamp.
 
 Update 2026-10-07 (wave 80 landed): convert base-codec shims --
 40 clauses / 25 new pub (base16 4, base32 4, base64url 4, percent 4,

@@ -20,7 +20,9 @@ use xiom.char;
 /// Parameters: s -- the input string.
 /// Returns: one UInt32 per Unicode code point.
 /// Complexity: O(n), n = code points.
-pub fn utf32_encode(s: Str) -> Vec[UInt32] {
+pub fn utf32_encode(s: Str) -> Vec[UInt32]
+  ensures: (s.len() == 0) => (result.len() == 0)
+{
   var result = Vec[UInt32].new();
   var cps = _collect_cps(s);
   var i: Int = 0;
@@ -35,7 +37,9 @@ pub fn utf32_encode(s: Str) -> Vec[UInt32] {
 /// Parameters: code_points -- the code points (a leading BOM is skipped).
 /// Returns: Ok(Str) on success; Err for a surrogate or out-of-range value.
 /// Complexity: O(n).
-pub fn utf32_decode(code_points: &Vec[UInt32]) -> Result[Str, Str] {
+pub fn utf32_decode(code_points: &Vec[UInt32]) -> Result[Str, Str]
+  ensures: (code_points.len() == 0) => (result.is_ok == true)
+{
   var cps = Vec[Int].new();
   var i: Int = 0;
   var n = code_points.len();
@@ -60,7 +64,10 @@ pub fn utf32_decode(code_points: &Vec[UInt32]) -> Result[Str, Str] {
 /// Parameters: s -- the input string.
 /// Returns: the little-endian byte sequence.
 /// Complexity: O(n).
-pub fn utf32le_to_bytes(s: Str) -> Vec[UInt8] {
+pub fn utf32le_to_bytes(s: Str) -> Vec[UInt8]
+  ensures: (s.len() == 0) => (result.len() == 4)
+  ensures: result.len() % 4 == 0
+{
   var result = Vec[UInt8].new();
   result.push(0xFF);
   result.push(0xFE);
@@ -83,7 +90,10 @@ pub fn utf32le_to_bytes(s: Str) -> Vec[UInt8] {
 /// Parameters: s -- the input string.
 /// Returns: the big-endian byte sequence.
 /// Complexity: O(n).
-pub fn utf32be_to_bytes(s: Str) -> Vec[UInt8] {
+pub fn utf32be_to_bytes(s: Str) -> Vec[UInt8]
+  ensures: (s.len() == 0) => (result.len() == 4)
+  ensures: result.len() % 4 == 0
+{
   var result = Vec[UInt8].new();
   result.push(0x00);
   result.push(0x00);

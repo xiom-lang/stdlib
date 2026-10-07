@@ -1197,8 +1197,15 @@ T1/T2 yields.
         p_wave80_shapes.xi (246th, 45 checks) green on v0.64.0 pre/post;
         targeted codec smokes 1/1. Split: local codec bodies + utf family
         arrive in wave 81.
+        Wave 81 (2026-10-07): coverage wave 44 -- convert unicode family,
+        38 clauses / 26 new pub (utf8 4, utf16 4, utf32 4, utf 14).
+        convert 46.9% -> 55.4%, global 53.5% -> 53.9%, meter 75.4%;
+        floors118. Probe p_wave81_shapes.xi (247th, 36 checks) green on
+        v0.64.0 pre/post; targeted utf smokes + utf8 KATs 1/1. Next:
+        convert local codec bodies (ascii85/uuencode/quotedprintable/
+        base58/base62 legs) + uri/url/urn/ip families.
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors117.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors118.json
        tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;

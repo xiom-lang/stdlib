@@ -19,7 +19,9 @@ use xiom.string;
 /// Parameters: c -- the character.
 /// Returns: 1-4 bytes forming the UTF-8 encoding of c.
 /// Complexity: O(1).
-pub fn utf8_encode(c: Char) -> Vec[UInt8] {
+pub fn utf8_encode(c: Char) -> Vec[UInt8]
+  ensures: (result.len() >= 1) && (result.len() <= 4)
+{
   var buf = Vec[UInt8].new();
   char.encode_utf8(c, &buf);
   return buf;
@@ -30,7 +32,9 @@ pub fn utf8_encode(c: Char) -> Vec[UInt8] {
 /// Returns: Some(Char) when the leading sequence is well-formed (including
 ///          overlong/surrogate/range checks); None otherwise.
 /// Complexity: O(1).
-pub fn utf8_decode(bytes: &Vec[UInt8]) -> Option[Char] {
+pub fn utf8_decode(bytes: &Vec[UInt8]) -> Option[Char]
+  ensures: (bytes.len() == 0) => (result.is_none == true)
+{
   let len = bytes.len();
   if len == 0 {
     return None;
@@ -85,7 +89,9 @@ pub fn utf8_decode(bytes: &Vec[UInt8]) -> Option[Char] {
 /// Parameters: s -- the string to validate.
 /// Returns: true when every byte sequence decodes cleanly.
 /// Complexity: O(n), n = byte length.
-pub fn utf8_validate(s: Str) -> Bool {
+pub fn utf8_validate(s: Str) -> Bool
+  ensures: (s.len() == 0) => (result == true)
+{
   let len = s.len();
   var i: Int = 0;
   while i < len {
@@ -119,7 +125,10 @@ pub fn utf8_validate(s: Str) -> Bool {
 /// Parameters: s -- the string to scan.
 /// Returns: the number of well-formed UTF-8 sequences.
 /// Complexity: O(n), n = byte length.
-pub fn utf8_valid_sequences(s: Str) -> Int {
+pub fn utf8_valid_sequences(s: Str) -> Int
+  ensures: (s.len() == 0) => (result == 0)
+  ensures: result <= s.len()
+{
   let len = s.len();
   var count: Int = 0;
   var i: Int = 0;

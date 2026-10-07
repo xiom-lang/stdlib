@@ -21,7 +21,9 @@ use xiom.char;
 /// Parameters: s -- the input string.
 /// Returns: UTF-16 code units (surrogate pairs for supplementary chars).
 /// Complexity: O(n).
-pub fn utf16_encode(s: Str) -> Vec[UInt16] {
+pub fn utf16_encode(s: Str) -> Vec[UInt16]
+  ensures: (s.len() == 0) => (result.len() == 0)
+{
   var result = Vec[UInt16].new();
   var cps = _collect_cps(s);
   var i: Int = 0;
@@ -45,7 +47,9 @@ pub fn utf16_encode(s: Str) -> Vec[UInt16] {
 /// Parameters: bytes -- the code units (a leading BOM is skipped).
 /// Returns: Ok(Str) on success; Err for lone surrogates.
 /// Complexity: O(n).
-pub fn utf16_decode(bytes: &Vec[UInt16]) -> Result[Str, Str] {
+pub fn utf16_decode(bytes: &Vec[UInt16]) -> Result[Str, Str]
+  ensures: (bytes.len() == 0) => (result.is_ok == true)
+{
   var cps = Vec[Int].new();
   var i: Int = 0;
   var n = bytes.len();
@@ -79,7 +83,10 @@ pub fn utf16_decode(bytes: &Vec[UInt16]) -> Result[Str, Str] {
 /// Parameters: s -- the input string.
 /// Returns: the byte sequence.
 /// Complexity: O(n).
-pub fn utf16le_to_bytes(s: Str) -> Vec[UInt8] {
+pub fn utf16le_to_bytes(s: Str) -> Vec[UInt8]
+  ensures: (s.len() == 0) => (result.len() == 2)
+  ensures: result.len() % 2 == 0
+{
   var result = Vec[UInt8].new();
   result.push(0xFF);
   result.push(0xFE);
@@ -98,7 +105,10 @@ pub fn utf16le_to_bytes(s: Str) -> Vec[UInt8] {
 /// Parameters: s -- the input string.
 /// Returns: the byte sequence.
 /// Complexity: O(n).
-pub fn utf16be_to_bytes(s: Str) -> Vec[UInt8] {
+pub fn utf16be_to_bytes(s: Str) -> Vec[UInt8]
+  ensures: (s.len() == 0) => (result.len() == 2)
+  ensures: result.len() % 2 == 0
+{
   var result = Vec[UInt8].new();
   result.push(0xFE);
   result.push(0xFF);
@@ -117,7 +127,10 @@ pub fn utf16be_to_bytes(s: Str) -> Vec[UInt8] {
 /// Parameters: bytes -- the byte sequence (a leading BOM is skipped).
 /// Returns: Ok(Str) on success; Err for an odd length or lone surrogates.
 /// Complexity: O(n).
-pub fn utf16_decode_le(bytes: &Vec[UInt8]) -> Result[Str, Str] {
+pub fn utf16_decode_le(bytes: &Vec[UInt8]) -> Result[Str, Str]
+  ensures: (bytes.len() % 2 != 0) => (result.is_err == true)
+  ensures: (bytes.len() == 0) => (result.is_ok == true)
+{
   if bytes.len() % 2 != 0 {
     return Err("utf16_decode_le: odd byte length");
   }
@@ -136,7 +149,10 @@ pub fn utf16_decode_le(bytes: &Vec[UInt8]) -> Result[Str, Str] {
 /// Parameters: bytes -- the byte sequence (a leading BOM is skipped).
 /// Returns: Ok(Str) on success; Err for an odd length or lone surrogates.
 /// Complexity: O(n).
-pub fn utf16_decode_be(bytes: &Vec[UInt8]) -> Result[Str, Str] {
+pub fn utf16_decode_be(bytes: &Vec[UInt8]) -> Result[Str, Str]
+  ensures: (bytes.len() % 2 != 0) => (result.is_err == true)
+  ensures: (bytes.len() == 0) => (result.is_ok == true)
+{
   if bytes.len() % 2 != 0 {
     return Err("utf16_decode_be: odd byte length");
   }
@@ -155,7 +171,9 @@ pub fn utf16_decode_be(bytes: &Vec[UInt8]) -> Result[Str, Str] {
 /// Parameters: s -- the input string.
 /// Returns: one UInt32 per code point.
 /// Complexity: O(n).
-pub fn utf32_encode(s: Str) -> Vec[UInt32] {
+pub fn utf32_encode(s: Str) -> Vec[UInt32]
+  ensures: (s.len() == 0) => (result.len() == 0)
+{
   var result = Vec[UInt32].new();
   var cps = _collect_cps(s);
   var i: Int = 0;
@@ -170,7 +188,9 @@ pub fn utf32_encode(s: Str) -> Vec[UInt32] {
 /// Parameters: code_points -- the code points (a leading BOM is skipped).
 /// Returns: Ok(Str) on success; Err for a surrogate or out-of-range value.
 /// Complexity: O(n).
-pub fn utf32_decode(code_points: &Vec[UInt32]) -> Result[Str, Str] {
+pub fn utf32_decode(code_points: &Vec[UInt32]) -> Result[Str, Str]
+  ensures: (code_points.len() == 0) => (result.is_ok == true)
+{
   var cps = Vec[Int].new();
   var i: Int = 0;
   var n = code_points.len();
@@ -195,7 +215,10 @@ pub fn utf32_decode(code_points: &Vec[UInt32]) -> Result[Str, Str] {
 /// Parameters: s -- the input string.
 /// Returns: the byte sequence.
 /// Complexity: O(n).
-pub fn utf32le_to_bytes(s: Str) -> Vec[UInt8] {
+pub fn utf32le_to_bytes(s: Str) -> Vec[UInt8]
+  ensures: (s.len() == 0) => (result.len() == 4)
+  ensures: result.len() % 4 == 0
+{
   var result = Vec[UInt8].new();
   result.push(0xFF);
   result.push(0xFE);
@@ -218,7 +241,10 @@ pub fn utf32le_to_bytes(s: Str) -> Vec[UInt8] {
 /// Parameters: s -- the input string.
 /// Returns: the byte sequence.
 /// Complexity: O(n).
-pub fn utf32be_to_bytes(s: Str) -> Vec[UInt8] {
+pub fn utf32be_to_bytes(s: Str) -> Vec[UInt8]
+  ensures: (s.len() == 0) => (result.len() == 4)
+  ensures: result.len() % 4 == 0
+{
   var result = Vec[UInt8].new();
   result.push(0x00);
   result.push(0x00);
@@ -242,7 +268,9 @@ pub fn utf32be_to_bytes(s: Str) -> Vec[UInt8] {
 /// Parameters: s -- the input string.
 /// Returns: true when every code point is encodable in UTF-16.
 /// Complexity: O(n).
-pub fn utf16_is_valid(s: Str) -> Bool {
+pub fn utf16_is_valid(s: Str) -> Bool
+  ensures: (s.len() == 0) => (result == true)
+{
   var cps = _collect_cps(s);
   var i: Int = 0;
   while i < cps.len() {
@@ -265,7 +293,9 @@ pub fn utf16_is_valid(s: Str) -> Bool {
 /// Parameters: s -- the input string.
 /// Returns: true when every code point is a valid scalar value.
 /// Complexity: O(n).
-pub fn utf32_is_valid(s: Str) -> Bool {
+pub fn utf32_is_valid(s: Str) -> Bool
+  ensures: (s.len() == 0) => (result == true)
+{
   return utf16_is_valid(s);
 }
 
@@ -274,7 +304,10 @@ pub fn utf32_is_valid(s: Str) -> Bool {
 /// Returns: (high surrogate, low surrogate). Code points below 0x10000 or
 ///          above 0x10FFFF map to (0, 0).
 /// Complexity: O(1).
-pub fn code_point_to_utf16(cp: Int) -> (UInt16, UInt16) {
+pub fn code_point_to_utf16(cp: Int) -> (UInt16, UInt16)
+  ensures: (cp < 0x10000 || cp > 0x10FFFF) => (result.0 == result.1)
+  ensures: (cp >= 0x10000 && cp <= 0x10FFFF) => (result.0 != result.1)
+{
   if cp < 0x10000 || cp > 0x10FFFF {
     return (0 as UInt16, 0 as UInt16);
   }
@@ -288,7 +321,9 @@ pub fn code_point_to_utf16(cp: Int) -> (UInt16, UInt16) {
 /// Parameters: hi -- the high surrogate; lo -- the low surrogate.
 /// Returns: the code point; -1 when the pair is not a valid surrogate pair.
 /// Complexity: O(1).
-pub fn surrogate_pair_to_code_point(hi: UInt16, lo: UInt16) -> Int {
+pub fn surrogate_pair_to_code_point(hi: UInt16, lo: UInt16) -> Int
+  ensures: (result == -1) || (result >= 0x10000)
+{
   var h = hi as Int;
   var l = lo as Int;
   if h < 0xD800 || h > 0xDBFF {
