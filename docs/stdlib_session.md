@@ -4,14 +4,14 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 -->
 # XIOM Stdlib Session -- Handoff
 
-## 0A. CONTINUE HERE -- handoff snapshot 16 (updated 2026-10-07, v0.64.0 pin complete, wave 83 complete)
+## 0A. CONTINUE HERE -- handoff snapshot 16 (updated 2026-10-07, v0.64.0 pin complete, wave 84 complete)
 
 **PASTE-READY PROMPT FOR THE NEXT SESSION (copy this block):**
 
 ---
 You are continuing the XIOM stdlib lane. Worktree `E:\xiom-lang\stdlib`,
-branch `main`. Read `docs/stdlib_session.md` blocks 54 (latest), 53, 52,
-51, 50, 49, 48, 47, 46, 45, 44, 43
+branch `main`. Read `docs/stdlib_session.md` blocks 55 (latest), 54, 53,
+52, 51, 50, 49, 48, 47, 46, 45, 44, 43
 (publish), 27 (iter block) and `docs/PRODUCTION_READINESS_QUEUE.md`
 before acting; snapshot 5 below the prompt keeps the deep protocol lore.
 
@@ -22,20 +22,19 @@ kept. Registry carries xiom-std 0.62.3, 0.62.4 and 0.63.0 (0.63.1 publish
 pending); tags pushed: stdlib-v0.62.3 (12a3a1b), stdlib-v0.62.4 (3800c08),
 stdlib-v0.63.0 (179cfea).
 Gates on v0.64.0: release corpus 954/954 FULL (m196 loopback + uuencode
-roundtrip smokes added), modules 509/509, probes 249/249, barename
-0/509, floors120, module-smoke
-ratchet OK. Coverage = 54.2% global
-pub-with-clause. Waves landed: 63 net+hash, 64 reflect+iter adapters, 65x convert, 66 time, 67 format, 68 misc, 69 os+rand, 70 crypto, 71 log, 72 compress, 73 pin, 74 encoding, 75 encoding-rem+debug, 76 simd, 64.0 pin, 77 stats, Pulse hardening (write_all/server_parse_request/hmac_sha256_hex), 78 thread, 79 convert numeric shims, 80 convert base shims, 81 convert unicode, 82 convert codec guards, 83 convert codec tails. Wave
+roundtrip smokes added), modules 509/509, probes 250/250, barename
+0/509, floors121, module-smoke
+ratchet OK. Coverage = 54.3% global
+pub-with-clause. Waves landed: 63 net+hash, 64 reflect+iter adapters, 65x convert, 66 time, 67 format, 68 misc, 69 os+rand, 70 crypto, 71 log, 72 compress, 73 pin, 74 encoding, 75 encoding-rem+debug, 76 simd, 64.0 pin, 77 stats, Pulse hardening (write_all/server_parse_request/hmac_sha256_hex), 78 thread, 79 convert numeric shims, 80 convert base shims, 81 convert unicode, 82 convert codec guards, 83 convert codec tails, 84 convert uri/url/urn. Wave
 65 (iter clauses) is DEFERRED but pin-unblocked (block 27): the C001
 classifier is fixed on v0.63.1 and clauses may read tuple components; the
 deferred clause set (Range core 7 + chain 14 + fold 8 + iter_collect) is documented there.
 
-FIRST TASK (wave 84): convert uri/url/urn/ip families (uri 3, url 4,
-urn 3, ip 6 = 16 pub) plus lossy 4 and the network 4 / timestamp
-families, batching within the 40-60-pub directive; then the remaining
-low dirs (async 4.5%, serialize 5.4%, iter 18.6% -- clause-side blocked,
-bench 18.8%, os 26.2%, core 26.7%, format 27.3%, sync 29.1%, sort
-31.9%).
+FIRST TASK (wave 85): convert ip family (6 pub) plus lossy 4 and the
+network 4 / timestamp families, batching within the 40-60-pub directive;
+then the remaining low dirs (async 4.5%, serialize 5.4%, iter 18.6% --
+clause-side blocked, bench 18.8%, os 26.2%, core 26.7%, format 27.3%,
+sync 29.1%, sort 31.9%).
 PENDING/QUEUED:
 (a) iter clause retry: DONE as red on v0.64.0 (block 46); re-retry the
 deferred set (Range core 7 + chain 14 + fold 8 + iter_collect) when the
@@ -60,7 +59,7 @@ Mandatory protocol:
 (no unsigned `>= 0`, no `is_ok || is_err`, no self-mirrors); clauses run at
 runtime, so never read Result/Option payloads, guard division/NaN, and
 prefer exact mirrors, length/presence bands and `@pre` invariants.
-(2) probe-first: add `tools/probes/p_wave84_shapes.xi` exercising every
+(2) probe-first: add `tools/probes/p_wave85_shapes.xi` exercising every
 clause-guard path; bind module-returned values to `let` before comparing
 (inline unsigned compares misread high bits; inline indexing of a
 returned Vec[Float64] reads garbage -- bind it first); bind `Vec.new()`
@@ -68,12 +67,12 @@ temporaries passed as `&Vec`; do not declare externs for runtime guard
 symbols; green on v0.64.0 (v0.63.1 cross-check when cheap).
 (3) apply, run targeted smokes; if unrelated codegen breaks, bisect and
 drop the offending clause with a code comment (see blocks 27/65x).
-(4) dump `tools/coverage_floors121.json`, wire the workflows +
+(4) dump `tools/coverage_floors122.json`, wire the workflows +
 `tools/README.md`, update plan/session/queue in the same commit, YAML
 check, pure-ASCII conventional commit.
 (5) battery: `run_smokes.ps1 -ExcludeFile tools/known_failures/
-gate-exclusions.txt` (expect 954/954 full), probe corpus (expect 250),
-check_modules 509/509, barename 0/509, floors121 + module-smoke ratchets;
+gate-exclusions.txt` (expect 954/954 full), probe corpus (expect 251),
+check_modules 509/509, barename 0/509, floors122 + module-smoke ratchets;
 record results in the session block; push `main`. If a push hits GitHub
 500s, follow docs/failed_attempts.md (3 attempts, log, retry later).
 
@@ -1603,6 +1602,25 @@ registry pin, agent recon for the rest)**
   gates; open: contract coverage 100%, zero open findings, beta-exit release
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
+
+**SESSION 2026-10-07 block 55 (wave 84: convert uri/url/urn; floors121)**
+- Wave 84: 8 clauses / 8 new pub -- uri_parse and uri_normalize
+  (empty -> Err), url_parse (empty -> Err), url_encode (percent bands
+  >= n / <= 3n), url_decode (canonical `result is Ok => result.len() <=
+  s.len()` + empty-Ok), urn_parse and urn_is_valid (< 7 -> Err/false),
+  urn_build (result.len() == nid.len() + nss.len() + 5).
+- Compiler relay (same day): filed p_ensures_isok_guard.xi -- clause
+  payload-length claims guarded with `(result.is_ok == true) =>` violate
+  at runtime while the canonical `result is Ok =>` form works; rc 1 on
+  v0.64.0. Findings 10 -> 11; queue gate 9 updated.
+- Probe p_wave84_shapes.xi (250th, 16 checks): green on v0.64.0 pre- and
+  post-clauses; targeted smokes smoke_convert_url and smoke_net_url 1/1
+  each. convert 61.3% -> 63.9%, global 54.2% -> 54.3%, meter 75.4%;
+  floors121 wired.
+- Battery on this commit (v0.64.0): release corpus 954/954 full (763.9s,
+  no exclusions); probes 250/250 (228.5s); check_modules 509/509 (159.5s);
+  barename 0/509 (243.2s); floors121 + module-smoke (497/517, 3477/6202)
+  ratchets OK.
 
 **SESSION 2026-10-07 block 54 (wave 83: convert codec tails + UU trim fix; floors120)**
 - Wave 83: 7 clauses / 7 new pub -- uuencode (empty -> ""), uudecode

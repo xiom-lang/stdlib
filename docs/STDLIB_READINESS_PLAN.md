@@ -1223,8 +1223,16 @@ T1/T2 yields.
         convert 59% -> 61.3%, global 54.1% -> 54.2%, meter 75.4%;
         floors120. Probe p_wave83_shapes.xi (249th, 15 checks) green on
         v0.64.0 pre/post. Next: uri/url/urn/ip + lossy/network/timestamp.
+        Wave 84 (2026-10-07): coverage wave 47 -- convert uri/url/urn
+        families, 8 clauses / 8 new pub (uri_parse, uri_normalize,
+        url_parse, url_encode, url_decode, urn_parse, urn_is_valid,
+        urn_build). convert 61.3% -> 63.9%, global 54.2% -> 54.3%, meter
+        75.4%; floors121. Compiler relay: p_ensures_isok_guard.xi filed
+        (findings 11). Probe p_wave84_shapes.xi (250th, 16 checks) green
+        on v0.64.0 pre/post; targeted url smokes 1/1. Next: ip + lossy/
+        network/timestamp.
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors120.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors121.json
        tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;

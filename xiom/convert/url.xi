@@ -30,7 +30,9 @@ pub type Url = {
 /// Parameters: s -- the URL string.
 /// Returns: Ok(Url) on success; Err for an empty URL or a missing host.
 /// Complexity: O(n).
-pub fn url_parse(s: Str) -> Result[Url, Str] {
+pub fn url_parse(s: Str) -> Result[Url, Str]
+  ensures: (s.len() == 0) => (result.is_err == true)
+{
   var len = string.str_len(s);
   if len == 0 {
     return Err("empty URL");
@@ -119,7 +121,10 @@ pub fn url_build(scheme: Str, host: Str, port: Int, path: Str, query: Str) -> St
 /// Parameters: s -- the text to encode.
 /// Returns: the percent-encoded string.
 /// Complexity: O(n).
-pub fn url_encode(s: Str) -> Str {
+pub fn url_encode(s: Str) -> Str
+  ensures: result.len() >= s.len()
+  ensures: result.len() <= 3 * s.len()
+{
   var enc = encoding.percent_encode(s);
   return enc;
 }
@@ -128,7 +133,10 @@ pub fn url_encode(s: Str) -> Str {
 /// Parameters: s -- the encoded text.
 /// Returns: Ok(decoded) on success; Err for a truncated or invalid escape.
 /// Complexity: O(n).
-pub fn url_decode(s: Str) -> Result[Str, Str] {
+pub fn url_decode(s: Str) -> Result[Str, Str]
+  ensures: result is Ok => result.len() <= s.len()
+  ensures: (s.len() == 0) => (result.is_ok == true)
+{
   return encoding.percent_decode(s);
 }
 

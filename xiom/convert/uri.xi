@@ -28,7 +28,9 @@ pub type Uri = {
 /// Parameters: s -- the URI string.
 /// Returns: Ok(Uri) on success; Err for an empty URI.
 /// Complexity: O(n).
-pub fn uri_parse(s: Str) -> Result[Uri, Str] {
+pub fn uri_parse(s: Str) -> Result[Uri, Str]
+  ensures: (s.len() == 0) => (result.is_err == true)
+{
   var len = string.str_len(s);
   if len == 0 {
     return Err("empty URI");
@@ -94,7 +96,9 @@ pub fn uri_parse(s: Str) -> Result[Uri, Str] {
 /// Parameters: s -- the URI string.
 /// Returns: Ok(canonical) on success; Err for an empty URI.
 /// Complexity: O(n).
-pub fn uri_normalize(s: Str) -> Result[Str, Str] {
+pub fn uri_normalize(s: Str) -> Result[Str, Str]
+  ensures: (s.len() == 0) => (result.is_err == true)
+{
   var parsed = uri_parse(s);
   if !parsed.is_ok {
     return Err(parsed.error);

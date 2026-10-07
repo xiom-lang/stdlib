@@ -19,7 +19,9 @@ use xiom.string;
 /// Returns: Ok((nid, nss, rq)) on success, where rq is the concatenation of
 ///          the r-component and q-component ("" when absent); Err otherwise.
 /// Complexity: O(n).
-pub fn urn_parse(s: Str) -> Result[(Str, Str, Str), Str] {
+pub fn urn_parse(s: Str) -> Result[(Str, Str, Str), Str]
+  ensures: (s.len() < 7) => (result.is_err == true)
+{
   if string.str_len(s) < 7 {
     return Err("URN too short");
   }
@@ -58,7 +60,9 @@ pub fn urn_parse(s: Str) -> Result[(Str, Str, Str), Str] {
 /// Parameters: s -- the candidate URN string.
 /// Returns: true when the URN structure is valid.
 /// Complexity: O(n).
-pub fn urn_is_valid(s: Str) -> Bool {
+pub fn urn_is_valid(s: Str) -> Bool
+  ensures: (s.len() < 7) => (result == false)
+{
   var r = urn_parse(s);
   return r.is_ok;
 }
@@ -69,7 +73,9 @@ pub fn urn_is_valid(s: Str) -> Bool {
 ///          specific string.
 /// Returns: "urn:<nid>:<nss>".
 /// Complexity: O(n).
-pub fn urn_build(nid: Str, nss: Str) -> Str {
+pub fn urn_build(nid: Str, nss: Str) -> Str
+  ensures: result.len() == nid.len() + nss.len() + 5
+{
   var result = "urn:";
   result = string.str_concat(result, nid);
   result = string.str_concat(result, ":");
