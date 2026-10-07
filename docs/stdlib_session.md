@@ -4,14 +4,14 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 -->
 # XIOM Stdlib Session -- Handoff
 
-## 0A. CONTINUE HERE -- handoff snapshot 16 (updated 2026-10-07, v0.64.0 pin complete, wave 81 complete)
+## 0A. CONTINUE HERE -- handoff snapshot 16 (updated 2026-10-07, v0.64.0 pin complete, wave 82 complete)
 
 **PASTE-READY PROMPT FOR THE NEXT SESSION (copy this block):**
 
 ---
 You are continuing the XIOM stdlib lane. Worktree `E:\xiom-lang\stdlib`,
-branch `main`. Read `docs/stdlib_session.md` blocks 52 (latest), 51, 50,
-49, 48, 47, 46, 45, 44, 43
+branch `main`. Read `docs/stdlib_session.md` blocks 53 (latest), 52, 51,
+50, 49, 48, 47, 46, 45, 44, 43
 (publish), 27 (iter block) and `docs/PRODUCTION_READINESS_QUEUE.md`
 before acting; snapshot 5 below the prompt keeps the deep protocol lore.
 
@@ -22,18 +22,18 @@ kept. Registry carries xiom-std 0.62.3, 0.62.4 and 0.63.0 (0.63.1 publish
 pending); tags pushed: stdlib-v0.62.3 (12a3a1b), stdlib-v0.62.4 (3800c08),
 stdlib-v0.63.0 (179cfea).
 Gates on v0.64.0: release corpus 953/953 FULL (m196 loopback smoke added),
-modules 509/509, probes 247/247, barename 0/509, floors118, module-smoke
-ratchet OK. Coverage = 53.9% global
-pub-with-clause. Waves landed: 63 net+hash, 64 reflect+iter adapters, 65x convert, 66 time, 67 format, 68 misc, 69 os+rand, 70 crypto, 71 log, 72 compress, 73 pin, 74 encoding, 75 encoding-rem+debug, 76 simd, 64.0 pin, 77 stats, Pulse hardening (write_all/server_parse_request/hmac_sha256_hex), 78 thread, 79 convert numeric shims, 80 convert base shims, 81 convert unicode. Wave
+modules 509/509, probes 248/248, barename 0/509, floors119, module-smoke
+ratchet OK. Coverage = 54.1% global
+pub-with-clause. Waves landed: 63 net+hash, 64 reflect+iter adapters, 65x convert, 66 time, 67 format, 68 misc, 69 os+rand, 70 crypto, 71 log, 72 compress, 73 pin, 74 encoding, 75 encoding-rem+debug, 76 simd, 64.0 pin, 77 stats, Pulse hardening (write_all/server_parse_request/hmac_sha256_hex), 78 thread, 79 convert numeric shims, 80 convert base shims, 81 convert unicode, 82 convert codec guards. Wave
 65 (iter clauses) is DEFERRED but pin-unblocked (block 27): the C001
 classifier is fixed on v0.63.1 and clauses may read tuple components; the
 deferred clause set (Range core 7 + chain 14 + fold 8 + iter_collect) is documented there.
 
-FIRST TASK (wave 82): convert local codec bodies (ascii85 4, uuencode 6
-remaining, quotedprintable 4 remaining, base58 byte/check legs 3, base62
-byte leg 1) plus the uri/url/urn/ip families (uri 4, url 5, urn 3, ip 6),
-batching within the 40-60-pub directive; then lossy/network/timestamp and
-the remaining low dirs (async 4.5%, serialize 5.4%, iter 18.6% --
+FIRST TASK (wave 83): convert remaining codec legs (uuencode 5:
+uuencode/uudecode/uuencode_line/xxencode/xxdecode; base58check_encode/
+decode 2) plus the uri/url/urn/ip families (uri 4, url 5, urn 3, ip 6),
+batching within the 40-60-pub directive; then lossy/network/timestamp
+and the remaining low dirs (async 4.5%, serialize 5.4%, iter 18.6% --
 clause-side blocked, bench 18.8%, os 26.2%, core 26.7%, format 27.3%,
 sync 29.1%, sort 31.9%).
 PENDING/QUEUED:
@@ -60,7 +60,7 @@ Mandatory protocol:
 (no unsigned `>= 0`, no `is_ok || is_err`, no self-mirrors); clauses run at
 runtime, so never read Result/Option payloads, guard division/NaN, and
 prefer exact mirrors, length/presence bands and `@pre` invariants.
-(2) probe-first: add `tools/probes/p_wave82_shapes.xi` exercising every
+(2) probe-first: add `tools/probes/p_wave83_shapes.xi` exercising every
 clause-guard path; bind module-returned values to `let` before comparing
 (inline unsigned compares misread high bits; inline indexing of a
 returned Vec[Float64] reads garbage -- bind it first); bind `Vec.new()`
@@ -68,13 +68,14 @@ temporaries passed as `&Vec`; do not declare externs for runtime guard
 symbols; green on v0.64.0 (v0.63.1 cross-check when cheap).
 (3) apply, run targeted smokes; if unrelated codegen breaks, bisect and
 drop the offending clause with a code comment (see blocks 27/65x).
-(4) dump `tools/coverage_floors119.json`, wire the workflows +
+(4) dump `tools/coverage_floors120.json`, wire the workflows +
 `tools/README.md`, update plan/session/queue in the same commit, YAML
 check, pure-ASCII conventional commit.
 (5) battery: `run_smokes.ps1 -ExcludeFile tools/known_failures/
-gate-exclusions.txt` (expect 953/953 full), probe corpus (expect 248),
-check_modules 509/509, barename 0/509, floors119 + module-smoke ratchets;
-record results in the session block; push `main`.
+gate-exclusions.txt` (expect 953/953 full), probe corpus (expect 249),
+check_modules 509/509, barename 0/509, floors120 + module-smoke ratchets;
+record results in the session block; push `main`. If a push hits GitHub
+500s, follow docs/failed_attempts.md (3 attempts, log, retry later).
 
 QUEUED (do only when triggered):
 - DONE 2026-10-05 (compiler ask): scrypt / shuffle-choice / BUG-18 cannot
@@ -1602,6 +1603,26 @@ registry pin, agent recon for the rest)**
   gates; open: contract coverage 100%, zero open findings, beta-exit release
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
+
+**SESSION 2026-10-07 block 53 (wave 82: convert codec guards; floors119)**
+- Wave 82: 11 clauses / 11 new pub -- ascii85 4 (empty -> "" on
+  to_ascii85/ascii85_encode_str, empty -> Ok on from_ascii85/
+  ascii85_decode_str), quotedprintable 4 (qp_encode/qp_encode_maxline/
+  qp_soft_linebreak empty -> "", qp_decode empty -> Ok), base58_decode
+  and base62_decode empty -> Ok, uudecode_line empty -> Err.
+- Push incident: three GitHub `Internal Server Error` 500s at
+  15:07-15:09Z (push + ls-remote), logged in docs/failed_attempts.md;
+  the 4th attempt at 15:22Z succeeded and origin/main caught up
+  (5ce4785 -> e7c4ee5).
+- Probe p_wave82_shapes.xi (248th, 15 checks): green on v0.64.0 pre- and
+  post-clauses; targeted smokes smoke_convert_ascii85,
+  smoke_encoding_percent_ascii85, smoke_convert_base58_62 1/1 each.
+  convert 55.4% -> 59%, global 53.9% -> 54.1%, meter 75.4%; floors119
+  wired.
+- Battery on this commit (v0.64.0): release corpus 953/953 full (672.8s,
+  no exclusions); probes 248/248 (636.5s); check_modules 509/509 (282.6s);
+  barename 0/509 (298.6s); floors119 + module-smoke (497/517, 3477/6202)
+  ratchets OK.
 
 **SESSION 2026-10-07 block 52 (wave 81: convert unicode family; floors118)**
 - Wave 81: 38 clauses / 26 new pub -- utf8 4 (encode 1..4 range, empty

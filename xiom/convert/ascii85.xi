@@ -48,7 +48,9 @@ fn _a85_group(value: Int) -> Str {
 /// Encodes bytes as an Ascii85 string. Runs of four zero bytes collapse to
 /// 'z'; a final partial group is padded with zero bytes on the right and only
 /// the needed characters are emitted. Empty input yields "". Complexity: O(n).
-pub fn to_ascii85(data: &Vec[UInt8]) -> Str {
+pub fn to_ascii85(data: &Vec[UInt8]) -> Str
+  ensures: (data.len() == 0) => (result == "")
+{
   var result = "";
   let len = data.len();
   if len == 0 {
@@ -108,7 +110,9 @@ fn _a85_digit(c: UInt8) -> Int {
 /// Decodes an Ascii85 string back into bytes. Accepts 'z' for zero runs.
 /// Returns Err on an invalid character, a 'z' inside a group, an out-of-range
 /// group value, or a degenerate tail group. Complexity: O(n).
-pub fn from_ascii85(s: Str) -> Result[Vec[UInt8], Str] {
+pub fn from_ascii85(s: Str) -> Result[Vec[UInt8], Str]
+  ensures: (s.len() == 0) => (result.is_ok == true)
+{
   var result = Vec[UInt8].new();
   let len = s.len();
   if len == 0 {
@@ -170,7 +174,9 @@ pub fn from_ascii85(s: Str) -> Result[Vec[UInt8], Str] {
 }
 
 /// Encodes a string's UTF-8 bytes as Ascii85. Complexity: O(n).
-pub fn ascii85_encode_str(s: Str) -> Str {
+pub fn ascii85_encode_str(s: Str) -> Str
+  ensures: (s.len() == 0) => (result == "")
+{
   var bytes = Vec[UInt8].new();
   var i: Int = 0;
   let slen = s.len();
@@ -185,7 +191,9 @@ pub fn ascii85_encode_str(s: Str) -> Str {
 /// Decodes Ascii85 into a UTF-8 string (bytes copied verbatim; the caller is
 /// responsible for the UTF-8 validity of the decoded content). Returns Err on
 /// invalid Ascii85. Complexity: O(n).
-pub fn ascii85_decode_str(s: Str) -> Result[Str, Str] {
+pub fn ascii85_decode_str(s: Str) -> Result[Str, Str]
+  ensures: (s.len() == 0) => (result.is_ok == true)
+{
   var r = from_ascii85(s);
   match r {
     Ok(bytes) => {

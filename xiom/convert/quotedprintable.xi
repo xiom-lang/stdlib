@@ -18,7 +18,9 @@ use xiom.string;
 /// Parameters: data -- the raw bytes.
 /// Returns: the QP-encoded text (ASCII).
 /// Complexity: O(n).
-pub fn qp_encode(data: &Vec[UInt8]) -> Str {
+pub fn qp_encode(data: &Vec[UInt8]) -> Str
+  ensures: (data.len() == 0) => (result == "")
+{
   return qp_encode_maxline(data, 76);
 }
 
@@ -26,7 +28,9 @@ pub fn qp_encode(data: &Vec[UInt8]) -> Str {
 /// Parameters: data -- the raw bytes; max_line -- the target column limit.
 /// Returns: the QP-encoded text.
 /// Complexity: O(n).
-pub fn qp_encode_maxline(data: &Vec[UInt8], max_line: Int) -> Str {
+pub fn qp_encode_maxline(data: &Vec[UInt8], max_line: Int) -> Str
+  ensures: (data.len() == 0) => (result == "")
+{
   var result = "";
   var col: Int = 0;
   var i: Int = 0;
@@ -62,7 +66,9 @@ pub fn qp_encode_maxline(data: &Vec[UInt8], max_line: Int) -> Str {
 /// Parameters: s -- the QP-encoded text.
 /// Returns: Ok(bytes) on success; Err for a truncated or invalid =HH escape.
 /// Complexity: O(n).
-pub fn qp_decode(s: Str) -> Result[Vec[UInt8], Str] {
+pub fn qp_decode(s: Str) -> Result[Vec[UInt8], Str]
+  ensures: (s.len() == 0) => (result.is_ok == true)
+{
   var result = Vec[UInt8].new();
   var len = string.str_len(s);
   var i: Int = 0;
@@ -111,7 +117,9 @@ pub fn qp_decode(s: Str) -> Result[Vec[UInt8], Str] {
 /// Parameters: s -- the encoded text; width -- the maximum line width.
 /// Returns: the re-wrapped text.
 /// Complexity: O(n).
-pub fn qp_soft_linebreak(s: Str, width: Int) -> Str {
+pub fn qp_soft_linebreak(s: Str, width: Int) -> Str
+  ensures: (s.len() == 0) => (result == "")
+{
   var result = "";
   var col: Int = 0;
   var len = string.str_len(s);

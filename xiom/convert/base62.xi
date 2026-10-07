@@ -181,7 +181,9 @@ pub fn base62_encode(data: &Vec[UInt8]) -> Str
 /// Decodes a base62 string back into bytes. Leading '0' characters map back
 /// to leading zero bytes. Returns Err on an invalid character. Empty input
 /// yields an empty byte vector. Complexity: O(n^2) worst case.
-pub fn base62_decode(s: Str) -> Result[Vec[UInt8], Str] {
+pub fn base62_decode(s: Str) -> Result[Vec[UInt8], Str]
+  ensures: (s.len() == 0) => (result.is_ok == true)
+{
   var result = Vec[UInt8].new();
   let len = s.len();
   if len == 0 {

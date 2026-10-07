@@ -137,7 +137,9 @@ pub fn uuencode_line(data: &Vec[UInt8]) -> Str {
 /// Parameters: s -- the encoded line (length char + data, no newline).
 /// Returns: Ok(bytes) on success; Err on invalid input.
 /// Complexity: O(1).
-pub fn uudecode_line(s: Str) -> Result[Vec[UInt8], Str] {
+pub fn uudecode_line(s: Str) -> Result[Vec[UInt8], Str]
+  ensures: (s.len() == 0) => (result.is_err == true)
+{
   var len = string.str_len(s);
   if len == 0 {
     return Err("uudecode_line: empty line");
