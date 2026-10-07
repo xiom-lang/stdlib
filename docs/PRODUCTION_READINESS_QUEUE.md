@@ -94,6 +94,37 @@ items verified against our tree:
   Remaining runtime-backed items (`socket_set_timeout`/`nonblocking`/
   `reuse_addr` + real `flush_stdout`) wait for the runtime bundle or
   `XIOM_RUNTIME_DIR`.
+- Pulse wishlist fetch 2026-10-07 (their file updated 2026-10-05 21:39
+  against stdlib 15cb889 / pin v0.63.1, i.e. just before our ec64dec
+  hardening):
+  * Production evidence for `write_all`: serving the 270 KB app icon
+    through one `socket_send` returned a short write and the client got
+    nothing; PULSE chunks+loops locally (`send_all`). The stdlib version
+    landed at ec64dec (chunked, partial-send aware) and is locked by the
+    100000-byte loopback probe.
+  * `server_parse_request` landed as `Option[ServerRequest]` (PULSE
+    suggested `Result[ServerRequest, Str]`); flagged for PULSE re-verify
+    -- an error-carrying variant can follow if the failure reason is
+    needed.
+  * `hmac_sha256_hex` landed; `mac.xi` already carries
+    `constant_time_eq`/`hmac_verify`, so the constant-time-compare half
+    needs no new code.
+  * NEW durable-append ask (fsync/flush; `io.fsync(handle)`,
+    `flush_stdout`): no `fsync`/`FlushFileBuffers`/`_commit` exists in
+    `runtime/*.c`, so it is runtime-backed and queued for the next
+    compiler runtime bundle; the packages sheet filed the same ask on
+    2026-10-05 as its "highest-value storage ask" (two-lane demand).
+  * v0.64.0 positives: runtime + crypto link env-free (`XIOM_RUNTIME_DIR`
+    retired in PULSE's dev-env; doctor reports the installed
+    `lib\runtime`); `TcpStream.read` probes green (C-PULSE-01 closed).
+  * `PACKAGE-WISHLIST-PULSE.md` checked: packages-lane items only
+    (`xiom.http` 0.1.1, `xiom.jwt` 0.2.0 and `xiom.router` 0.1.0 adopted;
+    proposed `xiom.session`/`static`/`metrics`/`middleware`/`kv`); the
+    stdlib asset to keep for `xiom.static` is `xiom.net.mime`;
+    C-PULSE-02 (installed packages not mapped into the compiler module
+    catalog) is compiler-side.
+  * Submodule note: root modules do not re-export submodule fns; a doc
+    line per root README is a low-priority docs item.
 
 ## Systems track (bare-metal / GPU / driver-adjacent) -- relayed 2026-10-05
 

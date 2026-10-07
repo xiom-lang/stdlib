@@ -1596,6 +1596,36 @@ registry pin, agent recon for the rest)**
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
 
+**SESSION 2026-10-07 block 48 (relay intake: Pulse wishlist + packages sheet)**
+- Checked the Pulse lane's STDLIB-WISHLIST-PULSE.md (updated 2026-10-05
+  21:39 against stdlib 15cb889 / pin v0.63.1 -- predates our ec64dec
+  hardening) and the packages sheet
+  E:\xiom-packages\packages\docs\STDLIB-WISHLIST.md (now 134 rows, 8 new
+  2026-10-05 rows).
+- Pulse: `write_all` now has production evidence (a 270 KB icon served
+  through one `socket_send` short-wrote and the client received
+  nothing; PULSE ran a local `send_all` loop) -- landed at ec64dec;
+  `server_parse_request` landed as `Option[ServerRequest]` (PULSE
+  suggested `Result[ServerRequest, Str]`, flagged for re-verify);
+  `hmac_sha256_hex` landed and `mac.xi` already has
+  `constant_time_eq`/`hmac_verify`; v0.64.0 runtime+crypto link
+  env-free, `XIOM_RUNTIME_DIR` retired in PULSE's dev-env; NEW
+  durable-append ask (fsync/flush, no `fsync`/`FlushFileBuffers` in
+  `runtime/*.c`) queued runtime-backed.
+- Packages sheet 2026-10-05 batch recorded in docs/STDLIB-WISHLIST.md:
+  HTTP-date pair, path safety (`path_within`/`is_absolute`), fs remove
+  parity, streaming `read_exact`, durable write path (highest-value
+  storage ask, same as the Pulse fsync ask), `append_file_bytes`,
+  `truncate`/`remove_dir`, file locking. Defects unchanged:
+  `sb_push_int` INT_MIN, `parse_int` 2^63 -> INT64_MIN and
+  `_u64_lshr` n=63 open; row 33 crypto linkability compiler/install
+  lane; empty-needle fixed.
+- PACKAGE-WISHLIST-PULSE.md checked: packages-lane scope (xiom.router
+  adopted; session/static/metrics/middleware/kv proposed); stdlib keeps
+  `xiom.net.mime` for the future `xiom.static`; C-PULSE-02 is
+  compiler-side.
+- Next: wave 78 (thread 25% then convert 25.6%).
+
 **SESSION 2026-10-05 block 47 (Pulse hardening wave: write_all, server_parse_request, hmac_sha256_hex)**
 - New surfaces (Pulse relay follow-up): `TcpStream.write_all` in
   xiom/net/net.xi (64 KiB staging-buffer loop, advances by the

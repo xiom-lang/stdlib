@@ -95,3 +95,34 @@ stdlib release. The packages lane's other notes (catalog bugs obs-fold
 trimming and `max-age=abc` were package-side; `str_replace_all` proved
 useful for policy rewriting; avoid `==` on Result values in tests -- no
 guaranteed `Eq`) need no stdlib action beyond row 1.
+
+Relay status 2026-10-07 (fetched online; sheet now 134 rows): the
+2026-10-05 batch adds 8 rows, all stdlib-relevant:
+- HTTP-date pair: RFC 1123/7231 formatter from epoch + public
+  IMF-fixdate parser (`strftime` hardcodes `%H/%M/%S` to "00" and lacks
+  `%a/%b`; the parser is private in `cookie.xi`) -- requesters
+  `xiom.static`, PULSE.
+- Path safety: cross-platform lexical `path_within(root, child)`,
+  Windows-aware `is_absolute`, both-separator join (`io.join_paths` /
+  `io.is_absolute` are `/`-only) -- `xiom.static` traversal guard.
+- `xiom.io.fs` remove parity: `fs_remove` / `fs_remove_dir` (`fs` has
+  write/read but no remove; only `io.remove_file`).
+- Concrete stdio `Read` implementation of `read_exact` (streaming;
+  `io.xi:481` is interface-only, `fs_read_range` returns whole buffers
+  with Int32 offsets).
+- Durable write path: real `io.fsync(handle)` / flush (`fsync` /
+  `fdatasync` / `flush_fd` / `sync_fd` / `fsync_dir` are Err stubs and
+  `flush_stdout` is a no-op) -- flagged "highest-value storage ask";
+  also filed by PULSE (STDLIB-WISHLIST-PULSE row 25), so two-lane
+  demand. Runtime-backed: no `fsync`/`FlushFileBuffers`/`_commit` in
+  `runtime/*.c`; queued for the next compiler runtime bundle.
+- Byte-level append parity: `append_file_bytes(path, &Vec[UInt8])`.
+- `truncate(path, len)` + `remove_dir(path)` (`os/fs_ffi.xi:151` is a
+  stub; `io` has `remove_file` only).
+- File locking (`file_lock` is an Err stub; `xiom.kv` single-writer is
+  unenforced).
+Defects unchanged: `sb_push_int` INT_MIN (87), `parse_int` 2^63 ->
+INT64_MIN (96) and `_u64_lshr` n=63 (127) stay open (fix-first
+candidates); row 33 crypto linkability stays compiler/install-lane (not
+reproducible on stdlib main); the empty-needle row is fixed. Stale: 34
+(encoding.base64 shipped), 139 (duplicates 33).
