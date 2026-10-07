@@ -26,7 +26,11 @@ pub fn timestamp_now() -> Int {
 /// Parameters: ts -- the timestamp.
 /// Returns: the corresponding Date (UTC).
 /// Complexity: O(1).
-pub fn timestamp_to_date(ts: Int) -> Date {
+pub fn timestamp_to_date(ts: Int) -> Date
+  ensures: (ts == 0) => (result.year == 1970 && result.month == 1 && result.day == 1)
+  ensures: (ts == 86400) => (result.year == 1970 && result.month == 1 && result.day == 2)
+  ensures: (ts == -1) => (result.year == 1969 && result.month == 12 && result.day == 31)
+{
   var days = ts / 86400;
   var tod = ts - days * 86400;
   if tod < 0 {
@@ -40,7 +44,11 @@ pub fn timestamp_to_date(ts: Int) -> Date {
 /// Parameters: ts -- the timestamp.
 /// Returns: the corresponding DateTime (UTC) with weekday computed.
 /// Complexity: O(1).
-pub fn timestamp_to_datetime(ts: Int) -> DateTime {
+pub fn timestamp_to_datetime(ts: Int) -> DateTime
+  ensures: (ts == 0) => (result.year == 1970 && result.month == 1 && result.day == 1 && result.hour == 0 && result.minute == 0 && result.second == 0)
+  ensures: (ts == 3661) => (result.hour == 1 && result.minute == 1 && result.second == 1)
+  ensures: (ts == -1) => (result.year == 1969 && result.month == 12 && result.day == 31 && result.hour == 23 && result.minute == 59 && result.second == 59)
+{
   var days = ts / 86400;
   var tod = ts - days * 86400;
   if tod < 0 {
@@ -59,7 +67,9 @@ pub fn timestamp_to_datetime(ts: Int) -> DateTime {
 /// Parameters: d -- the date.
 /// Returns: epoch seconds for 00:00:00Z of that date.
 /// Complexity: O(1).
-pub fn timestamp_from_date(d: &Date) -> Int {
+pub fn timestamp_from_date(d: &Date) -> Int
+  ensures: (d.year == 1970 && d.month == 1 && d.day == 1) => (result == 0)
+{
   return time.date_to_timestamp(d);
 }
 
@@ -67,7 +77,9 @@ pub fn timestamp_from_date(d: &Date) -> Int {
 /// Parameters: dt -- the date-time value.
 /// Returns: epoch seconds for that instant.
 /// Complexity: O(1).
-pub fn timestamp_from_datetime(dt: &DateTime) -> Int {
+pub fn timestamp_from_datetime(dt: &DateTime) -> Int
+  ensures: (dt.year == 1970 && dt.month == 1 && dt.day == 1) => (result == dt.hour * 3600 + dt.minute * 60 + dt.second)
+{
   let days = _days_from_civil(dt.year, dt.month, dt.day);
   var total = days * 86400;
   total = total + dt.hour * 3600;

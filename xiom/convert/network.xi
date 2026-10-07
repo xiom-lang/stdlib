@@ -17,7 +17,9 @@ module xiom.convert.network
 /// Parameters: n -- a 16-bit value (0..65535).
 /// Returns: the byte-swapped value.
 /// Complexity: O(1).
-pub fn host_to_network16(n: Int) -> Int {
+pub fn host_to_network16(n: Int) -> Int
+  ensures: result == (((n & 0xFF) << 8) | ((n >> 8) & 0xFF))
+{
   var lo = n & 0xFF;
   var hi = (n >> 8) & 0xFF;
   return (lo << 8) | hi;
@@ -27,7 +29,9 @@ pub fn host_to_network16(n: Int) -> Int {
 /// Parameters: n -- a 32-bit value.
 /// Returns: the byte-swapped value.
 /// Complexity: O(1).
-pub fn host_to_network32(n: Int) -> Int {
+pub fn host_to_network32(n: Int) -> Int
+  ensures: result == (((n & 0xFF) << 24) | (((n >> 8) & 0xFF) << 16) | (((n >> 16) & 0xFF) << 8) | ((n >> 24) & 0xFF))
+{
   return _bswap32(n);
 }
 
@@ -35,7 +39,9 @@ pub fn host_to_network32(n: Int) -> Int {
 /// Parameters: n -- a 16-bit network-order value.
 /// Returns: the byte-swapped value.
 /// Complexity: O(1).
-pub fn network_to_host16(n: Int) -> Int {
+pub fn network_to_host16(n: Int) -> Int
+  ensures: result == (((n & 0xFF) << 8) | ((n >> 8) & 0xFF))
+{
   var lo = n & 0xFF;
   var hi = (n >> 8) & 0xFF;
   return (lo << 8) | hi;
@@ -45,7 +51,9 @@ pub fn network_to_host16(n: Int) -> Int {
 /// Parameters: n -- a 32-bit network-order value.
 /// Returns: the byte-swapped value.
 /// Complexity: O(1).
-pub fn network_to_host32(n: Int) -> Int {
+pub fn network_to_host32(n: Int) -> Int
+  ensures: result == (((n & 0xFF) << 24) | (((n >> 8) & 0xFF) << 16) | (((n >> 16) & 0xFF) << 8) | ((n >> 24) & 0xFF))
+{
   return _bswap32(n);
 }
 
@@ -53,7 +61,9 @@ pub fn network_to_host32(n: Int) -> Int {
 /// Parameters: n -- a 64-bit value.
 /// Returns: the byte-swapped value.
 /// Complexity: O(1).
-pub fn htonll(n: Int) -> Int {
+pub fn htonll(n: Int) -> Int
+  ensures: result == (((n & 0xFF) << 56) | (((n >> 8) & 0xFF) << 48) | (((n >> 16) & 0xFF) << 40) | (((n >> 24) & 0xFF) << 32) | (((n >> 32) & 0xFF) << 24) | (((n >> 40) & 0xFF) << 16) | (((n >> 48) & 0xFF) << 8) | ((n >> 56) & 0xFF))
+{
   return _bswap64(n);
 }
 
@@ -61,7 +71,9 @@ pub fn htonll(n: Int) -> Int {
 /// Parameters: n -- a 64-bit network-order value.
 /// Returns: the byte-swapped value.
 /// Complexity: O(1).
-pub fn ntohll(n: Int) -> Int {
+pub fn ntohll(n: Int) -> Int
+  ensures: result == (((n & 0xFF) << 56) | (((n >> 8) & 0xFF) << 48) | (((n >> 16) & 0xFF) << 40) | (((n >> 24) & 0xFF) << 32) | (((n >> 32) & 0xFF) << 24) | (((n >> 40) & 0xFF) << 16) | (((n >> 48) & 0xFF) << 8) | ((n >> 56) & 0xFF))
+{
   return _bswap64(n);
 }
 

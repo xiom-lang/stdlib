@@ -1231,9 +1231,22 @@ T1/T2 yields.
         (findings 11). Probe p_wave84_shapes.xi (250th, 16 checks) green
         on v0.64.0 pre/post; targeted url smokes 1/1. Next: ip + lossy/
         network/timestamp.
+        Wave 85 (2026-10-07): coverage wave 48 -- convert ip/lossy/
+        network/timestamp families, 31 clauses / 20 new pub (ip 6:
+        validator length guards + empty-input None identities;
+        lossy 4: empty/sign-only zero pins + NaN/2^63 clamp mirrors;
+        network 6: exact byte-swap mirrors incl. the 64-bit closed form;
+        timestamp 4: epoch/86400/-1 pins on to_date/to_datetime and the
+        epoch-day band on from_datetime; timestamp_now stays clause-free,
+        system clock). convert 63.9% -> 70.5%, global 54.3% -> 54.6%,
+        meter 75.5%; floors122. Probe p_wave85_shapes.xi (251st, 63
+        checks) green on v0.64.0 pre/post; targeted smokes
+        smoke_convert_ip, smoke_convert_time, smoke_convert_checked 1/1
+        each. Next: convert remaining locals (date/datetime/duration/
+        time, wstring/from/into/roundtrip) then the low dirs.
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors121.json
-       tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors122.json
+        tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;
        earlier floors kept at

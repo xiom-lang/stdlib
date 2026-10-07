@@ -18,7 +18,10 @@ use xiom.core.INT_MIN;
 /// Parses a decimal integer string. Returns 0 on malformed input (empty,
 /// invalid characters) and clamps to INT_MAX/INT_MIN on overflow -- the
 /// function never fails. Complexity: O(n), n = string length.
-pub fn lossy_from_str(s: Str) -> Int {
+pub fn lossy_from_str(s: Str) -> Int
+  ensures: (s.len() == 0) => (result == 0)
+  ensures: (s == "-" || s == "+") => (result == 0)
+{
   let len = s.len();
   if len == 0 {
     return 0;
@@ -60,7 +63,11 @@ pub fn lossy_from_str(s: Str) -> Int {
 
 /// Truncates a float toward zero, clamping to INT_MAX/INT_MIN on overflow.
 /// NaN yields 0. Complexity: O(1).
-pub fn lossy_from_float(f: Float64) -> Int {
+pub fn lossy_from_float(f: Float64) -> Int
+  ensures: (f != f) => (result == 0)
+  ensures: (f >= 9223372036854775808.0) => (result == INT_MAX)
+  ensures: (f < -9223372036854775808.0) => (result == INT_MIN)
+{
   if f != f {
     return 0;
   };
@@ -76,7 +83,10 @@ pub fn lossy_from_float(f: Float64) -> Int {
 /// Parses a floating-point string, returning 0.0 on any parse failure.
 /// Supports optional sign, decimal point, and 'e'/'E' exponent.
 /// Complexity: O(n), n = string length.
-pub fn lossy_to_float(s: Str) -> Float64 {
+pub fn lossy_to_float(s: Str) -> Float64
+  ensures: (s.len() == 0) => (result == 0.0)
+  ensures: (s == "-" || s == "+") => (result == 0.0)
+{
   let len = s.len();
   if len == 0 {
     return 0.0;
@@ -182,7 +192,9 @@ pub fn lossy_to_float(s: Str) -> Float64 {
 
 /// Returns the first character of s, or '\0' (the null character) when the
 /// string is empty. Complexity: O(1).
-pub fn lossy_char(s: Str) -> Char {
+pub fn lossy_char(s: Str) -> Char
+  ensures: (s.len() == 0) => (result == '\0')
+{
   var opt = string.char_at(s, 0);
   if opt.is_some {
     return opt.value;

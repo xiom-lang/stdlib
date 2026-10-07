@@ -1,10 +1,10 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
-**75.4% -- 7 of 10 gates complete; gate 8 at 54.3% (partial credit) and
+**75.5% -- 7 of 10 gates complete; gate 8 at 54.6% (partial credit) and
 gates 9-10 discrete.** (Compiler pin: **v0.64.0**.)
 **Gates: corpus 954/954 full (C001 carve-outs retired on v0.63.1; new
 TcpStream loopback and uuencode roundtrip smokes added), modules 509/509,
-probes 250/250, barename 0/509.**
+probes 251/251, barename 0/509.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -14,17 +14,18 @@ gates flip:
    full, no carve-outs (C001 fixed by 4bf8cf1e; 20/20 + 20/20 stress).
    lz4 is fixed by m190 and stayed in the gate; the new TcpStream loopback
    smoke locks m196.
-3. Probe corpus green -- MET (250/250 on v0.64.0, incl. the promoted
+3. Probe corpus green -- MET (251/251 on v0.64.0, incl. the promoted
    regression probes, the pin locks, the v0.64.0 m193-m196 probe, the
    wave-77 stats probe, the Pulse hardening probe, the wave-78 thread
    probe, the wave-79 convert probe, the wave-80 base-codec probe, the
    wave-81 unicode probe, the wave-82 codec-guard probe, the wave-83
-   codec-tail probe and the wave-84 uri/url/urn probe).
+   codec-tail probe, the wave-84 uri/url/urn probe and the wave-85
+   ip/lossy/network/timestamp probe).
 4. Strict bare-name scan clean -- MET (0/509).
-5. Coverage ratchet green -- MET (floors121).
+5. Coverage ratchet green -- MET (floors122).
 6. Documentation ratchet 100% -- MET.
-7. Module-smoke ratchet green -- MET (497/517 modules, 3475/6200 fns).
-8. Contract coverage 100% (every public fn carries clauses) -- OPEN (54.3%).
+7. Module-smoke ratchet green -- MET (497/517 modules, 3477/6202 fns).
+8. Contract coverage 100% (every public fn carries clauses) -- OPEN (54.6%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
    OPEN (11: 10 compiler, 1 stdlib algorithm).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
@@ -35,8 +36,8 @@ credit (discrete). Update the percentage and the gate-8 fraction in the
 same commit as each floors dump so the meter moves smoothly toward 80%.
 
 Authoritative order: the gates above, then the updates below newest-first.
-Current state: compiler pin v0.64.0; coverage 54.3%, meter 75.4%; handoff
-in `docs/stdlib_session.md` snapshot 16 (block 55).
+Current state: compiler pin v0.64.0; coverage 54.6%, meter 75.5%; handoff
+in `docs/stdlib_session.md` snapshot 17 (block 58).
 
 ## Project Pulse relay (web-framework lane) -- 2026-10-05
 
@@ -628,6 +629,24 @@ compiler-owned for v0.64.1; Box stays section C. floors113 (global
 51.4%, reflect 100%); meter 75.1%. Battery on v0.64.0: corpus 953/953,
 probes 241/241, modules 509/509, barename 0/509, floors113 +
 module-smoke ratchets OK.
+
+Update 2026-10-07 (wave 85 landed): convert ip/lossy/network/timestamp
+families -- 31 clauses / 20 new pub. ip 6 (is_valid_ipv4 < 7 / > 15 and
+is_valid_ipv6 < 2 => false; empty-input None identities on
+string_to_ipv4/ip_parse/ip_to_bytes; ipv4_to_string empty -> "" and the
+4-octet 7..15 length band), lossy 4 (empty and sign-only zero pins;
+NaN/2^63 clamp mirrors of lossy_from_float; zero pins on
+lossy_to_float/lossy_char), network 6 (exact byte-swap mirrors, incl. the
+64-bit closed form verified with the sign-bit case), timestamp 4
+(epoch/86400/-1 pins on timestamp_to_date/timestamp_to_datetime and the
+epoch-day band on timestamp_from_datetime; timestamp_now stays
+clause-free, system clock). convert 63.9% -> 70.5%, global 54.3% ->
+54.6%; meter 75.5%; floors122. Probe p_wave85_shapes.xi (251st, 63
+checks) green on v0.64.0 pre/post; targeted smokes smoke_convert_ip,
+smoke_convert_time and smoke_convert_checked 1/1 each. Readiness next:
+convert remaining locals (date/datetime/duration/time, wstring/from/into/
+roundtrip) then the low dirs (async 4.5%, serialize 5.4%, iter 18.6% --
+clause-side blocked -- bench 18.8%, os 26.2%, core 26.7%, format 27.3%).
 
 Update 2026-10-07 (wave 84 landed): convert uri/url/urn families --
 8 clauses / 8 new pub (uri_parse, uri_normalize, url_parse, url_encode,

@@ -4,14 +4,14 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 -->
 # XIOM Stdlib Session -- Handoff
 
-## 0A. CONTINUE HERE -- handoff snapshot 16 (updated 2026-10-07, v0.64.0 pin complete, wave 84 complete, compiler relay m200-m206 recorded)
+## 0A. CONTINUE HERE -- handoff snapshot 17 (updated 2026-10-07, v0.64.0 pin complete, wave 85 complete, compiler relay m200-m206 recorded)
 
 **PASTE-READY PROMPT FOR THE NEXT SESSION (copy this block):**
 
 ---
 You are continuing the XIOM stdlib lane. Worktree `E:\xiom-lang\stdlib`,
-branch `main`. Read `docs/stdlib_session.md` blocks 56 (latest), 55, 54,
-53, 52, 51, 50, 49, 48, 47, 46, 45, 44, 43
+branch `main`. Read `docs/stdlib_session.md` blocks 58 (latest), 57, 56,
+55, 54, 53, 52, 51, 50, 49, 48, 47, 46, 45, 44, 43
 (publish), 27 (iter block) and `docs/PRODUCTION_READINESS_QUEUE.md`
 before acting; snapshot 5 below the prompt keeps the deep protocol lore.
 
@@ -24,12 +24,12 @@ stdlib-v0.63.0 (179cfea). Compiler relay 2026-10-07 (dev builds m200-m203):
 m203 fixed the iter closure-thunk clause leak; m200 fixed the rvalue
 Vec[Float64] index; m201 fixed multipart/geom-matrix/polyhedra -- see the
 NEXT PIN trigger in QUEUED; m202 gates the packages grpc publish, m206
-covers graphql conformance.
+covers graphql conformance. Pin check 2026-10-07 (wave 85): v0.64.0 is
+still GitHub Latest, so no re-pin happened; the trigger stays queued.
 Gates on v0.64.0: release corpus 954/954 FULL (m196 loopback + uuencode
-roundtrip smokes added), modules 509/509, probes 250/250, barename
-0/509, floors121, module-smoke
-ratchet OK. Coverage = 54.3% global
-pub-with-clause. Waves landed: 63 net+hash, 64 reflect+iter adapters, 65x convert, 66 time, 67 format, 68 misc, 69 os+rand, 70 crypto, 71 log, 72 compress, 73 pin, 74 encoding, 75 encoding-rem+debug, 76 simd, 64.0 pin, 77 stats, Pulse hardening (write_all/server_parse_request/hmac_sha256_hex), 78 thread, 79 convert numeric shims, 80 convert base shims, 81 convert unicode, 82 convert codec guards, 83 convert codec tails, 84 convert uri/url/urn. Wave
+roundtrip smokes added), modules 509/509, probes 251/251, barename
+0/509, floors122, module-smoke ratchet OK. Coverage = 54.6% global
+pub-with-clause. Waves landed: 63 net+hash, 64 reflect+iter adapters, 65x convert, 66 time, 67 format, 68 misc, 69 os+rand, 70 crypto, 71 log, 72 compress, 73 pin, 74 encoding, 75 encoding-rem+debug, 76 simd, 64.0 pin, 77 stats, Pulse hardening (write_all/server_parse_request/hmac_sha256_hex), 78 thread, 79 convert numeric shims, 80 convert base shims, 81 convert unicode, 82 convert codec guards, 83 convert codec tails, 84 convert uri/url/urn, 85 convert ip/lossy/network/timestamp. Wave
 65 (iter clauses) is DEFERRED: the C001 classifier is fixed (v0.63.1) and
 clauses may read tuple components, but the clause-side closure lowering
 was re-verified red on v0.64.0 (smoke_iter `use of undefined value`);
@@ -37,15 +37,18 @@ compiler relay 2026-10-07 says m203 fixed it (Range.count + smoke_iter
 verified OK/exit 0 on the dev build) -- re-add at the next pin, see the
 NEXT PIN trigger.
 
-FIRST TASK (wave 85): convert ip family (6 pub) plus lossy 4 and the
-network 4 / timestamp families, batching within the 40-60-pub directive;
-then the remaining low dirs (async 4.5%, serialize 5.4%, iter 18.6% --
+FIRST TASK (wave 86): convert remaining local families -- date (6 pub),
+datetime (4), duration (6), time (4) plus the wstring (3), from (4),
+into (3), roundtrip (4) shims and the uuid/mac/iri tails, batching
+within the 40-60-pub directive; documented skips stay (overflow.xi must
+not be called; to_int/to_int_from_char undefined surfaces). Then the
+remaining low dirs (async 4.5%, serialize 5.4%, iter 18.6% --
 clause-side blocked, bench 18.8%, os 26.2%, core 26.7%, format 27.3%,
 sync 29.1%, sort 31.9%).
 IF THE NEXT COMPILER PIN IS OUT when you start (it must carry
 m200/m201/m203), DO THE PIN-BUMP TRIGGER FIRST (QUEUED below): re-add the
 Range.count clause, retry the deferred iter set probe-first, promote the
-four fixed known-failures, re-dump floors -- then wave 85.
+four fixed known-failures, re-dump floors -- then wave 86.
 PENDING/QUEUED:
 (a) iter clause retry: red on v0.64.0 (block 46); compiler relay
 2026-10-07: m203 fixed the closure-thunk clause leak (Range.count +
@@ -65,7 +68,7 @@ HANDOFF NOTE: new locks are p_pin0640_shapes.xi (m193-m196),
 tests/smoke/smoke_net_tcp_stream.xi (m196 + write_all),
 tests/smoke/smoke_convert_uuencode.xi (wave 83, corpus 954), the m193
 guard-alloc smoke, and probes p_wave77_shapes.xi (167 checks) and
-p_pulse_shapes.xi through p_wave84_shapes.xi (250 probes total);
+p_pulse_shapes.xi through p_wave85_shapes.xi (251 probes total);
 p_wave43_shapes was updated for m194 exactness;
 p_rvalue_float_vec_index.xi and p_ensures_isok_guard.xi are open
 known-failure repros; docs/failed_attempts.md logs push incidents;
@@ -80,7 +83,7 @@ result.len()` form ONLY: the `(result.is_ok == true) =>` implication
 violates at runtime (filed as p_ensures_isok_guard.xi, m-fix pending);
 if a wave surfaces a new compiler finding, file a minimal repro in
 tools/known_failures/ with a README Current entry before the wave commit.
-(2) probe-first: add `tools/probes/p_wave85_shapes.xi` exercising every
+(2) probe-first: add `tools/probes/p_wave86_shapes.xi` exercising every
 clause-guard path; bind module-returned values to `let` before comparing
 (inline unsigned compares misread high bits; inline indexing of a
 returned Vec[Float64] reads garbage -- bind it first); bind `Vec.new()`
@@ -88,12 +91,12 @@ temporaries passed as `&Vec`; do not declare externs for runtime guard
 symbols; green on v0.64.0 (v0.63.1 cross-check when cheap).
 (3) apply, run targeted smokes; if unrelated codegen breaks, bisect and
 drop the offending clause with a code comment (see blocks 27/65x).
-(4) dump `tools/coverage_floors122.json`, wire the workflows +
+(4) dump `tools/coverage_floors123.json`, wire the workflows +
 `tools/README.md`, update plan/session/queue in the same commit, YAML
 check, pure-ASCII conventional commit.
 (5) battery: `run_smokes.ps1 -ExcludeFile tools/known_failures/
-gate-exclusions.txt` (expect 954/954 full), probe corpus (expect 251),
-check_modules 509/509, barename 0/509, floors122 + module-smoke ratchets;
+gate-exclusions.txt` (expect 954/954 full), probe corpus (expect 252),
+check_modules 509/509, barename 0/509, floors123 + module-smoke ratchets;
 record results in the session block; push `main`. If a push hits GitHub
 500s, follow docs/failed_attempts.md (3 attempts, log, retry later).
 
@@ -1632,6 +1635,30 @@ registry pin, agent recon for the rest)**
   gates; open: contract coverage 100%, zero open findings, beta-exit release
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
+
+**SESSION 2026-10-07 block 58 (wave 85: convert ip/lossy/network/timestamp; floors122)**
+- Wave 85: 31 clauses / 20 new pub -- ip 6 (is_valid_ipv4 < 7 / > 15
+  and is_valid_ipv6 < 2 => false; ipv4_to_string empty -> "" plus the
+  4-octet 7..15 band; string_to_ipv4/ip_parse/ip_to_bytes empty and
+  length-band None identities), lossy 4 (empty and sign-only zero pins;
+  lossy_from_float NaN -> 0 and 2^63 clamp mirrors; zero pins on
+  lossy_to_float/lossy_char), network 6 (exact byte-swap mirrors: 16/32-bit
+  bit expressions and the 64-bit closed form, runtime-verified incl. the
+  sign-bit case), timestamp 4 (epoch/86400/-1 pins on
+  timestamp_to_date/timestamp_to_datetime and the epoch-day band on
+  timestamp_from_datetime; timestamp_now stays clause-free, system clock,
+  matching date_now/instant_now).
+- Pin status checked first: v0.64.0 is still the latest compiler release
+  (2026-10-05), so the NEXT PIN trigger (Range.count + deferred iter set +
+  the four promotions) stays queued.
+- Probe p_wave85_shapes.xi (251st, 63 checks): green on v0.64.0 pre- and
+  post-clauses; targeted smokes smoke_convert_ip, smoke_convert_time and
+  smoke_convert_checked 1/1 each. convert 63.9% -> 70.5%, global 54.3% ->
+  54.6%, meter 75.5%; floors122 wired.
+- Battery on this commit (v0.64.0): release corpus 954/954 full (752.3s,
+  no exclusions); probes 251/251 (653.1s); check_modules 509/509 (225.5s);
+  barename 0/509 (364.7s); floors122 + module-smoke (497/517, 3477/6202)
+  ratchets OK.
 
 **SESSION 2026-10-07 block 57 (handoff refresh: snapshot 16 updated for the next session)**
 - Snapshot 16 refreshed: read list -> blocks 56 (latest)..; STATE carries
