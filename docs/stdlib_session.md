@@ -4,41 +4,54 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 -->
 # XIOM Stdlib Session -- Handoff
 
-## 0A. CONTINUE HERE -- handoff snapshot 16 (updated 2026-10-07, v0.64.0 pin complete, wave 84 complete)
+## 0A. CONTINUE HERE -- handoff snapshot 16 (updated 2026-10-07, v0.64.0 pin complete, wave 84 complete, compiler relay m200-m206 recorded)
 
 **PASTE-READY PROMPT FOR THE NEXT SESSION (copy this block):**
 
 ---
 You are continuing the XIOM stdlib lane. Worktree `E:\xiom-lang\stdlib`,
-branch `main`. Read `docs/stdlib_session.md` blocks 55 (latest), 54, 53,
-52, 51, 50, 49, 48, 47, 46, 45, 44, 43
+branch `main`. Read `docs/stdlib_session.md` blocks 56 (latest), 55, 54,
+53, 52, 51, 50, 49, 48, 47, 46, 45, 44, 43
 (publish), 27 (iter block) and `docs/PRODUCTION_READINESS_QUEUE.md`
 before acting; snapshot 5 below the prompt keeps the deep protocol lore.
 
-STATE (2026-10-05): compiler pin = official v0.64.0 (tag c68d91de, pin
+STATE (2026-10-07): compiler pin = official v0.64.0 (tag c68d91de, pin
 6e60e958 = our wave-74 head; v0.63.1 was c0fa3a2d/1b972478). Binary at
 %TEMP%\kilo\stdlib_ws\v0.64.0; v0.62.3/v0.62.4/v0.63.0/v0.63.1 archives
 kept. Registry carries xiom-std 0.62.3, 0.62.4 and 0.63.0 (0.63.1 publish
 pending); tags pushed: stdlib-v0.62.3 (12a3a1b), stdlib-v0.62.4 (3800c08),
-stdlib-v0.63.0 (179cfea).
+stdlib-v0.63.0 (179cfea). Compiler relay 2026-10-07 (dev builds m200-m203):
+m203 fixed the iter closure-thunk clause leak; m200 fixed the rvalue
+Vec[Float64] index; m201 fixed multipart/geom-matrix/polyhedra -- see the
+NEXT PIN trigger in QUEUED; m202 gates the packages grpc publish, m206
+covers graphql conformance.
 Gates on v0.64.0: release corpus 954/954 FULL (m196 loopback + uuencode
 roundtrip smokes added), modules 509/509, probes 250/250, barename
 0/509, floors121, module-smoke
 ratchet OK. Coverage = 54.3% global
 pub-with-clause. Waves landed: 63 net+hash, 64 reflect+iter adapters, 65x convert, 66 time, 67 format, 68 misc, 69 os+rand, 70 crypto, 71 log, 72 compress, 73 pin, 74 encoding, 75 encoding-rem+debug, 76 simd, 64.0 pin, 77 stats, Pulse hardening (write_all/server_parse_request/hmac_sha256_hex), 78 thread, 79 convert numeric shims, 80 convert base shims, 81 convert unicode, 82 convert codec guards, 83 convert codec tails, 84 convert uri/url/urn. Wave
-65 (iter clauses) is DEFERRED but pin-unblocked (block 27): the C001
-classifier is fixed on v0.63.1 and clauses may read tuple components; the
-deferred clause set (Range core 7 + chain 14 + fold 8 + iter_collect) is documented there.
+65 (iter clauses) is DEFERRED: the C001 classifier is fixed (v0.63.1) and
+clauses may read tuple components, but the clause-side closure lowering
+was re-verified red on v0.64.0 (smoke_iter `use of undefined value`);
+compiler relay 2026-10-07 says m203 fixed it (Range.count + smoke_iter
+verified OK/exit 0 on the dev build) -- re-add at the next pin, see the
+NEXT PIN trigger.
 
 FIRST TASK (wave 85): convert ip family (6 pub) plus lossy 4 and the
 network 4 / timestamp families, batching within the 40-60-pub directive;
 then the remaining low dirs (async 4.5%, serialize 5.4%, iter 18.6% --
 clause-side blocked, bench 18.8%, os 26.2%, core 26.7%, format 27.3%,
 sync 29.1%, sort 31.9%).
+IF THE NEXT COMPILER PIN IS OUT when you start (it must carry
+m200/m201/m203), DO THE PIN-BUMP TRIGGER FIRST (QUEUED below): re-add the
+Range.count clause, retry the deferred iter set probe-first, promote the
+four fixed known-failures, re-dump floors -- then wave 85.
 PENDING/QUEUED:
-(a) iter clause retry: DONE as red on v0.64.0 (block 46); re-retry the
-deferred set (Range core 7 + chain 14 + fold 8 + iter_collect) when the
-compiler closure work lands.
+(a) iter clause retry: red on v0.64.0 (block 46); compiler relay
+2026-10-07: m203 fixed the closure-thunk clause leak (Range.count +
+smoke_iter verified OK/exit 0 on the dev build) -- re-add
+`ensures: result >= 0` at the next pin and retry the deferred set
+(Range core 7 + chain 14 + fold 8 + iter_collect) probe-first.
 (b) Pulse pure-XIOM hardening: DONE 2026-10-05 (block 47).
 (c) runtime-backed asks (socket timeout/nonblocking/reuse-addr, real
 flush_stdout, fsync/durable writes) wait for the compiler runtime bundle
@@ -49,16 +62,24 @@ safety, fs remove parity, streaming read_exact, append_file_bytes,
 truncate/remove_dir, file locking) recorded in docs/STDLIB-WISHLIST.md;
 not yet wave-scheduled.
 HANDOFF NOTE: new locks are p_pin0640_shapes.xi (m193-m196),
-tests/smoke/smoke_net_tcp_stream.xi (m196 + write_all), the m193
-guard-alloc smoke, p_wave77_shapes.xi (wave 77 stats, 167 checks) and
-p_pulse_shapes.xi (Pulse hardening, 33 checks); p_wave43_shapes was
-updated for m194 exactness; p_rvalue_float_vec_index.xi is the new
-known-failure repro for the rvalue Vec[Float64] index finding.
+tests/smoke/smoke_net_tcp_stream.xi (m196 + write_all),
+tests/smoke/smoke_convert_uuencode.xi (wave 83, corpus 954), the m193
+guard-alloc smoke, and probes p_wave77_shapes.xi (167 checks) and
+p_pulse_shapes.xi through p_wave84_shapes.xi (250 probes total);
+p_wave43_shapes was updated for m194 exactness;
+p_rvalue_float_vec_index.xi and p_ensures_isok_guard.xi are open
+known-failure repros; docs/failed_attempts.md logs push incidents;
+out/*.json are disposable battery artifacts.
 Mandatory protocol:
 (1) recon bodies and derive every clause from them; no placeholder forms
 (no unsigned `>= 0`, no `is_ok || is_err`, no self-mirrors); clauses run at
 runtime, so never read Result/Option payloads, guard division/NaN, and
-prefer exact mirrors, length/presence bands and `@pre` invariants.
+prefer exact mirrors, length/presence bands and `@pre` invariants. For
+guarded payload-length claims use the canonical `result is Ok =>
+result.len()` form ONLY: the `(result.is_ok == true) =>` implication
+violates at runtime (filed as p_ensures_isok_guard.xi, m-fix pending);
+if a wave surfaces a new compiler finding, file a minimal repro in
+tools/known_failures/ with a README Current entry before the wave commit.
 (2) probe-first: add `tools/probes/p_wave85_shapes.xi` exercising every
 clause-guard path; bind module-returned values to `let` before comparing
 (inline unsigned compares misread high bits; inline indexing of a
@@ -87,13 +108,17 @@ QUEUED (do only when triggered):
   "Project Pulse relay". Pulse reply: `str_bytes` adopted; the empty-body
   `flush_stdout` finding is the root cause of their lagging/truncated
   redirected logs; runtime-backed items accepted with the
-  `XIOM_RUNTIME_DIR` caveat. Stdlib Pulse-hardening wave queued: socket
-  timeout/nonblocking/reuse-addr runtime externs + wrappers + deadline
-  recv, `TcpStream.write_all`, `server_parse_request` (headers +
-  Content-Length + body span), real `flush_stdout`, `hmac_sha256_hex`,
-  and a tcp loopback read/write fixture (also locks compiler C-PULSE-01).
-  `str_bytes` already exists at `xiom.string.slice.str_bytes` (answer
-  relayed). Test registry is compiler-owned.
+  `XIOM_RUNTIME_DIR` caveat. LANDED 2026-10-05 (block 47):
+  `TcpStream.write_all`, `server_parse_request` + `ServerRequest`,
+  `crypto.hmac_sha256_hex` (p_pulse_shapes.xi, 243rd); production
+  evidence: a 270 KB icon single-send short-wrote and the client got
+  nothing. STILL QUEUED (runtime-backed): socket
+  timeout/nonblocking/reuse-addr + deadline recv, real `flush_stdout`,
+  and the new durable-append ask (fsync/FlushFileBuffers -- no such
+  symbol in runtime/*.c; cross-filed by the packages sheet as its
+  highest-value storage ask). `str_bytes` already exists at
+  `xiom.string.slice.str_bytes` (answer relayed). Test registry is
+  compiler-owned.
 - Systems track relayed to the compiler lane 2026-10-05 (queue section
   "Systems track"): asks are freestanding/no-runtime target, repr(C)/
   by-value ABI, volatile/fences/ordered atomics, contract-disable, later
@@ -1607,6 +1632,18 @@ registry pin, agent recon for the rest)**
   gates; open: contract coverage 100%, zero open findings, beta-exit release
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
+
+**SESSION 2026-10-07 block 57 (handoff refresh: snapshot 16 updated for the next session)**
+- Snapshot 16 refreshed: read list -> blocks 56 (latest)..; STATE carries
+  the m200-m206 compiler relay; FIRST TASK wave 85 (convert ip + lossy/
+  network/timestamp) is preceded by the NEXT PIN trigger when the pin
+  carrying m200/m201/m203 ships (re-add Range.count clause, retry the
+  deferred iter set, promote the four fixed repros, re-dump floors);
+  protocol (1) adds the `result is Ok =>` guard-form rule and the
+  file-a-finding rule; HANDOFF NOTE lists the wave-77..84 locks,
+  smoke_convert_uuencode, the two open known-failure repros and
+  docs/failed_attempts.md.
+- No code changes; heads: wave 84 (1006c30) + compiler relay (4121b83).
 
 **SESSION 2026-10-07 block 56 (compiler relay: m200-m203 fixes + next-pin checklist)**
 - Compiler lane relay: m203 fixed the closure-thunk clause leak --
