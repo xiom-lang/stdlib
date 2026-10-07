@@ -26,7 +26,7 @@ gates flip:
 7. Module-smoke ratchet green -- MET (497/517 modules, 3475/6200 fns).
 8. Contract coverage 100% (every public fn carries clauses) -- OPEN (54.2%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
-   OPEN (10: 9 compiler, 1 stdlib algorithm).
+   OPEN (11: 10 compiler, 1 stdlib algorithm).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
 
 Meter formula: MET gates count 1.0; gate 8 counts its current

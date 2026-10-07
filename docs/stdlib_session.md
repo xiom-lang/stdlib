@@ -1620,6 +1620,11 @@ registry pin, agent recon for the rest)**
   post-clauses; targeted smokes smoke_convert_uuencode and
   smoke_convert_base58_62 1/1 each. convert 59% -> 61.3%, global 54.1%
   -> 54.2%, meter 75.4%; floors120 wired.
+- Compiler relay: filed the wave-80 guard-form finding as
+  tools/known_failures/p_ensures_isok_guard.xi (clause payload-length
+  claims with `(result.is_ok == true) =>` violate at runtime; the
+  canonical `result is Ok =>` form is required; rc 1 on v0.64.0).
+  Findings 10 -> 11 (10 compiler, 1 stdlib); queue gate 9 updated.
 - Battery on this commit (v0.64.0): release corpus 954/954 full (680.7s,
   no exclusions); probes 249/249 (216.2s); check_modules 509/509 (167.7s);
   barename 0/509 (252.7s); floors120 + module-smoke (497/517, 3477/6202)

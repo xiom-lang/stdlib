@@ -16,6 +16,19 @@ xiom --force -o out.exe tools/known_failures/<file>.xi
 
 ## Current
 
+**Open finding 2026-10-07 (compiler v0.64.0): clause payload-length
+claims guarded with `(result.is_ok == true) =>` violate at runtime; the
+canonical `result is Ok =>` form works.** Found while landing the wave-80
+convert base-codec clauses: `(result.is_ok == true) => (result.len() ==
+s.len())` on `Result[Str, Str]` aborts with `contract violated: ensures`
+for a correct Ok payload, while the identical claim written
+`result is Ok => result.len() == s.len()` (the form every canonical
+module uses) is green on the same call. The checker should either reject
+the implication form at compile time (like other unsupported clause
+payload reads) or evaluate it like the guarded form. Repro:
+`tools/known_failures/p_ensures_isok_guard.xi` (rc 1 on v0.64.0).
+Expected when fixed: rc 0.
+
 **RESOLVED 2026-10-05 (compiler v0.63.1, fix `4bf8cf1e`): the C001
 classifier is fixed.**
 The direct-form iter-range reducer (`range-sums + contains`) flips between
