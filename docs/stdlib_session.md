@@ -118,6 +118,11 @@ QUEUED (do only when triggered):
   only the C001 half retired. RE-VERIFIED on v0.64.0 (wave-77 follow-up):
   same clang `use of undefined value` (%tmp8); the deferred set stays
   queued with the compiler closure work.
+  NEXT PIN (compiler relay 2026-10-07): carry m200/m201/m203; then
+  re-add `Range.count` `ensures: result >= 0` and retry the deferred set,
+  promote the rvalue/multipart/geom-matrix/polyhedra repros out of
+  known_failures, re-dump floors (m202 gates the packages grpc publish,
+  m206 covers graphql conformance).
 - Repo-wide `result.value` payload-clause audit (v0.63.1 lowers payload
   clauses strictly): the four io.xi IOError `.len()` sites retired in the
   pin wave were the ONLY bogus ones; io/pipe.xi, io/fs.xi and
@@ -1602,6 +1607,20 @@ registry pin, agent recon for the rest)**
   gates; open: contract coverage 100%, zero open findings, beta-exit release
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
+
+**SESSION 2026-10-07 block 56 (compiler relay: m200-m203 fixes + next-pin checklist)**
+- Compiler lane relay: m203 fixed the closure-thunk clause leak --
+  `ensures: result >= 0` on Range.count + smoke_iter verified OK/exit 0;
+  m200 fixed p_rvalue_float_vec_index; m201 fixed p_multipart_parse_name,
+  p_geom_matrix_result_infer and p_polyhedra_nested_hull.
+- Next-pin checklist: the pin must carry m200/m201/m203 (m202 gates the
+  packages grpc publish; m206 covers graphql conformance). Then:
+  (1) re-add the Range.count clause and retry the deferred iter set
+  (Range core 7 + chain 14 + fold 8 + iter_collect) probe-first;
+  (2) promote the four fixed repros out of known_failures;
+  (3) re-dump floors (the findings count drops as items move).
+- Recorded in tools/known_failures/README.md entries and the queue's
+  compiler-findings relay section (item 7); packages notes included.
 
 **SESSION 2026-10-07 block 55 (wave 84: convert uri/url/urn; floors121)**
 - Wave 84: 8 clauses / 8 new pub -- uri_parse and uri_normalize

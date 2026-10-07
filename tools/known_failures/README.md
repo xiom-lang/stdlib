@@ -59,6 +59,8 @@ branches (`return _sorted(data)[0]`), which now bind the sorted copy first.
 Repro: `tools/known_failures/p_rvalue_float_vec_index.xi` (rc 1 on
 v0.64.0; the Int and bound-local controls run green first). Expected when
 fixed: rc 0.
+COMPILER RELAY 2026-10-07: fixed on m200 (dev build); promote this repro
+out of known_failures at the next pin (rc should then be 0).
 
 **Open finding 2026-10-04 (official v0.62.3, v0.62.4, v0.63.0, v0.61.3
 and the m189 dev build; CALL SIDE FIXED on v0.62.4+): `xiom.iter`
@@ -76,6 +78,10 @@ again on v0.64.0 (2026-10-05, wave-77 follow-up): `ensures: result >= 0`
 on Range.count still fails smoke_iter with clang `use of undefined value`
 (`%tmp8` at the same lowering position); the C001 half of the block is
 fixed, the closure half remains. Queued with the compiler closure work.
+COMPILER RELAY 2026-10-07: m203 fixed the closure-thunk clause leak --
+`ensures: result >= 0` on Range.count + smoke_iter verified OK/exit 0.
+At the next pin: re-add the clause and retry the deferred set (Range core
+7 + chain 14 + fold 8 + iter_collect) probe-first; move this finding out.
 
 **RESOLVED 2026-10-05 (compiler v0.64.0, m195): `xiom.reflect.all_types()`
 no longer heap-corrupts; the probe exits 0.** m195 keeps angle-bracket
@@ -97,6 +103,8 @@ right. Repro `tools/known_failures/p_multipart_parse_name.xi` (rc=1,
 re-verified on v0.62.4 and v0.63.0).
 Found in wave 62; the wave probe is presence-only for that path. Expected:
 `out[0].name == "f"`.
+COMPILER RELAY 2026-10-07: fixed on m201 (dev build); move out at the
+next pin.
 
 **Open finding 2026-10-02 (compiler v0.61.3 and v0.62.1):
 `polyhedra.convex_hull_2d`/`convex_hull_3d` collapse on nonempty inputs.**
@@ -107,6 +115,8 @@ itself is collapsed (caller and callee length reads agree). Repro:
 `tools/known_failures/p_polyhedra_nested_hull.xi` (returns 1). Found while
 landing the wave-53 geom clauses; the wave-53 probe keeps only the
 empty-input hull checks. `geometry_2d.convex_hull` (Point2 rows) is correct.
+COMPILER RELAY 2026-10-07: fixed on m201 (dev build); move out at the
+next pin.
 
 **Open finding 2026-10-01 (stdlib algorithm, not a compiler bug):
 `geometry_2d.polygon_difference` intersects b's outside half-planes instead
@@ -141,6 +151,8 @@ single-level `Vec[Float64]` returns are unaffected. Repro:
 pin). Found while landing the wave-50 geom clauses; the wave-50 probe
 annotates every nested matrix-module local, and `smoke_geom_mat.xi`
 already verifies matrix-module results through det/trace/rank scalars.
+COMPILER RELAY 2026-10-07: fixed on m201 (dev build); move out at the
+next pin.
 
 **Open finding 2026-09-29 (compiler v0.61.3): clause-position indexing of
 Float64 vector elements reads garbage.** In an `ensures` clause, indexing a

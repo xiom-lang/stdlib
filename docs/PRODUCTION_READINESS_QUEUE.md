@@ -1390,3 +1390,13 @@ compiler lane bumps `STDLIB_VERSION`, runs
    The four touched modules check clean through the check_modules probe
    shape. Strict flip waits on the compiler lane's XIOM_STRICT_BRACKETS=1
    diagnostics + pin bump; the arity list is still outstanding.
+7. Compiler relay 2026-10-07 (dev builds m200-m203): four findings fixed --
+   promote out of known_failures at the next pin: p_rvalue_float_vec_index
+   (m200), p_multipart_parse_name (m201), p_geom_matrix_result_infer and
+   p_polyhedra_nested_hull (m201). The iter clause-side closure leak is
+   fixed on m203 (`ensures: result >= 0` on Range.count + smoke_iter
+   verified OK/exit 0): at the next pin, re-add that clause and retry the
+   deferred set (Range core 7 + chain 14 + fold 8 + iter_collect)
+   probe-first. Relay to packages: grpc publish can proceed once the
+   official pin carries m202 (their 36/36 x2 is on the candidate);
+   graphql conformance is 10/10 with m206.
