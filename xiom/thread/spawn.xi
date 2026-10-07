@@ -41,7 +41,9 @@ fn next_thread_id() -> Int {
 /// Params: f - the function to run.
 /// Returns: a handle to the thread. The closure runs inline (simulation).
 /// Complexity: O(1) plus the cost of `f`.
-pub fn spawn(f: fn()) -> SpawnThread {
+pub fn spawn(f: fn()) -> SpawnThread
+  ensures: result.id > 0
+{
   f();
   return SpawnThread{ id: next_thread_id(); }
 }
@@ -50,7 +52,9 @@ pub fn spawn(f: fn()) -> SpawnThread {
 /// Params: f - the function to run; arg - its single argument.
 /// Returns: a handle to the thread. The closure runs inline (simulation).
 /// Complexity: O(1) plus the cost of `f`.
-pub fn spawn_with(f: fn(Int), arg: Int) -> SpawnThread {
+pub fn spawn_with(f: fn(Int), arg: Int) -> SpawnThread
+  ensures: result.id > 0
+{
   f(arg);
   return SpawnThread{ id: next_thread_id(); }
 }
@@ -59,7 +63,9 @@ pub fn spawn_with(f: fn(Int), arg: Int) -> SpawnThread {
 /// Params: t - the thread handle (consumed).
 /// Returns: Ok(0); the simulated thread has already completed.
 /// Complexity: O(1).
-pub fn join(t: SpawnThread) -> Result[Int, Str] {
+pub fn join(t: SpawnThread) -> Result[Int, Str]
+  ensures: result.is_ok == true
+{
   return Ok(0);
 }
 
@@ -100,7 +106,9 @@ pub fn thread_id() -> Int
 /// The number of running threads (hardware parallelism).
 /// Returns: the available hardware thread count (>= 1).
 /// Complexity: O(1).
-pub fn thread_count() -> Int {
+pub fn thread_count() -> Int
+  ensures: result >= 1
+{
   let n = unsafe { xiom_cpu_count() };
   if n < 1 {
     return 1;
@@ -123,7 +131,9 @@ pub fn is_main_thread() -> Bool {
 /// Params: f - the function to run.
 /// Returns: Ok(0) after the closure runs inline (simulation).
 /// Complexity: O(1) plus the cost of `f`.
-pub fn spawn_scoped(f: fn()) -> Result[Int, Str] {
+pub fn spawn_scoped(f: fn()) -> Result[Int, Str]
+  ensures: result.is_ok == true
+{
   f();
   return Ok(0);
 }

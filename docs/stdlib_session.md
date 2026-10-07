@@ -4,13 +4,14 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 -->
 # XIOM Stdlib Session -- Handoff
 
-## 0A. CONTINUE HERE -- handoff snapshot 16 (updated 2026-10-05, v0.64.0 pin complete, wave 77 complete)
+## 0A. CONTINUE HERE -- handoff snapshot 16 (updated 2026-10-07, v0.64.0 pin complete, wave 78 complete)
 
 **PASTE-READY PROMPT FOR THE NEXT SESSION (copy this block):**
 
 ---
 You are continuing the XIOM stdlib lane. Worktree `E:\xiom-lang\stdlib`,
-branch `main`. Read `docs/stdlib_session.md` blocks 46 (latest), 45, 44, 43
+branch `main`. Read `docs/stdlib_session.md` blocks 49 (latest), 48, 47,
+46, 45, 44, 43
 (publish), 27 (iter block) and `docs/PRODUCTION_READINESS_QUEUE.md`
 before acting; snapshot 5 below the prompt keeps the deep protocol lore.
 
@@ -21,27 +22,30 @@ kept. Registry carries xiom-std 0.62.3, 0.62.4 and 0.63.0 (0.63.1 publish
 pending); tags pushed: stdlib-v0.62.3 (12a3a1b), stdlib-v0.62.4 (3800c08),
 stdlib-v0.63.0 (179cfea).
 Gates on v0.64.0: release corpus 953/953 FULL (m196 loopback smoke added),
-modules 509/509, probes 243/243, barename 0/509, floors114, module-smoke
-ratchet OK. Coverage = 52.1% global
-pub-with-clause. Waves landed: 63 net+hash, 64 reflect+iter adapters, 65x convert, 66 time, 67 format, 68 misc, 69 os+rand, 70 crypto, 71 log, 72 compress, 73 pin, 74 encoding, 75 encoding-rem+debug, 76 simd, 64.0 pin, 77 stats, Pulse hardening (write_all/server_parse_request/hmac_sha256_hex). Wave
+modules 509/509, probes 244/244, barename 0/509, floors115, module-smoke
+ratchet OK. Coverage = 52.5% global
+pub-with-clause. Waves landed: 63 net+hash, 64 reflect+iter adapters, 65x convert, 66 time, 67 format, 68 misc, 69 os+rand, 70 crypto, 71 log, 72 compress, 73 pin, 74 encoding, 75 encoding-rem+debug, 76 simd, 64.0 pin, 77 stats, Pulse hardening (write_all/server_parse_request/hmac_sha256_hex), 78 thread. Wave
 65 (iter clauses) is DEFERRED but pin-unblocked (block 27): the C001
 classifier is fixed on v0.63.1 and clauses may read tuple components; the
 deferred clause set (Range core 7 + chain 14 + fold 8 + iter_collect) is documented there.
 
-FIRST TASK (wave 78): thread 25% (56 pub) then convert 25.6%, holding the
-40-60-pub family batching. Pending from the wave-77 prompt (block 46):
-(a) iter clause retry (block 27) -- DONE on v0.64.0 (wave-77 follow-up):
-`ensures: result >= 0` on Range.count still fails smoke_iter with clang
-`use of undefined value` (%tmp8); the clause-side closure lowering stays
-compiler-blocked and the finding is updated. Re-retry the deferred set
-(Range core 7 + chain 14 + fold 8 + iter_collect) when the compiler
-closure work lands.
-(b) Pulse pure-XIOM hardening -- DONE 2026-10-05 (block 47):
-TcpStream.write_all, server_parse_request + ServerRequest and
-crypto.hmac_sha256_hex landed, locked by p_pulse_shapes.xi (243rd) and
-the extended smoke_net_tcp_stream.xi.
-(c) runtime-backed Pulse items (socket timeout/nonblocking/reuse-addr,
-real flush_stdout) wait for the compiler bundle or XIOM_RUNTIME_DIR.
+FIRST TASK (wave 79): convert 25.6% (305 pub, 86 clauses) -- batch within
+the 40-60-pub directive, multiple waves expected; then the remaining low
+dirs (async 4.5%, serialize 5.4%, iter 18.6% -- clause-side blocked,
+bench 18.8%, os 26.2%, core 26.7%, format 27.3%, sync 29.1%, sort 31.9%).
+PENDING/QUEUED:
+(a) iter clause retry: DONE as red on v0.64.0 (block 46); re-retry the
+deferred set (Range core 7 + chain 14 + fold 8 + iter_collect) when the
+compiler closure work lands.
+(b) Pulse pure-XIOM hardening: DONE 2026-10-05 (block 47).
+(c) runtime-backed asks (socket timeout/nonblocking/reuse-addr, real
+flush_stdout, fsync/durable writes) wait for the compiler runtime bundle
+(durable writes are cross-filed by PULSE and the packages sheet
+2026-10-05).
+(d) Packages-sheet intake 2026-10-05 (8 rows: HTTP-date pair, path
+safety, fs remove parity, streaming read_exact, append_file_bytes,
+truncate/remove_dir, file locking) recorded in docs/STDLIB-WISHLIST.md;
+not yet wave-scheduled.
 HANDOFF NOTE: new locks are p_pin0640_shapes.xi (m193-m196),
 tests/smoke/smoke_net_tcp_stream.xi (m196 + write_all), the m193
 guard-alloc smoke, p_wave77_shapes.xi (wave 77 stats, 167 checks) and
@@ -53,7 +57,7 @@ Mandatory protocol:
 (no unsigned `>= 0`, no `is_ok || is_err`, no self-mirrors); clauses run at
 runtime, so never read Result/Option payloads, guard division/NaN, and
 prefer exact mirrors, length/presence bands and `@pre` invariants.
-(2) probe-first: add `tools/probes/p_wave78_shapes.xi` exercising every
+(2) probe-first: add `tools/probes/p_wave79_shapes.xi` exercising every
 clause-guard path; bind module-returned values to `let` before comparing
 (inline unsigned compares misread high bits; inline indexing of a
 returned Vec[Float64] reads garbage -- bind it first); bind `Vec.new()`
@@ -61,12 +65,12 @@ temporaries passed as `&Vec`; do not declare externs for runtime guard
 symbols; green on v0.64.0 (v0.63.1 cross-check when cheap).
 (3) apply, run targeted smokes; if unrelated codegen breaks, bisect and
 drop the offending clause with a code comment (see blocks 27/65x).
-(4) dump `tools/coverage_floors115.json`, wire the workflows +
+(4) dump `tools/coverage_floors116.json`, wire the workflows +
 `tools/README.md`, update plan/session/queue in the same commit, YAML
 check, pure-ASCII conventional commit.
 (5) battery: `run_smokes.ps1 -ExcludeFile tools/known_failures/
-gate-exclusions.txt` (expect 953/953 full), probe corpus (expect 244),
-check_modules 509/509, barename 0/509, floors115 + module-smoke ratchets;
+gate-exclusions.txt` (expect 953/953 full), probe corpus (expect 245),
+check_modules 509/509, barename 0/509, floors116 + module-smoke ratchets;
 record results in the session block; push `main`.
 
 QUEUED (do only when triggered):
@@ -1595,6 +1599,35 @@ registry pin, agent recon for the rest)**
   gates; open: contract coverage 100%, zero open findings, beta-exit release
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
+
+**SESSION 2026-10-07 block 49 (wave 78: thread clauses; floors115)**
+- Wave 78: 27 clauses / 24 new pub -- thread 8 (Thread.id field mirror,
+  Thread.name/thread_name_current is_none, spawn_with_name delegation
+  ensure replacing a placeholder requires, Scope.spawn, aliases
+  hardware_threads/thread_count >= 1, sleep/thread_sleep_us delegation
+  preconditions), spawn 5 (spawn/spawn_with result.id > 0, join/
+  spawn_scoped result.is_ok == true, thread_count >= 1), pool 8
+  (thread_pool_new workers >= 1 / idle == workers / closed == false,
+  tp_submit_with closed-conditional booleans, tp_size/idle/busy >= 0
+  mirrors), park 1 (park_token_new non-null flag), local 5
+  (thread_local_new initialized false; tls_get/tls_replace initialized
+  true; tls_take initialized false; thread_local_key_new > 0). Void and
+  unclaimable surfaces stay clause-free: scope, thread_yield,
+  thread_parallel_for, detach, sleep_ms, is_main_thread, tp_submit/
+  tp_join/tp_shutdown, park_token_wait, park, park_timeout, unpark,
+  unpark_all, tls_set/tls_clear/tls_key_get/tls_key_set.
+- Fix-first (contract/doc consistency): thread.sleep_ms documented
+  "negative values return immediately" while `requires: ms >= 0` aborts
+  the call; doc corrected and `sleep` gained the same delegation
+  precondition.
+- Probe p_wave78_shapes.xi (244th, 39 checks): green on v0.64.0 pre- and
+  post-clauses; targeted smokes smoke_thread 1/1,
+  smoke_collect_threadpool 1/1. thread 25% -> 67.9%, global 52.1% ->
+  52.5%, meter 75.2%; floors115 wired.
+- Battery on this commit (v0.64.0): release corpus 953/953 full (640.4s,
+  no exclusions); probes 244/244 (287.7s); check_modules 509/509 (181.5s);
+  barename 0/509 (242.5s); floors115 + module-smoke (497/517, 3477/6202)
+  ratchets OK.
 
 **SESSION 2026-10-07 block 48 (relay intake: Pulse wishlist + packages sheet)**
 - Checked the Pulse lane's STDLIB-WISHLIST-PULSE.md (updated 2026-10-05

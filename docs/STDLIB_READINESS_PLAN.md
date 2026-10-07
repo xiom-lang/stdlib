@@ -1168,8 +1168,18 @@ T1/T2 yields.
         floors114 ratchet held. Runtime-backed Pulse items (socket
         options, real flush_stdout) stay queued for the runtime bundle /
         XIOM_RUNTIME_DIR.
+        Wave 78 (2026-10-07): coverage wave 41 -- thread, 27 clauses / 24
+        new pub (thread 8, spawn 5, pool 8, park 1, local 5; void and
+        unclaimable surfaces skipped). thread 25% -> 67.9%, global 52.1%
+        -> 52.5%, meter 75.2%; floors115. Fix-first (doc/contract):
+        thread.sleep_ms documented negative sleeps as immediate while
+        `requires: ms >= 0` aborts; doc corrected and sleep gained the
+        delegation precondition. Probe p_wave78_shapes.xi (244th, 39
+        checks) green on v0.64.0 pre/post; targeted smokes smoke_thread
+        1/1, smoke_collect_threadpool 1/1. Next: convert 25.6% (multiple
+        waves), then the remaining low dirs.
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors114.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors115.json
        tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;

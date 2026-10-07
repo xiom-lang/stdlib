@@ -20,7 +20,11 @@ use xiom.collect.threadpool;
 /// Params: workers - fixed number of workers (clamped to >= 1).
 /// Returns: a new pool with all workers idle and no pending jobs.
 /// Complexity: O(1).
-pub fn thread_pool_new(workers: Int) -> ThreadPool {
+pub fn thread_pool_new(workers: Int) -> ThreadPool
+  ensures: result.workers >= 1
+  ensures: result.idle == result.workers
+  ensures: result.closed == false
+{
   return threadpool.thread_pool_new(workers);
 }
 
@@ -37,7 +41,10 @@ pub fn tp_submit(p: &mut ThreadPool, job: fn()) -> Bool {
 /// Params: p - the pool; job - the closure; arg - its single argument.
 /// Returns: true on acceptance, false if the pool is shut down.
 /// Complexity: O(1) amortized.
-pub fn tp_submit_with(p: &mut ThreadPool, job: fn(Int), arg: Int) -> Bool {
+pub fn tp_submit_with(p: &mut ThreadPool, job: fn(Int), arg: Int) -> Bool
+  ensures: (p.closed == true) => (result == false)
+  ensures: (p.closed == false) => (result == true)
+{
   if p.closed {
     return false;
   }
@@ -69,7 +76,9 @@ pub fn tp_shutdown(p: &mut ThreadPool) {
 /// Params: p - the pool.
 /// Returns: the fixed worker count.
 /// Complexity: O(1).
-pub fn tp_size(p: &ThreadPool) -> Int {
+pub fn tp_size(p: &ThreadPool) -> Int
+  ensures: result >= 0
+{
   return threadpool.pool_size(p);
 }
 
@@ -77,7 +86,9 @@ pub fn tp_size(p: &ThreadPool) -> Int {
 /// Params: p - the pool.
 /// Returns: workers not currently assigned a job.
 /// Complexity: O(1).
-pub fn tp_idle(p: &ThreadPool) -> Int {
+pub fn tp_idle(p: &ThreadPool) -> Int
+  ensures: result >= 0
+{
   return threadpool.pool_idle_count(p);
 }
 
@@ -85,6 +96,8 @@ pub fn tp_idle(p: &ThreadPool) -> Int {
 /// Params: p - the pool.
 /// Returns: workers currently assigned a job (does not include queued work).
 /// Complexity: O(1).
-pub fn tp_busy(p: &ThreadPool) -> Int {
+pub fn tp_busy(p: &ThreadPool) -> Int
+  ensures: result >= 0
+{
   return threadpool.pool_busy_count(p);
 }

@@ -1,9 +1,9 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
-**75.2% -- 7 of 10 gates complete; gate 8 at 52.1% (partial credit) and
+**75.2% -- 7 of 10 gates complete; gate 8 at 52.5% (partial credit) and
 gates 9-10 discrete.** (Compiler pin: **v0.64.0**.)
 **Gates: corpus 953/953 full (C001 carve-outs retired on v0.63.1; new
-TcpStream loopback smoke added), modules 509/509, probes 243/243,
+TcpStream loopback smoke added), modules 509/509, probes 244/244,
 barename 0/509.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
@@ -14,26 +14,27 @@ gates flip:
    full, no carve-outs (C001 fixed by 4bf8cf1e; 20/20 + 20/20 stress).
    lz4 is fixed by m190 and stayed in the gate; the new TcpStream loopback
    smoke locks m196.
-3. Probe corpus green -- MET (243/243 on v0.64.0, incl. the promoted
+3. Probe corpus green -- MET (244/244 on v0.64.0, incl. the promoted
    regression probes, the pin locks, the v0.64.0 m193-m196 probe, the
-   wave-77 stats probe and the Pulse hardening probe).
+   wave-77 stats probe, the Pulse hardening probe and the wave-78 thread
+   probe).
 4. Strict bare-name scan clean -- MET (0/509).
-5. Coverage ratchet green -- MET (floors114).
+5. Coverage ratchet green -- MET (floors115).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (497/517 modules, 3475/6200 fns).
-8. Contract coverage 100% (every public fn carries clauses) -- OPEN (52.1%).
+8. Contract coverage 100% (every public fn carries clauses) -- OPEN (52.5%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
    OPEN (10: 9 compiler, 1 stdlib algorithm).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
 
 Meter formula: MET gates count 1.0; gate 8 counts its current
-pub-with-clause fraction (52.1% -> 0.521); gates 9 and 10 get no partial
+pub-with-clause fraction (52.5% -> 0.525); gates 9 and 10 get no partial
 credit (discrete). Update the percentage and the gate-8 fraction in the
 same commit as each floors dump so the meter moves smoothly toward 80%.
 
 Authoritative order: the gates above, then the updates below newest-first.
-Current state: compiler pin v0.64.0; coverage 52.1%, meter 75.2%; handoff
-in `docs/stdlib_session.md` snapshot 16 (block 46).
+Current state: compiler pin v0.64.0; coverage 52.5%, meter 75.2%; handoff
+in `docs/stdlib_session.md` snapshot 16 (block 49).
 
 ## Project Pulse relay (web-framework lane) -- 2026-10-05
 
@@ -625,6 +626,27 @@ compiler-owned for v0.64.1; Box stays section C. floors113 (global
 51.4%, reflect 100%); meter 75.1%. Battery on v0.64.0: corpus 953/953,
 probes 241/241, modules 509/509, barename 0/509, floors113 +
 module-smoke ratchets OK.
+
+Update 2026-10-07 (wave 78 landed): thread --
+27 clauses / 24 new pub (thread 8, spawn 5, pool 8, park 1, local 5;
+void/unclaimable surfaces skipped: scope, thread_yield,
+thread_parallel_for, detach, sleep_ms, is_main_thread, tp_submit/join/
+shutdown, park_token_wait, park, park_timeout, unpark, unpark_all,
+tls_set/clear/key_get/key_set). thread 25% -> 67.9%, global 52.1% ->
+52.5%; meter 75.2%; floors115. Fix-first (contract/doc consistency):
+xiom.thread.sleep_ms documented "negative values return immediately"
+while `requires: ms >= 0` aborts; doc corrected and `sleep` gained the
+same delegation precondition. Clause forms: Thread.id field mirror and
+Thread.name/thread_name_current is_none mirrors, spawn/spawn_with
+`result.id > 0`, join/spawn_scoped `result.is_ok == true`, pool
+new/submit_with/size/idle/busy cross-module field claims
+(closed => false / !closed => true), thread_local_new/tls_get/
+tls_replace/tls_take initialized-state claims, park_token_new non-null
+flag, alias delegation ranges (hardware_threads/thread_count >= 1,
+sleep/thread_sleep_us preconditions). Probe p_wave78_shapes.xi (244th,
+39 checks) green on v0.64.0 pre/post; targeted smokes smoke_thread 1/1,
+smoke_collect_threadpool 1/1. Readiness next: convert 25.6% (multiple
+waves), then the remaining low dirs.
 
 Update 2026-10-05 (wave 77 landed): stats --
 93 clauses / 48 new pub (dist 15, histogram 9 -- histogram_add is void

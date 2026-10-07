@@ -30,7 +30,9 @@ pub type ThreadLocal[T] = {
 /// Params: init - the initializer invoked on first access.
 /// Returns: uninitialised thread-local storage.
 /// Complexity: O(1).
-pub fn thread_local_new[T](init: fn() -> T) -> ThreadLocal[T] {
+pub fn thread_local_new[T](init: fn() -> T) -> ThreadLocal[T]
+  ensures: result.initialized == false
+{
   return ThreadLocal[T]{ init: init; value: T(); initialized: false; }
 }
 
@@ -38,7 +40,9 @@ pub fn thread_local_new[T](init: fn() -> T) -> ThreadLocal[T] {
 /// Params: tl - the thread-local (mutated on first access).
 /// Returns: the current value, running `init` if not yet set.
 /// Complexity: O(1).
-pub fn tls_get[T](tl: &mut ThreadLocal[T]) -> T {
+pub fn tls_get[T](tl: &mut ThreadLocal[T]) -> T
+  ensures: tl.initialized == true
+{
   if !tl.initialized {
     tl.value = tl.init();
     tl.initialized = true;
@@ -58,7 +62,9 @@ pub fn tls_set[T](tl: &mut ThreadLocal[T], value: T) {
 /// Params: tl - the thread-local; value - the replacement.
 /// Returns: the previous value (or the initializer's value if unset).
 /// Complexity: O(1).
-pub fn tls_replace[T](tl: &mut ThreadLocal[T], value: T) -> T {
+pub fn tls_replace[T](tl: &mut ThreadLocal[T], value: T) -> T
+  ensures: tl.initialized == true
+{
   if !tl.initialized {
     tl.value = tl.init();
     tl.initialized = true;
@@ -72,7 +78,9 @@ pub fn tls_replace[T](tl: &mut ThreadLocal[T], value: T) -> T {
 /// Params: tl - the thread-local (cleared).
 /// Returns: Some(value) if set, None if uninitialized.
 /// Complexity: O(1).
-pub fn tls_take[T](tl: &mut ThreadLocal[T]) -> Option[T] {
+pub fn tls_take[T](tl: &mut ThreadLocal[T]) -> Option[T]
+  ensures: tl.initialized == false
+{
   if !tl.initialized {
     return None;
   }
@@ -91,7 +99,9 @@ pub fn tls_clear[T](tl: &mut ThreadLocal[T]) {
 /// Allocate a raw TLS key.
 /// Returns: a fresh positive key value.
 /// Complexity: O(1).
-pub fn thread_local_key_new() -> Int {
+pub fn thread_local_key_new() -> Int
+  ensures: result > 0
+{
   _tls_keys = _tls_keys + 1;
   return _tls_keys;
 }

@@ -47,7 +47,9 @@ fn park_get_flag() -> *Int {
 /// Create a new park token.
 /// Returns: a token with no pending notification.
 /// Complexity: O(1).
-pub fn park_token_new() -> ParkToken {
+pub fn park_token_new() -> ParkToken
+  ensures: ptr.is_null(result.flag) == false
+{
   let s = alloc.alloc(8);
   unsafe { ptr.write(s as *Int, 0); }
   return ParkToken{ flag: s; }

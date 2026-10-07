@@ -53,7 +53,7 @@ pub fn spawn[T](f: fn() -> T) -> JoinHandle[T]
 
 /// Spawn a named thread (the name is advisory on some platforms).
 pub fn spawn_with_name[T](name: Str, f: fn() -> T) -> JoinHandle[T]
-  requires: name.len() >= 0
+  ensures: result.thread.handle != 0
 {
   spawn[T](f)
 }
@@ -117,24 +117,31 @@ pub fn Thread.current() -> Thread
 }
 
 /// Numeric thread id.
-pub fn Thread.id(self) -> Int {
+pub fn Thread.id(self) -> Int
+  ensures: result == self.id
+{
   self.id
 }
 
 /// Thread name when one was set at spawn, else None.
-pub fn Thread.name(self) -> Option[Str] {
+pub fn Thread.name(self) -> Option[Str]
+  ensures: result.is_none == true
+{
   None
 }
 
-/// Sleep for `ms` milliseconds (negative values return immediately).
+/// Sleep for `ms` milliseconds; `ms` must be non-negative.
 pub fn sleep_ms(ms: Int)
   requires: ms >= 0
 {
   unsafe { xiom_thread_sleep_ms(ms); }
 }
 
-/// Alias of `sleep_ms` (sleeps `ms` milliseconds).
-pub fn sleep(ms: Int) {
+/// Alias of `sleep_ms` (sleeps `ms` milliseconds); `ms` must be
+/// non-negative.
+pub fn sleep(ms: Int)
+  requires: ms >= 0
+{
   sleep_ms(ms);
 }
 
@@ -155,7 +162,9 @@ pub fn scope[T](f: fn(&Scope) -> T) -> T {
 }
 
 /// Spawn a thread joined when the enclosing scope exits.
-pub fn Scope.spawn[T](self, f: fn() -> T) -> JoinHandle[T] {
+pub fn Scope.spawn[T](self, f: fn() -> T) -> JoinHandle[T]
+  ensures: result.thread.handle != 0
+{
   spawn[T](f)
 }
 
@@ -172,7 +181,9 @@ pub fn available_parallelism() -> Int
 }
 
 /// Alias of `available_parallelism`.
-pub fn hardware_threads() -> Int {
+pub fn hardware_threads() -> Int
+  ensures: result >= 1
+{
   available_parallelism()
 }
 
@@ -188,7 +199,9 @@ pub fn current_thread_id() -> Int
 /// Returns the number of available hardware threads.
 /// Delegates to `available_parallelism()`.
 /// Complexity: O(1). Thread-safe.
-pub fn thread_count() -> Int {
+pub fn thread_count() -> Int
+  ensures: result >= 1
+{
   return available_parallelism();
 }
 
@@ -196,7 +209,9 @@ pub fn thread_count() -> Int {
 
 /// Sleeps for `us` microseconds, rounding down to the nearest millisecond.
 /// Complexity: O(1) syscall. Thread-safe.
-pub fn thread_sleep_us(us: Int) {
+pub fn thread_sleep_us(us: Int)
+  requires: us >= 0
+{
   sleep_ms(us / 1000);
 }
 
@@ -223,6 +238,8 @@ pub fn thread_parallel_for(start: Int, end: Int, f: fn(Int)) {
 /// Returns the name of the current thread, or `None` if unnamed.
 /// Delegates to `Thread.current().name`.
 /// Complexity: O(1). Thread-safe.
-pub fn thread_name_current() -> Option[Str] {
+pub fn thread_name_current() -> Option[Str]
+  ensures: result.is_none == true
+{
   return Thread.current().name();
 }
