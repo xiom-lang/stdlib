@@ -276,7 +276,9 @@ fn _b58check_checksum(data: &Vec[UInt8]) -> Vec[UInt8] {
 /// base58check shape. FALLBACK: the checksum is Adler-32, not double-SHA256
 /// (see the TODO(compiler) note) -- the output is NOT Bitcoin-interoperable.
 /// Complexity: O(n^2) worst case.
-pub fn base58check_encode(data: &Vec[UInt8]) -> Str {
+pub fn base58check_encode(data: &Vec[UInt8]) -> Str
+  ensures: result.len() >= 1
+{
   var checksum = _b58check_checksum(data);
   var payload = Vec[UInt8].new();
   var i: Int = 0;
@@ -296,7 +298,9 @@ pub fn base58check_encode(data: &Vec[UInt8]) -> Str {
 /// recomputed and compared; returns Err on invalid base58, truncated data, or
 /// a checksum mismatch. FALLBACK checksum: Adler-32 (see base58check_encode).
 /// Complexity: O(n^2) worst case.
-pub fn base58check_decode(s: Str) -> Result[Vec[UInt8], Str] {
+pub fn base58check_decode(s: Str) -> Result[Vec[UInt8], Str]
+  ensures: (s.len() == 0) => (result.is_err == true)
+{
   var result: Result[Vec[UInt8], Str] = Err("unreachable");
   var d = base58_decode(s);
   match d {

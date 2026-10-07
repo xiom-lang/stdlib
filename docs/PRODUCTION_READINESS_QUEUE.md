@@ -1,41 +1,42 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
-**75.4% -- 7 of 10 gates complete; gate 8 at 54.1% (partial credit) and
+**75.4% -- 7 of 10 gates complete; gate 8 at 54.2% (partial credit) and
 gates 9-10 discrete.** (Compiler pin: **v0.64.0**.)
-**Gates: corpus 953/953 full (C001 carve-outs retired on v0.63.1; new
-TcpStream loopback smoke added), modules 509/509, probes 248/248,
-barename 0/509.**
+**Gates: corpus 954/954 full (C001 carve-outs retired on v0.63.1; new
+TcpStream loopback and uuencode roundtrip smokes added), modules 509/509,
+probes 249/249, barename 0/509.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
 gates flip:
 1. Modules type-check clean -- MET (509/509).
-2. Smoke corpus green -- MET on the v0.64.0 pin: release gate 953/953
+2. Smoke corpus green -- MET on the v0.64.0 pin: release gate 954/954
    full, no carve-outs (C001 fixed by 4bf8cf1e; 20/20 + 20/20 stress).
    lz4 is fixed by m190 and stayed in the gate; the new TcpStream loopback
    smoke locks m196.
-3. Probe corpus green -- MET (248/248 on v0.64.0, incl. the promoted
+3. Probe corpus green -- MET (249/249 on v0.64.0, incl. the promoted
    regression probes, the pin locks, the v0.64.0 m193-m196 probe, the
    wave-77 stats probe, the Pulse hardening probe, the wave-78 thread
    probe, the wave-79 convert probe, the wave-80 base-codec probe, the
-   wave-81 unicode probe and the wave-82 codec-guard probe).
+   wave-81 unicode probe, the wave-82 codec-guard probe and the wave-83
+   codec-tail probe).
 4. Strict bare-name scan clean -- MET (0/509).
-5. Coverage ratchet green -- MET (floors119).
+5. Coverage ratchet green -- MET (floors120).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (497/517 modules, 3475/6200 fns).
-8. Contract coverage 100% (every public fn carries clauses) -- OPEN (54.1%).
+8. Contract coverage 100% (every public fn carries clauses) -- OPEN (54.2%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
    OPEN (10: 9 compiler, 1 stdlib algorithm).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
 
 Meter formula: MET gates count 1.0; gate 8 counts its current
-pub-with-clause fraction (54.1% -> 0.541); gates 9 and 10 get no partial
+pub-with-clause fraction (54.2% -> 0.542); gates 9 and 10 get no partial
 credit (discrete). Update the percentage and the gate-8 fraction in the
 same commit as each floors dump so the meter moves smoothly toward 80%.
 
 Authoritative order: the gates above, then the updates below newest-first.
-Current state: compiler pin v0.64.0; coverage 54.1%, meter 75.4%; handoff
-in `docs/stdlib_session.md` snapshot 16 (block 53).
+Current state: compiler pin v0.64.0; coverage 54.2%, meter 75.4%; handoff
+in `docs/stdlib_session.md` snapshot 16 (block 54).
 
 ## Project Pulse relay (web-framework lane) -- 2026-10-05
 
@@ -627,6 +628,23 @@ compiler-owned for v0.64.1; Box stays section C. floors113 (global
 51.4%, reflect 100%); meter 75.1%. Battery on v0.64.0: corpus 953/953,
 probes 241/241, modules 509/509, barename 0/509, floors113 +
 module-smoke ratchets OK.
+
+Update 2026-10-07 (wave 83 landed): convert codec tails + UU trim fix --
+7 clauses / 7 new pub (uuencode, uudecode, uuencode_line, xxencode,
+xxdecode, base58check_encode, base58check_decode). Fix-first
+(probe-caught): `_trim` in xiom/convert/uuencode.xi stripped trailing
+spaces, but UU trailing spaces are data (value 0 = ' '), so uudecode
+rejected every line whose final group ended in zero bytes (e.g. any
+1-byte payload: `uuencode([65])` = "!00  " -> Err "truncated line");
+`_trim` now strips only CR/LF on the right. New smoke
+tests/smoke/smoke_convert_uuencode.xi locks 1/3/45/100-byte and XX
+roundtrips (corpus 953 -> 954). convert 59% -> 61.3%, global 54.1% ->
+54.2%; meter 75.4%; floors120. Clause forms: empty-input identities
+("" / Ok(empty) / length-1 line / base58check Err-on-empty; base58check
+encode >= 1). Probe p_wave83_shapes.xi (249th, 15 checks) green on
+v0.64.0 pre/post; targeted smokes uuencode + base58_62 1/1 each.
+Readiness next: uri/url/urn/ip families + lossy/network/timestamp in
+wave 84.
 
 Update 2026-10-07 (wave 82 landed): convert codec guards --
 11 clauses / 11 new pub (ascii85 4, quotedprintable 4, base58_decode,

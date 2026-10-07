@@ -21,7 +21,9 @@ use xiom.string;
 /// Parameters: data -- the raw bytes.
 /// Returns: the UU-encoded text (each line ends with a newline).
 /// Complexity: O(n).
-pub fn uuencode(data: &Vec[UInt8]) -> Str {
+pub fn uuencode(data: &Vec[UInt8]) -> Str
+  ensures: (data.len() == 0) => (result == "")
+{
   var result = "";
   var n = data.len();
   var i: Int = 0;
@@ -48,7 +50,9 @@ pub fn uuencode(data: &Vec[UInt8]) -> Str {
 /// Parameters: s -- the UU text (data lines; "begin"/"end" wrappers ignored).
 /// Returns: Ok(bytes) on success; Err on malformed input.
 /// Complexity: O(n).
-pub fn uudecode(s: Str) -> Result[Vec[UInt8], Str] {
+pub fn uudecode(s: Str) -> Result[Vec[UInt8], Str]
+  ensures: (s.len() == 0) => (result.is_ok == true)
+{
   var result = Vec[UInt8].new();
   var lines = _split_lines(s);
   var i: Int = 0;
@@ -99,7 +103,9 @@ pub fn uudecode(s: Str) -> Result[Vec[UInt8], Str] {
 /// Parameters: data -- up to 45 bytes.
 /// Returns: the encoded line (without a trailing newline).
 /// Complexity: O(1).
-pub fn uuencode_line(data: &Vec[UInt8]) -> Str {
+pub fn uuencode_line(data: &Vec[UInt8]) -> Str
+  ensures: (data.len() == 0) => (result.len() == 1)
+{
   var n = data.len();
   if n > 45 {
     n = 45;
@@ -189,7 +195,9 @@ pub fn uudecode_line(s: Str) -> Result[Vec[UInt8], Str]
 /// Parameters: data -- the raw bytes.
 /// Returns: the XX-encoded text.
 /// Complexity: O(n).
-pub fn xxencode(data: &Vec[UInt8]) -> Str {
+pub fn xxencode(data: &Vec[UInt8]) -> Str
+  ensures: (data.len() == 0) => (result == "")
+{
   var result = "";
   var n = data.len();
   var i: Int = 0;
@@ -240,7 +248,9 @@ pub fn xxencode(data: &Vec[UInt8]) -> Str {
 /// Parameters: s -- the XX text.
 /// Returns: Ok(bytes) on success; Err on malformed input.
 /// Complexity: O(n).
-pub fn xxdecode(s: Str) -> Result[Vec[UInt8], Str] {
+pub fn xxdecode(s: Str) -> Result[Vec[UInt8], Str]
+  ensures: (s.len() == 0) => (result.is_ok == true)
+{
   var result = Vec[UInt8].new();
   var lines = _split_lines(s);
   var i: Int = 0;
@@ -384,7 +394,10 @@ fn _split_lines(s: Str) -> Vec[Str] {
   return result;
 }
 
-// Strip leading/trailing whitespace and carriage returns.
+// Strip leading whitespace and trailing CR/LF only. Trailing spaces are
+// significant UU data (value 0 encodes as ' '), so they must survive:
+// trimming them made uudecode reject every line whose final group ends in
+// zero-bytes (e.g. any 1-byte payload) -- fixed while landing wave 83.
 fn _trim(s: Str) -> Str {
   var len = string.str_len(s);
   var start: Int = 0;
@@ -399,7 +412,7 @@ fn _trim(s: Str) -> Str {
   }
   while end > start {
     var b2 = string.byte_at(s, end - 1);
-    if b2 == 32 || b2 == 9 || b2 == 13 || b2 == 10 {
+    if b2 == 13 || b2 == 10 {
       end = end - 1;
     } else {
       break;

@@ -1212,8 +1212,19 @@ T1/T2 yields.
         Probe p_wave82_shapes.xi (248th, 15 checks) green on v0.64.0
         pre/post; targeted codec smokes 1/1. Next: uuencode 5 +
         base58check 2 + uri/url/urn/ip families.
+        Wave 83 (2026-10-07): coverage wave 46 -- convert codec tails,
+        7 clauses / 7 new pub (uuencode, uudecode, uuencode_line,
+        xxencode, xxdecode, base58check_encode, base58check_decode).
+        Fix-first (probe-caught): `_trim` stripped trailing spaces but UU
+        trailing spaces are data (value 0 = ' '), breaking uudecode for
+        every line ending in zero bytes (any 1-byte payload); right-side
+        trim now CR/LF only, locked by the new
+        tests/smoke/smoke_convert_uuencode.xi (corpus 953 -> 954).
+        convert 59% -> 61.3%, global 54.1% -> 54.2%, meter 75.4%;
+        floors120. Probe p_wave83_shapes.xi (249th, 15 checks) green on
+        v0.64.0 pre/post. Next: uri/url/urn/ip + lossy/network/timestamp.
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors119.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors120.json
        tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;
