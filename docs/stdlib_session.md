@@ -1639,6 +1639,16 @@ registry pin, agent recon for the rest)**
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
 
+**SESSION 2026-10-07 block 63 (handoff refresh: snapshot 19 updated for the next session)**
+- Snapshot 19 refreshed: read list -> blocks 62 (latest)..; STATE carries
+  the wave-87 gates (probes 253, floors124, coverage 55.7%, convert 94.1%)
+  and the pin check note (v0.64.0 still Latest; trigger stays queued);
+  FIRST TASK wave 88 (serialize batch 1: endian/varint/csv, then the
+  serialize remainder and the other low dirs); HANDOFF NOTE lists
+  p_wave87_shapes.xi (253 probes) and floors124; push protocol notes the
+  credential-selection workaround in docs/failed_attempts.md.
+- No code changes; heads: wave 87 (59f9b14) + this refresh.
+
 **SESSION 2026-10-07 block 62 (wave 87: convert tails; floors124)**
 - Wave 87: 52 clauses / 33 new pub -- root convert 6 (int_to_float/
   float_to_int/int_to_string zero pins; float_to_fixed_str nan/0.0-0/1.5-1
