@@ -1638,6 +1638,18 @@ registry pin, agent recon for the rest)**
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
 
+**SESSION 2026-10-08 block 65 (handoff refresh: snapshot 20 updated for the next session)**
+- Snapshot 20 refreshed: read list -> blocks 64 (latest)..; STATE carries
+  the wave-88 gates (probes 254, floors125, coverage 56.1%, serialize
+  34.4%) and the pin check note (v0.64.0 still Latest; trigger stays
+  queued); FIRST TASK wave 89 (serialize batch 2: serialize/json then
+  toml/yaml_lite); HANDOFF NOTE lists p_wave88_shapes.xi (254 probes) and
+  floors125; the push-credential workaround note stays in the battery
+  step and docs/failed_attempts.md.
+- Host restarted mid-battery (RAM upgrade); probe/module/barename steps
+  re-ran clean on the same tree (block 64).
+- No code changes; heads: wave 88 (0cb45bb) + this refresh.
+
 **SESSION 2026-10-08 block 64 (wave 88: serialize batch 1 endian/varint/csv; floors125)**
 - Wave 88: 37 clauses / 27 new pub -- endian 16 (the eight write_* @pre
   append claims `out.len() == out.len()@pre + 2/4/8` covering the unsafe
