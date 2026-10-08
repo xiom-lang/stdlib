@@ -4,15 +4,15 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 -->
 # XIOM Stdlib Session -- Handoff
 
-## 0A. CONTINUE HERE -- handoff snapshot 20 (updated 2026-10-08, v0.64.0 pin complete, wave 88 complete, compiler relay m200-m206 recorded)
+## 0A. CONTINUE HERE -- handoff snapshot 21 (updated 2026-10-08, v0.64.0 pin complete, wave 89 complete, compiler relay m200-m206 recorded)
 
 **PASTE-READY PROMPT FOR THE NEXT SESSION (copy this block):**
 
 ---
 You are continuing the XIOM stdlib lane. Worktree `E:\xiom-lang\stdlib`,
-branch `main`. Read `docs/stdlib_session.md` blocks 64 (latest), 63, 62,
-61, 60, 59, 58, 57, 56, 55, 54, 53, 52, 51, 50, 49, 48, 47, 46, 45, 44, 43
-(publish), 27 (iter block) and `docs/PRODUCTION_READINESS_QUEUE.md`
+branch `main`. Read `docs/stdlib_session.md` blocks 66 (latest), 65, 64,
+63, 62, 61, 60, 59, 58, 57, 56, 55, 54, 53, 52, 51, 50, 49, 48, 47, 46, 45,
+44, 43 (publish), 27 (iter block) and `docs/PRODUCTION_READINESS_QUEUE.md`
 before acting; snapshot 5 below the prompt keeps the deep protocol lore.
 
 STATE (2026-10-07): compiler pin = official v0.64.0 (tag c68d91de, pin
@@ -24,12 +24,12 @@ stdlib-v0.63.0 (179cfea). Compiler relay 2026-10-07 (dev builds m200-m203):
 m203 fixed the iter closure-thunk clause leak; m200 fixed the rvalue
 Vec[Float64] index; m201 fixed multipart/geom-matrix/polyhedra -- see the
 NEXT PIN trigger in QUEUED; m202 gates the packages grpc publish, m206
-covers graphql conformance. Pin check 2026-10-08 (waves 85-88): v0.64.0
+covers graphql conformance. Pin check 2026-10-08 (waves 85-89): v0.64.0
 is still GitHub Latest, so no re-pin happened; the trigger stays queued.
 Gates on v0.64.0: release corpus 954/954 FULL (m196 loopback + uuencode
-roundtrip smokes added), modules 509/509, probes 254/254, barename
-0/509, floors125, module-smoke ratchet OK. Coverage = 56.1% global
-pub-with-clause. Waves landed: 63 net+hash, 64 reflect+iter adapters, 65x convert, 66 time, 67 format, 68 misc, 69 os+rand, 70 crypto, 71 log, 72 compress, 73 pin, 74 encoding, 75 encoding-rem+debug, 76 simd, 64.0 pin, 77 stats, Pulse hardening (write_all/server_parse_request/hmac_sha256_hex), 78 thread, 79 convert numeric shims, 80 convert base shims, 81 convert unicode, 82 convert codec guards, 83 convert codec tails, 84 convert uri/url/urn, 85 convert ip/lossy/network/timestamp, 86 convert locals + shims, 87 convert tails (convert 94.1%), 88 serialize batch 1 (endian/varint/csv; serialize 34.4%). Wave
+roundtrip smokes added), modules 509/509, probes 255/255, barename
+0/509, floors126, module-smoke ratchet OK. Coverage = 56.7% global
+pub-with-clause. Waves landed: 63 net+hash, 64 reflect+iter adapters, 65x convert, 66 time, 67 format, 68 misc, 69 os+rand, 70 crypto, 71 log, 72 compress, 73 pin, 74 encoding, 75 encoding-rem+debug, 76 simd, 64.0 pin, 77 stats, Pulse hardening (write_all/server_parse_request/hmac_sha256_hex), 78 thread, 79 convert numeric shims, 80 convert base shims, 81 convert unicode, 82 convert codec guards, 83 convert codec tails, 84 convert uri/url/urn, 85 convert ip/lossy/network/timestamp, 86 convert locals + shims, 87 convert tails (convert 94.1%), 88 serialize batch 1 (endian/varint/csv), 89 serialize + json modules (serialize 73.1%). Wave
 65 (iter clauses) is DEFERRED: the C001 classifier is fixed (v0.63.1) and
 clauses may read tuple components, but the clause-side closure lowering
 was re-verified red on v0.64.0 (smoke_iter `use of undefined value`);
@@ -37,17 +37,16 @@ compiler relay 2026-10-07 says m203 fixed it (Range.count + smoke_iter
 verified OK/exit 0 on the dev build) -- re-add at the next pin, see the
 NEXT PIN trigger.
 
-FIRST TASK (wave 89): serialize dir batch 2 -- serialize.xi (31 pub),
-json.xi (15), toml.xi (11), yaml_lite.xi (7), in one or two batches
-within the 40-60-pub directive (serialize+json first, then toml+
-yaml_lite); watch the same-name delegation caveats (BUG 25 #1) and the
-wire-format pins. Then the other low dirs (async 4.5% --
+FIRST TASK (wave 90): serialize batch 3 -- toml.xi (11 pub) + yaml_lite.xi
+(7 pub), batching within the 40-60-pub directive; watch the wire-format
+pins and the same-name delegation caveats (BUG 25 #1; see the new
+cross-module findings below). Then the other low dirs (async 4.5% --
 runtime-backed surfaces, check each; iter 18.6% -- clause-side blocked,
-bench 18.8%, os 26.2%, core 26.7%, format 27.3%, sync 29.1%).
+bench 18.8%, os 26.2%, core 26.7%, format 27.3%, sync 29.1%, sort 31.9%).
 IF THE NEXT COMPILER PIN IS OUT when you start (it must carry
 m200/m201/m203), DO THE PIN-BUMP TRIGGER FIRST (QUEUED below): re-add the
 Range.count clause, retry the deferred iter set probe-first, promote the
-four fixed known-failures, re-dump floors -- then wave 89.
+four fixed known-failures, re-dump floors -- then wave 90.
 PENDING/QUEUED:
 (a) iter clause retry: red on v0.64.0 (block 46); compiler relay
 2026-10-07: m203 fixed the closure-thunk clause leak (Range.count +
@@ -67,7 +66,9 @@ HANDOFF NOTE: new locks are p_pin0640_shapes.xi (m193-m196),
 tests/smoke/smoke_net_tcp_stream.xi (m196 + write_all),
 tests/smoke/smoke_convert_uuencode.xi (wave 83, corpus 954), the m193
 guard-alloc smoke, and probes p_wave77_shapes.xi (167 checks) and
-p_pulse_shapes.xi through p_wave88_shapes.xi (254 probes total);
+p_pulse_shapes.xi through p_wave89_shapes.xi (255 probes total);
+p_alias_module_type_path.xi + p_foreign_method_call.xi are the new open
+cross-module resolution repros (2026-10-08, cross-ref C-PULSE-12);
 p_wave43_shapes was updated for m194 exactness;
 p_rvalue_float_vec_index.xi and p_ensures_isok_guard.xi are open
 known-failure repros; docs/failed_attempts.md logs push incidents;
@@ -82,7 +83,7 @@ result.len()` form ONLY: the `(result.is_ok == true) =>` implication
 violates at runtime (filed as p_ensures_isok_guard.xi, m-fix pending);
 if a wave surfaces a new compiler finding, file a minimal repro in
 tools/known_failures/ with a README Current entry before the wave commit.
-(2) probe-first: add `tools/probes/p_wave89_shapes.xi` exercising every
+(2) probe-first: add `tools/probes/p_wave90_shapes.xi` exercising every
 clause-guard path; bind module-returned values to `let` before comparing
 (inline unsigned compares misread high bits; inline indexing of a
 returned Vec[Float64] reads garbage -- bind it first); bind `Vec.new()`
@@ -90,12 +91,12 @@ temporaries passed as `&Vec`; do not declare externs for runtime guard
 symbols; green on v0.64.0 (v0.63.1 cross-check when cheap).
 (3) apply, run targeted smokes; if unrelated codegen breaks, bisect and
 drop the offending clause with a code comment (see blocks 27/65x).
-(4) dump `tools/coverage_floors126.json`, wire the workflows +
+(4) dump `tools/coverage_floors127.json`, wire the workflows +
 `tools/README.md`, update plan/session/queue in the same commit, YAML
 check, pure-ASCII conventional commit.
 (5) battery: `run_smokes.ps1 -ExcludeFile tools/known_failures/
-gate-exclusions.txt` (expect 954/954 full), probe corpus (expect 255),
-check_modules 509/509, barename 0/509, floors126 + module-smoke ratchets;
+gate-exclusions.txt` (expect 954/954 full), probe corpus (expect 256),
+check_modules 509/509, barename 0/509, floors127 + module-smoke ratchets;
 record results in the session block; push `main` (NOTE: the push may
 present the wrong account -- see docs/failed_attempts.md 2026-10-07
 18:30 UTC: use the one-shot Lefteris-Notas credential; plain pushes may
@@ -1637,6 +1638,45 @@ registry pin, agent recon for the rest)**
   gates; open: contract coverage 100%, zero open findings, beta-exit release
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
+
+**SESSION 2026-10-08 block 66 (wave 89: serialize + json; floors126)**
+- Wave 89: 50 clauses / 36 new pub -- serialize.xi 26 (format_error >= 15
+  band + the exact zero-error pin; is_valid_json/is_valid_bytes empty ->
+  false; json_string/json_array/json_object empty pins + >= len+2 / 2n /
+  4n bands; json_number nan/zero pins; json_bool/json_null mirrors;
+  json_parse empty -> Err + "null" -> Ok replacing the placeholder
+  requires/twin-ensures; parse_json empty -> Err; JsonValue.index
+  negative -> None; little/big_endian constants; json_escape/unescape/
+  minify/pretty empty identities + bands; json_get_path empty-json None;
+  json_type_of empty/object/bool pins; varint_encode band + pins;
+  varint_decode(_at) pos-OOB Err; varint_encoded_len pos-OOB 0;
+  bytes_to_hex_str == 2n; hex_str_to_bytes empty -> Ok), serialize.json 12
+  (json_parse empty/null pins; json_get_path empty-path -> Some;
+  constructor type pins via json_type(result); json_type >= 4 band;
+  json_escape band).
+- Probe p_wave89_shapes.xi (255th, 67 checks): green on v0.64.0 pre- and
+  post-clauses. Probe-first fixes: the encoding.hex_decode even-length
+  requires aborts on odd input (odd -> Err claim dropped; probe uses "zz");
+  json_type_of is first-char-based ("nope" -> "null", corrected to "x").
+  Targeted smokes serialize/json/stress/fuzz/KAT 13 files 1/1.
+- PULSE relay 2026-10-08 checked: write_all + server_parse_request
+  ADOPTED (their 12-check probe); new import-aliasing ask (C-PULSE-12)
+  cross-filed; socket_set_timeout still a documented-Err stub
+  (runtime-backed); flush_stdout still a no-op. Recorded in
+  docs/STDLIB-WISHLIST.md.
+- Compiler findings filed (from the probe-first fixes):
+  p_alias_module_type_path.xi (T001 on `ser.SerializeError`, bare name
+  works) and p_foreign_method_call.xi (C001 on `v.json_get_path(...)`,
+  qualified call works); README Current entries added, cross-ref
+  C-PULSE-12.
+- Pin status checked: v0.64.0 still GitHub Latest, no re-pin; the NEXT
+  PIN trigger stays queued.
+- serialize 34.4% -> 73.1%, global 56.1% -> 56.7%, meter 75.7%;
+  floors126.
+- Battery on this commit (v0.64.0): release corpus 954/954 full (798.8s,
+  no exclusions); probes 255/255 (247.3s); check_modules 509/509 (170.5s);
+  barename 0/509 (220.5s); floors126 + module-smoke (497/517, 3477/6202)
+  ratchets OK.
 
 **SESSION 2026-10-08 block 65 (handoff refresh: snapshot 20 updated for the next session)**
 - Snapshot 20 refreshed: read list -> blocks 64 (latest)..; STATE carries

@@ -16,6 +16,26 @@ xiom --force -o out.exe tools/known_failures/<file>.xi
 
 ## Current
 
+**Open finding 2026-10-08 (compiler v0.64.0): cross-module type paths and
+method-style foreign calls.** Two resolution traps found while landing the
+wave-89 serialize/json clauses in `tools/probes/p_wave89_shapes.xi`:
+(a) with `use xiom.serialize as ser;`, the alias-qualified TYPE path
+`ser.SerializeError{...}` fails `T001: unknown type 'ser.SerializeError'`
+while the bare `SerializeError{...}` compiles (types import unqualified);
+(b) the full path `xiom.serialize.SerializeError{...}` compiles with only
+a `warning: unknown type ... defaulting to i64` (silent layout risk);
+(c) the method-style call `v.json_get_path(&path)` on a foreign
+`JsonValue` fails `C001: unresolved function symbol
+'JsonValue.json_get_path'` while the qualified call
+`json.json_get_path(v, &path)` works. Repros:
+`tools/known_failures/p_alias_module_type_path.xi` (T001) and
+`tools/known_failures/p_foreign_method_call.xi` (C001); both expected
+rc 0 when fixed. Cross-reference: C-PULSE-12 (alias shadowing by a
+consumer module whose last segment collides with a stdlib module) is the
+same resolution family; PULSE renamed their module as the workaround.
+Workaround in stdlib: use bare type names with alias imports and
+qualified function calls for foreign surfaces.
+
 **Open finding 2026-10-07 (compiler v0.64.0): clause payload-length
 claims guarded with `(result.is_ok == true) =>` violate at runtime; the
 canonical `result is Ok =>` form works.** Found while landing the wave-80

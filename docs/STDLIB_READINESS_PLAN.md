@@ -1303,8 +1303,35 @@ T1/T2 yields.
         (serialize 31, json 15, toml 11, yaml_lite 7) then the other low
         dirs (async 4.5% -- runtime-backed, iter clause-side blocked,
         bench 18.8%, os 26.2%, core 26.7%, format 27.3%).
+        Wave 89 (2026-10-08): coverage wave 52 -- serialize + json
+        modules, 50 clauses / 36 new pub. serialize.xi 26 (format_error
+        >= 15 band + the zero-error exact pin; is_valid_json/bytes empty
+        -> false; json_string/object/array empty pins + >= len+2 /
+        >= 4n / >= 2n bands; json_number nan/zero pins; json_bool/null
+        mirrors; json_parse empty -> Err + null -> Ok, replacing the
+        `requires: data.len() >= 0` and `ensures: true` placeholders;
+        parse_json empty -> Err; JsonValue.index negative -> None;
+        little/big_endian constants; json_escape/unescape/minify/pretty
+        empty identities + bands; json_get_path empty-json None;
+        json_type_of empty/object/bool pins; varint_encode band + pins,
+        varint_decode(_at) pos-OOB -> Err, varint_encoded_len pos-OOB ->
+        0; bytes_to_hex_str == 2n + empty; hex_str_to_bytes empty -> Ok),
+        serialize.json 12 (json_parse empty/null pins; json_get_path
+        empty-path -> Some; json_set/array_push/object_new/array_new/
+        number/string/bool/null type pins via json_type(result); json_type
+        >= 4 band; json_escape band). Found and filed two compiler
+        findings (repros p_alias_module_type_path + p_foreign_method_call;
+        cross-ref C-PULSE-12) and recorded the PULSE 2026-10-08 delta.
+        serialize 34.4% -> 73.1%, global 56.1% -> 56.7%, meter 75.7%;
+        floors126. Probe p_wave89_shapes.xi (255th, 67 checks) green on
+        v0.64.0 pre/post (one probe-input fix from the encoding.hex_decode
+        even-length requires; one behavior fix on json_type_of's
+        first-char rule); targeted smokes serialize/json/stress/fuzz/KAT
+        13 files 1/1. Next: serialize batch 3 (toml 11, yaml_lite 7) and
+        then the other low dirs (async 4.5% -- runtime-backed, iter
+        clause-side blocked, bench 18.8%, os 26.2%, core 26.7%).
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors125.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors126.json
         tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;

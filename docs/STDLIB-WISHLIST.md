@@ -126,3 +126,20 @@ INT64_MIN (96) and `_u64_lshr` n=63 (127) stay open (fix-first
 candidates); row 33 crypto linkability stays compiler/install-lane (not
 reproducible on stdlib main); the empty-needle row is fixed. Stale: 34
 (encoding.base64 shipped), 139 (duplicates 33).
+
+Relay status 2026-10-08 (PULSE delta, fetched from
+`E:\xiom-projects\xiom-pulse\docs\STDLIB-WISHLIST-PULSE.md`):
+`TcpStream.write_all` and `xiom.net.server.server_parse_request` are
+ADOPTED by PULSE (the 270 KB favicon path is green on both platforms;
+the parser is pinned by their 12-check
+`probe_stdlib_server_parse.xi`). New ask: import aliasing -- a consumer
+module whose last segment collides with a stdlib module shadows the alias
+(C-PULSE-12); cross-filed here as the cross-module type-path /
+foreign-method-call finding with repros
+`tools/known_failures/p_alias_module_type_path.xi` and
+`tools/known_failures/p_foreign_method_call.xi`. `socket_set_timeout`
+re-confirmed as a documented-Err stub (runtime-backed; stays queued with
+the socket-option row). `io.flush_stdout` is still a no-op
+(runtime-backed; queued). Positive: v0.64.0 runtime + crypto are
+env-free; `TcpStream.read` works (C-PULSE-01 fixed); the stdlib loopback
+fixture request is satisfied by `smoke_net_tcp_stream.xi`.

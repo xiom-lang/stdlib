@@ -42,7 +42,10 @@ pub type SerializeError = {
 } derive[Eq, Clone, Display]
 
 /// Error kinds: 0=Unknown, 1=InvalidFormat, 2=MissingField, 3=TypeMismatch, 4=ContractViolation, 5=UnsupportedType
-pub fn SerializeError.format_error() -> Str {
+pub fn SerializeError.format_error() -> Str
+  ensures: result.len() >= 15
+  ensures: (self.kind == 0 && self.message == "" && self.path == "" && self.line == 0 && self.col == 0) => (result == "SerializeError[0]:  (line 0, col 0)")
+{
   var s = "SerializeError[";
   s = s + convert.int_to_string(self.kind);
   s = s + "]: ";
@@ -71,14 +74,16 @@ pub fn detect_format(data: &Vec[UInt8]) -> Str
 
 /// True when the text parses as JSON.
 pub fn is_valid_json(data: Str) -> Bool
-  requires: data.len() >= 0
+  ensures: (data.len() == 0) => (result == false)
 {
   let result = json_parse(data);
   result.is_ok
 }
 
 /// True when the bytes contain valid UTF-8 JSON.
-pub fn is_valid_bytes(data: &Vec[UInt8]) -> Bool {
+pub fn is_valid_bytes(data: &Vec[UInt8]) -> Bool
+  ensures: (data.len() == 0) => (result == false)
+{
   var buf = Vec[UInt8].new();
   var i = 0;
   while i < data.len() {
@@ -91,7 +96,10 @@ pub fn is_valid_bytes(data: &Vec[UInt8]) -> Bool {
 }
 
 /// === JSON helpers ===
-pub fn json_string(s: Str) -> Str {
+pub fn json_string(s: Str) -> Str
+  ensures: (s.len() == 0) => (result == "\"\"")
+  ensures: result.len() >= s.len() + 2
+{
   var result = "\"";
   let len = s.len();
   var i: Int = 0;
@@ -121,23 +129,34 @@ pub fn json_string(s: Str) -> Str {
 }
 
 /// JSON number literal for the value.
-pub fn json_number(n: Float64) -> Str {
+pub fn json_number(n: Float64) -> Str
+  ensures: (n != n) => (result == "nan")
+  ensures: (n == 0.0) => (result == "0")
+{
   return convert.float_to_string(n);
 }
 
 /// JSON literal "true"/"false".
-pub fn json_bool(b: Bool) -> Str {
+pub fn json_bool(b: Bool) -> Str
+  ensures: (b == true) => (result == "true")
+  ensures: (b == false) => (result == "false")
+{
   if b { return "true"; }
   return "false";
 }
 
 /// JSON literal "null".
-pub fn json_null() -> Str {
+pub fn json_null() -> Str
+  ensures: result == "null"
+{
   return "null";
 }
 
 /// JSON array from pre-rendered element strings.
-pub fn json_array(items: Vec[Str]) -> Str {
+pub fn json_array(items: Vec[Str]) -> Str
+  ensures: (items.len() == 0) => (result == "[]")
+  ensures: result.len() >= 2 * items.len()
+{
   var result = "[";
   var i: Int = 0;
   while i < items.len() {
@@ -152,7 +171,10 @@ pub fn json_array(items: Vec[Str]) -> Str {
 }
 
 /// JSON object from pre-rendered key/value pairs.
-pub fn json_object(pairs: Vec[(Str, Str)]) -> Str {
+pub fn json_object(pairs: Vec[(Str, Str)]) -> Str
+  ensures: (pairs.len() == 0) => (result == "{}")
+  ensures: result.len() >= 4 * pairs.len()
+{
   var result = "{";
   var i: Int = 0;
   while i < pairs.len() {
@@ -446,9 +468,8 @@ fn parse_number(s: Str, pos: &mut Int) -> Result[JsonValue, SerializeError] {
 
 /// Parse JSON text into a JsonValue; Err with position info.
 pub fn json_parse(data: Str) -> Result[JsonValue, SerializeError]
-  requires: data.len() >= 0
-  ensures: true
-  ensures: true
+  ensures: (data.len() == 0) => (result.is_err == true)
+  ensures: (data == "null") => (result.is_ok == true)
 {
   var pos = 0;
   skip_whitespace(data, &pos);
@@ -464,7 +485,9 @@ pub fn json_parse(data: Str) -> Result[JsonValue, SerializeError]
 }
 
 /// Alias of json_parse (parse JSON text).
-pub fn parse_json(s: Str) -> Result[JsonValue, SerializeError] {
+pub fn parse_json(s: Str) -> Result[JsonValue, SerializeError]
+  ensures: (s.len() == 0) => (result.is_err == true)
+{
   return json_parse(s);
 }
 
@@ -536,7 +559,9 @@ pub fn JsonValue.get(self, key: Str) -> Option[JsonValue] {
 }
 
 /// Array element by index, or None.
-pub fn JsonValue.index(self, i: Int) -> Option[JsonValue] {
+pub fn JsonValue.index(self, i: Int) -> Option[JsonValue]
+  ensures: (i < 0) => (result.is_none == true)
+{
   match self {
     Array(items) => {
       if i < 0 || i >= items.len() { return None; }
@@ -547,12 +572,16 @@ pub fn JsonValue.index(self, i: Int) -> Option[JsonValue] {
 }
 
 /// === Binary helpers ===
-pub fn little_endian() -> Bool {
+pub fn little_endian() -> Bool
+  ensures: result == true
+{
   return true;
 }
 
 /// True when the target is big-endian (false on x86_64).
-pub fn big_endian() -> Bool {
+pub fn big_endian() -> Bool
+  ensures: result == false
+{
   return false;
 }
 
@@ -561,7 +590,10 @@ pub fn big_endian() -> Bool {
 /// JSON-escapes a string (without surrounding quotes).
 /// Handles \, ", \n, \r, \t, \b, \f.
 /// Complexity: O(n), n = string length.
-pub fn json_escape(s: Str) -> Str {
+pub fn json_escape(s: Str) -> Str
+  ensures: (s.len() == 0) => (result == "")
+  ensures: result.len() >= s.len()
+{
   var result = "";
   let len = s.len();
   var i: Int = 0;
@@ -592,7 +624,9 @@ pub fn json_escape(s: Str) -> Str {
 /// Unescapes a JSON-escaped string (without surrounding quotes).
 /// Handles \\, \", \/, \b, \f, \n, \r, \t, \uNNNN.
 /// Complexity: O(n), n = string length.
-pub fn json_unescape(s: Str) -> Result[Str, Str] {
+pub fn json_unescape(s: Str) -> Result[Str, Str]
+  ensures: (s.len() == 0) => (result.is_ok == true)
+{
   var result = "";
   let len = s.len();
   var i: Int = 0;
@@ -630,7 +664,10 @@ pub fn json_unescape(s: Str) -> Result[Str, Str] {
 
 /// Strips whitespace from JSON outside of strings.
 /// Complexity: O(n), n = input length.
-pub fn json_minify(s: Str) -> Result[Str, Str] {
+pub fn json_minify(s: Str) -> Result[Str, Str]
+  ensures: (s.len() == 0) => (result.is_ok == true)
+  ensures: result is Ok => result.len() <= s.len()
+{
   var result = "";
   let len = s.len();
   var i: Int = 0;
@@ -668,7 +705,9 @@ pub fn json_minify(s: Str) -> Result[Str, Str] {
 /// Pretty-prints JSON with 2-space indentation.
 /// Uses a simple tokenizer-based approach that tracks nesting depth.
 /// Complexity: O(n), n = input length.
-pub fn json_pretty(s: Str) -> Result[Str, Str] {
+pub fn json_pretty(s: Str) -> Result[Str, Str]
+  ensures: (s.len() == 0) => (result.is_ok == true)
+{
   var result = "";
   let len = s.len();
   var i: Int = 0;
@@ -781,7 +820,9 @@ pub fn json_pretty(s: Str) -> Result[Str, Str] {
 /// Navigates a JSON string using a dot-notation path (e.g. "a.b.0").
 /// Returns the value at the path as a string, or None if not found.
 /// Complexity: O(n * p), n = JSON size, p = path depth.
-pub fn json_get_path(json: Str, path: Str) -> Option[Str] {
+pub fn json_get_path(json: Str, path: Str) -> Option[Str]
+  ensures: (json.len() == 0) => (result.is_none == true)
+{
   let parsed = json_parse(json);
   if !parsed.is_ok {
     return Option[Str]{ is_some: false; value: ""; };
@@ -840,7 +881,11 @@ pub fn json_get_path(json: Str, path: Str) -> Option[Str] {
 /// Returns the JSON type of a string: "object", "array", "string", "number",
 /// "bool", "null", or "invalid".
 /// Complexity: O(1) -- reads only the first non-whitespace character.
-pub fn json_type_of(s: Str) -> Str {
+pub fn json_type_of(s: Str) -> Str
+  ensures: (s.len() == 0) => (result == "invalid")
+  ensures: (s == "{}") => (result == "object")
+  ensures: (s == "true") => (result == "bool")
+{
   var i: Int = 0;
   let len = s.len();
   while i < len {
@@ -869,7 +914,11 @@ pub fn json_type_of(s: Str) -> Str {
 /// Encodes an integer using unsigned LEB128 (Little Endian Base 128).
 /// Each byte uses 7 bits for data and the MSB as continuation flag.
 /// Complexity: O(log128(n)).
-pub fn varint_encode(value: Int) -> Vec[UInt8] {
+pub fn varint_encode(value: Int) -> Vec[UInt8]
+  ensures: result.len() >= 1 && result.len() <= 10
+  ensures: (value == 0) => (result.len() == 1)
+  ensures: (value == 300) => (result.len() == 2)
+{
   var result = Vec[UInt8].new();
   var v: Int = value;
   if v < 0 {
@@ -892,7 +941,9 @@ pub fn varint_encode(value: Int) -> Vec[UInt8] {
 /// Decodes an unsigned LEB128 integer from a byte slice starting at pos.
 /// Returns the decoded value. The caller advances pos by varint_encoded_len.
 /// Complexity: O(log128(n)).
-pub fn varint_decode(data: &Vec[UInt8], pos: Int) -> Result[Int, Str] {
+pub fn varint_decode(data: &Vec[UInt8], pos: Int) -> Result[Int, Str]
+  ensures: (pos >= data.len()) => (result.is_err == true)
+{
   var result: Int = 0;
   var shift: Int = 0;
   var p: Int = pos;
@@ -918,13 +969,17 @@ pub fn varint_decode(data: &Vec[UInt8], pos: Int) -> Result[Int, Str] {
 /// Decodes a LEB128 integer and returns the value with its encoded byte length.
 /// The caller can advance by the returned length.
 /// Complexity: O(log128(n)).
-pub fn varint_decode_at(data: &Vec[UInt8], pos: Int) -> Result[Int, Str] {
+pub fn varint_decode_at(data: &Vec[UInt8], pos: Int) -> Result[Int, Str]
+  ensures: (pos >= data.len()) => (result.is_err == true)
+{
   return varint_decode(data, pos);
 }
 
 /// Returns the number of bytes consumed by a LEB128-encoded integer.
 /// Scans continuation bits. Complexity: O(log128(n)).
-pub fn varint_encoded_len(data: &Vec[UInt8], pos: Int) -> Int {
+pub fn varint_encoded_len(data: &Vec[UInt8], pos: Int) -> Int
+  ensures: (pos >= data.len()) => (result == 0)
+{
   var p: Int = pos;
   let dlen = data.len();
   while p < dlen {
@@ -940,12 +995,17 @@ pub fn varint_encoded_len(data: &Vec[UInt8], pos: Int) -> Int {
 
 /// Converts bytes to a hex string. Delegates to xiom.encoding.hex_encode.
 /// Complexity: O(n), n = data length.
-pub fn bytes_to_hex_str(data: &Vec[UInt8]) -> Str {
+pub fn bytes_to_hex_str(data: &Vec[UInt8]) -> Str
+  ensures: (data.len() == 0) => (result == "")
+  ensures: result.len() == 2 * data.len()
+{
   return encoding.hex_encode(data);
 }
 
 /// Converts a hex string to bytes. Delegates to xiom.encoding.hex_decode.
 /// Complexity: O(n), n = string length.
-pub fn hex_str_to_bytes(s: Str) -> Result[Vec[UInt8], Str] {
+pub fn hex_str_to_bytes(s: Str) -> Result[Vec[UInt8], Str]
+  ensures: (s.len() == 0) => (result.is_ok == true)
+{
   return encoding.hex_decode(s);
 }

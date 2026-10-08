@@ -388,7 +388,10 @@ fn _json_parse_number(s: Str, pos: &mut Int) -> Result[JsonValue, Str] {
 /// NOTE: the name `json_parse` collides with the parent module's own
 /// json_parse and direct calls can misresolve under the current compiler
 /// (BUG 25 #1). The parsing logic lives in the uniquely-named helpers above.
-pub fn json_parse(s: Str) -> Result[JsonValue, Str] {
+pub fn json_parse(s: Str) -> Result[JsonValue, Str]
+  ensures: (s.len() == 0) => (result.is_err == true)
+  ensures: (s == "null") => (result.is_ok == true)
+{
   var pos = 0;
   let result = _json_parse_value(s, &pos);
   match result {
@@ -534,7 +537,9 @@ pub fn json_get(v: JsonValue, key: Str) -> Option[JsonValue] {
 /// The value at a key path (e.g. ["user", "address", "city"]), navigating
 /// objects by string key and arrays by numeric string index.
 /// Complexity: O(d * k), d = path depth, k = keys per object.
-pub fn json_get_path(v: JsonValue, path: &Vec[Str]) -> Option[JsonValue] {
+pub fn json_get_path(v: JsonValue, path: &Vec[Str]) -> Option[JsonValue]
+  ensures: (path.len() == 0) => (result.is_some == true)
+{
   var node = v;
   var i = 0;
   while i < path.len() {
@@ -584,7 +589,9 @@ pub fn json_get_path(v: JsonValue, path: &Vec[Str]) -> Option[JsonValue] {
 /// A copy of `v` (an object) with `key` set to `value`. An existing key is
 /// replaced; a missing key is appended.
 /// Complexity: O(k), k = number of keys.
-pub fn json_set(v: JsonValue, key: Str, value: JsonValue) -> JsonValue {
+pub fn json_set(v: JsonValue, key: Str, value: JsonValue) -> JsonValue
+  ensures: json_type(result) == "object"
+{
   var entries = Map[Str, JsonValue].new();
   var replaced = false;
   match v {
@@ -611,7 +618,9 @@ pub fn json_set(v: JsonValue, key: Str, value: JsonValue) -> JsonValue {
 /// A copy of the array `v` with `item` appended. Non-array values produce an
 /// array containing just `item`.
 /// Complexity: O(k), k = number of items.
-pub fn json_array_push(v: JsonValue, item: JsonValue) -> JsonValue {
+pub fn json_array_push(v: JsonValue, item: JsonValue) -> JsonValue
+  ensures: json_type(result) == "array"
+{
   var items = Vec[JsonValue].new();
   match v {
     JsonValue.Array(old) => {
@@ -629,43 +638,57 @@ pub fn json_array_push(v: JsonValue, item: JsonValue) -> JsonValue {
 
 /// A new empty JSON object.
 /// Complexity: O(1).
-pub fn json_object_new() -> JsonValue {
+pub fn json_object_new() -> JsonValue
+  ensures: json_type(result) == "object"
+{
   return JsonValue.Object(Map[Str, JsonValue].new());
 }
 
 /// A new empty JSON array.
 /// Complexity: O(1).
-pub fn json_array_new() -> JsonValue {
+pub fn json_array_new() -> JsonValue
+  ensures: json_type(result) == "array"
+{
   return JsonValue.Array(Vec[JsonValue].new());
 }
 
 /// Wrap a float as a JSON number.
 /// Complexity: O(1).
-pub fn json_number(f: Float64) -> JsonValue {
+pub fn json_number(f: Float64) -> JsonValue
+  ensures: json_type(result) == "number"
+{
   return JsonValue.Number(f);
 }
 
 /// Wrap a string as a JSON string.
 /// Complexity: O(1).
-pub fn json_string(s: Str) -> JsonValue {
+pub fn json_string(s: Str) -> JsonValue
+  ensures: json_type(result) == "string"
+{
   return JsonValue.String(s);
 }
 
 /// Wrap a bool as a JSON bool.
 /// Complexity: O(1).
-pub fn json_bool(b: Bool) -> JsonValue {
+pub fn json_bool(b: Bool) -> JsonValue
+  ensures: json_type(result) == "bool"
+{
   return JsonValue.Bool(b);
 }
 
 /// The JSON null value.
 /// Complexity: O(1).
-pub fn json_null() -> JsonValue {
+pub fn json_null() -> JsonValue
+  ensures: json_type(result) == "null"
+{
   return JsonValue.Null;
 }
 
 /// The type name of `v`: object, array, string, number, bool, or null.
 /// Complexity: O(1).
-pub fn json_type(v: JsonValue) -> Str {
+pub fn json_type(v: JsonValue) -> Str
+  ensures: result.len() >= 4
+{
   match v {
     JsonValue.Null => "null";
     JsonValue.Bool(_) => "bool";
@@ -682,7 +705,10 @@ pub fn json_type(v: JsonValue) -> Str {
 ///
 /// NOTE: the name `json_escape` collides with the parent module's own
 /// json_escape; the logic lives in the uniquely-named _json_escape_impl.
-pub fn json_escape(s: Str) -> Str {
+pub fn json_escape(s: Str) -> Str
+  ensures: (s.len() == 0) => (result == "")
+  ensures: result.len() >= s.len()
+{
   return _json_escape_impl(s);
 }
 

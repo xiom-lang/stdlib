@@ -1,10 +1,10 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
-**75.6% -- 7 of 10 gates complete; gate 8 at 56.1% (partial credit) and
+**75.7% -- 7 of 10 gates complete; gate 8 at 56.7% (partial credit) and
 gates 9-10 discrete.** (Compiler pin: **v0.64.0**.)
 **Gates: corpus 954/954 full (C001 carve-outs retired on v0.63.1; new
 TcpStream loopback and uuencode roundtrip smokes added), modules 509/509,
-probes 254/254, barename 0/509.**
+probes 255/255, barename 0/509.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -14,19 +14,20 @@ gates flip:
    full, no carve-outs (C001 fixed by 4bf8cf1e; 20/20 + 20/20 stress).
    lz4 is fixed by m190 and stayed in the gate; the new TcpStream loopback
    smoke locks m196.
-3. Probe corpus green -- MET (254/254 on v0.64.0, incl. the promoted
+3. Probe corpus green -- MET (255/255 on v0.64.0, incl. the promoted
    regression probes, the pin locks, the v0.64.0 m193-m196 probe, the
    wave-77 stats probe, the Pulse hardening probe, the wave-78 thread
    probe, the wave-79 convert probe, the wave-80 base-codec probe, the
    wave-81 unicode probe, the wave-82 codec-guard probe, the wave-83
    codec-tail probe, the wave-84 uri/url/urn probe, the wave-85
    ip/lossy/network/timestamp probe, the wave-86 convert-locals probe,
-   the wave-87 convert-tails probe and the wave-88 serialize probe).
+   the wave-87 convert-tails probe, the wave-88 serialize probe and the
+   wave-89 serialize+json probe).
 4. Strict bare-name scan clean -- MET (0/509).
-5. Coverage ratchet green -- MET (floors125).
+5. Coverage ratchet green -- MET (floors126).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (497/517 modules, 3477/6202 fns).
-8. Contract coverage 100% (every public fn carries clauses) -- OPEN (56.1%).
+8. Contract coverage 100% (every public fn carries clauses) -- OPEN (56.7%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
    OPEN (11: 10 compiler, 1 stdlib algorithm).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
@@ -37,8 +38,8 @@ credit (discrete). Update the percentage and the gate-8 fraction in the
 same commit as each floors dump so the meter moves smoothly toward 80%.
 
 Authoritative order: the gates above, then the updates below newest-first.
-Current state: compiler pin v0.64.0; coverage 56.1%, meter 75.6%; handoff
-in `docs/stdlib_session.md` snapshot 20 (block 64).
+Current state: compiler pin v0.64.0; coverage 56.7%, meter 75.7%; handoff
+in `docs/stdlib_session.md` snapshot 21 (block 66).
 
 ## Project Pulse relay (web-framework lane) -- 2026-10-05
 
@@ -630,6 +631,34 @@ compiler-owned for v0.64.1; Box stays section C. floors113 (global
 51.4%, reflect 100%); meter 75.1%. Battery on v0.64.0: corpus 953/953,
 probes 241/241, modules 509/509, barename 0/509, floors113 +
 module-smoke ratchets OK.
+
+Update 2026-10-08 (wave 89 landed): serialize + json modules -- 50
+clauses / 36 new pub. serialize.xi 26 (format_error band + zero-error
+exact pin; is_valid_json/is_valid_bytes empty -> false; json_string /
+json_array / json_object empty pins + result >= len+2 / 2n / 4n bands;
+json_number nan/zero pins; json_bool/json_null mirrors; json_parse empty
+-> Err + "null" -> Ok replacing the `requires: data.len() >= 0` and twin
+`ensures: true` placeholders; parse_json empty -> Err; JsonValue.index
+negative -> None; little_endian/big_endian constants;
+json_escape/unescape/minify/pretty empty identities and bands;
+json_get_path empty-json -> None; json_type_of empty/object/bool pins;
+varint_encode band + zero/300 pins; varint_decode(_at) pos-OOB -> Err;
+varint_encoded_len pos-OOB -> 0; bytes_to_hex_str == 2n + empty;
+hex_str_to_bytes empty -> Ok), serialize.json 12 (json_parse empty/null
+pins; json_get_path empty path -> Some; constructor type pins via
+json_type(result) on set/array_push/object_new/array_new/number/string/
+bool/null; json_type >= 4 band; json_escape band). Two compiler findings
+filed with minimal repros (p_alias_module_type_path, T001 on
+`ser.SerializeError`; p_foreign_method_call, C001 on
+`v.json_get_path(...)`; cross-ref C-PULSE-12) plus the PULSE 2026-10-08
+relay recorded in docs/STDLIB-WISHLIST.md (write_all/server_parse_request
+adopted; import-aliasing ask cross-filed; socket_set_timeout/flush_stdout
+stay runtime-backed). serialize 34.4% -> 73.1%, global 56.1% -> 56.7%;
+meter 75.7%; floors126. Probe p_wave89_shapes.xi (255th, 67 checks) green
+on v0.64.0 pre/post; targeted smokes serialize/json/stress/fuzz/KAT 13
+files 1/1. Readiness next: serialize batch 3 (toml 11, yaml_lite 7) then
+the other low dirs (async 4.5% -- runtime-backed, iter clause-side
+blocked, bench 18.8%, os 26.2%, core 26.7%).
 
 Update 2026-10-08 (wave 88 landed): serialize batch 1 -- 37 clauses / 27
 new pub. endian 16 (write_u16/u32/u64_le+be, write_i64_le and
