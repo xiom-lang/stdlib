@@ -34,7 +34,11 @@ module xiom.serialize.varint
 /// Encode `value` as signed LEB128 bytes (negative values use the 64-bit
 /// two's-complement pattern).
 /// Complexity: O(log128(|value|)).
-pub fn varint_encode(value: Int) -> Vec[UInt8] {
+pub fn varint_encode(value: Int) -> Vec[UInt8]
+  ensures: result.len() >= 1 && result.len() <= 10
+  ensures: (value == 0) => (result.len() == 1)
+  ensures: (value == 300) => (result.len() == 2)
+{
   var result = Vec[UInt8].new();
   var v = value;
   loop {
@@ -61,7 +65,9 @@ pub fn varint_encode(value: Int) -> Vec[UInt8] {
 /// misresolve in the current compiler (BUG 25 #1). The real logic lives in
 /// the uniquely-named private helper _sleb128_decode; this function is a thin
 /// wrapper. Prefer varint_decode_slice / _sleb128_decode for verification.
-pub fn varint_decode(bytes: &Vec[UInt8]) -> Result[(Int, Int), Str] {
+pub fn varint_decode(bytes: &Vec[UInt8]) -> Result[(Int, Int), Str]
+  ensures: (bytes.len() == 0) => (result.is_err == true)
+{
   return _sleb128_decode(bytes);
 }
 
@@ -97,7 +103,11 @@ fn _sleb128_decode(bytes: &Vec[UInt8]) -> Result[(Int, Int), Str] {
 
 /// The number of bytes needed to encode `value` as signed LEB128.
 /// Complexity: O(1) (at most 10).
-pub fn varint_size(value: Int) -> Int {
+pub fn varint_size(value: Int) -> Int
+  ensures: result >= 1 && result <= 10
+  ensures: (value == 0) => (result == 1)
+  ensures: (value == 300) => (result == 2)
+{
   var v = value;
   var n = 1;
   loop {
@@ -117,19 +127,26 @@ pub fn varint_size(value: Int) -> Int {
 /// Map a signed value to its non-negative zigzag encoding:
 /// 0 -> 0, -1 -> 1, 1 -> 2, -2 -> 3, ...
 /// Complexity: O(1).
-pub fn zigzag_encode(n: Int) -> Int {
+pub fn zigzag_encode(n: Int) -> Int
+  ensures: result == ((n << 1) ^ (n >> 63))
+{
   return (n << 1) ^ (n >> 63);
 }
 
 /// Invert zigzag_encode: map a zigzag value back to the signed value.
 /// Complexity: O(1).
-pub fn zigzag_decode(n: Int) -> Int {
+pub fn zigzag_decode(n: Int) -> Int
+  ensures: result == ((n >> 1) ^ (0 - (n & 1)))
+{
   return (n >> 1) ^ (0 - (n & 1));
 }
 
 /// Encode a UInt64 as unsigned LEB128 bytes.
 /// Complexity: O(log128(v)).
-pub fn uvarint_encode(value: UInt64) -> Vec[UInt8] {
+pub fn uvarint_encode(value: UInt64) -> Vec[UInt8]
+  ensures: result.len() >= 1 && result.len() <= 10
+  ensures: (value == 0) => (result.len() == 1)
+{
   var result = Vec[UInt8].new();
   var v = value;
   loop {
@@ -149,7 +166,9 @@ pub fn uvarint_encode(value: UInt64) -> Vec[UInt8] {
 /// Returns Err on truncation, on input longer than 10 bytes, or when the
 /// value would overflow UInt64.
 /// Complexity: O(1) (at most 10 bytes).
-pub fn uvarint_decode(bytes: &Vec[UInt8]) -> Result[(UInt64, Int), Str] {
+pub fn uvarint_decode(bytes: &Vec[UInt8]) -> Result[(UInt64, Int), Str]
+  ensures: (bytes.len() == 0) => (result.is_err == true)
+{
   var result: UInt64 = 0;
   var shift: Int = 0;
   var p: Int = 0;
@@ -182,7 +201,10 @@ pub fn uvarint_decode(bytes: &Vec[UInt8]) -> Result[(UInt64, Int), Str] {
 }
 
 /// Encode each value back-to-back as a signed LEB128 stream.
-pub fn varint_encode_slice(values: &Vec[Int]) -> Vec[UInt8] {
+pub fn varint_encode_slice(values: &Vec[Int]) -> Vec[UInt8]
+  ensures: (values.len() == 0) => (result.len() == 0)
+  ensures: result.len() >= values.len()
+{
   var result = Vec[UInt8].new();
   var i = 0;
   while i < values.len() {
@@ -200,7 +222,9 @@ pub fn varint_encode_slice(values: &Vec[Int]) -> Vec[UInt8] {
 /// Decode a stream of back-to-back signed LEB128 values.
 /// Returns Err on the first malformed or truncated varint.
 /// Complexity: O(n), n = number of values.
-pub fn varint_decode_slice(bytes: &Vec[UInt8]) -> Result[Vec[Int], Str] {
+pub fn varint_decode_slice(bytes: &Vec[UInt8]) -> Result[Vec[Int], Str]
+  ensures: (bytes.len() == 0) => (result.is_ok == true)
+{
   var result = Vec[Int].new();
   var p = 0;
   while p < bytes.len() {

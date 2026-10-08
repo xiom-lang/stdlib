@@ -27,7 +27,9 @@ use xiom.serialize;
 
 /// Append `v` as two little-endian bytes (LSB first).
 /// Complexity: O(1).
-pub fn write_u16_le(out: &mut Vec[UInt8], v: UInt16) {
+pub fn write_u16_le(out: &mut Vec[UInt8], v: UInt16)
+  ensures: out.len() == out.len()@pre + 2
+{
   var x = v as Int;
   out.push((x & 0xFF) as UInt8);
   out.push(((x >> 8) & 0xFF) as UInt8);
@@ -35,7 +37,9 @@ pub fn write_u16_le(out: &mut Vec[UInt8], v: UInt16) {
 
 /// Append `v` as four little-endian bytes (LSB first).
 /// Complexity: O(1).
-pub fn write_u32_le(out: &mut Vec[UInt8], v: UInt32) {
+pub fn write_u32_le(out: &mut Vec[UInt8], v: UInt32)
+  ensures: out.len() == out.len()@pre + 4
+{
   var x = v as Int;
   out.push((x & 0xFF) as UInt8);
   out.push(((x >> 8) & 0xFF) as UInt8);
@@ -45,7 +49,9 @@ pub fn write_u32_le(out: &mut Vec[UInt8], v: UInt32) {
 
 /// Append `v` as eight little-endian bytes (LSB first).
 /// Complexity: O(1).
-pub fn write_u64_le(out: &mut Vec[UInt8], v: UInt64) {
+pub fn write_u64_le(out: &mut Vec[UInt8], v: UInt64)
+  ensures: out.len() == out.len()@pre + 8
+{
   out.push((v & 0xFF) as UInt8);
   out.push(((v >> 8) & 0xFF) as UInt8);
   out.push(((v >> 16) & 0xFF) as UInt8);
@@ -58,7 +64,9 @@ pub fn write_u64_le(out: &mut Vec[UInt8], v: UInt64) {
 
 /// Append `v` as two big-endian bytes (MSB first).
 /// Complexity: O(1).
-pub fn write_u16_be(out: &mut Vec[UInt8], v: UInt16) {
+pub fn write_u16_be(out: &mut Vec[UInt8], v: UInt16)
+  ensures: out.len() == out.len()@pre + 2
+{
   var x = v as Int;
   out.push(((x >> 8) & 0xFF) as UInt8);
   out.push((x & 0xFF) as UInt8);
@@ -66,7 +74,9 @@ pub fn write_u16_be(out: &mut Vec[UInt8], v: UInt16) {
 
 /// Append `v` as four big-endian bytes (MSB first).
 /// Complexity: O(1).
-pub fn write_u32_be(out: &mut Vec[UInt8], v: UInt32) {
+pub fn write_u32_be(out: &mut Vec[UInt8], v: UInt32)
+  ensures: out.len() == out.len()@pre + 4
+{
   var x = v as Int;
   out.push(((x >> 24) & 0xFF) as UInt8);
   out.push(((x >> 16) & 0xFF) as UInt8);
@@ -76,7 +86,9 @@ pub fn write_u32_be(out: &mut Vec[UInt8], v: UInt32) {
 
 /// Append `v` as eight big-endian bytes (MSB first).
 /// Complexity: O(1).
-pub fn write_u64_be(out: &mut Vec[UInt8], v: UInt64) {
+pub fn write_u64_be(out: &mut Vec[UInt8], v: UInt64)
+  ensures: out.len() == out.len()@pre + 8
+{
   out.push(((v >> 56) & 0xFF) as UInt8);
   out.push(((v >> 48) & 0xFF) as UInt8);
   out.push(((v >> 40) & 0xFF) as UInt8);
@@ -90,7 +102,9 @@ pub fn write_u64_be(out: &mut Vec[UInt8], v: UInt64) {
 /// Read a little-endian UInt16 at `pos`; returns 0 when fewer than two bytes
 /// remain. Callers must verify `pos + 2 <= data.len()`.
 /// Complexity: O(1).
-pub fn read_u16_le(data: &Vec[UInt8], pos: Int) -> UInt16 {
+pub fn read_u16_le(data: &Vec[UInt8], pos: Int) -> UInt16
+  ensures: (pos < 0 || pos + 2 > data.len()) => (result == 0)
+{
   if pos < 0 || pos + 2 > data.len() { return 0 as UInt16; }
   var b0 = data[pos] as Int;
   var b1 = data[pos + 1] as Int;
@@ -100,7 +114,9 @@ pub fn read_u16_le(data: &Vec[UInt8], pos: Int) -> UInt16 {
 /// Read a little-endian UInt32 at `pos`; returns 0 when fewer than four bytes
 /// remain. Callers must verify `pos + 4 <= data.len()`.
 /// Complexity: O(1).
-pub fn read_u32_le(data: &Vec[UInt8], pos: Int) -> UInt32 {
+pub fn read_u32_le(data: &Vec[UInt8], pos: Int) -> UInt32
+  ensures: (pos < 0 || pos + 4 > data.len()) => (result == 0)
+{
   if pos < 0 || pos + 4 > data.len() { return 0 as UInt32; }
   var b0 = data[pos] as Int;
   var b1 = data[pos + 1] as Int;
@@ -112,7 +128,9 @@ pub fn read_u32_le(data: &Vec[UInt8], pos: Int) -> UInt32 {
 /// Read a little-endian UInt64 at `pos`; returns 0 when fewer than eight
 /// bytes remain. Callers must verify `pos + 8 <= data.len()`.
 /// Complexity: O(1).
-pub fn read_u64_le(data: &Vec[UInt8], pos: Int) -> UInt64 {
+pub fn read_u64_le(data: &Vec[UInt8], pos: Int) -> UInt64
+  ensures: (pos < 0 || pos + 8 > data.len()) => (result == 0)
+{
   if pos < 0 || pos + 8 > data.len() { return 0 as UInt64; }
   var r: UInt64 = 0;
   var i = 0;
@@ -126,7 +144,9 @@ pub fn read_u64_le(data: &Vec[UInt8], pos: Int) -> UInt64 {
 /// Read a big-endian UInt16 at `pos`; returns 0 when fewer than two bytes
 /// remain. Callers must verify `pos + 2 <= data.len()`.
 /// Complexity: O(1).
-pub fn read_u16_be(data: &Vec[UInt8], pos: Int) -> UInt16 {
+pub fn read_u16_be(data: &Vec[UInt8], pos: Int) -> UInt16
+  ensures: (pos < 0 || pos + 2 > data.len()) => (result == 0)
+{
   if pos < 0 || pos + 2 > data.len() { return 0 as UInt16; }
   var b0 = data[pos] as Int;
   var b1 = data[pos + 1] as Int;
@@ -136,7 +156,9 @@ pub fn read_u16_be(data: &Vec[UInt8], pos: Int) -> UInt16 {
 /// Read a big-endian UInt32 at `pos`; returns 0 when fewer than four bytes
 /// remain. Callers must verify `pos + 4 <= data.len()`.
 /// Complexity: O(1).
-pub fn read_u32_be(data: &Vec[UInt8], pos: Int) -> UInt32 {
+pub fn read_u32_be(data: &Vec[UInt8], pos: Int) -> UInt32
+  ensures: (pos < 0 || pos + 4 > data.len()) => (result == 0)
+{
   if pos < 0 || pos + 4 > data.len() { return 0 as UInt32; }
   var b0 = data[pos] as Int;
   var b1 = data[pos + 1] as Int;
@@ -148,7 +170,9 @@ pub fn read_u32_be(data: &Vec[UInt8], pos: Int) -> UInt32 {
 /// Read a big-endian UInt64 at `pos`; returns 0 when fewer than eight bytes
 /// remain. Callers must verify `pos + 8 <= data.len()`.
 /// Complexity: O(1).
-pub fn read_u64_be(data: &Vec[UInt8], pos: Int) -> UInt64 {
+pub fn read_u64_be(data: &Vec[UInt8], pos: Int) -> UInt64
+  ensures: (pos < 0 || pos + 8 > data.len()) => (result == 0)
+{
   if pos < 0 || pos + 8 > data.len() { return 0 as UInt64; }
   var r: UInt64 = 0;
   var i = 0;
@@ -161,7 +185,9 @@ pub fn read_u64_be(data: &Vec[UInt8], pos: Int) -> UInt64 {
 
 /// Append `v` as eight little-endian two's-complement bytes.
 /// Complexity: O(1).
-pub fn write_i64_le(out: &mut Vec[UInt8], v: Int) {
+pub fn write_i64_le(out: &mut Vec[UInt8], v: Int)
+  ensures: out.len() == out.len()@pre + 8
+{
   out.push((v & 0xFF) as UInt8);
   out.push(((v >> 8) & 0xFF) as UInt8);
   out.push(((v >> 16) & 0xFF) as UInt8);
@@ -175,7 +201,9 @@ pub fn write_i64_le(out: &mut Vec[UInt8], v: Int) {
 /// Read a little-endian signed 64-bit value at `pos`; returns 0 when fewer
 /// than eight bytes remain. Callers must verify `pos + 8 <= data.len()`.
 /// Complexity: O(1).
-pub fn read_i64_le(data: &Vec[UInt8], pos: Int) -> Int {
+pub fn read_i64_le(data: &Vec[UInt8], pos: Int) -> Int
+  ensures: (pos < 0 || pos + 8 > data.len()) => (result == 0)
+{
   if pos < 0 || pos + 8 > data.len() { return 0; }
   var b0 = data[pos] as Int;
   var b1 = data[pos + 1] as Int;
@@ -194,6 +222,7 @@ pub fn read_i64_le(data: &Vec[UInt8], pos: Int) -> Int {
 /// Complexity: O(1).
 pub fn write_f64_le(out: &mut Vec[UInt8], v: Float64)
   requires: true
+  ensures: out.len() == out.len()@pre + 8
 {
   unsafe {
     var buf: [8]UInt8;
@@ -210,7 +239,9 @@ pub fn write_f64_le(out: &mut Vec[UInt8], v: Float64)
 /// Read a little-endian IEEE-754 double at `pos`; returns 0.0 when fewer than
 /// eight bytes remain. Callers must verify `pos + 8 <= data.len()`.
 /// Complexity: O(1).
-pub fn read_f64_le(data: &Vec[UInt8], pos: Int) -> Float64 {
+pub fn read_f64_le(data: &Vec[UInt8], pos: Int) -> Float64
+  ensures: (pos < 0 || pos + 8 > data.len()) => (result == 0.0)
+{
   if pos < 0 || pos + 8 > data.len() { return 0.0; }
   unsafe {
     var buf: [8]UInt8;

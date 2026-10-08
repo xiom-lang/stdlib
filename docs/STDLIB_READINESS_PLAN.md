@@ -1283,8 +1283,28 @@ T1/T2 yields.
         bench 18.8%, os 26.2%, core 26.7%, format 27.3%) or the convert
         leftovers (overflow stays compiler-blocked; toint/char-cast and
         pointer/generic surfaces stay clause-free).
+        Wave 88 (2026-10-08): coverage wave 51 -- serialize batch 1,
+        37 clauses / 27 new pub. endian 16 (the eight write_* @pre
+        append claims out.len() == out.len()@pre + 2/4/8, including
+        write_f64_le's unsafe block; the eight read_* OOB-identity guards
+        pos < 0 || pos + N > data.len() => result == 0 / 0.0), varint 9
+        (encode/size len-int-value bands 1..10 + zero/300 pins;
+        decode empty -> Err; the zigzag exact body mirrors;
+        uvarint encode band + zero pin; decode empty -> Err;
+        encode_slice empty -> empty + result >= values band;
+        decode_slice empty -> Ok), csv 4 (empty -> Ok / "" on
+        parse/parse_with/write_row/write; write_row >= fields-1 and
+        write >= 2 * rows length bands). serialize 5.4% -> 34.4%,
+        global 55.7% -> 56.1%, meter 75.6%; floors125. Probe
+        p_wave88_shapes.xi (254th, 57 checks) green on v0.64.0 pre/post
+        (@pre claims verified incl. the double-append case); targeted
+        smokes smoke_serialize(+toml), smoke_serialize_csv,
+        smoke_convert_endian 1/1 each. Next: serialize remainder
+        (serialize 31, json 15, toml 11, yaml_lite 7) then the other low
+        dirs (async 4.5% -- runtime-backed, iter clause-side blocked,
+        bench 18.8%, os 26.2%, core 26.7%, format 27.3%).
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors124.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors125.json
         tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;

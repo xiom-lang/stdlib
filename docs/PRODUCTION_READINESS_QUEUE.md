@@ -1,10 +1,10 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
-**75.6% -- 7 of 10 gates complete; gate 8 at 55.7% (partial credit) and
+**75.6% -- 7 of 10 gates complete; gate 8 at 56.1% (partial credit) and
 gates 9-10 discrete.** (Compiler pin: **v0.64.0**.)
 **Gates: corpus 954/954 full (C001 carve-outs retired on v0.63.1; new
 TcpStream loopback and uuencode roundtrip smokes added), modules 509/509,
-probes 253/253, barename 0/509.**
+probes 254/254, barename 0/509.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -14,19 +14,19 @@ gates flip:
    full, no carve-outs (C001 fixed by 4bf8cf1e; 20/20 + 20/20 stress).
    lz4 is fixed by m190 and stayed in the gate; the new TcpStream loopback
    smoke locks m196.
-3. Probe corpus green -- MET (253/253 on v0.64.0, incl. the promoted
+3. Probe corpus green -- MET (254/254 on v0.64.0, incl. the promoted
    regression probes, the pin locks, the v0.64.0 m193-m196 probe, the
    wave-77 stats probe, the Pulse hardening probe, the wave-78 thread
    probe, the wave-79 convert probe, the wave-80 base-codec probe, the
    wave-81 unicode probe, the wave-82 codec-guard probe, the wave-83
    codec-tail probe, the wave-84 uri/url/urn probe, the wave-85
-   ip/lossy/network/timestamp probe, the wave-86 convert-locals probe
-   and the wave-87 convert-tails probe).
+   ip/lossy/network/timestamp probe, the wave-86 convert-locals probe,
+   the wave-87 convert-tails probe and the wave-88 serialize probe).
 4. Strict bare-name scan clean -- MET (0/509).
-5. Coverage ratchet green -- MET (floors124).
+5. Coverage ratchet green -- MET (floors125).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (497/517 modules, 3477/6202 fns).
-8. Contract coverage 100% (every public fn carries clauses) -- OPEN (55.7%).
+8. Contract coverage 100% (every public fn carries clauses) -- OPEN (56.1%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
    OPEN (11: 10 compiler, 1 stdlib algorithm).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
@@ -37,8 +37,8 @@ credit (discrete). Update the percentage and the gate-8 fraction in the
 same commit as each floors dump so the meter moves smoothly toward 80%.
 
 Authoritative order: the gates above, then the updates below newest-first.
-Current state: compiler pin v0.64.0; coverage 55.7%, meter 75.6%; handoff
-in `docs/stdlib_session.md` snapshot 19 (block 62).
+Current state: compiler pin v0.64.0; coverage 56.1%, meter 75.6%; handoff
+in `docs/stdlib_session.md` snapshot 20 (block 64).
 
 ## Project Pulse relay (web-framework lane) -- 2026-10-05
 
@@ -630,6 +630,26 @@ compiler-owned for v0.64.1; Box stays section C. floors113 (global
 51.4%, reflect 100%); meter 75.1%. Battery on v0.64.0: corpus 953/953,
 probes 241/241, modules 509/509, barename 0/509, floors113 +
 module-smoke ratchets OK.
+
+Update 2026-10-08 (wave 88 landed): serialize batch 1 -- 37 clauses / 27
+new pub. endian 16 (write_u16/u32/u64_le+be, write_i64_le and
+write_f64_le claim appends via out.len() == out.len()@pre + 2/4/8; the
+eight read_* carry the OOB identity guards pos < 0 || pos + N >
+data.len() => result == 0 / 0.0), varint 9 (varint_encode/varint_size
+1..10 bands + zero/300 pins; varint_decode empty -> Err; zigzag
+encode/decode exact body mirrors; uvarint_encode band + zero pin;
+uvarint_decode empty -> Err; varint_encode_slice empty -> empty and
+result >= values; varint_decode_slice empty -> Ok), csv 4 (empty -> Ok
+on parse/parse_with, empty -> "" on write_row/write; write_row >=
+fields-1 and write >= 2 * rows length bands). The @pre append claims
+held at runtime first pass (incl. the double-append case). serialize
+5.4% -> 34.4%, global 55.7% -> 56.1%; meter 75.6%; floors125. Probe
+p_wave88_shapes.xi (254th, 57 checks) green on v0.64.0 pre/post;
+targeted smokes smoke_serialize (+toml), smoke_serialize_csv and
+smoke_convert_endian 1/1 each. Readiness next: the serialize remainder
+(serialize 31, json 15, toml 11, yaml_lite 7) then the other low dirs
+(async 4.5% -- runtime-backed surfaces, check each; iter clause-side
+blocked; bench 18.8%; os 26.2%; core 26.7%).
 
 Update 2026-10-07 (wave 87 landed): convert tails -- 52 clauses / 33 new
 pub. Root convert 6 (int_to_float/float_to_int/int_to_string zero pins,

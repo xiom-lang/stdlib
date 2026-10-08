@@ -36,7 +36,9 @@ fn _is_record_end(b: UInt8) -> Bool {
 }
 
 /// Parse RFC 4180 CSV with the default comma delimiter.
-pub fn csv_parse(text: Str) -> Result[Vec[Vec[Str]], Str] {
+pub fn csv_parse(text: Str) -> Result[Vec[Vec[Str]], Str]
+  ensures: (text.len() == 0) => (result.is_ok == true)
+{
   return csv_parse_with(text, _CSV_COMMA);
 }
 
@@ -44,6 +46,7 @@ pub fn csv_parse(text: Str) -> Result[Vec[Vec[Str]], Str] {
 pub fn csv_parse_with(text: Str, delimiter: UInt8) -> Result[Vec[Vec[Str]], Str]
   requires: delimiter != _CSV_QUOTE
   requires: delimiter != _CSV_CR && delimiter != _CSV_LF
+  ensures: (text.len() == 0) => (result.is_ok == true)
 {
   var rows = Vec[Vec[Str]].new();
   let len = text.len();
@@ -143,7 +146,10 @@ fn _quote_field(s: Str, delimiter: UInt8) -> Str {
 }
 
 /// Serialize one record (no trailing terminator), quoting as needed.
-pub fn csv_write_row(fields: &Vec[Str]) -> Str {
+pub fn csv_write_row(fields: &Vec[Str]) -> Str
+  ensures: (fields.len() == 0) => (result == "")
+  ensures: result.len() >= fields.len() - 1
+{
   var out = "";
   var i = 0;
   while i < fields.len() {
@@ -155,7 +161,10 @@ pub fn csv_write_row(fields: &Vec[Str]) -> Str {
 }
 
 /// Serialize records with CRLF terminators per RFC 4180.
-pub fn csv_write(rows: &Vec[Vec[Str]]) -> Str {
+pub fn csv_write(rows: &Vec[Vec[Str]]) -> Str
+  ensures: (rows.len() == 0) => (result == "")
+  ensures: result.len() >= 2 * rows.len()
+{
   var out = "";
   var i = 0;
   while i < rows.len() {
