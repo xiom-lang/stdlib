@@ -98,23 +98,33 @@ fn _box(lines: &Vec[Str], width: Int, style: Int) -> Str {
 }
 
 /// Wrap lines in a plain ASCII box of the given width.
-pub fn box_around(lines: &Vec[Str], width: Int) -> Str {
+pub fn box_around(lines: &Vec[Str], width: Int) -> Str
+  ensures: (lines.len() == 0 && width >= 2) => (result.len() == 2 * width + 1)
+{
   return _box(lines, width, BOX_PLAIN);
 }
 
 /// Wrap lines in a rounded-corner box of the given width.
-pub fn box_rounded(lines: &Vec[Str], width: Int) -> Str {
+pub fn box_rounded(lines: &Vec[Str], width: Int) -> Str
+  ensures: (lines.len() == 0 && width >= 2) => (result.len() == 6 * width + 1)
+{
   return _box(lines, width, BOX_ROUNDED);
 }
 
 /// Wrap lines in a double-line box of the given width.
-pub fn box_double(lines: &Vec[Str], width: Int) -> Str {
+pub fn box_double(lines: &Vec[Str], width: Int) -> Str
+  ensures: (lines.len() == 0 && width >= 2) => (result.len() == 6 * width + 1)
+{
   return _box(lines, width, BOX_DOUBLE);
 }
 
 /// Render a top border line; `style` selects the character set (0 plain,
 /// 1 rounded, 2 double).
-pub fn border_top(width: Int, style: Int) -> Str {
+pub fn border_top(width: Int, style: Int) -> Str
+  ensures: (width >= 2 && style != 1 && style != 2) => (result.len() == width)
+  ensures: (width >= 2 && style == 1) => (result.len() == 3 * width)
+  ensures: (width >= 2 && style == 2) => (result.len() == 3 * width)
+{
   var chars = _box_chars(style);
   var tl = chars.tl;
   var tr = chars.tr;
@@ -127,7 +137,11 @@ pub fn border_top(width: Int, style: Int) -> Str {
 }
 
 /// Render a bottom border line; `style` selects the character set.
-pub fn border_bottom(width: Int, style: Int) -> Str {
+pub fn border_bottom(width: Int, style: Int) -> Str
+  ensures: (width >= 2 && style != 1 && style != 2) => (result.len() == width)
+  ensures: (width >= 2 && style == 1) => (result.len() == 3 * width)
+  ensures: (width >= 2 && style == 2) => (result.len() == 3 * width)
+{
   var chars = _box_chars(style);
   var bl = chars.bl;
   var br = chars.br;
@@ -140,66 +154,93 @@ pub fn border_bottom(width: Int, style: Int) -> Str {
 }
 
 /// Repeat `ch` `width` times as a horizontal separator.
-pub fn separator_line(ch: Char, width: Int) -> Str {
+pub fn separator_line(ch: Char, width: Int) -> Str
+  ensures: (ch == '=' && width >= 0) => (result.len() == width)
+  ensures: (width <= 0) => (result.len() == 0)
+{
   return _char_repeat(ch, width);
 }
 
 /// Render a double-line horizontal separator.
-pub fn separator_double(width: Int) -> Str {
+pub fn separator_double(width: Int) -> Str
+  ensures: (width >= 0) => (result.len() == 3 * width)
+  ensures: (width <= 0) => (result.len() == 0)
+{
   return string.str_repeat("\u{2550}", width);
 }
 
 /// Render a dashed horizontal separator.
-pub fn separator_dashed(width: Int) -> Str {
+pub fn separator_dashed(width: Int) -> Str
+  ensures: (width >= 0) => (result.len() == width)
+  ensures: (width <= 0) => (result.len() == 0)
+{
   return string.str_repeat("-", width);
 }
 
 /// Render a multi-line block header with the title centered inside a box.
-pub fn header_block(title: Str, width: Int) -> Str {
+pub fn header_block(title: Str, width: Int) -> Str
+  ensures: (width >= 2) => (result.len() == 3 * width + 2)
+{
   var lines = Vec[Str].new();
   lines.push(title);
   return _box(&lines, width, BOX_PLAIN);
 }
 
 /// Render a one-line bar header: a horizontal rule above the centered title.
-pub fn header_bar(title: Str, width: Int) -> Str {
+pub fn header_bar(title: Str, width: Int) -> Str
+  ensures: (title.len() <= width && width >= 0) => (result.len() == 2 * width + 1)
+{
   return string.str_repeat("-", width) + "\n" + string.str_center(title, width);
 }
 
 /// Render a multi-line footer block with the text centered inside a box.
-pub fn footer_block(text: Str, width: Int) -> Str {
+pub fn footer_block(text: Str, width: Int) -> Str
+  ensures: (width >= 2) => (result.len() == 3 * width + 2)
+{
   var lines = Vec[Str].new();
   lines.push(text);
   return _box(&lines, width, BOX_PLAIN);
 }
 
 /// Center the title within `width` columns.
-pub fn title_center(title: Str, width: Int) -> Str {
+pub fn title_center(title: Str, width: Int) -> Str
+  ensures: result.len() >= title.len()
+{
   return string.str_center(title, width);
 }
 
 /// Render the title with an overline and underline.
-pub fn title_overline(title: Str, width: Int) -> Str {
+pub fn title_overline(title: Str, width: Int) -> Str
+  ensures: (title.len() <= width && width >= 0) => (result.len() == 3 * width + 2)
+{
   return string.str_repeat("-", width) + "\n" + string.str_center(title, width) + "\n" + string.str_repeat("-", width);
 }
 
 /// Render the title with an underline.
-pub fn title_underline(title: Str, width: Int) -> Str {
+pub fn title_underline(title: Str, width: Int) -> Str
+  ensures: (title.len() <= width && width >= 0) => (result.len() == 2 * width + 1)
+{
   return string.str_center(title, width) + "\n" + string.str_repeat("-", width);
 }
 
 /// Render a section header with rule lines above and below.
-pub fn section_header(title: Str, width: Int) -> Str {
+pub fn section_header(title: Str, width: Int) -> Str
+  ensures: (title.len() <= width && width >= 0) => (result.len() == 3 * width + 2)
+{
   return string.str_repeat("-", width) + "\n" + string.str_center(title, width) + "\n" + string.str_repeat("-", width);
 }
 
 /// Render a numbered section heading such as "3. title".
-pub fn section_number(n: Int, title: Str) -> Str {
+pub fn section_number(n: Int, title: Str) -> Str
+  ensures: (n == 0) => (result.len() == title.len() + 3)
+{
   return convert.int_to_string(n) + ". " + title;
 }
 
 /// Render each item prefixed by the bullet marker.
-pub fn bullet_list(items: &Vec[Str], bullet: Str) -> Str {
+pub fn bullet_list(items: &Vec[Str], bullet: Str) -> Str
+  ensures: (items.len() == 0) => (result.len() == 0)
+{
   var result = "";
   var i = 0;
   while i < items.len() {
@@ -213,7 +254,9 @@ pub fn bullet_list(items: &Vec[Str], bullet: Str) -> Str {
 }
 
 /// Render each item prefixed by its 1-based number.
-pub fn numbered_list(items: &Vec[Str]) -> Str {
+pub fn numbered_list(items: &Vec[Str]) -> Str
+  ensures: (items.len() == 0) => (result.len() == 0)
+{
   var result = "";
   var i = 0;
   while i < items.len() {
@@ -227,7 +270,9 @@ pub fn numbered_list(items: &Vec[Str]) -> Str {
 }
 
 /// Render term/definition pairs, one per line.
-pub fn definition_list(terms: &Vec[Str], definitions: &Vec[Str]) -> Str {
+pub fn definition_list(terms: &Vec[Str], definitions: &Vec[Str]) -> Str
+  ensures: (terms.len() == 0 || definitions.len() == 0) => (result.len() == 0)
+{
   var result = "";
   var n = terms.len();
   if definitions.len() < n {
@@ -252,7 +297,9 @@ fn _toc_heading(headings: &Vec[Str], i: Int) -> Str {
 
 /// Render a table of contents with dot leaders and page numbers.
 /// Each line: heading, dots to fill to `width`, then the page number.
-pub fn toc(headings: &Vec[Str], pages: &Vec[Int]) -> Str {
+pub fn toc(headings: &Vec[Str], pages: &Vec[Int]) -> Str
+  ensures: (headings.len() == 0 || pages.len() == 0) => (result.len() == 0)
+{
   var result = "";
   var n = headings.len();
   if pages.len() < n {
@@ -287,7 +334,10 @@ pub fn toc(headings: &Vec[Str], pages: &Vec[Int]) -> Str {
 
 /// Return the indentation prefix for a TOC entry at the given level
 /// (two spaces per level).
-pub fn toc_indent(level: Int) -> Str {
+pub fn toc_indent(level: Int) -> Str
+  ensures: (level <= 0) => (result.len() == 0)
+  ensures: (level > 0) => (result.len() == 2 * level)
+{
   var l = level;
   if l < 0 {
     l = 0;
@@ -296,7 +346,9 @@ pub fn toc_indent(level: Int) -> Str {
 }
 
 /// Wrap `s` to `width` columns and center each line.
-pub fn text_wrap_center(s: Str, width: Int) -> Str {
+pub fn text_wrap_center(s: Str, width: Int) -> Str
+  ensures: (s.len() == 0 && width >= 0) => (result.len() == width)
+{
   var lines = _wrap_words(s, width);
   var result = "";
   var i = 0;
@@ -311,7 +363,9 @@ pub fn text_wrap_center(s: Str, width: Int) -> Str {
 }
 
 /// Wrap `s` to `width` columns with justified alignment.
-pub fn text_justify(s: Str, width: Int) -> Str {
+pub fn text_justify(s: Str, width: Int) -> Str
+  ensures: (s.len() == 0) => (result.len() == 0)
+{
   var lines = _wrap_words(s, width);
   var result = "";
   var i = 0;
@@ -429,7 +483,9 @@ type WordSpan = {
 
 /// Lay out items in the given number of equal columns (row-major), each line
 /// joined with two spaces between padded columns.
-pub fn text_columns(items: &Vec[Str], cols: Int) -> Str {
+pub fn text_columns(items: &Vec[Str], cols: Int) -> Str
+  ensures: (items.len() == 0) => (result.len() == 0)
+{
   var result = "";
   var n = items.len();
   if n == 0 {

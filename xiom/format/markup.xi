@@ -92,7 +92,10 @@ fn _unescape(s: Str) -> Str {
 
 /// Escape markup-significant characters with a backslash.
 /// Complexity: O(|s|).
-pub fn markup_escape(s: Str) -> Str {
+pub fn markup_escape(s: Str) -> Str
+  ensures: (s.len() == 0) => (result.len() == 0)
+  ensures: result.len() >= s.len()
+{
   var result = "";
   var len = s.len();
   var i = 0;
@@ -109,33 +112,46 @@ pub fn markup_escape(s: Str) -> Str {
 }
 
 /// Wrap text in a bold marker: "*text*".
-pub fn markup_bold(text: Str) -> Str {
+pub fn markup_bold(text: Str) -> Str
+  ensures: result.len() == text.len() + 2
+{
   return "*" + text + "*";
 }
 
 /// Wrap text in an italic marker: "_text_".
-pub fn markup_italic(text: Str) -> Str {
+pub fn markup_italic(text: Str) -> Str
+  ensures: result.len() == text.len() + 2
+{
   return "_" + text + "_";
 }
 
 /// Wrap text in a code marker: "`text`".
-pub fn markup_code(text: Str) -> Str {
+pub fn markup_code(text: Str) -> Str
+  ensures: result.len() == text.len() + 2
+{
   return "`" + text + "`";
 }
 
 /// Wrap text in a link marker with a url: "[text](url)".
-pub fn markup_link(text: Str, url: Str) -> Str {
+pub fn markup_link(text: Str, url: Str) -> Str
+  ensures: result.len() == text.len() + url.len() + 4
+{
   return "[" + text + "](" + url + ")";
 }
 
 /// Wrap text in a strikethrough marker: "~text~".
-pub fn markup_strike(text: Str) -> Str {
+pub fn markup_strike(text: Str) -> Str
+  ensures: result.len() == text.len() + 2
+{
   return "~" + text + "~";
 }
 
 /// Parse a markup string into a node list. Returns Err on unclosed markers.
 /// Complexity: O(n), n = string length.
-pub fn markup_parse(s: Str) -> Result[Vec[MarkupNode], Str] {
+pub fn markup_parse(s: Str) -> Result[Vec[MarkupNode], Str]
+  ensures: (s.len() == 0) => (result.is_ok == true)
+  ensures: (s == "*x") => (result.is_err == true)
+{
   var nodes = Vec[MarkupNode].new();
   var text_buf = "";
   var len = s.len();
@@ -231,7 +247,9 @@ pub fn markup_parse(s: Str) -> Result[Vec[MarkupNode], Str] {
 /// Parse the first inline span, ignoring trailing content. For this module
 /// the whole string is parsed (a trailing run of plain text becomes a text
 /// node), matching the documented span semantics for well-formed input.
-pub fn markup_parse_inline(s: Str) -> Vec[MarkupNode] {
+pub fn markup_parse_inline(s: Str) -> Vec[MarkupNode]
+  ensures: (s.len() == 0) => (result.len() == 0)
+{
   var parsed = markup_parse(s);
   match parsed {
     Ok(v) => { return v; };
@@ -240,7 +258,9 @@ pub fn markup_parse_inline(s: Str) -> Vec[MarkupNode] {
 }
 
 /// Render nodes back to the markup syntax (re-escaping text content).
-pub fn markup_render(nodes: &Vec[MarkupNode]) -> Str {
+pub fn markup_render(nodes: &Vec[MarkupNode]) -> Str
+  ensures: (nodes.len() == 0) => (result.len() == 0)
+{
   var result = "";
   var i = 0;
   while i < nodes.len() {
@@ -264,7 +284,9 @@ pub fn markup_render(nodes: &Vec[MarkupNode]) -> Str {
 }
 
 /// Render nodes with ANSI styling (bold/italic/code/underline/strike).
-pub fn markup_render_ansi(nodes: &Vec[MarkupNode]) -> Str {
+pub fn markup_render_ansi(nodes: &Vec[MarkupNode]) -> Str
+  ensures: (nodes.len() == 0) => (result.len() == 0)
+{
   var result = "";
   var i = 0;
   while i < nodes.len() {
@@ -288,7 +310,9 @@ pub fn markup_render_ansi(nodes: &Vec[MarkupNode]) -> Str {
 }
 
 /// Render nodes as HTML (<b>, <i>, <code>, <a href>, <s>).
-pub fn markup_render_html(nodes: &Vec[MarkupNode]) -> Str {
+pub fn markup_render_html(nodes: &Vec[MarkupNode]) -> Str
+  ensures: (nodes.len() == 0) => (result.len() == 0)
+{
   var result = "";
   var i = 0;
   while i < nodes.len() {
@@ -312,7 +336,9 @@ pub fn markup_render_html(nodes: &Vec[MarkupNode]) -> Str {
 }
 
 /// Render nodes as plain text, dropping all styling.
-pub fn markup_render_plain(nodes: &Vec[MarkupNode]) -> Str {
+pub fn markup_render_plain(nodes: &Vec[MarkupNode]) -> Str
+  ensures: (nodes.len() == 0) => (result.len() == 0)
+{
   var result = "";
   var i = 0;
   while i < nodes.len() {
@@ -327,7 +353,9 @@ pub fn markup_render_plain(nodes: &Vec[MarkupNode]) -> Str {
 /// as a direct scanner (the parse -> node-list -> render pipeline miscompiles
 /// for catalog-internal Vec[struct] reads in the current compiler). Unclosed
 /// markers are emitted literally.
-pub fn markup_strip(s: Str) -> Str {
+pub fn markup_strip(s: Str) -> Str
+  ensures: (s.len() == 0) => (result.len() == 0)
+{
   var result = "";
   var len = s.len();
   var i = 0;

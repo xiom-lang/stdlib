@@ -51,6 +51,12 @@ lowering works (Range.count + the retried set + smoke_iter 21/21 incl.
 -Workers 8); the deferred remainder (chain 14 + fold 8 + the rest of the
 iter surface) continues as normal coverage work.
 
+WAVE 95 STATUS (2026-10-08): DONE -- the format remainder landed (markup +
+textual + fmt; 82 clauses, +68 pub covered; format 88.7%, global 60.6%,
+meter 76.1%, floors132, probes 267/267). See block 79. The next wave (96)
+starts on the non-format low dirs: os 26.6%, sort 31.9%, hash 33.3%,
+num/array/bits, math/crypto, plus the queued feature candidates.
+
 WAVE 94 STATUS (2026-10-08): DONE -- cmp + core + sync + terminal landed
 (86 clauses, +62 pub covered; sync 35.9%, core 45.8%, format 59.3%,
 global 59.5%, meter 76.0%, floors131, probes 266/266). See block 78; three
@@ -1692,6 +1698,43 @@ registry pin, agent recon for the rest)**
   gates; open: contract coverage 100%, zero open findings, beta-exit release
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
+
+**SESSION 2026-10-08 block 79 (wave 95: format remainder -- markup/textual/fmt; floors132)**
+- Wave 95: 82 clauses, +68 pub covered. markup 13 (wrapper length claims:
+  bold/italic/code/strike len+2, link text+url+4; escape empty/expansion
+  bands; parse empty-Ok and unclosed-Err pins; empty render/strip
+  identities). textual 24 (box exact byte lengths 2w+1 plain / 6w+1
+  rounded-double for empty content; border widths by style; separator
+  widths incl. the 3-byte double rule; header/title/section exact
+  lengths; toc/toc_indent; list/columns/wrap/justify empty identities).
+  fmt 31 (Int/Float64/Bool/Str to_str pins; format1/2/3 no-placeholder
+  identity; table/columns/wrap/indent/hexdump/join guards; pad-number +
+  repeat width bands; float_fixed pin; bool/line/align claims; the eight
+  sprintf and three sscanf empty-spec Ok pins plus the sscanf mismatch
+  Err) -- format 59.3% -> 88.7%. The Formatter.write_str `ensures: true`
+  placeholder replaced with `result.is_ok`.
+- Local form note (candidate finding, NOT filed): catalog clauses reject
+  receiver `self == literal` comparisons (`Bool.to_str`'s
+  `self == true`/`self == false` failed to compile; rewritten to the
+  `result == "true" || result == "false"` disjunction and
+  `Str.to_str`'s `result == self` to `result.len() == self.len()`).
+  Param forms such as `(b == true) => ...` (core bool_to_int, wave 94)
+  remain fine.
+- Probe p_wave95_shapes.xi (267th, 92 checks): green on v0.64.1 pre- and
+  post-clauses. No smoke exercises the textual surface (probe is the
+  only lock); targeted smokes: smoke_format_markup 1/1, smoke_fmt 18/18,
+  smoke_string_printf_scanf_template 1/1.
+- Coverage: format 59.3% -> 88.7%, global 59.5% -> 60.6% (clauses 5110 ->
+  5192); meter 76.1%; floors132 dumped and wired (ci/heavy/release +
+  tools/README).
+- Battery on this commit (v0.64.1): release corpus 954/954 full (769.6s,
+  no exclusions); probes 267/267 (570.2s); check_modules 509/509 (379.3s);
+  barename 0/509 (243.2s); floors132 + doc + module-smoke (497/517,
+  3477/6205) ratchets OK.
+- Release side: nothing pending; the next cut picks up blocks 75/77/78/79.
+  Readiness next (wave 96): os 26.6% (runtime-backed surfaces inspected
+  per item), sort 31.9%, hash 33.3%, num 35.6%, array 35.6%, bits 36.6%,
+  math 38.8%, crypto 39.9%, and the queued feature candidates.
 
 **SESSION 2026-10-08 block 78 (wave 94: cmp + core + sync + terminal; floors131; three findings)**
 - Wave 94: 86 clauses, +62 pub covered. cmp 16 (then_with self-mirror;

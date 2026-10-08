@@ -36,7 +36,7 @@ pub fn Formatter.new() -> Formatter
 
 /// Append a string rendering.
 pub fn Formatter.write_str(self, s: Str) -> Result[Unit, FmtError]
-  ensures: true
+  ensures: result.is_ok
 {
   self.buf = string.str_concat(self.buf, s);
   Result[Unit, FmtError] { is_ok: true; value: (); error: FmtError { message: ""; }; }
@@ -79,27 +79,37 @@ pub fn Formatter.finish(self) -> Str
 // Alignment: 0=left, 1=right, 2=center
 
 /// === Display implementations for built-in types ===
-pub fn Int.to_str() -> Str {
+pub fn Int.to_str() -> Str
+  ensures: (self == 0) => (result == "0")
+{
   convert.int_to_string(self)
 }
 
 /// String rendering of the Float64.
-pub fn Float64.to_str() -> Str {
+pub fn Float64.to_str() -> Str
+  ensures: (self == 0.0) => (result == "0")
+{
   convert.float_to_string(self)
 }
 
 /// String rendering of the Bool.
-pub fn Bool.to_str() -> Str {
+pub fn Bool.to_str() -> Str
+  ensures: result == "true" || result == "false"
+{
   convert.bool_to_string(self)
 }
 
 /// String rendering of the Str (identity).
-pub fn Str.to_str() -> Str {
+pub fn Str.to_str() -> Str
+  ensures: result.len() == self.len()
+{
   self
 }
 
 /// === Format functions ===
-pub fn format1[T](fmt: Str, arg: T) -> Str {
+pub fn format1[T](fmt: Str, arg: T) -> Str
+  ensures: (fmt == "plain") => (result == "plain")
+{
   let idx_opt = string.index_of(fmt, "{}");
   if idx_opt.is_some {
     let idx = idx_opt.value;
@@ -113,13 +123,17 @@ pub fn format1[T](fmt: Str, arg: T) -> Str {
 }
 
 /// Format with two generic arguments substituted into `{}` placeholders.
-pub fn format2[T, U](fmt: Str, arg1: T, arg2: U) -> Str {
+pub fn format2[T, U](fmt: Str, arg1: T, arg2: U) -> Str
+  ensures: (fmt == "b") => (result == "b")
+{
   let s = format1(fmt, arg1);
   format1(s, arg2)
 }
 
 /// Format with three generic arguments substituted into `{}` placeholders.
-pub fn format3[T, U, V](fmt: Str, arg1: T, arg2: U, arg3: V) -> Str {
+pub fn format3[T, U, V](fmt: Str, arg1: T, arg2: U, arg3: V) -> Str
+  ensures: (fmt == "c") => (result == "c")
+{
   let s = format1(fmt, arg1);
   let s2 = format1(s, arg2);
   format1(s2, arg3)
@@ -143,7 +157,9 @@ pub fn println(s: Str) {
 
 /// Formats a simple aligned-column table with `|` separators.
 /// O(r * c). No padding -- cells are left-aligned as-is.
-pub fn format_table(headers: &Vec[Str], cells: &Vec[Str], col_count: Int) -> Str {
+pub fn format_table(headers: &Vec[Str], cells: &Vec[Str], col_count: Int) -> Str
+  ensures: (col_count <= 0 || headers.len() == 0) => (result.len() == 0)
+{
   if col_count <= 0 || headers.len() == 0 {
     return "";
   };
@@ -197,7 +213,9 @@ pub fn format_table(headers: &Vec[Str], cells: &Vec[Str], col_count: Int) -> Str
 /// Arranges `items` into multiple columns, wrapping at `width`.
 /// Items are placed column-by-column (top-to-bottom then left-to-right).
 /// O(n) where n = items.len().
-pub fn format_columns(items: &Vec[Str], width: Int) -> Str {
+pub fn format_columns(items: &Vec[Str], width: Int) -> Str
+  ensures: (items.len() == 0) => (result.len() == 0)
+{
   if items.len() == 0 {
     return "";
   };
@@ -249,7 +267,9 @@ pub fn format_columns(items: &Vec[Str], width: Int) -> Str {
 /// Wraps `text` at word boundaries to fit within `width` characters.
 /// Words longer than `width` are placed on their own line.
 /// O(n) where n = |text|.
-pub fn format_wrap(text: Str, width: Int) -> Str {
+pub fn format_wrap(text: Str, width: Int) -> Str
+  ensures: (width <= 0 || text.len() == 0) => (result == text)
+{
   if width <= 0 || string.str_len(text) == 0 {
     return text;
   };
@@ -288,7 +308,9 @@ pub fn format_wrap(text: Str, width: Int) -> Str {
 
 /// Adds `spaces` spaces at the beginning of each line in `text`.
 /// O(n + lines * spaces).
-pub fn format_indent(text: Str, spaces: Int) -> Str {
+pub fn format_indent(text: Str, spaces: Int) -> Str
+  ensures: (spaces <= 0) => (result == text)
+{
   if spaces <= 0 {
     return text;
   };
@@ -318,7 +340,9 @@ pub fn format_indent(text: Str, spaces: Int) -> Str {
 /// Formats a byte buffer as a classic hexdump: offset, hex bytes, ASCII preview.
 /// `width` controls bytes per line (default 16). Returns multi-line string.
 /// O(n) where n = data.len().
-pub fn format_hexdump(data: &Vec[UInt8], width: Int) -> Str {
+pub fn format_hexdump(data: &Vec[UInt8], width: Int) -> Str
+  ensures: (data.len() == 0) => (result.len() == 0)
+{
   if data.len() == 0 {
     return "";
   };
@@ -388,7 +412,10 @@ pub fn format_hexdump(data: &Vec[UInt8], width: Int) -> Str {
 
 /// Zero-pads integer `n` to `width` digits. Negative numbers are handled
 /// (the sign is not counted in the width). Returns the string representation.
-pub fn format_pad_number(n: Int, width: Int) -> Str {
+pub fn format_pad_number(n: Int, width: Int) -> Str
+  ensures: (width <= 0 && n == 0) => (result == "0")
+  ensures: (width > 0) => (result.len() >= width)
+{
   if width <= 0 {
     return convert.int_to_string(n);
   };
@@ -414,7 +441,9 @@ pub fn format_pad_number(n: Int, width: Int) -> Str {
 /// (2026-08-11: previously truncated via the old float_to_string, which itself
 /// was fptosi-garbage -- see convert.xi; now delegates to the exact
 /// scaled-integer formatter).
-pub fn format_float_fixed(f: Float64, decimals: Int) -> Str {
+pub fn format_float_fixed(f: Float64, decimals: Int) -> Str
+  ensures: (decimals < 0 && f == 0.0) => (result == "0")
+{
   if decimals < 0 { return convert.float_to_string(f); }
   return convert.float_to_fixed_str(f, decimals);
 }
@@ -422,23 +451,32 @@ pub fn format_float_fixed(f: Float64, decimals: Int) -> Str {
 // -- Simple Formatting --
 
 /// Converts a boolean to "true" or "false".
-pub fn format_bool(b: Bool) -> Str {
+pub fn format_bool(b: Bool) -> Str
+  ensures: (b == true) => (result == "true")
+  ensures: (b == false) => (result == "false")
+{
   convert.bool_to_string(b)
 }
 
 /// Left-aligns `s` within a field of `width` characters by right-padding with spaces.
-pub fn format_align_left(s: Str, width: Int) -> Str {
+pub fn format_align_left(s: Str, width: Int) -> Str
+  ensures: result.len() >= s.len()
+{
   string.str_pad_right(s, width, ' ')
 }
 
 /// Right-aligns `s` within a field of `width` characters by left-padding with spaces.
-pub fn format_align_right(s: Str, width: Int) -> Str {
+pub fn format_align_right(s: Str, width: Int) -> Str
+  ensures: result.len() >= s.len()
+{
   string.str_pad_left(s, width, ' ')
 }
 
 /// Joins `items` into a single string separated by `sep`.
 /// O(n * |sep|) where n = items.len().
-pub fn format_join(items: &Vec[Str], sep: Str) -> Str {
+pub fn format_join(items: &Vec[Str], sep: Str) -> Str
+  ensures: (items.len() == 0) => (result.len() == 0)
+{
   if items.len() == 0 {
     return "";
   };
@@ -452,13 +490,18 @@ pub fn format_join(items: &Vec[Str], sep: Str) -> Str {
 }
 
 /// Repeats `s` `n` times. Delegates to string.str_repeat.
-pub fn format_repeat(s: Str, n: Int) -> Str {
+pub fn format_repeat(s: Str, n: Int) -> Str
+  ensures: (n <= 0) => (result.len() == 0)
+  ensures: (n >= 0) => (result.len() == s.len() * n)
+{
   string.str_repeat(s, n)
 }
 
 /// Formats a line with a prefix and body, separated by ": ".
 /// Useful for key-value display: format_line("Name", "Alice") -> "Name: Alice"
-pub fn format_line(prefix: Str, body: Str) -> Str {
+pub fn format_line(prefix: Str, body: Str) -> Str
+  ensures: result.len() == prefix.len() + body.len() + 2
+{
   string.str_concat(string.str_concat(prefix, ": "), body)
 }
 
@@ -851,25 +894,33 @@ fn _sprintf_engine(spec: Str, ints: &Vec[Int], strs: &Vec[Str], fa: Float64, fb:
 
 /// printf-style formatting of an Int-only spec. Supports %d/%i/%u/%x/%X/%o/%b
 /// with flags/width/precision. Wrong conversion family or missing values -> Err.
-pub fn sprintf_i(spec: Str, values: &Vec[Int]) -> Result[Str, Str] {
+pub fn sprintf_i(spec: Str, values: &Vec[Int]) -> Result[Str, Str]
+  ensures: (spec.len() == 0) => (result.is_ok == true)
+{
   return _sprintf_engine(spec, values, Vec[Str].new(), 0.0, 0.0, 0, 0);
 }
 
 /// printf-style formatting of a Str-only spec. Supports %s with width/
 /// precision. Wrong conversion family or missing values -> Err.
-pub fn sprintf_s(spec: Str, values: &Vec[Str]) -> Result[Str, Str] {
+pub fn sprintf_s(spec: Str, values: &Vec[Str]) -> Result[Str, Str]
+  ensures: (spec.len() == 0) => (result.is_ok == true)
+{
   return _sprintf_engine(spec, Vec[Int].new(), values, 0.0, 0.0, 0, 1);
 }
 
 /// sprintf_i with one Int argument: sprintf_i1("%05d", 42) == "00042".
-pub fn sprintf_i1(spec: Str, a: Int) -> Result[Str, Str] {
+pub fn sprintf_i1(spec: Str, a: Int) -> Result[Str, Str]
+  ensures: (spec.len() == 0) => (result.is_ok == true)
+{
   var v = Vec[Int].new();
   v.push(a);
   return _sprintf_engine(spec, &v, Vec[Str].new(), 0.0, 0.0, 0, 0);
 }
 
 /// sprintf_i with two Int arguments.
-pub fn sprintf_i2(spec: Str, a: Int, b: Int) -> Result[Str, Str] {
+pub fn sprintf_i2(spec: Str, a: Int, b: Int) -> Result[Str, Str]
+  ensures: (spec.len() == 0) => (result.is_ok == true)
+{
   var v = Vec[Int].new();
   v.push(a);
   v.push(b);
@@ -878,24 +929,32 @@ pub fn sprintf_i2(spec: Str, a: Int, b: Int) -> Result[Str, Str] {
 
 /// sprintf_f with one Float64 argument: sprintf_f1("%.2f", 3.14159) == "3.14".
 /// Supports %f/%F/%e/%E/%g/%G with flags/width/precision.
-pub fn sprintf_f1(spec: Str, a: Float64) -> Result[Str, Str] {
+pub fn sprintf_f1(spec: Str, a: Float64) -> Result[Str, Str]
+  ensures: (spec.len() == 0) => (result.is_ok == true)
+{
   return _sprintf_engine(spec, Vec[Int].new(), Vec[Str].new(), a, 0.0, 1, 2);
 }
 
 /// sprintf_f with two Float64 arguments.
-pub fn sprintf_f2(spec: Str, a: Float64, b: Float64) -> Result[Str, Str] {
+pub fn sprintf_f2(spec: Str, a: Float64, b: Float64) -> Result[Str, Str]
+  ensures: (spec.len() == 0) => (result.is_ok == true)
+{
   return _sprintf_engine(spec, Vec[Int].new(), Vec[Str].new(), a, b, 2, 2);
 }
 
 /// sprintf_s with one Str argument: sprintf_s1("%10s", "hi") == "        hi".
-pub fn sprintf_s1(spec: Str, a: Str) -> Result[Str, Str] {
+pub fn sprintf_s1(spec: Str, a: Str) -> Result[Str, Str]
+  ensures: (spec.len() == 0) => (result.is_ok == true)
+{
   var v = Vec[Str].new();
   v.push(a);
   return _sprintf_engine(spec, Vec[Int].new(), &v, 0.0, 0.0, 0, 1);
 }
 
 /// sprintf_s with two Str arguments.
-pub fn sprintf_s2(spec: Str, a: Str, b: Str) -> Result[Str, Str] {
+pub fn sprintf_s2(spec: Str, a: Str, b: Str) -> Result[Str, Str]
+  ensures: (spec.len() == 0) => (result.is_ok == true)
+{
   var v = Vec[Str].new();
   v.push(a);
   v.push(b);
@@ -1237,7 +1296,10 @@ fn _normalize_float_token(t: Str) -> Str {
 /// %x/%X (hex, optional 0x), %f/%e/%g (float, optional exponent), %s (token),
 /// %c (exact chars incl. whitespace), width caps, `*` suppresses, %% literal.
 /// Returns the captured token strings in order, Err on any mismatch.
-pub fn sscanf(s: Str, spec: Str) -> Result[Vec[Str], Str] {
+pub fn sscanf(s: Str, spec: Str) -> Result[Vec[Str], Str]
+  ensures: (spec.len() == 0) => (result.is_ok == true)
+  ensures: (s.len() == 0 && spec == "%d") => (result.is_err == true)
+{
   var res = _sscanf_engine(s, spec);
   if !res.is_ok {
     return Err(res.error);
@@ -1248,7 +1310,9 @@ pub fn sscanf(s: Str, spec: Str) -> Result[Vec[Str], Str] {
 /// sscanf + typed integer extraction: converts %d/%i/%u (decimal) and %x/%X
 /// (hex) tokens to Int with overflow checking. Non-integer conversions in the
 /// spec -> Err. The returned Vec is in token order.
-pub fn sscanf_ints(s: Str, spec: Str) -> Result[Vec[Int], Str] {
+pub fn sscanf_ints(s: Str, spec: Str) -> Result[Vec[Int], Str]
+  ensures: (spec.len() == 0) => (result.is_ok == true)
+{
   var res = _sscanf_engine(s, spec);
   if !res.is_ok {
     return Err(res.error);
@@ -1306,7 +1370,9 @@ fn _scan_err(msg: Str) -> FormatFloatScan {
 /// (normalized ".5" -> "0.5" for the builtin parser). Non-float conversions
 /// in the spec or more than 8 float conversions -> is_ok = false with error.
 /// Values land in v0..v7 in token order; `count` says how many are valid.
-pub fn sscanf_floats(s: Str, spec: Str) -> FormatFloatScan {
+pub fn sscanf_floats(s: Str, spec: Str) -> FormatFloatScan
+  ensures: (spec.len() == 0) => (result.is_ok == true)
+{
   var res = _sscanf_engine(s, spec);
   if !res.is_ok {
     return _scan_err(res.error);
