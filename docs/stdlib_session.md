@@ -185,6 +185,13 @@ QUEUED (do only when triggered):
   promote the rvalue/multipart/geom-matrix/polyhedra repros out of
   known_failures, re-dump floors (m202 gates the packages grpc publish,
   m206 covers graphql conformance).
+  NEXT PIN TRIGGER: DONE 2026-10-08 (wave 92, v0.64.1 tag 3c6f3bb5):
+  Range.count + the retried range set landed, smoke_iter 21/21, and
+  rvalue/multipart/iter-forwardref were promoted. NOT covered by the fix:
+  geom-matrix tuple inference (rc 4) and polyhedra nested hull (rc 1)
+  STAY OPEN; the ensures-isok guard, clause float-vec indexing, geom Box
+  naming and the alias/type-path findings also stay open (see the
+  known_failures README).
 - Repo-wide `result.value` payload-clause audit (v0.63.1 lowers payload
   clauses strictly): the four io.xi IOError `.len()` sites retired in the
   pin wave were the ONLY bogus ones; io/pipe.xi, io/fs.xi and
