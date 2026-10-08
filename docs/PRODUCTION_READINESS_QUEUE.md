@@ -35,10 +35,11 @@ credit (discrete). Update the percentage and the gate-8 fraction in the
 same commit as each floors dump so the meter moves smoothly toward 80%.
 
 Authoritative order: the gates above, then the updates below newest-first.
-Current state: compiler pin v0.64.1 (consumed by wave 92; stdlib-v0.64.2
-RELEASED 2026-10-08 for the v0.64.2 combined release; registry publish
-awaiting environment approval); coverage 57.7%, meter 75.8%; handoff
-in `docs/stdlib_session.md` snapshot 23 (block 74).
+Current state: compiler pin v0.64.1 (consumed by wave 92); stdlib-v0.64.2
+RELEASED 2026-10-08 and REGISTRY LIVE (xiom-std 0.64.2 signed,
+f5375c03ad88); post-tag fixes on main (string linearization + signal
+stubs, block 75); coverage 57.7%, meter 75.8%; handoff in
+`docs/stdlib_session.md` snapshot 24 (block 76).
 
 ## Project Pulse relay (web-framework lane) -- 2026-10-05
 

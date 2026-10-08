@@ -4,15 +4,15 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 -->
 # XIOM Stdlib Session -- Handoff
 
-## 0A. CONTINUE HERE -- handoff snapshot 23 (updated 2026-10-08, v0.64.1 pin complete (wave 92), wave 91 landed, v0.64.2 pin decision pending)
+## 0A. CONTINUE HERE -- handoff snapshot 24 (updated 2026-10-08, v0.64.1 pin consumed, stdlib 0.64.2 RELEASED + registry LIVE, string fix + signal stubs landed; context handoff)
 
 **PASTE-READY PROMPT FOR THE NEXT SESSION (copy this block):**
 
 ---
 You are continuing the XIOM stdlib lane. Worktree `E:\xiom-lang\stdlib`,
-branch `main`. Read `docs/stdlib_session.md` blocks 72 (latest), 71, 70,
-69, 68, 67, 66, 65, 64, 63, 62, 61, 60, 59, 58, 57, 56, 55, 54, 53, 52, 51,
-50, 49, 48, 47, 46, 45, 44, 43 (publish), 27 (iter block) and
+branch `main`. Read `docs/stdlib_session.md` blocks 75 (latest), 74, 73, 72,
+71, 70, 69, 68, 67, 66, 65, 64, 63, 62, 61, 60, 59, 58, 57, 56, 55, 54, 53,
+52, 51, 50, 49, 48, 47, 46, 45, 44, 43 (publish), 27 (iter block) and
 `docs/PRODUCTION_READINESS_QUEUE.md`
 before acting; snapshot 5 below the prompt keeps the deep protocol lore.
 The ecosystem now has consumer lanes feeding relays (PULSE,
@@ -23,22 +23,29 @@ STATE (2026-10-08): compiler pin = official v0.64.1 (tag 3c6f3bb5,
 consumed by wave 92; the previous v0.64.0 tag c68d91de bundled stdlib
 6e60e958 = our wave-74 head). Binary at %TEMP%\kilo\stdlib_ws\v0.64.1;
 v0.62.3/v0.62.4/v0.63.0/v0.63.1/v0.64.0 archives kept. COMPILER_VERSION
-= v0.64.1. Registry currently carries xiom-std 0.61.3/0.62.0/0.62.3/
-0.62.4/0.63.0; no stdlib-v0.64.x tag exists yet (release-lane decision
-pending; the v0.64.2 stdlib fragment is authored at
-release-notes/v0.64.2.md). Compiler relay 2026-10-07 (dev builds
+= v0.64.1. RELEASE STATE: stdlib-v0.64.2 CUT (tag on 4dd8844,
+2026-10-08; release.yml success; assets xiom-std-0.64.2.tar.gz +
+SHA256SUMS) and the REGISTRY IS LIVE: xiom-std 0.64.2 published
+(signed, sha256 f5375c03ad88; lineage 0.63.0 -> 0.64.2; owner approved
+the publish runs). Compiler side: STDLIB_VERSION = stdlib-v0.64.2 for the
+v0.64.2 combined release; the fragment at the tag
+(release-notes/v0.64.2.md) merges into its notes. Post-tag main carries
+the block-75 fixes (string linearization + signal stubs) for the NEXT
+release cut. Compiler relay 2026-10-07 (dev builds
 m200-m203) CONSUMED on v0.64.1: m203 fixed the iter closure-thunk clause
 leak; m200 fixed the rvalue Vec[Float64] index; m201 fixed multipart and
 PARTIALLY geom-matrix (the tuple-element case is still red) but did NOT
 fix polyhedra -- see the README corrections. The next compiler release is
-v0.64.2: OUR pin for it is the stdlib-v0.64.2 tag (commit 4dd8844, cut
-2026-10-08) -- the archive at v0.64.1 still bundles the old 6e60e958
-stdlib. REGISTRY: 0.64.2 publish is queued on the protected environment
-(approve one run) then verify `xiom pkg info xiom-std`.
+v0.64.2: OUR pin for it is the stdlib-v0.64.2 tag (commit 4dd8844) --
+the archive at v0.64.1 still bundles the old 6e60e958 stdlib; the
+registry publish for 0.64.2 is DONE (see above).
 Gates on v0.64.1: release corpus 954/954 FULL (m196 loopback + uuencode
-roundtrip smokes added), modules 509/509, probes 263/263, barename
-0/509, floors129, module-smoke ratchet OK. Coverage = 57.7% global
-pub-with-clause. Waves landed: 63 net+hash, 64 reflect+iter adapters, 65x convert, 66 time, 67 format, 68 misc, 69 os+rand, 70 crypto, 71 log, 72 compress, 73 pin, 74 encoding, 75 encoding-rem+debug, 76 simd, 64.0 pin, 77 stats, Pulse hardening (write_all/server_parse_request/hmac_sha256_hex), 78 thread, 79 convert numeric shims, 80 convert base shims, 81 convert unicode, 82 convert codec guards, 83 convert codec tails, 84 convert uri/url/urn, 85 convert ip/lossy/network/timestamp, 86 convert locals + shims, 87 convert tails (convert 94.1%), 88 serialize batch 1 (endian/varint/csv), 89 serialize + json modules (serialize 73.1%), 90 serialize batch 3 (toml/yaml_lite; serialize 90.3%), 91 bench + format numbering/units (bench 87.5%, bench_time_fn defect fixed), 92 v0.64.1 PIN BUMP (iter retry: contains/sum/product/collect/count/max/min/find/all/any/nth/last; iter 25.1%). Post-wave-89 fixes (same day): io byte-fidelity/CRLF defect (read_file_lines CR strip; write_file/append_file/write_file_bytes now binary; p_read_file_lines_crlf.xi) and fs_remove (bindings W-1; p_fs_remove.xi); ORBITDB/XVECTOR/bindings relays intaken. Wave
+roundtrip smokes added), modules 509/509, probes 264/264, barename
+0/509, floors129 (re-dumped/tightened with the signal clauses; os
+26.6%), module-smoke ratchet OK. Coverage = 57.7% global pub-with-clause.
+Post-tag fixes on main (block 75): string linearization (str_split
+byte-scan, str_repeat doubling, pad single-alloc; probe
+p_str_split_scale.xi) and the PULSE signal stubs. Waves landed: 63 net+hash, 64 reflect+iter adapters, 65x convert, 66 time, 67 format, 68 misc, 69 os+rand, 70 crypto, 71 log, 72 compress, 73 pin, 74 encoding, 75 encoding-rem+debug, 76 simd, 64.0 pin, 77 stats, Pulse hardening (write_all/server_parse_request/hmac_sha256_hex), 78 thread, 79 convert numeric shims, 80 convert base shims, 81 convert unicode, 82 convert codec guards, 83 convert codec tails, 84 convert uri/url/urn, 85 convert ip/lossy/network/timestamp, 86 convert locals + shims, 87 convert tails (convert 94.1%), 88 serialize batch 1 (endian/varint/csv), 89 serialize + json modules (serialize 73.1%), 90 serialize batch 3 (toml/yaml_lite; serialize 90.3%), 91 bench + format numbering/units (bench 87.5%, bench_time_fn defect fixed), 92 v0.64.1 PIN BUMP (iter retry; iter 25.1%). Post-wave-89 fixes (same day): io byte-fidelity/CRLF defect (read_file_lines CR strip; write_file/append_file/write_file_bytes now binary; p_read_file_lines_crlf.xi) and fs_remove (bindings W-1; p_fs_remove.xi); ORBITDB/XVECTOR/bindings relays intaken. Wave
 65 (iter clauses) is RESOLVED on v0.64.1: the clause-side closure
 lowering works (Range.count + the retried set + smoke_iter 21/21 incl.
 -Workers 8); the deferred remainder (chain 14 + fold 8 + the rest of the
@@ -51,15 +58,12 @@ core 26.7%), batching toward 40-60 pub; async stays runtime-backed
 (inspect each surface before claiming). Queued feature candidates when
 the wave has room: ORBITDB `append_line_sync` pure half (tail repair;
 durable flush stays runtime-backed), bindings W-2 out-param slot helper,
-W-5 Vec[UInt8].with_len(n). RELEASE SIDE: stdlib-v0.64.2 was CUT 2026-10-08 (tag on commit
-4dd8844; release.yml success; assets xiom-std-0.64.2.tar.gz +
-SHA256SUMS). The compiler side should take STDLIB_VERSION = stdlib-v0.64.2
-(the notes fragment at the tag is what merges into v0.64.2 combined
-notes). REGISTRY: the publish runs are queued on the protected
-registry-publish environment -- approve ONE of the two waiting runs
-(37786796626 tag-triggered or 37793330331 dispatch); verify after with
-`xiom pkg info xiom-std` (expect 0.64.2 signed; registry showed through
-0.63.0 at cut time).
+W-5 Vec[UInt8].with_len(n). RELEASE SIDE (DONE): stdlib-v0.64.2 was cut 2026-10-08 (tag on 4dd8844;
+release.yml success) and the registry is LIVE -- `xiom pkg info xiom-std`
+shows 0.64.2 signed (sha256 f5375c03ad88). STDLIB_VERSION for the
+compiler v0.64.2 combined release = stdlib-v0.64.2. No release action is
+pending; the next cut will pick up the post-tag block-75 fixes (string
+linearization + signal stubs).
 NO PIN-BUMP TRIGGER is pending: v0.64.1 is consumed and the next
 compiler release (v0.64.2) is not out yet.
 PENDING/QUEUED:
@@ -71,27 +75,32 @@ probe p_pin0641_iter_shapes.xi. The deferred remainder (chain 14 + fold
 8 + the rest of the adapters) continues as normal coverage work.
 (b) Pulse pure-XIOM hardening: DONE 2026-10-05 (block 47).
 (c) runtime-backed asks (socket timeout/nonblocking/reuse-addr, real
-flush_stdout, fsync/durable writes) wait for the compiler runtime bundle
-(durable writes are cross-filed by PULSE and the packages sheet
-2026-10-05).
+flush_stdout, fsync/durable writes, the signal-handler trampoline for
+signal_handle/signal_pending, append-capable fd write path) wait for the
+compiler runtime bundle (durable writes are cross-filed by PULSE and the
+packages sheet 2026-10-05; ORBITDB/XVECTOR re-confirmed 2026-10-08).
 (d) Packages-sheet intake 2026-10-05 (8 rows: HTTP-date pair, path
 safety, fs remove parity, streaming read_exact, append_file_bytes,
 truncate/remove_dir, file locking) recorded in docs/STDLIB-WISHLIST.md;
 not yet wave-scheduled.
-HANDOFF NOTE: new locks are p_pin0640_shapes.xi (m193-m196),
+HANDOFF NOTE: locks include p_pin0640_shapes.xi (m193-m196),
 tests/smoke/smoke_net_tcp_stream.xi (m196 + write_all),
 tests/smoke/smoke_convert_uuencode.xi (wave 83, corpus 954), the m193
-guard-alloc smoke, and probes p_wave77_shapes.xi (167 checks) and
-p_pulse_shapes.xi through p_wave91_shapes.xi (263 probes total, incl. the
-v0.64.1 pin probe and the three promoted regression locks:
-p_rvalue_float_vec_index.xi, p_multipart_parse_name.xi,
-p_iter_range_collect_forwardref.xi);
-p_alias_module_type_path.xi + p_foreign_method_call.xi are the new open
-cross-module resolution repros (2026-10-08, cross-ref C-PULSE-12);
-p_wave43_shapes was updated for m194 exactness;
-p_rvalue_float_vec_index.xi and p_ensures_isok_guard.xi are open
-known-failure repros; docs/failed_attempts.md logs push incidents;
-out/*.json are disposable battery artifacts.
+guard-alloc smoke, and probes p_wave77_shapes.xi (167 checks) plus
+p_pulse_shapes.xi through p_wave91_shapes.xi, the v0.64.1 pin probe
+p_pin0641_iter_shapes.xi, p_str_split_scale.xi, the io locks
+(p_read_file_lines_crlf.xi, p_fs_remove.xi) and the three promoted
+regression locks (p_rvalue_float_vec_index.xi, p_multipart_parse_name.xi,
+p_iter_range_collect_forwardref.xi) -- 264 probes total.
+Open known-failure repros on v0.64.1: p_ensures_isok_guard.xi,
+p_geom_matrix_result_infer.xi (tuple-element check rc 4),
+p_polyhedra_nested_hull.xi (rc 1), p_clause_float_vec_index.xi,
+p_geom_box_unnameable.xi, p_alias_module_type_path.xi,
+p_foreign_method_call.xi. docs/failed_attempts.md logs push incidents;
+out/*.json are disposable battery artifacts. CAUTION: do not run large
+synthetic benchmarks unbounded -- a scratch quadratic benchmark once kept
+running after its shell timed out and ballooned memory until killed
+(block 75); use the probe/battery harness which has watchdogs.
 Mandatory protocol:
 (1) recon bodies and derive every clause from them; no placeholder forms
 (no unsigned `>= 0`, no `is_ok || is_err`, no self-mirrors); clauses run at
@@ -121,6 +130,9 @@ present the wrong account -- see docs/failed_attempts.md 2026-10-07
 18:30 UTC: use the one-shot Lefteris-Notas credential; plain pushes may
 403 as Lefteris-Ngonart. If a push hits GitHub 500s, follow the same doc
 (3 attempts, log, retry later).
+(6) never run a scratch benchmark with an unbounded/quadratic setup: the
+block-75 incident (a runaway scratch exe growing to ~4.7 GB after its
+shell timed out) shows why; use bounded sizes and the harness watchdogs.
 
 QUEUED (do only when triggered):
 - DONE 2026-10-05 (compiler ask): scrypt / shuffle-choice / BUG-18 cannot
@@ -1657,6 +1669,20 @@ registry pin, agent recon for the rest)**
   gates; open: contract coverage 100%, zero open findings, beta-exit release
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
+
+**SESSION 2026-10-08 block 76 (handoff refresh: snapshot 24; clean context handoff; release + registry DONE; next = wave 93)**
+- Snapshot 24 refreshed for the context handoff: read list -> blocks 75
+  (latest)..; STATE carries the v0.64.1 pin, the **completed release**
+  (stdlib-v0.64.2 on 4dd8844, registry LIVE: xiom-std 0.64.2 signed,
+  sha256 f5375c03ad88), the block-75 post-tag fixes (string linearization
+  + signal stubs), gates probes 264/floors129-tightened/coverage 57.7%,
+  and the corrected open-findings list (rvalue/multipart/iter-forwardref
+  are PROMOTED locks now; geom tuple, polyhedra, ensures-isok, clause
+  float-vec, geom Box, alias/foreign-call stay open).
+- FIRST TASK wave 93 unchanged (iter remainder + low dirs + queued
+  features); protocol now carries the no-unbounded-benchmarks caution
+  (block-75 incident).
+- No code changes; heads: block-75 fix (3657482) + this refresh.
 
 **SESSION 2026-10-08 block 75 (fix-first: str_split/str_repeat/pad quadratic defects; PULSE signal stubs; consumer re-sweep)**
 - Consumer re-sweep (PULSE, ORBITDB, XVECTOR, bindings, packages) recorded
