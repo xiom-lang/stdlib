@@ -39,8 +39,9 @@ credit (discrete). Update the percentage and the gate-8 fraction in the
 same commit as each floors dump so the meter moves smoothly toward 80%.
 
 Authoritative order: the gates above, then the updates below newest-first.
-Current state: compiler pin v0.64.0; coverage 56.9%, meter 75.7%; handoff
-in `docs/stdlib_session.md` snapshot 21 (block 69).
+Current state: compiler pin v0.64.0 (v0.64.1 closing after compiler C-06 --
+pin-bump trigger first); coverage 56.9%, meter 75.7%; handoff
+in `docs/stdlib_session.md` snapshot 22 (block 69).
 
 ## Project Pulse relay (web-framework lane) -- 2026-10-05
 

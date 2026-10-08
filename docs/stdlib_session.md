@@ -1650,6 +1650,18 @@ registry pin, agent recon for the rest)**
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
 
+**SESSION 2026-10-08 block 70 (handoff refresh: snapshot 22 updated for the next session; v0.64.1 imminent)**
+- Snapshot 22 refreshed: read list -> blocks 69 (latest)..; STATE carries
+  the wave-90 gates (probes 258, floors127, coverage 56.9%, serialize
+  90.3%) and flags that v0.64.1 is closing after the compiler C-06 fix --
+  do the NEXT PIN trigger first when it ships (must carry m200/m201/m203);
+  FIRST TASK wave 91 (next low dirs: bench/format/sync + queued feature
+  candidates); HANDOFF NOTE lists p_wave90_shapes.xi (258 probes),
+  floors127, the io-fidelity/fs_remove locks and the two open
+  cross-module repros; the ecosystem-lanes note was added (relays in
+  docs/STDLIB-WISHLIST.md).
+- No code changes; heads: wave 90 (d60cb43) + this refresh.
+
 **SESSION 2026-10-08 block 69 (wave 90: serialize batch 3 toml/yaml_lite; floors127)**
 - Wave 90: 23 clauses / 16 new pub -- toml 11 (toml_parse empty -> Ok,
   "a = 1" -> Ok, "[a" -> Err pins; toml_get and the six typed getters
