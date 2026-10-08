@@ -63,24 +63,32 @@ fn _spaces(n: Int) -> Str {
 }
 
 /// Center `s` in a field of `width` bytes.
-pub fn text_center(s: Str, width: Int) -> Str {
+pub fn text_center(s: Str, width: Int) -> Str
+  ensures: result.len() >= s.len()
+{
   return string.str_center(s, width);
 }
 
 /// Left-align `s` in a field of `width` bytes.
-pub fn text_left(s: Str, width: Int) -> Str {
+pub fn text_left(s: Str, width: Int) -> Str
+  ensures: result.len() >= s.len()
+{
   return string.str_pad_right(s, width, ' ');
 }
 
 /// Right-align `s` in a field of `width` bytes.
-pub fn text_right(s: Str, width: Int) -> Str {
+pub fn text_right(s: Str, width: Int) -> Str
+  ensures: result.len() >= s.len()
+{
   return string.str_pad_left(s, width, ' ');
 }
 
 /// Justify `s` to fill `width` by distributing extra spaces between words.
 /// Single-word or already-too-long text is returned unchanged.
 /// Complexity: O(|s|).
-pub fn text_justify(s: Str, width: Int) -> Str {
+pub fn text_justify(s: Str, width: Int) -> Str
+  ensures: (s.len() == 0) => (result.len() == 0)
+{
   var span = _next_word(s, 0);
   var count = 0;
   var total = 0;
@@ -119,7 +127,9 @@ pub fn text_justify(s: Str, width: Int) -> Str {
 
 /// Wrap `s` into lines no longer than `width` at word boundaries.
 /// Complexity: O(|s|).
-pub fn text_wrap(s: Str, width: Int) -> Vec[Str] {
+pub fn text_wrap(s: Str, width: Int) -> Vec[Str]
+  ensures: (s.len() == 0) => (result.len() == 1)
+{
   var result = Vec[Str].new();
   var line = "";
   var pos = 0;
@@ -146,7 +156,9 @@ pub fn text_wrap(s: Str, width: Int) -> Vec[Str] {
 /// Pack words greedily into lines of at most `width` bytes. The input Vec is
 /// read directly; callers should prefer text_wrap (string-based) where the
 /// input is already a string.
-pub fn text_flow(words: &Vec[Str], width: Int) -> Vec[Str] {
+pub fn text_flow(words: &Vec[Str], width: Int) -> Vec[Str]
+  ensures: (words.len() == 0) => (result.len() == 1)
+{
   var result = Vec[Str].new();
   var w = 0;
   var line = "";
@@ -169,7 +181,10 @@ pub fn text_flow(words: &Vec[Str], width: Int) -> Vec[Str] {
 }
 
 /// Prefix every line of `s` with `n` spaces.
-pub fn text_indent(s: Str, n: Int) -> Str {
+pub fn text_indent(s: Str, n: Int) -> Str
+  ensures: (n <= 0) => (result == s)
+  ensures: (n > 0) => (result.len() >= s.len())
+{
   if n <= 0 {
     return s;
   };
@@ -191,7 +206,10 @@ pub fn text_indent(s: Str, n: Int) -> Str {
 }
 
 /// Indent every line except the first by `n` spaces.
-pub fn text_hanging_indent(s: Str, n: Int) -> Str {
+pub fn text_hanging_indent(s: Str, n: Int) -> Str
+  ensures: (n <= 0) => (result == s)
+  ensures: (n > 0) => (result.len() >= s.len())
+{
   if n <= 0 {
     return s;
   };
@@ -213,7 +231,11 @@ pub fn text_hanging_indent(s: Str, n: Int) -> Str {
 }
 
 /// Lay `items` out in `cols` columns, row-major, padded to the widest item.
-pub fn text_columns(items: &Vec[Str], cols: Int) -> Vec[Str] {
+pub fn text_columns(items: &Vec[Str], cols: Int) -> Vec[Str]
+  ensures: (items.len() == 0) => (result.len() == 0)
+  ensures: (items.len() > 0 && cols >= 1) => (result.len() == (items.len() + cols - 1) / cols)
+  ensures: (items.len() > 0 && cols < 1) => (result.len() == items.len())
+{
   var result = Vec[Str].new();
   var n = items.len();
   if n == 0 {
@@ -254,7 +276,10 @@ pub fn text_columns(items: &Vec[Str], cols: Int) -> Vec[Str] {
 }
 
 /// Truncate `s` to `max_len` bytes with a trailing "..." (at least 3 bytes).
-pub fn text_ellipsis(s: Str, max_len: Int) -> Str {
+pub fn text_ellipsis(s: Str, max_len: Int) -> Str
+  ensures: (max_len >= 3 && s.len() <= max_len) => (result == s)
+  ensures: (max_len >= 3 && s.len() > max_len) => (result.len() == max_len)
+{
   if max_len < 3 {
     return string.str_slice(s, 0, max_len);
   };
@@ -265,18 +290,24 @@ pub fn text_ellipsis(s: Str, max_len: Int) -> Str {
 }
 
 /// Apply an overline decoration: a dash line above the text.
-pub fn text_overline(s: Str) -> Str {
+pub fn text_overline(s: Str) -> Str
+  ensures: result.len() == 2 * s.len() + 1
+{
   return string.str_repeat("-", s.len()) + "\n" + s;
 }
 
 /// Apply an underline decoration: a dash line below the text.
-pub fn text_underline(s: Str) -> Str {
+pub fn text_underline(s: Str) -> Str
+  ensures: result.len() == 2 * s.len() + 1
+{
   return s + "\n" + string.str_repeat("-", s.len());
 }
 
 /// Apply a strikethrough decoration: each character followed by the combining
 /// long stroke overlay (U+0336).
-pub fn text_strikethrough(s: Str) -> Str {
+pub fn text_strikethrough(s: Str) -> Str
+  ensures: result.len() == 3 * s.len()
+{
   var result = "";
   var len = s.len();
   var i = 0;
@@ -288,12 +319,17 @@ pub fn text_strikethrough(s: Str) -> Str {
 }
 
 /// Wrap `s` in quotation marks.
-pub fn text_quote(s: Str) -> Str {
+pub fn text_quote(s: Str) -> Str
+  ensures: result.len() == s.len() + 2
+{
   return "\"" + s + "\"";
 }
 
 /// Join lines into a blockquote, prefixing each with "> ".
-pub fn text_blockquote(lines: &Vec[Str]) -> Str {
+pub fn text_blockquote(lines: &Vec[Str]) -> Str
+  ensures: (lines.len() == 0) => (result.len() == 0)
+  ensures: (lines.len() > 0) => (result.len() >= 2 * lines.len())
+{
   var result = "";
   var i = 0;
   while i < lines.len() {
@@ -307,7 +343,9 @@ pub fn text_blockquote(lines: &Vec[Str]) -> Str {
 }
 
 /// Wrap `s` into a single justified paragraph of `width` columns.
-pub fn text_paragraph(s: Str, width: Int) -> Str {
+pub fn text_paragraph(s: Str, width: Int) -> Str
+  ensures: (s.len() == 0) => (result.len() == 0)
+{
   var result = "";
   var line = "";
   var pos = 0;
@@ -338,7 +376,9 @@ pub fn text_paragraph(s: Str, width: Int) -> Str {
 }
 
 /// Reflow `s` to `width`: words are repacked into lines of at most `width`.
-pub fn text_reflow(s: Str, width: Int) -> Str {
+pub fn text_reflow(s: Str, width: Int) -> Str
+  ensures: (s.len() == 0) => (result.len() == 0)
+{
   var result = "";
   var line = "";
   var pos = 0;
@@ -370,7 +410,10 @@ pub fn text_reflow(s: Str, width: Int) -> Str {
 
 /// The display width of `s`: ASCII bytes count 1, 3-byte (CJK) characters
 /// count 2. Complexity: O(|s|).
-pub fn text_measure(s: Str) -> Int {
+pub fn text_measure(s: Str) -> Int
+  ensures: (s.len() == 0) => (result == 0)
+  ensures: result <= s.len()
+{
   var total = 0;
   var len = s.len();
   var i = 0;

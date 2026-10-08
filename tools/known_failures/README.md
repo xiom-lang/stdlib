@@ -16,6 +16,23 @@ xiom --force -o out.exe tools/known_failures/<file>.xi
 
 ## Current
 
+**Open finding 2026-10-08 (compiler v0.64.1): the `xiom.iter` M7
+`Iterator[T]` adapter surface is unreachable.** The M7 adapters
+(`Iterator[T].step_by`/`take_while`/`skip_while`/`inspect` and the
+`StepByIter`/`TakeWhileIter`/`SkipWhileIter`/`InspectIter` types) use an
+`Iterator[T]` receiver/element type that is not declared anywhere in
+`xiom/`, so every consumer of `xiom.iter` compiles with the warning
+`unknown type 'Iterator' -- defaulting to i64. This may produce incorrect
+code.` (3-4x) and the call `r.step_by(2)` fails
+`error[C001]: codegen: unresolved function symbol(s) 'Iterator.step_by'`
+(the local auto-stub is now loud instead of silently zero). Found while
+probing the wave-93 iter remainder; the concrete Range/MapIter/FilterIter/
+EnumerateIter/TakeIter/ChainIter adapters are unaffected on the same pin.
+Repro: `tools/known_failures/p_iter_iterator_type_unresolved.xi` (rc 1 on
+v0.64.1; expected rc 0 when `Iterator[T]` resolves or the M7 family moves
+onto the concrete receivers). Stdlib impact: the four M7 adapters and the
+four M7 iterator types stay clause-free until then; no smoke calls them.
+
 **Open finding 2026-10-08 (compiler v0.64.0): cross-module type paths and
 method-style foreign calls.** Two resolution traps found while landing the
 wave-89 serialize/json clauses in `tools/probes/p_wave89_shapes.xi`:

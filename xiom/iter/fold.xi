@@ -51,7 +51,9 @@ pub fn iter_scan(v: &Vec[Int], init: Int, f: fn(Int, &Int) -> Int) -> Vec[Int]
 }
 
 /// First element satisfying pred, or None. O(n). Short-circuits.
-pub fn iter_find(v: &Vec[Int], pred: fn(&Int) -> Bool) -> Option[Int] {
+pub fn iter_find(v: &Vec[Int], pred: fn(&Int) -> Bool) -> Option[Int]
+  ensures: (v.len() == 0) => (result.is_none == true)
+{
   var i = 0;
   while i < v.len() {
     var x = v[i];
@@ -63,7 +65,9 @@ pub fn iter_find(v: &Vec[Int], pred: fn(&Int) -> Bool) -> Option[Int] {
 
 /// First Some value produced by f over the elements, or None. O(n).
 /// Short-circuits on the first Some result.
-pub fn iter_find_map(v: &Vec[Int], f: fn(&Int) -> Option[Int]) -> Option[Int] {
+pub fn iter_find_map(v: &Vec[Int], f: fn(&Int) -> Option[Int]) -> Option[Int]
+  ensures: (v.len() == 0) => (result.is_none == true)
+{
   var i = 0;
   while i < v.len() {
     var x = v[i];
@@ -78,7 +82,9 @@ pub fn iter_find_map(v: &Vec[Int], f: fn(&Int) -> Option[Int]) -> Option[Int] {
 }
 
 /// True if item occurs in v. O(n).
-pub fn iter_contains(v: &Vec[Int], item: Int) -> Bool {
+pub fn iter_contains(v: &Vec[Int], item: Int) -> Bool
+  ensures: (v.len() == 0) => (result == false)
+{
   var i = 0;
   while i < v.len() {
     if v[i] == item { return true; }
@@ -88,7 +94,9 @@ pub fn iter_contains(v: &Vec[Int], item: Int) -> Bool {
 }
 
 /// Index of the first occurrence of item, or None. O(n).
-pub fn iter_position_of(v: &Vec[Int], item: Int) -> Option[Int] {
+pub fn iter_position_of(v: &Vec[Int], item: Int) -> Option[Int]
+  ensures: (v.len() == 0) => (result.is_none == true)
+{
   var i = 0;
   while i < v.len() {
     if v[i] == item { return Some(i); }
@@ -100,7 +108,10 @@ pub fn iter_position_of(v: &Vec[Int], item: Int) -> Option[Int] {
 /// Contiguous non-overlapping chunks of size n; the last chunk may be short.
 /// O(n). n <= 0 yields an empty vector. Returns Vec[Vec[Int]]; nested element
 /// access is unreliable in the current compiler - treat as opaque.
-pub fn iter_chunks(v: &Vec[Int], n: Int) -> Vec[Vec[Int]] {
+pub fn iter_chunks(v: &Vec[Int], n: Int) -> Vec[Vec[Int]]
+  ensures: (n <= 0 || v.len() == 0) => (result.len() == 0)
+  ensures: (n > 0 && v.len() > 0) => (result.len() == (v.len() + n - 1) / n)
+{
   var out = Vec[Vec[Int]].new();
   if n <= 0 { return out; }
   var len = v.len();
@@ -123,7 +134,10 @@ pub fn iter_chunks(v: &Vec[Int], n: Int) -> Vec[Vec[Int]] {
 /// All contiguous length-n slices of v. O(n * w). Returns Vec[Vec[Int]];
 /// nested element access is unreliable in the current compiler.
 /// An empty result means n <= 0 or n > v.len().
-pub fn iter_windows(v: &Vec[Int], n: Int) -> Vec[Vec[Int]] {
+pub fn iter_windows(v: &Vec[Int], n: Int) -> Vec[Vec[Int]]
+  ensures: (n <= 0 || n > v.len()) => (result.len() == 0)
+  ensures: (n > 0 && n <= v.len()) => (result.len() == v.len() - n + 1)
+{
   var out = Vec[Vec[Int]].new();
   var len = v.len();
   if n <= 0 || n > len { return out; }
@@ -263,7 +277,11 @@ pub fn iter_for_each(v: &Vec[Int], f: fn(&Int)) {
 
 /// Lexicographic comparison of a and b: -1, 0, or 1. O(min(len)).
 /// A prefix of the other compares smaller.
-pub fn iter_cmp(a: &Vec[Int], b: &Vec[Int]) -> Int {
+pub fn iter_cmp(a: &Vec[Int], b: &Vec[Int]) -> Int
+  ensures: result >= -1 && result <= 1
+  ensures: (a.len() == 0 && b.len() > 0) => (result == -1)
+  ensures: (a.len() > 0 && b.len() == 0) => (result == 1)
+{
   var i = 0;
   var alen = a.len();
   var blen = b.len();
@@ -278,7 +296,10 @@ pub fn iter_cmp(a: &Vec[Int], b: &Vec[Int]) -> Int {
 }
 
 /// Element-wise equality of a and b (lengths must match). O(n).
-pub fn iter_eq(a: &Vec[Int], b: &Vec[Int]) -> Bool {
+pub fn iter_eq(a: &Vec[Int], b: &Vec[Int]) -> Bool
+  ensures: (a.len() != b.len()) => (result == false)
+  ensures: (a.len() == 0 && b.len() == 0) => (result == true)
+{
   if a.len() != b.len() { return false; }
   var i = 0;
   while i < a.len() {

@@ -29,7 +29,9 @@ pub fn range_inclusive(start: Int, end: Int) -> RangeInclusive {
 
 /// Yield the next integer; None once `start >= end`. Consumes from the front.
 pub fn Range.next(self) -> Option[Int]
-  ensures: true {
+  ensures: (self.start@pre >= self.end@pre) => (result.is_none == true)
+  ensures: (self.start@pre < self.end@pre) => (result.is_some == true)
+{
   if self.start < self.end {
     let val = self.start;
     self.start = self.start + 1;
@@ -87,7 +89,10 @@ pub fn Range.product(self) -> Int
 }
 
 /// Yield the next integer; None after the inclusive end was reached.
-pub fn RangeInclusive.next(self) -> Option[Int] {
+pub fn RangeInclusive.next(self) -> Option[Int]
+  ensures: (self.done@pre == true) => (result.is_none == true)
+  ensures: (self.done@pre == false) => (result.is_some == true)
+{
   if self.done {
     None
   } else {
@@ -286,19 +291,25 @@ pub fn Range.filter(self, predicate: fn(&Int) -> Bool) -> FilterIter[Int] {
 }
 
 /// Pair each integer with its 0-based position.
-pub fn Range.enumerate(self) -> EnumerateIter[Int] {
+pub fn Range.enumerate(self) -> EnumerateIter[Int]
+  ensures: result.index == 0
+{
   var r = self;
   EnumerateIter[Int]{ next_fn: fn() -> Option[Int] { return r.next(); }, index: 0 }
 }
 
 /// Yield at most the first `n` integers.
-pub fn Range.take(self, n: Int) -> TakeIter[Int] {
+pub fn Range.take(self, n: Int) -> TakeIter[Int]
+  ensures: result.remaining == n
+{
   var r = self;
   TakeIter[Int]{ next_fn: fn() -> Option[Int] { return r.next(); }, remaining: n }
 }
 
 /// Skip the first `n` integers.
-pub fn Range.skip(self, n: Int) -> SkipIter[Int] {
+pub fn Range.skip(self, n: Int) -> SkipIter[Int]
+  ensures: result.to_skip == n
+{
   var r = self;
   SkipIter[Int]{ next_fn: fn() -> Option[Int] { return r.next(); }, to_skip: n }
 }
@@ -452,7 +463,9 @@ pub fn EnumerateIter[T].next(self) -> Option[(Int, T)] {
 }
 
 /// Yield the next element while the limit lasts; None after.
-pub fn TakeIter[T].next(self) -> Option[T] {
+pub fn TakeIter[T].next(self) -> Option[T]
+  ensures: (self.remaining@pre <= 0) => (result.is_none == true)
+{
   if self.remaining <= 0 {
     return None;
   }
@@ -507,19 +520,25 @@ pub fn MapIter[T, U].filter(self, predicate: fn(&U) -> Bool) -> FilterIter[U] {
 }
 
 /// Pair each mapped element with its 0-based index.
-pub fn MapIter[T, U].enumerate(self) -> EnumerateIter[U] {
+pub fn MapIter[T, U].enumerate(self) -> EnumerateIter[U]
+  ensures: result.index == 0
+{
   var it = self;
   EnumerateIter[U]{ next_fn: fn() -> Option[U] { return it.next(); }, index: 0 }
 }
 
 /// Yield at most `n` mapped elements.
-pub fn MapIter[T, U].take(self, n: Int) -> TakeIter[U] {
+pub fn MapIter[T, U].take(self, n: Int) -> TakeIter[U]
+  ensures: result.remaining == n
+{
   var it = self;
   TakeIter[U]{ next_fn: fn() -> Option[U] { return it.next(); }, remaining: n }
 }
 
 /// Skip the first `n` mapped elements.
-pub fn MapIter[T, U].skip(self, n: Int) -> SkipIter[U] {
+pub fn MapIter[T, U].skip(self, n: Int) -> SkipIter[U]
+  ensures: result.to_skip == n
+{
   var it = self;
   SkipIter[U]{ next_fn: fn() -> Option[U] { return it.next(); }, to_skip: n }
 }
@@ -624,19 +643,25 @@ pub fn FilterIter[T].filter(self, predicate: fn(&T) -> Bool) -> FilterIter[T] {
 }
 
 /// Pair each filtered element with its 0-based index.
-pub fn FilterIter[T].enumerate(self) -> EnumerateIter[T] {
+pub fn FilterIter[T].enumerate(self) -> EnumerateIter[T]
+  ensures: result.index == 0
+{
   var it = self;
   EnumerateIter[T]{ next_fn: fn() -> Option[T] { return it.next(); }, index: 0 }
 }
 
 /// Yield at most `n` filtered elements.
-pub fn FilterIter[T].take(self, n: Int) -> TakeIter[T] {
+pub fn FilterIter[T].take(self, n: Int) -> TakeIter[T]
+  ensures: result.remaining == n
+{
   var it = self;
   TakeIter[T]{ next_fn: fn() -> Option[T] { return it.next(); }, remaining: n }
 }
 
 /// Skip the first `n` filtered elements.
-pub fn FilterIter[T].skip(self, n: Int) -> SkipIter[T] {
+pub fn FilterIter[T].skip(self, n: Int) -> SkipIter[T]
+  ensures: result.to_skip == n
+{
   var it = self;
   SkipIter[T]{ next_fn: fn() -> Option[T] { return it.next(); }, to_skip: n }
 }
@@ -735,7 +760,9 @@ pub fn EnumerateIter[T].map[U](self, f: fn((Int, T)) -> U) -> MapIter[(Int, T), 
 }
 
 /// Yield at most `n` (index, element) pairs.
-pub fn EnumerateIter[T].take(self, n: Int) -> TakeIter[(Int, T)] {
+pub fn EnumerateIter[T].take(self, n: Int) -> TakeIter[(Int, T)]
+  ensures: result.remaining == n
+{
   var it = self;
   TakeIter[(Int, T)]{ next_fn: fn() -> Option[(Int, T)] { return it.next(); }, remaining: n }
 }
@@ -958,7 +985,9 @@ pub fn ChainIter[T, U].map[V](self, f: fn(T) -> V) -> MapIter[T, V] {
 }
 
 /// Yield at most `n` chained elements.
-pub fn ChainIter[T, U].take(self, n: Int) -> TakeIter[T] {
+pub fn ChainIter[T, U].take(self, n: Int) -> TakeIter[T]
+  ensures: result.remaining == n
+{
   var it = self;
   TakeIter[T]{ next_fn: fn() -> Option[T] { return it.next(); }, remaining: n }
 }
@@ -1157,7 +1186,10 @@ pub fn InspectIter[T].next(self) -> Option[T] {
 /// Create a Vec[Int] containing values from start to end advancing by step.
 /// Returns empty Vec if step <= 0 or start >= end. O(N).
 /// Collect [start, end) stepping by `step` into a Vec (empty when step <= 0).
-pub fn range_step(start: Int, end: Int, step: Int) -> Vec[Int] {
+pub fn range_step(start: Int, end: Int, step: Int) -> Vec[Int]
+  ensures: (step <= 0 || start >= end) => (result.len() == 0)
+  ensures: (step > 0 && start < end) => (result.len() == (end - start + step - 1) / step)
+{
   var result = Vec[Int].new();
   if step <= 0 { return result; };
   var i = start;
@@ -1171,7 +1203,10 @@ pub fn range_step(start: Int, end: Int, step: Int) -> Vec[Int] {
 /// Create a Vec[Int] containing `value` repeated `n` times. O(N).
 /// Returns empty Vec if n <= 0.
 /// Vec with `value` repeated `n` times (empty when n <= 0).
-pub fn repeat_n(value: Int, n: Int) -> Vec[Int] {
+pub fn repeat_n(value: Int, n: Int) -> Vec[Int]
+  ensures: (n <= 0) => (result.len() == 0)
+  ensures: (n > 0) => (result.len() == n)
+{
   var result = Vec[Int].new();
   if n <= 0 { return result; };
   var i = 0;

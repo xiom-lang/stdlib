@@ -51,6 +51,14 @@ lowering works (Range.count + the retried set + smoke_iter 21/21 incl.
 -Workers 8); the deferred remainder (chain 14 + fold 8 + the rest of the
 iter surface) continues as normal coverage work.
 
+WAVE 93 STATUS (2026-10-08): DONE -- the iter remainder + format.text
+landed (55 pub / 71 clauses; iter 25.1% -> 45.4%, format 39.0% -> 46.8%,
+global 58.6%, meter 75.9%, floors130, probes 265/265). See block 77 for
+the full record and the new M7 `Iterator[T]` finding. The next wave (94)
+resumes the low dirs: os 26.6%, core 26.7%, sync 29.1%, format remainder
+(markup/terminal/fmt); release side unchanged (next cut takes block-75 +
+block-77).
+
 FIRST TASK (wave 93): resume coverage -- the iter remainder (chain 14 +
 fold 8 + the rest of the range/adapters surface, now unblocked on
 v0.64.1) plus the next low dirs (format remainder, sync 29.1%, os 26.2%,
@@ -1676,6 +1684,46 @@ registry pin, agent recon for the rest)**
   gates; open: contract coverage 100%, zero open findings, beta-exit release
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
+
+**SESSION 2026-10-08 block 77 (wave 93: iter remainder + format text; floors130; M7 finding)**
+- Wave 93: 55 pub / 71 clauses. iter.chain 14 (fold/fold_right empty ->
+  init; reduce/sum/product/any/all empty identities; nth OOB -> None;
+  last/position/max/min empty -> None; partition exact len-sum;
+  group_by empty -> len 0), iter.fold 8 (find/find_map/contains/
+  position_of empty identities; chunks/windows exact count bounds;
+  cmp [-1,1] + empty-side pins; eq len-mismatch/empty-equal pins), iter
+  adapters 14 new pub (RangeInclusive.next done-state pins;
+  Range/MapIter/FilterIter/EnumerateIter/ChainIter take/skip/enumerate
+  field mirrors; TakeIter.next remaining@pre guard; range_step ceil band;
+  repeat_n n band) plus the Range.next `ensures: true` placeholder
+  replaced with start/end@pre pins (first self-field @pre use in iter;
+  probe-validated), format.text 18 (alignment delegation bounds;
+  justify/wrap/flow/paragraph/reflow/measure empty identities; indent
+  no-op and len bands; columns row counts; ellipsis branches;
+  overline/underline/strikethrough/quote exact lengths; blockquote bands).
+- NEW FINDING (surfaced probe-first): p_iter_iterator_type_unresolved.xi --
+  the M7 `Iterator[T]` receiver type is not declared anywhere in xiom/,
+  so every `use xiom.iter;` consumer warns `unknown type 'Iterator' --
+  defaulting to i64` (3-4x) and `r.step_by(2)` fails C001 unresolved
+  `Iterator.step_by` (the old silent zero auto-stub is now loud). The four
+  M7 adapters (step_by/take_while/skip_while/inspect) and their iterator
+  types stay clause-free; the concrete adapters are unaffected. Findings
+  11 -> 12 (11 compiler, 1 stdlib); queue gate 9 updated.
+- Probe p_wave93_shapes.xi (265th, 139 checks): green on v0.64.1 pre- and
+  post-clauses (field mirrors, tuple len-sum, self @pre forms and the
+  text layout lengths all held first pass). Targeted smokes: smoke_iter
+  21/21, smoke_fmt 18/18, smoke_format_ 8/8, smoke_format_text 1/1,
+  smoke_text2 1/1.
+- Coverage: iter 25.1% -> 45.4%, format 39.0% -> 46.8%, global 57.7% ->
+  58.6% (clauses 4953 -> 5024); meter 75.9%; floors130 dumped and wired
+  (ci/heavy/release + tools/README).
+- Battery on this commit (v0.64.1): release corpus 954/954 full (606.2s,
+  no exclusions); probes 265/265 (316.7s); check_modules 509/509 (419.5s);
+  barename 0/509 (437.5s); floors130 + module-smoke (497/517, 3477/6205)
+  ratchets OK. (The 6203 -> 6205 module-smoke denominator predates this
+  wave: verified identical on the stashed pre-wave tree.)
+- Release side: nothing pending; the next cut picks up the block-75
+  post-tag fixes + this wave.
 
 **SESSION 2026-10-08 block 76 (handoff refresh: snapshot 24; clean context handoff; release + registry DONE; next = wave 93)**
 - Snapshot 24 refreshed for the context handoff: read list -> blocks 75

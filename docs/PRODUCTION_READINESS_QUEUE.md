@@ -1,10 +1,10 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
-**75.8% -- 7 of 10 gates complete; gate 8 at 57.7% (partial credit) and
+**75.9% -- 7 of 10 gates complete; gate 8 at 58.6% (partial credit) and
 gates 9-10 discrete.** (Compiler pin: **v0.64.1**.)
 **Gates: corpus 954/954 full (C001 carve-outs retired on v0.63.1; new
 TcpStream loopback and uuencode roundtrip smokes added), modules 509/509,
-probes 263/263, barename 0/509.**
+probes 265/265, barename 0/509.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -14,23 +14,23 @@ gates flip:
    full, no carve-outs (C001 fixed by 4bf8cf1e; 20/20 + 20/20 stress).
    lz4 is fixed by m190 and stayed in the gate; the new TcpStream loopback
    smoke locks m196.
-3. Probe corpus green -- MET (263/263 on v0.64.1, incl. the promoted
+3. Probe corpus green -- MET (265/265 on v0.64.1, incl. the promoted
    regression locks (rvalue float Vec index, multipart parse name, iter
    forwardref), the v0.64.1 pin probe p_pin0641_iter_shapes.xi, the
-   wave-77 stats probe, the Pulse hardening probe, the wave-78..91
+   wave-77 stats probe, the Pulse hardening probe, the wave-78..93
    coverage probes, the io byte-fidelity/CRLF lock and the fs_remove
    lock).
 4. Strict bare-name scan clean -- MET (0/509).
 5. Coverage ratchet green -- MET (floors129).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (497/517 modules, 3477/6202 fns).
-8. Contract coverage 100% (every public fn carries clauses) -- OPEN (57.7%).
+8. Contract coverage 100% (every public fn carries clauses) -- OPEN (58.6%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
-   OPEN (11: 10 compiler, 1 stdlib algorithm).
+   OPEN (12: 11 compiler, 1 stdlib algorithm).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
 
 Meter formula: MET gates count 1.0; gate 8 counts its current
-pub-with-clause fraction (54.3% -> 0.543); gates 9 and 10 get no partial
+pub-with-clause fraction (58.6% -> 0.586); gates 9 and 10 get no partial
 credit (discrete). Update the percentage and the gate-8 fraction in the
 same commit as each floors dump so the meter moves smoothly toward 80%.
 
@@ -38,8 +38,8 @@ Authoritative order: the gates above, then the updates below newest-first.
 Current state: compiler pin v0.64.1 (consumed by wave 92); stdlib-v0.64.2
 RELEASED 2026-10-08 and REGISTRY LIVE (xiom-std 0.64.2 signed,
 f5375c03ad88); post-tag fixes on main (string linearization + signal
-stubs, block 75); coverage 57.7%, meter 75.8%; handoff in
-`docs/stdlib_session.md` snapshot 24 (block 76).
+stubs, block 75); post-wave-93 coverage 58.6%, meter 75.9%; handoff in
+`docs/stdlib_session.md` snapshot 24 (block 77).
 
 ## Project Pulse relay (web-framework lane) -- 2026-10-05
 
@@ -677,6 +677,37 @@ cross-module type-path/foreign-call findings unchanged. iter 18.6% ->
 release lane: the archive at v0.64.1 bundles stdlib 6e60e958 (old
 wave-74 pin); the v0.64.2 pin decision + release notes are pending in
 the session blocks.
+
+Update 2026-10-08 (wave 93 landed): iter remainder + format text -- 55 pub /
+71 clauses. iter.chain 14 (fold/fold_right empty -> init; reduce/sum/product/
+any/all empty identities; nth OOB -> None; last/position/max/min empty ->
+None; partition exact len-sum; group_by empty -> len 0), iter.fold 8
+(find/find_map/contains/position_of empty identities; chunks/windows exact
+count bounds; cmp [-1,1] + empty-side pins; eq len-mismatch/empty-equal
+pins), iter adapters 14 new pub (RangeInclusive.next done-state pins;
+Range/MapIter/FilterIter/EnumerateIter/ChainIter take/skip/enumerate field
+mirrors; TakeIter.next remaining@pre guard; range_step ceil band; repeat_n
+n band) plus the Range.next `ensures: true` placeholder replaced with
+start/end@pre pins, format.text 18 (alignment delegation bounds; justify/
+wrap/flow/paragraph/reflow/measure empty identities; indent no-op and len
+bands; columns row counts; ellipsis branches; overline/underline/
+strikethrough/quote exact lengths; blockquote bands). NEW FINDING filed:
+`p_iter_iterator_type_unresolved.xi` -- the M7 `Iterator[T]` receiver type
+does not exist (`unknown type 'Iterator' -- defaulting to i64` warnings on
+every xiom.iter consumer; `r.step_by(2)` fails C001 unresolved
+`Iterator.step_by`), so the four M7 adapters stay clause-free (findings
+11 -> 12). Probe p_wave93_shapes.xi (265th, 139 checks) green on v0.64.1
+pre/post; targeted smokes smoke_iter 21/21, smoke_fmt 18/18,
+smoke_format_ 8/8, smoke_format_text + smoke_text2 1/1. iter 25.1% ->
+45.4%, format 39.0% -> 46.8%, global 57.7% -> 58.6% (clauses 4953 ->
+5024); meter 75.9%; floors130. Battery on v0.64.1: corpus 954/954 (606.2s,
+no exclusions), probes 265/265 (316.7s), modules 509/509 (419.5s),
+barename 0/509 (437.5s), floors130 + module-smoke (497/517, 3477/6205)
+ratchets OK. Release side: nothing pending -- the next cut picks up the
+block-75 post-tag fixes + this wave. Readiness next: async 4.5%
+(runtime-backed), os 26.6%, core 26.7%, sync 29.1%, format remainder
+(markup/terminal/fmt), and the queued feature candidates (ORBITDB
+append_line_sync pure half, bindings W-2/W-5).
 
 Update 2026-10-08 (wave 91 landed): bench + format (numbering/units) --
 85 clauses / 38 new pub, plus a defect fix. bench 13 new (run_bench

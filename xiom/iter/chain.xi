@@ -17,7 +17,9 @@ module xiom.iter.chain
 
 /// Left fold over v with seed init: acc = f(acc, v[i]) for i in order.
 /// Returns the final accumulator. O(n). The combiner takes (acc, element).
-pub fn iter_fold(v: &Vec[Int], init: Int, f: fn(Int, &Int) -> Int) -> Int {
+pub fn iter_fold(v: &Vec[Int], init: Int, f: fn(Int, &Int) -> Int) -> Int
+  ensures: (v.len() == 0) => (result == init)
+{
   var acc = init;
   var i = 0;
   while i < v.len() {
@@ -30,7 +32,9 @@ pub fn iter_fold(v: &Vec[Int], init: Int, f: fn(Int, &Int) -> Int) -> Int {
 
 /// Right fold over v with seed init: acc = f(acc, v[i]) visiting elements
 /// from the last to the first. Returns the final accumulator. O(n).
-pub fn iter_fold_right(v: &Vec[Int], init: Int, f: fn(Int, &Int) -> Int) -> Int {
+pub fn iter_fold_right(v: &Vec[Int], init: Int, f: fn(Int, &Int) -> Int) -> Int
+  ensures: (v.len() == 0) => (result == init)
+{
   var acc = init;
   var i = v.len() - 1;
   while i >= 0 {
@@ -42,7 +46,9 @@ pub fn iter_fold_right(v: &Vec[Int], init: Int, f: fn(Int, &Int) -> Int) -> Int 
 }
 
 /// Fold using the first element as the seed; None if v is empty. O(n).
-pub fn iter_reduce(v: &Vec[Int], f: fn(&Int, &Int) -> Int) -> Option[Int] {
+pub fn iter_reduce(v: &Vec[Int], f: fn(&Int, &Int) -> Int) -> Option[Int]
+  ensures: (v.len() == 0) => (result.is_none == true)
+{
   if v.len() == 0 { return None; }
   var acc = v[0];
   var i = 1;
@@ -55,7 +61,9 @@ pub fn iter_reduce(v: &Vec[Int], f: fn(&Int, &Int) -> Int) -> Option[Int] {
 }
 
 /// Sum of all elements of an Int vector. O(n). Empty vector sums to 0.
-pub fn iter_sum(v: &Vec[Int]) -> Int {
+pub fn iter_sum(v: &Vec[Int]) -> Int
+  ensures: (v.len() == 0) => (result == 0)
+{
   var total = 0;
   var i = 0;
   while i < v.len() {
@@ -66,7 +74,9 @@ pub fn iter_sum(v: &Vec[Int]) -> Int {
 }
 
 /// Product of all elements of an Int vector. O(n). Empty vector is 1.
-pub fn iter_product(v: &Vec[Int]) -> Int {
+pub fn iter_product(v: &Vec[Int]) -> Int
+  ensures: (v.len() == 0) => (result == 1)
+{
   var total = 1;
   var i = 0;
   while i < v.len() {
@@ -77,7 +87,9 @@ pub fn iter_product(v: &Vec[Int]) -> Int {
 }
 
 /// True if any element satisfies pred. O(n). Short-circuits.
-pub fn iter_any(v: &Vec[Int], pred: fn(&Int) -> Bool) -> Bool {
+pub fn iter_any(v: &Vec[Int], pred: fn(&Int) -> Bool) -> Bool
+  ensures: (v.len() == 0) => (result == false)
+{
   var i = 0;
   while i < v.len() {
     var x = v[i];
@@ -88,7 +100,9 @@ pub fn iter_any(v: &Vec[Int], pred: fn(&Int) -> Bool) -> Bool {
 }
 
 /// True if every element satisfies pred. O(n). Short-circuits.
-pub fn iter_all(v: &Vec[Int], pred: fn(&Int) -> Bool) -> Bool {
+pub fn iter_all(v: &Vec[Int], pred: fn(&Int) -> Bool) -> Bool
+  ensures: (v.len() == 0) => (result == true)
+{
   var i = 0;
   while i < v.len() {
     var x = v[i];
@@ -120,19 +134,25 @@ pub fn iter_count_if(v: &Vec[Int], pred: fn(&Int) -> Bool) -> Int
 }
 
 /// Element at index n, or None if out of bounds. O(1).
-pub fn iter_nth(v: &Vec[Int], n: Int) -> Option[Int] {
+pub fn iter_nth(v: &Vec[Int], n: Int) -> Option[Int]
+  ensures: (n < 0 || n >= v.len()) => (result.is_none == true)
+{
   if n < 0 || n >= v.len() { return None; }
   Some(v[n])
 }
 
 /// Last element of v, or None if empty. O(1).
-pub fn iter_last(v: &Vec[Int]) -> Option[Int] {
+pub fn iter_last(v: &Vec[Int]) -> Option[Int]
+  ensures: (v.len() == 0) => (result.is_none == true)
+{
   if v.len() == 0 { return None; }
   Some(v[v.len() - 1])
 }
 
 /// Index of the first element satisfying pred, or None. O(n).
-pub fn iter_position(v: &Vec[Int], pred: fn(&Int) -> Bool) -> Option[Int] {
+pub fn iter_position(v: &Vec[Int], pred: fn(&Int) -> Bool) -> Option[Int]
+  ensures: (v.len() == 0) => (result.is_none == true)
+{
   var i = 0;
   while i < v.len() {
     var x = v[i];
@@ -143,7 +163,9 @@ pub fn iter_position(v: &Vec[Int], pred: fn(&Int) -> Bool) -> Option[Int] {
 }
 
 /// Maximum element of an Int vector, or None if empty. O(n).
-pub fn iter_max(v: &Vec[Int]) -> Option[Int] {
+pub fn iter_max(v: &Vec[Int]) -> Option[Int]
+  ensures: (v.len() == 0) => (result.is_none == true)
+{
   if v.len() == 0 { return None; }
   var max_val = v[0];
   var i = 1;
@@ -155,7 +177,9 @@ pub fn iter_max(v: &Vec[Int]) -> Option[Int] {
 }
 
 /// Minimum element of an Int vector, or None if empty. O(n).
-pub fn iter_min(v: &Vec[Int]) -> Option[Int] {
+pub fn iter_min(v: &Vec[Int]) -> Option[Int]
+  ensures: (v.len() == 0) => (result.is_none == true)
+{
   if v.len() == 0 { return None; }
   var min_val = v[0];
   var i = 1;
@@ -168,7 +192,9 @@ pub fn iter_min(v: &Vec[Int]) -> Option[Int] {
 
 /// Split v into (matching, non-matching) vectors by pred. O(n).
 /// The first tuple element holds elements where pred is true, in order.
-pub fn iter_partition(v: &Vec[Int], pred: fn(&Int) -> Bool) -> (Vec[Int], Vec[Int]) {
+pub fn iter_partition(v: &Vec[Int], pred: fn(&Int) -> Bool) -> (Vec[Int], Vec[Int])
+  ensures: result.0.len() + result.1.len() == v.len()
+{
   var yes = Vec[Int].new();
   var no = Vec[Int].new();
   var i = 0;
@@ -188,7 +214,9 @@ pub fn iter_partition(v: &Vec[Int], pred: fn(&Int) -> Bool) -> (Vec[Int], Vec[In
 /// Returns a vector of groups in original order. O(n).
 /// NOTE: nested Vec[Vec[Int]] element access is unreliable in the current
 /// compiler; treat the result as opaque and inspect group lengths only.
-pub fn iter_group_by(v: &Vec[Int], key: fn(&Int) -> Int) -> Vec[Vec[Int]] {
+pub fn iter_group_by(v: &Vec[Int], key: fn(&Int) -> Int) -> Vec[Vec[Int]]
+  ensures: (v.len() == 0) => (result.len() == 0)
+{
   var groups = Vec[Vec[Int]].new();
   if v.len() == 0 { return groups; }
   var current = Vec[Int].new();
