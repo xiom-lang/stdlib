@@ -6,6 +6,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.64.2] - 2026-10-08
+
+Re-pinned to compiler `v0.64.1` (tag `3c6f3bb5`). The m200/m201/m203 batch
+unblocks the iter clause surface, fixes rvalue float-vector indexing and
+multipart parsing; file writes are byte-exact and CRLF line reads are clean.
+No 0.64.0/0.64.1 stdlib tags were cut, so this release supersedes them.
+
+### Fixed
+
+- `io.read_file_lines` strips a trailing carriage return, and
+  `write_file` / `append_file` / `write_file_bytes` open binary so newlines
+  are never rewritten on Windows (ORBITDB relay; locked by
+  `tools/probes/p_read_file_lines_crlf.xi`).
+- `bench.bench_time_fn` no longer violates `run_bench`'s name precondition
+  at runtime.
+- `xiom.io.fs` gains `fs_remove` (bindings-lane W-1; locked by
+  `tools/probes/p_fs_remove.xi`).
+
+### Changed
+
+- Iter contracts restored and extended on the new pin (contains, sum,
+  product, collect, count, max, min, find, all, any, nth, last); iter
+  18.6% -> 25.1%.
+- Coverage 56.9% -> 57.7% pub-with-clause (serialize 90.3%, convert 94.1%,
+  bench 87.5%, format 39.0%); floors129.
+- `COMPILER_VERSION` -> `v0.64.1`; probes 263; three resolved repros
+  promoted to `tools/probes/` locks (rvalue float Vec index, multipart
+  parse name, iter forwardref).
+
+### Notes
+
+- Still open on v0.64.1, re-filed with evidence: geom-matrix tuple-element
+  inference, polyhedra nested hulls, clause float-vec indexing, the
+  ensures-is-ok guard, geom Box naming, cross-module alias/type paths.
+- Consumer-lane relays (PULSE, ORBITDB, XVECTOR, bindings) tracked in
+  `docs/STDLIB-WISHLIST.md`.
+
 ## [0.64.0] - 2026-10-05
 
 Re-pinned to compiler `v0.64.0` (tag `c68d91de`). Consumes the m193-m196
