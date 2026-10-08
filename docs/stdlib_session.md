@@ -1653,6 +1653,21 @@ registry pin, agent recon for the rest)**
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
 
+**SESSION 2026-10-08 block 73 (handoff refresh: snapshot 23; v0.64.1 pin consumed; v0.64.2 pin + registry decision pending)**
+- Snapshot 23 refreshed: read list -> blocks 72 (latest)..; STATE carries
+  the v0.64.1 pin (tag 3c6f3bb5), COMPILER_VERSION v0.64.1, gates probes
+  263/floors129/coverage 57.7%, the wave-92 iter retry, and the RELAY
+  CORRECTIONS (geom-matrix tuple still red, polyhedra unchanged,
+  ensures-isok/clause-float-index/geom-Box/alias-foreign findings open).
+- Release side: release-notes/v0.64.2.md (stdlib fragment) authored; the
+  intended v0.64.2 compiler pin is THIS refresh commit's HEAD on main
+  (compiler lane: use the origin/main hash after this push). The
+  xiom-std 0.64.x registry entry needs a stdlib release tag first; the
+  registry tops out at 0.63.0 and no stdlib-v0.64.x tag exists (owner /
+  release-lane decision; raised 2026-10-08).
+- No code changes beyond the wave-92 commit (9d519ee); heads: wave 92
+  (9d519ee) + this refresh.
+
 **SESSION 2026-10-08 block 72 (v0.64.1 pin bump: m200/m201/m203 consumed; iter retry; floors129)**
 - Pin moved to official v0.64.1 (tag 3c6f3bb5; binary downloaded to
   %TEMP%\kilo\stdlib_ws\v0.64.1). Verification on the pin: m200 rvalue
