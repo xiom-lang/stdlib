@@ -1639,6 +1639,16 @@ registry pin, agent recon for the rest)**
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
 
+**SESSION 2026-10-08 block 67 (handoff refresh: snapshot 21 updated for the next session)**
+- Snapshot 21 refreshed: read list -> blocks 66 (latest)..; STATE carries
+  the wave-89 gates (probes 255, floors126, coverage 56.7%, serialize
+  73.1%) and the pin check note (v0.64.0 still Latest; trigger stays
+  queued); FIRST TASK wave 90 (serialize batch 3: toml/yaml_lite); HANDOFF
+  NOTE lists p_wave89_shapes.xi (255 probes), floors126 and the two new
+  cross-module resolution repros; the PULSE relay + credential workaround
+  notes stay in STDLIB-WISHLIST.md / failed_attempts.md.
+- No code changes; heads: wave 89 (14bc27a) + this refresh.
+
 **SESSION 2026-10-08 block 66 (wave 89: serialize + json; floors126)**
 - Wave 89: 50 clauses / 36 new pub -- serialize.xi 26 (format_error >= 15
   band + the exact zero-error pin; is_valid_json/is_valid_bytes empty ->
