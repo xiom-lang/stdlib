@@ -31,9 +31,10 @@ m200-m203) CONSUMED on v0.64.1: m203 fixed the iter closure-thunk clause
 leak; m200 fixed the rvalue Vec[Float64] index; m201 fixed multipart and
 PARTIALLY geom-matrix (the tuple-element case is still red) but did NOT
 fix polyhedra -- see the README corrections. The next compiler release is
-v0.64.2; OUR intended pin for it is the HEAD of this snapshot's refresh
-(record the hash on the compiler side; the archive at v0.64.1 still
-bundles the old 6e60e958 stdlib).
+v0.64.2: OUR pin for it is the stdlib-v0.64.2 tag (commit 4dd8844, cut
+2026-10-08) -- the archive at v0.64.1 still bundles the old 6e60e958
+stdlib. REGISTRY: 0.64.2 publish is queued on the protected environment
+(approve one run) then verify `xiom pkg info xiom-std`.
 Gates on v0.64.1: release corpus 954/954 FULL (m196 loopback + uuencode
 roundtrip smokes added), modules 509/509, probes 263/263, barename
 0/509, floors129, module-smoke ratchet OK. Coverage = 57.7% global
@@ -50,11 +51,15 @@ core 26.7%), batching toward 40-60 pub; async stays runtime-backed
 (inspect each surface before claiming). Queued feature candidates when
 the wave has room: ORBITDB `append_line_sync` pure half (tail repair;
 durable flush stays runtime-backed), bindings W-2 out-param slot helper,
-W-5 Vec[UInt8].with_len(n). RELEASE SIDE (release-lane decisions, do not
-act unilaterally): the v0.64.2 stdlib fragment is authored; the intended
-v0.64.2 pin is the HEAD of the snapshot-23 refresh commit; the
-xiom-std 0.64.x registry entry needs a stdlib tag first (owner decision;
-the registry tops out at 0.63.0).
+W-5 Vec[UInt8].with_len(n). RELEASE SIDE: stdlib-v0.64.2 was CUT 2026-10-08 (tag on commit
+4dd8844; release.yml success; assets xiom-std-0.64.2.tar.gz +
+SHA256SUMS). The compiler side should take STDLIB_VERSION = stdlib-v0.64.2
+(the notes fragment at the tag is what merges into v0.64.2 combined
+notes). REGISTRY: the publish runs are queued on the protected
+registry-publish environment -- approve ONE of the two waiting runs
+(37786796626 tag-triggered or 37793330331 dispatch); verify after with
+`xiom pkg info xiom-std` (expect 0.64.2 signed; registry showed through
+0.63.0 at cut time).
 NO PIN-BUMP TRIGGER is pending: v0.64.1 is consumed and the next
 compiler release (v0.64.2) is not out yet.
 PENDING/QUEUED:
@@ -1652,6 +1657,31 @@ registry pin, agent recon for the rest)**
   gates; open: contract coverage 100%, zero open findings, beta-exit release
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
+
+**SESSION 2026-10-08 block 74 (stdlib 0.64.2 RELEASED; registry publish queued for environment approval)**
+- Per the owner's decision (2026-10-08): cut ONE release at the new pin.
+  Steps executed: package.xi version -> "0.64.2" + release-notes/v0.64.2.md
+  + CHANGELOG [0.64.2] in commit 4dd8844 (on top of 57bff56); full release
+  gate suite on that exact commit -- corpus 954/954 (823.3s, -Workers 8
+  -RetryFailed), probes 263/263 (327.8s), check_modules 509/509 (204.1s),
+  barename 0/509 (273.1s), coverage ratchet floors129 OK, doc_scan 100%
+  ratchet OK, author identity Lefteris Notas <lefterisnotas@gmail.com>.
+- Tagged stdlib-v0.64.2 (annotated) on 4dd8844 and pushed; release.yml run
+  37786796498 completed SUCCESS (~43 min): validate + windows/ubuntu gates
+  + deterministic tarball; GitHub Release stdlib-v0.64.2 published with
+  xiom-std-0.64.2.tar.gz + SHA256SUMS. No 0.64.0/0.64.1 stdlib tags were
+  cut (owner decision), so the lineage is 0.63.0 -> 0.64.2.
+- Registry publish: the tag push auto-triggered a publish run
+  (37786796626) and an earlier dispatch (37793330331) exists; both are
+  WAITING on the protected `registry-publish` environment (required
+  reviewers) -- the owner must approve ONE of them. A third duplicate
+  dispatch was cancelled (37793441927). After approval the publish is
+  OIDC + ed25519 signed; verify with `xiom pkg info xiom-std` (expect
+  0.64.2 with a sha256 and signed). Registry still shows through 0.63.0
+  as of this block.
+- v0.64.2 pin: the compiler side should take stdlib tag stdlib-v0.64.2
+  (commit 4dd8844) for STDLIB_VERSION; the release-notes fragment at the
+  tag is release-notes/v0.64.2.md.
 
 **SESSION 2026-10-08 block 73 (handoff refresh: snapshot 23; v0.64.1 pin consumed; v0.64.2 pin + registry decision pending)**
 - Snapshot 23 refreshed: read list -> blocks 72 (latest)..; STATE carries

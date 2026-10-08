@@ -35,10 +35,10 @@ credit (discrete). Update the percentage and the gate-8 fraction in the
 same commit as each floors dump so the meter moves smoothly toward 80%.
 
 Authoritative order: the gates above, then the updates below newest-first.
-Current state: compiler pin v0.64.1 (consumed by wave 92; v0.64.2 pin =
-the snapshot-23 refresh HEAD, pending on the compiler side); coverage
-57.7%, meter 75.8%; handoff in `docs/stdlib_session.md` snapshot 23
-(block 72).
+Current state: compiler pin v0.64.1 (consumed by wave 92; stdlib-v0.64.2
+RELEASED 2026-10-08 for the v0.64.2 combined release; registry publish
+awaiting environment approval); coverage 57.7%, meter 75.8%; handoff
+in `docs/stdlib_session.md` snapshot 23 (block 74).
 
 ## Project Pulse relay (web-framework lane) -- 2026-10-05
 
@@ -630,6 +630,19 @@ compiler-owned for v0.64.1; Box stays section C. floors113 (global
 51.4%, reflect 100%); meter 75.1%. Battery on v0.64.0: corpus 953/953,
 probes 241/241, modules 509/509, barename 0/509, floors113 +
 module-smoke ratchets OK.
+
+Update 2026-10-08 (stdlib 0.64.2 RELEASED): per the owner decision, one
+release was cut at the new pin. Tag stdlib-v0.64.2 on commit 4dd8844
+(package.xi 0.64.2 + release-notes/v0.64.2.md + CHANGELOG [0.64.2]); the
+full gate suite ran green on that commit (corpus 954/954, probes
+263/263, modules 509/509, barename 0/509, floors129 + doc ratchets) and
+release.yml run 37786796498 completed SUCCESS with the GitHub Release
+(stdlib-v0.64.2: xiom-std-0.64.2.tar.gz + SHA256SUMS). No 0.64.0/0.64.1
+stdlib tags were cut; lineage 0.63.0 -> 0.64.2. REGISTRY: publish runs
+37786796626 (tag-triggered) and 37793330331 (dispatch) are WAITING on
+the protected registry-publish environment -- approve ONE, then verify
+with `xiom pkg info xiom-std` (expect 0.64.2 signed). Compiler side:
+STDLIB_VERSION = stdlib-v0.64.2 for the v0.64.2 combined release.
 
 Update 2026-10-08 (v0.64.1 PIN BUMP): pin moved to official v0.64.1 (tag
 3c6f3bb5; binary at %TEMP%\kilo\stdlib_ws\v0.64.1). Verified green on the
