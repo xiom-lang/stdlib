@@ -1330,8 +1330,28 @@ T1/T2 yields.
         13 files 1/1. Next: serialize batch 3 (toml 11, yaml_lite 7) and
         then the other low dirs (async 4.5% -- runtime-backed, iter
         clause-side blocked, bench 18.8%, os 26.2%, core 26.7%).
+        Wave 90 (2026-10-08): coverage wave 53 -- serialize batch 3,
+        23 clauses / 16 new pub. toml 11 (toml_parse empty -> Ok and
+        "a = 1" -> Ok / "[a" -> Err pins; the getter family's
+        empty-table -> None identities incl. the six typed getters;
+        toml_has empty -> false; toml_keys len mirror; toml_write
+        empty -> "" + >= keys band), yaml_lite 5 (yaml_parse /
+        yaml_parse_document empty -> Err + "a: 1" -> Ok pins;
+        yaml_emit_scalar empty -> `""` + >= len band; yaml_emit_sequence
+        empty -> "" + >= items band; yaml_emit_mapping empty-side ->
+        ""). Clause-free by design: yaml_stringify / yaml_get (enum
+        match, no clause-expressible claim) and the same for the
+        toml/yaml writer variant dispatch internals. serialize 73.1% ->
+        90.3%, global 56.7% -> 56.9%, meter 75.7%; floors127. Probe
+        p_wave90_shapes.xi (258th, 35 checks) green on v0.64.0 pre/post;
+        targeted smokes smoke_serialize (+csv/toml/toml_write) 1/1.
+        Next: the remaining low dirs (async 4.5% -- runtime-backed, iter
+        clause-side blocked, bench 18.8%, os 26.2%, core 26.7%, format
+        27.3%) with serialize leftovers (fill/emit internals) reviewed
+        for future passes; also queued: ORBITDB append_line_sync pure
+        half, bindings W-2 out-param slots, W-5 Vec[UInt8].with_len.
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors126.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors127.json
         tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;

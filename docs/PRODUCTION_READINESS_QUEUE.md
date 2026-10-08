@@ -1,10 +1,10 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
-**75.7% -- 7 of 10 gates complete; gate 8 at 56.7% (partial credit) and
+**75.7% -- 7 of 10 gates complete; gate 8 at 56.9% (partial credit) and
 gates 9-10 discrete.** (Compiler pin: **v0.64.0**.)
 **Gates: corpus 954/954 full (C001 carve-outs retired on v0.63.1; new
 TcpStream loopback and uuencode roundtrip smokes added), modules 509/509,
-probes 257/257, barename 0/509.**
+probes 258/258, barename 0/509.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -14,7 +14,7 @@ gates flip:
    full, no carve-outs (C001 fixed by 4bf8cf1e; 20/20 + 20/20 stress).
    lz4 is fixed by m190 and stayed in the gate; the new TcpStream loopback
    smoke locks m196.
-3. Probe corpus green -- MET (257/257 on v0.64.0, incl. the promoted
+3. Probe corpus green -- MET (258/258 on v0.64.0, incl. the promoted
    regression probes, the pin locks, the v0.64.0 m193-m196 probe, the
    wave-77 stats probe, the Pulse hardening probe, the wave-78 thread
    probe, the wave-79 convert probe, the wave-80 base-codec probe, the
@@ -22,13 +22,13 @@ gates flip:
    codec-tail probe, the wave-84 uri/url/urn probe, the wave-85
    ip/lossy/network/timestamp probe, the wave-86 convert-locals probe,
    the wave-87 convert-tails probe, the wave-88 serialize probe, the
-   wave-89 serialize+json probe, the io byte-fidelity/CRLF lock and the
-   fs_remove lock).
+   wave-89 serialize+json probe, the wave-90 toml/yaml_lite probe, the
+   io byte-fidelity/CRLF lock and the fs_remove lock).
 4. Strict bare-name scan clean -- MET (0/509).
-5. Coverage ratchet green -- MET (floors126).
+5. Coverage ratchet green -- MET (floors127).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (497/517 modules, 3477/6202 fns).
-8. Contract coverage 100% (every public fn carries clauses) -- OPEN (56.7%).
+8. Contract coverage 100% (every public fn carries clauses) -- OPEN (56.9%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
    OPEN (11: 10 compiler, 1 stdlib algorithm).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
@@ -39,8 +39,8 @@ credit (discrete). Update the percentage and the gate-8 fraction in the
 same commit as each floors dump so the meter moves smoothly toward 80%.
 
 Authoritative order: the gates above, then the updates below newest-first.
-Current state: compiler pin v0.64.0; coverage 56.7%, meter 75.7%; handoff
-in `docs/stdlib_session.md` snapshot 21 (block 68).
+Current state: compiler pin v0.64.0; coverage 56.9%, meter 75.7%; handoff
+in `docs/stdlib_session.md` snapshot 21 (block 69).
 
 ## Project Pulse relay (web-framework lane) -- 2026-10-05
 
@@ -632,6 +632,24 @@ compiler-owned for v0.64.1; Box stays section C. floors113 (global
 51.4%, reflect 100%); meter 75.1%. Battery on v0.64.0: corpus 953/953,
 probes 241/241, modules 509/509, barename 0/509, floors113 +
 module-smoke ratchets OK.
+
+Update 2026-10-08 (wave 90 landed): serialize batch 3 -- toml + yaml_lite,
+23 clauses / 16 new pub. toml 11 (toml_parse empty -> Ok, "a = 1" -> Ok,
+"[a" -> Err; toml_get + the six typed getters empty-table -> None;
+toml_has empty -> false; toml_keys len mirror; toml_write empty -> "" +
+result >= keys band), yaml_lite 5 (yaml_parse/yaml_parse_document empty
+-> Err + "a: 1" -> Ok; yaml_emit_scalar empty -> `""` + >= len band;
+yaml_emit_sequence empty -> "" + >= items band; yaml_emit_mapping any
+empty side -> ""). Clause-free by design: yaml_stringify/yaml_get (enum
+match). serialize 73.1% -> 90.3% (only clause-free-by-design surfaces
+remain), global 56.7% -> 56.9%; meter 75.7%; floors127. Probe
+p_wave90_shapes.xi (258th, 35 checks) green on v0.64.0 pre/post;
+targeted smokes smoke_serialize (+csv/toml/toml_write) 1/1.
+Readiness next: the remaining low dirs (async 4.5% -- runtime-backed, iter
+18.6% -- clause-side blocked, bench 18.8%, os 26.2%, core 26.7%, format
+27.3%, sync 29.1%, sort 31.9%), plus the queued feature candidates
+(ORBITDB append_line_sync pure half; bindings W-2 out-param slots; W-5
+Vec[UInt8].with_len).
 
 Update 2026-10-08 (io fidelity defect fixed + ORBITDB/XVECTOR intake): the
 ORBITDB relay's CRLF row is a real defect cluster -- `io.read_file_lines`

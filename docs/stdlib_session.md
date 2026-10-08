@@ -4,16 +4,20 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 -->
 # XIOM Stdlib Session -- Handoff
 
-## 0A. CONTINUE HERE -- handoff snapshot 21 (updated 2026-10-08, v0.64.0 pin complete, wave 89 complete, compiler relay m200-m206 recorded)
+## 0A. CONTINUE HERE -- handoff snapshot 22 (updated 2026-10-08, v0.64.0 pin complete, wave 90 complete, v0.64.1 pending after C-06)
 
 **PASTE-READY PROMPT FOR THE NEXT SESSION (copy this block):**
 
 ---
 You are continuing the XIOM stdlib lane. Worktree `E:\xiom-lang\stdlib`,
-branch `main`. Read `docs/stdlib_session.md` blocks 66 (latest), 65, 64,
-63, 62, 61, 60, 59, 58, 57, 56, 55, 54, 53, 52, 51, 50, 49, 48, 47, 46, 45,
-44, 43 (publish), 27 (iter block) and `docs/PRODUCTION_READINESS_QUEUE.md`
+branch `main`. Read `docs/stdlib_session.md` blocks 69 (latest), 68, 67,
+66, 65, 64, 63, 62, 61, 60, 59, 58, 57, 56, 55, 54, 53, 52, 51, 50, 49, 48,
+47, 46, 45, 44, 43 (publish), 27 (iter block) and
+`docs/PRODUCTION_READINESS_QUEUE.md`
 before acting; snapshot 5 below the prompt keeps the deep protocol lore.
+The ecosystem now has consumer lanes feeding relays (PULSE,
+ORBITDB, XVECTOR, bindings): intake rows land in `docs/STDLIB-WISHLIST.md`
+and runtime-backed asks queue with the compiler runtime bundle.
 
 STATE (2026-10-07): compiler pin = official v0.64.0 (tag c68d91de, pin
 6e60e958 = our wave-74 head; v0.63.1 was c0fa3a2d/1b972478). Binary at
@@ -24,12 +28,14 @@ stdlib-v0.63.0 (179cfea). Compiler relay 2026-10-07 (dev builds m200-m203):
 m203 fixed the iter closure-thunk clause leak; m200 fixed the rvalue
 Vec[Float64] index; m201 fixed multipart/geom-matrix/polyhedra -- see the
 NEXT PIN trigger in QUEUED; m202 gates the packages grpc publish, m206
-covers graphql conformance. Pin check 2026-10-08 (waves 85-89): v0.64.0
-is still GitHub Latest, so no re-pin happened; the trigger stays queued.
+covers graphql conformance. Pin check 2026-10-08 (waves 85-90): v0.64.0
+is still GitHub Latest; the owner reports v0.64.1 is closing after the
+compiler C-06 fix -- WHEN IT SHIPS (must carry m200/m201/m203), do the
+NEXT PIN trigger first (below), then resume waves.
 Gates on v0.64.0: release corpus 954/954 FULL (m196 loopback + uuencode
-roundtrip smokes added), modules 509/509, probes 257/257, barename
-0/509, floors126, module-smoke ratchet OK. Coverage = 56.7% global
-pub-with-clause. Waves landed: 63 net+hash, 64 reflect+iter adapters, 65x convert, 66 time, 67 format, 68 misc, 69 os+rand, 70 crypto, 71 log, 72 compress, 73 pin, 74 encoding, 75 encoding-rem+debug, 76 simd, 64.0 pin, 77 stats, Pulse hardening (write_all/server_parse_request/hmac_sha256_hex), 78 thread, 79 convert numeric shims, 80 convert base shims, 81 convert unicode, 82 convert codec guards, 83 convert codec tails, 84 convert uri/url/urn, 85 convert ip/lossy/network/timestamp, 86 convert locals + shims, 87 convert tails (convert 94.1%), 88 serialize batch 1 (endian/varint/csv), 89 serialize + json modules (serialize 73.1%). Post-wave-89 fixes (same day): io byte-fidelity/CRLF defect (read_file_lines CR strip; write_file/append_file/write_file_bytes now binary; p_read_file_lines_crlf.xi) and fs_remove (bindings W-1; p_fs_remove.xi); ORBITDB/XVECTOR/bindings relays intaken. Wave
+roundtrip smokes added), modules 509/509, probes 258/258, barename
+0/509, floors127, module-smoke ratchet OK. Coverage = 56.9% global
+pub-with-clause. Waves landed: 63 net+hash, 64 reflect+iter adapters, 65x convert, 66 time, 67 format, 68 misc, 69 os+rand, 70 crypto, 71 log, 72 compress, 73 pin, 74 encoding, 75 encoding-rem+debug, 76 simd, 64.0 pin, 77 stats, Pulse hardening (write_all/server_parse_request/hmac_sha256_hex), 78 thread, 79 convert numeric shims, 80 convert base shims, 81 convert unicode, 82 convert codec guards, 83 convert codec tails, 84 convert uri/url/urn, 85 convert ip/lossy/network/timestamp, 86 convert locals + shims, 87 convert tails (convert 94.1%), 88 serialize batch 1 (endian/varint/csv), 89 serialize + json modules (serialize 73.1%), 90 serialize batch 3 (toml/yaml_lite; serialize 90.3%). Post-wave-89 fixes (same day): io byte-fidelity/CRLF defect (read_file_lines CR strip; write_file/append_file/write_file_bytes now binary; p_read_file_lines_crlf.xi) and fs_remove (bindings W-1; p_fs_remove.xi); ORBITDB/XVECTOR/bindings relays intaken. Wave
 65 (iter clauses) is DEFERRED: the C001 classifier is fixed (v0.63.1) and
 clauses may read tuple components, but the clause-side closure lowering
 was re-verified red on v0.64.0 (smoke_iter `use of undefined value`);
@@ -37,16 +43,19 @@ compiler relay 2026-10-07 says m203 fixed it (Range.count + smoke_iter
 verified OK/exit 0 on the dev build) -- re-add at the next pin, see the
 NEXT PIN trigger.
 
-FIRST TASK (wave 90): serialize batch 3 -- toml.xi (11 pub) + yaml_lite.xi
-(7 pub), batching within the 40-60-pub directive; watch the wire-format
-pins and the same-name delegation caveats (BUG 25 #1; see the new
-cross-module findings below). Then the other low dirs (async 4.5% --
-runtime-backed surfaces, check each; iter 18.6% -- clause-side blocked,
-bench 18.8%, os 26.2%, core 26.7%, format 27.3%, sync 29.1%, sort 31.9%).
-IF THE NEXT COMPILER PIN IS OUT when you start (it must carry
-m200/m201/m203), DO THE PIN-BUMP TRIGGER FIRST (QUEUED below): re-add the
-Range.count clause, retry the deferred iter set probe-first, promote the
-four fixed known-failures, re-dump floors -- then wave 90.
+FIRST TASK (wave 91): the next low dirs -- bench.xi (18.8%, 16 pub)
+then format (27.3%) and/or sync (29.1%), batching toward 40-60 pub;
+async (4.5%) stays runtime-backed (inspect each surface before
+claiming), iter stays clause-side blocked, os/core are large but
+mainly runtime/FFI-backed. Queued feature candidates when the wave has
+room: ORBITDB `append_line_sync` pure half (tail repair; durable flush
+stays runtime-backed), bindings W-2 out-param slot helper, W-5
+Vec[UInt8].with_len(n).
+IF THE NEXT COMPILER PIN IS OUT when you start -- v0.64.1 is closing
+after the compiler C-06 fix and MUST carry m200/m201/m203 -- DO THE
+PIN-BUMP TRIGGER FIRST (QUEUED below): re-add the Range.count clause,
+retry the deferred iter set probe-first, promote the four fixed
+known-failures, re-dump floors -- then wave 91.
 PENDING/QUEUED:
 (a) iter clause retry: red on v0.64.0 (block 46); compiler relay
 2026-10-07: m203 fixed the closure-thunk clause leak (Range.count +
@@ -66,9 +75,9 @@ HANDOFF NOTE: new locks are p_pin0640_shapes.xi (m193-m196),
 tests/smoke/smoke_net_tcp_stream.xi (m196 + write_all),
 tests/smoke/smoke_convert_uuencode.xi (wave 83, corpus 954), the m193
 guard-alloc smoke, and probes p_wave77_shapes.xi (167 checks) and
-p_pulse_shapes.xi through p_wave89_shapes.xi (255 probes total);
+p_pulse_shapes.xi through p_wave90_shapes.xi (258 probes total;
 p_read_file_lines_crlf.xi and p_fs_remove.xi are the io-fidelity and
-fs_remove locks (post-wave-89 fix commit);
+fs_remove locks;
 p_alias_module_type_path.xi + p_foreign_method_call.xi are the new open
 cross-module resolution repros (2026-10-08, cross-ref C-PULSE-12);
 p_wave43_shapes was updated for m194 exactness;
@@ -85,7 +94,7 @@ result.len()` form ONLY: the `(result.is_ok == true) =>` implication
 violates at runtime (filed as p_ensures_isok_guard.xi, m-fix pending);
 if a wave surfaces a new compiler finding, file a minimal repro in
 tools/known_failures/ with a README Current entry before the wave commit.
-(2) probe-first: add `tools/probes/p_wave90_shapes.xi` exercising every
+(2) probe-first: add `tools/probes/p_wave91_shapes.xi` exercising every
 clause-guard path; bind module-returned values to `let` before comparing
 (inline unsigned compares misread high bits; inline indexing of a
 returned Vec[Float64] reads garbage -- bind it first); bind `Vec.new()`
@@ -93,12 +102,12 @@ temporaries passed as `&Vec`; do not declare externs for runtime guard
 symbols; green on v0.64.0 (v0.63.1 cross-check when cheap).
 (3) apply, run targeted smokes; if unrelated codegen breaks, bisect and
 drop the offending clause with a code comment (see blocks 27/65x).
-(4) dump `tools/coverage_floors127.json`, wire the workflows +
+(4) dump `tools/coverage_floors128.json`, wire the workflows +
 `tools/README.md`, update plan/session/queue in the same commit, YAML
 check, pure-ASCII conventional commit.
 (5) battery: `run_smokes.ps1 -ExcludeFile tools/known_failures/
-gate-exclusions.txt` (expect 954/954 full), probe corpus (expect 258),
-check_modules 509/509, barename 0/509, floors127 + module-smoke ratchets;
+gate-exclusions.txt` (expect 954/954 full), probe corpus (expect 259),
+check_modules 509/509, barename 0/509, floors128 + module-smoke ratchets;
 record results in the session block; push `main` (NOTE: the push may
 present the wrong account -- see docs/failed_attempts.md 2026-10-07
 18:30 UTC: use the one-shot Lefteris-Notas credential; plain pushes may
@@ -1640,6 +1649,26 @@ registry pin, agent recon for the rest)**
   gates; open: contract coverage 100%, zero open findings, beta-exit release
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
+
+**SESSION 2026-10-08 block 69 (wave 90: serialize batch 3 toml/yaml_lite; floors127)**
+- Wave 90: 23 clauses / 16 new pub -- toml 11 (toml_parse empty -> Ok,
+  "a = 1" -> Ok, "[a" -> Err pins; toml_get and the six typed getters
+  empty-table -> None; toml_has empty -> false; toml_keys len mirror;
+  toml_write empty -> "" + result >= keys band), yaml_lite 5 (yaml_parse /
+  yaml_parse_document empty -> Err + "a: 1" -> Ok pins; yaml_emit_scalar
+  empty -> `""` + >= len band; yaml_emit_sequence empty -> "" + >= items
+  band; yaml_emit_mapping any-empty-side -> ""). Clause-free by design:
+  yaml_stringify / yaml_get (enum match).
+- Pin status checked: v0.64.0 still GitHub Latest (v0.64.1 pending after
+  the C-06 compiler fix), no re-pin; the NEXT PIN trigger stays queued.
+- Probe p_wave90_shapes.xi (258th, 35 checks): green on v0.64.0 pre- and
+  post-clauses; targeted smokes smoke_serialize (+csv/toml/toml_write)
+  1/1. serialize 73.1% -> 90.3%, global 56.7% -> 56.9%, meter 75.7%;
+  floors127.
+- Battery on this commit (v0.64.0): release corpus 954/954 full (1233.1s,
+  no exclusions); probes 258/258 (305.5s); check_modules 509/509 (207.1s);
+  barename 0/509 (253.7s); floors127 + module-smoke (497/517, 3477/6203)
+  ratchets OK.
 
 **SESSION 2026-10-08 block 68 (io byte-fidelity + CRLF defect fix; ORBITDB/XVECTOR intake)**
 - Defect (fix-first, ORBITDB relay row 2): `io.read_file_lines` kept the

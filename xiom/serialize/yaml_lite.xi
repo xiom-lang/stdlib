@@ -183,7 +183,10 @@ fn _yaml_parse_block(lines: &Vec[Str], pos: &mut Int, indent: Int) -> Result[Yam
 /// NOTE: the current compiler miscompiles cross-module calls that return a
 /// Result whose payload is a recursive enum (see report); yaml_parse works
 /// when invoked from within its own module but not across modules.
-pub fn yaml_parse(s: Str) -> Result[YamlValue, Str] {
+pub fn yaml_parse(s: Str) -> Result[YamlValue, Str]
+  ensures: (s.len() == 0) => (result.is_err == true)
+  ensures: (s == "a: 1") => (result.is_ok == true)
+{
   var lines = Vec[Str].new();
   var start = 0;
   var i = 0;
@@ -217,7 +220,10 @@ pub fn yaml_parse(s: Str) -> Result[YamlValue, Str] {
 
 /// Parse a single YAML document (alias of yaml_parse for a strict reader).
 /// Complexity: O(n), n = document size.
-pub fn yaml_parse_document(s: Str) -> Result[YamlValue, Str] {
+pub fn yaml_parse_document(s: Str) -> Result[YamlValue, Str]
+  ensures: (s.len() == 0) => (result.is_err == true)
+  ensures: (s == "a: 1") => (result.is_ok == true)
+{
   return yaml_parse(s);
 }
 
@@ -328,7 +334,10 @@ pub fn yaml_get(v: YamlValue, key: Str) -> Option[YamlValue] {
 
 /// Emit `s` as a quoted (when ambiguous) or plain YAML scalar.
 /// Complexity: O(n), n = string length.
-pub fn yaml_emit_scalar(s: Str) -> Str {
+pub fn yaml_emit_scalar(s: Str) -> Str
+  ensures: (s.len() == 0) => (result == "\"\"")
+  ensures: result.len() >= s.len()
+{
   if s.len() == 0 {
     return "\"\"";
   }
@@ -376,7 +385,10 @@ fn _yaml_dquote(s: Str) -> Str {
 
 /// Emit `items` as a YAML block sequence.
 /// Complexity: O(n), n = number of items.
-pub fn yaml_emit_sequence(items: &Vec[Str]) -> Str {
+pub fn yaml_emit_sequence(items: &Vec[Str]) -> Str
+  ensures: (items.len() == 0) => (result == "")
+  ensures: result.len() >= items.len()
+{
   var result = "";
   var i = 0;
   while i < items.len() {
@@ -392,7 +404,9 @@ pub fn yaml_emit_sequence(items: &Vec[Str]) -> Str {
 /// Emit `keys` and `values` as a YAML block mapping. The two vectors must be
 /// the same length; mismatches are truncated to the shorter.
 /// Complexity: O(n), n = number of keys.
-pub fn yaml_emit_mapping(keys: &Vec[Str], values: &Vec[Str]) -> Str {
+pub fn yaml_emit_mapping(keys: &Vec[Str], values: &Vec[Str]) -> Str
+  ensures: (keys.len() == 0 || values.len() == 0) => (result == "")
+{
   var result = "";
   var n = keys.len();
   if values.len() < n {

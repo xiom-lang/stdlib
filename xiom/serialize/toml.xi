@@ -321,7 +321,11 @@ fn _table_find(t: &TomlTable, key: Str) -> Int {
 
 /// Parse a TOML v1 subset document; keys are section-qualified ("a.b").
 /// Errors carry the 1-based source line.
-pub fn toml_parse(text: Str) -> Result[TomlTable, Str] {
+pub fn toml_parse(text: Str) -> Result[TomlTable, Str]
+  ensures: (text.len() == 0) => (result.is_ok == true)
+  ensures: (text == "a = 1") => (result.is_ok == true)
+  ensures: (text == "[a") => (result.is_err == true)
+{
   var t = TomlTable{ keys: Vec[Str].new(); values: Vec[TomlValue].new(); };
   let raw_lines = string.str_split(text, "\n");
   var prefix = "";
@@ -370,7 +374,9 @@ pub fn toml_parse(text: Str) -> Result[TomlTable, Str] {
 }
 
 /// Value for `key`, or None when missing.
-pub fn toml_get(t: &TomlTable, key: Str) -> Option[TomlValue] {
+pub fn toml_get(t: &TomlTable, key: Str) -> Option[TomlValue]
+  ensures: (t.keys.len() == 0) => (result.is_none == true)
+{
   let idx = _table_find(t, key);
   if idx < 0 {
     return None;
@@ -379,12 +385,16 @@ pub fn toml_get(t: &TomlTable, key: Str) -> Option[TomlValue] {
 }
 
 /// True when `key` exists.
-pub fn toml_has(t: &TomlTable, key: Str) -> Bool {
+pub fn toml_has(t: &TomlTable, key: Str) -> Bool
+  ensures: (t.keys.len() == 0) => (result == false)
+{
   return _table_find(t, key) >= 0;
 }
 
 /// String value for `key`, or None when missing or of another type.
-pub fn toml_get_str(t: &TomlTable, key: Str) -> Option[Str] {
+pub fn toml_get_str(t: &TomlTable, key: Str) -> Option[Str]
+  ensures: (t.keys.len() == 0) => (result.is_none == true)
+{
   match toml_get(t, key) {
     Some(v) => {
       match v {
@@ -397,7 +407,9 @@ pub fn toml_get_str(t: &TomlTable, key: Str) -> Option[Str] {
 }
 
 /// Int value for `key`, or None when missing or of another type.
-pub fn toml_get_int(t: &TomlTable, key: Str) -> Option[Int] {
+pub fn toml_get_int(t: &TomlTable, key: Str) -> Option[Int]
+  ensures: (t.keys.len() == 0) => (result.is_none == true)
+{
   match toml_get(t, key) {
     Some(v) => {
       match v {
@@ -410,7 +422,9 @@ pub fn toml_get_int(t: &TomlTable, key: Str) -> Option[Int] {
 }
 
 /// Float value for `key`, or None when missing or of another type.
-pub fn toml_get_float(t: &TomlTable, key: Str) -> Option[Float64] {
+pub fn toml_get_float(t: &TomlTable, key: Str) -> Option[Float64]
+  ensures: (t.keys.len() == 0) => (result.is_none == true)
+{
   match toml_get(t, key) {
     Some(v) => {
       match v {
@@ -423,7 +437,9 @@ pub fn toml_get_float(t: &TomlTable, key: Str) -> Option[Float64] {
 }
 
 /// Bool value for `key`, or None when missing or of another type.
-pub fn toml_get_bool(t: &TomlTable, key: Str) -> Option[Bool] {
+pub fn toml_get_bool(t: &TomlTable, key: Str) -> Option[Bool]
+  ensures: (t.keys.len() == 0) => (result.is_none == true)
+{
   match toml_get(t, key) {
     Some(v) => {
       match v {
@@ -436,7 +452,9 @@ pub fn toml_get_bool(t: &TomlTable, key: Str) -> Option[Bool] {
 }
 
 /// String-array value for `key`, or None when missing or of another type.
-pub fn toml_get_str_array(t: &TomlTable, key: Str) -> Option[Vec[Str]] {
+pub fn toml_get_str_array(t: &TomlTable, key: Str) -> Option[Vec[Str]]
+  ensures: (t.keys.len() == 0) => (result.is_none == true)
+{
   match toml_get(t, key) {
     Some(v) => {
       match v {
@@ -449,7 +467,9 @@ pub fn toml_get_str_array(t: &TomlTable, key: Str) -> Option[Vec[Str]] {
 }
 
 /// Int-array value for `key`, or None when missing or of another type.
-pub fn toml_get_int_array(t: &TomlTable, key: Str) -> Option[Vec[Int]] {
+pub fn toml_get_int_array(t: &TomlTable, key: Str) -> Option[Vec[Int]]
+  ensures: (t.keys.len() == 0) => (result.is_none == true)
+{
   match toml_get(t, key) {
     Some(v) => {
       match v {
@@ -462,7 +482,9 @@ pub fn toml_get_int_array(t: &TomlTable, key: Str) -> Option[Vec[Int]] {
 }
 
 /// All keys in file order.
-pub fn toml_keys(t: &TomlTable) -> Vec[Str] {
+pub fn toml_keys(t: &TomlTable) -> Vec[Str]
+  ensures: result.len() == t.keys.len()
+{
   return t.keys;
 }
 
@@ -590,7 +612,10 @@ fn _toml_list_has(items: &Vec[Str], s: Str) -> Bool {
 /// order. Round-trips through `toml_parse` except for non-finite floats
 /// (written as `nan`/`inf`, which the v1 reader does not accept back).
 /// Complexity: O(n^2) worst case in the number of keys (section grouping).
-pub fn toml_write(t: &TomlTable) -> Str {
+pub fn toml_write(t: &TomlTable) -> Str
+  ensures: (t.keys.len() == 0) => (result == "")
+  ensures: result.len() >= t.keys.len()
+{
   var out = "";
   var i = 0;
   while i < t.keys.len() {
