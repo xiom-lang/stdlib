@@ -27,9 +27,9 @@ NEXT PIN trigger in QUEUED; m202 gates the packages grpc publish, m206
 covers graphql conformance. Pin check 2026-10-08 (waves 85-89): v0.64.0
 is still GitHub Latest, so no re-pin happened; the trigger stays queued.
 Gates on v0.64.0: release corpus 954/954 FULL (m196 loopback + uuencode
-roundtrip smokes added), modules 509/509, probes 255/255, barename
+roundtrip smokes added), modules 509/509, probes 257/257, barename
 0/509, floors126, module-smoke ratchet OK. Coverage = 56.7% global
-pub-with-clause. Waves landed: 63 net+hash, 64 reflect+iter adapters, 65x convert, 66 time, 67 format, 68 misc, 69 os+rand, 70 crypto, 71 log, 72 compress, 73 pin, 74 encoding, 75 encoding-rem+debug, 76 simd, 64.0 pin, 77 stats, Pulse hardening (write_all/server_parse_request/hmac_sha256_hex), 78 thread, 79 convert numeric shims, 80 convert base shims, 81 convert unicode, 82 convert codec guards, 83 convert codec tails, 84 convert uri/url/urn, 85 convert ip/lossy/network/timestamp, 86 convert locals + shims, 87 convert tails (convert 94.1%), 88 serialize batch 1 (endian/varint/csv), 89 serialize + json modules (serialize 73.1%). Wave
+pub-with-clause. Waves landed: 63 net+hash, 64 reflect+iter adapters, 65x convert, 66 time, 67 format, 68 misc, 69 os+rand, 70 crypto, 71 log, 72 compress, 73 pin, 74 encoding, 75 encoding-rem+debug, 76 simd, 64.0 pin, 77 stats, Pulse hardening (write_all/server_parse_request/hmac_sha256_hex), 78 thread, 79 convert numeric shims, 80 convert base shims, 81 convert unicode, 82 convert codec guards, 83 convert codec tails, 84 convert uri/url/urn, 85 convert ip/lossy/network/timestamp, 86 convert locals + shims, 87 convert tails (convert 94.1%), 88 serialize batch 1 (endian/varint/csv), 89 serialize + json modules (serialize 73.1%). Post-wave-89 fixes (same day): io byte-fidelity/CRLF defect (read_file_lines CR strip; write_file/append_file/write_file_bytes now binary; p_read_file_lines_crlf.xi) and fs_remove (bindings W-1; p_fs_remove.xi); ORBITDB/XVECTOR/bindings relays intaken. Wave
 65 (iter clauses) is DEFERRED: the C001 classifier is fixed (v0.63.1) and
 clauses may read tuple components, but the clause-side closure lowering
 was re-verified red on v0.64.0 (smoke_iter `use of undefined value`);
@@ -67,6 +67,8 @@ tests/smoke/smoke_net_tcp_stream.xi (m196 + write_all),
 tests/smoke/smoke_convert_uuencode.xi (wave 83, corpus 954), the m193
 guard-alloc smoke, and probes p_wave77_shapes.xi (167 checks) and
 p_pulse_shapes.xi through p_wave89_shapes.xi (255 probes total);
+p_read_file_lines_crlf.xi and p_fs_remove.xi are the io-fidelity and
+fs_remove locks (post-wave-89 fix commit);
 p_alias_module_type_path.xi + p_foreign_method_call.xi are the new open
 cross-module resolution repros (2026-10-08, cross-ref C-PULSE-12);
 p_wave43_shapes was updated for m194 exactness;
@@ -95,7 +97,7 @@ drop the offending clause with a code comment (see blocks 27/65x).
 `tools/README.md`, update plan/session/queue in the same commit, YAML
 check, pure-ASCII conventional commit.
 (5) battery: `run_smokes.ps1 -ExcludeFile tools/known_failures/
-gate-exclusions.txt` (expect 954/954 full), probe corpus (expect 256),
+gate-exclusions.txt` (expect 954/954 full), probe corpus (expect 258),
 check_modules 509/509, barename 0/509, floors127 + module-smoke ratchets;
 record results in the session block; push `main` (NOTE: the push may
 present the wrong account -- see docs/failed_attempts.md 2026-10-07
@@ -1638,6 +1640,39 @@ registry pin, agent recon for the rest)**
   gates; open: contract coverage 100%, zero open findings, beta-exit release
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
+
+**SESSION 2026-10-08 block 68 (io byte-fidelity + CRLF defect fix; ORBITDB/XVECTOR intake)**
+- Defect (fix-first, ORBITDB relay row 2): `io.read_file_lines` kept the
+  trailing CR on CRLF files ("10\r" -> parse failures, silent record
+  drops). Fixed by stripping one trailing CR per line. Root cause fixed
+  too: `io.write_file` / `io.append_file` / `io.write_file_bytes` opened
+  in TEXT mode, so Windows fwrite silently turned LF into CRLF and the
+  "bytes" writer was not byte-exact; all three now open binary
+  (`wb`/`ab`). Doc comments note the byte-exact contract.
+- Probe lock p_read_file_lines_crlf.xi (18 checks): fails pre-fix (run=3
+  reproduced the CR; raw length 12 vs 10 reproduced the write
+  translation), green post-fix. All 20 smoke_io tests + 4 byte-IO
+  stress/cross smokes green.
+- Intake recorded in docs/STDLIB-WISHLIST.md: ORBITDB rows 1-6 (fsync,
+  CRLF [fixed], append_line_sync, truncate, byte append, tail check) and
+  XVECTOR rows 1-6 (fsync, fd write_all, append_file_bytes, f32 bitcast,
+  truncate, flush_stdout), with the surface-shape confirmation requested
+  by XVECTOR: complete the existing fd-level (`xiom.os.sync_io`) +
+  path-level (`xiom.os.fs_ffi`, `io`) stubs rather than adding new names;
+  runtime-backed rows queue for the compiler runtime bundle. f32
+  bitcast is a compiler-lane ask.
+- Bindings-lane relay 2026-10-08 (W-1..W-5) processed: W-1 `fs_remove`
+  added to `xiom.io.fs` with probe lock p_fs_remove.xi; W-4 stale
+  Int-to-pointer-cast note corrected in smoke_ffi2.xi (typed-call idiom
+  verified by the bindings lane on v0.64.0; a dl typed-call smoke is
+  queued); W-3 stdlib side addressed by the new CONFINEMENT CAUTION in
+  the xiom.ffi module header + free doc (compiler finding B-05 owns the
+  real fix); W-2 (out-param slot helper) and W-5 (Vec[UInt8].with_len)
+  recorded as scheduled candidates.
+- Battery on this commit (v0.64.0): release corpus 954/954 full (740.4s,
+  no exclusions); probes 257/257 (337.9s); check_modules 509/509 (232s);
+  barename 0/509 (371.5s); floors126 + module-smoke (497/517, 3477/6203)
+  ratchets OK.
 
 **SESSION 2026-10-08 block 67 (handoff refresh: snapshot 21 updated for the next session)**
 - Snapshot 21 refreshed: read list -> blocks 66 (latest)..; STATE carries

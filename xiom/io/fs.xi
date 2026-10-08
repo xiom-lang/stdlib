@@ -131,6 +131,21 @@ pub fn fs_write_text(path: Str, s: Str) -> Result[Unit, Str]
   }
 }
 
+/// Remove (delete) a file; Err on failure. Delegates to xiom.io.remove_file.
+/// Params: path - the file path.
+/// Returns: Ok(()) on success, Err on failure.
+/// Complexity: O(1).
+/// Bindings-lane relay 2026-10-08 (docs/BINDINGS-STDLIB-WISHLIST.md W-1).
+pub fn fs_remove(path: Str) -> Result[Unit, Str]
+  ensures: result is Ok => !io.file_exists(path)
+{
+  let r = io.remove_file(path);
+  match r {
+    Ok(_) => Ok(());
+    Err(e) => Err(e.message);
+  }
+}
+
 /// Copy a file to a new path.
 /// Params: src - the source path; dst - the destination path.
 /// Returns: Ok(()) on success, Err on failure.

@@ -7,6 +7,12 @@
 //
 // Phase 1 (v0.49.2): Raw alloc/free/memcpy + SafePtr + FFIBuffer + FFIError + marshal
 // Phase 2 (future):  Drop trait auto-cleanup, Vec[UInt8] native support, AtomicPtr
+//
+// CONFINEMENT CAUTION (v0.64.0, compiler finding B-05): do NOT call
+// alloc/free inside a confined (`unsafe`) block -- the guard allocator
+// (xiom_guard_alloc) and libc free disagree there and the guard heap can
+// spin. Pair C allocations outside confinement, or keep buffers XIOM-owned.
+// Bindings-lane relay 2026-10-08 (docs/BINDINGS-STDLIB-WISHLIST.md W-3).
 
 module xiom.ffi
 use xiom.ffi.dl;
@@ -30,6 +36,9 @@ pub fn alloc(size: Int) -> *UInt8
 }
 
 /// Free a C-allocated pointer.
+/// Do not call inside a confined/unsafe block on v0.64.0: the guard
+/// allocator and libc free disagree (compiler finding B-05) and the guard
+/// heap can spin -- see the module header.
 pub fn free(ptr: *UInt8)
   requires: ptr != null
 {

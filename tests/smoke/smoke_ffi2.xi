@@ -3,10 +3,11 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Returns 0 on success, nonzero (and a tag) on failure.
 //
-// NOTE: the Int-to-pointer cast (`x as *UInt8`) is broken in this build, so
-// the pointer-taking helpers (c_strlen, c_strcmp, dl_sym, ...) cannot be
-// exercised from user code; the tested paths are the scalar helpers and the
-// errno API.
+// NOTE: the Int-to-pointer cast used to be broken; on v0.64.0 the typed
+// call cast (`let f = addr as fn(..) -> T;` inside `unsafe`) works and is
+// the enabler for SKIP-style dl probes (bindings-lane verified 2026-10-08;
+// see docs/BINDINGS-STDLIB-WISHLIST.md W-4). This smoke still exercises the
+// scalar helpers and the errno API; a dl typed-call smoke is queued.
 
 module smoke_ffi2
 use xiom.ffi.c;

@@ -4,7 +4,7 @@
 gates 9-10 discrete.** (Compiler pin: **v0.64.0**.)
 **Gates: corpus 954/954 full (C001 carve-outs retired on v0.63.1; new
 TcpStream loopback and uuencode roundtrip smokes added), modules 509/509,
-probes 255/255, barename 0/509.**
+probes 257/257, barename 0/509.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -14,15 +14,16 @@ gates flip:
    full, no carve-outs (C001 fixed by 4bf8cf1e; 20/20 + 20/20 stress).
    lz4 is fixed by m190 and stayed in the gate; the new TcpStream loopback
    smoke locks m196.
-3. Probe corpus green -- MET (255/255 on v0.64.0, incl. the promoted
+3. Probe corpus green -- MET (257/257 on v0.64.0, incl. the promoted
    regression probes, the pin locks, the v0.64.0 m193-m196 probe, the
    wave-77 stats probe, the Pulse hardening probe, the wave-78 thread
    probe, the wave-79 convert probe, the wave-80 base-codec probe, the
    wave-81 unicode probe, the wave-82 codec-guard probe, the wave-83
    codec-tail probe, the wave-84 uri/url/urn probe, the wave-85
    ip/lossy/network/timestamp probe, the wave-86 convert-locals probe,
-   the wave-87 convert-tails probe, the wave-88 serialize probe and the
-   wave-89 serialize+json probe).
+   the wave-87 convert-tails probe, the wave-88 serialize probe, the
+   wave-89 serialize+json probe, the io byte-fidelity/CRLF lock and the
+   fs_remove lock).
 4. Strict bare-name scan clean -- MET (0/509).
 5. Coverage ratchet green -- MET (floors126).
 6. Documentation ratchet 100% -- MET.
@@ -39,7 +40,7 @@ same commit as each floors dump so the meter moves smoothly toward 80%.
 
 Authoritative order: the gates above, then the updates below newest-first.
 Current state: compiler pin v0.64.0; coverage 56.7%, meter 75.7%; handoff
-in `docs/stdlib_session.md` snapshot 21 (block 66).
+in `docs/stdlib_session.md` snapshot 21 (block 68).
 
 ## Project Pulse relay (web-framework lane) -- 2026-10-05
 
@@ -631,6 +632,26 @@ compiler-owned for v0.64.1; Box stays section C. floors113 (global
 51.4%, reflect 100%); meter 75.1%. Battery on v0.64.0: corpus 953/953,
 probes 241/241, modules 509/509, barename 0/509, floors113 +
 module-smoke ratchets OK.
+
+Update 2026-10-08 (io fidelity defect fixed + ORBITDB/XVECTOR intake): the
+ORBITDB relay's CRLF row is a real defect cluster -- `io.read_file_lines`
+kept the trailing CR on CRLF files, and the CRLF files themselves came
+from `io.write_file` / `io.append_file` / `io.write_file_bytes` opening
+in TEXT mode (Windows `fwrite` silently turned every LF into CRLF; the
+"bytes" writer was not byte-exact). Fixed: line reads strip one trailing
+CR per line; all three writers open binary (`wb`/`ab`). Probe lock
+`p_read_file_lines_crlf.xi` (18 checks: byte-exact write/append roundtrips
++ CRLF/LF line reads). ORBITDB + XVECTOR durability rows (fsync,
+fd write path, append_file_bytes, truncate/ftruncate, tail check,
+flush_stdout, f32 bitcast) are recorded in docs/STDLIB-WISHLIST.md with
+the confirmed surface shape (complete the existing fd-level + path-level
+stubs; no new names) and stay queued with the compiler runtime bundle.
+Bindings-lane relay 2026-10-08 (W-1..W-5) recorded too: W-1 fixed
+(`fs_remove` + `p_fs_remove.xi`), W-4 fixed (smoke_ffi2 note now records
+the verified typed-call cast idiom), W-3 addressed stdlib-side (xiom.ffi
+confinement caution; compiler finding B-05 owns the real fix), W-2
+(out-param slots) and W-5 (Vec[UInt8].with_len) are scheduled
+candidates.
 
 Update 2026-10-08 (wave 89 landed): serialize + json modules -- 50
 clauses / 36 new pub. serialize.xi 26 (format_error band + zero-error

@@ -236,14 +236,16 @@ pub fn read_file(path: Str) -> Result[Str, IOError]
   Ok(Str::from_utf8(buf))
 }
 
-/// Write (create/truncate) a file; Err with the OS message.
+/// Write (create/truncate) a file byte-exactly; Err with the OS message.
+/// Opened in binary mode so content is not newline-translated on Windows
+/// (ORBITDB relay 2026-10-08: text mode silently turned LF into CRLF).
 pub fn write_file(path: Str, content: Str) -> Result[Unit, IOError]
   requires: path.len() > 0
   ensures:  result is Ok => file_exists(path)
 {
   let file: *UInt8;
   unsafe {
-    file = fopen(path.c_str(), "w");
+    file = fopen(path.c_str(), "wb");
   }
   if file == 0 {
     return Err(IOError{ message: "failed to open file for writing: " + path, code: 2 });
@@ -261,14 +263,15 @@ pub fn write_file(path: Str, content: Str) -> Result[Unit, IOError]
   Ok(())
 }
 
-/// Append to a file, creating it when missing; Err.
+/// Append to a file byte-exactly, creating it when missing; Err.
+/// Opened in binary mode so content is not newline-translated on Windows.
 pub fn append_file(path: Str, content: Str) -> Result[Unit, IOError]
   requires: path.len() > 0
   ensures:  result is Ok => file_exists(path)
 {
   let file: *UInt8;
   unsafe {
-    file = fopen(path.c_str(), "a");
+    file = fopen(path.c_str(), "ab");
   }
   if file == 0 {
     return Err(IOError{ message: "failed to open file for appending: " + path, code: 4 });
@@ -910,13 +913,14 @@ pub fn flush_stdout()
 // ----------------------------------------------------------
 
 /// write_file_bytes writes raw bytes to a file, truncating if it exists.
+/// Opened in binary mode: bytes are stored exactly (no newline translation).
 /// Complexity: O(n) where n = data.len().
 pub fn write_file_bytes(path: Str, data: &Vec[UInt8]) -> Result[Unit, IOError]
   ensures: result is Ok => file_exists(path)
 {
   let file: *UInt8;
   unsafe {
-    file = fopen(path.c_str(), "w");
+    file = fopen(path.c_str(), "wb");
   }
   if file == 0 {
     return Err(IOError{ message: "failed to open file for writing: " + path, code: 2 });
@@ -1065,14 +1069,28 @@ pub fn list_dir_recursive(path: Str) -> Result[Vec[Str], IOError]
 // ----------------------------------------------------------
 
 /// read_file_lines reads a file and returns its lines as a Vec[Str].
-/// Trailing newline characters are stripped.  Complexity: O(n).
+/// Trailing newline characters are stripped; a trailing CR is removed from
+/// each line so CRLF files yield clean line values (ORBITDB relay 2026-10-08).
+/// Complexity: O(n).
 pub fn read_file_lines(path: Str) -> Result[Vec[Str], IOError]
-  ensures: result is Ok => result.len() >= 0
+  ensures: result is Ok => result.len() >= 1
 {
   let s_result = read_file(path);
   match s_result {
     Ok(s) => {
-      let parts = xiom.string.str_split(s, "\n");
+      var parts = xiom.string.str_split(s, "\n");
+      var i = 0;
+      while i < parts.len() {
+        let line = parts[i];
+        let llen = line.len();
+        if llen > 0 {
+          let last = xiom.string.str_slice(line, llen - 1, llen);
+          if last == "\r" {
+            parts[i] = xiom.string.str_slice(line, 0, llen - 1);
+          }
+        }
+        i = i + 1;
+      }
       Ok(parts)
     };
     Err(e) => Err(e);

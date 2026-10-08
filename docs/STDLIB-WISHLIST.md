@@ -143,3 +143,79 @@ the socket-option row). `io.flush_stdout` is still a no-op
 (runtime-backed; queued). Positive: v0.64.0 runtime + crypto are
 env-free; `TcpStream.read` works (C-PULSE-01 fixed); the stdlib loopback
 fixture request is satisfied by `smoke_net_tcp_stream.xi`.
+
+Relay status 2026-10-08 (ORBITDB + XVECTOR lanes; sources
+`E:\xiom-projects\xiom-orbitdb\docs\RELAY-STDLIB-ORBITDB.md` and
+`E:\xiom-projects\xiom-xvector\docs\STDLIB-WISHLIST-XVECTOR.md`, both on
+pin v0.64.0).
+
+Storage/durability cluster (three lanes now agree -- PULSE, ORBITDB,
+XVECTOR), all runtime-backed and queued for the compiler runtime bundle;
+the stdlib-side surface shape is confirmed as follows (asked by XVECTOR):
+complete the existing documented stubs as designed instead of adding new
+names -- fd-level primitives in `xiom.os.sync_io` (`write_all`,
+`read_exact`, `sync_fd`/fsync, `fsync_dir`) plus path-level wrappers in
+`xiom.os.fs_ffi` (`fsync`, `fdatasync`, `truncate`, `ftruncate`) and
+`io` conveniences (`append_file_bytes(path, &Vec[UInt8])`,
+`sync_file(path)`, real `flush_stdout`); needs
+`fsync`/`FlushFileBuffers`/`_commit` and a write-capable fd in the
+runtime. Until then consumers keep the documented not-durable limit.
+
+- ORBITDB row 1 / XVECTOR row 1: `fsync`/`fdatasync` -- runtime-backed,
+  queued (PULSE row + two more requesters).
+- ORBITDB row 2: **`io.read_file_lines` CRLF normalization -- FIXED
+  2026-10-08** (strip one trailing CR per line; probe lock
+  `tools/probes/p_read_file_lines_crlf.xi`). Root cause fixed too: the
+  ORBITDB CRLF files came from `io.write_file` / `io.append_file` /
+  `io.write_file_bytes` opening in TEXT mode, so Windows `fwrite`
+  silently turned LF into CRLF (and `write_file_bytes` was not
+  byte-exact). All three now open binary (`wb`/`ab`); byte fidelity is
+  locked by the same probe. This also unblocks XVECTOR's byte-framing
+  expectations for the existing `read_file_bytes` / `write_file_bytes`.
+- ORBITDB row 3: append-with-tail-repair + flush -- the repair half is
+  pure XIOM (new `append_line_sync` surface to be scheduled); the durable
+  flush half is runtime-backed.
+- ORBITDB row 4 / XVECTOR row 5: `truncate`/`ftruncate` -- runtime-backed
+  stubs (WAL checkpoint/segmentation).
+- ORBITDB row 5 / XVECTOR row 3: byte-level append
+  (`io.append_file_bytes`) -- runtime-backed (append-capable fd write);
+  the whole-file byte APIs exist and are now byte-exact.
+- ORBITDB row 6: tail check without a full read
+  (`io.file_last_byte`/`ends_with_newline`) -- needs a seek/stat
+  primitive; runtime-backed.
+- XVECTOR row 4: `f32_bits`/`bits_to_f32` -- compiler-lane ask (bitcast
+  lowering for Float32; the Float64 pair is compiler-lowered); the
+  `as Float64` round-trip workaround is exact.
+- XVECTOR row 6 / PULSE: durable `flush_stdout` -- runtime-backed;
+  XVECTOR added as requester.
+- ORBITDB note: `xiom.test` `assert` returns `TestResult` (the old
+  `TestCase` type is gone) -- doc note queued.
+- Positives: `io.sleep(ms)`, `io.append_line`/`read_file_lines`,
+  `env.var_or`, `crc32c` framing, whole-file byte IO and the Float64
+  bitcast pair are adopted and working; ORBITDB's crash test is offered
+  as the acceptance fixture for the fsync/append-repair/replay rows.
+
+Relay status 2026-10-08 (bindings lane; source
+`E:\xiom-packages\bindings\docs\BINDINGS-STDLIB-WISHLIST.md`, rows
+W-1..W-5, pilot `xiom.sqlite` on v0.64.0):
+- W-1 `xiom.io.fs` file delete/remove -- **FIXED 2026-10-08**:
+  `fs_remove(path)` added to `xiom/io/fs.xi` (delegates to
+  `io.remove_file`; Ok -> `!file_exists`; probe lock `p_fs_remove.xi`).
+  `io.remove_file` already existed but was not on the fs module face.
+- W-2 `xiom.ffi` out-param slot helper (`OutSlot`, or `out_slot(n)` +
+  typed `read_i64`/`write_i64`) -- open; scheduled candidate (pure XIOM
+  over an `FFIBuffer`/`Vec[UInt8]` slot + `as_mut_ptr`).
+- W-3 guard-aware `ffi.free` -- compiler finding B-05 (guard-alloc vs
+  libc free mismatch spins the guard heap in confined blocks); the
+  stdlib side is addressed by the new CONFINEMENT CAUTION in the
+  `xiom.ffi` module header and the `free` doc (2026-10-08). The compiler
+  lane owns the real fix; bindings keep the outside-confinement pattern.
+- W-4 stale Int-to-pointer-cast warning -- **FIXED 2026-10-08**: the
+  `smoke_ffi2.xi` note now records the bindings-verified typed-call idiom
+  (`let f = addr as fn(..) -> T;` inside `unsafe`) on v0.64.0; a dl
+  typed-call smoke is queued so the idiom is locked.
+- W-5 `Vec[UInt8].with_len(n)` zeroed constructor -- open; scheduled
+  candidate (collections change + probe; removes the per-slot push loop).
+- Companion defects file: `docs/BINDINGS-COMPILER-FINDINGS.md` (B-05
+  above) lives with the bindings lane; the stdlib repro intake stays
+  `tools/known_failures/`.
