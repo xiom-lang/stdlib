@@ -1350,8 +1350,32 @@ T1/T2 yields.
         27.3%) with serialize leftovers (fill/emit internals) reviewed
         for future passes; also queued: ORBITDB append_line_sync pure
         half, bindings W-2 out-param slots, W-5 Vec[UInt8].with_len.
+        Wave 91 (2026-10-08): coverage wave 54 -- bench + format (numbering/
+        units), 85 clauses / 38 new pub. bench 13 new (run_bench field
+        pins: iterations 1, name mirror, total == mean, stddev 0;
+        run_bench_n name mirror + zero-iteration all-zero branch; compare
+        >= name band; ops-per-sec/faster-percent zero branches; min/max/
+        total/median empty -> 0; human-ns four unit pins; black-box int
+        identity; run_avg delegation pins; report empty len 124;
+        report_simple empty -> "") plus a DEFECT FIX: bench_time_fn called
+        run_bench("", f), violating run_bench's `requires: name.len() > 0`
+        at runtime -- now passes "bench_time_fn" (found by the wave probe;
+        bench_time_fn stays clause-free). format.numbering 11 (word/
+        milliard/ordinal/CJK/Indian/money exact pins), format.units 16
+        (bytes/bits/percent/ratio/scientific/engineering/SI/binary/
+        temperature/currency/durations/hertz exact pins). bench 18.8% ->
+        87.5% (black_box generic + bench_time_fn remain), format 27.3% ->
+        39.0%, global 56.9% -> 57.5%, meter 75.8%; floors128. Probe
+        p_wave91_shapes.xi (259th, 89 checks) green on v0.64.0 pre/post
+        (probe-first fixes: moved-value pushes, the long-scale milliard
+        expectation, 0.00 sci-zero); targeted smokes smoke_bench +
+        smoke_format_numbering + smoke_format_units 1/1. Next: the
+        remaining low dirs (async 4.5% -- runtime-backed, iter 18.6% --
+        clause-side blocked, os 26.2%, core 26.7%, sync 29.1%, sort
+        31.9%, format remainder) and the queued feature candidates
+        (ORBITDB append_line_sync pure half, bindings W-2/W-5).
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors127.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors128.json
         tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;

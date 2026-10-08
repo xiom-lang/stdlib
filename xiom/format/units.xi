@@ -23,17 +23,26 @@ use xiom.convert;
 const KIB: Float64 = 1024.0;
 
 /// Format a byte count with a decimal unit suffix (B, KB, MB, GB, TB).
-pub fn format_bytes(bytes: Int) -> Str {
+pub fn format_bytes(bytes: Int) -> Str
+  ensures: (bytes == 0) => (result == "0 B")
+  ensures: (bytes == 1500) => (result == "1.5 KB")
+  ensures: (bytes == -1000) => (result == "1.0 KB")
+{
   return _size_str(bytes, 1000.0, "B", "K", "M", "G", "T");
 }
 
 /// Format a byte count with a binary unit suffix (B, KiB, MiB, GiB, TiB).
-pub fn format_bytes_binary(bytes: Int) -> Str {
+pub fn format_bytes_binary(bytes: Int) -> Str
+  ensures: (bytes == 0) => (result == "0 B")
+  ensures: (bytes == 1024) => (result == "1.0 KiB")
+{
   return _size_str(bytes, KIB, "B", "Ki", "Mi", "Gi", "Ti");
 }
 
 /// Format a bit count with a decimal unit suffix (b, Kb, Mb, Gb, Tb).
-pub fn format_bits(bits: Int) -> Str {
+pub fn format_bits(bits: Int) -> Str
+  ensures: (bits == 1500) => (result == "1.5 Kb")
+{
   return _size_str(bits, 1000.0, "b", "K", "M", "G", "T");
 }
 
@@ -58,7 +67,10 @@ fn _size_str(value: Int, step: Float64, unit: Str, k: Str, m: Str, g: Str, t: St
 }
 
 /// Format a fraction in [0,1] as a percentage with `decimals` places.
-pub fn format_percent(f: Float64, decimals: Int) -> Str {
+pub fn format_percent(f: Float64, decimals: Int) -> Str
+  ensures: (f == 0.5 && decimals == 1) => (result == "50.0%")
+  ensures: (f == 0.5 && decimals == -3) => (result == "50%")
+{
   var d = decimals;
   if d < 0 {
     d = 0;
@@ -67,12 +79,19 @@ pub fn format_percent(f: Float64, decimals: Int) -> Str {
 }
 
 /// Format a percentage with a percent sign and no decimals.
-pub fn format_percent_sign(f: Float64) -> Str {
+pub fn format_percent_sign(f: Float64) -> Str
+  ensures: (f == 0.25) => (result == "25%")
+{
   return convert.float_to_fixed_str(f * 100.0, 0) + "%";
 }
 
 /// Format num/den as a ratio, handling zero denominators ("inf", "NaN", "-inf").
-pub fn format_ratio(num: Int, den: Int) -> Str {
+pub fn format_ratio(num: Int, den: Int) -> Str
+  ensures: (num == 1 && den == 0) => (result == "inf")
+  ensures: (num == 0 && den == 0) => (result == "NaN")
+  ensures: (num == -1 && den == 0) => (result == "-inf")
+  ensures: (num == 3 && den == 4) => (result == "3/4")
+{
   if den == 0 {
     if num == 0 {
       return "NaN";
@@ -86,7 +105,10 @@ pub fn format_ratio(num: Int, den: Int) -> Str {
 }
 
 /// Scientific notation with the given precision ("1.23e+04").
-pub fn format_scientific(f: Float64, prec: Int) -> Str {
+pub fn format_scientific(f: Float64, prec: Int) -> Str
+  ensures: (f == 1.5 && prec == 1) => (result == "1.5e+00")
+  ensures: (f == 0.0 && prec == 2) => (result == "0.00")
+{
   var p = prec;
   if p < 0 {
     p = 0;
@@ -96,7 +118,11 @@ pub fn format_scientific(f: Float64, prec: Int) -> Str {
 
 /// Engineering notation: exponent is a multiple of three, mantissa has 2
 /// decimals ("1.23e+03").
-pub fn format_engineering(f: Float64) -> Str {
+pub fn format_engineering(f: Float64) -> Str
+  ensures: (f == 0.0) => (result == "0.00e+00")
+  ensures: (f == 1500.0) => (result == "1.50e+03")
+  ensures: (f == -1500.0) => (result == "-1.50e+03")
+{
   if f == 0.0 {
     return "0.00e+00";
   };
@@ -141,12 +167,17 @@ fn _exp_text(e: Int) -> Str {
 }
 
 /// Value with an SI prefix (k, M, G, T; m, u, n) and unit.
-pub fn format_si(f: Float64, unit: Str) -> Str {
+pub fn format_si(f: Float64, unit: Str) -> Str
+  ensures: (f == 1500.0 && unit == "Hz") => (result == "1.5 kHz")
+  ensures: (f == 0.5 && unit == "s") => (result == "500.0 ms")
+{
   return _prefix_str(f, unit, false);
 }
 
 /// Value with a binary prefix (Ki, Mi, Gi, Ti) and unit.
-pub fn format_binary_prefix(f: Float64, unit: Str) -> Str {
+pub fn format_binary_prefix(f: Float64, unit: Str) -> Str
+  ensures: (f == 2048.0 && unit == "B") => (result == "2.0 KiB")
+{
   return _prefix_str(f, unit, true);
 }
 
@@ -206,12 +237,16 @@ fn _prefix_str(f: Float64, unit: Str, binary: Bool) -> Str {
 }
 
 /// Degrees Celsius with the degree sign and C suffix ("21.5degC").
-pub fn format_temperature_celsius(c: Float64) -> Str {
+pub fn format_temperature_celsius(c: Float64) -> Str
+  ensures: (c == 21.5) => (result == "21.5\u{00b0}C")
+{
   return convert.float_to_fixed_str(c, 1) + "\u{00b0}C";
 }
 
 /// Degrees Fahrenheit with the degree sign and F suffix ("72.0degF").
-pub fn format_temperature_fahrenheit(f: Float64) -> Str {
+pub fn format_temperature_fahrenheit(f: Float64) -> Str
+  ensures: (f == 72.0) => (result == "72.0\u{00b0}F")
+{
   return convert.float_to_fixed_str(f, 1) + "\u{00b0}F";
 }
 
@@ -256,7 +291,11 @@ fn _currency_symbol(currency: Str) -> Str {
 
 /// Integer cents as a localized currency string ("$1,234.56"). JPY drops the
 /// decimals. Negative amounts get a leading minus sign.
-pub fn format_currency(amount_cents: Int, currency: Str) -> Str {
+pub fn format_currency(amount_cents: Int, currency: Str) -> Str
+  ensures: (amount_cents == 123456 && currency == "USD") => (result == "$1,234.56")
+  ensures: (amount_cents == -123456 && currency == "USD") => (result == "-$1,234.56")
+  ensures: (amount_cents == 100 && currency == "JPY") => (result == "\u{00a5}1")
+{
   var neg = amount_cents < 0;
   var cents = amount_cents;
   if neg {
@@ -287,7 +326,11 @@ pub fn format_currency(amount_cents: Int, currency: Str) -> Str {
 }
 
 /// Seconds as a compact human duration ("1h 2m 3s", "2m 5s", "45s").
-pub fn format_seconds(secs: Int) -> Str {
+pub fn format_seconds(secs: Int) -> Str
+  ensures: (secs == 0) => (result == "0s")
+  ensures: (secs == 3661) => (result == "1h 1m 1s")
+  ensures: (secs == -61) => (result == "1m 1s")
+{
   var s = secs;
   if s < 0 {
     s = 0 - s;
@@ -324,7 +367,11 @@ pub fn format_seconds(secs: Int) -> Str {
 }
 
 /// Milliseconds as a compact human duration ("1h 2m 3s 500ms", "500ms").
-pub fn format_ms(ms: Int) -> Str {
+pub fn format_ms(ms: Int) -> Str
+  ensures: (ms == 500) => (result == "500ms")
+  ensures: (ms == 1500) => (result == "1s 500ms")
+  ensures: (ms == 1000) => (result == "1s")
+{
   var m = ms;
   if m < 0 {
     m = 0 - m;
@@ -342,7 +389,11 @@ pub fn format_ms(ms: Int) -> Str {
 }
 
 /// Frequency with a unit suffix (Hz, kHz, MHz, GHz).
-pub fn format_hertz(hz: Float64) -> Str {
+pub fn format_hertz(hz: Float64) -> Str
+  ensures: (hz == 999.0) => (result == "999.0 Hz")
+  ensures: (hz == 1500.0) => (result == "1.5 kHz")
+  ensures: (hz == 1500000000.0) => (result == "1.5 GHz")
+{
   var v = hz;
   var neg = v < 0.0;
   if neg {

@@ -33,7 +33,12 @@ fn isqrt(n: Int) -> Int {
 
 /// Time `f` once and return the result.
 pub fn run_bench(name: Str, f: fn()) -> BenchResult
-  requires: name.len() > 0 {
+  requires: name.len() > 0
+  ensures: result.iterations == 1
+  ensures: result.name == name
+  ensures: result.total_ns == result.mean_ns
+  ensures: result.stddev_ns == 0
+{
   let start = time.Instant.now();
   f();
   let ns = start.elapsed().as_nanos();
@@ -53,6 +58,8 @@ pub fn run_bench_n(name: Str, iterations: Int, f: fn()) -> BenchResult
   requires: name.len() > 0
   requires: iterations >= 0
   ensures:  result.iterations == iterations
+  ensures:  result.name == name
+  ensures:  (iterations <= 0) => (result.total_ns == 0 && result.mean_ns == 0 && result.min_ns == 0 && result.max_ns == 0 && result.stddev_ns == 0)
 {
   if iterations <= 0 {
     return BenchResult{
@@ -112,6 +119,7 @@ pub fn run_bench_n(name: Str, iterations: Int, f: fn()) -> BenchResult
 /// Human-readable comparison of two benchmark results.
 pub fn compare(a: BenchResult, b: BenchResult) -> Str
   ensures: result.len() > 0
+  ensures: result.len() >= a.name.len()
 {
   if a.mean_ns < b.mean_ns {
     return a.name + " is faster than " + b.name;
@@ -132,7 +140,9 @@ pub fn black_box[T](value: T) -> T {
 /// Returns operations per second based on `mean_ns`.
 /// Returns 0 if `mean_ns` is 0 to avoid division by zero.
 /// Complexity: O(1). Pure.
-pub fn bench_ops_per_sec_ns(result: &BenchResult) -> Int {
+pub fn bench_ops_per_sec_ns(result: &BenchResult) -> Int
+  ensures: (result.mean_ns <= 0) => (result == 0)
+{
   if result.mean_ns <= 0 {
     return 0;
   };
@@ -143,7 +153,9 @@ pub fn bench_ops_per_sec_ns(result: &BenchResult) -> Int {
 /// Positive means candidate is faster. Formula: (base - cand) * 100 / base.
 /// Returns 0 if `baseline.mean_ns` is 0.
 /// Complexity: O(1). Pure.
-pub fn bench_faster_percent(baseline: &BenchResult, candidate: &BenchResult) -> Int {
+pub fn bench_faster_percent(baseline: &BenchResult, candidate: &BenchResult) -> Int
+  ensures: (baseline.mean_ns <= 0) => (result == 0)
+{
   if baseline.mean_ns <= 0 {
     return 0;
   };
@@ -153,7 +165,9 @@ pub fn bench_faster_percent(baseline: &BenchResult, candidate: &BenchResult) -> 
 /// Returns the minimum `mean_ns` across all benchmark results.
 /// Returns 0 if the vector is empty.
 /// Complexity: O(n).
-pub fn bench_min_ns(results: Vec[BenchResult]) -> Int {
+pub fn bench_min_ns(results: Vec[BenchResult]) -> Int
+  ensures: (results.len() == 0) => (result == 0)
+{
   if results.len() == 0 {
     return 0;
   };
@@ -171,7 +185,9 @@ pub fn bench_min_ns(results: Vec[BenchResult]) -> Int {
 /// Returns the maximum `mean_ns` across all benchmark results.
 /// Returns 0 if the vector is empty.
 /// Complexity: O(n).
-pub fn bench_max_ns(results: Vec[BenchResult]) -> Int {
+pub fn bench_max_ns(results: Vec[BenchResult]) -> Int
+  ensures: (results.len() == 0) => (result == 0)
+{
   if results.len() == 0 {
     return 0;
   };
@@ -188,7 +204,9 @@ pub fn bench_max_ns(results: Vec[BenchResult]) -> Int {
 
 /// Returns the sum of `total_ns` across all benchmark results.
 /// Complexity: O(n).
-pub fn bench_total_ns(results: Vec[BenchResult]) -> Int {
+pub fn bench_total_ns(results: Vec[BenchResult]) -> Int
+  ensures: (results.len() == 0) => (result == 0)
+{
   var total: Int = 0;
   var i: Int = 0;
   while i < results.len() {
@@ -200,7 +218,9 @@ pub fn bench_total_ns(results: Vec[BenchResult]) -> Int {
 
 /// Returns the median `mean_ns` across results (middle element by position, unsorted).
 /// Complexity: O(1) index access.
-pub fn bench_median_ns(results: Vec[BenchResult]) -> Int {
+pub fn bench_median_ns(results: Vec[BenchResult]) -> Int
+  ensures: (results.len() == 0) => (result == 0)
+{
   if results.len() == 0 {
     return 0;
   };
@@ -209,7 +229,12 @@ pub fn bench_median_ns(results: Vec[BenchResult]) -> Int {
 
 /// Converts nanoseconds to a human-readable string ("1.23ms", "45us", "100ns").
 /// Complexity: O(1).
-pub fn bench_human_ns(ns: Int) -> Str {
+pub fn bench_human_ns(ns: Int) -> Str
+  ensures: (ns == 1500000000) => (result == "1.5s")
+  ensures: (ns == 1500000) => (result == "1.5ms")
+  ensures: (ns == 1500) => (result == "1.5us")
+  ensures: (ns == 999) => (result == "999ns")
+{
   if ns >= 1000000000 {
     let sec = ns / 1000000000;
     let frac = (ns % 1000000000) / 100000000;
@@ -231,20 +256,27 @@ pub fn bench_human_ns(ns: Int) -> Str {
 /// Wraps `black_box` for `Int` values, preventing compiler optimisations from
 /// eliminating benchmarked computations.
 /// Complexity: O(1). Pure.
-pub fn bench_black_box_int(n: Int) -> Int {
+pub fn bench_black_box_int(n: Int) -> Int
+  ensures: result == n
+{
   return black_box(n);
 }
 
 /// Runs a benchmark with the given name and iteration count. Alias for `run_bench_n`.
 /// Complexity: runs `f` exactly `iterations` times.
-pub fn bench_run_avg(name: Str, iterations: Int, f: fn()) -> BenchResult {
+pub fn bench_run_avg(name: Str, iterations: Int, f: fn()) -> BenchResult
+  ensures: result.iterations == iterations
+  ensures: result.name == name
+{
   return run_bench_n(name, iterations, f);
 }
 
 /// Times a single invocation of `f` and returns the elapsed nanoseconds.
 /// Complexity: runs `f` exactly once.
+/// Defect fix 2026-10-08 (wave 91): used to call `run_bench("", f)`, which
+/// violated run_bench's own `requires: name.len() > 0` at runtime.
 pub fn bench_time_fn(f: fn()) -> Int {
-  let result = run_bench("", f);
+  let result = run_bench("bench_time_fn", f);
   return result.mean_ns;
 }
 
@@ -252,7 +284,9 @@ pub fn bench_time_fn(f: fn()) -> Int {
 
 /// Generates a table report with columns: name, mean, min, max, ops/s.
 /// Complexity: O(n).
-pub fn bench_report(results: Vec[BenchResult]) -> Str {
+pub fn bench_report(results: Vec[BenchResult]) -> Str
+  ensures: (results.len() == 0) => (result.len() == 124)
+{
   var output: Str = "name               mean        min         max         ops/s\n";
   output = output + "--------------------------------------------------------------\n";
   var i: Int = 0;
@@ -279,7 +313,9 @@ pub fn bench_report(results: Vec[BenchResult]) -> Str {
 
 /// Generates a compact one-line-per-result report.
 /// Complexity: O(n).
-pub fn bench_report_simple(results: Vec[BenchResult]) -> Str {
+pub fn bench_report_simple(results: Vec[BenchResult]) -> Str
+  ensures: (results.len() == 0) => (result == "")
+{
   var output: Str = "";
   var i: Int = 0;
   while i < results.len() {

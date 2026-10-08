@@ -1650,6 +1650,34 @@ registry pin, agent recon for the rest)**
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
 
+**SESSION 2026-10-08 block 71 (wave 91: bench + format numbering/units; floors128; bench_time_fn defect fix)**
+- Wave 91: 85 clauses / 38 new pub -- bench 13 new (run_bench pins:
+  iterations 1, name mirror, total == mean, stddev 0; run_bench_n name
+  mirror + zero-iteration all-zero branch; compare >= name band;
+  ops-per-sec and faster-percent zero branches; min/max/total/median
+  empty -> 0; human-ns four pins; black-box int identity; run_avg
+  delegation pins; report empty len 124; report_simple empty -> ""),
+  format.numbering 11 (word/milliard/ordinal/CJK/Indian-grouping/money
+  exact pins), format.units 16 (bytes/bits/percent/ratio/scientific/
+  engineering/SI/binary/temperature/currency/durations/hertz pins).
+- DEFECT fix-first (found by the wave probe): `bench_time_fn` called
+  `run_bench("", f)` and aborted at runtime on run_bench's own
+  `requires: name.len() > 0`; now passes "bench_time_fn". bench_time_fn
+  stays clause-free (elapsed ns).
+- Pin status checked: v0.64.0 still GitHub Latest (v0.64.1 closing after
+  the compiler C-06 fix); no re-pin; the NEXT PIN trigger stays queued.
+- Probe p_wave91_shapes.xi (259th, 89 checks): green on v0.64.0 pre- and
+  post-clauses. Probe-first fixes: BenchResult moved-value pushes
+  (fresh zresult() per push), the UK long-scale "one milliard"
+  expectation (not billiard), and the sci-zero form "0.00". Targeted
+  smokes smoke_bench + smoke_format_numbering + smoke_format_units 1/1.
+  bench 18.8% -> 87.5%, format 27.3% -> 39.0%, global 56.9% -> 57.5%,
+  meter 75.8%; floors128.
+- Battery on this commit (v0.64.0): release corpus 954/954 full (726s,
+  no exclusions); probes 259/259 (398.8s); check_modules 509/509 (190.2s);
+  barename 0/509 (240.1s); floors128 + module-smoke (497/517, 3477/6203)
+  ratchets OK.
+
 **SESSION 2026-10-08 block 70 (handoff refresh: snapshot 22 updated for the next session; v0.64.1 imminent)**
 - Snapshot 22 refreshed: read list -> blocks 69 (latest)..; STATE carries
   the wave-90 gates (probes 258, floors127, coverage 56.9%, serialize

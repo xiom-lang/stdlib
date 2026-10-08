@@ -1,10 +1,10 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
-**75.7% -- 7 of 10 gates complete; gate 8 at 56.9% (partial credit) and
+**75.8% -- 7 of 10 gates complete; gate 8 at 57.5% (partial credit) and
 gates 9-10 discrete.** (Compiler pin: **v0.64.0**.)
 **Gates: corpus 954/954 full (C001 carve-outs retired on v0.63.1; new
 TcpStream loopback and uuencode roundtrip smokes added), modules 509/509,
-probes 258/258, barename 0/509.**
+probes 259/259, barename 0/509.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -14,7 +14,7 @@ gates flip:
    full, no carve-outs (C001 fixed by 4bf8cf1e; 20/20 + 20/20 stress).
    lz4 is fixed by m190 and stayed in the gate; the new TcpStream loopback
    smoke locks m196.
-3. Probe corpus green -- MET (258/258 on v0.64.0, incl. the promoted
+3. Probe corpus green -- MET (259/259 on v0.64.0, incl. the promoted
    regression probes, the pin locks, the v0.64.0 m193-m196 probe, the
    wave-77 stats probe, the Pulse hardening probe, the wave-78 thread
    probe, the wave-79 convert probe, the wave-80 base-codec probe, the
@@ -23,12 +23,13 @@ gates flip:
    ip/lossy/network/timestamp probe, the wave-86 convert-locals probe,
    the wave-87 convert-tails probe, the wave-88 serialize probe, the
    wave-89 serialize+json probe, the wave-90 toml/yaml_lite probe, the
-   io byte-fidelity/CRLF lock and the fs_remove lock).
+   wave-91 bench/numbering/units probe, the io byte-fidelity/CRLF lock
+   and the fs_remove lock).
 4. Strict bare-name scan clean -- MET (0/509).
-5. Coverage ratchet green -- MET (floors127).
+5. Coverage ratchet green -- MET (floors128).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (497/517 modules, 3477/6202 fns).
-8. Contract coverage 100% (every public fn carries clauses) -- OPEN (56.9%).
+8. Contract coverage 100% (every public fn carries clauses) -- OPEN (57.5%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
    OPEN (11: 10 compiler, 1 stdlib algorithm).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
@@ -40,8 +41,8 @@ same commit as each floors dump so the meter moves smoothly toward 80%.
 
 Authoritative order: the gates above, then the updates below newest-first.
 Current state: compiler pin v0.64.0 (v0.64.1 closing after compiler C-06 --
-pin-bump trigger first); coverage 56.9%, meter 75.7%; handoff
-in `docs/stdlib_session.md` snapshot 22 (block 69).
+pin-bump trigger first); coverage 57.5%, meter 75.8%; handoff
+in `docs/stdlib_session.md` snapshot 22 (block 71).
 
 ## Project Pulse relay (web-framework lane) -- 2026-10-05
 
@@ -633,6 +634,26 @@ compiler-owned for v0.64.1; Box stays section C. floors113 (global
 51.4%, reflect 100%); meter 75.1%. Battery on v0.64.0: corpus 953/953,
 probes 241/241, modules 509/509, barename 0/509, floors113 +
 module-smoke ratchets OK.
+
+Update 2026-10-08 (wave 91 landed): bench + format (numbering/units) --
+85 clauses / 38 new pub, plus a defect fix. bench 13 new (run_bench
+iteration/name/total==mean/stddev pins; run_bench_n zero-iteration
+all-zero branch; compare band; analytics zero branches and empty-result
+zeros; human-ns pins; black-box identity; run_avg pins; report empty len
+124); **defect fixed: bench_time_fn called `run_bench("", f)`, violating
+run_bench's own `requires: name.len() > 0` at runtime -- now passes
+"bench_time_fn" (found by the wave probe; bench_time_fn stays
+clause-free)**. format.numbering 11 (word/milliard/ordinal/CJK/Indian/
+money exact pins), format.units 16 (bytes/bits/percent/ratio/scientific/
+engineering/SI/binary/temperature/currency/durations/hertz exact pins).
+bench 18.8% -> 87.5%, format 27.3% -> 39.0%, global 56.9% -> 57.5%;
+meter 75.8%; floors128. Probe p_wave91_shapes.xi (259th, 89 checks) green
+on v0.64.0 pre/post; targeted smokes smoke_bench, smoke_format_numbering
+and smoke_format_units 1/1. Readiness next: the remaining low dirs
+(async 4.5% -- runtime-backed, iter 18.6% -- clause-side blocked, os
+26.2%, core 26.7%, sync 29.1%, sort 31.9%, format remainder) and the
+queued feature candidates (ORBITDB append_line_sync pure half, bindings
+W-2/W-5).
 
 Update 2026-10-08 (wave 90 landed): serialize batch 3 -- toml + yaml_lite,
 23 clauses / 16 new pub. toml 11 (toml_parse empty -> Ok, "a = 1" -> Ok,

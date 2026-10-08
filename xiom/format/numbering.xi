@@ -184,7 +184,12 @@ fn _digits_of(n: Int) -> DigitPair {
 
 /// Spell `n` in English words using the US short scale (billion = 10^9).
 /// "minus" precedes negative values. Complexity: O(log10 n).
-pub fn number_to_words(n: Int) -> Str {
+pub fn number_to_words(n: Int) -> Str
+  ensures: (n == 0) => (result == "zero")
+  ensures: (n == 21) => (result == "twenty-one")
+  ensures: (n == -5) => (result == "minus five")
+  ensures: (n == 1000000) => (result == "one million")
+{
   if n == 0 {
     return "zero";
   };
@@ -199,7 +204,11 @@ pub fn number_to_words(n: Int) -> Str {
 
 /// Spell `n` in English words using the UK long scale (billion = 10^12,
 /// milliard = 10^9). Complexity: O(log10 n).
-pub fn number_to_words_uk(n: Int) -> Str {
+pub fn number_to_words_uk(n: Int) -> Str
+  ensures: (n == 0) => (result == "zero")
+  ensures: (n == 21) => (result == "twenty-one")
+  ensures: (n == 1000000000) => (result == "one milliard")
+{
   if n == 0 {
     return "zero";
   };
@@ -298,7 +307,12 @@ fn _drop_last_word(s: Str) -> Str {
 }
 
 /// Spell `n` as an English ordinal word ("21" -> "twenty-first").
-pub fn number_to_ordinal_words(n: Int) -> Str {
+pub fn number_to_ordinal_words(n: Int) -> Str
+  ensures: (n == 0) => (result == "zeroth")
+  ensures: (n == 1) => (result == "first")
+  ensures: (n == 2) => (result == "second")
+  ensures: (n == 21) => (result == "twenty-first")
+{
   var words = number_to_words(n);
   if words.len() == 0 {
     return "zeroth";
@@ -423,12 +437,19 @@ fn _cn_units_kr() -> Str {
 }
 
 /// Spell `n` in Chinese numerals (simplified: 一亿零一, 十五, 一百零一).
-pub fn number_to_chinese(n: Int) -> Str {
+pub fn number_to_chinese(n: Int) -> Str
+  ensures: (n == 0) => (result == "\u{96f6}")
+  ensures: (n == 15) => (result == "\u{5341}\u{4e94}")
+  ensures: (n == -1) => (result == "\u{8d1f}\u{4e00}")
+{
   return number_to_chinese_simplified(n);
 }
 
 /// Spell `n` in simplified Chinese numerals (万/亿).
-pub fn number_to_chinese_simplified(n: Int) -> Str {
+pub fn number_to_chinese_simplified(n: Int) -> Str
+  ensures: (n == 0) => (result == "\u{96f6}")
+  ensures: (n == 15) => (result == "\u{5341}\u{4e94}")
+{
   var d = _digits_of(n);
   var body = _cjk_mag(d.digits, _cn_digits_simp(), _cn_units_cn(), "\u{96f6}", "\u{4e07}", "\u{4ebf}");
   if d.neg {
@@ -438,7 +459,10 @@ pub fn number_to_chinese_simplified(n: Int) -> Str {
 }
 
 /// Spell `n` in traditional Chinese numerals (萬/億).
-pub fn number_to_chinese_traditional(n: Int) -> Str {
+pub fn number_to_chinese_traditional(n: Int) -> Str
+  ensures: (n == 0) => (result == "\u{96f6}")
+  ensures: (n == 10000) => (result == "\u{4e00}\u{842c}")
+{
   var d = _digits_of(n);
   var body = _cjk_mag(d.digits, _cn_digits_simp(), _cn_units_cn(), "\u{96f6}", "\u{842c}", "\u{5104}");
   if d.neg {
@@ -448,7 +472,10 @@ pub fn number_to_chinese_traditional(n: Int) -> Str {
 }
 
 /// Spell `n` in Japanese numerals (〇 一 二 三 ... 十 百 千 万 億).
-pub fn number_to_japanese(n: Int) -> Str {
+pub fn number_to_japanese(n: Int) -> Str
+  ensures: (n == 0) => (result == "\u{3007}")
+  ensures: (n == 15) => (result == "\u{5341}\u{4e94}")
+{
   var d = _digits_of(n);
   var body = _cjk_mag(d.digits, _cn_digits_jp(), _cn_units_cn(), "\u{3007}", "\u{4e07}", "\u{5104}");
   if d.neg {
@@ -458,7 +485,10 @@ pub fn number_to_japanese(n: Int) -> Str {
 }
 
 /// Spell `n` in Sino-Korean numerals (영 일 이 삼 ... 십 백 천 만 억).
-pub fn number_to_korean(n: Int) -> Str {
+pub fn number_to_korean(n: Int) -> Str
+  ensures: (n == 0) => (result == "\u{c601}")
+  ensures: (n == 15) => (result == "\u{c2ed}\u{c624}")
+{
   var d = _digits_of(n);
   var body = _cjk_mag(d.digits, _cn_digits_kr(), _cn_units_kr(), "\u{c601}", "\u{b9cc}", "\u{c5b5}");
   if d.neg {
@@ -469,7 +499,10 @@ pub fn number_to_korean(n: Int) -> Str {
 
 /// Spell `n` in Indian-system English words (lakh = 10^5, crore = 10^7).
 /// Complexity: O(log10 n).
-pub fn number_to_indian_words(n: Int) -> Str {
+pub fn number_to_indian_words(n: Int) -> Str
+  ensures: (n == 0) => (result == "zero")
+  ensures: (n == 21) => (result == "twenty-one")
+{
   if n == 0 {
     return "zero";
   };
@@ -515,7 +548,10 @@ pub fn number_to_indian_words(n: Int) -> Str {
 
 /// Group `n` using Indian digit grouping (1234567 -> "12,34,567").
 /// Complexity: O(log10 n).
-pub fn number_to_indian_grouping(n: Int) -> Str {
+pub fn number_to_indian_grouping(n: Int) -> Str
+  ensures: (n == 0) => (result == "0")
+  ensures: (n == 1234567) => (result == "12,34,567")
+{
   var d = _digits_of(n);
   var digits = d.digits;
   var neg = d.neg;
@@ -578,7 +614,10 @@ fn _currency_names(currency: Str) -> MoneyNames {
 /// Spell a money amount in words: amount_cents is the value in the currency's
 /// smallest unit (e.g. 12345 cents for $123.45). Known currencies: USD, EUR,
 /// GBP, JPY, INR, AUD, CAD; anything else falls back to "unit/cent".
-pub fn money_to_words(amount_cents: Int, currency: Str) -> Str {
+pub fn money_to_words(amount_cents: Int, currency: Str) -> Str
+  ensures: (amount_cents == 12345 && currency == "USD") => (result == "one hundred twenty-three dollars and forty-five cents")
+  ensures: (amount_cents == 0 && currency == "JPY") => (result == "zero yen")
+{
   var names = _currency_names(currency);
   var neg = amount_cents < 0;
   var cents = amount_cents;
