@@ -16,6 +16,42 @@ xiom --force -o out.exe tools/known_failures/<file>.xi
 
 ## Current
 
+**Open finding 2026-10-08 (compiler v0.64.1): `@pre` on `&mut` parameter
+scalar fields aliases the post-mutation value.** Found while landing the
+wave-94 sync clauses: a clause
+`(x.a@pre < 100) => (x.a == x.a@pre + 1)` on a `&mut Pair` parameter
+violates at runtime (`contract violated: ensures`), because `x.a@pre`
+reads the value AFTER the body mutation. The same aliasing hit
+`sem_try_acquire`/`sem_release`/`cdl_count_down` (`&mut Semaphore` /
+`CountDownLatch` field reads); those clauses were rewritten to
+post-state forms and the sync surface keeps @pre-free clauses. Self-field
+`@pre` on method receivers is correct on the pin (wave-93 `Range.next`,
+probe p_wave93_shapes.xi), so this is the `&mut`-parameter half of the
+historical R49 entry-snapshot residual (see the
+`p_pre_capture_callee`/`p_pre_call_capture` history below). Repro:
+`tools/known_failures/p_mut_param_field_pre.xi` (rc 1 on v0.64.1;
+expected rc 0).
+
+**Open finding 2026-10-08 (compiler v0.64.1): generic by-reference params
+(`&Option[T]`/`&Result[T, E]`, bounded `&Slice[T]`) read wrong or fail
+codegen.** Found while probing the wave-94 core clauses:
+`core.option_is_some(&o)` returns false for `Some(4)` while the direct
+`o.is_some` is true; `option_is_none`/`result_is_ok`/`result_is_err`
+silently misread the same way (generic `&Vec[T]` params such as
+`cmp.min_of_vec` are correct on the pin). The Slice surface has the same
+family of failures: `is_sorted`/`contains`/`min_slice`/`max_slice`
+(`T: Ord`/`T: Eq` over `&Slice[T]`) fail
+`error[C001]: type 'Slice' does not implement 'Ord': missing method
+'compare'` (the bound lands on the argument's full type), the annotated
+`Slice[Int]` local from `array.as_slice` reads `.len()` wrong, and
+`core.slice_len` is wrong/crashes depending on annotation. Repros:
+`tools/known_failures/p_generic_byref_option.xi` (rc 2 on v0.64.1;
+expected rc 0) and `tools/known_failures/p_slice_bound_generic_c001.xi`
+(compile-fail; expected rc 0). Stdlib impact: those four Option/Result
+standalone queries and the whole Slice-param helper set
+(`is_sorted`/`all`/`none`/`contains`/`slice_*`/`min_slice`/`max_slice`/
+`sum_slice`) stay clause-free until this resolves.
+
 **Open finding 2026-10-08 (compiler v0.64.1): the `xiom.iter` M7
 `Iterator[T]` adapter surface is unreachable.** The M7 adapters
 (`Iterator[T].step_by`/`take_while`/`skip_while`/`inspect` and the

@@ -26,7 +26,12 @@ pub type Progress = {
 }
 
 /// Create a progress bar over `total` units (clamped to >= 0).
-pub fn progress_new(total: Int) -> Progress {
+pub fn progress_new(total: Int) -> Progress
+  ensures: (total < 0) => (result.total == 0)
+  ensures: (total >= 0) => (result.total == total)
+  ensures: result.done == 0
+  ensures: result.width == 40
+{
   var t = total;
   if t < 0 {
     t = 0;
@@ -69,12 +74,16 @@ pub fn progress_render(p: &Progress) -> Str {
 
 /// Finalize the bar: mark it complete (done = total). Rendering after this
 /// returns a full bar. No terminal I/O is performed.
-pub fn progress_finish(p: &mut Progress) -> Unit {
+pub fn progress_finish(p: &mut Progress) -> Unit
+  ensures: p.done == p.total
+{
   p.done = p.total;
 }
 
 /// Percent complete, 0..100.
-pub fn progress_percent(p: &Progress) -> Int {
+pub fn progress_percent(p: &Progress) -> Int
+  ensures: (p.total <= 0) => (result == 100)
+{
   if p.total <= 0 {
     return 100;
   };
@@ -112,7 +121,10 @@ pub type Spinner = {
 }
 
 /// Create a new spinner with the default frame set: | / - \.
-pub fn spinner_new() -> Spinner {
+pub fn spinner_new() -> Spinner
+  ensures: result.index == 0
+  ensures: result.frames.len() == 4
+{
   var frames = Vec[Str].new();
   frames.push("|");
   frames.push("/");
@@ -132,127 +144,177 @@ pub fn spinner_tick(sp: &mut Spinner) -> Str {
 }
 
 /// Current frame index of the spinner.
-pub fn spinner_frame(sp: &Spinner) -> Int {
+pub fn spinner_frame(sp: &Spinner) -> Int
+  ensures: result == sp.index
+{
   return sp.index;
 }
 
 /// ANSI reset attribute sequence.
-pub fn ansi_reset() -> Str {
+pub fn ansi_reset() -> Str
+  ensures: result == "\u{001b}[0m"
+{
   return "\u{001b}[0m";
 }
 
 /// ANSI bold attribute sequence.
-pub fn ansi_bold() -> Str {
+pub fn ansi_bold() -> Str
+  ensures: result == "\u{001b}[1m"
+{
   return "\u{001b}[1m";
 }
 
 /// ANSI dim attribute sequence.
-pub fn ansi_dim() -> Str {
+pub fn ansi_dim() -> Str
+  ensures: result == "\u{001b}[2m"
+{
   return "\u{001b}[2m";
 }
 
 /// ANSI italic attribute sequence.
-pub fn ansi_italic() -> Str {
+pub fn ansi_italic() -> Str
+  ensures: result == "\u{001b}[3m"
+{
   return "\u{001b}[3m";
 }
 
 /// ANSI underline attribute sequence.
-pub fn ansi_underline() -> Str {
+pub fn ansi_underline() -> Str
+  ensures: result == "\u{001b}[4m"
+{
   return "\u{001b}[4m";
 }
 
 /// ANSI blink attribute sequence.
-pub fn ansi_blink() -> Str {
+pub fn ansi_blink() -> Str
+  ensures: result == "\u{001b}[5m"
+{
   return "\u{001b}[5m";
 }
 
 /// ANSI reverse video attribute sequence.
-pub fn ansi_reverse() -> Str {
+pub fn ansi_reverse() -> Str
+  ensures: result == "\u{001b}[7m"
+{
   return "\u{001b}[7m";
 }
 
 /// ANSI strikethrough attribute sequence.
-pub fn ansi_strike() -> Str {
+pub fn ansi_strike() -> Str
+  ensures: result == "\u{001b}[9m"
+{
   return "\u{001b}[9m";
 }
 
 /// ANSI black foreground sequence.
-pub fn ansi_fg_black() -> Str {
+pub fn ansi_fg_black() -> Str
+  ensures: result == "\u{001b}[30m"
+{
   return "\u{001b}[30m";
 }
 
 /// ANSI red foreground sequence.
-pub fn ansi_fg_red() -> Str {
+pub fn ansi_fg_red() -> Str
+  ensures: result == "\u{001b}[31m"
+{
   return "\u{001b}[31m";
 }
 
 /// ANSI green foreground sequence.
-pub fn ansi_fg_green() -> Str {
+pub fn ansi_fg_green() -> Str
+  ensures: result == "\u{001b}[32m"
+{
   return "\u{001b}[32m";
 }
 
 /// ANSI yellow foreground sequence.
-pub fn ansi_fg_yellow() -> Str {
+pub fn ansi_fg_yellow() -> Str
+  ensures: result == "\u{001b}[33m"
+{
   return "\u{001b}[33m";
 }
 
 /// ANSI blue foreground sequence.
-pub fn ansi_fg_blue() -> Str {
+pub fn ansi_fg_blue() -> Str
+  ensures: result == "\u{001b}[34m"
+{
   return "\u{001b}[34m";
 }
 
 /// ANSI magenta foreground sequence.
-pub fn ansi_fg_magenta() -> Str {
+pub fn ansi_fg_magenta() -> Str
+  ensures: result == "\u{001b}[35m"
+{
   return "\u{001b}[35m";
 }
 
 /// ANSI cyan foreground sequence.
-pub fn ansi_fg_cyan() -> Str {
+pub fn ansi_fg_cyan() -> Str
+  ensures: result == "\u{001b}[36m"
+{
   return "\u{001b}[36m";
 }
 
 /// ANSI white foreground sequence.
-pub fn ansi_fg_white() -> Str {
+pub fn ansi_fg_white() -> Str
+  ensures: result == "\u{001b}[37m"
+{
   return "\u{001b}[37m";
 }
 
 /// ANSI black background sequence.
-pub fn ansi_bg_black() -> Str {
+pub fn ansi_bg_black() -> Str
+  ensures: result == "\u{001b}[40m"
+{
   return "\u{001b}[40m";
 }
 
 /// ANSI red background sequence.
-pub fn ansi_bg_red() -> Str {
+pub fn ansi_bg_red() -> Str
+  ensures: result == "\u{001b}[41m"
+{
   return "\u{001b}[41m";
 }
 
 /// ANSI green background sequence.
-pub fn ansi_bg_green() -> Str {
+pub fn ansi_bg_green() -> Str
+  ensures: result == "\u{001b}[42m"
+{
   return "\u{001b}[42m";
 }
 
 /// ANSI yellow background sequence.
-pub fn ansi_bg_yellow() -> Str {
+pub fn ansi_bg_yellow() -> Str
+  ensures: result == "\u{001b}[43m"
+{
   return "\u{001b}[43m";
 }
 
 /// ANSI blue background sequence.
-pub fn ansi_bg_blue() -> Str {
+pub fn ansi_bg_blue() -> Str
+  ensures: result == "\u{001b}[44m"
+{
   return "\u{001b}[44m";
 }
 
 /// ANSI magenta background sequence.
-pub fn ansi_bg_magenta() -> Str {
+pub fn ansi_bg_magenta() -> Str
+  ensures: result == "\u{001b}[45m"
+{
   return "\u{001b}[45m";
 }
 
 /// ANSI cyan background sequence.
-pub fn ansi_bg_cyan() -> Str {
+pub fn ansi_bg_cyan() -> Str
+  ensures: result == "\u{001b}[46m"
+{
   return "\u{001b}[46m";
 }
 
 /// ANSI white background sequence.
-pub fn ansi_bg_white() -> Str {
+pub fn ansi_bg_white() -> Str
+  ensures: result == "\u{001b}[47m"
+{
   return "\u{001b}[47m";
 }
 

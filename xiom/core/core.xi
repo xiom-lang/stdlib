@@ -54,7 +54,9 @@ pub fn to_float(x: Int) -> Float64 {
 }
 
 /// Decimal string for an Int.
-pub fn to_string(x: Int) -> Str {
+pub fn to_string(x: Int) -> Str
+  ensures: (x == 0) => (result == "0")
+{
   if x == 0 {
     return "0";
   }
@@ -91,6 +93,8 @@ pub fn to_string(x: Int) -> Str {
 /// Parse an Int; Err with a message on bad input.
 pub fn to_int_from_str(s: Str) -> Result[Int, Str]
   requires: true  // extern char_at calls below (D2.1/T002 safe-wrapper pattern)
+  ensures: (s.len() == 0) => (result.is_err == true)
+  ensures: (s == "0") => (result.is_ok == true)
 {
   if s.len() == 0 {
     return Err("empty string");
@@ -127,6 +131,8 @@ pub fn to_int_from_str(s: Str) -> Result[Int, Str]
 /// Parse a Float64; Err with a message on bad input.
 pub fn to_float_from_str(s: Str) -> Result[Float64, Str]
   requires: true  // extern char_at calls below (D2.1/T002 safe-wrapper pattern)
+  ensures: (s.len() == 0) => (result.is_err == true)
+  ensures: (s == "1.5") => (result.is_ok == true)
 {
   if s.len() == 0 {
     return Err("empty string");
@@ -227,7 +233,11 @@ pub fn to_float_from_str(s: Str) -> Result[Float64, Str]
 }
 
 /// Parse "true"/"false"; Err on other input.
-pub fn to_bool_from_str(s: Str) -> Result[Bool, Str] {
+pub fn to_bool_from_str(s: Str) -> Result[Bool, Str]
+  ensures: (s == "true") => (result.is_ok == true)
+  ensures: (s == "false") => (result.is_ok == true)
+  ensures: (s != "true" && s != "false") => (result.is_err == true)
+{
   if s == "true" {
     return Ok(true);
   } elif s == "false" {
@@ -1163,7 +1173,10 @@ fn BinaryHeap[T].is_empty(self) -> Bool {
 
 /// Returns the smaller of two `Int` values.
 /// Complexity: O(1). Pure, no side effects.
-pub fn min_of(a: Int, b: Int) -> Int {
+pub fn min_of(a: Int, b: Int) -> Int
+  ensures: result == a || result == b
+  ensures: result <= a && result <= b
+{
   if a < b {
     return a;
   };
@@ -1172,7 +1185,10 @@ pub fn min_of(a: Int, b: Int) -> Int {
 
 /// Returns the larger of two `Int` values.
 /// Complexity: O(1). Pure, no side effects.
-pub fn max_of(a: Int, b: Int) -> Int {
+pub fn max_of(a: Int, b: Int) -> Int
+  ensures: result == a || result == b
+  ensures: result >= a && result >= b
+{
   if a > b {
     return a;
   };
@@ -1182,7 +1198,9 @@ pub fn max_of(a: Int, b: Int) -> Int {
 /// Returns the absolute value of `n`.
 /// Complexity: O(1). Pure, no side effects.
 /// NOTE: `INT_MIN` has no positive representation; wraps on overflow.
-pub fn abs_int(n: Int) -> Int {
+pub fn abs_int(n: Int) -> Int
+  ensures: (n >= 0) => (result == n)
+{
   if n < 0 {
     return -n;
   };
@@ -1192,7 +1210,10 @@ pub fn abs_int(n: Int) -> Int {
 /// Clamps `v` to the inclusive range [`lo`, `hi`].
 /// Returns `lo` if `v < lo`, `hi` if `v > hi`, otherwise `v`.
 /// Complexity: O(1). Pure, no side effects.
-pub fn clamp_int(v: Int, lo: Int, hi: Int) -> Int {
+pub fn clamp_int(v: Int, lo: Int, hi: Int) -> Int
+  ensures: result == v || result == lo || result == hi
+  ensures: (v >= lo && v <= hi) => (result == v)
+{
   if v < lo {
     return lo;
   };
@@ -1207,7 +1228,10 @@ pub fn clamp_int(v: Int, lo: Int, hi: Int) -> Int {
 /// Converts a `Bool` to an `Int`: `true` -> 1, `false` -> 0.
 /// NOTE: XIOM does NOT support `b as Int`; this is the canonical conversion.
 /// Complexity: O(1). Pure, no side effects.
-pub fn bool_to_int(b: Bool) -> Int {
+pub fn bool_to_int(b: Bool) -> Int
+  ensures: (b == true) => (result == 1)
+  ensures: (b == false) => (result == 0)
+{
   if b {
     return 1;
   };
@@ -1216,7 +1240,10 @@ pub fn bool_to_int(b: Bool) -> Int {
 
 /// Converts an `Int` to a `Bool`: non-zero -> `true`, zero -> `false`.
 /// Complexity: O(1). Pure, no side effects.
-pub fn int_to_bool(n: Int) -> Bool {
+pub fn int_to_bool(n: Int) -> Bool
+  ensures: (n == 0) => (result == false)
+  ensures: (n != 0) => (result == true)
+{
   return n != 0;
 }
 
@@ -1225,7 +1252,10 @@ pub fn int_to_bool(n: Int) -> Bool {
 /// Safely converts an `Int` to a `Char`.
 /// Returns `None` if `n` is outside the valid Unicode code-point range (0..=0x10FFFF).
 /// Complexity: O(1). Pure, no side effects.
-pub fn int_to_char_safe(n: Int) -> Option[Char] {
+pub fn int_to_char_safe(n: Int) -> Option[Char]
+  ensures: (n < 0 || n > 1114111) => (result.is_none == true)
+  ensures: (n >= 0 && n <= 1114111) => (result.is_some == true)
+{
   if n >= 0 && n <= 1114111 {
     return Some(to_char(n));
   };
@@ -1357,7 +1387,9 @@ pub fn result_is_err[T, E](r: &Result[T, E]) -> Bool {
 
 /// Returns the contained `Ok` value, or `default` if the result is `Err`.
 /// Complexity: O(1). Thread-safe: reads immutable shared data.
-pub fn result_unwrap_or[T, E](r: Result[T, E], default: T) -> T {
+pub fn result_unwrap_or[T, E](r: Result[T, E], default: T) -> T
+  ensures: (r.is_err == true) => (result == default)
+{
   match r {
     Ok(v) => v;
     Err(e) => default;

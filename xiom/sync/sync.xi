@@ -624,13 +624,18 @@ pub type Semaphore = { count: Int; max: Int; }
 
 /// Creates a new semaphore with `permits` initial available permits.
 /// Complexity: O(1).
-pub fn sem_new(permits: Int) -> Semaphore {
+pub fn sem_new(permits: Int) -> Semaphore
+  ensures: result.count == permits
+  ensures: result.max == permits
+{
   return Semaphore{ count: permits; max: permits; };
 }
 
 /// Attempts to acquire one permit. Returns `true` on success, `false` if none available.
 /// Non-blocking. Complexity: O(1).
-pub fn sem_try_acquire(s: &mut Semaphore) -> Bool {
+pub fn sem_try_acquire(s: &mut Semaphore) -> Bool
+  ensures: (result == false) => (s.count <= 0)
+{
   if s.count > 0 {
     s.count = s.count - 1;
     return true;
@@ -640,13 +645,17 @@ pub fn sem_try_acquire(s: &mut Semaphore) -> Bool {
 
 /// Alias for `sem_try_acquire`. Non-blocking.
 /// Complexity: O(1).
-pub fn sem_acquire(s: &mut Semaphore) -> Bool {
+pub fn sem_acquire(s: &mut Semaphore) -> Bool
+  ensures: (result == false) => (s.count <= 0)
+{
   return sem_try_acquire(s);
 }
 
 /// Releases one permit back to the semaphore, up to the maximum.
 /// Complexity: O(1).
-pub fn sem_release(s: &mut Semaphore) {
+pub fn sem_release(s: &mut Semaphore)
+  requires: s.count <= s.max
+{
   if s.count < s.max {
     s.count = s.count + 1;
   };
@@ -654,7 +663,9 @@ pub fn sem_release(s: &mut Semaphore) {
 
 /// Returns the number of currently available permits.
 /// Complexity: O(1).
-pub fn sem_available(s: &Semaphore) -> Int {
+pub fn sem_available(s: &Semaphore) -> Int
+  ensures: result == s.count
+{
   return s.count;
 }
 
@@ -662,7 +673,10 @@ pub fn sem_available(s: &Semaphore) -> Int {
 
 /// Creates a new barrier for `n` threads. Wraps `Barrier.new`.
 /// Complexity: O(1).
-pub fn barrier_new(n: Int) -> Barrier {
+pub fn barrier_new(n: Int) -> Barrier
+  requires: n > 0
+  ensures: result.count == n
+{
   return Barrier.new(n);
 }
 
@@ -709,13 +723,16 @@ pub type CountDownLatch = { remaining: Int; }
 
 /// Creates a new count-down latch initialised to `n`.
 /// Complexity: O(1).
-pub fn cdl_new(n: Int) -> CountDownLatch {
+pub fn cdl_new(n: Int) -> CountDownLatch
+  ensures: result.remaining == n
+{
   return CountDownLatch{ remaining: n; };
 }
 
 /// Decrements the latch counter by one. Does nothing if already zero.
 /// Complexity: O(1).
-pub fn cdl_count_down(l: &mut CountDownLatch) {
+pub fn cdl_count_down(l: &mut CountDownLatch)
+{
   if l.remaining > 0 {
     l.remaining = l.remaining - 1;
   };
@@ -723,7 +740,10 @@ pub fn cdl_count_down(l: &mut CountDownLatch) {
 
 /// Returns `true` if the latch has reached zero.
 /// Complexity: O(1).
-pub fn cdl_is_zero(l: &CountDownLatch) -> Bool {
+pub fn cdl_is_zero(l: &CountDownLatch) -> Bool
+  ensures: (l.remaining == 0) => (result == true)
+  ensures: (l.remaining != 0) => (result == false)
+{
   return l.remaining == 0;
 }
 

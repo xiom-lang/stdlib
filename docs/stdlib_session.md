@@ -51,6 +51,14 @@ lowering works (Range.count + the retried set + smoke_iter 21/21 incl.
 -Workers 8); the deferred remainder (chain 14 + fold 8 + the rest of the
 iter surface) continues as normal coverage work.
 
+WAVE 94 STATUS (2026-10-08): DONE -- cmp + core + sync + terminal landed
+(86 clauses, +62 pub covered; sync 35.9%, core 45.8%, format 59.3%,
+global 59.5%, meter 76.0%, floors131, probes 266/266). See block 78; three
+new compiler findings filed (&mut param @pre aliasing, generic by-ref
+Option/Result queries, bounded Slice calls). The next wave (95) resumes
+the low dirs: os 26.6%, sort 31.9%, hash 33.3%, num/array/bits and the
+format remainder (markup/textual/fmt).
+
 WAVE 93 STATUS (2026-10-08): DONE -- the iter remainder + format.text
 landed (55 pub / 71 clauses; iter 25.1% -> 45.4%, format 39.0% -> 46.8%,
 global 58.6%, meter 75.9%, floors130, probes 265/265). See block 77 for
@@ -1684,6 +1692,58 @@ registry pin, agent recon for the rest)**
   gates; open: contract coverage 100%, zero open findings, beta-exit release
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
+
+**SESSION 2026-10-08 block 78 (wave 94: cmp + core + sync + terminal; floors131; three findings)**
+- Wave 94: 86 clauses, +62 pub covered. cmp 16 (then_with self-mirror;
+  min_by/max_by value disjunctions; max_int/min_int ordering bands;
+  max/min_float disjunctions; clamp_float three-way branch; Reverse.new
+  field mirror; min3/max3/median3 disjunctions; is_between guarded
+  results; compare_ints -1/0/1 pins; min_of_vec/max_of_vec empty ->
+  None) -- cmp 28.6% -> 100%. core.xi 12 (to_string zero pin; the
+  int/float/bool parser empty/valid guards; min_of/max_of disjunction +
+  ordering band; abs_int non-negative mirror; clamp_int three-way branch;
+  bool_to_int/int_to_bool branch pins; int_to_char_safe bounds;
+  result_unwrap_or Err -> default). sync 8 (sem_new field mirrors;
+  sem_try_acquire/sem_acquire false -> count <= 0; sem_release requires
+  count <= max; sem_available mirror; barrier_new requires n > 0 + count
+  mirror; cdl_new mirror; cdl_is_zero pins). format.terminal 29 (the 24
+  exact ANSI escape pins; progress_new clamp/done/width; progress_finish;
+  progress_percent total <= 0 -> 100; spinner_new index/frames;
+  spinner_frame mirror).
+- THREE NEW FINDINGS (probe-first discoveries, findings 12 -> 14):
+  (a) p_mut_param_field_pre.xi -- `@pre` on a `&mut` param scalar field
+  aliases the post-mutation value (clause violated at runtime); the sync
+  @pre clauses were rewritten to post-state forms (sem_try_acquire/
+  sem_acquire false guard; sem_release requires) and cdl_count_down stays
+  clause-free. Self-field @pre on method receivers works (wave 93), so
+  this is the &mut-parameter half of the R49 residual.
+  (b) p_generic_byref_option.xi -- `core.option_is_some(&o)` returns false
+  for `Some(4)` while `o.is_some` is true; the same silent misread hits
+  option_is_none/result_is_ok/result_is_err (generic `&Vec[T]` params such
+  as cmp.min_of_vec are correct).
+  (c) p_slice_bound_generic_c001.xi -- bounded `&Slice[T]` calls
+  (is_sorted/contains/min_slice/max_slice) fail
+  `error[C001]: type 'Slice' does not implement 'Ord'/'Eq'`; annotated
+  `Slice[Int]` locals from array.as_slice read `.len()` wrong and
+  core.slice_len is wrong/crashes. All Slice-param helpers stay
+  clause-free.
+- Probe p_wave94_shapes.xi (266th, 113 checks): green on v0.64.1 pre- and
+  post-clauses (the wave-93 probe forms plus the sync field mirrors and
+  terminal escape pins). Targeted smokes: smoke_cmp 17/17, smoke_sync
+  22/22, smoke_core 20/20, smoke_fmt 18/18, smoke_format_terminal +
+  smoke_format_ansi 1/1.
+- Coverage: sync 29.1% -> 35.9%, core 26.7% -> 45.8%, format 46.8% ->
+  59.3%, global 58.6% -> 59.5% (clauses 5024 -> 5110); meter 76.0%;
+  floors131 dumped and wired (ci/heavy/release + tools/README).
+- Battery on this commit (v0.64.1): release corpus 954/954 full (703s,
+  no exclusions); probes 266/266 (289.7s); check_modules 509/509 (197.6s);
+  barename 0/509 (299.7s); floors131 + doc + module-smoke (497/517,
+  3477/6205) ratchets OK.
+- Release side: nothing pending; the next cut picks up block-75 +
+  blocks 77/78. Readiness next (wave 95): os 26.6% (runtime-backed
+  surfaces inspected per item), sort 31.9%, hash 33.3%, num/array/bits,
+  the format remainder (markup/textual/fmt), and the queued feature
+  candidates.
 
 **SESSION 2026-10-08 block 77 (wave 93: iter remainder + format text; floors130; M7 finding)**
 - Wave 93: 55 pub / 71 clauses. iter.chain 14 (fold/fold_right empty ->

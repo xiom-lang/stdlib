@@ -29,7 +29,9 @@ pub fn Ordering.then(self, other: Ordering) -> Ordering
 }
 
 /// If this is Equal, evaluate `f`; otherwise keep this ordering.
-pub fn Ordering.then_with(self, f: fn() -> Ordering) -> Ordering {
+pub fn Ordering.then_with(self, f: fn() -> Ordering) -> Ordering
+  ensures: self != Equal => result == self
+{
   if self != Equal {
     return self;
   };
@@ -75,7 +77,9 @@ pub fn clamp[T: Ord](value: T, min_val: T, max_val: T) -> T
 }
 
 /// Value that compares smaller under `compare`.
-pub fn min_by[T](a: T, b: T, compare: fn(&T, &T) -> Ordering) -> T {
+pub fn min_by[T](a: T, b: T, compare: fn(&T, &T) -> Ordering) -> T
+  ensures: result == a || result == b
+{
   match compare(&a, &b) {
     Less => a;
     Equal => a;
@@ -84,7 +88,9 @@ pub fn min_by[T](a: T, b: T, compare: fn(&T, &T) -> Ordering) -> T {
 }
 
 /// Value that compares greater under `compare`.
-pub fn max_by[T](a: T, b: T, compare: fn(&T, &T) -> Ordering) -> T {
+pub fn max_by[T](a: T, b: T, compare: fn(&T, &T) -> Ordering) -> T
+  ensures: result == a || result == b
+{
   match compare(&a, &b) {
     Greater => a;
     Equal => a;
@@ -93,12 +99,16 @@ pub fn max_by[T](a: T, b: T, compare: fn(&T, &T) -> Ordering) -> T {
 }
 
 /// Larger of two Ints.
-pub fn max_int(a: Int, b: Int) -> Int {
+pub fn max_int(a: Int, b: Int) -> Int
+  ensures: result >= a && result >= b
+{
   if a >= b { a } else { b }
 }
 
 /// Smaller of two Ints.
-pub fn min_int(a: Int, b: Int) -> Int {
+pub fn min_int(a: Int, b: Int) -> Int
+  ensures: result <= a && result <= b
+{
   if a <= b { a } else { b }
 }
 
@@ -117,17 +127,23 @@ pub fn clamp_int(value: Int, min_val: Int, max_val: Int) -> Int
 }
 
 /// Larger of two Float64s.
-pub fn max_float(a: Float64, b: Float64) -> Float64 {
+pub fn max_float(a: Float64, b: Float64) -> Float64
+  ensures: result == a || result == b
+{
   if a >= b { a } else { b }
 }
 
 /// Smaller of two Float64s.
-pub fn min_float(a: Float64, b: Float64) -> Float64 {
+pub fn min_float(a: Float64, b: Float64) -> Float64
+  ensures: result == a || result == b
+{
   if a <= b { a } else { b }
 }
 
 /// Clamp a Float64 into [min_val, max_val].
-pub fn clamp_float(value: Float64, min_val: Float64, max_val: Float64) -> Float64 {
+pub fn clamp_float(value: Float64, min_val: Float64, max_val: Float64) -> Float64
+  ensures: result == value || result == min_val || result == max_val
+{
   if value < min_val {
     min_val
   } elif value > max_val {
@@ -154,14 +170,18 @@ pub interface PartialOrd[Rhs: Self] {
 /// Reverse ordering wrapper
 pub type Reverse[T] = { value: T; }
 /// Wrap a value so its ordering is reversed.
-pub fn Reverse.new[T](value: T) -> Reverse[T] {
+pub fn Reverse.new[T](value: T) -> Reverse[T]
+  ensures: result.value == value
+{
   Reverse { value: value; }
 }
 
 // -- Multi-value comparisons -------------------------------------------------
 
 /// Minimum of three values. O(1).
-pub fn min3[T: Ord](a: T, b: T, c: T) -> T {
+pub fn min3[T: Ord](a: T, b: T, c: T) -> T
+  ensures: result == a || result == b || result == c
+{
   if a.compare(b) <= 0 {
     if a.compare(c) <= 0 { a } else { c }
   } else {
@@ -170,7 +190,9 @@ pub fn min3[T: Ord](a: T, b: T, c: T) -> T {
 }
 
 /// Maximum of three values. O(1).
-pub fn max3[T: Ord](a: T, b: T, c: T) -> T {
+pub fn max3[T: Ord](a: T, b: T, c: T) -> T
+  ensures: result == a || result == b || result == c
+{
   if a.compare(b) >= 0 {
     if a.compare(c) >= 0 { a } else { c }
   } else {
@@ -179,12 +201,18 @@ pub fn max3[T: Ord](a: T, b: T, c: T) -> T {
 }
 
 /// Returns true if `value` is in the closed interval [lo, hi]. O(1).
-pub fn is_between[T: Ord](value: T, lo: T, hi: T) -> Bool {
+pub fn is_between[T: Ord](value: T, lo: T, hi: T) -> Bool
+  ensures: (value.compare(lo) < 0) => (result == false)
+  ensures: (value.compare(hi) > 0) => (result == false)
+  ensures: (value.compare(lo) >= 0 && value.compare(hi) <= 0) => (result == true)
+{
   value.compare(lo) >= 0 && value.compare(hi) <= 0
 }
 
 /// Median of three values (the value that would be in the middle when sorted). O(1).
-pub fn median3[T: Ord](a: T, b: T, c: T) -> T {
+pub fn median3[T: Ord](a: T, b: T, c: T) -> T
+  ensures: result == a || result == b || result == c
+{
   if a.compare(b) <= 0 {
     if b.compare(c) <= 0 { b }
     elif a.compare(c) <= 0 { c }
@@ -197,14 +225,20 @@ pub fn median3[T: Ord](a: T, b: T, c: T) -> T {
 }
 
 /// Compare two integers, returning -1, 0, or 1 like a comparator. O(1).
-pub fn compare_ints(a: Int, b: Int) -> Int {
+pub fn compare_ints(a: Int, b: Int) -> Int
+  ensures: (a < b) => (result == -1)
+  ensures: (a > b) => (result == 1)
+  ensures: (a == b) => (result == 0)
+{
   if a < b { -1 }
   elif a > b { 1 }
   else { 0 }
 }
 
 /// Minimum element in a Vec, or None if empty. O(N).
-pub fn min_of_vec[T: Ord](v: &Vec[T]) -> Option[T] {
+pub fn min_of_vec[T: Ord](v: &Vec[T]) -> Option[T]
+  ensures: (v.len() == 0) => (result.is_none == true)
+{
   var n = v.len();
   if n == 0 { return None; }
   var min_val = v[0];
@@ -217,7 +251,9 @@ pub fn min_of_vec[T: Ord](v: &Vec[T]) -> Option[T] {
 }
 
 /// Maximum element in a Vec, or None if empty. O(N).
-pub fn max_of_vec[T: Ord](v: &Vec[T]) -> Option[T] {
+pub fn max_of_vec[T: Ord](v: &Vec[T]) -> Option[T]
+  ensures: (v.len() == 0) => (result.is_none == true)
+{
   var n = v.len();
   if n == 0 { return None; }
   var max_val = v[0];
