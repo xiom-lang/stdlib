@@ -1,10 +1,10 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
-**75.8% -- 7 of 10 gates complete; gate 8 at 57.5% (partial credit) and
-gates 9-10 discrete.** (Compiler pin: **v0.64.0**.)
+**75.8% -- 7 of 10 gates complete; gate 8 at 57.7% (partial credit) and
+gates 9-10 discrete.** (Compiler pin: **v0.64.1**.)
 **Gates: corpus 954/954 full (C001 carve-outs retired on v0.63.1; new
 TcpStream loopback and uuencode roundtrip smokes added), modules 509/509,
-probes 259/259, barename 0/509.**
+probes 263/263, barename 0/509.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -14,22 +14,17 @@ gates flip:
    full, no carve-outs (C001 fixed by 4bf8cf1e; 20/20 + 20/20 stress).
    lz4 is fixed by m190 and stayed in the gate; the new TcpStream loopback
    smoke locks m196.
-3. Probe corpus green -- MET (259/259 on v0.64.0, incl. the promoted
-   regression probes, the pin locks, the v0.64.0 m193-m196 probe, the
-   wave-77 stats probe, the Pulse hardening probe, the wave-78 thread
-   probe, the wave-79 convert probe, the wave-80 base-codec probe, the
-   wave-81 unicode probe, the wave-82 codec-guard probe, the wave-83
-   codec-tail probe, the wave-84 uri/url/urn probe, the wave-85
-   ip/lossy/network/timestamp probe, the wave-86 convert-locals probe,
-   the wave-87 convert-tails probe, the wave-88 serialize probe, the
-   wave-89 serialize+json probe, the wave-90 toml/yaml_lite probe, the
-   wave-91 bench/numbering/units probe, the io byte-fidelity/CRLF lock
-   and the fs_remove lock).
+3. Probe corpus green -- MET (263/263 on v0.64.1, incl. the promoted
+   regression locks (rvalue float Vec index, multipart parse name, iter
+   forwardref), the v0.64.1 pin probe p_pin0641_iter_shapes.xi, the
+   wave-77 stats probe, the Pulse hardening probe, the wave-78..91
+   coverage probes, the io byte-fidelity/CRLF lock and the fs_remove
+   lock).
 4. Strict bare-name scan clean -- MET (0/509).
-5. Coverage ratchet green -- MET (floors128).
+5. Coverage ratchet green -- MET (floors129).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (497/517 modules, 3477/6202 fns).
-8. Contract coverage 100% (every public fn carries clauses) -- OPEN (57.5%).
+8. Contract coverage 100% (every public fn carries clauses) -- OPEN (57.7%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
    OPEN (11: 10 compiler, 1 stdlib algorithm).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
@@ -40,9 +35,10 @@ credit (discrete). Update the percentage and the gate-8 fraction in the
 same commit as each floors dump so the meter moves smoothly toward 80%.
 
 Authoritative order: the gates above, then the updates below newest-first.
-Current state: compiler pin v0.64.0 (v0.64.1 closing after compiler C-06 --
-pin-bump trigger first); coverage 57.5%, meter 75.8%; handoff
-in `docs/stdlib_session.md` snapshot 22 (block 71).
+Current state: compiler pin v0.64.1 (consumed by wave 92; v0.64.2 pin =
+the snapshot-23 refresh HEAD, pending on the compiler side); coverage
+57.7%, meter 75.8%; handoff in `docs/stdlib_session.md` snapshot 23
+(block 72).
 
 ## Project Pulse relay (web-framework lane) -- 2026-10-05
 
@@ -634,6 +630,25 @@ compiler-owned for v0.64.1; Box stays section C. floors113 (global
 51.4%, reflect 100%); meter 75.1%. Battery on v0.64.0: corpus 953/953,
 probes 241/241, modules 509/509, barename 0/509, floors113 +
 module-smoke ratchets OK.
+
+Update 2026-10-08 (v0.64.1 PIN BUMP): pin moved to official v0.64.1 (tag
+3c6f3bb5; binary at %TEMP%\kilo\stdlib_ws\v0.64.1). Verified green on the
+pin: m200 rvalue Vec[Float64] index (rc 0), m201 multipart parse name
+(rc 0) and m203 iter closure-thunk clause leak (Range.count clause +
+smoke_iter 21/21 including at -Workers 8; the forward-ref repro rc 0).
+Landed the retried iter set (13 clauses / 12 pub: contains x2, sum,
+product, collect, count-empty, max, min, find, all, any, nth, last) with
+pin probe p_pin0641_iter_shapes.xi green pre/post; promoted three
+resolved repros to tools/probes/ (rvalue, multipart, iter forwardref).
+STILL OPEN on v0.64.1 (relay corrections recorded): geom-matrix tuple
+inference PARTIAL (checks 1-3 pass, `var l2 = lu.0` check 4 rc=4),
+polyhedra nested hull unchanged (rc=1), p_ensures_isok_guard unchanged,
+p_clause_float_vec_index unchanged, p_geom_box_unnameable unchanged, the
+cross-module type-path/foreign-call findings unchanged. iter 18.6% ->
+25.1%, global 57.5% -> 57.7%, meter 75.8%; floors129. NOTE for the
+release lane: the archive at v0.64.1 bundles stdlib 6e60e958 (old
+wave-74 pin); the v0.64.2 pin decision + release notes are pending in
+the session blocks.
 
 Update 2026-10-08 (wave 91 landed): bench + format (numbering/units) --
 85 clauses / 38 new pub, plus a defect fix. bench 13 new (run_bench

@@ -68,40 +68,26 @@ were removed from the release gate on v0.63.1 (20/20 + 20/20 stress);
 the C001 carve-out file now holds no exclusions, and ci/heavy keep running
 the full corpus.
 
-**Open finding 2026-10-05 (compiler v0.64.0; v0.61.3-v0.63.1 family by
-inspection): inline indexing of a returned `Vec[Float64]` rvalue reads
-garbage.** `mk_f()[0]` on a function returning a one-element `Vec[Float64]`
-misreads the raw bits, while binding the same call to a `var`/`let` local
-first reads correctly and the identical shape on `Vec[Int]` is correct.
-Found by `tools/probes/p_wave77_shapes.xi` while landing the wave-77 stats
-clauses: it broke `xiom.stats.moments.quantile`'s `q == 0.0` / `q == 1.0`
-branches (`return _sorted(data)[0]`), which now bind the sorted copy first.
-Repro: `tools/known_failures/p_rvalue_float_vec_index.xi` (rc 1 on
-v0.64.0; the Int and bound-local controls run green first). Expected when
-fixed: rc 0.
-COMPILER RELAY 2026-10-07: fixed on m200 (dev build); promote this repro
-out of known_failures at the next pin (rc should then be 0).
+**RESOLVED 2026-10-08 (compiler v0.64.1, m200): inline indexing of a
+returned `Vec[Float64]` rvalue reads correctly.** Verified rc 0 on the
+official pin and PROMOTED to `tools/probes/p_rvalue_float_vec_index.xi`
+(regression lock). History: `mk_f()[0]` misread the raw bits on
+v0.61.3-v0.64.0 while bound locals and the `Vec[Int]` control were
+correct; found by the wave-77 probe; `xiom.stats.moments.quantile` binds
+the sorted copy first.
 
-**Open finding 2026-10-04 (official v0.62.3, v0.62.4, v0.63.0, v0.61.3
-and the m189 dev build; CALL SIDE FIXED on v0.62.4+): `xiom.iter`
-closure lowering.** On v0.62.4 and v0.63.0, calling the parent-module
-`iter.range(1, 3).collect()` compiles and runs green (promoted to
-`tools/probes/p_regress_iter_collect.xi`). The CLAUSE side persists:
-adding even `ensures: result >= 0` to `Range.count` (or `Range.find`)
-makes the unrelated `smoke_iter` fail with "use of undefined value" in a
-generated `__closure_N`, and landing the 7-clause Range core set makes 12
-iter-consuming smokes fail the same way. Repro
-`tools/known_failures/p_iter_range_collect_forwardref.xi` (call side now
-rc 0; the clause-side repro is the Range.count clause + smoke_iter, see
-the code comment). Clause side RE-VERIFIED on v0.63.1 (2026-10-05) and
-again on v0.64.0 (2026-10-05, wave-77 follow-up): `ensures: result >= 0`
-on Range.count still fails smoke_iter with clang `use of undefined value`
-(`%tmp8` at the same lowering position); the C001 half of the block is
-fixed, the closure half remains. Queued with the compiler closure work.
-COMPILER RELAY 2026-10-07: m203 fixed the closure-thunk clause leak --
-`ensures: result >= 0` on Range.count + smoke_iter verified OK/exit 0.
-At the next pin: re-add the clause and retry the deferred set (Range core
-7 + chain 14 + fold 8 + iter_collect) probe-first; move this finding out.
+**RESOLVED 2026-10-08 (compiler v0.64.1, m203): the `xiom.iter`
+closure-thunk CLAUSE leak.** Re-added `ensures: result >= 0` to
+`Range.count` and landed the retried set (contains x2, sum, product,
+collect, count-empty, max, min, find, all, any, nth, last), then verified
+`smoke_iter` 21/21 (including at -Workers 8, which used to surface the
+C001 flake), `p_pin0641_iter_shapes.xi` green pre/post and the repro
+PROMOTED to `tools/probes/p_iter_range_collect_forwardref.xi` (rc 0).
+History: on v0.62.3-v0.64.0 any Range.count/Range.find clause made
+generated `__closure_N` code fail clang with `use of undefined value`
+(the call side was already fixed on v0.62.4+). Remaining iter surface
+work (chain 14 + fold 8 + the rest of the deferred 40-60 set) continues
+as normal coverage waves.
 
 **RESOLVED 2026-10-05 (compiler v0.64.0, m195): `xiom.reflect.all_types()`
 no longer heap-corrupts; the probe exits 0.** m195 keeps angle-bracket
@@ -114,17 +100,12 @@ run rc -1073740940) on v0.62.3, v0.62.4, v0.63.0, v0.61.3 and the m187+
 dev builds; the wave-64 reflect clauses kept all_types clause-free and
 probe-excluded until fixed.
 
-**Open finding 2026-10-03 (v0.61.3 and official v0.62.3/v0.62.4/v0.63.0):
-`multipart_parse` result Part field reads are corrupt.** Build one
-`multipart_part("f", "v")` and parse it back with the same boundary:
-`out[0].name` is neither "f" nor "" (its `.len()` reads -1), while
-directly constructed Parts read correctly and the parsed part count is
-right. Repro `tools/known_failures/p_multipart_parse_name.xi` (rc=1,
-re-verified on v0.62.4 and v0.63.0).
-Found in wave 62; the wave probe is presence-only for that path. Expected:
-`out[0].name == "f"`.
-COMPILER RELAY 2026-10-07: fixed on m201 (dev build); move out at the
-next pin.
+**RESOLVED 2026-10-08 (compiler v0.64.1, m201): `multipart_parse` result
+Part field reads are correct.** Verified rc 0 on the official pin and
+PROMOTED to `tools/probes/p_multipart_parse_name.xi` (regression lock).
+History: parsed Part `.name`/`.len()` read corrupt on
+v0.61.3-v0.64.0 while direct Part construction was correct; found in
+wave 62.
 
 **Open finding 2026-10-02 (compiler v0.61.3 and v0.62.1):
 `polyhedra.convex_hull_2d`/`convex_hull_3d` collapse on nonempty inputs.**
@@ -132,11 +113,15 @@ The hull of a 4-point square is 2 rows; the hull of a tetrahedron is 0 rows
 (empty inputs are correct). The bodies already use the local-copy workaround
 for nested float Vec reads, so it is insufficient on both pins; the result
 itself is collapsed (caller and callee length reads agree). Repro:
-`tools/known_failures/p_polyhedra_nested_hull.xi` (returns 1). Found while
+`tools/known_failures/p_polyhedra_nested_hull.xi`. Found while
 landing the wave-53 geom clauses; the wave-53 probe keeps only the
 empty-input hull checks. `geometry_2d.convex_hull` (Point2 rows) is correct.
 COMPILER RELAY 2026-10-07: fixed on m201 (dev build); move out at the
 next pin.
+V0.64.1 RE-CHECK 2026-10-08: NOT fixed on the official pin -- the square
+hull is still 2 rows (rc=1, would be 2 for the tetra), so the repro
+STAYS in known_failures. The m201 fix did not cover this instance; the
+relay classification needs a correction on the compiler side.
 
 **Open finding 2026-10-01 (stdlib algorithm, not a compiler bug):
 `geometry_2d.polygon_difference` intersects b's outside half-planes instead
@@ -167,12 +152,17 @@ happens for tuple elements (`var l2 = lu.0;`). Adding the explicit type
 (`var z: Vec[Vec[Float64]] = ...`) fixes both reads. The identical
 un-annotated shape via `xiom.geom.mat` (`mat_identity`) is correct, and
 single-level `Vec[Float64]` returns are unaffected. Repro:
-`tools/known_failures/p_geom_matrix_result_infer.xi` (returns 1 on the
-pin). Found while landing the wave-50 geom clauses; the wave-50 probe
-annotates every nested matrix-module local, and `smoke_geom_mat.xi`
-already verifies matrix-module results through det/trace/rank scalars.
+`tools/known_failures/p_geom_matrix_result_infer.xi`. Found while landing
+the wave-50 geom clauses; the wave-50 probe annotates every nested
+matrix-module local, and `smoke_geom_mat.xi` already verifies
+matrix-module results through det/trace/rank scalars.
 COMPILER RELAY 2026-10-07: fixed on m201 (dev build); move out at the
 next pin.
+V0.64.1 RE-CHECK 2026-10-08: PARTIALLY fixed -- the inferred local (check
+1) and the annotation control (checks 2-3) now pass, but the
+tuple-element-without-annotation case still fails (`var l2 = lu.0;` ->
+`l2[0].len()` is 0, rc=4), so the repro STAYS in known_failures with the
+updated expected signature (rc 4 on the official pin).
 
 **Open finding 2026-09-29 (compiler v0.61.3): clause-position indexing of
 Float64 vector elements reads garbage.** In an `ensures` clause, indexing a

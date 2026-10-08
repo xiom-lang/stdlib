@@ -4,64 +4,66 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 -->
 # XIOM Stdlib Session -- Handoff
 
-## 0A. CONTINUE HERE -- handoff snapshot 22 (updated 2026-10-08, v0.64.0 pin complete, wave 90 complete, v0.64.1 pending after C-06)
+## 0A. CONTINUE HERE -- handoff snapshot 23 (updated 2026-10-08, v0.64.1 pin complete (wave 92), wave 91 landed, v0.64.2 pin decision pending)
 
 **PASTE-READY PROMPT FOR THE NEXT SESSION (copy this block):**
 
 ---
 You are continuing the XIOM stdlib lane. Worktree `E:\xiom-lang\stdlib`,
-branch `main`. Read `docs/stdlib_session.md` blocks 69 (latest), 68, 67,
-66, 65, 64, 63, 62, 61, 60, 59, 58, 57, 56, 55, 54, 53, 52, 51, 50, 49, 48,
-47, 46, 45, 44, 43 (publish), 27 (iter block) and
+branch `main`. Read `docs/stdlib_session.md` blocks 72 (latest), 71, 70,
+69, 68, 67, 66, 65, 64, 63, 62, 61, 60, 59, 58, 57, 56, 55, 54, 53, 52, 51,
+50, 49, 48, 47, 46, 45, 44, 43 (publish), 27 (iter block) and
 `docs/PRODUCTION_READINESS_QUEUE.md`
 before acting; snapshot 5 below the prompt keeps the deep protocol lore.
 The ecosystem now has consumer lanes feeding relays (PULSE,
 ORBITDB, XVECTOR, bindings): intake rows land in `docs/STDLIB-WISHLIST.md`
 and runtime-backed asks queue with the compiler runtime bundle.
 
-STATE (2026-10-07): compiler pin = official v0.64.0 (tag c68d91de, pin
-6e60e958 = our wave-74 head; v0.63.1 was c0fa3a2d/1b972478). Binary at
-%TEMP%\kilo\stdlib_ws\v0.64.0; v0.62.3/v0.62.4/v0.63.0/v0.63.1 archives
-kept. Registry carries xiom-std 0.62.3, 0.62.4 and 0.63.0 (0.63.1 publish
-pending); tags pushed: stdlib-v0.62.3 (12a3a1b), stdlib-v0.62.4 (3800c08),
-stdlib-v0.63.0 (179cfea). Compiler relay 2026-10-07 (dev builds m200-m203):
-m203 fixed the iter closure-thunk clause leak; m200 fixed the rvalue
-Vec[Float64] index; m201 fixed multipart/geom-matrix/polyhedra -- see the
-NEXT PIN trigger in QUEUED; m202 gates the packages grpc publish, m206
-covers graphql conformance. Pin check 2026-10-08 (waves 85-90): v0.64.0
-is still GitHub Latest; the owner reports v0.64.1 is closing after the
-compiler C-06 fix -- WHEN IT SHIPS (must carry m200/m201/m203), do the
-NEXT PIN trigger first (below), then resume waves.
-Gates on v0.64.0: release corpus 954/954 FULL (m196 loopback + uuencode
-roundtrip smokes added), modules 509/509, probes 258/258, barename
-0/509, floors127, module-smoke ratchet OK. Coverage = 56.9% global
-pub-with-clause. Waves landed: 63 net+hash, 64 reflect+iter adapters, 65x convert, 66 time, 67 format, 68 misc, 69 os+rand, 70 crypto, 71 log, 72 compress, 73 pin, 74 encoding, 75 encoding-rem+debug, 76 simd, 64.0 pin, 77 stats, Pulse hardening (write_all/server_parse_request/hmac_sha256_hex), 78 thread, 79 convert numeric shims, 80 convert base shims, 81 convert unicode, 82 convert codec guards, 83 convert codec tails, 84 convert uri/url/urn, 85 convert ip/lossy/network/timestamp, 86 convert locals + shims, 87 convert tails (convert 94.1%), 88 serialize batch 1 (endian/varint/csv), 89 serialize + json modules (serialize 73.1%), 90 serialize batch 3 (toml/yaml_lite; serialize 90.3%). Post-wave-89 fixes (same day): io byte-fidelity/CRLF defect (read_file_lines CR strip; write_file/append_file/write_file_bytes now binary; p_read_file_lines_crlf.xi) and fs_remove (bindings W-1; p_fs_remove.xi); ORBITDB/XVECTOR/bindings relays intaken. Wave
-65 (iter clauses) is DEFERRED: the C001 classifier is fixed (v0.63.1) and
-clauses may read tuple components, but the clause-side closure lowering
-was re-verified red on v0.64.0 (smoke_iter `use of undefined value`);
-compiler relay 2026-10-07 says m203 fixed it (Range.count + smoke_iter
-verified OK/exit 0 on the dev build) -- re-add at the next pin, see the
-NEXT PIN trigger.
+STATE (2026-10-08): compiler pin = official v0.64.1 (tag 3c6f3bb5,
+consumed by wave 92; the previous v0.64.0 tag c68d91de bundled stdlib
+6e60e958 = our wave-74 head). Binary at %TEMP%\kilo\stdlib_ws\v0.64.1;
+v0.62.3/v0.62.4/v0.63.0/v0.63.1/v0.64.0 archives kept. COMPILER_VERSION
+= v0.64.1. Registry currently carries xiom-std 0.61.3/0.62.0/0.62.3/
+0.62.4/0.63.0; no stdlib-v0.64.x tag exists yet (release-lane decision
+pending; the v0.64.2 stdlib fragment is authored at
+release-notes/v0.64.2.md). Compiler relay 2026-10-07 (dev builds
+m200-m203) CONSUMED on v0.64.1: m203 fixed the iter closure-thunk clause
+leak; m200 fixed the rvalue Vec[Float64] index; m201 fixed multipart and
+PARTIALLY geom-matrix (the tuple-element case is still red) but did NOT
+fix polyhedra -- see the README corrections. The next compiler release is
+v0.64.2; OUR intended pin for it is the HEAD of this snapshot's refresh
+(record the hash on the compiler side; the archive at v0.64.1 still
+bundles the old 6e60e958 stdlib).
+Gates on v0.64.1: release corpus 954/954 FULL (m196 loopback + uuencode
+roundtrip smokes added), modules 509/509, probes 263/263, barename
+0/509, floors129, module-smoke ratchet OK. Coverage = 57.7% global
+pub-with-clause. Waves landed: 63 net+hash, 64 reflect+iter adapters, 65x convert, 66 time, 67 format, 68 misc, 69 os+rand, 70 crypto, 71 log, 72 compress, 73 pin, 74 encoding, 75 encoding-rem+debug, 76 simd, 64.0 pin, 77 stats, Pulse hardening (write_all/server_parse_request/hmac_sha256_hex), 78 thread, 79 convert numeric shims, 80 convert base shims, 81 convert unicode, 82 convert codec guards, 83 convert codec tails, 84 convert uri/url/urn, 85 convert ip/lossy/network/timestamp, 86 convert locals + shims, 87 convert tails (convert 94.1%), 88 serialize batch 1 (endian/varint/csv), 89 serialize + json modules (serialize 73.1%), 90 serialize batch 3 (toml/yaml_lite; serialize 90.3%), 91 bench + format numbering/units (bench 87.5%, bench_time_fn defect fixed), 92 v0.64.1 PIN BUMP (iter retry: contains/sum/product/collect/count/max/min/find/all/any/nth/last; iter 25.1%). Post-wave-89 fixes (same day): io byte-fidelity/CRLF defect (read_file_lines CR strip; write_file/append_file/write_file_bytes now binary; p_read_file_lines_crlf.xi) and fs_remove (bindings W-1; p_fs_remove.xi); ORBITDB/XVECTOR/bindings relays intaken. Wave
+65 (iter clauses) is RESOLVED on v0.64.1: the clause-side closure
+lowering works (Range.count + the retried set + smoke_iter 21/21 incl.
+-Workers 8); the deferred remainder (chain 14 + fold 8 + the rest of the
+iter surface) continues as normal coverage work.
 
-FIRST TASK (wave 91): the next low dirs -- bench.xi (18.8%, 16 pub)
-then format (27.3%) and/or sync (29.1%), batching toward 40-60 pub;
-async (4.5%) stays runtime-backed (inspect each surface before
-claiming), iter stays clause-side blocked, os/core are large but
-mainly runtime/FFI-backed. Queued feature candidates when the wave has
-room: ORBITDB `append_line_sync` pure half (tail repair; durable flush
-stays runtime-backed), bindings W-2 out-param slot helper, W-5
-Vec[UInt8].with_len(n).
-IF THE NEXT COMPILER PIN IS OUT when you start -- v0.64.1 is closing
-after the compiler C-06 fix and MUST carry m200/m201/m203 -- DO THE
-PIN-BUMP TRIGGER FIRST (QUEUED below): re-add the Range.count clause,
-retry the deferred iter set probe-first, promote the four fixed
-known-failures, re-dump floors -- then wave 91.
+FIRST TASK (wave 93): resume coverage -- the iter remainder (chain 14 +
+fold 8 + the rest of the range/adapters surface, now unblocked on
+v0.64.1) plus the next low dirs (format remainder, sync 29.1%, os 26.2%,
+core 26.7%), batching toward 40-60 pub; async stays runtime-backed
+(inspect each surface before claiming). Queued feature candidates when
+the wave has room: ORBITDB `append_line_sync` pure half (tail repair;
+durable flush stays runtime-backed), bindings W-2 out-param slot helper,
+W-5 Vec[UInt8].with_len(n). RELEASE SIDE (release-lane decisions, do not
+act unilaterally): the v0.64.2 stdlib fragment is authored; the intended
+v0.64.2 pin is the HEAD of the snapshot-23 refresh commit; the
+xiom-std 0.64.x registry entry needs a stdlib tag first (owner decision;
+the registry tops out at 0.63.0).
+NO PIN-BUMP TRIGGER is pending: v0.64.1 is consumed and the next
+compiler release (v0.64.2) is not out yet.
 PENDING/QUEUED:
-(a) iter clause retry: red on v0.64.0 (block 46); compiler relay
-2026-10-07: m203 fixed the closure-thunk clause leak (Range.count +
-smoke_iter verified OK/exit 0 on the dev build) -- re-add
-`ensures: result >= 0` at the next pin and retry the deferred set
-(Range core 7 + chain 14 + fold 8 + iter_collect) probe-first.
+(a) iter clause retry: DONE 2026-10-08 on v0.64.1 (wave 92) -- the
+closure-thunk clause leak is fixed; Range.count plus the retried range
+set (contains/sum/product/collect/count/max/min/find/all/any/nth/last)
+landed and smoke_iter passes 21/21 (incl. -Workers 8), with the pin
+probe p_pin0641_iter_shapes.xi. The deferred remainder (chain 14 + fold
+8 + the rest of the adapters) continues as normal coverage work.
 (b) Pulse pure-XIOM hardening: DONE 2026-10-05 (block 47).
 (c) runtime-backed asks (socket timeout/nonblocking/reuse-addr, real
 flush_stdout, fsync/durable writes) wait for the compiler runtime bundle
@@ -75,9 +77,10 @@ HANDOFF NOTE: new locks are p_pin0640_shapes.xi (m193-m196),
 tests/smoke/smoke_net_tcp_stream.xi (m196 + write_all),
 tests/smoke/smoke_convert_uuencode.xi (wave 83, corpus 954), the m193
 guard-alloc smoke, and probes p_wave77_shapes.xi (167 checks) and
-p_pulse_shapes.xi through p_wave90_shapes.xi (258 probes total;
-p_read_file_lines_crlf.xi and p_fs_remove.xi are the io-fidelity and
-fs_remove locks;
+p_pulse_shapes.xi through p_wave91_shapes.xi (263 probes total, incl. the
+v0.64.1 pin probe and the three promoted regression locks:
+p_rvalue_float_vec_index.xi, p_multipart_parse_name.xi,
+p_iter_range_collect_forwardref.xi);
 p_alias_module_type_path.xi + p_foreign_method_call.xi are the new open
 cross-module resolution repros (2026-10-08, cross-ref C-PULSE-12);
 p_wave43_shapes was updated for m194 exactness;
@@ -94,20 +97,20 @@ result.len()` form ONLY: the `(result.is_ok == true) =>` implication
 violates at runtime (filed as p_ensures_isok_guard.xi, m-fix pending);
 if a wave surfaces a new compiler finding, file a minimal repro in
 tools/known_failures/ with a README Current entry before the wave commit.
-(2) probe-first: add `tools/probes/p_wave91_shapes.xi` exercising every
+(2) probe-first: add `tools/probes/p_wave93_shapes.xi` exercising every
 clause-guard path; bind module-returned values to `let` before comparing
 (inline unsigned compares misread high bits; inline indexing of a
 returned Vec[Float64] reads garbage -- bind it first); bind `Vec.new()`
 temporaries passed as `&Vec`; do not declare externs for runtime guard
-symbols; green on v0.64.0 (v0.63.1 cross-check when cheap).
+symbols; green on v0.64.1 (v0.64.0 cross-check when cheap).
 (3) apply, run targeted smokes; if unrelated codegen breaks, bisect and
 drop the offending clause with a code comment (see blocks 27/65x).
-(4) dump `tools/coverage_floors128.json`, wire the workflows +
+(4) dump `tools/coverage_floors130.json`, wire the workflows +
 `tools/README.md`, update plan/session/queue in the same commit, YAML
 check, pure-ASCII conventional commit.
 (5) battery: `run_smokes.ps1 -ExcludeFile tools/known_failures/
-gate-exclusions.txt` (expect 954/954 full), probe corpus (expect 259),
-check_modules 509/509, barename 0/509, floors128 + module-smoke ratchets;
+gate-exclusions.txt` (expect 954/954 full), probe corpus (expect 264),
+check_modules 509/509, barename 0/509, floors130 + module-smoke ratchets;
 record results in the session block; push `main` (NOTE: the push may
 present the wrong account -- see docs/failed_attempts.md 2026-10-07
 18:30 UTC: use the one-shot Lefteris-Notas credential; plain pushes may
@@ -1649,6 +1652,42 @@ registry pin, agent recon for the rest)**
   gates; open: contract coverage 100%, zero open findings, beta-exit release
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
+
+**SESSION 2026-10-08 block 72 (v0.64.1 pin bump: m200/m201/m203 consumed; iter retry; floors129)**
+- Pin moved to official v0.64.1 (tag 3c6f3bb5; binary downloaded to
+  %TEMP%\kilo\stdlib_ws\v0.64.1). Verification on the pin: m200 rvalue
+  Vec[Float64] index rc 0; m201 multipart parse name rc 0; m203 iter
+  closure-thunk clause leak -- `Range.count` clause re-added, smoke_iter
+  21/21 (incl. -Workers 8), p_iter_range_collect_forwardref rc 0.
+- Retried iter set landed (13 clauses / 12 pub): contains (x < start,
+  x >= end => false), sum empty -> 0, product empty -> 1, collect empty ->
+  len 0, count empty -> 0, max/min/find/nth/last empty -> None, all empty
+  -> true, any empty -> false. Pin probe p_pin0641_iter_shapes.xi (32
+  checks) green pre/post. iter 18.6% -> 25.1%, global 57.5% -> 57.7%,
+  meter 75.8%; floors129.
+- Promotions: p_rvalue_float_vec_index.xi, p_multipart_parse_name.xi and
+  p_iter_range_collect_forwardref.xi moved to tools/probes/ (regression
+  locks); README entries flipped to RESOLVED.
+- Relay corrections (still open on v0.64.1, annotated in the README):
+  geom-matrix tuple inference PARTIAL (checks 1-3 now pass; `var l2 =
+  lu.0;` check 4 rc=4), polyhedra nested hull unchanged (rc=1 --
+  m201 did not cover it), p_ensures_isok_guard unchanged,
+  p_clause_float_vec_index unchanged, p_geom_box_unnameable unchanged,
+  alias/foreign-call findings unchanged.
+- Release-lane note: v0.64.1's archive bundles stdlib 6e60e958 (old
+  wave-74 pin); the intended v0.64.2 pin is the HEAD of this pin-bump
+  (confirm in the v0.64.2 release notes; no v0.64.1 stdlib fragment
+  exists). Registry: xiom-std 0.63.1 publish still pending.
+- Battery on this commit (v0.64.1): release corpus 954/954 full (594.2s,
+  no exclusions); probes 263/263 (248.7s); check_modules 509/509 (152.3s);
+  barename 0/509 (316.9s); floors129 + module-smoke (497/517, 3477/6203)
+  ratchets OK.
+- COMPILER_VERSION bumped to v0.64.1; release-notes/v0.64.2.md (stdlib
+  fragment) authored for the combined v0.64.2 compiler release; intended
+  v0.64.2 pin = the HEAD of this commit (confirm on the compiler side).
+  Registry state: xiom-std on the registry tops out at 0.63.0; no
+  stdlib-v0.64.0/0.64.1 tag exists, so the 0.64.x registry entry needs a
+  release-lane tag decision (raised to the owner).
 
 **SESSION 2026-10-08 block 71 (wave 91: bench + format numbering/units; floors128; bench_time_fn defect fix)**
 - Wave 91: 85 clauses / 38 new pub -- bench 13 new (run_bench pins:

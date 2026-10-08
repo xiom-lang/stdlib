@@ -1374,8 +1374,28 @@ T1/T2 yields.
         clause-side blocked, os 26.2%, core 26.7%, sync 29.1%, sort
         31.9%, format remainder) and the queued feature candidates
         (ORBITDB append_line_sync pure half, bindings W-2/W-5).
+        Wave 92 (2026-10-08): v0.64.1 PIN BUMP -- consumed m200/m201/m203.
+        Verified on the official pin (tag 3c6f3bb5): rvalue float-vec
+        index rc 0, multipart parse name rc 0, iter closure-thunk clause
+        leak fixed (Range.count + smoke_iter 21/21 incl. -Workers 8, the
+        forwardref repro rc 0). Landed the retried iter set (13 clauses /
+        12 pub: contains x2, sum, product, collect, count-empty, max, min,
+        find, all, any, nth, last) with the pin probe
+        p_pin0641_iter_shapes.xi (32 checks) green pre/post; promoted the
+        three resolved repros to tools/probes/ (regression locks).
+        Relay corrections recorded on the pin: geom-matrix tuple
+        inference PARTIAL (tuple-element check still red), polyhedra
+        nested hull UNCHANGED, ensures-isok guard / clause float-vec
+        index / geom Box unnameable / alias+foreign-call findings all
+        still open. COMPILER_VERSION = v0.64.1; release-notes/v0.64.2.md
+        (stdlib fragment) authored ahead of the next combined compiler
+        release. iter 18.6% -> 25.1%, global 57.5% -> 57.7%, meter 75.8%;
+        floors129. Battery on v0.64.1: corpus 954/954 (594.2s), probes
+        263/263 (248.7s), modules 509/509, barename 0/509, ratchets OK.
+        Next: resume coverage on the unblocked iter remainder (chain 14 +
+        fold 8) and the low dirs.
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors128.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors129.json
         tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;

@@ -50,12 +50,17 @@ pub fn Range.len(self) -> Int
 }
 
 /// True when `x` is inside [start, end); does not consume the range.
-pub fn Range.contains(self, x: Int) -> Bool {
+pub fn Range.contains(self, x: Int) -> Bool
+  ensures: (x < self.start) => (result == false)
+  ensures: (x >= self.end) => (result == false)
+{
   x >= self.start && x < self.end
 }
 
 /// Sum of the remaining integers (0 for an empty range).
-pub fn Range.sum(self) -> Int {
+pub fn Range.sum(self) -> Int
+  ensures: (self.start >= self.end) => (result == 0)
+{
   var total: Int = 0;
   var i: Int = self.start;
   while i < self.end {
@@ -66,7 +71,9 @@ pub fn Range.sum(self) -> Int {
 }
 
 /// Product of the remaining integers (1 for an empty range).
-pub fn Range.product(self) -> Int {
+pub fn Range.product(self) -> Int
+  ensures: (self.start >= self.end) => (result == 1)
+{
   var total: Int = 1;
   var i: Int = self.start;
   if self.start >= self.end {
@@ -316,7 +323,9 @@ pub fn Range.zip(self, other: Range) -> ZipIter[Int, Int] {
 }
 
 /// Drain the remaining integers into a Vec.
-pub fn Range.collect(self) -> Vec[Int] {
+pub fn Range.collect(self) -> Vec[Int]
+  ensures: (self.start >= self.end) => (result.len() == 0)
+{
   var r = self;
   return _collect_via[Int](fn() -> Option[Int] { return r.next(); });
 }
@@ -328,49 +337,66 @@ pub fn Range.fold[B](self, init: B, f: fn(B, Int) -> B) -> B {
 }
 
 /// Number of remaining integers.
-pub fn Range.count(self) -> Int {
+pub fn Range.count(self) -> Int
+  ensures: result >= 0
+  ensures: (self.start >= self.end) => (result == 0)
+{
   var r = self;
   return _count_via[Int](fn() -> Option[Int] { return r.next(); });
 }
 
 /// Largest remaining integer, or None for an empty range.
-pub fn Range.max(self) -> Option[Int] {
+pub fn Range.max(self) -> Option[Int]
+  ensures: (self.start >= self.end) => (result.is_none == true)
+{
   var r = self;
   return _max_via[Int](fn() -> Option[Int] { return r.next(); });
 }
 
 /// Smallest remaining integer, or None for an empty range.
-pub fn Range.min(self) -> Option[Int] {
+pub fn Range.min(self) -> Option[Int]
+  ensures: (self.start >= self.end) => (result.is_none == true)
+{
   var r = self;
   return _min_via[Int](fn() -> Option[Int] { return r.next(); });
 }
 
 /// First remaining integer satisfying `predicate`, or None.
-pub fn Range.find(self, predicate: fn(&Int) -> Bool) -> Option[Int] {
+pub fn Range.find(self, predicate: fn(&Int) -> Bool) -> Option[Int]
+  ensures: (self.start >= self.end) => (result.is_none == true)
+{
   var r = self;
   return _find_via[Int](fn() -> Option[Int] { return r.next(); }, predicate);
 }
 
 /// True when every remaining integer satisfies `predicate`.
-pub fn Range.all(self, predicate: fn(&Int) -> Bool) -> Bool {
+pub fn Range.all(self, predicate: fn(&Int) -> Bool) -> Bool
+  ensures: (self.start >= self.end) => (result == true)
+{
   var r = self;
   return _all_via[Int](fn() -> Option[Int] { return r.next(); }, predicate);
 }
 
 /// True when at least one remaining integer satisfies `predicate`.
-pub fn Range.any(self, predicate: fn(&Int) -> Bool) -> Bool {
+pub fn Range.any(self, predicate: fn(&Int) -> Bool) -> Bool
+  ensures: (self.start >= self.end) => (result == false)
+{
   var r = self;
   return _any_via[Int](fn() -> Option[Int] { return r.next(); }, predicate);
 }
 
 /// Skip to and return the `n`-th remaining integer (0-based), or None.
-pub fn Range.nth(self, n: Int) -> Option[Int] {
+pub fn Range.nth(self, n: Int) -> Option[Int]
+  ensures: (self.start >= self.end) => (result.is_none == true)
+{
   var r = self;
   return _nth_via[Int](fn() -> Option[Int] { return r.next(); }, n);
 }
 
 /// Consume and return the final integer, or None for an empty range.
-pub fn Range.last(self) -> Option[Int] {
+pub fn Range.last(self) -> Option[Int]
+  ensures: (self.start >= self.end) => (result.is_none == true)
+{
   var r = self;
   return _last_via[Int](fn() -> Option[Int] { return r.next(); });
 }
