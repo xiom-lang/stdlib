@@ -151,6 +151,9 @@ pub fn str_compare(a: Str, b: Str) -> Int
 }
 
 /// Split on `delimiter` into parts (empty parts preserved).
+/// Byte-compare scan: O(|s| * |delimiter|), no per-position slicing
+/// (ORBITDB relay 2026-10-08: the old slice-per-position scan was quadratic
+/// and made 5 MB WAL replays take ~44 s).
 pub fn str_split(s: Str, delimiter: Str) -> Vec[Str]
   ensures:  result.len() >= 1  // always at least one element
 {
@@ -171,7 +174,20 @@ pub fn str_split(s: Str, delimiter: Str) -> Vec[Str]
   var start: Int = 0;
   var pos: Int = 0;
   while pos < s_len {
-    if pos + delim_len <= s_len && str_slice(s, pos, pos + delim_len) == delimiter {
+    var is_match: Bool = false;
+    if pos + delim_len <= s_len {
+      is_match = true;
+      var k: Int = 0;
+      while k < delim_len {
+        if byte_at(s, pos + k) != byte_at(delimiter, k) {
+          is_match = false;
+          k = delim_len;
+        } else {
+          k = k + 1;
+        };
+      };
+    };
+    if is_match {
       result.push(str_slice(s, start, pos));
       pos = pos + delim_len;
       start = pos;
@@ -490,25 +506,33 @@ pub fn str_replace_all(s: Str, from_needle: Str, to_replacement: Str) -> Str
 // -- Repeat & Pad --
 
 /// Repeats `s` `n` times. Returns empty string if n <= 0.
-/// O(n * |s|) using repeated concatenation.
+/// Doubling build: O(n * |s|) total copying (was quadratic accumulation).
 pub fn str_repeat(s: Str, n: Int) -> Str
   ensures: n <= 0 => result.len() == 0
+  ensures: n >= 0 => result.len() == s.len() * n
 {
   if n <= 0 {
     return "";
   };
   var result = "";
-  var i: Int = 0;
-  while i < n {
-    result = str_concat(result, s);
-    i = i + 1;
+  var chunk = s;
+  var remaining = n;
+  while remaining > 0 {
+    if remaining % 2 == 1 {
+      result = str_concat(result, chunk);
+    };
+    remaining = remaining / 2;
+    if remaining > 0 {
+      chunk = str_concat(chunk, chunk);
+    };
   };
   result
 }
 
 /// Left-pads `s` with `pad` until the string reaches `width` bytes.
 /// If `s` is already >= `width` in bytes, returns `s` unchanged.
-/// O(width - |s|). Only handles single-byte pad characters correctly.
+/// O(width - |s|); single-byte pad characters only (one small allocation,
+/// not one per pad byte as before).
 pub fn str_pad_left(s: Str, width: Int, pad: Char) -> Str
   ensures: result.len() >= s.len()
 {
@@ -517,23 +541,20 @@ pub fn str_pad_left(s: Str, width: Int, pad: Char) -> Str
     return s;
   };
   let pad_len = width - s_len;
-  var pad_str = "";
-  var i: Int = 0;
-  while i < pad_len {
-    unsafe {
-      var buf = malloc(2);
-      buf[0] = pad as UInt8;
-      buf[1] = 0;
-      pad_str = str_concat(pad_str, Str.from_cstring(buf));
-    };
-    i = i + 1;
+  var one = "";
+  unsafe {
+    var buf = malloc(2);
+    buf[0] = pad as UInt8;
+    buf[1] = 0;
+    one = Str.from_cstring(buf);
   };
+  let pad_str = str_repeat(one, pad_len);
   str_concat(pad_str, s)
 }
 
 /// Right-pads `s` with `pad` until the string reaches `width` bytes.
 /// If `s` is already >= `width` in bytes, returns `s` unchanged.
-/// O(width - |s|). Only handles single-byte pad characters correctly.
+/// O(width - |s|); single-byte pad characters only (one small allocation).
 pub fn str_pad_right(s: Str, width: Int, pad: Char) -> Str
   ensures: result.len() >= s.len()
 {
@@ -541,18 +562,15 @@ pub fn str_pad_right(s: Str, width: Int, pad: Char) -> Str
   if s_len >= width {
     return s;
   };
-  var result = s;
-  var i: Int = s_len;
-  while i < width {
-    unsafe {
-      var buf = malloc(2);
-      buf[0] = pad as UInt8;
-      buf[1] = 0;
-      result = str_concat(result, Str.from_cstring(buf));
-    };
-    i = i + 1;
+  var one = "";
+  unsafe {
+    var buf = malloc(2);
+    buf[0] = pad as UInt8;
+    buf[1] = 0;
+    one = Str.from_cstring(buf);
   };
-  result
+  let pad_str = str_repeat(one, width - s_len);
+  str_concat(s, pad_str)
 }
 
 // -- Strip --

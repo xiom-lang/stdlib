@@ -219,3 +219,32 @@ W-1..W-5, pilot `xiom.sqlite` on v0.64.0):
 - Companion defects file: `docs/BINDINGS-COMPILER-FINDINGS.md` (B-05
   above) lives with the bindings lane; the stdlib repro intake stays
   `tools/known_failures/`.
+
+Relay status 2026-10-08 (second sweep; sources re-fetched 17:40):
+- PULSE (`STDLIB-WISHLIST-PULSE.md`, 17:11), new asks: **signal-handler
+  installation** (`signal_handle`/`signal_pending`) -- ADDRESSED stdlib-side
+  as documented-Err stubs in `xiom/os/signal.xi` (signal-safe trampoline is
+  runtime-backed; SIGTERM graceful shutdown stays queued for the runtime
+  bundle); import aliasing (already cross-filed as the compiler finding);
+  socket options and `flush_stdout` unchanged (runtime-backed). PULSE
+  verified the adopted items on Linux v0.64.1 against lane checkout 4dd8844
+  (server-parse 12 checks, 270 KB favicon, soaks) -- no behavior delta.
+- ORBITDB (`RELAY-STDLIB-ORBITDB.md`, 16:15), sharp finding: **`str_split`
+  was O(n^2)** because it sliced a substring per scan position; 5 MB / 20k
+  line WAL replays took ~44 s (`read_file` alone 2 ms). **FIXED 2026-10-08**:
+  byte-compare scan, O(|s| * |delimiter|), no per-position slices; probe
+  lock `p_str_split_scale.xi` (120 KB scale + edge cases). Same-class fixes
+  in the sweep: `str_repeat` now doubles (was quadratic accumulation) and
+  `str_pad_left`/`str_pad_right` allocate once (were quadratic AND leaked
+  one malloc per pad byte). Row 2 (CRLF) already fixed earlier today; the
+  append-handle ask (`io.open_append` -> write/sync/close) stays open and
+  scheduled (throughput 626 -> 2,061 ops/s in-lane; the sync half is
+  runtime-backed).
+- XVECTOR (`STDLIB-WISHLIST-XVECTOR.md`, 13:05): no new rows; the
+  durability cluster (fsync, fd write path, append_file_bytes, f32 bitcast,
+  truncate, flush_stdout) is unchanged and queued.
+- Bindings (`BINDINGS-STDLIB-WISHLIST.md`, 13:30): no new rows; W-1/W-4
+  already fixed earlier today, W-2/W-3/W-5 unchanged (W-3 has the stdlib
+  confinement caution; compiler B-05 owns the fix).
+- Packages lane (`E:\xiom-packages\packages\docs\STDLIB-WISHLIST.md`): the
+  2026-10-05 eight-row intake stands; no new rows.

@@ -114,7 +114,7 @@ drop the offending clause with a code comment (see blocks 27/65x).
 `tools/README.md`, update plan/session/queue in the same commit, YAML
 check, pure-ASCII conventional commit.
 (5) battery: `run_smokes.ps1 -ExcludeFile tools/known_failures/
-gate-exclusions.txt` (expect 954/954 full), probe corpus (expect 264),
+gate-exclusions.txt` (expect 954/954 full), probe corpus (expect 265),
 check_modules 509/509, barename 0/509, floors130 + module-smoke ratchets;
 record results in the session block; push `main` (NOTE: the push may
 present the wrong account -- see docs/failed_attempts.md 2026-10-07
@@ -1657,6 +1657,37 @@ registry pin, agent recon for the rest)**
   gates; open: contract coverage 100%, zero open findings, beta-exit release
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
+
+**SESSION 2026-10-08 block 75 (fix-first: str_split/str_repeat/pad quadratic defects; PULSE signal stubs; consumer re-sweep)**
+- Consumer re-sweep (PULSE, ORBITDB, XVECTOR, bindings, packages) recorded
+  in docs/STDLIB-WISHLIST.md. ORBITDB's sharp finding: `str_split` was
+  O(n^2) (slice per scan position; 5 MB / 20k-line WAL replay ~44 s vs
+  2 ms for read_file). FIXED 2026-10-08: byte-compare scan,
+  O(|s| * |delimiter|), no per-position slices. Same-class fixes:
+  `str_repeat` now builds by doubling (was quadratic accumulation) and
+  `str_pad_left`/`str_pad_right` allocate once (were quadratic AND leaked
+  one malloc per pad byte). Probe lock p_str_split_scale.xi (120 KB scale
+  + edge cases) green; smoke_string_split(+edge/join),
+  smoke_string_pad_repeat, smoke_stress_string_split_edge, smoke_string_edge
+  1/1 each.
+- PULSE new ask addressed stdlib-side: `signal_handle`/`signal_pending`
+  documented-Err stubs in `xiom/os/signal.xi` (signal-safe runtime
+  trampoline is runtime-backed and queued; SIGTERM graceful shutdown stays
+  blocked until the runtime bundle).
+- ORBITDB append-handle ask (`io.open_append`) stays open/scheduled; the
+  sync half is runtime-backed. XVECTOR/bindings/packages: no new rows.
+- Incident (no repo impact): a scratch benchmark (out/benchsplit.xi,
+  deleted) carrying a quadratic str_repeat setup kept running after its
+  shell timed out, ballooning memory (~4.7 GB) and paging pressure until
+  force-killed; C: recovered (66 GB free). No further large synthetic
+  benchmarks from this lane.
+- Battery on this commit (v0.64.1): release corpus 954/954 full (756.6s,
+  -Workers 8 -RetryFailed, no exclusions); probes 264/264 (264.0s);
+  check_modules 509/509 (170.9s); barename 0/509 (243s); module-smoke
+  ratchet OK. Coverage: first pass FAILED the ratchet on os (26.1% < 26.2
+  floor) because the two new signal stubs initially carried no clauses;
+  fixed by adding their exact always-Err clauses (os 26.6%, global 57.7%),
+  floors129 re-dumped (tightened) and ratchet OK.
 
 **SESSION 2026-10-08 block 74 (stdlib 0.64.2 RELEASED; registry publish queued for environment approval)**
 - Per the owner's decision (2026-10-08): cut ONE release at the new pin.

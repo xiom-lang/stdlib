@@ -631,6 +631,20 @@ compiler-owned for v0.64.1; Box stays section C. floors113 (global
 probes 241/241, modules 509/509, barename 0/509, floors113 +
 module-smoke ratchets OK.
 
+Update 2026-10-08 (string quadratic defects fixed; PULSE signal stubs;
+registry live): ORBITDB's re-sweep found `str_split` O(n^2) (slice per scan
+position; 5 MB / 20k-line WAL replay ~44 s vs 2 ms read). Fixed with a
+byte-compare scan; same class: `str_repeat` now doubles (was quadratic
+accumulation), `str_pad_left`/`str_pad_right` allocate once (were
+quadratic and leaked one malloc per pad byte). Locked by
+`tools/probes/p_str_split_scale.xi` (120 KB scale + edge cases) plus the
+string smokes. PULSE's signal-handler ask is addressed stdlib-side as
+documented-Err `signal_handle`/`signal_pending` stubs in `xiom/os/signal.xi`
+(signal-safe runtime trampoline queued). XVECTOR, bindings and packages
+reports show no new rows. REGISTRY CONFIRMED LIVE: xiom-std 0.64.2 is
+published (signed, sha256 f5375c03ad88) -- the 0.63.0 -> 0.64.2 registry
+lineage is complete.
+
 Update 2026-10-08 (stdlib 0.64.2 RELEASED): per the owner decision, one
 release was cut at the new pin. Tag stdlib-v0.64.2 on commit 4dd8844
 (package.xi 0.64.2 + release-notes/v0.64.2.md + CHANGELOG [0.64.2]); the

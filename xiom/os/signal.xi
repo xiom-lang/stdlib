@@ -126,3 +126,27 @@ pub fn signal_raise(num: Int) -> Result[Unit, Str] {
   }
   Ok(())
 }
+
+/// signal_handle installs a handler callback for `num`. NOT AVAILABLE yet:
+/// a working implementation needs a signal-safe runtime trampoline
+/// (sigaction plus a pending-flag poll); PULSE relay 2026-10-08 (SIGTERM
+/// graceful shutdown blocked). Currently a documented Err stub so callers
+/// can compile against the surface and degrade to no-handler behavior.
+/// Complexity: O(1).
+pub fn signal_handle(num: Int, cb: fn(Int) -> Unit) -> Result[Unit, Str]
+  ensures: result.is_err == true  // always Err while runtime-backed
+{
+  if !signal_is_catchable(num) {
+    return Err("signal_handle: signal is not catchable");
+  }
+  Err("signal_handle: not available in the pure stdlib (runtime-backed)")
+}
+
+/// signal_pending polls for a signal delivered to the handler installed by
+/// signal_handle and clears the pending flag. NOT AVAILABLE yet (documented
+/// Err stub, see signal_handle). Complexity: O(1).
+pub fn signal_pending() -> Result[Int, Str]
+  ensures: result.is_err == true  // always Err while runtime-backed
+{
+  Err("signal_pending: not available in the pure stdlib (runtime-backed)")
+}
