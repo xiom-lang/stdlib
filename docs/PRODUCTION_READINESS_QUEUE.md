@@ -1,10 +1,10 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
-**76.2% -- 7 of 10 gates complete; gate 8 at 62.2% (partial credit) and
+**76.3% -- 7 of 10 gates complete; gate 8 at 62.6% (partial credit) and
 gates 9-10 discrete.** (Compiler pin: **v0.64.2**.)
 **Gates: corpus 954/954 full (C001 carve-outs retired on v0.63.1; new
 TcpStream loopback and uuencode roundtrip smokes added), modules 509/509,
-probes 272/272, barename 0/509.**
+probes 273/273, barename 0/509.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -14,24 +14,24 @@ gates flip:
    full, no carve-outs (C001 fixed by 4bf8cf1e; 20/20 + 20/20 stress).
    lz4 is fixed by m190 and stayed in the gate; the new TcpStream loopback
    smoke locks m196.
-3. Probe corpus green -- MET (272/272 on v0.64.2, incl. the promoted
+3. Probe corpus green -- MET (273/273 on v0.64.2, incl. the promoted
    regression locks (rvalue float Vec index, multipart parse name, iter
    forwardref), the v0.64.1 pin probe p_pin0641_iter_shapes.xi, the
-   wave-77 stats probe, the Pulse hardening probe, the wave-78..99
+   wave-77 stats probe, the Pulse hardening probe, the wave-78..100
    coverage probes (the wave-97 probe was remerged after m242, plus the
-   wave-98 and wave-99 probes), the io byte-fidelity/CRLF lock and the
+   wave-98/99/100 probes), the io byte-fidelity/CRLF lock and the
    fs_remove lock).
 4. Strict bare-name scan clean -- MET (0/509).
 5. Coverage ratchet green -- MET (floors129).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (497/517 modules, 3477/6202 fns).
-8. Contract coverage 100% (every public fn carries clauses) -- OPEN (62.2%).
+8. Contract coverage 100% (every public fn carries clauses) -- OPEN (62.6%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
    OPEN (14: 13 compiler, 1 stdlib algorithm).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
 
 Meter formula: MET gates count 1.0; gate 8 counts its current
-pub-with-clause fraction (62.2% -> 0.622); gates 9 and 10 get no partial
+pub-with-clause fraction (62.6% -> 0.626); gates 9 and 10 get no partial
 credit (discrete). Update the percentage and the gate-8 fraction in the
 same commit as each floors dump so the meter moves smoothly toward 80%.
 
@@ -51,11 +51,10 @@ for approval, package.xi needs `categories` + `stage` for the next cut,
 and the repaired heavy matrix passes ubuntu/windows but the macos-14
 corpus leg is red (PULSE macOS runtime-C blockers suspected). Wave 98
 landed post-tag (M7 closure rewrite; read_file_lines/to_string_char
-contract fixes; new tostring-import finding); wave 99 added the crypto
-hash sizes, xxhash/city empty pins and math constants (crypto 47.0%,
-hash 51.1%, math 39.1%; the wave-97 split probe was remerged after
-m242). Coverage 62.2%, meter 76.2%; handoff in
-`docs/stdlib_session.md` snapshot 24 (block 86).
+contract fixes; new tostring-import finding); wave 99 added crypto hash
+sizes, xxhash/city empty pins and math constants; wave 100 added the
+finance/information-theory guard surfaces (math 42.0%). Coverage 62.6%,
+meter 76.3%; handoff in `docs/stdlib_session.md` snapshot 24 (block 87).
 
 ## Project Pulse relay (web-framework lane) -- 2026-10-05
 
@@ -739,6 +738,30 @@ verify stdlib-v0.64.3 (d052a3c5) during its v0.64.3 candidate gates.
 Housekeeping in the same relay: the wave-97 sibling-alias split-probe
 workaround was DROPPED -- p_wave97_bitwise_shapes.xi was merged back into
 p_wave97_shapes.xi and re-run green on v0.64.2 (probe corpus stays 272).
+
+Update 2026-10-10 (wave 100 landed): finance + information theory -- 35
+clauses, +29 pub covered. finance 20 (the r==0 closed forms pv/fv/pmt/
+nper; NaN guards on mirr, pmt nper==0, ipmt/ppmt per<1, nper pmt==0,
+rate<=0 perpetuity, cagr, sharpe/sortino/calmar, bond_price invalid face/
+freq, VaR/CVaR bad alpha, beta/alpha length-or-sample guards, treynor
+beta<=0; empty-series npv==0 and drawdown len 0; exact perpetuity pmt/
+rate pin) -- finance contributes to math 39.1% -> 42.0% together with
+information_theory 9 (entropy empty==0, perplexity empty==1,
+data_compression_bound empty==0, huffman empty len 0, arithmetic_coding
+empty seq==0.5, kl/js/cross length-mismatch NaN, self_information p<=0
+-> +inf). Note: math/calculus.xi was inspected and SKIPPED -- the whole
+vector-calculus/limit surface is a documented frozen stub set (BUG 20
+AVX-512 / BUG 12 Vec[Float64] reads); no stub self-mirror clauses per
+protocol. Probe p_wave100_shapes.xi (273rd, 41 checks) green pre/post;
+targeted smokes smoke_math_finance 1/1 and smoke_math 53/53 (no
+information-theory smoke exists; the probe is the lock). Global 62.2% ->
+62.6% (clauses 5335 -> 5370, pubCovered 4046 -> 4075); meter 76.3%;
+floors137. Battery on v0.64.2: corpus 954/954 (698.3s, no exclusions),
+probes 273/273 (319s), modules 509/509 (213.1s), barename 0/509
+(312.9s), floors137 + doc + module-smoke (497/517, 3476/6204) ratchets
+OK. Readiness next: math remainder (graph_theory, machine_learning,
+decompose, fuzzy, game_theory), os 26.6%, the queued feature candidates,
+and the macOS runtime-C guards.
 
 Update 2026-10-09 (wave 99 landed): crypto hash + xxhash/city + math
 constants -- 26 clauses, +24 pub covered. crypto.hash 10 (exact digest/

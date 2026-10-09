@@ -37,7 +37,9 @@ fn _nphi(x: Float64) -> Float64 {
 
 /// Present value of an annuity and lump sum: PV = -(FV + pmt*((1+r)^n-1)/r)
 /// / (1+r)^n. r == 0 uses PV = -(FV + pmt*n). Complexity: O(1).
-pub fn pv(rate: Float64, nper: Float64, pmt: Float64, fv: Float64) -> Float64 {
+pub fn pv(rate: Float64, nper: Float64, pmt: Float64, fv: Float64) -> Float64
+  ensures: (rate == 0.0) => (result == -(fv + pmt * nper))
+{
   if rate == 0.0 {
     return -(fv + pmt * nper);
   }
@@ -48,7 +50,9 @@ pub fn pv(rate: Float64, nper: Float64, pmt: Float64, fv: Float64) -> Float64 {
 
 /// Future value of an annuity and lump sum: FV = PV (1+r)^n + pmt*((1+r)^n-1)
 /// / r. r == 0 uses FV = PV + pmt*n. Complexity: O(1).
-pub fn fv(rate: Float64, nper: Float64, pmt: Float64, pv: Float64) -> Float64 {
+pub fn fv(rate: Float64, nper: Float64, pmt: Float64, pv: Float64) -> Float64
+  ensures: (rate == 0.0) => (result == pv + pmt * nper)
+{
   if rate == 0.0 {
     return pv + pmt * nper;
   }
@@ -58,7 +62,9 @@ pub fn fv(rate: Float64, nper: Float64, pmt: Float64, pv: Float64) -> Float64 {
 
 /// Net present value of a cashflow series discounted from t = 0 (the first
 /// element is the undiscounted cashflow at time zero). Complexity: O(n).
-pub fn npv(rate: Float64, cashflows: &Vec[Float64]) -> Float64 {
+pub fn npv(rate: Float64, cashflows: &Vec[Float64]) -> Float64
+  ensures: (cashflows.len() == 0) => (result == 0.0)
+{
   var sum = 0.0;
   var i = 0;
   while i < cashflows.len() {
@@ -99,7 +105,9 @@ pub fn irr(cashflows: &Vec[Float64]) -> Float64 {
 /// - 1) where positive cashflows compound at reinvest_rate and negative ones
 /// discount at finance_rate. NaN when no negative cashflow exists.
 /// Complexity: O(n).
-pub fn mirr(cashflows: &Vec[Float64], finance_rate: Float64, reinvest_rate: Float64) -> Float64 {
+pub fn mirr(cashflows: &Vec[Float64], finance_rate: Float64, reinvest_rate: Float64) -> Float64
+  ensures: (cashflows.len() == 0) => (result != result)
+{
   var n = cashflows.len();
   if n == 0 { return 0.0 / 0.0; }
   var pv_neg = 0.0;
@@ -123,7 +131,10 @@ pub fn mirr(cashflows: &Vec[Float64], finance_rate: Float64, reinvest_rate: Floa
 
 /// Periodic payment of an annuity: pmt = (fv - pv (1+r)^n) r / ((1+r)^n - 1);
 /// r == 0 uses (fv - pv)/n. Complexity: O(1).
-pub fn pmt(rate: Float64, nper: Float64, pv: Float64, fv: Float64) -> Float64 {
+pub fn pmt(rate: Float64, nper: Float64, pv: Float64, fv: Float64) -> Float64
+  ensures: (nper == 0.0) => (result != result)
+  ensures: (rate == 0.0 && nper != 0.0) => (result == (fv - pv) / nper)
+{
   if nper == 0.0 { return 0.0 / 0.0; }
   if rate == 0.0 {
     return (fv - pv) / nper;
@@ -136,7 +147,10 @@ pub fn pmt(rate: Float64, nper: Float64, pv: Float64, fv: Float64) -> Float64 {
 
 /// Interest portion of the payment in period per (1-based) for a loan of pv
 /// amortized at rate over nper periods (fv = 0). Complexity: O(per).
-pub fn ipmt(rate: Float64, per: Int, nper: Float64, pv: Float64) -> Float64 {
+pub fn ipmt(rate: Float64, per: Int, nper: Float64, pv: Float64) -> Float64
+  ensures: (per < 1) => (result != result)
+  ensures: (rate == 0.0 && per >= 1 && nper != 0.0) => (result == 0.0)
+{
   if per < 1 { return 0.0 / 0.0; }
   var p = pmt(rate, nper, pv, 0.0);
   if rate == 0.0 { return 0.0; }
@@ -146,7 +160,9 @@ pub fn ipmt(rate: Float64, per: Int, nper: Float64, pv: Float64) -> Float64 {
 }
 
 /// Principal portion of the payment in period per. Complexity: O(per).
-pub fn ppmt(rate: Float64, per: Int, nper: Float64, pv: Float64) -> Float64 {
+pub fn ppmt(rate: Float64, per: Int, nper: Float64, pv: Float64) -> Float64
+  ensures: (per < 1) => (result != result)
+{
   var p = pmt(rate, nper, pv, 0.0);
   var ip = ipmt(rate, per, nper, pv);
   return p - ip;
@@ -154,7 +170,10 @@ pub fn ppmt(rate: Float64, per: Int, nper: Float64, pv: Float64) -> Float64 {
 
 /// Number of periods to reach fv from pv paying pmt per period:
 /// n = ln((pmt - fv r) / (pmt + pv r)) / ln(1 + r). Complexity: O(1).
-pub fn nper(rate: Float64, pmt: Float64, pv: Float64, fv: Float64) -> Float64 {
+pub fn nper(rate: Float64, pmt: Float64, pv: Float64, fv: Float64) -> Float64
+  ensures: (rate == 0.0 && pmt == 0.0) => (result != result)
+  ensures: (rate == 0.0 && pmt != 0.0) => (result == -(pv + fv) / pmt)
+{
   if rate == 0.0 {
     var d = pmt;
     if d == 0.0 { return 0.0 / 0.0; }
@@ -206,14 +225,19 @@ pub fn annuity(rate: Float64, nper: Float64, pmt: Float64) -> Float64 {
 
 /// Present value of a level perpetuity pmt / rate. NaN for rate <= 0.
 /// Complexity: O(1).
-pub fn perpetuity(pmt: Float64, rate: Float64) -> Float64 {
+pub fn perpetuity(pmt: Float64, rate: Float64) -> Float64
+  ensures: (rate <= 0.0) => (result != result)
+  ensures: (rate > 0.0) => (result == pmt / rate)
+{
   if rate <= 0.0 { return 0.0 / 0.0; }
   return pmt / rate;
 }
 
 /// Price of a coupon bond with face, annual coupon rate, yield to maturity,
 /// n years and freq coupons per year. Complexity: O(n * freq).
-pub fn bond_price(face: Float64, coupon: Float64, ytm: Float64, n: Int, freq: Int) -> Float64 {
+pub fn bond_price(face: Float64, coupon: Float64, ytm: Float64, n: Int, freq: Int) -> Float64
+  ensures: (face <= 0.0 || freq <= 0) => (result != result)
+{
   if face <= 0.0 || freq <= 0 { return 0.0 / 0.0; }
   var periods = n * freq;
   var c = coupon * face / (freq as Float64);
@@ -419,7 +443,9 @@ pub fn implied_volatility(market: Float64, s: Float64, k: Float64, t: Float64, r
 
 /// Compound annual growth rate (end/begin)^(1/years) - 1. NaN for years <= 0
 /// or non-positive begin. Complexity: O(1).
-pub fn cagr(begin_value: Float64, end_value: Float64, years: Float64) -> Float64 {
+pub fn cagr(begin_value: Float64, end_value: Float64, years: Float64) -> Float64
+  ensures: (begin_value <= 0.0 || years <= 0.0) => (result != result)
+{
   if begin_value <= 0.0 || years <= 0.0 { return 0.0 / 0.0; }
   var e = math.pow(end_value / begin_value, 1.0 / years);
   return e - 1.0;
@@ -427,7 +453,9 @@ pub fn cagr(begin_value: Float64, end_value: Float64, years: Float64) -> Float64
 
 /// Sharpe ratio (mean(returns) - rf) / sample_stddev(returns). NaN for fewer
 /// than 2 returns. Complexity: O(n).
-pub fn sharpe_ratio(returns: &Vec[Float64], rf: Float64) -> Float64 {
+pub fn sharpe_ratio(returns: &Vec[Float64], rf: Float64) -> Float64
+  ensures: (returns.len() < 2) => (result != result)
+{
   var n = returns.len();
   if n < 2 { return 0.0 / 0.0; }
   var mean = 0.0;
@@ -452,7 +480,9 @@ pub fn sharpe_ratio(returns: &Vec[Float64], rf: Float64) -> Float64 {
 /// Sortino ratio (mean(returns) - rf) / downside_deviation(returns, rf), where
 /// the downside deviation is the sqrt of the mean of squared returns below rf.
 /// NaN for fewer than 2 returns. Complexity: O(n).
-pub fn sortino_ratio(returns: &Vec[Float64], rf: Float64) -> Float64 {
+pub fn sortino_ratio(returns: &Vec[Float64], rf: Float64) -> Float64
+  ensures: (returns.len() < 2) => (result != result)
+{
   var n = returns.len();
   if n < 2 { return 0.0 / 0.0; }
   var mean = 0.0;
@@ -481,7 +511,9 @@ pub fn sortino_ratio(returns: &Vec[Float64], rf: Float64) -> Float64 {
 
 /// Calmar ratio annualized mean return / |max drawdown|. NaN for a zero
 /// drawdown or fewer than 2 returns. Complexity: O(n).
-pub fn calmar_ratio(returns: &Vec[Float64], max_drawdown: Float64) -> Float64 {
+pub fn calmar_ratio(returns: &Vec[Float64], max_drawdown: Float64) -> Float64
+  ensures: (returns.len() < 2 || max_drawdown == 0.0) => (result != result)
+{
   var n = returns.len();
   if n < 2 || max_drawdown == 0.0 { return 0.0 / 0.0; }
   var mean = 0.0;
@@ -519,7 +551,10 @@ fn _sort_asc(v: &mut Vec[Float64]) {
 /// Value at risk at confidence alpha: method 0 = historical quantile,
 /// method 1 = parametric (normal) quantile. Returns a positive loss.
 /// Complexity: O(n log n) historical / O(n) parametric.
-pub fn value_at_risk(returns: &Vec[Float64], alpha: Float64, method: Int) -> Float64 {
+pub fn value_at_risk(returns: &Vec[Float64], alpha: Float64, method: Int) -> Float64
+  ensures: (returns.len() == 0) => (result != result)
+  ensures: (returns.len() > 0 && (alpha <= 0.0 || alpha >= 1.0)) => (result != result)
+{
   var n = returns.len();
   if n == 0 { return 0.0 / 0.0; }
   if alpha <= 0.0 || alpha >= 1.0 { return 0.0 / 0.0; }
@@ -557,7 +592,10 @@ pub fn value_at_risk(returns: &Vec[Float64], alpha: Float64, method: Int) -> Flo
 
 /// Conditional value at risk: mean of the returns below the alpha-VaR level.
 /// NaN for fewer than 1 tail observation. Complexity: O(n log n).
-pub fn cvar(returns: &Vec[Float64], alpha: Float64) -> Float64 {
+pub fn cvar(returns: &Vec[Float64], alpha: Float64) -> Float64
+  ensures: (returns.len() == 0) => (result != result)
+  ensures: (returns.len() > 0 && (alpha <= 0.0 || alpha >= 1.0)) => (result != result)
+{
   var n = returns.len();
   if n == 0 { return 0.0 / 0.0; }
   if alpha <= 0.0 || alpha >= 1.0 { return 0.0 / 0.0; }
@@ -585,7 +623,9 @@ pub fn cvar(returns: &Vec[Float64], alpha: Float64) -> Float64 {
 
 /// Drawdown series of the returns (cumulative product minus 1, then
 /// peak-to-trough). Complexity: O(n).
-pub fn drawdown(returns: &Vec[Float64]) -> Vec[Float64] {
+pub fn drawdown(returns: &Vec[Float64]) -> Vec[Float64]
+  ensures: (returns.len() == 0) => (result.len() == 0)
+{
   var out = Vec[Float64].new();
   var equity = 1.0;
   var peak = 1.0;
@@ -604,7 +644,9 @@ pub fn drawdown(returns: &Vec[Float64]) -> Vec[Float64] {
 
 /// Systematic risk of an asset versus the market: covariance / market variance.
 /// NaN for fewer than 2 observations or zero market variance. Complexity: O(n).
-pub fn beta(asset_returns: &Vec[Float64], market_returns: &Vec[Float64]) -> Float64 {
+pub fn beta(asset_returns: &Vec[Float64], market_returns: &Vec[Float64]) -> Float64
+  ensures: (asset_returns.len() < 2 || market_returns.len() != asset_returns.len()) => (result != result)
+{
   var n = asset_returns.len();
   if n < 2 || market_returns.len() != n { return 0.0 / 0.0; }
   var ma = 0.0;
@@ -631,7 +673,9 @@ pub fn beta(asset_returns: &Vec[Float64], market_returns: &Vec[Float64]) -> Floa
 
 /// Jensen's alpha: mean(asset) - (rf + beta * (mean(market) - rf)).
 /// Complexity: O(n).
-pub fn alpha(asset_returns: &Vec[Float64], market_returns: &Vec[Float64], rf: Float64) -> Float64 {
+pub fn alpha(asset_returns: &Vec[Float64], market_returns: &Vec[Float64], rf: Float64) -> Float64
+  ensures: (asset_returns.len() == 0 || market_returns.len() != asset_returns.len()) => (result != result)
+{
   var n = asset_returns.len();
   if n == 0 || market_returns.len() != n { return 0.0 / 0.0; }
   var ma = 0.0;
@@ -650,7 +694,9 @@ pub fn alpha(asset_returns: &Vec[Float64], market_returns: &Vec[Float64], rf: Fl
 
 /// Treynor ratio (mean(returns) - rf) / beta. NaN for beta <= 0.
 /// Complexity: O(n).
-pub fn treynor_ratio(returns: &Vec[Float64], beta: Float64, rf: Float64) -> Float64 {
+pub fn treynor_ratio(returns: &Vec[Float64], beta: Float64, rf: Float64) -> Float64
+  ensures: (returns.len() == 0 || beta <= 0.0) => (result != result)
+{
   var n = returns.len();
   if n == 0 || beta <= 0.0 { return 0.0 / 0.0; }
   var mean = 0.0;

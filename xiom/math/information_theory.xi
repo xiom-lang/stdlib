@@ -34,7 +34,9 @@ fn _kl_term(p: Float64, q: Float64) -> Float64 {
 
 /// Shannon entropy H(p) = -sum p_i log2 p_i (bits). NaN for a negative
 /// probability. Complexity: O(n).
-pub fn entropy(probs: &Vec[Float64]) -> Float64 {
+pub fn entropy(probs: &Vec[Float64]) -> Float64
+  ensures: (probs.len() == 0) => (result == 0.0)
+{
   var sum = 0.0;
   var i = 0;
   while i < probs.len() {
@@ -71,7 +73,9 @@ pub fn mutual_information(p_joint: &Vec[Vec[Float64]]) -> Float64 {
 
 /// Kullback-Leibler divergence D(p || q) = sum p_i log2(p_i / q_i) (bits).
 /// NaN for a zero q_i with positive p_i. Complexity: O(n).
-pub fn kl_divergence(p: &Vec[Float64], q: &Vec[Float64]) -> Float64 {
+pub fn kl_divergence(p: &Vec[Float64], q: &Vec[Float64]) -> Float64
+  ensures: (p.len() != q.len()) => (result != result)
+{
   if p.len() != q.len() { return 0.0 / 0.0; }
   var sum = 0.0;
   var i = 0;
@@ -84,7 +88,9 @@ pub fn kl_divergence(p: &Vec[Float64], q: &Vec[Float64]) -> Float64 {
 
 /// Jensen-Shannon divergence JSD(p || q) = 0.5 D(p || m) + 0.5 D(q || m) with
 /// m = (p + q)/2 (bits; values in [0, 1]). NaN on length mismatch. Complexity: O(n).
-pub fn js_divergence(p: &Vec[Float64], q: &Vec[Float64]) -> Float64 {
+pub fn js_divergence(p: &Vec[Float64], q: &Vec[Float64]) -> Float64
+  ensures: (p.len() != q.len()) => (result != result)
+{
   if p.len() != q.len() { return 0.0 / 0.0; }
   var m = Vec[Float64].new();
   var i = 0;
@@ -103,7 +109,9 @@ pub fn js_divergence(p: &Vec[Float64], q: &Vec[Float64]) -> Float64 {
 
 /// Cross entropy H(p, q) = -sum p_i log2 q_i (bits). NaN for a zero q_i with
 /// positive p_i. Complexity: O(n).
-pub fn cross_entropy(p: &Vec[Float64], q: &Vec[Float64]) -> Float64 {
+pub fn cross_entropy(p: &Vec[Float64], q: &Vec[Float64]) -> Float64
+  ensures: (p.len() != q.len()) => (result != result)
+{
   if p.len() != q.len() { return 0.0 / 0.0; }
   var sum = 0.0;
   var i = 0;
@@ -121,7 +129,9 @@ pub fn cross_entropy(p: &Vec[Float64], q: &Vec[Float64]) -> Float64 {
 
 /// Perplexity = 2^H (exponential of the entropy in bits). NaN for negative
 /// probabilities. Complexity: O(n).
-pub fn perplexity(probs: &Vec[Float64]) -> Float64 {
+pub fn perplexity(probs: &Vec[Float64]) -> Float64
+  ensures: (probs.len() == 0) => (result == 1.0)
+{
   var h = entropy(probs);
   if h != h { return h; }
   return math.pow(2.0, h);
@@ -129,7 +139,9 @@ pub fn perplexity(probs: &Vec[Float64]) -> Float64 {
 
 /// Self information -log2(p) of a single event (bits). p <= 0 returns +inf.
 /// Complexity: O(1).
-pub fn self_information(p: Float64) -> Float64 {
+pub fn self_information(p: Float64) -> Float64
+  ensures: (p <= 0.0) => (result > 1.0)
+{
   if p <= 0.0 { return 1.0 / 0.0; }
   return -math.log2(p);
 }
@@ -154,14 +166,18 @@ pub fn channel_capacity(p_transition: &Vec[Vec[Float64]]) -> Float64 {
 
 /// Lower bound on the average code length for a distribution: its entropy
 /// (bits). NaN for negative probabilities. Complexity: O(n).
-pub fn data_compression_bound(dist: &Vec[Float64]) -> Float64 {
+pub fn data_compression_bound(dist: &Vec[Float64]) -> Float64
+  ensures: (dist.len() == 0) => (result == 0.0)
+{
   return entropy(dist);
 }
 
 /// Prefix-free Huffman code for a probability distribution. The result holds
 /// (symbol index, codeword) pairs with codewords of "0"/"1"; NaN inputs or an
 /// empty distribution yield an empty result. Complexity: O(n^2).
-pub fn huffman_coding(probs: &Vec[Float64]) -> Vec[(Int, Str)] {
+pub fn huffman_coding(probs: &Vec[Float64]) -> Vec[(Int, Str)]
+  ensures: (probs.len() == 0) => (result.len() == 0)
+{
   var out = Vec[(Int, Str)].new();
   var n = probs.len();
   if n == 0 { return out; }
@@ -235,7 +251,9 @@ pub fn huffman_coding(probs: &Vec[Float64]) -> Vec[(Int, Str)] {
 /// Arithmetic coding of the symbol sequence seq under the distribution probs:
 /// returns the midpoint of the final code interval in [0, 1). Invalid symbols
 /// (outside the distribution) contribute nothing (documented). Complexity: O(len(seq) * n).
-pub fn arithmetic_coding(probs: &Vec[Float64], seq: &Vec[Int]) -> Float64 {
+pub fn arithmetic_coding(probs: &Vec[Float64], seq: &Vec[Int]) -> Float64
+  ensures: (seq.len() == 0) => (result == 0.5)
+{
   var n = probs.len();
   var cum = Vec[Float64].new();
   var acc = 0.0;

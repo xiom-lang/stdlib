@@ -1722,6 +1722,46 @@ registry pin, agent recon for the rest)**
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
 
+**SESSION 2026-10-10 block 87 (wave 100: finance + information theory; floors137)**
+- Wave 100: 35 clauses, +29 pub covered, on pin v0.64.2.
+- finance 20 (the r==0 closed forms pv/fv/pmt/nper; NaN guards on mirr,
+  pmt nper==0, ipmt/ppmt per<1, nper pmt==0, perpetuity rate<=0, cagr,
+  sharpe/sortino/calmar, bond_price invalid face/freq, VaR/CVaR bad
+  alpha, beta/alpha length-or-sample guards, treynor beta<=0;
+  empty-series npv==0 and drawdown len 0; the exact perpetuity pmt/rate
+  branch).
+- information_theory 9 (entropy empty==0, perplexity empty==1,
+  data_compression_bound empty==0, huffman empty len 0,
+  arithmetic_coding empty seq==0.5, kl/js/cross_entropy length-mismatch
+  NaN, self_information p<=0 -> +inf).
+- math/calculus.xi was INSPECTED AND SKIPPED: the vector-calculus/limit
+  surface (gradient/partial_derivative/jacobian/hessian/laplacian/curl/
+  divergence, limit/limit_left/limit_right/is_continuous,
+  integrate_romberg) is a documented frozen stub set (BUG 20 AVX-512 +
+  BUG 12 Vec[Float64] element reads). No stub self-mirror clauses per
+  protocol; revisit when those codegen bugs land.
+- Probe p_wave100_shapes.xi (273rd, 41 checks): green pre/post. Two probe
+  drafting notes: the first cagr tolerance fix did not apply (PowerShell
+  single-quote backtick expansion) and was redone with a literal
+  Contains/Replace; cagr(100,121,2) is bit-above 0.1 so the control is a
+  [0.099, 0.101] band.
+- Targeted smokes: smoke_math_finance 1/1, smoke_math 53/53 (no
+  information-theory smoke exists; the probe is the lock).
+- Coverage: math 39.1% -> 42.0%, global 62.2% -> 62.6% (clauses 5335 ->
+  5370, pubCovered 4046 -> 4075); meter 76.3%; floors137 dumped and
+  wired (ci/heavy/release + tools/README).
+- Battery on this commit (v0.64.2): release corpus 954/954 full (698.3s,
+  no exclusions); probes 273/273 (319s); check_modules 509/509 (213.1s);
+  barename 0/509 (312.9s); floors137 + doc + module-smoke (497/517,
+  3476/6204) ratchets OK.
+- Open follow-ups unchanged: manual pin PR (`chore/pin-stdlib-v0.64.3`),
+  staging canary approval, package.xi `categories`/`stage`, heavy macOS
+  corpus leg red (PULSE macOS runtime-C guards suspected).
+- Readiness next (wave 101): math remainder (graph_theory,
+  machine_learning, decompose, fuzzy, game_theory, chaos), os 26.6%, the
+  queued feature candidates (Vec[UInt8].with_len, address-aware bind,
+  socket_recv_into), and the macOS runtime-C guards.
+
 **SESSION 2026-10-09 block 86 (pin protocol agreed; wave-97 probe remerged; wave 99: crypto hash + xxhash/city + constants; floors136)**
 - Pin protocol (relay `COMPILER-RELAY-2026-10-09-pin-protocol.md`): tag a
   CANDIDATE `stdlib-vX.Y.Z` -> compiler lane verifies against compiler
