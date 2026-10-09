@@ -6,6 +6,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.64.3] - 2026-10-09
+
+Re-pinned to compiler `v0.64.2` (tag `c51170a6`). Consumes the wave-93..97
+coverage batch and the compiler fixes that clear the two wave-96/97
+findings; heavy.yml's matrix nesting is repaired so the heavy suites can
+run.
+
+### Fixed
+
+- `xiom.array.fixed.array_zip` truncates to the shorter array in every
+  direction on the new pin (the M < N and M == 0 directions used to emit
+  N pairs and read out of bounds); the wave-96 repro exits 0.
+- Triplicate sibling submodule imports (bits.rotation/popcount/bitwise)
+  resolve again (m242); the split wave-97 probes merge cleanly and both
+  halves stay green.
+- `heavy.yml`: the job matrix was nested outside `strategy`, so every push
+  run failed before starting; the matrix now nests correctly.
+
+### Changed
+
+- Coverage 57.7% -> 61.8% pub-with-clause via waves 93-97 (349 clauses,
+  265 public functions): iter 45.4%, format 88.7%, cmp 100%, core 45.8%,
+  sync 35.9%, array 77.8%, sort 42.6%, bits 74.3%, hash 42.2%,
+  num.fraction; floors134; probe corpus 270.
+- `COMPILER_VERSION` -> `v0.64.2`; `package.xi` -> 0.64.3; the known-failure
+  repro sweep was re-run on the pin (14 findings remain: 13 compiler,
+  1 stdlib).
+
+### Notes
+
+- Release/registry state: stdlib-v0.64.3 tagged; the registry publish is
+  pending owner approval in the `registry-publish` environment.
+- Still open on v0.64.2: cross-module alias/type paths, foreign method
+  calls, ensures-is-ok guard, clause float-vec indexing, geom Box naming,
+  geom matrix inference, polyhedra hulls, the M7 Iterator[T] receiver,
+  &mut-param @pre aliasing, generic by-ref Option/Result queries, bounded
+  Slice generics, cross-type generic callbacks, vec-shape AV, and the
+  polygon stdlib algorithm.
+
 ## [0.64.2] - 2026-10-08
 
 Re-pinned to compiler `v0.64.1` (tag `3c6f3bb5`). The m200/m201/m203 batch

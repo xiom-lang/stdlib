@@ -11,7 +11,7 @@ mismatch fails the release before the gates run.
    `release.yml` greps for `compiler = ">=`.
 2. **`COMPILER_VERSION`** -- must name an *existing* compiler tag (the
    release builds that tag from source: `.github/actions/build-compiler`).
-   Current pin: `v0.61.3`. Do not point it at an unreleased/combined
+   Current pin: `v0.64.2`. Do not point it at an unreleased/combined
    compiler release; the combined compiler cut happens AFTER this release,
    when the compiler lane bumps `STDLIB_VERSION` to this tag.
 3. **`release-notes/<tag>.md`** -- present and schema-valid (website
@@ -19,9 +19,9 @@ mismatch fails the release before the gates run.
    <= 240 chars, plain ASCII, no internal IDs; highlights are `### Title` +
    `kind:` + body (<= 320 chars, title <= 60). The compiler release merges
    these with its own; the merged document must keep <= 6 highlights, and
-   the compiler lane's v0.62.0 draft already carries 4, so the stdlib
-   fragment must stay at **2** highlights.
-   Current draft: `release-notes/v0.62.0.md` (2 highlights).
+   the compiler lane's draft already carries 4, so the stdlib fragment must
+   stay at **2** highlights.
+   Current draft: `release-notes/v0.64.3.md` (2 highlights).
 4. **`CHANGELOG.md`** -- move `## [Unreleased]` entries under
    `## [X.Y.Z] - YYYY-MM-DD` (Keep a Changelog layout).
 5. **Local gate battery** (must be green on the exact commit):

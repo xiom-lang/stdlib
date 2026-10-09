@@ -16,30 +16,6 @@ xiom --force -o out.exe tools/known_failures/<file>.xi
 
 ## Current
 
-**Open finding 2026-10-09 (compiler v0.64.1): triplicate sibling function
-exports break alias-qualified resolution.** Importing three sibling
-submodules that export the same function name (`rotate_left`/
-`rotate_right` in `xiom.bits.rotation`, `xiom.bits.popcount` and
-`xiom.bits.bitwise`) makes alias-qualified calls fail with
-`error[T001]: cannot call 'next_pow2' on this expression` -- including
-calls to functions of a module that resolves fine when only two of the
-duplicate-export modules are imported. Found while building the wave-97
-probe; the probe was split (`p_wave97_shapes.xi` +
-`p_wave97_bitwise_shapes.xi`) as the workaround. Repro:
-`tools/known_failures/p_sibling_dup_fn_alias.xi` (compile-fail on
-v0.64.1; expected rc 0).
-
-**Open finding 2026-10-09 (compiler v0.64.1): `array_zip` does not
-truncate to the shorter array.** `xiom.array.fixed.array_zip` documents
-"truncated to the shorter array", but with M < N the
-`if M < count { count = M; }` branch is never taken: the result has N
-pairs and `b[M]` is read out of bounds (with M == 0 it still emits N
-pairs). Only the N <= M direction truncates correctly. Found while
-probing the wave-96 array clauses; the array_zip clause is restricted to
-the N <= M direction until this resolves. Repro:
-`tools/known_failures/p_array_zip_no_truncate.xi` (rc 1 on v0.64.1;
-expected rc 0).
-
 **Open finding 2026-10-08 (compiler v0.64.1): `@pre` on `&mut` parameter
 scalar fields aliases the post-mutation value.** Found while landing the
 wave-94 sync clauses: a clause
@@ -144,6 +120,23 @@ current pins compile-fail a random subset of runs). The two flaky smokes
 were removed from the release gate on v0.63.1 (20/20 + 20/20 stress);
 the C001 carve-out file now holds no exclusions, and ci/heavy keep running
 the full corpus.
+
+**RESOLVED 2026-10-09 (compiler v0.64.2): `array_zip` truncates to the
+shorter array in every direction.** Verified on the official v0.64.2 pin:
+the M < N, M == 0 (either side) and N <= M directions all return
+min(N, M) pairs (the wave-96 repro `p_array_zip_no_truncate.xi` exits 0;
+an extended check with both zero-length directions also exits 0). The
+array_zip clause keeps the N <= M direction until the next coverage wave
+extends it to the full min relation.
+
+**RESOLVED 2026-10-09 (compiler v0.64.2, m242): triplicate sibling
+submodule exports resolve again.** `p_sibling_dup_fn_alias.xi` compiles
+and exits 0 on the pin; the wave-97 probe split
+(`p_wave97_shapes.xi` + `p_wave97_bitwise_shapes.xi`) stays as-is and both
+halves remain green, and the single-file import combination now works as
+well. History: on v0.64.1 importing three sibling submodules that export
+the same function name broke alias-qualified calls (`cannot call
+'next_pow2' on this expression`) while two-module combinations passed.
 
 **RESOLVED 2026-10-08 (compiler v0.64.1, m200): inline indexing of a
 returned `Vec[Float64]` rvalue reads correctly.** Verified rc 0 on the

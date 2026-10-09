@@ -51,6 +51,13 @@ lowering works (Range.count + the retried set + smoke_iter 21/21 incl.
 -Workers 8); the deferred remainder (chain 14 + fold 8 + the rest of the
 iter surface) continues as normal coverage work.
 
+RELEASE CUT (2026-10-09): **stdlib-v0.64.3** tagged on the release commit
+(pin moved to compiler v0.64.2, tag c51170a6); release.yml +
+publish-registry.yml dispatched -- the registry publish is waiting in the
+`registry-publish` environment for owner approval. Findings cleared on
+v0.64.2: array_zip truncation and triplicate sibling imports (16 -> 14
+open). heavy.yml matrix repaired (it had never run). See block 82.
+
 WAVE 97 STATUS (2026-10-09): DONE -- bits submodules + hash + fraction
 landed (57 clauses, +40 pub covered; bits 74.3%, hash 42.2%, num 37.6%,
 global 61.8%, meter 76.2%, floors134, probes 270/270). See block 81; new
@@ -1714,6 +1721,43 @@ registry pin, agent recon for the rest)**
   gates; open: contract coverage 100%, zero open findings, beta-exit release
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
+
+**SESSION 2026-10-09 block 82 (pin bump v0.64.2 + stdlib-v0.64.3 release cut; findings cleared; heavy.yml repaired)**
+- Compiler pin: COMPILER_VERSION -> v0.64.2 (tag c51170a6, the combined
+  v0.64.2 release; local binary E:\xiom-lang\xiom\target\release\xiom.exe
+  verified "XIOM Compiler v0.64.2"). package.xi -> 0.64.3.
+- Findings sweep re-run on v0.64.2 (all known_failures repros compiled and
+  run): CLEARED -- array_zip (M<N, M==0 both sides and N<=M all truncate
+  to min(N,M); p_array_zip_no_truncate.xi exits 0; an extended
+  zero-length check exits 0) and triplicate sibling imports (m242;
+  p_sibling_dup_fn_alias.xi exits 0; the split wave-97 probes stay green
+  and the single-file combination works again). Findings 16 -> 14
+  (13 compiler, 1 stdlib). Still open with unchanged rcs: alias/type paths
+  (compile 1), foreign method call (compile 1), ensures-isok (run 1),
+  clause float vec (run 1), geom Box (compile 1), geom matrix (run 4),
+  M7 Iterator (compile 1; --check passes), mut-param @pre (run 1),
+  generic byref Option (run 2), slice bound C001 (compile 1), cross-type
+  generic callbacks (core_map/map run 41, sortbykey run 1), vec-shape AV
+  (run -1073741819), polygon stdlib (run 1), polyhedra (run 1).
+- heavy.yml REPAIRED: the matrix was nested OUTSIDE `strategy`, so GitHub
+  rejected every push run in 0s as a workflow file issue -- no heavy run
+  has ever succeeded. The matrix now nests under strategy (ubuntu-latest/
+  windows-latest/macos-14); the release push exercises it.
+- Release prep: release-notes/v0.64.3.md (summary 191 chars, 2 highlights
+  with 256/308-char bodies, schema-clean) + CHANGELOG [0.64.3]
+  (Fixed/Changed/Notes) + RELEASE_CHECKLIST pin example refreshed.
+- Battery on v0.64.2 (release commit): corpus 954/954 (2098.7s, no
+  exclusions), probes 270/270 (401.8s), modules 509/509 (221.3s),
+  barename 0/509 (464.2s), floors134 + doc + module-smoke (497/517,
+  3477/6205) ratchets OK.
+- CUT: release commit pushed + tag stdlib-v0.64.3 on the same commit ->
+  release.yml (validate -> Win/Linux gates -> tarball + SHA256SUMS ->
+  attested GitHub Release -> STDLIB_VERSION pin PR) and
+  publish-registry.yml (same-tag asset wait -> protected
+  `registry-publish` environment). REGISTRY PUBLISH PENDING OWNER
+  APPROVAL (approve ONE run).
+- Next: wave 98 resumes coverage on v0.64.2 (os/hash/num/math/crypto);
+  extend the array_zip clause to the full min relation (floors135).
 
 **SESSION 2026-10-09 block 81 (wave 97: bits submodules + hash + fraction; floors134; sibling-alias finding)**
 - Wave 97: 57 clauses, +40 pub covered. bits 22 (bitfield width/offset
