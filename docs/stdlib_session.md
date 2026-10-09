@@ -1741,8 +1741,11 @@ registry pin, agent recon for the rest)**
   (run -1073741819), polygon stdlib (run 1), polyhedra (run 1).
 - heavy.yml REPAIRED: the matrix was nested OUTSIDE `strategy`, so GitHub
   rejected every push run in 0s as a workflow file issue -- no heavy run
-  has ever succeeded. The matrix now nests under strategy (ubuntu-latest/
-  windows-latest/macos-14); the release push exercises it.
+  has ever succeeded. The matrix now nests under strategy and a manual
+  dispatch (run 37962605725) actually starts the ubuntu/windows/macos
+  job matrix. Cloud runs for this cut: release.yml 37962367989 (validate
+  OK, Win/Linux gates running), publish-registry.yml 37962367935 (waiting
+  at the protected `registry-publish` environment for owner approval).
 - Release prep: release-notes/v0.64.3.md (summary 191 chars, 2 highlights
   with 256/308-char bodies, schema-clean) + CHANGELOG [0.64.3]
   (Fixed/Changed/Notes) + RELEASE_CHECKLIST pin example refreshed.

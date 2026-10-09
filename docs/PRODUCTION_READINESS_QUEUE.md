@@ -696,7 +696,11 @@ Iterator[T] receiver remains open (check passes, run C001). Also fixed
 `heavy.yml`: the job matrix was nested OUTSIDE `strategy`, so every push
 run since the matrix was introduced died in 0s with "workflow file
 issue" (no heavy run has ever succeeded); the matrix now nests under
-strategy and the next push exercises it on ubuntu/windows/macos.
+strategy and a manual dispatch (run 37962605725, in progress) actually
+starts the ubuntu/windows/macos job matrix. Cloud runs for this cut:
+release.yml 37962367989 (validate OK, Win/Linux gates running),
+publish-registry.yml 37962367935 (waiting at the protected
+`registry-publish` environment for the owner approval).
 Battery on v0.64.2 (release commit): corpus 954/954 (2098.7s, no
 exclusions), probes 270/270 (401.8s), modules 509/509 (221.3s), barename
 0/509 (464.2s), floors134 + doc + module-smoke (497/517, 3477/6205)
