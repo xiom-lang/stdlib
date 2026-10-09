@@ -682,6 +682,21 @@ release lane: the archive at v0.64.1 bundles stdlib 6e60e958 (old
 wave-74 pin); the v0.64.2 pin decision + release notes are pending in
 the session blocks.
 
+Compiler relays consumed 2026-10-09 (block 83): v0.64.2 batch facts
+(m222..m241; m237 array_zip, m238 `[0]T` by value, m239 deep container
+equality, m240 verifier SMT, m241 OOB write trap; m242 sibling alias is
+in the tag c51170a6 -> 516ea33b); compiler main has moved past the pin
+(d9f146cb m244 null guards, not in v0.64.2). TWO actionable handoffs
+accepted: (a) M7 `Iterator[T]` is STDLIB-SIDE per the compiler-lane
+diagnosis -- declare the opaque handle or move the four adapters to the
+closure shape (wave-98 first item; `--check` passes, `--run` C001); (b)
+B-05 guard-heap spin is RUNTIME-SIDE in this repo (`runtime/xiom_runtime.c`
+guard arena; repro under
+`E:\xiom-packages\packages\docs\repro\bindings-pilot\alloc-guard-spin`) --
+runtime-lane item after the release. Findings 14 Current (13 compiler,
+1 stdlib); the two v0.64.2 clears (array_zip, sibling alias) are marked
+RESOLVED in the known_failures README with the re-run evidence.
+
 Release cut 2026-10-09 (stdlib-v0.64.3; pin v0.64.2; findings cleared;
 heavy.yml repaired): `COMPILER_VERSION` -> v0.64.2 (tag c51170a6; binary
 verified "XIOM Compiler v0.64.2"), `package.xi` -> 0.64.3,

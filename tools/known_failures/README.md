@@ -16,6 +16,16 @@ xiom --force -o out.exe tools/known_failures/<file>.xi
 
 ## Current
 
+Status check 2026-10-09 (compiler v0.64.2, tag `c51170a6`): every Current
+repro below was re-compiled and re-run on the new pin. Observed rcs are
+unchanged from the entries except where noted; `p_array_zip_no_truncate.xi`
+and `p_sibling_dup_fn_alias.xi` are now RESOLVED (entries in the history
+below). The compiler-side batch m222..m242 also fixed deep container
+equality, zero-length `[0]T` by value at clang, and the verifier SMT array
+model; compiler main has since moved past the tag (d9f146cb, m244 null
+guards under `--overflow-checks`). The 2026-10-09 relays are recorded in
+`docs/stdlib_session.md` block 83.
+
 **Open finding 2026-10-08 (compiler v0.64.1): `@pre` on `&mut` parameter
 scalar fields aliases the post-mutation value.** Found while landing the
 wave-94 sync clauses: a clause
@@ -52,22 +62,27 @@ standalone queries and the whole Slice-param helper set
 (`is_sorted`/`all`/`none`/`contains`/`slice_*`/`min_slice`/`max_slice`/
 `sum_slice`) stay clause-free until this resolves.
 
-**Open finding 2026-10-08 (compiler v0.64.1): the `xiom.iter` M7
-`Iterator[T]` adapter surface is unreachable.** The M7 adapters
+**Open finding 2026-10-08 (compiler v0.64.1; v0.64.2 status: unchanged,
+fix now stdlib-side): the `xiom.iter` M7 `Iterator[T]` adapter surface is
+unreachable.** The M7 adapters
 (`Iterator[T].step_by`/`take_while`/`skip_while`/`inspect` and the
 `StepByIter`/`TakeWhileIter`/`SkipWhileIter`/`InspectIter` types) use an
 `Iterator[T]` receiver/element type that is not declared anywhere in
 `xiom/`, so every consumer of `xiom.iter` compiles with the warning
 `unknown type 'Iterator' -- defaulting to i64. This may produce incorrect
-code.` (3-4x) and the call `r.step_by(2)` fails
-`error[C001]: codegen: unresolved function symbol(s) 'Iterator.step_by'`
-(the local auto-stub is now loud instead of silently zero). Found while
-probing the wave-93 iter remainder; the concrete Range/MapIter/FilterIter/
-EnumerateIter/TakeIter/ChainIter adapters are unaffected on the same pin.
-Repro: `tools/known_failures/p_iter_iterator_type_unresolved.xi` (rc 1 on
-v0.64.1; expected rc 0 when `Iterator[T]` resolves or the M7 family moves
-onto the concrete receivers). Stdlib impact: the four M7 adapters and the
-four M7 iterator types stay clause-free until then; no smoke calls them.
+code.` (5x on v0.64.2) and the call `r.step_by(2)` fails
+`error[C001]: codegen: unresolved function symbol(s) 'Iterator.step_by'`.
+Compiler-lane diagnosis (relay 2026-10-09): `Iterator[T]` is a leftover
+from the removed interface design; the lane will not bind undeclared
+generic receivers by leaf name, so the fix is STDLIB-SIDE -- declare an
+explicit opaque handle (`pub type Iterator[T] = Int;`) or (preferred)
+move the four M7 adapters to the closure-based shape the rest of
+`iter.xi` uses and drop the `Iterator[T]` receiver entirely. `--check`
+passes and `--run` fails on v0.64.2. Repro:
+`tools/known_failures/p_iter_iterator_type_unresolved.xi` (expected rc 0
+once the stdlib-side fix lands). Stdlib impact: the four M7 adapters and
+the four M7 iterator types stay clause-free until then; no smoke calls
+them. Wave-98 first item.
 
 **Open finding 2026-10-08 (compiler v0.64.0): cross-module type paths and
 method-style foreign calls.** Two resolution traps found while landing the

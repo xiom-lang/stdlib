@@ -1722,6 +1722,38 @@ registry pin, agent recon for the rest)**
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
 
+**SESSION 2026-10-09 block 83 (compiler relays consumed: v0.64.2 batch + M7 diagnosis + B-05 runtime-side)**
+- Relays read from the lane drops (local working files, not committed):
+  `docs/COMPILER-RELAY-2026-10-09-v0.64.2.md` and
+  `docs/COMPILER-RELAY-2026-10-09.md`.
+- v0.64.2 release facts: batch m222..m241 on the tagged tree; four
+  blockers fixed (m239 deep container equality, m237 array_zip
+  const-generic truncate, m238 zero-length `[0]T` by value at clang,
+  m240 verifier SMT array model) plus m241 (out-of-bounds Vec index
+  WRITE now traps under `--overflow-checks` like the read path). m242
+  (sibling alias) landed after the relay and is included in the tag
+  (c51170a6 -> 516ea33b); the relay's "reproduced on v0.64.2" note for
+  the sibling finding is stale. Compiler main has since moved past the
+  tag: d9f146cb m244 (null guards for raw pointer dereferences under
+  `--overflow-checks`) -- NOT in the v0.64.2 pin.
+- M7 `Iterator[T]`: compiler-lane diagnosis says the fix is STDLIB-SIDE
+  (declare an explicit opaque handle `pub type Iterator[T] = Int;` or,
+  preferred, move the four adapters to the closure-based shape); `--check`
+  passes, `--run` C001. Recorded in the known_failures README Current
+  entry; wave-98 first item.
+- B-05 guard-heap spin: runtime-side, in THIS repo
+  (`runtime/xiom_runtime.c` guard arena; repro
+  `E:\xiom-packages\packages\docs\repro\bindings-pilot\alloc-guard-spin`,
+  watchdog required; the spin smells like a slab index/offset never
+  advancing). Runtime-lane item after the release cut.
+- Same-window compiler fixes for other lanes: m230/m236
+  (encoding-via-user-module hard-fail), m234 (Vec[Struct] stride
+  padding), m235 (ORBITDB nested-`Vec[Page]` abort).
+- Findings status after the sweep: 14 Current (13 compiler, 1 stdlib);
+  two resolved today (array_zip, sibling alias), both re-run green on
+  v0.64.2. No release side effects: stdlib-v0.64.3 (pin v0.64.2) is
+  tagged; the registry publish is pending owner approval.
+
 **SESSION 2026-10-09 block 82 (pin bump v0.64.2 + stdlib-v0.64.3 release cut; findings cleared; heavy.yml repaired)**
 - Compiler pin: COMPILER_VERSION -> v0.64.2 (tag c51170a6, the combined
   v0.64.2 release; local binary E:\xiom-lang\xiom\target\release\xiom.exe
