@@ -16,6 +16,17 @@ xiom --force -o out.exe tools/known_failures/<file>.xi
 
 ## Current
 
+**Open finding 2026-10-09 (compiler v0.64.1): `array_zip` does not
+truncate to the shorter array.** `xiom.array.fixed.array_zip` documents
+"truncated to the shorter array", but with M < N the
+`if M < count { count = M; }` branch is never taken: the result has N
+pairs and `b[M]` is read out of bounds (with M == 0 it still emits N
+pairs). Only the N <= M direction truncates correctly. Found while
+probing the wave-96 array clauses; the array_zip clause is restricted to
+the N <= M direction until this resolves. Repro:
+`tools/known_failures/p_array_zip_no_truncate.xi` (rc 1 on v0.64.1;
+expected rc 0).
+
 **Open finding 2026-10-08 (compiler v0.64.1): `@pre` on `&mut` parameter
 scalar fields aliases the post-mutation value.** Found while landing the
 wave-94 sync clauses: a clause

@@ -13,12 +13,16 @@ module xiom.array.fixed
 // ============================================================================
 
 /// Compile-time length N of a fixed-size array. O(1).
-pub fn array_len[const N: Int](a: &[N]Int) -> Int {
+pub fn array_len[const N: Int](a: &[N]Int) -> Int
+  ensures: result == N
+{
   N
 }
 
 /// Element at idx, or None if out of bounds. O(1). Returns a value copy.
-pub fn array_get[const N: Int](a: &[N]Int, idx: Int) -> Option[Int] {
+pub fn array_get[const N: Int](a: &[N]Int, idx: Int) -> Option[Int]
+  ensures: (idx < 0 || idx >= N) => (result.is_none == true)
+{
   if idx < 0 || idx >= N { return None; }
   Some(a[idx])
 }
@@ -31,19 +35,27 @@ pub fn array_get[const N: Int](a: &[N]Int, idx: Int) -> Option[Int] {
 // array.fill/swap/reverse in array.xi and smoke_array_fill_swap.xi). Revisit
 // when mutable fixed-array parameters are supported.
 /// First element, or None if N == 0. O(1).
-pub fn array_first[const N: Int](a: &[N]Int) -> Option[Int] {
+pub fn array_first[const N: Int](a: &[N]Int) -> Option[Int]
+  ensures: (N == 0) => (result.is_none == true)
+{
   if N == 0 { return None; }
   Some(a[0])
 }
 
 /// Last element, or None if N == 0. O(1).
-pub fn array_last[const N: Int](a: &[N]Int) -> Option[Int] {
+pub fn array_last[const N: Int](a: &[N]Int) -> Option[Int]
+  ensures: (N == 0) => (result.is_none == true)
+{
   if N == 0 { return None; }
   Some(a[N - 1])
 }
 
 /// Copy of a[start..end) as a Vec[Int]. Bounds are clamped to [0, N]. O(n).
-pub fn array_slice[const N: Int](a: &[N]Int, start: Int, end: Int) -> Vec[Int] {
+pub fn array_slice[const N: Int](a: &[N]Int, start: Int, end: Int) -> Vec[Int]
+  ensures: (start >= end) => (result.len() == 0)
+  ensures: (start >= 0 && end <= N && end > start) => (result.len() == end - start)
+  ensures: (N == 0) => (result.len() == 0)
+{
   var out = Vec[Int].new();
   var s = start;
   var e = end;
@@ -65,7 +77,11 @@ pub fn array_slice[const N: Int](a: &[N]Int, start: Int, end: Int) -> Vec[Int] {
 
 /// (a[i], b[i]) pairs, truncated to the shorter array. O(min(N, M)).
 /// Returns Vec[(Int, Int)].
-pub fn array_zip[const N: Int, const M: Int](a: &[N]Int, b: &[M]Int) -> Vec[(Int, Int)] {
+/// NOTE: the M < N direction does not truncate on v0.64.1 (filed finding
+/// p_array_zip_no_truncate.xi); the clause covers the N <= M direction only.
+pub fn array_zip[const N: Int, const M: Int](a: &[N]Int, b: &[M]Int) -> Vec[(Int, Int)]
+  ensures: (N <= M) => (result.len() == N)
+{
   var out = Vec[(Int, Int)].new();
   var count = N;
   if M < count { count = M; }

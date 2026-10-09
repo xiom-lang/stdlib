@@ -18,7 +18,9 @@ pub fn array_push(a: &mut Vec[Int], value: Int) {
 }
 
 /// Remove and return the last element, or None if a is empty. O(1).
-pub fn array_pop(a: &mut Vec[Int]) -> Option[Int] {
+pub fn array_pop(a: &mut Vec[Int]) -> Option[Int]
+  ensures: (result.is_none == true) => (a.len() == 0)
+{
   a.pop()
 }
 
@@ -39,7 +41,9 @@ pub fn array_remove(a: &mut Vec[Int], idx: Int) -> Option[Int] {
 
 /// Resize a to n elements, padding new slots with fill. O(n).
 /// Negative n is a no-op; shrinking drops trailing elements.
-pub fn array_resize(a: &mut Vec[Int], n: Int, fill: Int) {
+pub fn array_resize(a: &mut Vec[Int], n: Int, fill: Int)
+  ensures: (n >= 0) => (a.len() == n)
+{
   if n < 0 { return; }
   while a.len() > n {
     a.pop();
@@ -50,7 +54,9 @@ pub fn array_resize(a: &mut Vec[Int], n: Int, fill: Int) {
 }
 
 /// New vector with a followed by b. O(a.len() + b.len()).
-pub fn array_concat(a: &Vec[Int], b: &Vec[Int]) -> Vec[Int] {
+pub fn array_concat(a: &Vec[Int], b: &Vec[Int]) -> Vec[Int]
+  ensures: result.len() == a.len() + b.len()
+{
   var out = Vec[Int].new();
   var i = 0;
   while i < a.len() {
@@ -131,7 +137,9 @@ pub fn array_sort(a: &mut Vec[Int]) {
 }
 
 /// Index of the first occurrence of item, or None. O(n).
-pub fn array_search(a: &Vec[Int], item: Int) -> Option[Int] {
+pub fn array_search(a: &Vec[Int], item: Int) -> Option[Int]
+  ensures: (a.len() == 0) => (result.is_none == true)
+{
   var i = 0;
   while i < a.len() {
     if a[i] == item { return Some(i); }
@@ -141,6 +149,9 @@ pub fn array_search(a: &Vec[Int], item: Int) -> Option[Int] {
 }
 
 /// True if the vector has no elements. O(1).
-pub fn array_is_empty(a: &Vec[Int]) -> Bool {
+pub fn array_is_empty(a: &Vec[Int]) -> Bool
+  ensures: (a.len() == 0) => (result == true)
+  ensures: (a.len() != 0) => (result == false)
+{
   a.len() == 0
 }

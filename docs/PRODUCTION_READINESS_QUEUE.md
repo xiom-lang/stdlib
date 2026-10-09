@@ -1,10 +1,10 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
-**76.1% -- 7 of 10 gates complete; gate 8 at 60.6% (partial credit) and
+**76.1% -- 7 of 10 gates complete; gate 8 at 61.2% (partial credit) and
 gates 9-10 discrete.** (Compiler pin: **v0.64.1**.)
 **Gates: corpus 954/954 full (C001 carve-outs retired on v0.63.1; new
 TcpStream loopback and uuencode roundtrip smokes added), modules 509/509,
-probes 267/267, barename 0/509.**
+probes 268/268, barename 0/509.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -14,23 +14,23 @@ gates flip:
    full, no carve-outs (C001 fixed by 4bf8cf1e; 20/20 + 20/20 stress).
    lz4 is fixed by m190 and stayed in the gate; the new TcpStream loopback
    smoke locks m196.
-3. Probe corpus green -- MET (267/267 on v0.64.1, incl. the promoted
+3. Probe corpus green -- MET (268/268 on v0.64.1, incl. the promoted
    regression locks (rvalue float Vec index, multipart parse name, iter
    forwardref), the v0.64.1 pin probe p_pin0641_iter_shapes.xi, the
-   wave-77 stats probe, the Pulse hardening probe, the wave-78..95
+   wave-77 stats probe, the Pulse hardening probe, the wave-78..96
    coverage probes, the io byte-fidelity/CRLF lock and the fs_remove
    lock).
 4. Strict bare-name scan clean -- MET (0/509).
 5. Coverage ratchet green -- MET (floors129).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (497/517 modules, 3477/6202 fns).
-8. Contract coverage 100% (every public fn carries clauses) -- OPEN (60.6%).
+8. Contract coverage 100% (every public fn carries clauses) -- OPEN (61.2%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
-   OPEN (14: 13 compiler, 1 stdlib algorithm).
+   OPEN (15: 14 compiler, 1 stdlib algorithm).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
 
 Meter formula: MET gates count 1.0; gate 8 counts its current
-pub-with-clause fraction (60.6% -> 0.606); gates 9 and 10 get no partial
+pub-with-clause fraction (61.2% -> 0.612); gates 9 and 10 get no partial
 credit (discrete). Update the percentage and the gate-8 fraction in the
 same commit as each floors dump so the meter moves smoothly toward 80%.
 
@@ -38,8 +38,8 @@ Authoritative order: the gates above, then the updates below newest-first.
 Current state: compiler pin v0.64.1 (consumed by wave 92); stdlib-v0.64.2
 RELEASED 2026-10-08 and REGISTRY LIVE (xiom-std 0.64.2 signed,
 f5375c03ad88); post-tag fixes on main (string linearization + signal
-stubs, block 75); post-wave-95 coverage 60.6%, meter 76.1%; handoff in
-`docs/stdlib_session.md` snapshot 24 (block 79).
+stubs, block 75); post-wave-96 coverage 61.2%, meter 76.1%; handoff in
+`docs/stdlib_session.md` snapshot 24 (block 80).
 
 ## Project Pulse relay (web-framework lane) -- 2026-10-05
 
@@ -677,6 +677,37 @@ cross-module type-path/foreign-call findings unchanged. iter 18.6% ->
 release lane: the archive at v0.64.1 bundles stdlib 6e60e958 (old
 wave-74 pin); the v0.64.2 pin decision + release notes are pending in
 the session blocks.
+
+Update 2026-10-09 (wave 96 landed): array + sort + bits -- 53 clauses, +40
+pub covered. array 19 (the N==0 identities on len/is_empty/array_sum/
+array_max/array_min/array_count/array_find/array_equal; fixed.xi
+array_len/get/first/last, the array_slice empty and bounded-length
+claims, the array_zip N<=M direction; dynamic.xi array_pop's None=>empty
+post-form, array_resize post-length, array_concat length-sum,
+array_search empty guard, array_is_empty branch pins) -- array 35.6% ->
+77.8%. sort 5 (the len<=1 is_sorted identities on sort.xi and
+sort.intro.xi, is_sorted_by variants and the nth_element bounds guard) --
+sort 31.9% -> 42.6%. bits 16 (out-of-range no-op guards on
+bit_set/clear/toggle, k==0 rotation identity, zero pins on bit_reverse/
+byte_swap16/32/64, the len<=0 identity on get/set_bit_range, is_pow2
+boundary pins, and the pack_u16/u32 little/big-endian bit-position pins)
+-- bits 36.6% -> 52.5%. NEW FINDING (14 -> 15):
+`p_array_zip_no_truncate.xi` -- array_zip does not truncate for M < N
+(emits N pairs, reads b[M] out of bounds; the `if M < count` branch is
+never taken), so the clause covers the N <= M direction only. Also
+dropped array.fold from the wave: passing a zero-length `[0]Int` by value
+miscompiles at clang ('[0 x i64]' vs 'i64'); the probe is p_wave96_shapes
+.xi (268th, 87 checks) green on v0.64.1 pre/post; targeted smokes
+smoke_array 17/17, smoke_sort 2/2, smoke_bit 3/3. Global 60.6% -> 61.2%
+(clauses 5192 -> 5245); meter 76.1%; floors133. Battery on v0.64.1:
+corpus 954/954 (709.6s, no exclusions), probes 268/268 (585.2s), modules
+509/509 (225.8s), barename 0/509 (291.1s), floors133 + doc + module-smoke
+(497/517, 3477/6205) ratchets OK. Readiness next: os 26.6% (runtime-backed
+surfaces inspected per item), hash 33.3%, num 35.6%, math 38.8%, crypto
+39.9%, the remaining bits submodules (bitarray/bitfield/rotation/popcount/
+bitwise/endianness), and the queued feature candidates (ORBITDB
+append_line_sync pure half, bindings W-2/W-5). Release note: the next
+stdlib cut picks up blocks 75/77/78/79/80.
 
 Update 2026-10-08 (wave 95 landed): format remainder -- 82 clauses, +68
 pub covered. markup 13 (wrapper length claims: bold/italic/code/strike

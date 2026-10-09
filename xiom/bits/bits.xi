@@ -32,21 +32,30 @@ pub fn bit_get(n: Int, pos: Int) -> Int
 }
 
 /// bit_set -- Returns n with the bit at position pos set to 1.
-pub fn bit_set(n: Int, pos: Int) -> Int {
+pub fn bit_set(n: Int, pos: Int) -> Int
+  ensures: (pos < 0 || pos >= 64) => (result == n)
+  ensures: (n == 0 && pos == 3) => (result == 8)
+{
   if pos < 0 || pos >= 64 { return n; }
   var mask = shl(1, pos);
   return bit_or(n, mask);
 }
 
 /// bit_clear -- Returns n with the bit at position pos cleared (set to 0).
-pub fn bit_clear(n: Int, pos: Int) -> Int {
+pub fn bit_clear(n: Int, pos: Int) -> Int
+  ensures: (pos < 0 || pos >= 64) => (result == n)
+  ensures: (n == 1 && pos == 0) => (result == 0)
+{
   if pos < 0 || pos >= 64 { return n; }
   var mask = bit_not(shl(1, pos));
   return bit_and(n, mask);
 }
 
 /// bit_toggle -- Flips the bit at position pos: 0->1, 1->0.
-pub fn bit_toggle(n: Int, pos: Int) -> Int {
+pub fn bit_toggle(n: Int, pos: Int) -> Int
+  ensures: (pos < 0 || pos >= 64) => (result == n)
+  ensures: (n == 0 && pos == 0) => (result == 1)
+{
   if pos < 0 || pos >= 64 { return n; }
   var mask = shl(1, pos);
   return bit_xor(n, mask);
@@ -120,7 +129,9 @@ pub fn ctz(n: Int) -> Int
 /// rot_left -- Circularly shifts bits left by k positions.
 /// Bits shifted off the MSB reappear at the LSB.
 /// Equivalent to xiom.num.rotate_left.
-pub fn rot_left(n: Int, k: Int) -> Int {
+pub fn rot_left(n: Int, k: Int) -> Int
+  ensures: (k == 0) => (result == n)
+{
   var bits = size_of[Int]() * 8;
   var shift = k % bits;
   if shift == 0 { return n; }
@@ -130,7 +141,9 @@ pub fn rot_left(n: Int, k: Int) -> Int {
 /// rot_right -- Circularly shifts bits right by k positions.
 /// Bits shifted off the LSB reappear at the MSB.
 /// Equivalent to xiom.num.rotate_right.
-pub fn rot_right(n: Int, k: Int) -> Int {
+pub fn rot_right(n: Int, k: Int) -> Int
+  ensures: (k == 0) => (result == n)
+{
   var bits = size_of[Int]() * 8;
   var shift = k % bits;
   if shift == 0 { return n; }
@@ -139,7 +152,9 @@ pub fn rot_right(n: Int, k: Int) -> Int {
 
 /// bit_reverse -- Reverses the order of bits in n (mirror).
 /// LSB becomes MSB and vice versa.
-pub fn bit_reverse(n: Int) -> Int {
+pub fn bit_reverse(n: Int) -> Int
+  ensures: (n == 0) => (result == 0)
+{
   var result = 0;
   var x = n;
   var bits = size_of[Int]() * 8;
@@ -154,7 +169,10 @@ pub fn bit_reverse(n: Int) -> Int {
 
 /// byte_swap16 -- Swaps the two bytes of a 16-bit value (stored in lower 16
 /// bits of an Int). Returns the byte-swapped result.
-pub fn byte_swap16(v: Int) -> Int {
+pub fn byte_swap16(v: Int) -> Int
+  ensures: (v == 0) => (result == 0)
+  ensures: (v == 256) => (result == 1)
+{
   var lower = bit_and(v, 255);
   var upper = bit_and(shr(v, 8), 255);
   return bit_or(shl(lower, 8), upper);
@@ -162,7 +180,9 @@ pub fn byte_swap16(v: Int) -> Int {
 
 /// byte_swap32 -- Swaps all four bytes of a 32-bit value (stored in lower 32
 /// bits of an Int). Returns the byte-swapped result.
-pub fn byte_swap32(v: Int) -> Int {
+pub fn byte_swap32(v: Int) -> Int
+  ensures: (v == 0) => (result == 0)
+{
   var b0 = bit_and(v, 255);
   var b1 = bit_and(shr(v, 8), 255);
   var b2 = bit_and(shr(v, 16), 255);
@@ -172,7 +192,9 @@ pub fn byte_swap32(v: Int) -> Int {
 
 /// byte_swap64 -- Swaps all eight bytes of a 64-bit value.
 /// Returns the fully byte-reversed Int.
-pub fn byte_swap64(v: Int) -> Int {
+pub fn byte_swap64(v: Int) -> Int
+  ensures: (v == 0) => (result == 0)
+{
   var result = 0;
   var i = 0;
   while i < 8 {
@@ -187,7 +209,9 @@ pub fn byte_swap64(v: Int) -> Int {
 /// value. start is the LSB position of the range, len is the number of bits.
 /// Returns the extracted value right-justified.
 /// Example: get_bit_range(0b110101, 0, 3) -> 0b101 (bits 0-2)
-pub fn get_bit_range(n: Int, start: Int, len: Int) -> Int {
+pub fn get_bit_range(n: Int, start: Int, len: Int) -> Int
+  ensures: (len <= 0) => (result == 0)
+{
   if len <= 0 { return 0; }
   var mask = 0;
   var i = 0;
@@ -202,7 +226,9 @@ pub fn get_bit_range(n: Int, start: Int, len: Int) -> Int {
 /// start is the LSB position, len is the bit width.
 /// value is right-justified (lower bits only).
 /// Returns the modified Int.
-pub fn set_bit_range(n: Int, start: Int, len: Int, value: Int) -> Int {
+pub fn set_bit_range(n: Int, start: Int, len: Int, value: Int) -> Int
+  ensures: (len <= 0) => (result == n)
+{
   if len <= 0 { return n; }
   var mask = 0;
   var i = 0;
@@ -219,7 +245,10 @@ pub fn set_bit_range(n: Int, start: Int, len: Int, value: Int) -> Int {
 /// Uses the classic bit trick: powers of two have exactly one set bit,
 /// so n & (n-1) == 0.
 /// NOTE: xiom.num also provides is_power_of_two with identical behavior.
-pub fn is_pow2(n: Int) -> Bool {
+pub fn is_pow2(n: Int) -> Bool
+  ensures: (n <= 0) => (result == false)
+  ensures: (n == 1) => (result == true)
+{
   if n <= 0 { return false; }
   return bit_and(n, n - 1) == 0;
 }
@@ -241,7 +270,10 @@ pub fn high_nibble(n: Int) -> Int
 
 /// pack_u16_le -- Packs two byte values (0-255) into a 16-bit integer in
 /// little-endian order: low_byte at bits 0-7, high_byte at bits 8-15.
-pub fn pack_u16_le(low_byte: Int, high_byte: Int) -> Int {
+pub fn pack_u16_le(low_byte: Int, high_byte: Int) -> Int
+  ensures: (low_byte == 0 && high_byte == 0) => (result == 0)
+  ensures: (low_byte == 0 && high_byte == 1) => (result == 256)
+{
   var lo = bit_and(low_byte, 255);
   var hi = bit_and(high_byte, 255);
   return bit_or(lo, shl(hi, 8));
@@ -249,7 +281,10 @@ pub fn pack_u16_le(low_byte: Int, high_byte: Int) -> Int {
 
 /// pack_u16_be -- Packs two byte values into a 16-bit integer in big-endian
 /// order: high_byte at bits 0-7, low_byte at bits 8-15.
-pub fn pack_u16_be(high_byte: Int, low_byte: Int) -> Int {
+pub fn pack_u16_be(high_byte: Int, low_byte: Int) -> Int
+  ensures: (high_byte == 0 && low_byte == 0) => (result == 0)
+  ensures: (high_byte == 0 && low_byte == 1) => (result == 256)
+{
   var lo = bit_and(low_byte, 255);
   var hi = bit_and(high_byte, 255);
   return bit_or(hi, shl(lo, 8));
@@ -257,14 +292,20 @@ pub fn pack_u16_be(high_byte: Int, low_byte: Int) -> Int {
 
 /// pack_u32_le -- Packs four byte values (0-255) into a 32-bit integer in
 /// little-endian order: b0 at bits 0-7, b1 at 8-15, b2 at 16-23, b3 at 24-31.
-pub fn pack_u32_le(b0: Int, b1: Int, b2: Int, b3: Int) -> Int {
+pub fn pack_u32_le(b0: Int, b1: Int, b2: Int, b3: Int) -> Int
+  ensures: (b0 == 0 && b1 == 0 && b2 == 0 && b3 == 0) => (result == 0)
+  ensures: (b0 == 0 && b1 == 0 && b2 == 0 && b3 == 1) => (result == 16777216)
+{
   return bit_or(bit_or(bit_and(b0, 255), shl(bit_and(b1, 255), 8)),
                 bit_or(shl(bit_and(b2, 255), 16), shl(bit_and(b3, 255), 24)));
 }
 
 /// pack_u32_be -- Packs four byte values into a 32-bit integer in big-endian
 /// order: b0 at bits 24-31, ... , b3 at bits 0-7.
-pub fn pack_u32_be(b0: Int, b1: Int, b2: Int, b3: Int) -> Int {
+pub fn pack_u32_be(b0: Int, b1: Int, b2: Int, b3: Int) -> Int
+  ensures: (b0 == 0 && b1 == 0 && b2 == 0 && b3 == 0) => (result == 0)
+  ensures: (b0 == 0 && b1 == 0 && b2 == 0 && b3 == 1) => (result == 1)
+{
   return bit_or(bit_or(shl(bit_and(b0, 255), 24), shl(bit_and(b1, 255), 16)),
                 bit_or(shl(bit_and(b2, 255), 8), bit_and(b3, 255)));
 }

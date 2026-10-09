@@ -436,7 +436,9 @@ pub fn sort_radix(arr: &mut Vec[Int]) {
 
 /// is_sorted -- O(n). Checks whether the vector is in non-decreasing order
 /// according to the Ord (compare) trait.
-pub fn is_sorted[T: Ord](arr: &Vec[T]) -> Bool {
+pub fn is_sorted[T: Ord](arr: &Vec[T]) -> Bool
+  ensures: (arr.len() <= 1) => (result == true)
+{
   var n = arr.len();
   if n <= 1 { return true; }
   var i = 1;
@@ -646,7 +648,9 @@ fn nth_partition[T: Ord](arr: &mut Vec[T], lo: Int, hi: Int) -> Int {
 
 /// Partition so the `n`-th element is in final position; returns it (None
 /// when `n` is out of range).
-pub fn nth_element[T: Ord](arr: &mut Vec[T], n: Int) -> Option[T] {
+pub fn nth_element[T: Ord](arr: &mut Vec[T], n: Int) -> Option[T]
+  ensures: (n < 0 || n >= arr.len()) => (result.is_none == true)
+{
   var len = arr.len();
   if n < 0 || n >= len { return None; }
   var lo = 0;
@@ -665,7 +669,9 @@ pub fn nth_element[T: Ord](arr: &mut Vec[T], n: Int) -> Option[T] {
 
 /// is_sorted_by -- O(n). Checks whether the vector is in non-decreasing order
 /// according to the supplied comparator.
-pub fn is_sorted_by[T](arr: &Vec[T], compare: fn(&T, &T) -> Int) -> Bool {
+pub fn is_sorted_by[T](arr: &Vec[T], compare: fn(&T, &T) -> Int) -> Bool
+  ensures: (arr.len() <= 1) => (result == true)
+{
   var n = arr.len();
   if n <= 1 { return true; }
   var i = 1;

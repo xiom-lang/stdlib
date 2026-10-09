@@ -268,7 +268,9 @@ pub fn selection_sort(v: &mut Vec[Int])
 }
 
 /// True if v is non-decreasing. O(n).
-pub fn is_sorted(v: &Vec[Int]) -> Bool {
+pub fn is_sorted(v: &Vec[Int]) -> Bool
+  ensures: (v.len() <= 1) => (result == true)
+{
   var n = v.len();
   if n <= 1 { return true; }
   var i = 1;
@@ -281,7 +283,9 @@ pub fn is_sorted(v: &Vec[Int]) -> Bool {
 
 /// True if v is sorted per the comparator. O(n).
 /// The comparator must be a named function returning -1/0/1.
-pub fn is_sorted_by(v: &Vec[Int], compare: fn(&Int, &Int) -> Int) -> Bool {
+pub fn is_sorted_by(v: &Vec[Int], compare: fn(&Int, &Int) -> Int) -> Bool
+  ensures: (v.len() <= 1) => (result == true)
+{
   var n = v.len();
   if n <= 1 { return true; }
   var i = 1;

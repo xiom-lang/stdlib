@@ -51,6 +51,14 @@ lowering works (Range.count + the retried set + smoke_iter 21/21 incl.
 -Workers 8); the deferred remainder (chain 14 + fold 8 + the rest of the
 iter surface) continues as normal coverage work.
 
+WAVE 96 STATUS (2026-10-09): DONE -- array + sort + bits landed (53
+clauses, +40 pub covered; array 77.8%, sort 42.6%, bits 52.5%, global
+61.2%, meter 76.1%, floors133, probes 268/268). See block 80; new finding
+array_zip M<N truncation. The next wave (97) continues the low dirs: os
+26.6%, hash 33.3%, num 35.6%, math 38.8%, crypto 39.9%, remaining bits
+submodules. Release note: the next stdlib cut picks up blocks
+75/77/78/79/80.
+
 WAVE 95 STATUS (2026-10-08): DONE -- the format remainder landed (markup +
 textual + fmt; 82 clauses, +68 pub covered; format 88.7%, global 60.6%,
 meter 76.1%, floors132, probes 267/267). See block 79. The next wave (96)
@@ -1698,6 +1706,47 @@ registry pin, agent recon for the rest)**
   gates; open: contract coverage 100%, zero open findings, beta-exit release
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
+
+**SESSION 2026-10-09 block 80 (wave 96: array + sort + bits; floors133; array_zip finding)**
+- Wave 96: 53 clauses, +40 pub covered. array 19 (N==0 identities on
+  len/is_empty/array_sum/array_max/array_min/array_count/array_find/
+  array_equal; fixed.xi array_len/get/first/last, array_slice empty +
+  bounded-length claims, the array_zip N<=M direction; dynamic.xi
+  array_pop's None => empty post-form, array_resize post-length,
+  array_concat length-sum, array_search empty guard, array_is_empty
+  branch pins) -- array 35.6% -> 77.8%. sort 5 (len<=1 is_sorted
+  identities on sort.xi + sort.intro.xi, the is_sorted_by variants and
+  nth_element's bounds guard) -- sort 31.9% -> 42.6%. bits 16
+  (out-of-range no-op guards on bit_set/clear/toggle, k==0 rotation
+  identity, zero pins on bit_reverse/byte_swap16/32/64, len<=0 identity
+  on get/set_bit_range, is_pow2 boundary pins, pack_u16/u32 little/big
+  endian bit-position pins) -- bits 36.6% -> 52.5%.
+- NEW FINDING (findings 14 -> 15): p_array_zip_no_truncate.xi -- array_zip
+  does not truncate for M < N: it emits N pairs and reads b[M] out of
+  bounds (with M == 0 it still emits N); the `if M < count` branch is
+  never taken on v0.64.1. Only the N <= M direction is correct, so the
+  array_zip clause covers that direction only. Filed with the stdlib
+  note in fixed.xi.
+- Also dropped array.fold from the wave: passing a zero-length `[0]Int`
+  by value to the const-generic fold miscompiles at clang
+  ('[0 x i64]' but expected 'i64'). No known_failures entry yet (candidate
+  finding; revisit alongside the const-generic/array-return bugs).
+- Probe p_wave96_shapes.xi (268th, 87 checks): green on v0.64.1 pre- and
+  post-clauses. Targeted smokes: smoke_array 17/17, smoke_sort 2/2,
+  smoke_bit 3/3.
+- Coverage: array 35.6% -> 77.8%, sort 31.9% -> 42.6%, bits 36.6% ->
+  52.5%, global 60.6% -> 61.2% (clauses 5192 -> 5245); meter 76.1%;
+  floors133 dumped and wired (ci/heavy/release + tools/README).
+- Battery on this commit (v0.64.1): release corpus 954/954 full (709.6s,
+  no exclusions); probes 268/268 (585.2s); check_modules 509/509 (225.8s);
+  barename 0/509 (291.1s); floors133 + doc + module-smoke (497/517,
+  3477/6205) ratchets OK.
+- Release side: user signalled the next release is close; the cut will
+  pick up blocks 75/77/78/79/80. Readiness next (wave 97): os 26.6%
+  (runtime-backed surfaces inspected per item), hash 33.3%, num 35.6%,
+  math 38.8%, crypto 39.9%, the remaining bits submodules
+  (bitarray/bitfield/rotation/popcount/bitwise/endianness), and the queued
+  feature candidates.
 
 **SESSION 2026-10-08 block 79 (wave 95: format remainder -- markup/textual/fmt; floors132)**
 - Wave 95: 82 clauses, +68 pub covered. markup 13 (wrapper length claims:

@@ -10,12 +10,17 @@ use xiom.array.dynamic;
 use xiom.cmp;
 
 /// Number of elements in the fixed-size array.
-pub fn len[T, const N: Int](arr: &[N]T) -> Int {
+pub fn len[T, const N: Int](arr: &[N]T) -> Int
+  ensures: result == N
+{
   N
 }
 
 /// True when the array has zero length.
-pub fn is_empty[T, const N: Int](arr: &[N]T) -> Bool {
+pub fn is_empty[T, const N: Int](arr: &[N]T) -> Bool
+  ensures: (N == 0) => (result == true)
+  ensures: (N > 0) => (result == false)
+{
   N == 0
 }
 
@@ -283,7 +288,9 @@ pub fn contains[T: Eq, const N: Int](arr: &[N]T, x: &T) -> Bool
 // -- Array Aggregation -------------------------------------------------------
 
 /// Sum of all elements in an integer array. O(N).
-pub fn array_sum[const N: Int](arr: &[N]Int) -> Int {
+pub fn array_sum[const N: Int](arr: &[N]Int) -> Int
+  ensures: (N == 0) => (result == 0)
+{
   var total = 0;
   var i = 0;
   while i < N {
@@ -294,7 +301,9 @@ pub fn array_sum[const N: Int](arr: &[N]Int) -> Int {
 }
 
 /// Maximum element in an array, or None if N == 0. O(N).
-pub fn array_max[T: Ord, const N: Int](arr: &[N]T) -> Option[T] {
+pub fn array_max[T: Ord, const N: Int](arr: &[N]T) -> Option[T]
+  ensures: (N == 0) => (result.is_none == true)
+{
   if N == 0 { return None; }
   var max_val = arr[0];
   var i = 1;
@@ -306,7 +315,9 @@ pub fn array_max[T: Ord, const N: Int](arr: &[N]T) -> Option[T] {
 }
 
 /// Minimum element in an array, or None if N == 0. O(N).
-pub fn array_min[T: Ord, const N: Int](arr: &[N]T) -> Option[T] {
+pub fn array_min[T: Ord, const N: Int](arr: &[N]T) -> Option[T]
+  ensures: (N == 0) => (result.is_none == true)
+{
   if N == 0 { return None; }
   var min_val = arr[0];
   var i = 1;
@@ -318,7 +329,9 @@ pub fn array_min[T: Ord, const N: Int](arr: &[N]T) -> Option[T] {
 }
 
 /// Count occurrences of `value` in the array. O(N).
-pub fn array_count[T: Eq, const N: Int](arr: &[N]T, value: T) -> Int {
+pub fn array_count[T: Eq, const N: Int](arr: &[N]T, value: T) -> Int
+  ensures: (N == 0) => (result == 0)
+{
   var count = 0;
   var i = 0;
   while i < N {
@@ -329,7 +342,9 @@ pub fn array_count[T: Eq, const N: Int](arr: &[N]T, value: T) -> Int {
 }
 
 /// Find the index of the first occurrence of `value`, or None. O(N).
-pub fn array_find[T: Eq, const N: Int](arr: &[N]T, value: T) -> Option[Int] {
+pub fn array_find[T: Eq, const N: Int](arr: &[N]T, value: T) -> Option[Int]
+  ensures: (N == 0) => (result.is_none == true)
+{
   var i = 0;
   while i < N {
     if arr[i].eq(value) { return Some(i); }
@@ -339,7 +354,9 @@ pub fn array_find[T: Eq, const N: Int](arr: &[N]T, value: T) -> Option[Int] {
 }
 
 /// Deep equality check between two arrays. O(N).
-pub fn array_equal[T: Eq, const N: Int](a: &[N]T, b: &[N]T) -> Bool {
+pub fn array_equal[T: Eq, const N: Int](a: &[N]T, b: &[N]T) -> Bool
+  ensures: (N == 0) => (result == true)
+{
   var i = 0;
   while i < N {
     if !(a[i].eq(b[i])) { return false; }
