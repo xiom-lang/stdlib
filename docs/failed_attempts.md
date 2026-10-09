@@ -4,6 +4,27 @@ Per the core protocol circuit breaker: after 3 failed attempts on a
 specific issue, stop, log here, and escalate (here: surface to the owner
 / other lanes). Entries newest-first.
 
+## 2026-10-10 01:10 UTC -- shared compiler build drifted past the pin (wave-101 first battery)
+
+- RESOLVED 2026-10-10 01:14 UTC: re-ran the wave-101 battery with the
+  official v0.64.2 archive binary
+  (`%TEMP%\kilo\stdlib_ws\v0.64.2\bin\xiom.exe`) -- corpus 954/954,
+  probes 274/274, modules 509/509, barename 0/509, no exclusions.
+- Symptom: the first full corpus run with the documented local build
+  `E:\xiom-lang\xiom\target\release\xiom.exe` failed 4 files
+  (smoke_cell_narrow rc 2, smoke_collections_btree_map rc 7,
+  smoke_rand_weighted rc 1, smoke_stress_regex_find AV) on a tree whose
+  only changes were the wave-101 math clauses. The same 4 fail on the
+  clean tree with the wave changes stashed; the official archive binary
+  passes all 4. Cause: the shared build path was rebuilt 2026-10-10
+  00:56 local from compiler main (`da7798da`, m252 -- far past the
+  v0.64.2 tag c51170a6) while still reporting "XIOM Compiler v0.64.2";
+  the compiler lane owns that path.
+- Prevention: wave batteries must use the official archive binary for
+  the pin; if the shared path is needed, verify it against a known
+  corpus file first (or rebuild from the tag). Recorded in session
+  block 89 and the queue's binary note.
+
 ## 2026-10-07 18:30 UTC -- git push origin main (wave-86 commits dacb229 + c3b92a2)
 
 - RESOLVED 2026-10-07 18:32 UTC: a one-shot push with the
