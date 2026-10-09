@@ -348,3 +348,18 @@ fsync/append-bytes; defects (fix-first, wave 98) -- `read_file_lines`
 empty-file ensures (io.xi:1076), `to_string_char(Char(0))` (packages row
 169). The compiler-relay drops (x5 lane dirs) carry the same B-05
 runtime-side and triplicate-sibling notes recorded in block 83.
+
+Wave-98 resolutions (2026-10-09): packages row 168 FIXED stdlib-side --
+`read_file_lines` now returns Ok with ZERO lines for a zero-byte file
+(byte-length guard) and the false `result.len() >= 1` ensures was
+replaced by `requires: path.len() > 0` plus doc notes (regular-file size
+reliance; /proc-like files read as empty); locked by
+`p_wave98_shapes.xi`. Packages row 169 FIXED stdlib-side --
+`to_string_char` now uses `Str::from_utf8` (removes a per-call malloc
+leak) with truthful clauses `(c != '\0') => len >= 1` /
+`(c == '\0') => len == 0` documenting the backend NUL truncation; locked
+by `p_wave98_tostring_shapes.xi`. M7 Iterator: the stdlib-side closure
+rewrite landed (`Range.step_by`/`take_while`/`skip_while`/`inspect`); the
+compiler-lane "stdlib-side fix" note is satisfied. New compiler finding
+from the same wave: importing `xiom.convert.tostring` corrupts closure
+predicate dispatch (`p_tostring_import_breaks_adapters.xi`).

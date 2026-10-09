@@ -77,10 +77,11 @@ pub fn array_slice[const N: Int](a: &[N]Int, start: Int, end: Int) -> Vec[Int]
 
 /// (a[i], b[i]) pairs, truncated to the shorter array. O(min(N, M)).
 /// Returns Vec[(Int, Int)].
-/// NOTE: the M < N direction does not truncate on v0.64.1 (filed finding
-/// p_array_zip_no_truncate.xi); the clause covers the N <= M direction only.
+/// Both truncation directions are claimed now that the const-generic
+/// truncate is fixed (compiler m237, verified on v0.64.2).
 pub fn array_zip[const N: Int, const M: Int](a: &[N]Int, b: &[M]Int) -> Vec[(Int, Int)]
   ensures: (N <= M) => (result.len() == N)
+  ensures: (M <= N) => (result.len() == M)
 {
   var out = Vec[(Int, Int)].new();
   var count = N;

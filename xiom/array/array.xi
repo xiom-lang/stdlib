@@ -87,7 +87,9 @@ pub fn zip[T, U, const N: Int](a: [N]T, b: [N]U) -> [N](T, U) {
 }
 
 /// Fold the elements with `f`, starting from `init`.
-pub fn fold[T, B, const N: Int](arr: [N]T, init: B, f: fn(B, T) -> B) -> B {
+pub fn fold[T, B, const N: Int](arr: [N]T, init: B, f: fn(B, T) -> B) -> B
+  ensures: (N == 0) => (result == init)
+{
   var acc = init;
   var i = 0;
   while i < N {

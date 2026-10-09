@@ -24,7 +24,26 @@ below). The compiler-side batch m222..m242 also fixed deep container
 equality, zero-length `[0]T` by value at clang, and the verifier SMT array
 model; compiler main has since moved past the tag (d9f146cb, m244 null
 guards under `--overflow-checks`). The 2026-10-09 relays are recorded in
-`docs/stdlib_session.md` block 83.
+`docs/stdlib_session.md` block 83. Wave-98 follow-up: the M7
+stdlib-side fix landed (closure rewrite of the four adapters; entry moved
+to the history below), the packages rows 168/169 were fixed stdlib-side
+(read_file_lines empty file -> zero lines; to_string_char NUL clause),
+and a new import-corruption finding was filed (first entry below).
+
+**Open finding 2026-10-09 (compiler v0.64.2): importing
+`xiom.convert.tostring` corrupts closure predicate dispatch.** With
+`use xiom.convert.tostring ...` in the same module (any alias; the plain
+leaf import too), `Range.filter`/`Range.take_while` predicates never see
+the values on v0.64.2: `range(0, 6).filter(lt3).next()` returns None and
+`take_while` returns None with `done` set, while the identical program
+without the tostring import is correct (`iter`+`io`, `iter`+`array`,
+`iter`+`array.fixed` combinations all behave). Inline lambdas are
+affected exactly like named function pointers; `Range.step_by` (no
+predicate) is unaffected. Found while building the wave-98 probe; the
+probe was split (`p_wave98_shapes.xi` + `p_wave98_tostring_shapes.xi`) as
+the workaround. Repro:
+`tools/known_failures/p_tostring_import_breaks_adapters.xi` (rc 1 on
+v0.64.2; expected rc 0).
 
 **Open finding 2026-10-08 (compiler v0.64.1): `@pre` on `&mut` parameter
 scalar fields aliases the post-mutation value.** Found while landing the
@@ -61,28 +80,6 @@ expected rc 0) and `tools/known_failures/p_slice_bound_generic_c001.xi`
 standalone queries and the whole Slice-param helper set
 (`is_sorted`/`all`/`none`/`contains`/`slice_*`/`min_slice`/`max_slice`/
 `sum_slice`) stay clause-free until this resolves.
-
-**Open finding 2026-10-08 (compiler v0.64.1; v0.64.2 status: unchanged,
-fix now stdlib-side): the `xiom.iter` M7 `Iterator[T]` adapter surface is
-unreachable.** The M7 adapters
-(`Iterator[T].step_by`/`take_while`/`skip_while`/`inspect` and the
-`StepByIter`/`TakeWhileIter`/`SkipWhileIter`/`InspectIter` types) use an
-`Iterator[T]` receiver/element type that is not declared anywhere in
-`xiom/`, so every consumer of `xiom.iter` compiles with the warning
-`unknown type 'Iterator' -- defaulting to i64. This may produce incorrect
-code.` (5x on v0.64.2) and the call `r.step_by(2)` fails
-`error[C001]: codegen: unresolved function symbol(s) 'Iterator.step_by'`.
-Compiler-lane diagnosis (relay 2026-10-09): `Iterator[T]` is a leftover
-from the removed interface design; the lane will not bind undeclared
-generic receivers by leaf name, so the fix is STDLIB-SIDE -- declare an
-explicit opaque handle (`pub type Iterator[T] = Int;`) or (preferred)
-move the four M7 adapters to the closure-based shape the rest of
-`iter.xi` uses and drop the `Iterator[T]` receiver entirely. `--check`
-passes and `--run` fails on v0.64.2. Repro:
-`tools/known_failures/p_iter_iterator_type_unresolved.xi` (expected rc 0
-once the stdlib-side fix lands). Stdlib impact: the four M7 adapters and
-the four M7 iterator types stay clause-free until then; no smoke calls
-them. Wave-98 first item.
 
 **Open finding 2026-10-08 (compiler v0.64.0): cross-module type paths and
 method-style foreign calls.** Two resolution traps found while landing the
@@ -135,6 +132,19 @@ current pins compile-fail a random subset of runs). The two flaky smokes
 were removed from the release gate on v0.63.1 (20/20 + 20/20 stress);
 the C001 carve-out file now holds no exclusions, and ci/heavy keep running
 the full corpus.
+
+**RESOLVED 2026-10-09 (wave 98, stdlib-side fix): the M7 `Iterator[T]`
+adapters are callable.** Per the compiler-lane diagnosis the fix was
+stdlib-side: the four adapters were rewritten to the closure-based shape
+the rest of `iter.xi` uses (`next_fn: fn() -> Option[T]`) and are
+constructed from Range (`Range.step_by`/`take_while`/`skip_while`/
+`inspect`); the `Iterator[T]` interface receivers are gone, so the 5x
+"unknown type 'Iterator'" warnings no longer appear for `xiom.iter`
+consumers. `p_iter_iterator_type_unresolved.xi` exits 0; the new probe
+`p_wave98_shapes.xi` locks the step_by/take_while/skip_while/inspect
+sequences and the constructor claims (iter 45.4% -> 46.4%). History: on
+v0.64.1/v0.64.2 the receivers could not bind at codegen
+(`C001 Iterator.step_by`) and the fields fell back to i64.
 
 **RESOLVED 2026-10-09 (compiler v0.64.2): `array_zip` truncates to the
 shorter array in every direction.** Verified on the official v0.64.2 pin:

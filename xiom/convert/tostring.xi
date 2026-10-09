@@ -49,23 +49,16 @@ pub fn to_string_bool(b: Bool) -> Str
 }
 
 /// Renders a character as a single-character UTF-8 string.
+/// NOTE: U+0000 renders as "" -- the string backend truncates at a NUL byte
+/// at construction time; every other code point yields a 1-4 byte string.
 /// Complexity: O(1).
 pub fn to_string_char(c: Char) -> Str
-  ensures: result.len() >= 1
+  ensures: (c != '\0') => (result.len() >= 1)
+  ensures: (c == '\0') => (result.len() == 0)
 {
   var tmp = Vec[UInt8].new();
   xiom.char.encode_utf8(c, &tmp);
-  let blen = tmp.len();
-  unsafe {
-    var buf = malloc(blen + 1);
-    var i: Int = 0;
-    while i < blen {
-      buf[i] = tmp[i];
-      i = i + 1;
-    };
-    buf[blen] = 0;
-    return Str.from_cstring(buf);
-  }
+  return Str::from_utf8(tmp);
 }
 
 /// Formats an integer in an arbitrary radix (2-36, lowercase digits).

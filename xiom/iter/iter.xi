@@ -1077,41 +1077,50 @@ pub fn ZipIter[T, U].last(self) -> Option[(T, U)] {
 }
 
 // === M7: Additional iterator adapters ===
+// Closure-based, like the rest of iter.xi: the old `Iterator[T]` interface
+// receivers are gone (they could not be bound at codegen; see the
+// known_failures M7 entry). Constructed from a Range for now.
 
 /// StepBy -- yields every nth element (1-based step)
-/// Iterator taking every `step`-th element of an underlying iterator.
-pub type StepByIter[T] = { iter: Iterator[T]; step: Int; first: Bool; }
+/// Iterator taking every `step`-th element of an underlying Range.
+pub type StepByIter[T] = { next_fn: fn() -> Option[T]; step: Int; first: Bool; }
 
 /// Take every `step`-th element, starting with the first.
-pub fn Iterator[T].step_by(self, step: Int) -> StepByIter[T]
+pub fn Range.step_by(self, step: Int) -> StepByIter[Int]
   requires: step > 0
+  ensures: result.step == step
+  ensures: result.first == true
 {
-  StepByIter { iter: self; step: step; first: true; }
+  var r = self;
+  StepByIter[Int] { next_fn: fn() -> Option[Int] { return r.next(); }, step: step, first: true }
 }
 
 /// Yield the next kept element at the configured stride; None when done.
 pub fn StepByIter[T].next(self) -> Option[T]
-  ensures: true
+  requires: self.step > 0
 {
   if self.first {
     self.first = false;
-    return self.iter.next();
+    return self.next_fn();
   };
   var i = 0;
   while i < self.step - 1 {
-    self.iter.next();
+    self.next_fn();
     i = i + 1;
   };
-  self.iter.next()
+  self.next_fn()
 }
 
 /// TakeWhile -- yields elements while predicate is true
 /// Iterator yielding elements while a predicate holds.
-pub type TakeWhileIter[T] = { iter: Iterator[T]; predicate: fn(&T) -> Bool; done: Bool; }
+pub type TakeWhileIter[T] = { next_fn: fn() -> Option[T]; predicate: fn(&T) -> Bool; done: Bool; }
 
 /// Yield elements while `predicate` holds, then stop permanently.
-pub fn Iterator[T].take_while(self, predicate: fn(&T) -> Bool) -> TakeWhileIter[T] {
-  TakeWhileIter { iter: self; predicate: predicate; done: false; }
+pub fn Range.take_while(self, predicate: fn(&Int) -> Bool) -> TakeWhileIter[Int]
+  ensures: result.done == false
+{
+  var r = self;
+  TakeWhileIter[Int] { next_fn: fn() -> Option[Int] { return r.next(); }, predicate: predicate, done: false }
 }
 
 /// Yield the next element while the predicate still holds; None once it fails.
@@ -1121,7 +1130,7 @@ pub fn TakeWhileIter[T].next(self) -> Option[T]
   if self.done {
     return None;
   };
-  match self.iter.next() {
+  match self.next_fn() {
     Some(v) => {
       if self.predicate(&v) {
         return Some(v);
@@ -1136,17 +1145,20 @@ pub fn TakeWhileIter[T].next(self) -> Option[T]
 
 /// SkipWhile -- skips elements while predicate is true, then yields rest
 /// Iterator skipping elements while a predicate holds.
-pub type SkipWhileIter[T] = { iter: Iterator[T]; predicate: fn(&T) -> Bool; skipped: Bool; }
+pub type SkipWhileIter[T] = { next_fn: fn() -> Option[T]; predicate: fn(&T) -> Bool; skipped: Bool; }
 
 /// Skip elements while `predicate` holds, then yield the rest.
-pub fn Iterator[T].skip_while(self, predicate: fn(&T) -> Bool) -> SkipWhileIter[T] {
-  SkipWhileIter { iter: self; predicate: predicate; skipped: false; }
+pub fn Range.skip_while(self, predicate: fn(&Int) -> Bool) -> SkipWhileIter[Int]
+  ensures: result.skipped == false
+{
+  var r = self;
+  SkipWhileIter[Int] { next_fn: fn() -> Option[Int] { return r.next(); }, predicate: predicate, skipped: false }
 }
 
 /// Yield the next element after the skipped prefix; None when exhausted.
 pub fn SkipWhileIter[T].next(self) -> Option[T] {
   if !self.skipped {
-    var item = self.iter.next();
+    var item = self.next_fn();
     while item is Some {
       match item {
         Some(v) => {
@@ -1154,28 +1166,29 @@ pub fn SkipWhileIter[T].next(self) -> Option[T] {
             self.skipped = true;
             return Some(v);
           };
-          item = self.iter.next();
+          item = self.next_fn();
         },
         None => { return None; },
       };
     };
     return None;
   };
-  self.iter.next()
+  self.next_fn()
 }
 
 /// Inspect -- calls f on each element for side effects, passes element through
 /// Iterator running a side effect on each element.
-pub type InspectIter[T] = { iter: Iterator[T]; f: fn(&T); }
+pub type InspectIter[T] = { next_fn: fn() -> Option[T]; f: fn(&T); }
 
 /// Call `f` on each element as it is consumed, passing it through unchanged.
-pub fn Iterator[T].inspect(self, f: fn(&T)) -> InspectIter[T] {
-  InspectIter { iter: self; f: f; }
+pub fn Range.inspect(self, f: fn(&Int)) -> InspectIter[Int] {
+  var r = self;
+  InspectIter[Int] { next_fn: fn() -> Option[Int] { return r.next(); }, f: f }
 }
 
 /// Run the side effect, then yield the underlying next element.
 pub fn InspectIter[T].next(self) -> Option[T] {
-  match self.iter.next() {
+  match self.next_fn() {
     Some(v) => { self.f(&v); Some(v) },
     None => None,
   }

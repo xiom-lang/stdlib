@@ -1722,6 +1722,54 @@ registry pin, agent recon for the rest)**
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
 
+**SESSION 2026-10-09 block 84 (wave 98: M7 stdlib-side fix + consumer contract fixes + array extension; floors135)**
+- Wave 98: 7 clauses, +3 pub covered, on pin v0.64.2.
+- M7 FIXED stdlib-side (the compiler-lane handoff): the four adapters
+  (step_by/take_while/skip_while/inspect) were rewritten to the
+  closure-based shape the rest of iter.xi uses (`next_fn: fn() ->
+  Option[T]`) and are constructed from Range; the `Iterator[T]` interface
+  receivers are gone, so the 5x "unknown type 'Iterator'" warnings stop.
+  `p_iter_iterator_type_unresolved.xi` exits 0; constructor claims landed
+  (Range.step_by step/first mirrors, take_while done==false, skip_while
+  skipped==false); StepByIter.next's `ensures: true` placeholder was
+  replaced by `requires: self.step > 0`. iter 45.4% -> 46.4%.
+- Consumer contract rows (wishlist sweep, fix-first): `read_file_lines`
+  now returns Ok with ZERO lines for a zero-byte file (byte-length guard)
+  and the false `result.len() >= 1` ensures was replaced by `requires:
+  path.len() > 0` plus doc notes (regular-file size reliance; /proc-like
+  files read as empty) -- packages row 168 (xiom.wal). `to_string_char`
+  rewritten over `Str::from_utf8` (removes the per-call malloc leak;
+  `from_utf8` truncates at NUL exactly like `from_cstring`) with truthful
+  clauses `(c != '\0') => (result.len() >= 1)` and `(c == '\0') =>
+  (result.len() == 0)` documenting the backend NUL truncation -- packages
+  row 169 (xiom.http). `array_zip` gained the M<=N direction clause (both
+  truncation directions now claimed; m237); `array.fold` gained the empty
+  identity (zero-length `[0]T` by value compiles on v0.64.2; m238).
+- NEW FINDING (findings stay 14 Current: M7 moved to history, this
+  added): `p_tostring_import_breaks_adapters.xi` -- importing
+  `xiom.convert.tostring` (any alias, plain import too) corrupts closure
+  predicate dispatch for `Range.filter`/`Range.take_while` on v0.64.2
+  (predicates never see values; inline lambdas affected identically;
+  `Range.step_by` unaffected; `iter`+`io`, `iter`+`array`,
+  `iter`+`array.fixed` combinations behave). No corpus smoke mixes the
+  import with iter adapters. The wave-98 probe was split
+  (`p_wave98_shapes.xi` + `p_wave98_tostring_shapes.xi`) as the
+  workaround.
+- Probes green on v0.64.2 (main 54 checks + tostring 5 checks); targeted
+  smokes smoke_iter 21/21, smoke_io 20/20, smoke_convert 38/38,
+  smoke_array 17/17 (no smoke_fs family exists).
+- Coverage: iter 45.4% -> 46.4%, global 61.8% (pubCovered 4022, clauses
+  5309); floors135 dumped and wired (ci/heavy/release + tools/README).
+- Battery on this commit (v0.64.2): release corpus 954/954 full (853.2s,
+  no exclusions); probes 272/272 (262.3s); check_modules 509/509 (205.2s);
+  barename 0/509 (285s); floors135 + doc + module-smoke (497/517,
+  3476/6204) ratchets OK.
+- Release side: stdlib-v0.64.3 tag unchanged (this wave is post-tag; it
+  rides the next cut). Registry publish still PENDING OWNER APPROVAL.
+- Readiness next (wave 99): relay the tostring-import finding; resume
+  coverage (os/hash/num/math/crypto); queued feature candidates
+  (Vec[UInt8].with_len, address-aware socket bind, socket_recv_into).
+
 **SESSION 2026-10-09 block 83 (compiler relays consumed: v0.64.2 batch + M7 diagnosis + B-05 runtime-side)**
 - Relays read from the lane drops (local working files, not committed):
   `docs/COMPILER-RELAY-2026-10-09-v0.64.2.md` and

@@ -1071,13 +1071,20 @@ pub fn list_dir_recursive(path: Str) -> Result[Vec[Str], IOError]
 /// read_file_lines reads a file and returns its lines as a Vec[Str].
 /// Trailing newline characters are stripped; a trailing CR is removed from
 /// each line so CRLF files yield clean line values (ORBITDB relay 2026-10-08).
+/// An empty (zero-byte) file yields Ok with zero lines. The read relies on
+/// the size reported by the file system (regular files); files that report
+/// size 0 (e.g. /proc entries) read as empty -- use the byte reader for
+/// those.
 /// Complexity: O(n).
 pub fn read_file_lines(path: Str) -> Result[Vec[Str], IOError]
-  ensures: result is Ok => result.len() >= 1
+  requires: path.len() > 0
 {
   let s_result = read_file(path);
   match s_result {
     Ok(s) => {
+      if s.len() == 0 {
+        return Ok(Vec[Str].new());
+      };
       var parts = xiom.string.str_split(s, "\n");
       var i = 0;
       while i < parts.len() {

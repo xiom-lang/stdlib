@@ -4,7 +4,7 @@
 gates 9-10 discrete.** (Compiler pin: **v0.64.2**.)
 **Gates: corpus 954/954 full (C001 carve-outs retired on v0.63.1; new
 TcpStream loopback and uuencode roundtrip smokes added), modules 509/509,
-probes 270/270, barename 0/509.**
+probes 272/272, barename 0/509.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -14,13 +14,12 @@ gates flip:
    full, no carve-outs (C001 fixed by 4bf8cf1e; 20/20 + 20/20 stress).
    lz4 is fixed by m190 and stayed in the gate; the new TcpStream loopback
    smoke locks m196.
-3. Probe corpus green -- MET (270/270 on v0.64.1, incl. the promoted
+3. Probe corpus green -- MET (272/272 on v0.64.2, incl. the promoted
    regression locks (rvalue float Vec index, multipart parse name, iter
    forwardref), the v0.64.1 pin probe p_pin0641_iter_shapes.xi, the
-   wave-77 stats probe, the Pulse hardening probe, the wave-78..97
-   coverage probes (the wave-97 pair p_wave97_shapes.xi +
-   p_wave97_bitwise_shapes.xi), the io byte-fidelity/CRLF lock and the
-   fs_remove lock).
+   wave-77 stats probe, the Pulse hardening probe, the wave-78..98
+   coverage probes (the wave-97 and wave-98 probe pairs), the io
+   byte-fidelity/CRLF lock and the fs_remove lock).
 4. Strict bare-name scan clean -- MET (0/509).
 5. Coverage ratchet green -- MET (floors129).
 6. Documentation ratchet 100% -- MET.
@@ -36,14 +35,17 @@ credit (discrete). Update the percentage and the gate-8 fraction in the
 same commit as each floors dump so the meter moves smoothly toward 80%.
 
 Authoritative order: the gates above, then the updates below newest-first.
-Current state: compiler pin **v0.64.2** (combined release, tag c51170a6;
-consumed by wave 98); stdlib-v0.64.2 REGISTRY LIVE (xiom-std 0.64.2 signed,
-f5375c03ad88) and **stdlib-v0.64.3 tagged 2026-10-09** (release.yml +
-publish-registry dispatched; registry publish awaiting owner approval in
-the `registry-publish` environment); the wave-96 array_zip and wave-97
-triplicate-sibling findings are CLEARED on v0.64.2 (findings 16 -> 14:
-13 compiler, 1 stdlib); heavy.yml matrix nesting repaired. Coverage 61.8%,
-meter 76.2%; handoff in `docs/stdlib_session.md` snapshot 24 (block 82).
+Current state: compiler pin **v0.64.2** (combined release, tag c51170a6);
+stdlib-v0.64.2 REGISTRY LIVE (xiom-std 0.64.2 signed, f5375c03ad88) and
+**stdlib-v0.64.3 tagged 2026-10-09** (release.yml + publish-registry
+dispatched; registry publish awaiting owner approval in the
+`registry-publish` environment); the wave-96 array_zip and wave-97
+triplicate-sibling findings are CLEARED on v0.64.2, the M7 `Iterator[T]`
+surface is FIXED stdlib-side (wave 98 closure rewrite), and the two
+consumer contract rows (read_file_lines empty file, to_string_char NUL)
+are fixed stdlib-side; findings 14 Current (13 compiler, 1 stdlib) with
+the new tostring-import corruption filed this wave. Coverage 61.8%,
+meter 76.2%; handoff in `docs/stdlib_session.md` snapshot 24 (block 84).
 
 ## Project Pulse relay (web-framework lane) -- 2026-10-05
 
@@ -681,6 +683,38 @@ cross-module type-path/foreign-call findings unchanged. iter 18.6% ->
 release lane: the archive at v0.64.1 bundles stdlib 6e60e958 (old
 wave-74 pin); the v0.64.2 pin decision + release notes are pending in
 the session blocks.
+
+Update 2026-10-09 (wave 98 landed): M7 stdlib-side fix + consumer contract
+fixes + array extension -- 7 clauses, +3 pub covered. M7: the four
+adapters (step_by/take_while/skip_while/inspect) rewritten to the
+closure-based shape and constructed from Range; the Iterator[T] receivers
+are gone (the 5x "unknown type 'Iterator'" warnings stop);
+p_iter_iterator_type_unresolved.xi exits 0; constructor claims landed
+(Range.step_by step/first mirrors, take_while done==false, skip_while
+skipped==false); iter 45.4% -> 46.4%. Consumer contract rows:
+read_file_lines now returns Ok with ZERO lines for a zero-byte file
+(guarded) and the false `len>=1` ensures was replaced by
+`requires: path.len() > 0` + doc (packages row 168, xiom.wal);
+to_string_char rewritten over Str::from_utf8 (removes a per-call malloc
+leak) with clauses `(c != '\0') => (result.len() >= 1)` and
+`(c == '\0') => (result.len() == 0)` documenting the NUL truncation
+(packages row 169, xiom.http). array_zip gained the M<=N direction clause
+and array.fold the empty identity (zero-length `[0]T` by value, m238).
+NEW FINDING: p_tostring_import_breaks_adapters.xi -- importing
+xiom.convert.tostring corrupts closure predicate dispatch for
+Range.filter/take_while (any alias; inline lambdas too; step_by
+unaffected; no corpus smoke mixes them); the wave-98 probe is split
+(p_wave98_shapes.xi + p_wave98_tostring_shapes.xi) as the workaround
+(findings stay 14 Current: M7 moved to history, the new entry added).
+Probes 272. Targeted smokes smoke_iter 21/21, smoke_io 20/20,
+smoke_convert 38/38, smoke_array 17/17 (no smoke_fs family exists).
+Coverage global 61.8% (pubCovered 4022, clauses 5309); floors135. Battery
+on v0.64.2: corpus 954/954 (853.2s, no exclusions), probes 272/272
+(262.3s), modules 509/509 (205.2s), barename 0/509 (285s), floors135 +
+doc + module-smoke (497/517, 3476/6204) ratchets OK. Readiness next:
+relay the tostring-import finding; resume coverage (os/hash/num/math/
+crypto); queued feature candidates (Vec[UInt8].with_len, address-aware
+bind, socket_recv_into).
 
 Wishlist scoop 2026-10-09 (five lanes; full delta in
 `docs/STDLIB-WISHLIST.md`): NEW fix-first defects -- `read_file_lines`
