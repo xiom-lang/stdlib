@@ -156,9 +156,9 @@ extends it to the full min relation.
 
 **RESOLVED 2026-10-09 (compiler v0.64.2, m242): triplicate sibling
 submodule exports resolve again.** `p_sibling_dup_fn_alias.xi` compiles
-and exits 0 on the pin; the wave-97 probe split
-(`p_wave97_shapes.xi` + `p_wave97_bitwise_shapes.xi`) stays as-is and both
-halves remain green, and the single-file import combination now works as
+and exits 0 on the pin; the wave-97 split probe was merged back into
+`p_wave97_shapes.xi` (2026-10-09, per the pin-protocol relay) and
+re-run green on v0.64.2 -- the single-file import combination works as
 well. History: on v0.64.1 importing three sibling submodules that export
 the same function name broke alias-qualified calls (`cannot call
 'next_pow2' on this expression`) while two-module combinations passed.

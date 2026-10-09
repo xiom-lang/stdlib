@@ -694,14 +694,18 @@ fn _blake2b_compress(h: &Vec[Int], m: &Vec[Int], sigma: &Vec[Int], t0: Int, t1: 
 
 /// SHA-256 digest (32 bytes). Delegates to xiom.crypto.sha256.
 /// Complexity: O(n), n = input length.
-pub fn crypto_hash_sha256(data: &Vec[UInt8]) -> Vec[UInt8] {
+pub fn crypto_hash_sha256(data: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: result.len() == 32
+{
   return crypto.sha256(data);
 }
 
 /// SHA-512 digest (64 bytes). Implemented locally with the corrected 64-bit
 /// rotate; the flat module's sha512 is not used (broken in the current build).
 /// Complexity: O(n), n = input length.
-pub fn crypto_hash_sha512(data: &Vec[UInt8]) -> Vec[UInt8] {
+pub fn crypto_hash_sha512(data: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: result.len() == 64
+{
   var st = _sha512_compress(data);
   var result = Vec[UInt8].new();
   var i = 0;
@@ -722,44 +726,59 @@ pub fn crypto_hash_sha512(data: &Vec[UInt8]) -> Vec[UInt8] {
 /// MD5 digest (16 bytes). Local implementation (the flat module's md5 fails
 /// its test vector in the current build). Legacy, interop only.
 /// Complexity: O(n), n = input length.
-pub fn crypto_hash_md5(data: &Vec[UInt8]) -> Vec[UInt8] {
+pub fn crypto_hash_md5(data: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: result.len() == 16
+{
   return _md5_compute(data);
 }
 
 /// SHA-256 digest as lowercase hex. Delegates to xiom.crypto.sha256_hex.
 /// Complexity: O(n), n = input length.
-pub fn crypto_hash_sha256_hex(data: &Vec[UInt8]) -> Str {
+pub fn crypto_hash_sha256_hex(data: &Vec[UInt8]) -> Str
+  ensures: result.len() == 64
+{
   return crypto.sha256_hex(data);
 }
 
 /// SHA-512 digest as lowercase hex (128 characters).
 /// Complexity: O(n), n = input length.
-pub fn crypto_hash_sha512_hex(data: &Vec[UInt8]) -> Str {
+pub fn crypto_hash_sha512_hex(data: &Vec[UInt8]) -> Str
+  ensures: result.len() == 128
+{
   var h = crypto_hash_sha512(data);
   return encoding.hex_encode(&h);
 }
 
 /// Keyed SHA-256 MAC. Delegates to xiom.crypto.hmac_sha256.
 /// Complexity: O(n), n = input length.
-pub fn crypto_hash_hmac_sha256(key: &Vec[UInt8], data: &Vec[UInt8]) -> Vec[UInt8] {
+pub fn crypto_hash_hmac_sha256(key: &Vec[UInt8], data: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: result.len() == 32
+{
   return crypto.hmac_sha256(key, data);
 }
 
 /// Keyed SHA-512 MAC (RFC 2104), built on the local SHA-512.
 /// Complexity: O(n), n = input length.
-pub fn crypto_hash_hmac_sha512(key: &Vec[UInt8], data: &Vec[UInt8]) -> Vec[UInt8] {
+pub fn crypto_hash_hmac_sha512(key: &Vec[UInt8], data: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: result.len() == 64
+{
   return _hmac_compute(key, data, 2);
 }
 
 /// Keyed MD5 MAC (RFC 2104). Legacy, interop only.
 /// Complexity: O(n), n = input length.
-pub fn crypto_hash_hmac_md5(key: &Vec[UInt8], data: &Vec[UInt8]) -> Vec[UInt8] {
+pub fn crypto_hash_hmac_md5(key: &Vec[UInt8], data: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: result.len() == 16
+{
   return _hmac_compute(key, data, 3);
 }
 
 /// PBKDF2-HMAC-SHA256 (RFC 2898): derive `len` key bytes from a password.
 /// Complexity: O(iterations * len / 32).
-pub fn crypto_hash_pbkdf2_sha256(password: &Vec[UInt8], salt: &Vec[UInt8], iterations: Int, len: Int) -> Vec[UInt8] {
+pub fn crypto_hash_pbkdf2_sha256(password: &Vec[UInt8], salt: &Vec[UInt8], iterations: Int, len: Int) -> Vec[UInt8]
+  ensures: (iterations < 1 || len < 1) => (result.len() == 0)
+  ensures: (iterations >= 1 && len >= 1) => (result.len() == len)
+{
   if iterations < 1 { return Vec[UInt8].new(); }
   if len < 1 { return Vec[UInt8].new(); }
   let h_len = 32;
@@ -806,7 +825,10 @@ pub fn crypto_hash_pbkdf2_sha256(password: &Vec[UInt8], salt: &Vec[UInt8], itera
 
 /// HKDF (RFC 5869) with SHA-256. `salt` may be empty (defaults to zeros).
 /// Complexity: O(len / 32 + n).
-pub fn crypto_hash_hkdf(ikm: &Vec[UInt8], salt: &Vec[UInt8], info: &Vec[UInt8], len: Int) -> Vec[UInt8] {
+pub fn crypto_hash_hkdf(ikm: &Vec[UInt8], salt: &Vec[UInt8], info: &Vec[UInt8], len: Int) -> Vec[UInt8]
+  ensures: (len < 1 || len > 255 * 32) => (result.len() == 0)
+  ensures: (len >= 1 && len <= 255 * 32) => (result.len() == len)
+{
   if len < 1 { return Vec[UInt8].new(); }
   if len > 255 * 32 { return Vec[UInt8].new(); }
   var prk = crypto.hmac_sha256(salt, ikm);

@@ -1,6 +1,6 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
-**76.2% -- 7 of 10 gates complete; gate 8 at 61.8% (partial credit) and
+**76.2% -- 7 of 10 gates complete; gate 8 at 62.2% (partial credit) and
 gates 9-10 discrete.** (Compiler pin: **v0.64.2**.)
 **Gates: corpus 954/954 full (C001 carve-outs retired on v0.63.1; new
 TcpStream loopback and uuencode roundtrip smokes added), modules 509/509,
@@ -17,20 +17,21 @@ gates flip:
 3. Probe corpus green -- MET (272/272 on v0.64.2, incl. the promoted
    regression locks (rvalue float Vec index, multipart parse name, iter
    forwardref), the v0.64.1 pin probe p_pin0641_iter_shapes.xi, the
-   wave-77 stats probe, the Pulse hardening probe, the wave-78..98
-   coverage probes (the wave-97 and wave-98 probe pairs), the io
-   byte-fidelity/CRLF lock and the fs_remove lock).
+   wave-77 stats probe, the Pulse hardening probe, the wave-78..99
+   coverage probes (the wave-97 probe was remerged after m242, plus the
+   wave-98 and wave-99 probes), the io byte-fidelity/CRLF lock and the
+   fs_remove lock).
 4. Strict bare-name scan clean -- MET (0/509).
 5. Coverage ratchet green -- MET (floors129).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (497/517 modules, 3477/6202 fns).
-8. Contract coverage 100% (every public fn carries clauses) -- OPEN (61.8%).
+8. Contract coverage 100% (every public fn carries clauses) -- OPEN (62.2%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
    OPEN (14: 13 compiler, 1 stdlib algorithm).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
 
 Meter formula: MET gates count 1.0; gate 8 counts its current
-pub-with-clause fraction (61.8% -> 0.618); gates 9 and 10 get no partial
+pub-with-clause fraction (62.2% -> 0.622); gates 9 and 10 get no partial
 credit (discrete). Update the percentage and the gate-8 fraction in the
 same commit as each floors dump so the meter moves smoothly toward 80%.
 
@@ -40,16 +41,21 @@ Current state: compiler pin **v0.64.2** (combined release, tag c51170a6);
 success; assets xiom-std-0.64.3.tar.gz + SHA256SUMS) and the **REGISTRY IS
 LIVE** (xiom-std 0.64.3 signed, sha256
 775496c094d2a1703307313c9139c8cdc959d7687fc7a5b42b57657efa596b17,
-compiler v0.64.2); open follow-ups: the STDLIB_VERSION pin PR needs a
-manual open (branch `chore/pin-stdlib-v0.64.3`; auto-create hit a token
-permission error), the staging canary (37968157641) still waits for
-approval, package.xi needs `categories` + `stage` for the next cut, and
-the repaired heavy matrix passes ubuntu/windows but the macos-14 corpus
-leg is red (PULSE macOS runtime-C blockers suspected). Wave 98 landed
-post-tag (M7 closure rewrite; read_file_lines/to_string_char contract
-fixes; array_zip/fold clauses; new tostring-import finding; floors135).
-Coverage 61.8%, meter 76.2%; handoff in `docs/stdlib_session.md`
-snapshot 24 (block 85).
+compiler v0.64.2); the compiler lane confirmed the **candidate-tag pin
+protocol** (relay 2026-10-09: tag candidate -> compiler verifies -> then
+registry publish; one-version steady state allowed) and will verify
+stdlib-v0.64.3 during its v0.64.3 candidate gates. Open follow-ups: the
+STDLIB_VERSION pin PR needs a manual open (branch
+`chore/pin-stdlib-v0.64.3`), the staging canary (37968157641) still waits
+for approval, package.xi needs `categories` + `stage` for the next cut,
+and the repaired heavy matrix passes ubuntu/windows but the macos-14
+corpus leg is red (PULSE macOS runtime-C blockers suspected). Wave 98
+landed post-tag (M7 closure rewrite; read_file_lines/to_string_char
+contract fixes; new tostring-import finding); wave 99 added the crypto
+hash sizes, xxhash/city empty pins and math constants (crypto 47.0%,
+hash 51.1%, math 39.1%; the wave-97 split probe was remerged after
+m242). Coverage 62.2%, meter 76.2%; handoff in
+`docs/stdlib_session.md` snapshot 24 (block 86).
 
 ## Project Pulse relay (web-framework lane) -- 2026-10-05
 
@@ -719,6 +725,44 @@ doc + module-smoke (497/517, 3476/6204) ratchets OK. Readiness next:
 relay the tostring-import finding; resume coverage (os/hash/num/math/
 crypto); queued feature candidates (Vec[UInt8].with_len, address-aware
 bind, socket_recv_into).
+
+Pin protocol agreed 2026-10-09 (relay `COMPILER-RELAY-2026-10-09-pin-protocol.md`,
+block 86): stdlib tags a CANDIDATE `stdlib-vX.Y.Z` (no registry publish
+yet) and relays tag + hash + wave report; the compiler lane verifies the
+candidate against compiler main (vendored sync + STDLIB_VERSION + e2e
+without XIOM_STDLIB + feature + checker corpus + the wave smokes) and
+replies OK; only then does stdlib publish to the registry and the
+compiler pins it at its next cut. Waves keep flowing on main throughout;
+one-version steady state is expected; security-urgent publishes may skip
+verification with an explicit note. Current cycle: the compiler lane will
+verify stdlib-v0.64.3 (d052a3c5) during its v0.64.3 candidate gates.
+Housekeeping in the same relay: the wave-97 sibling-alias split-probe
+workaround was DROPPED -- p_wave97_bitwise_shapes.xi was merged back into
+p_wave97_shapes.xi and re-run green on v0.64.2 (probe corpus stays 272).
+
+Update 2026-10-09 (wave 99 landed): crypto hash + xxhash/city + math
+constants -- 26 clauses, +24 pub covered. crypto.hash 10 (exact digest/
+hex sizes on sha256/sha512/md5 and the sha256/sha512/md5 HMAC variants;
+pbkdf2 `iterations<1 || len<1 -> empty` and derived -> `len`, hkdf
+`len<1 || len>255*32 -> empty` and derived -> `len`), crypto flat 3
+(sha256 32, sha256_hex 64, blake3 32) -- crypto 39.9% -> 47.0%. hash 8
+(xxh64/xxh32/xxh3_64 empty pins 0xEF46DB3751D8E999 / 0x02CC5D05 /
+0x2D06800538D394C2, xxh3_64_with_seed(seed 0) and the xxh3_128 pair
+low64 0x6001C324468D497F / high64 0x99AA06D3014798D8 -- the first probe
+had the 128-bit pair swapped and was corrected from the measured
+implementation, city64 empty 0x9AE16A3B2F90404F, city128 empty pair
+length 2) -- hash 42.2% -> 51.1%. math.constants 3 (infinity > 1,
+neg_infinity < -1, nan != nan) -- math 38.8% -> 39.1%. Probe
+p_wave99_shapes.xi (272nd, 28 checks) green pre/post; targeted smokes
+smoke_crypto 7/7, smoke_hash 25/25, smoke_math 53/53. Global 61.8% ->
+62.2% (clauses 5309 -> 5335, pubCovered 4022 -> 4046); meter 76.2%;
+floors136. Battery on v0.64.2: corpus 954/954 (794.6s, no exclusions),
+probes 272/272 (285.6s), modules 509/509 (192.4s), barename 0/509
+(257.5s), floors136 + doc + module-smoke (497/517, 3476/6204) ratchets
+OK. Readiness next: os 26.6% and math remainder (finance/calculus/
+graph_theory/machine_learning surfaces), the queued feature candidates
+(Vec[UInt8].with_len, address-aware bind, socket_recv_into), and the
+macOS runtime-C guards (PULSE).
 
 Wishlist scoop 2026-10-09 (five lanes; full delta in
 `docs/STDLIB-WISHLIST.md`): NEW fix-first defects -- `read_file_lines`

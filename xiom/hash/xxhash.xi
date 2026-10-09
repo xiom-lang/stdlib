@@ -94,7 +94,9 @@ fn _round32(acc: UInt64, lane: UInt64) -> UInt64 {
 }
 
 /// XXH64 of a byte string with the given seed.
-pub fn xxh64(data: &Vec[UInt8], seed: UInt64) -> UInt64 {
+pub fn xxh64(data: &Vec[UInt8], seed: UInt64) -> UInt64
+  ensures: (data.len() == 0 && seed == 0) => (result == 0xEF46DB3751D8E999)
+{
   let len = data.len();
   var p = 0;
   var h: UInt64 = 0;
@@ -144,7 +146,9 @@ pub fn xxh64(data: &Vec[UInt8], seed: UInt64) -> UInt64 {
 }
 
 /// XXH32 of a byte string with the given seed.
-pub fn xxh32(data: &Vec[UInt8], seed: UInt32) -> UInt32 {
+pub fn xxh32(data: &Vec[UInt8], seed: UInt32) -> UInt32
+  ensures: (data.len() == 0 && seed == 0) => (result == 0x02CC5D05)
+{
   let len = data.len();
   var s: UInt64 = seed as UInt64;
   var p = 0;
@@ -707,12 +711,16 @@ fn _hash_long_128(data: &Vec[UInt8], len: Int, seed: UInt64) -> Xxh128 {
 
 /// XXH3-64, seed 0. Verified against xxHash v0.8.3 reference: "" ->
 /// 0x2d06800538d394c2, "a" -> 0xe6c632b61e964e1f, "abc" -> 0x78af5f94892f3950.
-pub fn xxh3_64(data: &Vec[UInt8]) -> UInt64 {
+pub fn xxh3_64(data: &Vec[UInt8]) -> UInt64
+  ensures: (data.len() == 0) => (result == 0x2D06800538D394C2)
+{
   return xxh3_64_with_seed(data, 0);
 }
 
 /// XXH3-64 with an explicit 64-bit seed (v0.8.3 seeded-secret semantics).
-pub fn xxh3_64_with_seed(data: &Vec[UInt8], seed: UInt64) -> UInt64 {
+pub fn xxh3_64_with_seed(data: &Vec[UInt8], seed: UInt64) -> UInt64
+  ensures: (data.len() == 0 && seed == 0) => (result == 0x2D06800538D394C2)
+{
   var len = data.len();
   if len <= 16 { return _len_0to16_64(data, len, seed); }
   if len <= 128 { return _len_17to128_64(data, len, seed); }
@@ -723,12 +731,16 @@ pub fn xxh3_64_with_seed(data: &Vec[UInt8], seed: UInt64) -> UInt64 {
 /// XXH3-128, seed 0. Verified against xxHash v0.8.3 reference: "" ->
 /// (0x6001c324468d497f, 0x99aa06d3014798d8), "a" ->
 /// (0xe6c632b61e964e1f, 0xa96faf705af16834).
-pub fn xxh3_128(data: &Vec[UInt8]) -> Xxh128 {
+pub fn xxh3_128(data: &Vec[UInt8]) -> Xxh128
+  ensures: (data.len() == 0) => (result.low64 == 0x6001C324468D497F && result.high64 == 0x99AA06D3014798D8)
+{
   return xxh3_128_with_seed(data, 0);
 }
 
 /// XXH3-128 with an explicit 64-bit seed (v0.8.3 seeded-secret semantics).
-pub fn xxh3_128_with_seed(data: &Vec[UInt8], seed: UInt64) -> Xxh128 {
+pub fn xxh3_128_with_seed(data: &Vec[UInt8], seed: UInt64) -> Xxh128
+  ensures: (data.len() == 0 && seed == 0) => (result.low64 == 0x6001C324468D497F && result.high64 == 0x99AA06D3014798D8)
+{
   var len = data.len();
   if len <= 16 { return _len_0to16_128(data, len, seed); }
   if len <= 128 { return _len_17to128_128(data, len, seed); }

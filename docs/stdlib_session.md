@@ -1722,6 +1722,50 @@ registry pin, agent recon for the rest)**
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
 
+**SESSION 2026-10-09 block 86 (pin protocol agreed; wave-97 probe remerged; wave 99: crypto hash + xxhash/city + constants; floors136)**
+- Pin protocol (relay `COMPILER-RELAY-2026-10-09-pin-protocol.md`): tag a
+  CANDIDATE `stdlib-vX.Y.Z` -> compiler lane verifies against compiler
+  main (vendored sync + STDLIB_VERSION + e2e without XIOM_STDLIB +
+  feature + checker corpus + the wave smokes) -> on OK stdlib publishes
+  to the registry -> compiler pins it at its next cut. Waves keep flowing
+  on main throughout; one-version steady state is expected; security-
+  urgent publishes may skip verification with an explicit note. Current
+  cycle: the compiler lane verifies stdlib-v0.64.3 (d052a3c5) during its
+  v0.64.3 candidate gates.
+- Wave-97 split-probe workaround DROPPED per the relay:
+  `p_wave97_bitwise_shapes.xi` was merged back into `p_wave97_shapes.xi`
+  (bitwise section checks 77-86, `use xiom.bits.bitwise as bw;` restored)
+  and re-run green on v0.64.2 -- the triplicate sibling import
+  combination works after m242. Probe corpus stays 272.
+- Wave 99: 26 clauses, +24 pub covered. crypto.hash 10 (exact digest/hex
+  sizes on sha256/sha512/md5 and the HMAC variants; pbkdf2
+  `iterations<1 || len<1 -> empty` / derived -> len; hkdf `len<1 ||
+  len>255*32 -> empty` / derived -> len), crypto flat 3 (sha256 32,
+  sha256_hex 64, blake3 32) -- crypto 39.9% -> 47.0%. hash 8 (xxh64/xxh32/
+  xxh3_64 empty pins 0xEF46DB3751D8E999 / 0x02CC5D05 / 0x2D06800538D394C2,
+  xxh3_64_with_seed(0), the xxh3_128 pair low64 0x6001C324468D497F /
+  high64 0x99AA06D3014798D8, city64 empty 0x9AE16A3B2F90404F, city128
+  empty pair length 2) -- hash 42.2% -> 51.1%. math.constants 3
+  (infinity > 1, neg_infinity < -1, nan != nan) -- math 38.8% -> 39.1%.
+- Probe p_wave99_shapes.xi (272nd, 28 checks): green pre/post; the
+  xxh3-128 pair constants were measured from the implementation after the
+  first probe run showed my initial assignment swapped (the implementation
+  is correct).
+- Targeted smokes: smoke_crypto 7/7, smoke_hash 25/25, smoke_math 53/53.
+- Coverage: global 61.8% -> 62.2% (clauses 5309 -> 5335, pubCovered
+  4022 -> 4046); meter 76.2%; floors136 dumped and wired
+  (ci/heavy/release + tools/README).
+- Battery on this commit (v0.64.2): release corpus 954/954 full (794.6s,
+  no exclusions); probes 272/272 (285.6s); check_modules 509/509 (192.4s);
+  barename 0/509 (257.5s); floors136 + doc + module-smoke (497/517,
+  3476/6204) ratchets OK.
+- Open follow-ups unchanged: manual pin PR (`chore/pin-stdlib-v0.64.3`),
+  staging canary approval, package.xi `categories`/`stage`, heavy macOS
+  corpus leg red (PULSE macOS runtime-C guards suspected).
+- Readiness next (wave 100): os 26.6% and the math remainder
+  (finance/calculus/graph_theory/machine_learning surfaces), the queued
+  feature candidates, and the macOS runtime-C guards.
+
 **SESSION 2026-10-09 block 85 (stdlib-v0.64.3 release executed: gates, assets, registry LIVE; heavy matrix results)**
 - Release run 37962367989 (tag stdlib-v0.64.3 on d052a3c): FULL SUCCESS
   -- validate, Windows+Linux release gates, package, GitHub Release with

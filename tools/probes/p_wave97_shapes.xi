@@ -6,12 +6,12 @@
 //   (a) xiom.bits.bitfield: the width<=0 / offset<0 no-op guards on
 //       bitfield_set/clear/insert, the sign_extend width<=0 and width>=64
 //       identities, and the strengthened get/mask/extract guards;
-//   (b) xiom.bits.rotation + xiom.bits.popcount: the k==0 rotation
-//       identities, masked-rotate mask==0 no-op and the next/prev_pow2
-//       boundaries (the xiom.bits.bitwise checks live in the sibling
-//       p_wave97_bitwise_shapes.xi -- importing all three duplicate-
-//       exporting siblings together is blocked, see
-//       tools/known_failures/p_sibling_dup_fn_alias.xi);
+//   (b) xiom.bits.rotation + xiom.bits.popcount + xiom.bits.bitwise: the
+//       k==0 rotation identities, masked-rotate mask==0 no-op, the
+//       next/prev_pow2 boundaries, the zero/byte pins on bit_reverse and
+//       byte_swap, and the pow2 boundaries (the sibling-import split was
+//       merged back in 2026-10-09 after m242 fixed the triplicate
+//       duplicate-export resolution, compiler relay pin-protocol note);
 //   (c) xiom.hash: the empty-input identity pins on fnv1a32/fnv1a64,
 //       crc32_ieee, hash_bytes_to_hex, murmur3_32, xxhash64, the
 //       combine_hashes zero pin and string_hash (djb2) empty pin;
@@ -26,6 +26,7 @@ module p_wave97_shapes
 use xiom.bits.bitfield as bf;
 use xiom.bits.rotation as rot;
 use xiom.bits.popcount as pc;
+use xiom.bits.bitwise as bw;
 use xiom.hash as hsh;
 use xiom.num.fraction as fr;
 
@@ -179,6 +180,28 @@ fn main() -> Int {
   if cm1 != 0 { return 75; }
   let cm2 = fr.fraction_compare(fr.fraction_new(0, 1), fr.fraction_new(1, 2));
   if cm2 != -1 { return 76; }
+
+  // ---- bitwise: reverse / swap / rotate / pow2
+  let wr0 = bw.bit_reverse(0);
+  if wr0 != 0 { return 77; }
+  let wb0 = bw.bit_reverse_byte(0);
+  if wb0 != 0 { return 78; }
+  let wb1 = bw.bit_reverse_byte(1);
+  if wb1 != 128 { return 79; }
+  let ws0 = bw.byte_swap(0);
+  if ws0 != 0 { return 80; }
+  let ws1 = bw.byte_swap(256);
+  if ws1 != 281474976710656 { return 81; }
+  let wl0 = bw.rotate_left(7, 0);
+  if wl0 != 7 { return 82; }
+  let wrr0 = bw.rotate_right(7, 0);
+  if wrr0 != 7 { return 83; }
+  let wp0 = bw.is_power_of_two_bit(0);
+  if wp0 { return 84; }
+  let wp1 = bw.is_power_of_two_bit(1);
+  if wp1 == false { return 85; }
+  let wp2 = bw.is_power_of_two_bit(3);
+  if wp2 { return 86; }
 
   return 0;
 }

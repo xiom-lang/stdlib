@@ -195,7 +195,9 @@ fn city64_long(data: &Vec[UInt8], len0: Int) -> UInt64 {
 }
 
 /// CityHash64 of a byte string.
-pub fn city64(data: &Vec[UInt8]) -> UInt64 {
+pub fn city64(data: &Vec[UInt8]) -> UInt64
+  ensures: (data.len() == 0) => (result == 0x9AE16A3B2F90404F)
+{
   let len = data.len();
   if len <= 32 {
     if len <= 16 {
@@ -320,7 +322,9 @@ fn city128_with_seed(data: &Vec[UInt8], start: Int, l0: Int, seed_lo: UInt64, se
 }
 
 /// CityHash128 of a byte string; returns [low, high].
-pub fn city128(data: &Vec[UInt8]) -> Vec[UInt64] {
+pub fn city128(data: &Vec[UInt8]) -> Vec[UInt64]
+  ensures: (data.len() == 0) => (result.len() == 2)
+{
   let len = data.len();
   var out = Vec[UInt64].new();
   var r = Vec[UInt64].new();

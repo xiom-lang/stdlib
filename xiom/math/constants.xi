@@ -88,12 +88,16 @@ pub const FLOAT32_MAX: Float64 = 3.4028234663852886e38;
 pub const FLOAT32_MIN: Float64 = 1.1754943508222875e-38;
 
 /// Positive infinity. Constructor fn (no literal syntax; BUG 3 -- see header).
-pub fn infinity() -> Float64 {
+pub fn infinity() -> Float64
+  ensures: result > 1.0
+{
   return 1.0 / 0.0;
 }
 
 /// Negative infinity. Constructor fn (no literal syntax; BUG 3 -- see header).
-pub fn neg_infinity() -> Float64 {
+pub fn neg_infinity() -> Float64
+  ensures: result < -1.0
+{
   return -1.0 / 0.0;
 }
 
@@ -102,6 +106,8 @@ pub fn neg_infinity() -> Float64 {
 /// literals only). IEEE semantics verified: `nan() != nan()` is true and
 /// math.is_nan(nan()) is true since BUG 19's fcmp-one/Str+Float64-concat
 /// defects were fixed (2026-08-11, `9c3a2f9e`/`88f924ea`).
-pub fn nan() -> Float64 {
+pub fn nan() -> Float64
+  ensures: result != result
+{
   return 0.0 / 0.0;
 }

@@ -304,7 +304,9 @@ fn _int_to_be_bytes(x: Int, buf: &mut Vec[UInt8], offset: Int) {
 }
 
 /// SHA-256 digest (32 bytes).
-pub fn sha256(data: &Vec[UInt8]) -> Vec[UInt8] {
+pub fn sha256(data: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: result.len() == 32
+{
   var result = Vec[UInt8].new();
   var i = 0;
   while i < 32 {
@@ -329,7 +331,9 @@ pub fn sha256_accelerated(data: &Vec[UInt8]) -> Vec[UInt8]
 }
 
 /// Lowercase hex SHA-256 digest.
-pub fn sha256_hex(data: &Vec[UInt8]) -> Str {
+pub fn sha256_hex(data: &Vec[UInt8]) -> Str
+  ensures: result.len() == 64
+{
   var hash = sha256(data);
   var result = Vec[UInt8].new();
   var i = 0;
@@ -1072,7 +1076,9 @@ fn _b3_reduce_tree(level: &Vec[Int], schedule: &Vec[Int]) -> Vec[UInt8] {
 /// index), leaves are merged pairwise via parent nodes, and the root node
 /// carries the ROOT flag. The 32-byte digest is the root output words
 /// 7,6,5,4,3,2,1,0 serialized little-endian (reversed word order).
-pub fn blake3(data: &Vec[UInt8]) -> Vec[UInt8] {
+pub fn blake3(data: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: result.len() == 32
+{
   let len = data.len();
   let chunk_size = 1024;
   let num_chunks = (len + chunk_size - 1) / chunk_size;
