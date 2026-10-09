@@ -36,16 +36,20 @@ same commit as each floors dump so the meter moves smoothly toward 80%.
 
 Authoritative order: the gates above, then the updates below newest-first.
 Current state: compiler pin **v0.64.2** (combined release, tag c51170a6);
-stdlib-v0.64.2 REGISTRY LIVE (xiom-std 0.64.2 signed, f5375c03ad88) and
-**stdlib-v0.64.3 tagged 2026-10-09** (release.yml + publish-registry
-dispatched; registry publish awaiting owner approval in the
-`registry-publish` environment); the wave-96 array_zip and wave-97
-triplicate-sibling findings are CLEARED on v0.64.2, the M7 `Iterator[T]`
-surface is FIXED stdlib-side (wave 98 closure rewrite), and the two
-consumer contract rows (read_file_lines empty file, to_string_char NUL)
-are fixed stdlib-side; findings 14 Current (13 compiler, 1 stdlib) with
-the new tostring-import corruption filed this wave. Coverage 61.8%,
-meter 76.2%; handoff in `docs/stdlib_session.md` snapshot 24 (block 84).
+**stdlib-v0.64.3 RELEASED 2026-10-09** (release run 37962367989 full
+success; assets xiom-std-0.64.3.tar.gz + SHA256SUMS) and the **REGISTRY IS
+LIVE** (xiom-std 0.64.3 signed, sha256
+775496c094d2a1703307313c9139c8cdc959d7687fc7a5b42b57657efa596b17,
+compiler v0.64.2); open follow-ups: the STDLIB_VERSION pin PR needs a
+manual open (branch `chore/pin-stdlib-v0.64.3`; auto-create hit a token
+permission error), the staging canary (37968157641) still waits for
+approval, package.xi needs `categories` + `stage` for the next cut, and
+the repaired heavy matrix passes ubuntu/windows but the macos-14 corpus
+leg is red (PULSE macOS runtime-C blockers suspected). Wave 98 landed
+post-tag (M7 closure rewrite; read_file_lines/to_string_char contract
+fixes; array_zip/fold clauses; new tostring-import finding; floors135).
+Coverage 61.8%, meter 76.2%; handoff in `docs/stdlib_session.md`
+snapshot 24 (block 85).
 
 ## Project Pulse relay (web-framework lane) -- 2026-10-05
 

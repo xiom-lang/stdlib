@@ -1722,6 +1722,41 @@ registry pin, agent recon for the rest)**
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
 
+**SESSION 2026-10-09 block 85 (stdlib-v0.64.3 release executed: gates, assets, registry LIVE; heavy matrix results)**
+- Release run 37962367989 (tag stdlib-v0.64.3 on d052a3c): FULL SUCCESS
+  -- validate, Windows+Linux release gates, package, GitHub Release with
+  xiom-std-0.64.3.tar.gz (1,085,970 B) + SHA256SUMS, staging canary
+  dispatch, STDLIB_VERSION pin step.
+  - Pin PR: branch `chore/pin-stdlib-v0.64.3` was pushed to
+    xiom-lang/xiom, but PR creation failed (`Resource not accessible by
+    personal access token`); open it manually at
+    https://github.com/xiom-lang/xiom/pull/new/chore/pin-stdlib-v0.64.3.
+- Registry publish run 37962367935 (tag push, protected env approved):
+  SUCCESS. Published xiom-std v0.64.3 -- sha256
+  775496c094d2a1703307313c9139c8cdc959d7687fc7a5b42b57657efa596b17,
+  ephemeral ed25519 signature, `compiler: v0.64.2`, provenance
+  refs/tags/stdlib-v0.64.3 on d052a3c. Registry warnings for the next
+  cut: no categories declared (vocabulary: core, data, database, web,
+  network, graphics, media, ai-ml, science, crypto-security, cloud-infra,
+  observability, concurrency, systems, tooling, testing, text-nlp) and no
+  stage declared (`incubating`|`stable`) -- add both to package.xi.
+- Staging canary run 37968157641 (auto-dispatched by release.yml to
+  staging.registry.xiom-lang.org): waiting at the protected environment
+  for approval; optional now that production is live.
+- heavy.yml (repaired matrix) dispatch run 37962605725: ubuntu-latest
+  SUCCESS, windows-latest SUCCESS (full corpus + modules + barename +
+  ratchets each), macos-14 FAILURE at "Full smoke corpus" (the compiler
+  built; the corpus leg is red). Candidate causes: the PULSE-reported
+  macOS runtime-C blockers (`#ifdef __APPLE__` for `_SC_AVPHYS_PAGES`;
+  `__x86_64__` guard for the fp128 asm) or platform-specific smokes.
+  Follow-up item; not a release blocker (release gates are Win/Linux).
+- Wave 98 (2e55b13) landed after the tag: M7 closure rewrite,
+  read_file_lines/to_string_char contract fixes, array_zip/fold clauses,
+  floors135, the new tostring-import finding; battery green on v0.64.2
+  (954/954, 272/272, 509/509, 0/509).
+- Registry live state: xiom-std 0.64.3 published 2026-10-09 17:49 UTC;
+  lineage 0.63.0 -> 0.64.2 -> 0.64.3.
+
 **SESSION 2026-10-09 block 84 (wave 98: M7 stdlib-side fix + consumer contract fixes + array extension; floors135)**
 - Wave 98: 7 clauses, +3 pub covered, on pin v0.64.2.
 - M7 FIXED stdlib-side (the compiler-lane handoff): the four adapters
