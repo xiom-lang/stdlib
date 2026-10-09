@@ -1753,6 +1753,25 @@ registry pin, agent recon for the rest)**
   two resolved today (array_zip, sibling alias), both re-run green on
   v0.64.2. No release side effects: stdlib-v0.64.3 (pin v0.64.2) is
   tagged; the registry publish is pending owner approval.
+- Wishlist scoop 2026-10-09 (five lanes, agent-gathered; full delta in
+  `docs/STDLIB-WISHLIST.md`): NEW fix-first defects for wave 98 --
+  `read_file_lines`'s `ensures: result is Ok => result.len() >= 1`
+  (io.xi:1076) is false for empty files (packages row 168, requester
+  xiom.wal; same family as PULSE's /proc stat-size-0 case) and
+  `to_string_char(Char(0))` returns "" violating its own
+  `ensures: result.len() >= 1` (packages row 169, xiom.http 0.1.4).
+  NEW asks: address-aware socket bind (PULSE wrap 8),
+  `socket_recv_into(fd, &mut Vec[UInt8], max)` (PULSE wrap 4b),
+  `Vec[UInt8].with_len` (bindings W-5, re-checked on 0.64.3), macOS
+  runtime-C guards (`_SC_AVPHYS_PAGES` at xiom_runtime.c:4222 and the
+  x86 asm in fp128_helpers.c) (PULSE wrap 8b). Status changes: packages
+  row 162 `io.list_dir` RESOLVED (m211, re-verified on v0.64.2);
+  ORBITDB confirms the str_split/CRLF fixes (20k-record WAL replay
+  61.6 s -> 9.9 s) and tracks fsync/open_append/append_line_sync as open;
+  XVECTOR all six durability rows still open (critical pair fsync +
+  append-bytes; io.rename workaround); bindings W-2 re-scoped to a docs
+  gap + B-07 caveat, W-5 open, 19-suite matrix green on v0.64.2;
+  `xiom.wal` 0.1.0 waits on the durable-write row.
 
 **SESSION 2026-10-09 block 82 (pin bump v0.64.2 + stdlib-v0.64.3 release cut; findings cleared; heavy.yml repaired)**
 - Compiler pin: COMPILER_VERSION -> v0.64.2 (tag c51170a6, the combined

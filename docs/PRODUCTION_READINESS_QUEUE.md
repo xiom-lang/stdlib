@@ -682,6 +682,19 @@ release lane: the archive at v0.64.1 bundles stdlib 6e60e958 (old
 wave-74 pin); the v0.64.2 pin decision + release notes are pending in
 the session blocks.
 
+Wishlist scoop 2026-10-09 (five lanes; full delta in
+`docs/STDLIB-WISHLIST.md`): NEW fix-first defects -- `read_file_lines`
+empty-file ensures (io.xi:1076, packages row 168, requester xiom.wal) and
+`to_string_char(Char(0))` violating its own len>=1 ensures (packages row
+169, xiom.http 0.1.4); NEW asks -- address-aware socket bind +
+`socket_recv_into` (PULSE), `Vec[UInt8].with_len` (bindings W-5,
+re-checked on 0.64.3), macOS runtime-C guards (`_SC_AVPHYS_PAGES`,
+fp128 x86 asm). Status: packages `io.list_dir` RESOLVED (m211);
+ORBITDB str_split/CRLF confirmed fixed (20k-record WAL replay 61.6 s ->
+9.9 s) with the storage cluster still open; XVECTOR six rows open;
+bindings 19-suite matrix green on v0.64.2; `xiom.wal` 0.1.0 gated on the
+durable-write row.
+
 Compiler relays consumed 2026-10-09 (block 83): v0.64.2 batch facts
 (m222..m241; m237 array_zip, m238 `[0]T` by value, m239 deep container
 equality, m240 verifier SMT, m241 OOB write trap; m242 sibling alias is

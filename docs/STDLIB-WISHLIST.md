@@ -248,3 +248,103 @@ Relay status 2026-10-08 (second sweep; sources re-fetched 17:40):
   confinement caution; compiler B-05 owns the fix).
 - Packages lane (`E:\xiom-packages\packages\docs\STDLIB-WISHLIST.md`): the
   2026-10-05 eight-row intake stands; no new rows.
+
+Relay status 2026-10-09 (five-lane scoop, gathered by an agent; the agent
+sandbox denies shell, so file mtimes are unavailable and dates below are
+content-derived):
+
+Packages source-of-record (`E:\xiom-packages\packages\docs\STDLIB-WISHLIST.md`,
+370 lines, 138 data rows = +4 vs the mirrored 134):
+- row 162 (`io.list_dir` broken): **RESOLVED** on the v0.64.1 archive
+  (m211), re-verified natively on v0.64.2 (2026-10-09; 23 distinct entries).
+- row 164 durable write path: UPDATE 2026-10-09 -- `xiom.wal` 0.1.0
+  (extracted 2026-10-09) ships the documented no-op `wal_flush` with the
+  call site kept, waiting on this row; still the highest-value storage ask.
+- row 163 DateTime.weekday 0=Monday vs `date_day_of_week` 0=Sunday --
+  open (API inconsistency).
+- **NEW row 168 (2026-10-09, requester xiom.wal): `io.read_file_lines`'s
+  `ensures: result is Ok => result.len() >= 1` (io.xi:1076) is FALSE for
+  an empty file (Ok with zero lines)**; the consumer stays 6/6 green only
+  because callers pre-check. This is our clause; fix-first candidate.
+- **NEW row 169 (2026-10-09, requester xiom.http 0.1.4, repro
+  `tstring-char-nul.xi`): `to_string_char(Char(0))` returns "" (C-string
+  truncation) and violates its own `ensures: result.len() >= 1`**; emit
+  the NUL byte or weaken the contract -- stdlib lane's call; fix-first.
+- rows 165-167 (`append_file_bytes`, `truncate`/`remove_dir`, `file_lock`
+  stub) still open and may account for the remaining count delta.
+
+Bindings (`E:\xiom-packages\bindings\docs\BINDINGS-STDLIB-WISHLIST.md`,
+45 lines; "stdlib response check" dated 2026-10-09):
+- W-1 `fs_remove` DELIVERED (0.64.2; xiom.sqlite adoption queued).
+- W-2 out-param slot helper RE-SCOPED: `SafePtr`/`FFIBuffer` already
+  exist; the remaining gap is documentation plus the B-07 alias-shadowing
+  caveat (open on v0.64.2).
+- W-3 guard-aware `ffi.free` open; B-05 re-verified on v0.64.2 (6.9 CPU-s
+  in 8 s, flat ~4.5 MB); the compiler relay confirms runtime/stdlib side.
+- W-4 stale cast note DELIVERED (0.64.2).
+- W-5 `Vec[UInt8].with_len(n)` open; re-checked 2026-10-09 on stdlib
+  0.64.3: `xiom.mem.zeroed[T]` exists but is a zero-memory value, not a
+  sized buffer; no `with_len`/`filled` anywhere. Scheduled candidate.
+- Pin matrix: 19 suites green on v0.64.2, no stdlib regressions. The
+  sibling copy at
+  `E:\xiom-packages\packages\docs\BINDINGS-STDLIB-WISHLIST.md` is the
+  older 35-line variant (v0.64.2 repin: B-01 m231 and B-08 m228 FIXED,
+  workarounds droppable); the `bindings\docs` copy is newer.
+
+PULSE (`E:\xiom-projects\xiom-pulse\docs\STDLIB-WISHLIST-PULSE.md`,
+179 lines):
+- **NEW ASK (wrap 8, 2026-10-09): address-aware socket bind** --
+  `PULSE_BIND=127.0.0.1` currently binds `0.0.0.0` because `socket_bind`
+  is wildcard-only; ask for `xiom_socket_bind_addr(sock, host: *UInt8,
+  port)` or an extended `socket_bind` that parses IPv4/IPv6; "not in
+  v0.64.2; still awaited" (runtime-backed primitive + stdlib wrapper).
+- **NEW (wrap 8b, 2026-10-09): macOS runtime-C build blockers** --
+  `runtime/xiom_runtime.c:4222` uses `_SC_AVPHYS_PAGES` (Linux-only; needs
+  `#ifdef __APPLE__`) and `runtime/fp128_helpers.c` compiles x86 inline
+  asm (`leaq`/`movq`) on arm64 (needs a `__x86_64__` guard). Runtime-C
+  fix-first (macOS lane).
+- **NEW ASK (wrap 4b, 2026-10-08): `socket_recv_into(fd, &mut
+  Vec[UInt8], max)`** for reusable caller buffers.
+- Defect (wrap 4b): `read_file_lines("/proc/self/status")` trips its own
+  `ensures: result.len() >= 1` because /proc files stat as size 0 -- read
+  until EOF for the non-regular case or document regular-files-only (same
+  family as packages row 168).
+- `signal_handle`/`signal_pending` still shown open on the PULSE list (no
+  PULSE-side confirmation yet of the stdlib Err-stub landing recorded
+  2026-10-08); `socket_set_timeout`/`socket_reuse_addr` remain
+  documented-Err stubs; `flush_stdout` still empty (io.xi:903).
+
+ORBITDB (relay 64 lines stops at the 2026-10-08 update; full table
+`STDLIB-WISHLIST-ORBITDB.md` 69 lines pinned 2026-10-09, compiler v0.64.2,
+stdlib 82ac2f3):
+- **RESOLVED: `str_split`/`read_file_lines` O(n^2)** -- WAL replay of 20k
+  records 61.6 s -> 9.9 s on v0.64.2 ("every line-oriented consumer is
+  linear now"). **RESOLVED: CRLF handling.**
+- Open (no new rows): real `fsync` (stub surface at fs_ffi.xi:238 and
+  sync_io.xi:80), `io.open_append` (append still open/close-bound;
+  3,524 ops/s), `truncate_file`, byte read/write/append-bytes,
+  `append_line_sync`, `file_last_byte`/`ends_with_newline`.
+- Acknowledges our 82ac2f3 sweep; tracks the three new rows (empty-read
+  clause, `to_string_char(Char(0))`, whole-body cast miscompile) as
+  non-blockers for ORBITDB today.
+
+XVECTOR (`STDLIB-WISHLIST-XVECTOR.md` 45 lines + `RELAY-STDLIB.md`
+addendum, re-checked 2026-10-09 on stdlib 0.64.3 / compiler v0.64.2): all
+six rows STILL OPEN -- `fsync`/`fdatasync` stubs (fs_ffi.xi:238/:246), the
+whole `sync_io` fd path stubbed (write_all:28, sync_fd:80, fsync_dir:88),
+no `append_file_bytes`, `truncate`/`ftruncate` stubs (:151/:160), no
+`f32_bits`/`bits_to_f32` (Float64 pair only, float.xi:43/:52),
+`flush_stdout` empty (io.xi:906). Critical pair narrowed to fsync +
+append-bytes; "one primitive unblocks three consumers" (`xiom.wal` gated
+too); `io.rename` covers atomic checkpoints meanwhile. Status change:
+XVC-C-11/C-12 (read_file Str-content + tiny-read) were compiler-lowering
+bugs FIXED in compiler v0.64.2 -- no stdlib action; byte-file APIs are
+byte-exact/CRLF-clean since 0.64.2.
+
+Consolidated new actionables from this sweep: stdlib features -- address-
+aware socket bind, `socket_recv_into`, `Vec[UInt8].with_len`; runtime-C --
+macOS guards (`_SC_AVPHYS_PAGES`, fp128 asm), B-05 guard-heap spin,
+fsync/append-bytes; defects (fix-first, wave 98) -- `read_file_lines`
+empty-file ensures (io.xi:1076), `to_string_char(Char(0))` (packages row
+169). The compiler-relay drops (x5 lane dirs) carry the same B-05
+runtime-side and triplicate-sibling notes recorded in block 83.
