@@ -28,7 +28,25 @@ guards under `--overflow-checks`). The 2026-10-09 relays are recorded in
 stdlib-side fix landed (closure rewrite of the four adapters; entry moved
 to the history below), the packages rows 168/169 were fixed stdlib-side
 (read_file_lines empty file -> zero lines; to_string_char NUL clause),
-and a new import-corruption finding was filed (first entry below).
+and a new import-corruption finding was filed (second entry below).
+Wave 101 added the tuple-literal element-read corruption (first entry
+below), found by the p_wave101_shapes.xi probe (findings now 15 Current:
+14 compiler, 1 stdlib).
+
+**Open finding 2026-10-10 (compiler v0.64.2): an inline Vec element read
+inside a tuple literal corrupts the Float64 component.** While landing
+the wave-101 machine_learning clauses, `metric_auc` built its
+(score, label) pairs with `pairs.push((y_pred[j], y_true[j]))`: the
+Float64 scores arrived corrupted (band comparisons misread, the ranking
+ties compared equal, and the function returned a negative AUC) while the
+Int labels stayed correct. Binding the element first
+(`var pj = y_pred[j]; var tj = y_true[j]; pairs.push((pj, tj))`) fixes it
+on the same pin and is the workaround applied to `metric_auc`. Isolated:
+the corruption needs the element read syntactically inside the tuple
+literal; literal pushes (`v.push((0.1, 0))`), bound-variable pushes,
+tuple-vector element reads, and literal-built tuples are all correct.
+Repro: `tools/known_failures/p_tuple_elem_vec_read.xi` (rc 1 on v0.64.2;
+expected rc 0).
 
 **Open finding 2026-10-09 (compiler v0.64.2): importing
 `xiom.convert.tostring` corrupts closure predicate dispatch.** With

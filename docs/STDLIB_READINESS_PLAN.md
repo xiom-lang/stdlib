@@ -1394,8 +1394,24 @@ T1/T2 yields.
         263/263 (248.7s), modules 509/509, barename 0/509, ratchets OK.
         Next: resume coverage on the unblocked iter remainder (chain 14 +
         fold 8) and the low dirs.
+        Wave 101 (2026-10-10): coverage wave 55 -- graph_theory +
+        machine_learning (121 clauses, +63 pub; graph_theory 0% -> 100%,
+        machine_learning 0% -> 96.9%, math 42.0% -> 48.3%, global 62.6%
+        -> 63.6%, meter 76.4%; floors138). Two fix-firsts: floyd_warshall
+        emitted 2n rows (n dead zero rows before the n distance rows;
+        dropped) and metric_auc built its tuple scores with inline
+        vector element reads (corrupted on v0.64.2; new compiler finding
+        p_tuple_elem_vec_read.xi, bind-first workaround). Probe
+        p_wave101_shapes.xi (274th, 145 checks) green pre/post. Battery
+        on the official v0.64.2 archive: corpus 954/954 (661.4s), probes
+        274/274 (258.7s), modules 509/509 (173.4s), barename 0/509
+        (239.6s), floors138 + doc + module-smoke ratchets OK. NOTE:
+        waves 93-100 are recorded in docs/stdlib_session.md blocks 77-88
+        and docs/PRODUCTION_READINESS_QUEUE.md; the shared local compiler
+        build path drifted past the pin (compiler main da7798da m252;
+        use the official archive binary -- see block 89).
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors129.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors138.json
         tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;

@@ -1,6 +1,6 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
-**76.3% -- 7 of 10 gates complete; gate 8 at 62.6% (partial credit) and
+**76.4% -- 7 of 10 gates complete; gate 8 at 63.6% (partial credit) and
 gates 9-10 discrete.** (Compiler pin: **v0.64.2**.)
 **Gates: corpus 954/954 full (C001 carve-outs retired on v0.63.1; new
 TcpStream loopback and uuencode roundtrip smokes added), modules 509/509,
@@ -25,13 +25,13 @@ gates flip:
 5. Coverage ratchet green -- MET (floors129).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (497/517 modules, 3477/6202 fns).
-8. Contract coverage 100% (every public fn carries clauses) -- OPEN (62.6%).
+8. Contract coverage 100% (every public fn carries clauses) -- OPEN (63.6%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
    OPEN (14: 13 compiler, 1 stdlib algorithm).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
 
 Meter formula: MET gates count 1.0; gate 8 counts its current
-pub-with-clause fraction (62.6% -> 0.626); gates 9 and 10 get no partial
+pub-with-clause fraction (63.6% -> 0.636); gates 9 and 10 get no partial
 credit (discrete). Update the percentage and the gate-8 fraction in the
 same commit as each floors dump so the meter moves smoothly toward 80%.
 
@@ -53,8 +53,16 @@ corpus leg is red (PULSE macOS runtime-C blockers suspected). Wave 98
 landed post-tag (M7 closure rewrite; read_file_lines/to_string_char
 contract fixes; new tostring-import finding); wave 99 added crypto hash
 sizes, xxhash/city empty pins and math constants; wave 100 added the
-finance/information-theory guard surfaces (math 42.0%). Coverage 62.6%,
-meter 76.3%; handoff in `docs/stdlib_session.md` snapshot 25 (block 88).
+finance/information-theory guard surfaces; wave 101 added graph_theory
+(32/32) + machine_learning (31/32) and caught two fix-firsts
+(floyd_warshall's 2n-row defect; metric_auc's corrupted tuple scores --
+filed as the new compiler finding `p_tuple_elem_vec_read.xi`; findings
+15 Current). Coverage 63.6%, meter 76.4%; handoff in
+`docs/stdlib_session.md` snapshot 25 (block 88), wave record block 89.
+BINARY NOTE: the shared local build path
+`E:\xiom-lang\xiom\target\release\xiom.exe` was rebuilt past the pin
+(compiler main da7798da m252) and fails four corpus smokes; use the
+official archive binary `%TEMP%\kilo\stdlib_ws\v0.64.2\bin\xiom.exe`.
 
 ## Project Pulse relay (web-framework lane) -- 2026-10-05
 
@@ -738,6 +746,41 @@ verify stdlib-v0.64.3 (d052a3c5) during its v0.64.3 candidate gates.
 Housekeeping in the same relay: the wave-97 sibling-alias split-probe
 workaround was DROPPED -- p_wave97_bitwise_shapes.xi was merged back into
 p_wave97_shapes.xi and re-run green on v0.64.2 (probe corpus stays 272).
+
+Update 2026-10-10 (wave 101 landed): graph_theory + machine_learning --
+121 clauses, +63 pub covered. graph_theory 32/32 (100%): the
+empty-constructor field mirror, negative guards on the add/remove
+surface, the remove_edge post-state has_edge mirror, degree/traversal/
+shortest-path/spanning/SCC/ordering shape and presence claims, the
+connected/cyclic/bipartite/isomorphic pins and the flow/cut/hamiltonian/
+tsp identities. machine_learning 31/32 (96.9%; normalization_batch
+stays the frozen nested-float stub): activation branch bands,
+loss/metric mismatch-NaN guards, empty identities and [0,1] bands, the
+auc NaN-or-band form, regularization zero pins, normalization/dropout
+length guards, kernel/distance/similarity pins. TWO FIX-FIRSTS
+(probe-caught pre-clause): graph_floyd_warshall pushed n zero rows
+before the n distance rows (2n total -- the dead loop was dropped);
+metric_auc built (score, label) pairs with inline vector element reads
+inside the tuple literal, corrupting every Float64 score on v0.64.2 --
+binding the elements first is the workaround, FILED as the new compiler
+finding p_tuple_elem_vec_read.xi (findings 14 -> 15 Current). Probe
+p_wave101_shapes.xi (274th, 145 checks) green pre/post on the official
+v0.64.2 archive; targeted smokes smoke_math_finance 1/1, smoke_math
+53/53; both modules --check clean. Coverage global 62.6% -> 63.6%
+(clauses 5370 -> 5491, pubCovered 4075 -> 4138); math 42.0% -> 48.3%;
+meter 76.4%; floors138. Battery on the official v0.64.2 archive binary:
+corpus 954/954 (661.4s, no exclusions), probes 274/274 (258.7s),
+modules 509/509 (173.4s), barename 0/509 (239.6s), floors138 + doc +
+module-smoke (497/517, 3476/6204) ratchets OK. COMPILER-BINARY DRIFT:
+the shared local build path `E:\xiom-lang\xiom\target\release\xiom.exe`
+was rebuilt 2026-10-10 00:56 from compiler main (da7798da, m252 -- past
+the v0.64.2 tag c51170a6) and fails four corpus smokes the pin passes
+(smoke_cell_narrow rc 2, smoke_collections_btree_map rc 7,
+smoke_rand_weighted rc 1, smoke_stress_regex_find AV); the official
+archive binary `%TEMP%\kilo\stdlib_ws\v0.64.2\bin\xiom.exe` is the wave
+pin and is 954/954. Readiness next: the remaining math remainder
+(decompose/fuzzy/game_theory/chaos), os 26.6%, the queued feature
+candidates and the runtime-C guards.
 
 Update 2026-10-10 (wave 100 landed): finance + information theory -- 35
 clauses, +29 pub covered. finance 20 (the r==0 closed forms pv/fv/pmt/

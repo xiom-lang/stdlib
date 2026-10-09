@@ -4,6 +4,135 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 -->
 # XIOM Stdlib Session -- Handoff
 
+## 0A. CONTINUE HERE -- handoff snapshot 26 (updated 2026-10-10, pin v0.64.2 OFFICIAL ARCHIVE binary; waves 93-101 landed; binary-drift warning; candidate-tag pin protocol; context handoff)
+
+**PASTE-READY PROMPT FOR THE NEXT SESSION (copy this block):**
+
+---
+
+You are continuing the XIOM stdlib lane. Worktree `E:\xiom-lang\stdlib`,
+branch `main`. Read `docs/stdlib_session.md` blocks 89 (latest), 88, 87,
+86, 85, 84, 83, 82, 81, 80, 79, 78, 77, 76, 75, 74, 73, 72, 71, 70, 69,
+68, 67, 66, 65, 64, 63, 62, 61, 60, 59, 58, 57, 56, 55, 54, 53, 52, 51,
+50, 49, 48, 47, 46, 45, 44, 43 (publish), 27 (iter block) and
+`docs/PRODUCTION_READINESS_QUEUE.md` before acting; snapshot 25 below and
+snapshot 5 keep the deeper history/lore. The ecosystem relays (packages,
+bindings, PULSE, ORBITDB, XVECTOR) feed intake rows into
+`docs/STDLIB-WISHLIST.md`; runtime-backed asks queue with the compiler
+runtime bundle.
+
+STATE (2026-10-10): compiler pin = **v0.64.2**, but USE THE OFFICIAL
+ARCHIVE BINARY `%TEMP%\kilo\stdlib_ws\v0.64.2\bin\xiom.exe` (tag
+c51170a6 release). WARNING: the shared local build path
+`E:\xiom-lang\xiom\target\release\xiom.exe` was rebuilt 2026-10-10 00:56
+from compiler main (now da7798da, m252 -- far past the tag) and still
+reports "v0.64.2" while failing four corpus smokes the pin passes
+(smoke_cell_narrow rc 2, smoke_collections_btree_map rc 7,
+smoke_rand_weighted rc 1, smoke_stress_regex_find AV); do NOT use it for
+wave batteries until it is rebuilt from the tag. COMPILER_VERSION =
+v0.64.2. RELEASE STATE: **stdlib-v0.64.3 RELEASED 2026-10-09** (tag on
+d052a3c) -- release.yml run 37962367989 full success and the **REGISTRY
+IS LIVE**: xiom-std 0.64.3 published (signed, sha256
+775496c094d2a1703307313c9139c8cdc959d7687fc7a5b42b57657efa596b17,
+compiler v0.64.2, lineage 0.63.0 -> 0.64.2 -> 0.64.3). **Pin protocol
+agreed with the compiler lane** (relay
+`docs/COMPILER-RELAY-2026-10-09-pin-protocol.md`, untracked per
+convention): tag a CANDIDATE stdlib-vX.Y.Z (no registry publish yet) and
+relay tag + hash + wave report; the compiler lane verifies (vendored sync
++ STDLIB_VERSION + e2e without XIOM_STDLIB + feature + checker corpus +
+the wave smokes) and replies OK; only then publish to the registry; the
+compiler pins it at its next cut. Waves keep flowing on main throughout;
+one-version steady state is expected; security-urgent publishes may skip
+verification with an explicit note. Current cycle: the compiler lane
+verifies stdlib-v0.64.3 (d052a3c5) during its v0.64.3 gates. OPEN RELEASE
+FOLLOW-UPS: (a) the STDLIB_VERSION pin PR must be opened **MANUALLY** --
+the branch `chore/pin-stdlib-v0.64.3` is pushed to xiom-lang/xiom but PR
+creation failed on token scope:
+`https://github.com/xiom-lang/xiom/pull/new/chore/pin-stdlib-v0.64.3`;
+(b) the staging canary (run 37968157641) still waits for environment
+approval (optional); (c) add `categories` (1-3 from the registry
+vocabulary) and `stage` ("incubating"|"stable") to package.xi BEFORE the
+next candidate cut; (d) the repaired heavy matrix passes ubuntu/windows
+but the macos-14 corpus leg is red (PULSE macOS runtime-C blockers
+suspected: `_SC_AVPHYS_PAGES` needs `#ifdef __APPLE__`, the
+fp128_helpers x86 asm needs `__x86_64__`).
+
+Gates on v0.64.2 (official archive): release corpus **954/954 FULL**,
+modules **509/509**, probes **274/274**, barename **0/509**, floors138,
+module-smoke ratchet (497/517, 3476/6204) and doc ratchet OK. Coverage =
+**63.6%** global pub-with-clause (meter 76.4%). Waves landed after
+snapshot 24: 93 (iter remainder + format.text; 71 clauses), 94
+(cmp/core/sync/terminal; 86), 95 (format remainder; 82), 96
+(array/sort/bits; 53), 97 (bits submodules/hash/fraction; 57), 98 (M7
+closure rewrite + read_file_lines/to_string_char contract fixes; 7), 99
+(crypto hash/xxhash/city/math constants; 26), 100 (finance + information
+theory; 35), 101 (graph_theory + machine_learning; 121 clauses / +63 pub;
+two fix-firsts). Dir deltas: iter 46.4%, format 88.7%, cmp 100%, core
+45.8%, sync 35.9%, array 77.8%, sort 42.6%, bits 74.3%, hash 51.1%,
+crypto 47.0%, num 37.6%, math 48.3% (graph_theory 100%,
+machine_learning 96.9%), os 26.6%.
+
+Findings (15 Current: 14 compiler + 1 stdlib) -- since snapshot 25: NEW
+`p_tuple_elem_vec_read.xi` (an inline Vec float element read inside a
+tuple literal corrupts the component on v0.64.2; found by the wave-101
+probe, workaround = bind the element first; RELAY THIS to the compiler
+lane); `p_tostring_import_breaks_adapters.xi` (importing
+`xiom.convert.tostring` corrupts closure predicate dispatch) still needs
+relaying too. Still open: mut-param field @pre aliasing, generic by-ref
+Option/Result/Slice, cross-module type paths/foreign calls,
+ensures-isok guard, clause float-vec, geom Box/matrix, polyhedra,
+vec-shape AV, cross-type generic callbacks, payload reads, polygon
+(stdlib). B-05 guard-heap spin is RUNTIME-side in THIS repo
+(`runtime/xiom_runtime.c` guard arena; repro under
+`E:\xiom-packages\packages\docs\repro\bindings-pilot\alloc-guard-spin`);
+the macOS runtime-C guards are also ours.
+
+FIRST TASK (wave 102): finish the **math remainder** -- decompose (16
+pub), fuzzy (14; fuzzy_relation/fuzzy_composition stay SKIPPED stubs),
+game_theory (12; the five BUG 23 #1 stubs stay SKIPPED), chaos (12):
+~54 claimable pub, bodies already recon'd in block 89; then **os 26.6%**
+(inspect each runtime-backed surface before claiming), batching toward
+40-60 pub. Queued feature candidates when the wave has room: bindings W-5
+`Vec[UInt8].with_len(n)` (collections change + probe; check the
+module-smoke ratchet impact), PULSE address-aware socket bind
+(runtime-backed primitive + stdlib wrapper), `socket_recv_into`
+(runtime-backed). Runtime-C items: the macOS guards (above) and B-05.
+
+Mandatory protocol: (1) body-derived clauses only, no placeholders/
+payload reads; canonical `result is Ok =>` guard form; file new findings
+as minimal repros + README entry. (2) probe-first
+`tools/probes/p_wave102_shapes.xi`, bind returned values before
+comparing, green on v0.64.2 (the official archive binary -- see the
+binary-drift warning). (3) apply, targeted smokes, bisect/drop on
+codegen breaks. (4) dump `tools/coverage_floors139.json`, wire workflows
++ tools/README + plan/session/queue in one commit, YAML check, pure-ASCII
+commit. (5) battery: corpus 954/954, probes expect 275, modules 509/509,
+barename 0/509, floors139 + module-smoke ratchets; push `main` with the
+one-shot Lefteris-Notas credential (403 as Lefteris-Ngonart; GitHub 500s
+per failed_attempts.md). (6) no unbounded scratch benchmarks. (7) release
+side follows the candidate-tag pin protocol; do NOT tag/publish without
+the compiler-lane OK (a security exception needs an explicit note).
+
+HANDOFF NOTE: locks include p_pin0641_iter_shapes.xi, the wave-77 stats
+probe, the PULSE hardening probe, the wave-78..101 coverage probes (the
+wave-97 probe was remerged after m242; wave 101 added
+p_wave101_shapes.xi, 145 checks), p_str_split_scale.xi, the io locks
+(p_read_file_lines_crlf.xi, p_fs_remove.xi) and the promoted regression
+locks (p_rvalue_float_vec_index.xi, p_multipart_parse_name.xi,
+p_iter_range_collect_forwardref.xi) -- **274 probes total**. Open repros
+on v0.64.2: the 15 Current findings' repros (see
+tools/known_failures/README.md; the new
+`p_tuple_elem_vec_read.xi` is rc 1). docs/failed_attempts.md logs push
+incidents; out/*.json and the untracked relay drops
+(docs/COMPILER-RELAY-*.md) are disposable working files. CAUTION: never
+run large synthetic benchmarks unbounded (block-75 runaway incident);
+the heavy macos-14 leg stays red until the runtime-C guards land.
+
+---
+
+Snapshot 25 below retains the v0.64.2-era prompt; snapshot 5 keeps the
+deep protocol lore.
+
 ## 0A. CONTINUE HERE -- handoff snapshot 25 (updated 2026-10-10, pin v0.64.2; stdlib 0.64.3 RELEASED + registry LIVE; waves 93-100 landed; candidate-tag pin protocol agreed; context handoff)
 
 **PASTE-READY PROMPT FOR THE NEXT SESSION (copy this block):**
@@ -1842,6 +1971,69 @@ registry pin, agent recon for the rest)**
   gates; open: contract coverage 100%, zero open findings, beta-exit release
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
+
+**SESSION 2026-10-10 block 89 (wave 101: graph_theory + machine_learning; two fix-firsts; new compiler finding; floors138; compiler-binary drift incident)**
+- Wave 101: 121 clauses, +63 pub covered, on the official v0.64.2 pin
+  (archive binary `%TEMP%\kilo\stdlib_ws\v0.64.2\bin\xiom.exe` -- see the
+  binary-drift note below).
+- graph_theory 32/32 pub (100%): the empty-constructor field mirror; the
+  negative guards on add_vertex/add_edge/add_weighted_edge/remove_vertex;
+  the remove_edge post-state `graph_has_edge` mirror; the has_vertex
+  exact mirror; degree/vertices/edges/adjacent guards; the dfs/bfs/
+  dijkstra/bellman_ford/floyd_warshall/astar shape and presence claims;
+  prim/kruskal/tarjan/kosaraju/topological_sort presence and bounds;
+  connected/cyclic/bipartite/isomorphic pins; color length; max_flow/
+  min_cut/hamiltonian/tsp shape identities; the tsp start pin.
+- machine_learning 31/32 pub (96.9%; normalization_batch stays
+  clause-free, the frozen BUG 23 #1 nested-float stub): the activation
+  branch bands (sigmoid/tanh/relu/gelu/swish); the loss/metric
+  mismatch-NaN guards, the empty identities (cross_entropy 0, accuracy
+  0) and the [0,1] metric bands; the auc NaN-or-band form;
+  regularization zero pins; normalization/dropout length guards;
+  kernel mismatch/degree-0 pins; the distance bands and the similarity
+  [-1,1] bands.
+- TWO FIX-FIRSTS (probe-caught pre-clause): (a) graph_floyd_warshall
+  pushed n zero rows BEFORE the n distance rows (2n rows total,
+  contradicting the documented distance matrix; the dead loop dropped);
+  (b) metric_auc built its (score, label) pairs with inline vector
+  element reads inside the tuple literal -- every Float64 score arrived
+  corrupted on v0.64.2 (ranking ties compared equal; AUC was negative);
+  binding the elements first fixes it. (b) is a NEW COMPILER FINDING:
+  `p_tuple_elem_vec_read.xi` (rc 1 on v0.64.2, expected rc 0) filed in
+  tools/known_failures with the README Current entry -- findings
+  14 -> 15 Current (14 compiler, 1 stdlib).
+- Probe p_wave101_shapes.xi (274th, 145 checks) green pre/post on the
+  official v0.64.2 pin. Targeted smokes smoke_math_finance 1/1 (both
+  modules are exercised there) and smoke_math 53/53; both modules
+  --check clean.
+- Coverage: graph_theory 0% -> 100%, machine_learning 0% -> 96.9%,
+  math 42.0% -> 48.3%; global 62.6% -> 63.6% (clauses 5370 -> 5491,
+  pubCovered 4075 -> 4138); meter 76.4%; floors138 dumped and wired
+  (ci/heavy/release + tools/README).
+- Battery on the official v0.64.2 pin: release corpus 954/954 full
+  (661.4s, no exclusions); probes 274/274 (258.7s); check_modules
+  509/509 (173.4s); barename 0/509 (239.6s); floors138 + doc +
+  module-smoke (497/517, 3476/6204) ratchets OK.
+- COMPILER-BINARY DRIFT INCIDENT: the shared local build path
+  `E:\xiom-lang\xiom\target\release\xiom.exe` was rebuilt 2026-10-10
+  00:56 local from compiler main (now da7798da, m252 -- far past the
+  v0.64.2 tag c51170a6). The rebuilt binary still reports "v0.64.2" but
+  fails four corpus smokes the official pin passes (smoke_cell_narrow
+  rc 2, smoke_collections_btree_map rc 7, smoke_rand_weighted rc 1,
+  smoke_stress_regex_find AV): its first full run was 950/954 on the
+  drifted build; the official archive binary at
+  `%TEMP%\kilo\stdlib_ws\v0.64.2\bin\xiom.exe` is 954/954. THE PIN FOR
+  THIS WAVE IS THE OFFICIAL ARCHIVE BINARY; do not use the shared
+  target/release path until it is rebuilt from the tag again.
+- Open follow-ups unchanged: manual pin PR (`chore/pin-stdlib-v0.64.3`),
+  staging canary approval, package.xi `categories`/`stage`, heavy macOS
+  corpus leg red (PULSE macOS runtime-C guards suspected).
+- Readiness next (wave 102): the remaining math remainder (decompose,
+  fuzzy, game_theory, chaos -- all recon'd, ~54 claimable pub; the
+  fuzzy/game stub sets stay SKIPPED per the calculus precedent), then
+  os 26.6%, the queued feature candidates (Vec[UInt8].with_len,
+  address-aware bind, socket_recv_into), and the macOS runtime-C
+  guards + B-05.
 
 **SESSION 2026-10-10 block 88 (handoff refresh: snapshot 25; clean context handoff; next = wave 101)**
 - Snapshot 25 written at the top of this file as the PASTE-READY prompt for
