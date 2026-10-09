@@ -4,6 +4,127 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 -->
 # XIOM Stdlib Session -- Handoff
 
+## 0A. CONTINUE HERE -- handoff snapshot 25 (updated 2026-10-10, pin v0.64.2; stdlib 0.64.3 RELEASED + registry LIVE; waves 93-100 landed; candidate-tag pin protocol agreed; context handoff)
+
+**PASTE-READY PROMPT FOR THE NEXT SESSION (copy this block):**
+
+---
+You are continuing the XIOM stdlib lane. Worktree `E:\xiom-lang\stdlib`,
+branch `main`. Read `docs/stdlib_session.md` blocks 87 (latest), 86, 85, 84,
+83, 82, 81, 80, 79, 78, 77, 76, 75, 74, 73, 72, 71, 70, 69, 68, 67, 66,
+65, 64, 63, 62, 61, 60, 59, 58, 57, 56, 55, 54, 53, 52, 51, 50, 49, 48,
+47, 46, 45, 44, 43 (publish), 27 (iter block) and
+`docs/PRODUCTION_READINESS_QUEUE.md` before acting; snapshot 24 below and
+snapshot 5 keep the deeper history/lore. The ecosystem relays (packages,
+bindings, PULSE, ORBITDB, XVECTOR) feed intake rows into
+`docs/STDLIB-WISHLIST.md`; runtime-backed asks queue with the compiler
+runtime bundle.
+
+STATE (2026-10-10): compiler pin = **v0.64.2** (tag c51170a6, the combined
+v0.64.2 release; local build E:\xiom-lang\xiom\target\release\xiom.exe;
+compiler main has since moved past the tag to d9f146cb m244 -- NOT in the
+pin). COMPILER_VERSION = v0.64.2. RELEASE STATE: **stdlib-v0.64.3 RELEASED
+2026-10-09** (tag on d052a3c) -- release.yml run 37962367989 full success
+(validate, Win/Linux gates, assets xiom-std-0.64.3.tar.gz + SHA256SUMS,
+staging canary dispatch, STDLIB_VERSION pin step) and the **REGISTRY IS
+LIVE**: xiom-std 0.64.3 published (signed, sha256
+775496c094d2a1703307313c9139c8cdc959d7687fc7a5b42b57657efa596b17,
+compiler v0.64.2, lineage 0.63.0 -> 0.64.2 -> 0.64.3). **Pin protocol
+agreed with the compiler lane** (relay
+`docs/COMPILER-RELAY-2026-10-09-pin-protocol.md`, untracked per
+convention): tag a CANDIDATE stdlib-vX.Y.Z (no registry publish yet) and
+relay tag + hash + wave report; the compiler lane verifies (vendored sync
++ STDLIB_VERSION + e2e without XIOM_STDLIB + feature + checker corpus +
+the wave smokes) and replies OK; only then publish to the registry; the
+compiler pins it at its next cut. Waves keep flowing on main throughout;
+one-version steady state is expected; security-urgent publishes may skip
+verification with an explicit note. Current cycle: the compiler lane
+verifies stdlib-v0.64.3 (d052a3c5) during its v0.64.3 gates. OPEN RELEASE
+FOLLOW-UPS: (a) the STDLIB_VERSION pin PR must be opened MANUALLY -- the
+branch `chore/pin-stdlib-v0.64.3` is pushed to xiom-lang/xiom but PR
+creation failed on token scope:
+https://github.com/xiom-lang/xiom/pull/new/chore/pin-stdlib-v0.64.3 ;
+(b) the staging canary (run 37968157641) still waits for environment
+approval (optional); (c) add `categories` (1-3 from the registry
+vocabulary) and `stage` ("incubating"|"stable") to package.xi BEFORE the
+next candidate cut; (d) the repaired heavy matrix passes ubuntu/windows
+but the macos-14 corpus leg is red (PULSE macOS runtime-C blockers
+suspected: `_SC_AVPHYS_PAGES` needs `#ifdef __APPLE__`, the
+fp128_helpers x86 asm needs `__x86_64__`).
+
+Gates on v0.64.2: release corpus **954/954 FULL**, modules **509/509**,
+probes **273/273**, barename **0/509**, floors137, module-smoke ratchet
+(497/517, 3476/6204) and doc ratchet OK. Coverage = **62.6%** global
+pub-with-clause (meter 76.3%). Waves landed after snapshot 24: 93 (iter
+remainder + format.text; 71 clauses), 94 (cmp/core/sync/terminal; 86),
+95 (format remainder; 82), 96 (array/sort/bits; 53), 97 (bits submodules/
+hash/fraction; 57), 98 (M7 closure rewrite + read_file_lines/
+to_string_char contract fixes; 7), 99 (crypto hash/xxhash/city/math
+constants; 26), 100 (finance + information theory; 35). Dir deltas: iter
+45.4%, format 88.7%, cmp 100%, core 45.8%, sync 35.9%, array 77.8%, sort
+42.6%, bits 74.3%, hash 51.1%, crypto 47.0%, num 37.6%, math 42.0%, os
+26.6%.
+
+Findings (14 Current: 13 compiler + 1 stdlib) -- since snapshot 24:
+CLEARED array_zip truncation + triplicate sibling exports (m237/m242,
+re-run on v0.64.2); the M7 `Iterator[T]` finding is RESOLVED stdlib-side
+(wave 98 closure rewrite; p_wave98_shapes.xi); NEW
+`p_tostring_import_breaks_adapters.xi` (importing
+`xiom.convert.tostring` corrupts closure predicate dispatch; the wave-98
+probe split as a workaround -- RELAY THIS to the compiler lane); still
+open: mut-param field @pre aliasing, generic by-ref Option/Result/Slice,
+cross-module type paths/foreign calls, ensures-isok guard, clause
+float-vec, geom Box/matrix, polyhedra, vec-shape AV, cross-type generic
+callbacks, payload reads, polygon (stdlib). B-05 guard-heap spin is
+RUNTIME-side in THIS repo (`runtime/xiom_runtime.c` guard arena; repro
+under `E:\xiom-packages\packages\docs\repro\bindings-pilot\alloc-guard-spin`);
+the macOS runtime-C guards are also ours. Consumer-row fixes landed in
+wave 98 (packages rows 168/169: read_file_lines empty -> zero lines;
+to_string_char NUL clause; both locked by the wave-98 probes).
+
+FIRST TASK (wave 101): resume coverage -- the **math remainder**
+(graph_theory 0%, machine_learning 0%, decompose 0%, fuzzy 0%,
+game_theory 0%, chaos 0%; the calculus/information-theory matrix stubs
+stay SKIPPED per the freeze notes), then **os 26.6%** (inspect each
+runtime-backed surface before claiming), batching toward 40-60 pub.
+Queued feature candidates when the wave has room: bindings W-5
+`Vec[UInt8].with_len(n)` (collections change + probe; check the
+module-smoke ratchet impact), PULSE address-aware socket bind
+(runtime-backed primitive + stdlib wrapper), `socket_recv_into`
+(runtime-backed). Runtime-C items: the macOS guards (above) and B-05.
+
+Mandatory protocol: (1) body-derived clauses only, no placeholders/
+payload reads; canonical `result is Ok =>` guard form; file new findings
+as minimal repros + README entry. (2) probe-first
+`tools/probes/p_wave101_shapes.xi`, bind returned values before
+comparing, green on v0.64.2. (3) apply, targeted smokes, bisect/drop on
+codegen breaks. (4) dump `tools/coverage_floors138.json`, wire workflows
++ tools/README + plan/session/queue in one commit, YAML check, pure-ASCII
+commit. (5) battery: corpus 954/954, probes expect 274, modules 509/509,
+barename 0/509, floors138 + module-smoke ratchets; push `main` with the
+one-shot Lefteris-Notas credential (403 as Lefteris-Ngonart; GitHub 500s
+per failed_attempts.md). (6) no unbounded scratch benchmarks. (7) release
+side follows the candidate-tag pin protocol; do NOT tag/publish without
+the compiler-lane OK (a security exception needs an explicit note).
+
+HANDOFF NOTE: locks include p_pin0641_iter_shapes.xi, the wave-77 stats
+probe, the PULSE hardening probe, the wave-78..100 coverage probes (the
+wave-97 probe was remerged after m242), p_str_split_scale.xi, the io
+locks (p_read_file_lines_crlf.xi, p_fs_remove.xi) and the promoted
+regression locks (p_rvalue_float_vec_index.xi, p_multipart_parse_name.xi,
+p_iter_range_collect_forwardref.xi) -- **273 probes total**. Open repros
+on v0.64.2: the 14 Current findings' repros (see
+tools/known_failures/README.md). docs/failed_attempts.md logs push
+incidents; out/*.json and the untracked relay drops
+(docs/COMPILER-RELAY-*.md) are disposable working files. CAUTION: never
+run large synthetic benchmarks unbounded (block-75 runaway incident);
+the heavy macos-14 leg stays red until the runtime-C guards land.
+
+---
+
+Snapshot 24 below retains the v0.64.1/v0.64.2-era prompt; snapshot 5 keeps
+the deep protocol lore.
+
 ## 0A. CONTINUE HERE -- handoff snapshot 24 (updated 2026-10-08, v0.64.1 pin consumed, stdlib 0.64.2 RELEASED + registry LIVE, string fix + signal stubs landed; context handoff)
 
 **PASTE-READY PROMPT FOR THE NEXT SESSION (copy this block):**
@@ -1721,6 +1842,20 @@ registry pin, agent recon for the rest)**
   gates; open: contract coverage 100%, zero open findings, beta-exit release
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
+
+**SESSION 2026-10-10 block 88 (handoff refresh: snapshot 25; clean context handoff; next = wave 101)**
+- Snapshot 25 written at the top of this file as the PASTE-READY prompt for
+  the next session. It captures: pin v0.64.2; stdlib-v0.64.3 RELEASED +
+  registry LIVE (sha256 775496c0...); the candidate-tag pin protocol; the
+  open release follow-ups (manual pin PR, staging canary, package
+  categories/stage, heavy macos-14 red); gates on v0.64.2 (corpus 954/954,
+  probes 273/273, modules 509/509, barename 0/509, floors137, coverage
+  62.6%, meter 76.3%); waves 93-100 with the dir deltas; findings 14
+  Current (M7 resolved stdlib-side, array_zip/sibling cleared, the
+  tostring-import finding filed and awaiting a relay); wave-101 first task
+  (math remainder + os) with the queued feature/runtime-C candidates; and
+  the full mandatory protocol + locks.
+- No code changes in this block; handoff record only.
 
 **SESSION 2026-10-10 block 87 (wave 100: finance + information theory; floors137)**
 - Wave 100: 35 clauses, +29 pub covered, on pin v0.64.2.

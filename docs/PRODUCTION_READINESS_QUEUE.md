@@ -54,7 +54,7 @@ landed post-tag (M7 closure rewrite; read_file_lines/to_string_char
 contract fixes; new tostring-import finding); wave 99 added crypto hash
 sizes, xxhash/city empty pins and math constants; wave 100 added the
 finance/information-theory guard surfaces (math 42.0%). Coverage 62.6%,
-meter 76.3%; handoff in `docs/stdlib_session.md` snapshot 24 (block 87).
+meter 76.3%; handoff in `docs/stdlib_session.md` snapshot 25 (block 88).
 
 ## Project Pulse relay (web-framework lane) -- 2026-10-05
 
