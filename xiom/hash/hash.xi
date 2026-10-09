@@ -135,7 +135,9 @@ pub fn sip_hash(data: &Vec[UInt8]) -> UInt64 {
 /// Offset basis: 0x811C9DC5, prime: 0x01000193.
 /// Complexity: O(n), n = data length.
 /// Security: Non-cryptographic. Excellent distribution for hash tables.
-pub fn fnv1a32(data: &Vec[UInt8]) -> Int {
+pub fn fnv1a32(data: &Vec[UInt8]) -> Int
+  ensures: (data.len() == 0) => (result == 0x811C9DC5)
+{
   var hash: Int = 0x811C9DC5;
   var i: Int = 0;
   let len = data.len();
@@ -151,7 +153,9 @@ pub fn fnv1a32(data: &Vec[UInt8]) -> Int {
 /// FNV-1a 64-bit hash.
 /// Offset basis: 0xCBF29CE484222325, prime: 0x00000100000001B3.
 /// Complexity: O(n), n = data length.
-pub fn fnv1a64(data: &Vec[UInt8]) -> Int {
+pub fn fnv1a64(data: &Vec[UInt8]) -> Int
+  ensures: (data.len() == 0) => (result == 0xCBF29CE484222325)
+{
   var hash: Int = 0xCBF29CE484222325;
   var i: Int = 0;
   let len = data.len();
@@ -187,7 +191,9 @@ pub fn fnv1_64(data: &Vec[UInt8]) -> Int {
 /// Test vector: murmur3_32("hello", 0) == 0x248BFA47.
 /// Complexity: O(n), n = data length.
 /// Security: Non-cryptographic. Good avalanche characteristics.
-pub fn murmur3_32(data: &Vec[UInt8], seed: Int) -> Int {
+pub fn murmur3_32(data: &Vec[UInt8], seed: Int) -> Int
+  ensures: (data.len() == 0 && seed == 0) => (result == 0)
+{
   const C1: Int = 0xCC9E2D51;
   const C2: Int = 0x1B873593;
   let len = data.len();
@@ -390,7 +396,9 @@ pub fn sdbm(s: Str) -> Int
 /// CRC32-IEEE 802.3 (polynomial 0xEDB88320, reflected).
 /// Generates lookup table lazily on first call.
 /// Complexity: O(n), n = data length.
-pub fn crc32_ieee(data: &Vec[UInt8]) -> Int {
+pub fn crc32_ieee(data: &Vec[UInt8]) -> Int
+  ensures: (data.len() == 0) => (result == 0)
+{
   var table: [256]Int;
   var ti: Int = 0;
   while ti < 256 {
@@ -422,7 +430,9 @@ pub fn crc32_ieee(data: &Vec[UInt8]) -> Int {
 
 /// Converts a byte vector to a lowercase hexadecimal string.
 /// Delegates to xiom.encoding.hex_encode.
-pub fn hash_bytes_to_hex(data: &Vec[UInt8]) -> Str {
+pub fn hash_bytes_to_hex(data: &Vec[UInt8]) -> Str
+  ensures: (data.len() == 0) => (result.len() == 0)
+{
   return encoding.hex_encode(data);
 }
 
@@ -431,7 +441,9 @@ pub fn hash_bytes_to_hex(data: &Vec[UInt8]) -> Str {
 /// Boost-style hash combination.
 /// Combines two hash values into one using a mixing function.
 /// Formula: a ^ (b + 0x9e3779b9 + (a << 6) + (a >> 2)).
-pub fn combine_hashes(a: Int, b: Int) -> Int {
+pub fn combine_hashes(a: Int, b: Int) -> Int
+  ensures: (a == 0 && b == 0) => (result == 0x9e3779b9)
+{
   return a ^ (b + 0x9e3779b9 + (a << 6) + (a >> 2));
 }
 
@@ -439,7 +451,9 @@ pub fn combine_hashes(a: Int, b: Int) -> Int {
 
 /// DJB2 hash over string characters.
 /// Alias for djb2.
-pub fn string_hash(s: Str) -> Int {
+pub fn string_hash(s: Str) -> Int
+  ensures: (s.len() == 0) => (result == 5381)
+{
   return djb2(s);
 }
 
@@ -490,7 +504,9 @@ fn _xxh64_merge_round(acc: Int, val: Int) -> Int {
 
 /// xxHash64 (seed 0 compatible with the reference implementation; 64-bit
 /// results wrap naturally in i64 arithmetic -- masks are no-ops at 64 bits).
-pub fn xxhash64(data: &Vec[UInt8], seed: Int) -> Int {
+pub fn xxhash64(data: &Vec[UInt8], seed: Int) -> Int
+  ensures: (data.len() == 0 && seed == 0) => (result == 0xEF46DB3751D8E999)
+{
   var len = data.len();
   var h: Int = seed + PRIME64_5 + len;
   var pos: Int = 0;

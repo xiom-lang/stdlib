@@ -51,6 +51,14 @@ lowering works (Range.count + the retried set + smoke_iter 21/21 incl.
 -Workers 8); the deferred remainder (chain 14 + fold 8 + the rest of the
 iter surface) continues as normal coverage work.
 
+WAVE 97 STATUS (2026-10-09): DONE -- bits submodules + hash + fraction
+landed (57 clauses, +40 pub covered; bits 74.3%, hash 42.2%, num 37.6%,
+global 61.8%, meter 76.2%, floors134, probes 270/270). See block 81; new
+finding: triplicate sibling exports break alias resolution (wave-97 probe
+split in two). The next wave (98) continues: os 26.6%, num 37.6%, math
+38.8%, crypto 39.9%, hash 42.2%, remaining bitarray/endianness. Release
+note: the next stdlib cut picks up blocks 75/77/78/79/80/81.
+
 WAVE 96 STATUS (2026-10-09): DONE -- array + sort + bits landed (53
 clauses, +40 pub covered; array 77.8%, sort 42.6%, bits 52.5%, global
 61.2%, meter 76.1%, floors133, probes 268/268). See block 80; new finding
@@ -1706,6 +1714,46 @@ registry pin, agent recon for the rest)**
   gates; open: contract coverage 100%, zero open findings, beta-exit release
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
+
+**SESSION 2026-10-09 block 81 (wave 97: bits submodules + hash + fraction; floors134; sibling-alias finding)**
+- Wave 97: 57 clauses, +40 pub covered. bits 22 (bitfield width/offset
+  no-op guards on set/clear/insert, sign_extend width<=0 and >=64
+  identities, and the `result >= 0` placeholders on get/mask/extract
+  replaced with real guard/edge pins; rotation k==0/k==64 identities
+  including the rol/ror/bit_rotate aliases and masked mask==0; popcount
+  next/prev_pow2 boundaries + rotations; bitwise zero pins on
+  bit_reverse/byte_swap, bit_reverse_byte(1)->128, byte_swap(256)->1<<48,
+  pow2 boundaries) -- bits 52.5% -> 74.3%. hash 8 (empty-input offset
+  pins on fnv1a32/fnv1a64, crc32_ieee empty -> 0, hash_bytes_to_hex
+  empty, combine_hashes zero -> 0x9e3779b9, string_hash/djb2 empty ->
+  5381, murmur3_32(empty, seed 0) -> 0, xxhash64(empty, seed 0) ->
+  0xEF46DB3751D8E999) -- hash 33.3% -> 42.2%. num.fraction 10
+  (from_float zero/NaN -> 0/1; add/sub/mul den>0 invariant; sub equal ->
+  num 0; mul a.num==0 -> num 0; div b.num==0 -> None; reduce zero -> 0/1;
+  to_float zero -> 0.0; to_str 0/1 pin; is_zero branches; compare
+  [-1,1] + zero/positive-sign pins) -- num 35.6% -> 37.6%.
+- NEW FINDING (15 -> 16): p_sibling_dup_fn_alias.xi -- importing three
+  sibling submodules that export the same function name (rotate_left/
+  rotate_right in bits.rotation/popcount/bitwise) breaks alias-qualified
+  resolution ("cannot call 'next_pow2' on this expression"). Pairs of
+  duplicate exporters work; the third copy breaks it. Workaround: the
+  wave-97 probe was split into p_wave97_shapes.xi + 
+  p_wave97_bitwise_shapes.xi (corpus 270 probes).
+- Probes green on v0.64.1 pre- and post-clauses (67 + 11 checks);
+  targeted smokes smoke_hash 25/25, smoke_num_fraction 1/1, smoke_bit
+  3/3, smoke_num_rotate_bits 1/1.
+- Coverage: bits 52.5% -> 74.3%, hash 33.3% -> 42.2%, num 35.6% -> 37.6%,
+  global 61.2% -> 61.8% (clauses 5245 -> 5302); meter 76.2%; floors134
+  dumped and wired (ci/heavy/release + tools/README).
+- Battery on this commit (v0.64.1): release corpus 954/954 full (659.5s,
+  no exclusions); probes 270/270 (248.6s); check_modules 509/509 (154.8s);
+  barename 0/509 (232.9s); floors134 + doc + module-smoke (497/517,
+  3477/6205) ratchets OK.
+- Release side: next cut picks up blocks 75/77/78/79/80/81. Readiness
+  next (wave 98): os 26.6% (runtime-backed surfaces inspected per item),
+  num 37.6%, math 38.8%, crypto 39.9%, hash 42.2% (city/metro/farm/
+  xxh3/siphash empty pins), remaining bitarray/endianness, and the queued
+  feature candidates.
 
 **SESSION 2026-10-09 block 80 (wave 96: array + sort + bits; floors133; array_zip finding)**
 - Wave 96: 53 clauses, +40 pub covered. array 19 (N==0 identities on

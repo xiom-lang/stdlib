@@ -14,7 +14,10 @@ module xiom.bits.rotation
 
 /// Circular left rotation by k bits (the shift amount is reduced mod 64).
 /// Complexity: O(1).
-pub fn rotate_left(n: Int, k: Int) -> Int {
+pub fn rotate_left(n: Int, k: Int) -> Int
+  ensures: (k == 0) => (result == n)
+  ensures: (k == 64) => (result == n)
+{
   var shift = k % 64;
   if shift < 0 {
     shift = shift + 64;
@@ -27,7 +30,10 @@ pub fn rotate_left(n: Int, k: Int) -> Int {
 
 /// Circular right rotation by k bits (the shift amount is reduced mod 64).
 /// Complexity: O(1).
-pub fn rotate_right(n: Int, k: Int) -> Int {
+pub fn rotate_right(n: Int, k: Int) -> Int
+  ensures: (k == 0) => (result == n)
+  ensures: (k == 64) => (result == n)
+{
   var shift = k % 64;
   if shift < 0 {
     shift = shift + 64;
@@ -86,23 +92,31 @@ pub fn rotate_right_carry(n: Int, k: Int, carry_in: Int) -> (Int, Int)
 
 /// Rotate left by a "compile-time constant" k (equivalent to rotate_left; the
 /// language has no distinct immediate form). Complexity: O(1).
-pub fn rol_imm(n: Int, k: Int) -> Int {
+pub fn rol_imm(n: Int, k: Int) -> Int
+  ensures: (k == 0) => (result == n)
+{
   rotate_left(n, k)
 }
 
 /// Rotate right by a "compile-time constant" k (equivalent to rotate_right).
 /// Complexity: O(1).
-pub fn ror_imm(n: Int, k: Int) -> Int {
+pub fn ror_imm(n: Int, k: Int) -> Int
+  ensures: (k == 0) => (result == n)
+{
   rotate_right(n, k)
 }
 
 /// Alias of rotate_left. Complexity: O(1).
-pub fn bit_rotate_left(n: Int, k: Int) -> Int {
+pub fn bit_rotate_left(n: Int, k: Int) -> Int
+  ensures: (k == 0) => (result == n)
+{
   rotate_left(n, k)
 }
 
 /// Alias of rotate_right. Complexity: O(1).
-pub fn bit_rotate_right(n: Int, k: Int) -> Int {
+pub fn bit_rotate_right(n: Int, k: Int) -> Int
+  ensures: (k == 0) => (result == n)
+{
   rotate_right(n, k)
 }
 
@@ -110,7 +124,9 @@ pub fn bit_rotate_right(n: Int, k: Int) -> Int {
 /// the span of the selected bit positions and unselected bits are unchanged.
 /// The shift amount is reduced mod (number of selected bits).
 /// Complexity: O(64 + popcount(mask)).
-pub fn masked_rotate_left(n: Int, k: Int, mask: Int) -> Int {
+pub fn masked_rotate_left(n: Int, k: Int, mask: Int) -> Int
+  ensures: (mask == 0) => (result == n)
+{
   if mask == 0 {
     return n;
   };
@@ -165,7 +181,9 @@ pub fn masked_rotate_left(n: Int, k: Int, mask: Int) -> Int {
 /// Rotates right only the bits selected by `mask` (inverse of
 /// masked_rotate_left). The shift amount is reduced mod (number of selected
 /// bits). Complexity: O(64 + popcount(mask)).
-pub fn masked_rotate_right(n: Int, k: Int, mask: Int) -> Int {
+pub fn masked_rotate_right(n: Int, k: Int, mask: Int) -> Int
+  ensures: (mask == 0) => (result == n)
+{
   if mask == 0 {
     return n;
   };

@@ -68,7 +68,9 @@ pub fn ctz(n: Int) -> Int
 
 /// Reverses the bit order of n (bit 0 <-> bit 63).
 /// Complexity: O(64).
-pub fn bit_reverse(n: Int) -> Int {
+pub fn bit_reverse(n: Int) -> Int
+  ensures: (n == 0) => (result == 0)
+{
   var result: Int = 0;
   var x = n;
   var i: Int = 0;
@@ -83,7 +85,10 @@ pub fn bit_reverse(n: Int) -> Int {
 
 /// Reverses the bit order of a single byte (low 8 bits of the input).
 /// Complexity: O(8).
-pub fn bit_reverse_byte(b_in: Int) -> Int {
+pub fn bit_reverse_byte(b_in: Int) -> Int
+  ensures: (b_in == 0) => (result == 0)
+  ensures: (b_in == 1) => (result == 128)
+{
   var b = b_in & 0xFF;
   var result: Int = 0;
   var i: Int = 0;
@@ -98,7 +103,10 @@ pub fn bit_reverse_byte(b_in: Int) -> Int {
 
 /// Reverses the byte order of v (byte 0 <-> byte 7).
 /// Complexity: O(8).
-pub fn byte_swap(v: Int) -> Int {
+pub fn byte_swap(v: Int) -> Int
+  ensures: (v == 0) => (result == 0)
+  ensures: (v == 256) => (result == 281474976710656)
+{
   var result: Int = 0;
   var i: Int = 0;
   while i < 8 {
@@ -111,7 +119,9 @@ pub fn byte_swap(v: Int) -> Int {
 
 /// Circular left shift by k bits (the shift amount is reduced mod 64).
 /// Complexity: O(1).
-pub fn rotate_left(n: Int, k: Int) -> Int {
+pub fn rotate_left(n: Int, k: Int) -> Int
+  ensures: (k == 0) => (result == n)
+{
   var shift = k % 64;
   if shift < 0 {
     shift = shift + 64;
@@ -124,7 +134,9 @@ pub fn rotate_left(n: Int, k: Int) -> Int {
 
 /// Circular right shift by k bits (the shift amount is reduced mod 64).
 /// Complexity: O(1).
-pub fn rotate_right(n: Int, k: Int) -> Int {
+pub fn rotate_right(n: Int, k: Int) -> Int
+  ensures: (k == 0) => (result == n)
+{
   var shift = k % 64;
   if shift < 0 {
     shift = shift + 64;
@@ -244,7 +256,10 @@ pub fn bit_scan_reverse(n: Int) -> Int
 
 /// True iff n > 0 and n is a power of two (exactly one set bit).
 /// Complexity: O(64).
-pub fn is_power_of_two_bit(n: Int) -> Bool {
+pub fn is_power_of_two_bit(n: Int) -> Bool
+  ensures: (n <= 0) => (result == false)
+  ensures: (n == 1) => (result == true)
+{
   if n <= 0 {
     return false;
   };

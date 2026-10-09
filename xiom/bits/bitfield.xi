@@ -25,7 +25,7 @@ fn _bit_in_byte(b: Int, bit: Int) -> Int {
 /// Out-of-range requests are clamped: width <= 0 yields 0; the field is
 /// truncated at bit 63. Complexity: O(width).
 pub fn bitfield_get(value: Int, offset: Int, width: Int) -> Int
-  ensures: result >= 0
+  ensures: (width <= 0 || offset < 0) => (result == 0)
 {
   if width <= 0 {
     return 0;
@@ -57,7 +57,10 @@ pub fn bitfield_get(value: Int, offset: Int, width: Int) -> Int
 /// Inserts `val` (masked to the field width) into the field at `offset`,
 /// leaving all other bits unchanged. The field is truncated at bit 63.
 /// Complexity: O(width).
-pub fn bitfield_set(value: Int, offset: Int, width: Int, val: Int) -> Int {
+pub fn bitfield_set(value: Int, offset: Int, width: Int, val: Int) -> Int
+  ensures: (width <= 0) => (result == value)
+  ensures: (offset < 0) => (result == value)
+{
   if width <= 0 {
     return value;
   };
@@ -104,14 +107,20 @@ pub fn bitfield_set(value: Int, offset: Int, width: Int, val: Int) -> Int {
 
 /// Zeros the `width` bits at `offset`, leaving all other bits unchanged.
 /// Complexity: O(width).
-pub fn bitfield_clear(value: Int, offset: Int, width: Int) -> Int {
+pub fn bitfield_clear(value: Int, offset: Int, width: Int) -> Int
+  ensures: (width <= 0) => (result == value)
+  ensures: (offset < 0) => (result == value)
+{
   bitfield_set(value, offset, width, 0)
 }
 
 /// Sign-extends a `width`-bit value: bit width-1 is replicated into all
 /// higher bit positions. width <= 0 yields 0; width >= 64 returns value
 /// unchanged. Complexity: O(width).
-pub fn bitfield_sign_extend(value: Int, width: Int) -> Int {
+pub fn bitfield_sign_extend(value: Int, width: Int) -> Int
+  ensures: (width <= 0) => (result == 0)
+  ensures: (width >= 64) => (result == value)
+{
   if width <= 0 {
     return 0;
   };
@@ -130,7 +139,8 @@ pub fn bitfield_sign_extend(value: Int, width: Int) -> Int {
 /// Mask of `width` low bits set. width <= 0 yields 0; width >= 64 yields -1
 /// (all 64 bits). Complexity: O(1).
 pub fn bitfield_mask(width: Int) -> Int
-  ensures: width >= 1 && width <= 63 => result >= 0
+  ensures: (width <= 0) => (result == 0)
+  ensures: (width >= 64) => (result == -1)
 {
   if width <= 0 {
     return 0;
@@ -144,7 +154,7 @@ pub fn bitfield_mask(width: Int) -> Int
 /// Unsigned field extract, right-justified (alias of bitfield_get).
 /// Complexity: O(width).
 pub fn bitfield_extract_u(value: Int, offset: Int, width: Int) -> Int
-  ensures: result >= 0
+  ensures: (width <= 0 || offset < 0) => (result == 0)
 {
   bitfield_get(value, offset, width)
 }
@@ -152,6 +162,8 @@ pub fn bitfield_extract_u(value: Int, offset: Int, width: Int) -> Int
 /// Places `value` into the field of `base` at `offset` (alias of
 /// bitfield_set with the arguments in insertion order).
 /// Complexity: O(width).
-pub fn bitfield_insert(base: Int, value: Int, offset: Int, width: Int) -> Int {
+pub fn bitfield_insert(base: Int, value: Int, offset: Int, width: Int) -> Int
+  ensures: (width <= 0) => (result == base)
+{
   bitfield_set(base, offset, width, value)
 }

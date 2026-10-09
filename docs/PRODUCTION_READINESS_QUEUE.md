@@ -1,10 +1,10 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
-**76.1% -- 7 of 10 gates complete; gate 8 at 61.2% (partial credit) and
+**76.2% -- 7 of 10 gates complete; gate 8 at 61.8% (partial credit) and
 gates 9-10 discrete.** (Compiler pin: **v0.64.1**.)
 **Gates: corpus 954/954 full (C001 carve-outs retired on v0.63.1; new
 TcpStream loopback and uuencode roundtrip smokes added), modules 509/509,
-probes 268/268, barename 0/509.**
+probes 270/270, barename 0/509.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -14,23 +14,24 @@ gates flip:
    full, no carve-outs (C001 fixed by 4bf8cf1e; 20/20 + 20/20 stress).
    lz4 is fixed by m190 and stayed in the gate; the new TcpStream loopback
    smoke locks m196.
-3. Probe corpus green -- MET (268/268 on v0.64.1, incl. the promoted
+3. Probe corpus green -- MET (270/270 on v0.64.1, incl. the promoted
    regression locks (rvalue float Vec index, multipart parse name, iter
    forwardref), the v0.64.1 pin probe p_pin0641_iter_shapes.xi, the
-   wave-77 stats probe, the Pulse hardening probe, the wave-78..96
-   coverage probes, the io byte-fidelity/CRLF lock and the fs_remove
-   lock).
+   wave-77 stats probe, the Pulse hardening probe, the wave-78..97
+   coverage probes (the wave-97 pair p_wave97_shapes.xi +
+   p_wave97_bitwise_shapes.xi), the io byte-fidelity/CRLF lock and the
+   fs_remove lock).
 4. Strict bare-name scan clean -- MET (0/509).
 5. Coverage ratchet green -- MET (floors129).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (497/517 modules, 3477/6202 fns).
-8. Contract coverage 100% (every public fn carries clauses) -- OPEN (61.2%).
+8. Contract coverage 100% (every public fn carries clauses) -- OPEN (61.8%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
-   OPEN (15: 14 compiler, 1 stdlib algorithm).
+   OPEN (16: 15 compiler, 1 stdlib algorithm).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
 
 Meter formula: MET gates count 1.0; gate 8 counts its current
-pub-with-clause fraction (61.2% -> 0.612); gates 9 and 10 get no partial
+pub-with-clause fraction (61.8% -> 0.618); gates 9 and 10 get no partial
 credit (discrete). Update the percentage and the gate-8 fraction in the
 same commit as each floors dump so the meter moves smoothly toward 80%.
 
@@ -38,8 +39,8 @@ Authoritative order: the gates above, then the updates below newest-first.
 Current state: compiler pin v0.64.1 (consumed by wave 92); stdlib-v0.64.2
 RELEASED 2026-10-08 and REGISTRY LIVE (xiom-std 0.64.2 signed,
 f5375c03ad88); post-tag fixes on main (string linearization + signal
-stubs, block 75); post-wave-96 coverage 61.2%, meter 76.1%; handoff in
-`docs/stdlib_session.md` snapshot 24 (block 80).
+stubs, block 75); post-wave-97 coverage 61.8%, meter 76.2%; handoff in
+`docs/stdlib_session.md` snapshot 24 (block 81).
 
 ## Project Pulse relay (web-framework lane) -- 2026-10-05
 
@@ -677,6 +678,40 @@ cross-module type-path/foreign-call findings unchanged. iter 18.6% ->
 release lane: the archive at v0.64.1 bundles stdlib 6e60e958 (old
 wave-74 pin); the v0.64.2 pin decision + release notes are pending in
 the session blocks.
+
+Update 2026-10-09 (wave 97 landed): bits submodules + hash + fraction --
+57 clauses, +40 pub covered. bits 22 (bitfield: width/offset no-op guards
+on set/clear/insert, sign_extend width<=0 and >=64 identities, and the
+`result >= 0` placeholders on get/mask/extract replaced with real
+guard/edge pins; rotation: k==0/k==64 identities including the aliases
+and masked mask==0; popcount: next/prev_pow2 boundaries and rotations;
+bitwise: zero pins on bit_reverse/byte_swap, bit_reverse_byte(1)->128,
+byte_swap(256)->1<<48, pow2 boundaries) -- bits 52.5% -> 74.3%. hash 8
+(empty-input offset pins on fnv1a32/fnv1a64, crc32_ieee empty -> 0,
+hash_bytes_to_hex empty, combine_hashes zero pin -> 0x9e3779b9,
+string_hash/djb2 empty -> 5381, murmur3_32(empty, seed 0) -> 0,
+xxhash64(empty, seed 0) -> 0xEF46DB3751D8E999) -- hash 33.3% -> 42.2%.
+num.fraction 10 (from_float zero/NaN -> 0/1; add/sub/mul den>0 invariant;
+sub equal operands -> num 0; mul a.num==0 -> num 0; div b.num==0 -> None;
+reduce zero -> 0/1; to_float zero -> 0.0; to_str 0/1 pin; is_zero
+branches; compare [-1,1] + zero/positive-sign pins) -- num 35.6% ->
+37.6%. NEW FINDING (15 -> 16): p_sibling_dup_fn_alias.xi -- importing
+three sibling submodules that export the same function name
+(rotate_left/rotate_right in bits.rotation/popcount/bitwise) breaks
+alias-qualified resolution; the wave-97 probe was split into
+p_wave97_shapes.xi + p_wave97_bitwise_shapes.xi as the workaround. Probes
+green on v0.64.1 pre/post (67 + 11 checks); targeted smokes smoke_hash
+25/25, smoke_num_fraction 1/1, smoke_bit 3/3, smoke_num_rotate_bits 1/1.
+Global 61.2% -> 61.8% (clauses 5245 -> 5302); meter 76.2%; floors134.
+Battery on v0.64.1: corpus 954/954 (659.5s, no exclusions), probes
+270/270 (248.6s), modules 509/509 (154.8s), barename 0/509 (232.9s),
+floors134 + doc + module-smoke (497/517, 3477/6205) ratchets OK.
+Readiness next: os 26.6% (runtime-backed surfaces inspected per item),
+num 37.6% (convert/base/float/fraction remain), math 38.8%, crypto 39.9%,
+hash 42.2% (city/metro/farm/xxh3/siphash empty pins), the remaining
+bitarray/endianness surfaces, and the queued feature candidates (ORBITDB
+append_line_sync pure half, bindings W-2/W-5). Release note: the next
+stdlib cut picks up blocks 75/77/78/79/80/81.
 
 Update 2026-10-09 (wave 96 landed): array + sort + bits -- 53 clauses, +40
 pub covered. array 19 (the N==0 identities on len/is_empty/array_sum/

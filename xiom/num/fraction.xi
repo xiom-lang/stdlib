@@ -68,7 +68,10 @@ pub fn fraction_new(num: Int, den: Int) -> Fraction
 /// returned. Zero, NaN, and infinities map to 0/1 (documented). |f| must be
 /// < 2^63 for the floor cast; larger magnitudes return the current convergent.
 /// Complexity: O(log |f|) iterations.
-pub fn fraction_from_float(f: Float64) -> Fraction {
+pub fn fraction_from_float(f: Float64) -> Fraction
+  ensures: (f == 0.0) => (result.num == 0 && result.den == 1)
+  ensures: (f != f) => (result.num == 0 && result.den == 1)
+{
   // IEEE NaN guard (x != x); NaN/inf map to 0/1 (documented).
   if f != f { return Fraction{ num: 0; den: 1; }; }
   if f == 1.0 / 0.0 || f == -1.0 / 0.0 { return Fraction{ num: 0; den: 1; }; }
@@ -116,7 +119,9 @@ pub fn fraction_from_float(f: Float64) -> Fraction {
 /// a + b. Pre-reduces by gcd(a.den, b.den) to limit overflow; the result is
 /// re-reduced. Cross-products may still overflow i64 for very large
 /// denominators (documented). Complexity: O(log max(a.den, b.den)).
-pub fn fraction_add(a: Fraction, b: Fraction) -> Fraction {
+pub fn fraction_add(a: Fraction, b: Fraction) -> Fraction
+  ensures: result.den > 0
+{
   var g = _gcd(a.den, b.den);
   if g == 0 { g = 1; }
   var num = a.num * (b.den / g) + b.num * (a.den / g);
@@ -125,14 +130,20 @@ pub fn fraction_add(a: Fraction, b: Fraction) -> Fraction {
 }
 
 /// a - b. Complexity: O(log max(a.den, b.den)).
-pub fn fraction_sub(a: Fraction, b: Fraction) -> Fraction {
+pub fn fraction_sub(a: Fraction, b: Fraction) -> Fraction
+  ensures: result.den > 0
+  ensures: (a.num == b.num && a.den == b.den) => (result.num == 0)
+{
   var nb = Fraction{ num: -b.num; den: b.den; };
   fraction_add(a, nb)
 }
 
 /// a * b. Cross-cancels via gcd before multiplying, minimizing overflow.
 /// Complexity: O(log max(|num|, den)).
-pub fn fraction_mul(a: Fraction, b: Fraction) -> Fraction {
+pub fn fraction_mul(a: Fraction, b: Fraction) -> Fraction
+  ensures: result.den > 0
+  ensures: (a.num == 0) => (result.num == 0)
+{
   var g1 = _gcd(a.num, b.den);
   if g1 == 0 { g1 = 1; }
   var g2 = _gcd(b.num, a.den);
@@ -144,7 +155,9 @@ pub fn fraction_mul(a: Fraction, b: Fraction) -> Fraction {
 
 /// a / b as a / (b^-1). None when b is zero (no silent division by zero).
 /// Complexity: O(log max(|num|, den)).
-pub fn fraction_div(a: Fraction, b: Fraction) -> Option[Fraction] {
+pub fn fraction_div(a: Fraction, b: Fraction) -> Option[Fraction]
+  ensures: (b.num == 0) => (result.is_none == true)
+{
   if b.num == 0 { return None; }
   var r = Fraction{ num: b.den; den: b.num; };
   Some(fraction_mul(a, r))
@@ -152,31 +165,44 @@ pub fn fraction_div(a: Fraction, b: Fraction) -> Option[Fraction] {
 
 /// Reduces f to lowest terms with a positive denominator. Identity when f
 /// already satisfies the module invariant. Complexity: O(log max(|num|,|den|)).
-pub fn fraction_reduce(f: Fraction) -> Fraction {
+pub fn fraction_reduce(f: Fraction) -> Fraction
+  ensures: (f.num == 0) => (result.num == 0 && result.den == 1)
+{
   fraction_new(f.num, f.den)
 }
 
 /// Converts to Float64 (numerator / denominator division). A zero denominator
 /// (invariant violation) returns 0.0 (documented). Complexity: O(1).
-pub fn fraction_to_float(f: Fraction) -> Float64 {
+pub fn fraction_to_float(f: Fraction) -> Float64
+  ensures: (f.num == 0) => (result == 0.0)
+{
   if f.den == 0 { return 0.0; }
   (f.num as Float64) / (f.den as Float64)
 }
 
 /// Renders as "num/den". Complexity: O(1) string building.
-pub fn fraction_to_str(f: Fraction) -> Str {
+pub fn fraction_to_str(f: Fraction) -> Str
+  ensures: (f.num == 0 && f.den == 1) => (result == "0/1")
+{
   to_string(f.num) + "/" + to_string(f.den)
 }
 
 /// Returns true iff the numerator is zero. Complexity: O(1).
-pub fn fraction_is_zero(f: Fraction) -> Bool {
+pub fn fraction_is_zero(f: Fraction) -> Bool
+  ensures: (f.num == 0) => (result == true)
+  ensures: (f.num != 0) => (result == false)
+{
   f.num == 0
 }
 
 /// Three-way comparison via gcd-reduced cross-multiplication: -1, 0, or 1.
 /// Valid because denominators are positive. Cross-products can overflow i64
 /// for large fractions (documented). Complexity: O(log max(den)).
-pub fn fraction_compare(a: Fraction, b: Fraction) -> Int {
+pub fn fraction_compare(a: Fraction, b: Fraction) -> Int
+  ensures: result >= -1 && result <= 1
+  ensures: (a.num == 0 && b.num == 0) => (result == 0)
+  ensures: (a.num == 0 && b.num > 0 && a.den > 0 && b.den > 0) => (result == -1)
+{
   var g = _gcd(a.den, b.den);
   if g == 0 { g = 1; }
   var lhs = a.num * (b.den / g);

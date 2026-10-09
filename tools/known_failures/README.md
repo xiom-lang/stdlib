@@ -16,6 +16,19 @@ xiom --force -o out.exe tools/known_failures/<file>.xi
 
 ## Current
 
+**Open finding 2026-10-09 (compiler v0.64.1): triplicate sibling function
+exports break alias-qualified resolution.** Importing three sibling
+submodules that export the same function name (`rotate_left`/
+`rotate_right` in `xiom.bits.rotation`, `xiom.bits.popcount` and
+`xiom.bits.bitwise`) makes alias-qualified calls fail with
+`error[T001]: cannot call 'next_pow2' on this expression` -- including
+calls to functions of a module that resolves fine when only two of the
+duplicate-export modules are imported. Found while building the wave-97
+probe; the probe was split (`p_wave97_shapes.xi` +
+`p_wave97_bitwise_shapes.xi`) as the workaround. Repro:
+`tools/known_failures/p_sibling_dup_fn_alias.xi` (compile-fail on
+v0.64.1; expected rc 0).
+
 **Open finding 2026-10-09 (compiler v0.64.1): `array_zip` does not
 truncate to the shorter array.** `xiom.array.fixed.array_zip` documents
 "truncated to the shorter array", but with M < N the

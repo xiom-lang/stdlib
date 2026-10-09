@@ -126,7 +126,10 @@ pub fn bit_length(n: Int) -> Int
 
 /// Smallest power of two >= n. n <= 0 yields 1; values above 2^62 yield 0
 /// (the next power of two would not fit an Int). Complexity: O(63).
-pub fn next_pow2(n: Int) -> Int {
+pub fn next_pow2(n: Int) -> Int
+  ensures: (n <= 0) => (result == 1)
+  ensures: (n == 1) => (result == 1)
+{
   if n <= 0 {
     return 1;
   };
@@ -141,7 +144,10 @@ pub fn next_pow2(n: Int) -> Int {
 }
 
 /// Largest power of two <= n. n <= 0 yields 0. Complexity: O(64).
-pub fn prev_pow2(n: Int) -> Int {
+pub fn prev_pow2(n: Int) -> Int
+  ensures: (n <= 0) => (result == 0)
+  ensures: (n == 1) => (result == 1)
+{
   if n <= 0 {
     return 0;
   };
@@ -161,7 +167,9 @@ pub fn prev_pow2(n: Int) -> Int {
 
 /// Circular left shift by k bits (the shift amount is reduced mod 64).
 /// Complexity: O(1).
-pub fn rotate_left(n: Int, k: Int) -> Int {
+pub fn rotate_left(n: Int, k: Int) -> Int
+  ensures: (k == 0) => (result == n)
+{
   var shift = k % 64;
   if shift < 0 {
     shift = shift + 64;
@@ -174,7 +182,9 @@ pub fn rotate_left(n: Int, k: Int) -> Int {
 
 /// Circular right shift by k bits (the shift amount is reduced mod 64).
 /// Complexity: O(1).
-pub fn rotate_right(n: Int, k: Int) -> Int {
+pub fn rotate_right(n: Int, k: Int) -> Int
+  ensures: (k == 0) => (result == n)
+{
   var shift = k % 64;
   if shift < 0 {
     shift = shift + 64;
