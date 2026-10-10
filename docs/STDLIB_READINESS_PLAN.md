@@ -1470,6 +1470,21 @@ T1/T2 yields.
         (184.4s), barename 0/509 (263.1s), floors142 + doc + module-smoke
         (497/517, 3476/6204) ratchets OK.
         Next: the website-10 no-NASM crypto triage + runtime asks.
+        Relay website-10 (2026-10-10, security): the no-asm runtime AES
+        stubs wrote nothing and the compares returned 0 (= equal). The
+        stdlib path uses the NASM-independent xiom_aesni_* intrinsics and
+        crypto.mac.constant_time_eq is pure XIOM (no stdlib public API
+        wrong today); the runtime dispatch primitives were the hole, and
+        the pin's driver actually builds WITH -DXIOM_NO_ASM here (cached
+        runtime object carries the fallbacks), so it was operative. Fixed
+        with portable FIPS-197 AES-128 + branch-free XOR compares in the
+        no-asm block; KAT-verified standalone and end-to-end through the
+        driver; post-edit smokes kat_ 15/15, crypto 7/7, stress_crypto
+        24/24, mem 6/6, ffi 2/2. New open runtime finding: aarch64
+        xiom_aesni_encrypt_block is ONE round and xiom_aesni_decrypt_block
+        an empty stub while xiom_crypto_aesni_available() returns 1 --
+        wrong AES-128 ciphertext on Apple ARM (macos-14 leg candidate);
+        fix needs an ARM runner.
        Ratchet:
         tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors142.json
         tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json

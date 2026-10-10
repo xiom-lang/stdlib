@@ -2327,6 +2327,31 @@ registry pin, agent recon for the rest)**
   279/279 (304.7s), modules 509/509 (184.4s), barename 0/509 (263.1s),
   floors142 + doc + module-smoke (497/517, 3476/6204) ratchets OK.
 
+**SESSION 2026-10-10 block 103 (relay website-10 triage + no-NASM crypto fix; the pin's driver builds -DXIOM_NO_ASM; aarch64 AES finding)**
+- RELAY website-10 (security, no-NASM crypto stubs) TRIAGED + FIXED:
+  under -DXIOM_NO_ASM the runtime defined empty AES symbols (writes
+  nothing) and constant-time compares returning 0 (= equal). Reachability:
+  the stdlib AES path uses the NASM-independent xiom_aesni_* intrinsics
+  and crypto.mac.constant_time_eq is pure XIOM, so no stdlib public API
+  was wrong today; the runtime's exported dispatch primitives were.
+  Measured: the pin's driver builds WITH -DXIOM_NO_ASM here (the cached
+  runtime object carries the fallback symbols; no NASM objects are ever
+  linked), so the fallback is the operative path. Fix: real portable
+  FIPS-197 AES-128 (key expand + encrypt + decrypt) and branch-free
+  XOR-accumulator compares (0 = equal, matching the asm contract) in the
+  no-asm block; validated by a standalone KAT harness (FIPS C.1/B/zero
+  vectors + roundtrip + compare semantics) and an end-to-end KAT through
+  the actual driver build (rc 0); post-edit smokes kat_ 15/15, crypto
+  7/7, stress_crypto 24/24, mem 6/6, ffi 2/2.
+- NEW open runtime finding (recorded; needs a Mac runner): on aarch64 the
+  runtime's xiom_aesni_encrypt_block performs ONE round (ignores rounds)
+  and xiom_aesni_decrypt_block is an empty stub, while
+  xiom_crypto_aesni_available() returns 1 unconditionally -- so stdlib
+  aes_encrypt (16-byte key) produces wrong ciphertext on Apple ARM and
+  the roundtrip smoke should fail there (candidate contributor to the red
+  macos-14 corpus leg). Fix rides an ARM runner (use the verified portable
+  AES or the full vaeseq/vaesmc schedule).
+
 **SESSION 2026-10-10 block 102 (doorbell 19:00Z, recorded from the concurrent-session round: resolver fixed + both blocked items acked; engine-6 thread-pool ask acked)**
 - Ops fixed the relay.py resolver (eaea00b: exact-stem match wins);
   our bug item REL-20261010-1553-stdlib is verified and closed. Both

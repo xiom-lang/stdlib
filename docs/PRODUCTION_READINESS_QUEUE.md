@@ -765,6 +765,26 @@ Housekeeping in the same relay: the wave-97 sibling-alias split-probe
 workaround was DROPPED -- p_wave97_bitwise_shapes.xi was merged back into
 p_wave97_shapes.xi and re-run green on v0.64.2 (probe corpus stays 272).
 
+Update 2026-10-10 (relay website-10 fixed: no-NASM crypto fallbacks):
+security triage confirmed the hole shape but not through stdlib public
+API -- the stdlib AES path uses the NASM-independent xiom_aesni_*
+intrinsics and crypto.mac.constant_time_eq is pure XIOM; the broken
+pieces were the runtime's exported dispatch primitives
+(xiom_ct_compare_dispatch always "equal", xiom_aes128_*_dispatch writing
+zeros). The pin's driver here compiles with -DXIOM_NO_ASM (verified: the
+cached runtime object carries the fallback symbols; no NASM objects are
+linked), so the fallback is the operative path. Fixed with real portable
+FIPS-197 AES-128 (key expand, encrypt, decrypt) and branch-free XOR
+compares (0 = equal) in the no-asm block; KAT-verified standalone and
+end-to-end through the driver (throwaway out harness, rc 0); post-edit
+smokes green (kat_ 15/15, crypto 7/7, stress_crypto 24/24, mem 6/6, ffi
+2/2). Bus item moved acked -> fixed. NEW open runtime finding: aarch64
+xiom_aesni_encrypt_block is a single round and xiom_aesni_decrypt_block
+is an empty stub while xiom_crypto_aesni_available() returns 1 -- stdlib
+AES-128 on Apple ARM produces wrong ciphertext (candidate contributor to
+the red macos-14 corpus leg); fix needs an ARM runner (use the verified
+portable AES or the full vaeseq/vaesmc schedule).
+
 Update 2026-10-10 (wave 105 landed): FIX-FIRST signal_raise link defect
 + os batch 2 -- 64 clauses, +64 pub. FIX-FIRST: `xiom.os.signal.
 signal_raise` and `xiom.os.raise_signal` referenced a `raise_sig` extern

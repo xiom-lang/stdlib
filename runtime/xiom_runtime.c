@@ -59,16 +59,176 @@ typedef struct {
 /* -- C software implementations (no NASM) -- */
 #include <stddef.h>
 
-/* crypto stubs */
-/* NOTE: the stubs are NOT static -- stdlib modules (xiom.mem, xiom.ffi.c)
-   declare these symbols in their own extern blocks and link against them, so
-   a no-NASM build must expose the fallbacks with external linkage. This block
+/* crypto: portable fallbacks */
+/* website-10 (security triage 2026-10-10): the previous stubs wrote
+   nothing (AES) and returned 0 (constant-time compares = "equal"), so a
+   no-NASM build silently produced zero ciphertext and accepted any tag.
+   These are real portable implementations: FIPS-197 AES-128 (validated
+   against the C.1/B/zero-vector KATs) and a branch-free XOR accumulator
+   for the compares (0 = equal, matching the asm contract). The AES tables
+   use lookups, so this fallback is not cache-timing hardened -- it exists
+   so a NASM-less build computes *correct* crypto instead of garbage. */
+/* NOTE: these symbols are NOT static -- stdlib modules (xiom.mem, xiom.ffi.c)
+   declare them in their own extern blocks and link against them, so a
+   no-NASM build must expose the fallbacks with external linkage. This block
    only compiles when the compiler passes -DXIOM_NO_ASM, which happens exactly
    when the NASM objects are absent, so there is no duplicate-symbol clash. */
-void xiom_asm_aes128_encrypt_block(const uint8_t* p, const uint8_t* rk, uint8_t* c) { (void)p; (void)rk; (void)c; }
-void xiom_asm_aes128_decrypt_block(const uint8_t* c, const uint8_t* rk, uint8_t* p) { (void)c; (void)rk; (void)p; }
-void xiom_asm_aes128_key_expand(const uint8_t* k, uint8_t* rk) { (void)k; (void)rk; }
-int  xiom_asm_constant_time_compare(const uint8_t* a, const uint8_t* b, size_t n) { (void)a; (void)b; (void)n; return 0; }
+
+static uint8_t xiom_sw_aes_sbox[256];
+static uint8_t xiom_sw_aes_inv_sbox[256];
+static int xiom_sw_aes_tables_ready = 0;
+
+static uint8_t xiom_sw_aes_xtime(uint8_t x) {
+    return (uint8_t)((x << 1) ^ ((x & 0x80) ? 0x1B : 0x00));
+}
+
+static uint8_t xiom_sw_aes_mul(uint8_t a, uint8_t b) {
+    uint8_t r = 0;
+    int i;
+    for (i = 0; i < 8; i++) {
+        if (b & 1) r ^= a;
+        a = xiom_sw_aes_xtime(a);
+        b = (uint8_t)(b >> 1);
+    }
+    return r;
+}
+
+static uint8_t xiom_sw_aes_pow(uint8_t a, int e) {
+    uint8_t r = 1;
+    while (e > 0) {
+        if (e & 1) r = xiom_sw_aes_mul(r, a);
+        a = xiom_sw_aes_mul(a, a);
+        e >>= 1;
+    }
+    return r;
+}
+
+/* Build the S-box as affine(gf_inv(i)) per FIPS-197 5.1.1. Idempotent;
+   a first-call race writes identical bytes (fallback path, not TSAN-hardened). */
+static void xiom_sw_aes_init_tables(void) {
+    int i;
+    if (xiom_sw_aes_tables_ready) return;
+    for (i = 0; i < 256; i++) {
+        uint8_t inv = (i == 0) ? 0 : xiom_sw_aes_pow((uint8_t)i, 254);
+        uint8_t x = inv;
+        uint8_t y = (uint8_t)(x ^ (uint8_t)((x << 1) | (x >> 7))
+                                ^ (uint8_t)((x << 2) | (x >> 6))
+                                ^ (uint8_t)((x << 3) | (x >> 5))
+                                ^ (uint8_t)((x << 4) | (x >> 4)) ^ 0x63);
+        xiom_sw_aes_sbox[i] = y;
+        xiom_sw_aes_inv_sbox[y] = (uint8_t)i;
+    }
+    xiom_sw_aes_tables_ready = 1;
+}
+
+static void xiom_sw_aes_sub_shift(uint8_t* s) {
+    uint8_t t[16];
+    int i;
+    for (i = 0; i < 16; i++) t[i] = xiom_sw_aes_sbox[s[i]];
+    s[0] = t[0];  s[4] = t[4];  s[8]  = t[8];   s[12] = t[12];
+    s[1] = t[5];  s[5] = t[9];  s[9]  = t[13];  s[13] = t[1];
+    s[2] = t[10]; s[6] = t[14]; s[10] = t[2];   s[14] = t[6];
+    s[3] = t[15]; s[7] = t[3];  s[11] = t[7];   s[15] = t[11];
+}
+
+static void xiom_sw_aes_inv_sub_shift(uint8_t* s) {
+    uint8_t t[16];
+    int i;
+    for (i = 0; i < 16; i++) t[i] = xiom_sw_aes_inv_sbox[s[i]];
+    s[0] = t[0];  s[4] = t[4];  s[8]  = t[8];   s[12] = t[12];
+    s[1] = t[13]; s[5] = t[1];  s[9]  = t[5];   s[13] = t[9];
+    s[2] = t[10]; s[6] = t[14]; s[10] = t[2];   s[14] = t[6];
+    s[3] = t[7];  s[7] = t[11]; s[11] = t[15];  s[15] = t[3];
+}
+
+static void xiom_sw_aes_mix_columns(uint8_t* s) {
+    int c;
+    for (c = 0; c < 4; c++) {
+        uint8_t a0 = s[c * 4], a1 = s[c * 4 + 1], a2 = s[c * 4 + 2], a3 = s[c * 4 + 3];
+        s[c * 4]     = (uint8_t)(xiom_sw_aes_xtime(a0) ^ (uint8_t)(xiom_sw_aes_xtime(a1) ^ a1) ^ a2 ^ a3);
+        s[c * 4 + 1] = (uint8_t)(a0 ^ xiom_sw_aes_xtime(a1) ^ (uint8_t)(xiom_sw_aes_xtime(a2) ^ a2) ^ a3);
+        s[c * 4 + 2] = (uint8_t)(a0 ^ a1 ^ xiom_sw_aes_xtime(a2) ^ (uint8_t)(xiom_sw_aes_xtime(a3) ^ a3));
+        s[c * 4 + 3] = (uint8_t)((uint8_t)(xiom_sw_aes_xtime(a0) ^ a0) ^ a1 ^ a2 ^ xiom_sw_aes_xtime(a3));
+    }
+}
+
+static uint8_t xiom_sw_aes_mul9(uint8_t x)  { uint8_t x2 = xiom_sw_aes_xtime(x), x4 = xiom_sw_aes_xtime(x2), x8 = xiom_sw_aes_xtime(x4); return (uint8_t)(x8 ^ x); }
+static uint8_t xiom_sw_aes_mul11(uint8_t x) { uint8_t x2 = xiom_sw_aes_xtime(x), x4 = xiom_sw_aes_xtime(x2), x8 = xiom_sw_aes_xtime(x4); return (uint8_t)(x8 ^ x2 ^ x); }
+static uint8_t xiom_sw_aes_mul13(uint8_t x) { uint8_t x2 = xiom_sw_aes_xtime(x), x4 = xiom_sw_aes_xtime(x2), x8 = xiom_sw_aes_xtime(x4); return (uint8_t)(x8 ^ x4 ^ x); }
+static uint8_t xiom_sw_aes_mul14(uint8_t x) { uint8_t x2 = xiom_sw_aes_xtime(x), x4 = xiom_sw_aes_xtime(x2), x8 = xiom_sw_aes_xtime(x4); return (uint8_t)(x8 ^ x4 ^ x2); }
+
+static void xiom_sw_aes_inv_mix_columns(uint8_t* s) {
+    int c;
+    for (c = 0; c < 4; c++) {
+        uint8_t a0 = s[c * 4], a1 = s[c * 4 + 1], a2 = s[c * 4 + 2], a3 = s[c * 4 + 3];
+        s[c * 4]     = (uint8_t)(xiom_sw_aes_mul14(a0) ^ xiom_sw_aes_mul11(a1) ^ xiom_sw_aes_mul13(a2) ^ xiom_sw_aes_mul9(a3));
+        s[c * 4 + 1] = (uint8_t)(xiom_sw_aes_mul9(a0)  ^ xiom_sw_aes_mul14(a1) ^ xiom_sw_aes_mul11(a2) ^ xiom_sw_aes_mul13(a3));
+        s[c * 4 + 2] = (uint8_t)(xiom_sw_aes_mul13(a0) ^ xiom_sw_aes_mul9(a1)  ^ xiom_sw_aes_mul14(a2) ^ xiom_sw_aes_mul11(a3));
+        s[c * 4 + 3] = (uint8_t)(xiom_sw_aes_mul11(a0) ^ xiom_sw_aes_mul13(a1) ^ xiom_sw_aes_mul9(a2)  ^ xiom_sw_aes_mul14(a3));
+    }
+}
+
+static void xiom_sw_aes_add_round_key(uint8_t* s, const uint8_t* rk) {
+    int i;
+    for (i = 0; i < 16; i++) s[i] ^= rk[i];
+}
+
+void xiom_asm_aes128_key_expand(const uint8_t* k, uint8_t* rk) {
+    static const uint8_t rcon[10] = {0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1B, 0x36};
+    int r, i;
+    xiom_sw_aes_init_tables();
+    for (i = 0; i < 16; i++) rk[i] = k[i];
+    for (r = 1; r <= 10; r++) {
+        const uint8_t* prev = rk + (r - 1) * 16;
+        uint8_t* cur = rk + r * 16;
+        uint8_t t0 = (uint8_t)(xiom_sw_aes_sbox[prev[13]] ^ rcon[r - 1]);
+        uint8_t t1 = xiom_sw_aes_sbox[prev[14]];
+        uint8_t t2 = xiom_sw_aes_sbox[prev[15]];
+        uint8_t t3 = xiom_sw_aes_sbox[prev[12]];
+        cur[0] = (uint8_t)(prev[0] ^ t0);
+        cur[1] = (uint8_t)(prev[1] ^ t1);
+        cur[2] = (uint8_t)(prev[2] ^ t2);
+        cur[3] = (uint8_t)(prev[3] ^ t3);
+        for (i = 4; i < 16; i++) cur[i] = (uint8_t)(prev[i] ^ cur[i - 4]);
+    }
+}
+
+void xiom_asm_aes128_encrypt_block(const uint8_t* p, const uint8_t* rk, uint8_t* c) {
+    uint8_t s[16];
+    int r;
+    xiom_sw_aes_init_tables();
+    for (r = 0; r < 16; r++) s[r] = (uint8_t)(p[r] ^ rk[r]);
+    for (r = 1; r <= 9; r++) {
+        xiom_sw_aes_sub_shift(s);
+        xiom_sw_aes_mix_columns(s);
+        xiom_sw_aes_add_round_key(s, rk + r * 16);
+    }
+    xiom_sw_aes_sub_shift(s);
+    xiom_sw_aes_add_round_key(s, rk + 160);
+    for (r = 0; r < 16; r++) c[r] = s[r];
+}
+
+void xiom_asm_aes128_decrypt_block(const uint8_t* c, const uint8_t* rk, uint8_t* p) {
+    uint8_t s[16];
+    int r;
+    xiom_sw_aes_init_tables();
+    for (r = 0; r < 16; r++) s[r] = (uint8_t)(c[r] ^ rk[160 + r]);
+    for (r = 9; r >= 1; r--) {
+        xiom_sw_aes_inv_sub_shift(s);
+        xiom_sw_aes_add_round_key(s, rk + r * 16);
+        xiom_sw_aes_inv_mix_columns(s);
+    }
+    xiom_sw_aes_inv_sub_shift(s);
+    xiom_sw_aes_add_round_key(s, rk);
+    for (r = 0; r < 16; r++) p[r] = s[r];
+}
+
+int xiom_asm_constant_time_compare(const uint8_t* a, const uint8_t* b, size_t n) {
+    unsigned char diff = 0;
+    size_t i;
+    for (i = 0; i < n; i++) diff |= (unsigned char)(a[i] ^ b[i]);
+    return (int)diff;
+}
 
 /* mem stubs */
 void* xiom_asm_memcpy(void* d, const void* s, size_t n) { return memcpy(d, s, n); }
@@ -76,7 +236,16 @@ void* xiom_asm_memset(void* d, int c, size_t n) { return memset(d, c, n); }
 int   xiom_asm_memcmp(const void* a, const void* b, size_t n) { return memcmp(a, b, n); }
 void* xiom_asm_memmove(void* d, const void* s, size_t n) { return memmove(d, s, n); }
 void  xiom_asm_bzero(void* d, size_t n) { memset(d, 0, n); }
-int   xiom_asm_memcmp_ct(const void* a, const void* b, size_t n) { (void)a; (void)b; (void)n; return 0; }
+/* Constant-time byte compare (0 = equal, matching the asm contract; the
+   previous stub returned 0 = "equal" for every input). */
+int   xiom_asm_memcmp_ct(const void* a, const void* b, size_t n) {
+    const unsigned char* x = (const unsigned char*)a;
+    const unsigned char* y = (const unsigned char*)b;
+    unsigned char diff = 0;
+    size_t i;
+    for (i = 0; i < n; i++) diff |= (unsigned char)(x[i] ^ y[i]);
+    return (int)diff;
+}
 
 /* context stubs */
 int xiom_ctx_save(xiom_context* ctx) { (void)ctx; return 0; }
