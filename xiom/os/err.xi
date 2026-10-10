@@ -28,7 +28,11 @@ pub fn errno() -> Int {
 /// Parameters: code -- the errno number.
 /// Returns: the symbolic name (e.g. "ENOENT"), or "EUNKNOWN".
 /// Complexity: O(1). Pure.
-pub fn errno_name(code: Int) -> Str {
+pub fn errno_name(code: Int) -> Str
+  ensures: (code == 2) => (result == "ENOENT")
+  ensures: (code == 1) => (result == "EPERM")
+  ensures: (code == 0) => (result == "EUNKNOWN")
+{
   if code == 1 { return "EPERM"; }
   if code == 2 { return "ENOENT"; }
   if code == 3 { return "ESRCH"; }
@@ -109,7 +113,10 @@ pub fn errno_name(code: Int) -> Str {
 /// Parameters: code -- the errno number.
 /// Returns: the descriptive message, or "unknown error".
 /// Complexity: O(1). Pure.
-pub fn strerror(code: Int) -> Str {
+pub fn strerror(code: Int) -> Str
+  ensures: (code == 2) => (result == "no such file or directory")
+  ensures: (code == 0) => (result == "unknown error")
+{
   if code == 1 { return "operation not permitted"; }
   if code == 2 { return "no such file or directory"; }
   if code == 3 { return "no such process"; }
@@ -202,7 +209,9 @@ pub fn last_error() -> Str {
 /// Parameters: code -- the errno number.
 /// Returns: the formatted string.
 /// Complexity: O(1). Pure.
-pub fn errno_to_string(code: Int) -> Str {
+pub fn errno_to_string(code: Int) -> Str
+  ensures: (code == 2) => (result == "ENOENT (2): no such file or directory")
+{
   let name = errno_name(code);
   let message = strerror(code);
   var result = name;

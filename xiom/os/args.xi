@@ -71,7 +71,10 @@ pub fn args_raw() -> Vec[Str]
 
 /// True when args contains exactly `flag`.
 /// Complexity: O(n * flag.len()). Pure.
-pub fn flag_lookup(args: &Vec[Str], flag: Str) -> Bool {
+pub fn flag_lookup(args: &Vec[Str], flag: Str) -> Bool
+  ensures: (args.len() == 0) => (result == false)
+  ensures: (result == true) => (args.len() >= 1)
+{
   var i = 0;
   while i < args.len() {
     if args[i] == flag {
@@ -86,7 +89,9 @@ pub fn flag_lookup(args: &Vec[Str], flag: Str) -> Bool {
 /// Later occurrences win (last-one-wins convention, matching most CLI
 /// frameworks). Returns None when absent.
 /// Complexity: O(n * key.len()). Pure.
-pub fn option_value(args: &Vec[Str], key: Str) -> Option[Str] {
+pub fn option_value(args: &Vec[Str], key: Str) -> Option[Str]
+  ensures: (args.len() == 0) => (result.is_none == true)
+{
   var found: Option[Str] = None;
   var i = 0;
   while i < args.len() {
@@ -115,7 +120,9 @@ pub fn option_value(args: &Vec[Str], key: Str) -> Option[Str] {
 /// simple scanner treats any '--' entry as a flag/key, never as a negative
 /// number or literal.
 /// Complexity: O(n). Pure.
-pub fn positionals(args: &Vec[Str]) -> Vec[Str] {
+pub fn positionals(args: &Vec[Str]) -> Vec[Str]
+  ensures: result.len() <= args.len()
+{
   var result = Vec[Str].new();
   var i = 0;
   while i < args.len() {

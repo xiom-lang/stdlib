@@ -17,22 +17,23 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 27 (updated 2026-10-10, pin v0.64.2 OFFICIAL ARCHIVE binary; waves 93-102 landed incl. the json depth fix + math remainder + W-5; next = wave 103; binary-drift warning; candidate-tag pin protocol)
+## 0A. CONTINUE HERE -- handoff snapshot 27 (updated 2026-10-10, pin v0.64.2 OFFICIAL ARCHIVE binary; waves 93-103 landed incl. the json depth fix + math remainder + W-5 + os batch 1; next = wave 104; binary-drift warning; candidate-tag pin protocol; relay bus live)
 
 **PASTE-READY PROMPT FOR THE NEXT SESSION (copy this block):**
 
 ---
 
 You are continuing the XIOM stdlib lane. Worktree `E:\xiom-lang\stdlib`,
-branch `main`. Read `docs/stdlib_session.md` blocks 91 (latest), 90, 89,
-88, 87, 86, 85, 84, 83, 82, 81, 80, 79, 78, 77, 76, 75, 74, 73, 72, 71,
-70, 69, 68, 67, 66, 65, 64, 63, 62, 61, 60, 59, 58, 57, 56, 55, 54, 53,
-52, 51, 50, 49, 48, 47, 46, 45, 44, 43 (publish), 27 (iter block) and
-`docs/PRODUCTION_READINESS_QUEUE.md` before acting; snapshots 26/25 below
-and snapshot 5 keep the deeper history/lore. The ecosystem relays
-(packages, bindings, PULSE, ORBITDB, XVECTOR) feed intake rows into
-`docs/STDLIB-WISHLIST.md`; runtime-backed asks queue with the compiler
-runtime bundle.
+branch `main`. Read `docs/stdlib_session.md` blocks 94 (latest), 93, 92,
+91, 90, 89, 88, 87, 86, 85, 84, 83, 82, 81, 80, 79, 78, 77, 76, 75, 74,
+73, 72, 71, 70, 69, 68, 67, 66, 65, 64, 63, 62, 61, 60, 59, 58, 57, 56,
+55, 54, 53, 52, 51, 50, 49, 48, 47, 46, 45, 44, 43 (publish), 27 (iter
+block) and `docs/PRODUCTION_READINESS_QUEUE.md` before acting; snapshots
+26/25 below and snapshot 5 keep the deeper history/lore. Cross-lane
+coordination runs on the xiom-relays bus (section 0B + AGENTS.md);
+the ecosystem relays (packages, bindings, PULSE, ORBITDB, XVECTOR) feed
+intake rows into `docs/STDLIB-WISHLIST.md`; runtime-backed asks queue
+with the compiler runtime bundle.
 
 STATE (2026-10-10): compiler pin = **v0.64.2**, but USE THE OFFICIAL
 ARCHIVE BINARY `%TEMP%\kilo\stdlib_ws\v0.64.2\bin\xiom.exe` (tag
@@ -72,10 +73,11 @@ fp128 shims) -- re-run the leg; a mach `host_statistics64` follow-up is
 queued.
 
 Gates on v0.64.2 (official archive): release corpus **954/954 FULL**,
-modules **509/509**, probes **276/276** (wave 101 + p_wave102_shapes.xi +
-the promoted p_json_parse_depth_cap.xi), barename **0/509**, floors139,
-module-smoke ratchet (497/517, 3476/6204) and doc ratchet OK. Coverage =
-**64.3%** global pub-with-clause (meter 76.4%). Waves landed after
+modules **509/509**, probes **277/277** (waves 101-103; +
+p_wave102_shapes.xi, the promoted p_json_parse_depth_cap.xi and
+p_wave103_shapes.xi), barename **0/509**, floors140, module-smoke ratchet
+(497/517, 3476/6204) and doc ratchet OK. Coverage = **65.0%** global
+pub-with-clause (meter 76.5%). Waves landed after
 snapshot 24: 93 (iter remainder + format.text; 71 clauses), 94
 (cmp/core/sync/terminal; 86), 95 (format remainder; 82), 96
 (array/sort/bits; 53), 97 (bits submodules/hash/fraction; 57), 98 (M7
@@ -83,16 +85,23 @@ closure rewrite + read_file_lines/to_string_char contract fixes; 7), 99
 (crypto hash/xxhash/city/math constants; 26), 100 (finance + information
 theory; 35), 101 (graph_theory + machine_learning; 121 clauses / +63
 pub), 102 (json_parse depth cap FIXED + decompose/fuzzy/game_theory/
-chaos; 97 clauses / +46 pub + the W-5 Vec.with_len feature). Dir deltas:
+chaos; 97 clauses / +46 pub + the W-5 Vec.with_len feature), 103
+(sleep_ms/sleep(Duration) runtime-sleep fix + the os batch 1 fs/file/
+dir/platform/err/args; 46 clauses / +42 pub; two new compiler findings).
+Dir deltas:
 iter 46.4%, format 88.7%, cmp 100%, core 45.8%, sync 35.9%, array 77.8%,
 sort 42.6%, bits 74.3%, hash 51.1%, crypto 47.0%, num 37.6%, math 53.0%
 (graph_theory 100%, machine_learning 96.9%, decompose 100%, fuzzy 85.7%,
-game_theory 46.2%, chaos 100%), os 26.6%.
+game_theory 46.2%, chaos 100%), os 38.0%.
 
-Findings (15 Current: 14 compiler + 1 stdlib) -- since snapshot 26: the
+Findings (16 Current: 15 compiler + 1 stdlib) -- since snapshot 26: the
 XVECTOR json_parse depth cap is RESOLVED stdlib-side (finding #16 closed;
-repro promoted to `tools/probes/p_json_parse_depth_cap.xi`). The
-stdlib-filed compiler findings `p_tuple_elem_vec_read.xi` (inline Vec
+repro promoted to `tools/probes/p_json_parse_depth_cap.xi`); wave 103
+added the inline `Result.value[i]` payload-index corruption
+(`p_result_payload_index_concat.xi`, rc 1; PULSE C-PULSE-17 re-triage)
+and the context-dependent Path.exists println crash
+(`p_path_println_context_crash.xi`, exit -1073741795), both relayed
+(`REL-20261010-1609/1615-stdlib`). The stdlib-filed compiler findings `p_tuple_elem_vec_read.xi` (inline Vec
 float element read inside a tuple literal) and
 `p_tostring_import_breaks_adapters.xi` (tostring import corrupts closure
 predicate dispatch) were relayed to the compiler lane via
@@ -110,46 +119,49 @@ vec-shape AV, cross-type generic callbacks, payload reads, polygon
 the macOS runtime-C guards were fixed by the owner-authorized one-off
 48850df (a mach `host_statistics64` follow-up stays queued).
 
-FIRST TASK (wave 103): **os 26.6%** (err/event/fs/file/dir/sysinfo/
-terminal/signal surfaces; inspect each runtime-backed surface before
-claiming -- documented-Err stubs stay clause-free or carry only their
-truthful guards), batching toward 40-60 pub. Then the queued
-runtime-backed wishlist asks when the compiler runtime bundle moves
-(address-aware socket bind, `socket_recv_into`, the fsync/append-bytes/
-truncate family, durable `flush_stdout`, signal-handler installation),
-the remaining math-tail stubs when their compiler blockers lift (fuzzy
-relations, game_theory stubs, calc/information-theory matrix stubs), and
-the runtime-C items (B-05; the macOS guards landed via 48850df). The
-relay queue is live: process items to stdlib each session (the wave-103
-quick wins are pulse-6 sleep_ms, root-caused to the integer division
-`ms / MILLIS_PER_SEC`, and website-10 no-NASM crypto triage). The
-2026-10-10 five-lane fetch is recorded in `docs/STDLIB-WISHLIST.md`
+FIRST TASK (wave 104): **os batch 2** -- the claimable remainder
+(dir/file/fs tails, env, sysinfo, term, args, proc, os, process,
+signal; the documented stubs across event/terminal/mmap/sync_io/unix/
+win/ioctl/fs_ffi/proc_ffi stay clause-free), batching toward 40-60 pub.
+Then the relay queue (process items to stdlib each session: website-10
+no-NASM crypto triage, the two items blocked by the ops resolver bug)
+and the queued runtime-backed wishlist asks when the compiler runtime
+bundle moves (address-aware socket bind, `socket_recv_into`, the fsync/
+append-bytes/truncate family, durable `flush_stdout`, signal-handler
+installation), the remaining math-tail stubs when their compiler
+blockers lift (fuzzy relations, game_theory stubs, calc/information-
+theory matrix stubs), and the runtime-C items (B-05; the macOS guards
+landed via 48850df). The wave-103 fix-first (pulse-6 sleep) and
+re-triages (pulse-5 payload index; path println crash) are in block 94;
+the 2026-10-10 five-lane fetch is recorded in `docs/STDLIB-WISHLIST.md`
 ("Relay status 2026-10-10" + the wave-102 resolutions note).
 
 Mandatory protocol: (1) body-derived clauses only, no placeholders/
 payload reads; canonical `result is Ok =>` guard form; file new findings
 as minimal repros + README entry. (2) probe-first
-`tools/probes/p_wave103_shapes.xi`, bind returned values before
+`tools/probes/p_wave104_shapes.xi`, bind returned values before
 comparing, green on v0.64.2 (the official archive binary -- see the
 binary-drift warning). (3) apply, targeted smokes, bisect/drop on
-codegen breaks. (4) dump `tools/coverage_floors140.json`, wire workflows
+codegen breaks. (4) dump `tools/coverage_floors141.json`, wire workflows
 + tools/README + plan/session/queue in one commit, YAML check, pure-ASCII
-commit. (5) battery: corpus 954/954, probes expect 277, modules 509/509,
-barename 0/509, floors140 + module-smoke ratchets; push `main` with the
+commit. (5) battery: corpus 954/954, probes expect 278, modules 509/509,
+barename 0/509, floors141 + module-smoke ratchets; push `main` with the
 one-shot Lefteris-Notas credential (403 as Lefteris-Ngonart; GitHub 500s
 per failed_attempts.md). (6) no unbounded scratch benchmarks. (7) release
 side follows the candidate-tag pin protocol; do NOT tag/publish without
 the compiler-lane OK (a security exception needs an explicit note).
 
 HANDOFF NOTE: locks include p_pin0641_iter_shapes.xi, the wave-77 stats
-probe, the PULSE hardening probe, the wave-78..102 coverage probes
+probe, the PULSE hardening probe, the wave-78..103 coverage probes
 (wave 101 added p_wave101_shapes.xi; wave 102 added p_wave102_shapes.xi
-plus the promoted p_json_parse_depth_cap.xi), p_str_split_scale.xi, the
-io locks (p_read_file_lines_crlf.xi, p_fs_remove.xi) and the promoted
-regression locks (p_rvalue_float_vec_index.xi, p_multipart_parse_name.xi,
-p_iter_range_collect_forwardref.xi) -- **276 probes total**. Open repros
-on v0.64.2: the 15 Current findings' repros (see
-tools/known_failures/README.md). docs/failed_attempts.md logs push and
+plus the promoted p_json_parse_depth_cap.xi; wave 103 added
+p_wave103_shapes.xi), p_str_split_scale.xi, the io locks
+(p_read_file_lines_crlf.xi, p_fs_remove.xi) and the promoted regression
+locks (p_rvalue_float_vec_index.xi, p_multipart_parse_name.xi,
+p_iter_range_collect_forwardref.xi) -- **277 probes total**. Open repros
+on v0.64.2: the 16 Current findings' repros (see
+tools/known_failures/README.md; the new p_result_payload_index_concat.xi
+and p_path_println_context_crash.xi are rc 1 / exit -1073741795). docs/failed_attempts.md logs push and
 environment incidents (incl. the compiler-binary drift); out/*.json is
 disposable working space and the old relay drops were retired to the bus
 (REL-20261010-1559-stdlib records the pin protocol). CAUTION: never run
@@ -2137,6 +2149,44 @@ registry pin, agent recon for the rest)**
   gates; open: contract coverage 100%, zero open findings, beta-exit release
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
+
+**SESSION 2026-10-10 block 94 (wave 103: sleep fix-first; os batch -- fs/file/dir/platform/err/args; two new compiler findings; floors140)**
+- FIX-FIRST (relay pulse-6, C-PULSE-18): time.sleep_ms/sleep(Duration)
+  integer-truncated their argument (`ms / MILLIS_PER_SEC`), so sub-second
+  sleeps returned immediately. Both now call the runtime
+  `xiom_thread_sleep_ms` behind a non-positive guard; locked by a
+  monotonic_ms timing check (400 ms >= 300 ms) in p_wave103_shapes.xi and
+  by smoke_time_sleep.
+- RELAY re-triage: PULSE's C-PULSE-17 ("io.list_dir dangling names") is
+  NOT an io bug -- `Str::from_c_str` emits the m211 copy (verified in
+  the pin's emitted IR); the break is the consumer-side inline
+  `Result.value[0]` payload index in an rvalue context. Acked with the
+  diagnosis and the bind-first workaround; filed as
+  `p_result_payload_index_concat.xi` (rc 1) and bus item
+  REL-20261010-1609-stdlib.
+- NEW FINDING while building the probe: a Path.exists + trailing println
+  statement sequence dies with exit -1073741795 (context-dependent
+  codegen; the same body without prints, or with one print hoisted above
+  the calls, passes). Repro `p_path_println_context_crash.xi` + bus item
+  REL-20261010-1615-stdlib; the path section was dropped from the wave
+  probe.
+- Coverage (os batch 1): fs 9/10, file 12/12, dir 8/11, platform 7/10,
+  err 3/11, args 3/6 -- 42 new pub, 46 clauses. os 26.6% -> 38.0%;
+  global 64.3% -> 65.0% (pubCovered 4184 -> 4226, clauses 5588 -> 5634);
+  meter 76.5%; floors140 dumped and wired (ci/heavy/release +
+  tools/README). The remaining os gap is largely stub-gated: event 21/21,
+  terminal 15/18, mmap 12/12, sync_io 14/14, unix 16/17, win 9/12,
+  ioctl 4/4, fs_ffi 27/27, proc_ffi 17/17 are documented stubs and stay
+  clause-free; the claimable remainder is dir/file/fs/env/sysinfo/term/
+  args/proc/os/process/signal.
+- Probe p_wave103_shapes.xi (277th, 57 checks) green pre/post on the
+  official pin; targeted smokes: smoke_time_sleep, smoke_os_args,
+  smoke_os_path, smoke_platform, 18 io, 7 os, 6 env, 5 error -- all
+  green. Findings now 16 Current (15 compiler + 1 stdlib).
+- Battery on the official v0.64.2 archive: corpus 954/954 full (790.2s),
+  probes 277/277 (265.6s), modules 509/509 (200.2s), barename 0/509
+  (295.9s), floors140 + doc + module-smoke (497/517, 3476/6204)
+  ratchets OK.
 
 **SESSION 2026-10-10 block 93 (relay bus: first processing round -- 5 items fixed with refs, 23 acked, 1 ops bug filed, 48850df reviewed, doorbell live)**
 - The 14 migrated compiler-finding items reached the bus (the created

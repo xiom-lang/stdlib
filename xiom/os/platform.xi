@@ -48,38 +48,50 @@ pub fn platform_name() -> Str {
 
 /// platform_arch returns the target architecture ("x86_64", ...).
 /// Complexity: O(1). Pure.
-pub fn platform_arch() -> Str {
+pub fn platform_arch() -> Str
+  ensures: result.len() >= 1
+{
   env.ARCH
 }
 
 /// platform_family returns "unix" or "windows".
 /// Complexity: O(1). Pure.
-pub fn platform_family() -> Str {
+pub fn platform_family() -> Str
+  ensures: result == "windows" || result == "unix"
+{
   if platform_is_windows() { return "windows"; }
   return "unix";
 }
 
 /// platform_is_windows returns true on Windows.
 /// Complexity: O(1). Pure.
-pub fn platform_is_windows() -> Bool {
+pub fn platform_is_windows() -> Bool
+  ensures: result == (platform_name() == "windows")
+{
   return _rt_os_name() == "windows";
 }
 
 /// platform_is_linux returns true on Linux.
 /// Complexity: O(1). Pure.
-pub fn platform_is_linux() -> Bool {
+pub fn platform_is_linux() -> Bool
+  ensures: result == (platform_name() == "linux")
+{
   return _rt_os_name() == "linux";
 }
 
 /// platform_is_macos returns true on macOS.
 /// Complexity: O(1). Pure.
-pub fn platform_is_macos() -> Bool {
+pub fn platform_is_macos() -> Bool
+  ensures: result == (platform_name() == "macos")
+{
   return _rt_os_name() == "macos";
 }
 
 /// platform_is_unix returns true on Linux or macOS.
 /// Complexity: O(1). Pure.
-pub fn platform_is_unix() -> Bool {
+pub fn platform_is_unix() -> Bool
+  ensures: result == (platform_name() != "windows")
+{
   return _rt_os_name() != "windows";
 }
 
@@ -117,7 +129,9 @@ pub fn platform_hostname() -> Result[Str, Str] {
 
 /// platform_os_version returns a best-effort OS version string derived
 /// from environment constants. Complexity: O(1). Pure.
-pub fn platform_os_version() -> Str {
+pub fn platform_os_version() -> Str
+  ensures: result == env.OS
+{
   env.OS
 }
 

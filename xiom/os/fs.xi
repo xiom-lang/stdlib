@@ -16,7 +16,9 @@ use xiom.convert;
 
 /// fs_file_name returns the file-name portion of path (after the last
 /// '/' or '\'), or None if path is empty or ends in a separator.
-pub fn fs_file_name(path: Str) -> Option[Str] {
+pub fn fs_file_name(path: Str) -> Option[Str]
+  ensures: (path.len() == 0) => (result.is_none == true)
+{
   if path.len() == 0 {
     return None;
   };
@@ -36,7 +38,9 @@ pub fn fs_file_name(path: Str) -> Option[Str] {
 
 /// fs_parent_dir returns the directory portion of path (everything
 /// before the last '/' or '\'), or None if path has no parent.
-pub fn fs_parent_dir(path: Str) -> Option[Str] {
+pub fn fs_parent_dir(path: Str) -> Option[Str]
+  ensures: (path.len() == 0) => (result.is_none == true)
+{
   if path.len() == 0 {
     return None;
   };
@@ -57,7 +61,9 @@ pub fn fs_parent_dir(path: Str) -> Option[Str] {
 /// fs_extension returns the extension (text after the last dot in the
 /// file name), or None if there is no dot or the dot is leading/trailing.
 /// "a/b.tar.gz" -> Some("gz"); "a/b" -> None.
-pub fn fs_extension(path: Str) -> Option[Str] {
+pub fn fs_extension(path: Str) -> Option[Str]
+  ensures: (path.len() == 0) => (result.is_none == true)
+{
   if path.len() == 0 {
     return None;
   };
@@ -88,7 +94,9 @@ pub fn fs_extension(path: Str) -> Option[Str] {
 
 /// fs_stem returns the path with the last extension stripped, or the
 /// path unchanged if it has no extension. "a/b.tar.gz" -> "a/b.tar".
-pub fn fs_stem(path: Str) -> Option[Str] {
+pub fn fs_stem(path: Str) -> Option[Str]
+  ensures: (path.len() == 0) => (result.is_none == true)
+{
   let name_opt = fs_file_name(path);
   match name_opt {
     None => return None;
@@ -114,7 +122,9 @@ pub fn fs_stem(path: Str) -> Option[Str] {
 
 /// fs_is_hidden returns true if the file name starts with a dot,
 /// except for the special entries "." and "..".
-pub fn fs_is_hidden(path: Str) -> Bool {
+pub fn fs_is_hidden(path: Str) -> Bool
+  ensures: (path.len() == 0) => (result == false)
+{
   let name_opt = fs_file_name(path);
   match name_opt {
     None => return false;
@@ -129,7 +139,9 @@ pub fn fs_is_hidden(path: Str) -> Bool {
 
 /// fs_join_parts joins the given components with the OS path separator
 /// (env.path_separator: "\\" on Windows, "/" elsewhere).
-pub fn fs_join_parts(parts: Vec[Str]) -> Str {
+pub fn fs_join_parts(parts: Vec[Str]) -> Str
+  ensures: (parts.len() == 0) => (result.len() == 0)
+{
   let sep = env.path_separator();
   var result = "";
   var i: Int = 0;
@@ -146,7 +158,9 @@ pub fn fs_join_parts(parts: Vec[Str]) -> Str {
 /// fs_normalize collapses duplicate separators and resolves "." and ".."
 /// lexically, without touching the filesystem. Leading "/" and "C:\"-style
 /// drive prefixes are preserved. "a/b/../c//d/./e" -> "a/c/d/e".
-pub fn fs_normalize(path: Str) -> Str {
+pub fn fs_normalize(path: Str) -> Str
+  ensures: (path.len() == 0) => (result.len() == 0)
+{
   if path.len() == 0 {
     return "";
   };
@@ -194,7 +208,9 @@ pub fn fs_normalize(path: Str) -> Str {
 
 /// fs_with_extension replaces the extension of path with new_ext, or
 /// appends it if path has no extension. "a/b.txt" + "md" -> "a/b.md".
-pub fn fs_with_extension(path: Str, new_ext: Str) -> Str {
+pub fn fs_with_extension(path: Str, new_ext: Str) -> Str
+  ensures: (path.len() == 0) => (result.len() >= 1)
+{
   let stem_opt = fs_stem(path);
   match stem_opt {
     Some(stem) => return stem + "." + new_ext;
@@ -203,7 +219,9 @@ pub fn fs_with_extension(path: Str, new_ext: Str) -> Str {
 }
 
 /// fs_split returns (dir, file) -- the directory and file-name portions.
-pub fn fs_split(path: Str) -> (Str, Str) {
+pub fn fs_split(path: Str) -> (Str, Str)
+  ensures: (path.len() == 0) => (result.0 == "" && result.1 == "")
+{
   let dir_opt = fs_parent_dir(path);
   let file_opt = fs_file_name(path);
   var dir = "";

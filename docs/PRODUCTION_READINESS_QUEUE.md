@@ -1,6 +1,6 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
-**76.4% -- 7 of 10 gates complete; gate 8 at 64.3% (partial credit) and
+**76.5% -- 7 of 10 gates complete; gate 8 at 65.0% (partial credit) and
 gates 9-10 discrete.** (Compiler pin: **v0.64.2**.)
 **Gates: corpus 954/954 full (C001 carve-outs retired on v0.63.1; new
 TcpStream loopback and uuencode roundtrip smokes added), modules 509/509,
@@ -25,13 +25,13 @@ gates flip:
 5. Coverage ratchet green -- MET (floors129).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (497/517 modules, 3477/6202 fns).
-8. Contract coverage 100% (every public fn carries clauses) -- OPEN (64.3%).
+8. Contract coverage 100% (every public fn carries clauses) -- OPEN (65.0%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
-   OPEN (15: 14 compiler, 1 stdlib).
+   OPEN (16: 15 compiler, 1 stdlib).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
 
 Meter formula: MET gates count 1.0; gate 8 counts its current
-pub-with-clause fraction (64.3% -> 0.643); gates 9 and 10 get no partial
+pub-with-clause fraction (65.0% -> 0.650); gates 9 and 10 get no partial
 credit (discrete). Update the percentage and the gate-8 fraction in the
 same commit as each floors dump so the meter moves smoothly toward 80%.
 
@@ -65,9 +65,12 @@ lanes had no deltas. Wave 102 FIXED it stdlib-side (`_JSON_MAX_DEPTH =
 128`; the repro was promoted to tools/probes, findings 16 -> 15 Current)
 and covered the math remainder (decompose 100%, fuzzy 85.7%,
 game_theory 46.2%, chaos 100%; 46 pub, 97 clauses) plus the W-5
-`Vec[UInt8].with_len(n)` wishlist feature. Math 53.0%, global 64.3%,
-meter 76.4%; handoff in `docs/stdlib_session.md` snapshot 27 (block 91),
-wave records blocks 89-93.
+`Vec[UInt8].with_len(n)` wishlist feature. Wave 103 fixed the relay
+pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
+42 pub, 46 clauses), adding the payload-index and path-println findings
+(16 Current). Math 53.0%, os 38.0%, global 65.0%, meter 76.5%; handoff
+in `docs/stdlib_session.md` snapshot 27 (block 91 refresh), wave records
+blocks 89-94.
 BINARY NOTE: the shared local build path
 `E:\xiom-lang\xiom\target\release\xiom.exe` was rebuilt past the pin
 (compiler main da7798da m252) and fails four corpus smokes; use the
@@ -755,6 +758,28 @@ verify stdlib-v0.64.3 (d052a3c5) during its v0.64.3 candidate gates.
 Housekeeping in the same relay: the wave-97 sibling-alias split-probe
 workaround was DROPPED -- p_wave97_bitwise_shapes.xi was merged back into
 p_wave97_shapes.xi and re-run green on v0.64.2 (probe corpus stays 272).
+
+Update 2026-10-10 (wave 103 landed): sleep fix-first + os batch 1 --
+46 clauses, +42 pub. pulse-6 (C-PULSE-18) FIXED: time.sleep_ms/sleep
+(Duration) now call the runtime xiom_thread_sleep_ms (the old
+`ms / MILLIS_PER_SEC` integer division made sub-second sleeps no-ops);
+locked by a monotonic_ms timing check. pulse-5 (C-PULSE-17) RE-TRIAGED:
+io.list_dir is correct (from_c_str emits the m211 copy); the break is
+the consumer-side inline Result.value[i] payload index -- filed as
+p_result_payload_index_concat.xi + REL-20261010-1609-stdlib. NEW
+finding: the Path.exists + trailing-println sequence dies with exit
+-1073741795 (context-dependent codegen; p_path_println_context_crash.xi,
+REL-20261010-1615-stdlib). Coverage: fs 9/10, file 12/12, dir 8/11,
+platform 7/10, err 3/11, args 3/6; os 26.6% -> 38.0%; global 64.3% ->
+65.0% (pubCovered 4184 -> 4226, clauses 5588 -> 5634); meter 76.5%;
+floors140. Findings 16 Current (15 compiler + 1 stdlib). The remaining
+os gap is largely stub-gated (event/terminal/mmap/sync_io/unix/win/
+ioctl/fs_ffi/proc_ffi documented stubs stay clause-free). Battery on the
+official v0.64.2 archive: corpus 954/954 (790.2s), probes 277/277
+(265.6s), modules 509/509 (200.2s), barename 0/509 (295.9s), floors140
++ doc + module-smoke ratchets OK. Readiness next (wave 104): os batch 2
+(claimable remainder), the relay queue (website-10 no-NASM crypto
+triage), then the runtime-backed asks.
 
 Update 2026-10-10 (relay bus onboarding + first processing round): the
 stdlib lane is on `xiom-lang/xiom-relays` (working instructions in

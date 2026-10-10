@@ -1425,8 +1425,22 @@ T1/T2 yields.
         276/276 (298.3s), modules 509/509 (265.5s), barename 0/509
         (265.3s), floors139 + doc + module-smoke ratchets OK. Next:
         os 26.6%, then the runtime-backed wishlist asks.
+        Wave 103 (2026-10-10): sleep fix-first + os batch 1 -- 46
+        clauses, +42 pub. pulse-6 FIXED (time.sleep_ms/sleep(Duration)
+        now use the runtime ms sleep; the old integer division made
+        sub-second sleeps no-ops) + pulse-5 re-triaged to the payload
+        index (new finding, REL-20261010-1609-stdlib) + the new path
+        println crash finding (REL-20261010-1615-stdlib). Coverage: fs
+        9/10, file 12/12, dir 8/11, platform 7/10, err 3/11, args 3/6;
+        os 26.6% -> 38.0%, global 64.3% -> 65.0%, meter 76.5%;
+        floors140. Probe p_wave103_shapes.xi (277th, 57 checks) green
+        pre/post. Battery on the official v0.64.2 archive: corpus
+        954/954 (790.2s), probes 277/277 (265.6s), modules 509/509
+        (200.2s), barename 0/509 (295.9s), ratchets OK. The remaining
+        os gap is largely stub-gated; wave 104 takes the claimable
+        remainder + the relay queue.
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors139.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors140.json
         tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;

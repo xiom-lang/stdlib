@@ -23,7 +23,9 @@ pub fn dir_current() -> Result[Str, Str] {
 
 /// dir_create creates a single directory.
 /// Delegates to io.create_dir. Complexity: O(1) syscall.
-pub fn dir_create(path: Str) -> Result[Unit, Str] {
+pub fn dir_create(path: Str) -> Result[Unit, Str]
+  ensures: (path.len() == 0) => (result.is_err == true)
+{
   if path.len() == 0 {
     return Err("dir_create: empty path");
   }
@@ -36,7 +38,9 @@ pub fn dir_create(path: Str) -> Result[Unit, Str] {
 
 /// dir_create_all creates a directory and all missing parents.
 /// Delegates to io.create_dir_all. Complexity: O(depth) syscalls.
-pub fn dir_create_all(path: Str) -> Result[Unit, Str] {
+pub fn dir_create_all(path: Str) -> Result[Unit, Str]
+  ensures: (path.len() == 0) => (result.is_ok == true)
+{
   if path.len() == 0 {
     return Ok(());
   }
@@ -49,7 +53,9 @@ pub fn dir_create_all(path: Str) -> Result[Unit, Str] {
 
 /// dir_list returns the names of entries in a directory.
 /// Delegates to io.list_dir. Complexity: O(n) syscalls.
-pub fn dir_list(path: Str) -> Result[Vec[Str], Str] {
+pub fn dir_list(path: Str) -> Result[Vec[Str], Str]
+  ensures: (path.len() == 0) => (result.is_err == true)
+{
   if path.len() == 0 {
     return Err("dir_list: empty path");
   }
@@ -62,7 +68,9 @@ pub fn dir_list(path: Str) -> Result[Vec[Str], Str] {
 
 /// dir_exists returns true if path exists and is a directory.
 /// Delegates to io.is_dir. Complexity: O(1) syscall.
-pub fn dir_exists(path: Str) -> Bool {
+pub fn dir_exists(path: Str) -> Bool
+  ensures: (path.len() == 0) => (result == false)
+{
   if path.len() == 0 {
     return false;
   }
@@ -72,7 +80,9 @@ pub fn dir_exists(path: Str) -> Bool {
 /// dir_remove removes an empty directory.
 /// Delegates to io.remove_file (which handles both files and dirs via
 /// the C runtime). Complexity: O(1) syscall.
-pub fn dir_remove(path: Str) -> Result[Unit, Str] {
+pub fn dir_remove(path: Str) -> Result[Unit, Str]
+  ensures: (path.len() == 0) => (result.is_err == true)
+{
   if path.len() == 0 {
     return Err("dir_remove: empty path");
   }
@@ -85,7 +95,9 @@ pub fn dir_remove(path: Str) -> Result[Unit, Str] {
 
 /// dir_temp returns the system temporary directory.
 /// Delegates to env.temp_dir. Complexity: O(1).
-pub fn dir_temp() -> Str {
+pub fn dir_temp() -> Str
+  ensures: result == env.temp_dir()
+{
   env.temp_dir()
 }
 
@@ -97,7 +109,9 @@ pub fn dir_home() -> Option[Str] {
 
 /// dir_is_empty returns true if a directory contains no entries.
 /// Complexity: O(n) syscalls.
-pub fn dir_is_empty(path: Str) -> Bool {
+pub fn dir_is_empty(path: Str) -> Bool
+  ensures: (path.len() == 0) => (result == false)
+{
   if !io.is_dir(path) {
     return false;
   }
@@ -116,6 +130,8 @@ pub fn dir_join(a: Str, b: Str) -> Str {
 
 /// dir_parent returns the parent directory of path, or None if there is
 /// none. Delegates to fs.fs_parent_dir. Complexity: O(n).
-pub fn dir_parent(path: Str) -> Option[Str] {
+pub fn dir_parent(path: Str) -> Option[Str]
+  ensures: (path.len() == 0) => (result.is_none == true)
+{
   fs.fs_parent_dir(path)
 }

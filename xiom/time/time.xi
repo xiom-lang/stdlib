@@ -14,6 +14,7 @@ extern "C" {
   fn clock() -> Int;
   fn time(ptr: *Int) -> Int;
   fn xiom_async_now_ms() -> Int;
+  fn xiom_thread_sleep_ms(ms: Int);
 }
 
 /// === Duration -- a span of time ===
@@ -413,24 +414,28 @@ pub fn local_now() -> DateTime {
 }
 
 /// === Sleep / Wait ===
+/// Sleep for the given duration (blocking; millisecond resolution -- a
+/// sub-millisecond duration returns immediately, and the nanos field is
+/// truncated to whole milliseconds).
 pub fn sleep(dur: Duration)
-  requires: true  // extern time() calls in the wait loop (T002 confinement)
+  requires: true  // xiom_thread_sleep_ms extern call (T002 confinement)
 {
   let total_ms = dur.as_millis();
-  let start = time(0);
-  let end = start + total_ms / MILLIS_PER_SEC;
-  while time(0) < end {
-  };
+  if total_ms <= 0 { return; }
+  unsafe {
+    xiom_thread_sleep_ms(total_ms);
+  }
 }
 
-/// Sleep for `ms` milliseconds (blocking).
+/// Sleep for `ms` milliseconds (blocking; millisecond resolution). A
+/// non-positive value returns immediately.
 pub fn sleep_ms(ms: Int)
-  requires: true  // extern time() calls in the wait loop (T002 confinement)
+  requires: true  // xiom_thread_sleep_ms extern call (T002 confinement)
 {
-  let start = time(0);
-  let end = start + ms / MILLIS_PER_SEC;
-  while time(0) < end {
-  };
+  if ms <= 0 { return; }
+  unsafe {
+    xiom_thread_sleep_ms(ms);
+  }
 }
 
 /// Sleep until the given monotonic instant.

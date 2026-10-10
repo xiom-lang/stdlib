@@ -52,8 +52,38 @@ and a new import-corruption finding was filed (second entry below).
 Wave 101 added the tuple-literal element-read corruption (second entry
 below), found by the p_wave101_shapes.xi probe. Wave 102 fixed the
 json_parse depth cap stdlib-side (first entry below; its repro was
-promoted to `tools/probes/`); findings now 15 Current: 14 compiler,
-1 stdlib.
+promoted to `tools/probes/`). Wave 103 re-triaged PULSE's C-PULSE-17 to
+the inline payload-index corruption and added the context-dependent
+Path.exists crash (first two open entries below); findings now 16
+Current: 15 compiler, 1 stdlib.
+
+**Open finding 2026-10-10 (compiler v0.64.2): a Path.exists + trailing
+println sequence dies with an illegal-instruction exit.** The wave-103
+repro's exact statement sequence dies with exit -1073741795 (0xC000001D)
+before any output, while the same body without prints, or with one
+print hoisted above the calls, exits 0 -- and exists-only without the
+io import also exits 0: a context-dependent codegen crash (same family
+as the tostring-import corruption). Found while building the wave-103 os
+probe (its path section crashed identically and was dropped from the
+wave). Repro: `tools/known_failures/p_path_println_context_crash.xi`
+(rc -1073741795; expected rc 0); relayed as `REL-20261010-1615-stdlib`
+(to compiler). Workaround: hoist a print before the calls or bind the
+predicate result first.
+
+**Open finding 2026-10-10 (compiler v0.64.2): an inline `Result.value[i]`
+payload index in an rvalue context reads bits.** Found re-triaging
+PULSE's C-PULSE-17 ("io.list_dir dangling names"): `io.list_dir` itself
+is correct on the pin -- `Str::from_c_str` emits the m211 copy
+(`xiom_str_len` + `xiom_str_from_vec`, verified in the emitted IR) -- but
+a consumer chain `"[" + ld.value[0] + "]"` over `Result[Vec[Str], Str]`
+prints raw pointer bits (e.g. `[140697916152657]`) while the same
+element's direct comparison is correct and the bound form
+(`let v = ld.value; let s = v[0];`) is correct. Repro:
+`tools/known_failures/p_result_payload_index_concat.xi` (rc 1; expected
+rc 0; the control and bound-control legs pass first); relayed as
+`REL-20261010-1609-stdlib` (to compiler). Same family as the catalog
+payload-read entry below; consumer workaround: bind the payload before
+indexing.
 
 **RESOLVED 2026-10-10 (wave 102, stdlib-side fix): `json_parse` had no
 recursion depth cap -- deep untrusted input killed the process.** The
