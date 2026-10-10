@@ -4,6 +4,19 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 -->
 # XIOM Stdlib Session -- Handoff
 
+## 0B. RELAY BUS (xiom-relays) -- read me first
+
+- At session start and before finishing any task: pull xiom-relays and
+  process items addressed to this lane
+  (`git -C E:\xiom-lang\xiom-relays pull --ff-only`, then
+  `python tools/relay.py view --lane stdlib`).
+- Never edit another lane's item; open a new item instead.
+- Cross-lane open findings/wishlists/release checks live on the bus; the
+  lane's working instructions (AGENTS.md, repo root) carry the same two
+  rules. The 2026-10-10 onboarding + migration is recorded in block 92;
+  `tools/known_failures/` keeps the repro evidence and closed history,
+  and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
+
 ## 0A. CONTINUE HERE -- handoff snapshot 27 (updated 2026-10-10, pin v0.64.2 OFFICIAL ARCHIVE binary; waves 93-102 landed incl. the json depth fix + math remainder + W-5; next = wave 103; binary-drift warning; candidate-tag pin protocol)
 
 **PASTE-READY PROMPT FOR THE NEXT SESSION (copy this block):**
@@ -2118,6 +2131,38 @@ registry pin, agent recon for the rest)**
   gates; open: contract coverage 100%, zero open findings, beta-exit release
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
+
+**SESSION 2026-10-10 block 92 (relay-bus onboarding: ack, 14-item migration, inbound triage, doorbell)**
+- Bus: `E:\xiom-lang\xiom-relays` pulled (ff-only); README + PROTOCOL
+  read. The two rules were added to the lane's working instructions
+  (new `AGENTS.md` at the repo root) and to the top of this file
+  (section 0B): pull-and-process at session start and before finishing
+  any task (`python tools/relay.py view --lane stdlib`); never edit
+  another lane's item -- open a new one instead.
+- Rollout ack: `REL-20261010-1548-stdlib` (to owner, kind info).
+- Migration (open entries only, one item per entry; the repro files
+  stay in `tools/known_failures/` as public evidence and the README
+  Current section now carries a header pointing at these ids):
+  compiler findings `REL-20261010-1548-stdlib-2..7` and
+  `REL-20261010-1549-stdlib`, `-2..-7`; the shared-build drift bug
+  `REL-20261010-1549-stdlib-8` (all to compiler, kind bug, with the
+  pin and repro refs). The stdlib polygon entry stays in the file (not
+  cross-lane). `docs/STDLIB-WISHLIST.md` stays the intake mirror;
+  requester lanes migrate their own wishlist rows.
+- Inbound triage (to: stdlib): `REL-20261010-1548-bindings-9` (sized
+  zeroed Vec constructor) was already DELIVERED in wave 102 --
+  `Vec[UInt8].with_len(n)`, fixed with `commit:5b7bf8f` (reporter
+  verifies); `REL-20261010-1548-bindings-10` (out-param recipe in the
+  dl docs) DELIVERED -- the recipe paragraph landed in the
+  `xiom/ffi/dl.xi` header, fixed with this commit;
+  `REL-20261010-1548-bindings-8` (guard-aware free / loud rule) acked
+  with plan: the runtime-side guard-aware free is B-05
+  (`runtime/xiom_runtime.c`), the CONFINEMENT CAUTION already sits on
+  `xiom.ffi.alloc` and the new dl recipe points at it; the full
+  "balanced alloc/free semantics" stays open until B-05 lands.
+- Doorbell: this session carries a recurring 2-hour relay check (cron:
+  pull the bus, process items to stdlib, update statuses); if the
+  session dies, renew it at the next startup per the 0B rule.
 
 **SESSION 2026-10-10 block 91 (wave 102: json depth cap FIXED; decompose/fuzzy/game_theory/chaos clauses; W-5 Vec.with_len; findings 16 -> 15; floors139)**
 - FIX-FIRST: XVECTOR's json_parse depth cap (finding #16).

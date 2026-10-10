@@ -16,6 +16,26 @@ xiom --force -o out.exe tools/known_failures/<file>.xi
 
 ## Current
 
+MIGRATED TO THE RELAY BUS 2026-10-10: the open cross-lane findings in
+this section are now tracked as items on the private xiom-relays bus
+(one item per finding; the repro files below stay here as public
+evidence and the section keeps the detailed repro context). Item ids by
+entry: inline tuple element read = REL-20261010-1548-stdlib-2; tostring
+import = REL-20261010-1548-stdlib-3; mut-param @pre =
+REL-20261010-1548-stdlib-4; generic by-ref Option/Slice =
+REL-20261010-1548-stdlib-5; alias type paths / foreign calls =
+REL-20261010-1548-stdlib-6; ensures-isok guard =
+REL-20261010-1548-stdlib-7; polyhedra hull = REL-20261010-1549-stdlib;
+geom Box = REL-20261010-1549-stdlib-2; geom matrix infer =
+REL-20261010-1549-stdlib-3; clause float-vec index =
+REL-20261010-1549-stdlib-4; shape-mismatch &Vec AV =
+REL-20261010-1549-stdlib-5; catalog payload reads =
+REL-20261010-1549-stdlib-6; cross-type callbacks =
+REL-20261010-1549-stdlib-7; shared-compiler-build drift =
+REL-20261010-1549-stdlib-8 (all to: compiler, kind bug). Status lives
+on the bus; this section closes an entry only when its item closes.
+The stdlib algorithm entry (polygon) is not cross-lane and stays here.
+
 Status check 2026-10-09 (compiler v0.64.2, tag `c51170a6`): every Current
 repro below was re-compiled and re-run on the new pin. Observed rcs are
 unchanged from the entries except where noted; `p_array_zip_no_truncate.xi`

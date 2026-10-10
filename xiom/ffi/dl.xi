@@ -14,6 +14,16 @@ use xiom.convert;
 // Cross-platform: the runtime shims xiom_dl_* map to
 // LoadLibraryA / GetProcAddress / FreeLibrary on Windows and to
 // dlopen / dlsym / dlclose on POSIX. Handles are returned as Int addresses.
+//
+// Out-param recipe (bindings W-2, relay REL-20261010-1548-bindings-10):
+// when a loaded function writes back through a pointer, keep the slot
+// XIOM-owned and use the FFI byte helpers instead of C malloc/free --
+// allocate a Vec[UInt8] (a sized zeroed slot is
+// `Vec[UInt8].with_len(n)`), pass its address to the loaded function,
+// then read the result with `ffi.ptr_read_u64_le` / `ffi.ptr_read_u8`
+// (write with `ffi.ptr_write_u64_le` / `ffi.ptr_write_u8`). Do not pair
+// `ffi.alloc` with `ffi.free` inside a confined block -- see the
+// CONFINEMENT CAUTION on `xiom.ffi.alloc` (compiler finding B-05).
 // ============================================================================
 
 extern "C" {
