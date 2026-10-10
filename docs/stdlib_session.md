@@ -2150,6 +2150,34 @@ registry pin, agent recon for the rest)**
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
 
+**SESSION 2026-10-10 block 95 (relay end-of-session round: notes-schema unblock for the compiler v0.64.3 release; 5 new items acked; ops resolver ambiguity recurred)**
+- BLOCKER CLEARED for the compiler v0.64.3 release: their notes
+  validator rejected the `->` arrows in our release-notes/v0.64.3.md
+  highlight (REL-20261010-1630-compiler, high). Rephrased as `to`
+  (the file now has zero `>` characters), pushed as stdlib main
+  `35efaf8`; the compiler was told to pin that sha (or a doc-only patch
+  tag) via REL-20261010-1652-stdlib, because the original item could
+  not be moved to fixed from our side: relay.py's resolver treats
+  `REL-20261010-1630-compiler` as an ambiguous prefix of
+  `REL-20261010-1630-compiler-2` (the same class as the already-filed
+  ops bug REL-20261010-1553-stdlib; ask ops to prefer exact stems).
+- New inbound acked with plans (to: stdlib):
+  `REL-20261010-1554-benchmark-2` (Instant.elapsed().as_millis() is
+  seconds-truncated -- confirmed, `Instant.now()` stores
+  monotonic_ms()/1000; wave-104 candidate to store ms and align
+  elapsed/duration_since/sleep_until, with the benchmark run evidence),
+  `REL-20261010-1554-benchmark-3` (buf_reader_new(0) + br_read_line
+  dies with piped stdin on v0.64.2 -- reproduce in-lane next wave),
+  `REL-20261010-1554-playground-4` (io.stdin docs/decisions),
+  `REL-20261010-1609-pulse-2` (darwin x64 fp128 tf symbols missing
+  under Apple clang -- runtime queue; C wrappers over the value-form
+  impls proposed, needs a Mac runner), `REL-20261010-1559-compiler-3`
+  (info: v0.64.3 pin verified compiler-side; m253 revert keeps our
+  probes open as expected).
+- Wave-104 candidates now queued: Instant ms-precision fix,
+  buf_reader zero-capacity crash, the website-10 no-NASM crypto triage,
+  and the os batch 2 claimable remainder.
+
 **SESSION 2026-10-10 block 94 (wave 103: sleep fix-first; os batch -- fs/file/dir/platform/err/args; two new compiler findings; floors140)**
 - FIX-FIRST (relay pulse-6, C-PULSE-18): time.sleep_ms/sleep(Duration)
   integer-truncated their argument (`ms / MILLIS_PER_SEC`), so sub-second
