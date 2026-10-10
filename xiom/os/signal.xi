@@ -11,13 +11,19 @@
 
 module xiom.os.signal
 
+use xiom.env;
+
 extern "C" {
-  fn raise_sig(sig: Int32) -> Int32;
+  // libc raise() resolves on both ucrt and POSIX runtimes (the previous
+  // `raise_sig` name had no runtime implementation and failed to link).
+  fn raise(sig: Int32) -> Int32;
 }
 
 /// signal_name returns the canonical name for a signal number, or
 /// "unknown" for numbers outside the table. Complexity: O(1). Pure.
-pub fn signal_name(num: Int) -> Str {
+pub fn signal_name(num: Int) -> Str
+  ensures: result.len() > 0
+{
   if num == 1 { return "HUP"; }
   if num == 2 { return "INT"; }
   if num == 3 { return "QUIT"; }
@@ -54,7 +60,9 @@ pub fn signal_name(num: Int) -> Str {
 
 /// signal_code returns the signal number for a canonical name, or None.
 /// Matching is case-insensitive on the letters. Complexity: O(1). Pure.
-pub fn signal_code(name: Str) -> Option[Int] {
+pub fn signal_code(name: Str) -> Option[Int]
+  ensures: (result.is_some == true) => (name.len() >= 2)
+{
   let n = name;
   if n == "HUP" || n == "SIGHUP" { return Some(1); }
   if n == "INT" || n == "SIGINT" { return Some(2); }
@@ -91,19 +99,25 @@ pub fn signal_code(name: Str) -> Option[Int] {
 
 /// signal_is_ignorable returns true for signals that can be ignored
 /// (not SIGKILL or SIGSTOP). Complexity: O(1). Pure.
-pub fn signal_is_ignorable(num: Int) -> Bool {
+pub fn signal_is_ignorable(num: Int) -> Bool
+  ensures: result == (num != 9 && num != 19 && num > 0)
+{
   num != 9 && num != 19 && num > 0
 }
 
 /// signal_is_catchable returns true for signals a process can install a
 /// handler for (not SIGKILL or SIGSTOP). Complexity: O(1). Pure.
-pub fn signal_is_catchable(num: Int) -> Bool {
+pub fn signal_is_catchable(num: Int) -> Bool
+  ensures: result == (num != 9 && num != 19 && num > 0)
+{
   num != 9 && num != 19 && num > 0
 }
 
 /// signal_default_action returns the default disposition ("term", "core",
 /// "stop", "cont", "ignore", or "unknown"). Complexity: O(1). Pure.
-pub fn signal_default_action(num: Int) -> Str {
+pub fn signal_default_action(num: Int) -> Str
+  ensures: result.len() > 0
+{
   if num == 18 { return "cont"; }
   if num == 19 || num == 20 || num == 21 || num == 22 { return "stop"; }
   if num == 1 || num == 2 || num == 3 || num == 15 { return "term"; }
@@ -114,13 +128,21 @@ pub fn signal_default_action(num: Int) -> Str {
   "unknown"
 }
 
-/// signal_raise sends a signal to the current process via the runtime
-/// raise() primitive. Complexity: O(1) syscall.
-pub fn signal_raise(num: Int) -> Result[Unit, Str] {
+/// signal_raise sends a signal to the current process via the libc
+/// raise() primitive. POSIX only: on Windows the CRT raise() only knows
+/// its own small signal set and fail-fasts on unsupported numbers, so
+/// this documented-Err stub returns Err there (same stance as
+/// xiom.os.raise_signal). Complexity: O(1) syscall.
+pub fn signal_raise(num: Int) -> Result[Unit, Str]
+  ensures: (num <= 0) => (result.is_err == true)
+{
   if num <= 0 {
     return Err("signal_raise: invalid signal number");
   }
-  let rc = unsafe { raise_sig(num as Int32) };
+  if env.FAMILY == "windows" {
+    return Err("signal_raise: unsupported on Windows");
+  }
+  let rc = unsafe { raise(num as Int32) };
   if rc != 0 {
     return Err("signal_raise: raise failed");
   }

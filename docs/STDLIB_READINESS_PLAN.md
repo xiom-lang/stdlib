@@ -1451,8 +1451,27 @@ T1/T2 yields.
         corpus 954/954 (975.5s), probes 278/278 (323.2s), modules
         509/509 (255.7s), barename 0/509 (460.9s), ratchets OK. Next:
         os batch 2 + the website-10 crypto triage + runtime asks.
+        Wave 105 (2026-10-10): FIX-FIRST signal_raise/os.raise_signal
+        link defect (the `raise_sig` extern existed in no runtime; the
+        probe's first reference exposed the never-linkable surface) --
+        both now call libc raise, with a documented-Err Windows guard
+        (ucrt raise fail-fasts on unsupported numbers). os batch 2:
+        env/sysinfo/term/proc/signal full covers + dir/fs/args/process/
+        flat-os tails -- 64 clauses, +64 pub. Coverage: env 28/28,
+        sysinfo 12/12, term 11/11 pub (is_tty/width stay the delegated
+        stubs), proc 5/5, signal 8/8, dir 11/11, args 6/6, process
+        11/11, fs 10/10; os 38.0% -> 55.4%, global 65.0% -> 65.9%
+        (pubCovered 4226 -> 4290, clauses 5634 -> 5698); meter 76.6%;
+        floors142. Probe p_wave105_shapes.xi (279th, 91 checks) RED
+        pre-fix (undefined raise_sig) / GREEN post-fix and post-clauses.
+        Battery on the official v0.64.2 archive: corpus 954/954 full
+        (1002.7s; 5 transient clang -1 crashes cleared by -RetryFailed,
+        failed_attempts entry), probes 279/279 (304.7s), modules 509/509
+        (184.4s), barename 0/509 (263.1s), floors142 + doc + module-smoke
+        (497/517, 3476/6204) ratchets OK.
+        Next: the website-10 no-NASM crypto triage + runtime asks.
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors141.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors142.json
         tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;

@@ -36,7 +36,8 @@ extern "C" {
   fn xiom_disk_free(path: *UInt8) -> UInt64;
   fn xiom_disk_total(path: *UInt8) -> UInt64;
   fn signal(signum: Int32, handler: *UInt8) -> *UInt8;
-  fn raise_sig(sig: Int32) -> Int32;
+  // libc raise() (the runtime defines no raise_sig; POSIX-only semantics).
+  fn raise(sig: Int32) -> Int32;
   fn xiom_pipe(fds: *Int32) -> Int32;
   fn xiom_read(fd: Int32, buf: *UInt8, count: UInt) -> Int;
   fn xiom_write(fd: Int32, buf: *UInt8, count: UInt) -> Int;
@@ -501,12 +502,16 @@ pub fn on_signal(signal: Int, handler: fn(Int) -> Unit)
 {
 }
 
-/// Raise a signal in the current process (POSIX; unsupported on Windows).
+/// Raise a signal in the current process (POSIX; a no-op on Windows,
+/// where the CRT raise() fail-fasts on unsupported numbers).
 pub fn raise_signal(signal: Int)
   requires: signal > 0
 {
+  if env.FAMILY == "windows" {
+    return;
+  };
   unsafe {
-    let _ = raise_sig(signal as Int32);
+    let _ = raise(signal as Int32);
   }
 }
 
@@ -663,13 +668,17 @@ pub fn os_version_str() -> Str
 }
 
 /// is_unix returns true if the platform is linux or macos.
-pub fn is_unix() -> Bool {
+pub fn is_unix() -> Bool
+  ensures: result == (env.OS == "linux" || env.OS == "macos")
+{
   return is_linux() || is_macos();
 }
 
 /// user_name returns the current user name by reading the
 /// USERNAME (Windows) or USER (Unix) environment variable.
-pub fn user_name() -> Option[Str] {
+pub fn user_name() -> Option[Str]
+  ensures: (result.is_some == true) => (env.var_opt("USERNAME").is_some == true || env.var_opt("USER").is_some == true)
+{
   let v = env.var_opt("USERNAME");
   match v {
     Some(name) => return Some(name);
@@ -680,27 +689,35 @@ pub fn user_name() -> Option[Str] {
 
 /// total_memory_mb returns total system memory in MiB.
 /// Wraps total_memory() / (1024 * 1024).  Complexity: O(1).
-pub fn total_memory_mb() -> Int {
+pub fn total_memory_mb() -> Int
+  ensures: result >= -1
+{
   let total = total_memory();
   return total / (1024 * 1024);
 }
 
 /// free_memory_mb returns free system memory in MiB.
 /// Wraps free_memory() / (1024 * 1024).  Complexity: O(1).
-pub fn free_memory_mb() -> Int {
+pub fn free_memory_mb() -> Int
+  ensures: result >= -1
+{
   let free = free_memory();
   return free / (1024 * 1024);
 }
 
 /// page_size returns the system page size in bytes.
 /// Returns 4096 -- the runtime does not expose sysconf(_SC_PAGESIZE).
-pub fn page_size() -> Int {
+pub fn page_size() -> Int
+  ensures: result == 4096
+{
   return 4096;
 }
 
 /// terminal_width returns the terminal width in columns, if detectable.
 /// The Xiom runtime does not expose TIOCGWINSZ -- always returns None.
-pub fn terminal_width() -> Option[Int] {
+pub fn terminal_width() -> Option[Int]
+  ensures: result.is_none == true
+{
   return None;
 }
 
@@ -724,7 +741,9 @@ pub fn sleep_millis(ms: Int) {
 
 /// current_exe_path returns the path of the currently running executable.
 /// Delegates to env.current_exe().  Returns None on failure.
-pub fn current_exe_path() -> Option[Str] {
+pub fn current_exe_path() -> Option[Str]
+  ensures: (result.is_some == true) => (env.current_exe().is_ok == true)
+{
   let result = env.current_exe();
   match result {
     Ok(path) => Some(path);
@@ -745,6 +764,8 @@ pub fn process_id() -> Int
 /// cpu_model returns a human-readable CPU model string.
 /// The Xiom runtime does not expose CPUID or /proc/cpuinfo.
 /// Always returns "unknown".
-pub fn cpu_model() -> Str {
+pub fn cpu_model() -> Str
+  ensures: result == "unknown"
+{
   return "unknown";
 }

@@ -2302,6 +2302,47 @@ registry pin, agent recon for the rest)**
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
 
+**SESSION 2026-10-10 block 101 (wave 105: signal_raise link fix-first + os batch 2; 64 clauses, floors142; probe 279th)**
+- FIX-FIRST: `xiom.os.signal.signal_raise` / `xiom.os.raise_signal`
+  referenced a `raise_sig` extern that NO runtime defines (archive,
+  compiler vendored, or repo -- wave-4 legacy); the first link reference
+  (the wave probe) exposed the never-linkable surface. Both now call
+  libc `raise`; signal_raise returns a documented Err on Windows (ucrt
+  raise fail-fasts on unsupported numbers) and os.raise_signal is a
+  documented Windows no-op. Probe RED pre-fix (undefined symbol) /
+  GREEN post-fix.
+- os batch 2 coverage: env (17), sysinfo (12), term (9), proc (5),
+  signal (5 new), dir (3), fs (1), args (2), process (1), flat os (8)
+  -- 64 clauses, +64 pub. os 38.0% -> 55.4%, global 65.0% -> 65.9%
+  (pubCovered 4226 -> 4290, clauses 5634 -> 5698); meter 76.6%;
+  floors142 dumped + wired (ci/heavy/release + tools/README + plan).
+  Probe p_wave105_shapes.xi (279th, 91 checks) green on the official
+  v0.64.2 archive pre/post.
+- Bus at session start: acked the two resolver-blocked items
+  (REL-20261010-1550-packages, -website) -- the ops exact-stem fix
+  (eaea00b) is live; verified + closed REL-20261010-1553-stdlib.
+- Battery on the official v0.64.2 archive: corpus 954/954 full (1002.7s;
+  the first pass hit 5 transient clang -1 driver crashes under load and
+  was re-run clean with -RetryFailed -- failed_attempts entry), probes
+  279/279 (304.7s), modules 509/509 (184.4s), barename 0/509 (263.1s),
+  floors142 + doc + module-smoke (497/517, 3476/6204) ratchets OK.
+
+**SESSION 2026-10-10 block 102 (doorbell 19:00Z, recorded from the concurrent-session round: resolver fixed + both blocked items acked; engine-6 thread-pool ask acked)**
+- Ops fixed the relay.py resolver (eaea00b: exact-stem match wins);
+  our bug item REL-20261010-1553-stdlib is verified and closed. Both
+  previously blocked items moved open -> acked with runtime plans:
+  REL-20261010-1550-packages (real io.fsync: an xiom_fs_sync runtime
+  extern plus io.fsync/flush_fd/sync_fd wrappers, then xiom.wal drops
+  its no-op) and REL-20261010-1550-website (per-symbol NASM-backed
+  markers + an accelerated-vs-portable differential smoke, riding a
+  docs-oriented wave after the website-10 crypto triage).
+- NEW inbound acked: REL-20261010-1834-engine-6 (real thread pool +
+  Send/Sync decision) -- runtime-backed plan recorded (runtime worker
+  primitives + a pool smoke running N tasks on M threads + the
+  lifetime/ordering contract; Send/Sync pinned with the compiler lane;
+  engine keeps its spawn+atomics workaround until then).
+- No other queue moves this check.
+
 **SESSION 2026-10-10 block 100 (handoff refresh: snapshot 28 paste-ready; compiler v0.64.3 released pinning ab894b47; relay queue re-checked)**
 - Snapshot 28 is the paste-ready prompt for wave 105: compiler v0.64.3
   released (tag f7b3a4fe / a5b87965, STDLIB_VERSION = `ab894b47`); waves

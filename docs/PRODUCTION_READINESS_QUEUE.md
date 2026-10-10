@@ -1,10 +1,10 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
-**76.5% -- 7 of 10 gates complete; gate 8 at 65.0% (partial credit) and
+**76.6% -- 7 of 10 gates complete; gate 8 at 65.9% (partial credit) and
 gates 9-10 discrete.** (Compiler pin: **v0.64.2**.)
 **Gates: corpus 954/954 full (C001 carve-outs retired on v0.63.1; new
 TcpStream loopback and uuencode roundtrip smokes added), modules 509/509,
-probes 273/273, barename 0/509.**
+probes 279/279, barename 0/509.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -14,24 +14,24 @@ gates flip:
    full, no carve-outs (C001 fixed by 4bf8cf1e; 20/20 + 20/20 stress).
    lz4 is fixed by m190 and stayed in the gate; the new TcpStream loopback
    smoke locks m196.
-3. Probe corpus green -- MET (273/273 on v0.64.2, incl. the promoted
+3. Probe corpus green -- MET (279/279 on v0.64.2, incl. the promoted
    regression locks (rvalue float Vec index, multipart parse name, iter
    forwardref), the v0.64.1 pin probe p_pin0641_iter_shapes.xi, the
-   wave-77 stats probe, the Pulse hardening probe, the wave-78..100
+   wave-77 stats probe, the Pulse hardening probe, the wave-78..105
    coverage probes (the wave-97 probe was remerged after m242, plus the
-   wave-98/99/100 probes), the io byte-fidelity/CRLF lock and the
+   wave-98..105 probes), the io byte-fidelity/CRLF lock and the
    fs_remove lock).
 4. Strict bare-name scan clean -- MET (0/509).
-5. Coverage ratchet green -- MET (floors129).
+5. Coverage ratchet green -- MET (floors142).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (497/517 modules, 3477/6202 fns).
-8. Contract coverage 100% (every public fn carries clauses) -- OPEN (65.0%).
+8. Contract coverage 100% (every public fn carries clauses) -- OPEN (65.9%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
    OPEN (16: 15 compiler, 1 stdlib).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
 
 Meter formula: MET gates count 1.0; gate 8 counts its current
-pub-with-clause fraction (65.0% -> 0.650); gates 9 and 10 get no partial
+pub-with-clause fraction (65.9% -> 0.659); gates 9 and 10 get no partial
 credit (discrete). Update the percentage and the gate-8 fraction in the
 same commit as each floors dump so the meter moves smoothly toward 80%.
 
@@ -68,12 +68,15 @@ game_theory 46.2%, chaos 100%; 46 pub, 97 clauses) plus the W-5
 `Vec[UInt8].with_len(n)` wishlist feature. Wave 103 fixed the relay
 pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
 42 pub, 46 clauses), adding the payload-index and path-println findings
-(16 Current). Wave 104 fixed the relay benchmark-2 Instant millisecond
-resolution and benchmark-3 buffered-stdin normalization (probe 278th;
-coverage flat, fix wave). Math 53.0%, os 38.0%, global 65.0%, meter
-76.5%; handoff in `docs/stdlib_session.md` snapshot 28 (block 100
-refresh; compiler v0.64.3 released pinning ab894b47), wave records
-blocks 89-100.
+   (16 Current). Wave 104 fixed the relay benchmark-2 Instant millisecond
+   resolution and benchmark-3 buffered-stdin normalization (probe 278th;
+   coverage flat, fix wave). Wave 105 fixed the signal_raise/raise_signal
+   `raise_sig` link defect (libc raise + Windows guard) and covered the
+   os batch 2 remainder (env/sysinfo/term/proc/signal + dir/fs/args/
+   process/os tails; 64 clauses, +64 pub; probe 279th). Math 53.0%, os
+   55.4%, global 65.9%, meter 76.6%; handoff in `docs/stdlib_session.md`
+   snapshot 28 (block 100 refresh; compiler v0.64.3 released pinning
+   ab894b47), wave records blocks 89-101.
 BINARY NOTE: the shared local build path
 `E:\xiom-lang\xiom\target\release\xiom.exe` was rebuilt past the pin
 (compiler main da7798da m252) and fails four corpus smokes; use the
@@ -761,6 +764,26 @@ verify stdlib-v0.64.3 (d052a3c5) during its v0.64.3 candidate gates.
 Housekeeping in the same relay: the wave-97 sibling-alias split-probe
 workaround was DROPPED -- p_wave97_bitwise_shapes.xi was merged back into
 p_wave97_shapes.xi and re-run green on v0.64.2 (probe corpus stays 272).
+
+Update 2026-10-10 (wave 105 landed): FIX-FIRST signal_raise link defect
++ os batch 2 -- 64 clauses, +64 pub. FIX-FIRST: `xiom.os.signal.
+signal_raise` and `xiom.os.raise_signal` referenced a `raise_sig` extern
+that no runtime (archive, vendored, or repo) ever defined -- the first
+link reference (the wave probe) exposed the never-linkable surface. Both
+now call libc `raise` with a documented-Err Windows guard (the ucrt
+raise fail-fasts on unsupported numbers); locked by the probe. Coverage:
+env 28/28, sysinfo 12/12, term 11/11 pub (is_tty/width stay the
+documented stub delegations), proc 5/5, signal 8/8, dir 11/11, args 6/6,
+process 11/11, fs 10/10, plus the flat-os tails; os 38.0% -> 55.4%,
+global 65.0% -> 65.9% (pubCovered 4226 -> 4290, clauses 5634 -> 5698);
+meter 76.6%; floors142. Probe p_wave105_shapes.xi (279th, 91 checks) RED
+pre-fix (undefined raise_sig) / GREEN post-fix and post-clauses.
+Battery on the official v0.64.2 archive: corpus 954/954 full (1002.7s;
+first pass had 5 transient clang -1 crashes, -RetryFailed clean), probes
+279/279 (304.7s), modules 509/509 (184.4s), barename 0/509 (263.1s),
+floors142 + doc + module-smoke (497/517, 3476/6204) ratchets OK.
+Readiness next: the website-10 no-NASM crypto triage (security), then
+the runtime-backed wishlist asks.
 
 Update 2026-10-10 (wave 104 landed): Instant millisecond resolution +
 buffered-stdin normalization -- two relay fixes, probe 278th; coverage

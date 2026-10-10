@@ -141,13 +141,17 @@ pub fn positionals(args: &Vec[Str]) -> Vec[Str]
 }
 
 /// Convenience: flag lookup over the process's own arguments.
-pub fn args_has_flag(flag: Str) -> Bool {
+pub fn args_has_flag(flag: Str) -> Bool
+  ensures: (result == true) => (args_raw().len() >= 1)
+{
   var raw = args_raw();
   return flag_lookup(&raw, flag);
 }
 
 /// Convenience: option lookup over the process's own arguments.
-pub fn args_option(key: Str) -> Option[Str] {
+pub fn args_option(key: Str) -> Option[Str]
+  ensures: (args_raw().len() == 0) => (result.is_none == true)
+{
   var raw = args_raw();
   return option_value(&raw, key);
 }

@@ -99,25 +99,33 @@ pub fn remove_var(name: Str)
 }
 
 /// All environment variables as (name, value) pairs.
-pub fn vars() -> Vec<(Str, Str)> {
+pub fn vars() -> Vec<(Str, Str)>
+  ensures: result.len() == 0
+{
   // OS env var iteration is not supported via the C standard library.
   // On Unix, the `environ` external variable could be accessed but
   // is platform-specific and non-portable.
   return Vec[(Str, Str)].new();
 }
 
-/// Process arguments (UTF-8, lossy).
-pub fn args() -> Vec<Str> {
+/// Process arguments (UTF-8, lossy; stable across calls).
+pub fn args() -> Vec[Str]
+  ensures: result.len() == io.args().len()
+{
   return io.args();
 }
 
 /// Process arguments (OS-native strings; same representation here).
-pub fn args_os() -> Vec<Str> {
+pub fn args_os() -> Vec[Str]
+  ensures: result.len() == args().len()
+{
   return args();
 }
 
 /// Path of the running executable, or Err with the OS message.
-pub fn current_exe() -> Result<Str, Str> {
+pub fn current_exe() -> Result[Str, Str]
+  ensures: result is Ok => args().len() > 0
+{
   let a = args();
   if a.len() > 0 {
     return Ok(a[0]);
@@ -193,7 +201,9 @@ pub fn home_dir() -> Option<Str>
 }
 
 /// Per-user data directory, or None.
-pub fn data_dir() -> Option<Str> {
+pub fn data_dir() -> Option[Str]
+  ensures: (result.is_none == true) => (home_dir().is_none == true)
+{
   let v = var_opt("XDG_DATA_HOME");
   match v {
     Some(d) => return Some(d);
@@ -207,7 +217,9 @@ pub fn data_dir() -> Option<Str> {
 }
 
 /// Per-user cache directory, or None.
-pub fn cache_dir() -> Option<Str> {
+pub fn cache_dir() -> Option[Str]
+  ensures: (result.is_none == true) => (home_dir().is_none == true)
+{
   let v = var_opt("XDG_CACHE_HOME");
   match v {
     Some(d) => return Some(d);
@@ -221,7 +233,9 @@ pub fn cache_dir() -> Option<Str> {
 }
 
 /// Per-user configuration directory, or None.
-pub fn config_dir() -> Option<Str> {
+pub fn config_dir() -> Option[Str]
+  ensures: (result.is_none == true) => (home_dir().is_none == true)
+{
   let v = var_opt("XDG_CONFIG_HOME");
   match v {
     Some(d) => return Some(d);
@@ -235,7 +249,9 @@ pub fn config_dir() -> Option<Str> {
 }
 
 /// Directory containing the running executable, or None.
-pub fn executable_dir() -> Option<Str> {
+pub fn executable_dir() -> Option[Str]
+  ensures: (result.is_some == true) => (current_exe().is_ok == true)
+{
   let exe = current_exe();
   match exe {
     Ok(path) => {
@@ -251,12 +267,16 @@ pub fn executable_dir() -> Option<Str> {
 }
 
 /// Join two path fragments with the platform separator.
-pub fn join_paths(a: Str, b: Str) -> Str {
+pub fn join_paths(a: Str, b: Str) -> Str
+  ensures: result.len() == a.len() + b.len() + 1
+{
   return string.str_concat(string.str_concat(a, path_separator()), b);
 }
 
 /// Platform path separator ("/" or "\\").
-pub fn path_separator() -> Str {
+pub fn path_separator() -> Str
+  ensures: result.len() == 1
+{
   if FAMILY == "windows" {
     return "\\";
   };
@@ -270,7 +290,9 @@ pub fn path_separator() -> Str {
 /// var_or returns the value of the environment variable name,
 /// or default if the variable is not set.
 /// Complexity: O(1).
-pub fn var_or(name: Str, default: Str) -> Str {
+pub fn var_or(name: Str, default: Str) -> Str
+  ensures: (var_opt(name).is_none == true) => (result == default)
+{
   let result = var_opt(name);
   match result {
     Some(val) => val;
@@ -280,7 +302,9 @@ pub fn var_or(name: Str, default: Str) -> Str {
 
 /// has_var returns true if the environment variable name is set.
 /// Complexity: O(1).
-pub fn has_var(name: Str) -> Bool {
+pub fn has_var(name: Str) -> Bool
+  ensures: (result == true) => (var_opt(name).is_some == true)
+{
   let result = var_opt(name);
   match result {
     Some(_) => true;
@@ -291,14 +315,18 @@ pub fn has_var(name: Str) -> Bool {
 /// all_var_names returns an empty vector on all platforms -- the Xiom
 /// runtime does not support iterating over environment variables
 /// via the C standard library.
-pub fn all_var_names() -> Vec[Str] {
+pub fn all_var_names() -> Vec[Str]
+  ensures: result.len() == 0
+{
   var result: Vec[Str] = Vec[Str]::new();
   return result;
 }
 
 /// all_var_values returns an empty vector on all platforms -- see
 /// all_var_names for rationale.
-pub fn all_var_values() -> Vec[Str] {
+pub fn all_var_values() -> Vec[Str]
+  ensures: result.len() == 0
+{
   var result: Vec[Str] = Vec[Str]::new();
   return result;
 }
@@ -323,14 +351,18 @@ pub fn clear_var(name: Str) {
 
 /// args_len returns the number of command-line arguments.
 /// Complexity: O(1).
-pub fn args_len() -> Int {
+pub fn args_len() -> Int
+  ensures: result == io.args().len()
+{
   let a = io.args();
   return a.len();
 }
 
 /// arg_at returns the i-th command-line argument, or None if
 /// i is out of bounds.  Complexity: O(1).
-pub fn arg_at(i: Int) -> Option[Str] {
+pub fn arg_at(i: Int) -> Option[Str]
+  ensures: (i < 0 || i >= io.args().len()) => (result.is_none == true)
+{
   let a = io.args();
   if i < 0 || i >= a.len() {
     return None;
@@ -340,7 +372,9 @@ pub fn arg_at(i: Int) -> Option[Str] {
 
 /// arg_contains returns true if any command-line argument equals s.
 /// Complexity: O(n) where n = arg count.
-pub fn arg_contains(s: Str) -> Bool {
+pub fn arg_contains(s: Str) -> Bool
+  ensures: (io.args().len() == 0) => (result == false)
+{
   let a = io.args();
   var i = 0;
   while i < a.len() {

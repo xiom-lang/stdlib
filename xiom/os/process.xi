@@ -92,7 +92,9 @@ pub fn env_var(name: Str) -> Option[Str]
 /// Get the full path of the currently running executable.
 /// Delegates to xiom.env.current_exe() which reads argv[0].
 /// Returns Some(path) on success, None if the path cannot be determined.
-pub fn current_exe_path() -> Option[Str] {
+pub fn current_exe_path() -> Option[Str]
+    ensures: (result.is_some == true) => (xiom.env.current_exe().is_ok == true)
+{
     let result = xiom.env.current_exe();
     match result {
         Ok(path) => Some(path);

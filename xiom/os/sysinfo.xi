@@ -22,7 +22,9 @@ extern "C" {
 
 /// sysinfo_cpu_count returns the number of logical CPUs.
 /// Complexity: O(1) syscall.
-pub fn sysinfo_cpu_count() -> Int {
+pub fn sysinfo_cpu_count() -> Int
+  ensures: result >= 1
+{
   let count = unsafe { xiom_cpu_count() };
   if count < 1 {
     return 1;
@@ -30,43 +32,59 @@ pub fn sysinfo_cpu_count() -> Int {
   count as Int
 }
 
-/// sysinfo_total_memory returns total system memory in bytes.
+/// sysinfo_total_memory returns total system memory in bytes (-1 when
+/// the runtime cannot determine it).
 /// Complexity: O(1) syscall.
-pub fn sysinfo_total_memory() -> Int {
+pub fn sysinfo_total_memory() -> Int
+  ensures: result >= -1
+{
   let m = unsafe { xiom_total_memory() };
   m as Int
 }
 
-/// sysinfo_free_memory returns free system memory in bytes.
+/// sysinfo_free_memory returns free system memory in bytes (-1 when the
+/// runtime cannot determine it).
 /// Complexity: O(1) syscall.
-pub fn sysinfo_free_memory() -> Int {
+pub fn sysinfo_free_memory() -> Int
+  ensures: result >= -1
+{
   let m = unsafe { xiom_free_memory() };
   m as Int
 }
 
-/// sysinfo_total_memory_mb returns total system memory in MiB.
+/// sysinfo_total_memory_mb returns total system memory in MiB
+/// (-1 when the runtime cannot determine it).
 /// Complexity: O(1).
-pub fn sysinfo_total_memory_mb() -> Int {
+pub fn sysinfo_total_memory_mb() -> Int
+  ensures: result >= -1
+{
   let total = sysinfo_total_memory();
   total / (1024 * 1024)
 }
 
-/// sysinfo_free_memory_mb returns free system memory in MiB.
+/// sysinfo_free_memory_mb returns free system memory in MiB
+/// (-1 when the runtime cannot determine it).
 /// Complexity: O(1).
-pub fn sysinfo_free_memory_mb() -> Int {
+pub fn sysinfo_free_memory_mb() -> Int
+  ensures: result >= -1
+{
   let free = sysinfo_free_memory();
   free / (1024 * 1024)
 }
 
 /// sysinfo_page_size returns the system page size in bytes (4096 on the
 /// supported runtimes). Complexity: O(1).
-pub fn sysinfo_page_size() -> Int {
+pub fn sysinfo_page_size() -> Int
+  ensures: result == 4096
+{
   4096
 }
 
 /// sysinfo_hostname returns the system hostname from the COMPUTERNAME
 /// (Windows) or HOSTNAME (Unix) environment variable. Complexity: O(1).
-pub fn sysinfo_hostname() -> Result[Str, Str] {
+pub fn sysinfo_hostname() -> Result[Str, Str]
+  ensures: result is Ok => result.len() > 0
+{
   let cn = env.var_opt("COMPUTERNAME");
   match cn {
     Some(v) => {
@@ -92,26 +110,34 @@ pub fn sysinfo_hostname() -> Result[Str, Str] {
 
 /// sysinfo_os_name returns the OS name.
 /// Complexity: O(1). Pure.
-pub fn sysinfo_os_name() -> Str {
+pub fn sysinfo_os_name() -> Str
+  ensures: result == env.OS
+{
   env.OS
 }
 
 /// sysinfo_os_version returns a best-effort OS version string derived
 /// from environment constants. Complexity: O(1). Pure.
-pub fn sysinfo_os_version() -> Str {
+pub fn sysinfo_os_version() -> Str
+  ensures: result == env.OS
+{
   env.OS
 }
 
 /// sysinfo_process_id returns the current process ID.
 /// Complexity: O(1) syscall.
-pub fn sysinfo_process_id() -> Int {
+pub fn sysinfo_process_id() -> Int
+  ensures: result > 0
+{
   let pid = unsafe { xiom_getpid() };
   pid as Int
 }
 
 /// sysinfo_user_name returns the current user name from the USERNAME
 /// (Windows) or USER (Unix) environment variable. Complexity: O(1).
-pub fn sysinfo_user_name() -> Option[Str] {
+pub fn sysinfo_user_name() -> Option[Str]
+  ensures: (result.is_some == true) => (env.var_opt("USERNAME").is_some == true || env.var_opt("USER").is_some == true)
+{
   let un = env.var_opt("USERNAME");
   match un {
     Some(v) => {
@@ -127,6 +153,8 @@ pub fn sysinfo_user_name() -> Option[Str] {
 
 /// sysinfo_cpu_model returns a CPU model string. The runtime does not
 /// expose CPUID; always returns "unknown". Complexity: O(1).
-pub fn sysinfo_cpu_model() -> Str {
+pub fn sysinfo_cpu_model() -> Str
+  ensures: result == "unknown"
+{
   "unknown"
 }

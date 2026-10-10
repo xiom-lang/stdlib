@@ -256,7 +256,9 @@ pub fn fs_split(path: Str) -> (Str, Str)
 
 /// fs_unique_path returns dir/name if it does not exist, otherwise appends
 /// " (1)", " (2)", ... up to a maximum of 1000 attempts.
-pub fn fs_unique_path(dir: Str, name: Str) -> Str {
+pub fn fs_unique_path(dir: Str, name: Str) -> Str
+  ensures: result.len() >= 1
+{
   let base = io.join_paths(dir, name);
   if not io.file_exists(base) {
     return base;

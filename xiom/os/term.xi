@@ -27,49 +27,67 @@ pub fn term_is_tty(fd: Int) -> Bool {
 
 /// term_clear_screen returns the ANSI escape sequence that clears the
 /// screen and homes the cursor.
-pub fn term_clear_screen() -> Str {
+pub fn term_clear_screen() -> Str
+  ensures: result == "\x1b[2J\x1b[H"
+{
   return "\x1b[2J\x1b[H";
 }
 
 /// term_set_foreground returns the ANSI 256-color foreground escape for
 /// the given color index (0..255).
-pub fn term_set_foreground(color: Int) -> Str {
+pub fn term_set_foreground(color: Int) -> Str
+  ensures: result.len() >= 9
+{
   return "\x1b[38;5;" + convert.int_to_string(color) + "m";
 }
 
 /// term_reset returns the ANSI sequence that resets all attributes.
-pub fn term_reset() -> Str {
+pub fn term_reset() -> Str
+  ensures: result == fmt_term.ansi_reset()
+{
   return fmt_term.ansi_reset();
 }
 
 /// term_bold returns the ANSI sequence enabling bold.
-pub fn term_bold() -> Str {
+pub fn term_bold() -> Str
+  ensures: result == fmt_term.ansi_bold()
+{
   return fmt_term.ansi_bold();
 }
 
 /// term_dim returns the ANSI sequence enabling dim intensity.
-pub fn term_dim() -> Str {
+pub fn term_dim() -> Str
+  ensures: result == fmt_term.ansi_dim()
+{
   return fmt_term.ansi_dim();
 }
 
 /// term_underline returns the ANSI sequence enabling underline.
-pub fn term_underline() -> Str {
+pub fn term_underline() -> Str
+  ensures: result == fmt_term.ansi_underline()
+{
   return fmt_term.ansi_underline();
 }
 
 /// term_cursor_hide returns the ANSI sequence that hides the cursor.
-pub fn term_cursor_hide() -> Str {
+pub fn term_cursor_hide() -> Str
+  ensures: result == "\x1b[?25l"
+{
   return "\x1b[?25l";
 }
 
 /// term_cursor_show returns the ANSI sequence that shows the cursor.
-pub fn term_cursor_show() -> Str {
+pub fn term_cursor_show() -> Str
+  ensures: result == "\x1b[?25h"
+{
   return "\x1b[?25h";
 }
 
 /// term_cursor_move returns the ANSI sequence that moves the cursor to
 /// the given 1-based row and column.
-pub fn term_cursor_move(row: Int, col: Int) -> Str {
+pub fn term_cursor_move(row: Int, col: Int) -> Str
+  ensures: result.len() >= 6
+{
   return "\x1b[" + convert.int_to_string(row) + ";" + convert.int_to_string(col) + "H";
 }
 

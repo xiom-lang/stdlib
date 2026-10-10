@@ -13,7 +13,9 @@ use xiom.os.fs;
 
 /// dir_current returns the current working directory.
 /// Delegates to env.current_dir. Complexity: O(1) syscall.
-pub fn dir_current() -> Result[Str, Str] {
+pub fn dir_current() -> Result[Str, Str]
+  ensures: result is Ok => result.len() > 0
+{
   let r = env.current_dir();
   match r {
     Ok(p) => Ok(p);
@@ -103,7 +105,9 @@ pub fn dir_temp() -> Str
 
 /// dir_home returns the current user's home directory, if known.
 /// Delegates to env.home_dir. Complexity: O(1).
-pub fn dir_home() -> Option[Str] {
+pub fn dir_home() -> Option[Str]
+  ensures: result is Some => result.len() > 0
+{
   env.home_dir()
 }
 
@@ -124,7 +128,9 @@ pub fn dir_is_empty(path: Str) -> Bool
 
 /// dir_join joins two path components with the OS separator.
 /// Delegates to io.join_paths. Complexity: O(1).
-pub fn dir_join(a: Str, b: Str) -> Str {
+pub fn dir_join(a: Str, b: Str) -> Str
+  ensures: result.len() == a.len() + b.len() + 1
+{
   io.join_paths(a, b)
 }
 

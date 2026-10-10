@@ -4,6 +4,19 @@ Per the core protocol circuit breaker: after 3 failed attempts on a
 specific issue, stop, log here, and escalate (here: surface to the owner
 / other lanes). Entries newest-first.
 
+## 2026-10-10 18:55 UTC -- wave-105 corpus: 5 transient clang driver crashes under 8-way load
+
+- RESOLVED 2026-10-10 19:02 UTC: all 5 files (kat_crypto_hmac_rfc4231,
+  smoke_collections_btree_set, smoke_convert_roundtrip, smoke_net_jwt,
+  smoke_stats) compile+run green when re-run solo on the same tree with
+  the official v0.64.2 archive binary. The batch pass recorded them as
+  `clang failed with exit code -1` with only the module-triple warning
+  (no diagnostic), so this is a driver crash, not a type error; their
+  import sets do not overlap the wave-105 os/clause edits.
+- Prevention: on a battery pass with isolated `clang -1` crashes, re-run
+  those files solo (or use -RetryFailed) before treating them as
+  regressions, and note the retry in the wave record.
+
 ## 2026-10-10 01:10 UTC -- shared compiler build drifted past the pin (wave-101 first battery)
 
 - RESOLVED 2026-10-10 01:14 UTC: re-ran the wave-101 battery with the
