@@ -67,7 +67,7 @@ and covered the math remainder (decompose 100%, fuzzy 85.7%,
 game_theory 46.2%, chaos 100%; 46 pub, 97 clauses) plus the W-5
 `Vec[UInt8].with_len(n)` wishlist feature. Math 53.0%, global 64.3%,
 meter 76.4%; handoff in `docs/stdlib_session.md` snapshot 27 (block 91),
-wave records blocks 89/90/91.
+wave records blocks 89-93.
 BINARY NOTE: the shared local build path
 `E:\xiom-lang\xiom\target\release\xiom.exe` was rebuilt past the pin
 (compiler main da7798da m252) and fails four corpus smokes; use the
@@ -755,6 +755,21 @@ verify stdlib-v0.64.3 (d052a3c5) during its v0.64.3 candidate gates.
 Housekeeping in the same relay: the wave-97 sibling-alias split-probe
 workaround was DROPPED -- p_wave97_bitwise_shapes.xi was merged back into
 p_wave97_shapes.xi and re-run green on v0.64.2 (probe corpus stays 272).
+
+Update 2026-10-10 (relay bus onboarding + first processing round): the
+stdlib lane is on `xiom-lang/xiom-relays` (working instructions in
+AGENTS.md + session section 0B; a 2h doorbell cron is live). The 14 open
+compiler-finding entries were migrated one-per-entry (ids in the
+known_failures README Current header) plus the shared-build drift item.
+First inbound round: 5 items fixed with refs -- bindings-9
+(Vec.with_len, 5b7bf8f), bindings-10 (dl out-param recipe, c146cc1),
+xvector-7 (json depth cap, 5b7bf8f), packages-2/3 (wave-98 contract
+fixes, 2e55b13); 23 acked with plans (runtime-bundle queue plus two
+wave-103 quick wins: pulse-6 sleep_ms root-caused to the integer
+division, website-10 no-NASM crypto triage); one ops tool bug filed
+(REL-20261010-1553-stdlib; the resolver's exact-id collision blocks ack
+on two items). The owner-authorized darwin one-off 48850df (macOS
+runtime-C guards) was reviewed and accepted. Bus commit: 62d48e3.
 
 Update 2026-10-10 (wave 102 landed): json depth cap FIXED + math
 remainder covered + W-5 delivered -- 97 clauses, +46 pub. json:

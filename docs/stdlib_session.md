@@ -65,10 +65,11 @@ creation failed on token scope:
 (b) the staging canary (run 37968157641) still waits for environment
 approval (optional); (c) add `categories` (1-3 from the registry
 vocabulary) and `stage` ("incubating"|"stable") to package.xi BEFORE the
-next candidate cut; (d) the repaired heavy matrix passes ubuntu/windows
-but the macos-14 corpus leg is red (PULSE macOS runtime-C blockers
-suspected: `_SC_AVPHYS_PAGES` needs `#ifdef __APPLE__`, the
-fp128_helpers x86 asm needs `__x86_64__`).
+next candidate cut; (d) the repaired heavy matrix passes ubuntu/windows;
+the macos-14 corpus leg was unblocked by the owner-authorized darwin port
+(48850df, PULSE-applied: the free-memory __APPLE__ guard + x86-64-only
+fp128 shims) -- re-run the leg; a mach `host_statistics64` follow-up is
+queued.
 
 Gates on v0.64.2 (official archive): release corpus **954/954 FULL**,
 modules **509/509**, probes **276/276** (wave 101 + p_wave102_shapes.xi +
@@ -106,7 +107,8 @@ vec-shape AV, cross-type generic callbacks, payload reads, polygon
 (stdlib). B-05 guard-heap spin is RUNTIME-side in THIS repo
 (`runtime/xiom_runtime.c` guard arena; repro under
 `E:\xiom-packages\packages\docs\repro\bindings-pilot\alloc-guard-spin`);
-the macOS runtime-C guards are also ours.
+the macOS runtime-C guards were fixed by the owner-authorized one-off
+48850df (a mach `host_statistics64` follow-up stays queued).
 
 FIRST TASK (wave 103): **os 26.6%** (err/event/fs/file/dir/sysinfo/
 terminal/signal surfaces; inspect each runtime-backed surface before
@@ -117,9 +119,12 @@ runtime-backed wishlist asks when the compiler runtime bundle moves
 truncate family, durable `flush_stdout`, signal-handler installation),
 the remaining math-tail stubs when their compiler blockers lift (fuzzy
 relations, game_theory stubs, calc/information-theory matrix stubs), and
-the runtime-C items (macOS guards, B-05). The 2026-10-10 five-lane fetch
-is recorded in `docs/STDLIB-WISHLIST.md` ("Relay status 2026-10-10" +
-the wave-102 resolutions note).
+the runtime-C items (B-05; the macOS guards landed via 48850df). The
+relay queue is live: process items to stdlib each session (the wave-103
+quick wins are pulse-6 sleep_ms, root-caused to the integer division
+`ms / MILLIS_PER_SEC`, and website-10 no-NASM crypto triage). The
+2026-10-10 five-lane fetch is recorded in `docs/STDLIB-WISHLIST.md`
+("Relay status 2026-10-10" + the wave-102 resolutions note).
 
 Mandatory protocol: (1) body-derived clauses only, no placeholders/
 payload reads; canonical `result is Ok =>` guard form; file new findings
@@ -2131,6 +2136,41 @@ registry pin, agent recon for the rest)**
   gates; open: contract coverage 100%, zero open findings, beta-exit release
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
+
+**SESSION 2026-10-10 block 93 (relay bus: first processing round -- 5 items fixed with refs, 23 acked, 1 ops bug filed, 48850df reviewed, doorbell live)**
+- The 14 migrated compiler-finding items reached the bus (the created
+  files were swept into other lanes' commits; verified in history) plus
+  the shared-build drift item; the id map is in the known_failures
+  README Current header.
+- Fixed with evidence (the reporters verify at the next release check):
+  bindings-9 (`Vec.with_len`, commit:5b7bf8f), bindings-10 (dl
+  out-param recipe, commit:c146cc1), xvector-7 (json depth cap,
+  commit:5b7bf8f), packages-2/3 (the wave-98 read_file_lines +
+  to_string_char contract fixes, commit:2e55b13).
+- Acked with plans (23): bindings-8 (the B-05 runtime half stays open;
+  the loud-rule half is already in place), website-10 (no-NASM crypto
+  stubs -- security triage first; candidate wave-103 fix-first),
+  website-2 (pin metadata at the next cut), pulse-5 (list_dir --
+  suspected reused readdir buffer; wave-103 candidate), pulse-6
+  (sleep_ms root cause found: the integer division `ms /
+  MILLIS_PER_SEC` truncates sub-second values to zero; fix by delegating
+  to the runtime ms sleep; wave-103 candidate), pulse-7 (darwin one-off
+  accepted), orbitdb-3..8, packages-4..7 and xvector-2..6/8 (all on the
+  runtime bundle queue).
+- BLOCKED by a tool bug: ack on REL-20261010-1550-packages (fsync) and
+  REL-20261010-1550-website fails because the resolver treats the exact
+  id as an ambiguous prefix of its numbered siblings; filed to ops as
+  REL-20261010-1553-stdlib. Both stay open until the resolver prefers an
+  exact stem match.
+- Owner-authorized one-off 48850df (applied by PULSE) accepted: darwin
+  portability landed on stdlib main -- `xiom_free_memory` returns -1 on
+  __APPLE__ (no `_SC_AVPHYS_PAGES`) and the fp128 SysV asm shims compile
+  only on x86-64; Linux paths unchanged. A mach `host_statistics64`
+  implementation is queued as follow-up and the heavy macos-14 leg can
+  be re-run.
+- Bus commit: 62d48e3 (stdlib lane). Doorbell cron is live (every 2h:
+  pull, process items to stdlib, update statuses; renew it at the next
+  startup if the session dies).
 
 **SESSION 2026-10-10 block 92 (relay-bus onboarding: ack, 14-item migration, inbound triage, doorbell)**
 - Bus: `E:\xiom-lang\xiom-relays` pulled (ff-only); README + PROTOCOL
