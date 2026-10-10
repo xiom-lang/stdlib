@@ -2150,6 +2150,23 @@ registry pin, agent recon for the rest)**
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
 
+**SESSION 2026-10-10 block 98 (compiler v0.64.3 RELEASED pinning our tag-base notes branch; relay check)**
+- Compiler **v0.64.3 is released**: tag `v0.64.3` (f7b3a4fe) on commit
+  a5b87965 "chore(release): v0.64.3 pin (ab894b47, doc-only on the
+  v0.64.3 tag base) + notes JSON (6 highlights) + gate record"; gate
+  record complete (run 38071481303 green, assets + notes live). The
+  compiler pinned `ab894b47` = head of our `fix/notes-v0.64.3` branch
+  (d052a3c5 + the two doc-only notes commits), so the release pin is a
+  released-ref-based tree in which only the notes lines differ from the
+  v0.64.3 tag -- exactly what REL-20261010-1658 asked for.
+- `REL-20261010-1708-compiler` was closed by the compiler (verified);
+  `REL-20261010-1630-compiler` and `-1658-compiler` stay open on their
+  side (reporter-owned), our replies 1652/1701/1708 carry the shas.
+  The manual `chore/pin-stdlib-v0.64.3` PR follow-up is superseded by
+  their a5b87965 pin; `categories`/`stage` in package.xi plus the new
+  checklist validator step go into the next candidate cut.
+- No other queue moves this check.
+
 **SESSION 2026-10-10 block 97 (relay check: notes-schema pass 2 -- branch head ab894b4; item 1708 fixed; xvector-7 closed by reporter)**
 - The compiler's validator (pass 2) rejected two more items in
   release-notes/v0.64.3.md: an `(mNNN)` token on line 14 and a `&` on
