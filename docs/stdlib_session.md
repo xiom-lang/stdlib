@@ -2150,6 +2150,26 @@ registry pin, agent recon for the rest)**
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
 
+**SESSION 2026-10-10 block 97 (relay check: notes-schema pass 2 -- branch head ab894b4; item 1708 fixed; xvector-7 closed by reporter)**
+- The compiler's validator (pass 2) rejected two more items in
+  release-notes/v0.64.3.md: an `(mNNN)` token on line 14 and a `&` on
+  line 17, across highlights AND known issues. Both fixed on the tag-base
+  branch and on main; a full banned-char scan (`>` `<` `&` backtick,
+  m/r task-id tokens) is clean.
+  - Branch `fix/notes-v0.64.3` head is now **ab894b4** (chain
+    d052a3c5 -> f475c9d -> ab894b4; tree identical to the v0.64.3 tag
+    apart from the notes lines). `REL-20261010-1708-compiler` moved
+    open -> acked -> fixed with that sha (the id was unique, so the
+    resolver worked this time).
+  - Main carries the same content (`d97d5bc`), and
+    `docs/RELEASE_CHECKLIST.md` item 3 now runs the compiler validator
+    (`cargo run -q -p xiom-release-notes -- convert --tag <tag>
+    --stdlib <checkout>`) before tagging, with the banned-character and
+    task-id rules spelled out.
+- `REL-20261010-1550-xvector-7` (json depth cap) was closed by the
+  reporter lane -- verified after our wave-102 fix. No other queue
+  moves this check.
+
 **SESSION 2026-10-10 block 96 (doorbell 17:00Z: tag-base notes fix for the v0.64.3 pin; no other queue moves)**
 - Compiler follow-up REL-20261010-1658-compiler (high): pinning 35efaf8
   would import 18 unreleased commits (waves 98-103; 23
