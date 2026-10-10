@@ -22,6 +22,15 @@ mismatch fails the release before the gates run.
    the compiler lane's draft already carries 4, so the stdlib fragment must
    stay at **2** highlights.
    Current draft: `release-notes/v0.64.3.md` (2 highlights).
+   Run the compiler's validator locally BEFORE tagging (it is the
+   authority; the v0.64.3 fragment failed it three times -- arrows, an
+   `(mNNN)` token, and a `&`):
+   ```
+   cargo run -q -p xiom-release-notes -- convert --tag <tag> --stdlib <stdlib checkout>
+   ```
+   It validates highlights AND known issues: no `>` `<` `&` or backtick in
+   plain text (spell arrows as "to"), no internal task ids (tokens like
+   `m242`/`r123`), plain ASCII.
 4. **`CHANGELOG.md`** -- move `## [Unreleased]` entries under
    `## [X.Y.Z] - YYYY-MM-DD` (Keep a Changelog layout).
 5. **Local gate battery** (must be green on the exact commit):
