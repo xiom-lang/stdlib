@@ -944,7 +944,7 @@ pub fn write_file_bytes(path: Str, data: &Vec[UInt8]) -> Result[Unit, IOError]
 /// read_file_bytes reads a file and returns its raw bytes.
 /// Complexity: O(n) where n = file size.
 pub fn read_file_bytes(path: Str) -> Result[Vec[UInt8], IOError]
-  ensures: result is Ok => result.len() >= 0
+  ensures: (path.len() == 0) => (result.is_err == true)
 {
   let c_path = path.c_str();
   let ptr: *UInt8;

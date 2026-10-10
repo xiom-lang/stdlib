@@ -2327,6 +2327,26 @@ registry pin, agent recon for the rest)**
   279/279 (304.7s), modules 509/509 (184.4s), barename 0/509 (263.1s),
   floors142 + doc + module-smoke (497/517, 3476/6204) ratchets OK.
 
+**SESSION 2026-10-10 block 104 (doorbell 23:00Z: website-10 verified-closed; pulse-2 nested-read trap fixed -- read_file_bytes clause made payload-free)**
+- REL-20261010-1549-website-10 (no-NASM crypto stubs) was VERIFIED and
+  CLOSED by the website lane after the concurrent session's portable
+  crypto fix (5468469) -- reporter-verified.
+- NEW inbound (high): REL-20261010-2122-pulse-2 -- serving a nested
+  static file traps 'contract violated: ensures at 947:12', killing the
+  PULSE static-site process, while flat reads pass (both on the CI pin
+  and lane HEAD); PULSE links it to the payload-read class
+  (REL-20261010-1549-stdlib-6). Diagnosis: the clause
+  `ensures: result is Ok => result.len() >= 0` on read_file_bytes reads
+  the payload length in a clause (a tautology in any case).
+  FIX: payload-free replacement
+  `ensures: (path.len() == 0) => (result.is_err == true)` (the body
+  already errors on an empty path through the runtime read). Verified:
+  empty path Err, nested-path read (sub/index.html) Ok with the right
+  length, flat read Ok; xiom.io probe-check PASSED; smoke_io family
+  18/18 and smoke_compress 9/9 green. The bus item moved acked -> fixed
+  with the fix commit.
+- No other queue moves this round.
+
 **SESSION 2026-10-10 block 103 (relay website-10 triage + no-NASM crypto fix; the pin's driver builds -DXIOM_NO_ASM; aarch64 AES finding)**
 - RELAY website-10 (security, no-NASM crypto stubs) TRIAGED + FIXED:
   under -DXIOM_NO_ASM the runtime defined empty AES symbols (writes
