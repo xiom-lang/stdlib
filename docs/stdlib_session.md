@@ -17,6 +17,150 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
+## 0A. CONTINUE HERE -- handoff snapshot 28 (updated 2026-10-10, pin v0.64.2 OFFICIAL ARCHIVE binary; compiler v0.64.3 RELEASED pinning ab894b47; waves 93-104 landed; next = wave 105; relay bus live; binary-drift warning)
+
+**PASTE-READY PROMPT FOR THE NEXT SESSION (copy this block):**
+
+---
+
+You are continuing the XIOM stdlib lane. Worktree `E:\xiom-lang\stdlib`,
+branch `main`. Read `docs/stdlib_session.md` blocks 100 (latest), 99,
+98, 97, 96, 95, 94, 93, 92, 91, 90, 89, 88, 87, 86, 85, 84, 83, 82, 81,
+80, 79, 78, 77, 76, 75, 74, 73, 72, 71, 70, 69, 68, 67, 66, 65, 64, 63,
+62, 61, 60, 59, 58, 57, 56, 55, 54, 53, 52, 51, 50, 49, 48, 47, 46, 45,
+44, 43 (publish), 27 (iter block) and `docs/PRODUCTION_READINESS_QUEUE.md`
+before acting; snapshots 27/26/25 below and snapshot 5 keep the deeper
+history/lore. Cross-lane coordination runs on the xiom-relays bus
+(section 0B + AGENTS.md): pull it at session start and before finishing
+(`git -C E:\xiom-lang\xiom-relays pull --ff-only`, then
+`python tools/relay.py view --lane stdlib`), process items addressed to
+stdlib, never edit another lane's item. Ecosystem relays feed
+`docs/STDLIB-WISHLIST.md`; runtime-backed asks queue with the compiler
+runtime bundle.
+
+STATE (2026-10-10): compiler pin = **v0.64.2**, USE THE OFFICIAL ARCHIVE
+BINARY `%TEMP%\kilo\stdlib_ws\v0.64.2\bin\xiom.exe` (tag c51170a6).
+WARNING: the shared local build
+`E:\xiom-lang\xiom\target\release\xiom.exe` was rebuilt past the tag
+(m252) and fails four corpus smokes the pin passes; do NOT use it for
+batteries until rebuilt from the tag. The compiler lane's **v0.64.3 IS
+RELEASED**: tag f7b3a4fe on a5b87965 pinned STDLIB_VERSION =
+`ab894b47` (head of our `fix/notes-v0.64.3` branch: the v0.64.3 tag
+base plus the two doc-only notes commits), gate record complete (run
+38071481303 green, assets + notes live). stdlib-v0.64.3 remains
+published (registry live, lineage 0.63.0 -> 0.64.2 -> 0.64.3). Release
+follow-ups: the manual `chore/pin-stdlib-v0.64.3` PR is superseded by
+that pin -- no action; the staging canary (37968157641) is
+optional-pending; at the NEXT candidate cut add `categories` + `stage`
+to package.xi and run the notes validator per `docs/RELEASE_CHECKLIST.md`
+item 3 (banned in notes text: `>` `<` `&` backtick, `mNNN`/`rNNN`
+tokens; plain ASCII only).
+
+Gates on v0.64.2 (official archive): release corpus **954/954 FULL**,
+modules **509/509**, probes **278/278**, barename **0/509**, floors141,
+module-smoke ratchet (497/517, 3476/6204) and doc ratchet OK.
+Coverage = **65.0%** global pub-with-clause (meter 76.5%). Waves after
+snapshot 24: 93 (iter + format.text; 71 clauses), 94 (cmp/core/sync/
+terminal; 86), 95 (format remainder; 82), 96 (array/sort/bits; 53), 97
+(bits/hash/fraction; 57), 98 (M7 closure rewrite + contract fixes; 7),
+99 (crypto/math; 26), 100 (finance/information theory; 35), 101
+(graph_theory + machine_learning; 121 clauses / +63 pub), 102
+(json_parse depth cap FIXED + decompose/fuzzy/game_theory/chaos; 97
+clauses / +46 pub + the W-5 Vec.with_len feature), 103
+(sleep_ms/sleep runtime-sleep fix + os batch 1 fs/file/dir/platform/
+err/args; 46 clauses / +42 pub; two new compiler findings), 104 (Instant
+millisecond resolution + buffered-stdin normalization -- relay
+benchmark-2/3 fixes; probe 278th; coverage flat). Dir deltas: iter
+46.4%, format 88.7%, cmp 100%, core 45.8%, sync 35.9%, array 77.8%,
+sort 42.6%, bits 74.3%, hash 51.1%, crypto 47.0%, num 37.6%, math 53.0%
+(graph_theory 100%, machine_learning 96.9%, decompose 100%, fuzzy 85.7%,
+game_theory 46.2%, chaos 100%), os 38.0% (the rest largely stub-gated).
+
+Findings (16 Current: 15 compiler + 1 stdlib; the relay bus is the
+tracker, ids in the `tools/known_failures/README.md` Current header).
+Wave-103/104 additions: `p_result_payload_index_concat.xi` (inline
+`Result.value[i]` in an rvalue context reads bits;
+REL-20261010-1609-stdlib) and `p_path_println_context_crash.xi`
+(Path.exists + trailing printlns dies with exit -1073741795;
+REL-20261010-1615-stdlib). Still open compiler-side: tuple-literal
+element read, tostring import, mut-param @pre, generic by-ref
+Option/Slice, alias type paths / foreign calls, ensures-isok, clause
+float-vec, geom Box, geom matrix infer, polyhedra hull, vec-shape AV,
+catalog payload reads, cross-type callbacks. Stdlib-side: polygon.
+Runtime-side items are OURS: B-05 guard-heap spin
+(`runtime/xiom_runtime.c`); darwin-x64 fp128 tf symbols under Apple
+clang (pulse-2, needs a Mac runner; the 48850df pass only fixed the
+arm64 compile + `_SC_AVPHYS_PAGES`).
+
+RELAY QUEUE (process every session; the doorbell cron runs 2-hourly):
+open items to stdlib: `REL-20261010-1550-packages` (real io.fsync) and
+`REL-20261010-1550-website` (accelerated-path transparency) are blocked
+only by the ops resolver bug on their exact ids -- check whether
+relay.py got the exact-stem fix (ops bug REL-20261010-1553-stdlib).
+Acked families queued for runtime waves: fsync/byte-IO/truncate/
+flush_stdout (orbitdb-3..8, xvector-2..8, packages-4..7), website-10
+no-NASM crypto triage (security, high), playground-4 stdin docs,
+pulse-2 darwin fp128, bindings-8 (guard-aware free; runtime half with
+B-05). `REL-20261010-1630/1658-compiler` are superseded by the released
+v0.64.3 pin; leave them for the compiler to close.
+
+FIRST TASK (wave 105): **os batch 2** -- the claimable remainder
+(dir/file/fs tails, env, sysinfo, term, args, proc, os, process,
+signal; the documented stubs across event/terminal/mmap/sync_io/unix/
+win/ioctl/fs_ffi/proc_ffi stay clause-free), batching toward 40-60 pub.
+Then the relay queue (website-10 no-NASM crypto triage first -- it is a
+security item; then check the resolver fix) and the runtime-backed
+wishlist asks when the compiler runtime bundle moves (address-aware
+socket bind, `socket_recv_into`, the fsync/append-bytes/truncate family,
+durable `flush_stdout`, signal-handler installation), the remaining
+math-tail stubs when their compiler blockers lift (fuzzy relations,
+game_theory stubs, calc/information-theory matrix stubs), and the
+runtime-C items (B-05; darwin-x64 fp128 = pulse-2).
+
+Mandatory protocol: (1) body-derived clauses only, no placeholders/
+payload reads; canonical `result is Ok =>` guard form; file new findings
+as minimal repros + README entry. (2) probe-first
+`tools/probes/p_wave105_shapes.xi`, bind returned values before
+comparing, green on v0.64.2 (the official archive binary -- see the
+binary-drift warning). (3) apply, targeted smokes, bisect/drop on
+codegen breaks; when a deliberate semantic change lands, remerge the old
+locks that still assert the old behavior (wave-104 precedent:
+p_wave66_shapes.xi). (4) dump `tools/coverage_floors142.json`, wire
+workflows + tools/README + plan/session/queue in one commit, YAML check,
+pure-ASCII commit. (5) battery: corpus 954/954, probes expect 279,
+modules 509/509, barename 0/509, floors142 + module-smoke ratchets;
+push `main` with the one-shot Lefteris-Notas credential (403 as
+Lefteris-Ngonart; GitHub 500s per failed_attempts.md). (6) no unbounded
+scratch benchmarks. (7) release side follows the candidate-tag pin
+protocol; do NOT tag/publish without the compiler-lane OK (a security
+exception needs an explicit note).
+
+HANDOFF NOTE: locks include p_pin0641_iter_shapes.xi, the wave-77 stats
+probe, the PULSE hardening probe, the wave-78..104 coverage probes
+(wave 101 added p_wave101_shapes.xi; wave 102 added p_wave102_shapes.xi
+plus the promoted p_json_parse_depth_cap.xi; wave 103 added
+p_wave103_shapes.xi; wave 104 added p_wave104_shapes.xi and remerged
+p_wave66_shapes.xi to the millisecond Instant semantics),
+p_str_split_scale.xi, the io locks (p_read_file_lines_crlf.xi,
+p_fs_remove.xi) and the promoted regression locks
+(p_rvalue_float_vec_index.xi, p_multipart_parse_name.xi,
+p_iter_range_collect_forwardref.xi) -- **278 probes total**. Open repros
+on v0.64.2: the 16 Current findings' repros (see
+tools/known_failures/README.md; the new p_result_payload_index_concat.xi
+and p_path_println_context_crash.xi are rc 1 / exit -1073741795).
+docs/failed_attempts.md logs push and environment incidents (incl. the
+compiler-binary drift); out/*.json is disposable working space and the
+old relay drops were retired to the bus (REL-20261010-1559-stdlib
+records the pin protocol). CAUTION: never run large synthetic
+benchmarks unbounded (block-75 runaway incident); the heavy macos-14
+leg can be re-run now that the darwin guards landed (48850df), and
+darwin-x64 still needs the fp128 tf wrappers (pulse-2).
+
+---
+
+Snapshot 27 below retains the wave-103-era prompt with later
+incremental updates; snapshots 26/25 keep earlier prompts.
+
 ## 0A. CONTINUE HERE -- handoff snapshot 27 (updated 2026-10-10, pin v0.64.2 OFFICIAL ARCHIVE binary; waves 93-104 landed incl. the json depth fix + math remainder + W-5 + os batch 1 + the relay Instant/stdin fixes; next = wave 105; binary-drift warning; candidate-tag pin protocol; relay bus live)
 
 **PASTE-READY PROMPT FOR THE NEXT SESSION (copy this block):**
@@ -2157,6 +2301,20 @@ registry pin, agent recon for the rest)**
   gates; open: contract coverage 100%, zero open findings, beta-exit release
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
+
+**SESSION 2026-10-10 block 100 (handoff refresh: snapshot 28 paste-ready; compiler v0.64.3 released pinning ab894b47; relay queue re-checked)**
+- Snapshot 28 is the paste-ready prompt for wave 105: compiler v0.64.3
+  released (tag f7b3a4fe / a5b87965, STDLIB_VERSION = `ab894b47`); waves
+  93-104 landed; coverage 65.0% (os 38.0%, math 53.0%); probes 278;
+  floors141; findings 16 Current (15 compiler + 1 stdlib); the relay
+  bus is live with the 2-hour doorbell.
+- Pre-handoff bus check: no new inbound items; benchmark-2/3 are fixed
+  with refs (`commit:633de49`); REL-20261010-1708 and xvector-7 are
+  closed by their reporters; 1630/1658 remain compiler-owned
+  (superseded by the v0.64.3 pin); the two resolver-blocked items
+  (packages fsync, website accelerated-path) stay open until the ops
+  exact-stem fix lands.
+- Working tree: clean except the disposable out/; HEAD 633de49.
 
 **SESSION 2026-10-10 block 99 (wave 104: Instant millisecond resolution + buffered-stdin normalization; probe 278th; fix wave)**
 - FIX-FIRST benchmark-2 (REL-20261010-1554-benchmark-2): `Instant`

@@ -71,8 +71,9 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
 (16 Current). Wave 104 fixed the relay benchmark-2 Instant millisecond
 resolution and benchmark-3 buffered-stdin normalization (probe 278th;
 coverage flat, fix wave). Math 53.0%, os 38.0%, global 65.0%, meter
-76.5%; handoff in `docs/stdlib_session.md` snapshot 27 (block 91
-refresh), wave records blocks 89-99.
+76.5%; handoff in `docs/stdlib_session.md` snapshot 28 (block 100
+refresh; compiler v0.64.3 released pinning ab894b47), wave records
+blocks 89-100.
 BINARY NOTE: the shared local build path
 `E:\xiom-lang\xiom\target\release\xiom.exe` was rebuilt past the pin
 (compiler main da7798da m252) and fails four corpus smokes; use the
