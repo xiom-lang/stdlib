@@ -742,8 +742,8 @@ relay the tostring-import finding; resume coverage (os/hash/num/math/
 crypto); queued feature candidates (Vec[UInt8].with_len, address-aware
 bind, socket_recv_into).
 
-Pin protocol agreed 2026-10-09 (relay `COMPILER-RELAY-2026-10-09-pin-protocol.md`,
-block 86): stdlib tags a CANDIDATE `stdlib-vX.Y.Z` (no registry publish
+Pin protocol agreed 2026-10-09 (bus item REL-20261010-1559-stdlib; the
+old relay drop is retired, block 86): stdlib tags a CANDIDATE `stdlib-vX.Y.Z` (no registry publish
 yet) and relays tag + hash + wave report; the compiler lane verifies the
 candidate against compiler main (vendored sync + STDLIB_VERSION + e2e
 without XIOM_STDLIB + feature + checker corpus + the wave smokes) and

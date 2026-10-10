@@ -48,9 +48,9 @@ d052a3c) -- release.yml run 37962367989 full success and the **REGISTRY
 IS LIVE**: xiom-std 0.64.3 published (signed, sha256
 775496c094d2a1703307313c9139c8cdc959d7687fc7a5b42b57657efa596b17,
 compiler v0.64.2, lineage 0.63.0 -> 0.64.2 -> 0.64.3). **Pin protocol
-agreed with the compiler lane** (relay
-`docs/COMPILER-RELAY-2026-10-09-pin-protocol.md`, untracked per
-convention): tag a CANDIDATE stdlib-vX.Y.Z (no registry publish yet) and
+agreed with the compiler lane** (now recorded on the bus as
+REL-20261010-1559-stdlib; the old relay drop is retired): tag a
+CANDIDATE stdlib-vX.Y.Z (no registry publish yet) and
 relay tag + hash + wave report; the compiler lane verifies (vendored sync
 + STDLIB_VERSION + e2e without XIOM_STDLIB + feature + checker corpus +
 the wave smokes) and replies OK; only then publish to the registry; the
@@ -150,11 +150,12 @@ regression locks (p_rvalue_float_vec_index.xi, p_multipart_parse_name.xi,
 p_iter_range_collect_forwardref.xi) -- **276 probes total**. Open repros
 on v0.64.2: the 15 Current findings' repros (see
 tools/known_failures/README.md). docs/failed_attempts.md logs push and
-environment incidents (incl. the compiler-binary drift);
-out/*.json and the untracked relay drops (docs/COMPILER-RELAY-*.md)
-are disposable working files. CAUTION: never run large synthetic
-benchmarks unbounded (block-75 runaway incident); the heavy macos-14
-leg stays red until the runtime-C guards land.
+environment incidents (incl. the compiler-binary drift); out/*.json is
+disposable working space and the old relay drops were retired to the bus
+(REL-20261010-1559-stdlib records the pin protocol). CAUTION: never run
+large synthetic benchmarks unbounded (block-75 runaway incident); the
+heavy macos-14 leg can be re-run now that the darwin guards landed
+(48850df).
 
 ---
 

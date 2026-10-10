@@ -1,5 +1,19 @@
 # Stdlib wishlist (packages/consumers -> stdlib lane)
 
+BUS NOTE (2026-10-10): cross-lane asks now live as items on the private
+xiom-relays bus (repo `xiom-lang/xiom-relays`); this file is the intake
+archive and history, not the tracker. Open asks relayed on 2026-10-09/10
+migrated to items: bindings (W-2 recipe = REL-20261010-1548-bindings-10,
+confinement rule = -bindings-8, Vec.with_len = -bindings-9), orbitdb
+(fsync/append/truncate/byte-IO/tail = REL-20261010-1550-orbitdb-3..8),
+packages (read_file_lines = -packages-2, to_string_char = -packages-3,
+byte append/truncate/locking/read_exact = -packages-4..7, fsync =
+-packages), xvector (fsync/write_all/append/truncate/f32_bits/json cap/
+flush_stdout = REL-20261010-1550-xvector-2..8), website (crypto stubs =
+REL-20261010-1549-website-10, pin metadata = -website-2). Rows below stay
+for the record; statuses move on the bus. The lane's cross-lane compiler
+findings are also bus items (ids in tools/known_failures/README.md).
+
 Intake record for feature and defect requests relayed by the packages lane.
 Source of record: the packages lane's `docs/STDLIB-WISHLIST.md` sheet; this
 file mirrors the rows relayed on 2026-10-01 so they survive lane handoffs.
