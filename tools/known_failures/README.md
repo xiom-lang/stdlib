@@ -29,9 +29,26 @@ stdlib-side fix landed (closure rewrite of the four adapters; entry moved
 to the history below), the packages rows 168/169 were fixed stdlib-side
 (read_file_lines empty file -> zero lines; to_string_char NUL clause),
 and a new import-corruption finding was filed (second entry below).
-Wave 101 added the tuple-literal element-read corruption (first entry
-below), found by the p_wave101_shapes.xi probe (findings now 15 Current:
-14 compiler, 1 stdlib).
+Wave 101 added the tuple-literal element-read corruption (second entry
+below), found by the p_wave101_shapes.xi probe. The 2026-10-10 five-lane
+wishlist fetch filed the json_parse depth cap (first entry below;
+findings now 16 Current: 14 compiler, 2 stdlib).
+
+**Open finding 2026-10-10 (stdlib, v0.64.2): `json_parse` has no
+recursion depth cap -- deep untrusted input kills the process.** Relayed
+by the XVECTOR lane (`probe_http_fuzz` t-unbalanced; their HTTP edge
+pre-scans with `json_depth_ok(body, 64)`) and verified natively on the
+official v0.64.2 archive (Windows x64): a run of `[` nested 300+ deep
+overflows the process stack before any error path (exit -1073741795,
+0xC000001D) while depths 100/150/200 return the graceful
+"expected ']' or ','" Err; balanced vs unbalanced makes no difference at
+this floor. Fix-first: thread a depth counter through
+`_json_parse_value` / `_json_parse_array` / `_json_parse_object` and
+return Err at the cap; a cap around 128 (serde_json's default, well
+under the observed ~300 floor) keeps ordinary payloads -- and XVECTOR's
+64-deep guard -- safe with margin. Repro:
+`tools/known_failures/p_json_parse_depth_cap.xi` (dies pre-fix; expected
+rc 0 = Err).
 
 **Open finding 2026-10-10 (compiler v0.64.2): an inline Vec element read
 inside a tuple literal corrupts the Float64 component.** While landing

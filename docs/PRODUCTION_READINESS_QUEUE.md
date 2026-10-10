@@ -27,7 +27,7 @@ gates flip:
 7. Module-smoke ratchet green -- MET (497/517 modules, 3477/6202 fns).
 8. Contract coverage 100% (every public fn carries clauses) -- OPEN (63.6%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
-   OPEN (14: 13 compiler, 1 stdlib algorithm).
+   OPEN (16: 14 compiler, 2 stdlib).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
 
 Meter formula: MET gates count 1.0; gate 8 counts its current
@@ -56,9 +56,15 @@ sizes, xxhash/city empty pins and math constants; wave 100 added the
 finance/information-theory guard surfaces; wave 101 added graph_theory
 (32/32) + machine_learning (31/32) and caught two fix-firsts
 (floyd_warshall's 2n-row defect; metric_auc's corrupted tuple scores --
-filed as the new compiler finding `p_tuple_elem_vec_read.xi`; findings
-15 Current). Coverage 63.6%, meter 76.4%; handoff in
-`docs/stdlib_session.md` snapshot 25 (block 88), wave record block 89.
+filed as the new compiler finding `p_tuple_elem_vec_read.xi`). The
+2026-10-10 five-lane wishlist fetch added one row: XVECTOR's
+`json_parse` recursion-depth cap (verified natively: depth 300+ dies,
+0xC000001D; filed as finding #16, repro
+`p_json_parse_depth_cap.xi`) -- first wave-102 item; the other four
+lanes had no deltas. Findings 16 Current (14 compiler, 2 stdlib).
+Coverage 63.6%, meter 76.4%; handoff in
+`docs/stdlib_session.md` snapshot 26 (block 89 refresh), wave records
+blocks 89/90.
 BINARY NOTE: the shared local build path
 `E:\xiom-lang\xiom\target\release\xiom.exe` was rebuilt past the pin
 (compiler main da7798da m252) and fails four corpus smokes; use the
@@ -746,6 +752,24 @@ verify stdlib-v0.64.3 (d052a3c5) during its v0.64.3 candidate gates.
 Housekeeping in the same relay: the wave-97 sibling-alias split-probe
 workaround was DROPPED -- p_wave97_bitwise_shapes.xi was merged back into
 p_wave97_shapes.xi and re-run green on v0.64.2 (probe corpus stays 272).
+
+Update 2026-10-10 (five-lane stdlib-wishlist fetch): sources re-read
+directly on the lanes' working trees (packages, bindings, PULSE,
+ORBITDB, XVECTOR; the remaining lanes were swept for asks too). ONE new
+row ecosystem-wide: XVECTOR's bounded-depth `json_parse` recursion
+guard -- `xiom.serialize.json.json_parse` recurses without a cap and a
+deep `[` run kills the process before any error path; verified natively
+on the official v0.64.2 archive (Windows x64): depths 100/150/200
+return the graceful Err, depth 300+ dies with exit -1073741795
+(0xC000001D), depth 60000 likewise. Recommended cap ~128 (serde_json
+default; the observed floor is ~300 on Windows). Filed as finding #16
+with repro `tools/known_failures/p_json_parse_depth_cap.xi` (dies
+pre-fix; expected rc 0 = Err) and queued as the FIRST wave-102 item.
+Packages/bindings/PULSE/ORBITDB rows are unchanged (no new asks since
+2026-10-09; bindings' new B-11 plus the re-verified B-10/B-05 are
+compiler-lane items, no stdlib action). Full delta in
+`docs/STDLIB-WISHLIST.md` ("Relay status 2026-10-10") and session
+block 90. Findings now 16 Current (14 compiler, 2 stdlib).
 
 Update 2026-10-10 (wave 101 landed): graph_theory + machine_learning --
 121 clauses, +63 pub covered. graph_theory 32/32 (100%): the

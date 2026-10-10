@@ -363,3 +363,44 @@ rewrite landed (`Range.step_by`/`take_while`/`skip_while`/`inspect`); the
 compiler-lane "stdlib-side fix" note is satisfied. New compiler finding
 from the same wave: importing `xiom.convert.tostring` corrupts closure
 predicate dispatch (`p_tostring_import_breaks_adapters.xi`).
+
+Relay status 2026-10-10 (five-lane fetch; sources re-read directly on the
+lanes' working trees; every lane is active today):
+
+- XVECTOR (source updated 2026-10-10 04:12): **NEW seventh row --
+  bounded-depth `json_parse` (recursion guard).**
+  `xiom.serialize.json.json_parse` recurses per nesting level with no
+  cap; a ~60 KB run of `[` (`probe_http_fuzz` t-unbalanced) overflows the
+  process stack (their evidence: access violation 0xC0000005, exit
+  -1073741819). Workaround: XVECTOR pre-scans with
+  `json_depth_ok(body, 64)` at the HTTP edge. Requested: an internal
+  depth cap returning Err. VERIFIED NATIVELY on the official v0.64.2
+  archive (Windows x64, 2026-10-10): depths 100/150/200 return the
+  graceful "expected ']' or ','" Err; depth 300+ dies with exit
+  -1073741795 (0xC000001D) before any error path; depth 60000 likewise.
+  Recommended cap ~128 (serde_json's default, well under the observed
+  ~300 floor with margin). Filed fix-first as finding #16
+  (`tools/known_failures/p_json_parse_depth_cap.xi`, dies pre-fix,
+  expected rc 0 = Err); queued as the FIRST wave-102 item. The other six
+  rows are unchanged and still open.
+- Packages (source unchanged since 2026-10-09 20:23; lane active today
+  with xiom.durable/WAL wrap work): no new rows; the newest data rows
+  remain 2026-10-05..2026-10-09, with the 2026-10-09 rows 168/169 FIXED
+  stdlib-side in wave 98; changelog ends at wave 54/55.
+- Bindings (wishlist unchanged 2026-10-09 21:17): no new wishlist rows;
+  W-1/W-4 delivered, W-2 re-scoped to a docs ask (out-param recipe +
+  B-07 alias caveat), W-3 = compiler B-05, W-5 open. The lane's
+  2026-10-10 commits added compiler finding B-11 (out-param slot memory
+  recycled before XIOM can read it under a Vulkan-heavy C call) and
+  re-verified B-10/B-05 on v0.64.2 -- compiler-lane items, no stdlib
+  action.
+- PULSE (wishlist unchanged 2026-10-09 21:31): no new rows since wrap
+  8/8b; the lane wrapped 9-14 today with no new stdlib asks; the open set
+  is unchanged (socket options, address-aware bind, socket_recv_into,
+  /proc read_file_lines, durable flush_stdout, fsync).
+- ORBITDB (wishlist unchanged 2026-10-09 20:27): no new rows; the open
+  set is unchanged (fsync, open_append, truncate, byte IO,
+  append_line_sync, file_last_byte/ends_with_newline).
+- Other lanes (benchmark-chaos, engine, ripple, debugger, book, paper):
+  no stdlib wishlist files or asks (engine/ripple stale since 2026-09-21;
+  benchmark-chaos carries compiler relays only).

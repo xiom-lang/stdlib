@@ -72,13 +72,17 @@ two fix-firsts). Dir deltas: iter 46.4%, format 88.7%, cmp 100%, core
 crypto 47.0%, num 37.6%, math 48.3% (graph_theory 100%,
 machine_learning 96.9%), os 26.6%.
 
-Findings (15 Current: 14 compiler + 1 stdlib) -- since snapshot 25: NEW
+Findings (16 Current: 14 compiler + 2 stdlib) -- since snapshot 25: NEW
 `p_tuple_elem_vec_read.xi` (an inline Vec float element read inside a
 tuple literal corrupts the component on v0.64.2; found by the wave-101
 probe, workaround = bind the element first; RELAY THIS to the compiler
-lane); `p_tostring_import_breaks_adapters.xi` (importing
+lane) and NEW `p_json_parse_depth_cap.xi` (stdlib side:
+`json_parse` has no recursion cap -- a `[` run nested 300+ deep dies
+with exit -1073741795 on the official v0.64.2 archive while 100/150/200
+return the graceful Err; XVECTOR relay, verified natively; fix-first
+with a ~128 cap). `p_tostring_import_breaks_adapters.xi` (importing
 `xiom.convert.tostring` corrupts closure predicate dispatch) still needs
-relaying too. Still open: mut-param field @pre aliasing, generic by-ref
+relaying to the compiler lane too. Still open: mut-param field @pre aliasing, generic by-ref
 Option/Result/Slice, cross-module type paths/foreign calls,
 ensures-isok guard, clause float-vec, geom Box/matrix, polyhedra,
 vec-shape AV, cross-type generic callbacks, payload reads, polygon
@@ -87,7 +91,11 @@ vec-shape AV, cross-type generic callbacks, payload reads, polygon
 `E:\xiom-packages\packages\docs\repro\bindings-pilot\alloc-guard-spin`);
 the macOS runtime-C guards are also ours.
 
-FIRST TASK (wave 102): finish the **math remainder** -- decompose (16
+FIRST TASK (wave 102): (0) fix-first the **json_parse depth cap**
+(finding #16, XVECTOR relay, verified natively; repro
+`tools/known_failures/p_json_parse_depth_cap.xi`; recommended cap ~128;
+thread the counter through `_json_parse_value`/`_json_parse_array`/
+`_json_parse_object`); (1) finish the **math remainder** -- decompose (16
 pub), fuzzy (14; fuzzy_relation/fuzzy_composition stay SKIPPED stubs),
 game_theory (12; the five BUG 23 #1 stubs stay SKIPPED), chaos (12):
 ~54 claimable pub, bodies already recon'd in block 89; then **os 26.6%**
@@ -120,7 +128,7 @@ p_wave101_shapes.xi, 145 checks), p_str_split_scale.xi, the io locks
 (p_read_file_lines_crlf.xi, p_fs_remove.xi) and the promoted regression
 locks (p_rvalue_float_vec_index.xi, p_multipart_parse_name.xi,
 p_iter_range_collect_forwardref.xi) -- **274 probes total**. Open repros
-on v0.64.2: the 15 Current findings' repros (see
+on v0.64.2: the 16 Current findings' repros (see
 tools/known_failures/README.md; the new
 `p_tuple_elem_vec_read.xi` is rc 1). docs/failed_attempts.md logs push
 incidents; out/*.json and the untracked relay drops
@@ -1971,6 +1979,37 @@ registry pin, agent recon for the rest)**
   gates; open: contract coverage 100%, zero open findings, beta-exit release
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
+
+**SESSION 2026-10-10 block 90 (five-lane wishlist fetch: one new row -- XVECTOR json_parse depth cap; verified natively; findings 16)**
+- Sources re-read directly on the lanes' working trees: packages
+  (`E:\xiom-packages\packages\docs\STDLIB-WISHLIST.md`, unchanged since
+  2026-10-09; its newest rows 168/169 were already fixed in wave 98),
+  bindings (`BINDINGS-STDLIB-WISHLIST.md`, unchanged; W-2 is a docs ask,
+  W-3/B-05 and W-5 open; their new B-11 plus the re-verified B-10/B-05
+  are compiler-lane items), PULSE (`STDLIB-WISHLIST-PULSE.md`, no new
+  rows since wrap 8/8b; wraps 9-14 carried no new stdlib asks), ORBITDB
+  (`STDLIB-WISHLIST-ORBITDB.md`, no new rows), XVECTOR
+  (`STDLIB-WISHLIST-XVECTOR.md` updated 2026-10-10 04:12 -- ONE NEW
+  ROW). benchmark-chaos/engine/ripple/debugger/book/paper: no stdlib
+  asks.
+- NEW ROW: bounded-depth `json_parse` recursion guard
+  (`xiom.serialize.json.json_parse` recurses per nesting level with no
+  cap; a ~60 KB `[` run overflows the stack -- XVECTOR `probe_http_fuzz`
+  t-unbalanced; their workaround `json_depth_ok(body, 64)`). VERIFIED
+  NATIVELY on the official v0.64.2 archive (Windows x64, 2026-10-10):
+  depths 100/150/200 -> graceful "expected ']' or ','" Err; depth 300 ->
+  death, exit -1073741795 (0xC000001D); depth 60000 -> death. Crash
+  floor between 200 and 300, so a cap of ~128 (serde_json's default) is
+  the recommended margin.
+- Filed as finding #16 (stdlib; findings 16 Current = 14 compiler +
+  2 stdlib) with repro `tools/known_failures/p_json_parse_depth_cap.xi`
+  (depth 10000; dies pre-fix, expected rc 0 = Err post-fix) plus the
+  README Current entry. Queued as the FIRST wave-102 item (fix-first:
+  thread a depth counter through `_json_parse_value` /
+  `_json_parse_array` / `_json_parse_object`, return Err at the cap).
+- Full delta recorded in docs/STDLIB-WISHLIST.md ("Relay status
+  2026-10-10"); the queue's gate-9 line was bumped 14 -> 16 (it had been
+  left stale by wave 101) and the state paragraph refreshed.
 
 **SESSION 2026-10-10 block 89 (wave 101: graph_theory + machine_learning; two fix-firsts; new compiler finding; floors138; compiler-binary drift incident)**
 - Wave 101: 121 clauses, +63 pub covered, on the official v0.64.2 pin
