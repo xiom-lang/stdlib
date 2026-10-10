@@ -331,6 +331,7 @@ void xiom_f128_from_i128_sret(xiom_f128* out, const unsigned __int128* v, int ne
     *out = xiom_f128_pack(neg, exp, (uint64_t)(sig >> 64), (uint64_t)sig);
 }
 
+#if defined(__x86_64__) || defined(_M_X64)
 /* ============== naked asm shims (IR convention -> sret wrappers) ============ */
 /* Layout at each shim entry (rsp == 8 mod 16):
  *   subq N -> rsp == 0 at the `callq` (N == 8 mod 16, N >= 48)
@@ -478,6 +479,11 @@ __attribute__((used, naked)) void __floatuntitf(unsigned __int128 u) {
         "addq $0x58, %rsp\n\t"
         "retq\n\t");
 }
+
+#else
+/* Non-x86-64 targets (e.g. macOS arm64) take the f128 libcalls from
+   compiler-rt; the SysV sret-wrapping asm shims above are x86-64 only. */
+#endif
 
 /* ============ scalar-return helpers (ABI already matches; unchanged) ====== */
 

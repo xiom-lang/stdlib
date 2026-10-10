@@ -4219,10 +4219,16 @@ long xiom_total_memory(void) {
 }
 
 long xiom_free_memory(void) {
+#if defined(__APPLE__)
+    /* macOS has no _SC_AVPHYS_PAGES; report unknown (-1) until a mach
+       host_statistics64 implementation lands (darwin port, owner-ok). */
+    return -1;
+#else
     long pages = sysconf(_SC_AVPHYS_PAGES);
     long page_size = sysconf(_SC_PAGE_SIZE);
     if (pages < 0 || page_size < 0) return -1;
     return pages * page_size;
+#endif
 }
 
 #endif
