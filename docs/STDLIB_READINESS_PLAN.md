@@ -1410,8 +1410,23 @@ T1/T2 yields.
         and docs/PRODUCTION_READINESS_QUEUE.md; the shared local compiler
         build path drifted past the pin (compiler main da7798da m252;
         use the official archive binary -- see block 89).
+        Wave 102 (2026-10-10): json_parse depth cap FIXED (finding #16,
+        XVECTOR relay; `_JSON_MAX_DEPTH = 128`; repro promoted to
+        tools/probes/p_json_parse_depth_cap.xi; findings 16 -> 15) +
+        the math remainder (decompose 15/15, fuzzy 12/14, game_theory
+        6/13, chaos 13/13; 97 clauses, +46 pub) + wishlist W-5
+        `Vec[UInt8].with_len(n)` (fn Vec.with_len[T]; collections
+        smokes 21/21). math 48.3% -> 53.0%, global 63.6% -> 64.3%,
+        meter 76.4%; floors139. Probe p_wave102_shapes.xi (275th, 118
+        checks) green pre/post; compiler relay
+        docs/STDLIB-RELAY-2026-10-10.md dropped (two findings +
+        B-11/B-10/B-05/XVC-C-13/macOS blockers). Battery on the
+        official v0.64.2 archive: corpus 954/954 (831.6s), probes
+        276/276 (298.3s), modules 509/509 (265.5s), barename 0/509
+        (265.3s), floors139 + doc + module-smoke ratchets OK. Next:
+        os 26.6%, then the runtime-backed wishlist asks.
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors138.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors139.json
         tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;

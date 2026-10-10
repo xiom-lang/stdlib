@@ -1,6 +1,6 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
-**76.4% -- 7 of 10 gates complete; gate 8 at 63.6% (partial credit) and
+**76.4% -- 7 of 10 gates complete; gate 8 at 64.3% (partial credit) and
 gates 9-10 discrete.** (Compiler pin: **v0.64.2**.)
 **Gates: corpus 954/954 full (C001 carve-outs retired on v0.63.1; new
 TcpStream loopback and uuencode roundtrip smokes added), modules 509/509,
@@ -25,13 +25,13 @@ gates flip:
 5. Coverage ratchet green -- MET (floors129).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (497/517 modules, 3477/6202 fns).
-8. Contract coverage 100% (every public fn carries clauses) -- OPEN (63.6%).
+8. Contract coverage 100% (every public fn carries clauses) -- OPEN (64.3%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
-   OPEN (16: 14 compiler, 2 stdlib).
+   OPEN (15: 14 compiler, 1 stdlib).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
 
 Meter formula: MET gates count 1.0; gate 8 counts its current
-pub-with-clause fraction (63.6% -> 0.636); gates 9 and 10 get no partial
+pub-with-clause fraction (64.3% -> 0.643); gates 9 and 10 get no partial
 credit (discrete). Update the percentage and the gate-8 fraction in the
 same commit as each floors dump so the meter moves smoothly toward 80%.
 
@@ -61,10 +61,13 @@ filed as the new compiler finding `p_tuple_elem_vec_read.xi`). The
 `json_parse` recursion-depth cap (verified natively: depth 300+ dies,
 0xC000001D; filed as finding #16, repro
 `p_json_parse_depth_cap.xi`) -- first wave-102 item; the other four
-lanes had no deltas. Findings 16 Current (14 compiler, 2 stdlib).
-Coverage 63.6%, meter 76.4%; handoff in
-`docs/stdlib_session.md` snapshot 26 (block 89 refresh), wave records
-blocks 89/90.
+lanes had no deltas. Wave 102 FIXED it stdlib-side (`_JSON_MAX_DEPTH =
+128`; the repro was promoted to tools/probes, findings 16 -> 15 Current)
+and covered the math remainder (decompose 100%, fuzzy 85.7%,
+game_theory 46.2%, chaos 100%; 46 pub, 97 clauses) plus the W-5
+`Vec[UInt8].with_len(n)` wishlist feature. Math 53.0%, global 64.3%,
+meter 76.4%; handoff in `docs/stdlib_session.md` snapshot 27 (block 91),
+wave records blocks 89/90/91.
 BINARY NOTE: the shared local build path
 `E:\xiom-lang\xiom\target\release\xiom.exe` was rebuilt past the pin
 (compiler main da7798da m252) and fails four corpus smokes; use the
@@ -752,6 +755,30 @@ verify stdlib-v0.64.3 (d052a3c5) during its v0.64.3 candidate gates.
 Housekeeping in the same relay: the wave-97 sibling-alias split-probe
 workaround was DROPPED -- p_wave97_bitwise_shapes.xi was merged back into
 p_wave97_shapes.xi and re-run green on v0.64.2 (probe corpus stays 272).
+
+Update 2026-10-10 (wave 102 landed): json depth cap FIXED + math
+remainder covered + W-5 delivered -- 97 clauses, +46 pub. json:
+`_JSON_MAX_DEPTH = 128` threaded through the parser; Err beyond;
+boundary 128 Ok / 129+60000 Err locked by p_wave102_shapes.xi and the
+promoted tools/probes/p_json_parse_depth_cap.xi; finding #16 resolved
+(findings 16 -> 15 Current: 14 compiler, 1 stdlib). Math: decompose
+15/15 (100%), fuzzy 12/14 (85.7%; the two nested-float relation stubs
+stay), game_theory 6/13 (46.2%; the stubs and alpha_beta stay), chaos
+13/13 (100%); math 48.3% -> 53.0%; global 63.6% -> 64.3% (pubCovered
+4138 -> 4184, clauses 5491 -> 5588); meter 76.4%; floors139. Wishlist
+W-5 `Vec[UInt8].with_len(n)` delivered as `fn Vec.with_len[T]`
+(byte-zeroed element area; the mem.zeroed/mem_set generic calls did not
+resolve under C001, so the zeroing is an in-module byte loop);
+collections smokes 21/21. Compiler relay:
+`docs/STDLIB-RELAY-2026-10-10.md` dropped in the compiler repo
+(untracked) with the two stdlib findings plus the B-11/B-10/B-05/
+XVC-C-13/macOS blockers from the five-lane fetch. Battery on the
+official v0.64.2 archive: corpus 954/954 (831.6s), probes 276/276
+(298.3s), modules 509/509 (265.5s), barename 0/509 (265.3s), floors139
++ doc + module-smoke ratchets OK. Readiness next (wave 103): os 26.6%
+(inspect each runtime-backed surface before claiming), then the queued
+runtime-backed asks (address-aware bind, socket_recv_into, the fsync
+family) with the compiler runtime bundle.
 
 Update 2026-10-10 (five-lane stdlib-wishlist fetch): sources re-read
 directly on the lanes' working trees (packages, bindings, PULSE,

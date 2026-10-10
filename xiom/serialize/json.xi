@@ -19,6 +19,9 @@ module xiom.serialize.json
 // Security notes:
 //   - json_parse rejects trailing characters, malformed tokens, unterminated
 //     strings/escapes, and out-of-range escapes with a descriptive Err.
+//   - json_parse caps nesting at 128 levels (Err "json_parse: nesting too
+//     deep" beyond) so deeply nested untrusted payloads cannot overflow the
+//     process stack.
 //   - json_escape handles the standard control escapes; the backslash, quote,
 //     and control characters are always escaped so output is embeddable.
 //   - Number parsing accepts the JSON grammar subset (no NaN/Infinity).
@@ -68,14 +71,25 @@ fn _json_skip_ws(s: Str, pos: &mut Int) {
 // Parser (recursive descent)
 // ============================================================================
 
-fn _json_parse_value(s: Str, pos: &mut Int) -> Result[JsonValue, Str] {
+/// Maximum nesting depth accepted by the parser. Untrusted input must never
+/// be able to overflow the process stack: each array/object level costs
+/// several stack frames here, and the observed Windows floor for this parser
+/// is between 200 and 300 levels (v0.64.2), so 128 keeps a wide margin on
+/// every platform (serde_json uses the same default). Deeper input returns
+/// Err("json_parse: nesting too deep") instead of dying.
+const _JSON_MAX_DEPTH: Int = 128;
+
+fn _json_parse_value(s: Str, pos: &mut Int, depth: Int) -> Result[JsonValue, Str] {
+  if depth >= _JSON_MAX_DEPTH {
+    return Err("json_parse: nesting too deep");
+  }
   _json_skip_ws(s, pos);
   if *pos >= s.len() {
     return Err("json_parse: unexpected end of input");
   }
   let c = _json_get_char(s, *pos);
-  if c == '{' { return _json_parse_object(s, pos); }
-  if c == '[' { return _json_parse_array(s, pos); }
+  if c == '{' { return _json_parse_object(s, pos, depth); }
+  if c == '[' { return _json_parse_array(s, pos, depth); }
   if c == '"' { return _json_parse_string_val(s, pos); }
   if c == 't' { return _json_parse_literal(s, pos, "true", JsonValue.Bool(true)); }
   if c == 'f' { return _json_parse_literal(s, pos, "false", JsonValue.Bool(false)); }
@@ -105,7 +119,7 @@ fn _json_parse_literal(s: Str, pos: &mut Int, word: Str, val: JsonValue) -> Resu
   return Ok(val);
 }
 
-fn _json_parse_object(s: Str, pos: &mut Int) -> Result[JsonValue, Str] {
+fn _json_parse_object(s: Str, pos: &mut Int, depth: Int) -> Result[JsonValue, Str] {
   *pos = *pos + 1;
   var entries = Map[Str, JsonValue].new();
   _json_skip_ws(s, pos);
@@ -141,7 +155,7 @@ fn _json_parse_object(s: Str, pos: &mut Int) -> Result[JsonValue, Str] {
       return Err("json_parse: expected ':'");
     }
     *pos = *pos + 1;
-    let value_result = _json_parse_value(s, pos);
+    let value_result = _json_parse_value(s, pos, depth + 1);
     match value_result {
       Ok(v) => entries.insert(key, v);
       Err(e) => { return Err(e); }
@@ -164,7 +178,7 @@ fn _json_parse_object(s: Str, pos: &mut Int) -> Result[JsonValue, Str] {
   return Err("json_parse: unexpected end of object");
 }
 
-fn _json_parse_array(s: Str, pos: &mut Int) -> Result[JsonValue, Str] {
+fn _json_parse_array(s: Str, pos: &mut Int, depth: Int) -> Result[JsonValue, Str] {
   *pos = *pos + 1;
   var items = Vec[JsonValue].new();
   _json_skip_ws(s, pos);
@@ -176,7 +190,7 @@ fn _json_parse_array(s: Str, pos: &mut Int) -> Result[JsonValue, Str] {
     }
   }
   loop {
-    let value_result = _json_parse_value(s, pos);
+    let value_result = _json_parse_value(s, pos, depth + 1);
     match value_result {
       Ok(v) => items.push(v);
       Err(e) => { return Err(e); }
@@ -382,7 +396,8 @@ fn _json_parse_number(s: Str, pos: &mut Int) -> Result[JsonValue, Str] {
 // ============================================================================
 
 /// Parse `s` into a JsonValue tree. Returns Err with a descriptive message
-/// on malformed input or trailing garbage.
+/// on malformed input or trailing garbage, and for input nested deeper than
+/// the 128-level cap (`_JSON_MAX_DEPTH`).
 /// Complexity: O(n), n = input length.
 ///
 /// NOTE: the name `json_parse` collides with the parent module's own
@@ -393,7 +408,7 @@ pub fn json_parse(s: Str) -> Result[JsonValue, Str]
   ensures: (s == "null") => (result.is_ok == true)
 {
   var pos = 0;
-  let result = _json_parse_value(s, &pos);
+  let result = _json_parse_value(s, &pos, 0);
   match result {
     Ok(v) => {
       _json_skip_ws(s, &pos);

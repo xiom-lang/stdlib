@@ -29,6 +29,32 @@ fn Vec.with_capacity[T](cap: Int) -> Vec[T] {
   return v;
 }
 
+/// Zero-initialized vector with `len() == n`; `n <= 0` yields an empty
+/// vector. The element area is zeroed byte-wise (this Vec implementation
+/// allocates 8 bytes per slot), so primitive element types
+/// (UInt8/Int/Float64/...) are byte-zero. Intended for sized FFI/out-param
+/// buffers, e.g. `Vec[UInt8].with_len(8)`. O(n).
+fn Vec.with_len[T](n: Int) -> Vec[T]
+  ensures: (n > 0) => (result.len() == n)
+  ensures: (n <= 0) => (result.len() == 0)
+{
+  var v = Vec[T].new();
+  if n <= 0 { return v; }
+  v.reserve(n);
+  unsafe {
+    var b = v.data as *UInt8;
+    var total = n * 8;
+    var i = 0;
+    while i < total {
+      *b = 0 as UInt8;
+      b = b + 1;
+      i = i + 1;
+    }
+  }
+  v.len = n;
+  return v;
+}
+
 fn Vec.push[T](value: T)
   requires: true
   ensures: len() == len()@pre + 1

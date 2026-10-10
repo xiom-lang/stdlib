@@ -95,7 +95,10 @@ pub fn pareto_optimal(payoffs: &Vec[Vec[Float64]]) -> Vec[Int] {
 /// Grand-coalition value v(all players) and a feasible imputation: the tuple
 /// is (grand_coalition_value, equal-share imputation value). Complexity: O(1)
 /// plus the cost of v on the grand coalition.
-pub fn cooperative_game(v: fn(&Vec[Int]) -> Float64, n: Int) -> (Float64, Float64) {
+pub fn cooperative_game(v: fn(&Vec[Int]) -> Float64, n: Int) -> (Float64, Float64)
+  ensures: (n <= 0) => (result.1 == 0.0)
+  ensures: (n > 0) => (result.1 == result.0 / (n as Float64))
+{
   var all = Vec[Int].new();
   var i = 0;
   while i < n {
@@ -114,7 +117,10 @@ pub fn cooperative_game(v: fn(&Vec[Int]) -> Float64, n: Int) -> (Float64, Float6
 /// over all player permutations (exact for n <= 6 via permutations_enum,
 /// approximate for larger n by iterating cyclic shifts). Complexity:
 /// O(n! * n) exact / O(n^2) approximate.
-pub fn shapley_value(v: fn(&Vec[Int]) -> Float64, n: Int) -> Vec[Float64] {
+pub fn shapley_value(v: fn(&Vec[Int]) -> Float64, n: Int) -> Vec[Float64]
+  ensures: (n <= 0) => (result.len() == 0)
+  ensures: (n > 0) => (result.len() == n)
+{
   var out = Vec[Float64].new();
   if n <= 0 { return out; }
   var i = 0;
@@ -177,7 +183,12 @@ pub fn shapley_value(v: fn(&Vec[Int]) -> Float64, n: Int) -> Vec[Float64] {
 /// set of allocations (x1, x2) with x1 + x2 = v({0,1}) and x_i >= v({i}); the
 /// function returns a sample of its extreme points. For other n the function
 /// returns a documented greedy sample. Complexity: O(2^n * v) for small n.
-pub fn game_core(v: fn(&Vec[Int]) -> Float64, n: Int) -> Vec[Vec[Float64]] {
+pub fn game_core(v: fn(&Vec[Int]) -> Float64, n: Int) -> Vec[Vec[Float64]]
+  ensures: (n <= 0) => (result.len() == 0)
+  ensures: (n == 1) => (result.len() == 1)
+  ensures: (n == 2) => (result.len() == 2)
+  ensures: (n > 2) => (result.len() == 1)
+{
   var out = Vec[Vec[Float64]].new();
   if n <= 0 { return out; }
   if n == 2 {
@@ -222,7 +233,10 @@ pub fn game_core(v: fn(&Vec[Int]) -> Float64, n: Int) -> Vec[Vec[Float64]] {
 /// the highest bid at or above the reserve wins at its own bid. Returns
 /// (price, winner_index) or (0, -1) when no bid clears the reserve.
 /// Complexity: O(n).
-pub fn auction(bids: &Vec[Float64], reserve: Float64) -> (Float64, Int) {
+pub fn auction(bids: &Vec[Float64], reserve: Float64) -> (Float64, Int)
+  ensures: (result.1 >= 0) => (result.0 >= reserve && result.1 < bids.len())
+  ensures: (result.1 == -1) => (result.0 == 0.0)
+{
   var best_idx = -1;
   var best = reserve;
   var i = 0;
@@ -241,7 +255,10 @@ pub fn auction(bids: &Vec[Float64], reserve: Float64) -> (Float64, Int) {
 
 /// Dominant-strategy incentive-compatible allocation: bidder i receives a
 /// share of the type-space value proportional to values(i). Complexity: O(n).
-pub fn mechanism_design(type_space: &Vec[Float64], values: fn(Int) -> Float64) -> Vec[Float64] {
+pub fn mechanism_design(type_space: &Vec[Float64], values: fn(Int) -> Float64) -> Vec[Float64]
+  ensures: (type_space.len() == 0) => (result.len() == 0)
+  ensures: (type_space.len() > 0) => (result.len() == type_space.len())
+{
   var out = Vec[Float64].new();
   var n = type_space.len();
   if n == 0 { return out; }
@@ -284,6 +301,8 @@ pub fn replicator_dynamics(payoffs: &Vec[Vec[Float64]], population: &Vec[Float64
 
 /// Payoffs of the one-shot prisoner's dilemma: the tuple is
 /// (mutual_cooperation, mutual_defection) payoff. Complexity: O(1).
-pub fn prisoner_dilemma(defect: Float64, cooperate: Float64) -> (Float64, Float64) {
+pub fn prisoner_dilemma(defect: Float64, cooperate: Float64) -> (Float64, Float64)
+  ensures: result.0 == cooperate && result.1 == defect
+{
   return (cooperate, defect);
 }

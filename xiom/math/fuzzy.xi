@@ -23,7 +23,9 @@ const _PI: Float64 = 3.141592653589793;
 
 /// Membership degrees of the universe elements under the membership fn.
 /// Returns an empty vector for an empty universe. Complexity: O(n).
-pub fn fuzzy_set(universe: &Vec[Int], membership: fn(Int) -> Float64) -> Vec[Float64] {
+pub fn fuzzy_set(universe: &Vec[Int], membership: fn(Int) -> Float64) -> Vec[Float64]
+  ensures: result.len() == universe.len()
+{
   var out = Vec[Float64].new();
   var i = 0;
   while i < universe.len() {
@@ -35,7 +37,9 @@ pub fn fuzzy_set(universe: &Vec[Int], membership: fn(Int) -> Float64) -> Vec[Flo
 
 /// Membership degree of element in a fuzzy set; elements outside the set's
 /// range yield 0.0 (documented). Complexity: O(1).
-pub fn membership(set: &Vec[Float64], element: Int) -> Float64 {
+pub fn membership(set: &Vec[Float64], element: Int) -> Float64
+  ensures: (element < 0 || element >= set.len()) => (result == 0.0)
+{
   if element < 0 || element >= set.len() { return 0.0; }
   return set[element];
 }
@@ -44,7 +48,13 @@ pub fn membership(set: &Vec[Float64], element: Int) -> Float64 {
 /// "and" -> min, "or" -> max, "not" -> 1 - a, "prod" -> a*b,
 /// "sum" -> a + b - a*b (probabilistic or). Unknown op returns NaN.
 /// Complexity: O(1).
-pub fn fuzzy_logic(a: Float64, b: Float64, op: Str) -> Float64 {
+pub fn fuzzy_logic(a: Float64, b: Float64, op: Str) -> Float64
+  ensures: (op == "and") => (result <= a && result <= b)
+  ensures: (op == "or") => (result >= a && result >= b)
+  ensures: (op == "not") => (result == 1.0 - a)
+  ensures: (op == "prod") => (result == a * b)
+  ensures: (op == "sum") => (result == a + b - a * b)
+{
   if op == "and" {
     if a < b { return a; }
     return b;
@@ -67,7 +77,10 @@ pub fn fuzzy_logic(a: Float64, b: Float64, op: Str) -> Float64 {
 
 /// Pointwise minimum (intersection) of two fuzzy sets; empty on length
 /// mismatch. Complexity: O(n).
-pub fn fuzzy_intersection(a: &Vec[Float64], b: &Vec[Float64]) -> Vec[Float64] {
+pub fn fuzzy_intersection(a: &Vec[Float64], b: &Vec[Float64]) -> Vec[Float64]
+  ensures: (a.len() != b.len()) => (result.len() == 0)
+  ensures: (a.len() == b.len()) => (result.len() == a.len())
+{
   var out = Vec[Float64].new();
   if a.len() != b.len() { return out; }
   var i = 0;
@@ -84,7 +97,10 @@ pub fn fuzzy_intersection(a: &Vec[Float64], b: &Vec[Float64]) -> Vec[Float64] {
 
 /// Pointwise maximum (union) of two fuzzy sets; empty on length mismatch.
 /// Complexity: O(n).
-pub fn fuzzy_union(a: &Vec[Float64], b: &Vec[Float64]) -> Vec[Float64] {
+pub fn fuzzy_union(a: &Vec[Float64], b: &Vec[Float64]) -> Vec[Float64]
+  ensures: (a.len() != b.len()) => (result.len() == 0)
+  ensures: (a.len() == b.len()) => (result.len() == a.len())
+{
   var out = Vec[Float64].new();
   if a.len() != b.len() { return out; }
   var i = 0;
@@ -100,7 +116,9 @@ pub fn fuzzy_union(a: &Vec[Float64], b: &Vec[Float64]) -> Vec[Float64] {
 }
 
 /// Pointwise complement 1 - a of a fuzzy set. Complexity: O(n).
-pub fn fuzzy_complement(a: &Vec[Float64]) -> Vec[Float64] {
+pub fn fuzzy_complement(a: &Vec[Float64]) -> Vec[Float64]
+  ensures: result.len() == a.len()
+{
   var out = Vec[Float64].new();
   var i = 0;
   while i < a.len() {
@@ -133,7 +151,10 @@ pub fn fuzzy_composition(r: &Vec[Vec[Float64]], s: &Vec[Vec[Float64]]) -> Vec[Ve
 /// Centroid (center-of-gravity) defuzzification of a fuzzy set over the
 /// universe values: sum(u_i m_i) / sum(m_i). NaN when the total membership is
 /// zero or the lengths differ. Complexity: O(n).
-pub fn defuzzification(set: &Vec[Float64], universe: &Vec[Float64]) -> Float64 {
+pub fn defuzzification(set: &Vec[Float64], universe: &Vec[Float64]) -> Float64
+  ensures: (set.len() != universe.len()) => (result != result)
+  ensures: (set.len() == 0 || universe.len() == 0) => (result != result)
+{
   if set.len() != universe.len() { return 0.0 / 0.0; }
   var num = 0.0;
   var den = 0.0;
@@ -197,7 +218,10 @@ fn _parse_rule(r: Str) -> (Int, Int, Float64) {
 /// Aggregated conclusion degrees from fuzzy rules ("a:b:s" = antecedent,
 /// consequent, strength): out[j] = max over rules with consequent j of
 /// min(facts[a], s). NaN facts propagate as NaN conclusions. Complexity: O(rules).
-pub fn fuzzy_inference(rules: &Vec[Str], facts: &Vec[Float64]) -> Vec[Float64] {
+pub fn fuzzy_inference(rules: &Vec[Str], facts: &Vec[Float64]) -> Vec[Float64]
+  ensures: (rules.len() == 0) => (result.len() == 0)
+  ensures: (rules.len() > 0) => (result.len() == facts.len())
+{
   var out = Vec[Float64].new();
   if rules.len() == 0 { return out; }
   var i = 0;
@@ -226,14 +250,19 @@ pub fn fuzzy_inference(rules: &Vec[Str], facts: &Vec[Float64]) -> Vec[Float64] {
 
 /// Mamdani-style inference: min implication with max aggregation over the
 /// same "a:b:s" rule convention (alias of fuzzy_inference). Complexity: O(rules).
-pub fn mamdani(rules: &Vec[Str], inputs: &Vec[Float64]) -> Vec[Float64] {
+pub fn mamdani(rules: &Vec[Str], inputs: &Vec[Float64]) -> Vec[Float64]
+  ensures: (rules.len() == 0) => (result.len() == 0)
+  ensures: (rules.len() > 0) => (result.len() == inputs.len())
+{
   return fuzzy_inference(rules, inputs);
 }
 
 /// Sugeno-style weighted crisp output: rules are decimal strengths s_i and the
 /// result is sum(s_i * inputs_i) / sum(s_i). NaN when the weight sum is zero
 /// or the rule format is invalid. Complexity: O(rules).
-pub fn sugeno(rules: &Vec[Str], inputs: &Vec[Float64]) -> Float64 {
+pub fn sugeno(rules: &Vec[Str], inputs: &Vec[Float64]) -> Float64
+  ensures: (rules.len() == 0 || inputs.len() == 0) => (result != result)
+{
   var num = 0.0;
   var den = 0.0;
   var i = 0;
@@ -256,14 +285,19 @@ pub fn sugeno(rules: &Vec[Str], inputs: &Vec[Float64]) -> Float64 {
 /// Fuzzy logic controller output (position form): kp * error + ki * error
 /// with error = setpoint - measurement (integral term approximated
 /// proportionally; documented). Complexity: O(1).
-pub fn fuzzy_control(setpoint: Float64, measurement: Float64, kp: Float64, ki: Float64) -> Float64 {
+pub fn fuzzy_control(setpoint: Float64, measurement: Float64, kp: Float64, ki: Float64) -> Float64
+  ensures: (setpoint == measurement) => (result == 0.0)
+{
   var error = setpoint - measurement;
   return kp * error + ki * error;
 }
 
 /// Index of the best fuzzy-weighted alternative: argmax of alternatives_i *
 /// weights_i. Returns -1 for empty or mismatched input. Complexity: O(n).
-pub fn fuzzy_decision(alternatives: &Vec[Float64], weights: &Vec[Float64]) -> Int {
+pub fn fuzzy_decision(alternatives: &Vec[Float64], weights: &Vec[Float64]) -> Int
+  ensures: (alternatives.len() != weights.len() || alternatives.len() == 0) => (result == -1)
+  ensures: (alternatives.len() == weights.len() && alternatives.len() > 0) => (result >= 0 && result < alternatives.len())
+{
   if alternatives.len() != weights.len() || alternatives.len() == 0 { return -1; }
   var best = 0;
   var best_val = alternatives[0] * weights[0];

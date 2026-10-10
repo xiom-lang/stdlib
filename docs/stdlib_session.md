@@ -4,6 +4,145 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 -->
 # XIOM Stdlib Session -- Handoff
 
+## 0A. CONTINUE HERE -- handoff snapshot 27 (updated 2026-10-10, pin v0.64.2 OFFICIAL ARCHIVE binary; waves 93-102 landed incl. the json depth fix + math remainder + W-5; next = wave 103; binary-drift warning; candidate-tag pin protocol)
+
+**PASTE-READY PROMPT FOR THE NEXT SESSION (copy this block):**
+
+---
+
+You are continuing the XIOM stdlib lane. Worktree `E:\xiom-lang\stdlib`,
+branch `main`. Read `docs/stdlib_session.md` blocks 91 (latest), 90, 89,
+88, 87, 86, 85, 84, 83, 82, 81, 80, 79, 78, 77, 76, 75, 74, 73, 72, 71,
+70, 69, 68, 67, 66, 65, 64, 63, 62, 61, 60, 59, 58, 57, 56, 55, 54, 53,
+52, 51, 50, 49, 48, 47, 46, 45, 44, 43 (publish), 27 (iter block) and
+`docs/PRODUCTION_READINESS_QUEUE.md` before acting; snapshots 26/25 below
+and snapshot 5 keep the deeper history/lore. The ecosystem relays
+(packages, bindings, PULSE, ORBITDB, XVECTOR) feed intake rows into
+`docs/STDLIB-WISHLIST.md`; runtime-backed asks queue with the compiler
+runtime bundle.
+
+STATE (2026-10-10): compiler pin = **v0.64.2**, but USE THE OFFICIAL
+ARCHIVE BINARY `%TEMP%\kilo\stdlib_ws\v0.64.2\bin\xiom.exe` (tag
+c51170a6 release). WARNING: the shared local build path
+`E:\xiom-lang\xiom\target\release\xiom.exe` was rebuilt 2026-10-10 00:56
+from compiler main (da7798da, m252 -- far past the tag) and still
+reports "v0.64.2" while failing four corpus smokes the pin passes
+(smoke_cell_narrow rc 2, smoke_collections_btree_map rc 7,
+smoke_rand_weighted rc 1, smoke_stress_regex_find AV); do NOT use it for
+wave batteries until it is rebuilt from the tag. COMPILER_VERSION =
+v0.64.2. RELEASE STATE: **stdlib-v0.64.3 RELEASED 2026-10-09** (tag on
+d052a3c) -- release.yml run 37962367989 full success and the **REGISTRY
+IS LIVE**: xiom-std 0.64.3 published (signed, sha256
+775496c094d2a1703307313c9139c8cdc959d7687fc7a5b42b57657efa596b17,
+compiler v0.64.2, lineage 0.63.0 -> 0.64.2 -> 0.64.3). **Pin protocol
+agreed with the compiler lane** (relay
+`docs/COMPILER-RELAY-2026-10-09-pin-protocol.md`, untracked per
+convention): tag a CANDIDATE stdlib-vX.Y.Z (no registry publish yet) and
+relay tag + hash + wave report; the compiler lane verifies (vendored sync
++ STDLIB_VERSION + e2e without XIOM_STDLIB + feature + checker corpus +
+the wave smokes) and replies OK; only then publish to the registry; the
+compiler pins it at its next cut. Waves keep flowing on main throughout;
+one-version steady state is expected; security-urgent publishes may skip
+verification with an explicit note. Current cycle: the compiler lane
+verifies stdlib-v0.64.3 (d052a3c5) during its v0.64.3 gates. OPEN RELEASE
+FOLLOW-UPS: (a) the STDLIB_VERSION pin PR must be opened **MANUALLY** --
+the branch `chore/pin-stdlib-v0.64.3` is pushed to xiom-lang/xiom but PR
+creation failed on token scope:
+`https://github.com/xiom-lang/xiom/pull/new/chore/pin-stdlib-v0.64.3`;
+(b) the staging canary (run 37968157641) still waits for environment
+approval (optional); (c) add `categories` (1-3 from the registry
+vocabulary) and `stage` ("incubating"|"stable") to package.xi BEFORE the
+next candidate cut; (d) the repaired heavy matrix passes ubuntu/windows
+but the macos-14 corpus leg is red (PULSE macOS runtime-C blockers
+suspected: `_SC_AVPHYS_PAGES` needs `#ifdef __APPLE__`, the
+fp128_helpers x86 asm needs `__x86_64__`).
+
+Gates on v0.64.2 (official archive): release corpus **954/954 FULL**,
+modules **509/509**, probes **276/276** (wave 101 + p_wave102_shapes.xi +
+the promoted p_json_parse_depth_cap.xi), barename **0/509**, floors139,
+module-smoke ratchet (497/517, 3476/6204) and doc ratchet OK. Coverage =
+**64.3%** global pub-with-clause (meter 76.4%). Waves landed after
+snapshot 24: 93 (iter remainder + format.text; 71 clauses), 94
+(cmp/core/sync/terminal; 86), 95 (format remainder; 82), 96
+(array/sort/bits; 53), 97 (bits submodules/hash/fraction; 57), 98 (M7
+closure rewrite + read_file_lines/to_string_char contract fixes; 7), 99
+(crypto hash/xxhash/city/math constants; 26), 100 (finance + information
+theory; 35), 101 (graph_theory + machine_learning; 121 clauses / +63
+pub), 102 (json_parse depth cap FIXED + decompose/fuzzy/game_theory/
+chaos; 97 clauses / +46 pub + the W-5 Vec.with_len feature). Dir deltas:
+iter 46.4%, format 88.7%, cmp 100%, core 45.8%, sync 35.9%, array 77.8%,
+sort 42.6%, bits 74.3%, hash 51.1%, crypto 47.0%, num 37.6%, math 53.0%
+(graph_theory 100%, machine_learning 96.9%, decompose 100%, fuzzy 85.7%,
+game_theory 46.2%, chaos 100%), os 26.6%.
+
+Findings (15 Current: 14 compiler + 1 stdlib) -- since snapshot 26: the
+XVECTOR json_parse depth cap is RESOLVED stdlib-side (finding #16 closed;
+repro promoted to `tools/probes/p_json_parse_depth_cap.xi`). The
+stdlib-filed compiler findings `p_tuple_elem_vec_read.xi` (inline Vec
+float element read inside a tuple literal) and
+`p_tostring_import_breaks_adapters.xi` (tostring import corrupts closure
+predicate dispatch) were relayed to the compiler lane via
+`docs/STDLIB-RELAY-2026-10-10.md` (dropped in the compiler repo,
+untracked) together with the ecosystem blockers B-11 (out-param slot
+recycle), B-10 (alloc-name fn-pointer redirect), B-05 (guard-heap spin,
+runtime-side in THIS repo), XVC-C-13 (`&Str` unknown type) and the macOS
+runtime-C guards. Still open: mut-param field @pre aliasing, generic
+by-ref Option/Result/Slice, cross-module type paths/foreign calls,
+ensures-isok guard, clause float-vec, geom Box/matrix, polyhedra,
+vec-shape AV, cross-type generic callbacks, payload reads, polygon
+(stdlib). B-05 guard-heap spin is RUNTIME-side in THIS repo
+(`runtime/xiom_runtime.c` guard arena; repro under
+`E:\xiom-packages\packages\docs\repro\bindings-pilot\alloc-guard-spin`);
+the macOS runtime-C guards are also ours.
+
+FIRST TASK (wave 103): **os 26.6%** (err/event/fs/file/dir/sysinfo/
+terminal/signal surfaces; inspect each runtime-backed surface before
+claiming -- documented-Err stubs stay clause-free or carry only their
+truthful guards), batching toward 40-60 pub. Then the queued
+runtime-backed wishlist asks when the compiler runtime bundle moves
+(address-aware socket bind, `socket_recv_into`, the fsync/append-bytes/
+truncate family, durable `flush_stdout`, signal-handler installation),
+the remaining math-tail stubs when their compiler blockers lift (fuzzy
+relations, game_theory stubs, calc/information-theory matrix stubs), and
+the runtime-C items (macOS guards, B-05). The 2026-10-10 five-lane fetch
+is recorded in `docs/STDLIB-WISHLIST.md` ("Relay status 2026-10-10" +
+the wave-102 resolutions note).
+
+Mandatory protocol: (1) body-derived clauses only, no placeholders/
+payload reads; canonical `result is Ok =>` guard form; file new findings
+as minimal repros + README entry. (2) probe-first
+`tools/probes/p_wave103_shapes.xi`, bind returned values before
+comparing, green on v0.64.2 (the official archive binary -- see the
+binary-drift warning). (3) apply, targeted smokes, bisect/drop on
+codegen breaks. (4) dump `tools/coverage_floors140.json`, wire workflows
++ tools/README + plan/session/queue in one commit, YAML check, pure-ASCII
+commit. (5) battery: corpus 954/954, probes expect 277, modules 509/509,
+barename 0/509, floors140 + module-smoke ratchets; push `main` with the
+one-shot Lefteris-Notas credential (403 as Lefteris-Ngonart; GitHub 500s
+per failed_attempts.md). (6) no unbounded scratch benchmarks. (7) release
+side follows the candidate-tag pin protocol; do NOT tag/publish without
+the compiler-lane OK (a security exception needs an explicit note).
+
+HANDOFF NOTE: locks include p_pin0641_iter_shapes.xi, the wave-77 stats
+probe, the PULSE hardening probe, the wave-78..102 coverage probes
+(wave 101 added p_wave101_shapes.xi; wave 102 added p_wave102_shapes.xi
+plus the promoted p_json_parse_depth_cap.xi), p_str_split_scale.xi, the
+io locks (p_read_file_lines_crlf.xi, p_fs_remove.xi) and the promoted
+regression locks (p_rvalue_float_vec_index.xi, p_multipart_parse_name.xi,
+p_iter_range_collect_forwardref.xi) -- **276 probes total**. Open repros
+on v0.64.2: the 15 Current findings' repros (see
+tools/known_failures/README.md). docs/failed_attempts.md logs push and
+environment incidents (incl. the compiler-binary drift);
+out/*.json and the untracked relay drops (docs/COMPILER-RELAY-*.md)
+are disposable working files. CAUTION: never run large synthetic
+benchmarks unbounded (block-75 runaway incident); the heavy macos-14
+leg stays red until the runtime-C guards land.
+
+---
+
+Snapshot 26 below retains the post-wave-101 prompt; snapshot 25 keeps
+the v0.64.2-era prompt.
+
 ## 0A. CONTINUE HERE -- handoff snapshot 26 (updated 2026-10-10, pin v0.64.2 OFFICIAL ARCHIVE binary; waves 93-101 landed; binary-drift warning; candidate-tag pin protocol; context handoff)
 
 **PASTE-READY PROMPT FOR THE NEXT SESSION (copy this block):**
@@ -1979,6 +2118,45 @@ registry pin, agent recon for the rest)**
   gates; open: contract coverage 100%, zero open findings, beta-exit release
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
+
+**SESSION 2026-10-10 block 91 (wave 102: json depth cap FIXED; decompose/fuzzy/game_theory/chaos clauses; W-5 Vec.with_len; findings 16 -> 15; floors139)**
+- FIX-FIRST: XVECTOR's json_parse depth cap (finding #16).
+  `_JSON_MAX_DEPTH = 128` threaded through `_json_parse_value` /
+  `_json_parse_array` / `_json_parse_object`; beyond it the parser returns
+  Err("json_parse: nesting too deep"); module header + `json_parse` doc
+  updated. Boundary verified natively on the official v0.64.2 archive:
+  128-deep balanced parses Ok; 129 and 60000 return Err (pre-fix 300+
+  died with exit -1073741795). The repro was promoted to
+  `tools/probes/p_json_parse_depth_cap.xi` (rc 0 = Err) and the
+  known_failures README entry moved to RESOLVED; findings 16 -> 15
+  Current (14 compiler + 1 stdlib).
+- Coverage: decompose 15/15 (100%), fuzzy 12/14 (85.7%; the two BUG 23 #1
+  relation stubs stay clause-free), game_theory 6/13 (46.2%; the six
+  stubs plus alpha_beta stay), chaos 13/13 (100%) -- 46 new pub, 97
+  clauses. math 48.3% -> 53.0%; global 63.6% -> 64.3% (pubCovered
+  4138 -> 4184, clauses 5491 -> 5588); meter 76.4%; floors139 dumped
+  and wired (ci/heavy/release + tools/README).
+- Wishlist: W-5 `Vec[UInt8].with_len(n)` DELIVERED with the requested
+  method spelling (`fn Vec.with_len[T]` in `xiom.collections`; zeroes the
+  8-bytes-per-slot element area byte-wise; n <= 0 -> empty). The
+  cross-module `mem.zeroed`/`mem_set` generic calls did not resolve
+  under C001, so the zeroing is an in-module byte loop; probe checks
+  added and all 21 collections smokes are green.
+- Probe `p_wave102_shapes.xi` (275th, 118 checks) green pre/post on the
+  official pin; targeted smokes: smoke_math_decompose, smoke_math_finance,
+  smoke_serialize 4/4, smoke_stress_serialize 18/18,
+  kat_serialize_json_minimal, 21 collections smokes -- all green.
+- Compiler-lane relay: `docs/STDLIB-RELAY-2026-10-10.md` dropped into the
+  compiler repo docs (untracked per convention) carrying the two
+  stdlib-filed findings (`p_tuple_elem_vec_read.xi`,
+  `p_tostring_import_breaks_adapters.xi`) and the ecosystem blockers
+  from the five-lane fetch (B-11 slot recycle, B-10 alloc-name redirect,
+  B-05 guard-heap spin, XVC-C-13 `&Str`, the macOS runtime-C guards).
+  No compiler action for json -- fixed stdlib-side.
+- Battery on the official v0.64.2 archive: corpus 954/954 full (831.6s),
+  probes 276/276 (298.3s), modules 509/509 (265.5s), barename 0/509
+  (265.3s), floors139 + doc + module-smoke (497/517, 3476/6204)
+  ratchets OK.
 
 **SESSION 2026-10-10 block 90 (five-lane wishlist fetch: one new row -- XVECTOR json_parse depth cap; verified natively; findings 16)**
 - Sources re-read directly on the lanes' working trees: packages

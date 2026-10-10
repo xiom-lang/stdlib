@@ -404,3 +404,26 @@ lanes' working trees; every lane is active today):
 - Other lanes (benchmark-chaos, engine, ripple, debugger, book, paper):
   no stdlib wishlist files or asks (engine/ripple stale since 2026-09-21;
   benchmark-chaos carries compiler relays only).
+
+Wave-102 resolutions (2026-10-10, stdlib main):
+- XVECTOR's `json_parse` recursion-depth row is **FIXED**:
+  `_JSON_MAX_DEPTH = 128` threaded through the recursive descent; beyond
+  it the parser returns Err("json_parse: nesting too deep"). Boundary
+  locked by `tools/probes/p_wave102_shapes.xi` (128-deep balanced Ok;
+  129/60000 Err) and the promoted repro
+  `tools/probes/p_json_parse_depth_cap.xi`; finding #16 closed. XVECTOR
+  can rely on the Err path and eventually relax its `json_depth_ok(..., 64)`
+  edge guard if it wants (64 < 128 still passes everything it rejected
+  before, so no rush).
+- Bindings W-5 `Vec[UInt8].with_len(n)` **DELIVERED** as
+  `fn Vec.with_len[T]` in `xiom.collections` (byte-zeroed element area;
+  `n <= 0` -> empty). `xiom.sqlite`/`xiom.vma` can replace their
+  per-slot push loops at the next touch; `xiom.vma`'s B-11 workaround
+  stays compiler-side until the slot-recycle fix lands.
+- Still open and runtime-backed (queued with the compiler runtime
+  bundle): address-aware socket bind + `socket_recv_into` (PULSE),
+  fsync/append-bytes/truncate/`open_append` (ORBITDB/XVECTOR/PULSE/
+  `xiom.wal`), durable `flush_stdout` (three lanes), signal-handler
+  installation (PULSE), `f32_bits`/`bits_to_f32` (XVECTOR, compiler
+  bitcast). The compiler-lane blockers relayed on 2026-10-10 are listed
+  in `docs/stdlib_session.md` block 91.

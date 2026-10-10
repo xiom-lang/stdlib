@@ -20,7 +20,10 @@ use xiom.core.to_float;
 
 /// Logistic map x_{k+1} = r x (1 - x) iterated n steps from x0. Returns the
 /// orbit (x0, x1, ..., x_{n-1}); empty for n <= 0. Complexity: O(n).
-pub fn logistic_map(r: Float64, x0: Float64, n: Int) -> Vec[Float64] {
+pub fn logistic_map(r: Float64, x0: Float64, n: Int) -> Vec[Float64]
+  ensures: (n <= 0) => (result.len() == 0)
+  ensures: (n > 0) => (result.len() == n)
+{
   var out = Vec[Float64].new();
   if n <= 0 { return out; }
   var x = x0;
@@ -36,7 +39,10 @@ pub fn logistic_map(r: Float64, x0: Float64, n: Int) -> Vec[Float64] {
 /// Lorenz system dx/dt = sigma(y-x), dy/dt = x(rho-z) - y, dz/dt = xy - beta z
 /// integrated by explicit Euler. Returns steps + 1 rows of 3 components;
 /// empty for steps <= 0. Complexity: O(steps).
-pub fn lorenz_system(sigma: Float64, rho: Float64, beta: Float64, x0: &Vec[Float64], steps: Int, dt: Float64) -> Vec[Vec[Float64]] {
+pub fn lorenz_system(sigma: Float64, rho: Float64, beta: Float64, x0: &Vec[Float64], steps: Int, dt: Float64) -> Vec[Vec[Float64]]
+  ensures: (steps <= 0 || x0.len() != 3) => (result.len() == 0)
+  ensures: (steps > 0 && x0.len() == 3) => (result.len() == steps + 1)
+{
   var out = Vec[Vec[Float64]].new();
   if steps <= 0 || x0.len() != 3 { return out; }
   var x = x0[0];
@@ -65,7 +71,10 @@ pub fn lorenz_system(sigma: Float64, rho: Float64, beta: Float64, x0: &Vec[Float
 /// Rossler system dx/dt = -y - z, dy/dt = x + a y, dz/dt = b + z(x - c)
 /// integrated by explicit Euler. Returns steps + 1 rows of 3 components;
 /// empty for steps <= 0. Complexity: O(steps).
-pub fn rossler_system(a: Float64, b: Float64, c: Float64, x0: &Vec[Float64], steps: Int, dt: Float64) -> Vec[Vec[Float64]] {
+pub fn rossler_system(a: Float64, b: Float64, c: Float64, x0: &Vec[Float64], steps: Int, dt: Float64) -> Vec[Vec[Float64]]
+  ensures: (steps <= 0 || x0.len() != 3) => (result.len() == 0)
+  ensures: (steps > 0 && x0.len() == 3) => (result.len() == steps + 1)
+{
   var out = Vec[Vec[Float64]].new();
   if steps <= 0 || x0.len() != 3 { return out; }
   var x = x0[0];
@@ -93,7 +102,10 @@ pub fn rossler_system(a: Float64, b: Float64, c: Float64, x0: &Vec[Float64], ste
 
 /// Henon map x' = 1 - a x^2 + y, y' = b x iterated n steps. Returns the orbit
 /// as (x, y) pairs; empty for n <= 0. Complexity: O(n).
-pub fn henon_map(a: Float64, b: Float64, x0: Float64, y0: Float64, n: Int) -> Vec[(Float64, Float64)] {
+pub fn henon_map(a: Float64, b: Float64, x0: Float64, y0: Float64, n: Int) -> Vec[(Float64, Float64)]
+  ensures: (n <= 0) => (result.len() == 0)
+  ensures: (n > 0) => (result.len() == n)
+{
   var out = Vec[(Float64, Float64)].new();
   if n <= 0 { return out; }
   var x = x0;
@@ -114,7 +126,10 @@ pub fn henon_map(a: Float64, b: Float64, x0: Float64, y0: Float64, n: Int) -> Ve
 /// values uniformly spread over [r_min, r_max], discard `transients`
 /// iterations then capture 10 orbit points as (r, x) pairs. Empty for
 /// degenerate input. Complexity: O(steps * (transients + 10)).
-pub fn bifurcation_diagram(r_min: Float64, r_max: Float64, steps: Int, transients: Int) -> Vec[(Float64, Float64)] {
+pub fn bifurcation_diagram(r_min: Float64, r_max: Float64, steps: Int, transients: Int) -> Vec[(Float64, Float64)]
+  ensures: (steps <= 0 || r_max < r_min) => (result.len() == 0)
+  ensures: (steps > 0 && r_max >= r_min) => (result.len() == steps * 10)
+{
   var out = Vec[(Float64, Float64)].new();
   if steps <= 0 || r_max < r_min { return out; }
   var k = 0;
@@ -140,7 +155,9 @@ pub fn bifurcation_diagram(r_min: Float64, r_max: Float64, steps: Int, transient
 /// Estimated largest Lyapunov exponent of a 1-D time series from the mean
 /// log expansion ratio |x_{k+1} - x_k| / |x_k - x_{k-1}|. NaN for fewer than
 /// 3 points or a zero difference (documented). Complexity: O(n).
-pub fn lyapunov_exponent(orbit: &Vec[Float64]) -> Float64 {
+pub fn lyapunov_exponent(orbit: &Vec[Float64]) -> Float64
+  ensures: (orbit.len() < 3) => (result != result)
+{
   var n = orbit.len();
   if n < 3 { return 0.0 / 0.0; }
   var sum = 0.0;
@@ -164,7 +181,10 @@ pub fn lyapunov_exponent(orbit: &Vec[Float64]) -> Float64 {
 /// Trajectory of a chaotic attractor under the discrete dynamics map
 /// x <- dynamics(x), n steps. Returns n + 1 states; empty for n <= 0.
 /// Complexity: O(n * cost(dynamics)).
-pub fn strange_attractor(dynamics: fn(&Vec[Float64]) -> Vec[Float64], x0: &Vec[Float64], n: Int) -> Vec[Vec[Float64]] {
+pub fn strange_attractor(dynamics: fn(&Vec[Float64]) -> Vec[Float64], x0: &Vec[Float64], n: Int) -> Vec[Vec[Float64]]
+  ensures: (n < 0) => (result.len() == 0)
+  ensures: (n >= 0) => (result.len() == n + 1)
+{
   var out = Vec[Vec[Float64]].new();
   if n < 0 { return out; }
   var x = Vec[Float64].new();
@@ -199,7 +219,9 @@ pub fn strange_attractor(dynamics: fn(&Vec[Float64]) -> Vec[Float64], x0: &Vec[F
 /// Box-counting fractal dimension of a 2-D point set: for four box sizes the
 /// occupied-box counts are fit by least squares on log-log scales. NaN for
 /// fewer than 2 points. Complexity: O(4 * n).
-pub fn fractal_dimension(points: &Vec[(Float64, Float64)]) -> Float64 {
+pub fn fractal_dimension(points: &Vec[(Float64, Float64)]) -> Float64
+  ensures: (points.len() < 2) => (result != result)
+{
   var n = points.len();
   if n < 2 { return 0.0 / 0.0; }
   var minx = points[0].0;
@@ -261,7 +283,10 @@ pub fn fractal_dimension(points: &Vec[(Float64, Float64)]) -> Float64 {
 
 /// Escape iterations of c under z <- z^2 + c from z = 0; max_iter means the
 /// point is inside the set. Complexity: O(max_iter).
-pub fn mandelbrot_set(c_re: Float64, c_im: Float64, max_iter: Int) -> Int {
+pub fn mandelbrot_set(c_re: Float64, c_im: Float64, max_iter: Int) -> Int
+  ensures: (max_iter >= 0) => (result >= 0 && result <= max_iter)
+  ensures: (c_re == 0.0 && c_im == 0.0 && max_iter > 0) => (result == max_iter)
+{
   var zr = 0.0;
   var zi = 0.0;
   var it = 0;
@@ -280,7 +305,10 @@ pub fn mandelbrot_set(c_re: Float64, c_im: Float64, max_iter: Int) -> Int {
 
 /// Escape iterations of z0 under z <- z^2 + c for fixed parameter c; max_iter
 /// means the point is inside the Julia set. Complexity: O(max_iter).
-pub fn julia_set(c_re: Float64, c_im: Float64, z_re: Float64, z_im: Float64, max_iter: Int) -> Int {
+pub fn julia_set(c_re: Float64, c_im: Float64, z_re: Float64, z_im: Float64, max_iter: Int) -> Int
+  ensures: (max_iter >= 0) => (result >= 0 && result <= max_iter)
+  ensures: (c_re == 0.0 && c_im == 0.0 && z_re == 0.0 && z_im == 0.0 && max_iter > 0) => (result == max_iter)
+{
   var zr = z_re;
   var zi = z_im;
   var it = 0;
@@ -299,7 +327,10 @@ pub fn julia_set(c_re: Float64, c_im: Float64, z_re: Float64, z_im: Float64, max
 
 /// Burning-ship fractal escape count: z <- (|re z| + i |im z|)^2 + c.
 /// Complexity: O(max_iter).
-pub fn burning_ship(c_re: Float64, c_im: Float64, max_iter: Int) -> Int {
+pub fn burning_ship(c_re: Float64, c_im: Float64, max_iter: Int) -> Int
+  ensures: (max_iter >= 0) => (result >= 0 && result <= max_iter)
+  ensures: (c_re == 0.0 && c_im == 0.0 && max_iter > 0) => (result == max_iter)
+{
   var zr = 0.0;
   var zi = 0.0;
   var it = 0;
@@ -324,7 +355,10 @@ pub fn burning_ship(c_re: Float64, c_im: Float64, max_iter: Int) -> Int {
 /// polynomial a x^2 + b x + c (given as coeffs [a, b, c]). Returns 0 or 1 for
 /// a non-degenerate quadratic (documented restriction to degree <= 2).
 /// Complexity: O(iters).
-pub fn newton_fractal(coeffs: &Vec[Float64], z: Float64, max_iter: Int) -> Int {
+pub fn newton_fractal(coeffs: &Vec[Float64], z: Float64, max_iter: Int) -> Int
+  ensures: result == 0 || result == 1
+  ensures: (coeffs.len() < 3) => (result == 0)
+{
   var n = coeffs.len();
   if n < 3 { return 0; }
   var a = coeffs[0];
@@ -358,7 +392,10 @@ pub fn newton_fractal(coeffs: &Vec[Float64], z: Float64, max_iter: Int) -> Int {
 
 /// Tent map x_{k+1} = mu * min(x, 1 - x) iterated n steps from x0. Returns
 /// the orbit; empty for n <= 0. Complexity: O(n).
-pub fn tent_map(mu: Float64, x0: Float64, n: Int) -> Vec[Float64] {
+pub fn tent_map(mu: Float64, x0: Float64, n: Int) -> Vec[Float64]
+  ensures: (n <= 0) => (result.len() == 0)
+  ensures: (n > 0) => (result.len() == n)
+{
   var out = Vec[Float64].new();
   if n <= 0 { return out; }
   var x = x0;
