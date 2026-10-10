@@ -2150,6 +2150,22 @@ registry pin, agent recon for the rest)**
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
 
+**SESSION 2026-10-10 block 96 (doorbell 17:00Z: tag-base notes fix for the v0.64.3 pin; no other queue moves)**
+- Compiler follow-up REL-20261010-1658-compiler (high): pinning 35efaf8
+  would import 18 unreleased commits (waves 98-103; 23
+  frozen-signature drifts). Provided the SAME one-line fragment fix on
+  the v0.64.3 tag base: branch `fix/notes-v0.64.3` at `f475c9d` (parent
+  d052a3c5, 1 file / 1 line, tree otherwise identical to the tag),
+  pushed to origin. The compiler can pin that sha and re-run
+  convert/verify; a patch tag stdlib-v0.64.4 stays available on
+  request. Reply filed as REL-20261010-1701-stdlib -- the 1658/1630
+  items remain un-movable from our side because the resolver still
+  treats them as ambiguous prefixes of their -2 siblings (ops bug
+  REL-20261010-1553-stdlib).
+- Queue otherwise unchanged this hour: nothing new inbound to stdlib
+  beyond the compiler follow-up; nothing for stdlib to verify. Doorbell
+  continues every 2h.
+
 **SESSION 2026-10-10 block 95 (relay end-of-session round: notes-schema unblock for the compiler v0.64.3 release; 5 new items acked; ops resolver ambiguity recurred)**
 - BLOCKER CLEARED for the compiler v0.64.3 release: their notes
   validator rejected the `->` arrows in our release-notes/v0.64.3.md
