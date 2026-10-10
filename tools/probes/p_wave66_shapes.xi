@@ -49,18 +49,18 @@ fn main() -> Int {
   if !duration.duration_is_zero(duration.duration_secs(0)) { return 19; }
   if duration.duration_is_zero(d5) { return 20; }
 
-  // ---- instant
+  // ---- instant (millisecond resolution since wave 104; instant.t is ms)
   let i5 = instant.instant_from_millis(5000);
-  if i5.t != 5 { return 21; }
+  if i5.t != 5000 { return 21; }
   if instant.instant_to_millis(i5) != 5000 { return 22; }
   if instant.instant_compare(i5, instant.instant_from_millis(5000)) != 0 { return 23; }
   let i2 = instant.instant_from_millis(2000);
   if instant.instant_compare(i2, i5) != 0 - 1 { return 24; }
   if instant.instant_compare(i5, i2) != 1 { return 25; }
   let i7 = instant.instant_add(i5, duration.duration_secs(2));
-  if i7.t != 7 { return 26; }
+  if i7.t != 7000 { return 26; }
   let i3 = instant.instant_sub(i5, duration.duration_secs(2));
-  if i3.t != 3 { return 27; }
+  if i3.t != 3000 { return 27; }
   let el = instant.instant_duration_since(i5, i2);
   if el.secs != 3 || el.nanos != 0 { return 28; }
 

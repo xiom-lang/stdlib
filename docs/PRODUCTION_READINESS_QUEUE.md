@@ -68,9 +68,11 @@ game_theory 46.2%, chaos 100%; 46 pub, 97 clauses) plus the W-5
 `Vec[UInt8].with_len(n)` wishlist feature. Wave 103 fixed the relay
 pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
 42 pub, 46 clauses), adding the payload-index and path-println findings
-(16 Current). Math 53.0%, os 38.0%, global 65.0%, meter 76.5%; handoff
-in `docs/stdlib_session.md` snapshot 27 (block 91 refresh), wave records
-blocks 89-94.
+(16 Current). Wave 104 fixed the relay benchmark-2 Instant millisecond
+resolution and benchmark-3 buffered-stdin normalization (probe 278th;
+coverage flat, fix wave). Math 53.0%, os 38.0%, global 65.0%, meter
+76.5%; handoff in `docs/stdlib_session.md` snapshot 27 (block 91
+refresh), wave records blocks 89-99.
 BINARY NOTE: the shared local build path
 `E:\xiom-lang\xiom\target\release\xiom.exe` was rebuilt past the pin
 (compiler main da7798da m252) and fails four corpus smokes; use the
@@ -758,6 +760,20 @@ verify stdlib-v0.64.3 (d052a3c5) during its v0.64.3 candidate gates.
 Housekeeping in the same relay: the wave-97 sibling-alias split-probe
 workaround was DROPPED -- p_wave97_bitwise_shapes.xi was merged back into
 p_wave97_shapes.xi and re-run green on v0.64.2 (probe corpus stays 272).
+
+Update 2026-10-10 (wave 104 landed): Instant millisecond resolution +
+buffered-stdin normalization -- two relay fixes, probe 278th; coverage
+flat (fix wave). benchmark-2: Instant.t is now milliseconds;
+elapsed()/duration_since()/add/sub/sleep_until and the xiom.time.instant
+wrappers switched; elapsed().as_millis() reports real millisecond
+deltas (the wave-66 lock was remerged to the new semantics).
+benchmark-3: buf_reader_new(0)/buf_writer_new(1) resolve stdin/stdout
+through the runtime; piped stdin reads GOT:hello; FILE* handles
+unchanged. floors141. Battery on the official v0.64.2 archive: corpus
+954/954 (975.5s), probes 278/278 (323.2s), modules 509/509 (255.7s),
+barename 0/509 (460.9s), floors141 + doc + module-smoke ratchets OK.
+Readiness next (wave 105): the os batch 2 claimable remainder, the
+website-10 no-NASM crypto triage, and the runtime-backed wishlist asks.
 
 Update 2026-10-10 (wave 103 landed): sleep fix-first + os batch 1 --
 46 clauses, +42 pub. pulse-6 (C-PULSE-18) FIXED: time.sleep_ms/sleep

@@ -9,7 +9,7 @@ module xiom.time.instant
 // ============================================================================
 // Monotonic timestamps for measuring elapsed wall time.
 // Delegates to the parent xiom.time.Instant implementation; comparison and
-// millisecond conversions read the instant's internal second value.
+// millisecond conversions read the instant's internal millisecond value.
 // ============================================================================
 
 use xiom.time;
@@ -34,7 +34,7 @@ pub fn instant_elapsed(i: Instant) -> Duration {
 /// Returns: a - b.
 /// Complexity: O(1).
 pub fn instant_duration_since(a: Instant, b: Instant) -> Duration
-  ensures: result.secs == a.t - b.t && result.nanos == 0
+  ensures: result == Duration.from_millis(a.t - b.t)
 {
   return a.duration_since(b);
 }
@@ -44,7 +44,7 @@ pub fn instant_duration_since(a: Instant, b: Instant) -> Duration
 /// Returns: i + d.
 /// Complexity: O(1).
 pub fn instant_add(i: Instant, d: Duration) -> Instant
-  ensures: result.t == i.t + d.secs
+  ensures: result.t == i.t + d.as_millis()
 {
   return i.add(d);
 }
@@ -54,7 +54,7 @@ pub fn instant_add(i: Instant, d: Duration) -> Instant
 /// Returns: i - d.
 /// Complexity: O(1).
 pub fn instant_sub(i: Instant, d: Duration) -> Instant
-  ensures: result.t == i.t - d.secs
+  ensures: result.t == i.t - d.as_millis()
 {
   return i.sub(d);
 }
@@ -77,12 +77,12 @@ pub fn instant_compare(a: Instant, b: Instant) -> Int
 
 /// `i` as milliseconds since an arbitrary origin.
 /// Params: i - the instant.
-/// Returns: the underlying second reading scaled to milliseconds.
+/// Returns: the underlying millisecond reading.
 /// Complexity: O(1).
 pub fn instant_to_millis(i: Instant) -> Int
-  ensures: result == i.t * 1000
+  ensures: result == i.t
 {
-  return i.t * 1000;
+  return i.t;
 }
 
 /// An instant from a millisecond reading.
@@ -90,7 +90,7 @@ pub fn instant_to_millis(i: Instant) -> Int
 /// Returns: the corresponding Instant.
 /// Complexity: O(1).
 pub fn instant_from_millis(ms: Int) -> Instant
-  ensures: result.t == ms / 1000
+  ensures: result.t == ms
 {
-  return Instant{ t: ms / 1000; }
+  return Instant{ t: ms; }
 }

@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 27 (updated 2026-10-10, pin v0.64.2 OFFICIAL ARCHIVE binary; waves 93-103 landed incl. the json depth fix + math remainder + W-5 + os batch 1; next = wave 104; binary-drift warning; candidate-tag pin protocol; relay bus live)
+## 0A. CONTINUE HERE -- handoff snapshot 27 (updated 2026-10-10, pin v0.64.2 OFFICIAL ARCHIVE binary; waves 93-104 landed incl. the json depth fix + math remainder + W-5 + os batch 1 + the relay Instant/stdin fixes; next = wave 105; binary-drift warning; candidate-tag pin protocol; relay bus live)
 
 **PASTE-READY PROMPT FOR THE NEXT SESSION (copy this block):**
 
@@ -57,27 +57,30 @@ relay tag + hash + wave report; the compiler lane verifies (vendored sync
 the wave smokes) and replies OK; only then publish to the registry; the
 compiler pins it at its next cut. Waves keep flowing on main throughout;
 one-version steady state is expected; security-urgent publishes may skip
-verification with an explicit note. Current cycle: the compiler lane
-verifies stdlib-v0.64.3 (d052a3c5) during its v0.64.3 gates. OPEN RELEASE
-FOLLOW-UPS: (a) the STDLIB_VERSION pin PR must be opened **MANUALLY** --
-the branch `chore/pin-stdlib-v0.64.3` is pushed to xiom-lang/xiom but PR
-creation failed on token scope:
-`https://github.com/xiom-lang/xiom/pull/new/chore/pin-stdlib-v0.64.3`;
-(b) the staging canary (run 37968157641) still waits for environment
-approval (optional); (c) add `categories` (1-3 from the registry
-vocabulary) and `stage` ("incubating"|"stable") to package.xi BEFORE the
-next candidate cut; (d) the repaired heavy matrix passes ubuntu/windows;
+verification with an explicit note. STATUS: **compiler v0.64.3 is
+released** -- tag f7b3a4fe on a5b87965 pinned STDLIB_VERSION =
+`ab894b47` (head of our `fix/notes-v0.64.3` branch: the v0.64.3 tag
+base plus the two doc-only notes commits), gate record complete (run
+38071481303 green, assets + notes live). OPEN RELEASE
+FOLLOW-UPS: (a) the manual `chore/pin-stdlib-v0.64.3` PR is SUPERSEDED
+by that pin -- no action; (b) the staging canary (run 37968157641)
+still waits for environment approval (optional); (c) add `categories`
+(1-3 from the registry vocabulary) and `stage`
+("incubating"|"stable") to package.xi BEFORE the next candidate cut
+(also run the notes validator per the updated RELEASE_CHECKLIST);
+(d) the repaired heavy matrix passes ubuntu/windows;
 the macos-14 corpus leg was unblocked by the owner-authorized darwin port
 (48850df, PULSE-applied: the free-memory __APPLE__ guard + x86-64-only
 fp128 shims) -- re-run the leg; a mach `host_statistics64` follow-up is
 queued.
 
 Gates on v0.64.2 (official archive): release corpus **954/954 FULL**,
-modules **509/509**, probes **277/277** (waves 101-103; +
-p_wave102_shapes.xi, the promoted p_json_parse_depth_cap.xi and
-p_wave103_shapes.xi), barename **0/509**, floors140, module-smoke ratchet
-(497/517, 3476/6204) and doc ratchet OK. Coverage = **65.0%** global
-pub-with-clause (meter 76.5%). Waves landed after
+modules **509/509**, probes **278/278** (waves 101-104; +
+p_wave102_shapes.xi, the promoted p_json_parse_depth_cap.xi,
+p_wave103_shapes.xi and p_wave104_shapes.xi), barename **0/509**,
+floors141, module-smoke ratchet (497/517, 3476/6204) and doc ratchet OK.
+Coverage = **65.0%** global pub-with-clause (meter 76.5%). Waves landed
+after
 snapshot 24: 93 (iter remainder + format.text; 71 clauses), 94
 (cmp/core/sync/terminal; 86), 95 (format remainder; 82), 96
 (array/sort/bits; 53), 97 (bits submodules/hash/fraction; 57), 98 (M7
@@ -87,7 +90,9 @@ theory; 35), 101 (graph_theory + machine_learning; 121 clauses / +63
 pub), 102 (json_parse depth cap FIXED + decompose/fuzzy/game_theory/
 chaos; 97 clauses / +46 pub + the W-5 Vec.with_len feature), 103
 (sleep_ms/sleep(Duration) runtime-sleep fix + the os batch 1 fs/file/
-dir/platform/err/args; 46 clauses / +42 pub; two new compiler findings).
+dir/platform/err/args; 46 clauses / +42 pub; two new compiler findings),
+104 (Instant millisecond resolution + buffered-stdin normalization --
+relay benchmark-2/3 fixes; probe 278th; coverage flat).
 Dir deltas:
 iter 46.4%, format 88.7%, cmp 100%, core 45.8%, sync 35.9%, array 77.8%,
 sort 42.6%, bits 74.3%, hash 51.1%, crypto 47.0%, num 37.6%, math 53.0%
@@ -119,46 +124,49 @@ vec-shape AV, cross-type generic callbacks, payload reads, polygon
 the macOS runtime-C guards were fixed by the owner-authorized one-off
 48850df (a mach `host_statistics64` follow-up stays queued).
 
-FIRST TASK (wave 104): **os batch 2** -- the claimable remainder
+FIRST TASK (wave 105): **os batch 2** -- the claimable remainder
 (dir/file/fs tails, env, sysinfo, term, args, proc, os, process,
 signal; the documented stubs across event/terminal/mmap/sync_io/unix/
 win/ioctl/fs_ffi/proc_ffi stay clause-free), batching toward 40-60 pub.
 Then the relay queue (process items to stdlib each session: website-10
-no-NASM crypto triage, the two items blocked by the ops resolver bug)
-and the queued runtime-backed wishlist asks when the compiler runtime
-bundle moves (address-aware socket bind, `socket_recv_into`, the fsync/
-append-bytes/truncate family, durable `flush_stdout`, signal-handler
-installation), the remaining math-tail stubs when their compiler
-blockers lift (fuzzy relations, game_theory stubs, calc/information-
-theory matrix stubs), and the runtime-C items (B-05; the macOS guards
-landed via 48850df). The wave-103 fix-first (pulse-6 sleep) and
-re-triages (pulse-5 payload index; path println crash) are in block 94;
-the 2026-10-10 five-lane fetch is recorded in `docs/STDLIB-WISHLIST.md`
-("Relay status 2026-10-10" + the wave-102 resolutions note).
+no-NASM crypto triage, the two items blocked by the ops resolver bug --
+check whether relay.py got its exact-stem fix) and the queued
+runtime-backed wishlist asks when the compiler runtime bundle moves
+(address-aware socket bind, `socket_recv_into`, the fsync/append-bytes/
+truncate family, durable `flush_stdout`, signal-handler installation),
+the remaining math-tail stubs when their compiler blockers lift (fuzzy
+relations, game_theory stubs, calc/information-theory matrix stubs), and
+the runtime-C items (B-05; the macOS guards landed via 48850df, the
+darwin-x64 fp128 tf gap is pulse-2). The wave-104 fixes (Instant ms,
+buffered stdin) are in block 99; the 2026-10-10 five-lane fetch is
+recorded in `docs/STDLIB-WISHLIST.md` ("Relay status 2026-10-10" + the
+wave-102 resolutions note).
 
 Mandatory protocol: (1) body-derived clauses only, no placeholders/
 payload reads; canonical `result is Ok =>` guard form; file new findings
 as minimal repros + README entry. (2) probe-first
-`tools/probes/p_wave104_shapes.xi`, bind returned values before
+`tools/probes/p_wave105_shapes.xi`, bind returned values before
 comparing, green on v0.64.2 (the official archive binary -- see the
 binary-drift warning). (3) apply, targeted smokes, bisect/drop on
-codegen breaks. (4) dump `tools/coverage_floors141.json`, wire workflows
+codegen breaks. (4) dump `tools/coverage_floors142.json`, wire workflows
 + tools/README + plan/session/queue in one commit, YAML check, pure-ASCII
-commit. (5) battery: corpus 954/954, probes expect 278, modules 509/509,
-barename 0/509, floors141 + module-smoke ratchets; push `main` with the
+commit. (5) battery: corpus 954/954, probes expect 279, modules 509/509,
+barename 0/509, floors142 + module-smoke ratchets; push `main` with the
 one-shot Lefteris-Notas credential (403 as Lefteris-Ngonart; GitHub 500s
 per failed_attempts.md). (6) no unbounded scratch benchmarks. (7) release
 side follows the candidate-tag pin protocol; do NOT tag/publish without
 the compiler-lane OK (a security exception needs an explicit note).
 
 HANDOFF NOTE: locks include p_pin0641_iter_shapes.xi, the wave-77 stats
-probe, the PULSE hardening probe, the wave-78..103 coverage probes
+probe, the PULSE hardening probe, the wave-78..104 coverage probes
 (wave 101 added p_wave101_shapes.xi; wave 102 added p_wave102_shapes.xi
 plus the promoted p_json_parse_depth_cap.xi; wave 103 added
-p_wave103_shapes.xi), p_str_split_scale.xi, the io locks
-(p_read_file_lines_crlf.xi, p_fs_remove.xi) and the promoted regression
-locks (p_rvalue_float_vec_index.xi, p_multipart_parse_name.xi,
-p_iter_range_collect_forwardref.xi) -- **277 probes total**. Open repros
+p_wave103_shapes.xi; wave 104 added p_wave104_shapes.xi and remerged
+p_wave66_shapes.xi to the millisecond Instant semantics),
+p_str_split_scale.xi, the io locks (p_read_file_lines_crlf.xi,
+p_fs_remove.xi) and the promoted regression locks
+(p_rvalue_float_vec_index.xi, p_multipart_parse_name.xi,
+p_iter_range_collect_forwardref.xi) -- **278 probes total**. Open repros
 on v0.64.2: the 16 Current findings' repros (see
 tools/known_failures/README.md; the new p_result_payload_index_concat.xi
 and p_path_println_context_crash.xi are rc 1 / exit -1073741795). docs/failed_attempts.md logs push and
@@ -2149,6 +2157,33 @@ registry pin, agent recon for the rest)**
   gates; open: contract coverage 100%, zero open findings, beta-exit release
   cut). Every wave updates both lines as gates flip; the website's roadmap
   bar and corpus table row read them.
+
+**SESSION 2026-10-10 block 99 (wave 104: Instant millisecond resolution + buffered-stdin normalization; probe 278th; fix wave)**
+- FIX-FIRST benchmark-2 (REL-20261010-1554-benchmark-2): `Instant`
+  carried seconds (`monotonic_ms() / 1000`), so `elapsed().as_millis()`
+  returned seconds*1000. `Instant.t` is now milliseconds from the
+  monotonic origin: `now` / `elapsed` / `duration_since` / `add` / `sub`
+  switched to ms (`Duration.from_millis` / `as_millis`), `sleep_until`
+  compares the same monotonic clock and sleeps the remaining span via
+  `xiom_thread_sleep_ms`; the `xiom.time.instant` wrappers and clauses
+  were updated (`instant_to_millis == t`, `instant_from_millis` stores
+  ms, add/sub use `d.as_millis()`). Consumer audit: bench/test/log/
+  smoke_time paths stay correct; the wave-66 lock was remerged to the
+  new semantics (t == ms).
+- FIX-FIRST benchmark-3: `buf_reader_new(0)` / `buf_writer_new(1)` now
+  resolve the standard streams through the runtime
+  (`xiom_stdin()` / `xiom_stdout()`) instead of casting the fd number to
+  a FILE*; piped stdin reads `GOT:hello` (their Done criterion), and
+  nonzero FILE* handles (`fs.fopen`) keep working. `buffer.xi` externs
+  gained the two runtime declarations.
+- Probe `p_wave104_shapes.xi` (278th, 13 checks) locks both fixes and
+  the FILE* path (write_text -> fopen -> read 2 lines -> fclose/remove).
+  Targeted smokes: smoke_io2, 19 time, 21 stress_io, bench, 3 test,
+  5 log -- green.
+- Coverage unchanged (fix wave); floors141 dumped and wired. Battery on
+  the official v0.64.2 archive: corpus 954/954 full (975.5s), probes
+  278/278 (323.2s), modules 509/509 (255.7s), barename 0/509 (460.9s),
+  floors141 + doc + module-smoke (497/517, 3476/6204) ratchets OK.
 
 **SESSION 2026-10-10 block 98 (compiler v0.64.3 RELEASED pinning our tag-base notes branch; relay check)**
 - Compiler **v0.64.3 is released**: tag `v0.64.3` (f7b3a4fe) on commit

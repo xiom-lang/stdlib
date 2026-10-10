@@ -222,39 +222,39 @@ pub fn monotonic_ms() -> Int
 /// === Instant -- a point in time (monotonic clock) ===
 pub type Instant = { t: Int; }
 
-/// The current monotonic instant (second resolution), backed by the runtime
-/// monotonic clock; immune to wall-clock adjustments. Prefer
-/// `xiom.time.monotonic_ms` for millisecond resolution.
+/// The current monotonic instant (millisecond resolution), backed by the
+/// runtime monotonic clock (`xiom_async_now_ms`); immune to wall-clock
+/// adjustments. `t` is milliseconds from the monotonic origin.
 pub fn Instant.now() -> Instant
   ensures: result.t >= 0
   requires: true  // extern/runtime clock confinement (T002)
 {
-  return Instant{ t: monotonic_ms() / 1000; };
+  return Instant{ t: monotonic_ms() };
 }
 
-/// Time elapsed since this instant (monotonic clock, second resolution).
+/// Time elapsed since this instant (monotonic clock, millisecond
+/// resolution).
 pub fn Instant.elapsed(self) -> Duration
   requires: true  // extern/runtime clock confinement (T002)
 {
-  let now = monotonic_ms() / 1000;
-  let diff = now - self.t;
-  return Duration.from_secs(diff);
+  let diff = monotonic_ms() - self.t;
+  return Duration.from_millis(diff);
 }
 
-/// Time from `earlier` to this instant.
+/// Time from `earlier` to this instant (millisecond resolution).
 pub fn Instant.duration_since(self, earlier: Instant) -> Duration {
   let diff = self.t - earlier.t;
-  return Duration.from_secs(diff);
+  return Duration.from_millis(diff);
 }
 
-/// Instant shifted forward by `d`.
+/// Instant shifted forward by `d` (millisecond precision).
 pub fn Instant.add(self, d: Duration) -> Instant {
-  return Instant{ t: self.t + d.secs; };
+  return Instant{ t: self.t + d.as_millis() };
 }
 
-/// Instant shifted backward by `d`.
+/// Instant shifted backward by `d` (millisecond precision).
 pub fn Instant.sub(self, d: Duration) -> Instant {
-  return Instant{ t: self.t - d.secs; };
+  return Instant{ t: self.t - d.as_millis() };
 }
 
 /// === SystemTime -- wall clock time ===
@@ -438,12 +438,18 @@ pub fn sleep_ms(ms: Int)
   }
 }
 
-/// Sleep until the given monotonic instant.
+/// Sleep until the given monotonic instant (millisecond resolution --
+/// `instant.t` is a monotonic millisecond reading, so this compares the
+/// same clock the instant was taken from).
 pub fn sleep_until(instant: Instant)
-  requires: true  // extern time() call in the wait loop (T002 confinement)
+  requires: true  // xiom_thread_sleep_ms extern call (T002 confinement)
 {
-  while time(0) < instant.t {
-  };
+  let remaining = instant.t - monotonic_ms();
+  if remaining > 0 {
+    unsafe {
+      xiom_thread_sleep_ms(remaining);
+    }
+  }
 }
 
 ///  Date -- calendar date (year, month, day) with day-number

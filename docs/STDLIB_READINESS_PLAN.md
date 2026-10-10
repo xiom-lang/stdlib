@@ -1439,8 +1439,20 @@ T1/T2 yields.
         (200.2s), barename 0/509 (295.9s), ratchets OK. The remaining
         os gap is largely stub-gated; wave 104 takes the claimable
         remainder + the relay queue.
+        Wave 104 (2026-10-10): Instant millisecond resolution +
+        buffered-stdin normalization -- two relay fixes (benchmark-2:
+        Instant.t is ms, elapsed/duration_since/add/sub/sleep_until and
+        the instant.xi wrappers switched, the wave-66 lock remerged;
+        benchmark-3: buf_reader_new(0)/buf_writer_new(1) resolve
+        stdin/stdout through the runtime, piped stdin reads GOT:hello).
+        Probe p_wave104_shapes.xi (278th, 13 checks) green; targeted
+        smokes io2/time/stress_io/bench/test/log green. Coverage flat
+        (fix wave); floors141. Battery on the official v0.64.2 archive:
+        corpus 954/954 (975.5s), probes 278/278 (323.2s), modules
+        509/509 (255.7s), barename 0/509 (460.9s), ratchets OK. Next:
+        os batch 2 + the website-10 crypto triage + runtime asks.
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors140.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors141.json
         tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;

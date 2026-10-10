@@ -21,6 +21,8 @@ extern "C" {
   fn fwrite(buf: *UInt8, size: UInt, count: UInt, stream: *UInt8) -> UInt;
   fn fseek(stream: *UInt8, offset: Int32, whence: Int32) -> Int32;
   fn ftell(stream: *UInt8) -> Int32;
+  fn xiom_stdin() -> *UInt8;
+  fn xiom_stdout() -> *UInt8;
 }
 
 // Pop the front byte of a Vec[UInt8].
@@ -35,14 +37,21 @@ fn buf_pop_front(b: &mut Vec[UInt8]) -> UInt8 {
   return v;
 }
 
-/// Wrap an fd; BufReader holds the fd and an internal buffer.
-/// Params: fd - the file descriptor (FILE* as Int).
-/// Returns: a buffered reader over `fd`.
+/// Wrap a standard fd or a FILE*; 0 resolves to the real stdin FILE* via
+/// the runtime (so `buf_reader_new(io.stdin())` works with piped input),
+/// any other nonzero value is used as the stream handle directly (e.g. a
+/// pointer from `fs.fopen`).
+/// Params: fd - 0 for stdin, or a FILE* as Int.
+/// Returns: a buffered reader over the stream.
 /// Complexity: O(1).
 pub fn buf_reader_new(fd: Int) -> BufReader
-  ensures: result.inner == fd
+  ensures: (fd != 0) => (result.inner == fd)
 {
-  return BufReader{ inner: fd; buf: Vec[UInt8].new(); }
+  var inner = fd;
+  if fd == 0 {
+    unsafe { inner = xiom_stdin() as Int; }
+  }
+  return BufReader{ inner: inner; buf: Vec[UInt8].new(); }
 }
 
 /// Read one line through the buffer.
@@ -220,14 +229,20 @@ pub fn br_tell(r: &BufReader) -> Int
   unsafe { return ftell(r.inner as *UInt8) as Int; }
 }
 
-/// Wrap an fd; BufWriter holds the fd and an internal buffer.
-/// Params: fd - the file descriptor (FILE* as Int).
-/// Returns: a buffered writer over `fd`.
+/// Wrap a standard fd or a FILE*; 1 resolves to the real stdout FILE* via
+/// the runtime (so `buf_writer_new(io.stdout())` works), any other value
+/// is used as the stream handle directly.
+/// Params: fd - 1 for stdout, or a FILE* as Int.
+/// Returns: a buffered writer over the stream.
 /// Complexity: O(1).
 pub fn buf_writer_new(fd: Int) -> BufWriter
-  ensures: result.inner == fd
+  ensures: (fd != 1) => (result.inner == fd)
 {
-  return BufWriter{ inner: fd; buf: Vec[UInt8].new(); }
+  var inner = fd;
+  if fd == 1 {
+    unsafe { inner = xiom_stdout() as Int; }
+  }
+  return BufWriter{ inner: inner; buf: Vec[UInt8].new(); }
 }
 
 /// Buffer bytes for writing.
