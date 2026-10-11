@@ -1,10 +1,10 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
-**76.7% -- 7 of 10 gates complete; gate 8 at 67.2% (partial credit) and
+**76.8% -- 7 of 10 gates complete; gate 8 at 67.9% (partial credit) and
 gates 9-10 discrete.** (Compiler pin: **v0.64.2**.)
 **Gates: corpus 954/954 full (C001 carve-outs retired on v0.63.1; new
 TcpStream loopback and uuencode roundtrip smokes added), modules 509/509,
-probes 281/281, barename 0/509.**
+probes 282/282, barename 0/509.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -14,24 +14,24 @@ gates flip:
    full, no carve-outs (C001 fixed by 4bf8cf1e; 20/20 + 20/20 stress).
    lz4 is fixed by m190 and stayed in the gate; the new TcpStream loopback
    smoke locks m196.
-3. Probe corpus green -- MET (281/281 on v0.64.2, incl. the promoted
+3. Probe corpus green -- MET (282/282 on v0.64.2, incl. the promoted
    regression locks (rvalue float Vec index, multipart parse name, iter
    forwardref), the v0.64.1 pin probe p_pin0641_iter_shapes.xi, the
-   wave-77 stats probe, the Pulse hardening probe, the wave-78..107
+   wave-77 stats probe, the Pulse hardening probe, the wave-78..108
    coverage probes (the wave-97 probe was remerged after m242, plus the
-   wave-98..107 probes), the io byte-fidelity/CRLF lock and the
+   wave-98..108 probes), the io byte-fidelity/CRLF lock and the
    fs_remove lock).
 4. Strict bare-name scan clean -- MET (0/509).
-5. Coverage ratchet green -- MET (floors144).
+5. Coverage ratchet green -- MET (floors145).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (497/517 modules, 3477/6202 fns).
-8. Contract coverage 100% (every public fn carries clauses) -- OPEN (67.2%).
+8. Contract coverage 100% (every public fn carries clauses) -- OPEN (67.9%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
    OPEN (16: 15 compiler, 1 stdlib).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
 
 Meter formula: MET gates count 1.0; gate 8 counts its current
-pub-with-clause fraction (67.2% -> 0.672); gates 9 and 10 get no partial
+pub-with-clause fraction (67.9% -> 0.679); gates 9 and 10 get no partial
 credit (discrete). Update the percentage and the gate-8 fraction in the
 same commit as each floors dump so the meter moves smoothly toward 80%.
 
@@ -79,11 +79,15 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
    shadow filed as -1053-stdlib; 41 clauses, +39 pub; probe 280th). Wave
    107 covered crypto batch 1 (chacha/aead/curves/des/rng/sign/rsa; 41
    clauses, +41 pub; probe 281st) and fixed the RSA short-key OOB read in
-   _rsa_parse_key (bounds-guarded; caught by the probe's contract run).
-   Math 53.0%, os 55.4%, hash 94.4%, crypto 69.4%, global 67.2%, meter
-   76.7%; handoff in `docs/stdlib_session.md` snapshot 28 (block 100
-   refresh; compiler v0.64.3 released pinning ab894b47), wave records
-   blocks 89-109.
+   _rsa_parse_key. Wave 108 covered crypto batch 2 (cipher/crypto tail/
+   ecc; 49 fns, +46 pub; probe 282nd) and fixed THREE defects the probe
+   exposed: cipher.xi's _gf_mul11/_gf_mul13 swap (every cipher.xi decrypt
+   path was wrong; encrypt was FIPS-correct; untested by any smoke), the
+   argon2 iterations guard (tripped pbkdf2's requires), and the
+   educational ed25519 short-key/signature OOB reads. Math 53.0%, os
+   55.4%, hash 94.4%, crypto 94.5%, global 67.9%, meter 76.8%; handoff in
+   `docs/stdlib_session.md` snapshot 28 (block 100 refresh; compiler
+   v0.64.3 released pinning ab894b47), wave records blocks 89-111.
 BINARY NOTE: the shared local build path
 `E:\xiom-lang\xiom\target\release\xiom.exe` was rebuilt past the pin
 (compiler main da7798da m252) and fails four corpus smokes; use the
@@ -771,6 +775,27 @@ verify stdlib-v0.64.3 (d052a3c5) during its v0.64.3 candidate gates.
 Housekeeping in the same relay: the wave-97 sibling-alias split-probe
 workaround was DROPPED -- p_wave97_bitwise_shapes.xi was merged back into
 p_wave97_shapes.xi and re-run green on v0.64.2 (probe corpus stays 272).
+
+Update 2026-10-11 (wave 108 landed): FIX-FIRST crypto defects (3) +
+crypto batch 2. cipher.xi's `_gf_mul11`/`_gf_mul13` were SWAPPED -- every
+cipher.xi decrypt path (aes_block_decrypt / ECB / CBC) computed wrong
+plaintext while its encrypt was FIPS-correct; NO smoke covered the
+decrypt (the wave probe caught it by comparing the block roundtrip
+against the FIPS-verified runtime AES). Fixed. `argon2` could pass
+iterations <= 0 into pbkdf2 (whose requires trap) -- guarded to the
+family's validate-and-return-empty convention. The educational ecc
+ed25519_sign/verify indexed 32 bytes blindly (OOB reads for short keys/
+signatures) -- bounds-guarded with zero-fill; open note: the toy's
+keygen->sign->verify roundtrip is false by construction (sign binds
+sha256(sk); verify binds the passed key), no smoke covers it. Crypto
+coverage: 49 fns, +46 pub (cipher 22, crypto tail 15, ecc 12); crypto
+69.4% -> 94.5%, global 67.2% -> 67.9% (pubCovered 4370 -> 4416, clauses
+5790 -> 5875); meter 76.8%; floors145. Probe p_wave108_shapes.xi (282nd,
+60 checks) RED on the AES decrypt + argon2 trap / GREEN post-fix, green
+post-clauses. Battery: corpus 954/954 full (607.9s), probes 282/282
+(246.5s), modules 509/509 (156.2s), barename 0/509 (234.4s), floors145
++ doc + module-smoke (497/517, 3476/6204) ratchets OK. Next: misc/sync
+coverage; runtime asks when the compiler runtime bundle moves.
 
 Update 2026-10-11 (wave 107 landed): FIX-FIRST RSA short-key OOB read +
 crypto batch 1. `_rsa_parse_key` (crypto.xi) indexed key[0..8]

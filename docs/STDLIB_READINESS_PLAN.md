@@ -1531,8 +1531,29 @@ T1/T2 yields.
         note (three interface points adopted for the queued socket-
         timeout wave). Next: crypto batch 2 (cipher + crypto.xi tail +
         ecc); misc/sync coverage.
+        Wave 108 (2026-10-11): FIX-FIRST crypto defects (3). cipher.xi's
+        _gf_mul11/_gf_mul13 were SWAPPED -- every cipher.xi decrypt path
+        (aes_block_decrypt / ECB / CBC) computed wrong plaintext while
+        encrypt stayed FIPS-correct; NO smoke covered the decrypt (the
+        wave probe caught it by comparing the block roundtrip against the
+        FIPS-verified runtime AES). argon2 could pass iterations <= 0 into
+        pbkdf2 (whose requires trap) -- now guarded to the family's
+        validate-and-return-empty convention. The educational ecc
+        ed25519_sign/verify indexed 32 bytes blindly (OOB reads for short
+        keys/signatures) -- bounds-guarded with zero-fill. Existing open
+        note: the toy's keygen->sign->verify roundtrip is false by
+        construction (sign binds sha256(sk); verify binds the passed
+        key); no smoke covers it. Crypto batch 2 coverage: 49 fns, +46 pub
+        (cipher 22, crypto tail 15, ecc 12); crypto 69.4% -> 94.5%; global
+        67.2% -> 67.9% (pubCovered 4370 -> 4416, clauses 5790 -> 5875);
+        meter 76.8%; floors145. Probe p_wave108_shapes.xi (282nd, 60
+        checks) RED on the AES decrypt + argon2 trap / GREEN post-fix and
+        post-clauses. Battery on the official v0.64.2 archive: corpus
+        954/954 full (607.9s), probes 282/282 (246.5s), modules 509/509
+        (156.2s), barename 0/509 (234.4s), floors145 + doc + module-smoke
+        (497/517, 3476/6204) ratchets OK. Next: misc/sync coverage.
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors144.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors145.json
         tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;

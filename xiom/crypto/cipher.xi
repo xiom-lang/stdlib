@@ -97,12 +97,12 @@ fn _gf_mul9(a: UInt8) -> UInt8 {
 
 fn _gf_mul11(a: UInt8) -> UInt8 {
   var t = _gf_mul2(_gf_mul2(a));
-  return (_gf_mul2(t) as Int ^ t as Int ^ a as Int) as UInt8;
+  return (_gf_mul2(t) as Int ^ _gf_mul2(a) as Int ^ a as Int) as UInt8;
 }
 
 fn _gf_mul13(a: UInt8) -> UInt8 {
   var t = _gf_mul2(_gf_mul2(a));
-  return (_gf_mul2(t) as Int ^ _gf_mul2(a) as Int ^ a as Int) as UInt8;
+  return (_gf_mul2(t) as Int ^ t as Int ^ a as Int) as UInt8;
 }
 
 fn _gf_mul14(a: UInt8) -> UInt8 {
@@ -307,7 +307,11 @@ fn _aes_decrypt_block(block: &Vec[UInt8], start: Int, expanded_key: &Vec[UInt8],
 /// Added as a public primitive so MAC modules (CBC-MAC, CMAC) can reuse the
 /// verified block cipher. Returns Err on invalid key length.
 /// Complexity: O(1) (fixed 10-14 rounds).
-pub fn aes_block_encrypt(key: &Vec[UInt8], block: &Vec[UInt8]) -> Result<Vec[UInt8], Str> {
+pub fn aes_block_encrypt(key: &Vec[UInt8], block: &Vec[UInt8]) -> Result<Vec[UInt8], Str>
+  ensures: (key.len() != 16 && key.len() != 24 && key.len() != 32) => (result.is_err == true)
+  ensures: (block.len() != 16) => (result.is_err == true)
+  ensures: (result is Ok) => (result.len() == 16)
+{
   if !(_aes_valid_key(key)) {
     return Err("aes_block_encrypt: invalid key length");
   }
@@ -321,7 +325,11 @@ pub fn aes_block_encrypt(key: &Vec[UInt8], block: &Vec[UInt8]) -> Result<Vec[UIn
 /// Raw AES block decryption (16 bytes in -> 16 bytes out). See
 /// aes_block_encrypt.
 /// Complexity: O(1).
-pub fn aes_block_decrypt(key: &Vec[UInt8], block: &Vec[UInt8]) -> Result<Vec[UInt8], Str> {
+pub fn aes_block_decrypt(key: &Vec[UInt8], block: &Vec[UInt8]) -> Result<Vec[UInt8], Str>
+  ensures: (key.len() != 16 && key.len() != 24 && key.len() != 32) => (result.is_err == true)
+  ensures: (block.len() != 16) => (result.is_err == true)
+  ensures: (result is Ok) => (result.len() == 16)
+{
   if !(_aes_valid_key(key)) {
     return Err("aes_block_decrypt: invalid key length");
   }
@@ -377,7 +385,10 @@ fn _pkcs7_unpad(data: &Vec[UInt8]) -> Result<Vec[UInt8], Str> {
 /// AES block primitive (the flat module's aes_decrypt miscompiles its length
 /// check in the current build, so delegation is unsafe).
 /// Complexity: O(n).
-pub fn aes_encrypt_ecb(key: &Vec[UInt8], data: &Vec[UInt8]) -> Result<Vec[UInt8], Str> {
+pub fn aes_encrypt_ecb(key: &Vec[UInt8], data: &Vec[UInt8]) -> Result<Vec[UInt8], Str>
+  ensures: (key.len() != 16 && key.len() != 24 && key.len() != 32) => (result.is_err == true)
+  ensures: (result is Ok) => (result.len() % 16 == 0 && result.len() >= 16)
+{
   if !(_aes_valid_key(key)) { return Err("aes_encrypt_ecb: invalid key length"); }
   let sched = _aes_key_expansion(key);
   var padded = _pkcs7_pad(data);
@@ -398,7 +409,10 @@ pub fn aes_encrypt_ecb(key: &Vec[UInt8], data: &Vec[UInt8]) -> Result<Vec[UInt8]
 /// AES-ECB decrypt with padding removal. Local implementation (see
 /// aes_encrypt_ecb).
 /// Complexity: O(n).
-pub fn aes_decrypt_ecb(key: &Vec[UInt8], data: &Vec[UInt8]) -> Result<Vec[UInt8], Str> {
+pub fn aes_decrypt_ecb(key: &Vec[UInt8], data: &Vec[UInt8]) -> Result<Vec[UInt8], Str>
+  ensures: (key.len() != 16 && key.len() != 24 && key.len() != 32) => (result.is_err == true)
+  ensures: (data.len() % 16 != 0) => (result.is_err == true)
+{
   if !(_aes_valid_key(key)) { return Err("aes_decrypt_ecb: invalid key length"); }
   var dlen = data.len();
   var rem = dlen - (dlen / 16) * 16;
@@ -420,7 +434,11 @@ pub fn aes_decrypt_ecb(key: &Vec[UInt8], data: &Vec[UInt8]) -> Result<Vec[UInt8]
 
 /// AES-CBC encrypt with PKCS#7 padding.
 /// Complexity: O(n).
-pub fn aes_encrypt_cbc(key: &Vec[UInt8], iv: &Vec[UInt8], data: &Vec[UInt8]) -> Result<Vec[UInt8], Str> {
+pub fn aes_encrypt_cbc(key: &Vec[UInt8], iv: &Vec[UInt8], data: &Vec[UInt8]) -> Result<Vec[UInt8], Str>
+  ensures: (key.len() != 16 && key.len() != 24 && key.len() != 32) => (result.is_err == true)
+  ensures: (iv.len() != 16) => (result.is_err == true)
+  ensures: (result is Ok) => (result.len() % 16 == 0 && result.len() >= 16)
+{
   if !(_aes_valid_key(key)) { return Err("aes_encrypt_cbc: invalid key length"); }
   if iv.len() != 16 { return Err("aes_encrypt_cbc: IV must be 16 bytes"); }
   let sched = _aes_key_expansion(key);
@@ -454,7 +472,11 @@ pub fn aes_encrypt_cbc(key: &Vec[UInt8], iv: &Vec[UInt8], data: &Vec[UInt8]) -> 
 
 /// AES-CBC decrypt with padding removal.
 /// Complexity: O(n).
-pub fn aes_decrypt_cbc(key: &Vec[UInt8], iv: &Vec[UInt8], data: &Vec[UInt8]) -> Result<Vec[UInt8], Str> {
+pub fn aes_decrypt_cbc(key: &Vec[UInt8], iv: &Vec[UInt8], data: &Vec[UInt8]) -> Result<Vec[UInt8], Str>
+  ensures: (key.len() != 16 && key.len() != 24 && key.len() != 32) => (result.is_err == true)
+  ensures: (iv.len() != 16) => (result.is_err == true)
+  ensures: (data.len() % 16 != 0) => (result.is_err == true)
+{
   if !(_aes_valid_key(key)) { return Err("aes_decrypt_cbc: invalid key length"); }
   if iv.len() != 16 { return Err("aes_decrypt_cbc: IV must be 16 bytes"); }
   if data.len() % 16 != 0 { return Err("aes_decrypt_cbc: ciphertext length"); }
@@ -523,7 +545,9 @@ fn _aes_crypt_ctr(key: &Vec[UInt8], iv: &Vec[UInt8], data: &Vec[UInt8]) -> Resul
 
 /// AES-CTR encrypt (stream cipher, no padding; decrypt is identical).
 /// Complexity: O(n).
-pub fn aes_encrypt_ctr(key: &Vec[UInt8], iv: &Vec[UInt8], data: &Vec[UInt8]) -> Vec[UInt8] {
+pub fn aes_encrypt_ctr(key: &Vec[UInt8], iv: &Vec[UInt8], data: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: (result.len() != 0) => (result.len() == data.len())
+{
   var r = _aes_crypt_ctr(key, iv, data);
   match r {
     Ok(v) => v;
@@ -533,7 +557,9 @@ pub fn aes_encrypt_ctr(key: &Vec[UInt8], iv: &Vec[UInt8], data: &Vec[UInt8]) -> 
 
 /// AES-CTR decrypt (same keystream as encrypt).
 /// Complexity: O(n).
-pub fn aes_decrypt_ctr(key: &Vec[UInt8], iv: &Vec[UInt8], data: &Vec[UInt8]) -> Vec[UInt8] {
+pub fn aes_decrypt_ctr(key: &Vec[UInt8], iv: &Vec[UInt8], data: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: (result.len() != 0) => (result.len() == data.len())
+{
   var r = _aes_crypt_ctr(key, iv, data);
   match r {
     Ok(v) => v;
@@ -728,7 +754,11 @@ fn _gcm_crypt(key: &Vec[UInt8], nonce: &Vec[UInt8], data: &Vec[UInt8], aad: &Vec
 /// AES-GCM encrypt (combined form: ciphertext with the 16-byte tag appended).
 /// Implemented locally (the flat module's gcm name collides here).
 /// Complexity: O(n).
-pub fn aes_encrypt_gcm(key: &Vec[UInt8], iv: &Vec[UInt8], data: &Vec[UInt8], aad: &Vec[UInt8]) -> Vec[UInt8] {
+pub fn aes_encrypt_gcm(key: &Vec[UInt8], iv: &Vec[UInt8], data: &Vec[UInt8], aad: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: (key.len() != 16 && key.len() != 24 && key.len() != 32) => (result.len() == 0)
+  ensures: (iv.len() != 12) => (result.len() == 0)
+  ensures: (key.len() == 16 || key.len() == 24 || key.len() == 32) && iv.len() == 12 => (result.len() == data.len() + 16)
+{
   if !(_aes_valid_key(key)) { return Vec[UInt8].new(); }
   if iv.len() != 12 { return Vec[UInt8].new(); }
   let out = _gcm_crypt(key, iv, data, aad);
@@ -749,7 +779,11 @@ pub fn aes_encrypt_gcm(key: &Vec[UInt8], iv: &Vec[UInt8], data: &Vec[UInt8], aad
 /// AES-GCM decrypt and verify the tag. The ciphertext `data` carries the
 /// 16-byte tag appended (see aes_encrypt_gcm).
 /// Complexity: O(n).
-pub fn aes_decrypt_gcm(key: &Vec[UInt8], iv: &Vec[UInt8], data: &Vec[UInt8], aad: &Vec[UInt8], tag: &Vec[UInt8]) -> Result<Vec[UInt8], Str> {
+pub fn aes_decrypt_gcm(key: &Vec[UInt8], iv: &Vec[UInt8], data: &Vec[UInt8], aad: &Vec[UInt8], tag: &Vec[UInt8]) -> Result<Vec[UInt8], Str>
+  ensures: (key.len() != 16 && key.len() != 24 && key.len() != 32) => (result.is_err == true)
+  ensures: (iv.len() != 12) => (result.is_err == true)
+  ensures: (tag.len() != 16) => (result.is_err == true)
+{
   if !(_aes_valid_key(key)) { return Err("aes_decrypt_gcm: invalid key length"); }
   if iv.len() != 12 { return Err("aes_decrypt_gcm: nonce must be 12 bytes"); }
   if tag.len() != 16 {
@@ -806,7 +840,9 @@ fn _aes_crypt_cfb(key: &Vec[UInt8], iv: &Vec[UInt8], data: &Vec[UInt8]) -> Resul
 
 /// AES-CFB128 encrypt (stream, no padding).
 /// Complexity: O(n).
-pub fn aes_encrypt_cfb(key: &Vec[UInt8], iv: &Vec[UInt8], data: &Vec[UInt8]) -> Vec[UInt8] {
+pub fn aes_encrypt_cfb(key: &Vec[UInt8], iv: &Vec[UInt8], data: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: (result.len() != 0) => (result.len() == data.len())
+{
   var r = _aes_crypt_cfb(key, iv, data);
   match r {
     Ok(v) => v;
@@ -841,7 +877,9 @@ fn _aes_crypt_ofb(key: &Vec[UInt8], iv: &Vec[UInt8], data: &Vec[UInt8]) -> Resul
 
 /// AES-OFB encrypt (stream, no padding; decrypt is identical).
 /// Complexity: O(n).
-pub fn aes_encrypt_ofb(key: &Vec[UInt8], iv: &Vec[UInt8], data: &Vec[UInt8]) -> Vec[UInt8] {
+pub fn aes_encrypt_ofb(key: &Vec[UInt8], iv: &Vec[UInt8], data: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: (result.len() != 0) => (result.len() == data.len())
+{
   var r = _aes_crypt_ofb(key, iv, data);
   match r {
     Ok(v) => v;
@@ -851,13 +889,18 @@ pub fn aes_encrypt_ofb(key: &Vec[UInt8], iv: &Vec[UInt8], data: &Vec[UInt8]) -> 
 
 /// Generate a random 256-bit AES key from the system CSPRNG.
 /// Complexity: O(1).
-pub fn aes_generate_key() -> Vec[UInt8] {
+pub fn aes_generate_key() -> Vec[UInt8]
+  ensures: result.len() == 32
+{
   return crypto.secure_random_bytes(32);
 }
 
 /// Derive a 32-byte AES key from a passphrase using PBKDF2-HMAC-SHA256.
 /// Complexity: O(iterations).
-pub fn aes_key_from_passphrase(passphrase: &Vec[UInt8], salt: &Vec[UInt8], iterations: Int) -> Vec[UInt8] {
+pub fn aes_key_from_passphrase(passphrase: &Vec[UInt8], salt: &Vec[UInt8], iterations: Int) -> Vec[UInt8]
+  ensures: (iterations < 1) => (result.len() == 0)
+  ensures: (iterations >= 1) => (result.len() == 32)
+{
   if iterations < 1 { return Vec[UInt8].new(); }
   var it = iterations;
   if it > 1000000 { it = 1000000; }
@@ -910,7 +953,9 @@ pub fn aes_key_from_passphrase(passphrase: &Vec[UInt8], salt: &Vec[UInt8], itera
 /// ChaCha20 stream encrypt with an explicit 32-bit block counter. Built on
 /// xiom.chacha (the counter is seeded into the public ChaCha20 state).
 /// Complexity: O(n).
-pub fn chacha20_encrypt(key: &Vec[UInt8], nonce: &Vec[UInt8], counter: Int, data: &Vec[UInt8]) -> Vec[UInt8] {
+pub fn chacha20_encrypt(key: &Vec[UInt8], nonce: &Vec[UInt8], counter: Int, data: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: result.len() == data.len()
+{
   var ctx = chacha.chacha20_new(key, nonce);
   ctx.state[12] = ctx.state[12] + counter;
   return chacha.chacha20_process(&ctx, data);
@@ -918,7 +963,9 @@ pub fn chacha20_encrypt(key: &Vec[UInt8], nonce: &Vec[UInt8], counter: Int, data
 
 /// ChaCha20 stream decrypt (identical to encrypt).
 /// Complexity: O(n).
-pub fn chacha20_decrypt(key: &Vec[UInt8], nonce: &Vec[UInt8], counter: Int, data: &Vec[UInt8]) -> Vec[UInt8] {
+pub fn chacha20_decrypt(key: &Vec[UInt8], nonce: &Vec[UInt8], counter: Int, data: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: result.len() == data.len()
+{
   return chacha20_encrypt(key, nonce, counter, data);
 }
 
@@ -950,7 +997,11 @@ fn _le64(out: &mut Vec[UInt8], v: Int) {
 /// ChaCha20-Poly1305 AEAD encrypt (RFC 8439): returns ciphertext with the
 /// 16-byte tag appended.
 /// Complexity: O(n).
-pub fn chacha20poly1305_encrypt(key: &Vec[UInt8], nonce: &Vec[UInt8], data: &Vec[UInt8], aad: &Vec[UInt8]) -> Vec[UInt8] {
+pub fn chacha20poly1305_encrypt(key: &Vec[UInt8], nonce: &Vec[UInt8], data: &Vec[UInt8], aad: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: (key.len() != 32) => (result.len() == 0)
+  ensures: (nonce.len() != 12) => (result.len() == 0)
+  ensures: (key.len() == 32 && nonce.len() == 12) => (result.len() == data.len() + 16)
+{
   if key.len() != 32 { return Vec[UInt8].new(); }
   if nonce.len() != 12 { return Vec[UInt8].new(); }
   var base = chacha.chacha20_new(key, nonce);
@@ -1011,7 +1062,12 @@ pub fn chacha20poly1305_encrypt(key: &Vec[UInt8], nonce: &Vec[UInt8], data: &Vec
 
 /// ChaCha20-Poly1305 AEAD decrypt and verify the tag.
 /// Complexity: O(n).
-pub fn chacha20poly1305_decrypt(key: &Vec[UInt8], nonce: &Vec[UInt8], data: &Vec[UInt8], aad: &Vec[UInt8], tag: &Vec[UInt8]) -> Result<Vec[UInt8], Str> {
+pub fn chacha20poly1305_decrypt(key: &Vec[UInt8], nonce: &Vec[UInt8], data: &Vec[UInt8], aad: &Vec[UInt8], tag: &Vec[UInt8]) -> Result<Vec[UInt8], Str>
+  ensures: (key.len() != 32) => (result.is_err == true)
+  ensures: (nonce.len() != 12) => (result.is_err == true)
+  ensures: (tag.len() != 16) => (result.is_err == true)
+  ensures: (result is Ok) => (result.len() == data.len())
+{
   if key.len() != 32 { return Err("chacha20poly1305_decrypt: key must be 32 bytes"); }
   if nonce.len() != 12 { return Err("chacha20poly1305_decrypt: nonce must be 12 bytes"); }
   if tag.len() != 16 { return Err("chacha20poly1305_decrypt: tag must be 16 bytes"); }
@@ -1108,7 +1164,10 @@ fn _des_key_int(key: &Vec[UInt8]) -> Result[Int, Str] {
 /// Legacy single-DES encrypt (ECB, 8-byte blocks, PKCS#7 padding).
 /// Delegates to xiom.des. Interop only.
 /// Complexity: O(n).
-pub fn des_encrypt(key: &Vec[UInt8], data: &Vec[UInt8]) -> Result<Vec[UInt8], Str> {
+pub fn des_encrypt(key: &Vec[UInt8], data: &Vec[UInt8]) -> Result<Vec[UInt8], Str>
+  ensures: (key.len() != 8) => (result.is_err == true)
+  ensures: (result is Ok) => (result.len() % 8 == 0)
+{
   var k = _des_key_int(key);
   if !k.is_ok { return Err(k.error); }
   var padded = Vec[UInt8].new();
@@ -1142,7 +1201,10 @@ pub fn des_encrypt(key: &Vec[UInt8], data: &Vec[UInt8]) -> Result<Vec[UInt8], St
 
 /// Legacy single-DES decrypt (ECB, padding removal). Interop only.
 /// Complexity: O(n).
-pub fn des_decrypt(key: &Vec[UInt8], data: &Vec[UInt8]) -> Result<Vec[UInt8], Str> {
+pub fn des_decrypt(key: &Vec[UInt8], data: &Vec[UInt8]) -> Result<Vec[UInt8], Str>
+  ensures: (key.len() != 8) => (result.is_err == true)
+  ensures: (data.len() % 8 != 0) => (result.is_err == true)
+{
   if data.len() % 8 != 0 {
     return Err("des: ciphertext length must be a multiple of 8");
   }
@@ -1180,7 +1242,10 @@ pub fn des_decrypt(key: &Vec[UInt8], data: &Vec[UInt8]) -> Result<Vec[UInt8], St
 /// 3DES-EDE encrypt (3 x 8-byte keys, PKCS#7 padding). Delegates to xiom.des.
 /// Interop only.
 /// Complexity: O(n).
-pub fn triple_des_encrypt(key: &Vec[UInt8], data: &Vec[UInt8]) -> Result<Vec[UInt8], Str> {
+pub fn triple_des_encrypt(key: &Vec[UInt8], data: &Vec[UInt8]) -> Result<Vec[UInt8], Str>
+  ensures: (key.len() != 24) => (result.is_err == true)
+  ensures: (result is Ok) => (result.len() % 8 == 0)
+{
   if key.len() != 24 {
     return Err("triple_des: key must be 24 bytes");
   }
@@ -1218,7 +1283,10 @@ pub fn triple_des_encrypt(key: &Vec[UInt8], data: &Vec[UInt8]) -> Result<Vec[UIn
 
 /// 3DES-EDE decrypt (padding removal). Interop only.
 /// Complexity: O(n).
-pub fn triple_des_decrypt(key: &Vec[UInt8], data: &Vec[UInt8]) -> Result<Vec[UInt8], Str> {
+pub fn triple_des_decrypt(key: &Vec[UInt8], data: &Vec[UInt8]) -> Result<Vec[UInt8], Str>
+  ensures: (key.len() != 24) => (result.is_err == true)
+  ensures: (data.len() % 8 != 0) => (result.is_err == true)
+{
   if key.len() != 24 {
     return Err("triple_des: key must be 24 bytes");
   }

@@ -2359,7 +2359,43 @@ registry pin, agent recon for the rest)**
   (216.6s), floors144 + doc + module-smoke (497/517, 3476/6204)
   ratchets OK.
 
-**SESSION 2026-10-11 block 108 (doorbell 13:00Z: pulse-3/4 verified-closed; two design-info pulse items already acked; ops hygiene broadcast received)**
+**SESSION 2026-10-11 block 111 (wave 108: THREE fix-first crypto defects + crypto batch 2; crypto 94.5%; probe 282nd)**
+- FIX-FIRST (all caught by the wave probe):
+  1. cipher.xi `_gf_mul11`/`_gf_mul13` were swapped (mul11 computed a~13,
+     mul13 computed a~11) -- every cipher.xi decrypt path
+     (aes_block_decrypt/ECB/CBC) produced wrong plaintext while encrypt
+     stayed FIPS-correct; NO smoke covered the decrypt. Caught by
+     comparing the block roundtrip against the FIPS-verified runtime AES
+     (out scratch); fixed by swapping the middle terms.
+  2. `argon2` could pass effective_iterations <= 0 into pbkdf2 (whose
+     `requires: iterations > 0` traps); now guarded to the family's
+     validate-and-return-empty convention.
+  3. Educational ecc `ed25519_sign`/`ed25519_verify` indexed 32 bytes
+     blindly (OOB reads for short keys/signatures/keys); bounds-guarded
+     with zero-fill. Open note: the toy's keygen->sign->verify roundtrip
+     is false by construction (sign binds sha256(sk) while verify binds
+     the passed key); no smoke covers it -- candidate for a dedicated fix
+     wave.
+- Crypto batch 2 coverage: cipher 22 (AES block/ECB/CBC/CTR/GCM/CFB/OFB,
+     key generation/derivation, chacha/poly1305 wrappers, DES/3DES), the
+     flat crypto tail 15 (aes/gcm guards, RSA empty-key Err, argon2,
+     entropy draws, hkdf, chacha20_poly1305 out-param contract) and ecc 12
+     (small-curve KATs, none/zero identities, toy-ecdsa length locks,
+     production byte-API out-param sizing). 49 fns, +46 pub. crypto
+     69.4% -> 94.5%; global 67.2% -> 67.9% (pubCovered 4370 -> 4416,
+     clauses 5790 -> 5875); meter 76.8%; floors145 dumped + wired.
+     Probe p_wave108_shapes.xi (282nd, 60 checks) RED on the AES decrypt
+     + argon2 trap / GREEN post-fix and post-clauses.
+- Battery on the official v0.64.2 archive: corpus 954/954 full (607.9s),
+  probes 282/282 (246.5s), modules 509/509 (156.2s), barename 0/509
+  (234.4s), floors145 + doc + module-smoke (497/517, 3476/6204)
+  ratchets OK.
+- Bus at session start: no new inbound; doorbell recorded block 110
+  (pulse design items acked, ops hygiene in force). Session-doc block
+  renumber hygiene: the doorbell's 13:00Z block became 110 (mine 108/109
+  came first).
+
+**SESSION 2026-10-11 block 110 (doorbell 13:00Z: pulse-3/4 verified-closed; two design-info pulse items already acked; ops hygiene broadcast received)**
 - REL-20261011-0317-pulse-3/-4 were CLOSED by pulse (the
   already-present ec64dec deliveries verified by the reporter).
 - Two new pulse design items were acked by the concurrent session with

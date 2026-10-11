@@ -1479,6 +1479,8 @@ return Ok(result);
 
 /// AES encrypt with the given key; Err on bad key/data lengths.
 pub fn aes_encrypt(key: &Vec[UInt8], plaintext: &Vec[UInt8]) -> Result[Vec[UInt8], Str]
+  ensures: (key.len() != 16 && key.len() != 24 && key.len() != 32) => (result.is_err == true)
+  ensures: (result is Ok) => (result.len() % 16 == 0 && result.len() >= 16)
   // No requires clauses: the body validates and returns Err gracefully
   // (documented stdlib rule -- contracts trap on violation, BUG 22 #5).
 {
@@ -1537,6 +1539,8 @@ pub fn aes_encrypt(key: &Vec[UInt8], plaintext: &Vec[UInt8]) -> Result[Vec[UInt8
 
 /// AES decrypt with the given key; Err on bad key/data or padding.
 pub fn aes_decrypt(key: &Vec[UInt8], ciphertext: &Vec[UInt8]) -> Result<Vec[UInt8], Str>
+  ensures: (key.len() != 16 && key.len() != 24 && key.len() != 32) => (result.is_err == true)
+  ensures: (ciphertext.len() % 16 != 0) => (result.is_err == true)
   // No requires clauses: the body validates and returns Err gracefully
   // (documented stdlib rule -- contracts trap on violation, BUG 22 #5).
 {
@@ -1756,7 +1760,10 @@ fn _gcm_j0(nonce: &Vec[UInt8]) -> Vec[UInt8] {
 }
 
 /// AES-GCM encrypt: Ok((ciphertext, tag)); Err on bad lengths.
-pub fn aes_encrypt_gcm(key: &Vec[UInt8], nonce: &Vec[UInt8], plaintext: &Vec[UInt8], aad: &Vec[UInt8]) -> Result<(Vec[UInt8], Vec[UInt8]), Str> {
+pub fn aes_encrypt_gcm(key: &Vec[UInt8], nonce: &Vec[UInt8], plaintext: &Vec[UInt8], aad: &Vec[UInt8]) -> Result<(Vec[UInt8], Vec[UInt8]), Str>
+  ensures: (key.len() != 16 && key.len() != 24 && key.len() != 32) => (result.is_err == true)
+  ensures: (nonce.len() != 12) => (result.is_err == true)
+{
   if key.len() != 16 && key.len() != 24 && key.len() != 32 {
     return Err("invalid key length: must be 16, 24, or 32 bytes");
   }
@@ -1806,7 +1813,11 @@ pub fn aes_encrypt_gcm(key: &Vec[UInt8], nonce: &Vec[UInt8], plaintext: &Vec[UIn
 }
 
 /// AES-GCM decrypt and verify the tag; Err on failure.
-pub fn aes_decrypt_gcm(key: &Vec[UInt8], nonce: &Vec[UInt8], ciphertext: &Vec[UInt8], tag: &Vec[UInt8], aad: &Vec[UInt8]) -> Result<Vec[UInt8], Str> {
+pub fn aes_decrypt_gcm(key: &Vec[UInt8], nonce: &Vec[UInt8], ciphertext: &Vec[UInt8], tag: &Vec[UInt8], aad: &Vec[UInt8]) -> Result<Vec[UInt8], Str>
+  ensures: (key.len() != 16 && key.len() != 24 && key.len() != 32) => (result.is_err == true)
+  ensures: (nonce.len() != 12) => (result.is_err == true)
+  ensures: (tag.len() != 16) => (result.is_err == true)
+{
   if key.len() != 16 && key.len() != 24 && key.len() != 32 {
     return Err("invalid key length: must be 16, 24, or 32 bytes");
   }
@@ -1921,7 +1932,9 @@ fn _be_vec_to_int(data: &Vec[UInt8]) -> Int {
 }
 
 /// Generate an RSA key pair of `bits` bits; Err on failure.
-pub fn generate_rsa_keypair(bits: Int) -> Result<KeyPair, Str> {
+pub fn generate_rsa_keypair(bits: Int) -> Result<KeyPair, Str>
+  ensures: (bits < 16 || bits > 32) => (result.is_err == true)
+{
   if bits < 16 || bits > 32 {
     return Err("RSA key size out of practical range for pure XIOM (use 16-32 bits)");
   }
@@ -2006,7 +2019,9 @@ fn _rsa_parse_key(key: &Vec[UInt8]) -> (Int, Int, Int) {
 }
 
 /// RSA encrypt with a public key; Err on failure.
-pub fn rsa_encrypt(public_key: &Vec[UInt8], data: &Vec[UInt8]) -> Result<Vec[UInt8], Str> {
+pub fn rsa_encrypt(public_key: &Vec[UInt8], data: &Vec[UInt8]) -> Result<Vec[UInt8], Str>
+  ensures: (public_key.len() == 0) => (result.is_err == true)
+{
   let (n, e, key_size) = _rsa_parse_key(public_key);
   var data_int = _be_vec_to_int(data);
   if data_int >= n { return Err("data too large for RSA key"); }
@@ -2015,7 +2030,9 @@ pub fn rsa_encrypt(public_key: &Vec[UInt8], data: &Vec[UInt8]) -> Result<Vec[UIn
 }
 
 /// RSA decrypt with a private key; Err on failure.
-pub fn rsa_decrypt(private_key: &Vec[UInt8], data: &Vec[UInt8]) -> Result<Vec[UInt8], Str> {
+pub fn rsa_decrypt(private_key: &Vec[UInt8], data: &Vec[UInt8]) -> Result<Vec[UInt8], Str>
+  ensures: (private_key.len() == 0) => (result.is_err == true)
+{
   let (n, d, key_size) = _rsa_parse_key(private_key);
   var cipher_int = _be_vec_to_int(data);
   if cipher_int >= n { return Err("ciphertext too large for RSA key"); }
@@ -2024,12 +2041,16 @@ pub fn rsa_decrypt(private_key: &Vec[UInt8], data: &Vec[UInt8]) -> Result<Vec[UI
 }
 
 /// RSA signature over `data`; Err on failure.
-pub fn rsa_sign(private_key: &Vec[UInt8], data: &Vec[UInt8]) -> Result<Vec[UInt8], Str> {
+pub fn rsa_sign(private_key: &Vec[UInt8], data: &Vec[UInt8]) -> Result<Vec[UInt8], Str>
+  ensures: (private_key.len() == 0) => (result.is_err == true)
+{
   return rsa_decrypt(private_key, data);
 }
 
 /// Verify an RSA signature; Ok(true/false) or Err.
-pub fn rsa_verify(public_key: &Vec[UInt8], data: &Vec[UInt8], signature: &Vec[UInt8]) -> Result<Bool, Str> {
+pub fn rsa_verify(public_key: &Vec[UInt8], data: &Vec[UInt8], signature: &Vec[UInt8]) -> Result<Bool, Str>
+  ensures: (public_key.len() == 0) => (result.is_err == true)
+{
   let decrypted = rsa_encrypt(public_key, signature);
   match decrypted {
     Ok(d) => {
@@ -2105,9 +2126,16 @@ pub fn pbkdf2(password: &Str, salt: &Vec[UInt8], iterations: Int, key_len: Int) 
 }
 
 /// Argon2 key derivation with the given memory/iteration/parallelism costs.
-pub fn argon2(password: &Str, salt: &Vec[UInt8], memory: Int, iterations: Int, parallelism: Int) -> Vec[UInt8] {
+pub fn argon2(password: &Str, salt: &Vec[UInt8], memory: Int, iterations: Int, parallelism: Int) -> Vec[UInt8]
+  ensures: (iterations < 1 && memory < 1024) => (result.len() == 0)
+  ensures: (iterations >= 1 || memory >= 1024) => (result.len() == 32)
+{
   var effective_iterations = iterations;
   if memory > 0 { effective_iterations = iterations + memory / 1024; }
+  // pbkdf2 requires iterations > 0; keep the family's validate-and-return
+  // convention instead of tripping that contract on the way through
+  // (wave-108 fix-first).
+  if effective_iterations < 1 { return Vec[UInt8].new(); }
   return pbkdf2(password, salt, effective_iterations, 32);
 }
 
@@ -2142,7 +2170,10 @@ fn _seed_legacy_rng() {
 /// Backs secure_random_bytes since the confined-block growth fix
 /// (COMPILER_BUGS.md R4, 041e8bb3) removed the multi-draw AV; also used
 /// for the legacy fallback's one-time process seed.
-pub fn os_secure_random_bytes(count: Int) -> Vec[UInt8] {
+pub fn os_secure_random_bytes(count: Int) -> Vec[UInt8]
+  ensures: (count <= 0) => (result.len() == 0)
+  ensures: (count > 0) => (result.len() == count)
+{
   var result = Vec[UInt8].new();
   if count <= 0 {
     return result;
@@ -2190,7 +2221,10 @@ pub fn os_secure_random_bytes(count: Int) -> Vec[UInt8] {
 }
 
 /// OS-entropy random bytes (the CSPRNG source for the crypto modules).
-pub fn secure_random_bytes(count: Int) -> Vec[UInt8] {
+pub fn secure_random_bytes(count: Int) -> Vec[UInt8]
+  ensures: (count <= 0) => (result.len() == 0)
+  ensures: (count > 0) => (result.len() == count)
+{
   // OS-entropy CSPRNG: ProcessPrng/RtlGenRandom on Windows, /dev/urandom on
   // Unix (xiom_os_entropy in the runtime; multi-draw shapes unblocked by the
   // confined-block growth fix -- COMPILER_BUGS.md R4, 041e8bb3). Degrades to
@@ -2237,7 +2271,11 @@ pub fn constant_time_compare(a: &Vec[UInt8], b: &Vec[UInt8]) -> Bool
 ///   - Extract step concentrates entropy from IKM.
 ///   - Salt should be random but not secret; can be all-zeros.
 ///   - Info binds derived key to context; must be unique per key.
-pub fn hkdf_sha256(ikm: &Vec[UInt8], salt: &Vec[UInt8], info: &Vec[UInt8], okm_len: Int) -> Result[Vec[UInt8], Str] {
+pub fn hkdf_sha256(ikm: &Vec[UInt8], salt: &Vec[UInt8], info: &Vec<UInt8], okm_len: Int) -> Result[Vec[UInt8], Str]
+  ensures: (okm_len < 1) => (result.is_err == true)
+  ensures: (okm_len > 8160) => (result.is_err == true)
+  ensures: (result is Ok) => (result.len() == okm_len)
+{
   if okm_len < 1 { return Err("okm_len must be >= 1"); }
   let hash_len = 32;
   let max_len = 255 * hash_len;
@@ -2311,7 +2349,10 @@ pub fn hkdf_sha256(ikm: &Vec[UInt8], salt: &Vec[UInt8], info: &Vec[UInt8], okm_l
 ///   - Nonce MUST be unique for every message under the same key.
 ///   - Nonce reuse completely breaks confidentiality AND authenticity.
 ///   - The 16-byte tag provides 128-bit authentication strength.
-pub fn chacha20_poly1305_encrypt(key: &Vec[UInt8], nonce: &Vec[UInt8], aad: &Vec[UInt8], plaintext: &Vec[UInt8], ciphertext: &mut Vec[UInt8], tag: &mut Vec[UInt8]) -> Bool {
+pub fn chacha20_poly1305_encrypt(key: &Vec[UInt8], nonce: &Vec[UInt8], aad: &Vec[UInt8], plaintext: &Vec[UInt8], ciphertext: &mut Vec[UInt8], tag: &mut Vec[UInt8]) -> Bool
+  ensures: (key.len() == 32 && nonce.len() == 12) => (ciphertext.len() == plaintext.len())
+  ensures: (key.len() == 32 && nonce.len() == 12) => (tag.len() == 16)
+{
   if key.len() != 32 { return false; }
   if nonce.len() != 12 { return false; }
 
@@ -2406,7 +2447,9 @@ pub fn chacha20_poly1305_encrypt(key: &Vec[UInt8], nonce: &Vec[UInt8], aad: &Vec
 /// Security notes:
 ///   - Decryption only proceeds if tag verification passes (encrypt-then-MAC).
 ///   - Constant-time tag comparison prevents timing oracle attacks.
-pub fn chacha20_poly1305_decrypt(key: &Vec[UInt8], nonce: &Vec[UInt8], aad: &Vec[UInt8], ciphertext: &Vec[UInt8], tag: &Vec[UInt8], plaintext: &mut Vec[UInt8]) -> Bool {
+pub fn chacha20_poly1305_decrypt(key: &Vec[UInt8], nonce: &Vec[UInt8], aad: &Vec[UInt8], ciphertext: &Vec[UInt8], tag: &Vec[UInt8], plaintext: &mut Vec[UInt8]) -> Bool
+  ensures: (result == true) => (plaintext.len() == ciphertext.len())
+{
   if key.len() != 32 { return false; }
   if nonce.len() != 12 { return false; }
   if tag.len() != 16 { return false; }

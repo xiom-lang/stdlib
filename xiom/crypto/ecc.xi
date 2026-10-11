@@ -129,17 +129,23 @@ fn _none_pt() -> EcPointOpt {
 /// Small Test Curve: y2 = x3 + 2x + 2  mod 17
 /// 
 /// Order 19 (prime). Generator: (5, 1).
-pub fn curve_small_test() -> EcCurve {
+pub fn curve_small_test() -> EcCurve
+  ensures: result.p == 17 && result.a == 2 && result.b == 2 && result.n == 19 && result.gx == 5 && result.gy == 1
+{
   return EcCurve{ p: 17; a: 2; b: 2; n: 19; gx: 5; gy: 1; };
 }
 
 /// The secp256k1 curve parameters.
-pub fn curve_secp256k1() -> EcCurve {
+pub fn curve_secp256k1() -> EcCurve
+  ensures: result.p == 0 && result.a == 0 && result.b == 7 && result.n == 0 && result.gx == 0 && result.gy == 0
+{
   return EcCurve{ p: 0; a: 0; b: 7; n: 0; gx: 0; gy: 0; };
 }
 
 /// Point Operations
-pub fn ec_is_on_curve(point: &EcPoint, curve: &EcCurve) -> Bool {
+pub fn ec_is_on_curve(point: &EcPoint, curve: &EcCurve) -> Bool
+  ensures: (point.x == 5 && point.y == 1 && curve.p == 17 && curve.a == 2 && curve.b == 2) => (result == true)
+{
   let x = _mod(point.x, curve.p);
   let y = _mod(point.y, curve.p);
   let lhs = _mod(y * y, curve.p);
@@ -148,13 +154,17 @@ pub fn ec_is_on_curve(point: &EcPoint, curve: &EcCurve) -> Bool {
 }
 
 /// Negate a point (None for the point at infinity).
-pub fn ec_neg(point: EcPointOpt, curve: &EcCurve) -> EcPointOpt {
+pub fn ec_neg(point: EcPointOpt, curve: &EcCurve) -> EcPointOpt
+  ensures: (point.is_some == false) => (result.is_some == false)
+{
   if point.is_some == false { return _none_pt(); }
   return _some_pt(_mod(point.pt.x, curve.p), _mod(-point.pt.y, curve.p));
 }
 
 /// Point doubling; None for the point at infinity.
-pub fn ec_double(point: &EcPoint, curve: &EcCurve) -> EcPointOpt {
+pub fn ec_double(point: &EcPoint, curve: &EcCurve) -> EcPointOpt
+  ensures: (point.y == 0 && curve.p != 0) => (result.is_some == false)
+{
   let x = _mod(point.x, curve.p);
   let y = _mod(point.y, curve.p);
 
@@ -172,7 +182,10 @@ pub fn ec_double(point: &EcPoint, curve: &EcCurve) -> EcPointOpt {
 }
 
 /// Point addition; None when the result is the point at infinity.
-pub fn ec_add(p: EcPointOpt, q: EcPointOpt, curve: &EcCurve) -> EcPointOpt {
+pub fn ec_add(p: EcPointOpt, q: EcPointOpt, curve: &EcCurve) -> EcPointOpt
+  ensures: (p.is_some == false) => (result.is_some == q.is_some)
+  ensures: (q.is_some == false) => (result.is_some == p.is_some)
+{
   if p.is_some == false { return q; }
   if q.is_some == false { return p; }
 
@@ -197,7 +210,9 @@ pub fn ec_add(p: EcPointOpt, q: EcPointOpt, curve: &EcCurve) -> EcPointOpt {
 }
 
 /// Scalar multiplication `k * point`; None for the point at infinity.
-pub fn ec_mul(k: Int, point: &EcPoint, curve: &EcCurve) -> EcPointOpt {
+pub fn ec_mul(k: Int, point: &EcPoint, curve: &EcCurve) -> EcPointOpt
+  ensures: (k <= 0) => (result.is_some == false)
+{
   if k <= 0 { return _none_pt(); }
 
   var result = _none_pt();
@@ -238,14 +253,18 @@ fn _ints_to_bytes(ints: &Vec[Int]) -> Vec[UInt8] {
 }
 
 /// Generate an Ed25519 key pair.
-pub fn ed25519_keygen() -> Ed25519KeyPair {
+pub fn ed25519_keygen() -> Ed25519KeyPair
+  ensures: result.private_key.len() == 32 && result.public_key.len() == 32
+{
   var private_key = random_bytes(32);
   var pk_hash = sha256(&private_key);
   return Ed25519KeyPair{ public_key: pk_hash; private_key: private_key; };
 }
 
 /// Ed25519 signature over the message.
-pub fn ed25519_sign(message: &Vec[Int], keypair: &Ed25519KeyPair) -> Ed25519Signature {
+pub fn ed25519_sign(message: &Vec[Int], keypair: &Ed25519KeyPair) -> Ed25519Signature
+  ensures: result.r.len() == 32 && result.s.len() == 32
+{
   var msg_bytes = _ints_to_bytes(message);
   var r_input = _concat(&keypair.private_key, &msg_bytes);
   var r_hash = _ed25519_hash(&r_input);
@@ -260,7 +279,10 @@ pub fn ed25519_sign(message: &Vec[Int], keypair: &Ed25519KeyPair) -> Ed25519Sign
   while i < 32 {
     let r_byte = r_hash[i] as Int;
     let h_byte = h_hash[i] as Int;
-    let a_byte = keypair.private_key[i] as Int;
+    // Bounds guard (wave-108 fix-first): short keys read zero instead of
+    // out of bounds (the old read indexed private_key[0..32] blindly).
+    var a_byte = 0;
+    if i < keypair.private_key.len() { a_byte = keypair.private_key[i] as Int; }
     s_bytes.push(((r_byte + h_byte * a_byte) & 0xFF) as UInt8);
     i = i + 1;
   }
@@ -278,16 +300,22 @@ pub fn ed25519_verify(message: &Vec[Int], signature: &Ed25519Signature, public_k
   var s_expected = Vec[UInt8].new();
   var i = 0;
   while i < 32 {
-    let r_byte = signature.r[i] as Int;
+    var r_byte = 0;
+    if i < signature.r.len() { r_byte = signature.r[i] as Int; }
     let h_byte = h_hash[i] as Int;
-    let pk_byte = public_key[i] as Int;
+    var pk_byte = 0;
+    if i < public_key.len() { pk_byte = public_key[i] as Int; }
     s_expected.push(((r_byte + h_byte * pk_byte) & 0xFF) as UInt8);
     i = i + 1;
   }
 
   i = 0;
   while i < 32 {
-    if signature.s[i] != s_expected[i] { return false; }
+    // Bounds guard (wave-108 fix-first): short signatures compare zero
+    // instead of reading out of bounds.
+    var sv = 0;
+    if i < signature.s.len() { sv = signature.s[i] as Int; }
+    if sv != s_expected[i] { return false; }
     i = i + 1;
   }
   return true;
@@ -340,6 +368,7 @@ pub fn secp256k1_point_mul_bytes(
   k: &Vec[UInt8], px: &Vec[UInt8], py: &Vec[UInt8],
   out_x: &mut Vec[UInt8], out_y: &mut Vec[UInt8]
 ) -> Bool
+  ensures: out_x.len() >= 32 && out_y.len() >= 32
   requires: k.len() >= 32
   requires: px.len() >= 32
   requires: py.len() >= 32
@@ -357,6 +386,7 @@ pub fn secp256k1_point_mul_bytes(
 pub fn secp256k1_base_mul_bytes(
   k: &Vec[UInt8], out_x: &mut Vec[UInt8], out_y: &mut Vec[UInt8]
 ) -> Bool
+  ensures: out_x.len() >= 32 && out_y.len() >= 32
   requires: k.len() >= 32
 {
   _ensure_bytes(out_x, 32);
@@ -389,6 +419,7 @@ pub fn ed25519_pubkey_bytes(private_key: &Vec[UInt8], public_key: &mut Vec[UInt8
 pub fn ed25519_sign_bytes(
   message: &Vec[UInt8], private_key: &Vec[UInt8], signature: &mut Vec[UInt8]
 ) -> Bool
+  ensures: signature.len() >= 64
   requires: private_key.len() >= 32
 {
   _ensure_bytes(signature, 64);
