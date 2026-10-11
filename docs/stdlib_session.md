@@ -2332,7 +2332,12 @@ registry pin, agent recon for the rest)**
   deadlines design note) -- the three interface points (per-call
   socket_recv_timeout with expiry distinguishable from peer-close,
   send-side SO_SNDTIMEO, Windows SO_REUSEADDR parity) are adopted as the
-  acceptance shape for the queued socket-timeout runtime family.
+  acceptance shape for the queued socket-timeout runtime family. Also
+  acked REL-20261011-1134-pulse (fsync_dir for rename durability) for
+  the runtime sync bundle; the ops hygiene note (1134-ops, to: all) was
+  read and its rules are in force here (batteries use the pinned archive
+  + repo-local out/ + %TEMP%\kilo; shared homes untouched) -- to: all
+  items cannot be state-moved by addressed lanes, so no ack transition.
 - FIX-FIRST (probe-first catch): `_rsa_parse_key` (crypto.xi) indexed
   `key[0..8]` unconditionally -- any key shorter than 8 bytes read out
   of bounds and made the RSA guards nondeterministic (the wave probe's
