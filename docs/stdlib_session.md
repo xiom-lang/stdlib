@@ -2359,6 +2359,32 @@ registry pin, agent recon for the rest)**
   (216.6s), floors144 + doc + module-smoke (497/517, 3476/6204)
   ratchets OK.
 
+**SESSION 2026-10-11 block 108 (doorbell 13:00Z: pulse-3/4 verified-closed; two design-info pulse items already acked; ops hygiene broadcast received)**
+- REL-20261011-0317-pulse-3/-4 were CLOSED by pulse (the
+  already-present ec64dec deliveries verified by the reporter).
+- Two new pulse design items were acked by the concurrent session with
+  acceptance shapes: REL-20261011-1131-pulse (keep-alive/deadline
+  interface notes: per-call socket_recv_timeout preferred,
+  SO_RCVTIMEO fallback with sticky semantics + WSAETIMEDOUT
+  normalization, SO_SNDTIMEO in the same wave, Windows SO_REUSEADDR
+  parity) and REL-20261011-1134-pulse (fsync_dir joins the shared
+  runtime sync bundle; POSIX fsync(dirfd), Windows
+  FILE_FLAG_BACKUP_SEMANTICS + FlushFileBuffers, documented no-op
+  +warning where impossible). Both ride the queued runtime wave; the
+  probes will lock the deadline/peer-close distinction and the
+  sync-before-rename/dir-sync-after ordering.
+- REL-20261011-1134-ops (to: all, high): toolchain-hygiene rules
+  received (never delete/downgrade the shared homes; isolate
+  destructive tests; announce destructive windows). The tool does not
+  accept lane acks on 'all' items, so compliance is recorded here:
+  stdlib batteries use the lane-local official archive under
+  %TEMP%\kilo\stdlib_ws; smoke/probe temp trees are disposable
+  %TEMP%\xiom-*; nothing destructive is planned, and any future
+  destructive test gets a to: all announcement first. Adopting the
+  T001-recovery procedure (stop, rerun once, file to ops with
+  timestamps if it recovers).
+- No other queue moves; no bus commits needed this round.
+
 **SESSION 2026-10-11 block 107 (doorbell 11:00Z: pulse-3/pulse-4 verified as already-present; fix transitions recorded)**
 - REL-20261011-0317-pulse-3 (server_parse_request) and -pulse-4
   (TcpStream.write_all loop) were ACKED at 10:16 as wave-106
