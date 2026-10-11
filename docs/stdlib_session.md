@@ -2524,6 +2524,19 @@ registry pin, agent recon for the rest)**
   main, targeted release-check verdicts, then the cut commit (version
   0.64.4 + COMPILER_VERSION + CHANGELOG) and the candidate publish.
   Then async coverage and the queued runtime-backed families.
+- CUT PIN CLARIFICATION (checklist item 2, audited 19:50Z): the cut
+  commit sets `COMPILER_VERSION` to **v0.64.3** (the latest EXISTING
+  compiler tag), NOT v0.64.4 -- the v0.64.4 dry-run archive is the
+  battery/witness target, and the compiler tags v0.64.4 only AFTER our
+  tag (their release pins STDLIB_VERSION to it). release.yml builds the
+  COMPILER_VERSION tag and runs corpus/modules/barename/coverage
+  (the probe corpus is not part of release.yml gates, so the reverted
+  metro locks do not gate the tag; they stay battery locks on the
+  v0.64.4 archive). Cut ordering: land the revert, run the v0.64.4
+  battery (corpus 954 + probes 288 + modules + barename + ratchets), also
+  re-run the release-gate set on v0.64.3 (corpus/modules/barename/
+  coverage, the exact release.yml surface) to keep the tag's gates
+  claims true, then the cut commit + tag.
 
 **SESSION 2026-10-11 block 119 (wave 112: core Option/Result + Slice helpers, 16 fns; compiler six-batch closing -- 1052 CLOSED)**
 - Compiler status (1731-compiler broadcasts, 17:31Z): the v0.64.4
