@@ -2494,6 +2494,27 @@ registry pin, agent recon for the rest)**
   (216.6s), floors144 + doc + module-smoke (497/517, 3476/6204)
   ratchets OK.
 
+**SESSION 2026-10-11 block 122 (CUT: stdlib-v0.64.4 tagged at 3df0843)**
+- m275 (4c42fc0a) fixed the cross-module fn-arg regression we bounced
+  (root cause: m263's As-cast env unwrap was name-keyed, so
+  cooperative_game's `v` param leaked into Float32.to_float's `v` and
+  emitted inttoptr on a float). Refreshed archive (run 38177738188) FULL
+  GREEN: corpus 954/954 (552.1s), probes 288/288 (195.3s), modules
+  509/509 (152.1s), barename 0/509 (227.2s), floors148 + doc +
+  module-smoke ratchets OK.
+- Cut commit 3df0843: package.xi 0.64.4, COMPILER_VERSION -> v0.64.3,
+  CHANGELOG [0.64.4]; tag stdlib-v0.64.4 (annotated, f8fb7a88) pushed;
+  release-notes/v0.64.4.md clean. Tagged-commit surface re-verified
+  (three ex-failing items + both 1052 locks rc 0 + ratchets).
+- Bus: 1812 acked -> fixed with the tag + witness/battery evidence
+  ("pin STDLIB_VERSION and ship"); 2045 fixed -> verified -> closed
+  (reporter verify on the refreshed archive). Relay commit 2f981e7.
+  Scratch worktree stdlib_w1052 removed.
+- Next: the release-check verify on our side when the compiler ships
+  (the v0.64.4 check file: re-run targeted rows, e.g. 1548-stdlib-2 at
+  m254); registry publish per the candidate-tag protocol/owner approval;
+  then async coverage + the string-dir strnlen sweep.
+
 **SESSION 2026-10-11 block 121 (v0.64.4 archive: witness GREEN + metro revert landed; one codegen regression bounced, tag held)**
 - Archive: compiler pushed m254-m274 to origin (87c6ca3c, owner-authorized
   after our nudge 2014); dispatched the XIOM Release dry-run

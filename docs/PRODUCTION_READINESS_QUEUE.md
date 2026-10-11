@@ -1,9 +1,9 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
 **77.0% -- 7 of 10 gates complete; gate 8 at 69.8% (partial credit) and
-gates 9-10 discrete.** (Compiler pin: in-tree **v0.64.2**; official
-**v0.64.3** archive is the candidate pin for the next cut -- all recent
-batteries run on it.)
+gates 9-10 discrete.** (Compiler pin: in-tree **v0.64.3**; candidate
+`stdlib-v0.64.4` cut at 3df0843 on 2026-10-11 -- the compiler pins
+STDLIB_VERSION and ships v0.64.4 from it.)
 **Gates: corpus 954/954 full (C001 carve-outs retired on v0.63.1; new
 TcpStream loopback and uuencode roundtrip smokes added), modules 509/509,
 probes 288/288, barename 0/509.**
@@ -39,9 +39,10 @@ credit (discrete). Update the percentage and the gate-8 fraction in the
 same commit as each floors dump so the meter moves smoothly toward 80%.
 
 Authoritative order: the gates above, then the updates below newest-first.
-Current state: compiler pin **v0.64.2** in-tree (combined release, tag
-c51170a6; the official **v0.64.3** archive is the candidate pin -- the
-next cut flips COMPILER_VERSION to it or newer per the compiler lane);
+Current state: compiler pin **v0.64.3** in-tree (COMPILER_VERSION at
+3df0843); **stdlib-v0.64.4 CUT 2026-10-11** (tag object f8fb7a88 on
+3df0843; package.xi 0.64.4; battery + witness green on the v0.64.4
+release-wave archive; the compiler pins STDLIB_VERSION and ships);
 **stdlib-v0.64.3 RELEASED 2026-10-09** (release run 37962367989 full
 success; assets xiom-std-0.64.3.tar.gz + SHA256SUMS) and the **REGISTRY IS
 LIVE** (xiom-std 0.64.3 signed, sha256
@@ -161,6 +162,18 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
    dir's remaining strnlen-family call sites (191 across 34 files:
    builder/case/casefold/collate/compare/unicode/normalize/... ) need the
    same cached (base, len) treatment; scoped per-file with smokes.
+   CUT 2026-10-11: **stdlib-v0.64.4 tagged at 3df0843** (annotated tag
+   f8fb7a88; package.xi 0.64.4 + registry metadata; COMPILER_VERSION ->
+   v0.64.3; CHANGELOG [0.64.4]; release-notes/v0.64.4.md clean). Evidence:
+   witness branch both import-order locks rc 0 on the v0.64.4 archive
+   (metro revert landed 4e8b696); the compiler's m275 (4c42fc0a) fixed
+   the one regression the battery found (cross-module fn-arg inttoptr);
+   refreshed-archive battery FULL GREEN -- corpus 954/954 (552.1s),
+   probes 288/288 (195.3s), modules 509/509, barename 0/509, floors148 +
+   doc + module-smoke ratchets; release-gate set on v0.64.3 post-revert
+   green. Bus: 1812 -> fixed (pin + ship requested); 2045 verified +
+   closed. Next: the v0.64.4 release-check verify on our side at the
+   compiler ship; registry publish per the candidate-tag protocol.
 BINARY NOTE: the shared local build path
 `E:\xiom-lang\xiom\target\release\xiom.exe` was rebuilt past the pin
 (compiler main da7798da m252) and fails four corpus smokes; waves now run
