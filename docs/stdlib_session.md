@@ -2529,6 +2529,16 @@ registry pin, agent recon for the rest)**
   tree (checklist item 5), then the cut mechanics (version bump +
   COMPILER_VERSION v0.64.3 + release-notes/v0.64.4.md + CHANGELOG) and the
   compiler-lane OK before any tag.
+- Cut prep landed: `release-notes/v0.64.4.md` (2 highlights: the linear
+  JSON/string byte paths; coverage to nearly seventy percent) written and
+  validated through the compiler's converter (`cargo run -q -p
+  xiom-release-notes -- convert --tag v0.64.4 --stdlib . --notes-dir
+  <scratch>`; merged doc 3 highlights, 0 errors; the first run failed on a
+  version number inside the SCRATCH fragment's summary, not ours). The
+  version/pin/CHANGELOG bump stays for the tag commit pending the
+  compiler-lane OK. v0.64.3 pin battery: corpus 954/954 (578.1s), probes
+  286/286 (239s), modules 509/509 (194.3s), barename 0/509 (306.6s),
+  all ratchets OK.
 
 **SESSION 2026-10-11 block 117 (post-wave-111: xvector verified the committed hashes; package.xi registry metadata landed; RC prep continues)**
 - Relay round 16:37Z: xvector created two items after the fix --
