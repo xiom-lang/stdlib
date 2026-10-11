@@ -58,7 +58,9 @@ pub type RsaPublicKey = {
 /// Derive the public key (n, e) from a key pair.
 /// The public key can be safely shared; the private exponent d stays
 /// inside the RsaKeyPair.
-pub fn rsa_public_key(pair: &RsaKeyPair) -> RsaPublicKey {
+pub fn rsa_public_key(pair: &RsaKeyPair) -> RsaPublicKey
+  ensures: result.n == pair.n && result.e == pair.e
+{
   return RsaPublicKey{
     n: pair.n;
     e: pair.e;
@@ -237,7 +239,9 @@ fn _random_prime(min: Int, max: Int) -> Int {
 ///
 /// Complexity: O(2^(bits/2)) for primality testing due to trial division.
 ///             Keep bits <= 30 for reasonable performance.
-pub fn rsa_keygen(bits: Int) -> Result[RsaKeyPair, Str] {
+pub fn rsa_keygen(bits: Int) -> Result[RsaKeyPair, Str]
+  ensures: (bits < 8 || bits > 30) => (result.is_err == true)
+{
   if bits < 8 || bits > 30 {
     return Err("RSA key size must be between 8 and 30 bits for this implementation");
   }
@@ -331,7 +335,9 @@ pub fn rsa_keygen(bits: Int) -> Result[RsaKeyPair, Str] {
 ///
 /// Note: In real RSA, messages are padded and encoded as integers < n.
 ///       This raw implementation encrypts a single integer value.
-pub fn rsa_encrypt(msg: Int, key: &RsaPublicKey) -> Int {
+pub fn rsa_encrypt(msg: Int, key: &RsaPublicKey) -> Int
+  ensures: (msg == 0 && key.e > 0 && key.n > 0) => (result == 0)
+{
   return _mod_pow(msg, key.e, key.n);
 }
 
@@ -343,7 +349,9 @@ pub fn rsa_encrypt(msg: Int, key: &RsaPublicKey) -> Int {
 ///   ct: ciphertext (Int, must be < n)
 ///   key: RSA key pair (n, e, d)
 /// Returns: plaintext (Int)
-pub fn rsa_decrypt(ct: Int, key: &RsaKeyPair) -> Int {
+pub fn rsa_decrypt(ct: Int, key: &RsaKeyPair) -> Int
+  ensures: (ct == 0 && key.d > 0 && key.n > 0) => (result == 0)
+{
   return _mod_pow(ct, key.d, key.n);
 }
 
@@ -362,7 +370,9 @@ pub fn rsa_decrypt(ct: Int, key: &RsaKeyPair) -> Int {
 ///
 /// Security note: Real RSA signing uses PSS padding and hashes the message
 ///                before signing. This raw version is for education only.
-pub fn rsa_sign(msg: Int, key: &RsaKeyPair) -> Int {
+pub fn rsa_sign(msg: Int, key: &RsaKeyPair) -> Int
+  ensures: (msg == 0 && key.d > 0 && key.n > 0) => (result == 0)
+{
   return _mod_pow(msg, key.d, key.n);
 }
 
@@ -375,7 +385,9 @@ pub fn rsa_sign(msg: Int, key: &RsaKeyPair) -> Int {
 ///   sig: signature to verify (Int)
 ///   key: RSA public key (n, e)
 /// Returns: true if signature is valid
-pub fn rsa_verify(msg: Int, sig: Int, key: &RsaPublicKey) -> Bool {
+pub fn rsa_verify(msg: Int, sig: Int, key: &RsaPublicKey) -> Bool
+  ensures: (msg == 0 && sig == 0 && key.e > 0 && key.n > 0) => (result == true)
+{
   let decrypted = _mod_pow(sig, key.e, key.n);
   return decrypted == msg;
 }

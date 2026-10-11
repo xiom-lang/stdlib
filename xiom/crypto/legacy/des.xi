@@ -310,7 +310,9 @@ fn _feistel(block: Int, round_keys: &Vec[Int], ip: &Vec[Int], fp: &Vec[Int], e: 
 // ============================================================================
 
 /// Encrypt a single 64-bit block with DES (FIPS 46-3).
-pub fn des_encrypt_block(block: Int, key: Int) -> Int {
+pub fn des_encrypt_block(block: Int, key: Int) -> Int
+  ensures: (block == 0x0123456789ABCDEF && key == 0x133457799BBCDFF1) => (result == -8797760620317723643)
+{
   var ip = _build_ip();
   var fp = _build_fp();
   var e = _build_e();
@@ -324,7 +326,9 @@ pub fn des_encrypt_block(block: Int, key: Int) -> Int {
 }
 
 /// Decrypt a single 64-bit block with DES (FIPS 46-3).
-pub fn des_decrypt_block(block: Int, key: Int) -> Int {
+pub fn des_decrypt_block(block: Int, key: Int) -> Int
+  ensures: (block == -8797760620317723643 && key == 0x133457799BBCDFF1) => (result == 0x0123456789ABCDEF)
+{
   var ip = _build_ip();
   var fp = _build_fp();
   var e = _build_e();
@@ -343,14 +347,18 @@ pub fn des_decrypt_block(block: Int, key: Int) -> Int {
 
 /// Encrypt a 64-bit block with Triple-DES EDE: C = E_K3(D_K2(E_K1(P))).
 /// When K1 == K2 == K3 this degenerates to single DES.
-pub fn des3_encrypt_block(block: Int, k1: Int, k2: Int, k3: Int) -> Int {
+pub fn des3_encrypt_block(block: Int, k1: Int, k2: Int, k3: Int) -> Int
+  ensures: (k1 == k2 && k2 == k3) => (result == des_encrypt_block(block, k1))
+{
   var t1 = des_encrypt_block(block, k1);
   var t2 = des_decrypt_block(t1, k2);
   return des_encrypt_block(t2, k3);
 }
 
 /// Decrypt a 64-bit block with Triple-DES EDE: P = D_K1(E_K2(D_K3(C))).
-pub fn des3_decrypt_block(block: Int, k1: Int, k2: Int, k3: Int) -> Int {
+pub fn des3_decrypt_block(block: Int, k1: Int, k2: Int, k3: Int) -> Int
+  ensures: (k1 == k2 && k2 == k3) => (result == des_decrypt_block(block, k1))
+{
   var t1 = des_decrypt_block(block, k3);
   var t2 = des_encrypt_block(t1, k2);
   return des_decrypt_block(t2, k1);

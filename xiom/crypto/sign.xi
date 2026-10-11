@@ -26,7 +26,9 @@ use xiom.encoding;
 
 /// Generate a new Ed25519 keypair; the tuple is (sk, pk).
 /// Blocked in the current build (see module header).
-pub fn ed25519_keypair() -> (Vec[UInt8], Vec[UInt8]) {
+pub fn ed25519_keypair() -> (Vec[UInt8], Vec[UInt8])
+  ensures: result.0.len() == 32 && result.1.len() == 0
+{
   var sk = crypto.secure_random_bytes(32);
   return (sk, ed25519_public_key(&sk));
 }
@@ -56,7 +58,9 @@ pub fn ed25519_public_key(sk: &Vec[UInt8]) -> Vec[UInt8]
 
 /// Deterministically expand a 32-byte seed; the tuple is (sk, pk).
 /// Blocked in the current build (see module header).
-pub fn ed25519_keypair_from_seed(seed: &Vec[UInt8]) -> (Vec[UInt8], Vec[UInt8]) {
+pub fn ed25519_keypair_from_seed(seed: &Vec[UInt8]) -> (Vec[UInt8], Vec[UInt8])
+  ensures: result.0.len() == seed.len() && result.1.len() == 0
+{
   return (seed, Vec[UInt8].new());
 }
 
@@ -64,13 +68,17 @@ pub fn ed25519_keypair_from_seed(seed: &Vec[UInt8]) -> (Vec[UInt8], Vec[UInt8]) 
 /// textbook RSA over the small generated keys); the `hash` identifier is
 /// advisory (the flat implementation does not embed a digest identifier).
 /// Complexity: O(bitlen^3).
-pub fn rsa_sign(key: &Vec[UInt8], msg: &Vec[UInt8], hash: Int) -> Result[Vec[UInt8], Str] {
+pub fn rsa_sign(key: &Vec[UInt8], msg: &Vec[UInt8], hash: Int) -> Result[Vec[UInt8], Str]
+  ensures: (key.len() == 0) => (result.is_err == true)
+{
   return crypto.rsa_sign(key, msg);
 }
 
 /// Verify an RSA signature. Returns false on any error.
 /// Complexity: O(bitlen^3).
-pub fn rsa_verify(key: &Vec[UInt8], msg: &Vec[UInt8], sig: &Vec[UInt8], hash: Int) -> Bool {
+pub fn rsa_verify(key: &Vec[UInt8], msg: &Vec[UInt8], sig: &Vec[UInt8], hash: Int) -> Bool
+  ensures: (result == true) => (crypto.rsa_verify(key, msg, sig).is_ok == true)
+{
   var r = crypto.rsa_verify(key, msg, sig);
   match r {
     Ok(ok) => ok;
@@ -79,7 +87,9 @@ pub fn rsa_verify(key: &Vec[UInt8], msg: &Vec[UInt8], sig: &Vec[UInt8], hash: In
 }
 
 /// ECDSA sign; the tuple is (r, s). Blocked in the current build.
-pub fn ecdsa_sign(curve: Int, sk: &Vec[UInt8], msg: &Vec[UInt8]) -> (Vec[UInt8], Vec[UInt8]) {
+pub fn ecdsa_sign(curve: Int, sk: &Vec[UInt8], msg: &Vec[UInt8]) -> (Vec[UInt8], Vec[UInt8])
+  ensures: result.0.len() == 0 && result.1.len() == 0
+{
   var zero = Vec[UInt8].new();
   return (zero, zero);
 }
@@ -92,7 +102,9 @@ pub fn ecdsa_verify(curve: Int, pk: &Vec[UInt8], msg: &Vec[UInt8], r: &Vec[UInt8
 }
 
 /// DSA sign; the tuple is (r, s). Blocked in the current build.
-pub fn dsa_sign(p: &Vec[UInt8], q: &Vec[UInt8], g: &Vec[UInt8], x: &Vec[UInt8], msg: &Vec[UInt8]) -> (Vec[UInt8], Vec[UInt8]) {
+pub fn dsa_sign(p: &Vec[UInt8], q: &Vec[UInt8], g: &Vec[UInt8], x: &Vec[UInt8], msg: &Vec[UInt8]) -> (Vec[UInt8], Vec[UInt8])
+  ensures: result.0.len() == 0 && result.1.len() == 0
+{
   var zero = Vec[UInt8].new();
   return (zero, zero);
 }

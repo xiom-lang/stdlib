@@ -1513,8 +1513,26 @@ T1/T2 yields.
         ec64dec (the doorbell's "wave-106 candidates" framing
         superseded). Next: crypto/misc/sync coverage; runtime asks when
         the compiler runtime bundle moves.
+        Wave 107 (2026-10-11): FIX-FIRST RSA short-key OOB read in
+        crypto.xi (_rsa_parse_key indexed key[0..8] unconditionally, so
+        any key shorter than 8 bytes read out of bounds and made the RSA
+        guards nondeterministic -- caught by the wave probe's contract
+        run: the empty-key rsa_sign clause failed on garbage memory).
+        Bounds-guarded the read (short keys zero-pad). Crypto batch 1:
+        chacha (4), aead (10), curves (9), legacy des (4), rng (2), sign
+        (6), rsa (6) -- 41 clauses, +41 pub. crypto 47.0% -> 69.4%;
+        global 66.5% -> 67.2% (pubCovered 4329 -> 4370, clauses 5739 ->
+        5790); meter 76.7%; floors144. Probe p_wave107_shapes.xi (281st,
+        55 checks) green pre/post after the fix-first. Battery on the
+        official v0.64.2 archive: corpus 954/954 full (698.4s), probes
+        281/281 (299.4s), modules 509/509 (203.3s), barename 0/509
+        (216.6s), floors144 + doc + module-smoke (497/517, 3476/6204)
+        ratchets OK. Bus: acked the pulse keep-alive/deadlines design
+        note (three interface points adopted for the queued socket-
+        timeout wave). Next: crypto batch 2 (cipher + crypto.xi tail +
+        ecc); misc/sync coverage.
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors143.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors144.json
         tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;

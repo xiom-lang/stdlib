@@ -1986,7 +1986,14 @@ fn _rsa_parse_key(key: &Vec[UInt8]) -> (Int, Int, Int) {
   let key_size = 8;
   var n: Int = 0;
   var i = 0;
-  while i < key_size {
+  // Bounds guard (wave-107 fix-first): read only the bytes the key actually
+  // has; keys shorter than the 8-byte modulus window are zero-padded. The
+  // previous loop indexed key[0..key_size] unconditionally -- an
+  // out-of-bounds read whose garbage determined n (and made the RSA guards
+  // nondeterministic) for any key shorter than 8 bytes.
+  var n_lim = key_size;
+  if key.len() < key_size { n_lim = key.len(); }
+  while i < n_lim {
     n = n * 256 + (key[i] as Int);
     i = i + 1;
   }

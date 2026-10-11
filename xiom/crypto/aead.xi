@@ -38,14 +38,19 @@ const _TAG_SIZE: Int = 16;
 
 /// Whether an algorithm identifier is implemented.
 /// Complexity: O(1).
-pub fn aead_alg_supported(alg: Int) -> Bool {
+pub fn aead_alg_supported(alg: Int) -> Bool
+  ensures: (alg < 1 || alg > 3) => (result == false)
+{
   return alg == _ALG_AES128_GCM || alg == _ALG_AES256_GCM || alg == _ALG_CHACHA20_POLY1305;
 }
 
 /// Nonce length in bytes for an algorithm (12 for all supported algorithms).
 /// Returns 0 for unknown algorithms.
 /// Complexity: O(1).
-pub fn aead_nonce_size(alg: Int) -> Int {
+pub fn aead_nonce_size(alg: Int) -> Int
+  ensures: (alg >= 1 && alg <= 3) => (result == 12)
+  ensures: (alg < 1 || alg > 3) => (result == 0)
+{
   if aead_alg_supported(alg) { return _NONCE_SIZE; }
   return 0;
 }
@@ -53,7 +58,10 @@ pub fn aead_nonce_size(alg: Int) -> Int {
 /// Tag length in bytes for an algorithm (16 for all supported algorithms).
 /// Returns 0 for unknown algorithms.
 /// Complexity: O(1).
-pub fn aead_tag_size(alg: Int) -> Int {
+pub fn aead_tag_size(alg: Int) -> Int
+  ensures: (alg >= 1 && alg <= 3) => (result == 16)
+  ensures: (alg < 1 || alg > 3) => (result == 0)
+{
   if aead_alg_supported(alg) { return _TAG_SIZE; }
   return 0;
 }
@@ -61,7 +69,11 @@ pub fn aead_tag_size(alg: Int) -> Int {
 /// Key length in bytes for an algorithm: 16 (AES-128-GCM), 32 otherwise.
 /// Returns 0 for unknown algorithms.
 /// Complexity: O(1).
-pub fn aead_key_size(alg: Int) -> Int {
+pub fn aead_key_size(alg: Int) -> Int
+  ensures: (alg == 1) => (result == 16)
+  ensures: (alg == 2 || alg == 3) => (result == 32)
+  ensures: (alg < 1 || alg > 3) => (result == 0)
+{
   if alg == _ALG_AES128_GCM { return 16; }
   if aead_alg_supported(alg) { return 32; }
   return 0;
@@ -69,7 +81,10 @@ pub fn aead_key_size(alg: Int) -> Int {
 
 /// Generate a random nonce of the right size for an algorithm.
 /// Complexity: O(1).
-pub fn aead_generate_nonce(alg: Int) -> Vec[UInt8] {
+pub fn aead_generate_nonce(alg: Int) -> Vec[UInt8]
+  ensures: (alg >= 1 && alg <= 3) => (result.len() == 12)
+  ensures: (alg < 1 || alg > 3) => (result.len() == 0)
+{
   var size = aead_nonce_size(alg);
   if size <= 0 { return Vec[UInt8].new(); }
   return crypto.secure_random_bytes(size);
@@ -85,7 +100,10 @@ fn _aead_seal_alg(alg: Int, key: &Vec[UInt8], nonce: &Vec[UInt8], data: &Vec[UIn
 /// Encrypt `data` with associated data `aad` under `key`/`nonce`; returns the
 /// ciphertext with the 16-byte authentication tag appended.
 /// Complexity: O(n), n = data length.
-pub fn aead_encrypt(alg: Int, key: &Vec[UInt8], nonce: &Vec[UInt8], data: &Vec[UInt8], aad: &Vec[UInt8]) -> Result<Vec[UInt8], Str> {
+pub fn aead_encrypt(alg: Int, key: &Vec[UInt8], nonce: &Vec[UInt8], data: &Vec[UInt8], aad: &Vec[UInt8]) -> Result<Vec[UInt8], Str>
+  ensures: (alg < 1 || alg > 3) => (result.is_err == true)
+  ensures: (result is Ok) => (result.len() == data.len() + 16)
+{
   if !(aead_alg_supported(alg)) {
     return Err("aead_encrypt: unsupported algorithm");
   }
@@ -101,7 +119,10 @@ pub fn aead_encrypt(alg: Int, key: &Vec[UInt8], nonce: &Vec[UInt8], data: &Vec[U
 /// Verify the tag and decrypt. `data` is the ciphertext with the 16-byte tag
 /// appended; `tag` is the expected tag (the trailing bytes of `data`).
 /// Complexity: O(n), n = data length.
-pub fn aead_decrypt(alg: Int, key: &Vec[UInt8], nonce: &Vec[UInt8], data: &Vec[UInt8], aad: &Vec[UInt8], tag: &Vec[UInt8]) -> Result<Vec[UInt8], Str> {
+pub fn aead_decrypt(alg: Int, key: &Vec[UInt8], nonce: &Vec[UInt8], data: &Vec[UInt8], aad: &Vec[UInt8], tag: &Vec[UInt8]) -> Result<Vec[UInt8], Str>
+  ensures: (alg < 1 || alg > 3) => (result.is_err == true)
+  ensures: (key.len() != aead_key_size(alg) && alg >= 1 && alg <= 3) => (result.is_err == true)
+{
   if !(aead_alg_supported(alg)) {
     return Err("aead_decrypt: unsupported algorithm");
   }
@@ -120,7 +141,10 @@ pub fn aead_decrypt(alg: Int, key: &Vec[UInt8], nonce: &Vec[UInt8], data: &Vec[U
 /// Encrypt with a freshly generated nonce prepended:
 /// nonce || ciphertext || tag.
 /// Complexity: O(n), n = data length.
-pub fn aead_seal(alg: Int, key: &Vec[UInt8], data: &Vec[UInt8], aad: &Vec[UInt8]) -> Result<Vec[UInt8], Str> {
+pub fn aead_seal(alg: Int, key: &Vec[UInt8], data: &Vec[UInt8], aad: &Vec[UInt8]) -> Result<Vec[UInt8], Str>
+  ensures: (alg < 1 || alg > 3) => (result.is_err == true)
+  ensures: (result is Ok) => (result.len() >= 28)
+{
   if !(aead_alg_supported(alg)) {
     return Err("aead_seal: unsupported algorithm");
   }
@@ -150,7 +174,10 @@ pub fn aead_seal(alg: Int, key: &Vec[UInt8], data: &Vec[UInt8], aad: &Vec[UInt8]
 
 /// Decrypt a sealed message (nonce || ciphertext || tag).
 /// Complexity: O(n), n = data length.
-pub fn aead_open(alg: Int, key: &Vec[UInt8], sealed: &Vec[UInt8], aad: &Vec[UInt8]) -> Result<Vec[UInt8], Str> {
+pub fn aead_open(alg: Int, key: &Vec[UInt8], sealed: &Vec[UInt8], aad: &Vec[UInt8]) -> Result<Vec[UInt8], Str>
+  ensures: (alg < 1 || alg > 3) => (result.is_err == true)
+  ensures: (alg >= 1 && alg <= 3 && sealed.len() < 28) => (result.is_err == true)
+{
   if !(aead_alg_supported(alg)) {
     return Err("aead_open: unsupported algorithm");
   }
@@ -187,7 +214,9 @@ pub fn aead_open(alg: Int, key: &Vec[UInt8], sealed: &Vec[UInt8], aad: &Vec[UInt
 /// Encrypt and return the ciphertext and tag separately; the tuple is
 /// (ciphertext, tag).
 /// Complexity: O(n), n = data length.
-pub fn aead_encrypt_detached(alg: Int, key: &Vec[UInt8], nonce: &Vec[UInt8], data: &Vec[UInt8], aad: &Vec[UInt8]) -> Result[(Vec[UInt8], Vec[UInt8]), Str] {
+pub fn aead_encrypt_detached(alg: Int, key: &Vec[UInt8], nonce: &Vec[UInt8], data: &Vec[UInt8], aad: &Vec[UInt8]) -> Result[(Vec[UInt8], Vec[UInt8]), Str]
+  ensures: (alg < 1 || alg > 3) => (result.is_err == true)
+{
   if !(aead_alg_supported(alg)) {
     return Err("aead_encrypt_detached: unsupported algorithm");
   }

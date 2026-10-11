@@ -2327,6 +2327,33 @@ registry pin, agent recon for the rest)**
   279/279 (304.7s), modules 509/509 (184.4s), barename 0/509 (263.1s),
   floors142 + doc + module-smoke (497/517, 3476/6204) ratchets OK.
 
+**SESSION 2026-10-11 block 109 (wave 107: FIX-FIRST RSA short-key OOB read + crypto batch 1; probe 281st)**
+- Bus round at start: acked REL-20261011-1131-pulse (keep-alive/
+  deadlines design note) -- the three interface points (per-call
+  socket_recv_timeout with expiry distinguishable from peer-close,
+  send-side SO_SNDTIMEO, Windows SO_REUSEADDR parity) are adopted as the
+  acceptance shape for the queued socket-timeout runtime family.
+- FIX-FIRST (probe-first catch): `_rsa_parse_key` (crypto.xi) indexed
+  `key[0..8]` unconditionally -- any key shorter than 8 bytes read out
+  of bounds and made the RSA guards nondeterministic (the wave probe's
+  empty-key rsa_sign contract check failed on garbage memory: Ok in one
+  process layout, Err in another). Bounds-guarded: short keys zero-pad,
+  empty key -> n = 0 -> deterministic Err. Locked by probe check 47.
+- Crypto batch 1 coverage: chacha (4: state len/constants + length-
+  preserving XOR), aead (10: alg tables, guards, sealed/detached
+  layouts), curves (9: clamp/32-byte wire sizes/scalar validity),
+  legacy des (4: FIPS 46-3 vector + EDE degeneracy), rng_crypto (2:
+  shuffle length, choice empty), sign (6: stub tuples, delegation
+  guard), rsa (6: field mirror, keygen guard, zero-message identities).
+  41 clauses, +41 pub. crypto 47.0% -> 69.4%; global 66.5% -> 67.2%
+  (pubCovered 4329 -> 4370, clauses 5739 -> 5790); meter 76.7%;
+  floors144 dumped + wired. Probe p_wave107_shapes.xi (281st, 55
+  checks) green pre/post after the fix.
+- Battery on the official v0.64.2 archive: corpus 954/954 full (698.4s),
+  probes 281/281 (299.4s), modules 509/509 (203.3s), barename 0/509
+  (216.6s), floors144 + doc + module-smoke (497/517, 3476/6204)
+  ratchets OK.
+
 **SESSION 2026-10-11 block 107 (doorbell 11:00Z: pulse-3/pulse-4 verified as already-present; fix transitions recorded)**
 - REL-20261011-0317-pulse-3 (server_parse_request) and -pulse-4
   (TcpStream.write_all loop) were ACKED at 10:16 as wave-106

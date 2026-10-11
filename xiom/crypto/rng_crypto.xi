@@ -129,7 +129,9 @@ pub fn crypto_random_bool() -> Bool {
 
 /// Fisher-Yates shuffle in place using the CSPRNG.
 /// Complexity: O(n), n = vector length.
-pub fn crypto_random_shuffle[T](v: &mut Vec[T]) {
+pub fn crypto_random_shuffle[T](v: &mut Vec[T])
+  ensures: v.len() == v.len()@pre
+{
   var i = v.len();
   while i > 1 {
     var j = crypto_random_uniform(i);
@@ -142,7 +144,9 @@ pub fn crypto_random_shuffle[T](v: &mut Vec[T]) {
 
 /// Pick a uniformly random element, or None for an empty vector.
 /// Complexity: O(1).
-pub fn crypto_random_choice[T](v: &Vec[T]) -> Option[T] {
+pub fn crypto_random_choice[T](v: &Vec[T]) -> Option[T]
+  ensures: (v.len() == 0) => (result.is_none == true)
+{
   if v.len() == 0 {
     return None;
   }

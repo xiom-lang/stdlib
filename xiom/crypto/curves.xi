@@ -115,7 +115,9 @@ fn _bigint_invmod(a: &BigInt, m: &BigInt) -> BigInt {
 
 /// Apply the X25519 clamping rules to a 32-byte scalar.
 /// Complexity: O(1).
-pub fn curve25519_clamp(scalar: &Vec[UInt8]) -> Vec[UInt8] {
+pub fn curve25519_clamp(scalar: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: result.len() == 32
+{
   var result = Vec[UInt8].new();
   var i = 0;
   while i < 32 {
@@ -130,7 +132,9 @@ pub fn curve25519_clamp(scalar: &Vec[UInt8]) -> Vec[UInt8] {
 
 /// The standard Curve25519 base point encoding: u = 9.
 /// Complexity: O(1).
-pub fn curve25519_base_point() -> Vec[UInt8] {
+pub fn curve25519_base_point() -> Vec[UInt8]
+  ensures: result.len() == 32 && result[0] == 9
+{
   var result = Vec[UInt8].new();
   var i = 0;
   while i < 32 {
@@ -158,7 +162,9 @@ fn _decode_le32(scalar: &Vec[UInt8]) -> BigInt {
 /// and `point` are 32-byte little-endian encodings; returns the X coordinate
 /// little-endian. The caller should clamp the scalar first.
 /// Complexity: O(255) field multiplications.
-pub fn curve25519_scalar_mult(scalar: &Vec[UInt8], point: &Vec[UInt8]) -> Vec[UInt8] {
+pub fn curve25519_scalar_mult(scalar: &Vec[UInt8], point: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: result.len() == 32
+{
   var p = _bigint_from_str(_C25519_P);
   var a24 = _bigint_from_str(_C25519_A24);
   var x1 = _decode_le32(point);
@@ -267,7 +273,9 @@ const _SECP_GY: Str = "483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ff
 
 /// secp256k1 generator point; the tuple is (x, y).
 /// Complexity: O(1).
-pub fn secp256k1_generator() -> (Vec[UInt8], Vec[UInt8]) {
+pub fn secp256k1_generator() -> (Vec[UInt8], Vec[UInt8])
+  ensures: result.0.len() == 32 && result.1.len() == 32
+{
   var gx = _bigint_from_str(_SECP_GX);
   var gy = _bigint_from_str(_SECP_GY);
   return (_bytes_from_bigint(&gx, 32), _bytes_from_bigint(&gy, 32));
@@ -276,7 +284,9 @@ pub fn secp256k1_generator() -> (Vec[UInt8], Vec[UInt8]) {
 /// secp256k1 point addition; the tuple is (x, y). Returns the point at
 /// infinity as (0, 0).
 /// Complexity: O(1) field operations.
-pub fn secp256k1_point_add(a: &Vec[UInt8], b: &Vec[UInt8]) -> (Vec[UInt8], Vec[UInt8]) {
+pub fn secp256k1_point_add(a: &Vec[UInt8], b: &Vec[UInt8]) -> (Vec[UInt8], Vec[UInt8])
+  ensures: result.0.len() == 32 && result.1.len() == 32
+{
   var p = _bigint_from_str(_SECP_P);
   var x1 = _bigint_from_bytes(a);
   var y1 = _bigint_from_bytes(&_second(a));
@@ -321,7 +331,9 @@ fn _second(v: &Vec[UInt8]) -> Vec[UInt8] {
 
 /// secp256k1 scalar multiplication (double-and-add); the tuple is (x, y).
 /// Complexity: O(256) point operations.
-pub fn secp256k1_point_mul(scalar: &Vec[UInt8], point: &Vec[UInt8]) -> (Vec[UInt8], Vec[UInt8]) {
+pub fn secp256k1_point_mul(scalar: &Vec[UInt8], point: &Vec[UInt8]) -> (Vec[UInt8], Vec[UInt8])
+  ensures: result.0.len() == 32 && result.1.len() == 32
+{
   var zero = bigint.bigint_zero();
   var result = (_bytes_from_bigint(&zero, 32), _bytes_from_bigint(&zero, 32));
   var p = _bigint_from_bytes(point);
@@ -347,7 +359,9 @@ const _P256_N: Str = "ffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc
 
 /// The P-256 group order n.
 /// Complexity: O(1).
-pub fn p256_curve_order() -> Vec[UInt8] {
+pub fn p256_curve_order() -> Vec[UInt8]
+  ensures: result.len() == 32
+{
   var n = _bigint_from_str(_P256_N);
   return _bytes_from_bigint(&n, 32);
 }
@@ -355,7 +369,10 @@ pub fn p256_curve_order() -> Vec[UInt8] {
 /// Group order for a named curve: 1 = secp256k1, 2 = P-256, 4 = Ed25519.
 /// Returns an empty vector for Curve25519 (no standard group order).
 /// Complexity: O(1).
-pub fn curve_order(curve: Int) -> Vec[UInt8] {
+pub fn curve_order(curve: Int) -> Vec[UInt8]
+  ensures: (curve == 1 || curve == 2 || curve == 4) => (result.len() == 32)
+  ensures: (curve != 1 && curve != 2 && curve != 4) => (result.len() == 0)
+{
   if curve == 1 {
     var n = _bigint_from_str(_SECP_N);
     return _bytes_from_bigint(&n, 32);
@@ -400,7 +417,9 @@ pub fn curve_point_on_curve(curve: Int, x: &Vec[UInt8], y: &Vec[UInt8]) -> Bool 
 /// Test whether a scalar is a valid private key for a named curve
 /// (1 = secp256k1, 2 = P-256, 3 = Curve25519): 1 <= scalar < n.
 /// Complexity: O(1).
-pub fn curve_scalar_valid(curve: Int, scalar: &Vec[UInt8]) -> Bool {
+pub fn curve_scalar_valid(curve: Int, scalar: &Vec[UInt8]) -> Bool
+  ensures: (scalar.len() == 0) => (result == false)
+{
   var n_str = _SECP_N;
   if curve == 2 { n_str = _P256_N; }
   if curve == 3 {

@@ -221,7 +221,9 @@ fn _pack_u32_le(bytes: &Vec[UInt8], offset: Int) -> Int {
 }
 
 /// ChaCha20 stream cipher context from a key and nonce.
-pub fn chacha20_new(key: &Vec[UInt8], nonce_bytes: &Vec[UInt8]) -> ChaCha20 {
+pub fn chacha20_new(key: &Vec[UInt8], nonce_bytes: &Vec[UInt8]) -> ChaCha20
+  ensures: result.state.len() == 16
+{
   var state = Vec[Int].new();
 
   // Constants (4 words)
@@ -275,7 +277,9 @@ pub fn chacha20_new(key: &Vec[UInt8], nonce_bytes: &Vec[UInt8]) -> ChaCha20 {
 /// Process data through the ChaCha20 state (XOR keystream).
 /// This function takes ownership of the state and consumes it.
 /// For a non-consuming version, use the module-level chacha20_encrypt/chacha20_decrypt.
-pub fn chacha20_process(state: &ChaCha20, data: &Vec[UInt8]) -> Vec[UInt8] {
+pub fn chacha20_process(state: &ChaCha20, data: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: result.len() == data.len()
+{
   // Copy state so we can mutate the counter
   var st = Vec[Int].new();
   var i = 0;
@@ -330,7 +334,9 @@ pub fn chacha20_process(state: &ChaCha20, data: &Vec[UInt8]) -> Vec[UInt8] {
 /// nonce: 12 bytes (96 bits)
 /// data: plaintext to encrypt
 /// Returns: ciphertext (same length as plaintext)
-pub fn chacha20_encrypt(key: &Vec[UInt8], nonce: &Vec[UInt8], data: &Vec[UInt8]) -> Vec[UInt8] {
+pub fn chacha20_encrypt(key: &Vec[UInt8], nonce: &Vec[UInt8], data: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: result.len() == data.len()
+{
   var ctx = chacha20_new(key, nonce);
   return chacha20_process(&ctx, data);
 }
@@ -341,6 +347,8 @@ pub fn chacha20_encrypt(key: &Vec[UInt8], nonce: &Vec[UInt8], data: &Vec[UInt8])
 /// data: ciphertext to decrypt
 /// Returns: plaintext (same length as ciphertext)
 /// Note: This is identical to chacha20_encrypt -- ChaCha20 is a stream cipher.
-pub fn chacha20_decrypt(key: &Vec[UInt8], nonce: &Vec[UInt8], data: &Vec[UInt8]) -> Vec[UInt8] {
+pub fn chacha20_decrypt(key: &Vec[UInt8], nonce: &Vec[UInt8], data: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: result.len() == data.len()
+{
   return chacha20_encrypt(key, nonce, data);
 }
