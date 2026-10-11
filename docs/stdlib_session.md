@@ -2494,6 +2494,39 @@ registry pin, agent recon for the rest)**
   (216.6s), floors144 + doc + module-smoke (497/517, 3476/6204)
   ratchets OK.
 
+**SESSION 2026-10-11 block 121 (v0.64.4 archive: witness GREEN + metro revert landed; one codegen regression bounced, tag held)**
+- Archive: compiler pushed m254-m274 to origin (87c6ca3c, owner-authorized
+  after our nudge 2014); dispatched the XIOM Release dry-run
+  (run 38172284613, success) and extracted the official-shaped
+  v0.64.4 windows-x64 artifact to %TEMP%\kilo\stdlib_ws\v0.64.4
+  (`xiom.exe --version` = v0.64.4).
+- WITNESS GREEN: on the v0.64.4 archive, witness/1052-metro-rename-reverted
+  (1566c26) runs BOTH import-order locks rc 0 -- p_witness_1052_rev.xi
+  (metro-first: metrohash64(empty,0)=1424585646250073642, farm64=0) and
+  p_wave106_shapes.xi (farm-first). Metro revert landed on main (4e8b696:
+  natural _K0.._K3; p_witness_1052_rev was already on main since 67d66c9);
+  both locks re-ran rc 0 on the reverted main tree.
+- v0.64.4 battery map: modules 509/509 clean, barename 0/509, corpus
+  953/954, probes 286/288 -- every failure is ONE codegen regression:
+  a cross-module call passing a fn value (bare name / bound / closure)
+  to a module function with a fn-typed parameter emits clang
+  "'%tmp4' defined with type 'float' but expected 'i64'" at an inttoptr.
+  Failing: smoke_math_finance (game_theory.cooperative_game /
+  shapley_value), p_wave102_shapes (fuzzy.fuzzy_set), p_wave91_shapes
+  (bench.run_bench/_n/bench_run_avg/bench_time_fn). Controls green:
+  same-module fn-typed-param calls (verbatim cooperative_game copy), the
+  same imports without fn args, market_equilibrium (by-value fn args),
+  v0.64.3 for all three. Bounced with minimal repros as
+  REL-20261011-2045-stdlib (high; updated with the probe evidence at
+  20:52Z; compiler stack m263-m274 suspect). TAG HELD until the corpus
+  is 954/954 on a refreshed archive.
+- Next: on the compiler fix -- re-dispatch the v0.64.4 archive, re-run
+  the 3 failing items + full battery, then the cut commit (version
+  0.64.4, COMPILER_VERSION v0.64.3, CHANGELOG) + tag stdlib-v0.64.4 +
+  reply on 1812. Also planned: the release-gate set (corpus/modules/
+  barename/coverage) on v0.64.3 post-revert for the tag's release.yml
+  claim.
+
 **SESSION 2026-10-11 block 120 (wave 113: str_chars/str_code_points linear -- str-family closed; compiler release wave in flight)**
 - Relay round: compiler batch plan items acked (1626 queued for their
   checker batch; 1709 noted -- "per the pin protocol the compiler verifies
