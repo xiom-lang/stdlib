@@ -30,33 +30,97 @@ fn _slice_raw_byte(base: *UInt8, i: Int) -> UInt8
   unsafe { return *(base + i); }
 }
 
-/// Decodes the full UTF-8 character starting at byte `pos` of `s` and returns
-/// it as a Char whose code point equals the decoded Unicode scalar value.
-/// The runtime char reader only exposes the leading byte, so the sequence is
-/// decoded from the raw bytes. Invalid continuation bytes are treated
-/// conservatively as the leading byte itself.
+/// Masking UTF-8 decode at byte `pos` over a cached (base, len) view --
+/// byte-exact mirror of the previous `_char_at_decoded` (which read through
+/// `string.byte_at`): continuation bytes are masked, NOT validated, and
+/// out-of-range bytes read as 0 exactly like the old accessor. Kept as the
+/// `str_code_points` decoder for behavior compatibility.
 /// Complexity: O(1).
-fn _char_at_decoded(s: Str, pos: Int) -> Char {
-  let b0 = (string.byte_at(s, pos) as Int) & 0xFF;
+fn _char_at_masked(base: *UInt8, len: Int, pos: Int) -> Char {
+  var b0 = 0;
+  if pos >= 0 && pos < len {
+    b0 = (_slice_raw_byte(base, pos) as Int) & 0xFF;
+  }
   if b0 <= 0x7F {
     return to_char(b0);
-  };
+  }
   if (b0 & 0xE0) == 0xC0 {
-    let b1 = (string.byte_at(s, pos + 1) as Int) & 0xFF;
+    var b1 = 0;
+    if pos + 1 < len {
+      b1 = (_slice_raw_byte(base, pos + 1) as Int) & 0xFF;
+    }
     let cp = ((b0 & 0x1F) << 6) | (b1 & 0x3F);
     return to_char(cp);
-  };
+  }
   if (b0 & 0xF0) == 0xE0 {
-    let b1 = (string.byte_at(s, pos + 1) as Int) & 0xFF;
-    let b2 = (string.byte_at(s, pos + 2) as Int) & 0xFF;
+    var b1 = 0;
+    if pos + 1 < len {
+      b1 = (_slice_raw_byte(base, pos + 1) as Int) & 0xFF;
+    }
+    var b2 = 0;
+    if pos + 2 < len {
+      b2 = (_slice_raw_byte(base, pos + 2) as Int) & 0xFF;
+    }
     let cp = ((b0 & 0x0F) << 12) | ((b1 & 0x3F) << 6) | (b2 & 0x3F);
     return to_char(cp);
-  };
-  let b1 = (string.byte_at(s, pos + 1) as Int) & 0xFF;
-  let b2 = (string.byte_at(s, pos + 2) as Int) & 0xFF;
-  let b3 = (string.byte_at(s, pos + 3) as Int) & 0xFF;
+  }
+  var b1 = 0;
+  if pos + 1 < len {
+    b1 = (_slice_raw_byte(base, pos + 1) as Int) & 0xFF;
+  }
+  var b2 = 0;
+  if pos + 2 < len {
+    b2 = (_slice_raw_byte(base, pos + 2) as Int) & 0xFF;
+  }
+  var b3 = 0;
+  if pos + 3 < len {
+    b3 = (_slice_raw_byte(base, pos + 3) as Int) & 0xFF;
+  }
   let cp = ((b0 & 0x07) << 18) | ((b1 & 0x3F) << 12) | ((b2 & 0x3F) << 6) | (b3 & 0x3F);
   to_char(cp)
+}
+
+/// Runtime-`xiom_char_at`-equivalent UTF-8 decode over a cached (base, len)
+/// view: continuation bytes are validated, a malformed or truncated
+/// sequence yields the leading byte itself, and a stray continuation byte
+/// is returned as-is. Out-of-range positions/bytes read as 0 (the NUL byte
+/// the runtime would see).
+/// Complexity: O(1).
+fn _char_at_runtime(base: *UInt8, len: Int, pos: Int) -> Char {
+  if pos < 0 || pos >= len {
+    return to_char(0);
+  }
+  var b0 = (_slice_raw_byte(base, pos) as Int) & 0xFF;
+  if b0 < 0x80 {
+    return to_char(b0);
+  }
+  var n = 0;
+  var cp = 0;
+  if (b0 & 0xE0) == 0xC0 {
+    n = 2;
+    cp = b0 & 0x1F;
+  } elif (b0 & 0xF0) == 0xE0 {
+    n = 3;
+    cp = b0 & 0x0F;
+  } elif (b0 & 0xF8) == 0xF0 {
+    n = 4;
+    cp = b0 & 0x07;
+  } else {
+    return to_char(b0);
+  }
+  var i = 1;
+  while i < n {
+    var cb = 0;
+    if pos + i < len {
+      cb = (_slice_raw_byte(base, pos + i) as Int) & 0xFF;
+    }
+    if (cb & 0xC0) != 0x80 {
+      return to_char(b0);
+    }
+    cp = (cp << 6) | (cb & 0x3F);
+    i = i + 1;
+  }
+  return to_char(cp);
 }
 
 /// Returns the substring of `s` from byte index `start` (inclusive) to byte
@@ -127,10 +191,11 @@ pub fn str_chars(s: Str) -> Vec[Char]
   ensures: result.len() <= s.len()
 {
   var result = Vec[Char].new();
-  let len = string.str_len(s);
+  let len = s.len();
+  let base = s.c_str();
   var i: Int = 0;
   while i < len {
-    let ch = xiom_char_at(s, i);
+    let ch = _char_at_runtime(base, len, i);
     result.push(ch);
     let bl = char.len_utf8(ch);
     i = i + bl;
@@ -167,10 +232,11 @@ pub fn str_code_points(s: Str) -> Vec[Int]
   ensures: result.len() <= s.len()
 {
   var result = Vec[Int].new();
-  let len = string.str_len(s);
+  let len = s.len();
+  let base = s.c_str();
   var i: Int = 0;
   while i < len {
-    let ch = _char_at_decoded(s, i);
+    let ch = _char_at_masked(base, len, i);
     result.push(to_int_from_char(ch));
     let bl = char.len_utf8(ch);
     i = i + bl;

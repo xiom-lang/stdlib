@@ -2494,6 +2494,37 @@ registry pin, agent recon for the rest)**
   (216.6s), floors144 + doc + module-smoke (497/517, 3476/6204)
   ratchets OK.
 
+**SESSION 2026-10-11 block 120 (wave 113: str_chars/str_code_points linear -- str-family closed; compiler release wave in flight)**
+- Relay round: compiler batch plan items acked (1626 queued for their
+  checker batch; 1709 noted -- "per the pin protocol the compiler verifies
+  on the tag; release wave coordination in flight"). Their local main now
+  carries the full six-batch stack (m261-m271; head 3b31599f, "next =
+  archive verdict wave"); no v0.64.4 archive yet. We hold the witness run
+  and the targeted release-check re-verification for it.
+- Wave 113 (finishes the strnlen-family follow-up from 1453/1543):
+  `str_chars`/`str_code_points` decode over a cached (base, len) view.
+  `_char_at_runtime` is a byte-exact replica of the runtime xiom_char_at
+  (leading byte on malformed/truncated sequences, stray continuation
+  as-is); `_char_at_masked` preserves the old `_char_at_decoded` masking
+  decode for str_code_points; out-of-range bytes read as 0 exactly like
+  byte_at/the NUL terminator. The dead `_char_at_decoded` was replaced
+  (doc now matches the masking behavior).
+- Probe p_wave113_shapes.xi (288th): value locks incl. the malformed
+  quirks (lone 0xC3 -> char 195 / code point 192) + bounded linearity.
+  Local 400 KB: str_chars 2472 -> 389 ms (ratio 4.4 -> 2.1),
+  str_code_points 4221 -> 370 ms; both under the 500 ms gate. Red
+  pre-fix at the gate, green post; string 102/102 + slice 6/6 smokes
+  (smoke_string_slice locks the char values) green.
+- Battery on the official v0.64.3 archive: corpus 954/954 (1377.6s;
+  machine under load from the compiler lane), probes 288/288 (221.2s),
+  modules 509/509 (250.3s), barename 0/509 (596.6s), floors148 + doc +
+  module-smoke ratchets OK. No pub-coverage change (floors148 stays);
+  probe count gate moves to 288.
+- Next: on the compiler archive -- witness branch run + metro revert on
+  main, targeted release-check verdicts, then the cut commit (version
+  0.64.4 + COMPILER_VERSION + CHANGELOG) and the candidate publish.
+  Then async coverage and the queued runtime-backed families.
+
 **SESSION 2026-10-11 block 119 (wave 112: core Option/Result + Slice helpers, 16 fns; compiler six-batch closing -- 1052 CLOSED)**
 - Compiler status (1731-compiler broadcasts, 17:31Z): the v0.64.4
   six-batch program is closing -- batches 1-5 done (m261-m270), batch 6

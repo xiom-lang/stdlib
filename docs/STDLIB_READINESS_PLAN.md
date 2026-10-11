@@ -1650,6 +1650,24 @@ T1/T2 yields.
         OK. Next: the cut mechanics on the compiler's go (pin protocol
         1731-compiler-2), the wave-106 revert at the v0.64.4 archive, and
         the async/num/math/time/iter dirs.
+        Wave 113 (2026-10-11): str_chars / str_code_points linear --
+        the last strnlen-family conversions in slice.xi. Both loops now
+        read through a cached (base, len) view: `_char_at_runtime` is a
+        byte-exact replica of the runtime xiom_char_at decoder (leading
+        byte on malformed/truncated sequences, stray continuation as-is)
+        for str_chars, and `_char_at_masked` preserves the previous
+        `_char_at_decoded` masking decode (no continuation validation)
+        for str_code_points, with out-of-range bytes reading as 0 exactly
+        like byte_at/the NUL terminator. Probe p_wave113_shapes.xi (288th)
+        locks the values incl. the malformed quirks (lone 0xC3 -> char
+        195 / code point 192) and the bounded linearity; local 400 KB:
+        str_chars 2472 -> 389 ms, str_code_points 4221 -> 370 ms (linear,
+        gate 500 ms). No pub-coverage change (floors148 stays). Battery
+        on v0.64.3: corpus 954/954 (1377.6s), probes 288/288 (221.2s),
+        modules 509/509 (250.3s), barename 0/509 (596.6s), floors148 +
+        doc + module-smoke ratchets OK. Family closed for the release
+        (json parser + str_bytes/str_slice in wave 111; chars/code points
+        here); async remains the next coverage dir.
        Ratchet:
         tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors148.json
         tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json

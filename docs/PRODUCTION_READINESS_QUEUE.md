@@ -6,7 +6,7 @@ gates 9-10 discrete.** (Compiler pin: in-tree **v0.64.2**; official
 batteries run on it.)
 **Gates: corpus 954/954 full (C001 carve-outs retired on v0.63.1; new
 TcpStream loopback and uuencode roundtrip smokes added), modules 509/509,
-probes 287/287, barename 0/509.**
+probes 288/288, barename 0/509.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -16,7 +16,7 @@ gates flip:
    full, no carve-outs (C001 fixed by 4bf8cf1e; 20/20 + 20/20 stress).
    lz4 is fixed by m190 and stayed in the gate; the new TcpStream loopback
    smoke locks m196.
-3. Probe corpus green -- MET (287/287 on v0.64.3, incl. the promoted
+3. Probe corpus green -- MET (288/288 on v0.64.3, incl. the promoted
    regression locks (rvalue float Vec index, multipart parse name, iter
    forwardref), the v0.64.1 pin probe p_pin0641_iter_shapes.xi, the
    wave-77 stats probe, the Pulse hardening probe, the 1052 co-import
@@ -144,7 +144,14 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
    v0.64.3 generic by-reference fix (16 fns, +24 clauses; core 45.8% ->
    58.0%, global 69.8%; probe 287th) with the battery green on v0.64.3:
    corpus 954/954 (673.6s), probes 287/287 (222.1s), modules 509/509,
-   barename 0/509, floors148 + ratchets OK. Next for the cut: the
+   barename 0/509, floors148 + ratchets OK. Wave 113 (block 120) finished
+   the str-family linearization: `str_chars`/`str_code_points` now decode
+   over a cached (base, len) view with byte-exact semantics (masking
+   decode for code points, leading-byte rule for malformed sequences),
+   probe 288th; local 400 KB: chars 2472 -> 389 ms, code points 4221 ->
+   370 ms (linear, under the 500 ms gate); battery: corpus 954/954
+   (1377.6s), probes 288/288 (221.2s), modules 509/509 (250.3s),
+   barename 0/509 (596.6s), ratchets OK. Next for the cut: the
    version/pin/CHANGELOG mechanics on the compiler's go (1731-compiler-2
    pin protocol) and the wave-106 revert at the v0.64.4 archive.
 BINARY NOTE: the shared local build path
