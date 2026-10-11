@@ -2342,6 +2342,37 @@ registry pin, agent recon for the rest)**
   queue moves. The compiler-owned 1630/1658 remain stale-open
   (superseded by the v0.64.3 release pin).
 
+**SESSION 2026-10-11 block 107 (wave 106: hash modules -- private-symbol collision fix-first + two compiler findings; pulse-3/4 fixed as already-delivered)**
+- Bus round at start: pulse-3 (server_parse_request) and pulse-4
+  (net.write_all) were stale migrated asks already delivered at ec64dec
+  -- both moved acked -> fixed with the delivery refs; the doorbell's
+  "wave-106 stdlib-side candidates" framing is superseded.
+- Wave 106 hash coverage: 41 clauses, +39 pub covered. hash.xi 11
+  (DefaultHasher.new/write/write_int/write_str/finish, hash_combine,
+  sip_hash, fnv1_64, _rotl32, xxhash32, fnv1_32), farm 9, highway 4,
+  metro 5, murmur 2, spooky 4, t1ha 6. hash 51.1% -> 94.4%; global
+  65.9% -> 66.5% (pubCovered 4290 -> 4329, clauses 5698 -> 5739); meter
+  76.7%; floors143 dumped + wired. Bool.hash / hash_value / free hash
+  stay uncovered (finding 1053).
+- FIX-FIRST (probe-first catch): co-importing xiom.hash.farm +
+  xiom.hash.metro made metro's private _K0/_K1/_K2 resolve to farm's
+  values (metrohash64(empty,0) = 15427970114922222902 = metro's formula
+  with farm's constants; farm wins in both import orders). Filed
+  REL-20261011-1052-stdlib (high, compiler): module-level privates
+  collide across co-imported modules; same mechanism applies to
+  same-named private fns. Stdlib-side workaround: metro's consts renamed
+  _METRO_K0..K3 (city/farm already agree; a full stdlib scan found no
+  other live divergent const). SECOND finding REL-20261011-1053-stdlib
+  (medium, compiler): zero-arg `.hash()` on scalars lowers to a builtin
+  identity that shadows Int.hash/Bool.hash (explicit receiver does not
+  type-check; hash_value(0) == 0). Probe p_wave106_shapes.xi (280th, 50
+  checks) RED on the collision / GREEN after the rename, pre and post
+  clauses.
+- Battery on the official v0.64.2 archive: corpus 954/954 full (788.5s),
+  probes 280/280 (301.6s), modules 509/509 (221.5s), barename 0/509
+  (259.3s), floors143 + doc + module-smoke (497/517, 3476/6204)
+  ratchets OK.
+
 **SESSION 2026-10-11 block 106 (doorbell 05:00/10:14Z: pulse wishlist batch acked -- 7 items; two wave-106 stdlib-side candidates)**
 - New inbound (REL-20261011-0317-pulse, -2..-6) acked with plans:
   socket options (SO_RCVTIMEO/SO_REUSEADDR/non-blocking; Windows bind

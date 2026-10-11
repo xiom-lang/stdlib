@@ -132,7 +132,9 @@ fn _highway_core(data: &Vec[UInt8], k0: UInt64, k1: UInt64, k2: UInt64, k3: UInt
 
 /// 64-bit HighwayHash over `data` with a 256-bit key.
 /// Complexity: O(n).
-pub fn highway64(data: &Vec[UInt8], key0: UInt64, key1: UInt64, key2: UInt64, key3: UInt64) -> UInt64 {
+pub fn highway64(data: &Vec[UInt8], key0: UInt64, key1: UInt64, key2: UInt64, key3: UInt64) -> UInt64
+  ensures: (data.len() == 0 && key0 == 0 && key1 == 0 && key2 == 0 && key3 == 0) => (result == 0)
+{
   var lanes = _highway_core(data, key0, key1, key2, key3);
   var h = lanes[0] ^ _rotl64(lanes[1], 17) ^ _rotl64(lanes[2], 33) ^ _rotl64(lanes[3], 49);
   h = h ^ (data.len() as UInt64);
@@ -141,7 +143,9 @@ pub fn highway64(data: &Vec[UInt8], key0: UInt64, key1: UInt64, key2: UInt64, ke
 
 /// 128-bit HighwayHash digest returned as a two-field struct (low, high).
 /// Complexity: O(n).
-pub fn highway128(data: &Vec[UInt8], key0: UInt64, key1: UInt64, key2: UInt64, key3: UInt64) -> Hh128 {
+pub fn highway128(data: &Vec[UInt8], key0: UInt64, key1: UInt64, key2: UInt64, key3: UInt64) -> Hh128
+  ensures: (data.len() == 0 && key0 == 0 && key1 == 0 && key2 == 0 && key3 == 0) => (result.low == 0 && result.high == 0)
+{
   var lanes = _highway_core(data, key0, key1, key2, key3);
   var l = _fmix64(lanes[0] ^ _rotl64(lanes[1], 25) ^ (data.len() as UInt64));
   var h = _fmix64(lanes[2] ^ _rotl64(lanes[3], 25) ^ _rotl64(data.len() as UInt64, 25));
@@ -150,7 +154,9 @@ pub fn highway128(data: &Vec[UInt8], key0: UInt64, key1: UInt64, key2: UInt64, k
 
 /// 256-bit HighwayHash digest as four 64-bit lanes (v0, v1, v2, v3).
 /// Complexity: O(n).
-pub fn highway256(data: &Vec[UInt8], key0: UInt64, key1: UInt64, key2: UInt64, key3: UInt64) -> (UInt64, UInt64, UInt64, UInt64) {
+pub fn highway256(data: &Vec[UInt8], key0: UInt64, key1: UInt64, key2: UInt64, key3: UInt64) -> (UInt64, UInt64, UInt64, UInt64)
+  ensures: (data.len() == 0 && key0 == 0 && key1 == 0 && key2 == 0 && key3 == 0) => (result.0 == 0 && result.1 == 0 && result.2 == 0 && result.3 == 0)
+{
   var lanes = _highway_core(data, key0, key1, key2, key3);
   var r0: UInt64 = _fmix64(lanes[0] ^ (data.len() as UInt64));
   var r1: UInt64 = _fmix64(lanes[1] ^ _rotl64(data.len() as UInt64, 17));
@@ -169,7 +175,9 @@ pub fn highway_hash(data: &Vec[UInt8], key: Vec[UInt64]) -> UInt64
 
 /// Rehashes `data` with the given key and compares against `expected`.
 /// Complexity: O(n).
-pub fn highway_verify(data: &Vec[UInt8], key0: UInt64, key1: UInt64, key2: UInt64, key3: UInt64, expected: UInt64) -> Bool {
+pub fn highway_verify(data: &Vec[UInt8], key0: UInt64, key1: UInt64, key2: UInt64, key3: UInt64, expected: UInt64) -> Bool
+  ensures: result == (highway64(data, key0, key1, key2, key3) == expected)
+{
   var h = highway64(data, key0, key1, key2, key3);
   h == expected
 }

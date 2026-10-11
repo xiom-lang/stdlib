@@ -49,6 +49,7 @@ fn _fmix64(k: UInt64) -> UInt64 {
 /// MurmurHash3 x64_128 of a byte string; returns [h1, h2].
 pub fn murmur3_128(data: &Vec[UInt8], seed: UInt32) -> Vec[UInt64]
   ensures: result.len() == 2
+  ensures: (data.len() == 0 && seed == 0) => (result[0] == 0 && result[1] == 0)
 {
   let len = data.len();
   var h1: UInt64 = seed as UInt64;
@@ -125,7 +126,9 @@ pub fn murmur3_128(data: &Vec[UInt8], seed: UInt32) -> Vec[UInt64]
 }
 
 /// MurmurHash64A of a byte string with the given seed.
-pub fn murmur2_64(data: &Vec[UInt8], seed: UInt64) -> UInt64 {
+pub fn murmur2_64(data: &Vec[UInt8], seed: UInt64) -> UInt64
+  ensures: (data.len() == 0 && seed == 0) => (result == 0)
+{
   var r = 47;
   let len = data.len();
   var h = seed ^ ((len as UInt64) * _M64A);

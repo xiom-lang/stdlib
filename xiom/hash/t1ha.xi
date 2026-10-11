@@ -81,7 +81,9 @@ fn _read_tail(data: &Vec[UInt8], pos: Int, len: Int) -> UInt64 {
 
 /// t1ha0 latency-optimised portable 64-bit hash: single lane, 8-byte word
 /// mixing with a byte-wise tail fold. Complexity: O(n).
-pub fn t1ha0(data: &Vec[UInt8], seed: UInt64) -> UInt64 {
+pub fn t1ha0(data: &Vec[UInt8], seed: UInt64) -> UInt64
+  ensures: (data.len() == 0 && seed == 0) => (result == 0x97bc2877812efd86)
+{
   var len = data.len();
   var h = seed ^ (0x100000001B3 as UInt64);
   var pos = 0;
@@ -98,7 +100,9 @@ pub fn t1ha0(data: &Vec[UInt8], seed: UInt64) -> UInt64 {
 
 /// t1ha1 64-bit hash, well-tuned for medium inputs: two-lane 16-byte block
 /// mixing. Complexity: O(n).
-pub fn t1ha1(data: &Vec[UInt8], seed: UInt64) -> UInt64 {
+pub fn t1ha1(data: &Vec[UInt8], seed: UInt64) -> UInt64
+  ensures: (data.len() == 0 && seed == 0) => (result == 0x3be6b5f142e8b746)
+{
   var len = data.len();
   var a = seed;
   var b = seed ^ (0x9E3779B97F4A7C15 as UInt64);
@@ -121,19 +125,25 @@ pub fn t1ha1(data: &Vec[UInt8], seed: UInt64) -> UInt64 {
 
 /// t1ha2 64-bit hash, strongest avalanche of the family: two lanes, 32-byte
 /// block mixing with cross-lane addition. Complexity: O(n).
-pub fn t1ha2(data: &Vec[UInt8], seed: UInt64) -> UInt64 {
+pub fn t1ha2(data: &Vec[UInt8], seed: UInt64) -> UInt64
+  ensures: (data.len() == 0 && seed == 0) => (result == 0x99bfa7d850624dee)
+{
   var r = _t1ha2_core(data, seed);
   r.0
 }
 
 /// t1ha2 one-shot 64-bit hash with implicit zero seed. Complexity: O(n).
-pub fn t1ha2_atonce(data: &Vec[UInt8]) -> UInt64 {
+pub fn t1ha2_atonce(data: &Vec[UInt8]) -> UInt64
+  ensures: (data.len() == 0) => (result == 0x99bfa7d850624dee)
+{
   var r = _t1ha2_core(data, 0 as UInt64);
   r.0
 }
 
 /// t1ha2 one-shot 128-bit digest as two 64-bit words. Complexity: O(n).
-pub fn t1ha2_atonce128(data: &Vec[UInt8]) -> (UInt64, UInt64) {
+pub fn t1ha2_atonce128(data: &Vec[UInt8]) -> (UInt64, UInt64)
+  ensures: (data.len() == 0) => (result.0 == 0x99bfa7d850624dee && result.1 == 0x7acdbb98b1344213)
+{
   var r = _t1ha2_core(data, 0 as UInt64);
   r
 }
@@ -167,7 +177,9 @@ fn _t1ha2_core(data: &Vec[UInt8], seed: UInt64) -> (UInt64, UInt64) {
 
 /// t1ha variant tuned for IA-32 targets: smaller state, 4-byte word mixing.
 /// Complexity: O(n).
-pub fn t1ha_ia32(data: &Vec[UInt8], seed: UInt64) -> UInt64 {
+pub fn t1ha_ia32(data: &Vec[UInt8], seed: UInt64) -> UInt64
+  ensures: (data.len() == 0 && seed == 0) => (result == 0x78302769c031287d)
+{
   var len = data.len();
   var h = seed ^ (0xA5A5A5A5A5A5A5A5 as UInt64);
   var pos = 0;

@@ -29,12 +29,16 @@ pub interface BuildHasher {
 pub type DefaultHasher = { state: Int; } derive[Clone]
 
 /// Create a hasher with the default seed.
-pub fn DefaultHasher.new() -> DefaultHasher {
+pub fn DefaultHasher.new() -> DefaultHasher
+  ensures: result.state == 5381
+{
   return DefaultHasher { state: 5381; };
 }
 
 /// Feed bytes into the hasher.
-pub fn DefaultHasher.write(self, bytes: &Vec[UInt8]) {
+pub fn DefaultHasher.write(self, bytes: &Vec[UInt8])
+  ensures: (bytes.len() == 0) => (self.state == self.state@pre)
+{
   var i: Int = 0;
   while i < bytes.len() {
     self.state = ((self.state * 33) + bytes[i]);
@@ -43,7 +47,9 @@ pub fn DefaultHasher.write(self, bytes: &Vec[UInt8]) {
 }
 
 /// Feed an Int into the hasher.
-pub fn DefaultHasher.write_int(self, n: Int) {
+pub fn DefaultHasher.write_int(self, n: Int)
+  ensures: (n == 0) => (self.state == self.state@pre * 33 * 33 * 33 * 33 * 33 * 33 * 33 * 33)
+{
   var val: Int = n;
   var i: Int = 0;
   while i < 8 {
@@ -54,7 +60,9 @@ pub fn DefaultHasher.write_int(self, n: Int) {
 }
 
 /// Feed the bytes of a string into the hasher.
-pub fn DefaultHasher.write_str(self, s: Str) {
+pub fn DefaultHasher.write_str(self, s: Str)
+  ensures: (s.len() == 0) => (self.state == self.state@pre)
+{
   var i: Int = 0;
   let len: Int = str_len(s);
   while i < len {
@@ -68,7 +76,9 @@ pub fn DefaultHasher.write_str(self, s: Str) {
 }
 
 /// Finalize and return the 64-bit hash.
-pub fn DefaultHasher.finish(self) -> Int {
+pub fn DefaultHasher.finish(self) -> Int
+  ensures: result == self.state
+{
   return self.state;
 }
 
@@ -106,13 +116,20 @@ pub fn Bool.hash(self) -> UInt64 {
 /// (hash(self, hasher)) is defined above but has no concrete impls yet;
 /// calling through it from a &T receiver produced invalid IR
 /// (ptr->i64) -- keep by-value params until the interface path is complete.
+/// CAVEAT (REL-20261011-1053-stdlib): zero-arg `.hash()` on scalar
+/// receivers lowers to a compiler BUILTIN identity that shadows the
+/// concrete Int.hash/Bool.hash methods, and the explicit-receiver form
+/// (`Bool.hash(x)`) does not type-check -- so those two methods are
+/// unreachable today; treat `.hash()` on Int/Bool as the identity.
 pub fn hash_value[T: Hash](value: T) -> Int {
   let h = value.hash();
   return h as Int;
 }
 
 /// Combine two hashes into one (order-dependent).
-pub fn hash_combine(seed: Int, hash: Int) -> Int {
+pub fn hash_combine(seed: Int, hash: Int) -> Int
+  ensures: result == seed ^ (hash + 0x9e3779b9 + (seed << 6) + (seed >> 2))
+{
   return seed ^ (hash + 0x9e3779b9 + (seed << 6) + (seed >> 2));
 }
 
@@ -121,8 +138,10 @@ pub fn hash[T: Hash](value: T) -> UInt64 {
   value.hash()
 }
 
-/// SipHash-2-4 of the bytes (64-bit).
-pub fn sip_hash(data: &Vec[UInt8]) -> UInt64 {
+/// Default-hasher digest of the bytes (64-bit; DJB2-based, seed 5381).
+pub fn sip_hash(data: &Vec[UInt8]) -> UInt64
+  ensures: (data.len() == 0) => (result == 5381)
+{
   var hasher: DefaultHasher = DefaultHasher.new();
   hasher.write(data);
   return hasher.finish();
@@ -171,7 +190,9 @@ pub fn fnv1a64(data: &Vec[UInt8]) -> Int
 /// FNV-1 64-bit hash (multiply first, then XOR -- non-alternate variant).
 /// Offset basis: 0xCBF29CE484222325, prime: 0x00000100000001B3.
 /// Complexity: O(n), n = data length.
-pub fn fnv1_64(data: &Vec[UInt8]) -> Int {
+pub fn fnv1_64(data: &Vec[UInt8]) -> Int
+  ensures: (data.len() == 0) => (result == 0xCBF29CE484222325)
+{
   var hash: Int = 0xCBF29CE484222325;
   var i: Int = 0;
   let len = data.len();
@@ -247,7 +268,9 @@ pub fn murmur3_32(data: &Vec[UInt8], seed: Int) -> Int
 // -- xxHash32 ----------------------------------------------------------------
 
 /// Helper: rotates left within 32 bits.
-pub fn _rotl32(x: Int, r: Int) -> Int {
+pub fn _rotl32(x: Int, r: Int) -> Int
+  ensures: result >= 0 && result <= 0xFFFFFFFF
+{
   let a = (x & 0xFFFFFFFF) << r;
   let b = ((x & 0xFFFFFFFF) >> (32 - r));
   return (a | b) & 0xFFFFFFFF;
@@ -256,7 +279,9 @@ pub fn _rotl32(x: Int, r: Int) -> Int {
 /// xxHash32 -- Yann Collet's fast non-cryptographic hash.
 /// Prime constants and avalanche per original xxHash specification.
 /// Complexity: O(n), n = data length. Processes 4-byte lanes + tail.
-pub fn xxhash32(data: &Vec[UInt8], seed: Int) -> Int {
+pub fn xxhash32(data: &Vec[UInt8], seed: Int) -> Int
+  ensures: (data.len() == 0 && seed == 0) => (result == 0x02CC5D05)
+{
   const PRIME32_1: Int = 0x9E3779B1;
   const PRIME32_2: Int = 0x85EBCA77;
   const PRIME32_3: Int = 0xC2B2AE3D;
@@ -567,7 +592,9 @@ pub fn xxhash64(data: &Vec[UInt8], seed: Int) -> Int
 }
 
 /// FNV-1 32-bit (multiply before XOR, unlike FNV-1a).
-pub fn fnv1_32(s: Str) -> Int {
+pub fn fnv1_32(s: Str) -> Int
+  ensures: (s.len() == 0) => (result == 2166136261)
+{
   var h: Int = 2166136261;
   var i: Int = 0;
   while i < s.len() {

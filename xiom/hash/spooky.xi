@@ -189,28 +189,36 @@ fn _spooky_hash(data: &Vec[UInt8], seed1: UInt64, seed2: UInt64) -> (UInt64, UIn
 
 /// 32-bit SpookyHash over `data` (no seed): the low 32 bits of the unseeded
 /// 64-bit digest. Complexity: O(n).
-pub fn spooky32(data: &Vec[UInt8]) -> UInt32 {
+pub fn spooky32(data: &Vec[UInt8]) -> UInt32
+  ensures: (data.len() == 0) => (result == 0x96a9a34f)
+{
   var r = _spooky_hash(data, 0 as UInt64, 0 as UInt64);
   r.0 as UInt32
 }
 
 /// 64-bit SpookyHash over `data` with a single seed.
 /// Complexity: O(n).
-pub fn spooky64(data: &Vec[UInt8], seed: UInt64) -> UInt64 {
+pub fn spooky64(data: &Vec[UInt8], seed: UInt64) -> UInt64
+  ensures: (data.len() == 0 && seed == 0) => (result == 0x6f01ecae96a9a34f)
+{
   var r = _spooky_hash(data, seed, 0 as UInt64);
   r.0
 }
 
 /// 128-bit SpookyHash digest as two 64-bit words (hash1, hash2).
 /// Complexity: O(n).
-pub fn spooky128(data: &Vec[UInt8], seed1: UInt64, seed2: UInt64) -> (UInt64, UInt64) {
+pub fn spooky128(data: &Vec[UInt8], seed1: UInt64, seed2: UInt64) -> (UInt64, UInt64)
+  ensures: (data.len() == 0 && seed1 == 0 && seed2 == 0) => (result.0 == 0x6f01ecae96a9a34f && result.1 == 0x38905088c4094638)
+{
   _spooky_hash(data, seed1, seed2)
 }
 
 /// Fast path 64-bit hash for messages of 8 bytes or fewer: a compact
 /// byte-wise rotate-multiply mix with an fmix64 avalanche.
 /// Complexity: O(n), n <= 8.
-pub fn spooky_short(data: &Vec[UInt8]) -> UInt64 {
+pub fn spooky_short(data: &Vec[UInt8]) -> UInt64
+  ensures: (data.len() == 0) => (result == 0x0f1e72c77f3f5ceb)
+{
   var len = data.len();
   var h = _SC_CONST ^ (len as UInt64);
   var i = 0;

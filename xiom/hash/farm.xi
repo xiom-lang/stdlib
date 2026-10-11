@@ -113,23 +113,31 @@ fn _farm64_core(data: &Vec[UInt8], seed1: UInt64, seed2: UInt64) -> UInt64 {
 }
 
 /// FarmHash 64-bit digest over `data` (no seed). Complexity: O(n).
-pub fn farmhash64(data: &Vec[UInt8]) -> UInt64 {
+pub fn farmhash64(data: &Vec[UInt8]) -> UInt64
+  ensures: (data.len() == 0) => (result == 0)
+{
   _farm64_core(data, _K2, _K1)
 }
 
 /// FarmHash 64-bit digest with a single seed. Complexity: O(n).
-pub fn farmhash64_seed(data: &Vec[UInt8], seed: UInt64) -> UInt64 {
+pub fn farmhash64_seed(data: &Vec[UInt8], seed: UInt64) -> UInt64
+  ensures: (seed == 0x9ae16a3b2f90404f) => (result == farmhash64(data))
+{
   _farm64_core(data, seed, _K1)
 }
 
 /// FarmHash 64-bit digest with two seeds. Complexity: O(n).
-pub fn farmhash64_seed2(data: &Vec[UInt8], seed1: UInt64, seed2: UInt64) -> UInt64 {
+pub fn farmhash64_seed2(data: &Vec[UInt8], seed1: UInt64, seed2: UInt64) -> UInt64
+  ensures: (seed1 == 0x9ae16a3b2f90404f && seed2 == 0xb492b66fbe98f273) => (result == farmhash64(data))
+{
   _farm64_core(data, seed1, seed2)
 }
 
 /// FarmHash 32-bit digest over `data` (Murmur-style 4-byte mixing).
 /// Complexity: O(n).
-pub fn farmhash32(data: &Vec[UInt8]) -> UInt32 {
+pub fn farmhash32(data: &Vec[UInt8]) -> UInt32
+  ensures: (data.len() == 0) => (result == 0xc630264f)
+{
   var len = data.len();
   var h: UInt64 = (0x9E3779B9 as UInt64) ^ (len as UInt64);
   var pos = 0;
@@ -172,30 +180,40 @@ fn _farm128_core(data: &Vec[UInt8], seed1: UInt64, seed2: UInt64) -> (UInt64, UI
 }
 
 /// FarmHash 128-bit digest as two 64-bit words. Complexity: O(n).
-pub fn farmhash128(data: &Vec[UInt8]) -> (UInt64, UInt64) {
+pub fn farmhash128(data: &Vec[UInt8]) -> (UInt64, UInt64)
+  ensures: (data.len() == 0) => (result.0 == 0 && result.1 == 0)
+{
   _farm128_core(data, _K0, _K1)
 }
 
 /// FarmHash 128-bit digest seeded with two 64-bit words.
 /// Complexity: O(n).
-pub fn farmhash128_seed(data: &Vec[UInt8], seed1: UInt64, seed2: UInt64) -> (UInt64, UInt64) {
+pub fn farmhash128_seed(data: &Vec[UInt8], seed1: UInt64, seed2: UInt64) -> (UInt64, UInt64)
+  ensures: (data.len() == 0 && seed1 == 0xc3a5c85c97cb3127 && seed2 == 0xb492b66fbe98f273) => (result.0 == 0 && result.1 == 0)
+{
   _farm128_core(data, seed1, seed2)
 }
 
 /// 32-bit fingerprint, stable across runs for the same data.
 /// Complexity: O(n).
-pub fn farmhash_fingerprint32(data: &Vec[UInt8]) -> UInt32 {
+pub fn farmhash_fingerprint32(data: &Vec[UInt8]) -> UInt32
+  ensures: result == farmhash32(data)
+{
   farmhash32(data)
 }
 
 /// 64-bit fingerprint, stable across runs for the same data.
 /// Complexity: O(n).
-pub fn farmhash_fingerprint64(data: &Vec[UInt8]) -> UInt64 {
+pub fn farmhash_fingerprint64(data: &Vec[UInt8]) -> UInt64
+  ensures: result == farmhash64(data)
+{
   farmhash64(data)
 }
 
 /// 128-bit fingerprint, stable across runs for the same data.
 /// Complexity: O(n).
-pub fn farmhash_fingerprint128(data: &Vec[UInt8]) -> (UInt64, UInt64) {
+pub fn farmhash_fingerprint128(data: &Vec[UInt8]) -> (UInt64, UInt64)
+  ensures: (data.len() == 0) => (result.0 == 0 && result.1 == 0)
+{
   farmhash128(data)
 }

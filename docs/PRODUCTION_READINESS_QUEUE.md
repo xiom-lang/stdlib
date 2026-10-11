@@ -1,10 +1,10 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
-**76.6% -- 7 of 10 gates complete; gate 8 at 65.9% (partial credit) and
+**76.7% -- 7 of 10 gates complete; gate 8 at 66.5% (partial credit) and
 gates 9-10 discrete.** (Compiler pin: **v0.64.2**.)
 **Gates: corpus 954/954 full (C001 carve-outs retired on v0.63.1; new
 TcpStream loopback and uuencode roundtrip smokes added), modules 509/509,
-probes 279/279, barename 0/509.**
+probes 280/280, barename 0/509.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -14,24 +14,24 @@ gates flip:
    full, no carve-outs (C001 fixed by 4bf8cf1e; 20/20 + 20/20 stress).
    lz4 is fixed by m190 and stayed in the gate; the new TcpStream loopback
    smoke locks m196.
-3. Probe corpus green -- MET (279/279 on v0.64.2, incl. the promoted
+3. Probe corpus green -- MET (280/280 on v0.64.2, incl. the promoted
    regression locks (rvalue float Vec index, multipart parse name, iter
    forwardref), the v0.64.1 pin probe p_pin0641_iter_shapes.xi, the
-   wave-77 stats probe, the Pulse hardening probe, the wave-78..105
+   wave-77 stats probe, the Pulse hardening probe, the wave-78..106
    coverage probes (the wave-97 probe was remerged after m242, plus the
-   wave-98..105 probes), the io byte-fidelity/CRLF lock and the
+   wave-98..106 probes), the io byte-fidelity/CRLF lock and the
    fs_remove lock).
 4. Strict bare-name scan clean -- MET (0/509).
-5. Coverage ratchet green -- MET (floors142).
+5. Coverage ratchet green -- MET (floors143).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (497/517 modules, 3477/6202 fns).
-8. Contract coverage 100% (every public fn carries clauses) -- OPEN (65.9%).
+8. Contract coverage 100% (every public fn carries clauses) -- OPEN (66.5%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
    OPEN (16: 15 compiler, 1 stdlib).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
 
 Meter formula: MET gates count 1.0; gate 8 counts its current
-pub-with-clause fraction (65.9% -> 0.659); gates 9 and 10 get no partial
+pub-with-clause fraction (66.5% -> 0.665); gates 9 and 10 get no partial
 credit (discrete). Update the percentage and the gate-8 fraction in the
 same commit as each floors dump so the meter moves smoothly toward 80%.
 
@@ -73,10 +73,14 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
    coverage flat, fix wave). Wave 105 fixed the signal_raise/raise_signal
    `raise_sig` link defect (libc raise + Windows guard) and covered the
    os batch 2 remainder (env/sysinfo/term/proc/signal + dir/fs/args/
-   process/os tails; 64 clauses, +64 pub; probe 279th). Math 53.0%, os
-   55.4%, global 65.9%, meter 76.6%; handoff in `docs/stdlib_session.md`
-   snapshot 28 (block 100 refresh; compiler v0.64.3 released pinning
-   ab894b47), wave records blocks 89-101.
+   process/os tails; 64 clauses, +64 pub; probe 279th). Wave 106 covered
+   the hash modules (probe-first catch: private-symbol collision filed as
+   REL-20261011-1052-stdlib high, metro's consts renamed; builtin .hash()
+   shadow filed as -1053-stdlib; 41 clauses, +39 pub; probe 280th); pulse
+   -3/-4 moved fixed as already-delivered (ec64dec). Math 53.0%, os
+   55.4%, hash 94.4%, global 66.5%, meter 76.7%; handoff in
+   `docs/stdlib_session.md` snapshot 28 (block 100 refresh; compiler
+   v0.64.3 released pinning ab894b47), wave records blocks 89-107.
 BINARY NOTE: the shared local build path
 `E:\xiom-lang\xiom\target\release\xiom.exe` was rebuilt past the pin
 (compiler main da7798da m252) and fails four corpus smokes; use the
@@ -764,6 +768,31 @@ verify stdlib-v0.64.3 (d052a3c5) during its v0.64.3 candidate gates.
 Housekeeping in the same relay: the wave-97 sibling-alias split-probe
 workaround was DROPPED -- p_wave97_bitwise_shapes.xi was merged back into
 p_wave97_shapes.xi and re-run green on v0.64.2 (probe corpus stays 272).
+
+Update 2026-10-11 (wave 106 landed): hash modules + two compiler findings.
+FIX-FIRST private-symbol collision (probe-first catch): with
+xiom.hash.farm + xiom.hash.metro co-imported, metro's module-private
+_K0/_K1/_K2 resolved to farm's values -- metrohash64(empty,0) returned
+15427970114922222902 instead of 1424585646250073642 (exact numeric
+match; farm wins in both import orders). Filed REL-20261011-1052-stdlib
+(high): module-level privates must be per-module mangled (same mechanism
+covers same-named private fns; a full-stdlib scan found no other live
+divergent const). Stdlib-side: metro's consts renamed _METRO_K0..K3
+(city/farm agree). Second finding: REL-20261011-1053-stdlib (medium):
+zero-arg `.hash()` on scalars lowers to a compiler builtin identity that
+shadows Int.hash/Bool.hash (methods unreachable; explicit receiver does
+not type-check; hash_value(0) == 0). Hash coverage: 41 clauses, +39 pub
+(hash.xi 11, farm 9, highway 4, metro 5, murmur 2, spooky 4, t1ha 6);
+hash 51.1% -> 94.4%, global 65.9% -> 66.5% (pubCovered 4290 -> 4329,
+clauses 5698 -> 5739); meter 76.7%; floors143. Probe p_wave106_shapes.xi
+(280th, 50 checks) RED on the collision / GREEN after the rename, pre
+and post clauses. Battery: corpus 954/954 full (788.5s), probes 280/280
+(301.6s), modules 509/509 (221.5s), barename 0/509 (259.3s), floors143
++ doc + module-smoke (497/517, 3476/6204) ratchets OK. Bus round: pulse-3
+(server_parse_request) and pulse-4 (write_all) acked -> fixed as
+already-delivered at ec64dec (doorbell's "wave-106 candidates" framing
+superseded). Next: crypto/misc/sync coverage; runtime-backed asks when
+the compiler runtime bundle moves.
 
 Update 2026-10-10 (relay website-10 fixed: no-NASM crypto fallbacks):
 security triage confirmed the hole shape but not through stdlib public

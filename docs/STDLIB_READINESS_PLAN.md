@@ -1485,8 +1485,36 @@ T1/T2 yields.
         an empty stub while xiom_crypto_aesni_available() returns 1 --
         wrong AES-128 ciphertext on Apple ARM (macos-14 leg candidate);
         fix needs an ARM runner.
+        Wave 106 (2026-10-11): FIX-FIRST private-symbol collision in the
+        hash modules (probe-first catch). With xiom.hash.farm and
+        xiom.hash.metro co-imported, metro's module-private _K0/_K1/_K2
+        resolved to farm's values: metrohash64(empty, 0) returned
+        15427970114922222902 instead of 1424585646250073642 (exact
+        numeric match; farm wins in both import orders). Filed
+        REL-20261011-1052-stdlib (high): module-level privates must be
+        per-module mangled (same mechanism covers same-named private
+        fns; a full-stdlib scan found no other live divergent const).
+        Stdlib-side: metro's consts renamed _METRO_K0..K3 (city/farm
+        agree). Second finding filed REL-20261011-1053-stdlib (medium):
+        zero-arg `.hash()` on scalars lowers to a compiler builtin
+        identity that shadows Int.hash/Bool.hash (methods unreachable;
+        explicit receiver does not type-check; hash_value(0) == 0).
+        Hash coverage wave: 41 clauses, +39 pub covered (hash.xi 11,
+        farm 9, highway 4, metro 5, murmur 2, spooky 4, t1ha 6); hash
+        51.1% -> 94.4%; global 65.9% -> 66.5% (pubCovered 4290 -> 4329,
+        clauses 5698 -> 5739); meter 76.7%; floors143. Probe
+        p_wave106_shapes.xi (280th, 50 checks) RED on the collision /
+        GREEN after the rename, pre and post clauses. Battery on the
+        official v0.64.2 archive: corpus 954/954 full (788.5s), probes
+        280/280 (301.6s), modules 509/509 (221.5s), barename 0/509
+        (259.3s), floors143 + doc + module-smoke (497/517, 3476/6204)
+        ratchets OK. Bus round: pulse-3 (server_parse_request) and
+        pulse-4 (write_all) moved acked -> fixed as already-delivered at
+        ec64dec (the doorbell's "wave-106 candidates" framing
+        superseded). Next: crypto/misc/sync coverage; runtime asks when
+        the compiler runtime bundle moves.
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors142.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors143.json
         tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;
