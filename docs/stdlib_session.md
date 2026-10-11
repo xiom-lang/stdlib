@@ -24,9 +24,9 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 ---
 
 You are continuing the XIOM stdlib lane. Worktree `E:\xiom-lang\stdlib`,
-branch `main`. Read `docs/stdlib_session.md` blocks 113 (latest), 112,
-111, 110, 109, 108, 107, 106, 105, 104, 103, 102, 101, 100, 99, 98, 97,
-96, 95, 94, 93, 92, 91, 90, 89, 43 (publish), 27 (iter block) and
+branch `main`. Read `docs/stdlib_session.md` blocks 114 (latest), 113,
+112, 111, 110, 109, 108, 107, 106, 105, 104, 103, 102, 101, 100, 99, 98,
+97, 96, 95, 94, 93, 92, 91, 90, 89, 43 (publish), 27 (iter block) and
 `docs/PRODUCTION_READINESS_QUEUE.md` before acting; snapshots 28/27 below
 and snapshot 5 keep the deeper history/lore. Cross-lane coordination runs
 on the xiom-relays bus (section 0B + AGENTS.md): pull it at session start
@@ -97,7 +97,13 @@ notes: per-call deadline recv, SO_SNDTIMEO, Windows REUSEADDR parity),
 bindings-8 guard-aware free (runtime half with B-05), engine-6 thread
 pool + Send/Sync (P1/P4), playground-4 stdin docs, website
 accelerated-path markers. pulse-6 (sleep_ms no-op) is FIXED pending
-reporter verify; pulse-3/4, website-10, 1708 and xvector-7 are CLOSED.
+reporter verify; pulse-3/4, website-10, 1708 and xvector-7 are CLOSED;
+1442-compiler (signal env reference, ad9169e) is FIXED -- the compiler
+re-syncs its vendored tree. 1453-xvector (json_parse quadratic: every
+parser character read is a runtime strnlen) is ACKED with the
+byte-lexer fix plan -- TOP wave-110 candidate (json byte-based lexer
+fast path; acceptance = ms-scale xvector repro + depth cap/locks +
+linearity sweep) alongside the coverage sync.
 1630/1658-compiler are the compiler's; leave them.
 
 FIRST TASK (wave 110): **sync coverage** -- sync.xi tail + atomics (16
@@ -2487,6 +2493,30 @@ registry pin, agent recon for the rest)**
   probes 281/281 (299.4s), modules 509/509 (203.3s), barename 0/509
   (216.6s), floors144 + doc + module-smoke (497/517, 3476/6204)
   ratchets OK.
+
+**SESSION 2026-10-11 block 114 (doorbell 15:00Z: catalog-gate signal fix + xvector json quadratic root-caused)**
+- REL-20261011-1442-compiler (catalog corpus gate red): FIXED at
+  `ad9169e` -- signal_raise uses the fully qualified `xiom.env.FAMILY`,
+  resolving in both the pin front-end and the checker's catalog model.
+  Reproduced the exact 3 checker errors with
+  `cargo test -p xiom-check --lib -- tests::catalog_corpus_is_clean`;
+  the checker indexes a stale vendored stdlib (pre-wave-105, missing the
+  import); after copying the fixed signal.xi into
+  `E:\xiom-lang\xiom\stdlib` the oracle passes (1 passed, 148s). Pin
+  probe-check PASSED; smoke_os 7/7; p_wave105_shapes PASS. Bus: open ->
+  acked -> fixed (the compiler re-syncs the vendored tree).
+- REL-20261011-1453-xvector (high, json_parse quadratic): ACKED with the
+  root cause -- every parser character read goes through
+  `xiom.string.char_at` -> runtime `xiom_char_at` (strnlen per call) and
+  `Str.len()` is strlen (runtime comment), so parsing is O(n^2) on ANY
+  payload shape, not just numeric tokens. Fix plan: byte-based lexer
+  fast path (`s.c_str()` + one cached `s.len()`, raw byte reads via
+  pointer offset, keep `Str::from_utf8` for values). Top wave-110
+  candidate; acceptance = the pinned xvector repro goes ms-scale + the
+  depth cap/JSON locks stay green + a new linearity sweep probe.
+- No lane action on the ops hygiene broadcast (closed by ops) or the
+  compiler batch plan (to all); the pin-coordination note was acked by
+  the concurrent session.
 
 **SESSION 2026-10-11 block 113 (handoff refresh: snapshot 29 paste-ready; waves 105-109 recorded; 1052 witness armed; queue pointer updated)**
 - Snapshot 29 written at the top of section 0A (paste-ready prompt for the
