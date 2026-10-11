@@ -2327,6 +2327,21 @@ registry pin, agent recon for the rest)**
   279/279 (304.7s), modules 509/509 (184.4s), barename 0/509 (263.1s),
   floors142 + doc + module-smoke (497/517, 3476/6204) ratchets OK.
 
+**SESSION 2026-10-11 block 107 (doorbell 11:00Z: pulse-3/pulse-4 verified as already-present; fix transitions recorded)**
+- REL-20261011-0317-pulse-3 (server_parse_request) and -pulse-4
+  (TcpStream.write_all loop) were ACKED at 10:16 as wave-106
+  candidates; they were then verified as ALREADY DELIVERED in `ec64dec`
+  ("feat(net,crypto): Pulse hardening (write_all, server_parse_request,
+  hmac_sha256_hex) + probe") and moved acked -> fixed with that ref.
+  Shape note (pulse-3): implemented as Option[ServerRequest] vs the
+  suggested Result[ServerRequest, Str]; an error-carrying variant can
+  follow if needed. write_all loops over xiom_socket_send through a
+  64 KiB staging buffer (Err on negative/stalled) and is locked by the
+  100000-byte loopback probe p_pulse_shapes.xi. Reporters re-verify.
+- Bus: the two fix transitions committed + pushed (4ffcc2c); no other
+  queue moves. The compiler-owned 1630/1658 remain stale-open
+  (superseded by the v0.64.3 release pin).
+
 **SESSION 2026-10-11 block 106 (doorbell 05:00/10:14Z: pulse wishlist batch acked -- 7 items; two wave-106 stdlib-side candidates)**
 - New inbound (REL-20261011-0317-pulse, -2..-6) acked with plans:
   socket options (SO_RCVTIMEO/SO_REUSEADDR/non-blocking; Windows bind
