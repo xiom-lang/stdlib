@@ -139,7 +139,7 @@ pub fn signal_raise(num: Int) -> Result[Unit, Str]
   if num <= 0 {
     return Err("signal_raise: invalid signal number");
   }
-  if env.FAMILY == "windows" {
+  if xiom.env.FAMILY == "windows" {
     return Err("signal_raise: unsupported on Windows");
   }
   let rc = unsafe { raise(num as Int32) };
