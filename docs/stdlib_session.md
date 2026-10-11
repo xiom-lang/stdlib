@@ -17,6 +17,135 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
+## 0A. CONTINUE HERE -- handoff snapshot 29 (updated 2026-10-11, pin v0.64.2 OFFICIAL ARCHIVE binary; compiler v0.64.3 released pinning ab894b47; waves 105-109 landed; next = wave 110; relay bus live; compiler resolver/isolation batch in flight (1052); binary-drift warning)
+
+**PASTE-READY PROMPT FOR THE NEXT SESSION (copy this block):**
+
+---
+
+You are continuing the XIOM stdlib lane. Worktree `E:\xiom-lang\stdlib`,
+branch `main`. Read `docs/stdlib_session.md` blocks 113 (latest), 112,
+111, 110, 109, 108, 107, 106, 105, 104, 103, 102, 101, 100, 99, 98, 97,
+96, 95, 94, 93, 92, 91, 90, 89, 43 (publish), 27 (iter block) and
+`docs/PRODUCTION_READINESS_QUEUE.md` before acting; snapshots 28/27 below
+and snapshot 5 keep the deeper history/lore. Cross-lane coordination runs
+on the xiom-relays bus (section 0B + AGENTS.md): pull it at session start
+and before finishing (`git -C E:\xiom-lang\xiom-relays pull --ff-only`,
+then `python tools/relay.py view --lane stdlib`), process items addressed
+to stdlib, never edit another lane's item. Ecosystem relays feed
+`docs/STDLIB-WISHLIST.md`; runtime-backed asks queue with the compiler
+runtime bundle.
+
+STATE (2026-10-11): compiler pin = **v0.64.2**, USE THE OFFICIAL ARCHIVE
+BINARY `%TEMP%\kilo\stdlib_ws\v0.64.2\bin\xiom.exe`. WARNING: the shared
+local build `E:\xiom-lang\xiom\target\release\xiom.exe` remains drifted
+past the tag; do NOT use it for batteries. The pin's driver compiles the
+runtime with `-DXIOM_NO_ASM` here (verified: the cached runtime object
+carries the portable crypto fallbacks; no NASM objects are ever linked)
+-- the wave-105 portable crypto is the operative path. Compiler **v0.64.3
+released** (f7b3a4fe on a5b87965; STDLIB_VERSION ab894b47). The compiler
+is running SIX fix batches (REL-20261011-1342-compiler): (1)
+resolver/isolation (1052 + orbitdb 1124, HIGH) FIRST -- keep the
+workarounds until it ships; (2) fn-value ABI; (3) phantom imports; (4)
+toolchain home/path; (5) pulse startup AV; (6) Float32 slot stores. For
+batch 1 the stdlib WITNESS is armed: both import-order locks
+(p_wave106_shapes.xi farm-first; p_witness_1052_rev.xi metro-first) and
+the branch `witness/1052-metro-rename-reverted` (1566c26: metro's
+_K0..K3 restored to the natural names + both locks; RED today by contract
+abort, must run rc 0 post-fix). When the fix lands: re-run that branch
+against the new pin, revert the metro rename on main, keep both probes as
+permanent e2e locks; the registry package then ships natural names
+(compiler-2). Release follow-ups: at the NEXT candidate cut add
+`categories` + `stage` to package.xi and run the notes validator per
+`docs/RELEASE_CHECKLIST.md` item 3.
+
+Gates on v0.64.2 (official archive): release corpus **954/954 FULL**,
+modules **509/509**, probes **284/284**, barename **0/509**, floors146,
+module-smoke ratchet (497/517, 3476/6204) and doc ratchet OK.
+Coverage = **68.5%** global pub-with-clause (meter 76.9%). Waves after
+snapshot 28: 105 (signal_raise/raise_signal `raise_sig` link fix-first +
+os batch 2; 64 clauses), 106 (hash modules; private-symbol collision
+fix-first -> 1052; 41 clauses), 107 (RSA short-key OOB fix-first + crypto
+batch 1 chacha/aead/curves/des/rng/sign/rsa; 41 clauses), 108 (THREE
+fix-first crypto defects: cipher.xi _gf_mul11/13 swap, argon2 guard, ecc
+OOB + crypto batch 2 cipher/tail/ecc; 49 fns), 109 (misc.xi + semver.xi;
+38 fns; the 1052 witness round). Dir deltas: os 55.4%, hash 94.4%, crypto
+94.5%, misc 98.7%, math 53.0%, sync 35.9%, num 37.6%, core 45.8%, iter
+46.4%, time 41.3%, sort 42.6%, async 4.5%, regex 59.2%, stats 59.3%,
+string 60.1%, collect 61.9%.
+
+Findings: the relay bus is the tracker. New post-snapshot-28:
+REL-20261011-1052-stdlib (module-private symbols collide across
+co-imported modules; high; ACKED by compiler; batch 1; witness above) and
+REL-20261011-1053-stdlib (scalar `.hash()` builtin identity shadows
+Int.hash/Bool.hash; medium; ACKED; those fns stay uncovered pending the
+semantics call). Runtime-side ours: the aarch64 AES finding (one-round
+encrypt + empty decrypt while xiom_crypto_aesni_available() returns 1;
+wrong AES-128 on Apple ARM; candidate contributor to the red macos-14
+corpus leg; needs a Mac runner; recorded in the queue). Still open
+compiler-side (see tools/known_failures/README.md Current header): the
+16 Current findings + payload-index (relays C-PULSE-17 workaround: bind
+`ld.value` then index) + the wave-103/104 additions. B-05 guard-heap spin
+and darwin-x64 fp128 (pulse-2) remain ours, Mac/lane-permitting.
+
+RELAY QUEUE (process every session; the doorbell cron runs 2-hourly):
+acked runtime-backed families waiting on the compiler runtime bundle:
+fsync family (orbitdb-3..8, xvector-2..5/8, packages fsync/append/
+truncate/lock/read_exact family, pulse-5/6 fsync+flush_stdout,
+1134-pulse fsync_dir), socket timeouts (0317-pulse + the 1131 design
+notes: per-call deadline recv, SO_SNDTIMEO, Windows REUSEADDR parity),
+bindings-8 guard-aware free (runtime half with B-05), engine-6 thread
+pool + Send/Sync (P1/P4), playground-4 stdin docs, website
+accelerated-path markers. pulse-6 (sleep_ms no-op) is FIXED pending
+reporter verify; pulse-3/4, website-10, 1708 and xvector-7 are CLOSED.
+1630/1658-compiler are the compiler's; leave them.
+
+FIRST TASK (wave 110): **sync coverage** -- sync.xi tail + atomics (16
+pub) + mutex (6) + rwlock (9) + barrier/channel/condvar tails, batching
+toward 40-60 pub (the documented stub families stay clause-free).
+Then async when its blockers allow, and the remaining big dirs (num/
+math/time/core/iter) in later waves. Post-fix actions when the compiler
+lands batch 1: run the 1052 witness branch on the new pin, revert the
+metro rename on main, reporter-verify and close 1052. Runtime-backed
+asks stay queued until the compiler runtime bundle moves.
+
+Mandatory protocol: (1) body-derived clauses only, no placeholders/
+payload reads; canonical `result is Ok =>` guard form; file new findings
+as minimal repros + README entry + a bus item when cross-lane; fix-first
+when a probe exposes a live stdlib defect. (2) probe-first
+`tools/probes/p_wave110_shapes.xi`, bind returned values before
+comparing, green on v0.64.2 (the official archive binary -- see the
+drift warning). (3) apply, targeted smokes, bisect/drop on codegen
+breaks; when a deliberate semantic change lands, remerge the old locks
+that still assert the old behavior. (4) dump
+`tools/coverage_floors147.json`, wire workflows + tools/README +
+plan/session/queue in one commit, YAML check, pure-ASCII commit. (5)
+battery: corpus 954/954, probes expect 285, modules 509/509, barename
+0/509, floors147 + module-smoke ratchets; push `main` with the one-shot
+Lefteris-Notas credential (403 as Lefteris-Ngonart; GitHub 500s per
+failed_attempts.md). (6) no unbounded scratch benchmarks. (7) release
+side follows the candidate-tag pin protocol; do NOT tag/publish without
+the compiler-lane OK (a security exception needs an explicit note).
+
+HANDOFF NOTE: locks include the wave-78..109 coverage probes
+(p_wave105..p_wave109), the 1052 co-import locks in BOTH orders
+(p_wave106_shapes.xi + p_witness_1052_rev.xi), p_pin0641_iter_shapes.xi,
+the wave-77 stats probe, the PULSE hardening probe, p_str_split_scale.xi,
+the io locks and the promoted regression locks -- **284 probes total**.
+Open repros on v0.64.2: the Current findings' repros (see
+tools/known_failures/README.md; p_result_payload_index_concat.xi and
+p_path_println_context_crash.xi are rc 1). docs/failed_attempts.md logs
+push/environment incidents (incl. the transient clang -1 corpus batch of
+wave 105). out/*.json is disposable working space. CAUTION: never run
+large synthetic benchmarks unbounded (block-75 runaway incident); the
+heavy macos-14 leg is still red (aarch64 AES candidate recorded);
+darwin-x64 still needs the fp128 tf wrappers (pulse-2).
+
+---
+
+Snapshot 28 below retains the wave-104-era prompt with later
+incremental updates; snapshots 27/26/25 keep earlier prompts.
+
 ## 0A. CONTINUE HERE -- handoff snapshot 28 (updated 2026-10-10, pin v0.64.2 OFFICIAL ARCHIVE binary; compiler v0.64.3 RELEASED pinning ab894b47; waves 93-104 landed; next = wave 105; relay bus live; binary-drift warning)
 
 **PASTE-READY PROMPT FOR THE NEXT SESSION (copy this block):**
@@ -2358,6 +2487,26 @@ registry pin, agent recon for the rest)**
   probes 281/281 (299.4s), modules 509/509 (203.3s), barename 0/509
   (216.6s), floors144 + doc + module-smoke (497/517, 3476/6204)
   ratchets OK.
+
+**SESSION 2026-10-11 block 113 (handoff refresh: snapshot 29 paste-ready; waves 105-109 recorded; 1052 witness armed; queue pointer updated)**
+- Snapshot 29 written at the top of section 0A (paste-ready prompt for the
+  next session); the queue's current-state paragraph points at it. HEAD at
+  refresh: 0574cd1 (origin/main); working tree clean except the disposable
+  out/.
+- State carried into 29: pin v0.64.2 official archive (drift warning
+  intact); the pin's driver builds with -DXIOM_NO_ASM (wave-105 portable
+  crypto is the operative path); compiler v0.64.3 released; the compiler's
+  six-batch plan with resolver/isolation (1052) first and its stdlib
+  witness armed (both import-order locks + branch
+  witness/1052-metro-rename-reverted 1566c26, RED pre-fix / must run 0
+  post-fix); gates 954/284/509/0 + floors146; coverage 68.5% (meter
+  76.9%); waves 105-109 digests; the aarch64 AES runtime finding; runtime
+  asks queued behind the compiler runtime bundle.
+- Next = wave 110 (sync coverage: sync.xi tail + atomics/mutex/rwlock/
+  barrier/channel/condvar), then async and the remaining big dirs; the
+  1052 post-fix actions (rerun the witness branch on the new pin, revert
+  the metro rename on main, reporter-verify and close; registry natural
+  names) when the compiler batch lands.
 
 **SESSION 2026-10-11 block 112 (wave 109: misc dir 98.7% + relay round for the 1052 witness; probe 284th)**
 - Relay round: compiler started the resolver/isolation batch (1052) and

@@ -90,9 +90,10 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
    ran the compiler resolver/isolation coordination: reversed-order 1052
    lock added on main and the rename-reverted witness branch pushed.
    Math 53.0%, os 55.4%, hash 94.4%, crypto 94.5%, misc 98.7%, global
-   68.5%, meter 76.9%; handoff in `docs/stdlib_session.md` snapshot 28
-   (block 100 refresh; compiler v0.64.3 released pinning ab894b47), wave
-   records blocks 89-112.
+   68.5%, meter 76.9%; handoff in `docs/stdlib_session.md` snapshot 29
+   (block 113 refresh; compiler v0.64.3 released pinning ab894b47;
+   resolver/isolation batch in flight with the 1052 witness armed), wave
+   records blocks 89-113.
 BINARY NOTE: the shared local build path
 `E:\xiom-lang\xiom\target\release\xiom.exe` was rebuilt past the pin
 (compiler main da7798da m252) and fails four corpus smokes; use the
