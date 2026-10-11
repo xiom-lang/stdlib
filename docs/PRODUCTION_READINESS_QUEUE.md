@@ -1,10 +1,10 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
-**76.8% -- 7 of 10 gates complete; gate 8 at 67.9% (partial credit) and
+**76.9% -- 7 of 10 gates complete; gate 8 at 68.5% (partial credit) and
 gates 9-10 discrete.** (Compiler pin: **v0.64.2**.)
 **Gates: corpus 954/954 full (C001 carve-outs retired on v0.63.1; new
 TcpStream loopback and uuencode roundtrip smokes added), modules 509/509,
-probes 282/282, barename 0/509.**
+probes 284/284, barename 0/509.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -14,24 +14,25 @@ gates flip:
    full, no carve-outs (C001 fixed by 4bf8cf1e; 20/20 + 20/20 stress).
    lz4 is fixed by m190 and stayed in the gate; the new TcpStream loopback
    smoke locks m196.
-3. Probe corpus green -- MET (282/282 on v0.64.2, incl. the promoted
+3. Probe corpus green -- MET (284/284 on v0.64.2, incl. the promoted
    regression locks (rvalue float Vec index, multipart parse name, iter
    forwardref), the v0.64.1 pin probe p_pin0641_iter_shapes.xi, the
-   wave-77 stats probe, the Pulse hardening probe, the wave-78..108
+   wave-77 stats probe, the Pulse hardening probe, the 1052 co-import
+   locks in BOTH import orders, the wave-78..109
    coverage probes (the wave-97 probe was remerged after m242, plus the
-   wave-98..108 probes), the io byte-fidelity/CRLF lock and the
+   wave-98..109 probes), the io byte-fidelity/CRLF lock and the
    fs_remove lock).
 4. Strict bare-name scan clean -- MET (0/509).
-5. Coverage ratchet green -- MET (floors145).
+5. Coverage ratchet green -- MET (floors146).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (497/517 modules, 3477/6202 fns).
-8. Contract coverage 100% (every public fn carries clauses) -- OPEN (67.9%).
+8. Contract coverage 100% (every public fn carries clauses) -- OPEN (68.5%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
    OPEN (16: 15 compiler, 1 stdlib).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
 
 Meter formula: MET gates count 1.0; gate 8 counts its current
-pub-with-clause fraction (67.9% -> 0.679); gates 9 and 10 get no partial
+pub-with-clause fraction (68.5% -> 0.685); gates 9 and 10 get no partial
 credit (discrete). Update the percentage and the gate-8 fraction in the
 same commit as each floors dump so the meter moves smoothly toward 80%.
 
@@ -84,10 +85,14 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
    exposed: cipher.xi's _gf_mul11/_gf_mul13 swap (every cipher.xi decrypt
    path was wrong; encrypt was FIPS-correct; untested by any smoke), the
    argon2 iterations guard (tripped pbkdf2's requires), and the
-   educational ed25519 short-key/signature OOB reads. Math 53.0%, os
-   55.4%, hash 94.4%, crypto 94.5%, global 67.9%, meter 76.8%; handoff in
-   `docs/stdlib_session.md` snapshot 28 (block 100 refresh; compiler
-   v0.64.3 released pinning ab894b47), wave records blocks 89-111.
+   educational ed25519 short-key/signature OOB reads. Wave 109 covered
+   the misc dir (misc.xi + semver.xi; 38 fns, +38 pub; probe 284th) and
+   ran the compiler resolver/isolation coordination: reversed-order 1052
+   lock added on main and the rename-reverted witness branch pushed.
+   Math 53.0%, os 55.4%, hash 94.4%, crypto 94.5%, misc 98.7%, global
+   68.5%, meter 76.9%; handoff in `docs/stdlib_session.md` snapshot 28
+   (block 100 refresh; compiler v0.64.3 released pinning ab894b47), wave
+   records blocks 89-112.
 BINARY NOTE: the shared local build path
 `E:\xiom-lang\xiom\target\release\xiom.exe` was rebuilt past the pin
 (compiler main da7798da m252) and fails four corpus smokes; use the
@@ -775,6 +780,26 @@ verify stdlib-v0.64.3 (d052a3c5) during its v0.64.3 candidate gates.
 Housekeeping in the same relay: the wave-97 sibling-alias split-probe
 workaround was DROPPED -- p_wave97_bitwise_shapes.xi was merged back into
 p_wave97_shapes.xi and re-run green on v0.64.2 (probe corpus stays 272).
+
+Update 2026-10-11 (wave 109 landed): misc dir 98.7% + 1052 witness round.
+Misc coverage: 38 fns, +38 pub (misc.xi 25: glob/natural/palindrome,
+damerau/jaro/jaro-winkler/hamming/LCS, roman, case converters,
+ordinal/pluralize/anagram, unit conversions, human_size; semver.xi 13:
+parse/valid/compare/matches/satisfies/inc/to_string/prerelease/build/
+caret/tilde/gt/lt). misc 50.6% -> 98.7%, global 67.9% -> 68.5%
+(pubCovered 4416 -> 4454, clauses 5875 -> 5923); meter 76.9%; floors146.
+Relay round: compiler resolver/isolation batch (1052) coordination
+delivered -- forward-order lock already in p_wave106_shapes.xi, NEW
+reversed-order lock on main (p_witness_1052_rev.xi, commit 67d66c9) and
+the witness branch witness/1052-metro-rename-reverted (1566c26) with the
+rename reverted + both locks (RED today by contract abort; must run rc 0
+post-fix). The rename will be reverted on main once isolation is
+verified; both probes stay as permanent e2e locks and the registry ships
+natural names. Acked REL-20261011-1342-compiler-2. Battery: corpus
+954/954 full (757.8s), probes 284/284 (377.8s), modules 509/509 (196s),
+barename 0/509 (244.6s), floors146 + doc + module-smoke (497/517,
+3476/6204) ratchets OK. Next: sync coverage (sync.xi tail +
+atomics/mutex/rwlock); async later.
 
 Update 2026-10-11 (wave 108 landed): FIX-FIRST crypto defects (3) +
 crypto batch 2. cipher.xi's `_gf_mul11`/`_gf_mul13` were SWAPPED -- every

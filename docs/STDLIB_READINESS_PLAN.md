@@ -1552,8 +1552,26 @@ T1/T2 yields.
         954/954 full (607.9s), probes 282/282 (246.5s), modules 509/509
         (156.2s), barename 0/509 (234.4s), floors145 + doc + module-smoke
         (497/517, 3476/6204) ratchets OK. Next: misc/sync coverage.
+        Wave 109 (2026-10-11): misc dir 98.7%. 38 fns, +38 pub (misc.xi 25:
+        glob/natural/palindrome, distances/similarities, roman, case
+        converters, ordinal/pluralize/anagram, unit conversions,
+        human_size; semver.xi 13: parse/valid/compare/matches/satisfies/
+        inc/to_string/prerelease/build/caret/tilde/gt/lt). misc 50.6% ->
+        98.7%; global 67.9% -> 68.5% (pubCovered 4416 -> 4454, clauses
+        5875 -> 5923); meter 76.9%; floors146. Relay round: compiler
+        resolver/isolation batch coordination -- forward lock already in
+        p_wave106_shapes.xi, NEW reversed-order lock on main
+        (p_witness_1052_rev.xi, commit 67d66c9) and the witness branch
+        witness/1052-metro-rename-reverted (1566c26, rename reverted +
+        both order locks; RED today by contract abort -- farm's constants
+        win -- must run rc 0 post-fix). We revert the rename on main once
+        isolation is verified and keep both probes as e2e locks. Battery:
+        corpus 954/954 full (757.8s), probes 284/284 (377.8s), modules
+        509/509 (196s), barename 0/509 (244.6s), floors146 + doc +
+        module-smoke ratchets OK. Next: sync coverage (sync.xi tail +
+        atomics/mutex/rwlock); async later.
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors145.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors146.json
         tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;

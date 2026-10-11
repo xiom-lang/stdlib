@@ -126,7 +126,10 @@ pub fn levenshtein_distance(a: Str, b: Str) -> Int
 /// Match a string against a glob pattern supporting:
 ///   '?' matches any single character
 ///   '*' matches zero or more characters
-pub fn glob_match(pattern: Str, text: Str) -> Bool {
+pub fn glob_match(pattern: Str, text: Str) -> Bool
+  ensures: (pattern.len() == 0 && text.len() != 0) => (result == false)
+  ensures: (pattern == "*") => (result == true)
+{
     let plen = pattern.len();
     let tlen = text.len();
     var pi: Int = 0;
@@ -162,7 +165,10 @@ pub fn glob_match(pattern: Str, text: Str) -> Bool {
 
 /// Compare two strings using natural sort order (e.g., "file2" < "file10").
 /// Returns -1 if a < b, 0 if equal, 1 if a > b.
-pub fn natural_compare(a: Str, b: Str) -> Int {
+pub fn natural_compare(a: Str, b: Str) -> Int
+  ensures: (a.len() == 0 && b.len() == 0) => (result == 0)
+  ensures: (a.len() == 0 && b.len() != 0) => (result == -1)
+{
     let alen = a.len();
     let blen = b.len();
     var ai: Int = 0;
@@ -269,7 +275,9 @@ pub fn soundex(code: Str) -> Str
 // -- Palindrome ---------------------------------------------------------------
 
 /// Check if a string reads the same forward and backward.
-pub fn is_palindrome(s: Str) -> Bool {
+pub fn is_palindrome(s: Str) -> Bool
+  ensures: (s.len() == 0) => (result == true)
+{
     let len = s.len();
     var left: Int = 0;
     var right: Int = len - 1;
@@ -362,7 +370,10 @@ pub fn truncate(s: Str, max_len: Int) -> Str
 // ============================================================================
 
 /// Damerau-Levenshtein distance (insert/delete/substitute/transpose), O(n*m).
-pub fn damerau_levenshtein_distance(a: Str, b: Str) -> Int {
+pub fn damerau_levenshtein_distance(a: Str, b: Str) -> Int
+  ensures: (a.len() == 0) => (result == b.len())
+  ensures: (b.len() == 0) => (result == a.len())
+{
   var la = a.len();
   var lb = b.len();
   var cols = lb + 1;
@@ -402,7 +413,11 @@ pub fn damerau_levenshtein_distance(a: Str, b: Str) -> Int {
 }
 
 /// Jaro similarity in [0, 1] (ASCII-aware matching window).
-pub fn jaro_similarity(a: Str, b: Str) -> Float64 {
+pub fn jaro_similarity(a: Str, b: Str) -> Float64
+  ensures: (a.len() == 0 && b.len() == 0) => (result == 1.0)
+  ensures: (a.len() == 0 && b.len() != 0) => (result == 0.0)
+  ensures: (a.len() != 0 && b.len() == 0) => (result == 0.0)
+{
   var la = a.len();
   var lb = b.len();
   if la == 0 && lb == 0 { return 1.0; }
@@ -463,7 +478,9 @@ pub fn jaro_similarity(a: Str, b: Str) -> Float64 {
 }
 
 /// Jaro-Winkler similarity (prefix bonus up to 4 chars, scale 0.1).
-pub fn jaro_winkler_similarity(a: Str, b: Str) -> Float64 {
+pub fn jaro_winkler_similarity(a: Str, b: Str) -> Float64
+  ensures: (a.len() == 0 && b.len() == 0) => (result == 1.0)
+{
   var j = jaro_similarity(a, b);
   var prefix = 0;
   var limit = a.len();
@@ -480,7 +497,9 @@ pub fn jaro_winkler_similarity(a: Str, b: Str) -> Float64 {
 }
 
 /// Hamming distance; -1 if lengths differ.
-pub fn hamming_distance(a: Str, b: Str) -> Int {
+pub fn hamming_distance(a: Str, b: Str) -> Int
+  ensures: (a.len() != b.len()) => (result == -1)
+{
   if a.len() != b.len() { return -1; }
   var d = 0;
   var i = 0;
@@ -492,7 +511,9 @@ pub fn hamming_distance(a: Str, b: Str) -> Int {
 }
 
 /// Longest common subsequence (not substring), O(n*m).
-pub fn longest_common_subsequence(a: Str, b: Str) -> Str {
+pub fn longest_common_subsequence(a: Str, b: Str) -> Str
+  ensures: (a.len() == 0 || b.len() == 0) => (result.len() == 0)
+{
   var la = a.len();
   var lb = b.len();
   var cols = lb + 1;
@@ -561,7 +582,9 @@ pub fn to_roman(n: Int) -> Str
 }
 
 /// Parse a Roman numeral; 0 if invalid.
-pub fn from_roman(s: Str) -> Int {
+pub fn from_roman(s: Str) -> Int
+  ensures: (s.len() == 0) => (result == 0)
+{
   var total = 0;
   var prev = 0;
   var i = s.len() - 1;
@@ -653,7 +676,9 @@ fn _misc_capitalize(s: Str) -> Str {
 }
 
 /// Convert to camelCase.
-pub fn to_camel_case(s: Str) -> Str {
+pub fn to_camel_case(s: Str) -> Str
+  ensures: (s.len() == 0) => (result.len() == 0)
+{
   var words = _misc_split_words(s);
   var result = "";
   var i = 0;
@@ -667,7 +692,9 @@ pub fn to_camel_case(s: Str) -> Str {
 }
 
 /// Convert to PascalCase.
-pub fn to_pascal_case(s: Str) -> Str {
+pub fn to_pascal_case(s: Str) -> Str
+  ensures: (s.len() == 0) => (result.len() == 0)
+{
   var words = _misc_split_words(s);
   var result = "";
   var i = 0;
@@ -679,7 +706,9 @@ pub fn to_pascal_case(s: Str) -> Str {
 }
 
 /// Convert to snake_case.
-pub fn to_snake_case(s: Str) -> Str {
+pub fn to_snake_case(s: Str) -> Str
+  ensures: (s.len() == 0) => (result.len() == 0)
+{
   var words = _misc_split_words(s);
   var result = "";
   var i = 0;
@@ -692,7 +721,9 @@ pub fn to_snake_case(s: Str) -> Str {
 }
 
 /// Convert to kebab-case.
-pub fn to_kebab_case(s: Str) -> Str {
+pub fn to_kebab_case(s: Str) -> Str
+  ensures: (s.len() == 0) => (result.len() == 0)
+{
   var words = _misc_split_words(s);
   var result = "";
   var i = 0;
@@ -705,7 +736,10 @@ pub fn to_kebab_case(s: Str) -> Str {
 }
 
 /// Ordinal suffix: 1st, 2nd, 3rd, 11th, 21st, ...
-pub fn ordinal(n: Int) -> Str {
+pub fn ordinal(n: Int) -> Str
+  ensures: (n == 1) => (result == "1st")
+  ensures: (n == 11) => (result == "11th")
+{
   var suffix = "th";
   var mod100 = n % 100;
   if mod100 < 11 || mod100 > 13 {
@@ -718,7 +752,10 @@ pub fn ordinal(n: Int) -> Str {
 }
 
 /// Naive pluralize: count == 1 keeps the singular; otherwise +s / +es / +ies.
-pub fn pluralize(s: Str, count: Int) -> Str {
+pub fn pluralize(s: Str, count: Int) -> Str
+  ensures: (count == 1) => (result == s)
+  ensures: (s.len() == 0) => (result == s)
+{
   if count == 1 { return s; }
   if s.len() == 0 { return s; }
   var last = xiom.string.str_slice(s, s.len() - 1, s.len());
@@ -751,7 +788,9 @@ pub fn pluralize(s: Str, count: Int) -> Str {
 }
 
 /// Anagrams (ASCII case-insensitive letter counts).
-pub fn is_anagram(a: Str, b: Str) -> Bool {
+pub fn is_anagram(a: Str, b: Str) -> Bool
+  ensures: (a.len() == 0 && b.len() == 0) => (result == true)
+{
   var counts = Vec[Int].new();
   var i = 0;
   while i < 26 { counts.push(0); i = i + 1; }
@@ -778,48 +817,66 @@ pub fn is_anagram(a: Str, b: Str) -> Bool {
 }
 
 /// ---- Units ----
-pub fn celsius_to_fahrenheit(c: Float64) -> Float64 {
+pub fn celsius_to_fahrenheit(c: Float64) -> Float64
+  ensures: (c == 0.0) => (result == 32.0)
+{
   return c * 1.8 + 32.0;
 }
 
 /// Fahrenheit to Celsius.
-pub fn fahrenheit_to_celsius(f: Float64) -> Float64 {
+pub fn fahrenheit_to_celsius(f: Float64) -> Float64
+  ensures: (f == 32.0) => (result == 0.0)
+{
   return (f - 32.0) / 1.8;
 }
 
 /// Celsius to Kelvin.
-pub fn celsius_to_kelvin(c: Float64) -> Float64 {
+pub fn celsius_to_kelvin(c: Float64) -> Float64
+  ensures: (c == 0.0) => (result == 273.15)
+{
   return c + 273.15;
 }
 
 /// Kelvin to Celsius.
-pub fn kelvin_to_celsius(k: Float64) -> Float64 {
+pub fn kelvin_to_celsius(k: Float64) -> Float64
+  ensures: (k == 273.15) => (result == 0.0)
+{
   return k - 273.15;
 }
 
 /// Fahrenheit to Kelvin.
-pub fn fahrenheit_to_kelvin(f: Float64) -> Float64 {
+pub fn fahrenheit_to_kelvin(f: Float64) -> Float64
+  ensures: (f == -459.67) => (result == 0.0)
+{
   return (f + 459.67) * 5.0 / 9.0;
 }
 
 /// Kelvin to Fahrenheit.
-pub fn kelvin_to_fahrenheit(k: Float64) -> Float64 {
+pub fn kelvin_to_fahrenheit(k: Float64) -> Float64
+  ensures: (k == 0.0) => (result == -459.67)
+{
   return k * 1.8 - 459.67;
 }
 
 /// Miles to kilometres.
-pub fn miles_to_km(m: Float64) -> Float64 {
+pub fn miles_to_km(m: Float64) -> Float64
+  ensures: (m == 1.0) => (result == 1.609344)
+{
   return m * 1.609344;
 }
 
 /// Kilometres to miles.
-pub fn km_to_miles(km: Float64) -> Float64 {
+pub fn km_to_miles(km: Float64) -> Float64
+  ensures: (km == 1.609344) => (result == 1.0)
+{
   return km / 1.609344;
 }
 
 /// Human-readable byte size: "512 B", "1.5 KB", "3.2 MB", ...
 /// Integer math only (the runtime lacks decimal float formatting).
-pub fn human_size(bytes: Int) -> Str {
+pub fn human_size(bytes: Int) -> Str
+  ensures: (bytes <= 0) => (result == "0 B")
+{
   if bytes < 0 { return "0 B"; }
   var units = Vec[Str].new();
   units.push("B"); units.push("KB"); units.push("MB");

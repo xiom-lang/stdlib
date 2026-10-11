@@ -2359,6 +2359,33 @@ registry pin, agent recon for the rest)**
   (216.6s), floors144 + doc + module-smoke (497/517, 3476/6204)
   ratchets OK.
 
+**SESSION 2026-10-11 block 112 (wave 109: misc dir 98.7% + relay round for the 1052 witness; probe 284th)**
+- Relay round: compiler started the resolver/isolation batch (1052) and
+  asked for the pin witness. Delivered: (a) forward-order lock already in
+  p_wave106_shapes.xi; (b) NEW reversed-order lock on main
+  (tools/probes/p_witness_1052_rev.xi, metro before farm; green on the
+  pin, commit 67d66c9); (c) witness branch
+  witness/1052-metro-rename-reverted (1566c26) with metro's _K0..K3
+  restored to the natural colliding names + both order locks -- RED today
+  by contract abort (metrohash64's value clause runs on farm's constants
+  = 15427970114922222902), must run rc 0 post-fix; (d) agreed to revert the
+  rename on main once isolation is verified and keep both probes as
+  permanent e2e locks (registry ships natural names). Acked
+  REL-20261011-1342-compiler-2; the to:all batch plan (1342-compiler) was
+  read -- stdlib's share is the isolation witness above.
+- Wave 109 misc coverage: 38 fns, +38 pub. misc.xi 25 (glob/natural/
+  palindrome, damerau/jaro/jaro-winkler/hamming/LCS, roman, case
+  converters, ordinal/pluralize/anagram, unit conversions, human_size)
+  and semver.xi 13 (parse/valid/compare/matches/satisfies/inc/to_string/
+  prerelease/build/caret/tilde/gt/lt). misc 50.6% -> 98.7%; global 67.9%
+  -> 68.5% (pubCovered 4416 -> 4454, clauses 5875 -> 5923); meter 76.9%;
+  floors146 dumped + wired. Probe p_wave109_shapes.xi (284th, 54 checks)
+  green pre/post (39 grouped checks).
+- Battery on the official v0.64.2 archive: corpus 954/954 full (757.8s),
+  probes 284/284 (377.8s), modules 509/509 (196s), barename 0/509
+  (244.6s), floors146 + doc + module-smoke (497/517, 3476/6204) ratchets
+  OK.
+
 **SESSION 2026-10-11 block 111 (wave 108: THREE fix-first crypto defects + crypto batch 2; crypto 94.5%; probe 282nd)**
 - FIX-FIRST (all caught by the wave probe):
   1. cipher.xi `_gf_mul11`/`_gf_mul13` were swapped (mul11 computed a~13,

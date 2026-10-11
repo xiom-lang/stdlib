@@ -22,7 +22,11 @@ pub type SemVer = { major: Int; minor: Int; patch: Int; prerelease: Str; build: 
 /// Parse a semantic version string such as "1.2.3", "1.2.3-alpha.1" or
 /// "1.2.3+build.5". An optional leading 'v'/'V' is accepted. Returns None for
 /// malformed input (missing parts, non-numeric core, invalid identifiers).
-pub fn semver_parse(s: Str) -> Option[SemVer] {
+pub fn semver_parse(s: Str) -> Option[SemVer]
+  ensures: (s.len() == 0) => (result.is_none == true)
+  ensures: (s.len() == 1) => (result.is_none == true)
+  ensures: (s == "1.2.3") => (result.is_some == true)
+{
   var text = s;
   if text.len() > 0 && (text.char_at(0) == 'v' || text.char_at(0) == 'V') {
     text = xiom.string.str_slice(text, 1, text.len());
@@ -117,7 +121,10 @@ fn is_number(s: Str) -> Bool {
 
 /// Compare two SemVer values by precedence: -1, 0, or 1. Build metadata is
 /// ignored; a version without prerelease outranks one with a prerelease.
-pub fn semver_compare(a: SemVer, b: SemVer) -> Int {
+pub fn semver_compare(a: SemVer, b: SemVer) -> Int
+  ensures: (a.major < b.major) => (result == -1)
+  ensures: (a.major == b.major && a.minor == b.minor && a.patch == b.patch && a.prerelease.len() == 0 && b.prerelease.len() == 0) => (result == 0)
+{
   if a.major < b.major { return -1; }
   if a.major > b.major { return 1; }
   if a.minor < b.minor { return -1; }
@@ -190,7 +197,9 @@ fn lex_cmp(a: Str, b: Str) -> Int {
 }
 
 /// Whether s is a valid semantic version string. O(n).
-pub fn semver_valid(s: Str) -> Bool {
+pub fn semver_valid(s: Str) -> Bool
+  ensures: (s.len() == 0) => (result == false)
+{
   var parsed = semver_parse(s);
   match parsed {
     Some(_) => { return true; },
@@ -202,7 +211,9 @@ pub fn semver_valid(s: Str) -> Bool {
 /// Whether a version string satisfies a constraint string. Supports operator
 /// prefixes (>=, <=, >, <, =), caret (^), tilde (~), bare versions, partial
 /// versions ("1.2", "1", "1.2.x") and space-separated AND groups.
-pub fn semver_matches(version: Str, constraint: Str) -> Bool {
+pub fn semver_matches(version: Str, constraint: Str) -> Bool
+  ensures: (version.len() == 0) => (result == false)
+{
   var parsed = semver_parse(version);
   match parsed {
     None => { return false; },
@@ -488,7 +499,9 @@ fn semver_parse_partial(s: Str) -> Option[SemVer] {
 /// Whether a version falls inside a hyphen ("a - b") or comma-separated
 /// range. Comma-separated parts are alternatives (OR); a hyphen range is
 /// inclusive on both ends. A bare range delegates to semver_matches.
-pub fn semver_satisfies(version: Str, range: Str) -> Bool {
+pub fn semver_satisfies(version: Str, range: Str) -> Bool
+  ensures: (version.len() == 0) => (result == false)
+{
   var parsed_v = semver_parse(version);
   match parsed_v {
     None => { return false; },
@@ -549,7 +562,9 @@ pub fn semver_satisfies(version: Str, range: Str) -> Bool {
 /// Returns the new version string, or None if s is not a valid version.
 /// prerelease bumps the trailing numeric identifier (appending ".0" when the
 /// prerelease is not numeric); build does the same for build metadata.
-pub fn semver_inc(s: Str, part: Str) -> Option[Str] {
+pub fn semver_inc(s: Str, part: Str) -> Option[Str]
+  ensures: (s.len() == 0) => (result.is_none == true)
+{
   var parsed = semver_parse(s);
   match parsed {
     None => { return None; },
@@ -591,7 +606,9 @@ pub fn semver_inc(s: Str, part: Str) -> Option[Str] {
 }
 
 /// Serialize a SemVer back to text. O(n).
-pub fn semver_to_string(v: SemVer) -> Str {
+pub fn semver_to_string(v: SemVer) -> Str
+  ensures: (v.major == 1 && v.minor == 2 && v.patch == 3 && v.prerelease.len() == 0 && v.build.len() == 0) => (result == "1.2.3")
+{
   var s = xiom.string.str_concat(convert.int_to_string(v.major), ".");
   s = xiom.string.str_concat(s, convert.int_to_string(v.minor));
   s = xiom.string.str_concat(s, ".");
@@ -608,7 +625,9 @@ pub fn semver_to_string(v: SemVer) -> Str {
 }
 
 /// The prerelease identifier, if any.
-pub fn semver_prerelease(v: SemVer) -> Option[Str] {
+pub fn semver_prerelease(v: SemVer) -> Option[Str]
+  ensures: (v.prerelease.len() == 0) => (result.is_none == true)
+{
   if v.prerelease.len() == 0 {
     None
   } else {
@@ -617,7 +636,9 @@ pub fn semver_prerelease(v: SemVer) -> Option[Str] {
 }
 
 /// The build metadata, if any.
-pub fn semver_build(v: SemVer) -> Option[Str] {
+pub fn semver_build(v: SemVer) -> Option[Str]
+  ensures: (v.build.len() == 0) => (result.is_none == true)
+{
   if v.build.len() == 0 {
     None
   } else {
@@ -626,7 +647,9 @@ pub fn semver_build(v: SemVer) -> Option[Str] {
 }
 
 /// Caret compatibility: whether b falls in the caret range anchored at a.
-pub fn semver_caret(a: SemVer, b: SemVer) -> Bool {
+pub fn semver_caret(a: SemVer, b: SemVer) -> Bool
+  ensures: (a.major > 0 && b.major != a.major) => (result == false)
+{
   if a.major > 0 {
     if b.major != a.major { return false; }
     if b.minor > a.minor { return true; }
@@ -641,19 +664,25 @@ pub fn semver_caret(a: SemVer, b: SemVer) -> Bool {
 }
 
 /// Tilde compatibility: whether b falls in the tilde range anchored at a.
-pub fn semver_tilde(a: SemVer, b: SemVer) -> Bool {
+pub fn semver_tilde(a: SemVer, b: SemVer) -> Bool
+  ensures: (b.major != a.major) => (result == false)
+{
   if b.major != a.major { return false; }
   if b.minor != a.minor { return false; }
   b.patch >= a.patch
 }
 
 /// Strict greater-than comparison of two SemVer values.
-pub fn semver_gt(a: SemVer, b: SemVer) -> Bool {
+pub fn semver_gt(a: SemVer, b: SemVer) -> Bool
+  ensures: result == (semver_compare(a, b) > 0)
+{
   semver_compare(a, b) > 0
 }
 
 /// Strict less-than comparison of two SemVer values.
-pub fn semver_lt(a: SemVer, b: SemVer) -> Bool {
+pub fn semver_lt(a: SemVer, b: SemVer) -> Bool
+  ensures: result == (semver_compare(a, b) < 0)
+{
   semver_compare(a, b) < 0
 }
 
