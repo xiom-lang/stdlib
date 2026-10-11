@@ -153,7 +153,14 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
    (1377.6s), probes 288/288 (221.2s), modules 509/509 (250.3s),
    barename 0/509 (596.6s), ratchets OK. Next for the cut: the
    version/pin/CHANGELOG mechanics on the compiler's go (1731-compiler-2
-   pin protocol) and the wave-106 revert at the v0.64.4 archive.
+   pin protocol) and the wave-106 revert at the v0.64.4 archive. Compiler
+   pin decision (REL-20261011-1812-compiler, acked): HOLD the cut; after
+   their doorbell push lands m263-m271, build the v0.64.4 dry-run archive
+   via the XIOM Release workflow_dispatch, run the witness branch, land
+   the metro revert, then tag. Follow-up wave after async: the string
+   dir's remaining strnlen-family call sites (191 across 34 files:
+   builder/case/casefold/collate/compare/unicode/normalize/... ) need the
+   same cached (base, len) treatment; scoped per-file with smokes.
 BINARY NOTE: the shared local build path
 `E:\xiom-lang\xiom\target\release\xiom.exe` was rebuilt past the pin
 (compiler main da7798da m252) and fails four corpus smokes; waves now run
