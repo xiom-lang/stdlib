@@ -1578,7 +1578,9 @@ T1/T2 yields.
         mutex.xi 6; rwlock.xi 9; barrier.xi 4; channel.xi 5 (capacity clamp,
         closed mirrors, send-Err/recv-None closed guards); condvar.xi 3).
         sync 35.9% -> 94.9%; global 68.5% -> 69.5% (pubCovered 4454 ->
-        4524, clauses 5923 -> 6031); meter 77.0%; floors147. NEW finding
+        4523, clauses 5923 -> 6029 -- the 4524/6031 figures first recorded
+        here counted cdl_count_down's since-reverted @pre clauses); meter
+        77.0%; floors147. NEW finding
         while writing the probe: the v0.56 I3 builtin Mutex deadlock-
         detection names shadow the stdlib generic xiom.sync.Mutex[T] in
         user code (sync.Mutex.new(42) is T001; the zero-arg form binds the
@@ -1596,6 +1598,37 @@ T1/T2 yields.
         quadratic fix (byte-based lexer fast path) as the top candidate
         item, then async; 1052 post-fix actions when the compiler
         resolver/isolation batch lands.
+        Wave 111 (2026-10-11): xvector json quadratic fixed
+        (REL-20261011-1453; consumer-blocking for the next candidate).
+        The parser scans one cached (base, n) byte view -- json_parse takes
+        s.c_str() + s.len() once and every helper reads raw bytes (no
+        runtime strnlen per access); string values are rebuilt through a
+        byte buffer; the number path builds the literal bytes directly.
+        Same-family fixes: slice.str_bytes and string.str_slice copy
+        through cached (base, len) raw reads. FIX-FIRST find while
+        rewriting: the old \u escape branch fell through to a shared
+        *pos increment and swallowed the byte after the 4 hex digits
+        ("a\u0042c" parsed as "aB") -- now exact (probe checks 1-4).
+        Evidence: xvector's pinned probes exit 0 on the fixed stdlib
+        (repro_json_quad: 20000 numbers 498 ms vs ~18 s, linear
+        61/123/220/498; repro_strbytes: 400 KB 366 ms vs ~3.7 s, linear
+        44/93/182/366); local pre-fix numbers 10k 1972 ms / 20k 7600 ms
+        (ratio 3.85) -> post 165/382 (ratio 2.31). Probe
+        p_json_parse_scale.xi (286th, 49 checks) red pre-fix at check 1,
+        green post (correctness + sub-quadratic ratio + ms budgets).
+        NEW checker finding filed while landing the rewrite:
+        REL-20261011-1626-stdlib -- a bare trailing match expression
+        after a local Vec.push reports T001 "found ()"; workaround
+        `return match ...;` (repro p_trailing_match_after_push.xi;
+        findings 18 Current: 17 compiler + 1 stdlib). Battery: corpus
+        954/954 full (795.3s), probes 286/286 (291.6s), modules 509/509
+        (187.5s), barename 0/509 (264.6s), floors147 + doc + module-smoke
+        ratchets OK (no floors bump; pub coverage unchanged at 69.5%).
+        Relay round: 1453-xvector acked -> fixed; 1513-engine flake
+        acked for tracking; 1442-compiler already fixed at ad9169e.
+        Next: the cut mechanics (package.xi categories + stage, pin
+        decision with the compiler lane) and the v0.64.3 release-check
+        verdicts.
        Ratchet:
         tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors147.json
         tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json

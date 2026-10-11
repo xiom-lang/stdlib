@@ -4,7 +4,7 @@
 gates 9-10 discrete.** (Compiler pin: **v0.64.2**.)
 **Gates: corpus 954/954 full (C001 carve-outs retired on v0.63.1; new
 TcpStream loopback and uuencode roundtrip smokes added), modules 509/509,
-probes 285/285, barename 0/509.**
+probes 286/286, barename 0/509.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -14,7 +14,7 @@ gates flip:
    full, no carve-outs (C001 fixed by 4bf8cf1e; 20/20 + 20/20 stress).
    lz4 is fixed by m190 and stayed in the gate; the new TcpStream loopback
    smoke locks m196.
-3. Probe corpus green -- MET (285/285 on v0.64.2, incl. the promoted
+3. Probe corpus green -- MET (286/286 on v0.64.2, incl. the promoted
    regression locks (rvalue float Vec index, multipart parse name, iter
    forwardref), the v0.64.1 pin probe p_pin0641_iter_shapes.xi, the
    wave-77 stats probe, the Pulse hardening probe, the 1052 co-import
@@ -28,7 +28,7 @@ gates flip:
 7. Module-smoke ratchet green -- MET (497/517 modules, 3477/6202 fns).
 8. Contract coverage 100% (every public fn carries clauses) -- OPEN (69.5%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
-   OPEN (17: 16 compiler, 1 stdlib).
+   OPEN (18: 17 compiler, 1 stdlib).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
 
 Meter formula: MET gates count 1.0; gate 8 counts its current
@@ -93,16 +93,34 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
    68.5%, meter 76.9%; handoff in `docs/stdlib_session.md` snapshot 29
    (block 113 refresh; compiler v0.64.3 released pinning ab894b47;
    resolver/isolation batch in flight with the 1052 witness armed), wave
-   records blocks 89-115. Wave 110 covered the sync dir (sync.xi tail +
+   records blocks 89-116. Wave 110 covered the sync dir (sync.xi tail +
    atomics/mutex/rwlock/barrier/channel/condvar tails; 70 fns, +70 pub;
    sync 35.9% -> 94.9%, global 69.5%, meter 77.0%; probe 285th) and filed
-   the compiler Mutex builtin-shadow finding (REL-20261011-1456-stdlib;
-   findings 17 Current). Sync clauses are runtime-checked; the parent
-   Mutex.new/Mutex.lock surface stays clause-free, and cdl_count_down /
-   channel try paths stay clause-free (documented reasons in block 115).
-   Also this round: REL-20261011-1442-compiler fixed at ad9169e, and
-   REL-20261011-1453-xvector (json_parse quadratic) acked with the
-   byte-lexer fix plan -- recorded as the top next-candidate item.
+   the compiler Mutex builtin-shadow finding (REL-20261011-1456-stdlib).
+   Sync clauses are runtime-checked; the parent Mutex.new/Mutex.lock
+   surface stays clause-free, and cdl_count_down / channel try paths stay
+   clause-free (documented reasons in block 115). Correction: the wave-110
+   record's pubCovered/clause figures counted cdl_count_down's reverted
+   @pre clauses; the landed pair is pubCovered 4454 -> 4523 and clauses
+   5923 -> 6029. Wave 111 fixed the xvector json quadratic
+   (REL-20261011-1453): the json parser scans cached raw bytes (one
+   `s.len()`, pointer offsets) instead of `string.char_at`/`str_slice`
+   (runtime strnlen per call), `slice.str_bytes` and `string.str_slice`
+   copy bytes through cached (base, len) views, and the `\u` escape
+   no longer swallows the byte after its 4 hex digits ("a\u0042c" now
+   parses as "aBc"). Evidence: xvector's pinned probes exit 0
+   (repro_json_quad 20000 numbers 498 ms vs ~18 s pre-fix, linear;
+   repro_strbytes 400 KB 366 ms vs ~3.7 s, linear), probe 286th
+   (p_json_parse_scale.xi) green pre/post, battery corpus 954/954 full
+   (795.3s), probes 286/286 (291.6s), modules 509/509 (187.5s), barename
+   0/509 (264.6s), all ratchets OK (no floors bump; no pub-coverage
+   change). Also this round: REL-20261011-1442-compiler fixed at ad9169e,
+   REL-20261011-1453-xvector landed (acked -> fixed), REL-20261011-1513-
+   engine flake acked (save_write transient, tracking), and the new
+   checker finding REL-20261011-1626-stdlib (trailing bare match after a
+   Vec.push; findings 18 Current). Next candidate items: the cut
+   mechanics (package.xi categories + stage, pin decision) and the
+   compiler release-check verdicts.
 BINARY NOTE: the shared local build path
 `E:\xiom-lang\xiom\target\release\xiom.exe` was rebuilt past the pin
 (compiler main da7798da m252) and fails four corpus smokes; use the

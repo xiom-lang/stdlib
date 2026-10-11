@@ -2494,6 +2494,50 @@ registry pin, agent recon for the rest)**
   (216.6s), floors144 + doc + module-smoke (497/517, 3476/6204)
   ratchets OK.
 
+**SESSION 2026-10-11 block 116 (wave 111: xvector json quadratic fixed -- byte-lexer parser + str_bytes/str_slice linear; \u escape fix-first; probe 286th)**
+- REL-20261011-1453-xvector (high): FIXED. The json parser now scans one
+  cached (base, n) byte view (`json_parse` takes `s.c_str()` + `s.len()`
+  once; every helper reads raw bytes via `_json_byte`/`_json_char`, no
+  runtime `string.char_at`/`byte_at`/`str_slice` in the hot path), string
+  values are rebuilt through a `Vec[UInt8]` buffer, and the number path
+  builds the literal bytes directly before `to_float_from_str`. Same
+  family: `slice.str_bytes` and `string.str_slice` copy through cached
+  (base, len) raw reads (`_slice_raw_byte`/`_raw_byte`, `requires: true`
+  T007 helpers). Evidence (official pin): xvector's pinned probes exit 0
+  -- repro_json_quad 2500/5000/10000/20000 numbers = 61/123/220/498 ms
+  (pre-fix ~18 s at 20k; ratio 3.85 -> ~2.0); repro_strbytes
+  43/91/187/366 ms at 50/100/200/400 KB (pre-fix ~3.7 s; gate 500 ms).
+  Local pre-fix: 10k numbers 1972 ms, 20k 7600 ms.
+- FIX-FIRST (probe-first catch): the old `\u` escape branch fell through
+  to the shared `*pos = *pos + 1` after reading the 4 hex digits, so the
+  byte following every `\uXXXX` escape was swallowed ("a\u0042c" parsed
+  as "aB"); the KAT smoke only asserted Ok, so the corpus never noticed.
+  The rewrite consumes exactly 4 hex digits; probe checks 1-4 lock the
+  values (aBc / A+newline / ABC / multibyte passthrough).
+- Checker finding found while landing the rewrite: a bare trailing
+  `match` expression after a local `Vec.push` reports T001 "return type
+  mismatch ... found ()" (the same function shape without the push
+  compiles). Filed as REL-20261011-1626-stdlib (medium, to compiler)
+  with repro `tools/known_failures/p_trailing_match_after_push.xi`
+  (compile rc 1; expected rc 0); workaround in the stdlib is an explicit
+  `return match ...;`. Findings now 18 Current (17 compiler, 1 stdlib).
+- Probe p_json_parse_scale.xi (286th, 49 checks): escape-value
+  correctness + bounded linearity sweep (20k/40k numbers, budgets +
+  sub-quadratic ratio). Red pre-fix at check 1, green post.
+- Battery on the official v0.64.2 archive: corpus 954/954 full (795.3s),
+  probes 286/286 (291.6s), modules 509/509 (187.5s), barename 0/509
+  (264.6s), floors147 + doc + module-smoke (497/517, 3476/6204)
+  ratchets OK; no floors bump (pub coverage unchanged at 69.5%; the
+  three new `requires: true` helpers are private). Docs correction: the
+  wave-110 pubCovered/clause figures were 4523/6029, not 4524/6031 (the
+  earlier scan counted cdl_count_down's reverted @pre clauses).
+- Relay round: 1453 acked -> fixed (xvector verifies); 1442-compiler
+  fixed at ad9169e; 1513-engine (save_write transient flake) acked for
+  tracking with the write_file_bytes result-checking note; 1456/1626
+  ours to compiler. Next: cut mechanics for the next candidate
+  (package.xi categories+stage, pin decision) and the compiler v0.64.3
+  release-check verdicts.
+
 **SESSION 2026-10-11 block 115 (wave 110: sync dir 94.9%; Mutex builtin-shadow finding; probe 285th)**
 - Relay round at start: pulled the bus (1442 fixed at ad9169e by the
   concurrent round; 1453-xvector acked with the quadratic root cause and

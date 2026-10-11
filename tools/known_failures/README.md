@@ -33,7 +33,9 @@ REL-20261010-1549-stdlib-5; catalog payload reads =
 REL-20261010-1549-stdlib-6; cross-type callbacks =
 REL-20261010-1549-stdlib-7; shared-compiler-build drift =
 REL-20261010-1549-stdlib-8 (all to: compiler, kind bug); Mutex builtin
-shadow = REL-20261011-1456-stdlib (to: compiler, kind bug). Status lives
+shadow = REL-20261011-1456-stdlib (to: compiler, kind bug); trailing bare
+match after a Vec.push = REL-20261011-1626-stdlib (to: compiler, kind
+bug). Status lives
 on the bus; this section closes an entry only when its item closes.
 The stdlib algorithm entry (polygon) is not cross-lane and stays here.
 
@@ -56,8 +58,8 @@ json_parse depth cap stdlib-side (first entry below; its repro was
 promoted to `tools/probes/`). Wave 103 re-triaged PULSE's C-PULSE-17 to
 the inline payload-index corruption and added the context-dependent
 Path.exists crash (first two open entries below); wave 110 added the
-compiler Mutex builtin shadow (entry below); findings now 17 Current:
-16 compiler, 1 stdlib.
+compiler Mutex builtin shadow and wave 111 the trailing-match checker
+finding (entries below); findings now 18 Current: 17 compiler, 1 stdlib.
 
 **Open finding 2026-10-10 (compiler v0.64.2): a Path.exists + trailing
 println sequence dies with an illegal-instruction exit.** The wave-103
@@ -103,6 +105,19 @@ v0.64.2; expected rc 0); relayed as `REL-20261011-1456-stdlib` (to
 compiler). Stdlib side: parent `Mutex.new`/`Mutex.lock` stay clause-free
 (unprobeable from user code) until the fix; consumers keep using
 `xiom.sync.mutex.SyncMutex`.
+
+**Open finding 2026-10-11 (compiler v0.64.2): a bare trailing `match`
+expression after a local `Vec.push` reports T001 "return type mismatch
+... found ()".** Found while landing the wave-111 json parser rewrite:
+a function whose body ends in a bare `match` typed `Result[Float64, Str]`
+type-checks alone, but the checker rejects it as soon as a local
+`Vec[UInt8]` `push` statement precedes the match ("return type mismatch:
+expected Result[Float64, Str], found ()" at the fn opening). An explicit
+`return match ...;` (the workaround used in `_json_parse_number`) or
+dropping the push compiles. Repro:
+`tools/known_failures/p_trailing_match_after_push.xi` (compile rc 1 on
+v0.64.2; expected rc 0); relayed as `REL-20261011-1626-stdlib` (to
+compiler).
 
 **RESOLVED 2026-10-10 (wave 102, stdlib-side fix): `json_parse` had no
 recursion depth cap -- deep untrusted input killed the process.** The

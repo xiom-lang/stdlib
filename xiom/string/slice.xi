@@ -19,6 +19,17 @@ extern "C" {
   fn xiom_char_at(s: Str, pos: Int) -> Char;
 }
 
+// Wave 111 (xvector REL-20261011-1453): raw byte access over a cached
+// (base, len) view. string.byte_at re-scans the whole string per call
+// (runtime strnlen), so byte-stepped conversions were quadratic in the
+// string size (`str_bytes` on 400 KB took ~3.7 s). Callers bounds-check
+// against the cached length.
+fn _slice_raw_byte(base: *UInt8, i: Int) -> UInt8
+  requires: true  // raw byte read; callers bound i against len (T007)
+{
+  unsafe { return *(base + i); }
+}
+
 /// Decodes the full UTF-8 character starting at byte `pos` of `s` and returns
 /// it as a Char whose code point equals the decoded Unicode scalar value.
 /// The runtime char reader only exposes the leading byte, so the sequence is
@@ -136,10 +147,11 @@ pub fn str_bytes(s: Str) -> Vec[UInt8]
   ensures: result.len() == s.len()
 {
   var result = Vec[UInt8].new();
-  let len = string.str_len(s);
+  let len = s.len();
+  let base = s.c_str();
   var i: Int = 0;
   while i < len {
-    result.push(string.byte_at(s, i));
+    result.push(_slice_raw_byte(base, i));
     i = i + 1;
   };
   result

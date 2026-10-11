@@ -17,6 +17,17 @@ extern "C" {
   fn xiom_byte_at(s: Str, pos: Int) -> Int;
 }
 
+// Wave 111 (xvector REL-20261011-1453): raw byte access over a cached
+// (base, len) view for slice copies. byte_at re-scans the whole string per
+// call (runtime strnlen), so byte-stepped copies were O(k*n) -- the json
+// parser's per-token slices and slice.str_bytes were the observed quadratic
+// paths. Callers bound i against the cached length.
+fn _raw_byte(base: *UInt8, i: Int) -> UInt8
+  requires: true  // raw byte read; callers bound i against len (T007)
+{
+  unsafe { return *(base + i); }
+}
+
 /// Byte length of the string.
 pub fn str_len(s: Str) -> Int
   ensures: result >= 0
@@ -58,11 +69,12 @@ pub fn str_slice(s: Str, start: Int, end: Int) -> Str
   if s_end > len { s_end = len; };
   if s_start >= s_end { return ""; };
   let slice_len = s_end - s_start;
+  let base = s.c_str();
   unsafe {
     var buf = malloc(slice_len + 1);
     var i: Int = 0;
     while i < slice_len {
-      buf[i] = byte_at(s, s_start + i);
+      buf[i] = _raw_byte(base, s_start + i);
       i = i + 1;
     }
     buf[slice_len] = 0;

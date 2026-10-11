@@ -47,18 +47,54 @@ pub type JsonValue = enum {
 }
 
 // ============================================================================
-// Character + whitespace helpers
+// Byte-level access
 // ============================================================================
+//
+// The parser scans the raw UTF-8 bytes through a single cached (base, n)
+// view of the input. string.char_at/byte_at go through runtime accessors
+// that strnlen the whole string per call, and str_slice rebuilds through
+// byte_at, so a char-per-byte scan costs O(n) per accessor call -- quadratic
+// over a parse (relay REL-20261011-1453-xvector: 10k numbers / 49 KB parsed
+// in ~2.0 s and 20k / 109 KB in ~7.6 s locally, ~4x per 2x input). JSON
+// structure is ASCII, so byte comparisons are exact; string values are
+// rebuilt from the raw bytes (UTF-8 passthrough).
 
+fn _json_byte(base: *UInt8, i: Int) -> UInt8
+  requires: true  // raw byte read; callers bounds-check against n (T007)
+{
+  unsafe { return *(base + i); }
+}
+
+fn _json_char(base: *UInt8, i: Int) -> Char {
+  return (_json_byte(base, i) as Int) as Char;
+}
+
+fn _json_push_range(buf: &mut Vec[UInt8], base: *UInt8, start: Int, end: Int) {
+  var i = start;
+  while i < end {
+    buf.push(_json_byte(base, i));
+    i = i + 1;
+  }
+}
+
+fn _json_buf_str(buf: Vec[UInt8]) -> Str {
+  if buf.len() == 0 {
+    return "";
+  }
+  return Str::from_utf8(buf);
+}
+
+// Kept for the short non-hot strings (literal words, path keys, escape
+// output); every big-input scan goes through the byte helpers above.
 fn _json_get_char(s: Str, pos: Int) -> Char {
   var opt = xiom.string.char_at(s, pos);
   if opt.is_some { return opt.value; }
   return '\0';
 }
 
-fn _json_skip_ws(s: Str, pos: &mut Int) {
-  while *pos < s.len() {
-    let c = _json_get_char(s, *pos);
+fn _json_skip_ws(base: *UInt8, n: Int, pos: &mut Int) {
+  while *pos < n {
+    let c = _json_char(base, *pos);
     if c == ' ' || c == '\t' || c == '\n' || c == '\r' {
       *pos = *pos + 1;
     } else {
@@ -79,22 +115,22 @@ fn _json_skip_ws(s: Str, pos: &mut Int) {
 /// Err("json_parse: nesting too deep") instead of dying.
 const _JSON_MAX_DEPTH: Int = 128;
 
-fn _json_parse_value(s: Str, pos: &mut Int, depth: Int) -> Result[JsonValue, Str] {
+fn _json_parse_value(base: *UInt8, n: Int, pos: &mut Int, depth: Int) -> Result[JsonValue, Str] {
   if depth >= _JSON_MAX_DEPTH {
     return Err("json_parse: nesting too deep");
   }
-  _json_skip_ws(s, pos);
-  if *pos >= s.len() {
+  _json_skip_ws(base, n, pos);
+  if *pos >= n {
     return Err("json_parse: unexpected end of input");
   }
-  let c = _json_get_char(s, *pos);
-  if c == '{' { return _json_parse_object(s, pos, depth); }
-  if c == '[' { return _json_parse_array(s, pos, depth); }
-  if c == '"' { return _json_parse_string_val(s, pos); }
-  if c == 't' { return _json_parse_literal(s, pos, "true", JsonValue.Bool(true)); }
-  if c == 'f' { return _json_parse_literal(s, pos, "false", JsonValue.Bool(false)); }
-  if c == 'n' { return _json_parse_literal(s, pos, "null", JsonValue.Null); }
-  if c == '-' || _json_is_digit(c) { return _json_parse_number(s, pos); }
+  let c = _json_char(base, *pos);
+  if c == '{' { return _json_parse_object(base, n, pos, depth); }
+  if c == '[' { return _json_parse_array(base, n, pos, depth); }
+  if c == '"' { return _json_parse_string_val(base, n, pos); }
+  if c == 't' { return _json_parse_literal(base, n, pos, "true", JsonValue.Bool(true)); }
+  if c == 'f' { return _json_parse_literal(base, n, pos, "false", JsonValue.Bool(false)); }
+  if c == 'n' { return _json_parse_literal(base, n, pos, "null", JsonValue.Null); }
+  if c == '-' || _json_is_digit(c) { return _json_parse_number(base, n, pos); }
   return Err("json_parse: unexpected character");
 }
 
@@ -102,13 +138,13 @@ fn _json_is_digit(c: Char) -> Bool {
   return c >= '0' && c <= '9';
 }
 
-fn _json_parse_literal(s: Str, pos: &mut Int, word: Str, val: JsonValue) -> Result[JsonValue, Str] {
+fn _json_parse_literal(base: *UInt8, n: Int, pos: &mut Int, word: Str, val: JsonValue) -> Result[JsonValue, Str] {
   var i = 0;
   while i < word.len() {
-    if *pos + i >= s.len() {
+    if *pos + i >= n {
       return Err("json_parse: unterminated literal");
     }
-    let c = _json_get_char(s, *pos + i);
+    let c = _json_char(base, *pos + i);
     let wc = _json_get_char(word, i);
     if c != wc {
       return Err("json_parse: invalid literal");
@@ -119,23 +155,23 @@ fn _json_parse_literal(s: Str, pos: &mut Int, word: Str, val: JsonValue) -> Resu
   return Ok(val);
 }
 
-fn _json_parse_object(s: Str, pos: &mut Int, depth: Int) -> Result[JsonValue, Str] {
+fn _json_parse_object(base: *UInt8, n: Int, pos: &mut Int, depth: Int) -> Result[JsonValue, Str] {
   *pos = *pos + 1;
   var entries = Map[Str, JsonValue].new();
-  _json_skip_ws(s, pos);
-  if *pos < s.len() {
-    let c = _json_get_char(s, *pos);
+  _json_skip_ws(base, n, pos);
+  if *pos < n {
+    let c = _json_char(base, *pos);
     if c == '}' {
       *pos = *pos + 1;
       return Ok(JsonValue.Object(entries));
     }
   }
   loop {
-    _json_skip_ws(s, pos);
-    if *pos >= s.len() {
+    _json_skip_ws(base, n, pos);
+    if *pos >= n {
       return Err("json_parse: expected object key");
     }
-    let key_result = _json_parse_string_val(s, pos);
+    let key_result = _json_parse_string_val(base, n, pos);
     var key = "";
     match key_result {
       Ok(kv) => {
@@ -146,25 +182,25 @@ fn _json_parse_object(s: Str, pos: &mut Int, depth: Int) -> Result[JsonValue, St
       }
       Err(e) => { return Err(e); }
     }
-    _json_skip_ws(s, pos);
-    if *pos >= s.len() {
+    _json_skip_ws(base, n, pos);
+    if *pos >= n {
       return Err("json_parse: expected ':'");
     }
-    let colon = _json_get_char(s, *pos);
+    let colon = _json_char(base, *pos);
     if colon != ':' {
       return Err("json_parse: expected ':'");
     }
     *pos = *pos + 1;
-    let value_result = _json_parse_value(s, pos, depth + 1);
+    let value_result = _json_parse_value(base, n, pos, depth + 1);
     match value_result {
       Ok(v) => entries.insert(key, v);
       Err(e) => { return Err(e); }
     }
-    _json_skip_ws(s, pos);
-    if *pos >= s.len() {
+    _json_skip_ws(base, n, pos);
+    if *pos >= n {
       return Err("json_parse: expected '}' or ','");
     }
-    let next = _json_get_char(s, *pos);
+    let next = _json_char(base, *pos);
     if next == '}' {
       *pos = *pos + 1;
       return Ok(JsonValue.Object(entries));
@@ -178,28 +214,28 @@ fn _json_parse_object(s: Str, pos: &mut Int, depth: Int) -> Result[JsonValue, St
   return Err("json_parse: unexpected end of object");
 }
 
-fn _json_parse_array(s: Str, pos: &mut Int, depth: Int) -> Result[JsonValue, Str] {
+fn _json_parse_array(base: *UInt8, n: Int, pos: &mut Int, depth: Int) -> Result[JsonValue, Str] {
   *pos = *pos + 1;
   var items = Vec[JsonValue].new();
-  _json_skip_ws(s, pos);
-  if *pos < s.len() {
-    let c = _json_get_char(s, *pos);
+  _json_skip_ws(base, n, pos);
+  if *pos < n {
+    let c = _json_char(base, *pos);
     if c == ']' {
       *pos = *pos + 1;
       return Ok(JsonValue.Array(items));
     }
   }
   loop {
-    let value_result = _json_parse_value(s, pos, depth + 1);
+    let value_result = _json_parse_value(base, n, pos, depth + 1);
     match value_result {
       Ok(v) => items.push(v);
       Err(e) => { return Err(e); }
     }
-    _json_skip_ws(s, pos);
-    if *pos >= s.len() {
+    _json_skip_ws(base, n, pos);
+    if *pos >= n {
       return Err("json_parse: expected ']' or ','");
     }
-    let next = _json_get_char(s, *pos);
+    let next = _json_char(base, *pos);
     if next == ']' {
       *pos = *pos + 1;
       return Ok(JsonValue.Array(items));
@@ -213,59 +249,41 @@ fn _json_parse_array(s: Str, pos: &mut Int, depth: Int) -> Result[JsonValue, Str
   return Err("json_parse: unexpected end of array");
 }
 
-fn _json_parse_string_val(s: Str, pos: &mut Int) -> Result[JsonValue, Str] {
-  if *pos >= s.len() {
+fn _json_parse_string_val(base: *UInt8, n: Int, pos: &mut Int) -> Result[JsonValue, Str] {
+  if *pos >= n {
     return Err("json_parse: unterminated string");
   }
   *pos = *pos + 1;
-  var result = "";
+  var buf = Vec[UInt8].new();
   var start = *pos;
   loop {
-    if *pos >= s.len() {
+    if *pos >= n {
       return Err("json_parse: unterminated string");
     }
-    let c = _json_get_char(s, *pos);
-    if c == '"' {
-      if start < *pos {
-        result = result + xiom.string.str_slice(s, start, *pos);
-      }
+    let b = _json_byte(base, *pos);
+    if b == 34 as UInt8 {
+      // closing quote
+      _json_push_range(&mut buf, base, start, *pos);
       *pos = *pos + 1;
-      return Ok(JsonValue.String(result));
+      return Ok(JsonValue.String(_json_buf_str(buf)));
     }
-    if c == '\\' {
-      if start < *pos {
-        result = result + xiom.string.str_slice(s, start, *pos);
-      }
+    if b == 92 as UInt8 {
+      // backslash
+      _json_push_range(&mut buf, base, start, *pos);
       *pos = *pos + 1;
-      if *pos >= s.len() {
+      if *pos >= n {
         return Err("json_parse: unterminated escape");
       }
-      let esc = _json_get_char(s, *pos);
-      if esc == '"' {
-        result = result + "\"";
-      } elif esc == '\\' {
-        result = result + "\\";
-      } elif esc == '/' {
-        result = result + "/";
-      } elif esc == 'b' {
-        result = result + "\b";
-      } elif esc == 'f' {
-        result = result + "\f";
-      } elif esc == 'n' {
-        result = result + "\n";
-      } elif esc == 'r' {
-        result = result + "\r";
-      } elif esc == 't' {
-        result = result + "\t";
-      } elif esc == 'u' {
+      let esc = _json_char(base, *pos);
+      if esc == 'u' {
         *pos = *pos + 1;
         var code: Int = 0;
         var j = 0;
         while j < 4 {
-          if *pos >= s.len() {
+          if *pos >= n {
             return Err("json_parse: unterminated unicode escape");
           }
-          let hc = _json_get_char(s, *pos);
+          let hc = _json_char(base, *pos);
           var hv = _json_hex_value(hc);
           if hv < 0 {
             return Err("json_parse: invalid unicode escape");
@@ -274,6 +292,9 @@ fn _json_parse_string_val(s: Str, pos: &mut Int) -> Result[JsonValue, Str] {
           *pos = *pos + 1;
           j = j + 1;
         }
+        // NOTE (wave 111 fix): the old branch then fell through to a shared
+        // `*pos = *pos + 1`, consuming one byte PAST the 4 hex digits and
+        // dropping it from the value ("a\u0042c" parsed as "aB").
         var cp = code as UInt32;
         var utf = Vec[UInt8].new();
         if cp < 0x80 {
@@ -293,15 +314,40 @@ fn _json_parse_string_val(s: Str, pos: &mut Int) -> Result[JsonValue, Str] {
         }
         var dec = xiom.encoding.utf8_decode(&utf);
         match dec {
-          Ok(strv) => result = result + strv;
-          Err(_) => result = result + "?";
+          Ok(strv) => {
+            var k = 0;
+            let dln = strv.len();
+            while k < dln {
+              buf.push(strv.byte_at(k));
+              k = k + 1;
+            }
+          },
+          Err(_) => { buf.push(63 as UInt8); }
         }
         start = *pos;
       } else {
-        return Err("json_parse: invalid escape character");
+        if esc == '"' {
+          buf.push(34 as UInt8);
+        } elif esc == '\\' {
+          buf.push(92 as UInt8);
+        } elif esc == '/' {
+          buf.push(47 as UInt8);
+        } elif esc == 'b' {
+          buf.push(8 as UInt8);
+        } elif esc == 'f' {
+          buf.push(12 as UInt8);
+        } elif esc == 'n' {
+          buf.push(10 as UInt8);
+        } elif esc == 'r' {
+          buf.push(13 as UInt8);
+        } elif esc == 't' {
+          buf.push(9 as UInt8);
+        } else {
+          return Err("json_parse: invalid escape character");
+        }
+        *pos = *pos + 1;
+        start = *pos;
       }
-      *pos = *pos + 1;
-      start = *pos;
     } else {
       *pos = *pos + 1;
     }
@@ -315,36 +361,36 @@ fn _json_hex_value(c: Char) -> Int {
   return -1;
 }
 
-fn _json_parse_number(s: Str, pos: &mut Int) -> Result[JsonValue, Str] {
+fn _json_parse_number(base: *UInt8, n: Int, pos: &mut Int) -> Result[JsonValue, Str] {
   var start = *pos;
-  if *pos < s.len() {
-    let c = _json_get_char(s, *pos);
+  if *pos < n {
+    let c = _json_char(base, *pos);
     if c == '-' {
       *pos = *pos + 1;
     }
   }
-  if *pos >= s.len() {
+  if *pos >= n {
     return Err("json_parse: expected number");
   }
   let int_start = *pos;
-  while *pos < s.len() {
-    let c = _json_get_char(s, *pos);
+  while *pos < n {
+    let c = _json_char(base, *pos);
     if !(_json_is_digit(c)) { break; }
     *pos = *pos + 1;
   }
   if *pos == int_start {
     return Err("json_parse: expected number");
   }
-  if *pos - int_start > 1 && _json_get_char(s, int_start) == '0' {
+  if *pos - int_start > 1 && _json_char(base, int_start) == '0' {
     return Err("json_parse: leading zeros are not allowed");
   }
-  if *pos < s.len() {
-    let c = _json_get_char(s, *pos);
+  if *pos < n {
+    let c = _json_char(base, *pos);
     if c == '.' {
       *pos = *pos + 1;
       let frac_start = *pos;
-      while *pos < s.len() {
-        let d = _json_get_char(s, *pos);
+      while *pos < n {
+        let d = _json_char(base, *pos);
         if !(_json_is_digit(d)) { break; }
         *pos = *pos + 1;
       }
@@ -353,19 +399,19 @@ fn _json_parse_number(s: Str, pos: &mut Int) -> Result[JsonValue, Str] {
       }
     }
   }
-  if *pos < s.len() {
-    let c = _json_get_char(s, *pos);
+  if *pos < n {
+    let c = _json_char(base, *pos);
     if c == 'e' || c == 'E' {
       *pos = *pos + 1;
-      if *pos < s.len() {
-        let d = _json_get_char(s, *pos);
+      if *pos < n {
+        let d = _json_char(base, *pos);
         if d == '+' || d == '-' {
           *pos = *pos + 1;
         }
       }
       let exp_start = *pos;
-      while *pos < s.len() {
-        let d = _json_get_char(s, *pos);
+      while *pos < n {
+        let d = _json_char(base, *pos);
         if !(_json_is_digit(d)) { break; }
         *pos = *pos + 1;
       }
@@ -377,18 +423,22 @@ fn _json_parse_number(s: Str, pos: &mut Int) -> Result[JsonValue, Str] {
   if *pos == start {
     return Err("json_parse: expected number");
   }
-  let num_str = xiom.string.str_slice(s, start, *pos);
+  var num_buf = Vec[UInt8].new();
+  _json_push_range(&mut num_buf, base, start, *pos);
+  let num_str = _json_buf_str(num_buf);
   let parsed = xiom.core.to_float_from_str(num_str);
-  match parsed {
-    Ok(n) => {
-      if n != n { return Err("json_parse: number is not finite"); }
-      if n > 1.7976931348623157e308 || n < -1.7976931348623157e308 {
+  // NOTE: explicit `return match` -- a bare trailing match after a Vec.push
+  // trips the v0.64.2 checker ("return type mismatch ... found ()").
+  return match parsed {
+    Ok(fv) => {
+      if fv != fv { return Err("json_parse: number is not finite"); }
+      if fv > 1.7976931348623157e308 || fv < -1.7976931348623157e308 {
         return Err("json_parse: number out of range");
       }
-      Ok(JsonValue.Number(n))
+      Ok(JsonValue.Number(fv))
     }
-    Err(_) => Err("json_parse: invalid number format");
-  }
+    Err(_) => Err("json_parse: invalid number format")
+  };
 }
 
 // ============================================================================
@@ -408,11 +458,13 @@ pub fn json_parse(s: Str) -> Result[JsonValue, Str]
   ensures: (s == "null") => (result.is_ok == true)
 {
   var pos = 0;
-  let result = _json_parse_value(s, &pos, 0);
+  let base = s.c_str();
+  let n = s.len();
+  let result = _json_parse_value(base, n, &pos, 0);
   match result {
     Ok(v) => {
-      _json_skip_ws(s, &pos);
-      if pos != s.len() {
+      _json_skip_ws(base, n, &pos);
+      if pos != n {
         return Err("json_parse: trailing characters after value");
       }
       return Ok(v);
