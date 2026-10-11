@@ -6,6 +6,58 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.64.4] - 2026-10-11
+
+Re-pinned to compiler `v0.64.3`. Consumes waves 98-113: the JSON and
+string byte paths go linear, the sync dir and several fix-first defects
+land, and the module-private collision workaround is reverted now that
+module-private symbols are isolated per module (m261/m262). The revert
+was verified against the compiler v0.64.4 release-wave archive with both
+import-order locks and the farm/metro numeric witness green.
+
+### Fixed
+
+- `json_parse` is linear on large payloads (one cached byte view, raw
+  byte scans, byte-buffer strings, byte-built number literals): a
+  20k-number document that took about 18 s parses well under a second,
+  and the parser no longer drops the byte after a `\uXXXX` escape
+  (`"a\u0042c"` parsed as `aB` before). xvector's pinned repros exit 0.
+- `slice.str_bytes`, `string.str_slice`, `slice.str_chars` and
+  `slice.str_code_points` copy/decode through cached (base, len) views
+  instead of the strnlen-ing accessors: the 400 KB string sweeps run in
+  well under half a second and scale linearly (previously quadratic).
+- `json_parse` enforces a nesting depth cap; `time.sleep_ms` actually
+  sleeps; `Instant.elapsed().as_millis()` is millisecond-precision.
+- `io.read_file_lines` returns zero lines for an empty file;
+  `to_string_char` keeps its NUL clause; the piped-stdin
+  `buf_reader_new(0)` crash is fixed.
+- `os.signal_raise` links (a `raise_sig` link fix) and the os batch-2
+  fixes land; the signal catalog import is qualified.
+- Crypto fix-first defects: RSA short-key out-of-bounds, the cipher
+  GF-multiply constant swap, the argon2 length guard, and the ECC
+  out-of-bounds read, plus the chacha/aead/curves/des/rng/sign/rsa and
+  cipher/ecc coverage batches.
+- The `_METRO_K*` private-constant rename workaround is reverted:
+  `xiom.hash.metro` uses its natural `_K0.._K3` names and the
+  farm-first/metro-first co-import locks both pass on the compiler fix.
+
+### Changed
+
+- Coverage 61.8% -> 69.8% pub-with-clause via waves 98-113 (sync 35.9%
+  -> 94.9%, core 45.8% -> 58.0%, crypto 94.5%, hash 94.4%, misc 98.7%,
+  os 55.4%); floors148; probe corpus 288.
+- `COMPILER_VERSION` -> `v0.64.3`; `package.xi` -> 0.64.4 with the
+  registry metadata (`categories`, `stage`).
+- Findings: 17 Current (16 compiler, 1 stdlib) after the v0.64.3 sweep
+  resolved the generic by-reference Option/Result/Slice finding; the
+  wave-110/111 discoveries (a builtin `Mutex` shadowing the stdlib
+  generic, and a checker tail-expression case) are filed with repros.
+
+### Notes
+
+- Registry publish follows the candidate-tag pin protocol; the compiler
+  pins `STDLIB_VERSION` to this tag in its v0.64.4 release.
+
 ## [0.64.3] - 2026-10-09
 
 Re-pinned to compiler `v0.64.2` (tag `c51170a6`). Consumes the wave-93..97
