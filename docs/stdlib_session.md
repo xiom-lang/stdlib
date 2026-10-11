@@ -2494,6 +2494,28 @@ registry pin, agent recon for the rest)**
   (216.6s), floors144 + doc + module-smoke (497/517, 3476/6204)
   ratchets OK.
 
+**SESSION 2026-10-11 block 117 (post-wave-111: xvector verified the committed hashes; package.xi registry metadata landed; RC prep continues)**
+- Relay round 16:37Z: xvector created two items after the fix --
+  REL-20261011-1543-xvector (str_bytes root cause; acceptance = both
+  repros) and REL-20261011-1618-xvector (their early verification of my
+  working tree before I committed). Processed both: 1543 acked -> fixed
+  with commit 9a2b5ab; 1618 acked confirming the committed files are
+  byte-identical to their verified hashes (sha256 json E69E0275 / slice
+  874A8F67 / string 36D1F4FF). Their xvectord fit improved 120 s -> 57.4 s
+  on the fix. 1453 stays `fixed` pending their formal verify/close.
+- RC prep: package.xi now carries `categories: ["core","systems","data"]`
+  + `stage: "stable"` (R53 registry metadata; the queue's "needs
+  categories + stage for the next cut" follow-up is done). Registry
+  schema confirmed from the registry repo: max 3 canonical categories,
+  stages incubating|stable|deprecated, xiom.std exempt from
+  stage-overrides so the manifest value governs; release.yml validation
+  (name/version/compiler-range greps) unaffected. Owner review welcome;
+  a value change is a one-line edit before the cut.
+- Next: the pin decision for the candidate (v0.64.3 vs waiting for the
+  compiler batch 1 resolver/isolation; do not tag/publish without the
+  compiler-lane OK), the release-notes fragment + validator at cut, and
+  the compiler v0.64.3 release-check verdict rows.
+
 **SESSION 2026-10-11 block 116 (wave 111: xvector json quadratic fixed -- byte-lexer parser + str_bytes/str_slice linear; \u escape fix-first; probe 286th)**
 - REL-20261011-1453-xvector (high): FIXED. The json parser now scans one
   cached (base, n) byte view (`json_parse` takes `s.c_str()` + `s.len()`

@@ -48,7 +48,11 @@ registry publish; one-version steady state allowed) and will verify
 stdlib-v0.64.3 during its v0.64.3 candidate gates. Open follow-ups: the
 STDLIB_VERSION pin PR needs a manual open (branch
 `chore/pin-stdlib-v0.64.3`), the staging canary (37968157641) still waits
-for approval, package.xi needs `categories` + `stage` for the next cut,
+for approval, package.xi now carries the registry metadata for the next
+cut -- `categories: ["core", "systems", "data"]` + `stage: "stable"`
+(registry vocabulary: max 3 categories; stages incubating|stable|
+deprecated; xiom.std is exempt from display-stage overrides so the
+manifest value governs; owner review welcome at the cut),
 and the repaired heavy matrix passes ubuntu/windows but the macos-14
 corpus leg is red (PULSE macOS runtime-C blockers suspected). Wave 98
 landed post-tag (M7 closure rewrite; read_file_lines/to_string_char
