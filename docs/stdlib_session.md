@@ -2327,6 +2327,23 @@ registry pin, agent recon for the rest)**
   279/279 (304.7s), modules 509/509 (184.4s), barename 0/509 (263.1s),
   floors142 + doc + module-smoke (497/517, 3476/6204) ratchets OK.
 
+**SESSION 2026-10-11 block 106 (doorbell 05:00/10:14Z: pulse wishlist batch acked -- 7 items; two wave-106 stdlib-side candidates)**
+- New inbound (REL-20261011-0317-pulse, -2..-6) acked with plans:
+  socket options (SO_RCVTIMEO/SO_REUSEADDR/non-blocking; Windows bind
+  parity) and deadline-capable receive = runtime bundle (setsockopt/
+  FIONBIO primitives + socket.xi wrappers); durable flush_stdout = the
+  xvector-8 runtime family; fsync wrapper = the orbitdb-3/xvector-2/
+  packages shared runtime fix (one implementation serves all three).
+  Two are stdlib-side fix-first candidates for wave 106 (no runtime):
+  -pulse-3 server_parse_request(bytes) (request line + headers +
+  Content-Length framing with caps; probe-first) and -pulse-4
+  net.write_all must loop over send until drained (partial sends
+  reported Ok -- PULSE worked around with send_all; local-socket-pair
+  probe). -pulse-7 (test-harness fn-pointer reassignment) was forwarded
+  to compiler and is acked there -- no stdlib action.
+- Bus: six items committed+pushed (9dd0b91); the earlier pull error was
+  transient (local was in sync with origin). No other queue moves.
+
 **SESSION 2026-10-11 block 105 (doorbell 01:00Z: pulse-2 + bindings-9/10 verified-closed; no new inbound)**
 - Reporter-side verifications: REL-20261010-2122-pulse-2 CLOSED by
   pulse after the read_file_bytes payload-free fix (dd352f6) -- the
