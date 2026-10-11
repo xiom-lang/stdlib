@@ -61,7 +61,9 @@ fn barrier_unlock_guard(b: &mut SyncBarrier) {
 /// Params: count - the number of threads that must arrive to release.
 /// Returns: a new barrier. A non-positive count is clamped to 1.
 /// Complexity: O(1).
-pub fn barrier_new(count: Int) -> SyncBarrier {
+pub fn barrier_new(count: Int) -> SyncBarrier
+  ensures: result.count >= 1
+{
   var n = count;
   if n < 1 {
     n = 1;
@@ -80,7 +82,11 @@ pub fn barrier_new(count: Int) -> SyncBarrier {
 /// Returns: true when this call releases the barrier (the last arriver),
 ///          false for the other waiters.
 /// Complexity: O(1) per poll; blocks until all threads arrive.
-pub fn barrier_wait(b: &mut SyncBarrier) -> Bool {
+pub fn barrier_wait(b: &mut SyncBarrier) -> Bool
+  requires: b.guard != null
+  requires: b.waiting != null
+  requires: b.generation != null
+{
   barrier_lock_guard(b);
   var gen: Int;
   unsafe { gen = xiom_atomic_load(b.generation); }
@@ -117,7 +123,9 @@ pub fn barrier_count(b: &SyncBarrier) -> Int
 /// Reset the waiting counter to zero.
 /// Params: b - the barrier.
 /// Complexity: O(1). Not safe for concurrent use with active waiters.
-pub fn barrier_reset(b: &mut SyncBarrier) {
+pub fn barrier_reset(b: &mut SyncBarrier)
+  requires: b.waiting != null
+{
   let pw: *Int = b.waiting;
   unsafe { xiom_atomic_store(pw, 0); }
 }
@@ -126,7 +134,9 @@ pub fn barrier_reset(b: &mut SyncBarrier) {
 /// Params: b - the barrier.
 /// Returns: whether the current cycle is complete (all threads arrived).
 /// Complexity: O(1).
-pub fn barrier_is_ready(b: &SyncBarrier) -> Bool {
+pub fn barrier_is_ready(b: &SyncBarrier) -> Bool
+  requires: b.waiting != null
+{
   var w: Int;
   unsafe { w = xiom_atomic_load(b.waiting); }
   return w >= b.count;

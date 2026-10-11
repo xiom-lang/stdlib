@@ -35,7 +35,9 @@ pub type SyncCondvar = { notified: *Int; }
 /// Create a new condition variable.
 /// Returns: a condvar with a zero notify count.
 /// Complexity: O(1).
-pub fn condvar_new() -> SyncCondvar {
+pub fn condvar_new() -> SyncCondvar
+  ensures: result.notified != null
+{
   let s = alloc.alloc(8);
   unsafe { ptr.write(s as *Int, 0); }
   return SyncCondvar{ notified: s; }
@@ -45,7 +47,10 @@ pub fn condvar_new() -> SyncCondvar {
 /// Params: cv - the condition variable; m - the mutex guarding the state.
 /// Re-acquires `m` before returning.
 /// Complexity: O(1) per poll; blocks until a notify.
-pub fn condvar_wait(cv: SyncCondvar, m: SyncMutex) {
+pub fn condvar_wait(cv: SyncCondvar, m: SyncMutex)
+  requires: cv.notified != null
+  requires: m.locked != null
+{
   var mm = m;
   mutex.mutex_unlock(&mut mm);
   var done = false;
@@ -68,7 +73,10 @@ pub fn condvar_wait(cv: SyncCondvar, m: SyncMutex) {
 /// Returns: true if notified before the timeout, false on timeout.
 /// Re-acquires `m` before returning.
 /// Complexity: O(ms) polls, each sleeping up to 1 ms.
-pub fn condvar_wait_timeout(cv: SyncCondvar, m: SyncMutex, ms: Int) -> Bool {
+pub fn condvar_wait_timeout(cv: SyncCondvar, m: SyncMutex, ms: Int) -> Bool
+  requires: cv.notified != null
+  requires: m.locked != null
+{
   var mm = m;
   var budget = ms;
   if budget < 0 {

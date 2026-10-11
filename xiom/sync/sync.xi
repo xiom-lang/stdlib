@@ -125,7 +125,13 @@ pub type RwLock[T] = {
 
 /// Create an unlocked read-write lock holding `data`.
 #[unsafe_direct]
-pub fn RwLock.new[T](data: T) -> RwLock[T] {
+pub fn RwLock.new[T](data: T) -> RwLock[T]
+  ensures: result.inner != null
+  ensures: result.rcond != null
+  ensures: result.wcond != null
+  ensures: result.data != null
+  ensures: result.state != null
+{
   let m = alloc.alloc(64);
   unsafe { xiom_mutex_init(m); }
   let rc = alloc.alloc(64);
@@ -141,7 +147,10 @@ pub fn RwLock.new[T](data: T) -> RwLock[T] {
 
 /// Acquire a shared read guard (blocks while a writer holds the lock).
 #[unsafe_direct]
-pub fn RwLock.read[T](self) -> ReadGuard[T] {
+pub fn RwLock.read[T](self) -> ReadGuard[T]
+  requires: inner != null
+  requires: state != null
+{
   unsafe { xiom_mutex_lock(inner); }
   unsafe {
     var st = xiom_atomic_load(state);
@@ -157,7 +166,11 @@ pub fn RwLock.read[T](self) -> ReadGuard[T] {
 
 /// Acquire an exclusive write guard.
 #[unsafe_direct]
-pub fn RwLock.write[T](self) -> WriteGuard[T] {
+pub fn RwLock.write[T](self) -> WriteGuard[T]
+  requires: inner != null
+  requires: wcond != null
+  requires: state != null
+{
   unsafe { xiom_mutex_lock(inner); }
   unsafe {
     var st = xiom_atomic_load(state);
@@ -173,7 +186,10 @@ pub fn RwLock.write[T](self) -> WriteGuard[T] {
 
 /// Non-blocking shared read; None when a writer holds the lock.
 #[unsafe_direct]
-pub fn RwLock.try_read[T](self) -> Option[ReadGuard[T]] {
+pub fn RwLock.try_read[T](self) -> Option[ReadGuard[T]]
+  requires: inner != null
+  requires: state != null
+{
   unsafe { xiom_mutex_lock(inner); }
   unsafe {
     let st = xiom_atomic_load(state);
@@ -189,7 +205,10 @@ pub fn RwLock.try_read[T](self) -> Option[ReadGuard[T]] {
 
 /// Non-blocking exclusive write; None when the lock is held.
 #[unsafe_direct]
-pub fn RwLock.try_write[T](self) -> Option[WriteGuard[T]] {
+pub fn RwLock.try_write[T](self) -> Option[WriteGuard[T]]
+  requires: inner != null
+  requires: state != null
+{
   unsafe { xiom_mutex_lock(inner); }
   unsafe {
     let st = xiom_atomic_load(state);
@@ -216,7 +235,10 @@ pub fn ReadGuard.get[T](self) -> T
 
 /// Release the shared read lock.
 #[unsafe_direct]
-pub fn ReadGuard.drop[T](self) {
+pub fn ReadGuard.drop[T](self)
+  requires: lock.inner != null
+  requires: lock.state != null
+{
   unsafe { xiom_mutex_lock(lock.inner); }
   unsafe {
     xiom_atomic_fetch_sub(lock.state, 1);
@@ -248,7 +270,10 @@ pub fn WriteGuard.get_mut[T](self) -> T
 
 /// Release the exclusive lock.
 #[unsafe_direct]
-pub fn WriteGuard.drop[T](self) {
+pub fn WriteGuard.drop[T](self)
+  requires: lock.inner != null
+  requires: lock.state != null
+{
   unsafe { xiom_mutex_lock(lock.inner); }
   unsafe {
     xiom_atomic_store(lock.state, 0);
@@ -263,7 +288,9 @@ pub type Condvar = { inner: *UInt8; }
 
 /// Create a condition variable.
 #[unsafe_direct]
-pub fn Condvar.new() -> Condvar {
+pub fn Condvar.new() -> Condvar
+  ensures: result.inner != null
+{
   let c = alloc.alloc(64);
   unsafe { xiom_cond_init(c); }
   return Condvar{ inner: c; }
@@ -271,7 +298,10 @@ pub fn Condvar.new() -> Condvar {
 
 /// Wait for a notification, releasing and re-acquiring the mutex.
 #[unsafe_direct]
-pub fn Condvar.wait[T](self, guard: MutexGuard[T]) -> MutexGuard[T] {
+pub fn Condvar.wait[T](self, guard: MutexGuard[T]) -> MutexGuard[T]
+  requires: inner != null
+  requires: guard.mutex.inner != null
+{
   unsafe { xiom_cond_wait(inner, guard.mutex.inner); }
   return guard;
 }
@@ -300,7 +330,10 @@ pub type Once = {
 
 /// Create a one-shot initializer.
 #[unsafe_direct]
-pub fn Once.new() -> Once {
+pub fn Once.new() -> Once
+  ensures: result.inner != null
+  ensures: result.state != null
+{
   let m = alloc.alloc(64);
   unsafe { xiom_mutex_init(m); }
   let s = alloc.alloc(8);
@@ -366,7 +399,12 @@ pub fn Barrier.new(n: Int) -> Barrier
 
 /// Block until `n` threads arrive, then release them together.
 #[unsafe_direct]
-pub fn Barrier.wait(self) {
+pub fn Barrier.wait(self)
+  requires: inner != null
+  requires: cond != null
+  requires: waiting != null
+  requires: generation != null
+{
   unsafe { xiom_mutex_lock(inner); }
   unsafe {
     let gen = xiom_atomic_load(generation);
@@ -500,7 +538,9 @@ pub type AtomicBool = { ptr: *Int; }
 
 /// Create an atomic bool.
 #[unsafe_direct]
-pub fn AtomicBool.new(val: Bool) -> AtomicBool {
+pub fn AtomicBool.new(val: Bool) -> AtomicBool
+  ensures: result.ptr != null
+{
   let p = alloc.alloc(8);
   let iv: Int = if val { 1 } else { 0 };
   unsafe { *(p as *Int) = iv; }
@@ -519,21 +559,27 @@ pub fn AtomicBool.load(self) -> Bool
 
 /// Store with release ordering.
 #[unsafe_direct]
-pub fn AtomicBool.store(self, val: Bool) {
+pub fn AtomicBool.store(self, val: Bool)
+  requires: ptr != null
+{
   let iv: Int = if val { 1 } else { 0 };
   unsafe { xiom_atomic_store(ptr, iv); }
 }
 
 /// Atomically replace the value, returning the previous one.
 #[unsafe_direct]
-pub fn AtomicBool.swap(self, val: Bool) -> Bool {
+pub fn AtomicBool.swap(self, val: Bool) -> Bool
+  requires: ptr != null
+{
   let iv: Int = if val { 1 } else { 0 };
   unsafe { return xiom_atomic_exchange(ptr, iv) != 0; }
 }
 
 /// Set to `new` when the value equals `current`; true on success.
 #[unsafe_direct]
-pub fn AtomicBool.compare_exchange(self, current: Bool, new: Bool) -> Bool {
+pub fn AtomicBool.compare_exchange(self, current: Bool, new: Bool) -> Bool
+  requires: ptr != null
+{
   let c: Int = if current { 1 } else { 0 };
   let n: Int = if new { 1 } else { 0 };
   unsafe {
@@ -551,7 +597,9 @@ pub type AtomicInt = { ptr: *Int; }
 
 /// Create an atomic Int.
 #[unsafe_direct]
-pub fn AtomicInt.new(val: Int) -> AtomicInt {
+pub fn AtomicInt.new(val: Int) -> AtomicInt
+  ensures: result.ptr != null
+{
   let p = alloc.alloc(8);
   unsafe { *(p as *Int) = val; }
   unsafe {
@@ -684,7 +732,12 @@ pub fn barrier_new(n: Int) -> Barrier
 /// and the barrier releases all waiters. Returns `false` otherwise.
 /// Complexity: O(1) lock operations; blocks until all threads arrive.
 #[unsafe_direct]
-pub fn barrier_wait(b: &mut Barrier) -> Bool {
+pub fn barrier_wait(b: &mut Barrier) -> Bool
+  requires: b.inner != null
+  requires: b.cond != null
+  requires: b.waiting != null
+  requires: b.generation != null
+{
   unsafe { xiom_mutex_lock(b.inner); }
   unsafe {
     let gen = xiom_atomic_load(b.generation);
@@ -750,7 +803,9 @@ pub fn cdl_is_zero(l: &CountDownLatch) -> Bool
 /// Spins until the latch reaches zero. Yields the thread between checks.
 /// Complexity: O(remaining) busy-wait iterations.
 #[unsafe_direct]
-pub fn cdl_wait_spin(l: &mut CountDownLatch) {
+pub fn cdl_wait_spin(l: &mut CountDownLatch)
+  ensures: l.remaining <= 0
+{
   while l.remaining > 0 {
     unsafe { xiom_thread_yield(); };
   };
@@ -761,7 +816,9 @@ pub fn cdl_wait_spin(l: &mut CountDownLatch) {
 /// Atomically loads the current value. Direct FFI access.
 /// Complexity: O(1). Thread-safe.
 #[unsafe_direct]
-pub fn atomic_load(ai: &AtomicInt) -> Int {
+pub fn atomic_load(ai: &AtomicInt) -> Int
+  requires: ai.ptr != null
+{
   let p: *Int = ai.ptr;
   unsafe { return xiom_atomic_load(p); }
 }
@@ -769,7 +826,9 @@ pub fn atomic_load(ai: &AtomicInt) -> Int {
 /// Atomically stores a new value. Direct FFI access.
 /// Complexity: O(1). Thread-safe.
 #[unsafe_direct]
-pub fn atomic_store(ai: &mut AtomicInt, v: Int) {
+pub fn atomic_store(ai: &mut AtomicInt, v: Int)
+  requires: ai.ptr != null
+{
   let p: *Int = ai.ptr;
   unsafe { xiom_atomic_store(p, v); };
 }
@@ -777,7 +836,9 @@ pub fn atomic_store(ai: &mut AtomicInt, v: Int) {
 /// Atomically adds `v` to the value. Returns the new value.
 /// Complexity: O(1). Thread-safe.
 #[unsafe_direct]
-pub fn atomic_add(ai: &mut AtomicInt, v: Int) -> Int {
+pub fn atomic_add(ai: &mut AtomicInt, v: Int) -> Int
+  requires: ai.ptr != null
+{
   let p: *Int = ai.ptr;
   unsafe { return xiom_atomic_fetch_add(p, v) + v; }
 }
@@ -785,7 +846,9 @@ pub fn atomic_add(ai: &mut AtomicInt, v: Int) -> Int {
 /// Atomically subtracts `v` from the value. Returns the new value.
 /// Complexity: O(1). Thread-safe.
 #[unsafe_direct]
-pub fn atomic_sub(ai: &mut AtomicInt, v: Int) -> Int {
+pub fn atomic_sub(ai: &mut AtomicInt, v: Int) -> Int
+  requires: ai.ptr != null
+{
   let p: *Int = ai.ptr;
   unsafe { return xiom_atomic_fetch_sub(p, v) - v; }
 }
@@ -793,7 +856,9 @@ pub fn atomic_sub(ai: &mut AtomicInt, v: Int) -> Int {
 /// Atomically swaps the value and returns the old value.
 /// Complexity: O(1). Thread-safe.
 #[unsafe_direct]
-pub fn atomic_exchange(ai: &mut AtomicInt, v: Int) -> Int {
+pub fn atomic_exchange(ai: &mut AtomicInt, v: Int) -> Int
+  requires: ai.ptr != null
+{
   let p: *Int = ai.ptr;
   unsafe { return xiom_atomic_exchange(p, v); }
 }
@@ -802,7 +867,9 @@ pub fn atomic_exchange(ai: &mut AtomicInt, v: Int) -> Int {
 /// Returns `true` if the exchange was performed.
 /// Complexity: O(1). Thread-safe.
 #[unsafe_direct]
-pub fn atomic_compare_exchange(ai: &mut AtomicInt, expected: Int, new: Int) -> Bool {
+pub fn atomic_compare_exchange(ai: &mut AtomicInt, expected: Int, new: Int) -> Bool
+  requires: ai.ptr != null
+{
   let p: *Int = ai.ptr;
   unsafe {
     let old = xiom_atomic_load(p);
@@ -817,7 +884,9 @@ pub fn atomic_compare_exchange(ai: &mut AtomicInt, expected: Int, new: Int) -> B
 /// Atomically adds `v` and returns the OLD value.
 /// Complexity: O(1). Thread-safe.
 #[unsafe_direct]
-pub fn atomic_fetch_add(ai: &mut AtomicInt, v: Int) -> Int {
+pub fn atomic_fetch_add(ai: &mut AtomicInt, v: Int) -> Int
+  requires: ai.ptr != null
+{
   let p: *Int = ai.ptr;
   unsafe { return xiom_atomic_fetch_add(p, v); }
 }
@@ -825,7 +894,9 @@ pub fn atomic_fetch_add(ai: &mut AtomicInt, v: Int) -> Int {
 /// Atomically subtracts `v` and returns the OLD value.
 /// Complexity: O(1). Thread-safe.
 #[unsafe_direct]
-pub fn atomic_fetch_sub(ai: &mut AtomicInt, v: Int) -> Int {
+pub fn atomic_fetch_sub(ai: &mut AtomicInt, v: Int) -> Int
+  requires: ai.ptr != null
+{
   let p: *Int = ai.ptr;
   unsafe { return xiom_atomic_fetch_sub(p, v); }
 }

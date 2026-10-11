@@ -37,7 +37,9 @@ pub type SyncMutex = {
 /// Create a new unlocked mutex.
 /// Returns: a mutex whose locked state is false.
 /// Complexity: O(1).
-pub fn mutex_new() -> SyncMutex {
+pub fn mutex_new() -> SyncMutex
+  ensures: result.locked != null
+{
   let s = alloc.alloc(8);
   unsafe { ptr.write(s as *Int, 0); }
   return SyncMutex{ locked: s; }
@@ -46,7 +48,9 @@ pub fn mutex_new() -> SyncMutex {
 /// Block until the mutex is acquired.
 /// Params: m - the mutex.
 /// Complexity: O(1) per poll; spins with 1 ms sleeps while contended.
-pub fn mutex_lock(m: &mut SyncMutex) {
+pub fn mutex_lock(m: &mut SyncMutex)
+  requires: m.locked != null
+{
   let p: *Int = m.locked;
   var done = false;
   while !done {
@@ -64,7 +68,9 @@ pub fn mutex_lock(m: &mut SyncMutex) {
 /// Params: m - the mutex.
 /// Returns: true if the mutex was acquired, false if it is already held.
 /// Complexity: O(1). Never blocks.
-pub fn mutex_try_lock(m: &mut SyncMutex) -> Bool {
+pub fn mutex_try_lock(m: &mut SyncMutex) -> Bool
+  requires: m.locked != null
+{
   let p: *Int = m.locked;
   var old: Int;
   unsafe { old = xiom_atomic_exchange(p, 1); }
@@ -74,7 +80,9 @@ pub fn mutex_try_lock(m: &mut SyncMutex) -> Bool {
 /// Release a held mutex.
 /// Params: m - the mutex.
 /// Complexity: O(1).
-pub fn mutex_unlock(m: &mut SyncMutex) {
+pub fn mutex_unlock(m: &mut SyncMutex)
+  requires: m.locked != null
+{
   let p: *Int = m.locked;
   unsafe { xiom_atomic_store(p, 0); }
 }
@@ -83,7 +91,9 @@ pub fn mutex_unlock(m: &mut SyncMutex) {
 /// Params: m - the mutex.
 /// Returns: whether the mutex is locked by any thread.
 /// Complexity: O(1).
-pub fn mutex_is_locked(m: &SyncMutex) -> Bool {
+pub fn mutex_is_locked(m: &SyncMutex) -> Bool
+  requires: m.locked != null
+{
   let p: *Int = m.locked;
   var st: Int;
   unsafe { st = xiom_atomic_load(p); }
@@ -94,7 +104,9 @@ pub fn mutex_is_locked(m: &SyncMutex) -> Bool {
 /// Params: m - the mutex (consumed).
 /// Returns: the address of the atomic owner flag as an integer.
 /// Complexity: O(1). Frees the flag storage.
-pub fn mutex_into_inner(m: &mut SyncMutex) -> Int {
+pub fn mutex_into_inner(m: &mut SyncMutex) -> Int
+  requires: m.locked != null
+{
   var handle: Int = 0;
   unsafe {
     handle = m.locked as Int;

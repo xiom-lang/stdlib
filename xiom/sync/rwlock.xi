@@ -61,7 +61,11 @@ fn rwlock_unlock_guard(l: &mut SyncRwLock) {
 /// Create an unlocked reader-writer lock.
 /// Returns: a new lock with no readers and no writer.
 /// Complexity: O(1).
-pub fn rwlock_new() -> SyncRwLock {
+pub fn rwlock_new() -> SyncRwLock
+  ensures: result.guard != null
+  ensures: result.readers != null
+  ensures: result.writer != null
+{
   let g = alloc.alloc(8);
   unsafe { ptr.write(g as *Int, 0); }
   let r = alloc.alloc(8);
@@ -74,7 +78,10 @@ pub fn rwlock_new() -> SyncRwLock {
 /// Acquire a shared read lock, blocking for writers.
 /// Params: l - the lock.
 /// Complexity: O(1) per poll; blocks while a writer holds the lock.
-pub fn rwlock_read_lock(l: &mut SyncRwLock) {
+pub fn rwlock_read_lock(l: &mut SyncRwLock)
+  requires: l.guard != null
+  requires: l.writer != null
+{
   var done = false;
   while !done {
     rwlock_lock_guard(l);
@@ -95,7 +102,10 @@ pub fn rwlock_read_lock(l: &mut SyncRwLock) {
 /// Params: l - the lock.
 /// Returns: true if the read lock was acquired, false if a writer holds it.
 /// Complexity: O(1). Never blocks.
-pub fn rwlock_read_try_lock(l: &mut SyncRwLock) -> Bool {
+pub fn rwlock_read_try_lock(l: &mut SyncRwLock) -> Bool
+  requires: l.guard != null
+  requires: l.writer != null
+{
   rwlock_lock_guard(l);
   var w: Int;
   unsafe { w = xiom_atomic_load(l.writer); }
@@ -111,7 +121,10 @@ pub fn rwlock_read_try_lock(l: &mut SyncRwLock) -> Bool {
 /// Release a held read lock.
 /// Params: l - the lock.
 /// Complexity: O(1).
-pub fn rwlock_read_unlock(l: &mut SyncRwLock) {
+pub fn rwlock_read_unlock(l: &mut SyncRwLock)
+  requires: l.guard != null
+  requires: l.readers != null
+{
   rwlock_lock_guard(l);
   var r: Int;
   unsafe { r = xiom_atomic_load(l.readers); }
@@ -124,7 +137,11 @@ pub fn rwlock_read_unlock(l: &mut SyncRwLock) {
 /// Acquire the exclusive write lock, blocking.
 /// Params: l - the lock.
 /// Complexity: O(1) per poll; blocks while readers are active.
-pub fn rwlock_write_lock(l: &mut SyncRwLock) {
+pub fn rwlock_write_lock(l: &mut SyncRwLock)
+  requires: l.guard != null
+  requires: l.readers != null
+  requires: l.writer != null
+{
   var done = false;
   while !done {
     rwlock_lock_guard(l);
@@ -147,7 +164,11 @@ pub fn rwlock_write_lock(l: &mut SyncRwLock) {
 /// Params: l - the lock.
 /// Returns: true if the write lock was acquired, false if the lock is held.
 /// Complexity: O(1). Never blocks.
-pub fn rwlock_write_try_lock(l: &mut SyncRwLock) -> Bool {
+pub fn rwlock_write_try_lock(l: &mut SyncRwLock) -> Bool
+  requires: l.guard != null
+  requires: l.readers != null
+  requires: l.writer != null
+{
   rwlock_lock_guard(l);
   var r: Int;
   var w: Int;
@@ -165,7 +186,10 @@ pub fn rwlock_write_try_lock(l: &mut SyncRwLock) -> Bool {
 /// Release a held write lock.
 /// Params: l - the lock.
 /// Complexity: O(1).
-pub fn rwlock_write_unlock(l: &mut SyncRwLock) {
+pub fn rwlock_write_unlock(l: &mut SyncRwLock)
+  requires: l.guard != null
+  requires: l.writer != null
+{
   rwlock_lock_guard(l);
   unsafe { xiom_atomic_store(l.writer, 0); }
   rwlock_unlock_guard(l);
@@ -175,7 +199,9 @@ pub fn rwlock_write_unlock(l: &mut SyncRwLock) {
 /// Params: l - the lock.
 /// Returns: whether a writer currently holds the lock.
 /// Complexity: O(1).
-pub fn rwlock_is_write_locked(l: &SyncRwLock) -> Bool {
+pub fn rwlock_is_write_locked(l: &SyncRwLock) -> Bool
+  requires: l.writer != null
+{
   var w: Int;
   unsafe { w = xiom_atomic_load(l.writer); }
   return w != 0;
@@ -185,7 +211,11 @@ pub fn rwlock_is_write_locked(l: &SyncRwLock) -> Bool {
 /// Params: l - the lock (consumed).
 /// Returns: the address of the writer cell as an integer.
 /// Complexity: O(1). Frees the state storage.
-pub fn rwlock_into_inner(l: &mut SyncRwLock) -> Int {
+pub fn rwlock_into_inner(l: &mut SyncRwLock) -> Int
+  requires: l.guard != null
+  requires: l.readers != null
+  requires: l.writer != null
+{
   var handle: Int = 0;
   unsafe {
     handle = l.writer as Int;

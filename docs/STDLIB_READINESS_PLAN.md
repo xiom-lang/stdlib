@@ -1570,8 +1570,34 @@ T1/T2 yields.
         509/509 (196s), barename 0/509 (244.6s), floors146 + doc +
         module-smoke ratchets OK. Next: sync coverage (sync.xi tail +
         atomics/mutex/rwlock); async later.
+        Wave 110 (2026-10-11): sync dir 94.9%. 70 fns, +70 pub (sync.xi 27:
+        RwLock new/read/write/try_read/try_write + guard drops, Condvar
+        new/wait, Once.new, Barrier.wait + standalone barrier_wait,
+        AtomicBool/AtomicInt constructors + op guards, cdl_wait_spin, the 8
+        standalone atomic_* helpers; atomics.xi 16 constructor/op guards;
+        mutex.xi 6; rwlock.xi 9; barrier.xi 4; channel.xi 5 (capacity clamp,
+        closed mirrors, send-Err/recv-None closed guards); condvar.xi 3).
+        sync 35.9% -> 94.9%; global 68.5% -> 69.5% (pubCovered 4454 ->
+        4524, clauses 5923 -> 6031); meter 77.0%; floors147. NEW finding
+        while writing the probe: the v0.56 I3 builtin Mutex deadlock-
+        detection names shadow the stdlib generic xiom.sync.Mutex[T] in
+        user code (sync.Mutex.new(42) is T001; the zero-arg form binds the
+        builtin and returns Int), so the parent Mutex.new/lock surface
+        stays clause-free; repro p_sync_mutex_builtin_shadow.xi, bus item
+        REL-20261011-1456-stdlib (findings 17 Current: 16 compiler +
+        1 stdlib). Probe p_wave110_shapes.xi (285th, 49 checks) green on
+        the pin pre/post; cap note: xiom.sync + xiom.sync.atomics cannot
+        share one compilation (64 unsafe-direct-block codegen cap), so the
+        atomics submodule shape is locked by smoke_sync_atomics.xi +
+        smoke_sync_arc_battery.xi in the same battery. Battery: corpus
+        954/954 full (945.5s), probes 285/285 (359.5s), modules 509/509
+        (269.6s), barename 0/509 (276.7s), floors147 + doc + module-smoke
+        (497/517, 3476/6204) ratchets OK. Next: the xvector json_parse
+        quadratic fix (byte-based lexer fast path) as the top candidate
+        item, then async; 1052 post-fix actions when the compiler
+        resolver/isolation batch lands.
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors146.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors147.json
         tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;

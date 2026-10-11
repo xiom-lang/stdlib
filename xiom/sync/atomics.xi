@@ -33,7 +33,9 @@ pub type AtomicInt = { ptr: *Int; }
 /// Returns: a new atomic integer holding `init`.
 /// Complexity: O(1).
 #[unsafe_direct]
-pub fn atomic_int_new(init: Int) -> AtomicInt {
+pub fn atomic_int_new(init: Int) -> AtomicInt
+  ensures: result.ptr != null
+{
   let p = alloc.alloc(8);
   unsafe { ptr.write(p as *Int, init); }
   unsafe {
@@ -46,7 +48,9 @@ pub fn atomic_int_new(init: Int) -> AtomicInt {
 /// Returns: the current value.
 /// Complexity: O(1). Thread-safe.
 #[unsafe_direct]
-pub fn atomic_load(a: &AtomicInt) -> Int {
+pub fn atomic_load(a: &AtomicInt) -> Int
+  requires: a.ptr != null
+{
   let p: *Int = a.ptr;
   unsafe { return xiom_atomic_load(p); }
 }
@@ -55,7 +59,9 @@ pub fn atomic_load(a: &AtomicInt) -> Int {
 /// Params: a - the atomic integer; value - the new value.
 /// Complexity: O(1). Thread-safe.
 #[unsafe_direct]
-pub fn atomic_store(a: &mut AtomicInt, value: Int) {
+pub fn atomic_store(a: &mut AtomicInt, value: Int)
+  requires: a.ptr != null
+{
   let p: *Int = a.ptr;
   unsafe { xiom_atomic_store(p, value); }
 }
@@ -65,7 +71,9 @@ pub fn atomic_store(a: &mut AtomicInt, value: Int) {
 /// Returns: the value after the addition.
 /// Complexity: O(1). Thread-safe.
 #[unsafe_direct]
-pub fn atomic_add(a: &mut AtomicInt, delta: Int) -> Int {
+pub fn atomic_add(a: &mut AtomicInt, delta: Int) -> Int
+  requires: a.ptr != null
+{
   let p: *Int = a.ptr;
   var old: Int;
   unsafe { old = xiom_atomic_fetch_add(p, delta); }
@@ -77,7 +85,9 @@ pub fn atomic_add(a: &mut AtomicInt, delta: Int) -> Int {
 /// Returns: the value after the subtraction.
 /// Complexity: O(1). Thread-safe.
 #[unsafe_direct]
-pub fn atomic_sub(a: &mut AtomicInt, delta: Int) -> Int {
+pub fn atomic_sub(a: &mut AtomicInt, delta: Int) -> Int
+  requires: a.ptr != null
+{
   let p: *Int = a.ptr;
   var old: Int;
   unsafe { old = xiom_atomic_fetch_sub(p, delta); }
@@ -89,7 +99,9 @@ pub fn atomic_sub(a: &mut AtomicInt, delta: Int) -> Int {
 /// Returns: the value before the addition.
 /// Complexity: O(1). Thread-safe.
 #[unsafe_direct]
-pub fn atomic_fetch_add(a: &mut AtomicInt, delta: Int) -> Int {
+pub fn atomic_fetch_add(a: &mut AtomicInt, delta: Int) -> Int
+  requires: a.ptr != null
+{
   let p: *Int = a.ptr;
   unsafe { return xiom_atomic_fetch_add(p, delta); }
 }
@@ -99,7 +111,9 @@ pub fn atomic_fetch_add(a: &mut AtomicInt, delta: Int) -> Int {
 /// Returns: the value before the subtraction.
 /// Complexity: O(1). Thread-safe.
 #[unsafe_direct]
-pub fn atomic_fetch_sub(a: &mut AtomicInt, delta: Int) -> Int {
+pub fn atomic_fetch_sub(a: &mut AtomicInt, delta: Int) -> Int
+  requires: a.ptr != null
+{
   let p: *Int = a.ptr;
   unsafe { return xiom_atomic_fetch_sub(p, delta); }
 }
@@ -109,7 +123,9 @@ pub fn atomic_fetch_sub(a: &mut AtomicInt, delta: Int) -> Int {
 /// Returns: the value before the store.
 /// Complexity: O(1). Thread-safe.
 #[unsafe_direct]
-pub fn atomic_swap(a: &mut AtomicInt, value: Int) -> Int {
+pub fn atomic_swap(a: &mut AtomicInt, value: Int) -> Int
+  requires: a.ptr != null
+{
   let p: *Int = a.ptr;
   unsafe { return xiom_atomic_exchange(p, value); }
 }
@@ -120,7 +136,9 @@ pub fn atomic_swap(a: &mut AtomicInt, value: Int) -> Int {
 /// Returns: true if the exchange was performed.
 /// Complexity: O(1). Thread-safe.
 #[unsafe_direct]
-pub fn atomic_compare_exchange(a: &mut AtomicInt, expected: Int, new: Int) -> Bool {
+pub fn atomic_compare_exchange(a: &mut AtomicInt, expected: Int, new: Int) -> Bool
+  requires: a.ptr != null
+{
   let p: *Int = a.ptr;
   unsafe {
     let old = xiom_atomic_load(p);
@@ -140,7 +158,9 @@ pub type AtomicBool = { ptr: *Int; }
 /// Returns: a new atomic boolean holding `init`.
 /// Complexity: O(1).
 #[unsafe_direct]
-pub fn atomic_bool_new(init: Bool) -> AtomicBool {
+pub fn atomic_bool_new(init: Bool) -> AtomicBool
+  ensures: result.ptr != null
+{
   let p = alloc.alloc(8);
   let iv: Int = if init { 1 } else { 0 };
   unsafe { ptr.write(p as *Int, iv); }
@@ -154,7 +174,9 @@ pub fn atomic_bool_new(init: Bool) -> AtomicBool {
 /// Returns: the current value.
 /// Complexity: O(1). Thread-safe.
 #[unsafe_direct]
-pub fn atomic_bool_load(a: &AtomicBool) -> Bool {
+pub fn atomic_bool_load(a: &AtomicBool) -> Bool
+  requires: a.ptr != null
+{
   let p: *Int = a.ptr;
   unsafe { return xiom_atomic_load(p) != 0; }
 }
@@ -163,7 +185,9 @@ pub fn atomic_bool_load(a: &AtomicBool) -> Bool {
 /// Params: a - the atomic boolean; value - the new value.
 /// Complexity: O(1). Thread-safe.
 #[unsafe_direct]
-pub fn atomic_bool_store(a: &mut AtomicBool, value: Bool) {
+pub fn atomic_bool_store(a: &mut AtomicBool, value: Bool)
+  requires: a.ptr != null
+{
   let iv: Int = if value { 1 } else { 0 };
   let p: *Int = a.ptr;
   unsafe { xiom_atomic_store(p, iv); }
@@ -174,7 +198,9 @@ pub fn atomic_bool_store(a: &mut AtomicBool, value: Bool) {
 /// Returns: the value before the store.
 /// Complexity: O(1). Thread-safe.
 #[unsafe_direct]
-pub fn atomic_bool_swap(a: &mut AtomicBool, value: Bool) -> Bool {
+pub fn atomic_bool_swap(a: &mut AtomicBool, value: Bool) -> Bool
+  requires: a.ptr != null
+{
   let iv: Int = if value { 1 } else { 0 };
   let p: *Int = a.ptr;
   unsafe { return xiom_atomic_exchange(p, iv) != 0; }
@@ -188,7 +214,9 @@ pub type AtomicPtr = { ptr: *Int; }
 /// Returns: a new atomic pointer holding `ptr`.
 /// Complexity: O(1).
 #[unsafe_direct]
-pub fn atomic_ptr_new[T](ptr: Int) -> AtomicPtr {
+pub fn atomic_ptr_new[T](ptr: Int) -> AtomicPtr
+  ensures: result.ptr != null
+{
   let p = alloc.alloc(8);
   unsafe { ptr.write(p as *Int, ptr); }
   unsafe {
@@ -201,7 +229,9 @@ pub fn atomic_ptr_new[T](ptr: Int) -> AtomicPtr {
 /// Returns: the current address.
 /// Complexity: O(1). Thread-safe.
 #[unsafe_direct]
-pub fn atomic_ptr_load(a: &AtomicPtr) -> Int {
+pub fn atomic_ptr_load(a: &AtomicPtr) -> Int
+  requires: a.ptr != null
+{
   let p: *Int = a.ptr;
   unsafe { return xiom_atomic_load(p); }
 }
@@ -210,7 +240,9 @@ pub fn atomic_ptr_load(a: &AtomicPtr) -> Int {
 /// Params: a - the atomic pointer; ptr - the new address.
 /// Complexity: O(1). Thread-safe.
 #[unsafe_direct]
-pub fn atomic_ptr_store(a: &mut AtomicPtr, ptr: Int) {
+pub fn atomic_ptr_store(a: &mut AtomicPtr, ptr: Int)
+  requires: a.ptr != null
+{
   let p: *Int = a.ptr;
   unsafe { xiom_atomic_store(p, ptr); }
 }

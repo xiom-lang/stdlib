@@ -32,7 +32,8 @@ REL-20261010-1549-stdlib-4; shape-mismatch &Vec AV =
 REL-20261010-1549-stdlib-5; catalog payload reads =
 REL-20261010-1549-stdlib-6; cross-type callbacks =
 REL-20261010-1549-stdlib-7; shared-compiler-build drift =
-REL-20261010-1549-stdlib-8 (all to: compiler, kind bug). Status lives
+REL-20261010-1549-stdlib-8 (all to: compiler, kind bug); Mutex builtin
+shadow = REL-20261011-1456-stdlib (to: compiler, kind bug). Status lives
 on the bus; this section closes an entry only when its item closes.
 The stdlib algorithm entry (polygon) is not cross-lane and stays here.
 
@@ -54,8 +55,9 @@ below), found by the p_wave101_shapes.xi probe. Wave 102 fixed the
 json_parse depth cap stdlib-side (first entry below; its repro was
 promoted to `tools/probes/`). Wave 103 re-triaged PULSE's C-PULSE-17 to
 the inline payload-index corruption and added the context-dependent
-Path.exists crash (first two open entries below); findings now 16
-Current: 15 compiler, 1 stdlib.
+Path.exists crash (first two open entries below); wave 110 added the
+compiler Mutex builtin shadow (entry below); findings now 17 Current:
+16 compiler, 1 stdlib.
 
 **Open finding 2026-10-10 (compiler v0.64.2): a Path.exists + trailing
 println sequence dies with an illegal-instruction exit.** The wave-103
@@ -84,6 +86,23 @@ rc 0; the control and bound-control legs pass first); relayed as
 `REL-20261010-1609-stdlib` (to compiler). Same family as the catalog
 payload-read entry below; consumer workaround: bind the payload before
 indexing.
+
+**Open finding 2026-10-11 (compiler v0.64.2): the builtin Mutex
+deadlock-detection names shadow the stdlib generic `xiom.sync.Mutex[T]`
+in user code.** Found while building the wave-110 sync probe: the parent
+module's documented `Mutex.new(value)` / `Mutex.lock()` / `MutexGuard`
+surface cannot be called at all -- `sync.Mutex.new(42)` fails T001
+("'new' expects 0 argument(s), found 1") and the zero-arg form binds the
+compiler's v0.56 I3 builtin (`Mutex.new/lock/unlock`, registered
+globally in `xiom-check`; it returns a nonzero Int, not a `Mutex[T]`).
+Same family as the wave-106 co-import collision and the scalar `.hash()`
+identity, but a different mechanism: a compiler builtin winning over a
+module-qualified stdlib type rather than a co-import collision. Repro:
+`tools/known_failures/p_sync_mutex_builtin_shadow.xi` (compile rc 1 on
+v0.64.2; expected rc 0); relayed as `REL-20261011-1456-stdlib` (to
+compiler). Stdlib side: parent `Mutex.new`/`Mutex.lock` stay clause-free
+(unprobeable from user code) until the fix; consumers keep using
+`xiom.sync.mutex.SyncMutex`.
 
 **RESOLVED 2026-10-10 (wave 102, stdlib-side fix): `json_parse` had no
 recursion depth cap -- deep untrusted input killed the process.** The

@@ -29,7 +29,11 @@ pub type Channel[T] = {
 /// Params: capacity - maximum queued items, or 0 for unbounded.
 /// Returns: a new empty open channel.
 /// Complexity: O(1).
-pub fn channel_new[T](capacity: Int) -> Channel[T] {
+pub fn channel_new[T](capacity: Int) -> Channel[T]
+  ensures: (capacity < 0) => (result.cap == 0)
+  ensures: (capacity >= 0) => (result.cap == capacity)
+  ensures: result.closed == false
+{
   var c = capacity;
   if c < 0 {
     c = 0;
@@ -41,7 +45,9 @@ pub fn channel_new[T](capacity: Int) -> Channel[T] {
 /// Params: ch - the channel; item - the value to send.
 /// Returns: Ok(()) on success, Err("channel closed") if closed.
 /// Complexity: O(1) per poll; blocks while the channel is full.
-pub fn channel_send[T](ch: &mut Channel[T], item: T) -> Result[Unit, Str] {
+pub fn channel_send[T](ch: &mut Channel[T], item: T) -> Result[Unit, Str]
+  ensures: result is Err => ch.closed == true
+{
   var done = false;
   while !done {
     if ch.closed {
@@ -76,7 +82,9 @@ pub fn channel_try_send[T](ch: &mut Channel[T], item: T) -> Bool {
 /// Params: ch - the channel.
 /// Returns: Some(item) in FIFO order, None if closed and drained.
 /// Complexity: O(n) shift per pop; blocks while empty.
-pub fn channel_recv[T](ch: &mut Channel[T]) -> Option[T] {
+pub fn channel_recv[T](ch: &mut Channel[T]) -> Option[T]
+  ensures: result is None => ch.closed == true && ch.items.len() == 0
+{
   while ch.items.len() == 0 && !ch.closed {
     unsafe { xiom_thread_sleep_ms(1); }
   }
@@ -114,7 +122,9 @@ pub fn channel_try_recv[T](ch: &mut Channel[T]) -> Option[T] {
 /// Mark the channel closed; pending sends fail, queued items stay readable.
 /// Params: ch - the channel.
 /// Complexity: O(1).
-pub fn channel_close[T](ch: &mut Channel[T]) {
+pub fn channel_close[T](ch: &mut Channel[T])
+  ensures: ch.closed == true
+{
   ch.closed = true;
 }
 
@@ -122,7 +132,9 @@ pub fn channel_close[T](ch: &mut Channel[T]) {
 /// Params: ch - the channel.
 /// Returns: whether the channel was closed.
 /// Complexity: O(1).
-pub fn channel_is_closed[T](ch: &Channel[T]) -> Bool {
+pub fn channel_is_closed[T](ch: &Channel[T]) -> Bool
+  ensures: result == ch.closed
+{
   return ch.closed;
 }
 

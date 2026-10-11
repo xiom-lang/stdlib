@@ -2494,6 +2494,44 @@ registry pin, agent recon for the rest)**
   (216.6s), floors144 + doc + module-smoke (497/517, 3476/6204)
   ratchets OK.
 
+**SESSION 2026-10-11 block 115 (wave 110: sync dir 94.9%; Mutex builtin-shadow finding; probe 285th)**
+- Relay round at start: pulled the bus (1442 fixed at ad9169e by the
+  concurrent round; 1453-xvector acked with the quadratic root cause and
+  the byte-lexer fix plan -- recorded as the next-wave top candidate; see
+  block 114 for both). NEW finding filed this session:
+  REL-20261011-1456-stdlib (medium, to compiler) -- the v0.56 I3 builtin
+  Mutex.new/lock/unlock names shadow the stdlib generic
+  xiom.sync.Mutex[T] in user code (`sync.Mutex.new(42)` = T001, zero-arg
+  form binds the builtin and returns Int), so the parent Mutex surface is
+  unreachable; repro tools/known_failures/p_sync_mutex_builtin_shadow.xi
+  (compile rc 1; expected rc 0). Bus commit 1e2e8d0.
+- Wave 110 sync coverage: 70 fns, +70 pub. sync.xi 27 (RwLock
+  new/read/write/try_read/try_write + ReadGuard/WriteGuard drops, Condvar
+  new/wait, Once.new, Barrier.wait + the standalone barrier_wait,
+  AtomicBool/AtomicInt constructors + op guards, cdl_wait_spin, the 8
+  standalone atomic_* helpers), atomics.xi 16 (constructor ensures +
+  ptr-guard requires), mutex.xi 6, rwlock.xi 9, barrier.xi 4 (count >= 1
+  clamp + guard requires), channel.xi 5 (capacity clamp + closed mirrors,
+  send-Err/recv-None closed guards), condvar.xi 3. sync 35.9% -> 94.9%;
+  global 68.5% -> 69.5% (pubCovered 4454 -> 4524, clauses 5923 -> 6031);
+  meter 77.0%; floors147 dumped + wired. Uncovered leaves: parent
+  Mutex.new/Mutex.lock (builtin shadow, not probeable from user code),
+  cdl count_down (the @pre-on-&mut-param aliasing finding forces
+  @pre-free clauses and no post-state claim survives negative latches),
+  channel_try_send/try_recv/select (genuinely racy state claims).
+- Probe p_wave110_shapes.xi (285th, 49 checks) green pre/post on the
+  official pin. NOTE (cap): one compilation importing xiom.sync +
+  xiom.sync.atomics exceeds the compiler's 64 unsafe-direct-block codegen
+  cap (56 + 16 blocks), so the probe covers the parent + five submodule
+  tails and the atomics submodule shape stays locked by
+  smoke_sync_atomics.xi + smoke_sync_arc_battery.xi in the same battery.
+- Battery on the official v0.64.2 archive: corpus 954/954 full (945.5s),
+  probes 285/285 (359.5s), modules 509/509 (269.6s), barename 0/509
+  (276.7s), floors147 + doc + module-smoke (497/517, 3476/6204) ratchets
+  OK. Findings now 17 Current (16 compiler, 1 stdlib). Next: the xvector
+  json quadratic (byte-lexer fix) as the top candidate item, then async
+  coverage; 1052 post-fix actions when the resolver/isolation batch lands.
+
 **SESSION 2026-10-11 block 114 (doorbell 15:00Z: catalog-gate signal fix + xvector json quadratic root-caused)**
 - REL-20261011-1442-compiler (catalog corpus gate red): FIXED at
   `ad9169e` -- signal_raise uses the fully qualified `xiom.env.FAMILY`,
