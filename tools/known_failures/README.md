@@ -59,7 +59,15 @@ promoted to `tools/probes/`). Wave 103 re-triaged PULSE's C-PULSE-17 to
 the inline payload-index corruption and added the context-dependent
 Path.exists crash (first two open entries below); wave 110 added the
 compiler Mutex builtin shadow and wave 111 the trailing-match checker
-finding (entries below); findings now 18 Current: 17 compiler, 1 stdlib.
+finding (entries below); findings now 17 Current: 16 compiler, 1 stdlib.
+
+Status check 2026-10-11 (compiler v0.64.3, OFFICIAL windows-x64 archive,
+sha256 5140b863...): all 27 repro files below re-compiled and re-run.
+Newly RESOLVED: the generic by-reference finding (entry below) -- both
+repros at expected rc 0 (3x each). Every other Current repro is red with
+the same rc class as the v0.64.2 sweep; `p_iter_range_contains_c001.xi`
+passed 5/5 (the old flaky C001 state did not reproduce). Row-by-row
+verdicts filed on the compiler's release check (bus commit fdb9e4b).
 
 **Open finding 2026-10-10 (compiler v0.64.2): a Path.exists + trailing
 println sequence dies with an illegal-instruction exit.** The wave-103
@@ -182,25 +190,20 @@ historical R49 entry-snapshot residual (see the
 `tools/known_failures/p_mut_param_field_pre.xi` (rc 1 on v0.64.1;
 expected rc 0).
 
-**Open finding 2026-10-08 (compiler v0.64.1): generic by-reference params
-(`&Option[T]`/`&Result[T, E]`, bounded `&Slice[T]`) read wrong or fail
-codegen.** Found while probing the wave-94 core clauses:
-`core.option_is_some(&o)` returns false for `Some(4)` while the direct
-`o.is_some` is true; `option_is_none`/`result_is_ok`/`result_is_err`
-silently misread the same way (generic `&Vec[T]` params such as
-`cmp.min_of_vec` are correct on the pin). The Slice surface has the same
-family of failures: `is_sorted`/`contains`/`min_slice`/`max_slice`
-(`T: Ord`/`T: Eq` over `&Slice[T]`) fail
-`error[C001]: type 'Slice' does not implement 'Ord': missing method
-'compare'` (the bound lands on the argument's full type), the annotated
-`Slice[Int]` local from `array.as_slice` reads `.len()` wrong, and
-`core.slice_len` is wrong/crashes depending on annotation. Repros:
-`tools/known_failures/p_generic_byref_option.xi` (rc 2 on v0.64.1;
-expected rc 0) and `tools/known_failures/p_slice_bound_generic_c001.xi`
-(compile-fail; expected rc 0). Stdlib impact: those four Option/Result
-standalone queries and the whole Slice-param helper set
+**RESOLVED 2026-10-11 (compiler v0.64.3): generic by-reference params
+(`&Option[T]`/`&Result[T, E]`, bounded `&Slice[T]`).** Verified on the
+official v0.64.3 windows-x64 archive (sha256 5140b863..., digest-checked
+download): `p_generic_byref_option.xi` 3x rc 0 (was rc 2 on v0.64.1) and
+`p_slice_bound_generic_c001.xi` 3x rc 0 (was compile-fail) -- both at the
+expected rc 0. History: `core.option_is_some(&o)` returned false for
+`Some(4)` on v0.64.1, `option_is_none`/`result_is_ok`/`result_is_err`
+misread the same way, and the `&Slice[T]` helper set failed C001
+`type 'Slice' does not implement 'Ord'` because the bound landed on the
+argument's full type. Stdlib follow-up (next coverage wave): the four
+Option/Result standalone queries and the Slice-param helper set
 (`is_sorted`/`all`/`none`/`contains`/`slice_*`/`min_slice`/`max_slice`/
-`sum_slice`) stay clause-free until this resolves.
+`sum_slice`) can now take clauses; both repros stay in
+`tools/known_failures/` as regression locks (expect rc 0).
 
 **Open finding 2026-10-08 (compiler v0.64.0): cross-module type paths and
 method-style foreign calls.** Two resolution traps found while landing the

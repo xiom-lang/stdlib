@@ -28,7 +28,7 @@ gates flip:
 7. Module-smoke ratchet green -- MET (497/517 modules, 3477/6202 fns).
 8. Contract coverage 100% (every public fn carries clauses) -- OPEN (69.5%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
-   OPEN (18: 17 compiler, 1 stdlib).
+   OPEN (17: 16 compiler, 1 stdlib).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
 
 Meter formula: MET gates count 1.0; gate 8 counts its current
@@ -124,7 +124,20 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
    checker finding REL-20261011-1626-stdlib (trailing bare match after a
    Vec.push; findings 18 Current). Next candidate items: the cut
    mechanics (package.xi categories + stage, pin decision) and the
-   compiler release-check verdicts.
+   compiler release-check verdicts. RC round 2026-10-11 (block 118): the
+   OFFICIAL v0.64.3 windows-x64 archive was downloaded + digest-verified
+   (sha256 5140b863...), all 27 known_failures repros were re-run on it,
+   and the 15 stdlib rows of the compiler-v0.64.3 release check were
+   filled (bus commit fdb9e4b). Headline: REL-20261010-1548-stdlib-5
+   (generic by-ref Option/Result/Slice) is VERIFIED FIXED on v0.64.3 --
+   `p_generic_byref_option.xi` and `p_slice_bound_generic_c001.xi` both
+   3x rc 0 -- so findings drop to 17 Current (16 compiler, 1 stdlib) and
+   the held-back Option/Result queries + Slice-param helpers can take
+   clauses in the next coverage wave. All other open findings remain red
+   on v0.64.3 (repro rcs in the check file); -1548-stdlib-2 awaits the
+   next batch (m254). Next for the cut: the v0.64.3 pin battery on the
+   frozen tree, then the version/notes mechanics and the compiler-lane OK
+   to tag.
 BINARY NOTE: the shared local build path
 `E:\xiom-lang\xiom\target\release\xiom.exe` was rebuilt past the pin
 (compiler main da7798da m252) and fails four corpus smokes; use the

@@ -2494,6 +2494,42 @@ registry pin, agent recon for the rest)**
   (216.6s), floors144 + doc + module-smoke (497/517, 3476/6204)
   ratchets OK.
 
+**SESSION 2026-10-11 block 118 (RC round: official v0.64.3 archive verified; 27-repro sweep; 15 release-check rows filed; 1548-stdlib-5 fixed)**
+- Downloaded + digest-verified the official v0.64.3 windows-x64 archive
+  (sha256 5140b863... matches the GitHub release asset; extracted to
+  %TEMP%\kilo\stdlib_ws\v0.64.3, `xiom.exe --version` = v0.64.3). This is
+  the pin-candidate build for the next cut and the compiler's released
+  binary.
+- Full sweep: all 27 `tools/known_failures/*.xi` re-compiled and re-run on
+  v0.64.3. NEWLY FIXED: `p_generic_byref_option.xi` 3x rc 0 (was rc 2 on
+  v0.64.1) and `p_slice_bound_generic_c001.xi` 3x rc 0 (was compile-fail)
+  -- the 2026-10-08 generic by-ref Option/Result/Slice finding is
+  resolved (entry moved to RESOLVED in the known_failures README;
+  findings 18 -> 17 Current: 16 compiler + 1 stdlib). Follow-up for the
+  next coverage wave: the four Option/Result standalone queries and the
+  Slice-param helper set (is_sorted/all/none/contains/slice_*/min_slice/
+  max_slice/sum_slice) can now take clauses; both repros stay as
+  regression locks.
+- Still red on v0.64.3 (rc/state): tuple-elem rc 1 (m254 next batch),
+  tostring-import rc 1, mut-param @pre rc 1, alias-path + foreign-method
+  compile-fail, ensures-isok rc 1, geom Box compile-fail, geom matrix
+  rc 4, float-vec clause index rc 1, shape-mismatch AV 0xC0000005,
+  cross-type callbacks (map/core_map rc 41, sortbykey rc 1; fnptr shape
+  green), polyhedra hull rc 1 (ours), payload-index concat rc 1,
+  Path.exists+println 0xC000001D, Mutex builtin shadow + trailing-match
+  compile-fail (ours to compiler). Locks green: array_zip, sibling-dup,
+  seed-iterator, reflect all_types, slice-bound; `iter_range_contains`
+  passed 5/5 (the old flaky C001 state did not reproduce).
+- Filed the 15 stdlib rows on the compiler's release check
+  (release-checks/compiler-compiler-v0.64.3.md): -1548-stdlib-5 VERIFIED
+  FIXED (close it); -1652/-1701 satisfied (tag-base notes branch pinned by
+  the release); -1559 recorded; every other row still red with repro
+  evidence; -1548-stdlib-2 awaits the m254 archive. Bus commit fdb9e4b.
+- Next: run the full gate battery on the v0.64.3 pin against the frozen
+  tree (checklist item 5), then the cut mechanics (version bump +
+  COMPILER_VERSION v0.64.3 + release-notes/v0.64.4.md + CHANGELOG) and the
+  compiler-lane OK before any tag.
+
 **SESSION 2026-10-11 block 117 (post-wave-111: xvector verified the committed hashes; package.xi registry metadata landed; RC prep continues)**
 - Relay round 16:37Z: xvector created two items after the fix --
   REL-20261011-1543-xvector (str_bytes root cause; acceptance = both
