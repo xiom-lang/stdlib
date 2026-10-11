@@ -2327,6 +2327,16 @@ registry pin, agent recon for the rest)**
   279/279 (304.7s), modules 509/509 (184.4s), barename 0/509 (263.1s),
   floors142 + doc + module-smoke (497/517, 3476/6204) ratchets OK.
 
+**SESSION 2026-10-11 block 105 (doorbell 01:00Z: pulse-2 + bindings-9/10 verified-closed; no new inbound)**
+- Reporter-side verifications: REL-20261010-2122-pulse-2 CLOSED by
+  pulse after the read_file_bytes payload-free fix (dd352f6) -- the
+  static-site nested read works; REL-20261010-1548-bindings-9 (W-5
+  Vec.with_len, 5b7bf8f) and -bindings-10 (dl out-param recipe,
+  c146cc1) CLOSED by bindings. All wave-98/102/103/104 fixes are now
+  reporter-verified except the benchmark pair (fixed at 633de49,
+  awaiting their re-runs) and the acked runtime families.
+- No new inbound items this check; bus in sync.
+
 **SESSION 2026-10-10 block 104 (doorbell 23:00Z: website-10 verified-closed; pulse-2 nested-read trap fixed -- read_file_bytes clause made payload-free)**
 - REL-20261010-1549-website-10 (no-NASM crypto stubs) was VERIFIED and
   CLOSED by the website lane after the concurrent session's portable
