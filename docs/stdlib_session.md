@@ -2342,7 +2342,7 @@ registry pin, agent recon for the rest)**
   queue moves. The compiler-owned 1630/1658 remain stale-open
   (superseded by the v0.64.3 release pin).
 
-**SESSION 2026-10-11 block 107 (wave 106: hash modules -- private-symbol collision fix-first + two compiler findings; pulse-3/4 fixed as already-delivered)**
+**SESSION 2026-10-11 block 108 (wave 106: hash modules -- private-symbol collision fix-first + two compiler findings; pulse-3/4 fixed as already-delivered)**
 - Bus round at start: pulse-3 (server_parse_request) and pulse-4
   (net.write_all) were stale migrated asks already delivered at ec64dec
   -- both moved acked -> fixed with the delivery refs; the doorbell's
