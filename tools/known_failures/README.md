@@ -199,10 +199,10 @@ expected rc 0. History: `core.option_is_some(&o)` returned false for
 `Some(4)` on v0.64.1, `option_is_none`/`result_is_ok`/`result_is_err`
 misread the same way, and the `&Slice[T]` helper set failed C001
 `type 'Slice' does not implement 'Ord'` because the bound landed on the
-argument's full type. Stdlib follow-up (next coverage wave): the four
+argument's full type. Stdlib follow-up landed in wave 112: the four
 Option/Result standalone queries and the Slice-param helper set
 (`is_sorted`/`all`/`none`/`contains`/`slice_*`/`min_slice`/`max_slice`/
-`sum_slice`) can now take clauses; both repros stay in
+`sum_slice`) took 24 clauses (core 45.8% -> 58.0%); both repros stay in
 `tools/known_failures/` as regression locks (expect rc 0).
 
 **Open finding 2026-10-08 (compiler v0.64.0): cross-module type paths and

@@ -1,10 +1,12 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
-**77.0% -- 7 of 10 gates complete; gate 8 at 69.5% (partial credit) and
-gates 9-10 discrete.** (Compiler pin: **v0.64.2**.)
+**77.0% -- 7 of 10 gates complete; gate 8 at 69.8% (partial credit) and
+gates 9-10 discrete.** (Compiler pin: in-tree **v0.64.2**; official
+**v0.64.3** archive is the candidate pin for the next cut -- all recent
+batteries run on it.)
 **Gates: corpus 954/954 full (C001 carve-outs retired on v0.63.1; new
 TcpStream loopback and uuencode roundtrip smokes added), modules 509/509,
-probes 286/286, barename 0/509.**
+probes 287/287, barename 0/509.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -14,7 +16,7 @@ gates flip:
    full, no carve-outs (C001 fixed by 4bf8cf1e; 20/20 + 20/20 stress).
    lz4 is fixed by m190 and stayed in the gate; the new TcpStream loopback
    smoke locks m196.
-3. Probe corpus green -- MET (286/286 on v0.64.2, incl. the promoted
+3. Probe corpus green -- MET (287/287 on v0.64.3, incl. the promoted
    regression locks (rvalue float Vec index, multipart parse name, iter
    forwardref), the v0.64.1 pin probe p_pin0641_iter_shapes.xi, the
    wave-77 stats probe, the Pulse hardening probe, the 1052 co-import
@@ -23,21 +25,23 @@ gates flip:
    wave-98..110 probes), the io byte-fidelity/CRLF lock and the
    fs_remove lock).
 4. Strict bare-name scan clean -- MET (0/509).
-5. Coverage ratchet green -- MET (floors147).
+5. Coverage ratchet green -- MET (floors148).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (497/517 modules, 3477/6202 fns).
-8. Contract coverage 100% (every public fn carries clauses) -- OPEN (69.5%).
+8. Contract coverage 100% (every public fn carries clauses) -- OPEN (69.8%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
    OPEN (17: 16 compiler, 1 stdlib).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
 
 Meter formula: MET gates count 1.0; gate 8 counts its current
-pub-with-clause fraction (69.5% -> 0.695); gates 9 and 10 get no partial
+pub-with-clause fraction (69.8% -> 0.698); gates 9 and 10 get no partial
 credit (discrete). Update the percentage and the gate-8 fraction in the
 same commit as each floors dump so the meter moves smoothly toward 80%.
 
 Authoritative order: the gates above, then the updates below newest-first.
-Current state: compiler pin **v0.64.2** (combined release, tag c51170a6);
+Current state: compiler pin **v0.64.2** in-tree (combined release, tag
+c51170a6; the official **v0.64.3** archive is the candidate pin -- the
+next cut flips COMPILER_VERSION to it or newer per the compiler lane);
 **stdlib-v0.64.3 RELEASED 2026-10-09** (release run 37962367989 full
 success; assets xiom-std-0.64.3.tar.gz + SHA256SUMS) and the **REGISTRY IS
 LIVE** (xiom-std 0.64.3 signed, sha256
@@ -135,13 +139,20 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
    the held-back Option/Result queries + Slice-param helpers can take
    clauses in the next coverage wave. All other open findings remain red
    on v0.64.3 (repro rcs in the check file); -1548-stdlib-2 awaits the
-   next batch (m254). Next for the cut: the v0.64.3 pin battery on the
-   frozen tree, then the version/notes mechanics and the compiler-lane OK
-   to tag.
+   next batch (m254). Wave 112 (block 119) covered the Option/Result
+   standalone queries and the Slice-param helper set, unblocked by the
+   v0.64.3 generic by-reference fix (16 fns, +24 clauses; core 45.8% ->
+   58.0%, global 69.8%; probe 287th) with the battery green on v0.64.3:
+   corpus 954/954 (673.6s), probes 287/287 (222.1s), modules 509/509,
+   barename 0/509, floors148 + ratchets OK. Next for the cut: the
+   version/pin/CHANGELOG mechanics on the compiler's go (1731-compiler-2
+   pin protocol) and the wave-106 revert at the v0.64.4 archive.
 BINARY NOTE: the shared local build path
 `E:\xiom-lang\xiom\target\release\xiom.exe` was rebuilt past the pin
-(compiler main da7798da m252) and fails four corpus smokes; use the
-official archive binary `%TEMP%\kilo\stdlib_ws\v0.64.2\bin\xiom.exe`.
+(compiler main da7798da m252) and fails four corpus smokes; waves now run
+on the official v0.64.3 archive
+`%TEMP%\kilo\stdlib_ws\v0.64.3\bin\xiom.exe` (sha256 5140b863...), with
+the v0.64.2 archive kept for comparison.
 
 ## Project Pulse relay (web-framework lane) -- 2026-10-05
 

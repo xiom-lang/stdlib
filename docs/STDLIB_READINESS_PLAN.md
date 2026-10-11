@@ -1629,8 +1629,29 @@ T1/T2 yields.
         Next: the cut mechanics (package.xi categories + stage, pin
         decision with the compiler lane) and the v0.64.3 release-check
         verdicts.
+        Wave 112 (2026-10-11): the core Option/Result standalone queries
+        and the Slice-param helper set, unblocked by the compiler v0.64.3
+        generic by-reference fix (REL-20261010-1548-stdlib-5 verified on
+        the official archive): 16 fns, +24 clauses -- is_sorted/all/none/
+        contains length claims, slice_len/slice_is_empty/slice_to_vec
+        mirrors, slice_first/slice_get/min_slice/max_slice Some-None
+        branch guards, sum_slice empty claim, and the four queries with
+        canonical parameter is-guards (o is Some/None, r is Ok/Err -- the
+        guarded form is the one that works; the result.is_ok implication
+        form stays the open finding 1548-stdlib-7). core 45.8% -> 58.0%;
+        global 69.5% -> 69.8% (pubCovered 4523 -> 4539, clauses 6032 ->
+        6056); meter 77.0%; floors148. Probe p_wave112_shapes.xi (287th)
+        green pre/post on the pin; no empty-slice literal is constructible
+        on v0.64.3 (Str.as_bytes does not resolve; M33 [0]/[] arrays lose
+        the const N), so the zero-length clause branches stay
+        compile-validated. Battery on the v0.64.3 pin: corpus 954/954
+        (673.6s), probes 287/287 (222.1s), modules 509/509 (201.9s),
+        barename 0/509 (296.8s), floors148 + doc + module-smoke ratchets
+        OK. Next: the cut mechanics on the compiler's go (pin protocol
+        1731-compiler-2), the wave-106 revert at the v0.64.4 archive, and
+        the async/num/math/time/iter dirs.
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors147.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors148.json
         tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;

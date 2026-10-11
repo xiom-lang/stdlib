@@ -2494,6 +2494,46 @@ registry pin, agent recon for the rest)**
   (216.6s), floors144 + doc + module-smoke (497/517, 3476/6204)
   ratchets OK.
 
+**SESSION 2026-10-11 block 119 (wave 112: core Option/Result + Slice helpers, 16 fns; compiler six-batch closing -- 1052 CLOSED)**
+- Compiler status (1731-compiler broadcasts, 17:31Z): the v0.64.4
+  six-batch program is closing -- batches 1-5 done (m261-m270), batch 6
+  (Float32 slot stores) in flight; the stack b443e970..HEAD is staged for
+  the doorbell push (unpushed at note time). Batch 1 (m261/m262) CLOSES
+  our 1052 (module-private symbols) and orbitdb 1124; batch 5 (m270)
+  closes the pulse site-mode AVs. Their 1731-compiler-2 asks us for: the
+  v0.64.4 candidate pin (tag/branch + sha) when THEY cut; a clean
+  v0.64.4 fragment (done, validated); the WAVE-106 REVERT (metro _K0.._K3
+  natural names + witness re-verify at the archive); and re-verification
+  of the open release-check rows at the archive. Acked with our status
+  (93e84bc). Workarounds stay until the archive lands and the witness is
+  re-verified.
+- Wave 112 coverage: the core Option/Result standalone queries and the
+  Slice-param helper set, unblocked by the verified v0.64.3 generic
+  by-reference fix: 16 fns, +24 clauses. Forms: input-side length claims
+  for is_sorted/all/none/contains; direct mirrors for
+  slice_len/slice_is_empty/slice_to_vec; Some-None branch guards for
+  slice_first/slice_get/min_slice/max_slice; the empty-sum claim for
+  sum_slice; canonical PARAMETER is-guards for the four queries
+  ((o is Some) => (result == true) etc. -- tested on v0.64.3 before
+  applying; the result.is_ok implication form remains the open finding).
+  core 45.8% -> 58.0%; global 69.5% -> 69.8% (pubCovered 4523 -> 4539,
+  clauses 6032 -> 6056); meter 77.0%; floors148 dumped + wired
+  (workflows, tools/README, plan Ratchet, queue gates).
+- Probe p_wave112_shapes.xi (287th) green pre/post on the official
+  v0.64.3 archive; zero-length branches are compile-validated only (no
+  constructible empty Slice on the pin: Str.as_bytes never resolves --
+  no call sites anywhere; M33 [0]/[] array limitations). Targeted
+  core/slice/array smokes green; battery: corpus 954/954 (673.6s),
+  probes 287/287 (222.1s), modules 509/509 (201.9s), barename 0/509
+  (296.8s), ratchets OK.
+- Next: hold for the compiler's doorbell push/archive, then: run the
+  witness branch (witness/1052-metro-rename-reverted) on the new pin --
+  if green, land the metro revert on main + re-verify both locks; re-run
+  the open release-check rows; then the cut commit (version 0.64.4 +
+  COMPILER_VERSION + CHANGELOG) and publish the candidate per the pin
+  protocol. Also queued: str_chars/str_code_points (same strnlen family),
+  async coverage.
+
 **SESSION 2026-10-11 block 118 (RC round: official v0.64.3 archive verified; 27-repro sweep; 15 release-check rows filed; 1548-stdlib-5 fixed)**
 - Downloaded + digest-verified the official v0.64.3 windows-x64 archive
   (sha256 5140b863... matches the GitHub release asset; extracted to

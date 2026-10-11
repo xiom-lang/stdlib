@@ -258,7 +258,9 @@ pub fn to_int_from_char(c: Char) -> Int {
 }
 
 /// === Collection contract methods ===
-pub fn is_sorted[T: Ord](items: &Slice[T]) -> Bool {
+pub fn is_sorted[T: Ord](items: &Slice[T]) -> Bool
+  ensures: (items.len() <= 1) => (result == true)
+{
   var i: Int = 1;
   while i < items.len() {
     if items[i - 1].compare(items[i]) > 0 {
@@ -270,7 +272,9 @@ pub fn is_sorted[T: Ord](items: &Slice[T]) -> Bool {
 }
 
 /// True when every element satisfies `predicate` (true when empty).
-pub fn all[T](items: &Slice[T], predicate: fn(T) -> Bool) -> Bool {
+pub fn all[T](items: &Slice[T], predicate: fn(T) -> Bool) -> Bool
+  ensures: (items.len() == 0) => (result == true)
+{
   var i: Int = 0;
   while i < items.len() {
     if !predicate(items[i]) {
@@ -282,7 +286,9 @@ pub fn all[T](items: &Slice[T], predicate: fn(T) -> Bool) -> Bool {
 }
 
 /// True when no element satisfies `predicate`.
-pub fn none[T](items: &Slice[T], predicate: fn(T) -> Bool) -> Bool {
+pub fn none[T](items: &Slice[T], predicate: fn(T) -> Bool) -> Bool
+  ensures: (items.len() == 0) => (result == true)
+{
   var i: Int = 0;
   while i < items.len() {
     if predicate(items[i]) {
@@ -294,7 +300,9 @@ pub fn none[T](items: &Slice[T], predicate: fn(T) -> Bool) -> Bool {
 }
 
 /// True when `value` occurs in the slice.
-pub fn contains[T: Eq](items: &Slice[T], value: T) -> Bool {
+pub fn contains[T: Eq](items: &Slice[T], value: T) -> Bool
+  ensures: (items.len() == 0) => (result == false)
+{
   var i: Int = 0;
   while i < items.len() {
     if items[i].eq(value) {
@@ -1266,19 +1274,26 @@ pub fn int_to_char_safe(n: Int) -> Option[Char]
 
 /// Returns the number of elements in the slice.
 /// Complexity: O(1). Thread-safe: reads immutable shared data.
-pub fn slice_len[T](s: &Slice[T]) -> Int {
+pub fn slice_len[T](s: &Slice[T]) -> Int
+  ensures: result == s.len()
+{
   return s.len();
 }
 
 /// Returns `true` if the slice has zero elements.
 /// Complexity: O(1). Thread-safe: reads immutable shared data.
-pub fn slice_is_empty[T](s: &Slice[T]) -> Bool {
+pub fn slice_is_empty[T](s: &Slice[T]) -> Bool
+  ensures: result == (s.len() == 0)
+{
   return s.len() == 0;
 }
 
 /// Returns the first element of the slice, or `None` if empty.
 /// Complexity: O(1). Thread-safe: reads immutable shared data.
-pub fn slice_first[T](s: &Slice[T]) -> Option[T] {
+pub fn slice_first[T](s: &Slice[T]) -> Option[T]
+  ensures: (s.len() == 0) => (result is None)
+  ensures: (s.len() > 0) => (result is Some)
+{
   if s.len() == 0 {
     return None;
   };
@@ -1287,7 +1302,10 @@ pub fn slice_first[T](s: &Slice[T]) -> Option[T] {
 
 /// Returns the element at index `i`, or `None` if out of bounds.
 /// Complexity: O(1). Thread-safe: reads immutable shared data.
-pub fn slice_get[T](s: &Slice[T], i: Int) -> Option[T] {
+pub fn slice_get[T](s: &Slice[T], i: Int) -> Option[T]
+  ensures: (i < 0 || i >= s.len()) => (result is None)
+  ensures: (i >= 0 && i < s.len()) => (result is Some)
+{
   if i >= 0 && i < s.len() {
     return Some(s[i]);
   };
@@ -1296,7 +1314,9 @@ pub fn slice_get[T](s: &Slice[T], i: Int) -> Option[T] {
 
 /// Copies all elements from the slice into a new `Vec[T]`.
 /// Complexity: O(n) time and memory. Thread-safe: reads immutable shared data.
-pub fn slice_to_vec[T](s: &Slice[T]) -> Vec[T] {
+pub fn slice_to_vec[T](s: &Slice[T]) -> Vec[T]
+  ensures: result.len() == s.len()
+{
   var result = Vec[T].new();
   var i: Int = 0;
   while i < s.len() {
@@ -1311,7 +1331,10 @@ pub fn slice_to_vec[T](s: &Slice[T]) -> Vec[T] {
 /// Finds the minimum element in the slice using `Ord.compare`.
 /// Returns `None` if the slice is empty.
 /// Complexity: O(n) comparisons. Thread-safe: reads immutable shared data.
-pub fn min_slice[T: Ord](s: &Slice[T]) -> Option[T] {
+pub fn min_slice[T: Ord](s: &Slice[T]) -> Option[T]
+  ensures: (s.len() == 0) => (result is None)
+  ensures: (s.len() > 0) => (result is Some)
+{
   if s.len() == 0 {
     return None;
   };
@@ -1329,7 +1352,10 @@ pub fn min_slice[T: Ord](s: &Slice[T]) -> Option[T] {
 /// Finds the maximum element in the slice using `Ord.compare`.
 /// Returns `None` if the slice is empty.
 /// Complexity: O(n) comparisons. Thread-safe: reads immutable shared data.
-pub fn max_slice[T: Ord](s: &Slice[T]) -> Option[T] {
+pub fn max_slice[T: Ord](s: &Slice[T]) -> Option[T]
+  ensures: (s.len() == 0) => (result is None)
+  ensures: (s.len() > 0) => (result is Some)
+{
   if s.len() == 0 {
     return None;
   };
@@ -1347,7 +1373,9 @@ pub fn max_slice[T: Ord](s: &Slice[T]) -> Option[T] {
 /// Sums all `Int` elements in the slice.
 /// Returns 0 if the slice is empty.
 /// Complexity: O(n). Thread-safe: reads immutable shared data.
-pub fn sum_slice(s: &Slice[Int]) -> Int {
+pub fn sum_slice(s: &Slice[Int]) -> Int
+  ensures: (s.len() == 0) => (result == 0)
+{
   var total: Int = 0;
   var i: Int = 0;
   while i < s.len() {
@@ -1361,13 +1389,19 @@ pub fn sum_slice(s: &Slice[Int]) -> Int {
 
 /// Returns `true` if the option is `Some`.
 /// Complexity: O(1). Thread-safe: reads immutable shared data.
-pub fn option_is_some[T](o: &Option[T]) -> Bool {
+pub fn option_is_some[T](o: &Option[T]) -> Bool
+  ensures: (o is Some) => (result == true)
+  ensures: (o is None) => (result == false)
+{
   return o.is_some;
 }
 
 /// Returns `true` if the option is `None`.
 /// Complexity: O(1). Thread-safe: reads immutable shared data.
-pub fn option_is_none[T](o: &Option[T]) -> Bool {
+pub fn option_is_none[T](o: &Option[T]) -> Bool
+  ensures: (o is None) => (result == true)
+  ensures: (o is Some) => (result == false)
+{
   return !o.is_some;
 }
 
@@ -1375,13 +1409,19 @@ pub fn option_is_none[T](o: &Option[T]) -> Bool {
 
 /// Returns `true` if the result is `Ok`.
 /// Complexity: O(1). Thread-safe: reads immutable shared data.
-pub fn result_is_ok[T, E](r: &Result[T, E]) -> Bool {
+pub fn result_is_ok[T, E](r: &Result[T, E]) -> Bool
+  ensures: (r is Ok) => (result == true)
+  ensures: (r is Err) => (result == false)
+{
   return r.is_ok;
 }
 
 /// Returns `true` if the result is `Err`.
 /// Complexity: O(1). Thread-safe: reads immutable shared data.
-pub fn result_is_err[T, E](r: &Result[T, E]) -> Bool {
+pub fn result_is_err[T, E](r: &Result[T, E]) -> Bool
+  ensures: (r is Err) => (result == true)
+  ensures: (r is Ok) => (result == false)
+{
   return !r.is_ok;
 }
 
