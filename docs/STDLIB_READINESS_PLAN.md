@@ -1683,8 +1683,36 @@ T1/T2 yields.
         bound before comparing); smoke_async trio green; floors149 wired
         (ci/heavy/release + tools/README + plan). Parent xiom.async
         surface (AsyncExecutor/Channel methods) reserved for part 2.
+        Wave 115 (2026-10-12): the durability + byte-level IO first drop
+        (REL-20261012-1945-orbitdb / -1945-xvector-2 / -1946-pulse /
+        REL-20261010-1550-packages fsync family): runtime/xiom_runtime.c
+        gained the platform-branched shims xiom_fsync_fd /
+        xiom_fdatasync_fd / xiom_sync_file / xiom_fflush_stdout /
+        xiom_fsync_dir, the fd opens xiom_open_append / xiom_open_read,
+        the fixed-offset byte IO xiom_read_at (zero-fills past EOF) /
+        xiom_write_at (creates + gap-fills), xiom_append_bytes and
+        xiom_truncate_path. Stdlib: fs_ffi.fsync/fdatasync real; sync_io
+        read_exact (4 KiB staging, Err on early EOF), write_all
+        (partial-count loop), sync_fd, fsync_dir (POSIX dir fsync;
+        documented Windows no-op-with-success), open_append/open_read/
+        close_fd; io gains flush_stdout (real fflush), fsync(FILE*
+        handle), read_at (size-clamped), write_at, append_file_bytes,
+        truncate_file. Consumer lock: fixtures verify byte-exact
+        roundtrips; fs_ffi takes RAW fds while io.fsync takes FILE*
+        handles (probe-locked distinction -- a FILE* passed to the fd API
+        truncates and fast-fails). Probe p_wave115_shapes.xi (291st) red
+        pre / green post; smoke_os_sync + smoke_os_ffi rewritten to the
+        new semantics (old stub asserts retired), smoke_os* 8/8 +
+        smoke_io* 20/20 green. Coverage: pubFns 6505 -> 6513, pubCovered
+        4568 -> 4580; global 70.2% -> 70.3%; floors150 wired
+        (ci/heavy/release + tools/README + plan). Runtime caveat:
+        consumers see the new symbols at the next compiler pin that
+        re-vendors stdlib/runtime (XIOM_RUNTIME_DIR on v0.64.4 until
+        then). Still open in the bundle: fcntl locking (P4), mmap (P5),
+        append_line_sync + tail check, fd ftruncate, remove_dir,
+        read_until_eof/read_line_buffered/copy_fd*.
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors149.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors150.json
         tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;

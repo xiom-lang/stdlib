@@ -4764,6 +4764,234 @@ int xiom_close(int fd) {
 #endif
 
 /* ================================================================
+   Durability + byte-level random access (wave 115; REL-20261012-1945-orbitdb
+   / -1945-xvector-2 / -1946-pulse / REL-20261010-1550-packages fsync family).
+   fsync/fdatasync/flush, dir sync, append/read fd opens, fixed-offset
+   read/write, append-bytes and path truncate. Every helper returns
+   0 / count on success and -1 (or NULL) on failure; the stdlib wrappers
+   translate to Result. xiom_read_at zero-fills past EOF (documented);
+   callers clamp to the real file size via xiom_file_size first.
+   ================================================================ */
+
+#ifdef _WIN32
+
+int xiom_fsync_fd(int fd) {
+    return _commit(fd);
+}
+
+int xiom_fdatasync_fd(int fd) {
+    return _commit(fd); /* Windows fd writes have no data-only flush */
+}
+
+int xiom_sync_file(void* stream) {
+    FILE* f = (FILE*)stream;
+    if (fflush(f) != 0) return -1;
+    return _commit(_fileno(f));
+}
+
+int xiom_fflush_stdout(void) {
+    return fflush(stdout);
+}
+
+int xiom_fsync_dir(const char* path) {
+    /* Documented Windows behavior: open the directory with backup
+       semantics; the flush attempt is a best-effort no-op because
+       filesystems reject FlushFileBuffers on directory handles (and NTFS
+       journals directory metadata). Only the open failure is an error. */
+    HANDLE h = CreateFileA(path, GENERIC_READ,
+                           FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                           NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+    if (h == INVALID_HANDLE_VALUE) return -1;
+    FlushFileBuffers(h);
+    CloseHandle(h);
+    return 0;
+}
+
+int xiom_open_append(const char* path) {
+    return _open(path, _O_WRONLY | _O_CREAT | _O_APPEND | _O_BINARY,
+                 _S_IREAD | _S_IWRITE);
+}
+
+int xiom_open_read(const char* path) {
+    return _open(path, _O_RDONLY | _O_BINARY);
+}
+
+int xiom_truncate_path(const char* path, long size) {
+    int fd = _open(path, _O_RDWR | _O_BINARY);
+    if (fd < 0) return -1;
+    int rc = (int)_chsize_s(fd, (long long)size);
+    _close(fd);
+    return rc == 0 ? 0 : -1;
+}
+
+char* xiom_read_at(const char* path, long offset, long count) {
+    int fd = _open(path, _O_RDONLY | _O_BINARY);
+    if (fd < 0) return NULL;
+    if (offset > 0 && _lseeki64(fd, (long long)offset, SEEK_SET) < 0) {
+        _close(fd);
+        return NULL;
+    }
+    char* buf = (char*)malloc(count > 0 ? (size_t)count : 1);
+    if (!buf) {
+        _close(fd);
+        return NULL;
+    }
+    long total = 0;
+    while (total < count) {
+        int n = _read(fd, buf + total, (unsigned int)(count - total));
+        if (n <= 0) break;
+        total += n;
+    }
+    _close(fd);
+    while (total < count) buf[total++] = 0; /* documented zero-fill past EOF */
+    return buf;
+}
+
+long xiom_write_at(const char* path, long offset, const char* buf, long count) {
+    int fd = _open(path, _O_RDWR | _O_CREAT | _O_BINARY, _S_IREAD | _S_IWRITE);
+    if (fd < 0) return -1;
+    if (offset > 0 && _lseeki64(fd, (long long)offset, SEEK_SET) < 0) {
+        _close(fd);
+        return -1;
+    }
+    long total = 0;
+    while (total < count) {
+        int n = _write(fd, buf + total, (unsigned int)(count - total));
+        if (n <= 0) {
+            _close(fd);
+            return -1;
+        }
+        total += n;
+    }
+    _close(fd);
+    return total;
+}
+
+long xiom_append_bytes(const char* path, const char* buf, long count) {
+    int fd = _open(path, _O_WRONLY | _O_CREAT | _O_APPEND | _O_BINARY,
+                   _S_IREAD | _S_IWRITE);
+    if (fd < 0) return -1;
+    long total = 0;
+    while (total < count) {
+        int n = _write(fd, buf + total, (unsigned int)(count - total));
+        if (n <= 0) {
+            _close(fd);
+            return -1;
+        }
+        total += n;
+    }
+    _close(fd);
+    return total;
+}
+
+#else /* POSIX */
+
+#include <fcntl.h>
+
+int xiom_fsync_fd(int fd) {
+    return fsync(fd);
+}
+
+int xiom_fdatasync_fd(int fd) {
+#if defined(__APPLE__)
+    return fsync(fd); /* macOS has no fdatasync */
+#else
+    return fdatasync(fd);
+#endif
+}
+
+int xiom_sync_file(void* stream) {
+    FILE* f = (FILE*)stream;
+    if (fflush(f) != 0) return -1;
+    return fsync(fileno(f));
+}
+
+int xiom_fflush_stdout(void) {
+    return fflush(stdout);
+}
+
+int xiom_fsync_dir(const char* path) {
+    int fd = open(path, O_RDONLY);
+    if (fd < 0) return -1;
+    int rc = fsync(fd);
+    close(fd);
+    return rc;
+}
+
+int xiom_open_append(const char* path) {
+    return open(path, O_WRONLY | O_CREAT | O_APPEND, 0666);
+}
+
+int xiom_open_read(const char* path) {
+    return open(path, O_RDONLY);
+}
+
+int xiom_truncate_path(const char* path, long size) {
+    return truncate(path, (off_t)size);
+}
+
+char* xiom_read_at(const char* path, long offset, long count) {
+    int fd = open(path, O_RDONLY);
+    if (fd < 0) return NULL;
+    if (offset > 0 && lseek(fd, (off_t)offset, SEEK_SET) < 0) {
+        close(fd);
+        return NULL;
+    }
+    char* buf = (char*)malloc(count > 0 ? (size_t)count : 1);
+    if (!buf) {
+        close(fd);
+        return NULL;
+    }
+    long total = 0;
+    while (total < count) {
+        ssize_t n = read(fd, buf + total, (size_t)(count - total));
+        if (n <= 0) break;
+        total += n;
+    }
+    close(fd);
+    while (total < count) buf[total++] = 0;
+    return buf;
+}
+
+long xiom_write_at(const char* path, long offset, const char* buf, long count) {
+    int fd = open(path, O_RDWR | O_CREAT, 0666);
+    if (fd < 0) return -1;
+    if (offset > 0 && lseek(fd, (off_t)offset, SEEK_SET) < 0) {
+        close(fd);
+        return -1;
+    }
+    long total = 0;
+    while (total < count) {
+        ssize_t n = write(fd, buf + total, (size_t)(count - total));
+        if (n <= 0) {
+            close(fd);
+            return -1;
+        }
+        total += n;
+    }
+    close(fd);
+    return total;
+}
+
+long xiom_append_bytes(const char* path, const char* buf, long count) {
+    int fd = open(path, O_WRONLY | O_CREAT | O_APPEND, 0666);
+    if (fd < 0) return -1;
+    long total = 0;
+    while (total < count) {
+        ssize_t n = write(fd, buf + total, (size_t)(count - total));
+        if (n <= 0) {
+            close(fd);
+            return -1;
+        }
+        total += n;
+    }
+    close(fd);
+    return total;
+}
+
+#endif
+
+/* ================================================================
    Threading Support (pthreads / Win32)
    ================================================================ */
 

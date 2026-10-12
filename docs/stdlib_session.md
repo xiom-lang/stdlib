@@ -106,6 +106,15 @@ wave; (4) runtime/wishlist bundle (fsync family, socket options/
 deadline, thread pool, flush_stdout) when the compiler runtime handoff
 allows.
 
+RELEASE-CYCLE DIRECTIVE (owner, 2026-10-12 evening): on the next compiler
+candidate/release, take care of the relay items the compiler will post
+(release checks + pin coordination): pull the bus at each candidate, run
+the 27-repro re-verify sweep on the candidate archive, move fixed ->
+verified -> closed with evidence, bump the lane battery pin per the
+candidate-tag pin protocol, and fix any stdlib-side bugs it exposes --
+while the classic waves (coverage dirs, the durability bundle's remaining
+P3/P4/P5 rows, the string-dir follow-up) continue in parallel.
+
 Mandatory protocol: (1) body-derived clauses only, no placeholders/
 payload reads; canonical `result is Ok =>` guard form; file new findings
 as minimal repros + README entry. (2) probe-first
@@ -113,21 +122,21 @@ as minimal repros + README entry. (2) probe-first
 comparing, green on the CURRENT battery pin (v0.64.4 after the bump).
 (3) apply, targeted smokes, bisect/drop on codegen breaks; when a
 deliberate semantic change lands, remerge old locks that assert the old
-behavior. (4) dump `tools/coverage_floors149.json`, wire workflows +
+behavior. (4) dump `tools/coverage_floors150.json`, wire workflows +
 tools/README + plan/session/queue in one commit, YAML check, pure-ASCII
-commit. (5) battery: corpus 954/954, probes expect 290
-(289 + the wave-114 shapes probe), modules 509/509, barename 0/509,
-floors149 + module-smoke ratchets; push `main` with the one-shot Lefteris-Notas credential (403
+commit. (5) battery: corpus 954/954, probes expect 291
+(290 + the wave-115 shapes probe), modules 509/509, barename 0/509,
+floors150 + module-smoke ratchets; push `main` with the one-shot Lefteris-Notas credential (403
 as Lefteris-Ngonart; GitHub 500s per failed_attempts.md). (6) no
 unbounded scratch benchmarks. (7) release side follows the candidate-tag
 pin protocol; do NOT tag/publish without the compiler-lane OK.
 
 HANDOFF NOTE: locks include p_pin0641_iter_shapes.xi, the wave-77 stats
-probe, the PULSE hardening probe, the wave-78..114 coverage probes
-(wave 111 added p_json_parse_scale.xi; 112-114 added their probes), the
+probe, the PULSE hardening probe, the wave-78..115 coverage probes
+(wave 111 added p_json_parse_scale.xi; 112-115 added their probes), the
 io locks, the promoted regression locks, and the new witness locks
-(p_witness_1052_rev.xi, p_wave106_shapes.xi) -- **290 probes now (tuple
-lock promoted + the wave-114 shapes probe)**. Open repros: the 16 Current findings
+(p_witness_1052_rev.xi, p_wave106_shapes.xi) -- **291 probes now (tuple
+lock + the wave-114/-115 shapes probes)**. Open repros: the 16 Current findings
 (see tools/known_failures/README.md; the v0.64.4 verdict table is in
 block 124 + REL-20261012-1342-stdlib). The relay doorbell cron runs
 every 2h (renew at session start if the session died): pull the bus,
@@ -2617,6 +2626,45 @@ registry pin, agent recon for the rest)**
   probes 281/281 (299.4s), modules 509/509 (203.3s), barename 0/509
   (216.6s), floors144 + doc + module-smoke (497/517, 3476/6204)
   ratchets OK.
+
+**SESSION 2026-10-12 block 131 (wave 115: durability + byte-level IO first drop -- runtime fsync family + fd/path byte IO; probe 291st; floors150; four-lane bundle)**
+- LANDED: runtime/xiom_runtime.c gained xiom_fsync_fd / xiom_fdatasync_fd
+  / xiom_sync_file / xiom_fflush_stdout / xiom_fsync_dir /
+  xiom_open_append / xiom_open_read / xiom_truncate_path / xiom_read_at
+  / xiom_write_at / xiom_append_bytes; fs_ffi.fsync/fdatasync real;
+  sync_io read_exact/write_all/sync_fd/fsync_dir/open_append/open_read/
+  close_fd real; io.flush_stdout real + io.fsync(FILE*)/read_at/write_at/
+  append_file_bytes/truncate_file added. Satisfies the P1+P2 durability
+  request shared by orbitdb/xvector/pulse/packages (four lanes).
+- DEBUG LORE (for the record): the Windows fsync_dir path must not fail
+  on FlushFileBuffers (documented no-op-with-success); probe CWD is the
+  repo root, so relative fixtures persist across runs -- fixtures now
+  truncate first and clean up (the first probe red was stale state, not
+  codegen; 12-byte file = three runs of [1,2,3,4]); fs_ffi.fsync takes a
+  RAW fd -- passing an io.open FILE* truncates the pointer and
+  fast-fails 0xC0000409 (smoke_os_ffi now uses sync_io.open_append fds,
+  and the probe locks both surfaces separately).
+- PROBE: p_wave115_shapes.xi (291st) compile-fail pre / green post;
+  fixtures byte-exact; idempotent across two runs; no leftovers.
+  SMOKES: smoke_os_sync + smoke_os_ffi rewritten to the new semantics
+  (remerged old stub locks); smoke_os* 8/8, smoke_io* 20/20 green.
+- COVERAGE: pubFns 6505 -> 6513, pubCovered 4568 -> 4580; global 70.2%
+  -> 70.3%; floors150 dumped + wired (ci/heavy/release + tools/README +
+  plan; YAML-checked). Battery on v0.64.4-rel: corpus 954/954, probes
+  291/291, modules 509/509, barename 0/509, floors150 + doc +
+  module-smoke ratchets OK.
+- OWNER DIRECTIVE (2026-10-12): the next compiler candidate release
+  cycle must cover the compiler's relay items (release checks + pin
+  coordination + the 27-repro re-verify sweep on the candidate archive)
+  plus bug rows, with the classic waves continuing in parallel --
+  recorded in snapshot 30 + the queue.
+- BUS (after the push): landed rows move acked -> fixed with the commit
+  ref + the re-vendor caveat (new runtime symbols reach consumers at the
+  next compiler pin that re-vendors stdlib/runtime, or XIOM_RUNTIME_DIR
+  on v0.64.4): orbitdb-3/-4/-5/-6, xvector-2/-3/-4, pulse-5/-6,
+  packages, packages-4, packages-7. PARTIAL rows stay acked (xvector-5
+  fd ftruncate, packages-5 remove_dir, orbitdb-7/-8 sugar, packages-6
+  locking, the 1945 consolidated P4/P5 asks).
 
 **SESSION 2026-10-12 block 130 (relay round: three production-grade asks acked -- orbitdb durable-IO bundle, xvector mmap, pulse wave 2)**
 - Bus pulled at 19:59Z: five new open items since the last sweep; three

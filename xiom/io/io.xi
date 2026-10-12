@@ -52,6 +52,12 @@ extern "C" {
   fn xiom_stat_mtime(path: *UInt8) -> Int;
   fn xiom_stat_ctime(path: *UInt8) -> Int;
   fn xiom_stat_mode(path: *UInt8) -> Int;
+  fn xiom_read_at(path: *UInt8, offset: Int, count: Int) -> *UInt8;
+  fn xiom_write_at(path: *UInt8, offset: Int, buf: *UInt8, count: Int) -> Int;
+  fn xiom_append_bytes(path: *UInt8, buf: *UInt8, count: Int) -> Int;
+  fn xiom_truncate_path(path: *UInt8, size: Int) -> Int32;
+  fn xiom_fflush_stdout() -> Int32;
+  fn xiom_sync_file(stream: *UInt8) -> Int32;
 }
 
 /// === Error type ===
@@ -900,12 +906,15 @@ pub fn stdin_read_line() -> Str
   return read_line();
 }
 
-/// flush_stdout is a no-op: the Xiom runtime does not expose fflush
-/// via externs, but stdio is line-buffered by default so explicit
-/// flushing is rarely required.
+/// flush_stdout flushes the C stdout buffer (real since wave 115).
+/// Makes redirected/piped logs visible immediately; OS-level durability of
+/// the sink still depends on it (use io.fsync on a handle you own).
 pub fn flush_stdout()
   requires: true
 {
+  unsafe {
+    let _ = xiom_fflush_stdout();
+  }
 }
 
 // ----------------------------------------------------------
@@ -966,6 +975,131 @@ pub fn read_file_bytes(path: Str) -> Result[Vec[UInt8], IOError]
     xiom_free(ptr);
   }
   Ok(buf)
+}
+
+/// fsync a FILE* handle (from io.open, append modes included) to stable
+/// storage. Real implementation (wave 115): fflush + fsync(fileno) on POSIX,
+/// fflush + _commit on Windows, through the runtime.
+/// Returns: Ok(()) once the handle is durable; Err on failure.
+pub fn fsync(handle: Int) -> Result[Unit, IOError]
+  requires: handle != 0
+{
+  let rc: Int32;
+  unsafe {
+    rc = xiom_sync_file(handle as *UInt8);
+  }
+  if rc != 0 {
+    return Err(IOError{ message: "failed to fsync stream", code: 6 });
+  }
+  Ok(())
+}
+
+/// read_at reads up to `len` bytes starting at byte `offset`, clamped to the
+/// file size (no past-EOF fabrication). Binary read.
+/// Returns: Ok(bytes) with bytes.len() <= len; Err on open failure.
+pub fn read_at(path: Str, offset: Int, len: Int) -> Result[Vec[UInt8], IOError]
+  requires: path.len() > 0
+  requires: offset >= 0
+  requires: len >= 0
+  ensures: (len == 0) => (result is Ok)
+{
+  if len == 0 {
+    return Ok(Vec[UInt8].new());
+  }
+  let size: Int;
+  unsafe {
+    size = xiom_file_size(path.c_str());
+  }
+  if size < 0 {
+    return Err(IOError{ message: "failed to read file: " + path, code: 1 });
+  }
+  var count: Int = len;
+  if offset >= size {
+    count = 0;
+  } else {
+    let avail = size - offset;
+    if count > avail {
+      count = avail;
+    }
+  }
+  if count == 0 {
+    return Ok(Vec[UInt8].new());
+  }
+  let ptr: *UInt8;
+  unsafe {
+    ptr = xiom_read_at(path.c_str(), offset, count);
+  }
+  if ptr == 0 {
+    return Err(IOError{ message: "failed to read file: " + path, code: 1 });
+  }
+  var buf: Vec[UInt8] = Vec[UInt8]::with_capacity(count as UInt);
+  unsafe {
+    var i = 0;
+    while i < count {
+      buf.push(*(ptr.offset(i)));
+      i = i + 1;
+    }
+    xiom_free(ptr);
+  }
+  Ok(buf)
+}
+
+/// write_at writes `data` at byte `offset`, creating the file when missing
+/// and zero-filling a gap when the offset is past the current end. Binary.
+/// Returns: Err on open/write failure; an empty `data` is a no-op.
+pub fn write_at(path: Str, offset: Int, data: &Vec[UInt8]) -> Result[Unit, IOError]
+  requires: path.len() > 0
+  requires: offset >= 0
+{
+  let n = data.len();
+  if n == 0 {
+    return Ok(());
+  }
+  let wrote: Int;
+  unsafe {
+    wrote = xiom_write_at(path.c_str(), offset, &data[0] as *UInt8, n);
+  }
+  if wrote != n {
+    return Err(IOError{ message: "failed to write file: " + path, code: 2 });
+  }
+  Ok(())
+}
+
+/// append_file_bytes appends raw bytes to a file byte-exactly, creating it
+/// when missing; binary mode (no newline translation).
+/// Returns: Err on open/write failure; an empty `data` is a no-op.
+pub fn append_file_bytes(path: Str, data: &Vec[UInt8]) -> Result[Unit, IOError]
+  requires: path.len() > 0
+{
+  let n = data.len();
+  if n == 0 {
+    return Ok(());
+  }
+  let wrote: Int;
+  unsafe {
+    wrote = xiom_append_bytes(path.c_str(), &data[0] as *UInt8, n);
+  }
+  if wrote != n {
+    return Err(IOError{ message: "failed to append file: " + path, code: 2 });
+  }
+  Ok(())
+}
+
+/// truncate_file sets the file size to `size` bytes (extending zero-fills).
+/// Returns: Err when the file cannot be opened; Ok once the size is set.
+pub fn truncate_file(path: Str, size: Int) -> Result[Unit, IOError]
+  requires: path.len() > 0
+  requires: size >= 0
+  ensures: result is Ok => file_exists(path)
+{
+  let rc: Int32;
+  unsafe {
+    rc = xiom_truncate_path(path.c_str(), size);
+  }
+  if rc != 0 {
+    return Err(IOError{ message: "failed to truncate file: " + path, code: 2 });
+  }
+  Ok(())
 }
 
 // ----------------------------------------------------------

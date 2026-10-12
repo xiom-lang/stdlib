@@ -133,3 +133,15 @@ Suggested actions (compiler lane owns `stdlib/runtime/**`):
 Re-run the audit after runtime changes; the classifying script lives in the
 session tooling (`stdlib_ws\runtime_syms.txt`, `runtime_audit.csv`,
 `dead_strong.txt`) and is reproducible with the three greps above.
+
+## Wave-115 update 2026-10-12 (durability / byte-IO symbols)
+
+`runtime/xiom_runtime.c` gained 11 symbols for the durability + byte-level
+IO drop (wave 115): `xiom_fsync_fd`, `xiom_fdatasync_fd`,
+`xiom_sync_file`, `xiom_fflush_stdout`, `xiom_fsync_dir`,
+`xiom_open_append`, `xiom_open_read`, `xiom_truncate_path`,
+`xiom_read_at`, `xiom_write_at`, `xiom_append_bytes`. All 11 are DECLARED
+by stdlib modules in the same commit (`fs_ffi`, `sync_io`, `io` extern
+blocks), so they are bound by construction and do not enter the unbound
+remainder -- the re-run counts should move by +11 definitions / +11
+declarations. No deletions.

@@ -232,20 +232,38 @@ pub fn splice(in_fd: Int, out_fd: Int, count: Int) -> Result[Int, Str] {
   Err("splice: splice syscall not available in the pure stdlib")
 }
 
-/// Flush file data and metadata.
-/// NOT IMPLEMENTED: requires the fsync syscall.
-/// Returns: Err("fsync: fsync syscall not available in the pure stdlib").
-pub fn fsync(fd: Int) -> Result[Unit, Str] {
-  let _ = fd;
-  Err("fsync: fsync syscall not available in the pure stdlib")
+extern "C" {
+  fn xiom_fsync_fd(fd: Int) -> Int32;
+  fn xiom_fdatasync_fd(fd: Int) -> Int32;
 }
 
-/// Flush file data only.
-/// NOT IMPLEMENTED: requires the fdatasync syscall.
-/// Returns: Err("fdatasync: fdatasync syscall not available in the pure stdlib").
+/// Flush file data and metadata to stable storage.
+/// Real implementation (wave 115): fsync(2) on POSIX, the CRT _commit on
+/// Windows, through the xiom_fsync_fd runtime shim.
+/// Returns: Ok(()) once the fd is durable; Err on failure.
+pub fn fsync(fd: Int) -> Result[Unit, Str] {
+  let rc: Int32;
+  unsafe {
+    rc = xiom_fsync_fd(fd);
+  }
+  if rc != 0 {
+    return Err("fsync: flush failed");
+  }
+  Ok(())
+}
+
+/// Flush file data only (fdatasync; fsync fallback on macOS, _commit on
+/// Windows).
+/// Returns: Ok(()) once the fd data is durable; Err on failure.
 pub fn fdatasync(fd: Int) -> Result[Unit, Str] {
-  let _ = fd;
-  Err("fdatasync: fdatasync syscall not available in the pure stdlib")
+  let rc: Int32;
+  unsafe {
+    rc = xiom_fdatasync_fd(fd);
+  }
+  if rc != 0 {
+    return Err("fdatasync: flush failed");
+  }
+  Ok(())
 }
 
 /// Create a named pipe.

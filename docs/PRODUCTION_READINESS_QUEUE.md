@@ -210,7 +210,27 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
     numeric already linear; gzip ships). All runtime-backed rows queue
     with the runtime bundle (effective at the next re-vendoring compiler
     pin, or XIOM_RUNTIME_DIR on v0.64.4). Bus commit 92b6941; two to-all
-    notices read.
+    notices read. WAVE 115 (block 131): the durability + byte-level IO
+    first drop -- runtime fsync/fdatasync/_commit + sync_file +
+    fflush_stdout + fsync_dir + open_append/open_read + read_at/write_at/
+    append_bytes/truncate_path shims; fs_ffi.fsync/fdatasync, sync_io
+    read_exact/write_all/sync_fd/fsync_dir/open_append/open_read/
+    close_fd, io.flush_stdout/fsync(FILE*)/read_at/write_at/
+    append_file_bytes/truncate_file real. Probe p_wave115_shapes.xi
+    (291st) red pre / green post; smoke_os_sync + smoke_os_ffi rewritten
+    to the new semantics; smoke_os* 8/8 + smoke_io* 20/20 green.
+    Coverage: pubCovered 4568 -> 4580 / pubFns 6513 (global 70.3%);
+    floors150 wired. Battery on v0.64.4-rel: corpus 954/954, probes
+    291/291, modules 509/509, barename 0/509, ratchets OK. Landed rows
+    move acked -> fixed on the bus with the re-vendor caveat; partials
+    (fd ftruncate, remove_dir, locking, mmap, tail/append_line sugar)
+    stay acked. OWNER DIRECTIVE (block 131): on the next compiler
+    candidate/release, process the compiler's relay items (release checks
+    + pin coordination), run the 27-repro re-verify sweep on the
+    candidate archive (fixed -> verified -> closed), bump the pin per the
+    candidate-tag protocol, fix the stdlib-side bugs it exposes, and keep
+    the classic waves (coverage dirs, durability P3/P4/P5 remnants,
+    string-dir follow-up) running in parallel.
 BINARY NOTE: the shared local build path
 `E:\xiom-lang\xiom\target\release\xiom.exe` was rebuilt past the pin
 (compiler main da7798da m252) and fails four corpus smokes; waves now run

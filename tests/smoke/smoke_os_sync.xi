@@ -1,7 +1,9 @@
 // XIOM stdlib smoke test -- xiom.os.sync_io + xiom.os.terminal
 // Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
-// Synchronous fd helpers (documented stubs) and terminal helpers.
+// Synchronous fd durability primitives (real since wave 115: open_append/
+// open_read/write_all/read_exact/sync_fd/close_fd/fsync_dir), the remaining
+// documented stubs, and terminal helpers.
 // Returns 0 on success, nonzero on failure (process exit code).
 
 module smoke_os_sync
@@ -71,21 +73,114 @@ fn main() -> Int {
     }
   }
 
-  // --- sync_io: documented stubs ---
+  // --- sync_io: real durability primitives (wave 115) ---
+  let fixture = "os_sync_tmp.dat";
   {
-    let r = sync_io.read_exact(0, &mkbuf());
-    if r.is_ok {
-      io.println("sync-read");
-      return 11;
-    }
+    let h = sync_io.open_append(fixture);
+    match h {
+      Ok(fd) => {
+        let w = sync_io.write_all(fd, &mkbuf());
+        match w {
+          Ok(n) => {
+            if n != 2 {
+              io.println("sync-write");
+              return 12;
+            }
+          },
+          Err(_) => {
+            io.println("sync-write");
+            return 12;
+          },
+        };
+        let s = sync_io.sync_fd(fd);
+        match s {
+          Ok(_) => {},
+          Err(_) => {
+            io.println("sync-sync");
+            return 18;
+          },
+        };
+        let c = sync_io.close_fd(fd);
+        match c {
+          Ok(_) => {},
+          Err(_) => {
+            io.println("sync-close");
+            return 25;
+          },
+        };
+      },
+      Err(_) => {
+        io.println("sync-open");
+        return 26;
+      },
+    };
+    let rh = sync_io.open_read(fixture);
+    match rh {
+      Ok(fd2) => {
+        var buf = Vec[UInt8].with_len(2);
+        let r = sync_io.read_exact(fd2, &mut buf);
+        match r {
+          Ok(n) => {
+            if n != 2 {
+              io.println("sync-read");
+              return 11;
+            }
+          },
+          Err(_) => {
+            io.println("sync-read");
+            return 11;
+          },
+        };
+        if buf[0] != (97 as UInt8) {
+          io.println("sync-read-data");
+          return 27;
+        }
+        if buf[1] != (98 as UInt8) {
+          io.println("sync-read-data");
+          return 27;
+        }
+        var big = Vec[UInt8].with_len(8);
+        let r2 = sync_io.read_exact(fd2, &mut big);
+        match r2 {
+          Ok(_) => {
+            io.println("sync-read-eof");
+            return 28;
+          },
+          Err(_) => {},
+        };
+        let c2 = sync_io.close_fd(fd2);
+        match c2 {
+          Ok(_) => {},
+          Err(_) => {
+            io.println("sync-close");
+            return 25;
+          },
+        };
+      },
+      Err(_) => {
+        io.println("sync-openread");
+        return 29;
+      },
+    };
+    let d = sync_io.fsync_dir(".");
+    match d {
+      Ok(_) => {},
+      Err(_) => {
+        io.println("sync-dir");
+        return 19;
+      },
+    };
+    let rm = io.remove_file(fixture);
+    match rm {
+      Ok(_) => {},
+      Err(_) => {
+        io.println("sync-cleanup");
+        return 30;
+      },
+    };
   }
-  {
-    let r = sync_io.write_all(1, &mkbuf());
-    if r.is_ok {
-      io.println("sync-write");
-      return 12;
-    }
-  }
+
+  // --- sync_io: remaining documented stubs ---
   {
     let r = sync_io.read_until_eof(0);
     if r.is_ok {
@@ -119,20 +214,6 @@ fn main() -> Int {
     if r.is_ok {
       io.println("sync-flush");
       return 17;
-    }
-  }
-  {
-    let r = sync_io.sync_fd(1);
-    if r.is_ok {
-      io.println("sync-sync");
-      return 18;
-    }
-  }
-  {
-    let r = sync_io.fsync_dir(".");
-    if r.is_ok {
-      io.println("sync-dir");
-      return 19;
     }
   }
   {

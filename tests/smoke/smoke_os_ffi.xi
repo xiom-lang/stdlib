@@ -2,8 +2,9 @@
 // Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // xiom.os.mmap + xiom.os.win + xiom.os.unix
-// FFI-backed OS helpers: only what each stub documents as implementable is
-// verified; the rest are documented stubs returning Err or defaults.
+// FFI-backed OS helpers: the real durability primitives (fsync/fdatasync,
+// wave 115) are exercised on a fixture; the rest are documented stubs
+// returning Err or defaults.
 // Returns 0 on success, nonzero on failure (process exit code).
 
 module smoke_os_ffi
@@ -12,6 +13,7 @@ use xiom.os.fs_ffi;
 use xiom.os.proc_ffi;
 use xiom.os.ioctl;
 use xiom.os.mmap;
+use xiom.os.sync_io;
 use xiom.os.win;
 use xiom.os.unix;
 use xiom.io;
@@ -84,12 +86,33 @@ fn main() -> Int {
       return 9;
     }
   }
+  // --- fs_ffi: real durability primitives (wave 115; raw fd, not FILE*) ---
   {
-    let r = fs_ffi.fsync(1);
-    if r.is_ok {
-      io.println("ffi-fsync");
-      return 10;
-    }
+    let h = sync_io.open_append("os_ffi_fsync_tmp.txt");
+    match h {
+      Ok(fd) => {
+        let r = fs_ffi.fsync(fd);
+        if r.is_err {
+          io.println("ffi-fsync");
+          return 10;
+        };
+        let r2 = fs_ffi.fdatasync(fd);
+        if r2.is_err {
+          io.println("ffi-fdatasync");
+          return 30;
+        };
+        let c = sync_io.close_fd(fd);
+        if c.is_err {
+          io.println("ffi-fsync-close");
+          return 31;
+        };
+      },
+      Err(_) => {
+        io.println("ffi-fsync-open");
+        return 32;
+      },
+    };
+    let _ = io.remove_file("os_ffi_fsync_tmp.txt");
   }
   {
     let r = fs_ffi.mkfifo(tmp, 644);
