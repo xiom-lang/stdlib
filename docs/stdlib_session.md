@@ -101,10 +101,11 @@ the released pin -- the string-dir strnlen-family follow-up (cached
 (base, len) per file, scoped with smokes) or the next big dirs (num/
 time/async); (2) keep the re-verify cycle for the compiler's next batch
 (re-run the 27-repro sweep at each archive; move fixed -> verified ->
-closed); (3) stdlib-side: polygon difference halfplanes in a coverage
-wave; (4) runtime/wishlist bundle (fsync family, socket options/
-deadline, thread pool, flush_stdout) when the compiler runtime handoff
-allows.
+closed); (3) DONE 2026-10-12 (block 133): the polygon difference disjoint case is
+fixed and the repro promoted (probes 293); the full overlap clipper stays
+a follow-up; (4) PARTLY DONE 2026-10-12 (block 131, wave 115): the fsync
+family + byte IO + flush_stdout landed -- socket options/deadline, thread
+pool, locking/mmap and the P5 sugar remain in the runtime bundle queue.
 
 RELEASE-CYCLE DIRECTIVE (owner, 2026-10-12 evening): on the next compiler
 candidate/release, take care of the relay items the compiler will post
@@ -124,20 +125,22 @@ comparing, green on the CURRENT battery pin (v0.64.4 after the bump).
 deliberate semantic change lands, remerge old locks that assert the old
 behavior. (4) dump `tools/coverage_floors150.json`, wire workflows +
 tools/README + plan/session/queue in one commit, YAML check, pure-ASCII
-commit. (5) battery: corpus 954/954, probes expect 291
-(290 + the wave-115 shapes probe), modules 509/509, barename 0/509,
-floors150 + module-smoke ratchets; push `main` with the one-shot Lefteris-Notas credential (403
+commit. (5) battery: corpus 954/954, probes expect 293
+(291 + the wave-116 shapes probe + the promoted polygon repro), modules
+509/509, barename 0/509, floors150 + module-smoke ratchets; push `main` with the one-shot Lefteris-Notas credential (403
 as Lefteris-Ngonart; GitHub 500s per failed_attempts.md). (6) no
 unbounded scratch benchmarks. (7) release side follows the candidate-tag
 pin protocol; do NOT tag/publish without the compiler-lane OK.
 
 HANDOFF NOTE: locks include p_pin0641_iter_shapes.xi, the wave-77 stats
-probe, the PULSE hardening probe, the wave-78..115 coverage probes
-(wave 111 added p_json_parse_scale.xi; 112-115 added their probes), the
+probe, the PULSE hardening probe, the wave-78..116 coverage probes
+(wave 111 added p_json_parse_scale.xi; 112-116 added their probes), the
 io locks, the promoted regression locks, and the new witness locks
-(p_witness_1052_rev.xi, p_wave106_shapes.xi) -- **291 probes now (tuple
-lock + the wave-114/-115 shapes probes)**. Open repros: the 16 Current findings
-(see tools/known_failures/README.md; the v0.64.4 verdict table is in
+(p_witness_1052_rev.xi, p_wave106_shapes.xi) -- **293 probes now (tuple
+lock + the wave-114/-116 shapes probes + the promoted polygon repro)**.
+Open repros: the 15 Current findings, all compiler (the stdlib polygon
+entry was resolved in wave 116; see tools/known_failures/README.md; the
+v0.64.4 verdict table is in
 block 124 + REL-20261012-1342-stdlib). The relay doorbell cron runs
 every 2h (renew at session start if the session died): pull the bus,
 process items to stdlib, record status moves in a block. Cautions:
@@ -2626,6 +2629,33 @@ registry pin, agent recon for the rest)**
   probes 281/281 (299.4s), modules 509/509 (203.3s), barename 0/509
   (216.6s), floors144 + doc + module-smoke (497/517, 3476/6204)
   ratchets OK.
+
+**SESSION 2026-10-12 block 133 (wave 116: polygon_difference disjoint-case fix -- last stdlib Current repro resolved + promoted; probes 293)**
+- SOURCE: `xiom.geom.geometry_2d.polygon_difference` now routes through
+  `polygon_intersection` first: an empty intersection returns `Some(a)`
+  exactly (a minus b == a for disjoint inputs, both orders). empty-a
+  (None), empty-b (Some(a)) and a-inside-b (None) stay exact;
+  overlapping/containment inputs keep the documented conservative
+  approximation. Design analysis confirmed a single-ring fix is not
+  possible for overlaps (union-of-outside-clips pieces overlap;
+  concatenating disjoint pieces breaks even-odd fill), so the full
+  Weiler-Atherton-style clipper with holes/slits remains a queue
+  follow-up. Doc comment rewritten to the new contract.
+- LOCKS: probe `p_wave116_shapes.xi` (292nd) red pre (run 1) / green
+  post: disjoint both orders, empty-a/b, a-inside-b, and a no-abort
+  overlap call. Repro `p_polygon_difference_halfplanes.xi` rc 0 ->
+  PROMOTED to `tools/probes/` (293rd lock); header annotated;
+  known_failures README entry moved to RESOLVED and the Current count
+  drops to 15 (all compiler -- the stdlib ledger now carries no open
+  repro). No smoke exercised the polygon booleans before; the two probes
+  are the lock.
+- BATTERY on v0.64.4-rel: corpus 954/954 (438.5s), probes 293/293
+  (164.6s), modules 509/509, barename 0/509, floors150 + doc +
+  module-smoke ratchets OK. No pub-surface change (floors150 stays).
+- CONCURRENCY NOTE: the shared-worktree sibling session committed block
+  132 (its doorbell 21:00Z record) at c52b06a while this wave was scoped;
+  no file overlap (it works docs/relay bookkeeping; this session works
+  code/probes) and this session re-checked git state before each commit.
 
 **SESSION 2026-10-12 block 131 (wave 115: durability + byte-level IO first drop -- runtime fsync family + fd/path byte IO; probe 291st; floors150; four-lane bundle)**
 - LANDED: runtime/xiom_runtime.c gained xiom_fsync_fd / xiom_fdatasync_fd

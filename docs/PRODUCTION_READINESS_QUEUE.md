@@ -230,7 +230,15 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
     candidate archive (fixed -> verified -> closed), bump the pin per the
     candidate-tag protocol, fix the stdlib-side bugs it exposes, and keep
     the classic waves (coverage dirs, durability P3/P4/P5 remnants,
-    string-dir follow-up) running in parallel.
+    string-dir follow-up) running in parallel. WAVE 116 (block 133):
+    polygon_difference disjoint-case fix -- empty intersection returns
+    Some(a) exactly (both orders); empty-a/b and a-inside-b stay exact;
+    overlap stays documented-approximate (the full clipper with holes/
+    slits remains a follow-up). Probe p_wave116_shapes.xi (292nd) red pre
+    / green post; repro promoted to tools/probes (293rd); known_failures
+    Current now 15, all compiler. Battery on v0.64.4-rel: corpus 954/954,
+    probes 293/293, modules 509/509, barename 0/509, floors150 + ratchets
+    OK.
 BINARY NOTE: the shared local build path
 `E:\xiom-lang\xiom\target\release\xiom.exe` was rebuilt past the pin
 (compiler main da7798da m252) and fails four corpus smokes; waves now run

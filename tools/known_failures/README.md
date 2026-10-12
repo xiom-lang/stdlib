@@ -59,7 +59,9 @@ promoted to `tools/probes/`). Wave 103 re-triaged PULSE's C-PULSE-17 to
 the inline payload-index corruption and added the context-dependent
 Path.exists crash (first two open entries below); wave 110 added the
 compiler Mutex builtin shadow and wave 111 the trailing-match checker
-finding (entries below); findings now 16 Current: 15 compiler, 1 stdlib.
+finding (entries below); findings now 15 Current: all compiler (the stdlib
+polygon entry was fixed in wave 116 -- see the RESOLVED entry below, its
+repro promoted to `tools/probes/`).
 
 Status check 2026-10-11 (compiler v0.64.3, OFFICIAL windows-x64 archive,
 sha256 5140b863...): all 27 repro files below re-compiled and re-run.
@@ -344,15 +346,18 @@ hull is still 2 rows (rc=1, would be 2 for the tetra), so the repro
 STAYS in known_failures. The m201 fix did not cover this instance; the
 relay classification needs a correction on the compiler side.
 
-**Open finding 2026-10-01 (stdlib algorithm, not a compiler bug):
-`geometry_2d.polygon_difference` intersects b's outside half-planes instead
-of taking the difference.** For a closed b the result is usually empty, so
-`polygon_difference(a, b)` returns None even for disjoint a and b (where
-Some(a) is expected). Found by the wave-52 probe; the existing smoke never
-exercised the polygon booleans. Repro:
-`tools/known_failures/p_polygon_difference_halfplanes.xi` (returns 1).
-Needs a real polygon-clipping implementation; the doc comment now states
-the limitation.
+**RESOLVED 2026-10-12 (stdlib algorithm): `geometry_2d.polygon_difference`
+disjoint-case fix (wave 116).** The difference now routes through the
+intersection test first: an empty intersection returns `Some(a)` exactly
+(a minus b == a for disjoint inputs, both orders); empty-a (None),
+empty-b (Some(a)) and a-inside-b (None) stay exact; overlapping and
+containment inputs keep the documented conservative approximation (a real
+polygon-clipping implementation with holes/slits remains a queue
+follow-up). The repro `p_polygon_difference_halfplanes.xi` is rc 0 on the
+v0.64.4-rel pin and was PROMOTED to `tools/probes/`; the wave-116 probe
+`p_wave116_shapes.xi` locks the disjoint (both orders), empty-a/b and
+a-inside-b cases, and an overlapping call is checked not to abort (no
+smoke exercised the polygon booleans before, so the probe is the lock).
 
 **Open finding 2026-10-01 (compiler v0.61.3): `xiom.geom.geometry_3d.Box`
 is unnameable from consumers.** The leaf `Box` is shadowed by core's

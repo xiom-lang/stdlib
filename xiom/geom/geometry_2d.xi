@@ -493,14 +493,14 @@ pub fn polygon_union(a: Polygon2, b: Polygon2) -> Option[Polygon2]
   return Some(convex_hull(&all));
 }
 
-/// Boolean difference a minus b. NOTE: the current implementation clips a
-/// against the outside of every edge of b, which computes the intersection
-/// of b's outside half-planes rather than a minus b; for a closed b that is
-/// usually empty (a known design bug -- see
-/// tools/known_failures/p_polygon_difference_halfplanes.xi). Only the
-/// empty-a (None) and empty-b (Some(a)) edges are reliable; do not rely on
-/// it for overlapping inputs. A real polygon-clipping implementation is a
-/// queue follow-up. O(n*m).
+/// Boolean difference a minus b. Exact for the reliable inputs: empty-a ->
+/// None, empty-b -> Some(a), and disjoint polygons -> Some(a) (a minus b
+/// is a; disjointness is decided by the intersection test, so this is
+/// exact whenever polygon_intersection is exact -- b convex). A fully
+/// contained a returns None (a\b is empty). Overlapping and containment
+/// inputs otherwise remain a conservative approximation -- a real
+/// polygon-clipping implementation (single ring with holes/slits) is a
+/// queue follow-up; do not rely on overlap results. O(n*m).
 pub fn polygon_difference(a: Polygon2, b: Polygon2) -> Option[Polygon2]
   ensures: a.vertices.len() == 0 => result.is_some == false
 {
@@ -511,6 +511,14 @@ pub fn polygon_difference(a: Polygon2, b: Polygon2) -> Option[Polygon2]
     i = i + 1;
   }
   if subject.len() == 0 { return None; }
+  // Disjoint inputs: a minus b == a exactly (wave-116 fix). The
+  // intersection test reports empty for disjoint polygons; overlaps fall
+  // through to the documented approximation below.
+  let inter = polygon_intersection(a, b);
+  match inter {
+    None => { return Some(a); },
+    Some(_) => {},
+  }
   var bn = b.vertices.len();
   var e = 0;
   while e < bn {

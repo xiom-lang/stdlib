@@ -1711,6 +1711,21 @@ T1/T2 yields.
         then). Still open in the bundle: fcntl locking (P4), mmap (P5),
         append_line_sync + tail check, fd ftruncate, remove_dir,
         read_until_eof/read_line_buffered/copy_fd*.
+        Wave 116 (2026-10-12): polygon_difference disjoint-case fix --
+        the difference now routes through polygon_intersection first and
+        returns Some(a) exactly for disjoint inputs (both orders);
+        empty-a (None), empty-b (Some(a)) and a-inside-b (None) stay
+        exact; overlapping/containment inputs keep the documented
+        conservative approximation (union-of-outside-clips pieces
+        overlap and disjoint-piece concatenation breaks even-odd fill,
+        so the full Weiler-Atherton-style clipper with holes/slits stays
+        a queue follow-up). Probe p_wave116_shapes.xi (292nd) red pre /
+        green post; the repro p_polygon_difference_halfplanes.xi rc 0 and
+        PROMOTED to tools/probes (293rd); known_failures Current drops to
+        15, all compiler (the stdlib ledger carries no open repro for the
+        first time). Battery on v0.64.4-rel: corpus 954/954, probes
+        293/293, modules 509/509, barename 0/509, floors150 + doc +
+        module-smoke ratchets OK.
        Ratchet:
         tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors150.json
         tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
