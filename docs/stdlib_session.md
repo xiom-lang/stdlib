@@ -2494,6 +2494,36 @@ registry pin, agent recon for the rest)**
   (216.6s), floors144 + doc + module-smoke (497/517, 3476/6204)
   ratchets OK.
 
+**SESSION 2026-10-12 block 125 (findings plan after the v0.64.4 release check: 16 Current -- tiers, actions, pin-bump sequence)**
+- State: 16 Current findings (15 compiler + 1 stdlib); the bus is the
+  tracker (ids in the known_failures README header). v0.64.4 fixed one
+  (tuple elem read, verified+closed). Fresh on v0.64.4: the
+  payload-clause poisoning discriminator re-confirms stdlib-6 red (new
+  evidence item REL-20261012-1852-stdlib).
+- Planned sequence:
+  (1) PIN BUMP to the official v0.64.4 archive: re-run the full battery
+      on it, then promote `p_tuple_elem_vec_read.xi` to tools/probes
+      (289th lock), and update snapshots/queues accordingly -- the next
+      wave starts from the released pin.
+  (2) COMPILER NEXT-BATCH BRIEF (tier order): T1 silent-wrong/trap:
+      stdlib-6 payload clauses (fresh discriminator), 1609 payload
+      index, 1548-stdlib-3 tostring import, 1615 path println crash,
+      1549-stdlib-7 cross-type callbacks (sort_by_key mis-sorts),
+      1549-stdlib-4 clause float-vec, 1548-stdlib-7 ensures-isok,
+      1549-stdlib polyhedra, 1549-stdlib-3 geom matrix tuple,
+      1549-stdlib-5 shape-mismatch AV; T2 compile-fail ergonomics:
+      1548-stdlib-6 alias paths/foreign calls, 1549-stdlib-2 geom Box,
+      1456 Mutex shadow, 1626 trailing match; T3 guards: 1548-stdlib-4
+      mut @pre; info: 1549-stdlib-8 build drift (recheck), 1630/1658
+      compiler-stale, 1442 close pending.
+  (3) STDLIB-SIDE fixes: polygon difference halfplanes (own algorithm;
+      small, fix in a coverage wave); the runtime/wishlist bundle (fsync
+      family, socket options/deadline, thread pool, flush_stdout,
+      darwin fp128 pulse-2) when the compiler runtime handoff allows.
+  (4) RE-VERIFY cycle: after each compiler batch, re-run the 27-repro
+      sweep against the new archive and move verified/closed; keep the
+      red table current (1342-sweep + 1852 discriminator).
+
 **SESSION 2026-10-12 block 124 (v0.64.4 RELEASE CHECK: reporter sweep on the official archive -- tuple elem read VERIFIED; batch-targeted rows still red)**
 - The compiler RELEASED v0.64.4 (tag f76fd47c on df493530; run
   38256358845 green, assets live). Downloaded the official
