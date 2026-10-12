@@ -2494,6 +2494,32 @@ registry pin, agent recon for the rest)**
   (216.6s), floors144 + doc + module-smoke (497/517, 3476/6204)
   ratchets OK.
 
+**SESSION 2026-10-12 block 124 (v0.64.4 RELEASE CHECK: reporter sweep on the official archive -- tuple elem read VERIFIED; batch-targeted rows still red)**
+- The compiler RELEASED v0.64.4 (tag f76fd47c on df493530; run
+  38256358845 green, assets live). Downloaded the official
+  `xiom-0.64.4-windows-x64.zip` and ran ALL 27 known_failures repros on
+  it (compile+run) -- the full verdict table is in `out/sweep-v0644`.
+- GREEN/fixed on v0.64.4: `p_tuple_elem_vec_read` rc 0
+  (REL-20261010-1548-stdlib-2: VERIFIED + CLOSED on the bus; m254;
+  the repro stays in known_failures until the lane battery pin moves
+  to the v0.64.4 archive -- still rc 1 on v0.64.2, promotion at the
+  pin bump, probe corpus stays 288; README moved the entry to RESOLVED;
+  findings 17 -> 16 Current = 15 compiler + 1 stdlib); plus the
+  previously fixed locks (array_zip, iterator-type, range-contains,
+  reflect, sibling-dup, fnptr, slice-bound, generic-byref) all rc 0.
+- STILL RED on the release archive (rows stay open/acked; next-batch
+  candidates; consolidated as REL-20261012-1342-stdlib): tostring
+  import, mut @pre, cross-type callbacks (map/core_map rc 41, sortbykey
+  rc 1), clause float-vec, ensures-isok guard, payload index concat
+  (1609), path println crash (1615), polyhedra, geom matrix tuple
+  (rc 4), shape-mismatch AV, alias type path + foreign call
+  (compile-fail), geom Box (compile-fail), builtin Mutex shadow
+  (compile-fail), trailing match (compile-fail).
+- Also CLOSED: 1052-stdlib (witness both import orders green + metro
+  revert landed; m262) and 1709-stdlib (pin consumed by the release).
+- Bus commit 98e7ed1; this round's stdlib commit carries the README
+  resolution, the queue count and this block.
+
 **SESSION 2026-10-12 block 123 (doorbell 01:00Z: v0.64.4 pin SHIPPED; release tag awaits the owner)**
 - REL-20261011-1812-compiler moved fixed -> verified -> closed (2026-10-11
   22:38Z): the compiler pinned STDLIB_VERSION = `3df0843` (stdlib-v0.64.4;

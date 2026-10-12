@@ -59,7 +59,7 @@ promoted to `tools/probes/`). Wave 103 re-triaged PULSE's C-PULSE-17 to
 the inline payload-index corruption and added the context-dependent
 Path.exists crash (first two open entries below); wave 110 added the
 compiler Mutex builtin shadow and wave 111 the trailing-match checker
-finding (entries below); findings now 17 Current: 16 compiler, 1 stdlib.
+finding (entries below); findings now 16 Current: 15 compiler, 1 stdlib.
 
 Status check 2026-10-11 (compiler v0.64.3, OFFICIAL windows-x64 archive,
 sha256 5140b863...): all 27 repro files below re-compiled and re-run.
@@ -144,20 +144,22 @@ Err("json_parse: nesting too deep") beyond it; module header +
 to `tools/probes/p_json_parse_depth_cap.xi` (rc 0 = Err) and joined the
 274-probe corpus.
 
-**Open finding 2026-10-10 (compiler v0.64.2): an inline Vec element read
-inside a tuple literal corrupts the Float64 component.** While landing
-the wave-101 machine_learning clauses, `metric_auc` built its
-(score, label) pairs with `pairs.push((y_pred[j], y_true[j]))`: the
-Float64 scores arrived corrupted (band comparisons misread, the ranking
-ties compared equal, and the function returned a negative AUC) while the
-Int labels stayed correct. Binding the element first
-(`var pj = y_pred[j]; var tj = y_true[j]; pairs.push((pj, tj))`) fixes it
-on the same pin and is the workaround applied to `metric_auc`. Isolated:
-the corruption needs the element read syntactically inside the tuple
-literal; literal pushes (`v.push((0.1, 0))`), bound-variable pushes,
-tuple-vector element reads, and literal-built tuples are all correct.
-Repro: `tools/known_failures/p_tuple_elem_vec_read.xi` (rc 1 on v0.64.2;
-expected rc 0).
+**RESOLVED 2026-10-11 (compiler v0.64.4, m254): an inline Vec element
+read inside a tuple literal corrupted the Float64 component.** While
+landing the wave-101 machine_learning clauses, `metric_auc` built its
+(score, label) pairs with `pairs.push((y_pred[j], y_true[j]))` and the
+Float64 scores arrived corrupted (band comparisons misread, ranking
+ties compared equal, and the function returned a negative AUC) while
+the Int labels stayed correct; binding the element first was the
+workaround applied stdlib-side. Root: three tuple namers defaulted
+Index elements to Int; m254 added `container_element_xiom_name` (the
+compiler's own lock is e2e_m254_tuple_literal_index_elem, b443e970).
+VERIFIED on the official v0.64.4 release archive: the repro is now
+rc 0 (was rc 1 on v0.64.2). It stays in `tools/known_failures/` until
+the lane's battery pin moves to the v0.64.4 archive (it is still rc 1
+on the v0.64.2 battery pin); promotion to
+`tools/probes/p_tuple_elem_vec_read.xi` happens at the pin bump. Bus
+item REL-20261010-1548-stdlib-2 verified and closed.
 
 **Open finding 2026-10-09 (compiler v0.64.2): importing
 `xiom.convert.tostring` corrupts closure predicate dispatch.** With
