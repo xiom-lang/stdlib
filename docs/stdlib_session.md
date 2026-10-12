@@ -17,6 +17,127 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
+## 0A. CONTINUE HERE -- handoff snapshot 30 (updated 2026-10-12, compiler v0.64.4 RELEASED -- BUMP THE LANE BATTERY PIN to the official v0.64.4 archive first; stdlib-v0.64.4 tagged 3df0843 + pinned by the compiler; waves 110-113 landed; next = wave 114; relay bus live; binary-drift warning)
+
+**PASTE-READY PROMPT FOR THE NEXT SESSION (copy this block):**
+
+---
+
+You are continuing the XIOM stdlib lane. Worktree `E:\xiom-lang\stdlib`,
+branch `main`. Read `docs/stdlib_session.md` blocks 125 (latest), 124,
+123, 122, 121, 120, 119, 118, 117, 116, 115, 114, 113, 112, 111, 110,
+109, 108, 107, 106, 105, 104, 103, 102, 101, 100, 99, 98, 97, 96, 95,
+94, 93, 92, 91, 90, 89, 43 (publish), 27 (iter block) and
+`docs/PRODUCTION_READINESS_QUEUE.md` before acting; snapshots 29/28/27
+below and snapshot 5 keep the deeper history/lore. Cross-lane
+coordination runs on the xiom-relays bus (section 0B + AGENTS.md): pull
+it at session start and before finishing
+(`git -C E:\xiom-lang\xiom-relays pull --ff-only`, then
+`python tools/relay.py view --lane stdlib`), process items addressed to
+stdlib, never edit another lane's item. Ecosystem relays feed
+`docs/STDLIB-WISHLIST.md`; runtime-backed asks queue with the compiler
+runtime bundle.
+
+STATE (2026-10-12): **compiler v0.64.4 IS RELEASED** (tag f76fd47c on
+df493530; run 38256358845 green, assets live) and pinned stdlib-v0.64.4
+= `3df0843` (annotated tag f8fb7a88; package.xi 0.64.4; COMPILER_VERSION
+-> v0.64.3). The OFFICIAL v0.64.4 windows-x64 release asset is already
+downloaded and extracted at
+`%TEMP%\kilo\stdlib_ws\v0.64.4-rel\bin\xiom.exe` (from
+xiom-0.64.4-windows-x64.zip; verified `--version` = v0.64.4). The lane's
+battery pin is STILL the v0.64.2 archive
+(`%TEMP%\kilo\stdlib_ws\v0.64.2\bin\xiom.exe`) -- **FIRST ACTION: bump
+the battery pin to the v0.64.4 release archive** (re-run the full
+battery on it, then promote `p_tuple_elem_vec_read.xi` to tools/probes
+as the 289th lock). WARNING: the shared local build
+`E:\xiom-lang\xiom\target\release\xiom.exe` was rebuilt past the v0.64.2
+tag and fails four corpus smokes; do NOT use it for batteries. Registry:
+xiom-std 0.64.4 publish follows the candidate-tag pin protocol (the
+compiler's verification is done; security-urgent exceptions need a
+note).
+
+Gates on v0.64.2 (last full battery, block 121/113): corpus **954/954**,
+probes **288/288**, modules **509/509**, barename **0/509**, floors148,
+module-smoke + doc ratchets OK. Coverage = **69.8%** global
+pub-with-clause (meter 77.0%): misc 98.7, net 97.3, sync 94.9, crypto
+94.5, hash 94.4, os 55.4, math 53.0, iter 46.4, sort 42.6, time 41.3,
+num 37.6, async 4.5. Waves after snapshot 29: 110 (sync dir tail; 70
+fns; Mutex builtin-shadow finding filed), 111 (xvector json quadratic
+fixed -- byte-lexer linear parser + str_bytes/str_slice; probe 286th),
+112 (core Option/Result queries + Slice helpers -- unblocked by the
+v0.64.3 generic by-ref fix; floors148; probe 287th), 113 (str_chars/
+str_code_points linear; probe 288th), plus the v0.64.4 release flow
+(archive -> witness green -> metro revert landed 4e8b696 -> tagged
+3df0843 -> compiler pinned df493530) and the release-check round
+(block 124). The string dir still has ~191 strnlen-family call sites
+across 34 files (builder/case/collate/compare/unicode/normalize/...)
+needing the cached (base, len) treatment -- scoped follow-up wave.
+
+Findings: **16 Current (15 compiler + 1 stdlib)**, the relay bus is the
+tracker (ids in the known_failures README Current header). v0.64.4
+fixed one: the tuple-literal element read (1548-stdlib-2, verified +
+closed; m254; repro held in known_failures until this pin bump). The
+release-check sweep verdicts (block 124 / REL-20261012-1342-stdlib):
+STILL RED on v0.64.4 -- stdlib-6 payload-clause poisoning (fresh
+discriminator re-confirmed, REL-20261012-1852-stdlib), 1609 payload
+index, 1548-stdlib-3 tostring import, 1615 path-println crash,
+1549-stdlib-7 cross-type callbacks (sort_by_key), 1549-stdlib-4 clause
+float-vec, 1548-stdlib-7 ensures-isok, 1549-stdlib polyhedra,
+1549-stdlib-3 geom matrix tuple, 1549-stdlib-5 shape AV, 1548-stdlib-6
+alias paths/foreign calls, 1549-stdlib-2 geom Box, 1456 Mutex shadow,
+1626 trailing match, 1548-stdlib-4 mut @pre; stdlib-side: polygon. The
+findings plan is block 125 (tiers + pin-bump + re-verify cycle).
+Runtime/handoff items ours: B-05 guard-heap spin, darwin-x64 fp128
+(pulse-2); 1442 awaits the compiler close; 1630/1658 are the compiler's.
+
+FIRST TASK (wave 114): (0) **bump the battery pin to the v0.64.4
+release archive** (the one at ...\v0.64.4-rel), re-run the full battery,
+promote `p_tuple_elem_vec_read.xi` to `tools/probes/` (289 locks), and
+record the pin move in the snapshot/queue; (1) then continue coverage on
+the released pin -- the string-dir strnlen-family follow-up (cached
+(base, len) per file, scoped with smokes) or the next big dirs (num/
+time/async); (2) keep the re-verify cycle for the compiler's next batch
+(re-run the 27-repro sweep at each archive; move fixed -> verified ->
+closed); (3) stdlib-side: polygon difference halfplanes in a coverage
+wave; (4) runtime/wishlist bundle (fsync family, socket options/
+deadline, thread pool, flush_stdout) when the compiler runtime handoff
+allows.
+
+Mandatory protocol: (1) body-derived clauses only, no placeholders/
+payload reads; canonical `result is Ok =>` guard form; file new findings
+as minimal repros + README entry. (2) probe-first
+`tools/probes/p_wave114_shapes.xi`, bind returned values before
+comparing, green on the CURRENT battery pin (v0.64.4 after the bump).
+(3) apply, targeted smokes, bisect/drop on codegen breaks; when a
+deliberate semantic change lands, remerge old locks that assert the old
+behavior. (4) dump `tools/coverage_floors149.json`, wire workflows +
+tools/README + plan/session/queue in one commit, YAML check, pure-ASCII
+commit. (5) battery: corpus 954/954, probes expect 289 after the
+promotion, modules 509/509, barename 0/509, floors149 + module-smoke
+ratchets; push `main` with the one-shot Lefteris-Notas credential (403
+as Lefteris-Ngonart; GitHub 500s per failed_attempts.md). (6) no
+unbounded scratch benchmarks. (7) release side follows the candidate-tag
+pin protocol; do NOT tag/publish without the compiler-lane OK.
+
+HANDOFF NOTE: locks include p_pin0641_iter_shapes.xi, the wave-77 stats
+probe, the PULSE hardening probe, the wave-78..113 coverage probes
+(wave 111 added p_json_parse_scale.xi; 112/113 added their probes), the
+io locks, the promoted regression locks, and the new witness locks
+(p_witness_1052_rev.xi, p_wave106_shapes.xi) -- **288 probes now; 289
+after the tuple lock promotion**. Open repros: the 16 Current findings
+(see tools/known_failures/README.md; the v0.64.4 verdict table is in
+block 124 + REL-20261012-1342-stdlib). The relay doorbell cron runs
+every 2h (renew at session start if the session died): pull the bus,
+process items to stdlib, record status moves in a block. Cautions:
+never run large synthetic benchmarks unbounded; the notes validator
+rules for release fragments (no `>` `<` `&` backtick, no mNNN/rNNN
+tokens); the heavy macos-14 leg can be re-run.
+
+---
+
+Snapshot 29 below retains the pre-v0.64.4-release prompt; snapshots
+28/27 keep earlier prompts.
+
 ## 0A. CONTINUE HERE -- handoff snapshot 29 (updated 2026-10-11, pin v0.64.2 OFFICIAL ARCHIVE binary; compiler v0.64.3 released pinning ab894b47; waves 105-109 landed; next = wave 110; relay bus live; compiler resolver/isolation batch in flight (1052); binary-drift warning)
 
 **PASTE-READY PROMPT FOR THE NEXT SESSION (copy this block):**
@@ -2493,6 +2614,22 @@ registry pin, agent recon for the rest)**
   probes 281/281 (299.4s), modules 509/509 (203.3s), barename 0/509
   (216.6s), floors144 + doc + module-smoke (497/517, 3476/6204)
   ratchets OK.
+
+**SESSION 2026-10-12 block 126 (handoff refresh: snapshot 30 paste-ready; pin bump to v0.64.4 queued as wave-114 step 0)**
+- Snapshot 30 written at the top of section 0A: compiler v0.64.4
+  RELEASED (tag f76fd47c on df493530; run 38256358845) pinning
+  stdlib-v0.64.4 (3df0843); the official v0.64.4 windows-x64 archive is
+  pre-downloaded at `%TEMP%\kilo\stdlib_ws\v0.64.4-rel`; the lane
+  battery pin is still v0.64.2 and the FIRST ACTION of wave 114 is the
+  pin bump + battery + tuple-lock promotion (289 probes).
+- State carried: gates (corpus 954/954, probes 288/288, modules 509/509,
+  barename 0/509, floors148), coverage 69.8% (meter 77.0%), waves
+  110-113, findings 16 Current with the v0.64.4 verdict table (red rows
+  + the stdlib-6 discriminator) and the block-125 plan.
+- Queue pointer updated to snapshot 30 (block 126 refresh); wave records
+  blocks 89-126. Pre-handoff bus check: in sync; nothing pending for
+  this lane beyond the compiler-owned pair (1442 close; 1630/1658
+  stale).
 
 **SESSION 2026-10-12 block 125 (findings plan after the v0.64.4 release check: 16 Current -- tiers, actions, pin-bump sequence)**
 - State: 16 Current findings (15 compiler + 1 stdlib); the bus is the

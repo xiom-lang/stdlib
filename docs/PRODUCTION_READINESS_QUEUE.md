@@ -172,8 +172,26 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
    probes 288/288 (195.3s), modules 509/509, barename 0/509, floors148 +
    doc + module-smoke ratchets; release-gate set on v0.64.3 post-revert
    green. Bus: 1812 -> fixed (pin + ship requested); 2045 verified +
-   closed. Next: the v0.64.4 release-check verify on our side at the
-   compiler ship; registry publish per the candidate-tag protocol.
+    closed. Next: the v0.64.4 release-check verify on our side at the
+    compiler ship; registry publish per the candidate-tag protocol.
+    RELEASED 2026-10-12: **compiler v0.64.4 shipped** (tag f76fd47c on
+    df493530; run 38256358845 green, assets live) pinning stdlib-v0.64.4
+    (3df0843). Release-check round (block 124): the OFFICIAL
+    xiom-0.64.4-windows-x64 asset was downloaded to
+    %TEMP%\kilo\stdlib_ws\v0.64.4-rel and all 27 known_failures repros
+    were swept on it -- tuple elem read rc 0 (1548-stdlib-2 verified +
+    closed; m254), 1052 + 1709 closed (witness green / pin consumed);
+    the batch-targeted rows stay RED (table in REL-20261012-1342-stdlib)
+    and the stdlib-6 payload-poisoning discriminator re-confirms red on
+    v0.64.4 (REL-20261012-1852-stdlib); findings 16 Current (15 compiler
+    + 1 stdlib). Findings plan (block 125): (1) pin bump to the v0.64.4
+    release archive + battery + promote p_tuple_elem_vec_read.xi to
+    tools/probes (289th lock), then (2) the compiler next-batch brief
+    (T1 silent-wrong/trap rows, T2 compile-fail ergonomics, T3 guards),
+    (3) stdlib-side polygon + the runtime/wishlist bundle, (4) the
+    post-batch re-verify sweep cycle. Handoff in
+    `docs/stdlib_session.md` snapshot 30 (block 126 refresh), wave
+    records blocks 89-126.
 BINARY NOTE: the shared local build path
 `E:\xiom-lang\xiom\target\release\xiom.exe` was rebuilt past the pin
 (compiler main da7798da m252) and fails four corpus smokes; waves now run
