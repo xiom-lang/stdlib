@@ -2494,6 +2494,21 @@ registry pin, agent recon for the rest)**
   (216.6s), floors144 + doc + module-smoke (497/517, 3476/6204)
   ratchets OK.
 
+**SESSION 2026-10-12 block 123 (doorbell 01:00Z: v0.64.4 pin SHIPPED; release tag awaits the owner)**
+- REL-20261011-1812-compiler moved fixed -> verified -> closed (2026-10-11
+  22:38Z): the compiler pinned STDLIB_VERSION = `3df0843` (stdlib-v0.64.4;
+  annotated tag object f8fb7a88), converted release-notes/v0.64.4.json
+  (6 highlights = 4 compiler + 2 stdlib; 0 breaking, 2 docs), refreshed
+  the vendored stdlib to the tag, and pushed `df493530` (gate record
+  updated).
+- Compiler HEAD is now `d885dad5` "v0.64.4 pinned + pushed (df493530);
+  owner tag command; release run pending": the v0.64.4 release tag and
+  the release workflow run await the OWNER. No stdlib action remains on
+  the pin path; our release-check verify runs when the tag/run exists
+  (registry publish follows the pin protocol).
+- No new inbound items this round; 1442 remains fixed (compiler close),
+  1630/1658 stay the compiler's.
+
 **SESSION 2026-10-11 block 122 (CUT: stdlib-v0.64.4 tagged at 3df0843)**
 - m275 (4c42fc0a) fixed the cross-module fn-arg regression we bounced
   (root cause: m263's As-cast env unwrap was name-keyed, so
