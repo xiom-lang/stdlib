@@ -4775,6 +4775,8 @@ int xiom_close(int fd) {
 
 #ifdef _WIN32
 
+#include <direct.h> /* _rmdir */
+
 int xiom_fsync_fd(int fd) {
     return _commit(fd);
 }
@@ -4822,6 +4824,14 @@ int xiom_truncate_path(const char* path, long size) {
     int rc = (int)_chsize_s(fd, (long long)size);
     _close(fd);
     return rc == 0 ? 0 : -1;
+}
+
+int xiom_remove_dir(const char* path) {
+    return _rmdir(path);
+}
+
+int xiom_ftruncate_fd(int fd, long size) {
+    return (int)_chsize_s(fd, (long long)size);
 }
 
 char* xiom_read_at(const char* path, long offset, long count) {
@@ -4928,6 +4938,14 @@ int xiom_open_read(const char* path) {
 
 int xiom_truncate_path(const char* path, long size) {
     return truncate(path, (off_t)size);
+}
+
+int xiom_remove_dir(const char* path) {
+    return rmdir(path);
+}
+
+int xiom_ftruncate_fd(int fd, long size) {
+    return ftruncate(fd, (off_t)size);
 }
 
 char* xiom_read_at(const char* path, long offset, long count) {

@@ -23,6 +23,7 @@ extern "C" {
   fn xiom_open_read(path: *UInt8) -> Int;
   fn xiom_fsync_fd(fd: Int) -> Int32;
   fn xiom_fsync_dir(path: *UInt8) -> Int32;
+  fn xiom_ftruncate_fd(fd: Int32, size: Int) -> Int32;
 }
 
 /// Fill buf completely from fd or fail on early EOF.
@@ -206,6 +207,22 @@ pub fn close_fd(fd: Int) -> Result[Unit, Str]
   }
   if rc != 0 {
     return Err("close_fd: close failed");
+  }
+  Ok(())
+}
+
+/// truncate_fd sets the size of the file held by fd (ftruncate/_chsize_s);
+/// extending zero-fills. Returns: Ok(()) once the size is set.
+pub fn truncate_fd(fd: Int, len: Int) -> Result[Unit, Str]
+  requires: fd >= 0
+  requires: len >= 0
+{
+  let rc: Int32;
+  unsafe {
+    rc = xiom_ftruncate_fd(fd as Int32, len);
+  }
+  if rc != 0 {
+    return Err("truncate_fd: truncate failed");
   }
   Ok(())
 }

@@ -104,8 +104,10 @@ time/async); (2) keep the re-verify cycle for the compiler's next batch
 closed); (3) DONE 2026-10-12 (block 133): the polygon difference disjoint case is
 fixed and the repro promoted (probes 293); the full overlap clipper stays
 a follow-up; (4) PARTLY DONE 2026-10-12 (block 131, wave 115): the fsync
-family + byte IO + flush_stdout landed -- socket options/deadline, thread
-pool, locking/mmap and the P5 sugar remain in the runtime bundle queue.
+family + byte IO + flush_stdout landed; the P5 small pairs (append_line_sync,
+tail checks, remove_dir, fd ftruncate) landed in wave 117 (block 134) --
+socket options/deadline, thread pool, locking/mmap and the f32 bitcast
+remain in the runtime bundle queue.
 
 RELEASE-CYCLE DIRECTIVE (owner, 2026-10-12 evening): on the next compiler
 candidate/release, take care of the relay items the compiler will post
@@ -125,19 +127,19 @@ comparing, green on the CURRENT battery pin (v0.64.4 after the bump).
 deliberate semantic change lands, remerge old locks that assert the old
 behavior. (4) dump `tools/coverage_floors150.json`, wire workflows +
 tools/README + plan/session/queue in one commit, YAML check, pure-ASCII
-commit. (5) battery: corpus 954/954, probes expect 293
-(291 + the wave-116 shapes probe + the promoted polygon repro), modules
-509/509, barename 0/509, floors150 + module-smoke ratchets; push `main` with the one-shot Lefteris-Notas credential (403
+commit. (5) battery: corpus 954/954, probes expect 294
+(291 + the wave-116/-117 shapes probes + the promoted polygon repro),
+modules 509/509, barename 0/509, floors151 + module-smoke ratchets; push `main` with the one-shot Lefteris-Notas credential (403
 as Lefteris-Ngonart; GitHub 500s per failed_attempts.md). (6) no
 unbounded scratch benchmarks. (7) release side follows the candidate-tag
 pin protocol; do NOT tag/publish without the compiler-lane OK.
 
 HANDOFF NOTE: locks include p_pin0641_iter_shapes.xi, the wave-77 stats
-probe, the PULSE hardening probe, the wave-78..116 coverage probes
-(wave 111 added p_json_parse_scale.xi; 112-116 added their probes), the
+probe, the PULSE hardening probe, the wave-78..117 coverage probes
+(wave 111 added p_json_parse_scale.xi; 112-117 added their probes), the
 io locks, the promoted regression locks, and the new witness locks
-(p_witness_1052_rev.xi, p_wave106_shapes.xi) -- **293 probes now (tuple
-lock + the wave-114/-116 shapes probes + the promoted polygon repro)**.
+(p_witness_1052_rev.xi, p_wave106_shapes.xi) -- **294 probes now (tuple
+lock + the wave-114/-117 shapes probes + the promoted polygon repro)**.
 Open repros: the 15 Current findings, all compiler (the stdlib polygon
 entry was resolved in wave 116; see tools/known_failures/README.md; the
 v0.64.4 verdict table is in
@@ -2629,6 +2631,37 @@ registry pin, agent recon for the rest)**
   probes 281/281 (299.4s), modules 509/509 (203.3s), barename 0/509
   (216.6s), floors144 + doc + module-smoke (497/517, 3476/6204)
   ratchets OK.
+
+**SESSION 2026-10-12 block 134 (doorbell 23:00Z: consumer closures; wave 117 -- durability P5 pairs; probes 294; floors151)**
+- BUS ROUND: no new stdlib asks. Consumer verifications landed for wave
+  115: orbitdb closed -3..-6 (verified on the LANE runtime via
+  XIOM_RUNTIME_DIR on v0.64.4: probe_io_primitives.xi GREEN x2 Win + x2
+  WSL, 14 checks -- sync_fd does a real fsync) and pulse closed -5/-6;
+  xvector-2..4 stay fixed (verify pending). The to-all production-grade
+  relays are settled on the posters' side; nothing lane-actionable.
+- WAVE 117 (durability P5 pairs): io.append_line_sync (torn-tail repair,
+  then line + '\n' appended and the append handle fsynced before
+  returning), io.file_last_byte (O(1) via file_size + read_at) and
+  io.ends_with_newline, io.remove_dir (rmdir/_rmdir), sync_io.truncate_fd
+  (ftruncate/_chsize_s); runtime gains xiom_remove_dir +
+  xiom_ftruncate_fd (Windows also needed <direct.h> for _rmdir -- first
+  compile red; the str_bytes call was dropped for the proven
+  c_str+fwrite idiom). Serves orbitdb-7/-8, packages-5 (with the
+  wave-115 truncate_file) and the fd half of xvector-5.
+- LOCKS: probe p_wave117_shapes.xi (294th) red pre (surface absent) /
+  green post: line create/append bytes, torn-tail repair bytes, last
+  byte Some/None (empty + missing), newline true/false, remove_dir +
+  dir_exists, truncate_fd shrink; fixtures truncate-first and clean up.
+  smoke_io* 20/20 + smoke_os* 8/8 green.
+- COVERAGE: pubFns 6513 -> 6518, pubCovered 4580 -> 4585; global 70.3%
+  (clauses 6128); floors151 dumped + wired (ci/heavy/release +
+  tools/README + plan). Battery on v0.64.4-rel: corpus 954/954, probes
+  294/294, modules 509/509, barename 0/509, ratchets OK.
+- BUS (after the push): orbitdb-7, orbitdb-8, packages-5 and xvector-5
+  move acked -> fixed with the commit + re-vendor caveat; the orbitdb
+  consolidated item gets the wave-117 progress note.
+- CONCURRENCY: the sibling session has been idle since c52b06a; no file
+  overlap with this wave.
 
 **SESSION 2026-10-12 block 133 (wave 116: polygon_difference disjoint-case fix -- last stdlib Current repro resolved + promoted; probes 293)**
 - SOURCE: `xiom.geom.geometry_2d.polygon_difference` now routes through

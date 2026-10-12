@@ -56,6 +56,7 @@ extern "C" {
   fn xiom_write_at(path: *UInt8, offset: Int, buf: *UInt8, count: Int) -> Int;
   fn xiom_append_bytes(path: *UInt8, buf: *UInt8, count: Int) -> Int;
   fn xiom_truncate_path(path: *UInt8, size: Int) -> Int32;
+  fn xiom_remove_dir(path: *UInt8) -> Int32;
   fn xiom_fflush_stdout() -> Int32;
   fn xiom_sync_file(stream: *UInt8) -> Int32;
 }
@@ -1099,6 +1100,126 @@ pub fn truncate_file(path: Str, size: Int) -> Result[Unit, IOError]
   if rc != 0 {
     return Err(IOError{ message: "failed to truncate file: " + path, code: 2 });
   }
+  Ok(())
+}
+
+/// file_last_byte returns the final byte of a file, or None when the file
+/// is missing or empty. Reads a single byte at (size - 1): O(1), no full
+/// rescan. Binary.
+pub fn file_last_byte(path: Str) -> Option[UInt8]
+  requires: path.len() > 0
+{
+  var out: Option[UInt8] = None;
+  let m = file_size(path);
+  match m {
+    None => {},
+    Some(n) => {
+      if n > 0 {
+        let r = read_at(path, n - 1, 1);
+        match r {
+          Ok(v) => {
+            if v.len() == 1 {
+              out = Some(v[0]);
+            }
+          },
+          Err(_) => {},
+        };
+      }
+    },
+  };
+  return out;
+}
+
+/// ends_with_newline reports whether a file's final byte is '\n'; false
+/// when the file is missing, empty, or has any other tail byte. O(1) via
+/// file_last_byte.
+pub fn ends_with_newline(path: Str) -> Bool
+  requires: path.len() > 0
+{
+  var out = false;
+  let b = file_last_byte(path);
+  match b {
+    Some(x) => {
+      out = x == (10 as UInt8);
+    },
+    None => {},
+  };
+  return out;
+}
+
+/// remove_dir deletes an empty directory (rmdir/_rmdir); Err when the path
+/// is missing or not empty.
+pub fn remove_dir(path: Str) -> Result[Unit, IOError]
+  requires: path.len() > 0
+  ensures: result is Ok => !dir_exists(path)
+{
+  let rc: Int32;
+  unsafe {
+    rc = xiom_remove_dir(path.c_str());
+  }
+  if rc != 0 {
+    return Err(IOError{ message: "failed to remove directory: " + path, code: 2 });
+  }
+  Ok(())
+}
+
+/// append_line_sync appends `line` as one durable line: a torn tail (a
+/// nonempty file not ending in '\n') is terminated first, then line + '\n'
+/// is appended and the append handle is fsynced before returning. Binary;
+/// creates the file when missing. Err when open/write/flush fails.
+pub fn append_line_sync(path: Str, line: Str) -> Result[Unit, IOError]
+  requires: path.len() > 0
+  ensures: result is Ok => file_exists(path)
+{
+  let lb = file_last_byte(path);
+  match lb {
+    Some(x) => {
+      if x != (10 as UInt8) {
+        let rr = append_file(path, "\n");
+        match rr {
+          Ok(_) => {},
+          Err(_) => {
+            return Err(IOError{ message: "failed to repair torn tail: " + path, code: 2 });
+          },
+        };
+      }
+    },
+    None => {},
+  };
+  let payload = line + "\n";
+  let oh = open(path, "ab");
+  match oh {
+    Ok(handle) => {
+      let c_payload = payload.c_str();
+      let plen = payload.len() as UInt;
+      let written: UInt;
+      unsafe {
+        written = fwrite(c_payload, 1 as UInt, plen, handle as *UInt8);
+      }
+      if written != plen {
+        let _ = close(handle);
+        return Err(IOError{ message: "failed to append line: " + path, code: 2 });
+      }
+      let f = fsync(handle);
+      match f {
+        Ok(_) => {},
+        Err(_) => {
+          let _ = close(handle);
+          return Err(IOError{ message: "failed to flush appended line: " + path, code: 6 });
+        },
+      };
+      let c = close(handle);
+      match c {
+        Ok(_) => {},
+        Err(_) => {
+          return Err(IOError{ message: "failed to close appended file: " + path, code: 6 });
+        },
+      };
+    },
+    Err(_) => {
+      return Err(IOError{ message: "failed to open file for appending: " + path, code: 2 });
+    },
+  };
   Ok(())
 }
 

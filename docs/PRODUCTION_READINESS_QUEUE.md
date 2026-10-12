@@ -238,7 +238,16 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
     / green post; repro promoted to tools/probes (293rd); known_failures
     Current now 15, all compiler. Battery on v0.64.4-rel: corpus 954/954,
     probes 293/293, modules 509/509, barename 0/509, floors150 + ratchets
-    OK.
+    OK. WAVE 117 (block 134): durability P5 pairs -- io.append_line_sync
+    (torn-tail repair + fsync), io.file_last_byte / io.ends_with_newline,
+    io.remove_dir, sync_io.truncate_fd + the xiom_remove_dir /
+    xiom_ftruncate_fd runtime shims; probe p_wave117_shapes.xi (294th)
+    red pre / green post; smoke_io* 20/20 + smoke_os* 8/8; coverage
+    pubCovered 4585 / pubFns 6518 (70.3%), floors151 wired; battery on
+    v0.64.4-rel: corpus 954/954, probes 294/294, modules 509/509,
+    barename 0/509, ratchets OK. Orbitdb closed -3..-6 and pulse closed
+    -5/-6 verified on the lane runtime (XIOM_RUNTIME_DIR, Win+WSL); the
+    wave-117 landed rows move acked -> fixed next.
 BINARY NOTE: the shared local build path
 `E:\xiom-lang\xiom\target\release\xiom.exe` was rebuilt past the pin
 (compiler main da7798da m252) and fails four corpus smokes; waves now run

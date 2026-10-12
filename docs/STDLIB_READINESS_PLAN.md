@@ -1724,10 +1724,25 @@ T1/T2 yields.
         PROMOTED to tools/probes (293rd); known_failures Current drops to
         15, all compiler (the stdlib ledger carries no open repro for the
         first time). Battery on v0.64.4-rel: corpus 954/954, probes
-        293/293, modules 509/509, barename 0/509, floors150 + doc +
+        293/293, modules 509/509, barename 0/509,         floors150 + doc +
         module-smoke ratchets OK.
+        Wave 117 (2026-10-12): durability P5 pairs -- io.append_line_sync
+        (torn-tail repair, then line + newline appended and fsynced on
+        the append handle before returning), io.file_last_byte (O(1) via
+        file_size + read_at) and io.ends_with_newline, io.remove_dir
+        (rmdir/_rmdir), sync_io.truncate_fd (ftruncate/_chsize_s);
+        runtime gains xiom_remove_dir + xiom_ftruncate_fd (Windows needed
+        <direct.h> for _rmdir). Serves orbitdb-7/-8, packages-5 (with the
+        wave-115 truncate_file) and the fd half of xvector-5. Probe
+        p_wave117_shapes.xi (294th) red pre / green post (line bytes,
+        torn-tail repair bytes, last-byte Some/None incl. empty+missing,
+        newline true/false, remove_dir + dir_exists, truncate_fd shrink);
+        smoke_io* 20/20 + smoke_os* 8/8; coverage pubFns 6513 -> 6518 /
+        pubCovered 4580 -> 4585, global 70.3% (clauses 6128), floors151
+        wired; battery on v0.64.4-rel: corpus 954/954, probes 294/294,
+        modules 509/509, barename 0/509, ratchets OK.
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors150.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors151.json
         tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;

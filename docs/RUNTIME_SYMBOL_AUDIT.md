@@ -145,3 +145,8 @@ by stdlib modules in the same commit (`fs_ffi`, `sync_io`, `io` extern
 blocks), so they are bound by construction and do not enter the unbound
 remainder -- the re-run counts should move by +11 definitions / +11
 declarations. No deletions.
+
+Wave-117 update 2026-10-12: `xiom_remove_dir` and `xiom_ftruncate_fd`
+(directory removal and fd truncation for the P5 durability pairs) are
+declared by `io`/`sync_io` in the same commit -- the re-run counts should
+move by a further +2 definitions / +2 declarations. No deletions.
