@@ -2744,6 +2744,28 @@ registry pin, agent recon for the rest)**
   the released pin -- the string-dir strnlen-family follow-up (cached
   (base, len) per file, scoped with smokes), leading to floors149.
 
+**SESSION 2026-10-12 block 132 (doorbell 21:00Z: durability wave landed; engine-3 watch acked; production-grade relays mirrored)**
+- REL-20261012-2012-engine-3 (dir-change watch for asset hot reload) acked
+  with the runtime plan: ReadDirectoryChangesW / inotify / kqueue +
+  FSEvents behind watch_dir(path) + poll_events(handle) ->
+  Vec[ChangeEvent] with a bounded coalescing buffer; acceptance probe =
+  create/modify/delete events in a temp tree plus the overflow case;
+  queued after the socket/thread families (engine keeps mtime polling).
+- Lane state observed (concurrent session, blocks 128-131): wave 114 =
+  async coverage (4.5% -> 47.8%; probe 290th; floors149) with **the pin
+  bump to the v0.64.4 release archive DONE** (block 128; snapshot 30
+  updated in place; gates on v0.64.4-rel 954/288/509/0; the tuple lock
+  promoted -> 289 probes); wave 115 = durability + byte-level IO first
+  drop (runtime fsync family + fd/path byte IO; probe 291st; floors150;
+  block 131), which fixed orbitdb-3..6, packages-4/7 + fsync,
+  xvector-2..4 and pulse-5/6; the new production-grade relays
+  (orbitdb-1945, xvector-1945-2, pulse-1946) are acked/mirrored in
+  block 130.
+- Remaining acked families: orbitdb-7/8, packages-5/6, xvector-5/6/8,
+  pulse socket/deadline, engine-6, fsync_dir, bindings-8, playground-4,
+  website-2, pulse-2 darwin. No other queue moves; 1442 awaits the
+  compiler close; 1630/1658 compiler-stale.
+
 **SESSION 2026-10-12 block 127 (doorbell 19:00Z: ops clobber root cause + rules received; lane compliant)**
 - REL-20261012-1852-ops (to: all, high): the shared-home clobbers were
   caused by the toolchain installer/archive-extract wiping non-archive
