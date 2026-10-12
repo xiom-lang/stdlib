@@ -203,7 +203,14 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
     pre/post; smoke_async trio green); async 4.5% -> 47.8%, global 70.2%
     (pubCovered 4539 -> 4568, clauses 6056 -> 6102); floors149 wired
     (ci/heavy/release + tools/README + plan). Parent xiom.async surface
-    stays for part 2.
+    stays for part 2. RELAY ROUND 2026-10-12 19:45-19:46Z (block 130):
+    three new asks acked -- orbitdb durable-IO bundle (P1 fsync + P2 byte
+    IO first), xvector mmap family, pulse wave-2 server primitives
+    (deadlines first; websocket/chunked helpers stdlib-side; json_parse
+    numeric already linear; gzip ships). All runtime-backed rows queue
+    with the runtime bundle (effective at the next re-vendoring compiler
+    pin, or XIOM_RUNTIME_DIR on v0.64.4). Bus commit 92b6941; two to-all
+    notices read.
 BINARY NOTE: the shared local build path
 `E:\xiom-lang\xiom\target\release\xiom.exe` was rebuilt past the pin
 (compiler main da7798da m252) and fails four corpus smokes; waves now run

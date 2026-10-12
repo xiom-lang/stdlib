@@ -441,3 +441,30 @@ Wave-102 resolutions (2026-10-10, stdlib main):
   installation (PULSE), `f32_bits`/`bits_to_f32` (XVECTOR, compiler
   bitcast). The compiler-lane blockers relayed on 2026-10-10 are listed
   in `docs/stdlib_session.md` block 91.
+
+Bus status 2026-10-12 (production-grade relay round; sources re-read on the
+bus): three new stdlib-addressed asks acked in one round (relay commit
+92b6941):
+- ORBITDB `REL-20261012-1945-orbitdb` (high): one durable-IO runtime
+  bundle -- P1 real fsync (FlushFileBuffers/_commit + fsync/fdatasync) and
+  P2 byte random-access (`read_at`/`write_at`/`append_file_bytes`, held
+  append handle, truncate) as the first drop, then P3 `fsync_dir`, P4 real
+  advisory file locking, P5 small pairs (`append_line_sync`, tail check,
+  durable `flush_stdout`, `f32_bits`). Serves ORBITDB/XVECTOR/PULSE/
+  packages rows in one implementation; order-only window, P1+P2 first as
+  asked.
+- XVECTOR `REL-20261012-1945-xvector-2` (medium): the mmap family
+  (file/anonymous mappings, unmap, msync, madvise; mlock only if cheap)
+  replacing the 12 `xiom/os/mmap.xi` stubs + `fs_ffi` not-available
+  returns; queued in the same runtime bundle after P1+P2/P3.
+- PULSE `REL-20261012-1946-pulse` (high): wave-2 server primitives --
+  deadlines/socket options first (0317/1131 family, shutdown included);
+  runtime rows (signal delivery, poll/select timeout, SO_REUSEPORT, raw
+  stream send) queued; websocket + chunked-stream helpers are stdlib-side
+  and can land without the runtime pin; noted `json_parse` numeric is
+  already linear (wave 111) and gzip/deflate already ship in
+  `xiom.compress`.
+Runtime rows are effective for consumers at the next compiler pin that
+re-vendors `stdlib/runtime` (or `XIOM_RUNTIME_DIR` on v0.64.4 until then).
+The two to-all notices (REL-20261012-1945-xvector, -1946-pulse-3) are
+read; to-all items are not lane-ackable.

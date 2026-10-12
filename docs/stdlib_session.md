@@ -2618,6 +2618,29 @@ registry pin, agent recon for the rest)**
   (216.6s), floors144 + doc + module-smoke (497/517, 3476/6204)
   ratchets OK.
 
+**SESSION 2026-10-12 block 130 (relay round: three production-grade asks acked -- orbitdb durable-IO bundle, xvector mmap, pulse wave 2)**
+- Bus pulled at 19:59Z: five new open items since the last sweep; three
+  addressed to stdlib, all acked with triage notes (relay commit 92b6941,
+  validator 368 items OK):
+  (1) REL-20261012-1945-orbitdb (high): the consolidated durable-IO
+      bundle -- sequence confirmed, P1 (real fsync) + P2 (byte
+      random-access/append/truncate) as the first drop, then P3 fsync_dir,
+      P4 advisory locks, P5 small pairs; serves four lanes.
+  (2) REL-20261012-1945-xvector-2 (medium): mmap family replacing the 12
+      xiom/os/mmap.xi stubs; queued after P1+P2/P3 in the same bundle.
+  (3) REL-20261012-1946-pulse (high): wave-2 primitives -- deadlines
+      first (with shutdown(fd)); signals/poll/SO_REUSEPORT/stream-send
+      queued with the runtime bundle; websocket + chunked-stream helpers
+      are stdlib-side and can land without the runtime pin; noted
+      json_parse numeric already linear (wave 111) and gzip/deflate
+      already in xiom.compress.
+- Runtime rows stay effective-at-pin (next compiler pin re-vendoring
+  stdlib/runtime, or XIOM_RUNTIME_DIR on v0.64.4) -- the caveat is in all
+  three ack notes. Two to-all notices read (REL-20261012-1945-xvector,
+  -1946-pulse-3); not lane-ackable, no action.
+- Mirror updated: docs/STDLIB-WISHLIST.md bus-status paragraph + queue
+  state tail. No code changes this round.
+
 **SESSION 2026-10-12 block 129 (wave 114 part 1: async coverage -- 29 clauses across channel/executor/timer/io; async 4.5% -> 47.8%; probe 290th; floors149 wired)**
 - Source change (deliberate, clause-only): the four flat async submodules
   now carry body-derived clauses -- channel.xi 10 (async_channel_new /
