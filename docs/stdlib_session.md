@@ -115,19 +115,19 @@ comparing, green on the CURRENT battery pin (v0.64.4 after the bump).
 deliberate semantic change lands, remerge old locks that assert the old
 behavior. (4) dump `tools/coverage_floors149.json`, wire workflows +
 tools/README + plan/session/queue in one commit, YAML check, pure-ASCII
-commit. (5) battery: corpus 954/954, probes expect 289 after the
-promotion, modules 509/509, barename 0/509, floors149 + module-smoke
-ratchets; push `main` with the one-shot Lefteris-Notas credential (403
+commit. (5) battery: corpus 954/954, probes expect 290
+(289 + the wave-114 shapes probe), modules 509/509, barename 0/509,
+floors149 + module-smoke ratchets; push `main` with the one-shot Lefteris-Notas credential (403
 as Lefteris-Ngonart; GitHub 500s per failed_attempts.md). (6) no
 unbounded scratch benchmarks. (7) release side follows the candidate-tag
 pin protocol; do NOT tag/publish without the compiler-lane OK.
 
 HANDOFF NOTE: locks include p_pin0641_iter_shapes.xi, the wave-77 stats
-probe, the PULSE hardening probe, the wave-78..113 coverage probes
-(wave 111 added p_json_parse_scale.xi; 112/113 added their probes), the
+probe, the PULSE hardening probe, the wave-78..114 coverage probes
+(wave 111 added p_json_parse_scale.xi; 112-114 added their probes), the
 io locks, the promoted regression locks, and the new witness locks
-(p_witness_1052_rev.xi, p_wave106_shapes.xi) -- **289 probes now (tuple
-lock promoted at the pin bump)**. Open repros: the 16 Current findings
+(p_witness_1052_rev.xi, p_wave106_shapes.xi) -- **290 probes now (tuple
+lock promoted + the wave-114 shapes probe)**. Open repros: the 16 Current findings
 (see tools/known_failures/README.md; the v0.64.4 verdict table is in
 block 124 + REL-20261012-1342-stdlib). The relay doorbell cron runs
 every 2h (renew at session start if the session died): pull the bus,
@@ -2617,6 +2617,35 @@ registry pin, agent recon for the rest)**
   probes 281/281 (299.4s), modules 509/509 (203.3s), barename 0/509
   (216.6s), floors144 + doc + module-smoke (497/517, 3476/6204)
   ratchets OK.
+
+**SESSION 2026-10-12 block 129 (wave 114 part 1: async coverage -- 29 clauses across channel/executor/timer/io; async 4.5% -> 47.8%; probe 290th; floors149 wired)**
+- Source change (deliberate, clause-only): the four flat async submodules
+  now carry body-derived clauses -- channel.xi 10 (async_channel_new /
+  broadcast_new capacity-to-cap == mapping + closed false, async_send
+  Err-guard, async_recv None-guard, try_send false-guard, try_recv
+  None-guard, close/len, broadcast send cap-relation + recv seen/len
+  guards), executor.xi 4 (new empty vectors, tasks mirror,
+  run_until_idle/shutdown drained), timer.xi 7 (new/delay/interval
+  armed+ready, next armed guards, wheel_new literal fields, wheel
+  add/cancel parallel-array invariant), io.xi 8 (Future.ready == true on
+  every wrapper). Payload-free guards only, canonical `result is
+  Some/None/Err =>` and `result == (...)` forms; no @pre on &mut fields
+  (1548-stdlib-4) and no Result/Option payload reads (stdlib-6).
+- Probe p_wave114_shapes.xi (290th lock) green on v0.64.4-rel pre and
+  post: executor counts across new/spawn/run/run_until_idle/shutdown;
+  channel cap/closed/len + try outcomes + closed-channel send Err /
+  recv Some-then-None; bounded full rejection + FIFO; broadcast FIFO,
+  cap-drop and caught-up None; timer next Some/None, wheel slot clamp,
+  add/cancel invariant and a no-fire tick. Every value bound before
+  comparing. smoke_async trio green post-change.
+- Coverage: async 4.5% -> 47.8%; global 69.8% -> 70.2% (pubCovered
+  4539 -> 4568, clauses 6056 -> 6102); floors149 dumped + wired
+  (ci/heavy/release + tools/README + plan + queue; YAML-checked). The
+  parent xiom.async surface (AsyncExecutor/Channel methods) stays open
+  for part 2.
+- Next: full battery on v0.64.4-rel (probes 290), then the remaining
+  wave options -- string-dir strnlen follow-up / polygon halfplanes /
+  parent async part 2.
 
 **SESSION 2026-10-12 block 128 (wave 114 step 0: battery pin moved to the official v0.64.4 release archive; tuple lock promoted -- 289 probes; full battery green)**
 - PIN MOVE: battery pin v0.64.2 -> v0.64.4

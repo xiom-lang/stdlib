@@ -29,7 +29,11 @@ pub type AsyncChannel[T] = {
 /// Params: capacity - maximum queued items, or 0 for unbounded.
 /// Returns: a new empty open channel.
 /// Complexity: O(1).
-pub fn async_channel_new[T](capacity: Int) -> AsyncChannel[T] {
+pub fn async_channel_new[T](capacity: Int) -> AsyncChannel[T]
+  ensures: (capacity < 0) => (result.cap == 0)
+  ensures: (capacity >= 0) => (result.cap == capacity)
+  ensures: result.closed == false
+{
   var c = capacity;
   if c < 0 {
     c = 0;
@@ -41,7 +45,9 @@ pub fn async_channel_new[T](capacity: Int) -> AsyncChannel[T] {
 /// Params: ch - the channel; item - the value to send.
 /// Returns: Ok(()) on success, Err("channel closed") if closed.
 /// Complexity: O(1) per poll; yields while the channel is full.
-pub fn async_send[T](ch: &mut AsyncChannel[T], item: T) -> Result[Unit, Str] {
+pub fn async_send[T](ch: &mut AsyncChannel[T], item: T) -> Result[Unit, Str]
+  ensures: result is Err => ch.closed == true
+{
   var done = false;
   while !done {
     if ch.closed {
@@ -61,7 +67,9 @@ pub fn async_send[T](ch: &mut AsyncChannel[T], item: T) -> Result[Unit, Str] {
 /// Params: ch - the channel.
 /// Returns: Some(item) in FIFO order, None if closed and drained.
 /// Complexity: O(n) shift per pop; yields while empty.
-pub fn async_recv[T](ch: &mut AsyncChannel[T]) -> Option[T] {
+pub fn async_recv[T](ch: &mut AsyncChannel[T]) -> Option[T]
+  ensures: result is None => ch.closed == true && ch.items.len() == 0
+{
   while ch.items.len() == 0 && !ch.closed {
     unsafe { xiom_thread_sleep_ms(1); }
   }
@@ -82,7 +90,9 @@ pub fn async_recv[T](ch: &mut AsyncChannel[T]) -> Option[T] {
 /// Params: ch - the channel; item - the value to send.
 /// Returns: true if queued, false if the channel is full or closed.
 /// Complexity: O(1). Never yields.
-pub fn async_try_send[T](ch: &mut AsyncChannel[T], item: T) -> Bool {
+pub fn async_try_send[T](ch: &mut AsyncChannel[T], item: T) -> Bool
+  ensures: (result == false) => (ch.closed == true || (ch.cap > 0 && ch.items.len() >= ch.cap))
+{
   if ch.closed {
     return false;
   }
@@ -97,7 +107,9 @@ pub fn async_try_send[T](ch: &mut AsyncChannel[T], item: T) -> Bool {
 /// Params: ch - the channel.
 /// Returns: Some(item) in FIFO order, None if empty or closed.
 /// Complexity: O(n) shift per pop. Never yields.
-pub fn async_try_recv[T](ch: &mut AsyncChannel[T]) -> Option[T] {
+pub fn async_try_recv[T](ch: &mut AsyncChannel[T]) -> Option[T]
+  ensures: result is None => ch.items.len() == 0
+{
   if ch.items.len() == 0 {
     return None;
   }
@@ -114,7 +126,9 @@ pub fn async_try_recv[T](ch: &mut AsyncChannel[T]) -> Option[T] {
 /// Mark the channel closed.
 /// Params: ch - the channel.
 /// Complexity: O(1).
-pub fn async_channel_close[T](ch: &mut AsyncChannel[T]) {
+pub fn async_channel_close[T](ch: &mut AsyncChannel[T])
+  ensures: ch.closed == true
+{
   ch.closed = true;
 }
 
@@ -122,7 +136,9 @@ pub fn async_channel_close[T](ch: &mut AsyncChannel[T]) {
 /// Params: ch - the channel.
 /// Returns: the queue length.
 /// Complexity: O(1).
-pub fn async_channel_len[T](ch: &AsyncChannel[T]) -> Int {
+pub fn async_channel_len[T](ch: &AsyncChannel[T]) -> Int
+  ensures: result == ch.items.len()
+{
   return ch.items.len();
 }
 
@@ -180,7 +196,12 @@ pub type Broadcast[T] = {
 /// Params: capacity - maximum buffered items (0 = unbounded).
 /// Returns: a new broadcast channel with no unseen items.
 /// Complexity: O(1).
-pub fn broadcast_new[T](capacity: Int) -> Broadcast[T] {
+pub fn broadcast_new[T](capacity: Int) -> Broadcast[T]
+  ensures: (capacity < 0) => (result.cap == 0)
+  ensures: (capacity >= 0) => (result.cap == capacity)
+  ensures: result.seen == 0
+  ensures: result.closed == false
+{
   var c = capacity;
   if c < 0 {
     c = 0;
@@ -192,7 +213,9 @@ pub fn broadcast_new[T](capacity: Int) -> Broadcast[T] {
 /// Params: b - the broadcast channel; item - the value.
 /// Items beyond a bounded capacity are dropped.
 /// Complexity: O(1) amortized.
-pub fn broadcast_send[T](b: &mut Broadcast[T], item: T) {
+pub fn broadcast_send[T](b: &mut Broadcast[T], item: T)
+  ensures: (b.cap > 0) => (b.items.len() <= b.cap)
+{
   if b.cap == 0 || b.items.len() < b.cap {
     b.items.push(item);
   }
@@ -202,7 +225,10 @@ pub fn broadcast_send[T](b: &mut Broadcast[T], item: T) {
 /// Params: b - the broadcast channel.
 /// Returns: Some(item) in order, None once every item has been seen.
 /// Complexity: O(1).
-pub fn broadcast_recv[T](b: &mut Broadcast[T]) -> Option[T] {
+pub fn broadcast_recv[T](b: &mut Broadcast[T]) -> Option[T]
+  ensures: result is None => b.seen >= b.items.len()
+  ensures: result is Some => b.seen <= b.items.len()
+{
   if b.seen >= b.items.len() {
     return None;
   }

@@ -37,7 +37,10 @@ pub type Executor = {
 /// Create an empty executor.
 /// Returns: an executor with no ready tasks and no timers.
 /// Complexity: O(1).
-pub fn executor_new() -> Executor {
+pub fn executor_new() -> Executor
+  ensures: result.ready.len() == 0
+  ensures: result.timers.len() == 0
+{
   return Executor{ ready: Vec[fn()].new(); timers: Vec[TaskTimer].new(); }
 }
 
@@ -127,7 +130,9 @@ pub fn executor_run(e: &mut Executor) {
 /// Drain currently ready tasks without advancing timers.
 /// Params: e - the executor.
 /// Complexity: O(tasks).
-pub fn executor_run_until_idle(e: &mut Executor) {
+pub fn executor_run_until_idle(e: &mut Executor)
+  ensures: e.ready.len() == 0
+{
   while e.ready.len() > 0 {
     executor_step(e);
   }
@@ -136,7 +141,10 @@ pub fn executor_run_until_idle(e: &mut Executor) {
 /// Stop accepting tasks and release executor resources.
 /// Params: e - the executor.
 /// Complexity: O(tasks + timers).
-pub fn executor_shutdown(e: &mut Executor) {
+pub fn executor_shutdown(e: &mut Executor)
+  ensures: e.ready.len() == 0
+  ensures: e.timers.len() == 0
+{
   while e.ready.len() > 0 {
     e.ready.pop();
   }
@@ -149,7 +157,9 @@ pub fn executor_shutdown(e: &mut Executor) {
 /// Params: e - the executor.
 /// Returns: ready tasks plus pending timers.
 /// Complexity: O(1).
-pub fn executor_tasks(e: &Executor) -> Int {
+pub fn executor_tasks(e: &Executor) -> Int
+  ensures: result == e.ready.len() + e.timers.len()
+{
   return e.ready.len() + e.timers.len();
 }
 

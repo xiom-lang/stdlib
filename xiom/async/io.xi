@@ -42,7 +42,9 @@ fn future_ready(value: Int) -> Future {
 /// Params: fd - the descriptor; buf - the destination buffer.
 /// Returns: a ready Future whose value is the number of bytes read.
 /// Complexity: O(n) syscall.
-pub fn async_read(fd: Int, buf: &mut Vec[UInt8]) -> Future {
+pub fn async_read(fd: Int, buf: &mut Vec[UInt8]) -> Future
+  ensures: result.ready == true
+{
   // Read from the descriptor via the runtime fd helper; never cast an fd to
   // FILE* (the CRT dereferences it and fast-fails 0xC0000409 at EOF).
   var one: [1]UInt8;
@@ -60,7 +62,9 @@ pub fn async_read(fd: Int, buf: &mut Vec[UInt8]) -> Future {
 /// Params: fd - the descriptor; data - the bytes to write.
 /// Returns: a ready Future whose value is the number of bytes written.
 /// Complexity: O(n) syscall.
-pub fn async_write(fd: Int, data: &Vec[UInt8]) -> Future {
+pub fn async_write(fd: Int, data: &Vec[UInt8]) -> Future
+  ensures: result.ready == true
+{
   var total: Int = 0;
   var i: Int = 0;
   while i < data.len() {
@@ -81,7 +85,9 @@ pub fn async_write(fd: Int, data: &Vec[UInt8]) -> Future {
 /// Params: path - the file path.
 /// Returns: a ready Future whose data holds the file bytes.
 /// Complexity: O(n) where n is the file size.
-pub fn async_read_file(path: Str) -> Future {
+pub fn async_read_file(path: Str) -> Future
+  ensures: result.ready == true
+{
   let raw: *UInt8;
   let size: Int;
   unsafe {
@@ -107,7 +113,9 @@ pub fn async_read_file(path: Str) -> Future {
 /// Params: path - the file path; data - the bytes.
 /// Returns: a ready Future whose value is the number of bytes written.
 /// Complexity: O(n) where n is the data length.
-pub fn async_write_file(path: Str, data: &Vec[UInt8]) -> Future {
+pub fn async_write_file(path: Str, data: &Vec[UInt8]) -> Future
+  ensures: result.ready == true
+{
   let file: *UInt8;
   unsafe {
     file = fopen(path.c_str(), "wb");
@@ -138,7 +146,9 @@ pub fn async_write_file(path: Str, data: &Vec[UInt8]) -> Future {
 /// Params: listener - the listening socket fd.
 /// Returns: a ready Future whose value is the accepted socket fd or -1.
 /// Complexity: O(1) blocking syscall.
-pub fn async_accept(listener: Int) -> Future {
+pub fn async_accept(listener: Int) -> Future
+  ensures: result.ready == true
+{
   var ip_buf: [64]UInt8;
   var port_val: Int = 0;
   let client = unsafe { xiom_socket_accept(listener, &ip_buf as *UInt8, &port_val) };
@@ -149,7 +159,9 @@ pub fn async_accept(listener: Int) -> Future {
 /// Params: fd - the socket; addr - the host; port - the port.
 /// Returns: a ready Future whose value is the connect result (0 = ok).
 /// Complexity: O(1) syscall.
-pub fn async_connect(fd: Int, addr: Str, port: Int) -> Future {
+pub fn async_connect(fd: Int, addr: Str, port: Int) -> Future
+  ensures: result.ready == true
+{
   var c_host: [256]UInt8;
   var i: Int = 0;
   let hlen = addr.len();
@@ -166,7 +178,9 @@ pub fn async_connect(fd: Int, addr: Str, port: Int) -> Future {
 /// Params: fd - the descriptor.
 /// Returns: a ready Future whose data holds the line (newline included).
 /// Complexity: O(n) where n is the line length.
-pub fn async_read_line(fd: Int) -> Future {
+pub fn async_read_line(fd: Int) -> Future
+  ensures: result.ready == true
+{
   var buf: Vec[UInt8] = Vec[UInt8].new();
   var done = false;
   while !done {
@@ -192,7 +206,9 @@ pub fn async_read_line(fd: Int) -> Future {
 /// Returns: a ready Future whose data holds the bytes up to and including
 ///          the delimiter.
 /// Complexity: O(n) where n is the number of bytes read.
-pub fn async_read_until(fd: Int, delim: UInt8) -> Future {
+pub fn async_read_until(fd: Int, delim: UInt8) -> Future
+  ensures: result.ready == true
+{
   var buf: Vec[UInt8] = Vec[UInt8].new();
   var done = false;
   while !done {

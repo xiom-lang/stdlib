@@ -56,7 +56,9 @@ pub type Stopwatch = { start: Int; }
 /// Create an inert timer handle.
 /// Returns: a timer that is not armed.
 /// Complexity: O(1).
-pub fn timer_new() -> Timer {
+pub fn timer_new() -> Timer
+  ensures: result.armed == false
+{
   return Timer{ deadline: 0; armed: false; }
 }
 
@@ -75,7 +77,9 @@ pub fn timer_sleep(ms: Int) {
 /// Params: ms - the delay in milliseconds.
 /// Returns: a TimerFuture whose deadline is `ms` from now.
 /// Complexity: O(1).
-pub fn timer_delay(ms: Int) -> TimerFuture {
+pub fn timer_delay(ms: Int) -> TimerFuture
+  ensures: result.ready == false
+{
   var m = ms;
   if m < 0 {
     m = 0;
@@ -92,7 +96,9 @@ pub fn timer_delay(ms: Int) -> TimerFuture {
 /// defect where a struct literal whose first field is a computed expression
 /// drops the trailing `armed` field (BUG 28 #5; re-verified on v0.61.3:
 /// timer_next returned None for interval timers before this change).
-pub fn timer_interval(ms: Int) -> Timer {
+pub fn timer_interval(ms: Int) -> Timer
+  ensures: result.armed == true
+{
   var m = ms;
   if m < 0 {
     m = 0;
@@ -107,7 +113,10 @@ pub fn timer_interval(ms: Int) -> Timer {
 /// Params: t - the timer.
 /// Returns: Some(deadline in ms) if armed, None otherwise.
 /// Complexity: O(1).
-pub fn timer_next(t: &Timer) -> Option[Int] {
+pub fn timer_next(t: &Timer) -> Option[Int]
+  ensures: result is None => t.armed == false
+  ensures: result is Some => t.armed == true
+{
   if t.armed {
     return Some(t.deadline);
   }
@@ -118,7 +127,14 @@ pub fn timer_next(t: &Timer) -> Option[Int] {
 /// Params: slots - the number of slots (clamped to >= 1).
 /// Returns: an empty wheel with no scheduled timers.
 /// Complexity: O(1).
-pub fn timer_wheel_new(slots: Int) -> TimerWheel {
+pub fn timer_wheel_new(slots: Int) -> TimerWheel
+  ensures: result.slots >= 1
+  ensures: result.now == 0
+  ensures: result.ids.len() == 0
+  ensures: result.deadlines.len() == 0
+  ensures: result.tasks.len() == 0
+  ensures: result.next_id == 0
+{
   var s = slots;
   if s < 1 {
     s = 1;
@@ -129,7 +145,11 @@ pub fn timer_wheel_new(slots: Int) -> TimerWheel {
 /// Schedule `f` to run after `ms` milliseconds.
 /// Params: tw - the wheel; ms - the delay; f - the task.
 /// Complexity: O(1) amortized.
-pub fn timer_wheel_add(tw: &mut TimerWheel, ms: Int, f: fn()) {
+pub fn timer_wheel_add(tw: &mut TimerWheel, ms: Int, f: fn())
+  ensures: tw.ids.len() == tw.tasks.len()
+  ensures: tw.deadlines.len() == tw.ids.len()
+  ensures: tw.next_id >= 1
+{
   var m = ms;
   if m < 0 {
     m = 0;
@@ -170,7 +190,10 @@ pub fn timer_wheel_tick(tw: &mut TimerWheel) {
 /// Remove a scheduled timer by id.
 /// Params: tw - the wheel; id - the timer id.
 /// Complexity: O(n) where n is the number of scheduled timers.
-pub fn timer_wheel_cancel(tw: &mut TimerWheel, id: Int) {
+pub fn timer_wheel_cancel(tw: &mut TimerWheel, id: Int)
+  ensures: tw.ids.len() == tw.tasks.len()
+  ensures: tw.deadlines.len() == tw.ids.len()
+{
   var i: Int = 0;
   while i < tw.ids.len() {
     var eid = tw.ids[i];

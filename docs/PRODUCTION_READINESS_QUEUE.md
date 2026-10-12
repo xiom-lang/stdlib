@@ -197,7 +197,13 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
     COMPILER_VERSION -> v0.64.4): corpus 954/954 (589.5s), probes 289/289
     (277.7s; p_tuple_elem_vec_read.xi promoted, lock 289), modules
     509/509 (190.4s), barename 0/509 (322.3s), floors148 + doc +
-    module-smoke ratchets OK.
+    module-smoke ratchets OK. WAVE 114 part 1 (block 129): async coverage
+    -- 29 clauses (channel 10, executor 4, timer 7, io 8; payload-free
+    guards, no @pre on &mut fields; probe 290th p_wave114_shapes.xi green
+    pre/post; smoke_async trio green); async 4.5% -> 47.8%, global 70.2%
+    (pubCovered 4539 -> 4568, clauses 6056 -> 6102); floors149 wired
+    (ci/heavy/release + tools/README + plan). Parent xiom.async surface
+    stays for part 2.
 BINARY NOTE: the shared local build path
 `E:\xiom-lang\xiom\target\release\xiom.exe` was rebuilt past the pin
 (compiler main da7798da m252) and fails four corpus smokes; waves now run

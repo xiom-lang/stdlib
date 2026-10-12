@@ -1668,8 +1668,23 @@ T1/T2 yields.
         doc + module-smoke ratchets OK. Family closed for the release
         (json parser + str_bytes/str_slice in wave 111; chars/code points
         here); async remains the next coverage dir.
+        Wave 114 (2026-10-12): battery pin bumped to the official v0.64.4
+        release archive (corpus 954/954, probes 289/289, modules 509/509,
+        barename 0/509; tuple lock promoted; COMPILER_VERSION -> v0.64.4),
+        then async coverage part 1: 29 pub fns gained clauses across
+        channel (10: capacity/closed mapping, send/recv outcome guards,
+        broadcast seen/len relations), executor (4: new empties, tasks
+        mirror, drain/shutdown empties), timer (7: armed/ready literals,
+        next guards, wheel literal fields + parallel-array invariant) and
+        io (8: Future.ready == true). Payload-free guards only, no @pre on
+        &mut fields. async 4.5% -> 47.8%; global 69.8% -> 70.2%
+        (pubCovered 4539 -> 4568, clauses 6056 -> 6102); probe
+        p_wave114_shapes.xi (290th) green pre/post on the pin (values
+        bound before comparing); smoke_async trio green; floors149 wired
+        (ci/heavy/release + tools/README + plan). Parent xiom.async
+        surface (AsyncExecutor/Channel methods) reserved for part 2.
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors148.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors149.json
         tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;
