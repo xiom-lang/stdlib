@@ -2615,6 +2615,27 @@ registry pin, agent recon for the rest)**
   (216.6s), floors144 + doc + module-smoke (497/517, 3476/6204)
   ratchets OK.
 
+**SESSION 2026-10-12 block 127 (doorbell 19:00Z: ops clobber root cause + rules received; lane compliant)**
+- REL-20261012-1852-ops (to: all, high): the shared-home clobbers were
+  caused by the toolchain installer/archive-extract wiping non-archive
+  dirs in its target home (%LOCALAPPDATA%\xiom*, WSL homes) -- every
+  lane's packages/ was deleted by installs into the shared default.
+  Rules: upgrades/re-extracts go to lane-local dirs only; use
+  tools/home-snapshot.ps1 before risky windows; after a clobber restore
+  from the snapshot rather than reinstall; lanes that ran an
+  install/extract against the shared default today must report on the
+  bus with timestamps.
+- STDLIB COMPLIANCE: this lane never installs or extracts into the
+  shared homes -- batteries run the archive exes directly with
+  XIOM_STDLIB set; the v0.64.4 release asset was downloaded and
+  extracted lane-locally under %TEMP%\kilo\stdlib_ws\v0.64.4-rel (as
+  were all earlier archives). No install/extract against the shared
+  default was run by this lane today, so no rule-4 report is due.
+  Broadcasts to 'all' are not lane-ackable (tool-enforced), so this
+  record is the compliance note.
+- No other queue moves; 1442 still awaits the compiler close;
+  1630/1658 remain the compiler's.
+
 **SESSION 2026-10-12 block 126 (handoff refresh: snapshot 30 paste-ready; pin bump to v0.64.4 queued as wave-114 step 0)**
 - Snapshot 30 written at the top of section 0A: compiler v0.64.4
   RELEASED (tag f76fd47c on df493530; run 38256358845) pinning
