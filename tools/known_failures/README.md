@@ -155,11 +155,11 @@ workaround applied stdlib-side. Root: three tuple namers defaulted
 Index elements to Int; m254 added `container_element_xiom_name` (the
 compiler's own lock is e2e_m254_tuple_literal_index_elem, b443e970).
 VERIFIED on the official v0.64.4 release archive: the repro is now
-rc 0 (was rc 1 on v0.64.2). It stays in `tools/known_failures/` until
-the lane's battery pin moves to the v0.64.4 archive (it is still rc 1
-on the v0.64.2 battery pin); promotion to
-`tools/probes/p_tuple_elem_vec_read.xi` happens at the pin bump. Bus
-item REL-20261010-1548-stdlib-2 verified and closed.
+rc 0 (was rc 1 on v0.64.2). PROMOTED to
+`tools/probes/p_tuple_elem_vec_read.xi` at the wave-114 pin bump
+(2026-10-12; battery pin v0.64.4-rel, corpus 954/954): the probe
+corpus is now 289. Bus item REL-20261010-1548-stdlib-2 verified and
+closed.
 
 **Open finding 2026-10-09 (compiler v0.64.2): importing
 `xiom.convert.tostring` corrupts closure predicate dispatch.** With

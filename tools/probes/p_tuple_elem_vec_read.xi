@@ -5,6 +5,9 @@
 // Expected: rc 0 (`build` copies the Float64 scores 0.1/0.9 and the Int
 // labels 0/1 into the (Float64, Int) pairs; both score reads land in the
 // expected bands).
+// Promoted to the probe corpus at the wave-114 pin bump (2026-10-12):
+// rc 0 on the official v0.64.4 release archive (fixed by m254,
+// container_element_xiom_name); was rc 1 on the v0.64.2 battery pin.
 // Observed on compiler v0.64.2: the Float64 components pushed via the
 // INLINE element reads `v.push((pred[i], lab[i]))` are corrupted (both
 // band checks fail; the labels stay correct), so the program exits rc 1.
