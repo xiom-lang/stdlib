@@ -22,8 +22,8 @@ this lane is active.
 
 ## Lane essentials
 
-- Compiler pin: v0.64.2 -- use the OFFICIAL ARCHIVE binary
-  `%TEMP%\kilo\stdlib_ws\v0.64.2\bin\xiom.exe` for wave batteries (the
+- Compiler pin: v0.64.4 -- use the OFFICIAL RELEASE ARCHIVE binary
+  `%TEMP%\kilo\stdlib_ws\v0.64.4-rel\bin\xiom.exe` for wave batteries (the
   shared `E:\xiom-lang\xiom\target\release\xiom.exe` drifted past the tag
   on 2026-10-10; see docs/failed_attempts.md).
 - Session handoff and wave history: `docs/stdlib_session.md` (snapshots at

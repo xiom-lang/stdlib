@@ -44,21 +44,23 @@ df493530; run 38256358845 green, assets live) and pinned stdlib-v0.64.4
 -> v0.64.3). The OFFICIAL v0.64.4 windows-x64 release asset is already
 downloaded and extracted at
 `%TEMP%\kilo\stdlib_ws\v0.64.4-rel\bin\xiom.exe` (from
-xiom-0.64.4-windows-x64.zip; verified `--version` = v0.64.4). The lane's
-battery pin is STILL the v0.64.2 archive
-(`%TEMP%\kilo\stdlib_ws\v0.64.2\bin\xiom.exe`) -- **FIRST ACTION: bump
-the battery pin to the v0.64.4 release archive** (re-run the full
-battery on it, then promote `p_tuple_elem_vec_read.xi` to tools/probes
-as the 289th lock). WARNING: the shared local build
+  xiom-0.64.4-windows-x64.zip; verified `--version` = v0.64.4). PIN MOVED
+  2026-10-12 (wave 114 step 0, block 128): the lane battery pin IS
+  `%TEMP%\kilo\stdlib_ws\v0.64.4-rel\bin\xiom.exe` (sha256 DB8A2EF0...) --
+  full battery green on it (corpus 954/954, probes 289/289 with
+  `p_tuple_elem_vec_read.xi` promoted as the 289th lock, modules 509/509,
+  barename 0/509, floors148 + ratchets), and `COMPILER_VERSION` is now
+  v0.64.4. WARNING: the shared local build
 `E:\xiom-lang\xiom\target\release\xiom.exe` was rebuilt past the v0.64.2
 tag and fails four corpus smokes; do NOT use it for batteries. Registry:
 xiom-std 0.64.4 publish follows the candidate-tag pin protocol (the
 compiler's verification is done; security-urgent exceptions need a
 note).
 
-Gates on v0.64.2 (last full battery, block 121/113): corpus **954/954**,
-probes **288/288**, modules **509/509**, barename **0/509**, floors148,
-module-smoke + doc ratchets OK. Coverage = **69.8%** global
+Gates on v0.64.4-rel (wave 114 step 0, block 128): corpus **954/954**,
+probes **289/289** (tuple lock promoted), modules **509/509**, barename
+**0/509**, floors148, module-smoke + doc ratchets OK. (The v0.64.2
+battery history, block 121/113: the same minus the tuple lock.) Coverage = **69.8%** global
 pub-with-clause (meter 77.0%): misc 98.7, net 97.3, sync 94.9, crypto
 94.5, hash 94.4, os 55.4, math 53.0, iter 46.4, sort 42.6, time 41.3,
 num 37.6, async 4.5. Waves after snapshot 29: 110 (sync dir tail; 70
@@ -90,10 +92,11 @@ findings plan is block 125 (tiers + pin-bump + re-verify cycle).
 Runtime/handoff items ours: B-05 guard-heap spin, darwin-x64 fp128
 (pulse-2); 1442 awaits the compiler close; 1630/1658 are the compiler's.
 
-FIRST TASK (wave 114): (0) **bump the battery pin to the v0.64.4
-release archive** (the one at ...\v0.64.4-rel), re-run the full battery,
-promote `p_tuple_elem_vec_read.xi` to `tools/probes/` (289 locks), and
-record the pin move in the snapshot/queue; (1) then continue coverage on
+FIRST TASK (wave 114): (0) DONE 2026-10-12 (block 128): battery pin
+bumped to the v0.64.4 release archive (`...\v0.64.4-rel`), full battery
+green, `p_tuple_elem_vec_read.xi` promoted to `tools/probes/` (289
+locks), pin move recorded in snapshot/queue, `COMPILER_VERSION` ->
+v0.64.4; (1) then continue coverage on
 the released pin -- the string-dir strnlen-family follow-up (cached
 (base, len) per file, scoped with smokes) or the next big dirs (num/
 time/async); (2) keep the re-verify cycle for the compiler's next batch
@@ -123,8 +126,8 @@ HANDOFF NOTE: locks include p_pin0641_iter_shapes.xi, the wave-77 stats
 probe, the PULSE hardening probe, the wave-78..113 coverage probes
 (wave 111 added p_json_parse_scale.xi; 112/113 added their probes), the
 io locks, the promoted regression locks, and the new witness locks
-(p_witness_1052_rev.xi, p_wave106_shapes.xi) -- **288 probes now; 289
-after the tuple lock promotion**. Open repros: the 16 Current findings
+(p_witness_1052_rev.xi, p_wave106_shapes.xi) -- **289 probes now (tuple
+lock promoted at the pin bump)**. Open repros: the 16 Current findings
 (see tools/known_failures/README.md; the v0.64.4 verdict table is in
 block 124 + REL-20261012-1342-stdlib). The relay doorbell cron runs
 every 2h (renew at session start if the session died): pull the bus,
@@ -2614,6 +2617,32 @@ registry pin, agent recon for the rest)**
   probes 281/281 (299.4s), modules 509/509 (203.3s), barename 0/509
   (216.6s), floors144 + doc + module-smoke (497/517, 3476/6204)
   ratchets OK.
+
+**SESSION 2026-10-12 block 128 (wave 114 step 0: battery pin moved to the official v0.64.4 release archive; tuple lock promoted -- 289 probes; full battery green)**
+- PIN MOVE: battery pin v0.64.2 -> v0.64.4
+  (`%TEMP%\kilo\stdlib_ws\v0.64.4-rel\bin\xiom.exe`, the official
+  xiom-0.64.4-windows-x64 asset; `--version` = v0.64.4, sha256
+  DB8A2EF0FF6D1B99209D06D6E54DD0BFC18F7BDDEB792EA1B6E096CA45DB3B37);
+  `COMPILER_VERSION` v0.64.3 -> v0.64.4 (CI + release metadata now track
+  the released compiler; v0.64.3 was the cut-time existing tag; wave-pin
+  precedent 9d519ee).
+- FULL BATTERY on v0.64.4-rel, all green: corpus 954/954 (589.5s), probes
+  289/289 (277.7s), modules 509/509 (190.4s), barename 0/509 (322.3s),
+  coverage floors148 ratchet OK (69.8% pub-with-clause, meter 77.0%),
+  doc 100% + module-smoke (497/517, 3476/6204) ratchets OK. Evidence
+  under out/pin0644.
+- PROMOTION: `p_tuple_elem_vec_read.xi` known_failures -> tools/probes
+  (289th lock; rc 0 on the release archive, compiler m254); probe header
+  annotated + known_failures README resolution entry updated. The
+  known_failures sweep table stays 27 repros.
+- CONCURRENCY NOTE: commit 2e4a363 (block 127, doorbell 19:00Z,
+  ops-clobber compliance) landed from another process working this shared
+  worktree during this session's corpus run; it touched neither this
+  block's files nor its evidence, and this session leaves its records
+  intact.
+- Next in wave 114: probe-first `p_wave114_shapes.xi`; then coverage on
+  the released pin -- the string-dir strnlen-family follow-up (cached
+  (base, len) per file, scoped with smokes), leading to floors149.
 
 **SESSION 2026-10-12 block 127 (doorbell 19:00Z: ops clobber root cause + rules received; lane compliant)**
 - REL-20261012-1852-ops (to: all, high): the shared-home clobbers were

@@ -190,14 +190,20 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
     (T1 silent-wrong/trap rows, T2 compile-fail ergonomics, T3 guards),
     (3) stdlib-side polygon + the runtime/wishlist bundle, (4) the
     post-batch re-verify sweep cycle. Handoff in
-    `docs/stdlib_session.md` snapshot 30 (block 126 refresh), wave
-    records blocks 89-126.
+    `docs/stdlib_session.md` snapshot 30 (block 128 refresh), wave
+    records blocks 89-128. WAVE 114 step 0 (block 128): battery pin moved
+    to the official v0.64.4 release archive
+    (%TEMP%\kilo\stdlib_ws\v0.64.4-rel\bin\xiom.exe, sha256 DB8A2EF0...;
+    COMPILER_VERSION -> v0.64.4): corpus 954/954 (589.5s), probes 289/289
+    (277.7s; p_tuple_elem_vec_read.xi promoted, lock 289), modules
+    509/509 (190.4s), barename 0/509 (322.3s), floors148 + doc +
+    module-smoke ratchets OK.
 BINARY NOTE: the shared local build path
 `E:\xiom-lang\xiom\target\release\xiom.exe` was rebuilt past the pin
 (compiler main da7798da m252) and fails four corpus smokes; waves now run
-on the official v0.64.3 archive
-`%TEMP%\kilo\stdlib_ws\v0.64.3\bin\xiom.exe` (sha256 5140b863...), with
-the v0.64.2 archive kept for comparison.
+on the official v0.64.4 release archive
+`%TEMP%\kilo\stdlib_ws\v0.64.4-rel\bin\xiom.exe` (sha256 DB8A2EF0...),
+with the v0.64.3/v0.64.2 archives kept for comparison.
 
 ## Project Pulse relay (web-framework lane) -- 2026-10-05
 
