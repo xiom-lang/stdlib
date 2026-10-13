@@ -190,8 +190,9 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
     (T1 silent-wrong/trap rows, T2 compile-fail ergonomics, T3 guards),
     (3) stdlib-side polygon + the runtime/wishlist bundle, (4) the
     post-batch re-verify sweep cycle. Handoff in
-    `docs/stdlib_session.md` snapshot 31 (block 138 refresh), wave
-    records blocks 89-138. WAVE 114 step 0 (block 128): battery pin moved
+    `docs/stdlib_session.md` snapshot 31 (block 141 refresh, head
+    75e003d), wave
+    records blocks 89-141. WAVE 114 step 0 (block 128): battery pin moved
     to the official v0.64.4 release archive
     (%TEMP%\kilo\stdlib_ws\v0.64.4-rel\bin\xiom.exe, sha256 DB8A2EF0...;
     COMPILER_VERSION -> v0.64.4): corpus 954/954 (589.5s), probes 289/289

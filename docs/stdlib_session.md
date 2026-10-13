@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 31 (2026-10-13; waves 114-119 landed; probes 296; floors153; orbitdb bundle closed upstream; relay live)
+## 0A. CONTINUE HERE -- handoff snapshot 31 (updated 2026-10-13 12:00Z at head 75e003d; waves 114-119 landed and externally verified; probes 296; floors153; relay live)
 
 ### Snapshot 31 (paste-ready)
 
@@ -26,9 +26,10 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 ---
 
 You are continuing the XIOM stdlib lane. Worktree `E:\xiom-lang\stdlib`,
-branch `main`. Read `docs/stdlib_session.md` blocks 137, 136, 135, 134,
-133, 132, 131, 130, 129, 128, 127, 126, 125 (older as needed); the
-snapshot-30 section below is the previous handoff and is superseded.
+branch `main`. Read `docs/stdlib_session.md` blocks 140, 139, 138, 137,
+136, 135, 134, 133, 132, 131, 130, 129, 128, 127, 126, 125 (older as
+needed); the snapshot-30 section below is the previous handoff and is
+superseded.
 
 STATE: compiler v0.64.4 released and pinned (tag f76fd47c on df493530; the
 official windows-x64 asset pre-downloaded at
@@ -43,13 +44,17 @@ disjoint-case fix (the LAST stdlib Current repro resolved + promoted);
 ends_with_newline, remove_dir, truncate_fd); 118 = P4 advisory locking
 (fcntl/LockFileEx); 119 = socket options + deadline receive (SO_RCVTIMEO /
 FIONBIO / reuse_addr / shutdown real, Windows bind REUSEADDR parity, the
-recv/recvfrom Int32 ABI fix, socket_recv_timeout).
+recv/recvfrom Int32 ABI fix, socket_recv_timeout). All six waves are
+externally accepted: orbitdb closed its bundle; pulse closed the 0317/-2
+rows (re-ran the wave-119 lock probes against a9b21b2 with
+XIOM_RUNTIME_DIR) and fsync_dir; packages verified the locking row. Lane
+head at handoff: 75e003d (main).
 
 GATES (block 136, final tree): corpus 954/954, probes 296/296, modules
 509/509, barename 0/509, floors153 + module-smoke + doc ratchets OK.
 Coverage 70.4% (pubFns 6519, pubCovered 4589, clauses 6136). Consumer
-status: orbitdb bundle closed; pulse-0317/-2 and the 1550 durability rows
-fixed upstream-verifiable; xvector-2..4 fixed (verify pending).
+status: orbitdb bundle closed; pulse-0317/-2 and fsync_dir verified +
+closed; packages-6 verified; xvector-2..4 fixed (verify pending).
 
 FINDINGS: 15 Current, all compiler (tools/known_failures/README.md) -- the
 stdlib ledger carries no open repro (polygon was the last; block 133).
@@ -81,8 +86,13 @@ benchmarks; run_smokes.ps1 has NO per-file timeout (guard hangs at the
 caller -- direct compile + a managed process timeout works); Windows
 LockFileEx blocking-regain on a self-held range HANGS; probe file fixtures
 truncate-first and clean up (the probe CWD is the repo root); watch:
-smoke_misc2 flake rc 20 (no repro yet). The relay doorbell cron runs every
-2h (pull the bus, process items, record a block).
+smoke_misc2 flake rc 20 (no repro yet). The relay doorbell cron is
+SESSION-SCOPED: renew it at session start (schedule the 2h
+relay-doorbell prompt; this session's cron dies with it). A concurrent
+stdlib-side actor occasionally commits doc-level bus transitions in this
+shared worktree (idempotent only so far -- blocks 128/132/140); re-check
+git log/status before every write and never sweep foreign edits into a
+commit.
 
 ---
 
@@ -2702,6 +2712,20 @@ registry pin, agent recon for the rest)**
   probes 281/281 (299.4s), modules 509/509 (203.3s), barename 0/509
   (216.6s), floors144 + doc + module-smoke (497/517, 3476/6204)
   ratchets OK.
+
+**SESSION 2026-10-13 block 141 (handoff update 12:00Z -- snapshot 31 refreshed in place at head 75e003d; continuation prompt re-issued)**
+- Snapshot 31 updated in place: read-list through block 140; the
+  six-wave external-acceptance line (orbitdb bundle closed; pulse closed
+  the 0317/-2 rows by re-running the wave-119 lock probes against
+  a9b21b2 with XIOM_RUNTIME_DIR, and closed fsync_dir; packages verified
+  the locking row); consumer status refreshed; cautions now state that
+  the relay doorbell cron is SESSION-SCOPED (renew at session start) and
+  record the concurrent stdlib-side actor pattern (idempotent doc-level
+  transitions, blocks 128/132/140 -- re-check git state before writes,
+  never sweep foreign edits into a commit). Snapshot 30 remains as
+  superseded history; the queue pointer reads block 141.
+- The paste-ready continuation prompt was re-issued to the operator
+  because this session's context window is full. No code changes.
 
 **SESSION 2026-10-13 block 140 (doorbell 11:00Z: wave-119 rows verified + closed by pulse; no new asks)**
 - BUS ROUND (new relay commits since 09:00Z): no new stdlib asks.
