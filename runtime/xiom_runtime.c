@@ -5197,9 +5197,13 @@ int xiom_socket_connect(xiom_socket_t s, const char* host, int port) {
 }
 int xiom_socket_bind(xiom_socket_t s, int port) {
     struct sockaddr_in addr;
+    int opt = 1;
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = INADDR_ANY;
     addr.sin_port = htons((u_short)port);
+    /* Wave 119 (pulse REL-20261011-0317): POSIX parity -- the Windows
+       bind path lacked SO_REUSEADDR, breaking immediate restarts. */
+    setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (const char*)&opt, sizeof(opt));
     return bind(s, (struct sockaddr*)&addr, sizeof(addr));
 }
 int xiom_socket_listen(xiom_socket_t s, int backlog) { return listen(s, backlog); }
@@ -5216,6 +5220,19 @@ xiom_socket_t xiom_socket_accept(xiom_socket_t s, char* client_ip, int* client_p
 int xiom_socket_send(xiom_socket_t s, const char* buf, int len) { return send(s, buf, len, 0); }
 int xiom_socket_recv(xiom_socket_t s, char* buf, int len) { return recv(s, buf, len, 0); }
 int xiom_socket_close(xiom_socket_t s) { return closesocket(s); }
+int xiom_socket_set_timeout(xiom_socket_t s, int ms) {
+    /* Windows SO_RCVTIMEO takes milliseconds; 0 = no timeout. */
+    return setsockopt(s, SOL_SOCKET, SO_RCVTIMEO, (const char*)&ms, sizeof(ms));
+}
+int xiom_socket_set_nonblocking(xiom_socket_t s, int on) {
+    u_long mode = on ? 1ul : 0ul;
+    return ioctlsocket(s, FIONBIO, &mode);
+}
+int xiom_socket_reuse_addr(xiom_socket_t s, int on) {
+    int opt = on ? 1 : 0;
+    return setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (const char*)&opt, sizeof(opt));
+}
+int xiom_socket_shutdown(xiom_socket_t s, int how) { return shutdown(s, how); }
 int xiom_dns_resolve(const char* hostname, char* ip_buf, int buf_size) {
     struct hostent* he = gethostbyname(hostname);
     if (!he) return -1;
@@ -5297,6 +5314,27 @@ xiom_socket_t xiom_socket_accept(xiom_socket_t s, char* client_ip, int* client_p
 int xiom_socket_send(xiom_socket_t s, const char* buf, int len) { return (int)send(s, buf, len, 0); }
 int xiom_socket_recv(xiom_socket_t s, char* buf, int len) { return (int)recv(s, buf, len, 0); }
 int xiom_socket_close(xiom_socket_t s) { return close(s); }
+
+#include <fcntl.h>
+#include <sys/time.h>
+
+int xiom_socket_set_timeout(xiom_socket_t s, int ms) {
+    struct timeval tv;
+    tv.tv_sec = ms / 1000;
+    tv.tv_usec = (ms % 1000) * 1000;
+    return setsockopt(s, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+}
+int xiom_socket_set_nonblocking(xiom_socket_t s, int on) {
+    int fl = fcntl(s, F_GETFL, 0);
+    if (fl < 0) return -1;
+    if (on) fl |= O_NONBLOCK; else fl &= ~O_NONBLOCK;
+    return fcntl(s, F_SETFL, fl);
+}
+int xiom_socket_reuse_addr(xiom_socket_t s, int on) {
+    int opt = on ? 1 : 0;
+    return setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+}
+int xiom_socket_shutdown(xiom_socket_t s, int how) { return shutdown(s, how); }
 int xiom_dns_resolve(const char* hostname, char* ip_buf, int buf_size) {
     struct hostent* he = gethostbyname(hostname);
     if (!he) return -1;

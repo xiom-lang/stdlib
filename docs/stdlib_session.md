@@ -105,9 +105,11 @@ closed); (3) DONE 2026-10-12 (block 133): the polygon difference disjoint case i
 fixed and the repro promoted (probes 293); the full overlap clipper stays
 a follow-up; (4) PARTLY DONE 2026-10-12 (block 131, wave 115): the fsync
 family + byte IO + flush_stdout landed; the P5 small pairs (append_line_sync,
-tail checks, remove_dir, fd ftruncate) landed in wave 117 (block 134) --
-socket options/deadline, thread pool, locking/mmap and the f32 bitcast
-remain in the runtime bundle queue.
+tail checks, remove_dir, fd ftruncate) landed in wave 117 (block 134);
+locking landed in wave 118 (block 135); socket options + deadline receive
+landed in wave 119 (block 136) -- remaining: thread pool (rides the
+compiler 2053 batch), mmap (xvector-1945-2) and the f32 bitcast pair
+(compiler Float32 batch).
 
 RELEASE-CYCLE DIRECTIVE (owner, 2026-10-12 evening): on the next compiler
 candidate/release, take care of the relay items the compiler will post
@@ -127,19 +129,19 @@ comparing, green on the CURRENT battery pin (v0.64.4 after the bump).
 deliberate semantic change lands, remerge old locks that assert the old
 behavior. (4) dump `tools/coverage_floors150.json`, wire workflows +
 tools/README + plan/session/queue in one commit, YAML check, pure-ASCII
-commit. (5) battery: corpus 954/954, probes expect 295
-(291 + the wave-116/-118 shapes probes + the promoted polygon repro),
-modules 509/509, barename 0/509, floors152 + module-smoke ratchets; push `main` with the one-shot Lefteris-Notas credential (403
+commit. (5) battery: corpus 954/954, probes expect 296
+(291 + the wave-116/-119 shapes probes + the promoted polygon repro),
+modules 509/509, barename 0/509, floors153 + module-smoke ratchets; push `main` with the one-shot Lefteris-Notas credential (403
 as Lefteris-Ngonart; GitHub 500s per failed_attempts.md). (6) no
 unbounded scratch benchmarks. (7) release side follows the candidate-tag
 pin protocol; do NOT tag/publish without the compiler-lane OK.
 
 HANDOFF NOTE: locks include p_pin0641_iter_shapes.xi, the wave-77 stats
-probe, the PULSE hardening probe, the wave-78..118 coverage probes
-(wave 111 added p_json_parse_scale.xi; 112-118 added their probes), the
+probe, the PULSE hardening probe, the wave-78..119 coverage probes
+(wave 111 added p_json_parse_scale.xi; 112-119 added their probes), the
 io locks, the promoted regression locks, and the new witness locks
-(p_witness_1052_rev.xi, p_wave106_shapes.xi) -- **295 probes now (tuple
-lock + the wave-114/-118 shapes probes + the promoted polygon repro)**.
+(p_witness_1052_rev.xi, p_wave106_shapes.xi) -- **296 probes now (tuple
+lock + the wave-114/-119 shapes probes + the promoted polygon repro)**.
 Open repros: the 15 Current findings, all compiler (the stdlib polygon
 entry was resolved in wave 116; see tools/known_failures/README.md; the
 v0.64.4 verdict table is in
@@ -2631,6 +2633,45 @@ registry pin, agent recon for the rest)**
   probes 281/281 (299.4s), modules 509/509 (203.3s), barename 0/509
   (216.6s), floors144 + doc + module-smoke (497/517, 3476/6204)
   ratchets OK.
+
+**SESSION 2026-10-13 block 136 (doorbell 03:00Z: socket options + deadline recv real; probes 296; floors153; the -0317 family closed)**
+- BUS ROUND: no new asks; two stale wave-115 rows fixed on the bus
+  (pulse-1134 fsync_dir, xvector-8 flush_stdout -- both landed in c65acb5
+  but were never moved; now acked -> fixed with the re-vendor caveat).
+- WAVE 119 (socket options + deadline receive): runtime
+  xiom_socket_set_timeout (SO_RCVTIMEO; POSIX timeval, Windows ms),
+  xiom_socket_set_nonblocking (O_NONBLOCK / FIONBIO),
+  xiom_socket_reuse_addr, xiom_socket_shutdown; the Windows bind now sets
+  SO_REUSEADDR (POSIX parity -- the REL-20261011-0317 root cause);
+  socket.xi set_timeout / set_nonblocking / reuse_addr / shutdown /
+  recv_timeout real. Early-error returns were preserved after the first
+  cut used requires: p_wave60_shapes probes the old documented Err paths
+  and the requires form ABORTED (contract violated: requires at 336:13)
+  -- the catalog convention for these wrappers is return-Err, kept, with
+  payload-free ensures guards for coverage.
+- ROOT-CAUSE FIX (latent bug): xiom_socket_recv / recvfrom were declared
+  `-> Int` (i64) while the runtime returns C int; a -1 (EWOULDBLOCK /
+  timeout) was read as 4294967295, and socket_recv then tried a ~34 GB
+  Vec allocation -> ACCESS VIOLATION (0xC0000005; the standalone b4
+  bisect crashed between before/after markers; WER showed the fault
+  in-image). Both are `-> Int32` + casts now (join xiom_socket_connect);
+  the four new option externs are Int32 too. Never surfaced before
+  because net/http/ws call the extern directly with their own buffers
+  and never hit the -1 path; the socket.xi wrappers were unexercised.
+- LOCKS: probe p_wave119_shapes.xi (296th) red pre (run 8 = reuse stub) /
+  green post: loopback pair; nonblocking recv Err fast; 250 ms timeout
+  recv Err; recv_timeout Err; shutdown Ok + peer EOF (empty Ok recv);
+  every value bound before comparing. p_wave60_shapes remerged.
+  smoke_net* 11/11. FLAKE NOTE: smoke_misc2 returned rc 20 once in the
+  first wave-119 battery and passes solo x2 -- watch-listed, no repro
+  yet.
+- COVERAGE: pubFns 6518 -> 6519, pubCovered 4588 -> 4589 (clauses 6136;
+  70.4%); floors153 dumped + wired (ci/heavy/release + tools/README +
+  plan). Battery on v0.64.4-rel (final tree): corpus 954/954, probes
+  296/296, modules 509/509, barename 0/509, ratchets OK.
+- BUS (after the push): pulse-0317 and pulse-0317-2 move acked -> fixed
+  with the commit + the ABI-fix note; the 1946-pulse wave-2 item gets the
+  progress note (deadlines + socket options landed).
 
 **SESSION 2026-10-13 block 135 (doorbell 01:00Z: no new asks; wave 118 -- P4 advisory locking real; probes 295; floors152)**
 - BUS ROUND: no new stdlib asks (the non-terminal set is unchanged; the

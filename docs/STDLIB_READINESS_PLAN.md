@@ -1757,8 +1757,27 @@ T1/T2 yields.
         ratchets OK. DEFERRED: the f32 bitcast pair (xvector-6) is
         compiler-blocked (the f64 pair is a compiler-intrinsic lowering;
         Float32 narrowing rides the compiler's next batch).
+        Wave 119 (2026-10-13): socket options + deadline receive -- runtime
+        xiom_socket_set_timeout (SO_RCVTIMEO; POSIX timeval, Windows ms),
+        xiom_socket_set_nonblocking (O_NONBLOCK / FIONBIO),
+        xiom_socket_reuse_addr, xiom_socket_shutdown; the Windows bind now
+        sets SO_REUSEADDR (POSIX parity; the REL-20261011-0317 root cause);
+        socket.xi set_timeout / set_nonblocking / reuse_addr / shutdown /
+        recv_timeout real (early-error returns preserved -- old locks probe
+        them and a requires form aborts). ROOT-CAUSE FIX: xiom_socket_recv
+        / recvfrom returned C int but were declared Int (i64), so -1
+        (EWOULDBLOCK/timeout) read as 4294967295 and the wrapper tried a
+        ~34 GB Vec allocation -> ACCESS VIOLATION; both are Int32 + casts
+        now, which unblocks nonblocking and timeout recv. Probe
+        p_wave119_shapes.xi (296th) red pre / green post (loopback pair:
+        nonblocking Err fast, 250 ms timeout Err, recv_timeout Err,
+        shutdown Ok + peer EOF); p_wave60_shapes remerged to the real
+        semantics; smoke_net* 11/11. Coverage: pubFns 6519, pubCovered
+        4589 (clauses 6136, 70.4%), floors153 wired; battery on
+        v0.64.4-rel: corpus 954/954, probes 296/296, modules 509/509,
+        barename 0/509, ratchets OK.
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors152.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors153.json
         tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;

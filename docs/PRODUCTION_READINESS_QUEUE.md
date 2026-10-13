@@ -256,7 +256,18 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
     corpus 954/954, probes 295/295, modules 509/509, barename 0/509.
     Platform lore: Windows LockFileEx blocking-reacquire hangs -- never
     re-lock a held range. Deferred: xvector-6 f32 bitcast (compiler
-    Float32 batch).
+    Float32 batch). WAVE 119 (block 136): socket options + deadline
+    receive -- runtime set_timeout/nonblocking/reuse_addr/shutdown, the
+    Windows bind SO_REUSEADDR parity fix, socket.xi option wrappers +
+    recv_timeout real; ROOT-CAUSE FIX: recv/recvfrom Int->Int32 return
+    (a -1 read as 4294967295 caused an access violation on the
+    nonblocking/timeout path -- unblocks both). Probe p_wave119_shapes.xi
+    (296th); p_wave60_shapes remerged (requires-abort -> early-error
+    returns); smoke_net* 11/11; floors153 wired (pubCovered 4589,
+    clauses 6136); battery on v0.64.4-rel: corpus 954/954, probes
+    296/296, modules 509/509, barename 0/509. Stale rows fixed: pulse-1134
+    (fsync_dir), xvector-8 (flush_stdout). Watch: smoke_misc2 flaked once
+    (rc 20; solo x2 green).
 BINARY NOTE: the shared local build path
 `E:\xiom-lang\xiom\target\release\xiom.exe` was rebuilt past the pin
 (compiler main da7798da m252) and fails four corpus smokes; waves now run

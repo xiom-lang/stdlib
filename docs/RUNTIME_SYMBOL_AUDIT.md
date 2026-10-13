@@ -154,3 +154,8 @@ move by a further +2 definitions / +2 declarations. No deletions.
 Wave-118 update 2026-10-13: `xiom_flock_fd` and `xiom_funlock_fd`
 (advisory locking for the P4 row) are declared by `sync_io` in the same
 commit -- a further +2 definitions / +2 declarations. No deletions.
+
+Wave-119 update 2026-10-13: `xiom_socket_set_timeout`,
+`xiom_socket_set_nonblocking`, `xiom_socket_reuse_addr` and
+`xiom_socket_shutdown` are declared by `net/socket.xi` in the same commit
+-- a further +4 definitions / +4 declarations. No deletions.

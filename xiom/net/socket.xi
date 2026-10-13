@@ -9,9 +9,9 @@ module xiom.net.socket
 // Raw TCP/UDP socket lifecycle: create, bind, listen, accept, connect,
 // send, receive, address queries and options. The core operations are
 // implemented on the same runtime socket primitives used by xiom.net;
-// options that the runtime does not expose (timeout, non-blocking,
-// reuse-addr, shutdown, peer/local address, pending bytes) return a
-// documented Err instead of crashing.
+// timeout, non-blocking, reuse-addr and shutdown are real since wave 119
+// (SO_RCVTIMEO / FIONBIO / O_NONBLOCK / setsockopt + shutdown);
+// peer/local address and pending bytes still return a documented Err.
 
 extern "C" {
   fn xiom_socket_create(family: Int, typ: Int, proto: Int) -> Int;
@@ -20,10 +20,17 @@ extern "C" {
   fn xiom_socket_listen(sock: Int, backlog: Int) -> Int;
   fn xiom_socket_accept(sock: Int, client_ip: *UInt8, client_port: *Int) -> Int;
   fn xiom_socket_send(sock: Int, buf: *UInt8, len: Int) -> Int;
-  fn xiom_socket_recv(sock: Int, buf: *UInt8, len: Int) -> Int;
+  // Int32 return: the runtime returns C `int` and -1 means failure; an i64
+  // read would see 4294967295 and mis-classify errors (wave-119 fix; the
+  // same reason xiom_socket_connect above is Int32).
+  fn xiom_socket_recv(sock: Int, buf: *UInt8, len: Int) -> Int32;
   fn xiom_socket_close(sock: Int) -> Int;
   fn xiom_socket_sendto(sock: Int, buf: *UInt8, len: Int, host: *UInt8, port: Int) -> Int;
-  fn xiom_socket_recvfrom(sock: Int, buf: *UInt8, len: Int, out_ip: *UInt8, out_port: *Int) -> Int;
+  fn xiom_socket_recvfrom(sock: Int, buf: *UInt8, len: Int, out_ip: *UInt8, out_port: *Int) -> Int32;
+  fn xiom_socket_set_timeout(sock: Int, ms: Int) -> Int32;
+  fn xiom_socket_set_nonblocking(sock: Int, on: Int) -> Int32;
+  fn xiom_socket_reuse_addr(sock: Int, on: Int) -> Int32;
+  fn xiom_socket_shutdown(sock: Int, how: Int) -> Int32;
 }
 
 const AF_INET: Int = 2;
@@ -181,7 +188,8 @@ pub fn socket_recv(fd: Int, max: Int) -> Result[Vec[UInt8], Str]
     cap = 65536;
   }
   var raw_buf: [65536]UInt8;
-  let n = unsafe { xiom_socket_recv(fd, &raw_buf as *UInt8, cap) };
+  let n32: Int32 = unsafe { xiom_socket_recv(fd, &raw_buf as *UInt8, cap) };
+  let n = n32 as Int;
   if n < 0 {
     return Err("socket_recv: recv failed");
   }
@@ -248,7 +256,8 @@ pub fn socket_recv_from(fd: Int, max: Int) -> Result[(Vec[UInt8], Str, Int), Str
   var raw_buf: [65536]UInt8;
   var ip_buf: [64]UInt8;
   var port_val: Int = 0;
-  let n = unsafe { xiom_socket_recvfrom(fd, &raw_buf as *UInt8, cap, &ip_buf as *UInt8, &port_val) };
+  let n32: Int32 = unsafe { xiom_socket_recvfrom(fd, &raw_buf as *UInt8, cap, &ip_buf as *UInt8, &port_val) };
+  let n = n32 as Int;
   if n < 0 {
     return Err("socket_recv_from: recvfrom failed");
   }
@@ -272,6 +281,33 @@ pub fn socket_recv_from(fd: Int, max: Int) -> Result[(Vec[UInt8], Str, Int), Str
   Ok((data, peer, port_val))
 }
 
+/// socket_recv_timeout receives up to max bytes with a per-call deadline:
+/// it sets the receive timeout to ms, receives, then restores no-timeout
+/// (0). A deadline expiry (or any recv failure) surfaces as Err -- the
+/// slowloris guard from REL-20261011-0317-pulse-2. Real since wave 119.
+pub fn socket_recv_timeout(fd: Int, max: Int, ms: Int) -> Result[Vec[UInt8], Str]
+  ensures: (fd < 0) => (result is Err)
+  ensures: (ms < 0) => (result is Err)
+{
+  if fd < 0 {
+    return Err("socket_recv_timeout: invalid fd");
+  }
+  if ms < 0 {
+    return Err("socket_recv_timeout: negative timeout");
+  }
+  let st = socket_set_timeout(fd, ms);
+  match st {
+    Ok(_) => {},
+    Err(_) => {
+      return Err("socket_recv_timeout: set timeout failed");
+    },
+  };
+  let r = socket_recv(fd, max);
+  let sr = socket_set_timeout(fd, 0);
+  let _ = sr;
+  return r;
+}
+
 /// socket_close closes a socket, releasing the fd.
 /// Complexity: O(1) syscall.
 pub fn socket_close(fd: Int)
@@ -282,10 +318,13 @@ pub fn socket_close(fd: Int)
   }
 }
 
-/// socket_set_timeout sets the receive timeout in milliseconds. The
-/// runtime does not expose SO_RCVTIMEO; always returns a documented Err.
+/// socket_set_timeout sets the receive timeout in milliseconds
+/// (SO_RCVTIMEO; 0 = no timeout). Real since wave 119. Invalid inputs keep
+/// the documented early-error path (no contract abort).
+/// Returns: Ok(()) once the option is set; Err on failure.
 pub fn socket_set_timeout(fd: Int, ms: Int) -> Result[Unit, Str]
-  ensures: result.is_err == true
+  ensures: (fd < 0) => (result is Err)
+  ensures: (ms < 0) => (result is Err)
 {
   if fd < 0 {
     return Err("socket_set_timeout: invalid fd");
@@ -293,27 +332,46 @@ pub fn socket_set_timeout(fd: Int, ms: Int) -> Result[Unit, Str]
   if ms < 0 {
     return Err("socket_set_timeout: negative timeout");
   }
-  Err("socket_set_timeout: SO_RCVTIMEO not exposed by runtime")
+  let rc: Int32;
+  unsafe {
+    rc = xiom_socket_set_timeout(fd, ms);
+  }
+  if rc != 0 {
+    return Err("socket_set_timeout: setsockopt failed");
+  }
+  Ok(())
 }
 
-/// socket_set_nonblocking enables or disables non-blocking mode. The
-/// runtime does not expose FIONBIO/O_NONBLOCK; always returns a
-/// documented Err.
+/// socket_set_nonblocking enables or disables non-blocking mode
+/// (fcntl O_NONBLOCK on POSIX, ioctlsocket FIONBIO on Windows). Real
+/// since wave 119; invalid fd keeps the documented early-error path.
 pub fn socket_set_nonblocking(fd: Int, on: Bool) -> Result[Unit, Str]
-  ensures: result.is_err == true
+  ensures: (fd < 0) => (result is Err)
 {
   if fd < 0 {
     return Err("socket_set_nonblocking: invalid fd");
   }
-  let _ = on;
-  Err("socket_set_nonblocking: non-blocking mode not exposed by runtime")
+  var v = 0;
+  if on {
+    v = 1;
+  }
+  let rc: Int32;
+  unsafe {
+    rc = xiom_socket_set_nonblocking(fd, v);
+  }
+  if rc != 0 {
+    return Err("socket_set_nonblocking: mode change failed");
+  }
+  Ok(())
 }
 
 /// socket_shutdown shuts down reading, writing, or both per how
-/// (0 = receive, 1 = send, 2 = both). The runtime does not expose
-/// shutdown(); always returns a documented Err.
+/// (0 = receive, 1 = send, 2 = both). Real since wave 119; invalid fd/how
+/// keep the documented early-error path (no contract abort).
 pub fn socket_shutdown(fd: Int, how: Int) -> Result[Unit, Str]
-  ensures: result.is_err == true
+  ensures: (fd < 0) => (result is Err)
+  ensures: (how < 0) => (result is Err)
+  ensures: (how > 2) => (result is Err)
 {
   if fd < 0 {
     return Err("socket_shutdown: invalid fd");
@@ -321,7 +379,14 @@ pub fn socket_shutdown(fd: Int, how: Int) -> Result[Unit, Str]
   if how < 0 || how > 2 {
     return Err("socket_shutdown: invalid how");
   }
-  Err("socket_shutdown: shutdown() not exposed by runtime")
+  let rc: Int32;
+  unsafe {
+    rc = xiom_socket_shutdown(fd, how);
+  }
+  if rc != 0 {
+    return Err("socket_shutdown: shutdown failed");
+  }
+  Ok(())
 }
 
 /// socket_peer_addr returns the connected peer address. The runtime does
@@ -355,14 +420,26 @@ pub fn socket_available(fd: Int) -> Int
   0
 }
 
-/// socket_reuse_addr enables or disables SO_REUSEADDR. The runtime does
-/// not expose setsockopt(); always returns a documented Err.
+/// socket_reuse_addr enables or disables SO_REUSEADDR. Real since wave
+/// 119 (setsockopt on both platforms; the Windows bind also sets it);
+/// invalid fd keeps the documented early-error path.
+/// Returns: Ok(()) once the option is set; Err on failure.
 pub fn socket_reuse_addr(fd: Int, on: Bool) -> Result[Unit, Str]
-  ensures: result.is_err == true
+  ensures: (fd < 0) => (result is Err)
 {
   if fd < 0 {
     return Err("socket_reuse_addr: invalid fd");
   }
-  let _ = on;
-  Err("socket_reuse_addr: setsockopt() not exposed by runtime")
+  var v = 0;
+  if on {
+    v = 1;
+  }
+  let rc: Int32;
+  unsafe {
+    rc = xiom_socket_reuse_addr(fd, v);
+  }
+  if rc != 0 {
+    return Err("socket_reuse_addr: setsockopt failed");
+  }
+  Ok(())
 }
