@@ -3023,6 +3023,27 @@ registry pin, agent recon for the rest)**
   delivery) closed out the pulse wave-2 rows -- probes 300; floors157.
 - No other queue moves; 1442 and 1630/1658 remain the compiler's.
 
+**SESSION 2026-10-13 block 157 (doorbell 19:00Z -- quiet for transitions; waves 127-129 + snapshot 34 by the concurrent actor; 1445 now fixed on the bus)**
+- Lane view: no stdlib-addressed changes to transition. Bus state at this
+  round: `REL-20261013-1445-compiler` moved to **fixed** (the
+  alloc-guard-spin call-site lowering landed compiler-side; the lock
+  rides the next pin); `REL-20261013-1423` stays acked for the thread
+  wave; `REL-20261013-1545-orbitdb` **closed** -- the host incident was
+  this lane's wave-125 measurement scratch (out/dbg125r.exe grew ~26 GB
+  in 2 min and thrashed the box; stopped at the owner's flag 15:47Z); the
+  underlying defect (concat-per-byte builder; strings leak by design) was
+  measured and fixed in the same wave, and the re-run is capped and
+  announced per the 1545 protocol.
+- Tree: the concurrent actor committed waves **126-129** (strnlen batch
+  2: string.xi core + json escape; batch 3: 13 files; batch 4: 14 files
+  + the Char sign-extension mask fix; wave 129: the str_slice fast path)
+  and refreshed **snapshot 34** in place (block 153); head now `9855014`,
+  probes 306, floors163; working tree clean except the untracked out/
+  dir at this round.
+- Numbering: third shared-worktree collision case -- two block 152s
+  exist (mine + the actor's; wave 126 used 152b) and both stand as-is;
+  the next writer continues from 156/157.
+
 **SESSION 2026-10-13 block 156 (wave 129: the str_slice fast path -- hot per-part/per-char call sites + the combinatorics catch-up + builder; probes 306; floors163)**
 - WAVE 129 (classic wave; the core follow-up to batches 3/4): str_slice
   KEEPS its exact semantics (its `let len = s.len()` clamp is unchanged
