@@ -2934,6 +2934,32 @@ registry pin, agent recon for the rest)**
 - Handoff: snapshot 33's read-list now leads with this block; the next
   session may land on top of wave 126 if the actor commits it.
 
+**SESSION 2026-10-13 block 152 (doorbell 17:00Z: guard-free item fixed; thread hoist pending; the dbg125r host incident owned)**
+- REL-20261013-1445-compiler (B-05 guard free) moved acked -> FIXED:
+  wave 124 (252ec2d) added the arena-aware `xiom_guard_free` in
+  runtime/xiom_runtime.c and routed `ffi.free` through it (ffi.xi:45);
+  the compiler side's acceptance is the bindings alloc-guard-spin probe
+  under a watchdog. REL-20261013-1423-compiler (thread.spawn buffer
+  hoist) STAYS acked -- thread.xi still allocates inside the confined
+  block; the hoist lands with the thread wave (m282+ pin needed for the
+  spawn e2e); 2032 Vec-churn stays a separate memory-model item.
+- HOST INCIDENT (REL-20261013-1545-orbitdb, acked by the concurrent
+  session): `out/dbg125r.exe` grew to a ~25.7 GB working set in ~2 min
+  and thrashed the owner's 128 GB box; it was this lane's deliberate
+  wave-125 leak measurement. Root cause fixed in the same wave
+  (escape.xi builders are single-Vec; 512 KB in ~0.5 s / ~1 MB instead
+  of the ~137 GB allocation path; a139f23). Standing measures adopted:
+  any leak re-run is memory-capped and announced before it starts; the
+  remaining str_escape/str_unescape sites are string batch 2.
+- Observed: wave 124 = directory watch (xiom.os.watch, module 510;
+  ReadDirectoryChangesW; probe 301st; floors158) + the guard-free
+  runtime half (fixed engine-3); wave 125 = strnlen-family batch 1
+  (compare/trim/escape cached views; probe 302nd; floors159);
+  snapshot 33 re-issued (block 151; gates 955/302/510/0 on the
+  v0.64.4-rel pin).
+- No other queue moves; 1423 and the compiler-owned 1442/1630/1658
+  remain open on their sides.
+
 **SESSION 2026-10-13 block 151 (handoff 16:25Z -- snapshot 33 refreshed in place at head a139f23; waves 114-125; continuation prompt re-issued)**
 - Snapshot 33 written at the top of section 0A (waves 114-125; gates
   955/302/510/0 + floors159; coverage fns 8737/clauses 6184; the new
