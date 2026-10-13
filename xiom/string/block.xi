@@ -13,8 +13,19 @@ module xiom.string.block
 
 use xiom.string;
 
-extern "C" {
-  fn xiom_char_at(s: Str, pos: Int) -> Char;
+// Raw byte at byte index `i` of `s`, as a Char (the historical byte-level
+// semantics: multi-byte leads are not decoded here; the parsing loops only
+// compare ASCII hex digits and the 0x/U+/u+ prefixes).
+// Wave 128: raw read over the cached pointer -- xiom_char_at strnlens the
+// whole string per call, so the parsing scan was quadratic.
+// Complexity: O(1).
+fn _char_at(s: Str, i: Int) -> Char
+  requires: true  // raw byte read; callers bound i against the cached len (T007)
+{
+  unsafe {
+    let base: *UInt8 = s.c_str();
+    return (((*(base + i)) as Int) & 0xFF) as Char;
+  }
 }
 
 /// Returns the Unicode block name for a code point, or "Undefined" when the
@@ -138,24 +149,24 @@ pub fn unicode_block(c: Char) -> Str {
 /// Error case: "Undefined" for empty, non-hex, or unmapped input.
 /// Complexity: O(|code| + number of table entries).
 pub fn unicode_block_name(code: Str) -> Str
-  requires: true  // extern char_at calls in the parsing loops (T002 confinement)
+  requires: true  // raw-view parse in the loops (T002 confinement)
 {
   let len = string.str_len(code);
   var start: Int = 0;
   if len >= 2 {
-    let c = xiom_char_at(code, 0);
+    let c = _char_at(code, 0);
     if c == '0' {
-      let c2 = xiom_char_at(code, 1);
+      let c2 = _char_at(code, 1);
       if c2 == 'x' {
         start = 2;
       };
     } elif c == 'U' {
-      let c2 = xiom_char_at(code, 1);
+      let c2 = _char_at(code, 1);
       if c2 == '+' {
         start = 2;
       };
     } elif c == 'u' {
-      let c2 = xiom_char_at(code, 1);
+      let c2 = _char_at(code, 1);
       if c2 == 'u' {
         start = 2;
       };
@@ -167,7 +178,7 @@ pub fn unicode_block_name(code: Str) -> Str
   var started = false;
   var i = start;
   while i < len {
-    let c = xiom_char_at(code, i);
+    let c = _char_at(code, i);
     var hv: Int = -1;
     if c >= '0' && c <= '9' {
       hv = to_int_from_char(c) - 48;

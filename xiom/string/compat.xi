@@ -17,10 +17,16 @@ use xiom.string.normalize;
 use xiom.convert;
 
 // Masked byte at `pos` (BUG 22 #10: `as Int` sign-extends UInt8).
+// Wave 128: raw read over the cached pointer -- string.byte_at strnlens the
+// whole string per call, so the per-position decodes were quadratic.
 // Complexity: O(1).
-fn _byte(s: Str, i: Int) -> Int {
-  let v = string.byte_at(s, i) as Int;
-  v & 0xFF
+fn _byte(s: Str, i: Int) -> Int
+  requires: true  // raw byte read; callers bound i against the cached len (T007)
+{
+  unsafe {
+    let base: *UInt8 = s.c_str();
+    return ((*(base + i)) as Int) & 0xFF;
+  }
 }
 
 // UTF-8 sequence length given the leading byte.

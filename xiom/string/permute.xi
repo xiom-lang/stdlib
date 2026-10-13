@@ -17,25 +17,35 @@ use xiom.string;
 // -- Private helpers ---------------------------------------------------------
 
 // Masked byte at `pos` (BUG 22 #10: `as Int` sign-extends UInt8).
+// Wave 128: raw read over the cached pointer -- string.byte_at strnlens the
+// whole string per call, so the per-position scans were quadratic.
 // Complexity: O(1).
-fn _pm_byte(s: Str, i: Int) -> Int {
-  let v = string.byte_at(s, i) as Int;
-  v & 0xFF
+fn _pm_byte(s: Str, i: Int) -> Int
+  requires: true  // raw byte read; callers bound i against the cached len (T007)
+{
+  unsafe {
+    let base: *UInt8 = s.c_str();
+    return ((*(base + i)) as Int) & 0xFF;
+  }
 }
 
 // Builds a string from `s` by concatenating the single-byte characters at the
 // byte offsets given by `idx`, in order. Byte-based (ASCII-exact).
+// Wave 128: Vec[UInt8] builder (was concat-per-index, the leak class); the
+// cached length preserves the old str_slice clamping for out-of-range idx.
 // Complexity: O(|idx|).
 fn _pm_piece(s: Str, idx: &Vec[Int]) -> Str {
-  var piece = "";
+  var out: Vec[UInt8] = Vec[UInt8].new();
+  let slen = string.str_len(s);
   var j: Int = 0;
   while j < idx.len() {
     let pos = idx[j];
-    let one = string.str_slice(s, pos, pos + 1);
-    piece = string.str_concat(piece, one);
+    if pos < slen {
+      out.push(_pm_byte(s, pos) as UInt8);
+    };
     j = j + 1;
   };
-  piece
+  Str::from_utf8(out)
 }
 
 // Advances the index vector to the next combination of indices in [0, n).

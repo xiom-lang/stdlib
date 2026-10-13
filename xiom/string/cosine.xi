@@ -18,6 +18,19 @@ use xiom.math.sqrt;
 use xiom.string;
 use xiom.convert;
 
+// Masked byte at `pos` (BUG 22 #10: `as Int` sign-extends UInt8).
+// Wave 128: raw read over the cached pointer -- xiom.string.byte_at strnlens
+// the whole string per call, so the n-gram scan was quadratic.
+// Complexity: O(1).
+fn _raw_byte(s: Str, i: Int) -> Int
+  requires: true  // raw byte read; callers bound i against the cached len (T007)
+{
+  unsafe {
+    let base: *UInt8 = s.c_str();
+    return ((*(base + i)) as Int) & 0xFF;
+  }
+}
+
 // djb2 hash of the `n` consecutive bytes of `s` starting at `start`. The
 // bytes are masked to 0xFF because `byte_at(...) as Int` sign-extends; Int
 // wraparound is intentional - only code equality matters.
@@ -26,9 +39,7 @@ fn _ngram_code(s: Str, start: Int, n: Int) -> Int {
   var i = start;
   var end = start + n;
   while i < end {
-    let raw = xiom.string.byte_at(s, i) as Int;
-    let masked = raw & 0xFF;
-    h = h * 33 + masked;
+    h = h * 33 + _raw_byte(s, i);
     i = i + 1;
   }
   h

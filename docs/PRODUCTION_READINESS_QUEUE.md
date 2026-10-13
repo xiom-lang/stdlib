@@ -7,7 +7,7 @@ windows-x64 release archive.)
 **Gates: corpus 955/955 full (C001 carve-outs retired on v0.63.1; new
 TcpStream loopback and uuencode roundtrip smokes added; smoke_os_watch
 added in wave 124), modules 510/510,
-probes 304/304, barename 0/510.**
+probes 305/305, barename 0/510.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -26,7 +26,7 @@ gates flip:
    wave-98..110 probes), the io byte-fidelity/CRLF lock and the
    fs_remove lock).
 4. Strict bare-name scan clean -- MET (0/509).
-5. Coverage ratchet green -- MET (floors161).
+5. Coverage ratchet green -- MET (floors162).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (499/518 modules, 3500/6239 fns).
 8. Contract coverage 100% (every public fn carries clauses) -- OPEN (70.7%).
@@ -465,6 +465,31 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
      builder / combinatorics / block / compat / cosine / ea_width /
      editdistance / emoji / lcp / linebreak / normalize / permute / strip /
      template / interleave) + str_slice's per-call len; then the thread
+     wave (1423 hoist) / queued options.
+     WAVE 128 (block 155): strnlen-family conversion batch 4 -- the
+     remaining qualified byte_at / char_at accessors in 14 files
+     (casefold / ea_width / emoji / linebreak / normalize -- five
+     decoder-block copies of the same _byte_at body -- plus block /
+     compat / cosine / editdistance / lcp / permute / strip / template /
+     interleave) now read through cached raw pointers, and the
+     concat-per-item builders on those paths became single-Vec builders
+     (permute pieces, strip scans, interleave merges). One REAL regression
+     caught by the probe: raw Char-returning helpers must mask with
+     `& 0xFF` before `as Char` -- `(*(base + i)) as Int` sign-extends
+     (BUG 22 #10), which changed len_utf8-driven skip decisions (strip
+     swallowed a space after a multibyte char; an old-vs-new inlined
+     comparison isolated it, and the mask fixed it in all six
+     Char-returning helpers, incl. the wave-127 case/replace/reverse/
+     indent ones). Probe p_wave128_shapes.xi (305th): 49 rows byte-exact;
+     string smokes 102/102; capped measurement (1.5 GB cap + 240 s
+     watchdog): 13 ops on 512 KB + a 4 KB banded DP, rc=0, 18.8 s, peak
+     4.9 MB. Coverage fns 8759, clauses 6220 (floors162 wired); battery
+     corpus 955/955 (476s), probes 305/305 (197.4s), modules 510/510
+     (166.4s), barename 0/510 (236.6s) + ratchets OK.
+     NEXT: batch 5 = builder.xi's sb_push_str (the last qualified
+     byte_at site in the string dir) + str_slice's per-call len (core;
+     per-char/per-part paths pay O(k*n)) + the deferred builder pass
+     (template escape/interpolate, combinatorics joins); then the thread
      wave (1423 hoist) / queued options.
 BINARY NOTE: the shared local build path
 `E:\xiom-lang\xiom\target\release\xiom.exe` was rebuilt past the pin

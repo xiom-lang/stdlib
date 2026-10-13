@@ -15,6 +15,16 @@ module xiom.string.editdistance
 use xiom.text.similarity;
 use xiom.string;
 
+// Raw byte at `i` (byte-level compare; wave 128: cached raw pointer --
+// xiom.string.byte_at strnlens the whole string per call, so the DP cell
+// compare was cubic overall).
+// Complexity: O(1).
+fn _raw_byte(base: *UInt8, i: Int) -> UInt8
+  requires: true  // raw byte read; callers bound i against len (T007)
+{
+  unsafe { return *(base + i); }
+}
+
 /// Minimum number of edits (insertions, deletions, substitutions) needed to
 /// turn `a` into `b` (the Levenshtein distance). Delegates to
 /// `xiom.text.similarity.levenshtein`.
@@ -69,6 +79,8 @@ pub fn edit_distance_limited(a: Str, b: Str, max: Int) -> Int
     };
     j = j + 1;
   };
+  let ba = a.c_str();
+  let bb = b.c_str();
   var i: Int = 1;
   while i <= m {
     var cur = Vec[Int].new();
@@ -86,7 +98,7 @@ pub fn edit_distance_limited(a: Str, b: Str, max: Int) -> Int
       if gap < 0 { gap = -gap; };
       if gap <= max {
         var cost: Int = 1;
-        if xiom.string.byte_at(a, i - 1) == xiom.string.byte_at(b, j - 1) {
+        if _raw_byte(ba, i - 1) == _raw_byte(bb, j - 1) {
           cost = 0;
         };
         var del = prev[j] + 1;

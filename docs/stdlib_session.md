@@ -3023,6 +3023,53 @@ registry pin, agent recon for the rest)**
   delivery) closed out the pulse wave-2 rows -- probes 300; floors157.
 - No other queue moves; 1442 and 1630/1658 remain the compiler's.
 
+**SESSION 2026-10-13 block 155 (wave 128: strnlen-family batch 4 -- the remaining qualified accessors in 14 files + the Char sign-extension mask fix; probes 305; floors162)**
+- WAVE 128 (classic string-dir wave, batch 4 -- the block-154 follow-up):
+  the remaining QUALIFIED byte_at / char_at accessors converted to cached
+  raw-pointer reads in 14 files: casefold, ea_width, emoji, linebreak,
+  normalize (five copies of the same `_byte_at` + `_decode` decoder
+  block), plus block (the 0x/U+/u+ parse loop), compat, cosine (n-gram
+  hash), editdistance (the banded-DP cell compare -- was cubic overall),
+  lcp (pairwise prefix scan), permute, strip, template (placeholder
+  scan), interleave (both merge loops; also cached the per-part lengths
+  and the result-length test). Builders: permute `_pm_piece` (span copy,
+  the old str_slice clamp preserved), strip whitespace/control (Vec
+  push), both interleave merges (Vec push + sep bytes) -- that leak
+  class is now cleared from these too.
+- REAL regression found by the probe and fixed in-wave: raw
+  Char-returning helpers must mask with `& 0xFF` before `as Char`.
+  `(*(base + i)) as Int` sign-extends (BUG 22 #10) while the old
+  `byte_at(...) as Int` did not, so `as Char` produced a different
+  codepoint and len_utf8-driven skip decisions changed (strip swallowed
+  the space after a multibyte char: old len=3, new len=4; an inlined
+  old-vs-new comparison in out/dbg128s.xi isolated it). Fixed in all six
+  Char-returning helpers, including the wave-127 case / replace /
+  reverse / indent ones whose probe rows could not distinguish the
+  quirk. Masked Int reads (`& 0xFF`) and UInt8 returns were already
+  exact; probe 127 re-runs green.
+- Probe p_wave128_shapes.xi (305th): 49 rows byte-exact -- casefold
+  sharp-s + malformed, display width, emoji count/has, line break
+  points + split incl. newline retention, compat, cosine, edit distance
+  full/limited/banded, lcp, permutation lengths, block names incl. the
+  U+ prefix and Undefined, strip incl. multibyte-after and control
+  bytes, template escape/unescape/placeholder rows, interleave incl.
+  multibyte and parts, builder byte copy, normalize NFC/NFD/ascii;
+  string smokes 102/102.
+- Capped measurement: out/dbg128r.xi, 13 ops on a 512 KB input + a
+  4 KB banded DP, rc=0, 18.8 s, peak 4.9 MB (1.5 GB working-set cap +
+  240 s watchdog).
+- Coverage: fns 8759 (+7), pubFns 6540, clauses 6220 (+15), pubCovered
+  4625; floors162 dumped + wired. Battery on v0.64.4-rel (final tree):
+  corpus 955/955 (476s), probes 305/305 (197.4s), modules 510/510
+  (166.4s), barename 0/510 (236.6s), coverage ratchet vs floors161 +
+  module-smoke (499/518, 3500/6239) + doc ratchets OK.
+- Bus: 17:00Z doorbell quiet; 1545 acked, 1423/1445 unchanged this wave.
+- Next: batch 5 = builder.xi `sb_push_str` (the last qualified byte_at
+  site in the string dir) + str_slice's per-call len (core item: per-
+  char/per-part paths still pay O(k*n)) + the deferred builder pass
+  (template escape/interpolate, combinatorics joins); then the thread
+  wave (1423 hoist) / queued options.
+
 **SESSION 2026-10-13 block 154 (wave 127: strnlen-family batch 3 -- the remaining string-dir accessors + the string.xi bare-byte_at tail; probes 304; floors161)**
 - WAVE 127 (classic string-dir wave, batch 3 -- the block-152b follow-up):
   the remaining per-position accessors in 13 files (case, collate,

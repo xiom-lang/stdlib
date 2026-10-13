@@ -24,7 +24,7 @@ fn _char_at(s: Str, i: Int) -> Char
 {
   unsafe {
     let base: *UInt8 = s.c_str();
-    return ((*(base + i)) as Int) as Char;
+    return (((*(base + i)) as Int) & 0xFF) as Char;
   }
 }
 

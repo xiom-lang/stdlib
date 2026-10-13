@@ -14,12 +14,30 @@ module xiom.string.strip
 
 use xiom.string;
 
-// Returns the character at byte index `i` of `s`.
+// Returns the raw byte at byte index `i` of `s`, as a Char (the historical
+// byte-level semantics: multi-byte leads are not decoded here).
 // Precondition: 0 <= i < s.len().
+// Wave 128: raw read over the cached pointer -- string.byte_at strnlens the
+// whole string per call, so the per-position scans were quadratic.
 // Complexity: O(1).
-fn _char_at(s: Str, i: Int) -> Char {
-  let b = string.byte_at(s, i) as Int;
-  return b as Char;
+fn _char_at(s: Str, i: Int) -> Char
+  requires: true  // raw byte read; callers bound i against the cached len (T007)
+{
+  unsafe {
+    let base: *UInt8 = s.c_str();
+    return (((*(base + i)) as Int) & 0xFF) as Char;
+  }
+}
+
+// Raw byte at byte index `i` of `s` (see _char_at).
+// Complexity: O(1).
+fn _raw_byte(s: Str, i: Int) -> UInt8
+  requires: true  // raw byte read; callers bound i against the cached len (T007)
+{
+  unsafe {
+    let base: *UInt8 = s.c_str();
+    return *(base + i);
+  }
 }
 
 /// If `s` starts with `prefix`, returns `Some(s without the prefix)`.
@@ -42,18 +60,22 @@ pub fn str_strip_suffix(s: Str, suffix: Str) -> Option[Str] {
 pub fn str_strip_whitespace(s: Str) -> Str
   ensures: result.len() <= s.len()
 {
-  var result = "";
+  var out: Vec[UInt8] = Vec[UInt8].new();
   let len = string.str_len(s);
   var i: Int = 0;
   while i < len {
     let c = _char_at(s, i);
     let bl = xiom.char.len_utf8(c);
     if !xiom.char.is_whitespace(c) {
-      result = string.str_concat(result, string.str_slice(s, i, i + bl));
+      var k: Int = 0;
+      while k < bl && i + k < len {
+        out.push(_raw_byte(s, i + k));
+        k = k + 1;
+      };
     };
     i = i + bl;
   };
-  result
+  Str::from_utf8(out)
 }
 
 /// Removes all control characters from `s`.
@@ -62,16 +84,20 @@ pub fn str_strip_whitespace(s: Str) -> Str
 pub fn str_strip_control(s: Str) -> Str
   ensures: result.len() <= s.len()
 {
-  var result = "";
+  var out: Vec[UInt8] = Vec[UInt8].new();
   let len = string.str_len(s);
   var i: Int = 0;
   while i < len {
     let c = _char_at(s, i);
     let bl = xiom.char.len_utf8(c);
     if !xiom.char.is_control(c) {
-      result = string.str_concat(result, string.str_slice(s, i, i + bl));
+      var k: Int = 0;
+      while k < bl && i + k < len {
+        out.push(_raw_byte(s, i + k));
+        k = k + 1;
+      };
     };
     i = i + bl;
   };
-  result
+  Str::from_utf8(out)
 }

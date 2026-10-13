@@ -15,6 +15,16 @@ module xiom.string.lcp
 use xiom.text.similarity;
 use xiom.string;
 
+// Raw byte at `i` (byte-level compare; wave 128: cached raw pointer --
+// xiom.string.byte_at strnlens the whole string per call, so the pairwise
+// scan re-read the prefixes quadratically).
+// Complexity: O(1).
+fn _raw_byte(base: *UInt8, i: Int) -> UInt8
+  requires: true  // raw byte read; callers bound i against len (T007)
+{
+  unsafe { return *(base + i); }
+}
+
 /// Length of the longest common prefix of `a` and `b` (in bytes). Delegates
 /// to `xiom.text.similarity.longest_common_prefix`.
 /// Params: a, b - the strings to compare.
@@ -42,17 +52,19 @@ pub fn lcp_of_many(strings: &Vec[Str]) -> Int
     return 0;
   };
   var first = strings[0];
+  let bfirst = first.c_str();
   var result = first.len();
   var i: Int = 1;
   while i < count {
     var s = strings[i];
+    let bs = s.c_str();
     var l = s.len();
     if l < result {
       result = l;
     };
     var j: Int = 0;
     while j < result {
-      if xiom.string.byte_at(first, j) != xiom.string.byte_at(s, j) {
+      if _raw_byte(bfirst, j) != _raw_byte(bs, j) {
         result = j;
         break;
       };

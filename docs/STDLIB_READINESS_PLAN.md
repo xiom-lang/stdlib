@@ -2057,8 +2057,30 @@ T1/T2 yields.
         builder/combinatorics/block/compat/cosine/ea_width/editdistance/
         emoji/lcp/linebreak/normalize/permute/strip/template/interleave)
         + str_slice's per-call len; then the thread wave (1423 hoist).
+        Wave 128 (2026-10-13, block 155): strnlen-family conversion batch
+        4 -- the remaining qualified accessors in 14 files (casefold /
+        ea_width / emoji / linebreak / normalize -- the shared decoder
+        block -- plus block / compat / cosine / editdistance / lcp /
+        permute / strip / template / interleave) now read through cached
+        raw pointers; the concat builders on those paths became single-Vec
+        builders (permute pieces, strip scans, interleave merges). The
+        probe caught a real regression: raw Char-returning helpers must
+        mask `& 0xFF` before `as Char` because `(*(base + i)) as Int`
+        sign-extends (BUG 22 #10); without it len_utf8-driven skip
+        decisions changed (strip swallowed a space after a multibyte char).
+        Fixed in all six Char-returning helpers (incl. the wave-127
+        case/replace/reverse/indent ones). Probe p_wave128_shapes.xi
+        (305th): 49 rows byte-exact; string smokes 102/102. Measured
+        (capped 1.5 GB + 240 s watchdog): 13 ops on 512 KB + a 4 KB banded
+        DP, rc=0, 18.8 s, peak 4.9 MB. Coverage fns 8759, clauses 6220
+        (floors162) + module-smoke (499/518, 3500/6239) + doc ratchets OK;
+        battery on v0.64.4-rel: corpus 955/955 (476s), probes 305/305
+        (197.4s), modules 510/510 (166.4s), barename 0/510 (236.6s).
+        NEXT: batch 5 = builder.xi sb_push_str (the last qualified
+        byte_at site) + str_slice's per-call len + the deferred builder
+        pass (template escape/interpolate, combinatorics joins).
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors161.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors162.json
         tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;
