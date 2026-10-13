@@ -6,7 +6,7 @@ gates 9-10 discrete.** (Compiler pin: in-tree **v0.64.4** -- released
 windows-x64 release archive.)
 **Gates: corpus 954/954 full (C001 carve-outs retired on v0.63.1; new
 TcpStream loopback and uuencode roundtrip smokes added), modules 509/509,
-probes 299/299, barename 0/509.**
+probes 300/300, barename 0/509.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -25,7 +25,7 @@ gates flip:
    wave-98..110 probes), the io byte-fidelity/CRLF lock and the
    fs_remove lock).
 4. Strict bare-name scan clean -- MET (0/509).
-5. Coverage ratchet green -- MET (floors156).
+5. Coverage ratchet green -- MET (floors157).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (497/517 modules, 3477/6202 fns).
 8. Contract coverage 100% (every public fn carries clauses) -- OPEN (70.7%).
@@ -193,7 +193,7 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
     post-batch re-verify sweep cycle. Handoff in
     `docs/stdlib_session.md` snapshot 32 (block 143 refresh, head
     869ff72), wave
-    records blocks 89-146. WAVE 114 step 0 (block 128): battery pin moved
+    records blocks 89-147. WAVE 114 step 0 (block 128): battery pin moved
     to the official v0.64.4 release archive
     (%TEMP%\kilo\stdlib_ws\v0.64.4-rel\bin\xiom.exe, sha256 DB8A2EF0...;
     COMPILER_VERSION -> v0.64.4): corpus 954/954 (589.5s), probes 289/289
@@ -342,6 +342,23 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
      299/299, modules 509/509, barename 0/509, ratchets OK. Remaining
      pulse wave-2 row: signal delivery (next); raw stream send covered
      by socket_send_all (wave 121).
+     WAVE 123 (block 147): signal delivery -- the LAST stdlib-side
+     wave-2 row. Runtime xiom_signal_install/installed/wait/raise (POSIX
+     sigaction + self-pipe waker, coalesced last-wins via the wave-122
+     poll; Windows SetConsoleCtrlHandler + auto-reset event, CTRL_C->2 /
+     CTRL_BREAK->3 / close/logoff/shutdown->15, raise = latch+wake);
+     stdlib xiom.os.signal: signal_install (idempotent), signal_wait
+     (bounded; 0 timeout), signal_pending = wait(0), signal_raise real
+     on both platforms and Err before install; signal_handle stays a
+     documented Err pointing at the poll API. FIX-FIRST: signal_code's
+     documented case-insensitive match actually compared exact-case;
+     fixed. Probe p_wave123_shapes.xi (300th) red pre / green post;
+     smoke_os_folder extended; smoke_os 8/8. Coverage pubCovered 4620 ->
+     4622 (clauses 6177, global 70.7%), floors157 wired; battery on
+     v0.64.4-rel: corpus 954/954 (479.5s), probes 300/300 (277.6s),
+     modules 509/509 (179.8s), barename 0/509 (241.6s), module-smoke
+     (498/517, 3496/6235) + doc ratchets OK. BUS: REL-20261012-1946-pulse
+     acked -> fixed (all wave-2 rows delivered; pulse verifies next).
 BINARY NOTE: the shared local build path
 `E:\xiom-lang\xiom\target\release\xiom.exe` was rebuilt past the pin
 (compiler main da7798da m252) and fails four corpus smokes; waves now run

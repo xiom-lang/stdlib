@@ -2791,6 +2791,42 @@ registry pin, agent recon for the rest)**
   (216.6s), floors144 + doc + module-smoke (497/517, 3476/6204)
   ratchets OK.
 
+**SESSION 2026-10-13 block 147 (wave 123: signal delivery -- the last pulse wave-2 stdlib row; probes 300; floors157)**
+- WAVE 123 (REL-20261012-1946-pulse ask 1, the graceful-drain
+  primitive): runtime xiom_signal_install / xiom_signal_installed /
+  xiom_signal_wait / xiom_signal_raise. POSIX: sigaction(SIGINT,
+  SIGTERM) with a self-pipe waker -- the handler writes one
+  async-signal-safe byte, wait polls the read end (the wave-122 poll
+  twin), coalesced codes last-wins. Windows: SetConsoleCtrlHandler plus
+  an auto-reset event; console events map CTRL_C -> 2 (SIGINT),
+  CTRL_BREAK -> 3, close/logoff/shutdown -> 15; raise is the latch+wake
+  self-delivery hook. Stdlib xiom.os.signal: signal_install (idempotent),
+  signal_wait(timeout_ms) -> the number or 0 on timeout (bounded only;
+  negative Err), signal_pending = wait(0) (clear-on-read), signal_raise
+  real on BOTH platforms and refuses before install (a POSIX raise with
+  no handlers would terminate the process); signal_handle stays a
+  documented Err pointing at the poll API.
+- FIX-FIRST caught by the probe: signal_code documented case-insensitive
+  matching but compared exact-case ("sigterm" returned None); the body
+  upper-cases first now.
+- Probe p_wave123_shapes.xi (300th) red pre (T001: the delivery surface
+  did not exist) / green post: pure-helper rows, raise-before-install
+  Err, idempotent install, wait-timeout 0, TERM and INT roundtrips,
+  pending clear-on-read, negative-timeout Err, uncatchable-KILL Err.
+  smoke_os_folder extended with the delivery block; smoke_os 8/8.
+- Coverage: pubFns 6536, pubCovered 4622 (clauses 6177, global 70.7%);
+  floors157 dumped + wired (workflows + tools/README + plan/queue/
+  session + runtime symbol audit + wishlist). Battery on v0.64.4-rel:
+  corpus 954/954 (479.5s), probes 300/300 (277.6s), modules 509/509
+  (179.8s), barename 0/509 (241.6s), module-smoke (498/517, 3496/6235)
+  + doc ratchets OK.
+- Bus: REL-20261012-1946-pulse moved acked -> fixed with the delivery
+  refs -- every wave-2 row is delivered (deadlines/socket options wave
+  119; websocket + chunked + raw send waves 121-122; poll/select +
+  SO_REUSEPORT wave 122; signal delivery this wave; gzip/deflate and
+  linear json_parse were already in place). Pulse verifies next. Snapshot
+  32 stands for waves 114-120; blocks 144-147 carry waves 121-123.
+
 **SESSION 2026-10-13 block 146 (wave 122: poll/select with timeout + SO_REUSEPORT; the long-long ABI catch; probes 299; floors156)**
 - WAVE 122 (REL-20261012-1946-pulse asks 2 and 3): runtime
   xiom_socket_reuseport (POSIX setsockopt SO_REUSEPORT; Windows returns

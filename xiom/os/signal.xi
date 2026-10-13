@@ -2,21 +2,24 @@
 // Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 //
-// Signal name/code mapping and classification helpers. Pure mapping
-// tables. The module deliberately does NOT import the flat xiom.os
-// module: flat os declares an extern named `signal` and functions
-// `on_signal`/`raise_signal`, and importing both would make the
-// `signal` module prefix ambiguous (compiler module/function name
-// collision). signal_raise uses a local extern for the raise syscall.
+// Signal name/code mapping and classification helpers (pure) plus real
+// delivery since wave 123: signal_install / signal_wait / signal_pending
+// (sigaction + self-pipe on POSIX, console control events on Windows;
+// REL-20261012-1946-pulse ask 1 -- graceful drain). The module
+// deliberately does NOT import the flat xiom.os module: flat os declares
+// an extern named `signal` and functions `on_signal`/`raise_signal`, and
+// importing both would make the `signal` module prefix ambiguous
+// (compiler module/function name collision).
 
 module xiom.os.signal
 
-use xiom.env;
+use xiom.string;
 
 extern "C" {
-  // libc raise() resolves on both ucrt and POSIX runtimes (the previous
-  // `raise_sig` name had no runtime implementation and failed to link).
-  fn raise(sig: Int32) -> Int32;
+  fn xiom_signal_install() -> Int32;
+  fn xiom_signal_installed() -> Int32;
+  fn xiom_signal_wait(timeout_ms: Int) -> Int;
+  fn xiom_signal_raise(sig: Int32) -> Int32;
 }
 
 /// signal_name returns the canonical name for a signal number, or
@@ -59,11 +62,12 @@ pub fn signal_name(num: Int) -> Str
 }
 
 /// signal_code returns the signal number for a canonical name, or None.
-/// Matching is case-insensitive on the letters. Complexity: O(1). Pure.
+/// Matching is case-insensitive on the letters (wave-123 fix: the body
+/// now upper-cases first, matching this contract). Complexity: O(n). Pure.
 pub fn signal_code(name: Str) -> Option[Int]
   ensures: (result.is_some == true) => (name.len() >= 2)
 {
-  let n = name;
+  let n = string.str_upper(name);
   if n == "HUP" || n == "SIGHUP" { return Some(1); }
   if n == "INT" || n == "SIGINT" { return Some(2); }
   if n == "QUIT" || n == "SIGQUIT" { return Some(3); }
@@ -128,32 +132,103 @@ pub fn signal_default_action(num: Int) -> Str
   "unknown"
 }
 
-/// signal_raise sends a signal to the current process via the libc
-/// raise() primitive. POSIX only: on Windows the CRT raise() only knows
-/// its own small signal set and fail-fasts on unsupported numbers, so
-/// this documented-Err stub returns Err there (same stance as
-/// xiom.os.raise_signal). Complexity: O(1) syscall.
+/// signal_raise delivers `num` to the current process. Real implementation
+/// (wave 123): POSIX uses the libc raise() (the handlers must be installed
+/// first -- signal_install -- or the default action terminates the
+/// process); Windows latches the number and wakes a signal_wait as
+/// self-delivery (there is no OS signal for SIGTERM on Windows; the
+/// console-event mapping is CTRL_C -> 2, CTRL_BREAK -> 3, close/logoff/
+/// shutdown -> 15). Complexity: O(1) syscall.
+/// Returns: Ok(()) once delivered; Err before signal_install, for invalid
+/// numbers, and for uncatchable signals.
 pub fn signal_raise(num: Int) -> Result[Unit, Str]
   ensures: (num <= 0) => (result.is_err == true)
 {
   if num <= 0 {
     return Err("signal_raise: invalid signal number");
   }
-  if xiom.env.FAMILY == "windows" {
-    return Err("signal_raise: unsupported on Windows");
+  if !signal_is_catchable(num) {
+    return Err("signal_raise: signal is not catchable");
   }
-  let rc = unsafe { raise(num as Int32) };
+  let st: Int32;
+  unsafe {
+    st = xiom_signal_installed();
+  }
+  if st != 1 {
+    return Err("signal_raise: install the handlers first (signal_install)");
+  }
+  let rc: Int32;
+  unsafe {
+    rc = xiom_signal_raise(num as Int32);
+  }
   if rc != 0 {
     return Err("signal_raise: raise failed");
   }
   Ok(())
 }
 
-/// signal_handle installs a handler callback for `num`. NOT AVAILABLE yet:
-/// a working implementation needs a signal-safe runtime trampoline
-/// (sigaction plus a pending-flag poll); PULSE relay 2026-10-08 (SIGTERM
-/// graceful shutdown blocked). Currently a documented Err stub so callers
-/// can compile against the surface and degrade to no-handler behavior.
+/// signal_install installs the delivery handlers: SIGINT/SIGTERM via
+/// sigaction with a self-pipe waker on POSIX; console control events
+/// (CTRL_C -> 2, CTRL_BREAK -> 3, close/logoff/shutdown -> 15) via
+/// SetConsoleCtrlHandler on Windows. Idempotent; call once before
+/// signal_wait / signal_raise.
+/// Returns: Ok(()) once installed; Err on failure.
+/// Complexity: O(1).
+pub fn signal_install() -> Result[Unit, Str]
+  ensures: result is Ok => signal_installed_marker()
+{
+  let rc: Int32;
+  unsafe {
+    rc = xiom_signal_install();
+  }
+  if rc != 0 {
+    return Err("signal_install: install failed");
+  }
+  Ok(())
+}
+
+// signal_installed_marker re-reads the runtime install flag; the
+// signal_install Ok-side clause proves the install landed.
+fn signal_installed_marker() -> Bool
+{
+  let st: Int32;
+  unsafe {
+    st = xiom_signal_installed();
+  }
+  st == 1
+}
+
+/// signal_wait waits up to timeout_ms for a delivered signal and returns
+/// its number (2 = INT, 15 = TERM, 3 = BREAK/QUIT; 0 on timeout).
+/// Coalesced delivery: when several signals arrive between waits, the
+/// last one wins. Bounded timeouts only (negative is Err; no unbounded
+/// wait). Real implementation (wave 123) -- the graceful-drain primitive:
+/// install once, then loop { s = signal_wait(ms); if s == 15 || s == 2 {
+/// stop accepting; flush; exit 0 } }.
+/// Returns: Ok(signal number or 0); Err on bad arguments or failure.
+/// Complexity: blocking wait.
+pub fn signal_wait(timeout_ms: Int) -> Result[Int, Str]
+  ensures: result is Ok => result >= 0
+  ensures: result is Ok => timeout_ms >= 0
+{
+  if timeout_ms < 0 {
+    return Err("signal_wait: negative timeout");
+  }
+  let rc: Int;
+  unsafe {
+    rc = xiom_signal_wait(timeout_ms);
+  }
+  if rc < 0 {
+    return Err("signal_wait: wait failed (install the handlers first)");
+  }
+  Ok(rc)
+}
+
+/// signal_handle installs a handler callback for `num`. NOT AVAILABLE:
+/// callbacks from signal context need a compiler-side trampoline; use the
+/// poll API instead (signal_install + signal_wait / signal_pending).
+/// Currently a documented Err stub so callers can compile against the
+/// surface and degrade to no-handler behavior.
 /// Complexity: O(1).
 pub fn signal_handle(num: Int, cb: fn(Int) -> Unit) -> Result[Unit, Str]
   ensures: result.is_err == true  // always Err while runtime-backed
@@ -161,14 +236,15 @@ pub fn signal_handle(num: Int, cb: fn(Int) -> Unit) -> Result[Unit, Str]
   if !signal_is_catchable(num) {
     return Err("signal_handle: signal is not catchable");
   }
-  Err("signal_handle: not available in the pure stdlib (runtime-backed)")
+  Err("signal_handle: callback mode not available (use signal_install + signal_wait)")
 }
 
-/// signal_pending polls for a signal delivered to the handler installed by
-/// signal_handle and clears the pending flag. NOT AVAILABLE yet (documented
-/// Err stub, see signal_handle). Complexity: O(1).
+/// signal_pending is the non-blocking check: signal_wait(0) under the
+/// hood. Returns the pending signal number (0 when none); reading clears
+/// it. Real implementation (wave 123).
+/// Returns: Ok(signal number or 0); Err on failure.
 pub fn signal_pending() -> Result[Int, Str]
-  ensures: result.is_err == true  // always Err while runtime-backed
+  ensures: result is Ok => result >= 0
 {
-  Err("signal_pending: not available in the pure stdlib (runtime-backed)")
+  return signal_wait(0);
 }

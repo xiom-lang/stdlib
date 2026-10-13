@@ -174,3 +174,9 @@ Wave-122 update 2026-10-13: `xiom_socket_reuseport` and `xiom_poll`
 `long`) for Int-sized values and the in-place fd array -- C `long` is
 32-bit on Windows (LLP64) and half-wrote the 64-bit Int elements on the
 first attempt (bisected by a probe variant matrix).
+
+Wave-123 update 2026-10-13: `xiom_signal_install`,
+`xiom_signal_installed`, `xiom_signal_wait` and `xiom_signal_raise`
+(signal delivery for REL-20261012-1946-pulse ask 1) are declared by
+`os/signal.xi` in the same commit -- a further +4 definitions /
++4 declarations. No deletions.

@@ -7,6 +7,7 @@ module smoke_os_folder
 use xiom.os.fs;
 use xiom.os.proc;
 use xiom.os.term;
+use xiom.os.signal;
 use xiom.string;
 
 fn main() -> Int {
@@ -68,6 +69,29 @@ fn main() -> Int {
   var cm = xiom.os.term.term_cursor_move(3, 5);
   var has_rc = string.str_contains(cm, "3;5");
   if has_rc != true { return 15; }
+
+  // --- signal: delivery API (wave 123) ---
+  let si = xiom.os.signal.signal_install();
+  if si.is_err { return 16; }
+  let sp0 = xiom.os.signal.signal_pending();
+  match sp0 {
+    Ok(v) => { if v != 0 { return 16; } },
+    Err(_) => { return 16; },
+  };
+  let sr = xiom.os.signal.signal_raise(15);
+  if sr.is_err { return 17; }
+  let sw = xiom.os.signal.signal_wait(1000);
+  match sw {
+    Ok(v) => { if v != 15 { return 17; } },
+    Err(_) => { return 17; },
+  };
+  let sc = xiom.os.signal.signal_code("SIGINT");
+  match sc {
+    Some(v) => { if v != 2 { return 18; } },
+    None => { return 18; },
+  };
+  let sn = xiom.os.signal.signal_name(15);
+  if sn != "TERM" { return 18; }
 
   return 0;
 }

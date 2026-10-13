@@ -5427,6 +5427,51 @@ long long xiom_poll(long long* fds, long long nfds, long long timeout_ms, long l
     }
     return out;
 }
+/* ================================================================
+   Signal delivery (wave 123; REL-20261012-1946-pulse ask 1). Windows
+   console control events are mapped onto the closest POSIX numbers:
+   CTRL_C -> 2 (SIGINT), CTRL_BREAK -> 3, close/logoff/shutdown -> 15
+   (SIGTERM-ish). install is idempotent; wait returns the latched number,
+   0 on timeout, -1 when not installed; raise is the self-delivery hook
+   (latches + wakes -- no OS signal involved on Windows).
+   ================================================================ */
+static HANDLE xiom_signal_event = NULL;
+static volatile LONG xiom_signal_pending = 0;
+static BOOL WINAPI xiom_signal_ctrl_handler(DWORD ctrl) {
+    switch (ctrl) {
+    case CTRL_C_EVENT: xiom_signal_pending = 2; break;
+    case CTRL_BREAK_EVENT: xiom_signal_pending = 3; break;
+    case CTRL_CLOSE_EVENT:
+    case CTRL_LOGOFF_EVENT:
+    case CTRL_SHUTDOWN_EVENT: xiom_signal_pending = 15; break;
+    default: return FALSE;
+    }
+    if (xiom_signal_event) SetEvent(xiom_signal_event);
+    return TRUE;
+}
+int xiom_signal_install(void) {
+    if (xiom_signal_event != NULL) return 0;
+    xiom_signal_event = CreateEventA(NULL, FALSE, FALSE, NULL);
+    if (!xiom_signal_event) return -1;
+    if (!SetConsoleCtrlHandler(xiom_signal_ctrl_handler, TRUE)) return -1;
+    return 0;
+}
+int xiom_signal_installed(void) {
+    return xiom_signal_event != NULL ? 1 : 0;
+}
+long long xiom_signal_wait(long long timeout_ms) {
+    DWORD rc;
+    if (!xiom_signal_event) return -1;
+    rc = WaitForSingleObject(xiom_signal_event, (DWORD)timeout_ms);
+    if (rc == WAIT_TIMEOUT) return 0;
+    if (rc != WAIT_OBJECT_0) return -1;
+    return (long long)xiom_signal_pending;
+}
+int xiom_signal_raise(int sig) {
+    xiom_signal_pending = (LONG)sig;
+    if (xiom_signal_event) SetEvent(xiom_signal_event);
+    return 0;
+}
 int xiom_dns_resolve(const char* hostname, char* ip_buf, int buf_size) {
     struct hostent* he = gethostbyname(hostname);
     if (!he) return -1;
@@ -5468,6 +5513,7 @@ int xiom_gethostname(char* buf, int len) {
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <poll.h>
+#include <signal.h>
 #include <netdb.h>
 #include <unistd.h>
 #include <string.h>
@@ -5564,6 +5610,52 @@ long long xiom_poll(long long* fds, long long nfds, long long timeout_ms, long l
         }
     }
     return out;
+}
+/* Signal delivery (wave 123) -- POSIX self-pipe: the handler writes one
+   byte (async-signal-safe) and wait polls the read end (xiom_poll's
+   poll() twin), so delivery wakes the waiter without busy-waiting.
+   Coalesced codes: the last delivered byte wins. */
+static int xiom_signal_pipe[2] = { -1, -1 };
+static void xiom_signal_handler(int sig) {
+    unsigned char b = (unsigned char)sig;
+    if (xiom_signal_pipe[1] >= 0) {
+        ssize_t r = write(xiom_signal_pipe[1], &b, 1);
+        (void)r; /* drop when the pipe is full; the code coalesces */
+    }
+}
+int xiom_signal_install(void) {
+    struct sigaction sa;
+    if (xiom_signal_pipe[0] >= 0) return 0; /* idempotent */
+    if (pipe(xiom_signal_pipe) != 0) return -1;
+    memset(&sa, 0, sizeof(sa));
+    sa.sa_handler = xiom_signal_handler;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = SA_RESTART;
+    if (sigaction(SIGINT, &sa, NULL) != 0) return -1;
+    if (sigaction(SIGTERM, &sa, NULL) != 0) return -1;
+    return 0;
+}
+int xiom_signal_installed(void) {
+    return xiom_signal_pipe[0] >= 0 ? 1 : 0;
+}
+long long xiom_signal_wait(long long timeout_ms) {
+    struct pollfd p;
+    unsigned char buf[16];
+    ssize_t n;
+    int rc;
+    if (xiom_signal_pipe[0] < 0) return -1;
+    p.fd = xiom_signal_pipe[0];
+    p.events = POLLIN;
+    p.revents = 0;
+    rc = poll(&p, 1, (int)timeout_ms);
+    if (rc < 0) return -1;
+    if (rc == 0) return 0;
+    n = read(xiom_signal_pipe[0], buf, sizeof(buf));
+    if (n <= 0) return 0;
+    return (long long)buf[n - 1];
+}
+int xiom_signal_raise(int sig) {
+    return raise(sig);
 }
 int xiom_dns_resolve(const char* hostname, char* ip_buf, int buf_size) {
     struct hostent* he = gethostbyname(hostname);

@@ -1897,8 +1897,40 @@ T1/T2 yields.
         299/299, modules 509/509, barename 0/509, ratchets OK.
         Remaining pulse wave-2 row: signal delivery (next); raw stream
         send is covered by socket_send_all (wave 121).
+        Wave 123 (2026-10-13): signal delivery (REL-20261012-1946-pulse
+        ask 1 -- the LAST stdlib-side wave-2 row). Runtime:
+        xiom_signal_install / xiom_signal_installed / xiom_signal_wait /
+        xiom_signal_raise (POSIX: sigaction(SIGINT/SIGTERM) + a
+        self-pipe waker -- the handler writes one async-signal-safe byte,
+        wait polls the read end with the wave-122 poll twin, coalesced
+        codes last-wins; Windows: SetConsoleCtrlHandler + an auto-reset
+        event, console events mapped CTRL_C -> 2, CTRL_BREAK -> 3,
+        close/logoff/shutdown -> 15, raise is the latch+wake
+        self-delivery hook). Stdlib xiom.os.signal: signal_install
+        (idempotent), signal_wait(timeout_ms) -> number or 0 on timeout
+        (bounded only, negative Err), signal_pending = wait(0),
+        signal_raise now real on BOTH platforms and refuses before
+        install (a POSIX raise without handlers would kill the process);
+        signal_handle stays a documented Err pointing at the poll API.
+        FIX-FIRST caught by the probe: signal_code documented
+        case-insensitive matching but compared exact-case ("sigterm" ->
+        None); now upper-cases first. Probe p_wave123_shapes.xi (300th)
+        red pre / green post: pure-helper rows, raise-before-install Err,
+        idempotent install, timeout-0, TERM/INT roundtrips, pending
+        clear-on-read, negative-timeout Err, uncatchable-KILL Err.
+        smoke_os_folder extended with the delivery block; smoke_os 8/8.
+        Coverage: pubFns 6536, pubCovered 4622 (clauses 6177, global
+        70.7%); floors157 wired. Battery on v0.64.4-rel: corpus 954/954
+        (479.5s), probes 300/300 (277.6s), modules 509/509 (179.8s),
+        barename 0/509 (241.6s), module-smoke (498/517, 3496/6235) +
+        doc ratchets OK. Bus: REL-20261012-1946-pulse moved acked ->
+        fixed -- every wave-2 row is delivered (deadlines/socket options
+        wave 119; websocket + chunked + raw send waves 121-122;
+        poll/select + SO_REUSEPORT wave 122; signal delivery this wave;
+        gzip/deflate and linear json_parse were already in place per the
+        triage).
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors156.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors157.json
         tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;
