@@ -26,10 +26,10 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 ---
 
 You are continuing the XIOM stdlib lane. Worktree `E:\xiom-lang\stdlib`,
-branch `main`. Read `docs/stdlib_session.md` blocks 151, 150, 149, 148b,
-148, 147, 146, 145, 144, 143, 142, 141, 140, 139, 138, 137, 136, 135
-(older as needed); the snapshot-32 section below is the previous handoff
-and is superseded.
+branch `main`. Read `docs/stdlib_session.md` blocks 152, 151, 150, 149,
+148b, 148, 147, 146, 145, 144, 143, 142, 141, 140, 139, 138, 137, 136,
+135 (older as needed); the snapshot-32 section below is the previous
+handoff and is superseded.
 
 STATE: compiler v0.64.4 released and pinned (tag f76fd47c on df493530; the
 official windows-x64 asset pre-downloaded at
@@ -47,7 +47,12 @@ escape cached views; escape Vec-builders fixed an n^2/2 allocation leak).
 Lane head at handoff: a139f23 (main). Bus: orbitdb bundle closed; pulse
 wave-2 fixed (verify pending); engine-3 fixed (verify pending); xvector-2
 fixed; 1445 acked (compiler-side ffi.free call-site lowering pending);
-1423 acked (thread wave; compiler m282 required for e2e).
+1423 acked (thread wave; compiler m282 required for e2e). Wave 126 was in
+flight by the concurrent actor at handoff: string.str_escape/str_unescape
++ the json escape family rewritten as single-Vec builders (announced
+REL-20261013-1638-stdlib; uncommitted at 17:00Z) -- check git log/status
+before touching xiom/string or the json modules and never sweep those
+edits into a commit.
 
 GATES (block 150, final tree): corpus 955/955 (851.9s; box under the
 engine lane's Vulkan build), probes 302/302 (328.7s), modules 510/510
@@ -2908,6 +2913,26 @@ registry pin, agent recon for the rest)**
   121-123 (websocket I/O + helpers, poll/select + SO_REUSEPORT, signal
   delivery) closed out the pulse wave-2 rows -- probes 300; floors157.
 - No other queue moves; 1442 and 1630/1658 remain the compiler's.
+
+**SESSION 2026-10-13 block 152 (doorbell 17:00Z -- quiet lane round; wave 126 in flight by the concurrent actor; compiler verified the payload-index fix post-pin)**
+- Lane view: no stdlib-addressed changes; nothing to transition. Two
+  cross-lane developments: (a) the compiler headline
+  "REL-20261010-1549-stdlib-6 verified fixed cross-platform (Windows +
+  WSL)" -- the payload-index family fix is verified on a POST-v0.64.4
+  build, so the pulse-5 (C-PULSE-17) retest rides the next compiler pin;
+  (b) the concurrent stdlib actor filed REL-20261013-1638-stdlib (to
+  orbitdb, info, open): a wave-126 leak re-verification run -- it is
+  rewriting string.str_escape/str_unescape + the json escape family as
+  single-Vec builders (512 KB capped run, out/dbg126r.xi evidence). Its
+  uncommitted edits sat in xiom/string/string.xi, xiom/convert/json.xi,
+  xiom/log/json.xi, xiom/serialize/json.xi, xiom/serialize/serialize.xi
+  + tools/probes/p_wave126_shapes.xi at this round -- never sweep them
+  into a commit; check git log/status before writing those paths.
+- Tooling note: `git pull --ff-only` in the relays repo errors with
+  "Cannot fast-forward to multiple branches" (config quirk); use
+  `git fetch origin` and compare (local was already current).
+- Handoff: snapshot 33's read-list now leads with this block; the next
+  session may land on top of wave 126 if the actor commits it.
 
 **SESSION 2026-10-13 block 151 (handoff 16:25Z -- snapshot 33 refreshed in place at head a139f23; waves 114-125; continuation prompt re-issued)**
 - Snapshot 33 written at the top of section 0A (waves 114-125; gates
