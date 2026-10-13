@@ -479,7 +479,13 @@ bus): three new stdlib-addressed asks acked in one round (relay commit
   socket_chunked_end / socket_stream_chunk / socket_stream_end); locked
   by `tools/probes/p_wave121_shapes.xi` (298th). Still queued:
   signal delivery, poll/select, SO_REUSEPORT and raw-stream-send runtime
-  rows (next re-vendoring pin or XIOM_RUNTIME_DIR).
+  rows (next re-vendoring pin or XIOM_RUNTIME_DIR). **Further delivery
+  wave 122 (2026-10-13)**: `socket_set_reuseport` (POSIX; documented
+  Windows no-equivalent Err) and `socket_poll_read` / `socket_poll_write`
+  (poll()/WSAPoll, up to 1024 fds, bounded timeouts, ready fds in input
+  order) landed, locked by `tools/probes/p_wave122_shapes.xi` (299th);
+  raw stream send is covered by `socket_send_all` (wave 121). The
+  remaining pulse wave-2 row is signal delivery (next).
 Runtime rows are effective for consumers at the next compiler pin that
 re-vendors `stdlib/runtime` (or `XIOM_RUNTIME_DIR` on v0.64.4 until then).
 The two to-all notices (REL-20261012-1945-xvector, -1946-pulse-3) are

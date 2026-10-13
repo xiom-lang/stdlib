@@ -166,3 +166,11 @@ Wave-120 update 2026-10-13: `xiom_mmap_file`, `xiom_mmap_anon`,
 REL-20261012-1945-xvector-2) are declared by `os/mmap.xi` in the same
 commit, and `xiom_open_rw` is declared by `os/sync_io.xi` -- a further
 +10 definitions / +10 declarations. No deletions.
+
+Wave-122 update 2026-10-13: `xiom_socket_reuseport` and `xiom_poll`
+(SO_REUSEPORT + poll/select for the pulse runtime rows) are declared by
+`net/socket.xi` in the same commit -- a further +2 definitions /
++2 declarations. No deletions. ABI note: both use `long long` (not
+`long`) for Int-sized values and the in-place fd array -- C `long` is
+32-bit on Windows (LLP64) and half-wrote the 64-bit Int elements on the
+first attempt (bisected by a probe variant matrix).

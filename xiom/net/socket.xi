@@ -15,7 +15,12 @@ module xiom.net.socket
 // the full-send loop (socket_send_all) and the chunked-transfer stream
 // helpers (socket_chunk_encode / socket_chunked_end / socket_stream_chunk /
 // socket_stream_end; Transfer-Encoding: chunked writers for SSE-style
-// streaming endpoints, REL-20261012-1946-pulse).
+// streaming endpoints, REL-20261012-1946-pulse). Wave 122 adds SO_REUSEPORT
+// (POSIX; Windows has the documented no-equivalent Err) and the poll
+// wrappers socket_poll_read / socket_poll_write (poll() / WSAPoll; up to
+// 1024 fds, bounded timeouts, ready fds in input order).
+
+use xiom.env;
 
 extern "C" {
   fn xiom_socket_create(family: Int, typ: Int, proto: Int) -> Int;
@@ -35,6 +40,8 @@ extern "C" {
   fn xiom_socket_set_timeout(sock: Int, ms: Int) -> Int32;
   fn xiom_socket_set_nonblocking(sock: Int, on: Int) -> Int32;
   fn xiom_socket_reuse_addr(sock: Int, on: Int) -> Int32;
+  fn xiom_socket_reuseport(sock: Int, on: Int) -> Int32;
+  fn xiom_poll(fds: *Int, nfds: Int, timeout_ms: Int, for_write: Int) -> Int;
   fn xiom_socket_shutdown(sock: Int, how: Int) -> Int32;
 }
 
@@ -607,4 +614,100 @@ pub fn socket_reuse_addr(fd: Int, on: Bool) -> Result[Unit, Str]
     return Err("socket_reuse_addr: setsockopt failed");
   }
   Ok(())
+}
+
+/// socket_set_reuseport enables or disables SO_REUSEPORT (real since wave
+/// 122; POSIX only). Windows has no equivalent: the documented Err says to
+/// run N processes on distinct ports behind a reverse proxy. The double
+/// bind of one port by two SO_REUSEPORT listeners is the POSIX semantic.
+/// Returns: Ok(()) once the option is set; Err on failure or on Windows.
+pub fn socket_set_reuseport(fd: Int, on: Bool) -> Result[Unit, Str]
+  ensures: (fd < 0) => (result is Err)
+{
+  if fd < 0 {
+    return Err("socket_set_reuseport: invalid fd");
+  }
+  var v = 0;
+  if on {
+    v = 1;
+  }
+  let rc: Int32;
+  unsafe {
+    rc = xiom_socket_reuseport(fd, v);
+  }
+  if rc != 0 {
+    if env.FAMILY == "windows" {
+      return Err("socket_set_reuseport: SO_REUSEPORT has no Windows equivalent (run N processes on distinct ports behind a reverse proxy)");
+    }
+    return Err("socket_set_reuseport: setsockopt SO_REUSEPORT failed");
+  }
+  Ok(())
+}
+
+// poll_impl is the shared body of the poll wrappers: it copies the fd
+// list into a bounded stack array, calls the runtime poll and compacts
+// the result to the ready fds (in input order).
+fn poll_impl(fds: &Vec[Int], timeout_ms: Int, for_write: Bool) -> Result[Vec[Int], Str] {
+  let n = fds.len();
+  if n > 1024 {
+    return Err("socket_poll: too many fds (max 1024)");
+  }
+  if timeout_ms < 0 {
+    return Err("socket_poll: negative timeout");
+  }
+  var out: Vec[Int] = Vec[Int].new();
+  if n == 0 {
+    return Ok(out);
+  }
+  var arr: [1024]Int;
+  var i = 0;
+  while i < n {
+    arr[i] = fds[i];
+    i = i + 1;
+  }
+  var mode = 0;
+  if for_write {
+    mode = 1;
+  }
+  let rc: Int;
+  unsafe {
+    rc = xiom_poll(&arr[0] as *Int, n, timeout_ms, mode);
+  }
+  if rc < 0 {
+    return Err("socket_poll: poll failed");
+  }
+  var k = 0;
+  while k < rc {
+    out.push(arr[k]);
+    k = k + 1;
+  }
+  Ok(out)
+}
+
+/// socket_poll_read waits for read readiness over a list of sockets and
+/// returns the ready ones (in input order; up to 1024 fds per call).
+/// Real since wave 122: poll() on POSIX, WSAPoll on Windows. Errors and
+/// invalid entries count as ready so the caller can inspect them.
+/// timeout_ms: 0 = immediate, > 0 = wait that many ms (negative is Err;
+/// no unbounded wait). An empty list is an Ok empty result.
+/// Returns: Ok(ready fds); Err on bad arguments or poll failure.
+/// Complexity: network wait.
+pub fn socket_poll_read(fds: &Vec[Int], timeout_ms: Int) -> Result[Vec[Int], Str]
+  ensures: result is Ok => fds.len() <= 1024
+  ensures: result is Ok => timeout_ms >= 0
+{
+  return poll_impl(fds, timeout_ms, false);
+}
+
+/// socket_poll_write waits for write readiness over a list of sockets and
+/// returns the ready ones (in input order; up to 1024 fds per call).
+/// Real since wave 122: poll()/WSAPoll. Same bounds and conventions as
+/// socket_poll_read.
+/// Returns: Ok(ready fds); Err on bad arguments or poll failure.
+/// Complexity: network wait.
+pub fn socket_poll_write(fds: &Vec[Int], timeout_ms: Int) -> Result[Vec[Int], Str]
+  ensures: result is Ok => fds.len() <= 1024
+  ensures: result is Ok => timeout_ms >= 0
+{
+  return poll_impl(fds, timeout_ms, true);
 }

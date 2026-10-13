@@ -6,7 +6,7 @@ gates 9-10 discrete.** (Compiler pin: in-tree **v0.64.4** -- released
 windows-x64 release archive.)
 **Gates: corpus 954/954 full (C001 carve-outs retired on v0.63.1; new
 TcpStream loopback and uuencode roundtrip smokes added), modules 509/509,
-probes 298/298, barename 0/509.**
+probes 299/299, barename 0/509.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -25,7 +25,7 @@ gates flip:
    wave-98..110 probes), the io byte-fidelity/CRLF lock and the
    fs_remove lock).
 4. Strict bare-name scan clean -- MET (0/509).
-5. Coverage ratchet green -- MET (floors155).
+5. Coverage ratchet green -- MET (floors156).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (497/517 modules, 3477/6202 fns).
 8. Contract coverage 100% (every public fn carries clauses) -- OPEN (70.7%).
@@ -193,7 +193,7 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
     post-batch re-verify sweep cycle. Handoff in
     `docs/stdlib_session.md` snapshot 32 (block 143 refresh, head
     869ff72), wave
-    records blocks 89-145. WAVE 114 step 0 (block 128): battery pin moved
+    records blocks 89-146. WAVE 114 step 0 (block 128): battery pin moved
     to the official v0.64.4 release archive
     (%TEMP%\kilo\stdlib_ws\v0.64.4-rel\bin\xiom.exe, sha256 DB8A2EF0...;
     COMPILER_VERSION -> v0.64.4): corpus 954/954 (589.5s), probes 289/289
@@ -320,6 +320,28 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
      3490/6230) + doc ratchets OK. Follow-ups: ws_random_key is
      time-seeded; socket create/accept/bind/listen POSIX -1 declarations
      audit.
+     WAVE 122 (block 146): poll/select with timeout + SO_REUSEPORT
+     (REL-20261012-1946-pulse asks 2 and 3). Runtime:
+     xiom_socket_reuseport (POSIX setsockopt; Windows documented Err via
+     the wrapper, no-equivalent story) and xiom_poll (poll()/WSAPoll; up
+     to 1024 fds, in-place compaction to ready entries in input order;
+     0 = immediate, > 0 = wait). ABI CATCH (fix-first): the shim first
+     used C `long` (32-bit on Windows) -- the in-place Int array's
+     elements were half-written, producing phantom readiness and a ready
+     value of 0; fixed with `long long` everywhere in the shim (64-bit);
+     lesson recorded: runtime shims must use long long for Int-sized
+     values and Int arrays. Stdlib: socket_set_reuseport,
+     socket_poll_read, socket_poll_write (shared poll_impl; empty = Ok
+     empty; >1024 = Err; negative timeout = Err). Probe
+     p_wave122_shapes.xi (299th) red pre / green post (POSIX double-bind
+     of one port by two SO_REUSEPORT listeners; Windows documented Err;
+     poll timeout-empty / pending-connection / idle-empty / write-ready /
+     multi-fd order / post-send roundtrip / Err rows); smoke_net 11/11.
+     Coverage pubCovered 4617 -> 4620 (clauses 6174, global 70.7%),
+     floors156 wired; battery on v0.64.4-rel: corpus 954/954, probes
+     299/299, modules 509/509, barename 0/509, ratchets OK. Remaining
+     pulse wave-2 row: signal delivery (next); raw stream send covered
+     by socket_send_all (wave 121).
 BINARY NOTE: the shared local build path
 `E:\xiom-lang\xiom\target\release\xiom.exe` was rebuilt past the pin
 (compiler main da7798da m252) and fails four corpus smokes; waves now run

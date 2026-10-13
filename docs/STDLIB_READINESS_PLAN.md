@@ -1864,8 +1864,41 @@ T1/T2 yields.
         returns still read as 4294967295 (Windows-ABI-correct
         declarations; audit for a POSIX consumer needing failure
         classification).
+        Wave 122 (2026-10-13): poll/select with timeout + SO_REUSEPORT
+        (REL-20261012-1946-pulse asks 2 and 3). Runtime:
+        xiom_socket_reuseport (POSIX setsockopt SO_REUSEPORT; Windows has
+        no equivalent and returns -1 -- the wrapper's documented Err says
+        to run N processes on distinct ports behind a proxy) and
+        xiom_poll (poll() on POSIX, WSAPoll on Windows; up to 1024 fds,
+        in-place compaction to the ready entries in input order;
+        errors/invalid entries count as ready; 0 = immediate, > 0 = wait,
+        negative rejected by the wrapper). ABI CATCH (fix-first): the
+        shim first used C `long`, which is 32-bit on Windows (LLP64) --
+        the in-place Int array's elements were half-written and the
+        second slot read the high half of the first, so WSAPoll saw fd 0
+        (POLLNVAL) and reported bogus readiness (a variant matrix showed
+        a phantom second ready entry and a ready value of 0); fixed by
+        switching fds/nfds/timeout/for_write and the return to
+        `long long` (64-bit everywhere). LESSON: runtime shims must use
+        long long for Int-sized values and Int arrays (C `long` is
+        32-bit on Windows); the existing `long` shims carry no observed
+        failure but the high-bit cases are an audit follow-up. Stdlib:
+        socket_set_reuseport, socket_poll_read, socket_poll_write
+        (shared poll_impl; empty list = Ok empty; >1024 = Err). Probe
+        p_wave122_shapes.xi (299th) red pre / green post: POSIX asserts
+        Ok plus a real double-bind of one port by two SO_REUSEPORT
+        listeners; Windows asserts the documented Err; poll rows:
+        timeout-empty, listener-readable on a pending connection,
+        idle-empty, immediate write readiness, multi-fd order with a
+        drained companion, post-send read+recv, negative-timeout Err,
+        1025-fd Err, empty-input no-op. smoke_net 11/11. Coverage:
+        pubFns 6534, pubCovered 4620 (clauses 6174, global 70.7%);
+        floors156 wired. Battery on v0.64.4-rel: corpus 954/954, probes
+        299/299, modules 509/509, barename 0/509, ratchets OK.
+        Remaining pulse wave-2 row: signal delivery (next); raw stream
+        send is covered by socket_send_all (wave 121).
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors155.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors156.json
         tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;

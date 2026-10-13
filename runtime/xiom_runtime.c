@@ -5391,6 +5391,42 @@ int xiom_socket_reuse_addr(xiom_socket_t s, int on) {
     return setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (const char*)&opt, sizeof(opt));
 }
 int xiom_socket_shutdown(xiom_socket_t s, int how) { return shutdown(s, how); }
+int xiom_socket_reuseport(xiom_socket_t s, int on) {
+    /* No SO_REUSEPORT equivalent on Windows; the stdlib wrapper returns a
+       documented Err (run N processes on distinct ports behind a proxy). */
+    (void)s;
+    (void)on;
+    return -1;
+}
+/* Poll readiness for up to 1024 sockets; compacts fds[] in place to the
+   ready entries (errors/invalid entries count as ready) and returns that
+   count, 0 on timeout, -1 on failure. timeout_ms: 0 = immediate, > 0 =
+   wait; the stdlib wrapper rejects negative values. The element type is
+   long long (not long): Windows C `long` is 32-bit, and the XIOM Int
+   array elements are 64-bit. */
+long long xiom_poll(long long* fds, long long nfds, long long timeout_ms, long long for_write) {
+    WSAPOLLFD pfds[1024];
+    long long i;
+    int rc;
+    long long out;
+    if (nfds <= 0) return 0;
+    if (nfds > 1024) return -1;
+    for (i = 0; i < nfds; i++) {
+        pfds[i].fd = (SOCKET)fds[i];
+        pfds[i].events = for_write ? POLLWRNORM : POLLRDNORM;
+        pfds[i].revents = 0;
+    }
+    rc = WSAPoll(pfds, (ULONG)nfds, (INT)timeout_ms);
+    if (rc < 0) return -1;
+    out = 0;
+    for (i = 0; i < nfds; i++) {
+        if (pfds[i].revents != 0) {
+            fds[out] = (long long)pfds[i].fd;
+            out++;
+        }
+    }
+    return out;
+}
 int xiom_dns_resolve(const char* hostname, char* ip_buf, int buf_size) {
     struct hostent* he = gethostbyname(hostname);
     if (!he) return -1;
@@ -5431,6 +5467,7 @@ int xiom_gethostname(char* buf, int len) {
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <poll.h>
 #include <netdb.h>
 #include <unistd.h>
 #include <string.h>
@@ -5493,6 +5530,41 @@ int xiom_socket_reuse_addr(xiom_socket_t s, int on) {
     return setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 }
 int xiom_socket_shutdown(xiom_socket_t s, int how) { return shutdown(s, how); }
+int xiom_socket_reuseport(xiom_socket_t s, int on) {
+    int opt = on ? 1 : 0;
+#ifdef SO_REUSEPORT
+    return setsockopt(s, SOL_SOCKET, SO_REUSEPORT, &opt, sizeof(opt));
+#else
+    (void)opt;
+    return -1;
+#endif
+}
+/* Poll readiness for up to 1024 fds; see the Windows twin above for the
+   contract (in-place compaction to ready entries, count/0/-1 return, and
+   the long long element-type note). */
+long long xiom_poll(long long* fds, long long nfds, long long timeout_ms, long long for_write) {
+    struct pollfd pfds[1024];
+    long long i;
+    int rc;
+    long long out;
+    if (nfds <= 0) return 0;
+    if (nfds > 1024) return -1;
+    for (i = 0; i < nfds; i++) {
+        pfds[i].fd = (int)fds[i];
+        pfds[i].events = for_write ? POLLOUT : POLLIN;
+        pfds[i].revents = 0;
+    }
+    rc = poll(pfds, (nfds_t)nfds, (int)timeout_ms);
+    if (rc < 0) return -1;
+    out = 0;
+    for (i = 0; i < nfds; i++) {
+        if (pfds[i].revents != 0) {
+            fds[out] = (long long)pfds[i].fd;
+            out++;
+        }
+    }
+    return out;
+}
 int xiom_dns_resolve(const char* hostname, char* ip_buf, int buf_size) {
     struct hostent* he = gethostbyname(hostname);
     if (!he) return -1;

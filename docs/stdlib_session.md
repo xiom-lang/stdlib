@@ -2791,6 +2791,48 @@ registry pin, agent recon for the rest)**
   (216.6s), floors144 + doc + module-smoke (497/517, 3476/6204)
   ratchets OK.
 
+**SESSION 2026-10-13 block 146 (wave 122: poll/select with timeout + SO_REUSEPORT; the long-long ABI catch; probes 299; floors156)**
+- WAVE 122 (REL-20261012-1946-pulse asks 2 and 3): runtime
+  xiom_socket_reuseport (POSIX setsockopt SO_REUSEPORT; Windows returns
+  -1 and the wrapper's documented Err carries the no-equivalent story --
+  N processes on distinct ports behind a proxy) and xiom_poll (poll() on
+  POSIX, WSAPoll on Windows; up to 1024 fds compacted in place to the
+  ready entries in input order, errors/invalid entries count as ready;
+  0 = immediate, > 0 = wait; the wrapper rejects negative timeouts and
+  >1024 lists). Stdlib: socket_set_reuseport, socket_poll_read,
+  socket_poll_write (shared poll_impl; empty list = Ok empty).
+- ABI CATCH (fix-first, bisected in-session): the first xiom_poll shim
+  used C `long` for the in-place fd array -- on Windows `long` is
+  32-bit, so each 64-bit Int element was half-written and the second
+  slot read the high half of the first; WSAPoll then saw fd 0
+  (POLLNVAL) and reported bogus readiness (the variant matrix showed
+  [cfd, srv] returning both, plus a later ready value of 0, while
+  srv-alone polls were clean). Switched fds/nfds/timeout/for_write and
+  the return to `long long` (64-bit on every platform); the matrix is
+  clean after. LESSON: runtime shims must use long long for Int-sized
+  values and Int arrays (C long is 32-bit on Windows); the existing
+  `long` shims have no observed failure -- a high-bit audit is recorded
+  as follow-up.
+- Probe p_wave122_shapes.xi (299th) red pre (T001: the helpers did not
+  exist; red captured via a tracked-only stash against the pre-wave
+  tree) / green post: POSIX asserts reuseport Ok plus a real double-bind
+  of one port by two SO_REUSEPORT listeners; Windows asserts the
+  documented Err; poll rows: timeout-empty, listener-readable on a
+  pending connection, idle-empty, immediate write readiness, multi-fd
+  order with a drained companion, post-send read+recv, negative-timeout
+  Err, 1025-fd Err, empty-input no-op. smoke_net 11/11. Debug artifacts
+  in out/ (dbg122/dbg123 matrices; ctest_poll.c verified WSAPoll is
+  declared under the clang+SDK default).
+- Coverage: pubFns 6534, pubCovered 4620 (clauses 6174, global 70.7%);
+  floors156 dumped + wired (workflows + tools/README + plan/queue/
+  session + runtime symbol audit + wishlist). Battery on v0.64.4-rel:
+  corpus 954/954, probes 299/299, modules 509/509, barename 0/509,
+  ratchets OK.
+- Bus: REL-20261012-1946-pulse progress note acked -> acked (poll +
+  reuseport landed; signal delivery is the last stdlib-side runtime row
+  from wave 2). Snapshot 32 stands for waves 114-120; blocks 144-146
+  carry waves 121-122.
+
 **SESSION 2026-10-13 block 145 (wave 121: websocket I/O fix + server-side helpers + chunked-transfer stream helpers; probes 298; floors155)**
 - WAVE 121 (REL-20261012-1946-pulse stdlib-side rows): websocket I/O is
   fixed and completed. FIX-FIRST: ws_connect closed the socket before
