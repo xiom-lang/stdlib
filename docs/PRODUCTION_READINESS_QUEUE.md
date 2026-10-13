@@ -7,7 +7,7 @@ windows-x64 release archive.)
 **Gates: corpus 955/955 full (C001 carve-outs retired on v0.63.1; new
 TcpStream loopback and uuencode roundtrip smokes added; smoke_os_watch
 added in wave 124), modules 510/510,
-probes 307/307, barename 0/510.**
+probes 308/308, barename 0/510.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -26,7 +26,7 @@ gates flip:
    wave-98..110 probes), the io byte-fidelity/CRLF lock and the
    fs_remove lock).
 4. Strict bare-name scan clean -- MET (0/509).
-5. Coverage ratchet green -- MET (floors164).
+5. Coverage ratchet green -- MET (floors165).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (499/518 modules, 3500/6239 fns).
 8. Contract coverage 100% (every public fn carries clauses) -- OPEN (70.7%).
@@ -534,6 +534,25 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
      one-shot callers only (documented).
      NEXT: the thread wave (1423 hoist + pool/spawn flip); then
      playground-4 / website-2 / engine-6 as queued.
+     WAVE 131 (block 158): REL-20261013-1423 hoist -- xiom.thread.spawn's
+     result buffer (bufsize + alloc.alloc) moved OUT of the confined
+     block, so it is main-heap memory; the guard arena no longer frees it
+     at block exit while the spawned thread still writes its result (the
+     compiler's proposed fix, acked at 15:00Z; the join/detach deallocs
+     are unchanged and now pair with the main-heap alloc). The raw-fn
+     handover in the same function still requires compiler m282: the
+     spawn[T] e2e (return 42) HANGS on the v0.64.4 pin (out/dbg131s.xi
+     prints "spawned" then join never returns; killed by a 20 s
+     watchdog), so the probe locks the spawn-independent thread surfaces
+     only and the hoist is compile-locked by check_modules. Probe
+     p_wave131_shapes.xi (308th): 6 rows; thread smokes 2/2. Coverage
+     fns 8776, clauses 6234 (floors165 wired); battery corpus 955/955
+     (694.3s), probes 308/308 (353.9s), modules 510/510 (204.1s),
+     barename 0/510 (293.2s) + ratchets OK.
+     NEXT: on the next compiler pin (m282) flip spawn[T] to the real
+     path + the sequential-simulation notes (thread_parallel_for, pool),
+     re-run the spawn e2e; then playground-4 / website-2 / engine-6 as
+     queued.
 BINARY NOTE: the shared local build path
 `E:\xiom-lang\xiom\target\release\xiom.exe` was rebuilt past the pin
 (compiler main da7798da m252) and fails four corpus smokes; waves now run

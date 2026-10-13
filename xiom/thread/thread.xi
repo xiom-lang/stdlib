@@ -38,9 +38,15 @@ pub type JoinHandle[T] = { thread: Thread; result_buf: *UInt8; }
 pub fn spawn[T](f: fn() -> T) -> JoinHandle[T]
   requires: true
   ensures: result.thread.handle != 0 {
+  let bufsize = 8 + size_of[T]();
+  // Wave 131 (REL-20261013-1423): the result buffer is allocated OUTSIDE the
+  // confined block, so it is main-heap memory. Previously alloc.alloc ran
+  // inside the block: the confinement rewriting returned guard-arena memory,
+  // which the arena freed at block exit while the spawned thread still wrote
+  // its result into it. The matching deallocs in join/detach already go
+  // through the same allocator.
+  let buf = alloc.alloc(bufsize);
   unsafe {
-    let bufsize = 8 + size_of[T]();
-    let buf = alloc.alloc(bufsize);
     let done_ptr = buf as *Int;
     ptr.write(done_ptr, 0);
     let raw_fn = f as *UInt8;

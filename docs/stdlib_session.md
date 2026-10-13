@@ -3044,6 +3044,38 @@ registry pin, agent recon for the rest)**
   exist (mine + the actor's; wave 126 used 152b) and both stand as-is;
   the next writer continues from 156/157.
 
+**SESSION 2026-10-13 block 158 (wave 131: REL-20261013-1423 spawn-buffer hoist -- main-heap result buffer, e2e m282-gated; probes 308; floors165)**
+- WAVE 131 (thread wave, hoist half): xiom.thread.spawn's result
+  buffer (bufsize + alloc.alloc) moved OUT of the confined block, so it
+  is main-heap memory; the guard arena no longer frees it at block exit
+  while the spawned thread still writes its result (the compiler's
+  proposed fix, acked at 15:00Z; join/detach deallocs unchanged and now
+  pair with the main-heap alloc). The raw-fn handover in the same
+  function still requires compiler m282: the spawn[T] e2e (return 42)
+  HANGS on the v0.64.4 pin -- out/dbg131s.xi compiles, prints
+  "spawned", then join never returns (killed by a 20 s watchdog). The
+  probe therefore locks the spawn-independent thread surfaces only
+  (parallelism counts, current id/name, sleep/yield aliases); the hoist
+  itself is compile-locked by check_modules.
+- Probe p_wave131_shapes.xi (308th): 6 rows; thread smokes 2/2.
+- Coverage: fns 8776, pubFns 6540, clauses 6234, pubCovered 4625 (the
+  hoist is a move, so no count change); floors165 dumped + wired.
+  Battery on v0.64.4-rel (final tree): corpus 955/955 (694.3s), probes
+  308/308 (353.9s), modules 510/510 (204.1s), barename 0/510 (293.2s),
+  coverage ratchet vs floors164 + module-smoke (499/518, 3500/6239) +
+  doc ratchets OK.
+- Bus: 19:00Z doorbell quiet; the engine filed REL-20261013-1948-engine
+  (PACKAGE-ASKS.md ledger, to: all -- member lanes cannot move a
+  broadcast item; the tool refuses; stdlib noted the S01-S05 section +
+  rider R01 in the pull log and will pick the rows up when the engine
+  files its per-lane items). REL-20261013-1423 moves acked -> fixed
+  with this wave's evidence (the hoist landed; e2e stays compiler-gated
+  on m282). 1445/1545 unchanged (fixed/closed upstream).
+- Next: on the next compiler pin (m282) flip spawn[T] to the real path
+  + the sequential-simulation notes (thread_parallel_for, pool) and
+  re-run the spawn e2e; then playground-4 / website-2 / engine-6 as
+  queued.
+
 **SESSION 2026-10-13 block 157 (wave 130: the builder pass -- the last concat-per-item leak-class builders in the string dir; probes 307; floors164)**
 - WAVE 130 (classic wave; closes the wave-125..130 string arc): the
   remaining concat-per-item builders converted to single-Vec builders

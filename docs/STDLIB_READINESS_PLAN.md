@@ -2115,8 +2115,24 @@ T1/T2 yields.
         strnlen / concat-per-item class from the string dir. NEXT: the
         thread wave (1423 hoist + pool/spawn flip); then playground-4 /
         website-2 / engine-6 as queued.
+        Wave 131 (2026-10-13, block 158): the REL-20261013-1423 hoist --
+        xiom.thread.spawn's result buffer allocation moved outside the
+        confined block (main-heap), so the guard arena no longer frees it
+        at block exit while the spawned thread writes its result; the
+        compiler's proposed fix, acked at 15:00Z. The raw-fn handover
+        still needs m282: the spawn[T] e2e hangs on the v0.64.4 pin
+        (out/dbg131s.xi prints "spawned", join never returns, 20 s
+        watchdog kill), so the probe locks the spawn-independent thread
+        surfaces and check_modules compile-locks the hoist. Probe
+        p_wave131_shapes.xi (308th): 6 rows; thread smokes 2/2. Coverage
+        fns 8776, clauses 6234 (floors165) + module-smoke + doc ratchets
+        OK; battery on v0.64.4-rel: corpus 955/955 (694.3s), probes
+        308/308 (353.9s), modules 510/510 (204.1s), barename 0/510
+        (293.2s). NEXT: flip spawn[T] to the real path on the next pin
+        (m282) + the sequential-simulation notes (thread_parallel_for,
+        pool); then playground-4 / website-2 / engine-6 as queued.
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors164.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors165.json
         tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;
