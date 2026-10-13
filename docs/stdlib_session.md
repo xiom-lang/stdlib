@@ -3157,6 +3157,18 @@ registry pin, agent recon for the rest)**
   exist (mine + the actor's; wave 126 used 152b) and both stand as-is;
   the next writer continues from 156/157.
 
+**SESSION 2026-10-13 block 161 (doorbell 23:00Z -- quiet; no new rows; wave 132 still in flight uncommitted)**
+- Lane view: no new items or moves since block 160 (1423 fixed, 1445
+  fixed, 1545 closed, 1948 closed -- all recorded). Nothing to do.
+- Tree: head is still block 160's commit `7576458`; the concurrent actor
+  has been in wave 132 for ~2 h with uncommitted edits in
+  `xiom/io/io.xi`, `xiom/serialize/json.xi`,
+  `xiom/string/combinatorics.xi`, `xiom/string/permute.xi`,
+  `xiom/string/string.xi`, `xiom/string/unescape.xi` (+ earlier untracked
+  `docs/ACCELERATED.md`, `tools/probes/p_wave132_shapes.xi`). Never sweep
+  those edits; commit the session doc only.
+- The next writer continues from block 161.
+
 **SESSION 2026-10-13 block 160 (doorbell 21:00Z -- quiet for our lane; 1423 fixed via the actor's wave 131; wave 132 in flight)**
 - Lane view: nothing to transition. `REL-20261013-1423-compiler`
   moved to **fixed** (the concurrent actor's wave 131 spawn-buffer hoist,
