@@ -2850,22 +2850,18 @@ registry pin, agent recon for the rest)**
   required for e2e). Snapshot 32 stands for waves 114-120; blocks
   144-149 carry waves 121-124.
 
-**SESSION 2026-10-13 block 148 (doorbell 15:00Z -- two new compiler items landed mid-wave-124; both triaged)**
-- Bus pulled; no status moves by us; two new compiler-lane items:
-  REL-20261013-1423-compiler (high): thread.spawn result buffer is
-  guard-arena memory freed at block exit -- the compiler half is fixed
-  (m282 d6690868; raw-fn handover); the stdlib fix is to hoist the
-  buffer alloc out of the confined block (main-heap) with the matching
-  dealloc in join/detach. The concurrent stdout actor already acked it
-  with the adopted plan; queued for the thread wave (needs m282 for
-  e2e). REL-20261013-1445-compiler (medium): the alloc-guard-spin fix
-  (arena-aware xiom_guard_free + ffi.free routing). Part 1 was
-  implemented in-flight (it was also required to fix the linker gap the
-  wave's runtime rebuild exposed); part 2 landed as prescribed; the
-  spin still reproduces on v0.64.4 because the compiler lowers ffi.free
-  call sites to `@free` directly (IR evidence) -- progress note posted,
-  item stays acked pending the compiler-side change.
-- Watch rows unchanged otherwise; wave 124 continued after the round.
+**SESSION 2026-10-13 block 148b (15:00Z round -- same round as the concurrent actor's block 148 above; consolidated)**
+- This session's account of the same 15:00Z doorbell was superseded by
+  the actor's block 148 (already committed, above); the two colliding
+  block-148 texts are merged here as a cross-reference (first observed
+  collision of the shared-worktree doc transitions -- earlier rounds
+  128/132/140/144 were idempotent). Essentials: REL-20261013-1423
+  (thread-spawn result-buffer hoist) queued for the thread wave (needs
+  m282 for e2e); REL-20261013-1445 (alloc-guard-spin) part 1 implemented
+  in-flight (xiom_guard_free, required by the wave's runtime rebuild),
+  part 2 landed but the spin still reproduces on v0.64.4 because the
+  compiler lowers ffi.free call sites to `@free` (IR evidence; relayed,
+  item stays acked); wave 124 continued after the round.
 
 **SESSION 2026-10-13 block 147 (wave 123: signal delivery -- the last pulse wave-2 stdlib row; probes 300; floors157)**
 - WAVE 123 (REL-20261012-1946-pulse ask 1, the graceful-drain
