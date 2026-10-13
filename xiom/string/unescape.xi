@@ -145,7 +145,15 @@ pub fn str_unescape_ascii(s: Str) -> Str {
         let h1 = _hex_val(_byte(s, i + 2));
         let h2 = _hex_val(_byte(s, i + 3));
         if h1 >= 0 && h2 >= 0 {
-          out.push((h1 * 16 + h2) as UInt8);
+          let b = h1 * 16 + h2;
+          // Wave 132b (audit): a \x00 escape used to append _byte_str(0),
+          // which was "" -- the NUL was dropped and the scan continued.
+          // A Str cannot carry an embedded NUL (from_utf8 truncates at it),
+          // so pushing 0 here would drop the rest of the string; skip the
+          // byte to keep the historical behavior byte-exact.
+          if b != 0 {
+            out.push(b as UInt8);
+          };
           i = i + 4;
         } else {
           out.push(_raw_byte(s, i));

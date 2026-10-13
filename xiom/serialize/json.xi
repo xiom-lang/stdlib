@@ -66,7 +66,10 @@ fn _json_byte(base: *UInt8, i: Int) -> UInt8
 }
 
 fn _json_char(base: *UInt8, i: Int) -> Char {
-  return (_json_byte(base, i) as Int) as Char;
+  // Mask before the Char cast (wave 132b, audit): `(byte) as Int`
+  // sign-extends, which would produce the wrong codepoint for bytes above
+  // 0x7F (ASCII-only comparisons today, but keep the trap class out).
+  return (((_json_byte(base, i)) as Int) & 0xFF) as Char;
 }
 
 fn _json_push_range(buf: &mut Vec[UInt8], base: *UInt8, start: Int, end: Int) {

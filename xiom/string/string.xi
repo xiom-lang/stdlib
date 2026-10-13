@@ -176,8 +176,6 @@ fn _matches_at(s: Str, at: Int, sub: Str) -> Bool
   };
   return true;
 }
-  return true;
-}
 
 /// True when the string starts with `prefix`.
 pub fn str_starts_with(s: Str, prefix: Str) -> Bool
@@ -1074,13 +1072,8 @@ pub fn str_contains_any(s: Str, needles: &Vec[Str]) -> Bool
 // Build a one-char string from a printable ASCII byte value (32..126).
 // Bytes outside that range render as "?" -- the ciphers below only produce
 // printable output for printable input (documented).
-fn _mk_byte(v: Int) -> Str {
-  var table = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
-  if v >= 32 && v <= 126 {
-    return str_slice(table, v - 32, v - 31);
-  }
-  return str_slice("?", 0, 1);
-}
+// Wave 132b (audit): the last callers were replaced by direct Vec pushes in
+// wave 127/129, so this helper is gone.
 
 /// Translate characters per the `tr` utility: each char of `s` found in
 /// `from` is replaced by the char at the same position in `to`; chars beyond

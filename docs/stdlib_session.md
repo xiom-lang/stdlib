@@ -3183,6 +3183,64 @@ registry pin, agent recon for the rest)**
   sweep those edits; commit the session doc only.
 - Head `b0054b7`; the next writer continues from block 159/160.
 
+**SESSION 2026-10-13 block 160 (wave 132: relay asks -- io stdin callouts, ACCELERATED.md + probe-132 differential, website-2 confirmed wired; independent-audit fixes: \x00 escape drop + orphan brace; probes 309; floors166)**
+- WAVE 132 (relay-ask wave + independent-audit fixes):
+  (a) playground-4: doc callouts on io.read_line / io.read_int / io.stdin
+  (the fd-0 "reads like cin" trap: use the readers for console input;
+  stdin() is the numeric fd and never blocks).
+  (b) website-2: confirmed already wired -- publish-registry.yml reads
+  COMPILER_VERSION at the stdlib tag and passes `--compiler` to
+  `xiom pkg publish` (9b2d2a2); the registry stores the per-version
+  compiler field. No code change; the item moves fixed.
+  (c) website: docs/ACCELERATED.md -- the per-symbol marker inventory
+  (runtime dispatch surfaces, asm symbol sets, fallbacks, VERIFIED-BY)
+  plus probe 132's same-build differential: FIPS SHA-256 vectors through
+  the dispatch-backed sha256, sha256 vs sha256_accelerated equality,
+  ct-compare dispatch rows, the AES-128 FIPS-197 C.1 first-block KAT +
+  ECB/PKCS#7 roundtrip, and the dispatch-backed str_concat copy.
+  (d) INDEPENDENT AUDIT (read-only background subagent over waves
+  127-131) found two REAL issues, both fixed in-wave before the commit:
+  1) str_unescape_ascii dropped the rest of the string after a \x00
+  escape -- the Vec builder pushed a NUL byte, and Str::from_utf8
+  truncates at the first NUL; the pre-wave code appended _byte_str(0)
+  which was "" (skipped) and CONTINUED. Restored byte-exact (skip the
+  zero byte); probe rows 15/16 lock "a\x00b" -> "ab" and "\x00" -> "".
+  2) An orphaned `return true; }` left by the wave-127 _matches_at edit
+  (the parser recovers it on v0.64.4 but it is a latent parse break in
+  the most-imported module; removed). Hardening from the same audit:
+  `pos >= 0` guards in _pm_piece/_piece_from_idx; masked _json_char's
+  Char cast; removed the now-dead _mk_byte helper. The audit cleared
+  categories 1-3 (no unmasked `as Char` remains; no converted file keeps
+  per-position runtime accessor calls; all _slice_fast/_push_str sites
+  are bounds-guarded) -- recorded in the audit trail.
+- PARALLEL AGENTS: two read-only background subagents ran while this
+  wave finished -- (i) the waves-127-131 audit above; (ii) a tree-wide
+  quadratic sweep over every module EXCEPT xiom/string, which produced
+  the wave-133+ campaign inventory (HOT clusters: core.to_int_from_str,
+  io pipe_write_line/bw_write_str, hash DefaultHasher/djb2/sdbm/fnv1,
+  encoding base64/hex/percent idna codecs, convert escape/validate/
+  json/punycode, serialize serialize/toml/csv, net http/ws/dns,
+  format fmt/numbering, text similarity/diff, misc levenshtein/glob/
+  natural, num parse/itoa/bigint, log color/json, regex engine, search
+  kmp/boyer, collect trie/radix, crypto rng_crypto/curves, os path/fs,
+  error/debug/test builders). The full ranked list is in the agent
+  result captured this round; wave 133 starts with core + io + hash.
+- Probe p_wave132_shapes.xi (309th): 16 rows; probes 127/128 re-run
+  green; string smokes 102/102.
+- Coverage: fns 8775 (-1 for the dead helper), pubFns 6540, clauses
+  6234 (unchanged), pubCovered 4625; floors166 dumped + wired. Battery
+  under the compiler lanes' worktree sweep (m294-m297 lanes + engine
+  builds saturated the box): corpus 955/955 (1677.7s), probes 309/309
+  (298.4s), modules 510/510 (342.7s), barename 0/510 (506.9s),
+  module-smoke/doc ratchets OK. Two shell kills during the corpus legs
+  were box-load, not hangs (no orphan processes of this lane remained).
+- Bus: 21:00Z doorbell quiet; landing with this commit: playground-4 ->
+  fixed (io.xi doc refs), website-2 -> fixed (9b2d2a2 + workflow refs),
+  website -> fixed (docs/ACCELERATED.md + probe 132 refs).
+- Next: wave 133 = the sweep's top clusters (core.to_int_from_str, the
+  io writers, the hash family) with the established idioms; the spawn
+  flip + engine S-section rows stay pin/relay-gated.
+
 **SESSION 2026-10-13 block 159 (handoff 20:00Z -- snapshot 35 refreshed in place at head 664e4a7; waves 114-131; continuation prompt re-issued)**
 - Snapshot 35 written at the top of section 0A (waves 114-131; gates
   955/308/510/0 + floors165; coverage fns 8776/clauses 6234; the trap

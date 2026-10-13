@@ -297,7 +297,7 @@ fn _piece_from_idx(s: Str, idx: &Vec[Int]) -> Str {
   var j: Int = 0;
   while j < idx.len() {
     let pos = idx[j];
-    if pos < slen {
+    if pos >= 0 && pos < slen {
       out.push(_byte(s, pos) as UInt8);
     };
     j = j + 1;

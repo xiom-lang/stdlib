@@ -2128,11 +2128,28 @@ T1/T2 yields.
         fns 8776, clauses 6234 (floors165) + module-smoke + doc ratchets
         OK; battery on v0.64.4-rel: corpus 955/955 (694.3s), probes
         308/308 (353.9s), modules 510/510 (204.1s), barename 0/510
-        (293.2s). NEXT: flip spawn[T] to the real path on the next pin
-        (m282) + the sequential-simulation notes (thread_parallel_for,
-        pool); then playground-4 / website-2 / engine-6 as queued.
+        (293.2s).
+        Wave 132 (2026-10-13, block 160): relay asks + independent-audit
+        fix wave. io stdin doc callouts (playground-4);
+        docs/ACCELERATED.md marker inventory + probe-132 same-build
+        differential (website); website-2 confirmed wired (9b2d2a2).
+        The read-only audit of waves 127-131 found two REAL issues, both
+        fixed: str_unescape_ascii dropped the rest of the string after a
+        \x00 escape (Vec builder pushed a NUL; from_utf8 truncates) --
+        restored byte-exact; and an orphaned `return true; }` from the
+        wave-127 _matches_at edit -- removed. Hardening: pos >= 0 guards
+        in _pm_piece/_piece_from_idx, masked _json_char, dead _mk_byte
+        removed. Probe p_wave132_shapes.xi (309th): 16 rows; probes
+        127/128 green; string smokes 102/102. Coverage fns 8775 (-1),
+        clauses 6234 (floors166) + ratchets OK; battery: corpus 955/955
+        (1677.7s, box loaded by the compiler worktree sweep), probes
+        309/309 (298.4s), modules 510/510 (342.7s), barename 0/510
+        (506.9s). NEXT: the tree-wide quadratic-sweep campaign (agent
+        inventory: core/io/hash/encoding/convert/serialize/net/format
+        clusters); wave 133 opens with core + io + hash unless a relay
+        item wins.
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors165.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors166.json
         tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;

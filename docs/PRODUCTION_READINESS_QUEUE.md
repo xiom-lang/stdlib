@@ -7,7 +7,7 @@ windows-x64 release archive.)
 **Gates: corpus 955/955 full (C001 carve-outs retired on v0.63.1; new
 TcpStream loopback and uuencode roundtrip smokes added; smoke_os_watch
 added in wave 124), modules 510/510,
-probes 308/308, barename 0/510.**
+probes 309/309, barename 0/510.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -26,7 +26,7 @@ gates flip:
    wave-98..110 probes), the io byte-fidelity/CRLF lock and the
    fs_remove lock).
 4. Strict bare-name scan clean -- MET (0/509).
-5. Coverage ratchet green -- MET (floors165).
+5. Coverage ratchet green -- MET (floors166).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (499/518 modules, 3500/6239 fns).
 8. Contract coverage 100% (every public fn carries clauses) -- OPEN (70.7%).
@@ -553,6 +553,35 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
      path + the sequential-simulation notes (thread_parallel_for, pool),
      re-run the spawn e2e; then playground-4 / website-2 / engine-6 as
      queued.
+     WAVE 132 (block 160): the queued relay asks plus an independent
+     audit fix wave. (a) playground-4: io.stdin()/read_line/read_int doc
+     callouts (the fd-0 "reads like cin" trap); (b) website-2: confirmed
+     already wired -- the publish workflow reads COMPILER_VERSION at the
+     tag and passes --compiler to `xiom pkg publish` (9b2d2a2); (c)
+     website: docs/ACCELERATED.md per-symbol marker inventory + probe
+     132 same-build differential (sha256 vs sha256_accelerated, FIPS
+     "abc" vector, ct-compare dispatch, AES-128 FIPS C.1 first-block KAT
+     + roundtrip, dispatch-backed str_concat). (d) A read-only audit
+     subagent (waves 127-131) found and this wave FIXED two REAL issues:
+     str_unescape_ascii dropped the rest of the string after a \x00
+     escape (the Vec builder pushed a NUL, which from_utf8 truncates at;
+     the old _byte_str(0) skipped it and continued -- restored byte-
+     exact, probe rows 15/16), and an orphaned `return true; }` left by
+     the wave-127 _matches_at edit (parser-recovered today, latent
+     break; removed). Hardening from the same audit: pos >= 0 guards in
+     _pm_piece/_piece_from_idx, masked _json_char's Char cast, removed
+     the dead _mk_byte. Probe p_wave132_shapes.xi (309th): 16 rows;
+     probes 127/128 re-run green; string smokes 102/102. Coverage fns
+     8775 (-1 dead helper), clauses 6234 (floors166 wired); battery
+     corpus 955/955 (1677.7s under the compiler lanes' worktree sweep),
+     probes 309/309 (298.4s), modules 510/510 (342.7s), barename 0/510
+     (506.9s) + module-smoke/doc ratchets OK.
+     NEXT: the tree-wide quadratic-sweep inventory (independent agent;
+     it lists the remaining conversion campaign by module tree, HOT
+     clusters: core.to_int_from_str, io pipe/buffer writers, hash
+     hashers, encoding codecs, convert escape/validate, serialize
+     parsers, net http/ws, format fmt). Wave 133 starts the highest-
+     value batch (candidate: core + io + hash) unless a relay item wins.
 BINARY NOTE: the shared local build path
 `E:\xiom-lang\xiom\target\release\xiom.exe` was rebuilt past the pin
 (compiler main da7798da m252) and fails four corpus smokes; waves now run

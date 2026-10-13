@@ -91,6 +91,11 @@ pub fn println(msg: Str)
 }
 
 /// Read one line from standard input (newline stripped).
+/// This is the interactive reader: use it (or `read_int` / `read_float`)
+/// for console input. Do NOT use `stdin()` for this -- `stdin()` returns
+/// the numeric file descriptor 0 (for pipe/dup/close APIs), so
+/// `age = stdin()` silently stores 0 and never waits for input
+/// (playground-4 trap; see docs/ACCELERATED.md for the stream surfaces).
 pub fn read_line() -> Str
   ensures: result.len() >= 0
 {
@@ -120,6 +125,8 @@ fn strip_trailing_newline(s: Str) -> Str {
 }
 
 /// Read and parse an Int from standard input; Err on bad input.
+/// Use this (or `read_line` / `read_float`) for interactive input;
+/// `stdin()` is the fd 0 accessor, not a reader.
 pub fn read_int() -> Result[Int, Str]
   ensures: result is Err => result.value.len() > 0
 {
@@ -692,6 +699,9 @@ pub fn set_permissions(path: Str, perm: Int) -> Result[Unit, IOError]
 
 /// === Standard streams ===
 /// Numeric file descriptors (for fd-based APIs: pipe/dup/close).
+/// NOTE: `stdin()` returns fd 0 -- it is NOT a reader and never blocks.
+/// For console input use `read_line` / `read_int` / `read_float` (or
+/// `stdin_file()` for FILE*-based APIs).
 pub fn stdin() -> Int
   ensures: result >= 0
 {
