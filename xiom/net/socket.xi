@@ -10,8 +10,12 @@ module xiom.net.socket
 // send, receive, address queries and options. The core operations are
 // implemented on the same runtime socket primitives used by xiom.net;
 // timeout, non-blocking, reuse-addr and shutdown are real since wave 119
-// (SO_RCVTIMEO / FIONBIO / O_NONBLOCK / setsockopt + shutdown);
-// peer/local address and pending bytes still return a documented Err.
+// (SO_RCVTIMEO / FIONBIO / O_NONBLOCK / setsockopt + shutdown); peer/local
+// address and pending bytes still return a documented Err. Wave 121 adds
+// the full-send loop (socket_send_all) and the chunked-transfer stream
+// helpers (socket_chunk_encode / socket_chunked_end / socket_stream_chunk /
+// socket_stream_end; Transfer-Encoding: chunked writers for SSE-style
+// streaming endpoints, REL-20261012-1946-pulse).
 
 extern "C" {
   fn xiom_socket_create(family: Int, typ: Int, proto: Int) -> Int;
@@ -19,10 +23,11 @@ extern "C" {
   fn xiom_socket_bind(sock: Int, port: Int) -> Int;
   fn xiom_socket_listen(sock: Int, backlog: Int) -> Int;
   fn xiom_socket_accept(sock: Int, client_ip: *UInt8, client_port: *Int) -> Int;
-  fn xiom_socket_send(sock: Int, buf: *UInt8, len: Int) -> Int;
-  // Int32 return: the runtime returns C `int` and -1 means failure; an i64
-  // read would see 4294967295 and mis-classify errors (wave-119 fix; the
-  // same reason xiom_socket_connect above is Int32).
+  // Int32 returns: the runtime returns C `int` and -1 means failure; an i64
+  // read would see 4294967295 and mis-classify errors (wave-119 fix for
+  // recv/recvfrom; wave 121 extends it to send -- the same reason
+  // xiom_socket_connect above is Int32).
+  fn xiom_socket_send(sock: Int, buf: *UInt8, len: Int) -> Int32;
   fn xiom_socket_recv(sock: Int, buf: *UInt8, len: Int) -> Int32;
   fn xiom_socket_close(sock: Int) -> Int;
   fn xiom_socket_sendto(sock: Int, buf: *UInt8, len: Int, host: *UInt8, port: Int) -> Int;
@@ -165,11 +170,171 @@ pub fn socket_send(fd: Int, data: &Vec[UInt8]) -> Result[Int, Str]
     raw_buf[i] = data[i];
     i = i + 1;
   }
-  let n = unsafe { xiom_socket_send(fd, &raw_buf as *UInt8, dlen) };
+  let n32: Int32;
+  unsafe {
+    n32 = xiom_socket_send(fd, &raw_buf as *UInt8, dlen);
+  }
+  let n = n32 as Int;
   if n < 0 {
     return Err("socket_send: send failed");
   }
   Ok(n)
+}
+
+/// socket_send_all writes every byte of data, advancing by the syscall's
+/// partial counts so a short send cannot silently truncate a response.
+/// Real implementation (wave 121). Returns: Ok(data.len()).
+/// Complexity: O(n) syscall loop.
+pub fn socket_send_all(fd: Int, data: &Vec[UInt8]) -> Result[Int, Str]
+  ensures: data.len() == 0 => result is Ok
+  ensures: result is Ok => fd >= 0
+{
+  if fd < 0 {
+    return Err("socket_send_all: invalid fd");
+  }
+  let n = data.len();
+  if n == 0 {
+    return Ok(0);
+  }
+  var sent = 0;
+  while sent < n {
+    let w32: Int32;
+    unsafe {
+      w32 = xiom_socket_send(fd, &data[sent] as *UInt8, n - sent);
+    }
+    let w = w32 as Int;
+    if w <= 0 {
+      return Err("socket_send_all: send failed");
+    }
+    sent = sent + w;
+  }
+  Ok(sent)
+}
+
+// hex_bytes renders a non-negative length as lowercase ASCII hex digits.
+fn hex_bytes(v: Int) -> Vec[UInt8] {
+  var digits = Vec[UInt8].new();
+  if v == 0 {
+    digits.push(48);
+    return digits;
+  }
+  var t = v;
+  while t > 0 {
+    let d = t & 0x0F;
+    if d < 10 {
+      digits.push((48 + d) as UInt8);
+    } else {
+      digits.push((87 + d) as UInt8);
+    }
+    t = t >> 4;
+  }
+  var out = Vec[UInt8].new();
+  var i = digits.len() - 1;
+  while i >= 0 {
+    out.push(digits[i]);
+    i = i - 1;
+  }
+  out
+}
+
+/// socket_chunk_encode wraps data in one HTTP/1.1 chunked-transfer frame:
+/// "<hex length>\r\n" + data + "\r\n". Empty data yields "" (a zero-length
+/// chunk would terminate the stream; use socket_chunked_end for that).
+/// Complexity: O(n). Pure.
+pub fn socket_chunk_encode(data: &Vec[UInt8]) -> Str
+  ensures: data.len() == 0 => result.len() == 0
+  ensures: data.len() > 0 => result.len() >= data.len() + 3
+{
+  var out = Vec[UInt8].new();
+  let dlen = data.len();
+  if dlen == 0 {
+    return Str::from_utf8(out);
+  }
+  let hx = hex_bytes(dlen);
+  var h = 0;
+  while h < hx.len() {
+    out.push(hx[h]);
+    h = h + 1;
+  }
+  out.push(13);
+  out.push(10);
+  var i = 0;
+  while i < dlen {
+    out.push(data[i]);
+    i = i + 1;
+  }
+  out.push(13);
+  out.push(10);
+  Str::from_utf8(out)
+}
+
+/// socket_chunked_end returns the terminating zero-length chunk
+/// ("0\r\n\r\n") that finishes a chunked-transfer body. Complexity: O(1).
+/// Pure.
+pub fn socket_chunked_end() -> Str
+  ensures: result.len() == 5
+{
+  var out = Vec[UInt8].new();
+  out.push(48);
+  out.push(13);
+  out.push(10);
+  out.push(13);
+  out.push(10);
+  Str::from_utf8(out)
+}
+
+/// socket_stream_chunk sends one chunk frame (encode + full send). Empty
+/// data is a documented no-op (Ok(())). Write the response head with
+/// Transfer-Encoding: chunked first (e.g. via
+/// server.server_build_response_headers), then chunks, then
+/// socket_stream_end.
+/// Returns: Ok(()) once the frame is on the wire; Err on failure.
+/// Complexity: O(n) network I/O.
+pub fn socket_stream_chunk(fd: Int, data: &Vec[UInt8]) -> Result[Unit, Str]
+  ensures: data.len() == 0 => result is Ok
+  ensures: result is Ok => fd >= 0
+{
+  if fd < 0 {
+    return Err("socket_stream_chunk: invalid fd");
+  }
+  if data.len() == 0 {
+    return Ok(());
+  }
+  let chunk = socket_chunk_encode(data);
+  var bytes: Vec[UInt8] = Vec[UInt8].new();
+  var i = 0;
+  while i < chunk.len() {
+    bytes.push(chunk.byte_at(i));
+    i = i + 1;
+  }
+  let sent = socket_send_all(fd, &bytes);
+  match sent {
+    Ok(_) => Ok(()),
+    Err(e) => Err(e),
+  }
+}
+
+/// socket_stream_end sends the terminating zero-length chunk.
+/// Returns: Ok(()) once the terminator is on the wire; Err on failure.
+/// Complexity: O(1) network I/O.
+pub fn socket_stream_end(fd: Int) -> Result[Unit, Str]
+  ensures: result is Ok => fd >= 0
+{
+  if fd < 0 {
+    return Err("socket_stream_end: invalid fd");
+  }
+  let tail = socket_chunked_end();
+  var bytes: Vec[UInt8] = Vec[UInt8].new();
+  var i = 0;
+  while i < tail.len() {
+    bytes.push(tail.byte_at(i));
+    i = i + 1;
+  }
+  let sent = socket_send_all(fd, &bytes);
+  match sent {
+    Ok(_) => Ok(()),
+    Err(e) => Err(e),
+  }
 }
 
 /// socket_recv receives up to max bytes; returns the bytes received.

@@ -2791,6 +2791,72 @@ registry pin, agent recon for the rest)**
   (216.6s), floors144 + doc + module-smoke (497/517, 3476/6204)
   ratchets OK.
 
+**SESSION 2026-10-13 block 145 (wave 121: websocket I/O fix + server-side helpers + chunked-transfer stream helpers; probes 298; floors155)**
+- WAVE 121 (REL-20261012-1946-pulse stdlib-side rows): websocket I/O is
+  fixed and completed. FIX-FIRST: ws_connect closed the socket before
+  returning it and read the handshake to EOF, and ws_recv read every
+  frame to EOF -- both hang a persistent connection; now ws_connect
+  consumes the head exactly at CRLFCRLF (leftover bytes carried in the
+  new WsConnection.pending buffer) and keeps the fd live, and ws_recv is
+  a bounded incremental reader over pending+socket (1 MiB cap) built on
+  the new pure ws_frame_take (frame + consumed count;
+  Err("incomplete frame") = read more). New server-side helpers:
+  ws_request_key (case-insensitive Sec-WebSocket-Key extraction),
+  ws_handshake_response (101 builder, 129 bytes, RFC vector verified),
+  ws_close_code, ws_frame_encode_fin (FIN flag; ws_frame_encode
+  delegates). Partial sends fixed for every request/frame via
+  ws_send_all; ws_ping/ws_pong/ws_close return Result now (close clears
+  open). Client I/O goes through xiom.net.socket (no raw externs); the
+  shared send shim got the wave-119 Int32 return fix (send's -1 read as
+  4294967295 before). socket.xi: socket_send_all (full-send loop) +
+  chunked-transfer writers socket_chunk_encode / socket_chunked_end /
+  socket_stream_chunk / socket_stream_end (lowercase-hex frames, empty
+  data = no-op; the head with Transfer-Encoding: chunked is written by
+  the caller, e.g. server_build_response_headers).
+- Probe p_wave121_shapes.xi (298th) red pre (the helpers did not exist;
+  the old client I/O was broken) / green post: RFC accept vector through
+  the response builder; request-key case/space variants + missing row;
+  header split with byte-exact leftover; frame take for every truncated
+  prefix, two concatenated frames, 16-bit extended length, masked
+  roundtrip; close codes; chunk encodes (5-byte, empty, 4096 -> "1000");
+  loopback wire exchange (handshake request/response + verify, unmasked
+  server frame, masked client frame, chunked head+2 chunks+end
+  byte-exact); Err rows (bad fd x3, missing key/terminator). Platform
+  note: the live threaded ws_connect leg is deliberately not in the
+  probe (thread spawn in probes is untested and probes have no per-file
+  timeout); the client glue composes the locked pure pieces and the wire
+  exchange locks the protocol end to end. p_wave62_shapes remerged
+  (WsConnection.pending); smoke_net_url extended with the new pure
+  helpers; smoke_net 11/11.
+- Coverage: pubFns 6531, pubCovered 4617 (clauses 6169, global 70.7%);
+  floors155 dumped + wired (ci/heavy/release + tools/README + plan/queue/
+  session + wishlist). Battery on v0.64.4-rel: corpus 954/954 (578.1s),
+  probes 298/298 (211.4s), modules 509/509 (188s), barename 0/509
+  (280.2s), coverage + module-smoke (497/517, 3490/6230) + doc ratchets
+  OK. (Block 144 recorded the 13:00Z doorbell -- quiet round, no moves.)
+- Bus: REL-20261012-1946-pulse progress note acked -> acked (websocket +
+  chunked helpers landed; signal/poll/REUSEPORT/raw-stream-send runtime
+  rows still queued). Follow-ups recorded: ws_random_key is time-seeded
+  (predictable handshake keys -- random source when the RNG lands);
+  socket create/accept/bind/listen POSIX -1 returns still read as
+  4294967295 (Windows-ABI-correct declarations; audit when a POSIX
+  consumer needs failure classification). Snapshot 32 stands for waves
+  114-120; blocks 144/145 carry wave 121.
+
+**SESSION 2026-10-13 block 144 (doorbell 13:00Z -- quiet round; wave 121 in flight)**
+- Bus pulled (already up to date); the stdlib lane view shows no new asks
+  and no status moves this round (watch rows unchanged: bindings-8,
+  pulse-5, pulse-7, website/website-2, xvector-6, playground-4,
+  engine-3/engine-6, pulse-2, the compiler info rows); the fixed rows
+  (pulse-6, xvector-8, benchmark-2/3, 1442-compiler, xvector-2) await
+  reporter-side verify.
+- Wave 121 in flight at this round: websocket I/O fix (ws_connect keeps
+  the fd and reads the head exactly; ws_recv is incremental) +
+  server-side helpers (ws_request_key / ws_handshake_response /
+  ws_close_code / ws_frame_encode_fin) + the chunked-transfer stream
+  helpers in socket.xi; probe p_wave121_shapes.xi green; corpus 954/954
+  (578.1s) green; probes/modules/barename and floors155 in progress.
+
 **SESSION 2026-10-13 block 143 (wave 120 pushed fbf4bc0; xvector-2 acked -> fixed on the bus; snapshot 32 refresh)**
 - Wave 120 committed `fbf4bc0` and pushed to main (`93d636e..fbf4bc0`; the
   standard owner-bypass banner). Relay round: REL-20261012-1945-xvector-2

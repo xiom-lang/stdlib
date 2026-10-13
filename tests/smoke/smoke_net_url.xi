@@ -9,6 +9,7 @@ module smoke_net_url
 use xiom.net.url;
 use xiom.net.ws;
 use xiom.net.websocket;
+use xiom.net.socket;
 use xiom.io;
 
 fn main() -> Int {
@@ -177,6 +178,127 @@ fn main() -> Int {
       io.println("ws-parse3");
       return 20;
     }
+  }
+
+  // --- wave 121: handshake response builder + request-key extraction ---
+  let resp2 = websocket.ws_handshake_response("dGhlIHNhbXBsZSBub25jZQ==");
+  if resp2.len() != 129 {
+    io.println("ws-response-len");
+    return 21;
+  }
+  if websocket.ws_handshake_verify(resp2, "dGhlIHNhbXBsZSBub25jZQ==") != true {
+    io.println("ws-response-verify");
+    return 21;
+  }
+  let rk = websocket.ws_request_key("GET / HTTP/1.1\r\nsec-websocket-key: abc\r\n\r\n");
+  match rk {
+    Ok(v) => {
+      if v != "abc" {
+        io.println("ws-request-key");
+        return 22;
+      }
+    }
+    Err(_) => {
+      io.println("ws-request-key");
+      return 22;
+    }
+  }
+  let rk2 = websocket.ws_request_key("GET / HTTP/1.1\r\n\r\n");
+  if rk2.is_ok {
+    io.println("ws-request-key-missing");
+    return 22;
+  }
+
+  // --- wave 121: header split + frame take ---
+  var hb = Vec[UInt8].new();
+  var hbi = 0;
+  let hsrc = "HTTP/1.1 101 OK\r\nA: b\r\n\r\nXY";
+  while hbi < hsrc.len() {
+    hb.push(hsrc.byte_at(hbi));
+    hbi = hbi + 1;
+  }
+  let sp2 = websocket.ws_split_headers(&hb);
+  match sp2 {
+    Ok(t) => {
+      let rest = t.1;
+      if rest.len() != 2 {
+        io.println("ws-split-rest");
+        return 23;
+      }
+    }
+    Err(_) => {
+      io.println("ws-split");
+      return 23;
+    }
+  };
+  let tk2 = websocket.ws_frame_take(&frame);
+  match tk2 {
+    Ok(t) => {
+      let used = t.1;
+      if used != frame.len() {
+        io.println("ws-take-used");
+        return 24;
+      }
+    }
+    Err(_) => {
+      io.println("ws-take");
+      return 24;
+    }
+  };
+  let tkcut = websocket.ws_frame_take(&payload);
+  if tkcut.is_ok {
+    io.println("ws-take-short");
+    return 24;
+  }
+
+  // --- wave 121: close code + chunked encode ---
+  var cc_payload = Vec[UInt8].new();
+  cc_payload.push(3);
+  cc_payload.push(232);
+  let cframe2 = websocket.ws_frame_encode(8, &cc_payload, false);
+  let cdec = websocket.ws_frame_decode(&cframe2);
+  match cdec {
+    Ok(fr) => {
+      let cc = websocket.ws_close_code(&fr);
+      match cc {
+        Some(code) => {
+          if code != 1000 {
+            io.println("ws-close-code");
+            return 25;
+          }
+        }
+        None => {
+          io.println("ws-close-code");
+          return 25;
+        }
+      };
+    }
+    Err(_) => {
+      io.println("ws-close-code");
+      return 25;
+    }
+  };
+  var chd = Vec[UInt8].new();
+  chd.push(104);
+  chd.push(105);
+  let chs = socket.socket_chunk_encode(&chd);
+  if chs != "2\r\nhi\r\n" {
+    io.println("chunk-encode");
+    return 26;
+  }
+  var che: Vec[UInt8] = Vec[UInt8].new();
+  if socket.socket_chunk_encode(&che).len() != 0 {
+    io.println("chunk-empty");
+    return 26;
+  }
+  if socket.socket_chunked_end() != "0\r\n\r\n" {
+    io.println("chunk-end");
+    return 26;
+  }
+  let send_bad = socket.socket_send_all(-1, &chd);
+  if send_bad.is_ok {
+    io.println("send-all-badfd");
+    return 27;
   }
 
   io.println("OK");

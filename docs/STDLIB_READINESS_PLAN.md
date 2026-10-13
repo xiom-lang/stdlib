@@ -1817,8 +1817,55 @@ T1/T2 yields.
         ratchets OK. Follow-up: the async/io.xi and io/pipe.xi copies of
         the xiom_read/xiom_write Int returns need the same Int32
         treatment (same family; outside this wave's probe scope).
+        Wave 121 (2026-10-13): websocket I/O fix + server-side helpers +
+        chunked-transfer stream helpers (REL-20261012-1946-pulse
+        stdlib-side rows). websocket.xi FIX-FIRST: ws_connect closed the
+        socket before returning it and read the handshake to EOF, and
+        ws_recv read every frame to EOF (both hang a persistent
+        connection); now ws_connect consumes the head exactly at CRLFCRLF
+        (leftover bytes carried in the new WsConnection.pending buffer)
+        and keeps the fd live, and ws_recv is a bounded incremental
+        reader over pending+socket (1 MiB cap) built on the new pure
+        ws_frame_take (frame + consumed count; Err("incomplete frame") =
+        read more). New server-side helpers: ws_request_key
+        (case-insensitive Sec-WebSocket-Key extraction),
+        ws_handshake_response (101 builder, 129 bytes; RFC 6455 vector
+        verified), ws_close_code, ws_frame_encode_fin (FIN flag for
+        fragmentation; ws_frame_encode delegates). Partial sends fixed
+        for every request/frame via ws_send_all; ws_ping/ws_pong/ws_close
+        return Result now (close clears open). Client I/O goes through
+        xiom.net.socket (no raw externs); the shared send shim got the
+        wave-119 Int32 return fix (send's -1 read as 4294967295 before).
+        socket.xi: socket_send_all (full-send loop) + chunked-transfer
+        writers socket_chunk_encode / socket_chunked_end /
+        socket_stream_chunk / socket_stream_end (lowercase-hex frames,
+        empty data = no-op; the head with Transfer-Encoding: chunked is
+        written by the caller, e.g. server_build_response_headers).
+        Probe p_wave121_shapes.xi (298th) red pre / green post: RFC
+        accept vector through the response builder; request-key variants;
+        header split with byte-exact leftover; frame take for every
+        truncated prefix, concatenated frames, 16-bit length, masked
+        roundtrip; close codes; chunk encodes; loopback wire exchange
+        (handshake request/response + verify, unmasked server frame,
+        masked client frame, chunked head+2 chunks+end byte-exact).
+        Platform note: the live threaded ws_connect leg is deliberately
+        not in the probe (thread spawn in probes is untested and probes
+        have no per-file timeout) -- the client glue composes the locked
+        pure pieces and the wire exchange locks the protocol end to end.
+        p_wave62_shapes remerged (WsConnection.pending); smoke_net_url
+        extended with the new pure helpers; smoke_net 11/11. Coverage:
+        pubFns 6531, pubCovered 4617 (clauses 6169, global 70.7%);
+        floors155 wired. Battery on v0.64.4-rel: corpus 954/954
+        (578.1s), probes 298/298 (211.4s), modules 509/509 (188s),
+        barename 0/509 (280.2s), coverage + module-smoke (497/517,
+        3490/6230) + doc ratchets OK. Follow-ups: ws_random_key is
+        time-seeded (predictable handshake keys -- random source when
+        the RNG lands); socket create/accept/bind/listen POSIX -1
+        returns still read as 4294967295 (Windows-ABI-correct
+        declarations; audit for a POSIX consumer needing failure
+        classification).
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors154.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors155.json
         tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;

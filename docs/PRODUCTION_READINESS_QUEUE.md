@@ -1,12 +1,12 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
-**77.1% -- 7 of 10 gates complete; gate 8 at 70.6% (partial credit) and
+**77.1% -- 7 of 10 gates complete; gate 8 at 70.7% (partial credit) and
 gates 9-10 discrete.** (Compiler pin: in-tree **v0.64.4** -- released
 2026-10-12, tag f76fd47c on df493530; the lane battery runs the official
 windows-x64 release archive.)
 **Gates: corpus 954/954 full (C001 carve-outs retired on v0.63.1; new
 TcpStream loopback and uuencode roundtrip smokes added), modules 509/509,
-probes 297/297, barename 0/509.**
+probes 298/298, barename 0/509.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -25,16 +25,16 @@ gates flip:
    wave-98..110 probes), the io byte-fidelity/CRLF lock and the
    fs_remove lock).
 4. Strict bare-name scan clean -- MET (0/509).
-5. Coverage ratchet green -- MET (floors154).
+5. Coverage ratchet green -- MET (floors155).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (497/517 modules, 3477/6202 fns).
-8. Contract coverage 100% (every public fn carries clauses) -- OPEN (70.6%).
+8. Contract coverage 100% (every public fn carries clauses) -- OPEN (70.7%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
    OPEN (15: all compiler; the stdlib ledger carries no open repro).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
 
 Meter formula: MET gates count 1.0; gate 8 counts its current
-pub-with-clause fraction (70.6% -> 0.706); gates 9 and 10 get no partial
+pub-with-clause fraction (70.7% -> 0.707); gates 9 and 10 get no partial
 credit (discrete). Update the percentage and the gate-8 fraction in the
 same commit as each floors dump so the meter moves smoothly toward 80%.
 
@@ -193,7 +193,7 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
     post-batch re-verify sweep cycle. Handoff in
     `docs/stdlib_session.md` snapshot 32 (block 143 refresh, head
     869ff72), wave
-    records blocks 89-143. WAVE 114 step 0 (block 128): battery pin moved
+    records blocks 89-145. WAVE 114 step 0 (block 128): battery pin moved
     to the official v0.64.4 release archive
     (%TEMP%\kilo\stdlib_ws\v0.64.4-rel\bin\xiom.exe, sha256 DB8A2EF0...;
     COMPILER_VERSION -> v0.64.4): corpus 954/954 (589.5s), probes 289/289
@@ -296,6 +296,30 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
      out-of-range fd fast-fails the Windows process before returning a
      value (C-verified). Follow-up: async/io.xi + io/pipe.xi copies of the
      xiom_read/xiom_write Int returns need the Int32 treatment.
+     WAVE 121 (block 145): websocket I/O fix + server-side helpers +
+     chunked-transfer stream helpers (REL-20261012-1946-pulse stdlib-side
+     rows). websocket.xi FIX-FIRST: ws_connect closed the socket before
+     returning and read the handshake to EOF; ws_recv read every frame to
+     EOF (both hang a persistent connection); now head-exact reads with a
+     WsConnection.pending buffer, fd stays live, ws_recv is a bounded
+     incremental reader (1 MiB cap) on the new pure ws_frame_take (+
+     consumed count). New: ws_request_key, ws_handshake_response (101,
+     129 bytes), ws_close_code, ws_frame_encode_fin; full-send loop
+     ws_send_all fixes partial sends; ping/pong/close return Result;
+     client I/O via xiom.net.socket (send shim got the wave-119 Int32
+     fix). socket.xi: socket_send_all + socket_chunk_encode /
+     socket_chunked_end / socket_stream_chunk / socket_stream_end
+     (lowercase-hex; empty = no-op; head written by the caller). Probe
+     p_wave121_shapes.xi (298th) red pre / green post (pure protocol
+     pieces + loopback wire exchange, chunked bytes byte-exact);
+     p_wave62_shapes remerged (pending field); smoke_net_url extended;
+     smoke_net 11/11. Coverage pubCovered 4606 -> 4617 (clauses 6169,
+     global 70.7%), floors155 wired; battery on v0.64.4-rel: corpus
+     954/954 (578.1s), probes 298/298 (211.4s), modules 509/509 (188s),
+     barename 0/509 (280.2s), coverage + module-smoke (497/517,
+     3490/6230) + doc ratchets OK. Follow-ups: ws_random_key is
+     time-seeded; socket create/accept/bind/listen POSIX -1 declarations
+     audit.
 BINARY NOTE: the shared local build path
 `E:\xiom-lang\xiom\target\release\xiom.exe` was rebuilt past the pin
 (compiler main da7798da m252) and fails four corpus smokes; waves now run

@@ -470,7 +470,16 @@ bus): three new stdlib-addressed asks acked in one round (relay commit
   stream send) queued; websocket + chunked-stream helpers are stdlib-side
   and can land without the runtime pin; noted `json_parse` numeric is
   already linear (wave 111) and gzip/deflate already ship in
-  `xiom.compress`.
+  `xiom.compress`. **PARTIALLY DELIVERED wave 121 (2026-10-13)**: the
+  stdlib-side rows landed -- websocket frame/handshake primitives with
+  the client I/O fixed (head-exact handshake, incremental frame reads,
+  no early close), server-side helpers (ws_request_key /
+  ws_handshake_response / ws_close_code / ws_frame_encode_fin) and the
+  chunked-transfer writers (socket_send_all + socket_chunk_encode /
+  socket_chunked_end / socket_stream_chunk / socket_stream_end); locked
+  by `tools/probes/p_wave121_shapes.xi` (298th). Still queued:
+  signal delivery, poll/select, SO_REUSEPORT and raw-stream-send runtime
+  rows (next re-vendoring pin or XIOM_RUNTIME_DIR).
 Runtime rows are effective for consumers at the next compiler pin that
 re-vendors `stdlib/runtime` (or `XIOM_RUNTIME_DIR` on v0.64.4 until then).
 The two to-all notices (REL-20261012-1945-xvector, -1946-pulse-3) are

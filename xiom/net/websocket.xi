@@ -4,14 +4,18 @@
 
 module xiom.net.websocket
 
-// Depends on: xiom.string, xiom.net
+// Depends on: xiom.string, xiom.encoding, xiom.math, xiom.net.socket
 //
-// WebSocket framing and client handshake per RFC 6455.
-// Frame encode/decode, masking, and the connect/send/recv client API.
+// WebSocket framing and client handshake per RFC 6455 (wave 121): frame
+// encode/take/decode with masking, server-side upgrade helpers
+// (ws_request_key / ws_handshake_response), close-code parsing, and the
+// connect/send/recv client API over xiom.net.socket with bounded
+// incremental reads (frames are never read to EOF).
 
 use xiom.string;
 use xiom.encoding;
 use xiom.math;
+use xiom.net.socket;
 
 /// struct WsFrame { opcode: Int; fin: Bool; masked: Bool; payload: Vec[UInt8] }
 pub type WsFrame = {
@@ -21,11 +25,15 @@ pub type WsFrame = {
   payload: Vec[UInt8];
 } derive[Clone]
 
-/// struct WsConnection { socket: TcpStream; key: Str; open: Bool }
+/// struct WsConnection { fd: Int; key: Str; open: Bool; pending: Vec[UInt8] }
+/// pending carries bytes received past a head/frame boundary across
+/// ws_recv calls; the fd stays a live socket owned by the connection until
+/// ws_close.
 pub type WsConnection = {
   fd: Int;
   key: Str;
   open: Bool;
+  pending: Vec[UInt8];
 }
 
 // --- String helpers -----------------------------------------------------------
@@ -317,19 +325,87 @@ pub fn ws_handshake_verify(response: Str, key: Str) -> Bool
   got == string.str_lower(expected)
 }
 
+/// ws_handshake_response builds the server 101 upgrade response for a
+/// client's Sec-WebSocket-Key value (RFC 6455 4.2.2). Complexity: O(n).
+/// Pure.
+pub fn ws_handshake_response(key: Str) -> Str
+  ensures: result.len() == 129
+{
+  var resp = "HTTP/1.1 101 Switching Protocols\r\n";
+  resp = resp + "Upgrade: websocket\r\n";
+  resp = resp + "Connection: Upgrade\r\n";
+  resp = resp + "Sec-WebSocket-Accept: " + ws_accept_key(key) + "\r\n";
+  resp = resp + "\r\n";
+  resp
+}
+
+/// ws_request_key extracts the Sec-WebSocket-Key header value from a
+/// client upgrade request (case-insensitive name, optional whitespace
+/// trimmed, value up to the line end). Returns Err when the header is
+/// missing or empty. Complexity: O(n). Pure.
+pub fn ws_request_key(request: Str) -> Result[Str, Str]
+  ensures: result is Ok => request.len() > 0
+{
+  let lowered = string.str_lower(request);
+  let name = "sec-websocket-key:";
+  let at = idx_of(lowered, name);
+  if at < 0 {
+    return Err("missing Sec-WebSocket-Key");
+  }
+  let from = at + name.len();
+  var end = request.len();
+  var i = from;
+  while i < request.len() {
+    let b = request.byte_at(i);
+    if b == 13 || b == 10 {
+      end = i;
+      break;
+    }
+    i = i + 1;
+  }
+  var start = from;
+  while start < end && request.byte_at(start) == 32 {
+    start = start + 1;
+  }
+  var stop = end;
+  while stop > start && request.byte_at(stop - 1) == 32 {
+    stop = stop - 1;
+  }
+  if stop <= start {
+    return Err("empty Sec-WebSocket-Key");
+  }
+  Ok(string.str_slice(request, start, stop))
+}
+
 // --- Frame encode / decode ----------------------------------------------------
 
-/// ws_frame_encode serializes one WebSocket frame. When mask is true a
-/// random-looking client mask (derived from payload length) is applied.
-/// Complexity: O(n). Pure.
+/// ws_frame_encode serializes one final WebSocket frame (FIN set): a thin
+/// delegate to ws_frame_encode_fin with fin = true. When mask is true a
+/// deterministic client mask (derived from the payload length) is applied
+/// -- adequate for protocol correctness; layer a random key at the call
+/// site if unpredictability matters. Complexity: O(n). Pure.
 pub fn ws_frame_encode(opcode: Int, payload: &Vec[UInt8], mask: Bool) -> Vec[UInt8]
+  ensures: (result.len() >= 2) && ((mask == false && payload.len() < 126) => (result.len() == payload.len() + 2)) && ((mask == true && payload.len() < 126) => (result.len() == payload.len() + 6)) && ((payload.len() >= 126) => (result.len() >= payload.len() + 4))
+{
+  ws_frame_encode_fin(opcode, true, payload, mask)
+}
+
+/// ws_frame_encode_fin serializes one WebSocket frame with an explicit FIN
+/// flag (fragmented messages send continuation frames with fin = false and
+/// opcode 0; the first frame carries the message opcode). When mask is
+/// true a deterministic client mask (derived from the payload length) is
+/// applied. Complexity: O(n). Pure.
+pub fn ws_frame_encode_fin(opcode: Int, fin: Bool, payload: &Vec[UInt8], mask: Bool) -> Vec[UInt8]
   ensures: (result.len() >= 2) && ((mask == false && payload.len() < 126) => (result.len() == payload.len() + 2)) && ((mask == true && payload.len() < 126) => (result.len() == payload.len() + 6)) && ((payload.len() >= 126) => (result.len() >= payload.len() + 4))
 {
   var out: Vec[UInt8] = Vec[UInt8]::new();
   let plen = payload.len();
-  var first = 0x80 as UInt8;
+  var first = 0x00 as UInt8;
+  if fin {
+    first = 0x80 as UInt8;
+  }
   if opcode >= 0 {
-    first = (0x80 | (opcode & 0x0F)) as UInt8;
+    first = ((first as Int) | (opcode & 0x0F)) as UInt8;
   }
   out.push(first);
   var second = 0 as UInt8;
@@ -379,36 +455,40 @@ pub fn ws_frame_encode(opcode: Int, payload: &Vec[UInt8], mask: Bool) -> Vec[UIn
   out
 }
 
-/// ws_frame_decode parses one WebSocket frame from bytes. Returns Err on
-/// truncated or invalid input. Complexity: O(n). Pure.
-pub fn ws_frame_decode(frame: &Vec[UInt8]) -> Result[WsFrame, Str]
-  ensures: ((frame.len() < 2) => (result.is_err == true)) && ((result.is_ok == true) => (frame.len() >= 2))
+/// ws_frame_take parses the first WebSocket frame from bytes and reports
+/// how many bytes it consumed (only that many belong to the frame; any
+/// trailing bytes stay with the caller). Err("incomplete frame") means
+/// "read more bytes and retry" -- the incremental reader treats every Err
+/// as insufficient input and is bounded by its own size cap. Complexity:
+/// O(n). Pure.
+pub fn ws_frame_take(bytes: &Vec[UInt8]) -> Result[(WsFrame, Int), Str]
+  ensures: result is Ok => bytes.len() >= 2
 {
-  if frame.len() < 2 {
-    return Err("frame too short");
+  if bytes.len() < 2 {
+    return Err("incomplete frame");
   }
-  let b0 = frame[0] as Int;
-  let b1 = frame[1] as Int;
+  let b0 = bytes[0] as Int;
+  let b1 = bytes[1] as Int;
   let fin = (b0 & 0x80) != 0;
   let opcode = b0 & 0x0F;
   let masked = (b1 & 0x80) != 0;
   var payload_len = b1 & 0x7F;
   var offset = 2;
   if payload_len == 126 {
-    if frame.len() < 4 {
-      return Err("frame too short for extended length");
+    if bytes.len() < 4 {
+      return Err("incomplete frame");
     }
-    payload_len = ((frame[2] as Int) << 8) | (frame[3] as Int);
+    payload_len = ((bytes[2] as Int) << 8) | (bytes[3] as Int);
     offset = 4;
   } elif payload_len == 127 {
-    if frame.len() < 10 {
-      return Err("frame too short for 64-bit length");
+    if bytes.len() < 10 {
+      return Err("incomplete frame");
     }
     payload_len = 0;
     var shift = 56;
     var k = 2;
     while shift >= 0 {
-      payload_len = payload_len + ((frame[k] as Int) << shift);
+      payload_len = payload_len + ((bytes[k] as Int) << shift);
       shift = shift - 8;
       k = k + 1;
     }
@@ -416,30 +496,61 @@ pub fn ws_frame_decode(frame: &Vec[UInt8]) -> Result[WsFrame, Str]
   }
   var mask_key: [4]UInt8;
   if masked {
-    if frame.len() < offset + 4 {
-      return Err("frame too short for mask key");
+    if bytes.len() < offset + 4 {
+      return Err("incomplete frame");
     }
     var m = 0;
     while m < 4 {
-      mask_key[m] = frame[offset + m];
+      mask_key[m] = bytes[offset + m];
       m = m + 1;
     }
     offset = offset + 4;
   }
-  if frame.len() < offset + payload_len {
-    return Err("frame truncated");
+  let total = offset + payload_len;
+  if bytes.len() < total {
+    return Err("incomplete frame");
   }
   var payload: Vec[UInt8] = Vec[UInt8]::new();
   var i = 0;
   while i < payload_len {
     if masked {
-      payload.push((frame[offset + i] ^ mask_key[i % 4]) as UInt8);
+      payload.push((bytes[offset + i] ^ mask_key[i % 4]) as UInt8);
     } else {
-      payload.push(frame[offset + i]);
+      payload.push(bytes[offset + i]);
     }
     i = i + 1;
   }
-  Ok(WsFrame{ opcode: opcode; fin: fin; masked: masked; payload: payload; })
+  Ok((WsFrame{ opcode: opcode; fin: fin; masked: masked; payload: payload; }, total))
+}
+
+/// ws_frame_decode parses one WebSocket frame from bytes (a thin wrapper
+/// over ws_frame_take that drops the consumed count). Err means the input
+/// does not hold a complete frame. Complexity: O(n). Pure.
+pub fn ws_frame_decode(frame: &Vec[UInt8]) -> Result[WsFrame, Str]
+  ensures: result is Ok => frame.len() >= 2
+{
+  let taken = ws_frame_take(frame);
+  match taken {
+    Ok(t) => Ok(t.0),
+    Err(e) => Err(e),
+  }
+}
+
+/// ws_close_code extracts the 2-byte close code from a close frame's
+/// payload (RFC 6455 7.4); None for non-close frames or short payloads.
+/// Complexity: O(1). Pure.
+pub fn ws_close_code(frame: &WsFrame) -> Option[Int]
+  ensures: frame.opcode != 8 => result is None
+{
+  if frame.opcode != 8 {
+    return None;
+  }
+  if frame.payload.len() < 2 {
+    return None;
+  }
+  let p0 = frame.payload[0] as Int;
+  let p1 = frame.payload[1] as Int;
+  Some((p0 << 8) | p1)
 }
 
 /// ws_random_key generates a Sec-WebSocket-Key value (base64 of 16
@@ -544,20 +655,67 @@ pub fn ws_parse_url(url: Str) -> Result[(Str, Int, Str), Str]
 }
 
 // --- Client API (transport-aware) ---------------------------------------------
+//
+// Client I/O goes through xiom.net.socket (Int32-fixed shims; no raw
+// externs here). Reads are bounded incremental loops: the handshake stops
+// exactly at CRLFCRLF and ws_recv stops exactly at a frame boundary, so a
+// persistent connection is never read to EOF.
 
-extern "C" {
-  fn xiom_socket_create(family: Int, typ: Int, proto: Int) -> Int;
-  fn xiom_socket_connect(sock: Int, host: *UInt8, port: Int) -> Int32;
-  fn xiom_socket_send(sock: Int, buf: *UInt8, len: Int) -> Int;
-  fn xiom_socket_recv(sock: Int, buf: *UInt8, len: Int) -> Int;
-  fn xiom_socket_close(sock: Int) -> Int;
+// ws_send_all writes the full request/frame bytes through the socket layer.
+fn ws_send_all(fd: Int, data: &Vec[UInt8]) -> Result[Unit, Str] {
+  let r = socket.socket_send_all(fd, data);
+  match r {
+    Ok(_) => Ok(()),
+    Err(e) => Err(e),
+  }
+}
+
+/// ws_split_headers splits an HTTP head from the bytes after its CRLFCRLF
+/// terminator, preserving any leftover bytes byte-exact (they may already
+/// belong to the next frame). Err("incomplete headers") means "read more
+/// bytes and retry". Complexity: O(n). Pure.
+pub fn ws_split_headers(bytes: &Vec[UInt8]) -> Result[(Str, Vec[UInt8]), Str]
+  ensures: result is Ok => bytes.len() >= 4
+{
+  let n = bytes.len();
+  var at = -1;
+  var i = 0;
+  while i + 3 < n {
+    let b0 = bytes[i];
+    let b1 = bytes[i + 1];
+    let b2 = bytes[i + 2];
+    let b3 = bytes[i + 3];
+    if b0 == 13 && b1 == 10 && b2 == 13 && b3 == 10 {
+      at = i;
+      break;
+    }
+    i = i + 1;
+  }
+  if at < 0 {
+    return Err("incomplete headers");
+  }
+  var head_b = Vec[UInt8].new();
+  var h = 0;
+  while h < at {
+    head_b.push(bytes[h]);
+    h = h + 1;
+  }
+  var rest = Vec[UInt8].new();
+  var r = at + 4;
+  while r < n {
+    rest.push(bytes[r]);
+    r = r + 1;
+  }
+  Ok((Str::from_utf8(head_b), rest))
 }
 
 /// ws_connect opens a WebSocket connection to a ws:// or wss:// URL,
-/// performing the client handshake. TLS (wss) is not supported by the
-/// runtime socket layer; use ws://. Complexity: network I/O.
+/// performing the client handshake. The response head is consumed exactly
+/// at CRLFCRLF and any extra bytes are carried in the connection's pending
+/// buffer. TLS (wss) is not supported by the runtime socket layer; use
+/// ws://. Complexity: network I/O.
 pub fn ws_connect(url: Str) -> Result[WsConnection, Str]
-  ensures: ((url.len() < 4) => (result.is_err == true)) && ((result.is_ok == true) => (url.len() >= 4))
+  ensures: result is Ok => url.len() >= 4
 {
   let parsed = ws_parse_url(url);
   var host = "";
@@ -570,69 +728,92 @@ pub fn ws_connect(url: Str) -> Result[WsConnection, Str]
       path = t.2;
     }
     Err(e) => { return Err(e); }
-  }
+  };
   let key = ws_random_key();
   let request = ws_handshake_request(host, path, key);
-  let fd = unsafe { xiom_socket_create(2, 1, 0) };
-  if fd < 0 {
-    return Err("failed to create socket");
+  let sr = socket.socket_tcp();
+  let fd: Int;
+  match sr {
+    Ok(f) => { fd = f; },
+    Err(_) => { return Err("failed to create socket"); },
+  };
+  let cn = socket.socket_connect(fd, host, port);
+  match cn {
+    Ok(_) => {},
+    Err(_) => {
+      socket.socket_close(fd);
+      return Err("connection failed");
+    },
+  };
+  var reqb: Vec[UInt8] = Vec[UInt8].new();
+  var ri = 0;
+  while ri < request.len() {
+    reqb.push(request.byte_at(ri));
+    ri = ri + 1;
   }
-  var c_host: [256]UInt8;
-  var hi = 0;
-  let hlen = host.len();
-  while hi < hlen && hi < 255 {
-    c_host[hi] = host.byte_at(hi);
-    hi = hi + 1;
+  let snd = ws_send_all(fd, &reqb);
+  match snd {
+    Ok(_) => {},
+    Err(_) => {
+      socket.socket_close(fd);
+      return Err("handshake send failed");
+    },
+  };
+  var raw: Vec[UInt8] = Vec[UInt8].new();
+  var head = "";
+  var leftover: Vec[UInt8] = Vec[UInt8].new();
+  var have = false;
+  var guard = 0;
+  while !have && guard < 256 {
+    guard = guard + 1;
+    let sp = ws_split_headers(&raw);
+    match sp {
+      Ok(t) => {
+        head = t.0;
+        leftover = t.1;
+        have = true;
+      },
+      Err(_) => {
+        if raw.len() > 16384 {
+          socket.socket_close(fd);
+          return Err("handshake response too large");
+        }
+        let rb = socket.socket_recv(fd, 4096);
+        match rb {
+          Ok(v) => {
+            if v.len() == 0 {
+              socket.socket_close(fd);
+              return Err("connection closed during handshake");
+            }
+            var vi = 0;
+            while vi < v.len() {
+              raw.push(v[vi]);
+              vi = vi + 1;
+            }
+          },
+          Err(_) => {
+            socket.socket_close(fd);
+            return Err("handshake recv failed");
+          },
+        };
+      },
+    };
   }
-  c_host[hi] = 0 as UInt8;
-  let conn = unsafe { xiom_socket_connect(fd, &c_host as *UInt8, port) };
-  if conn < 0 {
-    unsafe { xiom_socket_close(fd); }
-    return Err("connection failed");
+  if !have {
+    socket.socket_close(fd);
+    return Err("handshake response too large");
   }
-  var send_buf: [1024]UInt8;
-  var si = 0;
-  let rlen = request.len();
-  if rlen > 1024 {
-    unsafe { xiom_socket_close(fd); }
-    return Err("handshake too large");
-  }
-  while si < rlen {
-    send_buf[si] = request.byte_at(si);
-    si = si + 1;
-  }
-  let sent = unsafe { xiom_socket_send(fd, &send_buf as *UInt8, rlen) };
-  if sent < 0 {
-    unsafe { xiom_socket_close(fd); }
-    return Err("send failed");
-  }
-  var recv_buf: [2048]UInt8;
-  var raw: Vec[UInt8] = Vec[UInt8]::with_capacity(2048);
-  var done = false;
-  while !done {
-    let n = unsafe { xiom_socket_recv(fd, &recv_buf as *UInt8, 2048) };
-    if n <= 0 {
-      done = true;
-    } else {
-      var ri = 0;
-      while ri < n {
-        raw.push(recv_buf[ri]);
-        ri = ri + 1;
-      }
-    }
-  }
-  unsafe { xiom_socket_close(fd); }
-  let resp = Str::from_utf8(raw);
-  if !ws_handshake_verify(resp, key) {
+  if !ws_handshake_verify(head, key) {
+    socket.socket_close(fd);
     return Err("handshake verification failed");
   }
-  Ok(WsConnection{ fd: fd; key: key; open: true; })
+  Ok(WsConnection{ fd: fd; key: key; open: true; pending: leftover; })
 }
 
 /// ws_send sends a text message over an open connection.
 /// Complexity: network I/O.
 pub fn ws_send(conn: &WsConnection, text: Str) -> Result[Unit, Str]
-  ensures: ((conn.open == false) => (result.is_err == true)) && ((result.is_ok == true) => (conn.open == true))
+  ensures: result is Ok => conn.open == true
 {
   if !conn.open {
     return Err("connection closed");
@@ -644,98 +825,117 @@ pub fn ws_send(conn: &WsConnection, text: Str) -> Result[Unit, Str]
     i = i + 1;
   }
   let frame = ws_frame_encode(1, &payload, true);
-  ws_send_frame(conn, frame)
+  ws_send_all(conn.fd, &frame)
 }
 
 /// ws_send_binary sends a binary message over an open connection.
 /// Complexity: network I/O.
 pub fn ws_send_binary(conn: &WsConnection, data: &Vec[UInt8]) -> Result[Unit, Str]
-  ensures: ((conn.open == false) => (result.is_err == true)) && ((result.is_ok == true) => (conn.open == true))
+  ensures: result is Ok => conn.open == true
 {
   if !conn.open {
     return Err("connection closed");
   }
   let frame = ws_frame_encode(2, data, true);
-  ws_send_frame(conn, frame)
+  ws_send_all(conn.fd, &frame)
 }
 
-// ws_send_frame writes raw frame bytes to the socket.
-fn ws_send_frame(conn: &WsConnection, frame: Vec[UInt8]) -> Result[Unit, Str] {
-  var send_buf: [8192]UInt8;
-  var i = 0;
-  let flen = frame.len();
-  if flen > 8192 {
-    return Err("frame too large");
-  }
-  while i < flen {
-    send_buf[i] = frame[i];
-    i = i + 1;
-  }
-  let sent = unsafe { xiom_socket_send(conn.fd, &send_buf as *UInt8, flen) };
-  if sent < 0 {
-    return Err("send failed");
-  }
-  Ok(())
-}
-
-/// ws_recv receives the next frame from the connection.
+/// ws_recv receives the next frame from the connection. Bytes are read
+/// incrementally from the connection's pending buffer plus the socket,
+/// stopping exactly at the frame boundary (bounded by a 1 MiB frame cap);
+/// a persistent connection is never read to EOF.
 /// Complexity: network I/O.
-pub fn ws_recv(conn: &WsConnection) -> Result[WsFrame, Str]
-  ensures: ((conn.open == false) => (result.is_err == true)) && ((result.is_ok == true) => (conn.open == true))
+pub fn ws_recv(conn: &mut WsConnection) -> Result[WsFrame, Str]
+  ensures: result is Ok => conn.open == true
 {
   if !conn.open {
     return Err("connection closed");
   }
-  var recv_buf: [8192]UInt8;
-  var raw: Vec[UInt8] = Vec[UInt8]::with_capacity(8192);
-  var done = false;
-  while !done {
-    let n = unsafe { xiom_socket_recv(conn.fd, &recv_buf as *UInt8, 8192) };
-    if n <= 0 {
-      done = true;
-    } else {
-      var ri = 0;
-      while ri < n {
-        raw.push(recv_buf[ri]);
-        ri = ri + 1;
-      }
-    }
+  var guard = 0;
+  while guard < 4096 {
+    guard = guard + 1;
+    let r = ws_frame_take(&conn.pending);
+    match r {
+      Ok(t) => {
+        let frame = t.0;
+        let used = t.1;
+        var rest: Vec[UInt8] = Vec[UInt8].new();
+        var i = used;
+        while i < conn.pending.len() {
+          rest.push(conn.pending[i]);
+          i = i + 1;
+        }
+        conn.pending = rest;
+        return Ok(frame);
+      },
+      Err(_) => {
+        if conn.pending.len() > 1048576 {
+          return Err("frame too large");
+        }
+        let rb = socket.socket_recv(conn.fd, 8192);
+        match rb {
+          Ok(v) => {
+            if v.len() == 0 {
+              return Err("connection closed by peer");
+            }
+            var vi = 0;
+            while vi < v.len() {
+              conn.pending.push(v[vi]);
+              vi = vi + 1;
+            }
+          },
+          Err(_) => {
+            return Err("recv failed");
+          },
+        };
+      },
+    };
   }
-  if raw.len() < 2 {
-    return Err("connection closed by peer");
-  }
-  ws_frame_decode(&raw)
+  Err("frame too large")
 }
 
-/// ws_close sends a close frame and tears down the connection.
-/// Complexity: network I/O.
-pub fn ws_close(conn: &WsConnection, code: Int)
-  ensures: true
+/// ws_close sends a close frame, closes the socket and marks the
+/// connection closed. Complexity: network I/O.
+pub fn ws_close(conn: &mut WsConnection, code: Int) -> Result[Unit, Str]
+  ensures: result is Ok => conn.open == false
 {
   var payload: Vec[UInt8] = Vec[UInt8]::new();
   payload.push(((code >> 8) & 0xFF) as UInt8);
   payload.push((code & 0xFF) as UInt8);
   let frame = ws_frame_encode(8, &payload, true);
-  let _ = ws_send_frame(conn, frame);
-  unsafe { xiom_socket_close(conn.fd); }
+  let sent = ws_send_all(conn.fd, &frame);
+  socket.socket_close(conn.fd);
+  conn.open = false;
+  match sent {
+    Ok(_) => { return Ok(()); },
+    Err(e) => { return Err(e); },
+  }
 }
 
 /// ws_ping sends a ping frame.
-/// Complexity: network I/O.
-pub fn ws_ping(conn: &WsConnection)
-  ensures: true
+/// Returns: Ok(()) once the frame is on the wire; Err (including a closed
+/// connection). Complexity: network I/O.
+pub fn ws_ping(conn: &WsConnection) -> Result[Unit, Str]
+  ensures: result is Ok => conn.open == true
 {
+  if !conn.open {
+    return Err("connection closed");
+  }
   let empty: Vec[UInt8] = Vec[UInt8]::new();
   let frame = ws_frame_encode(9, &empty, true);
-  let _ = ws_send_frame(conn, frame);
+  ws_send_all(conn.fd, &frame)
 }
 
 /// ws_pong sends a pong frame.
-/// Complexity: network I/O.
-pub fn ws_pong(conn: &WsConnection)
-  ensures: true
+/// Returns: Ok(()) once the frame is on the wire; Err (including a closed
+/// connection). Complexity: network I/O.
+pub fn ws_pong(conn: &WsConnection) -> Result[Unit, Str]
+  ensures: result is Ok => conn.open == true
 {
+  if !conn.open {
+    return Err("connection closed");
+  }
   let empty: Vec[UInt8] = Vec[UInt8]::new();
   let frame = ws_frame_encode(10, &empty, true);
-  let _ = ws_send_frame(conn, frame);
+  ws_send_all(conn.fd, &frame)
 }

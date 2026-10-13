@@ -7,6 +7,7 @@
 // early-error paths with synthetic connection structs (open:false/fd:-1);
 // ws_close/ws_ping/ws_pong are compile-only (unconditional sends, not
 // called). Returns 0 when every case holds.
+// Wave-121 remerge: WsConnection gained the `pending` buffer field.
 
 module p_wave62_shapes
 
@@ -79,7 +80,7 @@ fn main() -> Int {
   if !websocket.ws_parse_url("ws://ex.com:8080/chat?q=1#f").is_ok { return 30; }
   if !websocket.ws_connect("").is_err { return 31; }
   if !websocket.ws_connect("noscheme").is_err { return 32; }
-  var wconn = WsConnection{ fd: -1; key: ""; open: false; };
+  var wconn = WsConnection{ fd: -1; key: ""; open: false; pending: Vec[UInt8].new(); };
   if !websocket.ws_send(&wconn, "x").is_err { return 33; }
   if !websocket.ws_send_binary(&wconn, Vec[UInt8].new()).is_err { return 34; }
   if !websocket.ws_recv(&wconn).is_err { return 35; }
