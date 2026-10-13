@@ -17,9 +17,87 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 31 (updated 2026-10-13 12:00Z at head 75e003d; waves 114-119 landed and externally verified; probes 296; floors153; relay live)
+## 0A. CONTINUE HERE -- handoff snapshot 32 (updated 2026-10-13 12:45Z at head fbf4bc0; waves 114-120 landed; probes 297; floors154; relay live)
 
-### Snapshot 31 (paste-ready)
+### Snapshot 32 (paste-ready)
+
+**PASTE-READY PROMPT FOR THE NEXT SESSION (copy this block):**
+
+---
+
+You are continuing the XIOM stdlib lane. Worktree `E:\xiom-lang\stdlib`,
+branch `main`. Read `docs/stdlib_session.md` blocks 143, 142, 141, 140, 139,
+138, 137, 136, 135, 134, 133, 132, 131, 130, 129, 128, 127 (older as
+needed); the snapshot-31 section below is the previous handoff and is
+superseded.
+
+STATE: compiler v0.64.4 released and pinned (tag f76fd47c on df493530; the
+official windows-x64 asset pre-downloaded at
+`%TEMP%\kilo\stdlib_ws\v0.64.4-rel\bin\xiom.exe`, sha256 DB8A2EF0...);
+`COMPILER_VERSION` = v0.64.4. Waves 114-120 landed 2026-10-12/13: 114 = pin
+bump + tuple lock promotion (289) + async coverage part 1 (async 47.8%);
+115 = durability + byte-IO first drop (orbitdb bundle closed); 116 =
+polygon_difference disjoint-case fix (the LAST stdlib Current repro resolved);
+117 = durability P5 pairs; 118 = P4 advisory locking; 119 = socket options +
+deadline receive (recv Int32 ABI fix); 120 = mmap family real
+(REL-20261012-1945-xvector-2 P5: file/anon/unmap/msync/madvise/protect/lock +
+fs_ffi roundtrip + sync_io.open_rw; the fd-open/read/write Int32 ABI
+fix-first; probes 297; floors154). External status: orbitdb bundle closed;
+pulse 0317/-2 + fsync_dir closed; packages locking verified; xvector-2 moved
+acked -> fixed this wave (probe 297th; verify pending upstream); xvector-5..8
+closed/fixed. Lane head at handoff: fbf4bc0 (main).
+
+GATES (block 142, final tree): corpus 954/954 (617.1s), probes 297/297
+(209.3s), modules 509/509 (179.6s), barename 0/509 (249.7s), floors154 +
+module-smoke (497/517, 3481/6219) + doc ratchets OK. Coverage 70.6% (pubFns
+6520, pubCovered 4606, clauses 6155); os 62.2%.
+
+FINDINGS: 15 Current, all compiler (tools/known_failures/README.md) -- the
+stdlib ledger carries no open repro. Verdict tables: block 124 (v0.64.4
+sweep) + block 133 (polygon resolution). Compiler traps re-confirmed this
+wave: struct/Str payload reads in catalog ensures clauses false-fire or crash
+(REL-20261010-1549-stdlib-6 / 1548-stdlib-7 family) -- keep catalog Ok-side
+clauses payload-free and re-add the payload forms when the compiler closes
+that family (fs_ffi.mmap carries the pattern note).
+
+NEXT WAVE OPTIONS: (1) engine-3 directory watch (runtime;
+ReadDirectoryChangesW first); (2) websocket + chunked-stream helpers
+(stdlib-side; can land without a pin; pulse wave-2); (3) the string-dir
+strnlen-family follow-up (cached (base, len) per file, scoped with smokes);
+(4) parent-async part 2 (AsyncExecutor/Channel method clauses); (5) the
+async/io.xi + io/pipe.xi xiom_read/xiom_write Int32 follow-up (same ABI
+family as waves 119/120). Compiler-blocked: thread pool (rides 2053), f32
+bitcast (Float32 batch); mmap_resize stays documented Err (mremap is
+Linux-only). RELEASE-CYCLE DIRECTIVE (owner): on the next compiler
+candidate/release, process the compiler's relay items (release checks + pin
+coordination + the 27-repro re-verify sweep on the candidate archive), fix
+stdlib-side bugs it exposes, and keep the classic waves running in parallel.
+
+MANDATORY PROTOCOL: (1) body-derived clauses only, no placeholders; canonical
+`result is Ok =>` / `result is None =>` guard forms; payload-free Ok-side
+clauses on catalog Result[struct] returns; (2) probe-first
+tools/probes/p_waveNNN_shapes.xi (bind returned values before comparing; red
+pre / green post), promote repros when fixed; (3) apply, targeted smokes,
+remerge old locks that assert retired behavior; the socket/io wrapper family
+keeps EARLY-ERROR RETURNS (not requires); (4) dump tools/coverage_floors15N.json,
+wire workflows + tools/README + plan/session/queue in one commit, YAML check,
+pure-ASCII additions; (5) battery: corpus 954/954, probes expect 297, modules
+509/509, barename 0/509, floors154 + ratchets; push main with the one-shot
+credential. Cautions: no unbounded benchmarks; run_smokes.ps1 has NO per-file
+timeout (guard hangs at the caller); Windows LockFileEx blocking-regain on a
+self-held range HANGS; the Windows UCRT fast-fails the process on _read/_write
+of a closed/out-of-range fd (invalid-fd rows are POSIX-only -- never probe
+them on Windows); probe file fixtures truncate-first and clean up (the probe
+CWD is the repo root); watch: smoke_misc2 flake rc 20 (no repro yet). The
+relay doorbell cron is SESSION-SCOPED: renew it at session start (schedule the
+2h relay-doorbell prompt; this session's cron dies with it). A concurrent
+stdlib-side actor occasionally commits doc-level bus transitions in this
+shared worktree (idempotent only so far -- blocks 128/132/140); re-check git
+log/status before every write and never sweep foreign edits into a commit.
+
+---
+
+### Snapshot 31 (2026-10-13 12:00Z; SUPERSEDED by snapshot 32 -- kept for history)
 
 **PASTE-READY PROMPT FOR THE NEXT SESSION (copy this block):**
 
@@ -2712,6 +2790,20 @@ registry pin, agent recon for the rest)**
   probes 281/281 (299.4s), modules 509/509 (203.3s), barename 0/509
   (216.6s), floors144 + doc + module-smoke (497/517, 3476/6204)
   ratchets OK.
+
+**SESSION 2026-10-13 block 143 (wave 120 pushed fbf4bc0; xvector-2 acked -> fixed on the bus; snapshot 32 refresh)**
+- Wave 120 committed `fbf4bc0` and pushed to main (`93d636e..fbf4bc0`; the
+  standard owner-bypass banner). Relay round: REL-20261012-1945-xvector-2
+  moved acked -> fixed with commit/file refs (relay commit 6feae6d); verify
+  pending upstream (re-run p_wave120_shapes.xi with XIOM_RUNTIME_DIR). No
+  new stdlib asks in the same pull (the REL-20261013-1233-packages item is
+  to: ops).
+- SNAPSHOT 32 written at the top of section 0A (waves 114-120, gates
+  954/297/509/0 + floors154, coverage 70.6%, next-wave options, the
+  payload-clause trap note, the UCRT invalid-fd caution); snapshot 31 kept
+  below as superseded history; the queue pointer now reads block 142 and
+  wave records 89-142 are current.
+- Working tree: only the untracked out/ evidence dir; head fbf4bc0.
 
 **SESSION 2026-10-13 block 142 (wave 120: mmap family real -- the last P5 primitive; fd-open/read/write ABI fix-first; probes 297; floors154)**
 - WAVE 120 (REL-20261012-1945-xvector-2 P5): the mmap family is real.
