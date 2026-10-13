@@ -84,8 +84,19 @@ fn _json_buf_str(buf: Vec[UInt8]) -> Str {
   return Str::from_utf8(buf);
 }
 
-// Kept for the short non-hot strings (literal words, path keys, escape
-// output); every big-input scan goes through the byte helpers above.
+// Lowercase hex digit for a nibble 0..15. Wave 126: replaces the decimal
+// convert.int_to_string path, which emitted "11"/"14"/"15" for nibbles
+// above 9 (a malformed five-digit \u00XYa escape for control bytes such as
+// 0x0B / 0x0E / 0x1E).
+fn _json_hex_digit(v: Int) -> UInt8 {
+  if v < 10 {
+    return (48 + v) as UInt8;
+  }
+  (87 + v) as UInt8
+}
+
+// Kept for the short non-hot strings (literal words, path keys); every
+// big-input scan goes through the byte helpers above.
 fn _json_get_char(s: Str, pos: Int) -> Char {
   var opt = xiom.string.char_at(s, pos);
   if opt.is_some { return opt.value; }
@@ -780,37 +791,49 @@ pub fn json_escape(s: Str) -> Str
 }
 
 fn _json_escape_impl(s: Str) -> Str {
-  var result = "";
+  var out: Vec[UInt8] = Vec[UInt8].new();
+  let n = s.len();
+  let base = s.c_str();
   var i = 0;
-  while i < s.len() {
-    let c = _json_get_char(s, i);
-    if c == '"' {
-      result = result + "\\\"";
-    } elif c == '\\' {
-      result = result + "\\\\";
-    } elif c == '\n' {
-      result = result + "\\n";
-    } elif c == '\r' {
-      result = result + "\\r";
-    } elif c == '\t' {
-      result = result + "\\t";
-    } elif c == '\b' {
-      result = result + "\\b";
-    } elif c == '\f' {
-      result = result + "\\f";
-    } elif c == '/' {
-      result = result + "\\/";
+  while i < n {
+    let b = _json_byte(base, i);
+    if b == 34 {
+      out.push(92);
+      out.push(34);
+    } elif b == 92 {
+      out.push(92);
+      out.push(92);
+    } elif b == 10 {
+      out.push(92);
+      out.push(110);
+    } elif b == 13 {
+      out.push(92);
+      out.push(114);
+    } elif b == 9 {
+      out.push(92);
+      out.push(116);
+    } elif b == 8 {
+      out.push(92);
+      out.push(98);
+    } elif b == 12 {
+      out.push(92);
+      out.push(102);
+    } elif b == 47 {
+      out.push(92);
+      out.push(47);
     } else {
-      var code = c as UInt32;
-      if code < 0x20 {
-        result = result + "\\u00";
-        result = result + convert.int_to_string(((code as Int) / 16) % 16);
-        result = result + convert.int_to_string((code as Int) % 16);
+      if b < 0x20 {
+        out.push(92);
+        out.push(117);
+        out.push(48);
+        out.push(48);
+        out.push(_json_hex_digit((b as Int) >> 4));
+        out.push(_json_hex_digit((b as Int) & 0x0F));
       } else {
-        result = result + xiom.string.str_slice(s, i, i + 1);
+        out.push(b);
       }
     }
     i = i + 1;
   }
-  return result;
+  return _json_buf_str(out);
 }

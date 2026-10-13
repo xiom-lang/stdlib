@@ -28,6 +28,51 @@ fn _raw_byte(base: *UInt8, i: Int) -> UInt8
   unsafe { return *(base + i); }
 }
 
+// Wave 126: runtime-`xiom_char_at`-equivalent UTF-8 decode over a cached
+// (base, len) view (copied byte-exact from slice.xi). char_at re-scans the
+// whole string per call (runtime strnlen), so the per-position decodes in
+// the character loops below were quadratic. Continuation bytes are
+// validated, a malformed or truncated sequence yields the leading byte
+// itself, and a stray continuation byte is returned as-is. Out-of-range
+// positions read as 0 (the NUL byte the runtime would see).
+// Complexity: O(1).
+fn _char_at_runtime(base: *UInt8, len: Int, pos: Int) -> Char {
+  if pos < 0 || pos >= len {
+    return to_char(0);
+  }
+  var b0 = (_raw_byte(base, pos) as Int) & 0xFF;
+  if b0 < 0x80 {
+    return to_char(b0);
+  }
+  var n = 0;
+  var cp = 0;
+  if (b0 & 0xE0) == 0xC0 {
+    n = 2;
+    cp = b0 & 0x1F;
+  } elif (b0 & 0xF0) == 0xE0 {
+    n = 3;
+    cp = b0 & 0x0F;
+  } elif (b0 & 0xF8) == 0xF0 {
+    n = 4;
+    cp = b0 & 0x07;
+  } else {
+    return to_char(b0);
+  }
+  var i = 1;
+  while i < n {
+    var cb = 0;
+    if pos + i < len {
+      cb = (_raw_byte(base, pos + i) as Int) & 0xFF;
+    }
+    if (cb & 0xC0) != 0x80 {
+      return to_char(b0);
+    }
+    cp = (cp << 6) | (cb & 0x3F);
+    i = i + 1;
+  }
+  return to_char(cp);
+}
+
 /// Byte length of the string.
 pub fn str_len(s: Str) -> Int
   ensures: result >= 0
@@ -212,16 +257,18 @@ pub fn str_split(s: Str, delimiter: Str) -> Vec[Str]
 }
 
 /// Copy without leading/trailing ASCII whitespace.
+/// Wave 126: whitespace scan over the cached (base, len) view.
 pub fn str_trim(s: Str) -> Str
   ensures: result.len() <= s.len()  // trim never increases length
 {
   let len = s.len();
+  let base = s.c_str();
   var start: Int = 0;
   var end: Int = len;
-  while start < len && xiom.char.is_whitespace(xiom_char_at(s, start)) {
+  while start < len && xiom.char.is_whitespace(_char_at_runtime(base, len, start)) {
     start = start + 1;
   }
-  while end > start && xiom.char.is_whitespace(xiom_char_at(s, end - 1)) {
+  while end > start && xiom.char.is_whitespace(_char_at_runtime(base, len, end - 1)) {
     end = end - 1;
   }
   str_slice(s, start, end)
@@ -422,19 +469,21 @@ pub fn lines(s: Str) -> Vec[Str]
 }
 
 /// Whitespace-separated words.
+/// Wave 126: whitespace scan over the cached (base, len) view.
 pub fn words(s: Str) -> Vec[Str]
-  requires: true  // extern char_at calls in the loops (T002 confinement)
+  requires: true  // cached raw-view decode in the loops (T002 confinement)
 {
   var result = Vec[Str].new();
   let len = s.len();
+  let base = s.c_str();
   var i: Int = 0;
   while i < len {
-    while i < len && xiom.char.is_whitespace(xiom_char_at(s, i)) {
+    while i < len && xiom.char.is_whitespace(_char_at_runtime(base, len, i)) {
       i = i + 1;
     }
     if i < len {
       var start = i;
-      while i < len && !xiom.char.is_whitespace(xiom_char_at(s, i)) {
+      while i < len && !xiom.char.is_whitespace(_char_at_runtime(base, len, i)) {
         i = i + 1;
       }
       result.push(str_slice(s, start, i));
@@ -461,14 +510,16 @@ pub fn Str.is_empty(self) -> Bool
 }
 
 /// Number of UTF-8 characters.
+/// Wave 126: boundary walk over the cached (base, len) view.
 pub fn char_count(s: Str) -> Int
   ensures: result >= 0
 {
   var count: Int = 0;
   let len = s.len();
+  let base = s.c_str();
   var i: Int = 0;
   while i < len {
-    let c = xiom_char_at(s, i);
+    let c = _char_at_runtime(base, len, i);
     let byte_len = xiom.char.len_utf8(c);
     i = i + byte_len;
     count = count + 1;
@@ -614,96 +665,103 @@ pub fn str_strip_suffix(s: Str, suffix: Str) -> Option[Str] {
 /// Escapes special characters (\n, \t, \", \\, \r) in `s`.
 /// Returns a new string with escape sequences replaced by their literal representations.
 /// O(|s|). For multi-byte UTF-8 chars, only \n \t \" \\ \r are escaped.
+/// Wave 126: single-Vec builder over the cached (base, len) view (the
+/// previous slice/concat-per-char loop allocated O(n) strings and, because
+/// strings leak by design, ~n^2/2 bytes of output buffer for large inputs).
 pub fn str_escape(s: Str) -> Str
-  requires: true  // extern char_at call in the loop (T002 confinement)
+  requires: true  // cached raw-view decode in the loop (T002 confinement)
 {
-  var result = "";
+  var out: Vec[UInt8] = Vec[UInt8].new();
   let len = s.len();
+  let base = s.c_str();
   var i: Int = 0;
   while i < len {
-    let c = xiom_char_at(s, i);
+    let c = _char_at_runtime(base, len, i);
     if c == '\n' {
-      result = str_concat(result, "\\n");
+      out.push(92);
+      out.push(110);
     } elif c == '\t' {
-      result = str_concat(result, "\\t");
+      out.push(92);
+      out.push(116);
     } elif c == '\"' {
-      result = str_concat(result, "\\\"");
+      out.push(92);
+      out.push(34);
     } elif c == '\\' {
-      result = str_concat(result, "\\\\");
+      out.push(92);
+      out.push(92);
     } elif c == '\r' {
-      result = str_concat(result, "\\r");
+      out.push(92);
+      out.push(114);
     } else {
-      unsafe {
-        var buf = malloc(5);
-        var byte_len = xiom.char.len_utf8(c);
-        var code = xiom.char.to_int_from_char(c);
-        if code <= 0x7F {
-          buf[0] = code as UInt8;
-          buf[1] = 0;
-        } elif code <= 0x7FF {
-          buf[0] = (0xC0 | (code >> 6)) as UInt8;
-          buf[1] = (0x80 | (code & 0x3F)) as UInt8;
-          buf[2] = 0;
-        } elif code <= 0xFFFF {
-          buf[0] = (0xE0 | (code >> 12)) as UInt8;
-          buf[1] = (0x80 | ((code >> 6) & 0x3F)) as UInt8;
-          buf[2] = (0x80 | (code & 0x3F)) as UInt8;
-          buf[3] = 0;
-        } else {
-          buf[0] = (0xF0 | (code >> 18)) as UInt8;
-          buf[1] = (0x80 | ((code >> 12) & 0x3F)) as UInt8;
-          buf[2] = (0x80 | ((code >> 6) & 0x3F)) as UInt8;
-          buf[3] = (0x80 | (code & 0x3F)) as UInt8;
-          buf[4] = 0;
-        };
-        result = str_concat(result, Str.from_cstring(buf));
+      let code = xiom.char.to_int_from_char(c);
+      if code <= 0x7F {
+        out.push(code as UInt8);
+      } elif code <= 0x7FF {
+        out.push((0xC0 | (code >> 6)) as UInt8);
+        out.push((0x80 | (code & 0x3F)) as UInt8);
+      } elif code <= 0xFFFF {
+        out.push((0xE0 | (code >> 12)) as UInt8);
+        out.push((0x80 | ((code >> 6) & 0x3F)) as UInt8);
+        out.push((0x80 | (code & 0x3F)) as UInt8);
+      } else {
+        out.push((0xF0 | (code >> 18)) as UInt8);
+        out.push((0x80 | ((code >> 12) & 0x3F)) as UInt8);
+        out.push((0x80 | ((code >> 6) & 0x3F)) as UInt8);
+        out.push((0x80 | (code & 0x3F)) as UInt8);
       };
     };
-    let byte_adv = xiom.char.len_utf8(c);
-    i = i + byte_adv;
+    i = i + xiom.char.len_utf8(c);
   };
-  result
+  Str::from_utf8(out)
 }
 
 /// Un-escapes a string that contains escape sequences like \n \t \" \\ \r.
 /// Returns the string with literal escape sequences replaced by the actual characters.
 /// O(|s|). Unrecognised escape sequences are left unchanged.
+/// Wave 126: single-Vec builder over the cached (base, len) view; literal
+/// runs copy the raw bytes verbatim (malformed sequences included), exactly
+/// like the previous str_slice-per-char path.
 pub fn str_unescape(s: Str) -> Str
-  requires: true  // extern char_at calls in the loop (T002 confinement)
+  requires: true  // cached raw-view decode in the loop (T002 confinement)
 {
-  var result = "";
+  var out: Vec[UInt8] = Vec[UInt8].new();
   let len = s.len();
+  let base = s.c_str();
   var i: Int = 0;
   while i < len {
-    let c = xiom_char_at(s, i);
+    let c = _char_at_runtime(base, len, i);
     if c == '\\' && i + 1 < len {
-      let next = xiom_char_at(s, i + 1);
+      let next = _char_at_runtime(base, len, i + 1);
       if next == 'n' {
-        result = str_concat(result, "\n");
+        out.push(10);
         i = i + 2;
       } elif next == 't' {
-        result = str_concat(result, "\t");
+        out.push(9);
         i = i + 2;
       } elif next == '\"' {
-        result = str_concat(result, "\"");
+        out.push(34);
         i = i + 2;
       } elif next == '\\' {
-        result = str_concat(result, "\\");
+        out.push(92);
         i = i + 2;
       } elif next == 'r' {
-        result = str_concat(result, "\r");
+        out.push(13);
         i = i + 2;
       } else {
-        result = str_concat(result, str_slice(s, i, i + 1));
+        out.push(_raw_byte(base, i));
         i = i + 1;
       };
     } else {
       var byte_adv = xiom.char.len_utf8(c);
-      result = str_concat(result, str_slice(s, i, i + byte_adv));
+      var k: Int = 0;
+      while k < byte_adv && i + k < len {
+        out.push(_raw_byte(base, i + k));
+        k = k + 1;
+      };
       i = i + byte_adv;
     };
   };
-  result
+  Str::from_utf8(out)
 }
 
 // -- Case --
@@ -711,16 +769,18 @@ pub fn str_unescape(s: Str) -> Str
 /// Converts `s` to Title Case: first character of each space-separated word
 /// is uppercased, remaining characters are lowercased.
 /// O(|s|) byte-by-byte. Only handles ASCII letter case correctly.
+/// Wave 126: per-byte decode over the cached (base, len) view.
 pub fn str_title_case(s: Str) -> Str
   ensures: result.len() == s.len()
 {
   let len = s.len();
+  let base = s.c_str();
   var new_word = true;
   unsafe {
     var buf = malloc(len + 1);
     var i: Int = 0;
     while i < len {
-      let c = xiom_char_at(s, i);
+      let c = _char_at_runtime(base, len, i);
       if xiom.char.is_whitespace(c) {
         new_word = true;
         buf[i] = c as UInt8;
@@ -740,15 +800,17 @@ pub fn str_title_case(s: Str) -> Str
 /// Swaps the case of every character in `s`: uppercase becomes lowercase and
 /// vice versa. Characters that are neither are left unchanged.
 /// O(|s|) byte-by-byte. Only handles ASCII letter case correctly.
+/// Wave 126: per-byte decode over the cached (base, len) view.
 pub fn str_swap_case(s: Str) -> Str
   ensures: result.len() == s.len()
 {
   let len = s.len();
+  let base = s.c_str();
   unsafe {
     var buf = malloc(len + 1);
     var i: Int = 0;
     while i < len {
-      let c = xiom_char_at(s, i);
+      let c = _char_at_runtime(base, len, i);
       if xiom.char.is_uppercase(c) {
         buf[i] = xiom.char.to_lowercase(c) as UInt8;
       } elif xiom.char.is_lowercase(c) {
@@ -777,7 +839,15 @@ pub fn str_is_empty(s: Str) -> Bool
 
 /// Reverses the characters in `s`. Unicode-aware: iterates by
 /// proper UTF-8 character boundaries.
-/// O(|s|) -- two passes (collect + build).
+/// O(|s|) -- one boundary pass collects the code points, one build pass
+/// emits them in reverse.
+/// Wave 126: the previous nested boundary search re-decoded the string from
+/// the front for every character (quadratic) and could not terminate on
+/// malformed trailing sequences; the single pass below is byte-exact for
+/// every input the old walk completed. A truncated trailing sequence (whose
+/// decoded lead byte encodes longer than the bytes left in the buffer) is
+/// emitted as its raw remaining bytes, so the byte length is preserved on
+/// every input.
 pub fn str_reverse(s: Str) -> Str
   ensures: result.len() == s.len()
 {
@@ -785,50 +855,58 @@ pub fn str_reverse(s: Str) -> Str
   if len == 0 {
     return "";
   };
+  let base = s.c_str();
+  var codes: Vec[Int] = Vec[Int].new();
   var total_bytes: Int = 0;
+  var last_start: Int = 0;
   var i: Int = 0;
   while i < len {
-    let c = xiom_char_at(s, i);
-    total_bytes = total_bytes + xiom.char.len_utf8(c);
-    i = i + xiom.char.len_utf8(c);
+    last_start = i;
+    let c = _char_at_runtime(base, len, i);
+    codes.push(xiom.char.to_int_from_char(c));
+    let bl = xiom.char.len_utf8(c);
+    total_bytes = total_bytes + bl;
+    i = i + bl;
   };
   unsafe {
     var buf = malloc(total_bytes + 1);
     var out_pos: Int = 0;
-    var rev_start: Int = len;
-    while rev_start > 0 {
-      var j: Int = 0;
-      while j < rev_start {
-        let c = xiom_char_at(s, j);
-        let bl = xiom.char.len_utf8(c);
-        if j + bl == rev_start {
-          var code = xiom.char.to_int_from_char(c);
-          if code <= 0x7F {
-            buf[out_pos] = code as UInt8;
-            out_pos = out_pos + 1;
-          } elif code <= 0x7FF {
-            buf[out_pos] = (0xC0 | (code >> 6)) as UInt8;
-            buf[out_pos + 1] = (0x80 | (code & 0x3F)) as UInt8;
-            out_pos = out_pos + 2;
-          } elif code <= 0xFFFF {
-            buf[out_pos] = (0xE0 | (code >> 12)) as UInt8;
-            buf[out_pos + 1] = (0x80 | ((code >> 6) & 0x3F)) as UInt8;
-            buf[out_pos + 2] = (0x80 | (code & 0x3F)) as UInt8;
-            out_pos = out_pos + 3;
-          } else {
-            buf[out_pos] = (0xF0 | (code >> 18)) as UInt8;
-            buf[out_pos + 1] = (0x80 | ((code >> 12) & 0x3F)) as UInt8;
-            buf[out_pos + 2] = (0x80 | ((code >> 6) & 0x3F)) as UInt8;
-            buf[out_pos + 3] = (0x80 | (code & 0x3F)) as UInt8;
-            out_pos = out_pos + 4;
-          };
-          rev_start = j;
-          break;
-        };
-        j = j + bl;
+    var k: Int = codes.len();
+    // Truncated tail: emit its raw remaining bytes verbatim first (the
+    // reversed order starts at the end of the string).
+    if k > 0 && total_bytes > len {
+      var j: Int = last_start;
+      while j < len {
+        buf[out_pos] = _raw_byte(base, j);
+        out_pos = out_pos + 1;
+        j = j + 1;
+      };
+      k = k - 1;
+    };
+    while k > 0 {
+      k = k - 1;
+      let code = codes[k];
+      if code <= 0x7F {
+        buf[out_pos] = code as UInt8;
+        out_pos = out_pos + 1;
+      } elif code <= 0x7FF {
+        buf[out_pos] = (0xC0 | (code >> 6)) as UInt8;
+        buf[out_pos + 1] = (0x80 | (code & 0x3F)) as UInt8;
+        out_pos = out_pos + 2;
+      } elif code <= 0xFFFF {
+        buf[out_pos] = (0xE0 | (code >> 12)) as UInt8;
+        buf[out_pos + 1] = (0x80 | ((code >> 6) & 0x3F)) as UInt8;
+        buf[out_pos + 2] = (0x80 | (code & 0x3F)) as UInt8;
+        out_pos = out_pos + 3;
+      } else {
+        buf[out_pos] = (0xF0 | (code >> 18)) as UInt8;
+        buf[out_pos + 1] = (0x80 | ((code >> 12) & 0x3F)) as UInt8;
+        buf[out_pos + 2] = (0x80 | ((code >> 6) & 0x3F)) as UInt8;
+        buf[out_pos + 3] = (0x80 | (code & 0x3F)) as UInt8;
+        out_pos = out_pos + 4;
       };
     };
-    buf[total_bytes] = 0;
+    buf[out_pos] = 0;
     return Str.from_cstring(buf);
   }
 }
@@ -850,7 +928,7 @@ pub fn str_count_chars(s: Str) -> Int
 /// does not split a multi-byte UTF-8 character. If `max_bytes` lands in the
 /// middle of a multi-byte sequence, the result is truncated before that
 /// character begins.
-/// O(|s|).
+/// O(|s|). Wave 126: boundary walk over the cached (base, len) view.
 pub fn str_truncate_utf8(s: Str, max_bytes: Int) -> Str
   ensures: max_bytes >= 0 => result.len() <= max_bytes
 {
@@ -861,10 +939,11 @@ pub fn str_truncate_utf8(s: Str, max_bytes: Int) -> Str
   if max_bytes <= 0 {
     return "";
   };
+  let base = s.c_str();
   var i: Int = 0;
   var last_valid: Int = 0;
   while i < len && i < max_bytes {
-    let c = xiom_char_at(s, i);
+    let c = _char_at_runtime(base, len, i);
     let bl = xiom.char.len_utf8(c);
     if i + bl <= max_bytes {
       last_valid = i + bl;

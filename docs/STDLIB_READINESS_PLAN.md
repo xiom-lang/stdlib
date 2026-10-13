@@ -1998,8 +1998,37 @@ T1/T2 yields.
         then case/collate/indent/truncate/reverse/replace/segment/
         sentencebreak/unescape/unicode/wordbreak/shuffle and slice's
         remaining call sites (~34 .byte_at sites total).
+        Wave 126 (2026-10-13, block 152b): strnlen-family conversion batch
+        2 (classic wave) -- string.xi core + the json-escape family.
+        string.xi: a local byte-exact _char_at_runtime (the slice.xi
+        mirror) now backs str_trim / words / char_count / str_title_case /
+        str_swap_case / str_truncate_utf8 / str_reverse and the public
+        str_escape / str_unescape Vec-builders (the last concat-per-char
+        n^2-allocation carriers in the file; strings leak by design).
+        str_reverse: the nested per-character boundary search (quadratic
+        and non-terminating on malformed tails) became one boundary pass +
+        reverse emit; truncated trailing sequences emit their raw
+        remaining bytes so the len-preserving ensures holds on every
+        input (the runtime contract check caught this on the 512 KB
+        scratch before the battery). convert/json escape+unescape,
+        serialize's json_escape, serialize/json's _json_escape_impl and
+        log/json's json_escape are single-Vec builders over cached views;
+        _json_escape_impl control bytes now render lowercase hex (0x0B ->
+        "\u000b"; the decimal int_to_string nibble path emitted malformed
+        five-digit escapes). Probe p_wave126_shapes.xi (303rd): 70 rows
+        byte-exact (multibyte/malformed/truncated rows incl.), red pre
+        (run=65) / green post; smoke families 152/152. Capped 512 KB
+        re-measurement (REL-20261013-1638; 1.5 GB working-set cap + 60 s
+        watchdog): rc=0, peak 5.5-27.5 MB -- the wave-125 allocation
+        exhaustion is gone from the converted paths. Coverage fns 8742,
+        clauses 6187 (floors160) + module-smoke (499/518, 3500/6239) +
+        doc ratchets OK; battery on v0.64.4-rel: corpus 955/955 (560.9s),
+        probes 303/303 (216.3s), modules 510/510 (165s), barename 0/510
+        (268.6s). NEXT: batch 3 = case/collate/indent/truncate/replace/
+        segment/sentencebreak/unescape/unicode/wordbreak/shuffle + slice
+        remnants (~34 .byte_at sites); then the thread wave (1423).
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors159.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors160.json
         tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;

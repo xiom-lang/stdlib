@@ -31,24 +31,36 @@ pub type JsonLogEntry = {
   thread_id: Int;
 } derive[Clone]
 
+// Wave 126: cached (base, len) byte reads (the string.xi pattern): byte_at
+// re-scans the whole string per call (runtime strnlen), so the per-byte
+// escape loop was quadratic. Callers bounds-check against len.
+fn _raw_byte(base: *UInt8, i: Int) -> UInt8
+  requires: true  // raw byte read; callers bounds-check against len (T007)
+{
+  unsafe { return *(base + i); }
+}
+
 /// Escape a value for inclusion in a JSON string (`"` and `\`).
-/// Complexity: O(len(s)).
+/// Complexity: O(len(s)). Wave 126: single-Vec builder over the cached view.
 fn json_escape(s: Str) -> Str {
-  var result = "";
+  var out: Vec[UInt8] = Vec[UInt8].new();
   let len = s.len();
+  let base = s.c_str();
   var i: Int = 0;
   while i < len {
-    let b = string.byte_at(s, i);
+    let b = _raw_byte(base, i);
     if b == 34 {
-      result = string.str_concat(result, "\\\"");
+      out.push(92);
+      out.push(34);
     } elif b == 92 {
-      result = string.str_concat(result, "\\\\");
+      out.push(92);
+      out.push(92);
     } else {
-      result = string.str_concat(result, string.str_slice(s, i, i + 1));
+      out.push(b);
     };
     i = i + 1;
   };
-  result
+  Str::from_utf8(out)
 }
 
 /// The level name for the JSON output.

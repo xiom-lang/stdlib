@@ -212,6 +212,15 @@ fn get_char(s: Str, pos: Int) -> Char {
   return '\0';
 }
 
+// Wave 126: cached (base, len) byte read for the escape loop (the wave-111
+// string pattern): xiom.string.byte_at re-scans the whole string per call
+// (runtime strnlen), so the per-byte escape loop was quadratic.
+fn get_byte(base: *UInt8, i: Int) -> UInt8
+  requires: true  // raw byte read; callers bounds-check against len (T007)
+{
+  unsafe { return *(base + i); }
+}
+
 fn make_serror(msg: Str, pos: Int) -> SerializeError {
   return SerializeError {
     kind: 1;
@@ -590,35 +599,45 @@ pub fn big_endian() -> Bool
 /// JSON-escapes a string (without surrounding quotes).
 /// Handles \, ", \n, \r, \t, \b, \f.
 /// Complexity: O(n), n = string length.
+/// Wave 126: single-Vec builder over the cached (base, len) view (the
+/// previous concat-per-char loop was quadratic in scans and allocations).
 pub fn json_escape(s: Str) -> Str
   ensures: (s.len() == 0) => (result == "")
   ensures: result.len() >= s.len()
 {
-  var result = "";
+  var out: Vec[UInt8] = Vec[UInt8].new();
   let len = s.len();
+  let base = s.c_str();
   var i: Int = 0;
   while i < len {
-    let c = get_char(s, i);
-    if c == '\"' {
-      result = result + "\\\"";
-    } elif c == '\\' {
-      result = result + "\\\\";
-    } elif c == '\n' {
-      result = result + "\\n";
-    } elif c == '\r' {
-      result = result + "\\r";
-    } elif c == '\t' {
-      result = result + "\\t";
-    } elif c == '\b' {
-      result = result + "\\b";
-    } elif c == '\f' {
-      result = result + "\\f";
+    let b = get_byte(base, i);
+    if b == 34 {
+      out.push(92);
+      out.push(34);
+    } elif b == 92 {
+      out.push(92);
+      out.push(92);
+    } elif b == 10 {
+      out.push(92);
+      out.push(110);
+    } elif b == 13 {
+      out.push(92);
+      out.push(114);
+    } elif b == 9 {
+      out.push(92);
+      out.push(116);
+    } elif b == 8 {
+      out.push(92);
+      out.push(98);
+    } elif b == 12 {
+      out.push(92);
+      out.push(102);
     } else {
-      result = result + xiom.string.str_slice(s, i, i + 1);
+      out.push(b);
     };
     i = i + 1;
   };
-  return result;
+  return Str::from_utf8(out);
 }
 
 /// Unescapes a JSON-escaped string (without surrounding quotes).

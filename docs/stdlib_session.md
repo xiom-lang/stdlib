@@ -2914,6 +2914,68 @@ registry pin, agent recon for the rest)**
   delivery) closed out the pulse wave-2 rows -- probes 300; floors157.
 - No other queue moves; 1442 and 1630/1658 remain the compiler's.
 
+**SESSION 2026-10-13 block 152b (wave 126: strnlen-family batch 2 -- string.xi core + the json escape family; probes 303; floors160) -- same 17:00Z round as the concurrent doc-actor's block 152 below (wave 126 was in flight there; completed and committed here)**
+- WAVE 126 (classic string-dir wave, batch 2 -- the block-150 follow-up):
+  string.xi converted to the cached (base, len) idiom. A local
+  _char_at_runtime (byte-exact copy of slice.xi's: validated continuations,
+  malformed -> leading byte, stray continuation as-is, OOB as 0) now backs
+  str_trim, words, char_count, str_title_case, str_swap_case,
+  str_truncate_utf8, str_reverse and the public str_escape/str_unescape
+  Vec-builders (both were concat-per-char, the last n^2-allocation carriers
+  in this file; strings leak by design).
+- str_reverse defect caught by the capped re-measurement before the
+  battery: the old nested per-character boundary search was quadratic AND
+  could not terminate on malformed tails; the new single boundary pass +
+  reverse emit is byte-exact on everything the old walk completed, and a
+  truncated trailing sequence (decoded lead byte encodes longer than the
+  bytes left) emits its raw remaining bytes -- len-preserving on every
+  input, so the `result.len() == s.len()` ensures holds (the runtime
+  contract check aborted the scratch on the first post-rewrite run; fixed
+  and re-verified).
+- JSON escape family (the batch-2 "json-escape path"): convert/json.xi
+  json_escape/json_unescape, serialize/serialize.xi json_escape,
+  serialize/json.xi _json_escape_impl and log/json.xi json_escape are all
+  single-Vec builders over cached views now; escape sets, control-flow and
+  error messages unchanged. One real defect fixed in _json_escape_impl:
+  control bytes < 0x20 were hex-rendered via convert.int_to_string, so
+  nibbles >= 10 emitted decimal text (0x0B -> "\u00011", 0x1E -> "\u00114"
+  -- malformed five-digit escapes); the new _json_hex_digit renders
+  lowercase hex (0x0B -> "\u000b"). Probe rows for this are red pre
+  (run=65) / green post.
+- Probe p_wave126_shapes.xi (303rd): 70 rows, byte-exact on every
+  converted path -- decoded-char trim incl. NBSP non-whitespace, words
+  whitespace classes, char_count on malformed sequences, escape/unescape
+  specials + truncated-lead/stray-continuation re-encodes, title/swap
+  ASCII-only byte truncation, reverse multibyte + truncated tails (raw
+  tail copy; rows 68-70), truncate_utf8 mid-sequence clamps, convert json
+  escape/unescape \u + error rows, parent/sjson escape sets incl. the
+  control-hex rows. String/json/serialize/log smoke families 152/152.
+- Capped re-measurement (announced: REL-20261013-1638-stdlib; parent
+  poller capped at 1.5 GB working set + 60 s): out/dbg126r.xi runs 13 ops
+  on a 512 KB patterned input, rc=0, peak working set 5.5-27.5 MB across
+  runs (vs the wave-125 pre-fix path that exhausted allocation at ~137 GB)
+  -- the n^2 allocation class is gone from the converted paths.
+- Coverage: fns 8742 (+5 helpers), pubFns 6540, clauses 6187 (+3),
+  pubCovered 4625; floors160 dumped + wired (workflows + tools/README +
+  plan/queue in this commit). Battery on v0.64.4-rel (final tree): corpus
+  955/955 (560.9s), probes 303/303 (216.3s), modules 510/510 (165s),
+  barename 0/510 (268.6s), coverage ratchet vs floors159 +
+  module-smoke (499/518, 3500/6239) + doc ratchets OK.
+- Bus: REL-20261013-1545-orbitdb acked at session start (the incident was
+  this lane's wave-125 measurement scratch; root cause fixed in a139f23;
+  the re-run above was the announced capped follow-up);
+  REL-20261013-1638-stdlib filed (the announcement item; orbitdb may close
+  it); 1423/1445 unchanged (compiler-gated). Doorbell 17:00Z: no new asks.
+- Next: batch 3 = the remaining string-dir files (case/collate/indent/
+  truncate/replace/segment/sentencebreak/unescape/unicode/wordbreak/
+  shuffle + slice remnants, ~34 .byte_at sites); then the thread wave
+  (1423 hoist) and the other queued options. 1445 stays acked (call-site
+  lowering, compiler-side).
+- Block-collision note: this round's numbering collided with the
+  concurrent doc-actor's block 152 (same 17:00Z round; it recorded wave
+  126 in flight). Per the protocol this account lands as 152b next to
+  block 152 below; neither text was edited by the other actor.
+
 **SESSION 2026-10-13 block 152 (doorbell 17:00Z -- quiet lane round; wave 126 in flight by the concurrent actor; compiler verified the payload-index fix post-pin)**
 - Lane view: no stdlib-addressed changes; nothing to transition. Two
   cross-lane developments: (a) the compiler headline

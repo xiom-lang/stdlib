@@ -17,41 +17,59 @@ module xiom.convert.json
 
 use xiom.string;
 
+// Wave 126: cached (base, len) byte reads (the string.xi pattern): byte_at
+// re-scans the whole string per call (runtime strnlen), so the per-byte
+// escape/unescape loops were quadratic. Callers bounds-check against len.
+fn _raw_byte(base: *UInt8, i: Int) -> UInt8
+  requires: true  // raw byte read; callers bounds-check against len (T007)
+{
+  unsafe { return *(base + i); }
+}
+
 /// Escape a string for embedding in JSON (without surrounding quotes).
 /// Handles ", \, \n, \r, \t, \b, \f.
 /// Parameters: s -- the raw text.
 /// Returns: the escaped text.
 /// Complexity: O(n), n = string length.
+/// Wave 126: single-Vec builder over the cached (base, len) view (the
+/// previous concat-per-byte loop was quadratic in scans and allocations).
 pub fn json_escape(s: Str) -> Str
   ensures: (s.len() == 0) => (result == "")
   ensures: result.len() >= s.len()
 {
-  var result = "";
+  var out: Vec[UInt8] = Vec[UInt8].new();
   var len = string.str_len(s);
+  var base = s.c_str();
   var i: Int = 0;
   while i < len {
-    var b = string.byte_at(s, i);
+    var b = _raw_byte(base, i);
     if b == 34 {
-      result = string.str_concat(result, "\\\"");
+      out.push(92);
+      out.push(34);
     } elif b == 92 {
-      result = string.str_concat(result, "\\\\");
+      out.push(92);
+      out.push(92);
     } elif b == 10 {
-      result = string.str_concat(result, "\\n");
+      out.push(92);
+      out.push(110);
     } elif b == 13 {
-      result = string.str_concat(result, "\\r");
+      out.push(92);
+      out.push(114);
     } elif b == 9 {
-      result = string.str_concat(result, "\\t");
+      out.push(92);
+      out.push(116);
     } elif b == 8 {
-      result = string.str_concat(result, "\\b");
+      out.push(92);
+      out.push(98);
     } elif b == 12 {
-      result = string.str_concat(result, "\\f");
+      out.push(92);
+      out.push(102);
     } else {
-      var c = string.str_slice(s, i, i + 1);
-      result = string.str_concat(result, c);
+      out.push(b);
     }
     i = i + 1;
   }
-  return result;
+  return Str::from_utf8(out);
 }
 
 /// Unescape a JSON string literal (without surrounding quotes).
@@ -60,35 +78,38 @@ pub fn json_escape(s: Str) -> Str
 /// Returns: Ok(text) on success; Err on an invalid escape or a truncated
 ///          \u sequence.
 /// Complexity: O(n), n = string length.
+/// Wave 126: single-Vec builder over the cached (base, len) view; error
+/// paths and messages are unchanged.
 pub fn json_unescape(s: Str) -> Result[Str, Str]
   ensures: (s.len() == 0) => (result.is_ok == true)
 {
-  var result = "";
+  var out: Vec[UInt8] = Vec[UInt8].new();
   var len = string.str_len(s);
+  var base = s.c_str();
   var i: Int = 0;
   while i < len {
-    var b = string.byte_at(s, i);
+    var b = _raw_byte(base, i);
     if b == 92 {
       if i + 1 >= len {
         return Err("json_unescape: unexpected end after backslash");
       }
-      var esc = string.byte_at(s, i + 1);
+      var esc = _raw_byte(base, i + 1);
       if esc == 34 {
-        result = string.str_concat(result, "\"");
+        out.push(34);
       } elif esc == 92 {
-        result = string.str_concat(result, "\\");
+        out.push(92);
       } elif esc == 47 {
-        result = string.str_concat(result, "/");
+        out.push(47);
       } elif esc == 98 {
-        result = string.str_concat(result, "\b");
+        out.push(8);
       } elif esc == 102 {
-        result = string.str_concat(result, "\f");
+        out.push(12);
       } elif esc == 110 {
-        result = string.str_concat(result, "\n");
+        out.push(10);
       } elif esc == 114 {
-        result = string.str_concat(result, "\r");
+        out.push(13);
       } elif esc == 116 {
-        result = string.str_concat(result, "\t");
+        out.push(9);
       } elif esc == 117 {
         if i + 5 >= len {
           return Err("json_unescape: truncated \\u escape");
@@ -99,19 +120,22 @@ pub fn json_unescape(s: Str) -> Result[Str, Str]
           return Err("json_unescape: invalid \\u escape");
         }
         var ch = _cp_to_str(cp);
-        result = string.str_concat(result, ch);
+        var k: Int = 0;
+        while k < string.str_len(ch) {
+          out.push(string.byte_at(ch, k));
+          k = k + 1;
+        }
         i = i + 4;
       } else {
         return Err("json_unescape: invalid escape sequence");
       }
       i = i + 2;
     } else {
-      var c2 = string.str_slice(s, i, i + 1);
-      result = string.str_concat(result, c2);
+      out.push(b);
       i = i + 1;
     }
   }
-  return Ok(result);
+  return Ok(Str::from_utf8(out));
 }
 
 /// Wrap a string in JSON quotes with escaping.

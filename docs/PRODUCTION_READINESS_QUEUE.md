@@ -7,7 +7,7 @@ windows-x64 release archive.)
 **Gates: corpus 955/955 full (C001 carve-outs retired on v0.63.1; new
 TcpStream loopback and uuencode roundtrip smokes added; smoke_os_watch
 added in wave 124), modules 510/510,
-probes 302/302, barename 0/510.**
+probes 303/303, barename 0/510.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -26,9 +26,9 @@ gates flip:
    wave-98..110 probes), the io byte-fidelity/CRLF lock and the
    fs_remove lock).
 4. Strict bare-name scan clean -- MET (0/509).
-5. Coverage ratchet green -- MET (floors159).
+5. Coverage ratchet green -- MET (floors160).
 6. Documentation ratchet 100% -- MET.
-7. Module-smoke ratchet green -- MET (497/517 modules, 3477/6202 fns).
+7. Module-smoke ratchet green -- MET (499/518 modules, 3500/6239 fns).
 8. Contract coverage 100% (every public fn carries clauses) -- OPEN (70.7%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
    OPEN (15: all compiler; the stdlib ledger carries no open repro).
@@ -406,7 +406,35 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
      (418.4s), ratchets OK. NEXT BATCH: string.xi first (public
      str_escape/str_unescape + ~15 char_at sites, the json-escape path),
      then case/collate/indent/truncate/reverse/replace/segment/
-     sentencebreak/unescape/unicode/wordbreak/shuffle + slice remnants.
+      sentencebreak/unescape/unicode/wordbreak/shuffle + slice remnants.
+     WAVE 126 (block 152b): strnlen-family conversion batch 2 -- string.xi
+     core (trim / words / char_count / title_case / swap_case / reverse /
+     truncate_utf8 + the public str_escape / str_unescape, now single-Vec
+     builders over cached (base, len) views via a byte-exact
+     _char_at_runtime mirror of slice.xi) and the json escape family
+     (convert/json escape+unescape, serialize's json_escape,
+     serialize/json's _json_escape_impl, log/json's json_escape).
+     str_reverse: the quadratic nested per-character boundary search
+     became one boundary pass + reverse emit; a truncated trailing
+     sequence whose decoded lead byte encodes longer than the bytes left
+     emits its raw remaining bytes, so the len-preserving ensures holds on
+     every input (the old walk could not terminate on those). One real
+     defect fixed in _json_escape_impl: control bytes < 0x20 went through
+     convert.int_to_string, so nibbles >= 10 emitted decimal text (0x0B ->
+     "\u00011" -- malformed five-digit escapes); they now render lowercase
+     hex (0x0B -> "\u000b"). Probe p_wave126_shapes.xi (303rd): 70 rows
+     byte-exact on every converted path, red pre (run=65) / green post;
+     string/json/serialize/log smoke families 152/152. Capped 512 KB
+     re-measurement (REL-20261013-1638-stdlib; 1.5 GB working-set cap +
+     60 s watchdog): rc=0, peak 5.5-27.5 MB across runs -- the wave-125
+     allocation-exhaustion class is gone from the converted paths.
+     Coverage fns 8742, clauses 6187, floors160 wired; battery corpus
+     955/955 (560.9s), probes 303/303 (216.3s), modules 510/510 (165s),
+     barename 0/510 (268.6s), coverage/module-smoke/doc ratchets OK.
+     NEXT: batch 3 = case/collate/indent/truncate/replace/segment/
+     sentencebreak/unescape/unicode/wordbreak/shuffle + slice remnants
+     (~34 .byte_at sites); then the thread wave (1423 hoist) / queued
+     options.
 BINARY NOTE: the shared local build path
 `E:\xiom-lang\xiom\target\release\xiom.exe` was rebuilt past the pin
 (compiler main da7798da m252) and fails four corpus smokes; waves now run
