@@ -14,6 +14,15 @@ module xiom.string.trim
 
 use xiom.string;
 
+// Wave 125: raw byte access over a cached (base, len) view (the wave-111
+// pattern): xiom.byte_at re-scans with strnlen per call, so byte-stepped
+// loops were quadratic. Callers bounds-check against the cached length.
+fn _raw_byte(base: *UInt8, i: Int) -> UInt8
+  requires: true  // raw byte read; callers bound i against len (T007)
+{
+  unsafe { return *(base + i); }
+}
+
 // Returns true when byte `b` is ASCII whitespace (space, tab, LF, CR).
 // Complexity: O(1).
 fn _is_ws(b: UInt8) -> Bool {
@@ -25,9 +34,10 @@ fn _is_ws(b: UInt8) -> Bool {
 // Complexity: O(|s|).
 fn _char_in_str(s: Str, b: UInt8) -> Bool {
   let len = string.str_len(s);
+  let base = s.c_str();
   var i: Int = 0;
   while i < len {
-    if string.byte_at(s, i) == b {
+    if _raw_byte(base, i) == b {
       return true;
     };
     i = i + 1;
@@ -51,8 +61,9 @@ pub fn str_trim_start(s: Str) -> Str
   ensures: result.len() <= s.len()
 {
   let len = string.str_len(s);
+  let base = s.c_str();
   var start: Int = 0;
-  while start < len && _is_ws(string.byte_at(s, start)) {
+  while start < len && _is_ws(_raw_byte(base, start)) {
     start = start + 1;
   };
   string.str_slice(s, start, len)
@@ -65,8 +76,9 @@ pub fn str_trim_end(s: Str) -> Str
   ensures: result.len() <= s.len()
 {
   let len = string.str_len(s);
+  let base = s.c_str();
   var end: Int = len;
-  while end > 0 && _is_ws(string.byte_at(s, end - 1)) {
+  while end > 0 && _is_ws(_raw_byte(base, end - 1)) {
     end = end - 1;
   };
   string.str_slice(s, 0, end)
@@ -80,12 +92,13 @@ pub fn str_trim_matches(s: Str, chars: Str) -> Str
   ensures: result.len() <= s.len()
 {
   let len = string.str_len(s);
+  let base = s.c_str();
   var start: Int = 0;
-  while start < len && _char_in_str(chars, string.byte_at(s, start)) {
+  while start < len && _char_in_str(chars, _raw_byte(base, start)) {
     start = start + 1;
   };
   var end: Int = len;
-  while end > start && _char_in_str(chars, string.byte_at(s, end - 1)) {
+  while end > start && _char_in_str(chars, _raw_byte(base, end - 1)) {
     end = end - 1;
   };
   string.str_slice(s, start, end)
@@ -99,8 +112,9 @@ pub fn str_trim_start_matches(s: Str, chars: Str) -> Str
   ensures: result.len() <= s.len()
 {
   let len = string.str_len(s);
+  let base = s.c_str();
   var start: Int = 0;
-  while start < len && _char_in_str(chars, string.byte_at(s, start)) {
+  while start < len && _char_in_str(chars, _raw_byte(base, start)) {
     start = start + 1;
   };
   string.str_slice(s, start, len)
@@ -114,8 +128,9 @@ pub fn str_trim_end_matches(s: Str, chars: Str) -> Str
   ensures: result.len() <= s.len()
 {
   let len = string.str_len(s);
+  let base = s.c_str();
   var end: Int = len;
-  while end > 0 && _char_in_str(chars, string.byte_at(s, end - 1)) {
+  while end > 0 && _char_in_str(chars, _raw_byte(base, end - 1)) {
     end = end - 1;
   };
   string.str_slice(s, 0, end)

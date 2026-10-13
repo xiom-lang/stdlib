@@ -7,7 +7,7 @@ windows-x64 release archive.)
 **Gates: corpus 955/955 full (C001 carve-outs retired on v0.63.1; new
 TcpStream loopback and uuencode roundtrip smokes added; smoke_os_watch
 added in wave 124), modules 510/510,
-probes 301/301, barename 0/510.**
+probes 302/302, barename 0/510.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -26,7 +26,7 @@ gates flip:
    wave-98..110 probes), the io byte-fidelity/CRLF lock and the
    fs_remove lock).
 4. Strict bare-name scan clean -- MET (0/509).
-5. Coverage ratchet green -- MET (floors158).
+5. Coverage ratchet green -- MET (floors159).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (497/517 modules, 3477/6202 fns).
 8. Contract coverage 100% (every public fn carries clauses) -- OPEN (70.7%).
@@ -161,9 +161,17 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
    their doorbell push lands m263-m271, build the v0.64.4 dry-run archive
    via the XIOM Release workflow_dispatch, run the witness branch, land
    the metro revert, then tag. Follow-up wave after async: the string
-   dir's remaining strnlen-family call sites (191 across 34 files:
-   builder/case/casefold/collate/compare/unicode/normalize/... ) need the
-   same cached (base, len) treatment; scoped per-file with smokes.
+    dir's remaining strnlen-family call sites (191 across 34 files:
+    builder/case/casefold/collate/compare/unicode/normalize/... ) need the
+    same cached (base, len) treatment; scoped per-file with smokes.
+    WAVE 125 (block 150) converted batch 1 -- compare / trim / escape.xi
+    (cached (base, len) byte loops; escape builders rewritten to Vecs
+    after the old concat-per-byte loop allocated ~n^2/2 and died at
+    512 KB). Remaining: string.xi first (~15 per-position xiom_char_at
+    sites incl. the public str_escape/str_unescape, the json-escape
+    path), then case/collate/indent/truncate/reverse/replace/segment/
+    sentencebreak/unescape/unicode/wordbreak/shuffle + slice remnants
+    (~34 .byte_at sites).
    CUT 2026-10-11: **stdlib-v0.64.4 tagged at 3df0843** (annotated tag
    f8fb7a88; package.xi 0.64.4 + registry metadata; COMPILER_VERSION ->
    v0.64.3; CHANGELOG [0.64.4]; release-notes/v0.64.4.md clean). Evidence:
@@ -194,7 +202,7 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
     post-batch re-verify sweep cycle. Handoff in
     `docs/stdlib_session.md` snapshot 32 (block 143 refresh, head
     869ff72), wave
-    records blocks 89-149. WAVE 114 step 0 (block 128): battery pin moved
+    records blocks 89-150. WAVE 114 step 0 (block 128): battery pin moved
     to the official v0.64.4 release archive
     (%TEMP%\kilo\stdlib_ws\v0.64.4-rel\bin\xiom.exe, sha256 DB8A2EF0...;
     COMPILER_VERSION -> v0.64.4): corpus 954/954 (589.5s), probes 289/289
@@ -380,6 +388,25 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
      v0.64.4-rel: corpus 955/955 (544s), probes 301/301 (224.4s),
      modules 510/510 (224.5s), barename 0/510 (323.6s), floors158 +
      module-smoke (499/518) + doc ratchets OK.
+     WAVE 125 (block 150): strnlen-family conversion batch 1 -- compare /
+     trim / escape raw-byte loops over cached (base, len) views (the
+     wave-111 idiom; per-call strnlen made them quadratic). escape.xi's
+     _code_point_at reworked to (base, len, pos) with OOB reads as 0
+     (byte-exact); str_escape_ascii/unicode rewritten as single-Vec
+     builders after the old concat-per-byte loop allocated ~n^2/2 (the
+     512 KB measurement scratch hit allocation failure at ~137 GB of
+     leaked strings -- measured defect, fixed). Probe
+     p_wave125_shapes.xi (302nd) byte-exact (multibyte folding,
+     leading-zero order both ways, trim variants, \xNN/\uNNNN, U+1F600
+     -> "\uf600", truncated c0); string smokes 56/56. Local perf (512 KB
+     under engine-lane load, upper bounds): compare 1361 ms, natural
+     1257 ms, trim 550 ms, escape 567 ms. Coverage fns 8737, clauses
+     6184, floors159 wired; battery corpus 955/955 (851.9s), probes
+     302/302 (328.7s), modules 510/510 (280.5s), barename 0/510
+     (418.4s), ratchets OK. NEXT BATCH: string.xi first (public
+     str_escape/str_unescape + ~15 char_at sites, the json-escape path),
+     then case/collate/indent/truncate/reverse/replace/segment/
+     sentencebreak/unescape/unicode/wordbreak/shuffle + slice remnants.
 BINARY NOTE: the shared local build path
 `E:\xiom-lang\xiom\target\release\xiom.exe` was rebuilt past the pin
 (compiler main da7798da m252) and fails four corpus smokes; waves now run

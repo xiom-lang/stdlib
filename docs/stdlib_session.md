@@ -2812,6 +2812,37 @@ registry pin, agent recon for the rest)**
   delivery) closed out the pulse wave-2 rows -- probes 300; floors157.
 - No other queue moves; 1442 and 1630/1658 remain the compiler's.
 
+**SESSION 2026-10-13 block 150 (wave 125: strnlen-family batch 1 -- compare/trim/escape cached views + escape Vec-builders; probes 302; floors159)**
+- WAVE 125 (classic string-dir wave, batch 1): compare.xi
+  (str_compare_ignore_case, str_compare_natural), trim.xi (_char_in_str +
+  all five trim loops) and escape.xi (_code_point_at as (base, len, pos)
+  with OOB reads as 0; both escape builders) now read through cached
+  (base, len) views -- xiom.byte_at/xiom_char_at re-scan with strnlen per
+  call, so the byte-stepped loops were quadratic.
+- Second defect class caught by the local measurement: str_escape_ascii /
+  str_escape_unicode built output via slice+concat PER BYTE; strings leak
+  by design, so 512 KB input allocated ~n^2/2 (~137 GB) and the scratch
+  died on allocation failure (the owner saw the memory spike -- it was
+  this scratch measuring exactly that defect). Both rewritten as
+  single-Vec builders; the same run now completes in ~0.5 s / ~1 MB.
+- Probe p_wave125_shapes.xi (302nd) red pre (semantic lock) / green post:
+  ASCII-only folding on multibyte, natural leading-zero order both
+  directions, every trim variant, \xNN/\uNNNN outputs, U+1F600 ->
+  "\uf600" (low-16 quirk), truncated-sequence c0 mirror, empty rows.
+  String-family smokes 56/56. Local perf (512 KB, engine lane building;
+  upper bounds): compare 1361 ms, natural 1257 ms, trim_start 550 ms,
+  escape_ascii 567 ms.
+- Coverage: fns 8737, clauses 6184 (floors159 dumped + wired); battery on
+  v0.64.4-rel: corpus 955/955 (851.9s), probes 302/302 (328.7s), modules
+  510/510 (280.5s), barename 0/510 (418.4s), module-smoke (499/518) +
+  doc ratchets OK.
+- Next batch queued: string.xi first (~15 per-position xiom_char_at sites
+  incl. the public str_escape/str_unescape, the json-escape path; copy
+  slice.xi's byte-exact _char_at_runtime-equivalent locally), then
+  case/collate/indent/truncate/reverse/replace/segment/sentencebreak/
+  unescape/unicode/wordbreak/shuffle + slice remnants. Snapshot 32 stands
+  for waves 114-120; blocks 144-150 carry waves 121-125.
+
 **SESSION 2026-10-13 block 149 (wave 124: directory watch (module 510) + the guard-free runtime half; probes 301; floors158)**
 - WAVE 124 (REL-20261012-2012-engine-3, Windows-first per the ack): new
   module xiom.os.watch -- watch_dir (ReadDirectoryChangesW; recursive

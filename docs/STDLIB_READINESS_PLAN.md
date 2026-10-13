@@ -1964,8 +1964,42 @@ T1/T2 yields.
         REL-20261013-1445 progress note (part 1 landed; part 2 blocked
         compiler-side); REL-20261013-1423 acked (thread-spawn hoist
         queued for the thread wave; needs m282 for e2e).
+        Wave 125 (2026-10-13): strnlen-family conversion batch 1 (classic
+        wave) -- compare/trim/escape raw-byte loops over cached
+        (base, len) views (the wave-111 idiom: xiom.byte_at /
+        xiom_char_at re-scan with strnlen per call, so byte-stepped loops
+        were quadratic). compare.xi: str_compare_ignore_case and
+        str_compare_natural read via a cached view. trim.xi: _char_in_str
+        plus all five trim loops. escape.xi: _code_point_at reworked to
+        (base, len, pos) with out-of-range reads as 0 (byte-exact with
+        the old accessor, truncated sequences included);
+        str_escape_ascii / str_escape_unicode rewritten as single-Vec
+        builders -- the old slice+concat-per-byte loop was quadratic IN
+        ALLOCATION (strings leak by design in this phase, so 512 KB
+        input allocated ~n^2/2 ~ 137 GB and the measurement scratch died
+        on allocation failure; measured, then fixed). Probe
+        p_wave125_shapes.xi (302nd): byte-exact semantics incl.
+        ASCII-only folding on multibyte, natural leading-zero order in
+        both directions, all trim variants, \xNN/\uNNNN outputs, U+1F600
+        -> "\uf600" (low-16 quirk), truncated-sequence c0 mirror,
+        empty/prefix rows. Local perf (512 KB, box under the engine
+        lane's Vulkan build; upper bounds): compare_ignore_case 1361 ms,
+        natural 1257 ms, trim_start 550 ms, escape_ascii 567 ms -- all
+        linear and completing (escape previously died). String-family
+        smokes 56/56; coverage fns 8737, clauses 6184 (floors159) +
+        module-smoke (499/518) + doc ratchets OK; battery on v0.64.4-rel:
+        corpus 955/955 (851.9s), probes 302/302 (328.7s), modules 510/510
+        (280.5s), barename 0/510 (418.4s). NEXT BATCH (queued): string.xi
+        is the biggest remaining consumer (~15 per-position
+        xiom_char_at sites incl. the public str_escape / str_unescape,
+        which still carry concat-per-char builders and are the
+        json-escape path; plan: copy slice.xi's byte-exact
+        _char_at_runtime-equivalent locally and convert site by site);
+        then case/collate/indent/truncate/reverse/replace/segment/
+        sentencebreak/unescape/unicode/wordbreak/shuffle and slice's
+        remaining call sites (~34 .byte_at sites total).
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors158.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors159.json
         tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;

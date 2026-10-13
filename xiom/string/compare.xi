@@ -16,6 +16,16 @@ module xiom.string.compare
 
 use xiom.string;
 
+// Wave 125: raw byte access over a cached (base, len) view (the wave-111
+// pattern): xiom.byte_at re-scans with strnlen per call, so byte-stepped
+// loops were quadratic in the string size. Callers bounds-check against the
+// cached length.
+fn _raw_byte(base: *UInt8, i: Int) -> UInt8
+  requires: true  // raw byte read; callers bound i against len (T007)
+{
+  unsafe { return *(base + i); }
+}
+
 /// Lexicographic byte-wise comparison of `a` and `b`.
 /// Returns a negative Int when `a` sorts before `b`, 0 when equal, and a
 /// positive Int when `a` sorts after `b`. Canonical implementation:
@@ -44,10 +54,12 @@ pub fn str_compare_ignore_case(a: Str, b: Str) -> Int
 {
   let la = string.str_len(a);
   let lb = string.str_len(b);
+  let pa = a.c_str();
+  let pb = b.c_str();
   var i: Int = 0;
   while i < la && i < lb {
-    var ba = string.byte_at(a, i) as Int;
-    var bb = string.byte_at(b, i) as Int;
+    var ba = _raw_byte(pa, i) as Int;
+    var bb = _raw_byte(pb, i) as Int;
     if ba >= 65 && ba <= 90 {
       ba = ba + 32;
     };
@@ -84,6 +96,8 @@ pub fn str_compare_natural(a: Str, b: Str) -> Int
 {
   let la = string.str_len(a);
   let lb = string.str_len(b);
+  let pa = a.c_str();
+  let pb = b.c_str();
   var i: Int = 0;
   var j: Int = 0;
   loop {
@@ -96,14 +110,14 @@ pub fn str_compare_natural(a: Str, b: Str) -> Int
     if j >= lb {
       return 1;
     };
-    let ba = string.byte_at(a, i) as Int;
-    let bb = string.byte_at(b, j) as Int;
+    let ba = _raw_byte(pa, i) as Int;
+    let bb = _raw_byte(pb, j) as Int;
     let a_is_digit = ba >= 48 && ba <= 57;
     let b_is_digit = bb >= 48 && bb <= 57;
     if a_is_digit && b_is_digit {
       var i_end = i;
       while i_end < la {
-        let c = string.byte_at(a, i_end) as Int;
+        let c = _raw_byte(pa, i_end) as Int;
         if !(c >= 48 && c <= 57) {
           break;
         };
@@ -111,18 +125,18 @@ pub fn str_compare_natural(a: Str, b: Str) -> Int
       };
       var j_end = j;
       while j_end < lb {
-        let c = string.byte_at(b, j_end) as Int;
+        let c = _raw_byte(pb, j_end) as Int;
         if !(c >= 48 && c <= 57) {
           break;
         };
         j_end = j_end + 1;
       };
       var a_start = i;
-      while a_start < i_end - 1 && (string.byte_at(a, a_start) as Int) == 48 {
+      while a_start < i_end - 1 && (_raw_byte(pa, a_start) as Int) == 48 {
         a_start = a_start + 1;
       };
       var b_start = j;
-      while b_start < j_end - 1 && (string.byte_at(b, b_start) as Int) == 48 {
+      while b_start < j_end - 1 && (_raw_byte(pb, b_start) as Int) == 48 {
         b_start = b_start + 1;
       };
       let a_digits = i_end - a_start;
@@ -135,8 +149,8 @@ pub fn str_compare_natural(a: Str, b: Str) -> Int
       };
       var k: Int = 0;
       while k < a_digits {
-        let ca = string.byte_at(a, a_start + k) as Int;
-        let cb = string.byte_at(b, b_start + k) as Int;
+        let ca = _raw_byte(pa, a_start + k) as Int;
+        let cb = _raw_byte(pb, b_start + k) as Int;
         if ca < cb {
           return -1;
         };
