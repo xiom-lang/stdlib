@@ -1776,8 +1776,49 @@ T1/T2 yields.
         4589 (clauses 6136, 70.4%), floors153 wired; battery on
         v0.64.4-rel: corpus 954/954, probes 296/296, modules 509/509,
         barename 0/509, ratchets OK.
+        Wave 120 (2026-10-13): the mmap family real
+        (REL-20261012-1945-xvector-2 P5) -- runtime xiom_mmap_file /
+        xiom_mmap_anon / xiom_munmap / xiom_msync / xiom_madvise /
+        xiom_mprotect / xiom_mlock / xiom_munlock / xiom_mem_write plus
+        xiom_open_rw (POSIX mmap with MAP_ANON on Apple, msync/madvise/
+        mprotect/mlock; Windows CreateFileMapping/MapViewOfFile/
+        FlushViewOfFile/VirtualProtect/VirtualLock; msync flags
+        transported as 1 = async / else sync because the MS_* constants
+        differ on macOS); xiom/os/mmap.xi 12 stubs -> 11 real (anonymous
+        + file + writeable mappings, unmap/sync/advise/protect/lock/
+        unlock, pure-XIOM copy via cached offsets, memcpy write);
+        mmap_resize stays a documented Err (mremap is Linux-only);
+        fs_ffi mmap/munmap/msync/madvise/mlock/munlock real (path
+        roundtrip, fd owned until munmap; the Ok-side clause is
+        payload-free -- struct payload reads in catalog ensures clauses
+        false-fire on v0.64.4, known_failures payload family);
+        sync_io.open_rw new. FIX-FIRST (probe-first catch): the
+        fd-open/read/write externs returned C int but were declared i64,
+        so a -1 read as 4294967295 -- open_read on a missing path
+        returned Ok(bogus fd) and the downstream Int32 cast crashed
+        0xC0000409 (wave-119 ABI family completion: open_append/
+        open_read/open_rw/read/write are Int32 + casts now, matching the
+        socket recv pattern). Probe p_wave120_shapes.xi (297th) red pre
+        (compile: open_rw missing; the stubs return Err) / green post:
+        anon write/copy/lock/protect/unmap; file writeable copy + 1-byte
+        write + msync visible through a fresh read; read-only copy +
+        read_exact; fs_ffi roundtrip; Err rows (bad fd, null ptr, zero
+        length, missing path). Platform lore: the Windows UCRT
+        fast-fails the process on _read/_write of a closed/out-of-range
+        fd before any return value exists (C-verified; invalid-fd probe
+        rows are deliberately absent). smoke_os_ffi remerged to the real
+        semantics (stub-Err asserts retired; resize + bad-fd stay Err);
+        targeted smokes os 8/8, io 20/20, ffi 2/2, net 11/11.
+        Coverage: pubFns 6520, pubCovered 4589 -> 4606 (clauses 6136 ->
+        6155, global 70.4% -> 70.6%, os 57.8% -> 62.2%); floors154
+        wired. Battery on v0.64.4-rel: corpus 954/954 (617.1s), probes
+        297/297 (209.3s), modules 509/509 (179.6s), barename 0/509
+        (249.7s), coverage + module-smoke (497/517, 3481/6219) + doc
+        ratchets OK. Follow-up: the async/io.xi and io/pipe.xi copies of
+        the xiom_read/xiom_write Int returns need the same Int32
+        treatment (same family; outside this wave's probe scope).
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors153.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors154.json
         tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;

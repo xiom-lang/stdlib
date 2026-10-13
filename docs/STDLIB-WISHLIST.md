@@ -456,7 +456,14 @@ bus): three new stdlib-addressed asks acked in one round (relay commit
 - XVECTOR `REL-20261012-1945-xvector-2` (medium): the mmap family
   (file/anonymous mappings, unmap, msync, madvise; mlock only if cheap)
   replacing the 12 `xiom/os/mmap.xi` stubs + `fs_ffi` not-available
-  returns; queued in the same runtime bundle after P1+P2/P3.
+  returns; queued in the same runtime bundle after P1+P2/P3. **DELIVERED
+  wave 120 (2026-10-13)**: 11 of the 12 stubs real (file/anonymous/
+  writeable mappings, unmap/sync/advise/protect/lock/unlock, copy/write)
+  plus `fs_ffi` mmap/munmap/msync/madvise/mlock/munlock and
+  `sync_io.open_rw`; `mmap_resize` stays a documented Err (mremap is
+  Linux-only). Locked by `tools/probes/p_wave120_shapes.xi` (297th);
+  effective for consumers at the next re-vendoring compiler pin (or
+  `XIOM_RUNTIME_DIR` on v0.64.4 until then).
 - PULSE `REL-20261012-1946-pulse` (high): wave-2 server primitives --
   deadlines/socket options first (0317/1131 family, shutdown included);
   runtime rows (signal delivery, poll/select timeout, SO_REUSEPORT, raw

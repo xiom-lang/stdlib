@@ -3,8 +3,9 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // xiom.os.mmap + xiom.os.win + xiom.os.unix
 // FFI-backed OS helpers: the real durability primitives (fsync/fdatasync,
-// wave 115) are exercised on a fixture; the rest are documented stubs
-// returning Err or defaults.
+// wave 115) and the mmap family (wave 120: anonymous + file mappings,
+// unmap/copy/write, fs_ffi path roundtrip) are exercised on fixtures; the
+// rest are documented stubs returning Err or defaults.
 // Returns 0 on success, nonzero on failure (process exit code).
 
 module smoke_os_ffi
@@ -210,59 +211,114 @@ fn main() -> Int {
     }
   }
 
-  // --- mmap: documented stubs ---
+  // --- mmap: real family (wave 120) ---
   {
     let r = mmap.mmap_anonymous(4096);
-    if r.is_ok {
-      io.println("mmap-anon");
-      return 26;
-    }
+    match r {
+      Ok(pa) => {
+        var b = Vec[UInt8].new();
+        b.push(11);
+        b.push(22);
+        let w = mmap.mmap_write(pa, &b);
+        if w.is_err {
+          io.println("mmap-write");
+          return 26;
+        };
+        let got = mmap.mmap_copy(pa, 2);
+        let gl = got.len();
+        if gl != 2 {
+          io.println("mmap-copy-len");
+          return 27;
+        }
+        let g0 = got[0];
+        let g1 = got[1];
+        if g0 != 11 || g1 != 22 {
+          io.println("mmap-copy-bytes");
+          return 28;
+        }
+        let u = mmap.mmap_unmap(pa, 4096);
+        if u.is_err {
+          io.println("mmap-unmap");
+          return 29;
+        };
+      },
+      Err(_) => {
+        io.println("mmap-anon");
+        return 26;
+      },
+    };
   }
   {
-    let r = mmap.mmap_file(1, 0, 4096);
-    if r.is_ok {
-      io.println("mmap-file");
-      return 27;
-    }
-  }
-  {
-    let r = mmap.mmap_writeable(1, 0, 4096);
-    if r.is_ok {
-      io.println("mmap-writeable");
-      return 28;
-    }
-  }
-  {
-    let r = mmap.mmap_unmap(0, 4096);
-    if r.is_ok {
-      io.println("mmap-unmap");
-      return 29;
-    }
-  }
-  {
-    let r = mmap.mmap_sync(0, 4096, 0);
-    if r.is_ok {
-      io.println("mmap-sync");
+    let fx = "os_ffi_mmap_tmp.bin";
+    let _ = io.remove_file(fx);
+    let wfx = io.write_file(fx, "mmapdata");
+    if wfx.is_err {
+      io.println("mmap-fixture");
       return 30;
-    }
-  }
-  if mmap.mmap_copy(0, 10).len() != 0 {
-    io.println("mmap-copy");
-    return 31;
-  }
-  {
-    let r = mmap.mmap_write(0, &mkbytes());
-    if r.is_ok {
-      io.println("mmap-write");
-      return 32;
-    }
-  }
-  {
-    let r = mmap.mmap_resize(0, 4096, 8192);
-    if r.is_ok {
+    };
+    let hr = sync_io.open_read(fx);
+    match hr {
+      Ok(fd) => {
+        let mr = mmap.mmap_file(fd, 0, 8);
+        match mr {
+          Ok(p) => {
+            let cp = mmap.mmap_copy(p, 8);
+            let cpl = cp.len();
+            if cpl != 8 {
+              io.println("mmap-file-len");
+              return 31;
+            }
+            let c0 = cp[0];
+            if c0 != 109 {
+              io.println("mmap-file-bytes");
+              return 32;
+            }
+            let ur = mmap.mmap_unmap(p, 8);
+            if ur.is_err {
+              io.println("mmap-file-unmap");
+              return 33;
+            };
+          },
+          Err(_) => {
+            io.println("mmap-file");
+            return 31;
+          },
+        };
+        let _ = sync_io.close_fd(fd);
+      },
+      Err(_) => {
+        io.println("mmap-file-open");
+        return 31;
+      },
+    };
+    let ffr = fs_ffi.mmap(fx, 0, 8);
+    match ffr {
+      Ok(m) => {
+        let ms = fs_ffi.msync(m);
+        if ms.is_err {
+          io.println("mmap-ffi-msync");
+          return 32;
+        };
+        fs_ffi.munmap(m);
+      },
+      Err(_) => {
+        io.println("mmap-ffi");
+        return 32;
+      },
+    };
+    // resize stays a documented Err stub (mremap is Linux-only)
+    let rs = mmap.mmap_resize(0, 4096, 8192);
+    if rs.is_ok {
       io.println("mmap-resize");
       return 33;
-    }
+    };
+    // invalid arguments stay Err
+    let nf = mmap.mmap_file(-1, 0, 8);
+    if nf.is_ok {
+      io.println("mmap-badfd");
+      return 33;
+    };
+    let _ = io.remove_file(fx);
   }
 
   // --- win: environment + identity (Windows-only; the module wraps Windows APIs) ---
@@ -408,11 +464,4 @@ fn main() -> Int {
 
   io.println("OK");
   return 0;
-}
-
-fn mkbytes() -> Vec[UInt8] {
-  var v = Vec[UInt8].new();
-  v.push(97);
-  v.push(98);
-  v
 }

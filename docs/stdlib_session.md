@@ -2713,6 +2713,52 @@ registry pin, agent recon for the rest)**
   (216.6s), floors144 + doc + module-smoke (497/517, 3476/6204)
   ratchets OK.
 
+**SESSION 2026-10-13 block 142 (wave 120: mmap family real -- the last P5 primitive; fd-open/read/write ABI fix-first; probes 297; floors154)**
+- WAVE 120 (REL-20261012-1945-xvector-2 P5): the mmap family is real.
+  Runtime (both platforms): xiom_mmap_file, xiom_mmap_anon, xiom_munmap,
+  xiom_msync, xiom_madvise, xiom_mprotect, xiom_mlock, xiom_munlock,
+  xiom_mem_write + xiom_open_rw (POSIX mmap/munmap/msync/madvise/mprotect/
+  mlock + MAP_ANON on Apple; Windows CreateFileMapping/MapViewOfFile/
+  FlushViewOfFile/VirtualProtect/VirtualLock; msync flags transported as
+  1 = async / else sync because the MS_* constants differ across POSIX
+  platforms). Stdlib: xiom/os/mmap.xi 12 stubs -> 11 real (anonymous/file/
+  writeable mappings, unmap/sync/advise/protect/lock/unlock, pure-XIOM
+  mmap_copy over cached offsets, mmap_write via the runtime memcpy);
+  mmap_resize stays a documented Err (mremap is Linux-only). fs_ffi
+  mmap/munmap/msync/madvise/mlock/munlock real (path roundtrip, the fd is
+  owned until munmap; the Ok-side clause is deliberately payload-free
+  because struct payload reads in catalog ensures clauses false-fire on
+  v0.64.4 -- the known_failures payload family); sync_io.open_rw new.
+- FIX-FIRST (probe-first catch): the fd-open/read/write externs were C
+  `int` declared as i64, so -1 read as 4294967295 -- sync_io.open_read on
+  a missing path returned Ok(bogus fd), and the downstream Int32 cast
+  crashed 0xC0000409. open_append/open_read/open_rw/read/write are Int32 +
+  casts now (the wave-119 recv pattern; same ABI family). The probe locks
+  open_read(missing) -> Err directly; the read/write error rows are
+  POSIX-only in principle -- see the UCRT lore below.
+- Probe p_wave120_shapes.xi (297th) red pre (compile error: open_rw
+  missing; the stubs return Err) / green post: anon write/copy/lock/
+  protect/unmap; file-backed writeable copy + 1-byte write + msync visible
+  through a fresh read; read-only copy + read_exact; fs_ffi roundtrip; Err
+  rows (bad fd, null ptr, zero length, missing path). Platform lore
+  (C-verified with clang + UCRT): the Windows UCRT fast-fails the process
+  on _read/_write of a closed/out-of-range fd before any return value
+  exists -- invalid-fd probe rows are deliberately absent.
+  smoke_os_ffi remerged to the real semantics (stub-Err asserts retired;
+  resize + bad-fd stay Err); targeted smokes os 8/8, io 20/20, ffi 2/2,
+  net 11/11.
+- Coverage: pubFns 6520, pubCovered 4589 -> 4606 (clauses 6136 -> 6155,
+  global 70.4% -> 70.6%; os 57.8% -> 62.2%); floors154 dumped + wired
+  (ci/heavy/release + tools/README + plan/queue/session + the runtime
+  symbol audit). Battery on the v0.64.4-rel archive: corpus 954/954
+  (617.1s), probes 297/297 (209.3s), modules 509/509 (179.6s), barename
+  0/509 (249.7s), coverage + module-smoke (497/517, 3481/6219) + doc
+  ratchets OK.
+- Bus: REL-20261012-1945-xvector-2 acked -> fixed with the delivery refs
+  (consumers see it at the next re-vendoring pin or XIOM_RUNTIME_DIR on
+  v0.64.4). Follow-up recorded: async/io.xi + io/pipe.xi copies of the
+  xiom_read/xiom_write Int returns need the same Int32 treatment.
+
 **SESSION 2026-10-13 block 141 (handoff update 12:00Z -- snapshot 31 refreshed in place at head 75e003d; continuation prompt re-issued)**
 - Snapshot 31 updated in place: read-list through block 140; the
   six-wave external-acceptance line (orbitdb bundle closed; pulse closed

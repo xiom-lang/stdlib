@@ -1,12 +1,12 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
-**77.0% -- 7 of 10 gates complete; gate 8 at 69.8% (partial credit) and
-gates 9-10 discrete.** (Compiler pin: in-tree **v0.64.3**; candidate
-`stdlib-v0.64.4` cut at 3df0843 on 2026-10-11 -- the compiler pins
-STDLIB_VERSION and ships v0.64.4 from it.)
+**77.1% -- 7 of 10 gates complete; gate 8 at 70.6% (partial credit) and
+gates 9-10 discrete.** (Compiler pin: in-tree **v0.64.4** -- released
+2026-10-12, tag f76fd47c on df493530; the lane battery runs the official
+windows-x64 release archive.)
 **Gates: corpus 954/954 full (C001 carve-outs retired on v0.63.1; new
 TcpStream loopback and uuencode roundtrip smokes added), modules 509/509,
-probes 288/288, barename 0/509.**
+probes 297/297, barename 0/509.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -25,16 +25,16 @@ gates flip:
    wave-98..110 probes), the io byte-fidelity/CRLF lock and the
    fs_remove lock).
 4. Strict bare-name scan clean -- MET (0/509).
-5. Coverage ratchet green -- MET (floors148).
+5. Coverage ratchet green -- MET (floors154).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (497/517 modules, 3477/6202 fns).
-8. Contract coverage 100% (every public fn carries clauses) -- OPEN (69.8%).
+8. Contract coverage 100% (every public fn carries clauses) -- OPEN (70.6%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
-   OPEN (16: 15 compiler, 1 stdlib).
+   OPEN (15: all compiler; the stdlib ledger carries no open repro).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
 
 Meter formula: MET gates count 1.0; gate 8 counts its current
-pub-with-clause fraction (69.8% -> 0.698); gates 9 and 10 get no partial
+pub-with-clause fraction (70.6% -> 0.706); gates 9 and 10 get no partial
 credit (discrete). Update the percentage and the gate-8 fraction in the
 same commit as each floors dump so the meter moves smoothly toward 80%.
 
@@ -192,7 +192,7 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
     post-batch re-verify sweep cycle. Handoff in
     `docs/stdlib_session.md` snapshot 31 (block 141 refresh, head
     75e003d), wave
-    records blocks 89-141. WAVE 114 step 0 (block 128): battery pin moved
+    records blocks 89-142. WAVE 114 step 0 (block 128): battery pin moved
     to the official v0.64.4 release archive
     (%TEMP%\kilo\stdlib_ws\v0.64.4-rel\bin\xiom.exe, sha256 DB8A2EF0...;
     COMPILER_VERSION -> v0.64.4): corpus 954/954 (589.5s), probes 289/289
@@ -272,7 +272,29 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
     orbitdb bundle (REL-20261012-1945) closed upstream after verifying
     P1-P5; no new asks; remaining non-terminals are compiler-blocked or
     queued (thread pool/2053, f32 Float32 batch, mmap, pulse wave-2
-    remnants, engine-3 watch, C-PULSE-17 compiler payload-index family).
+     remnants, engine-3 watch, C-PULSE-17 compiler payload-index family).
+     WAVE 120 (block 142): the mmap family real (REL-20261012-1945-xvector-2
+     P5) -- runtime xiom_mmap_file/mmap_anon/munmap/msync/madvise/mprotect/
+     mlock/munlock/mem_write + xiom_open_rw (POSIX + Windows twins; msync
+     flags transported 1=async/else sync for the macOS MS_* differences);
+     mmap.xi 12 stubs -> 11 real (anon/file/writeable, unmap/sync/advise/
+     protect/lock/unlock, pure-XIOM copy, memcpy write), resize stays a
+     documented Err; fs_ffi mmap/munmap/msync/madvise/mlock/munlock real
+     (payload-free Ok-side clause -- catalog struct payload reads false-fire
+     on v0.64.4); sync_io.open_rw new. FIX-FIRST: the fd-open/read/write
+     externs returned C int but were declared i64 -- open_read on a missing
+     path returned Ok(4294967295-as-fd) and the downstream cast crashed
+     0xC0000409; now Int32 + casts (wave-119 family completion). Probe
+     p_wave120_shapes.xi (297th) red pre / green post; smoke_os_ffi remerged
+     to the real semantics; targeted smokes os 8/8, io 20/20, ffi 2/2,
+     net 11/11. Coverage pubCovered 4589 -> 4606 (clauses 6155, global
+     70.6%; os 57.8% -> 62.2%), floors154 wired; battery on v0.64.4-rel:
+     corpus 954/954 (617.1s), probes 297/297 (209.3s), modules 509/509
+     (179.6s), barename 0/509 (249.7s), coverage + module-smoke (497/517,
+     3481/6219) + doc ratchets OK. UCRT lore: _read/_write of a closed/
+     out-of-range fd fast-fails the Windows process before returning a
+     value (C-verified). Follow-up: async/io.xi + io/pipe.xi copies of the
+     xiom_read/xiom_write Int returns need the Int32 treatment.
 BINARY NOTE: the shared local build path
 `E:\xiom-lang\xiom\target\release\xiom.exe` was rebuilt past the pin
 (compiler main da7798da m252) and fails four corpus smokes; waves now run

@@ -159,3 +159,10 @@ Wave-119 update 2026-10-13: `xiom_socket_set_timeout`,
 `xiom_socket_set_nonblocking`, `xiom_socket_reuse_addr` and
 `xiom_socket_shutdown` are declared by `net/socket.xi` in the same commit
 -- a further +4 definitions / +4 declarations. No deletions.
+
+Wave-120 update 2026-10-13: `xiom_mmap_file`, `xiom_mmap_anon`,
+`xiom_munmap`, `xiom_msync`, `xiom_madvise`, `xiom_mprotect`, `xiom_mlock`,
+`xiom_munlock`, `xiom_mem_write` (the mmap family for
+REL-20261012-1945-xvector-2) are declared by `os/mmap.xi` in the same
+commit, and `xiom_open_rw` is declared by `os/sync_io.xi` -- a further
++10 definitions / +10 declarations. No deletions.

@@ -9,18 +9,24 @@ module xiom.os.sync_io
 // ============================================================================
 // Blocking fd helpers: exact reads, full writes, buffered line reads, copying
 // and file advice/locking. Wave 115 lands the read/write/close/open-append/
-// open-read/fsync/fsync_dir syscalls through the runtime shims below
-// (runtime/xiom_runtime.c); the remaining helpers (lseek-class positions,
-// fcntl locking, fadvise/fallocate, flush_fd) stay documented stubs
+// open-read/fsync/fsync_dir syscalls, wave 118 the fcntl/LockFileEx locking
+// pair and wave 120 open_rw (read/write opens backing the writable memory
+// mappings) through the runtime shims below (runtime/xiom_runtime.c); the
+// remaining helpers (lseek-class positions, read_until_eof, read_line_
+// buffered, copy_fd, fadvise/fallocate, flush_fd) stay documented stubs
 // returning Err.
 // ============================================================================
 
 extern "C" {
-  fn xiom_read(fd: Int32, buf: *UInt8, count: UInt) -> Int;
-  fn xiom_write(fd: Int32, buf: *UInt8, count: UInt) -> Int;
+  // Int32 returns: the runtime returns C `int` and -1 means failure; an i64
+  // read would see 4294967295 and mis-classify errors (wave-119 ABI family;
+  // wave 120 applies the same fix to the fd open/read/write shims).
+  fn xiom_read(fd: Int32, buf: *UInt8, count: UInt) -> Int32;
+  fn xiom_write(fd: Int32, buf: *UInt8, count: UInt) -> Int32;
   fn xiom_close(fd: Int32) -> Int32;
-  fn xiom_open_append(path: *UInt8) -> Int;
-  fn xiom_open_read(path: *UInt8) -> Int;
+  fn xiom_open_append(path: *UInt8) -> Int32;
+  fn xiom_open_read(path: *UInt8) -> Int32;
+  fn xiom_open_rw(path: *UInt8) -> Int32;
   fn xiom_fsync_fd(fd: Int) -> Int32;
   fn xiom_fsync_dir(path: *UInt8) -> Int32;
   fn xiom_ftruncate_fd(fd: Int32, size: Int) -> Int32;
@@ -47,10 +53,11 @@ pub fn read_exact(fd: Int, buf: &mut Vec[UInt8]) -> Result[Int, Str]
     if chunk > 4096 {
       chunk = 4096;
     }
-    let n: Int;
+    let n32: Int32;
     unsafe {
-      n = xiom_read(fd as Int32, &stage[0] as *UInt8, chunk as UInt);
+      n32 = xiom_read(fd as Int32, &stage[0] as *UInt8, chunk as UInt);
     }
+    let n = n32 as Int;
     if n <= 0 {
       return Err("read_exact: unexpected EOF");
     }
@@ -77,10 +84,11 @@ pub fn write_all(fd: Int, data: &Vec[UInt8]) -> Result[Int, Str]
   }
   var sent = 0;
   while sent < n {
-    let w: Int;
+    let w32: Int32;
     unsafe {
-      w = xiom_write(fd as Int32, &data[sent] as *UInt8, (n - sent) as UInt);
+      w32 = xiom_write(fd as Int32, &data[sent] as *UInt8, (n - sent) as UInt);
     }
+    let w = w32 as Int;
     if w <= 0 {
       return Err("write_all: write failed");
     }
@@ -173,10 +181,11 @@ pub fn fsync_dir(path: Str) -> Result[Unit, Str]
 pub fn open_append(path: Str) -> Result[Int, Str]
   requires: path.len() > 0
 {
-  let fd: Int;
+  let fd32: Int32;
   unsafe {
-    fd = xiom_open_append(path.c_str());
+    fd32 = xiom_open_append(path.c_str());
   }
+  let fd = fd32 as Int;
   if fd < 0 {
     return Err("open_append: open failed");
   }
@@ -189,12 +198,31 @@ pub fn open_append(path: Str) -> Result[Int, Str]
 pub fn open_read(path: Str) -> Result[Int, Str]
   requires: path.len() > 0
 {
-  let fd: Int;
+  let fd32: Int32;
   unsafe {
-    fd = xiom_open_read(path.c_str());
+    fd32 = xiom_open_read(path.c_str());
   }
+  let fd = fd32 as Int;
   if fd < 0 {
     return Err("open_read: open failed");
+  }
+  Ok(fd)
+}
+
+/// Open `path` for reading and writing (creating it when missing) and
+/// return a file descriptor. Real implementation (wave 120): O_RDWR|O_CREAT
+/// binary open (runtime); the writable-fd counterpart backing
+/// mmap_writeable; release with close_fd.
+pub fn open_rw(path: Str) -> Result[Int, Str]
+  requires: path.len() > 0
+{
+  let fd32: Int32;
+  unsafe {
+    fd32 = xiom_open_rw(path.c_str());
+  }
+  let fd = fd32 as Int;
+  if fd < 0 {
+    return Err("open_rw: open failed");
   }
   Ok(fd)
 }

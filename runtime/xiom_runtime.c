@@ -5050,6 +5050,164 @@ long xiom_append_bytes(const char* path, const char* buf, long count) {
 #endif
 
 /* ================================================================
+   Memory mapping (wave 120; REL-20261012-1945-xvector-2 P5). File-backed
+   and anonymous mappings, unmap, msync (transport flags: 1 = async,
+   anything else = sync), madvise (POSIX; documented no-op success on
+   Windows), mprotect, mlock/munlock and a raw memcpy into a mapping.
+   xiom_mmap_* return NULL on failure; the int helpers return 0 on
+   success / -1 on failure; the stdlib wrappers in xiom/os/mmap.xi
+   translate to Result. Mapping offsets must respect the platform
+   alignment (page size on POSIX, 64 KiB allocation granularity on
+   Windows); the stdlib wrappers document offset 0 as the safe default.
+   ================================================================ */
+
+#ifdef _WIN32
+
+void* xiom_mmap_file(int fd, long offset, long length, int writable) {
+    if (length <= 0 || offset < 0) return NULL;
+    HANDLE h = (HANDLE)_get_osfhandle(fd);
+    if (h == INVALID_HANDLE_VALUE) return NULL;
+    HANDLE hm = CreateFileMappingA(h, NULL,
+                                   writable ? PAGE_READWRITE : PAGE_READONLY,
+                                   0, 0, NULL);
+    if (!hm) return NULL;
+    void* p = MapViewOfFile(hm, writable ? FILE_MAP_WRITE : FILE_MAP_READ,
+                            (DWORD)((unsigned long long)offset >> 32),
+                            (DWORD)((unsigned long long)offset & 0xFFFFFFFFu),
+                            (SIZE_T)length);
+    CloseHandle(hm); /* the view holds its own reference to the mapping */
+    return p;
+}
+
+void* xiom_mmap_anon(long length) {
+    if (length <= 0) return NULL;
+    HANDLE hm = CreateFileMappingA(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE,
+                                   (DWORD)((unsigned long long)length >> 32),
+                                   (DWORD)((unsigned long long)length & 0xFFFFFFFFu),
+                                   NULL);
+    if (!hm) return NULL;
+    void* p = MapViewOfFile(hm, FILE_MAP_READ | FILE_MAP_WRITE, 0, 0,
+                            (SIZE_T)length);
+    CloseHandle(hm);
+    return p;
+}
+
+int xiom_munmap(void* ptr, long length) {
+    (void)length;
+    if (!ptr) return -1;
+    return UnmapViewOfFile(ptr) ? 0 : -1;
+}
+
+int xiom_msync(void* ptr, long length, int flags) {
+    (void)flags; /* Windows has no async flush; FlushViewOfFile is sync */
+    if (!ptr) return -1;
+    return FlushViewOfFile(ptr, (SIZE_T)length) ? 0 : -1;
+}
+
+int xiom_madvise(void* ptr, long length, int advice) {
+    (void)length;
+    (void)advice;
+    if (!ptr) return -1;
+    return 0; /* documented no-op: Windows has no madvise equivalent */
+}
+
+int xiom_mprotect(void* ptr, long length, int prot) {
+    if (!ptr) return -1;
+    DWORD np = PAGE_NOACCESS;
+    if (prot & 4) np = (prot & 2) ? PAGE_EXECUTE_READWRITE : PAGE_EXECUTE_READ;
+    else if (prot & 2) np = PAGE_READWRITE;
+    else if (prot & 1) np = PAGE_READONLY;
+    DWORD old = 0;
+    return VirtualProtect(ptr, (SIZE_T)length, np, &old) ? 0 : -1;
+}
+
+int xiom_mlock(void* ptr, long length) {
+    if (!ptr) return -1;
+    return VirtualLock(ptr, (SIZE_T)length) ? 0 : -1;
+}
+
+int xiom_munlock(void* ptr, long length) {
+    if (!ptr) return -1;
+    return VirtualUnlock(ptr, (SIZE_T)length) ? 0 : -1;
+}
+
+long xiom_mem_write(void* ptr, const char* buf, long count) {
+    if (!ptr || count < 0 || (!buf && count > 0)) return -1;
+    if (count > 0) memcpy(ptr, buf, (size_t)count);
+    return count;
+}
+
+int xiom_open_rw(const char* path) {
+    return _open(path, _O_RDWR | _O_CREAT | _O_BINARY, _S_IREAD | _S_IWRITE);
+}
+
+#else /* POSIX */
+
+#include <sys/mman.h>
+
+void* xiom_mmap_file(int fd, long offset, long length, int writable) {
+    if (length <= 0 || offset < 0) return NULL;
+    int prot = writable ? (PROT_READ | PROT_WRITE) : PROT_READ;
+    void* p = mmap(NULL, (size_t)length, prot, MAP_SHARED, fd, (off_t)offset);
+    return (p == MAP_FAILED) ? NULL : p;
+}
+
+void* xiom_mmap_anon(long length) {
+    if (length <= 0) return NULL;
+#if defined(__APPLE__)
+    int flags = MAP_PRIVATE | MAP_ANON;
+#else
+    int flags = MAP_PRIVATE | MAP_ANONYMOUS;
+#endif
+    void* p = mmap(NULL, (size_t)length, PROT_READ | PROT_WRITE, flags, -1, 0);
+    return (p == MAP_FAILED) ? NULL : p;
+}
+
+int xiom_munmap(void* ptr, long length) {
+    if (!ptr) return -1;
+    return munmap(ptr, (size_t)length);
+}
+
+int xiom_msync(void* ptr, long length, int flags) {
+    if (!ptr) return -1;
+    /* MS_ASYNC/MS_SYNC constants differ across POSIX platforms (macOS), so
+       transport our own values: 1 = async, anything else = sync. */
+    return msync(ptr, (size_t)length, (flags == 1) ? MS_ASYNC : MS_SYNC);
+}
+
+int xiom_madvise(void* ptr, long length, int advice) {
+    if (!ptr || length <= 0) return -1;
+    return madvise(ptr, (size_t)length, advice);
+}
+
+int xiom_mprotect(void* ptr, long length, int prot) {
+    if (!ptr) return -1;
+    return mprotect(ptr, (size_t)length, prot);
+}
+
+int xiom_mlock(void* ptr, long length) {
+    if (!ptr) return -1;
+    return mlock(ptr, (size_t)length);
+}
+
+int xiom_munlock(void* ptr, long length) {
+    if (!ptr) return -1;
+    return munlock(ptr, (size_t)length);
+}
+
+long xiom_mem_write(void* ptr, const char* buf, long count) {
+    if (!ptr || count < 0 || (!buf && count > 0)) return -1;
+    if (count > 0) memcpy(ptr, buf, (size_t)count);
+    return count;
+}
+
+int xiom_open_rw(const char* path) {
+    return open(path, O_RDWR | O_CREAT, 0666);
+}
+
+#endif
+
+/* ================================================================
    Threading Support (pthreads / Win32)
    ================================================================ */
 

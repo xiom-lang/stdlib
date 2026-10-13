@@ -9,12 +9,18 @@ module xiom.os.fs_ffi
 // ============================================================================
 // Advanced file-system operations that go beyond os.xi / io.xi: symlinks,
 // mmap, dup, positional and vectored I/O, sendfile/splice, fsync family,
-// memory advice and FIFOs. chmod delegates to xiom.io (set_permissions); the
-// remaining operations need raw syscalls the pure stdlib does not expose --
-// they are documented stubs returning Err (or documented defaults).
+// memory advice and FIFOs. Wave 120 makes the mmap family real (mmap /
+// munmap / msync / madvise / mlock / munlock; REL-20261012-1945-xvector-2)
+// by delegating to xiom.os.mmap; chmod delegates to xiom.io
+// (set_permissions); the remaining operations (symlinks, dup, pread/pwrite,
+// readv/writev, sendfile/splice, mkfifo, fallocate) still need raw syscalls
+// the pure stdlib does not expose -- they are documented stubs returning
+// Err (or documented defaults) as of wave 120.
 // ============================================================================
 
 use xiom.io;
+use xiom.os.mmap as mmap_ffi; // alias: the local fn mmap shadows the module leaf
+use xiom.os.sync_io;
 
 /// struct MappedFile { ptr: Int; length: Int; fd: Int; } - mmap result.
 pub type MappedFile = {
@@ -79,53 +85,87 @@ pub fn chmod_path(path: Str, mode: Int) -> Result[Unit, Str] {
   }
 }
 
-/// Memory-map a file.
-/// NOT IMPLEMENTED: requires the mmap syscall.
-/// Returns: Err("mmap: mmap syscall not available in the pure stdlib").
-pub fn mmap(path: Str, offset: Int, length: Int) -> Result[MappedFile, Str] {
-  let _ = path;
-  let _ = offset;
-  let _ = length;
-  Err("mmap: mmap syscall not available in the pure stdlib")
+/// Memory-map a file read-only; the returned struct owns an open fd until
+/// munmap. Real implementation (wave 120): opens the path (O_RDONLY), maps
+/// it through the runtime mmap family (xiom.os.mmap) and keeps the fd.
+/// Returns: Ok(MappedFile) on success; Err on bad arguments or failure.
+pub fn mmap(path: Str, offset: Int, length: Int) -> Result[MappedFile, Str]
+  requires: path.len() > 0
+  // Payload-free Ok-side clause: struct payload reads in catalog ensures
+  // clauses false-fire on v0.64.4 (catalog payload-read family in
+  // tools/known_failures/README.md); re-add `result.ptr > 0` when the
+  // compiler fixes it.
+  ensures: result is Ok => length > 0
+{
+  if offset < 0 || length <= 0 {
+    return Err("mmap: bad offset or length");
+  }
+  let h = sync_io.open_read(path);
+  match h {
+    Ok(f) => {
+      let p = mmap_ffi.mmap_file(f, offset, length);
+      match p {
+        Ok(ptr) => {
+          return Ok(MappedFile{ ptr: ptr, length: length, fd: f });
+        },
+        Err(e) => {
+          let _ = sync_io.close_fd(f);
+          return Err("mmap: " + e);
+        },
+      }
+    },
+    Err(_) => {
+      return Err("mmap: open failed: " + path);
+    },
+  };
+  return Err("mmap: unreachable");
 }
 
-/// Unmap a mapped region.
-/// NO-OP: no mappings exist in the pure stdlib.
+/// Unmap a mapped region and close the fd held by the struct.
+/// Real implementation (wave 120): munmap/UnmapViewOfFile + close; both
+/// steps are best-effort because the signature returns no Result.
 pub fn munmap(m: MappedFile) {
-  let _ = m;
+  let _ = mmap_ffi.mmap_unmap(m.ptr, m.length);
+  let _ = sync_io.close_fd(m.fd);
 }
 
-/// Flush mapped pages.
-/// NOT IMPLEMENTED: requires the msync syscall.
-/// Returns: Err("msync: msync syscall not available in the pure stdlib").
-pub fn msync(m: MappedFile) -> Result[Unit, Str] {
-  let _ = m;
-  Err("msync: msync syscall not available in the pure stdlib")
+/// Flush mapped pages back to the backing file (sync semantics).
+/// Real implementation (wave 120): delegates to mmap_sync with flags 4
+/// (MS_SYNC-equivalent; msync/flush).
+/// Returns: Ok(()) once flushed; Err on failure.
+pub fn msync(m: MappedFile) -> Result[Unit, Str]
+  ensures: result is Ok => m.ptr > 0
+{
+  return mmap_ffi.mmap_sync(m.ptr, m.length, 4);
 }
 
 /// Advise the kernel on page use.
-/// NOT IMPLEMENTED: requires the madvise syscall.
-/// Returns: Err("madvise: madvise syscall not available in the pure stdlib").
-pub fn madvise(m: MappedFile, advice: Int) -> Result[Unit, Str] {
-  let _ = m;
-  let _ = advice;
-  Err("madvise: madvise syscall not available in the pure stdlib")
+/// Real implementation (wave 120): madvise on POSIX (platform MADV_*
+/// values; 0 = MADV_NORMAL is portable); a documented no-op success on
+/// Windows.
+/// Returns: Ok(()) once the advice was accepted; Err on failure.
+pub fn madvise(m: MappedFile, advice: Int) -> Result[Unit, Str]
+  ensures: result is Ok => m.ptr > 0
+{
+  return mmap_ffi.mmap_advise(m.ptr, m.length, advice);
 }
 
-/// Lock pages in memory.
-/// NOT IMPLEMENTED: requires the mlock syscall.
-/// Returns: Err("mlock: mlock syscall not available in the pure stdlib").
-pub fn mlock(m: MappedFile) -> Result[Unit, Str] {
-  let _ = m;
-  Err("mlock: mlock syscall not available in the pure stdlib")
+/// Lock mapped pages in memory (mlock / VirtualLock).
+/// Real implementation (wave 120): delegates to mmap_lock.
+/// Returns: Ok(()) once the pages are resident; Err on failure.
+pub fn mlock(m: MappedFile) -> Result[Unit, Str]
+  ensures: result is Ok => m.ptr > 0
+{
+  return mmap_ffi.mmap_lock(m.ptr, m.length);
 }
 
-/// Unlock pages.
-/// NOT IMPLEMENTED: requires the munlock syscall.
-/// Returns: Err("munlock: munlock syscall not available in the pure stdlib").
-pub fn munlock(m: MappedFile) -> Result[Unit, Str] {
-  let _ = m;
-  Err("munlock: munlock syscall not available in the pure stdlib")
+/// Unlock mapped pages (munlock / VirtualUnlock).
+/// Real implementation (wave 120): delegates to mmap_unlock.
+/// Returns: Ok(()) once the pages are unlocked; Err on failure.
+pub fn munlock(m: MappedFile) -> Result[Unit, Str]
+  ensures: result is Ok => m.ptr > 0
+{
+  return mmap_ffi.mmap_unlock(m.ptr, m.length);
 }
 
 /// Duplicate a file descriptor.
