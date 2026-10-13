@@ -150,3 +150,7 @@ Wave-117 update 2026-10-12: `xiom_remove_dir` and `xiom_ftruncate_fd`
 (directory removal and fd truncation for the P5 durability pairs) are
 declared by `io`/`sync_io` in the same commit -- the re-run counts should
 move by a further +2 definitions / +2 declarations. No deletions.
+
+Wave-118 update 2026-10-13: `xiom_flock_fd` and `xiom_funlock_fd`
+(advisory locking for the P4 row) are declared by `sync_io` in the same
+commit -- a further +2 definitions / +2 declarations. No deletions.

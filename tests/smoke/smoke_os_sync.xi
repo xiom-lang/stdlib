@@ -230,23 +230,43 @@ fn main() -> Int {
       return 21;
     }
   }
+  // --- sync_io: real advisory locking (wave 118) ---
   {
-    let r = sync_io.file_lock(0);
-    if r.is_ok {
-      io.println("sync-lock");
-      return 22;
-    }
-  }
-  {
-    let r = sync_io.file_unlock(0);
-    if r.is_ok {
-      io.println("sync-unlock");
-      return 23;
-    }
-  }
-  if sync_io.file_try_lock(0) {
-    io.println("sync-trylock");
-    return 24;
+    let fh = sync_io.open_append("os_sync_lock.dat");
+    match fh {
+      Ok(lfd) => {
+        let t0 = sync_io.file_try_lock(lfd);
+        if !t0 {
+          io.println("sync-trylock");
+          return 24;
+        }
+        let u0 = sync_io.file_unlock(lfd);
+        if u0.is_err {
+          io.println("sync-unlock");
+          return 23;
+        };
+        let lk = sync_io.file_lock(lfd);
+        if lk.is_err {
+          io.println("sync-lock");
+          return 22;
+        };
+        let ul = sync_io.file_unlock(lfd);
+        if ul.is_err {
+          io.println("sync-unlock");
+          return 23;
+        };
+        let cl = sync_io.close_fd(lfd);
+        if cl.is_err {
+          io.println("sync-lock-close");
+          return 25;
+        };
+      },
+      Err(_) => {
+        io.println("sync-lock-open");
+        return 26;
+      },
+    };
+    let _ = io.remove_file("os_sync_lock.dat");
   }
 
   io.println("OK");

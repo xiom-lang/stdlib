@@ -4834,6 +4834,26 @@ int xiom_ftruncate_fd(int fd, long size) {
     return (int)_chsize_s(fd, (long long)size);
 }
 
+int xiom_flock_fd(int fd, int blocking) {
+    HANDLE h = (HANDLE)_get_osfhandle(fd);
+    if (h == INVALID_HANDLE_VALUE) return -1;
+    OVERLAPPED ov;
+    memset(&ov, 0, sizeof(ov));
+    DWORD flags = LOCKFILE_EXCLUSIVE_LOCK;
+    if (!blocking) flags |= LOCKFILE_FAIL_IMMEDIATELY;
+    if (!LockFileEx(h, flags, 0, 0xFFFFFFFFu, 0xFFFFFFFFu, &ov)) return -1;
+    return 0;
+}
+
+int xiom_funlock_fd(int fd) {
+    HANDLE h = (HANDLE)_get_osfhandle(fd);
+    if (h == INVALID_HANDLE_VALUE) return -1;
+    OVERLAPPED ov;
+    memset(&ov, 0, sizeof(ov));
+    if (!UnlockFileEx(h, 0, 0xFFFFFFFFu, 0xFFFFFFFFu, &ov)) return -1;
+    return 0;
+}
+
 char* xiom_read_at(const char* path, long offset, long count) {
     int fd = _open(path, _O_RDONLY | _O_BINARY);
     if (fd < 0) return NULL;
@@ -4946,6 +4966,26 @@ int xiom_remove_dir(const char* path) {
 
 int xiom_ftruncate_fd(int fd, long size) {
     return ftruncate(fd, (off_t)size);
+}
+
+int xiom_flock_fd(int fd, int blocking) {
+    struct flock fl;
+    memset(&fl, 0, sizeof(fl));
+    fl.l_type = F_WRLCK;
+    fl.l_whence = SEEK_SET;
+    fl.l_start = 0;
+    fl.l_len = 0; /* whole file */
+    return fcntl(fd, blocking ? F_SETLKW : F_SETLK, &fl);
+}
+
+int xiom_funlock_fd(int fd) {
+    struct flock fl;
+    memset(&fl, 0, sizeof(fl));
+    fl.l_type = F_UNLCK;
+    fl.l_whence = SEEK_SET;
+    fl.l_start = 0;
+    fl.l_len = 0;
+    return fcntl(fd, F_SETLK, &fl);
 }
 
 char* xiom_read_at(const char* path, long offset, long count) {

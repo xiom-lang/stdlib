@@ -24,6 +24,8 @@ extern "C" {
   fn xiom_fsync_fd(fd: Int) -> Int32;
   fn xiom_fsync_dir(path: *UInt8) -> Int32;
   fn xiom_ftruncate_fd(fd: Int32, size: Int) -> Int32;
+  fn xiom_flock_fd(fd: Int32, blocking: Int32) -> Int32;
+  fn xiom_funlock_fd(fd: Int32) -> Int32;
 }
 
 /// Fill buf completely from fd or fail on early EOF.
@@ -248,25 +250,48 @@ pub fn file_allocate(fd: Int, offset: Int, length: Int) -> Result[Unit, Str] {
   Err("file_allocate: posix_fallocate not available in the pure stdlib")
 }
 
-/// Take an exclusive advisory lock, blocking.
-/// NOT IMPLEMENTED: requires fcntl(F_SETLKW).
-/// Returns: Err("file_lock: fcntl locking not available in the pure stdlib").
-pub fn file_lock(fd: Int) -> Result[Unit, Str] {
-  let _ = fd;
-  Err("file_lock: fcntl locking not available in the pure stdlib")
+/// Take an exclusive advisory lock on fd, blocking until it is held.
+/// Real implementation (wave 118): fcntl(F_SETLKW) whole-file on POSIX,
+/// LockFileEx (full range) on Windows.
+/// Returns: Ok(()) once the lock is held; Err on failure.
+pub fn file_lock(fd: Int) -> Result[Unit, Str]
+  requires: fd >= 0
+{
+  let rc: Int32;
+  unsafe {
+    rc = xiom_flock_fd(fd as Int32, 1);
+  }
+  if rc != 0 {
+    return Err("file_lock: lock failed");
+  }
+  Ok(())
 }
 
-/// Release an advisory lock.
-/// NOT IMPLEMENTED: requires fcntl(F_SETLK).
-/// Returns: Err("file_unlock: fcntl locking not available in the pure stdlib").
-pub fn file_unlock(fd: Int) -> Result[Unit, Str] {
-  let _ = fd;
-  Err("file_unlock: fcntl locking not available in the pure stdlib")
+/// Release the advisory lock held on fd (fcntl F_UNLCK / UnlockFileEx).
+/// Returns: Ok(()) once released; Err on failure.
+pub fn file_unlock(fd: Int) -> Result[Unit, Str]
+  requires: fd >= 0
+{
+  let rc: Int32;
+  unsafe {
+    rc = xiom_funlock_fd(fd as Int32);
+  }
+  if rc != 0 {
+    return Err("file_unlock: unlock failed");
+  }
+  Ok(())
 }
 
-/// Attempt a non-blocking exclusive lock.
-/// NOT IMPLEMENTED: requires fcntl(F_SETLK). Returns false.
-pub fn file_try_lock(fd: Int) -> Bool {
-  let _ = fd;
-  false
+/// Attempt a non-blocking exclusive advisory lock; true when the lock is
+/// now held by this handle, false when it is held elsewhere (or the
+/// attempt failed). Real implementation (wave 118): F_SETLK /
+/// LockFileEx + LOCKFILE_FAIL_IMMEDIATELY.
+pub fn file_try_lock(fd: Int) -> Bool
+  requires: fd >= 0
+{
+  let rc: Int32;
+  unsafe {
+    rc = xiom_flock_fd(fd as Int32, 0);
+  }
+  return rc == 0;
 }

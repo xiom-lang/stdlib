@@ -1741,8 +1741,24 @@ T1/T2 yields.
         pubCovered 4580 -> 4585, global 70.3% (clauses 6128), floors151
         wired; battery on v0.64.4-rel: corpus 954/954, probes 294/294,
         modules 509/509, barename 0/509, ratchets OK.
+        Wave 118 (2026-10-13): P4 advisory locking -- runtime
+        xiom_flock_fd (POSIX fcntl F_SETLKW/F_SETLK whole-file; Windows
+        LockFileEx full range, LOCKFILE_FAIL_IMMEDIATELY for the try) +
+        xiom_funlock_fd; sync_io file_lock/file_unlock/file_try_lock real
+        (stubs retired). Windows LockFileEx blocking on a range already
+        held by the same handle hangs -- lock sequences are try ->
+        unlock -> blocking lock -> unlock (never re-lock a held range);
+        run_smokes.ps1 has no per-file timeout, so hung files must be
+        guarded at the caller. Probe p_wave118_shapes.xi (295th) red pre
+        / green post; smoke_os_sync remerged to the real semantics,
+        smoke_os* 8/8; coverage pubCovered 4585 -> 4588 (clauses 6131,
+        global 70.4%), floors152 wired; battery on v0.64.4-rel: corpus
+        954/954, probes 295/295, modules 509/509, barename 0/509,
+        ratchets OK. DEFERRED: the f32 bitcast pair (xvector-6) is
+        compiler-blocked (the f64 pair is a compiler-intrinsic lowering;
+        Float32 narrowing rides the compiler's next batch).
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors151.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors152.json
         tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;

@@ -127,19 +127,19 @@ comparing, green on the CURRENT battery pin (v0.64.4 after the bump).
 deliberate semantic change lands, remerge old locks that assert the old
 behavior. (4) dump `tools/coverage_floors150.json`, wire workflows +
 tools/README + plan/session/queue in one commit, YAML check, pure-ASCII
-commit. (5) battery: corpus 954/954, probes expect 294
-(291 + the wave-116/-117 shapes probes + the promoted polygon repro),
-modules 509/509, barename 0/509, floors151 + module-smoke ratchets; push `main` with the one-shot Lefteris-Notas credential (403
+commit. (5) battery: corpus 954/954, probes expect 295
+(291 + the wave-116/-118 shapes probes + the promoted polygon repro),
+modules 509/509, barename 0/509, floors152 + module-smoke ratchets; push `main` with the one-shot Lefteris-Notas credential (403
 as Lefteris-Ngonart; GitHub 500s per failed_attempts.md). (6) no
 unbounded scratch benchmarks. (7) release side follows the candidate-tag
 pin protocol; do NOT tag/publish without the compiler-lane OK.
 
 HANDOFF NOTE: locks include p_pin0641_iter_shapes.xi, the wave-77 stats
-probe, the PULSE hardening probe, the wave-78..117 coverage probes
-(wave 111 added p_json_parse_scale.xi; 112-117 added their probes), the
+probe, the PULSE hardening probe, the wave-78..118 coverage probes
+(wave 111 added p_json_parse_scale.xi; 112-118 added their probes), the
 io locks, the promoted regression locks, and the new witness locks
-(p_witness_1052_rev.xi, p_wave106_shapes.xi) -- **294 probes now (tuple
-lock + the wave-114/-117 shapes probes + the promoted polygon repro)**.
+(p_witness_1052_rev.xi, p_wave106_shapes.xi) -- **295 probes now (tuple
+lock + the wave-114/-118 shapes probes + the promoted polygon repro)**.
 Open repros: the 15 Current findings, all compiler (the stdlib polygon
 entry was resolved in wave 116; see tools/known_failures/README.md; the
 v0.64.4 verdict table is in
@@ -2631,6 +2631,39 @@ registry pin, agent recon for the rest)**
   probes 281/281 (299.4s), modules 509/509 (203.3s), barename 0/509
   (216.6s), floors144 + doc + module-smoke (497/517, 3476/6204)
   ratchets OK.
+
+**SESSION 2026-10-13 block 135 (doorbell 01:00Z: no new asks; wave 118 -- P4 advisory locking real; probes 295; floors152)**
+- BUS ROUND: no new stdlib asks (the non-terminal set is unchanged; the
+  to-all relays stay settled). Consumer status: orbitdb-3..6 and
+  pulse-5/-6 closed; xvector-2..4 stay fixed (verify pending).
+- WAVE 118 (P4 advisory locking): runtime xiom_flock_fd (POSIX fcntl
+  F_SETLKW/F_SETLK whole-file; Windows LockFileEx full range with
+  LOCKFILE_FAIL_IMMEDIATELY for the try) + xiom_funlock_fd; sync_io
+  file_lock/file_unlock/file_try_lock real (stubs retired). Serves
+  packages-6 and the orbitdb bundle's P4 row.
+- DEBUG LORE: Windows LockFileEx BLOCKING on a range already held by the
+  same handle HANGS (the first probe run hung 10+ minutes and had to be
+  killed; the process was p_wave118_shapes.exe, not xiom.exe); the safe
+  sequence is try -> unlock -> blocking lock -> unlock, never re-lock a
+  held range. Also: run_smokes.ps1 has NO per-file timeout -- hung files
+  must be guarded by the caller (direct compile + a managed process
+  timeout was used to bisect).
+- LOCKS: probe p_wave118_shapes.xi (295th) red pre / green post
+  (try/unlock/blocking/unlock cycle on an append-fd fixture; cross-fd
+  and cross-process contention semantics are documented OS advisory
+  behavior, not asserted). smoke_os_sync remerged to the real lock
+  semantics (the old stub asserts retired); smoke_os* 8/8.
+- COVERAGE: pubCovered 4585 -> 4588 (clauses 6131; global 70.4%);
+  floors152 dumped + wired (ci/heavy/release + tools/README + plan).
+  Battery on v0.64.4-rel: corpus 954/954, probes 295/295, modules
+  509/509, barename 0/509, ratchets OK.
+- DEFERRED with the bus note: xvector-6 (f32 bitcast pair) is
+  compiler-blocked -- the f64 pair is a compiler-intrinsic lowering
+  (float_bits since m194) and Float32 narrowing rides the compiler's
+  next batch; re-check at the next candidate (release-cycle directive).
+- BUS (after the push): packages-6 moves acked -> fixed (P4); the
+  orbitdb consolidated item gets the P4 progress note; xvector-6 gets
+  the deferral note.
 
 **SESSION 2026-10-12 block 134 (doorbell 23:00Z: consumer closures; wave 117 -- durability P5 pairs; probes 294; floors151)**
 - BUS ROUND: no new stdlib asks. Consumer verifications landed for wave

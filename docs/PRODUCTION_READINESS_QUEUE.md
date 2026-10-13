@@ -247,7 +247,16 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
     v0.64.4-rel: corpus 954/954, probes 294/294, modules 509/509,
     barename 0/509, ratchets OK. Orbitdb closed -3..-6 and pulse closed
     -5/-6 verified on the lane runtime (XIOM_RUNTIME_DIR, Win+WSL); the
-    wave-117 landed rows move acked -> fixed next.
+    wave-117 landed rows move acked -> fixed next. WAVE 118 (block 135):
+    P4 advisory locking real -- runtime xiom_flock_fd (POSIX
+    fcntl F_SETLKW/F_SETLK; Windows LockFileEx) + xiom_funlock_fd;
+    sync_io file_lock/file_unlock/file_try_lock live; probe
+    p_wave118_shapes.xi (295th); smoke_os_sync remerged; floors152 wired
+    (pubCovered 4588, clauses 6131, global 70.4%); battery on v0.64.4-rel
+    corpus 954/954, probes 295/295, modules 509/509, barename 0/509.
+    Platform lore: Windows LockFileEx blocking-reacquire hangs -- never
+    re-lock a held range. Deferred: xvector-6 f32 bitcast (compiler
+    Float32 batch).
 BINARY NOTE: the shared local build path
 `E:\xiom-lang\xiom\target\release\xiom.exe` was rebuilt past the pin
 (compiler main da7798da m252) and fails four corpus smokes; waves now run
