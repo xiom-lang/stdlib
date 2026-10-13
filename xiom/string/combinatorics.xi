@@ -52,6 +52,19 @@ fn _slice_fast(base: *UInt8, start: Int, end: Int) -> Str
   Str::from_utf8(out)
 }
 
+// Appends the bytes of `w` onto `out` (the Vec[UInt8] builder idiom).
+// Wave 130: several enumeration joins concatenated per item (~n^2/2 bytes
+// for large inputs; strings leak by design).
+// Complexity: O(|w|).
+fn _push_str(out: &mut Vec[UInt8], w: Str) {
+  var k: Int = 0;
+  let wl = string.str_len(w);
+  while k < wl {
+    out.push(_byte(w, k) as UInt8);
+    k = k + 1;
+  };
+}
+
 // True when byte `b` is a UTF-8 continuation byte (0b10xxxxxx).
 // Complexity: O(1).
 fn _is_cont(b: Int) -> Bool {
@@ -438,18 +451,18 @@ pub fn str_rotate_word(s: Str, n: Int) -> Str {
   if k < 0 {
     k = k + wc;
   };
-  var result = "";
+  var out: Vec[UInt8] = Vec[UInt8].new();
   var i: Int = 0;
   while i < wc {
     let src = (i + wc - k) % wc;
     let w = words[src];
     if i > 0 {
-      result = string.str_concat(result, " ");
+      out.push(32);
     };
-    result = string.str_concat(result, w);
+    _push_str(&mut out, w);
     i = i + 1;
   };
-  result
+  Str::from_utf8(out)
 }
 
 // -- Permutations and combinations -------------------------------------------
@@ -605,22 +618,22 @@ pub fn str_interleave(a: Str, b: Str) -> Str
 {
   let ac = _split_chars(a);
   let bc = _split_chars(b);
-  var result = "";
+  var out: Vec[UInt8] = Vec[UInt8].new();
   var i: Int = 0;
   while i < ac.len() && i < bc.len() {
-    result = string.str_concat(result, ac[i]);
-    result = string.str_concat(result, bc[i]);
+    _push_str(&mut out, ac[i]);
+    _push_str(&mut out, bc[i]);
     i = i + 1;
   };
   while i < ac.len() {
-    result = string.str_concat(result, ac[i]);
+    _push_str(&mut out, ac[i]);
     i = i + 1;
   };
   while i < bc.len() {
-    result = string.str_concat(result, bc[i]);
+    _push_str(&mut out, bc[i]);
     i = i + 1;
   };
-  result
+  Str::from_utf8(out)
 }
 
 /// Split `s` into consecutive chunks of `n` bytes; the final chunk may be
@@ -725,24 +738,25 @@ pub fn str_chunk_bytes(s: Str, n: Int) -> Vec[Str]
   if n < 1 || chars.len() == 0 {
     return result;
   };
-  var cur = "";
+  var cur: Vec[UInt8] = Vec[UInt8].new();
   var cur_bytes: Int = 0;
   var i: Int = 0;
   while i < chars.len() {
     let c = chars[i];
     let bl = string.str_len(c);
     if cur_bytes > 0 && cur_bytes + bl > n {
-      result.push(cur);
-      cur = c;
+      result.push(Str::from_utf8(cur));
+      cur = Vec[UInt8].new();
+      _push_str(&mut cur, c);
       cur_bytes = bl;
     } else {
-      cur = string.str_concat(cur, c);
+      _push_str(&mut cur, c);
       cur_bytes = cur_bytes + bl;
     };
     i = i + 1;
   };
   if cur_bytes > 0 {
-    result.push(cur);
+    result.push(Str::from_utf8(cur));
   };
   result
 }
@@ -801,9 +815,9 @@ pub fn str_reverse_words(s: Str) -> Str
 pub fn str_unique_chars(s: Str) -> Str
   ensures: result.len() <= s.len()
 {
-  var result = "";
   var seen = Vec[Int].new();
   let chars = _split_chars(s);
+  var out: Vec[UInt8] = Vec[UInt8].new();
   var i: Int = 0;
   while i < chars.len() {
     let c = chars[i];
@@ -818,11 +832,11 @@ pub fn str_unique_chars(s: Str) -> Str
     };
     if !found {
       seen.push(b);
-      result = string.str_concat(result, c);
+      _push_str(&mut out, c);
     };
     i = i + 1;
   };
-  result
+  Str::from_utf8(out)
 }
 
 /// Each distinct character of `s` and its occurrence count, in first-seen

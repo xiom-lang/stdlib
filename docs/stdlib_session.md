@@ -3044,6 +3044,38 @@ registry pin, agent recon for the rest)**
   exist (mine + the actor's; wave 126 used 152b) and both stand as-is;
   the next writer continues from 156/157.
 
+**SESSION 2026-10-13 block 157 (wave 130: the builder pass -- the last concat-per-item leak-class builders in the string dir; probes 307; floors164)**
+- WAVE 130 (classic wave; closes the wave-125..130 string arc): the
+  remaining concat-per-item builders converted to single-Vec builders
+  with cached raw reads: wrap (str_wrap / str_wrap_soft / str_wrap_hard
+  + _slice_fast / str_wrap_join), combine (str_combinations /
+  str_combination_at), align (str_align_justify), permute
+  (str_permutation_at), template (_render / template_escape /
+  template_unescape), combinatorics (str_rotate_word / str_interleave /
+  str_chunk_bytes / str_unique_chars). Byte-exact outputs (the wrap
+  builders keep the exact overflow / long-word semantics; the render
+  builder keeps every error string).
+- Announcement per the 1545 protocol (REL-20261013-1903-stdlib, relays
+  7daa815); capped measurement (1.5 GB + 240 s watchdog):
+  out/dbg130r.xi, 17 ops on 512 KB, rc=0, 14.9 s, peak 4.9 MB.
+- Probe p_wave130_shapes.xi (307th): 26 rows (wrap variants incl. the
+  long-word split, combinations + ranked combination, justify, ranked
+  permutation, template escape/unescape/render via Map, rotate_word,
+  interleave, chunk_bytes, unique_chars); string/template/align/wrap/
+  combine smokes 113/113.
+- Coverage: fns 8776 (+8), pubFns 6540, clauses 6234 (+4), pubCovered
+  4625; floors164 dumped + wired. Battery on v0.64.4-rel (final tree):
+  corpus 955/955 (507.4s), probes 307/307 (197.5s), modules 510/510
+  (176.4s), barename 0/510 (248.3s), coverage ratchet vs floors163 +
+  module-smoke (499/518, 3500/6239) + doc ratchets OK.
+- Bus: 19:00Z doorbell quiet (only the compiler-owned 1630/1658 remain
+  open, standing leave). 1545 acked; 1423/1445 unchanged.
+- Next: the thread wave (1423 hoist + pool/spawn flip); then
+  playground-4 / website-2 / engine-6 as queued. The wave-125..130 arc
+  removed the whole observed strnlen / concat-per-item class from the
+  string dir; str_slice's own per-call str_len remains only for
+  one-shot callers (documented; no hot per-item callers left).
+
 **SESSION 2026-10-13 block 156 (wave 129: the str_slice fast path -- hot per-part/per-char call sites + the combinatorics catch-up + builder; probes 306; floors163)**
 - WAVE 129 (classic wave; the core follow-up to batches 3/4): str_slice
   KEEPS its exact semantics (its `let len = s.len()` clamp is unchanged

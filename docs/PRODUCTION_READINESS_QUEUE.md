@@ -7,7 +7,7 @@ windows-x64 release archive.)
 **Gates: corpus 955/955 full (C001 carve-outs retired on v0.63.1; new
 TcpStream loopback and uuencode roundtrip smokes added; smoke_os_watch
 added in wave 124), modules 510/510,
-probes 306/306, barename 0/510.**
+probes 307/307, barename 0/510.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -26,7 +26,7 @@ gates flip:
    wave-98..110 probes), the io byte-fidelity/CRLF lock and the
    fs_remove lock).
 4. Strict bare-name scan clean -- MET (0/509).
-5. Coverage ratchet green -- MET (floors163).
+5. Coverage ratchet green -- MET (floors164).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (499/518 modules, 3500/6239 fns).
 8. Contract coverage 100% (every public fn carries clauses) -- OPEN (70.7%).
@@ -514,6 +514,26 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
      combinatorics combination/interleaving joins, normalize tails) +
      str_slice's own per-call str_len for one-shot callers; then the
      thread wave (1423 hoist) / queued options.
+     WAVE 130 (block 157): the builder pass -- the last concat-per-item
+     leak-class builders in the string dir converted to single-Vec
+     builders with cached raw reads: wrap (str_wrap / str_wrap_soft /
+     str_wrap_hard + _slice_fast / str_wrap_join), combine
+     (str_combinations / str_combination_at), align (str_align_justify),
+     permute (str_permutation_at), template (_render / template_escape /
+     template_unescape), combinatorics (str_rotate_word / str_interleave
+     / str_chunk_bytes / str_unique_chars). Announcement per the 1545
+     protocol (REL-20261013-1903-stdlib); capped measurement (1.5 GB +
+     240 s watchdog): out/dbg130r.xi, 17 ops on 512 KB, rc=0, 14.9 s,
+     peak 4.9 MB. Probe p_wave130_shapes.xi (307th): 26 rows;
+     string/template/align/wrap/combine smokes 113/113. Coverage fns
+     8776, clauses 6234 (floors164 wired); battery corpus 955/955
+     (507.4s), probes 307/307 (197.5s), modules 510/510 (176.4s),
+     barename 0/510 (248.3s) + ratchets OK. The wave-125..130 arc has
+     now removed the whole observed strnlen / concat-per-item class from
+     the string dir; str_slice's own per-call str_len remains for
+     one-shot callers only (documented).
+     NEXT: the thread wave (1423 hoist + pool/spawn flip); then
+     playground-4 / website-2 / engine-6 as queued.
 BINARY NOTE: the shared local build path
 `E:\xiom-lang\xiom\target\release\xiom.exe` was rebuilt past the pin
 (compiler main da7798da m252) and fails four corpus smokes; waves now run

@@ -14,6 +14,27 @@ module xiom.string.align
 
 use xiom.string;
 
+// Raw byte at `i` (wave 130: cached raw pointer -- string.byte_at strnlens
+// the whole string per call).
+// Complexity: O(1).
+fn _raw_byte(base: *UInt8, i: Int) -> UInt8
+  requires: true  // raw byte read; callers bound i against len (T007)
+{
+  unsafe { return *(base + i); }
+}
+
+// Appends the bytes of `w` onto `out` (the Vec[UInt8] builder idiom).
+// Complexity: O(|w|).
+fn _push_str(out: &mut Vec[UInt8], w: Str) {
+  var k: Int = 0;
+  let wl = string.str_len(w);
+  let base = w.c_str();
+  while k < wl {
+    out.push(_raw_byte(base, k));
+    k = k + 1;
+  };
+}
+
 /// Left-aligns `s` in a field of `width` bytes, padding on the right with
 /// spaces. A string already at or over the width is returned unchanged; a
 /// negative width is rejected (returns `s`).
@@ -101,7 +122,7 @@ pub fn str_align_justify(s: Str, width: Int) -> Str
   let extra = width - total_len;
   let base = extra / gaps;
   let rem = extra % gaps;
-  var result = "";
+  var out: Vec[UInt8] = Vec[UInt8].new();
   i = 0;
   while i < wcount {
     if i > 0 {
@@ -111,13 +132,13 @@ pub fn str_align_justify(s: Str, width: Int) -> Str
       };
       var g: Int = 0;
       while g < gap {
-        result = string.str_concat(result, " ");
+        out.push(32);
         g = g + 1;
       };
     };
     var wi = words[i];
-    result = string.str_concat(result, wi);
+    _push_str(&mut out, wi);
     i = i + 1;
   };
-  result
+  Str::from_utf8(out)
 }

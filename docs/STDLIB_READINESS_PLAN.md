@@ -2098,8 +2098,25 @@ T1/T2 yields.
         pass (template escape/interpolate, combinatorics
         combination/interleaving joins, normalize tails) + str_slice's
         own per-call str_len for one-shot callers.
+        Wave 130 (2026-10-13, block 157): the builder pass -- the last
+        concat-per-item leak-class builders in the string dir are
+        single-Vec builders with cached raw reads now: wrap
+        (str_wrap/soft/hard/join), combine (combinations/combination_at),
+        align (justify), permute (permutation_at), template
+        (_render/escape/unescape), combinatorics (rotate_word/interleave/
+        chunk_bytes/unique_chars). Announced per the 1545 protocol
+        (REL-20261013-1903-stdlib); capped measurement: 17 ops on 512 KB,
+        rc=0, 14.9 s, peak 4.9 MB. Probe p_wave130_shapes.xi (307th): 26
+        rows; string/template/align/wrap/combine smokes 113/113.
+        Coverage fns 8776, clauses 6234 (floors164) + module-smoke + doc
+        ratchets OK; battery on v0.64.4-rel: corpus 955/955 (507.4s),
+        probes 307/307 (197.5s), modules 510/510 (176.4s), barename
+        0/510 (248.3s). The wave-125..130 arc removed the whole observed
+        strnlen / concat-per-item class from the string dir. NEXT: the
+        thread wave (1423 hoist + pool/spawn flip); then playground-4 /
+        website-2 / engine-6 as queued.
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors163.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors164.json
         tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;

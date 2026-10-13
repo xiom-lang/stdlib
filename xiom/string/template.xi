@@ -69,6 +69,19 @@ fn _byte(s: Str, i: Int) -> Int
   }
 }
 
+// Appends the bytes of `w` onto `out` (the Vec[UInt8] builder idiom).
+// Wave 130: the render/escape builders concatenated per character, which
+// allocates ~n^2/2 bytes for large inputs (strings leak by design).
+// Complexity: O(|w|).
+fn _push_str(out: &mut Vec[UInt8], w: Str) {
+  var k: Int = 0;
+  let wl = string.str_len(w);
+  while k < wl {
+    out.push(_byte(w, k) as UInt8);
+    k = k + 1;
+  };
+}
+
 // Strict scan of `tpl`: collects the distinct placeholder names (when
 // `collect` is true) and returns the total placeholder count. A backslash
 // escapes the next character; a lone brace or an unclosed/empty/braced
@@ -207,17 +220,17 @@ fn _lookup(values: &Map, name: Str, strict: Bool, fallback: Str) -> Result[Str, 
 // `fallback`. Malformed placeholder syntax is always an Err.
 // Complexity: O(|tpl| + |map lookups| * |map|).
 fn _render(tpl: Str, values: &Map, strict: Bool, fallback: Str) -> Result[Str, Str] {
-  var result = "";
+  var out: Vec[UInt8] = Vec[UInt8].new();
   let len = string.str_len(tpl);
   var i: Int = 0;
   while i < len {
     let c = _byte(tpl, i);
     if c == 92 {
       if i + 1 < len {
-        result = string.str_concat(result, string.str_slice(tpl, i + 1, i + 2));
+        out.push(_byte(tpl, i + 1) as UInt8);
         i = i + 2;
       } else {
-        result = string.str_concat(result, string.str_slice(tpl, i, i + 1));
+        out.push(_byte(tpl, i) as UInt8);
         i = i + 1;
       };
     } elif c == 123 && i + 1 < len && _byte(tpl, i + 1) == 123 {
@@ -246,7 +259,7 @@ fn _render(tpl: Str, values: &Map, strict: Bool, fallback: Str) -> Result[Str, S
       let lr = _lookup(values, name, strict, fallback);
       match lr {
         Ok(v) => {
-          result = string.str_concat(result, v);
+          _push_str(&mut out, v);
         };
         Err(e) => {
           return Err(e);
@@ -256,11 +269,11 @@ fn _render(tpl: Str, values: &Map, strict: Bool, fallback: Str) -> Result[Str, S
     } elif c == 123 || c == 125 {
       return Err("template: unbalanced brace");
     } else {
-      result = string.str_concat(result, string.str_slice(tpl, i, i + 1));
+      out.push(c as UInt8);
       i = i + 1;
     };
   };
-  Ok(result)
+  Ok(Str::from_utf8(out))
 }
 
 /// Parse `tpl` into a compiled Template, validating placeholder syntax. The
@@ -359,20 +372,20 @@ pub fn template_render_strict(tpl: Str, values: &Map) -> Result[Str, Str] {
 /// Error case: none.
 /// Complexity: O(|s|).
 pub fn template_escape(s: Str) -> Str {
-  var result = "";
+  var out: Vec[UInt8] = Vec[UInt8].new();
   let len = string.str_len(s);
   var i: Int = 0;
   while i < len {
     let c = _byte(s, i);
     if c == 92 || c == 123 || c == 125 {
-      result = string.str_concat(result, "\\");
-      result = string.str_concat(result, string.str_slice(s, i, i + 1));
+      out.push(92);
+      out.push(c as UInt8);
     } else {
-      result = string.str_concat(result, string.str_slice(s, i, i + 1));
+      out.push(c as UInt8);
     };
     i = i + 1;
   };
-  result
+  Str::from_utf8(out)
 }
 
 /// Reverse of `template_escape`: restores "{{" and "}}" from their escaped
@@ -383,7 +396,7 @@ pub fn template_escape(s: Str) -> Str {
 /// Error case: none.
 /// Complexity: O(|s|).
 pub fn template_unescape(s: Str) -> Str {
-  var result = "";
+  var out: Vec[UInt8] = Vec[UInt8].new();
   let len = string.str_len(s);
   var i: Int = 0;
   while i < len {
@@ -391,18 +404,18 @@ pub fn template_unescape(s: Str) -> Str {
     if c == 92 && i + 1 < len {
       let n = _byte(s, i + 1);
       if n == 92 || n == 123 || n == 125 {
-        result = string.str_concat(result, string.str_slice(s, i + 1, i + 2));
+        out.push(n as UInt8);
         i = i + 2;
       } else {
-        result = string.str_concat(result, string.str_slice(s, i, i + 1));
+        out.push(c as UInt8);
         i = i + 1;
       };
     } else {
-      result = string.str_concat(result, string.str_slice(s, i, i + 1));
+      out.push(c as UInt8);
       i = i + 1;
     };
   };
-  result
+  Str::from_utf8(out)
 }
 
 /// Return true when `tpl` contains at least one well-formed "{{name}}"

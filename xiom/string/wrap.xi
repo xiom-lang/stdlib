@@ -14,6 +14,45 @@ module xiom.string.wrap
 
 use xiom.string;
 
+// Raw byte at `i` (wave 130: cached raw pointer -- string.byte_at strnlens
+// the whole string per call).
+// Complexity: O(1).
+fn _raw_byte(base: *UInt8, i: Int) -> UInt8
+  requires: true  // raw byte read; callers bound i against len (T007)
+{
+  unsafe { return *(base + i); }
+}
+
+// Appends the bytes of `w` onto `out` (the Vec[UInt8] builder idiom).
+// Complexity: O(|w|).
+fn _push_str(out: &mut Vec[UInt8], w: Str) {
+  var k: Int = 0;
+  let wl = string.str_len(w);
+  let base = w.c_str();
+  while k < wl {
+    out.push(_raw_byte(base, k));
+    k = k + 1;
+  };
+}
+
+// Slice [start, end) over a cached pointer WITHOUT the str_len clamp
+// (wave 130): str_slice rescans the source per call (strlen), so per-chunk
+// slices were O(|s|) each. Callers guarantee 0 <= start <= end <= len.
+// Complexity: O(end - start).
+fn _slice_fast(base: *UInt8, start: Int, end: Int) -> Str
+  requires: true  // raw byte copy; callers bound the range (T007)
+{
+  var out: Vec[UInt8] = Vec[UInt8].new();
+  unsafe {
+    var i: Int = start;
+    while i < end {
+      out.push(*(base + i));
+      i = i + 1;
+    };
+  };
+  Str::from_utf8(out)
+}
+
 /// Wraps `s` into lines no longer than `width` bytes (soft wrapping): words
 /// are kept whole and the width is measured in bytes; a single word longer
 /// than the width is hard-split to honour the limit. A width below 1 or an
@@ -30,15 +69,14 @@ pub fn str_wrap(s: Str, width: Int) -> Vec[Str]
     return lines;
   };
   var words = string.words(s);
-  var cur = "";
+  var cur: Vec[UInt8] = Vec[UInt8].new();
   var i: Int = 0;
   while i < words.len() {
     var w = words[i];
     var wlen = string.str_len(w);
-    let cur_len = string.str_len(cur);
-    if cur_len > 0 && cur_len + 1 + wlen > width {
-      lines.push(cur);
-      cur = "";
+    if cur.len() > 0 && cur.len() + 1 + wlen > width {
+      lines.push(Str::from_utf8(cur));
+      cur = Vec[UInt8].new();
     };
     if wlen > width {
       while wlen > width {
@@ -47,20 +85,20 @@ pub fn str_wrap(s: Str, width: Int) -> Vec[Str]
         w = string.str_slice(w, width, wlen);
         wlen = string.str_len(w);
       };
-      cur = w;
+      cur = Vec[UInt8].new();
+      _push_str(&mut cur, w);
     } else {
-      if string.str_len(cur) == 0 {
-        cur = w;
+      if cur.len() == 0 {
+        _push_str(&mut cur, w);
       } else {
-        cur = string.str_concat(cur, " ");
-        cur = string.str_concat(cur, w);
+        cur.push(32);
+        _push_str(&mut cur, w);
       };
     };
     i = i + 1;
   };
-  let cur_len2 = string.str_len(cur);
-  if cur_len2 > 0 {
-    lines.push(cur);
+  if cur.len() > 0 {
+    lines.push(Str::from_utf8(cur));
   };
   lines
 }
@@ -79,13 +117,14 @@ pub fn str_wrap_hard(s: Str, width: Int) -> Vec[Str]
     return lines;
   };
   let len = string.str_len(s);
+  let base = s.c_str();
   var i: Int = 0;
   while i < len {
     var end = i + width;
     if end > len {
       end = len;
     };
-    let chunk = string.str_slice(s, i, end);
+    let chunk = _slice_fast(base, i, end);
     lines.push(chunk);
     i = end;
   };
@@ -107,28 +146,27 @@ pub fn str_wrap_soft(s: Str, width: Int) -> Vec[Str]
     return lines;
   };
   var words = string.words(s);
-  var cur = "";
+  var cur: Vec[UInt8] = Vec[UInt8].new();
   var i: Int = 0;
   while i < words.len() {
     var w = words[i];
-    let cur_len = string.str_len(cur);
-    if cur_len == 0 {
-      cur = w;
+    if cur.len() == 0 {
+      _push_str(&mut cur, w);
     } else {
       let w_len = string.str_len(w);
-      if cur_len + 1 + w_len <= width {
-        cur = string.str_concat(cur, " ");
-        cur = string.str_concat(cur, w);
+      if cur.len() + 1 + w_len <= width {
+        cur.push(32);
+        _push_str(&mut cur, w);
       } else {
-        lines.push(cur);
-        cur = w;
+        lines.push(Str::from_utf8(cur));
+        cur = Vec[UInt8].new();
+        _push_str(&mut cur, w);
       };
     };
     i = i + 1;
   };
-  let cur_len2 = string.str_len(cur);
-  if cur_len2 > 0 {
-    lines.push(cur);
+  if cur.len() > 0 {
+    lines.push(Str::from_utf8(cur));
   };
   lines
 }
@@ -144,15 +182,15 @@ pub fn str_wrap_join(s: Str, width: Int, sep: Str) -> Str
   ensures: width < 1 => result.len() == 0
 {
   var lines = str_wrap(s, width);
-  var result = "";
+  var out: Vec[UInt8] = Vec[UInt8].new();
   var i: Int = 0;
   while i < lines.len() {
     if i > 0 {
-      result = string.str_concat(result, sep);
+      _push_str(&mut out, sep);
     };
     var line = lines[i];
-    result = string.str_concat(result, line);
+    _push_str(&mut out, line);
     i = i + 1;
   };
-  result
+  Str::from_utf8(out)
 }

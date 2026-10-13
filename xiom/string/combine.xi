@@ -14,6 +14,19 @@ module xiom.string.combine
 
 use xiom.string;
 
+// Raw byte at `i` (wave 130: cached raw pointer -- string.byte_at strnlens
+// the whole string per call, so the per-character combination builders were
+// quadratic).
+// Complexity: O(1).
+fn _raw_byte(s: Str, i: Int) -> UInt8
+  requires: true  // raw byte read; callers bound i against the cached len (T007)
+{
+  unsafe {
+    let base: *UInt8 = s.c_str();
+    return *(base + i);
+  }
+}
+
 /// Returns the binomial coefficient C(n, k); 0 when k is outside [0, n].
 /// Uses the multiplicative formula, exact at every step.
 /// Complexity: O(min(k, n-k)).
@@ -75,14 +88,13 @@ pub fn str_combinations(s: Str, n: Int) -> Vec[Str] {
     i = i + 1;
   };
   loop {
-    var piece = "";
+    var piece: Vec[UInt8] = Vec[UInt8].new();
     var j: Int = 0;
     while j < n {
-      let one = string.str_slice(s, idx[j], idx[j] + 1);
-      piece = string.str_concat(piece, one);
+      piece.push(_raw_byte(s, idx[j]));
       j = j + 1;
     };
-    result.push(piece);
+    result.push(Str::from_utf8(piece));
     if !_next_combination(&mut idx, len, n) {
       break;
     };
@@ -112,7 +124,7 @@ pub fn str_combination_at(s: Str, n: Int, rank: Int) -> Str {
   };
   var r = rank;
   var prev: Int = -1;
-  var result = "";
+  var out: Vec[UInt8] = Vec[UInt8].new();
   var i: Int = 0;
   while i < n {
     var c = prev + 1;
@@ -129,10 +141,9 @@ pub fn str_combination_at(s: Str, n: Int, rank: Int) -> Str {
     if !found_c {
       return "";
     };
-    let one = string.str_slice(s, c, c + 1);
-    result = string.str_concat(result, one);
+    out.push(_raw_byte(s, c));
     prev = c;
     i = i + 1;
   };
-  result
+  Str::from_utf8(out)
 }

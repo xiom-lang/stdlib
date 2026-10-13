@@ -239,15 +239,14 @@ pub fn str_permutation_at(s: Str, rank: Int) -> Str {
     remaining.push(k);
     k = k + 1;
   };
-  var result = "";
+  var out: Vec[UInt8] = Vec[UInt8].new();
   var r = rank;
   var pos: Int = 0;
   while pos < len {
     let block = fac[len - 1 - pos];
     let idx = r / block;
     let pick_pos = remaining[idx];
-    let one = string.str_slice(s, pick_pos, pick_pos + 1);
-    result = string.str_concat(result, one);
+    out.push(_pm_byte(s, pick_pos) as UInt8);
     var rem2 = Vec[Int].new();
     var k2: Int = 0;
     while k2 < remaining.len() {
@@ -261,5 +260,5 @@ pub fn str_permutation_at(s: Str, rank: Int) -> Str {
     r = r % block;
     pos = pos + 1;
   };
-  result
+  Str::from_utf8(out)
 }
