@@ -2703,6 +2703,25 @@ registry pin, agent recon for the rest)**
   (216.6s), floors144 + doc + module-smoke (497/517, 3476/6204)
   ratchets OK.
 
+**SESSION 2026-10-13 block 140 (doorbell 11:00Z: wave-119 rows verified + closed by pulse; no new asks)**
+- BUS ROUND (new relay commits since 09:00Z): no new stdlib asks.
+  Verifications landed for wave 119: pulse re-ran p_wave119_shapes.xi +
+  p_wave60_shapes.xi against stdlib a9b21b2 with the wave runtime
+  (XIOM_RUNTIME_DIR) -- both exit 0 -- and CLOSED
+  REL-20261011-0317-pulse (socket options; Windows bind SO_REUSEADDR
+  root cause fixed) and -0317-pulse-2 (recv deadline; "slowloris guard
+  verified; read deadlines cleared"). packages verified
+  REL-20261010-1550-packages-6 (locking, wave 118 probe) and pulse
+  verified + closed the fsync_dir row. Wave-119 external acceptance is
+  complete.
+- CONCURRENCY NOTE (repeat): a concurrent stdlib-side actor committed
+  b84751f ("fix transitions -- xvector-8 + fsync_dir") duplicating the
+  fix moves this session already made at 03:00Z -- idempotent history
+  lines only, no state harm; same shared-worktree pattern as blocks
+  128/132. This session re-checks git state before every write.
+- No code changes this cycle; snapshot 31 stands (15 Current, all
+  compiler; probes 296; floors153).
+
 **SESSION 2026-10-13 block 139 (doorbell 09:00Z: quiet round -- no bus moves; snapshot 31 stands)**
 - BUS ROUND: no new stdlib asks, no status moves since block 138; the
   non-terminal set is byte-identical to the 07:00Z round (compiler-blocked
