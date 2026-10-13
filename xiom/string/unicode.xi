@@ -117,6 +117,7 @@ pub fn unicode_decompose(c: Char) -> Vec[Char] {
 /// Split `s` into runs of a base character plus its trailing combining marks.
 pub fn unicode_combining_sequence(s: Str) -> Vec[Str] {
   let len = string.str_len(s);
+  let base = s.c_str();
   var out = Vec[Str].new();
   var i: Int = 0;
   var start: Int = 0;
@@ -129,7 +130,7 @@ pub fn unicode_combining_sequence(s: Str) -> Vec[Str] {
     };
     let is_mark = _is_combining_cp(cp);
     if !is_mark && prev_was_mark && i > start {
-      out.push(string.str_slice(s, start, i));
+      out.push(_slice_fast(base, start, i));
       start = i;
     };
     prev_was_mark = is_mark;
@@ -137,7 +138,7 @@ pub fn unicode_combining_sequence(s: Str) -> Vec[Str] {
     i = i + bl;
   }
   if start < len {
-    out.push(string.str_slice(s, start, len));
+    out.push(_slice_fast(base, start, len));
   };
   out
 }
@@ -990,6 +991,25 @@ fn _byte_at(s: Str, pos: Int) -> Int
     let base: *UInt8 = s.c_str();
     return ((*(base + pos)) as Int) & 0xFF;
   }
+}
+
+// Slice [start, end) over a cached pointer WITHOUT the str_len clamp
+// (wave 129): str_slice rescans the source per call (strlen), so per-part /
+// per-character slices were O(|s|) each. Callers guarantee
+// 0 <= start <= end <= len, which makes the result identical to str_slice.
+// Complexity: O(end - start).
+fn _slice_fast(base: *UInt8, start: Int, end: Int) -> Str
+  requires: true  // raw byte copy; callers bound the range (T007)
+{
+  var out: Vec[UInt8] = Vec[UInt8].new();
+  unsafe {
+    var i: Int = start;
+    while i < end {
+      out.push(*(base + i));
+      i = i + 1;
+    };
+  };
+  Str::from_utf8(out)
 }
 
 /// UTF-8 sequence length given the leading byte.

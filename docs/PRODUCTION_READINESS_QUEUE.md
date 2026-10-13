@@ -7,7 +7,7 @@ windows-x64 release archive.)
 **Gates: corpus 955/955 full (C001 carve-outs retired on v0.63.1; new
 TcpStream loopback and uuencode roundtrip smokes added; smoke_os_watch
 added in wave 124), modules 510/510,
-probes 305/305, barename 0/510.**
+probes 306/306, barename 0/510.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -26,7 +26,7 @@ gates flip:
    wave-98..110 probes), the io byte-fidelity/CRLF lock and the
    fs_remove lock).
 4. Strict bare-name scan clean -- MET (0/509).
-5. Coverage ratchet green -- MET (floors162).
+5. Coverage ratchet green -- MET (floors163).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (499/518 modules, 3500/6239 fns).
 8. Contract coverage 100% (every public fn carries clauses) -- OPEN (70.7%).
@@ -491,6 +491,29 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
      per-char/per-part paths pay O(k*n)) + the deferred builder pass
      (template escape/interpolate, combinatorics joins); then the thread
      wave (1423 hoist) / queued options.
+     WAVE 129 (block 156): the str_slice fast path (core) -- str_slice
+     itself keeps its exact len-clamp semantics (OOB / negative / empty
+     rows unchanged), while the hot per-part / per-character call sites
+     now use a bounds-guaranteed _slice_fast (raw copy over a cached
+     pointer, no str_len rescan): str_split, words, case _split_words,
+     segment _split_chars, shuffle _sh_split, sentencebreak/wordbreak
+     splits, unicode unicode_combining_sequence, combinatorics
+     splits/chunks/windows/reverse-words/joins -- and that commit also
+     carries the MISSED wave-128 combinatorics _byte body conversion
+     (its scans were still quadratic; the wave-128 edit failure exposed
+     it) plus builder.xi's sb_push_str (the last qualified byte_at site
+     in the string dir). Evidence: out/dbg127r.xi re-run drops from
+     157.1 s to 19.4 s (8.1x) with identical outputs and a 4.9 MB peak.
+     Probe p_wave129_shapes.xi (306th): 33 rows (str_slice
+     OOB/negative/empty clamps + all touched publics + builder); probes
+     127/128 re-run green; string smokes 102/102. Coverage fns 8768,
+     clauses 6230 (floors163 wired); battery corpus 955/955 (551.8s),
+     probes 306/306 (225.8s), modules 510/510 (271.2s), barename 0/510
+     (262.8s) + ratchets OK.
+     NEXT: the deferred builder pass (template escape/interpolate,
+     combinatorics combination/interleaving joins, normalize tails) +
+     str_slice's own per-call str_len for one-shot callers; then the
+     thread wave (1423 hoist) / queued options.
 BINARY NOTE: the shared local build path
 `E:\xiom-lang\xiom\target\release\xiom.exe` was rebuilt past the pin
 (compiler main da7798da m252) and fails four corpus smokes; waves now run

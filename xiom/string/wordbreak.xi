@@ -109,19 +109,20 @@ pub fn unicode_word_boundaries(s: Str) -> Vec[Int] {
 pub fn unicode_split_words(s: Str) -> Vec[Str] {
   let bounds = unicode_word_boundaries(s);
   let len = string.str_len(s);
+  let base = s.c_str();
   var out = Vec[Str].new();
   var start: Int = 0;
   var i: Int = 0;
   while i < bounds.len() {
     let b = bounds[i];
     if b > start {
-      out.push(string.str_slice(s, start, b));
+      out.push(_slice_fast(base, start, b));
     };
     start = b;
     i = i + 1;
   }
   if start < len {
-    out.push(string.str_slice(s, start, len));
+    out.push(_slice_fast(base, start, len));
   };
   out
 }
@@ -222,6 +223,25 @@ fn _byte_at(s: Str, pos: Int) -> Int
     let base: *UInt8 = s.c_str();
     return ((*(base + pos)) as Int) & 0xFF;
   }
+}
+
+// Slice [start, end) over a cached pointer WITHOUT the str_len clamp
+// (wave 129): str_slice rescans the source per call (strlen), so per-part /
+// per-character slices were O(|s|) each. Callers guarantee
+// 0 <= start <= end <= len, which makes the result identical to str_slice.
+// Complexity: O(end - start).
+fn _slice_fast(base: *UInt8, start: Int, end: Int) -> Str
+  requires: true  // raw byte copy; callers bound the range (T007)
+{
+  var out: Vec[UInt8] = Vec[UInt8].new();
+  unsafe {
+    var i: Int = start;
+    while i < end {
+      out.push(*(base + i));
+      i = i + 1;
+    };
+  };
+  Str::from_utf8(out)
 }
 
 /// UTF-8 sequence length given the leading byte.

@@ -30,6 +30,25 @@ fn _sh_byte(s: Str, i: Int) -> Int
   }
 }
 
+// Slice [start, end) over a cached pointer WITHOUT the str_len clamp
+// (wave 129): str_slice rescans the source per call (strlen), so per-part /
+// per-character slices were O(|s|) each. Callers guarantee
+// 0 <= start <= end <= len, which makes the result identical to str_slice.
+// Complexity: O(end - start).
+fn _slice_fast(base: *UInt8, start: Int, end: Int) -> Str
+  requires: true  // raw byte copy; callers bound the range (T007)
+{
+  var out: Vec[UInt8] = Vec[UInt8].new();
+  unsafe {
+    var i: Int = start;
+    while i < end {
+      out.push(*(base + i));
+      i = i + 1;
+    };
+  };
+  Str::from_utf8(out)
+}
+
 // True when byte `b` is a UTF-8 continuation byte (0b10xxxxxx).
 // Complexity: O(1).
 fn _sh_is_cont(b: Int) -> Bool {
@@ -42,6 +61,7 @@ fn _sh_is_cont(b: Int) -> Bool {
 fn _sh_split(s: Str) -> Vec[Str] {
   var chars = Vec[Str].new();
   let len = string.str_len(s);
+  let base = s.c_str();
   var i: Int = 0;
   while i < len {
     var start = i;
@@ -49,7 +69,7 @@ fn _sh_split(s: Str) -> Vec[Str] {
     while start + adv < len && _sh_is_cont(_sh_byte(s, start + adv)) {
       adv = adv + 1;
     };
-    chars.push(string.str_slice(s, start, start + adv));
+    chars.push(_slice_fast(base, start, start + adv));
     i = start + adv;
   };
   chars

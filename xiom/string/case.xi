@@ -59,6 +59,25 @@ fn _push_bytes(out: &mut Vec[UInt8], w: Str) {
   };
 }
 
+// Slice [start, end) over a cached pointer WITHOUT the str_len clamp
+// (wave 129): str_slice rescans the source per call (strlen), so per-part /
+// per-character slices were O(|s|) each. Callers guarantee
+// 0 <= start <= end <= len, which makes the result identical to str_slice.
+// Complexity: O(end - start).
+fn _slice_fast(base: *UInt8, start: Int, end: Int) -> Str
+  requires: true  // raw byte copy; callers bound the range (T007)
+{
+  var out: Vec[UInt8] = Vec[UInt8].new();
+  unsafe {
+    var i: Int = start;
+    while i < end {
+      out.push(*(base + i));
+      i = i + 1;
+    };
+  };
+  Str::from_utf8(out)
+}
+
 // Returns a one-character string holding the UTF-8 encoding of `c`.
 // Complexity: O(1).
 fn _char_to_str(c: Char) -> Str {
@@ -122,22 +141,23 @@ fn _is_lower_byte(b: UInt8) -> Bool {
 fn _split_words(s: Str) -> Vec[Str] {
   var result = Vec[Str].new();
   let len = string.str_len(s);
+  let base = s.c_str();
   var start: Int = 0;
   var i: Int = 0;
   while i < len {
     let b = _byte_at(s, i);
     if !_is_alnum_byte(b) {
       if i > start {
-        result.push(string.str_slice(s, start, i));
+        result.push(_slice_fast(base, start, i));
       };
       i = i + 1;
       start = i;
     } elif i > start && _is_upper_byte(b) && _is_lower_byte(_byte_at(s, i - 1)) {
-      result.push(string.str_slice(s, start, i));
+      result.push(_slice_fast(base, start, i));
       start = i;
       i = i + 1;
     } elif i >= 2 && i > start && _is_lower_byte(b) && _is_upper_byte(_byte_at(s, i - 1)) && _is_upper_byte(_byte_at(s, i - 2)) {
-      result.push(string.str_slice(s, start, i));
+      result.push(_slice_fast(base, start, i));
       start = i;
       i = i + 1;
     } else {
@@ -145,7 +165,7 @@ fn _split_words(s: Str) -> Vec[Str] {
     };
   }
   if i > start {
-    result.push(string.str_slice(s, start, i));
+    result.push(_slice_fast(base, start, i));
   };
   result
 }

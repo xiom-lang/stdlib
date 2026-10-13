@@ -28,6 +28,27 @@ fn _raw_byte(base: *UInt8, i: Int) -> UInt8
   unsafe { return *(base + i); }
 }
 
+// Slice [start, end) over a cached pointer WITHOUT the str_len clamp
+// (wave 129): str_slice rescans the source per call (strlen), so per-part /
+// per-character slices were O(|s|) each. Callers guarantee
+// 0 <= start <= end <= len, which makes the result identical to str_slice.
+// Complexity: O(end - start).
+fn _slice_fast(base: *UInt8, start: Int, end: Int) -> Str
+  requires: true  // raw byte copy; callers bound the range (T007)
+{
+  let n = end - start;
+  unsafe {
+    var buf = malloc(n + 1);
+    var i: Int = 0;
+    while i < n {
+      buf[i] = _raw_byte(base, start + i);
+      i = i + 1;
+    };
+    buf[n] = 0;
+    return Str.from_cstring(buf);
+  }
+}
+
 // Wave 126: runtime-`xiom_char_at`-equivalent UTF-8 decode over a cached
 // (base, len) view (copied byte-exact from slice.xi). char_at re-scans the
 // whole string per call (runtime strnlen), so the per-position decodes in
@@ -225,10 +246,11 @@ pub fn str_split(s: Str, delimiter: Str) -> Vec[Str]
   var result = Vec[Str].new();
   let delim_len = delimiter.len();
   let s_len = s.len();
+  let bs = s.c_str();
   if delim_len == 0 {
     var i: Int = 0;
     while i < s_len {
-      result.push(str_slice(s, i, i + 1));
+      result.push(_slice_fast(bs, i, i + 1));
       i = i + 1;
     }
     if result.len() == 0 {
@@ -238,7 +260,6 @@ pub fn str_split(s: Str, delimiter: Str) -> Vec[Str]
   };
   var start: Int = 0;
   var pos: Int = 0;
-  let bs = s.c_str();
   let bd = delimiter.c_str();
   while pos < s_len {
     var is_match: Bool = false;
@@ -255,14 +276,14 @@ pub fn str_split(s: Str, delimiter: Str) -> Vec[Str]
       };
     };
     if is_match {
-      result.push(str_slice(s, start, pos));
+      result.push(_slice_fast(bs, start, pos));
       pos = pos + delim_len;
       start = pos;
     } else {
       pos = pos + 1;
     };
   }
-  result.push(str_slice(s, start, s_len));
+  result.push(_slice_fast(bs, start, s_len));
   result
 }
 
@@ -498,7 +519,7 @@ pub fn words(s: Str) -> Vec[Str]
       while i < len && !xiom.char.is_whitespace(_char_at_runtime(base, len, i)) {
         i = i + 1;
       }
-      result.push(str_slice(s, start, i));
+      result.push(_slice_fast(base, start, i));
     };
   }
   result

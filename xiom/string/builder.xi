@@ -29,6 +29,15 @@ extern "C" {
 
 use xiom.string;
 
+// Raw byte at `i` (wave 129: cached raw pointer -- string.byte_at strnlens
+// the whole string per call, so appends were quadratic).
+// Complexity: O(1).
+fn _raw_byte(base: *UInt8, i: Int) -> UInt8
+  requires: true  // raw byte read; callers bound i against len (T007)
+{
+  unsafe { return *(base + i); }
+}
+
 /// New empty builder. Complexity: O(1).
 pub fn sb_new() -> Vec[UInt8]
   ensures: result.len() == 0
@@ -44,14 +53,16 @@ pub fn sb_push_byte(sb: &mut Vec[UInt8], b: UInt8)
 }
 
 /// Append a whole string (byte copy; UTF-8 safe -- bytes are opaque here).
+/// Wave 129: raw-read copy over the cached pointer.
 /// Complexity: O(s.len()) amortized.
 pub fn sb_push_str(sb: &mut Vec[UInt8], s: Str)
   ensures: s.len() > 0 => sb.len() >= 1
 {
   var i = 0;
   let n = s.len();
+  let base = s.c_str();
   while i < n {
-    sb.push(string.byte_at(s, i));
+    sb.push(_raw_byte(base, i));
     i = i + 1;
   }
 }

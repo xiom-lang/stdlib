@@ -2079,8 +2079,27 @@ T1/T2 yields.
         NEXT: batch 5 = builder.xi sb_push_str (the last qualified
         byte_at site) + str_slice's per-call len + the deferred builder
         pass (template escape/interpolate, combinatorics joins).
+        Wave 129 (2026-10-13, block 156): the str_slice fast path (core)
+        -- str_slice keeps its exact clamp semantics; the hot per-part /
+        per-character call sites (str_split, words, case _split_words,
+        segment _split_chars, shuffle _sh_split, sentencebreak/wordbreak
+        splits, unicode combining sequences, combinatorics
+        splits/chunks/windows/reverse-words/joins, builder sb_push_str)
+        use a bounds-guaranteed _slice_fast (raw copy over a cached
+        pointer). Also carries the missed wave-128 combinatorics _byte
+        conversion. Evidence: the dbg127r scratch drops 157.1 s -> 19.4 s
+        (8.1x) with identical outputs, 4.9 MB peak. Probe
+        p_wave129_shapes.xi (306th): 33 rows incl. the str_slice
+        OOB/negative/empty clamps; probes 127/128 green; string smokes
+        102/102. Coverage fns 8768, clauses 6230 (floors163) +
+        module-smoke + doc ratchets OK; battery on v0.64.4-rel: corpus
+        955/955 (551.8s), probes 306/306 (225.8s), modules 510/510
+        (271.2s), barename 0/510 (262.8s). NEXT: the deferred builder
+        pass (template escape/interpolate, combinatorics
+        combination/interleaving joins, normalize tails) + str_slice's
+        own per-call str_len for one-shot callers.
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors162.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors163.json
         tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;

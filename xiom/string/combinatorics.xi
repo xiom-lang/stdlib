@@ -20,10 +20,36 @@ use xiom.convert;
 // -- Private helpers ---------------------------------------------------------
 
 // Masked byte at `pos` (BUG 22 #10: `as Int` sign-extends UInt8).
+// Wave 129: raw read over the cached pointer -- string.byte_at strnlens the
+// whole string per call, so the per-position scans were quadratic (this file
+// was missed by the wave-128 batch).
 // Complexity: O(1).
-fn _byte(s: Str, i: Int) -> Int {
-  let v = string.byte_at(s, i) as Int;
-  v & 0xFF
+fn _byte(s: Str, i: Int) -> Int
+  requires: true  // raw byte read; callers bound i against the cached len (T007)
+{
+  unsafe {
+    let base: *UInt8 = s.c_str();
+    return ((*(base + i)) as Int) & 0xFF;
+  }
+}
+
+// Slice [start, end) over a cached pointer WITHOUT the str_len clamp
+// (wave 129): str_slice rescans the source per call (strlen), so per-part /
+// per-character slices were O(|s|) each. Callers guarantee
+// 0 <= start <= end <= len, which makes the result identical to str_slice.
+// Complexity: O(end - start).
+fn _slice_fast(base: *UInt8, start: Int, end: Int) -> Str
+  requires: true  // raw byte copy; callers bound the range (T007)
+{
+  var out: Vec[UInt8] = Vec[UInt8].new();
+  unsafe {
+    var i: Int = start;
+    while i < end {
+      out.push(*(base + i));
+      i = i + 1;
+    };
+  };
+  Str::from_utf8(out)
 }
 
 // True when byte `b` is a UTF-8 continuation byte (0b10xxxxxx).
@@ -45,6 +71,7 @@ fn _is_ws_byte(b: Int) -> Bool {
 fn _split_chars(s: Str) -> Vec[Str] {
   var chars = Vec[Str].new();
   let len = string.str_len(s);
+  let base = s.c_str();
   var i: Int = 0;
   while i < len {
     var start = i;
@@ -52,23 +79,29 @@ fn _split_chars(s: Str) -> Vec[Str] {
     while start + adv < len && _is_cont(_byte(s, start + adv)) {
       adv = adv + 1;
     };
-    chars.push(string.str_slice(s, start, start + adv));
+    chars.push(_slice_fast(base, start, start + adv));
     i = start + adv;
   };
   chars
 }
 
 // Concatenates the characters of `chars` into one string.
+// Wave 129: Vec[UInt8] builder (was concat-per-char, the leak class).
 // Complexity: O(total bytes).
 fn _join_chars(chars: &Vec[Str]) -> Str {
-  var result = "";
+  var out: Vec[UInt8] = Vec[UInt8].new();
   var i: Int = 0;
   while i < chars.len() {
     let c = chars[i];
-    result = string.str_concat(result, c);
+    var k: Int = 0;
+    let cl = string.str_len(c);
+    while k < cl {
+      out.push(_byte(c, k) as UInt8);
+      k = k + 1;
+    };
     i = i + 1;
   };
-  result
+  Str::from_utf8(out)
 }
 
 // Independent copy of a Vec[Str] (defensive: enumeration helpers push copies
@@ -146,19 +179,25 @@ fn _shuffle(chars: &Vec[Str], use_rand: Bool, seed: Int) -> Vec[Str] {
 }
 
 // Joins `words` with single spaces.
+// Wave 129: Vec[UInt8] builder (see _join_chars).
 // Complexity: O(total bytes).
 fn _join_words(words: &Vec[Str]) -> Str {
-  var result = "";
+  var out: Vec[UInt8] = Vec[UInt8].new();
   var i: Int = 0;
   while i < words.len() {
     let w = words[i];
     if i > 0 {
-      result = string.str_concat(result, " ");
+      out.push(32);
     };
-    result = string.str_concat(result, w);
+    var k: Int = 0;
+    let wl = string.str_len(w);
+    while k < wl {
+      out.push(_byte(w, k) as UInt8);
+      k = k + 1;
+    };
     i = i + 1;
   };
-  result
+  Str::from_utf8(out)
 }
 
 // Advances the index vector to the next k-combination of indices in [0, n).
@@ -240,15 +279,17 @@ fn _copy_idx(v: &Vec[Int]) -> Vec[Int] {
 // modules.
 // Complexity: O(|idx|).
 fn _piece_from_idx(s: Str, idx: &Vec[Int]) -> Str {
-  var piece = "";
+  var out: Vec[UInt8] = Vec[UInt8].new();
+  let slen = string.str_len(s);
   var j: Int = 0;
   while j < idx.len() {
     let pos = idx[j];
-    let one = string.str_slice(s, pos, pos + 1);
-    piece = string.str_concat(piece, one);
+    if pos < slen {
+      out.push(_byte(s, pos) as UInt8);
+    };
     j = j + 1;
   };
-  piece
+  Str::from_utf8(out)
 }
 
 // -- Shuffle (Fisher-Yates) --------------------------------------------------
@@ -596,13 +637,14 @@ pub fn str_chunk(s: Str, n: Int) -> Vec[Str]
   if n < 1 || len == 0 {
     return result;
   };
+  let base = s.c_str();
   var i: Int = 0;
   while i < len {
     var end = i + n;
     if end > len {
       end = len;
     };
-    let piece = string.str_slice(s, i, end);
+    let piece = _slice_fast(base, i, end);
     result.push(piece);
     i = end;
   };
@@ -628,6 +670,7 @@ pub fn str_chunks_reverse(s: Str, n: Int) -> Vec[Str]
   if first == 0 {
     first = n;
   };
+  let base = s.c_str();
   var cur = first;
   var i: Int = 0;
   while i < len {
@@ -635,7 +678,7 @@ pub fn str_chunks_reverse(s: Str, n: Int) -> Vec[Str]
     if end > len {
       end = len;
     };
-    let piece = string.str_slice(s, i, end);
+    let piece = _slice_fast(base, i, end);
     result.push(piece);
     i = end;
     cur = n;
@@ -657,9 +700,10 @@ pub fn str_windows(s: Str, n: Int) -> Vec[Str]
   if n < 1 || len < n {
     return result;
   };
+  let base = s.c_str();
   var i: Int = 0;
   while i <= len - n {
-    let piece = string.str_slice(s, i, i + n);
+    let piece = _slice_fast(base, i, i + n);
     result.push(piece);
     i = i + 1;
   };
@@ -715,7 +759,8 @@ pub fn str_chunk_bytes(s: Str, n: Int) -> Vec[Str]
 pub fn str_reverse_words(s: Str) -> Str
   ensures: result.len() == s.len()
 {
-  var runs = Vec[Str].new();
+  var starts = Vec[Int].new();
+  var ends = Vec[Int].new();
   let len = string.str_len(s);
   var i: Int = 0;
   while i < len {
@@ -724,19 +769,24 @@ pub fn str_reverse_words(s: Str) -> Str
     while i < len && _is_ws_byte(_byte(s, i)) == first_ws {
       i = i + 1;
     };
-    runs.push(string.str_slice(s, run_start, i));
+    starts.push(run_start);
+    ends.push(i);
   };
-  if runs.len() == 0 {
+  if starts.len() == 0 {
     return "";
   };
-  var result = "";
-  var j: Int = runs.len() - 1;
-  while j >= 0 {
-    let r = runs[j];
-    result = string.str_concat(result, r);
+  var out: Vec[UInt8] = Vec[UInt8].new();
+  var j: Int = starts.len();
+  while j > 0 {
     j = j - 1;
+    var k: Int = starts[j];
+    let e = ends[j];
+    while k < e {
+      out.push(_byte(s, k) as UInt8);
+      k = k + 1;
+    };
   };
-  result
+  Str::from_utf8(out)
 }
 
 // -- Character statistics ----------------------------------------------------

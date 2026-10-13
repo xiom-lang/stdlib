@@ -3023,6 +3023,45 @@ registry pin, agent recon for the rest)**
   delivery) closed out the pulse wave-2 rows -- probes 300; floors157.
 - No other queue moves; 1442 and 1630/1658 remain the compiler's.
 
+**SESSION 2026-10-13 block 156 (wave 129: the str_slice fast path -- hot per-part/per-char call sites + the combinatorics catch-up + builder; probes 306; floors163)**
+- WAVE 129 (classic wave; the core follow-up to batches 3/4): str_slice
+  KEEPS its exact semantics (its `let len = s.len()` clamp is unchanged
+  -- probe 129 locks the OOB / negative / empty rows), but the hot call
+  sites now use a local bounds-guaranteed `_slice_fast(base, start, end)`
+  (raw copy over the cached pointer, no str_len rescan):
+  string.str_split (3 sites incl. the empty-delimiter per-byte branch),
+  string.words, case._split_words (4), segment._split_chars,
+  shuffle._sh_split, sentencebreak.unicode_split_sentences,
+  wordbreak.unicode_split_words, unicode.unicode_combining_sequence,
+  combinatorics str_chunk / str_chunks_reverse / str_windows /
+  _split_chars / str_reverse_words / joins. The same commit carries the
+  MISSED wave-128 combinatorics `_byte` body conversion (a wave-128
+  edit failure exposed it -- its scans were still quadratic), its
+  _piece_from_idx / _join_chars / _join_words builders (Vec), and
+  builder.sb_push_str (the last qualified byte_at site in the string
+  dir).
+- Evidence (capped, 1.5 GB + 280 s watchdog): out/dbg127r.xi (16 ops on
+  512 KB) re-run drops from 157.1 s (wave 127) to 19.4 s (8.1x) with
+  identical outputs, peak 4.9 MB. The remaining one-shot str_slice
+  callers keep the per-call str_len (unchanged core; the deferred
+  builder pass is next).
+- Probe p_wave129_shapes.xi (306th): 33 rows -- str_slice
+  OOB/negative/empty clamps (unchanged core) + split/words/snake/
+  clusters/seeded shuffle/sentence+word splits/combinatorics
+  chunk/chunks_reverse/windows/reverse-words/rotate/rotate_left/caesar/
+  builder/trim; probes 127/128 re-run green; string smokes 102/102.
+- Coverage: fns 8768 (+9), pubFns 6540, clauses 6230 (+10), pubCovered
+  4625; floors163 dumped + wired. Battery on v0.64.4-rel (final tree):
+  corpus 955/955 (551.8s), probes 306/306 (225.8s), modules 510/510
+  (271.2s), barename 0/510 (262.8s), coverage ratchet vs floors162 +
+  module-smoke (499/518, 3500/6239) + doc ratchets OK.
+- Bus: 17:00Z doorbell quiet; the 19:00Z doorbell lands right around
+  this commit (processed next). 1545 acked; 1423/1445 unchanged.
+- Next: the deferred builder pass (template escape/interpolate,
+  combinatorics combination/interleaving joins, normalize tails) +
+  str_slice's own per-call str_len for one-shot callers; then the
+  thread wave (1423 hoist) / queued options.
+
 **SESSION 2026-10-13 block 155 (wave 128: strnlen-family batch 4 -- the remaining qualified accessors in 14 files + the Char sign-extension mask fix; probes 305; floors162)**
 - WAVE 128 (classic string-dir wave, batch 4 -- the block-154 follow-up):
   the remaining QUALIFIED byte_at / char_at accessors converted to cached
