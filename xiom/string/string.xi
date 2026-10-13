@@ -140,15 +140,21 @@ pub fn str_contains(s: Str, substr: Str) -> Bool
 // built a fresh slice per candidate position via str_slice.
 // UTF-8-safe: valid UTF-8 is prefix/suffix closed under byte comparison,
 // and byte_at returns raw bytes (round-14 semantics).
-fn _matches_at(s: Str, at: Int, sub: Str) -> Bool {
+fn _matches_at(s: Str, at: Int, sub: Str) -> Bool
+  requires: true  // raw byte reads over cached pointers; callers bound at (T007)
+{
   let n = sub.len();
+  let bs = s.c_str();
+  let bsub = sub.c_str();
   var i = 0;
   while i < n {
-    if byte_at(s, at + i) != byte_at(sub, i) {
+    if _raw_byte(bs, at + i) != _raw_byte(bsub, i) {
       return false;
     };
     i = i + 1;
-  }
+  };
+  return true;
+}
   return true;
 }
 
@@ -186,10 +192,12 @@ pub fn str_compare(a: Str, b: Str) -> Int
 {
   let la = a.len();
   let lb = b.len();
+  let ba_base = a.c_str();
+  let bb_base = b.c_str();
   var i: Int = 0;
   while i < la && i < lb {
-    let ba = byte_at(a, i) as Int;
-    let bb = byte_at(b, i) as Int;
+    let ba = _raw_byte(ba_base, i) as Int;
+    let bb = _raw_byte(bb_base, i) as Int;
     if ba < bb {
       return -1;
     };
@@ -230,13 +238,15 @@ pub fn str_split(s: Str, delimiter: Str) -> Vec[Str]
   };
   var start: Int = 0;
   var pos: Int = 0;
+  let bs = s.c_str();
+  let bd = delimiter.c_str();
   while pos < s_len {
     var is_match: Bool = false;
     if pos + delim_len <= s_len {
       is_match = true;
       var k: Int = 0;
       while k < delim_len {
-        if byte_at(s, pos + k) != byte_at(delimiter, k) {
+        if _raw_byte(bs, pos + k) != _raw_byte(bd, k) {
           is_match = false;
           k = delim_len;
         } else {
@@ -294,11 +304,12 @@ pub fn str_upper(s: Str) -> Str
   // pass through verbatim. The char-based version truncated multibyte
   // chars to their low byte (xiom_char_at -> as UInt8).
   let len = s.len();
+  let base = s.c_str();
   unsafe {
     var buf = malloc(len + 1);
     var i: Int = 0;
     while i < len {
-      let b = byte_at(s, i);
+      let b = _raw_byte(base, i);
       if b >= 97 && b <= 122 {
         buf[i] = (b - 32) as UInt8;
       } else {
@@ -317,11 +328,12 @@ pub fn str_lower(s: Str) -> Str
 {
   // Byte-safe: ASCII A-Z -> a-z; all other bytes pass through verbatim.
   let len = s.len();
+  let base = s.c_str();
   unsafe {
     var buf = malloc(len + 1);
     var i: Int = 0;
     while i < len {
-      let b = byte_at(s, i);
+      let b = _raw_byte(base, i);
       if b >= 65 && b <= 90 {
         buf[i] = (b + 32) as UInt8;
       } else {
@@ -1055,28 +1067,34 @@ fn _mk_byte(v: Int) -> Str {
 pub fn str_translate(s: Str, from: Str, to: Str) -> Str
   ensures: result.len() <= s.len()
 {
-  var result = "";
+  var out: Vec[UInt8] = Vec[UInt8].new();
+  let s_len = str_len(s);
+  let from_len = str_len(from);
+  let to_len = str_len(to);
+  let bs = s.c_str();
+  let bf = from.c_str();
+  let bt = to.c_str();
   var i: Int = 0;
-  while i < str_len(s) {
-    var c = byte_at(s, i);
+  while i < s_len {
+    var c = _raw_byte(bs, i);
     var j: Int = 0;
     var found = false;
-    while j < str_len(from) {
-      if byte_at(from, j) == c {
+    while j < from_len {
+      if _raw_byte(bf, j) == c {
         found = true;
         break;
       }
       j = j + 1;
     }
     if !found {
-      result = str_concat(result, str_slice(s, i, i + 1));
-    } elif j < str_len(to) {
-      result = str_concat(result, str_slice(to, j, j + 1));
+      out.push(c);
+    } elif j < to_len {
+      out.push(_raw_byte(bt, j));
     }
-    // j >= len(to): removed
+    // j >= to_len: removed
     i = i + 1;
   }
-  return result;
+  return Str::from_utf8(out);
 }
 
 /// ROT13 over A-Z/a-z (ASCII).
@@ -1090,20 +1108,22 @@ pub fn str_rot13(s: Str) -> Str
 pub fn str_rot47(s: Str) -> Str
   ensures: result.len() == s.len()
 {
-  var result = "";
+  var out: Vec[UInt8] = Vec[UInt8].new();
+  let len = str_len(s);
+  let base = s.c_str();
   var i: Int = 0;
-  while i < str_len(s) {
-    var b = byte_at(s, i) as Int;
+  while i < len {
+    var b = _raw_byte(base, i) as Int;
     if b >= 33 && b <= 126 {
       var v = b - 33;
       v = (v + 47) % 94;
-      result = str_concat(result, _mk_byte(v + 33));
+      out.push((v + 33) as UInt8);
     } else {
-      result = str_concat(result, str_slice(s, i, i + 1));
+      out.push(_raw_byte(base, i));
     }
     i = i + 1;
   }
-  return result;
+  return Str::from_utf8(out);
 }
 
 /// Caesar shift over A-Z/a-z (ASCII). Negative shifts go backwards; the
@@ -1111,44 +1131,48 @@ pub fn str_rot47(s: Str) -> Str
 pub fn str_caesar(s: Str, shift: Int) -> Str
   ensures: result.len() == s.len()
 {
-  var result = "";
+  var out: Vec[UInt8] = Vec[UInt8].new();
+  let len = str_len(s);
+  let base = s.c_str();
   var sh = shift % 26;
   if sh < 0 { sh = sh + 26; }
   var i: Int = 0;
-  while i < str_len(s) {
-    var b = byte_at(s, i) as Int;
+  while i < len {
+    var b = _raw_byte(base, i) as Int;
     if b >= 97 && b <= 122 {
       var v = (b - 97 + sh) % 26 + 97;
-      result = str_concat(result, _mk_byte(v));
+      out.push(v as UInt8);
     } elif b >= 65 && b <= 90 {
       var v2 = (b - 65 + sh) % 26 + 65;
-      result = str_concat(result, _mk_byte(v2));
+      out.push(v2 as UInt8);
     } else {
-      result = str_concat(result, str_slice(s, i, i + 1));
+      out.push(_raw_byte(base, i));
     }
     i = i + 1;
   }
-  return result;
+  return Str::from_utf8(out);
 }
 
 /// Atbash: a<->z, A<->Z mirror (ASCII). Non-letters pass through.
 pub fn str_atbash(s: Str) -> Str
   ensures: result.len() == s.len()
 {
-  var result = "";
+  var out: Vec[UInt8] = Vec[UInt8].new();
+  let len = str_len(s);
+  let base = s.c_str();
   var i: Int = 0;
-  while i < str_len(s) {
-    var b = byte_at(s, i) as Int;
+  while i < len {
+    var b = _raw_byte(base, i) as Int;
     if b >= 97 && b <= 122 {
-      result = str_concat(result, _mk_byte(97 + (122 - b)));
+      out.push((97 + (122 - b)) as UInt8);
     } elif b >= 65 && b <= 90 {
-      result = str_concat(result, _mk_byte(65 + (90 - b)));
+      out.push((65 + (90 - b)) as UInt8);
     } else {
-      result = str_concat(result, str_slice(s, i, i + 1));
+      out.push(_raw_byte(base, i));
     }
     i = i + 1;
   }
-  return result;
+  return Str::from_utf8(out);
 }
 
 /// Abbreviate with a middle ellipsis: keeps `(max_len-3)/2` chars from the

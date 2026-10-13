@@ -7,7 +7,7 @@ windows-x64 release archive.)
 **Gates: corpus 955/955 full (C001 carve-outs retired on v0.63.1; new
 TcpStream loopback and uuencode roundtrip smokes added; smoke_os_watch
 added in wave 124), modules 510/510,
-probes 303/303, barename 0/510.**
+probes 304/304, barename 0/510.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -26,7 +26,7 @@ gates flip:
    wave-98..110 probes), the io byte-fidelity/CRLF lock and the
    fs_remove lock).
 4. Strict bare-name scan clean -- MET (0/509).
-5. Coverage ratchet green -- MET (floors160).
+5. Coverage ratchet green -- MET (floors161).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (499/518 modules, 3500/6239 fns).
 8. Contract coverage 100% (every public fn carries clauses) -- OPEN (70.7%).
@@ -435,6 +435,37 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
      sentencebreak/unescape/unicode/wordbreak/shuffle + slice remnants
      (~34 .byte_at sites); then the thread wave (1423 hoist) / queued
      options.
+     WAVE 127 (block 154): strnlen-family conversion batch 3 -- the
+     remaining per-position accessors converted to cached raw-pointer
+     reads in 13 string-dir files (case / collate / indent / truncate /
+     replace / reverse / segment / sentencebreak / unescape / shuffle /
+     wordbreak / unicode) plus the string.xi bare-byte_at tail
+     (str_compare / str_split / str_contains-starts-ends via _matches_at /
+     str_upper / str_lower / str_translate / str_rot47 / str_caesar /
+     str_atbash). Two family traps recorded: the earlier grep pattern
+     missed BARE `byte_at(` calls (no qualifier), which is how string.xi's
+     split/compare/transform hot paths stayed quadratic; and `s.c_str()`
+     is a Ptr that supports neither arithmetic nor `as *UInt8` -- the
+     idiomatic cached binding is `let base: *UInt8 = s.c_str();` inside
+     the unsafe block (or passing c_str() to a *UInt8 parameter). The
+     concat-per-item builders on those paths became single-Vec builders
+     (case joins + sentence case, indent line builders, replace scans,
+     shuffle joins, reverse spans, unescape Vec push, transforms).
+     Probe p_wave127_shapes.xi (304th): 127 rows byte-exact on every
+     converted path (multibyte/malformed/truncated rows included);
+     string smokes 102/102 + shuffle 2/2. Measured (capped 1.5 GB + 280 s
+     watchdog): out/dbg127r.xi runs 16 ops on 512 KB, rc=0, 157.1 s, peak
+     4.2 MB -- the per-position rescans are gone; the residual cost is
+     str_slice's per-call len rescan on per-char/per-part paths
+     (clusters/shuffle/split lines), queued as a batch-4 core item.
+     Coverage fns 8752, clauses 6205 (floors161 wired); battery corpus
+     955/955 (496.7s), probes 304/304 (235.5s), modules 510/510 (209.8s),
+     barename 0/510 (344.3s) + coverage/module-smoke/doc ratchets OK.
+     NEXT: batch 4 = the remaining qualified `.byte_at` files (casefold /
+     builder / combinatorics / block / compat / cosine / ea_width /
+     editdistance / emoji / lcp / linebreak / normalize / permute / strip /
+     template / interleave) + str_slice's per-call len; then the thread
+     wave (1423 hoist) / queued options.
 BINARY NOTE: the shared local build path
 `E:\xiom-lang\xiom\target\release\xiom.exe` was rebuilt past the pin
 (compiler main da7798da m252) and fails four corpus smokes; waves now run

@@ -18,10 +18,16 @@ use xiom.rand;
 // -- Private helpers ---------------------------------------------------------
 
 // Masked byte at `pos` (BUG 22 #10: `as Int` sign-extends UInt8).
+// Wave 127: raw read over the cached pointer -- string.byte_at strnlens the
+// whole string per call, so the per-position decodes were quadratic.
 // Complexity: O(1).
-fn _sh_byte(s: Str, i: Int) -> Int {
-  let v = string.byte_at(s, i) as Int;
-  v & 0xFF
+fn _sh_byte(s: Str, i: Int) -> Int
+  requires: true  // raw byte read; callers bound i against the cached len (T007)
+{
+  unsafe {
+    let base: *UInt8 = s.c_str();
+    return ((*(base + i)) as Int) & 0xFF;
+  }
 }
 
 // True when byte `b` is a UTF-8 continuation byte (0b10xxxxxx).
@@ -50,32 +56,45 @@ fn _sh_split(s: Str) -> Vec[Str] {
 }
 
 // Concatenates `chars`.
+// Wave 127: Vec[UInt8] builder -- the previous concat-per-char loop allocated
+// ~n^2/2 bytes for large inputs (strings leak by design).
 // Complexity: O(total bytes).
 fn _sh_join(chars: &Vec[Str]) -> Str {
-  var result = "";
+  var out: Vec[UInt8] = Vec[UInt8].new();
   var i: Int = 0;
   while i < chars.len() {
     let c = chars[i];
-    result = string.str_concat(result, c);
+    var k: Int = 0;
+    let cl = string.str_len(c);
+    while k < cl {
+      out.push(_sh_byte(c, k) as UInt8);
+      k = k + 1;
+    };
     i = i + 1;
   };
-  result
+  Str::from_utf8(out)
 }
 
 // Joins `words` with single spaces.
+// Wave 127: Vec[UInt8] builder (see _sh_join).
 // Complexity: O(total bytes).
 fn _sh_join_words(words: &Vec[Str]) -> Str {
-  var result = "";
+  var out: Vec[UInt8] = Vec[UInt8].new();
   var i: Int = 0;
   while i < words.len() {
     let w = words[i];
     if i > 0 {
-      result = string.str_concat(result, " ");
+      out.push(32);
     };
-    result = string.str_concat(result, w);
+    var k: Int = 0;
+    let wl = string.str_len(w);
+    while k < wl {
+      out.push(_sh_byte(w, k) as UInt8);
+      k = k + 1;
+    };
     i = i + 1;
   };
-  result
+  Str::from_utf8(out)
 }
 
 // Independent copy of a Vec[Str].

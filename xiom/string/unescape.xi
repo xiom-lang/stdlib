@@ -17,10 +17,27 @@ use xiom.convert;
 use xiom.char;
 
 // Masked byte at `pos` (BUG 22 #10: `as Int` sign-extends UInt8).
+// Wave 127: raw read over the cached pointer -- string.byte_at strnlens the
+// whole string per call, so the per-position scans were quadratic.
 // Complexity: O(1).
-fn _byte(s: Str, i: Int) -> Int {
-  let v = string.byte_at(s, i) as Int;
-  v & 0xFF
+fn _byte(s: Str, i: Int) -> Int
+  requires: true  // raw byte read; callers bound i against the cached len (T007)
+{
+  unsafe {
+    let base: *UInt8 = s.c_str();
+    return ((*(base + i)) as Int) & 0xFF;
+  }
+}
+
+// Raw byte at `i` (see _byte), for the Vec[UInt8] builders.
+// Complexity: O(1).
+fn _raw_byte(s: Str, i: Int) -> UInt8
+  requires: true  // raw byte read; callers bound i against the cached len (T007)
+{
+  unsafe {
+    let base: *UInt8 = s.c_str();
+    return *(base + i);
+  }
 }
 
 // Hex digit value of `c`, or -1 when `c` is not a hex digit.
@@ -36,20 +53,6 @@ fn _hex_val(c: Int) -> Int {
     return c - 55;
   };
   -1
-}
-
-// One-char string holding the raw byte `b` (0..255); "" outside the range.
-// Complexity: O(1).
-fn _byte_str(b: Int) -> Str {
-  if b < 0 || b > 255 {
-    return "";
-  };
-  var out = Vec[UInt8].new();
-  out.push(b as UInt8);
-  out.push(0);
-  unsafe {
-    Str.from_cstring(out.data)
-  }
 }
 
 // One-char (or multi-byte) string holding the UTF-8 encoding of the code
@@ -83,7 +86,7 @@ fn _cp_str(cp: Int) -> Str {
 /// Error case: none.
 /// Complexity: O(|s|).
 pub fn str_unescape(s: Str) -> Str {
-  var result = "";
+  var out: Vec[UInt8] = Vec[UInt8].new();
   let len = string.str_len(s);
   var i: Int = 0;
   while i < len {
@@ -91,30 +94,30 @@ pub fn str_unescape(s: Str) -> Str {
     if c == 92 && i + 1 < len {
       let n = _byte(s, i + 1);
       if n == 110 {
-        result = string.str_concat(result, "\n");
+        out.push(10);
         i = i + 2;
       } elif n == 116 {
-        result = string.str_concat(result, "\t");
+        out.push(9);
         i = i + 2;
       } elif n == 114 {
-        result = string.str_concat(result, "\r");
+        out.push(13);
         i = i + 2;
       } elif n == 34 {
-        result = string.str_concat(result, "\"");
+        out.push(34);
         i = i + 2;
       } elif n == 92 {
-        result = string.str_concat(result, "\\");
+        out.push(92);
         i = i + 2;
       } else {
-        result = string.str_concat(result, string.str_slice(s, i, i + 1));
+        out.push(_raw_byte(s, i));
         i = i + 1;
       };
     } else {
-      result = string.str_concat(result, string.str_slice(s, i, i + 1));
+      out.push(_raw_byte(s, i));
       i = i + 1;
     };
   };
-  result
+  Str::from_utf8(out)
 }
 
 /// Interpret only the ASCII escapes in `s`: \n, \t and \xNN (exactly two hex
@@ -125,7 +128,7 @@ pub fn str_unescape(s: Str) -> Str {
 /// Error case: none; a malformed \xNN (fewer than two hex digits) is kept.
 /// Complexity: O(|s|).
 pub fn str_unescape_ascii(s: Str) -> Str {
-  var result = "";
+  var out: Vec[UInt8] = Vec[UInt8].new();
   let len = string.str_len(s);
   var i: Int = 0;
   while i < len {
@@ -133,32 +136,31 @@ pub fn str_unescape_ascii(s: Str) -> Str {
     if c == 92 && i + 1 < len {
       let n = _byte(s, i + 1);
       if n == 110 {
-        result = string.str_concat(result, "\n");
+        out.push(10);
         i = i + 2;
       } elif n == 116 {
-        result = string.str_concat(result, "\t");
+        out.push(9);
         i = i + 2;
       } elif n == 120 && i + 3 < len {
         let h1 = _hex_val(_byte(s, i + 2));
         let h2 = _hex_val(_byte(s, i + 3));
         if h1 >= 0 && h2 >= 0 {
-          let b = h1 * 16 + h2;
-          result = string.str_concat(result, _byte_str(b));
+          out.push((h1 * 16 + h2) as UInt8);
           i = i + 4;
         } else {
-          result = string.str_concat(result, string.str_slice(s, i, i + 1));
+          out.push(_raw_byte(s, i));
           i = i + 1;
         };
       } else {
-        result = string.str_concat(result, string.str_slice(s, i, i + 1));
+        out.push(_raw_byte(s, i));
         i = i + 1;
       };
     } else {
-      result = string.str_concat(result, string.str_slice(s, i, i + 1));
+      out.push(_raw_byte(s, i));
       i = i + 1;
     };
   };
-  result
+  Str::from_utf8(out)
 }
 
 /// Interpret the Unicode escapes in `s`: \uNNNN (exactly four hex digits) and
@@ -169,7 +171,7 @@ pub fn str_unescape_ascii(s: Str) -> Str {
 /// Error case: none; a malformed escape (wrong digit count) is kept verbatim.
 /// Complexity: O(|s|).
 pub fn str_unescape_unicode(s: Str) -> Str {
-  var result = "";
+  var out: Vec[UInt8] = Vec[UInt8].new();
   let len = string.str_len(s);
   var i: Int = 0;
   while i < len {
@@ -190,10 +192,16 @@ pub fn str_unescape_unicode(s: Str) -> Str {
           k = k + 1;
         };
         if ok {
-          result = string.str_concat(result, _cp_str(cp));
+          let ch = _cp_str(cp);
+          var ci: Int = 0;
+          let cl = string.str_len(ch);
+          while ci < cl {
+            out.push(_raw_byte(ch, ci));
+            ci = ci + 1;
+          };
           i = i + 6;
         } else {
-          result = string.str_concat(result, string.str_slice(s, i, i + 1));
+          out.push(_raw_byte(s, i));
           i = i + 1;
         };
       } elif n == 85 && i + 9 < len {
@@ -210,20 +218,26 @@ pub fn str_unescape_unicode(s: Str) -> Str {
           k2 = k2 + 1;
         };
         if ok2 {
-          result = string.str_concat(result, _cp_str(cp2));
+          let ch2 = _cp_str(cp2);
+          var ci2: Int = 0;
+          let cl2 = string.str_len(ch2);
+          while ci2 < cl2 {
+            out.push(_raw_byte(ch2, ci2));
+            ci2 = ci2 + 1;
+          };
           i = i + 10;
         } else {
-          result = string.str_concat(result, string.str_slice(s, i, i + 1));
+          out.push(_raw_byte(s, i));
           i = i + 1;
         };
       } else {
-        result = string.str_concat(result, string.str_slice(s, i, i + 1));
+        out.push(_raw_byte(s, i));
         i = i + 1;
       };
     } else {
-      result = string.str_concat(result, string.str_slice(s, i, i + 1));
+      out.push(_raw_byte(s, i));
       i = i + 1;
     };
   };
-  result
+  Str::from_utf8(out)
 }

@@ -16,12 +16,30 @@ module xiom.string.reverse
 // their order changes.
 // ============================================================================
 
-// Returns the character at byte index `i` of `s`.
+// Returns the raw byte at byte index `i` of `s`, as a Char (the historical
+// byte-level semantics: multi-byte leads are not decoded here).
 // Precondition: 0 <= i < s.len().
+// Wave 127: raw read over the cached pointer -- xiom.string.byte_at strnlens
+// the whole string per call, so the per-position scans were quadratic.
 // Complexity: O(1).
-fn _char_at(s: Str, i: Int) -> Char {
-  let b = xiom.string.byte_at(s, i) as Int;
-  return b as Char;
+fn _char_at(s: Str, i: Int) -> Char
+  requires: true  // raw byte read; callers bound i against the cached len (T007)
+{
+  unsafe {
+    let base: *UInt8 = s.c_str();
+    return ((*(base + i)) as Int) as Char;
+  }
+}
+
+// Raw byte at byte index `i` of `s` (see _char_at).
+// Complexity: O(1).
+fn _raw_byte(s: Str, i: Int) -> UInt8
+  requires: true  // raw byte read; callers bound i against the cached len (T007)
+{
+  unsafe {
+    let base: *UInt8 = s.c_str();
+    return *(base + i);
+  }
 }
 
 // Returns true when byte `b` is a UTF-8 continuation byte (0b10xxxxxx).
@@ -35,27 +53,37 @@ fn _is_cont(b: UInt8) -> Bool {
 // Reverses the characters of `s`, iterating over UTF-8 character boundaries
 // so multi-byte characters are preserved. Kept private so neither public entry
 // point has to reference the name `str_reverse` (see the module header).
+// Wave 127: one span pass collects the character ranges; the build pass copies
+// the raw bytes of the spans in reverse (the previous implementation pushed a
+// fresh str_slice per character and then concatenated per character -- the
+// same n^2-allocation class as the wave-125/126 builder fixes).
 fn _reverse_chars_impl(s: Str) -> Str {
-  var chars = Vec[Str].new();
+  var starts = Vec[Int].new();
+  var ends = Vec[Int].new();
   let len = xiom.string.str_len(s);
   var i: Int = 0;
   while i < len {
     var start = i;
     var adv: Int = 1;
-    while start + adv < len && _is_cont(xiom.string.byte_at(s, start + adv)) {
+    while start + adv < len && _is_cont(_raw_byte(s, start + adv)) {
       adv = adv + 1;
     };
-    chars.push(xiom.string.str_slice(s, start, start + adv));
+    starts.push(start);
+    ends.push(start + adv);
     i = start + adv;
   };
-  var result = "";
-  var j: Int = chars.len() - 1;
-  while j >= 0 {
-    var ch = chars[j];
-    result = xiom.string.str_concat(result, ch);
+  var out: Vec[UInt8] = Vec[UInt8].new();
+  var j: Int = starts.len();
+  while j > 0 {
     j = j - 1;
+    var k: Int = starts[j];
+    let e = ends[j];
+    while k < e {
+      out.push(_raw_byte(s, k));
+      k = k + 1;
+    };
   };
-  result
+  Str::from_utf8(out)
 }
 
 /// Reverses the characters of `s`, iterating over UTF-8 character boundaries
@@ -71,9 +99,11 @@ pub fn str_reverse(s: Str) -> Str
 /// Reverses the order of the whitespace-separated words of `s`. The runs of
 /// whitespace between words are preserved as runs; only the token order is
 /// reversed. Returns `s` unchanged when `s` has no words.
+/// Wave 127: span pass + reverse raw-byte copy (was slice+concat per run).
 /// Complexity: O(|s|).
 pub fn str_reverse_words(s: Str) -> Str {
-  var runs = Vec[Str].new();
+  var starts = Vec[Int].new();
+  var ends = Vec[Int].new();
   let len = xiom.string.str_len(s);
   var i: Int = 0;
   while i < len {
@@ -82,19 +112,24 @@ pub fn str_reverse_words(s: Str) -> Str {
     while i < len && xiom.char.is_whitespace(_char_at(s, i)) == first_ws {
       i = i + 1;
     };
-    runs.push(xiom.string.str_slice(s, run_start, i));
+    starts.push(run_start);
+    ends.push(i);
   };
-  if runs.len() == 0 {
+  if starts.len() == 0 {
     return "";
   };
-  var result = "";
-  var j: Int = runs.len() - 1;
-  while j >= 0 {
-    var r = runs[j];
-    result = xiom.string.str_concat(result, r);
+  var out: Vec[UInt8] = Vec[UInt8].new();
+  var j: Int = starts.len();
+  while j > 0 {
     j = j - 1;
+    var k: Int = starts[j];
+    let e = ends[j];
+    while k < e {
+      out.push(_raw_byte(s, k));
+      k = k + 1;
+    };
   };
-  result
+  Str::from_utf8(out)
 }
 
 /// Alias of `str_reverse`: reverses the characters of `s`.

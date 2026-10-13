@@ -16,6 +16,19 @@ use xiom.string;
 use xiom.misc;
 use xiom.convert;
 
+// Masked byte at `pos` over the cached pointer. Wave 127: string.byte_at
+// strnlens the whole string per call, so the per-position compares were
+// quadratic; callers bound `pos` against their cached length.
+// Complexity: O(1).
+fn _byte_at(s: Str, i: Int) -> Int
+  requires: true  // raw byte read; callers bound i against the cached len (T007)
+{
+  unsafe {
+    let base: *UInt8 = s.c_str();
+    return ((*(base + i)) as Int) & 0xFF;
+  }
+}
+
 /// Compare `a` and `b` in byte-wise collation order.
 /// Returns a negative Int when `a` sorts before `b`, zero when the strings are
 /// byte-identical, and a positive Int when `a` sorts after `b`. Bytes are
@@ -35,8 +48,8 @@ pub fn collate_compare(a: Str, b: Str) -> Int
   };
   var i: Int = 0;
   while i < n {
-    let ab = (string.byte_at(a, i) as Int) & 0xFF;
-    let bb = (string.byte_at(b, i) as Int) & 0xFF;
+    let ab = _byte_at(a, i);
+    let bb = _byte_at(b, i);
     if ab < bb {
       return -1;
     };
@@ -83,7 +96,7 @@ pub fn collate_key(s: Str) -> Str
   var out = Vec[UInt8].new();
   var i: Int = 0;
   while i < len {
-    let b = (string.byte_at(s, i) as Int) & 0xFF;
+    let b = _byte_at(s, i);
     var ch = b;
     if b >= 65 && b <= 90 {
       ch = b + 32;

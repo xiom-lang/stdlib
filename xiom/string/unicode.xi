@@ -981,9 +981,15 @@ fn _int_to_float(v: Int) -> Float64 {
 }
 
 /// Masked byte at `pos` (BUG 22 #10: `as Int` sign-extends UInt8).
-fn _byte_at(s: Str, pos: Int) -> Int {
-  let v = string.byte_at(s, pos) as Int;
-  v & 0xFF
+/// Wave 127: raw read over the cached pointer -- string.byte_at strnlens the
+/// whole string per call, so the per-position decodes were quadratic.
+fn _byte_at(s: Str, pos: Int) -> Int
+  requires: true  // raw byte read; callers bound pos against the cached len (T007)
+{
+  unsafe {
+    let base: *UInt8 = s.c_str();
+    return ((*(base + pos)) as Int) & 0xFF;
+  }
 }
 
 /// UTF-8 sequence length given the leading byte.

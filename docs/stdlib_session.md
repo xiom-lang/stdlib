@@ -3023,6 +3023,58 @@ registry pin, agent recon for the rest)**
   delivery) closed out the pulse wave-2 rows -- probes 300; floors157.
 - No other queue moves; 1442 and 1630/1658 remain the compiler's.
 
+**SESSION 2026-10-13 block 154 (wave 127: strnlen-family batch 3 -- the remaining string-dir accessors + the string.xi bare-byte_at tail; probes 304; floors161)**
+- WAVE 127 (classic string-dir wave, batch 3 -- the block-152b follow-up):
+  the remaining per-position accessors in 13 files (case, collate,
+  indent, truncate, replace, reverse, segment, sentencebreak, unescape,
+  shuffle, wordbreak, unicode) now read through cached raw pointers
+  instead of xiom_char_at / string.byte_at (runtime strnlen per call).
+  The string.xi BARE-byte_at tail was converted too: str_compare,
+  str_split, the shared _matches_at (fixes contains / starts_with /
+  ends_with / index_of / last_index_of), str_upper, str_lower,
+  str_translate, str_rot47, str_caesar, str_atbash. The concat-per-item
+  builders on those paths became single-Vec builders (case joins +
+  sentence case, indent line builders, replace scans, shuffle joins,
+  reverse spans, unescape push, transforms) -- the wave-125/126 leak
+  class is now cleared from all of these.
+- Two family traps this wave: (a) the wave-125/126 grep pattern
+  (qualified `.byte_at` / `xiom_byte_at` forms) MISSED bare `byte_at(`
+  calls -- that is how string.xi's split/compare/transform hot paths
+  stayed quadratic; re-grep with `[^_.a-zA-Z0-9]byte_at(`. (b)
+  `s.c_str()` is a Ptr: pointer arithmetic on it and `as *UInt8` casts
+  are both rejected -- the working idioms are
+  `let base: *UInt8 = s.c_str();` inside the unsafe block, or passing
+  `s.c_str()` straight to a `*UInt8` parameter.
+- The measurement found two more per-call rescans: replace._matches_at's
+  internal str_len(s) per position (the bound moved to the callers; this
+  was the 270 GB-scan stall the capped run exposed and fixed) and --
+  still open, batch 4 -- str_slice's per-call len rescan (per-char/
+  per-part paths: clusters / shuffle / split lines pay O(k*n); ~630 GB
+  of scanning on the 512 KB scratch, which is most of its 157 s).
+- Probe p_wave127_shapes.xi (304th): 127 rows, byte-exact on every
+  converted path (decoded trim, words classes, collate byte order,
+  reverse spans incl. truncated tails, replace incl. empty from,
+  unescape ascii/unicode, truncate incl. 4-byte emoji, grapheme
+  clusters + CRLF, sentence/word bounds, seeded shuffle permutation,
+  indent variants, unicode tolower/combining, split/compare/transform
+  rows); string smokes 102/102 + shuffle 2/2.
+- Capped measurement (per the 1545 protocol; 1.5 GB cap + 280 s
+  watchdog): out/dbg127r.xi, 16 ops on a 512 KB input, rc=0, 157.1 s,
+  peak working set 4.2 MB across the whole run -- bounded; no leak-class
+  behavior.
+- Coverage: fns 8752 (+10), pubFns 6540, clauses 6205 (+18), pubCovered
+  4625; floors161 dumped + wired. Battery on v0.64.4-rel (final tree):
+  corpus 955/955 (496.7s), probes 304/304 (235.5s), modules 510/510
+  (209.8s), barename 0/510 (344.3s), coverage ratchet vs floors160 +
+  module-smoke (499/518, 3500/6239) + doc ratchets OK.
+- Bus: doorbell 17:00Z quiet (nothing new stdlib-addressed); 1545 acked
+  earlier (the capped re-run completed); 1423/1445 unchanged this wave.
+- Next: batch 4 = the remaining qualified `.byte_at` files (casefold /
+  builder / combinatorics / block / compat / cosine / ea_width /
+  editdistance / emoji / lcp / linebreak / normalize / permute / strip /
+  template / interleave) + str_slice's per-call len; then the thread
+  wave (1423 hoist) / queued options.
+
 **SESSION 2026-10-13 block 153 (handoff 17:15Z -- snapshot 34 refreshed in place at head f3fba44; waves 114-126; continuation prompt re-issued)**
 - Snapshot 34 written at the top of section 0A (waves 114-126; gates
   955/303/510/0 + floors160; coverage fns 8742/clauses 6187; the new

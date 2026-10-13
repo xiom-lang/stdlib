@@ -2027,8 +2027,38 @@ T1/T2 yields.
         (268.6s). NEXT: batch 3 = case/collate/indent/truncate/replace/
         segment/sentencebreak/unescape/unicode/wordbreak/shuffle + slice
         remnants (~34 .byte_at sites); then the thread wave (1423).
+        Wave 127 (2026-10-13, block 154): strnlen-family conversion batch
+        3 -- the remaining per-position accessors in 13 string-dir files
+        (case / collate / indent / truncate / replace / reverse / segment /
+        sentencebreak / unescape / shuffle / wordbreak / unicode) plus the
+        string.xi bare-byte_at tail (str_compare / str_split / _matches_at
+        incl. contains-starts-ends-index_of / str_upper / str_lower /
+        str_translate / str_rot47 / str_caesar / str_atbash) now read
+        through cached raw pointers; the concat-per-item builders on those
+        paths became single-Vec builders (case joins + sentence case,
+        indent line builders, replace scans, shuffle joins, reverse spans,
+        unescape Vec push, transforms). Traps: bare `byte_at(` calls were
+        missed by the wave-125/126 grep pattern (re-grepped with
+        `[^_.a-zA-Z0-9]byte_at(`); `s.c_str()` is a Ptr -- it supports
+        neither arithmetic nor `as *UInt8`; the cached binding is
+        `let base: *UInt8 = s.c_str();` (inside unsafe) or passing c_str()
+        to a *UInt8 parameter; replace._matches_at's internal str_len(s)
+        per position was a full rescan (bound moved to callers). Probe
+        p_wave127_shapes.xi (304th): 127 rows byte-exact incl.
+        multibyte/malformed/truncated; string smokes 102/102 + shuffle 2/2.
+        Measured (capped 1.5 GB + 280 s watchdog; shared box): 16 ops on a
+        512 KB input, rc=0, 157.1 s, peak 4.2 MB. Residual: str_slice
+        still rescans the source per call (per-char/per-part paths pay
+        O(k*n)) -- batch-4 core item. Coverage fns 8752, clauses 6205
+        (floors161) + module-smoke (499/518, 3500/6239) + doc ratchets OK;
+        battery on v0.64.4-rel: corpus 955/955 (496.7s), probes 304/304
+        (235.5s), modules 510/510 (209.8s), barename 0/510 (344.3s).
+        NEXT: batch 4 = the remaining qualified `.byte_at` files (casefold/
+        builder/combinatorics/block/compat/cosine/ea_width/editdistance/
+        emoji/lcp/linebreak/normalize/permute/strip/template/interleave)
+        + str_slice's per-call len; then the thread wave (1423 hoist).
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors160.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors161.json
         tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;

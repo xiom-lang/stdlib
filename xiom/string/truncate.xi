@@ -15,8 +15,56 @@ module xiom.string.truncate
 use xiom.string;
 use xiom.char;
 
-extern "C" {
-  fn xiom_char_at(s: Str, pos: Int) -> Char;
+// Wave 127: raw byte reads over a cached (base, len) view -- xiom_char_at and
+// string.byte_at strnlen the whole string per call, so the per-position walks
+// were quadratic. Callers bound `i` against their cached length.
+// Complexity: O(1).
+fn _raw_byte(base: *UInt8, i: Int) -> UInt8
+  requires: true  // raw byte read; callers bound i against len (T007)
+{
+  unsafe { return *(base + i); }
+}
+
+// Runtime-`xiom_char_at`-equivalent UTF-8 decode over a cached (base, len)
+// view (copied byte-exact from slice.xi): continuation bytes are validated, a
+// malformed or truncated sequence yields the leading byte itself, a stray
+// continuation byte is returned as-is, and out-of-range positions read as 0
+// (the NUL byte the runtime would see). Complexity: O(1).
+fn _char_at_runtime(base: *UInt8, len: Int, pos: Int) -> Char {
+  if pos < 0 || pos >= len {
+    return to_char(0);
+  }
+  var b0 = (_raw_byte(base, pos) as Int) & 0xFF;
+  if b0 < 0x80 {
+    return to_char(b0);
+  }
+  var n = 0;
+  var cp = 0;
+  if (b0 & 0xE0) == 0xC0 {
+    n = 2;
+    cp = b0 & 0x1F;
+  } elif (b0 & 0xF0) == 0xE0 {
+    n = 3;
+    cp = b0 & 0x0F;
+  } elif (b0 & 0xF8) == 0xF0 {
+    n = 4;
+    cp = b0 & 0x07;
+  } else {
+    return to_char(b0);
+  }
+  var i = 1;
+  while i < n {
+    var cb = 0;
+    if pos + i < len {
+      cb = (_raw_byte(base, pos + i) as Int) & 0xFF;
+    }
+    if (cb & 0xC0) != 0x80 {
+      return to_char(b0);
+    }
+    cp = (cp << 6) | (cb & 0x3F);
+    i = i + 1;
+  }
+  return to_char(cp);
 }
 
 /// Returns the last `n` characters of `s` (n as a Unicode character count),
@@ -32,18 +80,19 @@ fn _last_chars(s: Str, n: Int) -> Str {
   };
   var count: Int = 0;
   var i = len;
+  let base = s.c_str();
   while count < n {
     var char_start = i - 1;
     var guard: Int = 0;
     while char_start > 0 && guard < 4 {
-      let b = (string.byte_at(s, char_start) as Int) & 0xFF;
+      let b = (_raw_byte(base, char_start) as Int) & 0xFF;
       if (b & 0xC0) != 0x80 {
         break;
       };
       char_start = char_start - 1;
       guard = guard + 1;
     };
-    let b0 = (string.byte_at(s, char_start) as Int) & 0xFF;
+    let b0 = (_raw_byte(base, char_start) as Int) & 0xFF;
     var bl: Int = 1;
     if b0 <= 0x7F {
       bl = 1;
@@ -83,8 +132,9 @@ pub fn str_truncate(s: Str, max_len: Int) -> Str
   var count: Int = 0;
   var i: Int = 0;
   var cut: Int = 0;
+  let base = s.c_str();
   while i < len && count < max_len {
-    let ch = xiom_char_at(s, i);
+    let ch = _char_at_runtime(base, len, i);
     let bl = char.len_utf8(ch);
     cut = i + bl;
     i = i + bl;

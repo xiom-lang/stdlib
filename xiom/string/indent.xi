@@ -14,8 +14,42 @@ module xiom.string.indent
 
 use xiom.string;
 
-extern "C" {
-  fn xiom_char_at(s: Str, pos: Int) -> Char;
+// Wave 127: raw byte reads over the cached pointer -- xiom_char_at /
+// string.byte_at strnlen the whole string per call, so the per-position
+// scans were quadratic. Both helpers keep the previous byte-level semantics
+// (this module only ever compares ASCII space / tab bytes).
+// Complexity: O(1).
+fn _char_at(s: Str, i: Int) -> Char
+  requires: true  // raw byte read; callers bound i against the cached len (T007)
+{
+  unsafe {
+    let base: *UInt8 = s.c_str();
+    return ((*(base + i)) as Int) as Char;
+  }
+}
+
+// Masked raw byte at `pos` (see _char_at).
+// Complexity: O(1).
+fn _byte_at(s: Str, i: Int) -> Int
+  requires: true  // raw byte read; callers bound i against the cached len (T007)
+{
+  unsafe {
+    let base: *UInt8 = s.c_str();
+    return ((*(base + i)) as Int) & 0xFF;
+  }
+}
+
+// Pushes the raw bytes of `w` onto `out` (the Vec[UInt8] builder idiom).
+// Wave 127: the indent builders joined their lines with str_concat per line,
+// which allocates ~n^2/2 bytes for many-line inputs (strings leak by design).
+// Complexity: O(|w|).
+fn _push_str(out: &mut Vec[UInt8], w: Str) {
+  var k: Int = 0;
+  let wl = string.str_len(w);
+  while k < wl {
+    out.push(_byte_at(w, k) as UInt8);
+    k = k + 1;
+  };
 }
 
 /// Prepends the given prefix to every line of `s` (lines are separated by
@@ -23,18 +57,18 @@ extern "C" {
 /// Complexity: O(|s| * n).
 fn _prefix_lines(s: Str, prefix: Str) -> Str {
   var lines = string.str_split(s, "\n");
-  var result = "";
+  var out: Vec[UInt8] = Vec[UInt8].new();
   var i: Int = 0;
   while i < lines.len() {
     if i > 0 {
-      result = string.str_concat(result, "\n");
+      out.push(10);
     };
     var line = lines[i];
-    result = string.str_concat(result, prefix);
-    result = string.str_concat(result, line);
+    _push_str(&mut out, prefix);
+    _push_str(&mut out, line);
     i = i + 1;
   };
-  result
+  Str::from_utf8(out)
 }
 
 /// Prepends `n` spaces to each line of `s`. An indent level at or below 0
@@ -74,7 +108,7 @@ pub fn str_indent_with(s: Str, n: Int, prefix: Str) -> Str {
 /// Error case: none.
 /// Complexity: O(|s|).
 pub fn str_dedent(s: Str) -> Str
-  requires: true  // extern char_at call in the scan loop (T002 confinement)
+  requires: true  // raw-view scan in the loop (T002 confinement)
 {
   var lines = string.str_split(s, "\n");
   var min_indent: Int = -1;
@@ -88,7 +122,7 @@ pub fn str_dedent(s: Str) -> Str
     };
     var ws: Int = 0;
     while ws < llen {
-      let c = xiom_char_at(line, ws);
+      let c = _char_at(line, ws);
       if c == ' ' || c == '\t' {
         ws = ws + 1;
       } else {
@@ -103,11 +137,11 @@ pub fn str_dedent(s: Str) -> Str
   if min_indent <= 0 {
     return s;
   };
-  var result = "";
+  var out: Vec[UInt8] = Vec[UInt8].new();
   i = 0;
   while i < lines.len() {
     if i > 0 {
-      result = string.str_concat(result, "\n");
+      out.push(10);
     };
     var line = lines[i];
     let llen = string.str_len(line);
@@ -115,11 +149,14 @@ pub fn str_dedent(s: Str) -> Str
     if strip > llen {
       strip = llen;
     };
-    let rest = string.str_slice(line, strip, llen);
-    result = string.str_concat(result, rest);
+    var k: Int = strip;
+    while k < llen {
+      out.push(_byte_at(line, k) as UInt8);
+      k = k + 1;
+    };
     i = i + 1;
   };
-  result
+  Str::from_utf8(out)
 }
 
 /// Removes one level of indentation from each line of `s`: a leading tab, or
@@ -131,21 +168,21 @@ pub fn str_dedent(s: Str) -> Str
 /// Complexity: O(|s|).
 pub fn str_unindent(s: Str) -> Str {
   var lines = string.str_split(s, "\n");
-  var result = "";
+  var out: Vec[UInt8] = Vec[UInt8].new();
   var i: Int = 0;
   while i < lines.len() {
     if i > 0 {
-      result = string.str_concat(result, "\n");
+      out.push(10);
     };
     var line = lines[i];
     let llen = string.str_len(line);
     var pos: Int = 0;
-    if pos < llen && (string.byte_at(line, 0) as Int) == 9 {
+    if pos < llen && _byte_at(line, 0) == 9 {
       pos = 1;
     } else {
       var removed: Int = 0;
       while pos < llen && removed < 4 {
-        let b = (string.byte_at(line, pos) as Int) & 0xFF;
+        let b = _byte_at(line, pos);
         if b == 32 {
           pos = pos + 1;
           removed = removed + 1;
@@ -154,9 +191,12 @@ pub fn str_unindent(s: Str) -> Str {
         };
       };
     };
-    let rest = string.str_slice(line, pos, llen);
-    result = string.str_concat(result, rest);
+    var k: Int = pos;
+    while k < llen {
+      out.push(_byte_at(line, k) as UInt8);
+      k = k + 1;
+    };
     i = i + 1;
   };
-  result
+  Str::from_utf8(out)
 }

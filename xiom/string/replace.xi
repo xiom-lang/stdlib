@@ -15,26 +15,51 @@ module xiom.string.replace
 // these implementations scan byte-by-byte with direct slice comparisons.
 // ============================================================================
 
-// Returns the character at byte index `i` of `s`.
+// Returns the raw byte at byte index `i` of `s`, as a Char (the historical
+// byte-level semantics: multi-byte leads are not decoded here).
 // Precondition: 0 <= i < s.len().
+// Wave 127: raw read over the cached pointer -- xiom.string.byte_at strnlens
+// the whole string per call, so the per-position scans were quadratic.
 // Complexity: O(1).
-fn _char_at(s: Str, i: Int) -> Char {
-  let b = xiom.string.byte_at(s, i) as Int;
-  return b as Char;
+fn _char_at(s: Str, i: Int) -> Char
+  requires: true  // raw byte read; callers bound i against the cached len (T007)
+{
+  unsafe {
+    let base: *UInt8 = s.c_str();
+    return ((*(base + i)) as Int) as Char;
+  }
+}
+
+// Raw byte at byte index `i` of `s` (see _char_at).
+// Complexity: O(1).
+fn _raw_byte(s: Str, i: Int) -> UInt8
+  requires: true  // raw byte read; callers bound i against the cached len (T007)
+{
+  unsafe {
+    let base: *UInt8 = s.c_str();
+    return *(base + i);
+  }
 }
 
 // Returns true when `from` occurs in `s` at byte position `pos`.
+// Wave 127: byte compare over the cached pointers (the previous
+// str_slice-per-position compare allocated a fresh slice at every probe);
+// callers bound `pos + |from|` against `|s|` (the internal str_len(s) here
+// was a full rescan per position).
 // Complexity: O(|from|).
 fn _matches_at(s: Str, pos: Int, from: Str) -> Bool {
   let from_len = xiom.string.str_len(from);
-  let s_len = xiom.string.str_len(s);
   if from_len == 0 {
     return false;
   };
-  if pos + from_len > s_len {
-    return false;
+  var k: Int = 0;
+  while k < from_len {
+    if _raw_byte(s, pos + k) != _raw_byte(from, k) {
+      return false;
+    };
+    k = k + 1;
   };
-  xiom.string.str_slice(s, pos, pos + from_len) == from
+  true
 }
 
 /// Replaces all non-overlapping occurrences of `from` with `to` in `s`.
@@ -47,21 +72,30 @@ pub fn str_replace(s: Str, from: Str, to: Str) -> Str
   if from_len == 0 {
     return s;
   };
-  var result = "";
+  var out: Vec[UInt8] = Vec[UInt8].new();
   var pos: Int = 0;
   let s_len = xiom.string.str_len(s);
   while pos < s_len {
-    if _matches_at(s, pos, from) {
-      result = xiom.string.str_concat(result, to);
+    if pos + from_len <= s_len && _matches_at(s, pos, from) {
+      var k: Int = 0;
+      let tl = xiom.string.str_len(to);
+      while k < tl {
+        out.push(_raw_byte(to, k));
+        k = k + 1;
+      };
       pos = pos + from_len;
     } else {
       let c = _char_at(s, pos);
       let bl = xiom.char.len_utf8(c);
-      result = xiom.string.str_concat(result, xiom.string.str_slice(s, pos, pos + bl));
+      var k2: Int = 0;
+      while k2 < bl && pos + k2 < s_len {
+        out.push(_raw_byte(s, pos + k2));
+        k2 = k2 + 1;
+      };
       pos = pos + bl;
     };
   };
-  result
+  Str::from_utf8(out)
 }
 
 /// Replaces all non-overlapping occurrences of `from` with `to` in `s`.
@@ -87,23 +121,32 @@ pub fn str_replace_n(s: Str, from: Str, to: Str, n: Int) -> Str
   if n <= 0 {
     return s;
   };
-  var result = "";
+  var out: Vec[UInt8] = Vec[UInt8].new();
   var pos: Int = 0;
   var count: Int = 0;
   let s_len = xiom.string.str_len(s);
   while pos < s_len {
-    if count < n && _matches_at(s, pos, from) {
-      result = xiom.string.str_concat(result, to);
+    if count < n && pos + from_len <= s_len && _matches_at(s, pos, from) {
+      var k: Int = 0;
+      let tl = xiom.string.str_len(to);
+      while k < tl {
+        out.push(_raw_byte(to, k));
+        k = k + 1;
+      };
       pos = pos + from_len;
       count = count + 1;
     } else {
       let c = _char_at(s, pos);
       let bl = xiom.char.len_utf8(c);
-      result = xiom.string.str_concat(result, xiom.string.str_slice(s, pos, pos + bl));
+      var k2: Int = 0;
+      while k2 < bl && pos + k2 < s_len {
+        out.push(_raw_byte(s, pos + k2));
+        k2 = k2 + 1;
+      };
       pos = pos + bl;
     };
   };
-  result
+  Str::from_utf8(out)
 }
 
 /// Replaces the first occurrence of `from` with `to` in `s`.

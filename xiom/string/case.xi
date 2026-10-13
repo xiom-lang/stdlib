@@ -19,12 +19,44 @@ extern "C" {
   fn malloc(size: UInt) -> *UInt8;
 }
 
-// Returns the character at byte index `i` of `s`.
+// Returns the raw byte at byte index `i` of `s`, as a Char (the historical
+// byte-level semantics: multi-byte leads are not decoded here).
 // Precondition: 0 <= i < s.len().
+// Wave 127: raw read over the cached pointer -- string.byte_at strnlens the
+// whole string per call, so the per-position reads were quadratic.
 // Complexity: O(1).
-fn _char_at(s: Str, i: Int) -> Char {
-  let b = string.byte_at(s, i) as Int;
-  return b as Char;
+fn _char_at(s: Str, i: Int) -> Char
+  requires: true  // raw byte read; callers bound i against the cached len (T007)
+{
+  unsafe {
+    let base: *UInt8 = s.c_str();
+    return ((*(base + i)) as Int) as Char;
+  }
+}
+
+// Raw byte at byte index `i` of `s` (the _split_words scanner's accessor).
+// Wave 127: raw read over the cached pointer (see _char_at).
+// Complexity: O(1).
+fn _byte_at(s: Str, i: Int) -> UInt8
+  requires: true  // raw byte read; callers bound i against the cached len (T007)
+{
+  unsafe {
+    let base: *UInt8 = s.c_str();
+    return *(base + i);
+  }
+}
+
+// Pushes the raw bytes of `w` onto `out` (the Vec[UInt8] builder idiom).
+// Wave 127: the case builders joined their pieces with str_concat per item,
+// which allocates ~n^2/2 bytes for large inputs (strings leak by design).
+// Complexity: O(|w|).
+fn _push_bytes(out: &mut Vec[UInt8], w: Str) {
+  var k: Int = 0;
+  let wl = string.str_len(w);
+  while k < wl {
+    out.push(_byte_at(w, k));
+    k = k + 1;
+  };
 }
 
 // Returns a one-character string holding the UTF-8 encoding of `c`.
@@ -93,18 +125,18 @@ fn _split_words(s: Str) -> Vec[Str] {
   var start: Int = 0;
   var i: Int = 0;
   while i < len {
-    let b = string.byte_at(s, i);
+    let b = _byte_at(s, i);
     if !_is_alnum_byte(b) {
       if i > start {
         result.push(string.str_slice(s, start, i));
       };
       i = i + 1;
       start = i;
-    } elif i > start && _is_upper_byte(b) && _is_lower_byte(string.byte_at(s, i - 1)) {
+    } elif i > start && _is_upper_byte(b) && _is_lower_byte(_byte_at(s, i - 1)) {
       result.push(string.str_slice(s, start, i));
       start = i;
       i = i + 1;
-    } elif i >= 2 && i > start && _is_lower_byte(b) && _is_upper_byte(string.byte_at(s, i - 1)) && _is_upper_byte(string.byte_at(s, i - 2)) {
+    } elif i >= 2 && i > start && _is_lower_byte(b) && _is_upper_byte(_byte_at(s, i - 1)) && _is_upper_byte(_byte_at(s, i - 2)) {
       result.push(string.str_slice(s, start, i));
       start = i;
       i = i + 1;
@@ -133,20 +165,21 @@ fn _capitalize(w: Str) -> Str {
 }
 
 // Joins the words of `s`, lowercased, with separator `sep`.
+// Wave 127: Vec[UInt8] builder (was concat-per-word).
 // Complexity: O(|s|).
 fn _join_lower(s: Str, sep: Str) -> Str {
   var words = _split_words(s);
-  var result = "";
+  var out: Vec[UInt8] = Vec[UInt8].new();
   var i: Int = 0;
   while i < words.len() {
     if i > 0 {
-      result = string.str_concat(result, sep);
+      _push_bytes(&mut out, sep);
     };
     var w = words[i];
-    result = string.str_concat(result, string.str_lower(w));
+    _push_bytes(&mut out, string.str_lower(w));
     i = i + 1;
   };
-  result
+  Str::from_utf8(out)
 }
 
 /// Converts all characters of `s` to uppercase.
@@ -203,7 +236,7 @@ pub fn str_capitalize(s: Str) -> Str
 pub fn str_sentence_case(s: Str) -> Str
   ensures: result.len() == s.len()
 {
-  var result = "";
+  var out: Vec[UInt8] = Vec[UInt8].new();
   let len = string.str_len(s);
   var cap_next = true;
   var i: Int = 0;
@@ -213,20 +246,28 @@ pub fn str_sentence_case(s: Str) -> Str
     if xiom.char.is_alphabetic(c) {
       if cap_next {
         let uc = xiom.char.to_uppercase(c);
-        result = string.str_concat(result, _char_to_str(uc));
+        _push_bytes(&mut out, _char_to_str(uc));
       } else {
-        result = string.str_concat(result, string.str_slice(s, i, i + bl));
+        var k: Int = 0;
+        while k < bl && i + k < len {
+          out.push(_byte_at(s, i + k));
+          k = k + 1;
+        };
       };
       cap_next = false;
     } else {
-      result = string.str_concat(result, string.str_slice(s, i, i + bl));
+      var k2: Int = 0;
+      while k2 < bl && i + k2 < len {
+        out.push(_byte_at(s, i + k2));
+        k2 = k2 + 1;
+      };
       if c == '.' || c == '!' || c == '?' {
         cap_next = true;
       };
     };
     i = i + bl;
   };
-  result
+  Str::from_utf8(out)
 }
 
 /// Converts `s` to lowerCamelCase: the first word is lowercased and each
@@ -240,14 +281,15 @@ pub fn str_to_camel_case(s: Str) -> Str
     return "";
   };
   var first = words[0];
-  var result = string.str_lower(first);
+  var out: Vec[UInt8] = Vec[UInt8].new();
+  _push_bytes(&mut out, string.str_lower(first));
   var i: Int = 1;
   while i < words.len() {
     var w = words[i];
-    result = string.str_concat(result, _capitalize(w));
+    _push_bytes(&mut out, _capitalize(w));
     i = i + 1;
   };
-  result
+  Str::from_utf8(out)
 }
 
 /// Converts `s` to snake_case: words are lowercased and joined with '_'.
@@ -273,12 +315,12 @@ pub fn str_to_pascal_case(s: Str) -> Str
   ensures: s.len() == 0 => result.len() == 0
 {
   var words = _split_words(s);
-  var result = "";
+  var out: Vec[UInt8] = Vec[UInt8].new();
   var i: Int = 0;
   while i < words.len() {
     var w = words[i];
-    result = string.str_concat(result, _capitalize(w));
+    _push_bytes(&mut out, _capitalize(w));
     i = i + 1;
   };
-  result
+  Str::from_utf8(out)
 }
