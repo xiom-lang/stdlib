@@ -363,6 +363,7 @@ xiom.os.sync_io
 xiom.os.term
 xiom.os.terminal
 xiom.os.unix
+xiom.os.watch
 xiom.os.win
 xiom.path
 xiom.platform

@@ -1929,8 +1929,43 @@ T1/T2 yields.
         poll/select + SO_REUSEPORT wave 122; signal delivery this wave;
         gzip/deflate and linear json_parse were already in place per the
         triage).
+        Wave 124 (2026-10-13): directory watch + the guard-free runtime
+        half. Watch (REL-20261012-2012-engine-3, Windows-first per the
+        ack): new module xiom.os.watch (modlist 510) -- watch_dir
+        (ReadDirectoryChangesW; recursive subtrees; up to 8 concurrent
+        watches, 4 KiB change buffers) + watch_poll (one runtime record
+        per call, drained up to 256 per call; a coalesced buffer
+        overflow surfaces as WATCH_OVERFLOW) + watch_close; POSIX
+        (inotify/kqueue) is a documented Err. Runtime
+        xiom_watch_open/poll/close (Windows impl; POSIX -1s). modlist
+        updated; smoke_os_watch added (corpus 955); module-smoke now
+        499/518. Probe p_wave124_shapes.xi (301st) red pre / green post:
+        POSIX Err rows; Windows fixture create/modify/remove roundtrip
+        plus a recursive subdir event and closed-handle/missing-dir
+        Errs; no leftovers. GUARD-FREE (REL-20261013-1445 part 1, the
+        B-05 runtime half): xiom_guard_free added (arena-aware -- no-op
+        inside the guard arena, libc free otherwise). Surfaced by this
+        wave's runtime rebuild: p_never_called_zeroarg and
+        q1_verify_all had been linking only because of a stale cached
+        runtime object; the fresh build exposed `undefined symbol:
+        xiom_guard_free`; the new definition fixes the link and both are
+        green. Part 2 (ffi.free routing through xiom_guard_free) landed
+        in xiom/ffi/ffi.xi as prescribed, but the alloc-guard-spin STILL
+        reproduces on the v0.64.4 archive: the emitted IR shows ffi.free
+        call sites lowering to `call void @free(i8*)` even though the
+        compiled wrapper calls xiom_guard_free (verified with --force
+        --no-cache; runtime markers never fire in the VEH re-run loop) --
+        the call-site lowering is compiler-side; relayed on
+        REL-20261013-1445 (stays acked pending the compiler's call-site
+        change or a newer pin). Battery on v0.64.4-rel: corpus 955/955
+        (544s), probes 301/301 (224.4s), modules 510/510 (224.5s),
+        barename 0/510 (323.6s), floors158 + module-smoke (499/518) +
+        doc ratchets OK. Bus: REL-20261012-2012-engine-3 acked -> fixed;
+        REL-20261013-1445 progress note (part 1 landed; part 2 blocked
+        compiler-side); REL-20261013-1423 acked (thread-spawn hoist
+        queued for the thread wave; needs m282 for e2e).
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors157.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors158.json
         tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;

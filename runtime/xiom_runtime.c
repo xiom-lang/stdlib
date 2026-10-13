@@ -552,6 +552,18 @@ static int xiom_guard_arena_contains(XiomGuardArena* a, const void* p) {
     return 0;
 }
 
+/* Guard-aware free (B-05 runtime half; surfaced by the wave-124 runtime
+   rebuild). The codegen emits xiom_guard_free for frees inside confined
+   (unsafe) blocks: pointers inside the active guard arena are no-ops (the
+   whole arena is discarded at block exit), anything else is a main-heap
+   pointer and is freed normally. Exported because the compiler's guard
+   instrumentation links against this exact symbol name. */
+void xiom_guard_free(void* p) {
+    if (!p) return;
+    if (xiom_guard_arena_contains(&xiom_guard_arena, p)) return;
+    free(p);
+}
+
 /* Arena-aware realloc: grow a guard-arena allocation. `realloc` cannot grow a
    VirtualAlloc slab pointer, so (inside a confined block) Vec growth must route
    here: allocate a fresh arena block, copy the old contents, and return it. The
@@ -5688,6 +5700,166 @@ int xiom_socket_recvfrom(xiom_socket_t sock, char* buf, int len, char* out_ip, i
 int xiom_gethostname(char* buf, int len) {
     return gethostname(buf, len);
 }
+#endif
+
+/* ================================================================
+   Directory watch (wave 124; REL-20261012-2012-engine-3). Windows-first:
+   ReadDirectoryChangesW with per-slot overlapped buffers and manual-reset
+   events; up to 8 concurrent watches with 4 KiB buffers. xiom_watch_poll
+   surfaces one record per call (1 = event written to kind_out + path_buf,
+   0 = timeout, 2 = overflow with an empty path, -1 = error). Paths are
+   relative to the watched directory (UTF-8). POSIX (inotify/kqueue) is a
+   documented -1 until a POSIX consumer needs it. Handles are slot + 1.
+   ================================================================ */
+
+#ifdef _WIN32
+
+#define XIOM_WATCH_SLOTS 8
+#define XIOM_WATCH_BUF 4096
+
+typedef struct {
+    HANDLE dir;
+    HANDLE ev;
+    OVERLAPPED ov;
+    char buf[XIOM_WATCH_BUF];
+    DWORD filled;
+    DWORD pos;
+    int subtree;
+    int in_use;
+} xiom_watch_slot;
+
+static xiom_watch_slot xiom_watch_slots[XIOM_WATCH_SLOTS];
+
+static int xiom_watch_arm(int idx) {
+    xiom_watch_slot* s = &xiom_watch_slots[idx];
+    memset(&s->ov, 0, sizeof(s->ov));
+    s->ov.hEvent = s->ev;
+    s->filled = 0;
+    s->pos = 0;
+    if (!ReadDirectoryChangesW(s->dir, s->buf, XIOM_WATCH_BUF, s->subtree,
+                               FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_DIR_NAME |
+                               FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_SIZE,
+                               &s->filled, &s->ov, NULL)) {
+        return -1;
+    }
+    return 0;
+}
+
+long long xiom_watch_open(const char* path, long long recursive) {
+    int i;
+    for (i = 0; i < XIOM_WATCH_SLOTS; i++) {
+        if (!xiom_watch_slots[i].in_use) {
+            HANDLE d = CreateFileA(path, FILE_LIST_DIRECTORY,
+                                   FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                                   NULL, OPEN_EXISTING,
+                                   FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED, NULL);
+            if (d == INVALID_HANDLE_VALUE) return -1;
+            xiom_watch_slots[i].dir = d;
+            xiom_watch_slots[i].ev = CreateEventA(NULL, TRUE, FALSE, NULL);
+            if (xiom_watch_slots[i].ev == NULL) { CloseHandle(d); return -1; }
+            xiom_watch_slots[i].subtree = recursive ? 1 : 0;
+            xiom_watch_slots[i].in_use = 1;
+            if (xiom_watch_arm(i) != 0) {
+                CloseHandle(xiom_watch_slots[i].ev);
+                CloseHandle(d);
+                xiom_watch_slots[i].in_use = 0;
+                return -1;
+            }
+            return (long long)(i + 1);
+        }
+    }
+    return -1;
+}
+
+static void xiom_watch_copy_name(const WCHAR* name, DWORD name_bytes, char* out, long long out_len) {
+    int wlen = (int)(name_bytes / sizeof(WCHAR));
+    int n;
+    if (out == NULL || out_len <= 0) return;
+    n = WideCharToMultiByte(CP_UTF8, 0, name, wlen, out, (int)out_len - 1, NULL, NULL);
+    if (n < 0) n = 0;
+    out[n] = '\0';
+}
+
+long long xiom_watch_poll(long long handle, long long timeout_ms, long long* kind_out,
+                          char* path_buf, long long buf_len) {
+    int idx = (int)handle - 1;
+    xiom_watch_slot* s;
+    DWORD wait;
+    DWORD bytes = 0;
+    FILE_NOTIFY_INFORMATION* rec;
+    long long kind = 0;
+    if (idx < 0 || idx >= XIOM_WATCH_SLOTS || !xiom_watch_slots[idx].in_use) return -1;
+    s = &xiom_watch_slots[idx];
+    if (s->pos >= s->filled) {
+        wait = WaitForSingleObject(s->ev, (DWORD)timeout_ms);
+        if (wait == WAIT_TIMEOUT) return 0;
+        if (wait != WAIT_OBJECT_0) return -1;
+        if (!GetOverlappedResult(s->dir, &s->ov, &bytes, FALSE)) return -1;
+        s->filled = bytes;
+        s->pos = 0;
+        if (s->filled == 0) {
+            /* zero bytes: the buffer overflowed and the kernel dropped records */
+            ResetEvent(s->ev);
+            if (xiom_watch_arm(idx) != 0) return -1;
+            if (path_buf != NULL && buf_len > 0) path_buf[0] = '\0';
+            if (kind_out != NULL) *kind_out = 5;
+            return 2;
+        }
+    }
+    rec = (FILE_NOTIFY_INFORMATION*)(void*)(s->buf + s->pos);
+    switch (rec->Action) {
+    case FILE_ACTION_ADDED: kind = 1; break;
+    case FILE_ACTION_MODIFIED: kind = 2; break;
+    case FILE_ACTION_REMOVED: kind = 3; break;
+    case FILE_ACTION_RENAMED_OLD_NAME:
+    case FILE_ACTION_RENAMED_NEW_NAME: kind = 4; break;
+    default: kind = 0; break;
+    }
+    if (kind_out != NULL) *kind_out = kind;
+    xiom_watch_copy_name(rec->FileName, rec->FileNameLength, path_buf, buf_len);
+    if (rec->NextEntryOffset == 0) {
+        s->pos = s->filled;
+        ResetEvent(s->ev);
+        if (xiom_watch_arm(idx) != 0) return -1;
+    } else {
+        s->pos += rec->NextEntryOffset;
+    }
+    return 1;
+}
+
+long long xiom_watch_close(long long handle) {
+    int idx = (int)handle - 1;
+    DWORD bytes = 0;
+    if (idx < 0 || idx >= XIOM_WATCH_SLOTS || !xiom_watch_slots[idx].in_use) return -1;
+    CancelIo(xiom_watch_slots[idx].dir);
+    /* Drain the cancelled read before freeing the slot (the buffer must not
+       be reused while a straggler completion could still write to it). */
+    GetOverlappedResult(xiom_watch_slots[idx].dir, &xiom_watch_slots[idx].ov, &bytes, TRUE);
+    CloseHandle(xiom_watch_slots[idx].dir);
+    CloseHandle(xiom_watch_slots[idx].ev);
+    xiom_watch_slots[idx].dir = INVALID_HANDLE_VALUE;
+    xiom_watch_slots[idx].ev = NULL;
+    xiom_watch_slots[idx].in_use = 0;
+    return 0;
+}
+
+#else /* POSIX: documented -1 until inotify/kqueue land */
+
+long long xiom_watch_open(const char* path, long long recursive) {
+    (void)path;
+    (void)recursive;
+    return -1;
+}
+long long xiom_watch_poll(long long handle, long long timeout_ms, long long* kind_out,
+                          char* path_buf, long long buf_len) {
+    (void)handle; (void)timeout_ms; (void)kind_out; (void)path_buf; (void)buf_len;
+    return -1;
+}
+long long xiom_watch_close(long long handle) {
+    (void)handle;
+    return -1;
+}
+
 #endif
 
 /* ================================================================

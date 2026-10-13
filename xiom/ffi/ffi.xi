@@ -25,6 +25,7 @@ extern "C" {
   fn malloc(size: UInt) -> *UInt8;
   fn free(ptr: *UInt8);
   fn memcpy(dest: *UInt8, src: *UInt8, size: UInt);
+  fn xiom_guard_free(ptr: *UInt8);
 }
 
 /// ---- Raw allocation / free (primitive, no wrapper) ----------------------------------------------------
@@ -36,13 +37,15 @@ pub fn alloc(size: Int) -> *UInt8
 }
 
 /// Free a C-allocated pointer.
-/// Do not call inside a confined/unsafe block on v0.64.0: the guard
-/// allocator and libc free disagree (compiler finding B-05) and the guard
-/// heap can spin -- see the module header.
+/// Arena-aware since wave 124 (REL-20261013-1445): pointers inside a
+/// confined block's guard arena are no-ops (the arena is released wholesale
+/// at block exit); main-heap pointers go to libc free. This pairs with the
+/// compiler routing confined malloc to the guard arena, so the B-05
+/// alloc-guard-spin is closed.
 pub fn free(ptr: *UInt8)
   requires: ptr != null
 {
-  unsafe { free(ptr); }
+  unsafe { xiom_guard_free(ptr); }
 }
 
 /// C memcpy over raw pointers.

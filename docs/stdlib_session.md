@@ -2812,6 +2812,61 @@ registry pin, agent recon for the rest)**
   delivery) closed out the pulse wave-2 rows -- probes 300; floors157.
 - No other queue moves; 1442 and 1630/1658 remain the compiler's.
 
+**SESSION 2026-10-13 block 149 (wave 124: directory watch (module 510) + the guard-free runtime half; probes 301; floors158)**
+- WAVE 124 (REL-20261012-2012-engine-3, Windows-first per the ack): new
+  module xiom.os.watch -- watch_dir (ReadDirectoryChangesW; recursive
+  subtrees; 8 slots x 4 KiB change buffers) + watch_poll (one runtime
+  record per call, drained up to 256 per call; coalesced buffer loss
+  surfaces as one WATCH_OVERFLOW event) + watch_close; POSIX
+  (inotify/kqueue) is a documented Err. Runtime xiom_watch_open/poll/
+  close (Windows overlapped impl; POSIX -1s). modlist updated (510);
+  smoke_os_watch added (corpus 955); module-smoke 499/518. Probe
+  p_wave124_shapes.xi (301st) red pre / green post: POSIX Err rows; the
+  Windows fixture rounds trip create/modify/remove + a recursive subdir
+  event; closed-handle and missing-dir are Err; no leftovers.
+- GUARD-FREE (REL-20261013-1445 part 1, the B-05 runtime half):
+  xiom_guard_free landed (arena-aware: no-op inside the guard arena,
+  libc free otherwise). Surfaced by this wave's runtime rebuild:
+  p_never_called_zeroarg and q1_verify_all had been linking only against
+  a stale cached runtime object; the fresh build exposed `undefined
+  symbol: xiom_guard_free` and the new definition fixes the link (both
+  green). Part 2 (ffi.free routed through xiom_guard_free) landed in
+  xiom/ffi/ffi.xi as prescribed, BUT the alloc-guard-spin still
+  reproduces on v0.64.4: the IR shows ffi.free call sites lowering to
+  `call void @free(i8*)` even though the compiled wrapper calls
+  xiom_guard_free (verified with --force --no-cache; runtime markers
+  never fire in the VEH re-run loop). The call-site lowering is
+  compiler-side; relayed on the item (stays acked pending the compiler's
+  call-site change or a newer pin).
+- Coverage: pubFns 6540, pubCovered 4625 (clauses 6181, global 70.8%);
+  floors158 dumped + wired. Battery on v0.64.4-rel (final tree): corpus
+  955/955 (544s), probes 301/301 (224.4s), modules 510/510 (224.5s),
+  barename 0/510 (323.6s), floors158 + module-smoke (499/518) + doc
+  ratchets OK.
+- Bus: REL-20261012-2012-engine-3 acked -> fixed (watch delivered);
+  REL-20261013-1445 progress note (parts 1+2 in-tree; acceptance
+  blocked compiler-side); REL-20261013-1423 acked (thread-spawn result
+  buffer hoist queued for the thread wave; the compiler m282 env fix is
+  required for e2e). Snapshot 32 stands for waves 114-120; blocks
+  144-149 carry waves 121-124.
+
+**SESSION 2026-10-13 block 148 (doorbell 15:00Z -- two new compiler items landed mid-wave-124; both triaged)**
+- Bus pulled; no status moves by us; two new compiler-lane items:
+  REL-20261013-1423-compiler (high): thread.spawn result buffer is
+  guard-arena memory freed at block exit -- the compiler half is fixed
+  (m282 d6690868; raw-fn handover); the stdlib fix is to hoist the
+  buffer alloc out of the confined block (main-heap) with the matching
+  dealloc in join/detach. The concurrent stdout actor already acked it
+  with the adopted plan; queued for the thread wave (needs m282 for
+  e2e). REL-20261013-1445-compiler (medium): the alloc-guard-spin fix
+  (arena-aware xiom_guard_free + ffi.free routing). Part 1 was
+  implemented in-flight (it was also required to fix the linker gap the
+  wave's runtime rebuild exposed); part 2 landed as prescribed; the
+  spin still reproduces on v0.64.4 because the compiler lowers ffi.free
+  call sites to `@free` directly (IR evidence) -- progress note posted,
+  item stays acked pending the compiler-side change.
+- Watch rows unchanged otherwise; wave 124 continued after the round.
+
 **SESSION 2026-10-13 block 147 (wave 123: signal delivery -- the last pulse wave-2 stdlib row; probes 300; floors157)**
 - WAVE 123 (REL-20261012-1946-pulse ask 1, the graceful-drain
   primitive): runtime xiom_signal_install / xiom_signal_installed /

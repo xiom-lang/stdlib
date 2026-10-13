@@ -180,3 +180,12 @@ Wave-123 update 2026-10-13: `xiom_signal_install`,
 (signal delivery for REL-20261012-1946-pulse ask 1) are declared by
 `os/signal.xi` in the same commit -- a further +4 definitions /
 +4 declarations. No deletions.
+
+Wave-124 update 2026-10-13: `xiom_watch_open`, `xiom_watch_poll` and
+`xiom_watch_close` (directory watch for REL-20261012-2012-engine-3) are
+declared by `os/watch.xi`, and `xiom_guard_free` (the B-05 runtime half
+for REL-20261013-1445) is declared by `ffi/ffi.xi` -- a further
++4 definitions / +4 declarations. No deletions. Note: the guard-family
+probes had linked against a stale cached runtime object until this
+wave's rebuild exposed the missing `xiom_guard_free`; the fresh
+definition closes that gap.

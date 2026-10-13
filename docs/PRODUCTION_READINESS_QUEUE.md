@@ -4,9 +4,10 @@
 gates 9-10 discrete.** (Compiler pin: in-tree **v0.64.4** -- released
 2026-10-12, tag f76fd47c on df493530; the lane battery runs the official
 windows-x64 release archive.)
-**Gates: corpus 954/954 full (C001 carve-outs retired on v0.63.1; new
-TcpStream loopback and uuencode roundtrip smokes added), modules 509/509,
-probes 300/300, barename 0/509.**
+**Gates: corpus 955/955 full (C001 carve-outs retired on v0.63.1; new
+TcpStream loopback and uuencode roundtrip smokes added; smoke_os_watch
+added in wave 124), modules 510/510,
+probes 301/301, barename 0/510.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -25,7 +26,7 @@ gates flip:
    wave-98..110 probes), the io byte-fidelity/CRLF lock and the
    fs_remove lock).
 4. Strict bare-name scan clean -- MET (0/509).
-5. Coverage ratchet green -- MET (floors157).
+5. Coverage ratchet green -- MET (floors158).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (497/517 modules, 3477/6202 fns).
 8. Contract coverage 100% (every public fn carries clauses) -- OPEN (70.7%).
@@ -193,7 +194,7 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
     post-batch re-verify sweep cycle. Handoff in
     `docs/stdlib_session.md` snapshot 32 (block 143 refresh, head
     869ff72), wave
-    records blocks 89-147. WAVE 114 step 0 (block 128): battery pin moved
+    records blocks 89-149. WAVE 114 step 0 (block 128): battery pin moved
     to the official v0.64.4 release archive
     (%TEMP%\kilo\stdlib_ws\v0.64.4-rel\bin\xiom.exe, sha256 DB8A2EF0...;
     COMPILER_VERSION -> v0.64.4): corpus 954/954 (589.5s), probes 289/289
@@ -359,6 +360,26 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
      modules 509/509 (179.8s), barename 0/509 (241.6s), module-smoke
      (498/517, 3496/6235) + doc ratchets OK. BUS: REL-20261012-1946-pulse
      acked -> fixed (all wave-2 rows delivered; pulse verifies next).
+     WAVE 124 (block 149): directory watch + the guard-free runtime half.
+     Watch (REL-20261012-2012-engine-3, Windows-first): new module
+     xiom.os.watch (modlist 510) -- watch_dir (ReadDirectoryChangesW,
+     recursive, 8 slots x 4 KiB) + watch_poll (record-per-call, 256/call
+     cap, WATCH_OVERFLOW on coalesced loss) + watch_close; POSIX
+     (inotify/kqueue) documented Err. Runtime xiom_watch_open/poll/close.
+     smoke_os_watch added (corpus 955); probe p_wave124_shapes.xi (301st)
+     red pre / green post (Windows create/modify/remove + recursive
+     subdir; POSIX Err rows). GUARD-FREE (REL-20261013-1445 part 1, B-05
+     runtime half): xiom_guard_free (arena-aware) -- surfaced by this
+     wave's runtime rebuild: two guard-family probes had linked only via
+     a stale cached runtime object; now green. Part 2 (ffi.free routing)
+     landed in ffi.xi but the alloc-guard-spin still reproduces on
+     v0.64.4: IR shows ffi.free call sites lowering to `call void @free`
+     regardless of the wrapper (--force --no-cache; markers never fire) --
+     compiler-side finding relayed; 1445 stays acked. 1423 (thread-spawn
+     hoist) acked for the thread wave (needs m282 e2e). Battery on
+     v0.64.4-rel: corpus 955/955 (544s), probes 301/301 (224.4s),
+     modules 510/510 (224.5s), barename 0/510 (323.6s), floors158 +
+     module-smoke (499/518) + doc ratchets OK.
 BINARY NOTE: the shared local build path
 `E:\xiom-lang\xiom\target\release\xiom.exe` was rebuilt past the pin
 (compiler main da7798da m252) and fails four corpus smokes; waves now run
