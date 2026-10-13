@@ -3157,6 +3157,20 @@ registry pin, agent recon for the rest)**
   exist (mine + the actor's; wave 126 used 152b) and both stand as-is;
   the next writer continues from 156/157.
 
+**SESSION 2026-10-13 block 160 (doorbell 21:00Z -- quiet for our lane; 1423 fixed via the actor's wave 131; wave 132 in flight)**
+- Lane view: nothing to transition. `REL-20261013-1423-compiler`
+  moved to **fixed** (the concurrent actor's wave 131 spawn-buffer hoist,
+  block 158, moved it with evidence); `REL-20261013-1948-engine` closed
+  (engine ask ledger); the two new `REL-20261013-2042-engine` rows
+  (Int128/UInt128 payload miscompile; UInt64 ordering/widening) are
+  `to: compiler` -- not ours.
+- Tree: the actor committed waves 130-131 and refreshed **snapshot 35**
+  in place (block 159; gates 955/308/510/0, floors165). It is mid-wave
+  **132** at this round: uncommitted `xiom/io/io.xi` + untracked
+  `docs/ACCELERATED.md` and `tools/probes/p_wave132_shapes.xi` -- never
+  sweep those edits; commit the session doc only.
+- Head `b0054b7`; the next writer continues from block 159/160.
+
 **SESSION 2026-10-13 block 159 (handoff 20:00Z -- snapshot 35 refreshed in place at head 664e4a7; waves 114-131; continuation prompt re-issued)**
 - Snapshot 35 written at the top of section 0A (waves 114-131; gates
   955/308/510/0 + floors165; coverage fns 8776/clauses 6234; the trap
