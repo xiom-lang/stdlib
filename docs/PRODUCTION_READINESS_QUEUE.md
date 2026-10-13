@@ -267,7 +267,11 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
     clauses 6136); battery on v0.64.4-rel: corpus 954/954, probes
     296/296, modules 509/509, barename 0/509. Stale rows fixed: pulse-1134
     (fsync_dir), xvector-8 (flush_stdout). Watch: smoke_misc2 flaked once
-    (rc 20; solo x2 green).
+    (rc 20; solo x2 green). DOORBELL 05:00Z (block 137): the consolidated
+    orbitdb bundle (REL-20261012-1945) closed upstream after verifying
+    P1-P5; no new asks; remaining non-terminals are compiler-blocked or
+    queued (thread pool/2053, f32 Float32 batch, mmap, pulse wave-2
+    remnants, engine-3 watch, C-PULSE-17 compiler payload-index family).
 BINARY NOTE: the shared local build path
 `E:\xiom-lang\xiom\target\release\xiom.exe` was rebuilt past the pin
 (compiler main da7798da m252) and fails four corpus smokes; waves now run

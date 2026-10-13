@@ -2634,6 +2634,27 @@ registry pin, agent recon for the rest)**
   (216.6s), floors144 + doc + module-smoke (497/517, 3476/6204)
   ratchets OK.
 
+**SESSION 2026-10-13 block 137 (doorbell 05:00Z: orbitdb consolidated bundle CLOSED; no new asks)**
+- BUS ROUND: no new stdlib asks. Major closure: the consolidated
+  REL-20261012-1945-orbitdb production-grade IO bundle was moved to
+  CLOSED by orbitdb after upstream verification of the P1-P5 delivery
+  (member rows -3..-8 all fixed/closed; the one deferral noted is
+  xvector-6's f32 bitcast, compiler-batched). This closes the four-lane
+  durability thread that waves 115/117/118 implemented.
+- The two stale wave-115 rows moved last cycle (pulse-1134 fsync_dir,
+  xvector-8 flush_stdout) are recorded fixed on the bus.
+- Remaining non-terminal stdlib rows, all externally blocked or
+  info-only: compiler rows 1630/1658 (fragment schema, compiler-owned),
+  engine-6 (thread pool -- rides compiler 2053), xvector-6 (Float32
+  batch), 1945-xvector-2 (mmap, queued), 1946-pulse wave-2 remnants
+  (signals/poll/SO_REUSEPORT/stream-send runtime + websocket/chunked
+  helpers), 2012-engine-3 (directory watch, queued), C-PULSE-17
+  (compiler payload-index family -- the wave-103 re-triage stands:
+  list_dir itself is correct), pulse-2 darwin, bindings-8, playground-4,
+  website rows, info notes (1131/1513/1618/1731).
+- Round verdict: nothing lane-actionable beyond the watch list
+  (smoke_misc2 flake rc 20, no repro yet). No code changes this cycle.
+
 **SESSION 2026-10-13 block 136 (doorbell 03:00Z: socket options + deadline recv real; probes 296; floors153; the -0317 family closed)**
 - BUS ROUND: no new asks; two stale wave-115 rows fixed on the bus
   (pulse-1134 fsync_dir, xvector-8 flush_stdout -- both landed in c65acb5
