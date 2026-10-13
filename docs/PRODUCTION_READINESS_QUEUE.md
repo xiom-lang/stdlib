@@ -39,10 +39,11 @@ credit (discrete). Update the percentage and the gate-8 fraction in the
 same commit as each floors dump so the meter moves smoothly toward 80%.
 
 Authoritative order: the gates above, then the updates below newest-first.
-Current state: compiler pin **v0.64.3** in-tree (COMPILER_VERSION at
-3df0843); **stdlib-v0.64.4 CUT 2026-10-11** (tag object f8fb7a88 on
-3df0843; package.xi 0.64.4; battery + witness green on the v0.64.4
-release-wave archive; the compiler pins STDLIB_VERSION and ships);
+Current state: compiler pin **v0.64.4** (released 2026-10-12, tag
+f76fd47c on df493530; the lane battery runs the official windows-x64
+release archive; COMPILER_VERSION = v0.64.4); **stdlib-v0.64.4 CUT
+2026-10-11** (tag object f8fb7a88 on 3df0843; package.xi 0.64.4; battery
++ witness green; the compiler pins STDLIB_VERSION and ships it);
 **stdlib-v0.64.3 RELEASED 2026-10-09** (release run 37962367989 full
 success; assets xiom-std-0.64.3.tar.gz + SHA256SUMS) and the **REGISTRY IS
 LIVE** (xiom-std 0.64.3 signed, sha256
@@ -190,9 +191,9 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
     (T1 silent-wrong/trap rows, T2 compile-fail ergonomics, T3 guards),
     (3) stdlib-side polygon + the runtime/wishlist bundle, (4) the
     post-batch re-verify sweep cycle. Handoff in
-    `docs/stdlib_session.md` snapshot 31 (block 141 refresh, head
-    75e003d), wave
-    records blocks 89-142. WAVE 114 step 0 (block 128): battery pin moved
+    `docs/stdlib_session.md` snapshot 32 (block 143 refresh, head
+    869ff72), wave
+    records blocks 89-143. WAVE 114 step 0 (block 128): battery pin moved
     to the official v0.64.4 release archive
     (%TEMP%\kilo\stdlib_ws\v0.64.4-rel\bin\xiom.exe, sha256 DB8A2EF0...;
     COMPILER_VERSION -> v0.64.4): corpus 954/954 (589.5s), probes 289/289
