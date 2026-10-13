@@ -17,7 +17,76 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 30 (updated 2026-10-12, compiler v0.64.4 RELEASED -- BUMP THE LANE BATTERY PIN to the official v0.64.4 archive first; stdlib-v0.64.4 tagged 3df0843 + pinned by the compiler; waves 110-113 landed; next = wave 114; relay bus live; binary-drift warning)
+## 0A. CONTINUE HERE -- handoff snapshot 31 (2026-10-13; waves 114-119 landed; probes 296; floors153; orbitdb bundle closed upstream; relay live)
+
+### Snapshot 31 (paste-ready)
+
+**PASTE-READY PROMPT FOR THE NEXT SESSION (copy this block):**
+
+---
+
+You are continuing the XIOM stdlib lane. Worktree `E:\xiom-lang\stdlib`,
+branch `main`. Read `docs/stdlib_session.md` blocks 137, 136, 135, 134,
+133, 132, 131, 130, 129, 128, 127, 126, 125 (older as needed); the
+snapshot-30 section below is the previous handoff and is superseded.
+
+STATE: compiler v0.64.4 released and pinned (tag f76fd47c on df493530; the
+official windows-x64 asset pre-downloaded at
+`%TEMP%\kilo\stdlib_ws\v0.64.4-rel\bin\xiom.exe`, sha256 DB8A2EF0...);
+`COMPILER_VERSION` = v0.64.4. Waves 114-119 landed 2026-10-12/13:
+114 = pin bump + tuple lock promotion (289) + async coverage part 1 (29
+clauses; async 4.5% -> 47.8%); 115 = durability + byte-IO first drop
+(runtime fsync family, fd/path byte IO) -- orbitdb verified it on the lane
+runtime and CLOSED its bundle (P1-P5); 116 = polygon_difference
+disjoint-case fix (the LAST stdlib Current repro resolved + promoted);
+117 = durability P5 pairs (append_line_sync, file_last_byte /
+ends_with_newline, remove_dir, truncate_fd); 118 = P4 advisory locking
+(fcntl/LockFileEx); 119 = socket options + deadline receive (SO_RCVTIMEO /
+FIONBIO / reuse_addr / shutdown real, Windows bind REUSEADDR parity, the
+recv/recvfrom Int32 ABI fix, socket_recv_timeout).
+
+GATES (block 136, final tree): corpus 954/954, probes 296/296, modules
+509/509, barename 0/509, floors153 + module-smoke + doc ratchets OK.
+Coverage 70.4% (pubFns 6519, pubCovered 4589, clauses 6136). Consumer
+status: orbitdb bundle closed; pulse-0317/-2 and the 1550 durability rows
+fixed upstream-verifiable; xvector-2..4 fixed (verify pending).
+
+FINDINGS: 15 Current, all compiler (tools/known_failures/README.md) -- the
+stdlib ledger carries no open repro (polygon was the last; block 133).
+Verdict tables: block 124 (v0.64.4 sweep) + block 133 (polygon resolution).
+
+NEXT WAVE OPTIONS: (1) mmap family (REL-20261012-1945-xvector-2; runtime;
+last big P5 primitive); (2) engine-3 directory watch (runtime;
+ReadDirectoryChangesW first); (3) websocket + chunked-stream helpers
+(stdlib-side; can land without a pin); (4) the string-dir strnlen-family
+follow-up (cached (base, len) per file, scoped with smokes); (5)
+parent-async part 2 (AsyncExecutor/Channel method clauses). Compiler-
+blocked: thread pool (rides 2053), f32 bitcast (Float32 batch). RELEASE-
+CYCLE DIRECTIVE (owner): on the next compiler candidate/release, process
+the compiler's relay items (release checks + pin coordination + the
+27-repro re-verify sweep on the candidate archive), fix stdlib-side bugs it
+exposes, and keep the classic waves running in parallel.
+
+MANDATORY PROTOCOL: (1) body-derived clauses only, no placeholders/payload
+reads; canonical `result is Ok =>` / `result is None =>` guard forms; (2)
+probe-first tools/probes/p_waveNNN_shapes.xi (bind returned values before
+comparing; red pre / green post), promote repros when fixed; (3) apply,
+targeted smokes, remerge old locks that assert retired behavior; the
+socket/io wrapper family keeps EARLY-ERROR RETURNS (not requires); (4) dump
+tools/coverage_floors15N.json, wire workflows + tools/README + plan/session/
+queue in one commit, YAML check, pure-ASCII commit; (5) battery: corpus
+954/954, probes expect 296, modules 509/509, barename 0/509, floors153 +
+ratchets; push main with the one-shot credential. Cautions: no unbounded
+benchmarks; run_smokes.ps1 has NO per-file timeout (guard hangs at the
+caller -- direct compile + a managed process timeout works); Windows
+LockFileEx blocking-regain on a self-held range HANGS; probe file fixtures
+truncate-first and clean up (the probe CWD is the repo root); watch:
+smoke_misc2 flake rc 20 (no repro yet). The relay doorbell cron runs every
+2h (pull the bus, process items, record a block).
+
+---
+
+### Snapshot 30 (2026-10-12; SUPERSEDED by snapshot 31 -- kept for history)
 
 **PASTE-READY PROMPT FOR THE NEXT SESSION (copy this block):**
 
@@ -2633,6 +2702,19 @@ registry pin, agent recon for the rest)**
   probes 281/281 (299.4s), modules 509/509 (203.3s), barename 0/509
   (216.6s), floors144 + doc + module-smoke (497/517, 3476/6204)
   ratchets OK.
+
+**SESSION 2026-10-13 block 138 (doorbell 07:00Z: no new asks; handoff refreshed -- snapshot 31)**
+- BUS ROUND: no new stdlib asks; xvector-8 now shows fixed on the board;
+  the non-terminal set is unchanged (compiler-blocked or queued rows
+  only).
+- HANDOFF REFRESH: snapshot 31 written at the top of section 0A (waves
+  114-119, gates 954/296/509/0 + floors153, coverage 70.4%, 15 Current
+  all compiler, next-wave options, the release-cycle directive, protocol
+  + cautions incl. the no-per-file-timeout note, the LockFileEx hang and
+  the smoke_misc2 watch); snapshot 30 kept below as superseded history;
+  the queue pointer now reads snapshot 31 (block 138 refresh). A fresh
+  session can start by pasting snapshot 31.
+- No code changes this cycle.
 
 **SESSION 2026-10-13 block 137 (doorbell 05:00Z: orbitdb consolidated bundle CLOSED; no new asks)**
 - BUS ROUND: no new stdlib asks. Major closure: the consolidated
