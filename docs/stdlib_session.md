@@ -2791,6 +2791,27 @@ registry pin, agent recon for the rest)**
   (216.6s), floors144 + doc + module-smoke (497/517, 3476/6204)
   ratchets OK.
 
+**SESSION 2026-10-13 block 148 (doorbell 15:00Z: two guard-arena runtime items acked; waves 121-123 observed)**
+- NEW compiler items acked with their proposed patches adopted; the
+  concurrent waves currently hold the runtime, so the landings ride the
+  next runtime wave:
+  `REL-20261013-1423-compiler` (high): hoist the `xiom.thread.spawn`
+  result-buffer allocation OUT of the confined block (main-heap) with
+  the matching dealloc in join/detach; the compiler m282 env fix
+  (d6690868) is required for the raw-fn handover, so the spawn e2e
+  verification waits for the next compiler pin; unblocks the
+  engine/xvector thread gates. `REL-20261013-1445-compiler` (medium,
+  B-05): add the arena-aware `xiom_guard_free` (no-op inside the guard
+  arena, libc free otherwise) and route `ffi.free` through it;
+  acceptance = the bindings alloc-guard-spin probe under a watchdog +
+  smoke_ffi; the 2032 Vec-churn row is a separate memory-model item.
+- Queue moves observed: wave 120 fixed `REL-20261012-1945-xvector-2`
+  (mmap family; snapshot 32 refresh in block 143), wave 119 fixed
+  `REL-20261012-1946-pulse` (server primitives wave 2), and waves
+  121-123 (websocket I/O + helpers, poll/select + SO_REUSEPORT, signal
+  delivery) closed out the pulse wave-2 rows -- probes 300; floors157.
+- No other queue moves; 1442 and 1630/1658 remain the compiler's.
+
 **SESSION 2026-10-13 block 147 (wave 123: signal delivery -- the last pulse wave-2 stdlib row; probes 300; floors157)**
 - WAVE 123 (REL-20261012-1946-pulse ask 1, the graceful-drain
   primitive): runtime xiom_signal_install / xiom_signal_installed /
