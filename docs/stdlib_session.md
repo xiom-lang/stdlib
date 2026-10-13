@@ -17,9 +17,118 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 33 (updated 2026-10-13 16:25Z at head a139f23; waves 114-125 landed; probes 302; floors159; relay live)
+## 0A. CONTINUE HERE -- handoff snapshot 34 (updated 2026-10-13 17:15Z at head f3fba44; waves 114-126 landed; probes 303; floors160; relay live)
 
-### Snapshot 33 (paste-ready)
+### Snapshot 34 (paste-ready)
+
+**PASTE-READY PROMPT FOR THE NEXT SESSION (copy this block):**
+
+---
+
+You are continuing the XIOM stdlib lane. Worktree `E:\xiom-lang\stdlib`,
+branch `main`. Read `docs/stdlib_session.md` blocks 153, 152b, 152 (both
+same-round texts: the quiet-round record and the guard-free/thread/incident
+record), 151, 150, 149, 148b, 148, 147, 146, 145, 144, 143, 142, 141, 140,
+139, 138, 137, 136, 135 (older as needed); snapshot 33 below is the
+previous handoff and is superseded (snapshots 32/31 stay below it as
+history).
+
+STATE: compiler v0.64.4 released and pinned (tag f76fd47c on df493530; the
+official windows-x64 asset pre-downloaded at
+`%TEMP%\kilo\stdlib_ws\v0.64.4-rel\bin\xiom.exe`); `COMPILER_VERSION` =
+v0.64.4. Waves 114-126 landed 2026-10-12/13: 114 pin/tuple/async; 115
+durability+byte-IO; 116 polygon_difference; 117 durability P5 pairs; 118
+advisory locking; 119 socket options + deadline recv; 120 mmap family
+(xvector-2); 121 websocket I/O + server helpers (pulse); 122 poll/select +
+SO_REUSEPORT; 123 signal delivery; 124 directory watch (module 510) +
+guard-free runtime half; 125 strnlen-family batch 1 (compare/trim/escape);
+126 strnlen-family batch 2 (string.xi core + the json escape family; the
+serialize.json control-hex defect fixed; str_reverse linear + raw
+truncated-tail copy; probe 303; floors160). Lane head at handoff: f3fba44
+(main). Bus: 1545-orbitdb acked (the incident was the wave-125 measurement
+scratch; root cause fixed in a139f23; the announced capped re-run is done:
+rc=0, peak 5.5-27.5 MB); 1638-stdlib filed (the announcement; orbitdb may
+close); 1445-compiler moved acked -> fixed (bus 69f2ed9; evidence 252ec2d
+-- the compiler side still owes the call-site ffi.free lowering for the
+v0.64.4 spin repro, verify on the next pin); 1423-compiler stays acked
+(thread wave; compiler m282 required for e2e).
+
+GATES (block 152b, final tree): corpus 955/955 (560.9s), probes 303/303
+(216.3s), modules 510/510 (165s), barename 0/510 (268.6s), floors160
+(fns 8742, pubFns 6540, clauses 6187, pubCovered 4625; clauses 70.8%,
+pub 70.7%) + module-smoke (499/518, 3500/6239) + doc ratchets OK.
+
+FINDINGS: 15 Current, all compiler (tools/known_failures/README.md). Live
+compiler traps: struct/Str payload reads in catalog ensures clauses
+false-fire (payload-free Ok-side clauses only); the Windows UCRT fast-fails
+on _read/_write of a closed/out-of-range fd (invalid-fd probe rows are
+POSIX-only); on v0.64.4 `ffi.free` call sites lower to plain `@free`
+regardless of the wrapper body; the driver's runtime object caches by
+source (a stale entry hid a missing `xiom_guard_free` until wave 124's
+rebuild). Decode trap learned in wave 126: a per-position UTF-8 decode can
+overshoot the buffer on a truncated trailing lead byte (len_utf8 of the
+decoded codepoint exceeds the bytes left) -- runtime-checked ensures
+caught it in str_reverse; handle truncated tails explicitly in every
+converted walk.
+
+NEXT WAVE OPTIONS: (1) strnlen-family batch 3 = the remaining string-dir
+files (~34 .byte_at sites): case/collate/indent/truncate/reverse/replace/
+segment/sentencebreak/unescape/unicode/wordbreak/shuffle + slice remnants
+(slice.xi's _char_at_runtime is now mirrored in string.xi; watch the
+concat-per-char builders -- same leak class -- and convert them to Vec
+builders); (2) the thread wave (REL-20261013-1423: hoist the
+xiom.thread.spawn result buffer out of the confined block + the real
+pool/spawn flip; e2e needs compiler m282 -- the hoist itself can land
+now); (3) playground-4 (io.stdin() diagnostic) and the website-2/website
+release artifacts; (4) engine-6 runtime pool primitives (they mostly
+exist; the pool build rides the spawn flip). Compiler-blocked: pulse-2
+(darwin fp128, needs a Mac runner), pulse-5 (payload-index verified fixed
+on a post-v0.64.4 build -- retest on the next pin), xvector-6 (f32),
+engine-6 Send/Sync, 1630/1658 (fragment; compiler-owned, leave). 1445 is
+fixed bus-side; its compiler-side acceptance re-runs on the next pin.
+RELEASE-CYCLE DIRECTIVE (owner): on the next compiler candidate/release,
+process the compiler's relay items (release checks + pin coordination +
+the 27-repro re-verify sweep on the candidate archive), fix stdlib-side
+bugs it exposes, and keep the classic waves running in parallel.
+
+MANDATORY PROTOCOL: (1) body-derived clauses only; canonical `result is
+Ok =>` / `result is None =>` guard forms; payload-free Ok-side clauses on
+catalog Result[struct] returns; (2) probe-first tools/probes/p_waveNNN_
+shapes.xi (bind returned values before comparing; red pre / green post);
+never put a row in a probe that can HANG pre-fix (run_smokes.ps1 has NO
+per-file timeout); remerge old locks that assert retired behavior
+(p_wave121-126 are the newest locks); (3) the socket/io wrapper family
+keeps EARLY-ERROR RETURNS (not requires); (4) runtime shims use
+`long long` (not `long`) for Int-sized values and Int arrays -- C long is
+32-bit on Windows; (5) dump tools/coverage_floors16N.json, wire workflows +
+tools/README + plan/session/queue in one commit, YAML check, pure-ASCII
+additions, then the battery: corpus 955/955, probes expect 303, modules
+510/510, barename 0/510, floors160 + ratchets; push main with the one-shot
+credential.
+
+CAUTIONS: no unbounded benchmarks; any leak-class measurement MUST be
+memory-capped and announced first (REL-20261013-1545: the wave-125 scratch
+grew to a ~26 GB working set in 2 min and thrashed the host; the wave-126
+follow-up used an announced 1.5 GB cap + 60 s watchdog -- keep that
+protocol); run_smokes.ps1 has NO per-file timeout (guard hangs at the
+caller); Windows LockFileEx blocking-regain on a self-held range HANGS;
+probe file fixtures truncate-first and clean up (probe CWD is the repo
+root); watch: smoke_misc2 flake rc 20 (no repro); strings LEAK BY DESIGN
+-- concat-per-char builders are n^2 allocations (the remaining string-dir
+files still carry them; handle as in waves 125/126 and confirm with a
+capped measurement, not an unbounded one); invalid-fd read/write rows are
+POSIX-only; the shared worktree has concurrent doc-actors: re-read the TOP
+of the block list before appending (blocks 128/132/140/144 idempotent, 148
+and 152 COLLIDED -- 152 got two foreign texts plus this lane's 152b; on a
+collision use an `<N>b` block and cross-reference; never sweep foreign
+edits); the engine lane shares this box (its Vulkan builds slow batteries;
+never kill foreign xiom.exe/dbg processes). The relay doorbell cron is
+SESSION-SCOPED: renew it at session start (schedule the 2h relay-doorbell
+prompt).
+
+---
+
+### Snapshot 33 (2026-10-13 16:25Z; SUPERSEDED by snapshot 34 -- kept for history)
 
 **PASTE-READY PROMPT FOR THE NEXT SESSION (copy this block):**
 
@@ -2914,6 +3023,24 @@ registry pin, agent recon for the rest)**
   delivery) closed out the pulse wave-2 rows -- probes 300; floors157.
 - No other queue moves; 1442 and 1630/1658 remain the compiler's.
 
+**SESSION 2026-10-13 block 153 (handoff 17:15Z -- snapshot 34 refreshed in place at head f3fba44; waves 114-126; continuation prompt re-issued)**
+- Snapshot 34 written at the top of section 0A (waves 114-126; gates
+  955/303/510/0 + floors160; coverage fns 8742/clauses 6187; the new
+  lessons: the truncated-tail decode overshoot caught by str_reverse's
+  contract check, the announced capped re-measurement protocol for
+  leak-class paths, the serialize.json control-hex defect fixed;
+  next-wave options led by batch 3 = the remaining string-dir .byte_at
+  sites and the thread wave 1423 hoist; the collision note now carries
+  148 + 152 -- two foreign 152 texts landed this round plus this lane's
+  152b). Snapshot 33 demoted to superseded history.
+- Bus at refresh: 1445-compiler moved acked -> fixed by the lane's bus
+  actor (relays 69f2ed9; evidence 252ec2d, wave 124) -- the compiler side
+  still owes the call-site ffi.free lowering for the v0.64.4 spin repro
+  (re-verify on the next pin); 1423 stays acked; 1545 acked (incident
+  answered; the announced capped re-run completed, rc=0, peak 5.5-27.5
+  MB); 1638 filed (announcement; orbitdb may close). Working tree: only
+  the untracked out/ evidence dir; head f3fba44 (wave 126).
+
 **SESSION 2026-10-13 block 152b (wave 126: strnlen-family batch 2 -- string.xi core + the json escape family; probes 303; floors160) -- same 17:00Z round as the concurrent doc-actor's block 152 below (wave 126 was in flight there; completed and committed here)**
 - WAVE 126 (classic string-dir wave, batch 2 -- the block-150 follow-up):
   string.xi converted to the cached (base, len) idiom. A local
@@ -2972,9 +3099,11 @@ registry pin, agent recon for the rest)**
   (1423 hoist) and the other queued options. 1445 stays acked (call-site
   lowering, compiler-side).
 - Block-collision note: this round's numbering collided with the
-  concurrent doc-actor's block 152 (same 17:00Z round; it recorded wave
-  126 in flight). Per the protocol this account lands as 152b next to
-  block 152 below; neither text was edited by the other actor.
+  concurrent doc-actors -- TWO foreign block-152 texts landed (the
+  17:00Z quiet-round record and the guard-free/thread/incident record)
+  next to this account (same round; one recorded wave 126 in flight).
+  Per the protocol this account lands as 152b and no text was edited by
+  another actor.
 
 **SESSION 2026-10-13 block 152 (doorbell 17:00Z -- quiet lane round; wave 126 in flight by the concurrent actor; compiler verified the payload-index fix post-pin)**
 - Lane view: no stdlib-addressed changes; nothing to transition. Two
