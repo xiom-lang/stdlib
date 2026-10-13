@@ -17,9 +17,106 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 32 (updated 2026-10-13 12:45Z at head fbf4bc0; waves 114-120 landed; probes 297; floors154; relay live)
+## 0A. CONTINUE HERE -- handoff snapshot 33 (updated 2026-10-13 16:25Z at head a139f23; waves 114-125 landed; probes 302; floors159; relay live)
 
-### Snapshot 32 (paste-ready)
+### Snapshot 33 (paste-ready)
+
+**PASTE-READY PROMPT FOR THE NEXT SESSION (copy this block):**
+
+---
+
+You are continuing the XIOM stdlib lane. Worktree `E:\xiom-lang\stdlib`,
+branch `main`. Read `docs/stdlib_session.md` blocks 151, 150, 149, 148b,
+148, 147, 146, 145, 144, 143, 142, 141, 140, 139, 138, 137, 136, 135
+(older as needed); the snapshot-32 section below is the previous handoff
+and is superseded.
+
+STATE: compiler v0.64.4 released and pinned (tag f76fd47c on df493530; the
+official windows-x64 asset pre-downloaded at
+`%TEMP%\kilo\stdlib_ws\v0.64.4-rel\bin\xiom.exe`); `COMPILER_VERSION` =
+v0.64.4. Waves 114-125 landed 2026-10-12/13: 114 pin/tuple/async; 115
+durability+byte-IO; 116 polygon_difference (last stdlib repro); 117
+durability P5 pairs; 118 advisory locking; 119 socket options + deadline
+recv (recv Int32 ABI fix); 120 mmap family (xvector-2); 121 websocket I/O
+fix + server helpers + chunked/raw send (pulse); 122 poll/select +
+SO_REUSEPORT (the long-long ABI catch); 123 signal delivery (pulse ask 1;
+signal_code case fix); 124 directory watch (xiom.os.watch, module 510) +
+the guard-free runtime half (xiom_guard_free; exposed a stale cached
+runtime object; probe 301); 125 strnlen-family batch 1 (compare/trim/
+escape cached views; escape Vec-builders fixed an n^2/2 allocation leak).
+Lane head at handoff: a139f23 (main). Bus: orbitdb bundle closed; pulse
+wave-2 fixed (verify pending); engine-3 fixed (verify pending); xvector-2
+fixed; 1445 acked (compiler-side ffi.free call-site lowering pending);
+1423 acked (thread wave; compiler m282 required for e2e).
+
+GATES (block 150, final tree): corpus 955/955 (851.9s; box under the
+engine lane's Vulkan build), probes 302/302 (328.7s), modules 510/510
+(280.5s), barename 0/510 (418.4s), floors159 (fns 8737, pubFns 6540,
+clauses 6184, pubCovered 4625; clauses 70.8%, pub 70.7%) + module-smoke
+(499/518) + doc ratchets OK.
+
+FINDINGS: 15 Current, all compiler (tools/known_failures/README.md). Live
+compiler traps: struct/Str payload reads in catalog ensures clauses
+false-fire (payload-free Ok-side clauses only); the Windows UCRT
+fast-fails on _read/_write of a closed/out-of-range fd (invalid-fd probe
+rows are POSIX-only); on v0.64.4 `ffi.free` call sites lower to plain
+`@free` regardless of the wrapper body (the alloc-guard-spin is NOT fixed
+on this pin; 1445 relayed with IR evidence); the driver's runtime object
+caches by source and a stale entry hid a missing `xiom_guard_free` until
+wave 124's rebuild.
+
+NEXT WAVE OPTIONS: (1) strnlen-family batch 2 = string.xi first (~15
+per-position xiom_char_at sites incl. the public str_escape/str_unescape,
+the json-escape path; copy slice.xi's byte-exact _char_at_runtime
+equivalent locally), then case/collate/indent/truncate/reverse/replace/
+segment/sentencebreak/unescape/unicode/wordbreak/shuffle + slice remnants
+(~34 .byte_at sites); (2) the thread wave (REL-20261013-1423: hoist the
+xiom.thread.spawn result buffer out of the confined block + the real
+pool/spawn flip; e2e needs the compiler m282 -- the hoist itself can land
+now); (3) playground-4 (io.stdin() diagnostic) and the website-2/website
+release artifacts; (4) engine-6 runtime pool primitives (they mostly
+exist; the pool build rides the spawn flip). Compiler-blocked: pulse-2
+(darwin fp128, needs a Mac runner), pulse-5 (payload-index), xvector-6
+(f32), engine-6 Send/Sync, 1630/1658 (fragment), 1445 (call-site
+lowering). RELEASE-CYCLE DIRECTIVE (owner): on the next compiler
+candidate/release, process the compiler's relay items (release checks +
+pin coordination + the 27-repro re-verify sweep on the candidate
+archive), fix stdlib-side bugs it exposes, and keep the classic waves
+running in parallel.
+
+MANDATORY PROTOCOL: (1) body-derived clauses only; canonical `result is
+Ok =>` / `result is None =>` guard forms; payload-free Ok-side clauses on
+catalog Result[struct] returns; (2) probe-first tools/probes/p_waveNNN_
+shapes.xi (bind returned values before comparing; red pre / green post),
+remerge old locks that assert retired behavior (p_wave62 lost the
+WsConnection.pending field; p_wave121-125 are the newest locks); (3) the
+socket/io wrapper family keeps EARLY-ERROR RETURNS (not requires);
+(4) runtime shims use `long long` (not `long`) for Int-sized values and
+Int arrays -- C long is 32-bit on Windows; (5) dump
+tools/coverage_floors15N.json, wire workflows + tools/README + plan/
+session/queue in one commit, YAML check, pure-ASCII additions, then the
+battery: corpus 955/955, probes expect 302, modules 510/510, barename
+0/510, floors159 + ratchets; push main with the one-shot credential.
+
+CAUTIONS: no unbounded benchmarks; run_smokes.ps1 has NO per-file timeout
+(guard hangs at the caller); Windows LockFileEx blocking-regain on a
+self-held range HANGS; probe file fixtures truncate-first and clean up
+(probe CWD is the repo root); watch: smoke_misc2 flake rc 20 (no repro);
+strings LEAK BY DESIGN and a concat-per-item builder is n^2 allocations --
+use Vec builders (the wave-125 512 KB scratch hit ~137 GB and died;
+measured, fixed in escape.xi; string.xi's str_escape/str_unescape still
+carry it -- fix in batch 2); invalid-fd read/write rows are POSIX-only;
+the shared worktree has a concurrent doc-actor: re-read the TOP of the
+block list before appending (blocks 128/132/140/144 were idempotent, 148
+COLLIDED -- on a collision use an `<N>b` block and cross-reference; never
+sweep foreign edits); the engine lane shares this box (its Vulkan builds
+slow batteries; never kill foreign xiom.exe/dbg processes). The relay
+doorbell cron is SESSION-SCOPED: renew it at session start (schedule the
+2h relay-doorbell prompt).
+
+---
+
+### Snapshot 32 (2026-10-13 12:45Z; SUPERSEDED by snapshot 33 -- kept for history)
 
 **PASTE-READY PROMPT FOR THE NEXT SESSION (copy this block):**
 
@@ -2811,6 +2908,19 @@ registry pin, agent recon for the rest)**
   121-123 (websocket I/O + helpers, poll/select + SO_REUSEPORT, signal
   delivery) closed out the pulse wave-2 rows -- probes 300; floors157.
 - No other queue moves; 1442 and 1630/1658 remain the compiler's.
+
+**SESSION 2026-10-13 block 151 (handoff 16:25Z -- snapshot 33 refreshed in place at head a139f23; waves 114-125; continuation prompt re-issued)**
+- Snapshot 33 written at the top of section 0A (waves 114-125; gates
+  955/302/510/0 + floors159; coverage fns 8737/clauses 6184; the new
+  compiler traps: the UCRT invalid-fd fast-fail, the v0.64.4 ffi.free
+  call-site lowering, and the stale cached runtime object; next-wave
+  options led by strnlen batch 2 (string.xi) and the thread wave (1423
+  hoist first); the block-collision protocol updated after the 148
+  collision; the engine-lane shared-box caution). Snapshot 32 demoted to
+  superseded history; snapshot 31 stays below it.
+- Bus at refresh: no new asks; the lane-actionable set is unchanged (the
+  remaining acked rows are compiler-gated or queued options). Working
+  tree: only the untracked out/ evidence dir; head a139f23.
 
 **SESSION 2026-10-13 block 150 (wave 125: strnlen-family batch 1 -- compare/trim/escape cached views + escape Vec-builders; probes 302; floors159)**
 - WAVE 125 (classic string-dir wave, batch 1): compare.xi
