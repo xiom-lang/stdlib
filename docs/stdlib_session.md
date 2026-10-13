@@ -17,9 +17,122 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 34 (updated 2026-10-13 17:15Z at head f3fba44; waves 114-126 landed; probes 303; floors160; relay live)
+## 0A. CONTINUE HERE -- handoff snapshot 35 (updated 2026-10-13 20:00Z at head 664e4a7; waves 114-131 landed; probes 308; floors165; relay live)
 
-### Snapshot 34 (paste-ready)
+### Snapshot 35 (paste-ready)
+
+**PASTE-READY PROMPT FOR THE NEXT SESSION (copy this block):**
+
+---
+
+You are continuing the XIOM stdlib lane. Worktree `E:\xiom-lang\stdlib`,
+branch `main`. Read `docs/stdlib_session.md` blocks 159, 158, 157, 156,
+155, 154, 153, 152b, 152 (both same-round texts), 151, 150, 149, 148b,
+148, 147, 146, 145, 144, 143, 142, 141, 140, 139, 138, 137, 136, 135
+(older as needed); snapshot 34 below is the previous handoff and is
+superseded (33/32/31 stay below it as history).
+
+STATE: compiler v0.64.4 released and pinned (tag f76fd47c on df493530; the
+official windows-x64 asset pre-downloaded at
+`%TEMP%\kilo\stdlib_ws\v0.64.4-rel\bin\xiom.exe`); `COMPILER_VERSION` =
+v0.64.4. Waves 114-131 landed 2026-10-12/13 (131 is the latest): 114
+pin/tuple/async; 115 durability+byte-IO; 116 polygon_difference; 117
+durability P5 pairs; 118 advisory locking; 119 socket options + deadline
+recv; 120 mmap family; 121 websocket I/O + server helpers; 122 poll/select
++ SO_REUSEPORT; 123 signal delivery; 124 directory watch + guard-free
+runtime half; 125-130 the strnlen/concat-builder arc (compare/trim/escape;
+string.xi core + json escape family; 13 string files + bare-byte_at tail;
+14 files + the Char sign-extension mask fix; the str_slice fast path at
+hot call sites -- dbg127r 157.1 s -> 19.4 s; the builder pass); 131 the
+REL-20261013-1423 spawn-buffer hoist (main-heap; e2e m282-gated). Lane
+head: 664e4a7 (main). Bus: 1423-compiler was moved acked -> fixed by this
+lane (wave 131; compiler verifies; spawn[T] e2e hangs on the pin until
+m282); 1445 fixed upstream (compiler-side acceptance re-runs on the next
+pin); 1545 closed (the incident; the announced capped re-runs completed);
+1948-engine is an open broadcast (PACKAGE-ASKS.md; member lanes cannot
+move to:all items -- the tool refuses; the engine will reference sections
+S01-S05/R01 in future per-lane items); 1630/1658 stay compiler-owned open
+(standing leave). packages cluster verified; orbitdb bundle closed.
+
+GATES (block 158, final tree): corpus 955/955 (694.3s), probes 308/308
+(353.9s), modules 510/510 (204.1s), barename 0/510 (293.2s), floors165
+(fns 8776, pubFns 6540, clauses 6234, pubCovered 4625; clauses 71.0%,
+pub 70.7%) + module-smoke (499/518, 3500/6239) + doc ratchets OK. Battery
+times swing ~+/-40% with the shared box (the engine lane's builds).
+
+FINDINGS: 15 Current, all compiler (tools/known_failures/README.md). Trap
+list (keep current in the block): struct/Str payload reads in catalog
+ensures clauses false-fire (payload-free Ok-side clauses only); the
+Windows UCRT fast-fails on _read/_write of a closed/out-of-range fd
+(invalid-fd probe rows are POSIX-only); on v0.64.4 `ffi.free` call sites
+lower to plain `@free` regardless of the wrapper body; the driver's
+runtime object caches by source (a stale entry hid a missing
+`xiom_guard_free` until wave 124's rebuild); a per-position UTF-8 decode
+can overshoot the buffer on a truncated trailing lead byte (wave 126,
+str_reverse); raw Char-returning helpers MUST mask `& 0xFF` before
+`as Char` -- `(*(base + i)) as Int` sign-extends while `byte_at(...) as
+Int` did not (wave 128 fixed six helpers; strip's len_utf8 skip exposed
+it); `s.c_str()` is an opaque `Ptr`: no arithmetic, no `as *UInt8` -- the
+idiom is `let base: *UInt8 = s.c_str();` inside the unsafe block, or
+passing `s.c_str()` to a `*UInt8` parameter; the wave-125/126 grep missed
+BARE `byte_at(` calls (use `[^_.a-zA-Z0-9]byte_at(`; the string dir is
+clean of them now); replace._matches_at's internal str_len per position
+was a hidden full rescan (bound moved to callers); str_slice itself is
+UNCHANGED (its per-call str_len clamp stays; hot per-item sites use
+bounds-guaranteed `_slice_fast`).
+
+NEXT WAVE OPTIONS: (1) playground-4 (io.stdin() diagnostic) and the
+website-2/website release artifacts (queued asks); (2) engine-6 runtime
+pool primitives (they mostly exist; the pool build rides the spawn flip);
+(3) the thread flip on the next compiler pin WITH m282: flip spawn[T] to
+the real path, update the sequential-simulation notes
+(thread_parallel_for, pool) and re-run the spawn e2e (return 42); (4) the
+engine S-section rows when the engine files its announced per-lane items.
+Compiler-blocked: pulse-2 (darwin fp128, needs a Mac runner), pulse-5
+(retest on the next pin), xvector-6 (f32), engine-6 Send/Sync, 1630/1658
+(leave), 1445 + 1423 (compiler-side verify). RELEASE-CYCLE DIRECTIVE
+(owner): on the next compiler candidate/release, process the compiler's
+relay items (release checks + pin coordination + the 27-repro re-verify
+sweep on the candidate archive), fix stdlib-side bugs it exposes, and keep
+the classic waves running in parallel.
+
+MANDATORY PROTOCOL: (1) body-derived clauses only; canonical `result is
+Ok =>` / `result is None =>` guard forms; payload-free Ok-side clauses on
+catalog Result[struct] returns; (2) probe-first tools/probes/p_waveNNN_
+shapes.xi (bind returned values before comparing; red pre / green post);
+never put a row in a probe that can HANG pre-fix (run_smokes.ps1 has NO
+per-file timeout); remerge old locks that assert retired behavior
+(p_wave121-131 are the newest locks); (3) the socket/io wrapper family
+keeps EARLY-ERROR RETURNS (not requires); (4) runtime shims use
+`long long` (not `long`) for Int-sized values and Int arrays -- C long is
+32-bit on Windows; (5) dump tools/coverage_floors16N.json, wire workflows
++ tools/README + plan/session/queue in one commit, YAML check, pure-ASCII
+additions, then the battery: corpus 955/955, probes expect 308, modules
+510/510, barename 0/510, floors165 + ratchets; push main with the
+one-shot credential; (6) hot per-item/per-char loops use the
+bounds-guaranteed `_slice_fast` / `_push_str` idioms (copied per module;
+never loosen str_slice's public clamps); (7) any leak-class measurement
+is announced first and capped (1.5 GB working set + watchdog; precedent
+REL-20261013-1638 and REL-20261013-1903).
+
+CAUTIONS: no unbounded benchmarks; leak-class rule as above (the wave-125
+scratch hit ~26 GB in 2 min; wave-129/130 re-runs finished at 4.9 MB); run
+_smokes.ps1 has NO per-file timeout (guard hangs at the caller); Windows
+LockFileEx blocking-regain on a self-held range HANGS; probe file fixtures
+truncate-first and clean up (probe CWD is the repo root); watch:
+smoke_misc2 flake rc 20 (no repro); strings LEAK BY DESIGN (the string
+dir's observed builders are converted; keep new code on Vec builders);
+invalid-fd read/write rows are POSIX-only; the shared worktree has
+concurrent doc-actors: re-read the TOP of the block list before appending
+(blocks 128/132/140/144 idempotent, 148 and 152 COLLIDED; on a collision
+use an `<N>b` block and cross-reference; never sweep foreign edits); the
+engine lane shares this box (its Vulkan builds slow batteries; never kill
+foreign xiom.exe/dbg processes). The relay doorbell cron is SESSION-SCOPED:
+renew it at session start (schedule the 2h relay-doorbell prompt).
+
+---
+
+### Snapshot 34 (2026-10-13 17:15Z; SUPERSEDED by snapshot 35 -- kept for history)
 
 **PASTE-READY PROMPT FOR THE NEXT SESSION (copy this block):**
 
@@ -3043,6 +3156,28 @@ registry pin, agent recon for the rest)**
 - Numbering: third shared-worktree collision case -- two block 152s
   exist (mine + the actor's; wave 126 used 152b) and both stand as-is;
   the next writer continues from 156/157.
+
+**SESSION 2026-10-13 block 159 (handoff 20:00Z -- snapshot 35 refreshed in place at head 664e4a7; waves 114-131; continuation prompt re-issued)**
+- Snapshot 35 written at the top of section 0A (waves 114-131; gates
+  955/308/510/0 + floors165; coverage fns 8776/clauses 6234; the trap
+  list now carries the Char `& 0xFF` mask rule, the `Ptr`/`c_str`
+  idiom, the bare-`byte_at(` grep lesson, the `replace._matches_at`
+  rescan and the str_slice/`_slice_fast` split; next options led by
+  playground-4/website-2 and the m282 spawn flip; the collision note
+  carries 148 + 152). Snapshot 34 demoted to superseded history.
+- Bus at refresh: 1423-compiler moved acked -> fixed by this lane (wave
+  131, commit 664e4a7; the compiler now verifies -- spawn[T] e2e stays
+  pin-gated until m282); 1948-engine broadcast noted (member lanes
+  cannot move to:all items; the engine will file per-lane sections
+  S01-S05/R01); 1545 closed; packages verified; 1445 fixed upstream;
+  1630/1658 compiler-owned open (standing leave). Working tree: only the
+  untracked out/ evidence dir; head 664e4a7 (wave 131).
+- Session arc: waves 126-131 landed this session (f3fba44, e82ba69,
+  9855014, 7978db0, 664e4a7) plus the snapshot/handoff refreshes
+  (f5ef21d, this commit); each wave carried a full battery plus the
+  capped measurements (re-run evidence in out/dbg1[2-3][0-9]r.log). The
+  string dir's observed strnlen / concat-per-item class is cleared
+  (waves 125-130).
 
 **SESSION 2026-10-13 block 158 (wave 131: REL-20261013-1423 spawn-buffer hoist -- main-heap result buffer, e2e m282-gated; probes 308; floors165)**
 - WAVE 131 (thread wave, hoist half): xiom.thread.spawn's result
