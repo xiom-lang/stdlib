@@ -3157,6 +3157,30 @@ registry pin, agent recon for the rest)**
   exist (mine + the actor's; wave 126 used 152b) and both stand as-is;
   the next writer continues from 156/157.
 
+**SESSION 2026-10-14 block 166 (doorbell 15:00Z -- new stdlib rows triaged; wave 136 in flight; relays raced with the actor)**
+- Lane view: two new stdlib-addressed rows plus follow-ups.
+  `REL-20261014-1208-bindings` (B-27/B-28: ffi write_at offsets dropped;
+  Vec.reserve/with_len heap overflow) is already **fixed** (the actor's
+  wave 135 fix-first, block 165). `REL-20261014-1305-pulse-2` (SIGILL
+  side-check; m297/m305-range evidence) is **acked** -- the actor's ack
+  cites the re-verification shape for `REL-20261010-1615-stdlib`
+  (`p_path_println_context_crash.xi`: re-run on the next archive, then
+  1615 fixed -> verified -> closed); this session's ack note with refs
+  (commit 769176e) is recorded on the same row. `REL-20261014-1427-engine`
+  (copy_file / read_file+write_file truncate at NUL; acked) is queued.
+  `REL-20261014-1453-packages` (fleet data point for -1427) was **open**
+  at fetch and the actor was mid-ack in the relays repo at this round
+  (uncommitted edit + active git processes) -- deferred, not raced.
+- Relays status: `git pull` raced with the actor's relay operations (six
+  git processes active; a transient index state blocked one commit and
+  then cleared); the 1305 note landed regardless; relays head 3e3460c.
+- Tree: head `769176e` (candidate-processing checklist for the next
+  compiler archive: v0.64.4 release-check rows, m312/m313 gates); the
+  actor is mid-wave **136** (`xiom/encoding/encoding.xi` modified;
+  untracked `tools/probes/p_wave136_shapes.xi`,
+  `tools/coverage_floors170.json`) -- session doc committed alone.
+- The next writer continues from block 165b/166.
+
 **SESSION 2026-10-14 block 165b (wave 135 consolidation: verification of 85acf16 + the stale-bundle root cause; floors169 wired; battery 955/312/510/0) -- same round as the actor's block 165 below; no text edited by either side**
 - The actor's B-27/B-28 fix (85acf16) is verified from this session:
   with the fixes in place, out/scratch_b27f.xi reads back through
