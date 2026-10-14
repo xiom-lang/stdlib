@@ -7,7 +7,7 @@ windows-x64 release archive.)
 **Gates: corpus 955/955 full (C001 carve-outs retired on v0.63.1; new
 TcpStream loopback and uuencode roundtrip smokes added; smoke_os_watch
 added in wave 124), modules 510/510,
-probes 313/313, barename 0/510.**
+probes 314/314, barename 0/510.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -26,7 +26,7 @@ gates flip:
    wave-98..110 probes), the io byte-fidelity/CRLF lock and the
    fs_remove lock).
 4. Strict bare-name scan clean -- MET (0/509).
-5. Coverage ratchet green -- MET (floors170).
+5. Coverage ratchet green -- MET (floors171).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (499/518 modules, 3500/6239 fns).
 8. Contract coverage 100% (every public fn carries clauses) -- OPEN (70.7%).
@@ -674,6 +674,25 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
      NEXT: wave 137 = FIX-FIRST REL-20261014-1427-engine (binary-safe
      copy_file / byte-exact file IO roundtrip); then the encoding
      submodules (base64/base32/hex/percent/punycode/idna/ascii85) batch.
+     WAVE 137 (block 167): FIX-FIRST REL-20261014-1427-engine --
+     copy_file now goes through read_file_bytes / write_file_bytes
+     (byte-exact, length-carrying) instead of read_file/write_file (Str
+     is NUL-terminated by design, so a binary source truncated at the
+     first NUL: a PE DLL became 3 bytes MZ\x90). Probe
+     p_wave137_shapes.xi (314th): 24 rows -- the NUL/0xFF byte roundtrip,
+     the PE-magic copy_file byte-equality + size, append parity at the
+     byte level, the unchanged text path, and fixture cleanup;
+     file/copy/binary smoke filters 20/20. Coverage fns 8787, clauses
+     6243 (floors171 wired -- counts unchanged, the rewrite swapped
+     calls only); battery corpus 955/955 (617.7s), probes 314/314
+     (367.9s), modules 510/510 (267.3s), barename 0/510 (392.3s) +
+     ratchets OK. The engine's PowerShell Copy-Item workaround can
+     retire on the next archive (or now against stdlib main via
+     XIOM_STDLIB); verify the NUL roundtrip + PE-magic copy at the
+     candidate.
+     NEXT: the encoding submodules (base64/base32/hex/percent/punycode/
+     idna/ascii85) sweep batch; the candidate-queue engine/bindings rows
+     as the archive lands.
      CANDIDATE QUEUE (the open v0.64.4 release-check,
      release-checks/compiler-compiler-v0.64.4.md on the bus; compiler
      fixer wave m276-m313 in flight as of 2026-10-14T14:15Z): when the

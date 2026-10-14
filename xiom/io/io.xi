@@ -415,6 +415,11 @@ pub fn remove_file(path: Str) -> Result[Unit, IOError]
 }
 
 /// Copy a file's contents to a new path; Err.
+/// Wave 137 (REL-20261014-1427): byte-exact copy. The previous
+/// read_file/write_file pair moved the bytes through Str, which is
+/// NUL-terminated by design, so binary sources truncated at the first NUL
+/// byte (a copied PE DLL became 3 bytes MZ\x90). read_file_bytes /
+/// write_file_bytes are length-carrying and byte-exact.
 pub fn copy_file(src: Str, dst: Str) -> Result[Unit, IOError]
   requires: src.len() > 0
   requires: dst.len() > 0
@@ -422,8 +427,8 @@ pub fn copy_file(src: Str, dst: Str) -> Result[Unit, IOError]
   requires: file_exists(src)
   ensures:  result is Ok => file_exists(dst)
 {
-  let content = read_file(src)?;
-  write_file(dst, content)
+  let content = read_file_bytes(src)?;
+  write_file_bytes(dst, &content)
 }
 
 /// Rename or move a path; Err with the OS message.

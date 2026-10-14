@@ -2205,8 +2205,19 @@ T1/T2 yields.
         modules 510/510 (244.2s), barename 0/510 (534s). NEXT: wave 137 =
         FIX-FIRST REL-20261014-1427-engine (binary-safe copy_file), then
         the encoding submodules batch.
+        Wave 137 (2026-10-14, block 167): FIX-FIRST REL-20261014-1427 --
+        copy_file moves to read_file_bytes/write_file_bytes (byte-exact;
+        the read_file/write_file pair truncated binaries at the first NUL
+        through the NUL-terminated Str). Probe p_wave137_shapes.xi
+        (314th): 24 rows (NUL/0xFF roundtrip, PE-magic copy equality +
+        size, byte-append parity, text path, cleanup); file/copy/binary
+        smokes 20/20. Coverage fns 8787, clauses 6243 (floors171) +
+        ratchets OK; battery: corpus 955/955 (617.7s), probes 314/314
+        (367.9s), modules 510/510 (267.3s), barename 0/510 (392.3s).
+        The engine workaround can retire via XIOM_STDLIB=main or at the
+        next archive.
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors170.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors171.json
         tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;

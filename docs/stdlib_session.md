@@ -3157,6 +3157,33 @@ registry pin, agent recon for the rest)**
   exist (mine + the actor's; wave 126 used 152b) and both stand as-is;
   the next writer continues from 156/157.
 
+**SESSION 2026-10-14 block 167 (wave 137: FIX-FIRST REL-20261014-1427-engine -- copy_file byte-exact via read_file_bytes/write_file_bytes; probes 314; floors171)**
+- WAVE 137 (fix-first, the engine's binary-IO ask): `copy_file` now runs
+  `read_file_bytes(src)?` + `write_file_bytes(dst, &content)`. Root
+  cause: the old read_file/write_file pair moved the bytes through Str,
+  which is NUL-terminated by design, so binary sources truncated at the
+  first NUL byte (a copied PE DLL became 3 bytes "MZ\x90"); the byte
+  APIs landed with the orbitdb wave and are length-carrying. copy_file
+  was the only read_file -> write_file copy site in the tree.
+- Probe p_wave137_shapes.xi (314th): 24 rows -- a PE-magic-like fixture
+  (4D 5A 90 00 01 02 FF 00 7F): write_file_bytes + file_size +
+  read_file_bytes roundtrip, copy_file byte-equality and size on the
+  NUL-containing source (the reported defect), byte-level append parity
+  (0xAA 00 BB), the text path unchanged, fixture cleanup. file / copy /
+  binary smoke filters 20/20. (The engine's repro stands as the
+  red-pre evidence; the fix is a call swap.)
+- Coverage: fns 8787, clauses 6243 (counts unchanged -- call swap
+  only); floors171 dumped + wired. Battery: corpus 955/955 (617.7s),
+  probes 314/314 (367.9s), modules 510/510 (267.3s), barename 0/510
+  (392.3s), module-smoke/doc ratchets OK.
+- Bus: REL-20261014-1427-engine moves acked -> fixed with this
+  evidence; the engine's PowerShell Copy-Item workaround can retire via
+  XIOM_STDLIB=main now or at the next archive (the NUL roundtrip +
+  PE-magic copy are the candidate verification rows).
+- Next: the encoding submodules (base64/base32/hex/percent/punycode/
+  idna/ascii85) sweep batch; then the candidate-queue rows as the
+  archive lands.
+
 **SESSION 2026-10-14 block 166b (wave 136: the encoding core converted; the value-position unsafe trap; engine 1427 acked; candidate queue gains the engine rows; probes 313; floors170) -- same round as the actor's block 166 below; no text edited by either side**
 - WAVE 136 (the sweep campaign, encoding.xi): base64 / base64url /
   hex / base32 decoders, url_encode / url_decode, the percent
