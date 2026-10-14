@@ -26,8 +26,8 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 ---
 
 You are continuing the XIOM stdlib lane. Worktree `E:\xiom-lang\stdlib`,
-branch `main`. Read `docs/stdlib_session.md` blocks 170c, 170b, 170, 169,
-168, 167, 166b, 166, 165b, 165, 164, 163, 162, 161, 160 (both same-round
+branch `main`. Read `docs/stdlib_session.md` blocks 170d, 170c, 170b, 170,
+169, 168, 167, 166b, 166, 165b, 165, 164, 163, 162, 161, 160 (both same-round
 texts), 159, 158, 157, 156, 155, 154, 153, 152b, 152 (both), 151, 150,
 149, 148b, 148 (older as needed); snapshot 35 below is the previous
 handoff and is superseded (34/33/32/31 stay below it as history).
@@ -51,12 +51,19 @@ opener (core/hash/io); 134 the escape family; 135 B-27/B-28 fixed (actor
 encoding core (the value-position unsafe trap); 137 copy_file byte-exact
 (engine 1427); 138 the encoding submodules (base64/base32/hex/percent/
 punycode/idna/ascii85 + the ascii85 per-group builder fix caught live by
-a capped scratch; probes 315; floors172). Lane head: a26072b (main).
-Bus tip: ddc7fa6 (1427 fixed; 1453 acked).
+a capped scratch; probes 315; floors172); 139 the 1423 RUNTIME half (the
+trampoline's i64 stores; the spawn e2e acceptance joined 42/7 x5 with the
+compiler's m312 build). Lane head: fc86466 (main). Bus tip: ddc7fa6
+(1427 fixed; 1453 acked).
 
-BUS STATE: 1423-compiler fixed (compiler verified on m310: the spawn HANG
-is gone -- m282 + the wave-131 hoist; the join readback is STILL garbage;
-fixer m312 in flight -- do NOT flip the spawn e2e until it lands). 1445
+BUS STATE: 1423-compiler fixed and now CLOSING: m312 landed (bc1d821b,
+the read-path half) and the runtime half is fixed stdlib-side (wave 139:
+xiom_task_trampoline stored the i64 result as C long -- 4 bytes on
+Windows -- leaving the upper half as malloc junk, which was the readback
+garbage). Acceptance: out/dbg131s.xi x5 plus the two-thread
+out/dbg139w.xi x5 -> "joined 42" / "42 + 7" rc=0; the compiler verifies
+and requests the v0.64.5 pin (stdlib main carrying wave 139); the spawn
+flip goes with that pin. 1445
 fixed bus-side but the alloc-guard-spin STILL reproduces on m310 (ffi.free
 call sites leaf-inline to `call void @free`; fixer m313 in flight; keep
 the alloc/free workarounds). 1208-bindings fixed (B-27/B-28; 85acf16).
@@ -72,14 +79,16 @@ CANDIDATE QUEUE (when the next archive lands; full block in the queue):
 verify the ten stdlib rows marked re-verify-at-next-archive in the
 release check (1548-stdlib-3/4/5/6/7, 1549-stdlib-2/3/4/5, 1615-stdlib);
 (3) re-add the 1549-stdlib-6 payload clauses once m283+ ships; (4) spawn
-flip + thread gate ONLY after m312; (5) guard-spin acceptance after
+flip + thread gate AT THE v0.64.5 PIN (m312 landed; the runtime half is
+fixed in wave 139 -- acceptance joined 42/7 x5); (5) guard-spin
+acceptance after
 m313; (6) bindings re-probe (stdlib 85acf16 + compiler m296 should clear
 B-27/B-28 end to end); (7) engine rows: 1427 verify, engine-6 on the
 m312 gate, 1513 under watch, engine-3 awaiting the engine verify
 (1158/1213 are compiler rows).
 
-GATES (block 169, final tree): corpus 955/955 (806.6s), probes 315/315
-(310.2s), modules 510/510 (232.7s), barename 0/510 (501.8s), floors172
+GATES (block 170d, final tree): corpus 955/955 (792.3s), probes 315/315
+(466.3s), modules 510/510 (295.8s), barename 0/510 (414.6s), floors172
 (fns 8802, pubFns 6540, clauses 6252, pubCovered 4625; clauses 71.0%,
 pub 70.7%) + module-smoke (499/518, 3500/6239) + doc ratchets OK. Battery
 times swing with the shared box (the compiler worktree sweeps and the
@@ -3342,6 +3351,26 @@ registry pin, agent recon for the rest)**
   clean except the untracked out/ dir at this round.
 - Two long-lived git processes (from ~14:20Z) sit in the relays repo;
   the bus itself is consistent. The next writer continues from 169/170.
+
+**SESSION 2026-10-14 block 171 (doorbell 19:00Z -- REL-20261014-1739-compiler acked: v0.64.5 pin prep, freeze on signal)**
+- Action item this round: the compiler lane's `REL-20261014-1739-compiler`
+  (open, high) -- "v0.64.5 pin request (prep): freeze a stdlib sha
+  carrying wave 139; tag stdlib-v0.64.5 on signal" -- is **acked** with
+  the freeze plan (relays 97b24a0): on the GO signal, freeze the latest
+  main sha carrying wave 139 (tree frozen-ready; clean except the
+  untracked out/ evidence dir), tag stdlib-v0.64.5, then run the
+  candidate-processing checklist (queue doc, 769176e): full battery +
+  ratchets on the candidate archive, the 27-repro re-verify sweep, and
+  the pending post-pin re-verifications (1615 path/println crash re-run,
+  pulse wave-2 rows, xvector-6 f32, 1445 ffi.free routing). No freeze
+  blockers known from this lane.
+- Other rows unchanged: 1208-bindings fixed; 1305-pulse-2 acked; 1427
+  fixed (wave 137); 1453 acked.
+- Tree: head `fc86466`; blocks run to 170d (the v0.64.5 release-gate
+  runtime fix for 1423: xiom_task_trampoline's i64 result store now uses
+  long long -- the Windows 4-byte `long` class again; acceptance x5
+  joined 42/7 rc=0). Snapshot 36 stands with its block 168/170b
+  amendments. The next writer continues from 170d/171.
 
 **SESSION 2026-10-14 block 170d (FIX-FIRST v0.64.5 release gate REL-20261013-1423: the runtime half -- xiom_task_trampoline stored the i64 result as C long (4 bytes on Windows); now long long for the payload fn type, the result local and BOTH stores + the spawn cast; acceptance dbg131s x5 + the two-thread dbg139w x5 joined 42/7 rc=0) -- same round as the actor's block 170 (doorbell summary; two 170s exist, the actor's + this one, so this block takes the d suffix) and the actor's block 170c (their mid-flight observation of this edit); no foreign text edited**
 - The 17:00Z doorbell surfaced the compiler's v0.64.5 release gate on
