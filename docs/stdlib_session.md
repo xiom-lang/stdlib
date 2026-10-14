@@ -26,11 +26,11 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 ---
 
 You are continuing the XIOM stdlib lane. Worktree `E:\xiom-lang\stdlib`,
-branch `main`. Read `docs/stdlib_session.md` blocks 168, 167, 166b, 166,
-165b, 165, 164, 163, 162, 161, 160 (both same-round texts), 159, 158,
-157, 156, 155, 154, 153, 152b, 152 (both), 151, 150, 149, 148b, 148 (older
-as needed); snapshot 35 below is the previous handoff and is superseded
-(34/33/32/31 stay below it as history).
+branch `main`. Read `docs/stdlib_session.md` blocks 170b, 170, 169, 168,
+167, 166b, 166, 165b, 165, 164, 163, 162, 161, 160 (both same-round
+texts), 159, 158, 157, 156, 155, 154, 153, 152b, 152 (both), 151, 150,
+149, 148b, 148 (older as needed); snapshot 35 below is the previous
+handoff and is superseded (34/33/32/31 stay below it as history).
 
 STATE: compiler v0.64.4 released and pinned (tag f76fd47c on df493530; the
 official windows-x64 asset pre-downloaded at
@@ -49,7 +49,10 @@ drop, orphan brace; ACCELERATED.md; probes 309); 133 the sweep-campaign
 opener (core/hash/io); 134 the escape family; 135 B-27/B-28 fixed (actor
 85acf16 + consolidation; the stale-bundle root cause found); 136 the
 encoding core (the value-position unsafe trap); 137 copy_file byte-exact
-(engine 1427). Lane head: 68fb8f0 (main). Bus tip: ddc7fa6.
+(engine 1427); 138 the encoding submodules (base64/base32/hex/percent/
+punycode/idna/ascii85 + the ascii85 per-group builder fix caught live by
+a capped scratch; probes 315; floors172). Lane head: a26072b (main).
+Bus tip: ddc7fa6 (1427 fixed; 1453 acked).
 
 BUS STATE: 1423-compiler fixed (compiler verified on m310: the spawn HANG
 is gone -- m282 + the wave-131 hoist; the join readback is STILL garbage;
@@ -75,9 +78,9 @@ B-27/B-28 end to end); (7) engine rows: 1427 verify, engine-6 on the
 m312 gate, 1513 under watch, engine-3 awaiting the engine verify
 (1158/1213 are compiler rows).
 
-GATES (block 167, final tree): corpus 955/955 (617.7s), probes 314/314
-(367.9s), modules 510/510 (267.3s), barename 0/510 (392.3s), floors171
-(fns 8787, pubFns 6540, clauses 6243, pubCovered 4625; clauses 71.0%,
+GATES (block 169, final tree): corpus 955/955 (806.6s), probes 315/315
+(310.2s), modules 510/510 (232.7s), barename 0/510 (501.8s), floors172
+(fns 8802, pubFns 6540, clauses 6252, pubCovered 4625; clauses 71.0%,
 pub 70.7%) + module-smoke (499/518, 3500/6239) + doc ratchets OK. Battery
 times swing with the shared box (the compiler worktree sweeps and the
 engine builds).
@@ -102,15 +105,14 @@ string dir is clean); replace._matches_at's internal str_len per
 position was a hidden rescan (bound moved to callers); str_slice itself
 is UNCHANGED (hot per-item sites use bounds-guaranteed `_slice_fast`).
 
-NEXT WAVE OPTIONS: (1) the encoding submodules sweep (base64 / base32 /
-hex / percent / punycode / idna / ascii85 -- the hot per-position sites
-are inventoried); (2) the rest of the tree-wide sweep campaign (ranked
-inventory: convert/validate + convert/json, serialize/toml+csv+json
-string-val, net http/ws/dns, format fmt, text similarity/diff,
-misc/regex/search/collect, num parse/itoa, log, crypto rng/curves, os
-path/fs, error/debug/test builders); (3) the candidate processing when
-the archive lands (jumps the queue); (4) the thread flip + guard-spin
-acceptance strictly after m312/m313. Compiler-blocked: pulse-2 (darwin
+NEXT WAVE OPTIONS: (1) the ranked sweep inventory continues (wave 138
+finished the encoding submodules): convert/validate + convert/json,
+serialize/toml+csv+json string-val, net http/ws/dns, format fmt, text
+similarity/diff, misc/regex/search/collect, num parse/itoa, log, crypto
+rng/curves, os path/fs, error/debug/test builders; (2) the candidate
+processing when the archive lands (jumps the queue); (3) the thread flip
++ guard-spin acceptance strictly after m312/m313. Compiler-blocked:
+pulse-2 (darwin
 fp128, Mac runner), pulse-5 (retest next pin), xvector-6 (f32), engine-6
 Send/Sync, 1630/1658 (leave), 1445/1423 (compiler fixers in flight).
 RELEASE-CYCLE DIRECTIVE (owner): on the next compiler candidate/release,
@@ -3293,6 +3295,23 @@ registry pin, agent recon for the rest)**
 - Numbering: third shared-worktree collision case -- two block 152s
   exist (mine + the actor's; wave 126 used 152b) and both stand as-is;
   the next writer continues from 156/157.
+
+**SESSION 2026-10-14 block 170b (snapshot 36 amended in place for wave 138: read-list, gates 955/315/510/0 + floors172, wave list, next options) -- same 17:00Z round as the actor's block 170 below; no text edited by either side**
+- Snapshot 36's paste block amended after wave 138 landed (6937b7c:
+  the encoding submodules converted + the ascii85 per-group builder fix
+  caught live by a capped scratch; probe 315th; floors172): the
+  read-list leads with 170b, 170, 169, 168, ...; the wave list carries
+  138; the GATES block now cites block 169 (corpus 955/955 806.6s,
+  probes 315/315 310.2s, modules 510/510 232.7s, barename 0/510
+  501.8s, floors172 -- fns 8802, pubFns 6540, clauses 6252, pubCovered
+  4625); the NEXT options drop the finished encoding submodules and
+  lead with the ranked sweep inventory.
+- Queued as a follow-up (from the REL-20261014-1453-packages ack): the
+  `copy_file_bytes` convenience alias rides the next io-touching wave
+  (copy_file itself is already byte-exact since wave 137; the alias is
+  discoverability only).
+- Open rows at the 17:00Z doorbell: only the two compiler-owned
+  1630/1658 (standing leave); 1453 acked with no action requested.
 
 **SESSION 2026-10-14 block 170 (doorbell 17:00Z -- quiet; 1427 fixed by the actor's wave 137; 1453 acked; wave 138 landed)**
 - Lane view: nothing to transition. `REL-20261014-1427-engine` is now
