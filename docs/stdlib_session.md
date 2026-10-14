@@ -26,8 +26,8 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 ---
 
 You are continuing the XIOM stdlib lane. Worktree `E:\xiom-lang\stdlib`,
-branch `main`. Read `docs/stdlib_session.md` blocks 170b, 170, 169, 168,
-167, 166b, 166, 165b, 165, 164, 163, 162, 161, 160 (both same-round
+branch `main`. Read `docs/stdlib_session.md` blocks 170c, 170b, 170, 169,
+168, 167, 166b, 166, 165b, 165, 164, 163, 162, 161, 160 (both same-round
 texts), 159, 158, 157, 156, 155, 154, 153, 152b, 152 (both), 151, 150,
 149, 148b, 148 (older as needed); snapshot 35 below is the previous
 handoff and is superseded (34/33/32/31 stay below it as history).
@@ -3295,6 +3295,22 @@ registry pin, agent recon for the rest)**
 - Numbering: third shared-worktree collision case -- two block 152s
   exist (mine + the actor's; wave 126 used 152b) and both stand as-is;
   the next writer continues from 156/157.
+
+**SESSION 2026-10-14 block 170c (mid-flight observation: the runtime spawn-trampoline long->long long edit; NOT verified here; do not sweep)**
+- The working tree carried an UNCOMMITTED foreign edit to
+  runtime/xiom_runtime.c while this block was written (20:01Z):
+  xiom_task_trampoline / xiom_task_payload_t switch the i64 result and
+  the done flag from C `long` to `long long`; the comment cites the 1423
+  readback garbage and C long being 4 bytes on Windows. It is NOT this
+  session's edit and was NOT swept into any commit.
+- Read-only observation against the mid-edit tree (20:02Z):
+  out/dbg131s.xi (the spawn e2e) prints "spawned" and then exits
+  0xC0000005 in ~3.3 s -- the old HANG is gone, but the crash means the
+  change was incomplete or still in flight (NOT a verdict). If the
+  runtime half is the true root cause of 1423's readback garbage, the
+  compiler m312 hunt may be moot -- the edit's owner will land + verify.
+- Next session: check `git status` first; if that runtime edit is still
+  uncommitted and unclaimed, leave it alone (never sweep foreign edits).
 
 **SESSION 2026-10-14 block 170b (snapshot 36 amended in place for wave 138: read-list, gates 955/315/510/0 + floors172, wave list, next options) -- same 17:00Z round as the actor's block 170 below; no text edited by either side**
 - Snapshot 36's paste block amended after wave 138 landed (6937b7c:
