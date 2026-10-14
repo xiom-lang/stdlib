@@ -3294,6 +3294,20 @@ registry pin, agent recon for the rest)**
   exist (mine + the actor's; wave 126 used 152b) and both stand as-is;
   the next writer continues from 156/157.
 
+**SESSION 2026-10-14 block 170 (doorbell 17:00Z -- quiet; 1427 fixed by the actor's wave 137; 1453 acked; wave 138 landed)**
+- Lane view: nothing to transition. `REL-20261014-1427-engine` is now
+  **fixed** (the actor's wave 137 fix-first, block 167: binary-safe
+  copy_file/read_file+write_file); `REL-20261014-1453-packages` is
+  **acked** (the actor picked up last round's deferral); 1305-pulse-2
+  stays acked (re-verify queued for the next archive).
+- Tree: the actor landed waves **137** (the -1427 fix) and **138**
+  (encoding submodules cached runtime-mirror reads + the convert/ascii85
+  builder leak-quadratic caught live; probe 315; floors172) and refreshed
+  **snapshot 36** in place (block 168). Head `6937b7c`; working tree
+  clean except the untracked out/ dir at this round.
+- Two long-lived git processes (from ~14:20Z) sit in the relays repo;
+  the bus itself is consistent. The next writer continues from 169/170.
+
 **SESSION 2026-10-14 block 169 (wave 138: the encoding submodules converted -- cached runtime-mirror reads in base64/base32/hex/percent/punycode/idna/ascii85; the convert/ascii85 builder fix (leak-quadratic caught live); probes 315; floors172)**
 - WAVE 138 (the sweep campaign, the 7 encoding submodules + the ascii85
   delegate): every per-position `string.byte_at` / `s.char_at` loop was
