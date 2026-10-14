@@ -3343,6 +3343,40 @@ registry pin, agent recon for the rest)**
 - Two long-lived git processes (from ~14:20Z) sit in the relays repo;
   the bus itself is consistent. The next writer continues from 169/170.
 
+**SESSION 2026-10-14 block 170d (FIX-FIRST v0.64.5 release gate REL-20261013-1423: the runtime half -- xiom_task_trampoline stored the i64 result as C long (4 bytes on Windows); now long long for the payload fn type, the result local and BOTH stores + the spawn cast; acceptance dbg131s x5 + the two-thread dbg139w x5 joined 42/7 rc=0) -- same round as the actor's block 170 (doorbell summary; two 170s exist, the actor's + this one, so this block takes the d suffix) and the actor's block 170c (their mid-flight observation of this edit); no foreign text edited**
+- The 17:00Z doorbell surfaced the compiler's v0.64.5 release gate on
+  REL-20261013-1423 (owner GO; this item is the LAST compiler-lane
+  blocker): the compiler half (m312 bc1d821b, read-path byte GEPs) is
+  landed, but the runtime half was still present in stdlib main 6937b7c
+  (wave 138): runtime/xiom_runtime.c xiom_task_trampoline stored the i64
+  result as C long -- sizeof(long)==4 on x86_64-pc-windows-msvc, so only
+  the low half landed at result_buf+8 while JoinHandle.join loads 8 bytes
+  (upper half = malloc junk; observed low32 == the worker value).
+- FIX: the payload fn type, the result local and BOTH stores in
+  xiom_task_trampoline, plus the fn cast in
+  xiom_thread_spawn_with_result, now use `long long` (8 bytes on every
+  supported ABI). Runtime-only, ~5962-5977; the rest of the runtime
+  already used long long. The layout comment now says i64.
+- ACCEPTANCE (the compiler's requested shape, run with the compiler
+  lane's live m312+ build E:\xiom-lang\xiom\target\debug\xiom.exe +
+  XIOM_STDLIB=this tree): dbg131s.xi x5 -> spawned + joined 42 rc=0;
+  the new two-thread out/dbg139w.xi x5 -> joined 42 + joined 7 rc=0.
+  Targeted: smoke_thread + smoke_collect_threadpool 2/2,
+  p_wave131_shapes green. (The pin batteries still run on v0.64.4 where
+  the spawn path is pre-m282: the pin-built scratch exits after
+  'spawned' with no join line -- the documented pin behavior.)
+- The actor's block 170c read-only note (20:01Z, written while this edit
+  was uncommitted): the pin-built out/dbg131s.exe exits 0xC0000005 in
+  ~3.3 s after 'spawned'. That binary runs on v0.64.4, whose compiler
+  half predates m282, so the trampoline calls the closure env handle as
+  code -- the acceptance below uses the m312+ build and is the verdict.
+  The edit then landed complete; no foreign edits were swept.
+- Battery follows this commit; results appended to this block.
+- Next: the compiler verifies and requests the v0.64.5 pin (expected
+  pin = stdlib main carrying this fix); the spawn e2e flip + thread gate
+  (2053/1627/1402) stay queued for the next archive per the candidate
+  queue.
+
 **SESSION 2026-10-14 block 169 (wave 138: the encoding submodules converted -- cached runtime-mirror reads in base64/base32/hex/percent/punycode/idna/ascii85; the convert/ascii85 builder fix (leak-quadratic caught live); probes 315; floors172)**
 - WAVE 138 (the sweep campaign, the 7 encoding submodules + the ascii85
   delegate): every per-position `string.byte_at` / `s.char_at` loop was

@@ -721,6 +721,28 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
      error/debug/test builders); the candidate queue jumps the moment
      the next archive lands (m312/m313 still gate the spawn flip + the
      guard-spin acceptance).
+     WAVE 139 (block 170d): FIX-FIRST the v0.64.5 release gate
+     REL-20261013-1423 -- the RUNTIME half (the 17:00Z doorbell item).
+     xiom_task_trampoline stored the i64 result as C long (sizeof(long)
+     == 4 on Windows), so only the low half landed at result_buf + 8 and
+     JoinHandle.join readbacks were garbage (low32 == the worker value;
+     compiler m312 bc1d821b had landed the read-path half). The payload
+     fn type, the result local and BOTH stores in the trampoline, plus
+     the spawn fn cast, now use long long (8 bytes on every ABI).
+     Acceptance with the compiler lane's live m312+ build
+     (E:\xiom-lang\xiom\target\debug\xiom.exe, XIOM_STDLIB=this tree):
+     dbg131s.xi x5 -> spawned + joined 42 rc=0; the new two-thread
+     out/dbg139w.xi x5 -> joined 42 + joined 7 rc=0; smoke_thread +
+     smoke_collect_threadpool 2/2; p_wave131_shapes green. The compiler
+     now verifies and requests the v0.64.5 pin (expected pin = stdlib
+     main carrying this fix); the spawn flip is unblocked at the next
+     archive (m312 landed); the guard-spin acceptance still waits on
+     m313; thread gate 2053/1627/1402 flips with the pin per the
+     candidate queue. (Numbering: the actor's doorbell block 170 sits
+     above; the wave block is 170d.)
+     NEXT: the ranked sweep inventory as before; candidate processing
+     when the v0.64.5 archive lands (release-check rows + known-failures
+     sweep + the m313 guard-spin acceptance).
      FOLLOW-UP (from the REL-20261014-1453-packages ack): add the
      `copy_file_bytes` convenience alias with the next io-touching wave
      (copy_file itself is already byte-exact since wave 137; the alias

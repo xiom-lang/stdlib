@@ -5956,25 +5956,31 @@ long xiom_thread_spawn_id(void* handle) {
 
 /*
  * Trampoline for XIOM thread spawn with result capture.
- * task_buf layout: [8 bytes: done flag (long)] [N bytes: result value]
+ * task_buf layout: [8 bytes: done flag (i64)] [N bytes: result value]
  * total size: 8 + result_size
+ * v0.64.5 release gate (REL-20261013-1423): the i64 result and the done
+ * flag MUST be stored as 64-bit values -- C long is 4 bytes on Windows
+ * (x86_64-pc-windows-msvc), which left the upper half of the result slot
+ * holding malloc junk and made JoinHandle.join readbacks garbage (the
+ * observed low32 was always the worker value). long long is 8 bytes on
+ * every supported ABI.
  */
 typedef struct {
-    long (*fn)(void);
+    long long (*fn)(void);
     char* result_buf;
 } xiom_task_payload_t;
 
 static void* xiom_task_trampoline(void* p) {
     xiom_task_payload_t* payload = (xiom_task_payload_t*)p;
-    long result = payload->fn();
-    *(long*)(payload->result_buf + 8) = result;
-    *(volatile long*)payload->result_buf = 1;
+    long long result = payload->fn();
+    *(long long*)(payload->result_buf + 8) = result;
+    *(volatile long long*)payload->result_buf = 1;
     return NULL;
 }
 
 void* xiom_thread_spawn_with_result(void* fn, char* result_buf) {
     xiom_task_payload_t* p = (xiom_task_payload_t*)malloc(sizeof(xiom_task_payload_t));
-    p->fn = (long (*)(void))fn;
+    p->fn = (long long (*)(void))fn;
     p->result_buf = result_buf;
     xiom_thread_t th = xiom_thread_create((void*)xiom_task_trampoline, p);
     if (!th) { free(p); return NULL; }
