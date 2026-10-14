@@ -17,9 +17,146 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 35 (updated 2026-10-13 20:00Z at head 664e4a7; waves 114-131 landed; probes 308; floors165; relay live)
+## 0A. CONTINUE HERE -- handoff snapshot 36 (updated 2026-10-14 15:05Z at head 68fb8f0; waves 114-137 landed; probes 314; floors171; relay live)
 
-### Snapshot 35 (paste-ready)
+### Snapshot 36 (paste-ready)
+
+**PASTE-READY PROMPT FOR THE NEXT SESSION (copy this block):**
+
+---
+
+You are continuing the XIOM stdlib lane. Worktree `E:\xiom-lang\stdlib`,
+branch `main`. Read `docs/stdlib_session.md` blocks 168, 167, 166b, 166,
+165b, 165, 164, 163, 162, 161, 160 (both same-round texts), 159, 158,
+157, 156, 155, 154, 153, 152b, 152 (both), 151, 150, 149, 148b, 148 (older
+as needed); snapshot 35 below is the previous handoff and is superseded
+(34/33/32/31 stay below it as history).
+
+STATE: compiler v0.64.4 released and pinned (tag f76fd47c on df493530; the
+official windows-x64 asset pre-downloaded at
+`%TEMP%\kilo\stdlib_ws\v0.64.4-rel\bin\xiom.exe`); `COMPILER_VERSION` =
+v0.64.4. Waves 114-137 landed 2026-10-12..14 (137 is the latest): 114
+pin/tuple/async; 115 durability+byte-IO; 116 polygon_difference; 117
+durability P5 pairs; 118 advisory locking; 119 socket options + deadline
+recv; 120 mmap family; 121 websocket I/O + server helpers; 122 poll/select
++ SO_REUSEPORT; 123 signal delivery; 124 directory watch + guard-free
+runtime half; 125-130 the strnlen/concat-builder arc (compare/trim/escape;
+string.xi core + json escape family; 13 string files + bare-byte_at tail;
+14 files + the Char mask fix; the str_slice fast path -- dbg127r 157.1 s
+-> 19.4 s; the builder pass); 131 the 1423 spawn-buffer hoist (main-heap;
+e2e m282-gated); 132 the relay asks + independent-audit fixes (\x00 escape
+drop, orphan brace; ACCELERATED.md; probes 309); 133 the sweep-campaign
+opener (core/hash/io); 134 the escape family; 135 B-27/B-28 fixed (actor
+85acf16 + consolidation; the stale-bundle root cause found); 136 the
+encoding core (the value-position unsafe trap); 137 copy_file byte-exact
+(engine 1427). Lane head: 68fb8f0 (main). Bus tip: ddc7fa6.
+
+BUS STATE: 1423-compiler fixed (compiler verified on m310: the spawn HANG
+is gone -- m282 + the wave-131 hoist; the join readback is STILL garbage;
+fixer m312 in flight -- do NOT flip the spawn e2e until it lands). 1445
+fixed bus-side but the alloc-guard-spin STILL reproduces on m310 (ffi.free
+call sites leaf-inline to `call void @free`; fixer m313 in flight; keep
+the alloc/free workarounds). 1208-bindings fixed (B-27/B-28; 85acf16).
+1401-stdlib filed (the v0.64.4 archive BUNDLES a stale stdlib snapshot at
+lib/xiom -- consumers must build with XIOM_STDLIB=stdlib main or wait for
+the next pin). 1427-engine fixed (wave 137). 1948-engine closed; 1545
+closed; packages verified; 1630/1658 stay compiler-owned open (standing
+leave). The compiler's fixer wave m276-m313 releases through the OPEN
+release check `release-checks/compiler-compiler-v0.64.4.md` (to: all).
+
+CANDIDATE QUEUE (when the next archive lands; full block in the queue):
+(1) known-failures sweep (25 repros under tools/known_failures); (2)
+verify the ten stdlib rows marked re-verify-at-next-archive in the
+release check (1548-stdlib-3/4/5/6/7, 1549-stdlib-2/3/4/5, 1615-stdlib);
+(3) re-add the 1549-stdlib-6 payload clauses once m283+ ships; (4) spawn
+flip + thread gate ONLY after m312; (5) guard-spin acceptance after
+m313; (6) bindings re-probe (stdlib 85acf16 + compiler m296 should clear
+B-27/B-28 end to end); (7) engine rows: 1427 verify, engine-6 on the
+m312 gate, 1513 under watch, engine-3 awaiting the engine verify
+(1158/1213 are compiler rows).
+
+GATES (block 167, final tree): corpus 955/955 (617.7s), probes 314/314
+(367.9s), modules 510/510 (267.3s), barename 0/510 (392.3s), floors171
+(fns 8787, pubFns 6540, clauses 6243, pubCovered 4625; clauses 71.0%,
+pub 70.7%) + module-smoke (499/518, 3500/6239) + doc ratchets OK. Battery
+times swing with the shared box (the compiler worktree sweeps and the
+engine builds).
+
+FINDINGS: 15 Current, all compiler (tools/known_failures/README.md). Trap
+list (keep current in the block): struct/Str payload reads in catalog
+ensures clauses false-fire (payload-free Ok-side clauses only); the
+Windows UCRT fast-fails on _read/_write of a closed/out-of-range fd
+(invalid-fd probe rows are POSIX-only); on v0.64.4 `ffi.free` call sites
+lower to plain `@free` regardless of the wrapper body (1445); a
+per-position UTF-8 decode can overshoot the buffer on a truncated
+trailing lead byte (handle tails explicitly); raw Char-returning helpers
+MUST mask `& 0xFF` before `as Char` (`(*(base + i)) as Int`
+sign-extends; wave 128 fixed six helpers); `s.c_str()` is an opaque
+`Ptr` -- the idiom is `let base: *UInt8 = s.c_str();` inside an unsafe
+block or passing `s.c_str()` to a `*UInt8` parameter; a VALUE-position
+`unsafe { *(base + pos) }` EXPRESSION misbehaved on the pin (raw lead
+byte for multibyte; wave 136) -- use a function-shaped
+`_raw_byte(base, i)`, never a value-position unsafe block; the wave-125/
+126 grep missed BARE `byte_at(` (use `[^_.a-zA-Z0-9]byte_at(`; the
+string dir is clean); replace._matches_at's internal str_len per
+position was a hidden rescan (bound moved to callers); str_slice itself
+is UNCHANGED (hot per-item sites use bounds-guaranteed `_slice_fast`).
+
+NEXT WAVE OPTIONS: (1) the encoding submodules sweep (base64 / base32 /
+hex / percent / punycode / idna / ascii85 -- the hot per-position sites
+are inventoried); (2) the rest of the tree-wide sweep campaign (ranked
+inventory: convert/validate + convert/json, serialize/toml+csv+json
+string-val, net http/ws/dns, format fmt, text similarity/diff,
+misc/regex/search/collect, num parse/itoa, log, crypto rng/curves, os
+path/fs, error/debug/test builders); (3) the candidate processing when
+the archive lands (jumps the queue); (4) the thread flip + guard-spin
+acceptance strictly after m312/m313. Compiler-blocked: pulse-2 (darwin
+fp128, Mac runner), pulse-5 (retest next pin), xvector-6 (f32), engine-6
+Send/Sync, 1630/1658 (leave), 1445/1423 (compiler fixers in flight).
+RELEASE-CYCLE DIRECTIVE (owner): on the next compiler candidate/release,
+process the compiler's relay items (release checks + pin coordination +
+the 27-repro re-verify sweep on the candidate archive), fix stdlib-side
+bugs it exposes, and keep the classic waves running in parallel.
+
+MANDATORY PROTOCOL: (1) body-derived clauses only; canonical `result is
+Ok =>` / `result is None =>` guard forms; payload-free Ok-side clauses on
+catalog Result[struct] returns; (2) probe-first tools/probes/p_waveNNN_
+shapes.xi (bind returned values before comparing; red pre / green post);
+never put a row in a probe that can HANG pre-fix (run_smokes.ps1 has NO
+per-file timeout; p_wave113's timing gate is best-of-3 for load
+robustness); remerge old locks that assert retired behavior
+(p_wave121-137 + p_b2728 are the newest locks); (3) the socket/io wrapper
+family keeps EARLY-ERROR RETURNS (not requires); (4) runtime shims use
+`long long` (not `long`) for Int-sized values and Int arrays -- C long is
+32-bit on Windows; (5) dump tools/coverage_floors17N.json, wire workflows
++ tools/README + plan/session/queue in one commit, YAML check, pure-ASCII
+additions, then the battery: corpus 955/955, probes expect 314, modules
+510/510, barename 0/510, floors171 + ratchets; push main with the
+one-shot credential; (6) hot per-item/per-char loops use the
+bounds-guaranteed `_slice_fast` / `_push_str` idioms (copied per module;
+never loosen str_slice's public clamps); (7) any leak-class measurement
+is announced first and capped (1.5 GB working set + watchdog; precedent
+REL-20261013-1638, REL-20261013-1903).
+
+CAUTIONS: no unbounded benchmarks; leak-class rule as above; run_smokes
+has NO per-file timeout; Windows LockFileEx blocking-regain on a
+self-held range HANGS; probe file fixtures truncate-first and clean up
+(probe CWD is the repo root); watch: smoke_misc2 flake rc 20 (no repro);
+strings LEAK BY DESIGN (keep new code on Vec builders); invalid-fd
+read/write rows are POSIX-only; the value-position unsafe trap (above);
+the shared worktree has concurrent doc-actors -- re-read the TOP of the
+block list before appending (blocks 148, 152, 166 COLLIDED; on a
+collision use an `<N>b` block and cross-reference; never sweep foreign
+edits); the engine lane shares this box (its Vulkan builds slow
+batteries; never kill foreign xiom.exe/dbg processes -- only this lane's
+own hung scratches); a first corpus pass can flake a few files with
+`clang failed with exit code -1` and empty stderr under load -- rerun
+before investigating. The relay doorbell cron is SESSION-SCOPED: renew it
+at session start (schedule the 2h relay-doorbell prompt).
+
+---
+
+### Snapshot 35 (2026-10-13 20:00Z; SUPERSEDED by snapshot 36 -- kept for history)
 
 **PASTE-READY PROMPT FOR THE NEXT SESSION (copy this block):**
 
@@ -3156,6 +3293,28 @@ registry pin, agent recon for the rest)**
 - Numbering: third shared-worktree collision case -- two block 152s
   exist (mine + the actor's; wave 126 used 152b) and both stand as-is;
   the next writer continues from 156/157.
+
+**SESSION 2026-10-14 block 168 (handoff 15:05Z -- snapshot 36 refreshed in place at head 68fb8f0; waves 114-137; continuation prompt re-issued)**
+- Snapshot 36 written at the top of section 0A (waves 114-137; gates
+  955/314/510/0 + floors171; coverage fns 8787/clauses 6243; the trap
+  list now carries the value-position unsafe rule (wave 136), the Char
+  `& 0xFF` mask, the stale-bundle finding, the bare-`byte_at(` grep
+  lesson and the str_slice/`_slice_fast` split; the bus state with the
+  m312 (spawn readback) / m313 (ffi.free call-site lowering) gates; the
+  candidate queue incl. the engine rows; the collision note carries 148
+  + 152 + 166). Snapshot 35 demoted to superseded history.
+- Bus at refresh: 1427-engine fixed (stdlib 68fb8f0; bus ddc7fa6);
+  1208-bindings fixed (85acf16); 1401-stdlib filed (stale bundle);
+  1423/1445 sit with the compiler fixers m312/m313; 1545 + 1948 closed;
+  the packages cluster verified; 1630/1658 stay compiler-owned open.
+  Working tree: only the untracked out/ evidence dir; head 68fb8f0.
+- Session arc: waves 126-137 landed across the 10-13/10-14 sessions
+  (f3fba44, de79b48, e82ba69, 9855014, 7978db0, 664e4a7, 3845f32,
+  a2af016, 0f30ccf, 85acf16+29465f7, c209e58, 68fb8f0) with full
+  batteries; the string + escaping + encoding + file-IO families are
+  converted; the independent audit (two real fixes) and the tree-wide
+  sweep inventory were consumed (the campaign continues per the ranked
+  list).
 
 **SESSION 2026-10-14 block 167 (wave 137: FIX-FIRST REL-20261014-1427-engine -- copy_file byte-exact via read_file_bytes/write_file_bytes; probes 314; floors171)**
 - WAVE 137 (fix-first, the engine's binary-IO ask): `copy_file` now runs
