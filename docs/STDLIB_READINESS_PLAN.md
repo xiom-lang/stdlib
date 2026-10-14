@@ -2164,8 +2164,34 @@ T1/T2 yields.
         (693.1s), modules 510/510 (466.9s), barename 0/510 (519.7s).
         NEXT: the next sweep batch (encoding or convert); the spawn flip
         + engine S-rows stay pin/relay-gated.
+        Wave 134 (2026-10-14, block 164): the escape family
+        (convert/escape.xi) converted -- all 16 scanners plus the entity
+        decoder and private scanners use cached pointers
+        (_raw_byte/_push_str/_slice_fast) and single-Vec builders; ASCII
+        byte decisions, byte-exact. Probe p_wave134_shapes.xi (311th): 33
+        rows; escape/convert/csv smokes 71/71. Capped measurement: 512 KB
+        through every scanner + roundtrips, rc=0, 10.5 s, 4.9 MB peak.
+        Also re-merged p_wave113's timing gate to best-of-3 (load flake).
+        Coverage fns 8785, clauses 6242 (floors168) + ratchets OK;
+        battery: corpus 955/955 (1174s), probes 311/311 (474.2s),
+        modules 510/510 (502.1s), barename 0/510 (611.7s).
+        Wave 135 (2026-10-14, block 165): FIX-FIRST the bindings item
+        REL-20261014-1208 (B-27/B-28). ffi.write_u32_at/write_u64_at now
+        apply their byte offset (like write_f32_at already did);
+        Vec.reserve seeds the 0->4 minimum before the doubling loop, so
+        with_len(n) holds n*8 bytes. Fixes are the lane actor's
+        working-tree edits, verified with the Vec-index readback scratch
+        and the reassembled p_b2728_shapes.xi probe (312th). Root cause
+        note: the v0.64.4 archive bundles a stale stdlib snapshot (the
+        reported defects were real against the bundle); consumers build
+        with XIOM_STDLIB=main or wait for the next pin, then the
+        workarounds retire. The probe's guard-free row was removed (the
+        pin's ffi.free/@free spin, 1445; a hung scratch_guard run
+        confirmed). Coverage fns 8785, clauses 6242 (floors169) +
+        ratchets OK; battery: corpus 955/955 (828.6s), probes 312/312
+        (383.9s), modules 510/510 (195.4s), barename 0/510 (281.8s).
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors167.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors169.json
         tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;

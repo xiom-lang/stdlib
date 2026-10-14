@@ -3157,6 +3157,32 @@ registry pin, agent recon for the rest)**
   exist (mine + the actor's; wave 126 used 152b) and both stand as-is;
   the next writer continues from 156/157.
 
+**SESSION 2026-10-14 block 165b (wave 135 consolidation: verification of 85acf16 + the stale-bundle root cause; floors169 wired; battery 955/312/510/0) -- same round as the actor's block 165 below; no text edited by either side**
+- The actor's B-27/B-28 fix (85acf16) is verified from this session:
+  with the fixes in place, out/scratch_b27f.xi reads back through
+  Vec-index accessors and shows u32@16 -> 44 33 22 11, u32@20 -> 88..55,
+  u64@24 low/high bytes and "Z"@40; the committed probe
+  p_b2728_shapes.xi (312th) is green.
+- ROOT CAUSE for the item's "did not reproduce here" note: the v0.64.4
+  archive BUNDLES a stale stdlib snapshot at
+  %TEMP%\kilo\stdlib_ws\v0.64.4-rel\lib\xiom -- its ffi.write_u32_at /
+  write_u64_at have no `+offset` and its Vec.reserve runs the 0->4 seed
+  AFTER the doubling loop. The bindings' ASan findings were therefore
+  real against the BUNDLE (and main matched that bundle until 85acf16
+  landed). Consumers must build with XIOM_STDLIB pointed at stdlib main
+  (or wait for the next pin that bundles this tree); the fidelityfx
+  workarounds can retire at the next-pin re-probe. A follow-up relay
+  item carries this to bindings.
+- Probe hygiene: the guard-free alloc/free row is out of the probe (the
+  pin's ffi.free/@free spin, 1445; a hung out/scratch_guard.xi confirmed
+  it); the actor killed the cascading clang stragglers.
+- Battery on the fixed tree (this session's runs): corpus 955/955
+  (828.6s; a first pass flaked three files with clang exit -1 / empty
+  stderr under load -- all pass alone and in the re-run), probes 312/312
+  (383.9s), modules 510/510 (195.4s), barename 0/510 (281.8s), floors169
+  + module-smoke/doc ratchets OK. Coverage fns 8785, clauses 6242
+  (floors169 wired in this commit).
+
 **SESSION 2026-10-14 block 165 (B-27/B-28 fix-first: ffi write_at offsets + reserve cap seed; probe 312th)**
 - REL-20261014-1208-bindings (high, ASan-proven consumer report) claimed
   and FIXED at 85acf16 (bus acked -> fixed):

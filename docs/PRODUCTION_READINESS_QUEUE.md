@@ -7,7 +7,7 @@ windows-x64 release archive.)
 **Gates: corpus 955/955 full (C001 carve-outs retired on v0.63.1; new
 TcpStream loopback and uuencode roundtrip smokes added; smoke_os_watch
 added in wave 124), modules 510/510,
-probes 311/311, barename 0/510.**
+probes 312/312, barename 0/510.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -26,7 +26,7 @@ gates flip:
    wave-98..110 probes), the io byte-fidelity/CRLF lock and the
    fs_remove lock).
 4. Strict bare-name scan clean -- MET (0/509).
-5. Coverage ratchet green -- MET (floors168).
+5. Coverage ratchet green -- MET (floors169).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (499/518 modules, 3500/6239 fns).
 8. Contract coverage 100% (every public fn carries clauses) -- OPEN (70.7%).
@@ -621,6 +621,34 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
      NEXT: FIX-FIRST -- REL-20261014-1208-bindings (B-27 ffi.write_u32/
      u64_at dropped offset; B-28 Vec.reserve cap==0 ordering -> with_len
      heap overflow, ASan-proven) is claimed and is wave 135; then the
+     encoding sweep batch; the spawn flip + engine S-rows stay
+     pin/relay-gated.
+     WAVE 135 (block 165): FIX-FIRST REL-20261014-1208-bindings. B-27:
+     ffi.write_u32_at / write_u64_at dropped their byte offset (`let p:
+     *UInt8 = dest as *UInt8`, no +offset); both now bind `(dest as
+     *UInt8) + offset` like the (already correct) write_f32_at. B-28:
+     Vec.reserve seeded the 0->4 minimum AFTER the doubling loop; the
+     seed (`if new_cap < 4 { new_cap = 4; }`) now runs BEFORE it, so
+     with_len(n) holds n*8 bytes. The two fixes are the lane actor's
+     working-tree edits, verified here: out/scratch_b27f.xi via Vec-index
+     readback shows u32@16 -> 44 33 22 11, u32@20 -> 88..55, u64@24
+     low/high bytes, "Z"@40; the reassembled probe p_b2728_shapes.xi
+     (312th) passes. ROOT-CAUSE NOTE: the v0.64.4 archive BUNDLES a
+     stale stdlib snapshot (lib/xiom) whose ffi lacks +offset and whose
+     reserve seeds after the loop -- so the reported defects were real
+     against the bundle; consumers must build with XIOM_STDLIB pointed at
+     stdlib main or wait for the next pin that bundles this tree, then
+     the bindings workarounds can retire. The probe's guard-free
+     alloc/free row was REMOVED: on the pin ffi.free lowers to plain
+     @free (1445) and freeing guard-arena memory SPINS (confirmed by a
+     hung out/scratch_guard.xi run) -- that lock belongs to the
+     compiler-side acceptance on the next pin; a hanging row must never
+     ship in a probe. Coverage fns 8785, clauses 6242 (floors169 wired);
+     battery corpus 955/955 (828.6s; a first pass flaked three files with
+     clang exit -1/empty stderr under load -- all pass alone and in the
+     re-run), probes 312/312 (383.9s), modules 510/510 (195.4s),
+     barename 0/510 (281.8s) + ratchets OK.
+     NEXT: re-probe B-27/B-28 at the next pin (bindings); then the
      encoding sweep batch; the spawn flip + engine S-rows stay
      pin/relay-gated.
 BINARY NOTE: the shared local build path
