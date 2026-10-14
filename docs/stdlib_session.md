@@ -3352,7 +3352,46 @@ registry pin, agent recon for the rest)**
 - Two long-lived git processes (from ~14:20Z) sit in the relays repo;
   the bus itself is consistent. The next writer continues from 169/170.
 
-**SESSION 2026-10-14 block 171b (doorbell 19:00Z follow-through, pin prep completed: release-notes/v0.64.5.md written + package.xi 0.64.5 + CHANGELOG [0.64.5]; converter-validated 2 highlights) -- the actor's 171 round sits below; no text of theirs edited**
+**SESSION 2026-10-14 block 172 (doorbell 21:00Z -- quiet; pin prep landed, awaiting the compiler GO to freeze/tag)**
+- Lane view: nothing to transition. The only open stdlib rows are the
+  compiler-owned fragment ones (`1630`/`1658`, historical v0.64.3
+  blockers); 1305-pulse-2 and 1453-packages stay acked as recorded.
+- Tree: pin prep completed by the shared lane actor at head `db2fbe8`
+  (release-notes/v0.64.5.md + package.xi 0.64.5 + CHANGELOG [0.64.5];
+  converter-validated; block 171b). Everything now waits on the
+  compiler's GO signal: freeze the sha carrying wave 139, tag
+  `stdlib-v0.64.5`, then run the candidate-processing checklist
+  (`769176e`) -- battery + ratchets on the candidate, the 27-repro
+  re-verify sweep, and the pending post-pin re-verifications.
+- Tree clean except the untracked out/ dir. The next writer continues
+  from block 171b/172.
+
+**SESSION 2026-10-14 block 173 (v0.64.5 checkpoint: release wave up; candidate checks + notes cleanup requested before the tag)**
+- REL-20261014-1739-compiler moved fixed -> fixed (compiler,
+  2026-10-14T19:48Z): the compiler's release-wave push is UP at
+  `1e4a444e` (90 commits from 91860f11; workspace + selfhost bumped to
+  v0.64.5); the dry-run archive was dispatched as release run
+  38626737822 (in progress; artifacts carry 0.64.5). Requested of this
+  lane, in order:
+  (1) run the candidate checks against that archive (queue-doc
+      checklist: full battery + ratchets, the 27-repro sweep, the
+      post-pin list);
+  (2) ONE cleanup before the tag: release-notes/v0.64.5.md's
+      last-known-issue line about the alloc/free guard workarounds is
+      now STALE (the compiler half landed at m313 -- call sites route
+      through the module-resolved wrapper -- acceptance green pre-pin
+      on main ae9c963); drop or reframe it;
+  (3) then cut the annotated `stdlib-v0.64.5` tag on the frozen
+      `db2fbe8` (plus the notes-cleanup commit; no other waves ride)
+      and reply on 1739 with the tag ref + sha.
+- Frozen pin-prep state: db2fbe8 carries the converter-validated
+  release-notes/v0.64.5.md (2 highlights; merged stays at the 6 cap),
+  package.xi 0.64.5, CHANGELOG [0.64.5]; COMPILER_VERSION stays v0.64.4
+  until the compiler pins.
+- This checkpoint is the doorbell's record of the 19:48 request; the
+  release driver (concurrent session) executes the sequence.
+
+**SESSION 2026-10-14 block 171b (doorbell 19:00Z follow-through, pin prep completed: release-notes/v0.64.5.md wr**itten + package.xi 0.64.5 + CHANGELOG [0.64.5]; converter-validated 2 highlights) -- the actor's 171 round sits below; no text of theirs edited**
 - The actor's block 171 acked REL-20261014-1739-compiler and flagged the
   notes fragment as the gap; this round completed the tag-prep set the
   RELEASE_CHECKLIST needs (items 1/3/4):
