@@ -3371,7 +3371,13 @@ registry pin, agent recon for the rest)**
   half predates m282, so the trampoline calls the closure env handle as
   code -- the acceptance below uses the m312+ build and is the verdict.
   The edit then landed complete; no foreign edits were swept.
-- Battery follows this commit; results appended to this block.
+- Battery (after the fix, pin v0.64.4): corpus 955/955 (792.3s),
+  probes 315/315 (466.3s), modules 510/510 (295.8s), barename 0/510
+  (414.6s), floors172 + module-smoke (499/518, 3500/6239) + doc
+  ratchets OK.
+- Bus: the 1423 history line records the runtime half + the acceptance
+  refs (relays b42cdd9 pushed); the compiler now verifies and requests
+  the v0.64.5 pin.
 - Next: the compiler verifies and requests the v0.64.5 pin (expected
   pin = stdlib main carrying this fix); the spawn e2e flip + thread gate
   (2053/1627/1402) stay queued for the next archive per the candidate

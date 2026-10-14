@@ -739,7 +739,10 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
      archive (m312 landed); the guard-spin acceptance still waits on
      m313; thread gate 2053/1627/1402 flips with the pin per the
      candidate queue. (Numbering: the actor's doorbell block 170 sits
-     above; the wave block is 170d.)
+     above; the wave block is 170d.) Battery (pin v0.64.4, after the
+     fix): corpus 955/955 (792.3s), probes 315/315 (466.3s), modules
+     510/510 (295.8s), barename 0/510 (414.6s) + module-smoke/doc
+     ratchets OK.
      NEXT: the ranked sweep inventory as before; candidate processing
      when the v0.64.5 archive lands (release-check rows + known-failures
      sweep + the m313 guard-spin acceptance).
