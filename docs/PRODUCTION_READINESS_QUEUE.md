@@ -721,6 +721,11 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
      error/debug/test builders); the candidate queue jumps the moment
      the next archive lands (m312/m313 still gate the spawn flip + the
      guard-spin acceptance).
+     FOLLOW-UP (from the REL-20261014-1453-packages ack): add the
+     `copy_file_bytes` convenience alias with the next io-touching wave
+     (copy_file itself is already byte-exact since wave 137; the alias
+     is discoverability only). Trivial, but it needs a battery cycle,
+     so it rides the next io change rather than a wave of its own.
      CANDIDATE QUEUE (the open v0.64.4 release-check,
      release-checks/compiler-compiler-v0.64.4.md on the bus; compiler
      fixer wave m276-m313 in flight as of 2026-10-14T14:15Z): when the
