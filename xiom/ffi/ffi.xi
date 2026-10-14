@@ -549,7 +549,7 @@ pub fn write_u32_at(dest: Int, offset: Int, value: Int)
   requires: offset >= 0
 {
   unsafe {
-    let p: *UInt8 = dest as *UInt8;
+    let p: *UInt8 = (dest as *UInt8) + offset;
     p[0] = ( value        & 0xFF) as UInt8;
     p[1] = ((value >>  8) & 0xFF) as UInt8;
     p[2] = ((value >> 16) & 0xFF) as UInt8;
@@ -563,7 +563,7 @@ pub fn write_u64_at(dest: Int, offset: Int, value: Int)
   requires: offset >= 0
 {
   unsafe {
-    let p: *UInt8 = dest as *UInt8;
+    let p: *UInt8 = (dest as *UInt8) + offset;
     p[0] = ( value        & 0xFF) as UInt8;
     p[1] = ((value >>  8) & 0xFF) as UInt8;
     p[2] = ((value >> 16) & 0xFF) as UInt8;

@@ -118,8 +118,8 @@ fn Vec.reserve[T](additional: Int)
   var needed = len + additional;
   if needed > cap {
     var new_cap = cap;
+    if new_cap < 4 { new_cap = 4; }
     while new_cap < needed { new_cap = new_cap * 2; }
-    if new_cap == 0 { new_cap = 4; }
     unsafe {
       data = @realloc(data as *UInt8, new_cap * 8) as *T;
       cap = new_cap;
