@@ -20,6 +20,55 @@ extern "C" {
   fn xiom_char_at(s: Str, pos: Int) -> Char;
 }
 
+// Raw byte read at `i` (wave 138): the function-shaped cached-pointer read
+// (the wave-136 pattern -- an inline `unsafe { }` VALUE expression misbehaved
+// on the pin). Complexity: O(1).
+fn _hex_raw_byte(base: *UInt8, i: Int) -> UInt8
+  requires: true  // raw byte read; callers bound i against len (T007)
+{
+  unsafe { return *(base + i); }
+}
+
+// Runtime-`xiom_char_at`-equivalent UTF-8 decode over a cached (base, len)
+// view (copied from the wave-136 xiom.encoding helper; xiom_char_at strnlens
+// per call, so the per-position codec loops were quadratic). Complexity: O(1).
+fn _hex_char_at_runtime(base: *UInt8, len: Int, pos: Int) -> Char {
+  if pos < 0 || pos >= len {
+    return to_char(0);
+  }
+  var b0 = (_hex_raw_byte(base, pos) as Int) & 0xFF;
+  if b0 < 0x80 {
+    return to_char(b0);
+  }
+  var n = 0;
+  var cp = 0;
+  if (b0 & 0xE0) == 0xC0 {
+    n = 2;
+    cp = b0 & 0x1F;
+  } elif (b0 & 0xF0) == 0xE0 {
+    n = 3;
+    cp = b0 & 0x0F;
+  } elif (b0 & 0xF8) == 0xF0 {
+    n = 4;
+    cp = b0 & 0x07;
+  } else {
+    return to_char(b0);
+  }
+  var i = 1;
+  while i < n {
+    var cb = 0;
+    if pos + i < len {
+      cb = (_hex_raw_byte(base, pos + i) as Int) & 0xFF;
+    }
+    if (cb & 0xC0) != 0x80 {
+      return to_char(b0);
+    }
+    cp = (cp << 6) | (cb & 0x3F);
+    i = i + 1;
+  }
+  return to_char(cp);
+}
+
 /// Numeric value of a hex digit character (0-9, a-f, A-F); -1 otherwise.
 fn _hex_value(c: UInt8) -> Int {
   var code = c as Int;
@@ -75,10 +124,11 @@ pub fn hex_decode(s: Str) -> Result[Vec[UInt8], Str]
     return Err("hex string must have even length");
   };
   var result = Vec[UInt8].new();
+  let base = s.c_str();
   var i = 0;
   while i < len {
-    var hi = _hex_value(string.byte_at(s, i));
-    var lo = _hex_value(string.byte_at(s, i + 1));
+    var hi = _hex_value(_hex_raw_byte(base, i));
+    var lo = _hex_value(_hex_raw_byte(base, i + 1));
     if hi < 0 || lo < 0 {
       return Err("invalid hex character");
     };
@@ -118,8 +168,9 @@ pub fn hex_encode_str(s: Str) -> Str
   var bytes = Vec[UInt8].new();
   var i = 0;
   let slen = s.len();
+  let base = s.c_str();
   while i < slen {
-    var c = s.char_at(i);
+    var c = _hex_char_at_runtime(base, slen, i);
     xiom.char.encode_utf8(c, &bytes);
     i = i + xiom.char.len_utf8(c);
   };
@@ -204,9 +255,10 @@ pub fn hex_decode_int(s: Str) -> Result[Int, Str]
     return Err("empty hex string");
   };
   var result: Int = 0;
+  let base = s.c_str();
   var i = 0;
   while i < len {
-    var v = _hex_value(string.byte_at(s, i));
+    var v = _hex_value(_hex_raw_byte(base, i));
     if v < 0 {
       return Err("invalid hex character");
     };

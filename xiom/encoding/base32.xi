@@ -20,6 +20,55 @@ extern "C" {
   fn xiom_char_at(s: Str, pos: Int) -> Char;
 }
 
+// Raw byte read at `i` (wave 138): the function-shaped cached-pointer read
+// (the wave-136 pattern -- an inline `unsafe { }` VALUE expression misbehaved
+// on the pin). Complexity: O(1).
+fn _b32_raw_byte(base: *UInt8, i: Int) -> UInt8
+  requires: true  // raw byte read; callers bound i against len (T007)
+{
+  unsafe { return *(base + i); }
+}
+
+// Runtime-`xiom_char_at`-equivalent UTF-8 decode over a cached (base, len)
+// view (copied from the wave-136 xiom.encoding helper; xiom_char_at strnlens
+// per call, so the per-position codec loops were quadratic). Complexity: O(1).
+fn _b32_char_at_runtime(base: *UInt8, len: Int, pos: Int) -> Char {
+  if pos < 0 || pos >= len {
+    return to_char(0);
+  }
+  var b0 = (_b32_raw_byte(base, pos) as Int) & 0xFF;
+  if b0 < 0x80 {
+    return to_char(b0);
+  }
+  var n = 0;
+  var cp = 0;
+  if (b0 & 0xE0) == 0xC0 {
+    n = 2;
+    cp = b0 & 0x1F;
+  } elif (b0 & 0xF0) == 0xE0 {
+    n = 3;
+    cp = b0 & 0x0F;
+  } elif (b0 & 0xF8) == 0xF0 {
+    n = 4;
+    cp = b0 & 0x07;
+  } else {
+    return to_char(b0);
+  }
+  var i = 1;
+  while i < n {
+    var cb = 0;
+    if pos + i < len {
+      cb = (_b32_raw_byte(base, pos + i) as Int) & 0xFF;
+    }
+    if (cb & 0xC0) != 0x80 {
+      return to_char(b0);
+    }
+    cp = (cp << 6) | (cb & 0x3F);
+    i = i + 1;
+  }
+  return to_char(cp);
+}
+
 const _B32_ALPHABET: Str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
 const _B32HEX_ALPHABET: Str = "0123456789ABCDEFGHIJKLMNOPQRSTUV";
 
@@ -141,9 +190,10 @@ fn _b32_decode(s: Str, hex_alpha: Bool) -> Result[Vec[UInt8], Str] {
   var result = Vec[UInt8].new();
   let len = s.len();
   if len == 0 { return Ok(result); };
+  let base = s.c_str();
   var data_len = len;
   while data_len > 0 {
-    var bc = string.byte_at(s, data_len - 1) as Int;
+    var bc = _b32_raw_byte(base, data_len - 1) as Int;
     bc = bc & 0xFF;
     if bc == 61 {
       data_len = data_len - 1;
@@ -159,7 +209,7 @@ fn _b32_decode(s: Str, hex_alpha: Bool) -> Result[Vec[UInt8], Str] {
   var bit_count: Int = 0;
   var i: Int = 0;
   while i < data_len {
-    var bc = string.byte_at(s, i) as Int;
+    var bc = _b32_raw_byte(base, i) as Int;
     bc = bc & 0xFF;
     if bc == 61 {
       return Err("invalid base32 padding position");
@@ -224,8 +274,9 @@ pub fn base32_encode_str(s: Str) -> Str
   var bytes = Vec[UInt8].new();
   var i = 0;
   let slen = s.len();
+  let base = s.c_str();
   while i < slen {
-    var c = s.char_at(i);
+    var c = _b32_char_at_runtime(base, slen, i);
     xiom.char.encode_utf8(c, &bytes);
     i = i + xiom.char.len_utf8(c);
   };

@@ -20,6 +20,55 @@ extern "C" {
   fn xiom_char_at(s: Str, pos: Int) -> Char;
 }
 
+// Raw byte read at `i` (wave 138): the function-shaped cached-pointer read
+// (the wave-136 pattern -- an inline `unsafe { }` VALUE expression misbehaved
+// on the pin). Complexity: O(1).
+fn _pct_raw_byte(base: *UInt8, i: Int) -> UInt8
+  requires: true  // raw byte read; callers bound i against len (T007)
+{
+  unsafe { return *(base + i); }
+}
+
+// Runtime-`xiom_char_at`-equivalent UTF-8 decode over a cached (base, len)
+// view (copied from the wave-136 xiom.encoding helper; xiom_char_at strnlens
+// per call, so the per-position codec loops were quadratic). Complexity: O(1).
+fn _pct_char_at_runtime(base: *UInt8, len: Int, pos: Int) -> Char {
+  if pos < 0 || pos >= len {
+    return to_char(0);
+  }
+  var b0 = (_pct_raw_byte(base, pos) as Int) & 0xFF;
+  if b0 < 0x80 {
+    return to_char(b0);
+  }
+  var n = 0;
+  var cp = 0;
+  if (b0 & 0xE0) == 0xC0 {
+    n = 2;
+    cp = b0 & 0x1F;
+  } elif (b0 & 0xF0) == 0xE0 {
+    n = 3;
+    cp = b0 & 0x0F;
+  } elif (b0 & 0xF8) == 0xF0 {
+    n = 4;
+    cp = b0 & 0x07;
+  } else {
+    return to_char(b0);
+  }
+  var i = 1;
+  while i < n {
+    var cb = 0;
+    if pos + i < len {
+      cb = (_pct_raw_byte(base, pos + i) as Int) & 0xFF;
+    }
+    if (cb & 0xC0) != 0x80 {
+      return to_char(b0);
+    }
+    cp = (cp << 6) | (cb & 0x3F);
+    i = i + 1;
+  }
+  return to_char(cp);
+}
+
 /// True iff c is an unreserved RFC 3986 character (A-Z a-z 0-9 - _ . ~).
 fn _is_unreserved(c: Char) -> Bool {
   var code = to_int_from_char(c);
@@ -50,12 +99,13 @@ fn _pct_hex_value(c: UInt8) -> Int {
 /// selects form semantics (space -> '+', all other non-unreserved bytes %XX).
 fn _percent_encode(s: Str, spaces_as_plus: Bool) -> Str {
   let s_len = s.len();
+  let base = s.c_str();
   unsafe {
     var buf = malloc(s_len * 3 + 1);
     var i = 0;
     var out = 0;
     while i < s_len {
-      var c = s.char_at(i);
+      var c = _pct_char_at_runtime(base, s_len, i);
       if _is_unreserved(c) {
         var tmp = Vec[UInt8].new();
         xiom.char.encode_utf8(c, &tmp);
@@ -107,18 +157,19 @@ pub fn percent_decode(s: Str) -> Result[Str, Str]
 {
   let len = s.len();
   if len == 0 { return Ok(""); };
+  let base = s.c_str();
   unsafe {
     var buf = malloc(len + 1);
     var i = 0;
     var out = 0;
     while i < len {
-      var c = s.char_at(i);
+      var c = _pct_char_at_runtime(base, len, i);
       if c == '%' {
         if i + 2 >= len {
           return Err("truncated percent escape");
         };
-        var hi = _pct_hex_value(string.byte_at(s, i + 1));
-        var lo = _pct_hex_value(string.byte_at(s, i + 2));
+        var hi = _pct_hex_value(_pct_raw_byte(base, i + 1));
+        var lo = _pct_hex_value(_pct_raw_byte(base, i + 2));
         if hi < 0 || lo < 0 {
           return Err("invalid percent escape");
         };
@@ -202,15 +253,16 @@ pub fn percent_decode_bytes(s: Str) -> Result[Vec[UInt8], Str]
 {
   var result = Vec[UInt8].new();
   let len = s.len();
+  let base = s.c_str();
   var i = 0;
   while i < len {
-    var c = s.char_at(i);
+    var c = _pct_char_at_runtime(base, len, i);
     if c == '%' {
       if i + 2 >= len {
         return Err("truncated percent escape");
       };
-      var hi = _pct_hex_value(string.byte_at(s, i + 1));
-      var lo = _pct_hex_value(string.byte_at(s, i + 2));
+      var hi = _pct_hex_value(_pct_raw_byte(base, i + 1));
+      var lo = _pct_hex_value(_pct_raw_byte(base, i + 2));
       if hi < 0 || lo < 0 {
         return Err("invalid percent escape");
       };
@@ -248,18 +300,19 @@ pub fn percent_decode_www_form(s: Str) -> Result[Str, Str]
 {
   let len = s.len();
   if len == 0 { return Ok(""); };
+  let base = s.c_str();
   unsafe {
     var buf = malloc(len + 1);
     var i = 0;
     var out = 0;
     while i < len {
-      var c = s.char_at(i);
+      var c = _pct_char_at_runtime(base, len, i);
       if c == '%' {
         if i + 2 >= len {
           return Err("truncated percent escape");
         };
-        var hi = _pct_hex_value(string.byte_at(s, i + 1));
-        var lo = _pct_hex_value(string.byte_at(s, i + 2));
+        var hi = _pct_hex_value(_pct_raw_byte(base, i + 1));
+        var lo = _pct_hex_value(_pct_raw_byte(base, i + 2));
         if hi < 0 || lo < 0 {
           return Err("invalid percent escape");
         };

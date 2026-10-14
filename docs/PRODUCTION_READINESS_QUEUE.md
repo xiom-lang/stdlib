@@ -693,6 +693,34 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
      NEXT: the encoding submodules (base64/base32/hex/percent/punycode/
      idna/ascii85) sweep batch; the candidate-queue engine/bindings rows
      as the archive lands.
+     WAVE 138 (block 169): the encoding submodules converted (the sweep
+     campaign) -- every per-position string.byte_at / s.char_at loop in
+     base64/base32/hex/percent/punycode/idna/ascii85 now reads through
+     per-module copies of the wave-136 function-shaped helpers (raw byte
+     + runtime-mirror decode) over a cached (base, len) view; the idna
+     _byte/_decode_cp/_char_len chain threads the cached base. 15 new
+     private helpers (per-module prefixes). FINDING (live, from the
+     capped scratch): the ascii85 encoder delegate
+     xiom.convert.ascii85.to_ascii85 grew its result with str_concat PER
+     GROUP -- quadratic time and leaked intermediate strings; the first
+     512 KB scratch run hit the 1.5 GB memcap at 10.8 s (peak 1567 MB)
+     inside a85_enc, and the builder rewrite (+ from_ascii85 cached
+     reads) turned it into rc=0, 14.6 s, 48.5 MB peak, all 21 rows
+     byte-exact. Probe p_wave138_shapes.xi (315th): 132 rows green pre
+     and post (RFC base64/base32 vectors, padding + Err rows, multibyte
+     encode_str rows, punycode/idna domain + uts46 + bidi rows, ascii85
+     delimiters); encoding smoke filters 16/16 + convert-family 60/60;
+     residue grep clean (no per-position accessors in xiom/encoding).
+     Coverage fns 8802, clauses 6252 (floors172 wired); battery corpus
+     955/955 (806.6s), probes 315/315 (310.2s), modules 510/510
+     (232.7s), barename 0/510 (501.8s) + module-smoke/doc ratchets OK.
+     NEXT: the rest of the ranked sweep inventory (convert/validate +
+     convert/json; serialize toml/csv/json string-val; net http/ws/dns;
+     format fmt/numbering; text similarity/diff; misc/regex/search/
+     collect; num parse/itoa; log; crypto rng/curves; os path/fs;
+     error/debug/test builders); the candidate queue jumps the moment
+     the next archive lands (m312/m313 still gate the spawn flip + the
+     guard-spin acceptance).
      CANDIDATE QUEUE (the open v0.64.4 release-check,
      release-checks/compiler-compiler-v0.64.4.md on the bus; compiler
      fixer wave m276-m313 in flight as of 2026-10-14T14:15Z): when the

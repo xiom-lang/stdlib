@@ -2216,8 +2216,22 @@ T1/T2 yields.
         (367.9s), modules 510/510 (267.3s), barename 0/510 (392.3s).
         The engine workaround can retire via XIOM_STDLIB=main or at the
         next archive.
+        Wave 138 (2026-10-14, block 169): the encoding submodules
+        (base64/base32/hex/percent/punycode/idna/ascii85) converted to
+        cached (base, len) views + per-module raw-byte/runtime-mirror
+        helpers (15 new private fns); the idna _byte/_decode_cp/
+        _char_len chain threads the cached base. The capped scratch
+        found the encoder delegate xiom.convert.ascii85.to_ascii85
+        building its result with str_concat per group (quadratic +
+        leaked intermediates: 1567 MB peak at the 1.5 GB cap, 10.8 s);
+        rebuilt on a single Vec builder: rc=0, 14.6 s, 48.5 MB peak,
+        all round-trips byte-exact. Probe p_wave138_shapes.xi (315th):
+        132 rows green pre/post. Coverage fns 8802, clauses 6252
+        (floors172) + ratchets OK; battery: corpus 955/955 (806.6s),
+        probes 315/315 (310.2s), modules 510/510 (232.7s), barename
+        0/510 (501.8s).
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors171.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors172.json
         tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;

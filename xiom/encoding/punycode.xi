@@ -21,6 +21,15 @@ extern "C" {
   fn xiom_char_at(s: Str, pos: Int) -> Char;
 }
 
+// Raw byte read at `i` (wave 138): the function-shaped cached-pointer read
+// (the wave-136 pattern -- an inline `unsafe { }` VALUE expression misbehaved
+// on the pin). Complexity: O(1).
+fn _puny_raw_byte(base: *UInt8, i: Int) -> UInt8
+  requires: true  // raw byte read; callers bound i against len (T007)
+{
+  unsafe { return *(base + i); }
+}
+
 const _BASE: Int = 36;
 const _TMIN: Int = 1;
 const _TMAX: Int = 26;
@@ -71,9 +80,10 @@ fn _vec_to_str(bytes: &Vec[UInt8]) -> Str {
 fn _str_to_cps(s: Str) -> Result[Vec[Int], Str] {
   var cps = Vec[Int].new();
   var len = s.len();
+  let base = s.c_str();
   var i = 0;
   while i < len {
-    var b0 = (string.byte_at(s, i) as Int) & 0xFF;
+    var b0 = (_puny_raw_byte(base, i) as Int) & 0xFF;
     if b0 < 0x80 {
       cps.push(b0);
       i = i + 1;
@@ -81,7 +91,7 @@ fn _str_to_cps(s: Str) -> Result[Vec[Int], Str] {
       if i + 1 >= len {
         return Err("punycode: truncated utf-8");
       };
-      var b1 = (string.byte_at(s, i + 1) as Int) & 0xFF;
+      var b1 = (_puny_raw_byte(base, i + 1) as Int) & 0xFF;
       var cp = ((b0 & 0x1F) << 6) | (b1 & 0x3F);
       if !_cp_valid(cp) {
         return Err("punycode: invalid code point");
@@ -92,8 +102,8 @@ fn _str_to_cps(s: Str) -> Result[Vec[Int], Str] {
       if i + 2 >= len {
         return Err("punycode: truncated utf-8");
       };
-      var b1 = (string.byte_at(s, i + 1) as Int) & 0xFF;
-      var b2 = (string.byte_at(s, i + 2) as Int) & 0xFF;
+      var b1 = (_puny_raw_byte(base, i + 1) as Int) & 0xFF;
+      var b2 = (_puny_raw_byte(base, i + 2) as Int) & 0xFF;
       var cp = ((b0 & 0x0F) << 12) | ((b1 & 0x3F) << 6) | (b2 & 0x3F);
       if !_cp_valid(cp) {
         return Err("punycode: invalid code point");
@@ -104,9 +114,9 @@ fn _str_to_cps(s: Str) -> Result[Vec[Int], Str] {
       if i + 3 >= len {
         return Err("punycode: truncated utf-8");
       };
-      var b1 = (string.byte_at(s, i + 1) as Int) & 0xFF;
-      var b2 = (string.byte_at(s, i + 2) as Int) & 0xFF;
-      var b3 = (string.byte_at(s, i + 3) as Int) & 0xFF;
+      var b1 = (_puny_raw_byte(base, i + 1) as Int) & 0xFF;
+      var b2 = (_puny_raw_byte(base, i + 2) as Int) & 0xFF;
+      var b3 = (_puny_raw_byte(base, i + 3) as Int) & 0xFF;
       var cp = ((b0 & 0x07) << 18) | ((b1 & 0x3F) << 12) | ((b2 & 0x3F) << 6) | (b3 & 0x3F);
       if !_cp_valid(cp) {
         return Err("punycode: invalid code point");
@@ -269,10 +279,11 @@ pub fn punycode_decode(s: Str) -> Result[Str, Str]
 {
   var cps = Vec[Int].new();
   var len = s.len();
+  let base = s.c_str();
   var sep = -1;
   var n = 0;
   while n < len {
-    var b = (string.byte_at(s, n) as Int) & 0xFF;
+    var b = (_puny_raw_byte(base, n) as Int) & 0xFF;
     if b == 45 {
       sep = n;
     };
@@ -281,7 +292,7 @@ pub fn punycode_decode(s: Str) -> Result[Str, Str]
   if sep >= 0 {
     n = 0;
     while n < sep {
-      var b = (string.byte_at(s, n) as Int) & 0xFF;
+      var b = (_puny_raw_byte(base, n) as Int) & 0xFF;
       if b >= 0x80 {
         return Err("punycode: non-basic code point before delimiter");
       };
@@ -301,7 +312,7 @@ pub fn punycode_decode(s: Str) -> Result[Str, Str]
       if idx >= len {
         return Err("punycode: truncated encoded sequence");
       };
-      var b = (string.byte_at(s, idx) as Int) & 0xFF;
+      var b = (_puny_raw_byte(base, idx) as Int) & 0xFF;
       var digit = punycode_decode_digit(to_char(b));
       if digit < 0 {
         return Err("punycode: invalid digit");
@@ -354,9 +365,10 @@ fn _cps_to_str(cps: &Vec[Int]) -> Str {
 /// point). Operates on the source string (byte values >= 0x80).
 fn _has_non_ascii(label: Str) -> Bool {
   let len = label.len();
+  let lbase = label.c_str();
   var n = 0;
   while n < len {
-    if ((string.byte_at(label, n) as Int) & 0xFF) >= 0x80 {
+    if ((_puny_raw_byte(lbase, n) as Int) & 0xFF) >= 0x80 {
       return true;
     };
     n = n + 1;

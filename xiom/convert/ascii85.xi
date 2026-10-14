@@ -22,10 +22,84 @@ extern "C" {
   fn xiom_char_at(s: Str, pos: Int) -> Char;
 }
 
+// Raw byte read at `i` (wave 138): the function-shaped cached-pointer read
+// (the wave-136 pattern -- an inline `unsafe { }` VALUE expression misbehaved
+// on the pin). Complexity: O(1).
+fn _ca85_raw_byte(base: *UInt8, i: Int) -> UInt8
+  requires: true  // raw byte read; callers bound i against len (T007)
+{
+  unsafe { return *(base + i); }
+}
+
+// Runtime-`xiom_char_at`-equivalent UTF-8 decode over a cached (base, len)
+// view (copied from the wave-136 xiom.encoding helper). Complexity: O(1).
+fn _ca85_char_at_runtime(base: *UInt8, len: Int, pos: Int) -> Char {
+  if pos < 0 || pos >= len {
+    return to_char(0);
+  }
+  var b0 = (_ca85_raw_byte(base, pos) as Int) & 0xFF;
+  if b0 < 0x80 {
+    return to_char(b0);
+  }
+  var n = 0;
+  var cp = 0;
+  if (b0 & 0xE0) == 0xC0 {
+    n = 2;
+    cp = b0 & 0x1F;
+  } elif (b0 & 0xF0) == 0xE0 {
+    n = 3;
+    cp = b0 & 0x0F;
+  } elif (b0 & 0xF8) == 0xF0 {
+    n = 4;
+    cp = b0 & 0x07;
+  } else {
+    return to_char(b0);
+  }
+  var i = 1;
+  while i < n {
+    var cb = 0;
+    if pos + i < len {
+      cb = (_ca85_raw_byte(base, pos + i) as Int) & 0xFF;
+    }
+    if (cb & 0xC0) != 0x80 {
+      return to_char(b0);
+    }
+    cp = (cp << 6) | (cb & 0x3F);
+    i = i + 1;
+  }
+  return to_char(cp);
+}
+
+// Builds a Str from UTF-8 bytes (single allocation, NUL-terminated). Wave
+// 138: the encoder previously grew its result with str_concat PER GROUP --
+// quadratic time and leaked intermediate strings (the 512 KB scratch blew
+// through the 1.5 GB cap); new code builds through one Vec.
+fn _ca85_vec_to_str(bytes: &Vec[UInt8]) -> Str {
+  var len = bytes.len();
+  if len == 0 {
+    return "";
+  };
+  unsafe {
+    var buf = malloc(len + 1);
+    var i = 0;
+    while i < len {
+      buf[i] = bytes[i];
+      i = i + 1;
+    };
+    buf[len] = 0;
+    return Str.from_cstring(buf);
+  }
+}
+
 const _A85_ALPHABET: Str = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_\x60abcdefghijklmnopqrstuvwxyz";
 
-/// Encodes one 32-bit value as exactly five Ascii85 characters ('!'..'u').
-fn _a85_group(value: Int) -> Str {
+/// Appends `count` (1..5) Ascii85 characters for `value` (0..2^32-1) to
+/// `out`; `abase` is the cached alphabet pointer. Wave 138: writes the
+/// digits straight into the output Vec (the old Str-building variant
+/// allocated six strings per group).
+fn _ca85_push_group(out: &mut Vec[UInt8], abase: *UInt8, value: Int, count: Int)
+  requires: count >= 1 && count <= 5
+{
   var v = value;
   var d4 = v % 85;
   v = v / 85;
@@ -36,13 +110,19 @@ fn _a85_group(value: Int) -> Str {
   var d1 = v % 85;
   v = v / 85;
   var d0 = v % 85;
-  var result = "";
-  result = string.str_concat(result, string.str_slice(_A85_ALPHABET, d0, d0 + 1));
-  result = string.str_concat(result, string.str_slice(_A85_ALPHABET, d1, d1 + 1));
-  result = string.str_concat(result, string.str_slice(_A85_ALPHABET, d2, d2 + 1));
-  result = string.str_concat(result, string.str_slice(_A85_ALPHABET, d3, d3 + 1));
-  result = string.str_concat(result, string.str_slice(_A85_ALPHABET, d4, d4 + 1));
-  result
+  out.push(_ca85_raw_byte(abase, d0));
+  if count > 1 {
+    out.push(_ca85_raw_byte(abase, d1));
+  };
+  if count > 2 {
+    out.push(_ca85_raw_byte(abase, d2));
+  };
+  if count > 3 {
+    out.push(_ca85_raw_byte(abase, d3));
+  };
+  if count > 4 {
+    out.push(_ca85_raw_byte(abase, d4));
+  };
 }
 
 /// Encodes bytes as an Ascii85 string. Runs of four zero bytes collapse to
@@ -51,11 +131,12 @@ fn _a85_group(value: Int) -> Str {
 pub fn to_ascii85(data: &Vec[UInt8]) -> Str
   ensures: (data.len() == 0) => (result == "")
 {
-  var result = "";
   let len = data.len();
   if len == 0 {
-    return result;
+    return "";
   };
+  let abase = _A85_ALPHABET.c_str();
+  var out = Vec[UInt8].new();
   var i: Int = 0;
   while i < len {
     var remaining = len - i;
@@ -69,9 +150,9 @@ pub fn to_ascii85(data: &Vec[UInt8]) -> Str
         k = k + 1;
       };
       if value == 0 {
-        result = string.str_concat(result, "z");
+        out.push(122 as UInt8);
       } else {
-        result = string.str_concat(result, _a85_group(value));
+        _ca85_push_group(&mut out, abase, value, 5);
       };
       i = i + 4;
     } else {
@@ -89,12 +170,11 @@ pub fn to_ascii85(data: &Vec[UInt8]) -> Str
         b2 = bb2 & 0xFF;
       };
       var value = (b0 * 16777216) + (b1 * 65536) + (b2 * 256);
-      var group = _a85_group(value);
-      result = string.str_concat(result, string.str_slice(group, 0, remaining + 1));
+      _ca85_push_group(&mut out, abase, value, remaining + 1);
       i = i + remaining;
     };
   };
-  result
+  _ca85_vec_to_str(&out)
 }
 
 /// Decode value of an Ascii85 character byte; -1 for an invalid character.
@@ -118,9 +198,10 @@ pub fn from_ascii85(s: Str) -> Result[Vec[UInt8], Str]
   if len == 0 {
     return Ok(result);
   };
+  let base = s.c_str();
   var i: Int = 0;
   while i < len {
-    var c = string.byte_at(s, i);
+    var c = _ca85_raw_byte(base, i);
     if c == 122 {
       result.push(0);
       result.push(0);
@@ -131,7 +212,7 @@ pub fn from_ascii85(s: Str) -> Result[Vec[UInt8], Str]
       var value: Int = 0;
       var count: Int = 0;
       while count < 5 && i < len {
-        var ch = string.byte_at(s, i);
+        var ch = _ca85_raw_byte(base, i);
         if ch == 122 {
           return Err("invalid 'z' inside ascii85 group");
         };
@@ -178,10 +259,11 @@ pub fn ascii85_encode_str(s: Str) -> Str
   ensures: (s.len() == 0) => (result == "")
 {
   var bytes = Vec[UInt8].new();
-  var i: Int = 0;
+  var i = 0;
   let slen = s.len();
+  let base = s.c_str();
   while i < slen {
-    var c = s.char_at(i);
+    var c = _ca85_char_at_runtime(base, slen, i);
     xiom.char.encode_utf8(c, &bytes);
     i = i + xiom.char.len_utf8(c);
   };

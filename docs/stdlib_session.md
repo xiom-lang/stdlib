@@ -3294,6 +3294,50 @@ registry pin, agent recon for the rest)**
   exist (mine + the actor's; wave 126 used 152b) and both stand as-is;
   the next writer continues from 156/157.
 
+**SESSION 2026-10-14 block 169 (wave 138: the encoding submodules converted -- cached runtime-mirror reads in base64/base32/hex/percent/punycode/idna/ascii85; the convert/ascii85 builder fix (leak-quadratic caught live); probes 315; floors172)**
+- WAVE 138 (the sweep campaign, the 7 encoding submodules + the ascii85
+  delegate): every per-position `string.byte_at` / `s.char_at` loop was
+  converted to per-module copies of the wave-136 function-shaped helpers
+  (raw byte + runtime-mirror decode) over a cached (base, len) view:
+  base64_decode / base64url_decode / base64_decode_padded /
+  base64_encode_str, _b32_decode / base32_encode_str, hex_decode /
+  hex_decode_int / hex_encode_str, _percent_encode / percent_decode /
+  percent_decode_bytes / percent_decode_www_form, _str_to_cps /
+  punycode_decode / _has_non_ascii, the idna helper chain (_byte /
+  _decode_cp / _char_len now take the cached base; all call sites
+  threaded) and ascii85_encode_str. 15 new private helpers with
+  per-module prefixes. Byte-exact: the index tables reject every
+  non-ASCII value either way; the re-encode loops keep the decoded
+  value. Residue grep: no per-position accessors left in xiom/encoding.
+- FINDING (caught live by the capped scratch): the ascii85 submodule's
+  encoder delegate `xiom.convert.ascii85.to_ascii85` grew its result
+  with `str_concat` PER GROUP -- quadratic time AND leaked intermediate
+  strings; the first 512 KB run hit the harness memcap at 10.8 s
+  (peak 1567 MB) inside the a85_enc step, with every earlier codec row
+  already printed. Rebuilt on a single Vec[UInt8] builder
+  (`_ca85_push_group` writer + cached alphabet pointer; `from_ascii85`
+  on cached raw reads): rc=0, 14.6 s, peak 48.5 MB, all 21 rows
+  byte-exact.
+- Probe p_wave138_shapes.xi (315th): 132 rows -- RFC 4648 base64/
+  base64url/base32/base32hex vectors, padding variants + invalid-length/
+  invalid-char Err rows, multibyte encode_str rows (`w6k=` / `c3a9`),
+  percent encode/decode/www-form/bytes rows, punycode `bcher-kva` +
+  domain rows + invalid-digit Err, idna to_ascii/to_unicode/is_valid/
+  uts46 (incl. fullwidth) / nameprep / bidi (RTL built from bytes),
+  ascii85 z-run/delimiters/round-trips; green pre AND post (the pre run
+  caught one leniency: `MZXW6=` strips padding then decodes Ok -- the
+  probe pins `MZXW6Y` for the invalid-length row). Encoding-family
+  smoke filters 16/16, convert-family 60/60.
+- Coverage fns 8802 (+15), pubFns 6540, clauses 6252 (+9: the eight
+  raw-byte `requires: true` + the push-group range clause), pubCovered
+  4625; floors172 dumped + wired. Battery: corpus 955/955 (806.6s),
+  probes 315/315 (310.2s), modules 510/510 (232.7s), barename 0/510
+  (501.8s), module-smoke (499/518, 3500/6239) + doc ratchets OK.
+- Next: the rest of the ranked sweep inventory (convert/validate +
+  convert/json; serialize string-val; net; format; text; misc/regex/
+  search/collect; num; log; crypto; os; builders); the candidate queue
+  jumps when the next archive lands (m312/m313 gates stand).
+
 **SESSION 2026-10-14 block 168 (handoff 15:05Z -- snapshot 36 refreshed in place at head 68fb8f0; waves 114-137; continuation prompt re-issued)**
 - Snapshot 36 written at the top of section 0A (waves 114-137; gates
   955/314/510/0 + floors171; coverage fns 8787/clauses 6243; the trap

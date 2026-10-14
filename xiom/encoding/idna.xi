@@ -24,6 +24,15 @@ extern "C" {
   fn xiom_char_at(s: Str, pos: Int) -> Char;
 }
 
+// Raw byte read at `i` (wave 138): the function-shaped cached-pointer read
+// (the wave-136 pattern -- an inline `unsafe { }` VALUE expression misbehaved
+// on the pin). Complexity: O(1).
+fn _idna_raw_byte(base: *UInt8, i: Int) -> UInt8
+  requires: true  // raw byte read; callers bound i against len (T007)
+{
+  unsafe { return *(base + i); }
+}
+
 /// Splits a domain at the dot separators. Empty labels (e.g. a trailing dot)
 /// are preserved. Complexity: O(n).
 pub fn idna_split_labels(domain: Str) -> Vec[Str]
@@ -59,42 +68,42 @@ fn _ldh(cp: Int) -> Bool {
   false
 }
 
-/// Unsigned byte value at index `i` of `s`.
-fn _byte(s: Str, i: Int) -> Int {
-  (string.byte_at(s, i) as Int) & 0xFF
+/// Unsigned byte value at index `i` of a cached base view.
+fn _byte(base: *UInt8, i: Int) -> Int {
+  (_idna_raw_byte(base, i) as Int) & 0xFF
 }
 
 /// Decodes the UTF-8 code point starting at byte `i` of `s`; -1 on invalid or
 /// truncated input.
-fn _decode_cp(s: Str, i: Int, slen: Int) -> Int {
-  var b0 = _byte(s, i);
+fn _decode_cp(base: *UInt8, i: Int, slen: Int) -> Int {
+  var b0 = _byte(base, i);
   if b0 < 0x80 {
     return b0;
   };
   if b0 >= 0xC0 && b0 <= 0xDF {
     if i + 1 >= slen { return -1; }
-    var b1 = _byte(s, i + 1);
+    var b1 = _byte(base, i + 1);
     return ((b0 & 0x1F) << 6) | (b1 & 0x3F);
   };
   if b0 >= 0xE0 && b0 <= 0xEF {
     if i + 2 >= slen { return -1; }
-    var b1 = _byte(s, i + 1);
-    var b2 = _byte(s, i + 2);
+    var b1 = _byte(base, i + 1);
+    var b2 = _byte(base, i + 2);
     return ((b0 & 0x0F) << 12) | ((b1 & 0x3F) << 6) | (b2 & 0x3F);
   };
   if b0 >= 0xF0 && b0 <= 0xF7 {
     if i + 3 >= slen { return -1; }
-    var b1 = _byte(s, i + 1);
-    var b2 = _byte(s, i + 2);
-    var b3 = _byte(s, i + 3);
+    var b1 = _byte(base, i + 1);
+    var b2 = _byte(base, i + 2);
+    var b3 = _byte(base, i + 3);
     return ((b0 & 0x07) << 18) | ((b1 & 0x3F) << 12) | ((b2 & 0x3F) << 6) | (b3 & 0x3F);
   };
   -1
 }
 
 /// Byte length of the UTF-8 sequence starting at byte `i` of `s` (1..4).
-fn _char_len(s: Str, i: Int) -> Int {
-  var b0 = _byte(s, i);
+fn _char_len(base: *UInt8, i: Int) -> Int {
+  var b0 = _byte(base, i);
   if b0 < 0x80 { return 1; }
   if b0 <= 0xDF { return 2; }
   if b0 <= 0xEF { return 3; }
@@ -108,16 +117,17 @@ fn _is_ldh_label(label: Str) -> Bool {
   if len == 0 {
     return false;
   };
+  let lbase = label.c_str();
   var n = 0;
   while n < len {
-    var cp = _byte(label, n);
+    var cp = _byte(lbase, n);
     if !_ldh(cp) {
       return false;
     };
     n = n + 1;
   };
-  var first = _byte(label, 0);
-  var last = _byte(label, len - 1);
+  var first = _byte(lbase, 0);
+  var last = _byte(lbase, len - 1);
   if first == 45 || last == 45 {
     return false;
   };
@@ -127,9 +137,10 @@ fn _is_ldh_label(label: Str) -> Bool {
 /// True iff the label contains any non-ASCII code point.
 fn _has_non_ascii(label: Str) -> Bool {
   var len = label.len();
+  let lbase = label.c_str();
   var n = 0;
   while n < len {
-    if _byte(label, n) >= 0x80 {
+    if _byte(lbase, n) >= 0x80 {
       return true;
     };
     n = n + 1;
@@ -299,9 +310,10 @@ pub fn idna_uts46_normalize(s: Str) -> Result[Str, Str]
 {
   var bytes = Vec[UInt8].new();
   var len = s.len();
+  let base = s.c_str();
   var i = 0;
   while i < len {
-    var cp = _decode_cp(s, i, len);
+    var cp = _decode_cp(base, i, len);
     if cp < 0 {
       return Err("invalid utf-8 in UTS-46");
     };
@@ -316,7 +328,7 @@ pub fn idna_uts46_normalize(s: Str) -> Result[Str, Str]
       bytes.push(tmp[j]);
       j = j + 1;
     };
-    i = i + _char_len(s, i);
+    i = i + _char_len(base, i);
   };
   var blen = bytes.len();
   if blen == 0 {
@@ -344,9 +356,10 @@ pub fn idna_nameprep(s: Str) -> Result[Str, Str]
 {
   var bytes = Vec[UInt8].new();
   var len = s.len();
+  let base = s.c_str();
   var i = 0;
   while i < len {
-    var cp = _decode_cp(s, i, len);
+    var cp = _decode_cp(base, i, len);
     if cp < 0 {
       return Err("invalid utf-8 in nameprep");
     };
@@ -370,7 +383,7 @@ pub fn idna_nameprep(s: Str) -> Result[Str, Str]
       bytes.push(tmp[j]);
       j = j + 1;
     };
-    i = i + _char_len(s, i);
+    i = i + _char_len(base, i);
   };
   var blen = bytes.len();
   if blen == 0 {
@@ -446,12 +459,13 @@ pub fn idna_is_bidi_valid(s: Str) -> Bool
       n = n + 1;
       continue;
     };
+    let lbase = label.c_str();
     var has_rtl = false;
-    var first_cp = _decode_cp(label, 0, len);
+    var first_cp = _decode_cp(lbase, 0, len);
     var last_cp = first_cp;
     var i = 0;
     while i < len {
-      var cp = _decode_cp(label, i, len);
+      var cp = _decode_cp(lbase, i, len);
       if cp < 0 {
         return false;
       };
@@ -459,7 +473,7 @@ pub fn idna_is_bidi_valid(s: Str) -> Bool
       if _is_rtl(cp) {
         has_rtl = true;
       };
-      i = i + _char_len(label, i);
+      i = i + _char_len(lbase, i);
     };
     if has_rtl {
       if !_is_rtl(first_cp) {
@@ -470,11 +484,11 @@ pub fn idna_is_bidi_valid(s: Str) -> Bool
       };
       i = 0;
       while i < len {
-        var cp = _decode_cp(label, i, len);
+        var cp = _decode_cp(lbase, i, len);
         if _is_ltr(cp) {
           return false;
         };
-        i = i + _char_len(label, i);
+        i = i + _char_len(lbase, i);
       };
     };
     n = n + 1;

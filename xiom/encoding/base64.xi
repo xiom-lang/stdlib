@@ -20,6 +20,55 @@ extern "C" {
   fn xiom_char_at(s: Str, pos: Int) -> Char;
 }
 
+// Raw byte read at `i` (wave 138): the function-shaped cached-pointer read
+// (the wave-136 pattern -- an inline `unsafe { }` VALUE expression misbehaved
+// on the pin). Complexity: O(1).
+fn _b64_raw_byte(base: *UInt8, i: Int) -> UInt8
+  requires: true  // raw byte read; callers bound i against len (T007)
+{
+  unsafe { return *(base + i); }
+}
+
+// Runtime-`xiom_char_at`-equivalent UTF-8 decode over a cached (base, len)
+// view (copied from the wave-136 xiom.encoding helper; xiom_char_at strnlens
+// per call, so the per-position codec loops were quadratic). Complexity: O(1).
+fn _b64_char_at_runtime(base: *UInt8, len: Int, pos: Int) -> Char {
+  if pos < 0 || pos >= len {
+    return to_char(0);
+  }
+  var b0 = (_b64_raw_byte(base, pos) as Int) & 0xFF;
+  if b0 < 0x80 {
+    return to_char(b0);
+  }
+  var n = 0;
+  var cp = 0;
+  if (b0 & 0xE0) == 0xC0 {
+    n = 2;
+    cp = b0 & 0x1F;
+  } elif (b0 & 0xF0) == 0xE0 {
+    n = 3;
+    cp = b0 & 0x0F;
+  } elif (b0 & 0xF8) == 0xF0 {
+    n = 4;
+    cp = b0 & 0x07;
+  } else {
+    return to_char(b0);
+  }
+  var i = 1;
+  while i < n {
+    var cb = 0;
+    if pos + i < len {
+      cb = (_b64_raw_byte(base, pos + i) as Int) & 0xFF;
+    }
+    if (cb & 0xC0) != 0x80 {
+      return to_char(b0);
+    }
+    cp = (cp << 6) | (cb & 0x3F);
+    i = i + 1;
+  }
+  return to_char(cp);
+}
+
 const _B64_ALPHABET: Str = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 const _B64U_ALPHABET: Str = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
 
@@ -141,10 +190,11 @@ pub fn base64_decode(s: Str) -> Result[Vec[UInt8], Str]
   if len % 4 != 0 {
     return Err("base64 length must be a multiple of 4");
   };
+  let base = s.c_str();
   var i: Int = 0;
   var pad: Int = 0;
   while i < len {
-    var c = s.char_at(i);
+    var c = _b64_char_at_runtime(base, len, i);
     if c != '=' {
       i = i + 1;
     } else {
@@ -152,7 +202,7 @@ pub fn base64_decode(s: Str) -> Result[Vec[UInt8], Str]
     };
   };
   while i < len {
-    var c = s.char_at(i);
+    var c = _b64_char_at_runtime(base, len, i);
     if c == '=' {
       pad = pad + 1;
       i = i + 1;
@@ -161,7 +211,7 @@ pub fn base64_decode(s: Str) -> Result[Vec[UInt8], Str]
     };
   };
   while i < len {
-    var c = s.char_at(i);
+    var c = _b64_char_at_runtime(base, len, i);
     if c != '=' {
       return Err("invalid base64 padding");
     };
@@ -170,10 +220,10 @@ pub fn base64_decode(s: Str) -> Result[Vec[UInt8], Str]
   let data_len = len - pad;
   i = 0;
   while i + 3 < data_len {
-    var v0 = _b64_index(string.byte_at(s, i));
-    var v1 = _b64_index(string.byte_at(s, i + 1));
-    var v2 = _b64_index(string.byte_at(s, i + 2));
-    var v3 = _b64_index(string.byte_at(s, i + 3));
+    var v0 = _b64_index(_b64_raw_byte(base, i));
+    var v1 = _b64_index(_b64_raw_byte(base, i + 1));
+    var v2 = _b64_index(_b64_raw_byte(base, i + 2));
+    var v3 = _b64_index(_b64_raw_byte(base, i + 3));
     if v0 < 0 || v1 < 0 || v2 < 0 || v3 < 0 {
       return Err("invalid base64 character");
     };
@@ -183,20 +233,20 @@ pub fn base64_decode(s: Str) -> Result[Vec[UInt8], Str]
     i = i + 4;
   };
   if i < data_len {
-    var v0 = _b64_index(string.byte_at(s, i));
-    var v1 = _b64_index(string.byte_at(s, i + 1));
+    var v0 = _b64_index(_b64_raw_byte(base, i));
+    var v1 = _b64_index(_b64_raw_byte(base, i + 1));
     if v0 < 0 || v1 < 0 {
       return Err("invalid base64 character");
     };
     result.push(((v0 << 2) | (v1 >> 4)) as UInt8);
     if pad < 2 {
-      var v2 = _b64_index(string.byte_at(s, i + 2));
+      var v2 = _b64_index(_b64_raw_byte(base, i + 2));
       if v2 < 0 {
         return Err("invalid base64 character");
       };
       result.push(((v1 << 4) | (v2 >> 2)) as UInt8);
       if pad == 0 {
-        var v3 = _b64_index(string.byte_at(s, i + 3));
+        var v3 = _b64_index(_b64_raw_byte(base, i + 3));
         if v3 < 0 {
           return Err("invalid base64 character");
         };
@@ -215,8 +265,9 @@ pub fn base64_encode_str(s: Str) -> Str
   var bytes = Vec[UInt8].new();
   var i = 0;
   let slen = s.len();
+  let base = s.c_str();
   while i < slen {
-    var c = s.char_at(i);
+    var c = _b64_char_at_runtime(base, slen, i);
     xiom.char.encode_utf8(c, &bytes);
     i = i + xiom.char.len_utf8(c);
   };
@@ -275,10 +326,11 @@ pub fn base64_decode_padded(s: Str) -> Result[Vec[UInt8], Str]
   if len % 4 != 0 {
     return Err("base64 length must be a multiple of 4");
   };
+  let base = s.c_str();
   var pad: Int = 0;
   var i: Int = len;
   while i > 0 {
-    var c = s.char_at(i - 1);
+    var c = _b64_char_at_runtime(base, len, i - 1);
     if c == '=' {
       pad = pad + 1;
       i = i - 1;
@@ -370,12 +422,13 @@ pub fn base64url_decode(s: Str) -> Result[Vec[UInt8], Str]
 {
   var result = Vec[UInt8].new();
   let len = s.len();
+  let base = s.c_str();
   var i: Int = 0;
   while i + 3 < len {
-    var v0 = _b64u_index(string.byte_at(s, i));
-    var v1 = _b64u_index(string.byte_at(s, i + 1));
-    var v2 = _b64u_index(string.byte_at(s, i + 2));
-    var v3 = _b64u_index(string.byte_at(s, i + 3));
+    var v0 = _b64u_index(_b64_raw_byte(base, i));
+    var v1 = _b64u_index(_b64_raw_byte(base, i + 1));
+    var v2 = _b64u_index(_b64_raw_byte(base, i + 2));
+    var v3 = _b64u_index(_b64_raw_byte(base, i + 3));
     if v0 < 0 || v1 < 0 || v2 < 0 || v3 < 0 {
       return Err("invalid base64url character");
     };
@@ -385,20 +438,20 @@ pub fn base64url_decode(s: Str) -> Result[Vec[UInt8], Str]
     i = i + 4;
   };
   if i + 1 < len {
-    var v0 = _b64u_index(string.byte_at(s, i));
-    var v1 = _b64u_index(string.byte_at(s, i + 1));
+    var v0 = _b64u_index(_b64_raw_byte(base, i));
+    var v1 = _b64u_index(_b64_raw_byte(base, i + 1));
     if v0 < 0 || v1 < 0 {
       return Err("invalid base64url character");
     };
     result.push(((v0 << 2) | (v1 >> 4)) as UInt8);
     if i + 2 < len {
-      var v2 = _b64u_index(string.byte_at(s, i + 2));
+      var v2 = _b64u_index(_b64_raw_byte(base, i + 2));
       if v2 < 0 {
         return Err("invalid base64url character");
       };
       result.push(((v1 << 4) | (v2 >> 2)) as UInt8);
       if i + 3 < len {
-        var v3 = _b64u_index(string.byte_at(s, i + 3));
+        var v3 = _b64u_index(_b64_raw_byte(base, i + 3));
         if v3 < 0 {
           return Err("invalid base64url character");
         };
