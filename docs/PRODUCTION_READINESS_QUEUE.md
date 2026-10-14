@@ -760,7 +760,12 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
      both 5/5 green on v0.64.4 in the same env). Filed as
      REL-20261014-2123-stdlib with minimal repros; the stdlib-v0.64.5 tag
      is HELD. Notes cleanup c8d713a (m313 stale line dropped, converter
-     rc=0) is the tag target once the next candidate is green.
+     rc=0) is the tag target once the next candidate is green. Full
+     candidate profile: corpus 953/955, probes 310/315 (3 compilefails:
+     zext-float IR in p_sweep_single_param; duplicate
+     LinkedList.invariant_check in p_wave7/p_wave8 -- 2 runfails:
+     p_wave107/p_wave108 crypto pair lengths = the aes-gcm signature),
+     modules 510/510, barename 0/510, ratchets OK.
      NEXT: the ranked sweep inventory as before; candidate processing
      when the v0.64.5 archive lands (release-check rows + known-failures
      sweep + the m313 guard-spin acceptance).

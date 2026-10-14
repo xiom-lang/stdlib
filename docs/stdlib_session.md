@@ -3371,9 +3371,16 @@ registry pin, agent recon for the rest)**
   p_v065_aesgcm_tuple_len.xi (cand rc 2/3, pin rc 0/0) and a
   known_failures README status paragraph; item 1739 carries the HOLD
   note (fixed->fixed). NO TAG CUT.
-- Pending: probes/modules/barename/ratchets on the candidate (profile
-  note to follow on 2123); the 27-repro sweep + post-pin rows run on the
-  fixed candidate.
+- Profile (same candidate): probes 310/315 -- 3 compilefails
+  (p_sweep_single_param: clang IR `zext float` to i64;
+  p_wave7_shapes + p_wave8_shapes: `invalid redefinition of function
+  'LinkedList.invariant_check'`) + 2 runfails (p_wave107_shapes /
+  p_wave108_shapes: the SAME crypto pair-length signature as the
+  aes-gcm row); modules 510/510; barename 0/510; floors172 +
+  module-smoke + doc ratchets OK. All five are pin-green. Full detail
+  on REL-20261014-2123-stdlib (profile note appended).
+- Pending: the 27-repro sweep + post-pin rows run on the fixed
+  candidate; the tag stays held until a candidate passes the battery.
 
 **SESSION 2026-10-14 block 172 (doorbell 21:00Z -- quiet; pin prep landed, awaiting the compiler GO to freeze/tag)**
 - Lane view: nothing to transition. The only open stdlib rows are the
