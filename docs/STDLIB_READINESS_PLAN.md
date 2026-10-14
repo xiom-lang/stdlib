@@ -2190,8 +2190,23 @@ T1/T2 yields.
         confirmed). Coverage fns 8785, clauses 6242 (floors169) +
         ratchets OK; battery: corpus 955/955 (828.6s), probes 312/312
         (383.9s), modules 510/510 (195.4s), barename 0/510 (281.8s).
+        Wave 136 (2026-10-14, block 166): the encoding core (encoding.xi)
+        converted -- base64/base64url/hex/base32 decoders, url_encode/
+        url_decode, percent delegates, utf8_encode, hex_to_int and
+        base64_encode_str decode through the cached runtime-mirror
+        _char_at_runtime. Trap: an inline `unsafe { }` EXPRESSION used as
+        a value misbehaved (raw lead byte for multibyte); the
+        function-shaped `_raw_byte(base, i)` is the proven form. Probe
+        p_wave136_shapes.xi (313th): 36 rows; encoding-family smokes
+        41/41. Capped measurement: 512 KB both directions of url/base64/
+        hex/base32 + wrappers, rc=0, 4.9 MB peak, round-trips exact.
+        Coverage fns 8787, clauses 6243 (floors170) + ratchets OK;
+        battery: corpus 955/955 (1001s), probes 313/313 (299.9s),
+        modules 510/510 (244.2s), barename 0/510 (534s). NEXT: wave 137 =
+        FIX-FIRST REL-20261014-1427-engine (binary-safe copy_file), then
+        the encoding submodules batch.
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors169.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors170.json
         tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;

@@ -3157,6 +3157,48 @@ registry pin, agent recon for the rest)**
   exist (mine + the actor's; wave 126 used 152b) and both stand as-is;
   the next writer continues from 156/157.
 
+**SESSION 2026-10-14 block 166b (wave 136: the encoding core converted; the value-position unsafe trap; engine 1427 acked; candidate queue gains the engine rows; probes 313; floors170) -- same round as the actor's block 166 below; no text edited by either side**
+- WAVE 136 (the sweep campaign, encoding.xi): base64 / base64url /
+  hex / base32 decoders, url_encode / url_decode, the percent
+  delegates, utf8_encode, hex_to_int and base64_encode_str now decode
+  through the cached runtime-mirror `_char_at_runtime` (xiom_char_at
+  strnlens per call; every per-position codec loop was quadratic).
+  The decode-vs-raw question resolved uniformly: the index tables
+  reject every non-ASCII value either way, while the re-encode paths
+  need the decoded value.
+- TRAP (new): an INLINE `unsafe { *(base + pos) }` EXPRESSION used as a
+  VALUE misbehaved in the pinned compiler -- the decoder acted on the
+  raw lead byte for multibyte input (url_encode on the C3 A9 bytes
+  produced %C3%83 instead of %C3%A9); rewriting the helper around a function-shaped
+  `_raw_byte(base, i)` fixed it. The proven form is a function-shaped
+  raw read, never a value-position unsafe block (statement-position
+  blocks in sync.xi are fine). Evidence: out/scratch_b136.xi before/
+  after.
+- Probe p_wave136_shapes.xi (313th): 36 rows -- round-trips, padding
+  variants, invalid-char Err rows, multibyte percent rows, the RFC 4648
+  base32 vector, hex_to_int, and the base64_encode_str low-byte-cast
+  quirk (C3 A9 input -> "6ak="); encoding/base64/base32/hex/percent/url/utf8
+  smoke filters 41/41. Capped measurement: out/dbg136r.xi, 512 KB
+  through both directions of url/base64/hex/base32 + wrappers, rc=0,
+  peak 4.9 MB, all round-trips byte-exact.
+- Engine ask acked (REL-20261014-1427, bus 51cd368): copy_file /
+  read_file+write_file truncate binary at the first NUL (PE DLL -> 3
+  bytes MZ\x90). Str is NUL-terminated by design, so the fix is the
+  byte-exact route (byte APIs + a NUL-roundtrip probe); queued as wave
+  137 FIX-FIRST. The engine's PowerShell Copy-Item workaround stays
+  until then.
+- The CANDIDATE QUEUE block gained the engine rows: 1427 (verify the
+  NUL roundtrip + PE-magic copy probe at the next archive), engine-6
+  on the m312 spawn gate, 1513-engine under watch, engine-3 awaiting
+  the engine's verify; 1158-engine (identifier `spawn` drops catalog
+  exports) and 1213-engine (layout-sensitive AV) are compiler rows.
+- Coverage: fns 8787 (+2), clauses 6243 (+1), floors170 dumped +
+  wired. Battery: corpus 955/955 (1001s), probes 313/313 (299.9s),
+  modules 510/510 (244.2s), barename 0/510 (534s), module-smoke/doc
+  ratchets OK.
+- Next: wave 137 = the binary-IO fix; then the encoding submodules
+  (base64/base32/hex/percent/punycode/idna/ascii85) batch.
+
 **SESSION 2026-10-14 block 166 (doorbell 15:00Z -- new stdlib rows triaged; wave 136 in flight; relays raced with the actor)**
 - Lane view: two new stdlib-addressed rows plus follow-ups.
   `REL-20261014-1208-bindings` (B-27/B-28: ffi write_at offsets dropped;

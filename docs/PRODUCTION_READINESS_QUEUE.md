@@ -7,7 +7,7 @@ windows-x64 release archive.)
 **Gates: corpus 955/955 full (C001 carve-outs retired on v0.63.1; new
 TcpStream loopback and uuencode roundtrip smokes added; smoke_os_watch
 added in wave 124), modules 510/510,
-probes 312/312, barename 0/510.**
+probes 313/313, barename 0/510.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -26,7 +26,7 @@ gates flip:
    wave-98..110 probes), the io byte-fidelity/CRLF lock and the
    fs_remove lock).
 4. Strict bare-name scan clean -- MET (0/509).
-5. Coverage ratchet green -- MET (floors169).
+5. Coverage ratchet green -- MET (floors170).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (499/518 modules, 3500/6239 fns).
 8. Contract coverage 100% (every public fn carries clauses) -- OPEN (70.7%).
@@ -651,6 +651,29 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
      NEXT: re-probe B-27/B-28 at the next pin (bindings); then the
      encoding sweep batch; the spawn flip + engine S-rows stay
      pin/relay-gated.
+     WAVE 136 (block 166): the encoding core (encoding.xi) -- base64 /
+     base64url / hex / base32 decoders, url_encode / url_decode, the
+     percent delegates, utf8_encode, hex_to_int and base64_encode_str
+     now decode through the cached runtime-mirror `_char_at_runtime`
+     (xiom_char_at strnlens per call, so the per-position codec loops
+     were quadratic). One trap found live: an INLINE
+     `unsafe { *(base + pos) }` EXPRESSION used as a VALUE misbehaved
+     (the decoder acted on the raw lead byte for multibyte input);
+     rewriting the helper around a function-shaped `_raw_byte(base, i)`
+     fixed it -- use the function form, never a value-position unsafe
+     block. Probe p_wave136_shapes.xi (313th): 36 rows (round-trips,
+     padding variants, invalid-character errors, multibyte percent rows,
+     the RFC 4648 base32 vector, the base64_encode_str low-byte-cast
+     quirk); encoding/base64/base32/hex/percent/url/utf8 smoke filters
+     41/41. Capped measurement: out/dbg136r.xi, 512 KB through both
+     directions of url/base64/hex/base32 + the wrappers, rc=0, peak
+     4.9 MB, every round-trip byte-exact. Coverage fns 8787, clauses
+     6243 (floors170 wired); battery corpus 955/955 (1001s), probes
+     313/313 (299.9s), modules 510/510 (244.2s), barename 0/510 (534s)
+     + ratchets OK.
+     NEXT: wave 137 = FIX-FIRST REL-20261014-1427-engine (binary-safe
+     copy_file / byte-exact file IO roundtrip); then the encoding
+     submodules (base64/base32/hex/percent/punycode/idna/ascii85) batch.
      CANDIDATE QUEUE (the open v0.64.4 release-check,
      release-checks/compiler-compiler-v0.64.4.md on the bus; compiler
      fixer wave m276-m313 in flight as of 2026-10-14T14:15Z): when the
@@ -675,7 +698,15 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
      the fix + a pin carrying both halves ship;
      (6) bindings re-probe context: the candidate carrying stdlib
      85acf16 + compiler m296 (vec_slot_size with_len overflow) should
-     clear B-27/B-28 end to end (REL-20261014-1401-stdlib).
+     clear B-27/B-28 end to end (REL-20261014-1401-stdlib);
+     (7) engine rows: REL-20261014-1427-engine (binary-safe copy_file --
+     fixed stdlib-side in wave 137; verify the NUL roundtrip + the
+     PE-magic copy_file probe on the candidate), engine-6 (thread
+     pool/Send-Sync) rides the m312 spawn gate, 1513-engine (probe_save
+     flake) stays under watch, engine-3 (directory watch) awaits the
+     engine lane's verify. 1158-engine (identifier `spawn` drops catalog
+     exports) and 1213-engine (layout-sensitive AV) are
+     compiler-addressed, not stdlib rows.
 BINARY NOTE: the shared local build path
 `E:\xiom-lang\xiom\target\release\xiom.exe` was rebuilt past the pin
 (compiler main da7798da m252) and fails four corpus smokes; waves now run

@@ -19,6 +19,61 @@ extern "C" {
   fn xiom_char_at(s: Str, pos: Int) -> Char;
 }
 
+// Raw byte at `i` (wave 136): cached-pointer read, the proven pattern (an
+// inline `unsafe { }` expression was observed to misbehave here).
+// Complexity: O(1).
+fn _raw_byte(base: *UInt8, i: Int) -> UInt8
+  requires: true  // raw byte read; callers bound i against len (T007)
+{
+  unsafe { return *(base + i); }
+}
+
+// Runtime-`xiom_char_at`-equivalent UTF-8 decode over a cached (base, len)
+// view (copied byte-exact from slice.xi): continuation bytes are validated,
+// a malformed or truncated sequence yields the leading byte itself, and a
+// stray continuation byte is returned as-is. Wave 136: xiom_char_at strnlens
+// the whole string per call, so the per-position codec loops were quadratic.
+// Both decode classes are byte-exact through this helper: the index tables
+// reject every non-ASCII value (raw or decoded alike), while the
+// re-encode paths (url_encode/url_decode/utf8_encode/base64_encode_str)
+// need the decoded value itself. Complexity: O(1).
+fn _char_at_runtime(base: *UInt8, len: Int, pos: Int) -> Char {
+  if pos < 0 || pos >= len {
+    return to_char(0);
+  }
+  var b0 = (_raw_byte(base, pos) as Int) & 0xFF;
+  if b0 < 0x80 {
+    return to_char(b0);
+  }
+  var n = 0;
+  var cp = 0;
+  if (b0 & 0xE0) == 0xC0 {
+    n = 2;
+    cp = b0 & 0x1F;
+  } elif (b0 & 0xF0) == 0xE0 {
+    n = 3;
+    cp = b0 & 0x0F;
+  } elif (b0 & 0xF8) == 0xF0 {
+    n = 4;
+    cp = b0 & 0x07;
+  } else {
+    return to_char(b0);
+  }
+  var i = 1;
+  while i < n {
+    var cb = 0;
+    if pos + i < len {
+      cb = (_raw_byte(base, pos + i) as Int) & 0xFF;
+    }
+    if (cb & 0xC0) != 0x80 {
+      return to_char(b0);
+    }
+    cp = (cp << 6) | (cb & 0x3F);
+    i = i + 1;
+  }
+  return to_char(cp);
+}
+
 // === Helpers ===
 
 fn base64_index(c: Char) -> Int {
@@ -179,22 +234,23 @@ pub fn base64_decode(encoded: Str) -> Result[Vec[UInt8], Str]
 {
   var result = Vec[UInt8].new();
   let len = encoded.len();
+  let base = encoded.c_str();
   var i = 0;
   var pad = 0;
-  while i < len && encoded.char_at(i) != '=' {
+  while i < len && _char_at_runtime(base, len, i) != '=' {
     i = i + 1;
   };
-  while i < len && encoded.char_at(i) == '=' {
+  while i < len && _char_at_runtime(base, len, i) == '=' {
     pad = pad + 1;
     i = i + 1;
   };
   let data_len = len - pad;
   i = 0;
   while i + 3 < data_len {
-    let v0 = base64_index(encoded.char_at(i));
-    let v1 = base64_index(encoded.char_at(i + 1));
-    let v2 = base64_index(encoded.char_at(i + 2));
-    let v3 = base64_index(encoded.char_at(i + 3));
+    let v0 = base64_index(_char_at_runtime(base, len, i));
+    let v1 = base64_index(_char_at_runtime(base, len, i + 1));
+    let v2 = base64_index(_char_at_runtime(base, len, i + 2));
+    let v3 = base64_index(_char_at_runtime(base, len, i + 3));
     if v0 < 0 || v1 < 0 || v2 < 0 || v3 < 0 {
       return Err("invalid base64 character");
     };
@@ -204,20 +260,20 @@ pub fn base64_decode(encoded: Str) -> Result[Vec[UInt8], Str]
     i = i + 4;
   };
   if i < data_len {
-    let v0 = base64_index(encoded.char_at(i));
-    let v1 = base64_index(encoded.char_at(i + 1));
+    let v0 = base64_index(_char_at_runtime(base, len, i));
+    let v1 = base64_index(_char_at_runtime(base, len, i + 1));
     if v0 < 0 || v1 < 0 {
       return Err("invalid base64 character");
     };
     result.push(((v0 << 2) | (v1 >> 4)) as UInt8);
     if pad < 2 {
-      let v2 = base64_index(encoded.char_at(i + 2));
+      let v2 = base64_index(_char_at_runtime(base, len, i + 2));
       if v2 < 0 {
         return Err("invalid base64 character");
       };
       result.push(((v1 << 4) | (v2 >> 2)) as UInt8);
       if pad == 0 {
-        let v3 = base64_index(encoded.char_at(i + 3));
+        let v3 = base64_index(_char_at_runtime(base, len, i + 3));
         if v3 < 0 {
           return Err("invalid base64 character");
         };
@@ -279,12 +335,13 @@ pub fn base64url_decode(encoded: Str) -> Result[Vec[UInt8], Str]
 {
   var result = Vec[UInt8].new();
   let len = encoded.len();
+  let base = encoded.c_str();
   var i = 0;
   while i + 3 < len {
-    let v0 = base64url_index(encoded.char_at(i));
-    let v1 = base64url_index(encoded.char_at(i + 1));
-    let v2 = base64url_index(encoded.char_at(i + 2));
-    let v3 = base64url_index(encoded.char_at(i + 3));
+    let v0 = base64url_index(_char_at_runtime(base, len, i));
+    let v1 = base64url_index(_char_at_runtime(base, len, i + 1));
+    let v2 = base64url_index(_char_at_runtime(base, len, i + 2));
+    let v3 = base64url_index(_char_at_runtime(base, len, i + 3));
     if v0 < 0 || v1 < 0 || v2 < 0 || v3 < 0 {
       return Err("invalid base64url character");
     };
@@ -294,20 +351,20 @@ pub fn base64url_decode(encoded: Str) -> Result[Vec[UInt8], Str]
     i = i + 4;
   };
   if i + 1 < len {
-    let v0 = base64url_index(encoded.char_at(i));
-    let v1 = base64url_index(encoded.char_at(i + 1));
+    let v0 = base64url_index(_char_at_runtime(base, len, i));
+    let v1 = base64url_index(_char_at_runtime(base, len, i + 1));
     if v0 < 0 || v1 < 0 {
       return Err("invalid base64url character");
     };
     result.push(((v0 << 2) | (v1 >> 4)) as UInt8);
     if i + 2 < len {
-      let v2 = base64url_index(encoded.char_at(i + 2));
+      let v2 = base64url_index(_char_at_runtime(base, len, i + 2));
       if v2 < 0 {
         return Err("invalid base64url character");
       };
       result.push(((v1 << 4) | (v2 >> 2)) as UInt8);
       if i + 3 < len {
-        let v3 = base64url_index(encoded.char_at(i + 3));
+        let v3 = base64url_index(_char_at_runtime(base, len, i + 3));
         if v3 < 0 {
           return Err("invalid base64url character");
         };
@@ -350,10 +407,11 @@ pub fn hex_decode(encoded: Str) -> Result[Vec[UInt8], Str]
     return Err("hex string must have even length");
   };
   var result = Vec[UInt8].new();
+  let base = encoded.c_str();
   var i = 0;
   while i < len {
-    let hi = hex_value(encoded.char_at(i));
-    let lo = hex_value(encoded.char_at(i + 1));
+    let hi = hex_value(_char_at_runtime(base, len, i));
+    let lo = hex_value(_char_at_runtime(base, len, i + 1));
     if hi < 0 || lo < 0 {
       return Err("invalid hex character");
     };
@@ -394,12 +452,13 @@ pub fn url_encode(data: Str) -> Str
   // with a worst-case buffer (s_len*3+1) and NUL at the ACTUAL write cursor
   // is deterministic by construction.
   let s_len = data.len();
+  let base = data.c_str();
   unsafe {
     var buf = malloc(s_len * 3 + 1);
     var i = 0;
     var out = 0;
     while i < s_len {
-      let c = data.char_at(i);
+      let c = _char_at_runtime(base, s_len, i);
       let clen = xiom.char.len_utf8(c);
       if is_url_safe(c) {
         var tmp = Vec[UInt8].new();
@@ -435,18 +494,19 @@ pub fn url_decode(encoded: Str) -> Result[Str, Str]
 {
   let len = encoded.len();
   if len == 0 { return Ok(""); };
+  let base = encoded.c_str();
   unsafe {
     var buf = malloc(len + 1);
     var i = 0;
     var out = 0;
     while i < len {
-      let c = encoded.char_at(i);
+      let c = _char_at_runtime(base, len, i);
       if c == '%' {
         if i + 2 >= len {
           return Err("truncated percent escape");
         };
-        let hi = hex_value(encoded.char_at(i + 1));
-        let lo = hex_value(encoded.char_at(i + 2));
+        let hi = hex_value(_char_at_runtime(base, len, i + 1));
+        let lo = hex_value(_char_at_runtime(base, len, i + 2));
         if hi < 0 || lo < 0 {
           return Err("invalid percent escape");
         };
@@ -502,9 +562,10 @@ pub fn utf8_encode(s: Str) -> Vec[UInt8]
 {
   var result = Vec[UInt8].new();
   let len = s.len();
+  let base = s.c_str();
   var i = 0;
   while i < len {
-    let c = s.char_at(i);
+    let c = _char_at_runtime(base, len, i);
     xiom.char.encode_utf8(c, &result);
     i = i + xiom.char.len_utf8(c);
   };
@@ -819,14 +880,13 @@ pub fn base32_decode(encoded: Str) -> Result[Vec[UInt8], Str]
 {
   var result = Vec[UInt8].new();
   let len = encoded.len();
+  let base = encoded.c_str();
   if len == 0 { return Ok(result); };
   var bits: Int = 0;
   var bit_count: Int = 0;
   var i: Int = 0;
   while i < len {
-    let opt = xiom.string.char_at(encoded, i);
-    if !opt.is_some { break; };
-    let c = opt.value;
+    let c = _char_at_runtime(base, len, i);
     let code = c as UInt8 as Int;
     if code == 61 {
       break;
@@ -916,8 +976,9 @@ pub fn hex_to_int(s: Str) -> Option[Int]
   };
   var result: Int = 0;
   var i: Int = 0;
+  let base = s.c_str();
   while i < len {
-    let c = s.char_at(i);
+    let c = _char_at_runtime(base, len, i);
     let v = hex_value(c);
     if v < 0 {
       return Option[Int]{ is_some: false; value: 0; };
@@ -933,15 +994,16 @@ pub fn hex_to_int(s: Str) -> Option[Int]
 /// Encodes a string to Base64 by first converting to UTF-8 bytes.
 /// Complexity: O(n), n = string length.
 pub fn base64_encode_str(s: Str) -> Str
-  requires: true  // extern char_at call in the loop (T002 confinement)
+  requires: true  // raw-view decode in the loop (T002 confinement)
   ensures: (s.len() == 0) => (result.len() == 0)
   ensures: (s.len() > 0) => (result.len() % 4 == 0)
 {
   var bytes = Vec[UInt8].new();
   var i: Int = 0;
   let slen = s.len();
+  let base = s.c_str();
   while i < slen {
-    let c: Char = xiom_char_at(s, i);
+    let c: Char = _char_at_runtime(base, slen, i);
     bytes.push(c as UInt8);
     i = i + 1;
   };
