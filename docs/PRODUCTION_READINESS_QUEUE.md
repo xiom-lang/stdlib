@@ -651,6 +651,31 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
      NEXT: re-probe B-27/B-28 at the next pin (bindings); then the
      encoding sweep batch; the spawn flip + engine S-rows stay
      pin/relay-gated.
+     CANDIDATE QUEUE (the open v0.64.4 release-check,
+     release-checks/compiler-compiler-v0.64.4.md on the bus; compiler
+     fixer wave m276-m313 in flight as of 2026-10-14T14:15Z): when the
+     next compiler archive lands --
+     (1) run the known-failures sweep (25 repros under
+     tools/known_failures) on the candidate and diff the observed rcs
+     against the recorded ones;
+     (2) verify the stdlib rows queued in the release check:
+     1548-stdlib-3/4/5/6/7, 1549-stdlib-2/3/4/5 and 1615-stdlib (all
+     marked "stdlib lane re-verifies at the next archive");
+     (3) re-add the 1549-stdlib-6 catalog payload clauses (Ok-side
+     payload reads) once the pin carries m283+;
+     (4) flip the spawn e2e + thread pool ONLY after m312 (the join
+     readback defect): on m310 the hang is gone (m282 + wave-131 hoist;
+     the worker runs, done=1 written) but the JoinHandle readback is
+     still pointer-shaped garbage; thread gate 2053/1627/1402 stays
+     OPEN;
+     (5) retest the alloc-guard-spin acceptance only after m313
+     (ffi.free call-site lowering): the spin still reproduces on m310,
+     IR shows `call void @free` at the user call site while the wrapper
+     body calls @xiom_guard_free; keep the alloc/free workarounds until
+     the fix + a pin carrying both halves ship;
+     (6) bindings re-probe context: the candidate carrying stdlib
+     85acf16 + compiler m296 (vec_slot_size with_len overflow) should
+     clear B-27/B-28 end to end (REL-20261014-1401-stdlib).
 BINARY NOTE: the shared local build path
 `E:\xiom-lang\xiom\target\release\xiom.exe` was rebuilt past the pin
 (compiler main da7798da m252) and fails four corpus smokes; waves now run
