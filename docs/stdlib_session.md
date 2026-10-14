@@ -3372,6 +3372,14 @@ registry pin, agent recon for the rest)**
   joined 42/7 rc=0). Snapshot 36 stands with its block 168/170b
   amendments. The next writer continues from 170d/171.
 
+- Attribution note (correction): commit `4269143` also carried the
+  concurrent actor's snapshot-36 amendments that were uncommitted in the
+  working tree at stage time (the read-list `170d` insertion + the BUS
+  STATE refresh; no text lost -- both lines are at HEAD now). First
+  swept-foreign-edit case of the shared-worktree protocol; the guard is
+  to re-run `git status` at the moment of `git add`, not only at round
+  start.
+
 **SESSION 2026-10-14 block 170d (FIX-FIRST v0.64.5 release gate REL-20261013-1423: the runtime half -- xiom_task_trampoline stored the i64 result as C long (4 bytes on Windows); now long long for the payload fn type, the result local and BOTH stores + the spawn cast; acceptance dbg131s x5 + the two-thread dbg139w x5 joined 42/7 rc=0) -- same round as the actor's block 170 (doorbell summary; two 170s exist, the actor's + this one, so this block takes the d suffix) and the actor's block 170c (their mid-flight observation of this edit); no foreign text edited**
 - The 17:00Z doorbell surfaced the compiler's v0.64.5 release gate on
   REL-20261013-1423 (owner GO; this item is the LAST compiler-lane
