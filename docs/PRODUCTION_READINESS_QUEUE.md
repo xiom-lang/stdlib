@@ -751,6 +751,16 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
      stdlib-v0.64.5 at the frozen sha and run the candidate-processing
      checklist (full battery + the 27-repro sweep + the pending post-pin
      re-verifications).
+     PIN HOLD (block 172, 2026-10-14 21:00Z): the tag signal arrived
+     (relays 06d0a7c; release-wave push 1e4a444e; dry-run 38626737822,
+     artifact sha256 67e57dfe...). Candidate checks found TWO
+     DETERMINISTIC corpus regressions (953/955: smoke_cell_narrow rc 2 --
+     Cell[Int8] set/get reads pointer-shaped garbage; smoke_stress_crypto_
+     aes_gcm 0xC0000005 -- aes pair lengths read 0xFFFFFFFF, decrypt AVs;
+     both 5/5 green on v0.64.4 in the same env). Filed as
+     REL-20261014-2123-stdlib with minimal repros; the stdlib-v0.64.5 tag
+     is HELD. Notes cleanup c8d713a (m313 stale line dropped, converter
+     rc=0) is the tag target once the next candidate is green.
      NEXT: the ranked sweep inventory as before; candidate processing
      when the v0.64.5 archive lands (release-check rows + known-failures
      sweep + the m313 guard-spin acceptance).

@@ -3352,6 +3352,29 @@ registry pin, agent recon for the rest)**
 - Two long-lived git processes (from ~14:20Z) sit in the relays repo;
   the bus itself is consistent. The next writer continues from 169/170.
 
+**SESSION 2026-10-14 block 173b (doorbell 21:00Z outcome -- supersedes the 'awaiting GO' state of the actor's 172/173 below: the tag signal arrived and the CANDIDATE CHECKS FAILED -- corpus 953/955, two deterministic regressions; stdlib-v0.64.5 tag HELD; filed REL-20261014-2123-stdlib)**
+- Signal: relays 06d0a7c + item 1739 note (19:48Z) -- release-wave push
+  1e4a444e, dry-run 38626737822 green; asked for candidate checks then
+  the tag; cleanup: drop the stale alloc/free notes line.
+- Notes cleanup c8d713a (converter re-run rc=0); candidate extracted at
+  %TEMP%\kilo\stdlib_ws\v0.64.5-rel (windows-x64 artifact sha256
+  67e57dfe..., version-checked v0.64.5).
+- Candidate corpus: 953/955, BOTH failures deterministic 5/5 (and 5/5
+  green on v0.64.4 in the same env): smoke_cell_narrow rc 2 --
+  Cell[Int8].set/get reads pointer-shaped garbage (triage
+  out/tri_cell127.xi: new(100)+get ok; set(127)->get=1642589568895;
+  Int16 leg ok); smoke_stress_crypto_aes_gcm 0xC0000005 --
+  aes_encrypt_gcm Ok but pair lengths read 0xFFFFFFFF then the decrypt
+  AVs (triage out/tri_aesgcm.xi).
+- Filed REL-20261014-2123-stdlib (bug/high) with committed minimal
+  repros tools/known_failures/p_v065_cell_int8_set_readback.xi +
+  p_v065_aesgcm_tuple_len.xi (cand rc 2/3, pin rc 0/0) and a
+  known_failures README status paragraph; item 1739 carries the HOLD
+  note (fixed->fixed). NO TAG CUT.
+- Pending: probes/modules/barename/ratchets on the candidate (profile
+  note to follow on 2123); the 27-repro sweep + post-pin rows run on the
+  fixed candidate.
+
 **SESSION 2026-10-14 block 172 (doorbell 21:00Z -- quiet; pin prep landed, awaiting the compiler GO to freeze/tag)**
 - Lane view: nothing to transition. The only open stdlib rows are the
   compiler-owned fragment ones (`1630`/`1658`, historical v0.64.3
@@ -3391,7 +3414,7 @@ registry pin, agent recon for the rest)**
 - This checkpoint is the doorbell's record of the 19:48 request; the
   release driver (concurrent session) executes the sequence.
 
-**SESSION 2026-10-14 block 171b (doorbell 19:00Z follow-through, pin prep completed: release-notes/v0.64.5.md wr**itten + package.xi 0.64.5 + CHANGELOG [0.64.5]; converter-validated 2 highlights) -- the actor's 171 round sits below; no text of theirs edited**
+**SESSION 2026-10-14 block 171b (doorbell 19:00Z follow-through, pin prep completed: release-notes/v0.64.5.md written + package.xi 0.64.5 + CHANGELOG [0.64.5]; converter-validated 2 highlights) -- the actor's 171 round sits below; no text of theirs edited**
 - The actor's block 171 acked REL-20261014-1739-compiler and flagged the
   notes fragment as the gap; this round completed the tag-prep set the
   RELEASE_CHECKLIST needs (items 1/3/4):

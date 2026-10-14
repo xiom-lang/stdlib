@@ -71,6 +71,23 @@ the same rc class as the v0.64.2 sweep; `p_iter_range_contains_c001.xi`
 passed 5/5 (the old flaky C001 state did not reproduce). Row-by-row
 verdicts filed on the compiler's release check (bus commit fdb9e4b).
 
+Status check 2026-10-14 (v0.64.5 CANDIDATE, dry-run archive run
+38626737822, sha256 67e57dfe...): the full smoke corpus is 953/955 with
+two DETERMINISTIC runfails (5/5 each; both green 5/5 on the v0.64.4
+archive in the same environment) -- filed as REL-20261014-2123-stdlib;
+the stdlib-v0.64.5 tag is HELD:
+- `p_v065_cell_int8_set_readback.xi` (run rc 2 on the candidate):
+  Cell[Int8].set(127) then get() reads pointer-shaped garbage
+  (1642589568895), set(42) reads 1642589568810; new(100)+get is correct
+  and the Int16 leg is correct.
+- `p_v065_aesgcm_tuple_len.xi` (run rc 3 on the candidate):
+  aes_encrypt_gcm returns Ok but the pair lengths read 4294967295
+  instead of 5/16; the source smoke
+  (tests/smoke/smoke_stress_crypto_aes_gcm.xi) AVs 0xC0000005 at the
+  decrypt.
+The 27-repro sweep and the post-pin rows run against the fixed
+candidate.
+
 **Open finding 2026-10-10 (compiler v0.64.2): a Path.exists + trailing
 println sequence dies with an illegal-instruction exit.** The wave-103
 repro's exact statement sequence dies with exit -1073741795 (0xC000001D)
