@@ -7,7 +7,7 @@ windows-x64 release archive.)
 **Gates: corpus 955/955 full (C001 carve-outs retired on v0.63.1; new
 TcpStream loopback and uuencode roundtrip smokes added; smoke_os_watch
 added in wave 124), modules 510/510,
-probes 310/310, barename 0/510.**
+probes 311/311, barename 0/510.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -26,7 +26,7 @@ gates flip:
    wave-98..110 probes), the io byte-fidelity/CRLF lock and the
    fs_remove lock).
 4. Strict bare-name scan clean -- MET (0/509).
-5. Coverage ratchet green -- MET (floors167).
+5. Coverage ratchet green -- MET (floors168).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (499/518 modules, 3500/6239 fns).
 8. Contract coverage 100% (every public fn carries clauses) -- OPEN (70.7%).
@@ -602,6 +602,27 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
      NEXT: the next sweep batch -- encoding codecs (base64/hex/percent/
      idna) or convert escape/validate/json; the spawn flip + engine
      S-section rows stay pin/relay-gated.
+     WAVE 134 (block 163): the escape family (convert/escape.xi) -- all
+     16 scanners (html/xml/csv/tsv/regex/glob/shell/cmd escape+unescape)
+     plus the entity decoder and the private scanners now read through
+     cached pointers and build through single Vec[UInt8] builders (the
+     1-byte-slice + concat-per-char loops were both quadratic). Probe
+     p_wave134_shapes.xi (311th): 33 rows (entity KATs incl. numeric,
+     unknown-entity and no-semicolon fallbacks, CSV quoting/doubling,
+     TSV/glob/shell/cmd rows, multibyte passthrough); escape/convert/csv
+     smoke filters 71/71. Capped measurement: out/dbg134r.xi, 512 KB
+     special-heavy input through every scanner + roundtrips, rc=0,
+     10.5 s, peak 4.9 MB. Wave also re-merges p_wave113's timing gate to
+     best-of-3 (a load flake in the first probes leg; a true quadratic
+     regression still trips the 500 ms gate). Coverage fns 8785, clauses
+     6242 (floors168 wired); battery corpus 955/955 (1174s), probes
+     311/311 (474.2s), modules 510/510 (502.1s), barename 0/510
+     (611.7s) + ratchets OK.
+     NEXT: FIX-FIRST -- REL-20261014-1208-bindings (B-27 ffi.write_u32/
+     u64_at dropped offset; B-28 Vec.reserve cap==0 ordering -> with_len
+     heap overflow, ASan-proven) is claimed and is wave 135; then the
+     encoding sweep batch; the spawn flip + engine S-rows stay
+     pin/relay-gated.
 BINARY NOTE: the shared local build path
 `E:\xiom-lang\xiom\target\release\xiom.exe` was rebuilt past the pin
 (compiler main da7798da m252) and fails four corpus smokes; waves now run

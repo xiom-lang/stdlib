@@ -3157,6 +3157,45 @@ registry pin, agent recon for the rest)**
   exist (mine + the actor's; wave 126 used 152b) and both stand as-is;
   the next writer continues from 156/157.
 
+**SESSION 2026-10-14 block 164 (wave 134: the escape family -- all 16 scanners cached-pointer + Vec builders; p_wave113 timing-gate re-merge; probes 311; floors168)**
+- WAVE 134 (the sweep campaign, convert/escape.xi): html/xml/csv/tsv/
+  regex/glob/shell/cmd escape+unescape (16 public) plus _decode_entity /
+  _parse_entity_number / _find_semicolon / _csv_needs_quote read through
+  cached pointers and build through single Vec[UInt8] builders; the
+  previous 1-byte slices + concat-per-char were quadratic twice over.
+  New module helpers: _raw_byte / _push_str / _slice_fast. All decisions
+  are ASCII byte comparisons, so raw reads are byte-exact; entity decode
+  slices via _slice_fast and appends via _push_str.
+- Probe p_wave134_shapes.xi (311th): 33 rows -- entity KATs (incl.
+  numeric &#65;/&#x41;, unknown "&zz;" -> "&zz" (semicolon consumed,
+  '&'+inner), no-semicolon passthrough), CSV quoting/doubling rows, TSV
+  escapes, regex/glob rows, shell/cmd quoting rows, multibyte
+  passthrough; escape/convert/csv smoke filters 71/71.
+- Capped measurement: out/dbg134r.xi, 512 KB special-heavy input through
+  every scanner + the html/csv roundtrips, rc=0, 10.5 s, peak 4.9 MB.
+- The first probes leg flaked on p_wave113 row 8 (its 500 ms timing gate
+  under battery load; the probe passes standalone, slice.xi untouched).
+  Re-merged the gate to best-of-3 measured runs (wave 134): still
+  catches a true quadratic regression, immune to shared-box load.
+  Probes re-run green 311/311.
+- Coverage: fns 8785 (+3), pubFns 6540, clauses 6242 (+2), pubCovered
+  4625; floors168 dumped + wired. Battery: corpus 955/955 (1174s),
+  probes 311/311 (474.2s), modules 510/510 (502.1s), barename 0/510
+  (611.7s), module-smoke/doc ratchets OK.
+- Bus: the 13:00Z doorbell surfaced REL-20261014-1208-bindings (high):
+  B-27 ffi.write_u32_at/write_u64_at DROP their offset argument (every
+  call writes at base+0; write_f32_at is correct) and B-28 Vec.reserve
+  mishandles cap == 0 (the 0 -> 4 seed runs after the doubling loop, so
+  Vec.with_len(n) zeroes n*8 bytes into a 32-byte allocation; ASan-proven
+  heap-buffer-overflow, intermittent 0xC0000005/0xC0000374 without
+  ASan). The lane's bus actor acked at 13:00Z with the diagnosis; the
+  fixes are wave 135 (fix-first), including the in-lane usage sweep for
+  write_u32_at/u64_at and a probe locking the offsets and Vec.with_len
+  element readbacks. The bindings workarounds can retire once the probes
+  are green at the next pin.
+- Next: wave 135 = B-27 + B-28 fixes; then the encoding sweep batch;
+  the spawn flip + engine S-section rows stay pin/relay-gated.
+
 **SESSION 2026-10-14 block 163 (doorbell rounds 01:00Z-13:00Z consolidated -- quiet for transitions; waves 132-133 landed by the actor; wave 134 in flight)**
 - Six scheduled doorbell fires arrived together (01:00Z through
   13:00Z; the session was idle between). This single block covers them.

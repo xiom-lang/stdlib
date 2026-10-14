@@ -17,6 +17,40 @@ module xiom.convert.escape
 
 use xiom.string;
 
+// Wave 134: cached-pointer byte access + Vec builders for the escape family.
+// string.byte_at / str_slice rescan the source per call (runtime strnlen),
+// so the per-position scans and 1-byte slices were quadratic.
+// Complexity: O(1) / O(range).
+fn _raw_byte(base: *UInt8, i: Int) -> UInt8
+  requires: true  // raw byte read; callers bound i against len (T007)
+{
+  unsafe { return *(base + i); }
+}
+
+fn _push_str(out: &mut Vec[UInt8], w: Str) {
+  var k: Int = 0;
+  let wl = string.str_len(w);
+  let base = w.c_str();
+  while k < wl {
+    out.push(_raw_byte(base, k));
+    k = k + 1;
+  };
+}
+
+fn _slice_fast(base: *UInt8, start: Int, end: Int) -> Str
+  requires: true  // raw byte copy; callers bound the range (T007)
+{
+  var out: Vec[UInt8] = Vec[UInt8].new();
+  unsafe {
+    var i: Int = start;
+    while i < end {
+      out.push(*(base + i));
+      i = i + 1;
+    };
+  };
+  Str::from_utf8(out)
+}
+
 /// Escape text for HTML body content: & < > " ' become entities.
 /// Parameters: s -- the input text.
 /// Returns: the escaped text (strictly longer unless no specials).
@@ -24,28 +58,28 @@ use xiom.string;
 pub fn html_escape(s: Str) -> Str
   ensures: result.len() >= s.len()
 {
-  var result = "";
+  var out: Vec[UInt8] = Vec[UInt8].new();
   var i: Int = 0;
   var len = string.str_len(s);
+  let base = s.c_str();
   while i < len {
-    var b = string.byte_at(s, i);
+    var b = _raw_byte(base, i);
     if b == 38 {
-      result = string.str_concat(result, "&amp;");
+      _push_str(&mut out, "&amp;");
     } elif b == 60 {
-      result = string.str_concat(result, "&lt;");
+      _push_str(&mut out, "&lt;");
     } elif b == 62 {
-      result = string.str_concat(result, "&gt;");
+      _push_str(&mut out, "&gt;");
     } elif b == 34 {
-      result = string.str_concat(result, "&quot;");
+      _push_str(&mut out, "&quot;");
     } elif b == 39 {
-      result = string.str_concat(result, "&#39;");
+      _push_str(&mut out, "&#39;");
     } else {
-      var c = string.str_slice(s, i, i + 1);
-      result = string.str_concat(result, c);
+      out.push(b);
     }
     i = i + 1;
   }
-  return result;
+  Str::from_utf8(out)
 }
 
 /// Decode HTML entities back to characters: the named set (&amp; &lt; &gt;
@@ -56,30 +90,29 @@ pub fn html_escape(s: Str) -> Str
 pub fn html_unescape(s: Str) -> Str
   ensures: result.len() <= s.len()
 {
-  var result = "";
+  var out: Vec[UInt8] = Vec[UInt8].new();
   var i: Int = 0;
   var len = string.str_len(s);
+  let base = s.c_str();
   while i < len {
-    var b = string.byte_at(s, i);
+    var b = _raw_byte(base, i);
     if b == 38 {
-      var semi = _find_semicolon(s, i);
+      var semi = _find_semicolon(base, len, i);
       if semi > i + 1 {
-        var inner = string.str_slice(s, i + 1, semi);
+        var inner = _slice_fast(base, i + 1, semi);
         var decoded = _decode_entity(inner);
-        result = string.str_concat(result, decoded);
+        _push_str(&mut out, decoded);
         i = semi + 1;
       } else {
-        var amp = string.str_slice(s, i, i + 1);
-        result = string.str_concat(result, amp);
+        out.push(b);
         i = i + 1;
       }
     } else {
-      var c2 = string.str_slice(s, i, i + 1);
-      result = string.str_concat(result, c2);
+      out.push(b);
       i = i + 1;
     }
   }
-  return result;
+  Str::from_utf8(out)
 }
 
 /// Escape text for use inside HTML attribute quotes: same entity set as
@@ -100,28 +133,28 @@ pub fn html_escape_attr(s: Str) -> Str
 pub fn xml_escape(s: Str) -> Str
   ensures: result.len() >= s.len()
 {
-  var result = "";
+  var out: Vec[UInt8] = Vec[UInt8].new();
   var i: Int = 0;
   var len = string.str_len(s);
+  let base = s.c_str();
   while i < len {
-    var b = string.byte_at(s, i);
+    var b = _raw_byte(base, i);
     if b == 38 {
-      result = string.str_concat(result, "&amp;");
+      _push_str(&mut out, "&amp;");
     } elif b == 34 {
-      result = string.str_concat(result, "&quot;");
+      _push_str(&mut out, "&quot;");
     } elif b == 39 {
-      result = string.str_concat(result, "&apos;");
+      _push_str(&mut out, "&apos;");
     } elif b == 60 {
-      result = string.str_concat(result, "&lt;");
+      _push_str(&mut out, "&lt;");
     } elif b == 62 {
-      result = string.str_concat(result, "&gt;");
+      _push_str(&mut out, "&gt;");
     } else {
-      var c = string.str_slice(s, i, i + 1);
-      result = string.str_concat(result, c);
+      out.push(b);
     }
     i = i + 1;
   }
-  return result;
+  Str::from_utf8(out)
 }
 
 /// Decode the predefined XML entities back to characters.
@@ -131,30 +164,29 @@ pub fn xml_escape(s: Str) -> Str
 pub fn xml_unescape(s: Str) -> Str
   ensures: result.len() <= s.len()
 {
-  var result = "";
+  var out: Vec[UInt8] = Vec[UInt8].new();
   var i: Int = 0;
   var len = string.str_len(s);
+  let base = s.c_str();
   while i < len {
-    var b = string.byte_at(s, i);
+    var b = _raw_byte(base, i);
     if b == 38 {
-      var semi = _find_semicolon(s, i);
+      var semi = _find_semicolon(base, len, i);
       if semi > i + 1 {
-        var inner = string.str_slice(s, i + 1, semi);
+        var inner = _slice_fast(base, i + 1, semi);
         var decoded = _decode_entity(inner);
-        result = string.str_concat(result, decoded);
+        _push_str(&mut out, decoded);
         i = semi + 1;
       } else {
-        var amp = string.str_slice(s, i, i + 1);
-        result = string.str_concat(result, amp);
+        out.push(b);
         i = i + 1;
       }
     } else {
-      var c2 = string.str_slice(s, i, i + 1);
-      result = string.str_concat(result, c2);
+      out.push(b);
       i = i + 1;
     }
   }
-  return result;
+  Str::from_utf8(out)
 }
 
 /// Escape and quote a field for RFC 4180 CSV output: the field is quoted when
@@ -165,24 +197,26 @@ pub fn xml_unescape(s: Str) -> Str
 pub fn csv_escape_field(s: Str) -> Str
   ensures: result.len() >= s.len()
 {
-  if !_csv_needs_quote(s) {
+  var len = string.str_len(s);
+  let base = s.c_str();
+  if !_csv_needs_quote(base, len) {
     return s;
   }
-  var result = "\"";
+  var out: Vec[UInt8] = Vec[UInt8].new();
+  out.push(34);
   var i: Int = 0;
-  var len = string.str_len(s);
   while i < len {
-    var b = string.byte_at(s, i);
+    var b = _raw_byte(base, i);
     if b == 34 {
-      result = string.str_concat(result, "\"\"");
+      out.push(34);
+      out.push(34);
     } else {
-      var c = string.str_slice(s, i, i + 1);
-      result = string.str_concat(result, c);
+      out.push(b);
     }
     i = i + 1;
   }
-  result = string.str_concat(result, "\"");
-  return result;
+  out.push(34);
+  Str::from_utf8(out)
 }
 
 /// Parse and unquote a single CSV field: a quoted field is unquoted and
@@ -194,33 +228,33 @@ pub fn csv_unescape_field(s: Str) -> Str
   ensures: result.len() <= s.len()
 {
   var len = string.str_len(s);
+  let base = s.c_str();
   if len >= 2 {
-    var first = string.byte_at(s, 0);
-    var last = string.byte_at(s, len - 1);
+    var first = _raw_byte(base, 0);
+    var last = _raw_byte(base, len - 1);
     if first == 34 && last == 34 {
-      var inner = string.str_slice(s, 1, len - 1);
-      var result = "";
-      var i: Int = 0;
+      var inner = _slice_fast(base, 1, len - 1);
+      var ibase = inner.c_str();
       var ilen = string.str_len(inner);
+      var out: Vec[UInt8] = Vec[UInt8].new();
+      var i: Int = 0;
       while i < ilen {
-        var b = string.byte_at(inner, i);
+        var b = _raw_byte(ibase, i);
         if b == 34 && i + 1 < ilen {
-          var next = string.byte_at(inner, i + 1);
+          var next = _raw_byte(ibase, i + 1);
           if next == 34 {
-            result = string.str_concat(result, "\"");
+            out.push(34);
             i = i + 2;
           } else {
-            var c = string.str_slice(inner, i, i + 1);
-            result = string.str_concat(result, c);
+            out.push(b);
             i = i + 1;
           }
         } else {
-          var c2 = string.str_slice(inner, i, i + 1);
-          result = string.str_concat(result, c2);
+          out.push(b);
           i = i + 1;
         }
       }
-      return result;
+      return Str::from_utf8(out);
     }
   }
   return s;
@@ -233,24 +267,24 @@ pub fn csv_unescape_field(s: Str) -> Str
 pub fn tsv_escape_field(s: Str) -> Str
   ensures: result.len() >= s.len()
 {
-  var result = "";
+  var out: Vec[UInt8] = Vec[UInt8].new();
   var i: Int = 0;
   var len = string.str_len(s);
+  let base = s.c_str();
   while i < len {
-    var b = string.byte_at(s, i);
+    var b = _raw_byte(base, i);
     if b == 9 {
-      result = string.str_concat(result, "\\t");
+      _push_str(&mut out, "\\t");
     } elif b == 13 {
-      result = string.str_concat(result, "\\r");
+      _push_str(&mut out, "\\r");
     } elif b == 10 {
-      result = string.str_concat(result, "\\n");
+      _push_str(&mut out, "\\n");
     } else {
-      var c = string.str_slice(s, i, i + 1);
-      result = string.str_concat(result, c);
+      out.push(b);
     }
     i = i + 1;
   }
-  return result;
+  Str::from_utf8(out)
 }
 
 /// Restore tab, CR and LF escapes in a TSV field.
@@ -260,34 +294,33 @@ pub fn tsv_escape_field(s: Str) -> Str
 pub fn tsv_unescape_field(s: Str) -> Str
   ensures: result.len() <= s.len()
 {
-  var result = "";
+  var out: Vec[UInt8] = Vec[UInt8].new();
   var i: Int = 0;
   var len = string.str_len(s);
+  let base = s.c_str();
   while i < len {
-    var b = string.byte_at(s, i);
+    var b = _raw_byte(base, i);
     if b == 92 && i + 1 < len {
-      var next = string.byte_at(s, i + 1);
+      var next = _raw_byte(base, i + 1);
       if next == 116 {
-        result = string.str_concat(result, "\t");
+        out.push(9);
         i = i + 2;
       } elif next == 114 {
-        result = string.str_concat(result, "\r");
+        out.push(13);
         i = i + 2;
       } elif next == 110 {
-        result = string.str_concat(result, "\n");
+        out.push(10);
         i = i + 2;
       } else {
-        var c = string.str_slice(s, i, i + 1);
-        result = string.str_concat(result, c);
+        out.push(b);
         i = i + 1;
       }
     } else {
-      var c2 = string.str_slice(s, i, i + 1);
-      result = string.str_concat(result, c2);
+      out.push(b);
       i = i + 1;
     }
   }
-  return result;
+  Str::from_utf8(out)
 }
 
 /// Escape regex metacharacters in a literal string with a backslash.
@@ -298,19 +331,19 @@ pub fn tsv_unescape_field(s: Str) -> Str
 pub fn regex_escape(s: Str) -> Str
   ensures: result.len() >= s.len()
 {
-  var result = "";
+  var out: Vec[UInt8] = Vec[UInt8].new();
   var i: Int = 0;
   var len = string.str_len(s);
+  let base = s.c_str();
   while i < len {
-    var b = string.byte_at(s, i);
+    var b = _raw_byte(base, i);
     if _is_regex_meta(b) {
-      result = string.str_concat(result, "\\");
+      out.push(92);
     }
-    var c = string.str_slice(s, i, i + 1);
-    result = string.str_concat(result, c);
+    out.push(b);
     i = i + 1;
   }
-  return result;
+  Str::from_utf8(out)
 }
 
 /// Escape glob wildcard metacharacters (* ? [ ] and backslash) in a literal
@@ -321,19 +354,19 @@ pub fn regex_escape(s: Str) -> Str
 pub fn glob_escape(s: Str) -> Str
   ensures: result.len() >= s.len()
 {
-  var result = "";
+  var out: Vec[UInt8] = Vec[UInt8].new();
   var i: Int = 0;
   var len = string.str_len(s);
+  let base = s.c_str();
   while i < len {
-    var b = string.byte_at(s, i);
+    var b = _raw_byte(base, i);
     if b == 42 || b == 63 || b == 91 || b == 93 || b == 92 {
-      result = string.str_concat(result, "\\");
+      out.push(92);
     }
-    var c = string.str_slice(s, i, i + 1);
-    result = string.str_concat(result, c);
+    out.push(b);
     i = i + 1;
   }
-  return result;
+  Str::from_utf8(out)
 }
 
 /// Restore escaped glob metacharacters: a backslash before a glob character
@@ -344,29 +377,27 @@ pub fn glob_escape(s: Str) -> Str
 pub fn glob_unescape(s: Str) -> Str
   ensures: result.len() <= s.len()
 {
-  var result = "";
+  var out: Vec[UInt8] = Vec[UInt8].new();
   var i: Int = 0;
   var len = string.str_len(s);
+  let base = s.c_str();
   while i < len {
-    var b = string.byte_at(s, i);
+    var b = _raw_byte(base, i);
     if b == 92 && i + 1 < len {
-      var next = string.byte_at(s, i + 1);
+      var next = _raw_byte(base, i + 1);
       if next == 42 || next == 63 || next == 91 || next == 93 || next == 92 {
-        var c = string.str_slice(s, i + 1, i + 2);
-        result = string.str_concat(result, c);
+        out.push(next);
         i = i + 2;
       } else {
-        var c2 = string.str_slice(s, i, i + 1);
-        result = string.str_concat(result, c2);
+        out.push(b);
         i = i + 1;
       }
     } else {
-      var c3 = string.str_slice(s, i, i + 1);
-      result = string.str_concat(result, c3);
+      out.push(b);
       i = i + 1;
     }
   }
-  return result;
+  Str::from_utf8(out)
 }
 
 /// Escape a string for safe use in a POSIX shell command: every character
@@ -378,19 +409,19 @@ pub fn glob_unescape(s: Str) -> Str
 pub fn shell_escape(s: Str) -> Str
   ensures: result.len() >= s.len()
 {
-  var result = "";
+  var out: Vec[UInt8] = Vec[UInt8].new();
   var i: Int = 0;
   var len = string.str_len(s);
+  let base = s.c_str();
   while i < len {
-    var b = string.byte_at(s, i);
+    var b = _raw_byte(base, i);
     if !_is_shell_safe(b) {
-      result = string.str_concat(result, "\\");
+      out.push(92);
     }
-    var c = string.str_slice(s, i, i + 1);
-    result = string.str_concat(result, c);
+    out.push(b);
     i = i + 1;
   }
-  return result;
+  Str::from_utf8(out)
 }
 
 /// Quote a string with single quotes for a POSIX shell; embedded single
@@ -401,21 +432,25 @@ pub fn shell_escape(s: Str) -> Str
 pub fn shell_quote(s: Str) -> Str
   ensures: result.len() >= s.len() + 2
 {
-  var result = "'";
+  var out: Vec[UInt8] = Vec[UInt8].new();
+  out.push(39);
   var i: Int = 0;
   var len = string.str_len(s);
+  let base = s.c_str();
   while i < len {
-    var b = string.byte_at(s, i);
+    var b = _raw_byte(base, i);
     if b == 39 {
-      result = string.str_concat(result, "'\\''");
+      out.push(39);
+      out.push(92);
+      out.push(39);
+      out.push(39);
     } else {
-      var c = string.str_slice(s, i, i + 1);
-      result = string.str_concat(result, c);
+      out.push(b);
     }
     i = i + 1;
   }
-  result = string.str_concat(result, "'");
-  return result;
+  out.push(39);
+  Str::from_utf8(out)
 }
 
 /// Escape a string for safe use in a Windows cmd command line: ^ & | < >
@@ -426,19 +461,19 @@ pub fn shell_quote(s: Str) -> Str
 pub fn cmd_escape(s: Str) -> Str
   ensures: result.len() >= s.len()
 {
-  var result = "";
+  var out: Vec[UInt8] = Vec[UInt8].new();
   var i: Int = 0;
   var len = string.str_len(s);
+  let base = s.c_str();
   while i < len {
-    var b = string.byte_at(s, i);
+    var b = _raw_byte(base, i);
     if b == 94 || b == 38 || b == 124 || b == 60 || b == 62 || b == 40 || b == 41 || b == 34 || b == 37 {
-      result = string.str_concat(result, "^");
+      out.push(94);
     }
-    var c = string.str_slice(s, i, i + 1);
-    result = string.str_concat(result, c);
+    out.push(b);
     i = i + 1;
   }
-  return result;
+  Str::from_utf8(out)
 }
 
 /// Quote a string for a Windows cmd command line: wrap in double quotes and
@@ -449,29 +484,30 @@ pub fn cmd_escape(s: Str) -> Str
 pub fn cmd_quote(s: Str) -> Str
   ensures: result.len() >= s.len() + 2
 {
-  var result = "\"";
+  var out: Vec[UInt8] = Vec[UInt8].new();
+  out.push(34);
   var i: Int = 0;
   var len = string.str_len(s);
+  let base = s.c_str();
   while i < len {
-    var b = string.byte_at(s, i);
+    var b = _raw_byte(base, i);
     if b == 34 {
-      result = string.str_concat(result, "\"\"");
+      out.push(34);
+      out.push(34);
     } else {
-      var c = string.str_slice(s, i, i + 1);
-      result = string.str_concat(result, c);
+      out.push(b);
     }
     i = i + 1;
   }
-  result = string.str_concat(result, "\"");
-  return result;
+  out.push(34);
+  Str::from_utf8(out)
 }
 
 // True when a CSV field needs RFC 4180 quoting.
-fn _csv_needs_quote(s: Str) -> Bool {
+fn _csv_needs_quote(base: *UInt8, len: Int) -> Bool {
   var i: Int = 0;
-  var len = string.str_len(s);
   while i < len {
-    var b = string.byte_at(s, i);
+    var b = _raw_byte(base, i);
     if b == 44 || b == 34 || b == 13 || b == 10 {
       return true;
     }
@@ -481,11 +517,10 @@ fn _csv_needs_quote(s: Str) -> Bool {
 }
 
 // Index of the next ';' at or after `start`, or -1.
-fn _find_semicolon(s: Str, start: Int) -> Int {
+fn _find_semicolon(base: *UInt8, len: Int, start: Int) -> Int {
   var i = start;
-  var len = string.str_len(s);
   while i < len {
-    var b = string.byte_at(s, i);
+    var b = _raw_byte(base, i);
     if b == 59 {
       return i;
     }
@@ -505,14 +540,16 @@ fn _decode_entity(inner: Str) -> Str {
   if inner == "#39" { return "'"; }
   var ilen = string.str_len(inner);
   if ilen > 2 {
-    var first = string.byte_at(inner, 0);
+    let ibase = inner.c_str();
+    var first = _raw_byte(ibase, 0);
     if first == 35 {
-      var numstr = string.str_slice(inner, 1, ilen);
+      var numstr = _slice_fast(ibase, 1, ilen);
       var is_hex = false;
-      var second = string.byte_at(numstr, 0);
+      var nbase = numstr.c_str();
+      var second = _raw_byte(nbase, 0);
       if second == 120 || second == 88 {
         is_hex = true;
-        numstr = string.str_slice(numstr, 1, string.str_len(numstr));
+        numstr = _slice_fast(nbase, 1, string.str_len(numstr));
       }
       var cp = _parse_entity_number(numstr, is_hex);
       if cp >= 0 && cp <= 1114111 {
@@ -529,10 +566,11 @@ fn _parse_entity_number(s: Str, is_hex: Bool) -> Int {
   if len == 0 {
     return -1;
   }
+  let base = s.c_str();
   var v: Int = 0;
   var i: Int = 0;
   while i < len {
-    var b = string.byte_at(s, i);
+    var b = _raw_byte(base, i);
     var d: Int = -1;
     if b >= 48 && b <= 57 {
       d = (b as Int) - 48;
