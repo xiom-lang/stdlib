@@ -2148,8 +2148,24 @@ T1/T2 yields.
         inventory: core/io/hash/encoding/convert/serialize/net/format
         clusters); wave 133 opens with core + io + hash unless a relay
         item wins.
+        Wave 133 (2026-10-14, block 162): the sweep-campaign opener
+        (core + io + hash clusters). core.to_int_from_str /
+        to_float_from_str (cached len + masked-raw Char reads; ASCII-only
+        decisions, byte-exact); hash write_str / djb2 / sdbm use the
+        runtime-mirror decode (the hashers consume the DECODED value per
+        byte position, so hash values are unchanged), fnv1_32 /
+        adler32_str raw; io.parse_int / parse_float / parent_path /
+        file_name / extension / pipe_write_line / bw_write_str via
+        cached pointers. Probe p_wave133_shapes.xi (310th): 46 rows;
+        core/hash/io/buffer/pipe smokes 200/200. Capped measurement:
+        512 KB digits through both parsers + all hashers, rc=0, 5.0 s,
+        4.7 MB peak. Coverage fns 8782, clauses 6240 (floors167) +
+        ratchets OK; battery: corpus 955/955 (1305.1s), probes 310/310
+        (693.1s), modules 510/510 (466.9s), barename 0/510 (519.7s).
+        NEXT: the next sweep batch (encoding or convert); the spawn flip
+        + engine S-rows stay pin/relay-gated.
        Ratchet:
-        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors166.json
+        tools/coverage_scan.ps1 -RatchetFile tools/coverage_floors167.json
         tools/module_smoke_scan.ps1 -BaselineFile tools/module_smoke_floors.json
 
        (repo tooling as of the split; positive + negative runs verified;

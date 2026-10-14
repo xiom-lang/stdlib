@@ -128,6 +128,15 @@ pub fn pipe_read_line(fd: Int) -> Result[Str, Str]
   return Ok(Str::from_utf8(out));
 }
 
+// Raw byte at `i` over the cached pointer (wave 133): Str.byte_at strnlens
+// the whole string per call, so the per-byte write loop was quadratic.
+// Complexity: O(1).
+fn _raw_byte(base: *UInt8, i: Int) -> UInt8
+  requires: true  // raw byte read; callers bound i against len (T007)
+{
+  unsafe { return *(base + i); }
+}
+
 /// Write a line to a pipe.
 /// Params: fd - the pipe fd; s - the line.
 /// Returns: Ok(()) on success, Err on a short or failed write.
@@ -135,9 +144,11 @@ pub fn pipe_read_line(fd: Int) -> Result[Str, Str]
 pub fn pipe_write_line(fd: Int, s: Str) -> Result[Unit, Str]
   ensures: result is Err => result.value.len() > 0
 {
+  let slen = s.len();
+  let sbase = s.c_str();
   var i: Int = 0;
-  while i < s.len() {
-    let b = s.byte_at(i);
+  while i < slen {
+    let b = _raw_byte(sbase, i);
     let n = unsafe { xiom_write(fd as Int32, &b, 1 as UInt) };
     if n != 1 {
       return Err("pipe write line failed");

@@ -142,6 +142,16 @@ pub fn read_float() -> Result[Float64, Str]
   return parse_float(line);
 }
 
+// Masked raw byte at `i` over the cached pointer (wave 133): the Str.byte_at
+// method form strnlens the whole string per call, so the per-position scans
+// in the parsers and path helpers were quadratic. Callers cache the length.
+// Complexity: O(1).
+fn _raw_byte(base: *UInt8, i: Int) -> UInt8
+  requires: true  // raw byte read; callers bound i against len (T007)
+{
+  unsafe { return *(base + i); }
+}
+
 /// Parse a decimal integer (optional leading +/- sign, ASCII digits only).
 /// Deterministic core of read_int, exposed for parsing without stdin.
 pub fn parse_int(s: Str) -> Result[Int, Str]
@@ -151,21 +161,23 @@ pub fn parse_int(s: Str) -> Result[Int, Str]
   if trimmed.is_empty() {
     return Err("empty input");
   }
+  let tlen = trimmed.len();
+  let tbase = trimmed.c_str();
   var sign: Int = 1;
   var start: Int = 0;
-  if trimmed.byte_at(0) == 45 {
+  if _raw_byte(tbase, 0) == 45 {
     sign = -1;
     start = 1;
-  } elif trimmed.byte_at(0) == 43 {
+  } elif _raw_byte(tbase, 0) == 43 {
     start = 1;
   }
-  if start == trimmed.len() {
+  if start == tlen {
     return Err("no digits found");
   }
   var result: Int = 0;
   var i = start;
-  while i < trimmed.len() {
-    let b = trimmed.byte_at(i);
+  while i < tlen {
+    let b = _raw_byte(tbase, i);
     if b < 48 || b > 57 {
       return Err("invalid integer: " + s);
     }
@@ -184,15 +196,17 @@ pub fn parse_float(s: Str) -> Result[Float64, Str]
   if trimmed.is_empty() {
     return Err("empty input");
   }
+  let tlen = trimmed.len();
+  let tbase = trimmed.c_str();
   var sign: Float64 = 1.0;
   var start: Int = 0;
-  if trimmed.byte_at(0) == 45 {
+  if _raw_byte(tbase, 0) == 45 {
     sign = -1.0;
     start = 1;
-  } elif trimmed.byte_at(0) == 43 {
+  } elif _raw_byte(tbase, 0) == 43 {
     start = 1;
   }
-  if start == trimmed.len() {
+  if start == tlen {
     return Err("no digits found");
   }
   var int_part: Float64 = 0.0;
@@ -200,8 +214,8 @@ pub fn parse_float(s: Str) -> Result[Float64, Str]
   var frac_div: Float64 = 1.0;
   var in_fraction = false;
   var i = start;
-  while i < trimmed.len() {
-    let b = trimmed.byte_at(i);
+  while i < tlen {
+    let b = _raw_byte(tbase, i);
     if b == 46 {
       if in_fraction {
         return Err("invalid float: " + s);
@@ -811,9 +825,11 @@ pub fn join_paths(base: Str, child: Str) -> Str
 pub fn parent_path(path: Str) -> Option[Str]
   ensures: result is Some => result.value.len() > 0
 {
-  var i = path.len() - 1;
+  let plen = path.len();
+  let pbase = path.c_str();
+  var i = plen - 1;
   while i >= 0 {
-    if path.byte_at(i) == 47 {
+    if _raw_byte(pbase, i) == 47 {
       if i == 0 {
         return Some("/");
       }
@@ -831,13 +847,15 @@ pub fn file_name(path: Str) -> Option[Str]
   if path.is_empty() {
     return None;
   }
-  var i = path.len() - 1;
+  let plen = path.len();
+  let pbase = path.c_str();
+  var i = plen - 1;
   while i >= 0 {
-    if path.byte_at(i) == 47 {
-      if i == path.len() - 1 {
+    if _raw_byte(pbase, i) == 47 {
+      if i == plen - 1 {
         return None;
       }
-      return Some(path.substr(i + 1, path.len()));
+      return Some(path.substr(i + 1, plen));
     }
     i = i - 1;
   }
@@ -852,13 +870,15 @@ pub fn extension(path: Str) -> Option[Str]
   if name == "." || name == ".." {
     return None;
   }
-  var i = name.len() - 1;
+  let nlen = name.len();
+  let nbase = name.c_str();
+  var i = nlen - 1;
   while i >= 0 {
-    if name.byte_at(i) == 46 {
-      if i == 0 || i == name.len() - 1 {
+    if _raw_byte(nbase, i) == 46 {
+      if i == 0 || i == nlen - 1 {
         return None;
       }
-      return Some(name.substr(i + 1, name.len()));
+      return Some(name.substr(i + 1, nlen));
     }
     i = i - 1;
   }

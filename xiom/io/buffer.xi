@@ -260,6 +260,15 @@ pub fn bw_write(w: &mut BufWriter, data: &Vec[UInt8]) -> Result[Unit, Str]
   return Ok(());
 }
 
+// Raw byte at `i` over the cached pointer (wave 133): Str.byte_at strnlens
+// the whole string per call, so the per-byte buffering loop was quadratic.
+// Complexity: O(1).
+fn _raw_byte(base: *UInt8, i: Int) -> UInt8
+  requires: true  // raw byte read; callers bound i against len (T007)
+{
+  unsafe { return *(base + i); }
+}
+
 /// Buffer a string for writing.
 /// Params: w - the writer; s - the string.
 /// Returns: Ok(()) on success.
@@ -267,9 +276,11 @@ pub fn bw_write(w: &mut BufWriter, data: &Vec[UInt8]) -> Result[Unit, Str]
 pub fn bw_write_str(w: &mut BufWriter, s: Str) -> Result[Unit, Str]
   ensures: result is Ok
 {
+  let slen = s.len();
+  let sbase = s.c_str();
   var i: Int = 0;
-  while i < s.len() {
-    w.buf.push(s.byte_at(i));
+  while i < slen {
+    w.buf.push(_raw_byte(sbase, i));
     i = i + 1;
   }
   return Ok(());

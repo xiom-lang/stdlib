@@ -3157,6 +3157,42 @@ registry pin, agent recon for the rest)**
   exist (mine + the actor's; wave 126 used 152b) and both stand as-is;
   the next writer continues from 156/157.
 
+**SESSION 2026-10-14 block 162 (wave 133: sweep-campaign opener -- core parsers + hash family + io parsers/paths/writers; probes 310; floors167)**
+- WAVE 133 (the independent tree-wide sweep's first batch, core + io +
+  hash): core.to_int_from_str / to_float_from_str now read via cached
+  len + masked-raw Char reads (the parser decisions are ASCII-only, so
+  byte-exact); hash.DefaultHasher.write_str / djb2 / sdbm use the
+  runtime-mirror decode because the hashers feed the DECODED value into
+  their state at every byte position (hash values unchanged -- locked by
+  write_str == djb2 and the corpus hash smokes); fnv1_32 / adler32_str
+  read masked raw bytes; io.parse_int / parse_float / parent_path /
+  file_name / extension / pipe_write_line and buffer.bw_write_str read
+  through cached pointers (the Str.byte_at method form strnlens per
+  call). Semantic split note for the campaign: choose raw-vs-decoded by
+  whether the VALUE enters the result, not by the accessor name.
+- Probe p_wave133_shapes.xi (310th): 46 rows -- Int parser KATs +
+  error rows incl. a multibyte Err, float parser rows (incl. exponent +
+  "1.2.3" Err), adler32 "Wikipedia" KAT, write_str == djb2, path-helper
+  rows (incl. "/", ".hidden", no-slash), buffered-writer byte copy;
+  core/hash/io/buffer/pipe smoke filters 200/200.
+- Capped measurement: out/dbg133r.xi, 512 KB digits through both parsers
+  + all hashers + a long-path parent scan, rc=0, 5.0 s, peak 4.7 MB
+  (every one of those ops was quadratic before).
+- Coverage: fns 8782 (+7 helpers), pubFns 6540, clauses 6240 (+6),
+  pubCovered 4625; floors167 dumped + wired. Battery (mixed box load):
+  corpus 955/955 (1305.1s), probes 310/310 (693.1s), modules 510/510
+  (466.9s), barename 0/510 (519.7s), module-smoke/doc ratchets OK.
+- Bus: doorbells 01:00-11:00Z passed silent (no session turns); the
+  12:00Z pull shows no new rows since 23:00Z -- the only open items are
+  the compiler-owned 1630/1658 (standing leave). The concurrent
+  doc-actors landed blocks 160 (21:00Z) and 161 (23:00Z) during the
+  idle window, so this wave's account takes 162 (their 161 noted wave
+  132 as in-flight; it committed as 3845f32).
+- Next: wave 134 = the next sweep batch (encoding codecs -- base64 /
+  hex / percent / idna -- or convert escape/validate/json, whichever is
+  scheduled); the spawn flip + engine S-section rows stay pin/relay-
+  gated.
+
 **SESSION 2026-10-13 block 161 (doorbell 23:00Z -- quiet; no new rows; wave 132 still in flight uncommitted)**
 - Lane view: no new items or moves since block 160 (1423 fixed, 1445
   fixed, 1545 closed, 1948 closed -- all recorded). Nothing to do.

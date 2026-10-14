@@ -7,6 +7,60 @@ module xiom.hash
 use xiom.string;
 use xiom.encoding;
 
+// Wave 133: cached raw-pointer accessors for the hasher loops. The runtime
+// xiom_char_at / string.byte_at strnlen the whole string per call, so the
+// per-byte hash loops were quadratic.
+// Complexity: O(1).
+fn _raw_byte(base: *UInt8, i: Int) -> UInt8
+  requires: true  // raw byte read; callers bound i against len (T007)
+{
+  unsafe { return *(base + i); }
+}
+
+// Runtime-`xiom_char_at`-equivalent UTF-8 decode over a cached (base, len)
+// view (copied byte-exact from slice.xi): continuation bytes are validated,
+// a malformed or truncated sequence yields the leading byte itself, and a
+// stray continuation byte is returned as-is. The hashers feed the decoded
+// value into their state at every byte position, so this decode is required
+// for byte-exact hash values.
+// Complexity: O(1).
+fn _char_at_runtime(base: *UInt8, len: Int, pos: Int) -> Char {
+  if pos < 0 || pos >= len {
+    return to_char(0);
+  }
+  var b0 = (_raw_byte(base, pos) as Int) & 0xFF;
+  if b0 < 0x80 {
+    return to_char(b0);
+  }
+  var n = 0;
+  var cp = 0;
+  if (b0 & 0xE0) == 0xC0 {
+    n = 2;
+    cp = b0 & 0x1F;
+  } elif (b0 & 0xF0) == 0xE0 {
+    n = 3;
+    cp = b0 & 0x0F;
+  } elif (b0 & 0xF8) == 0xF0 {
+    n = 4;
+    cp = b0 & 0x07;
+  } else {
+    return to_char(b0);
+  }
+  var i = 1;
+  while i < n {
+    var cb = 0;
+    if pos + i < len {
+      cb = (_raw_byte(base, pos + i) as Int) & 0xFF;
+    }
+    if (cb & 0xC0) != 0x80 {
+      return to_char(b0);
+    }
+    cp = (cp << 6) | (cb & 0x3F);
+    i = i + 1;
+  }
+  return to_char(cp);
+}
+
 /// === Hash interface (hasher-based) ===
 pub interface Hash {
   fn hash(self, hasher: Hasher);
@@ -65,12 +119,11 @@ pub fn DefaultHasher.write_str(self, s: Str)
 {
   var i: Int = 0;
   let len: Int = str_len(s);
+  let base = s.c_str();
   while i < len {
-    let ch: Option[Char] = char_at(s, i);
-    if ch.is_some {
-      let code: Int = to_int_from_char(ch.value);
-      self.state = ((self.state * 33) + code);
-    };
+    let c: Char = _char_at_runtime(base, len, i);
+    let code: Int = to_int_from_char(c);
+    self.state = ((self.state * 33) + code);
     i = i + 1;
   }
 }
@@ -382,13 +435,14 @@ pub fn xxhash32(data: &Vec[UInt8], seed: Int) -> Int
 /// Start with 5381, for each char: hash = hash * 33 + char_code.
 /// Complexity: O(n), n = string length.
 pub fn djb2(s: Str) -> Int
-  requires: true  // extern char_at call in the loop (T002 confinement)
+  requires: true  // raw-view decode in the loop (T002 confinement)
 {
   var hash: Int = 5381;
   var i: Int = 0;
   let len = s.len();
+  let base = s.c_str();
   while i < len {
-    let c: Char = xiom_char_at(s, i);
+    let c: Char = _char_at_runtime(base, len, i);
     let code: Int = to_int_from_char(c);
     hash = ((hash * 33) + code);
     i = i + 1;
@@ -402,13 +456,14 @@ pub fn djb2(s: Str) -> Int
 /// For each char: hash = char_code + (hash << 6) + (hash << 16) - hash.
 /// Complexity: O(n), n = string length.
 pub fn sdbm(s: Str) -> Int
-  requires: true  // extern char_at call in the loop (T002 confinement)
+  requires: true  // raw-view decode in the loop (T002 confinement)
 {
   var hash: Int = 0;
   var i: Int = 0;
   let len = s.len();
+  let base = s.c_str();
   while i < len {
-    let c: Char = xiom_char_at(s, i);
+    let c: Char = _char_at_runtime(base, len, i);
     let code: Int = to_int_from_char(c);
     hash = code + (hash << 6) + (hash << 16) - hash;
     i = i + 1;
@@ -597,9 +652,11 @@ pub fn fnv1_32(s: Str) -> Int
 {
   var h: Int = 2166136261;
   var i: Int = 0;
-  while i < s.len() {
+  let len = s.len();
+  let base = s.c_str();
+  while i < len {
     h = (h * 16777619) & 0xFFFFFFFF;
-    h = (h ^ (xiom.string.byte_at(s, i) as Int)) & 0xFFFFFFFF;
+    h = (h ^ (_raw_byte(base, i) as Int)) & 0xFFFFFFFF;
     i = i + 1;
   }
   return h;

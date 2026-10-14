@@ -15,6 +15,16 @@ module xiom.hash.adler
 
 use xiom.string;
 
+// Masked raw byte at `i` over the cached pointer (wave 133): string.byte_at
+// strnlens the whole string per call, so the per-byte checksum loop was
+// quadratic.
+// Complexity: O(1).
+fn _raw_byte(base: *UInt8, i: Int) -> Int
+  requires: true  // raw byte read; callers bound i against len (T007)
+{
+  unsafe { return ((*(base + i)) as Int) & 0xFF; }
+}
+
 const _ADLER_MOD: Int = 65521;
 
 /// Computes the Adler-32 checksum over `data` (RFC 1950). The empty input
@@ -43,9 +53,10 @@ pub fn adler32_str(s: Str) -> UInt32
   var a: Int = 1;
   var b: Int = 0;
   var len = s.len();
+  var base = s.c_str();
   var i = 0;
   while i < len {
-    var byte = (string.byte_at(s, i) as Int) & 0xFF;
+    var byte = _raw_byte(base, i);
     a = (a + byte) % _ADLER_MOD;
     b = (b + a) % _ADLER_MOD;
     i = i + 1;

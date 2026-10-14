@@ -7,7 +7,7 @@ windows-x64 release archive.)
 **Gates: corpus 955/955 full (C001 carve-outs retired on v0.63.1; new
 TcpStream loopback and uuencode roundtrip smokes added; smoke_os_watch
 added in wave 124), modules 510/510,
-probes 309/309, barename 0/510.**
+probes 310/310, barename 0/510.**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -26,7 +26,7 @@ gates flip:
    wave-98..110 probes), the io byte-fidelity/CRLF lock and the
    fs_remove lock).
 4. Strict bare-name scan clean -- MET (0/509).
-5. Coverage ratchet green -- MET (floors166).
+5. Coverage ratchet green -- MET (floors167).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (499/518 modules, 3500/6239 fns).
 8. Contract coverage 100% (every public fn carries clauses) -- OPEN (70.7%).
@@ -582,6 +582,26 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
      hashers, encoding codecs, convert escape/validate, serialize
      parsers, net http/ws, format fmt). Wave 133 starts the highest-
      value batch (candidate: core + io + hash) unless a relay item wins.
+     WAVE 133 (block 162): the sweep-campaign opener (core + io + hash).
+     Converted: core.to_int_from_str / to_float_from_str (cached len +
+     masked-raw Char reads; the parser decisions are ASCII-only, so
+     byte-exact), hash.DefaultHasher.write_str / djb2 / sdbm (the
+     runtime-mirror decode -- the hashers feed the DECODED value into
+     their state at every byte position, so hash values stay identical)
+     / fnv1_32 / adler32_str, io.parse_int / parse_float / parent_path /
+     file_name / extension, io.pipe_write_line, io.buffer.bw_write_str.
+     Probe p_wave133_shapes.xi (310th): 46 rows (parser KATs + error
+     rows, adler32 "Wikipedia" KAT, write_str == djb2 equality,
+     path-helper rows, buffered-writer byte copy); core/hash/io/buffer/
+     pipe smokes 200/200. Capped measurement: out/dbg133r.xi, 512 KB
+     digits through both parsers + all hashers + a long-path parent
+     scan, rc=0, 5.0 s, peak 4.7 MB (each op was quadratic before).
+     Coverage fns 8782, clauses 6240 (floors167 wired); battery corpus
+     955/955 (1305.1s), probes 310/310 (693.1s), modules 510/510
+     (466.9s), barename 0/510 (519.7s) + ratchets OK.
+     NEXT: the next sweep batch -- encoding codecs (base64/hex/percent/
+     idna) or convert escape/validate/json; the spawn flip + engine
+     S-section rows stay pin/relay-gated.
 BINARY NOTE: the shared local build path
 `E:\xiom-lang\xiom\target\release\xiom.exe` was rebuilt past the pin
 (compiler main da7798da m252) and fails four corpus smokes; waves now run

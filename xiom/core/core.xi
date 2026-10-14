@@ -15,6 +15,17 @@ extern "C" {
   fn xiom_char_at(s: Str, pos: Int) -> Char;
 }
 
+// Masked raw byte as a Char over the cached pointer (wave 133): the runtime
+// xiom_char_at strnlens the whole string per call, so the parser digit loops
+// were quadratic. The parser decisions here are ASCII-only, where the decoded
+// value and the raw byte coincide, so this is byte-exact.
+// Complexity: O(1).
+fn _char_at(base: *UInt8, i: Int) -> Char
+  requires: true  // raw byte read; callers bound i against len (T007)
+{
+  unsafe { return (((*(base + i)) as Int) & 0xFF) as Char; }
+}
+
 // === Option type ===
 type Option[T] = {
   is_some: Bool;
@@ -92,28 +103,30 @@ pub fn to_string(x: Int) -> Str
 
 /// Parse an Int; Err with a message on bad input.
 pub fn to_int_from_str(s: Str) -> Result[Int, Str]
-  requires: true  // extern char_at calls below (D2.1/T002 safe-wrapper pattern)
+  requires: true  // raw-view reads below (D2.1/T002 safe-wrapper pattern)
   ensures: (s.len() == 0) => (result.is_err == true)
   ensures: (s == "0") => (result.is_ok == true)
 {
-  if s.len() == 0 {
+  let len = s.len();
+  if len == 0 {
     return Err("empty string");
   }
+  let base = s.c_str();
   var i: Int = 0;
   var negative = false;
-  var c = xiom_char_at(s, 0);
+  var c = _char_at(base, 0);
   if c == '-' {
     negative = true;
     i = 1;
   } elif c == '+' {
     i = 1;
   }
-  if i >= s.len() {
+  if i >= len {
     return Err("no digits found");
   }
   var result: Int = 0;
-  while i < s.len() {
-    c = xiom_char_at(s, i);
+  while i < len {
+    c = _char_at(base, i);
     if c < '0' || c > '9' {
       return Err("invalid character in integer string");
     }
@@ -130,23 +143,25 @@ pub fn to_int_from_str(s: Str) -> Result[Int, Str]
 
 /// Parse a Float64; Err with a message on bad input.
 pub fn to_float_from_str(s: Str) -> Result[Float64, Str]
-  requires: true  // extern char_at calls below (D2.1/T002 safe-wrapper pattern)
+  requires: true  // raw-view reads below (D2.1/T002 safe-wrapper pattern)
   ensures: (s.len() == 0) => (result.is_err == true)
   ensures: (s == "1.5") => (result.is_ok == true)
 {
-  if s.len() == 0 {
+  let len = s.len();
+  if len == 0 {
     return Err("empty string");
   }
+  let base = s.c_str();
   var i: Int = 0;
   var negative = false;
-  var c = xiom_char_at(s, 0);
+  var c = _char_at(base, 0);
   if c == '-' {
     negative = true;
     i = 1;
   } elif c == '+' {
     i = 1;
   }
-  if i >= s.len() {
+  if i >= len {
     return Err("no digits found");
   }
   var int_part: Float64 = 0.0;
@@ -154,8 +169,8 @@ pub fn to_float_from_str(s: Str) -> Result[Float64, Str]
   var frac_div: Float64 = 10.0;
   var has_frac = false;
   var has_digit = false;
-  while i < s.len() {
-    c = xiom_char_at(s, i);
+  while i < len {
+    c = _char_at(base, i);
     if c == '.' {
       if has_frac {
         return Err("multiple decimal points");
@@ -167,8 +182,8 @@ pub fn to_float_from_str(s: Str) -> Result[Float64, Str]
     if c == 'e' || c == 'E' {
       i = i + 1;
       var exp_negative = false;
-      if i < s.len() {
-        c = xiom_char_at(s, i);
+      if i < len {
+        c = _char_at(base, i);
         if c == '-' {
           exp_negative = true;
           i = i + 1;
@@ -177,8 +192,8 @@ pub fn to_float_from_str(s: Str) -> Result[Float64, Str]
         }
       }
       var exp_val: Int = 0;
-      while i < s.len() {
-        c = xiom_char_at(s, i);
+      while i < len {
+        c = _char_at(base, i);
         if c < '0' || c > '9' {
           return Err("invalid character in exponent");
         }
