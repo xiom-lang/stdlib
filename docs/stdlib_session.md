@@ -3352,6 +3352,20 @@ registry pin, agent recon for the rest)**
 - Two long-lived git processes (from ~14:20Z) sit in the relays repo;
   the bus itself is consistent. The next writer continues from 169/170.
 
+**SESSION 2026-10-14 block 174 (doorbell 23:00Z -- tag HELD after candidate regressions; nothing inbound to transition)**
+- Lane view: nothing to transition (the two open rows remain the
+  compiler-owned fragment ones 1630/1658); the round's substance is
+  already recorded by the shared lane actor:
+- v0.64.5 CANDIDATE CHECKS FAILED at the GO signal: corpus 953/955 with
+  two deterministic regressions on the candidate archive; the tag is
+  **HELD**; repros `p_v065_*` + known_failures README status landed
+  (`ed7b772`) and the queue carries the PIN HOLD numbers (`ed1ff24`;
+  profile probes 310/315, modules 510/510, barename 0/510, ratchets OK);
+  the regressions were filed as `REL-20261014-2123-stdlib`. The lane's
+  172 block landed via the actor's doc commit, as predicted.
+- Tree: head `ed1ff24`; clean except the untracked out/ dir. The next
+  writer continues from block 173b/174.
+
 **SESSION 2026-10-14 block 173b (doorbell 21:00Z outcome -- supersedes the 'awaiting GO' state of the actor's 172/173 below: the tag signal arrived and the CANDIDATE CHECKS FAILED -- corpus 953/955, two deterministic regressions; stdlib-v0.64.5 tag HELD; filed REL-20261014-2123-stdlib)**
 - Signal: relays 06d0a7c + item 1739 note (19:48Z) -- release-wave push
   1e4a444e, dry-run 38626737822 green; asked for candidate checks then
