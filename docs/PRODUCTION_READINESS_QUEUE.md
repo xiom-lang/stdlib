@@ -743,6 +743,14 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
      fix): corpus 955/955 (792.3s), probes 315/315 (466.3s), modules
      510/510 (295.8s), barename 0/510 (414.6s) + module-smoke/doc
      ratchets OK.
+     PIN PREP v0.64.5 (block 171b, from the REL-20261014-1739 ack): the
+     tag set is ready -- release-notes/v0.64.5.md (converter-validated,
+     2 highlights, merged cap 6 with the compiler draft's 4), package.xi
+     0.64.5, CHANGELOG [0.64.5]; COMPILER_VERSION stays v0.64.4. The
+     compiler lane holds the tag signal; on it, cut the annotated
+     stdlib-v0.64.5 at the frozen sha and run the candidate-processing
+     checklist (full battery + the 27-repro sweep + the pending post-pin
+     re-verifications).
      NEXT: the ranked sweep inventory as before; candidate processing
      when the v0.64.5 archive lands (release-check rows + known-failures
      sweep + the m313 guard-spin acceptance).

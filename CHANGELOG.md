@@ -6,6 +6,62 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.64.5] - 2026-10-14
+
+Pinned to compiler `v0.64.4`. Consumes waves 114-139: the quadratic-pass
+sweep converts the string, escaping, encoding, hashing, parser and
+file-IO families to cached single-pass reads and buffer builders; new
+durability, socket, watch, memory-mapped and websocket primitives land;
+and the thread spawn result path is byte-exact end to end.
+
+### Fixed
+
+- The thread spawn result path is byte-exact: the result buffer is
+  main-heap and the runtime trampoline stores the full 64-bit result
+  and done flag, so join readbacks return the exact worker value on
+  every ABI (the single and two-thread e2e prints 42 and 7 across
+  repeated runs).
+- `copy_file`, `read_file` and `write_file` are binary-safe: the copy
+  runs through the length-carrying byte APIs, so NUL-containing sources
+  are not truncated at the first NUL byte.
+- The strnlen-per-call accessor class is swept from the string,
+  escaping, encoding, hashing, parser, path and file-IO families: hot
+  per-position loops read through cached (base, len) views, and hot
+  per-item sites use the bounds-guaranteed slice and builder helpers.
+  The encoding codecs (base64, base32, hex, percent, punycode, idna,
+  ascii85) and the JSON and string byte paths are linear.
+- `convert.ascii85` builds through one byte buffer instead of
+  concatenating per four-byte group, removing the quadratic time and
+  the leaked intermediate strings on large payloads.
+- `ffi.write_u32_at` and `ffi.write_u64_at` apply their byte offset;
+  `Vec.reserve` seeds the minimum capacity before the growth loop, so
+  `with_len(n)` holds the full n-element buffer.
+
+### Added
+
+- Durability primitives: fsync and fdatasync for files and directories,
+  held append handles with sync-on-close, file truncation, byte-level
+  random access, append-bytes, cheap tail checks, and durable stdout.
+- Platform and server primitives: file locking, memory-mapped files,
+  directory-change watch, signal delivery, socket options with receive
+  deadlines, poll and select, SO_REUSEPORT, websocket I/O and server
+  helpers, and real streaming reads.
+- Buffer-backed builders replace the remaining concatenate-per-item
+  string construction sites.
+
+### Known issues
+
+- Still open: cross-module alias types and method-style foreign calls;
+  use bare type names with qualified calls.
+- Still open: pre-state clauses on mut-parameter fields alias the
+  mutated value; clause-position float vector indexing reads garbage.
+- Still open: tuples and nested vectors can lose element or nesting
+  types without annotations; geom matrix tuple inference and Box naming.
+- Still open: cross-type generic callbacks and Result or Option payload
+  reads in catalog clauses.
+- The alloc and free guard workarounds stay until `free` is routed
+  through the arena-aware guard at call sites.
+
 ## [0.64.4] - 2026-10-11
 
 Re-pinned to compiler `v0.64.3`. Consumes waves 98-113: the JSON and

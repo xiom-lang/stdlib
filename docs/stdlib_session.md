@@ -3352,6 +3352,29 @@ registry pin, agent recon for the rest)**
 - Two long-lived git processes (from ~14:20Z) sit in the relays repo;
   the bus itself is consistent. The next writer continues from 169/170.
 
+**SESSION 2026-10-14 block 171b (doorbell 19:00Z follow-through, pin prep completed: release-notes/v0.64.5.md written + package.xi 0.64.5 + CHANGELOG [0.64.5]; converter-validated 2 highlights) -- the actor's 171 round sits below; no text of theirs edited**
+- The actor's block 171 acked REL-20261014-1739-compiler and flagged the
+  notes fragment as the gap; this round completed the tag-prep set the
+  RELEASE_CHECKLIST needs (items 1/3/4):
+  - release-notes/v0.64.5.md: Summary 219 chars, 2 highlights (the
+    quadratic sweep; the byte-exact thread spawn), Breaking changes
+    None, 5 known issues; plain ASCII, no > < & backtick, no m/r ID
+    tokens (spot-checked), and validated with the compiler's converter:
+    `cargo run -q -p xiom-release-notes -- convert --tag v0.64.5
+    --notes-dir <scratch base> --stdlib <tree>` -> rc=0, 2 highlights
+    isolated (4 when both inputs point at the same tree -- an artifact
+    of feeding the fragment twice). Merged with the compiler draft's 4,
+    this stays at the 6 cap.
+  - package.xi version 0.64.4 -> 0.64.5 (release.yml's validate greps
+    `version: "0.64.5"` against the tag suffix); COMPILER_VERSION stays
+    v0.64.4 (the existing tag; the combined compiler cut comes after).
+  - CHANGELOG [0.64.5] - 2026-10-14 (waves 114-139: Fixed / Added /
+    Known issues).
+- Frozen-sha candidate is this commit; the item note carries it;
+  standing by for the compiler's tag signal -- the annotated
+  stdlib-v0.64.5 tag goes on it and the ref + sha get replied on the
+  item.
+
 **SESSION 2026-10-14 block 171 (doorbell 19:00Z -- REL-20261014-1739-compiler acked: v0.64.5 pin prep, freeze on signal)**
 - Action item this round: the compiler lane's `REL-20261014-1739-compiler`
   (open, high) -- "v0.64.5 pin request (prep): freeze a stdlib sha
