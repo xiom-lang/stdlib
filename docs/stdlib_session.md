@@ -3157,6 +3157,31 @@ registry pin, agent recon for the rest)**
   exist (mine + the actor's; wave 126 used 152b) and both stand as-is;
   the next writer continues from 156/157.
 
+**SESSION 2026-10-14 block 165 (B-27/B-28 fix-first: ffi write_at offsets + reserve cap seed; probe 312th)**
+- REL-20261014-1208-bindings (high, ASan-proven consumer report) claimed
+  and FIXED at 85acf16 (bus acked -> fixed):
+  - B-27: `xiom.ffi.write_u32_at`/`write_u64_at` ignored their offset
+    (built the pointer from dest without `+offset`; `write_f32_at` was
+    the correct twin). Both now advance by offset; no in-lane callers
+    needed sweeping (smoke_net_proto2 uses a local helper).
+  - B-28: `Vec.reserve` seeded the `0 -> 4` cap AFTER the doubling
+    loop; the seed now runs BEFORE it, so `new_cap` can never stay 0
+    and `Vec.with_len(n)` always holds n*8 bytes. On the current tree
+    cap was already correct for n=16/1000 (the ASan overflow did not
+    reproduce here); this removes the latent ordering hazard the
+    fidelityfx recipe caught.
+- Probe `tools/probes/p_b2728_shapes.xi` green on the v0.64.4 archive
+  (mixed-width write/readbacks at offsets 0/16/24/28/32/36 + with_len
+  cap>=n + full element roundtrip); smoke_ffi 2/2, smoke_collections
+  21/21. The confined-block alloc/free row stays OUT of the probe: on
+  v0.64.4 `ffi.free` call sites lower to plain `@free`, so freeing
+  guard-arena memory still spins -- that acceptance sits with the
+  compiler-side call-site lowering at the next pin.
+- Hygiene: six hung clang processes from the earlier probe hangs were
+  killed; the hangs were cascading build-lock stragglers, not the fix.
+- Bus commit 45d0337; lane commit 85acf16 (on top of the concurrent
+  session's wave 134).
+
 **SESSION 2026-10-14 block 164 (wave 134: the escape family -- all 16 scanners cached-pointer + Vec builders; p_wave113 timing-gate re-merge; probes 311; floors168)**
 - WAVE 134 (the sweep campaign, convert/escape.xi): html/xml/csv/tsv/
   regex/glob/shell/cmd escape+unescape (16 public) plus _decode_entity /
