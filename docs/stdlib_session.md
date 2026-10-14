@@ -3157,6 +3157,25 @@ registry pin, agent recon for the rest)**
   exist (mine + the actor's; wave 126 used 152b) and both stand as-is;
   the next writer continues from 156/157.
 
+**SESSION 2026-10-14 block 163 (doorbell rounds 01:00Z-13:00Z consolidated -- quiet for transitions; waves 132-133 landed by the actor; wave 134 in flight)**
+- Six scheduled doorbell fires arrived together (01:00Z through
+  13:00Z; the session was idle between). This single block covers them.
+  Lane view: nothing to transition for stdlib. Bus moves seen:
+  `REL-20261010-1550-website` is now **closed** (accelerated-path
+  transparency delivered by the actor's wave 132 via
+  docs/ACCELERATED.md); the new `REL-20261014-1208-bindings-3` (to
+  packages, fixed) and `REL-20261014-1259-packages` (to engine, open)
+  are not ours; compiler rows 1630/1658 remain open (compiler-owned).
+- Tree: the actor committed waves **132** (\x00-escape regression +
+  orphan-brace fix, io stdin callouts, ACCELERATED.md, probe 309,
+  floors166) and **133** (sweep-campaign opener: core/hash/io
+  cached-pointer sweep; probe 310th; floors167); head `a2af016`. It is
+  mid-wave **134** at this round: uncommitted `xiom/convert/escape.xi`
+  and `tools/probes/p_wave113_shapes.xi` + untracked
+  `tools/probes/p_wave134_shapes.xi` and `tools/coverage_floors168.json`
+  -- never sweep those edits; the session doc is committed alone.
+- The next writer continues from block 162/163.
+
 **SESSION 2026-10-14 block 162 (wave 133: sweep-campaign opener -- core parsers + hash family + io parsers/paths/writers; probes 310; floors167)**
 - WAVE 133 (the independent tree-wide sweep's first batch, core + io +
   hash): core.to_int_from_str / to_float_from_str now read via cached
