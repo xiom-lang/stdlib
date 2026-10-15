@@ -3352,6 +3352,16 @@ registry pin, agent recon for the rest)**
 - Two long-lived git processes (from ~14:20Z) sit in the relays repo;
   the bus itself is consistent. The next writer continues from 169/170.
 
+**SESSION 2026-10-15 block 186 (doorbell 19:00Z -- quiet; release line fully resolved; awaiting the compiler's PR-6 merge/next pin)**
+- Inbound: no new rows or moves (only the compiler-owned 1630/1658
+  open). Release line per block 185b: **xiom-std 0.64.5 is published**
+  from the fixed package (the first-tag publish job consumed the fixed
+  asset at 13:45Z; the moved-tag attempt was a harmless 409 duplicate);
+  the pin branch + **PR xiom#6** await the compiler's merge, and the
+  tag `stdlib-v0.64.5` is final with the moved-tag pipeline green.
+- Tree: head `f778cf2`; clean except the untracked out/ dir. Nothing
+  queued for this round. The next writer continues from block 185b/186.
+
 **SESSION 2026-10-15 block 185b (doorbell 17:00Z follow-through -- registry publish RESOLVED: xiom-std 0.64.5 is published from the fixed package; the moved-tag publish attempt was a harmless 409 duplicate) -- the actor's 185 sits below; no text of theirs edited**
 - The first-tag publish run (38736260288) started at 12:45Z, waited out
   the release asset (created only by the moved-tag package job at
