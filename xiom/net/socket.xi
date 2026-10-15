@@ -25,8 +25,8 @@ use xiom.env;
 extern "C" {
   fn xiom_socket_create(family: Int, typ: Int, proto: Int) -> Int;
   fn xiom_socket_connect(sock: Int, host: *UInt8, port: Int) -> Int32;
-  fn xiom_socket_bind(sock: Int, port: Int) -> Int;
-  fn xiom_socket_listen(sock: Int, backlog: Int) -> Int;
+  fn xiom_socket_bind(sock: Int, port: Int) -> Int32;
+  fn xiom_socket_listen(sock: Int, backlog: Int) -> Int32;
   fn xiom_socket_accept(sock: Int, client_ip: *UInt8, client_port: *Int) -> Int;
   // Int32 returns: the runtime returns C `int` and -1 means failure; an i64
   // read would see 4294967295 and mis-classify errors (wave-119 fix for
@@ -35,12 +35,14 @@ extern "C" {
   fn xiom_socket_send(sock: Int, buf: *UInt8, len: Int) -> Int32;
   fn xiom_socket_recv(sock: Int, buf: *UInt8, len: Int) -> Int32;
   fn xiom_socket_close(sock: Int) -> Int;
-  fn xiom_socket_sendto(sock: Int, buf: *UInt8, len: Int, host: *UInt8, port: Int) -> Int;
+  fn xiom_socket_sendto(sock: Int, buf: *UInt8, len: Int, host: *UInt8, port: Int) -> Int32;
   fn xiom_socket_recvfrom(sock: Int, buf: *UInt8, len: Int, out_ip: *UInt8, out_port: *Int) -> Int32;
   fn xiom_socket_set_timeout(sock: Int, ms: Int) -> Int32;
   fn xiom_socket_set_nonblocking(sock: Int, on: Int) -> Int32;
   fn xiom_socket_reuse_addr(sock: Int, on: Int) -> Int32;
   fn xiom_socket_reuseport(sock: Int, on: Int) -> Int32;
+  fn xiom_socket_set_nodelay(sock: Int, on: Int) -> Int32;
+  fn xiom_socket_set_keepalive(sock: Int, on: Int) -> Int32;
   fn xiom_poll(fds: *Int, nfds: Int, timeout_ms: Int, for_write: Int) -> Int;
   fn xiom_socket_shutdown(sock: Int, how: Int) -> Int32;
 }
@@ -88,7 +90,7 @@ pub fn socket_bind(fd: Int, addr: Str, port: Int) -> Result[Unit, Str]
   if port <= 0 || port > 65535 {
     return Err("socket_bind: port out of range");
   }
-  let rc = unsafe { xiom_socket_bind(fd, port) };
+  let rc: Int32 = unsafe { xiom_socket_bind(fd, port) };
   if rc < 0 {
     return Err("socket_bind: bind failed");
   }
@@ -106,7 +108,7 @@ pub fn socket_listen(fd: Int, backlog: Int) -> Result[Unit, Str]
   if backlog < 0 {
     return Err("socket_listen: negative backlog");
   }
-  let rc = unsafe { xiom_socket_listen(fd, backlog) };
+  let rc: Int32 = unsafe { xiom_socket_listen(fd, backlog) };
   if rc < 0 {
     return Err("socket_listen: listen failed");
   }
@@ -152,7 +154,7 @@ pub fn socket_connect(fd: Int, addr: Str, port: Int) -> Result[Unit, Str]
     i = i + 1;
   }
   c_host[i] = 0 as UInt8;
-  let rc = unsafe { xiom_socket_connect(fd, &c_host as *UInt8, port) };
+  let rc: Int32 = unsafe { xiom_socket_connect(fd, &c_host as *UInt8, port) };
   if rc < 0 {
     return Err("socket_connect: connect failed");
   }
@@ -403,11 +405,11 @@ pub fn socket_send_to(fd: Int, data: &Vec[UInt8], addr: Str, port: Int) -> Resul
     h = h + 1;
   }
   c_host[h] = 0 as UInt8;
-  let n = unsafe { xiom_socket_sendto(fd, &raw_buf as *UInt8, dlen, &c_host as *UInt8, port) };
+  let n: Int32 = unsafe { xiom_socket_sendto(fd, &raw_buf as *UInt8, dlen, &c_host as *UInt8, port) };
   if n < 0 {
     return Err("socket_send_to: sendto failed");
   }
-  Ok(n)
+  Ok(n as Int)
 }
 
 /// socket_recv_from receives a datagram; the tuple is
@@ -533,6 +535,50 @@ pub fn socket_set_nonblocking(fd: Int, on: Bool) -> Result[Unit, Str]
   }
   if rc != 0 {
     return Err("socket_set_nonblocking: mode change failed");
+  }
+  Ok(())
+}
+
+/// socket_set_nodelay disables or enables Nagle (TCP_NODELAY). Real since
+/// wave 143; invalid fds keep the documented early-error path.
+pub fn socket_set_nodelay(fd: Int, on: Bool) -> Result[Unit, Str]
+  ensures: (fd < 0) => (result is Err)
+{
+  if fd < 0 {
+    return Err("socket_set_nodelay: invalid fd");
+  }
+  var v = 0;
+  if on {
+    v = 1;
+  }
+  let rc: Int32;
+  unsafe {
+    rc = xiom_socket_set_nodelay(fd, v);
+  }
+  if rc != 0 {
+    return Err("socket_set_nodelay: setsockopt failed");
+  }
+  Ok(())
+}
+
+/// socket_set_keepalive enables or disables SO_KEEPALIVE on a socket. Real
+/// since wave 143; invalid fds keep the documented early-error path.
+pub fn socket_set_keepalive(fd: Int, on: Bool) -> Result[Unit, Str]
+  ensures: (fd < 0) => (result is Err)
+{
+  if fd < 0 {
+    return Err("socket_set_keepalive: invalid fd");
+  }
+  var v = 0;
+  if on {
+    v = 1;
+  }
+  let rc: Int32;
+  unsafe {
+    rc = xiom_socket_set_keepalive(fd, v);
+  }
+  if rc != 0 {
+    return Err("socket_set_keepalive: setsockopt failed");
   }
   Ok(())
 }

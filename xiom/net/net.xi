@@ -16,16 +16,16 @@ use xiom.string;
 extern "C" {
   fn xiom_socket_create(family: Int, typ: Int, proto: Int) -> Int;
   fn xiom_socket_connect(sock: Int, host: *UInt8, port: Int) -> Int32;
-  fn xiom_socket_bind(sock: Int, port: Int) -> Int;
-  fn xiom_socket_listen(sock: Int, backlog: Int) -> Int;
+  fn xiom_socket_bind(sock: Int, port: Int) -> Int32;
+  fn xiom_socket_listen(sock: Int, backlog: Int) -> Int32;
   fn xiom_socket_accept(sock: Int, client_ip: *UInt8, client_port: *Int) -> Int;
-  fn xiom_socket_send(sock: Int, buf: *UInt8, len: Int) -> Int;
-  fn xiom_socket_recv(sock: Int, buf: *UInt8, len: Int) -> Int;
-  fn xiom_socket_close(sock: Int) -> Int;
-  fn xiom_dns_resolve(hostname: *UInt8, ip_buf: *UInt8, buf_size: Int) -> Int;
-  fn xiom_socket_sendto(sock: Int, buf: *UInt8, len: Int, host: *UInt8, port: Int) -> Int;
-  fn xiom_socket_recvfrom(sock: Int, buf: *UInt8, len: Int, out_ip: *UInt8, out_port: *Int) -> Int;
-  fn xiom_gethostname(buf: *UInt8, len: Int) -> Int;
+  fn xiom_socket_send(sock: Int, buf: *UInt8, len: Int) -> Int32;
+  fn xiom_socket_recv(sock: Int, buf: *UInt8, len: Int) -> Int32;
+  fn xiom_socket_close(sock: Int) -> Int32;
+  fn xiom_dns_resolve(hostname: *UInt8, ip_buf: *UInt8, buf_size: Int) -> Int32;
+  fn xiom_socket_sendto(sock: Int, buf: *UInt8, len: Int, host: *UInt8, port: Int) -> Int32;
+  fn xiom_socket_recvfrom(sock: Int, buf: *UInt8, len: Int, out_ip: *UInt8, out_port: *Int) -> Int32;
+  fn xiom_gethostname(buf: *UInt8, len: Int) -> Int32;
   // Memory helpers (from xiom_runtime)
   fn xiom_alloc(size: UInt) -> *UInt8;
   fn xiom_free(ptr: *UInt8);
@@ -68,32 +68,47 @@ pub fn tcp_connect(host: Str, port: Int) -> Result[TcpStream, NetError]
       i = i + 1;
     }
     c_host_buf[i] = 0 as UInt8;
-    let result = xiom_socket_connect(fd, &c_host_buf as *UInt8, port);
+    let result: Int32 = xiom_socket_connect(fd, &c_host_buf as *UInt8, port);
     if result < 0 {
       xiom_socket_close(fd);
-      return Err(NetError{ message: "connection failed"; code: result; });
+      return Err(NetError{ message: "connection failed"; code: result as Int; });
     }
     return Ok(TcpStream{ fd: fd; });
   }
 }
 
-/// Bind and listen on host:port; Err on failure.
+/// Bind and listen on host:port; Err on failure. Delegates to
+/// `tcp_listen_with_backlog` with the default backlog of 128.
 pub fn tcp_listen(host: Str, port: Int) -> Result[TcpListener, NetError]
   requires: host.len() > 0
   requires: port > 0 && port <= 65535 {
+  return tcp_listen_with_backlog(host, port, 128);
+}
+
+/// Bind and listen on host:port with an explicit listener backlog (1-1024);
+/// Err on failure. Real since wave 143.
+pub fn tcp_listen_with_backlog(host: Str, port: Int, backlog: Int) -> Result[TcpListener, NetError]
+  requires: host.len() > 0
+  requires: port > 0 && port <= 65535
+  requires: backlog >= 1 && backlog <= 1024 {
   if port <= 0 || port >= 65536 {
     return Err(NetError{ message: "port out of range (1-65535)"; code: -101; });
+  }
+  if backlog < 1 || backlog > 1024 {
+    return Err(NetError{ message: "backlog out of range (1-1024)"; code: -102; });
   }
   unsafe {
     let fd = xiom_socket_create(AF_INET, SOCK_STREAM, 0);
     if fd < 0 {
       return Err(NetError{ message: "failed to create socket"; code: fd; });
     }
-    if xiom_socket_bind(fd, port) < 0 {
+    let brc: Int32 = xiom_socket_bind(fd, port);
+    if brc < 0 {
       xiom_socket_close(fd);
       return Err(NetError{ message: "bind failed"; code: -1; });
     }
-    if xiom_socket_listen(fd, 128) < 0 {
+    let lrc: Int32 = xiom_socket_listen(fd, backlog);
+    if lrc < 0 {
       xiom_socket_close(fd);
       return Err(NetError{ message: "listen failed"; code: -1; });
     }
@@ -107,16 +122,17 @@ pub fn TcpStream.read(self, buf: &mut Vec[UInt8]) -> Result[Int, NetError]
 {
   unsafe {
     var recv_buf: [4096]UInt8;
-    let n = xiom_socket_recv(self.fd, &recv_buf as *UInt8, 4096);
+    let n: Int32 = xiom_socket_recv(self.fd, &recv_buf as *UInt8, 4096);
     if n < 0 {
-      return Err(NetError{ message: "read failed"; code: n; });
+      return Err(NetError{ message: "read failed"; code: n as Int; });
     }
+    let nn = n as Int;
     var i = 0;
-    while i < n {
+    while i < nn {
       buf.push(recv_buf[i]);
       i = i + 1;
     }
-    return Ok(n);
+    return Ok(nn);
   }
 }
 
@@ -135,11 +151,11 @@ pub fn TcpStream.write(self, data: &Vec[UInt8]) -> Result[Int, NetError]
       raw_buf[i] = data[i];
       i = i + 1;
     }
-    let n = xiom_socket_send(self.fd, &raw_buf as *UInt8, dlen);
+    let n: Int32 = xiom_socket_send(self.fd, &raw_buf as *UInt8, dlen);
     if n < 0 {
-      return Err(NetError{ message: "write failed"; code: n; });
+      return Err(NetError{ message: "write failed"; code: n as Int; });
     }
-    return Ok(n);
+    return Ok(n as Int);
   }
 }
 
@@ -171,15 +187,15 @@ pub fn TcpStream.write_all(self, data: &Vec[UInt8]) -> Result[Int, NetError]
         n = n + 1;
         i = i + 1;
       }
-      let sent = xiom_socket_send(self.fd, &raw_buf as *UInt8, n);
+      let sent: Int32 = xiom_socket_send(self.fd, &raw_buf as *UInt8, n);
       if sent < 0 {
-        return Err(NetError{ message: "write_all failed"; code: sent; });
+        return Err(NetError{ message: "write_all failed"; code: sent as Int; });
       }
       if sent == 0 {
         return Err(NetError{ message: "write_all stalled"; code: -201; });
       }
-      total = total + sent;
-      off = off + sent;
+      total = total + (sent as Int);
+      off = off + (sent as Int);
     }
     return Ok(total);
   }
@@ -377,7 +393,8 @@ pub fn udp_bind(host: Str, port: Int) -> Result[UdpSocket, NetError]
     if fd < 0 {
       return Err(NetError{ message: "failed to create UDP socket"; code: fd; });
     }
-    if xiom_socket_bind(fd, port) < 0 {
+    let brc: Int32 = xiom_socket_bind(fd, port);
+    if brc < 0 {
       xiom_socket_close(fd);
       return Err(NetError{ message: "UDP bind failed"; code: -1; });
     }
@@ -408,11 +425,11 @@ pub fn UdpSocket.send_to(self, data: &Vec[UInt8], addr: Str, port: Int) -> Resul
       h = h + 1;
     }
     c_host_buf[h] = 0 as UInt8;
-    let n = xiom_socket_sendto(self.fd, &raw_buf as *UInt8, dlen, &c_host_buf as *UInt8, port);
+    let n: Int32 = xiom_socket_sendto(self.fd, &raw_buf as *UInt8, dlen, &c_host_buf as *UInt8, port);
     if n < 0 {
-      return Err(NetError{ message: "UDP send_to failed"; code: n; });
+      return Err(NetError{ message: "UDP send_to failed"; code: n as Int; });
     }
-    return Ok(n);
+    return Ok(n as Int);
   }
 }
 
@@ -424,12 +441,13 @@ pub fn UdpSocket.recv_from(self, buf: &mut Vec[UInt8]) -> Result[(Int, Str, Int)
     var recv_buf: [4096]UInt8;
     var ip_buf: [64]UInt8;
     var port_val: Int = 0;
-    let n = xiom_socket_recvfrom(self.fd, &recv_buf as *UInt8, 4096, &ip_buf as *UInt8, &port_val);
+    let n: Int32 = xiom_socket_recvfrom(self.fd, &recv_buf as *UInt8, 4096, &ip_buf as *UInt8, &port_val);
     if n < 0 {
-      return Err(NetError{ message: "UDP recv_from failed"; code: n; });
+      return Err(NetError{ message: "UDP recv_from failed"; code: n as Int; });
     }
+    let nn = n as Int;
     var i = 0;
-    while i < n {
+    while i < nn {
       buf.push(recv_buf[i]);
       i = i + 1;
     }
@@ -444,7 +462,7 @@ pub fn UdpSocket.recv_from(self, buf: &mut Vec[UInt8]) -> Result[(Int, Str, Int)
       j = j + 1;
     }
     let sender_ip = Str::from_utf8(ip_chars);
-    return Ok((n, sender_ip, port_val));
+    return Ok((nn, sender_ip, port_val));
   }
 }
 
@@ -472,9 +490,9 @@ pub fn resolve_host(hostname: Str) -> Result[Vec[Str], NetError]
     }
     c_host[i] = 0 as UInt8;
     var ip_buf: [256]UInt8;
-    let rc = xiom_dns_resolve(&c_host as *UInt8, &ip_buf as *UInt8, 256);
+    let rc: Int32 = xiom_dns_resolve(&c_host as *UInt8, &ip_buf as *UInt8, 256);
     if rc < 0 {
-      return Err(NetError{ message: "DNS resolution failed"; code: rc; });
+      return Err(NetError{ message: "DNS resolution failed"; code: rc as Int; });
     }
     var ip_len: Int = 0;
     while ip_len < 256 && ip_buf[ip_len] != 0 as UInt8 {
@@ -500,9 +518,9 @@ pub fn local_addr(port: Int) -> Result[Str, NetError]
   // Get local machine hostname, then resolve it
   unsafe {
     var host_buf: [256]UInt8;
-    let hrc = xiom_gethostname(&host_buf as *UInt8, 256);
+    let hrc: Int32 = xiom_gethostname(&host_buf as *UInt8, 256);
     if hrc < 0 {
-      return Err(NetError{ message: "gethostname failed"; code: hrc; });
+      return Err(NetError{ message: "gethostname failed"; code: hrc as Int; });
     }
     var host_len: Int = 0;
     while host_len < 256 && host_buf[host_len] != 0 as UInt8 {
@@ -524,9 +542,9 @@ pub fn local_addr(port: Int) -> Result[Str, NetError]
     }
     c_host[h] = 0 as UInt8;
     var ip_buf: [256]UInt8;
-    let rc = xiom_dns_resolve(&c_host as *UInt8, &ip_buf as *UInt8, 256);
+    let rc: Int32 = xiom_dns_resolve(&c_host as *UInt8, &ip_buf as *UInt8, 256);
     if rc < 0 {
-      return Err(NetError{ message: "local_addr DNS resolution failed"; code: rc; });
+      return Err(NetError{ message: "local_addr DNS resolution failed"; code: rc as Int; });
     }
     var ip_len: Int = 0;
     while ip_len < 256 && ip_buf[ip_len] != 0 as UInt8 {

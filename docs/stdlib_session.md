@@ -94,10 +94,10 @@ probe keeps its empty-input hull checks (the lock carries nonempty).
 captures + parse clauses still trip on the full catalog (compile reject /
 smoke_regex AV) -- reverted to guards and filed to the compiler
 (follow-up to 1549-stdlib-6); re-add when fixed.
-(3) net-socket wave: 1948-packages refused-connect synchronous Err
-(early-error return) + 2202 item 2 (TCP_NODELAY, listener backlog
-net/net.xi:96 hardcoded 128, SO_KEEPALIVE); re-check 1549-pulse-5
-(list_dir consumer break = the still-red 1609 payload-index row).
+(3) DONE (block 196): refused-connect fixed (inline-i32 misread in the
+wrappers; compiler class filed) + NODELAY/SO_KEEPALIVE/backlog; probe
+p_wave143_shapes; floors175. 1549-pulse-5 re-check still rides the 1609
+row (still red).
 (4) guard-free retirement: 1548-bindings-8 / 1445 -- retire the
 alloc/free workarounds, re-add the confined-block free row to p_b2728,
 re-probe on the official pin; bindings close B-8 (B-05 cleared).
@@ -3528,6 +3528,32 @@ registry pin, agent recon for the rest)**
   clean except the untracked out/ dir at this round.
 - Two long-lived git processes (from ~14:20Z) sit in the relays repo;
   the bus itself is consistent. The next writer continues from 169/170.
+
+**SESSION 2026-10-16 block 196 (wave 143 / pin-switch W3: net-socket -- refused-connect ROOT-CAUSED to a compiler-class inline-i32 misread and fixed in the wrappers; NODELAY/SO_KEEPALIVE/listener backlog landed; probe p_wave143_shapes; floors175)**
+- (1) refused-connect Ok (REL-20261015-1948) root cause -- NOT the
+  runtime: a runtime-side diag showed connect rc=-1, WSAECONNREFUSED
+  10061; the module wrapper's BARE inline form `let rc = unsafe { f() }`
+  read the i32 return as i64 (RAX upper bits) and classified -1 as >= 0.
+  Bitmask witness: bare inline broken; `let rc: Int32 = unsafe{...}` and
+  declared `let rc: Int32; unsafe { rc = ... }` correct. Fixed at all
+  socket-family call sites (socket.xi connect/bind/listen/sendto; net.xi
+  tcp_connect/bind/listen/read/write/write_all/udp/dns/gethostname; the
+  i64-typed externs switched to Int32 to match their C int returns).
+  Evidence: tools/probes/evidence/p_inline_i32_misread.xi (rc 1 today =
+  misread reproduced; rc 0 once the compiler fix lands); filed to the
+  compiler lane as its own item.
+- (2) 2202 item 2: socket_set_nodelay + socket_set_keepalive wrappers +
+  runtime fns; tcp_listen_with_backlog(host, port, backlog 1-1024);
+  tcp_listen delegates with 128. Probe p_wave143_shapes.xi (row 1 refused
+  Err; row 2 default listen accept; rows 3/4 nodelay/keepalive + invalid
+  fd; row 5 backlog accept) -- green 3/3 in battery config (no overlay).
+- Verification: probe 3/3; net smokes 12/12; wave119/121/122 probes 1/1;
+  the pre-fix RED baseline (CONNECT OK 2/2 through the repo runtime) is
+  recorded. Floors175 (timestamp refresh; net 97.5 / Global 70.7 held)
+  wired; queue gate 5 -> floors175. Probe corpus now 319 files; the next
+  full battery confirms 319/319.
+- Bus next: 1948 acked -> fixed; the inline-i32 class filed (new item).
+- Tree: this commit.
 
 **SESSION 2026-10-16 block 195 (wave 142 / pin-switch W2 PARTIAL: `regex_unescape` Ok-Str payload clause RE-ADDED (floors174); the captures and parse catalog clauses still trip on the full catalog -- isolated, reverted to guards, filed to the compiler as REL-20261015-2328-stdlib)**
 - The 1549-stdlib-6 full-catalog re-add was attempted on the official

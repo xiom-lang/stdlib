@@ -5426,6 +5426,14 @@ int xiom_socket_reuseport(xiom_socket_t s, int on) {
     (void)on;
     return -1;
 }
+int xiom_socket_set_nodelay(xiom_socket_t s, int on) {
+    int opt = on ? 1 : 0;
+    return setsockopt(s, IPPROTO_TCP, TCP_NODELAY, (const char*)&opt, sizeof(opt));
+}
+int xiom_socket_set_keepalive(xiom_socket_t s, int on) {
+    int opt = on ? 1 : 0;
+    return setsockopt(s, SOL_SOCKET, SO_KEEPALIVE, (const char*)&opt, sizeof(opt));
+}
 /* Poll readiness for up to 1024 sockets; compacts fds[] in place to the
    ready entries (errors/invalid entries count as ready) and returns that
    count, 0 on timeout, -1 on failure. timeout_ms: 0 = immediate, > 0 =
@@ -5602,6 +5610,14 @@ int xiom_socket_set_nonblocking(xiom_socket_t s, int on) {
 int xiom_socket_reuse_addr(xiom_socket_t s, int on) {
     int opt = on ? 1 : 0;
     return setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+}
+int xiom_socket_set_nodelay(xiom_socket_t s, int on) {
+    int opt = on ? 1 : 0;
+    return setsockopt(s, IPPROTO_TCP, TCP_NODELAY, &opt, sizeof(opt));
+}
+int xiom_socket_set_keepalive(xiom_socket_t s, int on) {
+    int opt = on ? 1 : 0;
+    return setsockopt(s, SOL_SOCKET, SO_KEEPALIVE, &opt, sizeof(opt));
 }
 int xiom_socket_shutdown(xiom_socket_t s, int how) { return shutdown(s, how); }
 int xiom_socket_reuseport(xiom_socket_t s, int on) {
