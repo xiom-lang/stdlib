@@ -3352,6 +3352,22 @@ registry pin, agent recon for the rest)**
 - Two long-lived git processes (from ~14:20Z) sit in the relays repo;
   the bus itself is consistent. The next writer continues from 169/170.
 
+**SESSION 2026-10-15 block 182 (doorbell 13:00Z -- v0.64.5 released; pin cycle closed; nothing inbound)**
+- The pin cycle completed between rounds (the shared lane actor's
+  block 181 stands as the authoritative record): the fresh candidate
+  battery was fully green, `REL-20261014-2123-stdlib` went
+  verified+closed, and the annotated tag `stdlib-v0.64.5` was cut and
+  pushed (`ecc3549 -> e082623`; fresh archive `v0.64.5b-rel` present in
+  the workspace). Queue RELEASED; known_failures sweep results recorded
+  in block 181.
+- Inbound this round: no new rows or moves (only the compiler-owned
+  1630/1658 remain open, historical v0.64.3 fragment items). Tree: head
+  `a47d8c4` (block 181); clean except the untracked out/ dir.
+- Next: resume the classic sweep campaign (waves 132-138 baseline) and
+  re-check the queued xs: pulse 0317/-2 rows on the new pin, the
+  remaining strnlen batches, playground-4/website artifacts. The next
+  writer continues from block 181/182.
+
 **SESSION 2026-10-15 block 181 (v0.64.5 RELEASED TO THE PIN LINE: fresh candidate battery fully green; 2123 verified+closed; annotated tag stdlib-v0.64.5 cut and pushed (ecc3549 -> e082623); polyhedra hull bonus-resolved)**
 - Signal (relays c836588, 1739 note 11:59Z): fresh wave 13081238
   (m322-m327; full e2e 2550/0/4), dry-run run 38731274663; re-run the
