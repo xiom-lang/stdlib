@@ -3370,6 +3370,11 @@ registry pin, agent recon for the rest)**
 - Retag: stdlib-v0.64.5 re-cut at this commit (the old tag object ecc3549
   / commit e082623 withdrawn; the new tag object + sha go on the 1739
   note). release.yml re-runs on the new tag push.
+- Moved-tag pipeline ALL GREEN (run 38740339683): validate + both gate
+  legs (ubuntu 32m42s, windows 33m53s) + package + the automatic
+  STDLIB_VERSION pin PR (xiom) + the registry canary dispatch; the
+  registry publish job is in flight (38740339682). The red first-push
+  run (38736260289) was cancelled.
 - Bus: the HOLD note went out before the fix (relays ab0a6eb); the
   follow-up carries the new sha so the compiler pins the moved tag.
 - Note: the WSL staging accident (a `C:Userslefte` dir under the repo
