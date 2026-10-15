@@ -28,12 +28,13 @@ gates flip:
    wave-98..110 probes), the io byte-fidelity/CRLF lock and the
    fs_remove lock).
 4. Strict bare-name scan clean -- MET (0/509).
-5. Coverage ratchet green -- MET (floors171).
+5. Coverage ratchet green -- MET (floors174).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (499/518 modules, 3500/6239 fns).
 8. Contract coverage 100% (every public fn carries clauses) -- OPEN (70.7%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
-   OPEN (15: all compiler; the stdlib ledger carries no open repro).
+   OPEN (7: all compiler -- the stdlib-family rows resolved on v0.64.5; the
+   payload-clause follow-up is on the bus, REL-20261015-2328-stdlib).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
 
 Meter formula: MET gates count 1.0; gate 8 counts its current

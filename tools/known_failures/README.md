@@ -537,6 +537,15 @@ Reproduced while landing the regex coverage wave:
    nested-Vec, unescape Ok-Str, parse payload) and the both-platform
    suite re-run ride the pin-switch wave; reopen with the specific clause
    if the full catalog trips.
+   RE-ADD ATTEMPTED 2026-10-16 (block 195, wave 142): the full catalog
+   TRIED -- the `regex_unescape` Ok-Str clause (`result is Ok =>
+   result.value.len() <= s.len()`) LANDED (regex suite 17/17; payload +
+   wave29 probes green); the `Regex.captures` clause still trips COMPILE
+   (clang IR reject at the 4 captures smokes: `%tmp120` defined with
+   `%struct.Vec` but expected `ptr`) and the `regex_parse` clause
+   (`result.value.pattern == pattern`) still trips RUN (smoke_regex
+   compiles rc 0 but AVs 0xC0000005) -- both REVERTED to their guards and
+   filed to the compiler (follow-up to -6; open item on the bus).
 
 **RESOLVED 2026-10-15 (compiler v0.64.5, m286): cross-type generic callback
 returns are miscompiled.** A `[T, U]`-style generic whose callback changes

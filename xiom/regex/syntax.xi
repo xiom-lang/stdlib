@@ -63,7 +63,7 @@ pub fn regex_escape(s: Str) -> Str
 /// backslash is an error.
 /// Complexity: O(len(s)).
 pub fn regex_unescape(s: Str) -> Result[Str, Str]
-  ensures: s.len() == 0 => result is Ok
+  ensures: result is Ok => result.value.len() <= s.len()
 {
   var result = "";
   var i: Int = 0;

@@ -90,9 +90,10 @@ order:
 (1) DONE (block 194): `p_polyhedra_nested_hull` PROMOTED to
 tools/probes (probe 318; rc 0 5/5 on the official pin); the wave-53
 probe keeps its empty-input hull checks (the lock carries nonempty).
-(2) re-add the 1549-stdlib-6 catalog payload clauses (captures
-nested-Vec, unescape Ok-Str, parse payload) + floors bump + both-
-platform suite (Windows + WSL); reopen-if-trips per the closed note.
+(2) PARTIAL (block 195): unescape Ok-Str clause RE-ADDED (floors174);
+captures + parse clauses still trip on the full catalog (compile reject /
+smoke_regex AV) -- reverted to guards and filed to the compiler
+(follow-up to 1549-stdlib-6); re-add when fixed.
 (3) net-socket wave: 1948-packages refused-connect synchronous Err
 (early-error return) + 2202 item 2 (TCP_NODELAY, listener backlog
 net/net.xi:96 hardcoded 128, SO_KEEPALIVE); re-check 1549-pulse-5
@@ -3527,6 +3528,30 @@ registry pin, agent recon for the rest)**
   clean except the untracked out/ dir at this round.
 - Two long-lived git processes (from ~14:20Z) sit in the relays repo;
   the bus itself is consistent. The next writer continues from 169/170.
+
+**SESSION 2026-10-16 block 195 (wave 142 / pin-switch W2 PARTIAL: `regex_unescape` Ok-Str payload clause RE-ADDED (floors174); the captures and parse catalog clauses still trip on the full catalog -- isolated, reverted to guards, filed to the compiler as REL-20261015-2328-stdlib)**
+- The 1549-stdlib-6 full-catalog re-add was attempted on the official
+  v0.64.5 pin with the regex suite as the oracle; isolation (each pass a
+  run_smokes -Filter regex):
+  (a) all three clauses in: 12/17 -- the four captures smokes
+  COMPILE-FAIL with the clang IR reject (`%tmp120` `%struct.Vec` vs
+  `ptr`, xiominput.ll:4559) and smoke_regex AVs 0xC0000005;
+  (b) captures reverted (unescape + parse kept): 16/17 -- compile clean,
+  the smoke_regex AV remains;
+  (c) captures + parse reverted (unescape kept): 17/17 GREEN (28.8s).
+  => captures clause = compile-side trip; parse clause = run-side trip;
+  unescape clause HOLDS and stays.
+- Landed: `regex_unescape` `ensures: result is Ok => result.value.len()
+  <= s.len()` (the payload-free guard retired). Payload + wave29 probe
+  slices green; post-restore slice 17/17 on the exact bytes.
+- Filed: `REL-20261015-2328-stdlib` (to compiler; follow-up to
+  REL-20261010-1549-stdlib-6) with the exact clauses, the oracle
+  workdirs, and the ask; the captures + parse guards are restored
+  pending their fix. The README payload entry carries the addendum.
+- Floors174 dumped + wired (ci/heavy/release + tools/README); global
+  70.7 unchanged (the clause was a replacement, not a net add); queue
+  gate lines refreshed (gate 5 = floors174; gate 9 = 7, all compiler).
+- Tree: this commit; out/ + the six diag smokes untracked as before.
 
 **SESSION 2026-10-16 block 194 (wave 141 / pin-switch W1: `p_polyhedra_nested_hull` PROMOTED to tools/probes -- probe 318; official-pin gates green: barename 0/510, module-smoke 499/518; probes battery 318/318)**
 - Gates on the official v0.64.5 pin: barename 0 hits in 510 modules
