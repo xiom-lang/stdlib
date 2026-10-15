@@ -98,7 +98,17 @@ site, the two `p_v065_*` regressions are rc 0, and
 batch-resolved; promotion to `tools/probes/` follows the bus item's
 close (probe count 316).
 
-**Open finding 2026-10-10 (compiler v0.64.2): a Path.exists + trailing
+Status check 2026-10-15 (OFFICIAL v0.64.5 release archive, as-shipped;
+v0.64.4-rel controls): the 1549 family -- polyhedra hull, geom Box, geom
+matrix infer, clause float-vec index, shape-mismatch &Vec, catalog payload
+reads, cross-type callbacks -- and the SIGILL Path.exists entry all
+verified GREEN first-hand (see the RESOLVED entries below); their bus
+items went fixed -> verified -> closed (relays e4c470a + d89b181). Still
+open per the fresh-candidate sweep (not re-run in this round):
+`p_result_payload_index_concat`, `p_sync_mutex_builtin_shadow`,
+`p_trailing_match_after_push`.
+
+**RESOLVED 2026-10-15 (compiler v0.64.5, m297): a Path.exists + trailing
 println sequence dies with an illegal-instruction exit.** The wave-103
 repro's exact statement sequence dies with exit -1073741795 (0xC000001D)
 before any output, while the same body without prints, or with one
@@ -110,6 +120,10 @@ wave). Repro: `tools/known_failures/p_path_println_context_crash.xi`
 (rc -1073741795; expected rc 0); relayed as `REL-20261010-1615-stdlib`
 (to compiler). Workaround: hoist a print before the calls or bind the
 predicate result first.
+RESOLVED 2026-10-15: fixed m297 (`6797197d`) and verified first-hand --
+the witness is rc 0 3/3 on the official v0.64.5 archive (v0.64.4 control
+3/3 rc 0xC000001D); the bus item is fixed -> verified -> closed (relays
+d89b181; PULSE's m305-range serve check is cited in the close note).
 
 **Open finding 2026-10-10 (compiler v0.64.2): an inline `Result.value[i]`
 payload index in an rvalue context reads bits.** Found re-triaging
@@ -357,7 +371,7 @@ History: parsed Part `.name`/`.len()` read corrupt on
 v0.61.3-v0.64.0 while direct Part construction was correct; found in
 wave 62.
 
-**Open finding 2026-10-02 (compiler v0.61.3 and v0.62.1):
+**RESOLVED 2026-10-15 (compiler v0.64.5, m276-m327 batch):
 `polyhedra.convex_hull_2d`/`convex_hull_3d` collapse on nonempty inputs.**
 The hull of a 4-point square is 2 rows; the hull of a tetrahedron is 0 rows
 (empty inputs are correct). The bodies already use the local-copy workaround
@@ -375,10 +389,11 @@ relay classification needs a correction on the compiler side.
 V0.64.5 RE-CHECK 2026-10-15: GREEN on the fresh v0.64.5 candidate
 (repro 5/5 rc 0; v0.64.4 release-archive control 3/3 rc 1) -- the hull
 collapse appears batch-resolved in the m276-m327 range (no single commit
-claims it); the bus item carries the reporter evidence. Header flips to
-RESOLVED and the repro is promoted to `tools/probes/` when the item
-closes; the wave-53 geom probe's empty-input-only hull checks can be
-strengthened then.
+claims it). RE-VERIFIED on the OFFICIAL v0.64.5 archive (as-shipped) and
+the bus item is fixed -> verified -> closed (relays e4c470a). The repro
+promotion to `tools/probes/` (probe 316) and the wave-53 geom probe's
+hull-check strengthening ride the pin-switch wave -- the repro is red on
+the v0.64.4 battery pin.
 
 **RESOLVED 2026-10-12 (stdlib algorithm): `geometry_2d.polygon_difference`
 disjoint-case fix (wave 116).** The difference now routes through the
@@ -393,17 +408,20 @@ v0.64.4-rel pin and was PROMOTED to `tools/probes/`; the wave-116 probe
 a-inside-b cases, and an overlapping call is checked not to abort (no
 smoke exercised the polygon booleans before, so the probe is the lock).
 
-**Open finding 2026-10-01 (compiler v0.61.3): `xiom.geom.geometry_3d.Box`
+**RESOLVED 2026-10-15 (compiler v0.64.5, m303): `xiom.geom.geometry_3d.Box`
 is unnameable from consumers.** The leaf `Box` is shadowed by core's
 `Box[T]`; `Box{...}` resolves to the core type ("no field 'min'"), neither
 `geometry_3d.Box{...}` ("unknown type") nor `use ...Box as GBox;` works, and
 there is no constructor, so `aabb_intersection`/`aabb_contains`/
 `ray_box_intersection` cannot be called from any other module. Repro:
 `tools/known_failures/p_geom_box_unnameable.xi` (compile-fail on the pin).
-Found while landing the wave-52 geom clauses; the wave-52 probe keeps those
+RESOLVED 2026-10-15: fixed m303 (`f67adcea`); the repro now compiles rc 0
+and runs 3/3 rc 0 on the official v0.64.5 archive (v0.64.4 control
+compile rc 1, T001); the bus item is fixed -> verified -> closed (relays
+e4c470a). Found while landing the wave-52 geom clauses; the wave-52 probe keeps those
 three functions clause-only until the geom dedup/rename (queue section C).
 
-**Open finding 2026-09-30 (compiler v0.61.3 and v0.62.1): call-site
+**RESOLVED 2026-10-15 (compiler v0.64.5, m303): call-site
 inference of `xiom.geom.matrix` `Vec[Vec[Float64]]` results loses a nesting
 level.** A local declared without an explicit type (`var z =
 matrix.zero(2, 2);`) reads its rows as garbage (`z[0].len()` is 0;
@@ -423,8 +441,11 @@ V0.64.1 RE-CHECK 2026-10-08: PARTIALLY fixed -- the inferred local (check
 tuple-element-without-annotation case still fails (`var l2 = lu.0;` ->
 `l2[0].len()` is 0, rc=4), so the repro STAYS in known_failures with the
 updated expected signature (rc 4 on the official pin).
+RESOLVED 2026-10-15: fixed m303 (`f67adcea`); the repro compiles rc 0 and
+runs 3/3 rc 0 on the official v0.64.5 archive (v0.64.4 control 3/3 rc 4);
+the bus item is fixed -> verified -> closed (relays e4c470a).
 
-**Open finding 2026-09-29 (compiler v0.61.3): clause-position indexing of
+**RESOLVED 2026-10-15 (compiler v0.64.5, m301): clause-position indexing of
 Float64 vector elements reads garbage.** In an `ensures` clause, indexing a
 `Vec[Float64]` return value (`result[0] == 1.0`) or a row of a
 `Vec[Vec[Float64]]` return value (`result[0].len() == 2`) fails with
@@ -437,8 +458,13 @@ clauses; the shipped mat clauses were reduced to len-only claims. Expected:
 the clause sees the stored elements. Stdlib impact: row/column shape claims
 on Float64 matrices (`mat_identity`, `mat_mul`, `mat_transpose`, `mat_det`,
 `mat_inv`) are weakened to length/interval claims until this is fixed.
+RESOLVED 2026-10-15: fixed m301 (`1b78d20f`); the repro compiles rc 0 and
+runs 3/3 rc 0 on the official v0.64.5 archive (v0.64.4 control 3/3 rc 1,
+"contract violated: ensures at 37:12"); the bus item is fixed ->
+verified -> closed (relays e4c470a). A coverage wave can restore the
+weakened Float64 matrix row/column claims.
 
-**Open finding 2026-09-28 (compiler v0.61.3): a shape-mismatched `&Vec`
+**RESOLVED 2026-10-15 (compiler v0.64.5, m285): a shape-mismatched `&Vec`
 argument compiles silently and crashes.** Passing `&Vec[Float64]` where
 `&Vec[Vec[Float64]]` is expected produces no diagnostic; the callee's
 nested element read then AVs (run rc 0xC0000005, -1073741819). Repro:
@@ -446,8 +472,13 @@ nested element read then AVs (run rc 0xC0000005, -1073741819). Repro:
 with both arguments `Vec[Vec[Float64]]` compiles and runs green in
 `tools/probes/p_wave42_shapes.xi`). Expected: a type error at the call
 site. Found while writing the wave-42 probe.
+RESOLVED 2026-10-15: fixed m285 (`77dfc786`); the repro is now the
+intended type error on the official v0.64.5 archive --
+`error[T001]: 26:13: argument 2 type mismatch` (compile rc 1;
+v0.64.4 control 3/3 rc 0xC0000005); the bus item is fixed -> verified ->
+closed (relays e4c470a).
 
-**Open finding 2026-09-25 (compiler v0.61.3): Result/Option payload reads
+**RESOLVED 2026-10-15 (compiler v0.64.5, m281/m283): Result/Option payload reads
 in CATALOG contract clauses are broken and can poison user codegen.**
 Reproduced while landing the regex coverage wave:
 
@@ -495,8 +526,17 @@ Reproduced while landing the regex coverage wave:
    called from a user module; the Err variant
    (`ensures: result is Err => result.value.len() > 0`) is the one that
    differs between Windows and Linux.
+   RESOLVED 2026-10-15: fixed by the m281 payload-read work plus the m283
+   concrete-monomorph resolution (compiler-verified on Windows AND Linux
+   with the exact catalog clause in place); the evidence repro compiles
+   rc 0 and runs 3/3 rc 0 on the official v0.64.5 archive (as-shipped);
+   the bus item is fixed -> verified -> closed (relays e4c470a). The
+   repo-side re-add of the payload-bearing catalog clauses (captures
+   nested-Vec, unescape Ok-Str, parse payload) and the both-platform
+   suite re-run ride the pin-switch wave; reopen with the specific clause
+   if the full catalog trips.
 
-**Open finding 2026-09-24 (compiler v0.61.3): cross-type generic callback
+**RESOLVED 2026-10-15 (compiler v0.64.5, m286): cross-type generic callback
 returns are miscompiled.** A `[T, U]`-style generic whose callback changes
 type (`fn(&T) -> U` or `fn(T) -> U`) returns a wrong value whenever `U` is a
 different runtime type than `T` (Str / Float64 observed); concrete callbacks
@@ -524,8 +564,11 @@ impact: the shipped smokes only exercise same-type maps
 are silently wrong. Also affected in the stdlib surface: `array.map[T,U]`
 and `iter` `Range.map[U]`/`MapIter.map[V]` for cross-type `U` (verified:
 Int -> Str wrong, run 41).
-Promote each file to `tools/probes/` (expected run exit 0) when the
-compiler lane fixes the callback ABI.
+The compiler lane fixed the callback ABI (m286, v0.64.5): all four files
+compile rc 0 and run 3/3 rc 0 on the official v0.64.5 archive (v0.64.4
+controls 41/41/1/0 exactly as recorded); the bus item is fixed ->
+verified -> closed (relays e4c470a). Promotion to `tools/probes/` rides
+the pin-switch wave (the repros are red on the v0.64.4 battery pin).
 
 **Resolved 2026-10-03 (stdlib-side, not a compiler regression; found in the
 v0.62.3 baseline):** the two cell smokes (`smoke_cell_refcell_basic.xi`,

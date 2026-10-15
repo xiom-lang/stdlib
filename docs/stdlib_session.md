@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 37 (updated 2026-10-15 19:25Z at head e3afaa5; v0.64.5 RELEASED and pinned; waves 114-139; probes 315; floors172; relay live)
+## 0A. CONTINUE HERE -- handoff snapshot 37 (updated 2026-10-15 19:55Z at head ea1c312; v0.64.5 RELEASED and pinned; the 1549 cluster + 1615 VERIFIED+CLOSED on the official archive (block 189); waves 114-139; probes 315; floors172; relay live)
 
 ### Snapshot 37 (paste-ready)
 
@@ -26,7 +26,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 ---
 
 You are continuing the XIOM stdlib lane. Worktree `E:\xiom-lang\stdlib`,
-branch `main`. Read `docs/stdlib_session.md` blocks 187, 186, 185b, 185,
+branch `main`. Read `docs/stdlib_session.md` blocks 189, 188, 187, 186, 185b, 185,
 184b, 184, 183, 182, 181, 180, 179, 178, 177, 176, 175b, 175, 174, 173b,
 173, 172, 171b, 171, 170d, 170c, 170b, 170, 169, 168, 167, 166b, 166,
 165b, 165 (older as needed); snapshot 36 below is the previous handoff and
@@ -45,8 +45,11 @@ duplicate. `COMPILER_VERSION` in this repo stays v0.64.4 until the next
 stdlib release; the battery pin remains the official v0.64.4 archive at
 `%TEMP%\kilo\stdlib_ws\v0.64.4-rel\bin\xiom.exe` (the official v0.64.5
 archive is live and our corpus is green on both -- if the next session
-switches the wave pin, do it explicitly and record it). Lane head:
-e3afaa5 (block 187); tree clean except the untracked out/ dir.
+switches the wave pin, do it explicitly and record it). The 1549
+cluster (parent + -2..-7) and 1615 were verified + closed on the
+official archive at session start (block 189; relays e4c470a +
+d89b181). Lane head: ea1c312 (block 188); tree clean except the
+untracked out/ dir.
 
 Waves 114-139 landed; 138 = the encoding submodules (base64/base32/hex/
 percent/punycode/idna/ascii85 cached runtime-mirror reads; the
@@ -61,31 +64,34 @@ then caught the m296 pin-era class in smoke_os_sync -> portable buffer
 fix + tag move (block 183); the cycle closed with pins + release (block
 187).
 
-BUS STATE: REL-20261014-1739-compiler -- OUR last note (17:02Z) records
-the registry resolution; the compiler released v0.64.5 (relays 4b73d3f)
-and closes the item with their wrap-up; nothing pending from us.
-Standing opens: 1630/1658 (compiler-owned leave). 1305-pulse-2 acked
-(re-verify against the official v0.64.5 archive where its row asks);
-1445 fixed bus-side (alloc-guard-spin acceptance green pre-pin; the
-alloc/free workarounds can retire in the next wave); 1453-packages acked
-(fleet data point); 1427-engine fixed (wave 137). The relay doorbell
-cron is SESSION-SCOPED: RENEW IT AT SESSION START (2h relay-doorbell
-prompt).
+BUS STATE: the 1549 cluster (parent + -2..-7) and 1615 went fixed ->
+verified -> CLOSED on the official v0.64.5 archive (block 189; relays
+e4c470a + d89b181); 1305-pulse-2 carries our re-verify note (pulse
+closes with their Linux re-verify). REL-20261014-1739-compiler resolved
+(registry + release closed with the compiler's wrap-up). Standing
+opens: 1630/1658 (compiler-owned leave); 1549-stdlib-8 acked
+(shared-build drift; env hygiene). 1445 fixed bus-side (alloc-guard-spin
+acceptance green pre-pin; the alloc/free workarounds can retire in the
+next wave); 1453-packages acked (fleet data point); 1427-engine fixed
+(wave 137). The relay doorbell cron is SESSION-SCOPED: RENEW IT AT
+SESSION START (2h relay-doorbell prompt).
 
-POST-PIN QUEUE (the next arc; blocks 181/183/187): (1) promote
-`p_polyhedra_nested_hull` to tools/probes (probe count 316) once
-REL-20261010-1549-stdlib closes (it is acked with our reporter evidence;
-check its status each round; the README entry flips to RESOLVED and the
-wave-53 geom hull checks strengthen then); (2) re-add the 1549-stdlib-6
-catalog payload clauses (m283+ is in the v0.64.5 pin; retire the
-payload-free guards there) + floors bump; (3) resume the ranked sweep
+POST-PIN QUEUE (the next arc; blocks 181/183/187/189): (1) promote
+`p_polyhedra_nested_hull` to tools/probes (probe count 316) -- the bus
+item is CLOSED (block 189) and the README entry is RESOLVED; the repro
+is red on the v0.64.4 battery pin, so promote together with the pin
+switch, then strengthen the wave-53 geom hull checks; (2) re-add the
+1549-stdlib-6 catalog payload clauses (m283+ is in v0.64.5; retire the
+payload-free guards there) + floors bump -- also keyed to the pin switch
+(reopen-if-trips per the closed item's note); (3) resume the ranked sweep
 inventory: convert/validate + convert/json; serialize toml/csv/json
 string-val; net http/ws/dns; format fmt/numbering; text similarity/diff;
 misc/regex/search/collect; num parse/itoa; log; crypto rng/curves; os
 path/fs; error/debug/test builders; (4) the thread-gate flip
 (2053/1627/1402) is UNBLOCKED (m312 + the wave-139 runtime half shipped
 in v0.64.5) -- flip the spawn e2e + thread pool and record the evidence;
-(5) the official-archive battery whenever the wave pin switches.
+(5) first action of the pin-switch wave: the full official-archive
+battery on v0.64.5-rel, then record the switch explicitly.
 
 GATES (v0.64.4 pin, blocks 170d + 181; the fresh v0.64.5b candidate was
 all-green too): corpus 955/955, probes 315/315, modules 510/510,
@@ -3486,6 +3492,36 @@ registry pin, agent recon for the rest)**
   clean except the untracked out/ dir at this round.
 - Two long-lived git processes (from ~14:20Z) sit in the relays repo;
   the bus itself is consistent. The next writer continues from 169/170.
+
+**SESSION 2026-10-15 block 189 (session start after the handoff refresh -- the 1549 cluster + 1615 VERIFIED+CLOSED on the official v0.64.5 archive; 1305-pulse-2 re-verify noted; doorbell cron renewed)**
+- Inbound scan: no stdlib-addressed moves (the compiler's release wrap,
+  fdaee6c, answered seven acked items -- all non-stdlib). The 1549
+  cluster had silently moved fixed at 19:21Z (cc6b825f) -- invisible to
+  `view --lane stdlib` again (the 175b lesson); the snapshot's 'acked'
+  line was stale.
+- Reporter verification first-hand on the OFFICIAL v0.64.5 archive
+  (v0.64.5-rel, as-shipped, no XIOM_STDLIB override) with v0.64.4-rel
+  controls: parent 5/5 rc 0 (control 5/5 rc 1); -2 compile 0 + 3/3 rc 0
+  (control compile rc 1 T001); -3 3/3 rc 0 (control rc 4); -4 3/3 rc 0
+  (control rc 1, contract violated 37:12); -5 intended T001 26:13
+  mismatch (control 3/3 0xC0000005); -6 evidence repro 3/3 rc 0; -7 all
+  four 3/3 rc 0 (controls 41/41/1/0). Cluster fixed -> verified ->
+  closed; relays e4c470a.
+- 1615 (SIGILL Path.exists, m297): witness 3/3 rc 0 (control 3/3
+  0xC000001D) -- fixed -> verified -> closed; 1305-pulse-2 carries the
+  re-verify note (pulse closes with their Linux re-verify); relays
+  d89b181.
+- tools/known_failures/README.md: the eight entries flipped to RESOLVED
+  + a 2026-10-15 status-check paragraph; all promotion lines are keyed
+  to the pin-switch wave (these repros are red on the v0.64.4 battery
+  pin).
+- Doorbell cron renewed for this session (2h; next fire 21:00Z).
+- Post-pin queue: items (1) promotion and (2) the -6 clause re-add are
+  unblocked bus-side but key on the pin switch; (3) ranked sweep can
+  start on the current pin; (4) the thread-gate flip also keys on the
+  v0.64.5 pin. First action of the pin-switch wave: full official-archive
+  battery on v0.64.5-rel, then record the switch explicitly.
+- Tree clean except the untracked out/ dir at this round.
 
 **SESSION 2026-10-15 block 188 (handoff refresh -- snapshot 37 written in place at head e3afaa5; v0.64.5 released + pinned; continuation prompt re-issued)**
 - Snapshot 37 replaced snapshot 36 in section 0A (36 kept below as
