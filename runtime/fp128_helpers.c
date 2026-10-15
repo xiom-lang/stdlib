@@ -362,7 +362,7 @@ void xiom_f128_from_i128_sret(xiom_f128* out, const unsigned __int128* v, int ne
  * comparison semantics; the classic extern helpers below (struct-passing
  * ABI) and the darwin vector-ABI wrappers both call them. */
 
-static double xiom_f128_to_f64_core(xiom_f128 f) {
+double xiom_f128_to_f64_core(xiom_f128 f) {
     if (xiom_f128_isnan(f)) { uint64_t nan = 0x7FF8000000000000ULL; double d; memcpy(&d, &nan, 8); return d; }
     int sign = (int)(f.hi >> 63);
     int e = (int)((f.hi >> 48) & XIOM_F128_EXP_MASK);
@@ -397,9 +397,9 @@ static double xiom_f128_to_f64_core(xiom_f128 f) {
     uint64_t bits = ((uint64_t)sign << 63) | ((uint64_t)e64 << 52) | (mant & 0xFFFFFFFFFFFFFULL);
     double d; memcpy(&d, &bits, 8); return d;
 }
-static float xiom_f128_to_f32_core(xiom_f128 f) { return (float)xiom_f128_to_f64_core(f); }
+float xiom_f128_to_f32_core(xiom_f128 f) { return (float)xiom_f128_to_f64_core(f); }
 
-static int64_t xiom_f128_to_i64_core(xiom_f128 f) {
+int64_t xiom_f128_to_i64_core(xiom_f128 f) {
     if (xiom_f128_isnan(f) || xiom_f128_isinf(f)) return 0;
     int sign = (int)(f.hi >> 63);
     int e = (int)((f.hi >> 48) & XIOM_F128_EXP_MASK);
@@ -414,7 +414,7 @@ static int64_t xiom_f128_to_i64_core(xiom_f128 f) {
     int64_t v = (int64_t)mag;
     return sign ? -v : v;
 }
-static uint64_t xiom_f128_to_u64_core(xiom_f128 f) {
+uint64_t xiom_f128_to_u64_core(xiom_f128 f) {
     if (xiom_f128_isnan(f) || xiom_f128_isinf(f) || (int)(f.hi >> 63)) return 0;
     int e = (int)((f.hi >> 48) & XIOM_F128_EXP_MASK);
     uint64_t mhi = f.hi & XIOM_F128_MAN_HI_MASK;
@@ -424,7 +424,7 @@ static uint64_t xiom_f128_to_u64_core(xiom_f128 f) {
     if (shift < 0 || shift >= 128) return 0;
     return (uint64_t)(sig >> shift);
 }
-static __int128 xiom_f128_to_i128_core(xiom_f128 f) {
+__int128 xiom_f128_to_i128_core(xiom_f128 f) {
     if (xiom_f128_isnan(f) || xiom_f128_isinf(f)) return 0;
     int sign = (int)(f.hi >> 63);
     int e = (int)((f.hi >> 48) & XIOM_F128_EXP_MASK);
@@ -441,7 +441,7 @@ static __int128 xiom_f128_to_i128_core(xiom_f128 f) {
     if (mag >= (((unsigned __int128)1) << 127)) return 0; /* >= INT128_MAX */
     return (__int128)mag;
 }
-static unsigned __int128 xiom_f128_to_u128_core(xiom_f128 f) {
+unsigned __int128 xiom_f128_to_u128_core(xiom_f128 f) {
     if (xiom_f128_isnan(f) || xiom_f128_isinf(f) || (int)(f.hi >> 63)) return 0;
     int e = (int)((f.hi >> 48) & XIOM_F128_EXP_MASK);
     uint64_t mhi = f.hi & XIOM_F128_MAN_HI_MASK;
@@ -452,12 +452,12 @@ static unsigned __int128 xiom_f128_to_u128_core(xiom_f128 f) {
     return sig >> shift;
 }
 
-static int xiom_f128_cmp_unord_core(xiom_f128 a, xiom_f128 b) { return xiom_f128_isnan(a) || xiom_f128_isnan(b); }
-static int xiom_f128_cmp_eq_core(xiom_f128 a, xiom_f128 b) {
+int xiom_f128_cmp_unord_core(xiom_f128 a, xiom_f128 b) { return xiom_f128_isnan(a) || xiom_f128_isnan(b); }
+int xiom_f128_cmp_eq_core(xiom_f128 a, xiom_f128 b) {
     if (xiom_f128_isnan(a) || xiom_f128_isnan(b)) return 1;
     return (a.hi == b.hi && a.lo == b.lo) ? 0 : 1;
 }
-static int xiom_f128_cmp_core(xiom_f128 a, xiom_f128 b) {
+int xiom_f128_cmp_core(xiom_f128 a, xiom_f128 b) {
     if (xiom_f128_isnan(a) || xiom_f128_isnan(b)) return 1;
     if (xiom_f128_cmp_eq_core(a, b) == 0) return 0;
     int sa = (int)(a.hi >> 63), sb = (int)(b.hi >> 63);
@@ -469,22 +469,35 @@ static int xiom_f128_cmp_core(xiom_f128 a, xiom_f128 b) {
     if (a.lo != b.lo) return (a.lo < b.lo) ? -e : e;
     return 0;
 }
-static int xiom_f128_cmp_get_core(xiom_f128 a, xiom_f128 b) {
+int xiom_f128_cmp_get_core(xiom_f128 a, xiom_f128 b) {
     int c = xiom_f128_cmp_core(a, b);
     return c == 1 ? 0 : c; /* unord -> 0 */
 }
-static int xiom_f128_cmp_gt_core(xiom_f128 a, xiom_f128 b) {
+int xiom_f128_cmp_gt_core(xiom_f128 a, xiom_f128 b) {
     int c = xiom_f128_cmp_core(a, b);
     return c > 0 ? 1 : 0;
 }
-static int xiom_f128_cmp_le_core(xiom_f128 a, xiom_f128 b) {
+int xiom_f128_cmp_le_core(xiom_f128 a, xiom_f128 b) {
     int c = xiom_f128_cmp_core(a, b);
     return c == 1 ? 1 : (c == 0 ? 0 : -1); /* unord -> 1 */
 }
-static int xiom_f128_cmp_lt_core(xiom_f128 a, xiom_f128 b) {
+int xiom_f128_cmp_lt_core(xiom_f128 a, xiom_f128 b) {
     int c = xiom_f128_cmp_core(a, b);
     return c < 0 ? -1 : 0;
 }
+
+/* Win64 fp128 libcall convention split: clang <= 20 (the GH runner images
+ * ship 20.1.8) passes f128 args AND the result in XMM registers (SysV-like),
+ * while clang >= 21 passes arguments as POINTERS (rcx/rdx) with the result in
+ * XMM0. The runtime is always compiled by the same clang that lowers the call
+ * sites, so the compile-time version selects the correct ABI. win64 has no C
+ * spelling of f128 (no __float128; 16-byte vectors pass by reference), so the
+ * clang<=20 layout is served by dedicated XMM-convention asm shims below. */
+#if defined(_WIN32) && defined(__clang__) && (__clang_major__ >= 21)
+#define XIOM_F128_WIN64_PTR_SHIMS 1
+#else
+#define XIOM_F128_WIN64_PTR_SHIMS 0
+#endif
 
 #if !defined(_WIN32)
 /* ============ Apple + ELF: vector-signature libcall wrappers ==============
@@ -566,7 +579,8 @@ int __gttf2(xiom_v2df a, xiom_v2df b) { return xiom_f128_cmp_gt_core(xiom_v2df_t
 int __letf2(xiom_v2df a, xiom_v2df b) { return xiom_f128_cmp_le_core(xiom_v2df_to_f128(a), xiom_v2df_to_f128(b)); }
 int __lttf2(xiom_v2df a, xiom_v2df b) { return xiom_f128_cmp_lt_core(xiom_v2df_to_f128(a), xiom_v2df_to_f128(b)); }
 
-#else /* _WIN32 -- Win64 platform layout: IR-convention asm shims + struct-ABI externs */
+#elif XIOM_F128_WIN64_PTR_SHIMS
+/* ============ win64 + clang >= 21: pointer-convention asm shims =========== */
 
 /* ============== Win64 asm shims (raw file-scope .globl symbols) ============
  * IR convention -> sret wrappers. Emitted as file-scope asm so the bytes are
@@ -775,6 +789,387 @@ int __gttf2(xiom_f128 a, xiom_f128 b) { return xiom_f128_cmp_gt_core(a, b); }
 int __letf2(xiom_f128 a, xiom_f128 b) { return xiom_f128_cmp_le_core(a, b); }
 int __lttf2(xiom_f128 a, xiom_f128 b) { return xiom_f128_cmp_lt_core(a, b); }
 
-#endif /* _WIN32 platform split (raw asm above is Windows-only) */
+#else /* win64 + clang <= 20 (GH runner images ship 20.1.8): XMM convention */
+/* LLVM <= 20 passes f128 ARGS and RESULTS in XMM registers on win64 (one XMM
+ * per f128 value; result xmm0; integer args unchanged). win64 has no C type
+ * that lowers to that layout (vectors pass by reference), so the shims below
+ * save xmm0/xmm1 into 16-byte slots, forward to the shared sret wrappers
+ * (f128-returning ops) or the exported scalar cores (fp128 -> scalar/cmp),
+ * then place the f128 result in xmm0. The double/float/int/i128-arg shims at
+ * the top of this branch are convention-agnostic (their args arrive in
+ * xmm0/rcx/ecx in both layouts) and mirror the clang >= 21 branch. */
+
+__asm__(
+    ".text\n\t"
+    ".globl __extenddftf2\n\t"
+    ".p2align 4\n\t"
+    "__extenddftf2:\n\t"
+    "subq $0x48, %rsp\n\t"
+    "leaq 32(%rsp), %rcx\n\t"
+    "movaps %xmm0, %xmm1\n\t"
+    "callq xiom_f128_ext_d_sret\n\t"
+    "movdqu 32(%rsp), %xmm0\n\t"
+    "addq $0x48, %rsp\n\t"
+    "retq\n\t");
+__asm__(
+    ".text\n\t"
+    ".globl __extendsftf2\n\t"
+    ".p2align 4\n\t"
+    "__extendsftf2:\n\t"
+    "subq $0x48, %rsp\n\t"
+    "leaq 32(%rsp), %rcx\n\t"
+    "movaps %xmm0, %xmm1\n\t"
+    "callq xiom_f128_ext_s_sret\n\t"
+    "movdqu 32(%rsp), %xmm0\n\t"
+    "addq $0x48, %rsp\n\t"
+    "retq\n\t");
+__asm__(
+    ".text\n\t"
+    ".globl __floatsitf\n\t"
+    ".p2align 4\n\t"
+    "__floatsitf:\n\t"
+    "subq $0x48, %rsp\n\t"
+    "movl %ecx, %edx\n\t"
+    "leaq 32(%rsp), %rcx\n\t"
+    "callq xiom_f128_from_i32_sret\n\t"
+    "movdqu 32(%rsp), %xmm0\n\t"
+    "addq $0x48, %rsp\n\t"
+    "retq\n\t");
+__asm__(
+    ".text\n\t"
+    ".globl __floatunsitf\n\t"
+    ".p2align 4\n\t"
+    "__floatunsitf:\n\t"
+    "subq $0x48, %rsp\n\t"
+    "movl %ecx, %edx\n\t"
+    "leaq 32(%rsp), %rcx\n\t"
+    "callq xiom_f128_from_u32_sret\n\t"
+    "movdqu 32(%rsp), %xmm0\n\t"
+    "addq $0x48, %rsp\n\t"
+    "retq\n\t");
+__asm__(
+    ".text\n\t"
+    ".globl __floatditf\n\t"
+    ".p2align 4\n\t"
+    "__floatditf:\n\t"
+    "subq $0x48, %rsp\n\t"
+    "movq %rcx, %rdx\n\t"
+    "leaq 32(%rsp), %rcx\n\t"
+    "callq xiom_f128_from_i64_sret\n\t"
+    "movdqu 32(%rsp), %xmm0\n\t"
+    "addq $0x48, %rsp\n\t"
+    "retq\n\t");
+__asm__(
+    ".text\n\t"
+    ".globl __floatunditf\n\t"
+    ".p2align 4\n\t"
+    "__floatunditf:\n\t"
+    "subq $0x48, %rsp\n\t"
+    "movq %rcx, %rdx\n\t"
+    "leaq 32(%rsp), %rcx\n\t"
+    "callq xiom_f128_from_u64_sret\n\t"
+    "movdqu 32(%rsp), %xmm0\n\t"
+    "addq $0x48, %rsp\n\t"
+    "retq\n\t");
+/* i128 args arrive BY REFERENCE in rcx in both layouts. */
+__asm__(
+    ".text\n\t"
+    ".globl __floattitf\n\t"
+    ".p2align 4\n\t"
+    "__floattitf:\n\t"
+    "subq $0x58, %rsp\n\t"
+    "movq %rcx, %rdx\n\t"
+    "leaq 32(%rsp), %rcx\n\t"
+    "movq 8(%rdx), %rax\n\t"
+    "shrq $63, %rax\n\t"
+    "movq %rax, %r8\n\t"
+    "callq xiom_f128_from_i128_sret\n\t"
+    "movdqu 32(%rsp), %xmm0\n\t"
+    "addq $0x58, %rsp\n\t"
+    "retq\n\t");
+__asm__(
+    ".text\n\t"
+    ".globl __floatuntitf\n\t"
+    ".p2align 4\n\t"
+    "__floatuntitf:\n\t"
+    "subq $0x58, %rsp\n\t"
+    "movq %rcx, %rdx\n\t"
+    "leaq 32(%rsp), %rcx\n\t"
+    "xorl %r8d, %r8d\n\t"
+    "callq xiom_f128_from_i128_sret\n\t"
+    "movdqu 32(%rsp), %xmm0\n\t"
+    "addq $0x58, %rsp\n\t"
+    "retq\n\t");
+
+/* f128-arg ops: args in xmm0/xmm1 -> slots -> sret wrapper -> xmm0 */
+__asm__(
+    ".text\n\t"
+    ".globl __addtf3\n\t"
+    ".p2align 4\n\t"
+    "__addtf3:\n\t"
+    "subq $0x48, %rsp\n\t"
+    "movaps %xmm0, 0(%rsp)\n\t"
+    "movaps %xmm1, 16(%rsp)\n\t"
+    "leaq 32(%rsp), %rcx\n\t"
+    "leaq 0(%rsp), %rdx\n\t"
+    "leaq 16(%rsp), %r8\n\t"
+    "callq xiom_f128_add_sret\n\t"
+    "movdqu 32(%rsp), %xmm0\n\t"
+    "addq $0x48, %rsp\n\t"
+    "retq\n\t");
+__asm__(
+    ".text\n\t"
+    ".globl __subtf3\n\t"
+    ".p2align 4\n\t"
+    "__subtf3:\n\t"
+    "subq $0x48, %rsp\n\t"
+    "movaps %xmm0, 0(%rsp)\n\t"
+    "movaps %xmm1, 16(%rsp)\n\t"
+    "leaq 32(%rsp), %rcx\n\t"
+    "leaq 0(%rsp), %rdx\n\t"
+    "leaq 16(%rsp), %r8\n\t"
+    "callq xiom_f128_sub_sret\n\t"
+    "movdqu 32(%rsp), %xmm0\n\t"
+    "addq $0x48, %rsp\n\t"
+    "retq\n\t");
+__asm__(
+    ".text\n\t"
+    ".globl __multf3\n\t"
+    ".p2align 4\n\t"
+    "__multf3:\n\t"
+    "subq $0x48, %rsp\n\t"
+    "movaps %xmm0, 0(%rsp)\n\t"
+    "movaps %xmm1, 16(%rsp)\n\t"
+    "leaq 32(%rsp), %rcx\n\t"
+    "leaq 0(%rsp), %rdx\n\t"
+    "leaq 16(%rsp), %r8\n\t"
+    "callq xiom_f128_mul_sret\n\t"
+    "movdqu 32(%rsp), %xmm0\n\t"
+    "addq $0x48, %rsp\n\t"
+    "retq\n\t");
+__asm__(
+    ".text\n\t"
+    ".globl __divtf3\n\t"
+    ".p2align 4\n\t"
+    "__divtf3:\n\t"
+    "subq $0x48, %rsp\n\t"
+    "movaps %xmm0, 0(%rsp)\n\t"
+    "movaps %xmm1, 16(%rsp)\n\t"
+    "leaq 32(%rsp), %rcx\n\t"
+    "leaq 0(%rsp), %rdx\n\t"
+    "leaq 16(%rsp), %r8\n\t"
+    "callq xiom_f128_div_sret\n\t"
+    "movdqu 32(%rsp), %xmm0\n\t"
+    "addq $0x48, %rsp\n\t"
+    "retq\n\t");
+__asm__(
+    ".text\n\t"
+    ".globl __negtf2\n\t"
+    ".p2align 4\n\t"
+    "__negtf2:\n\t"
+    "subq $0x38, %rsp\n\t"
+    "movaps %xmm0, 0(%rsp)\n\t"
+    "leaq 32(%rsp), %rcx\n\t"
+    "leaq 0(%rsp), %rdx\n\t"
+    "callq xiom_f128_neg_sret\n\t"
+    "movdqu 32(%rsp), %xmm0\n\t"
+    "addq $0x38, %rsp\n\t"
+    "retq\n\t");
+
+/* fp128-arg scalar/cmp ops: xmm0(/xmm1) -> slots -> exported cores */
+__asm__(
+    ".text\n\t"
+    ".globl __trunctfdf2\n\t"
+    ".p2align 4\n\t"
+    "__trunctfdf2:\n\t"
+    "subq $0x28, %rsp\n\t"
+    "movaps %xmm0, 0(%rsp)\n\t"
+    "leaq 0(%rsp), %rcx\n\t"
+    "callq xiom_f128_to_f64_core\n\t"
+    "addq $0x28, %rsp\n\t"
+    "retq\n\t");
+__asm__(
+    ".text\n\t"
+    ".globl __trunctfsf2\n\t"
+    ".p2align 4\n\t"
+    "__trunctfsf2:\n\t"
+    "subq $0x28, %rsp\n\t"
+    "movaps %xmm0, 0(%rsp)\n\t"
+    "leaq 0(%rsp), %rcx\n\t"
+    "callq xiom_f128_to_f32_core\n\t"
+    "addq $0x28, %rsp\n\t"
+    "retq\n\t");
+__asm__(
+    ".text\n\t"
+    ".globl __fixtfdi\n\t"
+    ".p2align 4\n\t"
+    "__fixtfdi:\n\t"
+    "subq $0x28, %rsp\n\t"
+    "movaps %xmm0, 0(%rsp)\n\t"
+    "leaq 0(%rsp), %rcx\n\t"
+    "callq xiom_f128_to_i64_core\n\t"
+    "addq $0x28, %rsp\n\t"
+    "retq\n\t");
+__asm__(
+    ".text\n\t"
+    ".globl __fixunstfdi\n\t"
+    ".p2align 4\n\t"
+    "__fixunstfdi:\n\t"
+    "subq $0x28, %rsp\n\t"
+    "movaps %xmm0, 0(%rsp)\n\t"
+    "leaq 0(%rsp), %rcx\n\t"
+    "callq xiom_f128_to_u64_core\n\t"
+    "addq $0x28, %rsp\n\t"
+    "retq\n\t");
+__asm__(
+    ".text\n\t"
+    ".globl __fixtfsi\n\t"
+    ".p2align 4\n\t"
+    "__fixtfsi:\n\t"
+    "subq $0x28, %rsp\n\t"
+    "movaps %xmm0, 0(%rsp)\n\t"
+    "leaq 0(%rsp), %rcx\n\t"
+    "callq xiom_f128_to_i64_core\n\t"
+    "addq $0x28, %rsp\n\t"
+    "retq\n\t");
+__asm__(
+    ".text\n\t"
+    ".globl __fixunstfsi\n\t"
+    ".p2align 4\n\t"
+    "__fixunstfsi:\n\t"
+    "subq $0x28, %rsp\n\t"
+    "movaps %xmm0, 0(%rsp)\n\t"
+    "leaq 0(%rsp), %rcx\n\t"
+    "callq xiom_f128_to_u64_core\n\t"
+    "addq $0x28, %rsp\n\t"
+    "retq\n\t");
+__asm__(
+    ".text\n\t"
+    ".globl __fixtfti\n\t"
+    ".p2align 4\n\t"
+    "__fixtfti:\n\t"
+    "subq $0x28, %rsp\n\t"
+    "movaps %xmm0, 0(%rsp)\n\t"
+    "leaq 0(%rsp), %rcx\n\t"
+    "callq xiom_f128_to_i128_core\n\t"
+    "addq $0x28, %rsp\n\t"
+    "retq\n\t");
+__asm__(
+    ".text\n\t"
+    ".globl __fixunstfti\n\t"
+    ".p2align 4\n\t"
+    "__fixunstfti:\n\t"
+    "subq $0x28, %rsp\n\t"
+    "movaps %xmm0, 0(%rsp)\n\t"
+    "leaq 0(%rsp), %rcx\n\t"
+    "callq xiom_f128_to_u128_core\n\t"
+    "addq $0x28, %rsp\n\t"
+    "retq\n\t");
+__asm__(
+    ".text\n\t"
+    ".globl __unordtf2\n\t"
+    ".p2align 4\n\t"
+    "__unordtf2:\n\t"
+    "subq $0x38, %rsp\n\t"
+    "movaps %xmm0, 0(%rsp)\n\t"
+    "movaps %xmm1, 16(%rsp)\n\t"
+    "leaq 0(%rsp), %rcx\n\t"
+    "leaq 16(%rsp), %rdx\n\t"
+    "callq xiom_f128_cmp_unord_core\n\t"
+    "addq $0x38, %rsp\n\t"
+    "retq\n\t");
+__asm__(
+    ".text\n\t"
+    ".globl __eqtf2\n\t"
+    ".p2align 4\n\t"
+    "__eqtf2:\n\t"
+    "subq $0x38, %rsp\n\t"
+    "movaps %xmm0, 0(%rsp)\n\t"
+    "movaps %xmm1, 16(%rsp)\n\t"
+    "leaq 0(%rsp), %rcx\n\t"
+    "leaq 16(%rsp), %rdx\n\t"
+    "callq xiom_f128_cmp_eq_core\n\t"
+    "addq $0x38, %rsp\n\t"
+    "retq\n\t");
+__asm__(
+    ".text\n\t"
+    ".globl __netf2\n\t"
+    ".p2align 4\n\t"
+    "__netf2:\n\t"
+    "subq $0x38, %rsp\n\t"
+    "movaps %xmm0, 0(%rsp)\n\t"
+    "movaps %xmm1, 16(%rsp)\n\t"
+    "leaq 0(%rsp), %rcx\n\t"
+    "leaq 16(%rsp), %rdx\n\t"
+    "callq xiom_f128_cmp_eq_core\n\t"
+    "addq $0x38, %rsp\n\t"
+    "retq\n\t");
+__asm__(
+    ".text\n\t"
+    ".globl __cmptf2\n\t"
+    ".p2align 4\n\t"
+    "__cmptf2:\n\t"
+    "subq $0x38, %rsp\n\t"
+    "movaps %xmm0, 0(%rsp)\n\t"
+    "movaps %xmm1, 16(%rsp)\n\t"
+    "leaq 0(%rsp), %rcx\n\t"
+    "leaq 16(%rsp), %rdx\n\t"
+    "callq xiom_f128_cmp_core\n\t"
+    "addq $0x38, %rsp\n\t"
+    "retq\n\t");
+__asm__(
+    ".text\n\t"
+    ".globl __getf2\n\t"
+    ".p2align 4\n\t"
+    "__getf2:\n\t"
+    "subq $0x38, %rsp\n\t"
+    "movaps %xmm0, 0(%rsp)\n\t"
+    "movaps %xmm1, 16(%rsp)\n\t"
+    "leaq 0(%rsp), %rcx\n\t"
+    "leaq 16(%rsp), %rdx\n\t"
+    "callq xiom_f128_cmp_get_core\n\t"
+    "addq $0x38, %rsp\n\t"
+    "retq\n\t");
+__asm__(
+    ".text\n\t"
+    ".globl __gttf2\n\t"
+    ".p2align 4\n\t"
+    "__gttf2:\n\t"
+    "subq $0x38, %rsp\n\t"
+    "movaps %xmm0, 0(%rsp)\n\t"
+    "movaps %xmm1, 16(%rsp)\n\t"
+    "leaq 0(%rsp), %rcx\n\t"
+    "leaq 16(%rsp), %rdx\n\t"
+    "callq xiom_f128_cmp_gt_core\n\t"
+    "addq $0x38, %rsp\n\t"
+    "retq\n\t");
+__asm__(
+    ".text\n\t"
+    ".globl __letf2\n\t"
+    ".p2align 4\n\t"
+    "__letf2:\n\t"
+    "subq $0x38, %rsp\n\t"
+    "movaps %xmm0, 0(%rsp)\n\t"
+    "movaps %xmm1, 16(%rsp)\n\t"
+    "leaq 0(%rsp), %rcx\n\t"
+    "leaq 16(%rsp), %rdx\n\t"
+    "callq xiom_f128_cmp_le_core\n\t"
+    "addq $0x38, %rsp\n\t"
+    "retq\n\t");
+__asm__(
+    ".text\n\t"
+    ".globl __lttf2\n\t"
+    ".p2align 4\n\t"
+    "__lttf2:\n\t"
+    "subq $0x38, %rsp\n\t"
+    "movaps %xmm0, 0(%rsp)\n\t"
+    "movaps %xmm1, 16(%rsp)\n\t"
+    "leaq 0(%rsp), %rcx\n\t"
+    "leaq 16(%rsp), %rdx\n\t"
+    "callq xiom_f128_cmp_lt_core\n\t"
+    "addq $0x38, %rsp\n\t"
+    "retq\n\t");
+
+#endif /* XIOM_F128_WIN64_PTR_SHIMS split (win64: clang >= 21 pointer asm / clang <= 20 xmm asm) */
 
 

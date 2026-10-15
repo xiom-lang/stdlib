@@ -3577,6 +3577,36 @@ registry pin, agent recon for the rest)**
 - Tree: head `2bc064e`; clean except the untracked out/ dir. The next
   writer continues from block 189b/190.
 
+**SESSION 2026-10-15 block 189d (win64 fp128 convention split landed: clang >= 21 = pointer shims, clang <= 20 (GH runner images ship 20.1.8) = XMM shims; local reproduction + full matrix green; re-dispatch)**
+- Root cause of the windows leg AV (both earlier rounds): win64 f128 libcall lowering
+  CHANGED between clang 20 and 21. Compile-probe evidence on the dev box: clang
+  22.1.8/21.1.8 lower `call fp128 @__addtf3` on win64 with POINTER args (rcx/rdx to
+  16-byte slots, result xmm0); clang 20.1.8 passes VALUES in xmm0/xmm1 (result xmm0).
+  The GH runner images (actions/runner-images manifests: LLVM 20.1.8 on the windows
+  images) ship the older layout -> the pointer-era asm shims dereferenced XMM-held
+  values as pointers -> 0xC0000005. The runtime is always compiled by the same clang
+  that lowers the call sites, so the compile-time version selects the right ABI.
+- Also ruled out (so nobody re-treads): vector-signature wrappers cannot serve win64
+  (the MSVC-style ABI passes 16-byte vectors BY REFERENCE -- verified c20+c22);
+  x86 `naked` IS supported since clang 18 (the round-1 theory was wrong); there is
+  no `__float128` on windows targets; `__vectorcall` fixes the registers but
+  decorates the symbols (__addtf3@@32) -> unusable for canonical libcall names.
+- Fix (runtime/fp128_helpers.c): win64 now has TWO asm shim sets selected by
+  `__clang_major__`: >= 21 keeps the pointer-convention shims + struct-ABI externs;
+  <= 20 gets XMM-convention shims that save xmm0/xmm1 into 16-byte slots, forward to
+  the shared sret wrappers (f128-returning ops) or the now-exported scalar cores
+  (fp128 -> scalar/cmp), and place results in xmm0. Apple/ELF keep the vector
+  wrappers; the shared cores are no longer static (asm-callable from both branches).
+- Local verification (archive compiler + this runtime via XIOM_RUNTIME_DIR):
+  pre-fix clang 20.1.8 run reproduced the runner AV exactly (rc 0xC0000005);
+  post-fix clang 20.1.8 / 21.1.8 / 22.1.8 all rc 0 on the smoke; c20 ladder
+  l0-l5 all rc 0; Windows struct-ABI harnesses green; WSL 200k exact-oracle fuzz
+  0 mismatches + SysV harness green; darwin cross-compiles unaffected.
+- Re-dispatch: heavy suites on the witness branch (compiler_ref=v0.64.5); the
+  verdicts land in relay 2011. (The pre-fix ladder run documented the failure
+  classes; this run carries both the fix and the ladder locks.)
+- Tree: M runtime/fp128_helpers.c (+ this block).
+
 **SESSION 2026-10-15 block 189c (round 2 for the darwin lock: heavy 38799767048 verdicts -- macos-14 GREEN on smoke_darwin_runtime; win AV + linux SIGSEGV root-caused and fixed; re-dispatch)**
 - Run 38799767048 (witness branch, compiler_ref=v0.64.5): windows 955/956 and
   ubuntu 955/956 -- the only failure was smoke_darwin_runtime (windows
