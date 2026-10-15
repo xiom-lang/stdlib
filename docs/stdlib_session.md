@@ -3352,6 +3352,17 @@ registry pin, agent recon for the rest)**
 - Two long-lived git processes (from ~14:20Z) sit in the relays repo;
   the bus itself is consistent. The next writer continues from 169/170.
 
+**SESSION 2026-10-15 block 185 (doorbell 17:00Z -- quiet; pin PR xiom#6 open awaiting the compiler merge)**
+- Inbound: no new rows or moves (only the compiler-owned 1630/1658
+  open). The pin line stands per block 184b: the pin branch is pushed
+  and **PR xiom#6** is open (opened manually; the pipeline token lacks
+  createPullRequest); the tag `stdlib-v0.64.5` is re-cut and the
+  moved-tag pipeline is green. Awaiting the compiler's merge/next pin.
+- Tree: head `ed48869`; clean except the untracked out/ dir. Next:
+  resume the classic sweep campaign on the v0.64.5 baseline when the
+  lane actor is active; nothing queued for this round. The next writer
+  continues from block 184b/185.
+
 **SESSION 2026-10-15 block 184b (doorbell 15:00Z follow-through -- pin PR xiom#6 opened; the pipeline's pin branch is pushed but its token cannot create PRs) -- the actor's 184 sits below; no text of theirs edited**
 - The moved-tag pipeline (all green) also ran "STDLIB_VERSION pin PR
   (xiom)": it pushed the branch chore/pin-stdlib-v0.64.5 (1e8429c,
