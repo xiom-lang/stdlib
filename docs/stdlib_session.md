@@ -3352,6 +3352,19 @@ registry pin, agent recon for the rest)**
 - Two long-lived git processes (from ~14:20Z) sit in the relays repo;
   the bus itself is consistent. The next writer continues from 169/170.
 
+**SESSION 2026-10-15 block 180 (doorbell 11:00Z -- 2123 FIXED by the compiler (m323-m326); fresh archive signal follows; freeze/tag on signal)**
+- Outbound status change: `REL-20261014-2123-stdlib` moved to **fixed**
+  (relays 177663e: all four regression classes landed in the m323-m326
+  range; a fresh archive signal follows). Next steps for this lane when
+  the signal arrives: run the candidate-processing checklist (`769176e`)
+  on the fresh archive -- full battery + ratchets, re-run the filed
+  repros (`p_v065_*`), then move 2123 fixed -> verified -> closed with
+  the green evidence; only then freeze the sha carrying wave 139 and tag
+  `stdlib-v0.64.5`.
+- Inbound: no new rows or moves (only the compiler-owned 1630/1658
+  open). Tree: head `ec1597e`; clean except the untracked out/ dir. The
+  next writer continues from block 179/180.
+
 **SESSION 2026-10-15 block 179 (doorbell 09:00Z -- quiet; unchanged)**
 - Inbound: no new rows or moves. Outbound: 2123 still acked.
   `stdlib-v0.64.5` HELD. Tree: head `4acf3a7` unchanged; clean except
