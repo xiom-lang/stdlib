@@ -3352,6 +3352,15 @@ registry pin, agent recon for the rest)**
 - Two long-lived git processes (from ~14:20Z) sit in the relays repo;
   the bus itself is consistent. The next writer continues from 169/170.
 
+**SESSION 2026-10-15 block 177 (doorbell 05:00Z -- quiet; outbound 2123 still acked; tag HELD)**
+- Inbound: no new rows or moves (only the compiler-owned 1630/1658
+  open). Outbound check per the 175b lesson:
+  `REL-20261014-2123-stdlib` is still **acked** (the compiler acked at
+  00:01Z; no fix landed yet), so `stdlib-v0.64.5` stays HELD.
+- Tree: head `c08a896` (block 176); no new commits or tracked edits
+  since 03:00Z; clean except the untracked out/ dir. The next writer
+  continues from block 176/177.
+
 **SESSION 2026-10-15 block 176 (doorbell 03:00Z -- quiet; no new rows; tag stays HELD pending the compiler's regression triage)**
 - Lane view: no new rows or moves; only the compiler-owned 1630/1658
   remain open. The 00:01Z compiler ack of the v0.64.5 candidate
