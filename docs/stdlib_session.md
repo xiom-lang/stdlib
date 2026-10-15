@@ -74,31 +74,58 @@ e4c470a + d89b181); 1305-pulse-2 carries our re-verify note (pulse
 closes with their Linux re-verify). REL-20261014-1739-compiler resolved
 (registry + release closed with the compiler's wrap-up). Standing
 opens: 1630/1658 (compiler-owned leave); 1549-stdlib-8 acked
-(shared-build drift; env hygiene). 1445 fixed bus-side (alloc-guard-spin
+(shared-build drift; env hygiene). NEW INTAKE: 2202-pulse acked
+(top-tier plan -> the wave plan below); 1942-packages acked (md5 fix =
+wave 140 in flight); 1948-packages acked (refused-connect -> wave plan
+3); 1609-pulse-2 + 1549-pulse-7 ride the actor's darwin close-out. 1445
+fixed bus-side (alloc-guard-spin
 acceptance green pre-pin; the alloc/free workarounds can retire in the
 next wave); 1453-packages acked (fleet data point); 1427-engine fixed
 (wave 137). The relay doorbell cron is SESSION-SCOPED: RENEW IT AT
 SESSION START (2h relay-doorbell prompt).
 
-POST-PIN QUEUE (the next arc; blocks 181/183/187/189): (1) promote
-`p_polyhedra_nested_hull` to tools/probes (probe count 316) -- the bus
-item is CLOSED (block 189) and the README entry is RESOLVED; the repro
-is red on the v0.64.4 battery pin; the wave pin is now switched (block
-191), so the promotion is the next wave -- probe count moves with the
-wave-140 probes (317 -> 318), then strengthen the wave-53 geom hull
-checks; (2) re-add the
-1549-stdlib-6 catalog payload clauses (m283+ is in v0.64.5; retire the
-payload-free guards there) + floors bump -- also keyed to the pin switch
-(reopen-if-trips per the closed item's note); (3) resume the ranked sweep
-inventory: convert/validate + convert/json; serialize toml/csv/json
-string-val; net http/ws/dns; format fmt/numbering; text similarity/diff;
-misc/regex/search/collect; num parse/itoa; log; crypto rng/curves; os
-path/fs; error/debug/test builders; (4) the thread-gate flip
-(2053/1627/1402) is UNBLOCKED (m312 + the wave-139 runtime half shipped
-in v0.64.5) -- flip the spawn e2e + thread pool and record the evidence;
-(5) DONE (block 191): the official-archive battery ran on the
-hash-verified release (bd71e2d3), the wave pin is switched and recorded
--- queue (1)-(4) now runs on the official v0.64.5 pin.
+WAVE PLAN (all outstanding requests mapped; blocks 181/183/187/189/191;
+runs on the official v0.64.5 pin) -- near-term, then the 2202-pulse
+order:
+(1) [next] promote `p_polyhedra_nested_hull` to tools/probes (probe
+count 317 -> 318 after wave 140) + README + wave-53 hull-check
+strengthening; bus item CLOSED (block 189).
+(2) re-add the 1549-stdlib-6 catalog payload clauses (captures
+nested-Vec, unescape Ok-Str, parse payload) + floors bump + both-
+platform suite (Windows + WSL); reopen-if-trips per the closed note.
+(3) net-socket wave: 1948-packages refused-connect synchronous Err
+(early-error return) + 2202 item 2 (TCP_NODELAY, listener backlog
+net/net.xi:96 hardcoded 128, SO_KEEPALIVE); re-check 1549-pulse-5
+(list_dir consumer break = the still-red 1609 payload-index row).
+(4) guard-free retirement: 1548-bindings-8 / 1445 -- retire the
+alloc/free workarounds, re-add the confined-block free row to p_b2728,
+re-probe on the official pin; bindings close B-8 (B-05 cleared).
+(5) thread wave: flip the spawn e2e + thread pool (2053/1627/1402,
+UNBLOCKED) + 1834-engine-6 (real threadpool + Send/Sync) + 2202 item 4.
+(6) compression upgrades (2202 item 5): dynamic-Huffman gzip, real
+brotli (RFC 7932), zstd + Accept-Encoding negotiation.
+(7) zero-copy send (2202 item 6): sendfile/splice/TransmitFile/writev
+(mmap family already shipped).
+(8) popen-class non-blocking spawn (2202 item 3; supervisor/reload
+shape).
+(9) TLS server+client + ALPN (2202 item 1, the ceiling-setter): via
+docs/TLS_DECISION.md (schannel/OpenSSL dl_open), gated on the
+compiler-side FFI hardening ref PULSE filed; then wss:// + h2-via-ALPN.
+(10) f32_bits/bits_to_f32 pair (1550-xvector-6; fold into the next
+num-touching wave).
+(11) phase-2 shelf (2202 items 7-10): SSE helpers, inotify parity, h2
+framing/HPACK scoping, epoll/kqueue/IOCP + LISTEN_FDS.
+PERVASIVE: the ranked sweep (convert/validate+json; serialize toml/csv/
+json string-val; net http/ws/dns; format fmt/numbering; text similarity/
+diff; misc/regex/search/collect; num parse/itoa; log; crypto rng/curves;
+os path/fs; error/debug/test builders) resumes inside every wave;
+darwin close-out with the actor (1609-pulse-2 + 1549-pulse-7 evidence ->
+fixed -> pulse verify); housekeeping close-loops for parked info rows
+(1131-pulse, 1342-compiler-2, 1453-packages, 1513-engine); 1630/1658
+stay compiler-owned; monitor the three still-red compiler rows
+(p_result_payload_index_concat / p_sync_mutex_builtin_shadow /
+p_trailing_match_after_push) at each pin; the queue/plan/README/floors
+wiring for wave 140 (floors173) follows the actor's commit.
 
 GATES (WAVE PIN = official v0.64.5, block 191): modules 510/510, corpus
 956/956, probes 317/317, floors172 (fns 8803/8802, rest at floor) + doc
