@@ -3352,6 +3352,20 @@ registry pin, agent recon for the rest)**
 - Two long-lived git processes (from ~14:20Z) sit in the relays repo;
   the bus itself is consistent. The next writer continues from 169/170.
 
+**SESSION 2026-10-15 block 175b (doorbell 01:00Z correction -- the compiler ACKED the v0.64.5 candidate regressions at 00:01Z, escalated ahead of the pin; the actor's 175 'quiet' verdict missed it because the ack sits on the stdlib->compiler item, invisible to `view --lane stdlib`) -- the actor's 175 sits below; no text of theirs edited**
+- REL-20261014-2123-stdlib history (00:01Z, compiler): open -> acked:
+  "v0.64.5 candidate regressions (Cell[Int8] set/get reads garbage +
+  aes_encrypt) -- release-train blocker; escalated ahead of the pin
+  (Cell[Int8] is the m249/m250-family lock shape)." Their doorbell
+  commit 62c36ba carries the same. No fix commit on the bus yet.
+- LESSON for the round ritual: `view --lane stdlib` lists rows where the
+  lane is the ADDRESSEE; an ack/fix on an item WE filed (from stdlib)
+  shows only via `python tools/relay.py show <item-id>` or the bus log.
+  Check `show` on our open filings each round.
+- State: the tag stays HELD on c8d713a; stdlib tree clean at a1e5ef9
+  plus this round's doc edits. On the compiler's fixed candidate: full
+  battery + 27-repro sweep + post-pin rows -> tag -> reply on 1739.
+
 **SESSION 2026-10-15 block 175 (doorbell 01:00Z -- quiet; lane idle since 23:00Z; tag still HELD)**
 - Lane view: no new rows or moves (only the compiler-owned 1630/1658
   stay open); nothing to transition.
