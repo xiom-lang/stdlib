@@ -3493,6 +3493,47 @@ registry pin, agent recon for the rest)**
 - Two long-lived git processes (from ~14:20Z) sit in the relays repo;
   the bus itself is consistent. The next writer continues from 169/170.
 
+**SESSION 2026-10-15 block 189b (compiler/debug-lane session, darwin runtime fixes landed in this repo -- fp128 libcall ABI wrappers (x86_64 + arm64) + mach free-memory + fp128 opposite-sign addsub/zero-path corrections; smoke_darwin_runtime added (corpus 955 -> 956); heavy macos dispatch pending)**
+- Two darwin runtime gaps from the v0.64.6 queue (REL-20261010-1609-pulse-2
+  + the 1549-pulse-7 host_statistics64 follow-up), fixed in the runtime C:
+  (1) fp128_helpers.c: on `__APPLE__` the whole f128 libcall family is now
+  defined with 16-byte-vector C signatures -- Apple clang has no
+  `__float128`/long-double f128 spelling and the x86-64 asm shims never
+  materialize there (macos-x64 linked the tf3 family UNDEFINED). The vector
+  ABI matches LLVM's fp128 registers on both darwin targets (xmm0/1 vs
+  q0/1; verified by darwin cross-compiles + IR probes + nm on both
+  `-target` arches). Windows/linux extern symbol sets stay byte-identical
+  (scalar/compare bodies relocated into shared static cores; ABI unchanged;
+  SysV harness + 200k-case exact-oracle fuzz -> 0 mismatches).
+  (2) xiom_runtime.c: `xiom_free_memory()` on `__APPLE__` reports
+  `host_statistics64` free_count x page size (was the -1 sentinel); mach
+  headers added under `__APPLE__`.
+- ALSO FIXED (found by the new lock; PRE-EXISTING on all platforms): the
+  fp128 opposite-sign `addsub` branch -- significand-only ordering chose
+  big/small with a NEGATIVE diff_exp (shift-by-negative UB: wrong answers on
+  win64, SIGSEGV under SysV), the exponent term sign (`ebig + (n - 113)`),
+  the `diff_exp >= 128` early return (now returns the big operand), and the
+  zero fast paths ignoring the subtract sign flip (`0.0 - a` returned `+a`).
+  Witness: `sub(2.0,1.5)` was `-1.5` -> `0.5`; probe matrix + 200k exact
+  fuzz green post-fix, red/segfault pre-fix.
+- NEW LOCK: `tests/smoke/smoke_darwin_runtime.xi` -- runtime-valued Float128
+  libcalls (derived from `platform.cpu_count()`, nothing constant-folds) +
+  the macOS free-memory non-negative contract (guarded by `is_macos()`).
+  RED on the pre-fix runtime (rc 10), GREEN on the fixed runtime (rc 0),
+  run with the official v0.64.5-rel compiler + `XIOM_RUNTIME_DIR` overlay.
+  Corpus count 955 -> 956 (docs/queue sweeps at the next wave); the heavy
+  macos-14 leg carries it once the witness branch is dispatched.
+- OPEN FINDING (recorded, not fixed): runtime `Float128 as Int128` lowers
+  to `__fixdfti` (double -> i128) on win64 -- a libcall the runtime does not
+  ship (`lld-link: undefined symbol __fixdfti`; the smoke hit it before the
+  cast was scoped out). Needs the double -> i128 helpers (+ `__fixunsdfti`)
+  with their own witness.
+- Provenance: compiler/debug-lane session owning the v0.64.6 darwin queue
+  item; the fixes ride the runtime commit immediately preceding this block
+  (see `git log`). Heavy dispatch + relay updates follow from that session.
+- Tree (pre-commit): M runtime/fp128_helpers.c, M runtime/xiom_runtime.c,
+  ?? tests/smoke/smoke_darwin_runtime.xi + the usual out/.
+
 **SESSION 2026-10-15 block 189 (session start after the handoff refresh -- the 1549 cluster + 1615 VERIFIED+CLOSED on the official v0.64.5 archive; 1305-pulse-2 re-verify noted; doorbell cron renewed)**
 - Inbound scan: no stdlib-addressed moves (the compiler's release wrap,
   fdaee6c, answered seven acked items -- all non-stdlib). The 1549

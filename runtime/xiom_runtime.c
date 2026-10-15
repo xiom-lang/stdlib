@@ -30,6 +30,12 @@
 #include <sys/statvfs.h>
 #endif
 
+#if defined(__APPLE__)
+#include <mach/mach.h>
+#include <mach/mach_host.h>
+#include <mach/host_info.h>
+#endif
+
 #include <stdint.h>
 #include <float.h>
 
@@ -4401,9 +4407,19 @@ long xiom_total_memory(void) {
 
 long xiom_free_memory(void) {
 #if defined(__APPLE__)
-    /* macOS has no _SC_AVPHYS_PAGES; report unknown (-1) until a mach
-       host_statistics64 implementation lands (darwin port, owner-ok). */
-    return -1;
+    /* macOS has no _SC_AVPHYS_PAGES; the mach host_statistics64 free-page
+       count is the faithful equivalent of Linux's MemFree (the 48850df
+       one-off reported -1 until this darwin follow-up landed). */
+    mach_port_t host = mach_host_self();
+    vm_statistics64_data_t vm;
+    mach_msg_type_number_t count = HOST_VM_INFO64_COUNT;
+    vm_size_t page = 0;
+    kern_return_t kr;
+    kr = host_statistics64(host, HOST_VM_INFO64, (host_info64_t)&vm, &count);
+    if (kr != KERN_SUCCESS) return -1;
+    kr = host_page_size(host, &page);
+    if (kr != KERN_SUCCESS || page == 0) return -1;
+    return (long)((uint64_t)vm.free_count * (uint64_t)page);
 #else
     long pages = sysconf(_SC_AVPHYS_PAGES);
     long page_size = sysconf(_SC_PAGE_SIZE);

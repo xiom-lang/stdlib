@@ -95,8 +95,20 @@ static xiom_f128 xiom_f128_addsub(xiom_f128 a, xiom_f128 b, int subtract) {
     int eb = (int)((b.hi >> 48) & XIOM_F128_EXP_MASK);
     uint64_t ma_hi = a.hi & XIOM_F128_MAN_HI_MASK;
     uint64_t mb_hi = b.hi & XIOM_F128_MAN_HI_MASK;
-    if (ea == 0 && ma_hi == 0 && a.lo == 0) { a.hi = (uint64_t)sa << 63; return b.hi == 0 ? (sa == sb ? a : xiom_f128_pack(0, 0, 0, 0)) : b; }
-    if (eb == 0 && mb_hi == 0 && b.lo == 0) { b.hi = (uint64_t)sb << 63; return a.hi == 0 ? (sa == sb ? a : xiom_f128_pack(0, 0, 0, 0)) : a; }
+    /* zero-operand fast paths -- kind-aware: for subtract, sb already holds
+       the EFFECTIVE (flipped) sign of b, and b's stored bits must follow it */
+    if (ea == 0 && ma_hi == 0 && a.lo == 0) {
+        if (eb == 0 && mb_hi == 0 && b.lo == 0) {
+            /* zero +- zero -> +0 unless the effective signs agree */
+            return xiom_f128_pack(sa == sb ? sa : 0, 0, 0, 0);
+        }
+        b.hi = (b.hi & 0x7FFFFFFFFFFFFFFFULL) | ((uint64_t)sb << 63);
+        return b;
+    }
+    if (eb == 0 && mb_hi == 0 && b.lo == 0) {
+        /* x +- 0 -> x (its own sign) */
+        return a;
+    }
 
     /* Build 113-bit significands (implicit bit at bit 112) */
     unsigned __int128 ma = ((unsigned __int128)1 << 112) | ((unsigned __int128)ma_hi << 64) | a.lo;
@@ -115,24 +127,35 @@ static xiom_f128 xiom_f128_addsub(xiom_f128 a, xiom_f128 b, int subtract) {
         e += n - 113;
         return xiom_f128_round_pack(sa, e, sum, 0);
     } else {
-        /* opposite signs -> magnitude subtract */
+        /* opposite signs -> magnitude subtract. Order by EXPONENT first:
+           with unequal exponents the larger-significand operand can carry
+           the smaller exponent (2.0 = 1.0b x 2^1 vs 1.5 = 1.1b x 2^0), and
+           `small >> diff_exp` with a negative diff_exp is a shift by a
+           negative count (UB; wrong-answer on every target). */
         int ebig = ea, esmall = eb;
         unsigned __int128 big = ma, small = mb;
-        if (ma < mb) { big = mb; small = ma; ebig = eb; esmall = ea; }
-        int diff_exp = ebig - esmall;
+        int big_is_a = 1;
+        if (ea < eb || (ea == eb && ma < mb)) {
+            big = mb; small = ma; ebig = eb; esmall = ea; big_is_a = 0;
+        }
+        int sres = big_is_a ? sa : sb;
+        int diff_exp = ebig - esmall; /* >= 0 now */
         if (diff_exp >= 128) {
-            return xiom_f128_pack(big ? (int)(big >> 127) & 1 : 0, 0, 0, 0);
+            /* the small operand is entirely below the 113-bit window -->
+               result is the big operand (truncated, like the diff path). */
+            return xiom_f128_pack(sres, ebig, (uint64_t)(big >> 64), (uint64_t)big);
         }
         unsigned __int128 diff = big - (small >> diff_exp);
         if (diff == 0) return xiom_f128_pack(0, 0, 0, 0);
-        int sres = (ebig == ea) ? sa : sb;
         /* renormalize */
         int n = 128;
         unsigned __int128 s = diff;
         while ((s >> 127) == 0) { s <<= 1; n--; }
         int renorm = 127 - 112;
         diff = s >> renorm;
-        int e2 = ebig - (n - 113);
+        /* value = (big - small) x 2^(ebig-16383-112); diff_out (bit 112
+           set) = D x 2^(113-n) --> e = ebig + (n - 113). */
+        int e2 = ebig + (n - 113);
         if (diff == 0) return xiom_f128_pack(0, 0, 0, 0);
         return xiom_f128_round_pack(sres, e2, diff, 0);
     }
@@ -331,6 +354,214 @@ void xiom_f128_from_i128_sret(xiom_f128* out, const unsigned __int128* v, int ne
     *out = xiom_f128_pack(neg, exp, (uint64_t)(sig >> 64), (uint64_t)sig);
 }
 
+/* ========== shared scalar-return / comparison cores (ABI-neutral) ========= */
+/* These bodies are the single source of truth for the fp128 -> scalar and
+ * comparison semantics; the classic extern helpers below (struct-passing
+ * ABI) and the darwin vector-ABI wrappers both call them. */
+
+static double xiom_f128_to_f64_core(xiom_f128 f) {
+    if (xiom_f128_isnan(f)) { uint64_t nan = 0x7FF8000000000000ULL; double d; memcpy(&d, &nan, 8); return d; }
+    int sign = (int)(f.hi >> 63);
+    int e = (int)((f.hi >> 48) & XIOM_F128_EXP_MASK);
+    uint64_t mhi = f.hi & XIOM_F128_MAN_HI_MASK;
+    if (e == 0x7FFF) {
+        uint64_t bits = ((uint64_t)sign << 63) | 0x7FF0000000000000ULL | (mhi ? (mhi >> 60) : 0);
+        double d; memcpy(&d, &bits, 8); return d;
+    }
+    if (e == 0 && mhi == 0 && f.lo == 0) { double z = 0.0; if (sign) z = -z; return z; }
+    int e64 = e - XIOM_F128_BIAS + 1023;
+    /* significand: implicit bit + 112 mantissa bits; keep 53 + guard/sticky */
+    unsigned __int128 sig = ((unsigned __int128)1 << 112) | ((unsigned __int128)mhi << 64) | f.lo;
+    if (e64 >= 0x7FF) { /* overflow -> inf */
+        uint64_t bits = ((uint64_t)sign << 63) | 0x7FF0000000000000ULL;
+        double d; memcpy(&d, &bits, 8); return d;
+    }
+    if (e64 <= 0) {
+        /* denormal/underflow path: shift right by (1 - e64) more */
+        int shift = 113 - 53 + (1 - e64);
+        unsigned __int128 shifted = shift >= 128 ? 0 : (sig >> shift);
+        uint64_t mant = (uint64_t)(shifted >> 60);
+        uint64_t bits = ((uint64_t)sign << 63) | mant;
+        double d; memcpy(&d, &bits, 8); return d;
+    }
+    int shift = 113 - 53;
+    unsigned __int128 shifted = sig >> shift;
+    uint64_t guard = (uint64_t)((sig >> (shift - 1)) & 1);
+    uint64_t sticky = (uint64_t)(sig & ((((unsigned __int128)1) << (shift - 1)) - 1));
+    uint64_t mant = (uint64_t)shifted; /* 53 bits */
+    if (guard && (sticky || (mant & 1))) mant += 1;
+    if (mant >> 53) { mant >>= 1; e64 += 1; }
+    uint64_t bits = ((uint64_t)sign << 63) | ((uint64_t)e64 << 52) | (mant & 0xFFFFFFFFFFFFFULL);
+    double d; memcpy(&d, &bits, 8); return d;
+}
+static float xiom_f128_to_f32_core(xiom_f128 f) { return (float)xiom_f128_to_f64_core(f); }
+
+static int64_t xiom_f128_to_i64_core(xiom_f128 f) {
+    if (xiom_f128_isnan(f) || xiom_f128_isinf(f)) return 0;
+    int sign = (int)(f.hi >> 63);
+    int e = (int)((f.hi >> 48) & XIOM_F128_EXP_MASK);
+    uint64_t mhi = f.hi & XIOM_F128_MAN_HI_MASK;
+    if (e == 0 && mhi == 0 && f.lo == 0) return 0;
+    unsigned __int128 sig = ((unsigned __int128)1 << 112) | ((unsigned __int128)mhi << 64) | f.lo;
+    int shift = 112 - (e - XIOM_F128_BIAS);
+    if (shift < 0) return 0; /* overflow */
+    if (shift >= 128) return 0;
+    unsigned __int128 mag = sig >> shift;
+    if (mag > (unsigned __int128)INT64_MAX + (sign ? 1 : 0)) return 0;
+    int64_t v = (int64_t)mag;
+    return sign ? -v : v;
+}
+static uint64_t xiom_f128_to_u64_core(xiom_f128 f) {
+    if (xiom_f128_isnan(f) || xiom_f128_isinf(f) || (int)(f.hi >> 63)) return 0;
+    int e = (int)((f.hi >> 48) & XIOM_F128_EXP_MASK);
+    uint64_t mhi = f.hi & XIOM_F128_MAN_HI_MASK;
+    if (e == 0 && mhi == 0 && f.lo == 0) return 0;
+    unsigned __int128 sig = ((unsigned __int128)1 << 112) | ((unsigned __int128)mhi << 64) | f.lo;
+    int shift = 112 - (e - XIOM_F128_BIAS);
+    if (shift < 0 || shift >= 128) return 0;
+    return (uint64_t)(sig >> shift);
+}
+static __int128 xiom_f128_to_i128_core(xiom_f128 f) {
+    if (xiom_f128_isnan(f) || xiom_f128_isinf(f)) return 0;
+    int sign = (int)(f.hi >> 63);
+    int e = (int)((f.hi >> 48) & XIOM_F128_EXP_MASK);
+    uint64_t mhi = f.hi & XIOM_F128_MAN_HI_MASK;
+    if (e == 0 && mhi == 0 && f.lo == 0) return 0;
+    unsigned __int128 sig = ((unsigned __int128)1 << 112) | ((unsigned __int128)mhi << 64) | f.lo;
+    int shift = 112 - (e - XIOM_F128_BIAS);
+    if (shift < 0 || shift >= 128) return 0; /* overflow */
+    unsigned __int128 mag = sig >> shift;
+    if (sign) {
+        if (mag > (((unsigned __int128)1) << 127)) return 0; /* < INT128_MIN */
+        return (__int128)(0 - mag);
+    }
+    if (mag >= (((unsigned __int128)1) << 127)) return 0; /* >= INT128_MAX */
+    return (__int128)mag;
+}
+static unsigned __int128 xiom_f128_to_u128_core(xiom_f128 f) {
+    if (xiom_f128_isnan(f) || xiom_f128_isinf(f) || (int)(f.hi >> 63)) return 0;
+    int e = (int)((f.hi >> 48) & XIOM_F128_EXP_MASK);
+    uint64_t mhi = f.hi & XIOM_F128_MAN_HI_MASK;
+    if (e == 0 && mhi == 0 && f.lo == 0) return 0;
+    unsigned __int128 sig = ((unsigned __int128)1 << 112) | ((unsigned __int128)mhi << 64) | f.lo;
+    int shift = 112 - (e - XIOM_F128_BIAS);
+    if (shift < 0 || shift >= 128) return 0;
+    return sig >> shift;
+}
+
+static int xiom_f128_cmp_unord_core(xiom_f128 a, xiom_f128 b) { return xiom_f128_isnan(a) || xiom_f128_isnan(b); }
+static int xiom_f128_cmp_eq_core(xiom_f128 a, xiom_f128 b) {
+    if (xiom_f128_isnan(a) || xiom_f128_isnan(b)) return 1;
+    return (a.hi == b.hi && a.lo == b.lo) ? 0 : 1;
+}
+static int xiom_f128_cmp_core(xiom_f128 a, xiom_f128 b) {
+    if (xiom_f128_isnan(a) || xiom_f128_isnan(b)) return 1;
+    if (xiom_f128_cmp_eq_core(a, b) == 0) return 0;
+    int sa = (int)(a.hi >> 63), sb = (int)(b.hi >> 63);
+    if (sa != sb) return sa ? -1 : 1;
+    int e = sa ? -1 : 1;
+    /* compare magnitudes */
+    uint64_t ah = a.hi & 0x7FFFFFFFFFFFFFFFULL, bh = b.hi & 0x7FFFFFFFFFFFFFFFULL;
+    if (ah != bh) return (ah < bh) ? -e : e;
+    if (a.lo != b.lo) return (a.lo < b.lo) ? -e : e;
+    return 0;
+}
+static int xiom_f128_cmp_get_core(xiom_f128 a, xiom_f128 b) {
+    int c = xiom_f128_cmp_core(a, b);
+    return c == 1 ? 0 : c; /* unord -> 0 */
+}
+static int xiom_f128_cmp_gt_core(xiom_f128 a, xiom_f128 b) {
+    int c = xiom_f128_cmp_core(a, b);
+    return c > 0 ? 1 : 0;
+}
+static int xiom_f128_cmp_le_core(xiom_f128 a, xiom_f128 b) {
+    int c = xiom_f128_cmp_core(a, b);
+    return c == 1 ? 1 : (c == 0 ? 0 : -1); /* unord -> 1 */
+}
+static int xiom_f128_cmp_lt_core(xiom_f128 a, xiom_f128 b) {
+    int c = xiom_f128_cmp_core(a, b);
+    return c < 0 ? -1 : 0;
+}
+
+#if defined(__APPLE__)
+/* ======================= darwin: ABI-correct libcall wrappers ==============
+ * Apple clang supports no C spelling of the f128 type (no __float128; long
+ * double is x87 on x86_64 and plain double on arm64), and Apple compiler-rt
+ * ships no f128 (tf) soft-float builtins on x86_64. LLVM's fp128 lowering
+ * passes each fp128 value in ONE 16-byte vector register on both darwin
+ * targets (xmm0/1.. on x86_64, q0/1.. on arm64), and a 16-byte vector C
+ * argument/return lands in exactly those registers, so the whole libcall
+ * family is (re)defined here with vector signatures over the shared
+ * value-form impls. Bodies never do fp128 arithmetic, so no wrapper can
+ * recurse into a libcall. Context: the x86-64 SysV asm shims never
+ * materialized under Apple clang, leaving the tf3 family undefined at link
+ * time (REL-20261010-1609-pulse-2); 48850df only fixed the arm64 compile.
+ * ==========================================================================*/
+typedef double xiom_v2df __attribute__((vector_size(16)));
+
+static xiom_f128 xiom_v2df_to_f128(xiom_v2df v) {
+    xiom_f128 f;
+    memcpy(&f, &v, sizeof(f));
+    return f;
+}
+static xiom_v2df xiom_f128_to_v2df(xiom_f128 f) {
+    xiom_v2df v;
+    memcpy(&v, &f, sizeof(v));
+    return v;
+}
+
+/* --- arithmetic / negation (fp128 in, fp128 out) --- */
+xiom_v2df __addtf3(xiom_v2df a, xiom_v2df b) { return xiom_f128_to_v2df(xiom_f128_addsub(xiom_v2df_to_f128(a), xiom_v2df_to_f128(b), 0)); }
+xiom_v2df __subtf3(xiom_v2df a, xiom_v2df b) { return xiom_f128_to_v2df(xiom_f128_addsub(xiom_v2df_to_f128(a), xiom_v2df_to_f128(b), 1)); }
+xiom_v2df __multf3(xiom_v2df a, xiom_v2df b) { return xiom_f128_to_v2df(xiom_f128_mul_impl(xiom_v2df_to_f128(a), xiom_v2df_to_f128(b))); }
+xiom_v2df __divtf3(xiom_v2df a, xiom_v2df b) { return xiom_f128_to_v2df(xiom_f128_div_impl(xiom_v2df_to_f128(a), xiom_v2df_to_f128(b))); }
+xiom_v2df __negtf2(xiom_v2df a) {
+    xiom_f128 r = xiom_v2df_to_f128(a);
+    r.hi ^= 0x8000000000000000ULL;
+    return xiom_f128_to_v2df(r);
+}
+
+/* --- int / double / float -> fp128 --- */
+xiom_v2df __extenddftf2(double d) { return xiom_f128_to_v2df(xiom_f128_from_f64_impl(d)); }
+xiom_v2df __extendsftf2(float f) { return xiom_f128_to_v2df(xiom_f128_from_f64_impl((double)f)); }
+xiom_v2df __floatsitf(int32_t v) { return xiom_f128_to_v2df(xiom_f128_from_i64_impl(v)); }
+xiom_v2df __floatunsitf(uint32_t v) { return xiom_f128_to_v2df(xiom_f128_from_u64_impl(v)); }
+xiom_v2df __floatditf(int64_t v) { return xiom_f128_to_v2df(xiom_f128_from_i64_impl(v)); }
+xiom_v2df __floatunditf(uint64_t v) { return xiom_f128_to_v2df(xiom_f128_from_u64_impl(v)); }
+xiom_v2df __floattitf(__int128 i) {
+    xiom_f128 r;
+    unsigned __int128 u = (unsigned __int128)i;
+    xiom_f128_from_i128_sret(&r, &u, i < 0);
+    return xiom_f128_to_v2df(r);
+}
+xiom_v2df __floatuntitf(unsigned __int128 u) {
+    xiom_f128 r;
+    xiom_f128_from_i128_sret(&r, &u, 0);
+    return xiom_f128_to_v2df(r);
+}
+
+/* --- fp128 -> scalar --- */
+double __trunctfdf2(xiom_v2df a) { return xiom_f128_to_f64_core(xiom_v2df_to_f128(a)); }
+float __trunctfsf2(xiom_v2df a) { return xiom_f128_to_f32_core(xiom_v2df_to_f128(a)); }
+int64_t __fixtfdi(xiom_v2df a) { return xiom_f128_to_i64_core(xiom_v2df_to_f128(a)); }
+uint64_t __fixunstfdi(xiom_v2df a) { return xiom_f128_to_u64_core(xiom_v2df_to_f128(a)); }
+int32_t __fixtfsi(xiom_v2df a) { return (int32_t)xiom_f128_to_i64_core(xiom_v2df_to_f128(a)); }
+uint32_t __fixunstfsi(xiom_v2df a) { return (uint32_t)xiom_f128_to_u64_core(xiom_v2df_to_f128(a)); }
+__int128 __fixtfti(xiom_v2df a) { return xiom_f128_to_i128_core(xiom_v2df_to_f128(a)); }
+unsigned __int128 __fixunstfti(xiom_v2df a) { return xiom_f128_to_u128_core(xiom_v2df_to_f128(a)); }
+
+/* --- comparisons (fp128, fp128 -> int) --- */
+int __unordtf2(xiom_v2df a, xiom_v2df b) { return xiom_f128_cmp_unord_core(xiom_v2df_to_f128(a), xiom_v2df_to_f128(b)); }
+int __eqtf2(xiom_v2df a, xiom_v2df b) { return xiom_f128_cmp_eq_core(xiom_v2df_to_f128(a), xiom_v2df_to_f128(b)); }
+int __netf2(xiom_v2df a, xiom_v2df b) { return xiom_f128_cmp_eq_core(xiom_v2df_to_f128(a), xiom_v2df_to_f128(b)); }
+int __cmptf2(xiom_v2df a, xiom_v2df b) { return xiom_f128_cmp_core(xiom_v2df_to_f128(a), xiom_v2df_to_f128(b)); }
+int __getf2(xiom_v2df a, xiom_v2df b) { return xiom_f128_cmp_get_core(xiom_v2df_to_f128(a), xiom_v2df_to_f128(b)); }
+int __gttf2(xiom_v2df a, xiom_v2df b) { return xiom_f128_cmp_gt_core(xiom_v2df_to_f128(a), xiom_v2df_to_f128(b)); }
+int __letf2(xiom_v2df a, xiom_v2df b) { return xiom_f128_cmp_le_core(xiom_v2df_to_f128(a), xiom_v2df_to_f128(b)); }
+int __lttf2(xiom_v2df a, xiom_v2df b) { return xiom_f128_cmp_lt_core(xiom_v2df_to_f128(a), xiom_v2df_to_f128(b)); }
+
+#else /* !__APPLE__ -- classic layouts (Win64 asm shims + struct-ABI helpers) */
+
 #if defined(__x86_64__) || defined(_M_X64)
 /* ============== naked asm shims (IR convention -> sret wrappers) ============ */
 /* Layout at each shim entry (rsp == 8 mod 16):
@@ -485,141 +716,33 @@ __attribute__((used, naked)) void __floatuntitf(unsigned __int128 u) {
    compiler-rt; the SysV sret-wrapping asm shims above are x86-64 only. */
 #endif
 
-/* ============ scalar-return helpers (ABI already matches; unchanged) ====== */
+/* ============ scalar-return helpers (struct-ABI externs) ================== */
+/* Signatures/ABI unchanged; the bodies live in the shared cores above. */
 
-double __trunctfdf2(xiom_f128 f) {
-    if (xiom_f128_isnan(f)) { uint64_t nan = 0x7FF8000000000000ULL; double d; memcpy(&d, &nan, 8); return d; }
-    int sign = (int)(f.hi >> 63);
-    int e = (int)((f.hi >> 48) & XIOM_F128_EXP_MASK);
-    uint64_t mhi = f.hi & XIOM_F128_MAN_HI_MASK;
-    if (e == 0x7FFF) {
-        uint64_t bits = ((uint64_t)sign << 63) | 0x7FF0000000000000ULL | (mhi ? (mhi >> 60) : 0);
-        double d; memcpy(&d, &bits, 8); return d;
-    }
-    if (e == 0 && mhi == 0 && f.lo == 0) { double z = 0.0; if (sign) z = -z; return z; }
-    int e64 = e - XIOM_F128_BIAS + 1023;
-    /* significand: implicit bit + 112 mantissa bits; keep 53 + guard/sticky */
-    unsigned __int128 sig = ((unsigned __int128)1 << 112) | ((unsigned __int128)mhi << 64) | f.lo;
-    if (e64 >= 0x7FF) { /* overflow -> inf */
-        uint64_t bits = ((uint64_t)sign << 63) | 0x7FF0000000000000ULL;
-        double d; memcpy(&d, &bits, 8); return d;
-    }
-    if (e64 <= 0) {
-        /* denormal/underflow path: shift right by (1 - e64) more */
-        int shift = 113 - 53 + (1 - e64);
-        unsigned __int128 shifted = shift >= 128 ? 0 : (sig >> shift);
-        uint64_t mant = (uint64_t)(shifted >> 60);
-        uint64_t bits = ((uint64_t)sign << 63) | mant;
-        double d; memcpy(&d, &bits, 8); return d;
-    }
-    int shift = 113 - 53;
-    unsigned __int128 shifted = sig >> shift;
-    uint64_t guard = (uint64_t)((sig >> (shift - 1)) & 1);
-    uint64_t sticky = (uint64_t)(sig & ((((unsigned __int128)1) << (shift - 1)) - 1));
-    uint64_t mant = (uint64_t)shifted; /* 53 bits */
-    if (guard && (sticky || (mant & 1))) mant += 1;
-    if (mant >> 53) { mant >>= 1; e64 += 1; }
-    uint64_t bits = ((uint64_t)sign << 63) | ((uint64_t)e64 << 52) | (mant & 0xFFFFFFFFFFFFFULL);
-    double d; memcpy(&d, &bits, 8); return d;
-}
+double __trunctfdf2(xiom_f128 f) { return xiom_f128_to_f64_core(f); }
 
-float __trunctfsf2(xiom_f128 f) {
-    double d = __trunctfdf2(f);
-    return (float)d;
-}
+float __trunctfsf2(xiom_f128 f) { return xiom_f128_to_f32_core(f); }
 
-int64_t __fixtfdi(xiom_f128 f) {
-    if (xiom_f128_isnan(f) || xiom_f128_isinf(f)) return 0;
-    int sign = (int)(f.hi >> 63);
-    int e = (int)((f.hi >> 48) & XIOM_F128_EXP_MASK);
-    uint64_t mhi = f.hi & XIOM_F128_MAN_HI_MASK;
-    if (e == 0 && mhi == 0 && f.lo == 0) return 0;
-    unsigned __int128 sig = ((unsigned __int128)1 << 112) | ((unsigned __int128)mhi << 64) | f.lo;
-    int shift = 112 - (e - XIOM_F128_BIAS);
-    if (shift < 0) return 0; /* overflow */
-    if (shift >= 128) return 0;
-    unsigned __int128 mag = sig >> shift;
-    if (mag > (unsigned __int128)INT64_MAX + (sign ? 1 : 0)) return 0;
-    int64_t v = (int64_t)mag;
-    return sign ? -v : v;
-}
-uint64_t __fixunstfdi(xiom_f128 f) {
-    if (xiom_f128_isnan(f) || xiom_f128_isinf(f) || (int)(f.hi >> 63)) return 0;
-    int e = (int)((f.hi >> 48) & XIOM_F128_EXP_MASK);
-    uint64_t mhi = f.hi & XIOM_F128_MAN_HI_MASK;
-    if (e == 0 && mhi == 0 && f.lo == 0) return 0;
-    unsigned __int128 sig = ((unsigned __int128)1 << 112) | ((unsigned __int128)mhi << 64) | f.lo;
-    int shift = 112 - (e - XIOM_F128_BIAS);
-    if (shift < 0 || shift >= 128) return 0;
-    return (uint64_t)(sig >> shift);
-}
-int32_t __fixtfsi(xiom_f128 f) { return (int32_t)__fixtfdi(f); }
-uint32_t __fixunstfsi(xiom_f128 f) { return (uint32_t)__fixunstfdi(f); }
+int64_t __fixtfdi(xiom_f128 f) { return xiom_f128_to_i64_core(f); }
+uint64_t __fixunstfdi(xiom_f128 f) { return xiom_f128_to_u64_core(f); }
+int32_t __fixtfsi(xiom_f128 f) { return (int32_t)xiom_f128_to_i64_core(f); }
+uint32_t __fixunstfsi(xiom_f128 f) { return (uint32_t)xiom_f128_to_u64_core(f); }
 
 /* 128-bit integer results return in rax:rdx on Win64 -- matches the IR's
  * i128 convention, so these need no shim. */
-__int128 __fixtfti(xiom_f128 f) {
-    if (xiom_f128_isnan(f) || xiom_f128_isinf(f)) return 0;
-    int sign = (int)(f.hi >> 63);
-    int e = (int)((f.hi >> 48) & XIOM_F128_EXP_MASK);
-    uint64_t mhi = f.hi & XIOM_F128_MAN_HI_MASK;
-    if (e == 0 && mhi == 0 && f.lo == 0) return 0;
-    unsigned __int128 sig = ((unsigned __int128)1 << 112) | ((unsigned __int128)mhi << 64) | f.lo;
-    int shift = 112 - (e - XIOM_F128_BIAS);
-    if (shift < 0 || shift >= 128) return 0; /* overflow */
-    unsigned __int128 mag = sig >> shift;
-    if (sign) {
-        if (mag > (((unsigned __int128)1) << 127)) return 0; /* < INT128_MIN */
-        return (__int128)(0 - mag);
-    }
-    if (mag >= (((unsigned __int128)1) << 127)) return 0; /* >= INT128_MAX */
-    return (__int128)mag;
-}
-unsigned __int128 __fixunstfti(xiom_f128 f) {
-    if (xiom_f128_isnan(f) || xiom_f128_isinf(f) || (int)(f.hi >> 63)) return 0;
-    int e = (int)((f.hi >> 48) & XIOM_F128_EXP_MASK);
-    uint64_t mhi = f.hi & XIOM_F128_MAN_HI_MASK;
-    if (e == 0 && mhi == 0 && f.lo == 0) return 0;
-    unsigned __int128 sig = ((unsigned __int128)1 << 112) | ((unsigned __int128)mhi << 64) | f.lo;
-    int shift = 112 - (e - XIOM_F128_BIAS);
-    if (shift < 0 || shift >= 128) return 0;
-    return sig >> shift;
-}
+__int128 __fixtfti(xiom_f128 f) { return xiom_f128_to_i128_core(f); }
+unsigned __int128 __fixunstfti(xiom_f128 f) { return xiom_f128_to_u128_core(f); }
 
 /* ========================== COMPARISONS =================================== */
-int __unordtf2(xiom_f128 a, xiom_f128 b) { return xiom_f128_isnan(a) || xiom_f128_isnan(b); }
-int __eqtf2(xiom_f128 a, xiom_f128 b) {
-    if (xiom_f128_isnan(a) || xiom_f128_isnan(b)) return 1;
-    return (a.hi == b.hi && a.lo == b.lo) ? 0 : 1;
-}
-int __netf2(xiom_f128 a, xiom_f128 b) { return __eqtf2(a, b); }
-int __cmptf2(xiom_f128 a, xiom_f128 b) {
-    if (xiom_f128_isnan(a) || xiom_f128_isnan(b)) return 1;
-    if (__eqtf2(a, b) == 0) return 0;
-    int sa = (int)(a.hi >> 63), sb = (int)(b.hi >> 63);
-    if (sa != sb) return sa ? -1 : 1;
-    int e = sa ? -1 : 1;
-    /* compare magnitudes */
-    uint64_t ah = a.hi & 0x7FFFFFFFFFFFFFFFULL, bh = b.hi & 0x7FFFFFFFFFFFFFFFULL;
-    if (ah != bh) return (ah < bh) ? -e : e;
-    if (a.lo != b.lo) return (a.lo < b.lo) ? -e : e;
-    return 0;
-}
-int __getf2(xiom_f128 a, xiom_f128 b) {
-    int c = __cmptf2(a, b);
-    return c == 1 ? 0 : c; /* unord -> 0 */
-}
-int __gttf2(xiom_f128 a, xiom_f128 b) {
-    int c = __cmptf2(a, b);
-    return c > 0 ? 1 : 0;
-}
-int __letf2(xiom_f128 a, xiom_f128 b) {
-    int c = __cmptf2(a, b);
-    return c == 1 ? 1 : (c == 0 ? 0 : -1); /* unord -> 1 */
-}
-int __lttf2(xiom_f128 a, xiom_f128 b) {
-    int c = __cmptf2(a, b);
-    return c < 0 ? -1 : 0;
-}
+int __unordtf2(xiom_f128 a, xiom_f128 b) { return xiom_f128_cmp_unord_core(a, b); }
+int __eqtf2(xiom_f128 a, xiom_f128 b) { return xiom_f128_cmp_eq_core(a, b); }
+int __netf2(xiom_f128 a, xiom_f128 b) { return xiom_f128_cmp_eq_core(a, b); }
+int __cmptf2(xiom_f128 a, xiom_f128 b) { return xiom_f128_cmp_core(a, b); }
+int __getf2(xiom_f128 a, xiom_f128 b) { return xiom_f128_cmp_get_core(a, b); }
+int __gttf2(xiom_f128 a, xiom_f128 b) { return xiom_f128_cmp_gt_core(a, b); }
+int __letf2(xiom_f128 a, xiom_f128 b) { return xiom_f128_cmp_le_core(a, b); }
+int __lttf2(xiom_f128 a, xiom_f128 b) { return xiom_f128_cmp_lt_core(a, b); }
+
+#endif /* __APPLE__ platform split */
 
 
