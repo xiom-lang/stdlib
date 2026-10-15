@@ -3352,6 +3352,35 @@ registry pin, agent recon for the rest)**
 - Two long-lived git processes (from ~14:20Z) sit in the relays repo;
   the bus itself is consistent. The next writer continues from 169/170.
 
+**SESSION 2026-10-15 block 181 (v0.64.5 RELEASED TO THE PIN LINE: fresh candidate battery fully green; 2123 verified+closed; annotated tag stdlib-v0.64.5 cut and pushed (ecc3549 -> e082623); polyhedra hull bonus-resolved)**
+- Signal (relays c836588, 1739 note 11:59Z): fresh wave 13081238
+  (m322-m327; full e2e 2550/0/4), dry-run run 38731274663; re-run the
+  candidate battery; tag on green on c8d713a (or newer).
+- Fresh candidate (windows-x64 sha256 9b391ef4..., extracted
+  %TEMP%\kilo\stdlib_ws\v0.64.5b-rel): all nine previously-failing files
+  rc 0 (spot-check first), then corpus 955/955 (779.4s), probes 315/315
+  (358.5s), modules 510/510 (187s), barename 0/510 (348.7s), floors172
+  + module-smoke + doc ratchets OK. 27-repro sweep: all expected greens
+  green; the three still-open rows stay red as recorded;
+  p_vec_shape_arg_mismatch is the intended T001. BONUS:
+  p_polyhedra_nested_hull 5/5 rc 0 (pin control 3/3 rc 1) -- the
+  long-open hull finding appears batch-resolved; evidence note appended
+  to REL-20261010-1549-stdlib (promotion to tools/probes queued for the
+  post-tag wave). Thread acceptance at the pin: dbg131s 5/5 +
+  two-thread dbg139w 5/5 rc 0.
+- Relays: 2123 fixed -> verified -> closed (green battery notes); 1739
+  got the tag reply (ref + sha + full evidence); pushed 8f0ff8d.
+- Tag: annotated stdlib-v0.64.5, tag object ecc3549 ->
+  e08262316d3c53dc2559d951362d9740adb2143f, pushed; triggers the stdlib
+  release.yml pipeline. The compiler now pins STDLIB_VERSION + refreshes
+  the vendored worktree, re-runs the full gate + thread acceptance,
+  converts the notes JSON, and tags v0.64.5.
+- Post-tag queue: promote p_polyhedra_nested_hull to tools/probes (probe
+  count 316); re-add the 1549-stdlib-6 catalog payload clauses
+  (payload-free guards retire) as the first post-pin stdlib wave; the
+  ranked sweep inventory continues; v0.64.6-track items (Darwin/memset
+  per the owner decision) stay cross-filed.
+
 **SESSION 2026-10-15 block 180 (doorbell 11:00Z -- 2123 FIXED by the compiler (m323-m326); fresh archive signal follows; freeze/tag on signal)**
 - Outbound status change: `REL-20261014-2123-stdlib` moved to **fixed**
   (relays 177663e: all four regression classes landed in the m323-m326

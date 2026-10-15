@@ -766,6 +766,17 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
      LinkedList.invariant_check in p_wave7/p_wave8 -- 2 runfails:
      p_wave107/p_wave108 crypto pair lengths = the aes-gcm signature),
      modules 510/510, barename 0/510, ratchets OK.
+     RELEASED (block 181, 2026-10-15): the fresh candidate (run
+     38731274663, sha256 9b391ef4...) is fully green -- corpus 955/955,
+     probes 315/315, modules 510/510, barename 0/510, floors172 +
+     module-smoke + doc ratchets OK; the 27-repro sweep matches the
+     recorded expectations; the thread acceptance is 5/5 on dbg131s and
+     5/5 on the two-thread dbg139w; p_polyhedra_nested_hull is
+     bonus-resolved (5/5 rc 0; pin control 3/3 rc 1). The annotated
+     stdlib-v0.64.5 (tag object ecc3549 -> commit e082623) is pushed;
+     the compiler pins + re-gates + tags v0.64.5. Post-tag: promote the
+     polyhedra repro to tools/probes (probe count 316), re-add the
+     1549-stdlib-6 payload clauses, resume the ranked sweep.
      NEXT: the ranked sweep inventory as before; candidate processing
      when the v0.64.5 archive lands (release-check rows + known-failures
      sweep + the m313 guard-spin acceptance).

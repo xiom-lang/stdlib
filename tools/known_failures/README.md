@@ -88,6 +88,16 @@ the stdlib-v0.64.5 tag is HELD:
 The 27-repro sweep and the post-pin rows run against the fixed
 candidate.
 
+Fresh candidate (run 38731274663, 2026-10-15): the full sweep is clean
+-- every m276-m327 row at the expected rc, the three still-open rows
+(`p_result_payload_index_concat`, `p_sync_mutex_builtin_shadow`,
+`p_trailing_match_after_push`) stay red as recorded,
+`p_vec_shape_arg_mismatch_av` is now the intended T001 at the call
+site, the two `p_v065_*` regressions are rc 0, and
+`p_polyhedra_nested_hull.xi` is rc 0 5/5 (v0.64.4 control 3/3 rc 1) --
+batch-resolved; promotion to `tools/probes/` follows the bus item's
+close (probe count 316).
+
 **Open finding 2026-10-10 (compiler v0.64.2): a Path.exists + trailing
 println sequence dies with an illegal-instruction exit.** The wave-103
 repro's exact statement sequence dies with exit -1073741795 (0xC000001D)
@@ -362,6 +372,13 @@ V0.64.1 RE-CHECK 2026-10-08: NOT fixed on the official pin -- the square
 hull is still 2 rows (rc=1, would be 2 for the tetra), so the repro
 STAYS in known_failures. The m201 fix did not cover this instance; the
 relay classification needs a correction on the compiler side.
+V0.64.5 RE-CHECK 2026-10-15: GREEN on the fresh v0.64.5 candidate
+(repro 5/5 rc 0; v0.64.4 release-archive control 3/3 rc 1) -- the hull
+collapse appears batch-resolved in the m276-m327 range (no single commit
+claims it); the bus item carries the reporter evidence. Header flips to
+RESOLVED and the repro is promoted to `tools/probes/` when the item
+closes; the wave-53 geom probe's empty-input-only hull checks can be
+strengthened then.
 
 **RESOLVED 2026-10-12 (stdlib algorithm): `geometry_2d.polygon_difference`
 disjoint-case fix (wave 116).** The difference now routes through the
