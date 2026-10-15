@@ -3352,6 +3352,20 @@ registry pin, agent recon for the rest)**
 - Two long-lived git processes (from ~14:20Z) sit in the relays repo;
   the bus itself is consistent. The next writer continues from 169/170.
 
+**SESSION 2026-10-15 block 184 (doorbell 15:00Z -- retag pipeline all green; nothing inbound)**
+- The tag-move incident from block 183 is resolved: `stdlib-v0.64.5`
+  was re-cut after the ubuntu release gate caught the pin-era m296
+  class in `smoke_os_sync` (pin-portable buffers, commit `092dfa0`);
+  the addendum (`30c0856`) reports the moved-tag pipeline **all green**
+  -- both gate legs + the STDLIB_VERSION pin PR + the canary. Block 183
+  superseded the naive 'pin cycle closed' framing; the queue carries the
+  RETAG line.
+- Inbound: no new rows or moves (only the compiler-owned 1630/1658
+  open). Tree: head `30c0856`; clean except the untracked out/ dir.
+  Next: resume the classic sweep campaign on the v0.64.5 baseline and
+  the queued row list (block 182). The next writer continues from block
+  183/184.
+
 **SESSION 2026-10-15 block 183 (v0.64.5 tag MOVED: the ubuntu release gate caught the pin-era m296 class in smoke_os_sync; pin-portable buffer fix; tag re-cut -- the actor's 182 'pin cycle closed' framing above is superseded until the ubuntu gate is green and the compiler pins)**
 - The e082623 tag push triggered release.yml: ubuntu-latest gates RED
   (954/955; smoke_os_sync SIGABRT -- glibc heap corruption; the
