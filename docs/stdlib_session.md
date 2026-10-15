@@ -3352,6 +3352,16 @@ registry pin, agent recon for the rest)**
 - Two long-lived git processes (from ~14:20Z) sit in the relays repo;
   the bus itself is consistent. The next writer continues from 169/170.
 
+**SESSION 2026-10-15 block 175 (doorbell 01:00Z -- quiet; lane idle since 23:00Z; tag still HELD)**
+- Lane view: no new rows or moves (only the compiler-owned 1630/1658
+  stay open); nothing to transition.
+- Tree: head is still `a1e5ef9` (block 174); no commits since 23:00Z and
+  no uncommitted tracked edits -- the shared lane actor is idle at this
+  round. `stdlib-v0.64.5` remains HELD pending the two candidate
+  regressions (`REL-20261014-2123-stdlib`, repros `p_v065_*`).
+- Tree clean except the untracked out/ dir. The next writer continues
+  from block 174/175.
+
 **SESSION 2026-10-14 block 174 (doorbell 23:00Z -- tag HELD after candidate regressions; nothing inbound to transition)**
 - Lane view: nothing to transition (the two open rows remain the
   compiler-owned fragment ones 1630/1658); the round's substance is
