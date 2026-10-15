@@ -46,12 +46,19 @@ fn main() -> Int {
     if rf != 1.5 { return 6; }
   }
 
-  // NOTE (wave 135): the guard-free alloc/free roundtrip row that stood
-  // here was REMOVED -- on the v0.64.4 pin `ffi.free` call sites lower to
-  // plain @free (REL-20261013-1445), so freeing guard-arena memory spins
-  // (confirmed by a hung out/scratch_guard.xi run). That lock belongs to
-  // the compiler-side call-site-lowering acceptance on the next pin; a
-  // hanging row must never ship in a probe (run_smokes has no timeout).
+  // Guard-free acceptance (re-added in wave 144; REL-20261013-1445 fixed
+  // in v0.64.5): alloc + free inside an `unsafe` (confined) block completes
+  // -- pre-fix this spun (wave-135 note; the row was held out of probes
+  // because run_smokes has no timeout). Watchdog-verified in
+  // out/scratch_guardfree.xi first (exited <20s), then re-added.
+  unsafe {
+    let gp = ffi.alloc(64);
+    if gp == 0 { return 10; }
+    ffi.write_u32_at(gp as Int, 0, 77);
+    let gr = ffi.ptr_read_u32_le(gp);
+    if gr != 77 { return 11; }
+    ffi.free(gp);
+  };
 
   // B-28: with_len holds capacity for n*8 bytes; full element roundtrip
   var v = Vec[UInt8].with_len(16);

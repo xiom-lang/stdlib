@@ -3529,6 +3529,20 @@ registry pin, agent recon for the rest)**
 - Two long-lived git processes (from ~14:20Z) sit in the relays repo;
   the bus itself is consistent. The next writer continues from 169/170.
 
+**SESSION 2026-10-16 block 197 (wave 144 / pin-switch W4: guard-free acceptance -- confined-block alloc/free row re-added to p_b2728 (watchdog-first); confinement cautions retired in ffi.xi/dl.xi)**
+- REL-20261013-1445 (B-05 class) acceptance: out/scratch_guardfree.xi
+  watchdog run exited <20s rc 0 (no spin) on the official pin, then the
+  row was re-added to tools/probes/p_b2728_shapes.xi (alloc 64 +
+  write/read 77 + free inside one `unsafe` block; rcs 10/11) -- green
+  3/3 solo; the wave-135 hold note is replaced by the acceptance note
+  (a hanging row still never ships -- run_smokes has no timeout).
+- Workaround retirement: the xiom.ffi CONFINEMENT CAUTION (B-05) and the
+  dl.xi companion note now record the closed state (arena-aware free;
+  XIOM-owned slots stay the preferred recipe where they fit).
+- Bus next: REL-20261010-1548-bindings-8 acked -> fixed (bindings
+  verifies/closes; B-05 already cleared on their side).
+- Tree: this commit.
+
 **SESSION 2026-10-16 block 196 (wave 143 / pin-switch W3: net-socket -- refused-connect ROOT-CAUSED to a compiler-class inline-i32 misread and fixed in the wrappers; NODELAY/SO_KEEPALIVE/listener backlog landed; probe p_wave143_shapes; floors175)**
 - (1) refused-connect Ok (REL-20261015-1948) root cause -- NOT the
   runtime: a runtime-side diag showed connect rc=-1, WSAECONNREFUSED

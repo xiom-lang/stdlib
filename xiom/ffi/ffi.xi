@@ -8,10 +8,13 @@
 // Phase 1 (v0.49.2): Raw alloc/free/memcpy + SafePtr + FFIBuffer + FFIError + marshal
 // Phase 2 (future):  Drop trait auto-cleanup, Vec[UInt8] native support, AtomicPtr
 //
-// CONFINEMENT CAUTION (v0.64.0, compiler finding B-05): do NOT call
-// alloc/free inside a confined (`unsafe`) block -- the guard allocator
-// (xiom_guard_alloc) and libc free disagree there and the guard heap can
-// spin. Pair C allocations outside confinement, or keep buffers XIOM-owned.
+// CONFINEMENT NOTE (was B-05, v0.64.0): CLOSED in v0.64.5 + wave 124 --
+// alloc/free inside a confined (`unsafe`) block are safe again: the
+// runtime routes confined malloc to the guard arena and `free` is
+// arena-aware (xiom_guard_free no-ops for guard pointers; the arena is
+// released wholesale at block exit). The wave-144 probe row in
+// tools/probes/p_b2728_shapes.xi locks the roundtrip. XIOM-owned buffers
+// (Vec[UInt8] slots) stay the preferred pattern where they fit.
 // Bindings-lane relay 2026-10-08 (docs/BINDINGS-STDLIB-WISHLIST.md W-3).
 
 module xiom.ffi

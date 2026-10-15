@@ -21,9 +21,10 @@ use xiom.convert;
 // allocate a Vec[UInt8] (a sized zeroed slot is
 // `Vec[UInt8].with_len(n)`), pass its address to the loaded function,
 // then read the result with `ffi.ptr_read_u64_le` / `ffi.ptr_read_u8`
-// (write with `ffi.ptr_write_u64_le` / `ffi.ptr_write_u8`). Do not pair
-// `ffi.alloc` with `ffi.free` inside a confined block -- see the
-// CONFINEMENT CAUTION on `xiom.ffi.alloc` (compiler finding B-05).
+// (write with `ffi.ptr_write_u64_le` / `ffi.ptr_write_u8`). Pairing
+// `ffi.alloc` with `ffi.free` inside a confined block is safe since
+// v0.64.5 (the old B-05 confinement caution is closed; see xiom.ffi),
+// but XIOM-owned slots remain the preferred recipe.
 // ============================================================================
 
 extern "C" {
