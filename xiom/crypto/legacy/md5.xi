@@ -161,14 +161,15 @@ fn md5_k(index: Int) -> Int {
   return 0;
 }
 
-fn rotr_32(x: Int, n: Int) -> Int {
+// Left rotate of the low 32 bits of `x` (MD5's `<<<`); the input mask
+// keeps the unmasked 64-bit accumulation this module carries from
+// leaking high bits into the result (REL-20261015-1942-packages class).
+fn rotl_32(x: Int, n: Int) -> Int {
   var s = Rot32State{ x: x; n: n; };
-  var shr_val = xiom.math.shr(s.x, s.n);
-  var mask = xiom.math.shl(1, s.n) - 1;
-  var hi = xiom.math.bit_and(s.x, mask);
-  var n_compl = 32 - s.n;
-  var hi_shifted = xiom.math.shl(hi, n_compl);
-  return xiom.math.bit_or(shr_val, hi_shifted);
+  var xm = xiom.math.bit_and(s.x, 0xFFFFFFFF);
+  var hi = xiom.math.bit_and(xiom.math.shl(xm, s.n), 0xFFFFFFFF);
+  var lo = xiom.math.shr(xm, 32 - s.n);
+  return xiom.math.bit_or(hi, lo);
 }
 
 fn md5_f(x: Int, y: Int, z: Int) -> Int {
@@ -252,7 +253,7 @@ pub fn md5(data: &Vec[Int]) -> Vec[Int]
         g = (7 * cur.i) % 16;
       };
 
-      var new_b = cur.b + rotr_32(cur.a + f_val + md5_k(cur.i) + m[g], md5_s(cur.i));
+      var new_b = cur.b + rotl_32(cur.a + f_val + md5_k(cur.i) + m[g], md5_s(cur.i));
       cur = Md5RoundState{ a: cur.d; b: new_b; c: cur.b; d: cur.c; i: cur.i + 1; };
     }
 

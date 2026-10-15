@@ -3528,6 +3528,38 @@ registry pin, agent recon for the rest)**
 - Two long-lived git processes (from ~14:20Z) sit in the relays repo;
   the bus itself is consistent. The next writer continues from 169/170.
 
+**SESSION 2026-10-16 block 192 (wave 140: FIX-FIRST REL-20261015-1942 md5 made RFC-correct on both surfaces; probes p_wave140/p_wave140b + the RFC suite in the md5 smoke; floors173; battery across slices under heavy box load; the round's inbound triaged -- 1948 socket_connect queued for the net wave) -- the actor's 190/191 sit below**
+- Round inbound (doorbell 21:00Z local 00:00): 1942 md5 (HIGH, acked),
+  1948 socket_connect Ok-on-refused (medium, acked -- next net-wave
+  fix), 2009 fleet impact scan (acked), 2011 darwin fixes + smoke count
+  955 -> 956 (acked; the +1 count kept), 2029 PULSE adoption GREEN
+  (acked by this round). The compiler/debug lane's darwin runtime work
+  also landed ON THIS REPO: 2bc064e (darwin fp128 wrappers + mach
+  free-memory + addsub/zero-path, block 189b -- pushed by this round
+  after finding it unpushed) and later 9d6a4d5 (non-Windows vector-ABI
+  wrappers; Win64 raw asm, block 189c).
+- MD5 root cause: facade (crypto.xi) used _u32_shl where the algorithm
+  needs leftrotate -> added _u32_rotl and switched the round; legacy
+  (crypto/legacy/md5.xi) rotated RIGHT on an unmasked accumulation ->
+  rotl_32 with an input mask. Six untracked smoke_diag_f128_l*.xi files
+  in tests/smoke belong to the debug lane's witness tooling (NOT
+  committed; mind any corpus counts while they linger).
+- Evidence: p_wave140_md5 red rc 1 -> green; p_wave140b_md5_legacy red
+  rc 1 -> green; the smoke extended with the 8 RFC rows. Battery
+  (v0.64.4-rel pin; the pin has since moved to v0.64.5-rel per block
+  191): corpus 948/956 rows clean before the 45-min timeout under a
+  3-way loaded box (5 load compile-flakes + the 8 tail files all
+  verified green solo = 956/956 across slices); probes 316/317
+  (p_wave113's timing gate load-flaked; 2/2 green solo = 317/317 across
+  slices); modules 510/510; barename 0/510 (2 load flakes re-verified
+  solo); floors173 (fns 8803 = +_u32_rotl, clauses 6252) + module-smoke
+  (499/518, 3501/6239) + doc ratchets OK. floors173 wired into
+  ci/heavy/release + tools/README.
+- Bus: 1942 goes acked -> fixed with the probe evidence; 1948 stays the
+  net-wave head (refused-connect Err on Windows or the documented
+  delay-to-first-IO semantics); the __fixdfti win64 finding from 2011
+  added to the queue (not fixed).
+
 **SESSION 2026-10-15/16 block 191 (pin-switch wave: official v0.64.5 battery green -- modules 510/510, corpus 956/956, probes 317/317, floors172 + doc OK; EXTRACTION-IDENTITY TRAP found + bus corrections; wave pin MOVED to the official archive bd71e2d3)**
 - Discovery: the corpus pass on `v0.64.5-rel` came back 953/955 with
   EXACTLY the two 10-14 candidate regressions (smoke_cell_narrow rc 2,

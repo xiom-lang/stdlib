@@ -90,6 +90,10 @@ fn _u32_rotr(x: Int, n: Int) -> Int {
   return _u32_mask(_u32_shr(x, n) | _u32_shl(x, 32 - n));
 }
 
+fn _u32_rotl(x: Int, n: Int) -> Int {
+  return _u32_mask(_u32_shl(x, n) | _u32_shr(x, 32 - n));
+}
+
 // ============================================================================
 // SHA-256
 // ============================================================================
@@ -721,7 +725,10 @@ pub fn md5(data: &Vec[UInt8]) -> Vec[UInt8]
       var temp = d;
       d = c;
       c = b;
-      b = _u32_add(b, _u32_shl(_u32_add(_u32_add(a, f_val), _u32_add(_MD5_K[j], m[g])), _MD5_S[j]));
+      // MD5 step: leftrotate(a + F + K + M, s) -- _u32_rotl, NOT a plain
+      // shift (REL-20261015-1942-packages: the plain _u32_shl here made
+      // every digest silently wrong).
+      b = _u32_add(b, _u32_rotl(_u32_add(_u32_add(a, f_val), _u32_add(_MD5_K[j], m[g])), _MD5_S[j]));
       a = temp;
       j = j + 1;
     }

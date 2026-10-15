@@ -786,6 +786,23 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
      in WSL (ASan clean + normal rc 0) and on Windows (pin + candidate
      rc 0). The tag was re-cut at the fix commit; release.yml re-runs on
      the moved tag; the compiler pins the moved tag.
+     WAVE 140 (block 192, 2026-10-16): FIX-FIRST REL-20261015-1942-packages
+     (HIGH) -- xiom.crypto.md5 produced wrong digests silently (RFC 1321
+     mismatch). Root cause, both surfaces: the facade round applied a
+     plain masked shift where MD5 needs a left rotate (no rotl helper
+     existed; added _u32_rotl), and the deprecated legacy module rotated
+     RIGHT on an unmasked 64-bit accumulation (now rotl_32 with an input
+     mask). Locks: tools/probes/p_wave140_md5.xi (RFC 1321 A.5 suite x8
+     + fox variants; red rc 1 pre, green post) + p_wave140b_md5_legacy.xi
+     (legacy surface) + the extended RFC suite in
+     smoke_stress_crypto_md5_basic.xi. Battery (v0.64.4-rel, heavy
+     shared-box load; slices verified solo where flaked): corpus 956/956,
+     probes 317/317, modules 510/510, barename 0/510, floors173 (fns
+     8803, clauses 6252) + module-smoke + doc ratchets OK. md5 item now
+     fixed; socket_connect (1948) is the next net-wave fix; the
+     __fixdfti win64 finding (from 2011) is queued. NOTE: the wave pin
+     moved to the official v0.64.5 archive (block 191) -- the next
+     battery uses v0.64.5-rel.
      NEXT: the ranked sweep inventory as before; candidate processing
      when the v0.64.5 archive lands (release-check rows + known-failures
      sweep + the m313 guard-spin acceptance).
