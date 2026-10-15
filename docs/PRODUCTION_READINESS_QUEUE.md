@@ -777,6 +777,15 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
      the compiler pins + re-gates + tags v0.64.5. Post-tag: promote the
      polyhedra repro to tools/probes (probe count 316), re-add the
      1549-stdlib-6 payload clauses, resume the ranked sweep.
+     RETAG (block 183, 2026-10-15): the first tag push (e082623) went RED
+     on the ubuntu release gates -- smoke_os_sync SIGABRT, glibc heap
+     corruption, root-caused to the pin-era m296 class (a fresh
+     Vec[UInt8] ctor allocates 16 bytes while with_len(8) zero-fills
+     n*8=64; the pinned compiler predates the m296 slot floor). The
+     smoke's buffers are now a pin-portable zeros(n) push loop; verified
+     in WSL (ASan clean + normal rc 0) and on Windows (pin + candidate
+     rc 0). The tag was re-cut at the fix commit; release.yml re-runs on
+     the moved tag; the compiler pins the moved tag.
      NEXT: the ranked sweep inventory as before; candidate processing
      when the v0.64.5 archive lands (release-check rows + known-failures
      sweep + the m313 guard-spin acceptance).

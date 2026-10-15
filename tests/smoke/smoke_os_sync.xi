@@ -117,7 +117,7 @@ fn main() -> Int {
     let rh = sync_io.open_read(fixture);
     match rh {
       Ok(fd2) => {
-        var buf = Vec[UInt8].with_len(2);
+        var buf = zeros(2);
         let r = sync_io.read_exact(fd2, &mut buf);
         match r {
           Ok(n) => {
@@ -139,7 +139,7 @@ fn main() -> Int {
           io.println("sync-read-data");
           return 27;
         }
-        var big = Vec[UInt8].with_len(8);
+        var big = zeros(8);
         let r2 = sync_io.read_exact(fd2, &mut big);
         match r2 {
           Ok(_) => {
@@ -277,5 +277,20 @@ fn mkbuf() -> Vec[UInt8] {
   var v = Vec[UInt8].new();
   v.push(97);
   v.push(98);
+  v
+}
+
+// Pin-portable zeroed byte buffer. The builtin Vec[UInt8].with_len(n)
+// zero-fills n*8 bytes while a fresh VEC ctor on the v0.64.4 pin sizes the
+// buffer at 16 bytes, so with_len(8) writes 64 bytes past a 16-byte region
+// (ASan-proven; the m296 class, fixed in the v0.64.5 wave). This smoke must
+// run green on the pinned compiler too, hence the plain push loop.
+fn zeros(n: Int) -> Vec[UInt8] {
+  var v = Vec[UInt8].new();
+  var i = 0;
+  while i < n {
+    v.push(0 as UInt8);
+    i = i + 1;
+  };
   v
 }

@@ -3352,6 +3352,30 @@ registry pin, agent recon for the rest)**
 - Two long-lived git processes (from ~14:20Z) sit in the relays repo;
   the bus itself is consistent. The next writer continues from 169/170.
 
+**SESSION 2026-10-15 block 183 (v0.64.5 tag MOVED: the ubuntu release gate caught the pin-era m296 class in smoke_os_sync; pin-portable buffer fix; tag re-cut -- the actor's 182 'pin cycle closed' framing above is superseded until the ubuntu gate is green and the compiler pins)**
+- The e082623 tag push triggered release.yml: ubuntu-latest gates RED
+  (954/955; smoke_os_sync SIGABRT -- glibc heap corruption; the
+  windows-latest leg was still running, silent on the same corruption).
+- Diagnosed in WSL with the official v0.64.4 linux archive: ASan =
+  "WRITE of size 64 past a 16-byte region" -- Vec[UInt8].with_len(8)
+  zero-fills n*8=64 bytes while a fresh VEC ctor on the pin allocates 16
+  bytes (the m296 class, REL-20261011-2320-bindings #1; fixed in the
+  v0.64.5 wave). Library code fine; the smoke's buffer construction was
+  pin-unsafe.
+- Fix: smoke_os_sync buffers via a local zeros(n) push loop (no
+  with_len) + hazard comment. Verified: WSL ASan clean (only the
+  runtime's by-design leaks) and WSL normal rc 0; Windows pin + v0.64.5
+  candidate rc 0. Battery impact: none (single smoke; no floors change);
+  the release.yml rerun re-validates the corpus.
+- Retag: stdlib-v0.64.5 re-cut at this commit (the old tag object ecc3549
+  / commit e082623 withdrawn; the new tag object + sha go on the 1739
+  note). release.yml re-runs on the new tag push.
+- Bus: the HOLD note went out before the fix (relays ab0a6eb); the
+  follow-up carries the new sha so the compiler pins the moved tag.
+- Note: the WSL staging accident (a `C:Userslefte` dir under the repo
+  root from a mangled $HOME) was moved out before any compile; it was
+  never git-visible.
+
 **SESSION 2026-10-15 block 182 (doorbell 13:00Z -- v0.64.5 released; pin cycle closed; nothing inbound)**
 - The pin cycle completed between rounds (the shared lane actor's
   block 181 stands as the authoritative record): the fresh candidate
