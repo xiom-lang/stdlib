@@ -17,9 +17,144 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 36 (updated 2026-10-14 15:05Z at head 68fb8f0; waves 114-137 landed; probes 314; floors171; relay live)
+## 0A. CONTINUE HERE -- handoff snapshot 37 (updated 2026-10-15 19:25Z at head e3afaa5; v0.64.5 RELEASED and pinned; waves 114-139; probes 315; floors172; relay live)
 
-### Snapshot 36 (paste-ready)
+### Snapshot 37 (paste-ready)
+
+**PASTE-READY PROMPT FOR THE NEXT SESSION (copy this block):**
+
+---
+
+You are continuing the XIOM stdlib lane. Worktree `E:\xiom-lang\stdlib`,
+branch `main`. Read `docs/stdlib_session.md` blocks 187, 186, 185b, 185,
+184b, 184, 183, 182, 181, 180, 179, 178, 177, 176, 175b, 175, 174, 173b,
+173, 172, 171b, 171, 170d, 170c, 170b, 170, 169, 168, 167, 166b, 166,
+165b, 165 (older as needed); snapshot 36 below is the previous handoff and
+is superseded (35/34/33/32/31 stay below it as history).
+
+STATE: v0.64.5 RELEASED and pinned (2026-10-15 19:12Z): the compiler tag
+is on 84f761c5 (release run 38792051847 green; all assets live); xiom
+main STDLIB_VERSION = 092dfa0cc0dc813943154278eecfc4fbb144d6e8; the
+stdlib tag stdlib-v0.64.5 is the annotated object 1667b3a8 -> commit
+092dfa0 (moved once from e082623 for the m296 pin-era smoke fix, block
+183). Registry: xiom-std 0.64.5 published 2026-10-15T13:45:08Z from the
+fixed release asset (run 38736260288; the registry stores a canonical
+hash/size -- compare against the release asset + publisher fields, not
+the tarball digest); the moved-tag publish attempt hit a harmless 409
+duplicate. `COMPILER_VERSION` in this repo stays v0.64.4 until the next
+stdlib release; the battery pin remains the official v0.64.4 archive at
+`%TEMP%\kilo\stdlib_ws\v0.64.4-rel\bin\xiom.exe` (the official v0.64.5
+archive is live and our corpus is green on both -- if the next session
+switches the wave pin, do it explicitly and record it). Lane head:
+e3afaa5 (block 187); tree clean except the untracked out/ dir.
+
+Waves 114-139 landed; 138 = the encoding submodules (base64/base32/hex/
+percent/punycode/idna/ascii85 cached runtime-mirror reads; the
+convert/ascii85 per-group builder fix caught live by a capped scratch;
+probe 315; floors172); 139 = the REL-20261013-1423 RUNTIME half
+(xiom_task_trampoline i64 stores). The v0.64.5 cycle is the arc's second
+half: candidate processing (run 38626737822) found four regression
+classes -> REL-20261014-2123-stdlib -> m323-m326 fixed -> verified +
+CLOSED on the fresh archive (run 38731274663; corpus 955/955, probes
+315/315, modules 510/510, barename 0/510, ratchets OK); the ubuntu gate
+then caught the m296 pin-era class in smoke_os_sync -> portable buffer
+fix + tag move (block 183); the cycle closed with pins + release (block
+187).
+
+BUS STATE: REL-20261014-1739-compiler -- OUR last note (17:02Z) records
+the registry resolution; the compiler released v0.64.5 (relays 4b73d3f)
+and closes the item with their wrap-up; nothing pending from us.
+Standing opens: 1630/1658 (compiler-owned leave). 1305-pulse-2 acked
+(re-verify against the official v0.64.5 archive where its row asks);
+1445 fixed bus-side (alloc-guard-spin acceptance green pre-pin; the
+alloc/free workarounds can retire in the next wave); 1453-packages acked
+(fleet data point); 1427-engine fixed (wave 137). The relay doorbell
+cron is SESSION-SCOPED: RENEW IT AT SESSION START (2h relay-doorbell
+prompt).
+
+POST-PIN QUEUE (the next arc; blocks 181/183/187): (1) promote
+`p_polyhedra_nested_hull` to tools/probes (probe count 316) once
+REL-20261010-1549-stdlib closes (it is acked with our reporter evidence;
+check its status each round; the README entry flips to RESOLVED and the
+wave-53 geom hull checks strengthen then); (2) re-add the 1549-stdlib-6
+catalog payload clauses (m283+ is in the v0.64.5 pin; retire the
+payload-free guards there) + floors bump; (3) resume the ranked sweep
+inventory: convert/validate + convert/json; serialize toml/csv/json
+string-val; net http/ws/dns; format fmt/numbering; text similarity/diff;
+misc/regex/search/collect; num parse/itoa; log; crypto rng/curves; os
+path/fs; error/debug/test builders; (4) the thread-gate flip
+(2053/1627/1402) is UNBLOCKED (m312 + the wave-139 runtime half shipped
+in v0.64.5) -- flip the spawn e2e + thread pool and record the evidence;
+(5) the official-archive battery whenever the wave pin switches.
+
+GATES (v0.64.4 pin, blocks 170d + 181; the fresh v0.64.5b candidate was
+all-green too): corpus 955/955, probes 315/315, modules 510/510,
+barename 0/510, floors172 (fns 8802, pubFns 6540, clauses 6252,
+pubCovered 4625) + module-smoke (499/518, 3500/6239) + doc ratchets OK.
+
+FINDINGS: 15 Current, all compiler (tools/known_failures/README.md); the
+two p_v065 regression locks are closed on the fixed candidate and stay in
+the history. Trap list (keep current in the block): struct/Str payload
+reads in catalog ensures clauses false-fire (payload-free Ok-side clauses
+only); the Windows UCRT fast-fails on _read/_write of a closed/
+out-of-range fd (invalid-fd rows are POSIX-only); on v0.64.4 `ffi.free`
+call sites lower to plain `@free` regardless of the wrapper body (1445);
+a per-position UTF-8 decode can overshoot on a truncated trailing lead
+byte (handle tails explicitly); raw Char-returning helpers MUST mask
+`& 0xFF` before `as Char`; `s.c_str()` is an opaque `Ptr` -- bind
+`let base: *UInt8 = s.c_str();` once and pass it; NEVER use a
+value-position `unsafe { *(base + pos) }` EXPRESSION (function-shaped
+`_raw_byte(base, i)` only -- wave 136); the wave-125/126 grep missed BARE
+`byte_at(` (use `[^_.a-zA-Z0-9]byte_at(`; the string dir is clean);
+str_slice itself is UNCHANGED (hot sites use bounds-guaranteed
+`_slice_fast`). NEW (v0.64.5 cycle): the m296 PIN-ERA class -- on the
+v0.64.4 pin a fresh Vec[UInt8] ctor allocates 16 bytes while the builtin
+with_len(n) zero-fills n*8, so with_len(8) writes 64 bytes past a
+16-byte region (glibc SIGABRT on Linux, silent on Windows); gate smokes
+must build buffers with push loops (see smoke_os_sync's zeros(n));
+Linux-only verification: WSL Ubuntu + the official linux archive +
+`--sanitize=address`; the release pipeline's pin-PR job cannot create
+PRs (token lacks createPullRequest -- open with `gh pr create`
+manually); the publish job is gated on the `registry-publish`
+environment (required reviewer) and the registry stores a canonical-form
+hash/size (asset digest differs by design).
+
+MANDATORY PROTOCOL: (1) body-derived clauses only; canonical
+`result is Ok =>` / `result is None =>` guard forms; payload-free
+Ok-side clauses on catalog Result[struct] returns; (2) probe-first
+tools/probes/p_waveNNN_shapes.xi (bind returned values before comparing;
+red pre / green post); never put a row in a probe that can hang pre-fix
+(run_smokes.ps1 has NO per-file timeout); remerge old locks that assert
+retired behavior (p_wave121-138 + p_b2728 + p_v065 are the newest);
+(3) the socket/io wrapper family keeps EARLY-ERROR RETURNS (not
+requires); (4) runtime shims use `long long` (not `long`) for Int-sized
+values and Int arrays (wave 139); (5) dump tools/coverage_floors17N.json,
+wire workflows + tools/README + plan/session/queue in one commit, YAML
+check, pure-ASCII additions, then the battery: corpus 955/955, probes
+expect 315 (316 after the polyhedra promotion), modules 510/510,
+barename 0/510, floors172 + ratchets; push main with the one-shot
+credential (tag moves: `git push --force origin stdlib-vX.Y.Z`; deletion
+is ruleset-blocked); (6) hot per-item/per-char loops use the
+bounds-guaranteed `_slice_fast` / `_push_str` idioms (copied per module;
+never loosen str_slice's public clamps); (7) any leak-class measurement
+is announced first and capped (1.5 GB working set + watchdog).
+
+CAUTIONS: no unbounded benchmarks; leak-class rule as above; run_smokes
+has NO per-file timeout; Windows LockFileEx blocking-regain on a
+self-held range HANGS; probe fixtures truncate-first and clean up (probe
+CWD is the repo root); strings LEAK BY DESIGN (keep new code on Vec
+builders); invalid-fd read/write rows are POSIX-only; the shared
+worktree has concurrent doc-actors -- re-read the TOP of the block list
+before appending (blocks 148, 152, 166 and the 170-187 rounds collided;
+use `<N>b` blocks and cross-reference; never sweep foreign edits); the
+engine lane shares this box (never kill foreign xiom.exe/dbg processes);
+a first corpus pass can flake a few files under load -- rerun before
+investigating. The relay doorbell cron is session-scoped: renew at
+session start.
+
+---
+
+### Snapshot 36 (2026-10-14 15:05Z; SUPERSEDED by snapshot 37 -- kept for history)
 
 **PASTE-READY PROMPT FOR THE NEXT SESSION (copy this block):**
 
@@ -3351,6 +3486,24 @@ registry pin, agent recon for the rest)**
   clean except the untracked out/ dir at this round.
 - Two long-lived git processes (from ~14:20Z) sit in the relays repo;
   the bus itself is consistent. The next writer continues from 169/170.
+
+**SESSION 2026-10-15 block 188 (handoff refresh -- snapshot 37 written in place at head e3afaa5; v0.64.5 released + pinned; continuation prompt re-issued)**
+- Snapshot 37 replaced snapshot 36 in section 0A (36 kept below as
+  history). State: v0.64.5 released and pinned (compiler 84f761c5;
+  stdlib tag object 1667b3a8 -> 092dfa0; STDLIB_VERSION merged via
+  xiom#6; registry published from the fixed asset); gates corpus
+  955/955, probes 315/315, modules 510/510, barename 0/510, floors172 +
+  module-smoke + doc ratchets.
+- New traps recorded: the m296 pin-era Vec ctor class (with_len zero
+  fills vs fresh ctor sizing; pin-safe push-loop buffers); the pin-PR
+  token gap (open PRs with `gh pr create`); the registry-publish
+  environment gate + canonical-form hash semantics; the WSL + official
+  archive + `--sanitize=address` recipe for Linux-only issues.
+- Post-pin queue in the prompt: polyhedra promotion (probe 316),
+  1549-stdlib-6 payload clauses, ranked sweep resume, the now-unblocked
+  thread-gate flip, official-archive battery on a pin switch.
+- Reading list leads with blocks 187..165; the doorbell-cron reminder is
+  in the prompt (session-scoped -- renew at start).
 
 **SESSION 2026-10-15 block 187 (v0.64.5 RELEASE CYCLE CLOSED: PR xiom#6 merged at 19:12Z; xiom main STDLIB_VERSION = 092dfa0; compiler v0.64.5 tagged on 84f761c5, release run green, all assets live) -- the actor's 186 'awaiting PR-6 merge' sits below**
 - PR xiom#6 (chore: pin STDLIB_VERSION to stdlib-v0.64.5) MERGED at
