@@ -3528,6 +3528,19 @@ registry pin, agent recon for the rest)**
 - Two long-lived git processes (from ~14:20Z) sit in the relays repo;
   the bus itself is consistent. The next writer continues from 169/170.
 
+**SESSION 2026-10-16 block 193 (doorbell 23:00Z -- quiet inbound; 1942 fixed (wave 140); 1948 queued; diag smokes are WIP)**
+- Inbound: no new rows or moves (only the compiler-owned 1630/1658
+  open). Status per the bus: `REL-20261015-1942-packages` (md5) is
+  **fixed** -- the actor's wave 140 (`36bcaac`: RFC-correct on both
+  surfaces; probes 140/140b + the RFC suite; floors173);
+  `REL-20261015-1948-packages` (socket_connect Ok-on-refused) stays
+  **acked**, queued for the net wave per block 192;
+  2009/2011 stay acked as recorded.
+- Tree: head `36bcaac`; the four untracked `tests/smoke/smoke_diag_f128_l*.xi`
+  files (from the throwaway win64 fp128 diag workflow `fc50360`) are the
+  actor's WIP -- do not stage or sweep; `out/` remains the only other
+  untracked entry. The next writer continues from block 192/193.
+
 **SESSION 2026-10-16 block 192 (wave 140: FIX-FIRST REL-20261015-1942 md5 made RFC-correct on both surfaces; probes p_wave140/p_wave140b + the RFC suite in the md5 smoke; floors173; battery across slices under heavy box load; the round's inbound triaged -- 1948 socket_connect queued for the net wave) -- the actor's 190/191 sit below**
 - Round inbound (doorbell 21:00Z local 00:00): 1942 md5 (HIGH, acked),
   1948 socket_connect Ok-on-refused (medium, acked -- next net-wave
