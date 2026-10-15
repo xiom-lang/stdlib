@@ -1,0 +1,33 @@
+# Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# Throwaway diagnostic (witness branch only): dump LLVM 23's win64 fp128
+# libcall lowering so the runtime shims can be matched to it.
+name: diag llvm win64 fp128 abi
+on:
+  workflow_dispatch:
+jobs:
+  diag:
+    runs-on: windows-latest
+    steps:
+      - name: clang + ABI dump
+        shell: pwsh
+        run: |
+          where.exe clang
+          clang --version
+          $ll = @'
+          target triple = "x86_64-pc-windows-msvc"
+          declare fp128 @__addtf3(fp128, fp128)
+          declare i32 @__eqtf2(fp128, fp128)
+          declare double @__trunctfdf2(fp128)
+          declare fp128 @__floatsitf(i32)
+          define double @caller(fp128 %a, fp128 %b) {
+            %s = call fp128 @__addtf3(fp128 %a, fp128 %b)
+            %c = call i32 @__eqtf2(fp128 %s, fp128 %b)
+            %f = call fp128 @__floatsitf(i32 5)
+            %d = call double @__trunctfdf2(fp128 %f)
+            ret double %d
+          }
+          '@
+          Set-Content -Path abi.ll -Value $ll
+          clang -S abi.ll -o abi.s
+          Get-Content abi.s
