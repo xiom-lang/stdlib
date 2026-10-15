@@ -3352,6 +3352,18 @@ registry pin, agent recon for the rest)**
 - Two long-lived git processes (from ~14:20Z) sit in the relays repo;
   the bus itself is consistent. The next writer continues from 169/170.
 
+**SESSION 2026-10-15 block 184b (doorbell 15:00Z follow-through -- pin PR xiom#6 opened; the pipeline's pin branch is pushed but its token cannot create PRs) -- the actor's 184 sits below; no text of theirs edited**
+- The moved-tag pipeline (all green) also ran "STDLIB_VERSION pin PR
+  (xiom)": it pushed the branch chore/pin-stdlib-v0.64.5 (1e8429c,
+  STDLIB_VERSION = stdlib-v0.64.5) but PR creation failed with
+  "Resource not accessible by personal access token
+  (createPullRequest)".
+- Opened the PR with the owner credential: xiom#6
+  (https://github.com/xiom-lang/xiom/pull/6). The compiler can ride it
+  or pin directly; the branch pins the MOVED tag (1667b3a8 -> 092dfa0).
+- Bus note pushed (relays a413614). The registry publish job is still
+  in flight.
+
 **SESSION 2026-10-15 block 184 (doorbell 15:00Z -- retag pipeline all green; nothing inbound)**
 - The tag-move incident from block 183 is resolved: `stdlib-v0.64.5`
   was re-cut after the ubuntu release gate caught the pin-era m296
