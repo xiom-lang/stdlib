@@ -1,13 +1,15 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
 **77.1% -- 7 of 10 gates complete; gate 8 at 70.7% (partial credit) and
-gates 9-10 discrete.** (Compiler pin: in-tree **v0.64.4** -- released
-2026-10-12, tag f76fd47c on df493530; the lane battery runs the official
-windows-x64 release archive.)
-**Gates: corpus 955/955 full (C001 carve-outs retired on v0.63.1; new
+gates 9-10 discrete.** (Compiler pin: in-tree **v0.64.4** for the release
+line -- released 2026-10-12; the lane BATTERY runs the official v0.64.5
+release archive since block 191, zip sha256 bd71e2d3.)
+**Gates: corpus 956/956 full (C001 carve-outs retired on v0.63.1; new
 TcpStream loopback and uuencode roundtrip smokes added; smoke_os_watch
-added in wave 124), modules 510/510,
-probes 314/314, barename 0/510.**
+added in wave 124; smoke_darwin_runtime added in the 189b/189c darwin
+wave), modules 510/510,
+probes 318/318, barename 0/510. Wave pin: official v0.64.5 (block 191;
+zip sha256 bd71e2d3).**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as

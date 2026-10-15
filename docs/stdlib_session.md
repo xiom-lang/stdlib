@@ -26,7 +26,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 ---
 
 You are continuing the XIOM stdlib lane. Worktree `E:\xiom-lang\stdlib`,
-branch `main`. Read `docs/stdlib_session.md` blocks 191, 190, 189c, 189b, 189, 188, 187, 186, 185b, 185,
+branch `main`. Read `docs/stdlib_session.md` blocks 194, 193, 192, 191, 190, 189c, 189b, 189, 188, 187, 186, 185b, 185,
 184b, 184, 183, 182, 181, 180, 179, 178, 177, 176, 175b, 175, 174, 173b,
 173, 172, 171b, 171, 170d, 170c, 170b, 170, 169, 168, 167, 166b, 166,
 165b, 165 (older as needed); snapshot 36 below is the previous handoff and
@@ -75,8 +75,8 @@ closes with their Linux re-verify). REL-20261014-1739-compiler resolved
 (registry + release closed with the compiler's wrap-up). Standing
 opens: 1630/1658 (compiler-owned leave); 1549-stdlib-8 acked
 (shared-build drift; env hygiene). NEW INTAKE: 2202-pulse acked
-(top-tier plan -> the wave plan below); 1942-packages acked (md5 fix =
-wave 140 in flight); 1948-packages acked (refused-connect -> wave plan
+(top-tier plan -> the wave plan below); 1942-packages FIXED (wave 140,
+36bcaac; reporter closes); 1948-packages acked (refused-connect -> wave plan
 3); 1609-pulse-2 + 1549-pulse-7 ride the actor's darwin close-out. 1445
 fixed bus-side (alloc-guard-spin
 acceptance green pre-pin; the alloc/free workarounds can retire in the
@@ -87,9 +87,9 @@ SESSION START (2h relay-doorbell prompt).
 WAVE PLAN (all outstanding requests mapped; blocks 181/183/187/189/191;
 runs on the official v0.64.5 pin) -- near-term, then the 2202-pulse
 order:
-(1) [next] promote `p_polyhedra_nested_hull` to tools/probes (probe
-count 317 -> 318 after wave 140) + README + wave-53 hull-check
-strengthening; bus item CLOSED (block 189).
+(1) DONE (block 194): `p_polyhedra_nested_hull` PROMOTED to
+tools/probes (probe 318; rc 0 5/5 on the official pin); the wave-53
+probe keeps its empty-input hull checks (the lock carries nonempty).
 (2) re-add the 1549-stdlib-6 catalog payload clauses (captures
 nested-Vec, unescape Ok-Str, parse payload) + floors bump + both-
 platform suite (Windows + WSL); reopen-if-trips per the closed note.
@@ -124,14 +124,14 @@ fixed -> pulse verify); housekeeping close-loops for parked info rows
 (1131-pulse, 1342-compiler-2, 1453-packages, 1513-engine); 1630/1658
 stay compiler-owned; monitor the three still-red compiler rows
 (p_result_payload_index_concat / p_sync_mutex_builtin_shadow /
-p_trailing_match_after_push) at each pin; the queue/plan/README/floors
-wiring for wave 140 (floors173) follows the actor's commit.
+p_trailing_match_after_push) at each pin; wave 140 wiring landed
+(36bcaac; floors173).
 
-GATES (WAVE PIN = official v0.64.5, block 191): modules 510/510, corpus
-956/956, probes 317/317, floors172 (fns 8803/8802, rest at floor) + doc
-(7041/7041) OK; barename + module-smoke pending the wave-140 commit
-(v0.64.4-pin history: 955/955, 315/315, 510/510, 0/510, module-smoke
-499/518, 3500/6239).
+GATES (WAVE PIN = official v0.64.5; blocks 191/194): modules 510/510,
+corpus 956/956, probes 318/318, barename 0/510 (827.9s), module-smoke
+499/518 + 3501/6239 OK, floors172 + doc OK; floors173 wired with wave
+140. (v0.64.4-pin history: 955/955, 315/315, 510/510, 0/510,
+module-smoke 499/518, 3500/6239.)
 
 FINDINGS: 15 Current, all compiler (tools/known_failures/README.md); the
 two p_v065 regression locks are closed on the fixed candidate and stay in
@@ -3527,6 +3527,24 @@ registry pin, agent recon for the rest)**
   clean except the untracked out/ dir at this round.
 - Two long-lived git processes (from ~14:20Z) sit in the relays repo;
   the bus itself is consistent. The next writer continues from 169/170.
+
+**SESSION 2026-10-16 block 194 (wave 141 / pin-switch W1: `p_polyhedra_nested_hull` PROMOTED to tools/probes -- probe 318; official-pin gates green: barename 0/510, module-smoke 499/518; probes battery 318/318)**
+- Gates on the official v0.64.5 pin: barename 0 hits in 510 modules
+  (827.9s); module-smoke 499/518 modules + 3501/6239 fns -- RATCHET OK
+  (fns +1 from the wave-140 md5 work).
+- W1 promotion (wave plan item 1; REL-20261010-1549-stdlib CLOSED in
+  block 189): `tools/known_failures/p_polyhedra_nested_hull.xi` moved to
+  `tools/probes/p_polyhedra_nested_hull.xi` with the header flipped to a
+  regression lock (expected rc 0; standalone 3/3 green; historical
+  context kept). The README entry carries the PROMOTED line; the wave-53
+  probe keeps its empty-input hull checks (the lock carries nonempty).
+- Probes battery on the official pin after the move: 318/318 (621.7s;
+  box load eased). Queue header refreshed: probes 318/318, corpus
+  956/956, modules 510/510, wave pin = official v0.64.5 (bd71e2d3).
+- Doorbell 23:00Z was handled by the actor (block 193); this round's
+  inbound was quiet (only 1630/1658 compiler-owned open).
+- Tree: this commit; out/ untracked as usual; the diag smokes remain the
+  debug lane's WIP (not staged).
 
 **SESSION 2026-10-16 block 193 (doorbell 23:00Z -- quiet inbound; 1942 fixed (wave 140); 1948 queued; diag smokes are WIP)**
 - Inbound: no new rows or moves (only the compiler-owned 1630/1658

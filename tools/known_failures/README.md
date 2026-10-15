@@ -377,7 +377,8 @@ The hull of a 4-point square is 2 rows; the hull of a tetrahedron is 0 rows
 (empty inputs are correct). The bodies already use the local-copy workaround
 for nested float Vec reads, so it is insufficient on both pins; the result
 itself is collapsed (caller and callee length reads agree). Repro:
-`tools/known_failures/p_polyhedra_nested_hull.xi`. Found while
+PROMOTED to `tools/probes/p_polyhedra_nested_hull.xi` (regression lock,
+2026-10-16; rc 0 5/5 on the official v0.64.5 pin). Found while
 landing the wave-53 geom clauses; the wave-53 probe keeps only the
 empty-input hull checks. `geometry_2d.convex_hull` (Point2 rows) is correct.
 COMPILER RELAY 2026-10-07: fixed on m201 (dev build); move out at the
@@ -390,10 +391,11 @@ V0.64.5 RE-CHECK 2026-10-15: GREEN on the fresh v0.64.5 candidate
 (repro 5/5 rc 0; v0.64.4 release-archive control 3/3 rc 1) -- the hull
 collapse appears batch-resolved in the m276-m327 range (no single commit
 claims it). RE-VERIFIED on the OFFICIAL v0.64.5 archive (as-shipped) and
-the bus item is fixed -> verified -> closed (relays e4c470a). The repro
-promotion to `tools/probes/` (probe 316) and the wave-53 geom probe's
-hull-check strengthening ride the pin-switch wave -- the repro is red on
-the v0.64.4 battery pin.
+the bus item is fixed -> verified -> closed (relays e4c470a). PROMOTED
+2026-10-16 (block 194): `tools/probes/p_polyhedra_nested_hull.xi`
+(probe 318; rc 0 5/5 on the official v0.64.5 pin). The wave-53 probe
+keeps its empty-input hull checks; the promoted lock carries the
+nonempty rows.
 
 **RESOLVED 2026-10-12 (stdlib algorithm): `geometry_2d.polygon_difference`
 disjoint-case fix (wave 116).** The difference now routes through the
