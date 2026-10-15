@@ -3352,6 +3352,24 @@ registry pin, agent recon for the rest)**
 - Two long-lived git processes (from ~14:20Z) sit in the relays repo;
   the bus itself is consistent. The next writer continues from 169/170.
 
+**SESSION 2026-10-15 block 187 (v0.64.5 RELEASE CYCLE CLOSED: PR xiom#6 merged at 19:12Z; xiom main STDLIB_VERSION = 092dfa0; compiler v0.64.5 tagged on 84f761c5, release run green, all assets live) -- the actor's 186 'awaiting PR-6 merge' sits below**
+- PR xiom#6 (chore: pin STDLIB_VERSION to stdlib-v0.64.5) MERGED at
+  2026-10-15T19:12:24Z; merge commit 84f761c5.
+- xiom main STDLIB_VERSION now 092dfa0cc0dc813943154278eecfc4fbb144d6e8
+  (the moved stdlib-v0.64.5 tag's commit).
+- The compiler tagged v0.64.5 on 84f761c5: release run 38792051847 green;
+  all assets live (linux-x64, macos x2, windows-x64, wasm, vsix). Bus:
+  relays 4b73d3f.
+- The full cycle: waves 114-139 -> stdlib tag (moved once for the m296
+  pin-era smoke fix) -> registry publish (fixed asset) -> pin PR ->
+  merged -> compiler v0.64.5 released.
+- Post-pin lane queue (opens the next arc): promote
+  p_polyhedra_nested_hull to tools/probes (probe 316; after the
+  1549-stdlib item closes), re-add the 1549-stdlib-6 payload clauses,
+  resume the ranked sweep inventory, and re-verify the standing acked
+  rows against the official v0.64.5 archive where their items ask for it
+  (1305-pulse-2 etc.).
+
 **SESSION 2026-10-15 block 186 (doorbell 19:00Z -- quiet; release line fully resolved; awaiting the compiler's PR-6 merge/next pin)**
 - Inbound: no new rows or moves (only the compiler-owned 1630/1658
   open). Release line per block 185b: **xiom-std 0.64.5 is published**
