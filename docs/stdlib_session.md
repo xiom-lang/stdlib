@@ -3513,6 +3513,34 @@ registry pin, agent recon for the rest)**
 - Tree: head `2bc064e`; clean except the untracked out/ dir. The next
   writer continues from block 189b/190.
 
+**SESSION 2026-10-15 block 189c (round 2 for the darwin lock: heavy 38799767048 verdicts -- macos-14 GREEN on smoke_darwin_runtime; win AV + linux SIGSEGV root-caused and fixed; re-dispatch)**
+- Run 38799767048 (witness branch, compiler_ref=v0.64.5): windows 955/956 and
+  ubuntu 955/956 -- the only failure was smoke_darwin_runtime (windows
+  run_exit -1073741819 = 0xC0000005; ubuntu 139 = SIGSEGV). macos-14 951/956
+  -- smoke_darwin_runtime PASSED (the darwin vector-ABI wrappers validated
+  end-to-end on the runner); the remaining five are the known non-runtime
+  reds (smoke_guard_fault 133 / smoke_platform 1 / smoke_ffi2 1 = platform
+  smokes; smoke_simd compilefail; smoke_stress_crypto_aes_roundtrip = the
+  recorded aarch64 AES finding). The stale v0.64.4-era list had 24 failures
+  -- 19 cleared (m323-m333 + the darwin fixes).
+- Round-2 root causes (both exposed by the first runtime-valued fp128 exercise
+  ever run in the corpus):
+  * linux-x64 SIGSEGV: the Win64 asm shims were compiled on ELF too and were
+    the selected definitions for the fp128 libcalls -> garbage pointers.
+  * windows 0xC0000005 on the CI runner only: clang < 18 silently ignores x86
+    `naked`; the shim got a compiler prologue and its own `retq` returned to
+    garbage. (clang 22 on the dev box honors naked, so local runs were green
+    -- version-sensitive until now.)
+- Fix (runtime/fp128_helpers.c): the vector-signature wrapper family now
+  compiles for every non-Windows target (Apple + ELF x64; re-validated by the
+  200k exact-oracle fuzz + SysV harness + Windows probes post-change); the
+  Windows shims are raw file-scope `.globl` asm blocks (assembled verbatim by
+  every clang; no-prologue confirmed by disasm). The $env:XIOM_RUNTIME_DIR
+  overlay runs the whole matrix locally against the fixed runtime.
+- Re-dispatch: heavy suites on the witness branch (compiler_ref=v0.64.5); the
+  run id + leg verdicts land in relay 2011 when complete.
+- Tree: M runtime/fp128_helpers.c (this block rides the same commit).
+
 **SESSION 2026-10-15 block 189b (compiler/debug-lane session, darwin runtime fixes landed in this repo -- fp128 libcall ABI wrappers (x86_64 + arm64) + mach free-memory + fp128 opposite-sign addsub/zero-path corrections; smoke_darwin_runtime added (corpus 955 -> 956); heavy macos dispatch pending)**
 - Two darwin runtime gaps from the v0.64.6 queue (REL-20261010-1609-pulse-2
   + the 1549-pulse-7 host_statistics64 follow-up), fixed in the runtime C:
