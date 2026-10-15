@@ -3493,6 +3493,26 @@ registry pin, agent recon for the rest)**
 - Two long-lived git processes (from ~14:20Z) sit in the relays repo;
   the bus itself is consistent. The next writer continues from 169/170.
 
+**SESSION 2026-10-15 block 190 (doorbell 21:00Z -- four new rows triaged; release cycle closed; darwin fixes landed)**
+- New inbound: `REL-20261015-1942-packages` (high: xiom.crypto.md5
+  wrong digests, RFC 1321 mismatch + repro) and
+  `REL-20261015-1948-packages` (medium: socket_connect returns Ok on a
+  refused connection, Windows; failure surfaces at first send) are
+  **acked** (the lane actor) and queued as the next fix-first pair;
+  `REL-20261015-2009-packages` (fleet impact scan; no migration needed)
+  and `REL-20261015-2011-compiler` (darwin fp128 ABI wrappers + mach
+  free-memory + addsub/zero-path fixes; heavy macos run 38799767048 on
+  witness/darwin-runtime-v0.64.6; smoke count 955 -> 956) were **acked
+  by this round** with refs (relays pushed). The darwin work matches the
+  in-tree block 189b and is expected to close the pulse-2 class at the
+  next pin.
+- Release line: the v0.64.5 release cycle is CLOSED (block 187; PR
+  merged); block 189 closed the 1549 cluster + 1615 on the official
+  archive and flipped the known_failures README RESOLVED rows; snapshot
+  37 (block 188) is the current handoff.
+- Tree: head `2bc064e`; clean except the untracked out/ dir. The next
+  writer continues from block 189b/190.
+
 **SESSION 2026-10-15 block 189b (compiler/debug-lane session, darwin runtime fixes landed in this repo -- fp128 libcall ABI wrappers (x86_64 + arm64) + mach free-memory + fp128 opposite-sign addsub/zero-path corrections; smoke_darwin_runtime added (corpus 955 -> 956); heavy macos dispatch pending)**
 - Two darwin runtime gaps from the v0.64.6 queue (REL-20261010-1609-pulse-2
   + the 1549-pulse-7 host_statistics64 follow-up), fixed in the runtime C:
