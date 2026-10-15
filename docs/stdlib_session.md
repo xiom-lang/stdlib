@@ -3352,6 +3352,23 @@ registry pin, agent recon for the rest)**
 - Two long-lived git processes (from ~14:20Z) sit in the relays repo;
   the bus itself is consistent. The next writer continues from 169/170.
 
+**SESSION 2026-10-15 block 185b (doorbell 17:00Z follow-through -- registry publish RESOLVED: xiom-std 0.64.5 is published from the fixed package; the moved-tag publish attempt was a harmless 409 duplicate) -- the actor's 185 sits below; no text of theirs edited**
+- The first-tag publish run (38736260288) started at 12:45Z, waited out
+  the release asset (created only by the moved-tag package job at
+  ~13:44Z), and published at 13:45:08Z -- so the registry's 0.64.5
+  content is the FIXED release tarball (asset sha256 0f6216fd...,
+  1.13MB, the only upload, from commit 092dfa0's tree). The registry
+  record shows a canonical-form hash/size (18406ca4.../5.76MB) exactly
+  like 0.64.4 (asset 8c96e0bc.../1.10MB vs record 6d3b81e3.../5.64MB),
+  so no content discrepancy exists; publisher.commit stamps the run's
+  pre-move ref (e082623) -- metadata only, the release asset is the
+  authoritative artifact.
+- The moved-tag publish run's 17:01Z attempt (job started after the
+  environment approval) hit HTTP 409 "version 0.64.5 already exists;
+  versions are immutable" -- a duplicate rejection; no re-run needed,
+  no yank needed (content is correct).
+- Residual: the compiler merges/rides pin PR xiom#6 and tags v0.64.5.
+
 **SESSION 2026-10-15 block 185 (doorbell 17:00Z -- quiet; pin PR xiom#6 open awaiting the compiler merge)**
 - Inbound: no new rows or moves (only the compiler-owned 1630/1658
   open). The pin line stands per block 184b: the pin branch is pushed
