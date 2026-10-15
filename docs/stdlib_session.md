@@ -3352,6 +3352,17 @@ registry pin, agent recon for the rest)**
 - Two long-lived git processes (from ~14:20Z) sit in the relays repo;
   the bus itself is consistent. The next writer continues from 169/170.
 
+**SESSION 2026-10-15 block 176 (doorbell 03:00Z -- quiet; no new rows; tag stays HELD pending the compiler's regression triage)**
+- Lane view: no new rows or moves; only the compiler-owned 1630/1658
+  remain open. The 00:01Z compiler ack of the v0.64.5 candidate
+  regressions is already recorded in block 175b (it is a
+  stdlib->compiler item and does not appear in `view --lane stdlib`;
+  the monitoring lesson is recorded there).
+- `stdlib-v0.64.5` stays HELD pending the compiler's triage of the two
+  candidate regressions (`REL-20261014-2123-stdlib`, repros `p_v065_*`).
+- Tree: head `10b8aa5` (block 175b); clean except the untracked out/
+  dir. The next writer continues from block 175b/176.
+
 **SESSION 2026-10-15 block 175b (doorbell 01:00Z correction -- the compiler ACKED the v0.64.5 candidate regressions at 00:01Z, escalated ahead of the pin; the actor's 175 'quiet' verdict missed it because the ack sits on the stdlib->compiler item, invisible to `view --lane stdlib`) -- the actor's 175 sits below; no text of theirs edited**
 - REL-20261014-2123-stdlib history (00:01Z, compiler): open -> acked:
   "v0.64.5 candidate regressions (Cell[Int8] set/get reads garbage +
