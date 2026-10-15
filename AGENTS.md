@@ -22,10 +22,14 @@ this lane is active.
 
 ## Lane essentials
 
-- Compiler pin: v0.64.4 -- use the OFFICIAL RELEASE ARCHIVE binary
-  `%TEMP%\kilo\stdlib_ws\v0.64.4-rel\bin\xiom.exe` for wave batteries (the
-  shared `E:\xiom-lang\xiom\target\release\xiom.exe` drifted past the tag
-  on 2026-10-10; see docs/failed_attempts.md).
+- Compiler pin: v0.64.5 -- use the OFFICIAL RELEASE ARCHIVE binary
+  `%TEMP%\kilo\stdlib_ws\v0.64.5-official\bin\xiom.exe` for wave batteries
+  (zip sha256 bd71e2d3...). TRAP: `v0.64.5-rel` (67e57dfe) is the
+  2026-10-14 pre-fix candidate and `v0.64.5b-rel` (9b391ef4) the fixed
+  dry-run -- verify the zip hash against the GitHub release digest; dir
+  names do not indicate release status. (The shared
+  `E:\xiom-lang\xiom\target\release\xiom.exe` drifted past the tag
+  on 2026-10-10; see docs/failed_attempts.md.)
 - Session handoff and wave history: `docs/stdlib_session.md` (snapshots at
   the top; newest wave block first in the block list).
 - Open internal reproductions: `tools/known_failures/` (public evidence;

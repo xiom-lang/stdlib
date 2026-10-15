@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 37 (updated 2026-10-15 19:55Z at head ea1c312; v0.64.5 RELEASED and pinned; the 1549 cluster + 1615 VERIFIED+CLOSED on the official archive (block 189); waves 114-139; probes 315; floors172; relay live)
+## 0A. CONTINUE HERE -- handoff snapshot 37 (updated 2026-10-16 01:00Z at head 9d6a4d5; v0.64.5 released; WAVE PIN SWITCHED to the official v0.64.5 archive (bd71e2d3; block 191; extraction trap recorded); 1549 cluster + 1615 closed (block 189); waves 114-139 + darwin runtime waves 189b/189c; probes 317; floors172; relay live)
 
 ### Snapshot 37 (paste-ready)
 
@@ -26,7 +26,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 ---
 
 You are continuing the XIOM stdlib lane. Worktree `E:\xiom-lang\stdlib`,
-branch `main`. Read `docs/stdlib_session.md` blocks 189, 188, 187, 186, 185b, 185,
+branch `main`. Read `docs/stdlib_session.md` blocks 191, 190, 189c, 189b, 189, 188, 187, 186, 185b, 185,
 184b, 184, 183, 182, 181, 180, 179, 178, 177, 176, 175b, 175, 174, 173b,
 173, 172, 171b, 171, 170d, 170c, 170b, 170, 169, 168, 167, 166b, 166,
 165b, 165 (older as needed); snapshot 36 below is the previous handoff and
@@ -42,14 +42,18 @@ fixed release asset (run 38736260288; the registry stores a canonical
 hash/size -- compare against the release asset + publisher fields, not
 the tarball digest); the moved-tag publish attempt hit a harmless 409
 duplicate. `COMPILER_VERSION` in this repo stays v0.64.4 until the next
-stdlib release; the battery pin remains the official v0.64.4 archive at
-`%TEMP%\kilo\stdlib_ws\v0.64.4-rel\bin\xiom.exe` (the official v0.64.5
-archive is live and our corpus is green on both -- if the next session
-switches the wave pin, do it explicitly and record it). The 1549
-cluster (parent + -2..-7) and 1615 were verified + closed on the
-official archive at session start (block 189; relays e4c470a +
-d89b181). Lane head: ea1c312 (block 188); tree clean except the
-untracked out/ dir.
+stdlib release. The WAVE PIN is now the OFFICIAL v0.64.5 archive at
+`%TEMP%\kilo\stdlib_ws\v0.64.5-official\bin\xiom.exe` (zip sha256
+bd71e2d3, hash-verified against the release digest; switched in block
+191 after the official battery: modules 510/510, corpus 956/956, probes
+317/317, floors172 + doc OK). TRAP: `v0.64.5-rel` (zip 67e57dfe) is the
+2026-10-14 PRE-FIX candidate and `v0.64.5b-rel` (9b391ef4) the fixed
+dry-run -- extraction dir names do not indicate release status; battery
+only on a hash-verified official extraction. The 1549 cluster (parent +
+-2..-7) and 1615 were verified + closed on the official archive (blocks
+189 + 191 corrections; relays e4c470a + d89b181 + 6e6607c). Lane head:
+9d6a4d5 + the concurrent wave-140 md5 WIP at refresh time; tree
+otherwise clean except the untracked out/ dir.
 
 Waves 114-139 landed; 138 = the encoding submodules (base64/base32/hex/
 percent/punycode/idna/ascii85 cached runtime-mirror reads; the
@@ -79,8 +83,10 @@ SESSION START (2h relay-doorbell prompt).
 POST-PIN QUEUE (the next arc; blocks 181/183/187/189): (1) promote
 `p_polyhedra_nested_hull` to tools/probes (probe count 316) -- the bus
 item is CLOSED (block 189) and the README entry is RESOLVED; the repro
-is red on the v0.64.4 battery pin, so promote together with the pin
-switch, then strengthen the wave-53 geom hull checks; (2) re-add the
+is red on the v0.64.4 battery pin; the wave pin is now switched (block
+191), so the promotion is the next wave -- probe count moves with the
+wave-140 probes (317 -> 318), then strengthen the wave-53 geom hull
+checks; (2) re-add the
 1549-stdlib-6 catalog payload clauses (m283+ is in v0.64.5; retire the
 payload-free guards there) + floors bump -- also keyed to the pin switch
 (reopen-if-trips per the closed item's note); (3) resume the ranked sweep
@@ -90,13 +96,15 @@ misc/regex/search/collect; num parse/itoa; log; crypto rng/curves; os
 path/fs; error/debug/test builders; (4) the thread-gate flip
 (2053/1627/1402) is UNBLOCKED (m312 + the wave-139 runtime half shipped
 in v0.64.5) -- flip the spawn e2e + thread pool and record the evidence;
-(5) first action of the pin-switch wave: the full official-archive
-battery on v0.64.5-rel, then record the switch explicitly.
+(5) DONE (block 191): the official-archive battery ran on the
+hash-verified release (bd71e2d3), the wave pin is switched and recorded
+-- queue (1)-(4) now runs on the official v0.64.5 pin.
 
-GATES (v0.64.4 pin, blocks 170d + 181; the fresh v0.64.5b candidate was
-all-green too): corpus 955/955, probes 315/315, modules 510/510,
-barename 0/510, floors172 (fns 8802, pubFns 6540, clauses 6252,
-pubCovered 4625) + module-smoke (499/518, 3500/6239) + doc ratchets OK.
+GATES (WAVE PIN = official v0.64.5, block 191): modules 510/510, corpus
+956/956, probes 317/317, floors172 (fns 8803/8802, rest at floor) + doc
+(7041/7041) OK; barename + module-smoke pending the wave-140 commit
+(v0.64.4-pin history: 955/955, 315/315, 510/510, 0/510, module-smoke
+499/518, 3500/6239).
 
 FINDINGS: 15 Current, all compiler (tools/known_failures/README.md); the
 two p_v065 regression locks are closed on the fixed candidate and stay in
@@ -3492,6 +3500,35 @@ registry pin, agent recon for the rest)**
   clean except the untracked out/ dir at this round.
 - Two long-lived git processes (from ~14:20Z) sit in the relays repo;
   the bus itself is consistent. The next writer continues from 169/170.
+
+**SESSION 2026-10-15/16 block 191 (pin-switch wave: official v0.64.5 battery green -- modules 510/510, corpus 956/956, probes 317/317, floors172 + doc OK; EXTRACTION-IDENTITY TRAP found + bus corrections; wave pin MOVED to the official archive bd71e2d3)**
+- Discovery: the corpus pass on `v0.64.5-rel` came back 953/955 with
+  EXACTLY the two 10-14 candidate regressions (smoke_cell_narrow rc 2,
+  smoke_stress_crypto_aes_gcm 0xC0000005; deterministic). Artifact
+  identity check: `v0.64.5-rel` zip sha256 = 67e57dfe = the 2026-10-14
+  PRE-FIX candidate (block 173b), NOT the release; `v0.64.5b-rel` =
+  9b391ef4 (fixed dry-run). The OFFICIAL windows zip = bd71e2d3 (release
+  run 38792051847; GitHub asset digest match), downloaded + verified +
+  extracted at `%TEMP%\kilo\stdlib_ws\v0.64.5-official` (exe 02F08578,
+  byte-identical to the previous actor's v0645-verify extraction).
+- Official battery (as-shipped binary; tools export XIOM_STDLIB=repo
+  root): modules 510/510 (365.8s); corpus 956/956 (1847s; the 956th =
+  smoke_darwin_runtime from the concurrent darwin wave); probes 317/317
+  (1412.2s; the +2 = the wave-140 md5 probes, present as WIP at run
+  time); floors172 OK (fns 8803/8802, rest at floor); doc OK (7041/7041).
+  barename + module-smoke re-run after the wave-140 commit (the tree was
+  mid-edit; wave 140's battery covers them on the same pin).
+- Repro requalification on the official binary (as-shipped, no
+  XIOM_STDLIB override): parent 5/5 rc 0; -2..-7 3/3 rc 0 (or the
+  intended T001 for -5); 1615 3/3 rc 0; -6 evidence 3/3 rc 0.
+- Bus: archive-identity CORRECTIONS appended to the 8 closed items +
+  1305-pulse-2 (relays 6e6607c) -- the close evidence stands, the
+  'official' labels now name bd71e2d3.
+- Wave pin MOVED: `%TEMP%\kilo\stdlib_ws\v0.64.5-official\bin\xiom.exe`
+  (zip bd71e2d3); AGENTS.md pin line updated; snapshot 37 updated in
+  place. Post-pin queue (1)-(4) now runs on the official pin.
+- Tree: head 9d6a4d5 + concurrent wave-140 md5 WIP (actor); this wave is
+  docs-only (AGENTS.md + session doc; out/ untracked as usual).
 
 **SESSION 2026-10-15 block 190 (doorbell 21:00Z -- four new rows triaged; release cycle closed; darwin fixes landed)**
 - New inbound: `REL-20261015-1942-packages` (high: xiom.crypto.md5
