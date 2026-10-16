@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 37 (updated 2026-10-16 17:55Z at head b6f90c9; waves 141-156 landed incl. the parallel batch + station audit; pin stdlib-v0.64.6 = b81430b; NEXT LEADS: TLS wave-B against the bindings' xiom.ssl (publish-ready), compression, zero-copy, popen spawn; relay live)
+## 0A. CONTINUE HERE -- handoff snapshot 37 (updated 2026-10-16 19:05Z at head ecae793; waves 141-163 landed incl. the campaign -- zero-copy, SSE, fix-first batch, BLAKE3 KATs; pin stdlib-v0.64.6 = b81430b; NEXT LEADS: TLS wave-B against the bindings' xiom.ssl (publish-ready), compression, popen spawn; relay live)
 
 ### Snapshot 37 (paste-ready)
 
@@ -26,7 +26,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 ---
 
 You are continuing the XIOM stdlib lane. Worktree `E:\xiom-lang\stdlib`,
-branch `main`. Read `docs/stdlib_session.md` blocks 209, 208, 207, 206, 205, 204, 203, 202, 201, 200, 199, 198, 197, 196, 195, 194, 193, 192, 191, 190, 189c, 189b, 189, 188, 187, 186, 185b, 185,
+branch `main`. Read `docs/stdlib_session.md` blocks 214, 213, 212, 211, 210, 209, 208, 207, 206, 205, 204, 203, 202, 201, 200, 199, 198, 197, 196, 195, 194, 193, 192, 191, 190, 189c, 189b, 189, 188, 187, 186, 185b, 185,
 184b, 184, 183, 182, 181, 180, 179, 178, 177, 176, 175b, 175, 174, 173b,
 173, 172, 171b, 171, 170d, 170c, 170b, 170, 169, 168, 167, 166b, 166,
 165b, 165 (older as needed); snapshot 36 below is the previous handoff and
@@ -118,8 +118,9 @@ REL-20261016-1550-stdlib); spawn_with stays inline (no arg channel);
 Send/Sync is a language gap.
 (6) compression upgrades (2202 item 5): dynamic-Huffman gzip, real
 brotli (RFC 7932), zstd + Accept-Encoding negotiation.
-(7) zero-copy send (2202 item 6): sendfile/splice/TransmitFile/writev
-(mmap family already shipped).
+(7) DONE (wave 159, block 212): zero-copy send real -- writev +
+sendfile/TransmitFile + TcpStream.send_file; probe p_wave159 (11 rows)
++ slices green.
 (8) popen-class non-blocking spawn (2202 item 3; supervisor/reload
 shape).
 (9) TLS wave-A DONE (block 205, wave 154): ALPN codec + dl_open loader
@@ -132,9 +133,10 @@ server half (cert/key loading, ALPN selection, error taxonomy) for
 (10) DONE (block 200): runtime-backed f32_bits/bits_to_f32 pair +
 probe p_wave147; floors177. A compiler-side Float32 bitcast lowering
 can replace the shim later without an API change.
-(11) phase-2 shelf (2202 items 7-10): SSE helpers, inotify parity, h2
-framing/HPACK scoping, epoll/kqueue/IOCP + LISTEN_FDS; 1129-xvector's
-POSIX-watch ask folds here.
+(11) SSE DONE (wave 162, block 211): sse_connect/headers/read_event/
+read_events/close real over live TcpStream (2202 phase-2 item 7).
+REMAINING shelf: inotify parity, h2 framing/HPACK scoping, epoll/
+kqueue/IOCP + LISTEN_FDS; 1129's POSIX-watch ask folds here.
 (12) DONE (block 205, wave 152): advisory file-lock wave
 (file_lock_try/file_lock/release; LockFileEx + fcntl shims; probe
 p_wave152 green Windows + WSL); shared by orbitdb-1128 + xvector-1129.
