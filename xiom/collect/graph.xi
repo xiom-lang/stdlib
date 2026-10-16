@@ -385,3 +385,282 @@ pub fn uf_count(u: &GraphUnionFind) -> Int
   }
   return seen.len();
 }
+
+// ============================================================================
+// Parallel-edge (from/to Vec[Int]) surface
+// ----------------------------------------------------------------------------
+// Closure, reachability, depth and topological order over CALLER-OWNED edge
+// vectors, for consumers that keep an edge list as two parallel Vec[Int]s
+// (the packages wishlist shape; the struct-node Graph above is the
+// alternative representation). Node ids are 0..n-1. Edge entries whose
+// source or destination falls outside [0, n) are skipped, so a partially
+// invalid edge list never traps; `from` and `to` are read up to the shorter
+// of the two lengths. `max_depth` is a caller budget in hops: >= 0 caps the
+// search depth, any negative value means unlimited. All routines are
+// deterministic (BFS shortest-hop; smallest-index-first Kahn).
+// ============================================================================
+
+/// Build a flat adjacency arena (head/to/next) from parallel edge vectors.
+/// Returns head (size max(n, 0)); the arena's `to`/`next` vectors are
+/// appended to out_to/out_next. Only edges with both endpoints inside
+/// [0, n) are kept. O(n + E).
+fn _edge_arena(n: Int, from: &Vec[Int], to: &Vec[Int], out_to: &mut Vec[Int], out_next: &mut Vec[Int]) -> Vec[Int] {
+  var head = Vec[Int].new();
+  var i = 0;
+  while i < n {
+    head.push(-1);
+    i = i + 1;
+  }
+  var m = from.len();
+  if to.len() < m { m = to.len(); }
+  var k = 0;
+  while k < m {
+    var u = from[k];
+    var v = to[k];
+    if u >= 0 && u < n && v >= 0 && v < n {
+      out_to.push(v);
+      out_next.push(head[u]);
+      head[u] = out_to.len() - 1;
+    }
+    k = k + 1;
+  }
+  return head;
+}
+
+/// Shortest-hop distances from `start` over the parallel edge vectors:
+/// result[v] is the number of edges on a shortest start -> v path, -1 when v
+/// is unreachable or farther than `max_depth` (>= 0; negative = unlimited).
+/// result[start] == 0 when start is inside [0, n); every entry is -1 when it
+/// is not. O(n + E).
+fn _edge_bfs_dist(n: Int, from: &Vec[Int], to: &Vec[Int], start: Int, max_depth: Int) -> Vec[Int] {
+  var dist = Vec[Int].new();
+  var i = 0;
+  while i < n {
+    dist.push(-1);
+    i = i + 1;
+  }
+  if start < 0 || start >= n {
+    return dist;
+  }
+  var to_a = Vec[Int].new();
+  var next_a = Vec[Int].new();
+  var head = _edge_arena(n, from, to, &mut to_a, &mut next_a);
+  dist[start] = 0;
+  var queue = Vec[Int].new();
+  var qh = 0;
+  queue.push(start);
+  while qh < queue.len() {
+    var u = queue[qh];
+    qh = qh + 1;
+    var du = dist[u];
+    if max_depth >= 0 && du >= max_depth { continue; }
+    var id = head[u];
+    while id != -1 {
+      var w = to_a[id];
+      if dist[w] == -1 {
+        dist[w] = du + 1;
+        queue.push(w);
+      }
+      id = next_a[id];
+    }
+  }
+  return dist;
+}
+
+/// True when `target` is reachable from `start` over the parallel edge
+/// vectors within `max_depth` hops (start == target counts as reachable with
+/// 0 hops). Out-of-range ids (or n <= 0) -> false. O(n + E).
+pub fn graph_reaches(n: Int, from: &Vec[Int], to: &Vec[Int], start: Int, target: Int, max_depth: Int) -> Bool
+  ensures: start < 0 || start >= n || target < 0 || target >= n => result == false
+  ensures: start == target && start >= 0 && start < n => result == true
+{
+  if start < 0 || start >= n || target < 0 || target >= n {
+    return false;
+  }
+  if start == target {
+    return true;
+  }
+  var dist = _edge_bfs_dist(n, from, to, start, max_depth);
+  return dist[target] != -1;
+}
+
+/// Transitive closure of `start`: every node reachable over one or more
+/// edges within `max_depth` hops, in ascending node order. `start` itself is
+/// not included (the zero-hop path); nodes on a cycle back to `start` are
+/// still reachable and appear. Out-of-range start (or n <= 0) -> empty.
+/// O(n + E).
+pub fn graph_closure(n: Int, from: &Vec[Int], to: &Vec[Int], start: Int, max_depth: Int) -> Vec[Int]
+  ensures: n >= 0 => result.len() <= n
+  ensures: start < 0 || start >= n => result.len() == 0
+{
+  var out = Vec[Int].new();
+  if n <= 0 || start < 0 || start >= n {
+    return out;
+  }
+  var dist = _edge_bfs_dist(n, from, to, start, max_depth);
+  var i = 0;
+  while i < n {
+    if dist[i] > 0 {
+      out.push(i);
+    }
+    i = i + 1;
+  }
+  return out;
+}
+
+/// Reflexive-transitive closure over the parallel edge vectors as a flat
+/// row-major Bool matrix of shape n x n: entry `u * n + v` is true when
+/// v == u (zero-hop reflexivity) or v is reachable from u within `max_depth`
+/// hops. n <= 0 -> empty. O(n * (n + E)).
+pub fn graph_closure_matrix(n: Int, from: &Vec[Int], to: &Vec[Int], max_depth: Int) -> Vec[Bool]
+  ensures: n <= 0 => result.len() == 0
+  ensures: n > 0 => result.len() == n * n
+{
+  var out = Vec[Bool].new();
+  if n <= 0 {
+    return out;
+  }
+  var u = 0;
+  while u < n {
+    var dist = _edge_bfs_dist(n, from, to, u, max_depth);
+    var v = 0;
+    while v < n {
+      out.push(dist[v] >= 0);
+      v = v + 1;
+    }
+    u = u + 1;
+  }
+  return out;
+}
+
+/// Shortest-hop depth of every node from `start`: result[v] is the number of
+/// edges on a shortest start -> v path, -1 for unreachable nodes and for
+/// nodes farther than `max_depth` (>= 0; negative = unlimited);
+/// result[start] == 0. Length is n (empty for n <= 0). O(n + E).
+pub fn graph_depth(n: Int, from: &Vec[Int], to: &Vec[Int], start: Int, max_depth: Int) -> Vec[Int]
+  ensures: n >= 0 => result.len() == n
+{
+  return _edge_bfs_dist(n, from, to, start, max_depth);
+}
+
+/// Shortest-hop depth from `start` to `target`; -1 when target is
+/// unreachable, farther than `max_depth` hops, or either id is out of range.
+/// start == target -> 0. O(n + E).
+pub fn graph_depth_of(n: Int, from: &Vec[Int], to: &Vec[Int], start: Int, target: Int, max_depth: Int) -> Int
+  ensures: start < 0 || start >= n || target < 0 || target >= n => result == -1
+{
+  if start < 0 || start >= n || target < 0 || target >= n {
+    return -1;
+  }
+  var dist = _edge_bfs_dist(n, from, to, start, max_depth);
+  return dist[target];
+}
+
+/// Kahn topological sort over the parallel edge vectors, deterministic:
+/// among the currently source-free nodes the smallest node id is emitted
+/// first. Duplicate edges and self-loops are honored as written (a self-loop
+/// is a cycle). O(n^2 + E) (linear source scan per emitted node). Ok(order)
+/// holds all n nodes when the graph is acyclic; Err(nodes) otherwise, where
+/// `nodes` (ascending) lists every node left with nonzero remaining
+/// indegree -- each node on a cycle plus every node that depends on one.
+fn _topo_kahn(n: Int, from: &Vec[Int], to: &Vec[Int]) -> Result[Vec[Int], Vec[Int]] {
+  var order = Vec[Int].new();
+  if n <= 0 {
+    return Ok(order);
+  }
+  var indeg = Vec[Int].new();
+  var emitted = Vec[Bool].new();
+  var i = 0;
+  while i < n {
+    indeg.push(0);
+    emitted.push(false);
+    i = i + 1;
+  }
+  var to_a = Vec[Int].new();
+  var next_a = Vec[Int].new();
+  var head = _edge_arena(n, from, to, &mut to_a, &mut next_a);
+  i = 0;
+  while i < n {
+    var id = head[i];
+    while id != -1 {
+      var w = to_a[id];
+      indeg[w] = indeg[w] + 1;
+      id = next_a[id];
+    }
+    i = i + 1;
+  }
+  var steps = 0;
+  while steps < n {
+    var pick = -1;
+    i = 0;
+    while i < n {
+      if !emitted[i] && indeg[i] == 0 {
+        pick = i;
+        break;
+      }
+      i = i + 1;
+    }
+    if pick == -1 {
+      break;
+    }
+    emitted[pick] = true;
+    order.push(pick);
+    var id2 = head[pick];
+    while id2 != -1 {
+      var w2 = to_a[id2];
+      indeg[w2] = indeg[w2] - 1;
+      id2 = next_a[id2];
+    }
+    steps = steps + 1;
+  }
+  if order.len() == n {
+    return Ok(order);
+  }
+  var cyc = Vec[Int].new();
+  i = 0;
+  while i < n {
+    if !emitted[i] {
+      cyc.push(i);
+    }
+    i = i + 1;
+  }
+  return Err(cyc);
+}
+
+/// Deterministic topological order of the parallel-edge graph (smallest
+/// source id first): Some(order) with all n nodes when acyclic, None when a
+/// cycle exists (use graph_topological_report for the cycle report).
+/// n <= 0 -> Some(empty). O(n^2 + E).
+pub fn graph_topological_sort(n: Int, from: &Vec[Int], to: &Vec[Int]) -> Option[Vec[Int]]
+  ensures: n <= 0 => result.is_some == true
+{
+  if n <= 0 {
+    return Some(Vec[Int].new());
+  }
+  match _topo_kahn(n, from, to) {
+    Ok(order) => { return Some(order); },
+    Err(_) => { return None; },
+  }
+}
+
+/// Like graph_topological_sort but the cyclic case reports instead of
+/// collapsing: Ok(order) for an acyclic graph, Err(nodes) otherwise with the
+/// ascending ids that never reached indegree 0 (cycle members and their
+/// dependents). n <= 0 -> Ok(empty). O(n^2 + E).
+pub fn graph_topological_report(n: Int, from: &Vec[Int], to: &Vec[Int]) -> Result[Vec[Int], Vec[Int]]
+  ensures: n <= 0 => result.is_ok == true
+{
+  return _topo_kahn(n, from, to);
+}
+
+/// True when the parallel-edge graph is acyclic (a topological sort covers
+/// all n nodes). n <= 0 -> true. O(n^2 + E).
+pub fn graph_is_dag(n: Int, from: &Vec[Int], to: &Vec[Int]) -> Bool
+  ensures: n <= 0 => result == true
+{
+  if n <= 0 {
+    return true;
+  }
+  var report = _topo_kahn(n, from, to);
+  return report.is_ok;
+}
