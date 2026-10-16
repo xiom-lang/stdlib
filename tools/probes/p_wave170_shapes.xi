@@ -37,6 +37,8 @@
 module p_wave170_shapes
 
 use xiom.collect.graph;
+use xiom.test.assertions;
+use xiom.string;
 
 fn main() -> Int {
   // ---- Row 1: graph_reaches -----------------------------------------------
@@ -161,6 +163,92 @@ fn main() -> Int {
   }
   if graph.graph_closure(0, &ef, &et, 0, 0 - 1).len() != 0 { return 7; }
   if graph.graph_closure_matrix(0, &ef, &et, 0 - 1).len() != 0 { return 7; }
+
+  // ---- Row 8: assertions pass path ----------------------------------------
+  var a8 = assertions_new();
+  check_eq_int(&mut a8, 3, 3, "three");
+  check_eq_str(&mut a8, "x", "x", "sx");
+  check_eq_bool(&mut a8, true, true, "btrue");
+  check_true(&mut a8, true, "t");
+  check_false(&mut a8, false, "f");
+  check_ge_int(&mut a8, 5, 5, "ge5");
+  if assertions_passed(&a8) != 6 { return 8; }
+  if assertions_failed(&a8) != 0 { return 8; }
+  if assertions_total(&a8) != 6 { return 8; }
+  if assertions_has_failures(&a8) { return 8; }
+  if assertions_summary(&a8) != "assertions: 6 passed, 0 failed" { return 8; }
+
+  // ---- Row 9: mixed failure records, collect-all continues ----------------
+  var a9 = assertions_new();
+  check_eq_int(&mut a9, 1, 2, "int-msg");
+  check_eq_str(&mut a9, "aa", "bb", "str-msg");
+  check_true(&mut a9, false, "true-msg");
+  // execution continues after the failures: this one still runs and passes
+  check_eq_int(&mut a9, 9, 9, "after");
+  check_ge_int(&mut a9, 3, 9, "ge-msg");
+  if assertions_passed(&a9) != 1 { return 9; }
+  if assertions_failed(&a9) != 4 { return 9; }
+  if assertions_total(&a9) != 5 { return 9; }
+  if assertion_kind(&a9, 0) != "eq_int" { return 9; }
+  if assertion_message(&a9, 0) != "int-msg" { return 9; }
+  if assertion_expected(&a9, 0) != "1" { return 9; }
+  if assertion_actual(&a9, 0) != "2" { return 9; }
+  if assertion_kind(&a9, 1) != "eq_str" { return 9; }
+  if assertion_expected(&a9, 1) != "aa" { return 9; }
+  if assertion_actual(&a9, 1) != "bb" { return 9; }
+  if assertion_kind(&a9, 2) != "is_true" { return 9; }
+  if assertion_actual(&a9, 2) != "false" { return 9; }
+  if assertion_expected(&a9, 3) != ">= 9" { return 9; }
+  if assertion_actual(&a9, 3) != "3" { return 9; }
+  if assertion_kind(&a9, 99) != "" { return 9; }
+  if assertion_message(&a9, 0 - 1) != "" { return 9; }
+
+  // ---- Row 10: Result/Option kinds + check_fail ---------------------------
+  var a10 = assertions_new();
+  let rok: Result[Int, Str] = Ok(1);
+  let rerr: Result[Int, Str] = Err("no");
+  let osm: Option[Int] = Some(7);
+  let ono: Option[Int] = None;
+  check_ok(&mut a10, rok, "ok");
+  check_err(&mut a10, rerr, "err");
+  check_some(&mut a10, osm, "some");
+  check_none(&mut a10, ono, "none");
+  check_ok(&mut a10, rerr, "bad-ok");
+  check_err(&mut a10, rok, "bad-err");
+  check_some(&mut a10, ono, "bad-some");
+  check_none(&mut a10, osm, "bad-none");
+  check_fail(&mut a10, "explicit");
+  if assertions_passed(&a10) != 4 { return 10; }
+  if assertions_failed(&a10) != 5 { return 10; }
+  if assertion_kind(&a10, 0) != "is_ok" { return 10; }
+  if assertion_kind(&a10, 1) != "is_err" { return 10; }
+  if assertion_kind(&a10, 2) != "is_some" { return 10; }
+  if assertion_kind(&a10, 3) != "is_none" { return 10; }
+  if assertion_actual(&a10, 0) != "Err" { return 10; }
+  if assertion_expected(&a10, 3) != "None" { return 10; }
+  if assertion_kind(&a10, 4) != "fail" { return 10; }
+  if assertion_message(&a10, 4) != "explicit" { return 10; }
+
+  // ---- Row 11: report + JSON formatting -----------------------------------
+  var a11 = assertions_new();
+  check_eq_int(&mut a11, 1, 2, "one");
+  check_eq_str(&mut a11, "a", "b", "two");
+  if assertions_summary(&a11) != "assertions: 0 passed, 2 failed" { return 11; }
+  let rep = assertions_report(&a11);
+  if !string.str_contains(rep, "FAIL [eq_int] one") { return 11; }
+  if !string.str_contains(rep, "FAIL [eq_str] two") { return 11; }
+  let js = assertions_to_json(&a11);
+  if !string.str_contains(js, "\"failed\":2") { return 11; }
+  if !string.str_contains(js, "\"kind\":\"eq_int\"") { return 11; }
+  if !string.str_contains(js, "\"actual\":\"b\"") { return 11; }
+  var a11b = assertions_new();
+  check_eq_str(&mut a11b, "a\"b", "c", "esc");
+  let js2 = assertions_to_json(&a11b);
+  if !string.str_contains(js2, "\\\"") { return 11; }
+  var a11c = assertions_new();
+  check_eq_str(&mut a11c, "x", "y\\z", "esc2");
+  let js3 = assertions_to_json(&a11c);
+  if !string.str_contains(js3, "y\\\\z") { return 11; }
 
   return 0;
 }
