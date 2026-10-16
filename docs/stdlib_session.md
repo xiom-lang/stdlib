@@ -3643,21 +3643,6 @@ registry pin, agent recon for the rest)**
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
 
-**SESSION 2026-10-16 block 218 (doorbell 21:00Z -- quiet inbound; 1128 fixed; ledger close-out at 217; wishlist waves 165-171 in flight)**
-- Inbound: `REL-20261016-1128-orbitdb` moved to **fixed** (the Station
-  server-tier wishlist -- the campaign waves delivered its primitives);
-  `1129-xvector` stays acked; nothing new otherwise (1630/1658
-  compiler-owned open).
-- Tree: head `c7af595`; block 217 closed out the compiler-blocker ledger
-  (four 1548 items re-verified on the official v0.64.5 archive; FIVE
-  repros promoted to the probe corpus -- count 341; 1852 closed as
-  superseded by 2328; the NEW residual `REL-20261016-2100-stdlib` filed
-  for alias-qualified types in field/signature positions, including a
-  silent no-diagnostics compiler abort). Block 216 landed wave 164
-  (runtime host-platform branches); the wishlist waves 165-171 are in
-  flight at this round. WIP left untouched (out/, the mojibake stress
-  dat, fp128 diag smokes). The next writer continues from block 217/218.
-
 **SESSION 2026-10-16 block 217 (compiler-blocker ledger audit + close-out: four 1548 items re-verified on official v0.64.5 -> fixed->verified->closed; five repros PROMOTED to the probe corpus (341); 1852 closed (superseded by 2328); NEW residual REL-20261016-2100-stdlib (alias-qualified types in field/signature positions: silent i64 default + C001, and the param+Result-return combination SILENTLY ABORTS the compiler rc -1 with no diagnostics); relays 2291513 pushed; wishlist waves 165-171 in flight)**
 - Audit of every stdlib->compiler bus item (the user asked "are all
   blockers filed"): YES -- all blockers are on the bus. Acked with the
