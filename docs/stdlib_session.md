@@ -3662,6 +3662,10 @@ registry pin, agent recon for the rest)**
   smoke_env 6/6, smoke_stress_env 3/3, smoke_path 1/1,
   smoke_stress_path 15/15, smoke_io_env 1/1, smoke_io_path 1/1,
   smoke_os_env 1/1, smoke_os_path 1/1.
+- CAMPAIGN-FINAL GATE: the FULL smoke corpus is green -- 962/962 PASS
+  (1693.4s) on the tree carrying waves 155-164 (incl. the six witness
+  ladder smokes); probes 335/335 on the same tree plus p_wave164 (336).
+  floors179 refreshed (os 65 -> 65.1).
 - Bus: REL-20261016-2000-stdlib filed to compiler (relays 3233577
   pushed).
 - FINDING (recorded, not chased): watch_dir returns Ok("/tmp") on Linux
