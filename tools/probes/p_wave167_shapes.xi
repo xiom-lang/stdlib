@@ -16,6 +16,10 @@
 //  3 -- composite keys: ckmap put/get/update/remove, key-eq/key-hash pair,
 //       arena iteration, growth re-link
 //  4 -- vec copy: Int/Str/UInt8 copies are independent, same order
+//  5 -- group fold: OHLCV bucket (first/last/min/max/sum/count/avg),
+//       missing-key Option shapes, first-seen key order
+//  6 -- bitsets: set/get/clear/count/next_set/to_vec, or/and/andnot,
+//       subset/equal, in-place or_into/and_into changed flags, fill mask
 //  7 -- pop ergonomics: pop_or / last_or / pop_checked (Option face)
 //  8 -- Vec[Str]: contains/index_of/last_index_of/equal/copy/unique/join
 //  9 -- truncation: truncate_to clamps (negative/oversize), drop_last count
@@ -30,6 +34,8 @@ use xiom.collect.composite;
 use xiom.collect.stringmap;
 use xiom.collect.vecops;
 use xiom.collect.vecstr;
+use xiom.collect.groupfold;
+use xiom.collect.bitset;
 
 fn main() -> Int {
   // Row 1: keyed FIFO mailboxes.
@@ -250,6 +256,131 @@ fn main() -> Int {
   var ub1 = cbc[1] as Int;
   if ub0 != 7 { return 4; }
   if ub1 != 250 { return 4; }
+
+  // Row 5: group-by-key running aggregate (OHLCV-shaped buckets).
+  var gf = groupfold.group_fold_new();
+  if groupfold.group_fold_size(&gf) != 0 { return 5; }
+  groupfold.group_fold_add(&mut gf, 100, 5);
+  groupfold.group_fold_add(&mut gf, 100, 12);
+  groupfold.group_fold_add(&mut gf, 100, 8);
+  groupfold.group_fold_add(&mut gf, 100, 11);
+  groupfold.group_fold_add(&mut gf, 200, 7);
+  if groupfold.group_fold_size(&gf) != 2 { return 5; }
+  if groupfold.group_fold_count(&gf, 100) != 4 { return 5; }
+  if groupfold.group_fold_sum(&gf, 100) != 36 { return 5; }
+  var mn = groupfold.group_fold_min(&gf, 100);
+  if !mn.is_some { return 5; }
+  if mn.value != 5 { return 5; }
+  var mx = groupfold.group_fold_max(&gf, 100);
+  if !mx.is_some { return 5; }
+  if mx.value != 12 { return 5; }
+  var op = groupfold.group_fold_first(&gf, 100);
+  if !op.is_some { return 5; }
+  if op.value != 5 { return 5; }
+  var cl = groupfold.group_fold_last(&gf, 100);
+  if !cl.is_some { return 5; }
+  if cl.value != 11 { return 5; }
+  var av = groupfold.group_fold_avg(&gf, 100);
+  if !av.is_some { return 5; }
+  if av.value != 9 { return 5; }
+  if groupfold.group_fold_count(&gf, 200) != 1 { return 5; }
+  if !groupfold.group_fold_contains(&gf, 200) { return 5; }
+  if groupfold.group_fold_sum(&gf, 9) != 0 { return 5; }
+  if groupfold.group_fold_contains(&gf, 9) { return 5; }
+  var mn9 = groupfold.group_fold_min(&gf, 9);
+  if mn9.is_some { return 5; }
+  var av9 = groupfold.group_fold_avg(&gf, 9);
+  if av9.is_some { return 5; }
+  var gk = groupfold.group_fold_keys(&gf);
+  if gk.len() != 2 { return 5; }
+  if gk[0] != 100 { return 5; }
+  if gk[1] != 200 { return 5; }
+  var bk = groupfold.group_fold_bucket_key(&gf, 1);
+  if !bk.is_some { return 5; }
+  if bk.value != 200 { return 5; }
+  var bk9 = groupfold.group_fold_bucket_key(&gf, 9);
+  if bk9.is_some { return 5; }
+  // signed values: min/max/sum keep their sign
+  groupfold.group_fold_add(&mut gf, 300, 0 - 5);
+  groupfold.group_fold_add(&mut gf, 300, 0 - 2);
+  var nmn = groupfold.group_fold_min(&gf, 300);
+  if !nmn.is_some { return 5; }
+  if nmn.value != 0 - 5 { return 5; }
+  var nmx = groupfold.group_fold_max(&gf, 300);
+  if !nmx.is_some { return 5; }
+  if nmx.value != 0 - 2 { return 5; }
+  if groupfold.group_fold_sum(&gf, 300) != 0 - 7 { return 5; }
+
+  // Row 6: bit-set dataflow primitives.
+  var bs = bitset.bitset_new(130);
+  if bitset.bitset_len(&bs) != 130 { return 6; }
+  if bitset.bitset_word_count(&bs) != 3 { return 6; }
+  if bitset.bitset_get(&bs, 5) { return 6; }
+  if !bitset.bitset_set(&bs, 5) { return 6; }
+  if !bitset.bitset_set(&bs, 64) { return 6; }
+  if !bitset.bitset_set(&bs, 129) { return 6; }
+  if bitset.bitset_set(&bs, 5) { return 6; }
+  if !bitset.bitset_get(&bs, 129) { return 6; }
+  if bitset.bitset_get(&bs, 130) { return 6; }
+  if bitset.bitset_count(&bs) != 3 { return 6; }
+  if !bitset.bitset_clear(&bs, 5) { return 6; }
+  if bitset.bitset_clear(&bs, 5) { return 6; }
+  if bitset.bitset_count(&bs) != 2 { return 6; }
+  if bitset.bitset_next_set(&bs, 0) != 64 { return 6; }
+  if bitset.bitset_next_set(&bs, 65) != 129 { return 6; }
+  if bitset.bitset_next_set(&bs, 130) != 0 - 1 { return 6; }
+  var bsv = bitset.bitset_to_vec(&bs);
+  if bsv.len() != 2 { return 6; }
+  if bsv[0] != 64 { return 6; }
+  if bsv[1] != 129 { return 6; }
+  var b2 = bitset.bitset_new(130);
+  bitset.bitset_set(&mut b2, 64);
+  bitset.bitset_set(&mut b2, 100);
+  var uni = bitset.bitset_or(&bs, &b2);
+  if bitset.bitset_count(&uni) != 3 { return 6; }
+  if !bitset.bitset_get(&uni, 100) { return 6; }
+  if !bitset.bitset_get(&uni, 129) { return 6; }
+  var ints = bitset.bitset_and(&bs, &b2);
+  if bitset.bitset_count(&ints) != 1 { return 6; }
+  if !bitset.bitset_get(&ints, 64) { return 6; }
+  if bitset.bitset_get(&ints, 100) { return 6; }
+  var diff = bitset.bitset_andnot(&bs, &b2);
+  if bitset.bitset_count(&diff) != 1 { return 6; }
+  if !bitset.bitset_get(&diff, 129) { return 6; }
+  if !bitset.bitset_is_subset(&b2, &uni) { return 6; }
+  if bitset.bitset_is_subset(&bs, &b2) { return 6; }
+  var uni2 = bitset.bitset_or(&b2, &bs);
+  if !bitset.bitset_equal(&uni, &uni2) { return 6; }
+  // in-place fixpoint pair: changed flags drive worklist loops
+  var dst = bitset.bitset_new(64);
+  if !bitset.bitset_or_into(&mut dst, &b2) { return 6; }
+  if bitset.bitset_count(&dst) != 2 { return 6; }
+  if bitset.bitset_len(&dst) != 130 { return 6; }
+  if bitset.bitset_or_into(&mut dst, &b2) { return 6; }
+  if !bitset.bitset_and_into(&mut dst, &bs) { return 6; }
+  if bitset.bitset_count(&dst) != 1 { return 6; }
+  if !bitset.bitset_get(&dst, 64) { return 6; }
+  if bitset.bitset_and_into(&mut dst, &bs) { return 6; }
+  if bitset.bitset_is_empty(&dst) { return 6; }
+  // fill masks the tail word of a non-multiple-of-64 universe
+  var bf = bitset.bitset_new(70);
+  bitset.bitset_fill(&mut bf);
+  if bitset.bitset_count(&bf) != 70 { return 6; }
+  if !bitset.bitset_get(&bf, 69) { return 6; }
+  if bitset.bitset_get(&bf, 70) { return 6; }
+  if bitset.bitset_next_set(&bf, 69) != 69 { return 6; }
+  bitset.bitset_clear_all(&mut bf);
+  if !bitset.bitset_is_empty(&bf) { return 6; }
+  if bitset.bitset_count(&bf) != 0 { return 6; }
+  if !bitset.bitset_is_subset(&bf, &bs) { return 6; }
+  // next_set skip path inside a word
+  var b3 = bitset.bitset_new(64);
+  bitset.bitset_set(&mut b3, 10);
+  bitset.bitset_set(&mut b3, 40);
+  if bitset.bitset_next_set(&b3, 0) != 10 { return 6; }
+  if bitset.bitset_next_set(&b3, 11) != 40 { return 6; }
+  if bitset.bitset_next_set(&b3, 41) != 0 - 1 { return 6; }
+  if bitset.bitset_next_set(&b3, 0 - 3) != 10 { return 6; }
 
   // Row 7: pop ergonomics.
   var pv = Vec[Int].new();
