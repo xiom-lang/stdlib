@@ -108,6 +108,20 @@ open per the fresh-candidate sweep (not re-run in this round):
 `p_result_payload_index_concat`, `p_sync_mutex_builtin_shadow`,
 `p_trailing_match_after_push`.
 
+Status check 2026-10-16 (OFFICIAL v0.64.5 release archive, as-shipped):
+the four 1548-family items that the compiler had marked fixed were
+re-verified first-hand (5 repros, 3/3 rc 0 each) and closed on the bus
+(relays 2291513): tostring-import adapters, mut-param @pre,
+alias-type-path + foreign-method-call, ensures-isok guard -- all five
+repros PROMOTED to `tools/probes/` (probe corpus now 341). One RESIDUAL
+was found while closing the alias-type item and is filed as
+REL-20261016-2100-stdlib (field/signature-position alias-qualified
+types; the param+Result-return combination aborts the compiler silently
+-- W1-W4 witnesses in the item). The three still-red rows above
+(`p_result_payload_index_concat`, `p_sync_mutex_builtin_shadow`,
+`p_trailing_match_after_push`) remain Current, none are claimed by the
+staged v0.64.6 cut range (m334-m346).
+
 **RESOLVED 2026-10-15 (compiler v0.64.5, m297): a Path.exists + trailing
 println sequence dies with an illegal-instruction exit.** The wave-103
 repro's exact statement sequence dies with exit -1073741795 (0xC000001D)
@@ -218,6 +232,10 @@ probe was split (`p_wave98_shapes.xi` + `p_wave98_tostring_shapes.xi`) as
 the workaround. Repro:
 `tools/known_failures/p_tostring_import_breaks_adapters.xi` (rc 1 on
 v0.64.2; expected rc 0).
+RESOLVED 2026-10-16 (official v0.64.5 archive, m287 `1f01e812`): the
+witness compiles rc 0 and runs 3/3 rc 0 first-hand; the bus item
+REL-20261010-1548-stdlib-3 is fixed -> verified -> closed; repro
+PROMOTED to `tools/probes/p_tostring_import_breaks_adapters.xi`.
 
 **Open finding 2026-10-08 (compiler v0.64.1): `@pre` on `&mut` parameter
 scalar fields aliases the post-mutation value.** Found while landing the
@@ -234,6 +252,10 @@ historical R49 entry-snapshot residual (see the
 `p_pre_capture_callee`/`p_pre_call_capture` history below). Repro:
 `tools/known_failures/p_mut_param_field_pre.xi` (rc 1 on v0.64.1;
 expected rc 0).
+RESOLVED 2026-10-16 (official v0.64.5 archive, m291 `a6bfe1e1` with
+enforcement live): witness 3/3 rc 0 first-hand; the bus item
+REL-20261010-1548-stdlib-4 is fixed -> verified -> closed; repro
+PROMOTED to `tools/probes/p_mut_param_field_pre.xi`.
 
 **RESOLVED 2026-10-11 (compiler v0.64.3): generic by-reference params
 (`&Option[T]`/`&Result[T, E]`, bounded `&Slice[T]`).** Verified on the
@@ -269,6 +291,19 @@ consumer module whose last segment collides with a stdlib module) is the
 same resolution family; PULSE renamed their module as the workaround.
 Workaround in stdlib: use bare type names with alias imports and
 qualified function calls for foreign surfaces.
+RESOLVED 2026-10-16 (official v0.64.5 archive, m290 `bc716bca` + m295
+`5fbd54be`): both repros 3/3 rc 0 first-hand; the bus item
+REL-20261010-1548-stdlib-6 is fixed -> verified -> closed; both repros
+PROMOTED to `tools/probes/` (`p_alias_module_type_path.xi`,
+`p_foreign_method_call.xi`).
+RESIDUAL (2026-10-16, found closing -6; filed as
+REL-20261016-2100-stdlib): alias-qualified module types in FIELD position
+(`net.TcpStream` as a struct field type) still silently default to i64
+(4 warnings) with C001 at the method call, and in SIGNATURE positions
+(param/Result-return) still silently default; the param + Result-return
+COMBINATION aborts the compiler with rc -1 and NO diagnostics (2/2 runs).
+The bare-leaf-name workaround above remains in force (it is what
+`xiom/net/sse.xi` and `xiom/net/tls_libssl.xi` document/use).
 
 **Open finding 2026-10-07 (compiler v0.64.0): clause payload-length
 claims guarded with `(result.is_ok == true) =>` violate at runtime; the
@@ -282,6 +317,10 @@ the implication form at compile time (like other unsupported clause
 payload reads) or evaluate it like the guarded form. Repro:
 `tools/known_failures/p_ensures_isok_guard.xi` (rc 1 on v0.64.0).
 Expected when fixed: rc 0.
+RESOLVED 2026-10-16 (official v0.64.5 archive, m291 with enforcement
+live): witness 3/3 rc 0 first-hand; the bus item REL-20261010-1548-stdlib-7
+is fixed -> verified -> closed; repro PROMOTED to
+`tools/probes/p_ensures_isok_guard.xi`.
 
 **RESOLVED 2026-10-05 (compiler v0.63.1, fix `4bf8cf1e`): the C001
 classifier is fixed.**

@@ -3643,6 +3643,32 @@ registry pin, agent recon for the rest)**
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
 
+**SESSION 2026-10-16 block 217 (compiler-blocker ledger audit + close-out: four 1548 items re-verified on official v0.64.5 -> fixed->verified->closed; five repros PROMOTED to the probe corpus (341); 1852 closed (superseded by 2328); NEW residual REL-20261016-2100-stdlib (alias-qualified types in field/signature positions: silent i64 default + C001, and the param+Result-return combination SILENTLY ABORTS the compiler rc -1 with no diagnostics); relays 2291513 pushed; wishlist waves 165-171 in flight)**
+- Audit of every stdlib->compiler bus item (the user asked "are all
+  blockers filed"): YES -- all blockers are on the bus. Acked with the
+  compiler: 1609 (payload index), 1456 (Mutex shadow), 1626 (trailing
+  match), 1053 (.hash shadow), 2328 (captures/parse clauses), 2343
+  (i32-extern), 1550 (worker-loop), 2000 (platform consts; m347
+  post-cut), 1549-stdlib-8 (shared-build drift), plus records
+  1342/1559/1652/1701. Verification debt FOUND and cleared: 1548
+  -3/-4/-6/-7 sat at fixed awaiting OUR re-verify -- five repros
+  re-verified NOW on the official pin (3/3 rc 0 each: tostring
+  adapters, mut-param @pre, alias type path, foreign method call,
+  ensures-isok guard), items closed with notes, repros PROMOTED to
+  tools/probes/ (corpus 341).
+- RESIDUAL while closing -6: alias-qualified module types in FIELD
+  position silently default to i64 (4 warnings + C001 at the method
+  call; hit by xiom/net/sse.xi in wave 162); SIGNATURE positions default
+  silently (compile rc 0); the param + Result-return combination makes
+  the compiler exit rc -1 with NO diagnostics (2/2 runs). Filed as
+  REL-20261016-2100-stdlib (W1-W4 witnesses); workaround = bare leaf
+  type names (documented in sse.xi / used by tls_libssl.xi).
+- 1852-stdlib closed as superseded by 2328.
+- NONE of the red rows are in the staged v0.64.6 cut range (m334-m346)
+  -- per the user's question: the next release does NOT clear them.
+- Wishlist sweep: waves 165-171 (7 agents) in flight since 20:20Z;
+  doorbell 21:00Z integrates.
+
 **SESSION 2026-10-16 block 216 (wave 164: runtime host-platform branches -- bare in-module FAMILY refs in xiom.os.env kept the literal "windows" on Linux; env.host_is_windows() probe added + the four branches moved onto it; probe p_wave164 (8 rows) green Windows + WSL 3/3; compiler item REL-20261016-2000 filed)**
 - Root cause (compiler): qualified cross-module refs to env.OS/FAMILY ARE
   rewritten per target ("unix"/"linux" seen from outside on Linux), but
