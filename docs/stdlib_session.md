@@ -3602,6 +3602,21 @@ registry pin, agent recon for the rest)**
 - Two long-lived git processes (from ~14:20Z) sit in the relays repo;
   the bus itself is consistent. The next writer continues from 169/170.
 
+**SESSION 2026-10-16 block 222 (doorbell 23:00Z -- quiet inbound; waves 165-171 integrated; POSIX watch merged; modlist 532)**
+- Inbound: no new asks or moves (1128 fixed; 1129 acked -- its
+  medium POSIX-watch ask merged in this window as wave 171, so the actor
+  may transition it next; 1143/1223 closed; 1630/1658 compiler-owned
+  open).
+- Tree: the campaign integrated waves **165-171** (`3496881`: tls.xi tail
+  repair, coverage fills, **modlist 532**; block 221) and merged
+  `9a1532d` = **wave 171 POSIX watch**; v0.64.6 is RELEASED per the
+  actor's block 218 (official archives hash-verified). Block numbering
+  collided again (two 218s: the actor's release block + this session's
+  doorbell block) -- both stand; this round uses **222**.
+- WIP left untouched: `tools/probes/p_wave138_shapes.xi` (modified) and
+  the usual untracked out/, mojibake stress dat, fp128 diag smokes. The
+  next writer continues from the newest campaign block / 222.
+
 **SESSION 2026-10-16 block 206 (doorbell 17:00Z -- quiet inbound; stdlib-v0.64.6 tagged; floors/wires WIP)**
 - Inbound: no new asks; `REL-20261016-1223-orbitdb` is now **closed**
   (the Linux-compile heads-up is moot after wave 149). Everything else
