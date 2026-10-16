@@ -117,7 +117,7 @@ fn main() -> Int {
   let tok = park.park_token_new();
   park.park_token_notify(tok);
   park.park_token_wait(tok);
-  let me = SpawnThread{ id: spawn.thread_id() };
+  let me = SpawnThread{ id: spawn.thread_id(); handle: 0 as *UInt8; buf: 0 as *UInt8; };
   park.unpark(me);
   park.park();
   let pt = park.park_timeout(0);
