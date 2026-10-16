@@ -3592,6 +3592,21 @@ registry pin, agent recon for the rest)**
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
 
+**SESSION 2026-10-16 block 208 (wave 156: Station asks 3-5 locked -- p_wave156 (HKDF TC1 + PBKDF2 KAT + argon2 determinism + CSPRNG + monotonic clock + session ergonomics) + docs/CRYPTO_AND_CLOCK_AUDIT.md; floors unchanged)**
+- Probe p_wave156_shapes.xi green 3/3 on the official pin; the PBKDF2
+  c=1 vector is an independent known-answer confirmation of the wave-140
+  era crypto path. Row 6 covers session ergonomics (reuse_addr / timeout /
+  local_addr / shutdown) on a live loopback pair; the monotonic rows lock
+  non-decreasing reads + Instant.elapsed().
+- New docs/CRYPTO_AND_CLOCK_AUDIT.md -- the audit line requested by
+  1128 (surfaces, KAT locks, trust notes, a consumption rule; MD5 marked
+  interop-only after wave 140).
+- 1128 status: file_lock (wave 152) + this wave cover asks 1/3/4/5; ask 2
+  (TLS/ALPN server side) rides wave 9-B (packages binding); the item keeps
+  acked with the progress note on the bus.
+- No floors dump (no xiom/ changes; floors178 stands).
+- Tree: this commit.
+
 **SESSION 2026-10-16 block 207 (corpus confirmation: full 962/962 GREEN on the pinned rev; posted to 1452; renumbered from a parallel 206 collision)**
 - The merged-tree corpus (started 15:01Z, straddling the b81430b merge)
   completed: total=962 pass=962 compilefail=0 runfail=0 (3456.9s under
