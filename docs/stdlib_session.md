@@ -3548,6 +3548,18 @@ registry pin, agent recon for the rest)**
 - Two long-lived git processes (from ~14:20Z) sit in the relays repo;
   the bus itself is consistent. The next writer continues from 169/170.
 
+**SESSION 2026-10-16 block 204 (doorbell 15:00Z -- quiet inbound; waves 153 pool-flip + 154 TLS-skeleton merged)**
+- Inbound: no new rows or moves since 13:00Z (the acked asks
+  1128/1129/1223 stand; only the compiler-owned 1630/1658 stay open).
+- Tree: the shared lane actor merged two feature branches --
+  `2fde40b` = wave **153 pool-flip** (the thread-pool simulation
+  flipped to the real path) and `6c96bbb` = wave **154 TLS skeleton**
+  (the pulse/orbitdb headline gap). Head `6c96bbb`; block 203's pointer
+  "next session starts at plan item 12" stands for the plan order.
+- WIP left untouched: untracked out/, the mojibake-named
+  `out\w148_stress.dat`, and `tests/smoke/smoke_diag_f128_l0..l2.xi`.
+  The next writer continues from block 203/204.
+
 **SESSION 2026-10-16 block 203 (doorbell 13:00Z -- quiet inbound; no stdlib-filed moves; next session starts at plan item 12)**
 - Inbound: no new rows or moves; only the compiler-owned 1630/1658 stay
   open. New relays commits are ops/compiler lane work (eco-release scope
