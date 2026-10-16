@@ -47,8 +47,8 @@ Status legend: **open** = not started; **fixed** = landed with a probe lock
 | 20 | Dependency-free `Vec[UInt8]` -> `Str` builder | feature | Build a `Str` from a byte vector without importing other modules (allocation-light path). | open |
 | 21 | `Vec.pop` ergonomics | feature | Pop returning an `Option`-shaped result (or a checked variant) instead of the raw representation. | open |
 | 22 | `compress.zip` | feature | ZIP container read/write support in `xiom.compress`. | open |
-| 23 | Deflate dynamic-Huffman reads + public tables | enhancement | Decoder support for dynamic Huffman blocks; expose the Huffman tables. | open |
-| 24 | Neutral CRC32 | feature | CRC32 helper without format/policy dependencies (shared by zip/deflate-class consumers). | open |
+| 23 | Deflate dynamic-Huffman reads + public tables | enhancement | Decoder support for dynamic Huffman blocks; expose the Huffman tables. | **fixed** (2026-10-16, wave 158: dynamic read completion incl. repeat codes 16/17/18 + two latent RFC table fixes; public RFC 1951 tables; probes `p_wave158_shapes`/`p_wave158_vectors`; CPython-zlib vectors byte-exact) |
+| 24 | Neutral CRC32 | feature | CRC32 helper without format/policy dependencies (shared by zip/deflate-class consumers). | **fixed** (2026-10-16, wave 158: `xiom.compress.crc32` table-free, KAT `crc32("123456789") == 0xCBF43926`; probe-locked) |
 | 25 | Keccak-256 | feature | Keccak-256 hash primitive. | open |
 | 26 | `_u64_lshr` defect | defect | The private u64 logical right shift is defective; fix plus a probe lock. | **fixed** (2026-10-16, wave 161; mask-based shift, pub `u64_lshr`/`u64_rotr` exposed; probe `p_wave161_shapes.xi`) |
 | 27 | Fixed-point `log2` + integer stats | feature | `log2` for the fixed-point type and integer-domain stats helpers. | open |
