@@ -3598,6 +3598,24 @@ registry pin, agent recon for the rest)**
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
 
+**SESSION 2026-10-16 block 211 (wave 162: SSE connection layer REAL -- sse_connect/headers/read_event/read_events/close over live TcpStream; 2202 item 7 connection half; p_wave162 (12 rows, loopback fixtures on real spawn threads); smoke_net 11/11)**
+- The five SSE connection fns were Err stubs since the pure-stdlib era;
+  now real: buffered reader with consumed-prefix cursor, CRLFCRLF/LFLF
+  block framing, response-head validation (200 + text/event-stream,
+  case-insensitive), https/other schemes refused with a typed error until
+  the TLS seam lands, header CR/LF injection refused, 1 MiB block /
+  64 KiB head caps, zero-timeout poll drain (<=1024/call), idempotent
+  close. Pure parse + accessors untouched (smoke_net_http2 11-slice
+  green; it is the only external consumer).
+- Evidence (official v0.64.5 pin): p_wave162 rc 0 3/3 direct + runner
+  PASS (16.4s); smoke_net slice 11/11. Cross-module type-path trap hit
+  and handled (bare leaf `TcpStream`; alias-qualified types default to
+  i64 with C001 on method calls).
+- 2202 item 7 status: connection half done; server-side SSE wire helpers
+  already live in net.proto; https/wss stays gated on wave 157 (TLS).
+- WAVE BATCH: 157-160 in flight; merges + merged battery follow.
+- Tree: this commit.
+
 **SESSION 2026-10-16 block 210 (wave 161: fix-first defect batch -- _u64_lshr n=63 + pub u64_lshr/u64_rotr, sb_push_int INT64_MIN, parse_int INT64_MIN; DISCOVERED: BLAKE2b tail-load BE, bits.rotation sign-bit rotates; probe p_wave161 (15 rows); slices + ratchet green; wave batch 157-160 IN FLIGHT in Agent Manager worktrees)**
 - Wave 161 landed on main (591bf40): the packages wishlist fix-first rows
   fixed with a red-before/green-after lock -- recon scratch rc=123 (rows
