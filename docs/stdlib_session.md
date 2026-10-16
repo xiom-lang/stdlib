@@ -3551,6 +3551,31 @@ registry pin, agent recon for the rest)**
 - Two long-lived git processes (from ~14:20Z) sit in the relays repo;
   the bus itself is consistent. The next writer continues from 169/170.
 
+**SESSION 2026-10-16 block 205 (PIN: stdlib-v0.64.6 TAGGED at b81430b -- e72288f (win64 fp128 convention split, cherry-picked runtime-only) + waves 151-154; the parallel wave batch merged; bus 1452 replied, 1550-stdlib filed)**
+- Parallel wave batch (Agent Manager worktrees wave/151..154) merged into
+  main with zero conflicts; per-wave evidence: probes p_wave151-154 green;
+  slices pipe 1/1 + os 24/24 + thread 2/2 + http 2/2; WSL legs
+  (p_wave151 + p_wave152) rc 0. Battery on the merged tree: probes 326/326
+  (1249.3s); modules 510/510; barename 0/510; floors178 (Global 70.8,
+  os 62.6); doc + module-smoke (499/519, 3501/6251) OK; the full corpus
+  confirmation completes after this record.
+- Waves: 151 = i32 annotation tails + the LIVE pipe error-path fix (+
+  runtime long-return tails); 152 = advisory file locks (orbitdb-1128 /
+  xvector-1129 shared ask); 153 = pool flip (real-per-job; persistent
+  fleet gaps documented + filed as REL-20261016-1550-stdlib: closure-
+  from-payload invocation, channel close/wake, threadpool join, Send/Sync);
+  154 = TLS wave-A scaffolding (ALPN codec + dl_open loader; probe).
+- PIN: the shared lane actor merged e72288f runtime-only as b81430b
+  (witness ladder stayed witness-only) and recorded block 204; the pin
+  ask REL-20261016-1452-compiler was satisfied -- annotated tag
+  stdlib-v0.64.6 -> b81430b pushed, reply posted with the rev + gates;
+  STDLIB_VERSION left to the compiler.
+- In-flight by the actor at record time: runtime/socket annotation tails +
+  the floors178 wiring edits (uncommitted; theirs to land -- no conflicts:
+  this record touches docs only).
+- Tree: head b81430b + the docs commits (30a2ca9 + this one); out/ + the
+  six untracked witness ladder smokes as before.
+
 **SESSION 2026-10-16 block 204 (doorbell 15:00Z -- quiet inbound; waves 153 pool-flip + 154 TLS-skeleton merged)**
 - Inbound: no new rows or moves since 13:00Z (the acked asks
   1128/1129/1223 stand; only the compiler-owned 1630/1658 stay open).
