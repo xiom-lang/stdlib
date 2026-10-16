@@ -189,3 +189,12 @@ for REL-20261013-1445) is declared by `ffi/ffi.xi` -- a further
 probes had linked against a stale cached runtime object until this
 wave's rebuild exposed the missing `xiom_guard_free`; the fresh
 definition closes that gap.
+
+Wave-160 update 2026-10-16: `xiom_process_spawn_pipes` (non-blocking
+pipe spawn), `xiom_process_spawn_args` (argv spawn, no shell) and
+`xiom_process_wait_status` (raw waitpid status on POSIX / unsigned exit
+code on Windows) are declared by `os/proc_ffi.xi` in the same commit --
+a further +3 definitions / +3 declarations. The Windows branch also
+gained a small tracked-process-handle table (spawn -> wait ordering
+safety); `xiom_process_kill` / `xiom_process_wait` /
+`xiom_process_running` keep their existing contracts. No deletions.

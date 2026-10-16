@@ -249,3 +249,13 @@ pub fn is_running(pid: Int) -> Bool
     }
     rc == 1
 }
+
+// -- Popen-class non-blocking spawn (wave 160) --------------------------------
+//
+// REL-20261015-2202-pulse item 3: the multi-worker supervisor / drain-safe
+// reload shape lives in xiom.os.proc_ffi -- spawn_with_pipes (a
+// non-blocking child plus parent-side stdin/stdout/stderr fds), drain_fd
+// over the xiom.io.pipe helpers, PipedChild.wait/kill/close_pipes,
+// popen/pclose, and argv-based (no shell) posix_spawn/posix_spawnp.
+// The functions in this module remain the blocking, shell-string,
+// wait-included path.

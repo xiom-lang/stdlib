@@ -4487,13 +4487,114 @@ long xiom_process_spawn(const char* cmd) {
     return (long)(int)exit_code;
 }
 
+/* ================================================================
+   Wave 160: popen-class non-blocking spawn (spawn_pipes / spawn_args).
+   A tiny handle-retention table keeps each spawned child's process handle
+   alive from spawn until wait: once every handle closes, Windows frees the
+   process object and the pid may be reused, which would make a late
+   OpenProcess(pid) fail or open a stranger.  Slots beyond the table are
+   closed immediately (wait then falls back to OpenProcess-by-pid, the
+   pre-wave behavior).  The lock is a spinlock so no init ordering is
+   needed (DllMain-free).
+   ================================================================ */
+
+#define XIOM_PROC_TRACK_MAX 16
+static volatile LONG xiom_proc_track_lock = 0;
+static long xiom_proc_track_pid[XIOM_PROC_TRACK_MAX];
+static HANDLE xiom_proc_track_handle[XIOM_PROC_TRACK_MAX];
+static int xiom_proc_track_count = 0;
+
+static void xiom_proc_track_acquire(void) {
+    while (InterlockedCompareExchange(&xiom_proc_track_lock, 1, 0) != 0) {
+        Sleep(0);
+    }
+}
+
+static void xiom_proc_track_release(void) {
+    InterlockedExchange(&xiom_proc_track_lock, 0);
+}
+
+// Remember a spawned child's process handle; closes it when the table is full.
+static void xiom_proc_track_add(long pid, HANDLE h) {
+    xiom_proc_track_acquire();
+    if (xiom_proc_track_count < XIOM_PROC_TRACK_MAX) {
+        xiom_proc_track_pid[xiom_proc_track_count] = pid;
+        xiom_proc_track_handle[xiom_proc_track_count] = h;
+        xiom_proc_track_count++;
+    } else {
+        CloseHandle(h);
+    }
+    xiom_proc_track_release();
+}
+
+// Look up a tracked handle without consuming it (caller must not close it).
+static HANDLE xiom_proc_track_peek(long pid) {
+    HANDLE h = NULL;
+    int i;
+    xiom_proc_track_acquire();
+    for (i = 0; i < xiom_proc_track_count; i++) {
+        if (xiom_proc_track_pid[i] == pid) {
+            h = xiom_proc_track_handle[i];
+            break;
+        }
+    }
+    xiom_proc_track_release();
+    return h;
+}
+
+// Consume (remove + return) a tracked handle; the caller owns it.
+static HANDLE xiom_proc_track_take(long pid) {
+    HANDLE h = NULL;
+    int i;
+    xiom_proc_track_acquire();
+    for (i = 0; i < xiom_proc_track_count; i++) {
+        if (xiom_proc_track_pid[i] == pid) {
+            h = xiom_proc_track_handle[i];
+            xiom_proc_track_count--;
+            xiom_proc_track_pid[i] = xiom_proc_track_pid[xiom_proc_track_count];
+            xiom_proc_track_handle[i] = xiom_proc_track_handle[xiom_proc_track_count];
+            break;
+        }
+    }
+    xiom_proc_track_release();
+    return h;
+}
+
+// Shared wait: prefer the tracked handle, else OpenProcess by pid.
+// Returns 0 and fills *out_code on success, -1 on failure.
+static int xiom_process_wait_raw(long pid, DWORD* out_code) {
+    HANDLE h = xiom_proc_track_take(pid);
+    DWORD exit_code = 0;
+    if (!h) {
+        h = OpenProcess(SYNCHRONIZE | PROCESS_QUERY_LIMITED_INFORMATION,
+                        FALSE, (DWORD)pid);
+    }
+    if (!h) return -1;
+    if (WaitForSingleObject(h, INFINITE) != WAIT_OBJECT_0) {
+        CloseHandle(h);
+        return -1;
+    }
+    if (!GetExitCodeProcess(h, &exit_code)) {
+        CloseHandle(h);
+        return -1;
+    }
+    CloseHandle(h);
+    *out_code = exit_code;
+    return 0;
+}
+
 // Terminate a process by PID.  Returns 0 on success, -1 on failure
-// (e.g. process doesn't exist or access denied).
+// (e.g. process doesn't exist or access denied).  A tracked popen-class
+// child keeps its handle alive so the following wait cannot race.
 int xiom_process_kill(long pid) {
-    HANDLE h = OpenProcess(PROCESS_TERMINATE, FALSE, (DWORD)pid);
+    HANDLE h = xiom_proc_track_peek(pid);
+    int tracked = (h != NULL);
+    if (!h) {
+        h = OpenProcess(PROCESS_TERMINATE, FALSE, (DWORD)pid);
+    }
     if (!h) return -1;
     int result = TerminateProcess(h, 1) ? 0 : -1;
-    CloseHandle(h);
+    if (!tracked) CloseHandle(h);
     return result;
 }
 
@@ -4501,34 +4602,237 @@ int xiom_process_kill(long pid) {
 // Returns exit code (>=0) on success, -1 on failure.
 // BLOCKING: blocks until the target process terminates.
 long xiom_process_wait(long pid) {
-    HANDLE h = OpenProcess(SYNCHRONIZE, FALSE, (DWORD)pid);
-    if (!h) return -1;
-    DWORD wait_result = WaitForSingleObject(h, INFINITE);
-    if (wait_result != WAIT_OBJECT_0) {
-        CloseHandle(h);
-        return -1;
-    }
     DWORD exit_code = 0;
-    if (!GetExitCodeProcess(h, &exit_code)) {
-        CloseHandle(h);
-        return -1;
-    }
-    CloseHandle(h);
+    if (xiom_process_wait_raw(pid, &exit_code) != 0) return -1;
     return (long)(int)exit_code;
+}
+
+// Wait and return the status word.  On Windows there is no signal status:
+// the child's exit code is returned as an unsigned 32-bit value (crash
+// codes like 0xC0000409 stay positive; only a wait failure is -1).
+// BLOCKING: blocks until the target process terminates.
+long long xiom_process_wait_status(long pid) {
+    DWORD exit_code = 0;
+    if (xiom_process_wait_raw(pid, &exit_code) != 0) return -1;
+    return (long long)(unsigned int)exit_code;
 }
 
 // Check whether a process is still running.
 // Returns 1 if running, 0 if not running, -1 on error.
 int xiom_process_running(long pid) {
-    HANDLE h = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, (DWORD)pid);
-    if (!h) return 0;
+    HANDLE h = xiom_proc_track_peek(pid);
+    int tracked = (h != NULL);
     DWORD exit_code = 0;
+    if (!h) {
+        h = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, (DWORD)pid);
+    }
+    if (!h) return 0;
     if (!GetExitCodeProcess(h, &exit_code)) {
-        CloseHandle(h);
+        if (!tracked) CloseHandle(h);
         return -1;
     }
-    CloseHandle(h);
+    if (!tracked) CloseHandle(h);
     return (exit_code == STILL_ACTIVE) ? 1 : 0;
+}
+
+// Windows command-line quoting for one argv entry.  Quoting is applied
+// only when the entry needs it (empty, or containing space/tab/quote) --
+// this is the MSVC/CRT-compatible list2cmdline rule and, importantly, it
+// leaves cmd.exe's own switches (`/c`) and metacharacters unquoted: an
+// always-quoted line breaks `cmd.exe /c "..."` (verified: exit 1 instead
+// of the command's code).  When quoting, the MSVC parsing rules apply: a
+// run of backslashes before a quote is doubled, trailing backslashes are
+// doubled inside the closing quote.  Appends " arg" (space-separated
+// unless pos == 0).  Returns the new position, or -1 when the buffer is
+// full.
+static int xiom_win_quote_arg(char* out, int cap, int pos, const char* arg) {
+    int bs = 0;
+    int need = (*arg == '\0');
+    const char* q;
+    const char* p = arg;
+    if (pos > 0) {
+        if (pos >= cap - 1) return -1;
+        out[pos++] = ' ';
+    }
+    for (q = arg; *q; q++) {
+        if (*q == ' ' || *q == '\t' || *q == '"') {
+            need = 1;
+            break;
+        }
+    }
+    if (!need) {
+        while (*p) {
+            if (pos >= cap - 1) return -1;
+            out[pos++] = *p++;
+        }
+        out[pos] = '\0';
+        return pos;
+    }
+    if (pos >= cap - 1) return -1;
+    out[pos++] = '"';
+    while (*p) {
+        if (*p == '\\') {
+            bs++;
+            p++;
+            continue;
+        }
+        if (*p == '"') {
+            int i;
+            for (i = 0; i < 2 * bs + 1; i++) {
+                if (pos >= cap - 1) return -1;
+                out[pos++] = '\\';
+            }
+            bs = 0;
+            if (pos >= cap - 1) return -1;
+            out[pos++] = '"';
+            p++;
+            continue;
+        }
+        while (bs > 0) {
+            if (pos >= cap - 1) return -1;
+            out[pos++] = '\\';
+            bs--;
+        }
+        if (pos >= cap - 1) return -1;
+        out[pos++] = *p;
+        p++;
+    }
+    while (bs > 0) {
+        if (pos >= cap - 2) return -1;
+        out[pos++] = '\\';
+        out[pos++] = '\\';
+        bs--;
+    }
+    if (pos >= cap - 1) return -1;
+    out[pos++] = '"';
+    out[pos] = '\0';
+    return pos;
+}
+
+// Wave 160: non-blocking spawn with three parent-side pipes (popen-class).
+// `cmd` runs through cmd.exe /c (shell-string, like xiom_process_spawn).
+// On success returns the child pid and fills out_fds with the parent-side
+// CRT descriptors: [0] write end for the child's stdin, [1] read end for
+// stdout, [2] read end for stderr (xiom_read / xiom_write / xiom_close
+// operate on them).  The parent returns immediately; -1 on failure
+// (out_fds all -1).  `dir` is the child's working directory (NULL/"" =
+// inherit).
+long long xiom_process_spawn_pipes(const char* cmd, const char* dir, int* out_fds) {
+    char cmdline[32768];
+    int n;
+    SECURITY_ATTRIBUTES sa;
+    STARTUPINFOA si;
+    PROCESS_INFORMATION pi;
+    HANDLE child_in = NULL, parent_in = NULL;
+    HANDLE parent_out = NULL, child_out = NULL;
+    HANDLE parent_err = NULL, child_err = NULL;
+
+    if (!cmd || !out_fds) return -1;
+    out_fds[0] = -1;
+    out_fds[1] = -1;
+    out_fds[2] = -1;
+
+    n = snprintf(cmdline, sizeof(cmdline), "cmd.exe /c %s", cmd);
+    if (n < 0 || n >= (int)sizeof(cmdline)) return -1;
+
+    memset(&sa, 0, sizeof(sa));
+    sa.nLength = sizeof(sa);
+    sa.bInheritHandle = TRUE;
+
+    if (!CreatePipe(&child_in, &parent_in, &sa, 0)) return -1;
+    if (!CreatePipe(&parent_out, &child_out, &sa, 0)) {
+        CloseHandle(child_in);
+        CloseHandle(parent_in);
+        return -1;
+    }
+    if (!CreatePipe(&parent_err, &child_err, &sa, 0)) {
+        CloseHandle(child_in);
+        CloseHandle(parent_in);
+        CloseHandle(parent_out);
+        CloseHandle(child_out);
+        return -1;
+    }
+    SetHandleInformation(parent_in, HANDLE_FLAG_INHERIT, 0);
+    SetHandleInformation(parent_out, HANDLE_FLAG_INHERIT, 0);
+    SetHandleInformation(parent_err, HANDLE_FLAG_INHERIT, 0);
+
+    memset(&si, 0, sizeof(si));
+    si.cb = sizeof(si);
+    si.dwFlags = STARTF_USESTDHANDLES;
+    si.hStdInput = child_in;
+    si.hStdOutput = child_out;
+    si.hStdError = child_err;
+    memset(&pi, 0, sizeof(pi));
+
+    if (!CreateProcessA(NULL, cmdline, NULL, NULL, TRUE, CREATE_NO_WINDOW,
+                        NULL, (dir && dir[0]) ? dir : NULL, &si, &pi)) {
+        CloseHandle(child_in);
+        CloseHandle(parent_in);
+        CloseHandle(parent_out);
+        CloseHandle(child_out);
+        CloseHandle(parent_err);
+        CloseHandle(child_err);
+        return -1;
+    }
+    CloseHandle(child_in);
+    CloseHandle(child_out);
+    CloseHandle(child_err);
+    CloseHandle(pi.hThread);
+
+    out_fds[0] = _open_osfhandle((intptr_t)parent_in, _O_BINARY | _O_WRONLY);
+    out_fds[1] = _open_osfhandle((intptr_t)parent_out, _O_BINARY | _O_RDONLY);
+    out_fds[2] = _open_osfhandle((intptr_t)parent_err, _O_BINARY | _O_RDONLY);
+    /* _open_osfhandle does not consume the handle on failure */
+    if (out_fds[0] < 0) CloseHandle(parent_in);
+    if (out_fds[1] < 0) CloseHandle(parent_out);
+    if (out_fds[2] < 0) CloseHandle(parent_err);
+
+    xiom_proc_track_add((long)pi.dwProcessId, pi.hProcess);
+    return (long long)pi.dwProcessId;
+}
+
+// Wave 160: non-blocking spawn without a shell (exec-style argv).
+// `blob` is NUL-separated argv entries terminated by an empty entry; an
+// empty blob uses `file` as argv[0].  search_path != 0 searches PATH
+// (posix_spawnp semantics); 0 treats `file` as a path (posix_spawn).
+// Windows maps both to CreateProcessA: posix_spawn uses lpApplicationName
+// = file; posix_spawnp resolves the image from the command line's argv[0]
+// (the POSIX convention of argv[0] naming the program is expected).  The
+// child inherits the parent's standard handles; returns the pid or -1.
+long long xiom_process_spawn_args(const char* file, const char* blob, const char* dir, int search_path) {
+    char cmdline[32768];
+    int pos = 0;
+    int first = 1;
+    const char* p;
+    STARTUPINFOA si;
+    PROCESS_INFORMATION pi;
+
+    if (!file || !file[0] || !blob) return -1;
+
+    p = blob;
+    while (*p) {
+        pos = xiom_win_quote_arg(cmdline, (int)sizeof(cmdline), pos, p);
+        if (pos < 0) return -1;
+        p += strlen(p) + 1;
+        first = 0;
+    }
+    if (first) {
+        pos = xiom_win_quote_arg(cmdline, (int)sizeof(cmdline), pos, file);
+        if (pos < 0) return -1;
+    }
+
+    memset(&si, 0, sizeof(si));
+    si.cb = sizeof(si);
+    memset(&pi, 0, sizeof(pi));
+
+    if (!CreateProcessA(search_path ? NULL : file, cmdline, NULL, NULL, TRUE,
+                        CREATE_NO_WINDOW, NULL,
+                        (dir && dir[0]) ? dir : NULL, &si, &pi)) {
+        return -1;
+    }
+    CloseHandle(pi.hThread);
+    xiom_proc_track_add((long)pi.dwProcessId, pi.hProcess);
+    return (long long)pi.dwProcessId;
 }
 
 // Best-effort OS version string (cached, static buffer).
@@ -4555,6 +4859,7 @@ const char* xiom_os_version_str(void) {
 #include <sys/wait.h>
 #include <sys/utsname.h>
 #include <errno.h>
+#include <fcntl.h>  /* wave 160: FD_CLOEXEC on the parent pipe ends */
 
 // Returns the system hostname as a pointer to an internal static buffer.
 // Thread-safe for single-threaded callers; returns NULL on failure.
@@ -4597,6 +4902,123 @@ int xiom_process_running(long pid) {
     if (kill((pid_t)pid, 0) == 0) return 1;
     if (errno == ESRCH) return 0;
     return -1;
+}
+
+// Wait and return the raw waitpid status word (the stdlib decodes it with
+// exit_code / exit_signal; WIFEXITED(status) == ((status & 0x7F) == 0)).
+// Returns the status (>=0) on success, -1 on failure.
+// BLOCKING: blocks until the target process terminates.
+long long xiom_process_wait_status(long pid) {
+    int status = 0;
+    if (waitpid((pid_t)pid, &status, 0) < 0) return -1;
+    return (long long)status;
+}
+
+// Wave 160: non-blocking spawn with three parent-side pipes (popen-class).
+// `cmd` runs through /bin/sh -c (shell-string, like xiom_process_spawn).
+// On success returns the child pid and fills out_fds with the parent-side
+// descriptors: [0] write end for the child's stdin, [1] read end for
+// stdout, [2] read end for stderr.  The parent returns immediately (no
+// wait); -1 on failure (out_fds all -1).  The parent ends carry FD_CLOEXEC
+// so concurrent children do not hold each other's pipes open.  `dir` is
+// the child's working directory (NULL/"" = inherit).
+long long xiom_process_spawn_pipes(const char* cmd, const char* dir, int* out_fds) {
+    int in_pipe[2];
+    int out_pipe[2];
+    int err_pipe[2];
+    pid_t pid;
+
+    if (!cmd || !out_fds) return -1;
+    out_fds[0] = -1;
+    out_fds[1] = -1;
+    out_fds[2] = -1;
+
+    if (pipe(in_pipe) != 0) return -1;
+    if (pipe(out_pipe) != 0) {
+        close(in_pipe[0]);
+        close(in_pipe[1]);
+        return -1;
+    }
+    if (pipe(err_pipe) != 0) {
+        close(in_pipe[0]);
+        close(in_pipe[1]);
+        close(out_pipe[0]);
+        close(out_pipe[1]);
+        return -1;
+    }
+
+    pid = fork();
+    if (pid < 0) {
+        close(in_pipe[0]);
+        close(in_pipe[1]);
+        close(out_pipe[0]);
+        close(out_pipe[1]);
+        close(err_pipe[0]);
+        close(err_pipe[1]);
+        return -1;
+    }
+    if (pid == 0) {
+        dup2(in_pipe[0], 0);
+        dup2(out_pipe[1], 1);
+        dup2(err_pipe[1], 2);
+        close(in_pipe[0]);
+        close(in_pipe[1]);
+        close(out_pipe[0]);
+        close(out_pipe[1]);
+        close(err_pipe[0]);
+        close(err_pipe[1]);
+        if (dir && dir[0]) {
+            if (chdir(dir) != 0) _exit(127);
+        }
+        execl("/bin/sh", "sh", "-c", cmd, (char*)NULL);
+        _exit(127);
+    }
+    close(in_pipe[0]);
+    close(out_pipe[1]);
+    close(err_pipe[1]);
+    fcntl(in_pipe[1], F_SETFD, FD_CLOEXEC);
+    fcntl(out_pipe[0], F_SETFD, FD_CLOEXEC);
+    fcntl(err_pipe[0], F_SETFD, FD_CLOEXEC);
+    out_fds[0] = in_pipe[1];   /* parent writes the child's stdin */
+    out_fds[1] = out_pipe[0];  /* parent reads the child's stdout */
+    out_fds[2] = err_pipe[0];  /* parent reads the child's stderr */
+    return (long long)pid;
+}
+
+// Wave 160: non-blocking spawn without a shell (exec-style argv).
+// `blob` is NUL-separated argv entries terminated by an empty entry; an
+// empty blob uses `file` as argv[0].  search_path != 0 runs execvp (PATH
+// search, posix_spawnp semantics); 0 runs execv on `file` (posix_spawn).
+// The child inherits the parent's standard handles; returns the pid or -1.
+long long xiom_process_spawn_args(const char* file, const char* blob, const char* dir, int search_path) {
+    char* argv[256];
+    const char* p;
+    int argc = 0;
+    pid_t pid;
+
+    if (!file || !file[0] || !blob) return -1;
+
+    pid = fork();
+    if (pid < 0) return -1;
+    if (pid == 0) {
+        p = blob;
+        while (*p && argc < 255) {
+            argv[argc++] = (char*)p;
+            p += strlen(p) + 1;
+        }
+        if (argc == 0) argv[argc++] = (char*)file;
+        argv[argc] = NULL;
+        if (dir && dir[0]) {
+            if (chdir(dir) != 0) _exit(127);
+        }
+        if (search_path) {
+            execvp(file, argv);
+        } else {
+            execv(file, argv);
+        }
+        _exit(127);
+    }
+    return (long long)pid;
 }
 
 const char* xiom_os_version_str(void) {
