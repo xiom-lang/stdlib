@@ -694,11 +694,12 @@ pub fn tls_session_read(backend: &TlsBackend, sess: &TlsSession, max: Int) -> Re
 /// all-or-nothing per call: the driver hands the whole payload to the
 /// backend and a short count is a typed TLS_ERR_IO (the backend owns its
 /// retries).
-/// Returns: Ok(len) when the whole payload was accepted; Err on a fatal
-///          write failure or a bad handle.
+/// Returns: Ok(len) when the whole payload was accepted (Ok(0) for an
+///          empty payload on a live session); Err on a fatal write
+///          failure or a bad handle.
 /// Complexity: O(len).
 pub fn tls_session_write(backend: &TlsBackend, sess: &TlsSession, data: &Vec[UInt8]) -> Result[Int, TlsError]
-  ensures: (data.len() == 0) => (result.is_ok == true)
+  ensures: (sess.id <= 0) => (result.is_err == true)
 {
   if !tls_backend_is_loaded(backend) {
     return Err(tls_driver_err(TLS_ERR_LOAD, "tls_session_write: backend is not loaded"));

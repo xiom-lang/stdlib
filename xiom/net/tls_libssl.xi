@@ -687,14 +687,14 @@ pub fn tls_libssl_read(lib: &TlsLibssl, sess: &TlsLibSession, max: Int) -> Resul
   }
 }
 
-/// tls_libssl_write writes every byte of data, retrying partial writes
-/// and waiting on WANT states with a bounded socket poll.
+/// tls_libssl_write writes every byte of data (Ok(0) for an empty
+/// payload on a live session), retrying partial writes and waiting on
+/// WANT states with a bounded socket poll.
 /// Returns: Ok(data.len()) when the whole payload was written; Err
 ///          (TLS_ERR_IO) on a fatal failure or when the bounded wait
 ///          runs out; Err(TLS_ERR_ARG) on a bad handle.
 /// Complexity: O(len + wait).
 pub fn tls_libssl_write(lib: &TlsLibssl, sess: &TlsLibSession, data: &Vec[UInt8]) -> Result[Int, TlsError]
-  ensures: (data.len() == 0) => (result.is_ok == true)
   ensures: (sess.ssl <= 0) => (result.is_err == true)
 {
   if !lib_is_loaded(lib) {
