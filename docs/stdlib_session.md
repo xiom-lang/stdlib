@@ -3565,7 +3565,7 @@ registry pin, agent recon for the rest)**
   and `tools/README.md` (likely the floors/wires bump for the new tag) --
   do not stage or sweep. The next writer continues from block 205/206.
 
-**SESSION 2026-10-16 block 206 (doorbell 17:00Z: the full corpus lands GREEN -- 962/962 on the pinned rev; confirmation posted to 1452)**
+**SESSION 2026-10-16 block 207 (corpus confirmation: full 962/962 GREEN on the pinned rev; posted to 1452; renumbered from a parallel 206 collision)**
 - The merged-tree corpus (started 15:01Z, straddling the b81430b merge)
   completed: total=962 pass=962 compilefail=0 runfail=0 (3456.9s under
   heavy foreign load). All wave-151..154 surfaces green in-battery:
