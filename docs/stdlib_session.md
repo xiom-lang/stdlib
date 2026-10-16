@@ -3529,6 +3529,29 @@ registry pin, agent recon for the rest)**
 - Two long-lived git processes (from ~14:20Z) sit in the relays repo;
   the bus itself is consistent. The next writer continues from 169/170.
 
+**SESSION 2026-10-16 block 198 (catch-up doorbells 01:00Z-11:00Z -- overnight waves 141-144; 1948 + 1548-bindings-8 both fixed; pulse top-tier directive received)**
+- Overnight the shared lane actor landed waves **141-144**: 141 =
+  p_polyhedra_nested_hull promoted (probe 318; official-pin gates);
+  142 = `regex_unescape` Ok-Str payload clause re-added (floors174) +
+  a NEW filed finding `REL-20261015-2328-stdlib` (captures clause still
+  rejects; parse clause still AVs; unescape clause landed) -- outbound,
+  now acked by the compiler; 143 = the **socket_connect refused-connect
+  ROOT CAUSE fixed** (inline i32 misread; all socket-family externs/call
+  sites annotated; NODELAY/SO_KEEPALIVE/listener backlog added; probe
+  p_wave143; floors175) -- `REL-20261015-1948-packages` moved to
+  **fixed**; 144 = guard-free acceptance row re-added to p_b2728 and the
+  confinement cautions retired -- `REL-20261010-1548-bindings-8` moved to
+  **fixed** (the long-standing medium row).
+- New directive: `REL-20261015-2202-pulse-5` (open, high, **to all**) --
+  PULSE escalated to #1-class; roadmap + per-lane asks filed, with "no
+  TLS anywhere" as the headline gap. To-all rows are not ours alone to
+  transition; the lane actor's wave-plan commit (`5d7d071`) already maps
+  it into the outstanding-request plan.
+- Inbound otherwise: only the historical compiler-owned 1630/1658 open.
+  Tree: head `8f92fdc`; WIP left untouched: uncommitted
+  `runtime/xiom_runtime.c` + untracked `tests/smoke/smoke_diag_f128_l0..l5.xi`
+  (fp128 diagnostics). The next writer continues from block 197/198.
+
 **SESSION 2026-10-16 block 197 (wave 144 / pin-switch W4: guard-free acceptance -- confined-block alloc/free row re-added to p_b2728 (watchdog-first); confinement cautions retired in ffi.xi/dl.xi)**
 - REL-20261013-1445 (B-05 class) acceptance: out/scratch_guardfree.xi
   watchdog run exited <20s rc 0 (no spin) on the official pin, then the
