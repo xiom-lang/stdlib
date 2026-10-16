@@ -94,6 +94,7 @@ xiom.compress.huffman
 xiom.compress.lz4
 xiom.compress.lz77
 xiom.compress.snappy
+xiom.compress.zip
 xiom.compress.zlib
 xiom.contracts
 xiom.convert
@@ -165,6 +166,7 @@ xiom.crypto.cipher
 xiom.crypto.curves
 xiom.crypto.hash
 xiom.crypto.kdf
+xiom.crypto.keccak
 xiom.crypto.keyx
 xiom.crypto.mac
 xiom.crypto.md5

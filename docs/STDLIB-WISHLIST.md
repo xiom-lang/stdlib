@@ -46,10 +46,10 @@ Status legend: **open** = not started; **fixed** = landed with a probe lock
 | 19 | Borrowed `Str` views | feature | Non-owning string slice views (offset+len) to scan without copying. | open |
 | 20 | Dependency-free `Vec[UInt8]` -> `Str` builder | feature | Build a `Str` from a byte vector without importing other modules (allocation-light path). | open |
 | 21 | `Vec.pop` ergonomics | feature | Pop returning an `Option`-shaped result (or a checked variant) instead of the raw representation. | open |
-| 22 | `compress.zip` | feature | ZIP container read/write support in `xiom.compress`. | open |
+| 22 | `compress.zip` | feature | ZIP container read/write support in `xiom.compress`. | **fixed** (2026-10-16, wave 168: `xiom/compress/zip.xi` zip32 subset -- central-directory walk, stored/deflate, CRC-32-verified, bomb cap; writer with stored/deflate; CPython-zipfile cross-checked both directions; probe `p_wave168_shapes`) |
 | 23 | Deflate dynamic-Huffman reads + public tables | enhancement | Decoder support for dynamic Huffman blocks; expose the Huffman tables. | **fixed** (2026-10-16, wave 158: dynamic read completion incl. repeat codes 16/17/18 + two latent RFC table fixes; public RFC 1951 tables; probes `p_wave158_shapes`/`p_wave158_vectors`; CPython-zlib vectors byte-exact) |
 | 24 | Neutral CRC32 | feature | CRC32 helper without format/policy dependencies (shared by zip/deflate-class consumers). | **fixed** (2026-10-16, wave 158: `xiom.compress.crc32` table-free, KAT `crc32("123456789") == 0xCBF43926`; probe-locked) |
-| 25 | Keccak-256 | feature | Keccak-256 hash primitive. | open |
+| 25 | Keccak-256 | feature | Keccak-256 hash primitive. | **fixed** (2026-10-16, wave 168: `xiom/crypto/keccak.xi` -- original 0x01-padding Keccak (Ethereum family); KATs in `p_wave168_shapes`) |
 | 26 | `_u64_lshr` defect | defect | The private u64 logical right shift is defective; fix plus a probe lock. | **fixed** (2026-10-16, wave 161; mask-based shift, pub `u64_lshr`/`u64_rotr` exposed; probe `p_wave161_shapes.xi`) |
 | 27 | Fixed-point `log2` + integer stats | feature | `log2` for the fixed-point type and integer-domain stats helpers. | open |
 | 28 | Strict `str_to_int` | feature | Strict integer parsing (reject junk; `Option`-shaped result). | open |
@@ -58,7 +58,7 @@ Status legend: **open** = not started; **fixed** = landed with a probe lock
 | 31 | `rand.state` | feature | Explicit RNG state save/restore (requester list extended 2026-10-02). | open |
 | 32 | `encoding.le` | feature | Little-endian encode/decode helpers (requester list extended 2026-10-02). | open |
 | 33 | `crypto` linkability defect | defect | Packages packet `docs/repro/crypto-link` @ 8eb7944f (Windows x64, v0.62.2 installed, stdlib-perf1): `lld-link: undefined symbol: xiom_sha256_hash` from `xiom.crypto.sha256_hex(&Vec[UInt8])` / `xiom.crypto.hash.crypto_hash_sha256(&Vec[UInt8])`; --emit-ir passes. NOT reproduced on stdlib main: both KATs (NIST "abc"; base64 "YWJj") link and run green on v0.61.3 and v0.62.2 dev, with/without XIOM_STDLIB; the symbol is in `runtime/sha256_sw.c` in all tags and in the driver's build-runtime list -- suspect a stale installed runtime library; handed to the compiler/install lane with the packages KATs. | open (compiler/install lane) |
-| 34 | `xiom.hash` FNV-1a over `Str` + masked combine | feature | FNV-1a hashing for `Str` inputs and a masked/truncated combine variant. | open |
+| 34 | `xiom.hash` FNV-1a over `Str` + masked combine | feature | FNV-1a hashing for `Str` inputs and a masked/truncated combine variant. | **fixed** (2026-10-16, wave 168: FNV-1a over `Str` + masked combine in `xiom/hash/hash.xi`; probe `p_wave168_shapes`) |
 | 35 | ASCII byte classifiers | feature | Byte-domain ASCII digit/alpha/alnum-class predicates. | open |
 | 36 | Delimiter helpers | feature | Multi-delimiter scan/split helpers. | open |
 | 37 | Graph closure/depth | feature | Transitive closure and depth computation over graph structures. | open |
