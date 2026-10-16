@@ -3643,6 +3643,55 @@ registry pin, agent recon for the rest)**
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
 
+**SESSION 2026-10-16 block 218 (v0.64.6 RELEASED -- official archives hash-verified; the 2328 residual clauses RE-ADDED and GREEN on v0.64.6 (m345) Windows + Linux; floors deferred to the fleet's post-168 settle)**
+- The release announcement REL-20261016-2034-compiler (20:33Z) arrived
+  with the assets. Staged: windows zip A32BF7FA == release digest,
+  extracted at `stdlib_ws\v0.64.6-official` (sanity probe green); linux
+  tar 82A7417B == digest, extracted in WSL (`/tmp/xiom646`); both report
+  XIOM Compiler v0.64.6.
+- WAVE 165 (the m345 test): the two residual clauses from 2328
+  (`Regex.captures` `result is Some => result.value.groups.len() == 1`;
+  `regex_parse` `result is Ok => result.value.pattern == pattern`) are
+  re-added to the catalog; regex suite 17/17 on BOTH platforms (Windows
+  official archive; WSL: smoke_regex OK + captures_len rc 0 + syntax
+  probe rc 0). m345 closes the 2328 class; the README addendum records
+  it; the bus note is posted.
+- FLOORS DEFERRED (deliberate): wave 168's zip.xi moved compress
+  68 -> 66.7 vs floors179 mid-flight; the next dump must ride the
+  fleet's 168 close (clauses on zip.xi pub fns or a justified dump) --
+  do NOT wire a stale 180.
+- NEXT WAVE: the full official-archive v0.64.6 acceptance battery
+  (corpus / probes / modules / barename / floors-on-settle / doc /
+  module-smoke) + the pin-switch record; then popen spawn + the shelf.
+- Tree: this commit; the campaign blocks 210-217 carry the fleet waves
+  (note: the fleet's "waves 165-171" are wishlist-sweep numbers; block
+  numbers are the unambiguous record).
+
+**SESSION 2026-10-16 block 219 (wave 168 MERGED -- compress.zip + keccak256 + FNV-1a; rows 22/25/34 fixed; modules registered (515); probe + slices green on the merged tree; compiler v0.64.6 RELEASED upstream 20:33Z -- re-pin round starting)**
+- wave/168-compress-crypto merged (5569dde): new xiom/compress/zip.xi
+  (zip32 subset; comment-tolerant EOCD scan; central-directory walk;
+  methods 0/8; per-entry CRC-32 via the neutral crc32; decompression via
+  the wave-158 RFC 1951 decoder; zip64/encryption/multi-disk honest Err;
+  1 GiB bomb cap via the _capped variant; writer with local headers +
+  central directory + EOCD, stored/deflate) + xiom/crypto/keccak.xi
+  (original 0x01-padding Keccak, Ethereum family) + FNV-1a over Str with
+  masked combine in xiom/hash/hash.xi.
+- Fixture provenance: the embedded 441-byte archive was written by CPython
+  zipfile; writer output was cross-read back by python zipfile (testzip
+  clean, byte-equal contents); WSL consumer leg rc 0 on installed v0.64.6.
+- Merge-lane re-verify (official v0.64.5 pin): p_wave168 PASS (48.3s);
+  compress 26/26; kat 15/15; smoke_crypto 7/7. Modules registered:
+  xiom.compress.zip + xiom.crypto.keccak (modlist 513 -> 515).
+- Wishlist rows 22/25/34 -> fixed.
+- Other six agents still in flight: 165 busy (math/fixed), 166 busy (+4
+  commits), 167 busy (+2), 169 busy, 170 busy (+4), 171 busy (+7).
+- UPSTREAM: compiler v0.64.6 RELEASED 20:33Z (release run 38962236697
+  GREEN; assets live). The announcement lists no fix for our red rows
+  (1609/1456/1626); the empirical re-check on the archive + the 2100
+  witnesses + the 1445 retirement check start now (re-pin round); the
+  full merged battery on v0.64.6 follows once the sweep agents merge.
+- Tree: this commit.
+
 **SESSION 2026-10-16 block 217 (compiler-blocker ledger audit + close-out: four 1548 items re-verified on official v0.64.5 -> fixed->verified->closed; five repros PROMOTED to the probe corpus (341); 1852 closed (superseded by 2328); NEW residual REL-20261016-2100-stdlib (alias-qualified types in field/signature positions: silent i64 default + C001, and the param+Result-return combination SILENTLY ABORTS the compiler rc -1 with no diagnostics); relays 2291513 pushed; wishlist waves 165-171 in flight)**
 - Audit of every stdlib->compiler bus item (the user asked "are all
   blockers filed"): YES -- all blockers are on the bus. Acked with the
