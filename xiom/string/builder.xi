@@ -127,6 +127,19 @@ pub fn sb_to_str(sb: &Vec[UInt8]) -> Str
   }
 }
 
+/// Dependency-free materializer (2026-10-02 intake row 20; requesters
+/// text-markup, context, encoder packages): ONE runtime copy through
+/// `Str::from_utf8` (xiom_str_from_vec) -- no extern malloc/memcpy is
+/// touched on this route, so modules that avoid the FFI path can still turn
+/// a built Vec[UInt8] into a Str. Consumes the builder (the vector's payload
+/// is not adopted; from_utf8 copies). Representability limit: a Str is
+/// NUL-terminated, so the result ends at the first 0x00 byte -- use
+/// sb_to_str for byte counts known to be NUL-free, and keep binary-ish text
+/// in Vec[UInt8]. Complexity: O(n).
+pub fn sb_into_str(sb: Vec[UInt8]) -> Str {
+  Str::from_utf8(sb)
+}
+
 /// Reset to empty. Complexity: O(n).
 pub fn sb_clear(sb: &mut Vec[UInt8])
   ensures: sb.len() == 0

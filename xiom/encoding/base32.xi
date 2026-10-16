@@ -71,9 +71,13 @@ fn _b32_char_at_runtime(base: *UInt8, len: Int, pos: Int) -> Char {
 
 const _B32_ALPHABET: Str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
 const _B32HEX_ALPHABET: Str = "0123456789ABCDEFGHIJKLMNOPQRSTUV";
+// Wave 166 (row 46): i2p-style canonical unpadded LOWERCASE base32.
+const _B32_ALPHABET_LOWER: Str = "abcdefghijklmnopqrstuvwxyz234567";
 
 /// Decode value of a base32 character byte; -1 for an invalid character.
-/// `hex_alpha` selects the base32hex alphabet.
+/// `hex_alpha` selects the base32hex alphabet. Both alphabets accept digit
+/// and letter case (wave 166: lowercase was missing for the standard
+/// alphabet, so i2p-style lowercase input failed).
 fn _b32_index(code: Int, hex_alpha: Bool) -> Int {
   if hex_alpha {
     if code >= 48 && code <= 57 { return code - 48; }
@@ -82,6 +86,7 @@ fn _b32_index(code: Int, hex_alpha: Bool) -> Int {
     return -1;
   };
   if code >= 65 && code <= 90 { return code - 65; }
+  if code >= 97 && code <= 122 { return code - 97; }
   if code >= 50 && code <= 55 { return code - 24; }
   -1
 }
@@ -255,6 +260,30 @@ pub fn base32hex_encode(data: &Vec[UInt8]) -> Str
   ensures: result.len() == ((data.len() + 4) / 5) * 8
 {
   _b32_encode(data, _B32HEX_ALPHABET)
+}
+
+/// Encodes bytes as a canonical unpadded LOWERCASE RFC 4648 base32 string
+/// (alphabet a-z, 2-7; wave 166 row 46, i2p "b32" addresses / GCS object
+/// names). The output length is ceil(n * 8 / 5) with no '=' padding:
+/// ((n / 5) * 8) + (2, 4, 5, 7 for n % 5 = 1, 2, 3, 4). Decode with
+/// base32_decode (padding optional, either case). Complexity: O(n).
+pub fn base32_encode_lower_nopad(data: &Vec[UInt8]) -> Str
+  ensures: (data.len() == 0) => (result.len() == 0)
+{
+  let padded = _b32_encode(data, _B32_ALPHABET_LOWER);
+  let n = data.len();
+  let rem = n % 5;
+  var extra = 0;
+  if rem == 1 {
+    extra = 2;
+  } elif rem == 2 {
+    extra = 4;
+  } elif rem == 3 {
+    extra = 5;
+  } elif rem == 4 {
+    extra = 7;
+  };
+  string.str_slice(padded, 0, (n / 5) * 8 + extra)
 }
 
 /// Decodes a base32hex string to bytes (both digit cases accepted). Returns

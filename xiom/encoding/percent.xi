@@ -96,17 +96,22 @@ fn _pct_hex_value(c: UInt8) -> Int {
 }
 
 /// Shared single-pass percent encoder over UTF-8 code points. `spaces_as_plus`
-/// selects form semantics (space -> '+', all other non-unreserved bytes %XX).
-fn _percent_encode(s: Str, spaces_as_plus: Bool) -> Str {
+/// selects form semantics (space -> '+', all other non-unreserved bytes %XX);
+/// `keep` is a caller byte set whose single-byte characters pass through
+/// literally (wave 166: percent_encode_path keeps '/'; multi-byte characters
+/// are always encoded).
+fn _percent_encode(s: Str, spaces_as_plus: Bool, keep: Str) -> Str {
   let s_len = s.len();
   let base = s.c_str();
+  let k_len = keep.len();
+  let k_base = keep.c_str();
   unsafe {
     var buf = malloc(s_len * 3 + 1);
     var i = 0;
     var out = 0;
     while i < s_len {
       var c = _pct_char_at_runtime(base, s_len, i);
-      if _is_unreserved(c) {
+      if _is_unreserved(c) || _pct_in_keep(k_base, k_len, c) {
         var tmp = Vec[UInt8].new();
         xiom.char.encode_utf8(c, &tmp);
         var j = 0;
@@ -139,6 +144,24 @@ fn _percent_encode(s: Str, spaces_as_plus: Bool) -> Str {
   }
 }
 
+/// True when the single-byte character `c` occurs in the keep byte set
+/// (multi-byte characters are never kept).
+fn _pct_in_keep(keep_base: *UInt8, keep_len: Int, c: Char) -> Bool {
+  let code = to_int_from_char(c);
+  if code < 0 || code > 255 {
+    return false;
+  };
+  var i = 0;
+  while i < keep_len {
+    let b = (_pct_raw_byte(keep_base, i) as Int) & 0xFF;
+    if b == code {
+      return true;
+    };
+    i = i + 1;
+  };
+  false
+}
+
 /// Percent-encodes every non-unreserved character of `s` per its UTF-8 bytes;
 /// spaces become '%20'. Unreserved characters (A-Z a-z 0-9 - _ . ~) pass
 /// through. Complexity: O(n).
@@ -146,7 +169,7 @@ pub fn percent_encode(s: Str) -> Str
   ensures: result.len() >= s.len()
   ensures: result.len() <= 3 * s.len()
 {
-  _percent_encode(s, false)
+  _percent_encode(s, false, "")
 }
 
 /// Decodes percent-escapes in `s`. '+' is left as a literal '+'. Returns Err
@@ -200,7 +223,7 @@ pub fn percent_encode_component(s: Str) -> Str
   ensures: result.len() >= s.len()
   ensures: result.len() <= 3 * s.len()
 {
-  _percent_encode(s, false)
+  _percent_encode(s, false, "")
 }
 
 /// Decodes a URL component: '%XX' escapes are decoded; '+' is left as a
@@ -289,7 +312,28 @@ pub fn percent_encode_www_form(s: Str) -> Str
   ensures: result.len() >= s.len()
   ensures: result.len() <= 3 * s.len()
 {
-  _percent_encode(s, true)
+  _percent_encode(s, true, "")
+}
+
+/// Percent-encodes `s` but keeps every single-byte character of the `keep`
+/// byte set literal (uppercase hex escapes; wave 166 row 46). For example
+/// percent_encode_keep("/a b", "/") encodes the space only. Multi-byte
+/// characters are always encoded. Complexity: O(n * |keep|).
+pub fn percent_encode_keep(s: Str, keep: Str) -> Str
+  ensures: result.len() >= s.len()
+  ensures: result.len() <= 3 * s.len()
+{
+  _percent_encode(s, false, keep)
+}
+
+/// Path-segment-aware percent-encoder (wave 166 row 46; requester gcp --
+/// GCS object paths): unreserved characters and '/' pass through, everything
+/// else is percent-encoded per UTF-8 byte with UPPERCASE hex. Complexity: O(n).
+pub fn percent_encode_path(s: Str) -> Str
+  ensures: result.len() >= s.len()
+  ensures: result.len() <= 3 * s.len()
+{
+  _percent_encode(s, false, "/")
 }
 
 /// Decodes a form body: '+' becomes a space and '%XX' escapes are decoded.
