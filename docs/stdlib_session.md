@@ -3598,6 +3598,20 @@ registry pin, agent recon for the rest)**
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
 
+**SESSION 2026-10-16 block 214 (doorbell 19:00Z -- quiet inbound; the campaign is deep in waves 155-163)**
+- Inbound: no new asks or moves since 17:00Z (1128/1129 acked;
+  1143/1223 closed; 1630/1658 compiler-owned open) -- nothing to
+  transition.
+- Tree: the shared lane actor is running the parallel campaign at speed
+  -- waves **155-163** landed in this window (155: socket_bind fix;
+  159: zero-copy send real -- writev/sendfile/TransmitFile +
+  TcpStream.send_file; 161: fix-first defect batch; 162: SSE connection
+  layer real; 163: BLAKE3 KAT hardening), head `ecae793`; the actor's
+  block 213 covers wave 163. WIP left untouched (untracked out/, the
+  mojibake stress dat, fp128 diag smokes).
+- This block is the round record only; the campaign blocks 207-213 carry
+  the wave detail. The next writer continues from block 213/214.
+
 **SESSION 2026-10-16 block 213 (wave 163 hardening: BLAKE3 KAT rows -- empty/abc/1024/1025 pattern vectors cross-checked against the reference blake3 impl; the length-only smoke now carries real vectors; audit row)**
 - After the wave-161 BLAKE2b discovery, the sibling digest got the same
   treatment: BLAKE3 verified correct on all four vectors (including the
