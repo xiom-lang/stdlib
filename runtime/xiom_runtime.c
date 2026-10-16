@@ -4893,6 +4893,51 @@ int xiom_funlock_fd(int fd) {
     return 0;
 }
 
+/* Wave 152 path-level advisory locks (xiom.os.lock; REL-20261016-1128-
+   orbitdb / -1129-xvector). Contract: 0 = acquired, 1 = held elsewhere
+   (try only; Windows GetLastError == ERROR_LOCK_VIOLATION), -1 = error.
+   Windows byte-range locks are per-handle: a second open in the SAME
+   process also contends. xiom_open_rw_existing opens read-write WITHOUT
+   creating (the stdlib lock API requires the target file to exist). */
+int xiom_open_rw_existing(const char* path) {
+    return _open(path, _O_RDWR | _O_BINARY);
+}
+
+long long xiom_file_lock_try(int fd) {
+    HANDLE h = (HANDLE)_get_osfhandle(fd);
+    if (h == INVALID_HANDLE_VALUE) return -1;
+    OVERLAPPED ov;
+    memset(&ov, 0, sizeof(ov));
+    if (!LockFileEx(h, LOCKFILE_EXCLUSIVE_LOCK | LOCKFILE_FAIL_IMMEDIATELY,
+                    0, 0xFFFFFFFFu, 0xFFFFFFFFu, &ov)) {
+        if (GetLastError() == ERROR_LOCK_VIOLATION) return 1;
+        return -1;
+    }
+    return 0;
+}
+
+long long xiom_file_lock_wait(int fd) {
+    HANDLE h = (HANDLE)_get_osfhandle(fd);
+    if (h == INVALID_HANDLE_VALUE) return -1;
+    OVERLAPPED ov;
+    memset(&ov, 0, sizeof(ov));
+    /* No LOCKFILE_FAIL_IMMEDIATELY: a synchronous CRT fd queues until the
+       range is free. Never wait on a range the same handle already holds
+       (LockFileEx self-re-lock deadlocks; wave-118 lore). */
+    if (!LockFileEx(h, LOCKFILE_EXCLUSIVE_LOCK, 0, 0xFFFFFFFFu, 0xFFFFFFFFu, &ov))
+        return -1;
+    return 0;
+}
+
+long long xiom_file_unlock(int fd) {
+    HANDLE h = (HANDLE)_get_osfhandle(fd);
+    if (h == INVALID_HANDLE_VALUE) return -1;
+    OVERLAPPED ov;
+    memset(&ov, 0, sizeof(ov));
+    if (!UnlockFileEx(h, 0, 0xFFFFFFFFu, 0xFFFFFFFFu, &ov)) return -1;
+    return 0;
+}
+
 char* xiom_read_at(const char* path, long offset, long count) {
     int fd = _open(path, _O_RDONLY | _O_BINARY);
     if (fd < 0) return NULL;
@@ -5025,6 +5070,52 @@ int xiom_funlock_fd(int fd) {
     fl.l_start = 0;
     fl.l_len = 0;
     return fcntl(fd, F_SETLK, &fl);
+}
+
+/* Wave 152 path-level advisory locks (xiom.os.lock; REL-20261016-1128-
+   orbitdb / -1129-xvector). Contract: 0 = acquired, 1 = contended (try
+   only; EACCES/EAGAIN), -1 = error. POSIX fcntl locks are owned by the
+   PROCESS: a second fd in the same process never contends and closing
+   ANY fd for the file drops all of the process's locks on it
+   (documented in xiom/os/lock.xi). xiom_open_rw_existing opens
+   read-write WITHOUT creating (F_WRLCK needs write access). */
+int xiom_open_rw_existing(const char* path) {
+    return open(path, O_RDWR);
+}
+
+long long xiom_file_lock_try(int fd) {
+    struct flock fl;
+    memset(&fl, 0, sizeof(fl));
+    fl.l_type = F_WRLCK;
+    fl.l_whence = SEEK_SET;
+    fl.l_start = 0;
+    fl.l_len = 0; /* whole file */
+    if (fcntl(fd, F_SETLK, &fl) == 0) return 0;
+    if (errno == EACCES || errno == EAGAIN) return 1;
+    return -1;
+}
+
+long long xiom_file_lock_wait(int fd) {
+    struct flock fl;
+    memset(&fl, 0, sizeof(fl));
+    fl.l_type = F_WRLCK;
+    fl.l_whence = SEEK_SET;
+    fl.l_start = 0;
+    fl.l_len = 0;
+    for (;;) {
+        if (fcntl(fd, F_SETLKW, &fl) == 0) return 0;
+        if (errno != EINTR) return -1; /* a signal mid-wait: retry */
+    }
+}
+
+long long xiom_file_unlock(int fd) {
+    struct flock fl;
+    memset(&fl, 0, sizeof(fl));
+    fl.l_type = F_UNLCK;
+    fl.l_whence = SEEK_SET;
+    fl.l_start = 0;
+    fl.l_len = 0;
+    return fcntl(fd, F_SETLK, &fl) == 0 ? 0 : -1;
 }
 
 char* xiom_read_at(const char* path, long offset, long count) {
