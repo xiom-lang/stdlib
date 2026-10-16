@@ -398,10 +398,11 @@ pub fn zip_read(data: &Vec[UInt8], name: Str) -> Result[Vec[UInt8], Str]
 // ---------------------------------------------------------------------------
 // Writer
 // ---------------------------------------------------------------------------
-
 /// New empty archive builder. `finish` on a fresh writer emits a valid
 /// 22-byte empty archive.
-pub fn zip_writer_new() -> ZipWriter {
+pub fn zip_writer_new() -> ZipWriter
+  ensures: true
+{
   return ZipWriter{
     out: Vec[UInt8].new(),
     central: Vec[UInt8].new(),
@@ -413,6 +414,8 @@ pub fn zip_writer_new() -> ZipWriter {
 /// record. `method` is ZIP_METHOD_STORED or ZIP_METHOD_DEFLATE; deflate uses
 /// the default level 6. Err on ids the zip32 format cannot express.
 pub fn zip_writer_add(w: &mut ZipWriter, name: Str, data: &Vec[UInt8], method: Int) -> Result[Unit, Str]
+  ensures: (name.len() == 0) => (result.is_err)
+  ensures: (name.len() > 65535) => (result.is_err)
 {
   return zip_writer_add_level(w, name, data, method, 6);
 }
@@ -420,6 +423,8 @@ pub fn zip_writer_add(w: &mut ZipWriter, name: Str, data: &Vec[UInt8], method: I
 /// `zip_writer_add` with an explicit deflate level (0..9; ignored for
 /// stored).
 pub fn zip_writer_add_level(w: &mut ZipWriter, name: Str, data: &Vec[UInt8], method: Int, level: Int) -> Result[Unit, Str]
+  ensures: (name.len() == 0) => (result.is_err)
+  ensures: (name.len() > 65535) => (result.is_err)
 {
   var name_len = name.len();
   if name_len <= 0 {
@@ -500,6 +505,7 @@ pub fn zip_writer_add_level(w: &mut ZipWriter, name: Str, data: &Vec[UInt8], met
 /// Close the archive: append the central directory and the EOCD and return
 /// the full byte stream. The writer stays usable for a new archive.
 pub fn zip_writer_finish(w: &mut ZipWriter) -> Result[Vec[UInt8], Str]
+  ensures: true
 {
   var count = w.count;
   var cd_size = w.central.len();

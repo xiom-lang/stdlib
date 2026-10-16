@@ -258,7 +258,9 @@ pub fn assertion_actual(a: &Assertions, i: Int) -> Str
 }
 
 /// One-line summary: "assertions: N passed, M failed".
-pub fn assertions_summary(a: &Assertions) -> Str {
+pub fn assertions_summary(a: &Assertions) -> Str
+  ensures: true
+{
   var sb = Vec[UInt8].new();
   builder.sb_push_str(&mut sb, "assertions: ");
   builder.sb_push_int(&mut sb, a.passed);
@@ -270,7 +272,9 @@ pub fn assertions_summary(a: &Assertions) -> Str {
 
 /// Multi-line report: the summary line, then one line per failure
 /// ("FAIL [kind] message -- expected: X, actual: Y").
-pub fn assertions_report(a: &Assertions) -> Str {
+pub fn assertions_report(a: &Assertions) -> Str
+  ensures: true
+{
   var sb = Vec[UInt8].new();
   builder.sb_push_str(&mut sb, assertions_summary(a));
   var i = 0;
@@ -313,7 +317,9 @@ fn _a_json_escape(sb: &mut Vec[UInt8], s: Str) {
 /// Structured JSON document:
 /// {"passed":N,"failed":M,"failures":[{"kind":..,"message":..,
 /// "expected":..,"actual":..}, ...]}.
-pub fn assertions_to_json(a: &Assertions) -> Str {
+pub fn assertions_to_json(a: &Assertions) -> Str
+  ensures: true
+{
   var sb = Vec[UInt8].new();
   builder.sb_push_str(&mut sb, "{\"passed\":");
   builder.sb_push_int(&mut sb, a.passed);

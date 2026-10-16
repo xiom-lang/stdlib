@@ -25,19 +25,23 @@ xiom.collect.arc
 xiom.collect.avl
 xiom.collect.bheap
 xiom.collect.bitmap
+xiom.collect.bitset
 xiom.collect.blockingqueue
 xiom.collect.bloom
 xiom.collect.btree
 xiom.collect.btreeplus
 xiom.collect.cache
+xiom.collect.composite
 xiom.collect.concurrent
 xiom.collect.cuckoo
 xiom.collect.dag
 xiom.collect.dense
 xiom.collect.deque
+xiom.collect.eventlog
 xiom.collect.fenwick
 xiom.collect.fheap
 xiom.collect.graph
+xiom.collect.groupfold
 xiom.collect.hamt
 xiom.collect.hash
 xiom.collect.hasharray
@@ -51,6 +55,7 @@ xiom.collect.lfu
 xiom.collect.linkedhash
 xiom.collect.list
 xiom.collect.lru
+xiom.collect.mailbox
 xiom.collect.map
 xiom.collect.mapch
 xiom.collect.mpmc
@@ -80,6 +85,8 @@ xiom.collect.treemap
 xiom.collect.treeset
 xiom.collect.trie
 xiom.collect.unionfind
+xiom.collect.vecops
+xiom.collect.vecstr
 xiom.collect.vector
 xiom.collect.workqueue
 xiom.collections
@@ -184,6 +191,7 @@ xiom.encoding.base32
 xiom.encoding.base64
 xiom.encoding.hex
 xiom.encoding.idna
+xiom.encoding.le
 xiom.encoding.percent
 xiom.encoding.punycode
 xiom.env
@@ -271,11 +279,13 @@ xiom.math.differential_equations
 xiom.math.exponential
 xiom.math.factorial
 xiom.math.finance
+xiom.math.fixed
 xiom.math.fuzzy
 xiom.math.game_theory
 xiom.math.graph_theory
 xiom.math.hyperbolic
 xiom.math.information_theory
+xiom.math.int
 xiom.math.integral
 xiom.math.interfaces
 xiom.math.inverse_trig
@@ -400,6 +410,7 @@ xiom.serialize.endian
 xiom.serialize.json
 xiom.serialize.toml
 xiom.serialize.varint
+xiom.serialize.xml
 xiom.serialize.yaml_lite
 xiom.simd
 xiom.simd.gather
@@ -415,6 +426,7 @@ xiom.sort.radix
 xiom.stats
 xiom.stats.dist
 xiom.stats.histogram
+xiom.stats.int_stats
 xiom.stats.moments
 xiom.stats.probability
 xiom.stats.regress
@@ -422,12 +434,14 @@ xiom.stats.statistics
 xiom.stats.test
 xiom.string
 xiom.string.align
+xiom.string.ascii
 xiom.string.bidi
 xiom.string.block
 xiom.string.case
 xiom.string.casefold
 xiom.string.category
 xiom.string.chunk
+xiom.string.codepoint
 xiom.string.collate
 xiom.string.combinatorics
 xiom.string.combine
@@ -453,6 +467,7 @@ xiom.string.lcs
 xiom.string.lcsuffix
 xiom.string.levenshtein
 xiom.string.linebreak
+xiom.string.lines
 xiom.string.lowercase
 xiom.string.metaphone
 xiom.string.mirror
@@ -484,6 +499,7 @@ xiom.string.truncate
 xiom.string.unescape
 xiom.string.unicode
 xiom.string.uppercase
+xiom.string.view
 xiom.string.wordbreak
 xiom.string.wrap
 xiom.sync
@@ -495,6 +511,7 @@ xiom.sync.mutex
 xiom.sync.rwlock
 xiom.test
 xiom.test.assert
+xiom.test.assertions
 xiom.test.harness
 xiom.text.diff
 xiom.text.similarity

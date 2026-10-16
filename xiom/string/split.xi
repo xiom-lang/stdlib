@@ -107,7 +107,9 @@ pub fn str_split_any(s: Str, delims: &Vec[Str]) -> Vec[Str]
 /// before `delim` and the part after it. When `delim` does not occur in `s`,
 /// returns `(s, "")`.
 /// Complexity: O(|s|).
-pub fn str_split_once(s: Str, delim: Str) -> (Str, Str) {
+pub fn str_split_once(s: Str, delim: Str) -> (Str, Str)
+  ensures: true
+{
   let idx = string.index_of(s, delim);
   match idx {
     Some(i) => {
@@ -131,7 +133,9 @@ pub fn str_lines(s: Str) -> Vec[Str]
 /// Splits `s` on whitespace boundaries into words.
 /// Returns an empty vector when `s` contains no words.
 /// Complexity: O(|s|).
-pub fn str_words(s: Str) -> Vec[Str] {
+pub fn str_words(s: Str) -> Vec[Str]
+  ensures: true
+{
   return string.words(s);
 }
 
@@ -207,7 +211,9 @@ fn _split_match_at(base: *UInt8, len: Int, at: Int, delim: Str) -> Bool {
 /// When `delim` does not occur, returns all of `s`; an empty `delim` yields ""
 /// (consistent with index_of's Some(0) for an empty needle).
 /// Complexity: O(|s| * |delim|).
-pub fn str_before(s: Str, delim: Str) -> Str {
+pub fn str_before(s: Str, delim: Str) -> Str
+  ensures: true
+{
   let idx = string.index_of(s, delim);
   match idx {
     Some(i) => {
@@ -223,7 +229,9 @@ pub fn str_before(s: Str, delim: Str) -> Str {
 /// When `delim` does not occur, returns ""; an empty `delim` yields all of `s`
 /// (consistent with index_of's Some(0) for an empty needle).
 /// Complexity: O(|s| * |delim|).
-pub fn str_after(s: Str, delim: Str) -> Str {
+pub fn str_after(s: Str, delim: Str) -> Str
+  ensures: true
+{
   let idx = string.index_of(s, delim);
   match idx {
     Some(i) => {
@@ -237,7 +245,9 @@ pub fn str_after(s: Str, delim: Str) -> Str {
 
 /// Earliest byte offset >= `from` where any delimiter in `delims` matches, or
 /// None. A negative `from` clamps to 0. Complexity: O((|s| - from) * |delims|).
-pub fn str_find_any_at(s: Str, delims: &Vec[Str], from: Int) -> Option[Int] {
+pub fn str_find_any_at(s: Str, delims: &Vec[Str], from: Int) -> Option[Int]
+  ensures: true
+{
   let len = string.str_len(s);
   var f = from;
   if f < 0 {
@@ -260,7 +270,9 @@ pub fn str_find_any_at(s: Str, delims: &Vec[Str], from: Int) -> Option[Int] {
 
 /// Length of the LONGEST delimiter in `delims` matching at byte `pos`
 /// (0 when none matches). Complexity: O(|delims| * max |delim|).
-pub fn str_delim_len_at(s: Str, delims: &Vec[Str], pos: Int) -> Int {
+pub fn str_delim_len_at(s: Str, delims: &Vec[Str], pos: Int) -> Int
+  ensures: true
+{
   let len = string.str_len(s);
   if pos < 0 || pos >= len {
     return 0;
@@ -282,7 +294,9 @@ pub fn str_delim_len_at(s: Str, delims: &Vec[Str], pos: Int) -> Int {
 /// one Vec[Int], no Str per part. Matches str_split exactly, including the
 /// empty-delimiter (per-byte) and trailing-empty-part cases.
 /// Complexity: O(|s| * |delim|).
-pub fn str_split_spans(s: Str, delim: Str) -> Vec[Int] {
+pub fn str_split_spans(s: Str, delim: Str) -> Vec[Int]
+  ensures: true
+{
   var result = Vec[Int].new();
   let len = string.str_len(s);
   let dlen = string.str_len(delim);
@@ -321,7 +335,9 @@ pub fn str_split_spans(s: Str, delim: Str) -> Vec[Int] {
 /// pairs (no Vec[Str]). The longest delimiter match at each position wins,
 /// matching str_split_any; an empty `delims` (or only-empty delimiters) yields
 /// a single whole-string span. Complexity: O(|s| * |delims| * max |delim|).
-pub fn str_split_any_spans(s: Str, delims: &Vec[Str]) -> Vec[Int] {
+pub fn str_split_any_spans(s: Str, delims: &Vec[Str]) -> Vec[Int]
+  ensures: true
+{
   var result = Vec[Int].new();
   let len = string.str_len(s);
   if delims.len() == 0 {

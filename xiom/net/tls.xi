@@ -980,6 +980,3 @@ pub fn tls_wait_writable(fd: Int, timeout_ms: Int) -> Result[Bool, Str]
     },
   }
 }
-  }
-  exists
-}

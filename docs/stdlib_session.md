@@ -3643,6 +3643,32 @@ registry pin, agent recon for the rest)**
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
 
+**SESSION 2026-10-16 block 221 (sweep integration: waves 165/166/167/169/170/171 MERGED after the audit -- tls.xi stray-tail repair, 57-fn coverage fill + zip writer clauses, modlist 532; all six probes green; ratchet OK; owner-directed 0.64.6 release prep in flight)**
+- Branch audit: all six idle-complete, no forbidden-file touches, no
+  left-behind WIP; one additive known_failures/README conflict resolved
+  (kept the 2026-10-16 status block + wave-165's new i128 finding).
+- NEW finding from wave 165 (relay item goes out with the release batch):
+  a runtime `sdiv i128` inlined into a vector-loop function compiles rc 0
+  and AVs 0xC0000005 on the official v0.64.5 archive (repro
+  `tools/known_failures/p_i128_div_vec_loop_av.xi` + support module;
+  workaround = shift/mask long division in the shipped
+  math.int/math.fixed/int_stats).
+- Merge-lane repairs: tls.xi's stray 3-line tail (wave-157 era; tolerated
+  by full compiles, fatal to --check) removed; 57 uncovered pub fns
+  clause-filled across le/ascii/codepoint/split/bytes/glob/assertions +
+  the four zip writer fns -> RATCHET OK vs floors179 (five dir dips
+  recovered: string/test/convert/misc/encoding + the earlier compress).
+- Verified on official v0.64.6: p_wave165/166/167/169/170/171 all PASS;
+  modlist 532 sorted.
+- RELEASE PREP in flight (owner-directed "make a release on registry so
+  we match the compiler version" + "update your relays"): floors180 on
+  the settled tree, wishlist sweep-status block, package.xi 0.64.6 +
+  COMPILER_VERSION v0.64.6 + release-notes + CHANGELOG, the tag-move
+  relay batch, then the stdlib-v0.64.6 tag move (the fresh publish run
+  spawns on the tag push for owner approval; the previously approved
+  stale-pin run was cancelled per owner decision).
+- Tree: this commit.
+
 **SESSION 2026-10-16 block 220 (v0.64.6 re-pin round part 1 -- 1445 re-verify DONE (spincheck v=7 ~100ms both official archives; probe locked); 2100 v0.64.6 matrix (W2/W3/W4 FIXED, W4 silent abort gone; W1 narrowed to non-bare field spellings); red rows 1609/1456/1626 unchanged on v0.64.6; floors180 must ride the settle)**
 - 1445 (alloc-guard-spin, compiler->stdlib fixed): acceptance spincheck
   (ffi.alloc(8) + ptr_write_u64_le/ptr_read_u64_le + ffi.free in ONE

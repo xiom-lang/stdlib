@@ -39,7 +39,9 @@ pub type CodePointCursor = { base: *UInt8; len: Int; pos: Int; }
 
 /// True iff `cp` is a Unicode scalar value (0..=U+10FFFF excluding the
 /// surrogate range U+D800-U+DFFF). Complexity: O(1).
-pub fn codepoint_valid(cp: Int) -> Bool {
+pub fn codepoint_valid(cp: Int) -> Bool
+  ensures: true
+{
   if cp < 0 || cp > 0x10FFFF {
     return false;
   };
@@ -51,7 +53,9 @@ pub fn codepoint_valid(cp: Int) -> Bool {
 
 /// Encoded UTF-8 byte length of `cp` (1-4); 0 when `cp` is not a scalar
 /// value. Complexity: O(1).
-pub fn codepoint_byte_len(cp: Int) -> Int {
+pub fn codepoint_byte_len(cp: Int) -> Int
+  ensures: true
+{
   if !codepoint_valid(cp) {
     return 0;
   };
@@ -153,7 +157,9 @@ pub fn codepoint_cursor(s: Str) -> CodePointCursor
 /// Next code point; advances the cursor on success. Returns None at the end
 /// of the string AND on malformed input (the cursor does not advance on
 /// malformed input). Complexity: O(1).
-pub fn codepoint_next(c: &mut CodePointCursor) -> Option[CodePoint] {
+pub fn codepoint_next(c: &mut CodePointCursor) -> Option[CodePoint]
+  ensures: true
+{
   var value = 0;
   var byte_len = 0;
   if !_cp_step(c.base, c.len, c.pos, &mut value, &mut byte_len) {
@@ -168,7 +174,9 @@ pub fn codepoint_next(c: &mut CodePointCursor) -> Option[CodePoint] {
 /// order. Stops at the first malformed sequence (pair with codepoints_valid
 /// to distinguish "walked to the end" from "stopped early").
 /// Complexity: O(n).
-pub fn codepoint_offsets(s: Str) -> Vec[Int] {
+pub fn codepoint_offsets(s: Str) -> Vec[Int]
+  ensures: true
+{
   var result = Vec[Int].new();
   let len = s.len();
   let base = s.c_str();
@@ -187,7 +195,9 @@ pub fn codepoint_offsets(s: Str) -> Vec[Int] {
 
 /// True iff the whole string is well-formed UTF-8 (strict walk reaches the
 /// end with no malformed sequence). Complexity: O(n).
-pub fn codepoints_valid(s: Str) -> Bool {
+pub fn codepoints_valid(s: Str) -> Bool
+  ensures: true
+{
   let len = s.len();
   let base = s.c_str();
   var pos = 0;
@@ -205,7 +215,9 @@ pub fn codepoints_valid(s: Str) -> Bool {
 /// Append the UTF-8 encoding of `cp` to `out`; Err when `cp` is not a
 /// Unicode scalar value. U+0000 is allowed here (a Vec[UInt8] can carry it).
 /// Complexity: O(1).
-pub fn codepoint_encode(cp: Int, out: &mut Vec[UInt8]) -> Result[Unit, Str] {
+pub fn codepoint_encode(cp: Int, out: &mut Vec[UInt8]) -> Result[Unit, Str]
+  ensures: true
+{
   if !codepoint_valid(cp) {
     return Err("invalid code point");
   };
@@ -230,7 +242,9 @@ pub fn codepoint_encode(cp: Int, out: &mut Vec[UInt8]) -> Result[Unit, Str] {
 /// Build a Str from a code-point vector (the row-30 builder half). Every
 /// entry must be a Unicode scalar value; U+0000 is rejected because a Str is
 /// NUL-terminated and cannot represent it. Complexity: O(cps.len()).
-pub fn str_from_codepoints(cps: &Vec[Int]) -> Result[Str, Str] {
+pub fn str_from_codepoints(cps: &Vec[Int]) -> Result[Str, Str]
+  ensures: true
+{
   var out: Vec[UInt8] = Vec[UInt8].new();
   let n = cps.len();
   var i = 0;

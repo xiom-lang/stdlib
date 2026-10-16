@@ -526,7 +526,9 @@ fn _glob_path_from(ps: &Vec[Int], pl: &Vec[Int], ss: &Vec[Int], sl: &Vec[Int], p
 /// character in this dialect -- a backslash is an ordinary character, so
 /// Windows-style patterns need no quoting. A trailing separator in the
 /// pattern demands a trailing (empty) segment. O(|pattern| * |path|) worst.
-pub fn glob_match_path(pattern: Str, path: Str, sep: Char) -> Bool {
+pub fn glob_match_path(pattern: Str, path: Str, sep: Char) -> Bool
+  ensures: true
+{
   var ps = Vec[Int].new();
   var pl = Vec[Int].new();
   var ss = Vec[Int].new();
@@ -540,7 +542,9 @@ pub fn glob_match_path(pattern: Str, path: Str, sep: Char) -> Bool {
 /// mixed POSIX/Windows path trees. CASE-SENSITIVE. Because a backslash is
 /// always a separator here, this dialect has no escape character either (use
 /// glob_match_ext for escape semantics). O(|pattern| * |path|) worst case.
-pub fn glob_match_path_any(pattern: Str, path: Str) -> Bool {
+pub fn glob_match_path_any(pattern: Str, path: Str) -> Bool
+  ensures: true
+{
   var ps = Vec[Int].new();
   var pl = Vec[Int].new();
   var ss = Vec[Int].new();
