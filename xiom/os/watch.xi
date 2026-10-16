@@ -3,14 +3,20 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 //
 // Directory-change watching for asset hot reload / editors
-// (REL-20261012-2012-engine-3; Windows-first per the ack). Windows:
-// ReadDirectoryChangesW with overlapped buffers -- up to 8 concurrent
-// watches, 4 KiB change buffer, relative UTF-8 paths. POSIX
-// (inotify/kqueue) is a documented Err until a POSIX consumer needs it.
-// Delivery is coalesced by the OS: extra events are fine, and a rare
-// buffer overflow surfaces as one WATCH_OVERFLOW event (empty path).
-// Effective for consumers at the next re-vendoring pin (or
-// XIOM_RUNTIME_DIR on v0.64.4 until then).
+// (REL-20261012-2012-engine-3; POSIX leg: REL-20261016-1129-xvector
+// item 2). Native change notification on both desktop platforms: Windows
+// via ReadDirectoryChangesW (overlapped buffers), Linux via inotify
+// (IN_CREATE/IN_MODIFY/IN_ATTRIB/IN_DELETE/IN_MOVED_FROM/IN_MOVED_TO).
+// Up to 8 concurrent watches, 4 KiB change buffer, relative UTF-8 paths.
+// Recursive watches subtrees: Windows in-kernel; Linux attaches one watch
+// per subdirectory (bounded at 256 directories per watch, adding new
+// ones as they appear). WSL2 caveat: inotify sees no events under /mnt/*
+// (drvfs/9p) paths -- watch Linux-native directories there. Other POSIX
+// (darwin/BSD, kqueue) is a documented Err until implemented. Delivery
+// is coalesced by the OS: extra events are fine, and a rare buffer/queue
+// overflow surfaces as one WATCH_OVERFLOW event (empty path). Effective
+// for consumers at the next re-vendoring pin (or XIOM_RUNTIME_DIR on
+// older pins).
 
 module xiom.os.watch
 
@@ -56,11 +62,13 @@ pub fn watch_kind_name(kind: Int) -> Str
 }
 
 /// watch_dir starts watching a directory and returns an opaque handle.
-/// Real implementation (wave 124; Windows-first): ReadDirectoryChangesW;
-/// recursive watches subtrees. POSIX (inotify/kqueue) is a documented Err
-/// until a POSIX consumer needs it.
-/// Returns: Ok(handle > 0); Err for an empty/missing path, a POSIX target,
-/// or when the 8-watch table or the OS open fails.
+/// Real implementation: ReadDirectoryChangesW on Windows (wave 124),
+/// inotify on Linux (wave 171); recursive watches subtrees (the Linux
+/// leg attaches up to 256 directories per watch, adding new ones as they
+/// appear). Other POSIX (darwin/BSD, kqueue) is a documented Err.
+/// Returns: Ok(handle > 0); Err for an empty/missing path, a
+/// non-directory, an unsupported platform, or when the 8-watch table or
+/// the OS open fails.
 pub fn watch_dir(path: Str, recursive: Bool) -> Result[Int, Str]
   ensures: result is Ok => path.len() > 0
 {
@@ -79,7 +87,7 @@ pub fn watch_dir(path: Str, recursive: Bool) -> Result[Int, Str]
     if env.FAMILY == "windows" {
       return Err("watch_dir: open failed (missing directory or watch table full)");
     }
-    return Err("watch_dir: directory watch is Windows-first; POSIX (inotify/kqueue) not implemented yet");
+    return Err("watch_dir: open failed (missing directory, watch table full, or platform without inotify)");
   }
   Ok(h)
 }
@@ -87,7 +95,9 @@ pub fn watch_dir(path: Str, recursive: Bool) -> Result[Int, Str]
 /// watch_poll collects the pending change events for a watch handle,
 /// waiting up to timeout_ms for the first one and draining the rest
 /// immediately (up to 256 per call; later calls pick up any remainder).
-/// A buffer overflow is surfaced as one WATCH_OVERFLOW event (empty path).
+/// The blocking wait is the platform primitive (overlapped event on
+/// Windows, poll(2) on Linux). A buffer overflow is surfaced as one
+/// WATCH_OVERFLOW event (empty path).
 /// Returns: Ok(events) (possibly empty on timeout); Err on a bad handle or
 /// a negative timeout.
 /// Complexity: blocking wait + O(events).

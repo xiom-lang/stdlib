@@ -429,20 +429,30 @@ pub fn walk_dir_filtered(path: Str, pattern: Str, callback: fn(Str, Metadata) ->
   }
 }
 
-/// === File System Watch ===
+/// === File System Watch (polling facade) ===
+/// FileWatcher wraps a path and reports from FileWatcher.poll, which
+/// re-lists the directory on every call: it holds NO OS watch and keeps no
+/// diff state (entries are classified by metadata -- directories as
+/// Created, files as Modified, unreadable entries as Deleted). For native
+/// change notification use xiom.os.watch.watch_dir
+/// (ReadDirectoryChangesW on Windows, inotify on Linux).
 pub type FileWatcher = {
   path: Str;
   recursive: Bool;
 }
 
-/// Watch a single file for changes, or Err with the OS message.
+/// watch_file wraps `path` in the polling FileWatcher facade (see
+/// FileWatcher); it never consults the OS, so a non-empty path always
+/// yields Ok.
 pub fn watch_file(path: Str) -> Result[FileWatcher, Str]
   requires: path.len() > 0
 {
   return watch_dir(path, false);
 }
 
-/// Watch a directory (optionally recursive), or Err.
+/// watch_dir wraps `path` in the polling FileWatcher facade (see
+/// FileWatcher); it never consults the OS, so a non-empty path always
+/// yields Ok, on every platform.
 pub fn watch_dir(path: Str, recursive: Bool) -> Result[FileWatcher, Str]
   requires: path.len() > 0
 {
@@ -484,7 +494,8 @@ pub fn FileWatcher.poll(self) -> Result[Vec[FileEvent], Str]
   }
 }
 
-/// Stop watching and release the watcher.
+/// Stop watching and release the watcher (no-op: the polling facade
+/// holds no OS resources).
 pub fn FileWatcher.close(self) {
 }
 

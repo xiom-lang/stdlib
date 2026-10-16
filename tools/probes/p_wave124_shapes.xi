@@ -4,8 +4,9 @@
 // Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 //
-// POSIX branch: watch_dir is a documented Err (inotify/kqueue not
-// implemented yet) and watch_poll(handle, 0) errors.
+// POSIX branch (remerged in wave 171 when the inotify leg landed): a real
+// fixture rounds trip on Linux -- watch opens, a written file delivers a
+// create-or-modify event, and the closed handle plus a bad handle are Err.
 // Windows branch: a real fixture rounds trip -- create/modify/remove a
 // file under a watched dir and observe create-or-modify, modify and
 // remove events (coalesced extra events are fine; the first record for a
@@ -179,18 +180,54 @@ fn main() -> Int {
     let _ = io.remove_dir("p_wave124_dir/sub");
     let _ = io.remove_dir("p_wave124_dir");
   } else {
-    // --- POSIX: documented Err until inotify/kqueue land ---
-    let wd = watch.watch_dir(".", false);
+    // --- POSIX: real inotify leg (wave 171; the documented-Err rows are
+    //     retired here per the remerge protocol) ---
+    let _ = io.remove_file("p_wave124_dir/a.txt");
+    let _ = io.remove_dir("p_wave124_dir");
+    match io.create_dir("p_wave124_dir") {
+      Ok(_) => {},
+      Err(_) => { return 3; },
+    };
+    let wd = watch.watch_dir("p_wave124_dir", false);
+    let h: Int;
     match wd {
-      Ok(_) => { return 2; },
+      Ok(v) => { h = v; },
+      Err(_) => { return 2; },
+    };
+    let w1 = io.write_file("p_wave124_dir/a.txt", "one");
+    match w1 {
+      Ok(_) => {},
+      Err(_) => { return 3; },
+    };
+    let ev1 = watch.watch_poll(h, 3000);
+    match ev1 {
+      Ok(v) => {
+        let n1 = v.len();
+        if n1 < 1 { return 4; }
+        var found = false;
+        var i = 0;
+        while i < n1 {
+          let e = v[i];
+          if (e.kind == 1 || e.kind == 2) && e.path.ends_with("a.txt") { found = true; }
+          i = i + 1;
+        }
+        if !found { return 4; }
+      },
+      Err(_) => { return 4; },
+    };
+    watch.watch_close(h);
+    let pc = watch.watch_poll(h, 0);
+    match pc {
+      Ok(_) => { return 5; },
       Err(_) => {},
     };
-    let pp = watch.watch_poll(1, 0);
+    let pp = watch.watch_poll(999999, 0);
     match pp {
-      Ok(_) => { return 2; },
+      Ok(_) => { return 5; },
       Err(_) => {},
     };
-    watch.watch_close(0);
+    let _ = io.remove_file("p_wave124_dir/a.txt");
+    let _ = io.remove_dir("p_wave124_dir");
   };
   return 0;
 }
