@@ -585,6 +585,11 @@ Reproduced while landing the regex coverage wave:
    (`result.value.pattern == pattern`) still trips RUN (smoke_regex
    compiles rc 0 but AVs 0xC0000005) -- both REVERTED to their guards and
    filed to the compiler (follow-up to -6; open item on the bus).
+   RE-ADDED 2026-10-16 (wave 165, block 218) on the official v0.64.6
+   archive (m345): both clauses hold -- regex suite 17/17 Windows +
+   Linux (smoke_regex OK + captures_len + syntax probe; v0.64.6 windows
+   zip A32BF7FA / linux tar 82A7417B). REL-20261015-2328-stdlib carries
+   the verification note.
 
 **RESOLVED 2026-10-15 (compiler v0.64.5, m286): cross-type generic callback
 returns are miscompiled.** A `[T, U]`-style generic whose callback changes

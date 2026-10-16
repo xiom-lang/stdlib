@@ -333,8 +333,8 @@ pub fn Regex.find_all(self, text: Str) -> Vec[Match]
 }
 
 /// Capture groups of the first match, or None.
-pub fn Regex.captures(self, text: Str) -> Option<Captures>
-  ensures: self.pattern.len() == 0 => result is Some
+pub fn Regex.captures(self, text: Str) -> Option[Captures]
+  ensures: result is Some => result.value.groups.len() == 1
 {
   let m = find_first_match(self.pattern, text);
   match m {

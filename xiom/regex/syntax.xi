@@ -98,7 +98,7 @@ pub fn regex_unescape(s: Str) -> Result[Str, Str]
 /// Complexity: O(len(pattern)).
 pub fn regex_parse(pattern: Str) -> Result[Ast, Str]
   ensures: result is Err => pattern.len() > 0
-  ensures: pattern.len() == 0 => result is Ok
+  ensures: result is Ok => result.value.pattern == pattern
 {
   let compiled = engine.regex_compile(pattern);
   match compiled {
