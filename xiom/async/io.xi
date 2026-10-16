@@ -23,8 +23,12 @@ extern "C" {
   fn xiom_read_file(path: *UInt8) -> *UInt8;
   fn xiom_file_size(path: *UInt8) -> Int;
   fn xiom_free(ptr: *UInt8);
-  fn xiom_socket_accept(sock: Int, client_ip: *UInt8, client_port: *Int) -> Int;
-  fn xiom_socket_connect(sock: Int, host: *UInt8, port: Int) -> Int;
+  // Int32 returns: C `int` on both platforms (POSIX xiom_socket_t is int;
+  // the Windows SOCKET handle fits in i32 and INVALID_SOCKET reads as -1).
+  // Declared-form bindings below; mirrors the net/socket.xi connect fix
+  // (wave 151; REL-20261015-2343 class).
+  fn xiom_socket_accept(sock: Int, client_ip: *UInt8, client_port: *Int) -> Int32;
+  fn xiom_socket_connect(sock: Int, host: *UInt8, port: Int) -> Int32;
 }
 
 /// Future - an opaque handle to a pending async operation.
@@ -151,7 +155,11 @@ pub fn async_accept(listener: Int) -> Future
 {
   var ip_buf: [64]UInt8;
   var port_val: Int = 0;
-  let client = unsafe { xiom_socket_accept(listener, &ip_buf as *UInt8, &port_val) };
+  let client32: Int32;
+  unsafe {
+    client32 = xiom_socket_accept(listener, &ip_buf as *UInt8, &port_val);
+  }
+  let client = client32 as Int;
   return future_ready(client);
 }
 
@@ -170,7 +178,11 @@ pub fn async_connect(fd: Int, addr: Str, port: Int) -> Future
     i = i + 1;
   }
   c_host[i] = 0 as UInt8;
-  let rc = unsafe { xiom_socket_connect(fd, &c_host as *UInt8, port) };
+  let rc32: Int32;
+  unsafe {
+    rc32 = xiom_socket_connect(fd, &c_host as *UInt8, port);
+  }
+  let rc = rc32 as Int;
   return future_ready(rc);
 }
 

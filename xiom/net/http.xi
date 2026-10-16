@@ -437,8 +437,11 @@ pub fn http_url_decode(s: Str) -> Result[Str, Str]
 extern "C" {
   fn xiom_socket_create(family: Int, typ: Int, proto: Int) -> Int;
   fn xiom_socket_connect(sock: Int, host: *UInt8, port: Int) -> Int32;
-  fn xiom_socket_send(sock: Int, buf: *UInt8, len: Int) -> Int;
-  fn xiom_socket_recv(sock: Int, buf: *UInt8, len: Int) -> Int;
+  // Int32 returns: the runtime returns C `int` (runtime xiom_socket_send /
+  // xiom_socket_recv); an Int-typed read turns a failed call (-1) into a
+  // huge positive count (wave 151; REL-20261015-2343 class).
+  fn xiom_socket_send(sock: Int, buf: *UInt8, len: Int) -> Int32;
+  fn xiom_socket_recv(sock: Int, buf: *UInt8, len: Int) -> Int32;
   fn xiom_socket_close(sock: Int) -> Int;
 }
 
@@ -585,7 +588,7 @@ pub fn http_request(method: Str, url: Str, headers: &Vec[(Str, Str)], body: &Vec
     hi = hi + 1;
   }
   c_host[hi] = 0 as UInt8;
-  let conn = unsafe { xiom_socket_connect(fd, &c_host as *UInt8, port) };
+  let conn: Int32 = unsafe { xiom_socket_connect(fd, &c_host as *UInt8, port) };
   if conn < 0 {
     unsafe { xiom_socket_close(fd); }
     return Err("connection failed");
@@ -601,7 +604,11 @@ pub fn http_request(method: Str, url: Str, headers: &Vec[(Str, Str)], body: &Vec
     send_buf[si] = req_str.byte_at(si);
     si = si + 1;
   }
-  let sent = unsafe { xiom_socket_send(fd, &send_buf as *UInt8, rlen) };
+  let sent32: Int32;
+  unsafe {
+    sent32 = xiom_socket_send(fd, &send_buf as *UInt8, rlen);
+  }
+  let sent = sent32 as Int;
   if sent < 0 {
     unsafe { xiom_socket_close(fd); }
     return Err("send failed");
@@ -610,7 +617,11 @@ pub fn http_request(method: Str, url: Str, headers: &Vec[(Str, Str)], body: &Vec
   var raw: Vec[UInt8] = Vec[UInt8]::with_capacity(8192);
   var done = false;
   while !done {
-    let n = unsafe { xiom_socket_recv(fd, &recv_buf as *UInt8, 8192) };
+    let nrecv32: Int32;
+    unsafe {
+      nrecv32 = xiom_socket_recv(fd, &recv_buf as *UInt8, 8192);
+    }
+    let n = nrecv32 as Int;
     if n <= 0 {
       done = true;
     } else {

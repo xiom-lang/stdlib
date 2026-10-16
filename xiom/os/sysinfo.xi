@@ -25,7 +25,7 @@ extern "C" {
 pub fn sysinfo_cpu_count() -> Int
   ensures: result >= 1
 {
-  let count = unsafe { xiom_cpu_count() };
+  let count: Int32 = unsafe { xiom_cpu_count() };
   if count < 1 {
     return 1;
   }

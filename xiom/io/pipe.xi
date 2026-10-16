@@ -15,8 +15,12 @@ module xiom.io.pipe
 
 extern "C" {
   fn xiom_pipe(fds: *Int32) -> Int32;
-  fn xiom_read(fd: Int32, buf: *UInt8, count: UInt) -> Int;
-  fn xiom_write(fd: Int32, buf: *UInt8, count: UInt) -> Int;
+  // Int32 returns: the runtime returns C `int` (xiom_runtime.c xiom_read /
+  // xiom_write). With an Int-typed extern an unannotated read took the full
+  // register and turned a failed syscall (-1) into a huge positive count,
+  // so failure looked like success (wave 151; REL-20261015-2343 class).
+  fn xiom_read(fd: Int32, buf: *UInt8, count: UInt) -> Int32;
+  fn xiom_write(fd: Int32, buf: *UInt8, count: UInt) -> Int32;
   fn xiom_close(fd: Int32) -> Int32;
   fn xiom_thread_sleep_ms(ms: Int);
 }
@@ -28,7 +32,10 @@ pub fn pipe_create() -> (Int, Int)
   ensures: result.0 == -1 => result.1 == -1
 {
   var fds: [2]Int32;
-  let rc = unsafe { xiom_pipe(&fds[0]) };
+  let rc: Int32;
+  unsafe {
+    rc = xiom_pipe(&fds[0]);
+  }
   if rc != 0 {
     return (-1, -1);
   }
@@ -44,7 +51,11 @@ pub fn pipe_read(fd: Int, buf: &mut Vec[UInt8]) -> Result[Int, Str]
   ensures: result is Err => result.value.len() > 0
 {
   var one: [256]UInt8;
-  let n = unsafe { xiom_read(fd as Int32, &one[0], 256 as UInt) };
+  let n32: Int32;
+  unsafe {
+    n32 = xiom_read(fd as Int32, &one[0], 256 as UInt);
+  }
+  let n = n32 as Int;
   if n < 0 {
     return Err("pipe read failed");
   }
@@ -68,7 +79,11 @@ pub fn pipe_write(fd: Int, data: &Vec[UInt8]) -> Result[Int, Str]
   var i: Int = 0;
   while i < data.len() {
     let b = data[i];
-    let n = unsafe { xiom_write(fd as Int32, &b, 1 as UInt) };
+    let n32: Int32;
+    unsafe {
+      n32 = xiom_write(fd as Int32, &b, 1 as UInt);
+    }
+    let n = n32 as Int;
     if n < 0 {
       return Err("pipe write failed");
     }
@@ -113,7 +128,11 @@ pub fn pipe_read_line(fd: Int) -> Result[Str, Str]
   var done = false;
   while !done {
     var one: [1]UInt8;
-    let n = unsafe { xiom_read(fd as Int32, &one[0], 1 as UInt) };
+    let n32: Int32;
+    unsafe {
+      n32 = xiom_read(fd as Int32, &one[0], 1 as UInt);
+    }
+    let n = n32 as Int;
     if n <= 0 {
       done = true;
     } else {
@@ -149,14 +168,21 @@ pub fn pipe_write_line(fd: Int, s: Str) -> Result[Unit, Str]
   var i: Int = 0;
   while i < slen {
     let b = _raw_byte(sbase, i);
-    let n = unsafe { xiom_write(fd as Int32, &b, 1 as UInt) };
+    let n32: Int32;
+    unsafe {
+      n32 = xiom_write(fd as Int32, &b, 1 as UInt);
+    }
+    let n = n32 as Int;
     if n != 1 {
       return Err("pipe write line failed");
     }
     i = i + 1;
   }
   let nl: UInt8 = 10;
-  let n2 = unsafe { xiom_write(fd as Int32, &nl, 1 as UInt) };
+  let n2: Int32;
+  unsafe {
+    n2 = xiom_write(fd as Int32, &nl, 1 as UInt);
+  }
   if n2 != 1 {
     return Err("pipe write line failed");
   }
@@ -182,7 +208,11 @@ pub fn pipe_read_timeout(fd: Int, ms: Int) -> Result[Int, Str]
   ensures: result is Err => result.value.len() > 0
 {
   var one: [1]UInt8;
-  let n = unsafe { xiom_read(fd as Int32, &one[0], 1 as UInt) };
+  let n32: Int32;
+  unsafe {
+    n32 = xiom_read(fd as Int32, &one[0], 1 as UInt);
+  }
+  let n = n32 as Int;
   if n < 0 {
     return Err("pipe read timeout failed");
   }
@@ -205,7 +235,14 @@ pub fn pipe_write_timeout(fd: Int, data: &Vec[UInt8], ms: Int) -> Result[Int, St
   var i: Int = 0;
   while i < data.len() {
     let b = data[i];
-    let n = unsafe { xiom_write(fd as Int32, &b, 1 as UInt) };
+    let n32: Int32;
+    unsafe {
+      n32 = xiom_write(fd as Int32, &b, 1 as UInt);
+    }
+    let n = n32 as Int;
+    if n < 0 {
+      return Err("pipe write timeout failed");
+    }
     if n > 0 {
       total = total + n;
     } else {

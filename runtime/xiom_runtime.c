@@ -4376,22 +4376,22 @@ int xiom_cpu_count(void) {
     return (int)si.dwNumberOfProcessors;
 }
 
-long xiom_getpid(void) {
-    return (long)GetCurrentProcessId();
+long long xiom_getpid(void) {
+    return (long long)GetCurrentProcessId();
 }
 
-long xiom_total_memory(void) {
+long long xiom_total_memory(void) {
     MEMORYSTATUSEX ms;
     ms.dwLength = sizeof(ms);
     if (!GlobalMemoryStatusEx(&ms)) return -1;
-    return (long)ms.ullTotalPhys;
+    return (long long)ms.ullTotalPhys;
 }
 
-long xiom_free_memory(void) {
+long long xiom_free_memory(void) {
     MEMORYSTATUSEX ms;
     ms.dwLength = sizeof(ms);
     if (!GlobalMemoryStatusEx(&ms)) return -1;
-    return (long)ms.ullAvailPhys;
+    return (long long)ms.ullAvailPhys;
 }
 
 #else
@@ -4401,22 +4401,22 @@ int xiom_cpu_count(void) {
     return (n < 0) ? 1 : (int)n;
 }
 
-long xiom_getpid(void) {
+long long xiom_getpid(void) {
 #ifdef _WIN32
-    return (long)GetCurrentProcessId();
+    return (long long)GetCurrentProcessId();
 #else
-    return (long)getpid();
+    return (long long)getpid();
 #endif
 }
 
-long xiom_total_memory(void) {
+long long xiom_total_memory(void) {
     long pages = sysconf(_SC_PHYS_PAGES);
     long page_size = sysconf(_SC_PAGE_SIZE);
     if (pages < 0 || page_size < 0) return -1;
-    return pages * page_size;
+    return (long long)pages * page_size;
 }
 
-long xiom_free_memory(void) {
+long long xiom_free_memory(void) {
 #if defined(__APPLE__)
     /* macOS has no _SC_AVPHYS_PAGES; the mach host_statistics64 free-page
        count is the faithful equivalent of Linux's MemFree (the 48850df
@@ -4430,12 +4430,12 @@ long xiom_free_memory(void) {
     if (kr != KERN_SUCCESS) return -1;
     kr = host_page_size(host, &page);
     if (kr != KERN_SUCCESS || page == 0) return -1;
-    return (long)((uint64_t)vm.free_count * (uint64_t)page);
+    return (long long)((uint64_t)vm.free_count * (uint64_t)page);
 #else
     long pages = sysconf(_SC_AVPHYS_PAGES);
     long page_size = sysconf(_SC_PAGE_SIZE);
     if (pages < 0 || page_size < 0) return -1;
-    return pages * page_size;
+    return (long long)pages * page_size;
 #endif
 }
 

@@ -357,7 +357,7 @@ pub fn secp256k1_point_valid_bytes(px: &Vec[UInt8], py: &Vec[UInt8]) -> Bool
   requires: px.len() >= 32
   requires: py.len() >= 32
 {
-  let result = unsafe { xiom_secp256k1_point_valid(px.data, py.data) };
+  let result: Int32 = unsafe { xiom_secp256k1_point_valid(px.data, py.data) };
   return result != 0;
 }
 
