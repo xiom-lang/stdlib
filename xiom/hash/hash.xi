@@ -662,3 +662,63 @@ pub fn fnv1_32(s: Str) -> Int
   return h;
 }
 
+// -- FNV-1a over Str (wishlist row 34) ----------------------------------------
+
+/// FNV-1a 32-bit hash over the raw UTF-8 bytes of `s` (byte-exact with
+/// `fnv1a32` applied to the same bytes; `s.len()` is the byte length).
+/// XOR first, then multiply. Empty input yields the offset basis 0x811C9DC5.
+/// Complexity: O(n).
+pub fn fnv1a_str(s: Str) -> Int
+  ensures: (s.len() == 0) => (result == 0x811C9DC5)
+{
+  var h: Int = 0x811C9DC5;
+  var i: Int = 0;
+  let len = s.len();
+  let base = s.c_str();
+  while i < len {
+    h = h ^ ((_raw_byte(base, i) as Int) & 0xFF);
+    h = (h * 0x01000193) & 0xFFFFFFFF;
+    i = i + 1;
+  }
+  return h;
+}
+
+/// FNV-1a 64-bit hash over the raw UTF-8 bytes of `s` (byte-exact with
+/// `fnv1a64` applied to the same bytes). Empty input yields the offset basis
+/// 0xCBF29CE484222325. The full 64-bit result is returned as an Int (the
+/// bit pattern; values with the top bit set read back negative).
+/// Complexity: O(n).
+pub fn fnv1a64_str(s: Str) -> Int
+  ensures: (s.len() == 0) => (result == 0xCBF29CE484222325)
+{
+  var h: Int = 0xCBF29CE484222325;
+  var i: Int = 0;
+  let len = s.len();
+  let base = s.c_str();
+  while i < len {
+    h = h ^ ((_raw_byte(base, i) as Int) & 0xFF);
+    h = h * 0x00000100000001B3;
+    i = i + 1;
+  }
+  return h;
+}
+
+/// Masked/truncated FNV combine (wishlist row 34): fold `other` into `seed`
+/// with the Boost-style mix used by `combine_hashes`, then truncate the mix
+/// to its low `bits` bits (the classic "mask FNV for a smaller table" step).
+/// bits <= 0 yields 0; bits >= 64 yields the unmasked mix (equal to
+/// `combine_hashes(seed, other)`). Order-dependent. Complexity: O(1).
+pub fn fnv1a_combine_masked(seed: Int, other: Int, bits: Int) -> Int
+  ensures: (bits <= 0) => (result == 0)
+{
+  var mixed = seed ^ (other + 0x9e3779b9 + (seed << 6) + (seed >> 2));
+  if bits <= 0 {
+    return 0;
+  };
+  if bits >= 64 {
+    return mixed;
+  };
+  var mask = (1 << bits) - 1;
+  return mixed & mask;
+}
+
