@@ -11,11 +11,13 @@ module xiom.os.fs_ffi
 // mmap, dup, positional and vectored I/O, sendfile/splice, fsync family,
 // memory advice and FIFOs. Wave 120 makes the mmap family real (mmap /
 // munmap / msync / madvise / mlock / munlock; REL-20261012-1945-xvector-2)
-// by delegating to xiom.os.mmap; chmod delegates to xiom.io
-// (set_permissions); the remaining operations (symlinks, dup, pread/pwrite,
-// readv/writev, sendfile/splice, mkfifo, fallocate) still need raw syscalls
-// the pure stdlib does not expose -- they are documented stubs returning
-// Err (or documented defaults) as of wave 120.
+// by delegating to xiom.os.mmap; wave 159 makes writev and sendfile real
+// through runtime shims (REL-20261015-2202-pulse item 6: POSIX writev(2) /
+// sendfile(2); Windows WSASend + sequential _write fallback / TransmitFile);
+// chmod delegates to xiom.io (set_permissions); the remaining operations
+// (symlinks, dup, pread/pwrite, readv, splice, mkfifo, fallocate) still need
+// raw syscalls the pure stdlib does not expose -- they are documented stubs
+// returning Err (or documented defaults) as of wave 159.
 // ============================================================================
 
 use xiom.io;
@@ -242,24 +244,102 @@ pub fn readv(fd: Int, buffers: &Vec[Vec[UInt8]]) -> Result[Int, Str] {
   Err("readv: readv syscall not available in the pure stdlib")
 }
 
-/// Vectored write.
-/// NOT IMPLEMENTED: requires the writev syscall.
-/// Returns: Err("writev: writev syscall not available in the pure stdlib").
-pub fn writev(fd: Int, buffers: &Vec[Vec[UInt8]]) -> Result[Int, Str] {
-  let _ = fd;
-  let _ = buffers;
-  Err("writev: writev syscall not available in the pure stdlib")
+/// Vectored write (scatter write): writes every segment of `buffers` to fd
+/// in one call, in order.
+/// Real implementation (wave 159; REL-20261015-2202-pulse item 6): POSIX
+/// writev(2); on Windows a WSASend when the fd is a socket, otherwise a
+/// sequential _write fallback (short writes loop; the full total or Err).
+/// An empty `buffers` or all-empty segments is Ok(0); more than 1024
+/// segments is Err. The returned count is the syscall's count -- a short
+/// count (pipe/socket backpressure) is reported as-is, not as an error.
+/// Returns: Ok(bytes written) on success; Err on an invalid fd or failure.
+/// Complexity: O(total bytes). Pure (OS call).
+pub fn writev(fd: Int, buffers: &Vec[Vec[UInt8]]) -> Result[Int, Str]
+  ensures: result is Ok => fd >= 0
+{
+  if fd < 0 {
+    return Err("writev: invalid fd");
+  }
+  let nseg = buffers.len();
+  if nseg == 0 {
+    return Ok(0);
+  }
+  if nseg > 1024 {
+    return Err("writev: too many segments (max 1024)");
+  }
+  var layout: Vec[Int] = Vec[Int].new();
+  var i = 0;
+  var nlive = 0;
+  while i < nseg {
+    let seglen = buffers[i].len();
+    if seglen > 0 {
+      let addr: Int;
+      unsafe {
+        addr = (&buffers[i][0] as *UInt8) as Int;
+      }
+      layout.push(addr);
+      layout.push(seglen);
+      nlive = nlive + 1;
+    }
+    i = i + 1;
+  }
+  if nlive == 0 {
+    return Ok(0);
+  }
+  let rc: Int;
+  unsafe {
+    rc = xiom_fd_writev(fd, &layout[0] as *Int, nlive);
+  }
+  if rc < 0 {
+    return Err("writev: write failed");
+  }
+  Ok(rc)
 }
 
-/// Copy between fds in-kernel.
-/// NOT IMPLEMENTED: requires the sendfile syscall.
-/// Returns: Err("sendfile: sendfile syscall not available in the pure stdlib").
-pub fn sendfile(out_fd: Int, in_fd: Int, offset: Int, count: Int) -> Result[Int, Str] {
-  let _ = out_fd;
-  let _ = in_fd;
-  let _ = offset;
-  let _ = count;
-  Err("sendfile: sendfile syscall not available in the pure stdlib")
+/// Copy a file region to an out fd without user-space copying.
+/// Real implementation (wave 159; REL-20261015-2202-pulse item 6): Linux
+/// sendfile(2); Windows TransmitFile (the out fd must be a socket; the in
+/// fd is a CRT file fd, mapped with _get_osfhandle). Offset semantics:
+/// offset >= 0 reads from that file offset; offset == -1 uses the current
+/// position. POSIX leaves the position unchanged for an explicit offset
+/// and advances it for -1; Windows keeps one shared file pointer, so the
+/// position ends past the sent range in both cases -- callers that need
+/// repeatable sends should pass an explicit offset. count == 0 is Ok(0).
+/// A short Ok count means EOF was reached before `count` bytes (POSIX);
+/// on Windows the count is clamped to the remaining file size first, so a
+/// successful Windows call always sends the full min(count, remaining).
+/// Returns: Ok(bytes sent); Err on invalid arguments, platform gaps (no
+/// portable sendfile outside Linux/Windows) or a failed transfer.
+/// Complexity: O(count) kernel-side. Pure (OS call).
+pub fn sendfile(out_fd: Int, in_fd: Int, offset: Int, count: Int) -> Result[Int, Str]
+  ensures: result is Ok => (out_fd >= 0 && in_fd >= 0 && count >= 0 && offset >= -1)
+{
+  if out_fd < 0 || in_fd < 0 {
+    return Err("sendfile: invalid fd");
+  }
+  if count < 0 {
+    return Err("sendfile: negative count");
+  }
+  if offset < -1 {
+    return Err("sendfile: bad offset (-1 = current position)");
+  }
+  if count == 0 {
+    return Ok(0);
+  }
+  let rc: Int;
+  unsafe {
+    rc = xiom_fd_sendfile(out_fd, in_fd, offset, count);
+  }
+  if rc == -2 {
+    return Err("sendfile: not supported on this platform (Linux sendfile / Windows TransmitFile only)");
+  }
+  if rc == -3 {
+    return Err("sendfile: on Windows the out fd must be a socket (TransmitFile requirement)");
+  }
+  if rc < 0 {
+    return Err("sendfile: transfer failed");
+  }
+  Ok(rc)
 }
 
 /// Move data between fds without copying.
@@ -275,6 +355,12 @@ pub fn splice(in_fd: Int, out_fd: Int, count: Int) -> Result[Int, Str] {
 extern "C" {
   fn xiom_fsync_fd(fd: Int) -> Int32;
   fn xiom_fdatasync_fd(fd: Int) -> Int32;
+  // Wave 159 (2202 item 6): long-long returns and 64-bit Int arguments
+  // (Windows C long is 32-bit; the runtime contract is long long -- cf.
+  // xiom_poll's ABI note). writev takes a (address, length) pair array,
+  // 2 entries per segment, as an Int vector.
+  fn xiom_fd_writev(fd: Int, pairs: *Int, iovcnt: Int) -> Int;
+  fn xiom_fd_sendfile(out_fd: Int, in_fd: Int, offset: Int, count: Int) -> Int;
 }
 
 /// Flush file data and metadata to stable storage.
