@@ -12,6 +12,7 @@ the official v0.64.5 pin.
 | Argon2id | `crypto.argon2`, `kdf.argon2id` | `smoke_stress_crypto_argon2_basic`; `p_wave156` determinism | memory-hard; station-auth default candidate |
 | SHA-2 family / HMAC | `crypto.sha256/sha512`, `crypto.hmac_sha256` | `kat_crypto_sha_multiblock`, `kat_crypto_hmac_rfc4231`, SHA KATs; 64-bit rotate helpers re-locked by `p_wave161` | the KDFs above are built on these |
 | BLAKE2b-512 | `crypto.hash.crypto_hash_blake2b` | `p_wave161` RFC 7693 KAT (`"abc"`); wave 161 fixed a big-endian tail-block load (previously every tail-carrying digest was wrong, no KAT existed) | unkeyed; not a KDF |
+| BLAKE3 | `crypto.blake3` | `smoke_stress_crypto_blake3_basic` (empty / `"abc"` / 1024 / 1025-byte pattern KATs, wave 163 -- cross-checked against the reference `blake3` implementation; the smoke checked only length before) | unkeyed; not a KDF |
 | MD5 (legacy) | `crypto.md5` | wave-140 RFC-correctness fix (`REL-20261015-1942`) | do NOT use for auth; interop only |
 | Monotonic clock | `time.monotonic_ms`, `time.Instant` | `p_wave156` (non-decreasing; `elapsed() >= 0`), `smoke_time_instant` | QueryPerformanceCounter / CLOCK_MONOTONIC; immune to wall-clock jumps |
 

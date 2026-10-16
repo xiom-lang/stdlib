@@ -3598,6 +3598,17 @@ registry pin, agent recon for the rest)**
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
 
+**SESSION 2026-10-16 block 213 (wave 163 hardening: BLAKE3 KAT rows -- empty/abc/1024/1025 pattern vectors cross-checked against the reference blake3 impl; the length-only smoke now carries real vectors; audit row)**
+- After the wave-161 BLAKE2b discovery, the sibling digest got the same
+  treatment: BLAKE3 verified correct on all four vectors (including the
+  1024/1025 tree paths); the smoke previously checked only the output
+  length. No code fix needed -- the lock is real KATs now (provenance in
+  the smoke header: BLAKE3 team vectors + reference-impl cross-check).
+- Evidence: smoke_stress_crypto_blake3_basic PASS + _large PASS (15.8s,
+  official pin).
+- Still in flight: waves 157/158/160 (busy); doorbell 19:00Z integrates.
+- Tree: this commit.
+
 **SESSION 2026-10-16 block 212 (wave 159 MERGED -- zero-copy send real: writev + sendfile/TransmitFile + TcpStream.send_file; p_wave159 (11 rows) PASS Windows + WSL; merge-lane re-verify os 9/9 net 11/11)**
 - Branch wave/159-zerocopy (752dec8) merged 61ec887: runtime/xiom_runtime.c
   gains xiom_fd_writev (POSIX writev(2) / Windows WSASend when the fd is a
