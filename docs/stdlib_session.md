@@ -3643,6 +3643,35 @@ registry pin, agent recon for the rest)**
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
 
+**SESSION 2026-10-16 block 220 (v0.64.6 re-pin round part 1 -- 1445 re-verify DONE (spincheck v=7 ~100ms both official archives; probe locked); 2100 v0.64.6 matrix (W2/W3/W4 FIXED, W4 silent abort gone; W1 narrowed to non-bare field spellings); red rows 1609/1456/1626 unchanged on v0.64.6; floors180 must ride the settle)**
+- 1445 (alloc-guard-spin, compiler->stdlib fixed): acceptance spincheck
+  (ffi.alloc(8) + ptr_write_u64_le/ptr_read_u64_le + ffi.free in ONE
+  confined block, --force --no-cache) prints v=7 and exits rc 0 in
+  ~100 ms on BOTH official archives (v0.64.5 96 ms; v0.64.6 110 ms);
+  promoted as tools/probes/p_ffi_guard_free_spin.xi (runner PASS; probe
+  corpus 342). No stdlib-side workaround remains (ffi.free routes through
+  the arena-aware xiom_guard_free since wave 124); consumer lanes can
+  drop their guards. Bus note posted; compiler closes.
+- 2100 v0.64.6 matrix: W2/W3 (signature positions) now compile with ZERO
+  warnings; W4 (param + Result-return) no longer aborts -- compiles rc 0
+  and runs rc 0 (was silent rc -1 with no diagnostics on v0.64.5, 2/2).
+  W1 (field position) silent i64 default GONE but a method call on the
+  field still fails C001 ('close' unresolved) for both 'net.TcpStream'
+  and full-path 'xiom.net.TcpStream' spellings; bare 'TcpStream' control
+  compiles + runs rc 0. Bus history + severity high->medium posted;
+  witnesses kept in out/.
+- Red rows on v0.64.6: 1609 (run rc 1), 1456 (compile rc 1), 1626
+  (compile rc 1) -- unchanged; none claimed by m334-m346.
+- Floors180 note (peer block 218): wave 168's zip.xi moved compress
+  68 -> 66.7 vs floors179 -- the next dump rides the fleet settle with
+  zip.xi clauses (or a justified dump); do NOT wire a stale 180.
+- SWEEP still in flight: 165 math (busy), 166 string (+4 commits, busy),
+  167 collect (+2, busy), 169 xml/json (busy), 170 graph/test (+4,
+  busy), 171 posix-watch (+7 commits, busy); wave 168 merged (block
+  219). Next doorbell (23:00Z) merges the remaining six + runs the full
+  v0.64.6 acceptance battery + floors180 + post notes.
+- Tree: this commit.
+
 **SESSION 2026-10-16 block 218 (v0.64.6 RELEASED -- official archives hash-verified; the 2328 residual clauses RE-ADDED and GREEN on v0.64.6 (m345) Windows + Linux; floors deferred to the fleet's post-168 settle)**
 - The release announcement REL-20261016-2034-compiler (20:33Z) arrived
   with the assets. Staged: windows zip A32BF7FA == release digest,
