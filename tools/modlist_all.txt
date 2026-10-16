@@ -85,7 +85,9 @@ xiom.collect.workqueue
 xiom.collections
 xiom.complex
 xiom.compress
+xiom.compress.accept_encoding
 xiom.compress.brotli
+xiom.compress.crc32
 xiom.compress.deflate
 xiom.compress.gzip
 xiom.compress.huffman

@@ -9,10 +9,13 @@ module xiom.compress.brotli
 use xiom.compress.deflate;
 
 // ============================================================================
-// Brotli compression with quality and window controls. PARTIAL implementation
-// (honest TODO(compiler)): the full RFC 7932 bit-stream -- meta-blocks,
-// context modeling, static dictionary, distance-cache coding -- is NOT
-// implemented. This module provides the LZ77 + Huffman framing:
+// NOT RFC 7932. This module is an honest custom frame -- the full RFC 7932
+// bit-stream (meta-blocks, context modeling, static dictionary, distance-
+// cache coding) is NOT implemented and will NOT be reimplemented here.
+// `Content-Encoding: br` CANNOT be produced by this module; it only
+// round-trips within XIOM. For real brotli use the registry package
+// `xiom.brotli` 0.1.0 (vendored google/brotli 1.2.0, encoder + decoder,
+// landed with the bindings lane / eco-v0.1.189). The frame shape:
 //
 //   [0..3]   magic CE B2 CF 81
 //   [4]      quality (0..11)
@@ -32,15 +35,27 @@ extern "C" {
   fn fwrite(buf: *UInt8, size: UInt, count: UInt, stream: *UInt8) -> UInt;
 }
 
-/// Compress at the default quality (11) and window exponent (20).
+/// Always false: this module does NOT implement RFC 7932 brotli (it uses a
+/// custom frame; see the module header). Real brotli: registry package
+/// `xiom.brotli` 0.1.0. O(1).
+pub fn brotli_is_rfc7932() -> Bool
+  ensures: result == false
+{
+  return false;
+}
+
+/// Compress at the default quality (11) and window exponent (20) into the
+/// custom NOT-RFC-7932 frame (see the module header; use the registry
+/// package `xiom.brotli` for real brotli). O(n * window).
 pub fn brotli_compress(data: &Vec[UInt8]) -> Vec[UInt8]
   ensures: result.len() >= 12
 {
   return brotli_compress_quality(data, 11);
 }
 
-/// Compress with an explicit quality (0-11, clamped). The quality is recorded
-/// in the header and does not change the payload shape.
+/// Compress with an explicit quality (0-11, clamped) into the custom
+/// NOT-RFC-7932 frame. The quality is recorded in the header and does not
+/// change the payload shape. Real brotli: registry package `xiom.brotli`.
 pub fn brotli_compress_quality(data: &Vec[UInt8], quality: Int) -> Vec[UInt8]
   ensures: result.len() >= 12
 {
@@ -54,8 +69,9 @@ pub fn brotli_compress_quality(data: &Vec[UInt8], quality: Int) -> Vec[UInt8]
   return _brotli_frame(data, q, 20);
 }
 
-/// Compress with an explicit window size in bytes. The base-2 logarithm is
-/// stored in the header, clamped to 10..24 (window 1KiB..16MiB).
+/// Compress with an explicit window size in bytes into the custom
+/// NOT-RFC-7932 frame. The base-2 logarithm is stored in the header, clamped
+/// to 10..24 (window 1KiB..16MiB). Real brotli: registry package `xiom.brotli`.
 pub fn brotli_compress_window(data: &Vec[UInt8], window: Int) -> Vec[UInt8]
   ensures: result.len() >= 12
 {
@@ -93,9 +109,10 @@ fn _brotli_frame(data: &Vec[UInt8], quality: Int, window_exp: Int) -> Vec[UInt8]
   return result;
 }
 
-/// Decompress a brotli_compress frame. Validates magic and the length
-/// trailer, then decompresses the payload. Returns Err on malformed input or
-/// a size mismatch.
+/// Decompress a custom NOT-RFC-7932 frame (see the module header; this does
+/// NOT read real brotli streams -- use the registry package `xiom.brotli`).
+/// Validates magic and the length trailer, then decompresses the payload.
+/// Returns Err on malformed input or a size mismatch.
 pub fn brotli_decompress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str]
   ensures: (data.len() < 10) => (result.is_err)
 {
@@ -130,8 +147,9 @@ pub fn brotli_decompress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str]
 }
 
 /// Stream-decompress between two file descriptors: reads all bytes from
-/// `reader`, decompresses them, writes the result to `writer`, and returns
-/// the number of bytes written. Errors surface as Err.
+/// `reader`, decompresses them (custom NOT-RFC-7932 frame; real brotli:
+/// registry package `xiom.brotli`), writes the result to `writer`, and
+/// returns the number of bytes written. Errors surface as Err.
 pub fn brotli_decompress_stream(reader: Int, writer: Int) -> Result[Int, Str] {
   var input = Vec[UInt8].new();
   var done = false;
