@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 37 (updated 2026-10-16 15:50Z at head b81430b; **stdlib-v0.64.6 TAGGED** at b81430b -- e72288f + waves 141-154; the parallel Agent Manager wave batch merged; batteries green on the official v0.64.5 pin; relay live)
+## 0A. CONTINUE HERE -- handoff snapshot 37 (updated 2026-10-16 17:55Z at head b6f90c9; waves 141-156 landed incl. the parallel batch + station audit; pin stdlib-v0.64.6 = b81430b; NEXT LEADS: TLS wave-B against the bindings' xiom.ssl (publish-ready), compression, zero-copy, popen spawn; relay live)
 
 ### Snapshot 37 (paste-ready)
 
@@ -26,7 +26,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 ---
 
 You are continuing the XIOM stdlib lane. Worktree `E:\xiom-lang\stdlib`,
-branch `main`. Read `docs/stdlib_session.md` blocks 205, 204, 203, 202, 201, 200, 199, 198, 197, 196, 195, 194, 193, 192, 191, 190, 189c, 189b, 189, 188, 187, 186, 185b, 185,
+branch `main`. Read `docs/stdlib_session.md` blocks 209, 208, 207, 206, 205, 204, 203, 202, 201, 200, 199, 198, 197, 196, 195, 194, 193, 192, 191, 190, 189c, 189b, 189, 188, 187, 186, 185b, 185,
 184b, 184, 183, 182, 181, 180, 179, 178, 177, 176, 175b, 175, 174, 173b,
 173, 172, 171b, 171, 170d, 170c, 170b, 170, 169, 168, 167, 166b, 166,
 165b, 165 (older as needed); snapshot 36 below is the previous handoff and
@@ -52,8 +52,9 @@ only on a hash-verified official extraction. Linux legs: WSL Ubuntu with
 `~/.local/bin/xiom` (v0.64.5) through the consumer path (block 202
 verified p_wave143 + p_wave148 there). The 1549 cluster (parent + -2..-7)
 and 1615 were verified + closed on the official archive (blocks 189 +
-191 corrections). Lane head: ca6aaca (block 201) + the block-202
-refresh; tree clean except the untracked out/ dir and the debug lane's
+191 corrections). PIN: stdlib-v0.64.6 = b81430b (waves 141-154 +
+e72288f; block 205). Lane head: b6f90c9 + the wave-155 actor commit
+(46caa94); tree clean except the untracked out/ dir and the debug lane's
 six untracked smoke_diag_f128_l*.xi files.
 
 Waves 114-139 landed; 138 = the encoding submodules (base64/base32/hex/
@@ -122,8 +123,12 @@ brotli (RFC 7932), zstd + Accept-Encoding negotiation.
 (8) popen-class non-blocking spawn (2202 item 3; supervisor/reload
 shape).
 (9) TLS wave-A DONE (block 205, wave 154): ALPN codec + dl_open loader
-scaffold (probe p_wave154); wave B (session plumbing) rides the
-packages/bindings TLS binding; the ceiling-setter per 2202 item 1.
+scaffold (probe p_wave154); the ceiling-setter per 2202 item 1. WAVE-B
+TARGET NOW KNOWN: the bindings' xiom.ssl 0.1.0 is publish-ready (live
+23/23 + SKIP 4/4 per their publish request) -- the loader's 8-symbol
+contract is the seam; wave-B = session plumbing against xiom.ssl + the
+server half (cert/key loading, ALPN selection, error taxonomy) for
+1128 ask 2.
 (10) DONE (block 200): runtime-backed f32_bits/bits_to_f32 pair +
 probe p_wave147; floors177. A compiler-side Float32 bitcast lowering
 can replace the shim later without an API change.
@@ -133,9 +138,10 @@ POSIX-watch ask folds here.
 (12) DONE (block 205, wave 152): advisory file-lock wave
 (file_lock_try/file_lock/release; LockFileEx + fcntl shims; probe
 p_wave152 green Windows + WSL); shared by orbitdb-1128 + xvector-1129.
-(13) station primitives (1128-orbitdb): CSPRNG+KDF surface (rng_crypto
-exists; add the asked KDF) + a monotonic-clock station API; TCP session
-ergonomics ride the net family (1128's TLS/ALPN server side = wave 9).
+(13) DONE (block 208, wave 156): station surfaces locked -- p_wave156
+(HKDF TC1, PBKDF2 KAT, argon2, CSPRNG, monotonic clock, session
+ergonomics) + docs/CRYPTO_AND_CLOCK_AUDIT.md; 1128 asks 1/3/4/5 covered,
+ask 2 (TLS server) rides wave 9-B.
 PERVASIVE: the ranked sweep (convert/validate+json; serialize toml/csv/
 json string-val; net http/ws/dns; format fmt/numbering; text similarity/
 diff; misc/regex/search/collect; num parse/itoa; log; crypto rng/curves;
@@ -149,12 +155,12 @@ p_trailing_match_after_push) at each pin; wave 140 wiring landed
 (36bcaac; floors173).
 
 GATES (WAVE PIN = official v0.64.5; pinned rev b81430b = stdlib-v0.64.6):
-modules 510/510, probes 326/326, barename 0/510, floors178 (Global 70.8),
+modules 510/510, probes 328/328, barename 0/510, floors178 (Global 70.8),
 doc + module-smoke (499/519, 3501/6251) OK; the tracked corpus is 956
 files (the six witness ladder smokes stay witness-only, untracked; with
-them the local runs show 962, all passing). PIN: stdlib-v0.64.6 tagged at
-b81430b (2026-10-16; e72288f cherry-pick + waves 151-154; bus 1452
-replied; STDLIB_VERSION left to the compiler).
+them the local runs show 962, all passing -- the full 962/962 confirmation
+is on 1452). PIN: stdlib-v0.64.6 tagged at b81430b; further waves land
+post-tag without moving it.
 
 FINDINGS: 15 Current, all compiler (tools/known_failures/README.md); the
 two p_v065 regression locks are closed on the fixed candidate and stay in
@@ -3591,6 +3597,38 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-16 block 209 (session refresh for handoff -- the remaining wishlist/relay inventory; next leads: TLS wave-B against xiom.ssl (publish-ready), compression, zero-copy, popen spawn; this block is the deliberate handoff point)**
+- REMAINING FROM THE BUS (to stdlib, non-closed):
+  * Ours, executable: 2202-pulse items 3-9 (popen spawn, threads-beyond,
+    compression, zero-copy, phase-2 shelf: SSE / inotify / h2 / epoll);
+    1128 ask 2 (TLS/ALPN server side = wave 9-B); 1129 leftovers (POSIX
+    watch = phase-2 shelf; TLS requester = 9-B).
+  * Ours, blocked: 1834-engine-6 persistent pool fleet + Send/Sync
+    (compiler primitives; filed as REL-20261016-1550-stdlib);
+    1549-pulse-5 (compiler row 1609-stdlib still red).
+  * Monitors: 1630/1658-compiler (compiler-owned); the 2309-packages
+    mixed-tuple class (compiler; no battery row until fixed); the three
+    still-red compiler rows (1609/1456/1626).
+  * Reporter-side closes (not our move): fixed rows awaiting reporters'
+    verify (bindings-8, pulse-6, xvector-8, benchmark-2/3, engine-3,
+    1427, 1404, 1452, ...); the 1550-packages family is verified
+    (packages closing).
+  * Info to-all rows: no action (1134, 1731 + -2, 1945, 1946-pulse-3,
+    2012-engine, 2202-pulse-5, 1304, 1429, 1446).
+- WISHLIST DOCS: docs/STDLIB-WISHLIST.md is the intake ARCHIVE per its
+  own header -- 44 open rows = the long-tail catalogue feeding the ranked
+  sweep; its compress rows 22-23 (zip; deflate dynamic-Huffman reads +
+  public tables) overlap wave 6. The active relayed wishlists are the
+  acked bus items above.
+- NEXT WAVES (order): (a) wave 9-B TLS session plumbing against the
+  bindings' xiom.ssl 0.1.0 (publish-ready per their request; the loader's
+  8-symbol contract is the seam; unlocks 2202-1 / 1128-2 / 1129);
+  (b) wave 6 compression (dynamic-Huffman gzip encoder + honest
+  brotli/zstd path); (c) wave 7 zero-copy send; (d) wave 8 popen-class
+  spawn; (e) the ranked sweep in spare cycles; the pool fleet when the
+  compiler lands the worker-loop primitives.
+- Tree: this commit; out/ + the six untracked ladder smokes as before.
 
 **SESSION 2026-10-16 block 208 (wave 156: Station asks 3-5 locked -- p_wave156 (HKDF TC1 + PBKDF2 KAT + argon2 determinism + CSPRNG + monotonic clock + session ergonomics) + docs/CRYPTO_AND_CLOCK_AUDIT.md; floors unchanged)**
 - Probe p_wave156_shapes.xi green 3/3 on the official pin; the PBKDF2
