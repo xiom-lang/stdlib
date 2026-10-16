@@ -3598,6 +3598,33 @@ registry pin, agent recon for the rest)**
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
 
+**SESSION 2026-10-16 block 210 (wave 161: fix-first defect batch -- _u64_lshr n=63 + pub u64_lshr/u64_rotr, sb_push_int INT64_MIN, parse_int INT64_MIN; DISCOVERED: BLAKE2b tail-load BE, bits.rotation sign-bit rotates; probe p_wave161 (15 rows); slices + ratchet green; wave batch 157-160 IN FLIGHT in Agent Manager worktrees)**
+- Wave 161 landed on main (591bf40): the packages wishlist fix-first rows
+  fixed with a red-before/green-after lock -- recon scratch rc=123 (rows
+  1+2+8+16+32+64) pre-fix on the official pin; probe p_wave161 green 1/1
+  (8.6s post). New pub `crypto.hash.u64_lshr`/`u64_rotr` (clause-carrying;
+  consumers were copying the helper).
+- Discovered + fixed (both silent, untested): `crypto_hash_blake2b` loaded
+  the LAST block big-endian while full blocks were little-endian -- every
+  tail-carrying digest wrong (now RFC 7693 "abc" exact; audit row added);
+  `bits.rotation.rotate_left/rotate_right/rotate_right_carry` used raw `>>`
+  (arithmetic for Int) -- negative operands rotated in sign bits
+  (rotate_right(MIN,1) read 0xC000..., rotate_left(MIN,1) read -1).
+- Slices rc 0 (official pin): smoke_crypto / kat_crypto /
+  smoke_stress_crypto / smoke_bits / smoke_num_rotate_bits /
+  smoke_string_builder / smoke_string_parse / smoke_num_parse_radix /
+  smoke_hash_edge / smoke_stress_hash; coverage ratchet floors178 OK
+  (Global 70.8; the two new pubs carry clauses).
+- Docs: wishlist status block + CRYPTO_AND_CLOCK_AUDIT BLAKE2b row.
+  Sibling notes (NOT fixed): io.parse_int has no overflow check;
+  core.to_int_from_str wraps on positive overflow; num.parse_int_radix
+  keeps the INT64_MIN limitation.
+- WAVE BATCH IN FLIGHT: Agent Manager worktrees wave/157 (TLS wave-B),
+  wave/158 (compression), wave/159 (zero-copy), wave/160 (popen spawn)
+  started against block 209's next-wave order; merges + merged battery
+  follow. Doorbell cron renewed (19:00Z fire).
+- Tree: head 591bf40; out/ + the six untracked ladder smokes as before.
+
 **SESSION 2026-10-16 block 209 (session refresh for handoff -- the remaining wishlist/relay inventory; next leads: TLS wave-B against xiom.ssl (publish-ready), compression, zero-copy, popen spawn; this block is the deliberate handoff point)**
 - REMAINING FROM THE BUS (to stdlib, non-closed):
   * Ours, executable: 2202-pulse items 3-9 (popen spawn, threads-beyond,
