@@ -125,7 +125,10 @@ fn main() -> Int {
     Err(_) => { return 28; },
   }
   let b3 = base32.base32_decode("mzxw6===");
-  if b3.is_ok { return 29; }
+  match b3 {
+    Ok(v) => { if !eq_bytes(&v, &to_bytes("foo")) { return 29; } },
+    Err(_) => { return 29; },
+  }
   let b4 = base32.base32_decode("MZXW6Y");
   if b4.is_ok { return 30; }
   if base32.base32_encode(&to_bytes("foo")) != "MZXW6===" { return 31; }
