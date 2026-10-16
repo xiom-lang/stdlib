@@ -814,6 +814,39 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
      (copy_file itself is already byte-exact since wave 137; the alias
      is discoverability only). Trivial, but it needs a battery cycle,
      so it rides the next io change rather than a wave of its own.
+     FOLLOW-UP (wave-145 candidate, from REL-20261015-2343-stdlib): the
+     bare-inline i32-extern annotation tails + two ABI findings.
+     Classification done 2026-10-16 (extern declaration vs the runtime's
+     C return, source-of-truth = runtime/xiom_runtime.c):
+     - pipe.xi xiom_read/xiom_write are declared `-> Int` while the
+       runtime returns C int (sync_io.xi's copies are already Int32).
+       PIN-TODAY BUG: on the bare form a -1 read is zero-extended to
+       0xFFFFFFFF (positive), so pipe_read / pipe_write / pipe_read_
+       timeout treat a failed syscall as success with garbage bytes.
+       Fix (the wave-143 convention): retype the extern to Int32 +
+       declared-form bindings `let n32: Int32; unsafe { n32 = ...; };
+       let n = n32 as Int;`. Sites: pipe.xi 31, 47, 71, 116, 152, 159,
+       185, 208.
+     - async/io.xi 154/173 (the accept/connect copies declared
+       `-> Int`): retype to Int32 + declared bindings, mirroring
+       net/socket.xi.
+     - ecc.xi 360: the extern is already Int32 -> annotate the binding
+       only.
+     - http.xi: 588 connect (Int32 declared) annotate; 604/613
+       send/recv (declared `-> Int`, C int) retype + annotate; the
+       create/accept sites keep Int (SOCKET is pointer-sized).
+     - sysinfo.xi 28 / spawn.xi 157: cpu_count is Int32 -> annotate.
+       thread_id is Int with a C long long -> fine as-is.
+     - RUNTIME TAILS (needs a runtime-touching wave AFTER the actor's
+       in-flight runtime edit lands): xiom_getpid / xiom_total_memory /
+       xiom_free_memory return C `long` (32-bit on Windows) while the
+       externs declare Int64/UInt64 -- memory totals truncate on
+       greater-than-4GB boxes. Retype the C to long long (the wave-139
+       lesson).
+     - Context: the compiler's general fix (2343-stdlib, acked) makes
+       bare forms correct on the next pin; the annotations are the
+       belt-and-braces route plus THE pin-today error-path fix. The
+       pipe error rows are probe material (red pre-fix on v0.64.4).
      CANDIDATE QUEUE (the open v0.64.4 release-check,
      release-checks/compiler-compiler-v0.64.4.md on the bus; compiler
      fixer wave m276-m313 in flight as of 2026-10-14T14:15Z): when the
