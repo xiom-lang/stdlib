@@ -44,7 +44,8 @@ fn _sat64(q: Int128) -> Int {
 // miscompiles a runtime `sdiv i128` that gets inlined into a function which
 // also contains a vector element-load loop (AV 0xC0000005 at run time; see
 // the wave-165 entry in tools/known_failures/README.md). Shift/mask forms
-// lower cleanly. Domain: |n| < 2^126, 0 < d <= 2^126.
+// lower cleanly. Domain: 0 <= n < 2^127, 0 < d <= 2^126 (all callers'
+// ranges; 2*r must stay under 2^127).
 fn _divmod_pos(n: Int128, d: Int128) -> Int128 {
   var q: Int128 = 0;
   var r: Int128 = 0;
