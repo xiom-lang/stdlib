@@ -108,6 +108,33 @@ open per the fresh-candidate sweep (not re-run in this round):
 `p_result_payload_index_concat`, `p_sync_mutex_builtin_shadow`,
 `p_trailing_match_after_push`.
 
+**OPEN (wave 165, 2026-10-16, compiler v0.64.5 official archive): a runtime
+`sdiv i128` inlined into a vector-loop function compiles rc 0 and AVs at
+run time (0xC0000005).** Found while implementing `xiom.math.fixed` on the
+wave-165 math/fixed-point wishlist rows: a function that contains a vector
+element-load loop and then performs one RUNTIME 128-bit division (`/` or
+`%` on an `Int128` with a non-constant divisor) miscompiles when the
+division ends up in the same function body -- writing it inline, or
+inlining a private same-module helper (the compiler emits those with
+`alwaysinline`). Isolated variants: the loop alone runs green; the
+division alone in its own function runs green; a cross-module `pub`
+helper left as a real call runs green (the call must actually stay a call);
+constant divisors run green (LLVM expands those without the runtime
+divide). Reproduced only when the loop-vs-division merge happens inside an
+`xiom.*`-namespace module; plain user-namespace copies of the same code
+ran green in the wave-165 scratch. Repro:
+`tools/known_failures/p_i128_div_vec_loop_av.xi` + the support module
+`tools/known_failures/support/p_i128_div_vec_loop_mod.xi` (copy the module
+to `<stdlib-root>/xiom/math/` per the recipe in the runner header;
+duplicate-visibility W001 warning is expected). Observed pre-workaround:
+compile rc 0, run rc 0xC0000005 (-1073741819). Expected: rc 0.
+Workaround in shipped code: the wave-165 `xiom.math.int` /
+`xiom.math.fixed` / `xiom.stats.int_stats` helpers implement 128-bit
+division with a 127-step shift/mask long division (zero `sdiv`/`srem i128`
+in the emitted IR), so the lock probes `tools/probes/p_wave165_shapes.xi`
+and `p_wave165_vectors.xi` are green; the finding stays open until the
+compiler lowers the runtime i128 divide correctly inside loop bodies.
+
 **RESOLVED 2026-10-15 (compiler v0.64.5, m297): a Path.exists + trailing
 println sequence dies with an illegal-instruction exit.** The wave-103
 repro's exact statement sequence dies with exit -1073741795 (0xC000001D)
