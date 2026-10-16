@@ -3536,6 +3536,26 @@ registry pin, agent recon for the rest)**
 - Two long-lived git processes (from ~14:20Z) sit in the relays repo;
   the bus itself is consistent. The next writer continues from 169/170.
 
+**SESSION 2026-10-16 block 201 (wave 148: the save_write flake ROOT-FIXED at the runtime -- MoveFileExA retries transient sharing violations; REL-20261011-1513-engine close-loop; probe p_wave148)**
+- Reproduced first-hand: out/scratch_save_write_stress.xi (200x
+  write_file_bytes to a tmp + io.rename replace + byte-exact read-back)
+  failed 1 of 5 passes (~1/1000 ops). The runtime xiom_rename used
+  MoveFileExA(REPLACE_EXISTING) with no retry, so a transient
+  sharing/lock violation (a scanner/indexer briefly holding a just-closed
+  file) surfaced as Err. Fix (wave 148): 5 attempts, 10ms apart, only
+  for ACCESS_DENIED / SHARING_VIOLATION / LOCK_VIOLATION; other errors
+  fail immediately; the POSIX branch is unchanged (plain rename).
+- Post-fix witness: 10 x 200 = 2000 ops, 0 failures. Guard:
+  tools/probes/p_wave148_shapes.xi (300x loop + read-back) green 3/3;
+  probes now 322 files.
+- Bus next: 1513-engine acked -> fixed (refs; engine verifies/closes);
+  1131-pulse + 1618-xvector + 1549-pulse-5 carry status notes.
+- Four-lane mandate status: xvector-6 DONE (147); pulse darwin pair DONE
+  (148 close-out); engine 1513 DONE (this wave); engine 1834-engine-6
+  pool flip = the remaining big one (design: real workers over the
+  runtime channel primitives; next wave); orbitdb cluster fully closed.
+- Tree: this commit.
+
 **SESSION 2026-10-16 block 200 (wave 147: Float32 bitcast pair landed (runtime-backed; REL-20261010-1550-xvector-6); final battery across slices GREEN; floors177; the pulse/engine/orbitdb/xvector 100%-coverage mandate engaged)**
 - f32_bits / bits_to_f32 in xiom.num.float: runtime-backed exact memcpy
   bitcast (long long shim per the runtime rule); the Float64 pair keeps

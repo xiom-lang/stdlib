@@ -317,8 +317,19 @@ void xiom_free(void* ptr) {
    Returns 0 on success, -1 on failure. */
 int xiom_rename(const char* oldpath, const char* newpath) {
 #ifdef _WIN32
-    if (!MoveFileExA(oldpath, newpath, MOVEFILE_REPLACE_EXISTING)) return -1;
-    return 0;
+    /* MoveFileExA with replace; retry briefly on transient sharing
+       violations (a scanner/indexer briefly holding a just-closed file --
+       the 1513-engine save_write flake class; wave 148). 5 attempts,
+       10ms apart; other errors fail immediately. */
+    int attempt = 0;
+    while (attempt < 5) {
+        if (MoveFileExA(oldpath, newpath, MOVEFILE_REPLACE_EXISTING)) return 0;
+        DWORD err = GetLastError();
+        if (err != ERROR_ACCESS_DENIED && err != ERROR_SHARING_VIOLATION && err != ERROR_LOCK_VIOLATION) return -1;
+        Sleep(10);
+        attempt++;
+    }
+    return -1;
 #else
     return rename(oldpath, newpath);
 #endif
