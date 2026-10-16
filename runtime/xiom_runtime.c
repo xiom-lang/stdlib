@@ -5558,6 +5558,7 @@ int xiom_gethostname(char* buf, int len) {
 #else
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <netinet/tcp.h>
 #include <arpa/inet.h>
 #include <poll.h>
 #include <signal.h>

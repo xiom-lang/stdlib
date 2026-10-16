@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 37 (updated 2026-10-16 01:00Z at head 9d6a4d5; v0.64.5 released; WAVE PIN SWITCHED to the official v0.64.5 archive (bd71e2d3; block 191; extraction trap recorded); 1549 cluster + 1615 closed (block 189); waves 114-139 + darwin runtime waves 189b/189c; probes 317; floors172; relay live)
+## 0A. CONTINUE HERE -- handoff snapshot 37 (updated 2026-10-16 12:50Z at head ca6aaca; waves 141-149 landed -- promotion, clause partial, net-socket, guard-free, thread flip, f32 pair, rename-flake fix, POSIX include fix; batteries green on the official v0.64.5 pin; relay live)
 
 ### Snapshot 37 (paste-ready)
 
@@ -26,7 +26,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 ---
 
 You are continuing the XIOM stdlib lane. Worktree `E:\xiom-lang\stdlib`,
-branch `main`. Read `docs/stdlib_session.md` blocks 199, 198, 197, 196, 195, 194, 193, 192, 191, 190, 189c, 189b, 189, 188, 187, 186, 185b, 185,
+branch `main`. Read `docs/stdlib_session.md` blocks 202, 201, 200, 199, 198, 197, 196, 195, 194, 193, 192, 191, 190, 189c, 189b, 189, 188, 187, 186, 185b, 185,
 184b, 184, 183, 182, 181, 180, 179, 178, 177, 176, 175b, 175, 174, 173b,
 173, 172, 171b, 171, 170d, 170c, 170b, 170, 169, 168, 167, 166b, 166,
 165b, 165 (older as needed); snapshot 36 below is the previous handoff and
@@ -45,15 +45,16 @@ duplicate. `COMPILER_VERSION` in this repo stays v0.64.4 until the next
 stdlib release. The WAVE PIN is now the OFFICIAL v0.64.5 archive at
 `%TEMP%\kilo\stdlib_ws\v0.64.5-official\bin\xiom.exe` (zip sha256
 bd71e2d3, hash-verified against the release digest; switched in block
-191 after the official battery: modules 510/510, corpus 956/956, probes
-317/317, floors172 + doc OK). TRAP: `v0.64.5-rel` (zip 67e57dfe) is the
-2026-10-14 PRE-FIX candidate and `v0.64.5b-rel` (9b391ef4) the fixed
+191 after the official battery). TRAP: `v0.64.5-rel` (zip 67e57dfe) is
+the 2026-10-14 PRE-FIX candidate and `v0.64.5b-rel` (9b391ef4) the fixed
 dry-run -- extraction dir names do not indicate release status; battery
-only on a hash-verified official extraction. The 1549 cluster (parent +
--2..-7) and 1615 were verified + closed on the official archive (blocks
-189 + 191 corrections; relays e4c470a + d89b181 + 6e6607c). Lane head:
-9d6a4d5 + the concurrent wave-140 md5 WIP at refresh time; tree
-otherwise clean except the untracked out/ dir.
+only on a hash-verified official extraction. Linux legs: WSL Ubuntu with
+`~/.local/bin/xiom` (v0.64.5) through the consumer path (block 202
+verified p_wave143 + p_wave148 there). The 1549 cluster (parent + -2..-7)
+and 1615 were verified + closed on the official archive (blocks 189 +
+191 corrections). Lane head: ca6aaca (block 201) + the block-202
+refresh; tree clean except the untracked out/ dir and the debug lane's
+six untracked smoke_diag_f128_l*.xi files.
 
 Waves 114-139 landed; 138 = the encoding submodules (base64/base32/hex/
 percent/punycode/idna/ascii85 cached runtime-mirror reads; the
@@ -80,7 +81,10 @@ opens: 1630/1658 (compiler-owned leave); 1549-stdlib-8 acked
 3); 1609-pulse-2 + 1549-pulse-7 ride the actor's darwin close-out.
 2328/2343-stdlib acked by the compiler overnight (queued compiler-side);
 2309-packages(-2) are compiler monitors (mixed-element tuples -> stdlib
-socket_recv_from unusable; no battery row until fixed). 1445
+socket_recv_from unusable; no battery row until fixed). 1128-orbitdb +
+1129-xvector acked (noon wishlists -> plan items 12/13); 1143-xvector
+FIXED + 1223-orbitdb resolved (the wave-143 POSIX include; Linux-verified
+in WSL, block 202). 1445
 fixed bus-side (alloc-guard-spin
 acceptance green pre-pin; the alloc/free workarounds can retire in the
 next wave); 1453-packages acked (fleet data point); 1427-engine fixed
@@ -122,7 +126,15 @@ compiler-side FFI hardening ref PULSE filed; then wss:// + h2-via-ALPN.
 probe p_wave147; floors177. A compiler-side Float32 bitcast lowering
 can replace the shim later without an API change.
 (11) phase-2 shelf (2202 items 7-10): SSE helpers, inotify parity, h2
-framing/HPACK scoping, epoll/kqueue/IOCP + LISTEN_FDS.
+framing/HPACK scoping, epoll/kqueue/IOCP + LISTEN_FDS; 1129-xvector's
+POSIX-watch ask folds here.
+(12) file-lock wave (1128-orbitdb + 1129-xvector): advisory
+cross-process file lock (fcntl F_SETLK / LockFileEx), try-acquire +
+release + contention semantics; probe both platforms; unlocks the
+ORBITDB Station single-writer gate.
+(13) station primitives (1128-orbitdb): CSPRNG+KDF surface (rng_crypto
+exists; add the asked KDF) + a monotonic-clock station API; TCP session
+ergonomics ride the net family (1128's TLS/ALPN server side = wave 9).
 PERVASIVE: the ranked sweep (convert/validate+json; serialize toml/csv/
 json string-val; net http/ws/dns; format fmt/numbering; text similarity/
 diff; misc/regex/search/collect; num parse/itoa; log; crypto rng/curves;
@@ -179,9 +191,9 @@ retired behavior (p_wave121-138 + p_b2728 + p_v065 are the newest);
 requires); (4) runtime shims use `long long` (not `long`) for Int-sized
 values and Int arrays (wave 139); (5) dump tools/coverage_floors17N.json,
 wire workflows + tools/README + plan/session/queue in one commit, YAML
-check, pure-ASCII additions, then the battery: corpus 955/955, probes
-expect 315 (316 after the polyhedra promotion), modules 510/510,
-barename 0/510, floors172 + ratchets; push main with the one-shot
+check, pure-ASCII additions, then the battery: corpus 962/962 (956 +
+the debug lane's 6 diag smokes while they linger), probes 322, modules
+510/510, barename 0/510, floors177 + ratchets; push main with the one-shot
 credential (tag moves: `git push --force origin stdlib-vX.Y.Z`; deletion
 is ruleset-blocked); (6) hot per-item/per-char loops use the
 bounds-guaranteed `_slice_fast` / `_push_str` idioms (copied per module;
@@ -3535,6 +3547,25 @@ registry pin, agent recon for the rest)**
   clean except the untracked out/ dir at this round.
 - Two long-lived git processes (from ~14:20Z) sit in the relays repo;
   the bus itself is consistent. The next writer continues from 169/170.
+
+**SESSION 2026-10-16 block 202 (wave 149: POSIX build break FIXED -- the wave-143 TCP_NODELAY needs <netinet/tcp.h>; Linux-verified in WSL; + snapshot refresh for the next session; 1128-orbitdb / 1129-xvector wishlists mapped)**
+- REL-20261016-1143-xvector (HIGH) + 1223-orbitdb (heads-up): the
+  wave-143 `xiom_socket_set_nodelay` POSIX branch used TCP_NODELAY
+  without including <netinet/tcp.h>, breaking every WSL/Linux consumer
+  build (Win32 was fine -- ws2tcpip.h). Fixed: added the include to the
+  POSIX block (runtime/xiom_runtime.c ~L5562). LINUX-VERIFIED in WSL
+  Ubuntu with the installed v0.64.5 toolchain through the consumer path:
+  tools/probes/p_wave143_shapes.xi compiles + runs rc 0 (refused-connect
+  Err + NODELAY/KEEPALIVE/backlog rows all green on Linux) and
+  p_wave148_shapes.xi (300x rename stress) compiles + runs rc 0.
+- New asks mapped (the four-lane mandate): 1128-orbitdb (Station:
+  file_lock, TLS/ALPN server, TCP session ergonomics, CSPRNG+KDF,
+  monotonic clock) + 1129-xvector (advisory file lock, POSIX watch, TLS
+  requester signal, status refresh) -> plan items (12)/(13) below + wave
+  9 refs; status refresh already delivered via today's notes.
+- Snapshot 37 refreshed in place for the next session (state, gates,
+  wave plan, bus intake).
+- Tree: this commit + the refresh.
 
 **SESSION 2026-10-16 block 201 (wave 148: the save_write flake ROOT-FIXED at the runtime -- MoveFileExA retries transient sharing violations; REL-20261011-1513-engine close-loop; probe p_wave148)**
 - Reproduced first-hand: out/scratch_save_write_stress.xi (200x
