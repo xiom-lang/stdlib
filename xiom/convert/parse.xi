@@ -16,6 +16,7 @@ module xiom.convert.parse
 
 use xiom.string;
 use xiom.core.INT_MAX;
+use xiom.core.INT_MIN;
 
 /// Parses a decimal integer string. An optional leading '-'/'+' is accepted.
 /// Returns Err on an empty string, an invalid character, or overflow.
@@ -41,6 +42,9 @@ pub fn parse_int_radix(s: Str, radix: Int) -> Result[Int, Str]
 }
 
 /// Shared radix parser (radix pre-validated by the caller).
+/// Wave 161: the minus path accumulates in the negative domain so the
+/// INT64_MIN magnitude (2^63, not representable as a positive Int) parses;
+/// the positive-magnitude form rejected "-9223372036854775808" as overflow.
 fn _parse_int_radix(s: Str, radix: Int) -> Result[Int, Str] {
   let len = s.len();
   if len == 0 {
@@ -58,6 +62,24 @@ fn _parse_int_radix(s: Str, radix: Int) -> Result[Int, Str] {
   if i >= len {
     return Err("no digits");
   };
+  if negative {
+    var nres: Int = 0;
+    while i < len {
+      var digit = _digit_value(string.byte_at(s, i));
+      if digit < 0 {
+        return Err("invalid digit");
+      };
+      if digit >= radix {
+        return Err("digit out of range for radix");
+      };
+      if nres < (INT_MIN + digit) / radix {
+        return Err("overflow");
+      };
+      nres = nres * radix - digit;
+      i = i + 1;
+    };
+    return Ok(nres);
+  };
   var result: Int = 0;
   while i < len {
     var digit = _digit_value(string.byte_at(s, i));
@@ -72,9 +94,6 @@ fn _parse_int_radix(s: Str, radix: Int) -> Result[Int, Str] {
     };
     result = result * radix + digit;
     i = i + 1;
-  };
-  if negative {
-    result = -result;
   };
   Ok(result)
 }

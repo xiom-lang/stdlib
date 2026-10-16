@@ -50,7 +50,7 @@ Status legend: **open** = not started; **fixed** = landed with a probe lock
 | 23 | Deflate dynamic-Huffman reads + public tables | enhancement | Decoder support for dynamic Huffman blocks; expose the Huffman tables. | open |
 | 24 | Neutral CRC32 | feature | CRC32 helper without format/policy dependencies (shared by zip/deflate-class consumers). | open |
 | 25 | Keccak-256 | feature | Keccak-256 hash primitive. | open |
-| 26 | `_u64_lshr` defect | defect | The private u64 logical right shift is defective; fix plus a probe lock. | open |
+| 26 | `_u64_lshr` defect | defect | The private u64 logical right shift is defective; fix plus a probe lock. | **fixed** (2026-10-16, wave 161; mask-based shift, pub `u64_lshr`/`u64_rotr` exposed; probe `p_wave161_shapes.xi`) |
 | 27 | Fixed-point `log2` + integer stats | feature | `log2` for the fixed-point type and integer-domain stats helpers. | open |
 | 28 | Strict `str_to_int` | feature | Strict integer parsing (reject junk; `Option`-shaped result). | open |
 | 29 | XML tokenizer | feature | Streaming XML tokenizer. | open |
@@ -496,3 +496,36 @@ Runtime rows are effective for consumers at the next compiler pin that
 re-vendors `stdlib/runtime` (or `XIOM_RUNTIME_DIR` on v0.64.4 until then).
 The two to-all notices (REL-20261012-1945-xvector, -1946-pulse-3) are
 read; to-all items are not lane-ackable.
+
+Bus status 2026-10-16 (wave 161 -- fix-first defect batch; the packages
+sheet's stdlib-defect rows, plus two discovered defects):
+- `xiom.crypto.hash` `_u64_lshr`/`_u64_shr` n = 63 (sheet: `_u64_lshr` n=63
+  defect): the old division form divided by `_pow2(63)` = `INT64_MIN` and
+  over-corrected (`INT64_MIN` read back 3, not 1); now mask-based, and the
+  pair is exposed pub as `u64_lshr`/`u64_rotr` (the keccak-port consumers'
+  need). Row 26 above.
+- `xiom.string.builder.sb_push_int(INT64_MIN)` (sheet: INT_MIN defect):
+  negate-in-place left INT64_MIN negative -- emitted just "-"; digits are
+  now extracted in the negative domain.
+- `xiom.convert.parse.parse_int("-9223372036854775808")` (sheet:
+  `parse_int` INT64_MIN defect): rejected the 2^63 magnitude as overflow;
+  the minus path now accumulates in the negative domain (core's existing
+  pattern) with an exact `INT64_MIN` bound.
+- DISCOVERED: `xiom.crypto.hash.crypto_hash_blake2b` loaded its last block
+  big-endian (full blocks were little-endian) -- every tail-carrying digest
+  was wrong and the surface had no KAT; now RFC 7693 `"abc"` correct
+  (locked in the same probe; audit row added).
+- DISCOVERED: `xiom.bits.rotation.rotate_left`/`rotate_right`/
+  `rotate_right_carry` relied on `>>` alone (arithmetic for Int) --
+  negative operands rotated in sign bits (`rotate_right(MIN, 1)` read
+  0xC000..., `rotate_left(MIN, 1)` read -1); all now logical-shift through
+  a shared `_lshr64`.
+Probe `tools/probes/p_wave161_shapes.xi` (15 rows; red-before recon
+rc=123). Targeted slices green: smoke_crypto / kat_crypto /
+smoke_stress_crypto / smoke_bits / smoke_num_rotate_bits /
+smoke_string_builder / smoke_string_parse / smoke_num_parse_radix /
+smoke_hash_edge / smoke_stress_hash. Sibling notes (NOT fixed here):
+`xiom.io.parse_int` has no overflow check at all (silently wraps);
+`core.to_int_from_str` accepts out-of-range positives with wrap;
+`num.parse_int_radix` keeps the same INT64_MIN limitation the convert face
+had (fixed on the convert face only).

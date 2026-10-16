@@ -69,26 +69,36 @@ pub fn sb_push_str(sb: &mut Vec[UInt8], s: Str)
 
 /// Append the decimal representation of `v` (sign-aware, zero-safe).
 /// Emits digits without any temporary Str allocation.
+/// Wave 161: INT_MIN-safe -- negative values extract digits in the negative
+/// domain (`-` is never formed on the value; the old negate-in-place form
+/// left INT_MIN negative and emitted just "-").
 /// Complexity: O(digits).
 pub fn sb_push_int(sb: &mut Vec[UInt8], v: Int)
   ensures: sb.len() >= 1
 {
   var neg = false;
-  var n = v;
-  if n < 0 {
+  if v < 0 {
     neg = true;
-    n = -n;
   };
   var digits: [20]UInt8;
   var pos = 20;
-  if n == 0 {
+  if v == 0 {
     pos = 19;
     digits[19] = 48;
-  };
-  while n > 0 {
-    pos = pos - 1;
-    digits[pos] = 48 + (n % 10) as UInt8;
-    n = n / 10;
+  } elif neg {
+    var n = v;
+    while n != 0 {
+      pos = pos - 1;
+      digits[pos] = 48 + (0 - (n % 10)) as UInt8;
+      n = n / 10;
+    };
+  } else {
+    var n = v;
+    while n > 0 {
+      pos = pos - 1;
+      digits[pos] = 48 + (n % 10) as UInt8;
+      n = n / 10;
+    };
   };
   if neg {
     sb.push(45u8);

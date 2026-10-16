@@ -4,13 +4,28 @@
 
 module xiom.bits.rotation
 
-// Depends on: none
+// Depends on: xiom.core (INT_MAX mask for the logical shift)
+
+use xiom.core.INT_MAX;
 
 // ============================================================================
 // Bit rotation with carry, immediate, and masked variants. Carry rotations
 // are computed one bit at a time (up to 63 steps). Masked rotations rotate
 // only the bits selected by a mask, within the span of those bits.
+//
+// Wave 161: rotate_left/rotate_right/rotate_right_carry previously relied on
+// `>>` alone, which is arithmetic for Int operands -- negative inputs (sign
+// bit set) rotated in stale sign bits (rotate_right(MIN, 1) read 0xC000...,
+// rotate_left(MIN, 1) read -1). The rotate bodies now logical-shift through
+// _lshr64.
 // ============================================================================
+
+// Logical (zero-fill) right shift of the 64-bit pattern of `n` by s bits
+// (callers pass 1 <= s <= 63). Pure.
+fn _lshr64(n: Int, s: Int) -> Int {
+  let mask = INT_MAX >> (s - 1);
+  return (n >> s) & mask;
+}
 
 /// Circular left rotation by k bits (the shift amount is reduced mod 64).
 /// Complexity: O(1).
@@ -25,7 +40,7 @@ pub fn rotate_left(n: Int, k: Int) -> Int
   if shift == 0 {
     return n;
   };
-  (n << shift) | (n >> (64 - shift))
+  (n << shift) | _lshr64(n, 64 - shift)
 }
 
 /// Circular right rotation by k bits (the shift amount is reduced mod 64).
@@ -41,7 +56,7 @@ pub fn rotate_right(n: Int, k: Int) -> Int
   if shift == 0 {
     return n;
   };
-  (n >> shift) | (n << (64 - shift))
+  _lshr64(n, shift) | (n << (64 - shift))
 }
 
 /// Rotate-left-with-carry: performs k rotate-through-carry steps (each step
@@ -83,7 +98,7 @@ pub fn rotate_right_carry(n: Int, k: Int, carry_in: Int) -> (Int, Int)
   var i: Int = 0;
   while i < shift {
     var bottom = result & 1;
-    result = (result >> 1) | (c << 63);
+    result = _lshr64(result, 1) | (c << 63);
     c = bottom;
     i = i + 1;
   };

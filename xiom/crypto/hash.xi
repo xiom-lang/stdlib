@@ -28,6 +28,7 @@ module xiom.crypto.hash
 // ============================================================================
 
 use xiom.crypto;
+use xiom.core.INT_MAX;
 use xiom.encoding;
 use xiom.string;
 
@@ -235,34 +236,54 @@ fn _md5_compute(data: &Vec[UInt8]) -> Vec[UInt8] {
 // 64-bit helpers (SHA-512 / BLAKE2b). Logical rotate: the right part must
 // zero-fill, so negative operands are handled as unsigned (the flat module's
 // rotate is arithmetic here and corrupts high-bit words).
+//
+// Wave 161: mask-based logical shift (no division). The old form divided by
+// _pow2(63) = INT64_MIN for n = 63 and over-corrected (INT64_MIN read back as
+// 3 instead of 1). u64_lshr/u64_rotr are exposed pub for consumers (the
+// packages lane hit exactly this defect; keccak-class ports need the pair).
 // ============================================================================
 
 fn _u64_lshr(x: Int, n: Int) -> Int {
   if n <= 0 { return x; }
   if n >= 64 { return 0; }
-  var p = _pow2(n);
-  if x >= 0 { return x / p; }
-  var q = x / p;
-  if (x % p) != 0 { q = q - 1; }
-  return q + _pow2(64 - n);
+  // mask = 2^(64-n) - 1 = INT_MAX >> (n-1); (x >> n) keeps bits n..63, the
+  // mask clears the arithmetic sign fill. n = 63 -> (x >> 63) & 1.
+  var mask = INT_MAX >> (n - 1);
+  return (x >> n) & mask;
 }
 
 fn _u64_rotr(x: Int, n: Int) -> Int {
   if n <= 0 { return x; }
   if n >= 64 { return x; }
   var right = _u64_lshr(x, n);
-  var left = x * _pow2(64 - n);
+  var left = x << (64 - n);
   return right | left;
 }
 
 fn _u64_shr(x: Int, n: Int) -> Int {
-  if n <= 0 { return x; }
-  if n >= 64 { return 0; }
-  var p = _pow2(n);
-  if x >= 0 { return x / p; }
-  var q = x / p;
-  if (x % p) != 0 { q = q - 1; }
-  return q + _pow2(64 - n);
+  _u64_lshr(x, n)
+}
+
+/// Logical (zero-fill) right shift of the 64-bit pattern of `x`: the value
+/// `(x as u64) >> n` re-read as a two's-complement Int. n <= 0 returns x;
+/// n >= 64 returns 0. Pure.
+/// Complexity: O(1).
+pub fn u64_lshr(x: Int, n: Int) -> Int
+  ensures: (n <= 0) => (result == x)
+  ensures: (n >= 64) => (result == 0)
+{
+  _u64_lshr(x, n)
+}
+
+/// Circular right rotation of the 64-bit pattern of `x` by `n` bits
+/// (n <= 0 or n >= 64 returns x, the internal helper's documented guard).
+/// Pure.
+/// Complexity: O(1).
+pub fn u64_rotr(x: Int, n: Int) -> Int
+  ensures: (n <= 0) => (result == x)
+  ensures: (n >= 64) => (result == x)
+{
+  _u64_rotr(x, n)
 }
 
 /// SHA-1 (FIPS 180-1). 20-byte digest. Legacy, interop only.
@@ -623,15 +644,19 @@ pub fn crypto_hash_blake2b(data: &Vec[UInt8]) -> Vec[UInt8]
   var m = Vec[Int].new();
   var j = 0;
   while j < 16 {
+    // Wave 161: little-endian tail load (matching _blake2b_load64). The old
+    // form accumulated ascending offsets -- big-endian -- so any digest whose
+    // last block carried data was wrong (BLAKE2b had no KAT before this wave;
+    // crypto_hash_blake2b("abc") now matches RFC 7693).
     var word: Int = 0;
-    var k = 0;
-    while k < 8 {
+    var k = 7;
+    while k >= 0 {
       if pos + j * 8 + k < data_len {
         word = word * 256 + (data[pos + j * 8 + k] as Int);
       } else {
         word = word * 256;
       }
-      k = k + 1;
+      k = k - 1;
     }
     m.push(word);
     j = j + 1;
