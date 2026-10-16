@@ -14,6 +14,16 @@ use xiom.compress.snappy;
 
 use xiom.string;
 
+// HONESTY NOTES (wave 158):
+//   - brotli here is NOT RFC 7932 (custom frame; see xiom.compress.brotli).
+//     For real brotli use registry package `xiom.brotli` 0.1.0 (vendored
+//     google/brotli 1.2.0; landed with the bindings lane / eco-v0.1.189).
+//   - zstd is NOT implemented in stdlib and will not be reimplemented here;
+//     the registry package `xiom.zstd` 0.3.0 is the supported path.
+//   - deflate/gzip/zlib encode and decode REAL RFC 1951/1952/1950 streams
+//     (dynamic-Huffman producer since wave 158; dynamic blocks including
+//     code-length repeat codes 16/17/18 decode).
+
 /// === Compression traits ===
 pub interface Compressor {
   fn compress(self, data: &Vec[UInt8]) -> Result<Vec[UInt8], Str>;
@@ -250,20 +260,25 @@ pub fn zlib_decompress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str]
 }
 
 /// === Brotli ===
+/// NOT RFC 7932: `brotli_compress` below writes the custom CE B2 CF 81 frame
+/// (see xiom.compress.brotli). `Content-Encoding: br` cannot be served from
+/// this module; use the registry package `xiom.brotli` 0.1.0 for real brotli.
 pub fn brotli_compress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str]
   ensures:  result is Ok => result.len() >= 8
 {
   Ok(brotli.brotli_compress(data))
 }
 
-/// Brotli-compress with a quality 0..11; Err on failure.
+/// Brotli-compress with a quality 0..11 (clamped) into the custom
+/// NOT-RFC-7932 frame; Err on failure. Real brotli: registry `xiom.brotli`.
 pub fn brotli_compress_level(data: &Vec[UInt8], quality: Int) -> Result[Vec[UInt8], Str]
   ensures:  result is Ok => result.len() >= 8
 {
   Ok(brotli.brotli_compress_quality(data, quality))
 }
 
-/// Decompress Brotli data; Err on malformed input.
+/// Decompress only the custom NOT-RFC-7932 frame (not real brotli streams);
+/// Err on malformed input. Real brotli: registry package `xiom.brotli`.
 pub fn brotli_decompress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str]
   ensures:  result is Ok => result.len() >= 0
 {
@@ -338,6 +353,9 @@ pub fn is_compressed(data: &Vec[UInt8]) -> Bool
 }
 
 /// Name of the detected compression format, or "" when unrecognized.
+/// NOTE: "brotli" here means the custom CE B2 CF 81 frame of
+/// xiom.compress.brotli (real brotli streams have no magic and are NOT
+/// detected); zstd is not implemented in stdlib (registry `xiom.zstd`).
 pub fn detect_format(data: &Vec[UInt8]) -> Str
   requires: data.len() >= 0
 {

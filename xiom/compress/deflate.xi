@@ -3,10 +3,12 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 //
 // REAL RFC 1951 implementation (replaced the pre-1.0 custom container on
-// 2026-08-27). Producer: STORED blocks (level 0) or FIXED-Huffman blocks
-// (levels 1-9). Consumer: STORED + FIXED + DYNAMIC blocks, so streams from
-// standard tools (zlib/gzip/png) decompress. gzip.xi / zlib.xi wrap this
-// payload per RFC 1952 / RFC 1950 respectively.
+// 2026-08-27). Producer: STORED blocks (level 0), FIXED-Huffman blocks
+// (levels 1-3), and full DYNAMIC-Huffman blocks (BTYPE=10, RFC 1951 3.2.7;
+// levels 4-9 pick the smallest of stored/fixed/dynamic). Consumer: STORED +
+// FIXED + DYNAMIC blocks including code-length repeat codes 16/17/18, so
+// streams from standard tools (zlib/gzip/png) decompress. gzip.xi / zlib.xi
+// wrap this payload per RFC 1952 / RFC 1950 respectively.
 //
 // Implementation notes (shapes that matter):
 //   - every `expr as Type` cast is PARENTHESIZED: unparenthesized casts on
@@ -95,12 +97,21 @@ fn _dist_base(code: Int) -> Int {
 }
 
 fn _dist_extra(code: Int) -> Int {
+  // RFC 1951 3.2.5: codes 4..29 take 1 + (code - 4) / 2 extra bits; this
+  // yields 12 for codes 26/27 (previously hardcoded 13, which desynced
+  // third-party streams at distances >= 8193).
   if code < 4 { return 0; }
-  if code < 26 { return 1 + (code - 4) / 2; }
-  return 13;
+  return 1 + (code - 4) / 2;
 }
 
 fn _len_code_for(n: Int) -> Int {
+  // RFC 1951 3.2.5: length 258 is code 285 with zero extra bits. Without
+  // this early return the loop below matches 258 into code 284's 227..258
+  // span (284 + 5 extra bits), which is non-canonical and not all decoders
+  // accept.
+  if n >= 258 {
+    return 285;
+  };
   var c = 257;
   while c <= 285 {
     var base = _len_base(c);
@@ -203,6 +214,567 @@ fn _fx_extra(out: &mut Vec[UInt8], acc: Int, acc_bits: Int, value: Int, count: I
     i = i + 1;
   }
   return (a, b);
+}
+
+// ============================================================================
+// Dynamic-Huffman producer (RFC 1951 3.2.7, wave 158)
+// ============================================================================
+
+type TokFreqs = {
+  lit: Vec[Int];
+  dist: Vec[Int];
+}
+
+type RleSeq = {
+  syms: Vec[Int];
+  extras: Vec[Int];
+  ebits: Vec[Int];
+}
+
+/// Tokenize with the same greedy matcher as _fixed_deflate: flat triples
+/// [0, byte, 0] for a literal and [1, match_len, match_dist] for a match.
+/// Kept in lock-step with the fixed encoder so the block chooser compares
+/// like with like.
+fn _tokenize(data: &Vec[UInt8]) -> Vec[Int] {
+  var tokens = Vec[Int].new();
+  var len = data.len();
+  var pos = 0;
+  var lit_start = 0;
+  while pos < len {
+    var best_len = 0;
+    var best_off = 0;
+    var search_start = pos - 32768;
+    if search_start < 0 {
+      search_start = 0;
+    };
+    var si = search_start;
+    while si < pos {
+      var ml = 0;
+      while (si + ml) < pos && (pos + ml) < len && ml < 258 {
+        if data[si + ml] != data[pos + ml] {
+          break;
+        };
+        ml = ml + 1;
+      };
+      if ml > best_len && ml >= 3 {
+        best_len = ml;
+        best_off = pos - si;
+      };
+      si = si + 1;
+    }
+    if best_len >= 3 {
+      var li = lit_start;
+      while li < pos {
+        tokens.push(0);
+        tokens.push(data[li] as Int);
+        tokens.push(0);
+        li = li + 1;
+      }
+      tokens.push(1);
+      tokens.push(best_len);
+      tokens.push(best_off);
+      pos = pos + best_len;
+      lit_start = pos;
+    } else {
+      pos = pos + 1;
+    };
+  }
+  var li2 = lit_start;
+  while li2 < len {
+    tokens.push(0);
+    tokens.push(data[li2] as Int);
+    tokens.push(0);
+    li2 = li2 + 1;
+  }
+  return tokens;
+}
+
+/// Literal/length and distance symbol frequencies of a token stream.
+fn _tok_freqs(tokens: &Vec[Int]) -> TokFreqs {
+  var litf = Vec[Int].new();
+  var i = 0;
+  while i < 286 {
+    litf.push(0);
+    i = i + 1;
+  }
+  var distf = Vec[Int].new();
+  i = 0;
+  while i < 30 {
+    distf.push(0);
+    i = i + 1;
+  }
+  litf[256] = 1;
+  var ntok = tokens.len() / 3;
+  var t = 0;
+  while t < ntok {
+    var kind = tokens[t * 3];
+    if kind == 0 {
+      var b = tokens[t * 3 + 1];
+      litf[b] = litf[b] + 1;
+    } else {
+      var lc = _len_code_for(tokens[t * 3 + 1]);
+      litf[lc] = litf[lc] + 1;
+      var dc = _dist_code_for(tokens[t * 3 + 2]);
+      distf[dc] = distf[dc] + 1;
+    };
+    t = t + 1;
+  }
+  return TokFreqs{ lit: litf; dist: distf; };
+}
+
+/// Length-limited Huffman code lengths (zlib gen_bitlen shape): merge the
+/// two smallest weights repeatedly, clamp depths to `max_len`, redistribute
+/// the overflow the way zlib does, and verify the Kraft sum afterwards. If
+/// the check ever fails, a balanced complete code is used instead, so
+/// decoders never see an invalid table. Locals only (module arrays buggy).
+fn _huff_lengths(freqs: &Vec[Int], max_len: Int) -> Vec[Int] {
+  var n = freqs.len();
+  var syms = Vec[Int].new();
+  var wts = Vec[Int].new();
+  var i = 0;
+  while i < n {
+    if freqs[i] > 0 {
+      syms.push(i);
+      wts.push(freqs[i]);
+    };
+    i = i + 1;
+  }
+  // Force at least two symbols (RFC 1951: a distance tree needs at least
+  // one code even with no matches; a single-leaf tree has depth 0 and would
+  // produce no codes at all).
+  if syms.len() == 0 {
+    syms.push(0);
+    wts.push(1);
+    syms.push(1);
+    wts.push(1);
+  } elif syms.len() == 1 {
+    var d0 = 0;
+    if syms[0] == 0 {
+      d0 = 1;
+    };
+    syms.push(d0);
+    wts.push(1);
+  };
+  var m = syms.len();
+  var nw = Vec[Int].new();
+  i = 0;
+  while i < m {
+    nw.push(wts[i]);
+    i = i + 1;
+  }
+  var parent = Vec[Int].new();
+  i = 0;
+  while i < m {
+    parent.push(-1);
+    i = i + 1;
+  }
+  var active = m;
+  var next_node = m;
+  while active > 1 {
+    var i1 = -1;
+    var i2 = -1;
+    var k = 0;
+    while k < next_node {
+      if parent[k] == -1 {
+        if i1 == -1 || nw[k] < nw[i1] {
+          i2 = i1;
+          i1 = k;
+        } elif i2 == -1 || nw[k] < nw[i2] {
+          i2 = k;
+        };
+      };
+      k = k + 1;
+    };
+    nw.push(nw[i1] + nw[i2]);
+    parent.push(-1);
+    parent[i1] = next_node;
+    parent[i2] = next_node;
+    next_node = next_node + 1;
+    active = active - 1;
+  }
+  var bl = Vec[Int].new();
+  i = 0;
+  while i <= max_len {
+    bl.push(0);
+    i = i + 1;
+  }
+  var leaf_len = Vec[Int].new();
+  var overflow = 0;
+  var had_over = 0;
+  i = 0;
+  while i < m {
+    var d2 = 0;
+    var cur = i;
+    while parent[cur] != -1 {
+      cur = parent[cur];
+      d2 = d2 + 1;
+    };
+    if d2 > max_len {
+      d2 = max_len;
+      had_over = 1;
+      overflow = overflow + 1;
+    };
+    leaf_len.push(d2);
+    bl[d2] = bl[d2] + 1;
+    i = i + 1;
+  }
+  // zlib gen_bitlen redistribution.
+  while overflow > 0 {
+    var bits = max_len - 1;
+    while bits >= 1 && bl[bits] == 0 {
+      bits = bits - 1;
+    };
+    if bits < 1 {
+      overflow = 0;
+    } else {
+      bl[bits] = bl[bits] - 1;
+      bl[bits + 1] = bl[bits + 1] + 2;
+      bl[max_len] = bl[max_len] - 1;
+      overflow = overflow - 2;
+    };
+  }
+  // Active leaves sorted by weight ascending (ties keep symbol order).
+  var order = Vec[Int].new();
+  i = 0;
+  while i < m {
+    order.push(i);
+    i = i + 1;
+  }
+  var a = 1;
+  while a < m {
+    var key = order[a];
+    var kw = wts[key];
+    var j = a - 1;
+    while j >= 0 && wts[order[j]] > kw {
+      order[j + 1] = order[j];
+      j = j - 1;
+    };
+    order[j + 1] = key;
+    a = a + 1;
+  }
+  var lengths = Vec[Int].new();
+  i = 0;
+  while i < n {
+    lengths.push(0);
+    i = i + 1;
+  }
+  if had_over == 0 {
+    i = 0;
+    while i < m {
+      lengths[syms[order[i]]] = leaf_len[order[i]];
+      i = i + 1;
+    };
+  } else {
+    var idx = 0;
+    var L = max_len;
+    while L >= 1 {
+      var c = bl[L];
+      var q = 0;
+      while q < c {
+        lengths[syms[order[idx]]] = L;
+        idx = idx + 1;
+        q = q + 1;
+      };
+      L = L - 1;
+    };
+  };
+  // Kraft completeness guard (numerator against 2^max_len).
+  var ksum = 0;
+  var j2 = 0;
+  while j2 < n {
+    var l = lengths[j2];
+    if l > 0 {
+      var w2 = 1;
+      var s2 = 0;
+      while s2 < max_len - l {
+        w2 = w2 * 2;
+        s2 = s2 + 1;
+      };
+      ksum = ksum + w2;
+    };
+    j2 = j2 + 1;
+  }
+  var ktarget = 1;
+  var s3 = 0;
+  while s3 < max_len {
+    ktarget = ktarget * 2;
+    s3 = s3 + 1;
+  };
+  if ksum != ktarget {
+    // Balanced complete code: d = floor(log2 m); x = 2^(d+1) - m leaves at
+    // depth d (the heaviest), the rest at depth d+1.
+    i = 0;
+    while i < n {
+      lengths[i] = 0;
+      i = i + 1;
+    };
+    var d = 0;
+    var p2 = 1;
+    while p2 * 2 <= m {
+      p2 = p2 * 2;
+      d = d + 1;
+    };
+    var xcount = p2 * 2 - m;
+    var ycount = m - xcount;
+    i = 0;
+    while i < ycount {
+      lengths[syms[order[i]]] = d + 1;
+      i = i + 1;
+    };
+    while i < m {
+      lengths[syms[order[i]]] = d;
+      i = i + 1;
+    };
+  };
+  return lengths;
+}
+
+/// Run-length encode one tree's code lengths with repeat codes 16 (repeat
+/// previous nonzero 3-6x), 17 (zero run 3-10x) and 18 (zero run 11-138x).
+fn _rle_lengths(lens: &Vec[Int], count: Int) -> RleSeq {
+  var syms = Vec[Int].new();
+  var extras = Vec[Int].new();
+  var ebits = Vec[Int].new();
+  var i = 0;
+  while i < count {
+    var v = lens[i];
+    var run = 1;
+    while (i + run) < count && lens[i + run] == v {
+      run = run + 1;
+    };
+    if v == 0 {
+      var rem = run;
+      while rem >= 11 {
+        var k18 = rem;
+        if k18 > 138 {
+          k18 = 138;
+        };
+        syms.push(18);
+        extras.push(k18 - 11);
+        ebits.push(7);
+        rem = rem - k18;
+      };
+      if rem >= 3 {
+        syms.push(17);
+        extras.push(rem - 3);
+        ebits.push(3);
+        rem = 0;
+      };
+      while rem > 0 {
+        syms.push(0);
+        extras.push(0);
+        ebits.push(0);
+        rem = rem - 1;
+      };
+    } else {
+      syms.push(v);
+      extras.push(0);
+      ebits.push(0);
+      var rem2 = run - 1;
+      while rem2 >= 3 {
+        var k16 = rem2;
+        if k16 > 6 {
+          k16 = 6;
+        };
+        syms.push(16);
+        extras.push(k16 - 3);
+        ebits.push(2);
+        rem2 = rem2 - k16;
+      };
+      while rem2 > 0 {
+        syms.push(v);
+        extras.push(0);
+        ebits.push(0);
+        rem2 = rem2 - 1;
+      };
+    };
+    i = i + run;
+  };
+  return RleSeq{ syms: syms; extras: extras; ebits: ebits; };
+}
+
+/// Write one Huffman code MSB-first: reverse the low `count` bits, then let
+/// the LSB-first bit writer put them out in the canonical order.
+fn _dyn_write_sym(out: &mut Vec[UInt8], acc: Int, acc_bits: Int, code: Int, count: Int) -> (Int, Int) {
+  var rev = 0;
+  var m = 1;
+  var i = 0;
+  while i < count {
+    rev = rev + ((code >> (count - 1 - i)) & 1) * m;
+    m = m * 2;
+    i = i + 1;
+  };
+  return _bw_put(out, acc, acc_bits, rev, count);
+}
+
+/// Emit one dynamic block: literal/length + distance codes per RFC 1951
+/// 3.2.7, including the code-length section with repeat codes. Single block
+/// (BFINAL=1); the caller picks it only when it is the smallest encoding.
+fn _dynamic_deflate(data: &Vec[UInt8]) -> Vec[UInt8] {
+  var tokens = _tokenize(data);
+  var fr = _tok_freqs(&tokens);
+  var lit_lens = _huff_lengths(&fr.lit, 15);
+  var dist_lens = _huff_lengths(&fr.dist, 15);
+  var lit_codes = _canonical_codes(&lit_lens, lit_lens.len());
+  var dist_codes = _canonical_codes(&dist_lens, dist_lens.len());
+  var hlit = 257;
+  var found = false;
+  var i = 285;
+  while i >= 257 && !found {
+    if lit_lens[i] > 0 {
+      hlit = i + 1;
+      found = true;
+    };
+    i = i - 1;
+  };
+  var hdist = 1;
+  found = false;
+  i = 29;
+  while i >= 1 && !found {
+    if dist_lens[i] > 0 {
+      hdist = i + 1;
+      found = true;
+    };
+    i = i - 1;
+  };
+  var r1 = _rle_lengths(&lit_lens, hlit);
+  var r2 = _rle_lengths(&dist_lens, hdist);
+  var clfreq = Vec[Int].new();
+  i = 0;
+  while i < 19 {
+    clfreq.push(0);
+    i = i + 1;
+  }
+  i = 0;
+  while i < r1.syms.len() {
+    var s1 = r1.syms[i];
+    clfreq[s1] = clfreq[s1] + 1;
+    i = i + 1;
+  };
+  i = 0;
+  while i < r2.syms.len() {
+    var s2 = r2.syms[i];
+    clfreq[s2] = clfreq[s2] + 1;
+    i = i + 1;
+  };
+  var cl_lens = _huff_lengths(&clfreq, 7);
+  var cl_codes = _canonical_codes(&cl_lens, 19);
+  var order = Vec[Int].new();
+  order.push(16);
+  order.push(17);
+  order.push(18);
+  order.push(0);
+  order.push(8);
+  order.push(7);
+  order.push(9);
+  order.push(6);
+  order.push(10);
+  order.push(5);
+  order.push(11);
+  order.push(4);
+  order.push(12);
+  order.push(3);
+  order.push(13);
+  order.push(2);
+  order.push(14);
+  order.push(1);
+  order.push(15);
+  var hclen = 4;
+  i = 18;
+  while i >= 4 {
+    if cl_lens[order[i]] > 0 {
+      hclen = i + 1;
+      i = 3;
+    };
+    i = i - 1;
+  };
+  var out = Vec[UInt8].new();
+  var acc = 0;
+  var acc_bits = 0;
+  var t = _bw_put(&mut out, acc, acc_bits, 5, 3);
+  acc = t.0;
+  acc_bits = t.1;
+  t = _bw_put(&mut out, acc, acc_bits, hlit - 257, 5);
+  acc = t.0;
+  acc_bits = t.1;
+  t = _bw_put(&mut out, acc, acc_bits, hdist - 1, 5);
+  acc = t.0;
+  acc_bits = t.1;
+  t = _bw_put(&mut out, acc, acc_bits, hclen - 4, 4);
+  acc = t.0;
+  acc_bits = t.1;
+  i = 0;
+  while i < hclen {
+    t = _bw_put(&mut out, acc, acc_bits, cl_lens[order[i]], 3);
+    acc = t.0;
+    acc_bits = t.1;
+    i = i + 1;
+  };
+  i = 0;
+  while i < r1.syms.len() {
+    var rs1 = r1.syms[i];
+    t = _dyn_write_sym(&mut out, acc, acc_bits, cl_codes[rs1], cl_lens[rs1]);
+    acc = t.0;
+    acc_bits = t.1;
+    t = _bw_put(&mut out, acc, acc_bits, r1.extras[i], r1.ebits[i]);
+    acc = t.0;
+    acc_bits = t.1;
+    i = i + 1;
+  };
+  i = 0;
+  while i < r2.syms.len() {
+    var rs2 = r2.syms[i];
+    t = _dyn_write_sym(&mut out, acc, acc_bits, cl_codes[rs2], cl_lens[rs2]);
+    acc = t.0;
+    acc_bits = t.1;
+    t = _bw_put(&mut out, acc, acc_bits, r2.extras[i], r2.ebits[i]);
+    acc = t.0;
+    acc_bits = t.1;
+    i = i + 1;
+  };
+  var ntok = tokens.len() / 3;
+  var tk = 0;
+  while tk < ntok {
+    var kind = tokens[tk * 3];
+    if kind == 0 {
+      var b = tokens[tk * 3 + 1];
+      t = _dyn_write_sym(&mut out, acc, acc_bits, lit_codes[b], lit_lens[b]);
+      acc = t.0;
+      acc_bits = t.1;
+    } else {
+      var mlen = tokens[tk * 3 + 1];
+      var mdist = tokens[tk * 3 + 2];
+      var lc = _len_code_for(mlen);
+      t = _dyn_write_sym(&mut out, acc, acc_bits, lit_codes[lc], lit_lens[lc]);
+      acc = t.0;
+      acc_bits = t.1;
+      t = _bw_put(&mut out, acc, acc_bits, mlen - _len_base(lc), _len_extra(lc));
+      acc = t.0;
+      acc_bits = t.1;
+      var dc = _dist_code_for(mdist);
+      t = _dyn_write_sym(&mut out, acc, acc_bits, dist_codes[dc], dist_lens[dc]);
+      acc = t.0;
+      acc_bits = t.1;
+      t = _bw_put(&mut out, acc, acc_bits, mdist - _dist_base(dc), _dist_extra(dc));
+      acc = t.0;
+      acc_bits = t.1;
+    };
+    tk = tk + 1;
+  };
+  t = _dyn_write_sym(&mut out, acc, acc_bits, lit_codes[256], lit_lens[256]);
+  acc = t.0;
+  acc_bits = t.1;
+  // INLINE final flush (finding #16: the last byte must be pushed from this
+  // frame, not from a nested helper).
+  while acc_bits >= 8 {
+    out.push((acc % 256) as UInt8);
+    acc = acc / 256;
+    acc_bits = acc_bits - 8;
+  };
+  if acc_bits > 0 {
+    out.push((acc % 256) as UInt8);
+  };
+  return out;
 }
 
 // ============================================================================
@@ -334,16 +906,19 @@ fn _stored_deflate(data: &Vec[UInt8]) -> Vec[UInt8] {
   return out;
 }
 
-/// Compress with the RFC 1951 fixed-Huffman encoding (matching the
-/// deterministic reference behavior of zlib Z_FIXED for greedy matchers).
+/// Compress with the RFC 1951 encoding (matching the deterministic
+/// reference behavior shapes of zlib for greedy matchers). Default level 6
+/// picks the smallest of stored/fixed/dynamic per input; for compressible
+/// data that is a dynamic-Huffman block.
 pub fn deflate_compress(data: &Vec[UInt8]) -> Vec[UInt8]
   ensures: result.len() >= 2
 {
   return deflate_compress_level(data, 6);
 }
 
-/// level 0 => STORED blocks (real, uncompressed); levels 1-9 => FIXED
-/// Huffman blocks.
+/// level 0 => STORED blocks (real, uncompressed); levels 1-3 => FIXED
+/// Huffman blocks; levels 4-9 => the smallest of STORED, FIXED and DYNAMIC
+/// Huffman blocks (dynamic is what wins on compressible inputs).
 pub fn deflate_compress_level(data: &Vec[UInt8], level: Int) -> Vec[UInt8]
   ensures: result.len() >= 2
   ensures: (level <= 0) => (result.len() >= data.len() + 5)
@@ -359,7 +934,19 @@ pub fn deflate_compress_level(data: &Vec[UInt8], level: Int) -> Vec[UInt8]
   if lvl == 0 {
     return _stored_deflate(data);
   };
-  return _fixed_deflate(data);
+  var fixed = _fixed_deflate(data);
+  if lvl < 4 {
+    return fixed;
+  };
+  var best = _dynamic_deflate(data);
+  if fixed.len() < best.len() {
+    best = fixed;
+  };
+  var stored = _stored_deflate(data);
+  if stored.len() < best.len() {
+    best = stored;
+  };
+  return best;
 }
 
 // ============================================================================
@@ -602,8 +1189,9 @@ fn _inflate_capped(data: &Vec[UInt8], max_out: Int) -> Result[Vec[UInt8], Str] {
           };
           var all_lens = Vec[Int].new();
           var total = hlit + hdist;
-          i2 = 0;
-          while i2 < total {
+          // Repeat codes can emit several lengths per symbol, so the loop
+          // must count ENTRIES, not decoded symbols.
+          while all_lens.len() < total {
             var sym = _decode_sym(data, pos, &cl_codes, &cl_lens, 19);
             if sym.0 < 0 {
               return Err("deflate: bad clen symbol");
@@ -613,15 +1201,52 @@ fn _inflate_capped(data: &Vec[UInt8], max_out: Int) -> Result[Vec[UInt8], Str] {
             if s < 16 {
               all_lens.push(s);
             } else {
-              // HONEST BOUNDARY (2026-08-28): canonical dynamic tables
-              // WITHOUT repeat codes decode correctly (round-trip proven
-              // against the uniform-length producer), but zlib's 16/17/18
-              // repeat coding currently misparses (probes pydec6/7/8).
-              // Reject loudly instead of risking silent data corruption;
-              // repeat-code support is the next focused fix.
-              return Err("deflate: dynamic repeat codes not yet supported");
+              // RFC 1951 3.2.7 repeat codes: 16 repeats the previous length
+              // 3-6 times, 17 repeats zero 3-10 times, 18 repeats zero
+              // 11-138 times. Wave 158: full support (previously rejected).
+              if s == 16 {
+                if all_lens.len() == 0 {
+                  return Err("deflate: code-length repeat with no previous length");
+                };
+                var r16 = _br_peek(data, pos, 2);
+                if r16 < 0 {
+                  return Err("deflate: truncated code-length repeat");
+                };
+                pos = pos + 2;
+                var prev_len = all_lens[all_lens.len() - 1];
+                var cnt16 = r16 + 3;
+                if all_lens.len() + cnt16 > total {
+                  return Err("deflate: code-length repeat overruns header");
+                };
+                var k16 = 0;
+                while k16 < cnt16 {
+                  all_lens.push(prev_len);
+                  k16 = k16 + 1;
+                };
+              } else {
+                var eb = 3;
+                if s == 18 {
+                  eb = 7;
+                };
+                var r17 = _br_peek(data, pos, eb);
+                if r17 < 0 {
+                  return Err("deflate: truncated code-length repeat");
+                };
+                pos = pos + eb;
+                var cnt17 = r17 + 3;
+                if s == 18 {
+                  cnt17 = r17 + 11;
+                };
+                if all_lens.len() + cnt17 > total {
+                  return Err("deflate: code-length repeat overruns header");
+                };
+                var k17 = 0;
+                while k17 < cnt17 {
+                  all_lens.push(0);
+                  k17 = k17 + 1;
+                };
+              };
             };
-            i2 = i2 + 1;
           }
           i2 = 0;
           while i2 < hlit {
@@ -790,4 +1415,101 @@ pub fn deflate_compress_stream(reader: Int, writer: Int) -> Result[Int, Str] {
     var written = fwrite(compressed.data, 1 as UInt, compressed.len() as UInt, writer as *UInt8);
     return Ok(written as Int);
   };
+}
+
+// ============================================================================
+// Public RFC 1951 tables (wave 158; requesters docx/pptx/xlsx via
+// REL-20261015-2202 + the packages wishlist). Built in locals on every call
+// (module-level arrays are mis-materialized by this toolchain).
+// ============================================================================
+
+/// RFC 1951 3.2.5 literal/length base values; index i is code 257 + i
+/// (29 entries covering codes 257..285). O(29).
+pub fn deflate_length_base_table() -> Vec[Int]
+  ensures: result.len() == 29
+{
+  var t = Vec[Int].new();
+  var c = 257;
+  while c <= 285 {
+    t.push(_len_base(c));
+    c = c + 1;
+  };
+  return t;
+}
+
+/// RFC 1951 3.2.5 extra-bit counts for length codes 257..285 (29 entries).
+/// O(29).
+pub fn deflate_length_extra_table() -> Vec[Int]
+  ensures: result.len() == 29
+{
+  var t = Vec[Int].new();
+  var c = 257;
+  while c <= 285 {
+    t.push(_len_extra(c));
+    c = c + 1;
+  };
+  return t;
+}
+
+/// RFC 1951 3.2.5 distance base values; index i is distance code i
+/// (30 entries covering codes 0..29). O(30).
+pub fn deflate_distance_base_table() -> Vec[Int]
+  ensures: result.len() == 30
+{
+  var t = Vec[Int].new();
+  var c = 0;
+  while c < 30 {
+    t.push(_dist_base(c));
+    c = c + 1;
+  };
+  return t;
+}
+
+/// RFC 1951 3.2.5 extra-bit counts for distance codes 0..29 (30 entries).
+/// O(30).
+pub fn deflate_distance_extra_table() -> Vec[Int]
+  ensures: result.len() == 30
+{
+  var t = Vec[Int].new();
+  var c = 0;
+  while c < 30 {
+    t.push(_dist_extra(c));
+    c = c + 1;
+  };
+  return t;
+}
+
+/// RFC 1951 3.2.6 fixed literal/length code lengths (288 entries; symbol
+/// index, code 256 is the end-of-block symbol). O(288).
+pub fn deflate_fixed_lit_lengths() -> Vec[Int]
+  ensures: result.len() == 288
+{
+  var t = Vec[Int].new();
+  var i = 0;
+  while i < 288 {
+    var l = 8;
+    if i >= 144 && i <= 255 {
+      l = 9;
+    };
+    if i >= 256 && i <= 279 {
+      l = 7;
+    };
+    t.push(l);
+    i = i + 1;
+  };
+  return t;
+}
+
+/// RFC 1951 3.2.6 fixed distance code lengths: 30 codes of 5 bits (the
+/// fixed table defines 32; only codes 0..29 can appear in a stream). O(30).
+pub fn deflate_fixed_dist_lengths() -> Vec[Int]
+  ensures: result.len() == 30
+{
+  var t = Vec[Int].new();
+  var i = 0;
+  while i < 30 {
+    t.push(5);
+    i = i + 1;
+  };
+  return t;
 }
