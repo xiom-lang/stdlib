@@ -301,3 +301,252 @@ pub fn glob_compile_match(compiled: Int, s: Str) -> Bool
   }
   glob_match(_compiled, s)
 }
+
+// ============================================================================
+// Extended glob dialects (wave 170)
+// ----------------------------------------------------------------------------
+// glob_match above stays the frozen simple dialect ('*' and '?' only; '[' and
+// '**' are ordinary characters -- locked by the smoke corpus). The functions
+// below ADD the richer surface the packages wishlist asked for:
+//   glob_match_ext   -- '*', '?', '[...]' classes and '\' escapes
+//   glob_match_path  -- path semantics: atoms never cross the separator and a
+//                       complete '**' segment spans zero or more segments
+// All three are CASE-SENSITIVE (the simple dialect's case folding lives in
+// glob_match_case_insensitive).
+// ============================================================================
+
+/// Index of the closing ']' of the class opening at `i` ('['), or -1 when
+/// the class is unterminated before `limit`. A leading '!' or '^' negates; a
+/// ']' in the first class position is a literal member; `esc` enables '\'
+/// escaping inside the class.
+fn _glob_class_end(pattern: Str, i: Int, limit: Int, esc: Bool) -> Int {
+  var j = i + 1;
+  if j < limit {
+    var f = pattern.char_at(j) as Int;
+    if f == 33 || f == 94 { j = j + 1; }
+  }
+  if j < limit && (pattern.char_at(j) as Int) == 93 { j = j + 1; }
+  while j < limit {
+    var c = pattern.char_at(j) as Int;
+    if c == 93 { return j; }
+    if esc && c == 92 && j + 1 < limit {
+      j = j + 2;
+    } else {
+      j = j + 1;
+    }
+  }
+  return -1;
+}
+
+/// True when character code `c` is a member of the class between `cs` (the
+/// position after '[') and `ce` (the closing ']' index). Leading '!' or '^'
+/// negates; '-' spans ranges ('a-z'); `esc` enables '\' escaping.
+fn _glob_class_has(pattern: Str, cs: Int, ce: Int, c: Int, esc: Bool) -> Bool {
+  var negate = false;
+  var j = cs;
+  if j < ce {
+    var f = pattern.char_at(j) as Int;
+    if f == 33 || f == 94 {
+      negate = true;
+      j = j + 1;
+    }
+  }
+  var hit = false;
+  while j < ce {
+    var pc = pattern.char_at(j) as Int;
+    if esc && pc == 92 && j + 1 < ce {
+      if (pattern.char_at(j + 1) as Int) == c { hit = true; }
+      j = j + 2;
+    } elif j + 2 < ce && (pattern.char_at(j + 1) as Int) == 45 {
+      var lo = pc;
+      var hi = pattern.char_at(j + 2) as Int;
+      if lo <= c && c <= hi { hit = true; }
+      j = j + 3;
+    } else {
+      if pc == c { hit = true; }
+      j = j + 1;
+    }
+  }
+  if negate {
+    return !hit;
+  }
+  return hit;
+}
+
+/// Number of pattern characters consumed by the single-character token
+/// starting at `pi` (0 when past `p1`): 1 for a literal or '?', 2 for an
+/// escape pair ('\x'), the full span for a well-formed '[...]' class, and 1
+/// for an unterminated '[' (which then matches a literal '[').
+fn _glob_tok_len(pattern: Str, pi: Int, p1: Int, esc: Bool) -> Int {
+  if pi >= p1 { return 0; }
+  var c = pattern.char_at(pi) as Int;
+  if esc && c == 92 {
+    if pi + 1 < p1 { return 2; }
+    return 1;
+  }
+  if c == 91 {
+    var ce = _glob_class_end(pattern, pi, p1, esc);
+    if ce < 0 { return 1; }
+    return ce - pi + 1;
+  }
+  return 1;
+}
+
+/// True when the token of length `tok` at `pi` matches character code `c`.
+/// Tokens: literal (incl. a lone '\' or an unterminated '['), '?', '\x'
+/// escape and '[...]' class.
+fn _glob_tok_match(pattern: Str, pi: Int, tok: Int, c: Int, esc: Bool) -> Bool {
+  var pc = pattern.char_at(pi) as Int;
+  if esc && pc == 92 {
+    if tok == 2 { return (pattern.char_at(pi + 1) as Int) == c; }
+    return c == 92;
+  }
+  if pc == 63 { return true; }
+  if pc == 91 {
+    if tok == 1 { return c == 91; }
+    return _glob_class_has(pattern, pi + 1, pi + tok - 1, c, esc);
+  }
+  return pc == c;
+}
+
+/// Greedy star-backtracking match over the pattern range [p0, p1) and string
+/// range [s0, s1) ('*' = any run, single-character tokens as per
+/// _glob_tok_len; `esc` enables '\' escaping). O((p1 - p0) * (s1 - s0))
+/// worst case, O(1) extra space.
+fn _glob_match_range(pattern: Str, p0: Int, p1: Int, s: Str, s0: Int, s1: Int, esc: Bool) -> Bool {
+  var pi = p0;
+  var si = s0;
+  var star = -1;
+  var star_si = 0;
+  while si < s1 {
+    var pc = -1;
+    if pi < p1 { pc = pattern.char_at(pi) as Int; }
+    if pc == 42 {
+      star = pi;
+      star_si = si;
+      pi = pi + 1;
+    } else {
+      var tok = _glob_tok_len(pattern, pi, p1, esc);
+      if tok > 0 && _glob_tok_match(pattern, pi, tok, s.char_at(si) as Int, esc) {
+        pi = pi + tok;
+        si = si + 1;
+      } elif star >= 0 {
+        pi = star + 1;
+        star_si = star_si + 1;
+        si = star_si;
+      } else {
+        return false;
+      }
+    }
+  }
+  while pi < p1 && (pattern.char_at(pi) as Int) == 42 {
+    pi = pi + 1;
+  }
+  return pi >= p1;
+}
+
+/// Match `s` against the extended glob syntax, CASE-SENSITIVE:
+///   '*'      zero or more characters (a second '*' is not special here)
+///   '?'      exactly one character
+///   '[...]'  one character class: leading '!' or '^' negates, '-' spans
+///            ranges ('a-z'), ']' first is a literal member, '\' escapes
+///            inside the class
+///   '\x'     literal x (a backslash escapes the next pattern character)
+/// An unterminated '[' is a literal '['. O(|pattern| * |s|) worst case.
+pub fn glob_match_ext(pattern: Str, s: Str) -> Bool
+  ensures: (pattern.len() == 0) => (result == (s.len() == 0))
+{
+  return _glob_match_range(pattern, 0, pattern.len(), s, 0, s.len(), true);
+}
+
+/// Split `s` into (start, length) segments at `sep1` (and `sep2` when >= 0);
+/// one entry per separator plus the tail, so "" yields one empty segment.
+fn _glob_split(s: Str, sep1: Int, sep2: Int, starts: &mut Vec[Int], lens: &mut Vec[Int]) {
+  var seg_start = 0;
+  var i = 0;
+  while i < s.len() {
+    var c = s.char_at(i) as Int;
+    if c == sep1 || (sep2 >= 0 && c == sep2) {
+      starts.push(seg_start);
+      lens.push(i - seg_start);
+      seg_start = i + 1;
+    }
+    i = i + 1;
+  }
+  starts.push(seg_start);
+  lens.push(s.len() - seg_start);
+}
+
+/// True when the pattern segment [start, start + len) consists of two or
+/// more '*' only -- the GLOBSTAR segment.
+fn _glob_seg_is_globstar(pattern: Str, start: Int, len: Int) -> Bool {
+  if len < 2 { return false; }
+  var i = start;
+  while i < start + len {
+    if (pattern.char_at(i) as Int) != 42 { return false; }
+    i = i + 1;
+  }
+  return true;
+}
+
+/// Segment-list matcher shared by the path dialects: walk pattern and path
+/// segment lists in lockstep (without separators inside segments); a
+/// GLOBSTAR segment tries zero or more whole path segments. Recursion depth
+/// is bounded by the number of globstar segments; the segment zipper loop
+/// keeps the common case flat.
+fn _glob_path_from(ps: &Vec[Int], pl: &Vec[Int], ss: &Vec[Int], sl: &Vec[Int], pattern: Str, s: Str, pi0: Int, si0: Int) -> Bool {
+  var npat = ps.len();
+  var nstr = ss.len();
+  var pi = pi0;
+  var si = si0;
+  while pi < npat {
+    if _glob_seg_is_globstar(pattern, ps[pi], pl[pi]) {
+      var k = si;
+      while k <= nstr {
+        if _glob_path_from(ps, pl, ss, sl, pattern, s, pi + 1, k) { return true; }
+        k = k + 1;
+      }
+      return false;
+    }
+    if si >= nstr { return false; }
+    var seg_ok = _glob_match_range(pattern, ps[pi], ps[pi] + pl[pi], s, ss[si], ss[si] + sl[si], false);
+    if !seg_ok { return false; }
+    pi = pi + 1;
+    si = si + 1;
+  }
+  return si == nstr;
+}
+
+/// Path-aware glob match, CASE-SENSITIVE, over separator `sep` ('/', '\\',
+/// or any byte): '?' matches one non-separator character, '*' zero or more
+/// non-separator characters, '[...]' one non-separator character, and a
+/// pattern segment of two or more '*' only is a GLOBSTAR matching zero or
+/// more WHOLE path segments (leading, middle and trailing positions all
+/// work; "src/**" therefore also matches "src" itself). There is NO escape
+/// character in this dialect -- a backslash is an ordinary character, so
+/// Windows-style patterns need no quoting. A trailing separator in the
+/// pattern demands a trailing (empty) segment. O(|pattern| * |path|) worst.
+pub fn glob_match_path(pattern: Str, path: Str, sep: Char) -> Bool {
+  var ps = Vec[Int].new();
+  var pl = Vec[Int].new();
+  var ss = Vec[Int].new();
+  var sl = Vec[Int].new();
+  _glob_split(pattern, sep as Int, -1, &mut ps, &mut pl);
+  _glob_split(path, sep as Int, -1, &mut ss, &mut sl);
+  return _glob_path_from(&ps, &pl, &ss, &sl, pattern, path, 0, 0);
+}
+
+/// Like glob_match_path with BOTH '/' and '\\' treated as separators, for
+/// mixed POSIX/Windows path trees. CASE-SENSITIVE. Because a backslash is
+/// always a separator here, this dialect has no escape character either (use
+/// glob_match_ext for escape semantics). O(|pattern| * |path|) worst case.
+pub fn glob_match_path_any(pattern: Str, path: Str) -> Bool {
+  var ps = Vec[Int].new();
+  var pl = Vec[Int].new();
+  var ss = Vec[Int].new();
+  var sl = Vec[Int].new();
+  _glob_split(pattern, 47, 92, &mut ps, &mut pl);
+  _glob_split(path, 47, 92, &mut ss, &mut sl);
+  return _glob_path_from(&ps, &pl, &ss, &sl, pattern, path, 0, 0);
+}
+

@@ -38,6 +38,7 @@ module p_wave170_shapes
 
 use xiom.collect.graph;
 use xiom.test.assertions;
+use xiom.misc.glob;
 use xiom.string;
 
 fn main() -> Int {
@@ -249,6 +250,84 @@ fn main() -> Int {
   check_eq_str(&mut a11c, "x", "y\\z", "esc2");
   let js3 = assertions_to_json(&a11c);
   if !string.str_contains(js3, "y\\\\z") { return 11; }
+
+  // ---- Row 12: glob_match_ext ---------------------------------------------
+  if !glob.glob_match_ext("*.xi", "main.xi") { return 12; }
+  if glob.glob_match_ext("*.xi", "MAIN.XI") { return 12; }        // case-sensitive
+  if !glob.glob_match_ext("a?c", "abc") { return 12; }
+  if glob.glob_match_ext("a?c", "ac") { return 12; }
+  if !glob.glob_match_ext("a**b", "ab") { return 12; }
+  if !glob.glob_match_ext("[ab]c", "ac") { return 12; }
+  if glob.glob_match_ext("[ab]c", "xc") { return 12; }
+  if !glob.glob_match_ext("[!ab]c", "xc") { return 12; }
+  if glob.glob_match_ext("[!ab]c", "ac") { return 12; }
+  if !glob.glob_match_ext("[^ab]c", "xc") { return 12; }
+  if !glob.glob_match_ext("file[0-9].txt", "file7.txt") { return 12; }
+  if glob.glob_match_ext("file[0-9].txt", "filea.txt") { return 12; }
+  if !glob.glob_match_ext("[]]x", "]x") { return 12; }            // leading ']' literal
+  if glob.glob_match_ext("[]]x", "ax") { return 12; }
+  if !glob.glob_match_ext("a\\*b", "a*b") { return 12; }          // '\' escapes '*'
+  if glob.glob_match_ext("a\\*b", "axb") { return 12; }
+  if !glob.glob_match_ext("\\[ab\\]", "[ab]") { return 12; }
+  if !glob.glob_match_ext("a[b", "a[b") { return 12; }            // unterminated class = literal
+  if glob.glob_match_ext("a[b", "axb") { return 12; }
+  if !glob.glob_match_ext("", "") { return 12; }
+  if glob.glob_match_ext("", "a") { return 12; }
+
+  // ---- Row 13: frozen simple dialect unchanged (separation lock) ----------
+  if !glob.glob_match("*.xi", "main.xi") { return 13; }
+  if glob.glob_match("[ab]c", "ac") { return 13; }   // class literal in simple dialect
+  if !glob.glob_match("a**b", "ab") { return 13; }   // simple dialect: '**' = two stars = any run
+  if !glob.glob_match_ext("[ab]c", "ac") { return 13; }
+  if !glob.glob_has_magic("[a]") { return 13; }
+
+  // ---- Row 14: glob_match_path POSIX --------------------------------------
+  if !glob.glob_match_path("src/*.xi", "src/main.xi", '/') { return 14; }
+  if glob.glob_match_path("src/*.xi", "src/sub/main.xi", '/') { return 14; }
+  if glob.glob_match_path("src/*.xi", "src\\main.xi", '/') { return 14; }   // '\' not a sep here
+  if !glob.glob_match_path("*.xi", "main.xi", '/') { return 14; }
+  if glob.glob_match_path("*.xi", "a/main.xi", '/') { return 14; }
+  if glob.glob_match_path("a?b", "a/b", '/') { return 14; }
+  if !glob.glob_match_path("/abs/*", "/abs/file", '/') { return 14; }
+  if !glob.glob_match_path("a/b/", "a/b/", '/') { return 14; }
+  if glob.glob_match_path("a/b/", "a/b", '/') { return 14; }
+  // globstar: zero or more whole segments
+  if !glob.glob_match_path("src/**/*.xi", "src/a.xi", '/') { return 14; }
+  if !glob.glob_match_path("src/**/*.xi", "src/a/b.xi", '/') { return 14; }
+  if !glob.glob_match_path("src/**/*.xi", "src/a/b/c.xi", '/') { return 14; }
+  if glob.glob_match_path("src/**/*.xi", "src/b.xt", '/') { return 14; }
+  if !glob.glob_match_path("**/*.xi", "main.xi", '/') { return 14; }
+  if !glob.glob_match_path("**/*.xi", "a/b/main.xi", '/') { return 14; }
+  if !glob.glob_match_path("a/**", "a", '/') { return 14; }
+  if !glob.glob_match_path("a/**", "a/b", '/') { return 14; }
+  if !glob.glob_match_path("a/**/b", "a/b", '/') { return 14; }
+  if !glob.glob_match_path("a/**/b", "a/x/y/b", '/') { return 14; }
+  if glob.glob_match_path("a/**/b", "a/xb", '/') { return 14; }  // globstar spans whole segments only
+
+  // ---- Row 15: Windows separator + both-separator table -------------------
+  if !glob.glob_match_path("src\\*.xi", "src\\main.xi", 92 as Char) { return 15; }
+  if glob.glob_match_path("src\\*.xi", "src\\sub\\main.xi", 92 as Char) { return 15; }
+  if !glob.glob_match_path("**\\*.xi", "a\\b\\main.xi", 92 as Char) { return 15; }
+  if !glob.glob_match_path_any("src/*.xi", "src\\main.xi") { return 15; }
+  if !glob.glob_match_path_any("src\\*.xi", "src/main.xi") { return 15; }
+  if !glob.glob_match_path_any("C:\\*", "C:\\x") { return 15; }
+  if !glob.glob_match_path_any("C:/*", "C:\\x") { return 15; }
+  if glob.glob_match_path_any("*.xi", "src/main.xi") { return 15; }
+  if glob.glob_match_path_any("src/*.xi", "SRC/main.xi") { return 15; }  // case-sensitive
+
+  // ---- Row 16: path edge table --------------------------------------------
+  if !glob.glob_match_path("", "", '/') { return 16; }
+  if glob.glob_match_path("", "a", '/') { return 16; }
+  if !glob.glob_match_path("**", "", '/') { return 16; }
+  if !glob.glob_match_path("**", "a/b", '/') { return 16; }
+  if !glob.glob_match_path("a**b", "axb", '/') { return 16; }    // partial-segment '**' = '*'
+  if !glob.glob_match_path("[ab]x", "ax", '/') { return 16; }    // classes work per segment
+  if glob.glob_match_path("[ab]x", "a/x", '/') { return 16; }
+  if !glob.glob_match_path("a\\*b", "a\\*b", '/') { return 16; } // no escape: '\' literal
+  if glob.glob_match_path("a\\*b", "axb", '/') { return 16; }
+  if !glob.glob_match_path("a\\*b", "a\\xb", '/') { return 16; }
+  if !glob.glob_match_path("a/b", "a/b", '/') { return 16; }
+  if glob.glob_match_path("a/b", "a/b/c", '/') { return 16; }
 
   return 0;
 }
