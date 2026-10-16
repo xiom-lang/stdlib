@@ -188,3 +188,32 @@ pub fn float_classify(f: Float64) -> Str
   if float_is_subnormal(f) { return "subnormal"; }
   "normal"
 }
+
+// ----------------------------------------------------------------------------
+// Float32 bitcast pair (REL-20261010-1550-xvector-6). The Float64 pair above
+// lowers to a compiler intrinsic (m194); this pair is runtime-backed (an
+// exact memcpy bitcast in the runtime) so Float32 consumers get the same
+// contract today. A compiler-side Float32 lowering can replace the shim
+// later without an API change.
+// ----------------------------------------------------------------------------
+
+extern "C" {
+  fn xiom_f32_bits(f: Float32) -> Int;
+  fn xiom_bits_to_f32(bits: Int) -> Float32;
+}
+
+/// Raw 32-bit IEEE-754 bit pattern of f (runtime-backed bitcast,
+/// REL-20261010-1550-xvector-6). Zero has two patterns; 1.0 is 0x3F800000.
+pub fn f32_bits(f: Float32) -> Int
+  ensures: (f == 1.0) => (result == 1065353216)
+{
+  return unsafe { xiom_f32_bits(f) };
+}
+
+/// Float32 reconstructed from a raw 32-bit IEEE-754 bit pattern
+/// (runtime-backed bitcast, REL-20261010-1550-xvector-6).
+pub fn bits_to_f32(bits: Int) -> Float32
+  ensures: f32_bits(result) == bits
+{
+  return unsafe { xiom_bits_to_f32(bits) };
+}

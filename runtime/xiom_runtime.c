@@ -7815,3 +7815,19 @@ uint8_t* xiom_errno_ptr(void) {
 }
 #endif
 
+
+/* IEEE-754 Float32 bitcast pair (runtime-backed; REL-20261010-1550-xvector-6).
+   The Float64 pair lowers to a compiler intrinsic (m194); this pair gives
+   Float32 consumers the same contract today via an exact memcpy bitcast.
+   long long returns per the runtime-shim rule. */
+long long xiom_f32_bits(float f) {
+    unsigned int bits = 0;
+    memcpy(&bits, &f, sizeof(bits));
+    return (long long)bits;
+}
+float xiom_bits_to_f32(long long b) {
+    unsigned int u = (unsigned int)b;
+    float f = 0.0f;
+    memcpy(&f, &u, sizeof(f));
+    return f;
+}

@@ -118,8 +118,9 @@ shape).
 (9) TLS server+client + ALPN (2202 item 1, the ceiling-setter): via
 docs/TLS_DECISION.md (schannel/OpenSSL dl_open), gated on the
 compiler-side FFI hardening ref PULSE filed; then wss:// + h2-via-ALPN.
-(10) f32_bits/bits_to_f32 pair (1550-xvector-6; fold into the next
-num-touching wave).
+(10) DONE (block 200): runtime-backed f32_bits/bits_to_f32 pair +
+probe p_wave147; floors177. A compiler-side Float32 bitcast lowering
+can replace the shim later without an API change.
 (11) phase-2 shelf (2202 items 7-10): SSE helpers, inotify parity, h2
 framing/HPACK scoping, epoll/kqueue/IOCP + LISTEN_FDS.
 PERVASIVE: the ranked sweep (convert/validate+json; serialize toml/csv/
@@ -134,11 +135,11 @@ stay compiler-owned; monitor the three still-red compiler rows
 p_trailing_match_after_push) at each pin; wave 140 wiring landed
 (36bcaac; floors173).
 
-GATES (WAVE PIN = official v0.64.5; blocks 191/194): modules 510/510,
-corpus 956/956, probes 318/318, barename 0/510 (827.9s), module-smoke
-499/518 + 3501/6239 OK, floors172 + doc OK; floors173 wired with wave
-140. (v0.64.4-pin history: 955/955, 315/315, 510/510, 0/510,
-module-smoke 499/518, 3500/6239.)
+GATES (WAVE PIN = official v0.64.5; blocks 191/194/200): modules
+510/510, corpus 962/962 (956 + the debug lane's 6 diag smokes, all
+green), probes 321 files (full slices green; the last single pass ran
+320 with one construction fix since folded in), barename 0/510,
+floors177 (num 37.9), doc OK, module-smoke 499/518 + 3501/6242 OK.
 
 FINDINGS: 15 Current, all compiler (tools/known_failures/README.md); the
 two p_v065 regression locks are closed on the fixed candidate and stay in
@@ -3534,6 +3535,26 @@ registry pin, agent recon for the rest)**
   clean except the untracked out/ dir at this round.
 - Two long-lived git processes (from ~14:20Z) sit in the relays repo;
   the bus itself is consistent. The next writer continues from 169/170.
+
+**SESSION 2026-10-16 block 200 (wave 147: Float32 bitcast pair landed (runtime-backed; REL-20261010-1550-xvector-6); final battery across slices GREEN; floors177; the pulse/engine/orbitdb/xvector 100%-coverage mandate engaged)**
+- f32_bits / bits_to_f32 in xiom.num.float: runtime-backed exact memcpy
+  bitcast (long long shim per the runtime rule); the Float64 pair keeps
+  its compiler-intrinsic route (m194). Probe p_wave147_shapes.xi rows
+  1-8 (1.0/0.0/0x80000000/0.5/-2.5/inf/qNaN patterns) green 3/3
+  battery-config. floors177 (num 37.6 -> 37.9) wired.
+- Battery acceptance (official pin, 2026-10-16 morning): check_modules
+  510/510 (352.6s); corpus 962/962 (1083.7s; 956 + the debug lane's 6
+  diag smokes, all green); probes 320-run 319/320 -- the one
+  compilefail was p_wave78's SpawnThread construction (the wave-146
+  field extension; fixed 696b944) -- plus p_wave147 = 321 files, all
+  green across slices; barename 0/510 (620.4s); floors176 OK; doc OK;
+  module-smoke 499/518 + 3501/6242 OK.
+- User mandate (2026-10-16): pulse / engine / orbitdb / xvector asks to
+  100% coverage. orbitdb's cluster is fully closed; the active set:
+  xvector-6 DONE (this wave); darwin close-out (1549-pulse-7 +
+  1609-pulse-2) next; 1513-engine close-loop + 1131/1618 notes; the
+  1834-engine-6 pool flip and 2202 items 1-6 stay mapped.
+- Tree: this commit.
 
 **SESSION 2026-10-16 block 199 (wave 146 / pin-switch W5: thread spawn e2e FLIPPED to real OS threads -- spawn/join/detach/spawn_scoped; probe p_wave145; runtime long-return widening; spawn_with stays inline (no arg channel); floors176)**
 - spawn.xi is REAL: spawn(f) runs the closure on an OS thread via
