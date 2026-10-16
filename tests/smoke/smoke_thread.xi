@@ -63,7 +63,7 @@ fn main() -> Int {
   var p2 = park.park_timeout(20);
   if !p2 { io.println("park:unpark"); return 11; }
 
-  // pool: submit, join, shutdown semantics
+  // pool: submit, join, shutdown semantics + real execution (wave 153)
   var p = pool.thread_pool_new(4);
   if pool.tp_size(&p) != 4 { io.println("pool:size"); return 12; }
   if !pool.tp_submit(&mut p, bump) { io.println("pool:submit"); return 13; }
@@ -73,10 +73,15 @@ fn main() -> Int {
   pool.tp_join(&mut p);
   if pool.tp_busy(&p) != 0 { io.println("pool:join_busy"); return 17; }
   if pool.tp_idle(&p) != 4 { io.println("pool:join_idle"); return 18; }
+  // wave 153: both accepted jobs really ran exactly once -- tp_submit on
+  // its OS thread (joined above), tp_submit_with inline at submit.
+  if _n != 2 { io.println("pool:run_once"); return 26; }
   pool.tp_shutdown(&mut p);
   if pool.tp_submit(&mut p, bump) { io.println("pool:shutdown"); return 19; }
 
-  // spawn: real spawn/join since wave 145 (was an inline simulation)
+  // spawn: real spawn/join since wave 145 (was an inline simulation);
+  // reset the counter the pool jobs advanced.
+  _n = 0;
   var t = spawn.spawn(bump);
   var jr = spawn.join(t);
   if jr.is_err { io.println("spawn:join"); return 20; }
