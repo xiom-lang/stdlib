@@ -6298,13 +6298,18 @@ int xiom_gethostname(char* buf, int len) {
 #endif
 
 /* ================================================================
-   Directory watch (wave 124; REL-20261012-2012-engine-3). Windows-first:
-   ReadDirectoryChangesW with per-slot overlapped buffers and manual-reset
-   events; up to 8 concurrent watches with 4 KiB buffers. xiom_watch_poll
-   surfaces one record per call (1 = event written to kind_out + path_buf,
-   0 = timeout, 2 = overflow with an empty path, -1 = error). Paths are
-   relative to the watched directory (UTF-8). POSIX (inotify/kqueue) is a
-   documented -1 until a POSIX consumer needs it. Handles are slot + 1.
+   Directory watch (wave 124; POSIX leg wave 171, REL-20261016-1129-
+   xvector item 2). Windows: ReadDirectoryChangesW with per-slot
+   overlapped buffers and manual-reset events. Linux: inotify with one
+   descriptor per slot, a bounded wd -> relative-path map, and poll(2)
+   for the blocking wait. Up to 8 concurrent watches with 4 KiB buffers.
+   xiom_watch_poll surfaces one record per call (1 = event written to
+   kind_out + path_buf, 0 = timeout, 2 = overflow with an empty path,
+   -1 = error). Paths are relative to the watched directory (UTF-8).
+   Recursive: Windows watches the subtree in-kernel; Linux attaches one
+   watch per subdirectory (bounded at XIOM_WATCH_MAX_DIRS per slot,
+   new directories attached as they appear). Other POSIX (darwin/BSD,
+   kqueue) stays a documented -1 until needed. Handles are slot + 1.
    ================================================================ */
 
 #ifdef _WIN32
@@ -6438,7 +6443,247 @@ long long xiom_watch_close(long long handle) {
     return 0;
 }
 
-#else /* POSIX: documented -1 until inotify/kqueue land */
+#elif defined(__linux__)
+
+/* Real inotify leg (wave 171; REL-20261016-1129-xvector item 2). One
+   inotify descriptor per slot plus a bounded wd -> relative-path map; the
+   4 KiB read buffer mirrors the Windows one-record-per-call contract.
+   Recursive mode pre-attaches every existing subdirectory and attaches
+   new directories as IN_CREATE/IN_MOVED_TO observations arrive (bounded
+   at XIOM_WATCH_MAX_DIRS per slot). Kind mapping: IN_CREATE -> 1;
+   IN_MODIFY / IN_ATTRIB -> 2; IN_DELETE (also self-delete / self-move)
+   -> 3; IN_MOVED_FROM / IN_MOVED_TO -> 4; queue overflow -> 2
+   (WATCH_OVERFLOW, empty path). Blocks in poll(2). */
+
+#include <sys/inotify.h>
+#include <poll.h>
+#include <fcntl.h>
+#include <errno.h>
+
+#define XIOM_WATCH_SLOTS 8
+#define XIOM_WATCH_BUF 4096
+#define XIOM_WATCH_MAX_DIRS 256
+#define XIOM_WATCH_PREF 512
+
+typedef struct {
+    int wd;
+    char prefix[XIOM_WATCH_PREF]; /* "" at the root, then "sub/", "sub/deep/" */
+} xiom_watch_dirmap;
+
+typedef struct {
+    int fd;
+    int subtree;
+    int in_use;
+    int nwmaps;
+    char root[PATH_MAX];
+    xiom_watch_dirmap maps[XIOM_WATCH_MAX_DIRS];
+    char buf[XIOM_WATCH_BUF];
+    long long filled;
+    long long pos;
+} xiom_watch_slot;
+
+static xiom_watch_slot xiom_watch_slots[XIOM_WATCH_SLOTS];
+
+static xiom_watch_dirmap* xiom_watch_map_of(xiom_watch_slot* s, int wd) {
+    int i;
+    for (i = 0; i < s->nwmaps; i++) {
+        if (s->maps[i].wd == wd) return &s->maps[i];
+    }
+    return NULL;
+}
+
+static int xiom_watch_attach(xiom_watch_slot* s, const char* full, const char* prefix) {
+    xiom_watch_dirmap* m;
+    int wd;
+    if (s->nwmaps >= XIOM_WATCH_MAX_DIRS) return -1;
+    if (strlen(prefix) >= XIOM_WATCH_PREF) return -1;
+    wd = inotify_add_watch(s->fd, full, IN_CREATE | IN_MODIFY | IN_DELETE |
+                           IN_MOVED_FROM | IN_MOVED_TO | IN_ATTRIB);
+    if (wd < 0) return -1;
+    m = xiom_watch_map_of(s, wd);
+    if (m == NULL) {
+        m = &s->maps[s->nwmaps];
+        m->wd = wd;
+        s->nwmaps++;
+    }
+    strcpy(m->prefix, prefix);
+    return 0;
+}
+
+static void xiom_watch_scan(xiom_watch_slot* s, const char* full, const char* prefix) {
+    DIR* d = opendir(full);
+    struct dirent* e;
+    if (d == NULL) return;
+    while ((e = readdir(d)) != NULL) {
+        char child_full[PATH_MAX];
+        char child_rel[XIOM_WATCH_PREF];
+        struct stat st;
+        if (e->d_name[0] == '.' &&
+            (e->d_name[1] == '\0' || (e->d_name[1] == '.' && e->d_name[2] == '\0'))) continue;
+        if (s->nwmaps >= XIOM_WATCH_MAX_DIRS) break;
+        snprintf(child_full, sizeof(child_full), "%s/%s", full, e->d_name);
+        if (stat(child_full, &st) != 0 || !S_ISDIR(st.st_mode)) continue;
+        if (snprintf(child_rel, sizeof(child_rel), "%s%s/", prefix, e->d_name) >= (int)sizeof(child_rel)) continue;
+        if (xiom_watch_attach(s, child_full, child_rel) != 0) continue;
+        xiom_watch_scan(s, child_full, child_rel);
+    }
+    closedir(d);
+}
+
+long long xiom_watch_open(const char* path, long long recursive) {
+    int i, fl;
+    struct stat st;
+    if (path == NULL) return -1;
+    if (stat(path, &st) != 0 || !S_ISDIR(st.st_mode)) return -1;
+    for (i = 0; i < XIOM_WATCH_SLOTS; i++) {
+        if (!xiom_watch_slots[i].in_use) {
+            xiom_watch_slot* s = &xiom_watch_slots[i];
+            size_t rl;
+            s->fd = inotify_init();
+            if (s->fd < 0) return -1;
+            fl = fcntl(s->fd, F_GETFL, 0);
+            if (fl >= 0) (void)fcntl(s->fd, F_SETFL, fl | O_NONBLOCK);
+            (void)fcntl(s->fd, F_SETFD, FD_CLOEXEC);
+            s->subtree = recursive ? 1 : 0;
+            s->nwmaps = 0;
+            s->filled = 0;
+            s->pos = 0;
+            rl = strlen(path);
+            if (rl >= sizeof(s->root)) rl = sizeof(s->root) - 1;
+            memcpy(s->root, path, rl);
+            s->root[rl] = '\0';
+            s->in_use = 1;
+            if (xiom_watch_attach(s, path, "") != 0) {
+                close(s->fd);
+                s->fd = -1;
+                s->in_use = 0;
+                return -1;
+            }
+            if (s->subtree) xiom_watch_scan(s, path, "");
+            return (long long)(i + 1);
+        }
+    }
+    return -1;
+}
+
+long long xiom_watch_poll(long long handle, long long timeout_ms, long long* kind_out,
+                          char* path_buf, long long buf_len) {
+    int idx = (int)handle - 1;
+    xiom_watch_slot* s;
+    if (idx < 0 || idx >= XIOM_WATCH_SLOTS || !xiom_watch_slots[idx].in_use) return -1;
+    s = &xiom_watch_slots[idx];
+    for (;;) {
+        while (s->pos + (long long)sizeof(struct inotify_event) <= s->filled) {
+            struct inotify_event* ev = (struct inotify_event*)(void*)(s->buf + s->pos);
+            long long reclen = (long long)sizeof(struct inotify_event) + (long long)ev->len;
+            if (s->pos + reclen > s->filled) { s->pos = s->filled; break; }
+            s->pos += reclen;
+            if (ev->mask & IN_Q_OVERFLOW) {
+                if (path_buf != NULL && buf_len > 0) path_buf[0] = '\0';
+                if (kind_out != NULL) *kind_out = 5;
+                return 2;
+            }
+            if (ev->mask & IN_IGNORED) {
+                /* The kernel dropped this watch (rm_watch or watched dir gone). */
+                xiom_watch_dirmap* gone = xiom_watch_map_of(s, ev->wd);
+                if (gone != NULL) {
+                    *gone = s->maps[s->nwmaps - 1];
+                    s->nwmaps--;
+                }
+                continue;
+            }
+            {
+                long long kind;
+                xiom_watch_dirmap* m;
+                const char* name;
+                if (ev->mask & IN_CREATE) kind = 1;
+                else if (ev->mask & (IN_MODIFY | IN_ATTRIB)) kind = 2;
+                else if (ev->mask & (IN_DELETE | IN_DELETE_SELF | IN_MOVE_SELF)) kind = 3;
+                else if (ev->mask & (IN_MOVED_FROM | IN_MOVED_TO)) kind = 4;
+                else continue; /* IN_UNMOUNT / unknown mask: drop, keep parsing */
+                m = xiom_watch_map_of(s, ev->wd);
+                name = ev->len > 0 ? ev->name : "";
+                if (path_buf != NULL && buf_len > 0) {
+                    long long n = 0;
+                    if (m != NULL) {
+                        long long pl = (long long)strlen(m->prefix);
+                        if (pl > buf_len - 1) pl = buf_len - 1;
+                        memcpy(path_buf, m->prefix, (size_t)pl);
+                        n = pl;
+                    }
+                    if (ev->len > 0 && n < buf_len - 1) {
+                        long long room = buf_len - 1 - n;
+                        long long nl = (long long)strlen(name);
+                        if (nl > room) nl = room;
+                        memcpy(path_buf + n, name, (size_t)nl);
+                        n += nl;
+                    }
+                    path_buf[n] = '\0';
+                }
+                if (kind_out != NULL) *kind_out = kind;
+                if (s->subtree && (ev->mask & IN_ISDIR) &&
+                    (ev->mask & (IN_CREATE | IN_MOVED_TO))) {
+                    /* A directory appeared: attach it so its subtree reports too
+                       (bounded; best effort on create-then-remove races). */
+                    if (m != NULL && ev->len > 0 && s->nwmaps < XIOM_WATCH_MAX_DIRS) {
+                        char child[PATH_MAX];
+                        char rel[XIOM_WATCH_PREF];
+                        int rl = snprintf(rel, sizeof(rel), "%s%s/", m->prefix, name);
+                        if (rl > 0 && rl < (int)sizeof(rel) &&
+                            snprintf(child, sizeof(child), "%s/%s%s", s->root, m->prefix, name)
+                                < (int)sizeof(child)) {
+                            (void)xiom_watch_attach(s, child, rel);
+                        }
+                    }
+                }
+                return 1;
+            }
+        }
+        {
+            struct pollfd pfd;
+            int prc;
+            ssize_t got;
+            long long tmo = timeout_ms;
+            if (s->pos < s->filled) { /* defensive: drop a trailing partial (kernel yields whole records only) */
+                s->filled = 0;
+                s->pos = 0;
+            }
+            if (tmo > 2147483647LL) tmo = 2147483647LL;
+            if (tmo < -1) tmo = -1;
+            pfd.fd = s->fd;
+            pfd.events = POLLIN;
+            pfd.revents = 0;
+            prc = poll(&pfd, 1, (int)tmo);
+            if (prc == 0) return 0;
+            if (prc < 0) {
+                if (errno == EINTR) continue;
+                return -1;
+            }
+            got = read(s->fd, s->buf, sizeof(s->buf));
+            if (got < 0) {
+                if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) return 0;
+                return -1;
+            }
+            if (got == 0) return 0;
+            s->filled = (long long)got;
+            s->pos = 0;
+        }
+    }
+}
+
+long long xiom_watch_close(long long handle) {
+    int idx = (int)handle - 1;
+    if (idx < 0 || idx >= XIOM_WATCH_SLOTS || !xiom_watch_slots[idx].in_use) return -1;
+    close(xiom_watch_slots[idx].fd); /* closing the fd drops every attached watch */
+    xiom_watch_slots[idx].fd = -1;
+    xiom_watch_slots[idx].nwmaps = 0;
+    xiom_watch_slots[idx].filled = 0;
+    xiom_watch_slots[idx].pos = 0;
+    xiom_watch_slots[idx].in_use = 0;
+    return 0;
+}
+
+#else /* other POSIX (darwin/BSD): kqueue is a documented -1 until needed */
 
 long long xiom_watch_open(const char* path, long long recursive) {
     (void)path;
