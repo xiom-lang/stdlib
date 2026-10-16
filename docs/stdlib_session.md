@@ -3565,6 +3565,33 @@ registry pin, agent recon for the rest)**
   and `tools/README.md` (likely the floors/wires bump for the new tag) --
   do not stage or sweep. The next writer continues from block 205/206.
 
+**SESSION 2026-10-16 block 207b (wave 155: REL-20261016-1404 fixed -- socket_bind honors the address + socket_local_addr real via getsockname; p_wave155 red 6 -> green 0; netstat witness 127.0.0.1:45741 LISTENING; floors178; battery green on the OFFICIAL v0.64.5 pin -- the v0.64.5-rel trap was hit once and the corpus was re-run clean) -- the actor's 207 sits below**
+- 1404 (compiler handoff, C-PULSE-16): runtime xiom_runtime.c both
+  platform blocks now define xiom_socket_bind_addr (inet_pton/InetPtonA,
+  -2 = parse failure; "" / 0.0.0.0 = wildcard) and
+  xiom_socket_local_addr (getsockname + inet_ntop/InetNtopA);
+  xiom_socket_bind stays as the wildcard delegation for ABI. socket.xi:
+  bind marshals the host and maps -2 to "invalid address";
+  socket_local_addr implemented (mirrors recvfrom's cstr->Str pattern);
+  peer_addr stays the documented stub.
+- Evidence: p_wave155_bind.xi -- RED 6 on the pre-155 tree (detached
+  worktree at b81430b; the stub's guaranteed Err) -> GREEN 0 post
+  (127.0.0.1 roundtrip, wildcard, invalid-address Err, non-local Err,
+  unbound port-0 row, client-loopback row); out/bind_witness.xi +
+  netstat: TCP 127.0.0.1:45741 LISTENING (the item's pre-155 witness was
+  0.0.0.0).
+- Battery on the OFFICIAL v0.64.5 pin (bd71e2d3; the AGENTS.md trap
+  note): corpus 962/962 (956 tracked + the 6 debug-lane untracked diag
+  smokes; 0 fail; -ExcludeFile did not take, kept as-is), probes 327/327
+  (the wave-151..154 probes + p_wave155), floors178 ratchet, modules
+  510/510, barename 0/510, module-smoke (499/519, 3501/6251), doc OK.
+  TRAP HIT: the first corpus run used v0.64.5-rel (67e57dfe, the PRE-FIX
+  candidate) and reproduced the m323/m324 regressions; the re-run on the
+  official archive is clean.
+- This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
+  (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
+  the next pin.
+
 **SESSION 2026-10-16 block 207 (corpus confirmation: full 962/962 GREEN on the pinned rev; posted to 1452; renumbered from a parallel 206 collision)**
 - The merged-tree corpus (started 15:01Z, straddling the b81430b merge)
   completed: total=962 pass=962 compilefail=0 runfail=0 (3456.9s under

@@ -5483,16 +5483,35 @@ int xiom_socket_connect(xiom_socket_t s, const char* host, int port) {
     memcpy(&addr.sin_addr, he->h_addr_list[0], he->h_length);
     return connect(s, (struct sockaddr*)&addr, sizeof(addr));
 }
-int xiom_socket_bind(xiom_socket_t s, int port) {
+int xiom_socket_bind_addr(xiom_socket_t s, const char* host, int port) {
     struct sockaddr_in addr;
     int opt = 1;
     addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = INADDR_ANY;
+    if (host && host[0] != '\0') {
+        if (InetPtonA(AF_INET, host, &addr.sin_addr) != 1) return -2;
+    } else {
+        addr.sin_addr.s_addr = INADDR_ANY;
+    }
     addr.sin_port = htons((u_short)port);
     /* Wave 119 (pulse REL-20261011-0317): POSIX parity -- the Windows
        bind path lacked SO_REUSEADDR, breaking immediate restarts. */
     setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (const char*)&opt, sizeof(opt));
     return bind(s, (struct sockaddr*)&addr, sizeof(addr));
+}
+
+/* Wave 155 (REL-20261016-1404): the wildcard entry point stays for ABI
+   compatibility; the stdlib now passes the address through bind_addr. */
+int xiom_socket_bind(xiom_socket_t s, int port) {
+    return xiom_socket_bind_addr(s, "", port);
+}
+
+int xiom_socket_local_addr(xiom_socket_t s, char* ip_buf, int buf_size, int* out_port) {
+    struct sockaddr_in addr;
+    int addrlen = sizeof(addr);
+    if (getsockname(s, (struct sockaddr*)&addr, &addrlen) != 0) return -1;
+    if (!InetNtopA(AF_INET, &addr.sin_addr, ip_buf, buf_size)) return -1;
+    if (out_port) *out_port = (int)ntohs(addr.sin_port);
+    return 0;
 }
 int xiom_socket_listen(xiom_socket_t s, int backlog) { return listen(s, backlog); }
 xiom_socket_t xiom_socket_accept(xiom_socket_t s, char* client_ip, int* client_port) {
@@ -5671,14 +5690,33 @@ int xiom_socket_connect(xiom_socket_t s, const char* host, int port) {
     memcpy(&addr.sin_addr, he->h_addr_list[0], he->h_length);
     return connect(s, (struct sockaddr*)&addr, sizeof(addr));
 }
-int xiom_socket_bind(xiom_socket_t s, int port) {
+int xiom_socket_bind_addr(xiom_socket_t s, const char* host, int port) {
     struct sockaddr_in addr;
     addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = INADDR_ANY;
+    if (host && host[0] != '\0') {
+        if (inet_pton(AF_INET, host, &addr.sin_addr) != 1) return -2;
+    } else {
+        addr.sin_addr.s_addr = INADDR_ANY;
+    }
     addr.sin_port = htons(port);
     int opt = 1;
     setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
     return bind(s, (struct sockaddr*)&addr, sizeof(addr));
+}
+
+/* Wave 155 (REL-20261016-1404): the wildcard entry point stays for ABI
+   compatibility; the stdlib now passes the address through bind_addr. */
+int xiom_socket_bind(xiom_socket_t s, int port) {
+    return xiom_socket_bind_addr(s, "", port);
+}
+
+int xiom_socket_local_addr(xiom_socket_t s, char* ip_buf, int buf_size, int* out_port) {
+    struct sockaddr_in addr;
+    socklen_t addrlen = sizeof(addr);
+    if (getsockname(s, (struct sockaddr*)&addr, &addrlen) != 0) return -1;
+    if (!inet_ntop(AF_INET, &addr.sin_addr, ip_buf, (socklen_t)buf_size)) return -1;
+    if (out_port) *out_port = (int)ntohs(addr.sin_port);
+    return 0;
 }
 int xiom_socket_listen(xiom_socket_t s, int backlog) { return listen(s, backlog); }
 xiom_socket_t xiom_socket_accept(xiom_socket_t s, char* client_ip, int* client_port) {

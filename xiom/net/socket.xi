@@ -10,8 +10,10 @@ module xiom.net.socket
 // send, receive, address queries and options. The core operations are
 // implemented on the same runtime socket primitives used by xiom.net;
 // timeout, non-blocking, reuse-addr and shutdown are real since wave 119
-// (SO_RCVTIMEO / FIONBIO / O_NONBLOCK / setsockopt + shutdown); peer/local
-// address and pending bytes still return a documented Err. Wave 121 adds
+// (SO_RCVTIMEO / FIONBIO / O_NONBLOCK / setsockopt + shutdown); the
+// bind honored-address path and socket_local_addr are real since wave 155
+// (REL-20261016-1404); the peer address and pending bytes still return a
+// documented Err. Wave 121 adds
 // the full-send loop (socket_send_all) and the chunked-transfer stream
 // helpers (socket_chunk_encode / socket_chunked_end / socket_stream_chunk /
 // socket_stream_end; Transfer-Encoding: chunked writers for SSE-style
@@ -26,6 +28,7 @@ extern "C" {
   fn xiom_socket_create(family: Int, typ: Int, proto: Int) -> Int;
   fn xiom_socket_connect(sock: Int, host: *UInt8, port: Int) -> Int32;
   fn xiom_socket_bind(sock: Int, port: Int) -> Int32;
+  fn xiom_socket_bind_addr(sock: Int, host: *UInt8, port: Int) -> Int32;
   fn xiom_socket_listen(sock: Int, backlog: Int) -> Int32;
   fn xiom_socket_accept(sock: Int, client_ip: *UInt8, client_port: *Int) -> Int;
   // Int32 returns: the runtime returns C `int` and -1 means failure; an i64
@@ -45,6 +48,7 @@ extern "C" {
   fn xiom_socket_set_keepalive(sock: Int, on: Int) -> Int32;
   fn xiom_poll(fds: *Int, nfds: Int, timeout_ms: Int, for_write: Int) -> Int;
   fn xiom_socket_shutdown(sock: Int, how: Int) -> Int32;
+  fn xiom_socket_local_addr(sock: Int, ip_buf: *UInt8, buf_size: Int, out_port: *Int) -> Int32;
 }
 
 const AF_INET: Int = 2;
@@ -75,9 +79,10 @@ pub fn socket_udp() -> Result[Int, Str]
   Ok(fd)
 }
 
-/// socket_bind binds a socket to addr:port. The runtime binds to the
-/// given port on the wildcard address; the addr string is validated for
-/// non-emptiness. Complexity: O(1) syscall.
+/// socket_bind binds a socket to addr:port on the given address (wave
+/// 155, REL-20261016-1404: the address is honored -- pass "0.0.0.0" for
+/// the wildcard; an unparsable IPv4 literal is a typed Err).
+/// Complexity: O(1) syscall.
 pub fn socket_bind(fd: Int, addr: Str, port: Int) -> Result[Unit, Str]
   ensures: (result.is_ok == false) || (fd >= 0 && addr.len() > 0 && port >= 1 && port <= 65535)
 {
@@ -90,7 +95,18 @@ pub fn socket_bind(fd: Int, addr: Str, port: Int) -> Result[Unit, Str]
   if port <= 0 || port > 65535 {
     return Err("socket_bind: port out of range");
   }
-  let rc: Int32 = unsafe { xiom_socket_bind(fd, port) };
+  var c_host: [256]UInt8;
+  var i = 0;
+  let hlen = addr.len();
+  while i < hlen && i < 255 {
+    c_host[i] = addr.byte_at(i);
+    i = i + 1;
+  }
+  c_host[i] = 0 as UInt8;
+  let rc: Int32 = unsafe { xiom_socket_bind_addr(fd, &c_host as *UInt8, port) };
+  if rc == -2 {
+    return Err("socket_bind: invalid address");
+  }
   if rc < 0 {
     return Err("socket_bind: bind failed");
   }
@@ -618,15 +634,32 @@ pub fn socket_peer_addr(fd: Int) -> Result[(Str, Int), Str]
   Err("socket_peer_addr: getpeername() not exposed by runtime")
 }
 
-/// socket_local_addr returns the bound local address. The runtime does
-/// not expose getsockname(); always returns a documented Err.
+/// socket_local_addr returns the bound local (addr, port) via
+/// getsockname (real since wave 155, REL-20261016-1404); an unbound or
+/// closed fd returns Err.
 pub fn socket_local_addr(fd: Int) -> Result[(Str, Int), Str]
-  ensures: result.is_err == true
+  ensures: (fd < 0) => (result is Err)
 {
   if fd < 0 {
     return Err("socket_local_addr: invalid fd");
   }
-  Err("socket_local_addr: getsockname() not exposed by runtime")
+  var ip_buf: [64]UInt8;
+  var port_val: Int = 0;
+  let rc: Int32 = unsafe { xiom_socket_local_addr(fd, &ip_buf as *UInt8, 64, &port_val) };
+  if rc != 0 {
+    return Err("socket_local_addr: getsockname failed");
+  }
+  var ip_len: Int = 0;
+  while ip_len < 64 && ip_buf[ip_len] != 0 as UInt8 {
+    ip_len = ip_len + 1;
+  }
+  var ip_chars: Vec[UInt8] = Vec[UInt8]::with_capacity(ip_len as UInt);
+  var j = 0;
+  while j < ip_len {
+    ip_chars.push(ip_buf[j]);
+    j = j + 1;
+  }
+  Ok((Str::from_utf8(ip_chars), port_val))
 }
 
 /// socket_available returns the number of bytes currently readable

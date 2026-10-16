@@ -809,6 +809,23 @@ pulse-6 sleep bug and covered os batch 1 (fs/file/dir/platform/err/args;
      NEXT: the ranked sweep inventory as before; candidate processing
      when the v0.64.5 archive lands (release-check rows + known-failures
      sweep + the m313 guard-spin acceptance).
+     WAVE 155 (block 207b, 2026-10-16): FIX-FIRST REL-20261016-1404-compiler
+     (HIGH, C-PULSE-16) -- socket_bind ignored the address and
+     socket_local_addr was an Err stub. Runtime (both platform blocks):
+     xiom_socket_bind_addr (inet_pton/InetPtonA; -2 = parse failure;
+     "" / 0.0.0.0 = wildcard) + xiom_socket_local_addr (getsockname +
+     inet_ntop/InetNtopA); xiom_socket_bind stays as the wildcard
+     delegation. socket.xi: bind marshals the host and maps -2 to the
+     typed "invalid address" Err; socket_local_addr returns (ip, port).
+     Locks: p_wave155_bind.xi RED 6 (pre-155 stub, detached-worktree
+     witness) -> GREEN 0 -- 127.0.0.1 roundtrip, wildcard, invalid -> Err,
+     non-local -> Err, unbound port-0, client-loopback; netstat witness
+     TCP 127.0.0.1:45741 LISTENING (pre-155: 0.0.0.0). Battery on the
+     OFFICIAL v0.64.5 pin (bd71e2d3): corpus 962/962 (956 tracked + 6
+     untracked diag smokes), probes 327/327, floors178 ratchet, modules
+     510/510, barename 0/510, module-smoke + doc OK. First POST-TAG tail:
+     stdlib-v0.64.6 stays at b81430b (does not carry this fix); notes on
+     1404/1452 for the next pin.
      FOLLOW-UP (from the REL-20261014-1453-packages ack): add the
      `copy_file_bytes` convenience alias with the next io-touching wave
      (copy_file itself is already byte-exact since wave 137; the alias
