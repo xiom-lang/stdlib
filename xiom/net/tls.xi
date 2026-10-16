@@ -11,36 +11,58 @@
 //       ProtocolNameList wire format: a 2-byte big-endian total length
 //       followed by one 1-byte-length-prefixed name per protocol
 //       (names 1..255 bytes; list 2..65535 bytes).
-//   (2) A backend-loader skeleton over xiom.ffi.dl (tls_backend_load /
-//       tls_backend_available). STAGE GATE: the loader only resolves the
-//       symbols below -- it never calls into the backend. The concrete
-//       TLS binding (mbedTLS-class) ships via the packages/bindings
-//       lane against this symbol contract.
+//   (2) A backend loader over xiom.ffi.dl (tls_backend_load /
+//       tls_backend_available) against the eight-symbol contract below.
+//
+// Wave 157 (stage B; refs REL-20261015-2202-pulse item 1,
+// REL-20261016-1128-orbitdb ask 2, REL-20261016-1129-xvector item 3)
+// lifts the wave-154 stage gate: the session driver below CALLS the
+// eight resolved addresses, the server-half helpers and the error
+// taxonomy land here, and the system-libssl backend module
+// (xiom.net.tls_libssl) is the live in-tree leg. The registry package
+// xiom.ssl is the ecosystem consumer route; docs/TLS_DECISION.md
+// records the composition and the honest live/not-live boundary.
 //
 // Backend symbol contract (every symbol is mandatory; resolved by exact
-// name with dl_sym, extern "C" ABI, no versioned or platform prefixes):
+// name with dl_sym, extern "C" ABI, no versioned or platform prefixes).
+// Wave 154 fixed the names; wave 157 pins the signatures:
 //
-//   tls_init           -- one-time backend initialisation
-//   tls_server_new     -- create a server session/context
-//   tls_client_new     -- create a client session/context
-//   tls_handshake      -- drive the handshake on a session
-//   tls_read           -- read plaintext from a session
-//   tls_write          -- write plaintext into a session
-//   tls_close          -- release a session/context
-//   tls_alpn_selected  -- report the negotiated ALPN protocol name
+//   Int32 tls_init(void);                        // 0 = ok, nonzero = failure
+//   Int   tls_server_new(Int fd, *UInt8 cert_pem_path, *UInt8 key_pem_path);
+//                                                // >0 session handle, 0 = failure
+//   Int   tls_client_new(Int fd, *UInt8 server_name);
+//                                                // >0 session handle, 0 = failure
+//   Int32 tls_handshake(Int sess);               // 1 done, 2 want-read,
+//                                                // 3 want-write, <0 fatal
+//   Int32 tls_read(Int sess, *UInt8 buf, Int cap);
+//                                                // >0 bytes, 0 = clean
+//                                                // close_notify, <0 fatal
+//   Int32 tls_write(Int sess, *UInt8 buf, Int len);
+//                                                // len accepted, <0 fatal
+//   void  tls_close(Int sess);                   // release (idempotent)
+//   Int32 tls_alpn_selected(Int sess, *UInt8 buf, Int cap);
+//                                                // >=0 selected-name length
+//                                                // (0 = none), <0 fatal
 //
-// tls_backend_load resolves all eight symbols (a library that opens but
-// misses any symbol fails the load and the handle is closed); the
-// returned TlsBackend owns the module handle. Session calls themselves
-// are out of scope until the backend package lands (stage gate above).
+// The fd is attached by *_new (the contract has no separate attach
+// symbol); server-side cert/key are PEM file paths; the caller keeps
+// ownership of the fd. tls_backend_load resolves all eight symbols (a
+// library that opens but misses any symbol fails the load and the handle
+// is closed); the returned TlsBackend owns the module handle. The driver
+// validates every handle and address it touches: zero/absent backends
+// and bad handles fail with typed errors, never a crash.
 //
-// No network I/O or cryptography is performed here.
+// No cryptography and no network I/O are performed by the loader or the
+// protocol helpers.
 
 module xiom.net.tls
 
-// Depends on: xiom.ffi.dl (backend loader only)
+// Depends on: xiom.ffi.dl (backend loader + session driver), xiom.io
+// (cert/key material pre-validation), xiom.net.socket (readiness pump)
 
 use xiom.ffi.dl;
+use xiom.io;
+use xiom.net.socket;
 
 /// tls_default_port returns the default TLS port (443).
 /// Complexity: O(1). Pure.
@@ -370,6 +392,594 @@ pub fn tls_backend_available(path: Str) -> Bool
       let _ = cr;
       exists = ok;
     }
+  }
+  exists
+}
+
+// ============================================================================
+// Error taxonomy (wave 157). Session/step failures classify in stdlib
+// terms so callers can branch without string matching:
+//
+//   TLS_ERR_NONE       -- no error
+//   TLS_ERR_LOAD       -- backend library absent (no candidate loaded)
+//   TLS_ERR_ARG        -- invalid handle, fd, or argument at the seam
+//   TLS_ERR_ALLOC      -- session/context allocation failed
+//   TLS_ERR_CERT       -- certificate/key material rejected or unloadable
+//   TLS_ERR_ALPN       -- ALPN configuration rejected
+//   TLS_ERR_HANDSHAKE  -- fatal handshake failure (peer/protocol)
+//   TLS_ERR_VERIFY     -- peer certificate verification failed (fatal)
+//   TLS_ERR_IO         -- fatal read/write/shutdown failure
+//   TLS_ERR_EOF        -- clean peer close (close_notify) where data was
+//                         expected: end of stream, not a transport failure
+//   TLS_ERR_WANT_READ  -- non-fatal: retry when the fd is readable
+//   TLS_ERR_WANT_WRITE -- non-fatal: retry when the fd is writable
+//   TLS_ERR_ABI        -- backend library loaded but a contract symbol is
+//                         missing (version/ABI mismatch)
+//
+// Step mapping: a handshake step that must wait reports Ok(TLS_STEP_*)
+// on the step-shaped surface (tls_session_step, tls_libssl_step); where a
+// seam reports waiting as an error (read/write/shutdown), it maps to
+// TLS_ERR_WANT_READ/WRITE. A fatal handshake maps to
+// TLS_ERR_HANDSHAKE; the verify distinction needs a verification result
+// from the backend (the generic eight-symbol contract has no verify
+// symbol; xiom.ssl binds SSL_get_verify_result for that).
+// ============================================================================
+
+/// No error.
+pub const TLS_ERR_NONE: Int = 0;
+/// Backend library absent: no candidate soname loaded.
+pub const TLS_ERR_LOAD: Int = 1;
+/// Invalid handle, fd, or argument at the seam (caller bug).
+pub const TLS_ERR_ARG: Int = 2;
+/// Session/context allocation failed.
+pub const TLS_ERR_ALLOC: Int = 3;
+/// Certificate/key material rejected or unloadable.
+pub const TLS_ERR_CERT: Int = 4;
+/// ALPN configuration rejected.
+pub const TLS_ERR_ALPN: Int = 5;
+/// Fatal handshake failure (peer/protocol).
+pub const TLS_ERR_HANDSHAKE: Int = 6;
+/// Peer certificate verification failed (fatal).
+pub const TLS_ERR_VERIFY: Int = 7;
+/// Fatal read/write/shutdown failure.
+pub const TLS_ERR_IO: Int = 8;
+/// Clean peer close (close_notify) where data was expected.
+pub const TLS_ERR_EOF: Int = 9;
+/// Non-fatal: retry when the fd is readable.
+pub const TLS_ERR_WANT_READ: Int = 10;
+/// Non-fatal: retry when the fd is writable.
+pub const TLS_ERR_WANT_WRITE: Int = 11;
+/// Backend library loaded but a contract symbol is missing (ABI mismatch).
+pub const TLS_ERR_ABI: Int = 12;
+
+/// Handshake step codes (Ok side of tls_session_step / tls_libssl_step;
+/// these are also the backend contract's tls_handshake return codes).
+pub const TLS_STEP_DONE: Int = 1;
+pub const TLS_STEP_WANT_READ: Int = 2;
+pub const TLS_STEP_WANT_WRITE: Int = 3;
+
+/// tls_err_kind_name maps a taxonomy kind to a short stable name
+/// ("none", "load", "arg", "alloc", "cert", "alpn", "handshake",
+/// "verify", "io", "eof", "want-read", "want-write", "abi"; "unknown"
+/// for anything else). Complexity: O(1).
+pub fn tls_err_kind_name(kind: Int) -> Str
+  ensures: ((kind == TLS_ERR_NONE) => (result == "none")) && ((kind == TLS_ERR_LOAD) => (result == "load")) && ((kind == TLS_ERR_HANDSHAKE) => (result == "handshake")) && ((kind == TLS_ERR_ABI) => (result == "abi")) && (result.len() > 0)
+{
+  if kind == TLS_ERR_NONE { return "none"; }
+  if kind == TLS_ERR_LOAD { return "load"; }
+  if kind == TLS_ERR_ARG { return "arg"; }
+  if kind == TLS_ERR_ALLOC { return "alloc"; }
+  if kind == TLS_ERR_CERT { return "cert"; }
+  if kind == TLS_ERR_ALPN { return "alpn"; }
+  if kind == TLS_ERR_HANDSHAKE { return "handshake"; }
+  if kind == TLS_ERR_VERIFY { return "verify"; }
+  if kind == TLS_ERR_IO { return "io"; }
+  if kind == TLS_ERR_EOF { return "eof"; }
+  if kind == TLS_ERR_WANT_READ { return "want-read"; }
+  if kind == TLS_ERR_WANT_WRITE { return "want-write"; }
+  if kind == TLS_ERR_ABI { return "abi"; }
+  "unknown"
+}
+
+/// tls_err_kind_is_want reports whether the kind is the non-fatal
+/// readiness form (retry when the fd is readable/writable).
+/// Complexity: O(1). Pure.
+pub fn tls_err_kind_is_want(kind: Int) -> Bool
+  ensures: (kind == TLS_ERR_WANT_READ) => result == true
+  ensures: (kind == TLS_ERR_WANT_WRITE) => result == true
+  ensures: (kind == TLS_ERR_NONE) => result == false
+{
+  if kind == TLS_ERR_WANT_READ { return true; }
+  if kind == TLS_ERR_WANT_WRITE { return true; }
+  false
+}
+
+/// tls_err_kind_is_fatal reports whether the kind means the session
+/// cannot continue (load/abi/arg/alloc/cert/alpn/handshake/verify/io).
+/// NONE, EOF and the WANT kinds are not fatal in this sense (EOF is a
+/// clean end of stream; ARG is caller misuse, not a session state).
+/// Complexity: O(1). Pure.
+pub fn tls_err_kind_is_fatal(kind: Int) -> Bool
+  ensures: (kind == TLS_ERR_HANDSHAKE) => result == true
+  ensures: (kind == TLS_ERR_IO) => result == true
+  ensures: (kind == TLS_ERR_EOF) => result == false
+  ensures: (kind == TLS_ERR_NONE) => result == false
+{
+  if kind == TLS_ERR_LOAD { return true; }
+  if kind == TLS_ERR_ABI { return true; }
+  if kind == TLS_ERR_ALLOC { return true; }
+  if kind == TLS_ERR_CERT { return true; }
+  if kind == TLS_ERR_ALPN { return true; }
+  if kind == TLS_ERR_HANDSHAKE { return true; }
+  if kind == TLS_ERR_VERIFY { return true; }
+  if kind == TLS_ERR_IO { return true; }
+  false
+}
+
+// ============================================================================
+// Session driver over the eight-symbol contract. Every call is an
+// fn-pointer cast over the resolved address; handles are Ints and are
+// validated before every call, so a zero/absent backend or a bad session
+// handle fails with a typed TlsError instead of a crash. Transport
+// readiness is the caller's: a WANT step result pairs with
+// tls_wait_readable / tls_wait_writable.
+// ============================================================================
+
+/// TlsError is a typed TLS failure: a taxonomy kind (TLS_ERR_*) plus a
+/// message.
+pub type TlsError = {
+  kind: Int;
+  message: Str;
+}
+
+/// TlsSession is one session on a loaded backend: the raw session id
+/// (> 0 while open, 0 after tls_session_close), the role, and the
+/// attached fd.
+pub type TlsSession = {
+  id: Int;
+  server: Bool;
+  fd: Int;
+}
+
+// tls_backend_is_loaded reports whether every contract address in a
+// backend value is non-zero. A hand-built or zeroed TlsBackend is not
+// callable; the driver checks this before every call.
+fn tls_backend_is_loaded(backend: &TlsBackend) -> Bool {
+  if backend.handle == 0 { return false; }
+  if backend.tls_init == 0 { return false; }
+  if backend.tls_server_new == 0 { return false; }
+  if backend.tls_client_new == 0 { return false; }
+  if backend.tls_handshake == 0 { return false; }
+  if backend.tls_read == 0 { return false; }
+  if backend.tls_write == 0 { return false; }
+  if backend.tls_close == 0 { return false; }
+  if backend.tls_alpn_selected == 0 { return false; }
+  true
+}
+
+// tls_driver_err builds a typed driver error.
+fn tls_driver_err(kind: Int, message: Str) -> TlsError {
+  TlsError{ kind: kind; message: message }
+}
+
+/// tls_session_open opens a session against a loaded backend:
+///   - server == true: cert_path/key_path are PEM file paths handed to
+///     the backend (the fd is already connected); both must be non-empty;
+///   - server == false: server_name is the peer name handed to the
+///     backend (SNI or equivalent; may be empty).
+/// The fd is attached by the backend's *_new call -- the contract has no
+/// separate attach symbol; the caller keeps ownership of the fd. The
+/// backend's tls_init runs first and must be idempotent (the driver calls
+/// it on every open).
+/// Returns: Ok(session); Err(TLS_ERR_LOAD) when the backend value is not
+///          loaded, Err(TLS_ERR_ARG) on a bad fd or empty material path,
+///          Err(TLS_ERR_ALLOC) when the backend refuses the session.
+/// Complexity: O(paths).
+pub fn tls_session_open(backend: &TlsBackend, server: Bool, fd: Int, cert_path: Str, key_path: Str, server_name: Str) -> Result[TlsSession, TlsError]
+  ensures: (fd < 0) => (result.is_err == true)
+  ensures: (server == true && cert_path.len() == 0) => (result.is_err == true)
+  ensures: (server == true && key_path.len() == 0) => (result.is_err == true)
+{
+  if !tls_backend_is_loaded(backend) {
+    return Err(tls_driver_err(TLS_ERR_LOAD, "tls_session_open: backend is not loaded (zero handle or unresolved symbol)"));
+  }
+  if fd < 0 {
+    return Err(tls_driver_err(TLS_ERR_ARG, "tls_session_open: invalid fd"));
+  }
+  if server {
+    if cert_path.len() == 0 {
+      return Err(tls_driver_err(TLS_ERR_ARG, "tls_session_open: empty certificate path"));
+    }
+    if key_path.len() == 0 {
+      return Err(tls_driver_err(TLS_ERR_ARG, "tls_session_open: empty key path"));
+    }
+  }
+  unsafe {
+    let fi = backend.tls_init as fn() -> Int32;
+    let ir = fi() as Int;
+    if ir != 0 {
+      return Err(tls_driver_err(TLS_ERR_LOAD, "tls_session_open: backend initialisation failed (code " + ir.to_str() + ")"));
+    }
+    if server {
+      let cert_c = cert_path.c_str();
+      let key_c = key_path.c_str();
+      let fs = backend.tls_server_new as fn(Int, *UInt8, *UInt8) -> Int;
+      let h = fs(fd, cert_c, key_c);
+      if h <= 0 {
+        return Err(tls_driver_err(TLS_ERR_ALLOC, "tls_session_open: backend refused the server session"));
+      }
+      return Ok(TlsSession{ id: h; server: true; fd: fd });
+    }
+    let name_c = server_name.c_str();
+    let fc = backend.tls_client_new as fn(Int, *UInt8) -> Int;
+    let h = fc(fd, name_c);
+    if h <= 0 {
+      return Err(tls_driver_err(TLS_ERR_ALLOC, "tls_session_open: backend refused the client session"));
+    }
+    return Ok(TlsSession{ id: h; server: false; fd: fd });
+  }
+}
+
+/// tls_session_step advances the handshake one step (server: accept
+/// side, client: connect side).
+/// Returns: Ok(TLS_STEP_DONE) when the handshake is complete;
+///          Ok(TLS_STEP_WANT_READ) / Ok(TLS_STEP_WANT_WRITE) when the
+///          caller must wait for fd readiness first (tls_wait_readable /
+///          tls_wait_writable) and call again; Err(TLS_ERR_HANDSHAKE) on
+///          a fatal handshake failure; Err(TLS_ERR_ARG/TLS_ERR_LOAD) on
+///          a bad handle or an unloaded backend.
+/// Complexity: O(handshake progress).
+pub fn tls_session_step(backend: &TlsBackend, sess: &TlsSession) -> Result[Int, TlsError]
+  ensures: (sess.id <= 0) => (result.is_err == true)
+{
+  if !tls_backend_is_loaded(backend) {
+    return Err(tls_driver_err(TLS_ERR_LOAD, "tls_session_step: backend is not loaded"));
+  }
+  if sess.id <= 0 {
+    return Err(tls_driver_err(TLS_ERR_ARG, "tls_session_step: session is not open"));
+  }
+  unsafe {
+    let f = backend.tls_handshake as fn(Int) -> Int32;
+    let rc = f(sess.id) as Int;
+    if rc == TLS_STEP_DONE { return Ok(TLS_STEP_DONE); }
+    if rc == TLS_STEP_WANT_READ { return Ok(TLS_STEP_WANT_READ); }
+    if rc == TLS_STEP_WANT_WRITE { return Ok(TLS_STEP_WANT_WRITE); }
+    return Err(tls_driver_err(TLS_ERR_HANDSHAKE, "tls_session_step: fatal handshake failure (backend code " + rc.to_str() + ")"));
+  }
+}
+
+/// tls_session_read reads up to max plaintext bytes.
+/// Returns: Ok(bytes) with bytes.len() >= 1; Err(TLS_ERR_EOF) when the
+///          peer closed the connection cleanly (close_notify); Err
+///          (TLS_ERR_IO) on a fatal read failure; Err(TLS_ERR_ARG) on a
+///          bad handle or max outside 1..65536.
+/// Complexity: O(max).
+pub fn tls_session_read(backend: &TlsBackend, sess: &TlsSession, max: Int) -> Result[Vec[UInt8], TlsError]
+  ensures: (max <= 0) => (result.is_err == true)
+  ensures: (max > 65536) => (result.is_err == true)
+{
+  if !tls_backend_is_loaded(backend) {
+    return Err(tls_driver_err(TLS_ERR_LOAD, "tls_session_read: backend is not loaded"));
+  }
+  if sess.id <= 0 {
+    return Err(tls_driver_err(TLS_ERR_ARG, "tls_session_read: session is not open"));
+  }
+  if max <= 0 || max > 65536 {
+    return Err(tls_driver_err(TLS_ERR_ARG, "tls_session_read: max outside 1..65536"));
+  }
+  unsafe {
+    var buf = Vec[UInt8].with_len(max);
+    let f = backend.tls_read as fn(Int, *UInt8, Int) -> Int32;
+    let rc = f(sess.id, buf.as_mut_ptr(), max) as Int;
+    if rc > max {
+      return Err(tls_driver_err(TLS_ERR_IO, "tls_session_read: backend over-reported the byte count"));
+    }
+    if rc > 0 {
+      var out: Vec[UInt8] = Vec[UInt8].new();
+      var i = 0;
+      while i < rc {
+        out.push(buf[i]);
+        i = i + 1;
+      }
+      return Ok(out);
+    }
+    if rc == 0 {
+      return Err(tls_driver_err(TLS_ERR_EOF, "tls_session_read: peer closed the connection (close_notify)"));
+    }
+    return Err(tls_driver_err(TLS_ERR_IO, "tls_session_read: fatal read failure (backend code " + rc.to_str() + ")"));
+  }
+}
+
+/// tls_session_write writes data into the session. The contract is
+/// all-or-nothing per call: the driver hands the whole payload to the
+/// backend and a short count is a typed TLS_ERR_IO (the backend owns its
+/// retries).
+/// Returns: Ok(len) when the whole payload was accepted (Ok(0) for an
+///          empty payload on a live session); Err on a fatal write
+///          failure or a bad handle.
+/// Complexity: O(len).
+pub fn tls_session_write(backend: &TlsBackend, sess: &TlsSession, data: &Vec[UInt8]) -> Result[Int, TlsError]
+  ensures: (sess.id <= 0) => (result.is_err == true)
+{
+  if !tls_backend_is_loaded(backend) {
+    return Err(tls_driver_err(TLS_ERR_LOAD, "tls_session_write: backend is not loaded"));
+  }
+  if sess.id <= 0 {
+    return Err(tls_driver_err(TLS_ERR_ARG, "tls_session_write: session is not open"));
+  }
+  let n = data.len();
+  if n == 0 {
+    return Ok(0);
+  }
+  unsafe {
+    let base = &data[0] as *UInt8;
+    let f = backend.tls_write as fn(Int, *UInt8, Int) -> Int32;
+    let rc = f(sess.id, base, n) as Int;
+    if rc == n {
+      return Ok(rc);
+    }
+    if rc > 0 {
+      return Err(tls_driver_err(TLS_ERR_IO, "tls_session_write: partial write (" + rc.to_str() + " of " + n.to_str() + " bytes)"));
+    }
+    return Err(tls_driver_err(TLS_ERR_IO, "tls_session_write: fatal write failure (backend code " + rc.to_str() + ")"));
+  }
+}
+
+/// tls_session_alpn_selected reports the negotiated ALPN protocol name of
+/// the session ("" when none was selected -- server-side selection needs
+/// a C callback no XIOM backend can install; see tls_alpn_select_server
+/// for the application-layer policy).
+/// Returns: Ok(name); Err(TLS_ERR_IO) when the backend cannot report it;
+///          Err(TLS_ERR_ARG/TLS_ERR_LOAD) on a bad handle.
+/// Complexity: O(name length).
+pub fn tls_session_alpn_selected(backend: &TlsBackend, sess: &TlsSession) -> Result[Str, TlsError]
+  ensures: (sess.id <= 0) => (result.is_err == true)
+{
+  if !tls_backend_is_loaded(backend) {
+    return Err(tls_driver_err(TLS_ERR_LOAD, "tls_session_alpn_selected: backend is not loaded"));
+  }
+  if sess.id <= 0 {
+    return Err(tls_driver_err(TLS_ERR_ARG, "tls_session_alpn_selected: session is not open"));
+  }
+  unsafe {
+    var buf = Vec[UInt8].with_len(256);
+    let f = backend.tls_alpn_selected as fn(Int, *UInt8, Int) -> Int32;
+    let rc = f(sess.id, buf.as_mut_ptr(), 256) as Int;
+    if rc < 0 {
+      return Err(tls_driver_err(TLS_ERR_IO, "tls_session_alpn_selected: read failed (backend code " + rc.to_str() + ")"));
+    }
+    if rc == 0 {
+      return Ok("");
+    }
+    if rc > 256 {
+      return Err(tls_driver_err(TLS_ERR_IO, "tls_session_alpn_selected: name length out of range"));
+    }
+    var bytes: Vec[UInt8] = Vec[UInt8].new();
+    var i = 0;
+    while i < rc {
+      bytes.push(buf[i]);
+      i = i + 1;
+    }
+    return Ok(Str::from_utf8(bytes));
+  }
+}
+
+/// tls_session_close releases the session through the backend and marks
+/// the handle closed (sess.id := 0), so a second close on the same value
+/// is a clean Ok: the backend is never called twice for one session.
+/// Returns: Ok(()) once closed (or already closed); Err(TLS_ERR_LOAD)
+///          when the backend value is not loaded; Err(TLS_ERR_ARG) for a
+///          negative id.
+/// Complexity: O(1).
+pub fn tls_session_close(backend: &TlsBackend, sess: &mut TlsSession) -> Result[Unit, TlsError]
+  ensures: (backend.handle == 0) => (result.is_err == true)
+{
+  if !tls_backend_is_loaded(backend) {
+    return Err(tls_driver_err(TLS_ERR_LOAD, "tls_session_close: backend is not loaded"));
+  }
+  if sess.id < 0 {
+    return Err(tls_driver_err(TLS_ERR_ARG, "tls_session_close: negative session id"));
+  }
+  if sess.id == 0 {
+    return Ok(());
+  }
+  unsafe {
+    let f = backend.tls_close as fn(Int) -> Unit;
+    f(sess.id);
+  }
+  sess.id = 0;
+  Ok(())
+}
+
+// ============================================================================
+// Server-half helpers (pure). Certificate/key material pre-validation and
+// the server-side ALPN selection policy. The selection policy lives at the
+// application layer because OpenSSL-class backends can only select the
+// server protocol through an SSL_CTX_set_alpn_select_cb C callback, which
+// the current XIOM FFI cannot install (documented binding limitation).
+// ============================================================================
+
+/// tls_material_sniff classifies certificate/key material by its leading
+/// bytes: "pem" (begin marker "-----BEGIN"), "der" (ASN.1 SEQUENCE tag
+/// 0x30), or "unknown" (empty or anything else). Pure; a pre-flight
+/// classification helper (backends load PEM files directly).
+/// Complexity: O(1).
+pub fn tls_material_sniff(bytes: &Vec[UInt8]) -> Str
+  ensures: bytes.len() == 0 => result == "unknown"
+{
+  if bytes.len() >= 10 {
+    if bytes[0] == 45 as UInt8 && bytes[1] == 45 as UInt8 && bytes[2] == 45 as UInt8 && bytes[3] == 45 as UInt8 && bytes[4] == 45 as UInt8 && bytes[5] == 66 as UInt8 && bytes[6] == 69 as UInt8 && bytes[7] == 71 as UInt8 && bytes[8] == 73 as UInt8 && bytes[9] == 78 as UInt8 {
+      return "pem";
+    }
+  }
+  if bytes.len() >= 1 {
+    if bytes[0] == 48 as UInt8 {
+      return "der";
+    }
+  }
+  "unknown"
+}
+
+/// tls_cert_material_check pre-validates a certificate/key file pair
+/// before any backend call: each path must be non-empty, the files must
+/// exist, be readable, and hold at least one byte. A cheap application
+/// -layer gate (a missing file is a configuration mistake, not a
+/// handshake failure); the material itself is not parsed.
+/// Returns: Ok(()) when both files pass; Err naming the first failure.
+/// Complexity: O(file size).
+pub fn tls_cert_material_check(cert_path: Str, key_path: Str) -> Result[Unit, Str]
+  ensures: (cert_path.len() == 0) => (result.is_err == true)
+  ensures: (key_path.len() == 0) => (result.is_err == true)
+{
+  if cert_path.len() == 0 {
+    return Err("tls_cert_material_check: empty certificate path");
+  }
+  if key_path.len() == 0 {
+    return Err("tls_cert_material_check: empty key path");
+  }
+  if !io.file_exists(cert_path) {
+    return Err("tls_cert_material_check: certificate file not found: " + cert_path);
+  }
+  if !io.file_exists(key_path) {
+    return Err("tls_cert_material_check: key file not found: " + key_path);
+  }
+  let cb = io.read_file_bytes(cert_path);
+  match cb {
+    Err(_) => {
+      return Err("tls_cert_material_check: certificate file unreadable: " + cert_path);
+    },
+    Ok(cbytes) => {
+      if cbytes.len() == 0 {
+        return Err("tls_cert_material_check: certificate file empty: " + cert_path);
+      }
+    },
+  }
+  let kb = io.read_file_bytes(key_path);
+  match kb {
+    Err(_) => {
+      return Err("tls_cert_material_check: key file unreadable: " + key_path);
+    },
+    Ok(kbytes) => {
+      if kbytes.len() == 0 {
+        return Err("tls_cert_material_check: key file empty: " + key_path);
+      }
+    },
+  }
+  Ok(())
+}
+
+/// Err value of tls_alpn_select_server when no offered protocol is
+/// acceptable (the classified RFC 7301 / RFC 8446 no_application_protocol
+/// alert class; see tls_alert_name(120)).
+pub const TLS_ALPN_NO_APPLICATION_PROTOCOL: Str = "no_application_protocol";
+
+/// tls_alpn_select_server picks the server-side ALPN protocol by server
+/// preference: the first entry of server_pref that the client offered.
+/// This is the application-layer policy the backend cannot express (no
+/// callback bridging), so servers negotiate here and can refuse with the
+/// classified no_application_protocol error.
+/// Returns: Ok(selected name); Err(TLS_ALPN_NO_APPLICATION_PROTOCOL)
+///          when the client offered nothing usable; Err on an empty
+///          server preference list (misconfiguration).
+/// Complexity: O(server_pref * client_offered). Pure.
+pub fn tls_alpn_select_server(server_pref: &Vec[Str], client_offered: &Vec[Str]) -> Result[Str, Str]
+  ensures: (server_pref.len() == 0) => (result.is_err == true)
+  ensures: (client_offered.len() == 0) => (result.is_err == true)
+{
+  if server_pref.len() == 0 {
+    return Err("tls_alpn_select_server: empty server preference list");
+  }
+  if client_offered.len() == 0 {
+    return Err(TLS_ALPN_NO_APPLICATION_PROTOCOL);
+  }
+  var i = 0;
+  while i < server_pref.len() {
+    let wanted = server_pref[i];
+    var j = 0;
+    while j < client_offered.len() {
+      if client_offered[j] == wanted {
+        return Ok(wanted);
+      }
+      j = j + 1;
+    }
+    i = i + 1;
+  }
+  Err(TLS_ALPN_NO_APPLICATION_PROTOCOL)
+}
+
+// ============================================================================
+// fd-readiness pump. Built on the real poll wrappers from
+// xiom.net.socket (wave 122: poll() on POSIX, WSAPoll on Windows; up to
+// 1024 fds, bounded waits). These drive step-shaped handshakes: a
+// TLS_STEP_WANT_READ / WRITE result pairs with the matching helper and a
+// bounded retry loop; the timeout is the remaining slice of the caller's
+// deadline budget (compose with time.monotonic_ms). Note the poll layer
+// reports invalid entries as ready so the caller can inspect them: a
+// returned Ok(true) means "inspect now", not "data is guaranteed".
+// ============================================================================
+
+/// tls_wait_readable waits until fd is readable or the timeout budget
+/// runs out (timeout_ms == 0 polls once). An already-ready fd returns
+/// immediately.
+/// Returns: Ok(true) when the fd reports activity, Ok(false) on timeout;
+///          Err on a negative fd or timeout.
+/// Complexity: network wait.
+pub fn tls_wait_readable(fd: Int, timeout_ms: Int) -> Result[Bool, Str]
+  ensures: (fd < 0) => (result.is_err == true)
+  ensures: (timeout_ms < 0) => (result.is_err == true)
+{
+  if fd < 0 {
+    return Err("tls_wait_readable: invalid fd");
+  }
+  if timeout_ms < 0 {
+    return Err("tls_wait_readable: negative timeout");
+  }
+  var fds: Vec[Int] = Vec[Int].new();
+  fds.push(fd);
+  let pr = socket.socket_poll_read(&fds, timeout_ms);
+  match pr {
+    Err(e) => {
+      return Err("tls_wait_readable: " + e);
+    },
+    Ok(ready) => {
+      if ready.len() > 0 {
+        return Ok(true);
+      }
+      return Ok(false);
+    },
+  }
+}
+
+/// tls_wait_writable waits until fd is writable or the timeout budget
+/// runs out (timeout_ms == 0 polls once).
+/// Returns: Ok(true) when the fd reports writability, Ok(false) on
+///          timeout; Err on a negative fd or timeout.
+/// Complexity: network wait.
+pub fn tls_wait_writable(fd: Int, timeout_ms: Int) -> Result[Bool, Str]
+  ensures: (fd < 0) => (result.is_err == true)
+  ensures: (timeout_ms < 0) => (result.is_err == true)
+{
+  if fd < 0 {
+    return Err("tls_wait_writable: invalid fd");
+  }
+  if timeout_ms < 0 {
+    return Err("tls_wait_writable: negative timeout");
+  }
+  var fds: Vec[Int] = Vec[Int].new();
+  fds.push(fd);
+  let pw = socket.socket_poll_write(&fds, timeout_ms);
+  match pw {
+    Err(e) => {
+      return Err("tls_wait_writable: " + e);
+    },
+    Ok(ready) => {
+      if ready.len() > 0 {
+        return Ok(true);
+      }
+      return Ok(false);
+    },
+  }
+}
   }
   exists
 }

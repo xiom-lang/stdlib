@@ -334,6 +334,7 @@ xiom.net.sse
 xiom.net.tcp
 xiom.net.tls
 xiom.net.tls_helper
+xiom.net.tls_libssl
 xiom.net.udp
 xiom.net.unix
 xiom.net.websocket
