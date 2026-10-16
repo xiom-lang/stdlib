@@ -3565,6 +3565,22 @@ registry pin, agent recon for the rest)**
   and `tools/README.md` (likely the floors/wires bump for the new tag) --
   do not stage or sweep. The next writer continues from block 205/206.
 
+**SESSION 2026-10-16 block 206 (doorbell 17:00Z: the full corpus lands GREEN -- 962/962 on the pinned rev; confirmation posted to 1452)**
+- The merged-tree corpus (started 15:01Z, straddling the b81430b merge)
+  completed: total=962 pass=962 compilefail=0 runfail=0 (3456.9s under
+  heavy foreign load). All wave-151..154 surfaces green in-battery:
+  smoke_thread + smoke_collect_threadpool (real spawn/pool), the six f128
+  ladder smokes, smoke_darwin_runtime, smoke_regex, the net/io/os slices.
+  The pin reply's promised confirmation was posted to
+  REL-20261016-1452-compiler.
+- Bus: otherwise quiet (only the compiler-owned 1630/1658 open; new
+  relays commits are compiler/engine lane work).
+- Stdlib tree: tip 76e227d; the shared actor's in-flight tails
+  (runtime/socket annotations + floors178 wiring) remain uncommitted.
+- Next: plan item 13 (KDF + monotonic-clock station primitives) leads;
+  the 1620s-packages socket_recv_from tuple monitor and the three
+  still-red compiler rows stay watched.
+
 **SESSION 2026-10-16 block 205 (PIN: stdlib-v0.64.6 TAGGED at b81430b -- e72288f (win64 fp128 convention split, cherry-picked runtime-only) + waves 151-154; the parallel wave batch merged; bus 1452 replied, 1550-stdlib filed)**
 - Parallel wave batch (Agent Manager worktrees wave/151..154) merged into
   main with zero conflicts; per-wave evidence: probes p_wave151-154 green;
