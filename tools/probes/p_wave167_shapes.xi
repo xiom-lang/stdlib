@@ -15,6 +15,10 @@
 //       cursor_at, poll, read_range clamps
 //  3 -- composite keys: ckmap put/get/update/remove, key-eq/key-hash pair,
 //       arena iteration, growth re-link
+//  4 -- vec copy: Int/Str/UInt8 copies are independent, same order
+//  7 -- pop ergonomics: pop_or / last_or / pop_checked (Option face)
+//  8 -- Vec[Str]: contains/index_of/last_index_of/equal/copy/unique/join
+//  9 -- truncation: truncate_to clamps (negative/oversize), drop_last count
 // 10 -- Str -> Str map: put/update/get/remove, entry iteration, growth
 // Setup failures use 20+.
 
@@ -24,6 +28,8 @@ use xiom.collect.mailbox;
 use xiom.collect.eventlog;
 use xiom.collect.composite;
 use xiom.collect.stringmap;
+use xiom.collect.vecops;
+use xiom.collect.vecstr;
 
 fn main() -> Int {
   // Row 1: keyed FIFO mailboxes.
@@ -215,6 +221,140 @@ fn main() -> Int {
     if got.value != gcheck + 1000 { return 3; }
     gcheck = gcheck + 1;
   }
+
+  // Row 4: typed-vector copy helper (concrete per element type).
+  var cvi = Vec[Int].new();
+  cvi.push(1);
+  cvi.push(2);
+  cvi.push(3);
+  var cvc = vecops.vec_copy_int(&cvi);
+  if cvc.len() != 3 { return 4; }
+  if cvc[0] != 1 { return 4; }
+  if cvc[2] != 3 { return 4; }
+  cvc[0] = 99;
+  if cvi[0] != 1 { return 4; }
+  var cvs = Vec[Str].new();
+  cvs.push("a");
+  cvs.push("b");
+  var csc = vecops.vec_copy_str(&cvs);
+  if csc.len() != 2 { return 4; }
+  if csc[1] != "b" { return 4; }
+  csc[0] = "z";
+  if cvs[0] != "a" { return 4; }
+  var cvb = Vec[UInt8].new();
+  cvb.push(7 as UInt8);
+  cvb.push(250 as UInt8);
+  var cbc = vecops.vec_copy_bytes(&cvb);
+  if cbc.len() != 2 { return 4; }
+  var ub0 = cbc[0] as Int;
+  var ub1 = cbc[1] as Int;
+  if ub0 != 7 { return 4; }
+  if ub1 != 250 { return 4; }
+
+  // Row 7: pop ergonomics.
+  var pv = Vec[Int].new();
+  pv.push(1);
+  pv.push(2);
+  if vecops.vec_pop_or(&mut pv, 0 - 5) != 2 { return 7; }
+  if vecops.vec_pop_or(&mut pv, 0 - 5) != 1 { return 7; }
+  if vecops.vec_pop_or(&mut pv, 0 - 5) != 0 - 5 { return 7; }
+  if pv.len() != 0 { return 7; }
+  if vecops.vec_last_or(&pv, 0 - 7) != 0 - 7 { return 7; }
+  pv.push(4);
+  if vecops.vec_last_or(&pv, 0 - 7) != 4 { return 7; }
+  if pv.len() != 1 { return 7; }
+  pv.push(9);
+  pv.push(10);
+  var pc1 = vecops.vec_pop_checked(&mut pv);
+  if !pc1.is_some { return 7; }
+  if pc1.value != 10 { return 7; }
+  var pc2 = vecops.vec_pop_checked(&mut pv);
+  if !pc2.is_some { return 7; }
+  if pc2.value != 9 { return 7; }
+  var pc3 = vecops.vec_pop_checked(&mut pv);
+  if !pc3.is_some { return 7; }
+  if pc3.value != 4 { return 7; }
+  var pc4 = vecops.vec_pop_checked(&mut pv);
+  if pc4.is_some { return 7; }
+  if pv.len() != 0 { return 7; }
+
+  // Row 8: Vec[Str] helpers.
+  var vs = Vec[Str].new();
+  vs.push("a");
+  vs.push("b");
+  vs.push("c");
+  vs.push("a");
+  if !vecstr.vec_str_contains(&vs, "b") { return 8; }
+  if vecstr.vec_str_contains(&vs, "z") { return 8; }
+  if vecstr.vec_str_index_of(&vs, "c") != 2 { return 8; }
+  if vecstr.vec_str_index_of(&vs, "z") != 0 - 1 { return 8; }
+  if vecstr.vec_str_last_index_of(&vs, "a") != 3 { return 8; }
+  if vecstr.vec_str_last_index_of(&vs, "z") != 0 - 1 { return 8; }
+  var vs2 = Vec[Str].new();
+  vs2.push("a");
+  vs2.push("b");
+  vs2.push("c");
+  vs2.push("a");
+  if !vecstr.vec_str_equal(&vs, &vs2) { return 8; }
+  var vs3 = Vec[Str].new();
+  vs3.push("a");
+  if vecstr.vec_str_equal(&vs, &vs3) { return 8; }
+  var ve = Vec[Str].new();
+  if !vecstr.vec_str_equal(&ve, &ve) { return 8; }
+  var vsc = vecstr.vec_str_copy(&vs);
+  if vsc.len() != 4 { return 8; }
+  vsc[0] = "z";
+  if vs[0] != "a" { return 8; }
+  var vu = vecstr.vec_str_unique(&vs);
+  if vu.len() != 3 { return 8; }
+  if vu[0] != "a" { return 8; }
+  if vu[1] != "b" { return 8; }
+  if vu[2] != "c" { return 8; }
+  var vj = Vec[Str].new();
+  vj.push("x");
+  vj.push("y");
+  vj.push("z");
+  if vecstr.vec_str_join(&vj, "-") != "x-y-z" { return 8; }
+  if vecstr.vec_str_join(&ve, "-") != "" { return 8; }
+  var vj1 = Vec[Str].new();
+  vj1.push("solo");
+  if vecstr.vec_str_join(&vj1, ",") != "solo" { return 8; }
+
+  // Row 9: truncation helpers.
+  var tv = Vec[Int].new();
+  tv.push(1);
+  tv.push(2);
+  tv.push(3);
+  tv.push(4);
+  tv.push(5);
+  tv.push(6);
+  vecops.vec_truncate_to(&mut tv, 3);
+  if tv.len() != 3 { return 9; }
+  if tv[2] != 3 { return 9; }
+  vecops.vec_truncate_to(&mut tv, 10);
+  if tv.len() != 3 { return 9; }
+  vecops.vec_truncate_to(&mut tv, 0 - 4);
+  if tv.len() != 0 { return 9; }
+  var tv2 = Vec[Int].new();
+  tv2.push(1);
+  tv2.push(2);
+  tv2.push(3);
+  tv2.push(4);
+  tv2.push(5);
+  if vecops.vec_drop_last(&mut tv2, 2) != 2 { return 9; }
+  if tv2.len() != 3 { return 9; }
+  if tv2[2] != 3 { return 9; }
+  if vecops.vec_drop_last(&mut tv2, 0) != 0 { return 9; }
+  if tv2.len() != 3 { return 9; }
+  if vecops.vec_drop_last(&mut tv2, 10) != 3 { return 9; }
+  if tv2.len() != 0 { return 9; }
+  var tvs = Vec[Str].new();
+  tvs.push("a");
+  tvs.push("b");
+  tvs.push("c");
+  if vecops.vec_drop_last(&mut tvs, 1) != 1 { return 9; }
+  if tvs.len() != 2 { return 9; }
+  if tvs[1] != "b" { return 9; }
 
   // Row 10: Str -> Str map on the module face (no manual hashing).
   var s2 = stringmap.string_str_map_new();
