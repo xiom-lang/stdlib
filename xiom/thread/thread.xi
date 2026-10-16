@@ -180,7 +180,7 @@ pub fn available_parallelism() -> Int
   ensures: result >= 1
 {
   unsafe {
-    let n = xiom_cpu_count();
+    let n: Int32 = xiom_cpu_count();
     if n < 1 { return 1; };
     return n as Int;
   }

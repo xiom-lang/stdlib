@@ -26,7 +26,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 ---
 
 You are continuing the XIOM stdlib lane. Worktree `E:\xiom-lang\stdlib`,
-branch `main`. Read `docs/stdlib_session.md` blocks 194, 193, 192, 191, 190, 189c, 189b, 189, 188, 187, 186, 185b, 185,
+branch `main`. Read `docs/stdlib_session.md` blocks 199, 198, 197, 196, 195, 194, 193, 192, 191, 190, 189c, 189b, 189, 188, 187, 186, 185b, 185,
 184b, 184, 183, 182, 181, 180, 179, 178, 177, 176, 175b, 175, 174, 173b,
 173, 172, 171b, 171, 170d, 170c, 170b, 170, 169, 168, 167, 166b, 166,
 165b, 165 (older as needed); snapshot 36 below is the previous handoff and
@@ -77,7 +77,10 @@ opens: 1630/1658 (compiler-owned leave); 1549-stdlib-8 acked
 (shared-build drift; env hygiene). NEW INTAKE: 2202-pulse acked
 (top-tier plan -> the wave plan below); 1942-packages FIXED (wave 140,
 36bcaac; reporter closes); 1948-packages acked (refused-connect -> wave plan
-3); 1609-pulse-2 + 1549-pulse-7 ride the actor's darwin close-out. 1445
+3); 1609-pulse-2 + 1549-pulse-7 ride the actor's darwin close-out.
+2328/2343-stdlib acked by the compiler overnight (queued compiler-side);
+2309-packages(-2) are compiler monitors (mixed-element tuples -> stdlib
+socket_recv_from unusable; no battery row until fixed). 1445
 fixed bus-side (alloc-guard-spin
 acceptance green pre-pin; the alloc/free workarounds can retire in the
 next wave); 1453-packages acked (fleet data point); 1427-engine fixed
@@ -101,8 +104,11 @@ row (still red).
 (4) guard-free retirement: 1548-bindings-8 / 1445 -- retire the
 alloc/free workarounds, re-add the confined-block free row to p_b2728,
 re-probe on the official pin; bindings close B-8 (B-05 cleared).
-(5) thread wave: flip the spawn e2e + thread pool (2053/1627/1402,
-UNBLOCKED) + 1834-engine-6 (real threadpool + Send/Sync) + 2202 item 4.
+(5) PARTIAL (block 199, wave 146): spawn e2e FLIPPED (real OS-thread
+spawn/join/detach/scoped; probe p_wave145; runtime thread_id/spawn_id/
+spawn_join -> long long); spawn_with stays inline (no arg channel); the
+real pool + Send/Sync (1834-engine-6 remainder) queued -- finding
+recorded.
 (6) compression upgrades (2202 item 5): dynamic-Huffman gzip, real
 brotli (RFC 7932), zstd + Accept-Encoding negotiation.
 (7) zero-copy send (2202 item 6): sendfile/splice/TransmitFile/writev
@@ -3528,6 +3534,32 @@ registry pin, agent recon for the rest)**
   clean except the untracked out/ dir at this round.
 - Two long-lived git processes (from ~14:20Z) sit in the relays repo;
   the bus itself is consistent. The next writer continues from 169/170.
+
+**SESSION 2026-10-16 block 199 (wave 146 / pin-switch W5: thread spawn e2e FLIPPED to real OS threads -- spawn/join/detach/spawn_scoped; probe p_wave145; runtime long-return widening; spawn_with stays inline (no arg channel); floors176)**
+- spawn.xi is REAL: spawn(f) runs the closure on an OS thread via
+  xiom_thread_spawn_with_result (the 8+8 result buffer is allocated
+  OUTSIDE the confined block per wave 131; freed in join; detach keeps
+  the 16-byte buffer for the process lifetime -- documented). join blocks
+  then deallocs; spawn_scoped = spawn + join; spawn_with stays INLINE
+  (documented: the trampoline has no argument channel; queued behind the
+  engine-6 arg freeze). SpawnThread grew {handle, buf} fields (the
+  smoke's park token construction updated).
+- Runtime widening (the long-return tails this edit owned): thread_id,
+  spawn_id, spawn_join -> `long long` (C `long` is 32-bit on Windows);
+  cpu_count bindings annotated in spawn.xi + thread.xi (the 2343-class
+  classification the actor mapped).
+- Evidence: p_wave145_shapes.xi rows 1-6 (spawn[Int] join==42; two
+  concurrent spawns 42/7; worker id != main; is_finished window;
+  spawn(fn()) n=1; spawn_scoped n=2) -- green 3/3 battery-config;
+  smoke_thread OK (watchdog 30s); p_wave131 1/1; thread smokes 2/2.
+  Probes now 320 files.
+- Floors176 dumped + wired (Global 70.7 held). The compiler's general
+  bare-inline fix (REL-20261015-2343-stdlib, acked overnight) is the
+  belt-and-braces route for the class.
+- Waves renumbered: the actor's queue commit 31e3ff1 maps wave-145 = the
+  i32 annotation tails (their classification, deferred for context);
+  this thread flip is wave 146.
+- Tree: this commit.
 
 **SESSION 2026-10-16 block 198 (catch-up doorbells 01:00Z-11:00Z -- overnight waves 141-144; 1948 + 1548-bindings-8 both fixed; pulse top-tier directive received)**
 - Overnight the shared lane actor landed waves **141-144**: 141 =

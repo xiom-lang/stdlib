@@ -58,7 +58,7 @@ fn main() -> Int {
   park.park_token_wait(tok);
   var p1 = park.park_timeout(20);
   if p1 { io.println("park:timeout"); return 10; }
-  var me = SpawnThread{ id: spawn.thread_id(); };
+  var me = SpawnThread{ id: spawn.thread_id(); handle: 0 as *UInt8; buf: 0 as *UInt8; };
   park.unpark(me);
   var p2 = park.park_timeout(20);
   if !p2 { io.println("park:unpark"); return 11; }
@@ -76,7 +76,7 @@ fn main() -> Int {
   pool.tp_shutdown(&mut p);
   if pool.tp_submit(&mut p, bump) { io.println("pool:shutdown"); return 19; }
 
-  // spawn: simulated spawn/join, thread introspection
+  // spawn: real spawn/join since wave 145 (was an inline simulation)
   var t = spawn.spawn(bump);
   var jr = spawn.join(t);
   if jr.is_err { io.println("spawn:join"); return 20; }

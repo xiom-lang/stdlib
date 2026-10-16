@@ -5258,7 +5258,7 @@ int xiom_thread_join(xiom_thread_t thread) {
 void xiom_thread_detach(xiom_thread_t thread) { CloseHandle(thread); }
 void xiom_thread_exit(void) { ExitThread(0); }
 xiom_thread_t xiom_thread_self(void) { return GetCurrentThread(); }
-long xiom_thread_id(void) { return (long)GetCurrentThreadId(); }
+long long xiom_thread_id(void) { return (long long)GetCurrentThreadId(); }
 
 void xiom_mutex_init(xiom_mutex_t* m) { InitializeCriticalSection(m); }
 void xiom_mutex_lock(xiom_mutex_t* m) { EnterCriticalSection(m); }
@@ -5304,7 +5304,7 @@ int xiom_thread_join(xiom_thread_t thread) { return pthread_join(thread, NULL); 
 void xiom_thread_detach(xiom_thread_t thread) { pthread_detach(thread); }
 void xiom_thread_exit(void) { pthread_exit(NULL); }
 xiom_thread_t xiom_thread_self(void) { return pthread_self(); }
-long xiom_thread_id(void) { return (long)pthread_self(); }
+long long xiom_thread_id(void) { return (long long)pthread_self(); }
 
 void xiom_mutex_init(xiom_mutex_t* m) { pthread_mutex_init(m, NULL); }
 void xiom_mutex_lock(xiom_mutex_t* m) { pthread_mutex_lock(m); }
@@ -5946,7 +5946,7 @@ void* xiom_thread_spawn(void* fn_ptr, void* arg) {
     return (void*)(intptr_t)id;
 }
 
-long xiom_thread_spawn_join(void* handle) {
+long long xiom_thread_spawn_join(void* handle) {
     long id = (long)(intptr_t)handle;
     if (id <= 0) return -1;
     xiom_spawn_table_init();
@@ -5982,8 +5982,8 @@ void xiom_thread_spawn_detach(void* handle) {
     xiom_thread_detach(th);
 }
 
-long xiom_thread_spawn_id(void* handle) {
-    return (long)(intptr_t)handle;
+long long xiom_thread_spawn_id(void* handle) {
+    return (long long)(intptr_t)handle;
 }
 
 /*
