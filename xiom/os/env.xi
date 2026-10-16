@@ -4,6 +4,7 @@
 
 module xiom.env
 
+use xiom.convert.cstring;
 use xiom.io;
 use xiom.string;
 
@@ -15,13 +16,20 @@ extern "C" {
   fn xiom_env_unset(name: *UInt8) -> Int32;
   fn getcwd(buf: *UInt8, size: UInt) -> *UInt8;
   fn chdir(path: *UInt8) -> Int32;
+  // Wave 164: runtime host OS name for the in-module platform branches.
+  fn xiom_os_name() -> *UInt8;
 }
 
-/// Compile-time target OS name (lowercase).
-pub const OS: Str = "windows";     // compile-time target OS
+/// Compile-time target OS name (lowercase) at QUALIFIED reference sites
+/// (`env.OS`). WAVE 164: a bare in-module reference to a platform constant
+/// keeps the literal initializer instead of the target rewrite (verified on
+/// the official v0.64.5 pin: `env.FAMILY` reads "unix" from outside while a
+/// bare in-module check still matched "windows") -- in-module behavior
+/// branches MUST use host_is_windows() below, never these constants.
+pub const OS: Str = "windows";     // compile-time target OS (qualified refs only)
 /// Compile-time target architecture name.
 pub const ARCH: Str = "x86_64";    // compile-time target architecture
-/// Target family: "unix" or "windows".
+/// Target family: "unix" or "windows" (qualified refs only; see OS above).
 pub const FAMILY: Str = "windows"; // "unix" or "windows"
 
 fn cstr(s: Str) -> *UInt8
@@ -31,6 +39,25 @@ fn cstr(s: Str) -> *UInt8
   unsafe {
     return s as *UInt8;
   }
+}
+
+// _host_os_name reads the RUNNING host's OS name from the runtime (the
+// compile-time constants above are only reliably rewritten at qualified
+// reference sites; see the OS/FAMILY doc notes). Pure.
+fn _host_os_name() -> Str
+  requires: true
+{
+  unsafe { return cstring.from_cstring(xiom_os_name() as Int); }
+}
+
+/// host_is_windows returns true when the RUNNING host is Windows (runtime
+/// probe). Use this -- not the compile-time FAMILY constant -- for any
+/// behavior branch inside this module and for WSL/Linux-correct paths.
+/// Complexity: O(1).
+pub fn host_is_windows() -> Bool
+  ensures: result == (_host_os_name() == "windows")
+{
+  return _host_os_name() == "windows";
 }
 
 /// Environment variable value; Err with a message when unset.
@@ -211,7 +238,7 @@ pub fn data_dir() -> Option[Str]
   };
   let h = home_dir();
   match h {
-    Some(home) => Some(join_paths(home, if FAMILY == "windows" { "AppData/Roaming" } else { ".local/share" }));
+    Some(home) => Some(join_paths(home, if host_is_windows() { "AppData/Roaming" } else { ".local/share" }));
     None => None;
   }
 }
@@ -227,7 +254,7 @@ pub fn cache_dir() -> Option[Str]
   };
   let h = home_dir();
   match h {
-    Some(home) => Some(join_paths(home, if FAMILY == "windows" { "AppData/Local" } else { ".cache" }));
+    Some(home) => Some(join_paths(home, if host_is_windows() { "AppData/Local" } else { ".cache" }));
     None => None;
   }
 }
@@ -243,7 +270,7 @@ pub fn config_dir() -> Option[Str]
   };
   let h = home_dir();
   match h {
-    Some(home) => Some(join_paths(home, if FAMILY == "windows" { "AppData/Roaming" } else { ".config" }));
+    Some(home) => Some(join_paths(home, if host_is_windows() { "AppData/Roaming" } else { ".config" }));
     None => None;
   }
 }
@@ -273,11 +300,12 @@ pub fn join_paths(a: Str, b: Str) -> Str
   return string.str_concat(string.str_concat(a, path_separator()), b);
 }
 
-/// Platform path separator ("/" or "\\").
+/// Platform path separator ("/" or "\\"). Wave 164: branches on the runtime
+/// host probe -- the bare compile-time FAMILY check returned "\\" on Linux.
 pub fn path_separator() -> Str
   ensures: result.len() == 1
 {
-  if FAMILY == "windows" {
+  if host_is_windows() {
     return "\\";
   };
   return "/";

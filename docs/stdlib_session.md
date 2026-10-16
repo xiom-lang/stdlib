@@ -3643,6 +3643,33 @@ registry pin, agent recon for the rest)**
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
 
+**SESSION 2026-10-16 block 216 (wave 164: runtime host-platform branches -- bare in-module FAMILY refs in xiom.os.env kept the literal "windows" on Linux; env.host_is_windows() probe added + the four branches moved onto it; probe p_wave164 (8 rows) green Windows + WSL 3/3; compiler item REL-20261016-2000 filed)**
+- Root cause (compiler): qualified cross-module refs to env.OS/FAMILY ARE
+  rewritten per target ("unix"/"linux" seen from outside on Linux), but
+  BARE in-module refs keep the literal initializer -- so
+  env.path_separator() returned "\\", join_paths "a\\b" and
+  data/cache/config_dir answered AppData\... under a unix home. Recon on
+  WSL (official pin) captured the exact pre-fix values (red-before).
+- Fix: xiom.os.env gains host_is_windows() (runtime xiom_os_name probe;
+  the same pattern xiom.os.platform has carried since 2026-09-22) and the
+  four branches use it; OS/FAMILY doc comments now warn
+  qualified-refs-only. Survey: no other module branches on a bare platform
+  constant (socket/watch/os raise use qualified env.FAMILY and were
+  correct).
+- Evidence: p_wave164 rows 1-8; WSL rc 0 3/3 (post-fix recon: path "/",
+  join "a/b", data_dir ~/.local/share, config_dir ~/.config); Windows rc 0
+  3/3 + runner PASS (10.5s); slices green: smoke_os 9/9, smoke_net 11/11,
+  smoke_env 6/6, smoke_stress_env 3/3, smoke_path 1/1,
+  smoke_stress_path 15/15, smoke_io_env 1/1, smoke_io_path 1/1,
+  smoke_os_env 1/1, smoke_os_path 1/1.
+- Bus: REL-20261016-2000-stdlib filed to compiler (relays 3233577
+  pushed).
+- FINDING (recorded, not chased): watch_dir returns Ok("/tmp") on Linux
+  on the pin -- the "Windows-first, POSIX documented Err" comment at
+  watch.xi may be stale; observe watch_poll semantics before consuming
+  (phase-2 shelf item, 1129 POSIX-watch row).
+- Tree: this commit.
+
 **SESSION 2026-10-16 block 215 (campaign integration at the 19:00Z doorbell -- waves 157 (TLS wave-B, LIVE in-tree) + 158 (compression) + 160 (popen) merged; merged battery green; floors179 dumped + wired; bus: 2202 items 1/2/3/5/6/7 done, 1128 fixed, 1129 progress; snapshot 38 refreshed)**
 - Merges: 157 -> c97d3fe (stage-1 eight-symbol session driver, gate
   lifted; stage-2 xiom.net.tls_libssl minimal system-libssl backend;
