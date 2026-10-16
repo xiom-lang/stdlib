@@ -3658,6 +3658,21 @@ registry pin, agent recon for the rest)**
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
 
+**SESSION 2026-10-16 block 223 (RELEASE EXECUTED: stdlib-v0.64.6 tag MOVED b81430b -> 8d95815 + pushed; main pushed; release.yml run 38979638226 in progress; fresh publish run 38979638142 waiting on the owner's registry-publish environment approval -- re-resolves compiler pin v0.64.6; relay items 2330/2331 + the 1559 history pushed a319d39)**
+- Tag object 5ea2384 -> 588d9e7; remote forced update accepted; main
+  44c0fbb..8d95815.
+- Runs: Release 38979638226 (in_progress, started 23:06:45Z; Win+Linux
+  full-corpus gates -> deterministic tarball + SHA256SUMS -> GH release
+  -> pin PR -> staging canary dispatch); Registry Publish 38979638142
+  (waiting for owner environment approval; then waits up to 90 min for
+  the release asset xiom-std-0.64.6.tar.gz).
+- The previously approved stale run (38926960272, pin v0.64.4) was
+  cancelled per the owner decision; the fresh run locks the correct pin.
+- NEXT (wakeup ~23:58Z): verify the release run green + the asset
+  uploaded + the pin PR; when the registry publishes, post the
+  stdlib->all announcement item, update 1559, blocks + snapshot 39.
+- Tree: head 8d95815; worktree clean except the known untracked scratch.
+
 **SESSION 2026-10-16 block 222 (RELEASE PREP 0.64.6: floors180 (Global 71.1 -> 71.8, every dir up) wired; package.xi 0.64.6 + COMPILER_VERSION v0.64.6 + release-notes/v0.64.6.md + CHANGELOG [0.64.6]; p_wave138 lowercase-base32 lock updated; wishlist sweep block; relay batch + tag move next)**
 - Pre-tag gates on the official v0.64.6 pin: modules 532/532 clean;
   probes corpus 352/353 -> the one red (`p_wave138` rc 29) was wave-166's
