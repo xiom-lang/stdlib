@@ -249,3 +249,149 @@ pub fn parse_char(s: Str) -> Option[Char]
   };
   None
 }
+
+// ============================================================================
+// Wave 166 (2026-10-02 intake rows 28 + 45; requesters training, cloudlog,
+// translate): strict Option-shaped decimal parsing and offset-carrying
+// parsing. Reject empty input, any junk byte, a bare sign, and overflow --
+// never a silent zero. `parse_int_at` reports the byte offset consumed (the
+// caller-relocatable cursor the row-45 scanners asked for).
+// ============================================================================
+
+// Raw byte at `i` over a cached pointer (T007 confinement; callers bound i).
+fn _parse_raw(base: *UInt8, i: Int) -> UInt8
+  requires: true
+{
+  unsafe { return *(base + i); }
+}
+
+// Decimal value of byte `i` (0-9), or -1 for any other byte.
+fn _parse_dec_digit(base: *UInt8, i: Int) -> Int {
+  let v = (_parse_raw(base, i) as Int) & 0xFF;
+  if v >= 48 && v <= 57 {
+    return v - 48;
+  };
+  -1
+}
+
+/// Strict decimal parse, Option-shaped: Some(value) only when the WHOLE
+/// string is one optionally-signed decimal ("-"/"+" allowed) that fits an
+/// Int. Empty input, any junk byte, a bare sign, and overflow all yield None
+/// (never a silent zero). Complexity: O(n).
+pub fn parse_int_opt(s: Str) -> Option[Int]
+  requires: true  // cached raw-byte scan (T007 confinement)
+{
+  let len = s.len();
+  if len == 0 {
+    return None;
+  };
+  let base = s.c_str();
+  var i: Int = 0;
+  var negative = false;
+  let first = (_parse_raw(base, 0) as Int) & 0xFF;
+  if first == 45 {
+    negative = true;
+    i = 1;
+  } elif first == 43 {
+    i = 1;
+  };
+  if i >= len {
+    return None;
+  };
+  if negative {
+    var nres: Int = 0;
+    while i < len {
+      let d = _parse_dec_digit(base, i);
+      if d < 0 {
+        return None;
+      };
+      if nres < (INT_MIN + d) / 10 {
+        return None;
+      };
+      nres = nres * 10 - d;
+      i = i + 1;
+    };
+    return Some(nres);
+  };
+  var result: Int = 0;
+  while i < len {
+    let d = _parse_dec_digit(base, i);
+    if d < 0 {
+      return None;
+    };
+    if result > (INT_MAX - d) / 10 {
+      return None;
+    };
+    result = result * 10 + d;
+    i = i + 1;
+  };
+  Some(result)
+}
+
+/// struct ParsedInt { value: Int; next: Int } -- `next` is the byte offset
+/// just past the last consumed digit (the caller-relocatable cursor).
+pub type ParsedInt = { value: Int; next: Int; }
+
+/// Strict decimal parse starting at byte `start`: Some({value, next}) with
+/// the maximal digit run after an optional sign at `start`; requires at
+/// least one digit (a bare sign, junk, out-of-range `start`, and overflow
+/// all yield None). Junk AFTER the digits is not consumed and not an error --
+/// `next` tells the caller where parsing stopped. Complexity: O(digits).
+pub fn parse_int_at(s: Str, start: Int) -> Option[ParsedInt]
+  requires: true  // cached raw-byte scan (T007 confinement)
+{
+  let len = s.len();
+  if start < 0 || start >= len {
+    return None;
+  };
+  let base = s.c_str();
+  var i = start;
+  var negative = false;
+  let first = (_parse_raw(base, i) as Int) & 0xFF;
+  if first == 45 {
+    negative = true;
+    i = i + 1;
+  } elif first == 43 {
+    i = i + 1;
+  };
+  if i >= len {
+    return None;
+  };
+  var saw_digit = false;
+  if negative {
+    var nres: Int = 0;
+    while i < len {
+      let d = _parse_dec_digit(base, i);
+      if d < 0 {
+        break;
+      };
+      if nres < (INT_MIN + d) / 10 {
+        return None;
+      };
+      nres = nres * 10 - d;
+      saw_digit = true;
+      i = i + 1;
+    };
+    if !saw_digit {
+      return None;
+    };
+    return Some(ParsedInt{ value: nres; next: i });
+  };
+  var result: Int = 0;
+  while i < len {
+    let d = _parse_dec_digit(base, i);
+    if d < 0 {
+      break;
+    };
+    if result > (INT_MAX - d) / 10 {
+      return None;
+    };
+    result = result * 10 + d;
+    saw_digit = true;
+    i = i + 1;
+  };
+  if !saw_digit {
+    return None;
+  };
+  Some(ParsedInt{ value: result; next: i })
+}
