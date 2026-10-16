@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 37 (updated 2026-10-16 19:05Z at head ecae793; waves 141-163 landed incl. the campaign -- zero-copy, SSE, fix-first batch, BLAKE3 KATs; pin stdlib-v0.64.6 = b81430b; NEXT LEADS: TLS wave-B against the bindings' xiom.ssl (publish-ready), compression, popen spawn; relay live)
+## 0A. CONTINUE HERE -- handoff snapshot 38 (updated 2026-10-16 19:45Z at head 1ac7d73; the 2026-10-16 campaign is COMPLETE on main -- waves 155-163 incl. TLS wave-B (in-tree libssl route LIVE), compression (dynamic Huffman + two RFC table fixes), zero-copy, popen spawn, SSE connection layer, fix-first defect batch, BLAKE3 KATs; merged battery green + floors179 (Global 70.8); pin stdlib-v0.64.6 = b81430b; NEXT LEADS: ranked sweep + phase-2 shelf (inotify/h2/epoll), compiler-row monitors; relay live)
 
 ### Snapshot 37 (paste-ready)
 
@@ -26,11 +26,39 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 ---
 
 You are continuing the XIOM stdlib lane. Worktree `E:\xiom-lang\stdlib`,
-branch `main`. Read `docs/stdlib_session.md` blocks 214, 213, 212, 211, 210, 209, 208, 207, 206, 205, 204, 203, 202, 201, 200, 199, 198, 197, 196, 195, 194, 193, 192, 191, 190, 189c, 189b, 189, 188, 187, 186, 185b, 185,
+branch `main`. Read `docs/stdlib_session.md` blocks 215, 214, 213, 212, 211,
+210, 209, 208, 207, 206, 205, 204, 203, 202, 201, 200, 199, 198, 197, 196,
+195, 194, 193, 192, 191, 190, 189c, 189b, 189, 188, 187, 186, 185b, 185,
 184b, 184, 183, 182, 181, 180, 179, 178, 177, 176, 175b, 175, 174, 173b,
 173, 172, 171b, 171, 170d, 170c, 170b, 170, 169, 168, 167, 166b, 166,
 165b, 165 (older as needed); snapshot 36 below is the previous handoff and
 is superseded (35/34/33/32/31 stay below it as history).
+
+DELTA SINCE SNAPSHOT 37 (2026-10-16 19:45Z; blocks 210-215 are the
+authoritative record): wave 159 zero-copy merged (writev/sendfile/
+TransmitFile + TcpStream.send_file); wave 161 fix-first defects
+(_u64_lshr n=63 + pub u64_lshr/u64_rotr, sb_push_int INT64_MIN,
+parse_int INT64_MIN) plus the discovered BLAKE2b tail-load big-endian fix
+and the bits.rotation sign-bit rotate fix; wave 162 SSE connection layer
+real (2202-7 connection half); wave 163 BLAKE3 KAT rows; wave 157 TLS
+wave-B merged (stage-1 eight-symbol session driver with the gate LIFTED +
+stage-2 minimal system-libssl backend xiom.net.tls_libssl; live loopback
+handshake 3/3 on the official pin with Git OpenSSL on PATH, SKIP 1/1
+without; docs/TLS_DECISION status); wave 158 compression merged
+(dynamic-Huffman deflate encoder levels 4-9, dynamic read completion
+incl. repeat codes 16/17/18, public RFC 1951 tables, neutral crc32,
+Accept-Encoding negotiation, brotli/zstd honesty; two latent RFC table
+fixes; CPython zlib vectors byte-exact); wave 160 popen-class spawn
+merged. Merged battery: probes 335/335, modules 513/513, barename 0,
+doc+module-smoke (499/522, 3501/6294), ratchet OK -> floors179 (wired
+into ci/heavy/release + tools/README). Relay: 2202 items 1/2/3/5/6/7
+DONE (4 compiler-gated; 8-10 shelf), 1128 FIXED (reporter verifies),
+1129 progress (item 3 satisfied; POSIX watch on the shelf). NEW
+FOLLOW-UPS: the compile-time `env.OS`/`env.FAMILY` constants report
+"windows" on Linux targets (root cause compiler-side; lane workaround:
+runtime probes -- xiom.os.platform plus the new env.host_is_windows;
+wave 164 fixes the remaining call sites); wave-160 finding
+`env.path_separator`/`join_paths` backslash-on-Linux fixed by wave 164.
 
 STATE: v0.64.5 RELEASED and pinned (2026-10-15 19:12Z): the compiler tag
 is on 84f761c5 (release run 38792051847 green; all assets live); xiom
@@ -53,9 +81,10 @@ only on a hash-verified official extraction. Linux legs: WSL Ubuntu with
 verified p_wave143 + p_wave148 there). The 1549 cluster (parent + -2..-7)
 and 1615 were verified + closed on the official archive (blocks 189 +
 191 corrections). PIN: stdlib-v0.64.6 = b81430b (waves 141-154 +
-e72288f; block 205). Lane head: b6f90c9 + the wave-155 actor commit
-(46caa94); tree clean except the untracked out/ dir and the debug lane's
-six untracked smoke_diag_f128_l*.xi files.
+e72288f; block 205). Lane head: 1ac7d73 (the campaign 155-163 + merges
+157/158/160 + floors179; block 215 is this record); tree clean except the
+untracked out/ dir and the debug lane's six untracked smoke_diag_f128_l*.xi
+files.
 
 Waves 114-139 landed; 138 = the encoding submodules (base64/base32/hex/
 percent/punycode/idna/ascii85 cached runtime-mirror reads; the
@@ -87,7 +116,10 @@ socket_recv_from unusable; no battery row until fixed). 1128-orbitdb +
 FIXED + 1223-orbitdb resolved (the wave-143 POSIX include; Linux-verified
 in WSL, block 202). 1452-compiler FIXED (stdlib-v0.64.6 tagged at
 b81430b; block 205); 1550-stdlib filed (thread worker-loop gaps);
-1128/1129/1834/2202 carry progress notes. 1445
+1128 FIXED (ask 2 = TLS server side delivered via wave 157; reporter
+verifies), 1129 acked (item 3 TLS requester signal satisfied; POSIX watch
+on the shelf), 2202 acked (items 1/2/3/5/6/7 DONE; 4 compiler-gated;
+8-10 shelf), 1834 acked (compiler primitives). 1445
 fixed bus-side (alloc-guard-spin
 acceptance green pre-pin; the alloc/free workarounds can retire in the
 next wave); 1453-packages acked (fleet data point); 1427-engine fixed
@@ -116,20 +148,31 @@ real-per-job (wave 153) -- a persistent fleet needs closure-from-payload
 invocation + channel close/wake + threadpool join (filed as
 REL-20261016-1550-stdlib); spawn_with stays inline (no arg channel);
 Send/Sync is a language gap.
-(6) compression upgrades (2202 item 5): dynamic-Huffman gzip, real
-brotli (RFC 7932), zstd + Accept-Encoding negotiation.
+(6) DONE (wave 158, block 215): compression upgrades -- dynamic-Huffman
+deflate encoder (levels 4-9 pick the smallest of stored/fixed/dynamic) +
+dynamic read completion (repeat codes 16/17/18) + public RFC 1951 tables
++ neutral crc32 + Accept-Encoding negotiation + the brotli/zstd honesty
+pass (xiom.brotli package = the RFC 7932 path); two latent RFC table
+fixes (len 258 -> code 285; dist extra codes 26/27 -> 12); CPython zlib
+vectors + a recorded XIOM->python interop (40 KiB: 615 -> 462 bytes).
 (7) DONE (wave 159, block 212): zero-copy send real -- writev +
 sendfile/TransmitFile + TcpStream.send_file; probe p_wave159 (11 rows)
 + slices green.
-(8) popen-class non-blocking spawn (2202 item 3; supervisor/reload
-shape).
-(9) TLS wave-A DONE (block 205, wave 154): ALPN codec + dl_open loader
-scaffold (probe p_wave154); the ceiling-setter per 2202 item 1. WAVE-B
-TARGET NOW KNOWN: the bindings' xiom.ssl 0.1.0 is publish-ready (live
-23/23 + SKIP 4/4 per their publish request) -- the loader's 8-symbol
-contract is the seam; wave-B = session plumbing against xiom.ssl + the
-server half (cert/key loading, ALPN selection, error taxonomy) for
-1128 ask 2.
+(8) DONE (wave 160, block 215): popen-class non-blocking spawn --
+spawn_with_pipes + PipedChild {drain_fd,wait,kill,close_pipes,
+is_running}, popen/pclose, argv posix_spawn/posix_spawnp, real
+wait_status; runtime pipe triple (CreateProcessA) / fork+dup2 with
+tracked-handle race-free kill+wait; probe p_wave160 (16 rows) 3/3
+Windows + WSL rc 0 x3; smoke_os 9/9, smoke_io 20/20.
+(9) DONE (waves 154 + 157, blocks 205/215): TLS wave-A scaffold + wave-B
+merged -- eight-symbol session driver (stage gate LIFTED: calls the
+resolved addresses, typed failures, never crashes) + the minimal
+system-libssl backend xiom.net.tls_libssl (client+server ctx, PEM
+cert/key load, ALPN client set + negotiated read, taxonomy, fd-readiness
+pump; deliberately not a second xiom.ssl). LIVE loopback handshake 3/3
+on the official pin (Git OpenSSL on PATH) + SKIP 1/1 without; WSL SKIP
+leg green; docs/TLS_DECISION two-route status. Ecosystem route stays the
+live xiom.ssl 0.1.0 package. 1128 ask 2 fixed on the bus.
 (10) DONE (block 200): runtime-backed f32_bits/bits_to_f32 pair +
 probe p_wave147; floors177. A compiler-side Float32 bitcast lowering
 can replace the shim later without an API change.
@@ -157,8 +200,8 @@ p_trailing_match_after_push) at each pin; wave 140 wiring landed
 (36bcaac; floors173).
 
 GATES (WAVE PIN = official v0.64.5; pinned rev b81430b = stdlib-v0.64.6):
-modules 510/510, probes 328/328, barename 0/510, floors178 (Global 70.8),
-doc + module-smoke (499/519, 3501/6251) OK; the tracked corpus is 956
+modules 513/513, probes 335/335, barename 0/513, floors179 (Global 70.8),
+doc + module-smoke (499/522, 3501/6294) OK; the tracked corpus is 956
 files (the six witness ladder smokes stay witness-only, untracked; with
 them the local runs show 962, all passing -- the full 962/962 confirmation
 is on 1452). PIN: stdlib-v0.64.6 tagged at b81430b; further waves land
@@ -3599,6 +3642,38 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-16 block 215 (campaign integration at the 19:00Z doorbell -- waves 157 (TLS wave-B, LIVE in-tree) + 158 (compression) + 160 (popen) merged; merged battery green; floors179 dumped + wired; bus: 2202 items 1/2/3/5/6/7 done, 1128 fixed, 1129 progress; snapshot 38 refreshed)**
+- Merges: 157 -> c97d3fe (stage-1 eight-symbol session driver, gate
+  lifted; stage-2 xiom.net.tls_libssl minimal system-libssl backend;
+  tools/fixtures/tls test-only pair + hashes; p_wave157), 158 -> 86f9e0e
+  (dynamic-Huffman encoder + dynamic read completion + public RFC 1951
+  tables + neutral crc32 + Accept-Encoding + brotli/zstd honesty;
+  p_wave158_shapes + p_wave158_vectors; two latent RFC table fixes),
+  160 -> 961867a (spawn_with_pipes/PipedChild/popen/posix_spawn +
+  runtime pipe triple; p_wave160).
+- Merged-tree verification (official pin): p_wave157 LIVE 3/3 (Git
+  OpenSSL on PATH) + SKIP 1/1 (default PATH); p_wave158 2/2; compress
+  slice 26/26; kat slice 15/15; p_wave159 PASS; smoke_os 9/9;
+  smoke_net 11/11.
+- Battery (merged): probes 335/335 (454.4s), modules 513/513 (232.3s),
+  barename 0/513 (486.8s), doc scan rc 0, module-smoke 499/522 (95.6%)
+  ratchet OK, coverage ratchet floors178 OK -> FLOORS 179 dumped + wired
+  (ci/heavy/release + tools/README) in 1ac7d73.
+- Bus: 2202 progress notes x2 (items 1/5/6/7 + item 3 DONE; relays
+  a75ac85 + 3577576 pushed); 1128 acked -> fixed; 1129 progress.
+- NEW (wave-160 finding, wave 164 in progress): env.path_separator/
+  join_paths/data_dir/cache_dir/config_dir and os.raise_signal branch on
+  the compile-time FAMILY constant, which reports "windows" even on
+  Linux targets (documented since 2026-09-22 in xiom/os/platform.xi);
+  Linux consumers get backslash joins, Windows data-dir paths and a
+  no-op raise_signal; socket/watch Err texts mislabel too. Root cause is
+  compiler-side (to be filed); wave 164 moves the call sites onto
+  runtime probes (env.host_is_windows) + probe p_wave164 (Windows + WSL
+  legs, red-before on WSL).
+- Concurrent: the user's session recorded block 214 + a snapshot sync in
+  the same window; no conflicts (docs-only, disjoint regions).
+- Tree: 1ac7d73 + this docs commit.
 
 **SESSION 2026-10-16 block 214 (doorbell 19:00Z -- quiet inbound; the campaign is deep in waves 155-163)**
 - Inbound: no new asks or moves since 17:00Z (1128/1129 acked;
