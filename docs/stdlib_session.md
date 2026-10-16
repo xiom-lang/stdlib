@@ -3548,6 +3548,17 @@ registry pin, agent recon for the rest)**
 - Two long-lived git processes (from ~14:20Z) sit in the relays repo;
   the bus itself is consistent. The next writer continues from 169/170.
 
+**SESSION 2026-10-16 block 203 (doorbell 13:00Z -- quiet inbound; no stdlib-filed moves; next session starts at plan item 12)**
+- Inbound: no new rows or moves; only the compiler-owned 1630/1658 stay
+  open. New relays commits are ops/compiler lane work (eco-release scope
+  queue; m334/m335 integration on their tree).
+- Tree: head a451349; clean except the untracked out/ dir + the debug
+  lane's six diag smokes.
+- Next session: snapshot 37 (block 202 refresh) leads with plan item 12
+  (advisory file-lock wave, shared by orbitdb-1128 + xvector-1129) per
+  the four-lane 100%-coverage mandate; the pool flip (1834-engine-6)
+  follows.
+
 **SESSION 2026-10-16 block 202 (wave 149: POSIX build break FIXED -- the wave-143 TCP_NODELAY needs <netinet/tcp.h>; Linux-verified in WSL; + snapshot refresh for the next session; 1128-orbitdb / 1129-xvector wishlists mapped)**
 - REL-20261016-1143-xvector (HIGH) + 1223-orbitdb (heads-up): the
   wave-143 `xiom_socket_set_nodelay` POSIX branch used TCP_NODELAY
