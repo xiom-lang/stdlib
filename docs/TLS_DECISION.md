@@ -59,7 +59,7 @@ Rationale:
 - KAT corpus for the wrapper itself: handshake against test endpoints +
   Interop tests with openssl s_server/s_client scripted in e2e.
 
-## Status 2026-10-16 (wave 157 stage B, stage 1): the two routes
+## Status 2026-10-16 (wave 157 stage B): the two routes and the honest live boundary
 
 The original decision ("bind the OS TLS stack first; do NOT grow a homegrown
 TLS") stands. Two concrete routes now exist and compose:
@@ -73,42 +73,63 @@ negotiated read, verify modes, typed errors, and SKIP-safe loading
 (SPEC.md/AUDIT.md in that package). Consumers on the registry path use that
 package; its suite is live-proven 23/23 on libssl 3.2.4 and 4/4 SKIP.
 
-**Route B -- in-tree: the `xiom.net.tls` session layer.** This repo cannot
-import registry packages, so the in-tree route is the `dl_open` seam.
-`xiom.net.tls` defines the backend-independent **eight-symbol contract**
-(`tls_init`, `tls_server_new`, `tls_client_new`, `tls_handshake`,
-`tls_read`, `tls_write`, `tls_close`, `tls_alpn_selected`; signatures
-pinned in the module header) and now DRIVES it (the wave-154 stage gate is
-lifted): session open (server/client + fd attach + PEM cert/key paths),
-step (done / want-read / want-write / typed fatal), read, write,
-alpn-selected, close. Every handle and address is validated before any
-call, so a zero/absent backend or a bad handle fails with a typed
-`TlsError` kind, never a crash. The server-half helpers (cert/key material
-pre-validation, PEM/DER sniff, ALPN server policy) and the fd-readiness
-pump (`tls_wait_readable` / `tls_wait_writable`) live in the same module.
+**Route B -- in-tree: the `xiom.net.tls` session layer + the minimal
+`xiom.net.tls_libssl` backend (wave 157).** This repo cannot import registry
+packages, so the in-tree route is the `dl_open` seam:
 
-The live in-tree leg (a minimal system-libssl session backend,
-`xiom.net.tls_libssl`) is the wave-157 stage-2 commit; at this commit the
-driver's happy path is proven only when a conforming native backend library
-is present, and no shipped consumer wires TLS yet (https/ws keep their
-plaintext warnings).
+1. `xiom.net.tls` defines the backend-independent **eight-symbol contract**
+   (`tls_init`, `tls_server_new`, `tls_client_new`, `tls_handshake`,
+   `tls_read`, `tls_write`, `tls_close`, `tls_alpn_selected`; signatures
+   pinned in the module header) and now DRIVES it (wave-154 stage gate
+   lifted): session open (server/client + fd attach + PEM cert/key paths),
+   step (done / want-read / want-write / typed fatal), read, write,
+   alpn-selected, close. Every handle and address is validated before any
+   call, so a zero/absent backend or a bad handle fails with a typed
+   `TlsError` kind, never a crash. No conforming native backend library for
+   this contract exists on this box yet: the driver's happy path is proven
+   only when such a backend is present (the contract is the seam a
+   mbedTLS-class or shim backend would fill).
+2. `xiom.net.tls_libssl` is the live in-tree leg: a **minimal** libssl
+   session module (17 entry points, the binding's soname list; deliberately
+   NOT a second xiom.ssl -- no buffer/DER material, no chain/CA stores, no
+   memory BIOs, no SNI, no version/cipher/verify-result symbols) that runs
+   real TLS sessions over a socket fd.
+
+**What is LIVE today:** Route A in full (package suite). Route B: the
+libssl leg runs a real loopback TLS handshake (encrypted ping/pong both
+directions, clean `close_notify` with typed EOF) on this box (Git for
+Windows libssl 3.2.4 via `C:\Program Files\Git\mingw64\bin` on PATH; absent
+libssl is a clean load error and the probe SKIPs green); the pure halves --
+error taxonomy, ALPN policy, material sniff/pre-validation, fd-readiness
+pump -- are live on every host, and the eight-symbol driver's fail-clean
+paths are probe-locked.
+
+**What is NOT live (do not claim otherwise):** no in-tree consumer is wired
+to TLS yet (https/ws still carry their plaintext warnings; nothing imports
+`tls_libssl`); server-side ALPN *selection* (below); verify-result
+classification in the minimal libssl surface (Route A binds
+`SSL_get_verify_result`; the in-tree minimal module classifies fatal
+handshakes as `TLS_ERR_HANDSHAKE` only); cert/key buffers/DER, chains, CA
+stores, memory BIOs and SNI on the in-tree minimal surface.
 
 **Server-side ALPN selection: documented limitation + policy workaround.**
 OpenSSL selects the server-side ALPN protocol only through an
 `SSL_CTX_set_alpn_select_cb` C callback; the XIOM FFI has no callback
 bridging (the binding's AUDIT records the same lane survey), so a server
 without one negotiates ALPN "none" (`alpn_selected == ""`; locked live by
-the binding suite). The workaround is policy at the application layer:
-`xiom.net.tls.tls_alpn_select_server(server_pref, client_offered)` returns
-the first server-preferred protocol the client offered, or the classified
-`no_application_protocol` error (the RFC 7301 / RFC 8446 alert-120 class).
-Applications negotiate in-band before serving or refuse the connection; the
-selected name is not injected into the ALPN extension itself until
-C-callback bridging exists.
+the binding suite and the wave-157 probe). The workaround is policy at the
+application layer: `xiom.net.tls.tls_alpn_select_server(server_pref,
+client_offered)` returns the first server-preferred protocol the client
+offered, or the classified `no_application_protocol` error (the RFC 7301 /
+RFC 8446 alert-120 class). Applications negotiate in-band before serving or
+refuse the connection; the selected name is not injected into the ALPN
+extension itself until C-callback bridging exists.
 
-Evidence at this commit: `tools/probes/p_wave157_shapes.xi` (stage-1 rows;
-green on the official v0.64.5 pin) and `tools/probes/p_wave154_shapes.xi`
-(loader/ALPN codec).
+Evidence: `tools/probes/p_wave157_shapes.xi` (wave-157 lock; green 3/3 on
+the official v0.64.5 pin with the live leg, plus a green SKIP run without
+Git on PATH, plus a WSL Ubuntu run), `tools/probes/p_wave154_shapes.xi`
+(loader/ALPN codec), `tools/fixtures/tls/README.md` (test-only fixture
+provenance), and the xiom-ssl SPEC/AUDIT for Route A.
 
 ## Interim posture (current, honest)
 

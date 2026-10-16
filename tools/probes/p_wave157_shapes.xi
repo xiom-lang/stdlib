@@ -1,8 +1,8 @@
-﻿// p_wave157_shapes.xi -- wave 157 lock: TLS wave-B session layer, stage 1
-// (plan item 9 wave-B; refs REL-20261015-2202-pulse item 1,
-// REL-20261016-1128-orbitdb ask 2, REL-20261016-1129-xvector item 3).
-// Pure parts, fail-clean paths, taxonomy, ALPN policy and the readiness
-// pump for the eight-symbol session driver in xiom.net.tls.
+﻿// p_wave157_shapes.xi -- wave 157 lock: TLS wave-B session layer (plan item 9
+// wave-B; refs REL-20261015-2202-pulse item 1, REL-20261016-1128-orbitdb
+// ask 2, REL-20261016-1129-xvector item 3). Pure parts, fail-clean paths,
+// taxonomy and ALPN policy for the eight-symbol session driver in
+// xiom.net.tls, plus the live in-tree libssl leg (xiom.net.tls_libssl).
 //
 // Rows (0 = all hold):
 //  1 -- ALPN server policy: server preference order wins ([h2,http/1.1] x
@@ -21,17 +21,45 @@
 //  8 -- readiness pump: bad fd/timeout Err; live loopback pair
 //       wait_writable(true) + wait_readable(false on timeout, true after
 //       a byte)
-// Setup failures use 21+ (21 stage-1 loopback pair).
+//  9 -- libssl ALPN client wire golden ([h2,http/1.1] -> 12 bytes, no
+//       outer 2-byte prefix) + empty list Err
+// 10 -- tls_libssl_load_named(bogus) -> Err kind TLS_ERR_LOAD
+// 11 -- tls_libssl_load(): Err(TLS_ERR_LOAD) -> live leg SKIPs (pass);
+//       Err(TLS_ERR_ABI) or anything else -> failure
+// 12 -- (live) tls_libssl_available() == true once the library loaded
+// 13 -- (live) bad handles on a loaded library: step/read/write/shutdown/
+//       alpn with a closed session -> typed Err; free of a zero session
+//       is a clean no-op
+// 14 -- (live) loopback pair + server/client sessions (client ALPN
+//       set-list accepted; nonblocking fds)
+// 15 -- (live) full TLS handshake, step-driven via tls_wait_readable /
+//       tls_wait_writable
+// 16 -- (live) encrypted app data both directions (ping + pong)
+// 17 -- (live) ALPN negotiated read: both ends "" (no server-side
+//       selector; the documented state)
+// 18 -- (live) clean close: server close_notify -> Ok(0); client read ->
+//       Err kind TLS_ERR_EOF; shutdown completes 1/1
+// Setup failures use 21+ (21 stage-1 loopback pair, 22 live loopback
+// pair, 23 fixture read).
 
 module p_wave157_shapes
 
+use xiom.io;
 use xiom.net.socket;
 use xiom.net.tls;
 use xiom.net.tls.TlsBackend;
 use xiom.net.tls.TlsSession;
 use xiom.net.tls.TLS_ALPN_NO_APPLICATION_PROTOCOL;
 use xiom.net.tls.TLS_ERR_LOAD;
+use xiom.net.tls.TLS_ERR_ABI;
 use xiom.net.tls.TLS_ERR_ARG;
+use xiom.net.tls.TLS_ERR_EOF;
+use xiom.net.tls.TLS_STEP_DONE;
+use xiom.net.tls.TLS_STEP_WANT_READ;
+use xiom.net.tls.TLS_STEP_WANT_WRITE;
+use xiom.net.tls_libssl;
+use xiom.net.tls_libssl.TlsLibssl;
+use xiom.net.tls_libssl.TlsLibSession;
 
 const CERT_PEM: Str = "tools/fixtures/tls/server-cert.pem";
 const KEY_PEM: Str = "tools/fixtures/tls/server-key.pem";
@@ -389,10 +417,271 @@ fn row_pump() -> Int {
 }
 
 // =========================================================================
+// Stage-2 rows (libssl)
+// =========================================================================
+
+// row_alpn_wire locks the client set-list wire format (no outer prefix).
+fn row_alpn_wire() -> Int {
+  let names = two_str("h2", "http/1.1");
+  match tls_libssl.tls_libssl_alpn_client_wire(&names) {
+    Ok(w) => {
+      if w.len() != 12 { return 9; }
+      if w[0] != 2 as UInt8 { return 9; }
+      if w[3] != 8 as UInt8 { return 9; }
+    },
+    Err(_) => { return 9; },
+  }
+  var none = Vec[Str].new();
+  match tls_libssl.tls_libssl_alpn_client_wire(&none) {
+    Ok(_) => { return 9; },
+    Err(_) => {},
+  }
+  0
+}
+
+// pump_handshake drives both step machines until both finish; returns 0
+// on success, 1/2 on a fatal per side, 3 on exhaustion.
+fn pump_handshake(lib: &TlsLibssl, srv: &TlsLibSession, cli: &TlsLibSession) -> Int {
+  var srv_done = false;
+  var cli_done = false;
+  var srv_code = 0;
+  var cli_code = 0;
+  var i = 0;
+  while i < 400 {
+    if srv_done && cli_done {
+      return 0;
+    }
+    if !srv_done {
+      match tls_libssl.tls_libssl_step(lib, srv, true) {
+        Ok(c) => {
+          srv_code = c;
+          if c == TLS_STEP_DONE { srv_done = true; }
+        },
+        Err(_) => { return 1; },
+      }
+    }
+    if !cli_done {
+      match tls_libssl.tls_libssl_step(lib, cli, false) {
+        Ok(c) => {
+          cli_code = c;
+          if c == TLS_STEP_DONE { cli_done = true; }
+        },
+        Err(_) => { return 2; },
+      }
+    }
+    if srv_done && cli_done {
+      return 0;
+    }
+    if !srv_done {
+      if srv_code == TLS_STEP_WANT_WRITE {
+        let _ = tls.tls_wait_writable(srv.fd, 30);
+      } else {
+        let _ = tls.tls_wait_readable(srv.fd, 30);
+      }
+    }
+    if !cli_done {
+      if cli_code == TLS_STEP_WANT_WRITE {
+        let _ = tls.tls_wait_writable(cli.fd, 30);
+      } else {
+        let _ = tls.tls_wait_readable(cli.fd, 30);
+      }
+    }
+    i = i + 1;
+  }
+  3
+}
+
+// shutdown_progress retries one side's shutdown across WANT states until
+// it completes (1) or the budget runs out (-1).
+fn shutdown_progress(lib: &TlsLibssl, sess: &TlsLibSession, fd: Int) -> Int {
+  var k = 0;
+  while k < 400 {
+    let r = tls_libssl.tls_libssl_shutdown(lib, sess);
+    if r.is_ok {
+      if r.value == 1 { return 1; }
+    } else {
+      if r.error.kind == tls.TLS_ERR_WANT_READ {
+        let _ = tls.tls_wait_readable(fd, 25);
+      } elif r.error.kind == tls.TLS_ERR_WANT_WRITE {
+        let _ = tls.tls_wait_writable(fd, 25);
+      } else {
+        return -1;
+      }
+    }
+    k = k + 1;
+  }
+  -1
+}
+
+// row_live runs the live libssl leg on a fresh loopback pair.
+fn row_live(lib: &TlsLibssl) -> Int {
+  var zero = TlsLibSession{ ssl: 0; ctx: 0; fd: -1 };
+
+  // Bad handles on a loaded library: typed errors, no crash.
+  match tls_libssl.tls_libssl_step(lib, &zero, true) {
+    Ok(_) => { return 13; },
+    Err(e) => {
+      if e.kind != TLS_ERR_ARG { return 13; }
+    },
+  }
+  let r0 = tls_libssl.tls_libssl_read(lib, &zero, 16);
+  if r0.is_ok { return 13; }
+  let w0 = tls_libssl.tls_libssl_write(lib, &zero, &bytes_of("x"));
+  if w0.is_ok { return 13; }
+  let sd0 = tls_libssl.tls_libssl_shutdown(lib, &zero);
+  if sd0.is_ok { return 13; }
+  let a0 = tls_libssl.tls_libssl_alpn_selected(lib, &zero);
+  if a0.is_ok { return 13; }
+  tls_libssl.tls_libssl_free(lib, &zero);
+
+  // Fixtures must be readable before the live handshake.
+  match tls.tls_cert_material_check(CERT_PEM, KEY_PEM) {
+    Ok(_) => {},
+    Err(_) => { return 23; },
+  }
+
+  let pair = open_pair();
+  if !pair.ok { return 22; }
+
+  let srr = tls_libssl.tls_libssl_server_session(lib, pair.afd, CERT_PEM, KEY_PEM);
+  if !srr.is_ok {
+    socket.socket_close(pair.afd);
+    socket.socket_close(pair.cfd);
+    socket.socket_close(pair.lfd);
+    return 14;
+  }
+  let srv: TlsLibSession = srr.value;
+
+  let names = two_str("h2", "http/1.1");
+  let crr = tls_libssl.tls_libssl_client_session(lib, pair.cfd, &names);
+  if !crr.is_ok {
+    tls_libssl.tls_libssl_free(lib, &srv);
+    socket.socket_close(pair.afd);
+    socket.socket_close(pair.cfd);
+    socket.socket_close(pair.lfd);
+    return 14;
+  }
+  let cli: TlsLibSession = crr.value;
+
+  let nb1 = socket.socket_set_nonblocking(pair.afd, true);
+  let nb2 = socket.socket_set_nonblocking(pair.cfd, true);
+  let _ = nb1;
+  let _ = nb2;
+
+  // Handshake.
+  let hs = pump_handshake(lib, &srv, &cli);
+  if hs != 0 {
+    tls_libssl.tls_libssl_free(lib, &srv);
+    tls_libssl.tls_libssl_free(lib, &cli);
+    socket.socket_close(pair.afd);
+    socket.socket_close(pair.cfd);
+    socket.socket_close(pair.lfd);
+    return 15;
+  }
+
+  // Data both directions.
+  var rc = 0;
+  let ping = bytes_of("wave157-ping");
+  match tls_libssl.tls_libssl_write(lib, &cli, &ping) {
+    Ok(n) => {
+      if n != 12 { rc = 16; }
+    },
+    Err(_) => { rc = 16; },
+  }
+  if rc == 0 {
+    match tls_libssl.tls_libssl_read(lib, &srv, 64) {
+      Ok(got) => {
+        if got.len() != 12 { rc = 16; }
+        elif Str::from_utf8(got) != "wave157-ping" { rc = 16; }
+      },
+      Err(_) => { rc = 16; },
+    }
+  }
+  let pong = bytes_of("wave157-pong");
+  if rc == 0 {
+    match tls_libssl.tls_libssl_write(lib, &srv, &pong) {
+      Ok(n) => {
+        if n != 12 { rc = 16; }
+      },
+      Err(_) => { rc = 16; },
+    }
+  }
+  if rc == 0 {
+    match tls_libssl.tls_libssl_read(lib, &cli, 64) {
+      Ok(got) => {
+        if got.len() != 12 { rc = 16; }
+        elif Str::from_utf8(got) != "wave157-pong" { rc = 16; }
+      },
+      Err(_) => { rc = 16; },
+    }
+  }
+
+  // ALPN negotiated read: client set the list, no server selector ->
+  // both ends report "" (the documented state).
+  if rc == 0 {
+    let sa = tls_libssl.tls_libssl_alpn_selected(lib, &srv);
+    let ca = tls_libssl.tls_libssl_alpn_selected(lib, &cli);
+    if !sa.is_ok || !ca.is_ok {
+      rc = 17;
+    } elif sa.value.len() != 0 || ca.value.len() != 0 {
+      rc = 17;
+    }
+  }
+
+  // Clean close: server close_notify first (Ok(0)), the client's read
+  // reports EOF, then the client's close_notify completes both sides.
+  if rc == 0 {
+    var sent = -1;
+    var k = 0;
+    while k < 200 {
+      let r = tls_libssl.tls_libssl_shutdown(lib, &srv);
+      if r.is_ok {
+        if r.value >= 0 {
+          sent = r.value;
+          break;
+        }
+      } else {
+        if r.error.kind == tls.TLS_ERR_WANT_READ {
+          let _ = tls.tls_wait_readable(pair.afd, 25);
+        } elif r.error.kind == tls.TLS_ERR_WANT_WRITE {
+          let _ = tls.tls_wait_writable(pair.afd, 25);
+        } else {
+          sent = -2;
+          break;
+        }
+      }
+      k = k + 1;
+    }
+    if sent != 0 { rc = 18; }
+  }
+  if rc == 0 {
+    match tls_libssl.tls_libssl_read(lib, &cli, 64) {
+      Ok(_) => { rc = 18; },
+      Err(e) => {
+        if e.kind != TLS_ERR_EOF { rc = 18; }
+      },
+    }
+  }
+  if rc == 0 {
+    let c_done = shutdown_progress(lib, &cli, pair.cfd);
+    let s_done = shutdown_progress(lib, &srv, pair.afd);
+    if c_done != 1 || s_done != 1 { rc = 18; }
+  }
+
+  tls_libssl.tls_libssl_free(lib, &srv);
+  tls_libssl.tls_libssl_free(lib, &cli);
+  socket.socket_close(pair.afd);
+  socket.socket_close(pair.cfd);
+  socket.socket_close(pair.lfd);
+  rc
+}
+
+// =========================================================================
 // Driver
 // =========================================================================
 
 fn main() -> Int {
+  // Stage 1: pure parts, taxonomy, ALPN policy, fail-clean driver.
   let r1 = row_alpn_policy();
   if r1 != 0 { return r1; }
   let r4 = row_taxonomy();
@@ -405,5 +694,34 @@ fn main() -> Int {
   if r7 != 0 { return r7; }
   let r8 = row_pump();
   if r8 != 0 { return r8; }
+
+  // Stage 2: libssl leg (SKIP-safe).
+  let r9 = row_alpn_wire();
+  if r9 != 0 { return r9; }
+
+  match tls_libssl.tls_libssl_load_named("definitely-missing-libssl-wave157.dll") {
+    Ok(_) => { return 10; },
+    Err(e) => {
+      if e.kind != TLS_ERR_LOAD { return 10; }
+    },
+  }
+
+  let lr = tls_libssl.tls_libssl_load();
+  if !lr.is_ok {
+    if lr.error.kind == TLS_ERR_LOAD {
+      // No system libssl: the live rows are SKIPped by design (the
+      // binding's suite uses the same classification).
+      return 0;
+    }
+    return 11;
+  }
+  let lib: TlsLibssl = lr.value;
+
+  if !tls_libssl.tls_libssl_available() { return 12; }
+
+  let rl = row_live(&lib);
+  let cl = tls_libssl.tls_libssl_close(&lib);
+  if !cl.is_ok { return 19; }
+  if rl != 0 { return rl; }
   return 0;
 }
