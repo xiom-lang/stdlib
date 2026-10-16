@@ -3598,6 +3598,25 @@ registry pin, agent recon for the rest)**
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
 
+**SESSION 2026-10-16 block 212 (wave 159 MERGED -- zero-copy send real: writev + sendfile/TransmitFile + TcpStream.send_file; p_wave159 (11 rows) PASS Windows + WSL; merge-lane re-verify os 9/9 net 11/11)**
+- Branch wave/159-zerocopy (752dec8) merged 61ec887: runtime/xiom_runtime.c
+  gains xiom_fd_writev (POSIX writev(2) / Windows WSASend when the fd is a
+  socket, else a sequential _write fallback with full-total-or--1) and
+  xiom_fd_sendfile (Linux sendfile(2) / Windows TransmitFile; -2
+  unsupported platform macOS/BSD, -3 unsupported fd kind Windows
+  non-socket out); fs_ffi stubs -> real (signatures preserved); thin
+  TcpStream.send_file wrapper in net.xi.
+- Evidence: agent leg probe PASS 3/3 on the official pin (TransmitFile +
+  WSASend + fallback paths) and WSL consumer path rc 0 3/3 (sendfile(2)/
+  writev(2) + the POSIX-only closed-fd row); merge-lane re-verify on the
+  merged tree: p_wave159 PASS, smoke_os 9/9, smoke_net 11/11.
+- 2202 item 6 at the primitive level: sendfile/TransmitFile/writev
+  covered; splice stays out (Linux-only, no consumer ask yet) -- bus note
+  will say exactly that.
+- Still in flight at record time: wave 157 (TLS-B, busy), 158
+  (compress, busy), 160 (popen, busy); doorbell 19:00Z integrates.
+- Tree: 61ec887.
+
 **SESSION 2026-10-16 block 211 (wave 162: SSE connection layer REAL -- sse_connect/headers/read_event/read_events/close over live TcpStream; 2202 item 7 connection half; p_wave162 (12 rows, loopback fixtures on real spawn threads); smoke_net 11/11)**
 - The five SSE connection fns were Err stubs since the pure-stdlib era;
   now real: buffered reader with consumed-prefix cursor, CRLFCRLF/LFLF
