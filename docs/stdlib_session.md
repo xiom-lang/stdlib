@@ -3551,6 +3551,20 @@ registry pin, agent recon for the rest)**
 - Two long-lived git processes (from ~14:20Z) sit in the relays repo;
   the bus itself is consistent. The next writer continues from 169/170.
 
+**SESSION 2026-10-16 block 206 (doorbell 17:00Z -- quiet inbound; stdlib-v0.64.6 tagged; floors/wires WIP)**
+- Inbound: no new asks; `REL-20261016-1223-orbitdb` is now **closed**
+  (the Linux-compile heads-up is moot after wave 149). Everything else
+  stands as recorded (1128/1129 acked; 1143 closed; 1630/1658
+  compiler-owned open).
+- Pin line: **stdlib-v0.64.6 is TAGGED at `b81430b`** (block 205): the
+  win64 fp128 libcall convention split (pointer shims for clang>=21 /
+  XMM shims for clang<=20) + waves 151-154 + the parallel wave batch
+  merged; bus 1452 replied and 1550-stdlib filed. Snapshot refreshed.
+- WIP left untouched: the actor holds uncommitted edits in
+  `.github/workflows/{ci,heavy,release}.yml`, `runtime/xiom_runtime.c`
+  and `tools/README.md` (likely the floors/wires bump for the new tag) --
+  do not stage or sweep. The next writer continues from block 205/206.
+
 **SESSION 2026-10-16 block 205 (PIN: stdlib-v0.64.6 TAGGED at b81430b -- e72288f (win64 fp128 convention split, cherry-picked runtime-only) + waves 151-154; the parallel wave batch merged; bus 1452 replied, 1550-stdlib filed)**
 - Parallel wave batch (Agent Manager worktrees wave/151..154) merged into
   main with zero conflicts; per-wave evidence: probes p_wave151-154 green;
