@@ -214,10 +214,14 @@ fn main() -> Int {
   check_err(&mut a10, rerr, "err");
   check_some(&mut a10, osm, "some");
   check_none(&mut a10, ono, "none");
-  check_ok(&mut a10, rerr, "bad-ok");
-  check_err(&mut a10, rok, "bad-err");
-  check_some(&mut a10, ono, "bad-some");
-  check_none(&mut a10, osm, "bad-none");
+  let rerr2: Result[Int, Str] = Err("no2");
+  let rok2: Result[Int, Str] = Ok(2);
+  let ono2: Option[Int] = None;
+  let osm2: Option[Int] = Some(8);
+  check_ok(&mut a10, rerr2, "bad-ok");
+  check_err(&mut a10, rok2, "bad-err");
+  check_some(&mut a10, ono2, "bad-some");
+  check_none(&mut a10, osm2, "bad-none");
   check_fail(&mut a10, "explicit");
   if assertions_passed(&a10) != 4 { return 10; }
   if assertions_failed(&a10) != 5 { return 10; }
