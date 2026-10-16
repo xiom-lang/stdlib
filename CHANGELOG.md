@@ -6,6 +6,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.64.6] - 2026-10-17
+
+Pinned to compiler `v0.64.6`. Consumes the campaign and the wishlist
+sweep (waves 155-171): in-tree TLS wave B (session driver over the
+eight-symbol contract + a minimal system-libssl backend, server-half
+helpers, error taxonomy, fd-readiness pumps), compression upgrades
+(dynamic-Huffman deflate encoder, dynamic-block read completion, public
+RFC 1951 tables, neutral CRC32, Accept-Encoding negotiation, ZIP
+container read/write with CRC-32 verification), zero-copy send
+(sendfile/TransmitFile/writev + a checked socket send-file wrapper),
+popen-class non-blocking spawn with pipes, the SSE connection layer,
+the fix-first defect batch (INT64_MIN printing and parsing, the 64-bit
+logical shift at 63 bits, the BLAKE2b tail load, bit-rotation sign
+corrections, runtime host-platform branches for path and directory
+helpers), and seventeen new wishlist modules (fixed-point math and
+integer stats, string views, ASCII and codepoint helpers, strict
+parsing, little-endian codecs, keyed mailboxes, event-log cursors,
+bit sets, composite keys, vec helpers, XML tokens, zip, Keccak-256,
+FNV-1a, glob, non-aborting assertions).
+
 ## [0.64.5] - 2026-10-14
 
 Pinned to compiler `v0.64.4`. Consumes waves 114-139: the quadratic-pass

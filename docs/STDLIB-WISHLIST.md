@@ -529,3 +529,35 @@ smoke_hash_edge / smoke_stress_hash. Sibling notes (NOT fixed here):
 `core.to_int_from_str` accepts out-of-range positives with wrap;
 `num.parse_int_radix` keeps the same INT64_MIN limitation the convert face
 had (fixed on the convert face only).
+
+Sweep status 2026-10-17 (wishlist waves 165-171, landed in the v0.64.6
+campaign release; the row statuses in the table above are normalized by
+the next docs pass, this block is the per-row record):
+- wave 165 (math/fixed): rows 4, 8, 9, 10, 11, 12, 14, 16, 17, 27 --
+  xiom.math.int (saturating add/sub/mul, div_round/div_ceil, standalone
+  isqrt), xiom.math.fixed (scale-once kernels, log2/ln/exp/pow, sin/cos,
+  MSE, table interp, exact-sum softmax), xiom.stats.int_stats (first-wins
+  argmax, integer mean, integer least-squares slope). Probes
+  p_wave165_shapes + p_wave165_vectors. Side finding (open, relayed):
+  runtime i128 sdiv inlined into a vector-loop function AVs; shipped
+  helpers use shift/mask long division.
+- wave 166 (string/encoding): rows 2, 19, 20, 28, 30, 32, 35, 36, 44,
+  45, 46 -- string lines/ascii/codepoint/view, convert strict parsing +
+  byte spans, encoding le codecs + canonical lowercase base32 + path
+  percent-encoder. Probes p_wave166_shapes/_convert/_encoding.
+- wave 167 (collect): rows 3, 5, 6, 13, 15, 18, 21, 38, 39, 43 --
+  keyed mailboxes, event-log cursors, composite keys, vec copy/pop/
+  truncate, group-by fold, bit-set dataflow, Vec[Str] helpers, Str->Str
+  maps. Probe p_wave167_shapes.
+- wave 168 (compress/crypto): rows 22, 25, 34 -- zip container, Keccak-256,
+  FNV-1a over Str. Probe p_wave168_shapes.
+- wave 169 (serialize): rows 29, 40 -- streaming XML tokenizer, JSON
+  typed accessors. Probes p_wave169_shapes + _xml_vectors.
+- wave 170 (graph/test/glob): rows 7, 37, 41, 42 -- graph closure/depth,
+  deterministic Kahn topo, non-aborting assertion catalog, glob dialects.
+  Probe p_wave170_shapes.
+- wave 171 (os): xvector 1129 item 2 -- POSIX directory watch real
+  (inotify runtime leg) + platform docs. Probe p_wave171_shapes.
+- NOT assigned in this pass: row 31 (rand.state) -- queued for the next
+  sweep; row 33 stays compiler/install-lane. Released as stdlib-v0.64.6 /
+  xiom-std 0.64.6 (compiler pin v0.64.6).

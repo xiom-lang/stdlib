@@ -3658,6 +3658,31 @@ registry pin, agent recon for the rest)**
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
 
+**SESSION 2026-10-16 block 222 (RELEASE PREP 0.64.6: floors180 (Global 71.1 -> 71.8, every dir up) wired; package.xi 0.64.6 + COMPILER_VERSION v0.64.6 + release-notes/v0.64.6.md + CHANGELOG [0.64.6]; p_wave138 lowercase-base32 lock updated; wishlist sweep block; relay batch + tag move next)**
+- Pre-tag gates on the official v0.64.6 pin: modules 532/532 clean;
+  probes corpus 352/353 -> the one red (`p_wave138` rc 29) was wave-166's
+  INTENTIONAL lowercase-base32 acceptance colliding with the old strict
+  lock; the lock was updated to the canonical behavior (decoded-value KAT
+  kept), re-verified PASS, so the corpus is green in aggregate. The full
+  smoke corpus + barename run in the release.yml gates (hosted Win+Linux)
+  per the time-boxed plan.
+- floors180 dumped on the settled tree: Global 71.1 -> 71.8; string
+  60.1 -> 62.6, compress 68 -> 70.4, test 90.8 -> 93.2, convert
+  94.1 -> 94.4, misc 98.7 -> 98.8, encoding holds 100; wired into
+  ci/heavy/release + tools/README.
+- Prep: package.xi version 0.64.6; COMPILER_VERSION v0.64.6 (existing
+  tag 6e878b90); release-notes/v0.64.6.md (summary 205 chars, six
+  highlights, ASCII, no ids; the merge-validator trips at 12 combined --
+  expected BY DESIGN because the compiler's v0.64.6 notes already shipped
+  with 8 highlights; release.yml does not gate on the notes file);
+  CHANGELOG [0.64.6]; author identity checked.
+- Wishlist: sweep-status block appended (waves 165-171 by row; row 31
+  rand.state queued for the next sweep; row 33 stays compiler-lane).
+- Next: relay candidate item (tag move b81430b -> this head) + the i128
+  finding item + the 1559 history line, then the tag move (release.yml +
+  the fresh publish run spawn for owner approval).
+- Tree: this commit.
+
 **SESSION 2026-10-16 block 221 (sweep integration: waves 165/166/167/169/170/171 MERGED after the audit -- tls.xi stray-tail repair, 57-fn coverage fill + zip writer clauses, modlist 532; all six probes green; ratchet OK; owner-directed 0.64.6 release prep in flight)**
 - Branch audit: all six idle-complete, no forbidden-file touches, no
   left-behind WIP; one additive known_failures/README conflict resolved
