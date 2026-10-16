@@ -10,6 +10,9 @@ use xiom.net.ip4 as net4;
 use xiom.net.socket;
 use xiom.net.tls_helper;
 
+use xiom.os.fs_ffi;
+use xiom.os.sync_io;
+
 use xiom.string;
 
 // === FFI: C Runtime Socket Functions ===
@@ -209,6 +212,45 @@ pub fn TcpStream.close(self) -> Result[Unit, NetError]
     xiom_socket_close(self.fd);
   }
   Ok(())
+}
+
+/// Send a file to the peer with a kernel-side copy (zero-copy on Linux;
+/// TransmitFile on Windows). Wave 159 (REL-20261015-2202-pulse item 6):
+/// opens `path` read-only, delegates to xiom.os.fs_ffi.sendfile on this
+/// stream's socket fd, and closes the file fd. offset semantics: >= 0 is
+/// an explicit file offset, -1 is the current file position. count == 0
+/// is Ok(0) before the open (a documented no-op). On Linux a short Ok
+/// count means EOF; on Windows the range is clamped to the remaining file
+/// size first. An empty path is Err. The socket fd is a real SOCKET on
+/// Windows (TransmitFile requirement).
+/// Returns: Ok(bytes sent) on success; Err with the underlying message.
+pub fn TcpStream.send_file(self, path: Str, offset: Int, count: Int) -> Result[Int, NetError]
+  ensures: (count == 0) => (result.is_ok == true)
+{
+  if count == 0 {
+    return Ok(0);
+  }
+  if count < 0 {
+    return Err(NetError{ message: "send_file: negative count"; code: -300; });
+  }
+  if path.len() == 0 {
+    return Err(NetError{ message: "send_file: empty path"; code: -301; });
+  }
+  let h = sync_io.open_read(path);
+  match h {
+    Ok(fd_in) => {
+      let r = fs_ffi.sendfile(self.fd, fd_in, offset, count);
+      let _ = sync_io.close_fd(fd_in);
+      match r {
+        Ok(n) => { return Ok(n); },
+        Err(e) => { return Err(NetError{ message: "send_file: " + e; code: -302; }); },
+      }
+    },
+    Err(_) => {
+      return Err(NetError{ message: "send_file: open failed: " + path; code: -303; });
+    },
+  };
+  return Err(NetError{ message: "send_file: unreachable"; code: -304; });
 }
 
 /// Accept a connection; Ok((stream, peer address)) or Err.

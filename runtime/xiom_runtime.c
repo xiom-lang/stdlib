@@ -7972,3 +7972,228 @@ float xiom_bits_to_f32(long long b) {
     memcpy(&f, &u, sizeof(f));
     return f;
 }
+
+/* ================================================================
+   Zero-copy send (wave 159; REL-20261015-2202-pulse item 6).
+   xiom_fd_writev(fd, pairs, iovcnt): vectored write. `pairs` is a
+   2 * iovcnt array of (address, length) entries supplied by the stdlib
+   (an Int vector): the element type is long long, NOT C long -- XIOM
+   Int elements are 64-bit and Windows C long is 32-bit (cf. the
+   xiom_poll ABI note). POSIX: writev(2) (short counts are the syscall's
+   own semantics; only the actual count is returned). Windows: WSASend
+   when fd is a socket (the xiom_socket_create ABI returns raw SOCKET
+   values on Windows; detected with the canonical SO_TYPE probe),
+   otherwise a sequential _write fallback over CRT fds that loops short
+   writes and returns the full total or -1 (no silent partial totals).
+   Empty input (iovcnt 0, or all-zero-length segments) returns 0.
+   xiom_fd_sendfile(out_fd, in_fd, offset, count): kernel-side
+   file-to-out copy. Linux: sendfile(2) with POSIX offset semantics
+   (offset >= 0 reads from that file offset and leaves the position
+   unchanged; offset -1 uses the current position and advances it).
+   Windows: TransmitFile (out_fd must be a socket; in_fd is a CRT fd
+   mapped with _get_osfhandle; offset >= 0 seeks first -- Windows keeps
+   one shared file pointer, so the position ends past the sent range in
+   both cases, a documented platform divergence). Return codes: >= 0
+   bytes sent; -1 system failure; -2 unsupported platform (no portable
+   sendfile: macOS/BSD/other); -3 unsupported fd kind (Windows out fd is
+   not a socket). count == 0 returns 0 without a syscall.
+   ================================================================ */
+
+#ifdef _WIN32
+#include <mswsock.h>
+#pragma comment(lib, "mswsock.lib")
+
+#define XIOM_WRITEV_MAX 1024
+#define XIOM_FD_GUARD_MAX 8192
+
+/* Canonical "is this Winsock socket" probe: SO_TYPE succeeds only for
+   sockets; a non-socket handle value fails with WSAENOTSOCK. */
+static int xiom_fd_is_socket(long long fd) {
+    int type = 0;
+    int len = (int)sizeof(type);
+    if (fd < 0) return 0;
+    xiom_net_init();
+    return getsockopt((SOCKET)(ULONG_PTR)fd, SOL_SOCKET, SO_TYPE,
+                      (char*)&type, &len) == 0;
+}
+
+long long xiom_fd_writev(long long fd, const long long* pairs, long long iovcnt) {
+    long long i;
+    if (fd < 0 || iovcnt < 0 || iovcnt > XIOM_WRITEV_MAX) return -1;
+    if (iovcnt == 0) return 0;
+    if (!pairs) return -1;
+    if (xiom_fd_is_socket(fd)) {
+        WSABUF buf[XIOM_WRITEV_MAX];
+        long long total = 0;
+        long long idx = 0;
+        DWORD sent = 0;
+        for (i = 0; i < iovcnt; i++) {
+            long long addr = pairs[2 * i];
+            long long len = pairs[2 * i + 1];
+            if (len < 0 || len > 0xFFFFFFFFLL) return -1;
+            buf[i].buf = (CHAR*)(ULONG_PTR)addr;
+            buf[i].len = (ULONG)len;
+        }
+        /* Blocking WSASend normally completes in one call; advance over a
+           partial completion instead of reporting a silent short total. */
+        while (idx < iovcnt) {
+            int rc;
+            while (idx < iovcnt && buf[idx].len == 0) idx++;
+            if (idx >= iovcnt) break;
+            sent = 0;
+            rc = WSASend((SOCKET)(ULONG_PTR)fd, &buf[idx],
+                         (DWORD)(iovcnt - idx), &sent, 0, NULL, NULL);
+            if (rc == SOCKET_ERROR) return -1;
+            if (sent == 0) return -1;
+            total += (long long)sent;
+            {
+                DWORD rem = sent;
+                while (rem > 0 && idx < iovcnt) {
+                    if (rem >= buf[idx].len) {
+                        rem -= buf[idx].len;
+                        idx++;
+                    } else {
+                        buf[idx].buf += rem;
+                        buf[idx].len -= rem;
+                        rem = 0;
+                    }
+                }
+            }
+        }
+        return total;
+    }
+    /* CRT-fd fallback (files, pipes): sequential _write loop. The range
+       guard keeps an out-of-range value away from the UCRT's invalid-
+       parameter fast-fail (the documented _read/_write trap); a closed
+       in-range fd stays the caller's contract (POSIX-only probe row). */
+    if (fd > XIOM_FD_GUARD_MAX) return -1;
+    {
+        long long total = 0;
+        for (i = 0; i < iovcnt; i++) {
+            long long addr = pairs[2 * i];
+            long long len = pairs[2 * i + 1];
+            const char* p;
+            if (len < 0) return -1;
+            p = (const char*)(ULONG_PTR)addr;
+            while (len > 0) {
+                unsigned int chunk = (len > 0x40000000LL) ? 0x40000000u : (unsigned int)len;
+                int w = _write((int)fd, p, chunk);
+                if (w <= 0) return -1;
+                total += w;
+                p += w;
+                len -= w;
+            }
+        }
+        return total;
+    }
+}
+
+long long xiom_fd_sendfile(long long out_fd, long long in_fd, long long offset, long long count) {
+    SOCKET s;
+    HANDLE h;
+    LARGE_INTEGER pos;
+    if (out_fd < 0 || in_fd < 0 || count < 0) return -1;
+    if (count == 0) return 0;
+    if (!xiom_fd_is_socket(out_fd)) return -3; /* TransmitFile needs a socket */
+    if (in_fd > XIOM_FD_GUARD_MAX) return -1;
+    s = (SOCKET)(ULONG_PTR)out_fd;
+    h = (HANDLE)_get_osfhandle((int)in_fd);
+    if (h == INVALID_HANDLE_VALUE) return -1;
+    if (offset >= 0) {
+        pos.QuadPart = (LONGLONG)offset;
+        if (!SetFilePointerEx(h, pos, NULL, FILE_BEGIN)) return -1;
+    }
+    /* Clamp to the remaining file bytes so a successful call means the
+       full min(count, remaining) range was queued (no short-count
+       ambiguity on Windows; POSIX keeps sendfile's short-at-EOF rule). */
+    {
+        LARGE_INTEGER size, cur;
+        if (!GetFileSizeEx(h, &size)) return -1;
+        pos.QuadPart = 0;
+        if (!SetFilePointerEx(h, pos, &cur, FILE_CURRENT)) return -1;
+        if (cur.QuadPart >= size.QuadPart) return 0;
+        if (count > size.QuadPart - cur.QuadPart) count = size.QuadPart - cur.QuadPart;
+    }
+    {
+        long long total = 0;
+        while (count > 0) {
+            DWORD chunk = (count > 0x7FFFFFFFLL) ? 0x7FFFFFFFu : (DWORD)count;
+            if (!TransmitFile(s, h, chunk, 0, NULL, NULL, 0)) return -1;
+            total += (long long)chunk;
+            count -= (long long)chunk;
+        }
+        return total;
+    }
+}
+
+#else /* POSIX */
+
+#include <sys/uio.h>
+#include <errno.h>
+
+#define XIOM_WRITEV_MAX 1024
+
+long long xiom_fd_writev(long long fd, const long long* pairs, long long iovcnt) {
+    struct iovec iov[XIOM_WRITEV_MAX];
+    long long i;
+    if (fd < 0 || iovcnt < 0 || iovcnt > XIOM_WRITEV_MAX) return -1;
+    if (iovcnt == 0) return 0;
+    if (!pairs) return -1;
+    for (i = 0; i < iovcnt; i++) {
+        long long addr = pairs[2 * i];
+        long long len = pairs[2 * i + 1];
+        if (len < 0) return -1;
+        iov[i].iov_base = (void*)(intptr_t)addr;
+        iov[i].iov_len = (size_t)len;
+    }
+    for (;;) {
+        ssize_t n = writev((int)fd, iov, (int)iovcnt);
+        if (n >= 0) return (long long)n;
+        if (errno == EINTR) continue;
+        return -1;
+    }
+}
+
+#if defined(__linux__)
+#include <sys/sendfile.h>
+
+long long xiom_fd_sendfile(long long out_fd, long long in_fd, long long offset, long long count) {
+    long long total = 0;
+    if (out_fd < 0 || in_fd < 0 || count < 0) return -1;
+    if (count == 0) return 0;
+    if (offset >= 0) {
+        off_t off = (off_t)offset;
+        while (count > 0) {
+            ssize_t n = sendfile((int)out_fd, (int)in_fd, &off, (size_t)count);
+            if (n < 0) {
+                if (errno == EINTR) continue;
+                return -1; /* blocking path; EAGAIN stays an error */
+            }
+            if (n == 0) break; /* EOF */
+            total += (long long)n;
+            count -= (long long)n;
+        }
+        return total;
+    }
+    while (count > 0) {
+        ssize_t n = sendfile((int)out_fd, (int)in_fd, NULL, (size_t)count);
+        if (n < 0) {
+            if (errno == EINTR) continue;
+            return -1;
+        }
+        if (n == 0) break; /* EOF */
+        total += (long long)n;
+        count -= (long long)n;
+    }
+    return total;
+}
+#else /* macOS / BSD / other POSIX: no portable sendfile */
+long long xiom_fd_sendfile(long long out_fd, long long in_fd, long long offset, long long count) {
+    (void)out_fd;
+    (void)in_fd;
+    (void)offset;
+    (void)count;
+    return -2;
+}
+#endif
+#endif
