@@ -3658,6 +3658,26 @@ registry pin, agent recon for the rest)**
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
 
+**SESSION 2026-10-16 block 224 (PAUSED by the owner 23:19Z until tomorrow; verification wakeup + doorbell cancelled; the server-side release train continues autonomously: release run 38979638226 in progress, publish run 38979638142 WAITS on the owner's registry-publish environment approval -- nothing publishes until approved)**
+- Owner away until tomorrow; all local automation paused (the 23:59Z
+  release-verification wakeup and the recurring 2h doorbell were
+  cancelled). No local processes running; every Agent Manager session is
+  idle (the six sweep waves are merged; worktrees remain on disk).
+- SERVER-SIDE (GitHub, unaffected by the pause): `XIOM Stdlib Release`
+  run 38979638226 on stdlib-v0.64.6 continues autonomously -- Win+Linux
+  gates, then xiom-std-0.64.6.tar.gz + SHA256SUMS, the GitHub release,
+  the pin PR branch chore/pin-stdlib-v0.64.6, and the staging canary
+  dispatch. `XIOM Stdlib Registry Publish` run 38979638142 stays WAITING
+  for the owner's registry-publish environment approval; once approved it
+  finds the asset and publishes xiom-std 0.64.6 with compiler pin v0.64.6.
+- RESUME CHECKLIST (first thing next session): verify the release run +
+  the asset + its sha256; have the owner approve the publish run if not
+  already done; fetch the registry entry (xiom-std 0.64.6); post the
+  stdlib->all announcement item + the 1559-stdlib history; snapshot 39
+  refresh; re-arm the doorbell; then the ranked-sweep remainder (row 31
+  rand.state) and the monitor rows (1609/1456/1626, 1630/1658, 2309).
+- Tree: head 0fbcc51; clean except the known untracked scratch.
+
 **SESSION 2026-10-16 block 223 (RELEASE EXECUTED: stdlib-v0.64.6 tag MOVED b81430b -> 8d95815 + pushed; main pushed; release.yml run 38979638226 in progress; fresh publish run 38979638142 waiting on the owner's registry-publish environment approval -- re-resolves compiler pin v0.64.6; relay items 2330/2331 + the 1559 history pushed a319d39)**
 - Tag object 5ea2384 -> 588d9e7; remote forced update accepted; main
   44c0fbb..8d95815.
