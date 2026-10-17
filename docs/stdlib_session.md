@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 46 (updated 2026-10-17 14:50Z at head 4afc581; WAVE 177 LANDED -- Windows WSAPoll readiness backend (`eventloop_*` real on Windows; 16 loops x 1024 fds) + extended p_wave176_shapes green Windows+WSL; macOS Err until kqueue; floors181 hold (net 97.8, Global 71.9); next queue item is kqueue (needs a macOS runner), then the net.event wrapper (179) and LISTEN_FDS server integration (180); pin stdlib-v0.64.6 = 8d95815)
+## 0A. CONTINUE HERE -- handoff snapshot 46 (updated 2026-10-17 14:50Z at head 4afc581; WAVE 177 LANDED -- Windows WSAPoll readiness backend (`eventloop_*` real on Windows; 16 loops x 1024 fds) + extended p_wave176_shapes green Windows+WSL; full probes 358/358, modules 533/533; macOS Err until kqueue; floors181 hold (net 97.8, Global 71.9); next queue item is kqueue (needs a macOS runner), then the net.event wrapper (179) and LISTEN_FDS server integration (180); pin stdlib-v0.64.6 = 8d95815)
 
 ### Snapshot 37 (paste-ready)
 
@@ -3673,8 +3673,9 @@ registry pin, agent recon for the rest)**
   official v0.64.6 pin.
 - Gates: socket module check clean; coverage/doc ratchet OK vs
   floors181 (net 97.8 / global 71.9 unchanged; 6880 pub fns / 4947
-  covered); full 533/533 module check clean (430.5s). No floors182
-  (no pub-coverage rise).
+  covered); full 533/533 module check clean (430.5s); post-wave-177
+  full probe corpus 358/358 (941.2s, 6 workers, RetryFailed). No
+  floors182 (no pub-coverage rise).
 - Relay: 2202-pulse item 10 Windows-leg progress; website status
   addendum 4.
 - Tree: wave commit 4029002; merge 4afc581 (main).
