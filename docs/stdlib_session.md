@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 43 (updated 2026-10-17 13:25Z at head 46fbd1b; WAVE 174 LANDED -- `xiom.net.h2` frame-header/frame codecs + HPACK integer/string/static-table/header-field foundation (2202 item 9); probe p_wave174_shapes; 533rd manifest module; floors181 dumped (Global 71.9, net 97.8); next queue item is 2202 item 10 -- event loop beyond poll (epoll/kqueue/IOCP + LISTEN_FDS) then reporter close-loops; pin stdlib-v0.64.6 = 8d95815)
+## 0A. CONTINUE HERE -- handoff snapshot 44 (updated 2026-10-17 13:45Z at wave-175 commit; WAVE 175 LANDED -- `socket_listen_fds` (systemd LISTEN_PID/LISTEN_FDS) + `docs/EVENT_LOOP_PLAN.md` (epoll/kqueue/IOCP scoping, staged 176-180); probe p_wave175_shapes green Windows+WSL; floors181 hold (net 97.8, Global 71.9); next queue item is the event-loop runtime ABI (wave 176, epoll backend) then reporter close-loops; pin stdlib-v0.64.6 = 8d95815)
 
 ### Snapshot 37 (paste-ready)
 
@@ -3657,6 +3657,32 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-17 block 230 (WAVE 175 LANDED -- 2202 item 10 first leg: socket_listen_fds systemd activation + docs/EVENT_LOOP_PLAN.md epoll/kqueue/IOCP scoping; probe p_wave175_shapes green Windows + WSL; net 97.8 holds)**
+- `xiom/net/socket.xi`: `socket_listen_fds` adopts systemd socket
+  activation (`LISTEN_PID` must match this process, `LISTEN_FDS` is the
+  count 0..=1024, fds are 3..3+N-1; POSIX-only; consumes LISTEN_PID/
+  LISTEN_FDS on success, preserves LISTEN_FDNAMES for the caller). A
+  strict internal decimal parser rejects sign/junk/overflow; `xiom_getpid`
+  is the only new extern.
+- `docs/EVENT_LOOP_PLAN.md`: current poll limits (1024 fds, bounded
+  waits), target backend matrix (epoll / kqueue / IOCP / poll fallback),
+  proposed `eventloop_*` API, runtime `xiom_eventloop_*` ABI, staged
+  checklist (wave 176 epoll ABI, 177 kqueue, 178 Windows decision,
+  179 wrapper, 180 LISTEN_FDS integration), contracts/lifetime, test
+  matrix, non-goals.
+- Probe `tools/probes/p_wave175_shapes.xi`: Windows asserts the
+  documented POSIX-only Err; WSL Ubuntu exercises the real path -- three
+  inherited fds become [3,4,5], LISTEN_PID/LISTEN_FDS are consumed,
+  LISTEN_FDNAMES survives, a second call is Err, zero-count is Ok empty,
+  and malformed/mismatched/1025-count inputs are Err. PASS on Windows
+  (compile 0 / run 0) and WSL (rc 0) on the official v0.64.6 pin.
+- Gates: socket module check clean; coverage ratchet OK vs floors181
+  (net 97.8, global 71.9 unchanged); doc ratchet OK. No floors182
+  (no pub-coverage rise).
+- Relay: 2202-pulse item 10 first-leg progress; website status
+  addendum 2.
+- Tree: this commit.
 
 **SESSION 2026-10-17 block 229 (WAVE 174 LANDED -- phase-2 shelf item 9 foundation: xiom.net.h2 frame headers/frames + HPACK integer/string/static-table/header codecs; probe p_wave174_shapes; new module -> 533/533; floors181 dumped (Global 71.9, net 97.8))**
 - New module `xiom/net/h2.xi` (533rd manifest module; `tools/modlist_all.txt`

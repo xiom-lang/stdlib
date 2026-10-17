@@ -20,7 +20,10 @@ module xiom.net.socket
 // streaming endpoints, REL-20261012-1946-pulse). Wave 122 adds SO_REUSEPORT
 // (POSIX; Windows has the documented no-equivalent Err) and the poll
 // wrappers socket_poll_read / socket_poll_write (poll() / WSAPoll; up to
-// 1024 fds, bounded timeouts, ready fds in input order).
+// 1024 fds, bounded timeouts, ready fds in input order). Wave 175 adds
+// socket_listen_fds (systemd socket activation: LISTEN_PID/LISTEN_FDS, fds
+// 3..3+N-1, POSIX-only) so zero-downtime reloads can adopt inherited
+// listeners; LISTEN_FDNAMES is left in place for the caller.
 
 use xiom.env;
 
@@ -47,6 +50,7 @@ extern "C" {
   fn xiom_socket_set_nodelay(sock: Int, on: Int) -> Int32;
   fn xiom_socket_set_keepalive(sock: Int, on: Int) -> Int32;
   fn xiom_poll(fds: *Int, nfds: Int, timeout_ms: Int, for_write: Int) -> Int;
+  fn xiom_getpid() -> Int64;
   fn xiom_socket_shutdown(sock: Int, how: Int) -> Int32;
   fn xiom_socket_local_addr(sock: Int, ip_buf: *UInt8, buf_size: Int, out_port: *Int) -> Int32;
 }
@@ -789,4 +793,85 @@ pub fn socket_poll_write(fds: &Vec[Int], timeout_ms: Int) -> Result[Vec[Int], St
   ensures: result is Ok => timeout_ms >= 0
 {
   return poll_impl(fds, timeout_ms, true);
+}
+
+// Strict non-negative decimal parse for the activation counters (no sign,
+// no junk, no overflow).
+fn _listen_fds_count(s: Str) -> Result[Int, Str] {
+  if s.len() == 0 {
+    return Err("socket_listen_fds: empty count");
+  };
+  var v = 0;
+  var i = 0;
+  while i < s.len() {
+    let c = s.byte_at(i) as Int;
+    if c < 48 || c > 57 {
+      return Err("socket_listen_fds: invalid count");
+    };
+    if v > 214748364 {
+      return Err("socket_listen_fds: count overflow");
+    };
+    v = v * 10 + (c - 48);
+    i = i + 1;
+  };
+  return Ok(v);
+}
+
+/// socket_listen_fds adopts systemd socket activation: LISTEN_PID must equal
+/// this process, LISTEN_FDS is the inherited descriptor count, and the fds
+/// are 3..3+N-1 (the classic systemd convention). POSIX-only. On success the
+/// LISTEN_PID/LISTEN_FDS variables are consumed so a second call cannot
+/// double-adopt; LISTEN_FDNAMES stays in place for the caller. Err on
+/// Windows, a missing/mismatched PID, an invalid or negative count, or a
+/// count above the 1024-fd poll cap.
+/// Complexity: O(number of inherited fds).
+pub fn socket_listen_fds() -> Result[Vec[Int], Str]
+  ensures: (env.host_is_windows()) => (result.is_err)
+{
+  if env.host_is_windows() {
+    return Err("socket_listen_fds: systemd socket activation is POSIX-only");
+  };
+  let pid_raw = env.get_var("LISTEN_PID");
+  let pid_text: Str;
+  match pid_raw {
+    Ok(v) => { pid_text = v; },
+    Err(_) => { return Err("socket_listen_fds: LISTEN_PID is not set"); },
+  };
+  let pid_parsed = _listen_fds_count(pid_text);
+  let listen_pid: Int;
+  match pid_parsed {
+    Ok(v) => { listen_pid = v; },
+    Err(e) => { return Err(e); },
+  };
+  var current_pid: Int = 0;
+  unsafe {
+    current_pid = xiom_getpid() as Int;
+  };
+  if listen_pid != current_pid {
+    return Err("socket_listen_fds: LISTEN_PID does not match this process");
+  };
+  let fds_raw = env.get_var("LISTEN_FDS");
+  let fds_text: Str;
+  match fds_raw {
+    Ok(v) => { fds_text = v; },
+    Err(_) => { return Err("socket_listen_fds: LISTEN_FDS is not set"); },
+  };
+  let count_parsed = _listen_fds_count(fds_text);
+  var count: Int = 0;
+  match count_parsed {
+    Ok(v) => { count = v; },
+    Err(e) => { return Err(e); },
+  };
+  if count > 1024 {
+    return Err("socket_listen_fds: too many inherited fds (max 1024)");
+  };
+  var out = Vec[Int].new();
+  var i = 0;
+  while i < count {
+    out.push(3 + i);
+    i = i + 1;
+  };
+  env.remove_var("LISTEN_PID");
+  env.remove_var("LISTEN_FDS");
+  return Ok(out);
 }
