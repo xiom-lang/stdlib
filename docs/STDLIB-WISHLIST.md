@@ -577,5 +577,12 @@ campaign release; the table statuses above were normalized in the
   plus `docs/EVENT_LOOP_PLAN.md` scoping the epoll/kqueue/IOCP
   backends and staged waves 176-180. Probe p_wave175_shapes green
   Windows+WSL.
+- wave 176 (net/event): 2202 item 10 epoll leg -- runtime
+  `xiom_eventloop_*` ABI + Linux epoll backend; `socket.EventLoop`/
+  `EventBatch` + `eventloop_new/add/modify/remove/wait/close`
+  (Windows/macOS explicit Err stubs). Probe p_wave176_shapes green
+  Windows+WSL. kqueue (177), the Windows decision (178), the
+  net.event wrapper (179) and LISTEN_FDS server integration (180)
+  remain.
 - NOT assigned in the 165-171 pass: row 33 stays compiler/install-lane.
   Released as stdlib-v0.64.6 / xiom-std 0.64.6 (compiler pin v0.64.6).

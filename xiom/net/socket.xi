@@ -23,7 +23,9 @@ module xiom.net.socket
 // 1024 fds, bounded timeouts, ready fds in input order). Wave 175 adds
 // socket_listen_fds (systemd socket activation: LISTEN_PID/LISTEN_FDS, fds
 // 3..3+N-1, POSIX-only) so zero-downtime reloads can adopt inherited
-// listeners; LISTEN_FDNAMES is left in place for the caller.
+// listeners; LISTEN_FDNAMES is left in place for the caller. Wave 176 adds
+// the epoll-backed eventloop_* readiness layer (Linux; other platforms Err
+// until their backend wave -- see docs/EVENT_LOOP_PLAN.md).
 
 use xiom.env;
 
@@ -51,6 +53,10 @@ extern "C" {
   fn xiom_socket_set_keepalive(sock: Int, on: Int) -> Int32;
   fn xiom_poll(fds: *Int, nfds: Int, timeout_ms: Int, for_write: Int) -> Int;
   fn xiom_getpid() -> Int64;
+  fn xiom_eventloop_create() -> Int32;
+  fn xiom_eventloop_ctl(handle: Int, op: Int, fd: Int, read: Int, write: Int) -> Int32;
+  fn xiom_eventloop_wait(handle: Int, timeout_ms: Int, out_fds: *Int, out_flags: *Int, max: Int) -> Int;
+  fn xiom_eventloop_close(handle: Int) -> Int32;
   fn xiom_socket_shutdown(sock: Int, how: Int) -> Int32;
   fn xiom_socket_local_addr(sock: Int, ip_buf: *UInt8, buf_size: Int, out_port: *Int) -> Int32;
 }
@@ -874,4 +880,150 @@ pub fn socket_listen_fds() -> Result[Vec[Int], Str]
   env.remove_var("LISTEN_PID");
   env.remove_var("LISTEN_FDS");
   return Ok(out);
+}
+
+// ---------------------------------------------------------------------------
+// Event loop (wave 176; Linux epoll backend, other platforms Err)
+// ---------------------------------------------------------------------------
+
+/// Opaque readiness-loop handle (an epoll fd on Linux).
+pub type EventLoop = { handle: Int; }
+
+/// Readiness batch: parallel fds/flags vectors (no Vec[struct]). Flags:
+/// bit 1 = readable, bit 2 = writable, bit 4 = error/hangup.
+pub type EventBatch = { fds: Vec[Int]; flags: Vec[Int]; }
+
+/// New empty readiness batch.
+pub fn eventbatch_new() -> EventBatch
+  ensures: result.fds.len() == 0
+  ensures: result.flags.len() == 0
+{
+  return EventBatch{ fds: Vec[Int].new(); flags: Vec[Int].new(); };
+}
+
+/// Create a readiness loop. Linux uses epoll; Windows and macOS/BSD return
+/// the documented Err until their backend wave.
+pub fn eventloop_new() -> Result[EventLoop, Str]
+  ensures: (env.host_is_windows()) => (result.is_err)
+{
+  if env.host_is_windows() {
+    return Err("eventloop_new: not implemented on Windows yet (see docs/EVENT_LOOP_PLAN.md)");
+  };
+  var handle: Int = -1;
+  unsafe {
+    handle = xiom_eventloop_create() as Int;
+  };
+  if handle < 0 {
+    return Err("eventloop_new: backend create failed (unsupported platform or resource limit)");
+  };
+  return Ok(EventLoop{ handle: handle; });
+}
+
+/// Register `fd` for read and/or write readiness. Err on a closed loop,
+/// a negative fd, or a backend failure.
+pub fn eventloop_add(loop: &EventLoop, fd: Int, read: Bool, write: Bool) -> Result[Unit, Str]
+  ensures: (loop.handle < 0 || fd < 0) => (result.is_err)
+{
+  if loop.handle < 0 || fd < 0 {
+    return Err("eventloop_add: invalid loop handle or fd");
+  };
+  var r = 0;
+  var w = 0;
+  if read { r = 1; };
+  if write { w = 1; };
+  var rc: Int = -1;
+  unsafe {
+    rc = xiom_eventloop_ctl(loop.handle, 0, fd, r, w) as Int;
+  };
+  if rc != 0 {
+    return Err("eventloop_add: backend registration failed");
+  };
+  return Ok(());
+}
+
+/// Change the read/write interest for a registered `fd`.
+pub fn eventloop_modify(loop: &EventLoop, fd: Int, read: Bool, write: Bool) -> Result[Unit, Str]
+  ensures: (loop.handle < 0 || fd < 0) => (result.is_err)
+{
+  if loop.handle < 0 || fd < 0 {
+    return Err("eventloop_modify: invalid loop handle or fd");
+  };
+  var r = 0;
+  var w = 0;
+  if read { r = 1; };
+  if write { w = 1; };
+  var rc: Int = -1;
+  unsafe {
+    rc = xiom_eventloop_ctl(loop.handle, 1, fd, r, w) as Int;
+  };
+  if rc != 0 {
+    return Err("eventloop_modify: backend modify failed");
+  };
+  return Ok(());
+}
+
+/// Remove `fd` from the loop.
+pub fn eventloop_remove(loop: &EventLoop, fd: Int) -> Result[Unit, Str]
+  ensures: (loop.handle < 0 || fd < 0) => (result.is_err)
+{
+  if loop.handle < 0 || fd < 0 {
+    return Err("eventloop_remove: invalid loop handle or fd");
+  };
+  var rc: Int = -1;
+  unsafe {
+    rc = xiom_eventloop_ctl(loop.handle, 2, fd, 0, 0) as Int;
+  };
+  if rc != 0 {
+    return Err("eventloop_remove: backend remove failed");
+  };
+  return Ok(());
+}
+
+/// Wait for readiness and APPEND the ready entries to `out`. `timeout_ms`:
+/// 0 = immediate, > 0 = wait that many ms, -1 = block until an event.
+/// Returns the number of events appended. Err on a closed loop or a timeout
+/// below -1.
+pub fn eventloop_wait(loop: &EventLoop, timeout_ms: Int, out: &mut EventBatch) -> Result[Int, Str]
+  ensures: (loop.handle < 0 || timeout_ms < 0 - 1) => (result.is_err)
+{
+  if loop.handle < 0 {
+    return Err("eventloop_wait: closed loop");
+  };
+  if timeout_ms < 0 - 1 {
+    return Err("eventloop_wait: timeout below -1");
+  };
+  var fds: [256]Int;
+  var flags: [256]Int;
+  var rc: Int = -1;
+  unsafe {
+    rc = xiom_eventloop_wait(loop.handle, timeout_ms, &fds[0] as *Int, &flags[0] as *Int, 256);
+  };
+  if rc < 0 {
+    return Err("eventloop_wait: backend wait failed");
+  };
+  var i = 0;
+  while i < rc {
+    out.fds.push(fds[i]);
+    out.flags.push(flags[i]);
+    i = i + 1;
+  };
+  return Ok(rc);
+}
+
+/// Close the loop and invalidate the handle. Idempotent: returns false when
+/// the loop was already closed, true when this call closed it. Registered
+/// fds are never closed by the loop.
+pub fn eventloop_close(loop: &mut EventLoop) -> Bool
+  ensures: result == (loop.handle@pre >= 0)
+{
+  if loop.handle < 0 {
+    return false;
+  };
+  let handle = loop.handle;
+  loop.handle = 0 - 1;
+  var rc: Int = 0;
+  unsafe {
+    rc = xiom_eventloop_close(handle) as Int;
+  };
+  return true;
 }
