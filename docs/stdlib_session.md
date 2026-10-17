@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 48 (updated 2026-10-17 17:35Z at head 3cb1138; m351 TYPED-FAULT RUNTIME MERGED (37603a2 -> 3cb1138); probes 358/358, modules 533/533, coverage 72.3% (error 90.5%), docs/barename green; BLOCKED on a compiler m351 candidate ref for the two guard smokes; release/v0.64.7-prep (64a8b3f) is ready with package 0.64.7 + note; v0.64.7 cut + registry pending that ref + owner sync gate; pin stdlib-v0.64.6 = 8d95815)
+## 0A. CONTINUE HERE -- handoff snapshot 49 (updated 2026-10-17 19:55Z at head dcf721e; v0.64.7 CODE-COMPLETE on main -- m351 runtime + arm64 crypto-availability fix + package 0.64.7 + schema-correct note; probes 358/358, modules 533/533, coverage 72.3%; Windows full smoke 961/962 on the stale m351-only binary (only smoke_hash_edge, m353 pre-fix -- need the true 065481eb4 candidate); compiler to re-pin dcf721e and rerun the arm64 functional gate; tag stdlib-v0.64.7 only on that pass + explicit release go; pin stdlib-v0.64.6 = 8d95815)
 
 ### Snapshot 37 (paste-ready)
 
@@ -3657,6 +3657,28 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-17 block 235 (ARM64 CRYPTO GATE FIX MERGED -- compiler branch 8eb22eb merged into prep bb764f0 and main dcf721e; aarch64 AES/SHA now report unavailable so the portable software path is used; Windows x64 guard smoke rc 0; v0.64.7 tag ready on dcf721e pending the compiler arm64 gate + explicit release go)**
+- `fix/arm64-crypto-availability` (8eb22eb, off release/v0.64.7-prep;
+  1 file, +11/-18): the `__aarch64__` runtime block no longer includes
+  `arm_neon.h` or calls `vaeseq_u8`/`vaesmcq_u8` without the ARMv8 crypto
+  extension; `xiom_crypto_aesni_available`/`shani_available` return 0 and
+  the AES/SHA entry points are no-ops, so callers take the portable
+  software path. No AES acceleration on arm64 until a verified path.
+- Merged into `release/v0.64.7-prep` at bb764f0 and into main at 6acd800;
+  main note fix dcf721e makes the release-note kind schema-correct
+  (`stdlib`). package.xi is 0.64.7.
+- Windows x64 check after the merge: `smoke_guard_fault` recompiled and
+  rc 0 (FAULT-OK), confirming the x64 runtime is unaffected.
+- Gate context: full Windows smoke on the stale m351-only local binary
+  was 961/962; the only red was `smoke_hash_edge` (m353 pre-fix), so the
+  true 065481eb4 candidate is still needed for a clean 962/962. Probes
+  358/358, modules 533/533, coverage/docs/barename/module-smoke ratchets
+  green.
+- Relay: 8eb22eb merge reported (5ed8f01); compiler to re-pin
+  STDLIB_VERSION to dcf721e and rerun the arm64 functional gate. The tag
+  is cut only on that pass plus the explicit release go.
+- Tree: main dcf721e; prep bb764f0.
 
 **SESSION 2026-10-17 block 234 (m351 TYPED-FAULT RUNTIME MERGED -- compiler branch 37603a2 merged at 3cb1138; runtime fault record + exit 70 + xiom.error faulted/take_fault + guard smokes; probes 358/358, modules 533/533; the two guard smokes fail on official v0.64.6 by design -- the v0.64.7 gate needs a compiler m351 candidate ref)**
 - Merge: `fix/m351-typed-fault` (37603a2, rebased on 8ce84cc) ->
