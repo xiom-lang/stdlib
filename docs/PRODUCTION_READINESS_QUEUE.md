@@ -31,7 +31,10 @@ gates flip:
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- MET
     (stdlib-v0.64.7 released 2026-10-17; release run 39073534681;
     GitHub Release + assets published; pin already at stdlib-v0.64.7 on
-    compiler main 3667ee29d; staging registry canary awaiting approval).
+    compiler main 3667ee29d; staging registry canary 39076910630 failed
+    on the missing candidate compiler asset -- compiler v0.64.7 release +
+    a canary re-run with the publish workflow's `compiler` override are
+    the remaining registry step).
 
 Meter formula: MET gates count 1.0; gate 8 counts its current
 pub-with-clause fraction (72.3% -> 0.723); gate 9 gets no partial credit
@@ -48,8 +51,11 @@ release run 39073534681; assets `xiom-std-0.64.7.tar.gz` sha256
 release gates was candidate-v0.64.7-m351-r2. Main carries waves 172-178,
 the m351 typed-fault runtime and the arm64 crypto-availability fix.
 Gate 8 is 72.3%; gate 9 is compiler-owned. Registry canary 39076910630
-is awaiting its environment approval. Historical state below is retained
-for the record.
+failed at Download compiler because the tag pins the candidate tag
+(no public release asset); REL-20261017-2257-stdlib asks the compiler
+for v0.64.7, and publish-registry.yml now takes a `compiler` override
+(main ae13302) for the re-run. Historical state below is retained for
+the record.
 
 Historical state (2026-10-11): compiler pin **v0.64.4** (released
 2026-10-12, tag f76fd47c on df493530; the lane battery runs the official
