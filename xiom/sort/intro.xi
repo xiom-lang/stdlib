@@ -298,7 +298,9 @@ pub fn is_sorted_by(v: &Vec[Int], compare: fn(&Int, &Int) -> Int) -> Bool
 
 /// Place the smallest k elements at the front, in order. O(n*k), O(1) space.
 /// Unstable. If k >= n the whole vector becomes sorted; if k <= 0 no-op.
-pub fn partial_sort(v: &mut Vec[Int], k: Int) {
+pub fn partial_sort(v: &mut Vec[Int], k: Int)
+  ensures: v.len() == v.len()@pre
+{
   var n = v.len();
   if n <= 1 || k <= 0 { return; }
   var kk = k;
@@ -323,7 +325,9 @@ pub fn partial_sort(v: &mut Vec[Int], k: Int) {
 /// Quickselect: the element that would land at index n in sorted order.
 /// O(n) average, O(n^2) worst. Unstable. Reorders v as a side effect.
 /// n is clamped into [0, len-1]; returns 0 for an empty vector.
-pub fn nth_element(v: &mut Vec[Int], n: Int) -> Int {
+pub fn nth_element(v: &mut Vec[Int], n: Int) -> Int
+  ensures: v.len() == v.len()@pre
+{
   var len = v.len();
   if len == 0 { return 0; }
   var nn = n;

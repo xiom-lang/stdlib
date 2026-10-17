@@ -103,7 +103,10 @@ pub fn merge(a: &Vec[Int], b: &Vec[Int]) -> Vec[Int]
 
 /// Stable merge sort with a custom comparator. O(n log n), O(n) space.
 /// The comparator must be a named function returning -1/0/1.
-pub fn merge_sort_stable(v: &mut Vec[Int], compare: fn(&Int, &Int) -> Int) {
+pub fn merge_sort_stable(v: &mut Vec[Int], compare: fn(&Int, &Int) -> Int)
+  ensures: v.len() == v.len()@pre
+  ensures: intro.is_sorted_by(v, compare) == true
+{
   var n = v.len();
   if n <= 1 { return; }
   var tmp = Vec[Int].new();

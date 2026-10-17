@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 46 (updated 2026-10-17 14:50Z at head 4afc581; WAVE 177 LANDED -- Windows WSAPoll readiness backend (`eventloop_*` real on Windows; 16 loops x 1024 fds) + extended p_wave176_shapes green Windows+WSL; full probes 358/358, modules 533/533; macOS Err until kqueue; floors181 hold (net 97.8, Global 71.9); next queue item is kqueue (needs a macOS runner), then the net.event wrapper (179) and LISTEN_FDS server integration (180); pin stdlib-v0.64.6 = 8d95815)
+## 0A. CONTINUE HERE -- handoff snapshot 47 (updated 2026-10-17 17:00Z at wave-178 commit; WAVE 178 LANDED -- sort contract coverage 42.6% -> 100%, global 72.3%; floors182 wired; readiness meter 77.2% (gate 8 72.3%); IMMEDIATE: merge compiler m351 branch 37603a2 (REL-20261017-1444), run the gates, and cut/reply for v0.64.7 per the owner sync gate; pin stdlib-v0.64.6 = 8d95815)
 
 ### Snapshot 37 (paste-ready)
 
@@ -3657,6 +3657,24 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-17 block 233 (WAVE 178 LANDED -- readiness gate 8: sort contract coverage 42.6% -> 100%, global 71.9% -> 72.3%; all 47 sort pub fns now carry length/sortedness clauses; floors182 dumped/wired; readiness meter refreshed to 77.2%)**
+- `xiom/sort/{heap,intro,merge,quick,radix,sort}.xi`: added clauses to
+  all 27 previously uncovered pub fns. In-place sorts assert
+  `v.len() == v.len()@pre`; full sorts also assert
+  `is_sorted`/`is_sorted_by` (the local generic predicates in sort.xi;
+  the Int predicates via `xiom.sort.intro` in the family modules);
+  partial/counting/radix/key-based sorts assert length only.
+- Gates: sort modules 6/6 type-check clean; coverage scan now reports
+  sort 100% (47/47), global pub-with-clause 72.3% (6880 pub / 4974
+  covered), clauses/fns 73.1%; floors182 dumped and wired into
+  ci/heavy/release + tools/README; doc ratchet OK; bare-name 0/533;
+  module-smoke 499/542 modules + 3501/6575 fns; readiness meter updated
+  to 77.2% with gate 8 at 72.3%.
+- Relay: the next action is REL-20261017-1444-compiler (m351 typed-fault
+  runtime, branch 37603a2) -- merge into main, run the gates, include in
+  v0.64.7 per the owner sync gate, and reply with the tag/sha.
+- Tree: this commit.
 
 **SESSION 2026-10-17 block 232 (WAVE 177 LANDED -- Windows WSAPoll readiness backend: eventloop_* now real on Windows via a 16-loop/1024-fd shim; probe p_wave176_shapes extended with listener/accept/read rows green Windows + Linux; macOS remains Err until kqueue)**
 - `runtime/xiom_runtime.c`: replaced the Windows -1 stubs with a

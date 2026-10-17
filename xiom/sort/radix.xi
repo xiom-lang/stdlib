@@ -77,7 +77,9 @@ pub fn radix_sort(v: &mut Vec[Int])
 }
 
 /// Radix sort of UInt64 values. O(n * d), stable, in-place, O(n) space.
-pub fn radix_sort_u64(v: &mut Vec[UInt64]) {
+pub fn radix_sort_u64(v: &mut Vec[UInt64])
+  ensures: v.len() == v.len()@pre
+{
   var n = v.len();
   if n <= 1 { return; }
   var max_val: UInt64 = 0;
@@ -157,7 +159,9 @@ pub fn radix_sort_by_bytes(v: &mut Vec[Int])
 /// Stable counting sort for values in [0, max_val]. O(n + k), stable, O(n+k)
 /// space. If max_val < 0, or if any element lies outside [0, max_val], the
 /// vector is left unchanged (documented contract).
-pub fn counting_sort(v: &mut Vec[Int], max_val: Int) {
+pub fn counting_sort(v: &mut Vec[Int], max_val: Int)
+  ensures: v.len() == v.len()@pre
+{
   var n = v.len();
   if n <= 1 || max_val < 0 { return; }
   var counts = Vec[Int].new();
@@ -210,7 +214,9 @@ pub fn counting_sort(v: &mut Vec[Int], max_val: Int) {
 /// spread exceeds i64 range (span > 2^63) may produce wrong bucket indexes;
 /// exact for any realistic dataset. Requires v to be non-empty and
 /// buckets >= 1; otherwise v is unchanged.
-pub fn bucket_sort(v: &mut Vec[Int], buckets: Int) {
+pub fn bucket_sort(v: &mut Vec[Int], buckets: Int)
+  ensures: v.len() == v.len()@pre
+{
   var n = v.len();
   if n <= 1 || buckets <= 0 { return; }
   var min = v[0];
