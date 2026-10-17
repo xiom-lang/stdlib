@@ -3658,6 +3658,30 @@ registry pin, agent recon for the rest)**
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
 
+**SESSION 2026-10-17 block 227 (WAVE 172 LANDED -- wishlist row 31 rand.state: explicit global RNG save/restore on xiom.rand; probe p_wave172_rand_state; modules 532/532; coverage rand 88.5; doc ratchet OK)**
+- API: `pub fn state() -> Int` returns the opaque non-zero global
+  snapshot (`ensures: result != 0`); `pub fn set_state(snapshot: Int)`
+  restores it exactly (`requires: snapshot != 0`;
+  `seed_from_value(0)` remains the zero-normalizing reset). The state
+  stays the existing scalar `_global_state`; no new storage.
+- Probe `tools/probes/p_wave172_rand_state.xi` (11 rows): initial
+  non-zero; float replay; mixed stream replay (random_int/bool/bytes,
+  uuid_v4, random_float, sample_normal); zero-seed normalization;
+  negative-seed snapshot; nested snapshots; StdRng independence;
+  Xorshift64 independence; a draw advances the state; bulk shuffle
+  replay; CSPRNG draws leave the global stream untouched. PASS on the
+  official v0.64.6 archive with XIOM_STDLIB=this checkout
+  (compile 0 / run 0).
+- Gates: check_modules 532/532 type-check clean (446.5s); coverage
+  ratchet OK vs floors180 (global 71.8 unchanged; rand 88.0 -> 88.5,
+  52 pub fns / 46 with clauses); doc ratchet OK (rand 58/58
+  documented; the net 2 pre-existing rows stay within baseline4).
+  Floors181 not needed (no dip).
+- Docs: wishlist row 31 -> fixed (wave 172 + probe ref). Next queue
+  item is the mirror row-status normalization (rows 2-22, 25, 27-32,
+  34-46).
+- Tree: this commit (code + probe + wishlist row + this block).
+
 **SESSION 2026-10-17 block 226 (CONTINUATION HANDOFF at head 9a09af9 -- snapshot 40; v0.64.6 shipped, registry live, pin PR xiom#7; complete next-session queue below; doorbell armed 13:00Z)**
 - STATE: main head 9a09af9; worktree clean except the known untracked
   out/ dir, out/w148 mojibake dat and the six debug-lane diag smokes.

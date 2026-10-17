@@ -462,6 +462,26 @@ pub fn seed_from_value(seed: Int) {
   };
 }
 
+/// Returns an opaque snapshot of the global RNG state.
+/// Pass the value to `set_state` to restore the exact stream position;
+/// snapshots are implementation-specific and only valid for this module.
+/// The global state is never zero. Complexity: O(1).
+pub fn state() -> Int
+  ensures: result != 0
+{
+  return _global_state;
+}
+
+/// Restores the global RNG state from a `state` snapshot.
+/// The snapshot must be non-zero (every value returned by `state` is);
+/// use `seed_from_value(0)` to reset the generator to its normalized
+/// zero seed. Complexity: O(1).
+pub fn set_state(snapshot: Int)
+  requires: snapshot != 0
+{
+  _global_state = snapshot;
+}
+
 // -- Xorshift64 --------------------------------------------------------------
 
 /// Xorshift64 PRNG (Marsaglia, 2003).
