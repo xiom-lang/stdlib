@@ -132,7 +132,8 @@ pub fn bytes_span_new(start: Int, len: Int) -> ByteSpan
 /// Strict window over a vector of `n` bytes: Some only when
 /// 0 <= start <= n, 0 <= len and start + len <= n -- otherwise None.
 pub fn bytes_span_checked(n: Int, start: Int, len: Int) -> Option[ByteSpan]
-  ensures: true
+  ensures: (n < 0 || start < 0 || len < 0 || start > n || start + len > n) => (result.is_none)
+  ensures: (n >= 0 && start >= 0 && len >= 0 && start <= n && start + len <= n) => (result.is_some)
 {
   if n < 0 || start < 0 || len < 0 {
     return None;
@@ -152,7 +153,7 @@ pub fn bytes_span_len(sp: &ByteSpan) -> Int
 
 /// True when the span has zero bytes.
 pub fn bytes_span_is_empty(sp: &ByteSpan) -> Bool
-  ensures: true
+  ensures: result == (sp.len == 0)
 {
   sp.len == 0
 }
@@ -181,7 +182,8 @@ pub fn bytes_span_slice(sp: &ByteSpan, start: Int, len: Int) -> ByteSpan
 /// Byte at offset `i` within the span, or 0 when out of the span or out of
 /// the vector (string.byte_at convention). Complexity: O(1).
 pub fn bytes_span_get(data: &Vec[UInt8], sp: &ByteSpan, i: Int) -> UInt8
-  ensures: true
+  ensures: (i < 0 || i >= sp.len) => (result == 0u8)
+  ensures: (sp.start + i < 0 || sp.start + i >= data.len()) => (result == 0u8)
 {
   if i < 0 || i >= sp.len {
     return 0u8;
@@ -208,7 +210,9 @@ pub fn bytes_span_to_vec(data: &Vec[UInt8], sp: &ByteSpan) -> Vec[UInt8]
 
 /// Append the window's bytes to `out` (clamped to the vector's end).
 pub fn bytes_span_copy_into(data: &Vec[UInt8], sp: &ByteSpan, out: &mut Vec[UInt8])
-  ensures: true
+  ensures: out.len() >= out.len()@pre
+  ensures: (sp.len < 0) => (out.len() == out.len()@pre)
+  ensures: (sp.len >= 0) => (out.len() <= out.len()@pre + sp.len)
 {
   var i = 0;
   while i < sp.len && sp.start + i < data.len() {
@@ -220,7 +224,8 @@ pub fn bytes_span_copy_into(data: &Vec[UInt8], sp: &ByteSpan, out: &mut Vec[UInt
 /// Byte-wise equality of two windows (possibly over different vectors):
 /// length first, then bytes. Complexity: O(min lengths).
 pub fn bytes_span_eq(a: &Vec[UInt8], sa: &ByteSpan, b: &Vec[UInt8], sb: &ByteSpan) -> Bool
-  ensures: true
+  ensures: (sa.len != sb.len) => (result == false)
+  ensures: (result == true) => (sa.len == sb.len)
 {
   if sa.len != sb.len {
     return false;
@@ -238,7 +243,8 @@ pub fn bytes_span_eq(a: &Vec[UInt8], sa: &ByteSpan, b: &Vec[UInt8], sb: &ByteSpa
 /// True when the window starts with the bytes of `prefix` (an empty prefix
 /// always matches). Complexity: O(|prefix|).
 pub fn bytes_span_starts_with(data: &Vec[UInt8], sp: &ByteSpan, prefix: &Vec[UInt8]) -> Bool
-  ensures: true
+  ensures: (prefix.len() > sp.len) => (result == false)
+  ensures: (prefix.len() == 0) => (result == true)
 {
   let plen = prefix.len();
   if plen > sp.len {
@@ -257,7 +263,8 @@ pub fn bytes_span_starts_with(data: &Vec[UInt8], sp: &ByteSpan, prefix: &Vec[UIn
 /// Offset (relative to the span start) of the first `byte` in the window, or
 /// None. `byte` is masked to 8 bits. Complexity: O(span length).
 pub fn bytes_span_find_byte(data: &Vec[UInt8], sp: &ByteSpan, byte: Int) -> Option[Int]
-  ensures: true
+  ensures: (sp.len <= 0) => (result.is_none)
+  ensures: (result.is_some) => (sp.len > 0)
 {
   let target = (byte & 0xFF) as UInt8;
   var i = 0;
@@ -276,7 +283,9 @@ pub fn bytes_span_find_byte(data: &Vec[UInt8], sp: &ByteSpan, byte: Int) -> Opti
 /// through Str::from_utf8. UTF-8 validity is the caller's concern (same
 /// policy as base32_decode_str). Complexity: O(window length).
 pub fn bytes_span_to_str(data: &Vec[UInt8], sp: &ByteSpan) -> Result[Str, Str]
-  ensures: true
+  ensures: (sp.start < 0 || sp.len < 0 || sp.start + sp.len > data.len()) => (result.is_err)
+  ensures: (result.is_ok) => (sp.start >= 0 && sp.len >= 0 && sp.start + sp.len <= data.len())
+  ensures: (sp.len == 0 && sp.start >= 0 && sp.start <= data.len()) => (result.is_ok)
 {
   if sp.start < 0 || sp.len < 0 || sp.start + sp.len > data.len() {
     return Err("byte span out of bounds");

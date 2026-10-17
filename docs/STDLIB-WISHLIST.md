@@ -560,5 +560,10 @@ campaign release; the table statuses above were normalized in the
   (inotify runtime leg) + platform docs. Probe p_wave171_shapes.
 - wave 172 (rand): row 31 -- explicit global RNG state save/restore
   (`rand.state()`/`set_state`). Probe p_wave172_rand_state.
+- wave 173 (contract quality): the 54 remaining mechanical
+  `ensures: true` clauses from the wave-166/168/170 fill were tightened
+  to real functional guards across le/ascii/codepoint/split/bytes/glob/
+  assertions/zip (success + error paths). Probe p_wave173_shapes; no
+  surface change.
 - NOT assigned in the 165-171 pass: row 33 stays compiler/install-lane.
   Released as stdlib-v0.64.6 / xiom-std 0.64.6 (compiler pin v0.64.6).

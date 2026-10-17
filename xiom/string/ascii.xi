@@ -18,7 +18,7 @@ module xiom.string.ascii
 
 /// True iff the low byte is an ASCII decimal digit (0x30-0x39).
 pub fn ascii_is_digit(b: Int) -> Bool
-  ensures: true
+  ensures: result == (((b & 0xFF) >= 48) && ((b & 0xFF) <= 57))
 {
   let v = b & 0xFF;
   v >= 48 && v <= 57
@@ -26,7 +26,7 @@ pub fn ascii_is_digit(b: Int) -> Bool
 
 /// True iff the low byte is an ASCII uppercase letter (A-Z).
 pub fn ascii_is_upper(b: Int) -> Bool
-  ensures: true
+  ensures: result == (((b & 0xFF) >= 65) && ((b & 0xFF) <= 90))
 {
   let v = b & 0xFF;
   v >= 65 && v <= 90
@@ -34,7 +34,7 @@ pub fn ascii_is_upper(b: Int) -> Bool
 
 /// True iff the low byte is an ASCII lowercase letter (a-z).
 pub fn ascii_is_lower(b: Int) -> Bool
-  ensures: true
+  ensures: result == (((b & 0xFF) >= 97) && ((b & 0xFF) <= 122))
 {
   let v = b & 0xFF;
   v >= 97 && v <= 122
@@ -42,7 +42,7 @@ pub fn ascii_is_lower(b: Int) -> Bool
 
 /// True iff the low byte is an ASCII letter (A-Z or a-z).
 pub fn ascii_is_alpha(b: Int) -> Bool
-  ensures: true
+  ensures: result == ((((b & 0xFF) >= 65) && ((b & 0xFF) <= 90)) || (((b & 0xFF) >= 97) && ((b & 0xFF) <= 122)))
 {
   let v = b & 0xFF;
   (v >= 65 && v <= 90) || (v >= 97 && v <= 122)
@@ -50,7 +50,7 @@ pub fn ascii_is_alpha(b: Int) -> Bool
 
 /// True iff the low byte is an ASCII letter or decimal digit.
 pub fn ascii_is_alnum(b: Int) -> Bool
-  ensures: true
+  ensures: result == ((((b & 0xFF) >= 48) && ((b & 0xFF) <= 57)) || (((b & 0xFF) >= 65) && ((b & 0xFF) <= 90)) || (((b & 0xFF) >= 97) && ((b & 0xFF) <= 122)))
 {
   let v = b & 0xFF;
   (v >= 48 && v <= 57) || (v >= 65 && v <= 90) || (v >= 97 && v <= 122)
@@ -58,7 +58,7 @@ pub fn ascii_is_alnum(b: Int) -> Bool
 
 /// True iff the low byte is C whitespace (space, \t, \n, \v, \f, \r).
 pub fn ascii_is_space(b: Int) -> Bool
-  ensures: true
+  ensures: result == (((b & 0xFF) == 32) || (((b & 0xFF) >= 9) && ((b & 0xFF) <= 13)))
 {
   let v = b & 0xFF;
   v == 32 || (v >= 9 && v <= 13)
@@ -66,7 +66,7 @@ pub fn ascii_is_space(b: Int) -> Bool
 
 /// True iff the low byte is an ASCII blank (space or \t).
 pub fn ascii_is_blank(b: Int) -> Bool
-  ensures: true
+  ensures: result == (((b & 0xFF) == 32) || ((b & 0xFF) == 9))
 {
   let v = b & 0xFF;
   v == 32 || v == 9
@@ -74,7 +74,7 @@ pub fn ascii_is_blank(b: Int) -> Bool
 
 /// True iff the low byte is a hex digit (0-9, a-f, A-F).
 pub fn ascii_is_hex(b: Int) -> Bool
-  ensures: true
+  ensures: result == ((((b & 0xFF) >= 48) && ((b & 0xFF) <= 57)) || (((b & 0xFF) >= 97) && ((b & 0xFF) <= 102)) || (((b & 0xFF) >= 65) && ((b & 0xFF) <= 70)))
 {
   let v = b & 0xFF;
   (v >= 48 && v <= 57) || (v >= 97 && v <= 102) || (v >= 65 && v <= 70)
@@ -82,7 +82,7 @@ pub fn ascii_is_hex(b: Int) -> Bool
 
 /// True iff the low byte is an ASCII control code (0x00-0x1F or 0x7F).
 pub fn ascii_is_control(b: Int) -> Bool
-  ensures: true
+  ensures: result == (((b & 0xFF) <= 31) || ((b & 0xFF) == 127))
 {
   let v = b & 0xFF;
   v <= 31 || v == 127
@@ -90,7 +90,7 @@ pub fn ascii_is_control(b: Int) -> Bool
 
 /// True iff the low byte is printable ASCII (0x20-0x7E).
 pub fn ascii_is_printable(b: Int) -> Bool
-  ensures: true
+  ensures: result == (((b & 0xFF) >= 32) && ((b & 0xFF) <= 126))
 {
   let v = b & 0xFF;
   v >= 32 && v <= 126
@@ -99,7 +99,8 @@ pub fn ascii_is_printable(b: Int) -> Bool
 /// True iff the low byte occurs in the byte set `set` (raw byte membership;
 /// e.g. ascii_in_set(59, ";,") is true). Complexity: O(|set|).
 pub fn ascii_in_set(b: Int, set: Str) -> Bool
-  ensures: true
+  ensures: (set.len() == 0) => (result == false)
+  ensures: (result == true) => (set.len() > 0)
 {
   let v = b & 0xFF;
   let len = set.len();
@@ -117,7 +118,9 @@ pub fn ascii_in_set(b: Int, set: Str) -> Bool
 
 /// ASCII uppercase mapping: a-z map to A-Z, every other byte unchanged.
 pub fn ascii_upper_byte(b: Int) -> Int
-  ensures: true
+  ensures: (((b & 0xFF) >= 97) && ((b & 0xFF) <= 122)) => (result == ((b & 0xFF) - 32))
+  ensures: (((b & 0xFF) < 97) || ((b & 0xFF) > 122)) => (result == (b & 0xFF))
+  ensures: result >= 0 && result <= 255
 {
   let v = b & 0xFF;
   if v >= 97 && v <= 122 {
@@ -128,7 +131,9 @@ pub fn ascii_upper_byte(b: Int) -> Int
 
 /// ASCII lowercase mapping: A-Z map to a-z, every other byte unchanged.
 pub fn ascii_lower_byte(b: Int) -> Int
-  ensures: true
+  ensures: (((b & 0xFF) >= 65) && ((b & 0xFF) <= 90)) => (result == ((b & 0xFF) + 32))
+  ensures: (((b & 0xFF) < 65) || ((b & 0xFF) > 90)) => (result == (b & 0xFF))
+  ensures: result >= 0 && result <= 255
 {
   let v = b & 0xFF;
   if v >= 65 && v <= 90 {

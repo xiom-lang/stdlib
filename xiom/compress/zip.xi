@@ -401,7 +401,9 @@ pub fn zip_read(data: &Vec[UInt8], name: Str) -> Result[Vec[UInt8], Str]
 /// New empty archive builder. `finish` on a fresh writer emits a valid
 /// 22-byte empty archive.
 pub fn zip_writer_new() -> ZipWriter
-  ensures: true
+  ensures: result.count == 0
+  ensures: result.out.len() == 0
+  ensures: result.central.len() == 0
 {
   return ZipWriter{
     out: Vec[UInt8].new(),
@@ -505,7 +507,7 @@ pub fn zip_writer_add_level(w: &mut ZipWriter, name: Str, data: &Vec[UInt8], met
 /// Close the archive: append the central directory and the EOCD and return
 /// the full byte stream. The writer stays usable for a new archive.
 pub fn zip_writer_finish(w: &mut ZipWriter) -> Result[Vec[UInt8], Str]
-  ensures: true
+  ensures: (result.is_ok) => (w.out.len() == w.out.len()@pre + w.central.len() + 22)
 {
   var count = w.count;
   var cd_size = w.central.len();
