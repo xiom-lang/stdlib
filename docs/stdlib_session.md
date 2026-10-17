@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 42 (updated 2026-10-17 12:40Z at head 7908f8f; WAVE 173 LANDED -- 54 mechanical `ensures: true` clauses replaced with real guards across le/ascii/codepoint/split/bytes/glob/assertions/zip; probe p_wave173_shapes; full probes 355/355, modules 532/532; coverage clauses/fns 71.9 -> 72.6; relay 1129 fixed, stale v0.64.3 items wontfix, 0.64.6 announcement closed; next queue item is the phase-2 shelf -- h2 framing/HPACK then epoll/kqueue/IOCP + LISTEN_FDS; pin stdlib-v0.64.6 = 8d95815)
+## 0A. CONTINUE HERE -- handoff snapshot 43 (updated 2026-10-17 13:05Z at wave-174 commit; WAVE 174 LANDED -- `xiom.net.h2` frame-header/frame codecs + HPACK integer/string/static-table/header-field foundation (2202 item 9); probe p_wave174_shapes; 533rd manifest module; floors181 dumped (Global 71.9, net 97.8); next queue item is 2202 item 10 -- event loop beyond poll (epoll/kqueue/IOCP + LISTEN_FDS) then reporter close-loops; pin stdlib-v0.64.6 = 8d95815)
 
 ### Snapshot 37 (paste-ready)
 
@@ -3658,6 +3658,30 @@ registry pin, agent recon for the rest)**
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
 
+**SESSION 2026-10-17 block 229 (WAVE 174 LANDED -- phase-2 shelf item 9 foundation: xiom.net.h2 frame headers/frames + HPACK integer/string/static-table/header codecs; probe p_wave174_shapes; new module -> 533/533; floors181 dumped (Global 71.9, net 97.8))**
+- New module `xiom/net/h2.xi` (533rd manifest module; `tools/modlist_all.txt`
+  updated): RFC 9113 9-byte frame header encode/decode + full frame
+  encode/decode; HPACK 5.1 integer + 5.2 non-Huffman string codecs; the
+  RFC 7541 Appendix A 61-entry static table in one private chain (no
+  module-level tables); one header field encode/decode (static-indexed
+  or literal without indexing, indexed or new name). Scope boundary is
+  documented in the module header: Huffman, dynamic-table
+  inserts/eviction, CONTINUATION reassembly and connection state are
+  rejected/out of scope.
+- Probe `tools/probes/p_wave174_shapes.xi` (10 rows): constants; frame
+  header KAT [00 00 05 00 00 00 00 00 01]; range rejects; full "hello"
+  DATA frame; RFC 7541 C.1 integer vectors (10/1337/42); string KAT +
+  Huffman reject; static lookups (2/8/16/61); indexed header 0x82;
+  literal indexed-name (:method PUT); new-name x-test; dynamic
+  insert/index rejects. PASS official v0.64.6 (compile 0 / run 0).
+- Gates: coverage OK vs floors181 (Global 71.8 -> 71.9, net 97.7 ->
+  97.8; 6872 pub fns / 4939 covered); doc ratchet OK (net's 2
+  pre-existing rows stay within baseline4); full 533/533 module check
+  clean (564s); floors181 wired into ci/heavy/release + tools/README.
+- Relay: 2202-pulse item 9 progress (h2 foundation; item 10 next);
+  website status addendum follows.
+- Tree: this commit.
+
 **SESSION 2026-10-17 block 228 (WAVE 173 LANDED -- contract tightening: 54 mechanical `ensures: true` clauses replaced with real guards across le/ascii/codepoint/split/bytes/glob/assertions/zip; probe p_wave173_shapes; full probes 355/355, modules 532/532; coverage clauses/fns 71.9 -> 72.6)**
 - Scope (all clauses are payload-free guards; no behavior change):
   xiom/encoding/le.xi (11 writers/readers: range Err/Ok + exact
@@ -3796,9 +3820,14 @@ registry pin, agent recon for the rest)**
   Agent Manager worktrees: the six sweep worktrees (wave/165,166,167,
   169,170,171) and the older campaign worktrees remain idle on disk with
   merged branches; wave/154 leftovers are NOT ours to touch.
-- TO RESUME: say "resume"; read this block + the snapshot 40 header; the
-  doorbell is already armed at 13:00Z and its prompt carries the same
-  queue.
+- TO RESUME: say "resume"; read the TOP of the doc -- the peer lane
+  actor advanced past this block: blocks 227/228 + snapshots 41/42 carry
+  waves 172-173 (row 31 rand.state, the wishlist row-status
+  normalization and the 54 mechanical-clause tightenings are DONE) and a
+  peer WIP edit may sit on tools/modlist_all.txt (respect it, never
+  sweep). THIS session's doorbell cron was CANCELLED at the 13:00Z
+  handoff so a spent session does not keep resuming -- RE-ARM the 2h
+  doorbell at the start of the next session (2019-line lane rule).
 - Tree: this commit (docs only).
 
 **SESSION 2026-10-17 block 225 (RELEASE CONFIRMED: hosted gates green (Windows 49m45s / Ubuntu 36m28s), registry publish SUCCESS (compiler pin v0.64.6; canonical sha256 7ba3b09a; asset efa4c2f0, 1,237,513 B), pin PR xiom#7 opened manually (PAT gap), staging canary queued awaiting approval; bus announcement + 1559/1129/2328/2202 updates pushed 2d12d1c; doorbell re-armed; snapshot 39)**
