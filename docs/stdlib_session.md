@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 51 (updated 2026-10-17 23:20Z at this docs commit; **stdlib-v0.64.7 RELEASED** -- tag 1271dd5, release run 39073534681 green on Windows+Ubuntu, GitHub Release + assets live, compiler STDLIB_VERSION pinned at 3667ee29d; the automated pin-PR job failed idempotently; staging registry canary 39076910630 failed on the missing candidate compiler asset (sequencing, not stdlib); REL-20261017-2257-stdlib asks compiler for v0.64.7, and publish-registry.yml now has a compiler override (ae13302); readiness 87.2%, gate 10 MET; next: compiler v0.64.7 release + canary re-run, gate 8 coverage (num/time/iter/async), gate 9 compiler findings)
+## 0A. CONTINUE HERE -- handoff snapshot 51 (updated 2026-10-17 23:20Z at this docs commit; **stdlib-v0.64.7 RELEASED** -- tag 1271dd5, release run 39073534681 green on Windows+Ubuntu, GitHub Release + assets live, compiler STDLIB_VERSION pinned at 3667ee29d; the automated pin-PR job failed idempotently; compiler v0.64.7 shipped (39076930839 green) and the staging canary re-run 39077278671 is GREEN with the compiler override; production dispatch 39077410576 failed publisher_not_mapped because production trusts only refs/tags/stdlib-v* -- REL-20261017-2305-stdlib asks registry to allow refs/heads/main, then re-run production; readiness 87.2%, gate 10 MET; next: production registry publish, gate 8 coverage (num/time/iter/async), gate 9 compiler findings)
 
 ### Snapshot 37 (paste-ready)
 
@@ -3676,14 +3676,17 @@ registry pin, agent recon for the rest)**
 - Readiness: 87.2% (8/10 gates); gate 8 is 72.3% (sort 100%, next worst
   num/time/iter/async), gate 9 is compiler-owned. v0.64.7 is the
   beta-exit release cut.
-- Staging registry canary run 39076910630 was approved, then failed at
-  "Download compiler": the tag's COMPILER_VERSION is
-  `candidate-v0.64.7-m351-r2`, which has no public GitHub Release asset.
-  This is a sequencing gap, not a stdlib package defect. Follow-up
-  `REL-20261017-2257-stdlib` asks the compiler to cut v0.64.7;
-  `publish-registry.yml` now accepts a `compiler` dispatch override
-  (main ae13302) so the canary can be re-run with `compiler=v0.64.7`
-  and record the final compiler pin without retagging.
+- Registry sequence: the first staging canary (39076910630) failed at
+  "Download compiler" because the tag pins the candidate tag (no public
+  release asset). Compiler v0.64.7 then shipped (run 39076930839 green);
+  the staging canary re-run **39077278671 is GREEN** with the new
+  `compiler` dispatch override (main ae13302; `version=0.64.7`,
+  `compiler=v0.64.7`). The production dispatch **39077410576 failed**
+  with HTTP 403 `publisher_not_mapped`: production trusts only
+  `refs/tags/stdlib-v*`, not the `refs/heads/main` dispatch ref.
+  `REL-20261017-2305-stdlib` asks the registry lane to add
+  `refs/heads/main` to the production entry; we then re-run the
+  production dispatch and confirm.
 - Tree: tag 1271dd5; main docs.
 
 **SESSION 2026-10-17 block 236 (v0.64.7 TAG HELD -- dry-run release gates 39065075427 are 955/956 on BOTH Windows and Ubuntu; only smoke_hash_edge red on an m353 residual: the candidate fixes 0.hash()/true/false but (-1).hash() still returns the identity -1 while hash.hash(-1) is DJB2; COMPILER_VERSION on prep is candidate-v0.64.7-m351 at 282c1e7; tag not cut; compiler asked to fix negative receivers or confirm identity)**
