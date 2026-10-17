@@ -3677,6 +3677,10 @@ registry pin, agent recon for the rest)**
   52 pub fns / 46 with clauses); doc ratchet OK (rand 58/58
   documented; the net 2 pre-existing rows stay within baseline4).
   Floors181 not needed (no dip).
+- Trap confirmed: a bare official-archive compile resolves `xiom.*`
+  from the archive's lib (W001 duplicate-module warnings) and silently
+  ignores lane edits; set XIOM_STDLIB=<checkout> for lane tests
+  (run_smokes.ps1 does this for every child compile).
 - Docs: wishlist row 31 -> fixed (wave 172 + probe ref); queue item 2
   also done -- rows 2-32 and 34-46 normalized to fixed with wave + probe
   refs, row 33 remains the only open row (compiler/install lane). Next
