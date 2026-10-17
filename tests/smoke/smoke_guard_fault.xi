@@ -3,8 +3,12 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Deliberate hardware faults inside confined blocks must be caught by the SEH
 // trampoline; the process must SURVIVE and continue (println after each).
+// m351 (B-33): each manifested fault is typed and must be ACKNOWLEDGED via
+// take_fault() -- otherwise the process exits 70 at exit. Acknowledging is
+// the only exit-0 path after a fault.
 // Returns 0 on success.
 use xiom.io;
+use xiom.error;
 
 extern "C" {
   fn xiom_fault_av() -> Int;        // deliberate access violation (SIGSEGV)
@@ -59,22 +63,29 @@ fn main() -> Int {
   var r1 = confined_av();
   io.println("after-av");
   if r1 != 0 { return 1; }
+  if !error.faulted() { return 5; }
+  error.take_fault();
 
   // (2) Illegal instruction (ud2) inside a confined block -> process survives.
   io.println("before-ud2");
   var r2 = confined_ud2();
   io.println("after-ud2");
   if r2 != 0 { return 2; }
+  if !error.faulted() { return 6; }
+  error.take_fault();
 
   // (3) Divide-by-zero inside a confined block -> process survives.
   io.println("before-div0");
   var r3 = confined_div0();
   io.println("after-div0");
   if r3 != 0 { return 3; }
+  if !error.faulted() { return 7; }
+  error.take_fault();
 
   // (4) A benign confined block still returns its value correctly.
   var r4 = confined_ok();
   if r4 != 42 { return 4; }
+  if error.faulted() { return 8; }
 
   io.println("FAULT-OK");
   return 0;

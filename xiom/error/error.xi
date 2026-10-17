@@ -161,3 +161,47 @@ pub type HardwareFault = { signal: Str; pc: UInt64; retried: Bool; }
 
 /// Description of a violated contract (used by the runtime).
 pub type ContractViolation = { contract: Str; }
+
+// m351 (REL-20261016-2031-bindings-3, B-33): TYPED CONFINED-FAULT SURFACE.
+// The runtime TLS record is manifested by the codegen fault path
+// (xiom_fault_note) with an always-on diagnostic. If the program does not
+// acknowledge the fault through take_fault(), the process exits 70 at exit;
+// taking it (the ONLY exit-0 path after a fault) returns the typed record.
+extern "C" {
+  fn xiom_fault_active() -> Int;
+  fn xiom_fault_take() -> Int;
+  fn xiom_fault_pc() -> Int;
+  fn xiom_fault_retried_flag() -> Int;
+  fn xiom_fault_signal() -> *UInt8;
+}
+
+/// True while a confined-block fault is recorded and not acknowledged.
+/// Complexity: O(1).
+pub fn faulted() -> Bool
+  requires: true
+{
+  unsafe {
+    return xiom_fault_active() != 0;
+  }
+}
+
+/// Consume the recorded hardware fault (acknowledges it, which keeps the
+/// process exit code 0). Returns None when no fault is pending.
+/// Complexity: O(1).
+pub fn take_fault() -> Option[HardwareFault]
+  requires: true
+{
+  unsafe {
+    if xiom_fault_active() == 0 {
+      return None;
+    }
+    let code = xiom_fault_take();
+    if code == 0 {
+      return None;
+    }
+    let sig = xiom_fault_signal();
+    let pc = xiom_fault_pc();
+    let retried = xiom_fault_retried_flag() != 0;
+    return Some(HardwareFault{ signal: Str.from_cstring(sig); pc: pc as UInt64; retried: retried });
+  }
+}
