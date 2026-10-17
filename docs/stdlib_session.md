@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 42 (updated 2026-10-17 12:40Z at wave-173 commit; WAVE 173 LANDED -- 54 mechanical `ensures: true` clauses replaced with real guards across le/ascii/codepoint/split/bytes/glob/assertions/zip; probe p_wave173_shapes; full probes 355/355, modules 532/532; coverage clauses/fns 71.9 -> 72.6; relay 1129 fixed, stale v0.64.3 items wontfix, 0.64.6 announcement closed; next queue item is the phase-2 shelf -- h2 framing/HPACK then epoll/kqueue/IOCP + LISTEN_FDS; pin stdlib-v0.64.6 = 8d95815)
+## 0A. CONTINUE HERE -- handoff snapshot 42 (updated 2026-10-17 12:40Z at head 7908f8f; WAVE 173 LANDED -- 54 mechanical `ensures: true` clauses replaced with real guards across le/ascii/codepoint/split/bytes/glob/assertions/zip; probe p_wave173_shapes; full probes 355/355, modules 532/532; coverage clauses/fns 71.9 -> 72.6; relay 1129 fixed, stale v0.64.3 items wontfix, 0.64.6 announcement closed; next queue item is the phase-2 shelf -- h2 framing/HPACK then epoll/kqueue/IOCP + LISTEN_FDS; pin stdlib-v0.64.6 = 8d95815)
 
 ### Snapshot 37 (paste-ready)
 
@@ -3692,8 +3692,16 @@ registry pin, agent recon for the rest)**
   not surface count.
 - Relay batch (pushed 004a105): 1129-xvector -> fixed (POSIX watch,
   wave 171); stale 1630/1658-compiler -> wontfix (v0.64.3 superseded;
-  current notes schema-clean); 0.64.6 announcement closed.
-- Tree: this commit.
+  current notes schema-clean); 0.64.6 announcement closed. Website
+  status row REL-20261017-1247-stdlib pushed (b9300ba; public-safe
+  0.64.6 + wave 172/173 + wishlist-normalized copy).
+- Housekeeping: removed 14 merged wave worktrees (151-160, 165-171)
+  and both stdlib-verify checkouts; deleted 16 merged branches (the
+  same waves plus 172/173). Kept the unmerged witness branches, the
+  compiler-side checkout, and the wave/154 leftovers (not ours). The
+  empty `.kilo/worktrees/*` directories are deregistered and await an
+  external process releasing their handles; no git metadata remains.
+- Tree: wave commit 0f525b5; merge 7908f8f (main).
 
 **SESSION 2026-10-17 block 227 (WAVE 172 LANDED -- wishlist row 31 rand.state: explicit global RNG save/restore on xiom.rand; probe p_wave172_rand_state; modules 532/532; coverage rand 88.5; doc ratchet OK)**
 - API: `pub fn state() -> Int` returns the opaque non-zero global
