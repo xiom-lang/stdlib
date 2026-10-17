@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 38 (updated 2026-10-16 19:45Z at head 1ac7d73; the 2026-10-16 campaign is COMPLETE on main -- waves 155-163 incl. TLS wave-B (in-tree libssl route LIVE), compression (dynamic Huffman + two RFC table fixes), zero-copy, popen spawn, SSE connection layer, fix-first defect batch, BLAKE3 KATs; merged battery green + floors179 (Global 70.8); pin stdlib-v0.64.6 = b81430b; NEXT LEADS: ranked sweep + phase-2 shelf (inotify/h2/epoll), compiler-row monitors; relay live)
+## 0A. CONTINUE HERE -- handoff snapshot 39 (updated 2026-10-17 11:05Z; v0.64.6 SHIPPED -- stdlib-v0.64.6 tag moved to 8d95815, hosted Win+Linux gates green, xiom-std 0.64.6 LIVE on the registry (compiler pin v0.64.6; registry canonical sha256 7ba3b09a; release asset efa4c2f0, 1,237,513 B), pin PR xiom#7 open; sweep waves 155-171 all merged; floors180 (Global 71.8); NEXT LEADS: row 31 rand.state + mirror statuses, phase-2 shelf (h2/epoll/IOCP), compiler-row monitors (1609/1456/1626; m347/1550 post-cut), v0.64.7 watch; relay live)
 
 ### Snapshot 37 (paste-ready)
 
@@ -3657,6 +3657,26 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-17 block 225 (RELEASE CONFIRMED: hosted gates green (Windows 49m45s / Ubuntu 36m28s), registry publish SUCCESS (compiler pin v0.64.6; canonical sha256 7ba3b09a; asset efa4c2f0, 1,237,513 B), pin PR xiom#7 opened manually (PAT gap), staging canary queued awaiting approval; bus announcement + 1559/1129/2328/2202 updates pushed 2d12d1c; doorbell re-armed; snapshot 39)**
+- Release evidence: run 38979638226 -- all jobs green (validate /
+  gates / package + GH release / pin-PR branch / canary dispatch);
+  publish run 38979638142 green with "publishing stdlib 0.64.6 against
+  compiler pin v0.64.6" and "release asset ready" at 23:57Z; registry
+  live (xiom-std 0.64.6).
+- Bus: REL-20261017-1100-stdlib (to all) created; 1559 publish line;
+  1129 item 2 DONE (POSIX watch real, close requested); 2328 re-add
+  green on v0.64.6 both platforms (close requested); 2202 release
+  progress (only item 4 compiler-gated + shelf 9/10 remain).
+- Overnight relays: compiler ACKED 2330 (release cut) + 2331 (i128 AV)
+  and B-34 (alias-in-generic-position wishlist -- overlaps our 2100 W1;
+  watch it).
+- TODO next: row 31 (rand.state) + wishlist mirror row-status
+  normalization; coverage tightening of the mechanical `ensures: true`
+  sweep clauses; shelf h2/epoll/IOCP; monitors 1609/1456/1626/1053/
+  1549-stdlib-8/2309 (1630/1658 compiler-owned); staging canary
+  approval (owner, optional); v0.64.7 watch (m347-m351 + arm64).
+- Tree: this commit.
 
 **SESSION 2026-10-16 block 224 (PAUSED by the owner 23:19Z until tomorrow; verification wakeup + doorbell cancelled; the server-side release train continues autonomously: release run 38979638226 in progress, publish run 38979638142 WAITS on the owner's registry-publish environment approval -- nothing publishes until approved)**
 - Owner away until tomorrow; all local automation paused (the 23:59Z
