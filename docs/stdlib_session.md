@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 46 (updated 2026-10-17 14:35Z at wave-177 commit; WAVE 177 LANDED -- Windows WSAPoll readiness backend (`eventloop_*` real on Windows; 16 loops x 1024 fds) + extended p_wave176_shapes green Windows+WSL; macOS Err until kqueue; floors181 hold (net 97.8, Global 71.9); next queue item is kqueue (needs a macOS runner), then the net.event wrapper (179) and LISTEN_FDS server integration (180); pin stdlib-v0.64.6 = 8d95815)
+## 0A. CONTINUE HERE -- handoff snapshot 46 (updated 2026-10-17 14:50Z at head 4afc581; WAVE 177 LANDED -- Windows WSAPoll readiness backend (`eventloop_*` real on Windows; 16 loops x 1024 fds) + extended p_wave176_shapes green Windows+WSL; macOS Err until kqueue; floors181 hold (net 97.8, Global 71.9); next queue item is kqueue (needs a macOS runner), then the net.event wrapper (179) and LISTEN_FDS server integration (180); pin stdlib-v0.64.6 = 8d95815)
 
 ### Snapshot 37 (paste-ready)
 
@@ -3677,7 +3677,7 @@ registry pin, agent recon for the rest)**
   (no pub-coverage rise).
 - Relay: 2202-pulse item 10 Windows-leg progress; website status
   addendum 4.
-- Tree: this commit.
+- Tree: wave commit 4029002; merge 4afc581 (main).
 
 **SESSION 2026-10-17 block 231 (WAVE 176 LANDED -- event-loop runtime ABI + Linux epoll backend: eventloop_new/add/modify/wait/remove/close + EventBatch; probe p_wave176_shapes green Windows stubs + WSL epoll; full 533/533 recorded after the background run)**
 - `runtime/xiom_runtime.c`: new `xiom_eventloop_create/ctl/wait/close`
