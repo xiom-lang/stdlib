@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 48 (updated 2026-10-17 17:35Z at head 3cb1138; m351 TYPED-FAULT RUNTIME MERGED (37603a2 -> 3cb1138); probes 358/358, modules 533/533, coverage 72.3% (error 90.5%), docs/barename green; BLOCKED on a compiler m351 candidate ref for the two guard smokes; v0.64.7 cut + registry pending that ref + owner sync gate; pin stdlib-v0.64.6 = 8d95815)
+## 0A. CONTINUE HERE -- handoff snapshot 48 (updated 2026-10-17 17:35Z at head 3cb1138; m351 TYPED-FAULT RUNTIME MERGED (37603a2 -> 3cb1138); probes 358/358, modules 533/533, coverage 72.3% (error 90.5%), docs/barename green; BLOCKED on a compiler m351 candidate ref for the two guard smokes; release/v0.64.7-prep (64a8b3f) is ready with package 0.64.7 + note; v0.64.7 cut + registry pending that ref + owner sync gate; pin stdlib-v0.64.6 = 8d95815)
 
 ### Snapshot 37 (paste-ready)
 
@@ -3677,6 +3677,10 @@ registry pin, agent recon for the rest)**
   push a candidate ref carrying m351 so the v0.64.7 release gates can
   run. Do not cut v0.64.7 without that ref (the release gates would fail
   the two smokes).
+- Release prep: branch `release/v0.64.7-prep` (64a8b3f, pushed) carries
+  `package.xi` 0.64.7 and `release-notes/v0.64.7.md` (2 highlights,
+  schema-safe). Not merged or tagged; COMPILER_VERSION stays v0.64.6
+  until the m351 candidate ref is confirmed.
 - Tree: merge 3cb1138 (main).
 
 **SESSION 2026-10-17 block 233 (WAVE 178 LANDED -- readiness gate 8: sort contract coverage 42.6% -> 100%, global 71.9% -> 72.3%; all 47 sort pub fns now carry length/sortedness clauses; floors182 dumped/wired; readiness meter refreshed to 77.2%)**
