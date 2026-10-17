@@ -24,6 +24,7 @@
 #include <windows.h>
 #include <io.h>
 #include <fcntl.h>
+#include <process.h>
 #else
 #include <dirent.h>
 #include <unistd.h>
@@ -650,6 +651,24 @@ void xiom_guard_page_arm(void) {
     xiom_guard_page_armed = 1;
 }
 
+/* m351 (B-33): does `addr` fall inside the per-thread guard page? A
+   first-touch guard-page fault is the documented TRANSIENT case (retry
+   once); every other fault is deterministic and is not retried. */
+static int xiom_guard_page_contains(uintptr_t addr) {
+    if (!xiom_guard_page_ptr) return 0;
+#ifdef _WIN32
+    SYSTEM_INFO si;
+    GetSystemInfo(&si);
+    uintptr_t base = (uintptr_t)xiom_guard_page_ptr;
+    return addr >= base && addr < base + (uintptr_t)si.dwPageSize;
+#else
+    long page = sysconf(_SC_PAGESIZE);
+    if (page <= 0) return 0;
+    uintptr_t base = (uintptr_t)xiom_guard_page_ptr;
+    return addr >= base && addr < base + (uintptr_t)page;
+#endif
+}
+
 /* Disarm the guard page (restore it to a benign state until re-armed). */
 void xiom_guard_page_disarm(void) {
     if (!xiom_guard_page_ptr || !xiom_guard_page_armed) return;
@@ -666,6 +685,102 @@ void xiom_guard_page_disarm(void) {
     mprotect(xiom_guard_page_ptr, (size_t)page, PROT_READ | PROT_WRITE);
 #endif
     xiom_guard_page_armed = 0;
+}
+
+/* ================================================================
+   m351 (B-33): TYPED FAULT RECORD + EXIT-70 CONTRACT
+   ================================================================
+   The trampoline used to hand a caught fault to the codegen fault path,
+   which simply returned a zero of the enclosing function's type -- for
+   main that meant a SILENT exit 0 (P1 CI masking). The fault is now
+   always represented:
+     - the trampoline records the permanent fault in this TLS record;
+     - the codegen fault path calls xiom_fault_note(block_id), which
+       manifests it (always-on diagnostic, atexit exit-70 registration);
+     - stdlib xiom.error.faulted()/take_fault() expose the typed surface;
+       take_fault() acknowledges the record, which is the ONLY way to keep
+       exit 0.
+   Fault codes match xiom_trap_signal_name: 1=SIGSEGV, 2=SIGILL, 3=SIGFPE,
+   4=STACK_OVERFLOW, 5=GUARD_PAGE, 6=UNKNOWN. */
+const char* xiom_trap_signal_name(int code);
+
+typedef struct {
+    int pending;        /* trampoline caught a permanent fault */
+    int active;         /* fault_note manifested it */
+    int acknowledged;   /* take_fault()/ack() consumed it */
+    int code;           /* mapped fault code 1-6 */
+    int retried;        /* the transient retry already ran */
+    long os_code;       /* raw Win32 exception code / POSIX signal */
+    uint64_t pc;        /* faulting address / instruction pointer */
+    int64_t block_id;   /* confined block id from codegen */
+    int exit_registered;
+} XiomFaultRecord;
+
+static XIOM_TLS XiomFaultRecord xiom_fault_record;
+
+static void xiom_fault_exit_handler(void) {
+    XiomFaultRecord* f = &xiom_fault_record;
+    if (f->active && !f->acknowledged) {
+        fprintf(stderr,
+                "[fault] unhandled confined fault: exiting 70 "
+                "(call xiom.error.take_fault() to acknowledge)\n");
+        fflush(stdout);
+        fflush(stderr);
+        _exit(70);
+    }
+}
+
+/* Codegen fault path: manifest the trampoline's permanent fault. */
+void xiom_fault_note(int64_t block_id) {
+    XiomFaultRecord* f = &xiom_fault_record;
+    if (!f->pending) return;
+    f->active = 1;
+    f->acknowledged = 0;
+    f->block_id = block_id;
+    f->pending = 0;
+    if (!f->exit_registered) {
+        atexit(xiom_fault_exit_handler);
+        f->exit_registered = 1;
+    }
+    fprintf(stderr,
+            "[fault] confined block %lld fault: %s "
+            "(os=0x%lX, pc=0x%llX, retried=%d)\n",
+            (long long)block_id, xiom_trap_signal_name(f->code),
+            (unsigned long)f->os_code, (unsigned long long)f->pc, f->retried);
+    fflush(stderr);
+}
+
+/* Typed surface (stdlib xiom.error.faulted/take_fault). */
+int64_t xiom_fault_active(void) {
+    return xiom_fault_record.active && !xiom_fault_record.acknowledged;
+}
+
+/* Consume the fault: the only way to keep exit 0 after a fault. */
+int64_t xiom_fault_take(void) {
+    XiomFaultRecord* f = &xiom_fault_record;
+    if (!f->active || f->acknowledged) return 0;
+    f->acknowledged = 1;
+    return f->code;
+}
+
+void xiom_fault_ack(void) {
+    xiom_fault_record.acknowledged = 1;
+}
+
+int64_t xiom_fault_pc(void) {
+    return (int64_t)xiom_fault_record.pc;
+}
+
+int64_t xiom_fault_retried_flag(void) {
+    return xiom_fault_record.retried;
+}
+
+const char* xiom_fault_signal(void) {
+    return xiom_trap_signal_name(xiom_fault_record.code);
+}
+
+int64_t xiom_fault_should_exit(void) {
+    return xiom_fault_record.active && !xiom_fault_record.acknowledged;
 }
 
 /* ================================================================
@@ -757,6 +872,14 @@ void xiom_trap_leave(void) {
     xiom_trap_fault = 0;
 }
 
+/* m351: capture both the exception code and the faulting address from the
+   SEH filter (the __except block itself only sees GetExceptionCode). */
+static int xiom_trampoline_filter(PEXCEPTION_POINTERS ep, DWORD* out_code, ULONG_PTR* out_addr) {
+    *out_code = ep->ExceptionRecord->ExceptionCode;
+    *out_addr = (ULONG_PTR)ep->ExceptionRecord->ExceptionAddress;
+    return EXCEPTION_EXECUTE_HANDLER;
+}
+
 int64_t xiom_trampoline_call(xiom_block_fn fn, uint8_t* ctx) {
     int64_t result = 0;
     int fault_code = 0;
@@ -773,12 +896,12 @@ int64_t xiom_trampoline_call(xiom_block_fn fn, uint8_t* ctx) {
         xiom_trampoline_returned = 0;
         int faulted = 0;
         DWORD fault_win = 0;
+        ULONG_PTR fault_addr = 0;
         __try {
             result = fn(ctx);
         }
-        __except (EXCEPTION_EXECUTE_HANDLER) {
+        __except (xiom_trampoline_filter(GetExceptionInformation(), &fault_win, &fault_addr)) {
             faulted = 1;
-            fault_win = GetExceptionCode();
         }
         xiom_trampoline_active = 0;
 
@@ -790,8 +913,10 @@ int64_t xiom_trampoline_call(xiom_block_fn fn, uint8_t* ctx) {
             return 0;
         }
         if (getenv("XIOM_TRACE_FAULT")) {
-            fprintf(stderr, "[trampoline] fault win=0x%lX attempt=%d\n", (unsigned long)fault_win, attempt);
+            fprintf(stderr, "[trampoline] fault win=0x%lX addr=0x%llX attempt=%d\n",
+                    (unsigned long)fault_win, (unsigned long long)fault_addr, attempt);
         }
+        attempt++;
 
         /* Map the fault code. */
         if (fault_win == EXCEPTION_ACCESS_VIOLATION) fault_code = 1;       /* SIGSEGV */
@@ -801,21 +926,26 @@ int64_t xiom_trampoline_call(xiom_block_fn fn, uint8_t* ctx) {
         else if (fault_win == EXCEPTION_GUARD_PAGE) fault_code = 5;          /* guard page hit */
         else fault_code = 6;                                                 /* other */
 
-        /* D2.1 (Phase 6, requirement h): transient-fault RETRY ONCE. A fault can
-           be transient (first-touch guard page / fresh arena slot). Reset the
-           guard arena (discard all slabs) + re-arm the guard page, then re-run
-           the block fn ONCE on a fresh memory slot. The block fn re-enters the
-           arena + re-arms the page at its entry. If it faults again the fault is
-           permanent -> report it. `#[unsafe_no_retry]` (xiom_trampoline_allow_retry
-           == 0) disables the retry. */
-        if (xiom_trampoline_allow_retry && !xiom_trampoline_retried) {
+        /* m351 (B-33): ONLY a guard-page first-touch fault is transient.
+           Deterministic foreign/hardware faults (AV at an arbitrary address,
+           SIGILL, SIGFPE, ...) are NOT retried -- a retry executed the
+           faulting foreign call TWICE and duplicated its side effects. */
+        int transient = (fault_code == 5)
+            || (fault_code == 1 && xiom_guard_page_contains((uintptr_t)fault_addr));
+        if (xiom_trampoline_allow_retry && !xiom_trampoline_retried && transient) {
             xiom_trampoline_retried = 1;
             xiom_guard_heap_exit();    /* discard all arena slabs (fresh slot) */
             xiom_guard_page_disarm();  /* block fn re-arms on retry */
             continue;                  /* re-run fn(ctx) */
         }
 
-        /* Permanent fault (or retry disabled / already retried): report it. */
+        /* Permanent fault (or retry disabled / already retried): record it
+           for the codegen fault path (xiom_fault_note) and report the code. */
+        xiom_fault_record.pending = 1;
+        xiom_fault_record.code = fault_code;
+        xiom_fault_record.os_code = (long)fault_win;
+        xiom_fault_record.pc = (uint64_t)fault_addr;
+        xiom_fault_record.retried = xiom_trampoline_retried;
         xiom_trampoline_returned = saved_returned;
         return fault_code;
     }
@@ -830,12 +960,17 @@ static __thread int xiom_trampoline_returned = 0;
 static __thread int xiom_trampoline_this_returned = 0;
 static __thread int xiom_trampoline_retried = 0;
 static __thread int xiom_trampoline_allow_retry = 1;
+/* m351: raw signal + faulting address captured by the handler. */
+static __thread int xiom_trampoline_os_code = 0;
+static __thread uintptr_t xiom_trampoline_fault_addr = 0;
 
 static void xiom_trampoline_handler(int sig, siginfo_t* si, void* uc) {
-    (void)si; (void)uc;
+    (void)uc;
     if (xiom_trampoline_active) {
         /* Map to fault code: SIGSEGV=1, SIGILL=2, SIGFPE=3 */
         int code = (sig == SIGSEGV) ? 1 : (sig == SIGILL) ? 2 : (sig == SIGFPE) ? 3 : 6;
+        xiom_trampoline_os_code = sig;
+        xiom_trampoline_fault_addr = si ? (uintptr_t)si->si_addr : 0;
         siglongjmp(xiom_trampoline_jmp, code);
     }
     /* Not in a trampoline: restore default and re-raise (crash loudly). */
@@ -906,6 +1041,7 @@ int64_t xiom_trampoline_call(xiom_block_fn fn, uint8_t* ctx) {
     int saved_returned = xiom_trampoline_returned;
     xiom_trampoline_retried = 0;
     int fault_code = 0;
+    int attempt = 0;
     while (1) {
         xiom_trampoline_active = 1;
         xiom_trampoline_returned = 0;
@@ -922,12 +1058,27 @@ int64_t xiom_trampoline_call(xiom_block_fn fn, uint8_t* ctx) {
             return 0;
         }
         fault_code = code;
-        if (xiom_trampoline_allow_retry && !xiom_trampoline_retried) {
+        int os_code = xiom_trampoline_os_code;
+        uintptr_t fault_addr = xiom_trampoline_fault_addr;
+        if (getenv("XIOM_TRACE_FAULT")) {
+            fprintf(stderr, "[trampoline] fault sig=%d addr=0x%llX attempt=%d\n",
+                    os_code, (unsigned long long)fault_addr, attempt);
+        }
+        attempt++;
+        /* m351: retry ONLY a guard-page first-touch (the documented
+           transient case); deterministic faults are not retried. */
+        int transient = (fault_code == 1 && xiom_guard_page_contains(fault_addr));
+        if (xiom_trampoline_allow_retry && !xiom_trampoline_retried && transient) {
             xiom_trampoline_retried = 1;
             xiom_guard_heap_exit();
             xiom_guard_page_disarm();
             continue;
         }
+        xiom_fault_record.pending = 1;
+        xiom_fault_record.code = fault_code;
+        xiom_fault_record.os_code = (long)os_code;
+        xiom_fault_record.pc = (uint64_t)fault_addr;
+        xiom_fault_record.retried = xiom_trampoline_retried;
         xiom_trampoline_returned = saved_returned;
         return fault_code;
     }
@@ -1014,8 +1165,13 @@ static XIOM_TLS int xiom_fault_transient_count = 0;
 int64_t xiom_fault_transient(void) {
     if (xiom_fault_transient_count == 0) {
         xiom_fault_transient_count = 1;
-        volatile int* bad = (volatile int*)0x1;
-        return (int64_t)*bad; /* SIGSEGV on first call */
+        /* m351: the ONLY retried fault class is a guard-page first touch.
+           Raise a REAL guard-page fault (Windows PAGE_GUARD ->
+           STATUS_GUARD_PAGE_VIOLATION; POSIX PROT_NONE -> SIGSEGV at the
+           guard page) instead of an AV at address 0x1, which is now
+           deterministic and deliberately not retried. */
+        xiom_guard_page_arm();
+        return (int64_t)*(volatile int*)xiom_guard_page_ptr;
     }
     return 42; /* succeeds on retry */
 }
