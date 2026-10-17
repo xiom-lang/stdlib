@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 44 (updated 2026-10-17 13:45Z at wave-175 commit; WAVE 175 LANDED -- `socket_listen_fds` (systemd LISTEN_PID/LISTEN_FDS) + `docs/EVENT_LOOP_PLAN.md` (epoll/kqueue/IOCP scoping, staged 176-180); probe p_wave175_shapes green Windows+WSL; floors181 hold (net 97.8, Global 71.9); next queue item is the event-loop runtime ABI (wave 176, epoll backend) then reporter close-loops; pin stdlib-v0.64.6 = 8d95815)
+## 0A. CONTINUE HERE -- handoff snapshot 44 (updated 2026-10-17 13:50Z at head 8843da2; WAVE 175 LANDED -- `socket_listen_fds` (systemd LISTEN_PID/LISTEN_FDS) + `docs/EVENT_LOOP_PLAN.md` (epoll/kqueue/IOCP scoping, staged 176-180); probe p_wave175_shapes green Windows+WSL; floors181 hold (net 97.8, Global 71.9); next queue item is the event-loop runtime ABI (wave 176, epoll backend) then reporter close-loops; pin stdlib-v0.64.6 = 8d95815)
 
 ### Snapshot 37 (paste-ready)
 
@@ -3682,7 +3682,7 @@ registry pin, agent recon for the rest)**
   (no pub-coverage rise).
 - Relay: 2202-pulse item 10 first-leg progress; website status
   addendum 2.
-- Tree: this commit.
+- Tree: wave commit 94ca30b; merge 8843da2 (main).
 
 **SESSION 2026-10-17 block 229 (WAVE 174 LANDED -- phase-2 shelf item 9 foundation: xiom.net.h2 frame headers/frames + HPACK integer/string/static-table/header codecs; probe p_wave174_shapes; new module -> 533/533; floors181 dumped (Global 71.9, net 97.8))**
 - New module `xiom/net/h2.xi` (533rd manifest module; `tools/modlist_all.txt`
