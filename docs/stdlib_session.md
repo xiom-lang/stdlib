@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 49 (updated 2026-10-17 19:55Z at head dcf721e; v0.64.7 CODE-COMPLETE on main -- m351 runtime + arm64 crypto-availability fix + package 0.64.7 + schema-correct note; probes 358/358, modules 533/533, coverage 72.3%; Windows full smoke 961/962 on the stale m351-only binary (only smoke_hash_edge, m353 pre-fix -- need the true 065481eb4 candidate); compiler to re-pin dcf721e and rerun the arm64 functional gate; tag stdlib-v0.64.7 only on that pass + explicit release go; pin stdlib-v0.64.6 = 8d95815)
+## 0A. CONTINUE HERE -- handoff snapshot 50 (updated 2026-10-17 20:45Z at this docs commit; v0.64.7 TAG HELD -- dry-run 39065075427 is 955/956 on BOTH Windows and Ubuntu, only smoke_hash_edge red on an m353 residual (negative Int `.hash()` still identity); arm64 gate + combined notes green; prep release/v0.64.7-prep at 282c1e7 with COMPILER_VERSION=candidate-v0.64.7-m351 and package 0.64.7; awaiting compiler fix/confirmation before tag + registry publish; pin stdlib-v0.64.6 = 8d95815)
 
 ### Snapshot 37 (paste-ready)
 
@@ -3657,6 +3657,28 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-17 block 236 (v0.64.7 TAG HELD -- dry-run release gates 39065075427 are 955/956 on BOTH Windows and Ubuntu; only smoke_hash_edge red on an m353 residual: the candidate fixes 0.hash()/true/false but (-1).hash() still returns the identity -1 while hash.hash(-1) is DJB2; COMPILER_VERSION on prep is candidate-v0.64.7-m351 at 282c1e7; tag not cut; compiler asked to fix negative receivers or confirm identity)**
+- Release dry-run: `gh workflow run release.yml -R xiom-lang/stdlib
+  --ref release/v0.64.7-prep -f version=0.64.7`, run 39065075427.
+  Both OS legs fail only `smoke_hash_edge`; the remaining gate steps
+  were skipped because the smoke step failed first. The local pre-gate
+  already had probes 358/358 and modules 533/533.
+- Root cause: with candidate 065481eb4, `0.hash()` =
+  7567884774754821, `true.hash()` = 177574, `false.hash()` = 177573
+  (m353 fixed), but `(-1).hash()` = -1 (identity) while
+  `hash.hash(-1)` = 7579092093431421. `smoke_hash_edge` row 2 compares
+  those and fails.
+- Pre-tag catch: `COMPILER_VERSION` on bb764f0 was still v0.64.6;
+  bumped to `candidate-v0.64.7-m351` at 282c1e7 so the official gates
+  build the candidate rather than the old compiler.
+- Smoke update on main: row 1 now uses the declared `0.hash()` form
+  instead of the cast form; row 2 awaits the compiler decision.
+- Tag `stdlib-v0.64.7` is NOT cut. Awaiting the compiler: fix negative
+  Int `.hash()` (then re-run the dry-run) or confirm identity semantics
+  (then adjust the smoke and re-run). Arm64 gate and combined notes are
+  already green.
+- Tree: main docs; prep 282c1e7.
 
 **SESSION 2026-10-17 block 235 (ARM64 CRYPTO GATE FIX MERGED -- compiler branch 8eb22eb merged into prep bb764f0 and main dcf721e; aarch64 AES/SHA now report unavailable so the portable software path is used; Windows x64 guard smoke rc 0; v0.64.7 tag ready on dcf721e pending the compiler arm64 gate + explicit release go)**
 - `fix/arm64-crypto-availability` (8eb22eb, off release/v0.64.7-prep;
