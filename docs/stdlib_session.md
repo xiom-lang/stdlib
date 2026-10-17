@@ -3676,8 +3676,8 @@ registry pin, agent recon for the rest)**
   (net 97.8, global 71.9 unchanged; 6880 pub fns / 4947 covered); doc
   ratchet OK; full 533/533 module check clean (541.8s). No floors182
   (no pub-coverage rise).
-- Relay: 2202-pulse item 10 epoll-leg progress; website status
-  addendum 3.
+- Relay: 2202-pulse item 10 epoll-leg progress (acked) + website
+  addendum 3 `REL-20261017-1335-stdlib`; relay commit 3908f02.
 - Tree: wave commit b8b1e72; merge d322a0e (main).
 
 **SESSION 2026-10-17 block 230 (WAVE 175 LANDED -- 2202 item 10 first leg: socket_listen_fds systemd activation + docs/EVENT_LOOP_PLAN.md epoll/kqueue/IOCP scoping; probe p_wave175_shapes green Windows + WSL; net 97.8 holds)**
