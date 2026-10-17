@@ -8871,16 +8871,113 @@ long long xiom_fd_sendfile(long long out_fd, long long in_fd, long long offset, 
    ABI is deliberately fd/flags based: flags bit 1 = readable, bit 2 =
    writable, bit 4 = error/hangup. */
 #ifdef _WIN32
-int xiom_eventloop_create(void) { return -1; }
+/* WSAPoll readiness shim with a small static loop registry. Windows has no
+   epoll; WSAPoll is level-triggered and readiness-based, so the ABI maps
+   directly. One owner per loop; no locking (documented). */
+#define XIOM_WIN_LOOPS 16
+#define XIOM_WIN_FDS 1024
+typedef struct {
+    int used;
+    int n;
+    int fds[XIOM_WIN_FDS];
+    int want_read[XIOM_WIN_FDS];
+    int want_write[XIOM_WIN_FDS];
+} XiomWinEventLoop;
+static XiomWinEventLoop xiom_win_loops[XIOM_WIN_LOOPS];
+static XiomWinEventLoop* xiom_win_loop(int handle) {
+    if (handle < 1 || handle > XIOM_WIN_LOOPS) return NULL;
+    if (!xiom_win_loops[handle - 1].used) return NULL;
+    return &xiom_win_loops[handle - 1];
+}
+int xiom_eventloop_create(void) {
+    int i;
+    for (i = 0; i < XIOM_WIN_LOOPS; i++) {
+        if (!xiom_win_loops[i].used) {
+            memset(&xiom_win_loops[i], 0, sizeof(xiom_win_loops[i]));
+            xiom_win_loops[i].used = 1;
+            return i + 1;
+        }
+    }
+    return -1;
+}
 int xiom_eventloop_ctl(int handle, int op, int fd, int read, int write) {
-    (void)handle; (void)op; (void)fd; (void)read; (void)write;
+    XiomWinEventLoop* L = xiom_win_loop(handle);
+    int i;
+    if (L == NULL || fd < 0) return -1;
+    if (op == 0) {
+        if (L->n >= XIOM_WIN_FDS) return -1;
+        for (i = 0; i < L->n; i++) {
+            if (L->fds[i] == fd) return -1; /* EEXIST */
+        }
+        L->fds[L->n] = fd;
+        L->want_read[L->n] = read ? 1 : 0;
+        L->want_write[L->n] = write ? 1 : 0;
+        L->n++;
+        return 0;
+    }
+    if (op == 1) {
+        for (i = 0; i < L->n; i++) {
+            if (L->fds[i] == fd) {
+                L->want_read[i] = read ? 1 : 0;
+                L->want_write[i] = write ? 1 : 0;
+                return 0;
+            }
+        }
+        return -1;
+    }
+    if (op == 2) {
+        for (i = 0; i < L->n; i++) {
+            if (L->fds[i] == fd) {
+                L->n--;
+                L->fds[i] = L->fds[L->n];
+                L->want_read[i] = L->want_read[L->n];
+                L->want_write[i] = L->want_write[L->n];
+                return 0;
+            }
+        }
+        return -1;
+    }
     return -1;
 }
 long long xiom_eventloop_wait(int handle, long long timeout_ms, long long* out_fds, long long* out_flags, long long max) {
-    (void)handle; (void)timeout_ms; (void)out_fds; (void)out_flags; (void)max;
-    return -1;
+    XiomWinEventLoop* L = xiom_win_loop(handle);
+    WSAPOLLFD pfd[XIOM_WIN_FDS];
+    int i;
+    int rc;
+    long long outn = 0;
+    if (L == NULL || out_fds == NULL || out_flags == NULL || max <= 0) return -1;
+    if (L->n == 0) {
+        if (timeout_ms < 0) Sleep(INFINITE);
+        else Sleep((DWORD)timeout_ms);
+        return 0;
+    }
+    for (i = 0; i < L->n; i++) {
+        pfd[i].fd = (SOCKET)L->fds[i];
+        pfd[i].events = (short)((L->want_read[i] ? POLLRDNORM : 0) | (L->want_write[i] ? POLLWRNORM : 0));
+        pfd[i].revents = 0;
+    }
+    rc = WSAPoll(pfd, (ULONG)L->n, (INT)timeout_ms);
+    if (rc == SOCKET_ERROR) return -1;
+    for (i = 0; i < L->n && outn < max; i++) {
+        short re = pfd[i].revents;
+        long long flags = 0;
+        if (re == 0) continue;
+        if (re & (POLLRDNORM | POLLRDBAND | POLLHUP | POLLERR | POLLNVAL)) flags |= 1;
+        if (re & (POLLWRNORM | POLLWRBAND | POLLHUP | POLLERR | POLLNVAL)) flags |= 2;
+        if (re & (POLLERR | POLLHUP | POLLNVAL)) flags |= 4;
+        out_fds[outn] = (long long)L->fds[i];
+        out_flags[outn] = flags;
+        outn++;
+    }
+    return outn;
 }
-int xiom_eventloop_close(int handle) { (void)handle; return -1; }
+int xiom_eventloop_close(int handle) {
+    XiomWinEventLoop* L = xiom_win_loop(handle);
+    if (L == NULL) return -1;
+    L->used = 0;
+    L->n = 0;
+    return 0;
+}
 #elif defined(__linux__)
 #include <sys/epoll.h>
 #include <unistd.h>

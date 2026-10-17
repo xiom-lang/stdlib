@@ -23,11 +23,12 @@ module xiom.net.socket
 // 1024 fds, bounded timeouts, ready fds in input order). Wave 175 adds
 // socket_listen_fds (systemd socket activation: LISTEN_PID/LISTEN_FDS, fds
 // 3..3+N-1, POSIX-only) so zero-downtime reloads can adopt inherited
-// listeners; LISTEN_FDNAMES is left in place for the caller. Wave 176 adds
-// the epoll-backed eventloop_* readiness layer (Linux; other platforms Err
-// until their backend wave -- see docs/EVENT_LOOP_PLAN.md).
+// listeners; LISTEN_FDNAMES is left in place for the caller. Waves 176/177
+// add the eventloop_* readiness layer (Linux epoll, Windows WSAPoll; macOS/
+// BSD Err until the kqueue wave -- see docs/EVENT_LOOP_PLAN.md).
 
 use xiom.env;
+use xiom.os.platform as plat;
 
 extern "C" {
   fn xiom_socket_create(family: Int, typ: Int, proto: Int) -> Int;
@@ -901,14 +902,12 @@ pub fn eventbatch_new() -> EventBatch
   return EventBatch{ fds: Vec[Int].new(); flags: Vec[Int].new(); };
 }
 
-/// Create a readiness loop. Linux uses epoll; Windows and macOS/BSD return
-/// the documented Err until their backend wave.
+/// Create a readiness loop. Linux uses epoll, Windows uses a WSAPoll
+/// readiness shim; macOS/BSD return the documented Err until the kqueue
+/// wave.
 pub fn eventloop_new() -> Result[EventLoop, Str]
-  ensures: (env.host_is_windows()) => (result.is_err)
+  ensures: (plat.platform_is_macos()) => (result.is_err)
 {
-  if env.host_is_windows() {
-    return Err("eventloop_new: not implemented on Windows yet (see docs/EVENT_LOOP_PLAN.md)");
-  };
   var handle: Int = -1;
   unsafe {
     handle = xiom_eventloop_create() as Int;
