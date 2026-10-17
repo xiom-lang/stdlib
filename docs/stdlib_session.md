@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 43 (updated 2026-10-17 13:05Z at wave-174 commit; WAVE 174 LANDED -- `xiom.net.h2` frame-header/frame codecs + HPACK integer/string/static-table/header-field foundation (2202 item 9); probe p_wave174_shapes; 533rd manifest module; floors181 dumped (Global 71.9, net 97.8); next queue item is 2202 item 10 -- event loop beyond poll (epoll/kqueue/IOCP + LISTEN_FDS) then reporter close-loops; pin stdlib-v0.64.6 = 8d95815)
+## 0A. CONTINUE HERE -- handoff snapshot 43 (updated 2026-10-17 13:25Z at head 46fbd1b; WAVE 174 LANDED -- `xiom.net.h2` frame-header/frame codecs + HPACK integer/string/static-table/header-field foundation (2202 item 9); probe p_wave174_shapes; 533rd manifest module; floors181 dumped (Global 71.9, net 97.8); next queue item is 2202 item 10 -- event loop beyond poll (epoll/kqueue/IOCP + LISTEN_FDS) then reporter close-loops; pin stdlib-v0.64.6 = 8d95815)
 
 ### Snapshot 37 (paste-ready)
 
@@ -3680,7 +3680,7 @@ registry pin, agent recon for the rest)**
   clean (564s); floors181 wired into ci/heavy/release + tools/README.
 - Relay: 2202-pulse item 9 progress (h2 foundation; item 10 next);
   website status addendum follows.
-- Tree: this commit.
+- Tree: wave commit 8158e37; merge 46fbd1b (main).
 
 **SESSION 2026-10-17 block 228 (WAVE 173 LANDED -- contract tightening: 54 mechanical `ensures: true` clauses replaced with real guards across le/ascii/codepoint/split/bytes/glob/assertions/zip; probe p_wave173_shapes; full probes 355/355, modules 532/532; coverage clauses/fns 71.9 -> 72.6)**
 - Scope (all clauses are payload-free guards; no behavior change):
