@@ -72,9 +72,10 @@ xiom_eventloop_close(handle) -> Int
 
 - [x] Wave 175: `socket_listen_fds` + this scoping plan + probe
   `p_wave175_shapes`.
-- [ ] Wave 176: runtime `xiom_eventloop_*` ABI + Linux epoll backend;
+- [x] Wave 176: runtime `xiom_eventloop_*` ABI + Linux epoll backend;
   pipe/socketpair probe (`p_wave176_shapes`) with timeout, read/write,
-  error and remove rows.
+  error and remove rows. Landed 2026-10-17; Windows/macOS remain the
+  explicit -1 stubs until waves 177/178.
 - [ ] Wave 177: kqueue backend on macOS/BSD; same probe via the WSL/macOS
   leg; keep the poll fallback.
 - [ ] Wave 178: Windows backend decision (WSAPoll shim first; IOCP only

@@ -8864,3 +8864,76 @@ long long xiom_fd_sendfile(long long out_fd, long long in_fd, long long offset, 
 }
 #endif
 #endif
+
+/* ---- Event loop ABI (wave 176) -------------------------------------------
+   One readiness API with a Linux epoll backend. Windows and macOS/BSD are
+   explicit -1 stubs until their waves (see docs/EVENT_LOOP_PLAN.md). The
+   ABI is deliberately fd/flags based: flags bit 1 = readable, bit 2 =
+   writable, bit 4 = error/hangup. */
+#ifdef _WIN32
+int xiom_eventloop_create(void) { return -1; }
+int xiom_eventloop_ctl(int handle, int op, int fd, int read, int write) {
+    (void)handle; (void)op; (void)fd; (void)read; (void)write;
+    return -1;
+}
+long long xiom_eventloop_wait(int handle, long long timeout_ms, long long* out_fds, long long* out_flags, long long max) {
+    (void)handle; (void)timeout_ms; (void)out_fds; (void)out_flags; (void)max;
+    return -1;
+}
+int xiom_eventloop_close(int handle) { (void)handle; return -1; }
+#elif defined(__linux__)
+#include <sys/epoll.h>
+#include <unistd.h>
+int xiom_eventloop_create(void) {
+    return epoll_create1(0);
+}
+int xiom_eventloop_ctl(int handle, int op, int fd, int read, int write) {
+    struct epoll_event ev;
+    int eop;
+    if (handle < 0 || fd < 0) return -1;
+    memset(&ev, 0, sizeof(ev));
+    ev.events = (uint32_t)(EPOLLERR | EPOLLHUP);
+    if (read) ev.events |= EPOLLIN;
+    if (write) ev.events |= EPOLLOUT;
+    ev.data.fd = fd;
+    if (op == 0) eop = EPOLL_CTL_ADD;
+    else if (op == 1) eop = EPOLL_CTL_MOD;
+    else if (op == 2) eop = EPOLL_CTL_DEL;
+    else return -1;
+    return epoll_ctl(handle, eop, fd, &ev);
+}
+long long xiom_eventloop_wait(int handle, long long timeout_ms, long long* out_fds, long long* out_flags, long long max) {
+    struct epoll_event events[256];
+    int cap;
+    int n;
+    int i;
+    if (handle < 0 || max <= 0 || out_fds == NULL || out_flags == NULL) return -1;
+    cap = (int)(max > 256 ? 256 : max);
+    n = epoll_wait(handle, events, cap, (int)timeout_ms);
+    if (n < 0) return -1;
+    for (i = 0; i < n; i++) {
+        long long flags = 0;
+        if (events[i].events & (EPOLLIN | EPOLLHUP | EPOLLERR)) flags |= 1;
+        if (events[i].events & (EPOLLOUT | EPOLLHUP | EPOLLERR)) flags |= 2;
+        if (events[i].events & (EPOLLERR | EPOLLHUP)) flags |= 4;
+        out_fds[i] = (long long)events[i].data.fd;
+        out_flags[i] = flags;
+    }
+    return n;
+}
+int xiom_eventloop_close(int handle) {
+    if (handle < 0) return -1;
+    return close(handle);
+}
+#else
+int xiom_eventloop_create(void) { return -1; }
+int xiom_eventloop_ctl(int handle, int op, int fd, int read, int write) {
+    (void)handle; (void)op; (void)fd; (void)read; (void)write;
+    return -1;
+}
+long long xiom_eventloop_wait(int handle, long long timeout_ms, long long* out_fds, long long* out_flags, long long max) {
+    (void)handle; (void)timeout_ms; (void)out_fds; (void)out_flags; (void)max;
+    return -1;
+}
+int xiom_eventloop_close(int handle) { (void)handle; return -1; }
+#endif

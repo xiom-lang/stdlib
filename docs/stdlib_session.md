@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 44 (updated 2026-10-17 13:50Z at head 8843da2; WAVE 175 LANDED -- `socket_listen_fds` (systemd LISTEN_PID/LISTEN_FDS) + `docs/EVENT_LOOP_PLAN.md` (epoll/kqueue/IOCP scoping, staged 176-180); probe p_wave175_shapes green Windows+WSL; floors181 hold (net 97.8, Global 71.9); next queue item is the event-loop runtime ABI (wave 176, epoll backend) then reporter close-loops; pin stdlib-v0.64.6 = 8d95815)
+## 0A. CONTINUE HERE -- handoff snapshot 45 (updated 2026-10-17 14:05Z at wave-176 commit; WAVE 176 LANDED -- event-loop runtime ABI + Linux epoll backend (`eventloop_*` + `EventBatch`; Windows/macOS explicit stubs); probe p_wave176_shapes green Windows+WSL; floors181 hold (net 97.8, Global 71.9); next queue item is kqueue (wave 177), then the Windows backend decision (178), the net.event wrapper (179) and LISTEN_FDS server integration (180); pin stdlib-v0.64.6 = 8d95815)
 
 ### Snapshot 37 (paste-ready)
 
@@ -3657,6 +3657,28 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-17 block 231 (WAVE 176 LANDED -- event-loop runtime ABI + Linux epoll backend: eventloop_new/add/modify/wait/remove/close + EventBatch; probe p_wave176_shapes green Windows stubs + WSL epoll; full 533/533 recorded after the background run)**
+- `runtime/xiom_runtime.c`: new `xiom_eventloop_create/ctl/wait/close`
+  ABI. Linux is a real epoll backend (EPOLLIN/EPOLLOUT/EPOLLERR/EPOLLHUP,
+  256-event stack cap, timeout -1 blocks); Windows and macOS/BSD are
+  explicit -1 stubs until their backend waves.
+- `xiom/net/socket.xi`: `EventLoop`/`EventBatch` types,
+  `eventbatch_new`, and `eventloop_new/add/modify/remove/wait/close`.
+  Non-Linux `eventloop_new` is Err; `wait` appends to the batch and uses
+  flag bit 1=readable, 2=writable, 4=error/hangup; timeout -1 blocks,
+  below -1 is Err; `close` is idempotent and returns whether it closed.
+- Probe `tools/probes/p_wave176_shapes.xi` (12 rows): non-Linux Err;
+  create; pipe read readiness; writable registration; modify; remove;
+  close idempotence; closed-loop Err; bad timeout. PASS on Windows
+  (compile 0 / run 0) and WSL Ubuntu (rc 0) on the official v0.64.6 pin.
+- Gates: socket module check clean; coverage ratchet OK vs floors181
+  (net 97.8, global 71.9 unchanged; 6880 pub fns / 4947 covered); doc
+  ratchet OK; full 533/533 module check clean (541.8s). No floors182
+  (no pub-coverage rise).
+- Relay: 2202-pulse item 10 epoll-leg progress; website status
+  addendum 3.
+- Tree: this commit.
 
 **SESSION 2026-10-17 block 230 (WAVE 175 LANDED -- 2202 item 10 first leg: socket_listen_fds systemd activation + docs/EVENT_LOOP_PLAN.md epoll/kqueue/IOCP scoping; probe p_wave175_shapes green Windows + WSL; net 97.8 holds)**
 - `xiom/net/socket.xi`: `socket_listen_fds` adopts systemd socket
