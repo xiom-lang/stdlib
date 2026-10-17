@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 41 (updated 2026-10-17 14:50Z at head 6ee3804 + this docs commit; WAVE 172 LANDED -- xiom.rand.state()/set_state() explicit global RNG save/restore (wishlist row 31; probe p_wave172_rand_state; modules 532/532; coverage rand 88.5, ratchet OK); wishlist mirror normalized -- only row 33 remains open (compiler/install lane); next queue item is the coverage-tightening wave (mechanical `ensures: true` clauses, wave 173); the 13:00Z doorbell is not in this session's cron list -- re-arm at the next handoff; pin stdlib-v0.64.6 = 8d95815)
+## 0A. CONTINUE HERE -- handoff snapshot 42 (updated 2026-10-17 12:40Z at wave-173 commit; WAVE 173 LANDED -- 54 mechanical `ensures: true` clauses replaced with real guards across le/ascii/codepoint/split/bytes/glob/assertions/zip; probe p_wave173_shapes; full probes 355/355, modules 532/532; coverage clauses/fns 71.9 -> 72.6; relay 1129 fixed, stale v0.64.3 items wontfix, 0.64.6 announcement closed; next queue item is the phase-2 shelf -- h2 framing/HPACK then epoll/kqueue/IOCP + LISTEN_FDS; pin stdlib-v0.64.6 = 8d95815)
 
 ### Snapshot 37 (paste-ready)
 
@@ -3657,6 +3657,43 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-17 block 228 (WAVE 173 LANDED -- contract tightening: 54 mechanical `ensures: true` clauses replaced with real guards across le/ascii/codepoint/split/bytes/glob/assertions/zip; probe p_wave173_shapes; full probes 355/355, modules 532/532; coverage clauses/fns 71.9 -> 72.6)**
+- Scope (all clauses are payload-free guards; no behavior change):
+  xiom/encoding/le.xi (11 writers/readers: range Err/Ok + exact
+  length growth; reader bounds Err/Ok), xiom/string/ascii.xi (13
+  predicates/mappers: exact low-byte predicates, set-nonempty
+  implication, exact case mapping + 0..255 range),
+  xiom/string/codepoint.xi (7: scalar predicate, byte-length piecewise,
+  cursor advance/stay, offsets bounds, validity empty/first-malformed,
+  encode Err/Ok + exact length, builder empty/err),
+  xiom/string/split.xi (8: once length split, words/parts bounds,
+  before/after absent/empty-delim, find/delim bounds, span pair
+  parity/count bounds), xiom/convert/bytes.xi (8: checked-window
+  complement, empty/equality, get clamps, copy growth bounds, prefix,
+  find, to_str bounds/NUL), xiom/misc/glob.xi (2: empty pattern matches
+  only the empty path), xiom/test/assertions.xi (3: summary/report/JSON
+  length floors; empty report equals summary), xiom/compress/zip.xi
+  (2: new writer zero state; finish exact out growth).
+- Probe `tools/probes/p_wave173_shapes.xi` (12 rows) exercises the
+  success AND error paths (range/bounds rejects, invalid code points,
+  NUL spans, missing delimiters, malformed glob paths, zip empty-name)
+  so the runtime contract checks see every tightened clause. PASS on
+  the official v0.64.6 archive (compile 0 / run 0).
+- Batteries: full probe corpus 355/355 (7 parallel-run rc=-1 timeouts
+  all PASS solo -- load artifact, no code failure); check_modules
+  532/532 type-check clean (806.7s); coverage ratchet OK vs floors180
+  (global pub coverage unchanged 71.8; clauses/fns 71.9 -> 72.6, +66
+  clauses; string 57.1, encoding 128.8, convert 86.1, compress 57.5,
+  test 89.6); doc ratchet OK. Floors181 not needed (no pub-coverage
+  rise).
+- Wishlist: no row changes (all landed rows already fixed; row 33
+  remains compiler/install-lane). This wave raises contract quality,
+  not surface count.
+- Relay batch (pushed 004a105): 1129-xvector -> fixed (POSIX watch,
+  wave 171); stale 1630/1658-compiler -> wontfix (v0.64.3 superseded;
+  current notes schema-clean); 0.64.6 announcement closed.
+- Tree: this commit.
 
 **SESSION 2026-10-17 block 227 (WAVE 172 LANDED -- wishlist row 31 rand.state: explicit global RNG save/restore on xiom.rand; probe p_wave172_rand_state; modules 532/532; coverage rand 88.5; doc ratchet OK)**
 - API: `pub fn state() -> Int` returns the opaque non-zero global

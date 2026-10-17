@@ -50,7 +50,9 @@ fn _le_bounds_err(bits: Int) -> Str {
 
 /// Append `v` as a little-endian UInt16; Err when v < 0 or v > 0xFFFF.
 pub fn write_u16_le(out: &mut Vec[UInt8], v: Int) -> Result[Unit, Str]
-  ensures: true
+  ensures: (v < 0 || v > 0xFFFF) => (result.is_err)
+  ensures: (v >= 0 && v <= 0xFFFF) => (result.is_ok)
+  ensures: (v >= 0 && v <= 0xFFFF) => (out.len() == out.len()@pre + 2)
 {
   if v < 0 || v > 0xFFFF {
     return Err(_le_range_err(16));
@@ -62,7 +64,9 @@ pub fn write_u16_le(out: &mut Vec[UInt8], v: Int) -> Result[Unit, Str]
 
 /// Append `v` as a little-endian 24-bit value; Err when v < 0 or v > 0xFFFFFF.
 pub fn write_u24_le(out: &mut Vec[UInt8], v: Int) -> Result[Unit, Str]
-  ensures: true
+  ensures: (v < 0 || v > 0xFFFFFF) => (result.is_err)
+  ensures: (v >= 0 && v <= 0xFFFFFF) => (result.is_ok)
+  ensures: (v >= 0 && v <= 0xFFFFFF) => (out.len() == out.len()@pre + 3)
 {
   if v < 0 || v > 0xFFFFFF {
     return Err(_le_range_err(24));
@@ -75,7 +79,9 @@ pub fn write_u24_le(out: &mut Vec[UInt8], v: Int) -> Result[Unit, Str]
 
 /// Append `v` as a little-endian UInt32; Err when v < 0 or v > 0xFFFFFFFF.
 pub fn write_u32_le(out: &mut Vec[UInt8], v: Int) -> Result[Unit, Str]
-  ensures: true
+  ensures: (v < 0 || v > 0xFFFFFFFF) => (result.is_err)
+  ensures: (v >= 0 && v <= 0xFFFFFFFF) => (result.is_ok)
+  ensures: (v >= 0 && v <= 0xFFFFFFFF) => (out.len() == out.len()@pre + 4)
 {
   if v < 0 || v > 0xFFFFFFFF {
     return Err(_le_range_err(32));
@@ -112,7 +118,9 @@ pub fn write_u64_le(out: &mut Vec<UInt8>, v: Int) -> Result[Unit, Str]
 
 /// Append `v` as a big-endian UInt16; Err when v < 0 or v > 0xFFFF.
 pub fn write_u16_be(out: &mut Vec[UInt8], v: Int) -> Result[Unit, Str]
-  ensures: true
+  ensures: (v < 0 || v > 0xFFFF) => (result.is_err)
+  ensures: (v >= 0 && v <= 0xFFFF) => (result.is_ok)
+  ensures: (v >= 0 && v <= 0xFFFF) => (out.len() == out.len()@pre + 2)
 {
   if v < 0 || v > 0xFFFF {
     return Err(_le_range_err(16));
@@ -124,7 +132,9 @@ pub fn write_u16_be(out: &mut Vec[UInt8], v: Int) -> Result[Unit, Str]
 
 /// Append `v` as a big-endian 24-bit value; Err when v < 0 or v > 0xFFFFFF.
 pub fn write_u24_be(out: &mut Vec[UInt8], v: Int) -> Result[Unit, Str]
-  ensures: true
+  ensures: (v < 0 || v > 0xFFFFFF) => (result.is_err)
+  ensures: (v >= 0 && v <= 0xFFFFFF) => (result.is_ok)
+  ensures: (v >= 0 && v <= 0xFFFFFF) => (out.len() == out.len()@pre + 3)
 {
   if v < 0 || v > 0xFFFFFF {
     return Err(_le_range_err(24));
@@ -152,8 +162,10 @@ pub fn write_u32_be(out: &mut Vec<UInt8>, v: Int) -> Result[Unit, Str]
 
 /// Append `v` as a big-endian UInt64 (accepted domain 0..=INT64_MAX);
 /// Err when v < 0.
-pub fn write_u64_be(out: &mut Vec[UInt8], v: Int) -> Result[Unit, Str]
-  ensures: true
+pub fn write_u64_be(out: &mut Vec<UInt8>, v: Int) -> Result[Unit, Str]
+  ensures: (v < 0) => (result.is_err)
+  ensures: (v >= 0) => (result.is_ok)
+  ensures: (v >= 0) => (out.len() == out.len()@pre + 8)
 {
   if v < 0 {
     return Err(_le_range_err(64));
@@ -171,7 +183,8 @@ pub fn write_u64_be(out: &mut Vec[UInt8], v: Int) -> Result[Unit, Str]
 /// Read a little-endian UInt16 at `pos`; Err when pos < 0 or fewer than two
 /// bytes remain.
 pub fn read_u16_le(data: &Vec[UInt8], pos: Int) -> Result[Int, Str]
-  ensures: true
+  ensures: (pos < 0 || pos + 2 > data.len()) => (result.is_err)
+  ensures: (pos >= 0 && pos + 2 <= data.len()) => (result.is_ok)
 {
   if pos < 0 || pos + 2 > data.len() {
     return Err(_le_bounds_err(16));
@@ -184,7 +197,8 @@ pub fn read_u16_le(data: &Vec[UInt8], pos: Int) -> Result[Int, Str]
 /// Read a little-endian 24-bit value at `pos`; Err when pos < 0 or fewer than
 /// three bytes remain.
 pub fn read_u24_le(data: &Vec[UInt8], pos: Int) -> Result[Int, Str]
-  ensures: true
+  ensures: (pos < 0 || pos + 3 > data.len()) => (result.is_err)
+  ensures: (pos >= 0 && pos + 3 <= data.len()) => (result.is_ok)
 {
   if pos < 0 || pos + 3 > data.len() {
     return Err(_le_bounds_err(24));
@@ -238,7 +252,8 @@ pub fn read_u64_le(data: &Vec[UInt8], pos: Int) -> Result[Int, Str]
 /// Read a big-endian UInt16 at `pos`; Err when pos < 0 or fewer than two
 /// bytes remain.
 pub fn read_u16_be(data: &Vec[UInt8], pos: Int) -> Result[Int, Str]
-  ensures: true
+  ensures: (pos < 0 || pos + 2 > data.len()) => (result.is_err)
+  ensures: (pos >= 0 && pos + 2 <= data.len()) => (result.is_ok)
 {
   if pos < 0 || pos + 2 > data.len() {
     return Err(_le_bounds_err(16));
@@ -251,7 +266,8 @@ pub fn read_u16_be(data: &Vec[UInt8], pos: Int) -> Result[Int, Str]
 /// Read a big-endian 24-bit value at `pos`; Err when pos < 0 or fewer than
 /// three bytes remain.
 pub fn read_u24_be(data: &Vec[UInt8], pos: Int) -> Result[Int, Str]
-  ensures: true
+  ensures: (pos < 0 || pos + 3 > data.len()) => (result.is_err)
+  ensures: (pos >= 0 && pos + 3 <= data.len()) => (result.is_ok)
 {
   if pos < 0 || pos + 3 > data.len() {
     return Err(_le_bounds_err(24));
@@ -284,7 +300,8 @@ pub fn read_u32_be(data: &Vec[UInt8], pos: Int) -> Result[Int, Str]
 /// bytes remain. The return carries the raw 64-bit pattern (two's complement
 /// when the top bit is set).
 pub fn read_u64_be(data: &Vec[UInt8], pos: Int) -> Result[Int, Str]
-  ensures: true
+  ensures: (pos < 0 || pos + 8 > data.len()) => (result.is_err)
+  ensures: (pos >= 0 && pos + 8 <= data.len()) => (result.is_ok)
 {
   if pos < 0 || pos + 8 > data.len() {
     return Err(_le_bounds_err(64));

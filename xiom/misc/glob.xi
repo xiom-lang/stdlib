@@ -527,7 +527,7 @@ fn _glob_path_from(ps: &Vec[Int], pl: &Vec[Int], ss: &Vec[Int], sl: &Vec[Int], p
 /// Windows-style patterns need no quoting. A trailing separator in the
 /// pattern demands a trailing (empty) segment. O(|pattern| * |path|) worst.
 pub fn glob_match_path(pattern: Str, path: Str, sep: Char) -> Bool
-  ensures: true
+  ensures: (pattern.len() == 0) => (result == (path.len() == 0))
 {
   var ps = Vec[Int].new();
   var pl = Vec[Int].new();
@@ -543,7 +543,7 @@ pub fn glob_match_path(pattern: Str, path: Str, sep: Char) -> Bool
 /// always a separator here, this dialect has no escape character either (use
 /// glob_match_ext for escape semantics). O(|pattern| * |path|) worst case.
 pub fn glob_match_path_any(pattern: Str, path: Str) -> Bool
-  ensures: true
+  ensures: (pattern.len() == 0) => (result == (path.len() == 0))
 {
   var ps = Vec[Int].new();
   var pl = Vec[Int].new();
