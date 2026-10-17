@@ -580,9 +580,14 @@ campaign release; the table statuses above were normalized in the
 - wave 176 (net/event): 2202 item 10 epoll leg -- runtime
   `xiom_eventloop_*` ABI + Linux epoll backend; `socket.EventLoop`/
   `EventBatch` + `eventloop_new/add/modify/remove/wait/close`
-  (Windows/macOS explicit Err stubs). Probe p_wave176_shapes green
-  Windows+WSL. kqueue (177), the Windows decision (178), the
-  net.event wrapper (179) and LISTEN_FDS server integration (180)
-  remain.
+  (Windows/macOS explicit Err stubs at the time). Probe
+  p_wave176_shapes green Windows+WSL.
+- wave 177 (net/event): 2202 item 10 Windows leg -- WSAPoll readiness
+  backend behind the same `eventloop_*` ABI (16 loops x 1024 fds,
+  add/mod/del registry, level-triggered flags); eventloop_new now
+  succeeds on Windows, macOS stays Err until kqueue. Extended
+  p_wave176_shapes (listener/accept/read) green Windows+WSL. kqueue
+  (needs a macOS runner), the net.event wrapper (179) and LISTEN_FDS
+  server integration (180) remain.
 - NOT assigned in the 165-171 pass: row 33 stays compiler/install-lane.
   Released as stdlib-v0.64.6 / xiom-std 0.64.6 (compiler pin v0.64.6).

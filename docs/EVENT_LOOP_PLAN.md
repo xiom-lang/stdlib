@@ -1,8 +1,9 @@
 # Event loop beyond poll -- scoping plan (2026-10-17)
 
-Status: scoping + first leg. This file records the phase-2 shelf plan for
-REL-20261015-2202-pulse item 10 ("Event loop beyond poll") and the first
-leg landed in wave 175 (`socket_listen_fds`).
+Status: scoping + Linux/Windows legs. This file records the phase-2 shelf
+plan for REL-20261015-2202-pulse item 10 ("Event loop beyond poll").
+Wave 175 landed `socket_listen_fds`; wave 176 landed the runtime ABI and
+Linux epoll; wave 177 landed the Windows WSAPoll readiness backend.
 
 ## Current state (verified 2026-10-17)
 
@@ -15,8 +16,10 @@ leg landed in wave 175 (`socket_listen_fds`).
   `LISTEN_PID` must match the process, `LISTEN_FDS` is the count, fds are
   `3..3+N-1`, max 1024. POSIX-only; consumes `LISTEN_PID`/`LISTEN_FDS` on
   success and leaves `LISTEN_FDNAMES` for the caller.
-- No epoll/kqueue/IOCP/select wrapper exists. `xiom.net.socket` is the
-  only readiness surface consumers use today.
+- `eventloop_new/add/modify/remove/wait/close` are in-tree: Linux epoll
+  (wave 176) and Windows WSAPoll (wave 177). macOS/BSD still return the
+  documented Err until kqueue; IOCP is a separate completion API, not a
+  readiness drop-in.
 
 ## Target shape
 
@@ -27,7 +30,7 @@ fallback:
 |---|---|---|
 | Linux | epoll | edge-triggered registration; level-triggered default; fd reuse across calls |
 | macOS/BSD | kqueue | EVFILT_READ/WRITE; one-shot optional |
-| Windows | IOCP | completion-based; a readiness shim may be needed for sockets |
+| Windows | WSAPoll shim (wave 177) | readiness-based; IOCP is a separate completion API later |
 | other POSIX | poll fallback | existing 1024-fd behavior, documented |
 
 Proposed public surface (names provisional; keep it small):
@@ -62,10 +65,10 @@ xiom_eventloop_close(handle) -> Int
 - Linux: `epoll_create1` + `epoll_ctl` + `epoll_wait`; flags map
   `EPOLLIN/EPOLLOUT/EPOLLERR/EPOLLHUP`.
 - macOS/BSD: `kqueue` + `kevent`; read/write filters.
-- Windows: IOCP is completion-based, not readiness-based. Stage it behind
-  the same API using a socket readiness shim (WSAEventSelect + wait), or
-  keep `WSAPoll` as the Windows backend and mark IOCP as a later slice.
-  Do not pretend IOCP is a drop-in readiness API.
+- Windows: the landed backend is a `WSAPoll` readiness shim (wave 177;
+  16 static loops x 1024 fds, one owner per loop). IOCP is
+  completion-based, not readiness-based; it belongs in a separate
+  completion API later. Do not pretend IOCP is a drop-in readiness API.
 - Fallback: `poll()` over a dynamic array (no 1024 cap; allocate per call).
 
 ## Staged checklist
@@ -74,12 +77,13 @@ xiom_eventloop_close(handle) -> Int
   `p_wave175_shapes`.
 - [x] Wave 176: runtime `xiom_eventloop_*` ABI + Linux epoll backend;
   pipe/socketpair probe (`p_wave176_shapes`) with timeout, read/write,
-  error and remove rows. Landed 2026-10-17; Windows/macOS remain the
-  explicit -1 stubs until waves 177/178.
-- [ ] Wave 177: kqueue backend on macOS/BSD; same probe via the WSL/macOS
-  leg; keep the poll fallback.
-- [ ] Wave 178: Windows backend decision (WSAPoll shim first; IOCP only
-  with a separate completion API); document the choice.
+  error and remove rows. Landed 2026-10-17.
+- [x] Wave 177: Windows WSAPoll readiness backend (16 loops x 1024 fds,
+  add/mod/del registry, level-triggered flags); probe extended with
+  listener/accept/read rows. Landed 2026-10-17 (out of order because no
+  macOS runner was available).
+- [ ] Wave 178: kqueue backend on macOS/BSD; same probe via a macOS
+  runner; keep the poll fallback.
 - [ ] Wave 179: `xiom.net.event` wrapper + typed `Event`; adapter from
   `socket_poll_read/write`; PULSE consumer smoke.
 - [ ] Wave 180: `LISTEN_FDS` integration in the server path (adopt

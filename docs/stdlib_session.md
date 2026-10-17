@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 45 (updated 2026-10-17 14:15Z at head d322a0e; WAVE 176 LANDED -- event-loop runtime ABI + Linux epoll backend (`eventloop_*` + `EventBatch`; Windows/macOS explicit stubs); probe p_wave176_shapes green Windows+WSL; floors181 hold (net 97.8, Global 71.9); next queue item is kqueue (wave 177), then the Windows backend decision (178), the net.event wrapper (179) and LISTEN_FDS server integration (180); pin stdlib-v0.64.6 = 8d95815)
+## 0A. CONTINUE HERE -- handoff snapshot 46 (updated 2026-10-17 14:35Z at wave-177 commit; WAVE 177 LANDED -- Windows WSAPoll readiness backend (`eventloop_*` real on Windows; 16 loops x 1024 fds) + extended p_wave176_shapes green Windows+WSL; macOS Err until kqueue; floors181 hold (net 97.8, Global 71.9); next queue item is kqueue (needs a macOS runner), then the net.event wrapper (179) and LISTEN_FDS server integration (180); pin stdlib-v0.64.6 = 8d95815)
 
 ### Snapshot 37 (paste-ready)
 
@@ -3657,6 +3657,27 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-17 block 232 (WAVE 177 LANDED -- Windows WSAPoll readiness backend: eventloop_* now real on Windows via a 16-loop/1024-fd shim; probe p_wave176_shapes extended with listener/accept/read rows green Windows + Linux; macOS remains Err until kqueue)**
+- `runtime/xiom_runtime.c`: replaced the Windows -1 stubs with a
+  WSAPoll readiness shim -- 16 static loops x 1024 fds, an
+  add/mod/del registry, level-triggered read/write/error flags,
+  zero-fd timeout sleeps (INFINITE for -1), one-owner/no-lock
+  documented. Linux epoll is unchanged.
+- `xiom/net/socket.xi`: `eventloop_new` now succeeds on Windows (macOS
+  ensure Err remains); module docs updated.
+- Probe `tools/probes/p_wave176_shapes.xi` extended: Windows TCP
+  listener readiness -> accept -> accepted-socket read readiness ->
+  remove/close/closed-loop; Linux pipe rows unchanged; macOS Err row.
+  PASS on Windows (compile 0 / run 0) and WSL Ubuntu (rc 0) on the
+  official v0.64.6 pin.
+- Gates: socket module check clean; coverage/doc ratchet OK vs
+  floors181 (net 97.8 / global 71.9 unchanged; 6880 pub fns / 4947
+  covered); full 533/533 module check clean (430.5s). No floors182
+  (no pub-coverage rise).
+- Relay: 2202-pulse item 10 Windows-leg progress; website status
+  addendum 4.
+- Tree: this commit.
 
 **SESSION 2026-10-17 block 231 (WAVE 176 LANDED -- event-loop runtime ABI + Linux epoll backend: eventloop_new/add/modify/wait/remove/close + EventBatch; probe p_wave176_shapes green Windows stubs + WSL epoll; full 533/533 recorded after the background run)**
 - `runtime/xiom_runtime.c`: new `xiom_eventloop_create/ctl/wait/close`
