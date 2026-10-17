@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 45 (updated 2026-10-17 14:05Z at wave-176 commit; WAVE 176 LANDED -- event-loop runtime ABI + Linux epoll backend (`eventloop_*` + `EventBatch`; Windows/macOS explicit stubs); probe p_wave176_shapes green Windows+WSL; floors181 hold (net 97.8, Global 71.9); next queue item is kqueue (wave 177), then the Windows backend decision (178), the net.event wrapper (179) and LISTEN_FDS server integration (180); pin stdlib-v0.64.6 = 8d95815)
+## 0A. CONTINUE HERE -- handoff snapshot 45 (updated 2026-10-17 14:15Z at head d322a0e; WAVE 176 LANDED -- event-loop runtime ABI + Linux epoll backend (`eventloop_*` + `EventBatch`; Windows/macOS explicit stubs); probe p_wave176_shapes green Windows+WSL; floors181 hold (net 97.8, Global 71.9); next queue item is kqueue (wave 177), then the Windows backend decision (178), the net.event wrapper (179) and LISTEN_FDS server integration (180); pin stdlib-v0.64.6 = 8d95815)
 
 ### Snapshot 37 (paste-ready)
 
@@ -3678,7 +3678,7 @@ registry pin, agent recon for the rest)**
   (no pub-coverage rise).
 - Relay: 2202-pulse item 10 epoll-leg progress; website status
   addendum 3.
-- Tree: this commit.
+- Tree: wave commit b8b1e72; merge d322a0e (main).
 
 **SESSION 2026-10-17 block 230 (WAVE 175 LANDED -- 2202 item 10 first leg: socket_listen_fds systemd activation + docs/EVENT_LOOP_PLAN.md epoll/kqueue/IOCP scoping; probe p_wave175_shapes green Windows + WSL; net 97.8 holds)**
 - `xiom/net/socket.xi`: `socket_listen_fds` adopts systemd socket
