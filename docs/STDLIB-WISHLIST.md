@@ -593,4 +593,6 @@ campaign release; the table statuses above were normalized in the
   (all 47 pub fns now carry length/sortedness clauses; global
   71.9% -> 72.3%); floors182 dumped/wired; readiness meter 77.2%.
 - NOT assigned in the 165-171 pass: row 33 stays compiler/install-lane.
-  Released as stdlib-v0.64.6 / xiom-std 0.64.6 (compiler pin v0.64.6).
+  Released as stdlib-v0.64.7 / xiom-std 0.64.7 (release gates on
+  candidate-v0.64.7-m351-r2; compiler v0.64.7 pins STDLIB_VERSION to the
+  stdlib tag).

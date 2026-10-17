@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 50 (updated 2026-10-17 20:45Z at this docs commit; v0.64.7 TAG HELD -- dry-run 39065075427 is 955/956 on BOTH Windows and Ubuntu, only smoke_hash_edge red on an m353 residual (negative Int `.hash()` still identity); arm64 gate + combined notes green; prep release/v0.64.7-prep at 282c1e7 with COMPILER_VERSION=candidate-v0.64.7-m351 and package 0.64.7; awaiting compiler fix/confirmation before tag + registry publish; pin stdlib-v0.64.6 = 8d95815)
+## 0A. CONTINUE HERE -- handoff snapshot 51 (updated 2026-10-17 23:20Z at this docs commit; **stdlib-v0.64.7 RELEASED** -- tag 1271dd5, release run 39073534681 green on Windows+Ubuntu, GitHub Release + assets live, compiler STDLIB_VERSION pinned at 3667ee29d; the automated pin-PR job failed idempotently; staging registry canary 39076910630 awaits environment approval; readiness 87.2%, gate 10 MET; next: gate 8 coverage (num/time/iter/async) and gate 9 compiler findings)
 
 ### Snapshot 37 (paste-ready)
 
@@ -3657,6 +3657,28 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-17 block 237 (stdlib-v0.64.7 RELEASED -- tag 1271dd5; release run 39073534681 green on Windows+Ubuntu, package + GitHub Release published; compiler main already pins STDLIB_VERSION=stdlib-v0.64.7 at 3667ee29d; the automated pin-PR job failed idempotently 'nothing to commit'; staging registry canary 39076910630 awaits environment approval; readiness meter 87.2%, gate 10 MET)**
+- Release gates: validate; Windows 49m05s; Ubuntu 38m12s; package +
+  GitHub Release 33s; staging canary dispatch 5s -- all green. The only
+  red job is the automated pin PR, which failed because compiler main
+  already had `STDLIB_VERSION=stdlib-v0.64.7` at 3667ee29d; no PR was
+  needed.
+- Tag: `stdlib-v0.64.7` -> `1271dd5` (annotated), cut on
+  `release/v0.64.7-prep` after the r2 dry-run (39069464037) went green.
+  Release: https://github.com/xiom-lang/stdlib/releases/tag/stdlib-v0.64.7
+  ; `xiom-std-0.64.7.tar.gz` sha256
+  `8da73347efb13a78f79999f613002f3c681858a9b70cb651933ed7feccd66061`
+  ; `SHA256SUMS` sha256
+  `4ae4af514c66782d1aa13cb6741193e0f421a6c3dfa07a0b5b004ec0f6ad4f33`.
+- Compiler relay 1444 moved acked -> fixed with the tag/sha and release
+  evidence; the compiler verifies/closes.
+- Readiness: 87.2% (8/10 gates); gate 8 is 72.3% (sort 100%, next worst
+  num/time/iter/async), gate 9 is compiler-owned. v0.64.7 is the
+  beta-exit release cut.
+- Staging registry canary run 39076910630 is waiting on its environment
+  approval; production registry publish follows the canary.
+- Tree: tag 1271dd5; main docs.
 
 **SESSION 2026-10-17 block 236 (v0.64.7 TAG HELD -- dry-run release gates 39065075427 are 955/956 on BOTH Windows and Ubuntu; only smoke_hash_edge red on an m353 residual: the candidate fixes 0.hash()/true/false but (-1).hash() still returns the identity -1 while hash.hash(-1) is DJB2; COMPILER_VERSION on prep is candidate-v0.64.7-m351 at 282c1e7; tag not cut; compiler asked to fix negative receivers or confirm identity)**
 - Release dry-run: `gh workflow run release.yml -R xiom-lang/stdlib

@@ -1,22 +1,24 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
-**77.2% -- 7 of 10 gates complete; gate 8 at 72.3% (partial credit) and
-gates 9-10 discrete.** (Compiler pin: official **v0.64.6** release archive
-for the lane battery -- released 2026-10-16; stdlib-v0.64.6 tagged
-`8d95815`; registry `xiom-std 0.64.6` live. The next cut, v0.64.7, is
-pending the m351 typed-fault runtime merge, REL-20261017-1444-compiler.)
-**Gates: corpus green on the v0.64.6 release gates (Windows/Ubuntu),
-modules 533/533, probes 358/358, barename 0/533. Wave pin: official
-v0.64.6 (block 232; canonical zip sha256 7ba3b09a...).**
+**87.2% -- 8 of 10 gates complete; gate 8 at 72.3% (partial credit) and
+gate 9 discrete.** (Compiler pin for the release gates:
+**candidate-v0.64.7-m351-r2**; stdlib-v0.64.7 tagged `1271dd5` and
+released 2026-10-17; compiler main pins
+`STDLIB_VERSION=stdlib-v0.64.7`; registry canary run 39076910630 is
+awaiting its environment approval.)
+**Gates: corpus 956/956 on both Windows and Ubuntu release gates
+(962 including retries; 0 compilefail / 0 runfail), modules 533/533,
+probes 358/358, barename 0/533. Wave pin: candidate-v0.64.7-m351-r2
+(block 237).**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
 gates flip:
 1. Modules type-check clean -- MET (533/533).
-2. Smoke corpus green -- MET on the v0.64.6 pin: hosted release gates
-   green on Windows and Ubuntu; no carve-outs.
-3. Probe corpus green -- MET (358/358 on v0.64.6, post-wave-177 full
-   corpus with RetryFailed).
+2. Smoke corpus green -- MET on the v0.64.7 release gates: 956/956 on
+   both Windows and Ubuntu, no carve-outs.
+3. Probe corpus green -- MET (358/358, post-wave-177 full corpus with
+   RetryFailed).
 4. Strict bare-name scan clean -- MET (0/533).
 5. Coverage ratchet green -- MET (floors182).
 6. Documentation ratchet 100% -- MET.
@@ -26,26 +28,28 @@ gates flip:
    async/math).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
    OPEN (compiler-owned; see the relay bus for the current item set).
-10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
+10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- MET
+    (stdlib-v0.64.7 released 2026-10-17; release run 39073534681;
+    GitHub Release + assets published; pin already at stdlib-v0.64.7 on
+    compiler main 3667ee29d; staging registry canary awaiting approval).
 
 Meter formula: MET gates count 1.0; gate 8 counts its current
-pub-with-clause fraction (72.3% -> 0.723); gates 9 and 10 get no partial
-credit (discrete). Update the percentage and the gate-8 fraction in the
-same commit as each floors dump so the meter moves smoothly toward 80%.
+pub-with-clause fraction (72.3% -> 0.723); gate 9 gets no partial credit
+(discrete). 8.723 / 10 = 87.2%. Update the percentage and the gate-8
+fraction in the same commit as each floors dump so the meter moves
+smoothly toward 90%.
 
 Authoritative order: the gates above, then the updates below newest-first.
 
-Current state 2026-10-17: compiler pin official **v0.64.6**; stdlib
-release **v0.64.6** (`8d95815`) live in the registry; main carries waves
-172-178 (rand.state, clause tightening, HTTP/2 frame+HPACK foundation,
-LISTEN_FDS, Linux epoll, Windows WSAPoll, sort contract coverage).
-**m351 and the arm64 crypto-availability fix are merged into main at
-dcf721e** (m351 runtime 3cb1138; arm64 8eb22eb via 6acd800; package
-0.64.7 + schema-correct release note): probes 358/358, modules 533/533,
-coverage 72.3%. v0.64.7 is now gated on the compiler's arm64 functional
-gate against dcf721e (the local m351-only binary lacks m353, so its
-961/962 smoke red is not the candidate) and the explicit release go.
-Historical state below is retained for the record.
+Current state 2026-10-17: **stdlib-v0.64.7 RELEASED** (tag `1271dd5`;
+release run 39073534681; assets `xiom-std-0.64.7.tar.gz` sha256
+`8da73347...` and `SHA256SUMS` sha256 `4ae4af51...`; compiler main pins
+`STDLIB_VERSION=stdlib-v0.64.7` at 3667ee29d). The compiler used for the
+release gates was candidate-v0.64.7-m351-r2. Main carries waves 172-178,
+the m351 typed-fault runtime and the arm64 crypto-availability fix.
+Gate 8 is 72.3%; gate 9 is compiler-owned. Registry canary 39076910630
+is awaiting its environment approval. Historical state below is retained
+for the record.
 
 Historical state (2026-10-11): compiler pin **v0.64.4** (released
 2026-10-12, tag f76fd47c on df493530; the lane battery runs the official
