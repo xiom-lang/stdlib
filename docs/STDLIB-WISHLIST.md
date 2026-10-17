@@ -571,5 +571,11 @@ campaign release; the table statuses above were normalized in the
   module). Huffman, dynamic-table inserts/eviction, CONTINUATION
   reassembly and connection state are explicitly out of scope. Probe
   p_wave174_shapes.
+- wave 175 (net/socket): 2202 item 10 first leg -- systemd socket
+  activation (`socket_listen_fds`: LISTEN_PID/LISTEN_FDS -> fds
+  3..3+N-1, POSIX-only, consumes the vars, preserves LISTEN_FDNAMES)
+  plus `docs/EVENT_LOOP_PLAN.md` scoping the epoll/kqueue/IOCP
+  backends and staged waves 176-180. Probe p_wave175_shapes green
+  Windows+WSL.
 - NOT assigned in the 165-171 pass: row 33 stays compiler/install-lane.
   Released as stdlib-v0.64.6 / xiom-std 0.64.6 (compiler pin v0.64.6).
