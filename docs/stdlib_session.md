@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 39 (updated 2026-10-17 11:05Z; v0.64.6 SHIPPED -- stdlib-v0.64.6 tag moved to 8d95815, hosted Win+Linux gates green, xiom-std 0.64.6 LIVE on the registry (compiler pin v0.64.6; registry canonical sha256 7ba3b09a; release asset efa4c2f0, 1,237,513 B), pin PR xiom#7 open; sweep waves 155-171 all merged; floors180 (Global 71.8); NEXT LEADS: row 31 rand.state + mirror statuses, phase-2 shelf (h2/epoll/IOCP), compiler-row monitors (1609/1456/1626; m347/1550 post-cut), v0.64.7 watch; relay live)
+## 0A. CONTINUE HERE -- handoff snapshot 40 (updated 2026-10-17 11:10Z at head 9a09af9; v0.64.6 SHIPPED AND LIVE -- registry xiom-std 0.64.6 (compiler pin v0.64.6; canonical sha256 7ba3b09a; asset efa4c2f0), pin PR xiom#7, staging canary optional; block 226 carries the complete next-session queue: row 31 rand.state, wishlist mirror statuses, clause tightening, shelf h2/epoll/IOCP, compiler monitors + v0.64.7 watch, close-loops; doorbell armed 13:00Z; pin stdlib-v0.64.6 = 8d95815)
 
 ### Snapshot 37 (paste-ready)
 
@@ -3657,6 +3657,71 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-17 block 226 (CONTINUATION HANDOFF at head 9a09af9 -- snapshot 40; v0.64.6 shipped, registry live, pin PR xiom#7; complete next-session queue below; doorbell armed 13:00Z)**
+- STATE: main head 9a09af9; worktree clean except the known untracked
+  out/ dir, out/w148 mojibake dat and the six debug-lane diag smokes.
+  stdlib-v0.64.6 tag = 8d95815 (moved from b81430b per the 1559 protocol,
+  compiler acked in REL-20261016-2330-stdlib). Registry: xiom-std 0.64.6
+  LIVE (compiler pin v0.64.6; canonical sha256 7ba3b09a; pubkey
+  a7f9491e); GitHub release asset xiom-std-0.64.6.tar.gz = 1,237,513 B,
+  sha256 efa4c2f0 per SHA256SUMS. Pin PR xiom-lang/xiom#7 open (branch
+  c7d438e; bot PAT cannot create PRs). Hosted release run 38979638226
+  green (Win 49m45s / Ubuntu 36m28s); publish run 38979638142 green at
+  23:57Z. floors180 wired (Global 71.8). Staging canary 38984039352
+  waits on the optional environment approval. Doorbell cron next fire
+  13:00Z.
+- BUS (pushed 2d12d1c; 690 items valid): REL-20261017-1100-stdlib
+  announcement (to all); 1559 publish confirmation; 1129 item 2 DONE +
+  close request (POSIX watch real, wave 171); 2328 re-add GREEN both
+  platforms + close request (m345 class); 2202 release progress (only
+  item 4 compiler-gated + shelf 9/10 remain). Overnight the compiler
+  ACKED 2330 (release cut) and 2331 (i128 sdiv AV) and B-34
+  (alias-in-generic-position WISHLIST -- overlaps our 2100 W1; watch).
+  1128 fixed (orbitdb verifies); 1445 fixed (compiler verifies);
+  1549-pulse-5 rides 1609; 1834 rides 1550; 1609/1456/1626/1053/
+  1549-stdlib-8 are acked-red; 1630/1658 compiler-owned;
+  2309-packages tuple monitor.
+- NEXT-SESSION QUEUE (ordered; owner-approved direction):
+  1. Row 31 `rand.state` -- explicit RNG state save/restore on xiom.rand
+     (the one wishlist row missed by the sweep); probe lock; wave 172.
+  2. Wishlist mirror row-status normalization in docs/STDLIB-WISHLIST.md
+     (rows 2-22, 25, 27-32, 34-46 landed -> fixed with wave refs; row 31
+     after step 1; row 33 stays compiler/install-lane).
+  3. Coverage-tightening wave: replace the mechanical `ensures: true`
+     fill with real guards in xiom/encoding/le.xi (16), string/ascii.xi
+     (13), string/codepoint.xi (7), string/split.xi (8),
+     convert/bytes.xi (8), misc/glob.xi (2), test/assertions.xi (3) and
+     the four zip writer fns; dump floors181 if it rises.
+  4. Phase-2 shelf (2202 items 9/10): h2 framing/HPACK scoping first,
+     then epoll/kqueue/IOCP + LISTEN_FDS.
+  5. Monitors every doorbell: the three red compiler rows (1609 inline
+     payload-index, 1456 Mutex shadow, 1626 trailing match), 2100 W1,
+     1053, 1549-stdlib-8, 2309; compiler v0.64.7 watch (candidate
+     m347-m351 + arm64 leg; our 2000-stdlib = m347 post-cut; 1550 not
+     queued) -- on a v0.64.7 tag: fetch the official archive, verify the
+     SHA256SUMS, re-check the red rows, run the full battery, then plan
+     the next pin.
+  6. Close-loops owed to reporters: 1128 (orbitdb), 1129 (xvector), 2328
+     (compiler), 1445 (compiler), plus the older fixed-awaiting-reporter
+     rows; NONE are ours to move beyond the notes already posted.
+- TRAPS CARRIED FORWARD: official archives only -- v0.64.5 (bd71e2d3)
+  and v0.64.6-official under %TEMP%\kilo\stdlib_ws; NEVER the -rel dirs
+  or E:\xiom-lang\xiom\target\release. Bare-leaf type names (alias-
+  qualified types fail in field/signature positions; 2100 W1). Payload-
+  free Ok-side clauses; no module-level array tables; bind call results
+  before comparing; `ensures: true` counts for coverage but tighten when
+  convenient. Rule: 3 failed attempts on one issue -> record + move on.
+  The peer session shares this checkout -- check git status/log before
+  committing and never sweep foreign edits; relay pulls use fetch +
+  merge --ff-only origin/main; run relay.py validate before pushing.
+  Agent Manager worktrees: the six sweep worktrees (wave/165,166,167,
+  169,170,171) and the older campaign worktrees remain idle on disk with
+  merged branches; wave/154 leftovers are NOT ours to touch.
+- TO RESUME: say "resume"; read this block + the snapshot 40 header; the
+  doorbell is already armed at 13:00Z and its prompt carries the same
+  queue.
+- Tree: this commit (docs only).
 
 **SESSION 2026-10-17 block 225 (RELEASE CONFIRMED: hosted gates green (Windows 49m45s / Ubuntu 36m28s), registry publish SUCCESS (compiler pin v0.64.6; canonical sha256 7ba3b09a; asset efa4c2f0, 1,237,513 B), pin PR xiom#7 opened manually (PAT gap), staging canary queued awaiting approval; bus announcement + 1559/1129/2328/2202 updates pushed 2d12d1c; doorbell re-armed; snapshot 39)**
 - Release evidence: run 38979638226 -- all jobs green (validate /
