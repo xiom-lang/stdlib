@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 42 (updated 2026-10-17 12:40Z at head 7908f8f; WAVE 173 LANDED -- 54 mechanical `ensures: true` clauses replaced with real guards across le/ascii/codepoint/split/bytes/glob/assertions/zip; probe p_wave173_shapes; full probes 355/355, modules 532/532; coverage clauses/fns 71.9 -> 72.6; relay 1129 fixed, stale v0.64.3 items wontfix, 0.64.6 announcement closed; next queue item is the phase-2 shelf -- h2 framing/HPACK then epoll/kqueue/IOCP + LISTEN_FDS; pin stdlib-v0.64.6 = 8d95815)
+## 0A. CONTINUE HERE -- handoff snapshot 43 (updated 2026-10-17 13:05Z at wave-174 commit; WAVE 174 LANDED -- `xiom.net.h2` frame-header/frame codecs + HPACK integer/string/static-table/header-field foundation (2202 item 9); probe p_wave174_shapes; 533rd manifest module; floors181 dumped (Global 71.9, net 97.8); next queue item is 2202 item 10 -- event loop beyond poll (epoll/kqueue/IOCP + LISTEN_FDS) then reporter close-loops; pin stdlib-v0.64.6 = 8d95815)
 
 ### Snapshot 37 (paste-ready)
 
@@ -3676,9 +3676,8 @@ registry pin, agent recon for the rest)**
   insert/index rejects. PASS official v0.64.6 (compile 0 / run 0).
 - Gates: coverage OK vs floors181 (Global 71.8 -> 71.9, net 97.7 ->
   97.8; 6872 pub fns / 4939 covered); doc ratchet OK (net's 2
-  pre-existing rows stay within baseline4); h2 module check clean;
-  full 533/533 module check recorded below after the background run.
-  floors181 wired into ci/heavy/release + tools/README.
+  pre-existing rows stay within baseline4); full 533/533 module check
+  clean (564s); floors181 wired into ci/heavy/release + tools/README.
 - Relay: 2202-pulse item 9 progress (h2 foundation; item 10 next);
   website status addendum follows.
 - Tree: this commit.

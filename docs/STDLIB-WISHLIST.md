@@ -565,5 +565,11 @@ campaign release; the table statuses above were normalized in the
   to real functional guards across le/ascii/codepoint/split/bytes/glob/
   assertions/zip (success + error paths). Probe p_wave173_shapes; no
   surface change.
+- wave 174 (net/h2): 2202 item 9 foundation -- RFC 9113 frame
+  header/frame codecs + RFC 7541 HPACK integer/string/static-table/
+  header-field primitives in the new `xiom.net.h2` (533rd manifest
+  module). Huffman, dynamic-table inserts/eviction, CONTINUATION
+  reassembly and connection state are explicitly out of scope. Probe
+  p_wave174_shapes.
 - NOT assigned in the 165-171 pass: row 33 stays compiler/install-lane.
   Released as stdlib-v0.64.6 / xiom-std 0.64.6 (compiler pin v0.64.6).

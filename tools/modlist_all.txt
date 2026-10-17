@@ -329,6 +329,7 @@ xiom.net.address
 xiom.net.cookie
 xiom.net.dns
 xiom.net.ftp
+xiom.net.h2
 xiom.net.header
 xiom.net.http
 xiom.net.https
