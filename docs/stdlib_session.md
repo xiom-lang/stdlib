@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 41 (updated 2026-10-17 14:45Z at head 6ee3804; WAVE 172 LANDED -- xiom.rand.state()/set_state() explicit global RNG save/restore (wishlist row 31; probe p_wave172_rand_state; modules 532/532; coverage rand 88.5, ratchet OK); next queue item is the wishlist mirror row-status normalization; the 13:00Z doorbell is not in this session's cron list -- re-arm at the next handoff; pin stdlib-v0.64.6 = 8d95815)
+## 0A. CONTINUE HERE -- handoff snapshot 41 (updated 2026-10-17 14:50Z at head 6ee3804 + this docs commit; WAVE 172 LANDED -- xiom.rand.state()/set_state() explicit global RNG save/restore (wishlist row 31; probe p_wave172_rand_state; modules 532/532; coverage rand 88.5, ratchet OK); wishlist mirror normalized -- only row 33 remains open (compiler/install lane); next queue item is the coverage-tightening wave (mechanical `ensures: true` clauses, wave 173); the 13:00Z doorbell is not in this session's cron list -- re-arm at the next handoff; pin stdlib-v0.64.6 = 8d95815)
 
 ### Snapshot 37 (paste-ready)
 
@@ -3677,9 +3677,11 @@ registry pin, agent recon for the rest)**
   52 pub fns / 46 with clauses); doc ratchet OK (rand 58/58
   documented; the net 2 pre-existing rows stay within baseline4).
   Floors181 not needed (no dip).
-- Docs: wishlist row 31 -> fixed (wave 172 + probe ref). Next queue
-  item is the mirror row-status normalization (rows 2-22, 25, 27-32,
-  34-46).
+- Docs: wishlist row 31 -> fixed (wave 172 + probe ref); queue item 2
+  also done -- rows 2-32 and 34-46 normalized to fixed with wave + probe
+  refs, row 33 remains the only open row (compiler/install lane). Next
+  queue item is the coverage-tightening wave (mechanical `ensures: true`
+  clauses; planned as wave 173).
 - Doorbell: this continuation session's `cron_list` is empty (the
   13:00Z task belongs to the prior session/host); re-arm at the next
   handoff.
