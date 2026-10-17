@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 47 (updated 2026-10-17 17:00Z at wave-178 commit; WAVE 178 LANDED -- sort contract coverage 42.6% -> 100%, global 72.3%; floors182 wired; readiness meter 77.2% (gate 8 72.3%); IMMEDIATE: merge compiler m351 branch 37603a2 (REL-20261017-1444), run the gates, and cut/reply for v0.64.7 per the owner sync gate; pin stdlib-v0.64.6 = 8d95815)
+## 0A. CONTINUE HERE -- handoff snapshot 48 (updated 2026-10-17 17:35Z at head 3cb1138; m351 TYPED-FAULT RUNTIME MERGED (37603a2 -> 3cb1138); probes 358/358, modules 533/533, coverage 72.3% (error 90.5%), docs/barename green; BLOCKED on a compiler m351 candidate ref for the two guard smokes; v0.64.7 cut + registry pending that ref + owner sync gate; pin stdlib-v0.64.6 = 8d95815)
 
 ### Snapshot 37 (paste-ready)
 
@@ -3657,6 +3657,27 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-17 block 234 (m351 TYPED-FAULT RUNTIME MERGED -- compiler branch 37603a2 merged at 3cb1138; runtime fault record + exit 70 + xiom.error faulted/take_fault + guard smokes; probes 358/358, modules 533/533; the two guard smokes fail on official v0.64.6 by design -- the v0.64.7 gate needs a compiler m351 candidate ref)**
+- Merge: `fix/m351-typed-fault` (37603a2, rebased on 8ce84cc) ->
+  main 3cb1138; 4 files, 241 insertions / 23 deletions:
+  `runtime/xiom_runtime.c` confined-fault TLS record + always-on
+  diagnostic + exit 70 unless acknowledged + guard-page retry class +
+  attempt/address trace; `xiom/error/error.xi` `HardwareFault` +
+  `faulted()`/`take_fault()`; the two guard smokes acknowledge.
+- Gates on the official v0.64.6 compiler: probes 358/358 (0 compilefail
+  / 0 runfail, 1065.3s, 6 workers, RetryFailed); modules 533/533 clean
+  (342s); coverage ratchet OK vs floors182 (global 72.3%, error 90.5%);
+  doc ratchet OK; bare-name 0/533.
+- The two updated guard smokes (`smoke_guard_fault`, `smoke_guard_retry`)
+  compile but fail at the typed-fault rows on v0.64.6 (`faulted()` is
+  false) -- expected: v0.64.6 codegen does not call `xiom_fault_note`.
+  They are the compiler-m351 pair, not a stdlib regression.
+- Relay: REL-20261017-1444-compiler acked; asked the compiler lane to
+  push a candidate ref carrying m351 so the v0.64.7 release gates can
+  run. Do not cut v0.64.7 without that ref (the release gates would fail
+  the two smokes).
+- Tree: merge 3cb1138 (main).
 
 **SESSION 2026-10-17 block 233 (WAVE 178 LANDED -- readiness gate 8: sort contract coverage 42.6% -> 100%, global 71.9% -> 72.3%; all 47 sort pub fns now carry length/sortedness clauses; floors182 dumped/wired; readiness meter refreshed to 77.2%)**
 - `xiom/sort/{heap,intro,merge,quick,radix,sort}.xi`: added clauses to

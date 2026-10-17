@@ -38,9 +38,13 @@ Authoritative order: the gates above, then the updates below newest-first.
 Current state 2026-10-17: compiler pin official **v0.64.6**; stdlib
 release **v0.64.6** (`8d95815`) live in the registry; main carries waves
 172-178 (rand.state, clause tightening, HTTP/2 frame+HPACK foundation,
-LISTEN_FDS, Linux epoll, Windows WSAPoll, sort contract coverage). The
-v0.64.7 cut is gated on merging `fix/m351-typed-fault` (37603a2) and the
-owner sync gate. Historical state below is retained for the record.
+LISTEN_FDS, Linux epoll, Windows WSAPoll, sort contract coverage).
+**m351 is merged into main at 3cb1138** (branch 37603a2): probes
+358/358, modules 533/533, coverage 72.3%. v0.64.7 is now gated on a
+compiler candidate ref carrying m351 (the official v0.64.6 compiler does
+not emit `xiom_fault_*`, so the two guard smokes fail there by design)
+and the owner sync gate. Historical state below is retained for the
+record.
 
 Historical state (2026-10-11): compiler pin **v0.64.4** (released
 2026-10-12, tag f76fd47c on df493530; the lane battery runs the official
