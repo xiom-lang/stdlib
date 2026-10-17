@@ -7074,38 +7074,31 @@ int xiom_crypto_aesni_available(void) { return xiom_crypto_has_aesni(); }
 int xiom_crypto_shani_available(void) { return xiom_crypto_has_sha_ni(); }
 
 #elif defined(__aarch64__)
-#include <arm_neon.h>
-
-int xiom_crypto_aesni_available(void) { return 1; }
-int xiom_crypto_shani_available(void) { return 1; }
+/* No verified ARMv8 crypto intrinsic path yet: report unavailable so the
+ * portable software AES/SHA paths are used. The previous block referenced
+ * vaeseq_u8/vaesmcq_u8 without the ARMv8 crypto extension enabled (clang 14
+ * on the linux-arm64 release runner), which failed the functional native
+ * gate; its single-round "encrypt" was also not a full AES transform. */
+int xiom_crypto_aesni_available(void) { return 0; }
+int xiom_crypto_shani_available(void) { return 0; }
 
 void xiom_aesni_encrypt_block(const unsigned char* plaintext, const unsigned char* key,
                                int rounds, unsigned char* ciphertext) {
-    (void)rounds;
-    uint8x16_t state = vld1q_u8(plaintext);
-    uint8x16_t rk = vld1q_u8(key);
-    state = vaeseq_u8(state, rk);
-    state = vaesmcq_u8(state);
-    vst1q_u8(ciphertext, state);
+    (void)plaintext; (void)key; (void)rounds; (void)ciphertext;
 }
 
 void xiom_aesni_decrypt_block(const unsigned char* ciphertext,
                                const unsigned char* round_keys, int rounds,
                                unsigned char* plaintext) {
-    (void)round_keys;
-    (void)rounds;
-    (void)ciphertext;
-    (void)plaintext;
+    (void)round_keys; (void)rounds; (void)ciphertext; (void)plaintext;
 }
 
 void xiom_aesni_key_expand_128(const unsigned char* key, unsigned char* round_keys) {
-    (void)key;
-    (void)round_keys;
+    (void)key; (void)round_keys;
 }
 
 void xiom_shani_sha256_compress(unsigned int* state, const unsigned char* block) {
-    (void)state;
-    (void)block;
+    (void)state; (void)block;
 }
 
 #else
