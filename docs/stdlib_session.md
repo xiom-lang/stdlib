@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 40 (updated 2026-10-17 11:10Z at head 9a09af9; v0.64.6 SHIPPED AND LIVE -- registry xiom-std 0.64.6 (compiler pin v0.64.6; canonical sha256 7ba3b09a; asset efa4c2f0), pin PR xiom#7, staging canary optional; block 226 carries the complete next-session queue: row 31 rand.state, wishlist mirror statuses, clause tightening, shelf h2/epoll/IOCP, compiler monitors + v0.64.7 watch, close-loops; doorbell armed 13:00Z; pin stdlib-v0.64.6 = 8d95815)
+## 0A. CONTINUE HERE -- handoff snapshot 41 (updated 2026-10-17 14:45Z at head 6ee3804; WAVE 172 LANDED -- xiom.rand.state()/set_state() explicit global RNG save/restore (wishlist row 31; probe p_wave172_rand_state; modules 532/532; coverage rand 88.5, ratchet OK); next queue item is the wishlist mirror row-status normalization; the 13:00Z doorbell is not in this session's cron list -- re-arm at the next handoff; pin stdlib-v0.64.6 = 8d95815)
 
 ### Snapshot 37 (paste-ready)
 
@@ -3680,7 +3680,10 @@ registry pin, agent recon for the rest)**
 - Docs: wishlist row 31 -> fixed (wave 172 + probe ref). Next queue
   item is the mirror row-status normalization (rows 2-22, 25, 27-32,
   34-46).
-- Tree: this commit (code + probe + wishlist row + this block).
+- Doorbell: this continuation session's `cron_list` is empty (the
+  13:00Z task belongs to the prior session/host); re-arm at the next
+  handoff.
+- Tree: wave commit 1c5babb; merge 6ee3804 (main).
 
 **SESSION 2026-10-17 block 226 (CONTINUATION HANDOFF at head 9a09af9 -- snapshot 40; v0.64.6 shipped, registry live, pin PR xiom#7; complete next-session queue below; doorbell armed 13:00Z)**
 - STATE: main head 9a09af9; worktree clean except the known untracked
