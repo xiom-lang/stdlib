@@ -75,7 +75,10 @@ pub fn quick_sort(v: &mut Vec[Int])
 
 /// Quicksort with a custom comparator. O(n log n) average, O(n^2) worst.
 /// Unstable. The comparator must be a named function returning -1/0/1.
-pub fn quick_sort_by(v: &mut Vec[Int], compare: fn(&Int, &Int) -> Int) {
+pub fn quick_sort_by(v: &mut Vec[Int], compare: fn(&Int, &Int) -> Int)
+  ensures: v.len() == v.len()@pre
+  ensures: intro.is_sorted_by(v, compare) == true
+{
   var n = v.len();
   if n <= 1 { return; }
   quick_sort_by_range(v, compare, 0, n - 1);
@@ -106,7 +109,9 @@ fn quick_sort_by_range(v: &mut Vec[Int], compare: fn(&Int, &Int) -> Int, lo: Int
 /// Quickselect: returns the k-th smallest element (0-based) of v, reordering v.
 /// O(n) average, O(n^2) worst. Unstable. k is clamped into [0, len-1];
 /// returns 0 for an empty vector.
-pub fn quick_select(v: &mut Vec[Int], k: Int) -> Int {
+pub fn quick_select(v: &mut Vec[Int], k: Int) -> Int
+  ensures: v.len() == v.len()@pre
+{
   var n = v.len();
   if n == 0 { return 0; }
   var kk = k;

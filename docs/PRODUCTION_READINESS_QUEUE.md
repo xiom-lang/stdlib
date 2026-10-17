@@ -1,51 +1,51 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
-**77.1% -- 7 of 10 gates complete; gate 8 at 70.7% (partial credit) and
-gates 9-10 discrete.** (Compiler pin: in-tree **v0.64.4** for the release
-line -- released 2026-10-12; the lane BATTERY runs the official v0.64.5
-release archive since block 191, zip sha256 bd71e2d3.)
-**Gates: corpus 956/956 full (C001 carve-outs retired on v0.63.1; new
-TcpStream loopback and uuencode roundtrip smokes added; smoke_os_watch
-added in wave 124; smoke_darwin_runtime added in the 189b/189c darwin
-wave), modules 510/510,
-probes 318/318, barename 0/510. Wave pin: official v0.64.5 (block 191;
-zip sha256 bd71e2d3).**
+**77.2% -- 7 of 10 gates complete; gate 8 at 72.3% (partial credit) and
+gates 9-10 discrete.** (Compiler pin: official **v0.64.6** release archive
+for the lane battery -- released 2026-10-16; stdlib-v0.64.6 tagged
+`8d95815`; registry `xiom-std 0.64.6` live. The next cut, v0.64.7, is
+pending the m351 typed-fault runtime merge, REL-20261017-1444-compiler.)
+**Gates: corpus green on the v0.64.6 release gates (Windows/Ubuntu),
+modules 533/533, probes 358/358, barename 0/533. Wave pin: official
+v0.64.6 (block 232; canonical zip sha256 7ba3b09a...).**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
 gates flip:
-1. Modules type-check clean -- MET (509/509).
-2. Smoke corpus green -- MET on the v0.64.0 pin: release gate 954/954
-   full, no carve-outs (C001 fixed by 4bf8cf1e; 20/20 + 20/20 stress).
-   lz4 is fixed by m190 and stayed in the gate; the new TcpStream loopback
-   smoke locks m196.
-3. Probe corpus green -- MET (288/288 on v0.64.3, incl. the promoted
-   regression locks (rvalue float Vec index, multipart parse name, iter
-   forwardref), the v0.64.1 pin probe p_pin0641_iter_shapes.xi, the
-   wave-77 stats probe, the Pulse hardening probe, the 1052 co-import
-   locks in BOTH import orders, the wave-78..110
-   coverage probes (the wave-97 probe was remerged after m242, plus the
-   wave-98..110 probes), the io byte-fidelity/CRLF lock and the
-   fs_remove lock).
-4. Strict bare-name scan clean -- MET (0/509).
-5. Coverage ratchet green -- MET (floors177).
+1. Modules type-check clean -- MET (533/533).
+2. Smoke corpus green -- MET on the v0.64.6 pin: hosted release gates
+   green on Windows and Ubuntu; no carve-outs.
+3. Probe corpus green -- MET (358/358 on v0.64.6, post-wave-177 full
+   corpus with RetryFailed).
+4. Strict bare-name scan clean -- MET (0/533).
+5. Coverage ratchet green -- MET (floors182).
 6. Documentation ratchet 100% -- MET.
-7. Module-smoke ratchet green -- MET (499/518 modules, 3500/6239 fns).
-8. Contract coverage 100% (every public fn carries clauses) -- OPEN (70.7%).
+7. Module-smoke ratchet green -- MET (499/542 modules, 3501/6575 fns).
+8. Contract coverage 100% (every public fn carries clauses) -- OPEN
+   (72.3%; sort is now 100%, the worst directories are num/time/iter/
+   async/math).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
-   OPEN (7: all compiler -- the stdlib-family rows resolved on v0.64.5; the
-   payload-clause follow-up is on the bus, REL-20261015-2328-stdlib).
+   OPEN (compiler-owned; see the relay bus for the current item set).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- OPEN.
 
 Meter formula: MET gates count 1.0; gate 8 counts its current
-pub-with-clause fraction (70.7% -> 0.707); gates 9 and 10 get no partial
+pub-with-clause fraction (72.3% -> 0.723); gates 9 and 10 get no partial
 credit (discrete). Update the percentage and the gate-8 fraction in the
 same commit as each floors dump so the meter moves smoothly toward 80%.
 
 Authoritative order: the gates above, then the updates below newest-first.
-Current state: compiler pin **v0.64.4** (released 2026-10-12, tag
-f76fd47c on df493530; the lane battery runs the official windows-x64
-release archive; COMPILER_VERSION = v0.64.4); **stdlib-v0.64.4 CUT
+
+Current state 2026-10-17: compiler pin official **v0.64.6**; stdlib
+release **v0.64.6** (`8d95815`) live in the registry; main carries waves
+172-178 (rand.state, clause tightening, HTTP/2 frame+HPACK foundation,
+LISTEN_FDS, Linux epoll, Windows WSAPoll, sort contract coverage). The
+v0.64.7 cut is gated on merging `fix/m351-typed-fault` (37603a2) and the
+owner sync gate. Historical state below is retained for the record.
+
+Historical state (2026-10-11): compiler pin **v0.64.4** (released
+2026-10-12, tag f76fd47c on df493530; the lane battery runs the official
+windows-x64 release archive; COMPILER_VERSION = v0.64.4);
+**stdlib-v0.64.4 CUT
 2026-10-11** (tag object f8fb7a88 on 3df0843; package.xi 0.64.4; battery
 + witness green; the compiler pins STDLIB_VERSION and ships it);
 **stdlib-v0.64.3 RELEASED 2026-10-09** (release run 37962367989 full

@@ -34,7 +34,9 @@ fn sift_down(v: &mut Vec[Int], start: Int, end: Int) {
 }
 
 /// Build a max-heap from the vector in place. O(n).
-pub fn heapify(v: &mut Vec[Int]) {
+pub fn heapify(v: &mut Vec[Int])
+  ensures: v.len() == v.len()@pre
+{
   var n = v.len();
   var i = n / 2;
   while i >= 0 {
@@ -62,7 +64,10 @@ pub fn heap_sort(v: &mut Vec[Int])
 
 /// Heap sort with a custom comparator. O(n log n), unstable, O(1) space.
 /// The comparator must be a named function returning -1/0/1.
-pub fn heap_sort_by(v: &mut Vec[Int], compare: fn(&Int, &Int) -> Int) {
+pub fn heap_sort_by(v: &mut Vec[Int], compare: fn(&Int, &Int) -> Int)
+  ensures: v.len() == v.len()@pre
+  ensures: intro.is_sorted_by(v, compare) == true
+{
   var n = v.len();
   if n <= 1 { return; }
   var i = n / 2;
