@@ -33,7 +33,7 @@ No Agent Manager contract waves are in flight. Continue gate 8: num 37.9%, iter 
 
 Gate 9: verify/close compiler items 1053/1456/1626/2328/2343/2000/2100/2331 on v0.64.7; 1549-pulse-5 waits on compiler 1609, 1834 on 1550; the new 1546 item needs a compiler fix. Wishlist: row 33 open (compiler/install), row 47 acked. Kqueue needs a macOS runner; net.event wrapper and LISTEN_FDS server integration remain.
 
-Use the official v0.64.6 archive for batteries (%TEMP%\kilo\stdlib_ws\v0.64.6-official\bin\xiom.exe); v0.64.7 is report-identical at %TEMP%\kilo\v0647\extract but not hash-verified for lane batteries. run_smokes sets XIOM_STDLIB. Do not move tags; release.yml is idempotent at 0056bce. Keep docs/session current and post material findings on the relay bus.
+Use the official v0.64.6 archive for batteries (%TEMP%\kilo\stdlib_ws\v0.64.6-official\bin\xiom.exe); a v0.64.7 extraction exists at %TEMP%\kilo\v0647\extract (version reports v0.64.7; hash not verified for lane batteries). run_smokes sets XIOM_STDLIB. Do not move tags; release.yml is idempotent at 0056bce. Keep docs/session current and post material findings on the relay bus.
 ```
 
 ### Snapshot 37 (paste-ready)
@@ -3712,9 +3712,10 @@ registry pin, agent recon for the rest)**
   form) acked -> wishlist row 47, queued after gate 8. The
   `view --lane stdlib` output also shows the open compiler selfhost
   info item and the v0.64.7 announcement (info-only).
-- Worktrees: stopped the two Agent Manager sessions, removed their
-  worktrees, deleted the two merged branches. The wave/154 leftovers
-  stay untouched.
+- Worktrees: stopped the two Agent Manager sessions, pruned their
+  worktree metadata (contents removed), and deleted the two merged
+  branches. The two empty `.kilo/worktrees` directories stay locked by
+  the extension until it reloads; the wave/154 leftovers are untouched.
 - Next: gate 8 num/iter/math/core (worst rows); gate 9 verification
   on v0.64.7.
 
