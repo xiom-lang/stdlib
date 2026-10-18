@@ -24,7 +24,10 @@ pub type BigRat = { num: BigInt; den: BigInt; }
 /// Constructs a reduced BigRat from num/den, normalizing the sign to the
 /// denominator. None when den is zero. Zero maps to 0/1.
 /// Complexity: O(gcd) bigint operations.
-pub fn bigrat_new(num: BigInt, den: BigInt) -> Option[BigRat] {
+pub fn bigrat_new(num: BigInt, den: BigInt) -> Option[BigRat]
+  ensures: (result is None) => xiom.bigint.bigint_is_zero(&den)
+  ensures: (result is Some) => !xiom.bigint.bigint_is_zero(&den)
+{
   if xiom.bigint.bigint_is_zero(&den) { return None; }
   var n = num;
   var d = den;
@@ -44,7 +47,9 @@ pub fn bigrat_new(num: BigInt, den: BigInt) -> Option[BigRat] {
 }
 
 /// Constructs the BigRat v/1. Complexity: O(1).
-pub fn bigrat_from_int(v: Int) -> BigRat {
+pub fn bigrat_from_int(v: Int) -> BigRat
+  ensures: xiom.bigint.bigint_is_one(&result.den)
+{
   BigRat{ num: xiom.bigint.bigint_from_int(v); den: xiom.bigint.bigint_one(); }
 }
 
@@ -153,18 +158,24 @@ pub fn bigrat_to_str(r: BigRat) -> Str
 }
 
 /// The numerator (a copy). Complexity: O(n).
-pub fn bigrat_numerator(r: BigRat) -> BigInt {
+pub fn bigrat_numerator(r: BigRat) -> BigInt
+  ensures: xiom.bigint.bigint_eq(&result, &r.num)
+{
   return r.num;
 }
 
 /// The denominator (always positive; a copy). Complexity: O(n).
-pub fn bigrat_denominator(r: BigRat) -> BigInt {
+pub fn bigrat_denominator(r: BigRat) -> BigInt
+  ensures: xiom.bigint.bigint_eq(&result, &r.den)
+{
   return r.den;
 }
 
 /// Sum a + b: (a.num*b.den + b.num*a.den) / (a.den*b.den), reduced.
 /// Complexity: O(n^2) bigint operations.
-pub fn bigrat_add(a: BigRat, b: BigRat) -> BigRat {
+pub fn bigrat_add(a: BigRat, b: BigRat) -> BigRat
+  ensures: (bigrat_is_reduced(a) && bigrat_is_reduced(b)) => bigrat_is_reduced(result)
+{
   var t1 = xiom.bigint.bigint_mul(&a.num, &b.den);
   var t2 = xiom.bigint.bigint_mul(&b.num, &a.den);
   var num = xiom.bigint.bigint_add(&t1, &t2);
@@ -173,7 +184,9 @@ pub fn bigrat_add(a: BigRat, b: BigRat) -> BigRat {
 }
 
 /// Difference a - b. Complexity: O(n^2).
-pub fn bigrat_sub(a: BigRat, b: BigRat) -> BigRat {
+pub fn bigrat_sub(a: BigRat, b: BigRat) -> BigRat
+  ensures: (bigrat_is_reduced(a) && bigrat_is_reduced(b)) => bigrat_is_reduced(result)
+{
   var t1 = xiom.bigint.bigint_mul(&a.num, &b.den);
   var t2 = xiom.bigint.bigint_mul(&b.num, &a.den);
   var num = xiom.bigint.bigint_sub(&t1, &t2);
@@ -182,7 +195,9 @@ pub fn bigrat_sub(a: BigRat, b: BigRat) -> BigRat {
 }
 
 /// Product a * b. Complexity: O(n^2).
-pub fn bigrat_mul(a: BigRat, b: BigRat) -> BigRat {
+pub fn bigrat_mul(a: BigRat, b: BigRat) -> BigRat
+  ensures: (bigrat_is_reduced(a) && bigrat_is_reduced(b)) => bigrat_is_reduced(result)
+{
   var num = xiom.bigint.bigint_mul(&a.num, &b.num);
   var den = xiom.bigint.bigint_mul(&a.den, &b.den);
   bigrat_reduce(BigRat{ num: num; den: den; })
@@ -190,7 +205,10 @@ pub fn bigrat_mul(a: BigRat, b: BigRat) -> BigRat {
 
 /// Quotient a / b. None when b is zero. The denominator sign is normalized
 /// by the reduction. Complexity: O(n^2).
-pub fn bigrat_div(a: BigRat, b: BigRat) -> Option[BigRat] {
+pub fn bigrat_div(a: BigRat, b: BigRat) -> Option[BigRat]
+  ensures: (result is None) => xiom.bigint.bigint_is_zero(&b.num)
+  ensures: (result is Some) => !xiom.bigint.bigint_is_zero(&b.num)
+{
   if xiom.bigint.bigint_is_zero(&b.num) { return None; }
   var num = xiom.bigint.bigint_mul(&a.num, &b.den);
   var den = xiom.bigint.bigint_mul(&a.den, &b.num);
@@ -200,6 +218,7 @@ pub fn bigrat_div(a: BigRat, b: BigRat) -> Option[BigRat] {
 /// Negation. Complexity: O(n).
 pub fn bigrat_neg(a: BigRat) -> BigRat
   ensures: (a.num.negative == true) => (result.num.negative == false)
+  ensures: xiom.bigint.bigint_eq(&result.den, &a.den)
 {
   BigRat{ num: xiom.bigint.bigint_neg(&a.num); den: a.den; }
 }
@@ -207,12 +226,16 @@ pub fn bigrat_neg(a: BigRat) -> BigRat
 /// Absolute value. Complexity: O(n).
 pub fn bigrat_abs(a: BigRat) -> BigRat
   ensures: result.num.negative == false
+  ensures: xiom.bigint.bigint_eq(&result.den, &a.den)
 {
   BigRat{ num: xiom.bigint.bigint_abs(&a.num); den: a.den; }
 }
 
 /// Reciprocal 1/a. None when a is zero. Complexity: O(n^2) reduction.
-pub fn bigrat_recip(a: BigRat) -> Option[BigRat] {
+pub fn bigrat_recip(a: BigRat) -> Option[BigRat]
+  ensures: (result is None) => xiom.bigint.bigint_is_zero(&a.num)
+  ensures: (result is Some) => !xiom.bigint.bigint_is_zero(&a.num)
+{
   if xiom.bigint.bigint_is_zero(&a.num) { return None; }
   var r = BigRat{ num: a.den; den: a.num; };
   Some(bigrat_reduce(r))
@@ -220,7 +243,9 @@ pub fn bigrat_recip(a: BigRat) -> Option[BigRat] {
 
 /// Reduces r to lowest terms with a positive denominator. Identity when r
 /// already satisfies the invariant. Complexity: O(gcd).
-pub fn bigrat_reduce(r: BigRat) -> BigRat {
+pub fn bigrat_reduce(r: BigRat) -> BigRat
+  ensures: (!xiom.bigint.bigint_is_zero(&r.den)) => bigrat_is_reduced(result)
+{
   var o = bigrat_new(r.num, r.den);
   match o {
     None => { return r; }
@@ -230,7 +255,9 @@ pub fn bigrat_reduce(r: BigRat) -> BigRat {
 
 /// Whether r is in lowest terms with a positive denominator.
 /// Complexity: O(gcd).
-pub fn bigrat_is_reduced(r: BigRat) -> Bool {
+pub fn bigrat_is_reduced(r: BigRat) -> Bool
+  ensures: (result == true) => !xiom.bigint.bigint_is_negative(&r.den)
+{
   if xiom.bigint.bigint_is_negative(&r.den) { return false; }
   var g = xiom.bigint.bigint_gcd(&r.num, &r.den);
   xiom.bigint.bigint_is_one(&g)
@@ -238,12 +265,16 @@ pub fn bigrat_is_reduced(r: BigRat) -> Bool {
 
 /// Whether the denominator divides the numerator (i.e. r is an integer;
 /// for a reduced fraction this is den == 1). Complexity: O(1).
-pub fn bigrat_is_integer(r: BigRat) -> Bool {
+pub fn bigrat_is_integer(r: BigRat) -> Bool
+  ensures: result == xiom.bigint.bigint_is_one(&r.den)
+{
   xiom.bigint.bigint_is_one(&r.den)
 }
 
 /// Whether r equals zero. Complexity: O(1).
-pub fn bigrat_is_zero(r: BigRat) -> Bool {
+pub fn bigrat_is_zero(r: BigRat) -> Bool
+  ensures: result == xiom.bigint.bigint_is_zero(&r.num)
+{
   xiom.bigint.bigint_is_zero(&r.num)
 }
 
@@ -258,7 +289,9 @@ pub fn bigrat_compare(a: BigRat, b: BigRat) -> Int
 }
 
 /// Whether a equals b. Complexity: O(n^2).
-pub fn bigrat_eq(a: BigRat, b: BigRat) -> Bool {
+pub fn bigrat_eq(a: BigRat, b: BigRat) -> Bool
+  ensures: result == (bigrat_compare(a, b) == 0)
+{
   bigrat_compare(a, b) == 0
 }
 
@@ -290,7 +323,10 @@ fn _bigint_to_float(b: &BigInt) -> Float64 {
 
 /// The integer value of r; None when r is not integral.
 /// Complexity: O(1) (reduced form: integral iff den == 1).
-pub fn bigrat_to_integer(r: BigRat) -> Option[BigInt] {
+pub fn bigrat_to_integer(r: BigRat) -> Option[BigInt]
+  ensures: (result is None) => !bigrat_is_integer(r)
+  ensures: (result is Some) => bigrat_is_integer(r)
+{
   if !bigrat_is_integer(r) { return None; }
   Some(r.num)
 }

@@ -17,7 +17,9 @@ module xiom.num.precision_integer
 use xiom.bigint;
 
 /// Constructs a BigInt from a native integer. Complexity: O(1).
-pub fn bigint_from_int(v: Int) -> BigInt {
+pub fn bigint_from_int(v: Int) -> BigInt
+  ensures: ((v == 0) => (result.digits.len() == 0 && result.negative == false)) && ((v > 0) => (result.negative == false && result.digits.len() > 0))
+{
   return xiom.bigint.bigint_from_int(v);
 }
 
@@ -62,30 +64,45 @@ pub fn bigint_to_oct(b: BigInt) -> Str
 }
 
 /// Sum a + b. Complexity: O(n).
-pub fn bigint_add(a: BigInt, b: BigInt) -> BigInt {
+pub fn bigint_add(a: BigInt, b: BigInt) -> BigInt
+  ensures: ((result.negative == true) => (result.digits.len() > 0)) && ((result.digits.len() == 0) => (result.negative == false))
+  ensures: (xiom.bigint.bigint_is_zero(&a) && xiom.bigint.bigint_is_zero(&b)) => xiom.bigint.bigint_is_zero(&result)
+{
   return xiom.bigint.bigint_add(&a, &b);
 }
 
 /// Difference a - b. Complexity: O(n).
-pub fn bigint_sub(a: BigInt, b: BigInt) -> BigInt {
+pub fn bigint_sub(a: BigInt, b: BigInt) -> BigInt
+  ensures: ((result.negative == true) => (result.digits.len() > 0)) && ((result.digits.len() == 0) => (result.negative == false))
+  ensures: (xiom.bigint.bigint_eq(&a, &b)) => xiom.bigint.bigint_is_zero(&result)
+{
   return xiom.bigint.bigint_sub(&a, &b);
 }
 
 /// Product a * b. Complexity: O(n^2) schoolbook, Karatsuba above 36k digits.
-pub fn bigint_mul(a: BigInt, b: BigInt) -> BigInt {
+pub fn bigint_mul(a: BigInt, b: BigInt) -> BigInt
+  ensures: ((result.negative == true) => (result.digits.len() > 0)) && ((result.digits.len() == 0) => (result.negative == false))
+  ensures: (xiom.bigint.bigint_is_zero(&a) || xiom.bigint.bigint_is_zero(&b)) => xiom.bigint.bigint_is_zero(&result)
+{
   return xiom.bigint.bigint_mul(&a, &b);
 }
 
 /// Quotient a / b (truncating). None when b is zero.
 /// Complexity: O(n^2) Knuth Algorithm D.
-pub fn bigint_div(a: BigInt, b: BigInt) -> Option[BigInt] {
+pub fn bigint_div(a: BigInt, b: BigInt) -> Option[BigInt]
+  ensures: (result is None) => xiom.bigint.bigint_is_zero(&b)
+  ensures: (result is Some) => !xiom.bigint.bigint_is_zero(&b)
+{
   if xiom.bigint.bigint_is_zero(&b) { return None; }
   return Some(xiom.bigint.bigint_div(&a, &b));
 }
 
 /// Remainder a mod b (sign of the dividend). None when b is zero.
 /// Complexity: O(n^2).
-pub fn bigint_mod(a: BigInt, b: BigInt) -> Option[BigInt] {
+pub fn bigint_mod(a: BigInt, b: BigInt) -> Option[BigInt]
+  ensures: (result is None) => xiom.bigint.bigint_is_zero(&b)
+  ensures: (result is Some) => !xiom.bigint.bigint_is_zero(&b)
+{
   if xiom.bigint.bigint_is_zero(&b) { return None; }
   return Some(xiom.bigint.bigint_mod(&a, &b));
 }
@@ -94,17 +111,27 @@ pub fn bigint_mod(a: BigInt, b: BigInt) -> Option[BigInt] {
 /// exp < 0 returns zero (documented). Complexity: O(log exp) multiplications.
 pub fn bigint_pow(base: BigInt, exp: Int) -> BigInt
   requires: exp >= 0
+  ensures: (exp == 0) => xiom.bigint.bigint_is_one(&result)
+  ensures: (exp > 0) => (xiom.bigint.bigint_is_negative(&result) == (xiom.bigint.bigint_is_negative(&base) && exp % 2 == 1))
 {
   return xiom.bigint.bigint_pow(&base, exp);
 }
 
 /// Negation. Complexity: O(n).
-pub fn bigint_neg(a: BigInt) -> BigInt {
+pub fn bigint_neg(a: BigInt) -> BigInt
+  ensures: ((result.negative == true) => (result.digits.len() > 0)) && ((result.digits.len() == 0) => (result.negative == false))
+  ensures: (xiom.bigint.bigint_is_zero(&a)) => xiom.bigint.bigint_is_zero(&result)
+  ensures: (!xiom.bigint.bigint_is_zero(&a)) => (xiom.bigint.bigint_is_negative(&result) == !xiom.bigint.bigint_is_negative(&a))
+{
   return xiom.bigint.bigint_neg(&a);
 }
 
 /// Absolute value. Complexity: O(n).
-pub fn bigint_abs(a: BigInt) -> BigInt {
+pub fn bigint_abs(a: BigInt) -> BigInt
+  ensures: !xiom.bigint.bigint_is_negative(&result)
+  ensures: (xiom.bigint.bigint_is_zero(&a)) => xiom.bigint.bigint_is_zero(&result)
+  ensures: (xiom.bigint.bigint_is_zero(&result)) => xiom.bigint.bigint_is_zero(&a)
+{
   return xiom.bigint.bigint_abs(&a);
 }
 
@@ -116,32 +143,44 @@ pub fn bigint_compare(a: BigInt, b: BigInt) -> Int
 }
 
 /// Whether a equals b. Complexity: O(n).
-pub fn bigint_eq(a: BigInt, b: BigInt) -> Bool {
+pub fn bigint_eq(a: BigInt, b: BigInt) -> Bool
+  ensures: result == (xiom.bigint.bigint_compare(&a, &b) == 0)
+{
   return xiom.bigint.bigint_eq(&a, &b);
 }
 
 /// Whether a is strictly less than b. Complexity: O(n).
-pub fn bigint_lt(a: BigInt, b: BigInt) -> Bool {
+pub fn bigint_lt(a: BigInt, b: BigInt) -> Bool
+  ensures: result == (xiom.bigint.bigint_compare(&a, &b) < 0)
+{
   return xiom.bigint.bigint_lt(&a, &b);
 }
 
 /// Whether a is strictly greater than b. Complexity: O(n).
-pub fn bigint_gt(a: BigInt, b: BigInt) -> Bool {
+pub fn bigint_gt(a: BigInt, b: BigInt) -> Bool
+  ensures: result == (xiom.bigint.bigint_compare(&a, &b) > 0)
+{
   return xiom.bigint.bigint_gt(&a, &b);
 }
 
 /// Bitwise AND (two's-complement semantics). Complexity: O(n).
-pub fn bigint_bit_and(a: BigInt, b: BigInt) -> BigInt {
+pub fn bigint_bit_and(a: BigInt, b: BigInt) -> BigInt
+  ensures: ((result.negative == true) => (result.digits.len() > 0)) && ((result.digits.len() == 0) => (result.negative == false))
+{
   return xiom.bigint.bigint_bit_and(&a, &b);
 }
 
 /// Bitwise OR (two's-complement semantics). Complexity: O(n).
-pub fn bigint_bit_or(a: BigInt, b: BigInt) -> BigInt {
+pub fn bigint_bit_or(a: BigInt, b: BigInt) -> BigInt
+  ensures: ((result.negative == true) => (result.digits.len() > 0)) && ((result.digits.len() == 0) => (result.negative == false))
+{
   return xiom.bigint.bigint_bit_or(&a, &b);
 }
 
 /// Bitwise XOR (two's-complement semantics). Complexity: O(n).
-pub fn bigint_bit_xor(a: BigInt, b: BigInt) -> BigInt {
+pub fn bigint_bit_xor(a: BigInt, b: BigInt) -> BigInt
+  ensures: ((result.negative == true) => (result.digits.len() > 0)) && ((result.digits.len() == 0) => (result.negative == false))
+{
   return xiom.bigint.bigint_bit_xor(&a, &b);
 }
 
@@ -150,6 +189,8 @@ pub fn bigint_bit_xor(a: BigInt, b: BigInt) -> BigInt {
 /// O(n^2) via the multiplications.
 pub fn bigint_shift_left(a: BigInt, n: Int) -> BigInt
   requires: n >= 0
+  ensures: (n == 0) => xiom.bigint.bigint_eq(&result, &a)
+  ensures: (n > 0) => (xiom.bigint.bigint_is_negative(&result) == xiom.bigint.bigint_is_negative(&a))
 {
   if n <= 0 { return a; }
   var two = xiom.bigint.bigint_from_int(2);
@@ -161,6 +202,8 @@ pub fn bigint_shift_left(a: BigInt, n: Int) -> BigInt
 /// negative b. n < 0 treated as 0. Complexity: O(n^2) via the divisions.
 pub fn bigint_shift_right(a: BigInt, n: Int) -> BigInt
   requires: n >= 0
+  ensures: (n == 0) => xiom.bigint.bigint_eq(&result, &a)
+  ensures: (n > 0) => (xiom.bigint.bigint_is_negative(&result) == xiom.bigint.bigint_is_negative(&a))
 {
   if n <= 0 { return a; }
   return xiom.bigint.bigint_shift_right(&a, n);
@@ -168,24 +211,35 @@ pub fn bigint_shift_right(a: BigInt, n: Int) -> BigInt
 
 /// Probabilistic primality test (Miller-Rabin, deterministic for n < 3.3e24).
 /// Complexity: O(k log^3 n) bigint operations.
-pub fn bigint_is_prime(b: BigInt) -> Bool {
+pub fn bigint_is_prime(b: BigInt) -> Bool
+  ensures: (result == true) => (!xiom.bigint.bigint_is_negative(&b) && !xiom.bigint.bigint_is_zero(&b) && !xiom.bigint.bigint_is_one(&b))
+{
   return xiom.bigint.bigint_is_prime(&b);
 }
 
 /// Greatest common divisor (non-negative). Complexity: O(log n) divisions.
-pub fn bigint_gcd(a: BigInt, b: BigInt) -> BigInt {
+pub fn bigint_gcd(a: BigInt, b: BigInt) -> BigInt
+  ensures: !xiom.bigint.bigint_is_negative(&result)
+  ensures: (xiom.bigint.bigint_is_zero(&a) && xiom.bigint.bigint_is_zero(&b)) => xiom.bigint.bigint_is_zero(&result)
+{
   return xiom.bigint.bigint_gcd(&a, &b);
 }
 
 /// Least common multiple; lcm(0, x) == 0. Complexity: O(gcd + mul).
-pub fn bigint_lcm(a: BigInt, b: BigInt) -> BigInt {
+pub fn bigint_lcm(a: BigInt, b: BigInt) -> BigInt
+  ensures: !xiom.bigint.bigint_is_negative(&result)
+  ensures: (xiom.bigint.bigint_is_zero(&a) || xiom.bigint.bigint_is_zero(&b)) => xiom.bigint.bigint_is_zero(&result)
+{
   return xiom.bigint.bigint_lcm(&a, &b);
 }
 
 /// Modular inverse of a mod m via extended Euclid. None when gcd(a, m) != 1
 /// or when m is zero. The result lies in [0, |m|). Complexity: O(log m)
 /// divisions.
-pub fn bigint_mod_inverse(a: BigInt, m: BigInt) -> Option[BigInt] {
+pub fn bigint_mod_inverse(a: BigInt, m: BigInt) -> Option[BigInt]
+  ensures: (result is Some) => !xiom.bigint.bigint_is_zero(&m)
+  ensures: (result is None && !xiom.bigint.bigint_is_zero(&m)) => !xiom.bigint.bigint_is_one(&xiom.bigint.bigint_gcd(&a, &m))
+{
   if xiom.bigint.bigint_is_zero(&m) { return None; }
   var eg = xiom.bigint.bigint_ext_gcd(&a, &m);
   if !xiom.bigint.bigint_is_one(&eg.0) { return None; }
@@ -197,6 +251,7 @@ pub fn bigint_mod_inverse(a: BigInt, m: BigInt) -> Option[BigInt] {
 pub fn bigint_mod_pow(base: BigInt, exp: BigInt, m: BigInt) -> BigInt
   requires: !xiom.bigint.bigint_is_zero(&m)
   requires: !xiom.bigint.bigint_is_negative(&exp)
+  ensures: result.negative == false
 {
   return xiom.bigint.bigint_pow_mod(&base, &exp, &m);
 }
@@ -205,6 +260,7 @@ pub fn bigint_mod_pow(base: BigInt, exp: BigInt, m: BigInt) -> BigInt
 /// Complexity: O(n) bigint multiplications.
 pub fn bigint_factorial(n: Int) -> BigInt
   requires: n >= 0
+  ensures: (!xiom.bigint.bigint_is_negative(&result)) && (!xiom.bigint.bigint_is_zero(&result))
 {
   return xiom.bigint.bigint_factorial(n);
 }
@@ -215,6 +271,7 @@ pub fn bigint_binomial(n: Int, k: Int) -> BigInt
   requires: n >= 0
   requires: k >= 0
   requires: k <= n
+  ensures: (!xiom.bigint.bigint_is_negative(&result)) && (!xiom.bigint.bigint_is_zero(&result))
 {
   return xiom.bigint.bigint_binomial(n, k);
 }

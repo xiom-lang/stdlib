@@ -601,6 +601,12 @@ campaign release; the table statuses above were normalized in the
   probes `p_wave66_shapes`/`p_wave114_shapes`/`p_async_copy` green on
   v0.64.6; found the `&Vec[GenericStruct]` read corruption
   (`REL-20261018-1546-stdlib`). Readiness 87.3%.
+- wave 181 (num precision contracts): num coverage 37.9% -> 50.7%
+  (the three `precision_*` files fully covered: BigInt representation
+  invariants and sign/zero laws, BigFloat well-formedness and exact
+  None domains, BigRat reduction/accessor identities); global
+  72.7% -> 73.6%; floors184 dumped/wired; probe
+  `p_wave181_precision_shapes`; readiness 87.4%.
 - NOT assigned in the 165-171 pass: row 33 stays compiler/install-lane.
   Released as stdlib-v0.64.7 / xiom-std 0.64.7 (release gates on
   candidate-v0.64.7-m351-r2; compiler v0.64.7 pins STDLIB_VERSION to the
