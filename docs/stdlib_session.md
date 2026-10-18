@@ -9,7 +9,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 - At session start and before finishing any task: pull xiom-relays and
   process items addressed to this lane
   (`git -C E:\xiom-lang\xiom-relays pull --ff-only`, then
-  `python tools/relay.py view --lane stdlib`).
+  `python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib`).
 - Never edit another lane's item; open a new item instead.
 - Cross-lane open findings/wishlists/release checks live on the bus; the
   lane's working instructions (AGENTS.md, repo root) carry the same two
@@ -17,25 +17,23 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 54 (updated 2026-10-18 15:40Z at this docs commit; **v0.64.7 RELEASED/PUBLISHED** -- tag f4482b14 (tag object 11bf62a6), registry latest 0.64.7, compiler v0.64.7; **waves 179 (time contracts) and 180 (async contracts) are in flight in Agent Manager worktrees**; 14 old merged worktrees pruned; readiness 87.2% (gate 10 MET; gate 8 72.3%); relay lane only the compiler info announcement is open; paste-ready next-session prompt in `## 0C`)
+## 0A. CONTINUE HERE -- handoff snapshot 55 (updated 2026-10-18 15:55Z at this docs commit; **waves 179/180 MERGED** -- time 52.9%, async 62.7%, global 72.7%, floors183 wired; readiness 87.3% (gate 10 MET; gate 8 72.7%); v0.64.7 released/published; new compiler item REL-20261018-1546-stdlib from the async_select probe; xvector channel-handle item acked; paste-ready next-session prompt in `## 0C`)
 
 ## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-18)
 
 ```
 Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
   git -C E:\xiom-lang\xiom-relays pull --ff-only
-  python tools/relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 54 + block 240 (and this 0C block).
+  python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
+Read docs/stdlib_session.md snapshot 55 + block 241 (and this 0C block).
 
-State: stdlib-v0.64.7 is released; tag stdlib-v0.64.7 = f4482b14 (tag object 11bf62a6); registry xiom-std 0.64.7 is live; compiler v0.64.7 is released; main 5cdc30d. Readiness 87.2% (gates 1-7 and 10 met; gate 8 72.3%; gate 9 compiler-owned). Relay: only the compiler v0.64.7 info announcement is open; PULSE tag-move item fixed; 2257/2305 closed.
+State: stdlib-v0.64.7 is released; tag stdlib-v0.64.7 = f4482b14 (tag object 11bf62a6); registry xiom-std 0.64.7 is live; compiler v0.64.7 is released. Waves 179 (time 41.3% -> 52.9%) and 180 (async 47.8% -> 62.7%) are merged; global 72.7%; floors183 wired; readiness 87.3% (gates 1-7 and 10 met; gate 8 72.7%; gate 9 compiler-owned). New compiler item REL-20261018-1546-stdlib: callee reads of &Vec[GenericStruct] corrupt fields (breaks async_select closed-drain; repro tools/known_failures/p_vec_byref_generic_struct.xi). Relay: compiler info announcements open; xvector channel-handle wishlist acked (row 47); PULSE tag-move fixed; 2257/2305 closed.
 
-Parallel waves: wave/179-time-contracts (session ses_eb06f4a1bffefmwRfqgi2lqhJr) and wave/180-async-contracts (session ses_eb06eb23dffeSrPgi8q4OSAk5J) are running. Use agent_manager list; when idle, review their reports, run check_modules/coverage_scan/doc_scan and targeted probes, dump floors183 if pub coverage rises, update readiness meter, merge with --no-ff, delete branches/worktrees, and clean .kilo worktrees.
+No Agent Manager contract waves are in flight. Continue gate 8: num 37.9%, iter 46.4%, math 53.8%, core 58.0%, regex 59.2%, stats 60.4%, search 62.2%, string 62.6%. Next wave(s): num/iter/math/core (largest gaps); dump floors184, wire ci/heavy/release + tools/README, update the readiness meter.
 
-Then continue gate 8: num 37.9%, iter 46.4%, math 53.8%, core 58.0%, regex 59.2%, stats 60.4% (time/async via the agents). Gate 9: verify/close compiler items 1053/1456/1626/2328/2343/2000/2100/2331 on v0.64.7.
+Gate 9: verify/close compiler items 1053/1456/1626/2328/2343/2000/2100/2331 on v0.64.7; 1549-pulse-5 waits on compiler 1609, 1834 on 1550; the new 1546 item needs a compiler fix. Wishlist: row 33 open (compiler/install), row 47 acked. Kqueue needs a macOS runner; net.event wrapper and LISTEN_FDS server integration remain.
 
-Blockers: 1549-pulse-5 waits on compiler 1609; 1834 waits on compiler 1550; fixed items await reporters. Wishlist: only row 33 open (compiler/install). Kqueue needs a macOS runner; net.event wrapper and LISTEN_FDS server integration remain.
-
-Use the official v0.64.6 archive for batteries (%TEMP%\kilo\stdlib_ws\v0.64.6-official\bin\xiom.exe); run_smokes sets XIOM_STDLIB. Do not move tags; release.yml is idempotent at 0056bce. Keep docs/session current and post material findings on the relay bus.
+Use the official v0.64.6 archive for batteries (%TEMP%\kilo\stdlib_ws\v0.64.6-official\bin\xiom.exe); v0.64.7 is report-identical at %TEMP%\kilo\v0647\extract but not hash-verified for lane batteries. run_smokes sets XIOM_STDLIB. Do not move tags; release.yml is idempotent at 0056bce. Keep docs/session current and post material findings on the relay bus.
 ```
 
 ### Snapshot 37 (paste-ready)
@@ -3676,6 +3674,49 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-18 block 241 (WAVES 179/180 MERGED -- time 52.9%, async 62.7%, global 72.7%; floors183 wired; readiness 87.3%; async_select/&Vec[GenericStruct] compiler finding filed)**
+- Merges (both `--no-ff`, branches based on 5cdc30d, clean):
+  `9d41ad9` wave 179 time contracts (`0d21003`) and `f8618f4`
+  wave 180 async contracts (`32c6d66`).
+- Scope: `xiom/time/{calendar,date,instant}.xi` (+48/-16) and
+  `xiom/async/{channel,executor,timer}.xi` (+39/-10). Contract-only;
+  every clause reviewed against its body (name maps, month lengths, JDN
+  round-trip, 42-slot grid anchor, month-add normalize/clamp, timer
+  parallel-array invariants, executor queue lengths, `block_on` Ok,
+  `async_select` non-empty set). `time.duration` and `async.io` already
+  carried clauses and were untouched.
+- Gates on merged main (v0.64.6 official, XIOM Compiler v0.64.6):
+  `check_modules` 6/6 clean (the six touched modules); coverage ratchet
+  floors183 OK; doc ratchet OK (7456 pub, 7454 documented, the 2
+  pre-existing net misses); probes `p_wave66_shapes`,
+  `p_wave114_shapes`, `p_async_copy` all PASS compile=0 run=0
+  (8.7s / 6.5s / 7.0s).
+- Coverage: global pub-with-clause 72.3% -> 72.7% (clauses 6801 ->
+  6836, pubCovered 4976 -> 5002); time 41.3% -> 52.9%; async 47.8% ->
+  62.7%. `tools/coverage_floors183.json` dumped and wired into
+  `ci.yml`/`heavy.yml`/`release.yml` + `tools/README.md`. Readiness
+  meter 87.3% (8.727 / 10; gate 8 fraction 0.727).
+- NEW COMPILER FINDING: wave 180's runtime probe over one closed,
+  drained channel exits 2 -- `async_select` returns `Some` instead of
+  `None`. Root cause isolated to codegen: a callee taking
+  `&Vec[Box[Int]]` (`type Box[T] = { items: Vec[T]; closed: Bool;
+  cap: Int; }`) reads `bs[0]` with corrupted fields (len != 0,
+  closed=false, cap!=7), while construction and caller-side reads are
+  correct; a concrete `Vec[Int]` field works. Repro
+  `tools/known_failures/p_vec_byref_generic_struct.xi`: compile rc 0,
+  run rc 1, `plain=111` on both v0.64.6 official and the v0.64.7
+  extract. Filed `REL-20261018-1546-stdlib` (to compiler, high);
+  known_failures Current is now 16.
+- Relay intake: `REL-20261018-1518-xvector-2` (sync.channel handle
+  form) acked -> wishlist row 47, queued after gate 8. The
+  `view --lane stdlib` output also shows the open compiler selfhost
+  info item and the v0.64.7 announcement (info-only).
+- Worktrees: stopped the two Agent Manager sessions, removed their
+  worktrees, deleted the two merged branches. The wave/154 leftovers
+  stay untouched.
+- Next: gate 8 num/iter/math/core (worst rows); gate 9 verification
+  on v0.64.7.
 
 **SESSION 2026-10-18 block 240 (PARALLEL READINESS WAVES + HOUSEKEEPING -- wave/179 time contracts and wave/180 async contracts launched in Agent Manager worktrees; 14 old merged sessions stopped and empty worktrees pruned; relay lane clean except info; next-session prompt recorded)**
 - Agent Manager worktree sessions (both busy at launch):

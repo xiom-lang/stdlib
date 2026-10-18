@@ -71,6 +71,7 @@ Status legend: **open** = not started; **fixed** = landed with a probe lock
 | 44 | Span/byte-slice API | feature | Non-owning byte-span views over `Str`/`Vec[UInt8]` for zero-copy parsing; relay 2026-10-02 night. | **fixed** (2026-10-17, wave 166: span/byte-slice API; probe `p_wave166_shapes`) |
 | 45 | Strict int parsing with offsets | feature | Reject-junk integer parsing that also reports the consumed byte offset (extends row 28); relay 2026-10-02 night. | **fixed** (2026-10-17, wave 166: strict parsing + offsets; probe `p_wave166_convert`) |
 | 46 | base32 + percent-encoder | feature | Public base32 encode/decode and a standalone percent-encoder on the encoding face; relay 2026-10-02 night. | **fixed** (2026-10-17, wave 166: base32 + percent-encoder; probe `p_wave166_encoding`) |
+| 47 | `xiom.sync.channel` handle form | feature | Cross-thread producer/consumer without a global container; the value form has no internal lock and an explicit lock needs a stable-address handle. Filed by xvector 2026-10-18. | acked (bus `REL-20261018-1518-xvector-2`); queued after gate 8 |
 
 Relay status 2026-10-03 (fetched 2026-10-05): the packages source-of-record
 has advanced to 126 rows (waves 47-55); this mirror still carries rows
@@ -592,6 +593,14 @@ campaign release; the table statuses above were normalized in the
 - wave 178 (readiness gate 8): sort contract coverage 42.6% -> 100%
   (all 47 pub fns now carry length/sortedness clauses; global
   71.9% -> 72.3%); floors182 dumped/wired; readiness meter 77.2%.
+- wave 179 (time contracts): time coverage 41.3% -> 52.9%
+  (calendar/instant/date clauses; duration already covered); global
+  72.3% -> 72.5%; floors183 dumped/wired.
+- wave 180 (async contracts): async coverage 47.8% -> 62.7%
+  (channel/timer/executor; io already covered); combined global 72.7%;
+  probes `p_wave66_shapes`/`p_wave114_shapes`/`p_async_copy` green on
+  v0.64.6; found the `&Vec[GenericStruct]` read corruption
+  (`REL-20261018-1546-stdlib`). Readiness 87.3%.
 - NOT assigned in the 165-171 pass: row 33 stays compiler/install-lane.
   Released as stdlib-v0.64.7 / xiom-std 0.64.7 (release gates on
   candidate-v0.64.7-m351-r2; compiler v0.64.7 pins STDLIB_VERSION to the

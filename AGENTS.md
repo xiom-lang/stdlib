@@ -10,7 +10,7 @@ Cross-lane coordination goes through the private relay bus at
 - At session start and before finishing any task: pull xiom-relays and
   process items addressed to your lane
   (`git -C E:\xiom-lang\xiom-relays pull --ff-only` then
-  `python tools/relay.py view --lane stdlib`).
+  `python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib`).
 - Never edit another lane's item; open a new item instead.
 
 The bus is one file per item under `items/`, id `REL-YYYYMMDD-HHMM-<lane>`.
