@@ -170,10 +170,20 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           ver="${{ needs.validate.outputs.version }}"
-          gh release create "${{ inputs.tag || github.ref_name }}" \
-            "xiom-std-${ver}.tar.gz" SHA256SUMS \
-            --title "XIOM stdlib $ver" \
-            --notes "Stdlib release $ver. Verified against compiler pin $(tr -d '\r\n ' < COMPILER_VERSION)."
+          tag="${{ inputs.tag || github.ref_name }}"
+          notes="Stdlib release $ver. Verified against compiler pin $(tr -d '\r\n ' < COMPILER_VERSION)."
+          # A moved/re-run tag may already have a release. Keep the step
+          # idempotent: replace the assets and refresh the notes instead of
+          # failing on "a release with the same tag name already exists".
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" "xiom-std-${ver}.tar.gz" SHA256SUMS --clobber
+            gh release edit "$tag" --title "XIOM stdlib $ver" --notes "$notes"
+          else
+            gh release create "$tag" \
+              "xiom-std-${ver}.tar.gz" SHA256SUMS \
+              --title "XIOM stdlib $ver" \
+              --notes "$notes"
+          fi
 
   pin-pr:
     name: STDLIB_VERSION pin PR (xiom)
