@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 51 (updated 2026-10-17 23:20Z at this docs commit; **stdlib-v0.64.7 RELEASED** -- tag 1271dd5, release run 39073534681 green on Windows+Ubuntu, GitHub Release + assets live, compiler STDLIB_VERSION pinned at 3667ee29d; the automated pin-PR job failed idempotently; compiler v0.64.7 shipped (39076930839 green) and the staging canary re-run 39077278671 is GREEN with the compiler override; production dispatch 39077410576 failed publisher_not_mapped because production trusts only refs/tags/stdlib-v* -- REL-20261017-2305-stdlib asks registry to allow refs/heads/main, then re-run production; readiness 87.2%, gate 10 MET; next: production registry publish, gate 8 coverage (num/time/iter/async), gate 9 compiler findings)
+## 0A. CONTINUE HERE -- handoff snapshot 52 (updated 2026-10-18 14:20Z at this docs commit; **stdlib-v0.64.7 + compiler v0.64.7 RELEASED**; staging registry canary green; the ONLY blocker is the production registry trusted-publisher mapping -- production/ops config still allows only refs/tags/stdlib-v*, so the main-ref dispatch retry 39134943390 failed publisher_not_mapped again; REL-20261017-2305-stdlib is open with no registry reply; readiness 87.2%, gate 10 MET; next: registry/ops adds refs/heads/main + reload, then re-run production dispatch version=0.64.7 compiler=v0.64.7; then gate 8 coverage (num/time/iter/async) and gate 9 compiler findings)
 
 ### Snapshot 37 (paste-ready)
 
@@ -3657,6 +3657,25 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-18 block 238 (v0.64.7 PRODUCTION REGISTRY PUBLISH STILL BLOCKED -- retry 39134943390 failed publisher_not_mapped again; ops production config still allows only refs/tags/stdlib-v*, staging allows refs/heads/main; REL-20261017-2305-stdlib remains open with no registry reply; everything else is released and green)**
+- Retry: production dispatch 39134943390 (version 0.64.7,
+  compiler v0.64.7) was approved and failed at POST
+  https://registry.xiom-lang.org/publish with the same HTTP 403
+  `publisher_not_mapped`.
+- Ops evidence: `ops/stacks/trusted-publishers.production.json`
+  `stdlib-release` still lists only `refs/tags/stdlib-v*`; the staging
+  file has `refs/heads/main` (which is why the staging canary passed).
+  Production needs `refs/heads/main` added and the registry recreated.
+- `REL-20261017-2305-stdlib` (stdlib -> registry, high) is still open
+  with no history beyond creation; no registry reply.
+- Released state unchanged: stdlib-v0.64.7 (tag 1271dd5, release
+  39073534681 green), compiler v0.64.7 (release 39076930839 green,
+  STDLIB_VERSION pinned), staging canary 39077278671 green.
+- Next: registry/ops adds `refs/heads/main` to the production entry and
+  reloads; then re-run the production dispatch with version=0.64.7 and
+  compiler=v0.64.7, approve, and confirm.
+- Tree: main docs.
 
 **SESSION 2026-10-17 block 237 (stdlib-v0.64.7 RELEASED -- tag 1271dd5; release run 39073534681 green on Windows+Ubuntu, package + GitHub Release published; compiler main already pins STDLIB_VERSION=stdlib-v0.64.7 at 3667ee29d; the automated pin-PR job failed idempotently 'nothing to commit'; staging registry canary 39076910630 awaits environment approval; readiness meter 87.2%, gate 10 MET)**
 - Release gates: validate; Windows 49m05s; Ubuntu 38m12s; package +

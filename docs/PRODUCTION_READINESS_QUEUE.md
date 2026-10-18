@@ -33,8 +33,9 @@ gates flip:
     GitHub Release + assets published; pin already at stdlib-v0.64.7 on
     compiler main 3667ee29d; compiler v0.64.7 shipped and staging canary
     39077278671 is green with the publish workflow's `compiler` override;
-    production publish is pending the registry's `refs/heads/main`
-    mapping, REL-20261017-2305-stdlib).
+    production publish retry 39134943390 is still publisher_not_mapped
+    pending the registry's `refs/heads/main` mapping,
+    REL-20261017-2305-stdlib).
 
 Meter formula: MET gates count 1.0; gate 8 counts its current
 pub-with-clause fraction (72.3% -> 0.723); gate 9 gets no partial credit
@@ -53,10 +54,11 @@ the m351 typed-fault runtime and the arm64 crypto-availability fix.
 Gate 8 is 72.3%; gate 9 is compiler-owned. Compiler v0.64.7 shipped
 (run 39076930839 green); the staging canary re-run 39077278671 is green
 with the compiler override (main ae13302). The production dispatch
-39077410576 failed publisher_not_mapped because production trusts only
-refs/tags/stdlib-v*; REL-20261017-2305-stdlib asks the registry lane to
-allow refs/heads/main, after which we re-run production. Historical
-state below is retained for the record.
+retry 39134943390 failed publisher_not_mapped again: the ops production
+file (`ops/stacks/trusted-publishers.production.json`) still allows only
+refs/tags/stdlib-v* (staging has refs/heads/main). REL-20261017-2305-stdlib
+is open with no registry reply; registry/ops must add the ref and reload,
+then we re-run production. Historical state below is retained.
 
 Historical state (2026-10-11): compiler pin **v0.64.4** (released
 2026-10-12, tag f76fd47c on df493530; the lane battery runs the official
