@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 52 (updated 2026-10-18 14:20Z at this docs commit; **stdlib-v0.64.7 + compiler v0.64.7 RELEASED**; staging registry canary green; the ONLY blocker is the production registry trusted-publisher mapping -- production/ops config still allows only refs/tags/stdlib-v*, so the main-ref dispatch retry 39134943390 failed publisher_not_mapped again; REL-20261017-2305-stdlib is open with no registry reply; readiness 87.2%, gate 10 MET; next: registry/ops adds refs/heads/main + reload, then re-run production dispatch version=0.64.7 compiler=v0.64.7; then gate 8 coverage (num/time/iter/async) and gate 9 compiler findings)
+## 0A. CONTINUE HERE -- handoff snapshot 53 (updated 2026-10-18 15:05Z at this docs commit; **v0.64.7 FULLY RELEASED AND PUBLISHED** -- release lane moved the tag to da714e4 (COMPILER_VERSION=v0.64.7); tag-triggered production publish 39135008135 GREEN, re-gate 39135008156 green on Windows+Ubuntu, release assets replaced (xiom-std-0.64.7.tar.gz sha256 93da5829...) and body updated to compiler v0.64.7; release.yml idempotent at 0056bce; readiness 87.2% (gate 10 MET); next: gate 8 coverage (num/time/iter/async) and gate 9 compiler findings)
 
 ### Snapshot 37 (paste-ready)
 
@@ -3657,6 +3657,28 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-18 block 239 (v0.64.7 PRODUCTION PUBLISH COMPLETE -- release lane moved the tag to the final compiler pin da714e4; tag-triggered production publish 39135008135 GREEN; re-gate 39135008156 green on both OSes; release-create step hit an existing release, assets were replaced and the body refreshed; release workflow made idempotent at 0056bce; registry mapping item resolved without a config change)**
+- The release lane force-moved `stdlib-v0.64.7` to `da714e4`
+  (COMPILER_VERSION=v0.64.7). That made the tag-ref OIDC path match
+  production's `refs/tags/stdlib-v*` policy:
+  - production publish run **39135008135 GREEN** (no registry config
+    change needed; `REL-20261017-2305-stdlib` resolved);
+  - re-gate run **39135008156**: validate + Ubuntu 22m34s + Windows
+    32m37s all green; `package + GitHub Release` failed only at
+    "a release with the same tag name already exists".
+- Fixed the release state manually: downloaded the rebuilt
+  `stdlib-release-package` artifact, replaced the release assets with
+  `xiom-std-0.64.7.tar.gz` sha256
+  `93da58295c816d9691fad9981a1b1ed4eb2a04169bd008f7e97fce22857ac312`
+  and the new `SHA256SUMS`, and set the release body to
+  "Verified against compiler pin v0.64.7".
+- `release.yml` now makes the GitHub Release step idempotent
+  (`release view` -> `upload --clobber` + `edit`, else create) at
+  0056bce, so a moved/re-run tag no longer paints the package job red.
+- Snapshot 52's blocker is cleared: stdlib-v0.64.7 + compiler v0.64.7
+  are both released, staging and production registry publishes are
+  green, and the release assets match the moved tag.
 
 **SESSION 2026-10-18 block 238 (v0.64.7 PRODUCTION REGISTRY PUBLISH STILL BLOCKED -- retry 39134943390 failed publisher_not_mapped again; ops production config still allows only refs/tags/stdlib-v*, staging allows refs/heads/main; REL-20261017-2305-stdlib remains open with no registry reply; everything else is released and green)**
 - Retry: production dispatch 39134943390 (version 0.64.7,

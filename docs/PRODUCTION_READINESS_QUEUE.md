@@ -1,15 +1,13 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
 **87.2% -- 8 of 10 gates complete; gate 8 at 72.3% (partial credit) and
-gate 9 discrete.** (Compiler pin for the release gates:
-**candidate-v0.64.7-m351-r2**; stdlib-v0.64.7 tagged `1271dd5` and
-released 2026-10-17; compiler main pins
-`STDLIB_VERSION=stdlib-v0.64.7`; registry canary run 39076910630 is
-awaiting its environment approval.)
+gate 9 discrete.** (Compiler pin: **v0.64.7**; stdlib-v0.64.7 tag moved
+to `da714e4` with `COMPILER_VERSION=v0.64.7`; compiler main pins
+`STDLIB_VERSION=stdlib-v0.64.7`; production registry publish
+39135008135 is green and the release assets/body match the moved tag.)
 **Gates: corpus 956/956 on both Windows and Ubuntu release gates
 (962 including retries; 0 compilefail / 0 runfail), modules 533/533,
-probes 358/358, barename 0/533. Wave pin: candidate-v0.64.7-m351-r2
-(block 237).**
+probes 358/358, barename 0/533. Wave pin: v0.64.7 (block 239).**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -30,12 +28,10 @@ gates flip:
    OPEN (compiler-owned; see the relay bus for the current item set).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- MET
     (stdlib-v0.64.7 released 2026-10-17; release run 39073534681;
-    GitHub Release + assets published; pin already at stdlib-v0.64.7 on
-    compiler main 3667ee29d; compiler v0.64.7 shipped and staging canary
-    39077278671 is green with the publish workflow's `compiler` override;
-    production publish retry 39134943390 is still publisher_not_mapped
-    pending the registry's `refs/heads/main` mapping,
-    REL-20261017-2305-stdlib).
+    GitHub Release + assets published and refreshed after the tag moved
+    to da714e4 (COMPILER_VERSION=v0.64.7); compiler v0.64.7 shipped and
+    pins STDLIB_VERSION; staging canary 39077278671 and production
+    publish 39135008135 are GREEN; release.yml is idempotent at 0056bce).
 
 Meter formula: MET gates count 1.0; gate 8 counts its current
 pub-with-clause fraction (72.3% -> 0.723); gate 9 gets no partial credit
@@ -53,12 +49,13 @@ release gates was candidate-v0.64.7-m351-r2. Main carries waves 172-178,
 the m351 typed-fault runtime and the arm64 crypto-availability fix.
 Gate 8 is 72.3%; gate 9 is compiler-owned. Compiler v0.64.7 shipped
 (run 39076930839 green); the staging canary re-run 39077278671 is green
-with the compiler override (main ae13302). The production dispatch
-retry 39134943390 failed publisher_not_mapped again: the ops production
-file (`ops/stacks/trusted-publishers.production.json`) still allows only
-refs/tags/stdlib-v* (staging has refs/heads/main). REL-20261017-2305-stdlib
-is open with no registry reply; registry/ops must add the ref and reload,
-then we re-run production. Historical state below is retained.
+with the compiler override (main ae13302). The release lane then moved
+the tag to da714e4 with COMPILER_VERSION=v0.64.7, so the tag-ref OIDC
+path matched production's refs/tags/stdlib-v* policy: production publish
+39135008135 is GREEN and the re-gate 39135008156 is green on both OSes.
+The release assets were replaced and the body refreshed to compiler
+v0.64.7; no registry config change was needed. Historical state below is
+retained.
 
 Historical state (2026-10-11): compiler pin **v0.64.4** (released
 2026-10-12, tag f76fd47c on df493530; the lane battery runs the official
