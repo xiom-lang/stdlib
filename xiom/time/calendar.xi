@@ -72,7 +72,9 @@ fn days_in_month_cl(year: Int, month: Int) -> Int {
 /// Params: month - the month number.
 /// Returns: "January".."December"; an out-of-range month yields "Unknown".
 /// Complexity: O(1).
-pub fn calendar_month_name(month: Int) -> Str {
+pub fn calendar_month_name(month: Int) -> Str
+  ensures: ((month == 1) => (result == "January")) && ((month == 2) => (result == "February")) && ((month == 3) => (result == "March")) && ((month == 4) => (result == "April")) && ((month == 5) => (result == "May")) && ((month == 6) => (result == "June")) && ((month == 7) => (result == "July")) && ((month == 8) => (result == "August")) && ((month == 9) => (result == "September")) && ((month == 10) => (result == "October")) && ((month == 11) => (result == "November")) && ((month == 12) => (result == "December")) && ((month < 1 || month > 12) => (result == "Unknown"))
+{
   if month == 1 { return "January"; }
   if month == 2 { return "February"; }
   if month == 3 { return "March"; }
@@ -92,7 +94,9 @@ pub fn calendar_month_name(month: Int) -> Str {
 /// Params: month - the month number.
 /// Returns: "Jan".."Dec"; an out-of-range month yields "Unk".
 /// Complexity: O(1).
-pub fn calendar_month_name_short(month: Int) -> Str {
+pub fn calendar_month_name_short(month: Int) -> Str
+  ensures: ((month == 1) => (result == "Jan")) && ((month == 2) => (result == "Feb")) && ((month == 3) => (result == "Mar")) && ((month == 4) => (result == "Apr")) && ((month == 5) => (result == "May")) && ((month == 6) => (result == "Jun")) && ((month == 7) => (result == "Jul")) && ((month == 8) => (result == "Aug")) && ((month == 9) => (result == "Sep")) && ((month == 10) => (result == "Oct")) && ((month == 11) => (result == "Nov")) && ((month == 12) => (result == "Dec")) && ((month < 1 || month > 12) => (result == "Unk"))
+{
   if month == 1 { return "Jan"; }
   if month == 2 { return "Feb"; }
   if month == 3 { return "Mar"; }
@@ -112,7 +116,9 @@ pub fn calendar_month_name_short(month: Int) -> Str {
 /// Params: weekday - 0 for Sunday through 6 for Saturday.
 /// Returns: "Sunday".."Saturday"; out of range yields "Unknown".
 /// Complexity: O(1).
-pub fn calendar_weekday_name(weekday: Int) -> Str {
+pub fn calendar_weekday_name(weekday: Int) -> Str
+  ensures: ((weekday == 0) => (result == "Sunday")) && ((weekday == 1) => (result == "Monday")) && ((weekday == 2) => (result == "Tuesday")) && ((weekday == 3) => (result == "Wednesday")) && ((weekday == 4) => (result == "Thursday")) && ((weekday == 5) => (result == "Friday")) && ((weekday == 6) => (result == "Saturday")) && ((weekday < 0 || weekday > 6) => (result == "Unknown"))
+{
   if weekday == 0 { return "Sunday"; }
   if weekday == 1 { return "Monday"; }
   if weekday == 2 { return "Tuesday"; }
@@ -127,7 +133,9 @@ pub fn calendar_weekday_name(weekday: Int) -> Str {
 /// Params: weekday - 0 for Sunday through 6 for Saturday.
 /// Returns: "Sun".."Sat"; out of range yields "Unk".
 /// Complexity: O(1).
-pub fn calendar_weekday_name_short(weekday: Int) -> Str {
+pub fn calendar_weekday_name_short(weekday: Int) -> Str
+  ensures: ((weekday == 0) => (result == "Sun")) && ((weekday == 1) => (result == "Mon")) && ((weekday == 2) => (result == "Tue")) && ((weekday == 3) => (result == "Wed")) && ((weekday == 4) => (result == "Thu")) && ((weekday == 5) => (result == "Fri")) && ((weekday == 6) => (result == "Sat")) && ((weekday < 0 || weekday > 6) => (result == "Unk"))
+{
   if weekday == 0 { return "Sun"; }
   if weekday == 1 { return "Mon"; }
   if weekday == 2 { return "Tue"; }
@@ -142,7 +150,9 @@ pub fn calendar_weekday_name_short(weekday: Int) -> Str {
 /// Params: year, month - the calendar fields.
 /// Returns: 28-31 days.
 /// Complexity: O(1).
-pub fn calendar_days_in_month(year: Int, month: Int) -> Int {
+pub fn calendar_days_in_month(year: Int, month: Int) -> Int
+  ensures: ((month == 2) => (result == 28 || result == 29)) && ((month == 4 || month == 6 || month == 9 || month == 11) => (result == 30)) && ((month == 1 || month == 3 || month == 5 || month == 7 || month == 8 || month == 10 || month == 12) => (result == 31)) && ((month < 1 || month > 12) => (result == 31))
+{
   return time.date_days_in_month(year, month);
 }
 
@@ -150,7 +160,9 @@ pub fn calendar_days_in_month(year: Int, month: Int) -> Int {
 /// Params: year, month - the calendar fields.
 /// Returns: 0 for Sunday through 6 for Saturday.
 /// Complexity: O(1).
-pub fn calendar_first_weekday(year: Int, month: Int) -> Int {
+pub fn calendar_first_weekday(year: Int, month: Int) -> Int
+  ensures: (0 <= result && result < 7) && ((year == 1970 && month == 1) => (result == 4))
+{
   return time.date_day_of_week(year, month, 1);
 }
 
@@ -158,7 +170,9 @@ pub fn calendar_first_weekday(year: Int, month: Int) -> Int {
 /// Params: year - the year.
 /// Returns: 52, or 53 when the ISO year has 53 weeks.
 /// Complexity: O(1).
-pub fn calendar_weeks_in_year(year: Int) -> Int {
+pub fn calendar_weeks_in_year(year: Int) -> Int
+  ensures: result == 52 || result == 53
+{
   let jan1 = time.date_day_of_week(year, 1, 1);
   if jan1 == 4 {
     return 53;
@@ -173,7 +187,9 @@ pub fn calendar_weeks_in_year(year: Int) -> Int {
 /// Params: year - the year.
 /// Returns: the Easter Sunday date (Meeus/Jones/Butcher computus).
 /// Complexity: O(1).
-pub fn calendar_easter(year: Int) -> Date {
+pub fn calendar_easter(year: Int) -> Date
+  ensures: (year >= 1583) => (result.year == year && ((result.month == 3 && 22 <= result.day && result.day <= 31) || (result.month == 4 && 1 <= result.day && result.day <= 25)))
+{
   let a = year % 19;
   let b = year / 100;
   let c = year % 100;
@@ -195,7 +211,9 @@ pub fn calendar_easter(year: Int) -> Date {
 /// Params: year, month, day - the calendar fields.
 /// Returns: the astronomical Julian Day Number.
 /// Complexity: O(1).
-pub fn calendar_julian_day(year: Int, month: Int, day: Int) -> Int {
+pub fn calendar_julian_day(year: Int, month: Int, day: Int) -> Int
+  ensures: result == days_from_civil_cl(year, month, day) + 2440588
+{
   let days = days_from_civil_cl(year, month, day);
   return days + 2440588;
 }
@@ -204,7 +222,9 @@ pub fn calendar_julian_day(year: Int, month: Int, day: Int) -> Int {
 /// Params: jd - the Julian Day Number.
 /// Returns: the corresponding Date.
 /// Complexity: O(1).
-pub fn calendar_from_julian_day(jd: Int) -> Date {
+pub fn calendar_from_julian_day(jd: Int) -> Date
+  ensures: (jd >= 2440588 - 719468) => (calendar_julian_day(result.year, result.month, result.day) == jd)
+{
   let (y, m, d) = civil_from_days_cl(jd - 2440588);
   return Date{ year: y; month: m; day: d; }
 }
@@ -213,7 +233,9 @@ pub fn calendar_from_julian_day(jd: Int) -> Date {
 /// Params: year, month - the calendar fields.
 /// Returns: a 42-slot grid starting on the first day's weekday.
 /// Complexity: O(1).
-pub fn calendar_month_grid(year: Int, month: Int) -> Vec[Int] {
+pub fn calendar_month_grid(year: Int, month: Int) -> Vec[Int]
+  ensures: (result.len() == 42) && ((year == 1970 && month == 1) => (result[0] == 0 && result[4] == 1))
+{
   var grid: Vec[Int] = Vec[Int].new();
   var i: Int = 0;
   while i < 42 {
@@ -234,7 +256,9 @@ pub fn calendar_month_grid(year: Int, month: Int) -> Vec[Int] {
 /// Params: d - the date.
 /// Returns: whether the weekday is 0 (Sunday) or 6 (Saturday).
 /// Complexity: O(1).
-pub fn calendar_is_weekend(d: &Date) -> Bool {
+pub fn calendar_is_weekend(d: &Date) -> Bool
+  ensures: result == (time.date_day_of_week(d.year, d.month, d.day) == 0 || time.date_day_of_week(d.year, d.month, d.day) == 6)
+{
   let wd = time.date_day_of_week(d.year, d.month, d.day);
   if wd == 0 {
     return true;
@@ -246,7 +270,9 @@ pub fn calendar_is_weekend(d: &Date) -> Bool {
 /// Params: d - the base date; n - the month offset.
 /// Returns: the shifted date with the day clamped to the target month.
 /// Complexity: O(1).
-pub fn calendar_add_months_overflow_safe(d: &Date, n: Int) -> Date {
+pub fn calendar_add_months_overflow_safe(d: &Date, n: Int) -> Date
+  ensures: (1 <= result.month && result.month <= 12) && (result.day <= 31) && (result.day <= d.day) && ((1 <= d.day) => (1 <= result.day)) && ((n == 0 && 1 <= d.month && d.month <= 12 && 1 <= d.day && d.day <= 28) => (result.year == d.year && result.month == d.month && result.day == d.day))
+{
   var total = d.month - 1 + n;
   var y = d.year;
   var m = d.month;

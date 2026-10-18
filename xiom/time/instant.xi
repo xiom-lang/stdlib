@@ -17,7 +17,9 @@ use xiom.time;
 /// The current monotonic instant.
 /// Returns: an Instant from the system monotonic clock.
 /// Complexity: O(1).
-pub fn instant_now() -> Instant {
+pub fn instant_now() -> Instant
+  ensures: result.t >= 0
+{
   return time.Instant.now();
 }
 
@@ -25,7 +27,9 @@ pub fn instant_now() -> Instant {
 /// Params: i - the earlier instant.
 /// Returns: now - i.
 /// Complexity: O(1).
-pub fn instant_elapsed(i: Instant) -> Duration {
+pub fn instant_elapsed(i: Instant) -> Duration
+  ensures: 0 <= result.nanos && result.nanos < 1000000000
+{
   return i.elapsed();
 }
 
