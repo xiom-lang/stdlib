@@ -122,6 +122,21 @@ types; the param+Result-return combination aborts the compiler silently
 `p_trailing_match_after_push`) remain Current, none are claimed by the
 staged v0.64.6 cut range (m334-m346).
 
+**OPEN (wave 180, 2026-10-18, compiler v0.64.6 official archive + v0.64.7
+extract): a callee reading an element of `&Vec[GenericStruct]` sees
+corrupted fields.** Found while runtime-checking the new `async_select`
+contract: a closed, drained `AsyncChannel[Int]` read inside the callee is
+reported as `closed=false`, `items.len()=4294967295`, so `async_select`
+returns `Some` instead of `None`. Minimal repro:
+`tools/known_failures/p_vec_byref_generic_struct.xi` (`type Box[T] =
+{ items: Vec[T]; closed: Bool; cap: Int; }`; `fn inspect(bs:
+&Vec[Box[Int]])` reads `bs[0]`). Caller-side construction/reads are
+correct, and a concrete `Vec[Int]` field works; the trigger is the generic
+struct's nested generic container crossing the by-ref parameter. Observed
+on both pins: compile rc 0, run rc 1, `plain=111` (len!=0 + closed!=true +
+cap!=7); expected rc 0. Filed as `REL-20261018-1546-stdlib` (to compiler).
+Current is now 16 findings (the 15 prior plus this one).
+
 **OPEN (wave 165, 2026-10-16, compiler v0.64.5 official archive): a runtime
 `sdiv i128` inlined into a vector-loop function compiles rc 0 and AVs at
 run time (0xC0000005).** Found while implementing `xiom.math.fixed` on the
