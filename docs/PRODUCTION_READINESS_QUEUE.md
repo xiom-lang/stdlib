@@ -2,7 +2,7 @@
 
 **87.2% -- 8 of 10 gates complete; gate 8 at 72.3% (partial credit) and
 gate 9 discrete.** (Compiler pin: **v0.64.7**; stdlib-v0.64.7 tag moved
-to `da714e4` with `COMPILER_VERSION=v0.64.7`; compiler main pins
+to `f4482b14` with `COMPILER_VERSION=v0.64.7`; compiler main pins
 `STDLIB_VERSION=stdlib-v0.64.7`; production registry publish
 39135008135 is green and the release assets/body match the moved tag.)
 **Gates: corpus 956/956 on both Windows and Ubuntu release gates
@@ -29,7 +29,7 @@ gates flip:
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- MET
     (stdlib-v0.64.7 released 2026-10-17; release run 39073534681;
     GitHub Release + assets published and refreshed after the tag moved
-    to da714e4 (COMPILER_VERSION=v0.64.7); compiler v0.64.7 shipped and
+    to f4482b14 (COMPILER_VERSION=v0.64.7); compiler v0.64.7 shipped and
     pins STDLIB_VERSION; staging canary 39077278671 and production
     publish 39135008135 are GREEN; release.yml is idempotent at 0056bce).
 
@@ -41,21 +41,17 @@ smoothly toward 90%.
 
 Authoritative order: the gates above, then the updates below newest-first.
 
-Current state 2026-10-17: **stdlib-v0.64.7 RELEASED** (tag `1271dd5`;
-release run 39073534681; assets `xiom-std-0.64.7.tar.gz` sha256
-`8da73347...` and `SHA256SUMS` sha256 `4ae4af51...`; compiler main pins
-`STDLIB_VERSION=stdlib-v0.64.7` at 3667ee29d). The compiler used for the
-release gates was candidate-v0.64.7-m351-r2. Main carries waves 172-178,
-the m351 typed-fault runtime and the arm64 crypto-availability fix.
-Gate 8 is 72.3%; gate 9 is compiler-owned. Compiler v0.64.7 shipped
-(run 39076930839 green); the staging canary re-run 39077278671 is green
-with the compiler override (main ae13302). The release lane then moved
-the tag to da714e4 with COMPILER_VERSION=v0.64.7, so the tag-ref OIDC
-path matched production's refs/tags/stdlib-v* policy: production publish
-39135008135 is GREEN and the re-gate 39135008156 is green on both OSes.
-The release assets were replaced and the body refreshed to compiler
-v0.64.7; no registry config change was needed. Historical state below is
-retained.
+Current state 2026-10-18: **stdlib-v0.64.7 RELEASED and PUBLISHED**
+(annotated tag `stdlib-v0.64.7` = tag object `11bf62a6` -> commit
+`f4482b14`; `COMPILER_VERSION=v0.64.7`; compiler main pins
+`STDLIB_VERSION=stdlib-v0.64.7` at 3667ee29d). Release run 39073534681
+and the moved-tag re-gate 39135008156 are green on Windows+Ubuntu;
+production registry publish 39135008135 is green and the registry
+reports `xiom-std 0.64.7` latest. Assets: `xiom-std-0.64.7.tar.gz`
+sha256 `93da5829...`; the release body is verified against compiler
+v0.64.7. Main carries waves 172-178, the m351 typed-fault runtime and
+the arm64 crypto-availability fix. Gate 8 is 72.3%; gate 9 is
+compiler-owned. Historical state below is retained.
 
 Historical state (2026-10-11): compiler pin **v0.64.4** (released
 2026-10-12, tag f76fd47c on df493530; the lane battery runs the official

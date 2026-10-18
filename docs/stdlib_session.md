@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 53 (updated 2026-10-18 15:05Z at this docs commit; **v0.64.7 FULLY RELEASED AND PUBLISHED** -- release lane moved the tag to da714e4 (COMPILER_VERSION=v0.64.7); tag-triggered production publish 39135008135 GREEN, re-gate 39135008156 green on Windows+Ubuntu, release assets replaced (xiom-std-0.64.7.tar.gz sha256 93da5829...) and body updated to compiler v0.64.7; release.yml idempotent at 0056bce; readiness 87.2% (gate 10 MET); next: gate 8 coverage (num/time/iter/async) and gate 9 compiler findings)
+## 0A. CONTINUE HERE -- handoff snapshot 53 (updated 2026-10-18 15:30Z at this docs commit; **v0.64.7 FULLY RELEASED AND PUBLISHED** -- release lane moved the tag to f4482b14 (annotated tag object 11bf62a6; COMPILER_VERSION=v0.64.7; main's equivalent pin is da714e4); tag-triggered production publish 39135008135 GREEN, re-gate 39135008156 green on Windows+Ubuntu, release assets replaced (xiom-std-0.64.7.tar.gz sha256 93da5829...) and body updated to compiler v0.64.7; release.yml idempotent at 0056bce; PULSE confirmed on f4482b14; readiness 87.2% (gate 10 MET); next: gate 8 coverage (num/time/iter/async) and gate 9 compiler findings)
 
 ### Snapshot 37 (paste-ready)
 
@@ -3658,9 +3658,10 @@ registry pin, agent recon for the rest)**
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
 
-**SESSION 2026-10-18 block 239 (v0.64.7 PRODUCTION PUBLISH COMPLETE -- release lane moved the tag to the final compiler pin da714e4; tag-triggered production publish 39135008135 GREEN; re-gate 39135008156 green on both OSes; release-create step hit an existing release, assets were replaced and the body refreshed; release workflow made idempotent at 0056bce; registry mapping item resolved without a config change)**
-- The release lane force-moved `stdlib-v0.64.7` to `da714e4`
-  (COMPILER_VERSION=v0.64.7). That made the tag-ref OIDC path match
+**SESSION 2026-10-18 block 239 (v0.64.7 PRODUCTION PUBLISH COMPLETE -- release lane moved the tag to the final compiler pin f4482b14; tag-triggered production publish 39135008135 GREEN; re-gate 39135008156 green on both OSes; release-create step hit an existing release, assets were replaced and the body refreshed; release workflow made idempotent at 0056bce; registry mapping item resolved without a config change)**
+- The release lane force-moved `stdlib-v0.64.7` to `f4482b14`
+  (annotated tag object 11bf62a6; COMPILER_VERSION=v0.64.7; the
+  equivalent main commit is da714e4). That made the tag-ref OIDC path match
   production's `refs/tags/stdlib-v*` policy:
   - production publish run **39135008135 GREEN** (no registry config
     change needed; `REL-20261017-2305-stdlib` resolved);
@@ -3691,9 +3692,10 @@ registry pin, agent recon for the rest)**
   Production needs `refs/heads/main` added and the registry recreated.
 - `REL-20261017-2305-stdlib` (stdlib -> registry, high) is still open
   with no history beyond creation; no registry reply.
-- Released state unchanged: stdlib-v0.64.7 (tag 1271dd5, release
-  39073534681 green), compiler v0.64.7 (release 39076930839 green,
-  STDLIB_VERSION pinned), staging canary 39077278671 green.
+- Released state unchanged: stdlib-v0.64.7 (original tag 1271dd5, later
+  moved to f4482b14 -- see block 239; release 39073534681 green),
+  compiler v0.64.7 (release 39076930839 green, STDLIB_VERSION pinned),
+  staging canary 39077278671 green.
 - Next: registry/ops adds `refs/heads/main` to the production entry and
   reloads; then re-run the production dispatch with version=0.64.7 and
   compiler=v0.64.7, approve, and confirm.
@@ -3705,7 +3707,8 @@ registry pin, agent recon for the rest)**
   red job is the automated pin PR, which failed because compiler main
   already had `STDLIB_VERSION=stdlib-v0.64.7` at 3667ee29d; no PR was
   needed.
-- Tag: `stdlib-v0.64.7` -> `1271dd5` (annotated), cut on
+- Tag: `stdlib-v0.64.7` -> `1271dd5` (annotated; later moved to
+  f4482b14 with the final compiler pin -- see block 239), cut on
   `release/v0.64.7-prep` after the r2 dry-run (39069464037) went green.
   Release: https://github.com/xiom-lang/stdlib/releases/tag/stdlib-v0.64.7
   ; `xiom-std-0.64.7.tar.gz` sha256
