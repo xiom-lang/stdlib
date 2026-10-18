@@ -17,7 +17,26 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 53 (updated 2026-10-18 15:30Z at this docs commit; **v0.64.7 FULLY RELEASED AND PUBLISHED** -- release lane moved the tag to f4482b14 (annotated tag object 11bf62a6; COMPILER_VERSION=v0.64.7; main's equivalent pin is da714e4); tag-triggered production publish 39135008135 GREEN, re-gate 39135008156 green on Windows+Ubuntu, release assets replaced (xiom-std-0.64.7.tar.gz sha256 93da5829...) and body updated to compiler v0.64.7; release.yml idempotent at 0056bce; PULSE confirmed on f4482b14; readiness 87.2% (gate 10 MET); next: gate 8 coverage (num/time/iter/async) and gate 9 compiler findings)
+## 0A. CONTINUE HERE -- handoff snapshot 54 (updated 2026-10-18 15:40Z at this docs commit; **v0.64.7 RELEASED/PUBLISHED** -- tag f4482b14 (tag object 11bf62a6), registry latest 0.64.7, compiler v0.64.7; **waves 179 (time contracts) and 180 (async contracts) are in flight in Agent Manager worktrees**; 14 old merged worktrees pruned; readiness 87.2% (gate 10 MET; gate 8 72.3%); relay lane only the compiler info announcement is open; paste-ready next-session prompt in `## 0C`)
+
+## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-18)
+
+```
+Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
+  git -C E:\xiom-lang\xiom-relays pull --ff-only
+  python tools/relay.py view --lane stdlib
+Read docs/stdlib_session.md snapshot 54 + block 240 (and this 0C block).
+
+State: stdlib-v0.64.7 is released; tag stdlib-v0.64.7 = f4482b14 (tag object 11bf62a6); registry xiom-std 0.64.7 is live; compiler v0.64.7 is released; main 5cdc30d. Readiness 87.2% (gates 1-7 and 10 met; gate 8 72.3%; gate 9 compiler-owned). Relay: only the compiler v0.64.7 info announcement is open; PULSE tag-move item fixed; 2257/2305 closed.
+
+Parallel waves: wave/179-time-contracts (session ses_eb06f4a1bffefmwRfqgi2lqhJr) and wave/180-async-contracts (session ses_eb06eb23dffeSrPgi8q4OSAk5J) are running. Use agent_manager list; when idle, review their reports, run check_modules/coverage_scan/doc_scan and targeted probes, dump floors183 if pub coverage rises, update readiness meter, merge with --no-ff, delete branches/worktrees, and clean .kilo worktrees.
+
+Then continue gate 8: num 37.9%, iter 46.4%, math 53.8%, core 58.0%, regex 59.2%, stats 60.4% (time/async via the agents). Gate 9: verify/close compiler items 1053/1456/1626/2328/2343/2000/2100/2331 on v0.64.7.
+
+Blockers: 1549-pulse-5 waits on compiler 1609; 1834 waits on compiler 1550; fixed items await reporters. Wishlist: only row 33 open (compiler/install). Kqueue needs a macOS runner; net.event wrapper and LISTEN_FDS server integration remain.
+
+Use the official v0.64.6 archive for batteries (%TEMP%\kilo\stdlib_ws\v0.64.6-official\bin\xiom.exe); run_smokes sets XIOM_STDLIB. Do not move tags; release.yml is idempotent at 0056bce. Keep docs/session current and post material findings on the relay bus.
+```
 
 ### Snapshot 37 (paste-ready)
 
@@ -3657,6 +3676,34 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-18 block 240 (PARALLEL READINESS WAVES + HOUSEKEEPING -- wave/179 time contracts and wave/180 async contracts launched in Agent Manager worktrees; 14 old merged sessions stopped and empty worktrees pruned; relay lane clean except info; next-session prompt recorded)**
+- Agent Manager worktree sessions (both busy at launch):
+  - wave/179 time: `ses_eb06f4a1bffefmwRfqgi2lqhJr`, branch
+    `wave/179-time-contracts`, scope `time/duration|instant|date|
+    calendar`, real clauses only, checks/coverage/doc/probes, commit on
+    branch, no merge.
+  - wave/180 async: `ses_eb06eb23dffeSrPgi8q4OSAk5J`, branch
+    `wave/180-async-contracts`, scope `async/channel|timer|io|executor`,
+    same contract/verification rules.
+- Housekeeping: stopped 14 merged/old Agent Manager sessions
+  (waves 151-171 except the two wave/154 leftovers), ran
+  `git worktree prune`, and removed 14 empty `.kilo/worktrees` dirs.
+  Deleted merged local branches `wave/178-sort-coverage`,
+  `fix/arm64-crypto-availability`, `fix/m351-typed-fault`. Kept
+  wave/154 (not ours), release/v0.64.7-prep, main-pin, the witness
+  branches, and foreign worktrees.
+- Relay: only `REL-20261017-2259-compiler` open (info to all).
+  `REL-20261018-1432-pulse-2` fixed (tag move to f4482b14 confirmed);
+  `2257`/`2305` closed. Blockers: 1549-pulse-5 waits on compiler 1609;
+  1834 waits on compiler 1550. Fixed items await reporters.
+- Backlog check: wishlist has only row 33 open (compiler/install lane);
+  `tools/known_failures/README.md` Current is 15 findings, all
+  compiler-owned. v0.64.7 likely retired the hash/mutex/alias rows, but
+  the relay items still need verification/closure.
+- Readiness 87.2%: gates 1-7 and 10 met; gate 8 is 72.3% (time 41.3,
+  async 47.8, num 37.9, iter 46.4, math 53.8); gate 9 compiler-owned.
+- Next-session prompt: see `## 0B` below.
 
 **SESSION 2026-10-18 block 239 (v0.64.7 PRODUCTION PUBLISH COMPLETE -- release lane moved the tag to the final compiler pin f4482b14; tag-triggered production publish 39135008135 GREEN; re-gate 39135008156 green on both OSes; release-create step hit an existing release, assets were replaced and the body refreshed; release workflow made idempotent at 0056bce; registry mapping item resolved without a config change)**
 - The release lane force-moved `stdlib-v0.64.7` to `f4482b14`
