@@ -163,7 +163,13 @@ pub fn timer_wheel_add(tw: &mut TimerWheel, ms: Int, f: fn())
 /// Advance one slot, firing every due timer.
 /// Params: tw - the wheel.
 /// Complexity: O(1) plus the cost of due tasks.
-pub fn timer_wheel_tick(tw: &mut TimerWheel) {
+pub fn timer_wheel_tick(tw: &mut TimerWheel)
+  requires: tw.ids.len() == tw.tasks.len()
+  requires: tw.deadlines.len() == tw.ids.len()
+  ensures: tw.now == tw.now@pre + 1
+  ensures: tw.ids.len() == tw.tasks.len()
+  ensures: tw.deadlines.len() == tw.ids.len()
+{
   tw.now = tw.now + 1;
   var i: Int = 0;
   while i < tw.deadlines.len() {
@@ -217,7 +223,9 @@ pub fn timer_wheel_cancel(tw: &mut TimerWheel, id: Int)
 /// Create a stopwatch started now.
 /// Returns: a stopwatch whose elapsed time is zero at creation.
 /// Complexity: O(1).
-pub fn stopwatch_new() -> Stopwatch {
+pub fn stopwatch_new() -> Stopwatch
+  ensures: result.start >= 0
+{
   return Stopwatch{ start: _now(); }
 }
 
@@ -225,14 +233,20 @@ pub fn stopwatch_new() -> Stopwatch {
 /// Params: s - the stopwatch.
 /// Returns: the elapsed wall-clock milliseconds.
 /// Complexity: O(1).
-pub fn stopwatch_elapsed_ms(s: Stopwatch) -> Int {
+pub fn stopwatch_elapsed_ms(s: Stopwatch) -> Int
+  requires: s.start >= 0
+  requires: s.start <= _now()
+  ensures: result >= 0
+{
   return _now() - s.start;
 }
 
 /// Restart the stopwatch from zero.
 /// Params: s - the stopwatch.
 /// Complexity: O(1).
-pub fn stopwatch_reset(s: &mut Stopwatch) {
+pub fn stopwatch_reset(s: &mut Stopwatch)
+  ensures: s.start >= 0
+{
   s.start = _now();
 }
 
@@ -240,6 +254,10 @@ pub fn stopwatch_reset(s: &mut Stopwatch) {
 /// Params: s - the stopwatch.
 /// Returns: the elapsed wall-clock milliseconds.
 /// Complexity: O(1).
-pub fn stopwatch_split(s: Stopwatch) -> Int {
+pub fn stopwatch_split(s: Stopwatch) -> Int
+  requires: s.start >= 0
+  requires: s.start <= _now()
+  ensures: result >= 0
+{
   return _now() - s.start;
 }

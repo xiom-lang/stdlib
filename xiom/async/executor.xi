@@ -47,7 +47,9 @@ pub fn executor_new() -> Executor
 /// Enqueue a task to run on the next drain.
 /// Params: e - the executor; f - the task.
 /// Complexity: O(1) amortized.
-pub fn executor_spawn(e: &mut Executor, f: fn()) {
+pub fn executor_spawn(e: &mut Executor, f: fn())
+  ensures: e.ready.len() == e.ready.len()@pre + 1
+{
   e.ready.push(f);
 }
 
@@ -55,7 +57,9 @@ pub fn executor_spawn(e: &mut Executor, f: fn()) {
 /// Params: e - the executor; f - the task.
 /// In this cooperative simulation the task joins the ready queue directly.
 /// Complexity: O(1) amortized.
-pub fn executor_spawn_blocking(e: &mut Executor, f: fn()) {
+pub fn executor_spawn_blocking(e: &mut Executor, f: fn())
+  ensures: e.ready.len() == e.ready.len()@pre + 1
+{
   e.ready.push(f);
 }
 
@@ -114,7 +118,10 @@ fn executor_fire_due_timers(e: &mut Executor) {
 /// Drive the executor until the queues are empty.
 /// Params: e - the executor.
 /// Complexity: O(tasks) executions plus timer sleeps.
-pub fn executor_run(e: &mut Executor) {
+pub fn executor_run(e: &mut Executor)
+  ensures: e.ready.len() == 0
+  ensures: e.timers.len() == 0
+{
   while e.ready.len() > 0 || e.timers.len() > 0 {
     var drained = true;
     while e.ready.len() > 0 {
@@ -167,7 +174,9 @@ pub fn executor_tasks(e: &Executor) -> Int
 /// Params: f - the task.
 /// Returns: Ok(0) once `f` and any spawned work complete.
 /// Complexity: O(tasks) executions.
-pub fn block_on(f: fn()) -> Result[Int, Str] {
+pub fn block_on(f: fn()) -> Result[Int, Str]
+  ensures: result is Ok
+{
   var exec = executor_new();
   executor_spawn(&mut exec, f);
   executor_run(&mut exec);

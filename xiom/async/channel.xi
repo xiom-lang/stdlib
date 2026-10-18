@@ -147,7 +147,9 @@ pub fn async_channel_len[T](ch: &AsyncChannel[T]) -> Int
 /// Returns: Some(index) of the first channel with a queued item, or None if
 ///          every channel is closed and drained.
 /// Complexity: O(n) per poll; yields while no channel is ready.
-pub fn async_select[T](chs: &Vec[AsyncChannel[T]]) -> Option[Int] {
+pub fn async_select[T](chs: &Vec[AsyncChannel[T]]) -> Option[Int]
+  ensures: result is Some => chs.len() > 0
+{
   var done = false;
   var result: Option[Int] = None;
   while !done {
