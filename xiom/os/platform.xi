@@ -101,7 +101,9 @@ pub fn platform_is_unix() -> Bool
 /// via the env.TEMP-free C getenv-free approach: reads the COMPUTERNAME
 /// variable (Windows) or HOSTNAME (Unix) as a best effort. Complexity:
 /// O(1).
-pub fn platform_hostname() -> Result[Str, Str] {
+pub fn platform_hostname() -> Result[Str, Str]
+  ensures: result is Ok => result.value.len() > 0
+{
   let rt = _rt_hostname();
   if rt.len() > 0 {
     return Ok(rt);
