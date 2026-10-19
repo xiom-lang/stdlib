@@ -357,7 +357,10 @@ pub fn stability_routh_hurwitz(den: &Vec[Float64]) -> Bool
     var nlen = 0;
     var col = 0;
     while col < 4 {
-      var v1 = _row_el(prev1, col, l1);
+      var v1 = 0.0;
+      if col + 1 < l1 {
+        v1 = _row_el(prev1, col + 1, l1);
+      }
       var v2 = 0.0;
       if col + 1 < l2 {
         v2 = _row_el(prev2, col + 1, l2);
