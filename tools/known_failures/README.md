@@ -122,9 +122,14 @@ types; the param+Result-return combination aborts the compiler silently
 `p_trailing_match_after_push`) remain Current, none are claimed by the
 staged v0.64.6 cut range (m334-m346).
 
-**OPEN (wave 180, 2026-10-18, compiler v0.64.6 official archive + v0.64.7
-extract): a callee reading an element of `&Vec[GenericStruct]` sees
-corrupted fields.** Found while runtime-checking the new `async_select`
+**RESOLVED (v0.64.8, 2026-10-19): a callee reading an element of
+`&Vec[GenericStruct]` sees corrupted fields.** Found on v0.64.6/v0.64.7;
+fixed by compiler m370 (`f7fe288e3`). Re-verified on the official v0.64.8
+archive: `tools/known_failures/p_vec_byref_generic_struct.xi` rc 0 /
+`plain=0`, and the new `tools/probes/p_async_select_closed_drain.xi` PASS
+(closed+item -> Some(0), closed+drained -> None). Closed
+`REL-20261018-1546-stdlib`. Entry retained as history:
+Found while runtime-checking the new `async_select`
 contract: a closed, drained `AsyncChannel[Int]` read inside the callee is
 reported as `closed=false`, `items.len()=4294967295`, so `async_select`
 returns `Some` instead of `None`. Minimal repro:

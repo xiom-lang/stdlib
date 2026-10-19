@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 72 (updated 2026-10-19 23:40Z; **v0.64.8 PINNED + RELEASED**; waves 188-190 merged: global 83.0%, readiness 88.3%, floors190; final battery modules 533/533, smokes 962/962 (+ new io rename-dir smoke, 963 total), probes 372/372, barename 0/533; next: iter/time/async/os/collect/thread/compress + math remainder; gate 9 reds 1626/2343/2100-W1)
+## 0A. CONTINUE HERE -- handoff snapshot 73 (updated 2026-10-20 01:05Z; **v0.64.8 PINNED + RELEASED**; waves 191-195 merged: global 89.0%, readiness 88.9%, floors191; final battery modules 533/533, smokes 963/963, probes 381/381, barename 0/533; next: iter/os/math/collections/simd/ffi/array; gate 9 reds 1626/2343/2100-W1 + 1609)
 
 ## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-19, snapshot 72)
 
@@ -25,7 +25,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib, branch main). Start with:
   git -C E:\xiom-lang\xiom-relays pull --ff-only origin main
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 72 + blocks 259/260 (and this 0C block).
+Read docs/stdlib_session.md snapshot 73 + blocks 260/261 (and this 0C block).
 
 State: v0.64.8 is RELEASED and PINNED. COMPILER_VERSION=v0.64.8; staged
 archive %TEMP%\kilo\stdlib_ws\v0.64.8-official (windows zip sha256
@@ -34,45 +34,55 @@ c31d9c46..., linux tar.gz a8c003c0...). stdlib-v0.64.8 tag object 0bf5b75
 run 39289746856; registry xiom-std 0.64.8 live (sha256 c4ab5c61..., run
 39298965606). Tags frozen; do NOT move/re-cut v0.64.8.
 
-Coverage: global pub-with-clause 83.0% (5720/6890; clauses/fns 84.2%),
-readiness 88.3% (gate 8 83.0%; floors190; gates 1-7/10 met, gate 9 open).
-Merged waves 188-190: num 50.7% -> 96.9% (num/num.xi 5.4% -> 99.2%),
-string 68.9% -> 90.4%, math 56.0% -> 71.3%. Worst dirs: iter 46.4%,
-time 52.9%, async 62.7%, os 65.1%, collect 65.5%, thread 67.9%,
-compress 70.4%, math 71.3%, bits 74.3%, core 78.6%.
+Coverage: global pub-with-clause 89.0% (6129/6890; clauses/fns 91%,
+8473 clauses), readiness 88.9% (gate 8 89.0%; floors191; gates 1-7/10
+met, gate 9 open). Waves 188-195 merged: num/num.xi 5.4% -> 99.2%,
+string 68.9% -> 90.4%, time 52.9% -> 85.5%, async 62.7% -> 85.1%,
+os 65.1% -> 68.5%, collect 65.5% -> 93.2%, thread 67.9% -> 89.3%,
+compress 70.4% -> 96.3%, math 71.3% -> 78.2%, bits 74.3% -> 97.0%,
+iter 46.4% -> 55.2%, core 78.6% -> 94.7%. Worst dirs: iter 55.2%,
+os 68.5%, collections 77.2%, math 78.2%, alloc 78.6%, simd 78.9%,
+ffi 79.5%, array 80.0%, cell 81.2%.
 
 Final battery on the merged tree (official v0.64.8): modules 533/533,
-smokes 962/962 (0 compilefail / 0 runfail) + new io rename-dir smoke
-(963 total), probes 372/372, barename 0/533, coverage floors190 RATCHET
-OK, regex 17/17, doc_scan 100% (2 pre-existing net misses).
-fraction_add cross-cancel fix + p_fraction_add_reduce; io.rename
-directory-aware postcondition + smoke_io_rename_dir; runtime __udivti3
-fix + tests/runtime/test_udivti3.c.
+smokes 963/963 (0 compilefail / 0 runfail), probes 381/381, barename
+0/533, coverage floors191 RATCHET OK, regex 17/17, doc_scan 100%
+(2 pre-existing net misses). Bug fixes on top: fraction_add cross-cancel
+(109afa1), io.rename directory-aware postcondition (19d86de), runtime
+__udivti3 (1555c93), Routh-Hurwitz recurrence (07a9619), weekday
+0=Sunday (d1ee6b3), AsyncExecutor.run receiver drain (fc8e2b6).
+Probes: p_fraction_add_reduce, p_routh_stability,
+p_async_executor_state, p_hash_shadow, p_async_select_closed_drain.
 
 Immediate housekeeping:
-- Stop/remove the merged Agent Manager sessions for wave/188-num-contracts,
-  wave/189-string-contracts, wave/190-math-contracts; remove worktrees,
-  delete the merged branches. Keep wave/154 (foreign).
-- Agent Manager may list stale no-session worktrees for waves 179/180;
-  clean only if safe. Do not merge anything else.
+- Stop/remove the merged Agent Manager sessions for
+  wave/191-time-async-contracts, wave/192-os-contracts,
+  wave/193-collect-thread-compress, wave/194-math-bits-contracts, and
+  wave/195-iter-core-contracts; remove worktrees, delete the merged
+  branches. Keep wave/154 (foreign).
+- Agent Manager may list stale no-session worktrees for 179/180 and the
+  merged wave worktrees; clean only if safe. Do not merge anything else.
 
-Next waves (Agent Manager worktrees, 2-3 parallel, same rules as 188-190):
-1. iter: contract-limited (183 pub, 46.4%; ~8 meaningful clauses in lazy
-   adapters). Do NOT chase tautologies; document the remainder.
-2. time 52.9%, async 62.7%, os 65.1%, collect 65.5%, thread 67.9%,
-   compress 70.4%: target tractable files with true domain/range/length/
-   Result clauses.
-3. math remainder 71.3%: special/numerical/calculus/optimization/control
-   theory; skip compiler-limited stubs and table/Bool predicates; real
-   domain/range only.
-Agent prompt: scope files; read snapshot 72 + block 260; real
+Next waves (Agent Manager worktrees, 2-3 parallel, same rules as
+191-195):
+1. iter remainder 55.2%: the remaining 82 pub fns are opaque closure
+   adapters; only add the few defensible clauses, then document the
+   contract-limited remainder. Do NOT chase tautologies.
+2. os 68.5%: the remaining event/terminal/unix/win/ioctl/err/fs_ffi/
+   proc_ffi fns are mostly documented Err stubs and no-ops; add only
+   clauses for the real paths and report the stub remainder.
+3. math 78.2%: optimization/calculus/game_theory/tower and the
+   compiler-limited matrix stubs; bits is 97.0%.
+4. collections 77.2%, simd 78.9%, ffi 79.5%, array 80.0%, cell 81.2%:
+   target real container/math bounds only.
+Agent prompt: scope files; read snapshot 73 + block 261; real
 requires/ensures only; clause-only/no body changes; pin
 C:\Users\lefte\AppData\Local\Temp\kilo\stdlib_ws\v0.64.8-official\bin\xiom.exe;
 check_modules with unique -OutDir; coverage_scan -RatchetFile
-tools/coverage_floors190.json; doc_scan; targeted smokes/probes; add a
+tools/coverage_floors191.json; doc_scan; targeted smokes/probes; add a
 runner-compatible probe; do NOT edit floors/workflows/readiness/session
 docs/COMPILER_VERSION; commit on branch; no merge/push. Main session
-reviews, runs combined gates, merges --no-ff, dumps floors191, wires
+reviews, runs combined gates, merges --no-ff, dumps floors192, wires
 ci/heavy/release + tools/README, updates readiness/session.
 
 Relays, bugs, wishlist:
@@ -81,18 +91,17 @@ Relays, bugs, wishlist:
 - Gate 9 still red on v0.64.8: REL-20261011-1626-stdlib (T001 bare
   trailing match after push), REL-20261015-2343-stdlib (bare inline i32
   -1 read as >=0), REL-20261016-2100-stdlib W1 (alias/full-path field +
-  close() C001). Re-test on the next compiler candidate; close only with
-  evidence.
-- Green gate 9 items 1053/1456/2328/2000 await the compiler marking
-  acked -> fixed; we filed REL-20261019-1953-stdlib with the matrix.
-  2331 stdlib runtime residual verified/closed.
-- Open compiler bugs affecting stdlib: REL-20261018-1546-stdlib
-  (Vec[GenericStruct] callee read) and REL-20261019-1451-stdlib (nested
-  generic ptr.read); repros under tools/known_failures; re-verify on the
-  next archive.
+  close() C001), and REL-20261010-1609-stdlib (inline Result.value[i]
+  payload read, still blocking PULSE list_dir). Re-test on the next
+  compiler candidate; close only with evidence.
+- Verified/closed on v0.64.8: 1053 (p_hash_shadow), 1456, 2328, 2000,
+  1546 (m370 + p_async_select_closed_drain), 1624, and 2331 runtime
+  residual. 1451 (nested generic ptr.read) is queued for the next
+  compiler candidate; 1549 list_dir stays blocked by 1609.
 - Wishlist row 33 (compiler/install) open; row 47 fixed pending xvector
-  verify. New: fraction_add cross-cancel fixed (p_fraction_add_reduce);
-  no open stdlib defect there.
+  verify; thread-pool item 1834 no-arg path green, persistent fleet /
+  Send-Sync remain. New stdlib fixes: fraction_add, io.rename,
+  Routh-Hurwitz, weekday, AsyncExecutor.run.
 
 Pitfalls:
 - check_modules/barename parallel runs need distinct -OutDir (timestamp
@@ -101,6 +110,14 @@ Pitfalls:
   probes or use --timeout 900, but only promote runner-compatible probes.
 - The compiler links every runtime/*.c into each program; keep test mains
   out of runtime/ (tests/runtime/test_udivti3.c).
+- `@pre` on an ensures that calls a contracted helper or an AtomicInt
+  method is evaluated against post-state on v0.64.8 (spurious contract
+  violation); use post-state invariants instead.
+- Module-global references inside contracts crash codegen (0xC000001D);
+  the async free functions stay unclaused for now.
+- Channel generic call forms: `Channel.bounded(2)` plus
+  `Channel.send[Int](...)` / `try_recv[Int](...)` / `close[Int](...)`;
+  `Channel[Int].bounded` is rejected.
 - Release ruleset bypass is expected; do not move tags.
 - agent_manager list to review reports; idle = done; merge --no-ff; clean
   worktrees/branches.
@@ -3748,6 +3765,42 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-20 block 261 (waves 191-195 merged: global 89.0%; readiness 88.9%; floors191; five pre-existing bugs fixed; final battery green)**
+- Merged --no-ff: wave 191 time/async `61599ba`, 192 os `e7e3200`,
+  193 collect/thread/compress `624ecb9`, 194 math/bits `fe733fb`,
+  195 iter/core `05b485c` on the v0.64.8 pin.
+- Coverage: global pub-with-clause 89.0% (6129/6890; was 83.0%),
+  clauses/fns 91% (8473). time 52.9 -> 85.5; async 62.7 -> 85.1;
+  os 65.1 -> 68.5; collect 65.5 -> 93.2; thread 67.9 -> 89.3;
+  compress 70.4 -> 96.3; math 71.3 -> 78.2; bits 74.3 -> 97.0; iter
+  46.4 -> 55.2; core 78.6 -> 94.7. Worst dirs: iter 55.2, os 68.5,
+  collections 77.2, math 78.2, alloc 78.6, simd 78.9, ffi 79.5,
+  array 80.0, cell 81.2.
+- Floors191 dumped and wired into ci/heavy/release + tools/README;
+  RATCHET OK.
+- Pre-existing bugs found by waves and fixed: Routh-Hurwitz used
+  `prev1[col]` instead of `prev1[col+1]` (`s^2+2s+1` returned false;
+  `07a9619`, `p_routh_stability`); `datetime_from_epoch` weekday was
+  0=Monday while date/chrono are 0=Sunday (`d1ee6b3`, p_wave191
+  updated); `AsyncExecutor.run` drained `self` by value and left
+  `ex.ready` populated (`fc8e2b6`, `p_async_executor_state`). Block-260
+  fixes: fraction_add `109afa1`, io.rename `19d86de`, runtime
+  `__udivti3` `1555c93`.
+- Final battery on merged tree (official v0.64.8): modules 533/533
+  (645.9s), smokes 963/963 0/0 (1404.6s), probes 381/381, barename
+  0/533, floors191 ratchet OK, doc_scan 100% (2 pre-existing net
+  misses), regex 17/17.
+- Relay: verified/closed 1546 (m370; `p_async_select_closed_drain`),
+  1053 (`p_hash_shadow`), 1456, 2328, 2000, 1624; fixed
+  1432/1440/1513 release-check; 2020 io.rename fixed; 1549 list_dir
+  still blocked by 1609; 1834 thread-pool no-arg path green,
+  persistent fleet/Send-Sync remain. `REL-20261019-1953-stdlib`
+  gate-9 matrix acked.
+- Readiness 88.9% (gate 8 89.0%; gates 1-7/10 met; gate 9 open). Next:
+  iter adapters (contract-limited), os stubs, math stubs,
+  collections/simd/ffi/array; gate 9 reds 1626/2343/2100-W1 and 1609;
+  no new release cut planned until the next compiler candidate.
 
 **SESSION 2026-10-19 block 260 (waves 188-190 merged; global 83.0%; floors190; fraction_add fixed; final battery green)**
 - Merged --no-ff: wave 188 num `27fff73`, wave 189 string `4374b64`,
