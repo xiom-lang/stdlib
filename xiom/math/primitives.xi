@@ -100,7 +100,7 @@ fn _two_sum(a: Float64, b: Float64) -> (Float64, Float64) {
 /// Smaller of a and b. IEEE min semantics: NaN propagates only when both
 /// operands are NaN (plain comparison; callers pass validated values).
 pub fn min(a: Float64, b: Float64) -> Float64
-  ensures: result <= a && result <= b
+  ensures: (result <= a && result <= b) || (a != a) || (b != b)
 {
   if a < b { return a; }
   return b;
@@ -108,7 +108,7 @@ pub fn min(a: Float64, b: Float64) -> Float64
 
 /// Larger of a and b.
 pub fn max(a: Float64, b: Float64) -> Float64
-  ensures: result >= a && result >= b
+  ensures: (result >= a && result >= b) || (a != a) || (b != b)
 {
   if a > b { return a; }
   return b;
@@ -118,7 +118,7 @@ pub fn max(a: Float64, b: Float64) -> Float64
 /// requires: lo <= hi
 pub fn clamp(x: Float64, lo: Float64, hi: Float64) -> Float64
   requires: lo <= hi
-  ensures: result >= lo && result <= hi
+  ensures: (result >= lo && result <= hi) || (result != result)
 {
   if x < lo { return lo; }
   if x > hi { return hi; }
@@ -134,7 +134,9 @@ pub fn abs(x: Float64) -> Float64
 }
 
 /// -1, 0, or 1 matching the sign of x. -0.0 == 0.0 yields 0.
-pub fn signum(x: Float64) -> Int {
+pub fn signum(x: Float64) -> Int
+  ensures: (result == -1 && x < 0.0) || (result == 1 && x > 0.0) || (result == 0 && !(x < 0.0) && !(x > 0.0))
+{
   if x < 0.0 { return -1; }
   if x > 0.0 { return 1; }
   return 0;
@@ -146,14 +148,18 @@ pub fn lerp(a: Float64, b: Float64, t: Float64) -> Float64 {
 }
 
 /// 0.0 if x < edge, else 1.0. A hard threshold step.
-pub fn step(edge: Float64, x: Float64) -> Float64 {
+pub fn step(edge: Float64, x: Float64) -> Float64
+  ensures: (result == 0.0 && x < edge) || (result == 1.0 && !(x < edge))
+{
   if x < edge { return 0.0; }
   return 1.0;
 }
 
 /// Hermite interpolation between 0 and 1 over [e0, e1]. Degenerate e0 == e1
 /// behaves as a step at e0 (0.0 below, 1.0 at/above). Complexity: O(1).
-pub fn smoothstep(e0: Float64, e1: Float64, x: Float64) -> Float64 {
+pub fn smoothstep(e0: Float64, e1: Float64, x: Float64) -> Float64
+  ensures: ((result >= 0.0) && (result <= 1.0)) || (result != result)
+{
   if e0 == e1 {
     if x >= e0 { return 1.0; }
     return 0.0;
@@ -164,7 +170,9 @@ pub fn smoothstep(e0: Float64, e1: Float64, x: Float64) -> Float64 {
 
 /// Fractional part of x with the sign of x. fract(2.5) == 0.5,
 /// fract(-2.5) == -0.5. For |x| >= 2^53 (x integral) returns 0.0.
-pub fn fract(x: Float64) -> Float64 {
+pub fn fract(x: Float64) -> Float64
+  ensures: ((result > -1.0) && (result < 1.0)) || (result != result)
+{
   if x >= _two_53() || x <= -_two_53() { return 0.0; }
   var t = x as Int;
   return x - (t as Float64);
@@ -174,7 +182,9 @@ pub fn fract(x: Float64) -> Float64 {
 /// truncated toward zero. modf(2.5) == (2, 0.5), modf(-2.5) == (-2, -0.5).
 /// For |x| >= 2^63 the integral part saturates to INT_MAX/INT_MIN and the
 /// fractional part is 0.0.
-pub fn modf(x: Float64) -> (Int, Float64) {
+pub fn modf(x: Float64) -> (Int, Float64)
+  ensures: ((result.1 > -1.0) && (result.1 < 1.0)) || (result.1 != result.1)
+{
   if x >= 9223372036854775807.0 {
     return (9223372036854775807, 0.0);
   }
@@ -187,7 +197,9 @@ pub fn modf(x: Float64) -> (Int, Float64) {
 }
 
 /// Magnitude of x with the sign of y. Handles -0.0: copysign(1.0, -0.0) == -1.0.
-pub fn copysign(x: Float64, y: Float64) -> Float64 {
+pub fn copysign(x: Float64, y: Float64) -> Float64
+  ensures: (result == x) || (result == -x) || (result != result)
+{
   var m = abs(x);
   if y < 0.0 { return -m; }
   if y == 0.0 {
@@ -205,7 +217,9 @@ pub fn copysign(x: Float64, y: Float64) -> Float64 {
 /// TODO(compiler): an exact implementation normally uses a float<->int
 /// bitcast; this arithmetic form is exact for all finite normal/subnormal
 /// values (verified by round-trip tests) and avoids NaN-producing ops.
-pub fn nextafter(x: Float64, y: Float64) -> Float64 {
+pub fn nextafter(x: Float64, y: Float64) -> Float64
+  ensures: (x != y) || (result == x)
+{
   if x == y { return x; }
   if x == 1.0 / 0.0 {
     if y == 1.0 / 0.0 { return x; }
@@ -243,7 +257,10 @@ pub fn nextafter(x: Float64, y: Float64) -> Float64 {
 /// rounding is s + (s2 + e), which matches the hardware-fused result for all
 /// non-pathological inputs (error <= 1 ulp otherwise; no double rounding).
 /// Complexity: O(1). Overflow of a*b propagates to inf, as IEEE requires.
-pub fn fma(a: Float64, b: Float64, c: Float64) -> Float64 {
+pub fn fma(a: Float64, b: Float64, c: Float64) -> Float64
+  ensures: ((a == 0.0) && (b == 0.0) && (c == c) && (c != 1.0 / 0.0) && (c != -1.0 / 0.0)) => (result == c)
+  ensures: ((a == 0.0) && (b == 0.0) && (c != c)) => (result != result)
+{
   var prod = _two_product(a, b);
   var p = prod.0;
   var e = prod.1;
@@ -256,7 +273,9 @@ pub fn fma(a: Float64, b: Float64, c: Float64) -> Float64 {
 /// Split x into (mantissa, exponent) with x == mantissa * 2^exponent and
 /// mantissa in [0.5, 1). frexp(8.0) == (0.5, 4), frexp(0.0) == (0.0, 0).
 /// Sign is preserved. Exact. Complexity: O(1074) worst case.
-pub fn frexp(x: Float64) -> (Float64, Int) {
+pub fn frexp(x: Float64) -> (Float64, Int)
+  ensures: ((x == 0.0) && (result.0 == 0.0)) || ((result.0 >= 0.5) && (result.0 < 1.0)) || ((result.0 <= -0.5) && (result.0 > -1.0)) || (result.0 == 1.0 / 0.0) || (result.0 == -1.0 / 0.0) || (result.0 != result.0)
+{
   if x == 0.0 { return (0.0, 0); }
   if x == 1.0 / 0.0 { return (x, 0); }
   if x == -1.0 / 0.0 { return (x, 0); }
@@ -280,7 +299,10 @@ pub fn frexp(x: Float64) -> (Float64, Int) {
 /// x * 2^exp. Exact (single rounding at the end). For exp > 1100 the result
 /// overflows to +-inf; for exp < -1100 it flushes to 0.0 (documented; the
 /// representable exponent range is [-1074, 1023]).
-pub fn ldexp(x: Float64, exp: Int) -> Float64 {
+pub fn ldexp(x: Float64, exp: Int) -> Float64
+  ensures: ((x > 0.0) => (result >= 0.0)) && ((x < 0.0) => (result <= 0.0))
+  ensures: (x != 0.0) || (result == 0.0)
+{
   if x == 0.0 { return 0.0; }
   if exp > 1100 {
     if x > 0.0 { return 1.0 / 0.0; }
@@ -304,7 +326,7 @@ pub fn ldexp(x: Float64, exp: Int) -> Float64 {
 /// scaled form m * sqrt(1 + (n/m)^2) where m = max(|a|, |b|).
 /// hypot(0.0, 0.0) == 0.0. Complexity: O(1). Requires pure-Newton sqrt.
 pub fn hypot(a: Float64, b: Float64) -> Float64
-  ensures: result >= 0.0
+  ensures: (result >= 0.0) || (result != result)
 {
   var ax = abs(a);
   var ay = abs(b);
@@ -317,7 +339,9 @@ pub fn hypot(a: Float64, b: Float64) -> Float64
 
 /// Cube root of x, any sign. Newton iteration with an exponent-scaled initial
 /// guess, 20 iterations. Complexity: O(1074 + 20).
-pub fn cbrt(x: Float64) -> Float64 {
+pub fn cbrt(x: Float64) -> Float64
+  ensures: ((x > 0.0) => (result > 0.0)) && ((x < 0.0) => (result < 0.0)) && ((x == 0.0) => (result == 0.0))
+{
   if x == 0.0 { return 0.0; }
   var neg = x < 0.0;
   var ax = x;
@@ -334,16 +358,22 @@ pub fn cbrt(x: Float64) -> Float64 {
 }
 
 /// True iff x is NaN (IEEE: x != x).
-pub fn is_nan(x: Float64) -> Bool {
+pub fn is_nan(x: Float64) -> Bool
+  ensures: result == (x != x)
+{
   return x != x;
 }
 
 /// True iff x is positive or negative infinity.
-pub fn is_inf(x: Float64) -> Bool {
+pub fn is_inf(x: Float64) -> Bool
+  ensures: result == (x == 1.0 / 0.0 || x == -1.0 / 0.0)
+{
   return x == 1.0 / 0.0 || x == -1.0 / 0.0;
 }
 
 /// True iff x is neither NaN nor infinite.
-pub fn is_finite(x: Float64) -> Bool {
+pub fn is_finite(x: Float64) -> Bool
+  ensures: result == (x == x && x != 1.0 / 0.0 && x != -1.0 / 0.0)
+{
   return x == x && x != 1.0 / 0.0 && x != -1.0 / 0.0;
 }
