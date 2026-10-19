@@ -17,23 +17,47 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 70 (updated 2026-10-19 18:29Z at this docs commit; **v0.64.8 COMPLETE** -- stdlib + compiler released; `xiom-std 0.64.8` live (registry sha256 `c4ab5c61...`); tag `112c5b6`; coverage 76.1%, readiness 87.6%; next is gate 8 iter/num/math/string)
+## 0A. CONTINUE HERE -- handoff snapshot 71 (updated 2026-10-19 18:34Z at this docs commit; **v0.64.8 COMPLETE** -- stdlib + compiler released, `xiom-std 0.64.8` live; **NEXT SESSION HANDOFF**: gate 8 76.1%, next waves `num/num.xi` + string + math; gate 9 on v0.64.8; relays/bugs/wishlist triage; use Agent Manager worktrees; paste-ready prompt in `## 0C`)
 
 ## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-18)
 
 ```
-Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
-  git -C E:\xiom-lang\xiom-relays pull --ff-only
+Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib, branch main). Start with:
+  git -C E:\xiom-lang\xiom-relays pull --ff-only origin main
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 70 + block 257 (and this 0C block).
+Read docs/stdlib_session.md snapshot 71 + block 258 (and this 0C block).
 
-State: stdlib-v0.64.7 is released; tag stdlib-v0.64.7 = f4482b14 (tag object 11bf62a6); registry xiom-std 0.64.7 is live. **stdlib-v0.64.8 is RELEASED**: tag object 0bf5b752462059eaa15cd8261eeb8b92039d8411 at commit 112c5b647215a12782ba066ad72b11595bd0afac; COMPILER_VERSION=candidate-v0.64.8-r2; package.xi 0.64.8; release-notes/v0.64.8.md; CHANGELOG [0.64.8]. release.yml run 39289746856 completed success (validate, ubuntu, windows, package + GitHub Release); the separate STDLIB_VERSION pin-PR job failed on the known token limitation. Assets: xiom-std-0.64.8.tar.gz sha256 6ea77968232e26ff8d1d2adcf83b2c4ed3cf3a0a3597ff891c8d3d40fc815683; SHA256SUMS sha256 70d350667986a472485a2791cb6730355c00938ca867bd43b45a0194d20e246f; https://github.com/xiom-lang/stdlib/releases/tag/stdlib-v0.64.8. The tag-push registry run 39289746947 was cancelled; dispatch publish-registry with compiler v0.64.8 after the final compiler tag. Local battery on 9b88b46: modules 533/533, probes 368/368, smokes 960/962 (the documented v0.64.7-gated guard pair on v0.64.6), barename/coverage/doc rc 0. Waves 179-188 and wishlist 47 are merged: time 52.9%, async 62.7%, num 50.7%, core 78.6%, stats 99.3%, regex 98.0%, search 100%, string 68.9%, math 56.0%, sync 95.2%; global 76.1%; floors189 wired; readiness 87.6% (gates 1-7 and 10 met; gate 8 76.1%; gate 9 compiler-owned). New compiler items: REL-20261018-1546-stdlib, REL-20261019-1451-stdlib, REL-20261019-1624-stdlib. Wishlist row 47 is fixed pending xvector verification.
+State: v0.64.8 is COMPLETE. stdlib-v0.64.8 tag object 0bf5b75 -> commit 112c5b6 (COMPILER_VERSION=candidate-v0.64.8-r2); release run 39289746856 success; assets xiom-std-0.64.8.tar.gz sha256 6ea77968..., https://github.com/xiom-lang/stdlib/releases/tag/stdlib-v0.64.8. Compiler v0.64.8 tag 4d040604b. Registry xiom-std 0.64.8 is latest: sha256 c4ab5c61..., publicKey c8cd29a5..., signature 8bdf9f14...; run 39298965606 re-ran green after the ops mapping fix. Do NOT move the stdlib tag or re-cut v0.64.8; tags are frozen. Main docs 935a4f2+.
 
-Release complete: compiler v0.64.8 is tagged at 4d040604b; stdlib-v0.64.8 assets are live; `xiom-std 0.64.8` is live in the registry (latest) with registry sha256 c4ab5c614506c44f95c011f81901d1630f7d4788aa51af6d5b86ca013447f4fe, publicKey c8cd29a5a53a51587378249d13679ef02dbf0d4fbc2c4b14631f887e09b7d022, signature 8bdf9f14c4b8e0d9892f0850abac91054f1bb80b770f71a0dc90b91bfb31cf6182abf2c004a4c30f3980d94637c53f1b66b4b071a2516e04521400426405900c. The tag-ref publish run 39298965606 was re-run after ops restored the trusted-publisher mappings and succeeded; the redundant dispatch 39302510868 was cancelled. Packages items 1755/1805 can close. Return to gate 8: iter 46.4%, num 50.7%, math 56.0%, string 68.9%, core 78.6%, regex 98.0%, stats 99.3%, search 100%; next waves are num/num.xi and the string/math continuations; dump floors190, wire workflows + tools/README, update the readiness meter.
+Coverage: global 76.1%, readiness 87.6% (gate 8 0.761; floors189). Directories: iter 46.4%, num 50.7%, math 56.0%, string 68.9%, core 78.6%, regex 98.0%, stats 99.3%, search 100%, time 52.9%, async 62.7%. Gate 8 is the main path; aim for 100% with real clauses, not tautologies.
 
-Gate 9 (corrected live ids): REL-20261011-1053-stdlib, -1456-stdlib, -1626-stdlib, REL-20261015-2328-stdlib, -2343-stdlib, REL-20261016-2000-stdlib, -2100-stdlib, -2331-stdlib. All are stdlib -> compiler; only 2331 is fixed. Verify 1456/1053/2328/2000 first on the official v0.64.7 archive (sha256 16a436c4...), then 2100 W2-W4 green/W1 red; 1626 needs m354, 2343 m355, 2100 W1 m357, 2331 needs the next archive + the stdlib runtime helper fix. Do not close from the unverified local v0647 extract. 1549-pulse-5 waits on compiler 1609, 1834 on 1550. Wishlist: row 33 open (compiler/install), row 47 fixed pending xvector verify. Kqueue needs a macOS runner; net.event wrapper and LISTEN_FDS server integration remain.
+Immediate housekeeping:
+- Stop the merged Agent Manager sessions for wave/186-string-contracts, wave/187-math-contracts and wishlist/47-channel-handle; remove their worktrees and delete the merged branches. Keep wave/154 (foreign) and any release/marker branches.
+- Agent Manager may still list stale no-session worktrees for waves 179/180; clean only if safe. Do not merge anything else.
 
-Use the official v0.64.6 archive for local batteries (%TEMP%\kilo\stdlib_ws\v0.64.6-official\bin\xiom.exe); v0.64.8 has no lane extraction yet. run_smokes sets XIOM_STDLIB. Do not move tags; release.yml is idempotent at 0056bce. Keep docs/session current and post material findings on the relay bus.
+Next waves (use Agent Manager worktrees, 2-3 parallel, same rules as waves 179-188):
+1. Dedicated num/num.xi: 242 pub fns at 5.4% is the dominant num gap. Split into sub-waves if needed.
+2. String: 171 uncovered across Unicode-table/small modules; inspect first, target the tractable files.
+3. Math: 56.0%; target numerical/special/analysis modules with true domain/range clauses.
+4. iter is contract-limited (94 lazy adapters; ~8 meaningful clauses); do not chase tautologies. Regex/stats are effectively done (pcre_free/histogram_add documented no-ops).
+Agent prompt: scope files; read this snapshot/block; real requires/ensures only; clause-only/no body changes; pin %TEMP%\kilo\stdlib_ws\v0.64.6-official\bin\xiom.exe (or a hash-verified v0.64.8 extraction once staged); check_modules with explicit -OutDir; coverage_scan -RatchetFile tools/coverage_floors189.json; doc_scan; targeted smokes/probes; add a runner-compatible probe; do NOT edit floors/workflows/readiness/session docs; commit on branch; no merge/push. Main session reviews, runs combined gates, merges --no-ff, dumps floors190, wires ci/heavy/release + tools/README, updates readiness/session.
+
+Relays, bugs, wishlist:
+- Pull with explicit origin main (bare pull can fail "Cannot fast-forward to multiple branches").
+- Gate 9 live ids: REL-20261011-1053-stdlib, -1456-stdlib, -1626-stdlib, REL-20261015-2328-stdlib, -2343-stdlib, REL-20261016-2000-stdlib, -2100-stdlib, -2331-stdlib. Re-read and verify on the official v0.64.8 archive; 2331 was fixed but needs the stdlib runtime helper check; 1626/2343/2100-W1 were compiler-blocked on v0.64.7, so re-test and close only with evidence.
+- Open compiler bugs affecting stdlib: REL-20261018-1546-stdlib (Vec[GenericStruct] callee read) and REL-20261019-1451-stdlib (nested generic ptr.read); repros under tools/known_failures; re-verify on v0.64.8.
+- Wishlist row 33 (compiler/install) open; row 47 fixed pending xvector verify; packages 1755/1805 can close. No release blockers.
+
+Stage the official v0.64.8 compiler archive from the GitHub release, verify SHA256SUMS, extract to %TEMP%\kilo\stdlib_ws\v0.64.8-official, and run a battery before updating the lane pin.
+
+Pitfalls:
+- check_modules parallel runs need distinct -OutDir (timestamp collisions corrupt results).
+- Combined stats/contract probes can hit the 300s compiler limit; split probes or use --timeout 900, but only promote runner-compatible probes.
+- Relay commits via python tools/relay.py commit --lane stdlib -m "..."; never edit another lane's item.
+- Release ruleset bypass is expected; do not move tags.
+- agent_manager list to review reports; idle = done; merge --no-ff; clean worktrees/branches.
+
+Deliver: per wave report coverage before/after, gate outputs, probes, commit; keep docs/session current and post material findings on the relay bus.
 ```
 
 ### Snapshot 37 (paste-ready)
@@ -3674,6 +3698,24 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-19 block 258 (SESSION HANDOFF -- v0.64.8 COMPLETE; gate 8 at 76.1%; next waves num/num.xi + string + math; gate 9 on v0.64.8; relays/bugs/wishlist triage)**
+- v0.64.8 complete: stdlib tag `stdlib-v0.64.8` = tag object
+  `0bf5b75` -> commit `112c5b6`; release run 39289746856 success;
+  `xiom-std-0.64.8.tar.gz` sha256 `6ea77968...`; compiler v0.64.8
+  tag `4d040604b`; registry `xiom-std 0.64.8` live (registry sha256
+  `c4ab5c61...`, publicKey `c8cd29a5...`, signature `8bdf9f14...`);
+  run 39298965606 re-ran green after the ops mapping fix. Tags frozen.
+- Coverage 76.1%, readiness 87.6%, floors189: iter 46.4%, num 50.7%,
+  math 56.0%, string 68.9%, core 78.6%, regex 98.0%, stats 99.3%,
+  search 100%, time 52.9%, async 62.7%.
+- Housekeeping: stop/remove the merged wave 186/187 and wishlist 47
+  Agent Manager sessions, worktrees, and branches; keep wave/154.
+- Next: Agent Manager waves for num/num.xi (split), string and math;
+  same contract rules; merge `--no-ff`; floors190. Stage the official
+  v0.64.8 compiler archive and verify its hash. Gate 9 on v0.64.8;
+  open bugs 1546/1451; wishlist row 33 open, row 47 pending xvector
+  verification; packages 1755/1805 can close.
 
 **SESSION 2026-10-19 block 257 (v0.64.8 COMPLETE -- xiom-std 0.64.8 published; registry sha; all release gates green)**
 - Ops restored the trusted-publisher mappings after the 2.14.2 recreate;

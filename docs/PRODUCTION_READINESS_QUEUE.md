@@ -1,23 +1,23 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
 **87.6% -- 8 of 10 gates complete; gate 8 at 76.1% (partial credit) and
-gate 9 discrete.** (Compiler pin: **v0.64.7**; stdlib-v0.64.7 tag moved
-to `f4482b14` with `COMPILER_VERSION=v0.64.7`; compiler main pins
-`STDLIB_VERSION=stdlib-v0.64.7`; production registry publish
-39135008135 is green and the release assets/body match the moved tag.)
-**Gates: corpus 956/956 on both Windows and Ubuntu release gates
+gate 9 discrete.** (Compiler pin: **v0.64.8**; stdlib-v0.64.8 tag object
+`0bf5b75` at `112c5b6` with `COMPILER_VERSION=candidate-v0.64.8-r2`;
+compiler v0.64.8 pins `STDLIB_VERSION=stdlib-v0.64.8`; registry
+`xiom-std 0.64.8` is live, run 39298965606 re-ran green after the ops
+mapping fix.)
+**Gates: corpus 956/956 on both r2 Windows and Ubuntu release gates
 (962 including retries; 0 compilefail / 0 runfail), modules 533/533,
-probes 358/358, barename 0/533. Wave pin: v0.64.7 (block 239).**
+probes 368/368, barename 0/533. Wave pin: v0.64.8 (block 257).**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
 gates flip:
 1. Modules type-check clean -- MET (533/533).
-2. Smoke corpus green -- MET on the v0.64.7 release gates: 956/956 on
+2. Smoke corpus green -- MET on the v0.64.8 r2 release gates: 956/956 on
    both Windows and Ubuntu, no carve-outs.
-3. Probe corpus green -- MET (358/358, post-wave-177 full corpus with
-   RetryFailed; the wave-181..188 probes are 359-368 and are
-   individually green).
+3. Probe corpus green -- MET (368/368; the wave-181..188 probes are
+   included and individually green).
 4. Strict bare-name scan clean -- MET (0/533).
 5. Coverage ratchet green -- MET (floors189).
 6. Documentation ratchet 100% -- MET.
