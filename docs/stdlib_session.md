@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 57 (updated 2026-10-19 12:10Z at this docs commit; **wave 182 merged** -- core 58.0% -> 78.6% (platform/contracts), global 74.0%, floors185 wired; readiness 87.4% (gate 10 MET; gate 8 74.0%); waves 179-181 merged earlier; v0.64.7 released/published; iter is contract-limited; paste-ready next-session prompt in `## 0C`)
+## 0A. CONTINUE HERE -- handoff snapshot 58 (updated 2026-10-19 13:35Z at this docs commit; **wave 183 merged** -- stats 60.4% -> 99.3%, global 74.8%, floors186 wired; readiness 87.5% (gate 10 MET; gate 8 74.8%); waves 179-182 merged earlier; v0.64.7 released/published; iter is contract-limited; paste-ready next-session prompt in `## 0C`)
 
 ## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-18)
 
@@ -25,11 +25,11 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
   git -C E:\xiom-lang\xiom-relays pull --ff-only
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 57 + block 243 (and this 0C block).
+Read docs/stdlib_session.md snapshot 58 + block 244 (and this 0C block).
 
-State: stdlib-v0.64.7 is released; tag stdlib-v0.64.7 = f4482b14 (tag object 11bf62a6); registry xiom-std 0.64.7 is live; compiler v0.64.7 is released. Waves 179 (time 41.3% -> 52.9%), 180 (async 47.8% -> 62.7%), 181 (num 37.9% -> 50.7%; precision_* fully covered) and 182 (core 58.0% -> 78.6%; platform/contracts) are merged; global 74.0%; floors185 wired; readiness 87.4% (gates 1-7 and 10 met; gate 8 74.0%; gate 9 compiler-owned). New compiler item REL-20261018-1546-stdlib: callee reads of &Vec[GenericStruct] corrupt fields (breaks async_select closed-drain; repro tools/known_failures/p_vec_byref_generic_struct.xi). Relay: compiler info announcements open; xvector channel-handle wishlist acked (row 47); PULSE tag-move fixed; 2257/2305 closed.
+State: stdlib-v0.64.7 is released; tag stdlib-v0.64.7 = f4482b14 (tag object 11bf62a6); registry xiom-std 0.64.7 is live; compiler v0.64.7 is released. Waves 179 (time 41.3% -> 52.9%), 180 (async 47.8% -> 62.7%), 181 (num 37.9% -> 50.7%; precision_* fully covered), 182 (core 58.0% -> 78.6%; platform/contracts) and 183 (stats 60.4% -> 99.3%; statistics/regress/probability) are merged; global 74.8%; floors186 wired; readiness 87.5% (gates 1-7 and 10 met; gate 8 74.8%; gate 9 compiler-owned). New compiler item REL-20261018-1546-stdlib: callee reads of &Vec[GenericStruct] corrupt fields (breaks async_select closed-drain; repro tools/known_failures/p_vec_byref_generic_struct.xi). Relay: compiler info announcements open; xvector channel-handle wishlist acked (row 47); PULSE tag-move fixed; 2257/2305 closed.
 
-No Agent Manager contract waves are in flight. Continue gate 8: iter 46.4%, num 50.7%, math 53.8%, regex 59.2%, stats 60.4%, search 62.2%, string 62.6%, core 78.6%. Next wave(s): math/regex/stats; a dedicated num wave must target num/num.xi (242 pub fns at 5.4%). iter is contract-limited: its 94 uncovered fns are lazy closure adapters with no truthful postcondition; only range/range_inclusive constructors and nth>=0 preconditions (~8 clauses) are available -- do not chase it with tautologies. Dump floors186, wire ci/heavy/release + tools/README, update the readiness meter.
+No Agent Manager contract waves are in flight. Continue gate 8: iter 46.4%, num 50.7%, math 53.8%, regex 59.2%, search 62.2%, string 62.6%, core 78.6%, stats 99.3%. Next wave(s): math/regex/search; a dedicated num wave must target num/num.xi (242 pub fns at 5.4%). iter is contract-limited (94 lazy closure adapters; only ~8 meaningful clauses); stats is effectively done (only histogram_add, a frozen by-value Unit no-op). Dump floors187, wire ci/heavy/release + tools/README, update the readiness meter.
 
 Gate 9: verify/close compiler items 1053/1456/1626/2328/2343/2000/2100/2331 on v0.64.7; 1549-pulse-5 waits on compiler 1609, 1834 on 1550; the new 1546 item needs a compiler fix. Wishlist: row 33 open (compiler/install), row 47 acked. Kqueue needs a macOS runner; net.event wrapper and LISTEN_FDS server integration remain.
 
@@ -3674,6 +3674,34 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-19 block 244 (WAVE 183 STATS CONTRACTS -- stats 60.4% -> 99.3%, global 74.8%; floors186 wired; probes 361-363; readiness 87.5%)**
+- Scope: `xiom/stats/statistics.xi` (25 fns: empty/NaN/None rows,
+  quartile shape, percentile domains, correlation mismatch NaN,
+  trim/weighted/z-score guards), `regress.xi` (10 fns: zeroed
+  slope/intercept/R2 rows, polynomial shape by degree, NaN exponential
+  fit, residuals shape, exact `predict_line`), and `probability.xi`
+  (19 fns: out-of-domain NaN and boundary-zero clauses). Only
+  `histogram_add` remains uncovered -- a frozen by-value Unit signature
+  whose caller copy is not updated, so there is no observable
+  postcondition.
+- Gates: `check_modules` 4/4 clean (v0.64.6 official); coverage
+  floors186 OK (global 74.0% -> 74.8%, stats 60.4% -> 99.3%; clauses
+  6964 -> 7038, pubCovered 5092 -> 5148); doc ratchet OK (7456/7454,
+  the 2 pre-existing net misses); `smoke_stats` PASS (35.5s); new
+  `p_wave183_stats_shapes` (10.4s), `p_wave183_regress_shapes` (10.0s)
+  and `p_wave183_probability_shapes` (11.4s) PASS and are promoted
+  (probes 361-363).
+- Caveat: the combined stats edge probe hit the compiler's default 300s
+  compile timeout; it compiled and passed with `--timeout 900`, while
+  the three split probes compile under the standard runner. The flat
+  `stats_mode`/`stats_correlation` rows were validated by a temporary
+  probe (50.7s, not promoted).
+- iter remains contract-limited (94 lazy adapters); stats is effectively
+  done (only `histogram_add`). Next gate 8: math 53.8%, regex 59.2%,
+  search 62.2%, string 62.6%; a dedicated `num/num.xi` wave remains.
+  Readiness 87.5% (8.748 / 10; gate 8 fraction 0.748). No relay changes;
+  `REL-20261018-1546-stdlib` stays open on the compiler lane.
 
 **SESSION 2026-10-19 block 243 (WAVE 182 CORE CONTRACTS/PLATFORM -- core 58.0% -> 78.6%, global 74.0%; floors185 wired; probe 360; iter adjudicated contract-limited)**
 - Scope: `xiom/core/platform.xi` (8 clauses: exact OS predicates,

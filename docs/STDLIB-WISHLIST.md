@@ -612,6 +612,11 @@ campaign release; the table statuses above were normalized in the
   index queries); global 73.6% -> 74.0%; floors185 dumped/wired; probe
   `p_wave182_core_shapes`; readiness 87.4%. `iter` stays contract-limited
   (lazy closure adapters; only ~8 meaningful clauses available).
+- wave 183 (stats contracts): stats coverage 60.4% -> 99.3%
+  (statistics/regress/probability degenerate-input and domain clauses;
+  `histogram_add` is a frozen by-value Unit no-op left uncovered);
+  global 74.0% -> 74.8%; floors186 dumped/wired; probes
+  `p_wave183_{stats,regress,probability}_shapes`; readiness 87.5%.
 - NOT assigned in the 165-171 pass: row 33 stays compiler/install-lane.
   Released as stdlib-v0.64.7 / xiom-std 0.64.7 (release gates on
   candidate-v0.64.7-m351-r2; compiler v0.64.7 pins STDLIB_VERSION to the

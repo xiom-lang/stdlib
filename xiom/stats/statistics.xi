@@ -19,7 +19,9 @@ module xiom.stats.statistics
 use xiom.math;
 
 /// Arithmetic mean; 0 for an empty sample. Complexity: O(n).
-pub fn mean(data: &Vec[Float64]) -> Float64 {
+pub fn mean(data: &Vec[Float64]) -> Float64
+  ensures: (data.len() == 0) => (result == 0.0)
+{
   var n = data.len();
   if n == 0 { return 0.0; }
   var s = 0.0;
@@ -33,7 +35,9 @@ pub fn mean(data: &Vec[Float64]) -> Float64 {
 
 /// Middle value of the sorted sample; average of the two middles when even.
 /// NaN for an empty sample. Complexity: O(n log n).
-pub fn median(data: &Vec[Float64]) -> Float64 {
+pub fn median(data: &Vec[Float64]) -> Float64
+  ensures: (data.len() == 0) => math.is_nan(result)
+{
   var n = data.len();
   if n == 0 { return 0.0 / 0.0; }
   var s = _sorted(data);
@@ -45,7 +49,10 @@ pub fn median(data: &Vec[Float64]) -> Float64 {
 
 /// Most frequently occurring value. NaN for an empty sample; the first mode
 /// wins ties (documented). Complexity: O(n^2).
-pub fn mode(data: &Vec[Float64]) -> Option[Float64] {
+pub fn mode(data: &Vec[Float64]) -> Option[Float64]
+  ensures: (data.len() == 0) => (result is None)
+  ensures: (data.len() > 0) => (result is Some)
+{
   var n = data.len();
   if n == 0 {
     return Option[Float64]{ is_some: false, value: 0.0 };
@@ -72,7 +79,9 @@ pub fn mode(data: &Vec[Float64]) -> Option[Float64] {
 }
 
 /// Sample variance (n - 1); 0 for fewer than 2 samples. Complexity: O(n).
-pub fn variance(data: &Vec[Float64]) -> Float64 {
+pub fn variance(data: &Vec[Float64]) -> Float64
+  ensures: (data.len() < 2) => (result == 0.0)
+{
   var n = data.len();
   if n < 2 { return 0.0; }
   var m = mean(data);
@@ -87,7 +96,9 @@ pub fn variance(data: &Vec[Float64]) -> Float64 {
 }
 
 /// Population variance (n); 0 for an empty sample. Complexity: O(n).
-pub fn variance_pop(data: &Vec[Float64]) -> Float64 {
+pub fn variance_pop(data: &Vec[Float64]) -> Float64
+  ensures: (data.len() == 0) => (result == 0.0)
+{
   var n = data.len();
   if n == 0 { return 0.0; }
   var m = mean(data);
@@ -102,17 +113,23 @@ pub fn variance_pop(data: &Vec[Float64]) -> Float64 {
 }
 
 /// Sample standard deviation. Complexity: O(n).
-pub fn stddev(data: &Vec[Float64]) -> Float64 {
+pub fn stddev(data: &Vec[Float64]) -> Float64
+  ensures: (data.len() < 2) => (result == 0.0)
+{
   return math.sqrt(variance(data));
 }
 
 /// Population standard deviation. Complexity: O(n).
-pub fn stddev_pop(data: &Vec[Float64]) -> Float64 {
+pub fn stddev_pop(data: &Vec[Float64]) -> Float64
+  ensures: (data.len() == 0) => (result == 0.0)
+{
   return math.sqrt(variance_pop(data));
 }
 
 /// Range (max - min); 0 for an empty sample. Complexity: O(n).
-pub fn range(data: &Vec[Float64]) -> Float64 {
+pub fn range(data: &Vec[Float64]) -> Float64
+  ensures: (data.len() == 0) => (result == 0.0)
+{
   var n = data.len();
   if n == 0 { return 0.0; }
   var mn = data[0];
@@ -128,7 +145,9 @@ pub fn range(data: &Vec[Float64]) -> Float64 {
 
 /// Interquartile range (Q3 - Q1). NaN for fewer than 2 samples.
 /// Complexity: O(n log n).
-pub fn iqr(data: &Vec[Float64]) -> Float64 {
+pub fn iqr(data: &Vec[Float64]) -> Float64
+  ensures: (data.len() == 0) => math.is_nan(result)
+{
   var q = quartiles(data);
   if q.len() != 3 { return 0.0 / 0.0; }
   return q[2] - q[0];
@@ -136,7 +155,10 @@ pub fn iqr(data: &Vec[Float64]) -> Float64 {
 
 /// Quartiles [Q1, Q2, Q3] by linear interpolation. Empty for an empty sample.
 /// Complexity: O(n log n).
-pub fn quartiles(data: &Vec[Float64]) -> Vec[Float64] {
+pub fn quartiles(data: &Vec[Float64]) -> Vec[Float64]
+  ensures: (data.len() == 0) => (result.len() == 0)
+  ensures: (data.len() > 0) => (result.len() == 3)
+{
   var out = Vec[Float64].new();
   var n = data.len();
   if n == 0 { return out; }
@@ -152,7 +174,10 @@ pub fn quartiles(data: &Vec[Float64]) -> Vec[Float64] {
 
 /// p-th percentile by linear interpolation (p in [0, 100]). NaN for invalid p.
 /// Complexity: O(n log n).
-pub fn percentile(data: &Vec[Float64], p: Float64) -> Float64 {
+pub fn percentile(data: &Vec[Float64], p: Float64) -> Float64
+  ensures: (p < 0.0 || p > 100.0) => math.is_nan(result)
+  ensures: (data.len() == 0 && 0.0 <= p && p <= 100.0) => math.is_nan(result)
+{
   if p < 0.0 || p > 100.0 { return 0.0 / 0.0; }
   var n = data.len();
   if n == 0 { return 0.0 / 0.0; }
@@ -161,7 +186,9 @@ pub fn percentile(data: &Vec[Float64], p: Float64) -> Float64 {
 }
 
 /// Standardized third central moment. Complexity: O(n).
-pub fn skewness(data: &Vec[Float64]) -> Float64 {
+pub fn skewness(data: &Vec[Float64]) -> Float64
+  ensures: (data.len() < 3) => math.is_nan(result)
+{
   var n = data.len();
   if n < 3 { return 0.0 / 0.0; }
   var m = mean(data);
@@ -181,7 +208,9 @@ pub fn skewness(data: &Vec[Float64]) -> Float64 {
 }
 
 /// Excess kurtosis (fourth central moment, zero for normal). Complexity: O(n).
-pub fn kurtosis(data: &Vec[Float64]) -> Float64 {
+pub fn kurtosis(data: &Vec[Float64]) -> Float64
+  ensures: (data.len() < 4) => math.is_nan(result)
+{
   var n = data.len();
   if n < 4 { return 0.0 / 0.0; }
   var m = mean(data);
@@ -200,7 +229,10 @@ pub fn kurtosis(data: &Vec[Float64]) -> Float64 {
 }
 
 /// Sample covariance of x and y. Complexity: O(n).
-pub fn covariance(x: &Vec[Float64], y: &Vec[Float64]) -> Float64 {
+pub fn covariance(x: &Vec[Float64], y: &Vec[Float64]) -> Float64
+  ensures: (x.len() != y.len()) => math.is_nan(result)
+  ensures: (x.len() == y.len() && x.len() < 2) => (result == 0.0)
+{
   var n = x.len();
   if y.len() != n { return 0.0 / 0.0; }
   if n < 2 { return 0.0; }
@@ -216,7 +248,10 @@ pub fn covariance(x: &Vec[Float64], y: &Vec[Float64]) -> Float64 {
 }
 
 /// Pearson correlation coefficient. Complexity: O(n).
-pub fn correlation(x: &Vec[Float64], y: &Vec[Float64]) -> Float64 {
+pub fn correlation(x: &Vec[Float64], y: &Vec[Float64]) -> Float64
+  ensures: (x.len() != y.len()) => math.is_nan(result)
+  ensures: (x.len() == y.len() && x.len() < 2) => math.is_nan(result)
+{
   var n = x.len();
   if y.len() != n { return 0.0 / 0.0; }
   if n < 2 { return 0.0 / 0.0; }
@@ -241,7 +276,10 @@ pub fn correlation(x: &Vec[Float64], y: &Vec[Float64]) -> Float64 {
 
 /// Spearman rank correlation: the Pearson correlation of the ranks.
 /// Complexity: O(n log n).
-pub fn spearman_correlation(x: &Vec[Float64], y: &Vec[Float64]) -> Float64 {
+pub fn spearman_correlation(x: &Vec[Float64], y: &Vec[Float64]) -> Float64
+  ensures: (x.len() != y.len()) => math.is_nan(result)
+  ensures: (x.len() == y.len() && x.len() < 2) => math.is_nan(result)
+{
   var n = x.len();
   if y.len() != n { return 0.0 / 0.0; }
   if n < 2 { return 0.0 / 0.0; }
@@ -252,7 +290,10 @@ pub fn spearman_correlation(x: &Vec[Float64], y: &Vec[Float64]) -> Float64 {
 
 /// Kendall tau-b rank correlation (concordant minus discordant pairs).
 /// Complexity: O(n^2).
-pub fn kendall_correlation(x: &Vec[Float64], y: &Vec[Float64]) -> Float64 {
+pub fn kendall_correlation(x: &Vec[Float64], y: &Vec[Float64]) -> Float64
+  ensures: (x.len() != y.len()) => math.is_nan(result)
+  ensures: (x.len() == y.len() && x.len() < 2) => math.is_nan(result)
+{
   var n = x.len();
   if y.len() != n { return 0.0 / 0.0; }
   if n < 2 { return 0.0 / 0.0; }
@@ -281,7 +322,9 @@ pub fn kendall_correlation(x: &Vec[Float64], y: &Vec[Float64]) -> Float64 {
 }
 
 /// Root mean square of the sample; 0 for an empty sample. Complexity: O(n).
-pub fn rms(data: &Vec[Float64]) -> Float64 {
+pub fn rms(data: &Vec[Float64]) -> Float64
+  ensures: (data.len() == 0) => (result == 0.0)
+{
   var n = data.len();
   if n == 0 { return 0.0; }
   var s = 0.0;
@@ -294,7 +337,9 @@ pub fn rms(data: &Vec[Float64]) -> Float64 {
 }
 
 /// Geometric mean via log-space; NaN for non-positive values. Complexity: O(n).
-pub fn geometric_mean(data: &Vec[Float64]) -> Float64 {
+pub fn geometric_mean(data: &Vec[Float64]) -> Float64
+  ensures: (data.len() == 0) => math.is_nan(result)
+{
   var n = data.len();
   if n == 0 { return 0.0 / 0.0; }
   var s = 0.0;
@@ -308,7 +353,9 @@ pub fn geometric_mean(data: &Vec[Float64]) -> Float64 {
 }
 
 /// Harmonic mean; NaN for non-positive values. Complexity: O(n).
-pub fn harmonic_mean(data: &Vec[Float64]) -> Float64 {
+pub fn harmonic_mean(data: &Vec[Float64]) -> Float64
+  ensures: (data.len() == 0) => math.is_nan(result)
+{
   var n = data.len();
   if n == 0 { return 0.0 / 0.0; }
   var s = 0.0;
@@ -323,7 +370,9 @@ pub fn harmonic_mean(data: &Vec[Float64]) -> Float64 {
 }
 
 /// Mean weighted by weights. Complexity: O(n).
-pub fn weighted_mean(data: &Vec[Float64], weights: &Vec[Float64]) -> Float64 {
+pub fn weighted_mean(data: &Vec[Float64], weights: &Vec[Float64]) -> Float64
+  ensures: (data.len() != weights.len()) => math.is_nan(result)
+{
   var n = data.len();
   if weights.len() != n { return 0.0 / 0.0; }
   var num = 0.0;
@@ -340,7 +389,10 @@ pub fn weighted_mean(data: &Vec[Float64], weights: &Vec[Float64]) -> Float64 {
 
 /// Mean after removing the fraction `trim` from each sorted tail.
 /// NaN for invalid trim or an over-trimmed sample. Complexity: O(n log n).
-pub fn trimmed_mean(data: &Vec[Float64], trim: Float64) -> Float64 {
+pub fn trimmed_mean(data: &Vec[Float64], trim: Float64) -> Float64
+  ensures: (trim < 0.0 || trim >= 0.5) => math.is_nan(result)
+  ensures: (data.len() == 0) => math.is_nan(result)
+{
   var n = data.len();
   if trim < 0.0 || trim >= 0.5 { return 0.0 / 0.0; }
   if n == 0 { return 0.0 / 0.0; }
@@ -358,7 +410,10 @@ pub fn trimmed_mean(data: &Vec[Float64], trim: Float64) -> Float64 {
 
 /// Mean with the fraction `trim` of each tail winsorized to the tail values.
 /// NaN for invalid trim. Complexity: O(n log n).
-pub fn winsorized_mean(data: &Vec[Float64], trim: Float64) -> Float64 {
+pub fn winsorized_mean(data: &Vec[Float64], trim: Float64) -> Float64
+  ensures: (trim < 0.0 || trim >= 0.5) => math.is_nan(result)
+  ensures: (data.len() == 0) => math.is_nan(result)
+{
   var n = data.len();
   if trim < 0.0 || trim >= 0.5 { return 0.0 / 0.0; }
   if n == 0 { return 0.0 / 0.0; }
@@ -381,7 +436,9 @@ pub fn winsorized_mean(data: &Vec[Float64], trim: Float64) -> Float64 {
 
 /// Median absolute deviation from the median. NaN for an empty sample.
 /// Complexity: O(n log n).
-pub fn mad(data: &Vec[Float64]) -> Float64 {
+pub fn mad(data: &Vec[Float64]) -> Float64
+  ensures: (data.len() == 0) => math.is_nan(result)
+{
   var n = data.len();
   if n == 0 { return 0.0 / 0.0; }
   var med = median(data);
@@ -397,7 +454,9 @@ pub fn mad(data: &Vec[Float64]) -> Float64 {
 }
 
 /// Standardized score (x - mean) / stddev. Complexity: O(1).
-pub fn z_score(x: Float64, mean: Float64, stddev: Float64) -> Float64 {
+pub fn z_score(x: Float64, mean: Float64, stddev: Float64) -> Float64
+  ensures: (stddev == 0.0) => math.is_nan(result)
+{
   if stddev == 0.0 { return 0.0 / 0.0; }
   return (x - mean) / stddev;
 }

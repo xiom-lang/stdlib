@@ -42,28 +42,36 @@ pub fn uniform_cdf(x: Float64, a: Float64, b: Float64) -> Float64
 }
 
 /// Normal density with mean mu and stddev sigma. Complexity: O(1).
-pub fn normal_pdf(x: Float64, mu: Float64, sigma: Float64) -> Float64 {
+pub fn normal_pdf(x: Float64, mu: Float64, sigma: Float64) -> Float64
+  ensures: (sigma <= 0.0) => math.is_nan(result)
+{
   if sigma <= 0.0 { return 0.0 / 0.0; }
   var d = (x - mu) / sigma;
   return math.exp(-0.5 * d * d) / (sigma * _SQRT_2PI);
 }
 
 /// Normal cumulative distribution. Complexity: O(1).
-pub fn normal_cdf(x: Float64, mu: Float64, sigma: Float64) -> Float64 {
+pub fn normal_cdf(x: Float64, mu: Float64, sigma: Float64) -> Float64
+  ensures: (sigma <= 0.0) => math.is_nan(result)
+{
   if sigma <= 0.0 { return 0.0 / 0.0; }
   var z = (x - mu) / (sigma * _SQRT2);
   return 0.5 * (1.0 + math.special.erf(z));
 }
 
 /// Normal quantile (inverse CDF) for probability p. Complexity: O(1).
-pub fn normal_quantile(p: Float64, mu: Float64, sigma: Float64) -> Float64 {
+pub fn normal_quantile(p: Float64, mu: Float64, sigma: Float64) -> Float64
+  ensures: (p <= 0.0 || p >= 1.0) => math.is_nan(result)
+{
   if p <= 0.0 || p >= 1.0 { return 0.0 / 0.0; }
   var z = math.special.erfinv(2.0 * p - 1.0) * _SQRT2;
   return mu + sigma * z;
 }
 
 /// Exponential density with rate lambda. Complexity: O(1).
-pub fn exponential_pdf(x: Float64, lambda: Float64) -> Float64 {
+pub fn exponential_pdf(x: Float64, lambda: Float64) -> Float64
+  ensures: (lambda <= 0.0 || x < 0.0) => math.is_nan(result)
+{
   if lambda <= 0.0 || x < 0.0 { return 0.0 / 0.0; }
   return lambda * math.exp(-lambda * x);
 }
@@ -77,7 +85,9 @@ pub fn exponential_cdf(x: Float64, lambda: Float64) -> Float64
 }
 
 /// Gamma density with shape k and scale theta. Complexity: O(1).
-pub fn gamma_pdf(x: Float64, k: Float64, theta: Float64) -> Float64 {
+pub fn gamma_pdf(x: Float64, k: Float64, theta: Float64) -> Float64
+  ensures: (k <= 0.0 || theta <= 0.0 || x < 0.0) => math.is_nan(result)
+{
   if k <= 0.0 || theta <= 0.0 || x < 0.0 { return 0.0 / 0.0; }
   if x == 0.0 {
     if k < 1.0 { return 1.0 / 0.0; }
@@ -99,7 +109,10 @@ pub fn gamma_cdf(x: Float64, k: Float64, theta: Float64) -> Float64
 }
 
 /// Beta density with shape parameters a and b. Complexity: O(1).
-pub fn beta_pdf(x: Float64, a: Float64, b: Float64) -> Float64 {
+pub fn beta_pdf(x: Float64, a: Float64, b: Float64) -> Float64
+  ensures: (a <= 0.0 || b <= 0.0) => math.is_nan(result)
+  ensures: (a > 0.0 && b > 0.0 && (x <= 0.0 || x >= 1.0)) => (result == 0.0)
+{
   if a <= 0.0 || b <= 0.0 { return 0.0 / 0.0; }
   if x <= 0.0 || x >= 1.0 { return 0.0; }
   var log_p = (a - 1.0) * math.ln(x) + (b - 1.0) * math.ln(1.0 - x)
@@ -119,7 +132,10 @@ pub fn beta_cdf(x: Float64, a: Float64, b: Float64) -> Float64
 }
 
 /// Chi-squared density with k degrees of freedom. Complexity: O(1).
-pub fn chi2_pdf(x: Float64, k: Float64) -> Float64 {
+pub fn chi2_pdf(x: Float64, k: Float64) -> Float64
+  ensures: (x < 0.0 || k <= 0.0) => math.is_nan(result)
+  ensures: (x == 0.0 && k > 2.0) => (result == 0.0)
+{
   if x < 0.0 || k <= 0.0 { return 0.0 / 0.0; }
   if x == 0.0 {
     if k < 2.0 { return 1.0 / 0.0; }
@@ -141,7 +157,9 @@ pub fn chi2_cdf(x: Float64, k: Float64) -> Float64
 }
 
 /// Student's t density with v degrees of freedom. Complexity: O(1).
-pub fn t_pdf(x: Float64, v: Float64) -> Float64 {
+pub fn t_pdf(x: Float64, v: Float64) -> Float64
+  ensures: (v <= 0.0) => math.is_nan(result)
+{
   if v <= 0.0 { return 0.0 / 0.0; }
   var log_p = math.special.gamma_ln((v + 1.0) / 2.0) - math.special.gamma_ln(v / 2.0)
     - 0.5 * math.ln(v * 3.141592653589793)
@@ -151,7 +169,9 @@ pub fn t_pdf(x: Float64, v: Float64) -> Float64 {
 
 /// Student's t cumulative distribution via the regularized incomplete beta.
 /// Complexity: O(iterations).
-pub fn t_cdf(x: Float64, v: Float64) -> Float64 {
+pub fn t_cdf(x: Float64, v: Float64) -> Float64
+  ensures: (v <= 0.0) => math.is_nan(result)
+{
   if v <= 0.0 { return 0.0 / 0.0; }
   var t2 = x * x;
   var z = v / (v + t2);
@@ -163,7 +183,9 @@ pub fn t_cdf(x: Float64, v: Float64) -> Float64 {
 }
 
 /// F density with d1, d2 degrees of freedom. Complexity: O(1).
-pub fn f_pdf(x: Float64, d1: Float64, d2: Float64) -> Float64 {
+pub fn f_pdf(x: Float64, d1: Float64, d2: Float64) -> Float64
+  ensures: (x <= 0.0 || d1 <= 0.0 || d2 <= 0.0) => math.is_nan(result)
+{
   if x <= 0.0 || d1 <= 0.0 || d2 <= 0.0 { return 0.0 / 0.0; }
   var log_p = 0.5 * d1 * math.ln(d1) + 0.5 * d2 * math.ln(d2)
     + (d1 / 2.0 - 1.0) * math.ln(x)
@@ -184,7 +206,10 @@ pub fn f_cdf(x: Float64, d1: Float64, d2: Float64) -> Float64
 }
 
 /// Weibull density with shape and scale. Complexity: O(1).
-pub fn weibull_pdf(x: Float64, shape: Float64, scale: Float64) -> Float64 {
+pub fn weibull_pdf(x: Float64, shape: Float64, scale: Float64) -> Float64
+  ensures: (shape <= 0.0 || scale <= 0.0 || x < 0.0) => math.is_nan(result)
+  ensures: (x == 0.0 && shape > 1.0) => (result == 0.0)
+{
   if shape <= 0.0 || scale <= 0.0 || x < 0.0 { return 0.0 / 0.0; }
   if x == 0.0 {
     if shape < 1.0 { return 1.0 / 0.0; }
@@ -206,7 +231,9 @@ pub fn weibull_cdf(x: Float64, shape: Float64, scale: Float64) -> Float64
 }
 
 /// Log-normal density of exp(mu + sigma Z). Complexity: O(1).
-pub fn lognormal_pdf(x: Float64, mu: Float64, sigma: Float64) -> Float64 {
+pub fn lognormal_pdf(x: Float64, mu: Float64, sigma: Float64) -> Float64
+  ensures: (sigma <= 0.0 || x <= 0.0) => math.is_nan(result)
+{
   if sigma <= 0.0 || x <= 0.0 { return 0.0 / 0.0; }
   var lx = math.ln(x);
   var d = (lx - mu) / sigma;
@@ -214,20 +241,27 @@ pub fn lognormal_pdf(x: Float64, mu: Float64, sigma: Float64) -> Float64 {
 }
 
 /// Log-normal cumulative distribution. Complexity: O(1).
-pub fn lognormal_cdf(x: Float64, mu: Float64, sigma: Float64) -> Float64 {
+pub fn lognormal_cdf(x: Float64, mu: Float64, sigma: Float64) -> Float64
+  ensures: (sigma <= 0.0 || x <= 0.0) => math.is_nan(result)
+{
   if sigma <= 0.0 || x <= 0.0 { return 0.0 / 0.0; }
   var z = (math.ln(x) - mu) / (sigma * _SQRT2);
   return 0.5 * (1.0 + math.special.erf(z));
 }
 
 /// Pareto density with shape alpha and scale xm. Complexity: O(1).
-pub fn pareto_pdf(x: Float64, alpha: Float64, xm: Float64) -> Float64 {
+pub fn pareto_pdf(x: Float64, alpha: Float64, xm: Float64) -> Float64
+  ensures: (alpha <= 0.0 || xm <= 0.0 || x < xm) => math.is_nan(result)
+{
   if alpha <= 0.0 || xm <= 0.0 || x < xm { return 0.0 / 0.0; }
   return alpha * math.pow(xm, alpha) / math.pow(x, alpha + 1.0);
 }
 
 /// Pareto cumulative distribution. Complexity: O(1).
-pub fn pareto_cdf(x: Float64, alpha: Float64, xm: Float64) -> Float64 {
+pub fn pareto_cdf(x: Float64, alpha: Float64, xm: Float64) -> Float64
+  ensures: (alpha <= 0.0 || xm <= 0.0) => math.is_nan(result)
+  ensures: (alpha > 0.0 && xm > 0.0 && x < xm) => (result == 0.0)
+{
   if alpha <= 0.0 || xm <= 0.0 { return 0.0 / 0.0; }
   if x < xm { return 0.0; }
   return 1.0 - math.pow(xm / x, alpha);
@@ -263,7 +297,9 @@ pub fn poisson_cdf(k: Int, lambda: Float64) -> Float64
 }
 
 /// Binomial probability of k successes in n trials. Complexity: O(1).
-pub fn binomial_pmf(k: Int, n: Int, p: Float64) -> Float64 {
+pub fn binomial_pmf(k: Int, n: Int, p: Float64) -> Float64
+  ensures: (p < 0.0 || p > 1.0 || k < 0 || n < 0 || k > n) => math.is_nan(result)
+{
   if p < 0.0 || p > 1.0 || k < 0 || n < 0 || k > n { return 0.0 / 0.0; }
   var log_p = math.special.gamma_ln((n + 1) as Float64) - math.special.gamma_ln((k + 1) as Float64)
     - math.special.gamma_ln((n - k + 1) as Float64)
@@ -304,7 +340,9 @@ pub fn geometric_cdf(k: Int, p: Float64) -> Float64
 
 /// Negative binomial probability of k failures before r successes.
 /// Complexity: O(1).
-pub fn negative_binomial_pmf(k: Int, r: Int, p: Float64) -> Float64 {
+pub fn negative_binomial_pmf(k: Int, r: Int, p: Float64) -> Float64
+  ensures: (p <= 0.0 || p > 1.0 || k < 0 || r <= 0) => math.is_nan(result)
+{
   if p <= 0.0 || p > 1.0 || k < 0 || r <= 0 { return 0.0 / 0.0; }
   var log_p = math.special.gamma_ln((k + r) as Float64) - math.special.gamma_ln((k + 1) as Float64)
     - math.special.gamma_ln(r as Float64)
@@ -313,7 +351,9 @@ pub fn negative_binomial_pmf(k: Int, r: Int, p: Float64) -> Float64 {
 }
 
 /// Negative binomial cumulative distribution. Complexity: O(k).
-pub fn negative_binomial_cdf(k: Int, r: Int, p: Float64) -> Float64 {
+pub fn negative_binomial_cdf(k: Int, r: Int, p: Float64) -> Float64
+  ensures: (k < 0 || r <= 0 || p <= 0.0 || p > 1.0) => math.is_nan(result)
+{
   if k < 0 || r <= 0 { return 0.0 / 0.0; }
   var sum = 0.0;
   var i = 0;
@@ -326,7 +366,9 @@ pub fn negative_binomial_cdf(k: Int, r: Int, p: Float64) -> Float64 {
 
 /// Hypergeometric probability of k successes drawing n from a population of N
 /// with K successes. Complexity: O(1).
-pub fn hypergeometric_pmf(k: Int, n: Int, K: Int, N: Int) -> Float64 {
+pub fn hypergeometric_pmf(k: Int, n: Int, K: Int, N: Int) -> Float64
+  ensures: (n < 0 || K < 0 || N <= 0 || k < 0 || k > n || k > K || n - k > N - K) => math.is_nan(result)
+{
   if n < 0 || K < 0 || N <= 0 || k < 0 || k > n || k > K || n - k > N - K {
     return 0.0 / 0.0;
   }

@@ -27,7 +27,10 @@ pub type RegressionResult = {
 
 /// Least-squares linear fit y = slope*x + intercept with R-squared. Returns a
 /// zeroed result for fewer than 2 points or a mismatch. Complexity: O(n).
-pub fn linear_regression(x: &Vec[Float64], y: &Vec[Float64]) -> RegressionResult {
+pub fn linear_regression(x: &Vec[Float64], y: &Vec[Float64]) -> RegressionResult
+  ensures: (x.len() == 0 || y.len() != x.len()) => (result.slope == 0.0 && result.intercept == 0.0 && result.r2 == 0.0)
+  ensures: (x.len() == 1 && y.len() == 1) => (result.slope == 0.0 && result.r2 == 0.0)
+{
   var s = slope(x, y);
   var b = intercept(x, y);
   var r = r_squared(x, y);
@@ -35,7 +38,9 @@ pub fn linear_regression(x: &Vec[Float64], y: &Vec[Float64]) -> RegressionResult
 }
 
 /// Regression slope. Returns 0 for degenerate input. Complexity: O(n).
-pub fn slope(x: &Vec[Float64], y: &Vec[Float64]) -> Float64 {
+pub fn slope(x: &Vec[Float64], y: &Vec[Float64]) -> Float64
+  ensures: (x.len() < 2 || y.len() != x.len()) => (result == 0.0)
+{
   var n = x.len();
   if n < 2 || y.len() != n { return 0.0; }
   var mx = 0.0;
@@ -62,7 +67,9 @@ pub fn slope(x: &Vec[Float64], y: &Vec[Float64]) -> Float64 {
 }
 
 /// Regression intercept. Returns 0 for degenerate input. Complexity: O(n).
-pub fn intercept(x: &Vec[Float64], y: &Vec[Float64]) -> Float64 {
+pub fn intercept(x: &Vec[Float64], y: &Vec[Float64]) -> Float64
+  ensures: (x.len() == 0 || y.len() != x.len()) => (result == 0.0)
+{
   var n = x.len();
   if n == 0 || y.len() != n { return 0.0; }
   var mx = 0.0;
@@ -81,7 +88,9 @@ pub fn intercept(x: &Vec[Float64], y: &Vec[Float64]) -> Float64 {
 
 /// Coefficient of determination R^2. Returns 0 for degenerate input.
 /// Complexity: O(n).
-pub fn r_squared(x: &Vec[Float64], y: &Vec[Float64]) -> Float64 {
+pub fn r_squared(x: &Vec[Float64], y: &Vec[Float64]) -> Float64
+  ensures: (x.len() < 2 || y.len() != x.len()) => (result == 0.0)
+{
   var n = x.len();
   if n < 2 || y.len() != n { return 0.0; }
   var m = slope(x, y);
@@ -109,7 +118,9 @@ pub fn r_squared(x: &Vec[Float64], y: &Vec[Float64]) -> Float64 {
 }
 
 /// Pearson correlation coefficient. Complexity: O(n).
-pub fn pearson_correlation(x: &Vec[Float64], y: &Vec[Float64]) -> Float64 {
+pub fn pearson_correlation(x: &Vec[Float64], y: &Vec[Float64]) -> Float64
+  ensures: (x.len() < 2 || y.len() != x.len()) => math.is_nan(result)
+{
   var n = x.len();
   if n < 2 || y.len() != n { return 0.0 / 0.0; }
   var mx = 0.0;
@@ -140,7 +151,9 @@ pub fn pearson_correlation(x: &Vec[Float64], y: &Vec[Float64]) -> Float64 {
 }
 
 /// Rank-based Spearman correlation. Complexity: O(n log n).
-pub fn spearman_correlation(x: &Vec[Float64], y: &Vec[Float64]) -> Float64 {
+pub fn spearman_correlation(x: &Vec[Float64], y: &Vec[Float64]) -> Float64
+  ensures: (y.len() != x.len() || x.len() < 2) => math.is_nan(result)
+{
   var n = x.len();
   if y.len() != n { return 0.0 / 0.0; }
   if n < 2 { return 0.0 / 0.0; }
@@ -152,7 +165,11 @@ pub fn spearman_correlation(x: &Vec[Float64], y: &Vec[Float64]) -> Float64 {
 /// Least-squares polynomial coefficients (lowest degree first) by solving the
 /// normal equations: exact for degree 1 and 2 (Cramer's rule); higher degrees
 /// return the empty vector (documented). Complexity: O(n).
-pub fn polynomial_regression(x: &Vec[Float64], y: &Vec[Float64], degree: Int) -> Vec[Float64] {
+pub fn polynomial_regression(x: &Vec[Float64], y: &Vec[Float64], degree: Int) -> Vec[Float64]
+  ensures: (degree < 1 || degree > 2) => (result.len() == 0)
+  ensures: (degree == 1 && x.len() >= 2 && y.len() == x.len()) => (result.len() == 2)
+  ensures: (degree == 2 && x.len() >= 3 && y.len() == x.len()) => (result.len() == 0 || result.len() == 3)
+{
   var out = Vec[Float64].new();
   var n = x.len();
   if n < degree + 1 || y.len() != n { return out; }
@@ -207,7 +224,9 @@ fn _det3(a: Float64, b: Float64, c: Float64, d: Float64, e: Float64, f: Float64,
 
 /// Exponential fit y = a * exp(b*x): linear regression on (x, ln y). Returns
 /// (a, b); NaN for non-positive y. Complexity: O(n).
-pub fn exponential_fit(x: &Vec[Float64], y: &Vec[Float64]) -> (Float64, Float64) {
+pub fn exponential_fit(x: &Vec[Float64], y: &Vec[Float64]) -> (Float64, Float64)
+  ensures: (x.len() < 2 || y.len() != x.len()) => (math.is_nan(result.0) && math.is_nan(result.1))
+{
   var n = x.len();
   if n < 2 || y.len() != n {
     return (0.0 / 0.0, 0.0 / 0.0);
@@ -228,12 +247,17 @@ pub fn exponential_fit(x: &Vec[Float64], y: &Vec[Float64]) -> (Float64, Float64)
 }
 
 /// Predicted value slope * x + intercept. Complexity: O(1).
-pub fn predict_line(slope: Float64, intercept: Float64, x: Float64) -> Float64 {
+pub fn predict_line(slope: Float64, intercept: Float64, x: Float64) -> Float64
+  ensures: result == slope * x + intercept
+{
   return slope * x + intercept;
 }
 
 /// Observed minus predicted values. Empty for a mismatch. Complexity: O(n).
-pub fn residuals(x: &Vec[Float64], y: &Vec[Float64], slope: Float64, intercept: Float64) -> Vec[Float64] {
+pub fn residuals(x: &Vec[Float64], y: &Vec[Float64], slope: Float64, intercept: Float64) -> Vec[Float64]
+  ensures: (y.len() != x.len()) => (result.len() == 0)
+  ensures: (y.len() == x.len()) => (result.len() == x.len())
+{
   var out = Vec[Float64].new();
   var n = x.len();
   if y.len() != n { return out; }

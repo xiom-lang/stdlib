@@ -161,7 +161,10 @@ pub fn stats_range(data: &Vec[Int]) -> Int
 
 /// Returns the most frequently occurring value (mode) in a sorted vector.
 /// For ties, returns the first mode encountered.
-pub fn stats_mode(data: &Vec[Int]) -> Option[Int] {
+pub fn stats_mode(data: &Vec[Int]) -> Option[Int]
+  ensures: (data.len() == 0) => (result is None)
+  ensures: (data.len() > 0) => (result is Some)
+{
   let len = data.len();
   if len == 0 {
     return Option[Int]{ is_some: false; value: 0; };
@@ -342,7 +345,9 @@ pub fn stats_covariance(a: &Vec[Int], b: &Vec[Int]) -> Float64
 }
 
 /// Computes the Pearson correlation coefficient between two vectors.
-pub fn stats_correlation(a: &Vec[Int], b: &Vec[Int]) -> Float64 {
+pub fn stats_correlation(a: &Vec[Int], b: &Vec[Int]) -> Float64
+  ensures: (a.len() < 2 || b.len() < 2) => (result == 0.0)
+{
   let var_a = stats_variance(a);
   let var_b = stats_variance(b);
   if var_a == 0.0 || var_b == 0.0 { return 0.0; };
