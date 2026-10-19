@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 72 (updated 2026-10-19 23:35Z; **v0.64.8 PINNED + RELEASED**; waves 188-190 merged: global 83.0%, readiness 88.3%, floors190; final battery modules 533/533, smokes 962/962, probes 372/372, barename 0/533; next: iter/time/async/os/collect/thread/compress + math remainder; gate 9 reds 1626/2343/2100-W1)
+## 0A. CONTINUE HERE -- handoff snapshot 72 (updated 2026-10-19 23:40Z; **v0.64.8 PINNED + RELEASED**; waves 188-190 merged: global 83.0%, readiness 88.3%, floors190; final battery modules 533/533, smokes 962/962 (+ new io rename-dir smoke, 963 total), probes 372/372, barename 0/533; next: iter/time/async/os/collect/thread/compress + math remainder; gate 9 reds 1626/2343/2100-W1)
 
 ## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-19, snapshot 72)
 
@@ -42,10 +42,12 @@ time 52.9%, async 62.7%, os 65.1%, collect 65.5%, thread 67.9%,
 compress 70.4%, math 71.3%, bits 74.3%, core 78.6%.
 
 Final battery on the merged tree (official v0.64.8): modules 533/533,
-smokes 962/962 (0 compilefail / 0 runfail), probes 372/372, barename
-0/533, coverage floors190 RATCHET OK, regex 17/17, doc_scan 100%
-(2 pre-existing net misses). fraction_add cross-cancel fix +
-p_fraction_add_reduce; runtime __udivti3 fix + tests/runtime/test_udivti3.c.
+smokes 962/962 (0 compilefail / 0 runfail) + new io rename-dir smoke
+(963 total), probes 372/372, barename 0/533, coverage floors190 RATCHET
+OK, regex 17/17, doc_scan 100% (2 pre-existing net misses).
+fraction_add cross-cancel fix + p_fraction_add_reduce; io.rename
+directory-aware postcondition + smoke_io_rename_dir; runtime __udivti3
+fix + tests/runtime/test_udivti3.c.
 
 Immediate housekeeping:
 - Stop/remove the merged Agent Manager sessions for wave/188-num-contracts,
@@ -3762,6 +3764,12 @@ registry pin, agent recon for the rest)**
   divided by gcd(denominators). Fixed to
   `a.num*(b.den/g) + b.num*(a.den/g)` (commit `109afa1`), probe
   `p_fraction_add_reduce` rc 0; targeted num smokes 18/18.
+- Engine high item `REL-20261019-2020-stdlib` fixed: `io.rename`'s
+  postcondition used `file_exists` (fopen-based, false for directories),
+  so every successful directory move tripped the runtime contract after
+  the OS move. Now `!fs_exists(src) && fs_exists(dst)`; new
+  `tests/smoke/smoke_io_rename_dir.xi` passes (rename filter 3/3,
+  io_dir 1/1). Commit `19d86de`.
 - Merged-tree battery (official v0.64.8; repo stdlib): smokes 962/962
   (0 compilefail / 0 runfail) before the fraction fix; after it,
   targeted num smokes 18/18, probes 372/372, modules 533/533, barename

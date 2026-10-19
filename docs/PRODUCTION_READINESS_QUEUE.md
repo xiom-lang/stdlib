@@ -6,15 +6,16 @@ gate 9 discrete.** (Compiler pin: **v0.64.8**; stdlib-v0.64.8 tag object
 main pin `v0.64.8` after the block-259 battery; compiler v0.64.8 pins
 `STDLIB_VERSION=stdlib-v0.64.8`; registry `xiom-std 0.64.8` is live, run
 39298965606 re-ran green after the ops mapping fix.)
-**Gates: merged corpus 962/962 (0 compilefail / 0 runfail), modules
-533/533, probes 372/372, barename 0/533, floors190. Wave pin: v0.64.8
-(blocks 259/260).**
+**Gates: merged corpus 962/962 (0 compilefail / 0 runfail) + new io
+rename-dir smoke (963 total), modules 533/533, probes 372/372, barename
+0/533, floors190. Wave pin: v0.64.8 (blocks 259/260).**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
 gates flip:
 1. Modules type-check clean -- MET (533/533).
-2. Smoke corpus green -- MET: merged 962/962 on v0.64.8 (0/0), plus
+2. Smoke corpus green -- MET: merged 962/962 on v0.64.8 (0/0), plus the
+   new directory-rename smoke (rename filter 3/3; 963 total), plus
    956/956 on both Windows and Ubuntu release gates, no carve-outs.
 3. Probe corpus green -- MET (372/372; the wave-188..190 and
    fraction-add probes are included and individually green).
