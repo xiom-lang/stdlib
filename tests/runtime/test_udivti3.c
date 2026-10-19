@@ -7,9 +7,13 @@
  * defined in the same TU) and self-recursed; the high-limb path also lost
  * the 129th remainder bit and returned wrong quotients.
  *
- * Build (Windows; run from runtime/):
+ * This test lives outside runtime/ on purpose: the compiler links every
+ * .c file in runtime/ into each program, and a test main() would collide
+ * with the program entry point.
+ *
+ * Build (Windows; run from tests/runtime/):
  *   clang -c -O0 -maes -ffunction-sections -fdata-sections -DXIOM_NO_ASM ^
- *         xiom_runtime.c -o xiom_runtime_test.obj
+ *         ..\..\runtime\xiom_runtime.c -o xiom_runtime_test.obj
  *   clang -O2 test_udivti3.c xiom_runtime_test.obj -o test_udivti3.exe
  *   test_udivti3.exe
  * Expected: prints "ok" and exits 0.

@@ -3728,8 +3728,10 @@ registry pin, agent recon for the rest)**
   same-TU symbol) and self-recurse. The old high-limb path was also
   wrong: a standalone replica mismatched 16,716/50,000 random vectors
   (e.g. 0x97A.../0x3C0... returned 0 instead of 2). The fixed algorithm
-  matched Python big ints on 50,007 vectors; `runtime/test_udivti3.c`
-  linked against the compiled runtime object prints ok/rc 0.
+  matched Python big ints on 50,007 vectors; `tests/runtime/test_udivti3.c`
+  linked against the compiled runtime object prints ok/rc 0. The test
+  lives outside `runtime/` because the compiler links every
+  `runtime/*.c` into each program and a test `main()` collides.
   (`p_udivti3_runtime.xi` was dropped: extern "C" returning UInt128
   currently fails codegen with i64-vs-i128.)
 - Agent Manager housekeeping: stopped/removed wave 186/187 and wishlist
