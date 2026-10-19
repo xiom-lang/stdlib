@@ -165,17 +165,23 @@ impl Bounded[Float64] {
 }
 
 /// Minimum finite value of a bounded numeric type.
-pub fn min_value[T: Bounded]() -> T {
+pub fn min_value[T: Bounded]() -> T
+  ensures: result == T.min_value()
+{
   return T.min_value();
 }
 
 /// Maximum finite value of a bounded numeric type.
-pub fn max_value[T: Bounded]() -> T {
+pub fn max_value[T: Bounded]() -> T
+  ensures: result == T.max_value()
+{
   return T.max_value();
 }
 
 /// Difference between 1.0 and the next representable value.
-pub fn epsilon[T: Bounded]() -> T {
+pub fn epsilon[T: Bounded]() -> T
+  ensures: result == T.epsilon()
+{
   return T.epsilon();
 }
 
@@ -196,18 +202,25 @@ pub fn gcd(a: Int, b: Int) -> Int
 }
 
 /// Least common multiple of two Ints (0 when either is 0).
-pub fn lcm(a: Int, b: Int) -> Int {
+pub fn lcm(a: Int, b: Int) -> Int
+  ensures: a == 0 || b == 0 => result == 0
+{
   if a == 0 || b == 0 { return 0; }
   return a / gcd(a, b) * b;
 }
 
 /// True when `n > 0` and `n` is a power of two.
-pub fn is_power_of_two(n: Int) -> Bool {
+pub fn is_power_of_two(n: Int) -> Bool
+  ensures: result == (n > 0 && bit_and(n, n - 1) == 0)
+{
   return n > 0 && bit_and(n, n - 1) == 0;
 }
 
 /// Smallest power of two >= n (1 for n <= 1).
-pub fn next_power_of_two(n: Int) -> Int {
+pub fn next_power_of_two(n: Int) -> Int
+  ensures: n <= 1 => result == 1
+  ensures: n > 1 => result != 0
+{
   if n <= 0 { return 1; }
   var p = 1;
   while p > 0 && p < n {
@@ -225,6 +238,7 @@ extern "C" {
 /// Number of set bits (popcount).
 pub fn count_ones(n: Int) -> Int
   requires: true  // extern popcount call below (T002 confinement)
+  ensures: result >= 0 && result <= 64
 {
   // Hardware popcount (POPCNT instruction / __builtin_popcountll).
   // The runtime falls back to a SWAR bit-count when unsupported.
@@ -232,13 +246,16 @@ pub fn count_ones(n: Int) -> Int
 }
 
 /// Number of cleared bits.
-pub fn count_zeros(n: Int) -> Int {
+pub fn count_zeros(n: Int) -> Int
+  ensures: result == 64 - count_ones(n)
+{
   return size_of[Int]() * 8 - count_ones(n);
 }
 
 /// Number of leading zero bits.
 pub fn leading_zeros(n: Int) -> Int
   requires: true  // extern clz call below (T002 confinement)
+  ensures: result >= 0 && result <= 64
 {
   // Hardware LZCNT/BSR (__builtin_clzll). 64 for zero.
   xiom_clz64(n)
@@ -247,13 +264,17 @@ pub fn leading_zeros(n: Int) -> Int
 /// Number of trailing zero bits.
 pub fn trailing_zeros(n: Int) -> Int
   requires: true  // extern ctz call below (T002 confinement)
+  ensures: result >= 0 && result <= 64
 {
   // Hardware TZCNT/BSF (__builtin_ctzll). 64 for zero.
   xiom_ctz64(n)
 }
 
 /// Rotate bits left by `k` positions.
-pub fn rotate_left(n: Int, k: Int) -> Int {
+pub fn rotate_left(n: Int, k: Int) -> Int
+  ensures: k % 64 == 0 => result == n
+  ensures: n == 0 => result == 0
+{
   var bits = size_of[Int]() * 8;
   var shift = k % bits;
   if shift == 0 { return n; }
@@ -261,7 +282,10 @@ pub fn rotate_left(n: Int, k: Int) -> Int {
 }
 
 /// Rotate bits right by `k` positions.
-pub fn rotate_right(n: Int, k: Int) -> Int {
+pub fn rotate_right(n: Int, k: Int) -> Int
+  ensures: k % 64 == 0 => result == n
+  ensures: n == 0 => result == 0
+{
   var bits = size_of[Int]() * 8;
   var shift = k % bits;
   if shift == 0 { return n; }
@@ -269,7 +293,10 @@ pub fn rotate_right(n: Int, k: Int) -> Int {
 }
 
 /// Reverse the bit order of the value.
-pub fn reverse_bits(n: Int) -> Int {
+pub fn reverse_bits(n: Int) -> Int
+  ensures: n == 0 => result == 0
+  ensures: n == -1 => result == -1
+{
   var result = 0;
   var x = n;
   var bits = size_of[Int]() * 8;
@@ -283,7 +310,10 @@ pub fn reverse_bits(n: Int) -> Int {
 }
 
 /// Convert from native to big-endian byte order.
-pub fn to_be(n: Int) -> Int {
+pub fn to_be(n: Int) -> Int
+  ensures: n == 0 => result == 0
+  ensures: n == -1 => result == -1
+{
   var result = 0;
   var x = n;
   var bytes = size_of[Int]();
@@ -298,35 +328,48 @@ pub fn to_be(n: Int) -> Int {
 }
 
 /// Convert from native to little-endian byte order.
-pub fn to_le(n: Int) -> Int {
+pub fn to_le(n: Int) -> Int
+  ensures: result == n
+{
   return n;
 }
 
 /// Convert from big-endian to native byte order.
-pub fn from_be(n: Int) -> Int {
+pub fn from_be(n: Int) -> Int
+  ensures: result == to_be(n)
+{
   return to_be(n);
 }
 
 /// Convert from little-endian to native byte order.
-pub fn from_le(n: Int) -> Int {
+pub fn from_le(n: Int) -> Int
+  ensures: result == n
+{
   return n;
 }
 
 /// Float-specific
-pub fn is_finite(x: Float64) -> Bool {
+pub fn is_finite(x: Float64) -> Bool
+  ensures: result == (!is_nan(x) && !is_inf(x))
+{
   var not_nan = !(is_nan(x));
   var not_inf = !(is_inf(x));
   return not_nan && not_inf;
 }
 
 /// True when `x` is finite and neither zero nor subnormal.
-pub fn is_normal(x: Float64) -> Bool {
+pub fn is_normal(x: Float64) -> Bool
+  ensures: result == (x != 0.0 && !is_nan(x) && !is_inf(x))
+{
   if x == 0.0 || is_nan(x) || is_inf(x) { return false; }
   return true;
 }
 
 /// IEEE-754 classification code (see the FLOAT_* constants).
-pub fn classify(x: Float64) -> Int {
+pub fn classify(x: Float64) -> Int
+  ensures: result == 0 || result == 1 || result == 2 || result == 4
+  ensures: is_nan(x) => result == 0
+{
   if is_nan(x) { return 0; }
   if is_inf(x) { return 1; }
   if x == 0.0 { return 2; }
@@ -354,18 +397,29 @@ pub fn ceil(x: Float64) -> Int
 }
 
 /// Nearest integer, with halves rounded away from zero.
-pub fn round(x: Float64) -> Int {
+pub fn round(x: Float64) -> Int
+  ensures: x == 0.0 => result == 0
+  ensures: x > 0.0 && x < 0.5 => result == 0
+{
   if x >= 0.0 { return to_int(x + 0.5); }
   return to_int(x - 0.5);
 }
 
 /// Integer part of `x` (truncation toward zero).
-pub fn trunc(x: Float64) -> Int {
+pub fn trunc(x: Float64) -> Int
+  ensures: x == 0.0 => result == 0
+  ensures: x > 0.0 && x < 1.0 => result == 0
+  ensures: x < 0.0 && x > -1.0 => result == 0
+{
   return to_int(x);
 }
 
 /// Fractional part of `x` (`x - trunc(x)`).
-pub fn fract(x: Float64) -> Float64 {
+pub fn fract(x: Float64) -> Float64
+  ensures: x == 0.0 => result == 0.0
+  ensures: x > 0.0 && x < 1.0 => result == x
+  ensures: x < 0.0 && x > -1.0 => result == x
+{
   return x - to_float(to_int(x));
 }
 
@@ -377,24 +431,32 @@ pub fn recip(x: Float64) -> Float64
 }
 
 /// Convert radians to degrees.
-pub fn to_degrees(rad: Float64) -> Float64 {
+pub fn to_degrees(rad: Float64) -> Float64
+  ensures: rad == 0.0 => result == 0.0
+{
   return rad * 180.0 / 3.141592653589793;
 }
 
 /// Convert degrees to radians.
-pub fn to_radians(deg: Float64) -> Float64 {
+pub fn to_radians(deg: Float64) -> Float64
+  ensures: deg == 0.0 => result == 0.0
+{
   return deg * 3.141592653589793 / 180.0;
 }
 
 /// Length of the hypotenuse `sqrt(x^2 + y^2)` without intermediate overflow.
 pub fn hypot(x: Float64, y: Float64) -> Float64
   requires: true  // extern sqrt call below (T002 confinement)
+  ensures: (result >= 0.0) || (result != result)
+  ensures: x == 0.0 && y == 0.0 => result == 0.0
 {
   return sqrt(x * x + y * y);
 }
 
 /// Saturation arithmetic
-pub fn saturating_add[T: Bounded + Ord + Add](a: T, b: T) -> T {
+pub fn saturating_add[T: Bounded + Ord + Add](a: T, b: T) -> T
+  ensures: result >= T.min_value() && result <= T.max_value()
+{
   var z = T.zero();
   var max_val = T.max_value();
   var min_val = T.min_value();
@@ -404,7 +466,9 @@ pub fn saturating_add[T: Bounded + Ord + Add](a: T, b: T) -> T {
 }
 
 /// Subtraction clamped to the type minimum/maximum.
-pub fn saturating_sub[T: Bounded + Ord + Sub](a: T, b: T) -> T {
+pub fn saturating_sub[T: Bounded + Ord + Sub](a: T, b: T) -> T
+  ensures: result >= T.min_value() && result <= T.max_value()
+{
   var z = T.zero();
   var max_val = T.max_value();
   var min_val = T.min_value();
@@ -414,7 +478,9 @@ pub fn saturating_sub[T: Bounded + Ord + Sub](a: T, b: T) -> T {
 }
 
 /// Multiplication clamped to the type minimum/maximum.
-pub fn saturating_mul[T: Bounded + Ord + Mul + Div](a: T, b: T) -> T {
+pub fn saturating_mul[T: Bounded + Ord + Mul + Div](a: T, b: T) -> T
+  ensures: result >= T.min_value() && result <= T.max_value()
+{
   var z = T.zero();
   if a == z || b == z { return z; }
   var max_val = T.max_value();
@@ -427,7 +493,9 @@ pub fn saturating_mul[T: Bounded + Ord + Mul + Div](a: T, b: T) -> T {
 }
 
 /// Checked arithmetic
-pub fn checked_add[T: Bounded + Ord + Add](a: T, b: T) -> Option[T] {
+pub fn checked_add[T: Bounded + Ord + Add](a: T, b: T) -> Option[T]
+  ensures: b == T.zero() => result == Some(a)
+{
   var z = T.zero();
   var max_val = T.max_value();
   var min_val = T.min_value();
@@ -437,7 +505,9 @@ pub fn checked_add[T: Bounded + Ord + Add](a: T, b: T) -> Option[T] {
 }
 
 /// Subtraction, or None on overflow/underflow.
-pub fn checked_sub[T: Bounded + Ord + Sub](a: T, b: T) -> Option[T] {
+pub fn checked_sub[T: Bounded + Ord + Sub](a: T, b: T) -> Option[T]
+  ensures: b == T.zero() => result == Some(a)
+{
   var z = T.zero();
   var max_val = T.max_value();
   var min_val = T.min_value();
@@ -447,7 +517,9 @@ pub fn checked_sub[T: Bounded + Ord + Sub](a: T, b: T) -> Option[T] {
 }
 
 /// Multiplication, or None on overflow.
-pub fn checked_mul[T: Bounded + Ord + Mul + Div](a: T, b: T) -> Option[T] {
+pub fn checked_mul[T: Bounded + Ord + Mul + Div](a: T, b: T) -> Option[T]
+  ensures: a == T.zero() || b == T.zero() => result == Some(T.zero())
+{
   var z = T.zero();
   if a == z || b == z { return Some(z); }
   var max_val = T.max_value();
@@ -469,27 +541,37 @@ pub fn checked_div[T: Bounded + Eq + Div](a: T, b: T) -> Option[T]
 }
 
 /// Wrapping arithmetic
-pub fn wrapping_add[T: Bounded + Add](a: T, b: T) -> T {
+pub fn wrapping_add[T: Bounded + Add](a: T, b: T) -> T
+  ensures: result == a + b
+{
   return a + b;
 }
 
 /// Subtraction wrapping around the type range.
-pub fn wrapping_sub[T: Bounded + Sub](a: T, b: T) -> T {
+pub fn wrapping_sub[T: Bounded + Sub](a: T, b: T) -> T
+  ensures: result == a - b
+{
   return a - b;
 }
 
 /// Multiplication wrapping around the type range.
-pub fn wrapping_mul[T: Bounded + Mul](a: T, b: T) -> T {
+pub fn wrapping_mul[T: Bounded + Mul](a: T, b: T) -> T
+  ensures: result == a * b
+{
   return a * b;
 }
 
 /// Parse
-pub fn parse_int(s: Str) -> Result[Int, Str] {
+pub fn parse_int(s: Str) -> Result[Int, Str]
+  ensures: s.len() == 0 => result is Err
+{
   return to_int_from_str(s);
 }
 
 /// Parse a decimal Float64; Err with a message on bad input.
-pub fn parse_float(s: Str) -> Result[Float64, Str] {
+pub fn parse_float(s: Str) -> Result[Float64, Str]
+  ensures: s.len() == 0 => result is Err
+{
   return to_float_from_str(s);
 }
 
@@ -533,32 +615,44 @@ pub fn parse_int_radix(s: Str, radix: Int) -> Result[Int, Str]
 // -- Basic Integer Predicates ------------------------------------------------
 
 /// Returns true if n is even. O(1).
-pub fn is_even(n: Int) -> Bool {
+pub fn is_even(n: Int) -> Bool
+  ensures: result == (n % 2 == 0)
+{
   n % 2 == 0
 }
 
 /// Returns true if n is odd. O(1).
-pub fn is_odd(n: Int) -> Bool {
+pub fn is_odd(n: Int) -> Bool
+  ensures: result == !(n % 2 == 0)
+{
   !(n % 2 == 0)
 }
 
 /// Returns true if n > 0. O(1).
-pub fn is_positive(n: Int) -> Bool {
+pub fn is_positive(n: Int) -> Bool
+  ensures: result == (n > 0)
+{
   n > 0
 }
 
 /// Returns true if n < 0. O(1).
-pub fn is_negative(n: Int) -> Bool {
+pub fn is_negative(n: Int) -> Bool
+  ensures: result == (n < 0)
+{
   n < 0
 }
 
 /// Returns true if n >= 0. O(1).
-pub fn is_non_negative(n: Int) -> Bool {
+pub fn is_non_negative(n: Int) -> Bool
+  ensures: result == (n >= 0)
+{
   n >= 0
 }
 
 /// Returns -1 for negative, 0 for zero, 1 for positive. O(1).
-pub fn signum(n: Int) -> Int {
+pub fn signum(n: Int) -> Int
+  ensures: (result == -1 && n < 0) || (result == 0 && n == 0) || (result == 1 && n > 0)
+{
   if n > 0 { 1 }
   elif n < 0 { -1 }
   else { 0 }
@@ -567,7 +661,10 @@ pub fn signum(n: Int) -> Int {
 // -- Digit Operations --------------------------------------------------------
 
 /// Counts the number of decimal digits. O(log10 n).
-pub fn digit_count(n: Int) -> Int {
+pub fn digit_count(n: Int) -> Int
+  ensures: n >= 0 => result >= 1
+  ensures: n > 0 => result <= 19
+{
   if n == 0 { return 1; }
   var count = 0;
   var x = n;
@@ -580,7 +677,10 @@ pub fn digit_count(n: Int) -> Int {
 }
 
 /// Sum of decimal digits. O(log10 n).
-pub fn digit_sum(n: Int) -> Int {
+pub fn digit_sum(n: Int) -> Int
+  ensures: result >= 0
+  ensures: n == 0 => result == 0
+{
   var sum = 0;
   var x = n;
   if x < 0 { x = -x; }
@@ -592,7 +692,10 @@ pub fn digit_sum(n: Int) -> Int {
 }
 
 /// Digital root: repeated digit sum until a single digit is obtained. O(log10 n).
-pub fn digital_root(n: Int) -> Int {
+pub fn digital_root(n: Int) -> Int
+  ensures: result >= 0 && result <= 9
+  ensures: n == 0 => result == 0
+{
   if n == 0 { return 0; }
   var r = n % 9;
   if r == 0 { return 9; }
@@ -603,7 +706,10 @@ pub fn digital_root(n: Int) -> Int {
 // -- Combinatorics -----------------------------------------------------------
 
 /// Factorial of n (n!). Returns 0 on overflow or negative input. O(N).
-pub fn factorial(n: Int) -> Int {
+pub fn factorial(n: Int) -> Int
+  ensures: n < 0 => result == 0
+  ensures: n == 0 || n == 1 => result == 1
+{
   if n < 0 { return 0; }
   if n <= 1 { return 1; }
   var result = 1;
@@ -617,7 +723,10 @@ pub fn factorial(n: Int) -> Int {
 }
 
 /// Binomial coefficient C(n, k). Returns 0 on overflow or invalid input. O(k).
-pub fn binomial(n: Int, k: Int) -> Int {
+pub fn binomial(n: Int, k: Int) -> Int
+  ensures: k < 0 || k > n => result == 0
+  ensures: n >= 0 && (k == 0 || k == n) => result == 1
+{
   if k < 0 || k > n { return 0; }
   if k == 0 || k == n { return 1; }
   var kk = k;
@@ -634,7 +743,11 @@ pub fn binomial(n: Int, k: Int) -> Int {
 }
 
 /// Fibonacci number F(n). 0-indexed: F(0)=0, F(1)=1. Returns 0 for n < 0. O(N).
-pub fn fibonacci(n: Int) -> Int {
+pub fn fibonacci(n: Int) -> Int
+  ensures: n < 0 => result == 0
+  ensures: n == 0 => result == 0
+  ensures: n == 1 => result == 1
+{
   if n < 0 { return 0; }
   if n <= 1 { return n; }
   var a = 0;
@@ -652,7 +765,9 @@ pub fn fibonacci(n: Int) -> Int {
 // -- Extended GCD / LCM ------------------------------------------------------
 
 /// GCD of a slice of integers. Returns 0 if the slice is empty. O(N-log max).
-pub fn gcd_many(nums: &Vec[Int]) -> Int {
+pub fn gcd_many(nums: &Vec[Int]) -> Int
+  ensures: nums.len() == 0 => result == 0
+{
   var n = nums.len();
   if n == 0 { return 0; }
   var g = nums[0];
@@ -666,7 +781,9 @@ pub fn gcd_many(nums: &Vec[Int]) -> Int {
 }
 
 /// LCM of a slice of integers. Returns 0 if any element is 0. O(N-log max).
-pub fn lcm_many(nums: &Vec[Int]) -> Int {
+pub fn lcm_many(nums: &Vec[Int]) -> Int
+  ensures: nums.len() == 0 => result == 0
+{
   var n = nums.len();
   if n == 0 { return 0; }
   var l = nums[0];
@@ -684,7 +801,10 @@ pub fn lcm_many(nums: &Vec[Int]) -> Int {
 // -- Prime Numbers -----------------------------------------------------------
 
 /// Trial-division primality test. O(sqrtn).
-pub fn is_prime(n: Int) -> Bool {
+pub fn is_prime(n: Int) -> Bool
+  ensures: result => n >= 2
+  ensures: n < 2 => !result
+{
   if n < 2 { return false; }
   if n == 2 { return true; }
   if n % 2 == 0 { return false; }
@@ -697,7 +817,9 @@ pub fn is_prime(n: Int) -> Bool {
 }
 
 /// Next prime greater than n. O(sqrtresult - gap).
-pub fn next_prime(n: Int) -> Int {
+pub fn next_prime(n: Int) -> Int
+  ensures: n < 2 => result == 2
+{
   if n < 2 { return 2; }
   var cand = n + 1;
   if cand % 2 == 0 { cand = cand + 1; }
@@ -708,7 +830,10 @@ pub fn next_prime(n: Int) -> Int {
 }
 
 /// Nth prime (1-indexed: nth_prime(1)=2). Returns 0 for n <= 0. O(n-sqrtpn).
-pub fn nth_prime(n: Int) -> Int {
+pub fn nth_prime(n: Int) -> Int
+  ensures: n <= 0 => result == 0
+  ensures: n == 1 => result == 2
+{
   if n <= 0 { return 0; }
   if n == 1 { return 2; }
   var count = 1;
@@ -721,7 +846,10 @@ pub fn nth_prime(n: Int) -> Int {
 }
 
 /// Prime factors of n (with multiplicity). O(sqrtn).
-pub fn prime_factors(n: Int) -> Vec[Int] {
+pub fn prime_factors(n: Int) -> Vec[Int]
+  ensures: n == 0 || n == 1 => result.len() == 0
+  ensures: n > 1 => result.len() >= 1
+{
   var result = Vec[Int].new();
   if n <= 1 { return result; }
   var x = n;
@@ -743,7 +871,10 @@ pub fn prime_factors(n: Int) -> Vec[Int] {
 }
 
 /// All positive divisors of n (unsorted). O(sqrtn).
-pub fn divisors(n: Int) -> Vec[Int] {
+pub fn divisors(n: Int) -> Vec[Int]
+  ensures: n <= 0 => result.len() == 0
+  ensures: n > 0 => result.len() >= 1
+{
   var result = Vec[Int].new();
   if n <= 0 { return result; }
   var x = n;
@@ -760,7 +891,11 @@ pub fn divisors(n: Int) -> Vec[Int] {
 }
 
 /// Euler's totient phi(n): count of k in [1, n] with gcd(k, n) = 1. O(sqrtn).
-pub fn euler_totient(n: Int) -> Int {
+pub fn euler_totient(n: Int) -> Int
+  ensures: n <= 0 => result == 0
+  ensures: n == 1 => result == 1
+  ensures: n >= 2 => result >= 1 && result < n
+{
   if n <= 0 { return 0; }
   if n == 1 { return 1; }
   var result = n;
@@ -782,7 +917,10 @@ pub fn euler_totient(n: Int) -> Int {
 // -- Modular Arithmetic ------------------------------------------------------
 
 /// Modular exponentiation: (base^exp) mod m. Uses square-and-multiply. O(log exp).
-pub fn mod_pow(base: Int, exp: Int, m: Int) -> Int {
+pub fn mod_pow(base: Int, exp: Int, m: Int) -> Int
+  ensures: m == 1 => result == 0
+  ensures: exp < 0 => result == 0
+{
   if m == 1 { return 0; }
   if exp < 0 { return 0; }
   var result = 1;
@@ -802,7 +940,10 @@ pub fn mod_pow(base: Int, exp: Int, m: Int) -> Int {
 
 /// Modular inverse: x such that (a * x) == 1 (mod m). Uses extended Euclid. O(log min(a,m)).
 /// Returns None if gcd(a, m) != 1.
-pub fn mod_inverse(a: Int, m: Int) -> Option[Int] {
+pub fn mod_inverse(a: Int, m: Int) -> Option[Int]
+  ensures: m == 1 => result == Some(0)
+  ensures: a == 0 && m > 1 => result is None
+{
   var old_r = a % m;
   if old_r < 0 { old_r = old_r + m; }
   var r = m;
@@ -824,7 +965,9 @@ pub fn mod_inverse(a: Int, m: Int) -> Option[Int] {
 }
 
 /// Modular addition: (a + b) mod m. Result in [0, m). O(1).
-pub fn mod_add(a: Int, b: Int, m: Int) -> Int {
+pub fn mod_add(a: Int, b: Int, m: Int) -> Int
+  ensures: m > 0 => result >= 0 && result < m
+{
   var x = a % m;
   if x < 0 { x = x + m; }
   var y = b % m;
@@ -835,7 +978,9 @@ pub fn mod_add(a: Int, b: Int, m: Int) -> Int {
 }
 
 /// Modular subtraction: (a - b) mod m. Result in [0, m). O(1).
-pub fn mod_sub(a: Int, b: Int, m: Int) -> Int {
+pub fn mod_sub(a: Int, b: Int, m: Int) -> Int
+  ensures: m > 0 => result >= 0 && result < m
+{
   var x = a % m;
   if x < 0 { x = x + m; }
   var y = b % m;
@@ -846,7 +991,9 @@ pub fn mod_sub(a: Int, b: Int, m: Int) -> Int {
 }
 
 /// Modular multiplication: (a * b) mod m. Result in [0, m). O(1).
-pub fn mod_mul(a: Int, b: Int, m: Int) -> Int {
+pub fn mod_mul(a: Int, b: Int, m: Int) -> Int
+  ensures: m > 0 => result >= 0 && result < m
+{
   var x = a % m;
   if x < 0 { x = x + m; }
   var y = b % m;
@@ -859,7 +1006,10 @@ pub fn mod_mul(a: Int, b: Int, m: Int) -> Int {
 // -- Integer Properties ------------------------------------------------------
 
 /// Returns true if n is a perfect square. O(log n).
-pub fn is_perfect_square(n: Int) -> Bool {
+pub fn is_perfect_square(n: Int) -> Bool
+  ensures: result => n >= 0
+  ensures: n < 0 => !result
+{
   if n < 0 { return false; }
   if n <= 1 { return true; }
   var lo = 1;
@@ -875,7 +1025,10 @@ pub fn is_perfect_square(n: Int) -> Bool {
 }
 
 /// Returns true if n reads the same forward and backward in decimal. O(log10 n).
-pub fn is_palindrome_int(n: Int) -> Bool {
+pub fn is_palindrome_int(n: Int) -> Bool
+  ensures: n < 0 => !result
+  ensures: n == 0 => result
+{
   if n < 0 { return false; }
   var reversed = 0;
   var x = n;
@@ -887,7 +1040,9 @@ pub fn is_palindrome_int(n: Int) -> Bool {
 }
 
 /// Reverses the decimal digits of n. Sign is preserved. O(log10 n).
-pub fn reverse_int(n: Int) -> Int {
+pub fn reverse_int(n: Int) -> Int
+  ensures: n == 0 => result == 0
+{
   var neg = n < 0;
   var x = n;
   if neg { x = -x; }
@@ -903,7 +1058,10 @@ pub fn reverse_int(n: Int) -> Int {
 
 /// Convert integer to string in given base (2-36). Uses digits 0-9, A-Z.
 /// Returns empty string for invalid base. O(log_base n).
-pub fn to_base(n: Int, base: Int) -> Str {
+pub fn to_base(n: Int, base: Int) -> Str
+  ensures: (base < 2 || base > 36) => result == ""
+  ensures: n == 0 && base >= 2 && base <= 36 => result == "0"
+{
   if base < 2 || base > 36 { return ""; }
   if n == 0 { return "0"; }
   var neg = false;
@@ -929,7 +1087,9 @@ pub fn to_base(n: Int, base: Int) -> Str {
 
 /// Parse integer from string in given base (2-36). Delegates to parse_int_radix.
 /// Returns None on invalid input or overflow. O(N).
-pub fn from_base(s: Str, base: Int) -> Option[Int] {
+pub fn from_base(s: Str, base: Int) -> Option[Int]
+  ensures: s.len() == 0 => result is None
+{
   if s.len() == 0 { return None; }
   var res = parse_int_radix(s, base);
   match res {
@@ -1084,6 +1244,7 @@ fn i128_zero() -> Int128 {
 /// Complexity: O(1).
 pub fn f64_round(x: Float64) -> Float64
   requires: true  // extern floor/ceil calls below (T002 confinement)
+  ensures: x == 0.0 => result == 0.0
 {
   if is_nan(x) { return x; }
   if x >= 9223372036854775808.0 || x < -9223372036854775808.0 { return x; }
@@ -1093,7 +1254,10 @@ pub fn f64_round(x: Float64) -> Float64
 
 /// Largest integral Float64 <= x. NaN propagates.
 /// Complexity: O(1).
-pub fn f64_floor(x: Float64) -> Float64 {
+pub fn f64_floor(x: Float64) -> Float64
+  ensures: (result <= x) || (result != result)
+  ensures: (result > -9007199254740992.0 && result < 9007199254740992.0) => x < result + 1.0
+{
   if is_nan(x) { return x; }
   if x >= 9223372036854775808.0 || x < -9223372036854775808.0 { return x; }
   var i = to_int(x);
@@ -1104,7 +1268,10 @@ pub fn f64_floor(x: Float64) -> Float64 {
 
 /// Smallest integral Float64 >= x. NaN propagates.
 /// Complexity: O(1).
-pub fn f64_ceil(x: Float64) -> Float64 {
+pub fn f64_ceil(x: Float64) -> Float64
+  ensures: (result >= x) || (result != result)
+  ensures: (result > -9007199254740992.0 && result < 9007199254740992.0) => x > result - 1.0
+{
   if is_nan(x) { return x; }
   if x >= 9223372036854775808.0 || x < -9223372036854775808.0 { return x; }
   var i = to_int(x);
@@ -1115,7 +1282,11 @@ pub fn f64_ceil(x: Float64) -> Float64 {
 
 /// Truncates x toward zero, returning the integral part as Float64.
 /// NaN propagates. Complexity: O(1).
-pub fn f64_trunc(x: Float64) -> Float64 {
+pub fn f64_trunc(x: Float64) -> Float64
+  ensures: ((x >= 0.0 => result <= x) && (x <= 0.0 => result >= x)) || result != result
+  ensures: x > 0.0 && x < 1.0 => result == 0.0
+  ensures: x < 0.0 && x > -1.0 => result == 0.0
+{
   if is_nan(x) { return x; }
   if x >= 9223372036854775808.0 || x < -9223372036854775808.0 { return x; }
   return to_int(x) as Float64;
@@ -1124,7 +1295,10 @@ pub fn f64_trunc(x: Float64) -> Float64 {
 /// Fractional part of x with the sign of x: x - trunc(x).
 /// fract(2.75) == 0.75, fract(-2.75) == -0.75. NaN propagates.
 /// Complexity: O(1).
-pub fn f64_fract(x: Float64) -> Float64 {
+pub fn f64_fract(x: Float64) -> Float64
+  ensures: ((result > -1.0) && (result < 1.0)) || (result != result)
+  ensures: x == 0.0 => result == 0.0
+{
   if is_nan(x) { return x; }
   if x >= 9223372036854775808.0 || x < -9223372036854775808.0 { return 0.0; }
   return x - to_float(to_int(x));
@@ -1132,13 +1306,17 @@ pub fn f64_fract(x: Float64) -> Float64 {
 
 /// Integral part of x (C `modf` split, matches f64_fract's sign convention).
 /// Equivalent to f64_trunc. Complexity: O(1).
-pub fn f64_modf_int_part(x: Float64) -> Float64 {
+pub fn f64_modf_int_part(x: Float64) -> Float64
+  ensures: result == f64_trunc(x)
+{
   return f64_trunc(x);
 }
 
 /// Fractional part of x (C `modf` split, sign of x).
 /// Equivalent to f64_fract. Complexity: O(1).
-pub fn f64_modf_frac_part(x: Float64) -> Float64 {
+pub fn f64_modf_frac_part(x: Float64) -> Float64
+  ensures: result == f64_fract(x)
+{
   return f64_fract(x);
 }
 
@@ -1150,6 +1328,7 @@ pub fn f64_modf_frac_part(x: Float64) -> Float64 {
 /// Complexity: O(1).
 pub fn f32_round(x: Float32) -> Float32
   requires: true  // extern floor/ceil calls below (T002 confinement)
+  ensures: x == 0.0 => result == 0.0
 {
   var xd = x as Float64;
   if is_nan(xd) { return x; }
@@ -1160,7 +1339,10 @@ pub fn f32_round(x: Float32) -> Float32
 
 /// Largest integral Float32 <= x. NaN propagates.
 /// Complexity: O(1).
-pub fn f32_floor(x: Float32) -> Float32 {
+pub fn f32_floor(x: Float32) -> Float32
+  ensures: ((result as Float64) <= (x as Float64)) || (result != result)
+  ensures: ((result as Float64) > -9007199254740992.0 && (result as Float64) < 9007199254740992.0) => (x as Float64) < (result as Float64) + 1.0
+{
   var xd = x as Float64;
   if is_nan(xd) { return x; }
   if xd >= 9223372036854775808.0 || xd < -9223372036854775808.0 { return x; }
@@ -1172,7 +1354,10 @@ pub fn f32_floor(x: Float32) -> Float32 {
 
 /// Smallest integral Float32 >= x. NaN propagates.
 /// Complexity: O(1).
-pub fn f32_ceil(x: Float32) -> Float32 {
+pub fn f32_ceil(x: Float32) -> Float32
+  ensures: ((result as Float64) >= (x as Float64)) || (result != result)
+  ensures: ((result as Float64) > -9007199254740992.0 && (result as Float64) < 9007199254740992.0) => (x as Float64) > (result as Float64) - 1.0
+{
   var xd = x as Float64;
   if is_nan(xd) { return x; }
   if xd >= 9223372036854775808.0 || xd < -9223372036854775808.0 { return x; }
@@ -1184,7 +1369,10 @@ pub fn f32_ceil(x: Float32) -> Float32 {
 
 /// Truncates x toward zero as Float32. NaN propagates.
 /// Complexity: O(1).
-pub fn f32_trunc(x: Float32) -> Float32 {
+pub fn f32_trunc(x: Float32) -> Float32
+  ensures: x > 0.0 && x < 1.0 => result == 0.0
+  ensures: x < 0.0 && x > -1.0 => result == 0.0
+{
   var xd = x as Float64;
   if is_nan(xd) { return x; }
   if xd >= 9223372036854775808.0 || xd < -9223372036854775808.0 { return x; }
@@ -1193,7 +1381,10 @@ pub fn f32_trunc(x: Float32) -> Float32 {
 
 /// Fractional part of x with the sign of x. NaN propagates.
 /// Complexity: O(1).
-pub fn f32_fract(x: Float32) -> Float32 {
+pub fn f32_fract(x: Float32) -> Float32
+  ensures: (((result as Float64) > -1.0) && ((result as Float64) < 1.0)) || (result != result)
+  ensures: x == 0.0 => result == 0.0
+{
   var xd = x as Float64;
   if is_nan(xd) { return x; }
   if xd >= 9223372036854775808.0 || xd < -9223372036854775808.0 { return 0.0 as Float32; }
@@ -1202,13 +1393,17 @@ pub fn f32_fract(x: Float32) -> Float32 {
 
 /// Integral part of x (C `modf` split). Equivalent to f32_trunc.
 /// Complexity: O(1).
-pub fn f32_modf_int_part(x: Float32) -> Float32 {
+pub fn f32_modf_int_part(x: Float32) -> Float32
+  ensures: result == f32_trunc(x)
+{
   return f32_trunc(x);
 }
 
 /// Fractional part of x (C `modf` split, sign of x).
 /// Complexity: O(1).
-pub fn f32_modf_frac_part(x: Float32) -> Float32 {
+pub fn f32_modf_frac_part(x: Float32) -> Float32
+  ensures: result == f32_fract(x)
+{
   return f32_fract(x);
 }
 
@@ -1217,7 +1412,11 @@ pub fn f32_modf_frac_part(x: Float32) -> Float32 {
 
 /// Rounds x to the nearest Int, halves away from zero. NaN -> 0,
 /// out of i64 range -> saturated INT_MAX/INT_MIN. Complexity: O(1).
-pub fn f64_round_to_int(x: Float64) -> Int {
+pub fn f64_round_to_int(x: Float64) -> Int
+  ensures: is_nan(x) => result == 0
+  ensures: x >= 9223372036854775808.0 => result == INT_MAX
+  ensures: x < -9223372036854775808.0 => result == INT_MIN
+{
   if is_nan(x) { return 0; }
   if x >= 9223372036854775808.0 { return INT_MAX; }
   if x < -9223372036854775808.0 { return INT_MIN; }
@@ -1227,7 +1426,11 @@ pub fn f64_round_to_int(x: Float64) -> Int {
 
 /// Floor of x as Int. NaN -> 0, out of i64 range -> saturated INT_MAX/INT_MIN.
 /// Complexity: O(1).
-pub fn f64_floor_to_int(x: Float64) -> Int {
+pub fn f64_floor_to_int(x: Float64) -> Int
+  ensures: is_nan(x) => result == 0
+  ensures: x >= 9223372036854775808.0 => result == INT_MAX
+  ensures: x < -9223372036854775808.0 => result == INT_MIN
+{
   if is_nan(x) { return 0; }
   if x >= 9223372036854775808.0 { return INT_MAX; }
   if x < -9223372036854775808.0 { return INT_MIN; }
@@ -1239,7 +1442,11 @@ pub fn f64_floor_to_int(x: Float64) -> Int {
 
 /// Ceiling of x as Int. NaN -> 0, out of i64 range -> saturated INT_MAX/INT_MIN.
 /// Complexity: O(1).
-pub fn f64_ceil_to_int(x: Float64) -> Int {
+pub fn f64_ceil_to_int(x: Float64) -> Int
+  ensures: is_nan(x) => result == 0
+  ensures: x >= 9223372036854775808.0 => result == INT_MAX
+  ensures: x < -9223372036854775808.0 => result == INT_MIN
+{
   if is_nan(x) { return 0; }
   if x >= 9223372036854775808.0 { return INT_MAX; }
   if x < -9223372036854775808.0 { return INT_MIN; }
@@ -1251,7 +1458,11 @@ pub fn f64_ceil_to_int(x: Float64) -> Int {
 
 /// Truncation of x toward zero as Int. NaN -> 0, out of i64 range ->
 /// saturated INT_MAX/INT_MIN. Complexity: O(1).
-pub fn f64_trunc_to_int(x: Float64) -> Int {
+pub fn f64_trunc_to_int(x: Float64) -> Int
+  ensures: is_nan(x) => result == 0
+  ensures: x >= 9223372036854775808.0 => result == INT_MAX
+  ensures: x < -9223372036854775808.0 => result == INT_MIN
+{
   if is_nan(x) { return 0; }
   if x >= 9223372036854775808.0 { return INT_MAX; }
   if x < -9223372036854775808.0 { return INT_MIN; }
@@ -1259,22 +1470,38 @@ pub fn f64_trunc_to_int(x: Float64) -> Int {
 }
 
 /// Float32 variant of f64_round_to_int. Complexity: O(1).
-pub fn f32_round_to_int(x: Float32) -> Int {
+pub fn f32_round_to_int(x: Float32) -> Int
+  ensures: is_nan(x as Float64) => result == 0
+  ensures: (x as Float64) >= 9223372036854775808.0 => result == INT_MAX
+  ensures: (x as Float64) < -9223372036854775808.0 => result == INT_MIN
+{
   return f64_round_to_int(x as Float64);
 }
 
 /// Float32 variant of f64_floor_to_int. Complexity: O(1).
-pub fn f32_floor_to_int(x: Float32) -> Int {
+pub fn f32_floor_to_int(x: Float32) -> Int
+  ensures: is_nan(x as Float64) => result == 0
+  ensures: (x as Float64) >= 9223372036854775808.0 => result == INT_MAX
+  ensures: (x as Float64) < -9223372036854775808.0 => result == INT_MIN
+{
   return f64_floor_to_int(x as Float64);
 }
 
 /// Float32 variant of f64_ceil_to_int. Complexity: O(1).
-pub fn f32_ceil_to_int(x: Float32) -> Int {
+pub fn f32_ceil_to_int(x: Float32) -> Int
+  ensures: is_nan(x as Float64) => result == 0
+  ensures: (x as Float64) >= 9223372036854775808.0 => result == INT_MAX
+  ensures: (x as Float64) < -9223372036854775808.0 => result == INT_MIN
+{
   return f64_ceil_to_int(x as Float64);
 }
 
 /// Float32 variant of f64_trunc_to_int. Complexity: O(1).
-pub fn f32_trunc_to_int(x: Float32) -> Int {
+pub fn f32_trunc_to_int(x: Float32) -> Int
+  ensures: is_nan(x as Float64) => result == 0
+  ensures: (x as Float64) >= 9223372036854775808.0 => result == INT_MAX
+  ensures: (x as Float64) < -9223372036854775808.0 => result == INT_MIN
+{
   return f64_trunc_to_int(x as Float64);
 }
 
@@ -1284,7 +1511,10 @@ pub fn f32_trunc_to_int(x: Float32) -> Int {
 
 /// Floor division: largest Int <= a/b (rounds toward -inf).
 /// floor(-7, 2) == -4. Complexity: O(1).
-pub fn i64_div_floor(a: Int, b: Int) -> Int {
+pub fn i64_div_floor(a: Int, b: Int) -> Int
+  ensures: b == 0 => result == 0
+  ensures: a == INT_MIN && b == -1 => result == INT_MIN
+{
   if b == 0 { return 0; }
   if a == INT_MIN && b == -1 { return INT_MIN; }
   var q = a / b;
@@ -1295,7 +1525,10 @@ pub fn i64_div_floor(a: Int, b: Int) -> Int {
 
 /// Ceiling division: smallest Int >= a/b (rounds toward +inf).
 /// ceil(-7, 2) == -3. Complexity: O(1).
-pub fn i64_div_ceil(a: Int, b: Int) -> Int {
+pub fn i64_div_ceil(a: Int, b: Int) -> Int
+  ensures: b == 0 => result == 0
+  ensures: a == INT_MIN && b == -1 => result == INT_MIN
+{
   if b == 0 { return 0; }
   if a == INT_MIN && b == -1 { return INT_MIN; }
   var q = a / b;
@@ -1308,7 +1541,10 @@ pub fn i64_div_ceil(a: Int, b: Int) -> Int {
 /// magnitude arithmetic so the result is exact for the full i64 range
 /// (saturating to INT_MAX/INT_MIN only for the unrepresentable +2^63).
 /// Complexity: O(64) via u64_div_mod.
-pub fn i64_div_round(a: Int, b: Int) -> Int {
+pub fn i64_div_round(a: Int, b: Int) -> Int
+  ensures: b == 0 => result == 0
+  ensures: a == 0 && b != 0 => result == 0
+{
   if b == 0 { return 0; }
   var neg = (a < 0) != (b < 0);
   var na = u64_mag(a);
@@ -1335,7 +1571,10 @@ pub fn i64_div_round(a: Int, b: Int) -> Int {
 
 /// Euclidean remainder: r >= 0 always, r == a (mod b).
 /// mod_euclid(-7, 2) == 1. Division by zero returns 0. Complexity: O(1).
-pub fn i64_mod_euclid(a: Int, b: Int) -> Int {
+pub fn i64_mod_euclid(a: Int, b: Int) -> Int
+  ensures: result >= 0
+  ensures: b == 0 => result == 0
+{
   if b == 0 { return 0; }
   var r = a % b;
   if r < 0 {
@@ -1347,7 +1586,10 @@ pub fn i64_mod_euclid(a: Int, b: Int) -> Int {
 
 /// Euclidean division: q = floor(a/b) (see i64_div_floor).
 /// Complexity: O(1).
-pub fn i64_div_euclid(a: Int, b: Int) -> Int {
+pub fn i64_div_euclid(a: Int, b: Int) -> Int
+  ensures: b == 0 => result == 0
+  ensures: a == INT_MIN && b == -1 => result == INT_MIN
+{
   if b == 0 { return 0; }
   if a == INT_MIN && b == -1 { return INT_MIN; }
   var q = a / b;
@@ -1358,7 +1600,9 @@ pub fn i64_div_euclid(a: Int, b: Int) -> Int {
 
 /// Unsigned floor division (identical to plain unsigned division).
 /// Division by zero returns 0. Complexity: O(64).
-pub fn u64_div_floor(a: UInt64, b: UInt64) -> UInt64 {
+pub fn u64_div_floor(a: UInt64, b: UInt64) -> UInt64
+  ensures: b == 0 => result == 0
+{
   if b == 0 {
     var z: UInt64 = 0;
     return z;
@@ -1368,7 +1612,10 @@ pub fn u64_div_floor(a: UInt64, b: UInt64) -> UInt64 {
 }
 
 /// Unsigned ceiling division. Division by zero returns 0. Complexity: O(64).
-pub fn u64_div_ceil(a: UInt64, b: UInt64) -> UInt64 {
+pub fn u64_div_ceil(a: UInt64, b: UInt64) -> UInt64
+  ensures: b == 0 => result == 0
+  ensures: u64_ge(b, a) && a != 0 => result == 1
+{
   if b == 0 {
     var z: UInt64 = 0;
     return z;
@@ -1383,7 +1630,10 @@ pub fn u64_div_ceil(a: UInt64, b: UInt64) -> UInt64 {
 
 /// Unsigned Euclidean remainder (= plain unsigned remainder).
 /// Division by zero returns 0. Complexity: O(64).
-pub fn u64_mod_euclid(a: UInt64, b: UInt64) -> UInt64 {
+pub fn u64_mod_euclid(a: UInt64, b: UInt64) -> UInt64
+  ensures: b == 0 => result == 0
+  ensures: b != 0 => !u64_ge(result, b)
+{
   if b == 0 {
     var z: UInt64 = 0;
     return z;
@@ -1394,7 +1644,9 @@ pub fn u64_mod_euclid(a: UInt64, b: UInt64) -> UInt64 {
 
 /// Unsigned Euclidean division (identical to u64_div_floor).
 /// Complexity: O(64).
-pub fn u64_div_euclid(a: UInt64, b: UInt64) -> UInt64 {
+pub fn u64_div_euclid(a: UInt64, b: UInt64) -> UInt64
+  ensures: b == 0 => result == 0
+{
   return u64_div_floor(a, b);
 }
 
@@ -1403,7 +1655,10 @@ pub fn u64_div_euclid(a: UInt64, b: UInt64) -> UInt64 {
 
 /// a + b with overflow detection. Some(sum) on success, None on overflow.
 /// Complexity: O(1).
-pub fn i64_add_checked(a: Int, b: Int) -> Option[Int] {
+pub fn i64_add_checked(a: Int, b: Int) -> Option[Int]
+  ensures: b == 0 => result == Some(a)
+  ensures: a == 0 => result == Some(b)
+{
   if b > 0 && a > INT_MAX - b { return None; }
   if b < 0 && a < INT_MIN - b { return None; }
   return Some(a + b);
@@ -1411,7 +1666,9 @@ pub fn i64_add_checked(a: Int, b: Int) -> Option[Int] {
 
 /// a - b with overflow detection. Some(diff) on success, None on overflow.
 /// Complexity: O(1).
-pub fn i64_sub_checked(a: Int, b: Int) -> Option[Int] {
+pub fn i64_sub_checked(a: Int, b: Int) -> Option[Int]
+  ensures: b == 0 => result == Some(a)
+{
   if b < 0 && a > INT_MAX + b { return None; }
   if b > 0 && a < INT_MIN + b { return None; }
   return Some(a - b);
@@ -1419,7 +1676,10 @@ pub fn i64_sub_checked(a: Int, b: Int) -> Option[Int] {
 
 /// a * b with overflow detection. Some(product) on success, None on overflow.
 /// Handles the +/-1 edge cases explicitly. Complexity: O(1).
-pub fn i64_mul_checked(a: Int, b: Int) -> Option[Int] {
+pub fn i64_mul_checked(a: Int, b: Int) -> Option[Int]
+  ensures: a == 0 || b == 0 => result == Some(0)
+  ensures: a == 1 => result == Some(b)
+{
   if a == 0 || b == 0 { return Some(0); }
   if a == -1 { return Some(-b); }
   if b == -1 { return Some(-a); }
@@ -1432,7 +1692,10 @@ pub fn i64_mul_checked(a: Int, b: Int) -> Option[Int] {
 
 /// a / b with div-by-zero and INT_MIN / -1 overflow detection.
 /// Complexity: O(1).
-pub fn i64_div_checked(a: Int, b: Int) -> Option[Int] {
+pub fn i64_div_checked(a: Int, b: Int) -> Option[Int]
+  ensures: b == 0 => result is None
+  ensures: a == INT_MIN && b == -1 => result is None
+{
   if b == 0 { return None; }
   if a == INT_MIN && b == -1 { return None; }
   return Some(a / b);
@@ -1440,14 +1703,21 @@ pub fn i64_div_checked(a: Int, b: Int) -> Option[Int] {
 
 /// -a with overflow detection (INT_MIN has no positive inverse).
 /// Complexity: O(1).
-pub fn i64_neg_checked(a: Int) -> Option[Int] {
+pub fn i64_neg_checked(a: Int) -> Option[Int]
+  ensures: a == INT_MIN => result is None
+  ensures: a != INT_MIN => result == Some(-a)
+{
   if a == INT_MIN { return None; }
   return Some(-a);
 }
 
 /// base^exp with overflow detection via square-and-multiply.
 /// Negative exponent returns None. Complexity: O(log exp).
-pub fn i64_pow_checked(base: Int, exp: Int) -> Option[Int] {
+pub fn i64_pow_checked(base: Int, exp: Int) -> Option[Int]
+  ensures: exp < 0 => result is None
+  ensures: exp == 0 => result == Some(1)
+  ensures: base == 0 && exp > 0 => result == Some(0)
+{
   if exp < 0 { return None; }
   if exp == 0 { return Some(1); }
   var result = 1;
@@ -1478,14 +1748,19 @@ pub fn i64_pow_checked(base: Int, exp: Int) -> Option[Int] {
 // only failure mode is the final range check.
 
 /// i32 a + b. Some on success, None on overflow. Complexity: O(1).
-pub fn i32_add_checked(a: Int32, b: Int32) -> Option[Int32] {
+pub fn i32_add_checked(a: Int32, b: Int32) -> Option[Int32]
+  ensures: b == 0 => result == Some(a)
+  ensures: a == 0 => result == Some(b)
+{
   var big: Int = (a as Int) + (b as Int);
   if big > 2147483647 || big < -2147483648 { return None; }
   return Some(big as Int32);
 }
 
 /// i32 a - b. Some on success, None on overflow. Complexity: O(1).
-pub fn i32_sub_checked(a: Int32, b: Int32) -> Option[Int32] {
+pub fn i32_sub_checked(a: Int32, b: Int32) -> Option[Int32]
+  ensures: b == 0 => result == Some(a)
+{
   var big: Int = (a as Int) - (b as Int);
   if big > 2147483647 || big < -2147483648 { return None; }
   return Some(big as Int32);
@@ -1493,14 +1768,19 @@ pub fn i32_sub_checked(a: Int32, b: Int32) -> Option[Int32] {
 
 /// i32 a * b (i64 product is exact for all i32 inputs). None on overflow.
 /// Complexity: O(1).
-pub fn i32_mul_checked(a: Int32, b: Int32) -> Option[Int32] {
+pub fn i32_mul_checked(a: Int32, b: Int32) -> Option[Int32]
+  ensures: a == 0 || b == 0 => result == Some(0)
+{
   var big: Int = (a as Int) * (b as Int);
   if big > 2147483647 || big < -2147483648 { return None; }
   return Some(big as Int32);
 }
 
 /// i32 a / b. None on div-by-zero or INT32_MIN / -1. Complexity: O(1).
-pub fn i32_div_checked(a: Int32, b: Int32) -> Option[Int32] {
+pub fn i32_div_checked(a: Int32, b: Int32) -> Option[Int32]
+  ensures: b == 0 => result is None
+  ensures: (a as Int) == -2147483648 && (b as Int) == -1 => result is None
+{
   if b == 0 { return None; }
   var big_a: Int = a as Int;
   var big_b: Int = b as Int;
@@ -1509,28 +1789,38 @@ pub fn i32_div_checked(a: Int32, b: Int32) -> Option[Int32] {
 }
 
 /// i16 a + b. None on overflow. Complexity: O(1).
-pub fn i16_add_checked(a: Int16, b: Int16) -> Option[Int16] {
+pub fn i16_add_checked(a: Int16, b: Int16) -> Option[Int16]
+  ensures: b == 0 => result == Some(a)
+  ensures: a == 0 => result == Some(b)
+{
   var big: Int = (a as Int) + (b as Int);
   if big > 32767 || big < -32768 { return None; }
   return Some(big as Int16);
 }
 
 /// i16 a - b. None on overflow. Complexity: O(1).
-pub fn i16_sub_checked(a: Int16, b: Int16) -> Option[Int16] {
+pub fn i16_sub_checked(a: Int16, b: Int16) -> Option[Int16]
+  ensures: b == 0 => result == Some(a)
+{
   var big: Int = (a as Int) - (b as Int);
   if big > 32767 || big < -32768 { return None; }
   return Some(big as Int16);
 }
 
 /// i16 a * b. None on overflow. Complexity: O(1).
-pub fn i16_mul_checked(a: Int16, b: Int16) -> Option[Int16] {
+pub fn i16_mul_checked(a: Int16, b: Int16) -> Option[Int16]
+  ensures: a == 0 || b == 0 => result == Some(0)
+{
   var big: Int = (a as Int) * (b as Int);
   if big > 32767 || big < -32768 { return None; }
   return Some(big as Int16);
 }
 
 /// i16 a / b. None on div-by-zero or INT16_MIN / -1. Complexity: O(1).
-pub fn i16_div_checked(a: Int16, b: Int16) -> Option[Int16] {
+pub fn i16_div_checked(a: Int16, b: Int16) -> Option[Int16]
+  ensures: b == 0 => result is None
+  ensures: (a as Int) == -32768 && (b as Int) == -1 => result is None
+{
   if b == 0 { return None; }
   var big_a: Int = a as Int;
   var big_b: Int = b as Int;
@@ -1539,28 +1829,38 @@ pub fn i16_div_checked(a: Int16, b: Int16) -> Option[Int16] {
 }
 
 /// i8 a + b. None on overflow. Complexity: O(1).
-pub fn i8_add_checked(a: Int8, b: Int8) -> Option[Int8] {
+pub fn i8_add_checked(a: Int8, b: Int8) -> Option[Int8]
+  ensures: b == 0 => result == Some(a)
+  ensures: a == 0 => result == Some(b)
+{
   var big: Int = (a as Int) + (b as Int);
   if big > 127 || big < -128 { return None; }
   return Some(big as Int8);
 }
 
 /// i8 a - b. None on overflow. Complexity: O(1).
-pub fn i8_sub_checked(a: Int8, b: Int8) -> Option[Int8] {
+pub fn i8_sub_checked(a: Int8, b: Int8) -> Option[Int8]
+  ensures: b == 0 => result == Some(a)
+{
   var big: Int = (a as Int) - (b as Int);
   if big > 127 || big < -128 { return None; }
   return Some(big as Int8);
 }
 
 /// i8 a * b. None on overflow. Complexity: O(1).
-pub fn i8_mul_checked(a: Int8, b: Int8) -> Option[Int8] {
+pub fn i8_mul_checked(a: Int8, b: Int8) -> Option[Int8]
+  ensures: a == 0 || b == 0 => result == Some(0)
+{
   var big: Int = (a as Int) * (b as Int);
   if big > 127 || big < -128 { return None; }
   return Some(big as Int8);
 }
 
 /// i8 a / b. None on div-by-zero or INT8_MIN / -1. Complexity: O(1).
-pub fn i8_div_checked(a: Int8, b: Int8) -> Option[Int8] {
+pub fn i8_div_checked(a: Int8, b: Int8) -> Option[Int8]
+  ensures: b == 0 => result is None
+  ensures: (a as Int) == -128 && (b as Int) == -1 => result is None
+{
   if b == 0 { return None; }
   var big_a: Int = a as Int;
   var big_b: Int = b as Int;
@@ -1572,21 +1872,28 @@ pub fn i8_div_checked(a: Int8, b: Int8) -> Option[Int8] {
 
 /// u64 a + b using unsigned wrap detection. None on overflow.
 /// Complexity: O(1).
-pub fn u64_add_checked(a: UInt64, b: UInt64) -> Option[UInt64] {
+pub fn u64_add_checked(a: UInt64, b: UInt64) -> Option[UInt64]
+  ensures: b == 0 => result == Some(a)
+  ensures: a == 0 => result == Some(b)
+{
   var sum = a + b;
   if !u64_ge(sum, a) { return None; }
   return Some(sum);
 }
 
 /// u64 a - b. None on underflow (a < b). Complexity: O(1).
-pub fn u64_sub_checked(a: UInt64, b: UInt64) -> Option[UInt64] {
+pub fn u64_sub_checked(a: UInt64, b: UInt64) -> Option[UInt64]
+  ensures: b == 0 => result == Some(a)
+{
   if !u64_ge(a, b) { return None; }
   return Some(a - b);
 }
 
 /// u64 a * b via the exact 128-bit product; None when the high limb is non-zero.
 /// Complexity: O(1).
-pub fn u64_mul_checked(a: UInt64, b: UInt64) -> Option[UInt64] {
+pub fn u64_mul_checked(a: UInt64, b: UInt64) -> Option[UInt64]
+  ensures: a == 0 || b == 0 => result == Some(0)
+{
   if a == 0 || b == 0 { return Some(0); }
   var w = u64_mul_wide(a, b);
   if ((w >> 64) as UInt64) != 0 { return None; }
@@ -1594,21 +1901,29 @@ pub fn u64_mul_checked(a: UInt64, b: UInt64) -> Option[UInt64] {
 }
 
 /// u64 a / b. None on div-by-zero. Complexity: O(64).
-pub fn u64_div_checked(a: UInt64, b: UInt64) -> Option[UInt64] {
+pub fn u64_div_checked(a: UInt64, b: UInt64) -> Option[UInt64]
+  ensures: b == 0 => result is None
+  ensures: b != 0 => result is Some
+{
   if b == 0 { return None; }
   var dm = u64_div_mod(a, b);
   return Some(dm.quot);
 }
 
 /// u32 a + b. None on overflow. Complexity: O(1).
-pub fn u32_add_checked(a: UInt32, b: UInt32) -> Option[UInt32] {
+pub fn u32_add_checked(a: UInt32, b: UInt32) -> Option[UInt32]
+  ensures: b == 0 => result == Some(a)
+  ensures: a == 0 => result == Some(b)
+{
   var big: Int = (a as Int) + (b as Int);
   if big > 4294967295 { return None; }
   return Some(big as UInt32);
 }
 
 /// u32 a - b. None on underflow. Complexity: O(1).
-pub fn u32_sub_checked(a: UInt32, b: UInt32) -> Option[UInt32] {
+pub fn u32_sub_checked(a: UInt32, b: UInt32) -> Option[UInt32]
+  ensures: b == 0 => result == Some(a)
+{
   var big: Int = (a as Int) - (b as Int);
   if big < 0 { return None; }
   return Some(big as UInt32);
@@ -1616,68 +1931,93 @@ pub fn u32_sub_checked(a: UInt32, b: UInt32) -> Option[UInt32] {
 
 /// u32 a * b (i64 product is exact for all u32 inputs). None on overflow.
 /// Complexity: O(1).
-pub fn u32_mul_checked(a: UInt32, b: UInt32) -> Option[UInt32] {
+pub fn u32_mul_checked(a: UInt32, b: UInt32) -> Option[UInt32]
+  ensures: a == 0 || b == 0 => result == Some(0)
+{
   var big: Int = (a as Int) * (b as Int);
   if big > 4294967295 { return None; }
   return Some(big as UInt32);
 }
 
 /// u32 a / b. None on div-by-zero. Complexity: O(1).
-pub fn u32_div_checked(a: UInt32, b: UInt32) -> Option[UInt32] {
+pub fn u32_div_checked(a: UInt32, b: UInt32) -> Option[UInt32]
+  ensures: b == 0 => result is None
+  ensures: b != 0 => result is Some
+{
   if b == 0 { return None; }
   return Some((a as Int / b as Int) as UInt32);
 }
 
 /// u16 a + b. None on overflow. Complexity: O(1).
-pub fn u16_add_checked(a: UInt16, b: UInt16) -> Option[UInt16] {
+pub fn u16_add_checked(a: UInt16, b: UInt16) -> Option[UInt16]
+  ensures: b == 0 => result == Some(a)
+  ensures: a == 0 => result == Some(b)
+{
   var big: Int = (a as Int) + (b as Int);
   if big > 65535 { return None; }
   return Some(big as UInt16);
 }
 
 /// u16 a - b. None on underflow. Complexity: O(1).
-pub fn u16_sub_checked(a: UInt16, b: UInt16) -> Option[UInt16] {
+pub fn u16_sub_checked(a: UInt16, b: UInt16) -> Option[UInt16]
+  ensures: b == 0 => result == Some(a)
+{
   var big: Int = (a as Int) - (b as Int);
   if big < 0 { return None; }
   return Some(big as UInt16);
 }
 
 /// u16 a * b. None on overflow. Complexity: O(1).
-pub fn u16_mul_checked(a: UInt16, b: UInt16) -> Option[UInt16] {
+pub fn u16_mul_checked(a: UInt16, b: UInt16) -> Option[UInt16]
+  ensures: a == 0 || b == 0 => result == Some(0)
+{
   var big: Int = (a as Int) * (b as Int);
   if big > 65535 { return None; }
   return Some(big as UInt16);
 }
 
 /// u16 a / b. None on div-by-zero. Complexity: O(1).
-pub fn u16_div_checked(a: UInt16, b: UInt16) -> Option[UInt16] {
+pub fn u16_div_checked(a: UInt16, b: UInt16) -> Option[UInt16]
+  ensures: b == 0 => result is None
+  ensures: b != 0 => result is Some
+{
   if b == 0 { return None; }
   return Some((a as Int / b as Int) as UInt16);
 }
 
 /// u8 a + b. None on overflow. Complexity: O(1).
-pub fn u8_add_checked(a: UInt8, b: UInt8) -> Option[UInt8] {
+pub fn u8_add_checked(a: UInt8, b: UInt8) -> Option[UInt8]
+  ensures: b == 0 => result == Some(a)
+  ensures: a == 0 => result == Some(b)
+{
   var big: Int = (a as Int) + (b as Int);
   if big > 255 { return None; }
   return Some(big as UInt8);
 }
 
 /// u8 a - b. None on underflow. Complexity: O(1).
-pub fn u8_sub_checked(a: UInt8, b: UInt8) -> Option[UInt8] {
+pub fn u8_sub_checked(a: UInt8, b: UInt8) -> Option[UInt8]
+  ensures: b == 0 => result == Some(a)
+{
   var big: Int = (a as Int) - (b as Int);
   if big < 0 { return None; }
   return Some(big as UInt8);
 }
 
 /// u8 a * b. None on overflow. Complexity: O(1).
-pub fn u8_mul_checked(a: UInt8, b: UInt8) -> Option[UInt8] {
+pub fn u8_mul_checked(a: UInt8, b: UInt8) -> Option[UInt8]
+  ensures: a == 0 || b == 0 => result == Some(0)
+{
   var big: Int = (a as Int) * (b as Int);
   if big > 255 { return None; }
   return Some(big as UInt8);
 }
 
 /// u8 a / b. None on div-by-zero. Complexity: O(1).
-pub fn u8_div_checked(a: UInt8, b: UInt8) -> Option[UInt8] {
+pub fn u8_div_checked(a: UInt8, b: UInt8) -> Option[UInt8]
+  ensures: b == 0 => result is None
+  ensures: b != 0 => result is Some
+{
   if b == 0 { return None; }
   return Some((a as Int / b as Int) as UInt8);
 }
@@ -1686,7 +2026,10 @@ pub fn u8_div_checked(a: UInt8, b: UInt8) -> Option[UInt8] {
 // Clamp to the width's min/max instead of wrapping or failing.
 
 /// Saturating i64 addition: clamps to INT_MAX/INT_MIN. Complexity: O(1).
-pub fn i64_add_sat(a: Int, b: Int) -> Int {
+pub fn i64_add_sat(a: Int, b: Int) -> Int
+  ensures: a >= 0 && b >= 0 => result >= a
+  ensures: a <= 0 && b <= 0 => result <= a
+{
   var o = i64_add_checked(a, b);
   match o {
     Some(v) => { return v; },
@@ -1697,7 +2040,11 @@ pub fn i64_add_sat(a: Int, b: Int) -> Int {
 }
 
 /// Saturating i64 subtraction. Complexity: O(1).
-pub fn i64_sub_sat(a: Int, b: Int) -> Int {
+pub fn i64_sub_sat(a: Int, b: Int) -> Int
+  ensures: b == 0 => result == a
+  ensures: a >= 0 && b <= 0 => result >= a
+  ensures: a <= 0 && b >= 0 => result <= a
+{
   var o = i64_sub_checked(a, b);
   match o {
     Some(v) => { return v; },
@@ -1708,7 +2055,10 @@ pub fn i64_sub_sat(a: Int, b: Int) -> Int {
 }
 
 /// Saturating i64 multiplication. Complexity: O(1).
-pub fn i64_mul_sat(a: Int, b: Int) -> Int {
+pub fn i64_mul_sat(a: Int, b: Int) -> Int
+  ensures: a == 0 || b == 0 => result == 0
+  ensures: a == 1 => result == b
+{
   var o = i64_mul_checked(a, b);
   match o {
     Some(v) => { return v; },
@@ -1719,7 +2069,10 @@ pub fn i64_mul_sat(a: Int, b: Int) -> Int {
 }
 
 /// Saturating u64 addition: clamps at 0xFFFFFFFFFFFFFFFF. Complexity: O(1).
-pub fn u64_add_sat(a: UInt64, b: UInt64) -> UInt64 {
+pub fn u64_add_sat(a: UInt64, b: UInt64) -> UInt64
+  ensures: b == 0 => result == a
+  ensures: a == 0 => result == b
+{
   var o = u64_add_checked(a, b);
   match o {
     Some(v) => { return v; },
@@ -1728,7 +2081,10 @@ pub fn u64_add_sat(a: UInt64, b: UInt64) -> UInt64 {
 }
 
 /// Saturating u64 subtraction: clamps at 0 on underflow. Complexity: O(1).
-pub fn u64_sub_sat(a: UInt64, b: UInt64) -> UInt64 {
+pub fn u64_sub_sat(a: UInt64, b: UInt64) -> UInt64
+  ensures: b == 0 => result == a
+  ensures: !u64_ge(a, b) => result == 0
+{
   var o = u64_sub_checked(a, b);
   match o {
     Some(v) => { return v; },
@@ -1741,7 +2097,10 @@ pub fn u64_sub_sat(a: UInt64, b: UInt64) -> UInt64 {
 
 /// Saturating u64 multiplication: clamps at 0xFFFFFFFFFFFFFFFF.
 /// Complexity: O(1).
-pub fn u64_mul_sat(a: UInt64, b: UInt64) -> UInt64 {
+pub fn u64_mul_sat(a: UInt64, b: UInt64) -> UInt64
+  ensures: a == 0 || b == 0 => result == 0
+  ensures: a == 1 => result == b
+{
   var o = u64_mul_checked(a, b);
   match o {
     Some(v) => { return v; },
@@ -1750,7 +2109,10 @@ pub fn u64_mul_sat(a: UInt64, b: UInt64) -> UInt64 {
 }
 
 /// Saturating i32 addition. Complexity: O(1).
-pub fn i32_add_sat(a: Int32, b: Int32) -> Int32 {
+pub fn i32_add_sat(a: Int32, b: Int32) -> Int32
+  ensures: b == 0 => result == a
+  ensures: a == 0 => result == b
+{
   var big: Int = (a as Int) + (b as Int);
   if big > 2147483647 { return 2147483647 as Int32; }
   if big < -2147483648 { return -2147483648 as Int32; }
@@ -1758,7 +2120,9 @@ pub fn i32_add_sat(a: Int32, b: Int32) -> Int32 {
 }
 
 /// Saturating i32 subtraction. Complexity: O(1).
-pub fn i32_sub_sat(a: Int32, b: Int32) -> Int32 {
+pub fn i32_sub_sat(a: Int32, b: Int32) -> Int32
+  ensures: b == 0 => result == a
+{
   var big: Int = (a as Int) - (b as Int);
   if big > 2147483647 { return 2147483647 as Int32; }
   if big < -2147483648 { return -2147483648 as Int32; }
@@ -1766,7 +2130,9 @@ pub fn i32_sub_sat(a: Int32, b: Int32) -> Int32 {
 }
 
 /// Saturating i32 multiplication. Complexity: O(1).
-pub fn i32_mul_sat(a: Int32, b: Int32) -> Int32 {
+pub fn i32_mul_sat(a: Int32, b: Int32) -> Int32
+  ensures: a == 0 || b == 0 => result == 0
+{
   var big: Int = (a as Int) * (b as Int);
   if big > 2147483647 { return 2147483647 as Int32; }
   if big < -2147483648 { return -2147483648 as Int32; }
@@ -1774,21 +2140,29 @@ pub fn i32_mul_sat(a: Int32, b: Int32) -> Int32 {
 }
 
 /// Saturating u32 addition: clamps at 4294967295. Complexity: O(1).
-pub fn u32_add_sat(a: UInt32, b: UInt32) -> UInt32 {
+pub fn u32_add_sat(a: UInt32, b: UInt32) -> UInt32
+  ensures: b == 0 => result == a
+  ensures: a == 0 => result == b
+{
   var big: Int = (a as Int) + (b as Int);
   if big > 4294967295 { return 4294967295 as UInt32; }
   return big as UInt32;
 }
 
 /// Saturating u32 subtraction: clamps at 0. Complexity: O(1).
-pub fn u32_sub_sat(a: UInt32, b: UInt32) -> UInt32 {
+pub fn u32_sub_sat(a: UInt32, b: UInt32) -> UInt32
+  ensures: b == 0 => result == a
+  ensures: (a as Int) < (b as Int) => result == 0
+{
   var big: Int = (a as Int) - (b as Int);
   if big < 0 { return 0 as UInt32; }
   return big as UInt32;
 }
 
 /// Saturating u32 multiplication. Complexity: O(1).
-pub fn u32_mul_sat(a: UInt32, b: UInt32) -> UInt32 {
+pub fn u32_mul_sat(a: UInt32, b: UInt32) -> UInt32
+  ensures: a == 0 || b == 0 => result == 0
+{
   var big: Int = (a as Int) * (b as Int);
   if big > 4294967295 { return 4294967295 as UInt32; }
   return big as UInt32;
@@ -1800,13 +2174,17 @@ pub fn u32_mul_sat(a: UInt32, b: UInt32) -> UInt32 {
 
 /// Constructs an Int128 from a signed 64-bit value (sign-extended).
 /// Complexity: O(1).
-pub fn i128_from_i64(v: Int) -> Int128 {
+pub fn i128_from_i64(v: Int) -> Int128
+  ensures: result == (v as Int128)
+{
   return v as Int128;
 }
 
 /// Constructs an Int128 directly from a high signed limb and a low unsigned
 /// limb (value = hi * 2^64 + lo). Complexity: O(1).
-pub fn i128_from_parts(hi: Int, lo: UInt64) -> Int128 {
+pub fn i128_from_parts(hi: Int, lo: UInt64) -> Int128
+  ensures: hi == 0 => result >= 0
+{
   var h = hi as Int128;
   var l = lo as UInt128 as Int128;
   return (h << 64) | l;
@@ -1815,24 +2193,32 @@ pub fn i128_from_parts(hi: Int, lo: UInt64) -> Int128 {
 // -- Int128: arithmetic (wrapping at 128 bits) -------------------------------
 
 /// 128-bit addition (wraps on overflow). Complexity: O(1).
-pub fn i128_add(a: Int128, b: Int128) -> Int128 {
+pub fn i128_add(a: Int128, b: Int128) -> Int128
+  ensures: result == (a + b)
+{
   return a + b;
 }
 
 /// 128-bit subtraction (wraps on underflow). Complexity: O(1).
-pub fn i128_sub(a: Int128, b: Int128) -> Int128 {
+pub fn i128_sub(a: Int128, b: Int128) -> Int128
+  ensures: result == (a - b)
+{
   return a - b;
 }
 
 /// Two's-complement negation. Handles INT128_MIN correctly (wraps back to
 /// itself, as required by two's-complement arithmetic). Complexity: O(1).
-pub fn i128_neg(a: Int128) -> Int128 {
+pub fn i128_neg(a: Int128) -> Int128
+  ensures: result == (0 as Int128) - a
+{
   return 0 as Int128 - a;
 }
 
 /// Absolute value (returns the negated value for INT128_MIN, documenting the
 /// two's-complement wrap). Complexity: O(1).
-pub fn i128_abs(a: Int128) -> Int128 {
+pub fn i128_abs(a: Int128) -> Int128
+  ensures: (a >= 0 => result == a) && (a < 0 => result == i128_neg(a))
+{
   if a < (0 as Int128) { return i128_neg(a); }
   return a;
 }
@@ -1840,7 +2226,9 @@ pub fn i128_abs(a: Int128) -> Int128 {
 /// Full 128-bit product of two 64-bit signed values.
 /// i64_mul_wide(2^32, 2^32) == { hi: 1, lo: 0 } == 2^64. Exact.
 /// Complexity: O(1).
-pub fn i64_mul_wide(a: Int, b: Int) -> Int128 {
+pub fn i64_mul_wide(a: Int, b: Int) -> Int128
+  ensures: result == (a as Int128) * (b as Int128)
+{
   var aw = a as Int128;
   var bw = b as Int128;
   return aw * bw;
@@ -1848,26 +2236,34 @@ pub fn i64_mul_wide(a: Int, b: Int) -> Int128 {
 
 /// 128 x 128 multiplication (result is modulo 2^128; low 128 bits are exact
 /// regardless of signedness). Complexity: O(1) -- native i128 mul.
-pub fn i128_mul(a: Int128, b: Int128) -> Int128 {
+pub fn i128_mul(a: Int128, b: Int128) -> Int128
+  ensures: result == (a * b)
+{
   return a * b;
 }
 
 // -- Int128: comparison & predicates -----------------------------------------
 
 /// Three-way comparison (-1/0/1). Complexity: O(1).
-pub fn i128_compare(a: Int128, b: Int128) -> Int {
+pub fn i128_compare(a: Int128, b: Int128) -> Int
+  ensures: (a < b && result == -1) || (a == b && result == 0) || (a > b && result == 1)
+{
   if a < b { return -1; }
   if a > b { return 1; }
   return 0;
 }
 
 /// Returns true iff the value is exactly zero. Complexity: O(1).
-pub fn i128_is_zero(a: Int128) -> Bool {
+pub fn i128_is_zero(a: Int128) -> Bool
+  ensures: result == (a == (0 as Int128))
+{
   return a == (0 as Int128);
 }
 
 /// Returns true iff the value is negative (top bit set). Complexity: O(1).
-pub fn i128_is_negative(a: Int128) -> Bool {
+pub fn i128_is_negative(a: Int128) -> Bool
+  ensures: result == (a < (0 as Int128))
+{
   return a < (0 as Int128);
 }
 
@@ -1875,7 +2271,9 @@ pub fn i128_is_negative(a: Int128) -> Bool {
 
 /// Converts to i64; None if the value does not fit in a signed 64-bit range.
 /// Complexity: O(1).
-pub fn i128_to_i64(a: Int128) -> Option[Int] {
+pub fn i128_to_i64(a: Int128) -> Option[Int]
+  ensures: (result is Some) == (a >= (-9223372036854775808 as Int128) && a <= (9223372036854775807 as Int128))
+{
   if a >= (-9223372036854775808 as Int128) && a <= (9223372036854775807 as Int128) {
     return Some(a as Int);
   }
@@ -1890,7 +2288,11 @@ pub fn i128_to_i64(a: Int128) -> Option[Int] {
 /// the sdiv/srem i128 libcalls (__divti3/__modti3) inside a multi-iteration
 /// loop with memory ops miscompile at clang -O2 (verified repeatedly). The
 /// limb algorithm is exact (e2e-proven pre-D1) and works at every opt level.
-pub fn i128_to_str(a: Int128) -> Str {
+pub fn i128_to_str(a: Int128) -> Str
+  ensures: a == (0 as Int128) => result == "0"
+  ensures: a == (1 as Int128) => result == "1"
+  ensures: a == (0 as Int128) - (1 as Int128) => result == "-1"
+{
   if i128_is_zero(a) { return "0"; }
   var neg = a < (0 as Int128);
   var n = a;
@@ -1935,7 +2337,10 @@ pub fn i128_to_str(a: Int128) -> Str {
 /// Returns Err on invalid characters, empty input, or overflow beyond the
 /// 128-bit range.
 /// Complexity: O(digits * 128) ~ O(1).
-pub fn i128_from_str(s: Str) -> Result[Int128, Str] {
+pub fn i128_from_str(s: Str) -> Result[Int128, Str]
+  ensures: s.len() == 0 => result is Err
+  ensures: s == "+" || s == "-" => result is Err
+{
   if s.len() == 0 { return Err("empty string"); }
   var neg = false;
   var start = 0;
@@ -1975,7 +2380,10 @@ pub fn i128_from_str(s: Str) -> Result[Int128, Str] {
 
 /// Arithmetic shift left by n bits (wraps at 128 bits). n >= 128 yields zero.
 /// Complexity: O(1).
-pub fn i128_shl(a: Int128, n: Int) -> Int128 {
+pub fn i128_shl(a: Int128, n: Int) -> Int128
+  ensures: n <= 0 => result == a
+  ensures: n >= 128 => result == (0 as Int128)
+{
   if n <= 0 { return a; }
   if n >= 128 { return i128_zero(); }
   return a << n;
@@ -1983,7 +2391,11 @@ pub fn i128_shl(a: Int128, n: Int) -> Int128 {
 
 /// Arithmetic shift right by n bits (sign-extending). For n >= 128 the result
 /// is the sign (all ones for negatives, zero otherwise). Complexity: O(1).
-pub fn i128_shr(a: Int128, n: Int) -> Int128 {
+pub fn i128_shr(a: Int128, n: Int) -> Int128
+  ensures: n <= 0 => result == a
+  ensures: n >= 128 && a >= 0 => result == (0 as Int128)
+  ensures: n >= 128 && a < 0 => result == (0 as Int128) - (1 as Int128)
+{
   if n <= 0 { return a; }
   if n >= 128 {
     if i128_is_negative(a) { return 0 as Int128 - 1 as Int128; }
@@ -1995,7 +2407,10 @@ pub fn i128_shr(a: Int128, n: Int) -> Int128 {
 /// a*b/c evaluated with a 128-bit intermediate, then clamped (saturated) to
 /// the i64 range. c == 0 returns 0 (documented). Exact for all i64 inputs.
 /// Complexity: O(1) -- native i128 mul + div.
-pub fn i64_mul_div(a: Int, b: Int, c: Int) -> Int {
+pub fn i64_mul_div(a: Int, b: Int, c: Int) -> Int
+  ensures: c == 0 => result == 0
+  ensures: a == 0 || b == 0 => result == 0
+{
   if c == 0 { return 0; }
   var w = i64_mul_wide(a, b);
   var q = w / (c as Int128);
@@ -2053,87 +2468,126 @@ fn _digit_char(d: Int) -> Str {
 // returns None on failure, so all-widths math is safe by construction.
 
 /// u8 from i64: Some(v) iff 0 <= v <= 255. Complexity: O(1).
-pub fn u8_from_i64(v: Int) -> Option[Int] {
+pub fn u8_from_i64(v: Int) -> Option[Int]
+  ensures: (result is Some) == (v >= 0 && v <= 255)
+  ensures: result is Some => result.value == v
+{
   if v < 0 || v > 255 { return None; }
   return Some(v);
 }
 
 /// u8 from i32 (promoted through i64 arithmetic). Complexity: O(1).
-pub fn u8_from_i32(v: Int32) -> Option[Int] {
+pub fn u8_from_i32(v: Int32) -> Option[Int]
+  ensures: (result is Some) == ((v as Int) >= 0 && (v as Int) <= 255)
+  ensures: result is Some => result.value == (v as Int)
+{
   var big: Int = v as Int;
   if big < 0 || big > 255 { return None; }
   return Some(big);
 }
 
 /// u16 from i64: Some(v) iff 0 <= v <= 65535. Complexity: O(1).
-pub fn u16_from_i64(v: Int) -> Option[Int] {
+pub fn u16_from_i64(v: Int) -> Option[Int]
+  ensures: (result is Some) == (v >= 0 && v <= 65535)
+  ensures: result is Some => result.value == v
+{
   if v < 0 || v > 65535 { return None; }
   return Some(v);
 }
 
 /// u32 from i64: Some(v) iff 0 <= v <= 4294967295. Complexity: O(1).
-pub fn u32_from_i64(v: Int) -> Option[Int] {
+pub fn u32_from_i64(v: Int) -> Option[Int]
+  ensures: (result is Some) == (v >= 0 && v <= 4294967295)
+  ensures: result is Some => result.value == v
+{
   if v < 0 || v > 4294967295 { return None; }
   return Some(v);
 }
 
 /// u64 from i64: Some(v) iff v >= 0. Complexity: O(1).
-pub fn u64_from_i64(v: Int) -> Option[UInt64] {
+pub fn u64_from_i64(v: Int) -> Option[UInt64]
+  ensures: (result is Some) == (v >= 0)
+  ensures: result is Some => (result.value as Int) == v
+{
   if v < 0 { return None; }
   return Some(v as UInt64);
 }
 
 /// i8 from i64: Some(v) iff -128 <= v <= 127. Complexity: O(1).
-pub fn i8_from_i64(v: Int) -> Option[Int] {
+pub fn i8_from_i64(v: Int) -> Option[Int]
+  ensures: (result is Some) == (v >= -128 && v <= 127)
+  ensures: result is Some => result.value == v
+{
   if v < -128 || v > 127 { return None; }
   return Some(v);
 }
 
 /// i16 from i64: Some(v) iff -32768 <= v <= 32767. Complexity: O(1).
-pub fn i16_from_i64(v: Int) -> Option[Int] {
+pub fn i16_from_i64(v: Int) -> Option[Int]
+  ensures: (result is Some) == (v >= -32768 && v <= 32767)
+  ensures: result is Some => result.value == v
+{
   if v < -32768 || v > 32767 { return None; }
   return Some(v);
 }
 
 /// i32 from i64: Some(v) iff -2147483648 <= v <= 2147483647. Complexity: O(1).
-pub fn i32_from_i64(v: Int) -> Option[Int] {
+pub fn i32_from_i64(v: Int) -> Option[Int]
+  ensures: (result is Some) == (v >= -2147483648 && v <= 2147483647)
+  ensures: result is Some => result.value == v
+{
   if v < -2147483648 || v > 2147483647 { return None; }
   return Some(v);
 }
 
 /// i64 from u64: Some(v) iff v has the top bit clear. Complexity: O(1).
-pub fn i64_from_u64(v: UInt64) -> Option[Int] {
+pub fn i64_from_u64(v: UInt64) -> Option[Int]
+  ensures: (result is Some) == (u64_bit(v, 63) == 0)
+  ensures: result is Some => result.value >= 0
+{
   if u64_bit(v, 63) == 1 { return None; }
   return Some(v as Int);
 }
 
 /// i64 from i32: always fits. Complexity: O(1).
-pub fn i64_from_i32(v: Int32) -> Int {
+pub fn i64_from_i32(v: Int32) -> Int
+  ensures: result == (v as Int)
+{
   return v as Int;
 }
 
 /// i64 from i16: always fits. Complexity: O(1).
-pub fn i64_from_i16(v: Int16) -> Int {
+pub fn i64_from_i16(v: Int16) -> Int
+  ensures: result == (v as Int)
+{
   return v as Int;
 }
 
 /// i64 from i8: always fits. Complexity: O(1).
-pub fn i64_from_i8(v: Int8) -> Int {
+pub fn i64_from_i8(v: Int8) -> Int
+  ensures: result == (v as Int)
+{
   return v as Int;
 }
 
 /// i64 from u8: always fits. Complexity: O(1).
-pub fn i64_from_u8(v: UInt8) -> Int {
+pub fn i64_from_u8(v: UInt8) -> Int
+  ensures: result == (v as Int)
+{
   return v as Int;
 }
 
 /// i64 from u16: always fits. Complexity: O(1).
-pub fn i64_from_u16(v: UInt16) -> Int {
+pub fn i64_from_u16(v: UInt16) -> Int
+  ensures: result == (v as Int)
+{
   return v as Int;
 }
 
 /// i64 from u32: always fits. Complexity: O(1).
-pub fn i64_from_u32(v: UInt32) -> Int {
+pub fn i64_from_u32(v: UInt32) -> Int
+  ensures: result == (v as Int)
+{
   return v as Int;
 }
 
@@ -2141,18 +2595,24 @@ pub fn i64_from_u32(v: UInt32) -> Int {
 
 /// Float64 from i64 (lossless only for |v| < 2^53; rounds beyond).
 /// Complexity: O(1).
-pub fn f64_from_int(v: Int) -> Float64 {
+pub fn f64_from_int(v: Int) -> Float64
+  ensures: result == (v as Float64)
+{
   return v as Float64;
 }
 
 /// Float64 from i32: always exact. Complexity: O(1).
-pub fn f64_from_i32(v: Int32) -> Float64 {
+pub fn f64_from_i32(v: Int32) -> Float64
+  ensures: result == ((v as Int) as Float64)
+{
   return (v as Int) as Float64;
 }
 
 /// Float64 from u64: exact split into two 32-bit halves avoids relying on
 /// unsigned-to-float conversions for values above i64::MAX. Complexity: O(1).
-pub fn f64_from_u64(v: UInt64) -> Float64 {
+pub fn f64_from_u64(v: UInt64) -> Float64
+  ensures: v == 0 => result == 0.0
+{
   var hi = u64_logical_shr(v, 32);
   var lo = v & 0xFFFFFFFF;
   var fhi = (hi as Int) as Float64;
@@ -2161,17 +2621,23 @@ pub fn f64_from_u64(v: UInt64) -> Float64 {
 }
 
 /// Float32 from i64 (rounds for |v| > 2^24). Complexity: O(1).
-pub fn f32_from_int(v: Int) -> Float32 {
+pub fn f32_from_int(v: Int) -> Float32
+  ensures: result == ((v as Float64) as Float32)
+{
   return (v as Float64) as Float32;
 }
 
 /// Float32 from Float64 (round-to-nearest; inf/NaN propagate). Complexity: O(1).
-pub fn f32_from_f64(v: Float64) -> Float32 {
+pub fn f32_from_f64(v: Float64) -> Float32
+  ensures: result == (v as Float32)
+{
   return v as Float32;
 }
 
 /// Float64 from Float32: always exact. Complexity: O(1).
-pub fn f64_from_f32(v: Float32) -> Float64 {
+pub fn f64_from_f32(v: Float32) -> Float64
+  ensures: result == (v as Float64)
+{
   return v as Float64;
 }
 
@@ -2179,7 +2645,10 @@ pub fn f64_from_f32(v: Float32) -> Float64 {
 
 /// Truncating conversion Float64 -> Int. None on NaN or out-of-i64-range.
 /// Complexity: O(1).
-pub fn int_from_f64_trunc(v: Float64) -> Option[Int] {
+pub fn int_from_f64_trunc(v: Float64) -> Option[Int]
+  ensures: (result is Some) == (!is_nan(v) && v < 9223372036854775808.0 && v >= -9223372036854775808.0)
+  ensures: result is Some => result.value == to_int(v)
+{
   if is_nan(v) { return None; }
   if v >= 9223372036854775808.0 { return None; }
   if v < -9223372036854775808.0 { return None; }
@@ -2188,7 +2657,9 @@ pub fn int_from_f64_trunc(v: Float64) -> Option[Int] {
 
 /// Rounding conversion Float64 -> Int (round-half-away-from-zero).
 /// None on NaN or out-of-range. Complexity: O(1).
-pub fn int_from_f64_round(v: Float64) -> Option[Int] {
+pub fn int_from_f64_round(v: Float64) -> Option[Int]
+  ensures: (result is Some) == (!is_nan(v) && v < 9223372036854775808.0 && v >= -9223372036854775808.0)
+{
   if is_nan(v) { return None; }
   if v >= 9223372036854775808.0 { return None; }
   if v < -9223372036854775808.0 { return None; }
@@ -2198,7 +2669,10 @@ pub fn int_from_f64_round(v: Float64) -> Option[Int] {
 
 /// Truncating conversion Float64 -> Int32. None on NaN, out-of-i64-range,
 /// or outside the Int32 range. Complexity: O(1).
-pub fn i32_from_f64_trunc(v: Float64) -> Option[Int32] {
+pub fn i32_from_f64_trunc(v: Float64) -> Option[Int32]
+  ensures: result is Some => (result.value as Int) >= -2147483648 && (result.value as Int) <= 2147483647
+  ensures: v == 0.0 => result == Some(0)
+{
   var o = int_from_f64_trunc(v);
   match o {
     Some(x) => {
@@ -2211,7 +2685,10 @@ pub fn i32_from_f64_trunc(v: Float64) -> Option[Int32] {
 
 /// Rounding conversion Float64 -> Int32 (round-half-away-from-zero).
 /// Complexity: O(1).
-pub fn i32_from_f64_round(v: Float64) -> Option[Int32] {
+pub fn i32_from_f64_round(v: Float64) -> Option[Int32]
+  ensures: result is Some => (result.value as Int) >= -2147483648 && (result.value as Int) <= 2147483647
+  ensures: v == 0.0 => result == Some(0)
+{
   var o = int_from_f64_round(v);
   match o {
     Some(x) => {
@@ -2225,7 +2702,10 @@ pub fn i32_from_f64_round(v: Float64) -> Option[Int32] {
 /// Truncating conversion Float64 -> UInt64. None on NaN, negatives, or
 /// values >= 2^64. Handles the high half without unsigned-to-int casts.
 /// Complexity: O(1).
-pub fn u64_from_f64_trunc(v: Float64) -> Option[UInt64] {
+pub fn u64_from_f64_trunc(v: Float64) -> Option[UInt64]
+  ensures: (result is Some) == (!is_nan(v) && v >= 0.0 && v < 18446744073709551616.0)
+  ensures: v == 0.0 => result == Some(0)
+{
   if is_nan(v) { return None; }
   if v < 0.0 { return None; }
   if v >= 18446744073709551616.0 { return None; }
@@ -2237,20 +2717,29 @@ pub fn u64_from_f64_trunc(v: Float64) -> Option[UInt64] {
 }
 
 /// Truncating conversion Float32 -> Int. Complexity: O(1).
-pub fn int_from_f32_trunc(v: Float32) -> Option[Int] {
+pub fn int_from_f32_trunc(v: Float32) -> Option[Int]
+  ensures: (result is Some) == (!is_nan(v as Float64) && (v as Float64) < 9223372036854775808.0 && (v as Float64) >= -9223372036854775808.0)
+  ensures: v == 0.0 => result == Some(0)
+{
   return int_from_f64_trunc(v as Float64);
 }
 
 /// Rounding conversion Float32 -> Int (round-half-away-from-zero).
 /// Complexity: O(1).
-pub fn int_from_f32_round(v: Float32) -> Option[Int] {
+pub fn int_from_f32_round(v: Float32) -> Option[Int]
+  ensures: (result is Some) == (!is_nan(v as Float64) && (v as Float64) < 9223372036854775808.0 && (v as Float64) >= -9223372036854775808.0)
+  ensures: v == 0.0 => result == Some(0)
+{
   return int_from_f64_round(v as Float64);
 }
 
 /// Bounds-checked integer parse in the given radix (2..36).
 /// Reuses parse_int_radix; None on invalid input or overflow.
 /// Complexity: O(len(s)).
-pub fn int_from_str_radix_checked(s: Str, radix: Int) -> Option[Int] {
+pub fn int_from_str_radix_checked(s: Str, radix: Int) -> Option[Int]
+  ensures: s.len() == 0 => result is None
+  ensures: radix < 2 || radix > 36 => result is None
+{
   if s.len() == 0 { return None; }
   if radix < 2 || radix > 36 { return None; }
   var res = parse_int_radix(s, radix);
@@ -2265,27 +2754,35 @@ pub fn int_from_str_radix_checked(s: Str, radix: Int) -> Option[Int] {
 /// Absolute value of an i64. NOTE: |INT_MIN| wraps to INT_MIN
 /// (two's-complement); use i64_neg_checked for overflow-safe negation.
 /// Complexity: O(1).
-pub fn i64_abs(v: Int) -> Int {
+pub fn i64_abs(v: Int) -> Int
+  ensures: (v >= 0 => result == v) && (v < 0 => result == -v)
+{
   if v < 0 { return -v; }
   return v;
 }
 
 /// Absolute value of an i32. |INT32_MIN| wraps to INT32_MIN. Complexity: O(1).
-pub fn i32_abs(v: Int32) -> Int32 {
+pub fn i32_abs(v: Int32) -> Int32
+  ensures: (v >= 0 => result == v) && (v < 0 => result == -v)
+{
   var big: Int = v as Int;
   if big < 0 { big = -big; }
   return big as Int32;
 }
 
 /// Absolute value of an i16. |INT16_MIN| wraps to INT16_MIN. Complexity: O(1).
-pub fn i16_abs(v: Int16) -> Int16 {
+pub fn i16_abs(v: Int16) -> Int16
+  ensures: (v >= 0 => result == v) && (v < 0 => result == -v)
+{
   var big: Int = v as Int;
   if big < 0 { big = -big; }
   return big as Int16;
 }
 
 /// Absolute value of an i8. |INT8_MIN| wraps to INT8_MIN. Complexity: O(1).
-pub fn i8_abs(v: Int8) -> Int8 {
+pub fn i8_abs(v: Int8) -> Int8
+  ensures: (v >= 0 => result == v) && (v < 0 => result == -v)
+{
   var big: Int = v as Int;
   if big < 0 { big = -big; }
   return big as Int8;
@@ -2293,13 +2790,17 @@ pub fn i8_abs(v: Int8) -> Int8 {
 
 /// Absolute value of a Float64 (fabs; -0.0 becomes +0.0, NaN propagates).
 /// Complexity: O(1).
-pub fn f64_abs(x: Float64) -> Float64 {
+pub fn f64_abs(x: Float64) -> Float64
+  ensures: (result >= 0.0) || (result != result)
+{
   if x >= 0.0 { return x; }
   return -x;
 }
 
 /// Absolute value of a Float32. Complexity: O(1).
-pub fn f32_abs(x: Float32) -> Float32 {
+pub fn f32_abs(x: Float32) -> Float32
+  ensures: (result >= 0.0) || (result != result)
+{
   if x >= 0.0 { return x; }
   return -x;
 }
@@ -2307,14 +2808,20 @@ pub fn f32_abs(x: Float32) -> Float32 {
 // -- Per-width clamp ---------------------------------------------------------
 
 /// Clamps v to the inclusive range [lo, hi]. Complexity: O(1).
-pub fn i64_clamp(v: Int, lo: Int, hi: Int) -> Int {
+pub fn i64_clamp(v: Int, lo: Int, hi: Int) -> Int
+  requires: lo <= hi
+  ensures: result >= lo && result <= hi
+{
   if v < lo { return lo; }
   if v > hi { return hi; }
   return v;
 }
 
 /// Clamps an i32 (promoted to i64 arithmetic). Complexity: O(1).
-pub fn i32_clamp(v: Int32, lo: Int32, hi: Int32) -> Int32 {
+pub fn i32_clamp(v: Int32, lo: Int32, hi: Int32) -> Int32
+  requires: lo <= hi
+  ensures: result >= lo && result <= hi
+{
   var big_v: Int = v as Int;
   var big_lo: Int = lo as Int;
   var big_hi: Int = hi as Int;
@@ -2325,21 +2832,30 @@ pub fn i32_clamp(v: Int32, lo: Int32, hi: Int32) -> Int32 {
 
 /// Clamps a u64 using unsigned comparisons (avoids the signed `>` bug).
 /// Complexity: O(1).
-pub fn u64_clamp(v: UInt64, lo: UInt64, hi: UInt64) -> UInt64 {
+pub fn u64_clamp(v: UInt64, lo: UInt64, hi: UInt64) -> UInt64
+  requires: u64_ge(hi, lo)
+  ensures: u64_ge(result, lo) && u64_ge(hi, result)
+{
   if !u64_ge(v, lo) { return lo; }
   if !u64_ge(hi, v) { return hi; }
   return v;
 }
 
 /// Clamps a Float64. Complexity: O(1).
-pub fn f64_clamp(x: Float64, lo: Float64, hi: Float64) -> Float64 {
+pub fn f64_clamp(x: Float64, lo: Float64, hi: Float64) -> Float64
+  requires: lo <= hi
+  ensures: ((result >= lo && result <= hi) || result != result)
+{
   if x < lo { return lo; }
   if x > hi { return hi; }
   return x;
 }
 
 /// Clamps a Float32. Complexity: O(1).
-pub fn f32_clamp(x: Float32, lo: Float32, hi: Float32) -> Float32 {
+pub fn f32_clamp(x: Float32, lo: Float32, hi: Float32) -> Float32
+  requires: lo <= hi
+  ensures: ((result >= lo && result <= hi) || result != result)
+{
   if x < lo { return lo; }
   if x > hi { return hi; }
   return x;
@@ -2348,14 +2864,18 @@ pub fn f32_clamp(x: Float32, lo: Float32, hi: Float32) -> Float32 {
 // -- Per-width signum --------------------------------------------------------
 
 /// -1/0/1 for negative/zero/positive i64. Complexity: O(1).
-pub fn i64_signum(v: Int) -> Int {
+pub fn i64_signum(v: Int) -> Int
+  ensures: (result == -1 && v < 0) || (result == 0 && v == 0) || (result == 1 && v > 0)
+{
   if v > 0 { return 1; }
   if v < 0 { return -1; }
   return 0;
 }
 
 /// -1/0/1 for i32. Complexity: O(1).
-pub fn i32_signum(v: Int32) -> Int {
+pub fn i32_signum(v: Int32) -> Int
+  ensures: (result == -1 && v < 0) || (result == 0 && v == 0) || (result == 1 && v > 0)
+{
   if v > 0 { return 1; }
   if v < 0 { return -1; }
   return 0;
@@ -2363,7 +2883,9 @@ pub fn i32_signum(v: Int32) -> Int {
 
 /// -1.0/0.0/1.0 for a Float64. NaN returns NaN (IEEE signum semantics).
 /// Complexity: O(1).
-pub fn f64_signum(v: Float64) -> Float64 {
+pub fn f64_signum(v: Float64) -> Float64
+  ensures: (result == -1.0 && v < 0.0) || (result == 1.0 && v > 0.0) || (result == 0.0 && !(v < 0.0) && !(v > 0.0) && v == v) || result != result
+{
   if v != v { return v; }
   if v > 0.0 { return 1.0; }
   if v < 0.0 { return -1.0; }
@@ -2371,7 +2893,9 @@ pub fn f64_signum(v: Float64) -> Float64 {
 }
 
 /// -1.0/0.0/1.0 for a Float32. NaN returns NaN. Complexity: O(1).
-pub fn f32_signum(v: Float32) -> Float32 {
+pub fn f32_signum(v: Float32) -> Float32
+  ensures: (result == -1.0 && v < 0.0) || (result == 1.0 && v > 0.0) || (result == 0.0 && !(v < 0.0) && !(v > 0.0) && v == v) || result != result
+{
   if v != v { return v; }
   if v > 0.0 { return 1.0; }
   if v < 0.0 { return -1.0; }
@@ -2383,7 +2907,12 @@ pub fn f32_signum(v: Float32) -> Float32 {
 /// base^exp for i64 via square-and-multiply. Overflows WRAP (documented);
 /// use i64_pow_checked for overflow detection. Negative exponent returns 0.
 /// Complexity: O(log exp).
-pub fn i64_pow(base: Int, exp: Int) -> Int {
+pub fn i64_pow(base: Int, exp: Int) -> Int
+  ensures: exp < 0 => result == 0
+  ensures: exp == 0 => result == 1
+  ensures: base == 0 && exp > 0 => result == 0
+  ensures: base == 1 && exp >= 0 => result == 1
+{
   if exp < 0 { return 0; }
   if exp == 0 { return 1; }
   var result = 1;
@@ -2399,7 +2928,12 @@ pub fn i64_pow(base: Int, exp: Int) -> Int {
 
 /// base^exp for u64. Overflows WRAP (documented). Negative exponent returns 0.
 /// Complexity: O(log exp).
-pub fn u64_pow(base: UInt64, exp: Int) -> UInt64 {
+pub fn u64_pow(base: UInt64, exp: Int) -> UInt64
+  ensures: exp < 0 => result == 0
+  ensures: exp == 0 => result == 1
+  ensures: base == 0 && exp > 0 => result == 0
+  ensures: base == 1 && exp >= 0 => result == 1
+{
   if exp < 0 {
     var z: UInt64 = 0;
     return z;
@@ -2421,7 +2955,12 @@ pub fn u64_pow(base: UInt64, exp: Int) -> UInt64 {
 
 /// base^exp for i32 (wraps at 32 bits; documented). Negative exponent returns 0.
 /// Complexity: O(log exp).
-pub fn i32_pow(base: Int32, exp: Int) -> Int32 {
+pub fn i32_pow(base: Int32, exp: Int) -> Int32
+  ensures: exp < 0 => result == 0
+  ensures: exp == 0 => result == 1
+  ensures: base == 0 && exp > 0 => result == 0
+  ensures: base == 1 && exp >= 0 => result == 1
+{
   if exp < 0 { return 0 as Int32; }
   if exp == 0 { return 1 as Int32; }
   var result: Int32 = 1;
@@ -2440,6 +2979,7 @@ pub fn i32_pow(base: Int32, exp: Int) -> Int32 {
 /// returns NaN (documented edge). Complexity: O(log exp) via libm.
 pub fn f64_pow(base: Float64, exp: Float64) -> Float64
   requires: true  // extern pow calls below (T002 confinement)
+  ensures: exp == 0.0 => result == 1.0
 {
   if base < 0.0 {
     if exp >= 9223372036854775808.0 || exp < -9223372036854775808.0 {
@@ -2455,7 +2995,9 @@ pub fn f64_pow(base: Float64, exp: Float64) -> Float64
 }
 
 /// Float32 power (promoted through f64_pow). Complexity: O(log exp).
-pub fn f32_pow(base: Float32, exp: Float32) -> Float32 {
+pub fn f32_pow(base: Float32, exp: Float32) -> Float32
+  ensures: exp == 0.0 => result == 1.0
+{
   return f64_pow(base as Float64, exp as Float64) as Float32;
 }
 
@@ -2463,7 +3005,9 @@ pub fn f32_pow(base: Float32, exp: Float32) -> Float32 {
 
 /// Minimum of three i64 values. Concrete (generic min3 needs Ord dispatch).
 /// Complexity: O(1).
-pub fn i64_min_of3(a: Int, b: Int, c: Int) -> Int {
+pub fn i64_min_of3(a: Int, b: Int, c: Int) -> Int
+  ensures: result <= a && result <= b && result <= c
+{
   if a < b {
     if a < c { return a; }
     return c;
@@ -2473,7 +3017,9 @@ pub fn i64_min_of3(a: Int, b: Int, c: Int) -> Int {
 }
 
 /// Maximum of three i64 values. Complexity: O(1).
-pub fn i64_max_of3(a: Int, b: Int, c: Int) -> Int {
+pub fn i64_max_of3(a: Int, b: Int, c: Int) -> Int
+  ensures: result >= a && result >= b && result >= c
+{
   if a > b {
     if a > c { return a; }
     return c;
@@ -2490,7 +3036,10 @@ pub fn i64_max_of3(a: Int, b: Int, c: Int) -> Int {
 /// Builds a reduced fraction from num/den, normalizing the sign to the
 /// denominator. den == 0 returns the zero fraction (documented).
 /// Complexity: O(log max(|num|, |den|)) for gcd.
-pub fn fraction_new(num: Int, den: Int) -> Fraction {
+pub fn fraction_new(num: Int, den: Int) -> Fraction
+  ensures: result.den > 0
+  ensures: result.num == 0 => result.den == 1
+{
   if den == 0 { return Fraction{ num: 0; den: 1; }; }
   var g = gcd(num, den);
   if g < 0 { g = -g; }
@@ -2505,24 +3054,33 @@ pub fn fraction_new(num: Int, den: Int) -> Fraction {
 }
 
 /// Builds the fraction v/1. Complexity: O(1).
-pub fn fraction_from_int(v: Int) -> Fraction {
+pub fn fraction_from_int(v: Int) -> Fraction
+  ensures: result.num == v && result.den == 1
+{
   return Fraction{ num: v; den: 1; };
 }
 
 /// The zero fraction 0/1. Complexity: O(1).
-pub fn fraction_zero() -> Fraction {
+pub fn fraction_zero() -> Fraction
+  ensures: result.num == 0 && result.den == 1
+{
   return Fraction{ num: 0; den: 1; };
 }
 
 /// The one fraction 1/1. Complexity: O(1).
-pub fn fraction_one() -> Fraction {
+pub fn fraction_one() -> Fraction
+  ensures: result.num == 1 && result.den == 1
+{
   return Fraction{ num: 1; den: 1; };
 }
 
 /// a + b. Pre-reduces by gcd(a.den, b.den) to limit overflow; the final
 /// result is re-reduced. Cross-products may still overflow i64 for very
 /// large denominators (documented). Complexity: O(log max(den)).
-pub fn fraction_add(a: &Fraction, b: &Fraction) -> Fraction {
+pub fn fraction_add(a: &Fraction, b: &Fraction) -> Fraction
+  requires: a.den > 0 && b.den > 0
+  ensures: a.num == 0 && b.num == 0 => result.num == 0
+{
   var g = gcd(a.den, b.den);
   if g < 0 { g = -g; }
   var num = (a.num / g) * b.den + (b.num / g) * a.den;
@@ -2531,14 +3089,20 @@ pub fn fraction_add(a: &Fraction, b: &Fraction) -> Fraction {
 }
 
 /// a - b. Complexity: O(log max(den)).
-pub fn fraction_sub(a: &Fraction, b: &Fraction) -> Fraction {
+pub fn fraction_sub(a: &Fraction, b: &Fraction) -> Fraction
+  requires: a.den > 0 && b.den > 0
+  ensures: a.num == 0 && b.num == 0 => result.num == 0
+{
   var neg_b = Fraction{ num: -b.num; den: b.den; };
   return fraction_add(a, &neg_b);
 }
 
 /// a * b. Cross-cancels via gcd before multiplying, minimizing overflow.
 /// Complexity: O(log max(|num|, den)).
-pub fn fraction_mul(a: &Fraction, b: &Fraction) -> Fraction {
+pub fn fraction_mul(a: &Fraction, b: &Fraction) -> Fraction
+  requires: a.den > 0 && b.den > 0
+  ensures: a.num == 0 || b.num == 0 => result.num == 0
+{
   var g1 = gcd(a.num, b.den);
   if g1 < 0 { g1 = -g1; }
   var g2 = gcd(b.num, a.den);
@@ -2550,19 +3114,26 @@ pub fn fraction_mul(a: &Fraction, b: &Fraction) -> Fraction {
 
 /// a / b (flip b and multiply). Dividing by the zero fraction yields zero
 /// (documented). Complexity: O(log max(|num|, den)).
-pub fn fraction_div(a: &Fraction, b: &Fraction) -> Fraction {
+pub fn fraction_div(a: &Fraction, b: &Fraction) -> Fraction
+  requires: a.den > 0 && b.den > 0
+  ensures: a.num == 0 => result.num == 0
+{
   var r = fraction_reciprocal(b);
   return fraction_mul(a, &r);
 }
 
 /// -a. Complexity: O(1).
-pub fn fraction_neg(a: &Fraction) -> Fraction {
+pub fn fraction_neg(a: &Fraction) -> Fraction
+  ensures: result.num == -a.num && result.den == a.den
+{
   return Fraction{ num: -a.num; den: a.den; };
 }
 
 /// Three-way comparison via cross-multiplication. Cross-products can
 /// overflow i64 for large fractions (documented). Complexity: O(1).
-pub fn fraction_compare(a: Fraction, b: Fraction) -> Int {
+pub fn fraction_compare(a: Fraction, b: Fraction) -> Int
+  ensures: result == -1 || result == 0 || result == 1
+{
   var lhs = a.num * b.den;
   var rhs = b.num * a.den;
   if lhs < rhs { return -1; }
@@ -2571,7 +3142,9 @@ pub fn fraction_compare(a: Fraction, b: Fraction) -> Int {
 }
 
 /// Returns true iff the fraction is zero. Complexity: O(1).
-pub fn fraction_is_zero(a: Fraction) -> Bool {
+pub fn fraction_is_zero(a: Fraction) -> Bool
+  ensures: result == (a.num == 0)
+{
   return a.num == 0;
 }
 
@@ -2586,23 +3159,34 @@ pub fn fraction_den(a: Fraction) -> Int {
 }
 
 /// Converts to Float64 (numerator/denominator division). Complexity: O(1).
-pub fn fraction_to_float(a: Fraction) -> Float64 {
+pub fn fraction_to_float(a: Fraction) -> Float64
+  ensures: a.den != 0 && a.num == a.den => result == 1.0
+  ensures: a.den != 0 && a.num == 0 => result == 0.0
+{
   return (a.num as Float64) / (a.den as Float64);
 }
 
 /// Converts to Float32. Complexity: O(1).
-pub fn fraction_to_float32(a: Fraction) -> Float32 {
+pub fn fraction_to_float32(a: Fraction) -> Float32
+  ensures: a.den != 0 && a.num == a.den => result == 1.0
+  ensures: a.den != 0 && a.num == 0 => result == 0.0
+{
   return ((a.num as Float64) / (a.den as Float64)) as Float32;
 }
 
 /// Renders as "num/den". Complexity: O(1) string building.
-pub fn fraction_to_str(a: Fraction) -> Str {
+pub fn fraction_to_str(a: Fraction) -> Str
+  ensures: str_len(result) == str_len(to_string(a.num)) + str_len(to_string(a.den)) + 1
+{
   return str_concat(to_string(a.num), str_concat("/", to_string(a.den)));
 }
 
 /// Parses "num/den" (optional signs on each part). None on malformed input,
 /// empty parts, or a zero denominator. Complexity: O(len(s)).
-pub fn fraction_from_str(s: Str) -> Option[Fraction] {
+pub fn fraction_from_str(s: Str) -> Option[Fraction]
+  ensures: s.len() == 0 => result is None
+  ensures: result is Some => result.value.den > 0
+{
   if s.len() == 0 { return None; }
   var slash = -1;
   var i = 0;
@@ -2635,7 +3219,11 @@ pub fn fraction_from_str(s: Str) -> Option[Fraction] {
 
 /// 1/a (den/num). The zero fraction has no reciprocal; returns zero.
 /// Complexity: O(log max(|num|, den)).
-pub fn fraction_reciprocal(a: &Fraction) -> Fraction {
+pub fn fraction_reciprocal(a: &Fraction) -> Fraction
+  requires: a.den > 0
+  ensures: a.num == 0 => result.num == 0 && result.den == 1
+  ensures: a.num != 0 => result.den > 0
+{
   if a.num == 0 { return fraction_zero(); }
   return fraction_new(a.den, a.num);
 }
@@ -2643,7 +3231,12 @@ pub fn fraction_reciprocal(a: &Fraction) -> Fraction {
 /// a^n for integer exponents. Negative n raises the reciprocal; n == 0
 /// returns one. n == INT_MIN returns zero (documented overflow edge).
 /// Complexity: O(log |n|).
-pub fn fraction_pow_int(a: Fraction, n: Int) -> Fraction {
+pub fn fraction_pow_int(a: Fraction, n: Int) -> Fraction
+  requires: a.den > 0
+  ensures: n == 0 => result.num == 1 && result.den == 1
+  ensures: n == INT_MIN => result.num == 0 && result.den == 1
+  ensures: a.num == 0 && n > 0 => result.num == 0
+{
   if n == 0 { return fraction_one(); }
   if n == INT_MIN { return fraction_zero(); }
   var base = a;
@@ -2664,7 +3257,9 @@ pub fn fraction_pow_int(a: Fraction, n: Int) -> Fraction {
 /// Returns true iff |num| < den (a proper fraction). NOTE: |INT_MIN| wraps
 /// (documented); proper tests near the i64 extreme are degenerate.
 /// Complexity: O(1).
-pub fn fraction_is_proper(a: Fraction) -> Bool {
+pub fn fraction_is_proper(a: Fraction) -> Bool
+  ensures: result => a.den > 0
+{
   var n = a.num;
   if n < 0 { n = -n; }
   return n < a.den;
@@ -2675,7 +3270,9 @@ pub fn fraction_is_proper(a: Fraction) -> Bool {
 /// Integer lerp: a + (b - a) * t with t clamped to [0, 1]. For i64, t is
 /// effectively 0 or 1. NOTE: (b - a) * t can overflow i64 for extreme ranges
 /// (documented). Complexity: O(1).
-pub fn i64_lerp(a: Int, b: Int, t: Int) -> Int {
+pub fn i64_lerp(a: Int, b: Int, t: Int) -> Int
+  ensures: result == a || result == b
+{
   var tt = t;
   if tt < 0 { tt = 0; }
   if tt > 1 { tt = 1; }
@@ -2683,18 +3280,25 @@ pub fn i64_lerp(a: Int, b: Int, t: Int) -> Int {
 }
 
 /// Float64 lerp: a + (b - a) * t. Complexity: O(1).
-pub fn f64_lerp(a: Float64, b: Float64, t: Float64) -> Float64 {
+pub fn f64_lerp(a: Float64, b: Float64, t: Float64) -> Float64
+  ensures: (a == b && is_finite(a) && is_finite(t)) => result == a
+{
   return a + (b - a) * t;
 }
 
 /// Float32 lerp: a + (b - a) * t. Complexity: O(1).
-pub fn f32_lerp(a: Float32, b: Float32, t: Float32) -> Float32 {
+pub fn f32_lerp(a: Float32, b: Float32, t: Float32) -> Float32
+  ensures: (a == b && is_finite(a as Float64) && is_finite(t as Float64)) => result == a
+{
   return a + (b - a) * t;
 }
 
 /// Inverse lerp: (v - a) / (b - a), clamped to [0, 1]. If b == a, returns 0
 /// (documented). Complexity: O(1).
-pub fn f64_inverse_lerp(a: Float64, b: Float64, v: Float64) -> Float64 {
+pub fn f64_inverse_lerp(a: Float64, b: Float64, v: Float64) -> Float64
+  ensures: ((result >= 0.0 && result <= 1.0) || result != result)
+  ensures: b == a => result == 0.0
+{
   if b == a { return 0.0; }
   var t = (v - a) / (b - a);
   if t < 0.0 { return 0.0; }
@@ -2704,7 +3308,9 @@ pub fn f64_inverse_lerp(a: Float64, b: Float64, v: Float64) -> Float64 {
 
 /// Remaps v from the range [in_lo, in_hi] to [out_lo, out_hi] (linear).
 /// If in_hi == in_lo, returns out_lo (documented). Complexity: O(1).
-pub fn f64_remap(v: Float64, in_lo: Float64, in_hi: Float64, out_lo: Float64, out_hi: Float64) -> Float64 {
+pub fn f64_remap(v: Float64, in_lo: Float64, in_hi: Float64, out_lo: Float64, out_hi: Float64) -> Float64
+  ensures: in_hi == in_lo => result == out_lo
+{
   if in_hi == in_lo { return out_lo; }
   var t = (v - in_lo) / (in_hi - in_lo);
   return out_lo + t * (out_hi - out_lo);
