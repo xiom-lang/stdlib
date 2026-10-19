@@ -607,6 +607,11 @@ campaign release; the table statuses above were normalized in the
   None domains, BigRat reduction/accessor identities); global
   72.7% -> 73.6%; floors184 dumped/wired; probe
   `p_wave181_precision_shapes`; readiness 87.4%.
+- wave 182 (core contracts/platform): core coverage 58.0% -> 78.6%
+  (platform OS/arch predicates exact, contract exports/statistics/
+  index queries); global 73.6% -> 74.0%; floors185 dumped/wired; probe
+  `p_wave182_core_shapes`; readiness 87.4%. `iter` stays contract-limited
+  (lazy closure adapters; only ~8 meaningful clauses available).
 - NOT assigned in the 165-171 pass: row 33 stays compiler/install-lane.
   Released as stdlib-v0.64.7 / xiom-std 0.64.7 (release gates on
   candidate-v0.64.7-m351-r2; compiler v0.64.7 pins STDLIB_VERSION to the

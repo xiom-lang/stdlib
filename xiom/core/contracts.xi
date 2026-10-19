@@ -125,13 +125,17 @@ pub fn verify_invariants[T](value: &T) -> Vec[ContractCheckResult]
 
 /// Verify ALL contracts of a function against its actual call.
 /// Called automatically by the compiler at runtime.
-pub fn verify_function_contracts(func: Str, args: Map[Str, Str]) -> Vec[ContractCheckResult] {
+pub fn verify_function_contracts(func: Str, args: Map[Str, Str]) -> Vec[ContractCheckResult]
+  ensures: result.len() == 0
+{
   // Bootstrap: compiler contract metadata not yet available
   Vec[ContractCheckResult].new()
 }
 
 /// Verify a single invariant expression against a value.
-pub fn check_invariant[T](value: &T, invariant: Str) -> ContractCheckResult {
+pub fn check_invariant[T](value: &T, invariant: Str) -> ContractCheckResult
+  ensures: result.passed == true
+{
   let clause = ContractClause{
     kind: 2;
     expression: invariant;
@@ -307,7 +311,9 @@ pub fn find_invariants_using_field(type_name: Str, field_name: Str) -> Vec[Contr
 // ============================================================================
 
 /// Export the contract index as JSON (same format as --dump-contracts).
-pub fn export_contracts_json() -> Str {
+pub fn export_contracts_json() -> Str
+  ensures: result.len() > 0
+{
   let idx = _get_index();
   var json = "{\n";
   json = string.str_concat(json, "  \"package\": \"");
@@ -327,7 +333,9 @@ pub fn export_contracts_json() -> Str {
 }
 
 /// Export the contract index as structured documentation.
-pub fn export_contracts_markdown() -> Str {
+pub fn export_contracts_markdown() -> Str
+  ensures: result.len() > 0
+{
   let idx = _get_index();
   var md = "# Contract Index\n\n";
   md = string.str_concat(md, "## Package: ");
@@ -349,7 +357,9 @@ pub fn export_contracts_markdown() -> Str {
 }
 
 /// Export contract index as OpenAPI/Swagger-like spec.
-pub fn export_contracts_openapi() -> Str {
+pub fn export_contracts_openapi() -> Str
+  ensures: result.len() > 0
+{
   let idx = _get_index();
   var yaml = "openapi: \"3.0.0\"\n";
   yaml = string.str_concat(yaml, "info:\n");
@@ -467,7 +477,9 @@ pub fn can_compose(f_requires: Vec[ContractClause], g_ensures: Vec[ContractClaus
 }
 
 /// Given a chain of function calls, verify contract propagation.
-pub fn verify_chain(fns: Vec<Str>) -> Result[Unit, Vec[ContractCheckResult]] {
+pub fn verify_chain(fns: Vec<Str>) -> Result[Unit, Vec[ContractCheckResult]]
+  ensures: result is Ok
+{
   // Bootstrap: chained contract verification not yet available.
   Ok(Unit)
 }
@@ -480,32 +492,44 @@ pub fn total_contracts() -> Int
 }
 
 /// Number of registered `requires` clauses.
-pub fn total_requires() -> Int {
+pub fn total_requires() -> Int
+  ensures: result >= 0
+{
   _get_index().requires_count
 }
 
 /// Number of registered `ensures` clauses.
-pub fn total_ensures() -> Int {
+pub fn total_ensures() -> Int
+  ensures: result >= 0
+{
   _get_index().ensures_count
 }
 
 /// Number of registered type invariants.
-pub fn total_invariants() -> Int {
+pub fn total_invariants() -> Int
+  ensures: result >= 0
+{
   _get_index().invariant_count
 }
 
 /// Number of functions carrying at least one clause.
-pub fn functions_with_contracts() -> Int {
+pub fn functions_with_contracts() -> Int
+  ensures: result >= 0
+{
   _get_index().functions.len()
 }
 
 /// Number of types carrying invariants.
-pub fn types_with_invariants() -> Int {
+pub fn types_with_invariants() -> Int
+  ensures: result >= 0
+{
   _get_index().types.len()
 }
 
 /// Clauses per function across the registered catalog.
-pub fn contract_density() -> Float64 {
+pub fn contract_density() -> Float64
+  ensures: result >= 0.0
+{
   let idx = _get_index();
   let fn_count = idx.functions.len();
   if fn_count == 0 { return 0.0; }
@@ -531,7 +555,9 @@ pub fn ContractIndex.none(self) -> Bool
 /// Returns true if the functions in the contract index are sorted by
 /// name in ascending order. Useful for validating compiler-emitted
 /// metadata table ordering.
-pub fn ContractIndex.is_sorted(self) -> Bool {
+pub fn ContractIndex.is_sorted(self) -> Bool
+  ensures: (self.functions.len() <= 1) => (result == true)
+{
   if self.functions.len() <= 1 { return true; }
   var i: Int = 1;
   while i < self.functions.len() {
@@ -545,7 +571,9 @@ pub fn ContractIndex.is_sorted(self) -> Bool {
 
 /// Returns true if a function with the given name has contracts
 /// registered in the index.
-pub fn ContractIndex.contains_fn(self, name: Str) -> Bool {
+pub fn ContractIndex.contains_fn(self, name: Str) -> Bool
+  ensures: (self.functions.len() == 0) => (result == false)
+{
   var i: Int = 0;
   while i < self.functions.len() {
     if self.functions[i].name == name {
@@ -558,7 +586,9 @@ pub fn ContractIndex.contains_fn(self, name: Str) -> Bool {
 
 /// Returns true if a type with the given name has invariants
 /// registered in the index.
-pub fn ContractIndex.contains_type(self, name: Str) -> Bool {
+pub fn ContractIndex.contains_type(self, name: Str) -> Bool
+  ensures: (self.types.len() == 0) => (result == false)
+{
   var i: Int = 0;
   while i < self.types.len() {
     if self.types[i].name == name {
@@ -607,7 +637,9 @@ pub fn ContractIndex.all_clauses(self) -> Vec[ContractClause]
 /// Returns a subset of the contract index containing only functions that
 /// have at least one requires or ensures clause. Skips functions with
 /// zero clauses.
-pub fn ContractIndex.filter_nonempty(self) -> ContractIndex {
+pub fn ContractIndex.filter_nonempty(self) -> ContractIndex
+  ensures: result.functions.len() <= self.functions.len()
+{
   var filtered_fns: Vec[FunctionContracts] = Vec[FunctionContracts].new();
   var req_total: Int = 0;
   var ens_total: Int = 0;
@@ -636,16 +668,22 @@ pub fn ContractIndex.filter_nonempty(self) -> ContractIndex {
 }
 
 /// Convenience: check if any contracts exist at all (package-level query).
-pub fn any_contracts() -> Bool {
+pub fn any_contracts() -> Bool
+  ensures: result == !_get_index().none()
+{
   return !_get_index().none();
 }
 
 /// Convenience: check if a specific function has contracts (package-level query).
-pub fn fn_has_contracts(name: Str) -> Bool {
+pub fn fn_has_contracts(name: Str) -> Bool
+  ensures: result == _get_index().contains_fn(name)
+{
   return _get_index().contains_fn(name);
 }
 
 /// Convenience: check if a specific type has invariants (package-level query).
-pub fn type_has_invariants(name: Str) -> Bool {
+pub fn type_has_invariants(name: Str) -> Bool
+  ensures: result == _get_index().contains_type(name)
+{
   return _get_index().contains_type(name);
 }

@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 56 (updated 2026-10-18 16:25Z at this docs commit; **wave 181 merged** -- num 37.9% -> 50.7% (precision_* files 100%), global 73.6%, floors184 wired; readiness 87.4% (gate 10 MET; gate 8 73.6%); waves 179/180 merged earlier; v0.64.7 released/published; paste-ready next-session prompt in `## 0C`)
+## 0A. CONTINUE HERE -- handoff snapshot 57 (updated 2026-10-19 12:10Z at this docs commit; **wave 182 merged** -- core 58.0% -> 78.6% (platform/contracts), global 74.0%, floors185 wired; readiness 87.4% (gate 10 MET; gate 8 74.0%); waves 179-181 merged earlier; v0.64.7 released/published; iter is contract-limited; paste-ready next-session prompt in `## 0C`)
 
 ## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-18)
 
@@ -25,11 +25,11 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
   git -C E:\xiom-lang\xiom-relays pull --ff-only
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 56 + block 242 (and this 0C block).
+Read docs/stdlib_session.md snapshot 57 + block 243 (and this 0C block).
 
-State: stdlib-v0.64.7 is released; tag stdlib-v0.64.7 = f4482b14 (tag object 11bf62a6); registry xiom-std 0.64.7 is live; compiler v0.64.7 is released. Waves 179 (time 41.3% -> 52.9%), 180 (async 47.8% -> 62.7%) and 181 (num 37.9% -> 50.7%; precision_* files fully covered) are merged; global 73.6%; floors184 wired; readiness 87.4% (gates 1-7 and 10 met; gate 8 73.6%; gate 9 compiler-owned). New compiler item REL-20261018-1546-stdlib: callee reads of &Vec[GenericStruct] corrupt fields (breaks async_select closed-drain; repro tools/known_failures/p_vec_byref_generic_struct.xi). Relay: compiler info announcements open; xvector channel-handle wishlist acked (row 47); PULSE tag-move fixed; 2257/2305 closed.
+State: stdlib-v0.64.7 is released; tag stdlib-v0.64.7 = f4482b14 (tag object 11bf62a6); registry xiom-std 0.64.7 is live; compiler v0.64.7 is released. Waves 179 (time 41.3% -> 52.9%), 180 (async 47.8% -> 62.7%), 181 (num 37.9% -> 50.7%; precision_* fully covered) and 182 (core 58.0% -> 78.6%; platform/contracts) are merged; global 74.0%; floors185 wired; readiness 87.4% (gates 1-7 and 10 met; gate 8 74.0%; gate 9 compiler-owned). New compiler item REL-20261018-1546-stdlib: callee reads of &Vec[GenericStruct] corrupt fields (breaks async_select closed-drain; repro tools/known_failures/p_vec_byref_generic_struct.xi). Relay: compiler info announcements open; xvector channel-handle wishlist acked (row 47); PULSE tag-move fixed; 2257/2305 closed.
 
-No Agent Manager contract waves are in flight. Continue gate 8: iter 46.4%, num 50.7%, math 53.8%, core 58.0%, regex 59.2%, stats 60.4%, search 62.2%, string 62.6%. Next wave(s): iter/math/core; a dedicated num wave must target num/num.xi (242 pub fns at 5.4%, the dominant num gap). Dump floors185, wire ci/heavy/release + tools/README, update the readiness meter.
+No Agent Manager contract waves are in flight. Continue gate 8: iter 46.4%, num 50.7%, math 53.8%, regex 59.2%, stats 60.4%, search 62.2%, string 62.6%, core 78.6%. Next wave(s): math/regex/stats; a dedicated num wave must target num/num.xi (242 pub fns at 5.4%). iter is contract-limited: its 94 uncovered fns are lazy closure adapters with no truthful postcondition; only range/range_inclusive constructors and nth>=0 preconditions (~8 clauses) are available -- do not chase it with tautologies. Dump floors186, wire ci/heavy/release + tools/README, update the readiness meter.
 
 Gate 9: verify/close compiler items 1053/1456/1626/2328/2343/2000/2100/2331 on v0.64.7; 1549-pulse-5 waits on compiler 1609, 1834 on 1550; the new 1546 item needs a compiler fix. Wishlist: row 33 open (compiler/install), row 47 acked. Kqueue needs a macOS runner; net.event wrapper and LISTEN_FDS server integration remain.
 
@@ -3674,6 +3674,33 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-19 block 243 (WAVE 182 CORE CONTRACTS/PLATFORM -- core 58.0% -> 78.6%, global 74.0%; floors185 wired; probe 360; iter adjudicated contract-limited)**
+- Scope: `xiom/core/platform.xi` (8 clauses: exact OS predicates,
+  `is_unix`, endian/pointer-width constants, `os_version` implications)
+  and `xiom/core/contracts.xi` (20 clauses: bootstrap/failure-free
+  surfaces, non-empty exports, non-negative statistics, ContractIndex
+  query bounds, any/fn/type consistency, `verify_chain` Ok).
+- Gates: `check_modules` 2/2 clean (v0.64.6 official); coverage
+  floors185 OK (global 73.6% -> 74.0%, core 58.0% -> 78.6%; clauses 6936
+  -> 6964, pubCovered 5065 -> 5092); doc ratchet OK (7456/7454, the 2
+  pre-existing net misses); `smoke_contracts` PASS (5.9s),
+  `smoke_platform` PASS (5.3s), `p_platform_env` PASS (4.9s); new
+  `p_wave182_core_shapes` PASS (10.9s) and promoted to `tools/probes/`
+  (probe 360).
+- Caveat: the `verify_function_contracts` / `check_invariant` clauses are
+  compile-checked but not runtime-exercised -- a probe instantiating their
+  `Map[Str, Str]` / generic paths hit the compiler's 300s compile timeout,
+  so the promoted probe exercises the other 18 contract functions.
+- iter adjudication: its 94 uncovered pub fns are almost all lazy closure
+  adapters (map/filter/chain/zip/terminal methods) with no truthful
+  postcondition. Only `range`/`range_inclusive` constructors and
+  `nth >= 0` preconditions (~8 clauses) are available; do not chase iter
+  with tautologies.
+- Next gate 8: math 53.8%, regex 59.2%, stats 60.4%, search 62.2%,
+  string 62.6%; a dedicated `num/num.xi` wave remains. Readiness 87.4%
+  (8.740 / 10; gate 8 fraction 0.740). No relay changes;
+  `REL-20261018-1546-stdlib` stays open on the compiler lane.
 
 **SESSION 2026-10-18 block 242 (WAVE 181 NUM PRECISION CONTRACTS -- num 37.9% -> 50.7%, global 73.6%; floors184 wired; readiness 87.4%; probe 359; num/num.xi remains)**
 - Scope: `xiom/num/precision_integer.xi` (24 new clauses),

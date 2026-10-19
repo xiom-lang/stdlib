@@ -42,29 +42,39 @@ pub fn os_name() -> Str
 // -- Boolean OS checks --------------------------------------------------------
 
 /// True when the target OS is Windows.
-pub fn is_windows() -> Bool {
+pub fn is_windows() -> Bool
+    ensures: result == (os_name() == "windows")
+{
     return _rt_os_name() == "windows";
 }
 
 /// True when the target OS is Linux.
-pub fn is_linux() -> Bool {
+pub fn is_linux() -> Bool
+    ensures: result == (os_name() == "linux")
+{
     return _rt_os_name() == "linux";
 }
 
 /// True when the target OS is macOS (Darwin).
-pub fn is_macos() -> Bool {
+pub fn is_macos() -> Bool
+    ensures: result == (os_name() == "macos")
+{
     return _rt_os_name() == "macos";
 }
 
 /// True when the target OS is a BSD variant (freebsd, openbsd, netbsd).
-pub fn is_bsd() -> Bool {
+pub fn is_bsd() -> Bool
+    ensures: result == (os_name() == "freebsd" || os_name() == "openbsd" || os_name() == "netbsd" || os_name() == "dragonfly")
+{
     let os = _rt_os_name();
     return os == "freebsd" || os == "openbsd" || os == "netbsd" || os == "dragonfly";
 }
 
 /// True when the target OS is a Unix-like system (Linux, macOS, BSD).
 /// This is the negation of is_windows().
-pub fn is_unix() -> Bool {
+pub fn is_unix() -> Bool
+    ensures: result == !is_windows()
+{
     !is_windows()
 }
 
@@ -87,7 +97,9 @@ pub fn arch_name() -> Str
 /// For a full runtime check, a known integer pattern would be inspected via
 /// pointer casting, but the XIOM compiler currently lacks raw pointer deref.
 /// Documented as: true on all current XIOM targets (x86_64, aarch64).
-pub fn endian_is_little() -> Bool {
+pub fn endian_is_little() -> Bool
+    ensures: result == true
+{
     true
 }
 
@@ -134,7 +146,9 @@ pub fn path_sep() -> Str
 
 /// Returns true if the platform uses 64-bit pointers.
 /// XIOM Int is always 64-bit, so this is always true.
-pub fn is_64bit() -> Bool {
+pub fn is_64bit() -> Bool
+    ensures: result == true
+{
     true
 }
 
@@ -145,7 +159,10 @@ pub fn is_64bit() -> Bool {
 /// On Windows: attempts "OS" or "VER" environment variable.
 /// On Unix: attempts "OSTYPE" or returns "unknown".
 /// Returns "unknown" if no version information is available.
-pub fn os_version() -> Str {
+pub fn os_version() -> Str
+    ensures: (is_macos()) => (result == "macOS")
+    ensures: (!is_windows() && !is_linux() && !is_macos()) => (result == "unknown")
+{
     if is_windows() {
         let ver_opt = xiom.env.var_opt("OS");
         match ver_opt {

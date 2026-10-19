@@ -1,6 +1,6 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
-**87.4% -- 8 of 10 gates complete; gate 8 at 73.6% (partial credit) and
+**87.4% -- 8 of 10 gates complete; gate 8 at 74.0% (partial credit) and
 gate 9 discrete.** (Compiler pin: **v0.64.7**; stdlib-v0.64.7 tag moved
 to `f4482b14` with `COMPILER_VERSION=v0.64.7`; compiler main pins
 `STDLIB_VERSION=stdlib-v0.64.7`; production registry publish
@@ -16,17 +16,17 @@ gates flip:
 2. Smoke corpus green -- MET on the v0.64.7 release gates: 956/956 on
    both Windows and Ubuntu, no carve-outs.
 3. Probe corpus green -- MET (358/358, post-wave-177 full corpus with
-   RetryFailed; the wave-181 `p_wave181_precision_shapes` is the 359th
-   probe and is individually green).
+   RetryFailed; the wave-181 `p_wave181_precision_shapes` (359th) and
+   wave-182 `p_wave182_core_shapes` (360th) are individually green).
 4. Strict bare-name scan clean -- MET (0/533).
-5. Coverage ratchet green -- MET (floors184).
+5. Coverage ratchet green -- MET (floors185).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (499/542 modules, 3501/6575 fns).
 8. Contract coverage 100% (every public fn carries clauses) -- OPEN
-   (73.6%; wave 181 lifted num 37.9% -> 50.7% with the three precision_*
-   files fully covered; waves 179/180 lifted time 41.3% -> 52.9% and
-   async 47.8% -> 62.7%; the worst directories are iter/num/math/core/
-   regex/stats).
+   (74.0%; wave 182 lifted core 58.0% -> 78.6% via the platform and
+   contracts surfaces; wave 181 lifted num 37.9% -> 50.7%; waves 179/180
+   lifted time 41.3% -> 52.9% and async 47.8% -> 62.7%; the worst
+   directories are iter/num/math/regex/stats).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
    OPEN (compiler-owned; see the relay bus for the current item set).
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- MET
@@ -37,8 +37,8 @@ gates flip:
     publish 39135008135 are GREEN; release.yml is idempotent at 0056bce).
 
 Meter formula: MET gates count 1.0; gate 8 counts its current
-pub-with-clause fraction (73.6% -> 0.736); gate 9 gets no partial credit
-(discrete). 8.736 / 10 = 87.4%. Update the percentage and the gate-8
+pub-with-clause fraction (74.0% -> 0.740); gate 9 gets no partial credit
+(discrete). 8.740 / 10 = 87.4%. Update the percentage and the gate-8
 fraction in the same commit as each floors dump so the meter moves
 smoothly toward 90%.
 
@@ -52,10 +52,10 @@ and the moved-tag re-gate 39135008156 are green on Windows+Ubuntu;
 production registry publish 39135008135 is green and the registry
 reports `xiom-std 0.64.7` latest. Assets: `xiom-std-0.64.7.tar.gz`
 sha256 `93da5829...`; the release body is verified against compiler
-v0.64.7. Main carries waves 172-181, the m351 typed-fault runtime and
-the arm64 crypto-availability fix. Gate 8 is 73.6% (wave 181 lifted num
-37.9% -> 50.7%; waves 179/180: time 52.9%, async 62.7%); gate 9 is
-compiler-owned. Historical state below is retained.
+v0.64.7. Main carries waves 172-182, the m351 typed-fault runtime and
+the arm64 crypto-availability fix. Gate 8 is 74.0% (wave 182 lifted core
+58.0% -> 78.6%; wave 181 num 50.7%; waves 179/180: time 52.9%, async
+62.7%); gate 9 is compiler-owned. Historical state below is retained.
 
 Historical state (2026-10-11): compiler pin **v0.64.4** (released
 2026-10-12, tag f76fd47c on df493530; the lane battery runs the official
