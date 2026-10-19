@@ -42,7 +42,10 @@ pub fn logistic_growth(r: Float64, k: Float64, n0: Float64, t: Float64) -> Float
 /// One Euler step of the Lotka-Volterra predator-prey system:
 /// prey' = alpha*prey - beta*prey*pred, pred' = delta*prey*pred - gamma*pred.
 /// Returns (prey, pred). Complexity: O(1).
-pub fn lotka_volterra(alpha: Float64, beta: Float64, gamma: Float64, delta: Float64, prey: Float64, pred: Float64, dt: Float64) -> (Float64, Float64) {
+pub fn lotka_volterra(alpha: Float64, beta: Float64, gamma: Float64, delta: Float64, prey: Float64, pred: Float64, dt: Float64) -> (Float64, Float64)
+  ensures: (dt != 0.0) || (result.0 != result.0) || (result.0 == prey)
+  ensures: (dt != 0.0) || (result.1 != result.1) || (result.1 == pred)
+{
   var dprey = alpha * prey - beta * prey * pred;
   var dpred = delta * prey * pred - gamma * pred;
   var np = prey + dt * dprey;
@@ -52,7 +55,11 @@ pub fn lotka_volterra(alpha: Float64, beta: Float64, gamma: Float64, delta: Floa
 
 /// One SIR compartment step: S' = -beta S I, I' = beta S I - gamma I,
 /// R' = gamma I. Returns (S, I, R). Complexity: O(1).
-pub fn epidemiological_sir(beta: Float64, gamma: Float64, s: Float64, i: Float64, r: Float64, dt: Float64) -> (Float64, Float64, Float64) {
+pub fn epidemiological_sir(beta: Float64, gamma: Float64, s: Float64, i: Float64, r: Float64, dt: Float64) -> (Float64, Float64, Float64)
+  ensures: (dt != 0.0) || (result.0 != result.0) || (result.0 == s)
+  ensures: (dt != 0.0) || (result.1 != result.1) || (result.1 == i)
+  ensures: (dt != 0.0) || (result.2 != result.2) || (result.2 == r)
+{
   var ds = -beta * s * i;
   var di = beta * s * i - gamma * i;
   var dr = gamma * i;
@@ -64,7 +71,12 @@ pub fn epidemiological_sir(beta: Float64, gamma: Float64, s: Float64, i: Float64
 
 /// One SEIR compartment step: S' = -beta S I, E' = beta S I - sigma E,
 /// I' = sigma E - gamma I, R' = gamma I. Returns (S, E, I, R). Complexity: O(1).
-pub fn epidemiological_seir(beta: Float64, sigma: Float64, gamma: Float64, s: Float64, e: Float64, i: Float64, r: Float64, dt: Float64) -> (Float64, Float64, Float64, Float64) {
+pub fn epidemiological_seir(beta: Float64, sigma: Float64, gamma: Float64, s: Float64, e: Float64, i: Float64, r: Float64, dt: Float64) -> (Float64, Float64, Float64, Float64)
+  ensures: (dt != 0.0) || (result.0 != result.0) || (result.0 == s)
+  ensures: (dt != 0.0) || (result.1 != result.1) || (result.1 == e)
+  ensures: (dt != 0.0) || (result.2 != result.2) || (result.2 == i)
+  ensures: (dt != 0.0) || (result.3 != result.3) || (result.3 == r)
+{
   var ds = -beta * s * i;
   var de = beta * s * i - sigma * e;
   var di = sigma * e - gamma * i;
@@ -125,7 +137,10 @@ pub fn ecology(species: &Vec[Float64], interaction: &Vec[Vec[Float64]], dt: Floa
 /// One immune-response step: antigen' = infection_rate*antigen -
 /// antibody*antigen, antibody' = antigen*antibody - clearance*antibody.
 /// Returns (antigen, antibody). Complexity: O(1).
-pub fn immunology(antigen: Float64, antibody: Float64, infection_rate: Float64, clearance: Float64, dt: Float64) -> (Float64, Float64) {
+pub fn immunology(antigen: Float64, antibody: Float64, infection_rate: Float64, clearance: Float64, dt: Float64) -> (Float64, Float64)
+  ensures: (dt != 0.0) || (result.0 != result.0) || (result.0 == antigen)
+  ensures: (dt != 0.0) || (result.1 != result.1) || (result.1 == antibody)
+{
   var da = infection_rate * antigen - antibody * antigen;
   var db = antigen * antibody - clearance * antibody;
   var na = antigen + dt * da;

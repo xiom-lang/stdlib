@@ -42,7 +42,9 @@ fn _rt_os_name() -> Str
 
 /// platform_name returns the OS name ("windows", "linux", "macos", ...).
 /// Complexity: O(1). Pure.
-pub fn platform_name() -> Str {
+pub fn platform_name() -> Str
+  ensures: result.len() > 0
+{
   return _rt_os_name();
 }
 
@@ -99,7 +101,9 @@ pub fn platform_is_unix() -> Bool
 /// via the env.TEMP-free C getenv-free approach: reads the COMPUTERNAME
 /// variable (Windows) or HOSTNAME (Unix) as a best effort. Complexity:
 /// O(1).
-pub fn platform_hostname() -> Result[Str, Str] {
+pub fn platform_hostname() -> Result[Str, Str]
+  ensures: result is Ok => result.value.len() > 0
+{
   let rt = _rt_hostname();
   if rt.len() > 0 {
     return Ok(rt);

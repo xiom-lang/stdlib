@@ -58,7 +58,9 @@ pub fn derivative_3rd(f: fn(Float64) -> Float64, x: Float64, h: Float64) -> Floa
 
 /// Default high-accuracy definite integral of f over [a, b]. Delegates to
 /// xiom.math.integral.definite_integral. Complexity: depends on the integrand.
-pub fn integrate(f: fn(Float64) -> Float64, a: Float64, b: Float64) -> Float64 {
+pub fn integrate(f: fn(Float64) -> Float64, a: Float64, b: Float64) -> Float64
+  ensures: (a != b) || (result == 0.0)
+{
   return math.integral.definite_integral(f, a, b);
 }
 
@@ -95,7 +97,9 @@ pub fn integrate_romberg(f: fn(Float64) -> Float64, a: Float64, b: Float64, tol:
 /// Complexity: O(n).
 /// Re-verified on v0.61.3 (2026-09-24): the cross-module delegation works;
 /// the old BUG-20 crash claim was stale.
-pub fn integrate_gauss(f: fn(Float64) -> Float64, a: Float64, b: Float64, n: Int) -> Float64 {
+pub fn integrate_gauss(f: fn(Float64) -> Float64, a: Float64, b: Float64, n: Int) -> Float64
+  ensures: (a != b) || (result != result) || (result == 0.0)
+{
   return integral.integrate_gauss_legendre(f, a, b, n);
 }
 

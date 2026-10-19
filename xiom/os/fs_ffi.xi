@@ -129,7 +129,9 @@ pub fn mmap(path: Str, offset: Int, length: Int) -> Result[MappedFile, Str]
 /// Unmap a mapped region and close the fd held by the struct.
 /// Real implementation (wave 120): munmap/UnmapViewOfFile + close; both
 /// steps are best-effort because the signature returns no Result.
-pub fn munmap(m: MappedFile) {
+pub fn munmap(m: MappedFile)
+  requires: m.ptr >= 0 && m.length >= 0
+{
   let _ = mmap_ffi.mmap_unmap(m.ptr, m.length);
   let _ = sync_io.close_fd(m.fd);
 }
