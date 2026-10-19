@@ -162,7 +162,9 @@ pub fn perror(msg: Str) -> Unit {
 /// Return the message for the current errno value.
 /// Returns: strerror(errno()).
 /// Complexity: O(1). Pure.
-pub fn errno_message() -> Str {
+pub fn errno_message() -> Str
+  ensures: result.len() > 0
+{
   strerror(errno())
 }
 

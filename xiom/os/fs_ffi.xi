@@ -79,7 +79,10 @@ pub fn chown(path: Str, uid: Int, gid: Int) -> Result[Unit, Str] {
 /// Parameters: path -- the file path; mode -- the permission bits.
 /// Returns: Ok(()) on success, Err with the underlying message otherwise.
 /// Complexity: O(1). Pure (OS call).
-pub fn chmod_path(path: Str, mode: Int) -> Result[Unit, Str] {
+pub fn chmod_path(path: Str, mode: Int) -> Result[Unit, Str]
+  requires: path.len() > 0
+  requires: mode >= 0
+{
   let r = io.set_permissions(path, mode);
   match r {
     Ok(()) => Ok(());
@@ -367,7 +370,9 @@ extern "C" {
 /// Real implementation (wave 115): fsync(2) on POSIX, the CRT _commit on
 /// Windows, through the xiom_fsync_fd runtime shim.
 /// Returns: Ok(()) once the fd is durable; Err on failure.
-pub fn fsync(fd: Int) -> Result[Unit, Str] {
+pub fn fsync(fd: Int) -> Result[Unit, Str]
+  requires: fd >= 0
+{
   let rc: Int32;
   unsafe {
     rc = xiom_fsync_fd(fd);
@@ -381,7 +386,9 @@ pub fn fsync(fd: Int) -> Result[Unit, Str] {
 /// Flush file data only (fdatasync; fsync fallback on macOS, _commit on
 /// Windows).
 /// Returns: Ok(()) once the fd data is durable; Err on failure.
-pub fn fdatasync(fd: Int) -> Result[Unit, Str] {
+pub fn fdatasync(fd: Int) -> Result[Unit, Str]
+  requires: fd >= 0
+{
   let rc: Int32;
   unsafe {
     rc = xiom_fdatasync_fd(fd);

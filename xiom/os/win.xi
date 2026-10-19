@@ -52,7 +52,9 @@ pub fn win_registry_delete(hive: Int, path: Str, name: Str) -> Result[Unit, Str]
 /// Parameters: name -- the variable name.
 /// Returns: Some(value) when set, None otherwise.
 /// Complexity: O(1). Pure (OS call).
-pub fn win_environment_var(name: Str) -> Option[Str] {
+pub fn win_environment_var(name: Str) -> Option[Str]
+  requires: name.len() > 0
+{
   let v = env.var_opt(name);
   v
 }
@@ -104,7 +106,9 @@ pub fn win_shell_execute(verb: Str, file: Str, args: Str) -> Result[Int, Str] {
 /// Returns the compile-time target OS name (the runtime does not expose
 /// GetVersionEx in the pure stdlib).
 /// Complexity: O(1).
-pub fn win_version() -> Str {
+pub fn win_version() -> Str
+  ensures: result.len() > 0
+{
   env.OS
 }
 
@@ -117,7 +121,9 @@ pub fn win_is_admin() -> Bool {
 /// The current Windows user name.
 /// Reads the USERNAME environment variable, or "" when unset.
 /// Complexity: O(1). Pure (OS call).
-pub fn win_username() -> Str {
+pub fn win_username() -> Str
+  ensures: result.len() > 0 => env.var_opt("USERNAME").is_some
+{
   let v = env.var_opt("USERNAME");
   match v {
     Some(u) => u;
