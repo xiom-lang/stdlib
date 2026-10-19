@@ -49,7 +49,10 @@ pub fn cos(x: Float64) -> Float64
 }
 
 /// Tangent of x (radians); a pole (cos(x) == 0) yields +-infinity. Complexity: O(1).
-pub fn tan(x: Float64) -> Float64 {
+pub fn tan(x: Float64) -> Float64
+  ensures: (x != 0.0) || (result == 0.0)
+  ensures: ((x == x) && (x != 1.0 / 0.0) && (x != -1.0 / 0.0)) || (result != result)
+{
   return math.tan(x);
 }
 
@@ -72,7 +75,10 @@ pub fn sec(x: Float64) -> Float64
 }
 
 /// Cotangent of x: cos(x)/sin(x); a zero sine yields +inf (documented). Complexity: O(1).
-pub fn cot(x: Float64) -> Float64 {
+pub fn cot(x: Float64) -> Float64
+  ensures: (x != 0.0) || (result == 1.0 / 0.0)
+  ensures: ((x == x) && (x != 1.0 / 0.0) && (x != -1.0 / 0.0)) || (result != result)
+{
   var c = math.cos(x);
   var s = math.sin(x);
   if s == 0.0 { return 1.0 / 0.0; }
@@ -80,14 +86,18 @@ pub fn cot(x: Float64) -> Float64 {
 }
 
 /// Pair (sin(x), cos(x)) computed once. Complexity: O(1).
-pub fn sincos(x: Float64) -> (Float64, Float64) {
+pub fn sincos(x: Float64) -> (Float64, Float64)
+  ensures: (((result.0 >= -1.0) && (result.0 <= 1.0)) || (result.0 != result.0)) && (((result.1 >= -1.0) && (result.1 <= 1.0)) || (result.1 != result.1))
+{
   var s = math.sin(x);
   var c = math.cos(x);
   return (s, c);
 }
 
 /// Pair (sin(pi*x), cos(pi*x)). Complexity: O(1).
-pub fn sincospi(x: Float64) -> (Float64, Float64) {
+pub fn sincospi(x: Float64) -> (Float64, Float64)
+  ensures: (((result.0 >= -1.0) && (result.0 <= 1.0)) || (result.0 != result.0)) && (((result.1 >= -1.0) && (result.1 <= 1.0)) || (result.1 != result.1))
+{
   var px = _PI * x;
   var s = math.sin(px);
   var c = math.cos(px);
@@ -95,7 +105,10 @@ pub fn sincospi(x: Float64) -> (Float64, Float64) {
 }
 
 /// Sine via the normalized Taylor series (no libm), 10 terms. Complexity: O(10).
-pub fn sin_pure(x: Float64) -> Float64 {
+pub fn sin_pure(x: Float64) -> Float64
+  ensures: (x != 0.0) || (result == 0.0)
+  ensures: ((x == x) && (x != 1.0 / 0.0) && (x != -1.0 / 0.0)) || (result != result)
+{
   var a = _norm(x);
   var result = a;
   var term = a;
@@ -110,7 +123,10 @@ pub fn sin_pure(x: Float64) -> Float64 {
 }
 
 /// Cosine via the normalized Taylor series (no libm), 10 terms. Complexity: O(10).
-pub fn cos_pure(x: Float64) -> Float64 {
+pub fn cos_pure(x: Float64) -> Float64
+  ensures: (x != 0.0) || (result == 1.0)
+  ensures: ((x == x) && (x != 1.0 / 0.0) && (x != -1.0 / 0.0)) || (result != result)
+{
   var a = _norm(x);
   var result = 1.0;
   var term = 1.0;
@@ -125,7 +141,10 @@ pub fn cos_pure(x: Float64) -> Float64 {
 }
 
 /// Tangent via pure sin/cos. Complexity: O(10).
-pub fn tan_pure(x: Float64) -> Float64 {
+pub fn tan_pure(x: Float64) -> Float64
+  ensures: (x != 0.0) || (result == 0.0)
+  ensures: ((x == x) && (x != 1.0 / 0.0) && (x != -1.0 / 0.0)) || (result != result)
+{
   var s = sin_pure(x);
   var c = cos_pure(x);
   if c == 0.0 { return 1.0 / 0.0; }
@@ -173,7 +192,10 @@ pub fn cospi(x: Float64) -> Float64
 /// is evaluated on the reduced angle. NaN and infinite inputs return NaN
 /// (the reduction cannot terminate on infinities); a pole yields +-infinity.
 /// Complexity: O(|x|).
-pub fn tanpi(x: Float64) -> Float64 {
+pub fn tanpi(x: Float64) -> Float64
+  ensures: (x != 0.0) || (result == 0.0)
+  ensures: ((x == x) && (x != 1.0 / 0.0) && (x != -1.0 / 0.0)) || (result != result)
+{
   if x != x { return x; }
   if (x == 1.0 / 0.0) || (x == -1.0 / 0.0) { return 0.0 / 0.0; }
   var r = x;
