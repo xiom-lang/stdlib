@@ -19,7 +19,11 @@ pub type BitArray = {
 
 /// BitArray of length n (n < 0 is clamped to 0), all bits cleared.
 /// Complexity: O(n/8).
-pub fn bit_array_new(n: Int) -> BitArray {
+pub fn bit_array_new(n: Int) -> BitArray
+  ensures: (n < 0) => (result.len == 0)
+  ensures: (n >= 0) => (result.len == n)
+  ensures: result.bits.len() == (result.len + 7) / 8
+{
   var len = n;
   if len < 0 {
     len = 0;
@@ -62,7 +66,9 @@ pub fn bit_array_clear(ba: &mut BitArray, i: Int) {
 
 /// True iff bit i is set. Out-of-range indices yield false.
 /// Complexity: O(1).
-pub fn bit_array_test(ba: BitArray, i: Int) -> Bool {
+pub fn bit_array_test(ba: BitArray, i: Int) -> Bool
+  ensures: (i >= 0 && i < ba.len) || (result == false)
+{
   if i < 0 || i >= ba.len {
     return false;
   };
@@ -120,19 +126,31 @@ pub fn bit_array_len(ba: BitArray) -> Int
 
 /// Bitwise AND of two bit arrays; the result has max(a.len, b.len) bits and
 /// missing bits read as 0. Complexity: O(max/8).
-pub fn bit_array_and(a: BitArray, b: BitArray) -> BitArray {
+pub fn bit_array_and(a: BitArray, b: BitArray) -> BitArray
+  ensures: (a.len >= b.len) => (result.len == a.len)
+  ensures: (b.len > a.len) => (result.len == b.len)
+  ensures: result.bits.len() == (result.len + 7) / 8
+{
   _bop(a, b, 0)
 }
 
 /// Bitwise OR of two bit arrays; the result has max(a.len, b.len) bits.
 /// Complexity: O(max/8).
-pub fn bit_array_or(a: BitArray, b: BitArray) -> BitArray {
+pub fn bit_array_or(a: BitArray, b: BitArray) -> BitArray
+  ensures: (a.len >= b.len) => (result.len == a.len)
+  ensures: (b.len > a.len) => (result.len == b.len)
+  ensures: result.bits.len() == (result.len + 7) / 8
+{
   _bop(a, b, 1)
 }
 
 /// Bitwise XOR of two bit arrays; the result has max(a.len, b.len) bits and
 /// missing bits read as 0. Complexity: O(max/8).
-pub fn bit_array_xor(a: BitArray, b: BitArray) -> BitArray {
+pub fn bit_array_xor(a: BitArray, b: BitArray) -> BitArray
+  ensures: (a.len >= b.len) => (result.len == a.len)
+  ensures: (b.len > a.len) => (result.len == b.len)
+  ensures: result.bits.len() == (result.len + 7) / 8
+{
   _bop(a, b, 2)
 }
 
@@ -174,7 +192,10 @@ fn _bop(a: BitArray, b: BitArray, op: Int) -> BitArray {
 
 /// Bitwise complement over ba.len bits; trailing bits beyond len in the last
 /// byte are cleared. Complexity: O(n/8).
-pub fn bit_array_not(ba: BitArray) -> BitArray {
+pub fn bit_array_not(ba: BitArray) -> BitArray
+  ensures: result.len == ba.len
+  ensures: result.bits.len() == ba.bits.len()
+{
   var num_bytes = ba.bits.len();
   var result_bytes = Vec[UInt8].new();
   var i: Int = 0;
@@ -198,7 +219,9 @@ pub fn bit_array_not(ba: BitArray) -> BitArray {
 
 /// Packed byte representation, MSB-first within each byte (bit i of the array
 /// is bit 7-(i%8) of byte i/8). Complexity: O(n/8).
-pub fn bit_array_to_bytes(ba: BitArray) -> Vec[UInt8] {
+pub fn bit_array_to_bytes(ba: BitArray) -> Vec[UInt8]
+  ensures: result.len() == ba.bits.len()
+{
   var result = Vec[UInt8].new();
   var i: Int = 0;
   while i < ba.bits.len() {

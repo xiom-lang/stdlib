@@ -204,7 +204,9 @@ pub fn pow(base: Float64, exp: Float64) -> Float64
 }
 
 /// Absolute value of an Int, returned as Int.
-pub fn abs_int(x: Int) -> Int {
+pub fn abs_int(x: Int) -> Int
+  ensures: (x == INT_MIN) || (result >= 0)
+{
   if x >= 0 { return x; }
   return -x;
 }
@@ -217,25 +219,35 @@ pub fn abs_float(x: Float64) -> Float64
 }
 
 /// Smaller of two Ints.
-pub fn min_int(a: Int, b: Int) -> Int {
+pub fn min_int(a: Int, b: Int) -> Int
+  ensures: result <= a && result <= b
+  ensures: result == a || result == b
+{
   if a < b { return a; }
   return b;
 }
 
 /// Larger of two Ints.
-pub fn max_int(a: Int, b: Int) -> Int {
+pub fn max_int(a: Int, b: Int) -> Int
+  ensures: result >= a && result >= b
+  ensures: result == a || result == b
+{
   if a > b { return a; }
   return b;
 }
 
 /// Smaller of two Float64s.
-pub fn min_float(a: Float64, b: Float64) -> Float64 {
+pub fn min_float(a: Float64, b: Float64) -> Float64
+  ensures: (a != a) || (b != b) || ((result == a || result == b) && result <= a && result <= b)
+{
   if a < b { return a; }
   return b;
 }
 
 /// Larger of two Float64s.
-pub fn max_float(a: Float64, b: Float64) -> Float64 {
+pub fn max_float(a: Float64, b: Float64) -> Float64
+  ensures: (a != a) || (b != b) || ((result == a || result == b) && result >= a && result >= b)
+{
   if a > b { return a; }
   return b;
 }
@@ -442,7 +454,10 @@ pub fn bit_not(a: Int) -> Int {
 
 /// Logical shift left by `n` bits; `n <= 0` returns `a` unchanged, `n >= 64`
 /// returns 0.
-pub fn shl(a: Int, n: Int) -> Int {
+pub fn shl(a: Int, n: Int) -> Int
+  ensures: (n < 64) || (result == 0)
+  ensures: (n > 0) || (result == a)
+{
   if n <= 0 { return a; }
   if n >= 64 { return 0; }
   if n == 63 {
@@ -454,7 +469,10 @@ pub fn shl(a: Int, n: Int) -> Int {
 
 /// Arithmetic shift right by `n` bits; `n <= 0` returns `a` unchanged, and
 /// negative values shift in sign bits.
-pub fn shr(a: Int, n: Int) -> Int {
+pub fn shr(a: Int, n: Int) -> Int
+  ensures: (n < 64) || ((a < 0 && result == -1) || (a >= 0 && result == 0))
+  ensures: (n > 0) || (result == a)
+{
   if n <= 0 { return a; }
   if n >= 64 {
     if a < 0 { return -1; }
@@ -507,21 +525,31 @@ pub fn random_range(min: Int, max: Int) -> Int
 }
 
 /// Alias of `random`; the next Float64 in [0, 1).
-pub fn random_float() -> Float64 {
+pub fn random_float() -> Float64
+  ensures: result >= 0.0
+  ensures: result < 1.0
+{
   return random();
 }
 
 // === Misc ===
 
 /// Clamp `x` into [lo, hi]; assumes `lo <= hi`.
-pub fn clamp(x: Float64, lo: Float64, hi: Float64) -> Float64 {
+pub fn clamp(x: Float64, lo: Float64, hi: Float64) -> Float64
+  requires: lo <= hi
+  ensures: (x != x) || (result >= lo && result <= hi)
+  ensures: (x != x) || (result == x || result == lo || result == hi)
+{
   if x < lo { return lo; }
   if x > hi { return hi; }
   return x;
 }
 
 /// Linear interpolation: `a + (b - a) * t` (no clamping of `t`).
-pub fn lerp(a: Float64, b: Float64, t: Float64) -> Float64 {
+pub fn lerp(a: Float64, b: Float64, t: Float64) -> Float64
+  ensures: (t != 0.0) || (result == a) || (result != result)
+  ensures: (t != 1.0) || (result == b) || (result != result)
+{
   return a + (b - a) * t;
 }
 
@@ -567,13 +595,19 @@ pub fn pow_pure(base: Float64, exp: Float64) -> Float64
 }
 
 /// Pure-XIOM absolute value of a Float64.
-pub fn abs_float_pure(x: Float64) -> Float64 {
+pub fn abs_float_pure(x: Float64) -> Float64
+  ensures: (x != x) || (result >= 0.0)
+{
   if x >= 0.0 { return x; }
   return -x;
 }
 
 /// Pure-XIOM floor (truncation adjusted for negatives).
-pub fn floor_pure(x: Float64) -> Float64 {
+pub fn floor_pure(x: Float64) -> Float64
+  requires: x >= -9.0e18
+  requires: x <= 9.0e18
+  ensures: result <= x && result > x - 1.0
+{
   var i = to_int(x);
   if x >= 0.0 { return to_float(i); }
   if to_float(i) == x { return to_float(i); }
@@ -581,7 +615,11 @@ pub fn floor_pure(x: Float64) -> Float64 {
 }
 
 /// Pure-XIOM ceil (truncation adjusted for positives).
-pub fn ceil_pure(x: Float64) -> Float64 {
+pub fn ceil_pure(x: Float64) -> Float64
+  requires: x >= -9.0e18
+  requires: x <= 9.0e18
+  ensures: result >= x && result < x + 1.0
+{
   var i = to_int(x);
   if x <= 0.0 { return to_float(i); }
   if to_float(i) == x { return to_float(i); }
@@ -589,17 +627,23 @@ pub fn ceil_pure(x: Float64) -> Float64 {
 }
 
 /// Pure-XIOM sine via angle reduction + 10-term Taylor series.
-pub fn sin_pure(x: Float64) -> Float64 {
+pub fn sin_pure(x: Float64) -> Float64
+  ensures: (x != 0.0) || (result == 0.0)
+{
   return _sin_taylor(_normalize_angle(x));
 }
 
 /// Pure-XIOM cosine via angle reduction + 10-term Taylor series.
-pub fn cos_pure(x: Float64) -> Float64 {
+pub fn cos_pure(x: Float64) -> Float64
+  ensures: (x != 0.0) || (result == 1.0)
+{
   return _cos_taylor(_normalize_angle(x));
 }
 
 /// Pure-XIOM tangent as `sin_pure / cos_pure`.
-pub fn tan_pure(x: Float64) -> Float64 {
+pub fn tan_pure(x: Float64) -> Float64
+  ensures: (x != 0.0) || (result == 0.0)
+{
   return sin_pure(x) / cos_pure(x);
 }
 
@@ -622,7 +666,9 @@ pub fn acos_pure(x: Float64) -> Float64
 }
 
 /// Pure-XIOM arc tangent via series with reciprocal reduction.
-pub fn atan_pure(x: Float64) -> Float64 {
+pub fn atan_pure(x: Float64) -> Float64
+  ensures: (x != x) || (result >= -PI / 2.0 && result <= PI / 2.0)
+{
   if x > 1.0 { return PI / 2.0 - _atan_small(1.0 / x); }
   if x < -1.0 { return -PI / 2.0 - _atan_small(1.0 / x); }
   return _atan_small(x);
@@ -644,7 +690,9 @@ pub fn atan2_pure(y: Float64, x: Float64) -> Float64
 }
 
 /// Pure-XIOM `e ^ x` via range reduction + 25-term series (overflow guard).
-pub fn exp_pure(x: Float64) -> Float64 {
+pub fn exp_pure(x: Float64) -> Float64
+  ensures: (x != x) || (result >= 0.0)
+{
   return exp_inner(x);
 }
 

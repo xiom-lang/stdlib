@@ -25,7 +25,10 @@ use xiom.core.to_int;
 /// error sample, which the frozen signature does not carry, so the output is
 /// the proportional + integral action kp*e + ki*I_new. Returns (output,
 /// integral_new) with integral_new = integral + error*dt. Complexity: O(1).
-pub fn pid_controller(kp: Float64, ki: Float64, kd: Float64, error: Float64, dt: Float64, integral: Float64) -> (Float64, Float64) {
+pub fn pid_controller(kp: Float64, ki: Float64, kd: Float64, error: Float64, dt: Float64, integral: Float64) -> (Float64, Float64)
+  ensures: result.1 == integral + error * dt
+  ensures: (dt != 0.0) || (result.1 == integral)
+{
   var i_new = integral + error * dt;
   var out = kp * error + ki * i_new;
   return (out, i_new);
@@ -33,7 +36,10 @@ pub fn pid_controller(kp: Float64, ki: Float64, kd: Float64, error: Float64, dt:
 
 /// Rational transfer function evaluated at s: num(s) / den(s) by Horner's
 /// scheme. NaN when the denominator vanishes. Complexity: O(degree).
-pub fn transfer_function(num: &Vec[Float64], den: &Vec[Float64], s: Float64) -> Float64 {
+pub fn transfer_function(num: &Vec[Float64], den: &Vec[Float64], s: Float64) -> Float64
+  requires: num.len() > 0
+  requires: den.len() > 0
+{
   if num.len() == 0 || den.len() == 0 { return 0.0 / 0.0; }
   var n = num[0];
   var i = 1;
@@ -301,7 +307,10 @@ type _RRow = {
 /// highest power first). Returns false for an empty or non-positive leading
 /// coefficient. Routh table rows hold at most 4 entries (degree <= 8).
 /// Complexity: O(n^2).
-pub fn stability_routh_hurwitz(den: &Vec[Float64]) -> Bool {
+pub fn stability_routh_hurwitz(den: &Vec[Float64]) -> Bool
+  requires: den.len() > 0
+  ensures: (den[0] > 0.0) || (den[0] != den[0]) || (result == false)
+{
   var n = den.len();
   if n == 0 { return false; }
   if den[0] <= 0.0 { return false; }
