@@ -27,9 +27,10 @@ use xiom.core.size_of;  // bare intrinsic binding (strict catalog gate)
 //   copyable Int-addressed handle. Every handle operation assumes the CALLER
 //   holds the same external `xiom.sync.mutex.SyncMutex`; there is no internal
 //   lock. Threads using copies of one handle must agree on that lock.
-// - `channel_handle_free` drains and deallocates the cell. Call it exactly
-//   once, after every thread that can touch the handle has been joined, and
-//   never concurrently with another operation. Copies are dangling after it.
+// - `channel_handle_free` drains the queue, releases the Vec backing buffer,
+//   and deallocates the cell. Call it exactly once, after every thread that
+//   can touch the handle has been joined, and never concurrently with another
+//   operation. Copies are dangling after it.
 // ============================================================================
 
 extern "C" {
@@ -371,7 +372,7 @@ pub fn channel_handle_capacity[T](h: ChannelHandle[T]) -> Int
   return c.cap;
 }
 
-/// Drain the channel and deallocate its cell.
+/// Drain the channel, release the Vec backing buffer, and deallocate its cell.
 /// Params: h - the handle.
 /// Thread safety: caller must hold the external lock for `h`; call exactly
 ///               once, after every thread using the handle has been joined,
@@ -386,5 +387,6 @@ pub fn channel_handle_free[T](h: ChannelHandle[T])
   while c.items.len() > 0 {
     c.items.pop();
   }
+  c.items.shrink_to_fit();
   unsafe { alloc.dealloc(cell as *UInt8, size_of[Channel[T]]()); }
 }
