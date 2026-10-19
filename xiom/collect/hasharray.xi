@@ -85,7 +85,10 @@ fn _add_leaf(h: &mut Hamt, key: Int, value: Int) -> Int {
 /// Create a new empty HAMT map (a single empty root table node).
 /// Returns: a fresh Hamt with 0 entries.
 /// Complexity: O(1).
-pub fn hamt_new() -> Hamt {
+pub fn hamt_new() -> Hamt
+  ensures: result.size == 0
+  ensures: result.root >= 0
+{
   var h = Hamt{ root: -1; size: 0; keys: Vec[Int].new(); values: Vec[Int].new(); hashes: Vec[Int].new(); is_leaf: Vec[Bool].new(); kids: Vec[Int].new(); };
   var root = _add_table(&mut h);
   h.root = root;
@@ -118,7 +121,9 @@ fn _find_leaf(h: &Hamt, key: Int) -> Int {
 /// Params: h - the map; key - Int key; value - Int value.
 /// Re-inserting an existing key updates its value in place.
 /// Complexity: O(log_32 n) expected.
-pub fn hamt_insert(h: &mut Hamt, key: Int, value: Int) {
+pub fn hamt_insert(h: &mut Hamt, key: Int, value: Int)
+  ensures: hamt_contains(h, key)
+{
   var existing = _find_leaf(h, key);
   if existing != -1 {
     h.values[existing] = value;
@@ -168,7 +173,9 @@ pub fn hamt_insert(h: &mut Hamt, key: Int, value: Int) {
 /// Params: h - the map; key - Int key.
 /// Returns: Some(value) if present, None otherwise.
 /// Complexity: O(log_32 n) expected.
-pub fn hamt_get(h: &Hamt, key: Int) -> Option[Int] {
+pub fn hamt_get(h: &Hamt, key: Int) -> Option[Int]
+  ensures: result.is_some == hamt_contains(h, key)
+{
   var leaf = _find_leaf(h, key);
   if leaf == -1 {
     return Option[Int]{ is_some: false; value: 0; };
@@ -180,7 +187,9 @@ pub fn hamt_get(h: &Hamt, key: Int) -> Option[Int] {
 /// Params: h - the map; key - Int key.
 /// Returns: true if `key` maps to a value.
 /// Complexity: O(log_32 n) expected.
-pub fn hamt_contains(h: &Hamt, key: Int) -> Bool {
+pub fn hamt_contains(h: &Hamt, key: Int) -> Bool
+  ensures: result == true => hamt_size(h) >= 1
+{
   return _find_leaf(h, key) != -1;
 }
 
@@ -188,7 +197,9 @@ pub fn hamt_contains(h: &Hamt, key: Int) -> Bool {
 /// Params: h - the map; key - Int key.
 /// Absent keys are a no-op. Arena memory is retained.
 /// Complexity: O(log_32 n) expected.
-pub fn hamt_remove(h: &mut Hamt, key: Int) {
+pub fn hamt_remove(h: &mut Hamt, key: Int)
+  ensures: hamt_contains(h, key) == false
+{
   var hval = _hash(key);
   var node = h.root;
   var parent = -1;

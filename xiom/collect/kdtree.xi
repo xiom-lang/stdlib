@@ -30,14 +30,19 @@ pub type KdTree = {
 
 /// Create a new empty k-d tree.
 /// O(1).
-pub fn kdtree_new() -> KdTree {
+pub fn kdtree_new() -> KdTree
+  ensures: result.size == 0
+  ensures: result.root == -1
+{
   return KdTree{ root: -1; size: 0; xs: Vec[Int].new(); ys: Vec[Int].new(); vals: Vec[Int].new(); left: Vec[Int].new(); right: Vec[Int].new(); };
 }
 
 /// Insert a point (x, y) with its value. Duplicate points are allowed and each
 /// insertion creates a new node.
 /// O(h) expected, O(n) worst case.
-pub fn kdtree_insert(t: &mut KdTree, x: Int, y: Int, value: Int) {
+pub fn kdtree_insert(t: &mut KdTree, x: Int, y: Int, value: Int)
+  ensures: kdtree_size(t) >= 1
+{
   var id = t.xs.len();
   t.xs.push(x);
   t.ys.push(y);
@@ -142,7 +147,10 @@ fn _nn_search(t: &KdTree, node: Int, x: Int, y: Int, depth: Int, best: &mut Neig
 /// Value of the point nearest to (x, y), or None if the tree is empty.
 /// Ties are broken toward the point visited first. O(n) worst case,
 /// O(log n) expected.
-pub fn kdtree_nearest(t: &KdTree, x: Int, y: Int) -> Option[Int] {
+pub fn kdtree_nearest(t: &KdTree, x: Int, y: Int) -> Option[Int]
+  ensures: result is None => t.root == -1
+  ensures: result is Some => kdtree_size(t) >= 1
+{
   if t.root == -1 {
     return Option[Int]{ is_some: false; value: 0; };
   }
@@ -180,7 +188,9 @@ fn _range_search(t: &KdTree, node: Int, x1: Int, y1: Int, x2: Int, y2: Int, dept
 
 /// Values of all points inside the rectangle [x1, x2] x [y1, y2] (inclusive).
 /// Empty regions yield an empty Vec. O(n) worst case.
-pub fn kdtree_range(t: &KdTree, x1: Int, y1: Int, x2: Int, y2: Int) -> Vec[Int] {
+pub fn kdtree_range(t: &KdTree, x1: Int, y1: Int, x2: Int, y2: Int) -> Vec[Int]
+  ensures: result.len() <= kdtree_size(t)
+{
   var out = Vec[Int].new();
   if t.root == -1 {
     return out;

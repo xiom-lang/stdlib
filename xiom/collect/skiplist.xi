@@ -98,7 +98,10 @@ fn _add_node(l: &mut SkipList, key: Int) -> Int {
 }
 
 /// Create an empty skip list (header node with key INT_MIN).
-pub fn skiplist_new() -> SkipList {
+pub fn skiplist_new() -> SkipList
+  ensures: result.size == 0
+  ensures: result.head >= 0
+{
   var keys = Vec[Int].new();
   var nexts = Vec[Int].new();
   keys.push(-9223372036854775807);
@@ -111,7 +114,9 @@ pub fn skiplist_new() -> SkipList {
 }
 
 /// Insert `key`. Returns false if the key already exists.
-pub fn skiplist_insert(l: &mut SkipList, key: Int) -> Bool {
+pub fn skiplist_insert(l: &mut SkipList, key: Int) -> Bool
+  ensures: skiplist_contains(l, key)
+{
   var found = _search(l, key);
   if found.node != -1 && _key_at(l, found.node) == key {
     return false;
@@ -134,7 +139,9 @@ pub fn skiplist_insert(l: &mut SkipList, key: Int) -> Bool {
 }
 
 /// True if `key` is present.
-pub fn skiplist_contains(l: &SkipList, key: Int) -> Bool {
+pub fn skiplist_contains(l: &SkipList, key: Int) -> Bool
+  ensures: result == true => skiplist_size(l) >= 1
+{
   var found = _search(l, key);
   if found.node == -1 {
     return false;
@@ -143,7 +150,9 @@ pub fn skiplist_contains(l: &SkipList, key: Int) -> Bool {
 }
 
 /// Remove `key`. Returns true if it was present.
-pub fn skiplist_remove(l: &mut SkipList, key: Int) -> Bool {
+pub fn skiplist_remove(l: &mut SkipList, key: Int) -> Bool
+  ensures: result == true => skiplist_contains(l, key) == false
+{
   var found = _search(l, key);
   if found.node == -1 || _key_at(l, found.node) != key {
     return false;
@@ -169,7 +178,10 @@ pub fn skiplist_size(l: &SkipList) -> Int
 }
 
 /// Smallest key (None if empty).
-pub fn skiplist_min(l: &SkipList) -> Option[Int] {
+pub fn skiplist_min(l: &SkipList) -> Option[Int]
+  ensures: result is None => skiplist_size(l) == 0
+  ensures: result is Some => skiplist_size(l) >= 1
+{
   if l.size == 0 {
     return Option[Int]{ is_some: false; value: 0; };
   }
@@ -178,7 +190,10 @@ pub fn skiplist_min(l: &SkipList) -> Option[Int] {
 }
 
 /// Largest key (None if empty).
-pub fn skiplist_max(l: &SkipList) -> Option[Int] {
+pub fn skiplist_max(l: &SkipList) -> Option[Int]
+  ensures: result is None => skiplist_size(l) == 0
+  ensures: result is Some => skiplist_size(l) >= 1
+{
   if l.size == 0 {
     return Option[Int]{ is_some: false; value: 0; };
   }

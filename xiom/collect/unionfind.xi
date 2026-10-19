@@ -26,7 +26,10 @@ pub type UnionFind = {
 /// Create a disjoint-set with `n` isolated elements (ids 0..n-1), each in its
 /// own set of size 1. A negative `n` yields an empty structure.
 /// O(n).
-pub fn uf_new(n: Int) -> UnionFind {
+pub fn uf_new(n: Int) -> UnionFind
+  ensures: result.count == n
+  ensures: n >= 0 => result.parent.len() == n
+{
   var parent = Vec[Int].new();
   var comp_size = Vec[Int].new();
   var i = 0;
@@ -74,7 +77,9 @@ pub fn uf_find(uf: &mut UnionFind, x: Int) -> Int
 /// Merge the sets containing `x` and `y` (union by size). Out-of-range ids are
 /// ignored. The size of the merged set is tracked at the new root.
 /// O(alpha n) amortized.
-pub fn uf_union(uf: &mut UnionFind, x: Int, y: Int) {
+pub fn uf_union(uf: &mut UnionFind, x: Int, y: Int)
+  ensures: (x >= 0 && x < uf.parent.len() && y >= 0 && y < uf.parent.len()) => uf_connected(uf, x, y)
+{
   if x < 0 || x >= uf.parent.len() || y < 0 || y >= uf.parent.len() {
     return;
   }
@@ -96,7 +101,9 @@ pub fn uf_union(uf: &mut UnionFind, x: Int, y: Int) {
 /// Check whether `x` and `y` share a representative. Returns false for
 /// out-of-range ids.
 /// O(alpha n) amortized (read-only traversal).
-pub fn uf_connected(uf: &UnionFind, x: Int, y: Int) -> Bool {
+pub fn uf_connected(uf: &UnionFind, x: Int, y: Int) -> Bool
+  ensures: result == true => uf_component_size(uf, x) >= 1
+{
   if x < 0 || x >= uf.parent.len() || y < 0 || y >= uf.parent.len() {
     return false;
   }

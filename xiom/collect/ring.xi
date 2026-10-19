@@ -21,7 +21,11 @@ pub type RingBuffer = {
 }
 
 /// Create a ring with `cap` slots. A capacity below 1 is clamped to 1. O(cap).
-pub fn ring_new(cap: Int) -> RingBuffer {
+pub fn ring_new(cap: Int) -> RingBuffer
+  ensures: result.cap >= 1
+  ensures: result.buf.len() == result.cap
+  ensures: result.head == 0 && result.tail == 0
+{
   var n = cap;
   if n < 1 { n = 1; }
   var buf = Vec[Int].new();
@@ -34,7 +38,10 @@ pub fn ring_new(cap: Int) -> RingBuffer {
 }
 
 /// Try to enqueue `value`; returns false when the ring is full. O(1).
-pub fn ring_push(r: &mut RingBuffer, value: Int) -> Bool {
+pub fn ring_push(r: &mut RingBuffer, value: Int) -> Bool
+  ensures: result == true => r.tail > r.head
+  ensures: result == false => r.tail - r.head >= r.cap
+{
   if r.tail - r.head >= r.cap { return false; }
   r.buf[r.tail % r.cap] = value;
   r.tail = r.tail + 1;
@@ -42,7 +49,10 @@ pub fn ring_push(r: &mut RingBuffer, value: Int) -> Bool {
 }
 
 /// Dequeue a value. None when the ring is empty. O(1).
-pub fn ring_pop(r: &mut RingBuffer) -> Option[Int] {
+pub fn ring_pop(r: &mut RingBuffer) -> Option[Int]
+  ensures: result is None => r.head >= r.tail
+  ensures: result is Some => r.tail >= r.head
+{
   if r.head >= r.tail { return None; }
   var value = r.buf[r.head % r.cap];
   r.head = r.head + 1;

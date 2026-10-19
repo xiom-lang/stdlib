@@ -127,7 +127,10 @@ fn _query_max(t: &SegTree, k: Int, l: Int, r: Int, ql: Int, qr: Int) -> Int {
 
 /// Create a segment tree over `n` zero slots. Out-of-range values clamp to 0.
 /// O(n) time, O(4n) memory.
-pub fn segtree_new(n: Int) -> SegTree {
+pub fn segtree_new(n: Int) -> SegTree
+  ensures: result.n >= 0
+  ensures: result.sums.len() == 4 * result.n + 4
+{
   var nn = n;
   if nn < 0 {
     nn = 0;
@@ -147,7 +150,10 @@ pub fn segtree_new(n: Int) -> SegTree {
 /// Build internal nodes from the given values. The tree is resized to match
 /// the values length (0-length input leaves the tree empty).
 /// O(n).
-pub fn segtree_build(t: &mut SegTree, values: &Vec[Int]) {
+pub fn segtree_build(t: &mut SegTree, values: &Vec[Int])
+  ensures: segtree_size(t) == values.len()
+  ensures: t.sums.len() == 4 * t.n + 4
+{
   var nn = values.len();
   t.n = nn;
   var cap = 4 * nn + 4;
@@ -169,7 +175,9 @@ pub fn segtree_build(t: &mut SegTree, values: &Vec[Int]) {
 
 /// Set slot `idx` to `value`. Out-of-range indices are ignored.
 /// O(log n).
-pub fn segtree_update(t: &mut SegTree, idx: Int, value: Int) {
+pub fn segtree_update(t: &mut SegTree, idx: Int, value: Int)
+  ensures: t.sums.len() == 4 * t.n + 4
+{
   if t.n == 0 {
     return;
   }
@@ -198,7 +206,9 @@ fn _clamp(t: &SegTree, l: Int, r: Int, ql: &mut Int, qr: &mut Int) -> Bool {
 /// Sum over [l, r] inclusive. Out-of-range queries are clamped; an empty
 /// clamped range returns 0 (the sum identity).
 /// O(log n).
-pub fn segtree_query_sum(t: &SegTree, l: Int, r: Int) -> Int {
+pub fn segtree_query_sum(t: &SegTree, l: Int, r: Int) -> Int
+  ensures: (l > r || r < 0 || l >= t.n) => result == 0
+{
   var ql = 0;
   var qr = 0;
   var ok = _clamp(t, l, r, &mut ql, &mut qr);
@@ -211,7 +221,9 @@ pub fn segtree_query_sum(t: &SegTree, l: Int, r: Int) -> Int {
 /// Minimum over [l, r] inclusive. An empty clamped range returns INT_MAX
 /// (the min identity).
 /// O(log n).
-pub fn segtree_query_min(t: &SegTree, l: Int, r: Int) -> Int {
+pub fn segtree_query_min(t: &SegTree, l: Int, r: Int) -> Int
+  ensures: (l > r || r < 0 || l >= t.n) => result == _INT_MAX
+{
   var ql = 0;
   var qr = 0;
   var ok = _clamp(t, l, r, &mut ql, &mut qr);
@@ -224,7 +236,9 @@ pub fn segtree_query_min(t: &SegTree, l: Int, r: Int) -> Int {
 /// Maximum over [l, r] inclusive. An empty clamped range returns INT_MIN
 /// (the max identity).
 /// O(log n).
-pub fn segtree_query_max(t: &SegTree, l: Int, r: Int) -> Int {
+pub fn segtree_query_max(t: &SegTree, l: Int, r: Int) -> Int
+  ensures: (l > r || r < 0 || l >= t.n) => result == _INT_MIN
+{
   var ql = 0;
   var qr = 0;
   var ok = _clamp(t, l, r, &mut ql, &mut qr);

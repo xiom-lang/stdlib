@@ -28,7 +28,10 @@ pub type SpmcQueue = {
 /// Params: capacity - number of buffered slots (clamped to >= 1).
 /// Returns: a queue able to hold up to `capacity` items.
 /// Complexity: O(capacity) to pre-fill the ring.
-pub fn spmc_queue_new(capacity: Int) -> SpmcQueue {
+pub fn spmc_queue_new(capacity: Int) -> SpmcQueue
+  ensures: result.cap >= 1
+  ensures: result.buf.len() == result.cap
+{
   var cap = capacity;
   if cap < 1 { cap = 1; }
   var buf = Vec[Int].new();
@@ -45,7 +48,9 @@ pub fn spmc_queue_new(capacity: Int) -> SpmcQueue {
 /// Params: q - the queue; value - item to enqueue.
 /// Returns: true on success, false when full.
 /// Complexity: O(1).
-pub fn spmc_push(q: &mut SpmcQueue, value: Int) -> Bool {
+pub fn spmc_push(q: &mut SpmcQueue, value: Int) -> Bool
+  ensures: q.buf.len() == q.cap
+{
   var t = q.tail.fetch_add(1);
   var h = q.head.load();
   if t - h >= q.cap {
@@ -60,7 +65,9 @@ pub fn spmc_push(q: &mut SpmcQueue, value: Int) -> Bool {
 /// Params: q - the queue.
 /// Returns: the oldest buffered item, or None when empty.
 /// Complexity: O(1).
-pub fn spmc_pop(q: &mut SpmcQueue) -> Option[Int] {
+pub fn spmc_pop(q: &mut SpmcQueue) -> Option[Int]
+  ensures: q.buf.len() == q.cap
+{
   var h = q.head.fetch_add(1);
   var t = q.tail.load();
   if h >= t {

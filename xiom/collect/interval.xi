@@ -45,14 +45,20 @@ fn _recalc_max(t: &mut IntervalTree, node: Int) {
 
 /// Create an empty interval tree.
 /// O(1).
-pub fn interval_tree_new() -> IntervalTree {
+pub fn interval_tree_new() -> IntervalTree
+  ensures: result.size == 0
+  ensures: result.root == -1
+{
   return IntervalTree{ root: -1; size: 0; starts: Vec[Int].new(); ends: Vec[Int].new(); vals: Vec[Int].new(); left: Vec[Int].new(); right: Vec[Int].new(); max_ends: Vec[Int].new(); alive: Vec[Bool].new(); };
 }
 
 /// Insert the interval [start, end] (inclusive) with its value. Duplicate
 /// intervals are allowed. An interval with start > end is rejected (ignored).
 /// O(h) with h the tree height (O(log n) expected).
-pub fn interval_insert(t: &mut IntervalTree, start: Int, end: Int, value: Int) {
+pub fn interval_insert(t: &mut IntervalTree, start: Int, end: Int, value: Int)
+  ensures: start <= end => interval_contains_point(t, start)
+  ensures: interval_size(t) <= t.starts.len()
+{
   if start > end {
     return;
   }
@@ -117,7 +123,9 @@ fn _stabbing(t: &IntervalTree, node: Int, point: Int, out: &mut Vec[Int]) {
 
 /// Values of the intervals containing `point` (inclusive bounds).
 /// O(log n + k) expected.
-pub fn interval_query(t: &IntervalTree, point: Int) -> Vec[Int] {
+pub fn interval_query(t: &IntervalTree, point: Int) -> Vec[Int]
+  ensures: result.len() <= interval_size(t)
+{
   var out = Vec[Int].new();
   _stabbing(t, t.root, point, &mut out);
   return out;
@@ -144,7 +152,9 @@ fn _overlap(t: &IntervalTree, node: Int, lo: Int, hi: Int, out: &mut Vec[Int]) {
 /// Values of the intervals overlapping [start, end] (inclusive; an interval
 /// [a, b] overlaps when a <= end and b >= start).
 /// O(log n + k) expected.
-pub fn interval_range_query(t: &IntervalTree, start: Int, end: Int) -> Vec[Int] {
+pub fn interval_range_query(t: &IntervalTree, start: Int, end: Int) -> Vec[Int]
+  ensures: result.len() <= interval_size(t)
+{
   var out = Vec[Int].new();
   var lo = start;
   var hi = end;
@@ -160,7 +170,9 @@ pub fn interval_range_query(t: &IntervalTree, start: Int, end: Int) -> Vec[Int] 
 /// Remove the first interval matching [start, end]. Returns true if one was
 /// found. Intervals are removed lazily (skipped by later queries).
 /// O(n) worst case.
-pub fn interval_remove(t: &mut IntervalTree, start: Int, end: Int) -> Bool {
+pub fn interval_remove(t: &mut IntervalTree, start: Int, end: Int) -> Bool
+  ensures: interval_size(t) <= t.starts.len()
+{
   var stack = Vec[Int].new();
   stack.push(t.root);
   while stack.len() > 0 {
@@ -211,7 +223,9 @@ fn _stabbing_hit(t: &IntervalTree, node: Int, point: Int) -> Bool {
 
 /// True if any live interval contains `point`.
 /// O(log n + k) expected.
-pub fn interval_contains_point(t: &IntervalTree, point: Int) -> Bool {
+pub fn interval_contains_point(t: &IntervalTree, point: Int) -> Bool
+  ensures: result == true => interval_size(t) >= 1
+{
   return _stabbing_hit(t, t.root, point);
 }
 
@@ -236,7 +250,9 @@ fn _overlap_hit(t: &IntervalTree, node: Int, lo: Int, hi: Int) -> Bool {
 
 /// True if any live interval overlaps the range [start, end].
 /// O(log n + k) expected.
-pub fn interval_overlaps(t: &IntervalTree, start: Int, end: Int) -> Bool {
+pub fn interval_overlaps(t: &IntervalTree, start: Int, end: Int) -> Bool
+  ensures: result == true => interval_size(t) >= 1
+{
   var lo = start;
   var hi = end;
   if lo > hi {

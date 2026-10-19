@@ -52,12 +52,16 @@ fn ph_sift_down(q: &mut IntMaxHeap, i: Int) {
 }
 
 /// Create a new empty priority queue. O(1).
-pub fn pqueue_new() -> IntMaxHeap {
+pub fn pqueue_new() -> IntMaxHeap
+  ensures: result.data.len() == 0
+{
   return IntMaxHeap{ data: Vec[Int].new(); };
 }
 
 /// Insert `value` into the queue. O(log n).
-pub fn pqueue_push(q: &mut IntMaxHeap, value: Int) {
+pub fn pqueue_push(q: &mut IntMaxHeap, value: Int)
+  ensures: pqueue_len(q) >= 1
+{
   q.data.push(value);
   var last = q.data.len() - 1;
   ph_sift_up(q, last);
@@ -65,7 +69,9 @@ pub fn pqueue_push(q: &mut IntMaxHeap, value: Int) {
 
 /// Remove and return the highest-priority (largest) element. None if empty.
 /// O(log n).
-pub fn pqueue_pop(q: &mut IntMaxHeap) -> Option[Int] {
+pub fn pqueue_pop(q: &mut IntMaxHeap) -> Option[Int]
+  ensures: result is None => pqueue_len(q) == 0
+{
   if q.data.len() == 0 { return None; }
   var top = q.data[0];
   var last = q.data.len() - 1;
@@ -79,7 +85,10 @@ pub fn pqueue_pop(q: &mut IntMaxHeap) -> Option[Int] {
 
 /// Return the highest-priority element without removing it. None if empty.
 /// O(1).
-pub fn pqueue_peek(q: &IntMaxHeap) -> Option[Int] {
+pub fn pqueue_peek(q: &IntMaxHeap) -> Option[Int]
+  ensures: result is None => pqueue_len(q) == 0
+  ensures: result is Some => pqueue_len(q) >= 1
+{
   if q.data.len() == 0 { return None; }
   return Some(q.data[0]);
 }

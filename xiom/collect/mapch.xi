@@ -41,7 +41,10 @@ fn _bucket(m: &HashMap, key: Int) -> Int {
 /// Create a new empty chaining hash map.
 /// Returns: a map with a small initial table and zero entries.
 /// Complexity: O(1).
-pub fn hashmap_new() -> HashMap {
+pub fn hashmap_new() -> HashMap
+  ensures: result.count == 0
+  ensures: result.buckets.len() >= 1
+{
   var buckets = Vec[Int].new();
   var i: Int = 0;
   while i < _MAPCH_INITIAL {
@@ -88,7 +91,9 @@ fn _grow(m: &mut HashMap) {
 /// Insert or update `key` -> `value`.
 /// Params: m - the map; key - Int key; value - Int value.
 /// Complexity: O(1) amortized.
-pub fn hashmap_put(m: &mut HashMap, key: Int, value: Int) {
+pub fn hashmap_put(m: &mut HashMap, key: Int, value: Int)
+  ensures: hashmap_contains(m, key)
+{
   var idx = _find(m, key);
   if idx >= 0 {
     m.values[idx] = value;
@@ -111,7 +116,9 @@ pub fn hashmap_put(m: &mut HashMap, key: Int, value: Int) {
 /// Params: m - the map; key - Int key.
 /// Returns: Some(value) if present, None otherwise.
 /// Complexity: O(1) amortized.
-pub fn hashmap_get(m: &HashMap, key: Int) -> Option[Int] {
+pub fn hashmap_get(m: &HashMap, key: Int) -> Option[Int]
+  ensures: result.is_some == hashmap_contains(m, key)
+{
   var idx = _find(m, key);
   if idx < 0 { return None; }
   return Some(m.values[idx]);
@@ -121,7 +128,9 @@ pub fn hashmap_get(m: &HashMap, key: Int) -> Option[Int] {
 /// Params: m - the map; key - Int key.
 /// Returns: true if `key` maps to a value.
 /// Complexity: O(1) amortized.
-pub fn hashmap_contains(m: &HashMap, key: Int) -> Bool {
+pub fn hashmap_contains(m: &HashMap, key: Int) -> Bool
+  ensures: result == true => hashmap_size(m) >= 1
+{
   return _find(m, key) >= 0;
 }
 
@@ -129,7 +138,9 @@ pub fn hashmap_contains(m: &HashMap, key: Int) -> Bool {
 /// Params: m - the map; key - Int key.
 /// Returns: true if the key was present and is now removed.
 /// Complexity: O(1) amortized.
-pub fn hashmap_remove(m: &mut HashMap, key: Int) -> Bool {
+pub fn hashmap_remove(m: &mut HashMap, key: Int) -> Bool
+  ensures: result == true => hashmap_contains(m, key) == false
+{
   var b = _bucket(m, key);
   var prev: Int = -1;
   var e = m.buckets[b];

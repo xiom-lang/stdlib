@@ -24,23 +24,31 @@ pub fn lhmap_new() -> LhMap
 
 /// Insert or update `key` -> `value`. New keys are appended in insertion
 /// order; updating keeps the existing position. O(n).
-pub fn lhmap_put(m: &mut LhMap, key: Int, value: Int) {
+pub fn lhmap_put(m: &mut LhMap, key: Int, value: Int)
+  ensures: lhmap_contains(m, key)
+{
   xiom.collect.hash.lhmap_put(m, key, value);
 }
 
 /// Value for `key`, or None when absent. O(n).
-pub fn lhmap_get(m: &LhMap, key: Int) -> Option[Int] {
+pub fn lhmap_get(m: &LhMap, key: Int) -> Option[Int]
+  ensures: result.is_some == lhmap_contains(m, key)
+{
   return xiom.collect.hash.lhmap_get(m, key);
 }
 
 /// True if `key` is present. O(n).
-pub fn lhmap_contains(m: &LhMap, key: Int) -> Bool {
+pub fn lhmap_contains(m: &LhMap, key: Int) -> Bool
+  ensures: result == true => lhmap_size(m) >= 1
+{
   return xiom.collect.hash.lhmap_contains(m, key);
 }
 
 /// Remove `key` if present, preserving the relative order of the remaining
 /// entries. O(n). Unit wrapper over the canonical Bool-returning function.
-pub fn lhmap_remove(m: &mut LhMap, key: Int) {
+pub fn lhmap_remove(m: &mut LhMap, key: Int)
+  ensures: lhmap_contains(m, key) == false
+{
   xiom.collect.hash.lhmap_remove(m, key);
 }
 
@@ -52,16 +60,22 @@ pub fn lhmap_size(m: &LhMap) -> Int
 }
 
 /// First key in insertion order, or None when the map is empty. O(1).
-pub fn lhmap_first(m: &LhMap) -> Option[Int] {
+pub fn lhmap_first(m: &LhMap) -> Option[Int]
+  ensures: result is None => lhmap_size(m) == 0
+{
   return xiom.collect.hash.lhmap_first(m);
 }
 
 /// Last key in insertion order, or None when the map is empty. O(1).
-pub fn lhmap_last(m: &LhMap) -> Option[Int] {
+pub fn lhmap_last(m: &LhMap) -> Option[Int]
+  ensures: result is None => lhmap_size(m) == 0
+{
   return xiom.collect.hash.lhmap_last(m);
 }
 
 /// All keys in insertion order. O(n).
-pub fn lhmap_iter(m: &LhMap) -> Vec[Int] {
+pub fn lhmap_iter(m: &LhMap) -> Vec[Int]
+  ensures: result.len() == lhmap_size(m)
+{
   return xiom.collect.hash.lhmap_iter(m);
 }

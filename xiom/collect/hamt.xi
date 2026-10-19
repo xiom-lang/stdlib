@@ -90,7 +90,10 @@ fn _add_leaf(h: &mut Hamt, key: Int, value: Int) -> Int {
 /// Create an empty HAMT (a single empty root table node).
 /// Returns a fresh Hamt with size 0.
 /// O(1) time, O(1) memory.
-pub fn hamt_new() -> Hamt {
+pub fn hamt_new() -> Hamt
+  ensures: result.size == 0
+  ensures: result.root >= 0
+{
   var h = Hamt{ root: -1; size: 0; keys: Vec[Int].new(); values: Vec[Int].new(); hashes: Vec[Int].new(); is_leaf: Vec[Bool].new(); kids: Vec[Int].new(); };
   var root = _add_table(&mut h);
   h.root = root;
@@ -100,7 +103,9 @@ pub fn hamt_new() -> Hamt {
 /// Insert `key` -> `value`. Returns false if the key already exists
 /// (the map keeps the original value). True on a fresh insert.
 /// O(log_32 n) expected.
-pub fn hamt_insert(h: &mut Hamt, key: Int, value: Int) -> Bool {
+pub fn hamt_insert(h: &mut Hamt, key: Int, value: Int) -> Bool
+  ensures: hamt_contains(h, key)
+{
   var hval = _hash(key);
   var node = h.root;
   var parent = -1;
@@ -168,7 +173,9 @@ fn _find_leaf(h: &Hamt, key: Int) -> Int {
 
 /// Value stored for `key`, or None if the key is absent.
 /// O(log_32 n) expected.
-pub fn hamt_get(h: &Hamt, key: Int) -> Option[Int] {
+pub fn hamt_get(h: &Hamt, key: Int) -> Option[Int]
+  ensures: result.is_some == hamt_contains(h, key)
+{
   var leaf = _find_leaf(h, key);
   if leaf == -1 {
     return Option[Int]{ is_some: false; value: 0; };
@@ -178,13 +185,17 @@ pub fn hamt_get(h: &Hamt, key: Int) -> Option[Int] {
 
 /// True if `key` is present in the map.
 /// O(log_32 n) expected.
-pub fn hamt_contains(h: &Hamt, key: Int) -> Bool {
+pub fn hamt_contains(h: &Hamt, key: Int) -> Bool
+  ensures: result == true => hamt_size(h) >= 1
+{
   return _find_leaf(h, key) != -1;
 }
 
 /// Remove `key`. Returns true if it was present.
 /// O(log_32 n) expected.
-pub fn hamt_remove(h: &mut Hamt, key: Int) -> Bool {
+pub fn hamt_remove(h: &mut Hamt, key: Int) -> Bool
+  ensures: hamt_contains(h, key) == false
+{
   var hval = _hash(key);
   var node = h.root;
   var parent = -1;

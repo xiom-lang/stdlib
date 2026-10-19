@@ -247,7 +247,10 @@ fn _insert_at(o: &mut Octree, node: Int, x: Int, y: Int, z: Int, value: Int, dep
 /// Create a new empty octree (root region starts at (0, 0, 0, 1, 1, 1) and
 /// grows on demand).
 /// O(1).
-pub fn octree_new() -> Octree {
+pub fn octree_new() -> Octree
+  ensures: result.size == 0
+  ensures: result.root >= 0
+{
   var o = Octree{ root: -1; size: 0; nx: Vec[Int].new(); ny: Vec[Int].new(); nz: Vec[Int].new(); nw: Vec[Int].new(); nh: Vec[Int].new(); nd: Vec[Int].new(); kids: Vec[Int].new(); phead: Vec[Int].new(); px: Vec[Int].new(); py: Vec[Int].new(); pz: Vec[Int].new(); pv: Vec[Int].new(); pnxt: Vec[Int].new(); };
   var root = _add_node(&mut o, 0, 0, 0, 1, 1, 1);
   o.root = root;
@@ -257,14 +260,18 @@ pub fn octree_new() -> Octree {
 /// Insert a point (x, y, z) with its value. Duplicate points are allowed.
 /// O(depth) where depth grows logarithmically with the distance from the
 /// initial root region.
-pub fn octree_insert(t: &mut Octree, x: Int, y: Int, z: Int, value: Int) {
+pub fn octree_insert(t: &mut Octree, x: Int, y: Int, z: Int, value: Int)
+  ensures: octree_size(t) >= 1
+{
   _expand_root(t, x, y, z);
   _insert_at(t, t.root, x, y, z, value, 0);
 }
 
 /// Value stored at the point (x, y, z), or None if no point with those exact
 /// coordinates is stored. O(depth).
-pub fn octree_query(t: &Octree, x: Int, y: Int, z: Int) -> Option[Int] {
+pub fn octree_query(t: &Octree, x: Int, y: Int, z: Int) -> Option[Int]
+  ensures: result is Some => octree_size(t) >= 1
+{
   var node = t.root;
   loop {
     var pid = t.phead[node];

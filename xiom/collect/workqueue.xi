@@ -18,14 +18,19 @@ pub type WorkQueue = {
 /// Create a new empty work queue.
 /// Returns: an empty WorkQueue with no pending jobs.
 /// Complexity: O(1).
-pub fn workqueue_new() -> WorkQueue {
+pub fn workqueue_new() -> WorkQueue
+  ensures: result.items.len() == 0
+  ensures: result.head == 0
+{
   return WorkQueue{ items: Vec[Int].new(); head: 0; };
 }
 
 /// Append a job handle to the back of the queue.
 /// Params: q - the queue; value - the Int job handle to enqueue.
 /// Complexity: O(1) amortized.
-pub fn workqueue_push(q: &mut WorkQueue, value: Int) {
+pub fn workqueue_push(q: &mut WorkQueue, value: Int)
+  ensures: workqueue_len(q) >= 1
+{
   q.items.push(value);
 }
 
@@ -33,7 +38,9 @@ pub fn workqueue_push(q: &mut WorkQueue, value: Int) {
 /// Params: q - the queue.
 /// Returns: the oldest pending job, or None if no jobs are pending.
 /// Complexity: O(1).
-pub fn workqueue_pop(q: &mut WorkQueue) -> Option[Int] {
+pub fn workqueue_pop(q: &mut WorkQueue) -> Option[Int]
+  ensures: result is None => q.head >= q.items.len()
+{
   if q.head >= q.items.len() { return None; }
   var val = q.items[q.head];
   q.head = q.head + 1;

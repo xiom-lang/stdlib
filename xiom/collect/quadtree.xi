@@ -221,7 +221,10 @@ fn _insert_at(q: &mut Quadtree, node: Int, x: Int, y: Int, value: Int, depth: In
 /// Create a new empty quadtree (root region starts at (0, 0, 1, 1) and grows
 /// on demand).
 /// O(1).
-pub fn quadtree_new() -> Quadtree {
+pub fn quadtree_new() -> Quadtree
+  ensures: result.size == 0
+  ensures: result.root >= 0
+{
   var q = Quadtree{ root: -1; size: 0; nx: Vec[Int].new(); ny: Vec[Int].new(); nw: Vec[Int].new(); nh: Vec[Int].new(); kids: Vec[Int].new(); phead: Vec[Int].new(); px: Vec[Int].new(); py: Vec[Int].new(); pv: Vec[Int].new(); pnxt: Vec[Int].new(); };
   var root = _add_node(&mut q, 0, 0, 1, 1);
   q.root = root;
@@ -231,14 +234,18 @@ pub fn quadtree_new() -> Quadtree {
 /// Insert a point (x, y) with its value. Duplicate points are allowed.
 /// O(depth) where depth grows logarithmically with the distance from the
 /// initial root region.
-pub fn quadtree_insert(t: &mut Quadtree, x: Int, y: Int, value: Int) {
+pub fn quadtree_insert(t: &mut Quadtree, x: Int, y: Int, value: Int)
+  ensures: quadtree_size(t) >= 1
+{
   _expand_root(t, x, y);
   _insert_at(t, t.root, x, y, value, 0);
 }
 
 /// Value stored at the point (x, y), or None if no point with those exact
 /// coordinates is stored. O(depth).
-pub fn quadtree_query(t: &Quadtree, x: Int, y: Int) -> Option[Int] {
+pub fn quadtree_query(t: &Quadtree, x: Int, y: Int) -> Option[Int]
+  ensures: result is Some => quadtree_size(t) >= 1
+{
   var node = t.root;
   loop {
     var pid = t.phead[node];

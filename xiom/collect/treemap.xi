@@ -24,7 +24,10 @@ pub type BTreeMap = {
 }
 
 /// Create a new empty tree map. O(1).
-pub fn treemap_new() -> BTreeMap {
+pub fn treemap_new() -> BTreeMap
+  ensures: result.size == 0
+  ensures: result.root == -1
+{
   return BTreeMap{
     root: -1;
     keys: Vec[Int].new(); values: Vec[Int].new();
@@ -121,7 +124,10 @@ fn tm_put_at(m: &mut BTreeMap, idx: Int, key: Int, value: Int) -> Int {
 }
 
 /// Insert or update `key` -> `value`. O(log n).
-pub fn treemap_put(m: &mut BTreeMap, key: Int, value: Int) {
+pub fn treemap_put(m: &mut BTreeMap, key: Int, value: Int)
+  ensures: treemap_contains(m, key)
+  ensures: m.size >= 1
+{
   var old_nodes = m.keys.len();
   m.root = tm_put_at(m, m.root, key, value);
   if m.keys.len() > old_nodes {
@@ -130,7 +136,9 @@ pub fn treemap_put(m: &mut BTreeMap, key: Int, value: Int) {
 }
 
 /// Value for `key`, or None when absent. O(log n).
-pub fn treemap_get(m: &BTreeMap, key: Int) -> Option[Int] {
+pub fn treemap_get(m: &BTreeMap, key: Int) -> Option[Int]
+  ensures: result.is_some == treemap_contains(m, key)
+{
   var cur = m.root;
   while cur != -1 {
     var k = m.keys[cur];
@@ -145,7 +153,9 @@ pub fn treemap_get(m: &BTreeMap, key: Int) -> Option[Int] {
 }
 
 /// True if `key` is present. O(log n).
-pub fn treemap_contains(m: &BTreeMap, key: Int) -> Bool {
+pub fn treemap_contains(m: &BTreeMap, key: Int) -> Bool
+  ensures: result == true => treemap_size(m) >= 1
+{
   var cur = m.root;
   while cur != -1 {
     var k = m.keys[cur];
@@ -184,7 +194,9 @@ fn tm_remove_at(m: &mut BTreeMap, idx: Int, key: Int) -> Int {
 }
 
 /// Remove `key`; returns true if it was present. O(log n).
-pub fn treemap_remove(m: &mut BTreeMap, key: Int) -> Bool {
+pub fn treemap_remove(m: &mut BTreeMap, key: Int) -> Bool
+  ensures: result == true => treemap_contains(m, key) == false
+{
   if !treemap_contains(m, key) { return false; }
   m.root = tm_remove_at(m, m.root, key);
   m.size = m.size - 1;
@@ -199,7 +211,10 @@ pub fn treemap_size(m: &BTreeMap) -> Int
 }
 
 /// Smallest key, or None when the map is empty. O(log n).
-pub fn treemap_min(m: &BTreeMap) -> Option[Int] {
+pub fn treemap_min(m: &BTreeMap) -> Option[Int]
+  ensures: result is None => treemap_size(m) == 0
+  ensures: result is Some => treemap_size(m) >= 1
+{
   if m.root == -1 { return None; }
   var cur = m.root;
   while m.left[cur] != -1 {
@@ -209,7 +224,10 @@ pub fn treemap_min(m: &BTreeMap) -> Option[Int] {
 }
 
 /// Largest key, or None when the map is empty. O(log n).
-pub fn treemap_max(m: &BTreeMap) -> Option[Int] {
+pub fn treemap_max(m: &BTreeMap) -> Option[Int]
+  ensures: result is None => treemap_size(m) == 0
+  ensures: result is Some => treemap_size(m) >= 1
+{
   if m.root == -1 { return None; }
   var cur = m.root;
   while m.right[cur] != -1 {
@@ -226,7 +244,9 @@ fn tm_walk(m: &BTreeMap, node: Int, out: &mut Vec[(Int, Int)]) {
 }
 
 /// All entries as (key, value) pairs in ascending key order. O(n).
-pub fn treemap_iter(m: &BTreeMap) -> Vec[(Int, Int)] {
+pub fn treemap_iter(m: &BTreeMap) -> Vec[(Int, Int)]
+  ensures: result.len() == treemap_size(m)
+{
   var out = Vec[(Int, Int)].new();
   tm_walk(m, m.root, &mut out);
   return out;

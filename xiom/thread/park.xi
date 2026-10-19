@@ -58,7 +58,9 @@ pub fn park_token_new() -> ParkToken
 /// Block until the token is notified.
 /// Params: tok - the token.
 /// Complexity: O(1) per poll; blocks until a notify.
-pub fn park_token_wait(tok: ParkToken) {
+pub fn park_token_wait(tok: ParkToken)
+  requires: ptr.is_null(tok.flag) == false
+{
   var done = false;
   while !done {
     var f: Int;
@@ -83,7 +85,9 @@ pub fn park_token_notify(tok: ParkToken)
 
 /// Block the calling thread until it is unparked.
 /// Complexity: O(1) per poll; blocks until an unpark.
-pub fn park() {
+pub fn park()
+  ensures: ptr.is_null(_park_flag) == false
+{
   let flag = park_get_flag();
   var done = false;
   while !done {
@@ -102,7 +106,9 @@ pub fn park() {
 /// Params: ms - the timeout in milliseconds (clamped to >= 0).
 /// Returns: true if unparked before the timeout, false on timeout.
 /// Complexity: O(ms) polls, each sleeping up to 1 ms.
-pub fn park_timeout(ms: Int) -> Bool {
+pub fn park_timeout(ms: Int) -> Bool
+  ensures: ptr.is_null(_park_flag) == false
+{
   var budget = ms;
   if budget < 0 {
     budget = 0;
@@ -131,7 +137,9 @@ pub fn park_timeout(ms: Int) -> Bool {
 /// Make the target thread eligible to resume.
 /// Params: t - the target thread.
 /// Complexity: O(1).
-pub fn unpark(t: SpawnThread) {
+pub fn unpark(t: SpawnThread)
+  ensures: ptr.is_null(_park_flag) == false
+{
   let flag = park_get_flag();
   unsafe { xiom_atomic_store(flag, 1); }
 }
@@ -139,7 +147,9 @@ pub fn unpark(t: SpawnThread) {
 /// Unpark every thread in the vector.
 /// Params: threads - the threads to wake.
 /// Complexity: O(n) where n is the number of threads.
-pub fn unpark_all(threads: &Vec[SpawnThread]) {
+pub fn unpark_all(threads: &Vec[SpawnThread])
+  ensures: ptr.is_null(_park_flag) == false
+{
   let flag = park_get_flag();
   var i: Int = 0;
   var n = threads.len();

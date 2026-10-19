@@ -11,13 +11,19 @@ module xiom.collect.objectpool
 pub type ObjectPool = { free: Vec[Int]; next: Int; capacity: Int; }
 
 /// Create a pool with `capacity` handles.
-pub fn pool_new(capacity: Int) -> ObjectPool {
+pub fn pool_new(capacity: Int) -> ObjectPool
+  ensures: result.next == 0
+  ensures: result.free.len() == 0
+  ensures: result.capacity == capacity
+{
   var free = Vec[Int].new();
   return ObjectPool{ free: free; next: 0; capacity: capacity; };
 }
 
 /// Acquire a handle (None when the pool is exhausted).
-pub fn pool_acquire(p: &mut ObjectPool) -> Option[Int] {
+pub fn pool_acquire(p: &mut ObjectPool) -> Option[Int]
+  ensures: result is None => p.free.len() == 0 && p.next >= p.capacity
+{
   if p.free.len() > 0 {
     var h = p.free[p.free.len() - 1];
     p.free.pop();
@@ -33,7 +39,9 @@ pub fn pool_acquire(p: &mut ObjectPool) -> Option[Int] {
 
 /// Release a handle back to the pool. Returns false on out-of-range or
 /// double-release.
-pub fn pool_release(p: &mut ObjectPool, handle: Int) -> Bool {
+pub fn pool_release(p: &mut ObjectPool, handle: Int) -> Bool
+  ensures: result == true => p.free.len() >= 1
+{
   if handle < 0 || handle >= p.capacity {
     return false;
   }

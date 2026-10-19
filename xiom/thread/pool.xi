@@ -102,7 +102,10 @@ pub fn thread_pool_new(workers: Int) -> ThreadPool
 ///          thread through the spawn machinery; `tp_join` waits for it).
 /// Returns: true on acceptance, false if the pool is shut down.
 /// Complexity: O(1) amortized plus one OS thread spawn.
-pub fn tp_submit(p: &mut ThreadPool, job: fn()) -> Bool {
+pub fn tp_submit(p: &mut ThreadPool, job: fn()) -> Bool
+  ensures: result == true => p.queued.len() >= 1
+  ensures: p.busy + p.idle == p.workers
+{
   if p.closed {
     return false;
   }
@@ -166,7 +169,11 @@ pub fn tp_submit_with(p: &mut ThreadPool, job: fn(Int), arg: Int) -> Bool
 /// and frees its result buffer; the counters return to busy == 0,
 /// idle == workers.
 /// Complexity: O(n) where n is the number of pending jobs.
-pub fn tp_join(p: &mut ThreadPool) {
+pub fn tp_join(p: &mut ThreadPool)
+  ensures: p.queued.len() == 0
+  ensures: p.busy == 0
+  ensures: p.idle == p.workers
+{
   while p.running.len() > 0 {
     let popped = p.running.pop();
     match popped {
@@ -192,7 +199,10 @@ pub fn tp_join(p: &mut ThreadPool) {
 /// Closes the pool (submit returns false afterwards) and drains the pending
 /// work as tp_join does.
 /// Complexity: O(n) where n is the number of pending jobs.
-pub fn tp_shutdown(p: &mut ThreadPool) {
+pub fn tp_shutdown(p: &mut ThreadPool)
+  ensures: p.closed == true
+  ensures: p.queued.len() == 0
+{
   p.closed = true;
   tp_join(p);
 }

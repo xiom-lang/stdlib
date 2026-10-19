@@ -30,14 +30,20 @@ pub type IntervalSet = {
 
 /// Create a new empty interval tree.
 /// O(1).
-pub fn interval_tree_new() -> IntervalSet {
+pub fn interval_tree_new() -> IntervalSet
+  ensures: result.starts.len() == 0
+  ensures: result.starts.len() == result.alive.len()
+{
   return IntervalSet{ starts: Vec[Int].new(); ends: Vec[Int].new(); vals: Vec[Int].new(); alive: Vec[Bool].new(); };
 }
 
 /// Insert an interval with its value. Duplicate intervals are allowed; an
 /// interval with start > end is rejected (ignored).
 /// O(1) amortized.
-pub fn interval_insert(t: &mut IntervalSet, start: Int, end: Int, value: Int) {
+pub fn interval_insert(t: &mut IntervalSet, start: Int, end: Int, value: Int)
+  ensures: start <= end => interval_query(t, start).len() >= 1
+  ensures: t.starts.len() == t.alive.len()
+{
   if start > end {
     return;
   }
@@ -49,7 +55,9 @@ pub fn interval_insert(t: &mut IntervalSet, start: Int, end: Int, value: Int) {
 
 /// Values of the live intervals covering `point` (inclusive on both ends).
 /// O(n).
-pub fn interval_query(t: &IntervalSet, point: Int) -> Vec[Int] {
+pub fn interval_query(t: &IntervalSet, point: Int) -> Vec[Int]
+  ensures: result.len() <= t.alive.len()
+{
   var out = Vec[Int].new();
   var i = 0;
   while i < t.starts.len() {
@@ -66,7 +74,9 @@ pub fn interval_query(t: &IntervalSet, point: Int) -> Vec[Int] {
 /// Remove the first live interval matching [start, end]. Returns true if one
 /// was found and removed.
 /// O(n).
-pub fn interval_remove(t: &mut IntervalSet, start: Int, end: Int) -> Bool {
+pub fn interval_remove(t: &mut IntervalSet, start: Int, end: Int) -> Bool
+  ensures: result == true => interval_query(t, start).len() <= t.alive.len()
+{
   var i = 0;
   while i < t.starts.len() {
     if t.alive[i] {

@@ -25,7 +25,9 @@ module xiom.compress.lz77
 
 /// Compress `data` with a greedy 32KiB sliding-window search into the
 /// control-byte token stream documented above. O(n * 32768).
-pub fn lz77_compress(data: &Vec[UInt8]) -> Vec[UInt8] {
+pub fn lz77_compress(data: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: result.len() <= 2 * data.len()
+{
   var result = Vec[UInt8].new();
   var len = data.len();
   if len == 0 {
@@ -83,7 +85,9 @@ pub fn lz77_compress(data: &Vec[UInt8]) -> Vec[UInt8] {
 const _LZ77_DEFAULT_CAP: Int = 1073741824;
 
 /// Decompress LZ77 data; Err on malformed input.
-pub fn lz77_decompress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str] {
+pub fn lz77_decompress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str]
+  ensures: result is Ok => result.len() <= _LZ77_DEFAULT_CAP
+{
   return lz77_decompress_capped(data, _LZ77_DEFAULT_CAP);
 }
 
@@ -91,7 +95,9 @@ pub fn lz77_decompress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str] {
 /// checked BEFORE writing, so a hostile token stream cannot allocate beyond
 /// the cap even momentarily. Returns Err("lz77: output exceeds cap") when
 /// exceeded.
-pub fn lz77_decompress_capped(data: &Vec[UInt8], max_out: Int) -> Result[Vec[UInt8], Str] {
+pub fn lz77_decompress_capped(data: &Vec[UInt8], max_out: Int) -> Result[Vec[UInt8], Str]
+  ensures: result is Ok => max_out < 0 || result.len() <= max_out
+{
   var result = Vec[UInt8].new();
   var len = data.len();
   var pos = 0;
@@ -147,7 +153,10 @@ pub fn lz77_decompress_capped(data: &Vec[UInt8], max_out: Int) -> Result[Vec[UIn
 /// `window` positions. Returns (length, distance); (0, 0) when no match of
 /// length >= 3 exists. Out-of-range positions yield (0, 0).
 /// Complexity: O(window * match_length).
-pub fn lz77_find_longest_match(data: &Vec[UInt8], pos: Int, window: Int) -> (Int, Int) {
+pub fn lz77_find_longest_match(data: &Vec[UInt8], pos: Int, window: Int) -> (Int, Int)
+  ensures: result.0 >= 0 && result.0 <= 258
+  ensures: result.0 == 0 => result.1 == 0
+{
   var len = data.len();
   if pos < 0 || pos >= len {
     return (0, 0);
@@ -184,7 +193,9 @@ pub fn lz77_find_longest_match(data: &Vec[UInt8], pos: Int, window: Int) -> (Int
 
 /// Pack a (length, distance) pair into a single token: (length << 16) | distance.
 /// Both fields are clamped to 16 bits (0..65535). Pure-Int token.
-pub fn lz77_token_encode(length: Int, distance: Int) -> Int {
+pub fn lz77_token_encode(length: Int, distance: Int) -> Int
+  ensures: result >= 0 && result <= 4294967295
+{
   var l = length;
   if l < 0 {
     l = 0;
@@ -203,7 +214,10 @@ pub fn lz77_token_encode(length: Int, distance: Int) -> Int {
 }
 
 /// Unpack a token produced by lz77_token_encode into (length, distance).
-pub fn lz77_token_decode(token: Int) -> (Int, Int) {
+pub fn lz77_token_decode(token: Int) -> (Int, Int)
+  ensures: result.0 >= 0 && result.0 <= 65535
+  ensures: result.1 >= 0 && result.1 <= 65535
+{
   var length = (token >> 16) & 0xFFFF;
   var distance = token & 0xFFFF;
   return (length, distance);
