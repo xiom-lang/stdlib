@@ -30,19 +30,25 @@ use xiom.math.integral;
 
 /// First derivative of f at x with step h (central difference). Delegates to
 /// xiom.math.differential.derivative. Complexity: O(1).
-pub fn derivative(f: fn(Float64) -> Float64, x: Float64, h: Float64) -> Float64 {
+pub fn derivative(f: fn(Float64) -> Float64, x: Float64, h: Float64) -> Float64
+  ensures: (h != 0.0) || (result == 0.0)
+{
   return math.differential.derivative(f, x, h);
 }
 
 /// Second derivative of f at x with step h. Delegates to
 /// xiom.math.differential.derivative2. Complexity: O(1).
-pub fn derivative_2nd(f: fn(Float64) -> Float64, x: Float64, h: Float64) -> Float64 {
+pub fn derivative_2nd(f: fn(Float64) -> Float64, x: Float64, h: Float64) -> Float64
+  ensures: (h != 0.0) || (result == 0.0)
+{
   return math.differential.derivative2(f, x, h);
 }
 
 /// Third derivative of f at x with step h. Delegates to
 /// xiom.math.differential.derivative3. Complexity: O(1).
-pub fn derivative_3rd(f: fn(Float64) -> Float64, x: Float64, h: Float64) -> Float64 {
+pub fn derivative_3rd(f: fn(Float64) -> Float64, x: Float64, h: Float64) -> Float64
+  ensures: (h != 0.0) || (result == 0.0)
+{
   return math.differential.derivative3(f, x, h);
 }
 
@@ -58,13 +64,17 @@ pub fn integrate(f: fn(Float64) -> Float64, a: Float64, b: Float64) -> Float64 {
 
 /// Composite trapezoidal rule with n subintervals. Delegates to
 /// xiom.math.integral.integrate_trapezoid. Complexity: O(n).
-pub fn integrate_trapezoid(f: fn(Float64) -> Float64, a: Float64, b: Float64, n: Int) -> Float64 {
+pub fn integrate_trapezoid(f: fn(Float64) -> Float64, a: Float64, b: Float64, n: Int) -> Float64
+  ensures: (n > 0) || (result == 0.0)
+{
   return math.integral.integrate_trapezoid(f, a, b, n);
 }
 
 /// Composite Simpson's rule with n subintervals (odd n reduced to n - 1).
 /// Delegates to xiom.math.integral.integrate_simpson. Complexity: O(n).
-pub fn integrate_simpson(f: fn(Float64) -> Float64, a: Float64, b: Float64, n: Int) -> Float64 {
+pub fn integrate_simpson(f: fn(Float64) -> Float64, a: Float64, b: Float64, n: Int) -> Float64
+  ensures: (n > 0) || (result == 0.0)
+{
   return math.integral.integrate_simpson(f, a, b, n);
 }
 
@@ -74,7 +84,9 @@ pub fn integrate_simpson(f: fn(Float64) -> Float64, a: Float64, b: Float64, n: I
 /// TODO(compiler): NOT IMPLEMENTABLE in this compiler build - the Romberg
 /// Richardson-table loops emit AVX-512 and crash with 0xC000001D (BUG 20) on
 /// Zen 2. Keep the frozen signature; revisit when the loops are not vectorized.
-pub fn integrate_romberg(f: fn(Float64) -> Float64, a: Float64, b: Float64, tol: Float64) -> Float64 {
+pub fn integrate_romberg(f: fn(Float64) -> Float64, a: Float64, b: Float64, tol: Float64) -> Float64
+  ensures: (tol > 0.0) || (result == 0.0)
+{
   return 0.0;
 }
 

@@ -30,7 +30,9 @@ pub fn sqrt(x: Float64) -> Float64
 
 /// Cube root of x, any sign. Uses sign-split math.pow for speed.
 /// cbrt(27.0) == 3.0, cbrt(-27.0) == -3.0. Complexity: O(1), libm pow.
-pub fn cbrt(x: Float64) -> Float64 {
+pub fn cbrt(x: Float64) -> Float64
+  ensures: ((x > 0.0) && (result > 0.0)) || ((x < 0.0) && (result < 0.0)) || ((x == 0.0) && (result == 0.0)) || (result != result)
+{
   if x == 0.0 { return 0.0; }
   if x > 0.0 { return math.pow(x, 0.3333333333333333); }
   return -math.pow(-x, 0.3333333333333333);
@@ -64,7 +66,9 @@ pub fn sqrt_pure(x: Float64) -> Float64
 /// cbrt via Newton iteration, no libm. 20 iterations with an exponent-scaled
 /// initial guess (floor(log2|x|)/3 via math.decompose.ilogb). Exact for all
 /// finite values, any sign. Complexity: O(ilogb + 20).
-pub fn cbrt_pure(x: Float64) -> Float64 {
+pub fn cbrt_pure(x: Float64) -> Float64
+  ensures: ((x > 0.0) && (result > 0.0)) || ((x < 0.0) && (result < 0.0)) || ((x == 0.0) && (result == 0.0)) || (result != result)
+{
   if x == 0.0 { return 0.0; }
   if x == 1.0 / 0.0 { return x; }
   if x == -1.0 / 0.0 { return x; }
@@ -101,7 +105,9 @@ pub fn is_cube(n: Int) -> Bool {
 /// floor(sqrt(n)) for n >= 0 via integer Newton (no float, no overflow).
 /// integer_sqrt(16) == 4, integer_sqrt(17) == 4. For n < 0 returns -1
 /// (documented). Complexity: O(log n) iterations.
-pub fn integer_sqrt(n: Int) -> Int {
+pub fn integer_sqrt(n: Int) -> Int
+  ensures: (n >= 0) || (result == -1)
+{
   if n < 0 { return -1; }
   if n < 2 { return n; }
   // x0 = n/2 + 1 >= sqrt(n) for all n >= 1, and x0 + n/x0 never overflows.
@@ -116,7 +122,9 @@ pub fn integer_sqrt(n: Int) -> Int {
 /// floor(cbrt(n)) for n >= 0 via integer Newton (no float, no overflow).
 /// integer_cbrt(27) == 3, integer_cbrt(28) == 3. For n < 0 returns -1
 /// (documented). Complexity: O(log n) iterations.
-pub fn integer_cbrt(n: Int) -> Int {
+pub fn integer_cbrt(n: Int) -> Int
+  ensures: (n >= 0) || (result == -1)
+{
   if n < 0 { return -1; }
   if n < 2 { return n; }
   var x = 1;
@@ -172,11 +180,15 @@ pub fn hypot3(x: Float64, y: Float64, z: Float64) -> Float64
 }
 
 /// Euclidean norm of a 2D vector (x, y). Alias of hypot. Complexity: O(1).
-pub fn norm2(x: Float64, y: Float64) -> Float64 {
+pub fn norm2(x: Float64, y: Float64) -> Float64
+  ensures: result >= 0.0
+{
   return hypot(x, y);
 }
 
 /// Euclidean norm of a 3D vector (x, y, z). Alias of hypot3. Complexity: O(1).
-pub fn norm3(x: Float64, y: Float64, z: Float64) -> Float64 {
+pub fn norm3(x: Float64, y: Float64, z: Float64) -> Float64
+  ensures: result >= 0.0
+{
   return hypot3(x, y, z);
 }

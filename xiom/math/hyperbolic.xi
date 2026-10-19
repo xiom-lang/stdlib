@@ -22,7 +22,9 @@ use xiom.math;
 
 /// Hyperbolic sine of x. sinh(0.0) == 0.0; |x| > ~710 overflows to +-inf.
 /// Complexity: O(1), libm exp.
-pub fn sinh(x: Float64) -> Float64 {
+pub fn sinh(x: Float64) -> Float64
+  ensures: ((x >= 0.0) && (result >= 0.0)) || ((x < 0.0) && (result <= 0.0)) || (result != result)
+{
   return (math.exp(x) - math.exp(-x)) / 2.0;
 }
 
@@ -47,7 +49,9 @@ pub fn tanh(x: Float64) -> Float64
 
 /// Hyperbolic cosecant, 1/sinh(x). csch(0.0) == +inf (native 1.0/0.0).
 /// Complexity: O(1), libm exp.
-pub fn csch(x: Float64) -> Float64 {
+pub fn csch(x: Float64) -> Float64
+  ensures: ((x >= 0.0) && (result >= 0.0)) || ((x < 0.0) && (result <= 0.0)) || (result != result)
+{
   return 1.0 / sinh(x);
 }
 
@@ -69,7 +73,9 @@ pub fn coth(x: Float64) -> Float64
 /// Inverse hyperbolic sine: ln(x + sqrt(x^2 + 1)). Odd function. For
 /// |x| > 1e150 uses ln(|x|) + ln 2 (avoids x^2 overflow and cancellation).
 /// asinh(1.0) == 0.881373587019543. Complexity: O(1), libm ln/sqrt.
-pub fn asinh(x: Float64) -> Float64 {
+pub fn asinh(x: Float64) -> Float64
+  ensures: ((x >= 0.0) && (result >= 0.0)) || ((x < 0.0) && (result <= 0.0)) || (result != result)
+{
   if x == 0.0 { return 0.0; }
   var neg = x < 0.0;
   var ax = x;
@@ -103,26 +109,34 @@ pub fn acosh(x: Float64) -> Float64
 /// For |x| > 1 returns NaN (IEEE semantics);
 /// atanh(1.0) == +inf and atanh(-1.0) == -inf (native, ln 0/inf).
 /// atanh(0.0) == 0.0. Complexity: O(1), libm ln.
-pub fn atanh(x: Float64) -> Float64 {
+pub fn atanh(x: Float64) -> Float64
+  ensures: ((x >= 0.0) && (result >= 0.0)) || ((x < 0.0) && (result <= 0.0)) || (result != result)
+{
   if x > 1.0 || x < -1.0 { return 0.0 / 0.0; }
   return 0.5 * math.ln((1.0 + x) / (1.0 - x));
 }
 
 /// Hyperbolic sine via the pure exp series (math.exponential.exp_pure), no
 /// libm. sinh_pure(0.0) == 0.0. Complexity: O(exp_pure).
-pub fn sinh_pure(x: Float64) -> Float64 {
+pub fn sinh_pure(x: Float64) -> Float64
+  ensures: ((x >= 0.0) && (result >= 0.0)) || ((x < 0.0) && (result <= 0.0)) || (result != result)
+{
   return (math.exponential.exp_pure(x) - math.exponential.exp_pure(-x)) / 2.0;
 }
 
 /// Hyperbolic cosine via the pure exp series, no libm. cosh_pure(0.0) == 1.0.
 /// Complexity: O(exp_pure).
-pub fn cosh_pure(x: Float64) -> Float64 {
+pub fn cosh_pure(x: Float64) -> Float64
+  ensures: (result >= 0.0) || (result != result)
+{
   return (math.exponential.exp_pure(x) + math.exponential.exp_pure(-x)) / 2.0;
 }
 
 /// Hyperbolic tangent via pure sinh/cosh series, no libm. Saturates to +-1.0
 /// for |x| > 20. tanh_pure(0.0) == 0.0. Complexity: O(exp_pure).
-pub fn tanh_pure(x: Float64) -> Float64 {
+pub fn tanh_pure(x: Float64) -> Float64
+  ensures: ((result >= -1.0) && (result <= 1.0)) || (result != result)
+{
   if x > 20.0 { return 1.0; }
   if x < -20.0 { return -1.0; }
   var sh = sinh_pure(x);

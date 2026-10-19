@@ -54,14 +54,18 @@ fn _ps_rec(coeffs: &Vec[Float64], x: Float64, lo: Int, hi: Int) -> Float64 {
 
 /// Sum of terms(0) + terms(1) + ... + terms(n-1). Returns 0.0 for n <= 0.
 /// Complexity: O(n).
-pub fn series_sum(terms: fn(Int) -> Float64, n: Int) -> Float64 {
+pub fn series_sum(terms: fn(Int) -> Float64, n: Int) -> Float64
+  ensures: (n > 0) || (result == 0.0)
+{
   if n <= 0 { return 0.0; }
   return _sum_rec(terms, 0, n - 1);
 }
 
 /// Value of the power series sum c[i] * x^i over the coefficients. Returns
 /// 0.0 for an empty coefficient list. Complexity: O(n log n).
-pub fn power_series(coefficients: &Vec[Float64], x: Float64) -> Float64 {
+pub fn power_series(coefficients: &Vec[Float64], x: Float64) -> Float64
+  ensures: (coefficients.len() > 0) || (result == 0.0)
+{
   var n = coefficients.len();
   if n == 0 { return 0.0; }
   return _ps_rec(coefficients, x, 0, n - 1);
@@ -70,7 +74,9 @@ pub fn power_series(coefficients: &Vec[Float64], x: Float64) -> Float64 {
 /// Sum of the first n terms of the geometric series a, a*r, a*r^2, ... via the
 /// closed form a*(1 - r^n)/(1 - r) for r != 1 and a*n for r == 1. Returns
 /// 0.0 for n <= 0. Complexity: O(log n).
-pub fn geometric_series(a: Float64, r: Float64, n: Int) -> Float64 {
+pub fn geometric_series(a: Float64, r: Float64, n: Int) -> Float64
+  ensures: (n > 0) || (result == 0.0)
+{
   if n <= 0 { return 0.0; }
   if r == 1.0 { return a * (n as Float64); }
   var p = _ipow(r, n);
@@ -79,7 +85,9 @@ pub fn geometric_series(a: Float64, r: Float64, n: Int) -> Float64 {
 
 /// Sum of the first n terms of the arithmetic series a, a+d, a+2d, ... via the
 /// closed form n/2 * (2a + (n-1)d). Returns 0.0 for n <= 0. Complexity: O(1).
-pub fn arithmetic_series(a: Float64, d: Float64, n: Int) -> Float64 {
+pub fn arithmetic_series(a: Float64, d: Float64, n: Int) -> Float64
+  ensures: (n > 0) || (result == 0.0)
+{
   if n <= 0 { return 0.0; }
   var nf = n as Float64;
   return nf / 2.0 * (2.0 * a + (nf - 1.0) * d);
@@ -87,7 +95,9 @@ pub fn arithmetic_series(a: Float64, d: Float64, n: Int) -> Float64 {
 
 /// The n-th harmonic number: sum of 1/k for k = 1..n. Returns 0.0 for n <= 0.
 /// Complexity: O(n).
-pub fn harmonic(n: Int) -> Float64 {
+pub fn harmonic(n: Int) -> Float64
+  ensures: (n <= 0) || (result > 0.0)
+{
   if n <= 0 { return 0.0; }
   return _sum_rec(_inv_k, 1, n);
 }
@@ -120,7 +130,9 @@ pub fn maclaurin_series(f: fn(Float64) -> Float64, order: Int, x: Float64) -> Fl
 /// by recursion (one term per frame; the smoke uses a handful of terms).
 /// Returns 0.0 for an empty list. A zero partial denominator propagates as +/-
 /// infinity (IEEE semantics). Complexity: O(len(coeffs)).
-pub fn continued_fraction(coeffs: &Vec[Float64]) -> Float64 {
+pub fn continued_fraction(coeffs: &Vec[Float64]) -> Float64
+  ensures: (coeffs.len() > 0) || (result == 0.0)
+{
   var n = coeffs.len();
   if n == 0 { return 0.0; }
   return _cf_rec(coeffs, 0);
@@ -139,7 +151,9 @@ fn _cf_rec(coeffs: &Vec[Float64], i: Int) -> Float64 {
 
 /// The n-th Fibonacci number F(n), 0-indexed (F(0) = 0, F(1) = 1); returns 0
 /// for n < 0. Delegates to xiom.math.combinatorics.fibonacci. Complexity: O(n).
-pub fn fib(n: Int) -> Int {
+pub fn fib(n: Int) -> Int
+  ensures: (n < 0) || (n > 92) || (result >= 0)
+{
   return math.combinatorics.fibonacci(n);
 }
 
@@ -148,7 +162,9 @@ pub fn fib(n: Int) -> Int {
 /// n < 0 and 0 (documented) for n > 91, where the doubling intermediates
 /// exceed Int range (the plain iteration in math.combinatorics.fibonacci
 /// reaches F(92)). Complexity: O(log n).
-pub fn fib_fast(n: Int) -> Int {
+pub fn fib_fast(n: Int) -> Int
+  ensures: (n < 0) || (n > 91) || (result >= 0)
+{
   if n < 0 { return 0; }
   if n > 91 { return 0; }
   var r = _fib_doubling(n);
@@ -178,7 +194,9 @@ fn _fib_doubling(n: Int) -> (Int, Int) {
 /// Implemented iteratively (no recursive Bool-accumulator walk) and verified
 /// on v0.61.3 on 2026-09-24: linear sequences give ~1.0, quadratically
 /// convergent sequences give ~2.0.
-pub fn convergence_rate(seq: &Vec[Float64]) -> Float64 {
+pub fn convergence_rate(seq: &Vec[Float64]) -> Float64
+  ensures: (seq.len() >= 4) || (result == 0.0)
+{
   var n = seq.len();
   if n < 4 { return 0.0; }
   var e0 = math.abs_float(seq[1] - seq[0]);

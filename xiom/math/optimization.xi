@@ -465,7 +465,9 @@ pub fn genetic_algorithm(f: fn(&Vec[Float64]) -> Float64, bounds: &Vec[Vec[Float
 /// objective or with probability exp(-(df)/t); the temperature follows
 /// schedule(t, i). Returns the best point found. Empty for an empty x0.
 /// Complexity: O(iters * n * cost(f)).
-pub fn simulated_annealing(f: fn(&Vec[Float64]) -> Float64, x0: &Vec[Float64], t0: Float64, schedule: fn(Float64, Float64) -> Float64) -> Vec[Float64] {
+pub fn simulated_annealing(f: fn(&Vec[Float64]) -> Float64, x0: &Vec[Float64], t0: Float64, schedule: fn(Float64, Float64) -> Float64) -> Vec[Float64]
+  ensures: result.len() == x0.len()
+{
   var out = Vec[Float64].new();
   var n = x0.len();
   if n == 0 { return out; }
@@ -534,7 +536,9 @@ pub fn particle_swarm(f: fn(&Vec[Float64]) -> Float64, bounds: &Vec[Vec[Float64]
 /// candidate permutations of the n_nodes cities, biased toward the best tour
 /// found so far; the best tour (as a permutation of city ids) is returned.
 /// Empty for n_nodes <= 0. Complexity: O(iters * n_nodes^2 + iters * cost(cost)).
-pub fn ant_colony(cost: fn(&Vec[Int]) -> Float64, n_nodes: Int, iters: Int) -> Vec[Int] {
+pub fn ant_colony(cost: fn(&Vec[Int]) -> Float64, n_nodes: Int, iters: Int) -> Vec[Int]
+  ensures: (n_nodes <= 0) || (result.len() == n_nodes)
+{
   var out = Vec[Int].new();
   if n_nodes <= 0 { return out; }
   math.seed_rng(13);

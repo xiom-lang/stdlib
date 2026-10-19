@@ -21,7 +21,9 @@ use xiom.math;
 
 /// Explicit Euler steps of y' = f(t, y) from t0 to t1 in n steps. Returns
 /// n + 1 values (y(t0), ..., y(t1)); empty for n <= 0. Complexity: O(n).
-pub fn solve_ode_euler(f: fn(Float64, Float64) -> Float64, y0: Float64, t0: Float64, t1: Float64, n: Int) -> Vec[Float64] {
+pub fn solve_ode_euler(f: fn(Float64, Float64) -> Float64, y0: Float64, t0: Float64, t1: Float64, n: Int) -> Vec[Float64]
+  ensures: (n <= 0) || (result.len() == n + 1)
+{
   var out = Vec[Float64].new();
   if n <= 0 { return out; }
   var h = (t1 - t0) / (n as Float64);
@@ -40,7 +42,9 @@ pub fn solve_ode_euler(f: fn(Float64, Float64) -> Float64, y0: Float64, t0: Floa
 
 /// Classical fourth-order Runge-Kutta integration of y' = f(t, y) in n steps.
 /// Returns n + 1 values; empty for n <= 0. Complexity: O(n).
-pub fn solve_ode_rk4(f: fn(Float64, Float64) -> Float64, y0: Float64, t0: Float64, t1: Float64, n: Int) -> Vec[Float64] {
+pub fn solve_ode_rk4(f: fn(Float64, Float64) -> Float64, y0: Float64, t0: Float64, t1: Float64, n: Int) -> Vec[Float64]
+  ensures: (n <= 0) || (result.len() == n + 1)
+{
   var out = Vec[Float64].new();
   if n <= 0 { return out; }
   var h = (t1 - t0) / (n as Float64);
@@ -65,7 +69,9 @@ pub fn solve_ode_rk4(f: fn(Float64, Float64) -> Float64, y0: Float64, t0: Float6
 /// tol. Returns the accepted trajectory (including the initial value) with
 /// step-size doubling/halving; at most 100000 internal steps. NaN for tol <= 0.
 /// Complexity: O(steps * cost(f)).
-pub fn solve_ode_rk45(f: fn(Float64, Float64) -> Float64, y0: Float64, t0: Float64, t1: Float64, tol: Float64) -> Vec[Float64] {
+pub fn solve_ode_rk45(f: fn(Float64, Float64) -> Float64, y0: Float64, t0: Float64, t1: Float64, tol: Float64) -> Vec[Float64]
+  ensures: (tol <= 0.0) || (result.len() >= 1)
+{
   var out = Vec[Float64].new();
   if tol <= 0.0 { return out; }
   out.push(y0);
@@ -107,7 +113,9 @@ pub fn solve_ode_rk45(f: fn(Float64, Float64) -> Float64, y0: Float64, t0: Float
 /// Generic adaptive step-size integrator of y' = f(t, y) to tolerance tol.
 /// Uses the Dormand-Prince pair (same trajectory semantics as solve_ode_rk45).
 /// Complexity: O(steps * cost(f)).
-pub fn solve_ode_adaptive(f: fn(Float64, Float64) -> Float64, y0: Float64, t0: Float64, t1: Float64, tol: Float64) -> Vec[Float64] {
+pub fn solve_ode_adaptive(f: fn(Float64, Float64) -> Float64, y0: Float64, t0: Float64, t1: Float64, tol: Float64) -> Vec[Float64]
+  ensures: (tol <= 0.0) || (result.len() >= 1)
+{
   return solve_ode_rk45(f, y0, t0, t1, tol);
 }
 
@@ -115,7 +123,9 @@ pub fn solve_ode_adaptive(f: fn(Float64, Float64) -> Float64, y0: Float64, t0: F
 /// y_{n+1} = y_n + h f(t_{n+1}, y_{n+1}) solved by fixed-point iteration
 /// (8 iterations per step). Returns n + 1 values; empty for n <= 0.
 /// Complexity: O(n * iters * cost(f)).
-pub fn solve_ode_bdf(f: fn(Float64, Float64) -> Float64, y0: Float64, t0: Float64, t1: Float64, n: Int) -> Vec[Float64] {
+pub fn solve_ode_bdf(f: fn(Float64, Float64) -> Float64, y0: Float64, t0: Float64, t1: Float64, n: Int) -> Vec[Float64]
+  ensures: (n <= 0) || (result.len() == n + 1)
+{
   var out = Vec[Float64].new();
   if n <= 0 { return out; }
   var h = (t1 - t0) / (n as Float64);
@@ -142,7 +152,9 @@ pub fn solve_ode_bdf(f: fn(Float64, Float64) -> Float64, y0: Float64, t0: Float6
 /// u_t = u_xx + f(t, x) on x in [0, 1], u(x, 0) = sin(pi x), zero boundary
 /// conditions. Returns nt + 1 rows of nx + 1 spatial samples. Empty for
 /// degenerate input. Complexity: O(nt * nx).
-pub fn solve_pde_fd(f: fn(Float64, Float64) -> Float64, t0: Float64, t1: Float64, nx: Int, nt: Int) -> Vec[Vec[Float64]] {
+pub fn solve_pde_fd(f: fn(Float64, Float64) -> Float64, t0: Float64, t1: Float64, nx: Int, nt: Int) -> Vec[Vec[Float64]]
+  ensures: (nx <= 1) || (nt <= 0) || (result.len() == nt + 1)
+{
   var out = Vec[Vec[Float64]].new();
   if nx <= 1 || nt <= 0 { return out; }
   var dx = 1.0 / (nx as Float64);
@@ -195,7 +207,9 @@ pub fn solve_pde_fd(f: fn(Float64, Float64) -> Float64, t0: Float64, t1: Float64
 /// u_t = u_xx + f(t, x) on x in [0, 1] with zero boundaries and initial
 /// u = sin(pi x). Returns nt + 1 rows of nx + 1 samples. Empty for degenerate
 /// input. Complexity: O(nt * nx).
-pub fn solve_pde_fem(f: fn(Float64, Float64) -> Float64, t0: Float64, t1: Float64, nx: Int, nt: Int) -> Vec[Vec[Float64]] {
+pub fn solve_pde_fem(f: fn(Float64, Float64) -> Float64, t0: Float64, t1: Float64, nx: Int, nt: Int) -> Vec[Vec[Float64]]
+  ensures: (nx <= 1) || (nt <= 0) || (result.len() == nt + 1)
+{
   var out = Vec[Vec[Float64]].new();
   if nx <= 1 || nt <= 0 { return out; }
   var dx = 1.0 / (nx as Float64);

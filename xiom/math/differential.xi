@@ -21,7 +21,9 @@ use xiom.math;
 
 /// First derivative of f at x by the central difference (f(x+h) - f(x-h))/2h.
 /// Returns 0.0 for h == 0 (documented). Complexity: O(1).
-pub fn derivative(f: fn(Float64) -> Float64, x: Float64, h: Float64) -> Float64 {
+pub fn derivative(f: fn(Float64) -> Float64, x: Float64, h: Float64) -> Float64
+  ensures: (h != 0.0) || (result == 0.0)
+{
   if h == 0.0 { return 0.0; }
   var fplus = f(x + h);
   var fminus = f(x - h);
@@ -31,7 +33,9 @@ pub fn derivative(f: fn(Float64) -> Float64, x: Float64, h: Float64) -> Float64 
 /// Second derivative of f at x by the central difference
 /// (f(x+h) - 2f(x) + f(x-h))/h^2. Returns 0.0 for h == 0 (documented).
 /// Complexity: O(1).
-pub fn derivative2(f: fn(Float64) -> Float64, x: Float64, h: Float64) -> Float64 {
+pub fn derivative2(f: fn(Float64) -> Float64, x: Float64, h: Float64) -> Float64
+  ensures: (h != 0.0) || (result == 0.0)
+{
   if h == 0.0 { return 0.0; }
   var fplus = f(x + h);
   var f0 = f(x);
@@ -43,7 +47,9 @@ pub fn derivative2(f: fn(Float64) -> Float64, x: Float64, h: Float64) -> Float64
 /// Third derivative of f at x by the four-point central difference
 /// (f(x+2h) - 2f(x+h) + 2f(x-h) - f(x-2h))/2h^3. Returns 0.0 for h == 0
 /// (documented). Complexity: O(1).
-pub fn derivative3(f: fn(Float64) -> Float64, x: Float64, h: Float64) -> Float64 {
+pub fn derivative3(f: fn(Float64) -> Float64, x: Float64, h: Float64) -> Float64
+  ensures: (h != 0.0) || (result == 0.0)
+{
   if h == 0.0 { return 0.0; }
   var fp2 = f(x + 2.0 * h);
   var fp1 = f(x + h);
@@ -56,7 +62,9 @@ pub fn derivative3(f: fn(Float64) -> Float64, x: Float64, h: Float64) -> Float64
 
 /// Central finite-difference approximation of the first derivative. Alias of
 /// derivative. Returns 0.0 for h == 0 (documented). Complexity: O(1).
-pub fn finite_difference(f: fn(Float64) -> Float64, x: Float64, h: Float64) -> Float64 {
+pub fn finite_difference(f: fn(Float64) -> Float64, x: Float64, h: Float64) -> Float64
+  ensures: (h != 0.0) || (result == 0.0)
+{
   return derivative(f, x, h);
 }
 
@@ -66,7 +74,9 @@ pub fn finite_difference(f: fn(Float64) -> Float64, x: Float64, h: Float64) -> F
 /// O(halvings).
 /// Implemented iteratively on v0.61.3 (2026-09-24); the old BUG-20 crash
 /// claim was stale.
-pub fn richardson(f: fn(Float64) -> Float64, x: Float64, h: Float64, tol: Float64) -> Float64 {
+pub fn richardson(f: fn(Float64) -> Float64, x: Float64, h: Float64, tol: Float64) -> Float64
+  ensures: (tol > 0.0) || (tol != tol) || (result == 0.0)
+{
   if tol <= 0.0 { return 0.0; }
   var hh = h;
   if hh == 0.0 { hh = 1e-6; }
@@ -88,7 +98,9 @@ pub fn richardson(f: fn(Float64) -> Float64, x: Float64, h: Float64, tol: Float6
 /// Complexity: O(n * f).
 /// Implemented on v0.61.3 (2026-09-24) with push-only perturbation vectors
 /// (no indexed writes); Vec[Float64] reads and float loops are codegen-correct.
-pub fn gradient(f: fn(&Vec[Float64]) -> Float64, x: &Vec[Float64]) -> Vec[Float64] {
+pub fn gradient(f: fn(&Vec[Float64]) -> Float64, x: &Vec[Float64]) -> Vec[Float64]
+  ensures: result.len() == x.len()
+{
   var out = Vec[Float64].new();
   var n = x.len();
   var i = 0;
@@ -128,7 +140,9 @@ pub fn jacobian(fs: &Vec[fn(&Vec[Float64]) -> Float64], x: &Vec[Float64]) -> Vec
 /// Returns 0.0 for h == 0 and for i out of [0, len(x)) (documented).
 /// Complexity: O(f).
 /// Implemented on v0.61.3 (2026-09-24) with push-only perturbations.
-pub fn partial_derivative(f: fn(&Vec[Float64]) -> Float64, x: &Vec[Float64], i: Int, h: Float64) -> Float64 {
+pub fn partial_derivative(f: fn(&Vec[Float64]) -> Float64, x: &Vec[Float64], i: Int, h: Float64) -> Float64
+  ensures: ((i >= 0) && (i < x.len()) && (h != 0.0)) || (result == 0.0)
+{
   var n = x.len();
   if h == 0.0 { return 0.0; }
   if i < 0 || i >= n { return 0.0; }
