@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 65 (updated 2026-10-19 16:58Z at this docs commit; **stdlib-v0.64.8 MOVED to r2** -- tag object `0bf5b75` at `112c5b6`, COMPILER_VERSION=candidate-v0.64.8-r2; release run 39289746856 in progress; r1 `smoke_io_edge` SIGILL fixed by `4d040604b`; awaiting gate; no assets; coverage 76.1%, readiness 87.6%; paste-ready next-session prompt in `## 0C`)
+## 0A. CONTINUE HERE -- handoff snapshot 66 (updated 2026-10-19 17:48Z at this docs commit; **stdlib-v0.64.8 RELEASED** -- r2 gate green, run 39289746856 success, assets live (tarball sha256 6ea779...); tag `0bf5b75` at `112c5b6`; compiler final v0.64.8/STDLIB_VERSION pin pending; registry dispatch after; coverage 76.1%, readiness 87.6%; paste-ready next-session prompt in `## 0C`)
 
 ## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-18)
 
@@ -25,11 +25,11 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
   git -C E:\xiom-lang\xiom-relays pull --ff-only
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 65 + block 251 (and this 0C block).
+Read docs/stdlib_session.md snapshot 66 + block 252 (and this 0C block).
 
-State: stdlib-v0.64.7 is released; tag stdlib-v0.64.7 = f4482b14 (tag object 11bf62a6); registry xiom-std 0.64.7 is live. **stdlib-v0.64.8 is now on the r2 candidate**: tag object 0bf5b752462059eaa15cd8261eeb8b92039d8411 at commit 112c5b647215a12782ba066ad72b11595bd0afac; COMPILER_VERSION=candidate-v0.64.8-r2; package.xi 0.64.8; release-notes/v0.64.8.md; CHANGELOG [0.64.8]. The r1 gate failed only `smoke_io_edge` on both OSes (ubuntu 132/SIGILL, windows -1073741795/0xC000001D); the compiler root cause was a zero-size alloc / zero-capacity Vec path, fixed by 4d040604b (clamp alloc, grow Vec from 8), and r2 is the fixed candidate. New release run 39289746856 is in progress: https://github.com/xiom-lang/stdlib/actions/runs/39289746856. The tag-push registry run 39289746947 is waiting and is expected to fail on the r2 candidate asset; dispatch it after the final compiler v0.64.8. No GitHub Release assets exist yet. Local battery on 9b88b46: modules 533/533, probes 368/368, smokes 960/962 (the documented v0.64.7-gated guard pair on v0.64.6), barename/coverage/doc rc 0. Waves 179-188 and wishlist 47 are merged: time 52.9%, async 62.7%, num 50.7%, core 78.6%, stats 99.3%, regex 98.0%, search 100%, string 68.9%, math 56.0%, sync 95.2%; global 76.1%; floors189 wired; readiness 87.6% (gates 1-7 and 10 met; gate 8 76.1%; gate 9 compiler-owned). New compiler items: REL-20261018-1546-stdlib, REL-20261019-1451-stdlib, REL-20261019-1624-stdlib. Wishlist row 47 is fixed pending xvector verification.
+State: stdlib-v0.64.7 is released; tag stdlib-v0.64.7 = f4482b14 (tag object 11bf62a6); registry xiom-std 0.64.7 is live. **stdlib-v0.64.8 is RELEASED**: tag object 0bf5b752462059eaa15cd8261eeb8b92039d8411 at commit 112c5b647215a12782ba066ad72b11595bd0afac; COMPILER_VERSION=candidate-v0.64.8-r2; package.xi 0.64.8; release-notes/v0.64.8.md; CHANGELOG [0.64.8]. release.yml run 39289746856 completed success (validate, ubuntu, windows, package + GitHub Release); the separate STDLIB_VERSION pin-PR job failed on the known token limitation. Assets: xiom-std-0.64.8.tar.gz sha256 6ea77968232e26ff8d1d2adcf83b2c4ed3cf3a0a3597ff891c8d3d40fc815683; SHA256SUMS sha256 70d350667986a472485a2791cb6730355c00938ca867bd43b45a0194d20e246f; https://github.com/xiom-lang/stdlib/releases/tag/stdlib-v0.64.8. The tag-push registry run 39289746947 was cancelled; dispatch publish-registry with compiler v0.64.8 after the final compiler tag. Local battery on 9b88b46: modules 533/533, probes 368/368, smokes 960/962 (the documented v0.64.7-gated guard pair on v0.64.6), barename/coverage/doc rc 0. Waves 179-188 and wishlist 47 are merged: time 52.9%, async 62.7%, num 50.7%, core 78.6%, stats 99.3%, regex 98.0%, search 100%, string 68.9%, math 56.0%, sync 95.2%; global 76.1%; floors189 wired; readiness 87.6% (gates 1-7 and 10 met; gate 8 76.1%; gate 9 compiler-owned). New compiler items: REL-20261018-1546-stdlib, REL-20261019-1451-stdlib, REL-20261019-1624-stdlib. Wishlist row 47 is fixed pending xvector verification.
 
-Release next: monitor run 39289746856. If green, return the release asset sha, let the compiler cut the final v0.64.8, and dispatch publish-registry with the compiler v0.64.8 override; if it fails, report the failed gate and the exact file. Do not move the tag again unless r2 fails. Remaining gate 8 after the cut: iter 46.4%, num 50.7%, math 56.0%, string 68.9%, core 78.6%, regex 98.0%, stats 99.3%, search 100%; next waves are num/num.xi and the string/math continuations; dump floors190, wire workflows + tools/README, update the readiness meter.
+Release next: the compiler sets STDLIB_VERSION=stdlib-v0.64.8 (the pin-PR job failure is the known token limitation) and cuts the final v0.64.8 tag; once the final compiler tag exists, dispatch publish-registry with compiler=v0.64.8 and verify xiom-std 0.64.8. The stdlib tag must not move again. Remaining gate 8 after the cut: iter 46.4%, num 50.7%, math 56.0%, string 68.9%, core 78.6%, regex 98.0%, stats 99.3%, search 100%; next waves are num/num.xi and the string/math continuations; dump floors190, wire workflows + tools/README, update the readiness meter.
 
 Gate 9 (corrected live ids): REL-20261011-1053-stdlib, -1456-stdlib, -1626-stdlib, REL-20261015-2328-stdlib, -2343-stdlib, REL-20261016-2000-stdlib, -2100-stdlib, -2331-stdlib. All are stdlib -> compiler; only 2331 is fixed. Verify 1456/1053/2328/2000 first on the official v0.64.7 archive (sha256 16a436c4...), then 2100 W2-W4 green/W1 red; 1626 needs m354, 2343 m355, 2100 W1 m357, 2331 needs the next archive + the stdlib runtime helper fix. Do not close from the unverified local v0647 extract. 1549-pulse-5 waits on compiler 1609, 1834 on 1550. Wishlist: row 33 open (compiler/install), row 47 fixed pending xvector verify. Kqueue needs a macOS runner; net.event wrapper and LISTEN_FDS server integration remain.
 
@@ -3674,6 +3674,23 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-19 block 252 (v0.64.8 RELEASED -- r2 gate green; run 39289746856 success; assets live; pin-PR known failure; registry pending final compiler tag)**
+- `release.yml` run 39289746856 completed success: validate, ubuntu,
+  windows, package + GitHub Release. The separate STDLIB_VERSION pin-PR
+  job failed on the known token limitation; the compiler must set the
+  pin/cut manually.
+- Tag object `0bf5b75` at commit `112c5b6`. Assets: tarball sha256
+  `6ea77968232e26ff8d1d2adcf83b2c4ed3cf3a0a3597ff891c8d3d40fc815683`;
+  SHA256SUMS sha256
+  `70d350667986a472485a2791cb6730355c00938ca867bd43b45a0194d20e246f`;
+  https://github.com/xiom-lang/stdlib/releases/tag/stdlib-v0.64.8.
+- r2 fix `4d040604b` resolved `smoke_io_edge`; relay `1624`/`1432`
+  updated with the asset SHA and release URL. Stale tag-push registry
+  run 39289746947 was cancelled.
+- Next: compiler sets `STDLIB_VERSION=stdlib-v0.64.8` and cuts v0.64.8;
+  then dispatch `publish-registry` with `compiler=v0.64.8`, verify
+  `xiom-std 0.64.8`, and return to gate 8 (iter/num/math/string).
 
 **SESSION 2026-10-19 block 251 (v0.64.8 r2 RE-GATE -- tag moved to 112c5b6 / tag object 0bf5b75; run 39289746856 in progress)**
 - r1 failure was only `smoke_io_edge` on both OSes (SIGILL). Compiler
