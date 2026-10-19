@@ -323,7 +323,10 @@ fn is_valid_regex(pattern: Str) -> Bool {
 /// Compile a regex pattern. Validates the syntax and returns a compiled
 /// `Regex`, or `Err` describing the problem on invalid syntax.
 /// Complexity: O(len(pattern)) validation.
-pub fn regex_compile(pattern: Str) -> Result[Regex, Str] {
+pub fn regex_compile(pattern: Str) -> Result[Regex, Str]
+  ensures: (is_valid_regex(pattern)) => (result is Ok)
+  ensures: (!is_valid_regex(pattern)) => (result is Err)
+{
   if !is_valid_regex(pattern) {
     return Err("invalid regex pattern");
   };
@@ -332,7 +335,9 @@ pub fn regex_compile(pattern: Str) -> Result[Regex, Str] {
 
 /// True when `r` matches the entire string `s` (anchored at both ends).
 /// Complexity: O(len(s) * len(r)) worst case for the backtracking matcher.
-pub fn regex_match(r: Regex, s: Str) -> Bool {
+pub fn regex_match(r: Regex, s: Str) -> Bool
+  requires: r.compiled == 0
+{
   let pattern = r.pattern;
   let anchored = pattern.len() > 0 && string.char_at(pattern, 0).unwrap() == '^';
   let result = match_here(pattern, s, if anchored { 1 } else { 0 }, 0);
@@ -349,14 +354,19 @@ pub fn regex_match(r: Regex, s: Str) -> Bool {
 
 /// Find the first match of `r` in `s`, or None when there is no match.
 /// Complexity: O(len(s) * len(r)) worst case.
-pub fn regex_find(r: Regex, s: Str) -> Option[Match] {
+pub fn regex_find(r: Regex, s: Str) -> Option[Match]
+  requires: r.compiled == 0
+{
   find_first_match(r.pattern, s)
 }
 
 /// Find every non-overlapping match of `r` in `s`, in left-to-right order.
 /// An empty pattern matches at every byte boundary.
 /// Complexity: O(len(s) * len(r)) per match.
-pub fn regex_find_all(r: Regex, s: Str) -> Vec[Match] {
+pub fn regex_find_all(r: Regex, s: Str) -> Vec[Match]
+  requires: r.compiled == 0
+  ensures: (r.pattern.len() == 0) => (result.len() == s.len() + 1)
+{
   var matches = Vec[Match].new();
   let pattern = r.pattern;
   let t_len = s.len();
@@ -397,7 +407,9 @@ pub fn regex_find_all(r: Regex, s: Str) -> Vec[Match] {
 /// syntax, so the returned vector contains exactly one element: the full
 /// match text (group 0). None when there is no match.
 /// Complexity: O(len(s) * len(r)) worst case.
-pub fn regex_captures(r: Regex, s: Str) -> Option[Vec[Str]] {
+pub fn regex_captures(r: Regex, s: Str) -> Option[Vec[Str]]
+  requires: r.compiled == 0
+{
   let m = find_first_match(r.pattern, s);
   var groups = Vec[Str].new();
   match m {
@@ -415,7 +427,9 @@ pub fn regex_captures(r: Regex, s: Str) -> Option[Vec[Str]] {
 /// Names of the named capture groups. This engine has no named-group syntax,
 /// so the result is always an empty vector.
 /// Complexity: O(1).
-pub fn regex_capture_names(r: Regex) -> Vec[Str] {
+pub fn regex_capture_names(r: Regex) -> Vec[Str]
+  ensures: result.len() == 0
+{
   Vec[Str].new()
 }
 
@@ -423,7 +437,9 @@ pub fn regex_capture_names(r: Regex) -> Vec[Str] {
 /// semantics, like PCRE `pcre_exec`). Returns false on invalid pattern
 /// syntax or when there is no match.
 /// Complexity: O(len(s) * len(pattern)) worst case.
-pub fn regex_is_match(pattern: Str, s: Str) -> Bool {
+pub fn regex_is_match(pattern: Str, s: Str) -> Bool
+  ensures: (!is_valid_regex(pattern)) => (result == false)
+{
   let compiled = regex_compile(pattern);
   match compiled {
     Ok(r) => find_first_match(r.pattern, s).is_some;
@@ -434,7 +450,9 @@ pub fn regex_is_match(pattern: Str, s: Str) -> Bool {
 /// Convenience: compile `pattern` then find all matches in `s`.
 /// Returns an empty vector on invalid pattern syntax.
 /// Complexity: O(len(s) * len(pattern)) worst case.
-pub fn regex_matches(pattern: Str, s: Str) -> Vec[Match] {
+pub fn regex_matches(pattern: Str, s: Str) -> Vec[Match]
+  ensures: (!is_valid_regex(pattern)) => (result.len() == 0)
+{
   let compiled = regex_compile(pattern);
   match compiled {
     Ok(r) => regex_find_all(r, s);
@@ -445,7 +463,9 @@ pub fn regex_matches(pattern: Str, s: Str) -> Vec[Match] {
 /// Replace the first match of `r` in `s` with `replacement`.
 /// Returns `s` unchanged when there is no match. Literal replacement (no $1).
 /// Complexity: O(len(s) + len(replacement)).
-pub fn regex_replace(r: Regex, s: Str, replacement: Str) -> Str {
+pub fn regex_replace(r: Regex, s: Str, replacement: Str) -> Str
+  requires: r.compiled == 0
+{
   let m = find_first_match(r.pattern, s);
   match m {
     Some(match_obj) => {
@@ -460,7 +480,9 @@ pub fn regex_replace(r: Regex, s: Str, replacement: Str) -> Str {
 /// Replace every non-overlapping match of `r` in `s` with `replacement`.
 /// Returns `s` unchanged when there are no matches. Literal replacement.
 /// Complexity: O(len(s) + matches * len(replacement)).
-pub fn regex_replace_all(r: Regex, s: Str, replacement: Str) -> Str {
+pub fn regex_replace_all(r: Regex, s: Str, replacement: Str) -> Str
+  requires: r.compiled == 0
+{
   let matches = regex_find_all(r, s);
   if matches.len() == 0 {
     return s;
@@ -480,7 +502,10 @@ pub fn regex_replace_all(r: Regex, s: Str, replacement: Str) -> Str {
 /// Split `s` around every non-overlapping match of `r`. An empty pattern
 /// splits into individual characters. The trailing segment is always present.
 /// Complexity: O(len(s) * len(r)) worst case.
-pub fn regex_split(r: Regex, s: Str) -> Vec[Str] {
+pub fn regex_split(r: Regex, s: Str) -> Vec[Str]
+  requires: r.compiled == 0
+  ensures: result.len() >= 1
+{
   var result = Vec[Str].new();
   let pattern = r.pattern;
   let t_len = s.len();
@@ -518,6 +543,9 @@ pub fn regex_split(r: Regex, s: Str) -> Vec[Str] {
 /// Lazily-ordered iterator of every match of `r` in `s`, materialised as a
 /// vector in left-to-right order. Equivalent to `regex_find_all`.
 /// Complexity: O(len(s) * len(r)) worst case.
-pub fn regex_find_iter(r: Regex, s: Str) -> Vec[Match] {
+pub fn regex_find_iter(r: Regex, s: Str) -> Vec[Match]
+  requires: r.compiled == 0
+  ensures: result.len() == regex_find_all(r, s).len()
+{
   regex_find_all(r, s)
 }

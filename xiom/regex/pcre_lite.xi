@@ -49,7 +49,10 @@ fn pattern_for(handle: Int) -> Option[Str] {
 /// `flags` is reserved for future PCRE options and is currently ignored
 /// (documented: only flags == 0 is honoured).
 /// Complexity: O(len(pattern)).
-pub fn pcre_compile(pattern: Str, flags: Int) -> Result[Int, Str] {
+pub fn pcre_compile(pattern: Str, flags: Int) -> Result[Int, Str]
+  ensures: (syntax.regex_validate(pattern)) => (result is Ok)
+  ensures: (!syntax.regex_validate(pattern)) => (result is Err)
+{
   if !syntax.regex_validate(pattern) {
     return Err("invalid regex pattern");
   };
@@ -62,7 +65,9 @@ pub fn pcre_compile(pattern: Str, flags: Int) -> Result[Int, Str] {
 /// True when the compiled pattern `compiled` matches somewhere in `s`
 /// (search semantics, not whole-string). False for invalid handles.
 /// Complexity: O(len(s) * len(pattern)) worst case.
-pub fn pcre_match(compiled: Int, s: Str) -> Bool {
+pub fn pcre_match(compiled: Int, s: Str) -> Bool
+  ensures: (pattern_for(compiled) is None) => (result == false)
+{
   let pat = pattern_for(compiled);
   match pat {
     Some(p) => engine.regex_is_match(p, s);
@@ -74,7 +79,10 @@ pub fn pcre_match(compiled: Int, s: Str) -> Bool {
 /// (start, end) byte-index pairs: [s0, e0, s1, e1, ...].
 /// Empty for invalid handles or no matches.
 /// Complexity: O(len(s) * len(pattern)) worst case.
-pub fn pcre_exec(compiled: Int, s: Str) -> Vec[Int] {
+pub fn pcre_exec(compiled: Int, s: Str) -> Vec[Int]
+  ensures: (pattern_for(compiled) is None) => (result.len() == 0)
+  ensures: (pattern_for(compiled) is Some) => (result.len() % 2 == 0)
+{
   var out = Vec[Int].new();
   let pat = pattern_for(compiled);
   match pat {
@@ -95,7 +103,9 @@ pub fn pcre_exec(compiled: Int, s: Str) -> Vec[Int] {
 /// Replace the first match of the compiled pattern `compiled` in `s` with
 /// `replacement`. Returns `s` unchanged for invalid handles.
 /// Complexity: O(len(s) + len(replacement)).
-pub fn pcre_replace(compiled: Int, s: Str, replacement: Str) -> Str {
+pub fn pcre_replace(compiled: Int, s: Str, replacement: Str) -> Str
+  ensures: (pattern_for(compiled) is None) => (result == s)
+{
   let pat = pattern_for(compiled);
   match pat {
     Some(p) => {
@@ -112,7 +122,10 @@ pub fn pcre_replace(compiled: Int, s: Str, replacement: Str) -> Str {
 /// Split `s` around every match of the compiled pattern `compiled`.
 /// Returns [s] (a single segment) for invalid handles.
 /// Complexity: O(len(s) * len(pattern)) worst case.
-pub fn pcre_split(compiled: Int, s: Str) -> Vec[Str] {
+pub fn pcre_split(compiled: Int, s: Str) -> Vec[Str]
+  ensures: (pattern_for(compiled) is None) => (result.len() == 1 && result[0] == s)
+  ensures: (pattern_for(compiled) is Some) => (result.len() >= 1)
+{
   var out = Vec[Str].new();
   let pat = pattern_for(compiled);
   match pat {
@@ -142,7 +155,9 @@ pub fn pcre_free(compiled: Int) {
 
 /// Version string of this embedded PCRE implementation.
 /// Complexity: O(1).
-pub fn pcre_version() -> Str {
+pub fn pcre_version() -> Str
+  ensures: result.len() > 0
+{
   "xiom-pcre-lite/1.0 (subset)"
 }
 
@@ -150,7 +165,9 @@ pub fn pcre_version() -> Str {
 /// syntax, so this is always 0 for valid handles; invalid handles also
 /// return 0.
 /// Complexity: O(1).
-pub fn pcre_capture_count(compiled: Int) -> Int {
+pub fn pcre_capture_count(compiled: Int) -> Int
+  ensures: result == 0
+{
   let pat = pattern_for(compiled);
   match pat {
     Some(_) => 0;

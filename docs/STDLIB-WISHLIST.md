@@ -617,6 +617,11 @@ campaign release; the table statuses above were normalized in the
   `histogram_add` is a frozen by-value Unit no-op left uncovered);
   global 74.0% -> 74.8%; floors186 dumped/wired; probes
   `p_wave183_{stats,regress,probability}_shapes`; readiness 87.5%.
+- wave 184 (regex contracts): regex coverage 59.2% -> 98.0%
+  (engine compile/validity/empty-pattern clauses, pcre_lite
+  invalid-handle rows; `pcre_free` is a documented no-op left
+  uncovered); global 74.8% -> 75.1%; floors187 dumped/wired; probe
+  `p_wave184_regex_shapes`; readiness 87.5%.
 - NOT assigned in the 165-171 pass: row 33 stays compiler/install-lane.
   Released as stdlib-v0.64.7 / xiom-std 0.64.7 (release gates on
   candidate-v0.64.7-m351-r2; compiler v0.64.7 pins STDLIB_VERSION to the
