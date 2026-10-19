@@ -1,14 +1,14 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
-**88.9% -- 8 of 10 gates complete; gate 8 at 89.0% (partial credit) and
+**89.0% -- 8 of 10 gates complete; gate 8 at 90.0% (partial credit) and
 gate 9 discrete.** (Compiler pin: **v0.64.8**; stdlib-v0.64.8 tag object
 `0bf5b75` at `112c5b6` with tag-time `COMPILER_VERSION=candidate-v0.64.8-r2`;
 main pin `v0.64.8` after the block-259 battery; compiler v0.64.8 pins
 `STDLIB_VERSION=stdlib-v0.64.8`; registry `xiom-std 0.64.8` is live, run
 39298965606 re-ran green after the ops mapping fix.)
 **Gates: merged corpus 963/963 (0 compilefail / 0 runfail), modules
-533/533, probes 381/381, barename 0/533, floors191. Wave pin: v0.64.8
-(block 261).**
+533/533, probes 383/383, barename 0/533, floors192. Wave pin: v0.64.8
+(block 262).**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -17,29 +17,31 @@ gates flip:
 2. Smoke corpus green -- MET: merged 963/963 on v0.64.8 (0/0),
    including the directory-rename regression; plus 956/956 on both
    Windows and Ubuntu release gates, no carve-outs.
-3. Probe corpus green -- MET (381/381; waves 188-195, fraction-add,
-   io.rename, hash-shadow, async-select, Routh, and executor probes
-   are included and individually green).
+3. Probe corpus green -- MET (383/383; waves 188-197, fraction-add,
+   io.rename, hash-shadow, async-select, Routh, executor, and
+   small-gap/math-os probes are included and individually green).
 4. Strict bare-name scan clean -- MET (0/533).
-5. Coverage ratchet green -- MET (floors191).
+5. Coverage ratchet green -- MET (floors192).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (499/542 modules, 3501/6575 fns).
 8. Contract coverage 100% (every public fn carries clauses) -- OPEN
-   (89.0%, 6129/6890; clauses/fns 91%, 8473 clauses; floors191). Waves
-   191-195 lifted time 52.9% -> 85.5%, async 62.7% -> 85.1%, os 65.1%
-   -> 68.5%, collect 65.5% -> 93.2%, thread 67.9% -> 89.3%, compress
-   70.4% -> 96.3%, math 71.3% -> 78.2%, bits 74.3% -> 97.0%, iter
-   46.4% -> 55.2%, core 78.6% -> 94.7%. Worst directories: iter 55.2%,
-   os 68.5%, collections 77.2%, math 78.2%, alloc 78.6%, simd 78.9%,
-   ffi 79.5%, array 80.0%, cell 81.2%.
+   (90.0%, 6200/6890; clauses/fns 92.1%, 8574 clauses; floors192).
+   Waves 191-197 lifted time 85.5%, async 85.1%, os 69.2%, collect
+   93.2%, thread 89.3%, compress 96.3%, math 79.5%, bits 97.0%, iter
+   55.2%, core 94.7%; collections/array/cell now 100%, format 95.2%,
+   ffi 89.0%, simd 87.8%. Worst directories: iter 55.2%, os 69.2%,
+   alloc 78.6%, math 79.5%, async 85.1%, time 85.5%, rc 86.7%,
+   bench 87.5%, simd 87.8%.
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
    OPEN. Gate 9 on v0.64.8: 1053/1456/2328/2000/1546/1624 verified and
    closed; 1626 (T001 trailing match), 2343 (bare inline i32), 2100-W1
    (alias field + close C001) still red; 1609 (inline Result.value[i])
    still red and keeps the PULSE list_dir workaround; 2331 stdlib runtime
-   residual verified/closed. New stdlib fixes this cycle: fraction_add,
-   io.rename directory postcondition, Routh-Hurwitz, weekday convention,
-   AsyncExecutor.run receiver drain.
+   residual verified/closed. New compiler items filed from wave 196:
+   REL-20261019-2249-stdlib (multiple generic Map/Set free helpers AV
+   0xC0000005) and -2 (Vec4f lane get/write miscompile). New stdlib fixes
+   this cycle: fraction_add, io.rename directory postcondition,
+   Routh-Hurwitz, weekday convention, AsyncExecutor.run receiver drain.
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- MET
     (stdlib-v0.64.8 released 2026-10-19; tag object 0bf5b75 -> commit
     112c5b6; release run 39289746856; assets + SHA256SUMS published;
@@ -47,8 +49,8 @@ gates flip:
     xiom-std 0.64.8 live via run 39298965606; tags frozen).
 
 Meter formula: MET gates count 1.0; gate 8 counts its current
-pub-with-clause fraction (89.0% -> 0.890); gate 9 gets no partial credit
-(discrete). 8.890 / 10 = 88.9%. Update the percentage and the gate-8
+pub-with-clause fraction (90.0% -> 0.900); gate 9 gets no partial credit
+(discrete). 8.900 / 10 = 89.0%. Update the percentage and the gate-8
 fraction in the same commit as each floors dump so the meter moves
 smoothly toward 90%.
 
@@ -60,15 +62,15 @@ pin v0.64.8** (tag object `0bf5b75` -> commit `112c5b6` with tag-time
 `4d040604b`; release run 39289746856; registry run 39298965606 green,
 `xiom-std 0.64.8` sha256 `c4ab5c61...`). Assets:
 `xiom-std-0.64.8.tar.gz` sha256 `6ea77968...`. Main carries waves
-188-195: num/num.xi 5.4% -> 99.2%, string 68.9% -> 90.4%, time 52.9%
--> 85.5%, async 62.7% -> 85.1%, collect 93.2%, thread 89.3%, compress
-96.3%, math 78.2%, bits 97.0%, iter 55.2%, core 94.7%. Gates: modules
-533/533, smokes 963/963, probes 381/381, barename 0/533, floors191.
-Also fixed this cycle: runtime `__udivti3`, `fraction_add`, `io.rename`
-directory postcondition, Routh-Hurwitz, weekday convention, and
-`AsyncExecutor.run` receiver drain. Gate 8 is 89.0%; readiness is 88.9%;
-gate 9 reds are 1626/2343/2100-W1 (plus 1609). Historical state below is
-retained.
+188-197: num/num.xi 5.4% -> 99.2%, string 90.4%, time 85.5%, async
+85.1%, os 69.2%, collect 93.2%, thread 89.3%, compress 96.3%, math
+79.5%, bits 97.0%, iter 55.2%, core 94.7%; collections/array/cell
+100%, format 95.2%, ffi 89.0%, simd 87.8%. Gates: modules 533/533,
+smokes 963/963, probes 383/383, barename 0/533, floors192. Also fixed
+this cycle: runtime `__udivti3`, `fraction_add`, `io.rename` directory
+postcondition, Routh-Hurwitz, weekday convention, and `AsyncExecutor.run`
+receiver drain. Gate 8 is 90.0%; readiness is 89.0%; gate 9 reds are
+1626/2343/2100-W1 plus 1609. Historical state below is retained.
 
 Historical state (2026-10-11): compiler pin **v0.64.4** (released
 2026-10-12, tag f76fd47c on df493530; the lane battery runs the official
