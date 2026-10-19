@@ -1,67 +1,62 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
-**87.6% -- 8 of 10 gates complete; gate 8 at 76.1% (partial credit) and
+**88.3% -- 8 of 10 gates complete; gate 8 at 83.0% (partial credit) and
 gate 9 discrete.** (Compiler pin: **v0.64.8**; stdlib-v0.64.8 tag object
-`0bf5b75` at `112c5b6` with `COMPILER_VERSION=candidate-v0.64.8-r2`;
-compiler v0.64.8 pins `STDLIB_VERSION=stdlib-v0.64.8`; registry
-`xiom-std 0.64.8` is live, run 39298965606 re-ran green after the ops
-mapping fix.)
-**Gates: corpus 956/956 on both r2 Windows and Ubuntu release gates
-(962 including retries; 0 compilefail / 0 runfail), modules 533/533,
-probes 368/368, barename 0/533. Wave pin: v0.64.8 (block 257).**
+`0bf5b75` at `112c5b6` with tag-time `COMPILER_VERSION=candidate-v0.64.8-r2`;
+main pin `v0.64.8` after the block-259 battery; compiler v0.64.8 pins
+`STDLIB_VERSION=stdlib-v0.64.8`; registry `xiom-std 0.64.8` is live, run
+39298965606 re-ran green after the ops mapping fix.)
+**Gates: merged corpus 962/962 (0 compilefail / 0 runfail), modules
+533/533, probes 372/372, barename 0/533, floors190. Wave pin: v0.64.8
+(blocks 259/260).**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
 gates flip:
 1. Modules type-check clean -- MET (533/533).
-2. Smoke corpus green -- MET on the v0.64.8 r2 release gates: 956/956 on
-   both Windows and Ubuntu, no carve-outs.
-3. Probe corpus green -- MET (368/368; the wave-181..188 probes are
-   included and individually green).
+2. Smoke corpus green -- MET: merged 962/962 on v0.64.8 (0/0), plus
+   956/956 on both Windows and Ubuntu release gates, no carve-outs.
+3. Probe corpus green -- MET (372/372; the wave-188..190 and
+   fraction-add probes are included and individually green).
 4. Strict bare-name scan clean -- MET (0/533).
-5. Coverage ratchet green -- MET (floors189).
+5. Coverage ratchet green -- MET (floors190).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (499/542 modules, 3501/6575 fns).
 8. Contract coverage 100% (every public fn carries clauses) -- OPEN
-   (76.1%; wave 186 lifted string 62.6% -> 68.9%; wave 187 lifted math
-   53.8% -> 56.0%; wishlist 47 added the sync channel handle form (sync
-   95.2%); wave 185 lifted search 62.2% -> 100%; wave 184 lifted regex
-   59.2% -> 98.0%; wave 183 lifted stats 60.4% -> 99.3%; wave 182
-   lifted core 58.0% -> 78.6%; wave 181 lifted num 37.9% -> 50.7%;
-   waves 179/180 lifted time 41.3% -> 52.9% and async 47.8% -> 62.7%;
-   the worst directories are iter/num/math/string).
+   (83.0%; wave 188 lifted num 50.7% -> 96.9% with num/num.xi 5.4% ->
+   99.2%; wave 189 lifted string 68.9% -> 90.4%; wave 190 lifted math
+   56.0% -> 71.3%; floors190. The worst directories are iter 46.4%,
+   time 52.9%, async 62.7%, os 65.1%, collect 65.5%, thread 67.9%,
+   compress 70.4%, math 71.3%).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
-   OPEN (compiler-owned; see the relay bus for the current item set).
+   OPEN. Gate 9 on v0.64.8: 1053/1456/2328/2000 green (compiler to mark
+   fixed; report REL-20261019-1953-stdlib); 1626 (T001 trailing match),
+   2343 (bare inline i32), 2100-W1 (alias field + close C001) still red;
+   2331 stdlib runtime residual verified/closed.
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- MET
-    (stdlib-v0.64.7 released 2026-10-17; release run 39073534681;
-    GitHub Release + assets published and refreshed after the tag moved
-    to f4482b14 (COMPILER_VERSION=v0.64.7); compiler v0.64.7 shipped and
-    pins STDLIB_VERSION; staging canary 39077278671 and production
-    publish 39135008135 are GREEN; release.yml is idempotent at 0056bce).
+    (stdlib-v0.64.8 released 2026-10-19; tag object 0bf5b75 -> commit
+    112c5b6; release run 39289746856; assets + SHA256SUMS published;
+    compiler v0.64.8 tag 4d040604b pins STDLIB_VERSION; registry
+    xiom-std 0.64.8 live via run 39298965606; tags frozen).
 
 Meter formula: MET gates count 1.0; gate 8 counts its current
-pub-with-clause fraction (76.1% -> 0.761); gate 9 gets no partial credit
-(discrete). 8.761 / 10 = 87.6%. Update the percentage and the gate-8
+pub-with-clause fraction (83.0% -> 0.830); gate 9 gets no partial credit
+(discrete). 8.830 / 10 = 88.3%. Update the percentage and the gate-8
 fraction in the same commit as each floors dump so the meter moves
 smoothly toward 90%.
 
 Authoritative order: the gates above, then the updates below newest-first.
 
-Current state 2026-10-18: **stdlib-v0.64.7 RELEASED and PUBLISHED**
-(annotated tag `stdlib-v0.64.7` = tag object `11bf62a6` -> commit
-`f4482b14`; `COMPILER_VERSION=v0.64.7`; compiler main pins
-`STDLIB_VERSION=stdlib-v0.64.7` at 3667ee29d). Release run 39073534681
-and the moved-tag re-gate 39135008156 are green on Windows+Ubuntu;
-production registry publish 39135008135 is green and the registry
-reports `xiom-std 0.64.7` latest. Assets: `xiom-std-0.64.7.tar.gz`
-sha256 `93da5829...`; the release body is verified against compiler
-v0.64.7. Main carries waves 172-188 plus wishlist 47, the m351
-typed-fault runtime and the arm64 crypto-availability fix. Gate 8 is
-76.1% (wave 186 string 68.9%; wave 187 math 56.0%; wishlist 47 sync
-95.2%; wave 185 search 100%; wave 184 regex 98.0%; wave 183 stats
-99.3%; wave 182 core 78.6%; wave 181 num 50.7%; waves 179/180: time
-52.9%, async 62.7%); gate 9 is compiler-owned. Historical state below
-is retained.
+Current state 2026-10-19: **stdlib-v0.64.8 RELEASED and PUBLISHED; main
+pin v0.64.8** (tag object `0bf5b75` -> commit `112c5b6` with tag-time
+`COMPILER_VERSION=candidate-v0.64.8-r2`; compiler v0.64.8 tag
+`4d040604b`; release run 39289746856; registry run 39298965606 green,
+`xiom-std 0.64.8` sha256 `c4ab5c61...`). Assets:
+`xiom-std-0.64.8.tar.gz` sha256 `6ea77968...`. Main carries waves
+188-190 (num/num.xi 5.4% -> 99.2%, string 68.9% -> 90.4%, math 56.0%
+-> 71.3%), floors190, the runtime `__udivti3` fix and the `fraction_add`
+cross-cancel fix. Gate 8 is 83.0%; readiness is 88.3%; gate 9 reds are
+1626/2343/2100-W1. Historical state below is retained.
 
 Historical state (2026-10-11): compiler pin **v0.64.4** (released
 2026-10-12, tag f76fd47c on df493530; the lane battery runs the official

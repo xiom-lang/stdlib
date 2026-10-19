@@ -17,47 +17,95 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 71 (updated 2026-10-19 18:34Z at this docs commit; **v0.64.8 COMPLETE** -- stdlib + compiler released, `xiom-std 0.64.8` live; **NEXT SESSION HANDOFF**: gate 8 76.1%, next waves `num/num.xi` + string + math; gate 9 on v0.64.8; relays/bugs/wishlist triage; use Agent Manager worktrees; paste-ready prompt in `## 0C`)
+## 0A. CONTINUE HERE -- handoff snapshot 72 (updated 2026-10-19 23:35Z; **v0.64.8 PINNED + RELEASED**; waves 188-190 merged: global 83.0%, readiness 88.3%, floors190; final battery modules 533/533, smokes 962/962, probes 372/372, barename 0/533; next: iter/time/async/os/collect/thread/compress + math remainder; gate 9 reds 1626/2343/2100-W1)
 
-## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-18)
+## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-19, snapshot 72)
 
 ```
 Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib, branch main). Start with:
   git -C E:\xiom-lang\xiom-relays pull --ff-only origin main
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 71 + block 258 (and this 0C block).
+Read docs/stdlib_session.md snapshot 72 + blocks 259/260 (and this 0C block).
 
-State: v0.64.8 is COMPLETE. stdlib-v0.64.8 tag object 0bf5b75 -> commit 112c5b6 (COMPILER_VERSION=candidate-v0.64.8-r2); release run 39289746856 success; assets xiom-std-0.64.8.tar.gz sha256 6ea77968..., https://github.com/xiom-lang/stdlib/releases/tag/stdlib-v0.64.8. Compiler v0.64.8 tag 4d040604b. Registry xiom-std 0.64.8 is latest: sha256 c4ab5c61..., publicKey c8cd29a5..., signature 8bdf9f14...; run 39298965606 re-ran green after the ops mapping fix. Do NOT move the stdlib tag or re-cut v0.64.8; tags are frozen. Main docs 935a4f2+.
+State: v0.64.8 is RELEASED and PINNED. COMPILER_VERSION=v0.64.8; staged
+archive %TEMP%\kilo\stdlib_ws\v0.64.8-official (windows zip sha256
+c31d9c46..., linux tar.gz a8c003c0...). stdlib-v0.64.8 tag object 0bf5b75
+-> commit 112c5b6 (tag-time COMPILER_VERSION=candidate-v0.64.8-r2); release
+run 39289746856; registry xiom-std 0.64.8 live (sha256 c4ab5c61..., run
+39298965606). Tags frozen; do NOT move/re-cut v0.64.8.
 
-Coverage: global 76.1%, readiness 87.6% (gate 8 0.761; floors189). Directories: iter 46.4%, num 50.7%, math 56.0%, string 68.9%, core 78.6%, regex 98.0%, stats 99.3%, search 100%, time 52.9%, async 62.7%. Gate 8 is the main path; aim for 100% with real clauses, not tautologies.
+Coverage: global pub-with-clause 83.0% (5720/6890; clauses/fns 84.2%),
+readiness 88.3% (gate 8 83.0%; floors190; gates 1-7/10 met, gate 9 open).
+Merged waves 188-190: num 50.7% -> 96.9% (num/num.xi 5.4% -> 99.2%),
+string 68.9% -> 90.4%, math 56.0% -> 71.3%. Worst dirs: iter 46.4%,
+time 52.9%, async 62.7%, os 65.1%, collect 65.5%, thread 67.9%,
+compress 70.4%, math 71.3%, bits 74.3%, core 78.6%.
+
+Final battery on the merged tree (official v0.64.8): modules 533/533,
+smokes 962/962 (0 compilefail / 0 runfail), probes 372/372, barename
+0/533, coverage floors190 RATCHET OK, regex 17/17, doc_scan 100%
+(2 pre-existing net misses). fraction_add cross-cancel fix +
+p_fraction_add_reduce; runtime __udivti3 fix + tests/runtime/test_udivti3.c.
 
 Immediate housekeeping:
-- Stop the merged Agent Manager sessions for wave/186-string-contracts, wave/187-math-contracts and wishlist/47-channel-handle; remove their worktrees and delete the merged branches. Keep wave/154 (foreign) and any release/marker branches.
-- Agent Manager may still list stale no-session worktrees for waves 179/180; clean only if safe. Do not merge anything else.
+- Stop/remove the merged Agent Manager sessions for wave/188-num-contracts,
+  wave/189-string-contracts, wave/190-math-contracts; remove worktrees,
+  delete the merged branches. Keep wave/154 (foreign).
+- Agent Manager may list stale no-session worktrees for waves 179/180;
+  clean only if safe. Do not merge anything else.
 
-Next waves (use Agent Manager worktrees, 2-3 parallel, same rules as waves 179-188):
-1. Dedicated num/num.xi: 242 pub fns at 5.4% is the dominant num gap. Split into sub-waves if needed.
-2. String: 171 uncovered across Unicode-table/small modules; inspect first, target the tractable files.
-3. Math: 56.0%; target numerical/special/analysis modules with true domain/range clauses.
-4. iter is contract-limited (94 lazy adapters; ~8 meaningful clauses); do not chase tautologies. Regex/stats are effectively done (pcre_free/histogram_add documented no-ops).
-Agent prompt: scope files; read this snapshot/block; real requires/ensures only; clause-only/no body changes; pin %TEMP%\kilo\stdlib_ws\v0.64.6-official\bin\xiom.exe (or a hash-verified v0.64.8 extraction once staged); check_modules with explicit -OutDir; coverage_scan -RatchetFile tools/coverage_floors189.json; doc_scan; targeted smokes/probes; add a runner-compatible probe; do NOT edit floors/workflows/readiness/session docs; commit on branch; no merge/push. Main session reviews, runs combined gates, merges --no-ff, dumps floors190, wires ci/heavy/release + tools/README, updates readiness/session.
+Next waves (Agent Manager worktrees, 2-3 parallel, same rules as 188-190):
+1. iter: contract-limited (183 pub, 46.4%; ~8 meaningful clauses in lazy
+   adapters). Do NOT chase tautologies; document the remainder.
+2. time 52.9%, async 62.7%, os 65.1%, collect 65.5%, thread 67.9%,
+   compress 70.4%: target tractable files with true domain/range/length/
+   Result clauses.
+3. math remainder 71.3%: special/numerical/calculus/optimization/control
+   theory; skip compiler-limited stubs and table/Bool predicates; real
+   domain/range only.
+Agent prompt: scope files; read snapshot 72 + block 260; real
+requires/ensures only; clause-only/no body changes; pin
+C:\Users\lefte\AppData\Local\Temp\kilo\stdlib_ws\v0.64.8-official\bin\xiom.exe;
+check_modules with unique -OutDir; coverage_scan -RatchetFile
+tools/coverage_floors190.json; doc_scan; targeted smokes/probes; add a
+runner-compatible probe; do NOT edit floors/workflows/readiness/session
+docs/COMPILER_VERSION; commit on branch; no merge/push. Main session
+reviews, runs combined gates, merges --no-ff, dumps floors191, wires
+ci/heavy/release + tools/README, updates readiness/session.
 
 Relays, bugs, wishlist:
-- Pull with explicit origin main (bare pull can fail "Cannot fast-forward to multiple branches").
-- Gate 9 live ids: REL-20261011-1053-stdlib, -1456-stdlib, -1626-stdlib, REL-20261015-2328-stdlib, -2343-stdlib, REL-20261016-2000-stdlib, -2100-stdlib, -2331-stdlib. Re-read and verify on the official v0.64.8 archive; 2331 was fixed but needs the stdlib runtime helper check; 1626/2343/2100-W1 were compiler-blocked on v0.64.7, so re-test and close only with evidence.
-- Open compiler bugs affecting stdlib: REL-20261018-1546-stdlib (Vec[GenericStruct] callee read) and REL-20261019-1451-stdlib (nested generic ptr.read); repros under tools/known_failures; re-verify on v0.64.8.
-- Wishlist row 33 (compiler/install) open; row 47 fixed pending xvector verify; packages 1755/1805 can close. No release blockers.
-
-Stage the official v0.64.8 compiler archive from the GitHub release, verify SHA256SUMS, extract to %TEMP%\kilo\stdlib_ws\v0.64.8-official, and run a battery before updating the lane pin.
+- Pull with explicit origin main; relay commits via python tools/relay.py
+  commit --lane stdlib -m "..."; never edit another lane's item.
+- Gate 9 still red on v0.64.8: REL-20261011-1626-stdlib (T001 bare
+  trailing match after push), REL-20261015-2343-stdlib (bare inline i32
+  -1 read as >=0), REL-20261016-2100-stdlib W1 (alias/full-path field +
+  close() C001). Re-test on the next compiler candidate; close only with
+  evidence.
+- Green gate 9 items 1053/1456/2328/2000 await the compiler marking
+  acked -> fixed; we filed REL-20261019-1953-stdlib with the matrix.
+  2331 stdlib runtime residual verified/closed.
+- Open compiler bugs affecting stdlib: REL-20261018-1546-stdlib
+  (Vec[GenericStruct] callee read) and REL-20261019-1451-stdlib (nested
+  generic ptr.read); repros under tools/known_failures; re-verify on the
+  next archive.
+- Wishlist row 33 (compiler/install) open; row 47 fixed pending xvector
+  verify. New: fraction_add cross-cancel fixed (p_fraction_add_reduce);
+  no open stdlib defect there.
 
 Pitfalls:
-- check_modules parallel runs need distinct -OutDir (timestamp collisions corrupt results).
-- Combined stats/contract probes can hit the 300s compiler limit; split probes or use --timeout 900, but only promote runner-compatible probes.
-- Relay commits via python tools/relay.py commit --lane stdlib -m "..."; never edit another lane's item.
+- check_modules/barename parallel runs need distinct -OutDir (timestamp
+  collisions corrupt results).
+- Combined stats/contract probes can hit the 300s compiler limit; split
+  probes or use --timeout 900, but only promote runner-compatible probes.
+- The compiler links every runtime/*.c into each program; keep test mains
+  out of runtime/ (tests/runtime/test_udivti3.c).
 - Release ruleset bypass is expected; do not move tags.
-- agent_manager list to review reports; idle = done; merge --no-ff; clean worktrees/branches.
+- agent_manager list to review reports; idle = done; merge --no-ff; clean
+  worktrees/branches.
 
-Deliver: per wave report coverage before/after, gate outputs, probes, commit; keep docs/session current and post material findings on the relay bus.
+Deliver: per wave report coverage before/after, gate outputs, probes,
+commit; keep docs/session current and post material findings on the relay
+bus.
 ```
 
 ### Snapshot 37 (paste-ready)
@@ -3698,6 +3746,35 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-19 block 260 (waves 188-190 merged; global 83.0%; floors190; fraction_add fixed; final battery green)**
+- Merged --no-ff: wave 188 num `27fff73`, wave 189 string `4374b64`,
+  wave 190 math `be1f84f` on the v0.64.8 pin (runtime/pin commits
+  `1555c93`, `4aa536c`, `1ab3324`).
+- Coverage: global clauses/fns 84.2%, pub-with-clause 83.0%
+  (5720/6890; was 76.1%). num 50.7% -> 96.9% (`num/num.xi` 5.4% ->
+  99.2%, 240/242); string 68.9% -> 90.4%; math 56.0% -> 71.3%.
+  Worst dirs: iter 46.4%, time 52.9%, async 62.7%, os 65.1%, collect
+  65.5%, thread 67.9%, compress 70.4%, math 71.3%.
+- Floors190 dumped and wired into `.github/workflows/{ci,heavy,release}.yml`
+  + `tools/README.md`; RATCHET OK.
+- Wave 188 found `fraction_add(1/3, 1/6) -> 0/1`: both numerators were
+  divided by gcd(denominators). Fixed to
+  `a.num*(b.den/g) + b.num*(a.den/g)` (commit `109afa1`), probe
+  `p_fraction_add_reduce` rc 0; targeted num smokes 18/18.
+- Final battery on the merged tree (official v0.64.8; repo stdlib):
+  modules 533/533, smokes 962/962 (0 compilefail / 0 runfail), probes
+  372/372, barename 0/533, regex 17/17, doc_scan 100% (2 pre-existing
+  net misses), floors190 ratchet OK. Runtime `__udivti3` fix +
+  `tests/runtime/test_udivti3.c` (kept out of `runtime/` because the
+  compiler links every `runtime/*.c`).
+- Gate 9: filed `REL-20261019-1953-stdlib` to compiler
+  (1053/1456/2328/2000 green; 1626/2343/2100-W1 red);
+  `REL-20261016-2331-stdlib` verified/closed after the runtime fix.
+  Relay 1752/1754/1755 fixed; registry live.
+- Readiness 88.3% (gate 8 83.0%; gates 1-7/10 met; gate 9 open). Next:
+  iter/time/async/os/collect/thread/compress + math remainder; do not
+  chase iter tautologies; gate 9 reds 1626/2343/2100-W1.
 
 **SESSION 2026-10-19 block 259 (v0.64.8 official battery green; gate 9 re-verified; runtime __udivti3 fixed; waves 188-190 launched)**
 - Official v0.64.8 archives staged + hash-verified: Windows x64 zip
