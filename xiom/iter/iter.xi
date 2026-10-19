@@ -18,12 +18,17 @@ pub type Range = { start: Int; end: Int; }
 pub type RangeInclusive = { start: Int; end: Int; current: Int; done: Bool; }
 
 /// Create a half-open range [start, end).
-pub fn range(start: Int, end: Int) -> Range {
+pub fn range(start: Int, end: Int) -> Range
+  ensures: result.start == start && result.end == end
+{
   Range { start: start; end: end; }
 }
 
 /// Create an inclusive range [start, end].
-pub fn range_inclusive(start: Int, end: Int) -> RangeInclusive {
+pub fn range_inclusive(start: Int, end: Int) -> RangeInclusive
+  ensures: result.start == start && result.end == end
+  ensures: result.current == start && result.done == false
+{
   RangeInclusive { start: start; end: end; current: start; done: false; }
 }
 
@@ -31,6 +36,9 @@ pub fn range_inclusive(start: Int, end: Int) -> RangeInclusive {
 pub fn Range.next(self) -> Option[Int]
   ensures: (self.start@pre >= self.end@pre) => (result.is_none == true)
   ensures: (self.start@pre < self.end@pre) => (result.is_some == true)
+  ensures: (result is Some) => (result.value == self.start@pre)
+  ensures: (result is Some) => (self.start == self.start@pre + 1)
+  ensures: (result is None) => (self.start == self.start@pre)
 {
   if self.start < self.end {
     let val = self.start;
@@ -43,7 +51,9 @@ pub fn Range.next(self) -> Option[Int]
 
 /// Number of integers left in the range.
 pub fn Range.len(self) -> Int
-  ensures: result >= 0 {
+  ensures: result >= 0
+  ensures: (self.start < self.end) => (result == self.end - self.start)
+  ensures: (self.start >= self.end) => (result == 0) {
   if self.start < self.end {
     self.end - self.start
   } else {
@@ -55,6 +65,7 @@ pub fn Range.len(self) -> Int
 pub fn Range.contains(self, x: Int) -> Bool
   ensures: (x < self.start) => (result == false)
   ensures: (x >= self.end) => (result == false)
+  ensures: (result == true) => (x >= self.start && x < self.end)
 {
   x >= self.start && x < self.end
 }
@@ -92,6 +103,7 @@ pub fn Range.product(self) -> Int
 pub fn RangeInclusive.next(self) -> Option[Int]
   ensures: (self.done@pre == true) => (result.is_none == true)
   ensures: (self.done@pre == false) => (result.is_some == true)
+  ensures: (result is Some) => (result.value == self.current@pre)
 {
   if self.done {
     None
@@ -336,13 +348,16 @@ pub fn Range.zip(self, other: Range) -> ZipIter[Int, Int] {
 /// Drain the remaining integers into a Vec.
 pub fn Range.collect(self) -> Vec[Int]
   ensures: (self.start >= self.end) => (result.len() == 0)
+  ensures: (self.start < self.end) => (result.len() == self.end - self.start)
 {
   var r = self;
   return _collect_via[Int](fn() -> Option[Int] { return r.next(); });
 }
 
 /// Fold the remaining integers with `f`, starting from `init`.
-pub fn Range.fold[B](self, init: B, f: fn(B, Int) -> B) -> B {
+pub fn Range.fold[B](self, init: B, f: fn(B, Int) -> B) -> B
+  ensures: (self.start >= self.end) => (result == init)
+{
   var r = self;
   return _fold_via[Int, B](fn() -> Option[Int] { return r.next(); }, init, f);
 }
@@ -351,6 +366,7 @@ pub fn Range.fold[B](self, init: B, f: fn(B, Int) -> B) -> B {
 pub fn Range.count(self) -> Int
   ensures: result >= 0
   ensures: (self.start >= self.end) => (result == 0)
+  ensures: (self.start < self.end) => (result == self.end - self.start)
 {
   var r = self;
   return _count_via[Int](fn() -> Option[Int] { return r.next(); });
@@ -359,6 +375,7 @@ pub fn Range.count(self) -> Int
 /// Largest remaining integer, or None for an empty range.
 pub fn Range.max(self) -> Option[Int]
   ensures: (self.start >= self.end) => (result.is_none == true)
+  ensures: (self.start < self.end) => (result is Some && result.value == self.end - 1)
 {
   var r = self;
   return _max_via[Int](fn() -> Option[Int] { return r.next(); });
@@ -367,6 +384,7 @@ pub fn Range.max(self) -> Option[Int]
 /// Smallest remaining integer, or None for an empty range.
 pub fn Range.min(self) -> Option[Int]
   ensures: (self.start >= self.end) => (result.is_none == true)
+  ensures: (self.start < self.end) => (result is Some && result.value == self.start)
 {
   var r = self;
   return _min_via[Int](fn() -> Option[Int] { return r.next(); });
@@ -399,6 +417,7 @@ pub fn Range.any(self, predicate: fn(&Int) -> Bool) -> Bool
 /// Skip to and return the `n`-th remaining integer (0-based), or None.
 pub fn Range.nth(self, n: Int) -> Option[Int]
   ensures: (self.start >= self.end) => (result.is_none == true)
+  ensures: (n == 0 && self.start < self.end) => (result is Some && result.value == self.start)
 {
   var r = self;
   return _nth_via[Int](fn() -> Option[Int] { return r.next(); }, n);
@@ -407,6 +426,7 @@ pub fn Range.nth(self, n: Int) -> Option[Int]
 /// Consume and return the final integer, or None for an empty range.
 pub fn Range.last(self) -> Option[Int]
   ensures: (self.start >= self.end) => (result.is_none == true)
+  ensures: (self.start < self.end) => (result is Some && result.value == self.end - 1)
 {
   var r = self;
   return _last_via[Int](fn() -> Option[Int] { return r.next(); });
@@ -451,7 +471,10 @@ pub fn FilterIter[T].next(self) -> Option[T] {
 }
 
 /// Yield (index, element); None when exhausted.
-pub fn EnumerateIter[T].next(self) -> Option[(Int, T)] {
+pub fn EnumerateIter[T].next(self) -> Option[(Int, T)]
+  ensures: (result is Some) => (self.index == self.index@pre + 1)
+  ensures: (result is None) => (self.index == self.index@pre)
+{
   match self.next_fn() {
     Some(v) => {
       let idx = self.index;
@@ -474,7 +497,9 @@ pub fn TakeIter[T].next(self) -> Option[T]
 }
 
 /// Skip the configured prefix, then yield elements; None when exhausted.
-pub fn SkipIter[T].next(self) -> Option[T] {
+pub fn SkipIter[T].next(self) -> Option[T]
+  ensures: self.to_skip <= self.to_skip@pre
+{
   while self.to_skip > 0 {
     self.to_skip = self.to_skip - 1;
     match self.next_fn() {
@@ -571,7 +596,9 @@ pub fn MapIter[T, U].fold[B](self, init: B, f: fn(B, U) -> B) -> B {
 }
 
 /// Number of remaining mapped elements.
-pub fn MapIter[T, U].count(self) -> Int {
+pub fn MapIter[T, U].count(self) -> Int
+  ensures: result >= 0
+{
   var it = self;
   return _count_via[U](fn() -> Option[U] { return it.next(); });
 }
@@ -694,7 +721,9 @@ pub fn FilterIter[T].fold[B](self, init: B, f: fn(B, T) -> B) -> B {
 }
 
 /// Number of remaining filtered elements.
-pub fn FilterIter[T].count(self) -> Int {
+pub fn FilterIter[T].count(self) -> Int
+  ensures: result >= 0
+{
   var it = self;
   return _count_via[T](fn() -> Option[T] { return it.next(); });
 }
@@ -781,7 +810,9 @@ pub fn EnumerateIter[T].collect(self) -> Vec[(Int, T)] {
 }
 
 /// Number of remaining (index, element) pairs.
-pub fn EnumerateIter[T].count(self) -> Int {
+pub fn EnumerateIter[T].count(self) -> Int
+  ensures: result >= 0
+{
   var it = self;
   return _count_via[(Int, T)](fn() -> Option[(Int, T)] { return it.next(); });
 }
@@ -811,7 +842,10 @@ pub fn TakeIter[T].fold[B](self, init: B, f: fn(B, T) -> B) -> B {
 }
 
 /// Number of taken elements remaining.
-pub fn TakeIter[T].count(self) -> Int {
+pub fn TakeIter[T].count(self) -> Int
+  ensures: result >= 0
+  ensures: (self.remaining@pre > 0) => (result <= self.remaining@pre)
+{
   var it = self;
   return _count_via[T](fn() -> Option[T] { return it.next(); });
 }
@@ -895,7 +929,9 @@ pub fn SkipIter[T].fold[B](self, init: B, f: fn(B, T) -> B) -> B {
 }
 
 /// Number of post-prefix elements remaining.
-pub fn SkipIter[T].count(self) -> Int {
+pub fn SkipIter[T].count(self) -> Int
+  ensures: result >= 0
+{
   var it = self;
   return _count_via[T](fn() -> Option[T] { return it.next(); });
 }
@@ -968,7 +1004,9 @@ pub fn ChainIter[T, U].collect(self) -> Vec[T] {
 }
 
 /// Number of chained elements remaining.
-pub fn ChainIter[T, U].count(self) -> Int {
+pub fn ChainIter[T, U].count(self) -> Int
+  ensures: result >= 0
+{
   var n = 0;
   var item = self.next();
   while item is Some {
@@ -1036,7 +1074,9 @@ pub fn ZipIter[T, U].collect(self) -> Vec[(T, U)] {
 }
 
 /// Number of pairs remaining on the shorter side.
-pub fn ZipIter[T, U].count(self) -> Int {
+pub fn ZipIter[T, U].count(self) -> Int
+  ensures: result >= 0
+{
   var n = 0;
   var item = self.next();
   while item is Some {
@@ -1156,7 +1196,9 @@ pub fn Range.skip_while(self, predicate: fn(&Int) -> Bool) -> SkipWhileIter[Int]
 }
 
 /// Yield the next element after the skipped prefix; None when exhausted.
-pub fn SkipWhileIter[T].next(self) -> Option[T] {
+pub fn SkipWhileIter[T].next(self) -> Option[T]
+  ensures: (self.skipped@pre == false && self.skipped == true) => (result is Some)
+{
   if !self.skipped {
     var item = self.next_fn();
     while item is Some {

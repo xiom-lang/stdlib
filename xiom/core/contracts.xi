@@ -232,7 +232,9 @@ pub fn build_contract_index() -> ContractIndex
 }
 
 /// Query contracts for a specific function.
-pub fn get_function_contracts(name: Str) -> Option[Vec[FunctionContracts]] {
+pub fn get_function_contracts(name: Str) -> Option[Vec[FunctionContracts]]
+  ensures: (result is Some) => (result.value.len() > 0)
+{
   let idx = _get_index();
   var result = Vec[FunctionContracts].new();
   var i = 0;
@@ -247,7 +249,9 @@ pub fn get_function_contracts(name: Str) -> Option[Vec[FunctionContracts]] {
 }
 
 /// Query contracts for a specific type.
-pub fn get_type_contracts(name: Str) -> Option<Vec<TypeContracts>> {
+pub fn get_type_contracts(name: Str) -> Option<Vec<TypeContracts>>
+  ensures: (result is Some) => (result.value.len() > 0)
+{
   let idx = _get_index();
   var result = Vec[TypeContracts].new();
   var i = 0;
@@ -262,7 +266,9 @@ pub fn get_type_contracts(name: Str) -> Option<Vec<TypeContracts>> {
 }
 
 /// Find all functions whose contracts reference a given type.
-pub fn find_functions_using_type(type_name: Str) -> Vec[Str] {
+pub fn find_functions_using_type(type_name: Str) -> Vec[Str]
+  ensures: result.len() <= _get_index().functions.len()
+{
   let idx = _get_index();
   var result = Vec[Str].new();
   var i = 0;
@@ -284,7 +290,9 @@ pub fn find_functions_using_type(type_name: Str) -> Vec[Str] {
 }
 
 /// Find all invariants that reference a given field.
-pub fn find_invariants_using_field(type_name: Str, field_name: Str) -> Vec[ContractClause] {
+pub fn find_invariants_using_field(type_name: Str, field_name: Str) -> Vec[ContractClause]
+  ensures: result.len() <= _get_index().all_clauses().len()
+{
   var idx = _get_index();
   var result = Vec[ContractClause].new();
   var i = 0;
@@ -386,17 +394,23 @@ pub fn export_contracts_openapi() -> Str
 // ============================================================================
 
 /// Track which contracts have been exercised by tests.
-pub fn reset_contract_coverage() {
+pub fn reset_contract_coverage()
+  ensures: _coverage.len() == 0
+{
   _coverage = Map[Str, Bool].new();
 }
 
 /// Record that `clause` was exercised with the given inputs.
-pub fn record_contract_hit(clause: ContractClause, input_values: Map[Str, Str]) {
+pub fn record_contract_hit(clause: ContractClause, input_values: Map[Str, Str])
+  ensures: _coverage.contains(&clause.expression)
+{
   _coverage.insert(clause.expression, true);
 }
 
 /// Map from clause id to whether it has been hit.
-pub fn get_contract_coverage() -> Map[Str, Bool] {
+pub fn get_contract_coverage() -> Map[Str, Bool]
+  ensures: result.len() == _coverage.len()
+{
   var result = Map[Str, Bool].new();
   let keys = _coverage.keys();
   var i = 0;
@@ -413,7 +427,9 @@ pub fn get_contract_coverage() -> Map[Str, Bool] {
 }
 
 /// Clauses that have not been hit yet.
-pub fn get_uncovered_contracts() -> Vec[ContractClause] {
+pub fn get_uncovered_contracts() -> Vec[ContractClause]
+  ensures: result.len() <= _get_index().all_clauses().len()
+{
   let idx = _get_index();
   var result = Vec[ContractClause].new();
   var i = 0;

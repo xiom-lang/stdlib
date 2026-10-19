@@ -55,12 +55,18 @@ fn assert(condition: Bool, msg: Str)
 }
 
 /// === Numeric conversions ===
-pub fn to_int(x: Float64) -> Int {
+pub fn to_int(x: Float64) -> Int
+  ensures: (x >= 0.0 && x < 1.0) => (result == 0)
+  ensures: (x > -1.0 && x < 0.0) => (result == 0)
+{
   return x as Int;
 }
 
 /// Convert an Int to Float64 (may lose precision above 2^53).
-pub fn to_float(x: Int) -> Float64 {
+pub fn to_float(x: Int) -> Float64
+  ensures: (x >= 0) => (result >= 0.0)
+  ensures: (x < 0) => (result < 0.0)
+{
   return x as Float64;
 }
 
@@ -826,57 +832,89 @@ pub interface TryInto[T] {
 // === M7: From/Into implementations for primitive types ===
 
 /// Int -> Float64 (lossless for reasonable values)
-pub fn Int.from(value: Float64) -> Int {
+pub fn Int.from(value: Float64) -> Int
+  ensures: (value >= 0.0 && value < 1.0) => (result == 0)
+  ensures: (value > -1.0 && value < 0.0) => (result == 0)
+{
   return to_int(value);
 }
 /// Truncating conversion to Int.
-pub fn Float64.into(self) -> Int {
+pub fn Float64.into(self) -> Int
+  ensures: (self >= 0.0 && self < 1.0) => (result == 0)
+  ensures: (self > -1.0 && self < 0.0) => (result == 0)
+{
   return to_int(self);
 }
 
 /// Float64 -> Int (may truncate)
-pub fn Float64.from(value: Int) -> Float64 {
+pub fn Float64.from(value: Int) -> Float64
+  ensures: (value >= 0) => (result >= 0.0)
+  ensures: (value < 0) => (result < 0.0)
+{
   return to_float(value);
 }
 /// Widening conversion to Float64 (lossy above 2^53).
-pub fn Int.into(self) -> Float64 {
+pub fn Int.into(self) -> Float64
+  ensures: (self >= 0) => (result >= 0.0)
+  ensures: (self < 0) => (result < 0.0)
+{
   return to_float(self);
 }
 
 /// Int -> Str
-pub fn Str.from(value: Int) -> Str {
+pub fn Str.from(value: Int) -> Str
+  ensures: result.len() > 0
+{
   return to_string(value);
 }
 /// Decimal string conversion.
-pub fn Int.into(self) -> Str {
+pub fn Int.into(self) -> Str
+  ensures: result.len() > 0
+{
   return to_string(self);
 }
 
 /// Float64 -> Str
-pub fn Str.from(value: Float64) -> Str {
+pub fn Str.from(value: Float64) -> Str
+  ensures: result.len() > 0
+{
   return xiom.convert.float_to_string(value);
 }
 /// Decimal string conversion.
-pub fn Float64.into(self) -> Str {
+pub fn Float64.into(self) -> Str
+  ensures: result.len() > 0
+{
   return xiom.convert.float_to_string(self);
 }
 
 /// Bool -> Str
-pub fn Str.from(value: Bool) -> Str {
+pub fn Str.from(value: Bool) -> Str
+  ensures: (value == true) => (result == "true")
+  ensures: (value == false) => (result == "false")
+{
   return convert.bool_to_string(value);
 }
 /// "true" or "false" conversion.
-pub fn Bool.into(self) -> Str {
+pub fn Bool.into(self) -> Str
+  ensures: self => (result == "true")
+  ensures: !self => (result == "false")
+{
   return convert.bool_to_string(self);
 }
 
 /// Bool -> Int
-pub fn Int.from(value: Bool) -> Int {
+pub fn Int.from(value: Bool) -> Int
+  ensures: (value == true) => (result == 1)
+  ensures: (value == false) => (result == 0)
+{
   if value { return 1; }
   return 0;
 }
 /// 1 for true, 0 for false.
-pub fn Bool.into(self) -> Int {
+pub fn Bool.into(self) -> Int
+  ensures: self => (result == 1)
+  ensures: !self => (result == 0)
+{
   if self { return 1; }
   return 0;
 }

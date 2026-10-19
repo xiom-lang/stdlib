@@ -29,7 +29,9 @@ pub fn iter_filter(v: &Vec[Int], pred: fn(&Int) -> Bool) -> Vec[Int]
 
 /// Remove in place every element of v not satisfying pred. O(n).
 /// Element order is preserved; v is compacted in place.
-pub fn iter_filter_mut(v: &mut Vec[Int], pred: fn(&Int) -> Bool) {
+pub fn iter_filter_mut(v: &mut Vec[Int], pred: fn(&Int) -> Bool)
+  ensures: v.len() <= v.len()@pre
+{
   var write = 0;
   var read = 0;
   while read < v.len() {
@@ -77,7 +79,9 @@ pub fn iter_skip(v: &Vec[Int], n: Int) -> Vec[Int]
 }
 
 /// The leading run of elements for which pred holds. O(n). Short-circuits.
-pub fn iter_take_while(v: &Vec[Int], pred: fn(&Int) -> Bool) -> Vec[Int] {
+pub fn iter_take_while(v: &Vec[Int], pred: fn(&Int) -> Bool) -> Vec[Int]
+  ensures: result.len() <= v.len()
+{
   var out = Vec[Int].new();
   var i = 0;
   while i < v.len() {
@@ -90,7 +94,9 @@ pub fn iter_take_while(v: &Vec[Int], pred: fn(&Int) -> Bool) -> Vec[Int] {
 }
 
 /// Elements of v after the leading run satisfying pred. O(n). Short-circuits.
-pub fn iter_skip_while(v: &Vec[Int], pred: fn(&Int) -> Bool) -> Vec[Int] {
+pub fn iter_skip_while(v: &Vec[Int], pred: fn(&Int) -> Bool) -> Vec[Int]
+  ensures: result.len() <= v.len()
+{
   var out = Vec[Int].new();
   var i = 0;
   while i < v.len() {
