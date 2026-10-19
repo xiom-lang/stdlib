@@ -41,7 +41,9 @@ pub fn minimax(payoffs: &Vec[Vec[Float64]]) -> Float64 {
 /// `game(move_sequence) -> terminal value`. Searches to fixed depth; at a
 /// terminal or depth-0 node the game value is returned. Complexity:
 /// O(branch^depth) with pruning.
-pub fn alpha_beta(game: fn(&Vec[Int]) -> Float64, depth: Int, alpha: Float64, beta: Float64) -> Float64 {
+pub fn alpha_beta(game: fn(&Vec[Int]) -> Float64, depth: Int, alpha: Float64, beta: Float64) -> Float64
+  requires: depth >= 0
+{
   return _ab(game, depth, alpha, beta, true);
 }
 

@@ -106,7 +106,9 @@ pub fn lerp[T: Num](a: T, b: T, t: T) -> T {
 }
 
 /// Arithmetic mean of two values. Generic over every Num width.
-pub fn average[T: Num](a: T, b: T) -> T {
+pub fn average[T: Num](a: T, b: T) -> T
+  requires: Num[T].add(Num[T].one(), Num[T].one()) != Num[T].zero()
+{
   var sum = Num[T].add(a, b);
   var one = Num[T].one();
   var two = Num[T].add(one, one);
@@ -114,7 +116,9 @@ pub fn average[T: Num](a: T, b: T) -> T {
 }
 
 /// Sum of a Vec of values. Generic over every Num width.
-pub fn sum[T: Num](values: Vec[T]) -> T {
+pub fn sum[T: Num](values: Vec[T]) -> T
+  ensures: (values.len() != 0) || (result == Num[T].zero())
+{
   var total = Num[T].zero();
   var i = 0;
   while i < values.len() {
@@ -125,7 +129,9 @@ pub fn sum[T: Num](values: Vec[T]) -> T {
 }
 
 /// Product of a Vec of values. Generic over every Num width.
-pub fn product[T: Num](values: Vec[T]) -> T {
+pub fn product[T: Num](values: Vec[T]) -> T
+  ensures: (values.len() != 0) || (result == Num[T].one())
+{
   var total = Num[T].one();
   var i = 0;
   while i < values.len() {
@@ -238,20 +244,30 @@ pub fn abs[T: Real + Num](a: T) -> T {
 }
 
 /// Clamp x into [lo, hi]. Generic over widths implementing Real.
-pub fn clamp[T: Real + Num](x: T, lo: T, hi: T) -> T {
+pub fn clamp[T: Real + Num](x: T, lo: T, hi: T) -> T
+  requires: Real[T].le(lo, hi)
+  ensures: Real[T].ge(result, lo)
+  ensures: Real[T].le(result, hi)
+{
   if Real[T].lt(x, lo) { return lo; }
   if Real[T].gt(x, hi) { return hi; }
   return x;
 }
 
 /// Minimum of two values. Generic over widths implementing Real.
-pub fn min2[T: Real](a: T, b: T) -> T {
+pub fn min2[T: Real](a: T, b: T) -> T
+  ensures: Real[T].le(result, a)
+  ensures: Real[T].le(result, b)
+{
   if Real[T].lt(a, b) { return a; }
   return b;
 }
 
 /// Maximum of two values. Generic over widths implementing Real.
-pub fn max2[T: Real](a: T, b: T) -> T {
+pub fn max2[T: Real](a: T, b: T) -> T
+  ensures: Real[T].ge(result, a)
+  ensures: Real[T].ge(result, b)
+{
   if Real[T].gt(a, b) { return a; }
   return b;
 }

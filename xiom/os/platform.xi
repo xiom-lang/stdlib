@@ -42,7 +42,9 @@ fn _rt_os_name() -> Str
 
 /// platform_name returns the OS name ("windows", "linux", "macos", ...).
 /// Complexity: O(1). Pure.
-pub fn platform_name() -> Str {
+pub fn platform_name() -> Str
+  ensures: result.len() > 0
+{
   return _rt_os_name();
 }
 
