@@ -189,7 +189,9 @@ fn _gl_weights(n: Int) -> Vec[Float64] {
 
 /// Riemann sum over n subintervals using left endpoints. Returns 0.0 for
 /// n <= 0 (documented). Complexity: O(n).
-pub fn integrate_riemann(f: fn(Float64) -> Float64, a: Float64, b: Float64, n: Int) -> Float64 {
+pub fn integrate_riemann(f: fn(Float64) -> Float64, a: Float64, b: Float64, n: Int) -> Float64
+  ensures: (n > 0) || (result == 0.0)
+{
   if n <= 0 { return 0.0; }
   var h = (b - a) / (n as Float64);
   var s = _fs_rec(f, a, h, 0, n - 1);
@@ -198,7 +200,9 @@ pub fn integrate_riemann(f: fn(Float64) -> Float64, a: Float64, b: Float64, n: I
 
 /// Composite trapezoidal rule over n subintervals. Returns 0.0 for n <= 0
 /// (documented). Complexity: O(n).
-pub fn integrate_trapezoid(f: fn(Float64) -> Float64, a: Float64, b: Float64, n: Int) -> Float64 {
+pub fn integrate_trapezoid(f: fn(Float64) -> Float64, a: Float64, b: Float64, n: Int) -> Float64
+  ensures: (n > 0) || (result == 0.0)
+{
   if n <= 0 { return 0.0; }
   var h = (b - a) / (n as Float64);
   var fa = f(a);
@@ -210,7 +214,9 @@ pub fn integrate_trapezoid(f: fn(Float64) -> Float64, a: Float64, b: Float64, n:
 
 /// Composite midpoint rule over n subintervals. Returns 0.0 for n <= 0
 /// (documented). Complexity: O(n).
-pub fn integrate_midpoint(f: fn(Float64) -> Float64, a: Float64, b: Float64, n: Int) -> Float64 {
+pub fn integrate_midpoint(f: fn(Float64) -> Float64, a: Float64, b: Float64, n: Int) -> Float64
+  ensures: (n > 0) || (result == 0.0)
+{
   if n <= 0 { return 0.0; }
   var h = (b - a) / (n as Float64);
   var s = _fms_rec(f, a, h, 0, n - 1);
@@ -219,7 +225,9 @@ pub fn integrate_midpoint(f: fn(Float64) -> Float64, a: Float64, b: Float64, n: 
 
 /// Composite Simpson's rule over n subintervals. An odd n is reduced to n - 1
 /// (documented). Returns 0.0 for n <= 0 (documented). Complexity: O(n).
-pub fn integrate_simpson(f: fn(Float64) -> Float64, a: Float64, b: Float64, n: Int) -> Float64 {
+pub fn integrate_simpson(f: fn(Float64) -> Float64, a: Float64, b: Float64, n: Int) -> Float64
+  ensures: (n > 0) || (result == 0.0)
+{
   if n <= 0 { return 0.0; }
   var nn = n;
   if nn % 2 == 1 { nn = nn - 1; }
@@ -242,7 +250,9 @@ pub fn integrate_simpson(f: fn(Float64) -> Float64, a: Float64, b: Float64, n: I
 /// makes any program that links it crash at startup with 0xC000001D (BUG 20
 /// AVX-512 codegen on Zen 2), even before main. Keep the frozen signature;
 /// revisit when the vectorizer cannot touch this shape.
-pub fn integrate_adaptive(f: fn(Float64) -> Float64, a: Float64, b: Float64, tol: Float64) -> Float64 {
+pub fn integrate_adaptive(f: fn(Float64) -> Float64, a: Float64, b: Float64, tol: Float64) -> Float64
+  ensures: (tol > 0.0) || (result == 0.0)
+{
   return 0.0;
 }
 
@@ -272,7 +282,9 @@ fn _gl_rec(f: fn(Float64) -> Float64, nodes: &Vec[Float64], weights: &Vec[Float6
 /// integrate_adaptive), so this currently falls back to the composite
 /// trapezoidal rule with 1000 subintervals (~1e-6 accuracy for smooth
 /// integrands). Complexity: O(1000).
-pub fn definite_integral(f: fn(Float64) -> Float64, a: Float64, b: Float64) -> Float64 {
+pub fn definite_integral(f: fn(Float64) -> Float64, a: Float64, b: Float64) -> Float64
+  ensures: (a != b) || (result == 0.0)
+{
   if a == b { return 0.0; }
   return integrate_trapezoid(f, a, b, 1000);
 }

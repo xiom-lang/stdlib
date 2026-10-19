@@ -383,7 +383,9 @@ fn _row_el(r: _RRow, col: Int, len: Int) -> Float64 {
 /// each frequency and returned as (real, imag) with imag = 0 (a real-valued
 /// tf(omega) cannot carry phase in this signature; documented). Complexity:
 /// O(freqs * cost(tf)).
-pub fn nyquist_plot(tf: fn(Float64) -> Float64, freqs: &Vec[Float64]) -> Vec[(Float64, Float64)] {
+pub fn nyquist_plot(tf: fn(Float64) -> Float64, freqs: &Vec[Float64]) -> Vec[(Float64, Float64)]
+  ensures: result.len() == freqs.len()
+{
   var out = Vec[(Float64, Float64)].new();
   var i = 0;
   while i < freqs.len() {
@@ -396,7 +398,9 @@ pub fn nyquist_plot(tf: fn(Float64) -> Float64, freqs: &Vec[Float64]) -> Vec[(Fl
 
 /// Bode plot points: (frequency, magnitude) with the magnitude supplied by
 /// tf(omega). Complexity: O(freqs * cost(tf)).
-pub fn bode_plot(tf: fn(Float64) -> Float64, freqs: &Vec[Float64]) -> Vec[(Float64, Float64)] {
+pub fn bode_plot(tf: fn(Float64) -> Float64, freqs: &Vec[Float64]) -> Vec[(Float64, Float64)]
+  ensures: result.len() == freqs.len()
+{
   var out = Vec[(Float64, Float64)].new();
   var i = 0;
   while i < freqs.len() {
@@ -411,7 +415,9 @@ pub fn bode_plot(tf: fn(Float64) -> Float64, freqs: &Vec[Float64]) -> Vec[(Float
 /// transfer num/den: the closed-loop characteristic polynomial den + K num is
 /// solved for each gain (exact for degree <= 2; empty otherwise, documented).
 /// Complexity: O(gains * degree).
-pub fn root_locus(num: &Vec[Float64], den: &Vec[Float64], gains: &Vec[Float64]) -> Vec[(Float64, Float64)] {
+pub fn root_locus(num: &Vec[Float64], den: &Vec[Float64], gains: &Vec[Float64]) -> Vec[(Float64, Float64)]
+  ensures: result.len() <= 2 * gains.len()
+{
   var out = Vec[(Float64, Float64)].new();
   var deg = 0;
   if den.len() > 0 { deg = den.len() - 1; }
@@ -486,7 +492,9 @@ pub fn lqg(a: &Vec[Vec[Float64]], b: &Vec[Vec[Float64]], c: &Vec[Vec[Float64]], 
 /// not readable in this compiler build, so the update degenerates to a
 /// documented identity step (estimate unchanged).
 /// TODO(compiler): matrix inputs (A, B, C) unreadable (BUG 23 #1 residual).
-pub fn kalman_filter(a: &Vec[Vec[Float64]], b: &Vec[Vec[Float64]], c: &Vec[Vec[Float64]], y: &Vec[Float64], x_hat: &Vec[Float64]) -> Vec[Float64] {
+pub fn kalman_filter(a: &Vec[Vec[Float64]], b: &Vec[Vec[Float64]], c: &Vec[Vec[Float64]], y: &Vec[Float64], x_hat: &Vec[Float64]) -> Vec[Float64]
+  ensures: result.len() == x_hat.len()
+{
   var out = Vec[Float64].new();
   var i = 0;
   while i < x_hat.len() {

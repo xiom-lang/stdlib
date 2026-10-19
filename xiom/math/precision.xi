@@ -130,27 +130,37 @@ pub fn epsilon[T: PrecisionLimits]() -> T {
 }
 
 /// Number of significant decimal digits (floats) or decimal digits (integers).
-pub fn digits[T: PrecisionLimits]() -> Int {
+pub fn digits[T: PrecisionLimits]() -> Int
+  ensures: result > 0
+{
   return PrecisionLimits[T].digits();
 }
 
 /// Number of bits in the significand of T (magnitude bits for integers).
-pub fn mantissa_digits[T: PrecisionLimits]() -> Int {
+pub fn mantissa_digits[T: PrecisionLimits]() -> Int
+  ensures: result > 0
+{
   return PrecisionLimits[T].mantissa_digits();
 }
 
 /// Exponent bias of T (floats); 0 for integers.
-pub fn exponent_bias[T: PrecisionLimits]() -> Int {
+pub fn exponent_bias[T: PrecisionLimits]() -> Int
+  ensures: result >= 0
+{
   return PrecisionLimits[T].exponent_bias();
 }
 
 /// Minimum binary exponent of T (floats); 0 for integers.
-pub fn min_exponent[T: PrecisionLimits]() -> Int {
+pub fn min_exponent[T: PrecisionLimits]() -> Int
+  ensures: result <= 0
+{
   return PrecisionLimits[T].min_exponent();
 }
 
 /// Maximum binary exponent of T (floats); 0 for integers.
-pub fn max_exponent[T: PrecisionLimits]() -> Int {
+pub fn max_exponent[T: PrecisionLimits]() -> Int
+  ensures: result >= 0
+{
   return PrecisionLimits[T].max_exponent();
 }
 
@@ -160,11 +170,15 @@ pub fn is_signed[T: PrecisionLimits]() -> Bool {
 }
 
 /// Number of bits in a value of T.
-pub fn bit_width[T: PrecisionLimits]() -> Int {
+pub fn bit_width[T: PrecisionLimits]() -> Int
+  ensures: result > 0
+{
   return PrecisionLimits[T].bit_width();
 }
 
 /// Number of bytes in a value of T.
-pub fn byte_width[T: PrecisionLimits]() -> Int {
+pub fn byte_width[T: PrecisionLimits]() -> Int
+  ensures: result > 0
+{
   return PrecisionLimits[T].byte_width();
 }

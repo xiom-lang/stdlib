@@ -51,7 +51,9 @@ pub fn extrapolation(x: &Vec[Float64], y: &Vec[Float64], point: Float64) -> Floa
 /// the coefficient vector [c0, c1, ..., c_degree] with c0 the constant term;
 /// the empty vector for empty/mismatched input or degree < 0 (documented).
 /// Complexity: O(n * d^2 + d^3).
-pub fn polynomial_approx(x: &Vec[Float64], y: &Vec[Float64], degree: Int) -> Vec[Float64] {
+pub fn polynomial_approx(x: &Vec[Float64], y: &Vec[Float64], degree: Int) -> Vec[Float64]
+  ensures: (result.len() == 0) || (result.len() == degree + 1)
+{
   var empty = Vec[Float64].new();
   var n = x.len();
   if n == 0 || y.len() != n || degree < 0 { return empty; }
@@ -91,7 +93,9 @@ pub fn polynomial_approx(x: &Vec[Float64], y: &Vec[Float64], degree: Int) -> Vec
 /// Returns [p0..pm, q1..qn] (the leading denominator coefficient is fixed at
 /// 1); the empty vector for empty/mismatched input or m, n < 0 (documented).
 /// Complexity: O(k * (m+n)^2 + (m+n)^3).
-pub fn rational_approx(x: &Vec[Float64], y: &Vec[Float64], m: Int, n: Int) -> Vec[Float64] {
+pub fn rational_approx(x: &Vec[Float64], y: &Vec[Float64], m: Int, n: Int) -> Vec[Float64]
+  ensures: (result.len() == 0) || (result.len() == m + n + 1)
+{
   var empty = Vec[Float64].new();
   var k = x.len();
   if k == 0 || y.len() != k || m < 0 || n < 0 { return empty; }
@@ -132,7 +136,9 @@ pub fn rational_approx(x: &Vec[Float64], y: &Vec[Float64], m: Int, n: Int) -> Ve
 /// one period). Returns [a0, a1..aH, b1..bH] where a0 is the DC term and
 /// a_k/b_k the cosine/sine amplitudes; the empty vector for empty/mismatched
 /// input or harmonics < 0 (documented). Complexity: O(k * H).
-pub fn trigonometric_approx(x: &Vec[Float64], y: &Vec[Float64], harmonics: Int) -> Vec[Float64] {
+pub fn trigonometric_approx(x: &Vec[Float64], y: &Vec[Float64], harmonics: Int) -> Vec[Float64]
+  ensures: (result.len() == 0) || (result.len() == 1 + 2 * harmonics)
+{
   var empty = Vec[Float64].new();
   var n = x.len();
   if n == 0 || y.len() != n || harmonics < 0 { return empty; }
@@ -168,7 +174,9 @@ pub fn trigonometric_approx(x: &Vec[Float64], y: &Vec[Float64], harmonics: Int) 
 /// [a, b]. Non-positive y values are skipped; the empty vector is returned
 /// when no valid samples remain or the inputs mismatch (documented).
 /// Complexity: O(k).
-pub fn exponential_approx(x: &Vec[Float64], y: &Vec[Float64]) -> Vec[Float64] {
+pub fn exponential_approx(x: &Vec[Float64], y: &Vec[Float64]) -> Vec[Float64]
+  ensures: (result.len() == 0) || (result.len() == 2)
+{
   var empty = Vec[Float64].new();
   var n = x.len();
   if n == 0 || y.len() != n { return empty; }
@@ -208,7 +216,9 @@ pub fn exponential_approx(x: &Vec[Float64], y: &Vec[Float64]) -> Vec[Float64] {
 /// Chebyshev-Gauss quadrature c_k = (2/N) sum_i f(c) T_k over the N mapped
 /// Chebyshev nodes (c_0 averaged). Returns [c0, c1, ..., c_degree].
 /// The empty vector for degree < 0 (documented). Complexity: O(N * degree).
-pub fn chebyshev_approx(f: fn(Float64) -> Float64, a: Float64, b: Float64, degree: Int) -> Vec[Float64] {
+pub fn chebyshev_approx(f: fn(Float64) -> Float64, a: Float64, b: Float64, degree: Int) -> Vec[Float64]
+  ensures: (degree < 0) || (result.len() == degree + 1)
+{
   var out = Vec[Float64].new();
   if degree < 0 { return out; }
   var n = degree + 1;
@@ -240,7 +250,9 @@ pub fn chebyshev_approx(f: fn(Float64) -> Float64, a: Float64, b: Float64, degre
 /// recipe proven in geom/matrix.xi and re-verified on v0.61.3 (row-local
 /// copies alone are NOT enough for the Float64 case; the full local-matrix
 /// copy is required).
-pub fn least_squares(a: &Vec[Vec[Float64]], b: &Vec[Float64]) -> Vec[Float64] {
+pub fn least_squares(a: &Vec[Vec[Float64]], b: &Vec[Float64]) -> Vec[Float64]
+  ensures: (a.len() == 0) || (result.len() == 0) || (result.len() == a[0].len())
+{
   var empty = Vec[Float64].new();
   var m = a.len();
   if m == 0 || b.len() != m { return empty; }
@@ -285,7 +297,9 @@ pub fn least_squares(a: &Vec[Vec[Float64]], b: &Vec[Float64]) -> Vec[Float64] {
 /// Computed by the Remez exchange algorithm (see remez); the returned vector
 /// holds power-basis coefficients from the constant term. Complexity:
 /// O(iters * degree^3).
-pub fn minimax(f: fn(Float64) -> Float64, a: Float64, b: Float64, degree: Int) -> Vec[Float64] {
+pub fn minimax(f: fn(Float64) -> Float64, a: Float64, b: Float64, degree: Int) -> Vec[Float64]
+  ensures: (degree < 0) || (result.len() == 0) || (result.len() == degree + 1)
+{
   return remez(f, a, b, degree);
 }
 
@@ -296,7 +310,9 @@ pub fn minimax(f: fn(Float64) -> Float64, a: Float64, b: Float64, degree: Int) -
 /// m, n < 0 (documented). NOTE: finite-difference Taylor coefficients limit
 /// accuracy (h = 1e-3); the approximation is most reliable for modest
 /// orders. Complexity: O((m+n) * cost(f)).
-pub fn pade_approx(f: fn(Float64) -> Float64, m: Int, n: Int, x0: Float64) -> Vec[Float64] {
+pub fn pade_approx(f: fn(Float64) -> Float64, m: Int, n: Int, x0: Float64) -> Vec[Float64]
+  ensures: (m < 0) || (n < 0) || (result.len() == m + n + 1)
+{
   var empty = Vec[Float64].new();
   if m < 0 || n < 0 { return empty; }
   var order = m + n;
@@ -368,7 +384,9 @@ pub fn pade_approx(f: fn(Float64) -> Float64, m: Int, n: Int, x0: Float64) -> Ve
 /// largest deviation on a dense grid. Returns power-basis coefficients from
 /// the constant term; the empty vector for degree < 0 (documented).
 /// Complexity: O(iters * degree^3).
-pub fn remez(f: fn(Float64) -> Float64, a: Float64, b: Float64, degree: Int) -> Vec[Float64] {
+pub fn remez(f: fn(Float64) -> Float64, a: Float64, b: Float64, degree: Int) -> Vec[Float64]
+  ensures: (degree < 0) || (result.len() == 0) || (result.len() == degree + 1)
+{
   var empty = Vec[Float64].new();
   if degree < 0 { return empty; }
   var n = degree + 2;
@@ -471,7 +489,9 @@ pub fn remez(f: fn(Float64) -> Float64, a: Float64, b: Float64, degree: Int) -> 
 /// p(x) = a + b*t + c*t^2 + d*t^3 with t = x - x_i (natural spline). The
 /// empty matrix for fewer than 2 points or mismatched input (documented).
 /// Complexity: O(n).
-pub fn spline_approx(x: &Vec[Float64], y: &Vec[Float64]) -> Vec[Vec[Float64]] {
+pub fn spline_approx(x: &Vec[Float64], y: &Vec[Float64]) -> Vec[Vec[Float64]]
+  ensures: (x.len() < 2) || (y.len() != x.len()) || (result.len() == x.len() - 1)
+{
   var out = Vec[Vec[Float64]].new();
   var n = x.len();
   if n < 2 || y.len() != n { return out; }
@@ -499,7 +519,9 @@ pub fn spline_approx(x: &Vec[Float64], y: &Vec[Float64]) -> Vec[Vec[Float64]] {
 /// normal equations sampled at 64 points. Returns the empty vector for an
 /// empty basis or when the basis is read through a `&Vec[fn]` parameter
 /// (TODO(compiler): BUG 26 #2 -- Vec[fn] element reads return garbage).
-pub fn best_approx(f: fn(Float64) -> Float64, basis: &Vec[fn(Float64) -> Float64], a: Float64, b: Float64) -> Vec[Float64] {
+pub fn best_approx(f: fn(Float64) -> Float64, basis: &Vec[fn(Float64) -> Float64], a: Float64, b: Float64) -> Vec[Float64]
+  ensures: (basis.len() == 0) || (result.len() == 0) || (result.len() == basis.len())
+{
   var empty = Vec[Float64].new();
   var m = basis.len();
   if m == 0 { return empty; }

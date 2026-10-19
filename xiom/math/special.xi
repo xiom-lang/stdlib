@@ -148,7 +148,9 @@ fn _psi_m_asym(m: Int, x: Float64) -> Float64 {
 
 /// Gamma function. Poles (x == 0 and negative integers) return +inf
 /// (documented). NaN propagates. Complexity: O(1) Lanczos + reflection.
-pub fn gamma(x: Float64) -> Float64 {
+pub fn gamma(x: Float64) -> Float64
+  ensures: (x <= 0.0) || (result > 0.0) || (result != result)
+{
   if x != x { return x; }
   if x == 0.0 { return 1.0 / 0.0; }
   if x < 0.5 {
@@ -165,7 +167,9 @@ pub fn gamma(x: Float64) -> Float64 {
 
 /// Log-gamma: (ln|gamma(x)|, sign of gamma(x)). sign is +1 or -1, or 0 at a
 /// pole (value +inf). Complexity: O(1).
-pub fn lgamma(x: Float64) -> (Float64, Int) {
+pub fn lgamma(x: Float64) -> (Float64, Int)
+  ensures: (result.1 == 0) || (result.1 == 1) || (result.1 == -1)
+{
   if x != x { return (x, 0); }
   if x == 0.0 { return (1.0 / 0.0, 0); }
   if x < 0.5 {
@@ -185,7 +189,9 @@ pub fn lgamma(x: Float64) -> (Float64, Int) {
 
 /// Natural log of the gamma function. Same value as lgamma's first component
 /// (sign discarded). Complexity: O(1).
-pub fn gamma_ln(x: Float64) -> Float64 {
+pub fn gamma_ln(x: Float64) -> Float64
+  ensures: (x <= 0.0) || (result >= -1.0) || (result != result)
+{
   if x != x { return x; }
   if x == 0.0 { return 1.0 / 0.0; }
   if x < 0.5 {
@@ -202,14 +208,18 @@ pub fn gamma_ln(x: Float64) -> Float64 {
 /// Beta function B(a, b) = gamma(a) gamma(b) / gamma(a + b) via the Lanczos
 /// log-gamma (stable, no overflow). Returns NaN for a <= 0 or b <= 0
 /// (documented domain). Complexity: O(1).
-pub fn beta(a: Float64, b: Float64) -> Float64 {
+pub fn beta(a: Float64, b: Float64) -> Float64
+  ensures: (a <= 0.0) || (b <= 0.0) || (result > 0.0) || (result != result)
+{
   if a <= 0.0 || b <= 0.0 { return 0.0 / 0.0; }
   var lg = _lanczos_ln(a) + _lanczos_ln(b) - _lanczos_ln(a + b);
   return math.exp(lg);
 }
 
 /// Natural log of the beta function. NaN for a <= 0 or b <= 0. Complexity: O(1).
-pub fn beta_ln(a: Float64, b: Float64) -> Float64 {
+pub fn beta_ln(a: Float64, b: Float64) -> Float64
+  ensures: (a > 0.0 && b > 0.0) || (result != result)
+{
   if a <= 0.0 || b <= 0.0 { return 0.0 / 0.0; }
   return _lanczos_ln(a) + _lanczos_ln(b) - _lanczos_ln(a + b);
 }
@@ -271,7 +281,9 @@ fn _gcf(a: Float64, x: Float64) -> Float64 {
 /// Regularized lower incomplete gamma P(a, x). NaN for a <= 0 or x < 0;
 /// P(a, 0) == 0. Uses the series (x < a + 1) or continued fraction.
 /// Complexity: O(iterations).
-pub fn incomplete_gamma(a: Float64, x: Float64) -> Float64 {
+pub fn incomplete_gamma(a: Float64, x: Float64) -> Float64
+  ensures: (a <= 0.0) || (x < 0.0) || ((result >= 0.0) && (result <= 1.0)) || (result != result)
+{
   if a <= 0.0 || x < 0.0 { return 0.0 / 0.0; }
   if x == 0.0 { return 0.0; }
   if x < a + 1.0 { return _gser(a, x); }
@@ -279,7 +291,9 @@ pub fn incomplete_gamma(a: Float64, x: Float64) -> Float64 {
 }
 
 /// Alias of incomplete_gamma: the regularized lower incomplete gamma P(a, x).
-pub fn incomplete_gamma_low(a: Float64, x: Float64) -> Float64 {
+pub fn incomplete_gamma_low(a: Float64, x: Float64) -> Float64
+  ensures: (a <= 0.0) || (x < 0.0) || ((result >= 0.0) && (result <= 1.0)) || (result != result)
+{
   return incomplete_gamma(a, x);
 }
 
@@ -321,7 +335,9 @@ fn _betacf(a: Float64, b: Float64, x: Float64) -> Float64 {
 /// Regularized incomplete beta I_x(a, b) for x in [0, 1]. NaN for a <= 0,
 /// b <= 0, or x outside [0, 1]. Series/continued-fraction evaluation.
 /// Complexity: O(iterations).
-pub fn incomplete_beta(a: Float64, b: Float64, x: Float64) -> Float64 {
+pub fn incomplete_beta(a: Float64, b: Float64, x: Float64) -> Float64
+  ensures: (a <= 0.0) || (b <= 0.0) || (x < 0.0) || (x > 1.0) || ((result >= 0.0) && (result <= 1.0)) || (result != result)
+{
   if a <= 0.0 || b <= 0.0 { return 0.0 / 0.0; }
   if x <= 0.0 { return 0.0; }
   if x >= 1.0 { return 1.0; }
@@ -353,7 +369,9 @@ fn _erfc_t(t: Float64, x: Float64) -> Float64 {
 
 /// Error function erf(x). Maximum absolute error ~3e-8 (NR rational approx).
 /// Complexity: O(1).
-pub fn erf(x: Float64) -> Float64 {
+pub fn erf(x: Float64) -> Float64
+  ensures: ((result >= -1.0) && (result <= 1.0)) || (result != result)
+{
   if x != x { return x; }
   if x == 0.0 { return 0.0; }
   var ax = math.abs_float(x);
@@ -364,7 +382,9 @@ pub fn erf(x: Float64) -> Float64 {
 }
 
 /// Complementary error function erfc(x) = 1 - erf(x). Complexity: O(1).
-pub fn erfc(x: Float64) -> Float64 {
+pub fn erfc(x: Float64) -> Float64
+  ensures: ((result >= 0.0) && (result <= 2.0)) || (result != result)
+{
   if x != x { return x; }
   if x == 0.0 { return 1.0; }
   var ax = math.abs_float(x);
@@ -377,7 +397,9 @@ pub fn erfc(x: Float64) -> Float64 {
 /// Imaginary error function erfi(x) = -i erf(i x) = (2/sqrt(pi)) sum
 /// x^(2n+1)/(n!(2n+1)). Series for |x| <= 3; for larger |x| the asymptotic
 /// form erfi(x) ~ exp(x^2)/(sqrt(pi) x) is used. Complexity: O(n^2).
-pub fn erfi(x: Float64) -> Float64 {
+pub fn erfi(x: Float64) -> Float64
+  ensures: ((x >= 0.0) && (result >= 0.0)) || ((x < 0.0) && (result <= 0.0)) || (result != result)
+{
   if x != x { return x; }
   if x == 0.0 { return 0.0; }
   var neg = x < 0.0;
@@ -421,7 +443,9 @@ pub fn erfi(x: Float64) -> Float64 {
 
 /// Dawson integral D(x) = exp(-x^2) * integral_0^x exp(t^2) dt.
 /// Series for |x| <= 3, asymptotic for larger |x|. Complexity: O(n^2).
-pub fn dawson(x: Float64) -> Float64 {
+pub fn dawson(x: Float64) -> Float64
+  ensures: ((x >= 0.0) && (result >= 0.0)) || ((x < 0.0) && (result <= 0.0)) || (result != result)
+{
   if x != x { return x; }
   if x == 0.0 { return 0.0; }
   var neg = x < 0.0;
@@ -465,7 +489,9 @@ pub fn dawson(x: Float64) -> Float64 {
 /// Inverse error function erfinv(x) by Newton iteration on erf (30 iters,
 /// ~1e-12 accuracy away from the endpoints). erfinv(+-1) = +-inf; |x| > 1
 /// returns NaN. Complexity: O(30).
-pub fn erfinv(x: Float64) -> Float64 {
+pub fn erfinv(x: Float64) -> Float64
+  ensures: ((x >= 0.0) && (result >= 0.0)) || ((x < 0.0) && (result <= 0.0)) || (result != result)
+{
   if x != x { return x; }
   if x <= -1.0 {
     if x == -1.0 { return -1.0 / 0.0; }
@@ -494,7 +520,9 @@ pub fn erfinv(x: Float64) -> Float64 {
 /// Inverse complementary error function erfcinv(x) = erfinv(1 - x).
 /// x in (0, 2); endpoints return +-inf; outside returns NaN.
 /// Complexity: O(erfinv).
-pub fn erfcinv(x: Float64) -> Float64 {
+pub fn erfcinv(x: Float64) -> Float64
+  ensures: (((x <= 1.0) || (result <= 0.0)) && ((x >= 1.0) || (result >= 0.0))) || (result != result)
+{
   if x != x { return x; }
   if x <= 0.0 {
     if x == 0.0 { return 1.0 / 0.0; }
@@ -513,7 +541,9 @@ pub fn erfcinv(x: Float64) -> Float64 {
 
 /// J_0(x) via the alternating power series. Accurate for moderate |x|;
 /// for |x| > 30 the asymptotic form is used. Complexity: O(n^2).
-pub fn bessel_j0(x: Float64) -> Float64 {
+pub fn bessel_j0(x: Float64) -> Float64
+  ensures: ((result >= -1.0) && (result <= 1.0)) || (result != result)
+{
   if x != x { return x; }
   var ax = math.abs_float(x);
   if ax > 30.0 {
@@ -542,7 +572,9 @@ pub fn bessel_j0(x: Float64) -> Float64 {
 }
 
 /// J_1(x) via the alternating power series. Complexity: O(n^2).
-pub fn bessel_j1(x: Float64) -> Float64 {
+pub fn bessel_j1(x: Float64) -> Float64
+  ensures: ((result >= -1.0) && (result <= 1.0)) || (result != result)
+{
   if x != x { return x; }
   var ax = math.abs_float(x);
   if ax > 30.0 {
@@ -575,7 +607,9 @@ pub fn bessel_j1(x: Float64) -> Float64 {
 /// J_n(x), Bessel of the first kind of integer order n, by its power series
 /// sum (-1)^k (x/2)^(2k+n)/(k!(k+n)!). Negative n uses J_{-n} = (-1)^n J_n.
 /// Complexity: O(n^2).
-pub fn bessel_j(n: Int, x: Float64) -> Float64 {
+pub fn bessel_j(n: Int, x: Float64) -> Float64
+  ensures: (math.abs_float(x) > 30.0) || ((result >= -1.0) && (result <= 1.0)) || (result != result)
+{
   if n < 0 {
     var v = bessel_j(-n, x);
     if n % 2 == 0 { return v; }
@@ -606,7 +640,9 @@ pub fn bessel_j(n: Int, x: Float64) -> Float64 {
 }
 
 /// Alias of bessel_j for order n. Complexity: O(terms).
-pub fn bessel_jn(n: Int, x: Float64) -> Float64 {
+pub fn bessel_jn(n: Int, x: Float64) -> Float64
+  ensures: (math.abs_float(x) > 30.0) || ((result >= -1.0) && (result <= 1.0)) || (result != result)
+{
   return bessel_j(n, x);
 }
 
@@ -683,7 +719,9 @@ pub fn bessel_yn(n: Int, x: Float64) -> Float64 {
 /// I_n(x), modified Bessel of the first kind of integer order n (series
 /// sum (x/2)^(2k+n)/(k!(k+n)!); I_{-n} == I_n for integer n).
 /// Complexity: O(n^2).
-pub fn bessel_i(n: Int, x: Float64) -> Float64 {
+pub fn bessel_i(n: Int, x: Float64) -> Float64
+  ensures: (x >= 0.0) || ((n % 2 == 0) && (result >= 0.0)) || ((n % 2 != 0) && (result <= 0.0)) || (result != result)
+{
   var nn = n;
   if nn < 0 { nn = -nn; }
   var xh = 0.5 * x;
@@ -711,7 +749,9 @@ pub fn bessel_i(n: Int, x: Float64) -> Float64 {
 
 /// K_0(x), modified Bessel of the second kind of order zero: series
 /// K_0 = -(ln(x/2) + gamma) I_0 + sum H_k/(k!)^2 (x/2)^{2k}. NaN for x <= 0.
-pub fn bessel_k0(x: Float64) -> Float64 {
+pub fn bessel_k0(x: Float64) -> Float64
+  ensures: (x <= 0.0) || (x >= 700.0) || (result > 0.0) || (result != result)
+{
   if x != x { return x; }
   if x <= 0.0 { return 0.0 / 0.0; }
   if x > 30.0 {
@@ -739,7 +779,9 @@ pub fn bessel_k0(x: Float64) -> Float64 {
 }
 
 /// K_1(x) via -d/dx K_0 (central difference). NaN for x <= 0. Complexity: O(1).
-pub fn bessel_k1(x: Float64) -> Float64 {
+pub fn bessel_k1(x: Float64) -> Float64
+  ensures: (x <= 0.0) || (x >= 700.0) || (result > 0.0) || (result != result)
+{
   if x != x { return x; }
   if x <= 0.0 { return 0.0 / 0.0; }
   var h = 1.0e-6 * math.max_float(1.0, math.abs_float(x));
@@ -748,7 +790,9 @@ pub fn bessel_k1(x: Float64) -> Float64 {
 
 /// K_n(x), modified Bessel of the second kind of integer order n by upward
 /// recurrence K_{n+1} = (2n/x) K_n + K_{n-1}. NaN for x <= 0 or n < 0.
-pub fn bessel_k(n: Int, x: Float64) -> Float64 {
+pub fn bessel_k(n: Int, x: Float64) -> Float64
+  ensures: (x <= 0.0) || (n < 0) || (x >= 700.0) || (result > 0.0) || (result != result)
+{
   if n < 0 { return 0.0 / 0.0; }
   if x != x { return x; }
   if x <= 0.0 { return 0.0 / 0.0; }
@@ -776,7 +820,9 @@ pub fn bessel_k(n: Int, x: Float64) -> Float64 {
 /// B_16). Exact to ~1e-9 for s in (0, 40]. s == 1 returns +inf; s < 0 uses
 /// the functional equation zeta(s) = 2^s pi^(s-1) sin(pi s/2) Gamma(1-s)
 /// zeta(1-s). Complexity: O(1).
-pub fn zeta(x: Float64) -> Float64 {
+pub fn zeta(x: Float64) -> Float64
+  ensures: (x <= 1.0) || (x >= 1.0e300) || (result >= 1.0) || (result != result)
+{
   if x != x { return x; }
   if x == 1.0 { return 1.0 / 0.0; }
   if x < 0.0 {
@@ -804,12 +850,16 @@ pub fn zeta(x: Float64) -> Float64 {
 }
 
 /// Riemann zeta (alias). Complexity: O(1).
-pub fn riemann_zeta(x: Float64) -> Float64 {
+pub fn riemann_zeta(x: Float64) -> Float64
+  ensures: (x <= 1.0) || (x >= 1.0e300) || (result >= 1.0) || (result != result)
+{
   return zeta(x);
 }
 
 /// Dirichlet eta function: eta(s) = (1 - 2^(1-s)) zeta(s). Complexity: O(1).
-pub fn riemann_zeta_eta(x: Float64) -> Float64 {
+pub fn riemann_zeta_eta(x: Float64) -> Float64
+  ensures: (x <= 1.0) || (x >= 1.0e300) || ((result >= 0.0) && (result <= 1.0)) || (result != result)
+{
   if x != x { return x; }
   if x == 1.0 { return math.ln(2.0); }
   var f = 1.0 - math.pow(2.0, 1.0 - x);
@@ -819,7 +869,9 @@ pub fn riemann_zeta_eta(x: Float64) -> Float64 {
 /// Dirichlet beta function beta(s) = sum (-1)^k (2k+1)^(-s) by direct
 /// alternating summation (100k terms; alternating-series tail bound).
 /// Complexity: O(100000).
-pub fn dirichlet_beta(x: Float64) -> Float64 {
+pub fn dirichlet_beta(x: Float64) -> Float64
+  ensures: (x <= 0.0) || (x >= 1.0e300) || ((result > 0.0) && (result <= 1.0)) || (result != result)
+{
   if x != x { return x; }
   if x <= 0.0 { return 0.0 / 0.0; }
   var sum = 0.0;
@@ -836,7 +888,9 @@ pub fn dirichlet_beta(x: Float64) -> Float64 {
 /// Lerch transcendent Phi(z, s, a) = sum z^k (k+a)^(-s), |z| < 1, a > 0.
 /// At most 2000 terms; NaN for |z| >= 1 (divergent) or a <= 0.
 /// Complexity: O(terms).
-pub fn lerch_phi(z: Float64, s: Float64, a: Float64) -> Float64 {
+pub fn lerch_phi(z: Float64, s: Float64, a: Float64) -> Float64
+  ensures: (a <= 0.0) || (z < 0.0) || (result > 0.0) || (result != result)
+{
   if a <= 0.0 { return 0.0 / 0.0; }
   if math.abs_float(z) >= 1.0 {
     if z == 1.0 && s > 1.0 {
@@ -863,7 +917,9 @@ pub fn lerch_phi(z: Float64, s: Float64, a: Float64) -> Float64 {
 
 /// Polylogarithm Li_s(z) = sum z^k k^(-s), |z| < 1 (z == 1 and s > 1 gives
 /// zeta(s)). At most 2000 terms; NaN for |z| > 1 (divergent). Complexity: O(2000).
-pub fn polylog(s: Float64, z: Float64) -> Float64 {
+pub fn polylog(s: Float64, z: Float64) -> Float64
+  ensures: (z < 0.0) || (result >= 0.0) || (result != result)
+{
   if z == 1.0 {
     if s > 1.0 { return zeta(s); }
     return 1.0 / 0.0;
@@ -907,7 +963,9 @@ pub fn digamma(x: Float64) -> Float64 {
 
 /// Trigamma psi'(x), second derivative of ln gamma. NaN at poles. Complexity:
 /// O(shifts).
-pub fn trigamma(x: Float64) -> Float64 {
+pub fn trigamma(x: Float64) -> Float64
+  ensures: (x <= 0.0) || (x >= 1.0e300) || (result > 0.0) || (result != result)
+{
   return polygamma(1, x);
 }
 
@@ -915,7 +973,9 @@ pub fn trigamma(x: Float64) -> Float64 {
 /// For x <= 0 non-integer the reflection psi^(m)(x) = (-1)^m psi^(m)(1-x)
 /// - pi d^m/dx^m cot(pi x) is used (numerical cot derivative for m >= 2);
 /// poles return +inf. Complexity: O(shifts + m^2).
-pub fn polygamma(m: Int, x: Float64) -> Float64 {
+pub fn polygamma(m: Int, x: Float64) -> Float64
+  ensures: (x <= 0.0) || (x >= 1.0e9) || (m < 0) || (m > 8) || (m == 0) || ((m % 2 == 1) && (result > 0.0)) || ((m % 2 == 0) && (result < 0.0)) || (result != result)
+{
   if m < 0 { return 0.0 / 0.0; }
   if x != x { return x; }
   if x <= 0.0 {
@@ -957,7 +1017,9 @@ pub fn polygamma(m: Int, x: Float64) -> Float64 {
 
 /// Legendre polynomial P_n(x) by the recurrence (n+1)P_{n+1} =
 /// (2n+1)x P_n - n P_{n-1}. NaN for n < 0. Complexity: O(n).
-pub fn legendre_p(n: Int, x: Float64) -> Float64 {
+pub fn legendre_p(n: Int, x: Float64) -> Float64
+  ensures: (n < 0) || (x < -1.0) || (x > 1.0) || ((result >= -1.0) && (result <= 1.0)) || (result != result)
+{
   if n < 0 { return 0.0 / 0.0; }
   if n == 0 { return 1.0; }
   if n == 1 { return x; }
@@ -996,7 +1058,9 @@ pub fn legendre_q(n: Int, x: Float64) -> Float64 {
 
 /// Chebyshev polynomial of the first kind T_n(x): T_{n+1} = 2x T_n - T_{n-1}.
 /// NaN for n < 0. Complexity: O(n).
-pub fn chebyshev_t(n: Int, x: Float64) -> Float64 {
+pub fn chebyshev_t(n: Int, x: Float64) -> Float64
+  ensures: (n < 0) || (x < -1.0) || (x > 1.0) || ((result >= -1.0) && (result <= 1.0)) || (result != result)
+{
   if n < 0 { return 0.0 / 0.0; }
   if n == 0 { return 1.0; }
   if n == 1 { return x; }
@@ -1193,7 +1257,9 @@ fn _airy_series_d(x: Float64, b0: Float64, b1: Float64) -> Float64 {
 
 /// Airy function of the first kind Ai(x). Series for |x| <= 6; for larger |x|
 /// the asymptotic forms are used. Complexity: O(60).
-pub fn airy_ai(x: Float64) -> Float64 {
+pub fn airy_ai(x: Float64) -> Float64
+  ensures: (math.abs_float(x) > 3.0) || ((result >= -1.0) && (result <= 1.0)) || (result != result)
+{
   if x != x { return x; }
   var ax = math.abs_float(x);
   if ax <= 6.0 {
@@ -1230,7 +1296,9 @@ pub fn airy_bi(x: Float64) -> Float64 {
 /// Derivative of the Airy function of the first kind Ai'(x). Series for
 /// |x| <= 6; for larger |x| a central-difference of airy_ai is used.
 /// Complexity: O(60).
-pub fn airy_aip(x: Float64) -> Float64 {
+pub fn airy_aip(x: Float64) -> Float64
+  ensures: (math.abs_float(x) > 3.0) || ((result >= -2.0) && (result <= 2.0)) || (result != result)
+{
   if x != x { return x; }
   if math.abs_float(x) <= 6.0 {
     return _airy_series_d(x, 0.3550280538878172, -0.2588194037928068);
@@ -1257,7 +1325,9 @@ pub fn airy_bip(x: Float64) -> Float64 {
 
 /// Sine integral S(x) = integral_0^x sin(pi t^2/2) dt. Series to 60 terms
 /// (accurate for |x| <= 8); NaN for NaN. Complexity: O(60).
-pub fn fresnel_s(x: Float64) -> Float64 {
+pub fn fresnel_s(x: Float64) -> Float64
+  ensures: (math.abs_float(x) > 2.0) || ((result >= -1.0) && (result <= 1.0)) || (result != result)
+{
   if x != x { return x; }
   var neg = x < 0.0;
   var ax = math.abs_float(x);
@@ -1283,7 +1353,9 @@ pub fn fresnel_s(x: Float64) -> Float64 {
 
 /// Cosine integral C(x) = integral_0^x cos(pi t^2/2) dt. Series to 60 terms.
 /// Complexity: O(60).
-pub fn fresnel_c(x: Float64) -> Float64 {
+pub fn fresnel_c(x: Float64) -> Float64
+  ensures: (math.abs_float(x) > 2.0) || ((result >= -1.0) && (result <= 1.0)) || (result != result)
+{
   if x != x { return x; }
   var sum = 0.0;
   var n = 0;
@@ -1311,7 +1383,9 @@ pub fn fresnel_c(x: Float64) -> Float64 {
 /// Complete elliptic integral of the first kind K(k) via the arithmetic-
 /// geometric mean: K(k) = pi / (2 AGM(1, sqrt(1-k^2))). NaN for |k| > 1.
 /// K(0) = pi/2 exactly. Complexity: O(AGM iterations).
-pub fn elliptic_k(k: Float64) -> Float64 {
+pub fn elliptic_k(k: Float64) -> Float64
+  ensures: (k < -1.0) || (k > 1.0) || (result >= 1.5707963267948966) || (result != result)
+{
   if k != k { return k; }
   if math.abs_float(k) > 1.0 { return 0.0 / 0.0; }
   var k2 = k * k;
@@ -1335,7 +1409,9 @@ pub fn elliptic_k(k: Float64) -> Float64 {
 /// E(k) = (pi/2) [1 - sum ((2n-1)!!/(2n)!!)^2 k^(2n)/(2n-1)] for k^2 < 0.9;
 /// for k^2 >= 0.9 the defining integral is integrated by Simpson's rule.
 /// NaN for |k| > 1. Complexity: O(n^2) series / O(panels) quadrature.
-pub fn elliptic_e(k: Float64) -> Float64 {
+pub fn elliptic_e(k: Float64) -> Float64
+  ensures: (k < -1.0) || (k > 1.0) || ((result >= 1.0) && (result <= 1.5707963267948966)) || (result != result)
+{
   if k != k { return k; }
   if math.abs_float(k) > 1.0 { return 0.0 / 0.0; }
   var k2 = k * k;
@@ -1409,7 +1485,9 @@ pub fn elliptic_pi(n: Float64, k: Float64) -> Float64 {
 /// Incomplete elliptic integral of the first kind F(phi, k) =
 /// integral_0^phi dtheta / sqrt(1 - k^2 sin^2 theta) by Simpson quadrature.
 /// NaN for |k| > 1. Complexity: O(panels).
-pub fn elliptic_f(phi: Float64, k: Float64) -> Float64 {
+pub fn elliptic_f(phi: Float64, k: Float64) -> Float64
+  ensures: (phi <= 0.0) || (result >= 0.0) || (result != result)
+{
   if math.abs_float(k) > 1.0 { return 0.0 / 0.0; }
   if phi == 0.0 { return 0.0; }
   var m = 400;
@@ -1435,7 +1513,9 @@ pub fn elliptic_f(phi: Float64, k: Float64) -> Float64 {
 /// Incomplete elliptic integral of the second kind E(phi, k) =
 /// integral_0^phi sqrt(1 - k^2 sin^2 theta) dtheta by Simpson quadrature.
 /// NaN for |k| > 1. Complexity: O(panels).
-pub fn elliptic_e_incomplete(phi: Float64, k: Float64) -> Float64 {
+pub fn elliptic_e_incomplete(phi: Float64, k: Float64) -> Float64
+  ensures: (phi <= 0.0) || (result >= 0.0) || (result != result)
+{
   if math.abs_float(k) > 1.0 { return 0.0 / 0.0; }
   if phi == 0.0 { return 0.0; }
   var m = 400;
@@ -1459,7 +1539,9 @@ pub fn elliptic_e_incomplete(phi: Float64, k: Float64) -> Float64 {
 
 /// Incomplete elliptic integral of the third kind Pi(n; phi, k) by Simpson
 /// quadrature. NaN for n > 1 or |k| > 1. Complexity: O(panels).
-pub fn elliptic_pi_incomplete(n: Float64, phi: Float64, k: Float64) -> Float64 {
+pub fn elliptic_pi_incomplete(n: Float64, phi: Float64, k: Float64) -> Float64
+  ensures: (n > 1.0) || (phi <= 0.0) || (result > 0.0) || (result != result)
+{
   if math.abs_float(k) > 1.0 || n > 1.0 { return 0.0 / 0.0; }
   if phi == 0.0 { return 0.0; }
   var m = 400;
@@ -1489,7 +1571,9 @@ pub fn elliptic_pi_incomplete(n: Float64, phi: Float64, k: Float64) -> Float64 {
 
 /// theta_1(x, q) = 2 sum_{n>=0} (-1)^n q^((n+1/2)^2) sin((2n+1)x).
 /// Converges for 0 < q < 1 (real-domain); NaN otherwise. Complexity: O(terms).
-pub fn theta_1(x: Float64, q: Float64) -> Float64 {
+pub fn theta_1(x: Float64, q: Float64) -> Float64
+  ensures: (x <= 0.0) || (x >= 3.141592653589793) || (q <= 0.0) || (q >= 0.95) || (result > 0.0) || (result != result)
+{
   if q <= 0.0 || q >= 1.0 { return 0.0 / 0.0; }
   var sum = 0.0;
   var n = 0;
@@ -1521,7 +1605,9 @@ pub fn theta_2(x: Float64, q: Float64) -> Float64 {
 }
 
 /// theta_3(x, q) = 1 + 2 sum_{n>=1} q^(n^2) cos(2nx). Complexity: O(terms).
-pub fn theta_3(x: Float64, q: Float64) -> Float64 {
+pub fn theta_3(x: Float64, q: Float64) -> Float64
+  ensures: (q <= 0.0) || (q >= 0.95) || (result > 0.0) || (result != result)
+{
   if math.abs_float(q) >= 1.0 { return 0.0 / 0.0; }
   var sum = 1.0;
   var n = 1;
@@ -1577,7 +1663,9 @@ pub fn exponential_integral(x: Float64) -> Float64 {
 
 /// Logarithmic integral li(x) = Ei(ln x) for x > 0, x != 1. li(1) = -inf,
 /// li(0) = 0, li(x) for x < 0 is NaN (branch cut). Complexity: O(Ei terms).
-pub fn li(x: Float64) -> Float64 {
+pub fn li(x: Float64) -> Float64
+  ensures: (x <= 1.5) || (result > 0.0) || (result != result)
+{
   if x != x { return x; }
   if x < 0.0 { return 0.0 / 0.0; }
   if x == 0.0 { return 0.0; }
@@ -1587,7 +1675,9 @@ pub fn li(x: Float64) -> Float64 {
 
 /// Offset logarithmic integral Li(x) = li(x) - li(2). Same domain as li.
 /// Complexity: O(Ei terms).
-pub fn li_offset(x: Float64) -> Float64 {
+pub fn li_offset(x: Float64) -> Float64
+  ensures: (x <= 2.0) || (result > 0.0) || (result != result)
+{
   if x != x { return x; }
   if x < 0.0 { return 0.0 / 0.0; }
   if x == 0.0 { return -li(2.0); }
@@ -1598,7 +1688,9 @@ pub fn li_offset(x: Float64) -> Float64 {
 
 /// Sine integral Si(x) = integral_0^x sin(t)/t dt via its alternating power
 /// series sum (-1)^n x^(2n+1)/((2n+1)(2n+1)!). Complexity: O(n^2).
-pub fn sin_integral(x: Float64) -> Float64 {
+pub fn sin_integral(x: Float64) -> Float64
+  ensures: (math.abs_float(x) > 10.0) || ((result >= -2.0) && (result <= 2.0)) || (result != result)
+{
   if x != x { return x; }
   var neg = x < 0.0;
   var ax = math.abs_float(x);
@@ -1667,7 +1759,9 @@ pub fn hypergeometric_2f1(a: Float64, b: Float64, c: Float64, x: Float64) -> Flo
 
 /// Confluent hypergeometric function 1F1(a; b; x) by series summation
 /// (converges for all x). NaN for b <= 0. Complexity: O(terms).
-pub fn hypergeometric_1f1(a: Float64, b: Float64, x: Float64) -> Float64 {
+pub fn hypergeometric_1f1(a: Float64, b: Float64, x: Float64) -> Float64
+  ensures: (a < 0.0) || (b <= 0.0) || (x < 0.0) || (result > 0.0) || (result != result)
+{
   if b <= 0.0 { return 0.0 / 0.0; }
   var sum = 1.0;
   var term = 1.0;

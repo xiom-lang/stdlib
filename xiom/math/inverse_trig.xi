@@ -20,31 +20,41 @@ use xiom.math;
 
 /// Arcsine of x in radians, result in [-pi/2, pi/2]. For x outside [-1, 1]
 /// returns NaN (documented domain error). Complexity: O(1).
-pub fn asin(x: Float64) -> Float64 {
+pub fn asin(x: Float64) -> Float64
+  ensures: (x < -1.0) || (x > 1.0) || ((result >= -1.5707963267948966) && (result <= 1.5707963267948966)) || (result != result)
+{
   return math.trig.asin(x);
 }
 
 /// Arccosine of x in radians, result in [0, pi]. For x outside [-1, 1] returns
 /// NaN (documented domain error). Complexity: O(1).
-pub fn acos(x: Float64) -> Float64 {
+pub fn acos(x: Float64) -> Float64
+  ensures: (x < -1.0) || (x > 1.0) || ((result >= 0.0) && (result <= 3.141592653589793)) || (result != result)
+{
   return math.trig.acos(x);
 }
 
 /// Arctangent of x in radians, result in (-pi/2, pi/2). Complexity: O(1).
-pub fn atan(x: Float64) -> Float64 {
+pub fn atan(x: Float64) -> Float64
+  ensures: ((result >= -1.5707963267948966) && (result <= 1.5707963267948966)) || (result != result)
+{
   return math.trig.atan(x);
 }
 
 /// Four-quadrant arctangent of y/x in radians. When both y and x are zero
 /// returns NaN (documented; the angle is undefined there). Complexity: O(1).
-pub fn atan2(y: Float64, x: Float64) -> Float64 {
+pub fn atan2(y: Float64, x: Float64) -> Float64
+  ensures: ((result >= -3.141592653589793) && (result <= 3.141592653589793)) || (result != result)
+{
   return math.trig.atan2(y, x);
 }
 
 /// Four-quadrant arctangent of y/x computed purely by series (xiom.math's
 /// pure atan, no libm). When both y and x are zero returns NaN (documented).
 /// Complexity: O(series terms).
-pub fn atan2_pure(y: Float64, x: Float64) -> Float64 {
+pub fn atan2_pure(y: Float64, x: Float64) -> Float64
+  ensures: ((result >= -3.141592653589793) && (result <= 3.141592653589793)) || (result != result)
+{
   if y == 0.0 && x == 0.0 { return 0.0 / 0.0; }
   return math.atan2_pure(y, x);
 }
@@ -52,7 +62,9 @@ pub fn atan2_pure(y: Float64, x: Float64) -> Float64 {
 /// Arcsine of x via the identity asin(x) = atan(x/sqrt(1-x^2)) using the pure
 /// atan/sqrt implementations (no libm). For x outside [-1, 1] returns NaN
 /// (documented domain error). Complexity: O(series terms).
-pub fn asin_pure(x: Float64) -> Float64 {
+pub fn asin_pure(x: Float64) -> Float64
+  ensures: (x < -1.0) || (x > 1.0) || ((result >= -1.5707963267948966) && (result <= 1.5707963267948966)) || (result != result)
+{
   if x < -1.0 || x > 1.0 { return 0.0 / 0.0; }
   return math.asin_pure(x);
 }
@@ -60,14 +72,18 @@ pub fn asin_pure(x: Float64) -> Float64 {
 /// Arccosine of x via acos(x) = pi/2 - asin(x) on the pure asin (no libm).
 /// For x outside [-1, 1] returns NaN (documented domain error). Complexity:
 /// O(series terms).
-pub fn acos_pure(x: Float64) -> Float64 {
+pub fn acos_pure(x: Float64) -> Float64
+  ensures: (x < -1.0) || (x > 1.0) || ((result >= 0.0) && (result <= 3.141592653589793)) || (result != result)
+{
   if x < -1.0 || x > 1.0 { return 0.0 / 0.0; }
   return math.acos_pure(x);
 }
 
 /// Arctangent of x via the pure Taylor-series implementation (no libm). For
 /// |x| > 1 the reciprocal identity is applied. Complexity: O(series terms).
-pub fn atan_pure(x: Float64) -> Float64 {
+pub fn atan_pure(x: Float64) -> Float64
+  ensures: ((result >= -1.5707963267948966) && (result <= 1.5707963267948966)) || (result != result)
+{
   return math.atan_pure(x);
 }
 
@@ -75,6 +91,7 @@ pub fn atan_pure(x: Float64) -> Float64 {
 /// Complexity: O(1).
 pub fn atan2_radians(y: Float64, x: Float64) -> Float64
   requires: true  // extern atan2 call (T002 confinement)
+  ensures: ((result >= -3.141592653589793) && (result <= 3.141592653589793)) || (result != result)
 {
   return atan2(y, x);
 }
@@ -83,6 +100,7 @@ pub fn atan2_radians(y: Float64, x: Float64) -> Float64
 /// O(1).
 pub fn atan2_degrees(y: Float64, x: Float64) -> Float64
   requires: true  // extern atan2 call (T002 confinement)
+  ensures: ((result >= -180.0) && (result <= 180.0)) || (result != result)
 {
   var r = atan2(y, x);
   var pi = math.constants.PI;
@@ -92,6 +110,7 @@ pub fn atan2_degrees(y: Float64, x: Float64) -> Float64
 /// Angle of the vector (x, y) in radians: alias of atan2. Complexity: O(1).
 pub fn arg(y: Float64, x: Float64) -> Float64
   requires: true  // extern atan2 call (T002 confinement)
+  ensures: ((result >= -3.141592653589793) && (result <= 3.141592653589793)) || (result != result)
 {
   return atan2(y, x);
 }
