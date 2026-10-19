@@ -19,7 +19,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 
 ## 0A. CONTINUE HERE -- handoff snapshot 74 (updated 2026-10-20 02:15Z; **v0.64.8 PINNED + RELEASED**; waves 196-197 merged: global 90.0%, readiness 89.0%, floors192; final battery modules 533/533, smokes 963/963, probes 383/383, barename 0/533; next: iter/os/math/simd/ffi/format/alloc/rc/bench; gate 9 reds 1626/2343/2100-W1 + 1609 + compiler 2249)
 
-## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-19, snapshot 72)
+## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-20, snapshot 74)
 
 ```
 Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib, branch main). Start with:
