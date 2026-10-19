@@ -71,7 +71,7 @@ Status legend: **open** = not started; **fixed** = landed with a probe lock
 | 44 | Span/byte-slice API | feature | Non-owning byte-span views over `Str`/`Vec[UInt8]` for zero-copy parsing; relay 2026-10-02 night. | **fixed** (2026-10-17, wave 166: span/byte-slice API; probe `p_wave166_shapes`) |
 | 45 | Strict int parsing with offsets | feature | Reject-junk integer parsing that also reports the consumed byte offset (extends row 28); relay 2026-10-02 night. | **fixed** (2026-10-17, wave 166: strict parsing + offsets; probe `p_wave166_convert`) |
 | 46 | base32 + percent-encoder | feature | Public base32 encode/decode and a standalone percent-encoder on the encoding face; relay 2026-10-02 night. | **fixed** (2026-10-17, wave 166: base32 + percent-encoder; probe `p_wave166_encoding`) |
-| 47 | `xiom.sync.channel` handle form | feature | Cross-thread producer/consumer without a global container; the value form has no internal lock and an explicit lock needs a stable-address handle. Filed by xvector 2026-10-18. | acked (bus `REL-20261018-1518-xvector-2`); probe-first implementation wave `wishlist/47-channel-handle` in flight (Agent Manager) |
+| 47 | `xiom.sync.channel` handle form | feature | Cross-thread producer/consumer without a global container; the value form has no internal lock and an explicit lock needs a stable-address handle. Filed by xvector 2026-10-18. | **fixed** (2026-10-19, wave 188: `ChannelHandle[T]` + open/try-send/try-recv/close/len/capacity/free, external `SyncMutex` docs, probe `p_wave188_channel_handle`; merged for v0.64.8; relay `1518` fixed pending xvector verify) |
 
 Relay status 2026-10-03 (fetched 2026-10-05): the packages source-of-record
 has advanced to 126 rows (waves 47-55); this mirror still carries rows
