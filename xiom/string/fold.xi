@@ -23,7 +23,9 @@ use xiom.string.casefold;
 /// Returns: the case-folded string.
 /// Error case: none; malformed UTF-8 bytes pass through unchanged.
 /// Complexity: O(|s|).
-pub fn unicode_casefold(s: Str) -> Str {
+pub fn unicode_casefold(s: Str) -> Str
+  ensures: s.len() == 0 => result == ""
+{
   let r = casefold.str_casefold(s);
   r
 }
@@ -35,7 +37,9 @@ pub fn unicode_casefold(s: Str) -> Str {
 /// Returns: the fully case-folded string.
 /// Error case: none; malformed UTF-8 bytes pass through unchanged.
 /// Complexity: O(|s|).
-pub fn unicode_fold_full(s: Str) -> Str {
+pub fn unicode_fold_full(s: Str) -> Str
+  ensures: s.len() == 0 => result == ""
+{
   let r = casefold.str_casefold(s);
   r
 }

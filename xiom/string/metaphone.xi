@@ -22,7 +22,10 @@ use xiom.text.similarity;
 /// Returns: the Metaphone code ("" for empty input).
 /// Error case: none.
 /// Complexity: O(|s|).
-pub fn metaphone(s: Str) -> Str {
+pub fn metaphone(s: Str) -> Str
+  ensures: s.len() == 0 => result.len() == 0
+  ensures: result.len() <= 2 * s.len()
+{
   similarity.metaphone(s)
 }
 
@@ -32,7 +35,9 @@ pub fn metaphone(s: Str) -> Str {
 /// Returns: true when metaphone(a) == metaphone(b).
 /// Error case: none.
 /// Complexity: O(|a| + |b|).
-pub fn metaphone_compare(a: Str, b: Str) -> Bool {
+pub fn metaphone_compare(a: Str, b: Str) -> Bool
+  ensures: a == b => result == true
+{
   let ca = similarity.metaphone(a);
   let cb = similarity.metaphone(b);
   ca == cb

@@ -21,7 +21,9 @@ use xiom.fmt;
 /// Returns: Ok with the formatted string, Err on a malformed or mismatched spec.
 /// Error case: malformed spec, non-integer conversion, missing arguments.
 /// Complexity: O(|spec| + digits).
-pub fn str_printf_i1(spec: Str, a: Int) -> Result[Str, Str] {
+pub fn str_printf_i1(spec: Str, a: Int) -> Result[Str, Str]
+  ensures: spec.len() == 0 => result.is_ok == true
+{
   let r = fmt.sprintf_i1(spec, a);
   r
 }
@@ -33,7 +35,9 @@ pub fn str_printf_i1(spec: Str, a: Int) -> Result[Str, Str] {
 /// Returns: Ok with the formatted string, Err on a malformed or mismatched spec.
 /// Error case: malformed spec, non-float conversion, missing arguments.
 /// Complexity: O(|spec| + |fraction digits|).
-pub fn str_printf_f1(spec: Str, a: Float64) -> Result[Str, Str] {
+pub fn str_printf_f1(spec: Str, a: Float64) -> Result[Str, Str]
+  ensures: spec.len() == 0 => result.is_ok == true
+{
   let r = fmt.sprintf_f1(spec, a);
   r
 }
@@ -44,7 +48,9 @@ pub fn str_printf_f1(spec: Str, a: Float64) -> Result[Str, Str] {
 /// Returns: Ok with the formatted string, Err on a malformed or mismatched spec.
 /// Error case: malformed spec, non-string conversion, missing arguments.
 /// Complexity: O(|spec| + |a|).
-pub fn str_printf_s1(spec: Str, a: Str) -> Result[Str, Str] {
+pub fn str_printf_s1(spec: Str, a: Str) -> Result[Str, Str]
+  ensures: spec.len() == 0 => result.is_ok == true
+{
   let r = fmt.sprintf_s1(spec, a);
   r
 }

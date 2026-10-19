@@ -64,14 +64,20 @@ fn _char_to_str(c: Char) -> Str {
 
 /// Repeats `s` `n` times. Returns the empty string when `n <= 0`.
 /// Complexity: O(n * |s|).
-pub fn str_repeat(s: Str, n: Int) -> Str {
+pub fn str_repeat(s: Str, n: Int) -> Str
+  ensures: n <= 0 => result.len() == 0
+  ensures: n >= 0 => result.len() == s.len() * n
+{
   return string.str_repeat(s, n);
 }
 
 /// Returns a string consisting of `c` repeated `n` times. Returns the empty
 /// string when `n <= 0`. Multi-byte characters are encoded correctly.
 /// Complexity: O(n).
-pub fn str_repeat_char(c: Char, n: Int) -> Str {
+pub fn str_repeat_char(c: Char, n: Int) -> Str
+  ensures: n <= 0 => result.len() == 0
+  ensures: n >= 0 => result.len() <= 4 * n
+{
   if n <= 0 {
     return "";
   };

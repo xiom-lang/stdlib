@@ -47,7 +47,10 @@ pub type FloatScan = {
 /// Returns: Ok with the matched token strings, Err on mismatch.
 /// Error case: unterminated directive, no match, literal mismatch.
 /// Complexity: O(|s| + |spec|).
-pub fn str_scanf(s: Str, spec: Str) -> Result[Vec[Str], Str] {
+pub fn str_scanf(s: Str, spec: Str) -> Result[Vec[Str], Str]
+  ensures: spec.len() == 0 => result.is_ok == true
+  ensures: s.len() == 0 && spec == "%d" => result.is_err == true
+{
   let r = fmt.sscanf(s, spec);
   r
 }
@@ -60,7 +63,9 @@ pub fn str_scanf(s: Str, spec: Str) -> Result[Vec[Str], Str] {
 ///          a non-integer conversion.
 /// Error case: parse failure, integer overflow, non-integer conversion.
 /// Complexity: O(|s| + |spec|).
-pub fn str_scanf_ints(s: Str, spec: Str) -> Result[Vec[Int], Str] {
+pub fn str_scanf_ints(s: Str, spec: Str) -> Result[Vec[Int], Str]
+  ensures: spec.len() == 0 => result.is_ok == true
+{
   let r = fmt.sscanf_ints(s, spec);
   r
 }
@@ -79,7 +84,11 @@ pub fn str_scanf_ints(s: Str, spec: Str) -> Result[Vec[Int], Str] {
 /// Returns: a FloatScan struct.
 /// Error case: parse failure, too many float conversions, non-float conversion.
 /// Complexity: O(|s| + |spec|).
-pub fn str_scanf_floats(s: Str, spec: Str) -> FloatScan {
+pub fn str_scanf_floats(s: Str, spec: Str) -> FloatScan
+  ensures: spec.len() == 0 => result.is_ok == true
+  ensures: result.is_ok == false => result.count == 0
+  ensures: result.is_ok == true => (result.count >= 0 && result.count <= 8)
+{
   let r = fmt.sscanf_floats(s, spec);
   return FloatScan{
     is_ok: r.is_ok;
