@@ -122,6 +122,28 @@ types; the param+Result-return combination aborts the compiler silently
 `p_trailing_match_after_push`) remain Current, none are claimed by the
 staged v0.64.6 cut range (m334-m346).
 
+**OPEN (wave 188, 2026-10-19, compiler v0.64.6 official archive + v0.64.7
+extract): a generic call nested as the argument of `ptr.read` is silently
+mis-typed.** Found by the mandatory wave-188 probe for the handle form of
+`xiom.sync.channel` (wishlist row 47 / REL-20261018-1518-xvector-2).
+`type Pair[T] = { a: Int; b: Int; }` with
+`fn identity_ptr[T](p: *Pair[T]) -> *Pair[T]` and
+`let q = ptr.read(identity_ptr[T](p));` returns `0` for a cell holding
+`{a: 20, b: 22}` (the read is instantiated for the erased `T`, not
+`Pair[T]`). Staging the call in a local first --
+`let q0 = identity_ptr[T](p); let q = ptr.read(q0);` -- returns `42`.
+Compile rc 0, run rc 1 with `nested=0 local=42`; expected rc 0. The same
+construct through a Channel cell reports `closed=false`,
+`items.len()=4294967295`, `cap=0` instead of `false/0/3`. Repro:
+`tools/known_failures/p_nested_generic_ptr_read.xi`. Repro on both pins
+(v0.64.6 official archive and v0.64.7 extract): compile rc 0, run rc 1.
+Impact: the shipped handle form in `xiom/sync/channel.xi` stages the cell
+pointer in a local before every `ptr.read`/`ptr.write` and documents the
+trap; the staged shape is green, including the two-producer cross-thread
+probe. This is distinct from REL-20261018-1546 (callee reads of
+`&Vec[GenericStruct]`, which still reproduces as `plain=111` on v0.64.6).
+New compiler finding; to be filed on the relay bus by the main session.
+
 **OPEN (wave 165, 2026-10-16, compiler v0.64.5 official archive): a runtime
 `sdiv i128` inlined into a vector-loop function compiles rc 0 and AVs at
 run time (0xC0000005).** Found while implementing `xiom.math.fixed` on the
