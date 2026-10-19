@@ -155,7 +155,9 @@ pub fn terminal_height() -> Int {
 /// Parameters: title -- the desired title text.
 /// Returns: the "ESC]0;<title>BEL" sequence.
 /// Complexity: O(n). Pure.
-pub fn terminal_title(title: Str) -> Str {
+pub fn terminal_title(title: Str) -> Str
+  ensures: result.len() == title.len() + 5
+{
   var result = "\x1b]0;";
   result = result + title;
   result = result + "\x07";
@@ -165,6 +167,8 @@ pub fn terminal_title(title: Str) -> Str {
 /// Return the bell escape sequence.
 /// Returns: the BEL character "\x07".
 /// Complexity: O(1). Pure.
-pub fn terminal_bell() -> Str {
+pub fn terminal_bell() -> Str
+  ensures: result.len() == 1
+{
   "\x07"
 }

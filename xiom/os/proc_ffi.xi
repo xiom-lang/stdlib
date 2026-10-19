@@ -429,7 +429,9 @@ pub fn execvp(file: Str, args: &Vec[Str]) -> Result[Int, Str] {
 /// Current process id.
 /// Delegates to xiom.os.process_id.
 /// Complexity: O(1).
-pub fn getpid() -> Int {
+pub fn getpid() -> Int
+  ensures: result > 0
+{
   let pid = os.process_id();
   pid
 }
@@ -460,7 +462,9 @@ pub fn raise(sig: Int) -> Result[Unit, Str] {
 /// Parameters: status -- a wait()/waitpid() status word.
 /// Returns: the low 8 bits of the shifted status.
 /// Complexity: O(1). Pure.
-pub fn exit_code(status: Int) -> Int {
+pub fn exit_code(status: Int) -> Int
+  ensures: result >= 0 && result <= 255
+{
   let shifted = status >> 8;
   shifted & 0xFF
 }
@@ -469,7 +473,9 @@ pub fn exit_code(status: Int) -> Int {
 /// Parameters: status -- a wait()/waitpid() status word.
 /// Returns: the low 7 bits of the status.
 /// Complexity: O(1). Pure.
-pub fn exit_signal(status: Int) -> Int {
+pub fn exit_signal(status: Int) -> Int
+  ensures: result >= 0 && result <= 127
+{
   status & 0x7F
 }
 

@@ -54,7 +54,9 @@ pub fn unix_groupname(gid: Int) -> Result[Str, Str] {
 /// The current user's home directory.
 /// Reads HOME via xiom.env (falls back to "").
 /// Complexity: O(1). Pure (OS call).
-pub fn unix_home_dir() -> Str {
+pub fn unix_home_dir() -> Str
+  ensures: result.len() > 0 => env.home_dir().is_some
+{
   let v = env.home_dir();
   match v {
     Some(h) => h;
