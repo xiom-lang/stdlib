@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 68 (updated 2026-10-19 17:58Z at this docs commit; **stdlib-v0.64.8 + compiler v0.64.8 RELEASED; REGISTRY BLOCKED** -- publish run 39297988665 HTTP 403 `publisher_not_mapped`; packages item `REL-20261019-1755-stdlib`; `xiom-std` latest still 0.64.7; tag `112c5b6`; coverage 76.1%, readiness 87.6%; paste-ready next-session prompt in `## 0C`)
+## 0A. CONTINUE HERE -- handoff snapshot 69 (updated 2026-10-19 18:06Z at this docs commit; **REGISTRY MAPPING CONFIRMED STALE** -- tag-ref retry 39298965606 also HTTP 403 `publisher_not_mapped`; packages items `REL-20261019-1755-stdlib` + `REL-20261019-1805-stdlib`; `xiom-std` latest 0.64.7; stdlib/compiler v0.64.8 releases complete; tag `112c5b6`; coverage 76.1%, readiness 87.6%)
 
 ## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-18)
 
@@ -25,11 +25,11 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
   git -C E:\xiom-lang\xiom-relays pull --ff-only
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 68 + block 254 (and this 0C block).
+Read docs/stdlib_session.md snapshot 69 + block 255 (and this 0C block).
 
 State: stdlib-v0.64.7 is released; tag stdlib-v0.64.7 = f4482b14 (tag object 11bf62a6); registry xiom-std 0.64.7 is live. **stdlib-v0.64.8 is RELEASED**: tag object 0bf5b752462059eaa15cd8261eeb8b92039d8411 at commit 112c5b647215a12782ba066ad72b11595bd0afac; COMPILER_VERSION=candidate-v0.64.8-r2; package.xi 0.64.8; release-notes/v0.64.8.md; CHANGELOG [0.64.8]. release.yml run 39289746856 completed success (validate, ubuntu, windows, package + GitHub Release); the separate STDLIB_VERSION pin-PR job failed on the known token limitation. Assets: xiom-std-0.64.8.tar.gz sha256 6ea77968232e26ff8d1d2adcf83b2c4ed3cf3a0a3597ff891c8d3d40fc815683; SHA256SUMS sha256 70d350667986a472485a2791cb6730355c00938ca867bd43b45a0194d20e246f; https://github.com/xiom-lang/stdlib/releases/tag/stdlib-v0.64.8. The tag-push registry run 39289746947 was cancelled; dispatch publish-registry with compiler v0.64.8 after the final compiler tag. Local battery on 9b88b46: modules 533/533, probes 368/368, smokes 960/962 (the documented v0.64.7-gated guard pair on v0.64.6), barename/coverage/doc rc 0. Waves 179-188 and wishlist 47 are merged: time 52.9%, async 62.7%, num 50.7%, core 78.6%, stats 99.3%, regex 98.0%, search 100%, string 68.9%, math 56.0%, sync 95.2%; global 76.1%; floors189 wired; readiness 87.6% (gates 1-7 and 10 met; gate 8 76.1%; gate 9 compiler-owned). New compiler items: REL-20261018-1546-stdlib, REL-20261019-1451-stdlib, REL-20261019-1624-stdlib. Wishlist row 47 is fixed pending xvector verification.
 
-Release next: compiler v0.64.8 is released (tag 4d040604b) and STDLIB_VERSION is pinned. Registry publish run 39297988665 failed at "Publish to the registry" with HTTP 403 `publisher_not_mapped` (OIDC token from xiom-lang/stdlib is not a configured trusted publisher); filed `REL-20261019-1755-stdlib` to packages. Once the registry mapping is fixed, re-dispatch publish-registry with version=0.64.8 and compiler=v0.64.8 and verify xiom-std 0.64.8. The stdlib tag must not move again. Remaining gate 8: iter 46.4%, num 50.7%, math 56.0%, string 68.9%, core 78.6%, regex 98.0%, stats 99.3%, search 100%; next waves are num/num.xi and the string/math continuations; dump floors190, wire workflows + tools/README, update the readiness meter.
+Release next: compiler v0.64.8 is released (tag 4d040604b) and STDLIB_VERSION is pinned. Registry publish is blocked: run 39297988665 (main) and the tag-ref retry 39298965606 both returned HTTP 403 `publisher_not_mapped`; the retry's head branch was stdlib-v0.64.8, so the OIDC ref was refs/tags/stdlib-v0.64.8. The v0.64.7 precedent run 39135008135 succeeded, so the v0.64.8 trusted-publisher mapping is missing/stale. Packages items REL-20261019-1755-stdlib and REL-20261019-1805-stdlib carry the evidence. Do not retry until the mapping is fixed; then re-dispatch version=0.64.8/compiler=v0.64.8 and verify xiom-std 0.64.8. The stdlib tag must not move. Remaining gate 8: iter 46.4%, num 50.7%, math 56.0%, string 68.9%, core 78.6%, regex 98.0%, stats 99.3%, search 100%; next waves are num/num.xi and the string/math continuations; dump floors190, wire workflows + tools/README, update the readiness meter.
 
 Gate 9 (corrected live ids): REL-20261011-1053-stdlib, -1456-stdlib, -1626-stdlib, REL-20261015-2328-stdlib, -2343-stdlib, REL-20261016-2000-stdlib, -2100-stdlib, -2331-stdlib. All are stdlib -> compiler; only 2331 is fixed. Verify 1456/1053/2328/2000 first on the official v0.64.7 archive (sha256 16a436c4...), then 2100 W2-W4 green/W1 red; 1626 needs m354, 2343 m355, 2100 W1 m357, 2331 needs the next archive + the stdlib runtime helper fix. Do not close from the unverified local v0647 extract. 1549-pulse-5 waits on compiler 1609, 1834 on 1550. Wishlist: row 33 open (compiler/install), row 47 fixed pending xvector verify. Kqueue needs a macOS runner; net.event wrapper and LISTEN_FDS server integration remain.
 
@@ -3674,6 +3674,19 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-19 block 255 (REGISTRY MAPPING CONFIRMED STALE -- tag-ref retry 39298965606 also 403 publisher_not_mapped; 1805 filed)**
+- The tag-ref retry ran with head branch `stdlib-v0.64.8` (OIDC ref
+  `refs/tags/stdlib-v0.64.8`), packaged and signed `xiom-std v0.64.8`,
+  then the registry returned the same HTTP 403 `publisher_not_mapped`.
+- The first run 39297988665 ran from `main`; v0.64.7 published as
+  tag-triggered run 39135008135. The v0.64.8 trusted-publisher mapping is
+  missing or stale, not a dispatch-ref issue.
+- Packages items `REL-20261019-1755-stdlib` and
+  `REL-20261019-1805-stdlib` carry both failed runs and the precedent;
+  `REL-20261019-1755-compiler` is updated. No further retries until the
+  mapping is fixed. `xiom-std` latest remains 0.64.7; the stdlib and
+  compiler v0.64.8 releases are complete.
 
 **SESSION 2026-10-19 block 254 (REGISTRY PUBLISH BLOCKED -- run 39297988665 HTTP 403 publisher_not_mapped; packages item 1755)**
 - stdlib and compiler v0.64.8 are released. Registry dispatch verified
