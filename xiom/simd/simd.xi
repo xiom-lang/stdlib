@@ -211,7 +211,9 @@ pub fn Vec4f.mul(self, other: Vec4f) -> Vec4f
 }
 
 /// Lane-wise division.
-pub fn Vec4f.div(self, other: Vec4f) -> Vec4f {
+pub fn Vec4f.div(self, other: Vec4f) -> Vec4f
+  requires: simd_supported()
+{
   let out = alloc.alloc(16);
   unsafe { xiom_simd_f32x4_div(data, other.data, out as *Float32); }
   unsafe { alloc.free(data as *UInt8); alloc.free(other.data as *UInt8); }

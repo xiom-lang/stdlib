@@ -88,7 +88,9 @@ pub fn errno_last() -> Int {
 
 /// Whether a code represents an error (non-zero).
 /// Complexity: O(1).
-pub fn errno_is_error(code: Int) -> Bool {
+pub fn errno_is_error(code: Int) -> Bool
+  ensures: result == (code != 0)
+{
   code != 0
 }
 

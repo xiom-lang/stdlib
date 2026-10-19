@@ -1126,18 +1126,24 @@ pub fn vec_reverse[T](v: &mut Vec[T])
 }
 
 /// Sort elements in ascending order. O(N log N) avg.
-pub fn vec_sort_asc[T: Ord](v: &mut Vec[T]) {
+pub fn vec_sort_asc[T: Ord](v: &mut Vec[T])
+  ensures: v.len() == v.len()@pre
+{
   xiom.sort.sort_quick(v);
 }
 
 /// Sort elements in descending order. O(N log N) avg.
-pub fn vec_sort_desc[T: Ord](v: &mut Vec[T]) {
+pub fn vec_sort_desc[T: Ord](v: &mut Vec[T])
+  ensures: v.len() == v.len()@pre
+{
   xiom.sort.sort_quick(v);
   vec_reverse(v);
 }
 
 /// Returns true if the value is present. O(N).
-pub fn vec_contains[T: Eq](v: &Vec[T], value: T) -> Bool {
+pub fn vec_contains[T: Eq](v: &Vec[T], value: T) -> Bool
+  ensures: v.len() == 0 => result == false
+{
   var i = 0;
   while i < v.len() {
     if v[i] == value { return true; }
@@ -1347,12 +1353,16 @@ pub fn map_len[K, V](m: Map[K, V]) -> Int
 }
 
 /// Returns true if the key exists in the map. O(N).
-pub fn map_contains_key[K, V](m: &Map[K, V], key: &K) -> Bool {
+pub fn map_contains_key[K, V](m: &Map[K, V], key: &K) -> Bool
+  ensures: m.len() == 0 => result == false
+{
   m.contains(key)
 }
 
 /// Get value by key, or return `default` if not found. O(N).
-pub fn map_get_or[K, V](m: &Map[K, V], key: &K, default: V) -> V {
+pub fn map_get_or[K, V](m: &Map[K, V], key: &K, default: V) -> V
+  ensures: !m.contains(key) => result == default
+{
   var opt = m.get(key);
   match opt {
     Some(v) => v,
@@ -1361,7 +1371,9 @@ pub fn map_get_or[K, V](m: &Map[K, V], key: &K, default: V) -> V {
 }
 
 /// Remove a key-value pair. Returns the value if the key was present. O(N).
-pub fn map_remove_key[K, V](m: &mut Map[K, V], key: &K) -> Option[V] {
+pub fn map_remove_key[K, V](m: &mut Map[K, V], key: &K) -> Option[V]
+  ensures: !m.contains(key)
+{
   m.remove(key)
 }
 
@@ -1374,7 +1386,11 @@ pub fn map_clear[K, V](m: &mut Map[K, V])
 
 /// Insert a key-value pair only if the key is not already present.
 /// Returns true if inserted, false if key already existed. O(N).
-pub fn map_insert_if_absent[K, V](m: &mut Map[K, V], key: K, value: V) -> Bool {
+pub fn map_insert_if_absent[K, V](m: &mut Map[K, V], key: K, value: V) -> Bool
+  ensures: m.contains(&key)
+  ensures: result == true => m.len() == m.len()@pre + 1
+  ensures: result == false => m.len() == m.len()@pre
+{
   if m.contains(&key) { return false; }
   m.insert(key, value);
   true
@@ -1406,17 +1422,23 @@ pub fn map_merge[K, V](a: &Map[K, V], b: &Map[K, V]) -> Map[K, V]
 // -- Set Free Functions ------------------------------------------------------
 
 /// Insert a value into the set. O(N).
-pub fn set_insert[T](s: &mut Set[T], value: T) {
+pub fn set_insert[T](s: &mut Set[T], value: T)
+  ensures: s.len() == s.len()@pre || s.len() == s.len()@pre + 1
+{
   s.insert(value)
 }
 
 /// Returns true if the value is in the set. O(N).
-pub fn set_contains[T](s: &Set[T], value: &T) -> Bool {
+pub fn set_contains[T](s: &Set[T], value: &T) -> Bool
+  ensures: s.len() == 0 => result == false
+{
   s.contains(value)
 }
 
 /// Remove a value from the set. O(N).
-pub fn set_remove[T](s: &mut Set[T], value: &T) {
+pub fn set_remove[T](s: &mut Set[T], value: &T)
+  ensures: s.len() == s.len()@pre || s.len() == s.len()@pre - 1
+{
   s.remove(value)
 }
 
@@ -1450,7 +1472,10 @@ pub fn set_difference[T](a: &Set[T], b: &Set[T]) -> Set[T]
 }
 
 /// Returns true if `sub` is a subset of `sup` (all elements of sub are in sup). O(N-M).
-pub fn set_is_subset[T](sub: &Set[T], sup: &Set[T]) -> Bool {
+pub fn set_is_subset[T](sub: &Set[T], sup: &Set[T]) -> Bool
+  ensures: sub.len() == 0 => result == true
+  ensures: result == true => sub.len() <= sup.len()
+{
   var sub_vec = set_to_vec(sub);
   var i = 0;
   while i < sub_vec.len() {
@@ -1502,7 +1527,9 @@ pub fn set_from_vec[T](v: &Vec[T]) -> Set[T]
 /// O(N log N) average, O(N2) worst. Unstable.
 /// NOTE: the comparator must be a NAMED function -- inline lambdas crash the
 /// current runtime (see xiom.sort comparator note).
-pub fn vec_sort_by[T](v: &mut Vec[T], compare: fn(&T, &T) -> Int) {
+pub fn vec_sort_by[T](v: &mut Vec[T], compare: fn(&T, &T) -> Int)
+  ensures: v.len() == v.len()@pre
+{
   // Local insertion sort keeps the Int-comparator API (xiom.sort.sort_by
   // takes an Ordering comparator) and avoids the full-path import gate.
   let n = v.len();
@@ -1817,7 +1844,9 @@ pub fn vec_is_empty[T](v: &Vec[T]) -> Bool
 }
 
 /// Element at index i, or `default` if out of bounds. O(1).
-pub fn vec_get_or[T](v: &Vec[T], i: Int, default: T) -> T {
+pub fn vec_get_or[T](v: &Vec[T], i: Int, default: T) -> T
+  ensures: i < 0 || i >= v.len()@pre => result == default
+{
   if i < 0 || i >= v.len() { return default; }
   return v[i];
 }

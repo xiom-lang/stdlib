@@ -13,7 +13,9 @@ module xiom.array.dynamic
 // ============================================================================
 
 /// Append value to the end of a. O(1) amortized.
-pub fn array_push(a: &mut Vec[Int], value: Int) {
+pub fn array_push(a: &mut Vec[Int], value: Int)
+  ensures: a.len() == a.len()@pre + 1
+{
   a.push(value);
 }
 
@@ -26,14 +28,21 @@ pub fn array_pop(a: &mut Vec[Int]) -> Option[Int]
 
 /// Insert value at idx, shifting later elements right. O(n).
 /// No-op when idx is outside [0, len].
-pub fn array_insert(a: &mut Vec[Int], idx: Int, value: Int) {
+pub fn array_insert(a: &mut Vec[Int], idx: Int, value: Int)
+  ensures: idx < 0 || idx > a.len()@pre => a.len() == a.len()@pre
+  ensures: idx >= 0 && idx <= a.len()@pre => a.len() == a.len()@pre + 1
+{
   var len = a.len();
   if idx < 0 || idx > len { return; }
   a.insert(idx, value);
 }
 
 /// Remove and return the element at idx, or None if out of bounds. O(n).
-pub fn array_remove(a: &mut Vec[Int], idx: Int) -> Option[Int] {
+pub fn array_remove(a: &mut Vec[Int], idx: Int) -> Option[Int]
+  ensures: idx < 0 || idx >= a.len()@pre => result is None
+  ensures: result is None => a.len() == a.len()@pre
+  ensures: result is Some => a.len() == a.len()@pre - 1
+{
   var len = a.len();
   if idx < 0 || idx >= len { return None; }
   a.remove(idx)
@@ -72,7 +81,9 @@ pub fn array_concat(a: &Vec[Int], b: &Vec[Int]) -> Vec[Int]
 }
 
 /// Append all elements of b to a. O(b.len()).
-pub fn array_extend(a: &mut Vec[Int], b: &Vec[Int]) {
+pub fn array_extend(a: &mut Vec[Int], b: &Vec[Int])
+  ensures: a.len() == a.len()@pre + b.len()
+{
   var i = 0;
   while i < b.len() {
     a.push(b[i]);
@@ -124,7 +135,9 @@ fn arr_sort_range(a: &mut Vec[Int], tmp: &mut Vec[Int], lo: Int, hi: Int) {
 }
 
 /// Sort a in place. O(n log n), stable, O(n) space.
-pub fn array_sort(a: &mut Vec[Int]) {
+pub fn array_sort(a: &mut Vec[Int])
+  ensures: a.len() == a.len()@pre
+{
   var n = a.len();
   if n <= 1 { return; }
   var tmp = Vec[Int].new();

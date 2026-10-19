@@ -70,7 +70,9 @@ pub fn f32x4_mul(x: F32x4, y: F32x4) -> F32x4
 
 /// Lane-wise division.
 /// Complexity: O(1).
-pub fn f32x4_div(x: F32x4, y: F32x4) -> F32x4 {
+pub fn f32x4_div(x: F32x4, y: F32x4) -> F32x4
+  ensures: result.a == x.a / y.a && result.b == x.b / y.b && result.c == x.c / y.c && result.d == x.d / y.d
+{
   F32x4{ a: x.a / y.a; b: x.b / y.b; c: x.c / y.c; d: x.d / y.d; }
 }
 
@@ -132,7 +134,9 @@ pub fn f32x4_max(x: F32x4, y: F32x4) -> F32x4
 
 /// The dot product of two vectors.
 /// Complexity: O(1).
-pub fn f32x4_dot(x: F32x4, y: F32x4) -> Float32 {
+pub fn f32x4_dot(x: F32x4, y: F32x4) -> Float32
+  ensures: result == x.a * y.a + x.b * y.b + x.c * y.c + x.d * y.d
+{
   x.a * y.a + x.b * y.b + x.c * y.c + x.d * y.d
 }
 
@@ -215,7 +219,9 @@ pub fn f32x4_insert(x: F32x4, i: Int, v: Float32) -> F32x4
 
 /// The sum of all lanes.
 /// Complexity: O(1).
-pub fn f32x4_sum(x: F32x4) -> Float32 {
+pub fn f32x4_sum(x: F32x4) -> Float32
+  ensures: result == x.a + x.b + x.c + x.d
+{
   x.a + x.b + x.c + x.d
 }
 

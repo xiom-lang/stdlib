@@ -40,7 +40,10 @@ pub fn progress_new(total: Int) -> Progress
 }
 
 /// Advance the bar to `done` units (clamped to [0, total]).
-pub fn progress_update(p: &mut Progress, done: Int) -> Unit {
+pub fn progress_update(p: &mut Progress, done: Int) -> Unit
+  ensures: p.done <= p.total
+  ensures: p.total >= 0 => p.done >= 0
+{
   var d = done;
   if d < 0 {
     d = 0;
@@ -52,7 +55,9 @@ pub fn progress_update(p: &mut Progress, done: Int) -> Unit {
 }
 
 /// Render the bar to a single line string: "[####----] 50%".
-pub fn progress_render(p: &Progress) -> Str {
+pub fn progress_render(p: &Progress) -> Str
+  ensures: result.len() >= 3
+{
   var pct = progress_percent(p);
   var filled = 0;
   if p.total > 0 {
@@ -95,7 +100,10 @@ pub fn progress_percent(p: &Progress) -> Int
 }
 
 /// Estimated seconds remaining, or -1 when unknown (nothing done yet).
-pub fn progress_eta(p: &Progress) -> Int {
+pub fn progress_eta(p: &Progress) -> Int
+  ensures: result >= -1
+  ensures: p.done <= 0 => result == -1
+{
   if p.done <= 0 {
     return -1;
   };
@@ -134,7 +142,9 @@ pub fn spinner_new() -> Spinner
 }
 
 /// Advance the spinner and return its frame string.
-pub fn spinner_tick(sp: &mut Spinner) -> Str {
+pub fn spinner_tick(sp: &mut Spinner) -> Str
+  ensures: sp.index == sp.index@pre + 1
+{
   sp.index = sp.index + 1;
   if sp.frames.len() == 0 {
     return " ";
@@ -319,42 +329,62 @@ pub fn ansi_bg_white() -> Str
 }
 
 /// ANSI 256-color foreground escape for code 0..255 (clamped).
-pub fn ansi_fg_256(code: Int) -> Str {
+pub fn ansi_fg_256(code: Int) -> Str
+  ensures: code < 0 => result == "\u{001b}[38;5;0m"
+  ensures: code > 255 => result == "\u{001b}[38;5;255m"
+{
   return "\u{001b}[38;5;" + convert.int_to_string(_clamp8(code)) + "m";
 }
 
 /// ANSI 256-color background escape for code 0..255 (clamped).
-pub fn ansi_bg_256(code: Int) -> Str {
+pub fn ansi_bg_256(code: Int) -> Str
+  ensures: code < 0 => result == "\u{001b}[48;5;0m"
+  ensures: code > 255 => result == "\u{001b}[48;5;255m"
+{
   return "\u{001b}[48;5;" + convert.int_to_string(_clamp8(code)) + "m";
 }
 
 /// ANSI 24-bit foreground escape from RGB channels (0-255 each).
-pub fn ansi_fg_rgb(r: Int, g: Int, b: Int) -> Str {
+pub fn ansi_fg_rgb(r: Int, g: Int, b: Int) -> Str
+  ensures: (r < 0 && g < 0 && b < 0) => result == "\u{001b}[38;2;0;0;0m"
+  ensures: (r > 255 && g > 255 && b > 255) => result == "\u{001b}[38;2;255;255;255m"
+{
   return "\u{001b}[38;2;" + convert.int_to_string(_clamp8(r)) + ";" + convert.int_to_string(_clamp8(g)) + ";" + convert.int_to_string(_clamp8(b)) + "m";
 }
 
 /// ANSI 24-bit background escape from RGB channels (0-255 each).
-pub fn ansi_bg_rgb(r: Int, g: Int, b: Int) -> Str {
+pub fn ansi_bg_rgb(r: Int, g: Int, b: Int) -> Str
+  ensures: (r < 0 && g < 0 && b < 0) => result == "\u{001b}[48;2;0;0;0m"
+  ensures: (r > 255 && g > 255 && b > 255) => result == "\u{001b}[48;2;255;255;255m"
+{
   return "\u{001b}[48;2;" + convert.int_to_string(_clamp8(r)) + ";" + convert.int_to_string(_clamp8(g)) + ";" + convert.int_to_string(_clamp8(b)) + "m";
 }
 
 /// Move the cursor up `n` rows (n clamped >= 0).
-pub fn ansi_cursor_up(n: Int) -> Str {
+pub fn ansi_cursor_up(n: Int) -> Str
+  ensures: n < 0 => result == "\u{001b}[0A"
+{
   return "\u{001b}[" + convert.int_to_string(_max0(n)) + "A";
 }
 
 /// Move the cursor down `n` rows.
-pub fn ansi_cursor_down(n: Int) -> Str {
+pub fn ansi_cursor_down(n: Int) -> Str
+  ensures: n < 0 => result == "\u{001b}[0B"
+{
   return "\u{001b}[" + convert.int_to_string(_max0(n)) + "B";
 }
 
 /// Move the cursor right `n` columns.
-pub fn ansi_cursor_forward(n: Int) -> Str {
+pub fn ansi_cursor_forward(n: Int) -> Str
+  ensures: n < 0 => result == "\u{001b}[0C"
+{
   return "\u{001b}[" + convert.int_to_string(_max0(n)) + "C";
 }
 
 /// Move the cursor left `n` columns.
-pub fn ansi_cursor_back(n: Int) -> Str {
+pub fn ansi_cursor_back(n: Int) -> Str
+  ensures: n < 0 => result == "\u{001b}[0D"
+{
   return "\u{001b}[" + convert.int_to_string(_max0(n)) + "D";
 }
 
@@ -364,7 +394,9 @@ pub fn ansi_cursor_home() -> Str {
 }
 
 /// Move the cursor to the given 1-based row, col.
-pub fn ansi_cursor_to(row: Int, col: Int) -> Str {
+pub fn ansi_cursor_to(row: Int, col: Int) -> Str
+  ensures: (row < 1 && col < 1) => result == "\u{001b}[1;1H"
+{
   var r = row;
   if r < 1 {
     r = 1;
@@ -419,7 +451,13 @@ pub fn ansi_restore_cursor() -> Str {
 /// Convert an xterm-256 index (0..255) to its RGB triple (r, g, b).
 /// The 16 base colors use the standard palette, 16..231 the 6x6x6 cube, and
 /// 232..255 the grayscale ramp.
-pub fn color_256_to_rgb(code: Int) -> (Int, Int, Int) {
+pub fn color_256_to_rgb(code: Int) -> (Int, Int, Int)
+  ensures: result.0 >= 0 && result.0 <= 255
+  ensures: result.1 >= 0 && result.1 <= 255
+  ensures: result.2 >= 0 && result.2 <= 255
+  ensures: code < 0 => result.0 == 0 && result.1 == 0 && result.2 == 0
+  ensures: code > 255 => result.0 == 238 && result.1 == 238 && result.2 == 238
+{
   var c = _clamp8(code);
   if c < 16 {
     var idx = c * 3;
@@ -493,7 +531,9 @@ fn _word_at(s: Str, n: Int) -> Int {
 
 /// Quantize an RGB triple to the nearest xterm-256 index. Uses the 6-level
 /// color cube (index 16..231); the grayscale ramp is not considered.
-pub fn rgb_to_ansi256(r: Int, g: Int, b: Int) -> Int {
+pub fn rgb_to_ansi256(r: Int, g: Int, b: Int) -> Int
+  ensures: result >= 16 && result <= 231
+{
   var ri = _nearest_level(_clamp8(r));
   var gi = _nearest_level(_clamp8(g));
   var bi = _nearest_level(_clamp8(b));
