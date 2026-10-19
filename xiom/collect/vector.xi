@@ -18,17 +18,23 @@ pub type IntVec = {
 }
 
 /// Create a new empty vector. O(1).
-pub fn vec_new() -> IntVec {
+pub fn vec_new() -> IntVec
+  ensures: result.items.len() == 0
+{
   return IntVec{ items: Vec[Int].new(); };
 }
 
 /// Append `value` to the end of the vector. Amortized O(1).
-pub fn vec_push(v: &mut IntVec, value: Int) {
+pub fn vec_push(v: &mut IntVec, value: Int)
+  ensures: vec_len(v) >= 1
+{
   v.items.push(value);
 }
 
 /// Remove and return the last value. None if the vector is empty. O(1).
-pub fn vec_pop(v: &mut IntVec) -> Option[Int] {
+pub fn vec_pop(v: &mut IntVec) -> Option[Int]
+  ensures: result is None => vec_len(v) == 0
+{
   if v.items.len() == 0 { return None; }
   var o = v.items.pop();
   match o {
@@ -46,20 +52,27 @@ pub fn vec_len(v: &IntVec) -> Int
 }
 
 /// Value at index `idx`, or None when idx is out of bounds. O(1).
-pub fn vec_get(v: &IntVec, idx: Int) -> Option[Int] {
+pub fn vec_get(v: &IntVec, idx: Int) -> Option[Int]
+  ensures: result is None => idx < 0 || idx >= vec_len(v)
+  ensures: result is Some => idx >= 0 && idx < vec_len(v)
+{
   if idx < 0 || idx >= v.items.len() { return None; }
   return Some(v.items[idx]);
 }
 
 /// Overwrite the value at `idx`. Out-of-bounds indices are ignored. O(1).
-pub fn vec_set(v: &mut IntVec, idx: Int, value: Int) {
+pub fn vec_set(v: &mut IntVec, idx: Int, value: Int)
+  ensures: idx < 0 || idx >= v.items.len() || v.items[idx] == value
+{
   if idx < 0 || idx >= v.items.len() { return; }
   v.items[idx] = value;
 }
 
 /// Insert `value` at `idx`, shifting later elements right. Valid range is
 /// 0..=len; other indices are ignored. O(n).
-pub fn vec_insert(v: &mut IntVec, idx: Int, value: Int) {
+pub fn vec_insert(v: &mut IntVec, idx: Int, value: Int)
+  ensures: (idx >= 0 && idx < vec_len(v)) => v.items[idx] == value
+{
   var len = v.items.len();
   if idx < 0 || idx > len { return; }
   v.items.push(0);
@@ -73,7 +86,9 @@ pub fn vec_insert(v: &mut IntVec, idx: Int, value: Int) {
 
 /// Remove and return the value at `idx`, shifting later elements left.
 /// None when idx is out of bounds. O(n).
-pub fn vec_remove(v: &mut IntVec, idx: Int) -> Option[Int] {
+pub fn vec_remove(v: &mut IntVec, idx: Int) -> Option[Int]
+  ensures: result is None => idx < 0 || idx >= vec_len(v)
+{
   var len = v.items.len();
   if idx < 0 || idx >= len { return None; }
   var value = v.items[idx];

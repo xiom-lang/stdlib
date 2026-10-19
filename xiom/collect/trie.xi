@@ -64,7 +64,10 @@ fn _walk(t: &mut Trie, word: Str, creating: Bool) -> Int {
 }
 
 /// Create an empty trie (root node allocated).
-pub fn trie_new() -> Trie {
+pub fn trie_new() -> Trie
+  ensures: result.size == 0
+  ensures: result.children.len() == 26
+{
   var children = Vec[Int].new();
   var ends = Vec[Int].new();
   var k: Int = 0;
@@ -78,7 +81,9 @@ pub fn trie_new() -> Trie {
 
 /// Insert a lowercase word. Returns false if the word already exists or
 /// contains non a-z characters.
-pub fn trie_insert(t: &mut Trie, word: Str) -> Bool {
+pub fn trie_insert(t: &mut Trie, word: Str) -> Bool
+  ensures: result == true => trie_contains(t, word)
+{
   if string.str_len(word) == 0 {
     return false;
   }
@@ -95,7 +100,9 @@ pub fn trie_insert(t: &mut Trie, word: Str) -> Bool {
 }
 
 /// True if `word` is stored (exact match).
-pub fn trie_contains(t: &Trie, word: Str) -> Bool {
+pub fn trie_contains(t: &Trie, word: Str) -> Bool
+  ensures: result == true => trie_size(t) >= 1
+{
   if string.str_len(word) == 0 {
     return false;
   }
@@ -131,7 +138,9 @@ fn _collect(t: &Trie, node: Int, prefix: Str, out: &mut Vec[Str]) {
 
 /// All stored words starting with `prefix` (lexicographic DFS order).
 /// Returns an empty Vec if no word matches.
-pub fn trie_complete(t: &Trie, prefix: Str) -> Vec[Str] {
+pub fn trie_complete(t: &Trie, prefix: Str) -> Vec[Str]
+  ensures: result.len() <= trie_size(t)
+{
   var out = Vec[Str].new();
   var node = _walk(t, prefix, false);
   if node == -1 {
@@ -142,13 +151,17 @@ pub fn trie_complete(t: &Trie, prefix: Str) -> Vec[Str] {
 }
 
 /// True if any stored word starts with `prefix`.
-pub fn trie_has_prefix(t: &Trie, prefix: Str) -> Bool {
+pub fn trie_has_prefix(t: &Trie, prefix: Str) -> Bool
+  ensures: result == false => trie_complete(t, prefix).len() == 0
+{
   var node = _walk(t, prefix, false);
   return node != -1;
 }
 
 /// Remove `word`. Returns true if it was present.
-pub fn trie_remove(t: &mut Trie, word: Str) -> Bool {
+pub fn trie_remove(t: &mut Trie, word: Str) -> Bool
+  ensures: result == true => trie_contains(t, word) == false
+{
   var node = _walk(t, word, false);
   if node == -1 {
     return false;

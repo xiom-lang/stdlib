@@ -85,7 +85,10 @@ fn set_grow(s: &mut HashSet) {
 }
 
 /// Create a new empty hash set. O(1).
-pub fn hashset_new() -> HashSet {
+pub fn hashset_new() -> HashSet
+  ensures: result.size == 0
+  ensures: result.cap >= 1
+{
   var slots = Vec[Int].new();
   var used = Vec[Int].new();
   var i: Int = 0;
@@ -98,7 +101,9 @@ pub fn hashset_new() -> HashSet {
 }
 
 /// Insert `value` if it is not already present. O(1) expected.
-pub fn hashset_insert(s: &mut HashSet, value: Int) {
+pub fn hashset_insert(s: &mut HashSet, value: Int)
+  ensures: hashset_contains(s, value)
+{
   if set_find(s, value) >= 0 { return; }
   if s.size * 2 >= s.cap {
     set_grow(s);
@@ -108,12 +113,16 @@ pub fn hashset_insert(s: &mut HashSet, value: Int) {
 }
 
 /// True if `value` is present. O(1) expected.
-pub fn hashset_contains(s: &HashSet, value: Int) -> Bool {
+pub fn hashset_contains(s: &HashSet, value: Int) -> Bool
+  ensures: result == true => hashset_size(s) >= 1
+{
   return set_find(s, value) >= 0;
 }
 
 /// Remove `value` if present. O(n) worst case (table rebuild).
-pub fn hashset_remove(s: &mut HashSet, value: Int) {
+pub fn hashset_remove(s: &mut HashSet, value: Int)
+  ensures: hashset_contains(s, value) == false
+{
   if set_find(s, value) < 0 { return; }
   var old_slots = Vec[Int].new();
   var old_used = Vec[Int].new();

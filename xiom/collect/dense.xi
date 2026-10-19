@@ -39,14 +39,19 @@ fn _grow(s: &mut DenseSet, upto_byte: Int) {
 
 /// Create a new empty dense set.
 /// O(1).
-pub fn dense_set_new() -> DenseSet {
+pub fn dense_set_new() -> DenseSet
+  ensures: result.size == 0
+  ensures: result.bits.len() == 0
+{
   return DenseSet{ bits: Vec[UInt8].new(); size: 0; };
 }
 
 /// Add a value to the set (no-op if already present). Negative values are
 /// rejected (the bitmap cannot represent them).
 /// O(1) amortized.
-pub fn dense_add(s: &mut DenseSet, value: Int) {
+pub fn dense_add(s: &mut DenseSet, value: Int)
+  ensures: value >= 0 => dense_contains(s, value)
+{
   if value < 0 {
     return;
   }
@@ -64,13 +69,17 @@ pub fn dense_add(s: &mut DenseSet, value: Int) {
 
 /// Check whether a value is present.
 /// O(1).
-pub fn dense_contains(s: &DenseSet, value: Int) -> Bool {
+pub fn dense_contains(s: &DenseSet, value: Int) -> Bool
+  ensures: result == true => dense_size(s) >= 1
+{
   return _contains_at(s, value);
 }
 
 /// Remove a value from the set (no-op if absent).
 /// O(1).
-pub fn dense_remove(s: &mut DenseSet, value: Int) {
+pub fn dense_remove(s: &mut DenseSet, value: Int)
+  ensures: dense_contains(s, value) == false
+{
   if !_contains_at(s, value) {
     return;
   }
@@ -92,7 +101,9 @@ pub fn dense_size(s: &DenseSet) -> Int
 
 /// Iterate all elements in ascending order.
 /// O(bits + n).
-pub fn dense_iter(s: &DenseSet) -> Vec[Int] {
+pub fn dense_iter(s: &DenseSet) -> Vec[Int]
+  ensures: result.len() == dense_size(s)
+{
   var out = Vec[Int].new();
   var b = 0;
   while b < s.bits.len() {

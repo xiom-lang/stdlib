@@ -13,17 +13,23 @@ pub type Stack = {
 }
 
 /// Create a new empty stack. O(1).
-pub fn stack_new() -> Stack {
+pub fn stack_new() -> Stack
+  ensures: result.items.len() == 0
+{
   return Stack{ items: Vec[Int].new(); };
 }
 
 /// Push `value` onto the top of the stack. O(1).
-pub fn stack_push(s: &mut Stack, value: Int) {
+pub fn stack_push(s: &mut Stack, value: Int)
+  ensures: stack_len(s) >= 1
+{
   s.items.push(value);
 }
 
 /// Remove and return the top value. None if the stack is empty. O(1).
-pub fn stack_pop(s: &mut Stack) -> Option[Int] {
+pub fn stack_pop(s: &mut Stack) -> Option[Int]
+  ensures: result is None => stack_len(s) == 0
+{
   if s.items.len() == 0 { return None; }
   var o = s.items.pop();
   match o {
@@ -33,7 +39,10 @@ pub fn stack_pop(s: &mut Stack) -> Option[Int] {
 }
 
 /// Return the top value without removing it. None if empty. O(1).
-pub fn stack_peek(s: &Stack) -> Option[Int] {
+pub fn stack_peek(s: &Stack) -> Option[Int]
+  ensures: result is None => stack_len(s) == 0
+  ensures: result is Some => stack_len(s) >= 1
+{
   if s.items.len() == 0 { return None; }
   var last = s.items.len() - 1;
   return Some(s.items[last]);

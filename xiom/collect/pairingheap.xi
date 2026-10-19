@@ -23,14 +23,18 @@ use xiom.collect.heap;
 /// Create an empty pairing heap.
 /// Returns: an empty PHeap-backed heap.
 /// Complexity: O(1).
-pub fn pheap_new() -> PHeap {
+pub fn pheap_new() -> PHeap
+  ensures: result.keys.len() == 0
+{
   return xiom.collect.heap.pheap_new();
 }
 
 /// Insert a priority.
 /// Params: h - the heap; priority - Int priority to insert.
 /// Complexity: O(log n) amortized.
-pub fn pheap_push(h: &mut PHeap, priority: Int) {
+pub fn pheap_push(h: &mut PHeap, priority: Int)
+  ensures: pheap_size(h) >= 1
+{
   xiom.collect.heap.pheap_insert(h, priority);
 }
 
@@ -38,7 +42,9 @@ pub fn pheap_push(h: &mut PHeap, priority: Int) {
 /// Params: h - the heap.
 /// Returns: the minimum priority, or None when empty.
 /// Complexity: O(log n) amortized.
-pub fn pheap_pop(h: &mut PHeap) -> Option[Int] {
+pub fn pheap_pop(h: &mut PHeap) -> Option[Int]
+  ensures: result is None => pheap_size(h) == 0
+{
   return xiom.collect.heap.pheap_extract_min(h);
 }
 
@@ -46,7 +52,9 @@ pub fn pheap_pop(h: &mut PHeap) -> Option[Int] {
 /// Params: h - the heap.
 /// Returns: the minimum priority, or None when empty.
 /// Complexity: O(1).
-pub fn pheap_peek(h: &PHeap) -> Option[Int] {
+pub fn pheap_peek(h: &PHeap) -> Option[Int]
+  ensures: result is None => pheap_size(h) == 0
+{
   return xiom.collect.heap.pheap_find_min(h);
 }
 
@@ -64,7 +72,9 @@ pub fn pheap_size(h: &PHeap) -> Int
 /// Params: a - the receiving heap; b - the heap to drain.
 /// Returns: the merged heap (the same structure as `a`).
 /// Complexity: O(n log n) (drains `b` via extract-min + insert).
-pub fn pheap_merge(a: &mut PHeap, b: &mut PHeap) -> PHeap {
+pub fn pheap_merge(a: &mut PHeap, b: &mut PHeap) -> PHeap
+  ensures: pheap_is_empty(b)
+{
   while xiom.collect.heap.pheap_size(b) > 0 {
     var m = xiom.collect.heap.pheap_extract_min(b);
     match m {
@@ -81,7 +91,9 @@ pub fn pheap_merge(a: &mut PHeap, b: &mut PHeap) -> PHeap {
 /// Out-of-range handles and non-decreasing priorities are ignored. The arena
 /// is rebuilt afterwards, so all node handles become stale.
 /// Complexity: O(n log n) worst-case (full rebuild).
-pub fn pheap_decrease_key(h: &mut PHeap, node: Int, new_priority: Int) {
+pub fn pheap_decrease_key(h: &mut PHeap, node: Int, new_priority: Int)
+  ensures: h.keys.len() % 3 == 0
+{
   if node < 0 { return; }
   if node * 3 + 2 >= h.keys.len() { return; }
   var cur = h.keys[3 * node];
@@ -124,6 +136,8 @@ pub fn pheap_decrease_key(h: &mut PHeap, node: Int, new_priority: Int) {
 /// Params: h - the heap.
 /// Returns: true when the heap is empty.
 /// Complexity: O(1).
-pub fn pheap_is_empty(h: &PHeap) -> Bool {
+pub fn pheap_is_empty(h: &PHeap) -> Bool
+  ensures: result == (pheap_size(h) == 0)
+{
   return xiom.collect.heap.pheap_is_empty(h);
 }

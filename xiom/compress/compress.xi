@@ -34,12 +34,16 @@ pub interface Compressor {
 pub type GzipCompressor = { level: Int; }
 
 /// Streaming gzip compressor with the default level.
-pub fn GzipCompressor.new() -> GzipCompressor {
+pub fn GzipCompressor.new() -> GzipCompressor
+  ensures: result.level == 6
+{
   return GzipCompressor{ level: 6 };
 }
 
 /// Streaming gzip compressor with a level 0..9.
-pub fn GzipCompressor.with_level(level: Int) -> GzipCompressor {
+pub fn GzipCompressor.with_level(level: Int) -> GzipCompressor
+  ensures: result.level >= 0 && result.level <= 9
+{
   var lvl = level;
   if lvl < 0 { lvl = 0; };
   if lvl > 9 { lvl = 9; };
@@ -200,12 +204,16 @@ pub fn gzip_compress_level(data: &Vec[UInt8], level: Int) -> Result[Vec[UInt8], 
 
 /// Capped variant: hard ceiling on decompressed size (bomb guard).
 pub fn gzip_decompress_capped(data: &Vec[UInt8], max_out: Int) -> Result[Vec[UInt8], Str]
+  ensures: result is Ok => max_out >= 0
+  ensures: result is Ok => result.len() <= max_out
 {
   return gzip.gzip_decompress_capped(data, max_out);
 }
 
 /// Capped variant: hard ceiling on decompressed size (bomb guard).
 pub fn deflate_decompress_capped(data: &Vec[UInt8], max_out: Int) -> Result[Vec[UInt8], Str]
+  ensures: result is Ok => max_out >= 0
+  ensures: result is Ok => result.len() <= max_out
 {
   return deflate.deflate_decompress_capped(data, max_out);
 }
@@ -381,7 +389,10 @@ pub fn detect_format(data: &Vec[UInt8]) -> Str
 /// A match_offset of 0 means no match found; literal_len bytes follow directly.
 /// Window size limits the backward search distance.
 /// Complexity: O(n * window), n = data length.
-pub fn lz77_compress(data: &Vec[UInt8], window: Int) -> Vec[Int] {
+pub fn lz77_compress(data: &Vec[UInt8], window: Int) -> Vec[Int]
+  ensures: result.len() <= 3 * data.len()
+  ensures: result.len() % 3 == 0
+{
   var result = Vec[Int].new();
   let len = data.len();
   if len == 0 {
@@ -428,7 +439,9 @@ pub fn lz77_compress(data: &Vec[UInt8], window: Int) -> Vec[Int] {
 /// If literal_len == 0: data = match_offset, third = match_length.
 /// If literal_len == 1: data = literal byte, third = 0.
 /// Complexity: O(t), t = number of tokens.
-pub fn lz77_decompress(tokens: &Vec[Int]) -> Result[Vec[UInt8], Str] {
+pub fn lz77_decompress(tokens: &Vec[Int]) -> Result[Vec[UInt8], Str]
+  ensures: tokens.len() == 0 => result is Ok
+{
   var result = Vec[UInt8].new();
   let tlen = tokens.len();
   var i: Int = 0;
@@ -468,7 +481,10 @@ pub fn lz77_decompress(tokens: &Vec[Int]) -> Result[Vec[UInt8], Str] {
 /// Count represents the number of repetitions (1 means 1 byte).
 /// Differs from rle_encode which uses control-byte format with bit 7 markers.
 /// Complexity: O(n), n = data length.
-pub fn rle_encode_bytes(data: &Vec[UInt8]) -> Vec[UInt8] {
+pub fn rle_encode_bytes(data: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: result.len() % 2 == 0
+  ensures: result.len() <= 2 * data.len()
+{
   var result = Vec[UInt8].new();
   let len = data.len();
   if len == 0 {
@@ -492,7 +508,9 @@ pub fn rle_encode_bytes(data: &Vec[UInt8]) -> Vec[UInt8] {
 /// Builds a 256-slot frequency table for Huffman coding.
 /// Each slot i contains the count of byte value i in the input.
 /// Complexity: O(n), n = data length.
-pub fn huffman_freqs(data: &Vec[UInt8]) -> Vec[Int] {
+pub fn huffman_freqs(data: &Vec[UInt8]) -> Vec[Int]
+  ensures: result.len() == 256
+{
   var freqs = Vec[Int].new();
   var i: Int = 0;
   while i < 256 {
@@ -514,7 +532,9 @@ pub fn huffman_freqs(data: &Vec[UInt8]) -> Vec[Int] {
 /// Compresses a UTF-8 string using gzip.
 /// Converts Str to bytes, then wraps gzip_compress.
 /// Complexity: O(n), n = string length.
-pub fn compress_gzip_str(s: Str) -> Result[Vec[UInt8], Str] {
+pub fn compress_gzip_str(s: Str) -> Result[Vec[UInt8], Str]
+  ensures: s.len() == 0 => result is Err
+{
   var bytes = Vec[UInt8].new();
   var i: Int = 0;
   let slen = s.len();
@@ -535,7 +555,9 @@ pub fn compress_gzip_str(s: Str) -> Result[Vec[UInt8], Str] {
 /// Decompresses gzip data to a UTF-8 string.
 /// Wraps gzip_decompress and converts the result to Str.
 /// Complexity: O(n), n = compressed data length.
-pub fn decompress_gzip_str(data: &Vec[UInt8]) -> Result[Str, Str] {
+pub fn decompress_gzip_str(data: &Vec[UInt8]) -> Result[Str, Str]
+  ensures: result is Ok => data.len() >= 18
+{
   let decompressed = gzip_decompress(data);
   if !decompressed.is_ok {
     return Err(decompressed.error);
@@ -548,6 +570,8 @@ pub fn decompress_gzip_str(data: &Vec[UInt8]) -> Result[Str, Str] {
 
 /// Alias for compression_ratio. Returns original / compressed as Float64.
 /// Complexity: O(1).
-pub fn compress_ratio(original: Int, compressed: Int) -> Float64 {
+pub fn compress_ratio(original: Int, compressed: Int) -> Float64
+  ensures: original >= 0 => result >= 0.0
+{
   return compression_ratio(original, compressed);
 }

@@ -78,7 +78,9 @@ pub fn mpmc_queue_new(capacity: Int) -> ConcurrentQueue
 /// Params: q - the queue; item - value to enqueue.
 /// Returns: true on success, false when full or closed.
 /// Complexity: O(1).
-pub fn mpmc_push(q: &mut ConcurrentQueue, item: Int) -> Bool {
+pub fn mpmc_push(q: &mut ConcurrentQueue, item: Int) -> Bool
+  ensures: q.buf.len() == q.cap
+{
   return ccq_push(q, item);
 }
 
@@ -86,7 +88,9 @@ pub fn mpmc_push(q: &mut ConcurrentQueue, item: Int) -> Bool {
 /// Params: q - the queue.
 /// Returns: the oldest item, or None when empty.
 /// Complexity: O(1).
-pub fn mpmc_pop(q: &mut ConcurrentQueue) -> Option[Int] {
+pub fn mpmc_pop(q: &mut ConcurrentQueue) -> Option[Int]
+  ensures: q.buf.len() == q.cap
+{
   return ccq_pop(q);
 }
 
@@ -104,7 +108,9 @@ pub fn mpsc_queue_new(capacity: Int) -> ConcurrentQueue
 /// Params: q - the queue; item - value to enqueue.
 /// Returns: true on success, false when full or closed.
 /// Complexity: O(1).
-pub fn mpsc_push(q: &mut ConcurrentQueue, item: Int) -> Bool {
+pub fn mpsc_push(q: &mut ConcurrentQueue, item: Int) -> Bool
+  ensures: q.buf.len() == q.cap
+{
   return ccq_push(q, item);
 }
 
@@ -112,7 +118,9 @@ pub fn mpsc_push(q: &mut ConcurrentQueue, item: Int) -> Bool {
 /// Params: q - the queue.
 /// Returns: the oldest item, or None when empty.
 /// Complexity: O(1).
-pub fn mpsc_pop(q: &mut ConcurrentQueue) -> Option[Int] {
+pub fn mpsc_pop(q: &mut ConcurrentQueue) -> Option[Int]
+  ensures: q.buf.len() == q.cap
+{
   return ccq_pop(q);
 }
 
@@ -130,7 +138,9 @@ pub fn spmc_queue_new(capacity: Int) -> ConcurrentQueue
 /// Params: q - the queue; item - value to enqueue.
 /// Returns: true on success, false when full or closed.
 /// Complexity: O(1).
-pub fn spmc_push(q: &mut ConcurrentQueue, item: Int) -> Bool {
+pub fn spmc_push(q: &mut ConcurrentQueue, item: Int) -> Bool
+  ensures: q.buf.len() == q.cap
+{
   return ccq_push(q, item);
 }
 
@@ -138,7 +148,9 @@ pub fn spmc_push(q: &mut ConcurrentQueue, item: Int) -> Bool {
 /// Params: q - the queue.
 /// Returns: the oldest item, or None when empty.
 /// Complexity: O(1).
-pub fn spmc_pop(q: &mut ConcurrentQueue) -> Option[Int] {
+pub fn spmc_pop(q: &mut ConcurrentQueue) -> Option[Int]
+  ensures: q.buf.len() == q.cap
+{
   return ccq_pop(q);
 }
 
@@ -191,14 +203,18 @@ pub type ConcurrentCounter = {
 /// Create a concurrent counter starting at zero.
 /// Returns: a counter whose value is 0.
 /// Complexity: O(1).
-pub fn concurrent_counter_new() -> ConcurrentCounter {
+pub fn concurrent_counter_new() -> ConcurrentCounter
+  ensures: result.c.load() == 0
+{
   return ConcurrentCounter{ c: AtomicInt.new(0); };
 }
 
 /// Atomically add `delta` to the counter.
 /// Params: c - the counter; delta - signed increment.
 /// Complexity: O(1) (fetch_add).
-pub fn ccounter_add(c: &mut ConcurrentCounter, delta: Int) {
+pub fn ccounter_add(c: &mut ConcurrentCounter, delta: Int)
+  ensures: ccounter_get(c) == c.c.load()
+{
   var old = c.c.fetch_add(delta);
 }
 
@@ -206,6 +222,8 @@ pub fn ccounter_add(c: &mut ConcurrentCounter, delta: Int) {
 /// Params: c - the counter.
 /// Returns: the current value.
 /// Complexity: O(1) (atomic load).
-pub fn ccounter_get(c: &ConcurrentCounter) -> Int {
+pub fn ccounter_get(c: &ConcurrentCounter) -> Int
+  ensures: result == c.c.load()
+{
   return c.c.load();
 }

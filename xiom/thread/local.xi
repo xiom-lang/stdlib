@@ -53,7 +53,9 @@ pub fn tls_get[T](tl: &mut ThreadLocal[T]) -> T
 /// Write the calling thread's value.
 /// Params: tl - the thread-local; value - the new value.
 /// Complexity: O(1).
-pub fn tls_set[T](tl: &mut ThreadLocal[T], value: T) {
+pub fn tls_set[T](tl: &mut ThreadLocal[T], value: T)
+  ensures: tl.initialized == true
+{
   tl.value = value;
   tl.initialized = true;
 }
@@ -92,7 +94,9 @@ pub fn tls_take[T](tl: &mut ThreadLocal[T]) -> Option[T]
 /// Drop the calling thread's value and reset to uninitialized.
 /// Params: tl - the thread-local.
 /// Complexity: O(1).
-pub fn tls_clear[T](tl: &mut ThreadLocal[T]) {
+pub fn tls_clear[T](tl: &mut ThreadLocal[T])
+  ensures: tl.initialized == false
+{
   tl.initialized = false;
 }
 
@@ -110,7 +114,9 @@ pub fn thread_local_key_new() -> Int
 /// Params: key - the key to look up.
 /// Returns: the stored value, or 0 if the key is not the stored one.
 /// Complexity: O(1). Single-slot simulation: one raw key per program.
-pub fn tls_key_get(key: Int) -> Int {
+pub fn tls_key_get(key: Int) -> Int
+  ensures: _raw_key != key => result == 0
+{
   if _raw_key == key {
     return _raw_value;
   }
@@ -120,7 +126,10 @@ pub fn tls_key_get(key: Int) -> Int {
 /// Write the calling thread's value for a raw key.
 /// Params: key - the key; value - the value to store.
 /// Complexity: O(1). Single-slot simulation: one raw key per program.
-pub fn tls_key_set(key: Int, value: Int) {
+pub fn tls_key_set(key: Int, value: Int)
+  ensures: _raw_key == key
+  ensures: _raw_value == value
+{
   _raw_key = key;
   _raw_value = value;
 }

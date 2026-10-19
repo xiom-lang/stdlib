@@ -28,7 +28,10 @@ pub type MpscQueue = {
 /// Params: capacity - number of buffered slots (clamped to >= 1).
 /// Returns: a queue able to hold up to `capacity` items.
 /// Complexity: O(capacity) to pre-fill the ring.
-pub fn mpsc_queue_new(capacity: Int) -> MpscQueue {
+pub fn mpsc_queue_new(capacity: Int) -> MpscQueue
+  ensures: result.cap >= 1
+  ensures: result.buf.len() == result.cap
+{
   var cap = capacity;
   if cap < 1 { cap = 1; }
   var buf = Vec[Int].new();
@@ -44,7 +47,9 @@ pub fn mpsc_queue_new(capacity: Int) -> MpscQueue {
 /// Params: q - the queue; value - item to enqueue.
 /// Returns: true on success, false when full.
 /// Complexity: O(1).
-pub fn mpsc_push(q: &mut MpscQueue, value: Int) -> Bool {
+pub fn mpsc_push(q: &mut MpscQueue, value: Int) -> Bool
+  ensures: q.buf.len() == q.cap
+{
   var t = q.tail.fetch_add(1);
   var h = q.head.load();
   if t - h >= q.cap {
@@ -59,7 +64,9 @@ pub fn mpsc_push(q: &mut MpscQueue, value: Int) -> Bool {
 /// Params: q - the queue.
 /// Returns: the oldest buffered item, or None when empty.
 /// Complexity: O(1).
-pub fn mpsc_pop(q: &mut MpscQueue) -> Option[Int] {
+pub fn mpsc_pop(q: &mut MpscQueue) -> Option[Int]
+  ensures: q.buf.len() == q.cap
+{
   var h = q.head.fetch_add(1);
   var t = q.tail.load();
   if h >= t {

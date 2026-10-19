@@ -40,14 +40,18 @@ fn _contains_at(s: &SparseSet, value: Int) -> Bool {
 
 /// Create a new empty sparse set.
 /// O(1).
-pub fn sparse_set_new() -> SparseSet {
+pub fn sparse_set_new() -> SparseSet
+  ensures: result.dense.len() == 0
+{
   return SparseSet{ sparse: Vec[Int].new(); dense: Vec[Int].new(); };
 }
 
 /// Add a value to the set (no-op if already present). Negative values are
 /// rejected (they cannot be indexed in the sparse array).
 /// O(1) amortized.
-pub fn sparse_add(s: &mut SparseSet, value: Int) {
+pub fn sparse_add(s: &mut SparseSet, value: Int)
+  ensures: value >= 0 => sparse_contains(s, value)
+{
   if value < 0 {
     return;
   }
@@ -61,13 +65,17 @@ pub fn sparse_add(s: &mut SparseSet, value: Int) {
 
 /// Check whether a value is present.
 /// O(1).
-pub fn sparse_contains(s: &SparseSet, value: Int) -> Bool {
+pub fn sparse_contains(s: &SparseSet, value: Int) -> Bool
+  ensures: result == true => sparse_size(s) >= 1
+{
   return _contains_at(s, value);
 }
 
 /// Remove a value from the set (no-op if absent).
 /// O(1) amortized.
-pub fn sparse_remove(s: &mut SparseSet, value: Int) {
+pub fn sparse_remove(s: &mut SparseSet, value: Int)
+  ensures: sparse_contains(s, value) == false
+{
   if !_contains_at(s, value) {
     return;
   }
@@ -89,7 +97,9 @@ pub fn sparse_size(s: &SparseSet) -> Int
 
 /// Iterate all elements (arbitrary but stable order).
 /// O(n).
-pub fn sparse_iter(s: &SparseSet) -> Vec[Int] {
+pub fn sparse_iter(s: &SparseSet) -> Vec[Int]
+  ensures: result.len() == sparse_size(s)
+{
   var out = Vec[Int].new();
   var i = 0;
   while i < s.dense.len() {

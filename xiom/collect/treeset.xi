@@ -22,7 +22,10 @@ pub type BTreeSet = {
 }
 
 /// Create a new empty tree set. O(1).
-pub fn treeset_new() -> BTreeSet {
+pub fn treeset_new() -> BTreeSet
+  ensures: result.size == 0
+  ensures: result.root == -1
+{
   return BTreeSet{
     root: -1;
     keys: Vec[Int].new(); left: Vec[Int].new();
@@ -118,7 +121,9 @@ fn ts_insert_at(s: &mut BTreeSet, idx: Int, value: Int) -> Int {
 
 /// Insert `value`; returns true if it was newly added, false if it was
 /// already present. O(log n).
-pub fn treeset_insert(s: &mut BTreeSet, value: Int) -> Bool {
+pub fn treeset_insert(s: &mut BTreeSet, value: Int) -> Bool
+  ensures: treeset_contains(s, value)
+{
   if treeset_contains(s, value) { return false; }
   s.root = ts_insert_at(s, s.root, value);
   s.size = s.size + 1;
@@ -126,7 +131,9 @@ pub fn treeset_insert(s: &mut BTreeSet, value: Int) -> Bool {
 }
 
 /// True if `value` is present. O(log n).
-pub fn treeset_contains(s: &BTreeSet, value: Int) -> Bool {
+pub fn treeset_contains(s: &BTreeSet, value: Int) -> Bool
+  ensures: result == true => treeset_size(s) >= 1
+{
   var cur = s.root;
   while cur != -1 {
     var k = s.keys[cur];
@@ -164,7 +171,9 @@ fn ts_remove_at(s: &mut BTreeSet, idx: Int, value: Int) -> Int {
 }
 
 /// Remove `value`; returns true if it was present. O(log n).
-pub fn treeset_remove(s: &mut BTreeSet, value: Int) -> Bool {
+pub fn treeset_remove(s: &mut BTreeSet, value: Int) -> Bool
+  ensures: result == true => treeset_contains(s, value) == false
+{
   if !treeset_contains(s, value) { return false; }
   s.root = ts_remove_at(s, s.root, value);
   s.size = s.size - 1;
@@ -179,7 +188,10 @@ pub fn treeset_size(s: &BTreeSet) -> Int
 }
 
 /// Smallest element, or None when the set is empty. O(log n).
-pub fn treeset_min(s: &BTreeSet) -> Option[Int] {
+pub fn treeset_min(s: &BTreeSet) -> Option[Int]
+  ensures: result is None => treeset_size(s) == 0
+  ensures: result is Some => treeset_size(s) >= 1
+{
   if s.root == -1 { return None; }
   var cur = s.root;
   while s.left[cur] != -1 {
@@ -189,7 +201,10 @@ pub fn treeset_min(s: &BTreeSet) -> Option[Int] {
 }
 
 /// Largest element, or None when the set is empty. O(log n).
-pub fn treeset_max(s: &BTreeSet) -> Option[Int] {
+pub fn treeset_max(s: &BTreeSet) -> Option[Int]
+  ensures: result is None => treeset_size(s) == 0
+  ensures: result is Some => treeset_size(s) >= 1
+{
   if s.root == -1 { return None; }
   var cur = s.root;
   while s.right[cur] != -1 {

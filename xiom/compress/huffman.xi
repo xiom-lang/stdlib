@@ -43,7 +43,9 @@ type DecodeOne = {
 
 /// Derive the canonical prefix-free codes from per-symbol code lengths.
 /// Canonical order: shorter codes first, ties by symbol index. O(256).
-pub fn huffman_canonical(codelengths: &Vec[Int]) -> Vec[Int] {
+pub fn huffman_canonical(codelengths: &Vec[Int]) -> Vec[Int]
+  ensures: result.len() == 256
+{
   var codes = Vec[Int].new();
   var max_len = 0;
   var i = 0;
@@ -115,7 +117,10 @@ fn _tree_from_lengths(lens: &Vec[Int]) -> HuffmanTree {
 /// The tree holds per-symbol code lengths and canonical codes. Empty or
 /// single-symbol inputs are handled (single symbol gets length 1).
 /// Complexity: O(n^2) in the number of distinct symbols (<= 256).
-pub fn huffman_build(frequencies: &Vec[Int]) -> HuffmanTree {
+pub fn huffman_build(frequencies: &Vec[Int]) -> HuffmanTree
+  ensures: result.code_lengths.len() == 256
+  ensures: result.max_len >= 0
+{
   var lens = Vec[Int].new();
   var i = 0;
   while i < 256 {
@@ -216,7 +221,9 @@ pub fn huffman_build(frequencies: &Vec[Int]) -> HuffmanTree {
 }
 
 /// Extract the per-symbol code lengths as a fresh 256-slot Vec[Int].
-pub fn huffman_code_lengths(tree: HuffmanTree) -> Vec[Int] {
+pub fn huffman_code_lengths(tree: HuffmanTree) -> Vec[Int]
+  ensures: result.len() == 256
+{
   var result = Vec[Int].new();
   var i = 0;
   while i < 256 {
@@ -228,7 +235,9 @@ pub fn huffman_code_lengths(tree: HuffmanTree) -> Vec[Int] {
 
 /// Pack a flat canonical decode table: entries [0..255] are the canonical
 /// codes, entries [256..511] are the matching code lengths. O(512).
-pub fn huffman_table_new(codelengths: &Vec[Int]) -> Vec[Int] {
+pub fn huffman_table_new(codelengths: &Vec[Int]) -> Vec[Int]
+  ensures: result.len() == 512
+{
   var table = Vec[Int].new();
   var codes = huffman_canonical(codelengths);
   var i = 0;
@@ -246,7 +255,9 @@ pub fn huffman_table_new(codelengths: &Vec[Int]) -> Vec[Int] {
 
 /// Return the code bits of one symbol as booleans, MSB first.
 /// An uncovered symbol yields an empty Vec (documented).
-pub fn huffman_encode_symbol(tree: HuffmanTree, sym: Int) -> Vec[Bool] {
+pub fn huffman_encode_symbol(tree: HuffmanTree, sym: Int) -> Vec[Bool]
+  ensures: (sym < 0 || sym > 255) => result.len() == 0
+{
   var result = Vec[Bool].new();
   if sym < 0 || sym > 255 {
     return result;
@@ -268,7 +279,9 @@ pub fn huffman_encode_symbol(tree: HuffmanTree, sym: Int) -> Vec[Bool] {
 
 /// Pack `data` into an MSB-first bit stream using the tree's codes.
 /// O(n * avg code length). Requires the tree to cover every input byte.
-pub fn huffman_encode(tree: HuffmanTree, data: &Vec[UInt8]) -> Vec[UInt8] {
+pub fn huffman_encode(tree: HuffmanTree, data: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: data.len() == 0 => result.len() == 0
+{
   var result = Vec[UInt8].new();
   var acc = 0;
   var nbits = 0;
@@ -343,7 +356,9 @@ fn _decode_one(tree: HuffmanTree, bits: &Vec[UInt8], byte_len: Int, bit_pos: Int
 
 /// Decode exactly `len` bits of the MSB-first stream back into bytes.
 /// Returns Err on invalid bit patterns or stream exhaustion.
-pub fn huffman_decode(tree: HuffmanTree, bits: &Vec[UInt8], len: Int) -> Result[Vec[UInt8], Str] {
+pub fn huffman_decode(tree: HuffmanTree, bits: &Vec[UInt8], len: Int) -> Result[Vec[UInt8], Str]
+  ensures: result is Ok => len <= 0 || result.len() <= len
+{
   var result = Vec[UInt8].new();
   var byte_len = bits.len();
   var bit_pos = 0;
@@ -366,7 +381,10 @@ pub fn huffman_decode(tree: HuffmanTree, bits: &Vec[UInt8], len: Int) -> Result[
 /// One-shot Huffman compression: builds the frequency table and tree, packs
 /// the bits, and emits the self-describing container (header documented at the
 /// top of this module). Empty input yields a valid empty container.
-pub fn huffman_compress(data: &Vec[UInt8]) -> Vec[UInt8] {
+pub fn huffman_compress(data: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: result.len() >= 260
+  ensures: data.len() == 0 => result.len() == 260
+{
   var freq = Vec[Int].new();
   var i = 0;
   while i < 256 {
@@ -411,14 +429,18 @@ pub fn huffman_compress(data: &Vec[UInt8]) -> Vec[UInt8] {
 const _HUFF_DEFAULT_CAP: Int = 1073741824;
 
 /// Decompress Huffman-coded data; Err on malformed input.
-pub fn huffman_decompress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str] {
+pub fn huffman_decompress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str]
+  ensures: result is Ok => result.len() <= _HUFF_DEFAULT_CAP
+{
   return huffman_decompress_capped(data, _HUFF_DEFAULT_CAP);
 }
 
 /// Decompress with a hard ceiling on output size. The container's declared
 /// length is rejected up-front when it exceeds the cap; the decode loop
 /// re-checks per symbol, so a lying header cannot allocate past the cap.
-pub fn huffman_decompress_capped(data: &Vec[UInt8], max_out: Int) -> Result[Vec[UInt8], Str] {
+pub fn huffman_decompress_capped(data: &Vec[UInt8], max_out: Int) -> Result[Vec[UInt8], Str]
+  ensures: result is Ok => result.len() <= max_out
+{
   var len = data.len();
   if len < 260 {
     return Err("huffman: container too short");
@@ -467,7 +489,10 @@ pub fn huffman_decompress_capped(data: &Vec[UInt8], max_out: Int) -> Result[Vec[
 /// Byte-level run-length encoding: [count: UInt8, byte: UInt8] pairs for runs
 /// of identical bytes (count 1..255; runs longer than 255 split).
 /// Complexity: O(n), n = data length.
-pub fn rle_compress(data: &Vec[UInt8]) -> Vec[UInt8] {
+pub fn rle_compress(data: &Vec[UInt8]) -> Vec[UInt8]
+  ensures: result.len() % 2 == 0
+  ensures: result.len() <= 2 * data.len()
+{
   var result = Vec[UInt8].new();
   var len = data.len();
   if len == 0 {
@@ -493,7 +518,9 @@ pub fn rle_compress(data: &Vec[UInt8]) -> Vec[UInt8] {
 
 /// Undo byte-level run-length encoding (rle_compress format).
 /// Returns Err on a truncated pair (odd trailing byte) or a zero count.
-pub fn rle_decompress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str] {
+pub fn rle_decompress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str]
+  ensures: result is Ok => result.len() >= data.len() / 2
+{
   var result = Vec[UInt8].new();
   var len = data.len();
   if len == 0 {

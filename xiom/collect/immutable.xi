@@ -23,7 +23,9 @@ pub type PMap = {
 /// Create a new empty persistent vector.
 /// Returns: an empty PVec.
 /// Complexity: O(1).
-pub fn persistent_vec_new() -> PVec {
+pub fn persistent_vec_new() -> PVec
+  ensures: result.items.len() == 0
+{
   return PVec{ items: Vec[Int].new(); };
 }
 
@@ -31,7 +33,9 @@ pub fn persistent_vec_new() -> PVec {
 /// Params: v - the vector; value - Int element to append.
 /// The backing Vec is rebuilt, leaving any previously captured PVec intact.
 /// Complexity: O(n).
-pub fn pvec_push(v: &mut PVec, value: Int) {
+pub fn pvec_push(v: &mut PVec, value: Int)
+  ensures: v.items.len() >= 1
+{
   var nv = Vec[Int].new();
   var i: Int = 0;
   while i < v.items.len() {
@@ -46,7 +50,9 @@ pub fn pvec_push(v: &mut PVec, value: Int) {
 /// Params: v - the vector; idx - zero-based index.
 /// Returns: Some(element) if idx is in range, None otherwise.
 /// Complexity: O(1).
-pub fn pvec_get(v: &PVec, idx: Int) -> Option[Int] {
+pub fn pvec_get(v: &PVec, idx: Int) -> Option[Int]
+  ensures: result.is_some == (idx >= 0 && idx < v.items.len())
+{
   if idx < 0 || idx >= v.items.len() { return None; }
   return Some(v.items[idx]);
 }
@@ -64,7 +70,10 @@ pub fn pvec_len(v: &PVec) -> Int
 /// Create a new empty persistent map.
 /// Returns: an empty PMap.
 /// Complexity: O(1).
-pub fn persistent_map_new() -> PMap {
+pub fn persistent_map_new() -> PMap
+  ensures: result.keys.len() == 0
+  ensures: result.keys.len() == result.values.len()
+{
   return PMap{ keys: Vec[Int].new(); values: Vec[Int].new(); };
 }
 
@@ -72,7 +81,10 @@ pub fn persistent_map_new() -> PMap {
 /// Params: m - the map; key - Int key; value - Int value.
 /// The backing arenas are rebuilt, leaving any previously captured PMap intact.
 /// Complexity: O(n).
-pub fn pmap_put(m: &mut PMap, key: Int, value: Int) {
+pub fn pmap_put(m: &mut PMap, key: Int, value: Int)
+  ensures: pmap_get(m, key).is_some
+  ensures: m.keys.len() == m.values.len()
+{
   var nk = Vec[Int].new();
   var nv = Vec[Int].new();
   var found = false;
@@ -101,7 +113,10 @@ pub fn pmap_put(m: &mut PMap, key: Int, value: Int) {
 /// Params: m - the map; key - Int key.
 /// Returns: Some(value) if present, None otherwise.
 /// Complexity: O(n).
-pub fn pmap_get(m: &PMap, key: Int) -> Option[Int] {
+pub fn pmap_get(m: &PMap, key: Int) -> Option[Int]
+  ensures: result.is_some => m.keys.len() == m.values.len()
+  ensures: result.is_some => m.keys.len() >= 1
+{
   var i: Int = 0;
   while i < m.keys.len() {
     if m.keys[i] == key {
@@ -116,7 +131,10 @@ pub fn pmap_get(m: &PMap, key: Int) -> Option[Int] {
 /// Params: m - the map; key - Int key.
 /// Absent keys produce an equivalent copy. Prior versions stay intact.
 /// Complexity: O(n).
-pub fn pmap_remove(m: &mut PMap, key: Int) {
+pub fn pmap_remove(m: &mut PMap, key: Int)
+  ensures: pmap_get(m, key).is_some == false
+  ensures: m.keys.len() == m.values.len()
+{
   var nk = Vec[Int].new();
   var nv = Vec[Int].new();
   var i: Int = 0;

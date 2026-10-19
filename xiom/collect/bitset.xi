@@ -77,7 +77,9 @@ pub fn bitset_word_count(b: &BitSet) -> Int
 }
 
 /// Set bit `i`. False (no change) when `i` is out of range or already set.
-pub fn bitset_set(b: &mut BitSet, i: Int) -> Bool {
+pub fn bitset_set(b: &mut BitSet, i: Int) -> Bool
+  ensures: result == true => bitset_get(b, i) == true
+{
   if i < 0 || i >= b.nbits { return false; }
   var w = i / 64;
   var bit = i % 64;
@@ -89,7 +91,9 @@ pub fn bitset_set(b: &mut BitSet, i: Int) -> Bool {
 }
 
 /// Clear bit `i`. False (no change) when `i` is out of range or already clear.
-pub fn bitset_clear(b: &mut BitSet, i: Int) -> Bool {
+pub fn bitset_clear(b: &mut BitSet, i: Int) -> Bool
+  ensures: result == true => bitset_get(b, i) == false
+{
   if i < 0 || i >= b.nbits { return false; }
   var w = i / 64;
   var bit = i % 64;
@@ -101,7 +105,9 @@ pub fn bitset_clear(b: &mut BitSet, i: Int) -> Bool {
 }
 
 /// True when bit `i` is set (false out of range).
-pub fn bitset_get(b: &BitSet, i: Int) -> Bool {
+pub fn bitset_get(b: &BitSet, i: Int) -> Bool
+  ensures: result == true => bitset_count(b) >= 1
+{
   if i < 0 || i >= b.nbits { return false; }
   var w = i / 64;
   var bit = i % 64;
@@ -110,7 +116,9 @@ pub fn bitset_get(b: &BitSet, i: Int) -> Bool {
 }
 
 /// Set every bit in the universe. Bits beyond `nbits` stay zero.
-pub fn bitset_fill(b: &mut BitSet) {
+pub fn bitset_fill(b: &mut BitSet)
+  ensures: bitset_count(b) == b.nbits
+{
   var i = 0;
   while i < b.words.len() {
     b.words[i] = 0 - 1;
@@ -241,22 +249,33 @@ fn _bs_binop(a: &BitSet, b: &BitSet, op: Int) -> BitSet {
 }
 
 /// Union as a fresh set (universe = max of the operands').
-pub fn bitset_or(a: &BitSet, b: &BitSet) -> BitSet {
+pub fn bitset_or(a: &BitSet, b: &BitSet) -> BitSet
+  ensures: result.nbits >= a.nbits
+  ensures: result.nbits >= b.nbits
+{
   return _bs_binop(a, b, 0);
 }
 
 /// Intersection as a fresh set (universe = max of the operands').
-pub fn bitset_and(a: &BitSet, b: &BitSet) -> BitSet {
+pub fn bitset_and(a: &BitSet, b: &BitSet) -> BitSet
+  ensures: result.nbits >= a.nbits
+  ensures: result.nbits >= b.nbits
+{
   return _bs_binop(a, b, 1);
 }
 
 /// Difference a \ b as a fresh set (universe = max of the operands').
-pub fn bitset_andnot(a: &BitSet, b: &BitSet) -> BitSet {
+pub fn bitset_andnot(a: &BitSet, b: &BitSet) -> BitSet
+  ensures: result.nbits >= a.nbits
+  ensures: result.nbits >= b.nbits
+{
   return _bs_binop(a, b, 2);
 }
 
 /// True when every set bit of `a` is also set in `b`.
-pub fn bitset_is_subset(a: &BitSet, b: &BitSet) -> Bool {
+pub fn bitset_is_subset(a: &BitSet, b: &BitSet) -> Bool
+  ensures: result == true => bitset_count(a) <= bitset_count(b)
+{
   var i = 0;
   while i < a.words.len() {
     var wb = _bs_word(b, i);
@@ -275,7 +294,9 @@ pub fn bitset_equal(a: &BitSet, b: &BitSet) -> Bool
 
 /// In-place union `dst |= src`; returns true when `dst` gained bits. Grows
 /// `dst`'s universe (never shrinks it) when `src` is wider.
-pub fn bitset_or_into(dst: &mut BitSet, src: &BitSet) -> Bool {
+pub fn bitset_or_into(dst: &mut BitSet, src: &BitSet) -> Bool
+  ensures: dst.nbits >= src.nbits
+{
   var changed = false;
   var i = 0;
   while i < src.words.len() {
@@ -296,7 +317,9 @@ pub fn bitset_or_into(dst: &mut BitSet, src: &BitSet) -> Bool {
 }
 
 /// In-place intersection `dst &= src`; returns true when `dst` lost bits.
-pub fn bitset_and_into(dst: &mut BitSet, src: &BitSet) -> Bool {
+pub fn bitset_and_into(dst: &mut BitSet, src: &BitSet) -> Bool
+  ensures: bitset_count(dst) <= dst.nbits
+{
   var changed = false;
   var i = 0;
   while i < dst.words.len() {
