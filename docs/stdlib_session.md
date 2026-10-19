@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 60 (updated 2026-10-19 14:35Z at this docs commit; **waves 184/185 merged** -- regex 98.0%, search 100%, global 75.3%, floors188 wired; readiness 87.5% (gate 10 MET; gate 8 75.3%); waves 179-183 merged earlier; v0.64.7 released/published; iter is contract-limited; paste-ready next-session prompt in `## 0C`)
+## 0A. CONTINUE HERE -- handoff snapshot 61 (updated 2026-10-19 14:05Z at this docs commit; **waves 184/185 merged** -- regex 98.0%, search 100%, global 75.3%, floors188 wired; **waves 186 string / 187 math / wishlist 47 channel handle in flight in Agent Manager**; gate-9 live ids mapped; readiness 87.5% (gate 10 MET; gate 8 75.3%); v0.64.7 released/published; paste-ready next-session prompt in `## 0C`)
 
 ## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-18)
 
@@ -25,13 +25,13 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
   git -C E:\xiom-lang\xiom-relays pull --ff-only
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 60 + block 246 (and this 0C block).
+Read docs/stdlib_session.md snapshot 61 + block 247 (and this 0C block).
 
-State: stdlib-v0.64.7 is released; tag stdlib-v0.64.7 = f4482b14 (tag object 11bf62a6); registry xiom-std 0.64.7 is live; compiler v0.64.7 is released. Waves 179 (time 41.3% -> 52.9%), 180 (async 47.8% -> 62.7%), 181 (num 37.9% -> 50.7%; precision_* fully covered), 182 (core 58.0% -> 78.6%; platform/contracts), 183 (stats 60.4% -> 99.3%; statistics/regress/probability), 184 (regex 59.2% -> 98.0%; engine/pcre_lite) and 185 (search 62.2% -> 100%) are merged; global 75.3%; floors188 wired; readiness 87.5% (gates 1-7 and 10 met; gate 8 75.3%; gate 9 compiler-owned). New compiler item REL-20261018-1546-stdlib: callee reads of &Vec[GenericStruct] corrupt fields (breaks async_select closed-drain; repro tools/known_failures/p_vec_byref_generic_struct.xi). Relay: compiler info announcements open; xvector channel-handle wishlist acked (row 47); PULSE tag-move fixed; 2257/2305 closed.
+State: stdlib-v0.64.7 is released; tag stdlib-v0.64.7 = f4482b14 (tag object 11bf62a6); registry xiom-std 0.64.7 is live; compiler v0.64.7 is released. Waves 179 (time 41.3% -> 52.9%), 180 (async 47.8% -> 62.7%), 181 (num 37.9% -> 50.7%; precision_* fully covered), 182 (core 58.0% -> 78.6%; platform/contracts), 183 (stats 60.4% -> 99.3%; statistics/regress/probability), 184 (regex 59.2% -> 98.0%; engine/pcre_lite) and 185 (search 62.2% -> 100%) are merged; global 75.3%; floors188 wired; readiness 87.5% (gates 1-7 and 10 met; gate 8 75.3%; gate 9 compiler-owned). Waves 186 (string), 187 (math) and wishlist/47 (channel handle) are in flight in Agent Manager worktrees (ses_eab8c55f7ffe2xsulCB0g8Jz22, ses_eab8c1db2ffegDrQ8S7lNC1EgL, ses_eab89e25fffeCOU88yWXpKi81o). New compiler item REL-20261018-1546-stdlib: callee reads of &Vec[GenericStruct] corrupt fields (breaks async_select closed-drain; repro tools/known_failures/p_vec_byref_generic_struct.xi). Relay: compiler info announcements open; xvector channel-handle wishlist acked (row 47); PULSE tag-move fixed; 2257/2305 closed.
 
-No Agent Manager contract waves are in flight. Continue gate 8: iter 46.4%, num 50.7%, math 53.8%, string 62.6%, core 78.6%, regex 98.0%, stats 99.3%, search 100%. Next wave(s): math/string; a dedicated num wave must target num/num.xi (242 pub fns at 5.4%). iter is contract-limited (94 lazy closure adapters; only ~8 meaningful clauses); regex, search and stats are effectively done (pcre_free, histogram_add are documented no-ops). Dump floors189, wire ci/heavy/release + tools/README, update the readiness meter.
+No Agent Manager contract waves are complete yet. Continue gate 8 after the two wave reports merge: iter 46.4%, num 50.7%, math 53.8%, string 62.6%, core 78.6%, regex 98.0%, stats 99.3%, search 100%. Dump floors189, wire ci/heavy/release + tools/README, update the readiness meter.
 
-Gate 9: verify/close compiler items 1053/1456/1626/2328/2343/2000/2100/2331 on v0.64.7; 1549-pulse-5 waits on compiler 1609, 1834 on 1550; the new 1546 item needs a compiler fix. Wishlist: row 33 open (compiler/install), row 47 acked. Kqueue needs a macOS runner; net.event wrapper and LISTEN_FDS server integration remain.
+Gate 9 (corrected live ids): REL-20261011-1053-stdlib, -1456-stdlib, -1626-stdlib, REL-20261015-2328-stdlib, -2343-stdlib, REL-20261016-2000-stdlib, -2100-stdlib, -2331-stdlib. All are stdlib -> compiler; only 2331 is fixed. Verify 1456/1053/2328/2000 first on the official v0.64.7 archive (sha256 16a436c4...), then 2100 W2-W4 green/W1 red; 1626 needs m354, 2343 m355, 2100 W1 m357, 2331 needs the next archive + the stdlib runtime helper fix. Do not close from the unverified local v0647 extract. 1549-pulse-5 waits on compiler 1609, 1834 on 1550. Wishlist: row 33 open (compiler/install), row 47 implementation in flight. Kqueue needs a macOS runner; net.event wrapper and LISTEN_FDS server integration remain.
 
 Use the official v0.64.6 archive for batteries (%TEMP%\kilo\stdlib_ws\v0.64.6-official\bin\xiom.exe); a v0.64.7 extraction exists at %TEMP%\kilo\v0647\extract (version reports v0.64.7; hash not verified for lane batteries). run_smokes sets XIOM_STDLIB. Do not move tags; release.yml is idempotent at 0056bce. Keep docs/session current and post material findings on the relay bus.
 ```
@@ -3674,6 +3674,32 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-19 block 247 (PARALLEL WAVES + GATE-9 ID CORRECTION -- wave 186 string / wave 187 math / wishlist 47 channel handle in Agent Manager; gate-9 live ids mapped; no main code change)**
+- Agent Manager: `wave/186-string-contracts`
+  (`ses_eab8c55f7ffe2xsulCB0g8Jz22`), `wave/187-math-contracts`
+  (`ses_eab8c1db2ffegDrQ8S7lNC1EgL`) and
+  `wishlist/47-channel-handle` (`ses_eab89e25fffeCOU88yWXpKi81o`).
+  All busy in isolated worktrees; agents commit on branch, no
+  merge/push. The wave/154 TLS sessions remain untouched.
+- Wishlist design (read-only agent): a handle form is feasible
+  probe-first with a runtime-allocated `Channel[T]` cell and
+  `ptr.read`/mutate/`ptr.write` under the caller's `SyncMutex`; the
+  public handle is pointer-free; the generic-struct read/write shape is
+  the compiler risk (`REL-20261018-1546-stdlib`); `select` stays
+  blocked. The value form has no internal lock; blocking send/recv
+  deadlock under an external lock, so the handle API should expose try
+  ops. Relay row 47 is now in probe-first implementation.
+- Gate-9 mapping: the 0C literal ids do not exist on the bus; the live
+  items are `REL-20261011-1053-stdlib`, `-1456-stdlib`, `-1626-stdlib`,
+  `REL-20261015-2328-stdlib`, `-2343-stdlib`,
+  `REL-20261016-2000-stdlib`, `-2100-stdlib`, `-2331-stdlib`. All are
+  stdlib -> compiler; only 2331 is fixed. Verify 1456/1053/2328/2000
+  first on the official v0.64.7 archive (sha256 `16a436c4...`); 1626
+  needs m354, 2343 m355, 2100 W1 m357, 2331 needs the next archive plus
+  the stdlib runtime helper fix. Do not close from the unverified local
+  `v0647` extract.
+- No main code/floors change; readiness stays 87.5% (gate 8 75.3%).
 
 **SESSION 2026-10-19 block 246 (WAVE 185 SEARCH CONTRACTS -- search 62.2% -> 100%, global 75.3%; floors188 wired; probe 365; readiness 87.5%)**
 - Scope: `xiom/search/search.xi` (8 fns: empty-array None / 0 / (0,0)
