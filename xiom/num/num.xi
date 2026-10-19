@@ -3083,7 +3083,7 @@ pub fn fraction_add(a: &Fraction, b: &Fraction) -> Fraction
 {
   var g = gcd(a.den, b.den);
   if g < 0 { g = -g; }
-  var num = (a.num / g) * b.den + (b.num / g) * a.den;
+  var num = a.num * (b.den / g) + b.num * (a.den / g);
   var den = (a.den / g) * b.den;
   return fraction_new(num, den);
 }
