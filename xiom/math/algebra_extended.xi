@@ -460,7 +460,10 @@ pub fn lie_algebra(bracket: fn((Int, Int), (Int, Int)) -> (Int, Int), basis: &Ve
 /// their generator bitmask, 1 = e_1e_2...). The metric is the quadratic
 /// form of the underlying space; only its diagonal is used (documented).
 /// Returns the empty matrix for dim < 0 (documented). Complexity: O(4^dim).
-pub fn clifford_algebra(metric: &Vec[Vec[Float64]], dim: Int) -> Vec[Vec[Float64]] {
+pub fn clifford_algebra(metric: &Vec[Vec[Float64]], dim: Int) -> Vec[Vec[Float64]]
+  ensures: (dim < 0) => (result.len() == 0)
+  ensures: (dim >= 0) => (result.len() == _pow2(dim))
+{
   var out = Vec[Vec[Float64]].new();
   if dim < 0 { return out; }
   var size = _pow2(dim);

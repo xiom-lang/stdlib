@@ -215,7 +215,9 @@ pub fn metric_space(d: fn(Int, Int) -> Float64, points: &Vec[Int]) -> Bool {
 /// Open ball of radius around center: every point p with d(center, p) <
 /// radius. Returns the empty ball for a negative radius (documented).
 /// Complexity: O(|points|).
-pub fn ball(d: fn(Int, Int) -> Float64, center: Int, radius: Float64, points: &Vec[Int]) -> Vec[Int] {
+pub fn ball(d: fn(Int, Int) -> Float64, center: Int, radius: Float64, points: &Vec[Int]) -> Vec[Int]
+  ensures: result.len() <= points.len()
+{
   var out = Vec[Int].new();
   if radius < 0.0 { return out; }
   var i = 0;
@@ -231,7 +233,9 @@ pub fn ball(d: fn(Int, Int) -> Float64, center: Int, radius: Float64, points: &V
 /// Largest open set contained in s: the union of all members of tau that are
 /// subsets of s. Returns the empty set when no open subset exists.
 /// Complexity: O(|tau| * |s|).
-pub fn interior(tau: &Vec[Vec[Int]], s: &Vec[Int]) -> Vec[Int] {
+pub fn interior(tau: &Vec[Vec[Int]], s: &Vec[Int]) -> Vec[Int]
+  ensures: result.len() <= s.len()
+{
   var out = Vec[Int].new();
   var i = 0;
   while i < tau.len() {
@@ -246,7 +250,9 @@ pub fn interior(tau: &Vec[Vec[Int]], s: &Vec[Int]) -> Vec[Int] {
 /// Smallest closed set containing s: the intersection of every closed set
 /// (complement of an open set in tau) that contains s. Returns s itself
 /// when no closed superset exists. Complexity: O(|tau| * |s|).
-pub fn closure(tau: &Vec[Vec[Int]], s: &Vec[Int]) -> Vec[Int] {
+pub fn closure(tau: &Vec[Vec[Int]], s: &Vec[Int]) -> Vec[Int]
+  ensures: (tau.len() != 0) || (result.len() == s.len())
+{
   var uni = _family_union(tau);
   var found = false;
   var acc = Vec[Int].new();
@@ -269,7 +275,9 @@ pub fn closure(tau: &Vec[Vec[Int]], s: &Vec[Int]) -> Vec[Int] {
 
 /// Boundary of s: the points in the closure but not the interior of s.
 /// Complexity: O(|tau| * |s|).
-pub fn boundary(tau: &Vec[Vec[Int]], s: &Vec[Int]) -> Vec[Int] {
+pub fn boundary(tau: &Vec[Vec[Int]], s: &Vec[Int]) -> Vec[Int]
+  ensures: (tau.len() != 0) || (result.len() == s.len())
+{
   var cl = closure(tau, s);
   var it = interior(tau, s);
   return _set_diff(&cl, &it);

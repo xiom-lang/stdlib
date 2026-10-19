@@ -25,7 +25,9 @@ const _INF: Float64 = 1.0e300;
 /// max over next states ns in actions(s) of (reward(s, ns) + gamma V[ns])
 /// with gamma = 0.99, converged when the largest update is below 1e-6
 /// (at most 200 passes). Empty for an empty state set. Complexity: O(iters * A).
-pub fn dynamic_programming(states: &Vec[Int], actions: fn(Int) -> Vec[Int], reward: fn(Int, Int) -> Float64) -> Vec[Float64] {
+pub fn dynamic_programming(states: &Vec[Int], actions: fn(Int) -> Vec[Int], reward: fn(Int, Int) -> Float64) -> Vec[Float64]
+  ensures: (result.len() == 0) || (result.len() == states.len())
+{
   var out = Vec[Float64].new();
   var n = states.len();
   if n == 0 { return out; }
@@ -85,7 +87,9 @@ pub fn dynamic_programming(states: &Vec[Int], actions: fn(Int) -> Vec[Int], rewa
 /// heuristic: target S = 1.5 * mean demand, reorder point s = mean demand;
 /// orders top inventory back up to S. Returns one order quantity per period.
 /// Empty for an empty demand series. Complexity: O(n).
-pub fn inventory(demand: &Vec[Float64], holding_cost: Float64, order_cost: Float64) -> Vec[Float64] {
+pub fn inventory(demand: &Vec[Float64], holding_cost: Float64, order_cost: Float64) -> Vec[Float64]
+  ensures: (result.len() == 0) || (result.len() == demand.len())
+{
   var out = Vec[Float64].new();
   var n = demand.len();
   if n == 0 { return out; }
@@ -124,7 +128,10 @@ pub fn inventory(demand: &Vec[Float64], holding_cost: Float64, order_cost: Float
 /// jobs (id, duration, priority) are placed on the least-loaded machine in
 /// priority order. Returns a Vec[Int] with one machine index per job (in the
 /// input order). Empty for no jobs or machines <= 0. Complexity: O(jobs * machines).
-pub fn scheduling(jobs: &Vec[(Int, Int, Int)], machines: Int) -> Vec[Int] {
+pub fn scheduling(jobs: &Vec[(Int, Int, Int)], machines: Int) -> Vec[Int]
+  ensures: (machines > 0) || (result.len() == 0)
+  ensures: (machines <= 0) || (result.len() == jobs.len())
+{
   var out = Vec[Int].new();
   var n = jobs.len();
   if n == 0 || machines <= 0 { return out; }
@@ -192,7 +199,11 @@ pub fn transshipment(supply: &Vec[Float64], demand: &Vec[Float64], transship: &V
 /// source = nodes[0] and sink = the last node. Returns (max_flow, flow matrix
 /// over the edges, one row per edge: [u, v, flow]). Edmonds-Karp BFS
 /// augmenting paths. Complexity: O(V * E^2).
-pub fn network_flow(nodes: &Vec[Int], edges: &Vec[(Int, Int, Float64)]) -> (Float64, Vec[Vec[Float64]]) {
+pub fn network_flow(nodes: &Vec[Int], edges: &Vec[(Int, Int, Float64)]) -> (Float64, Vec[Vec[Float64]])
+  ensures: result.0 >= 0.0
+  ensures: (nodes.len() < 2 || edges.len() == 0) => (result.1.len() == 0)
+  ensures: (nodes.len() >= 2 && edges.len() > 0) => (result.1.len() == edges.len())
+{
   var m = Vec[Vec[Float64]].new();
   var n = nodes.len();
   if n < 2 || edges.len() == 0 {
@@ -314,7 +325,10 @@ pub fn network_flow(nodes: &Vec[Int], edges: &Vec[(Int, Int, Float64)]) -> (Floa
 /// k-median heuristic: pick the candidate that reduces the objective most.
 /// Returns the indices of the chosen candidates. Empty for degenerate input.
 /// Complexity: O(k^2 * demand * candidates).
-pub fn facility_location(demand: &Vec[Float64], candidates: &Vec[(Float64, Float64)], k: Int) -> Vec[Int] {
+pub fn facility_location(demand: &Vec[Float64], candidates: &Vec[(Float64, Float64)], k: Int) -> Vec[Int]
+  ensures: (k <= 0 || candidates.len() == 0 || demand.len() == 0) => (result.len() == 0)
+  ensures: (k > 0 && candidates.len() > 0 && demand.len() > 0) => (result.len() <= candidates.len())
+{
   var out = Vec[Int].new();
   var n = candidates.len();
   if n == 0 || k <= 0 || demand.len() == 0 { return out; }
@@ -387,7 +401,10 @@ pub fn supply_chain(demands: &Vec[Vec[Float64]], costs: &Vec[Vec[Float64]]) -> V
 /// are (price, mean_demand); for two classes the high-class protection level
 /// is min(seats, mean_demand_high * (1 - price_low / price_high)). The result
 /// holds one protection level per class. Complexity: O(classes).
-pub fn revenue_management(seats: Int, fare_classes: &Vec[(Float64, Float64)]) -> Vec[Float64] {
+pub fn revenue_management(seats: Int, fare_classes: &Vec[(Float64, Float64)]) -> Vec[Float64]
+  ensures: (fare_classes.len() == 0) => (result.len() == 0)
+  ensures: (fare_classes.len() > 0) => (result.len() == fare_classes.len())
+{
   var out = Vec[Float64].new();
   var n = fare_classes.len();
   if n == 0 { return out; }
@@ -422,7 +439,10 @@ pub fn revenue_management(seats: Int, fare_classes: &Vec[(Float64, Float64)]) ->
 /// objective is minimized over the box [bounds[i].0, bounds[i].1]^dims with
 /// `iters` samples; returns the best point. Empty for degenerate input.
 /// Complexity: O(iters * dims * cost(objective)).
-pub fn stochastic_optimization(objective: fn(&Vec[Float64]) -> Float64, bounds: &Vec[(Float64, Float64)], iters: Int) -> Vec[Float64] {
+pub fn stochastic_optimization(objective: fn(&Vec[Float64]) -> Float64, bounds: &Vec[(Float64, Float64)], iters: Int) -> Vec[Float64]
+  ensures: (bounds.len() == 0 || iters <= 0) => (result.len() == 0)
+  ensures: (bounds.len() > 0 && iters > 0) => (result.len() == bounds.len())
+{
   var out = Vec[Float64].new();
   var dims = bounds.len();
   if dims == 0 || iters <= 0 { return out; }

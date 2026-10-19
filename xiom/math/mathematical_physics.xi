@@ -42,7 +42,10 @@ pub fn quantum_operators(observable: &Vec[Vec[Float64]], state: &Vec[Float64]) -
 /// The index-th Pauli matrix (0 = identity, 1..3 = X, Y, Z) as a
 /// Vec[Vec[Float64]] 2x2. NaN-indexed inputs return an empty matrix.
 /// Complexity: O(1).
-pub fn pauli_matrices(index: Int) -> Vec[Vec[Float64]] {
+pub fn pauli_matrices(index: Int) -> Vec[Vec[Float64]]
+  ensures: (index >= 0 && index <= 3) => (result.len() == 2)
+  ensures: (index < 0 || index > 3) => (result.len() == 0)
+{
   var out = Vec[Vec[Float64]].new();
   var r0 = Vec[Float64].new();
   var r1 = Vec[Float64].new();
@@ -77,7 +80,10 @@ pub fn pauli_matrices(index: Int) -> Vec[Vec[Float64]] {
 /// Gamma matrices of the given spacetime dimension: for dim 2 the Pauli
 /// matrices; for dim 4 the Weyl representation. Other dimensions return the
 /// empty matrix. Complexity: O(dim^2).
-pub fn gamma_matrices(dim: Int) -> Vec[Vec[Float64]] {
+pub fn gamma_matrices(dim: Int) -> Vec[Vec[Float64]]
+  ensures: (dim == 2 || dim == 4) => (result.len() == 4)
+  ensures: (dim != 2 && dim != 4) => (result.len() == 0)
+{
   var out = Vec[Vec[Float64]].new();
   if dim == 2 {
     var i = 0;
@@ -127,7 +133,9 @@ pub fn tensor_calculus(tensor: &Vec[Float64], metric: &Vec[Vec[Float64]]) -> Vec
 
 /// Coordinate derivatives of a chart at point: the flattened Jacobian of the
 /// chart (one output row per coordinate). Complexity: O(dim^2 * cost(chart)).
-pub fn differential_geometry(chart: fn(&Vec[Float64]) -> Vec[Float64], point: &Vec[Float64]) -> Vec[Float64] {
+pub fn differential_geometry(chart: fn(&Vec[Float64]) -> Vec[Float64], point: &Vec[Float64]) -> Vec[Float64]
+  ensures: (point.len() == 0) || (result.len() % point.len() == 0)
+{
   var out = Vec[Float64].new();
   var n = point.len();
   if n == 0 { return out; }
@@ -199,7 +207,9 @@ pub fn representation(group: &Vec[Vec[Float64]], algebra: &Vec[Vec[Float64]]) ->
 /// relaxation over the residual L(u) - source (matrix-free). Returns the
 /// approximate solution (at most 200 sweeps). Empty for an empty source.
 /// Complexity: O(sweeps * cost(operator)).
-pub fn greens_function(operator: fn(&Vec[Float64]) -> Vec[Float64], source: &Vec[Float64]) -> Vec[Float64] {
+pub fn greens_function(operator: fn(&Vec[Float64]) -> Vec[Float64], source: &Vec[Float64]) -> Vec[Float64]
+  ensures: result.len() == source.len()
+{
   var out = Vec[Float64].new();
   var n = source.len();
   if n == 0 { return out; }
@@ -246,7 +256,10 @@ pub fn greens_function(operator: fn(&Vec[Float64]) -> Vec[Float64], source: &Vec
 /// return garbage in this compiler build, so the series degenerates to the
 /// identity matrix of the input's shape. Keep the frozen signature; revisit
 /// when nested float Vec reads land.
-pub fn propagator(hamiltonian: &Vec[Vec[Float64]], t: Float64) -> Vec[Vec[Float64]] {
+pub fn propagator(hamiltonian: &Vec[Vec[Float64]], t: Float64) -> Vec[Vec[Float64]]
+  ensures: (hamiltonian.len() == 0) => (result.len() == 0)
+  ensures: (hamiltonian.len() > 0) => (result.len() == hamiltonian.len())
+{
   var out = Vec[Vec[Float64]].new();
   var n = hamiltonian.len();
   if n == 0 { return out; }

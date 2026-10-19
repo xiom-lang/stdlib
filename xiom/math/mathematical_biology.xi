@@ -16,14 +16,20 @@ module xiom.math.mathematical_biology
 use xiom.math;
 
 /// Exponential population size N0 * exp(r t). Complexity: O(1).
-pub fn population_growth(r: Float64, n0: Float64, t: Float64) -> Float64 {
+pub fn population_growth(r: Float64, n0: Float64, t: Float64) -> Float64
+  requires: n0 >= 0.0
+  ensures: (result != result) || (result >= 0.0)
+{
   var e = math.exp(r * t);
   return n0 * e;
 }
 
 /// Logistic growth N(t) = K N0 e^(rt) / (K + N0(e^(rt) - 1)). Returns K for
 /// n0 == 0 and 0 for t == 0 with n0 == 0 (documented). Complexity: O(1).
-pub fn logistic_growth(r: Float64, k: Float64, n0: Float64, t: Float64) -> Float64 {
+pub fn logistic_growth(r: Float64, k: Float64, n0: Float64, t: Float64) -> Float64
+  requires: k > 0.0
+  ensures: (n0 != 0.0) || (result == 0.0)
+{
   if k <= 0.0 { return 0.0 / 0.0; }
   if n0 == 0.0 { return 0.0; }
   if t == 0.0 { return n0; }
@@ -72,7 +78,10 @@ pub fn epidemiological_seir(beta: Float64, sigma: Float64, gamma: Float64, s: Fl
 
 /// Tumor size after a treatment step: tumor * exp((growth - kill*dose) dt).
 /// Complexity: O(1).
-pub fn chemotherapy(growth: Float64, kill: Float64, tumor: Float64, dose: Float64, dt: Float64) -> Float64 {
+pub fn chemotherapy(growth: Float64, kill: Float64, tumor: Float64, dose: Float64, dt: Float64) -> Float64
+  requires: tumor >= 0.0
+  ensures: (result != result) || (result >= 0.0)
+{
   var e = math.exp((growth - kill * dose) * dt);
   return tumor * e;
 }
@@ -80,7 +89,13 @@ pub fn chemotherapy(growth: Float64, kill: Float64, tumor: Float64, dose: Float6
 /// Hardy-Weinberg genotype frequencies under selection on the homozygote
 /// (aa): p^2 w_AA : 2 p q w_Aa : q^2 w_aa, normalized. Returns a 3-vector
 /// (AA, Aa, aa). NaN for p + q far from 1 or negative frequencies. Complexity: O(1).
-pub fn genetics(p: Float64, q: Float64, selection: Float64) -> Vec[Float64] {
+pub fn genetics(p: Float64, q: Float64, selection: Float64) -> Vec[Float64]
+  requires: p >= 0.0
+  requires: q >= 0.0
+  requires: selection >= 0.0 && selection <= 1.0
+  ensures: (result.len() == 0) || (result.len() == 3)
+  ensures: (result.len() != 3) || (result[0] >= 0.0 && result[0] <= 1.0 && result[1] >= 0.0 && result[1] <= 1.0 && result[2] >= 0.0 && result[2] <= 1.0)
+{
   var out = Vec[Float64].new();
   if p < 0.0 || q < 0.0 || selection < 0.0 { return out; }
   var w_aa = 1.0 - selection;
@@ -159,7 +174,9 @@ pub fn neuroscience(v: Float64, input: Float64, tau: Float64, threshold: Float64
 /// Next-generation allele frequencies under selection and mutation:
 /// x_i' = (x_i w_i + mutation * (1/n - x_i)) / mean fitness, with w_i =
 /// fitness[i]. Empty for length mismatch. Complexity: O(n).
-pub fn evolution(fitness: &Vec[Float64], population: &Vec[Float64], mutation: Float64) -> Vec[Float64] {
+pub fn evolution(fitness: &Vec[Float64], population: &Vec[Float64], mutation: Float64) -> Vec[Float64]
+  ensures: (result.len() == 0) || (result.len() == population.len())
+{
   var out = Vec[Float64].new();
   var n = population.len();
   if fitness.len() != n || n == 0 { return out; }

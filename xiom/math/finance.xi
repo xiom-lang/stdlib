@@ -78,7 +78,9 @@ pub fn npv(rate: Float64, cashflows: &Vec[Float64]) -> Float64
 /// Internal rate of return: the rate r with npv(r, cashflows) == 0, found by
 /// bisection over [-0.99, 10] (200 iterations). NaN when no sign change exists.
 /// Complexity: O(iters * n).
-pub fn irr(cashflows: &Vec[Float64]) -> Float64 {
+pub fn irr(cashflows: &Vec[Float64]) -> Float64
+  ensures: (result != result) || (result >= -0.99 && result <= 10.0)
+{
   var lo = -0.99;
   var hi = 10.0;
   var f_lo = npv(lo, cashflows);
@@ -189,7 +191,9 @@ pub fn nper(rate: Float64, pmt: Float64, pv: Float64, fv: Float64) -> Float64
 
 /// Interest rate implied by an annuity: bisection on the fv identity over
 /// [-0.999, 10] (200 iterations). NaN when no root exists. Complexity: O(200).
-pub fn rate(nper: Float64, pmt: Float64, pv: Float64, fv: Float64) -> Float64 {
+pub fn rate(nper: Float64, pmt: Float64, pv: Float64, fv: Float64) -> Float64
+  ensures: (result != result) || (result >= -0.999 && result <= 10.0)
+{
   var lo = -0.999;
   var hi = 10.0;
   var f_lo = fv(lo, nper, pmt, pv);
@@ -215,7 +219,9 @@ pub fn rate(nper: Float64, pmt: Float64, pv: Float64, fv: Float64) -> Float64 {
 
 /// Present value of a level annuity paying pmt for nper periods at rate.
 /// Complexity: O(1).
-pub fn annuity(rate: Float64, nper: Float64, pmt: Float64) -> Float64 {
+pub fn annuity(rate: Float64, nper: Float64, pmt: Float64) -> Float64
+  ensures: (rate != 0.0) || (result == pmt * nper)
+{
   if rate == 0.0 {
     return pmt * nper;
   }
@@ -255,7 +261,9 @@ pub fn bond_price(face: Float64, coupon: Float64, ytm: Float64, n: Int, freq: In
 /// Yield to maturity of a coupon bond, found by bisection on the price
 /// equation over [-0.999, 10] (200 iterations). NaN when no root exists.
 /// Complexity: O(200 * n * freq).
-pub fn bond_yield(face: Float64, coupon: Float64, price: Float64, n: Int, freq: Int) -> Float64 {
+pub fn bond_yield(face: Float64, coupon: Float64, price: Float64, n: Int, freq: Int) -> Float64
+  ensures: (result != result) || (result >= -0.999 && result <= 10.0)
+{
   var lo = -0.999;
   var hi = 10.0;
   var f_lo = bond_price(face, coupon, lo, n, freq);
@@ -279,7 +287,9 @@ pub fn bond_yield(face: Float64, coupon: Float64, price: Float64, n: Int, freq: 
 }
 
 /// Macaulay duration of a coupon bond (years). Complexity: O(n * freq).
-pub fn duration(face: Float64, coupon: Float64, ytm: Float64, n: Int, freq: Int) -> Float64 {
+pub fn duration(face: Float64, coupon: Float64, ytm: Float64, n: Int, freq: Int) -> Float64
+  ensures: (face > 0.0 && freq > 0) || (result != result)
+{
   if face <= 0.0 || freq <= 0 { return 0.0 / 0.0; }
   var periods = n * freq;
   var c = coupon * face / (freq as Float64);
@@ -301,7 +311,9 @@ pub fn duration(face: Float64, coupon: Float64, ytm: Float64, n: Int, freq: Int)
 }
 
 /// Convexity of a coupon bond (years squared). Complexity: O(n * freq).
-pub fn convexity(face: Float64, coupon: Float64, ytm: Float64, n: Int, freq: Int) -> Float64 {
+pub fn convexity(face: Float64, coupon: Float64, ytm: Float64, n: Int, freq: Int) -> Float64
+  ensures: (face > 0.0 && freq > 0) || (result != result)
+{
   if face <= 0.0 || freq <= 0 { return 0.0 / 0.0; }
   var periods = n * freq;
   var c = coupon * face / (freq as Float64);
@@ -323,7 +335,9 @@ pub fn convexity(face: Float64, coupon: Float64, ytm: Float64, n: Int, freq: Int
 }
 
 /// Black-Scholes price of a European call. Complexity: O(1).
-pub fn option_call(s: Float64, k: Float64, t: Float64, r: Float64, sigma: Float64) -> Float64 {
+pub fn option_call(s: Float64, k: Float64, t: Float64, r: Float64, sigma: Float64) -> Float64
+  ensures: (s > 0.0 && k > 0.0 && t >= 0.0 && sigma > 0.0) || (result != result)
+{
   if s <= 0.0 || k <= 0.0 || t < 0.0 || sigma <= 0.0 { return 0.0 / 0.0; }
   if t == 0.0 {
     var payoff = s - k;
@@ -340,7 +354,9 @@ pub fn option_call(s: Float64, k: Float64, t: Float64, r: Float64, sigma: Float6
 }
 
 /// Black-Scholes price of a European put. Complexity: O(1).
-pub fn option_put(s: Float64, k: Float64, t: Float64, r: Float64, sigma: Float64) -> Float64 {
+pub fn option_put(s: Float64, k: Float64, t: Float64, r: Float64, sigma: Float64) -> Float64
+  ensures: (s > 0.0 && k > 0.0 && t >= 0.0 && sigma > 0.0) || (result != result)
+{
   if s <= 0.0 || k <= 0.0 || t < 0.0 || sigma <= 0.0 { return 0.0 / 0.0; }
   if t == 0.0 {
     var payoff = k - s;
@@ -357,7 +373,10 @@ pub fn option_put(s: Float64, k: Float64, t: Float64, r: Float64, sigma: Float64
 }
 
 /// Delta of a European call: N(d1). Complexity: O(1).
-pub fn option_call_delta(s: Float64, k: Float64, t: Float64, r: Float64, sigma: Float64) -> Float64 {
+pub fn option_call_delta(s: Float64, k: Float64, t: Float64, r: Float64, sigma: Float64) -> Float64
+  ensures: (s > 0.0 && k > 0.0 && t >= 0.0 && sigma > 0.0) || (result != result)
+  ensures: (s <= 0.0 || k <= 0.0 || t < 0.0 || sigma <= 0.0) || (result != result) || (result >= 0.0 && result <= 1.0)
+{
   if s <= 0.0 || k <= 0.0 || t < 0.0 || sigma <= 0.0 { return 0.0 / 0.0; }
   if t == 0.0 {
     if s > k { return 1.0; }
@@ -369,13 +388,18 @@ pub fn option_call_delta(s: Float64, k: Float64, t: Float64, r: Float64, sigma: 
 }
 
 /// Delta of a European put: N(d1) - 1. Complexity: O(1).
-pub fn option_put_delta(s: Float64, k: Float64, t: Float64, r: Float64, sigma: Float64) -> Float64 {
+pub fn option_put_delta(s: Float64, k: Float64, t: Float64, r: Float64, sigma: Float64) -> Float64
+  ensures: (s > 0.0 && k > 0.0 && t >= 0.0 && sigma > 0.0) || (result != result)
+  ensures: (s <= 0.0 || k <= 0.0 || t < 0.0 || sigma <= 0.0) || (result != result) || (result >= -1.0 && result <= 0.0)
+{
   var d = option_call_delta(s, k, t, r, sigma);
   return d - 1.0;
 }
 
 /// Gamma of a European option: phi(d1) / (S sigma sqrt(T)). Complexity: O(1).
-pub fn option_gamma(s: Float64, k: Float64, t: Float64, r: Float64, sigma: Float64) -> Float64 {
+pub fn option_gamma(s: Float64, k: Float64, t: Float64, r: Float64, sigma: Float64) -> Float64
+  ensures: (result != result) || (result >= 0.0)
+{
   if s <= 0.0 || k <= 0.0 || t <= 0.0 || sigma <= 0.0 { return 0.0 / 0.0; }
   var st = sigma * math.sqrt(t);
   var d1 = (math.ln(s / k) + (r + 0.5 * sigma * sigma) * t) / st;
@@ -386,7 +410,9 @@ pub fn option_gamma(s: Float64, k: Float64, t: Float64, r: Float64, sigma: Float
 
 /// Theta of a European call (per year): -(S phi(d1) sigma)/(2 sqrt(T))
 /// - r K e^{-rT} N(d2). Complexity: O(1).
-pub fn option_theta(s: Float64, k: Float64, t: Float64, r: Float64, sigma: Float64) -> Float64 {
+pub fn option_theta(s: Float64, k: Float64, t: Float64, r: Float64, sigma: Float64) -> Float64
+  ensures: (s > 0.0 && k > 0.0 && t > 0.0 && sigma > 0.0) || (result != result)
+{
   if s <= 0.0 || k <= 0.0 || t <= 0.0 || sigma <= 0.0 { return 0.0 / 0.0; }
   var st = sigma * math.sqrt(t);
   var d1 = (math.ln(s / k) + (r + 0.5 * sigma * sigma) * t) / st;
@@ -399,7 +425,9 @@ pub fn option_theta(s: Float64, k: Float64, t: Float64, r: Float64, sigma: Float
 
 /// Vega of a European option: S phi(d1) sqrt(T) / 100 (per 1% volatility).
 /// Complexity: O(1).
-pub fn option_vega(s: Float64, k: Float64, t: Float64, r: Float64, sigma: Float64) -> Float64 {
+pub fn option_vega(s: Float64, k: Float64, t: Float64, r: Float64, sigma: Float64) -> Float64
+  ensures: (result != result) || (result >= 0.0)
+{
   if s <= 0.0 || k <= 0.0 || t < 0.0 || sigma <= 0.0 { return 0.0 / 0.0; }
   if t == 0.0 { return 0.0; }
   var st = sigma * math.sqrt(t);
@@ -408,7 +436,9 @@ pub fn option_vega(s: Float64, k: Float64, t: Float64, r: Float64, sigma: Float6
 }
 
 /// Rho of a European call: K T e^{-rT} N(d2) / 100. Complexity: O(1).
-pub fn option_rho(s: Float64, k: Float64, t: Float64, r: Float64, sigma: Float64) -> Float64 {
+pub fn option_rho(s: Float64, k: Float64, t: Float64, r: Float64, sigma: Float64) -> Float64
+  ensures: (result != result) || (result >= 0.0)
+{
   if s <= 0.0 || k <= 0.0 || t < 0.0 || sigma <= 0.0 { return 0.0 / 0.0; }
   if t == 0.0 { return 0.0; }
   var st = sigma * math.sqrt(t);
@@ -420,7 +450,9 @@ pub fn option_rho(s: Float64, k: Float64, t: Float64, r: Float64, sigma: Float64
 /// Black-Scholes implied volatility for a European call price, by Newton
 /// iteration (100 iterations from sigma = 0.2). NaN when no solution is found
 /// (e.g. an arbitrage-violating price). Complexity: O(100).
-pub fn implied_volatility(market: Float64, s: Float64, k: Float64, t: Float64, r: Float64) -> Float64 {
+pub fn implied_volatility(market: Float64, s: Float64, k: Float64, t: Float64, r: Float64) -> Float64
+  ensures: (result != result) || (result > 0.0)
+{
   if s <= 0.0 || k <= 0.0 || t <= 0.0 { return 0.0 / 0.0; }
   var low = s - k * math.exp(-r * t);
   if low < 0.0 { low = 0.0; }

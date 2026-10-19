@@ -15,13 +15,17 @@ module xiom.bits.endianness
 
 /// True if the host stores integers big-endian. The supported targets are
 /// little-endian, so this returns false. Complexity: O(1).
-pub fn is_big_endian() -> Bool {
+pub fn is_big_endian() -> Bool
+  ensures: result == false
+{
   false
 }
 
 /// True if the host stores integers little-endian. The supported targets are
 /// little-endian, so this returns true. Complexity: O(1).
-pub fn is_little_endian() -> Bool {
+pub fn is_little_endian() -> Bool
+  ensures: result == true
+{
   true
 }
 
@@ -42,7 +46,10 @@ fn _swap_low(v: Int, size: Int) -> Int {
 /// Converts v to big-endian byte order for a `size`-byte value (the low
 /// `size` bytes are reversed; higher bytes are cleared).
 /// Complexity: O(size).
-pub fn to_be(v: Int, size: Int) -> Int {
+pub fn to_be(v: Int, size: Int) -> Int
+  ensures: (size > 1) || (result == v)
+  ensures: (size < 8) || (result == swap_endian(v))
+{
   if size <= 1 {
     return v;
   };
@@ -54,66 +61,90 @@ pub fn to_be(v: Int, size: Int) -> Int {
 
 /// Converts v to little-endian byte order for a `size`-byte value. On the
 /// little-endian host this is the identity. Complexity: O(1).
-pub fn to_le(v: Int, size: Int) -> Int {
+pub fn to_le(v: Int, size: Int) -> Int
+  ensures: result == v
+{
   v
 }
 
 /// Decodes a `size`-byte big-endian value held in v into host order (the low
 /// `size` bytes are reversed). Complexity: O(size).
-pub fn from_be(v: Int, size: Int) -> Int {
+pub fn from_be(v: Int, size: Int) -> Int
+  ensures: (size > 1) || (result == v)
+  ensures: (size < 8) || (result == swap_endian(v))
+{
   to_be(v, size)
 }
 
 /// Decodes a `size`-byte little-endian value held in v into host order (the
 /// identity on the little-endian host). Complexity: O(1).
-pub fn from_le(v: Int, size: Int) -> Int {
+pub fn from_le(v: Int, size: Int) -> Int
+  ensures: result == v
+{
   v
 }
 
 /// Converts a native value to big-endian order (all 8 bytes reversed).
 /// Complexity: O(8).
-pub fn native_to_be(v: Int) -> Int {
+pub fn native_to_be(v: Int) -> Int
+  ensures: result == swap_endian(v)
+{
   _swap_low(v, 8)
 }
 
 /// Converts a native value to little-endian order (the identity on this host).
 /// Complexity: O(1).
-pub fn native_to_le(v: Int) -> Int {
+pub fn native_to_le(v: Int) -> Int
+  ensures: result == v
+{
   v
 }
 
 /// Converts a big-endian value to native order (all 8 bytes reversed).
 /// Complexity: O(8).
-pub fn be_to_native(v: Int) -> Int {
+pub fn be_to_native(v: Int) -> Int
+  ensures: result == swap_endian(v)
+{
   _swap_low(v, 8)
 }
 
 /// Converts a little-endian value to native order (the identity on this host).
 /// Complexity: O(1).
-pub fn le_to_native(v: Int) -> Int {
+pub fn le_to_native(v: Int) -> Int
+  ensures: result == v
+{
   v
 }
 
 /// Unconditionally reverses the byte order of v (all 8 bytes).
 /// Complexity: O(8).
-pub fn swap_endian(v: Int) -> Int {
+pub fn swap_endian(v: Int) -> Int
+  ensures: (v != 0) || (result == 0)
+  ensures: (v < 0 || v > 127) || (result == v * 72057594037927936)
+{
   _swap_low(v, 8)
 }
 
 /// Byte-swaps a 16-bit value stored in the low 16 bits of v.
 /// Complexity: O(2).
-pub fn bswap_16(v: Int) -> Int {
+pub fn bswap_16(v: Int) -> Int
+  ensures: result >= 0 && result <= 65535
+{
   _swap_low(v, 2)
 }
 
 /// Byte-swaps a 32-bit value stored in the low 32 bits of v.
 /// Complexity: O(4).
-pub fn bswap_32(v: Int) -> Int {
+pub fn bswap_32(v: Int) -> Int
+  ensures: result >= 0 && result <= 4294967295
+{
   _swap_low(v, 4)
 }
 
 /// Byte-swaps a 64-bit value. Complexity: O(8).
-pub fn bswap_64(v: Int) -> Int {
+pub fn bswap_64(v: Int) -> Int
+  ensures: (v != 0) || (result == 0)
+{
   _swap_low(v, 8)
 }
 
@@ -123,12 +154,16 @@ pub fn bswap_64(v: Int) -> Int {
 
 /// Byte-swaps a 128-bit value. FALLBACK (platform Int is 64-bit): identical
 /// to bswap_64. Complexity: O(8).
-pub fn bswap_128(v: Int) -> Int {
+pub fn bswap_128(v: Int) -> Int
+  ensures: result == bswap_64(v)
+{
   _swap_low(v, 8)
 }
 
 /// Byte-swaps a 256-bit value. FALLBACK (platform Int is 64-bit): identical
 /// to bswap_64. Complexity: O(8).
-pub fn bswap_256(v: Int) -> Int {
+pub fn bswap_256(v: Int) -> Int
+  ensures: result == bswap_64(v)
+{
   _swap_low(v, 8)
 }

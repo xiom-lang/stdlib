@@ -676,7 +676,9 @@ pub fn model_theory(sentences: &Vec[Str], structure: fn(&Vec[Int]) -> Bool) -> B
 /// All formulas derivable from the axioms under the rule function `rules`
 /// (one forward-chaining round, at most 50 derivations; the seed axioms are
 /// included first). Complexity: O(50 * cost(rules)).
-pub fn proof_theory(axioms: &Vec[Str], rules: fn(&Vec[Str]) -> Vec[Str]) -> Vec[Str] {
+pub fn proof_theory(axioms: &Vec[Str], rules: fn(&Vec[Str]) -> Vec[Str]) -> Vec[Str]
+  ensures: result.len() >= axioms.len()
+{
   var out = Vec[Str].new();
   var i = 0;
   while i < axioms.len() {
