@@ -3699,6 +3699,50 @@ registry pin, agent recon for the rest)**
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
 
+**SESSION 2026-10-19 block 259 (v0.64.8 official battery green; gate 9 re-verified; runtime __udivti3 fixed; waves 188-190 launched)**
+- Official v0.64.8 archives staged + hash-verified: Windows x64 zip
+  sha256 `c31d9c464a4f9489fc442b4bf9a45b3e3b2363dcf9548d53566bd04a81dee6b5`
+  -> `%TEMP%\kilo\stdlib_ws\v0.64.8-official`; Linux x64 tar.gz
+  sha256 `a8c003c0d817880a8754fa301a9ba18359cdc7463d7cfc98d3267d7a2e56002a`
+  -> `/tmp/xiom-v0648` (WSL Ubuntu). `xiom --version` = v0.64.8;
+  `doctor --deep` green (clang 22.1.8 / NASM 3.02 / z3 4.13.4).
+- Baseline on v0.64.8 with `XIOM_STDLIB=E:\xiom-lang\stdlib`:
+  `check_modules` 533/533 type-check clean (973s); smoke corpus
+  962/962 pass, 0 compilefail / 0 runfail (2802s,
+  `out/smokes_v0648.json`); regex 17/17 (`out/regex_v0648.json`);
+  coverage ratchet floors189 OK; doc_scan 100% top-level rows.
+  Probes + barename were still running at block time.
+- Gate 9 (official v0.64.8): 1053 hash shadow FIXED -- `.hash()` and
+  explicit `Int.hash(0)`/`Bool.hash(false)` return the stdlib values
+  (7567884774754821 / 177573); 1456 Mutex shadow FIXED -- repro
+  compiles/runs rc 0 (`*T` unknown-type warnings remain); 2328 regex
+  clauses GREEN (17/17); 2000 platform constants GREEN on Windows and
+  WSL Ubuntu (`p_wave164_shapes` rc 0; keep the runtime-probe
+  workaround); 2100 W2/W3/W4 GREEN (compile+run rc 0), W1 STILL RED --
+  alias/full-path field + `close()` fails C001, bare-leaf control rc 0;
+  1626 STILL RED (T001 trailing match after Vec.push); 2343 STILL RED
+  (`p_inline_i32_misread` rc 1). 2331 fixed below.
+- 2331 runtime helper: `runtime/xiom_runtime.c` `xiom_udivti3` replaced
+  with a restoring 128-bit loop carrying the 129th remainder bit. No
+  native `a / b`, so clang cannot lower it back to `__udivti3` (the
+  same-TU symbol) and self-recurse. The old high-limb path was also
+  wrong: a standalone replica mismatched 16,716/50,000 random vectors
+  (e.g. 0x97A.../0x3C0... returned 0 instead of 2). The fixed algorithm
+  matched Python big ints on 50,007 vectors; `runtime/test_udivti3.c`
+  linked against the compiled runtime object prints ok/rc 0.
+  (`p_udivti3_runtime.xi` was dropped: extern "C" returning UInt128
+  currently fails codegen with i64-vs-i128.)
+- Agent Manager housekeeping: stopped/removed wave 186/187 and wishlist
+  47 sessions; branches `wave/186-string-contracts`,
+  `wave/187-math-contracts`, `wishlist/47-channel-handle` deleted. Waves
+  188 (num/num.xi), 189 (string), 190 (math) launched on the staged
+  v0.64.8 binary; wave 189 complete (string 68.9% -> 90.4%, global
+  76.1% -> 77.5%, commit 1a74792); 188/190 results in block 260.
+- Relay: 1752/1754/1755 fixed (registry `xiom-std 0.64.8` live,
+  sha256 `c4ab5c61...`). Gate 9 re-verify report to compiler pending.
+- Pin: `COMPILER_VERSION` candidate-v0.64.8-r2 -> `v0.64.8` after the
+  full battery (probes/barename pending at block time).
+
 **SESSION 2026-10-19 block 258 (SESSION HANDOFF -- v0.64.8 COMPLETE; gate 8 at 76.1%; next waves num/num.xi + string + math; gate 9 on v0.64.8; relays/bugs/wishlist triage)**
 - v0.64.8 complete: stdlib tag `stdlib-v0.64.8` = tag object
   `0bf5b75` -> commit `112c5b6`; release run 39289746856 success;

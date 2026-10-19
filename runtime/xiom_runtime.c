@@ -8634,31 +8634,25 @@ __int128 __multi3(__int128 a, __int128 b) {
     return (__int128)((__uint128_t)a * (__uint128_t)b);
 }
 
-/* Unsigned 128-bit division: Knuth Algorithm D on two 64-bit limbs.
-   b must be nonzero (LLVM only emits this call for well-defined div). */
+/* Unsigned 128-bit division: restoring long division on 128 bits.
+   b must be nonzero (LLVM only emits this call for well-defined div).
+   The remainder keeps a 129th bit so the shift never loses the top bit.
+   No native 128-bit divide is used: clang lowers `a / b` back to
+   __udivti3 (the symbol defined in this TU), which self-recursed for
+   divisors < 2^64. The old high-limb path also lost the top remainder
+   bit and returned wrong quotients (REL-20261016-2331). */
 static unsigned __int128 xiom_udivti3(unsigned __int128 a, unsigned __int128 b) {
-    /* Handle trivial cases with the native 128-bit op where the quotient
-       provably fits in 64 bits: b > a/2^64 i.e. high limb of b nonzero. */
-    unsigned __int128 u_hi = a >> 64;
-    if (b >> 64 != 0) {
-        /* Full 128/128: normalize b so its top bit is set. */
-        unsigned shift = 0;
-        unsigned __int128 nb = b;
-        while ((nb >> 127) == 0) { nb <<= 1; shift++; }
-        unsigned __int128 na = a << shift;
-        unsigned __int128 q = 0;
-        unsigned __int128 r = 0;
-        int bit;
-        for (bit = 127; bit >= 0; bit--) {
-            r = (r << 1) | ((na >> bit) & 1);
-            if (r >= nb) { r -= nb; q |= ((unsigned __int128)1 << bit); }
+    unsigned __int128 q = 0;
+    unsigned __int128 r = 0;
+    int bit;
+    for (bit = 127; bit >= 0; bit--) {
+        unsigned int overflow = (unsigned int)(r >> 127);
+        r = (r << 1) | ((a >> bit) & 1);
+        if (overflow || r >= b) {
+            r -= b;
+            q |= ((unsigned __int128)1 << bit);
         }
-        (void)u_hi;
-        return q;
     }
-    /* High limb of b is zero: single-limb divisor. The quotient fits in
-       64 bits; a native divide is exact and well-defined here. */
-    unsigned __int128 q = a / b;
     return q;
 }
 
