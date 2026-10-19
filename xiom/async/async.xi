@@ -157,12 +157,16 @@ pub fn AsyncExecutor.run(self)
 {
   while self.ready.len() > 0 || self.timers.len() > 0 {
     // Drain every currently-ready task (tasks may enqueue more as they run).
+    // Inline step: passing `self` to another method would drain a copy.
     while self.ready.len() > 0 {
-      self.step();
+      match self.ready.pop() {
+        Some(task) => { task(); },
+        None => {},
+      };
     }
     // Ready-queue exhausted: advance timers so at least one becomes ready.
     if self.timers.len() > 0 {
-      self.fire_due_timers();
+      AsyncExecutor.fire_due_timers(&mut self);
     }
   }
 }
@@ -172,8 +176,8 @@ pub fn AsyncExecutor.block_on(self, task: fn())
   ensures: self.ready.len() <= self.ready.len()@pre + 1
   ensures: self.timers.len() <= self.timers.len()@pre
 {
-  self.spawn(task);
-  self.run();
+  AsyncExecutor.spawn(&mut self, task);
+  AsyncExecutor.run(&mut self);
 }
 
 // === Global executor ===
