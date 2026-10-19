@@ -77,7 +77,10 @@ fn _prefix_lines(s: Str, prefix: Str) -> Str {
 /// Returns: the indented string.
 /// Error case: none; n <= 0 is a no-op.
 /// Complexity: O(|s| * n).
-pub fn str_indent(s: Str, n: Int) -> Str {
+pub fn str_indent(s: Str, n: Int) -> Str
+  ensures: n <= 0 => result == s
+  ensures: result.len() >= s.len()
+{
   if n <= 0 {
     return s;
   };
@@ -92,7 +95,10 @@ pub fn str_indent(s: Str, n: Int) -> Str {
 /// Returns: the indented string.
 /// Error case: none; n <= 0 is a no-op.
 /// Complexity: O(|s| * n * |prefix|).
-pub fn str_indent_with(s: Str, n: Int, prefix: Str) -> Str {
+pub fn str_indent_with(s: Str, n: Int, prefix: Str) -> Str
+  ensures: n <= 0 => result == s
+  ensures: result.len() >= s.len()
+{
   if n <= 0 {
     return s;
   };
@@ -109,6 +115,7 @@ pub fn str_indent_with(s: Str, n: Int, prefix: Str) -> Str {
 /// Complexity: O(|s|).
 pub fn str_dedent(s: Str) -> Str
   requires: true  // raw-view scan in the loop (T002 confinement)
+  ensures: result.len() <= s.len()
 {
   var lines = string.str_split(s, "\n");
   var min_indent: Int = -1;
@@ -166,7 +173,9 @@ pub fn str_dedent(s: Str) -> Str
 /// Returns: the unindented string.
 /// Error case: none.
 /// Complexity: O(|s|).
-pub fn str_unindent(s: Str) -> Str {
+pub fn str_unindent(s: Str) -> Str
+  ensures: result.len() <= s.len()
+{
   var lines = string.str_split(s, "\n");
   var out: Vec[UInt8] = Vec[UInt8].new();
   var i: Int = 0;

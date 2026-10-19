@@ -27,7 +27,9 @@ module xiom.string.category
 /// Returns: the two-letter general category code.
 /// Error case: none.
 /// Complexity: O(1).
-pub fn unicode_general_category(c: Char) -> Str {
+pub fn unicode_general_category(c: Char) -> Str
+  ensures: result.len() == 2
+{
   _category(to_int_from_char(c))
 }
 
@@ -36,7 +38,9 @@ pub fn unicode_general_category(c: Char) -> Str {
 /// Returns: true when c is a letter.
 /// Error case: none.
 /// Complexity: O(1).
-pub fn unicode_is_letter(c: Char) -> Bool {
+pub fn unicode_is_letter(c: Char) -> Bool
+  ensures: result => unicode_is_printable(c)
+{
   let cat = _category(to_int_from_char(c));
   _cat_is_letter(cat)
 }
@@ -46,7 +50,9 @@ pub fn unicode_is_letter(c: Char) -> Bool {
 /// Returns: true when c is a decimal digit.
 /// Error case: none.
 /// Complexity: O(1).
-pub fn unicode_is_digit(c: Char) -> Bool {
+pub fn unicode_is_digit(c: Char) -> Bool
+  ensures: result => unicode_is_printable(c)
+{
   let cat = _category(to_int_from_char(c));
   cat == "Nd"
 }
@@ -56,7 +62,9 @@ pub fn unicode_is_digit(c: Char) -> Bool {
 /// Returns: true when c is punctuation.
 /// Error case: none.
 /// Complexity: O(1).
-pub fn unicode_is_punct(c: Char) -> Bool {
+pub fn unicode_is_punct(c: Char) -> Bool
+  ensures: result => unicode_is_printable(c)
+{
   let cat = _category(to_int_from_char(c));
   _cat_is_punct(cat)
 }
@@ -66,7 +74,9 @@ pub fn unicode_is_punct(c: Char) -> Bool {
 /// Returns: true when c is a symbol.
 /// Error case: none.
 /// Complexity: O(1).
-pub fn unicode_is_symbol(c: Char) -> Bool {
+pub fn unicode_is_symbol(c: Char) -> Bool
+  ensures: result => unicode_is_printable(c)
+{
   let cat = _category(to_int_from_char(c));
   _cat_is_symbol(cat)
 }
@@ -76,7 +86,9 @@ pub fn unicode_is_symbol(c: Char) -> Bool {
 /// Returns: true when c is a separator.
 /// Error case: none.
 /// Complexity: O(1).
-pub fn unicode_is_separator(c: Char) -> Bool {
+pub fn unicode_is_separator(c: Char) -> Bool
+  ensures: result => unicode_is_printable(c)
+{
   let cat = _category(to_int_from_char(c));
   _cat_is_separator(cat)
 }
@@ -88,7 +100,9 @@ pub fn unicode_is_separator(c: Char) -> Bool {
 /// Returns: true when c is in category Cc/Cf/Cs/Co/Cn.
 /// Error case: none.
 /// Complexity: O(1).
-pub fn unicode_is_control(c: Char) -> Bool {
+pub fn unicode_is_control(c: Char) -> Bool
+  ensures: result == !unicode_is_printable(c)
+{
   let cat = _category(to_int_from_char(c));
   _cat_is_control(cat)
 }
@@ -100,7 +114,9 @@ pub fn unicode_is_control(c: Char) -> Bool {
 /// Returns: true when c is printable.
 /// Error case: none.
 /// Complexity: O(1).
-pub fn unicode_is_printable(c: Char) -> Bool {
+pub fn unicode_is_printable(c: Char) -> Bool
+  ensures: result == !unicode_is_control(c)
+{
   let cat = _category(to_int_from_char(c));
   !_cat_is_control(cat)
 }

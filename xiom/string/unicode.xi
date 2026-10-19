@@ -41,33 +41,46 @@ use xiom.string.wordbreak;
 // -- Normalization -----------------------------------------------------------
 
 /// Normalize `s` to NFC (canonical composition). See the normalize module.
-pub fn unicode_normalize(s: Str) -> Str {
+pub fn unicode_normalize(s: Str) -> Str
+  ensures: result == unicode_normalize_nfc(s)
+{
   normalize.unicode_normalize_nfc(s)
 }
 
 /// Normalize `s` to NFC (canonical composition).
-pub fn unicode_normalize_nfc(s: Str) -> Str {
+pub fn unicode_normalize_nfc(s: Str) -> Str
+  ensures: s.len() == 0 => result.len() == 0
+{
   normalize.unicode_normalize_nfc(s)
 }
 
 /// Normalize `s` to NFD (canonical decomposition).
-pub fn unicode_normalize_nfd(s: Str) -> Str {
+pub fn unicode_normalize_nfd(s: Str) -> Str
+  ensures: s.len() == 0 => result.len() == 0
+{
   normalize.unicode_normalize_nfd(s)
 }
 
 /// Normalize `s` to NFKC (compatibility composition).
-pub fn unicode_normalize_nfkc(s: Str) -> Str {
+pub fn unicode_normalize_nfkc(s: Str) -> Str
+  ensures: s.len() == 0 => result.len() == 0
+{
   normalize.unicode_normalize_nfkc(s)
 }
 
 /// Normalize `s` to NFKD (compatibility decomposition).
-pub fn unicode_normalize_nfkd(s: Str) -> Str {
+pub fn unicode_normalize_nfkd(s: Str) -> Str
+  ensures: s.len() == 0 => result.len() == 0
+{
   normalize.unicode_normalize_nfkd(s)
 }
 
 /// Normalize `s` using the named form "NFC", "NFD", "NFKC" or "NFKD"
 /// (case-insensitive). Unknown forms return `s` unchanged.
-pub fn unicode_normalize_form(s: Str, form: Str) -> Str {
+pub fn unicode_normalize_form(s: Str, form: Str) -> Str
+  ensures: form == "NFC" => result == unicode_normalize_nfc(s)
+  ensures: form == "NFKD" => result == unicode_normalize_nfkd(s)
+{
   if form == "NFC" { return normalize.unicode_normalize_nfc(s); };
   if form == "nfc" { return normalize.unicode_normalize_nfc(s); };
   if form == "NFD" { return normalize.unicode_normalize_nfd(s); };
@@ -80,14 +93,18 @@ pub fn unicode_normalize_form(s: Str, form: Str) -> Str {
 }
 
 /// True when `s` is already normalized to the named form.
-pub fn unicode_is_normalized(s: Str, form: Str) -> Bool {
+pub fn unicode_is_normalized(s: Str, form: Str) -> Bool
+  ensures: result => unicode_normalize_form(s, form) == s
+{
   let norm = unicode_normalize_form(s, form);
   norm == s
 }
 
 /// Canonical composition of `a` + `b` (b a combining mark), None when not
 /// composable. Covers ASCII + Latin-1 accents.
-pub fn unicode_compose_pair(a: Char, b: Char) -> Option[Char] {
+pub fn unicode_compose_pair(a: Char, b: Char) -> Option[Char]
+  ensures: result is Some => result.value != a && result.value != b
+{
   let ca = to_int_from_char(a);
   let cb = to_int_from_char(b);
   let cp = _compose_cp(ca, cb);
@@ -101,7 +118,9 @@ pub fn unicode_compose_pair(a: Char, b: Char) -> Option[Char] {
 /// char itself when undecomposable. NOTE: Vec[Char] stores 1 byte per element
 /// (COMPILER_BUGS.md BUG 12), so codepoints above U+00FF in the result are
 /// truncated; prefer unicode_normalize_nfd for exact decomposition.
-pub fn unicode_decompose(c: Char) -> Vec[Char] {
+pub fn unicode_decompose(c: Char) -> Vec[Char]
+  ensures: result.len() == 1 || result.len() == 2
+{
   var out = Vec[Char].new();
   let cp = to_int_from_char(c);
   let d = _decomp_cp(cp);
@@ -115,7 +134,9 @@ pub fn unicode_decompose(c: Char) -> Vec[Char] {
 }
 
 /// Split `s` into runs of a base character plus its trailing combining marks.
-pub fn unicode_combining_sequence(s: Str) -> Vec[Str] {
+pub fn unicode_combining_sequence(s: Str) -> Vec[Str]
+  ensures: result.len() <= s.len()
+{
   let len = string.str_len(s);
   let base = s.c_str();
   var out = Vec[Str].new();
@@ -162,18 +183,24 @@ pub fn unicode_nfkc_quick_check(s: Str) -> Bool
 // -- Case --------------------------------------------------------------------
 
 /// Full case folding of `s` for caseless comparison.
-pub fn unicode_casefold(s: Str) -> Str {
+pub fn unicode_casefold(s: Str) -> Str
+  ensures: result.len() <= 4 * s.len()
+{
   casefold.str_casefold(s)
 }
 
 /// Simple 1:1 case fold of one char (ASCII/Latin-1/Greek/Cyrillic).
-pub fn unicode_casefold_char(c: Char) -> Char {
+pub fn unicode_casefold_char(c: Char) -> Char
+  ensures: unicode_casefold_char(result) == result
+{
   let cp = _lower_map_cp(to_int_from_char(c));
   to_char(cp)
 }
 
 /// Case fold of `s` using the Turkic I/U-dotted rules.
-pub fn unicode_casefold_turkic(s: Str) -> Str {
+pub fn unicode_casefold_turkic(s: Str) -> Str
+  ensures: s.len() == 0 => result.len() == 0
+{
   let len = string.str_len(s);
   var out = Vec[UInt8].new();
   var i: Int = 0;
@@ -199,7 +226,9 @@ pub fn unicode_casefold_turkic(s: Str) -> Str {
 }
 
 /// Titlecase transform: the first cased letter of each word uppercased.
-pub fn unicode_titlecase(s: Str) -> Str {
+pub fn unicode_titlecase(s: Str) -> Str
+  ensures: s.len() == 0 => result.len() == 0
+{
   let len = string.str_len(s);
   var out = Vec[UInt8].new();
   var i: Int = 0;
@@ -232,7 +261,9 @@ pub fn unicode_titlecase(s: Str) -> Str {
 }
 
 /// Titlecase only the first word of `s`, leaving the rest unchanged.
-pub fn unicode_titlecase_word(s: Str) -> Str {
+pub fn unicode_titlecase_word(s: Str) -> Str
+  ensures: s.len() == 0 => result.len() == 0
+{
   let len = string.str_len(s);
   var out = Vec[UInt8].new();
   var i: Int = 0;
@@ -266,19 +297,25 @@ pub fn unicode_titlecase_word(s: Str) -> Str {
 }
 
 /// Simple 1:1 lowercase mapping of `c`, `c` itself when none exists.
-pub fn unicode_lowercase_map(c: Char) -> Char {
+pub fn unicode_lowercase_map(c: Char) -> Char
+  ensures: unicode_lowercase_map(result) == result
+{
   let cp = _lower_map_cp(to_int_from_char(c));
   to_char(cp)
 }
 
 /// Simple 1:1 uppercase mapping of `c`, `c` itself when none exists.
-pub fn unicode_uppercase_map(c: Char) -> Char {
+pub fn unicode_uppercase_map(c: Char) -> Char
+  ensures: unicode_uppercase_map(result) == result
+{
   let cp = _upper_map_cp(to_int_from_char(c));
   to_char(cp)
 }
 
 /// Full lowercase of `s` (1:1 mappings; no multi-char expansions).
-pub fn unicode_tolower_full(s: Str) -> Str {
+pub fn unicode_tolower_full(s: Str) -> Str
+  ensures: s.len() == 0 => result.len() == 0
+{
   let len = string.str_len(s);
   var out = Vec[UInt8].new();
   var i: Int = 0;
@@ -301,7 +338,9 @@ pub fn unicode_tolower_full(s: Str) -> Str {
 }
 
 /// Full uppercase of `s` (1:1 mappings; no multi-char expansions).
-pub fn unicode_toupper_full(s: Str) -> Str {
+pub fn unicode_toupper_full(s: Str) -> Str
+  ensures: result.len() >= s.len()
+{
   let len = string.str_len(s);
   var out = Vec[UInt8].new();
   var i: Int = 0;
@@ -324,13 +363,17 @@ pub fn unicode_toupper_full(s: Str) -> Str {
 }
 
 /// Simple 1:1 titlecase mapping of `c` (capital form).
-pub fn unicode_titlecase_map(c: Char) -> Char {
+pub fn unicode_titlecase_map(c: Char) -> Char
+  ensures: unicode_titlecase_map(result) == result
+{
   let cp = _upper_map_cp(to_int_from_char(c));
   to_char(cp)
 }
 
 /// True when `c` is a titlecase letter (Lt).
-pub fn unicode_istitlecase(c: Char) -> Bool {
+pub fn unicode_istitlecase(c: Char) -> Bool
+  ensures: result => unicode_is_letter(c)
+{
   let cat = category.unicode_general_category(c);
   cat == "Lt"
 }
@@ -341,6 +384,7 @@ pub fn unicode_istitlecase(c: Char) -> Bool {
 /// marks + ZWJ sequences + emoji modifiers).
 pub fn unicode_grapheme_clusters(s: Str) -> Vec[Str]
   ensures: result.len() >= 0
+  ensures: result.len() <= s.len()
 {
   let len = string.str_len(s);
   var out = Vec[Str].new();
@@ -377,6 +421,7 @@ pub fn unicode_grapheme_count(s: Str) -> Int
 /// Byte offsets of word boundaries in `s`.
 pub fn unicode_word_boundaries(s: Str) -> Vec[Int]
   ensures: result.len() >= 0
+  ensures: result.len() <= s.len()
 {
   wordbreak.unicode_word_boundaries(s)
 }
@@ -392,6 +437,7 @@ pub fn unicode_word_count(s: Str) -> Int
 /// Byte offsets of sentence boundaries in `s`.
 pub fn unicode_sentence_boundaries(s: Str) -> Vec[Int]
   ensures: result.len() >= 0
+  ensures: result.len() <= s.len()
 {
   sentencebreak.unicode_sentence_boundaries(s)
 }
@@ -407,6 +453,7 @@ pub fn unicode_sentence_count(s: Str) -> Int
 /// Byte offsets of allowed line break points in `s`.
 pub fn unicode_line_break_points(s: Str) -> Vec[Int]
   ensures: result.len() >= 0
+  ensures: result.len() <= s.len()
 {
   linebreak.unicode_line_break_points(s)
 }
@@ -414,6 +461,7 @@ pub fn unicode_line_break_points(s: Str) -> Vec[Int]
 /// Split `s` into lines at the allowed break points.
 pub fn unicode_line_breaks(s: Str) -> Vec[Str]
   ensures: result.len() >= 0
+  ensures: result.len() >= 1
 {
   linebreak.unicode_split_lines(s)
 }
@@ -421,6 +469,8 @@ pub fn unicode_line_breaks(s: Str) -> Vec[Str]
 /// Byte offset just past the grapheme starting at `offset`.
 pub fn unicode_next_grapheme(s: Str, offset: Int) -> Int
   ensures: result >= 0
+  ensures: result <= s.len()
+  ensures: (offset < 0 || offset >= s.len()) => result == s.len()
 {
   let len = string.str_len(s);
   if offset < 0 || offset >= len {
@@ -446,6 +496,8 @@ pub fn unicode_next_grapheme(s: Str, offset: Int) -> Int
 /// Byte offset of the grapheme start ending before `offset`.
 pub fn unicode_prev_grapheme(s: Str, offset: Int) -> Int
   ensures: result >= 0
+  ensures: result <= s.len()
+  ensures: offset <= 0 => result == 0
 {
   let len = string.str_len(s);
   if offset <= 0 {
@@ -478,6 +530,7 @@ pub fn unicode_prev_grapheme(s: Str, offset: Int) -> Int
 /// East Asian Width of `c`: 0, 1 or 2.
 pub fn unicode_ea_width(c: Char) -> Int
   ensures: result >= 0
+  ensures: result <= 2
 {
   ea_width.unicode_ea_width(c)
 }
@@ -485,6 +538,7 @@ pub fn unicode_ea_width(c: Char) -> Int
 /// Total display width of `s` in cells.
 pub fn unicode_display_width(s: Str) -> Int
   ensures: result >= 0
+  ensures: result <= 2 * s.len()
 {
   ea_width.unicode_display_width(s)
 }
@@ -588,7 +642,9 @@ pub fn unicode_count_emoji(s: Str) -> Int
 }
 
 /// True when `s` contains at least one emoji.
-pub fn unicode_has_emoji(s: Str) -> Bool {
+pub fn unicode_has_emoji(s: Str) -> Bool
+  ensures: result == (unicode_count_emoji(s) > 0)
+{
   emoji.unicode_has_emoji(s)
 }
 
@@ -602,6 +658,7 @@ pub fn unicode_emoji_presentation(c: Char) -> Bool {
 /// regional-indicator flag pairs) from `s`.
 pub fn unicode_emoji_sequences(s: Str) -> Vec[Str]
   ensures: result.len() >= 0
+  ensures: result.len() <= s.len()
 {
   let len = string.str_len(s);
   var out = Vec[Str].new();
@@ -633,19 +690,25 @@ pub fn unicode_emoji_sequences(s: Str) -> Vec[Str]
 }
 
 /// True when `c` is an emoji modifier (skin tone).
-pub fn unicode_emoji_modifier(c: Char) -> Bool {
+pub fn unicode_emoji_modifier(c: Char) -> Bool
+  ensures: result => unicode_is_emoji(c)
+{
   let cp = to_int_from_char(c);
   cp >= 0x1F3FB && cp <= 0x1F3FF
 }
 
 /// True when `c` is the ZWJ emoji joiner (U+200D).
-pub fn unicode_emoji_zwj(c: Char) -> Bool {
+pub fn unicode_emoji_zwj(c: Char) -> Bool
+  ensures: result => unicode_is_emoji(c)
+{
   let cp = to_int_from_char(c);
   cp == 0x200D
 }
 
 /// Emoji version implemented by the tables.
-pub fn unicode_emoji_version() -> Str {
+pub fn unicode_emoji_version() -> Str
+  ensures: result == "15.0"
+{
   "15.0"
 }
 
@@ -659,12 +722,16 @@ pub fn unicode_script(c: Char) -> Str
 }
 
 /// Long English script name for an ISO 15924 code.
-pub fn unicode_script_name(code: Str) -> Str {
+pub fn unicode_script_name(code: Str) -> Str
+  ensures: result.len() >= 2
+{
   script.unicode_script_name(code)
 }
 
 /// Unicode block name containing `c`, e.g. "Basic Latin".
-pub fn unicode_block(c: Char) -> Str {
+pub fn unicode_block(c: Char) -> Str
+  ensures: result.len() >= 4
+{
   let cp = to_int_from_char(c);
   _block_cp(cp)
 }
@@ -677,13 +744,17 @@ pub fn unicode_general_category(c: Char) -> Str
 }
 
 /// Long general category name of `c`, e.g. "Uppercase_Letter".
-pub fn unicode_general_category_name(c: Char) -> Str {
+pub fn unicode_general_category_name(c: Char) -> Str
+  ensures: result.len() >= 3
+{
   let cat = category.unicode_general_category(c);
   _cat_long_name(cat)
 }
 
 /// Unicode age of `c` as a version string (approximate for the compact table).
-pub fn unicode_age(c: Char) -> Str {
+pub fn unicode_age(c: Char) -> Str
+  ensures: result.len() >= 3
+{
   let cp = to_int_from_char(c);
   if cp >= 0x1F300 && cp <= 0x1FAFF { return "6.0"; };
   if cp >= 0x1F900 && cp <= 0x1FAFF { return "9.0"; };
@@ -698,43 +769,58 @@ pub fn unicode_age(c: Char) -> Str {
 /// Canonical combining class of `c`, 0 when spacing.
 pub fn unicode_combining_class(c: Char) -> Int
   ensures: result >= 0
+  ensures: result <= 240
 {
   let cp = to_int_from_char(c);
   _ccc_cp(cp)
 }
 
 /// True when `c` is in a letter category (L*).
-pub fn unicode_is_letter(c: Char) -> Bool {
+pub fn unicode_is_letter(c: Char) -> Bool
+  ensures: result => unicode_is_printable(c)
+{
   category.unicode_is_letter(c)
 }
 
 /// True when `c` is a decimal digit (Nd).
-pub fn unicode_is_digit(c: Char) -> Bool {
+pub fn unicode_is_digit(c: Char) -> Bool
+  ensures: result => unicode_is_printable(c)
+{
   category.unicode_is_digit(c)
 }
 
 /// True when `c` is punctuation (P*).
-pub fn unicode_is_punct(c: Char) -> Bool {
+pub fn unicode_is_punct(c: Char) -> Bool
+  ensures: result => unicode_is_printable(c)
+{
   category.unicode_is_punct(c)
 }
 
 /// True when `c` is a symbol (S*).
-pub fn unicode_is_symbol(c: Char) -> Bool {
+pub fn unicode_is_symbol(c: Char) -> Bool
+  ensures: result => unicode_is_printable(c)
+{
   category.unicode_is_symbol(c)
 }
 
 /// True when `c` is a separator (Z*).
-pub fn unicode_is_separator(c: Char) -> Bool {
+pub fn unicode_is_separator(c: Char) -> Bool
+  ensures: result => unicode_is_printable(c)
+{
   category.unicode_is_separator(c)
 }
 
 /// True when `c` is a control or format character (Cc, Cf, Cs, Co, Cn).
-pub fn unicode_is_control(c: Char) -> Bool {
+pub fn unicode_is_control(c: Char) -> Bool
+  ensures: result == !unicode_is_printable(c)
+{
   category.unicode_is_control(c)
 }
 
 /// True when `c` is printable (not control, format or unassigned).
-pub fn unicode_is_printable(c: Char) -> Bool {
+pub fn unicode_is_printable(c: Char) -> Bool
+  ensures: result == !unicode_is_control(c)
+{
   category.unicode_is_printable(c)
 }
 
@@ -792,22 +878,30 @@ pub fn unicode_is_ideographic(c: Char) -> Bool {
 // -- Bidi --------------------------------------------------------------------
 
 /// Bidi class of `c`, e.g. "L", "R", "AL", "NSM".
-pub fn unicode_bidi_class(c: Char) -> Str {
+pub fn unicode_bidi_class(c: Char) -> Str
+  ensures: result.len() >= 1 && result.len() <= 3
+{
   bidi.unicode_bidi_class(c)
 }
 
 /// True when `c` has the Bidi_Mirrored property.
-pub fn unicode_mirrored(c: Char) -> Bool {
+pub fn unicode_mirrored(c: Char) -> Bool
+  ensures: result == (unicode_mirror_char(c) != c)
+{
   bidi.unicode_mirrored(c)
 }
 
 /// Mirrored counterpart of `c`, `c` itself when not mirrored.
-pub fn unicode_mirror_char(c: Char) -> Char {
+pub fn unicode_mirror_char(c: Char) -> Char
+  ensures: unicode_mirror_char(result) == c
+{
   bidi.unicode_mirror_char(c)
 }
 
 /// Scan `s` for bidi bracket characters: one single-char string per bracket.
-pub fn unicode_bidi_brackets(s: Str) -> Vec[Str] {
+pub fn unicode_bidi_brackets(s: Str) -> Vec[Str]
+  ensures: result.len() <= s.len()
+{
   let len = string.str_len(s);
   var out = Vec[Str].new();
   var i: Int = 0;
@@ -903,7 +997,9 @@ pub fn unicode_is_alphabetic(c: Char) -> Bool {
 }
 
 /// True when `c` has the Cased property (uppercase/lowercase/titlecase).
-pub fn unicode_is_cased(c: Char) -> Bool {
+pub fn unicode_is_cased(c: Char) -> Bool
+  ensures: result => unicode_is_letter(c)
+{
   let cat = category.unicode_general_category(c);
   cat == "Lu" || cat == "Ll" || cat == "Lt"
 }
@@ -917,6 +1013,7 @@ pub fn unicode_is_numeric(c: Char) -> Bool {
 /// Decimal numeric value of `c` (Nd), None when not a decimal digit.
 pub fn unicode_decimal_value(c: Char) -> Option[Int]
   ensures: result is Some => result.value >= 0
+  ensures: result is Some => result.value <= 9
 {
   let cp = to_int_from_char(c);
   var v: Int = -1;
@@ -938,6 +1035,7 @@ pub fn unicode_decimal_value(c: Char) -> Option[Int]
 /// Digit numeric value of `c` (Nd and Nl/No digit forms), None otherwise.
 pub fn unicode_digit_value(c: Char) -> Option[Int]
   ensures: result is Some => result.value >= 0
+  ensures: result is Some => result.value <= 9
 {
   let d = unicode_decimal_value(c);
   if d.is_some {
@@ -956,6 +1054,7 @@ pub fn unicode_digit_value(c: Char) -> Option[Int]
 /// Full numeric value of `c` including fractions, None when none.
 pub fn unicode_numeric_value(c: Char) -> Option[Float64]
   ensures: result is Some => result.value >= 0.0
+  ensures: result is Some => result.value <= 9.0
 {
   let d = unicode_digit_value(c);
   if d.is_some {

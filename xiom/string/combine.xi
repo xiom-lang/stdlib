@@ -75,7 +75,10 @@ fn _next_combination(idx: &mut Vec[Int], n: Int, k: Int) -> Bool {
 /// Returns: a Vec[Str] with C(|s|, n) elements.
 /// Error case: n < 1 or n > s.len() => empty vector.
 /// Complexity: O(C(|s|, n) * n).
-pub fn str_combinations(s: Str, n: Int) -> Vec[Str] {
+pub fn str_combinations(s: Str, n: Int) -> Vec[Str]
+  ensures: (n < 1 || n > s.len()) => result.len() == 0
+  ensures: (n >= 1 && n <= s.len()) => result.len() >= 1
+{
   var result = Vec[Str].new();
   let len = string.str_len(s);
   if n < 1 || n > len {
@@ -110,7 +113,9 @@ pub fn str_combinations(s: Str, n: Int) -> Vec[Str] {
 /// Returns: the ranked combination string.
 /// Error case: "" when n < 1, n > s.len(), rank < 0, or rank >= C(|s|, n).
 /// Complexity: O(n^2) with O(1) binomial lookups.
-pub fn str_combination_at(s: Str, n: Int, rank: Int) -> Str {
+pub fn str_combination_at(s: Str, n: Int, rank: Int) -> Str
+  ensures: result.len() == 0 || result.len() == n
+{
   let len = string.str_len(s);
   if n < 1 || n > len {
     return "";

@@ -26,7 +26,9 @@ module xiom.string.script
 /// Returns: the four-letter ISO 15924 script code.
 /// Error case: none.
 /// Complexity: O(1).
-pub fn unicode_script(c: Char) -> Str {
+pub fn unicode_script(c: Char) -> Str
+  ensures: result.len() == 4
+{
   let code = _script_code(to_int_from_char(c));
   _script_name(code)
 }
@@ -37,7 +39,9 @@ pub fn unicode_script(c: Char) -> Str {
 /// Returns: the long script name.
 /// Error case: none; unknown codes map to "Unknown".
 /// Complexity: O(1).
-pub fn unicode_script_name(code: Str) -> Str {
+pub fn unicode_script_name(code: Str) -> Str
+  ensures: result.len() >= 2
+{
   _code_to_name(code)
 }
 

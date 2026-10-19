@@ -20,7 +20,10 @@ use xiom.string;
 /// Returns: a Vec[Str] of chunks covering `s` exactly once.
 /// Error case: n < 1 or s.len() == 0 => empty vector.
 /// Complexity: O(s.len()).
-pub fn str_chunk(s: Str, n: Int) -> Vec[Str] {
+pub fn str_chunk(s: Str, n: Int) -> Vec[Str]
+  ensures: (n < 1 || s.len() == 0) => result.len() == 0
+  ensures: result.len() <= s.len()
+{
   var result = Vec[Str].new();
   let len = string.str_len(s);
   if n < 1 {
@@ -49,7 +52,10 @@ pub fn str_chunk(s: Str, n: Int) -> Vec[Str] {
 /// Returns: a Vec[Str] of chunks in source order (first may be shorter).
 /// Error case: n < 1 or s.len() == 0 => empty vector.
 /// Complexity: O(s.len()).
-pub fn str_chunks_reverse(s: Str, n: Int) -> Vec[Str] {
+pub fn str_chunks_reverse(s: Str, n: Int) -> Vec[Str]
+  ensures: (n < 1 || s.len() == 0) => result.len() == 0
+  ensures: result.len() <= s.len()
+{
   var result = Vec[Str].new();
   let len = string.str_len(s);
   if n < 1 {
@@ -83,7 +89,10 @@ pub fn str_chunks_reverse(s: Str, n: Int) -> Vec[Str] {
 /// Returns: a Vec[Str] with one element per start position 0..len-n.
 /// Error case: n < 1 or len < n => empty vector.
 /// Complexity: O(s.len()).
-pub fn str_windows(s: Str, n: Int) -> Vec[Str] {
+pub fn str_windows(s: Str, n: Int) -> Vec[Str]
+  ensures: (n < 1 || s.len() < n) => result.len() == 0
+  ensures: result.len() <= s.len()
+{
   var result = Vec[Str].new();
   let len = string.str_len(s);
   if n < 1 {

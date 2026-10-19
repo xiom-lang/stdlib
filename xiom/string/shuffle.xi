@@ -199,7 +199,9 @@ fn _sh_shuffle(chars: &Vec[Str], use_rand: Bool, seed: Int) -> Vec[Str] {
 /// Returns: a random permutation of the characters of `s`.
 /// Error case: none; the empty string maps to itself.
 /// Complexity: O(|s|).
-pub fn str_shuffle(s: Str) -> Str {
+pub fn str_shuffle(s: Str) -> Str
+  ensures: result.len() == s.len()
+{
   let chars = _sh_split(s);
   let shuffled = _sh_shuffle(&chars, true, 0);
   let r = _sh_join(&shuffled);
@@ -212,7 +214,9 @@ pub fn str_shuffle(s: Str) -> Str {
 /// Returns: the seeded permutation of `s`.
 /// Error case: none; the empty string maps to itself.
 /// Complexity: O(|s|).
-pub fn str_shuffle_seeded(s: Str, seed: Int) -> Str {
+pub fn str_shuffle_seeded(s: Str, seed: Int) -> Str
+  ensures: result.len() == s.len()
+{
   let chars = _sh_split(s);
   let shuffled = _sh_shuffle(&chars, false, seed);
   let r = _sh_join(&shuffled);
@@ -225,7 +229,9 @@ pub fn str_shuffle_seeded(s: Str, seed: Int) -> Str {
 /// Returns: the shuffled words joined by single spaces.
 /// Error case: none; a string with no words yields "".
 /// Complexity: O(|s|).
-pub fn str_shuffle_words(s: Str) -> Str {
+pub fn str_shuffle_words(s: Str) -> Str
+  ensures: result.len() <= s.len()
+{
   let words = string.words(s);
   let shuffled = _sh_shuffle(&words, true, 0);
   let r = _sh_join_words(&shuffled);

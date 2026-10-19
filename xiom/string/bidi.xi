@@ -26,7 +26,9 @@ module xiom.string.bidi
 /// Returns: the bidi class code.
 /// Error case: none.
 /// Complexity: O(1).
-pub fn unicode_bidi_class(c: Char) -> Str {
+pub fn unicode_bidi_class(c: Char) -> Str
+  ensures: result.len() >= 1 && result.len() <= 3
+{
   let code = _bidi_code(to_int_from_char(c));
   _bidi_name(code)
 }
@@ -39,7 +41,9 @@ pub fn unicode_bidi_class(c: Char) -> Str {
 /// Returns: true when c is mirrored.
 /// Error case: none.
 /// Complexity: O(1).
-pub fn unicode_mirrored(c: Char) -> Bool {
+pub fn unicode_mirrored(c: Char) -> Bool
+  ensures: result == (unicode_mirror_char(c) != c)
+{
   let cp = to_int_from_char(c);
   _mirror_cp(cp) >= 0
 }
@@ -51,7 +55,9 @@ pub fn unicode_mirrored(c: Char) -> Bool {
 /// Returns: the mirrored counterpart, or c itself.
 /// Error case: none.
 /// Complexity: O(1).
-pub fn unicode_mirror_char(c: Char) -> Char {
+pub fn unicode_mirror_char(c: Char) -> Char
+  ensures: unicode_mirror_char(result) == c
+{
   let cp = to_int_from_char(c);
   let m = _mirror_cp(cp);
   if m >= 0 {

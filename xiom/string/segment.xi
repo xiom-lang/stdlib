@@ -172,7 +172,9 @@ fn _clusterize(chars: &Vec[Str]) -> Vec[Str] {
 /// Returns: a Vec[Str] whose concatenation equals `s`.
 /// Error case: none; malformed UTF-8 bytes pass through as single bytes.
 /// Complexity: O(|s|).
-pub fn unicode_grapheme_clusters(s: Str) -> Vec[Str] {
+pub fn unicode_grapheme_clusters(s: Str) -> Vec[Str]
+  ensures: result.len() <= s.len()
+{
   let chars = _split_chars(s);
   let clusters = _clusterize(&chars);
   clusters
@@ -185,7 +187,9 @@ pub fn unicode_grapheme_clusters(s: Str) -> Vec[Str] {
 /// Returns: a Vec[Int] with the first element 0 and the last element |s|.
 /// Error case: none; empty input yields [0].
 /// Complexity: O(|s|).
-pub fn unicode_segment_graphemes(s: Str) -> Vec[Int] {
+pub fn unicode_segment_graphemes(s: Str) -> Vec[Int]
+  ensures: result.len() == unicode_grapheme_clusters(s).len() + 1
+{
   var out = Vec[Int].new();
   out.push(0);
   let clusters = unicode_grapheme_clusters(s);
