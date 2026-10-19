@@ -20,7 +20,10 @@ use xiom.misc;
 /// input is empty or no characters match.
 /// Errors: none (empty inputs are handled in the body).
 /// Complexity: O(|a| * |b|) worst case.
-pub fn jaro_similarity(a: Str, b: Str) -> Float64 {
+pub fn jaro_similarity(a: Str, b: Str) -> Float64
+  ensures: result >= 0.0 && result <= 1.0
+  ensures: a == b => result == 1.0
+{
   misc.jaro_similarity(a, b)
 }
 
@@ -31,6 +34,9 @@ pub fn jaro_similarity(a: Str, b: Str) -> Float64 {
 /// Returns: the Jaro-Winkler score in 0.0..1.0.
 /// Errors: none.
 /// Complexity: O(|a| * |b|) worst case.
-pub fn jaro_winkler_similarity(a: Str, b: Str) -> Float64 {
+pub fn jaro_winkler_similarity(a: Str, b: Str) -> Float64
+  ensures: result >= 0.0 && result <= 1.0
+  ensures: a == b => result == 1.0
+{
   misc.jaro_winkler_similarity(a, b)
 }

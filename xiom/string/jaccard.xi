@@ -23,6 +23,10 @@ use xiom.text.similarity;
 /// or when both inputs have no n-grams.
 /// Errors: none (empty/short inputs are handled in the body).
 /// Complexity: O(|a| * |b|) worst case.
-pub fn jaccard_similarity(a: Str, b: Str, n: Int) -> Float64 {
+pub fn jaccard_similarity(a: Str, b: Str, n: Int) -> Float64
+  ensures: result >= 0.0
+  ensures: n < 1 || a.len() < n || b.len() < n => result == 0.0
+  ensures: a == b && n >= 1 && a.len() >= n => result == 1.0
+{
   similarity.jaccard_similarity(a, b, n)
 }

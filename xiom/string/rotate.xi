@@ -35,7 +35,10 @@ fn _norm(n: Int, len: Int) -> Int {
 /// Returns: the rotated string.
 /// Error case: none; the empty string is returned unchanged.
 /// Complexity: O(|s|).
-pub fn str_rotate(s: Str, n: Int) -> Str {
+pub fn str_rotate(s: Str, n: Int) -> Str
+  ensures: result.len() == s.len()
+  ensures: n == 0 => result == s
+{
   let len = string.str_len(s);
   let k = _norm(n, len);
   if len == 0 || k == 0 {
@@ -54,7 +57,10 @@ pub fn str_rotate(s: Str, n: Int) -> Str {
 /// Returns: the rotated string.
 /// Error case: none; the empty string is returned unchanged.
 /// Complexity: O(|s|).
-pub fn str_rotate_left(s: Str, n: Int) -> Str {
+pub fn str_rotate_left(s: Str, n: Int) -> Str
+  ensures: result.len() == s.len()
+  ensures: n == 0 => result == s
+{
   let len = string.str_len(s);
   let k = _norm(n, len);
   if len == 0 || k == 0 {
@@ -72,7 +78,10 @@ pub fn str_rotate_left(s: Str, n: Int) -> Str {
 /// Returns: the rotated string.
 /// Error case: none; the empty string is returned unchanged.
 /// Complexity: O(|s|).
-pub fn str_rotate_right(s: Str, n: Int) -> Str {
+pub fn str_rotate_right(s: Str, n: Int) -> Str
+  ensures: result.len() == s.len()
+  ensures: n == 0 => result == s
+{
   let r = str_rotate(s, n);
   r
 }

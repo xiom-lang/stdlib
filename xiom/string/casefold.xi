@@ -26,7 +26,10 @@ use xiom.char;
 /// Returns: the case-folded string.
 /// Error case: none; malformed UTF-8 bytes pass through unchanged.
 /// Complexity: O(|s|).
-pub fn str_casefold(s: Str) -> Str {
+pub fn str_casefold(s: Str) -> Str
+  ensures: s.len() == 0 => result == ""
+  ensures: result.len() <= 4 * s.len()
+{
   let len = string.str_len(s);
   var out = Vec[UInt8].new();
   var i: Int = 0;
@@ -61,7 +64,10 @@ pub fn str_casefold(s: Str) -> Str {
 /// Returns: the ASCII-folded string.
 /// Error case: none.
 /// Complexity: O(|s|).
-pub fn str_casefold_ascii(s: Str) -> Str {
+pub fn str_casefold_ascii(s: Str) -> Str
+  ensures: s.len() == 0 => result == ""
+  ensures: result.len() <= 4 * s.len()
+{
   let len = string.str_len(s);
   var out = Vec[UInt8].new();
   var i: Int = 0;

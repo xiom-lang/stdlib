@@ -22,7 +22,9 @@ use xiom.fmt;
 ///          entry point (reserved for API symmetry).
 /// Error case: none.
 /// Complexity: O(|spec| + |value display|).
-pub fn str_format1[T](spec: Str, a: T) -> Result[Str, Str] {
+pub fn str_format1[T](spec: Str, a: T) -> Result[Str, Str]
+  ensures: result.is_ok == true
+{
   let r = fmt.format1(spec, a);
   Ok(r)
 }
@@ -33,7 +35,9 @@ pub fn str_format1[T](spec: Str, a: T) -> Result[Str, Str] {
 /// Returns: Ok with the formatted string.
 /// Error case: none.
 /// Complexity: O(|spec| + |display|).
-pub fn str_format2[T, U](spec: Str, a: T, b: U) -> Result[Str, Str] {
+pub fn str_format2[T, U](spec: Str, a: T, b: U) -> Result[Str, Str]
+  ensures: result.is_ok == true
+{
   let r = fmt.format2(spec, a, b);
   Ok(r)
 }
@@ -43,7 +47,9 @@ pub fn str_format2[T, U](spec: Str, a: T, b: U) -> Result[Str, Str] {
 /// Returns: Ok with the formatted string.
 /// Error case: none.
 /// Complexity: O(|spec| + |display|).
-pub fn str_format3[T, U, V](spec: Str, a: T, b: U, c: V) -> Result[Str, Str] {
+pub fn str_format3[T, U, V](spec: Str, a: T, b: U, c: V) -> Result[Str, Str]
+  ensures: result.is_ok == true
+{
   let r = fmt.format3(spec, a, b, c);
   Ok(r)
 }

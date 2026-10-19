@@ -28,7 +28,10 @@ use xiom.misc.glob;
 /// Returns: true when `s` matches `pattern`.
 /// Error case: none.
 /// Complexity: O(|pattern| * |s|) worst case.
-pub fn glob_match(pattern: Str, s: Str) -> Bool {
+pub fn glob_match(pattern: Str, s: Str) -> Bool
+  ensures: (pattern.len() == 0) => (result == (s.len() == 0))
+  ensures: (pattern == "*") => (result == true)
+{
   xiom.misc.glob.glob_match(pattern, s)
 }
 
@@ -38,6 +41,9 @@ pub fn glob_match(pattern: Str, s: Str) -> Bool {
 /// Returns: true when `s` matches `pattern` case-insensitively.
 /// Error case: none.
 /// Complexity: O(|pattern| * |s|) worst case.
-pub fn glob_match_case_insensitive(pattern: Str, s: Str) -> Bool {
+pub fn glob_match_case_insensitive(pattern: Str, s: Str) -> Bool
+  ensures: (pattern.len() == 0) => (result == (s.len() == 0))
+  ensures: (pattern == "*") => (result == true)
+{
   xiom.misc.glob.glob_match_case_insensitive(pattern, s)
 }

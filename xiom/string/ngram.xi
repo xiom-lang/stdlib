@@ -22,7 +22,10 @@ use xiom.text.similarity;
 /// `n`. A source of length exactly `n` yields the single n-gram `s`.
 /// Errors: none (short/empty inputs yield an empty list).
 /// Complexity: O(|s|) time with O(|s|) output.
-pub fn ngram_extract(s: Str, n: Int) -> Vec[Str] {
+pub fn ngram_extract(s: Str, n: Int) -> Vec[Str]
+  ensures: n < 1 || s.len() < n => result.len() == 0
+  ensures: n >= 1 && s.len() >= n => result.len() == s.len() - n + 1
+{
   similarity.ngram_extract(s, n)
 }
 
@@ -34,6 +37,8 @@ pub fn ngram_extract(s: Str, n: Int) -> Vec[Str] {
 /// Complexity: O(1).
 pub fn ngram_count(s: Str, n: Int) -> Int
   ensures: result >= 0
+  ensures: n < 1 || s.len() < n => result == 0
+  ensures: n >= 1 && s.len() >= n => result == s.len() - n + 1
 {
   if n <= 0 {
     return 0;

@@ -22,7 +22,10 @@ use xiom.text.similarity;
 /// Returns: the 4-character Soundex code ("" for empty input).
 /// Error case: none; non-alphabetic leading characters yield their code 0.
 /// Complexity: O(|s|).
-pub fn soundex(s: Str) -> Str {
+pub fn soundex(s: Str) -> Str
+  ensures: s.len() == 0 => result.len() == 0
+  ensures: s.len() > 0 => result.len() == 4
+{
   similarity.soundex(s)
 }
 
@@ -32,7 +35,9 @@ pub fn soundex(s: Str) -> Str {
 /// Returns: true when soundex(a) == soundex(b).
 /// Error case: none.
 /// Complexity: O(|a| + |b|).
-pub fn soundex_compare(a: Str, b: Str) -> Bool {
+pub fn soundex_compare(a: Str, b: Str) -> Bool
+  ensures: a == b => result == true
+{
   let ca = similarity.soundex(a);
   let cb = similarity.soundex(b);
   ca == cb
