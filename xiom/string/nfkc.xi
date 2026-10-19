@@ -20,7 +20,9 @@ use xiom.string.normalize;
 /// Returns: the NFKC-normalized string.
 /// Error case: none; malformed UTF-8 bytes pass through approximately.
 /// Complexity: O(|s|).
-pub fn unicode_normalize_nfkc(s: Str) -> Str {
+pub fn unicode_normalize_nfkc(s: Str) -> Str
+  ensures: s.len() == 0 => result.len() == 0
+{
   normalize.unicode_normalize_nfkc(s)
 }
 
@@ -30,6 +32,8 @@ pub fn unicode_normalize_nfkc(s: Str) -> Str {
 /// Returns: the NFKD-normalized string.
 /// Error case: none; malformed UTF-8 bytes pass through approximately.
 /// Complexity: O(|s|).
-pub fn unicode_normalize_nfkd(s: Str) -> Str {
+pub fn unicode_normalize_nfkd(s: Str) -> Str
+  ensures: s.len() == 0 => result.len() == 0
+{
   normalize.unicode_normalize_nfkd(s)
 }

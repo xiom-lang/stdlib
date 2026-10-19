@@ -131,7 +131,10 @@ fn _pm_copy_idx(v: &Vec[Int]) -> Vec[Int] {
 /// Error case: inputs longer than 8 characters return an empty vector
 ///             (documented guard against an impractical result set).
 /// Complexity: O(n! * n).
-pub fn str_permutations(s: Str) -> Vec[Str] {
+pub fn str_permutations(s: Str) -> Vec[Str]
+  ensures: s.len() == 0 => result.len() == 1
+  ensures: s.len() > 8 => result.len() == 0
+{
   var out = Vec[Str].new();
   let len = string.str_len(s);
   if len == 0 {
@@ -164,7 +167,10 @@ pub fn str_permutations(s: Str) -> Vec[Str] {
 /// Error case: n < 0 or n > |s| => empty vector; large inputs are guarded as
 ///             in str_permutations.
 /// Complexity: O(P(n, k) * k).
-pub fn str_permutations_n(s: Str, n: Int) -> Vec[Str] {
+pub fn str_permutations_n(s: Str, n: Int) -> Vec[Str]
+  ensures: (n < 0 || n > s.len()) => result.len() == 0
+  ensures: n == 0 => result.len() == 1
+{
   var out = Vec[Str].new();
   let len = string.str_len(s);
   if n < 0 || n > len {
@@ -207,7 +213,9 @@ pub fn str_permutations_n(s: Str, n: Int) -> Vec[Str] {
 /// Error case: rank < 0 or rank >= |s|! => ""; inputs longer than 20
 ///             characters => "" (factorial range guard).
 /// Complexity: O(|s|^2).
-pub fn str_permutation_at(s: Str, rank: Int) -> Str {
+pub fn str_permutation_at(s: Str, rank: Int) -> Str
+  ensures: result.len() == 0 || result.len() == s.len()
+{
   let len = string.str_len(s);
   if len == 0 {
     return "";

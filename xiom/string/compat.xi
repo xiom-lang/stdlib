@@ -204,7 +204,9 @@ fn _decomp(cp: Int) -> (Int, Int) {
 /// Returns: the NFKC-normalized string.
 /// Error case: none; malformed UTF-8 bytes pass through approximately.
 /// Complexity: O(|s|).
-pub fn unicode_compatibility_normalize(s: Str) -> Str {
+pub fn unicode_compatibility_normalize(s: Str) -> Str
+  ensures: s.len() == 0 => result.len() == 0
+{
   let r = normalize.unicode_normalize_nfkc(s);
   r
 }
@@ -218,7 +220,9 @@ pub fn unicode_compatibility_normalize(s: Str) -> Str {
 /// Returns: a Vec[Str] with one element per code point of `s`.
 /// Error case: none; malformed UTF-8 bytes pass through as single bytes.
 /// Complexity: O(|s|).
-pub fn unicode_decompose(s: Str) -> Vec[Str] {
+pub fn unicode_decompose(s: Str) -> Vec[Str]
+  ensures: result.len() <= s.len()
+{
   var out = Vec[Str].new();
   let len = string.str_len(s);
   var i: Int = 0;

@@ -34,7 +34,10 @@ pub type Map = {
 /// Params: none.
 /// Returns: an empty Map.
 /// Complexity: O(1).
-pub fn map_new() -> Map {
+pub fn map_new() -> Map
+  ensures: result.keys.len() == 0
+  ensures: result.values.len() == 0
+{
   Map{ keys: Vec[Str].new(); values: Vec[Str].new(); }
 }
 
@@ -42,7 +45,11 @@ pub fn map_new() -> Map {
 /// Params: m the map to mutate; key, value the pair to store.
 /// Returns: nothing.
 /// Complexity: O(|m|).
-pub fn map_insert(m: &mut Map, key: Str, value: Str) {
+pub fn map_insert(m: &mut Map, key: Str, value: Str)
+  requires: m.keys.len() == m.values.len()
+  ensures: m.keys.len() == m.values.len()
+  ensures: m.keys.len() >= 1
+{
   var i: Int = 0;
   while i < m.keys.len() {
     let k = m.keys[i];
@@ -282,7 +289,10 @@ fn _render(tpl: Str, values: &Map, strict: Bool, fallback: Str) -> Result[Str, S
 /// Returns: Ok with the compiled Template, Err on malformed placeholders.
 /// Error case: unclosed placeholder, empty name, lone brace.
 /// Complexity: O(|tpl|).
-pub fn template_compile(tpl: Str) -> Result[Template, Str] {
+pub fn template_compile(tpl: Str) -> Result[Template, Str]
+  ensures: result is Ok => result.value.source == tpl
+  ensures: result is Ok => result.value.placeholders.len() <= tpl.len()
+{
   var names = Vec[Str].new();
   let r = _scan_placeholders(tpl, true, &names);
   match r {
@@ -301,7 +311,9 @@ pub fn template_compile(tpl: Str) -> Result[Template, Str] {
 /// Returns: Ok with the rendered string.
 /// Error case: none (the template was already validated at compile time).
 /// Complexity: O(|tpl| + |placeholders| * |map|).
-pub fn template_render_compiled(t: &Template, values: &Map) -> Result[Str, Str] {
+pub fn template_render_compiled(t: &Template, values: &Map) -> Result[Str, Str]
+  ensures: result is Err => result.error.len() > 0
+{
   let r = _render(t.source, values, false, "");
   r
 }
@@ -312,7 +324,9 @@ pub fn template_render_compiled(t: &Template, values: &Map) -> Result[Str, Str] 
 /// Returns: Ok with the rendered string, Err on malformed placeholder syntax.
 /// Error case: unclosed placeholder, empty name, lone brace.
 /// Complexity: O(|tpl| + |placeholders| * |map|).
-pub fn template_render(tpl: Str, values: &Map) -> Result[Str, Str] {
+pub fn template_render(tpl: Str, values: &Map) -> Result[Str, Str]
+  ensures: result is Err => result.error.len() > 0
+{
   let r = _render(tpl, values, false, "");
   r
 }
@@ -323,7 +337,9 @@ pub fn template_render(tpl: Str, values: &Map) -> Result[Str, Str] {
 /// Returns: Ok with the rendered string, Err on malformed placeholder syntax.
 /// Error case: unclosed placeholder, empty name, lone brace.
 /// Complexity: O(|tpl| + |placeholders| * |keys|).
-pub fn template_render_map(tpl: Str, keys: &Vec[Str], values: &Vec[Str]) -> Result[Str, Str] {
+pub fn template_render_map(tpl: Str, keys: &Vec[Str], values: &Vec[Str]) -> Result[Str, Str]
+  ensures: result is Err => result.error.len() > 0
+{
   var m = Map{ keys: Vec[Str].new(); values: Vec[Str].new(); };
   var i: Int = 0;
   while i < keys.len() {
@@ -347,7 +363,9 @@ pub fn template_render_map(tpl: Str, keys: &Vec[Str], values: &Vec[Str]) -> Resu
 /// Returns: Ok with the rendered string, Err on malformed placeholder syntax.
 /// Error case: unclosed placeholder, empty name, lone brace.
 /// Complexity: O(|tpl| + |placeholders| * |map|).
-pub fn template_render_fallback(tpl: Str, values: &Map, fallback: Str) -> Result[Str, Str] {
+pub fn template_render_fallback(tpl: Str, values: &Map, fallback: Str) -> Result[Str, Str]
+  ensures: result is Err => result.error.len() > 0
+{
   let r = _render(tpl, values, false, fallback);
   r
 }
@@ -359,7 +377,9 @@ pub fn template_render_fallback(tpl: Str, values: &Map, fallback: Str) -> Result
 ///          value.
 /// Error case: unclosed placeholder, empty name, lone brace, missing value.
 /// Complexity: O(|tpl| + |placeholders| * |map|).
-pub fn template_render_strict(tpl: Str, values: &Map) -> Result[Str, Str] {
+pub fn template_render_strict(tpl: Str, values: &Map) -> Result[Str, Str]
+  ensures: result is Err => result.error.len() > 0
+{
   let r = _render(tpl, values, true, "");
   r
 }
@@ -371,7 +391,10 @@ pub fn template_render_strict(tpl: Str, values: &Map) -> Result[Str, Str] {
 /// Returns: the escaped text.
 /// Error case: none.
 /// Complexity: O(|s|).
-pub fn template_escape(s: Str) -> Str {
+pub fn template_escape(s: Str) -> Str
+  ensures: result.len() >= s.len()
+  ensures: result.len() <= 2 * s.len()
+{
   var out: Vec[UInt8] = Vec[UInt8].new();
   let len = string.str_len(s);
   var i: Int = 0;
@@ -395,7 +418,9 @@ pub fn template_escape(s: Str) -> Str {
 /// Returns: the restored text.
 /// Error case: none.
 /// Complexity: O(|s|).
-pub fn template_unescape(s: Str) -> Str {
+pub fn template_unescape(s: Str) -> Str
+  ensures: result.len() <= s.len()
+{
   var out: Vec[UInt8] = Vec[UInt8].new();
   let len = string.str_len(s);
   var i: Int = 0;
@@ -423,7 +448,9 @@ pub fn template_unescape(s: Str) -> Str {
 /// Params: tpl the template text.
 /// Returns: true when a placeholder is present.
 /// Complexity: O(|tpl|).
-pub fn template_has_placeholders(tpl: Str) -> Bool {
+pub fn template_has_placeholders(tpl: Str) -> Bool
+  ensures: result == (template_placeholder_count(tpl) > 0)
+{
   var names = Vec[Str].new();
   let n = _scan_tolerant(tpl, &names);
   n > 0
@@ -434,7 +461,9 @@ pub fn template_has_placeholders(tpl: Str) -> Bool {
 /// Params: tpl the template text.
 /// Returns: a Vec[Str] of distinct names.
 /// Complexity: O(|tpl|).
-pub fn template_placeholders(tpl: Str) -> Vec[Str] {
+pub fn template_placeholders(tpl: Str) -> Vec[Str]
+  ensures: result.len() <= tpl.len()
+{
   var names = Vec[Str].new();
   let n = _scan_tolerant(tpl, &names);
   let _ = n;
@@ -458,7 +487,9 @@ pub fn template_placeholder_count(tpl: Str) -> Int
 /// Returns: Ok(()) when valid, Err describing the first problem.
 /// Error case: unclosed placeholder, empty name, lone brace, braces in a name.
 /// Complexity: O(|tpl|).
-pub fn template_validate(tpl: Str) -> Result[(), Str] {
+pub fn template_validate(tpl: Str) -> Result[(), Str]
+  ensures: result is Err => result.error.len() > 0
+{
   var names = Vec[Str].new();
   let r = _scan_placeholders(tpl, false, &names);
   match r {

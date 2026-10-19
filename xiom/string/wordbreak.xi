@@ -26,7 +26,9 @@ use xiom.string;
 /// Returns: the list of word-start byte offsets (may be empty).
 /// Error case: none; malformed UTF-8 bytes are skipped without boundaries.
 /// Complexity: O(|s| * log table size).
-pub fn unicode_word_boundaries(s: Str) -> Vec[Int] {
+pub fn unicode_word_boundaries(s: Str) -> Vec[Int]
+  ensures: result.len() <= s.len()
+{
   let len = string.str_len(s);
   var bounds = Vec[Int].new();
   var i: Int = 0;
@@ -106,7 +108,9 @@ pub fn unicode_word_boundaries(s: Str) -> Vec[Int] {
 /// Returns: the list of word substrings.
 /// Error case: none.
 /// Complexity: O(|s| + number of boundaries).
-pub fn unicode_split_words(s: Str) -> Vec[Str] {
+pub fn unicode_split_words(s: Str) -> Vec[Str]
+  ensures: result.len() <= s.len()
+{
   let bounds = unicode_word_boundaries(s);
   let len = string.str_len(s);
   let base = s.c_str();

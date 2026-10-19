@@ -85,7 +85,9 @@ fn _cp_str(cp: Int) -> Str {
 /// Returns: the unescaped string.
 /// Error case: none.
 /// Complexity: O(|s|).
-pub fn str_unescape(s: Str) -> Str {
+pub fn str_unescape(s: Str) -> Str
+  ensures: result.len() <= s.len()
+{
   var out: Vec[UInt8] = Vec[UInt8].new();
   let len = string.str_len(s);
   var i: Int = 0;
@@ -127,7 +129,9 @@ pub fn str_unescape(s: Str) -> Str {
 /// Returns: the unescaped string.
 /// Error case: none; a malformed \xNN (fewer than two hex digits) is kept.
 /// Complexity: O(|s|).
-pub fn str_unescape_ascii(s: Str) -> Str {
+pub fn str_unescape_ascii(s: Str) -> Str
+  ensures: result.len() <= s.len()
+{
   var out: Vec[UInt8] = Vec[UInt8].new();
   let len = string.str_len(s);
   var i: Int = 0;
@@ -178,7 +182,9 @@ pub fn str_unescape_ascii(s: Str) -> Str {
 /// Returns: the unescaped string.
 /// Error case: none; a malformed escape (wrong digit count) is kept verbatim.
 /// Complexity: O(|s|).
-pub fn str_unescape_unicode(s: Str) -> Str {
+pub fn str_unescape_unicode(s: Str) -> Str
+  ensures: result.len() <= s.len()
+{
   var out: Vec[UInt8] = Vec[UInt8].new();
   let len = string.str_len(s);
   var i: Int = 0;

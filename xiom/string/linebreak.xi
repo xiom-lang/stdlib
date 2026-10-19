@@ -31,7 +31,9 @@ use xiom.string;
 /// Returns: the list of allowed break byte offsets (may be empty).
 /// Error case: none; malformed UTF-8 bytes are skipped without break points.
 /// Complexity: O(|s|).
-pub fn unicode_line_break_points(s: Str) -> Vec[Int] {
+pub fn unicode_line_break_points(s: Str) -> Vec[Int]
+  ensures: result.len() <= s.len()
+{
   let len = string.str_len(s);
   var breaks = Vec[Int].new();
   var i: Int = 0;
@@ -91,7 +93,9 @@ pub fn unicode_line_break_points(s: Str) -> Vec[Int] {
 /// Returns: the list of line substrings.
 /// Error case: none.
 /// Complexity: O(|s| + number of break points).
-pub fn unicode_split_lines(s: Str) -> Vec[Str] {
+pub fn unicode_split_lines(s: Str) -> Vec[Str]
+  ensures: result.len() >= 1
+{
   let breaks = unicode_line_break_points(s);
   let len = string.str_len(s);
   var lines = Vec[Str].new();

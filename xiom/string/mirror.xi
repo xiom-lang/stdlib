@@ -43,7 +43,9 @@ fn _mirror_code(code: Int) -> Int {
 /// Returns: the mirrored character, or `c` itself.
 /// Error case: none.
 /// Complexity: O(1).
-pub fn unicode_mirror_char(c: Char) -> Char {
+pub fn unicode_mirror_char(c: Char) -> Char
+  ensures: unicode_mirror_char(result) == c
+{
   let code = convert.char_to_int(c);
   let m = _mirror_code(code);
   if m < 0 {
@@ -66,7 +68,9 @@ pub fn unicode_mirror_char(c: Char) -> Char {
 /// Returns: true when `c` has a mirror image, false otherwise.
 /// Error case: none.
 /// Complexity: O(1).
-pub fn unicode_is_mirrored(c: Char) -> Bool {
+pub fn unicode_is_mirrored(c: Char) -> Bool
+  ensures: result == (unicode_mirror_char(c) != c)
+{
   let code = convert.char_to_int(c);
   let m = _mirror_code(code);
   m >= 0
