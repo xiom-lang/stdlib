@@ -53,12 +53,16 @@ pub fn Duration.new(secs: Int, nanos: Int) -> Duration
 }
 
 /// Duration of `s` whole seconds.
-pub fn Duration.from_secs(s: Int) -> Duration {
+pub fn Duration.from_secs(s: Int) -> Duration
+  ensures: result.secs == s && result.nanos == 0
+{
   return Duration{ secs: s; nanos: 0; };
 }
 
 /// Duration from fractional seconds (truncated toward zero).
-pub fn Duration.from_secs_f64(secs: Float64) -> Duration {
+pub fn Duration.from_secs_f64(secs: Float64) -> Duration
+  ensures: (secs >= 0.0) => (0 <= result.nanos && result.nanos < NANOS_PER_SEC)
+{
   var s = secs as Int;
   var frac = secs - (s as Float64);
   if frac < 0.0 {
@@ -73,7 +77,10 @@ pub fn Duration.from_secs_f64(secs: Float64) -> Duration {
 }
 
 /// Duration of `ms` milliseconds.
-pub fn Duration.from_millis(ms: Int) -> Duration {
+pub fn Duration.from_millis(ms: Int) -> Duration
+  ensures: result.as_nanos() == ms * NANOS_PER_MILLI
+  ensures: 0 <= result.nanos && result.nanos < NANOS_PER_SEC
+{
   let s = ms / MILLIS_PER_SEC;
   var n = (ms - s * MILLIS_PER_SEC) * NANOS_PER_MILLI;
   var secs = s;
@@ -85,7 +92,10 @@ pub fn Duration.from_millis(ms: Int) -> Duration {
 }
 
 /// Duration of `us` microseconds.
-pub fn Duration.from_micros(us: Int) -> Duration {
+pub fn Duration.from_micros(us: Int) -> Duration
+  ensures: result.as_nanos() == us * NANOS_PER_MICRO
+  ensures: 0 <= result.nanos && result.nanos < NANOS_PER_SEC
+{
   let s = us / 1000000;
   var n = (us - s * 1000000) * NANOS_PER_MICRO;
   var secs = s;
@@ -97,7 +107,10 @@ pub fn Duration.from_micros(us: Int) -> Duration {
 }
 
 /// Duration of `ns` nanoseconds.
-pub fn Duration.from_nanos(ns: Int) -> Duration {
+pub fn Duration.from_nanos(ns: Int) -> Duration
+  ensures: result.as_nanos() == ns
+  ensures: 0 <= result.nanos && result.nanos < NANOS_PER_SEC
+{
   let s = ns / NANOS_PER_SEC;
   var n = ns - s * NANOS_PER_SEC;
   var secs = s;
@@ -174,7 +187,9 @@ pub fn Duration.div(self, divisor: Int) -> Duration
 }
 
 /// Checked sum; None on overflow.
-pub fn Duration.checked_add(self, other: Duration) -> Option[Duration] {
+pub fn Duration.checked_add(self, other: Duration) -> Option[Duration]
+  ensures: result is Some => (0 <= result.value.nanos && result.value.nanos < NANOS_PER_SEC)
+{
   var total_secs = self.secs + other.secs;
   var total_nanos = self.nanos + other.nanos;
   if total_nanos >= NANOS_PER_SEC {
@@ -189,7 +204,11 @@ pub fn Duration.checked_add(self, other: Duration) -> Option[Duration] {
 }
 
 /// Checked difference; None when it would be negative.
-pub fn Duration.checked_sub(self, other: Duration) -> Option[Duration] {
+pub fn Duration.checked_sub(self, other: Duration) -> Option[Duration]
+  ensures: result is None => self.as_nanos() < other.as_nanos()
+  ensures: result is Some => self.as_nanos() >= other.as_nanos()
+  ensures: result is Some => (0 <= result.value.nanos && result.value.nanos < NANOS_PER_SEC)
+{
   if self.as_nanos() < other.as_nanos() {
     return None;
   };
@@ -236,24 +255,32 @@ pub fn Instant.now() -> Instant
 /// resolution).
 pub fn Instant.elapsed(self) -> Duration
   requires: true  // extern/runtime clock confinement (T002)
+  ensures: 0 <= result.nanos && result.nanos < NANOS_PER_SEC
 {
   let diff = monotonic_ms() - self.t;
   return Duration.from_millis(diff);
 }
 
 /// Time from `earlier` to this instant (millisecond resolution).
-pub fn Instant.duration_since(self, earlier: Instant) -> Duration {
+pub fn Instant.duration_since(self, earlier: Instant) -> Duration
+  ensures: 0 <= result.nanos && result.nanos < NANOS_PER_SEC
+  ensures: result.as_nanos() == (self.t - earlier.t) * NANOS_PER_MILLI
+{
   let diff = self.t - earlier.t;
   return Duration.from_millis(diff);
 }
 
 /// Instant shifted forward by `d` (millisecond precision).
-pub fn Instant.add(self, d: Duration) -> Instant {
+pub fn Instant.add(self, d: Duration) -> Instant
+  ensures: d.as_millis() >= 0 => result.t >= self.t
+{
   return Instant{ t: self.t + d.as_millis() };
 }
 
 /// Instant shifted backward by `d` (millisecond precision).
-pub fn Instant.sub(self, d: Duration) -> Instant {
+pub fn Instant.sub(self, d: Duration) -> Instant
+  ensures: d.as_millis() >= 0 => result.t <= self.t
+{
   return Instant{ t: self.t - d.as_millis() };
 }
 
@@ -263,6 +290,7 @@ pub type SystemTime = { secs: Int; nanos: Int; }
 /// Wall-clock reading (may move backwards when the clock is adjusted).
 pub fn SystemTime.now() -> SystemTime
   requires: true  // extern/runtime clock confinement (T002)
+  ensures: result.nanos == 0
 {
   return SystemTime{ secs: time(0); nanos: 0; };
 }
@@ -277,6 +305,7 @@ pub fn SystemTime.duration_since(self, earlier: SystemTime) -> Result[Duration, 
   // Ok iff the duration is non-negative; the nanos borrow decides the
   // equal-seconds edge (10.200 - 10.500 is Err, not Ok).
   ensures: result.is_ok == (self.secs > earlier.secs || (self.secs == earlier.secs && self.nanos >= earlier.nanos))
+  ensures: result.is_ok => (0 <= result.value.nanos && result.value.nanos < NANOS_PER_SEC)
 {
   var sec_diff = self.secs - earlier.secs;
   var nano_diff = self.nanos - earlier.nanos;
@@ -350,6 +379,12 @@ fn decompose_epoch(epoch: Int) -> DateTime {
 /// Current UTC date and time.
 pub fn DateTime.now() -> DateTime
   requires: true  // extern/runtime clock confinement (T002)
+  ensures: 1 <= result.month && result.month <= 12
+  ensures: 1 <= result.day && result.day <= 31
+  ensures: 0 <= result.hour && result.hour < 24
+  ensures: 0 <= result.minute && result.minute < 60
+  ensures: 0 <= result.second && result.second < 60
+  ensures: 0 <= result.weekday && result.weekday < 7
 {
   let epoch = time(0);
   return decompose_epoch(epoch);
@@ -368,33 +403,49 @@ pub fn DateTime.month(self) -> Int
 }
 
 /// Day-of-month component 1..31 (UTC).
-pub fn DateTime.day(self) -> Int {
+pub fn DateTime.day(self) -> Int
+  ensures: 1 <= result && result <= 31
+{
   return self.day;
 }
 
 /// Hour component 0..23 (UTC).
-pub fn DateTime.hour(self) -> Int {
+pub fn DateTime.hour(self) -> Int
+  ensures: 0 <= result && result < 24
+{
   return self.hour;
 }
 
 /// Minute component 0..59 (UTC).
-pub fn DateTime.minute(self) -> Int {
+pub fn DateTime.minute(self) -> Int
+  ensures: 0 <= result && result < 60
+{
   return self.minute;
 }
 
 /// Second component 0..59 (UTC).
-pub fn DateTime.second(self) -> Int {
+pub fn DateTime.second(self) -> Int
+  ensures: 0 <= result && result < 60
+{
   return self.second;
 }
 
 /// Numeric day of week.
-pub fn DateTime.weekday(self) -> Int {
+pub fn DateTime.weekday(self) -> Int
+  ensures: 0 <= result && result < 7
+{
   return self.weekday;
 }
 
 /// Current UTC DateTime (alias of `DateTime.now`).
 pub fn utc_now() -> DateTime
   requires: true  // extern/runtime clock confinement (T002)
+  ensures: 1 <= result.month && result.month <= 12
+  ensures: 1 <= result.day && result.day <= 31
+  ensures: 0 <= result.hour && result.hour < 24
+  ensures: 0 <= result.minute && result.minute < 60
+  ensures: 0 <= result.second && result.second < 60
+  ensures: 0 <= result.weekday && result.weekday < 7
 {
   let epoch = time(0);
   return decompose_epoch(epoch);
@@ -403,13 +454,27 @@ pub fn utc_now() -> DateTime
 /// DateTime from a Unix epoch (seconds since 1970-01-01T00:00:00Z) in UTC.
 /// Public wrapper over the calendar decomposition; local-time conversion in
 /// xiom.time.tz builds on it.
-pub fn datetime_from_epoch(epoch: Int) -> DateTime {
+pub fn datetime_from_epoch(epoch: Int) -> DateTime
+  ensures: 1 <= result.month && result.month <= 12
+  ensures: 1 <= result.day && result.day <= 31
+  ensures: 0 <= result.hour && result.hour < 24
+  ensures: 0 <= result.minute && result.minute < 60
+  ensures: 0 <= result.second && result.second < 60
+  ensures: 0 <= result.weekday && result.weekday < 7
+{
   return decompose_epoch(epoch);
 }
 
 /// local_now is the UTC alias for backward compatibility; real local
 /// wall-clock conversion lives in xiom.time.tz (tzdata phase 1).
-pub fn local_now() -> DateTime {
+pub fn local_now() -> DateTime
+  ensures: 1 <= result.month && result.month <= 12
+  ensures: 1 <= result.day && result.day <= 31
+  ensures: 0 <= result.hour && result.hour < 24
+  ensures: 0 <= result.minute && result.minute < 60
+  ensures: 0 <= result.second && result.second < 60
+  ensures: 0 <= result.weekday && result.weekday < 7
+{
   return utc_now();
 }
 
@@ -485,6 +550,8 @@ pub fn date_new(year: Int, month: Int, day: Int) -> Date {
 /// Complexity: O(1). Uses time(0) for the system clock.
 pub fn date_now() -> Date
   requires: true  // extern/runtime clock confinement (T002)
+  ensures: 1 <= result.month && result.month <= 12
+  ensures: 1 <= result.day && result.day <= 31
 {
   let ts = time(0);
   return timestamp_to_date(ts);
@@ -524,7 +591,9 @@ pub fn date_is_leap_year(year: Int) -> Bool {
 /// date_days_in_month returns the number of days in the given month
 /// of the given year (1..31).  Valid for proleptic Gregorian.
 /// Complexity: O(1).
-pub fn date_days_in_month(year: Int, month: Int) -> Int {
+pub fn date_days_in_month(year: Int, month: Int) -> Int
+  ensures: 28 <= result && result <= 31
+{
   if month == 2 {
     if date_is_leap_year(year) {
       return 29;
@@ -540,7 +609,9 @@ pub fn date_days_in_month(year: Int, month: Int) -> Int {
 /// date_day_of_week returns the day of the week for the given date
 /// using Zeller's congruence (Gregorian).  0 = Sunday, ..., 6 = Saturday.
 /// Complexity: O(1).
-pub fn date_day_of_week(year: Int, month: Int, day: Int) -> Int {
+pub fn date_day_of_week(year: Int, month: Int, day: Int) -> Int
+  ensures: 0 <= result && result <= 6
+{
   var m = month;
   var y = year;
   if m <= 2 {
@@ -560,7 +631,9 @@ pub fn date_day_of_week(year: Int, month: Int, day: Int) -> Int {
 /// date_day_of_year returns the ordinal day of the year (1-366)
 /// for the given date.
 /// Complexity: O(1).
-pub fn date_day_of_year(year: Int, month: Int, day: Int) -> Int {
+pub fn date_day_of_year(year: Int, month: Int, day: Int) -> Int
+  ensures: (1 <= day && day <= 31 && 1 <= month && month <= 12) => (1 <= result && result <= 366)
+{
   var result = day;
   var m = 1;
   while m < month {
@@ -572,7 +645,9 @@ pub fn date_day_of_year(year: Int, month: Int, day: Int) -> Int {
 
 /// date_iso8601 formats a Date as a zero-padded "YYYY-MM-DD" string.
 /// Complexity: O(1).  No dynamic allocation overhead beyond str_concat.
-pub fn date_iso8601(d: &Date) -> Str {
+pub fn date_iso8601(d: &Date) -> Str
+  ensures: (0 <= d.year && d.year <= 9999) => result.len() == 10
+{
   return format_timestamp_date(d);
 }
 
@@ -614,7 +689,10 @@ fn format_int_padded(n: Int, width: Int) -> Str {
 /// date_from_iso8601 parses a "YYYY-MM-DD" string into a Date.
 /// Returns None if the format is malformed or values out of range.
 /// Complexity: O(1).
-pub fn date_from_iso8601(s: Str) -> Option[Date] {
+pub fn date_from_iso8601(s: Str) -> Option[Date]
+  ensures: result is Some => (1 <= result.value.month && result.value.month <= 12)
+  ensures: result is Some => (1 <= result.value.day && result.value.day <= 31)
+{
   if s.len() != 10 {
     return None;
   };
@@ -649,7 +727,10 @@ pub fn date_from_iso8601(s: Str) -> Option[Date] {
 
 /// date_add_days returns a new Date offset by the given number of days.
 /// Handles negative days correctly.  Complexity: O(1).
-pub fn date_add_days(d: &Date, days: Int) -> Date {
+pub fn date_add_days(d: &Date, days: Int) -> Date
+  ensures: 1 <= result.month && result.month <= 12
+  ensures: 1 <= result.day && result.day <= 31
+{
   let total = days_from_civil(d.year, d.month, d.day) + days;
   let (y, m, day) = civil_from_days(total);
   return Date{ year: y; month: m; day: day; };
@@ -665,7 +746,9 @@ pub fn date_diff_days(a: &Date, b: &Date) -> Int {
 
 /// date_compare compares two dates.
 /// Returns -1 if a < b, 0 if equal, 1 if a > b.  Complexity: O(1).
-pub fn date_compare(a: &Date, b: &Date) -> Int {
+pub fn date_compare(a: &Date, b: &Date) -> Int
+  ensures: (0 - 1) <= result && result <= 1
+{
   if a.year < b.year {
     return -1;
   };
@@ -698,7 +781,10 @@ pub fn unix_timestamp() -> Int
 /// timestamp_to_date converts a Unix timestamp (seconds) to a Date.
 /// Uses the existing civil_from_days calendar decomposition.
 /// Complexity: O(1).
-pub fn timestamp_to_date(ts: Int) -> Date {
+pub fn timestamp_to_date(ts: Int) -> Date
+  ensures: 1 <= result.month && result.month <= 12
+  ensures: 1 <= result.day && result.day <= 31
+{
   var days = ts / SECS_PER_DAY;
   var tod = ts - days * SECS_PER_DAY;
   if tod < 0 {
@@ -710,14 +796,18 @@ pub fn timestamp_to_date(ts: Int) -> Date {
 
 /// date_to_timestamp converts a Date to a Unix timestamp (0:00:00 UTC).
 /// Complexity: O(1).
-pub fn date_to_timestamp(d: &Date) -> Int {
+pub fn date_to_timestamp(d: &Date) -> Int
+  ensures: result % SECS_PER_DAY == 0
+{
   let days = days_from_civil(d.year, d.month, d.day);
   return days * SECS_PER_DAY;
 }
 
 /// iso8601_now returns the current date as an ISO-8601 "YYYY-MM-DD" string.
 /// Complexity: O(1).
-pub fn iso8601_now() -> Str {
+pub fn iso8601_now() -> Str
+  ensures: result.len() >= 10
+{
   let d = date_now();
   return date_iso8601(&d);
 }
@@ -725,7 +815,9 @@ pub fn iso8601_now() -> Str {
 /// format_timestamp formats a Unix timestamp as a human-readable
 /// date-time string "YYYY-MM-DD HH:MM:SS" (UTC).
 /// Complexity: O(1).
-pub fn format_timestamp(ts: Int) -> Str {
+pub fn format_timestamp(ts: Int) -> Str
+  ensures: result.len() >= 19
+{
   let dt = decompose_epoch(ts);
   let result = format_int_padded(dt.year, 4) + "-";
   result = result + format_int_padded(dt.month, 2);
@@ -776,7 +868,9 @@ fn _pad4(n: Int) -> Str {
 }
 
 /// Format a Date per the supported conversion set (see the module comment).
-pub fn strftime(spec: Str, d: &Date) -> Str {
+pub fn strftime(spec: Str, d: &Date) -> Str
+  ensures: spec.len() == 0 => result.len() == 0
+{
   var result = "";
   var i: Int = 0;
   var len = spec.len();
@@ -847,7 +941,11 @@ fn _parse_fail() -> DateParse {
 
 /// Parse a date/time string with a strftime-style spec; unparsed fields
 /// are left at their defaults with the error set.
-pub fn strptime(s: Str, spec: Str) -> DateParse {
+pub fn strptime(s: Str, spec: Str) -> DateParse
+  ensures: result.is_ok => (1 <= result.date.month && result.date.month <= 12)
+  ensures: result.is_ok => (1 <= result.date.day && result.date.day <= 31)
+  ensures: !result.is_ok => (result.date.month == 1 && result.date.day == 1)
+{
   var year: Int = 0;
   var month: Int = 1;
   var day: Int = 1;

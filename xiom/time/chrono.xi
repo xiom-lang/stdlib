@@ -111,7 +111,14 @@ fn make_dt_c(year: Int, month: Int, day: Int, hour: Int, minute: Int, second: In
 /// Returns: the current date/time (the runtime clock is UTC; local is a
 ///          documented alias in this build).
 /// Complexity: O(1).
-pub fn chrono_now() -> DateTime {
+pub fn chrono_now() -> DateTime
+  ensures: 1 <= result.month && result.month <= 12
+  ensures: 1 <= result.day && result.day <= 31
+  ensures: 0 <= result.hour && result.hour < 24
+  ensures: 0 <= result.minute && result.minute < 60
+  ensures: 0 <= result.second && result.second < 60
+  ensures: 0 <= result.weekday && result.weekday < 7
+{
   return time.DateTime.now();
 }
 
@@ -119,7 +126,14 @@ pub fn chrono_now() -> DateTime {
 /// Params: ts - seconds since the Unix epoch.
 /// Returns: the UTC date/time at that instant.
 /// Complexity: O(1).
-pub fn chrono_from_timestamp(ts: Int) -> DateTime {
+pub fn chrono_from_timestamp(ts: Int) -> DateTime
+  ensures: 1 <= result.month && result.month <= 12
+  ensures: 1 <= result.day && result.day <= 31
+  ensures: 0 <= result.hour && result.hour < 24
+  ensures: 0 <= result.minute && result.minute < 60
+  ensures: 0 <= result.second && result.second < 60
+  ensures: 0 <= result.weekday && result.weekday < 7
+{
   return decompose_c(ts);
 }
 
@@ -127,7 +141,9 @@ pub fn chrono_from_timestamp(ts: Int) -> DateTime {
 /// Params: dt - the date/time.
 /// Returns: seconds since the Unix epoch.
 /// Complexity: O(1).
-pub fn chrono_to_timestamp(dt: &DateTime) -> Int {
+pub fn chrono_to_timestamp(dt: &DateTime) -> Int
+  ensures: (0 <= dt.second && dt.second < 60) => ((result - dt.second) % 60 == 0)
+{
   let days = days_from_civil_c(dt.year, dt.month, dt.day);
   return days * 86400 + dt.hour * 3600 + dt.minute * 60 + dt.second;
 }
@@ -136,7 +152,9 @@ pub fn chrono_to_timestamp(dt: &DateTime) -> Int {
 /// Params: dt - the date/time; n - the second offset.
 /// Returns: the shifted date/time.
 /// Complexity: O(1).
-pub fn chrono_add_seconds(dt: &DateTime, n: Int) -> DateTime {
+pub fn chrono_add_seconds(dt: &DateTime, n: Int) -> DateTime
+  ensures: chrono_to_timestamp(&result) == chrono_to_timestamp(dt) + n
+{
   let ts = chrono_to_timestamp(dt) + n;
   return decompose_c(ts);
 }
@@ -145,7 +163,9 @@ pub fn chrono_add_seconds(dt: &DateTime, n: Int) -> DateTime {
 /// Params: dt - the date/time; n - the day offset.
 /// Returns: the shifted date/time.
 /// Complexity: O(1).
-pub fn chrono_add_days(dt: &DateTime, n: Int) -> DateTime {
+pub fn chrono_add_days(dt: &DateTime, n: Int) -> DateTime
+  ensures: chrono_to_timestamp(&result) == chrono_to_timestamp(dt) + n * 86400
+{
   let ts = chrono_to_timestamp(dt) + n * 86400;
   return decompose_c(ts);
 }
@@ -154,7 +174,11 @@ pub fn chrono_add_days(dt: &DateTime, n: Int) -> DateTime {
 /// Params: dt - the date/time; n - the month offset.
 /// Returns: the shifted date/time with the day clamped to the target month.
 /// Complexity: O(1).
-pub fn chrono_add_months(dt: &DateTime, n: Int) -> DateTime {
+pub fn chrono_add_months(dt: &DateTime, n: Int) -> DateTime
+  ensures: 1 <= result.month && result.month <= 12
+  ensures: 1 <= result.day && result.day <= 31
+  ensures: result.hour == dt.hour && result.minute == dt.minute && result.second == dt.second
+{
   var total = dt.month - 1 + n;
   var y = dt.year;
   var m = dt.month;
@@ -175,7 +199,11 @@ pub fn chrono_add_months(dt: &DateTime, n: Int) -> DateTime {
 /// Params: dt - the date/time; n - the year offset.
 /// Returns: the shifted date/time with the day clamped for non-leap years.
 /// Complexity: O(1).
-pub fn chrono_add_years(dt: &DateTime, n: Int) -> DateTime {
+pub fn chrono_add_years(dt: &DateTime, n: Int) -> DateTime
+  ensures: 1 <= result.month && result.month <= 12
+  ensures: 1 <= result.day && result.day <= 31
+  ensures: result.hour == dt.hour && result.minute == dt.minute && result.second == dt.second
+{
   return make_dt_c(dt.year + n, dt.month, dt.day, dt.hour, dt.minute, dt.second);
 }
 
@@ -183,7 +211,10 @@ pub fn chrono_add_years(dt: &DateTime, n: Int) -> DateTime {
 /// Params: a - the later date/time; b - the earlier date/time.
 /// Returns: a - b as a Duration.
 /// Complexity: O(1).
-pub fn chrono_diff(a: &DateTime, b: &DateTime) -> Duration {
+pub fn chrono_diff(a: &DateTime, b: &DateTime) -> Duration
+  ensures: result.nanos == 0
+  ensures: result.secs == chrono_to_timestamp(a) - chrono_to_timestamp(b)
+{
   let ta = chrono_to_timestamp(a);
   let tb = chrono_to_timestamp(b);
   return time.Duration.from_secs(ta - tb);
@@ -201,7 +232,9 @@ pub fn chrono_weekday(dt: &DateTime) -> Int {
 /// Params: a - the left operand; b - the right operand.
 /// Returns: negative, zero, or positive for a before, equal, after b.
 /// Complexity: O(1).
-pub fn chrono_compare(a: &DateTime, b: &DateTime) -> Int {
+pub fn chrono_compare(a: &DateTime, b: &DateTime) -> Int
+  ensures: (0 - 1) <= result && result <= 1
+{
   var ta = chrono_to_timestamp(a);
   var tb = chrono_to_timestamp(b);
   if ta < tb {
@@ -224,6 +257,13 @@ pub fn chrono_timezone_offset(dt: &DateTime) -> Int {
 /// The current UTC date and time.
 /// Returns: the current date/time in UTC.
 /// Complexity: O(1).
-pub fn chrono_utc_now() -> DateTime {
+pub fn chrono_utc_now() -> DateTime
+  ensures: 1 <= result.month && result.month <= 12
+  ensures: 1 <= result.day && result.day <= 31
+  ensures: 0 <= result.hour && result.hour < 24
+  ensures: 0 <= result.minute && result.minute < 60
+  ensures: 0 <= result.second && result.second < 60
+  ensures: 0 <= result.weekday && result.weekday < 7
+{
   return time.utc_now();
 }

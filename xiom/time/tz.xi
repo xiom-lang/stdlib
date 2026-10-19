@@ -57,7 +57,10 @@ fn _tm_isdst(buf: &Vec[UInt8]) -> Int {
 
 /// Local offset from UTC in seconds at an explicit Unix epoch (DST-aware).
 /// Positive means local time is ahead of UTC.
-pub fn tz_offset_secs_at(epoch: Int) -> Result[Int, Str] {
+pub fn tz_offset_secs_at(epoch: Int) -> Result[Int, Str]
+  ensures: result.is_ok => ((0 - 43200) <= result.value && result.value <= 50400)
+  ensures: result.is_err => result.error.len() > 0
+{
   var buf = _tm_zeroed();
   var e = epoch;
   var rc: Int32 = 0;
@@ -78,12 +81,17 @@ pub fn tz_offset_secs_at(epoch: Int) -> Result[Int, Str] {
 }
 
 /// Current local offset from UTC in seconds (DST-aware for the host zone).
-pub fn tz_local_offset_secs() -> Result[Int, Str] {
+pub fn tz_local_offset_secs() -> Result[Int, Str]
+  ensures: result.is_ok => ((0 - 43200) <= result.value && result.value <= 50400)
+  ensures: result.is_err => result.error.len() > 0
+{
   return tz_offset_secs_at(_utc_now_secs());
 }
 
 /// True when the host zone is currently observing daylight saving time.
-pub fn tz_is_dst() -> Result[Bool, Str] {
+pub fn tz_is_dst() -> Result[Bool, Str]
+  ensures: result.is_err => result.error.len() > 0
+{
   var buf = _tm_zeroed();
   var e = _utc_now_secs();
   var rc: Int32 = 0;
@@ -97,7 +105,9 @@ pub fn tz_is_dst() -> Result[Bool, Str] {
 }
 
 /// Current local Unix epoch (UTC seconds + local offset).
-pub fn tz_local_epoch_secs() -> Result[Int, Str] {
+pub fn tz_local_epoch_secs() -> Result[Int, Str]
+  ensures: result.is_err => result.error.len() > 0
+{
   let offset = tz_local_offset_secs();
   match offset {
     Ok(o) => { return Ok(_utc_now_secs() + o); },
@@ -106,7 +116,11 @@ pub fn tz_local_epoch_secs() -> Result[Int, Str] {
 }
 
 /// Current local wall-clock DateTime for the host zone.
-pub fn tz_local_now() -> Result[DateTime, Str] {
+pub fn tz_local_now() -> Result[DateTime, Str]
+  ensures: result.is_ok => (1 <= result.value.month && result.value.month <= 12)
+  ensures: result.is_ok => (1 <= result.value.day && result.value.day <= 31)
+  ensures: result.is_err => result.error.len() > 0
+{
   let local = tz_local_epoch_secs();
   match local {
     Ok(epoch) => { return Ok(time.datetime_from_epoch(epoch)); },

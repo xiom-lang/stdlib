@@ -67,23 +67,33 @@ pub type AsyncExecutor = {
 }
 
 /// Create an executor with empty ready/timer queues.
-pub fn AsyncExecutor.new() -> AsyncExecutor {
+pub fn AsyncExecutor.new() -> AsyncExecutor
+  ensures: result.ready.len() == 0
+  ensures: result.timers.len() == 0
+{
   return AsyncExecutor{ ready: Vec[fn()].new(), timers: Vec[AsyncTimerTask].new() };
 }
 
 /// Enqueue a task onto the ready-queue. It runs on the next drain, not now.
-pub fn AsyncExecutor.spawn(self, task: fn()) {
+pub fn AsyncExecutor.spawn(self, task: fn())
+  ensures: self.ready.len() == self.ready.len()@pre + 1
+{
   self.ready.push(task);
 }
 
 /// Register a task to become ready once the clock reaches `deadline`.
-pub fn AsyncExecutor.at(self, deadline: Int, task: fn()) {
+pub fn AsyncExecutor.at(self, deadline: Int, task: fn())
+  ensures: self.timers.len() == self.timers.len()@pre + 1
+{
   self.timers.push(AsyncTimerTask{ deadline: deadline, task: task });
 }
 
 /// Run a single ready task. Returns true if one was run, false if the
 /// ready-queue was empty.
-pub fn AsyncExecutor.step(self) -> Bool {
+pub fn AsyncExecutor.step(self) -> Bool
+  ensures: result == false => self.ready.len() == self.ready.len()@pre
+  ensures: result == true => self.ready.len() == self.ready.len()@pre - 1
+{
   if self.ready.len() == 0 {
     return false;
   }
@@ -98,7 +108,10 @@ pub fn AsyncExecutor.step(self) -> Bool {
 
 /// Advance pending timers: sleep until the earliest deadline, then move every
 /// timer that is now due onto the ready-queue (keeping the rest pending).
-pub fn AsyncExecutor.fire_due_timers(self) {
+pub fn AsyncExecutor.fire_due_timers(self)
+  ensures: self.timers.len() <= self.timers.len()@pre
+  ensures: self.ready.len() >= self.ready.len()@pre
+{
   if self.timers.len() == 0 {
     return;
   }
@@ -138,7 +151,10 @@ pub fn AsyncExecutor.fire_due_timers(self) {
 }
 
 /// Drive the scheduler until both the ready-queue and the timer set are empty.
-pub fn AsyncExecutor.run(self) {
+pub fn AsyncExecutor.run(self)
+  ensures: self.ready.len() <= self.ready.len()@pre
+  ensures: self.timers.len() <= self.timers.len()@pre
+{
   while self.ready.len() > 0 || self.timers.len() > 0 {
     // Drain every currently-ready task (tasks may enqueue more as they run).
     while self.ready.len() > 0 {
@@ -152,7 +168,10 @@ pub fn AsyncExecutor.run(self) {
 }
 
 /// Spawn a task then drive to completion.
-pub fn AsyncExecutor.block_on(self, task: fn()) {
+pub fn AsyncExecutor.block_on(self, task: fn())
+  ensures: self.ready.len() <= self.ready.len()@pre + 1
+  ensures: self.timers.len() <= self.timers.len()@pre
+{
   self.spawn(task);
   self.run();
 }
@@ -228,17 +247,26 @@ pub type Channel[T] = {
 /// Bounded channel holding at most `capacity` values.
 pub fn Channel.bounded[T](capacity: Int) -> Channel[T]
   requires: capacity > 0
+  ensures: result.cap == capacity
+  ensures: result.closed == false
+  ensures: result.items.len() == 0
 {
   return Channel[T]{ items: Vec[T].with_capacity(capacity), closed: false, cap: capacity };
 }
 
 /// Unbounded channel.
-pub fn Channel.unbounded[T]() -> Channel[T] {
+pub fn Channel.unbounded[T]() -> Channel[T]
+  ensures: result.cap == 0
+  ensures: result.closed == false
+  ensures: result.items.len() == 0
+{
   return Channel[T]{ items: Vec[T].new(), closed: false, cap: 0 };
 }
 
 /// Send a value (blocking when the channel is full).
-pub fn Channel.send[T](&mut self, value: T) {
+pub fn Channel.send[T](&mut self, value: T)
+  ensures: !self.closed => self.items.len() > 0
+{
   if closed {
     return;
   }
@@ -272,7 +300,10 @@ pub fn Channel.recv[T](&mut self) -> T {
 }
 
 /// Non-blocking receive; None when the channel is empty.
-pub fn Channel.try_recv[T](&mut self) -> Option[T] {
+pub fn Channel.try_recv[T](&mut self) -> Option[T]
+  ensures: result is None => self.items.len() == self.items.len()@pre
+  ensures: result is Some => self.items.len() == self.items.len()@pre - 1
+{
   if items.len() == 0 { return None; }
   var val = items[0];
   var i = 0;
@@ -285,7 +316,9 @@ pub fn Channel.try_recv[T](&mut self) -> Option[T] {
 }
 
 /// Close the channel.
-pub fn Channel.close[T](self) {
+pub fn Channel.close[T](self)
+  ensures: self.closed == true
+{
   closed = true;
 }
 
@@ -297,7 +330,9 @@ var _async_task_counter: Int = 0;
 
 /// Returns the current monotonic time in milliseconds.
 /// Complexity: O(1). Thread-safe.
-pub fn async_now_ms() -> Int {
+pub fn async_now_ms() -> Int
+  ensures: result >= 0
+{
   return _now();
 }
 
@@ -319,7 +354,9 @@ pub fn async_yield_now()
 
 /// Enqueues a task onto the global executor and returns a task id.
 /// Complexity: O(1). Thread-safe: accesses global executor.
-pub fn async_spawn(f: fn()) -> Int {
+pub fn async_spawn(f: fn()) -> Int
+  ensures: result >= 1
+{
   _exec.spawn(f);
   _async_task_counter = _async_task_counter + 1;
   return _async_task_counter;
@@ -335,7 +372,10 @@ pub fn async_spawn_delayed(ms: Int, f: fn()) {
 
 /// Runs one step of the given executor. Returns `true` if a task was run.
 /// Complexity: O(1). Thread-safe if executor is not shared.
-pub fn async_step_once(exec: &mut AsyncExecutor) -> Bool {
+pub fn async_step_once(exec: &mut AsyncExecutor) -> Bool
+  ensures: result == false => exec.ready.len() == exec.ready.len()@pre
+  ensures: result == true => exec.ready.len() == exec.ready.len()@pre - 1
+{
   return exec.step();
 }
 
@@ -347,7 +387,10 @@ pub fn async_has_pending(exec: &AsyncExecutor) -> Bool {
 
 /// Drains all ready tasks from the executor without advancing timers.
 /// Complexity: O(ready_queue_size).
-pub fn async_run_until_idle(exec: &mut AsyncExecutor) {
+pub fn async_run_until_idle(exec: &mut AsyncExecutor)
+  ensures: exec.ready.len() == 0
+  ensures: exec.timers.len() == exec.timers.len()@pre
+{
   while exec.ready.len() > 0 {
     exec.step();
   };
