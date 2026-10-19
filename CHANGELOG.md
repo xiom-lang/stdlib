@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.64.8] - 2026-10-19
+
+Pinned to compiler `v0.64.8`. Consumes waves 172-185: contract coverage
+across time, async, numeric precision, core, stats, regex and search;
+the new coverage floors and readiness ratchet; and the thread spawn/join
+result-buffer fix. Search is at full clause coverage and regex is near
+full. No breaking changes.
+
 ## [0.64.6] - 2026-10-17
 
 Pinned to compiler `v0.64.6`. Consumes the campaign and the wishlist
