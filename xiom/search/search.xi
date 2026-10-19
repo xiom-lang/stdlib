@@ -17,7 +17,9 @@ use xiom.cmp.max_int;
 /// Linear search -- O(n) worst/average, O(1) best.
 /// Scans the array sequentially from index 0. Works on unsorted data.
 /// Returns Some(index) of the first match, or None if not found.
-pub fn linear_search[T: Eq](arr: &Vec[T], target: &T) -> Option[Int] {
+pub fn linear_search[T: Eq](arr: &Vec[T], target: &T) -> Option[Int]
+  ensures: (arr.len() == 0) => (result is None)
+{
   var n = arr.len();
   var i = 0;
   while i < n {
@@ -33,7 +35,9 @@ pub fn linear_search[T: Eq](arr: &Vec[T], target: &T) -> Option[Int] {
 /// Classic divide-and-conquer: repeatedly narrows the range by comparing
 /// the middle element against the target.
 /// Returns Some(index) if found, or None if not present.
-pub fn binary_search[T: Ord](arr: &Vec[T], target: &T) -> Option[Int] {
+pub fn binary_search[T: Ord](arr: &Vec[T], target: &T) -> Option[Int]
+  ensures: (arr.len() == 0) => (result is None)
+{
   var n = arr.len();
   if n == 0 { return None; }
   var lo = 0;
@@ -56,7 +60,9 @@ pub fn binary_search[T: Ord](arr: &Vec[T], target: &T) -> Option[Int] {
 /// sorted Int arrays, O(n) worst. Analogous to how one searches a phone book:
 /// estimates position based on value range.
 /// Returns Some(index) if found, or None if not present.
-pub fn interpolation_search(arr: &Vec[Int], target: Int) -> Option[Int] {
+pub fn interpolation_search(arr: &Vec[Int], target: Int) -> Option[Int]
+  ensures: (arr.len() == 0) => (result is None)
+{
   var n = arr.len();
   if n == 0 { return None; }
   var lo = 0;
@@ -111,7 +117,9 @@ fn exp_binary_search[T: Ord](arr: &Vec[T], target: &T, lo: Int, hi: Int) -> Opti
 }
 
 /// Exponential search on a sorted slice; returns the index or None.
-pub fn exponential_search[T: Ord](arr: &Vec[T], target: &T) -> Option[Int] {
+pub fn exponential_search[T: Ord](arr: &Vec[T], target: &T) -> Option[Int]
+  ensures: (arr.len() == 0) => (result is None)
+{
   var n = arr.len();
   if n == 0 { return None; }
   if arr[0].compare(target) == 0 {
@@ -142,7 +150,9 @@ fn jump_sqrt(n: Int) -> Int {
 }
 
 /// Jump search on a sorted slice; returns the index or None.
-pub fn jump_search[T: Ord](arr: &Vec[T], target: &T) -> Option[Int] {
+pub fn jump_search[T: Ord](arr: &Vec[T], target: &T) -> Option[Int]
+  ensures: (arr.len() == 0) => (result is None)
+{
   var n = arr.len();
   if n == 0 { return None; }
   var step = jump_sqrt(n);
@@ -171,7 +181,9 @@ pub fn jump_search[T: Ord](arr: &Vec[T], target: &T) -> Option[Int] {
 /// lower_bound -- O(log n). Returns the index of the first element >= target.
 /// If all elements are < target, returns arr.len().
 /// Requires sorted array.
-pub fn lower_bound[T: Ord](arr: &Vec[T], target: &T) -> Int {
+pub fn lower_bound[T: Ord](arr: &Vec[T], target: &T) -> Int
+  ensures: (arr.len() == 0) => (result == 0)
+{
   var n = arr.len();
   var lo = 0;
   var hi = n;
@@ -189,7 +201,9 @@ pub fn lower_bound[T: Ord](arr: &Vec[T], target: &T) -> Int {
 /// upper_bound -- O(log n). Returns the index of the first element > target.
 /// If all elements are <= target, returns arr.len().
 /// Requires sorted array.
-pub fn upper_bound[T: Ord](arr: &Vec[T], target: &T) -> Int {
+pub fn upper_bound[T: Ord](arr: &Vec[T], target: &T) -> Int
+  ensures: (arr.len() == 0) => (result == 0)
+{
   var n = arr.len();
   var lo = 0;
   var hi = n;
@@ -208,7 +222,9 @@ pub fn upper_bound[T: Ord](arr: &Vec[T], target: &T) -> Int {
 /// tuple: [lo, hi) of all indices where arr[i] == target.
 /// If target is not found, lo == hi (empty range).
 /// Requires sorted array.
-pub fn binary_search_range[T: Ord](arr: &Vec[T], target: &T) -> (Int, Int) {
+pub fn binary_search_range[T: Ord](arr: &Vec[T], target: &T) -> (Int, Int)
+  ensures: (arr.len() == 0) => (result.0 == 0 && result.1 == 0)
+{
   var lo = lower_bound(arr, target);
   if lo == arr.len() || arr[lo].compare(target) != 0 {
     return (lo, lo);

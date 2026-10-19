@@ -157,7 +157,10 @@ pub fn jump_search(v: &Vec[Int], target: Int) -> Option[Int]
 /// Ternary search over a unimodal f on [lo, hi]: returns the x maximizing f.
 /// O(log n) iterations. f must be a named function; the curve must be
 /// strictly unimodal over the range.
-pub fn ternary_search(f: fn(Int) -> Int, lo: Int, hi: Int) -> Int {
+pub fn ternary_search(f: fn(Int) -> Int, lo: Int, hi: Int) -> Int
+  requires: lo <= hi
+  ensures: result >= lo && result <= hi
+{
   var left = lo;
   var right = hi;
   while right - left > 2 {

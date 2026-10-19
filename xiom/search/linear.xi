@@ -60,7 +60,9 @@ pub fn linear_search_all(v: &Vec[Int], target: Int) -> Vec[Int]
 
 /// Index of the first element satisfying pred, or None. O(n). Short-circuits.
 /// The predicate must be a named function.
-pub fn linear_search_by(v: &Vec[Int], pred: fn(&Int) -> Bool) -> Option[Int] {
+pub fn linear_search_by(v: &Vec[Int], pred: fn(&Int) -> Bool) -> Option[Int]
+  ensures: (v.len() == 0) => (result is None)
+{
   var n = v.len();
   var i = 0;
   while i < n {

@@ -31,7 +31,9 @@ pub fn boyer_moore_bad_char(pattern: Str) -> Vec[Int]
 
 /// Good-suffix shift table: gs[i] is the safe shift when a mismatch occurs at
 /// pattern position i. O(m). Computed from the standard suffix array.
-pub fn boyer_moore_good_suffix(pattern: Str) -> Vec[Int] {
+pub fn boyer_moore_good_suffix(pattern: Str) -> Vec[Int]
+  ensures: result.len() == pattern.len()
+{
   var m = pattern.len();
   var gs = Vec[Int].new();
   var suff = Vec[Int].new();
@@ -168,7 +170,9 @@ const RK_MOD: Int = 2147483647;
 
 /// Rolling hash value of the string s. O(len). Uses the fixed base 31 and
 /// the Mersenne prime 2^31-1 as modulus; values are always in [0, mod).
-pub fn rabin_karp_hash(s: Str) -> Int {
+pub fn rabin_karp_hash(s: Str) -> Int
+  ensures: result >= 0 && result < RK_MOD
+{
   var h = 0;
   var i = 0;
   while i < s.len() {
@@ -181,7 +185,9 @@ pub fn rabin_karp_hash(s: Str) -> Int {
 /// Rolling-hash substring search. O(n + m) expected, O(n*m) worst on hash
 /// collisions. Compares character-by-character when hashes match, so results
 /// are exact. Returns None when pattern is empty or longer than text.
-pub fn rabin_karp_search(text: Str, pattern: Str) -> Option[Int] {
+pub fn rabin_karp_search(text: Str, pattern: Str) -> Option[Int]
+  ensures: (pattern.len() == 0 || pattern.len() > text.len()) => (result is None)
+{
   var m = pattern.len();
   var n = text.len();
   if m == 0 || m > n { return None; }

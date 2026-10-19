@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 59 (updated 2026-10-19 14:05Z at this docs commit; **wave 184 merged** -- regex 59.2% -> 98.0%, global 75.1%, floors187 wired; readiness 87.5% (gate 10 MET; gate 8 75.1%); waves 179-183 merged earlier; v0.64.7 released/published; iter is contract-limited; paste-ready next-session prompt in `## 0C`)
+## 0A. CONTINUE HERE -- handoff snapshot 60 (updated 2026-10-19 14:35Z at this docs commit; **waves 184/185 merged** -- regex 98.0%, search 100%, global 75.3%, floors188 wired; readiness 87.5% (gate 10 MET; gate 8 75.3%); waves 179-183 merged earlier; v0.64.7 released/published; iter is contract-limited; paste-ready next-session prompt in `## 0C`)
 
 ## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-18)
 
@@ -25,11 +25,11 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
   git -C E:\xiom-lang\xiom-relays pull --ff-only
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 59 + block 245 (and this 0C block).
+Read docs/stdlib_session.md snapshot 60 + block 246 (and this 0C block).
 
-State: stdlib-v0.64.7 is released; tag stdlib-v0.64.7 = f4482b14 (tag object 11bf62a6); registry xiom-std 0.64.7 is live; compiler v0.64.7 is released. Waves 179 (time 41.3% -> 52.9%), 180 (async 47.8% -> 62.7%), 181 (num 37.9% -> 50.7%; precision_* fully covered), 182 (core 58.0% -> 78.6%; platform/contracts), 183 (stats 60.4% -> 99.3%; statistics/regress/probability) and 184 (regex 59.2% -> 98.0%; engine/pcre_lite) are merged; global 75.1%; floors187 wired; readiness 87.5% (gates 1-7 and 10 met; gate 8 75.1%; gate 9 compiler-owned). New compiler item REL-20261018-1546-stdlib: callee reads of &Vec[GenericStruct] corrupt fields (breaks async_select closed-drain; repro tools/known_failures/p_vec_byref_generic_struct.xi). Relay: compiler info announcements open; xvector channel-handle wishlist acked (row 47); PULSE tag-move fixed; 2257/2305 closed.
+State: stdlib-v0.64.7 is released; tag stdlib-v0.64.7 = f4482b14 (tag object 11bf62a6); registry xiom-std 0.64.7 is live; compiler v0.64.7 is released. Waves 179 (time 41.3% -> 52.9%), 180 (async 47.8% -> 62.7%), 181 (num 37.9% -> 50.7%; precision_* fully covered), 182 (core 58.0% -> 78.6%; platform/contracts), 183 (stats 60.4% -> 99.3%; statistics/regress/probability), 184 (regex 59.2% -> 98.0%; engine/pcre_lite) and 185 (search 62.2% -> 100%) are merged; global 75.3%; floors188 wired; readiness 87.5% (gates 1-7 and 10 met; gate 8 75.3%; gate 9 compiler-owned). New compiler item REL-20261018-1546-stdlib: callee reads of &Vec[GenericStruct] corrupt fields (breaks async_select closed-drain; repro tools/known_failures/p_vec_byref_generic_struct.xi). Relay: compiler info announcements open; xvector channel-handle wishlist acked (row 47); PULSE tag-move fixed; 2257/2305 closed.
 
-No Agent Manager contract waves are in flight. Continue gate 8: iter 46.4%, num 50.7%, math 53.8%, search 62.2%, string 62.6%, core 78.6%, regex 98.0%, stats 99.3%. Next wave(s): math/search; a dedicated num wave must target num/num.xi (242 pub fns at 5.4%). iter is contract-limited (94 lazy closure adapters; only ~8 meaningful clauses); regex and stats are effectively done (pcre_free and histogram_add are documented no-ops). Dump floors188, wire ci/heavy/release + tools/README, update the readiness meter.
+No Agent Manager contract waves are in flight. Continue gate 8: iter 46.4%, num 50.7%, math 53.8%, string 62.6%, core 78.6%, regex 98.0%, stats 99.3%, search 100%. Next wave(s): math/string; a dedicated num wave must target num/num.xi (242 pub fns at 5.4%). iter is contract-limited (94 lazy closure adapters; only ~8 meaningful clauses); regex, search and stats are effectively done (pcre_free, histogram_add are documented no-ops). Dump floors189, wire ci/heavy/release + tools/README, update the readiness meter.
 
 Gate 9: verify/close compiler items 1053/1456/1626/2328/2343/2000/2100/2331 on v0.64.7; 1549-pulse-5 waits on compiler 1609, 1834 on 1550; the new 1546 item needs a compiler fix. Wishlist: row 33 open (compiler/install), row 47 acked. Kqueue needs a macOS runner; net.event wrapper and LISTEN_FDS server integration remain.
 
@@ -3674,6 +3674,25 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-19 block 246 (WAVE 185 SEARCH CONTRACTS -- search 62.2% -> 100%, global 75.3%; floors188 wired; probe 365; readiness 87.5%)**
+- Scope: `xiom/search/search.xi` (8 fns: empty-array None / 0 / (0,0)
+  rows for linear, binary, interpolation, exponential, jump,
+  lower/upper bound and range), `linear.xi` (empty None), `kmp.xi`
+  (empty/oversize pattern false), `boyer.xi` (good-suffix length,
+  Rabin-Karp hash range, empty/oversize pattern None) and
+  `interpolation.xi` (`ternary_search` lo <= hi plus result range).
+- Gates: `check_modules` 5/5 clean (v0.64.6 official); coverage
+  floors188 OK (global 75.1% -> 75.3%, search 62.2% -> 100%; clauses
+  7064 -> 7079, pubCovered 5167 -> 5181); doc ratchet OK (7456/7454,
+  the 2 pre-existing net misses); `smoke_search` PASS (5.8s),
+  `p_wave18_shapes` PASS (5.1s); new `p_wave185_search_shapes` PASS
+  (6.6s) and promoted (probe 365).
+- Search is now 100%. Next gate 8: math 53.8%, num 50.7%, string 62.6%,
+  core 78.6%, regex 98.0%, stats 99.3%; iter 46.4 is contract-limited.
+  A dedicated `num/num.xi` wave remains.
+- Readiness 87.5% (8.753 / 10; gate 8 fraction 0.753). No relay
+  changes; `REL-20261018-1546-stdlib` stays open on the compiler lane.
 
 **SESSION 2026-10-19 block 245 (WAVE 184 REGEX CONTRACTS -- regex 59.2% -> 98.0%, global 75.1%; floors187 wired; probe 364; readiness 87.5%)**
 - Scope: `xiom/regex/engine.xi` (12 fns: compile Ok/Err split,

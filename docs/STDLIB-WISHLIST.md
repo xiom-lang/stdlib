@@ -622,6 +622,11 @@ campaign release; the table statuses above were normalized in the
   invalid-handle rows; `pcre_free` is a documented no-op left
   uncovered); global 74.8% -> 75.1%; floors187 dumped/wired; probe
   `p_wave184_regex_shapes`; readiness 87.5%.
+- wave 185 (search contracts): search coverage 62.2% -> 100%
+  (empty-array/empty-pattern edge rows, good-suffix length, Rabin-Karp
+  hash range, ternary-search result range); global 75.1% -> 75.3%;
+  floors188 dumped/wired; probe `p_wave185_search_shapes`; readiness
+  87.5%.
 - NOT assigned in the 165-171 pass: row 33 stays compiler/install-lane.
   Released as stdlib-v0.64.7 / xiom-std 0.64.7 (release gates on
   candidate-v0.64.7-m351-r2; compiler v0.64.7 pins STDLIB_VERSION to the

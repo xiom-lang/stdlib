@@ -93,7 +93,9 @@ pub fn kmp_search_all(text: Str, pattern: Str) -> Vec[Int]
 }
 
 /// True if pattern occurs anywhere in text. O(n + m). Empty pattern is false.
-pub fn kmp_contains(text: Str, pattern: Str) -> Bool {
+pub fn kmp_contains(text: Str, pattern: Str) -> Bool
+  ensures: (pattern.len() == 0 || pattern.len() > text.len()) => (result == false)
+{
   var r = kmp_search(text, pattern);
   match r {
     Some(_) => { return true; },
