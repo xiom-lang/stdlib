@@ -3710,8 +3710,12 @@ registry pin, agent recon for the rest)**
   `check_modules` 533/533 type-check clean (973s); smoke corpus
   962/962 pass, 0 compilefail / 0 runfail (2802s,
   `out/smokes_v0648.json`); regex 17/17 (`out/regex_v0648.json`);
-  coverage ratchet floors189 OK; doc_scan 100% top-level rows.
-  Probes + barename were still running at block time.
+  coverage ratchet floors189 OK; doc_scan 100% top-level rows; probes
+  368/368 (`out/probes_v0648b.json`); barename 0 hits / 533 modules.
+  The first probes/barename run after the runtime test landed failed
+  with `lld-link: duplicate symbol: main` (the compiler links every
+  `runtime/*.c`); the test now lives in `tests/runtime/` and the rerun
+  is clean.
 - Gate 9 (official v0.64.8): 1053 hash shadow FIXED -- `.hash()` and
   explicit `Int.hash(0)`/`Bool.hash(false)` return the stdlib values
   (7567884774754821 / 177573); 1456 Mutex shadow FIXED -- repro
@@ -3743,7 +3747,8 @@ registry pin, agent recon for the rest)**
 - Relay: 1752/1754/1755 fixed (registry `xiom-std 0.64.8` live,
   sha256 `c4ab5c61...`). Gate 9 re-verify report to compiler pending.
 - Pin: `COMPILER_VERSION` candidate-v0.64.8-r2 -> `v0.64.8` after the
-  full battery (probes/barename pending at block time).
+  full battery (modules 533/533, smokes 962/962, probes 368/368,
+  barename 0/533).
 
 **SESSION 2026-10-19 block 258 (SESSION HANDOFF -- v0.64.8 COMPLETE; gate 8 at 76.1%; next waves num/num.xi + string + math; gate 9 on v0.64.8; relays/bugs/wishlist triage)**
 - v0.64.8 complete: stdlib tag `stdlib-v0.64.8` = tag object
