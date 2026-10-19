@@ -6,12 +6,30 @@ module xiom.sync.channel
 
 // Depends on: xiom.sync
 
+use xiom.alloc;
+use xiom.ptr;
+use xiom.core.size_of;  // bare intrinsic binding (strict catalog gate)
+
 // ============================================================================
 // Bounded/unbounded typed channels for message passing between threads.
 // Pure-XIOM data structure over Vec[T]: capacity 0 means unbounded. The
 // blocking operations (`channel_send` on a full bounded channel, `channel_recv`
 // on an empty one, `channel_select`) poll with a 1 ms sleep, so they make
 // progress in single-threaded programs as soon as the counterpart op runs.
+//
+// THREAD SAFETY
+// - The value form (`Channel[T]`) has NO internal lock. It is safe for
+//   single-thread use, or for sharing only when every access is serialized by
+//   an external lock held across the whole operation. Its blocking ops poll
+//   and do not synchronize.
+// - The handle form (`ChannelHandle[T]`, below) is the cross-thread shape:
+//   `channel_open` allocates the `Channel[T]` cell once and returns a
+//   copyable Int-addressed handle. Every handle operation assumes the CALLER
+//   holds the same external `xiom.sync.mutex.SyncMutex`; there is no internal
+//   lock. Threads using copies of one handle must agree on that lock.
+// - `channel_handle_free` drains and deallocates the cell. Call it exactly
+//   once, after every thread that can touch the handle has been joined, and
+//   never concurrently with another operation. Copies are dangling after it.
 // ============================================================================
 
 extern "C" {
@@ -198,4 +216,175 @@ pub fn channel_select[T](chs: &Vec[Channel[T]]) -> Option[Int] {
     }
   }
   return result;
+}
+
+// ============================================================================
+// Handle form (wishlist row 47 / relay REL-20261018-1518-xvector-2).
+//
+// All operations below take the handle by value and read/modify/write the
+// underlying `Channel[T]` cell. They do NOT lock: the caller must hold one
+// external SyncMutex across each whole operation, and every thread using a
+// copy of the handle must use that same mutex. `channel_handle_free` is
+// single-use and only valid after all users have been joined.
+//
+// COMPILER NOTE: stage the cell pointer in a local before ptr.read/ptr.write.
+// `ptr.read(channel_handle_cell[T](h))` (a generic call nested as the argument
+// of another generic call) is silently mis-typed on v0.64.6 and reads garbage;
+// see tools/known_failures/p_nested_generic_ptr_read.xi. Every function below
+// uses the verified staged-local shape.
+// ============================================================================
+
+/// ChannelHandle[T] - a copyable Int-addressed handle to a heap-allocated
+/// `Channel[T]` cell. The address is non-zero for a live handle.
+pub type ChannelHandle[T] = { addr: Int; }
+
+/// Resolve a live handle to its heap cell.
+/// Params: h - a live handle.
+/// Returns: the `*Channel[T]` cell at `h.addr`.
+/// Complexity: O(1).
+fn channel_handle_cell[T](h: ChannelHandle[T]) -> *Channel[T]
+  requires: h.addr != 0
+{
+  unsafe { return h.addr as *Channel[T]; }
+}
+
+/// Allocate a channel cell and return its copyable handle.
+/// Params: capacity - maximum queued items, or 0 for unbounded; negative
+///          values are clamped to 0.
+/// Returns: a handle with a non-zero address to a new empty open channel.
+/// Thread safety: the caller must serialize all handle operations externally.
+/// Complexity: O(1).
+pub fn channel_open[T](capacity: Int) -> ChannelHandle[T]
+  ensures: result.addr != 0
+{
+  var cap = capacity;
+  if cap < 0 {
+    cap = 0;
+  }
+  let c = Channel[T]{ items: Vec[T].new(); closed: false; cap: cap; };
+  let cell = alloc.alloc(size_of[Channel[T]]());
+  unsafe { ptr.write(cell as *Channel[T], c); }
+  var addr: Int = 0;
+  unsafe { addr = cell as Int; }
+  return ChannelHandle[T]{ addr: addr; };
+}
+
+/// Enqueue without blocking; false if the channel is full or closed.
+/// Params: h - the handle; item - the value to send.
+/// Returns: true if queued, false if full or closed.
+/// Thread safety: caller must hold the external lock for `h`.
+/// Complexity: O(1). Never blocks.
+pub fn channel_handle_try_send[T](h: ChannelHandle[T], item: T) -> Bool
+  requires: h.addr != 0
+  ensures: result == false => channel_handle_is_closed[T](h) || (channel_handle_capacity[T](h) > 0 && channel_handle_len[T](h) >= channel_handle_capacity[T](h))
+{
+  let cell = channel_handle_cell[T](h);
+  var c = ptr.read(cell);
+  if c.closed {
+    return false;
+  }
+  if c.cap > 0 && c.items.len() >= c.cap {
+    return false;
+  }
+  c.items.push(item);
+  ptr.write(cell, c);
+  return true;
+}
+
+/// Dequeue without blocking; None if the channel is empty (closed or open).
+/// Params: h - the handle.
+/// Returns: Some(item) in FIFO order, or None when empty.
+/// Thread safety: caller must hold the external lock for `h`.
+/// Complexity: O(n) shift per pop. Never blocks.
+pub fn channel_handle_try_recv[T](h: ChannelHandle[T]) -> Option[T]
+  requires: h.addr != 0
+  ensures: result is None => channel_handle_len[T](h) == 0
+{
+  let cell = channel_handle_cell[T](h);
+  var c = ptr.read(cell);
+  if c.items.len() == 0 {
+    return None;
+  }
+  let val = c.items[0];
+  var i: Int = 0;
+  while i + 1 < c.items.len() {
+    c.items[i] = c.items[i + 1];
+    i = i + 1;
+  }
+  c.items.pop();
+  ptr.write(cell, c);
+  return Some(val);
+}
+
+/// Mark the channel closed; queued items stay readable.
+/// Params: h - the handle.
+/// Thread safety: caller must hold the external lock for `h`.
+/// Complexity: O(1).
+pub fn channel_handle_close[T](h: ChannelHandle[T])
+  requires: h.addr != 0
+  ensures: channel_handle_is_closed[T](h) == true
+{
+  let cell = channel_handle_cell[T](h);
+  var c = ptr.read(cell);
+  c.closed = true;
+  ptr.write(cell, c);
+}
+
+/// True if the channel is closed.
+/// Params: h - the handle.
+/// Returns: whether the channel was closed.
+/// Thread safety: caller must hold the external lock for `h`.
+/// Complexity: O(1).
+pub fn channel_handle_is_closed[T](h: ChannelHandle[T]) -> Bool
+  requires: h.addr != 0
+{
+  let cell = channel_handle_cell[T](h);
+  let c = ptr.read(cell);
+  return c.closed;
+}
+
+/// Number of items currently queued.
+/// Params: h - the handle.
+/// Returns: the queue length (>= 0).
+/// Thread safety: caller must hold the external lock for `h`.
+/// Complexity: O(1).
+pub fn channel_handle_len[T](h: ChannelHandle[T]) -> Int
+  requires: h.addr != 0
+  ensures: result >= 0
+{
+  let cell = channel_handle_cell[T](h);
+  let c = ptr.read(cell);
+  return c.items.len();
+}
+
+/// Configured capacity; 0 for unbounded.
+/// Params: h - the handle.
+/// Returns: the capacity configured at `channel_open` (>= 0).
+/// Thread safety: caller must hold the external lock for `h`.
+/// Complexity: O(1).
+pub fn channel_handle_capacity[T](h: ChannelHandle[T]) -> Int
+  requires: h.addr != 0
+  ensures: result >= 0
+{
+  let cell = channel_handle_cell[T](h);
+  let c = ptr.read(cell);
+  return c.cap;
+}
+
+/// Drain the channel and deallocate its cell.
+/// Params: h - the handle.
+/// Thread safety: caller must hold the external lock for `h`; call exactly
+///               once, after every thread using the handle has been joined,
+///               and never concurrently with another handle operation.
+///               Copies of the handle are dangling after this call.
+/// Complexity: O(n) drain + O(1) deallocation.
+pub fn channel_handle_free[T](h: ChannelHandle[T])
+  requires: h.addr != 0
+{
+  let cell = channel_handle_cell[T](h);
+  var c = ptr.read(cell);
+  while c.items.len() > 0 {
+    c.items.pop();
+  }
+  unsafe { alloc.dealloc(cell as *UInt8, size_of[Channel[T]]()); }
 }
