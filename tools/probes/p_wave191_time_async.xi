@@ -102,7 +102,7 @@ fn main() -> Int {
   // ---- 4: DateTime / Date ----
   var dt = time.datetime_from_epoch(0);
   if dt.year != 1970 || dt.month != 1 || dt.day != 1 { return 25; }
-  if dt.hour != 0 || dt.minute != 0 || dt.second != 0 || dt.weekday != 3 { return 26; }
+  if dt.hour != 0 || dt.minute != 0 || dt.second != 0 || dt.weekday != 4 { return 26; }
   var utc = time.utc_now();
   if utc.month < 1 || utc.month > 12 || utc.day < 1 || utc.day > 31 { return 27; }
   if utc.hour < 0 || utc.hour >= 24 || utc.minute < 0 || utc.minute >= 60 { return 28; }

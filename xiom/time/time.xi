@@ -354,7 +354,8 @@ fn civil_from_days(z: Int) -> (Int, Int, Int) {
 }
 
 fn weekday_from_days(days: Int) -> Int {
-  var d = (days + 3) % 7;
+  // 0 = Sunday, matching date_day_of_week/date_weekday/chrono.
+  var d = (days + 4) % 7;
   if d < 0 {
     d = d + 7;
   };
