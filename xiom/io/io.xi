@@ -435,7 +435,7 @@ pub fn copy_file(src: Str, dst: Str) -> Result[Unit, IOError]
 pub fn rename(src: Str, dst: Str) -> Result[Unit, IOError]
   requires: src.len() > 0
   requires: dst.len() > 0
-  ensures:  result is Ok => !file_exists(src) && file_exists(dst)
+  ensures:  result is Ok => !fs_exists(src) && fs_exists(dst)
 {
   let rc: Int32;
   unsafe {
